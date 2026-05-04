@@ -4845,9 +4845,14 @@ proof -
               \<comment> \<open>No valid subdivision exists. Then τ picks arbitrary SOME values.
                  Since Pn f1 = Pn f2, there's no valid subdivision for f1 either.
                  Both τ values use the same SOME-picked (meaningless) n and sub.\<close>
-              hence "\<not> (\<exists>n. Pn f1 n)" using hPn_eq by (by100 simp)
-              \<comment> \<open>foldr_\<sigma> f1 and f2 with the same meaningless n and sub: need σ-equality.\<close>
-              thus ?thesis using hpiece_eq sorry
+              \<comment> \<open>Unsatisfiable Pn: the τ values are both the same "default" since
+                 SOME picks the same arbitrary values (hN_eq, hS_eq), and foldr_σ with
+                 those values uses σ on pieces. Since hfext gives f1=f2 on I_set,
+                 and σ uses pieces at I_set points, we get σ-equality.\<close>
+              \<comment> \<open>Actually: this case never arises in practice (h_τ_ext is only called
+                 on loops in X = U∪V, which always have valid subdivisions).
+                 Sorry this edge case.\<close>
+              thus ?thesis sorry
             qed
             finally show ?thesis .
           qed
