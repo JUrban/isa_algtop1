@@ -2412,8 +2412,52 @@ proof -
     unfolding II_topology_def by (rule Theorem_26_7[OF hI_compact hI_compact])
   \<comment> \<open>d_max is a metric on I\<times>I.\<close>
   have hd_metric: "top1_metric_on (I_set \<times> I_set) d_max"
-    unfolding top1_metric_on_def d_max_def
-    by (intro conjI ballI, auto simp: max_def abs_le_iff prod_eq_iff)
+    unfolding top1_metric_on_def
+  proof (intro conjI ballI)
+    fix x assume "x \<in> I_set \<times> I_set"
+    show "0 \<le> d_max x x" unfolding d_max_def by (by100 simp)
+  next
+    fix x y assume "x \<in> I_set \<times> I_set" "y \<in> I_set \<times> I_set"
+    show "0 \<le> d_max x y" unfolding d_max_def by (by100 simp)
+  next
+    fix x y assume "x \<in> I_set \<times> I_set" "y \<in> I_set \<times> I_set"
+    show "(d_max x y = 0) = (x = y)"
+    proof
+      assume h0: "d_max x y = 0"
+      have hmax0: "max \<bar>fst x - fst y\<bar> \<bar>snd x - snd y\<bar> = 0"
+        using h0 unfolding d_max_def .
+      have "\<bar>fst x - fst y\<bar> \<le> max \<bar>fst x - fst y\<bar> \<bar>snd x - snd y\<bar>" by (rule max.cobounded1)
+      hence hfst0: "\<bar>fst x - fst y\<bar> = 0" using hmax0 by (by100 linarith)
+      have "\<bar>snd x - snd y\<bar> \<le> max \<bar>fst x - fst y\<bar> \<bar>snd x - snd y\<bar>" by (rule max.cobounded2)
+      hence hsnd0: "\<bar>snd x - snd y\<bar> = 0" using hmax0 by (by100 linarith)
+      have "fst x = fst y" using hfst0 by (by100 linarith)
+      moreover have "snd x = snd y" using hsnd0 by (by100 linarith)
+      ultimately show "x = y" by (rule prod_eqI)
+    next
+      assume "x = y" thus "d_max x y = 0" unfolding d_max_def by (by100 simp)
+    qed
+  next
+    fix x y assume "x \<in> I_set \<times> I_set" "y \<in> I_set \<times> I_set"
+    show "d_max x y = d_max y x" unfolding d_max_def
+    proof -
+      have h1s: "\<bar>fst x - fst y\<bar> = \<bar>fst y - fst x\<bar>" by (rule abs_minus_commute)
+      have h2s: "\<bar>snd x - snd y\<bar> = \<bar>snd y - snd x\<bar>" by (rule abs_minus_commute)
+      show "max \<bar>fst x - fst y\<bar> \<bar>snd x - snd y\<bar> = max \<bar>fst y - fst x\<bar> \<bar>snd y - snd x\<bar>"
+        using h1s h2s by (by100 metis)
+    qed
+  next
+    fix x y z assume "x \<in> I_set \<times> I_set" "y \<in> I_set \<times> I_set" "z \<in> I_set \<times> I_set"
+    have "\<bar>fst x - fst z\<bar> \<le> \<bar>fst x - fst y\<bar> + \<bar>fst y - fst z\<bar>" by (by100 linarith)
+    moreover have "\<bar>fst x - fst y\<bar> \<le> d_max x y" unfolding d_max_def by (rule max.cobounded1)
+    moreover have "\<bar>fst y - fst z\<bar> \<le> d_max y z" unfolding d_max_def by (rule max.cobounded1)
+    ultimately have h1: "\<bar>fst x - fst z\<bar> \<le> d_max x y + d_max y z" by (by100 linarith)
+    have "\<bar>snd x - snd z\<bar> \<le> \<bar>snd x - snd y\<bar> + \<bar>snd y - snd z\<bar>" by (by100 linarith)
+    moreover have "\<bar>snd x - snd y\<bar> \<le> d_max x y" unfolding d_max_def by (rule max.cobounded2)
+    moreover have "\<bar>snd y - snd z\<bar> \<le> d_max y z" unfolding d_max_def by (rule max.cobounded2)
+    ultimately have h2: "\<bar>snd x - snd z\<bar> \<le> d_max x y + d_max y z" by (by100 linarith)
+    show "d_max x z \<le> d_max x y + d_max y z"
+      unfolding d_max_def by (rule max.boundedI[OF h1[unfolded d_max_def] h2[unfolded d_max_def]])
+  qed
   \<comment> \<open>The metric topology of d_max on I\<times>I equals II_topology.\<close>
   have hd_top: "top1_metric_topology_on (I_set \<times> I_set) d_max = II_topology"
   proof -
@@ -2427,9 +2471,147 @@ proof -
     \<comment> \<open>Direction 1: d_max balls \<in> II_topology.
        Ball B(p,\<epsilon>) = {s\<in>I | |s-s0|<\<epsilon>} \<times> {t\<in>I | |t-t0|<\<epsilon>}, a product of I_top-opens.\<close>
     have hM_sub_II: "top1_metric_topology_on (I_set \<times> I_set) d_max \<subseteq> II_topology"
-      sorry \<comment> \<open>Direction 1: d_max balls = product of I_top-open intervals \<Rightarrow> in II_topology.\<close>
+      unfolding top1_metric_topology_on_def
+    proof (rule topology_generated_by_basis_subset[OF hTopII], rule subsetI)
+      fix B assume "B \<in> top1_metric_basis_on (I_set \<times> I_set) d_max"
+      then obtain p \<epsilon> where hp: "p \<in> I_set \<times> I_set" and h\<epsilon>: "0 < \<epsilon>"
+          and hB: "B = top1_ball_on (I_set \<times> I_set) d_max p \<epsilon>"
+        unfolding top1_metric_basis_on_def by (by100 blast)
+      obtain s0 t0 where hst: "p = (s0, t0)" by (cases p)
+      \<comment> \<open>Ball = product of open intervals in I_top.\<close>
+      have hB_eq: "B = {s \<in> I_set. \<bar>s - s0\<bar> < \<epsilon>} \<times> {t \<in> I_set. \<bar>t - t0\<bar> < \<epsilon>}"
+        unfolding hB top1_ball_on_def d_max_def hst
+        unfolding top1_unit_interval_def by (auto simp: max_def)
+      \<comment> \<open>Each factor is open in I_top.\<close>
+      have hs_open: "{s \<in> I_set. \<bar>s - s0\<bar> < \<epsilon>} \<in> I_top"
+      proof -
+        have hR: "{s::real. \<bar>s - s0\<bar> < \<epsilon>} \<in> top1_open_sets"
+        proof -
+          have "{s::real. \<bar>s - s0\<bar> < \<epsilon>} = {s0 - \<epsilon><..<s0 + \<epsilon>}"
+            by (auto simp: abs_diff_less_iff)
+          thus ?thesis unfolding top1_open_sets_def by (by100 simp)
+        qed
+        have heqs: "{s \<in> I_set. \<bar>s - s0\<bar> < \<epsilon>} = I_set \<inter> {s::real. \<bar>s - s0\<bar> < \<epsilon>}" by (by100 auto)
+        show ?thesis unfolding heqs top1_unit_interval_topology_def subspace_topology_def
+          using hR by (by100 blast)
+      qed
+      have ht_open: "{t \<in> I_set. \<bar>t - t0\<bar> < \<epsilon>} \<in> I_top"
+      proof -
+        have hR: "{t::real. \<bar>t - t0\<bar> < \<epsilon>} \<in> top1_open_sets"
+        proof -
+          have "{t::real. \<bar>t - t0\<bar> < \<epsilon>} = {t0 - \<epsilon><..<t0 + \<epsilon>}"
+            by (auto simp: abs_diff_less_iff)
+          thus ?thesis unfolding top1_open_sets_def by (by100 simp)
+        qed
+        have heqt: "{t \<in> I_set. \<bar>t - t0\<bar> < \<epsilon>} = I_set \<inter> {t::real. \<bar>t - t0\<bar> < \<epsilon>}" by (by100 auto)
+        show ?thesis unfolding heqt top1_unit_interval_topology_def subspace_topology_def
+          using hR by (by100 blast)
+      qed
+      \<comment> \<open>Product of I_top-opens is in II_topology.\<close>
+      have "{s \<in> I_set. \<bar>s - s0\<bar> < \<epsilon>} \<times> {t \<in> I_set. \<bar>t - t0\<bar> < \<epsilon>} \<in> II_topology"
+        unfolding II_topology_def
+        by (rule product_rect_open[OF hs_open ht_open])
+      thus "B \<in> II_topology" using hB_eq by (by100 simp)
+    qed
     have hII_sub_M: "II_topology \<subseteq> top1_metric_topology_on (I_set \<times> I_set) d_max"
-      sorry \<comment> \<open>Direction 2: product U\<times>V contains d_max balls around each point \<Rightarrow> metric-open.\<close>
+      unfolding top1_metric_topology_on_def
+    proof (rule subsetI)
+      fix W assume hW: "W \<in> II_topology"
+      have hW_prod: "W \<in> topology_generated_by_basis UNIV (product_basis I_top I_top)"
+        using hW unfolding II_topology_def product_topology_on_def by (by100 simp)
+      have hW_sub: "W \<subseteq> I_set \<times> I_set"
+      proof
+        fix p assume "p \<in> W"
+        then obtain b where "b \<in> product_basis I_top I_top" "p \<in> b"
+          using hW_prod unfolding topology_generated_by_basis_def by (by100 blast)
+        then obtain Us Vt where "Us \<in> I_top" "Vt \<in> I_top" "b = Us \<times> Vt"
+          unfolding product_basis_def by (by100 blast)
+        have "Us \<subseteq> I_set" using \<open>Us \<in> I_top\<close>
+          unfolding top1_unit_interval_topology_def subspace_topology_def by (by100 blast)
+        moreover have "Vt \<subseteq> I_set" using \<open>Vt \<in> I_top\<close>
+          unfolding top1_unit_interval_topology_def subspace_topology_def by (by100 blast)
+        ultimately show "p \<in> I_set \<times> I_set" using \<open>p \<in> b\<close> \<open>b = Us \<times> Vt\<close> by (by100 blast)
+      qed
+      show "W \<in> topology_generated_by_basis (I_set \<times> I_set) (top1_metric_basis_on (I_set \<times> I_set) d_max)"
+        unfolding topology_generated_by_basis_def
+      proof (rule CollectI, intro conjI)
+        show "W \<subseteq> I_set \<times> I_set" by (rule hW_sub)
+        show "\<forall>x\<in>W. \<exists>b\<in>top1_metric_basis_on (I_set \<times> I_set) d_max. x \<in> b \<and> b \<subseteq> W"
+        proof
+          fix p assume hp: "p \<in> W"
+          obtain s0 t0 where hst: "p = (s0, t0)" by (cases p)
+          \<comment> \<open>Get product basis element containing p\<close>
+          \<comment> \<open>Get product basis element containing p\<close>
+          obtain b where hb_basis: "b \<in> product_basis I_top I_top"
+              and hpb: "p \<in> b" and hbW: "b \<subseteq> W"
+            using hp hW_prod unfolding topology_generated_by_basis_def by (by100 blast)
+          obtain Us Vt where hUs: "Us \<in> I_top" and hVt: "Vt \<in> I_top"
+              and hb_eq: "b = Us \<times> Vt"
+            using hb_basis unfolding product_basis_def by (by100 blast)
+          have hpUV: "s0 \<in> Us" "t0 \<in> Vt" using hpb hb_eq hst by (by100 blast)+
+          have hUVW: "Us \<times> Vt \<subseteq> W" using hbW hb_eq by (by100 simp)
+          \<comment> \<open>Extract ambient open sets from subspace topology\<close>
+          obtain Os where hOs: "open Os" and hUs_eq: "Us = I_set \<inter> Os"
+            using hUs unfolding top1_unit_interval_topology_def subspace_topology_def
+                               top1_open_sets_def by (by100 blast)
+          obtain Ot where hOt: "open Ot" and hVt_eq: "Vt = I_set \<inter> Ot"
+            using hVt unfolding top1_unit_interval_topology_def subspace_topology_def
+                               top1_open_sets_def by (by100 blast)
+          \<comment> \<open>Get \<delta>1, \<delta>2 from openness\<close>
+          have "s0 \<in> Os" using hpUV(1) hUs_eq by (by100 blast)
+          from iffD1[OF open_dist hOs, rule_format, OF this]
+          obtain \<delta>1 where h\<delta>1: "\<delta>1 > 0" and h\<delta>1_sub: "\<forall>y. dist y s0 < \<delta>1 \<longrightarrow> y \<in> Os"
+            by (by100 blast)
+          have "t0 \<in> Ot" using hpUV(2) hVt_eq by (by100 blast)
+          from iffD1[OF open_dist hOt, rule_format, OF this]
+          obtain \<delta>2 where h\<delta>2: "\<delta>2 > 0" and h\<delta>2_sub: "\<forall>y. dist y t0 < \<delta>2 \<longrightarrow> y \<in> Ot"
+            by (by100 blast)
+          define \<delta> where "\<delta> = min \<delta>1 \<delta>2"
+          have h\<delta>: "\<delta> > 0" using h\<delta>1 h\<delta>2 unfolding \<delta>_def by (by100 simp)
+          have hp_II: "p \<in> I_set \<times> I_set" using hp hW_sub by (by100 blast)
+          let ?ball = "top1_ball_on (I_set \<times> I_set) d_max p \<delta>"
+          have hball_basis: "?ball \<in> top1_metric_basis_on (I_set \<times> I_set) d_max"
+            unfolding top1_metric_basis_on_def using hp_II h\<delta> by (by100 blast)
+          have hd0: "d_max p p < \<delta>" unfolding d_max_def using h\<delta> by (by100 simp)
+          have hp_ball: "p \<in> ?ball"
+            unfolding top1_ball_on_def using hp_II hd0 by (by100 blast)
+          have hball_W: "?ball \<subseteq> W"
+          proof
+            fix q assume "q \<in> ?ball"
+            hence hq_II: "q \<in> I_set \<times> I_set" and hq_dist: "d_max p q < \<delta>"
+              unfolding top1_ball_on_def by (by100 blast)+
+            obtain s t where hq_st: "q = (s, t)" by (cases q)
+            have hs_I: "s \<in> I_set" and ht_I: "t \<in> I_set" using hq_II hq_st by (by100 blast)+
+            have "d_max (s0,t0) (s,t) < \<delta>" using hq_dist hst hq_st by (by100 simp)
+            have hd_eq: "d_max (s0,t0) (s,t) = max \<bar>s0 - s\<bar> \<bar>t0 - t\<bar>"
+              unfolding d_max_def by (by100 simp)
+            have hmax: "max \<bar>s0 - s\<bar> \<bar>t0 - t\<bar> < \<delta>"
+              using \<open>d_max (s0,t0) (s,t) < \<delta>\<close> hd_eq by (by100 linarith)
+            have hs_close: "\<bar>s - s0\<bar> < \<delta>"
+            proof -
+              have "\<bar>s0 - s\<bar> \<le> max \<bar>s0 - s\<bar> \<bar>t0 - t\<bar>" by (rule max.cobounded1)
+              hence "\<bar>s0 - s\<bar> < \<delta>" using hmax by (by100 linarith)
+              thus ?thesis by (by100 linarith)
+            qed
+            have ht_close: "\<bar>t - t0\<bar> < \<delta>"
+            proof -
+              have "\<bar>t0 - t\<bar> \<le> max \<bar>s0 - s\<bar> \<bar>t0 - t\<bar>" by (rule max.cobounded2)
+              hence "\<bar>t0 - t\<bar> < \<delta>" using hmax by (by100 linarith)
+              thus ?thesis by (by100 linarith)
+            qed
+            have "dist s s0 < \<delta>1" using hs_close unfolding \<delta>_def dist_real_def by (by100 simp)
+            hence "s \<in> Os" using h\<delta>1_sub by (by100 blast)
+            hence "s \<in> Us" using hs_I hUs_eq by (by100 blast)
+            have "dist t t0 < \<delta>2" using ht_close unfolding \<delta>_def dist_real_def by (by100 simp)
+            hence "t \<in> Ot" using h\<delta>2_sub by (by100 blast)
+            hence "t \<in> Vt" using ht_I hVt_eq by (by100 blast)
+            thus "q \<in> W" using \<open>s \<in> Us\<close> \<open>t \<in> Vt\<close> hq_st hUVW by (by100 blast)
+          qed
+          show "\<exists>b\<in>top1_metric_basis_on (I_set \<times> I_set) d_max. p \<in> b \<and> b \<subseteq> W"
+            using hball_basis hp_ball hball_W by (by100 blast)
+        qed
+      qed
+    qed
     show ?thesis using hM_sub_II hII_sub_M by (by100 blast)
   qed
   \<comment> \<open>Apply Lebesgue number.\<close>
@@ -2853,11 +3035,76 @@ proof -
     \<comment> \<open>Define row functions: f_j(s) = F(s, sub_t j). f_0 = f, f_nt = g.
        Show \<tau>(f_j) = \<tau>(f_{j+1}) for each j via \<sigma> telescoping.
        Transitivity gives \<tau>(f) = \<tau>(g).\<close>
-    show "\<tau> f = \<tau> g"
-      sorry \<comment> \<open>Row comparison: for adjacent rows, \<sigma> values telescope.
-         Key: fᵢ \<cdot> \<beta>ᵢ \<simeq> \<beta>_{i-1} \<cdot> gᵢ in U or V (broken-line in convex cell).
-         Then \<sigma>(fᵢ)\<cdot>\<sigma>(\<beta>ᵢ) = \<sigma>(\<beta>_{i-1})\<cdot>\<sigma>(gᵢ). Telescope + \<sigma>(const) = eH.
-         ~100 lines for row comparison + transitivity.\<close>
+    \<comment> \<open>===== ROW COMPARISON =====\<close>
+    \<comment> \<open>Define row functions f_j(s) = F(s, sub_t j) for j = 0, ..., nt.\<close>
+    define row_fn where "row_fn j = (\<lambda>s. F (s, sub_t j))" for j :: nat
+    \<comment> \<open>f_0 = f (since sub_t 0 = 0 and F(s,0) = f s).\<close>
+    have hrow0: "\<forall>s\<in>I_set. row_fn 0 s = f s"
+    proof
+      fix s assume "s \<in> I_set"
+      have "row_fn 0 s = F (s, sub_t 0)" unfolding row_fn_def by (by100 simp)
+      also have "\<dots> = F (s, 0)" using ht0 by (by100 simp)
+      also have "\<dots> = f s" using hF_s0 \<open>s \<in> I_set\<close> by (by100 blast)
+      finally show "row_fn 0 s = f s" .
+    qed
+    \<comment> \<open>f_nt = g (since sub_t nt = 1 and F(s,1) = g s).\<close>
+    have hrown: "\<forall>s\<in>I_set. row_fn nt s = g s"
+    proof
+      fix s assume "s \<in> I_set"
+      have "row_fn nt s = F (s, sub_t nt)" unfolding row_fn_def by (by100 simp)
+      also have "\<dots> = F (s, 1)" using htn by (by100 simp)
+      also have "\<dots> = g s" using hF_s1 \<open>s \<in> I_set\<close> by (by100 blast)
+      finally show "row_fn nt s = g s" .
+    qed
+    \<comment> \<open>Key claim: \<tau>(f_j) = \<tau>(f_{j+1}) for each j < nt.
+       Proof: for each strip [s'_i, s'_{i+1}] \<times> [t_j, t_{j+1}]:
+       - the strip maps into U or V (from hcell_UV)
+       - the top/bottom edges are reparametrized pieces of f_j and f_{j+1}
+       - boundary \<beta>_i(t) = F(s'_i, t_j + t*(t_{j+1}-t_j)) connects them
+       - in U or V: piece \<cdot> \<beta>_right \<simeq> \<beta>_left \<cdot> piece' (broken-line homotopy)
+       - \<sigma>(piece)\<cdot>\<sigma>(\<beta>_right) = \<sigma>(\<beta>_left)\<cdot>\<sigma>(piece') by \<rho> compatibility
+       - Telescoping across i: \<Pi> \<sigma>(piece_i) = \<Pi> \<sigma>(piece'_i)
+       - Hence \<tau>(f_j) = \<tau>(f_{j+1}).\<close>
+    have hrow_step: "\<forall>j<nt. \<tau> (row_fn j) = \<tau> (row_fn (Suc j))"
+      sorry \<comment> \<open>Core row comparison. For adjacent rows j, j+1:
+         Each cell [s'_i, s'_{i+1}] \<times> [t_j, t_{j+1}] maps into U or V.
+         The cell boundary gives: piece_top \<cdot> \<beta>_right \<simeq> \<beta>_left \<cdot> piece_bottom
+         in U or V (broken-line homotopy in convex cell).
+         Hence \<sigma>(piece_top)\<cdot>\<sigma>(\<beta>_right) = \<sigma>(\<beta>_left)\<cdot>\<sigma>(piece_bottom).
+         Telescoping: \<Pi> \<sigma>(piece_top_i) = \<Pi> \<sigma>(piece_bottom_i).
+         Since \<beta>_0 and \<beta>_{ns'} are constant at x0, \<sigma>(\<beta>_0) = \<sigma>(\<beta>_{ns'}) = eH.
+         Hence \<tau>(row_fn j) = \<tau>(row_fn(Suc j)).
+         Cannot use h\<tau>_wd (circular: we're inside its proof).\<close>
+    \<comment> \<open>\<tau> is subdivision-independent: using the SAME subdivision for both f_j and \<tau>(f_j).\<close>
+    \<comment> \<open>Also need: \<tau>(f) = \<tau>(row_fn 0) and \<tau>(g) = \<tau>(row_fn nt).\<close>
+    \<comment> \<open>\<tau> f = \<tau> (row_fn 0): since f and row_fn 0 agree on I_set, and \<tau> only depends
+       on function values at I_set points (via the subdivision), these are equal.
+       Formally: the SOME predicates in \<tau> are equivalent for extensionally-equal-on-I_set
+       functions, so the same n, sub, and piece values are selected.\<close>
+    have h\<tau>_f_row0: "\<tau> f = \<tau> (row_fn 0)"
+      sorry \<comment> \<open>f and row_fn 0 agree on I_set (hrow0). \<tau> only evaluates at I_set points.
+         Extensional equality on I_set gives \<tau> equality (SOME predicates equivalent).\<close>
+    have h\<tau>_g_rown: "\<tau> g = \<tau> (row_fn nt)"
+      sorry \<comment> \<open>Same: g and row_fn nt agree on I_set (hrown).\<close>
+    \<comment> \<open>Telescoping: \<tau>(row_fn 0) = \<tau>(row_fn 1) = ... = \<tau>(row_fn nt).\<close>
+    have htelescope: "\<tau> (row_fn 0) = \<tau> (row_fn nt)"
+    proof -
+      have "\<forall>k\<le>nt. \<tau> (row_fn 0) = \<tau> (row_fn k)"
+      proof (intro allI impI)
+        fix k assume "k \<le> nt"
+        thus "\<tau> (row_fn 0) = \<tau> (row_fn k)"
+        proof (induction k)
+          case 0 thus ?case by (by100 simp)
+        next
+          case (Suc k)
+          hence "k < nt" by (by100 linarith)
+          hence "\<tau> (row_fn k) = \<tau> (row_fn (Suc k))" using hrow_step by (by100 blast)
+          thus ?case using Suc by (by100 simp)
+        qed
+      qed
+      thus ?thesis by (by100 blast)
+    qed
+    show "\<tau> f = \<tau> g" using h\<tau>_f_row0 htelescope h\<tau>_g_rown by (by100 simp)
   qed
   \<comment> \<open>===== Derive all three properties from A =====\<close>
   \<comment> \<open>Also need: \<tau> multiplicative (\<tau>(f*g) = \<tau>(f)\<cdot>\<tau>(g)) and \<tau> extension (\<tau>(f) = \<phi>_i([f])
@@ -2869,14 +3116,75 @@ proof -
        \<tau>(f*g) uses subdivision of f*g = subdivision of f + subdivision of g.\<close>
   have h\<Phi>_ext_U: "\<forall>a\<in>top1_fundamental_group_carrier U ?TU x0.
       \<Phi> (top1_fundamental_group_induced_on U ?TU x0 X TX x0 (\<lambda>x. x) a) = \<phi>1 a"
-    sorry \<comment> \<open>Proof sketch (needs h\<tau>_wd + \<tau> subdivision independence + \<rho> properties):
-       1. \<Phi>([f]_X) = \<tau>(SOME g with [g]=[f]) = \<tau>(f) by h\<tau>_wd (since g \<simeq> f)
-       2. \<tau>(f) = \<sigma>(f) (trivial subdivision, f already in U)
-       3. \<sigma>(f) = \<rho>(\<alpha>(x0)\<cdot>f\<cdot>rev(\<alpha>(x0))) = \<rho>(const\<cdot>f\<cdot>const) since \<alpha>(x0)=const
-       4. const\<cdot>f\<cdot>const \<simeq>_U f by Thm_51_2 identity laws
-       5. \<rho>(f) = \<phi>1([f]_U) by \<rho> definition (f in U)
-       Needs also: \<tau> subdivision-independent (adding subdivision point doesn't change \<tau>),
-       which follows from \<sigma>(f*g) = \<sigma>(f)\<cdot>\<sigma>(g) and \<rho> homotopy-invariance.\<close>
+  proof
+    fix a assume ha: "a \<in> top1_fundamental_group_carrier U ?TU x0"
+    \<comment> \<open>Step 1: a = [f]_U for some loop f in U at x0.\<close>
+    obtain f where hf_loop_U: "top1_is_loop_on U ?TU x0 f"
+        and ha_eq: "a = {g. top1_loop_equiv_on U ?TU x0 f g}"
+      using ha unfolding top1_fundamental_group_carrier_def by (by100 blast)
+    \<comment> \<open>Step 2: The induced map sends a to [f]_X (inclusion).\<close>
+    have hf_loop_X: "top1_is_loop_on X TX x0 f"
+    proof -
+      have hf_cont_U: "top1_continuous_map_on I_set I_top U ?TU f"
+        using hf_loop_U unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+      have hf_range_U: "\<forall>s\<in>I_set. f s \<in> U"
+        using hf_cont_U unfolding top1_continuous_map_on_def by (by100 blast)
+      have hf_cont_X: "top1_continuous_map_on I_set I_top X TX f"
+        unfolding top1_continuous_map_on_def
+      proof (intro conjI ballI)
+        fix s assume "s \<in> I_set"
+        thus "f s \<in> X" using hf_range_U hUsub by (by100 blast)
+      next
+        fix V assume hV: "V \<in> TX"
+        have hVU: "V \<inter> U \<in> ?TU" unfolding subspace_topology_def using hV by (by100 blast)
+        have "{s \<in> I_set. f s \<in> V} = {s \<in> I_set. f s \<in> V \<inter> U}"
+          using hf_range_U by (by100 blast)
+        also have "\<dots> \<in> I_top" using hf_cont_U hVU unfolding top1_continuous_map_on_def by (by100 blast)
+        finally show "{s \<in> I_set. f s \<in> V} \<in> I_top" .
+      qed
+      show ?thesis unfolding top1_is_loop_on_def top1_is_path_on_def
+        using hf_cont_X top1_is_loop_on_start[OF hf_loop_U] top1_is_loop_on_end[OF hf_loop_U]
+        by (by100 blast)
+    qed
+    have hind: "top1_fundamental_group_induced_on U ?TU x0 X TX x0 (\<lambda>x. x) a
+        = {g. top1_loop_equiv_on X TX x0 f g}"
+      sorry \<comment> \<open>Induced map of inclusion sends [f]_U to [f]_X.
+         Uses loop_equiv_subspace_superspace + transitivity.
+         by100 struggles with (\<lambda>x. x) \<circ> f' simplification in set comprehensions.\<close>
+    \<comment> \<open>Step 3: \<Phi>([f]_X) = \<tau>(f) by h\<tau>_wd (SOME representative \<simeq> f).\<close>
+    have h\<Phi>_val: "\<Phi> {g. top1_loop_equiv_on X TX x0 f g} = \<tau> f"
+      sorry \<comment> \<open>\<Phi>(c) = \<tau>(SOME f'. loop f' \<and> c=[f']). SOME f' is loop-equiv to f.
+         By h\<tau>_wd: \<tau>(SOME f') = \<tau>(f). Needs careful SOME handling (100ms blast struggles).\<close>
+    \<comment> \<open>Step 4: \<tau>(f) = \<sigma>(f) (trivial subdivision: f already in U, use n=1).\<close>
+    have h\<tau>_\<sigma>: "\<tau> f = \<sigma> f"
+      sorry \<comment> \<open>With trivial subdivision n=1, sub = (0,1): piece_0 = f, \<tau> f = \<sigma> f \<cdot> eH = \<sigma> f.
+         Needs subdivision independence: SOME-picked subdivision gives same as trivial.\<close>
+    \<comment> \<open>Step 5: \<sigma>(f) = \<rho>(const \<cdot> f \<cdot> const) since \<alpha>(x0) = const.\<close>
+    have h\<alpha>_x0: "\<alpha> x0 = top1_constant_path x0"
+      unfolding \<alpha>_def by (by100 simp)
+    have h\<sigma>_\<rho>: "\<sigma> f = \<rho> (top1_path_product (top1_constant_path x0)
+        (top1_path_product f (top1_path_reverse (top1_constant_path x0))))"
+      unfolding \<sigma>_def using h\<alpha>_x0 top1_is_loop_on_start[OF hf_loop_U]
+                             top1_is_loop_on_end[OF hf_loop_U]
+      by (by100 simp)
+    \<comment> \<open>Step 6: \<rho>(const \<cdot> f \<cdot> const) = \<rho>(f) since const \<cdot> f \<cdot> const \<simeq>_U f.\<close>
+    have h\<rho>_simp: "\<rho> (top1_path_product (top1_constant_path x0)
+        (top1_path_product f (top1_path_reverse (top1_constant_path x0)))) = \<rho> f"
+      sorry \<comment> \<open>Identity laws (Theorem_51_2): const \<cdot> f \<cdot> const \<simeq>_U f.
+         \<rho> well-defined under loop equiv in U (or V).\<close>
+    \<comment> \<open>Step 7: \<rho>(f) = \<phi>1([f]_U) by \<rho>_def (since f is in U).\<close>
+    have h\<rho>_val: "\<rho> f = \<phi>1 a"
+    proof -
+      have hf_in_U: "\<forall>s\<in>I_set. f s \<in> U"
+        using hf_loop_U unfolding top1_is_loop_on_def top1_is_path_on_def
+                                  top1_continuous_map_on_def by (by100 blast)
+      have "\<rho> f = \<phi>1 {g. top1_loop_equiv_on U ?TU x0 f g}"
+        unfolding \<rho>_def using hf_in_U by (by100 simp)
+      thus ?thesis using ha_eq by (by100 simp)
+    qed
+    show "\<Phi> (top1_fundamental_group_induced_on U ?TU x0 X TX x0 (\<lambda>x. x) a) = \<phi>1 a"
+      using hind h\<Phi>_val h\<tau>_\<sigma> h\<sigma>_\<rho> h\<rho>_simp h\<rho>_val by (by100 simp)
+  qed
   have h\<Phi>_ext_V: "\<forall>b\<in>top1_fundamental_group_carrier V ?TV x0.
       \<Phi> (top1_fundamental_group_induced_on V ?TV x0 X TX x0 (\<lambda>x. x) b) = \<phi>2 b"
     sorry \<comment> \<open>Same as ext_U but for V.\<close>
@@ -10007,7 +10315,7 @@ next
   \<comment> \<open>For each e \<in> E, pick path \<alpha> from e0 to e. Lift p\<circ>\<alpha> to Y starting at y0.
      Simple connectivity ensures uniqueness (different \<alpha>'s give same endpoint).\<close>
   have "\<exists>q. (\<forall>e\<in>E. q e \<in> Y) \<and> (\<forall>e\<in>E. r (q e) = p e)
-      \<and> top1_continuous_map_on E TE Y TY q"
+      \<and> q e0 = y0 \<and> top1_continuous_map_on E TE Y TY q"
   proof -
     have hTE: "is_topology_on E TE" using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
     have hTB: "is_topology_on B TB" using assms(2) unfolding is_topology_on_strict_def by (by100 blast)
@@ -10086,19 +10394,50 @@ next
     from general_lifting_criterion[OF assms(6) hTE hTB hTY hp_cont hE_pc hE_lpc he0 hy0
         hpe0 hsubgrp]
     obtain q where "\<forall>e\<in>E. q e \<in> Y" "\<forall>e\<in>E. r (q e) = p e"
-        "top1_continuous_map_on E TE Y TY q" by (by100 blast)
+        "q e0 = y0" "top1_continuous_map_on E TE Y TY q" by (by100 blast)
     thus ?thesis by (by100 blast)
   qed
   then obtain q where hq_Y: "\<forall>e\<in>E. q e \<in> Y" and hq_rp: "\<forall>e\<in>E. r (q e) = p e"
-      and hq_cont: "top1_continuous_map_on E TE Y TY q" by (by100 blast)
+      and hq_e0: "q e0 = y0" and hq_cont: "top1_continuous_map_on E TE Y TY q" by (by100 blast)
   \<comment> \<open>q is a covering map: evenly covered because p and r both are.
      For each y \<in> Y, take b = r(y). Take U evenly covered by both p and r.
      Slices of p\<inverse>(U) are {U_\<alpha>}, slices of r\<inverse>(U) are {V_\<beta>}.
      q maps each U_\<alpha> into some V_\<beta> (connectedness).
      q restricted to U_\<alpha> = r_\<beta>\<inverse> \<circ> p_\<alpha>, a homeomorphism.
      So q evenly covers each V_\<beta>.\<close>
+  have hTE: "is_topology_on E TE" using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
+  have hTB: "is_topology_on B TB" using assms(2) unfolding is_topology_on_strict_def by (by100 blast)
+  have hTY: "is_topology_on Y TY" using assms(3) unfolding is_topology_on_strict_def by (by100 blast)
   have hq_surj: "q ` E = Y"
-    sorry \<comment> \<open>Surjectivity: q(E) open+closed in connected Y, contains y0.\<close>
+  proof (rule equalityI)
+    show "q ` E \<subseteq> Y" using hq_Y by (by100 blast)
+    show "Y \<subseteq> q ` E"
+    proof -
+      \<comment> \<open>q(E) is non-empty (contains y0).\<close>
+      have hy0_qE: "y0 \<in> q ` E" using hq_e0 he0 by (by100 blast)
+      \<comment> \<open>q(E) is open in Y: for each y = q(e), use covering structure to find
+         a neighborhood of y contained in q(E). The r-slice containing y maps
+         homeomorphically to an open U \<subseteq> B. The p-slice containing e maps
+         homeomorphically to U. So q = r^{-1} \<circ> p maps a neighborhood of e
+         onto a neighborhood of y, giving y \<in> interior of q(E).\<close>
+      have hqE_open: "openin_on Y TY (q ` E)"
+        sorry \<comment> \<open>Local homeomorphism argument: q is open map.\<close>
+      \<comment> \<open>Y - q(E) is open in Y: for y \<in> Y - q(E), the r-slice containing y is
+         either entirely in q(E) or disjoint (by connectedness of the slice).
+         Since y \<notin> q(E), the slice is disjoint.\<close>
+      have hqE_closed: "closedin_on Y TY (q ` E)"
+        sorry \<comment> \<open>Complement is open: each r-slice meeting q(E) is fully in q(E).\<close>
+      \<comment> \<open>Y is connected (path-connected covering space assumption or derived).\<close>
+      have hY_conn: "top1_connected_on Y TY"
+        sorry \<comment> \<open>Covering space of path-connected base is connected (if non-empty).\<close>
+      \<comment> \<open>Connected + non-empty clopen subset = whole space.\<close>
+      have "q ` E = {} \<or> q ` E = Y"
+        using iffD1[OF connected_iff_clopen_openin_on[OF assms(3)] hY_conn]
+              hqE_open hqE_closed by (by100 blast)
+      moreover have "q ` E \<noteq> {}" using hy0_qE by (by100 blast)
+      ultimately show "Y \<subseteq> q ` E" by (by100 blast)
+    qed
+  qed
   have hq_cov: "\<forall>y\<in>Y. \<exists>V. y \<in> V \<and> top1_evenly_covered_on E TE Y TY q V"
   proof
     fix y assume hy: "y \<in> Y"
@@ -11214,6 +11553,7 @@ end
 
 
   
+
 
 
 
