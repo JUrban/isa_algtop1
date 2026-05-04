@@ -5465,7 +5465,69 @@ proof -
           also have "\<dots> = 1" using hs2_n' by (by100 simp)
           finally show ?thesis .
         qed
-        have hm_inc: "\<forall>i<n1+n2. sub_m i < sub_m (Suc i)" sorry
+        have hs1_inc': "\<forall>i<n1. sub1 i < sub1 (Suc i)" using hs1_inc unfolding sub1_def by (by100 simp)
+        have hs2_inc': "\<forall>i<n2. sub2 i < sub2 (Suc i)" using hs2_inc unfolding sub2_def by (by100 simp)
+        have hm_inc: "\<forall>i<n1+n2. sub_m i < sub_m (Suc i)"
+        proof (intro allI impI)
+          fix i assume hi: "i < n1 + n2"
+          show "sub_m i < sub_m (Suc i)"
+          proof (cases "Suc i \<le> n1")
+            case True
+            hence "i < n1" by (by100 presburger)
+            have "sub_m i = sub1 i / 2" unfolding sub_m_def using \<open>i < n1\<close> by (by100 simp)
+            moreover have "sub_m (Suc i) = sub1 (Suc i) / 2" unfolding sub_m_def using True by (by100 simp)
+            moreover have "sub1 i < sub1 (Suc i)" using hs1_inc' \<open>i < n1\<close> by (by100 blast)
+            ultimately show ?thesis by (by100 linarith)
+          next
+            case False
+            show ?thesis
+            proof (cases "i < n1")
+              case True
+              hence "i = n1 - 1" using False by (by100 presburger)
+              have "Suc i = n1" using \<open>i = n1 - 1\<close> hn1' by (by100 presburger)
+              have "sub_m i = sub1 i / 2" unfolding sub_m_def using True by (by100 simp)
+              have "sub_m (Suc i) = sub1 n1 / 2" unfolding sub_m_def using \<open>Suc i = n1\<close> by (by100 simp)
+              have "sub1 i < sub1 (Suc i)" using hs1_inc' True by (by100 blast)
+              hence "sub1 i < sub1 n1" using \<open>Suc i = n1\<close> by (by100 simp)
+              thus ?thesis using \<open>sub_m i = sub1 i / 2\<close> \<open>sub_m (Suc i) = sub1 n1 / 2\<close> by (by100 linarith)
+            next
+              case inner_False: False
+              hence "i \<ge> n1" by (by100 presburger)
+              show ?thesis
+              proof (cases "i = n1")
+                case True
+                \<comment> \<open>Boundary: sub_m(n1) = 1/2, sub_m(Suc n1) = 1/2 + sub2(1)/2 > 1/2.\<close>
+                have "sub_m n1 = sub1 n1 / 2" unfolding sub_m_def by (by100 simp)
+                hence "sub_m n1 = 1/2" using hs1_n' by (by100 simp)
+                have "\<not> (Suc n1 \<le> n1)" by (by100 presburger)
+                hence "sub_m (Suc n1) = 1/2 + sub2 (Suc n1 - n1) / 2" unfolding sub_m_def by (by100 simp)
+                hence "sub_m (Suc n1) = 1/2 + sub2 1 / 2" by (by100 simp)
+                have "sub2 0 < sub2 1" using hs2_inc' hn2' by (by100 force)
+                hence "0 < sub2 1" using hs2_0' by (by100 linarith)
+                have "sub_m n1 < sub_m (Suc n1)"
+                  using \<open>sub_m n1 = 1/2\<close> \<open>sub_m (Suc n1) = 1/2 + sub2 1 / 2\<close>
+                      \<open>0 < sub2 1\<close> by (by100 linarith)
+                thus ?thesis using True by (by100 simp)
+              next
+                case False
+                hence "i > n1" using \<open>i \<ge> n1\<close> by (by100 presburger)
+                hence hnotI: "\<not> (i \<le> n1)" by (by100 presburger)
+                have "sub_m i = 1/2 + sub2 (i - n1) / 2" unfolding sub_m_def using hnotI by (by100 simp)
+                have hnotSI: "\<not> (Suc i \<le> n1)" using \<open>i > n1\<close> by (by100 presburger)
+                have "sub_m (Suc i) = 1/2 + sub2 (Suc i - n1) / 2" unfolding sub_m_def using hnotSI by (by100 simp)
+                have "i - n1 < n2" using hi \<open>i \<ge> n1\<close> by (by100 presburger)
+                have "Suc i - n1 = Suc (i - n1)" using \<open>i \<ge> n1\<close> by (by100 presburger)
+                have "sub2 (i - n1) < sub2 (Suc (i - n1))" using hs2_inc' \<open>i - n1 < n2\<close> by (by100 blast)
+                hence "sub2 (i - n1) / 2 < sub2 (Suc (i - n1)) / 2" by (by100 linarith)
+                hence h_ineq: "1/2 + sub2 (i - n1) / 2 < 1/2 + sub2 (Suc (i - n1)) / 2" by (by100 linarith)
+                have "sub_m (Suc i) = 1/2 + sub2 (Suc (i - n1)) / 2"
+                  using \<open>sub_m (Suc i) = 1/2 + sub2 (Suc i - n1) / 2\<close> \<open>Suc i - n1 = Suc (i - n1)\<close>
+                  by (by100 presburger)
+                thus ?thesis using \<open>sub_m i = 1/2 + sub2 (i - n1) / 2\<close> h_ineq by (by100 linarith)
+              qed
+            qed
+          qed
+        qed
         \<comment> \<open>Each piece of f1*f2 via sub_m maps to U or V.\<close>
         have hm_UV: "\<forall>i<n1+n2. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow>
             top1_path_product f1 f2 (sub_m i + t * (sub_m (Suc i) - sub_m i)) \<in> U)
