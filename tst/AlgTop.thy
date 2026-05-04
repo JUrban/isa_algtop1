@@ -3140,10 +3140,10 @@ proof -
          All pieces agree on [0,1], hence \<sigma> values agree, hence foldr agrees.\<close>
       \<comment> \<open>Key: every evaluation of f in \<tau>_def is at a point in I_set.
          If f1 = f2 on I_set, all evaluations agree, making predicates identical.\<close>
-      have harg_I: "\<And>sub i t. sub 0 = (0::real) \<Longrightarrow> sub (i+1) \<le> 1
+      have harg_I: "\<And>sub i t. (0::real) \<le> sub i \<Longrightarrow> sub (i+1) \<le> 1
           \<Longrightarrow> sub i \<le> sub (i+1) \<Longrightarrow> 0 \<le> t \<Longrightarrow> t \<le> 1
           \<Longrightarrow> sub i + t * (sub (i+1) - sub i) \<in> I_set"
-        sorry \<comment> \<open>Convex combination of [0,1] values in [0,1]. Needs nlinarith.\<close>
+        sorry \<comment> \<open>Convex combination [sub i, sub(i+1)] \<subseteq> [0,1]. Needs nlinarith for mult.\<close>
       have "\<And>sub n i t. sub 0 = (0::real) \<Longrightarrow> sub n = 1 \<Longrightarrow> (\<forall>j<n. sub j < sub (Suc j))
           \<Longrightarrow> i < n \<Longrightarrow> 0 \<le> t \<Longrightarrow> t \<le> 1
           \<Longrightarrow> f1 (sub i + t * (sub (Suc i) - sub i)) = f2 (sub i + t * (sub (Suc i) - sub i))"
