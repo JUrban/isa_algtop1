@@ -4864,7 +4864,30 @@ proof -
           \<comment> \<open>Transfer: path_product agrees with f\<circ>\<phi>_concat, piece 0 sub' agrees with f\<circ>\<psi>_linear.\<close>
           have hhom2: "top1_path_homotopic_on U (subspace_topology X TX U)
               (f (sub 0)) (f (sub (Suc (Suc 0)))) (top1_path_product (piece 0 sub) (piece 1 sub)) (piece 0 sub')"
-            sorry \<comment> \<open>From hhom + hprod_eq + hmerged_eq: extensional equality on I_set.\<close>
+          proof -
+            \<comment> \<open>hhom gives the homotopy for f\<circ>\<phi> and f\<circ>\<psi>. These agree with path_product and piece 0 sub'
+               on I_set (hprod_eq, hmerged_eq). The homotopy F satisfies F(s,0) = (f\<circ>\<phi>)(s) = path_product(s)
+               and F(s,1) = (f\<circ>\<psi>)(s) = piece 0 sub'(s) for s \<in> I_set. So same F works.\<close>
+            from hhom obtain F where
+                hFc: "top1_continuous_map_on (I_set \<times> I_set) II_topology U (subspace_topology X TX U) F"
+                and hF0: "\<forall>s\<in>I_set. F (s, 0) = (f \<circ> \<phi>_concat) s"
+                and hF1: "\<forall>s\<in>I_set. F (s, 1) = (f \<circ> \<psi>_linear) s"
+                and hFleft: "\<forall>t\<in>I_set. F (0, t) = f (sub 0)"
+                and hFright: "\<forall>t\<in>I_set. F (1, t) = f (sub (Suc (Suc 0)))"
+              unfolding top1_path_homotopic_on_def top1_is_path_on_def by (by100 fast)
+            have hF0': "\<forall>s\<in>I_set. F (s, 0) = top1_path_product (piece 0 sub) (piece 1 sub) s"
+              using hF0 hprod_eq by (by100 force)
+            have hF1': "\<forall>s\<in>I_set. F (s, 1) = piece 0 sub' s"
+              using hF1 hmerged_eq by (by100 force)
+            have hpp: "top1_is_path_on U (subspace_topology X TX U) (f (sub 0)) (f (sub (Suc (Suc 0))))
+                (top1_path_product (piece 0 sub) (piece 1 sub))"
+              sorry \<comment> \<open>Path product of paths in U is a path in U.\<close>
+            have hm: "top1_is_path_on U (subspace_topology X TX U) (f (sub 0)) (f (sub (Suc (Suc 0))))
+                (piece 0 sub')"
+              sorry \<comment> \<open>piece 0 sub' is a path in U (from hpiece_in_U or similar).\<close>
+            show ?thesis unfolding top1_path_homotopic_on_def
+              using hpp hm hFc hF0' hF1' hFleft hFright by (by100 blast)
+          qed
           \<comment> \<open>Now \<sigma>_cond1: path-homotopic paths have the same \<sigma> value.\<close>
           have hreparam: "\<sigma> (top1_path_product (piece 0 sub) (piece 1 sub)) = \<sigma> (piece 0 sub')"
             sorry \<comment> \<open>From hhom2 + h\<sigma>_cond1. Needs endpoint matching for \<sigma>_cond1 application.\<close>
