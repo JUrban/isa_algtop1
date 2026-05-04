@@ -3671,7 +3671,66 @@ proof -
           (top1_path_product (\<alpha> (f' 0)) (top1_path_product f' (top1_path_reverse (\<alpha> (f' 1)))))
           (top1_path_product (\<alpha> (f' 1)) (top1_path_product g' (top1_path_reverse (\<alpha> (g' 1))))))
         (top1_path_product (\<alpha> (f' 0)) (top1_path_product (top1_path_product f' g') (top1_path_reverse (\<alpha> (g' 1)))))"
-      sorry \<comment> \<open>Same 5-step chain as U proof with V/hTopV/h\<alpha>_in_V.\<close>
+    proof -
+      note s1_V = Theorem_51_2_associativity[OF hTopV h\<alpha>x_V hf'ra_V
+          top1_path_product_is_path[OF hTopV h\<alpha>y_V hg'ra_V]]
+      have s2a_V: "top1_path_homotopic_on V (subspace_topology X TX V) (f' 0) x0
+          (top1_path_product (top1_path_product f' (top1_path_reverse (\<alpha> (f' 1)))) (top1_path_product (\<alpha> (f' 1)) (top1_path_product g' (top1_path_reverse (\<alpha> (g' 1))))))
+          (top1_path_product f' (top1_path_product (top1_path_reverse (\<alpha> (f' 1))) (top1_path_product (\<alpha> (f' 1)) (top1_path_product g' (top1_path_reverse (\<alpha> (g' 1)))))))"
+        using Theorem_51_2_associativity[OF hTopV hf'_path hra_y_V
+            top1_path_product_is_path[OF hTopV h\<alpha>y_V hg'ra_V]]
+        by (meson Lemma_51_1_path_homotopic_sym)
+      have s2b_inner_V: "top1_path_homotopic_on V (subspace_topology X TX V) (f' 1) x0
+          (top1_path_product (top1_path_reverse (\<alpha> (f' 1))) (top1_path_product (\<alpha> (f' 1)) (top1_path_product g' (top1_path_reverse (\<alpha> (g' 1))))))
+          (top1_path_product (top1_path_product (top1_path_reverse (\<alpha> (f' 1))) (\<alpha> (f' 1))) (top1_path_product g' (top1_path_reverse (\<alpha> (g' 1)))))"
+        using Theorem_51_2_associativity[OF hTopV hra_y_V h\<alpha>y_V hg'ra_V] .
+      have s2b_V: "top1_path_homotopic_on V (subspace_topology X TX V) (f' 0) x0
+          (top1_path_product f' (top1_path_product (top1_path_reverse (\<alpha> (f' 1))) (top1_path_product (\<alpha> (f' 1)) (top1_path_product g' (top1_path_reverse (\<alpha> (g' 1)))))))
+          (top1_path_product f' (top1_path_product (top1_path_product (top1_path_reverse (\<alpha> (f' 1))) (\<alpha> (f' 1))) (top1_path_product g' (top1_path_reverse (\<alpha> (g' 1))))))"
+        by (rule path_homotopic_product_right[OF hTopV s2b_inner_V hf'_path])
+      have s2c_inv_V: "top1_path_homotopic_on V (subspace_topology X TX V) (f' 1) (f' 1)
+          (top1_path_product (top1_path_reverse (\<alpha> (f' 1))) (\<alpha> (f' 1)))
+          (top1_constant_path (f' 1))"
+        by (rule Theorem_51_2_invgerse_right[OF hTopV h\<alpha>y_V])
+      have s2c_prop_V: "top1_path_homotopic_on V (subspace_topology X TX V) (f' 1) x0
+          (top1_path_product (top1_path_product (top1_path_reverse (\<alpha> (f' 1))) (\<alpha> (f' 1))) (top1_path_product g' (top1_path_reverse (\<alpha> (g' 1)))))
+          (top1_path_product (top1_constant_path (f' 1)) (top1_path_product g' (top1_path_reverse (\<alpha> (g' 1)))))"
+        by (rule path_homotopic_product_left[OF hTopV s2c_inv_V hg'ra_V])
+      have s2d_V: "top1_path_homotopic_on V (subspace_topology X TX V) (f' 1) x0
+          (top1_path_product (top1_constant_path (f' 1)) (top1_path_product g' (top1_path_reverse (\<alpha> (g' 1)))))
+          (top1_path_product g' (top1_path_reverse (\<alpha> (g' 1))))"
+        by (rule Theorem_51_2_left_identity[OF hTopV hg'ra_V])
+      have s2e_V: "top1_path_homotopic_on V (subspace_topology X TX V) (f' 0) x0
+          (top1_path_product f' (top1_path_product g' (top1_path_reverse (\<alpha> (g' 1)))))
+          (top1_path_product (top1_path_product f' g') (top1_path_reverse (\<alpha> (g' 1))))"
+        using Theorem_51_2_associativity[OF hTopV hf'_path hg'_path2 hra_z_V] .
+      have s2cd_inner_V: "top1_path_homotopic_on V (subspace_topology X TX V) (f' 1) x0
+          (top1_path_product (top1_path_product (top1_path_reverse (\<alpha> (f' 1))) (\<alpha> (f' 1))) (top1_path_product g' (top1_path_reverse (\<alpha> (g' 1)))))
+          (top1_path_product g' (top1_path_reverse (\<alpha> (g' 1))))"
+        by (rule Lemma_51_1_path_homotopic_trans[OF hTopV s2c_prop_V s2d_V])
+      have s2cd_V: "top1_path_homotopic_on V (subspace_topology X TX V) (f' 0) x0
+          (top1_path_product f' (top1_path_product (top1_path_product (top1_path_reverse (\<alpha> (f' 1))) (\<alpha> (f' 1))) (top1_path_product g' (top1_path_reverse (\<alpha> (g' 1))))))
+          (top1_path_product f' (top1_path_product g' (top1_path_reverse (\<alpha> (g' 1)))))"
+        by (rule path_homotopic_product_right[OF hTopV s2cd_inner_V hf'_path])
+      have s2ab_V: "top1_path_homotopic_on V (subspace_topology X TX V) (f' 0) x0
+          (top1_path_product (top1_path_product f' (top1_path_reverse (\<alpha> (f' 1)))) (top1_path_product (\<alpha> (f' 1)) (top1_path_product g' (top1_path_reverse (\<alpha> (g' 1))))))
+          (top1_path_product f' (top1_path_product (top1_path_product (top1_path_reverse (\<alpha> (f' 1))) (\<alpha> (f' 1))) (top1_path_product g' (top1_path_reverse (\<alpha> (g' 1))))))"
+        by (rule Lemma_51_1_path_homotopic_trans[OF hTopV s2a_V s2b_V])
+      have s2abcd_V: "top1_path_homotopic_on V (subspace_topology X TX V) (f' 0) x0
+          (top1_path_product (top1_path_product f' (top1_path_reverse (\<alpha> (f' 1)))) (top1_path_product (\<alpha> (f' 1)) (top1_path_product g' (top1_path_reverse (\<alpha> (g' 1))))))
+          (top1_path_product f' (top1_path_product g' (top1_path_reverse (\<alpha> (g' 1)))))"
+        by (rule Lemma_51_1_path_homotopic_trans[OF hTopV s2ab_V s2cd_V])
+      have s2_V: "top1_path_homotopic_on V (subspace_topology X TX V) (f' 0) x0
+          (top1_path_product (top1_path_product f' (top1_path_reverse (\<alpha> (f' 1)))) (top1_path_product (\<alpha> (f' 1)) (top1_path_product g' (top1_path_reverse (\<alpha> (g' 1))))))
+          (top1_path_product (top1_path_product f' g') (top1_path_reverse (\<alpha> (g' 1))))"
+        by (rule Lemma_51_1_path_homotopic_trans[OF hTopV s2abcd_V s2e_V])
+      note s3_V = path_homotopic_product_right[OF hTopV s2_V h\<alpha>x_V]
+      have s1_V': "top1_path_homotopic_on V (subspace_topology X TX V) x0 x0
+          (top1_path_product (top1_path_product (\<alpha> (f' 0)) (top1_path_product f' (top1_path_reverse (\<alpha> (f' 1))))) (top1_path_product (\<alpha> (f' 1)) (top1_path_product g' (top1_path_reverse (\<alpha> (g' 1))))))
+          (top1_path_product (\<alpha> (f' 0)) (top1_path_product (top1_path_product f' (top1_path_reverse (\<alpha> (f' 1)))) (top1_path_product (\<alpha> (f' 1)) (top1_path_product g' (top1_path_reverse (\<alpha> (g' 1)))))))"
+        using s1_V by (meson Lemma_51_1_path_homotopic_sym)
+      show ?thesis by (rule Lemma_51_1_path_homotopic_trans[OF hTopV s1_V' s3_V])
+    qed
     \<comment> \<open>Loop constructions.\<close>
     let ?Lf_V = "top1_path_product (\<alpha> (f' 0)) (top1_path_product f' (top1_path_reverse (\<alpha> (f' 1))))"
     let ?Lg_V = "top1_path_product (\<alpha> (f' 1)) (top1_path_product g' (top1_path_reverse (\<alpha> (g' 1))))"
