@@ -3143,7 +3143,33 @@ proof -
       have harg_I: "\<And>sub i t. (0::real) \<le> sub i \<Longrightarrow> sub (Suc i) \<le> 1
           \<Longrightarrow> sub i \<le> sub (Suc i) \<Longrightarrow> 0 \<le> t \<Longrightarrow> t \<le> 1
           \<Longrightarrow> sub i + t * (sub (Suc i) - sub i) \<in> I_set"
-        sorry \<comment> \<open>Convex combination [sub i, sub(i+1)] \<subseteq> [0,1]. Needs nlinarith for mult.\<close>
+      proof -
+        fix sub :: "nat \<Rightarrow> real" and i :: nat and t :: real
+        assume hge: "(0::real) \<le> sub i" and hle: "sub (Suc i) \<le> 1"
+           and hmon: "sub i \<le> sub (Suc i)" and ht0: "0 \<le> t" and ht1: "t \<le> 1"
+        have hdiff: "0 \<le> sub (Suc i) - sub i" using hmon by (by100 linarith)
+        have hprod: "0 \<le> t * (sub (Suc i) - sub i)"
+          by (rule mult_nonneg_nonneg[OF ht0 hdiff])
+        have hlo: "0 \<le> sub i + t * (sub (Suc i) - sub i)" using hge hprod by (by100 linarith)
+        have hprod2: "0 \<le> (1 - t) * (sub (Suc i) - sub i)"
+          apply (rule mult_nonneg_nonneg)
+          using ht1 apply (by100 linarith)
+          using hdiff by assumption
+        have hsum: "t * (sub (Suc i) - sub i) + (1 - t) * (sub (Suc i) - sub i) = sub (Suc i) - sub i"
+        proof -
+          have "t * (sub (Suc i) - sub i) + (1 - t) * (sub (Suc i) - sub i)
+              = (t + (1 - t)) * (sub (Suc i) - sub i)"
+            by (rule distrib_right[symmetric])
+          also have "\<dots> = 1 * (sub (Suc i) - sub i)" by (by100 simp)
+          also have "\<dots> = sub (Suc i) - sub i" by (by100 simp)
+          finally show ?thesis .
+        qed
+        have hhi: "sub i + t * (sub (Suc i) - sub i) \<le> sub (Suc i)"
+          using hprod2 hsum by (by100 linarith)
+        have hhi2: "sub i + t * (sub (Suc i) - sub i) \<le> 1" using hle hhi by (by100 linarith)
+        let ?v = "sub i + t * (sub (Suc i) - sub i)"
+        show "?v \<in> I_set" unfolding top1_unit_interval_def using hlo hhi2 by (by100 simp)
+      qed
       \<comment> \<open>Helper: monotone sub from 0 to 1 has all values in [0,1].\<close>
       have hsub_bounds: "\<And>sub n (i::nat). sub 0 = (0::real) \<Longrightarrow> sub n = 1
           \<Longrightarrow> (\<forall>j<n. sub j < sub (Suc j)) \<Longrightarrow> i \<le> n \<Longrightarrow> 0 \<le> sub i \<and> sub i \<le> 1"
