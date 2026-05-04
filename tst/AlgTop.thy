@@ -3481,8 +3481,7 @@ proof -
       thus "h \<in> {h. top1_loop_equiv_on V ?TV x0 ?comp h}"
         using top1_loop_equiv_on_trans[OF hTopV h_equiv] by (by100 fast)
     qed
-    hence "\<rho> ?comp = \<rho> f'" unfolding \<rho>_def using hcomp_in_V hf'_in_V
-      sorry \<comment> \<open>\<rho> uses if-in-U branch. Need case split; use h\<rho>_to_\<phi>2 pattern.\<close>
+    have "\<rho> ?comp = \<rho> f'" by (rule h\<rho>_respects_V[OF hcomp_loop hf' h_equiv])
     thus "\<sigma> f' = \<rho> f'" using h\<sigma>_eq by (by100 presburger)
   qed
   \<comment> \<open>===== Key property A: \<tau> well-defined under homotopy =====
