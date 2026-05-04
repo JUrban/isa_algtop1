@@ -4977,9 +4977,20 @@ proof -
             qed
           qed
           \<comment> \<open>RHS unfolds: map splits into [σ(piece 0 sub')] ++ map ... [1..<n-1].\<close>
+          have h0n1: "(0::nat) < n - 1" using hn2 by (by100 presburger)
+          have hn1_unfold2: "[0..<n-1] = 0 # [1..<n-1]"
+            using upt_rec[of 0 "n-1"] h0n1 by (by100 simp)
           have hRHS_split: "foldr mulH (map (\<lambda>i. \<sigma> (piece i sub')) [0..<n-1]) eH =
               mulH (\<sigma> (piece 0 sub')) (foldr mulH (map (\<lambda>i. \<sigma> (piece (Suc i) sub')) [0..<n - Suc 1]) eH)"
-            sorry \<comment> \<open>Unfolding map/foldr for [0..<n-1] = 0 # [1..<n-1].\<close>
+          proof -
+            have "map (\<lambda>i. \<sigma> (piece i sub')) [0..<n-1] =
+                \<sigma> (piece 0 sub') # map (\<lambda>i. \<sigma> (piece i sub')) [1..<n-1]"
+              using hn1_unfold2 by (by100 simp)
+            moreover have "map (\<lambda>i. \<sigma> (piece i sub')) [1..<n-1] =
+                map (\<lambda>i. \<sigma> (piece (Suc i) sub')) [0..<n - Suc 1]"
+              sorry \<comment> \<open>Index shift: [1..<n-1] = map Suc [0..<n-2], then map composition.\<close>
+            ultimately show ?thesis by (by100 simp)
+          qed
           \<comment> \<open>Now: LHS = mulH (σ p0) (mulH (σ p1) tail)
                      = mulH (σ(piece 0 sub')) tail  [by group assoc + hmerge_eq]
                      = RHS.\<close>
