@@ -3485,6 +3485,15 @@ proof -
       thus ?thesis using h\<sigma>_eq h\<rho>_V by (by100 simp)
     qed
   qed
+  \<comment> \<open>σ depends only on I_set values: if p = q on [0,1], then σ p = σ q.
+     Proof: the composite path path_product(α(p 0), path_product(p, reverse(α(p 1))))
+     evaluates p only at [0,1] points. If p = q on [0,1], the composites are ext-equal.\<close>
+  have h\<sigma>_I_cong: "\<And>p q. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> p t = q t) \<Longrightarrow> \<sigma> p = \<sigma> q"
+    sorry \<comment> \<open>σ depends on I_set values only. Approach: unfolding σ_def, apply arg_cong[of _ _ ρ],
+       apply ext, then case split on s ≤ 1/2 and 2s-1 ≤ 1/2.
+       s ≤ 1/2: outer pp uses α(p 0) = α(q 0) since p 0 = q 0.
+       1/2 < s ≤ 3/4: inner pp uses p(2*(2s-1)) = q(2*(2s-1)) since 2*(2s-1) ∈ [0,1].
+       s > 3/4: inner pp uses rev(α(p 1)) = rev(α(q 1)) since p 1 = q 1.\<close>
   \<comment> \<open>Step 4: Define \<tau>(f) for a loop f at x_0 in X.
      Pick SOME subdivision into U-or-V pieces, apply \<sigma> to each, multiply in H.
      The pieces are reparametrized sub-paths.\<close>
@@ -5467,6 +5476,21 @@ proof -
         qed
         have hs1_inc': "\<forall>i<n1. sub1 i < sub1 (Suc i)" using hs1_inc unfolding sub1_def by (by100 simp)
         have hs2_inc': "\<forall>i<n2. sub2 i < sub2 (Suc i)" using hs2_inc unfolding sub2_def by (by100 simp)
+        have hsub2_nn: "\<And>j. j \<le> n2 \<Longrightarrow> sub2 j \<ge> 0"
+        proof -
+          fix j assume "j \<le> n2"
+          thus "sub2 j \<ge> 0"
+          proof (induct j)
+            case 0 show ?case using hs2_0' by (by100 simp)
+          next
+            case (Suc k)
+            hence "k < n2" by (by100 presburger)
+            hence "k \<le> n2" by (by100 presburger)
+            have "sub2 k \<ge> 0" using Suc.hyps[OF \<open>k \<le> n2\<close>] .
+            have "sub2 k < sub2 (Suc k)" using hs2_inc' \<open>k < n2\<close> by (by100 blast)
+            thus ?case using \<open>sub2 k \<ge> 0\<close> by (by100 linarith)
+          qed
+        qed
         have hm_inc: "\<forall>i<n1+n2. sub_m i < sub_m (Suc i)"
         proof (intro allI impI)
           fix i assume hi: "i < n1 + n2"
@@ -5547,15 +5571,60 @@ proof -
                arg = sub1(i)/2 + t*(sub1(i+1)-sub1(i))/2, so 2*arg = sub1(i)+t*(sub1(i+1)-sub1(i)).
                This is the f1-piece at index i, which maps to U or V by hs1_UV.\<close>
             have hSuc_le: "Suc i \<le> n1" using True by (by100 presburger)
+            have hsub1_Si_le: "sub1 (Suc i) \<le> 1"
+            proof -
+              have "sub1 (Suc i) \<le> sub1 n1"
+              using hSuc_le proof (induct rule: dec_induct)
+                case base show ?case by (by100 simp)
+              next
+                case (step n)
+                have "sub1 n < sub1 (Suc n)" using hs1_inc' step.hyps(2) by (by100 blast)
+                thus ?case using step.hyps(3) by (by100 linarith)
+              qed
+              thus ?thesis using hs1_n' by (by100 simp)
+            qed
             have hsm_i: "sub_m i = sub1 i / 2" unfolding sub_m_def using True by (by100 simp)
             have hsm_Si: "sub_m (Suc i) = sub1 (Suc i) / 2" unfolding sub_m_def using hSuc_le by (by100 simp)
             \<comment> \<open>For i < n1: piece of f1*f2 equals corresponding piece of f1.\<close>
             have hpiece_f1: "\<And>t. 0 \<le> t \<Longrightarrow> t \<le> 1 \<Longrightarrow>
                 top1_path_product f1 f2 (sub_m i + t * (sub_m (Suc i) - sub_m i))
                 = f1 (sub1 i + t * (sub1 (Suc i) - sub1 i))"
-              sorry \<comment> \<open>sub_m(i) = sub1(i)/2, sub_m(i+1) = sub1(i+1)/2.
-                 Arg = sub1(i)/2 + t*(sub1(i+1)-sub1(i))/2 ≤ 1/2.
-                 path_product uses f1 branch: f1(2*arg) = f1(sub1(i)+t*(sub1(i+1)-sub1(i))).\<close>
+            proof -
+              fix t :: real assume ht0: "0 \<le> t" and ht1: "t \<le> 1"
+              \<comment> \<open>arg = sub1(i)/2 + t*(sub1(i+1)/2 - sub1(i)/2) = (sub1(i) + t*(sub1(i+1)-sub1(i)))/2\<close>
+              have harg_eq: "sub_m i + t * (sub_m (Suc i) - sub_m i)
+                  = (sub1 i + t * (sub1 (Suc i) - sub1 i)) / 2"
+                using hsm_i hsm_Si by (by100 simp)
+              \<comment> \<open>arg ≤ 1/2 since sub1(i)+t*(sub1(i+1)-sub1(i)) ≤ sub1(n1) = 1.\<close>
+              have hd_nn: "0 \<le> sub1 (Suc i) - sub1 i"
+              proof -
+                have "sub1 i < sub1 (Suc i)" using hs1_inc' True by (by100 blast)
+                thus ?thesis by (by100 linarith)
+              qed
+              have "t * (sub1 (Suc i) - sub1 i) \<le> sub1 (Suc i) - sub1 i"
+              proof -
+                have "t * (sub1 (Suc i) - sub1 i) \<le> 1 * (sub1 (Suc i) - sub1 i)"
+                  by (rule mult_right_mono[OF ht1 hd_nn])
+                thus ?thesis by (by100 simp)
+              qed
+              hence hX_le: "sub1 i + t * (sub1 (Suc i) - sub1 i) \<le> 1"
+                using hsub1_Si_le by (by100 linarith)
+              have harg_le: "sub_m i + t * (sub_m (Suc i) - sub_m i) \<le> 1/2"
+              proof -
+                have "(sub1 i + t * (sub1 (Suc i) - sub1 i)) / 2 \<le> 1 / 2"
+                  using hX_le by (by100 simp)
+                thus ?thesis using harg_eq by (by100 simp)
+              qed
+              \<comment> \<open>path_product uses f1 branch.\<close>
+              have "top1_path_product f1 f2 (sub_m i + t * (sub_m (Suc i) - sub_m i))
+                  = f1 (2 * (sub_m i + t * (sub_m (Suc i) - sub_m i)))"
+                unfolding top1_path_product_def using harg_le by (by100 simp)
+              moreover have "2 * (sub_m i + t * (sub_m (Suc i) - sub_m i))
+                  = sub1 i + t * (sub1 (Suc i) - sub1 i)"
+                using harg_eq by (by100 simp)
+              ultimately show "top1_path_product f1 f2 (sub_m i + t * (sub_m (Suc i) - sub_m i))
+                  = f1 (sub1 i + t * (sub1 (Suc i) - sub1 i))" by (by100 simp)
+            qed
             have hs1_UV_i: "(\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f1 (sub1 i + t * (sub1 (Suc i) - sub1 i)) \<in> U)
                 \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f1 (sub1 i + t * (sub1 (Suc i) - sub1 i)) \<in> V)"
               using hs1_UV True unfolding sub1_def by (by100 blast)
@@ -5567,20 +5636,85 @@ proof -
                arg = 1/2 + sub2(i-n1)/2 + t*(sub2(i-n1+1)-sub2(i-n1))/2.
                2*arg - 1 = sub2(i-n1) + t*(sub2(i-n1+1)-sub2(i-n1)).
                This is the f2-piece at index i-n1.\<close>
-            have "i - n1 < n2" using hi \<open>i \<ge> n1\<close> by (by100 presburger)
-            have harg_gt: "\<And>t. 0 \<le> t \<Longrightarrow> t \<le> 1 \<Longrightarrow>
-                \<not> (sub_m i + t * (sub_m (Suc i) - sub_m i) \<le> 1/2)"
-              sorry \<comment> \<open>sub_m(i) ≥ sub_m(n1) = 1/2, and sub_m(Suc i) > sub_m(i).
-                 For t > 0: arg > 1/2. For t = 0: arg = sub_m(i) ≥ 1/2.
-                 Actually arg = 1/2 when i = n1 and t = 0. Need > not ≥.
-                 Hmm, when i = n1 and t = 0, arg = sub_m(n1) = sub1(n1)/2 = 1/2.
-                 Then path_product uses the f1 branch (≤ 1/2).
-                 Need: sub_m(i) > 1/2 or handle the boundary.\<close>
+            have hj_lt: "i - n1 < n2" using hi \<open>i \<ge> n1\<close> by (by100 presburger)
+            \<comment> \<open>sub_m(i) = 1/2 + sub2(i-n1)/2 (even when i = n1, since sub2(0) = 0)\<close>
+            have hsm2_i: "sub_m i = 1/2 + sub2 (i - n1) / 2"
+            proof (cases "i = n1")
+              case True
+              have "sub_m n1 = sub1 n1 / 2" unfolding sub_m_def by (by100 simp)
+              hence "sub_m n1 = 1/2" using hs1_n' by (by100 simp)
+              moreover have "i - n1 = 0" using True by (by100 simp)
+              hence "sub2 (i - n1) = 0" using hs2_0' by (by100 simp)
+              ultimately show ?thesis using True by (by100 simp)
+            next
+              case False
+              hence "\<not> (i \<le> n1)" using \<open>i \<ge> n1\<close> by (by100 presburger)
+              thus ?thesis unfolding sub_m_def by (by100 simp)
+            qed
+            \<comment> \<open>sub_m(Suc i) = 1/2 + sub2(Suc(i-n1))/2\<close>
+            have hSuc_i_gt: "\<not> (Suc i \<le> n1)" using \<open>i \<ge> n1\<close> by (by100 presburger)
+            have hSuc_diff: "Suc i - n1 = Suc (i - n1)" using \<open>i \<ge> n1\<close> by (by100 presburger)
+            have hsm2_Si: "sub_m (Suc i) = 1/2 + sub2 (Suc (i - n1)) / 2"
+              unfolding sub_m_def using hSuc_i_gt hSuc_diff by (by100 simp)
+            \<comment> \<open>f1(1) = x0, f2(0) = x0 from loop conditions\<close>
+            have hf1_1: "f1 1 = x0"
+              using hf1_loop unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+            have hf2_0: "f2 0 = x0"
+              using hf2_loop unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
             have hpiece_f2: "\<And>t. 0 \<le> t \<Longrightarrow> t \<le> 1 \<Longrightarrow>
                 top1_path_product f1 f2 (sub_m i + t * (sub_m (Suc i) - sub_m i))
                 = f2 (sub2 (i - n1) + t * (sub2 (Suc (i - n1)) - sub2 (i - n1)))"
-              sorry \<comment> \<open>sub_m(i) = 1/2+sub2(i-n1)/2, arg > 1/2.
-                 path_product uses f2 branch: f2(2*arg-1) = f2(sub2(i-n1)+t*(sub2(Suc(i-n1))-sub2(i-n1))).\<close>
+            proof -
+              fix t :: real assume ht0: "0 \<le> t" and ht1: "t \<le> 1"
+              define val where "val = sub2 (i - n1) + t * (sub2 (Suc (i - n1)) - sub2 (i - n1))"
+              have harg_eq2: "sub_m i + t * (sub_m (Suc i) - sub_m i) = 1/2 + val / 2"
+                using hsm2_i hsm2_Si unfolding val_def by (by100 simp)
+              have hval_nn: "val \<ge> 0"
+              proof -
+                have "i - n1 \<le> n2" using hj_lt by (by100 presburger)
+                have "sub2 (i - n1) \<ge> 0" using hsub2_nn[OF \<open>i - n1 \<le> n2\<close>] .
+                moreover have "sub2 (Suc (i - n1)) \<ge> sub2 (i - n1)"
+                  using hs2_inc' hj_lt by (by100 force)
+                hence "t * (sub2 (Suc (i - n1)) - sub2 (i - n1)) \<ge> 0"
+                  using ht0 by (by100 simp)
+                ultimately show ?thesis unfolding val_def by (by100 linarith)
+              qed
+              show "top1_path_product f1 f2 (sub_m i + t * (sub_m (Suc i) - sub_m i))
+                  = f2 (sub2 (i - n1) + t * (sub2 (Suc (i - n1)) - sub2 (i - n1)))"
+              proof (cases "val = 0")
+                case True
+                \<comment> \<open>Boundary: arg = 1/2, path_product = f1(1) = x0 = f2(0)\<close>
+                have harg_half: "sub_m i + t * (sub_m (Suc i) - sub_m i) = 1/2"
+                  using harg_eq2 True by (by100 simp)
+                have "top1_path_product f1 f2 (1/2) = f1 (2 * (1/2::real))"
+                  unfolding top1_path_product_def by (by100 simp)
+                hence "top1_path_product f1 f2 (1/2) = f1 1" by (by100 simp)
+                hence hpp_half: "top1_path_product f1 f2 (1/2) = x0" using hf1_1 by (by100 simp)
+                from harg_half
+                have "top1_path_product f1 f2 (sub_m i + t * (sub_m (Suc i) - sub_m i))
+                    = top1_path_product f1 f2 (1/2)"
+                  by (rule arg_cong)
+                hence lhs_eq: "top1_path_product f1 f2 (sub_m i + t * (sub_m (Suc i) - sub_m i)) = x0"
+                  using hpp_half by (by100 simp)
+                have "sub2 (i - n1) + t * (sub2 (Suc (i - n1)) - sub2 (i - n1)) = 0"
+                  using True unfolding val_def by (by100 simp)
+                hence "f2 (sub2 (i - n1) + t * (sub2 (Suc (i - n1)) - sub2 (i - n1))) = x0"
+                  using hf2_0 by (by100 simp)
+                thus ?thesis using lhs_eq by (by100 simp)
+              next
+                case False
+                hence "val > 0" using hval_nn by (by100 linarith)
+                hence "1/2 + val / 2 > 1/2" by (by100 linarith)
+                hence harg_gt: "\<not> (sub_m i + t * (sub_m (Suc i) - sub_m i) \<le> 1/2)"
+                  using harg_eq2 by (by100 linarith)
+                have "top1_path_product f1 f2 (sub_m i + t * (sub_m (Suc i) - sub_m i))
+                    = f2 (2 * (sub_m i + t * (sub_m (Suc i) - sub_m i)) - 1)"
+                  unfolding top1_path_product_def using harg_gt by (by100 simp)
+                moreover have "2 * (sub_m i + t * (sub_m (Suc i) - sub_m i)) - 1 = val"
+                  using harg_eq2 by (by100 simp)
+                ultimately show ?thesis unfolding val_def by (by100 simp)
+              qed
+            qed
             have hs2_UV_j: "(\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f2 (sub2 (i-n1) + t * (sub2 (Suc (i-n1)) - sub2 (i-n1))) \<in> U)
                 \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f2 (sub2 (i-n1) + t * (sub2 (Suc (i-n1)) - sub2 (i-n1))) \<in> V)"
               using hs2_UV \<open>i - n1 < n2\<close> unfolding sub2_def by (by100 blast)
@@ -5618,15 +5752,294 @@ proof -
             qed
           qed
         qed
-        \<comment> \<open>By subdivision independence: τ(f1*f2) = foldr_σ (f1*f2) (n1+n2) sub_m.\<close>
-        \<comment> \<open>The foldr splits at position n1: first n1 σ-values come from f1, last n2 from f2.\<close>
-        \<comment> \<open>σ(piece_i for f1*f2) = σ(corresponding piece of f1) for i < n1,
-           σ(piece_i for f1*f2) = σ(corresponding piece of f2) for i ≥ n1.\<close>
-        \<comment> \<open>foldr [σ(f1-pieces), σ(f2-pieces)] eH = (foldr [σ(f1-pieces)] eH) · (foldr [σ(f2-pieces)] eH)
-           by group associativity + identity splitting.\<close>
-        \<comment> \<open>foldr [σ(f1-pieces)] eH = foldr_σ f1 n1 sub1 = τ(f1) by subdiv independence.\<close>
-        \<comment> \<open>foldr [σ(f2-pieces)] eH = foldr_σ f2 n2 sub2 = τ(f2) by subdiv independence.\<close>
-        show ?thesis sorry
+        \<comment> \<open>General subdivision independence: any valid subdivision gives the same foldr_σ = τ.
+           Proof strategy: take common refinement of SOME-picked and given subdivisions.
+           Splitting a piece preserves foldr_σ by σ_cond2 (both sub-pieces in same U or V).
+           This is the content of hsubdiv generalized from U-loops to X-loops.\<close>
+        have h_gen_indep_12: "\<tau> (top1_path_product f1 f2) = foldr_\<sigma> (top1_path_product f1 f2) (n1+n2) sub_m"
+          sorry \<comment> \<open>General subdivision independence for f1*f2. The SOME-picked subdivision and
+             (n1+n2, sub_m) both satisfy the predicate. Any two valid subdivisions of an X-loop
+             give the same foldr_σ value (by common refinement + σ_cond2 splitting argument).\<close>
+        have h_gen_indep_1: "\<tau> f1 = foldr_\<sigma> f1 n1 sub1"
+          sorry \<comment> \<open>General subdivision independence for f1: (n1, sub1) is valid for f1.\<close>
+        have h_gen_indep_2: "\<tau> f2 = foldr_\<sigma> f2 n2 sub2"
+          sorry \<comment> \<open>General subdivision independence for f2: (n2, sub2) is valid for f2.\<close>
+        \<comment> \<open>Piece identification: σ(piece_i of f1*f2) = σ(piece_i of f1) for i < n1,
+           σ(piece_i of f1*f2) = σ(piece_{i-n1} of f2) for i ≥ n1.
+           Then foldr splits: [0..<n1+n2] = [0..<n1] @ [n1..<n1+n2].
+           foldr (L1 @ L2) eH = mulH (foldr L1 eH) (foldr L2 eH) by group assoc + identity.\<close>
+        have h_split: "foldr_\<sigma> (top1_path_product f1 f2) (n1+n2) sub_m
+            = mulH (foldr_\<sigma> f1 n1 sub1) (foldr_\<sigma> f2 n2 sub2)"
+        proof -
+          \<comment> \<open>σ piece identification: uses h_σ_I_cong from line ~3491.\<close>
+          have h\<sigma>_eq_f1: "\<And>i. i < n1 \<Longrightarrow>
+              \<sigma> (\<lambda>t. top1_path_product f1 f2 (sub_m i + t * (sub_m (Suc i) - sub_m i)))
+              = \<sigma> (\<lambda>t. f1 (sub1 i + t * (sub1 (Suc i) - sub1 i)))"
+          proof -
+            fix i assume hi: "i < n1"
+            have "Suc i \<le> n1" using hi by (by100 presburger)
+            have hsm_i: "sub_m i = sub1 i / 2" unfolding sub_m_def using hi by (by100 simp)
+            have hsm_Si: "sub_m (Suc i) = sub1 (Suc i) / 2" unfolding sub_m_def using \<open>Suc i \<le> n1\<close> by (by100 simp)
+            show "\<sigma> (\<lambda>t. top1_path_product f1 f2 (sub_m i + t * (sub_m (Suc i) - sub_m i)))
+                = \<sigma> (\<lambda>t. f1 (sub1 i + t * (sub1 (Suc i) - sub1 i)))"
+            proof (rule h\<sigma>_I_cong, intro allI impI)
+              fix t :: real assume ht: "0 \<le> t \<and> t \<le> 1"
+              have ht0: "0 \<le> t" and ht1: "t \<le> 1" using ht by (by100 blast)+
+              \<comment> \<open>Need hpiece_f1 which was defined inside the hm_UV proof block.
+                 Re-derive the key equality directly using the same arithmetic.\<close>
+              have hsub1_Si_le: "sub1 (Suc i) \<le> 1"
+              proof -
+                have "sub1 (Suc i) \<le> sub1 n1"
+                using \<open>Suc i \<le> n1\<close> proof (induct rule: dec_induct)
+                  case base show ?case by (by100 simp)
+                next
+                  case (step n)
+                  have "sub1 n < sub1 (Suc n)" using hs1_inc' step.hyps(2) by (by100 blast)
+                  thus ?case using step.hyps(3) by (by100 linarith)
+                qed
+                thus ?thesis using hs1_n' by (by100 simp)
+              qed
+              have harg_eq: "sub_m i + t * (sub_m (Suc i) - sub_m i)
+                  = (sub1 i + t * (sub1 (Suc i) - sub1 i)) / 2"
+                using hsm_i hsm_Si by (by100 simp)
+              have hd_nn: "0 \<le> sub1 (Suc i) - sub1 i"
+              proof -
+                have "sub1 i < sub1 (Suc i)" using hs1_inc' hi by (by100 blast)
+                thus ?thesis by (by100 linarith)
+              qed
+              have "t * (sub1 (Suc i) - sub1 i) \<le> sub1 (Suc i) - sub1 i"
+              proof -
+                have "t * (sub1 (Suc i) - sub1 i) \<le> 1 * (sub1 (Suc i) - sub1 i)"
+                  by (rule mult_right_mono[OF ht1 hd_nn])
+                thus ?thesis by (by100 simp)
+              qed
+              hence "sub1 i + t * (sub1 (Suc i) - sub1 i) \<le> 1"
+                using hsub1_Si_le by (by100 linarith)
+              hence harg_le: "sub_m i + t * (sub_m (Suc i) - sub_m i) \<le> 1/2"
+              proof -
+                have "(sub1 i + t * (sub1 (Suc i) - sub1 i)) / 2 \<le> 1 / 2"
+                  using \<open>sub1 i + t * (sub1 (Suc i) - sub1 i) \<le> 1\<close> by (by100 simp)
+                thus ?thesis using harg_eq by (by100 simp)
+              qed
+              have "top1_path_product f1 f2 (sub_m i + t * (sub_m (Suc i) - sub_m i))
+                  = f1 (2 * (sub_m i + t * (sub_m (Suc i) - sub_m i)))"
+                unfolding top1_path_product_def using harg_le by (by100 simp)
+              moreover have "2 * (sub_m i + t * (sub_m (Suc i) - sub_m i))
+                  = sub1 i + t * (sub1 (Suc i) - sub1 i)"
+                using harg_eq by (by100 simp)
+              ultimately show "top1_path_product f1 f2 (sub_m i + t * (sub_m (Suc i) - sub_m i))
+                  = f1 (sub1 i + t * (sub1 (Suc i) - sub1 i))" by (by100 simp)
+            qed
+          qed
+          have h\<sigma>_eq_f2: "\<And>i. n1 \<le> i \<Longrightarrow> i < n1 + n2 \<Longrightarrow>
+              \<sigma> (\<lambda>t. top1_path_product f1 f2 (sub_m i + t * (sub_m (Suc i) - sub_m i)))
+              = \<sigma> (\<lambda>t. f2 (sub2 (i - n1) + t * (sub2 (Suc (i - n1)) - sub2 (i - n1))))"
+          proof -
+            fix i assume hi_ge: "n1 \<le> i" and hi_lt: "i < n1 + n2"
+            have hj_lt: "i - n1 < n2" using hi_ge hi_lt by (by100 presburger)
+            show "\<sigma> (\<lambda>t. top1_path_product f1 f2 (sub_m i + t * (sub_m (Suc i) - sub_m i)))
+                = \<sigma> (\<lambda>t. f2 (sub2 (i - n1) + t * (sub2 (Suc (i - n1)) - sub2 (i - n1))))"
+            proof (rule h\<sigma>_I_cong, intro allI impI)
+              fix t :: real assume ht: "0 \<le> t \<and> t \<le> 1"
+              have ht0: "0 \<le> t" and ht1: "t \<le> 1" using ht by (by100 blast)+
+              \<comment> \<open>Re-derive hpiece_f2 result.\<close>
+              have hsm2_i: "sub_m i = 1/2 + sub2 (i - n1) / 2"
+              proof (cases "i = n1")
+                case True
+                have "sub_m n1 = sub1 n1 / 2" unfolding sub_m_def by (by100 simp)
+                hence "sub_m n1 = 1/2" using hs1_n' by (by100 simp)
+                moreover have "i - n1 = 0" using True by (by100 simp)
+                hence "sub2 (i - n1) = 0" using hs2_0' by (by100 simp)
+                ultimately show ?thesis using True by (by100 simp)
+              next
+                case False
+                hence "\<not> (i \<le> n1)" using hi_ge by (by100 presburger)
+                thus ?thesis unfolding sub_m_def by (by100 simp)
+              qed
+              have hSuc_i_gt: "\<not> (Suc i \<le> n1)" using hi_ge by (by100 presburger)
+              have hSuc_diff: "Suc i - n1 = Suc (i - n1)" using hi_ge by (by100 presburger)
+              have hsm2_Si: "sub_m (Suc i) = 1/2 + sub2 (Suc (i - n1)) / 2"
+                unfolding sub_m_def using hSuc_i_gt hSuc_diff by (by100 simp)
+              define val where "val = sub2 (i - n1) + t * (sub2 (Suc (i - n1)) - sub2 (i - n1))"
+              have harg_eq2: "sub_m i + t * (sub_m (Suc i) - sub_m i) = 1/2 + val / 2"
+                using hsm2_i hsm2_Si unfolding val_def by (by100 simp)
+              have hval_nn: "val \<ge> 0"
+              proof -
+                have "i - n1 \<le> n2" using hj_lt by (by100 presburger)
+                have "sub2 (i - n1) \<ge> 0" using hsub2_nn[OF \<open>i - n1 \<le> n2\<close>] .
+                moreover have "sub2 (Suc (i - n1)) \<ge> sub2 (i - n1)"
+                  using hs2_inc' hj_lt by (by100 force)
+                hence "t * (sub2 (Suc (i - n1)) - sub2 (i - n1)) \<ge> 0"
+                  using ht0 by (by100 simp)
+                ultimately show ?thesis unfolding val_def by (by100 linarith)
+              qed
+              have hf1_1: "f1 1 = x0"
+                using hf1_loop unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+              have hf2_0: "f2 0 = x0"
+                using hf2_loop unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+              show "top1_path_product f1 f2 (sub_m i + t * (sub_m (Suc i) - sub_m i))
+                  = f2 (sub2 (i - n1) + t * (sub2 (Suc (i - n1)) - sub2 (i - n1)))"
+              proof (cases "val = 0")
+                case True
+                have harg_half: "sub_m i + t * (sub_m (Suc i) - sub_m i) = 1/2"
+                  using harg_eq2 True by (by100 simp)
+                have "top1_path_product f1 f2 (1/2) = f1 (2 * (1/2::real))"
+                  unfolding top1_path_product_def by (by100 simp)
+                hence "top1_path_product f1 f2 (1/2) = f1 1" by (by100 simp)
+                hence "top1_path_product f1 f2 (1/2) = x0" using hf1_1 by (by100 simp)
+                from harg_half have "top1_path_product f1 f2 (sub_m i + t * (sub_m (Suc i) - sub_m i))
+                    = top1_path_product f1 f2 (1/2)" by (rule arg_cong)
+                hence "top1_path_product f1 f2 (sub_m i + t * (sub_m (Suc i) - sub_m i)) = x0"
+                  using \<open>top1_path_product f1 f2 (1/2) = x0\<close> by (by100 simp)
+                moreover have "sub2 (i - n1) + t * (sub2 (Suc (i - n1)) - sub2 (i - n1)) = 0"
+                  using True unfolding val_def by (by100 simp)
+                hence "f2 (sub2 (i - n1) + t * (sub2 (Suc (i - n1)) - sub2 (i - n1))) = x0"
+                  using hf2_0 by (by100 simp)
+                ultimately show ?thesis by (by100 simp)
+              next
+                case False
+                hence "val > 0" using hval_nn by (by100 linarith)
+                hence "1/2 + val / 2 > 1/2" by (by100 linarith)
+                hence harg_gt: "\<not> (sub_m i + t * (sub_m (Suc i) - sub_m i) \<le> 1/2)"
+                  using harg_eq2 by (by100 linarith)
+                have "top1_path_product f1 f2 (sub_m i + t * (sub_m (Suc i) - sub_m i))
+                    = f2 (2 * (sub_m i + t * (sub_m (Suc i) - sub_m i)) - 1)"
+                  unfolding top1_path_product_def using harg_gt by (by100 simp)
+                moreover have "2 * (sub_m i + t * (sub_m (Suc i) - sub_m i)) - 1 = val"
+                  using harg_eq2 by (by100 simp)
+                ultimately show ?thesis unfolding val_def by (by100 simp)
+              qed
+            qed
+          qed
+          \<comment> \<open>Map decomposition and foldr splitting.\<close>
+          define G where "G i = \<sigma> (\<lambda>t. top1_path_product f1 f2 (sub_m i + t * (sub_m (Suc i) - sub_m i)))" for i
+          define F1 where "F1 i = \<sigma> (\<lambda>t. f1 (sub1 i + t * (sub1 (Suc i) - sub1 i)))" for i
+          define F2 where "F2 i = \<sigma> (\<lambda>t. f2 (sub2 i + t * (sub2 (Suc i) - sub2 i)))" for i
+          have hmapG_f1: "map G [0..<n1] = map F1 [0..<n1]"
+          proof (rule nth_equalityI)
+            show "length (map G [0..<n1]) = length (map F1 [0..<n1])" by (by100 simp)
+          next
+            fix j assume "j < length (map G [0..<n1])"
+            hence "j < n1" by (by100 simp)
+            thus "map G [0..<n1] ! j = map F1 [0..<n1] ! j"
+              unfolding G_def F1_def using h\<sigma>_eq_f1 by (by100 simp)
+          qed
+          have hmapG_f2: "map G [n1..<n1+n2] = map F2 [0..<n2]"
+          proof (rule nth_equalityI)
+            show "length (map G [n1..<n1+n2]) = length (map F2 [0..<n2])" by (by100 simp)
+          next
+            fix j assume "j < length (map G [n1..<n1+n2])"
+            hence hj: "j < n2" by (by100 simp)
+            have "map G [n1..<n1+n2] ! j = G ([n1..<n1+n2] ! j)"
+              using hj by (by100 simp)
+            moreover have "[n1..<n1+n2] ! j = n1 + j"
+              using hj by (by100 simp)
+            ultimately have "map G [n1..<n1+n2] ! j = G (n1 + j)" by (by100 simp)
+            also have "\<dots> = F2 j"
+            proof -
+              have "n1 \<le> n1 + j" by (by100 presburger)
+              have "n1 + j < n1 + n2" using hj by (by100 presburger)
+              have "G (n1 + j) = \<sigma> (\<lambda>t. f2 (sub2 ((n1+j) - n1) + t * (sub2 (Suc ((n1+j) - n1)) - sub2 ((n1+j) - n1))))"
+                unfolding G_def using h\<sigma>_eq_f2[OF \<open>n1 \<le> n1 + j\<close> \<open>n1 + j < n1 + n2\<close>] by (by100 simp)
+              thus ?thesis unfolding F2_def by (by100 simp)
+            qed
+            finally show "map G [n1..<n1+n2] ! j = map F2 [0..<n2] ! j" using hj by (by100 simp)
+          qed
+          have hmap_split: "map (\<lambda>i. \<sigma> (\<lambda>t. top1_path_product f1 f2 (sub_m i + t * (sub_m (Suc i) - sub_m i)))) [0..<n1+n2]
+              = map (\<lambda>i. \<sigma> (\<lambda>t. f1 (sub1 i + t * (sub1 (Suc i) - sub1 i)))) [0..<n1]
+              @ map (\<lambda>i. \<sigma> (\<lambda>t. f2 (sub2 i + t * (sub2 (Suc i) - sub2 i)))) [0..<n2]"
+          proof -
+            have "[0..<n1+n2] = [0..<n1] @ [n1..<n1+n2]" using upt_add_eq_append[of 0 n1 n2] by (by100 simp)
+            hence "map G [0..<n1+n2] = map G [0..<n1] @ map G [n1..<n1+n2]" by (by100 simp)
+            hence "map G [0..<n1+n2] = map F1 [0..<n1] @ map F2 [0..<n2]"
+              using hmapG_f1 hmapG_f2 by (by100 simp)
+            thus ?thesis unfolding G_def F1_def F2_def by (by100 simp)
+          qed
+          \<comment> \<open>Group properties from hH.\<close>
+          have heH_in: "eH \<in> H" using hH unfolding top1_is_group_on_def by (by100 fast)
+          have hmulH_cl: "\<And>a b. a \<in> H \<Longrightarrow> b \<in> H \<Longrightarrow> mulH a b \<in> H"
+            using hH unfolding top1_is_group_on_def by (by100 blast)
+          have hleft_id: "\<And>a. a \<in> H \<Longrightarrow> mulH eH a = a"
+            using hH unfolding top1_is_group_on_def by (by100 blast)
+          have hassoc: "\<And>a b c. a \<in> H \<Longrightarrow> b \<in> H \<Longrightarrow> c \<in> H \<Longrightarrow>
+              mulH (mulH a b) c = mulH a (mulH b c)"
+            using hH unfolding top1_is_group_on_def by (by100 blast)
+          \<comment> \<open>Foldr group splitting: foldr mulH (L1 @ L2) eH = mulH (foldr L1 eH) (foldr L2 eH).
+             By induction on L1 using group assoc + left identity.\<close>
+          have hfoldr_split_gen: "\<And>xs ys. (\<forall>x \<in> set xs. x \<in> H) \<Longrightarrow> (\<forall>y \<in> set ys. y \<in> H) \<Longrightarrow>
+              foldr mulH (xs @ ys) eH = mulH (foldr mulH xs eH) (foldr mulH ys eH)"
+          proof -
+            fix xs ys
+            assume hxH: "\<forall>x \<in> set xs. x \<in> H" and hyH: "\<forall>y \<in> set ys. y \<in> H"
+            have hfoldr_ys_H: "foldr mulH ys eH \<in> H"
+            proof -
+              have "\<And>zs. (\<forall>z \<in> set zs. z \<in> H) \<Longrightarrow> foldr mulH zs eH \<in> H"
+              proof -
+                fix zs show "(\<forall>z \<in> set zs. z \<in> H) \<Longrightarrow> foldr mulH zs eH \<in> H"
+                proof (induct zs)
+                  case Nil thus ?case using heH_in by (by100 simp)
+                next
+                  case (Cons a zs)
+                  have "a \<in> H" using Cons.prems by (by100 simp)
+                  have "foldr mulH zs eH \<in> H" using Cons by (by100 simp)
+                  thus ?case using hmulH_cl \<open>a \<in> H\<close> by (by100 simp)
+                qed
+              qed
+              thus ?thesis using hyH by (by100 blast)
+            qed
+            show "foldr mulH (xs @ ys) eH = mulH (foldr mulH xs eH) (foldr mulH ys eH)"
+            using hxH proof (induct xs)
+              case Nil
+              have "foldr mulH ([] @ ys) eH = foldr mulH ys eH" by (by100 simp)
+              also have "\<dots> = mulH eH (foldr mulH ys eH)" using hleft_id[OF hfoldr_ys_H, symmetric] .
+              also have "\<dots> = mulH (foldr mulH [] eH) (foldr mulH ys eH)" by (by100 simp)
+              finally show ?case .
+            next
+              case (Cons a xs)
+              have ha: "a \<in> H" using Cons.prems by (by100 simp)
+              have hxs_H: "\<forall>x \<in> set xs. x \<in> H" using Cons.prems by (by100 simp)
+              have IH: "foldr mulH (xs @ ys) eH = mulH (foldr mulH xs eH) (foldr mulH ys eH)"
+                using Cons.hyps[OF hxs_H] .
+              have hfoldr_xs_H: "foldr mulH xs eH \<in> H"
+              proof -
+                have "\<And>zs. (\<forall>z \<in> set zs. z \<in> H) \<Longrightarrow> foldr mulH zs eH \<in> H"
+                proof -
+                  fix zs show "(\<forall>z \<in> set zs. z \<in> H) \<Longrightarrow> foldr mulH zs eH \<in> H"
+                  proof (induct zs)
+                    case Nil thus ?case using heH_in by (by100 simp)
+                  next
+                    case (Cons a zs)
+                    have "a \<in> H" using Cons.prems by (by100 simp)
+                    have "foldr mulH zs eH \<in> H" using Cons by (by100 simp)
+                    thus ?case using hmulH_cl \<open>a \<in> H\<close> by (by100 simp)
+                  qed
+                qed
+                thus ?thesis using hxs_H by (by100 blast)
+              qed
+              have "foldr mulH ((a # xs) @ ys) eH = mulH a (foldr mulH (xs @ ys) eH)"
+                by (by100 simp)
+              also have "\<dots> = mulH a (mulH (foldr mulH xs eH) (foldr mulH ys eH))"
+                using IH by (by100 simp)
+              also have "\<dots> = mulH (mulH a (foldr mulH xs eH)) (foldr mulH ys eH)"
+                using hassoc[OF ha hfoldr_xs_H hfoldr_ys_H] by (by100 simp)
+              also have "mulH a (foldr mulH xs eH) = foldr mulH (a # xs) eH"
+                by (by100 simp)
+              finally show ?case by (by100 simp)
+            qed
+          qed
+          \<comment> \<open>All σ-values in the lists are in H.\<close>
+          have h\<sigma>_in_H_all: "(\<forall>x \<in> set (map F1 [0..<n1]). x \<in> H)
+              \<and> (\<forall>x \<in> set (map F2 [0..<n2]). x \<in> H)"
+            sorry \<comment> \<open>Each σ(piece_in_U_or_V) ∈ H by h_σ_path_in_H / h_σ_path_in_H_V + codomain_shrink.\<close>
+          have hfoldr_group: "foldr mulH
+              (map (\<lambda>i. \<sigma> (\<lambda>t. f1 (sub1 i + t * (sub1 (Suc i) - sub1 i)))) [0..<n1]
+              @ map (\<lambda>i. \<sigma> (\<lambda>t. f2 (sub2 i + t * (sub2 (Suc i) - sub2 i)))) [0..<n2]) eH
+              = mulH (foldr mulH (map (\<lambda>i. \<sigma> (\<lambda>t. f1 (sub1 i + t * (sub1 (Suc i) - sub1 i)))) [0..<n1]) eH)
+                     (foldr mulH (map (\<lambda>i. \<sigma> (\<lambda>t. f2 (sub2 i + t * (sub2 (Suc i) - sub2 i)))) [0..<n2]) eH)"
+            using hfoldr_split_gen h\<sigma>_in_H_all unfolding F1_def F2_def by (by100 blast)
+          show ?thesis unfolding foldr_\<sigma>_def using hmap_split hfoldr_group by (by100 simp)
+        qed
+        show ?thesis using h_gen_indep_12 h_gen_indep_1 h_gen_indep_2 h_split by (by100 simp)
       qed
       show ?thesis using h\<Phi>_prod h\<Phi>_c1 h\<Phi>_c2 h\<tau>_mul by (by100 simp)
     qed
