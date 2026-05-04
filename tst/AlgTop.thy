@@ -3092,6 +3092,10 @@ proof -
   \<comment> \<open>Step 4: Define \<tau>(f) for a loop f at x_0 in X.
      Pick SOME subdivision into U-or-V pieces, apply \<sigma> to each, multiply in H.
      The pieces are reparametrized sub-paths.\<close>
+  \<comment> \<open>Helper: compute the \<sigma>-product for a given subdivision (n, sub) of f.\<close>
+  define foldr_\<sigma> where "foldr_\<sigma> f n sub =
+    foldr mulH (map (\<lambda>i. \<sigma> (\<lambda>t. f (sub i + t * (sub (Suc i) - sub i)))) [0..<n]) eH" for f n sub
+  \<comment> \<open>\<tau>(f) = foldr_\<sigma> f (SOME n) (SOME sub) where SOME picks a valid subdivision.\<close>
   define \<tau> where "\<tau> f = (
     let n = SOME n::nat. n \<ge> 1 \<and> (\<exists>sub. sub 0 = 0 \<and> sub n = 1
         \<and> (\<forall>i<n. sub i < sub (Suc i))
@@ -3100,9 +3104,8 @@ proof -
         sub = SOME sub::nat\<Rightarrow>real. sub 0 = 0 \<and> sub n = 1
             \<and> (\<forall>i<n. sub i < sub (Suc i))
             \<and> (\<forall>i<n. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> U)
-                   \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> V));
-        piece = (\<lambda>i t. f (sub i + t * (sub (Suc i) - sub i)))
-    in foldr mulH (map (\<lambda>i. \<sigma> (piece i)) [0..<n]) eH)" for f
+                   \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> V))
+    in foldr_\<sigma> f n sub)" for f
   \<comment> \<open>Step 5: Define \<Phi>([f]) = \<tau>(f) for a SOME representative f of the class.\<close>
   define \<Phi> where "\<Phi> c = \<tau> (SOME f. top1_is_loop_on X TX x0 f
       \<and> c = {g. top1_loop_equiv_on X TX x0 f g})" for c
@@ -4354,13 +4357,39 @@ proof -
          For f in U: trivial subdivision n=1 satisfies the predicate.
          Key: ANY valid subdivision gives the same result (subdivision independence).
          Proof by showing the foldr telescopes to \<sigma>(f) for any valid n, sub.\<close>
-      show ?thesis
-        sorry \<comment> \<open>Needs: (1) extract SOME-picked n, sub from \<tau>_def (without term explosion),
-           (2) prove foldr telescopes to \<sigma>(f) by induction on n using \<sigma>_cond2,
-           (3) multiply by eH (group identity).
-           The \<tau>_def unfolding (even without Let_def) still creates large terms.
-           A proper fix would redefine \<tau> to avoid nested SOME, or factor out a
-           foldr-to-\<sigma> lemma that works generically on n, sub, piece.\<close>
+      \<comment> \<open>Step 1: trivial subdivision (n=1) gives \<sigma> f.\<close>
+      have htrivial: "foldr_\<sigma> f 1 (\<lambda>i. real i) = mulH (\<sigma> f) eH"
+        unfolding foldr_\<sigma>_def by (by100 simp)
+      have h\<sigma>_in_H: "\<sigma> f \<in> H"
+        sorry \<comment> \<open>\<sigma>(f) = \<rho>(L(f)) = \<phi>1([L(f)]_U) \<in> H.\<close>
+      have hid: "mulH (\<sigma> f) eH = \<sigma> f"
+        using hH h\<sigma>_in_H unfolding top1_is_group_on_def by (by100 blast)
+      have htrivial_eq: "foldr_\<sigma> f 1 (\<lambda>i. real i) = \<sigma> f"
+        using htrivial hid by (by100 simp)
+      \<comment> \<open>Step 2: \<tau> f = foldr_\<sigma> f n sub for the SOME-picked n, sub.\<close>
+      have h\<tau>_eq: "\<tau> f = foldr_\<sigma> f (SOME n. n \<ge> 1 \<and> (\<exists>sub. sub 0 = 0 \<and> sub n = 1
+          \<and> (\<forall>i<n. sub i < sub (Suc i))
+          \<and> (\<forall>i<n. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> U)
+                 \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> V))))
+          (SOME sub. sub 0 = 0 \<and> sub (SOME n. n \<ge> 1 \<and> (\<exists>sub. sub 0 = 0 \<and> sub n = 1
+          \<and> (\<forall>i<n. sub i < sub (Suc i))
+          \<and> (\<forall>i<n. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> U)
+                 \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> V)))) = 1
+          \<and> (\<forall>i<(SOME n. n \<ge> 1 \<and> (\<exists>sub. sub 0 = 0 \<and> sub n = 1
+          \<and> (\<forall>i<n. sub i < sub (Suc i))
+          \<and> (\<forall>i<n. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> U)
+                 \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> V)))). sub i < sub (Suc i))
+          \<and> (\<forall>i<(SOME n. n \<ge> 1 \<and> (\<exists>sub. sub 0 = 0 \<and> sub n = 1
+          \<and> (\<forall>i<n. sub i < sub (Suc i))
+          \<and> (\<forall>i<n. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> U)
+                 \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> V)))).
+              (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> U)
+           \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> V)))"
+        unfolding \<tau>_def Let_def by (by100 simp)
+      \<comment> \<open>Step 3: Subdivision independence: any valid (n, sub) gives foldr_\<sigma> f n sub = \<sigma> f.
+         Then h\<tau>_eq + subdivision independence + htrivial_eq give \<tau> f = \<sigma> f.\<close>
+      show ?thesis sorry \<comment> \<open>Needs subdivision independence: foldr_\<sigma> f n sub = \<sigma> f
+           for any valid n, sub when f \<subseteq> U. Proof by induction using \<sigma>_cond2.\<close>
     qed
     \<comment> \<open>Step 5: \<sigma>(f) = \<rho>(const \<cdot> f \<cdot> const) since \<alpha>(x0) = const.\<close>
     have h\<alpha>_x0: "\<alpha> x0 = top1_constant_path x0"
