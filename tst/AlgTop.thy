@@ -2758,7 +2758,29 @@ proof -
                          \<and> 0\<le>s \<and> s\<le>1 \<and> 0\<le>t \<and> t\<le>1 \<longrightarrow> F (s,t) \<in> U)
                \<or> (\<forall>s t. sub i \<le> s \<and> s \<le> sub (Suc i) \<and> sub j \<le> t \<and> t \<le> sub (Suc j)
                        \<and> 0\<le>s \<and> s\<le>1 \<and> 0\<le>t \<and> t\<le>1 \<longrightarrow> F (s,t) \<in> V)"
-      using hcW by (by100 blast)
+    proof (elim insertE)
+      assume hWU: "W = {p \<in> I_set \<times> I_set. F p \<in> U}"
+      show ?thesis
+      proof (rule disjI1, intro allI impI)
+        fix s t assume h: "sub i \<le> s \<and> s \<le> sub (Suc i) \<and> sub j \<le> t \<and> t \<le> sub (Suc j)
+            \<and> 0\<le>s \<and> s\<le>1 \<and> 0\<le>t \<and> t\<le>1"
+        have "(s, t) \<in> ?cell" using h unfolding top1_unit_interval_def by (by100 force)
+        hence "(s, t) \<in> W" using hcW by (by100 blast)
+        thus "F (s, t) \<in> U" using hWU by (by100 blast)
+      qed
+    next
+      assume hWV: "W = {p \<in> I_set \<times> I_set. F p \<in> V}"
+      show ?thesis
+      proof (rule disjI2, intro allI impI)
+        fix s t assume h: "sub i \<le> s \<and> s \<le> sub (Suc i) \<and> sub j \<le> t \<and> t \<le> sub (Suc j)
+            \<and> 0\<le>s \<and> s\<le>1 \<and> 0\<le>t \<and> t\<le>1"
+        have "(s, t) \<in> ?cell" using h unfolding top1_unit_interval_def by (by100 force)
+        hence "(s, t) \<in> W" using hcW by (by100 blast)
+        thus "F (s, t) \<in> V" using hWV by (by100 blast)
+      qed
+    next
+      assume "W \<in> {}" thus ?thesis by (by100 blast)
+    qed
   qed
   show ?thesis
     using hn hsub0 hsubn hsubinc hcell by (by100 blast)
@@ -3301,6 +3323,51 @@ proof -
   qed
   \<comment> \<open>Step 3: Define \<sigma>(f) = \<rho>(\<alpha>_{f(0)} \<cdot> f \<cdot> rev(\<alpha>_{f(1)})) for paths f in U or V.\<close>
   define \<sigma> where "\<sigma> f = \<rho> (top1_path_product (\<alpha> (f 0)) (top1_path_product f (top1_path_reverse (\<alpha> (f 1)))))" for f
+  \<comment> \<open>General fact: \<sigma> of any path in U maps to H.\<close>
+  have h\<sigma>_path_in_H: "\<And>f'. top1_is_path_on U (subspace_topology X TX U) (f' 0) (f' 1) f' \<Longrightarrow> \<sigma> f' \<in> H"
+  proof -
+    fix f' assume hf'p: "top1_is_path_on U (subspace_topology X TX U) (f' 0) (f' 1) f'"
+    have hf'_range: "\<forall>s\<in>I_set. f' s \<in> U"
+      using hf'p unfolding top1_is_path_on_def top1_continuous_map_on_def by (by100 blast)
+    have h0I: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+    have h1I: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+    have hf0U: "f' 0 \<in> U" using hf'_range h0I by (by100 blast)
+    have hf1U: "f' 1 \<in> U" using hf'_range h1I by (by100 blast)
+    \<comment> \<open>L(f') = \<alpha>(f'(0)) \<cdot> (f' \<cdot> rev(\<alpha>(f'(1)))) is a loop at x0 in U.\<close>
+    have h\<alpha>0: "top1_is_path_on U (subspace_topology X TX U) x0 (f' 0) (\<alpha> (f' 0))"
+      by (rule h\<alpha>_in_U[OF hf0U])
+    have h\<alpha>1: "top1_is_path_on U (subspace_topology X TX U) x0 (f' 1) (\<alpha> (f' 1))"
+      by (rule h\<alpha>_in_U[OF hf1U])
+    have hrev: "top1_is_path_on U (subspace_topology X TX U) (f' 1) x0 (top1_path_reverse (\<alpha> (f' 1)))"
+      by (rule top1_path_reverse_is_path[OF h\<alpha>1])
+    have hfr: "top1_is_path_on U (subspace_topology X TX U) (f' 0) x0
+        (top1_path_product f' (top1_path_reverse (\<alpha> (f' 1))))"
+      by (rule top1_path_product_is_path[OF hTopU hf'p hrev])
+    have hL: "top1_is_path_on U (subspace_topology X TX U) x0 x0
+        (top1_path_product (\<alpha> (f' 0)) (top1_path_product f' (top1_path_reverse (\<alpha> (f' 1)))))"
+      by (rule top1_path_product_is_path[OF hTopU h\<alpha>0 hfr])
+    have hL_loop: "top1_is_loop_on U (subspace_topology X TX U) x0
+        (top1_path_product (\<alpha> (f' 0)) (top1_path_product f' (top1_path_reverse (\<alpha> (f' 1)))))"
+      unfolding top1_is_loop_on_def using hL by (by100 blast)
+    have hL_in_U: "\<forall>s\<in>I_set. (top1_path_product (\<alpha> (f' 0))
+        (top1_path_product f' (top1_path_reverse (\<alpha> (f' 1))))) s \<in> U"
+      using hL unfolding top1_is_path_on_def top1_continuous_map_on_def by (by100 blast)
+    \<comment> \<open>\<sigma>(f') = \<rho>(L(f')) = \<phi>1([L(f')]_U) \<in> H.\<close>
+    have h\<sigma>_eq: "\<sigma> f' = \<rho> (top1_path_product (\<alpha> (f' 0)) (top1_path_product f' (top1_path_reverse (\<alpha> (f' 1)))))"
+      unfolding \<sigma>_def by (by100 simp)
+    have h\<rho>_eq: "\<rho> (top1_path_product (\<alpha> (f' 0)) (top1_path_product f' (top1_path_reverse (\<alpha> (f' 1)))))
+        = \<phi>1 {g. top1_loop_equiv_on U (subspace_topology X TX U) x0
+            (top1_path_product (\<alpha> (f' 0)) (top1_path_product f' (top1_path_reverse (\<alpha> (f' 1))))) g}"
+      unfolding \<rho>_def using hL_in_U by (by100 simp)
+    have hclass_in: "{g. top1_loop_equiv_on U (subspace_topology X TX U) x0
+        (top1_path_product (\<alpha> (f' 0)) (top1_path_product f' (top1_path_reverse (\<alpha> (f' 1))))) g}
+        \<in> top1_fundamental_group_carrier U (subspace_topology X TX U) x0"
+      unfolding top1_fundamental_group_carrier_def using hL_loop by (by100 blast)
+    have "\<phi>1 {g. top1_loop_equiv_on U (subspace_topology X TX U) x0
+        (top1_path_product (\<alpha> (f' 0)) (top1_path_product f' (top1_path_reverse (\<alpha> (f' 1))))) g} \<in> H"
+      using h\<phi>1 hclass_in unfolding top1_group_hom_on_def by (by100 blast)
+    thus "\<sigma> f' \<in> H" using h\<sigma>_eq h\<rho>_eq by (by100 simp)
+  qed
   \<comment> \<open>Step 4: Define \<tau>(f) for a loop f at x_0 in X.
      Pick SOME subdivision into U-or-V pieces, apply \<sigma> to each, multiply in H.
      The pieces are reparametrized sub-paths.\<close>
@@ -5323,9 +5390,21 @@ proof -
             proof -
               \<comment> \<open>Need σ values in H for group assoc.\<close>
               \<comment> \<open>\<sigma>(path in U) \<in> H: via \<sigma> \<rightarrow> \<rho> \<rightarrow> \<phi>1 chain.\<close>
-              have h\<sigma>0_H: "\<sigma> (piece 0 sub) \<in> H" sorry
-              have h\<sigma>1_H: "\<sigma> (piece 1 sub) \<in> H" sorry
-              have htail_H: "?tail \<in> H" sorry
+              have h\<sigma>0_H: "\<sigma> (piece 0 sub) \<in> H"
+              proof -
+                have "top1_is_path_on U (subspace_topology X TX U) (piece 0 sub 0) (piece 0 sub 1) (piece 0 sub)"
+                  using hpiece_in_U[OF h0n] .
+                thus ?thesis by (rule h\<sigma>_path_in_H)
+              qed
+              have h\<sigma>1_H: "\<sigma> (piece 1 sub) \<in> H"
+              proof -
+                have "top1_is_path_on U (subspace_topology X TX U) (piece 1 sub 0) (piece 1 sub 1) (piece 1 sub)"
+                  using hpiece_in_U[OF h1n] .
+                thus ?thesis by (rule h\<sigma>_path_in_H)
+              qed
+              have htail_H: "?tail \<in> H"
+                sorry \<comment> \<open>foldr of H-elements with eH \<in> H: each \<sigma>(piece j sub) \<in> H by h\<sigma>_path_in_H,
+                   eH \<in> H, mulH closed on H. Induction on the list.\<close>
               \<comment> \<open>Group associativity: mulH a (mulH b c) = mulH (mulH a b) c.\<close>
               have hassoc_raw: "\<forall>x\<in>H. \<forall>y\<in>H. \<forall>z\<in>H. mulH (mulH x y) z = mulH x (mulH y z)"
                 using hH unfolding top1_is_group_on_def by (by100 fast)
