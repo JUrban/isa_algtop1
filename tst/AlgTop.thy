@@ -4406,8 +4406,18 @@ proof -
         unfolding \<tau>_def Let_def by (by100 simp)
       \<comment> \<open>Step 3: Subdivision independence: any valid (n, sub) gives foldr_\<sigma> f n sub = \<sigma> f.
          Then h\<tau>_eq + subdivision independence + htrivial_eq give \<tau> f = \<sigma> f.\<close>
-      show ?thesis sorry \<comment> \<open>Needs subdivision independence: foldr_\<sigma> f n sub = \<sigma> f
-           for any valid n, sub when f \<subseteq> U. Proof by induction using \<sigma>_cond2.\<close>
+      \<comment> \<open>Step 3: Subdivision independence.\<close>
+      have hsubdiv: "\<And>n sub. n \<ge> 1 \<Longrightarrow> sub 0 = 0 \<Longrightarrow> sub n = 1
+          \<Longrightarrow> (\<forall>i<n. sub i < sub (Suc i))
+          \<Longrightarrow> (\<forall>i<n. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> U)
+                 \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> V))
+          \<Longrightarrow> foldr_\<sigma> f n sub = \<sigma> f"
+        sorry \<comment> \<open>Induction on n. Base n=1: piece = f (reparametrized), \<sigma>(piece) = \<sigma>(f).
+           Step: merge pieces 0,1 via \<sigma>_cond2, reduce to n-1.\<close>
+      \<comment> \<open>Step 4: Apply subdivision independence to SOME-picked subdivision.\<close>
+      show ?thesis
+        sorry \<comment> \<open>From h\<tau>_eq + hsubdiv + someI. The SOME-picked n, sub are valid,
+           so hsubdiv gives foldr_\<sigma> = \<sigma> f, hence \<tau> f = \<sigma> f.\<close>
     qed
     \<comment> \<open>Step 5: \<sigma>(f) = \<rho>(const \<cdot> f \<cdot> const) since \<alpha>(x0) = const.\<close>
     have h\<alpha>_x0: "\<alpha> x0 = top1_constant_path x0"
