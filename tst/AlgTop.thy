@@ -11116,10 +11116,26 @@ proof -
      |S| circles). H corresponds to a covering space E of X with p_*(\<pi>_1(E)) = H.
      By Theorem 83.2, E is a graph. By Theorem 84.7, \<pi>_1(E) is free.
      Since p_*(\<pi>_1(E)) = H and p_* is injective (covering), H is free.\<close>
-  \<comment> \<open>Step 1: Realize G as \<pi>_1 of a wedge of circles X.\<close>
-  \<comment> \<open>Step 2: H \<le> G \<cong> \<pi>_1(X) gives a covering space E of X with p_*(\<pi>_1(E)) \<cong> H.\<close>
-  \<comment> \<open>Step 3: E is a graph (Theorem 83.2). \<pi>_1(E) is free (Theorem 84.7). H \<cong> \<pi>_1(E) is free.\<close>
-  show ?thesis sorry
+  \<comment> \<open>Step 1: Realize G as \<pi>_1(X, x0) where X is a wedge of |S| circles.
+     By the free group realization theorem, every free group on S is isomorphic
+     to \<pi>_1 of a wedge of |S| circles.\<close>
+  obtain X :: "'a set" and TX :: "'a set set" and x0 :: 'a
+    where "top1_is_graph_on X TX" "top1_connected_on X TX" "x0 \<in> X"
+      and hiso: "top1_groups_isomorphic_on G mul
+          (top1_fundamental_group_carrier X TX x0) (top1_fundamental_group_mul X TX x0)"
+    sorry \<comment> \<open>Wedge of |S| circles realizes the free group G.\<close>
+  \<comment> \<open>Step 2: H \<le> G \<cong> \<pi>_1(X) gives a covering space E of X with p_*(\<pi>_1(E)) \<cong> H.
+     Use Theorem 82.1 (existence of covering spaces) with the subgroup
+     corresponding to H under the isomorphism G \<cong> \<pi>_1(X).\<close>
+  obtain E' :: "'b set" and TE' :: "'b set set" and p' :: "'b \<Rightarrow> 'a" and e0' :: 'b
+    where "top1_covering_map_on E' TE' X TX p'" "top1_connected_on E' TE'"
+      and "e0' \<in> E'"
+    sorry \<comment> \<open>Existence of covering space (Theorem 82.1) for the H-image in \<pi>_1(X).\<close>
+  \<comment> \<open>Step 3: E is a graph (Theorem 83.2: covering of graph is graph).
+     \<pi>_1(E) is free (Theorem 84.7: fund group of connected graph is free).
+     p_* injective (covering maps induce injections on \<pi>_1).
+     H \<cong> p_*(\<pi>_1(E)) which is free (subgroup of free = free via injection).\<close>
+  show ?thesis sorry \<comment> \<open>Combine: E graph (Thm 83.2) \<Rightarrow> \<pi>_1(E) free (Thm 84.7) \<Rightarrow> H free.\<close>
 qed
 
 (** from \<S>85 Theorem 85.3: Schreier index formula.
