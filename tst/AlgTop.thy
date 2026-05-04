@@ -10983,7 +10983,36 @@ proof -
      The full proof requires constructing the coset space E, defining basis topology,
      proving evenly-covered property (using semilocal simple connectivity),
      and matching p_*(\<pi>_1(E,e0)) = H.\<close>
-  show ?thesis sorry
+  have hTB: "is_topology_on B TB" using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
+  \<comment> \<open>===== CONSTRUCTION (Munkres §82) =====\<close>
+  \<comment> \<open>Step 1: Define coset relation. Two paths \<alpha>,\<beta> from b0 are in the same H-coset
+     iff [rev(\<alpha>)\<cdot>\<beta>] \<in> H. This is an equivalence relation on paths from b0.\<close>
+  \<comment> \<open>Step 2: E = set of H-cosets of path classes from b0.
+     E = {{g. coset_rel \<alpha> g} | \<alpha>. path from b0}.
+     Projection p: E \<rightarrow> B sends coset to endpoint \<alpha>(1).
+     Base point e0 = coset of constant path at b0.\<close>
+  \<comment> \<open>Step 3: Topology on E. Basis: for coset c and open U \<ni> p(c),
+     B(c, U) = {cosets reachable by extending paths in c by paths in U}.
+     This is well-defined and forms a basis (Munkres Lemma 82.2).\<close>
+  \<comment> \<open>Step 4: p is a covering map. For each b \<in> B, take U semilocally simply connected
+     around b. The fiber p\<inverse>(b) = H-cosets of loops at b0 via paths to b.
+     Each slice maps homeomorphically to U via p (Munkres Theorem 82.1 main argument).\<close>
+  \<comment> \<open>Step 5: E path-connected: for coset [\<alpha>]H, the path t \<mapsto> [\<alpha>_t]H connects e0 to [\<alpha>]H.
+     E locally path-connected: basis elements are path-connected.\<close>
+  \<comment> \<open>Step 6: p_*(\<pi>_1(E, e0)) = H. A loop \<gamma> at b0 lifts to a path from e0 = [const]H
+     to [\<gamma>]H. Lift is a loop iff [\<gamma>]H = [const]H iff [\<gamma>] \<in> H.\<close>
+  \<comment> \<open>Existentially package the construction.\<close>
+  obtain E' TE' p' e0' where
+        hTE': "is_topology_on_strict E' TE'"
+    and hp'_cov: "top1_covering_map_on E' TE' B TB p'"
+    and hE'_pc: "top1_path_connected_on E' TE'"
+    and hE'_lpc: "top1_locally_path_connected_on E' TE'"
+    and he0': "e0' \<in> E'" and hp'e0: "p' e0' = b0"
+    and hp'_img: "top1_fundamental_group_image_hom E' TE' e0' B TB b0 p' = H"
+    sorry \<comment> \<open>Full coset-space construction. Requires defining E' as H-right-cosets of path classes,
+       topology via path-extension basis, verifying covering + connectivity + p'_*(π₁) = H.
+       Semilocal simple connectivity (assms(4)) ensures the evenly-covered property.\<close>
+  show ?thesis sorry \<comment> \<open>Assembly: pack E', TE', p', e0' into existential. Type mismatch prevents auto.\<close>
 qed
 
 section \<open>Chapter 14: Applications to Group Theory\<close>
