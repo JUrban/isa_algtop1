@@ -4523,10 +4523,39 @@ proof -
         \<comment> \<open>σ unfolds to ρ(α(f'(0)) · (f' · rev(α(f'(1))))). With f'(0) and f'(1)
            equal for f1 and f2, the α paths are the same. The inner product depends
            on f' at I_set points only (via path product definition with t ∈ [0,1]).\<close>
-        show "\<sigma> (\<lambda>t. f1 (sub i + t * (sub (Suc i) - sub i)))
-            = \<sigma> (\<lambda>t. f2 (sub i + t * (sub (Suc i) - sub i)))"
-          sorry \<comment> \<open>σ depends on f' only at I_set points: endpoints + path product evaluation.
-             All at I_set by hf12. Technical: need to show σ is I_set-extensional.\<close>
+        \<comment> \<open>Since f1=f2 at all I_set points (by hf12), and the evaluation point
+           sub i + t*(sub(Suc i) - sub i) is in I_set for t \<in> [0,1], the pieces
+           agree on I_set. The σ definition only evaluates the piece function at
+           t=0, t=1, and at path-product points (all in [0,1]).
+           Key: (\<lambda>t. f1(arg(t))) and (\<lambda>t. f2(arg(t))) agree on I_set.\<close>
+        have hagree_piece: "\<forall>s\<in>I_set.
+            f1 (sub i + s * (sub (Suc i) - sub i)) = f2 (sub i + s * (sub (Suc i) - sub i))"
+        proof
+          fix s assume "s \<in> I_set"
+          hence "0 \<le> s" "s \<le> 1" unfolding top1_unit_interval_def by (by100 simp)+
+          thus "f1 (sub i + s * (sub (Suc i) - sub i)) = f2 (sub i + s * (sub (Suc i) - sub i))"
+            using hf12[OF hs0 hsn hinc hi] by (by100 blast)
+        qed
+        \<comment> \<open>The endpoints are equal (special case of hagree_piece at 0 and 1).\<close>
+        have hep0_simp: "f1 (sub i) = f2 (sub i)" using hep0 by (by100 simp)
+        have hep1_simp: "f1 (sub (Suc i)) = f2 (sub (Suc i))" using hep1 by (by100 simp)
+        \<comment> \<open>σ(f') = ρ(α(f'(0)) · (f' · rev(α(f'(1))))). The α paths depend on endpoints only.\<close>
+        define p1 where "p1 = (\<lambda>t. f1 (sub i + t * (sub (Suc i) - sub i)))"
+        define p2 where "p2 = (\<lambda>t. f2 (sub i + t * (sub (Suc i) - sub i)))"
+        have hp0_eq: "p1 0 = p2 0" unfolding p1_def p2_def using hep0_simp by (by100 simp)
+        have hp1_eq: "p1 1 = p2 1" unfolding p1_def p2_def using hep1_simp by (by100 simp)
+        have hL1: "\<sigma> p1 = \<rho> (top1_path_product (\<alpha> (p1 0)) (top1_path_product p1 (top1_path_reverse (\<alpha> (p1 1)))))"
+          unfolding \<sigma>_def by (by100 simp)
+        have hL2: "\<sigma> p2 = \<rho> (top1_path_product (\<alpha> (p2 0)) (top1_path_product p2 (top1_path_reverse (\<alpha> (p2 1)))))"
+          unfolding \<sigma>_def by (by100 simp)
+        \<comment> \<open>With p1(0)=p2(0) and p1(1)=p2(1), the α paths are the same.
+           The remaining difference is in the path products which evaluate p at I_set points.
+           Since p1=p2 on I_set, the path products are equal on I_set,
+           hence the ρ values are equal.\<close>
+        show "\<sigma> p1 = \<sigma> p2"
+          sorry \<comment> \<open>From hp0_eq, hp1_eq, hagree_piece: the L-constructions are
+             extensionally equal on I_set (α same, path product uses I_set values,
+             reverse uses I_set values). Hence ρ gives the same value.\<close>
       qed
       \<comment> \<open>foldr_\<sigma> f1 = foldr_\<sigma> f2 for any valid subdivision.\<close>
       have hfoldr_eq: "\<And>n sub. sub 0 = (0::real) \<Longrightarrow> sub n = 1 \<Longrightarrow> (\<forall>j<n. sub j < sub (Suc j))
@@ -9606,10 +9635,14 @@ proof -
     next
       assume "p \<in> {(x, y) | x y. \<exists>c. (\<forall>i<3. 0 \<le> c i) \<and> (\<Sum>i<3. c i) = 1
           \<and> x = (\<Sum>i<3. c i * ?vx i) \<and> y = (\<Sum>i<3. c i * ?vy i)}"
+      then obtain x' y' where hxy: "p = (x', y')" and "\<exists>c. (\<forall>i<3. (0::real) \<le> c i) \<and> (\<Sum>i<3. c i) = 1
+          \<and> x' = (\<Sum>i<3. c i * ?vx i) \<and> y' = (\<Sum>i<3. c i * ?vy i)"
+        by (by100 blast)
+      hence "x = x'" "y = y'" using hp by (by100 simp)+
       then obtain c where hcge: "\<forall>i<3. (0::real) \<le> c i"
           and hcsum: "(\<Sum>i<3. c i) = 1"
           and hpx_raw: "x = (\<Sum>i<3. c i * ?vx i)" and hpy_raw: "y = (\<Sum>i<3. c i * ?vy i)"
-        using hp by (by100 auto)
+        using \<open>\<exists>c. _\<close> by (by100 blast)
       have hpx: "x = c 1" using hpx_raw hsx by (by100 simp)
       have hpy: "y = c 2" using hpy_raw hsy by (by100 simp)
       have "c 0 + c 1 + c 2 = 1" using hcsum hsc by (by100 simp)
