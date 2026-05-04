@@ -5408,17 +5408,36 @@ proof -
                 have heH: "eH \<in> H" using hH unfolding top1_is_group_on_def by (by100 fast)
                 have hmcl: "\<And>a b. a \<in> H \<Longrightarrow> b \<in> H \<Longrightarrow> mulH a b \<in> H"
                   using hH unfolding top1_is_group_on_def by (by100 blast)
-                have "\<And>k. k \<le> length [Suc 1..<n] \<Longrightarrow>
-                    foldr mulH (take k (map (\<lambda>i. \<sigma> (piece i sub)) [Suc 1..<n])) eH \<in> H"
-                  sorry \<comment> \<open>Induction on k. Base: eH \<in> H. Step: foldr (take (Suc k)) = mulH head (foldr (take k)),
-                     head ∈ H by h_σ_path_in_H, foldr (take k) ∈ H by IH, mulH closed.\<close>
-                hence "foldr mulH (take (length [Suc 1..<n]) (map (\<lambda>i. \<sigma> (piece i sub)) [Suc 1..<n])) eH \<in> H"
-                  by (by100 force)
-                thus ?thesis by (by100 simp)
+                define tl where "tl = map (\<lambda>i. \<sigma> (piece i sub)) [Suc 1..<n]"
+                have hset_tl: "set tl \<subseteq> H"
+                proof -
+                  have "\<And>x. x \<in> set tl \<Longrightarrow> x \<in> H"
+                  proof -
+                    fix x assume "x \<in> set tl"
+                    then obtain j where "j \<ge> Suc 1" "j < n" "x = \<sigma> (piece j sub)"
+                      unfolding tl_def by (by100 force)
+                    thus "x \<in> H" using h\<sigma>_path_in_H[OF hpiece_in_U[OF \<open>j < n\<close>]] by (by100 simp)
+                  qed
+                  thus ?thesis by (by100 blast)
+                qed
+                have "foldr mulH tl eH \<in> H" using hset_tl
+                proof (induction tl)
+                  case Nil show ?case using heH by (by100 simp)
+                next
+                  case (Cons a xs)
+                  have ha: "a \<in> H" using Cons.prems by (by100 force)
+                  have hxs: "foldr mulH xs eH \<in> H" using Cons.IH Cons.prems by (by100 force)
+                  show ?case using hmcl[OF ha hxs] by (by100 simp)
+                qed
+                thus ?thesis unfolding tl_def .
               qed
               \<comment> \<open>Group associativity: mulH a (mulH b c) = mulH (mulH a b) c.\<close>
               have hassoc_raw: "\<forall>x\<in>H. \<forall>y\<in>H. \<forall>z\<in>H. mulH (mulH x y) z = mulH x (mulH y z)"
-                using hH unfolding top1_is_group_on_def by (by100 fast)
+              proof -
+                from hH have "\<forall>x\<in>H. \<forall>y\<in>H. \<forall>z\<in>H. mulH (mulH x y) z = mulH x (mulH y z)"
+                  unfolding top1_is_group_on_def by (by100 blast)
+                thus ?thesis .
+              qed
               have hassoc: "mulH (\<sigma> (piece 0 sub)) (mulH (\<sigma> (piece 1 sub)) ?tail)
                   = mulH (mulH (\<sigma> (piece 0 sub)) (\<sigma> (piece 1 sub))) ?tail"
                 using hassoc_raw[rule_format, OF h\<sigma>0_H h\<sigma>1_H htail_H] by (by100 simp)
