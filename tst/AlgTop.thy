@@ -2996,8 +2996,34 @@ proof -
         hence hpath_UV: "top1_is_path_on (U \<inter> V) ?TUV x0 x (\<alpha> x)"
           unfolding h\<alpha>_eq by (rule someI_ex)
         \<comment> \<open>Path in U\<inter>V is a path in U (codomain growth via subspace_topology_trans).\<close>
-        show ?thesis
-          sorry \<comment> \<open>hpath_UV: path in U\<inter>V. U\<inter>V \<subseteq> U. Codomain grow gives path in U.\<close>
+        \<comment> \<open>Grow codomain from U\<inter>V to U: continuous into U\<inter>V \<Rightarrow> continuous into U.\<close>
+        have hpath_UV_cont: "top1_continuous_map_on I_set I_top (U \<inter> V) ?TUV (\<alpha> x)"
+          using hpath_UV unfolding top1_is_path_on_def by (by100 blast)
+        have hpath_UV_range: "\<forall>s\<in>I_set. \<alpha> x s \<in> U \<inter> V"
+          using hpath_UV_cont unfolding top1_continuous_map_on_def by (by100 blast)
+        have h\<alpha>_cont_U: "top1_continuous_map_on I_set I_top U ?TU (\<alpha> x)"
+          unfolding top1_continuous_map_on_def
+        proof (intro conjI ballI)
+          fix s assume "s \<in> I_set" thus "\<alpha> x s \<in> U" using hpath_UV_range by (by100 blast)
+        next
+          fix W assume "W \<in> ?TU"
+          then obtain W' where "W' \<in> TX" "W = U \<inter> W'"
+            unfolding subspace_topology_def by (by100 blast)
+          have "{s \<in> I_set. \<alpha> x s \<in> W} = {s \<in> I_set. \<alpha> x s \<in> (U \<inter> V) \<inter> W'}"
+            using hpath_UV_range \<open>W = U \<inter> W'\<close> by (by100 blast)
+          also have "\<dots> \<in> I_top"
+          proof -
+            have "(U \<inter> V) \<inter> W' = (U \<inter> V) \<inter> (U \<inter> W')" by (by100 blast)
+            also have "U \<inter> W' = W" using \<open>W = U \<inter> W'\<close> by (by100 blast)
+            finally have "(U \<inter> V) \<inter> W' \<in> ?TUV"
+              unfolding subspace_topology_def using \<open>W' \<in> TX\<close> by (by100 blast)
+            thus ?thesis using hpath_UV_cont unfolding top1_continuous_map_on_def by (by100 blast)
+          qed
+          finally show "{s \<in> I_set. \<alpha> x s \<in> W} \<in> I_top" .
+        qed
+        show ?thesis unfolding top1_is_path_on_def
+          using h\<alpha>_cont_U
+          using hpath_UV unfolding top1_is_path_on_def by (by100 blast)
       next
         case False
         hence h\<alpha>_eq: "\<alpha> x = (SOME p. top1_is_path_on U ?TU x0 x p)"
