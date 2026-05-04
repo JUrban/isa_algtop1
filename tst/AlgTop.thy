@@ -5532,7 +5532,21 @@ proof -
         have hm_UV: "\<forall>i<n1+n2. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow>
             top1_path_product f1 f2 (sub_m i + t * (sub_m (Suc i) - sub_m i)) \<in> U)
             \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow>
-            top1_path_product f1 f2 (sub_m i + t * (sub_m (Suc i) - sub_m i)) \<in> V)" sorry
+            top1_path_product f1 f2 (sub_m i + t * (sub_m (Suc i) - sub_m i)) \<in> V)"
+        proof (intro allI impI)
+          fix i assume hi: "i < n1 + n2"
+          \<comment> \<open>For i < n1: piece is in [0, 1/2], uses f1 branch.
+             For i \<ge> n1: piece is in [1/2, 1], uses f2 branch.\<close>
+          show "(\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow>
+              top1_path_product f1 f2 (sub_m i + t * (sub_m (Suc i) - sub_m i)) \<in> U)
+              \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow>
+              top1_path_product f1 f2 (sub_m i + t * (sub_m (Suc i) - sub_m i)) \<in> V)"
+            sorry \<comment> \<open>Case i < n1: sub_m(i) = sub1(i)/2, sub_m(i+1) = sub1(i+1)/2.
+               Piece eval: (f1*f2)(sub1(i)/2 + t*(sub1(i+1)-sub1(i))/2) = f1(sub1(i)+t*(sub1(i+1)-sub1(i)))
+               since the argument is ≤ 1/2.
+               This equals the f1-piece, which maps to U or V by hs1_UV.
+               Case i ≥ n1: similar with f2 branch.\<close>
+        qed
         \<comment> \<open>By subdivision independence: τ(f1*f2) = foldr_σ (f1*f2) (n1+n2) sub_m.\<close>
         \<comment> \<open>The foldr splits at position n1: first n1 σ-values come from f1, last n2 from f2.\<close>
         \<comment> \<open>σ(piece_i for f1*f2) = σ(corresponding piece of f1) for i < n1,
