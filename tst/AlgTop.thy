@@ -2974,6 +2974,11 @@ proof -
       else if x \<in> U \<inter> V then SOME p. top1_is_path_on (U \<inter> V) ?TUV x0 x p
       else if x \<in> U then SOME p. top1_is_path_on U ?TU x0 x p
       else SOME p. top1_is_path_on V ?TV x0 x p)" for x
+  \<comment> \<open>\<alpha> properties: \<alpha>(x) is a path from x0 to x, lying in U (or V or U\<inter>V) depending on x.\<close>
+  have h\<alpha>_in_U: "\<And>x. x \<in> U \<Longrightarrow> top1_is_path_on U ?TU x0 x (\<alpha> x)"
+    sorry \<comment> \<open>From \<alpha>_def + path-connectedness of U. Case: x=x0 (const), x\<in>U\<inter>V (path in U\<inter>V \<subseteq> U), x\<in>U\\V (path in U).\<close>
+  have h\<alpha>_in_V: "\<And>x. x \<in> V \<Longrightarrow> top1_is_path_on V ?TV x0 x (\<alpha> x)"
+    sorry \<comment> \<open>Same for V.\<close>
   \<comment> \<open>Step 3: Define \<sigma>(f) = \<rho>(\<alpha>_{f(0)} \<cdot> f \<cdot> rev(\<alpha>_{f(1)})) for paths f in U or V.\<close>
   define \<sigma> where "\<sigma> f = \<rho> (top1_path_product (\<alpha> (f 0)) (top1_path_product f (top1_path_reverse (\<alpha> (f 1)))))" for f
   \<comment> \<open>Step 4: Define \<tau>(f) for a loop f at x_0 in X.
@@ -3018,10 +3023,18 @@ proof -
        Then \<alpha>\<cdot>(f'\<cdot>rev(\<alpha>)) \<simeq> \<alpha>\<cdot>(g'\<cdot>rev(\<alpha>)) by product_right.\<close>
     have hf'_path: "top1_is_path_on U ?TU (f' 0) (f' 1) f'"
       using hhom unfolding top1_path_homotopic_on_def by (by100 blast)
+    have hf'_cont: "top1_continuous_map_on I_set I_top U ?TU f'"
+      using hf'_path unfolding top1_is_path_on_def by (by100 blast)
+    have hf'_range: "\<forall>s\<in>I_set. f' s \<in> U"
+      using hf'_cont unfolding top1_continuous_map_on_def by (by100 blast)
+    have h0_I: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+    have h1_I: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+    have hf0_U: "f' 0 \<in> U" using hf'_range h0_I by (by100 blast)
+    have hf1_U: "f' 1 \<in> U" using hf'_range h1_I by (by100 blast)
     have hrev_path: "top1_is_path_on U ?TU (f' 1) x0 (top1_path_reverse (\<alpha> (f' 1)))"
-      sorry \<comment> \<open>rev(\<alpha>(f'(1))) is a path in U from f'(1) to x0.\<close>
+      by (rule top1_path_reverse_is_path[OF h\<alpha>_in_U[OF hf1_U]])
     have h\<alpha>_path: "top1_is_path_on U ?TU x0 (f' 0) (\<alpha> (f' 0))"
-      sorry \<comment> \<open>\<alpha>(f'(0)) is a path in U from x0 to f'(0).\<close>
+      by (rule h\<alpha>_in_U[OF hf0_U])
     have h_inner: "top1_path_homotopic_on U ?TU (f' 0) x0
         (top1_path_product f' (top1_path_reverse (\<alpha> (f' 1))))
         (top1_path_product g' (top1_path_reverse (\<alpha> (f' 1))))"
