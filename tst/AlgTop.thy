@@ -5391,11 +5391,95 @@ proof -
            The foldr splits: first n1 σ-values = foldr_σ f1 n1 sub1 = τ(f1),
            last n2 σ-values = foldr_σ f2 n2 sub2 = τ(f2).
            So τ(f1*f2) = τ(f1) · τ(f2).\<close>
+        \<comment> \<open>Extract n1, sub1 for f1 and n2, sub2 for f2 via someI_ex.\<close>
+        \<comment> \<open>Use someI_ex pattern to avoid flaky obtain.\<close>
+        define Pn1 where "Pn1 n \<equiv> n \<ge> 1 \<and> (\<exists>sub. sub 0 = (0::real) \<and> sub n = 1
+            \<and> (\<forall>i<n. sub i < sub (Suc i))
+            \<and> (\<forall>i<n. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f1 (sub i + t * (sub (Suc i) - sub i)) \<in> U)
+                   \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f1 (sub i + t * (sub (Suc i) - sub i)) \<in> V)))" for n :: nat
+        have "Pn1 (SOME n. Pn1 n)" using hex_f1 unfolding Pn1_def by (rule someI_ex)
+        hence hn1: "(SOME n. Pn1 n) \<ge> 1" and hex_s1: "\<exists>sub1. sub1 0 = (0::real) \<and> sub1 (SOME n. Pn1 n) = 1
+            \<and> (\<forall>i<(SOME n. Pn1 n). sub1 i < sub1 (Suc i))
+            \<and> (\<forall>i<(SOME n. Pn1 n). (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f1 (sub1 i + t * (sub1 (Suc i) - sub1 i)) \<in> U)
+                   \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f1 (sub1 i + t * (sub1 (Suc i) - sub1 i)) \<in> V))"
+          unfolding Pn1_def by (by100 blast)+
+        define n1 where "n1 = (SOME n. Pn1 n)"
+        define Ps1 where "Ps1 sub \<equiv> sub 0 = (0::real) \<and> sub n1 = 1
+            \<and> (\<forall>i<n1. sub i < sub (Suc i))
+            \<and> (\<forall>i<n1. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f1 (sub i + t * (sub (Suc i) - sub i)) \<in> U)
+                   \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f1 (sub i + t * (sub (Suc i) - sub i)) \<in> V))" for sub :: "nat \<Rightarrow> real"
+        have "Ps1 (SOME sub. Ps1 sub)"
+        proof -
+          have "\<exists>sub. Ps1 sub" using hex_s1 unfolding Ps1_def n1_def by (by100 blast)
+          thus ?thesis by (rule someI_ex)
+        qed
+        hence hs1_0: "(SOME sub. Ps1 sub) 0 = (0::real)"
+            and hs1_n: "(SOME sub. Ps1 sub) n1 = 1"
+            and hs1_inc: "\<forall>i<n1. (SOME sub. Ps1 sub) i < (SOME sub. Ps1 sub) (Suc i)"
+            and hs1_UV: "\<forall>i<n1. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f1 ((SOME sub. Ps1 sub) i + t * ((SOME sub. Ps1 sub) (Suc i) - (SOME sub. Ps1 sub) i)) \<in> U)
+                   \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f1 ((SOME sub. Ps1 sub) i + t * ((SOME sub. Ps1 sub) (Suc i) - (SOME sub. Ps1 sub) i)) \<in> V)"
+          unfolding Ps1_def by (by100 blast)+
+        define sub1 where "sub1 = (SOME sub. Ps1 sub)"
+        \<comment> \<open>Same for f2.\<close>
+        define Pn2 where "Pn2 n \<equiv> n \<ge> 1 \<and> (\<exists>sub. sub 0 = (0::real) \<and> sub n = 1
+            \<and> (\<forall>i<n. sub i < sub (Suc i))
+            \<and> (\<forall>i<n. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f2 (sub i + t * (sub (Suc i) - sub i)) \<in> U)
+                   \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f2 (sub i + t * (sub (Suc i) - sub i)) \<in> V)))" for n :: nat
+        have "Pn2 (SOME n. Pn2 n)" using hex_f2 unfolding Pn2_def by (rule someI_ex)
+        hence hn2: "(SOME n. Pn2 n) \<ge> 1" and hex_s2: "\<exists>sub2. sub2 0 = (0::real) \<and> sub2 (SOME n. Pn2 n) = 1
+            \<and> (\<forall>i<(SOME n. Pn2 n). sub2 i < sub2 (Suc i))
+            \<and> (\<forall>i<(SOME n. Pn2 n). (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f2 (sub2 i + t * (sub2 (Suc i) - sub2 i)) \<in> U)
+                   \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f2 (sub2 i + t * (sub2 (Suc i) - sub2 i)) \<in> V))"
+          unfolding Pn2_def by (by100 blast)+
+        define n2 where "n2 = (SOME n. Pn2 n)"
+        define Ps2 where "Ps2 sub \<equiv> sub 0 = (0::real) \<and> sub n2 = 1
+            \<and> (\<forall>i<n2. sub i < sub (Suc i))
+            \<and> (\<forall>i<n2. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f2 (sub i + t * (sub (Suc i) - sub i)) \<in> U)
+                   \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f2 (sub i + t * (sub (Suc i) - sub i)) \<in> V))" for sub :: "nat \<Rightarrow> real"
+        have "Ps2 (SOME sub. Ps2 sub)"
+        proof -
+          have "\<exists>sub. Ps2 sub" using hex_s2 unfolding Ps2_def n2_def by (by100 blast)
+          thus ?thesis by (rule someI_ex)
+        qed
+        hence hs2_0: "(SOME sub. Ps2 sub) 0 = (0::real)"
+            and hs2_n: "(SOME sub. Ps2 sub) n2 = 1"
+            and hs2_inc: "\<forall>i<n2. (SOME sub. Ps2 sub) i < (SOME sub. Ps2 sub) (Suc i)"
+            and hs2_UV: "\<forall>i<n2. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f2 ((SOME sub. Ps2 sub) i + t * ((SOME sub. Ps2 sub) (Suc i) - (SOME sub. Ps2 sub) i)) \<in> U)
+                   \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f2 ((SOME sub. Ps2 sub) i + t * ((SOME sub. Ps2 sub) (Suc i) - (SOME sub. Ps2 sub) i)) \<in> V)"
+          unfolding Ps2_def by (by100 blast)+
+        define sub2 where "sub2 = (SOME sub. Ps2 sub)"
+        \<comment> \<open>Merged subdivision: sub_m(i) = sub1(i)/2 for i ≤ n1, sub_m(n1+j) = 1/2+sub2(j)/2.\<close>
+        define sub_m where "sub_m i = (if i \<le> n1 then sub1 i / 2 else 1/2 + sub2 (i - n1) / 2)" for i
+        have hs1_0': "sub1 0 = (0::real)" using hs1_0 unfolding sub1_def by (by100 simp)
+        have hs1_n': "sub1 n1 = 1" using hs1_n unfolding sub1_def n1_def by (by100 simp)
+        have hs2_0': "sub2 0 = (0::real)" using hs2_0 unfolding sub2_def by (by100 simp)
+        have hs2_n': "sub2 n2 = 1" using hs2_n unfolding sub2_def n2_def by (by100 simp)
+        have hn1': "n1 \<ge> 1" using hn1 unfolding n1_def by (by100 simp)
+        have hn2': "n2 \<ge> 1" using hn2 unfolding n2_def by (by100 simp)
+        have hm_0: "sub_m 0 = (0::real)" unfolding sub_m_def using hs1_0' by (by100 simp)
+        have hm_n: "sub_m (n1 + n2) = 1"
+        proof -
+          have "\<not> (n1 + n2 \<le> n1)" using hn2' by (by100 presburger)
+          hence "sub_m (n1 + n2) = 1/2 + sub2 ((n1+n2) - n1) / 2" unfolding sub_m_def by (by100 simp)
+          also have "\<dots> = 1/2 + sub2 n2 / 2" by (by100 simp)
+          also have "\<dots> = 1" using hs2_n' by (by100 simp)
+          finally show ?thesis .
+        qed
+        have hm_inc: "\<forall>i<n1+n2. sub_m i < sub_m (Suc i)" sorry
+        \<comment> \<open>Each piece of f1*f2 via sub_m maps to U or V.\<close>
+        have hm_UV: "\<forall>i<n1+n2. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow>
+            top1_path_product f1 f2 (sub_m i + t * (sub_m (Suc i) - sub_m i)) \<in> U)
+            \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow>
+            top1_path_product f1 f2 (sub_m i + t * (sub_m (Suc i) - sub_m i)) \<in> V)" sorry
+        \<comment> \<open>By subdivision independence: τ(f1*f2) = foldr_σ (f1*f2) (n1+n2) sub_m.\<close>
+        \<comment> \<open>The foldr splits at position n1: first n1 σ-values come from f1, last n2 from f2.\<close>
+        \<comment> \<open>σ(piece_i for f1*f2) = σ(corresponding piece of f1) for i < n1,
+           σ(piece_i for f1*f2) = σ(corresponding piece of f2) for i ≥ n1.\<close>
+        \<comment> \<open>foldr [σ(f1-pieces), σ(f2-pieces)] eH = (foldr [σ(f1-pieces)] eH) · (foldr [σ(f2-pieces)] eH)
+           by group associativity + identity splitting.\<close>
+        \<comment> \<open>foldr [σ(f1-pieces)] eH = foldr_σ f1 n1 sub1 = τ(f1) by subdiv independence.\<close>
+        \<comment> \<open>foldr [σ(f2-pieces)] eH = foldr_σ f2 n2 sub2 = τ(f2) by subdiv independence.\<close>
         show ?thesis sorry
-          \<comment> \<open>The formal proof requires: constructing sub_merged, showing it's valid,
-             showing pieces correspond to f1/f2 pieces (via path_product_def),
-             splitting the foldr, and applying subdivision independence for f1 and f2.
-             Conceptually clean but technically ~200 lines.\<close>
       qed
       show ?thesis using h\<Phi>_prod h\<Phi>_c1 h\<Phi>_c2 h\<tau>_mul by (by100 simp)
     qed
