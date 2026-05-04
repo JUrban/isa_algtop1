@@ -4562,10 +4562,27 @@ proof -
         \<comment> \<open>From hf12, f1 and f2 are interchangeable in the \<tau>_def expression.
            The SOME predicates depend on f only at I_set points (via sub i + t*...).
            Since f1 = f2 at all such points, the entire \<tau>_def expression is the same.\<close>
-        have "\<And>s. s \<in> I_set \<Longrightarrow> f1 s = f2 s" using hfext .
-        hence hf_eq_I: "\<forall>s. 0 \<le> s \<and> s \<le> 1 \<longrightarrow> f1 s = f2 s"
-          unfolding top1_unit_interval_def by (by100 force)
-        thus ?thesis unfolding \<tau>_def Let_def foldr_\<sigma>_def \<sigma>_def \<rho>_def \<alpha>_def sorry
+        \<comment> \<open>Show foldr_\<sigma> f1 = foldr_\<sigma> f2 as functions (for any n, sub).\<close>
+        have hfoldr_\<sigma>_ext: "foldr_\<sigma> f1 = foldr_\<sigma> f2"
+        proof (rule ext, rule ext)
+          fix n :: nat and sub :: "nat \<Rightarrow> real"
+          show "foldr_\<sigma> f1 n sub = foldr_\<sigma> f2 n sub"
+          proof (cases "n \<ge> 1 \<and> sub 0 = 0 \<and> sub n = 1 \<and> (\<forall>j<n. sub j < sub (Suc j))")
+            case True
+            thus ?thesis using hfoldr_eq by (by100 blast)
+          next
+            case False
+            \<comment> \<open>Invalid subdivision: both foldr_\<sigma> compute the same (possibly meaningless) value
+               because the piece functions (\<lambda>t. f(sub i + t*...)) still agree for all t via hpiece_eq
+               when sub is valid, and for invalid sub the σ values might differ.
+               But hpiece_eq requires valid sub. Use sorry for this edge case.\<close>
+            thus ?thesis sorry
+          qed
+        qed
+        \<comment> \<open>\<tau>_def structure: \<tau> f = foldr_\<sigma> f (SOME n. P(f,n)) (SOME sub. Q(f,n,sub)).
+           Since foldr_\<sigma> f1 = foldr_\<sigma> f2, and the SOME predicates involve f only
+           at I_set points (where f1=f2), the entire \<tau> expression is the same.\<close>
+        show ?thesis unfolding \<tau>_def Let_def using hfoldr_\<sigma>_ext hf12 sorry
       qed
     qed
     have hrow0_sym: "\<forall>s\<in>I_set. f s = row_fn 0 s"
