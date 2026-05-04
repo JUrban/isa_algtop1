@@ -5352,7 +5352,10 @@ proof -
           \<comment> \<open>RHS unfolds: map splits into [σ(piece 0 sub')] ++ map ... [1..<n-1].\<close>
           have h0n1: "(0::nat) < n - 1" using hn2 by (by100 presburger)
           have hn1_unfold2: "[0..<n-1] = 0 # [1..<n-1]"
-            using upt_rec[of 0 "n-1"] h0n1 by (by100 simp)
+          proof -
+            have "0 < n - 1" using h0n1 .
+            thus ?thesis using upt_rec[of 0 "n-1"] by (by100 force)
+          qed
           have hRHS_split: "foldr mulH (map (\<lambda>i. \<sigma> (piece i sub')) [0..<n-1]) eH =
               mulH (\<sigma> (piece 0 sub')) (foldr mulH (map (\<lambda>i. \<sigma> (piece (Suc i) sub')) [0..<n - Suc 1]) eH)"
           proof -
@@ -5491,9 +5494,51 @@ proof -
       \<comment> \<open>Key insight: the SOME predicates for n and sub are the same as hsubdiv's premises.
          Since hex_n shows the predicates are satisfiable, someI gives the SOME values satisfy them.
          Then hsubdiv applies directly.\<close>
-      show ?thesis
-        sorry \<comment> \<open>τ f = foldr_σ f N S (by h_τ_eq) = σ f (by hsubdiv[OF someI-derived premises]).
-           The SOME terms are very large; needs careful someI + term matching.\<close>
+      \<comment> \<open>Abbreviate the n-predicate.\<close>
+      define Pn where "Pn n \<equiv> n \<ge> 1 \<and> (\<exists>sub. sub 0 = (0::real) \<and> sub n = 1
+          \<and> (\<forall>i<n. sub i < sub (Suc i))
+          \<and> (\<forall>i<n. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> U)
+                 \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> V)))" for n :: nat
+      have hPn_ex: "\<exists>n. Pn n" using hex_n unfolding Pn_def by (by100 blast)
+      hence hPn_some: "Pn (SOME n. Pn n)" by (rule someI_ex)
+      define N where "N = (SOME n. Pn n)"
+      have hN_ge: "N \<ge> 1" using hPn_some unfolding N_def Pn_def by (by100 blast)
+      have hN_ex_sub: "\<exists>sub. sub 0 = (0::real) \<and> sub N = 1
+          \<and> (\<forall>i<N. sub i < sub (Suc i))
+          \<and> (\<forall>i<N. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> U)
+                 \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> V))"
+        using hPn_some unfolding N_def Pn_def by (by100 blast)
+      \<comment> \<open>Abbreviate the sub-predicate (with N fixed).\<close>
+      define Psub where "Psub sub \<equiv> sub 0 = (0::real) \<and> sub N = 1
+          \<and> (\<forall>i<N. sub i < sub (Suc i))
+          \<and> (\<forall>i<N. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> U)
+                 \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> V))"
+        for sub :: "nat \<Rightarrow> real"
+      have hPsub_ex: "\<exists>sub. Psub sub" using hN_ex_sub unfolding Psub_def by (by100 blast)
+      hence hPsub_some: "Psub (SOME sub. Psub sub)" by (rule someI_ex)
+      define S where "S = (SOME sub. Psub sub)"
+      have hS0: "S 0 = 0" using hPsub_some unfolding S_def Psub_def by (by100 blast)
+      have hSN: "S N = 1" using hPsub_some unfolding S_def Psub_def by (by100 blast)
+      have hS_inc: "\<forall>i<N. S i < S (Suc i)" using hPsub_some unfolding S_def Psub_def by (by100 blast)
+      have hS_UV: "\<forall>i<N. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (S i + t * (S (Suc i) - S i)) \<in> U)
+             \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (S i + t * (S (Suc i) - S i)) \<in> V)"
+        using hPsub_some unfolding S_def Psub_def by (by100 blast)
+      \<comment> \<open>Apply hsubdiv.\<close>
+      have hsubdiv_app: "foldr_\<sigma> f N S = \<sigma> f"
+        by (rule hsubdiv[OF hN_ge hS0 hSN hS_inc hS_UV])
+      \<comment> \<open>Connect to h\<tau>_eq: \<tau> f = foldr_\<sigma> f N S.\<close>
+      \<comment> \<open>The SOME n in \<tau>_def picks the same value as N = SOME n. Pn n.
+         Key: the predicate in \<tau>_def is exactly Pn (after unfolding Pn_def).\<close>
+      have hN_eq: "N = (SOME n. n \<ge> 1 \<and> (\<exists>sub. sub 0 = (0::real) \<and> sub n = 1
+          \<and> (\<forall>i<n. sub i < sub (Suc i))
+          \<and> (\<forall>i<n. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> U)
+                 \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> V))))"
+        unfolding N_def Pn_def by (by100 simp)
+      \<comment> \<open>Similarly for S: the sub-predicate in \<tau>_def (with N substituted) equals Psub.\<close>
+      have hS_eq: "S = (SOME sub. Psub sub)" unfolding S_def by (by100 simp)
+      have h\<tau>_foldr: "\<tau> f = foldr_\<sigma> f N S"
+        using h\<tau>_eq hN_eq unfolding Psub_def S_def sorry
+      show ?thesis using h\<tau>_foldr hsubdiv_app by (by100 simp)
     qed
     \<comment> \<open>Step 5: \<sigma>(f) = \<rho>(const \<cdot> f \<cdot> const) since \<alpha>(x0) = const.\<close>
     have h\<alpha>_x0: "\<alpha> x0 = top1_constant_path x0"
@@ -7430,7 +7475,7 @@ proof -
         by (rule subgroup_generated_contains[OF hG h\<iota>0_sub])
     qed
   qed
-  thus ?thesis using hgen hgen_eq by (by100 simp)
+  thus ?thesis using hgen hgen_eq by (by100 force)
 qed
 
 text \<open>Helper: preimage of a normal subgroup under a group hom is normal.\<close>
@@ -8260,7 +8305,7 @@ proof -
                (invgFP (\<iota>fam 1 (top1_fundamental_group_induced_on (U \<inter> V) ?TUV x0 V ?TV x0 (\<lambda>x. x) c)))
        | c. c \<in> top1_fundamental_group_carrier (U \<inter> V) ?TUV x0 } \<subseteq> K
              \<and> top1_normal_subgroup_on FP mulFP eFP invgFP K}"
-        using hw hN'_def_eq by (by100 force)
+        using hw hN'_def_eq by (by100 simp)
       hence "w \<in> top1_group_kernel_on FP ?eQ \<psi>"
         using hgens_in_ker2 hker_normal_FP by (by100 blast)
       thus ?thesis .
