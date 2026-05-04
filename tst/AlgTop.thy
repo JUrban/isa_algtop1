@@ -4527,7 +4527,7 @@ proof -
           \<and> (\<forall>i<n. sub i < sub (Suc i))
           \<and> (\<forall>i<n. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f2 (sub i + t * (sub (Suc i) - sub i)) \<in> U)
                  \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f2 (sub i + t * (sub (Suc i) - sub i)) \<in> V))))"
-        sorry \<comment> \<open>From heval_agree: f1 and f2 agree at all I_set evaluation points.\<close>
+        sorry \<comment> \<open>From heval_agree: f1(arg) = f2(arg) for arg \<in> I_set, so f1 \<in> U iff f2 \<in> U.\<close>
       show "\<tau> f1 = \<tau> f2" unfolding \<tau>_def Let_def
         using hPn_eq hfoldr_eq sorry
     qed
