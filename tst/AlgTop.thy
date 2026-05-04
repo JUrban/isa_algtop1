@@ -2993,6 +2993,38 @@ proof -
   \<comment> \<open>Step 5: Define \<Phi>([f]) = \<tau>(f) for a SOME representative f of the class.\<close>
   define \<Phi> where "\<Phi> c = \<tau> (SOME f. top1_is_loop_on X TX x0 f
       \<and> c = {g. top1_loop_equiv_on X TX x0 f g})" for c
+  \<comment> \<open>===== \<sigma> conditions (Munkres Step 2) =====\<close>
+  \<comment> \<open>\<sigma> condition (1): if [f] = [g] in U (or V), then \<sigma>(f) = \<sigma>(g).
+     Proof: L(f) = \<alpha>_{f(0)}\<cdot>f\<cdot>rev(\<alpha>_{f(1)}) and L(g) = \<alpha>_{g(0)}\<cdot>g\<cdot>rev(\<alpha>_{g(1)}).
+     If f \<simeq> g in U, then f(0)=g(0), f(1)=g(1), so L(f) \<simeq> L(g) in U.
+     Then \<rho>(L(f)) = \<rho>(L(g)) by \<rho> condition (1).\<close>
+  have h\<sigma>_cond1: "\<And>f' g'. top1_path_homotopic_on U ?TU (f' 0) (f' 1) f' g'
+      \<Longrightarrow> \<sigma> f' = \<sigma> g'"
+    sorry \<comment> \<open>\<sigma> respects path homotopy in U (or V). Immediate from \<rho> cond (1).\<close>
+  have h\<sigma>_cond1_V: "\<And>f' g'. top1_path_homotopic_on V ?TV (f' 0) (f' 1) f' g'
+      \<Longrightarrow> \<sigma> f' = \<sigma> g'"
+    sorry \<comment> \<open>Same for V.\<close>
+  \<comment> \<open>\<sigma> condition (2): if f and g are paths with f(1)=g(0), both in U (or both in V),
+     then \<sigma>(f*g) = \<sigma>(f)\<cdot>\<sigma>(g).
+     Proof (Munkres p.429): L(f)*L(g) = (\<alpha>_x\<cdot>f\<cdot>rev(\<alpha>_y))*(\<alpha>_y\<cdot>g\<cdot>rev(\<alpha>_z))
+     \<simeq> \<alpha>_x\<cdot>f\<cdot>g\<cdot>rev(\<alpha>_z) = L(f*g) in U (or V).
+     Then \<rho>(L(f*g)) = \<rho>(L(f)*L(g)) = \<rho>(L(f))\<cdot>\<rho>(L(g))
+     since both L(f),L(g) are loops in U at x0, and \<phi>1 is a hom.\<close>
+  have h\<sigma>_cond2: "\<And>f' g'. (\<forall>s\<in>I_set. f' s \<in> U) \<Longrightarrow> (\<forall>s\<in>I_set. g' s \<in> U)
+      \<Longrightarrow> f' 1 = g' 0
+      \<Longrightarrow> \<sigma> (top1_path_product f' g') = mulH (\<sigma> f') (\<sigma> g')"
+    sorry \<comment> \<open>Munkres Step 2: L(f*g) \<simeq> L(f)*L(g) in U, then \<phi>1 hom gives product.\<close>
+  have h\<sigma>_cond2_V: "\<And>f' g'. (\<forall>s\<in>I_set. f' s \<in> V) \<Longrightarrow> (\<forall>s\<in>I_set. g' s \<in> V)
+      \<Longrightarrow> f' 1 = g' 0
+      \<Longrightarrow> \<sigma> (top1_path_product f' g') = mulH (\<sigma> f') (\<sigma> g')"
+    sorry \<comment> \<open>Same for V.\<close>
+  \<comment> \<open>\<sigma> extension of \<rho>: for a loop f at x0 in U (or V), \<sigma>(f) = \<rho>(f).
+     Proof: L(f) = \<alpha>_{x0}\<cdot>f\<cdot>rev(\<alpha>_{x0}) = const\<cdot>f\<cdot>const \<simeq> f in U.
+     Then \<sigma>(f) = \<rho>(L(f)) = \<rho>(f).\<close>
+  have h\<sigma>_ext_\<rho>: "\<And>f'. top1_is_loop_on U ?TU x0 f' \<Longrightarrow> \<sigma> f' = \<rho> f'"
+    sorry \<comment> \<open>Already proved for the specific f in h\<Phi>_ext_U (h\<sigma>_\<rho> + h\<rho>_simp). General version.\<close>
+  have h\<sigma>_ext_\<rho>_V: "\<And>f'. top1_is_loop_on V ?TV x0 f' \<Longrightarrow> \<sigma> f' = \<rho> f'"
+    sorry \<comment> \<open>Same for V.\<close>
   \<comment> \<open>===== Key property A: \<tau> well-defined under homotopy =====
      If f \<simeq> g (path homotopic in X, same endpoints), then \<tau>(f) = \<tau>(g).
      This is THE core 2D Lebesgue subdivision argument (Munkres Step 4).
@@ -3111,7 +3143,8 @@ proof -
        - Telescoping across i: \<Pi> \<sigma>(piece_i) = \<Pi> \<sigma>(piece'_i)
        - Hence \<tau>(f_j) = \<tau>(f_{j+1}).\<close>
     have hrow_step: "\<forall>j<nt. \<tau> (row_fn j) = \<tau> (row_fn (Suc j))"
-      sorry \<comment> \<open>Core row comparison. For adjacent rows j, j+1:
+      sorry \<comment> \<open>Munkres Step 4 (special case, applied to each strip).
+         For adjacent rows j, j+1:
          Each cell [s'_i, s'_{i+1}] \<times> [t_j, t_{j+1}] maps into U or V.
          The cell boundary gives: piece_top \<cdot> \<beta>_right \<simeq> \<beta>_left \<cdot> piece_bottom
          in U or V (broken-line homotopy in convex cell).
@@ -3268,14 +3301,13 @@ proof -
   have h\<Phi>_hom: "top1_group_hom_on
       (top1_fundamental_group_carrier X TX x0)
       (top1_fundamental_group_mul X TX x0) H mulH \<Phi>"
-    sorry \<comment> \<open>\<Phi> is a group homomorphism. Proof:
-       (1) Well-defined on equiv classes: from h\<tau>_wd (if f \<simeq> g then \<tau> f = \<tau> g).
-       (2) Carrier map: \<Phi>([f]) = \<tau>(f) \<in> H by \<sigma> values in H + mulH closure.
-       (3) Homomorphism: \<Phi>([f]\<cdot>[g]) = \<Phi>([f*g]) = \<tau>(f*g).
-           \<tau>(f*g) = \<tau>(f)\<cdot>\<tau>(g): the SOME-picked subdivision of f*g can be refined
-           to include the midpoint 1/2. Then pieces 0..k come from f, pieces k+1..n from g.
-           Telescoping for each half gives \<tau>(f) and \<tau>(g) respectively.
-           Uses same \<phi>1/\<phi>2 homomorphism + \<alpha> cancellation as h\<tau>_\<sigma>.\<close>
+    sorry \<comment> \<open>Munkres Steps 5-6: \<Phi> is a well-defined homomorphism.
+       Well-defined: from h\<tau>_wd (\<tau> cond (1)).
+       Homomorphism (\<tau> cond (2), Munkres Step 5): given f*g, choose subdivision
+       containing 1/2 as a point. Pieces split into f-pieces and g-pieces.
+       \<tau>(f*g) = \<sigma>(f_1)\<cdot>...\<cdot>\<sigma>(f_k)\<cdot>\<sigma>(g_1)\<cdot>...\<cdot>\<sigma>(g_{n-k}) = \<tau>(f)\<cdot>\<tau>(g).
+       Carrier: \<sigma> values are in H (from \<phi>1/\<phi>2 ranges); mulH closure.
+       Depends on: h\<tau>_wd, h\<sigma>_cond2, subdivision independence.\<close>
   have h\<Phi>_ext_U: "\<forall>a\<in>top1_fundamental_group_carrier U ?TU x0.
       \<Phi> (top1_fundamental_group_induced_on U ?TU x0 X TX x0 (\<lambda>x. x) a) = \<phi>1 a"
   proof
@@ -3364,13 +3396,12 @@ proof -
     qed
     \<comment> \<open>Step 4: \<tau>(f) = \<sigma>(f) (trivial subdivision: f already in U, use n=1).\<close>
     have h\<tau>_\<sigma>: "\<tau> f = \<sigma> f"
-      sorry \<comment> \<open>\<tau>-\<sigma> telescoping for f \<subseteq> U. Key: does NOT need subdivision independence.
-         Proof: (1) f \<subseteq> U so trivial subdiv n=1 satisfies SOME predicate.
-         (2) For ANY SOME-picked n,sub: all pieces in U (since f \<subseteq> U).
-         (3) Each \<sigma>(piece_i) = \<phi>1([A_i]) where A_i = \<alpha>(x_i)\<cdot>p_i\<cdot>rev(\<alpha>(x_{i+1})).
-         (4) \<phi>1 hom: \<Pi>\<phi>1([A_i]) = \<phi>1([A_0\<cdot>...\<cdot>A_{n-1}]).
-         (5) Telescoping: A_0\<cdot>...\<cdot>A_{n-1} \<simeq>_U \<alpha>(f(0))\<cdot>f\<cdot>rev(\<alpha>(f(1))) (cancellation).
-         (6) foldr mulH [v_i] eH = (\<Pi>v_i)\<cdot>eH = \<sigma>(f)\<cdot>eH = \<sigma>(f) (H-identity).\<close>
+      sorry \<comment> \<open>Munkres Step 3 + subdivision independence:
+         For f \<subseteq> U, any SOME-picked partition has all pieces in U.
+         Merging pieces one at a time using \<sigma> cond (2): \<sigma>(f_i)\<cdot>\<sigma>(f_{i+1}) = \<sigma>(f_i * f_{i+1}).
+         After all merges: \<sigma>(f_1*...*f_n). By \<sigma> cond (1) + reparametrization: = \<sigma>(f).
+         Then foldr ... eH = \<sigma>(f) \<cdot> eH = \<sigma>(f) (group identity in H).
+         Depends on: h\<sigma>_cond1, h\<sigma>_cond2, h\<sigma>_ext_\<rho>, hH (group axioms).\<close>
     \<comment> \<open>Step 5: \<sigma>(f) = \<rho>(const \<cdot> f \<cdot> const) since \<alpha>(x0) = const.\<close>
     have h\<alpha>_x0: "\<alpha> x0 = top1_constant_path x0"
       unfolding \<alpha>_def by (by100 simp)
@@ -3563,7 +3594,7 @@ proof -
     qed
     \<comment> \<open>Remaining steps: \<tau>(g) = \<sigma>(g) = \<rho>(const\<cdot>g\<cdot>const) = \<rho>(g) = \<phi>2([g]_V).\<close>
     have h\<tau>_\<sigma>_V: "\<tau> g = \<sigma> g"
-      sorry \<comment> \<open>Same telescoping as h\<tau>_\<sigma> but with V and \<phi>2. All pieces in V, \<phi>2 hom.\<close>
+      sorry \<comment> \<open>Same as h\<tau>_\<sigma> but with V. Uses h\<sigma>_cond1_V, h\<sigma>_cond2_V, h\<sigma>_ext_\<rho>_V.\<close>
     have h\<alpha>_x0_V: "\<alpha> x0 = top1_constant_path x0" unfolding \<alpha>_def by (by100 simp)
     have h\<sigma>_\<rho>_V: "\<sigma> g = \<rho> (top1_path_product (top1_constant_path x0)
         (top1_path_product g (top1_path_reverse (top1_constant_path x0))))"
