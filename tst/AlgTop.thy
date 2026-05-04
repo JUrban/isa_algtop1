@@ -3349,12 +3349,18 @@ proof -
      \<simeq> \<alpha>_x\<cdot>f\<cdot>g\<cdot>rev(\<alpha>_z) = L(f*g) in U (or V).
      Then \<rho>(L(f*g)) = \<rho>(L(f)*L(g)) = \<rho>(L(f))\<cdot>\<rho>(L(g))
      since both L(f),L(g) are loops in U at x0, and \<phi>1 is a hom.\<close>
-  have h\<sigma>_cond2: "\<And>f' g'. (\<forall>s\<in>I_set. f' s \<in> U) \<Longrightarrow> (\<forall>s\<in>I_set. g' s \<in> U)
+  have h\<sigma>_cond2: "\<And>f' g'. top1_is_path_on U ?TU (f' 0) (f' 1) f'
+      \<Longrightarrow> top1_is_path_on U ?TU (g' 0) (g' 1) g'
       \<Longrightarrow> f' 1 = g' 0
       \<Longrightarrow> \<sigma> (top1_path_product f' g') = mulH (\<sigma> f') (\<sigma> g')"
   proof -
-    fix f' g' assume hf'U: "\<forall>s\<in>I_set. f' s \<in> U" and hg'U: "\<forall>s\<in>I_set. g' s \<in> U"
+    fix f' g' assume hf'_path: "top1_is_path_on U ?TU (f' 0) (f' 1) f'"
+       and hg'_path: "top1_is_path_on U ?TU (g' 0) (g' 1) g'"
        and hfg: "f' 1 = g' 0"
+    have hf'U: "\<forall>s\<in>I_set. f' s \<in> U" using hf'_path unfolding top1_is_path_on_def
+        top1_continuous_map_on_def by (by100 blast)
+    have hg'U: "\<forall>s\<in>I_set. g' s \<in> U" using hg'_path unfolding top1_is_path_on_def
+        top1_continuous_map_on_def by (by100 blast)
     let ?x = "f' 0" and ?y = "f' 1" and ?z = "g' 1"
     \<comment> \<open>Step 1: L(f') = \<alpha>_x \<cdot> (f' \<cdot> rev(\<alpha>_y)), L(g') = \<alpha>_y \<cdot> (g' \<cdot> rev(\<alpha>_z)),
        L(f'*g') = \<alpha>_x \<cdot> ((f'*g') \<cdot> rev(\<alpha>_z)).\<close>
@@ -3394,10 +3400,8 @@ proof -
     have h\<alpha>x: "top1_is_path_on U ?TU x0 ?x (\<alpha> ?x)" by (rule h\<alpha>_in_U[OF hxU])
     have h\<alpha>y: "top1_is_path_on U ?TU x0 ?y (\<alpha> ?y)" by (rule h\<alpha>_in_U[OF hyU])
     have h\<alpha>z: "top1_is_path_on U ?TU x0 ?z (\<alpha> ?z)" by (rule h\<alpha>_in_U[OF hzU])
-    have hf'_path: "top1_is_path_on U ?TU ?x ?y f'"
-      sorry \<comment> \<open>f' is a path in U from f'(0) to f'(1). Needs continuity of f' in U.\<close>
-    have hg'_path: "top1_is_path_on U ?TU ?y ?z g'"
-      sorry \<comment> \<open>g' is a path in U. Uses hfg: f'(1) = g'(0).\<close>
+    have hg'_path2: "top1_is_path_on U ?TU ?y ?z g'"
+      using hg'_path hfg by (by100 presburger)
     have hLf_loop: "top1_is_loop_on U ?TU x0 ?Lf"
       unfolding top1_is_loop_on_def
       by (rule top1_path_product_is_path[OF hTopU h\<alpha>x
@@ -3406,10 +3410,10 @@ proof -
     have hLg_loop: "top1_is_loop_on U ?TU x0 ?Lg"
       unfolding top1_is_loop_on_def
       by (rule top1_path_product_is_path[OF hTopU h\<alpha>y
-           top1_path_product_is_path[OF hTopU hg'_path
+           top1_path_product_is_path[OF hTopU hg'_path2
              top1_path_reverse_is_path[OF h\<alpha>z]]])
     have hfg_path: "top1_is_path_on U ?TU ?x ?z (top1_path_product f' g')"
-      by (rule top1_path_product_is_path[OF hTopU hf'_path hg'_path])
+      by (rule top1_path_product_is_path[OF hTopU hf'_path hg'_path2])
     have hLfg_loop: "top1_is_loop_on U ?TU x0 ?Lfg"
       unfolding top1_is_loop_on_def
       by (rule top1_path_product_is_path[OF hTopU h\<alpha>x
@@ -3423,7 +3427,26 @@ proof -
     have hLfg_equiv: "top1_loop_equiv_on U ?TU x0 (top1_path_product ?Lf ?Lg) ?Lfg"
       unfolding top1_loop_equiv_on_def using hLfg_loop2 hLfg_loop hL_fg_hom by (by100 blast)
     have h\<rho>_eq: "\<rho> (top1_path_product ?Lf ?Lg) = \<rho> ?Lfg"
-      sorry \<comment> \<open>\<rho> respects loop-equiv in U (same pattern as h\<rho>_respects_V but for U).\<close>
+    proof -
+      \<comment> \<open>Both loops at x0 in U, same equiv class. \<rho> = \<phi>1 for both. Same class \<Rightarrow> same \<phi>1.\<close>
+      have hLfg2_U: "\<forall>s\<in>I_set. (top1_path_product ?Lf ?Lg) s \<in> U" using hLfg_loop2
+          unfolding top1_is_loop_on_def top1_is_path_on_def top1_continuous_map_on_def by (by100 blast)
+      have hLfg_U: "\<forall>s\<in>I_set. ?Lfg s \<in> U" using hLfg_loop
+          unfolding top1_is_loop_on_def top1_is_path_on_def top1_continuous_map_on_def by (by100 blast)
+      have hclass: "{h. top1_loop_equiv_on U ?TU x0 (top1_path_product ?Lf ?Lg) h}
+          = {h. top1_loop_equiv_on U ?TU x0 ?Lfg h}"
+      proof (rule equalityI; rule subsetI)
+        fix h assume "h \<in> {h. top1_loop_equiv_on U ?TU x0 (top1_path_product ?Lf ?Lg) h}"
+        thus "h \<in> {h. top1_loop_equiv_on U ?TU x0 ?Lfg h}"
+          using top1_loop_equiv_on_trans[OF hTopU top1_loop_equiv_on_sym[OF hLfg_equiv]]
+          by (by100 fast)
+      next
+        fix h assume "h \<in> {h. top1_loop_equiv_on U ?TU x0 ?Lfg h}"
+        thus "h \<in> {h. top1_loop_equiv_on U ?TU x0 (top1_path_product ?Lf ?Lg) h}"
+          using top1_loop_equiv_on_trans[OF hTopU hLfg_equiv] by (by100 fast)
+      qed
+      show ?thesis unfolding \<rho>_def using hLfg2_U hLfg_U hclass by (by100 simp)
+    qed
     \<comment> \<open>\<rho> condition (2): \<rho>(L(f')*L(g')) = \<rho>(L(f'))\<cdot>\<rho>(L(g')). Both in U, use \<phi>1 hom.\<close>
     have h\<rho>_mult: "\<rho> (top1_path_product ?Lf ?Lg) = mulH (\<rho> ?Lf) (\<rho> ?Lg)"
     proof -
@@ -3438,17 +3461,61 @@ proof -
           = top1_fundamental_group_mul U ?TU x0
               {h. top1_loop_equiv_on U ?TU x0 ?Lf h}
               {h. top1_loop_equiv_on U ?TU x0 ?Lg h}"
-        sorry \<comment> \<open>[Lf*Lg]_U = [Lf]_U \<cdot> [Lg]_U (fundamental group product).\<close>
-      show ?thesis unfolding \<rho>_def using hLf_in_U hLg_in_U hLfg2_in_U h_prod_class
-        sorry \<comment> \<open>\<phi>1 hom: \<phi>1([Lf]_U \<cdot> [Lg]_U) = \<phi>1([Lf]_U) \<cdot> \<phi>1([Lg]_U).\<close>
+        unfolding top1_fundamental_group_mul_def
+      proof (rule equalityI; rule subsetI)
+        fix h assume "h \<in> {h. top1_loop_equiv_on U ?TU x0 (top1_path_product ?Lf ?Lg) h}"
+        hence "top1_loop_equiv_on U ?TU x0 (top1_path_product ?Lf ?Lg) h" by (by100 blast)
+        have hLf_in_class: "?Lf \<in> {h. top1_loop_equiv_on U ?TU x0 ?Lf h}"
+          using top1_loop_equiv_on_refl[OF hLf_loop] by (by100 blast)
+        have hLg_in_class: "?Lg \<in> {h. top1_loop_equiv_on U ?TU x0 ?Lg h}"
+          using top1_loop_equiv_on_refl[OF hLg_loop] by (by100 blast)
+        show "h \<in> {h. \<exists>f\<in>{h. top1_loop_equiv_on U ?TU x0 ?Lf h}.
+            \<exists>g\<in>{h. top1_loop_equiv_on U ?TU x0 ?Lg h}.
+            top1_loop_equiv_on U ?TU x0 (top1_path_product f g) h}"
+          using hLf_in_class hLg_in_class
+                \<open>top1_loop_equiv_on U ?TU x0 (top1_path_product ?Lf ?Lg) h\<close>
+          by (by100 fast)
+      next
+        fix h assume "h \<in> {h. \<exists>f\<in>{h. top1_loop_equiv_on U ?TU x0 ?Lf h}.
+            \<exists>g\<in>{h. top1_loop_equiv_on U ?TU x0 ?Lg h}.
+            top1_loop_equiv_on U ?TU x0 (top1_path_product f g) h}"
+        then obtain f1 g1 where hf1: "top1_loop_equiv_on U ?TU x0 ?Lf f1"
+            and hg1: "top1_loop_equiv_on U ?TU x0 ?Lg g1"
+            and hfg1: "top1_loop_equiv_on U ?TU x0 (top1_path_product f1 g1) h" by (by100 fast)
+        \<comment> \<open>Lf*Lg \<simeq> f1*g1 by product compatibility, then f1*g1 \<simeq> h.\<close>
+        have "top1_path_homotopic_on U ?TU x0 x0 (top1_path_product ?Lf ?Lg) (top1_path_product f1 g1)"
+          sorry \<comment> \<open>Lf \<simeq> f1 and Lg \<simeq> g1 \<Rightarrow> Lf*Lg \<simeq> f1*g1 (product compat).\<close>
+        hence "top1_loop_equiv_on U ?TU x0 (top1_path_product ?Lf ?Lg) (top1_path_product f1 g1)"
+          unfolding top1_loop_equiv_on_def using hLfg_loop2
+          sorry \<comment> \<open>Need f1*g1 is a loop.\<close>
+        thus "h \<in> {h. top1_loop_equiv_on U ?TU x0 (top1_path_product ?Lf ?Lg) h}"
+          using top1_loop_equiv_on_trans[OF hTopU] hfg1 by (by100 fast)
+      qed
+      \<comment> \<open>\<phi>1 hom: \<phi>1([Lf]_U \<cdot> [Lg]_U) = \<phi>1([Lf]_U) \<cdot> \<phi>1([Lg]_U).\<close>
+      have hLf_carrier: "{h. top1_loop_equiv_on U ?TU x0 ?Lf h}
+          \<in> top1_fundamental_group_carrier U ?TU x0"
+        unfolding top1_fundamental_group_carrier_def using hLf_loop by (by100 blast)
+      have hLg_carrier: "{h. top1_loop_equiv_on U ?TU x0 ?Lg h}
+          \<in> top1_fundamental_group_carrier U ?TU x0"
+        unfolding top1_fundamental_group_carrier_def using hLg_loop by (by100 blast)
+      have h\<phi>1_hom_app: "\<phi>1 (top1_fundamental_group_mul U ?TU x0
+              {h. top1_loop_equiv_on U ?TU x0 ?Lf h}
+              {h. top1_loop_equiv_on U ?TU x0 ?Lg h})
+          = mulH (\<phi>1 {h. top1_loop_equiv_on U ?TU x0 ?Lf h})
+                 (\<phi>1 {h. top1_loop_equiv_on U ?TU x0 ?Lg h})"
+        using h\<phi>1 hLf_carrier hLg_carrier
+        unfolding top1_group_hom_on_def by (by100 blast)
+      show ?thesis unfolding \<rho>_def using hLf_in_U hLg_in_U hLfg2_in_U h_prod_class h\<phi>1_hom_app
+        by (by100 simp)
     qed
     show "\<sigma> (top1_path_product f' g') = mulH (\<sigma> f') (\<sigma> g')"
       using h\<sigma>_fg h\<sigma>_f h\<sigma>_g h\<rho>_eq h\<rho>_mult by (by100 presburger)
   qed
-  have h\<sigma>_cond2_V: "\<And>f' g'. (\<forall>s\<in>I_set. f' s \<in> V) \<Longrightarrow> (\<forall>s\<in>I_set. g' s \<in> V)
+  have h\<sigma>_cond2_V: "\<And>f' g'. top1_is_path_on V ?TV (f' 0) (f' 1) f'
+      \<Longrightarrow> top1_is_path_on V ?TV (g' 0) (g' 1) g'
       \<Longrightarrow> f' 1 = g' 0
       \<Longrightarrow> \<sigma> (top1_path_product f' g') = mulH (\<sigma> f') (\<sigma> g')"
-    sorry \<comment> \<open>Same proof with V, \<phi>2, hTopV. Uses h\<rho>_respects_V pattern.\<close>
+    sorry \<comment> \<open>Same proof with V, \<phi>2, hTopV. Uses h\<rho>_respects_V.\<close>
   \<comment> \<open>\<sigma> extension of \<rho>: for a loop f at x0 in U (or V), \<sigma>(f) = \<rho>(f).
      Proof: L(f) = \<alpha>_{x0}\<cdot>f\<cdot>rev(\<alpha>_{x0}) = const\<cdot>f\<cdot>const \<simeq> f in U.
      Then \<sigma>(f) = \<rho>(L(f)) = \<rho>(f).\<close>
