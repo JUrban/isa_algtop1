@@ -5541,11 +5541,82 @@ proof -
               top1_path_product f1 f2 (sub_m i + t * (sub_m (Suc i) - sub_m i)) \<in> U)
               \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow>
               top1_path_product f1 f2 (sub_m i + t * (sub_m (Suc i) - sub_m i)) \<in> V)"
-            sorry \<comment> \<open>Case i < n1: sub_m(i) = sub1(i)/2, sub_m(i+1) = sub1(i+1)/2.
-               Piece eval: (f1*f2)(sub1(i)/2 + t*(sub1(i+1)-sub1(i))/2) = f1(sub1(i)+t*(sub1(i+1)-sub1(i)))
-               since the argument is ≤ 1/2.
-               This equals the f1-piece, which maps to U or V by hs1_UV.
-               Case i ≥ n1: similar with f2 branch.\<close>
+          proof (cases "i < n1")
+            case True
+            \<comment> \<open>Piece i is in [0, 1/2]: (f1*f2)(arg) = f1(2*arg) since arg ≤ 1/2.
+               arg = sub1(i)/2 + t*(sub1(i+1)-sub1(i))/2, so 2*arg = sub1(i)+t*(sub1(i+1)-sub1(i)).
+               This is the f1-piece at index i, which maps to U or V by hs1_UV.\<close>
+            have hSuc_le: "Suc i \<le> n1" using True by (by100 presburger)
+            have hsm_i: "sub_m i = sub1 i / 2" unfolding sub_m_def using True by (by100 simp)
+            have hsm_Si: "sub_m (Suc i) = sub1 (Suc i) / 2" unfolding sub_m_def using hSuc_le by (by100 simp)
+            \<comment> \<open>For i < n1: piece of f1*f2 equals corresponding piece of f1.\<close>
+            have hpiece_f1: "\<And>t. 0 \<le> t \<Longrightarrow> t \<le> 1 \<Longrightarrow>
+                top1_path_product f1 f2 (sub_m i + t * (sub_m (Suc i) - sub_m i))
+                = f1 (sub1 i + t * (sub1 (Suc i) - sub1 i))"
+              sorry \<comment> \<open>sub_m(i) = sub1(i)/2, sub_m(i+1) = sub1(i+1)/2.
+                 Arg = sub1(i)/2 + t*(sub1(i+1)-sub1(i))/2 ≤ 1/2.
+                 path_product uses f1 branch: f1(2*arg) = f1(sub1(i)+t*(sub1(i+1)-sub1(i))).\<close>
+            have hs1_UV_i: "(\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f1 (sub1 i + t * (sub1 (Suc i) - sub1 i)) \<in> U)
+                \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f1 (sub1 i + t * (sub1 (Suc i) - sub1 i)) \<in> V)"
+              using hs1_UV True unfolding sub1_def by (by100 blast)
+            thus ?thesis using hpiece_f1 hs1_UV_i by (by100 force)
+          next
+            case False
+            hence "i \<ge> n1" by (by100 presburger)
+            \<comment> \<open>Piece i is in [1/2, 1]: (f1*f2)(arg) = f2(2*arg-1) since arg > 1/2.
+               arg = 1/2 + sub2(i-n1)/2 + t*(sub2(i-n1+1)-sub2(i-n1))/2.
+               2*arg - 1 = sub2(i-n1) + t*(sub2(i-n1+1)-sub2(i-n1)).
+               This is the f2-piece at index i-n1.\<close>
+            have "i - n1 < n2" using hi \<open>i \<ge> n1\<close> by (by100 presburger)
+            have harg_gt: "\<And>t. 0 \<le> t \<Longrightarrow> t \<le> 1 \<Longrightarrow>
+                \<not> (sub_m i + t * (sub_m (Suc i) - sub_m i) \<le> 1/2)"
+              sorry \<comment> \<open>sub_m(i) ≥ sub_m(n1) = 1/2, and sub_m(Suc i) > sub_m(i).
+                 For t > 0: arg > 1/2. For t = 0: arg = sub_m(i) ≥ 1/2.
+                 Actually arg = 1/2 when i = n1 and t = 0. Need > not ≥.
+                 Hmm, when i = n1 and t = 0, arg = sub_m(n1) = sub1(n1)/2 = 1/2.
+                 Then path_product uses the f1 branch (≤ 1/2).
+                 Need: sub_m(i) > 1/2 or handle the boundary.\<close>
+            have hpiece_f2: "\<And>t. 0 \<le> t \<Longrightarrow> t \<le> 1 \<Longrightarrow>
+                top1_path_product f1 f2 (sub_m i + t * (sub_m (Suc i) - sub_m i))
+                = f2 (sub2 (i - n1) + t * (sub2 (Suc (i - n1)) - sub2 (i - n1)))"
+              sorry \<comment> \<open>sub_m(i) = 1/2+sub2(i-n1)/2, arg > 1/2.
+                 path_product uses f2 branch: f2(2*arg-1) = f2(sub2(i-n1)+t*(sub2(Suc(i-n1))-sub2(i-n1))).\<close>
+            have hs2_UV_j: "(\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f2 (sub2 (i-n1) + t * (sub2 (Suc (i-n1)) - sub2 (i-n1))) \<in> U)
+                \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f2 (sub2 (i-n1) + t * (sub2 (Suc (i-n1)) - sub2 (i-n1))) \<in> V)"
+              using hs2_UV \<open>i - n1 < n2\<close> unfolding sub2_def by (by100 blast)
+            show ?thesis
+            proof (cases "\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f2 (sub2 (i-n1) + t * (sub2 (Suc (i-n1)) - sub2 (i-n1))) \<in> U")
+              case True
+              show ?thesis
+              proof (rule disjI1, intro allI impI)
+                fix t :: real assume ht: "0 \<le> t \<and> t \<le> 1"
+                have ht0: "0 \<le> t" and ht1: "t \<le> 1" using ht by (by100 blast)+
+                have "top1_path_product f1 f2 (sub_m i + t * (sub_m (Suc i) - sub_m i))
+                    = f2 (sub2 (i - n1) + t * (sub2 (Suc (i - n1)) - sub2 (i - n1)))"
+                  using hpiece_f2[OF ht0 ht1] .
+                moreover have "f2 (sub2 (i - n1) + t * (sub2 (Suc (i - n1)) - sub2 (i - n1))) \<in> U"
+                  using True ht by (by100 blast)
+                ultimately show "top1_path_product f1 f2 (sub_m i + t * (sub_m (Suc i) - sub_m i)) \<in> U"
+                  by (by100 simp)
+              qed
+            next
+              case False
+              hence hV_all: "\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f2 (sub2 (i-n1) + t * (sub2 (Suc (i-n1)) - sub2 (i-n1))) \<in> V"
+                using hs2_UV_j by (by100 blast)
+              show ?thesis
+              proof (rule disjI2, intro allI impI)
+                fix t :: real assume ht: "0 \<le> t \<and> t \<le> 1"
+                have ht0: "0 \<le> t" and ht1: "t \<le> 1" using ht by (by100 blast)+
+                have "top1_path_product f1 f2 (sub_m i + t * (sub_m (Suc i) - sub_m i))
+                    = f2 (sub2 (i - n1) + t * (sub2 (Suc (i - n1)) - sub2 (i - n1)))"
+                  using hpiece_f2[OF ht0 ht1] .
+                moreover have "f2 (sub2 (i - n1) + t * (sub2 (Suc (i - n1)) - sub2 (i - n1))) \<in> V"
+                  using hV_all ht by (by100 blast)
+                ultimately show "top1_path_product f1 f2 (sub_m i + t * (sub_m (Suc i) - sub_m i)) \<in> V"
+                  by (by100 simp)
+              qed
+            qed
+          qed
         qed
         \<comment> \<open>By subdivision independence: τ(f1*f2) = foldr_σ (f1*f2) (n1+n2) sub_m.\<close>
         \<comment> \<open>The foldr splits at position n1: first n1 σ-values come from f1, last n2 from f2.\<close>
