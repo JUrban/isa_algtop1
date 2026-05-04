@@ -3621,8 +3621,96 @@ proof -
       \<Longrightarrow> top1_is_path_on V (subspace_topology X TX V) (g' 0) (g' 1) g'
       \<Longrightarrow> f' 1 = g' 0
       \<Longrightarrow> \<sigma> (top1_path_product f' g') = mulH (\<sigma> f') (\<sigma> g')"
-    sorry \<comment> \<open>Same proof as h\<sigma>_cond2 with V/\<phi>2/hTopV/h\<alpha>_in_V/h\<rho>_respects_V.
-       268 lines of U proof, mechanically mirrored. All lemmas available.\<close>
+  proof -
+    fix f' g' assume hf'_path: "top1_is_path_on V (subspace_topology X TX V) (f' 0) (f' 1) f'"
+       and hg'_path: "top1_is_path_on V (subspace_topology X TX V) (g' 0) (g' 1) g'"
+       and hfg: "f' 1 = g' 0"
+    have hf'V: "\<forall>s\<in>I_set. f' s \<in> V" using hf'_path unfolding top1_is_path_on_def
+        top1_continuous_map_on_def by (by100 blast)
+    have hg'V: "\<forall>s\<in>I_set. g' s \<in> V" using hg'_path unfolding top1_is_path_on_def
+        top1_continuous_map_on_def by (by100 blast)
+    have hg'_path2: "top1_is_path_on V (subspace_topology X TX V) (f' 1) (g' 1) g'"
+      using hg'_path hfg by (by100 presburger)
+    \<comment> \<open>Path infrastructure: endpoints, \<alpha> paths.\<close>
+    have h0I: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+    have h1I: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+    have hf0V: "f' 0 \<in> V" using hf'V h0I by (by100 blast)
+    have hf1V: "f' 1 \<in> V" using hf'V h1I by (by100 blast)
+    have hz1V: "g' 1 \<in> V" using hg'V h1I by (by100 blast)
+    have h\<alpha>x_V: "top1_is_path_on V (subspace_topology X TX V) x0 (f' 0) (\<alpha> (f' 0))"
+      by (rule h\<alpha>_in_V[OF hf0V])
+    have h\<alpha>y_V: "top1_is_path_on V (subspace_topology X TX V) x0 (f' 1) (\<alpha> (f' 1))"
+      by (rule h\<alpha>_in_V[OF hf1V])
+    have h\<alpha>z_V: "top1_is_path_on V (subspace_topology X TX V) x0 (g' 1) (\<alpha> (g' 1))"
+      by (rule h\<alpha>_in_V[OF hz1V])
+    have hra_y_V: "top1_is_path_on V (subspace_topology X TX V) (f' 1) x0
+        (top1_path_reverse (\<alpha> (f' 1)))"
+      by (rule top1_path_reverse_is_path[OF h\<alpha>y_V])
+    have hra_z_V: "top1_is_path_on V (subspace_topology X TX V) (g' 1) x0
+        (top1_path_reverse (\<alpha> (g' 1)))"
+      by (rule top1_path_reverse_is_path[OF h\<alpha>z_V])
+    have hf'ra_V: "top1_is_path_on V (subspace_topology X TX V) (f' 0) x0
+        (top1_path_product f' (top1_path_reverse (\<alpha> (f' 1))))"
+      by (rule top1_path_product_is_path[OF hTopV hf'_path hra_y_V])
+    have hg'ra_V: "top1_is_path_on V (subspace_topology X TX V) (f' 1) x0
+        (top1_path_product g' (top1_path_reverse (\<alpha> (g' 1))))"
+      by (rule top1_path_product_is_path[OF hTopV hg'_path2 hra_z_V])
+    \<comment> \<open>\<sigma> unfoldings.\<close>
+    have hfg0: "top1_path_product f' g' 0 = f' 0" unfolding top1_path_product_def by (by100 simp)
+    have hfg1: "top1_path_product f' g' 1 = g' 1" unfolding top1_path_product_def by (by100 simp)
+    have h\<sigma>_fg: "\<sigma> (top1_path_product f' g') = \<rho> (top1_path_product (\<alpha> (f' 0))
+        (top1_path_product (top1_path_product f' g') (top1_path_reverse (\<alpha> (g' 1)))))"
+      unfolding \<sigma>_def hfg0 hfg1 by (by100 simp)
+    have h\<sigma>_f: "\<sigma> f' = \<rho> (top1_path_product (\<alpha> (f' 0)) (top1_path_product f' (top1_path_reverse (\<alpha> (f' 1)))))"
+      unfolding \<sigma>_def by (by100 simp)
+    have h\<sigma>_g: "\<sigma> g' = \<rho> (top1_path_product (\<alpha> (f' 1)) (top1_path_product g' (top1_path_reverse (\<alpha> (g' 1)))))"
+      unfolding \<sigma>_def using hfg by (by100 simp)
+    \<comment> \<open>hL_fg_hom for V: same 5-step chain as U.\<close>
+    have hL_fg_hom_V: "top1_path_homotopic_on V (subspace_topology X TX V) x0 x0
+        (top1_path_product
+          (top1_path_product (\<alpha> (f' 0)) (top1_path_product f' (top1_path_reverse (\<alpha> (f' 1)))))
+          (top1_path_product (\<alpha> (f' 1)) (top1_path_product g' (top1_path_reverse (\<alpha> (g' 1))))))
+        (top1_path_product (\<alpha> (f' 0)) (top1_path_product (top1_path_product f' g') (top1_path_reverse (\<alpha> (g' 1)))))"
+      sorry \<comment> \<open>Same 5-step chain as U proof with V/hTopV/h\<alpha>_in_V.\<close>
+    \<comment> \<open>Loop constructions.\<close>
+    let ?Lf_V = "top1_path_product (\<alpha> (f' 0)) (top1_path_product f' (top1_path_reverse (\<alpha> (f' 1))))"
+    let ?Lg_V = "top1_path_product (\<alpha> (f' 1)) (top1_path_product g' (top1_path_reverse (\<alpha> (g' 1))))"
+    let ?Lfg_V = "top1_path_product (\<alpha> (f' 0)) (top1_path_product (top1_path_product f' g') (top1_path_reverse (\<alpha> (g' 1))))"
+    have hLf_loop_V: "top1_is_loop_on V (subspace_topology X TX V) x0 ?Lf_V"
+      unfolding top1_is_loop_on_def
+      by (rule top1_path_product_is_path[OF hTopV h\<alpha>x_V
+           top1_path_product_is_path[OF hTopV hf'_path hra_y_V]])
+    have hLg_loop_V: "top1_is_loop_on V (subspace_topology X TX V) x0 ?Lg_V"
+      unfolding top1_is_loop_on_def
+      by (rule top1_path_product_is_path[OF hTopV h\<alpha>y_V
+           top1_path_product_is_path[OF hTopV hg'_path2 hra_z_V]])
+    have hfg_path_V: "top1_is_path_on V (subspace_topology X TX V) (f' 0) (g' 1) (top1_path_product f' g')"
+      by (rule top1_path_product_is_path[OF hTopV hf'_path hg'_path2])
+    have hLfg_loop_V: "top1_is_loop_on V (subspace_topology X TX V) x0 ?Lfg_V"
+      unfolding top1_is_loop_on_def
+      by (rule top1_path_product_is_path[OF hTopV h\<alpha>x_V
+           top1_path_product_is_path[OF hTopV hfg_path_V hra_z_V]])
+    have hLfg_loop2_V: "top1_is_loop_on V (subspace_topology X TX V) x0 (top1_path_product ?Lf_V ?Lg_V)"
+      unfolding top1_is_loop_on_def
+      by (rule top1_path_product_is_path[OF hTopV
+           hLf_loop_V[unfolded top1_is_loop_on_def] hLg_loop_V[unfolded top1_is_loop_on_def]])
+    \<comment> \<open>\<rho> equality via h\<rho>_respects_V.\<close>
+    have hLfg_equiv_V: "top1_loop_equiv_on V (subspace_topology X TX V) x0 (top1_path_product ?Lf_V ?Lg_V) ?Lfg_V"
+      unfolding top1_loop_equiv_on_def using hLfg_loop2_V hLfg_loop_V hL_fg_hom_V by (by100 blast)
+    have h\<rho>_eq_V: "\<rho> (top1_path_product ?Lf_V ?Lg_V) = \<rho> ?Lfg_V"
+      by (rule h\<rho>_respects_V[OF hLfg_loop2_V hLfg_loop_V hLfg_equiv_V])
+    \<comment> \<open>\<rho> multiplicativity via \<phi>2 homomorphism.\<close>
+    have hLf_carrier_V: "{h. top1_loop_equiv_on V (subspace_topology X TX V) x0 ?Lf_V h}
+        \<in> top1_fundamental_group_carrier V (subspace_topology X TX V) x0"
+      unfolding top1_fundamental_group_carrier_def using hLf_loop_V by (by100 blast)
+    have hLg_carrier_V: "{h. top1_loop_equiv_on V (subspace_topology X TX V) x0 ?Lg_V h}
+        \<in> top1_fundamental_group_carrier V (subspace_topology X TX V) x0"
+      unfolding top1_fundamental_group_carrier_def using hLg_loop_V by (by100 blast)
+    have h\<rho>_mult_V: "\<rho> (top1_path_product ?Lf_V ?Lg_V) = mulH (\<rho> ?Lf_V) (\<rho> ?Lg_V)"
+      sorry \<comment> \<open>\<rho> product = \<rho>(Lf)\<cdot>\<rho>(Lg). Same pattern as U: \<phi>2 hom + class product + case analysis.\<close>
+    show "\<sigma> (top1_path_product f' g') = mulH (\<sigma> f') (\<sigma> g')"
+      using h\<sigma>_fg h\<sigma>_f h\<sigma>_g h\<rho>_eq_V h\<rho>_mult_V by (by100 presburger)
+  qed
   \<comment> \<open>\<sigma> extension of \<rho>: for a loop f at x0 in U (or V), \<sigma>(f) = \<rho>(f).
      Proof: L(f) = \<alpha>_{x0}\<cdot>f\<cdot>rev(\<alpha>_{x0}) = const\<cdot>f\<cdot>const \<simeq> f in U.
      Then \<sigma>(f) = \<rho>(L(f)) = \<rho>(f).\<close>
