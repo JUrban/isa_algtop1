@@ -5058,8 +5058,9 @@ proof -
                     case False thus ?thesis unfolding \<phi>_concat_def by (by100 simp)
                   qed
                 qed
+                hence "\<And>s. s \<in> {1/2..1::real} \<Longrightarrow> ?f2 s = \<phi>_concat s" by (by100 simp)
                 thus ?thesis using continuous_on_cong[of "{1/2..1::real}" "{1/2..1}" ?f2 \<phi>_concat]
-                    hf2c by (by100 force)
+                    hf2c by (by100 blast)
               qed
               have "closed {0..1/2::real}" by (by100 auto)
               moreover have "closed {1/2..1::real}" by (by100 auto)
@@ -5403,8 +5404,8 @@ proof -
                 thus ?thesis by (rule h\<sigma>_path_in_H)
               qed
               have htail_H: "?tail \<in> H"
-                sorry \<comment> \<open>foldr of H-elements with eH \<in> H: each \<sigma>(piece j sub) \<in> H by h\<sigma>_path_in_H,
-                   eH \<in> H, mulH closed on H. Induction on the list.\<close>
+                sorry \<comment> \<open>foldr mulH (map σ-values) eH ∈ H: each σ(piece j sub) ∈ H
+                   by h_σ_path_in_H, eH ∈ H, mulH closed. List induction.\<close>
               \<comment> \<open>Group associativity: mulH a (mulH b c) = mulH (mulH a b) c.\<close>
               have hassoc_raw: "\<forall>x\<in>H. \<forall>y\<in>H. \<forall>z\<in>H. mulH (mulH x y) z = mulH x (mulH y z)"
                 using hH unfolding top1_is_group_on_def by (by100 fast)
@@ -6624,7 +6625,14 @@ proof -
             show "{t \<in> I_set. aff t \<in> V} \<subseteq> I_set \<inter> (aff -` W)"
               using hVW by (by100 blast)
             show "I_set \<inter> (aff -` W) \<subseteq> {t \<in> I_set. aff t \<in> V}"
-              using hVW haff_range unfolding top1_unit_interval_def by (by100 auto)
+            proof (rule subsetI)
+              fix t assume ht: "t \<in> I_set \<inter> (aff -` W)"
+              hence "t \<in> I_set" "aff t \<in> W" by (by100 blast)+
+              have "aff t \<in> I_set"
+                using haff_range \<open>t \<in> I_set\<close> unfolding top1_unit_interval_def by (by100 force)
+              thus "t \<in> {t \<in> I_set. aff t \<in> V}" using hVW \<open>t \<in> I_set\<close> \<open>aff t \<in> W\<close> \<open>aff t \<in> I_set\<close>
+                by (by100 blast)
+            qed
           qed
           thus "{t \<in> I_set. aff t \<in> V} \<in> I_top"
             unfolding top1_unit_interval_topology_def subspace_topology_def
