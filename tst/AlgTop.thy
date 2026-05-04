@@ -6756,9 +6756,15 @@ proof -
         { concat (map (\<lambda>i. [(2*i, True), (2*i+1, True),
                               (2*i, False), (2*i+1, False)]) [0..<n]) }"
     using Theorem_74_3_fund_group_n_torus[OF assms] by (by100 auto)
-  \<comment> \<open>Step 2: Abelianizing kills all commutators, making the relator trivial.
-     So H_1(T_n) = Z^{2n} (free abelian on 2n generators).\<close>
-  show ?thesis sorry
+  \<comment> \<open>Step 2: Abelianize. The presentation ⟨a₁,b₁,...|[a₁,b₁]...[aₙ,bₙ]⟩ abelianizes to
+     the free abelian group on 2n generators (commutator relator becomes trivial).\<close>
+  have h_abelianize: "\<exists>(H::'h set) mulH eH invgH \<iota>_S \<phi>.
+      top1_is_abelianization_of H mulH eH invgH
+        (top1_fundamental_group_carrier X TX x0) (top1_fundamental_group_mul X TX x0)
+        (top1_fundamental_group_id X TX x0) (top1_fundamental_group_invg X TX x0) \<phi>
+      \<and> top1_is_free_abelian_group_full_on H mulH eH invgH (\<iota>_S::nat \<Rightarrow> 'h) {..<2*n}"
+    sorry \<comment> \<open>Abelianization of group with commutator relator = free abelian.\<close>
+  show ?thesis using h_abelianize by (by100 blast)
 qed
 
 (** from \<S>75 Theorem 75.4: H_1(m-fold projective plane):
@@ -6792,9 +6798,9 @@ proof -
       top1_group_presented_by_on G mul0 e0 invg0 ({..<m}::nat set)
         { concat (map (\<lambda>i. [(i, True), (i, True)]) [0..<m]) }"
     using Theorem_74_4_fund_group_m_projective[OF assms] by (by100 auto)
-  \<comment> \<open>Step 2: Abelianize: H = Z^m / \<langle>2(a_1+...+a_m)\<rangle>.
-     Torsion = Z/2Z, free part = Z^{m-1}.\<close>
-  show ?thesis sorry
+  \<comment> \<open>Step 2: Abelianize. The relator a₁²...aₘ² maps to 2(a₁+...+aₘ) in the abelianization.
+     H₁ = Z^m/⟨2·sum⟩. Decompose: torsion = Z/2Z (class of sum), free = Z^{m-1}.\<close>
+  show ?thesis sorry \<comment> \<open>Abelianization + Smith normal form decomposition.\<close>
 qed
 
 section \<open>*\<S>78 Constructing Compact Surfaces\<close>
@@ -7012,8 +7018,22 @@ proof -
       and hq: "top1_quotient_map_on P
           (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) X TX q"
     using Theorem_78_2_connected_polygonal_quotient[OF assms(1) hconn assms(2)] by (by100 blast)
-  \<comment> \<open>Reduce the scheme via elementary operations to standard form.\<close>
-  show ?thesis sorry
+  \<comment> \<open>Step 1: From the polygonal quotient, extract the edge labeling scheme.\<close>
+  obtain scheme :: "(nat \<times> bool) list" where hsch: "top1_quotient_of_scheme_on X TX scheme"
+    sorry \<comment> \<open>Polygonal region with quotient map gives an edge scheme.\<close>
+  \<comment> \<open>Step 2: Apply elementary operations (Theorem 76) to reduce scheme.
+     Operations: relabel, rotate, cancel, cut, paste, flip.
+     Step 2a: Bring all vertices to one equivalence class.
+     Step 2b: Collect pairs aa into adjacent positions (projective type).
+     Step 2c: Pair remaining letters into commutator blocks aba\<inverse>b\<inverse> (torus type).\<close>
+  have hreduced: "(\<exists>w. scheme = w \<and> (\<forall>a\<in>set w. snd a) \<and> length w = 0)
+      \<or> (\<exists>n>0. \<exists>w. top1_is_torus_scheme w n
+            \<and> top1_elementary_scheme_equiv scheme w)
+      \<or> (\<exists>m>0. \<exists>w. top1_is_projective_scheme w m
+            \<and> top1_elementary_scheme_equiv scheme w)"
+    sorry \<comment> \<open>Reduction to normal form via elementary operations (Theorem 76).\<close>
+  \<comment> \<open>Step 3: Each normal form corresponds to the standard surface.\<close>
+  show ?thesis sorry \<comment> \<open>Normal form → homeomorphism type (S², T_n, or P_m).\<close>
 qed
 
 section \<open>Chapter 13: Classification of Covering Spaces\<close>
@@ -11106,8 +11126,16 @@ proof -
   obtain \<A>B where hAB: "(\<forall>A\<in>\<A>B. A \<subseteq> B \<and> top1_is_arc_on A (subspace_topology B TB A))"
       and hcover: "(\<Union>\<A>B) = B"
     using assms(1) unfolding top1_is_graph_on_def by (by100 auto)
-  \<comment> \<open>Lift arcs from B to E (sheets over arcs are arcs), inherit Hausdorff + weak topology.\<close>
-  show ?thesis sorry
+  \<comment> \<open>Step 1: For each arc A \<in> \<A>B, the preimage p\<inverse>(A) splits into sheets.
+     Each sheet is homeomorphic to A via p (local homeomorphism), hence an arc.\<close>
+  have hAE: "\<exists>\<A>E. (\<forall>A'\<in>\<A>E. A' \<subseteq> E \<and> top1_is_arc_on A' (subspace_topology E TE A'))
+      \<and> (\<Union>\<A>E) = E"
+    sorry \<comment> \<open>Lift arcs: each evenly-covered neighborhood splits A into sheets.\<close>
+  \<comment> \<open>Step 2: E is Hausdorff (covering space of Hausdorff is Hausdorff).\<close>
+  have hE_hausdorff: "is_hausdorff_on E TE"
+    sorry \<comment> \<open>Local homeomorphism + Hausdorff base = Hausdorff total space.\<close>
+  \<comment> \<open>Step 3: Intersection and weak topology conditions lift from B to E.\<close>
+  show ?thesis sorry \<comment> \<open>Combine: lifted arcs + Hausdorff + intersection + weak topology.\<close>
 qed
 
 section \<open>\<S>84 The Fundamental Group of a Graph\<close>
