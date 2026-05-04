@@ -5119,13 +5119,144 @@ proof -
           qed
           \<comment> \<open>τ(f') = foldr_σ f' N S. Show this ∈ H.\<close>
           show "\<tau> f' \<in> H"
-            sorry \<comment> \<open>τ(X-loop) ∈ H: τ = foldr_σ with SOME-picked valid subdivision.
-               Each σ(piece) ∈ H by h_σ_UV_in_H (proved above).
-               eH ∈ H, mulH closed. foldr ∈ H.
-               The full proof requires: (1) someI on hex' to get valid N, S,
-               (2) each σ(piece) ∈ H by h_σ_UV_in_H + affine_map_continuous,
-               (3) foldr closure by define + list induction.
-               All ingredients proved; assembly needs stable system (obtain flakes under load).\<close>
+          proof -
+            \<comment> \<open>Use someI_ex to get SOME-picked values valid, avoiding flaky obtain.\<close>
+            have hex': "\<exists>n::nat. n \<ge> 1 \<and> (\<exists>sub. sub 0 = (0::real) \<and> sub n = 1
+                \<and> (\<forall>i<n. sub i < sub (Suc i))
+                \<and> (\<forall>i<n. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f' (sub i + t * (sub (Suc i) - sub i)) \<in> U)
+                       \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f' (sub i + t * (sub (Suc i) - sub i)) \<in> V)))"
+              by (rule loop_subdivision_UV[OF hTopX hU hV hUV hf'_loop])
+            \<comment> \<open>Define Pn/Psub for SOME manipulation (same pattern as h_τ_σ).\<close>
+            define Pn' where "Pn' n \<equiv> n \<ge> 1 \<and> (\<exists>sub. sub 0 = (0::real) \<and> sub n = 1
+                \<and> (\<forall>i<n. sub i < sub (Suc i))
+                \<and> (\<forall>i<n. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f' (sub i + t * (sub (Suc i) - sub i)) \<in> U)
+                       \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f' (sub i + t * (sub (Suc i) - sub i)) \<in> V)))" for n :: nat
+            have "Pn' (SOME n. Pn' n)" using hex' unfolding Pn'_def by (rule someI_ex)
+            hence hN_ge: "(SOME n. Pn' n) \<ge> 1" and
+                hN_sub: "\<exists>sub. sub 0 = (0::real) \<and> sub (SOME n. Pn' n) = 1
+                    \<and> (\<forall>i<(SOME n. Pn' n). sub i < sub (Suc i))
+                    \<and> (\<forall>i<(SOME n. Pn' n). (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f' (sub i + t * (sub (Suc i) - sub i)) \<in> U)
+                           \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f' (sub i + t * (sub (Suc i) - sub i)) \<in> V))"
+              unfolding Pn'_def by (by100 blast)+
+            define N' where "N' = (SOME n. Pn' n)"
+            define Psub' where "Psub' sub \<equiv> sub 0 = (0::real) \<and> sub N' = 1
+                \<and> (\<forall>i<N'. sub i < sub (Suc i))
+                \<and> (\<forall>i<N'. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f' (sub i + t * (sub (Suc i) - sub i)) \<in> U)
+                       \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f' (sub i + t * (sub (Suc i) - sub i)) \<in> V))" for sub :: "nat \<Rightarrow> real"
+            have "Psub' (SOME sub. Psub' sub)"
+            proof -
+              have "\<exists>sub. Psub' sub" using hN_sub unfolding Psub'_def N'_def by (by100 blast)
+              thus ?thesis by (rule someI_ex)
+            qed
+            hence hS0: "(SOME sub. Psub' sub) 0 = (0::real)"
+                and hSN: "(SOME sub. Psub' sub) N' = 1"
+                and hSinc: "\<forall>i<N'. (SOME sub. Psub' sub) i < (SOME sub. Psub' sub) (Suc i)"
+                and hSUV: "\<forall>i<N'. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f' ((SOME sub. Psub' sub) i + t * ((SOME sub. Psub' sub) (Suc i) - (SOME sub. Psub' sub) i)) \<in> U)
+                       \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f' ((SOME sub. Psub' sub) i + t * ((SOME sub. Psub' sub) (Suc i) - (SOME sub. Psub' sub) i)) \<in> V)"
+              unfolding Psub'_def by (by100 blast)+
+            define S' where "S' = (SOME sub. Psub' sub)"
+            \<comment> \<open>τ(f') = foldr_σ f' N' S'.\<close>
+            have h\<tau>_eq': "\<tau> f' = foldr_\<sigma> f' N' S'"
+              unfolding N'_def Pn'_def S'_def Psub'_def \<tau>_def Let_def by (by100 simp)
+            \<comment> \<open>foldr_σ f' N' S' = foldr mulH [σ(pieces)] eH. Show ∈ H.\<close>
+            have "foldr_\<sigma> f' N' S' \<in> H"
+            proof -
+              \<comment> \<open>Each σ(piece) ∈ H.\<close>
+              have hf'_cont: "top1_continuous_map_on I_set I_top X TX f'"
+                using hf'_loop unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+              have h\<sigma>_piece: "\<And>i. i < N' \<Longrightarrow> \<sigma> (\<lambda>t. f' (S' i + t * (S' (Suc i) - S' i))) \<in> H"
+              proof -
+                fix i assume hi: "i < N'"
+                have hpUV_i: "(\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f' (S' i + t * (S' (Suc i) - S' i)) \<in> U)
+                    \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f' (S' i + t * (S' (Suc i) - S' i)) \<in> V)"
+                  using hSUV hi unfolding S'_def by (by100 blast)
+                have hpUV_I: "(\<forall>s\<in>I_set. f' (S' i + s * (S' (Suc i) - S' i)) \<in> U)
+                    \<or> (\<forall>s\<in>I_set. f' (S' i + s * (S' (Suc i) - S' i)) \<in> V)"
+                  using hpUV_i unfolding top1_unit_interval_def by (by100 force)
+                \<comment> \<open>Piece is a path in X.\<close>
+                have hge: "0 \<le> S' i"
+                proof -
+                  have "\<And>j. j \<le> N' \<Longrightarrow> 0 \<le> S' j"
+                  proof -
+                    fix j show "j \<le> N' \<Longrightarrow> 0 \<le> S' j"
+                    proof (induction j)
+                      case 0 show ?case using hS0 unfolding S'_def by (by100 simp)
+                    next
+                      case (Suc k)
+                      have "k < N'" using Suc.prems by (by100 presburger)
+                      have "k \<le> N'" using Suc.prems by (by100 presburger)
+                      have "0 \<le> S' k" using Suc.IH[OF \<open>k \<le> N'\<close>] .
+                      moreover have "S' k < S' (Suc k)" using hSinc \<open>k < N'\<close> unfolding S'_def by (by100 force)
+                      ultimately show ?case by (by100 linarith)
+                    qed
+                  qed
+                  thus ?thesis using hi by (by100 force)
+                qed
+                have hle: "S' (Suc i) \<le> 1"
+                proof -
+                  have "\<And>k. k + Suc i \<le> N' \<Longrightarrow> S' (Suc i) \<le> S' (k + Suc i)"
+                  proof -
+                    fix k show "k + Suc i \<le> N' \<Longrightarrow> S' (Suc i) \<le> S' (k + Suc i)"
+                    proof (induction k)
+                      case 0 thus ?case by (by100 simp)
+                    next
+                      case (Suc m)
+                      have "m + Suc i \<le> N'" using Suc.prems by (by100 presburger)
+                      have "S' (Suc i) \<le> S' (m + Suc i)" using Suc.IH[OF \<open>m + Suc i \<le> N'\<close>] .
+                      moreover have "m + Suc i < N'" using Suc.prems by (by100 presburger)
+                      moreover have "S' (m + Suc i) < S' (Suc m + Suc i)"
+                        using hSinc calculation(2) unfolding S'_def by (by100 force)
+                      ultimately show ?case by (by100 linarith)
+                    qed
+                  qed
+                  have "Suc i \<le> N'" using hi by (by100 presburger)
+                  have hk_le: "(N' - Suc i) + Suc i \<le> N'" using \<open>Suc i \<le> N'\<close> by (by100 presburger)
+                  have "S' (Suc i) \<le> S' ((N' - Suc i) + Suc i)"
+                    using \<open>\<And>k. k + Suc i \<le> N' \<Longrightarrow> S' (Suc i) \<le> S' (k + Suc i)\<close>[OF hk_le] .
+                  moreover have "(N' - Suc i) + Suc i = N'" using \<open>Suc i \<le> N'\<close> by (by100 presburger)
+                  ultimately have "S' (Suc i) \<le> S' N'" by (by100 presburger)
+                  thus ?thesis using hSN unfolding S'_def by (by100 linarith)
+                qed
+                have hmono: "S' i \<le> S' (Suc i)" using hSinc hi unfolding S'_def by (by100 force)
+                have haffine: "top1_continuous_map_on I_set I_top I_set I_top
+                    (\<lambda>t. S' i + t * (S' (Suc i) - S' i))"
+                  by (rule affine_map_continuous_I_to_I[OF hge hmono hle])
+                have "top1_continuous_map_on I_set I_top X TX
+                    (f' \<circ> (\<lambda>t. S' i + t * (S' (Suc i) - S' i)))"
+                  by (rule top1_continuous_map_on_comp[OF haffine hf'_cont])
+                hence hpc: "top1_continuous_map_on I_set I_top X TX
+                    (\<lambda>t. f' (S' i + t * (S' (Suc i) - S' i)))"
+                  unfolding comp_def by (by100 simp)
+                have hpp: "top1_is_path_on X TX
+                    ((\<lambda>t. f' (S' i + t * (S' (Suc i) - S' i))) 0)
+                    ((\<lambda>t. f' (S' i + t * (S' (Suc i) - S' i))) 1)
+                    (\<lambda>t. f' (S' i + t * (S' (Suc i) - S' i)))"
+                  unfolding top1_is_path_on_def using hpc by (by100 blast)
+                show "\<sigma> (\<lambda>t. f' (S' i + t * (S' (Suc i) - S' i))) \<in> H"
+                  by (rule h\<sigma>_UV_in_H[OF hpUV_I hpp])
+              qed
+              \<comment> \<open>foldr of H-elements ∈ H.\<close>
+              define tl where "tl = map (\<lambda>i. \<sigma> (\<lambda>t. f' (S' i + t * (S' (Suc i) - S' i)))) [0..<N']"
+              have "set tl \<subseteq> H"
+              proof
+                fix x assume "x \<in> set tl"
+                then obtain j where "j < N'" "x = \<sigma> (\<lambda>t. f' (S' j + t * (S' (Suc j) - S' j)))"
+                  unfolding tl_def by (by100 force)
+                thus "x \<in> H" using h\<sigma>_piece by (by100 simp)
+              qed
+              hence "foldr mulH tl eH \<in> H" using heH hmcl
+              proof (induction tl)
+                case Nil show ?case using heH by (by100 simp)
+              next
+                case (Cons a xs)
+                have ha: "a \<in> H" using Cons.prems by (by100 force)
+                have hxs: "foldr mulH xs eH \<in> H" using Cons.IH Cons.prems by (by100 force)
+                show ?case using hmcl[OF ha hxs] by (by100 simp)
+              qed
+              thus ?thesis unfolding tl_def foldr_\<sigma>_def .
+            qed
+            thus ?thesis using h\<tau>_eq' by (by100 simp)
+          qed
         qed
         show ?thesis using h\<tau>_in_H[OF hsome_loop] .
       qed
