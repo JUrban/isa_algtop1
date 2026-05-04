@@ -5033,10 +5033,38 @@ proof -
               using hF1 hmerged_eq by (by100 force)
             have hpp: "top1_is_path_on U (subspace_topology X TX U) (f (sub 0)) (f (sub (Suc (Suc 0))))
                 (top1_path_product (piece 0 sub) (piece 1 sub))"
-              sorry \<comment> \<open>Path product of paths in U is a path in U.\<close>
+            proof -
+              have hp0p: "top1_is_path_on U (subspace_topology X TX U) (f (sub 0)) (f (sub (Suc 0))) (piece 0 sub)"
+                using hpiece_in_U[OF h0n] unfolding piece_def by (by100 simp)
+              have hp1p: "top1_is_path_on U (subspace_topology X TX U) (f (sub (Suc 0))) (f (sub (Suc (Suc 0)))) (piece 1 sub)"
+                using hpiece_in_U[OF h1n] unfolding piece_def by (by100 simp)
+              have "top1_is_path_on U (subspace_topology X TX U) (f (sub 0)) (f (sub (Suc (Suc 0))))
+                  (top1_path_product (piece 0 sub) (piece 1 sub))"
+                by (rule top1_path_product_is_path[OF hTopU hp0p hp1p])
+              thus ?thesis .
+            qed
             have hm: "top1_is_path_on U (subspace_topology X TX U) (f (sub 0)) (f (sub (Suc (Suc 0))))
                 (piece 0 sub')"
-              sorry \<comment> \<open>piece 0 sub' is a path in U (from hpiece_in_U or similar).\<close>
+            proof -
+              \<comment> \<open>piece 0 sub' covers [sub 0, sub(Suc(Suc 0))]. Need (Suc 0) < (n-1) for hpiece_in_U
+                 applied to sub'. But hpiece_in_U is for the original sub, not sub'.
+                 Instead, use the composition argument directly.\<close>
+              have "top1_continuous_map_on I_set I_top U (subspace_topology X TX U) (piece 0 sub')"
+              proof -
+                have hf_U: "top1_continuous_map_on I_set I_top U (subspace_topology X TX U) f"
+                  using hf_loop_U unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+                have "top1_continuous_map_on I_set I_top U (subspace_topology X TX U)
+                    (f \<circ> (\<lambda>t. sub 0 + t * (sub (Suc (Suc 0)) - sub 0)))"
+                  by (rule top1_continuous_map_on_comp[OF
+                      affine_map_continuous_I_to_I[OF hsub0_ge hsub02_le hsub2_le1] hf_U])
+                moreover have "(f \<circ> (\<lambda>t. sub 0 + t * (sub (Suc (Suc 0)) - sub 0))) = piece 0 sub'"
+                  unfolding piece_def sub'_def comp_def by (by100 simp)
+                ultimately show ?thesis by (by100 simp)
+              qed
+              moreover have "piece 0 sub' 0 = f (sub 0)" unfolding piece_def sub'_def by (by100 simp)
+              moreover have "piece 0 sub' 1 = f (sub (Suc (Suc 0)))" unfolding piece_def sub'_def by (by100 simp)
+              ultimately show ?thesis unfolding top1_is_path_on_def by (by100 blast)
+            qed
             show ?thesis unfolding top1_path_homotopic_on_def
               using hpp hm hFc hF0' hF1' hFleft hFright by (by100 blast)
           qed
