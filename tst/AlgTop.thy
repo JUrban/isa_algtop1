@@ -6181,10 +6181,16 @@ proof -
         next
           case False
           \<comment> \<open>L(g) is in V but not entirely in U. ρ uses φ2 branch.\<close>
-          have h\<rho>_V: "\<rho> (top1_path_product (\<alpha> (g 0)) (top1_path_product g (top1_path_reverse (\<alpha> (g 1)))))
-              = \<phi>2 {h. top1_loop_equiv_on V (subspace_topology X TX V) x0
-                  (top1_path_product (\<alpha> (g 0)) (top1_path_product g (top1_path_reverse (\<alpha> (g 1))))) h}"
-            using False unfolding \<rho>_def sorry
+          let ?L = "top1_path_product (\<alpha> (g 0)) (top1_path_product g (top1_path_reverse (\<alpha> (g 1))))"
+          have h\<rho>_V: "\<rho> ?L = \<phi>2 {h. top1_loop_equiv_on V (subspace_topology X TX V) x0 ?L h}"
+          proof -
+            have hnotU: "\<not> (\<forall>s\<in>I_set. ?L s \<in> U)" using False by (by100 blast)
+            have "\<rho> ?L = (if (\<forall>s\<in>I_set. ?L s \<in> U)
+                then \<phi>1 {g. top1_loop_equiv_on U (subspace_topology X TX U) x0 ?L g}
+                else \<phi>2 {g. top1_loop_equiv_on V (subspace_topology X TX V) x0 ?L g})"
+              unfolding \<rho>_def by (by100 blast)
+            thus ?thesis using hnotU by (by100 simp)
+          qed
           moreover have "{h. top1_loop_equiv_on V (subspace_topology X TX V) x0
               (top1_path_product (\<alpha> (g 0)) (top1_path_product g (top1_path_reverse (\<alpha> (g 1))))) h}
               \<in> top1_fundamental_group_carrier V (subspace_topology X TX V) x0"
