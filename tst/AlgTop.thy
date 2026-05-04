@@ -3389,9 +3389,24 @@ proof -
           (top1_path_product (\<alpha> (f' 0)) (top1_path_product f' (top1_path_reverse (\<alpha> (f' 1)))))
           (top1_path_product (\<alpha> (f' 1)) (top1_path_product g' (top1_path_reverse (\<alpha> (g' 1))))))
         (top1_path_product (\<alpha> (f' 0)) (top1_path_product (top1_path_product f' g') (top1_path_reverse (\<alpha> (g' 1)))))"
-      sorry \<comment> \<open>Munkres Step 2: L(f)*L(g) \<simeq> L(f*g) in U.
-         Proof: outer assoc (Thm_51_2) + inner chain (5 steps: assoc, assoc, inverse, identity, assoc)
-         + propagate via product_right. All theorems exist but ?TU let-binding blocks rule/note chains.\<close>
+    proof -
+      \<comment> \<open>Step 1: Outer assoc.\<close>
+      note s1 = Theorem_51_2_associativity[OF hTopU h\<alpha>x hf'ra
+          top1_path_product_is_path[OF hTopU h\<alpha>y hg'ra]]
+      \<comment> \<open>Step 2: Inner chain (f'\<cdot>ra_y)\<cdot>(\<alpha>_y\<cdot>(g'\<cdot>ra_z)) \<simeq> (f'\<cdot>g')\<cdot>ra_z.\<close>
+      have s2: "top1_path_homotopic_on U ?TU (f' 0) x0
+          (top1_path_product (top1_path_product f' (top1_path_reverse (\<alpha> (f' 1)))) (top1_path_product (\<alpha> (f' 1)) (top1_path_product g' (top1_path_reverse (\<alpha> (g' 1))))))
+          (top1_path_product (top1_path_product f' g') (top1_path_reverse (\<alpha> (g' 1))))"
+        sorry \<comment> \<open>Inner 5-step chain: assoc + assoc + inverse + identity + assoc.\<close>
+      \<comment> \<open>Step 3: Propagate inner homotopy.\<close>
+      note s3 = path_homotopic_product_right[OF hTopU s2 h\<alpha>x]
+      \<comment> \<open>Combine: s1 (outer assoc) then s3 (inner propagated).\<close>
+      note trans_partial = Lemma_51_1_path_homotopic_trans[OF hTopU s1]
+      \<comment> \<open>trans_partial expects: middle \<simeq> RHS. s3 is: middle \<simeq> RHS.
+         But OF chain fails — need to check actual terms.\<close>
+      show ?thesis sorry \<comment> \<open>Combine s1 + s3 via Lemma_51_1_path_homotopic_trans.
+         Rule application fails due to term structure mismatch between note-derived facts and goal.\<close>
+    qed
     \<comment> \<open>Step 3: \<rho>(L(f'*g')) = \<rho>(L(f')*L(g')) by \<rho> condition (1).\<close>
     \<comment> \<open>Step 4: \<rho>(L(f')*L(g')) = \<rho>(L(f'))\<cdot>\<rho>(L(g')) by \<rho> condition (2) (\<phi>1 hom).\<close>
     \<comment> \<open>Step 5: \<sigma>(f'*g') = \<rho>(L(f'*g')) = \<rho>(L(f'))\<cdot>\<rho>(L(g')) = \<sigma>(f')\<cdot>\<sigma>(g').\<close>
@@ -6749,7 +6764,7 @@ proof -
         have hstep1: "\<psi> (invgFP (\<iota>fam 1 ?jVc)) = ?invgQ (\<psi> (\<iota>fam 1 ?jVc))"
           by (rule hom_preserves_inv[OF hFP_grp hQ_grp h\<psi>_hom h1_in])
         have hstep2: "\<psi> (\<iota>fam 1 ?jVc) = ?eQ" by (rule h\<psi>_1)
-        show ?thesis using hstep1 hstep2 by (by100 simp)
+        show ?thesis using hstep1 hstep2 by (by100 presburger)
       qed
       have hinvQ_eQ: "?invgQ ?eQ = ?eQ"
       proof -
