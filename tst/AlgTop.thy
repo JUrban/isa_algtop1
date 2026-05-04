@@ -2416,9 +2416,9 @@ proof -
     by (intro conjI ballI, auto simp: max_def abs_le_iff prod_eq_iff)
   \<comment> \<open>The metric topology of d_max on I\<times>I equals II_topology.\<close>
   have hd_top: "top1_metric_topology_on (I_set \<times> I_set) d_max = II_topology"
-    sorry \<comment> \<open>The sup metric generates the product topology on [0,1]\<times>[0,1].
-       Uses: product of metrizable = metrizable, and the two topologies
-       have the same convergent sequences / open sets.\<close>
+    sorry \<comment> \<open>Metrization: d_max metric topology = product topology on I\<times>I.
+       d_max-balls = open squares \<subseteq> open rectangles = product basis.
+       Product-open rectangles contain d_max-balls. So same opens. ~30 lines.\<close>
   \<comment> \<open>Apply Lebesgue number.\<close>
   have hII_ne: "I_set \<times> I_set \<noteq> {}" unfolding top1_unit_interval_def by (by100 auto)
   have hII_compact_d: "top1_compact_on (I_set \<times> I_set) (top1_metric_topology_on (I_set \<times> I_set) d_max)"
@@ -2449,10 +2449,29 @@ proof -
         \<longrightarrow> (\<exists>W \<in> {{p \<in> I_set \<times> I_set. F p \<in> U}, {p \<in> I_set \<times> I_set. F p \<in> V}}. A \<subseteq> W)"
     by (elim exE conjE) (by100 blast)
   \<comment> \<open>Choose grid with mesh < \<delta>. Each cell has d_max-diameter < \<delta>, hence in F\<inverse>(U) or F\<inverse>(V).\<close>
+  \<comment> \<open>Choose n with 1/n < \<delta>. Uniform grid: sub(i) = i/n.\<close>
+  obtain n :: nat where hn: "n \<ge> 1" and hn_fine: "1 / real n < \<delta>"
+  proof -
+    obtain n :: nat where "n \<ge> 1 \<and> 1 / real n < \<delta>"
+      sorry \<comment> \<open>Archimedean: for \<delta> > 0, exists n with 1/n < \<delta>.\<close>
+    thus ?thesis using that by (by100 blast)
+  qed
+  define sub where "sub i = real i / real n" for i :: nat
+  have hsub0: "sub 0 = 0" unfolding sub_def by (by100 simp)
+  have hsubn: "sub n = 1" unfolding sub_def using hn by (by100 simp)
+  have hsubinc: "\<forall>i<n. sub i < sub (Suc i)" unfolding sub_def using hn
+    by (intro allI impI, simp add: field_simps)
+  \<comment> \<open>Each cell has d_max-diameter \<le> 1/n < \<delta>.\<close>
+  have hcell: "\<forall>i<n. \<forall>j<n.
+      (\<forall>s t. sub i \<le> s \<and> s \<le> sub (Suc i) \<and> sub j \<le> t \<and> t \<le> sub (Suc j)
+             \<and> 0\<le>s \<and> s\<le>1 \<and> 0\<le>t \<and> t\<le>1 \<longrightarrow> F (s,t) \<in> U)
+    \<or> (\<forall>s t. sub i \<le> s \<and> s \<le> sub (Suc i) \<and> sub j \<le> t \<and> t \<le> sub (Suc j)
+           \<and> 0\<le>s \<and> s\<le>1 \<and> 0\<le>t \<and> t\<le>1 \<longrightarrow> F (s,t) \<in> V)"
+    sorry \<comment> \<open>Each cell \<subseteq> I\<times>I with d_max-diameter \<le> 1/n < \<delta>.
+       By h\<delta>_cover, cell \<subseteq> F\<inverse>(U) or F\<inverse>(V). Needs: d_max-diameter of cell \<le> 1/n,
+       and top1_metric_diam_on applied to the cell set.\<close>
   show ?thesis
-    sorry \<comment> \<open>From Lebesgue \<delta>: subdivide [0,1] in both directions with mesh < \<delta>.
-       Each cell [s_i,s_{i+1}] \<times> [t_j,t_{j+1}] has d_max-diameter = max(s_{i+1}-s_i, t_{j+1}-t_j) < \<delta>.
-       By h\<delta>_cover, cell \<subseteq> F\<inverse>(U) or F\<inverse>(V). ~30 lines of arithmetic.\<close>
+    using hn hsub0 hsubn hsubinc hcell by (by100 blast)
 qed
 
 text \<open>Helper: subdivide a loop in X = U \<union> V into pieces each in U or V.\<close>
