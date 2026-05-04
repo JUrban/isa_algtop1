@@ -5197,9 +5197,13 @@ proof -
             also have "\<dots> = mulH (\<sigma> (piece 0 sub')) ?tail"
             proof -
               \<comment> \<open>Need σ values in H for group assoc.\<close>
+              \<comment> \<open>\<sigma>(path in U) \<in> H: \<sigma>(f') = \<rho>(L(f')) where L wraps f' into a loop,
+                 \<rho>(loop in U) = \<phi>1([loop]_U), and \<phi>1 maps \<pi>1(U) to H.\<close>
               have h\<sigma>0_H: "\<sigma> (piece 0 sub) \<in> H" sorry
               have h\<sigma>1_H: "\<sigma> (piece 1 sub) \<in> H" sorry
               have htail_H: "?tail \<in> H" sorry
+              \<comment> \<open>These require: (1) L(piece j sub) is a loop in U, (2) \<rho> maps to H via \<phi>1,
+                 (3) tail is closed under mulH in H (group closure + eH \<in> H).\<close>
               \<comment> \<open>Group associativity: mulH a (mulH b c) = mulH (mulH a b) c.\<close>
               have hassoc_raw: "\<forall>x\<in>H. \<forall>y\<in>H. \<forall>z\<in>H. mulH (mulH x y) z = mulH x (mulH y z)"
                 using hH unfolding top1_is_group_on_def by (by100 fast)
