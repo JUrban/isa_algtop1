@@ -5537,7 +5537,7 @@ proof -
       \<comment> \<open>Similarly for S: the sub-predicate in \<tau>_def (with N substituted) equals Psub.\<close>
       have hS_eq: "S = (SOME sub. Psub sub)" unfolding S_def by (by100 simp)
       have h\<tau>_foldr: "\<tau> f = foldr_\<sigma> f N S"
-        using h\<tau>_eq hN_eq unfolding Psub_def S_def sorry
+        unfolding N_def Pn_def S_def Psub_def using h\<tau>_eq by (by100 simp)
       show ?thesis using h\<tau>_foldr hsubdiv_app by (by100 simp)
     qed
     \<comment> \<open>Step 5: \<sigma>(f) = \<rho>(const \<cdot> f \<cdot> const) since \<alpha>(x0) = const.\<close>
