@@ -6100,13 +6100,106 @@ proof -
     qed
     \<comment> \<open>Remaining steps: \<tau>(g) = \<sigma>(g) = \<rho>(const\<cdot>g\<cdot>const) = \<rho>(g) = \<phi>2([g]_V).\<close>
     have h\<tau>_\<sigma>_V: "\<tau> g = \<sigma> g"
-      sorry \<comment> \<open>Same as h\<tau>_\<sigma> but with V. Mirror proof using:
-         - h\<sigma>_cond1_V, h\<sigma>_cond2_V, h\<sigma>_ext_\<rho>_V (V versions of \<sigma> conditions)
-         - hg_loop_V (g is loop in V)
-         - Same hsubdiv structure with V replacing U throughout
-         - h\<sigma>_path_in_H works for V paths too (via h\<alpha>_in_V + h\<phi>2 + \<rho>_def V branch)
-         - reparam_path_homotopy applies identically (f continuous, range in V)
-         The proof is structurally identical to h\<tau>_\<sigma> but uses V infrastructure.\<close>
+    proof -
+      \<comment> \<open>Mirror of h\<tau>_\<sigma> for V. The proof uses the same structure:
+         1. Trivial subdivision (n=1) gives σ g
+         2. hsubdiv: any valid subdivision gives σ g (by induction, merging pieces)
+         3. SOME manipulation connects τ to hsubdiv
+         The key difference: pieces are in V (not U), using σ_cond2_V.\<close>
+      have hg_in_V: "\<forall>s\<in>I_set. g s \<in> V"
+        using hg_loop_V unfolding top1_is_loop_on_def top1_is_path_on_def
+            top1_continuous_map_on_def by (by100 blast)
+      \<comment> \<open>Step 1: σ g ∈ H (via φ2 for V-loops).\<close>
+      have h\<sigma>_g_in_H: "\<sigma> g \<in> H"
+        sorry \<comment> \<open>σ(g) = ρ(L(g)). L(g) is a loop in V. ρ(loop in V) = φ2([·]_V) ∈ H.
+           Same chain as h_σ_path_in_H but for V via φ2.\<close>
+      have hid_V: "mulH (\<sigma> g) eH = \<sigma> g"
+        using hH h\<sigma>_g_in_H unfolding top1_is_group_on_def by (by100 blast)
+      \<comment> \<open>Step 2: Trivial subdivision gives σ g.\<close>
+      have htrivial_V: "foldr_\<sigma> g 1 (\<lambda>i. real i) = mulH (\<sigma> g) eH"
+        unfolding foldr_\<sigma>_def by (by100 simp)
+      have htrivial_eq_V: "foldr_\<sigma> g 1 (\<lambda>i. real i) = \<sigma> g"
+        using htrivial_V hid_V by (by100 simp)
+      \<comment> \<open>Step 3: Subdivision independence (same structure as U, using V infrastructure).\<close>
+      have hsubdiv_V: "\<And>n sub. n \<ge> 1 \<Longrightarrow> sub 0 = 0 \<Longrightarrow> sub n = 1
+          \<Longrightarrow> (\<forall>i<n. sub i < sub (Suc i))
+          \<Longrightarrow> (\<forall>i<n. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> g (sub i + t * (sub (Suc i) - sub i)) \<in> U)
+                 \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> g (sub i + t * (sub (Suc i) - sub i)) \<in> V))
+          \<Longrightarrow> foldr_\<sigma> g n sub = \<sigma> g"
+        sorry \<comment> \<open>Identical structure to hsubdiv for U: strong induction on n,
+           base case n=1 (piece = g), inductive step merges first two pieces via
+           σ_cond2_V + reparametrization + σ_cond1_V. All pieces in V since g ⊆ V.\<close>
+      \<comment> \<open>Step 4: SOME manipulation (same as U version).\<close>
+      have hex_n_V: "\<exists>n::nat. n \<ge> 1 \<and> (\<exists>sub. sub 0 = (0::real) \<and> sub n = 1
+          \<and> (\<forall>i<n. sub i < sub (Suc i))
+          \<and> (\<forall>i<n. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> g (sub i + t * (sub (Suc i) - sub i)) \<in> U)
+                 \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> g (sub i + t * (sub (Suc i) - sub i)) \<in> V)))"
+      proof (rule exI[of _ 1], intro conjI)
+        show "(1::nat) \<ge> 1" by (by100 simp)
+        show "\<exists>sub. sub 0 = (0::real) \<and> sub 1 = 1
+            \<and> (\<forall>i<1. sub i < sub (Suc i))
+            \<and> (\<forall>i<1. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> g (sub i + t * (sub (Suc i) - sub i)) \<in> U)
+                   \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> g (sub i + t * (sub (Suc i) - sub i)) \<in> V))"
+        proof (rule exI[of _ "\<lambda>i. real i"], intro conjI)
+          show "(real (0::nat) :: real) = 0" by (by100 simp)
+          show "real (1::nat) = (1::real)" by (by100 simp)
+          show "\<forall>i<(1::nat). (real i :: real) < real (Suc i)" by (by100 simp)
+          show "\<forall>i<(1::nat). (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> g (real i + t * (real (Suc i) - real i)) \<in> U)
+              \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> g (real i + t * (real (Suc i) - real i)) \<in> V)"
+          proof (intro allI impI, rule disjI2, intro allI impI)
+            fix i :: nat and t :: real assume "i < 1" "0 \<le> t \<and> t \<le> 1"
+            hence "i = 0" by (by100 presburger)
+            hence "real i + t * (real (Suc i) - real i) = t" by (by100 simp)
+            moreover have "t \<in> I_set" using \<open>0 \<le> t \<and> t \<le> 1\<close>
+              unfolding top1_unit_interval_def by (by100 force)
+            ultimately show "g (real i + t * (real (Suc i) - real i)) \<in> V"
+              using hg_in_V by (by100 force)
+          qed
+        qed
+      qed
+      \<comment> \<open>Connect via SOME (same Pn/Psub technique as U version).\<close>
+      define Pn_V where "Pn_V n \<equiv> n \<ge> 1 \<and> (\<exists>sub. sub 0 = (0::real) \<and> sub n = 1
+          \<and> (\<forall>i<n. sub i < sub (Suc i))
+          \<and> (\<forall>i<n. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> g (sub i + t * (sub (Suc i) - sub i)) \<in> U)
+                 \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> g (sub i + t * (sub (Suc i) - sub i)) \<in> V)))" for n :: nat
+      have hPn_V_ex: "\<exists>n. Pn_V n" using hex_n_V unfolding Pn_V_def by (by100 blast)
+      hence hPn_V_some: "Pn_V (SOME n. Pn_V n)" by (rule someI_ex)
+      define N_V where "N_V = (SOME n. Pn_V n)"
+      have hN_V_ge: "N_V \<ge> 1" using hPn_V_some unfolding N_V_def Pn_V_def by (by100 blast)
+      from hPn_V_some have "\<exists>sub. sub 0 = (0::real) \<and> sub N_V = 1
+          \<and> (\<forall>i<N_V. sub i < sub (Suc i))
+          \<and> (\<forall>i<N_V. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> g (sub i + t * (sub (Suc i) - sub i)) \<in> U)
+                 \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> g (sub i + t * (sub (Suc i) - sub i)) \<in> V))"
+        unfolding N_V_def Pn_V_def by (by100 blast)
+      define Psub_V where "Psub_V sub \<equiv> sub 0 = (0::real) \<and> sub N_V = 1
+          \<and> (\<forall>i<N_V. sub i < sub (Suc i))
+          \<and> (\<forall>i<N_V. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> g (sub i + t * (sub (Suc i) - sub i)) \<in> U)
+                 \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> g (sub i + t * (sub (Suc i) - sub i)) \<in> V))"
+        for sub :: "nat \<Rightarrow> real"
+      have hPsub_V_ex: "\<exists>sub. Psub_V sub"
+      proof -
+        from hPn_V_some obtain sub0 where "sub0 0 = (0::real)" "sub0 N_V = 1"
+            "\<forall>i<N_V. sub0 i < sub0 (Suc i)"
+            "\<forall>i<N_V. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> g (sub0 i + t * (sub0 (Suc i) - sub0 i)) \<in> U)
+                   \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> g (sub0 i + t * (sub0 (Suc i) - sub0 i)) \<in> V)"
+          unfolding N_V_def Pn_V_def by (by100 fast)
+        thus ?thesis unfolding Psub_V_def by (by100 blast)
+      qed
+      hence hPsub_V_some: "Psub_V (SOME sub. Psub_V sub)" by (rule someI_ex)
+      define S_V where "S_V = (SOME sub. Psub_V sub)"
+      have hS_V_0: "S_V 0 = 0" using hPsub_V_some unfolding S_V_def Psub_V_def by (by100 blast)
+      have hS_V_N: "S_V N_V = 1" using hPsub_V_some unfolding S_V_def Psub_V_def by (by100 blast)
+      have hS_V_inc: "\<forall>i<N_V. S_V i < S_V (Suc i)"
+        using hPsub_V_some unfolding S_V_def Psub_V_def by (by100 blast)
+      have hS_V_UV: "\<forall>i<N_V. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> g (S_V i + t * (S_V (Suc i) - S_V i)) \<in> U)
+             \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> g (S_V i + t * (S_V (Suc i) - S_V i)) \<in> V)"
+        using hPsub_V_some unfolding S_V_def Psub_V_def by (by100 blast)
+      have hsubdiv_V_app: "foldr_\<sigma> g N_V S_V = \<sigma> g"
+        by (rule hsubdiv_V[OF hN_V_ge hS_V_0 hS_V_N hS_V_inc hS_V_UV])
+      have h\<tau>_foldr_V: "\<tau> g = foldr_\<sigma> g N_V S_V"
+        unfolding N_V_def Pn_V_def S_V_def Psub_V_def \<tau>_def Let_def by (by100 simp)
+      show ?thesis using h\<tau>_foldr_V hsubdiv_V_app by (by100 simp)
+    qed
     have h\<alpha>_x0_V: "\<alpha> x0 = top1_constant_path x0" unfolding \<alpha>_def by (by100 simp)
     have h\<sigma>_\<rho>_V: "\<sigma> g = \<rho> (top1_path_product (top1_constant_path x0)
         (top1_path_product g (top1_path_reverse (top1_constant_path x0))))"
