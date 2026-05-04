@@ -4582,7 +4582,40 @@ proof -
         \<comment> \<open>\<tau>_def structure: \<tau> f = foldr_\<sigma> f (SOME n. P(f,n)) (SOME sub. Q(f,n,sub)).
            Since foldr_\<sigma> f1 = foldr_\<sigma> f2, and the SOME predicates involve f only
            at I_set points (where f1=f2), the entire \<tau> expression is the same.\<close>
-        show ?thesis unfolding \<tau>_def Let_def using hfoldr_\<sigma>_ext hf12 sorry
+        \<comment> \<open>The \<tau>_def expression: let n = SOME n. P(f,n); sub = SOME sub. Q(f,n,sub)
+             in foldr_\<sigma> f n sub. Every appearance of f in P and Q is at sub i + t*...
+             where t \<in> [0,1], hence at an I_set point. So P(f1,n) = P(f2,n) and
+             Q(f1,n,sub) = Q(f2,n,sub), giving same SOME values, and
+             foldr_\<sigma> f1 = foldr_\<sigma> f2 by hfoldr_\<sigma>_ext.\<close>
+        show ?thesis
+        proof -
+          \<comment> \<open>Show the n-SOME predicates are extensionally equal.\<close>
+          define Pn where "Pn g n \<equiv> n \<ge> 1 \<and> (\<exists>sub. sub 0 = (0::real) \<and> sub n = 1
+              \<and> (\<forall>i<n. sub i < sub (Suc i))
+              \<and> (\<forall>i<n. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> g (sub i + t * (sub (Suc i) - sub i)) \<in> U)
+                     \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> g (sub i + t * (sub (Suc i) - sub i)) \<in> V)))"
+            for g :: "real \<Rightarrow> 'a" and n :: nat
+          have hPn_eq: "Pn f1 = Pn f2"
+            sorry \<comment> \<open>From hf12: f1=f2 at all I_set eval points \<Rightarrow> predicates extensionally equal.\<close>
+          hence hN_eq: "(SOME n. Pn f1 n) = (SOME n. Pn f2 n)" by (by100 simp)
+          \<comment> \<open>Show the sub-SOME predicates are extensionally equal (with same n).\<close>
+          define Qsub where "Qsub g n sub \<equiv> sub 0 = (0::real) \<and> sub n = 1
+              \<and> (\<forall>i<n. sub i < sub (Suc i))
+              \<and> (\<forall>i<n. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> g (sub i + t * (sub (Suc i) - sub i)) \<in> U)
+                     \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> g (sub i + t * (sub (Suc i) - sub i)) \<in> V))"
+            for g :: "real \<Rightarrow> 'a" and n :: nat and sub :: "nat \<Rightarrow> real"
+          have hQsub_eq: "\<And>n. Qsub f1 n = Qsub f2 n"
+            sorry \<comment> \<open>Same reasoning as hPn_eq.\<close>
+          hence hS_eq: "\<And>n. (SOME sub. Qsub f1 n sub) = (SOME sub. Qsub f2 n sub)" by (by100 simp)
+          \<comment> \<open>Assemble: \<tau> f1 = foldr_\<sigma> f1 N S = foldr_\<sigma> f2 N S = \<tau> f2.\<close>
+          have "\<tau> f1 = foldr_\<sigma> f1 (SOME n. Pn f1 n) (SOME sub. Qsub f1 (SOME n. Pn f1 n) sub)"
+            unfolding \<tau>_def Let_def Pn_def Qsub_def by (by100 simp)
+          also have "\<dots> = foldr_\<sigma> f2 (SOME n. Pn f2 n) (SOME sub. Qsub f2 (SOME n. Pn f2 n) sub)"
+            using hN_eq hS_eq hfoldr_\<sigma>_ext by (by100 simp)
+          also have "\<dots> = \<tau> f2"
+            unfolding \<tau>_def Let_def Pn_def Qsub_def by (by100 simp)
+          finally show ?thesis .
+        qed
       qed
     qed
     have hrow0_sym: "\<forall>s\<in>I_set. f s = row_fn 0 s"
