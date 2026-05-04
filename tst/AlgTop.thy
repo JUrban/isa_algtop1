@@ -2976,9 +2976,40 @@ proof -
       else SOME p. top1_is_path_on V ?TV x0 x p)" for x
   \<comment> \<open>\<alpha> properties: \<alpha>(x) is a path from x0 to x, lying in U (or V or U\<inter>V) depending on x.\<close>
   have h\<alpha>_in_U: "\<And>x. x \<in> U \<Longrightarrow> top1_is_path_on U ?TU x0 x (\<alpha> x)"
-    sorry \<comment> \<open>From \<alpha>_def + path-connectedness of U. Case: x=x0 (const), x\<in>U\<inter>V (path in U\<inter>V \<subseteq> U), x\<in>U\\V (path in U).\<close>
+  proof -
+    fix x assume hxU: "x \<in> U"
+    show "top1_is_path_on U ?TU x0 x (\<alpha> x)"
+    proof (cases "x = x0")
+      case True
+      hence "\<alpha> x = top1_constant_path x0" unfolding \<alpha>_def by (by100 simp)
+      thus ?thesis using True top1_constant_path_is_path[OF hTopU hx0_U] by (by100 simp)
+    next
+      case False
+      show ?thesis
+      proof (cases "x \<in> U \<inter> V")
+        case True
+        hence h\<alpha>_eq: "\<alpha> x = (SOME p. top1_is_path_on (U \<inter> V) ?TUV x0 x p)"
+          unfolding \<alpha>_def using False by (by100 simp)
+        \<comment> \<open>Path exists by path-connectedness of U\<inter>V.\<close>
+        have "\<exists>p. top1_is_path_on (U \<inter> V) ?TUV x0 x p"
+          using hUVpc hx0 True unfolding top1_path_connected_on_def by (by100 auto)
+        hence hpath_UV: "top1_is_path_on (U \<inter> V) ?TUV x0 x (\<alpha> x)"
+          unfolding h\<alpha>_eq by (rule someI_ex)
+        \<comment> \<open>Path in U\<inter>V is a path in U (codomain growth via subspace_topology_trans).\<close>
+        show ?thesis
+          sorry \<comment> \<open>hpath_UV: path in U\<inter>V. U\<inter>V \<subseteq> U. Codomain grow gives path in U.\<close>
+      next
+        case False
+        hence h\<alpha>_eq: "\<alpha> x = (SOME p. top1_is_path_on U ?TU x0 x p)"
+          unfolding \<alpha>_def using \<open>x \<noteq> x0\<close> False hxU by (by100 simp)
+        have "\<exists>p. top1_is_path_on U ?TU x0 x p"
+          using hUpc hx0_U hxU unfolding top1_path_connected_on_def by (by100 auto)
+        thus ?thesis unfolding h\<alpha>_eq by (rule someI_ex)
+      qed
+    qed
+  qed
   have h\<alpha>_in_V: "\<And>x. x \<in> V \<Longrightarrow> top1_is_path_on V ?TV x0 x (\<alpha> x)"
-    sorry \<comment> \<open>Same for V.\<close>
+    sorry \<comment> \<open>Same structure as h\<alpha>_in_U with V. Cases: x=x0 (const), x\<in>U\<inter>V (path in U\<inter>V \<subseteq> V), x\<in>V\\U (path in V).\<close>
   \<comment> \<open>Step 3: Define \<sigma>(f) = \<rho>(\<alpha>_{f(0)} \<cdot> f \<cdot> rev(\<alpha>_{f(1)})) for paths f in U or V.\<close>
   define \<sigma> where "\<sigma> f = \<rho> (top1_path_product (\<alpha> (f 0)) (top1_path_product f (top1_path_reverse (\<alpha> (f 1)))))" for f
   \<comment> \<open>Step 4: Define \<tau>(f) for a loop f at x_0 in X.
