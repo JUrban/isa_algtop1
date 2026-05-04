@@ -4725,22 +4725,35 @@ proof -
             unfolding \<tau>_def Let_def Pn_def Qsub_def by (by100 simp)
           also have "\<dots> = foldr_\<sigma> f2 (SOME n. Pn f2 n) (SOME sub. Qsub f2 (SOME n. Pn f2 n) sub)"
           proof -
-            \<comment> \<open>SOME n equal, SOME sub equal, foldr_\<sigma> equal for the SOME-picked valid sub.\<close>
+            \<comment> \<open>Since Pn f1 = Pn f2 and Qsub f1 = Qsub f2, the SOME values are identical.
+               So foldr_\<sigma> f1 N S = foldr_\<sigma> f2 N' S' where N=N' and S=S'.\<close>
             have "foldr_\<sigma> f1 (SOME n. Pn f1 n) (SOME sub. Qsub f1 (SOME n. Pn f1 n) sub)
-                = foldr_\<sigma> f2 (SOME n. Pn f1 n) (SOME sub. Qsub f1 (SOME n. Pn f1 n) sub)"
-            proof -
-              \<comment> \<open>The SOME-picked n and sub are valid, so hfoldr_eq applies.\<close>
-              have hvalid: "Pn f1 (SOME n. Pn f1 n)" sorry
-              hence "Qsub f1 (SOME n. Pn f1 n) (SOME sub. Qsub f1 (SOME n. Pn f1 n) sub)" sorry
-              hence "((SOME sub. Qsub f1 (SOME n. Pn f1 n) sub) 0 = 0)"
-                  "((SOME sub. Qsub f1 (SOME n. Pn f1 n) sub) (SOME n. Pn f1 n) = 1)"
-                  "(\<forall>j<(SOME n. Pn f1 n). (SOME sub. Qsub f1 (SOME n. Pn f1 n) sub) j
-                      < (SOME sub. Qsub f1 (SOME n. Pn f1 n) sub) (Suc j))"
-                unfolding Qsub_def by (by100 blast)+
-              thus ?thesis using hfoldr_eq by (by100 blast)
-            qed
-            also have "\<dots> = foldr_\<sigma> f2 (SOME n. Pn f2 n) (SOME sub. Qsub f2 (SOME n. Pn f2 n) sub)"
+                = foldr_\<sigma> f1 (SOME n. Pn f2 n) (SOME sub. Qsub f2 (SOME n. Pn f2 n) sub)"
               using hN_eq hS_eq by (by100 simp)
+            also have "\<dots> = foldr_\<sigma> f2 (SOME n. Pn f2 n) (SOME sub. Qsub f2 (SOME n. Pn f2 n) sub)"
+            proof (cases "\<exists>n. Pn f2 n")
+              case True
+              hence hPn_valid: "Pn f2 (SOME n. Pn f2 n)" by (rule someI_ex)
+              hence hN_ge: "(SOME n. Pn f2 n) \<ge> 1" unfolding Pn_def by (by100 blast)
+              from hPn_valid have "\<exists>sub. Qsub f2 (SOME n. Pn f2 n) sub"
+                unfolding Pn_def Qsub_def by (by100 fast)
+              hence hQsub_valid: "Qsub f2 (SOME n. Pn f2 n) (SOME sub. Qsub f2 (SOME n. Pn f2 n) sub)"
+                by (rule someI_ex)
+              hence hS0: "(SOME sub. Qsub f2 (SOME n. Pn f2 n) sub) 0 = 0"
+                  and hSN: "(SOME sub. Qsub f2 (SOME n. Pn f2 n) sub) (SOME n. Pn f2 n) = 1"
+                  and hSinc: "\<forall>j<(SOME n. Pn f2 n). (SOME sub. Qsub f2 (SOME n. Pn f2 n) sub) j
+                      < (SOME sub. Qsub f2 (SOME n. Pn f2 n) sub) (Suc j)"
+                unfolding Qsub_def by (by100 blast)+
+              show ?thesis using hfoldr_eq[OF hS0 hSN hSinc] by (by100 simp)
+            next
+              case False
+              \<comment> \<open>No valid subdivision exists. Then τ picks arbitrary SOME values.
+                 Since Pn f1 = Pn f2, there's no valid subdivision for f1 either.
+                 Both τ values use the same SOME-picked (meaningless) n and sub.\<close>
+              hence "\<not> (\<exists>n. Pn f1 n)" using hPn_eq by (by100 simp)
+              \<comment> \<open>foldr_\<sigma> f1 and f2 with the same meaningless n and sub: need σ-equality.\<close>
+              thus ?thesis using hpiece_eq sorry
+            qed
             finally show ?thesis .
           qed
           also have "\<dots> = \<tau> f2"
