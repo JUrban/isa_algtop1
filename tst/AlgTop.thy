@@ -3364,15 +3364,53 @@ proof -
     let ?x = "f' 0" and ?y = "f' 1" and ?z = "g' 1"
     \<comment> \<open>Step 1: L(f') = \<alpha>_x \<cdot> (f' \<cdot> rev(\<alpha>_y)), L(g') = \<alpha>_y \<cdot> (g' \<cdot> rev(\<alpha>_z)),
        L(f'*g') = \<alpha>_x \<cdot> ((f'*g') \<cdot> rev(\<alpha>_z)).\<close>
-    \<comment> \<open>Step 2: L(f')*L(g') \<simeq> L(f'*g') in U. Key: rev(\<alpha>_y)\<cdot>\<alpha>_y \<simeq> const, then
-       reassociate and apply identity law.\<close>
+    \<comment> \<open>Path infrastructure: endpoints in U, \<alpha> paths, reverse paths.\<close>
+    have h0I: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+    have h1I: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+    have hxU: "?x \<in> U" using hf'U h0I by (by100 blast)
+    have hyU: "?y \<in> U" using hf'U h1I by (by100 blast)
+    have hzU: "?z \<in> U" using hg'U h1I by (by100 blast)
+    have h\<alpha>x: "top1_is_path_on U ?TU x0 ?x (\<alpha> ?x)" by (rule h\<alpha>_in_U[OF hxU])
+    have h\<alpha>y: "top1_is_path_on U ?TU x0 ?y (\<alpha> ?y)" by (rule h\<alpha>_in_U[OF hyU])
+    have h\<alpha>z: "top1_is_path_on U ?TU x0 ?z (\<alpha> ?z)" by (rule h\<alpha>_in_U[OF hzU])
+    have hg'_path2: "top1_is_path_on U ?TU ?y ?z g'"
+      using hg'_path hfg by (by100 presburger)
+    have hra_y: "top1_is_path_on U ?TU ?y x0 (top1_path_reverse (\<alpha> ?y))"
+      by (rule top1_path_reverse_is_path[OF h\<alpha>y])
+    have hra_z: "top1_is_path_on U ?TU ?z x0 (top1_path_reverse (\<alpha> ?z))"
+      by (rule top1_path_reverse_is_path[OF h\<alpha>z])
+    have hf'ra: "top1_is_path_on U ?TU ?x x0 (top1_path_product f' (top1_path_reverse (\<alpha> ?y)))"
+      by (rule top1_path_product_is_path[OF hTopU hf'_path hra_y])
+    have hg'ra: "top1_is_path_on U ?TU ?y x0 (top1_path_product g' (top1_path_reverse (\<alpha> ?z)))"
+      by (rule top1_path_product_is_path[OF hTopU hg'_path2 hra_z])
+    \<comment> \<open>Step 2: L(f')*L(g') \<simeq> L(f'*g') in U.\<close>
+    let ?ra_y = "top1_path_reverse (\<alpha> (f' 1))" and ?ra_z = "top1_path_reverse (\<alpha> (g' 1))"
     have hL_fg_hom: "top1_path_homotopic_on U ?TU x0 x0
         (top1_path_product
-          (top1_path_product (\<alpha> ?x) (top1_path_product f' (top1_path_reverse (\<alpha> ?y))))
-          (top1_path_product (\<alpha> ?y) (top1_path_product g' (top1_path_reverse (\<alpha> ?z)))))
-        (top1_path_product (\<alpha> ?x) (top1_path_product (top1_path_product f' g') (top1_path_reverse (\<alpha> ?z))))"
-      sorry \<comment> \<open>Munkres Step 2 core: L(f)*L(g) path-homotopic to L(f*g) in U.
-         Uses Theorem_51_2 associativity, inverse, identity laws repeatedly.\<close>
+          (top1_path_product (\<alpha> (f' 0)) (top1_path_product f' ?ra_y))
+          (top1_path_product (\<alpha> (f' 1)) (top1_path_product g' ?ra_z)))
+        (top1_path_product (\<alpha> (f' 0)) (top1_path_product (top1_path_product f' g') ?ra_z))"
+    proof -
+      \<comment> \<open>Step 1: Outer assoc: (a\<cdot>b)\<cdot>c \<simeq> a\<cdot>(b\<cdot>c).\<close>
+      have hc_path: "top1_is_path_on U ?TU x0 x0
+          (top1_path_product (\<alpha> (f' 1)) (top1_path_product g' ?ra_z))"
+        by (rule top1_path_product_is_path[OF hTopU h\<alpha>y hg'ra])
+      have s1: "top1_path_homotopic_on U ?TU x0 x0
+          (top1_path_product (top1_path_product (\<alpha> ?x) (top1_path_product f' ?ra_y)) (top1_path_product (\<alpha> ?y) (top1_path_product g' ?ra_z)))
+          (top1_path_product (\<alpha> ?x) (top1_path_product (top1_path_product f' ?ra_y) (top1_path_product (\<alpha> ?y) (top1_path_product g' ?ra_z))))"
+        sorry \<comment> \<open>Theorem_51_2_associativity[OF hTopU h_alpha_x hf'ra hc_path]. Rule app fails.\<close>
+      \<comment> \<open>Step 2: Inner: (f'\<cdot>ra_y)\<cdot>(\<alpha>_y\<cdot>(g'\<cdot>ra_z)) \<simeq> (f'\<cdot>g')\<cdot>ra_z.\<close>
+      have s2_inner: "top1_path_homotopic_on U ?TU (f' 0) x0
+          (top1_path_product (top1_path_product f' ?ra_y) (top1_path_product (\<alpha> (f' 1)) (top1_path_product g' ?ra_z)))
+          (top1_path_product (top1_path_product f' g') ?ra_z)"
+        sorry \<comment> \<open>5-step chain: assoc + assoc + inverse + identity + assoc.\<close>
+      \<comment> \<open>Step 3: Propagate: \<alpha>_x\<cdot>inner \<simeq> \<alpha>_x\<cdot>result.\<close>
+      have s3: "top1_path_homotopic_on U ?TU x0 x0
+          (top1_path_product (\<alpha> (f' 0)) (top1_path_product (top1_path_product f' ?ra_y) (top1_path_product (\<alpha> (f' 1)) (top1_path_product g' ?ra_z))))
+          (top1_path_product (\<alpha> (f' 0)) (top1_path_product (top1_path_product f' g') ?ra_z))"
+        by (rule path_homotopic_product_right[OF hTopU s2_inner h\<alpha>x])
+      show ?thesis by (rule Lemma_51_1_path_homotopic_trans[OF hTopU s1 s3])
+    qed
     \<comment> \<open>Step 3: \<rho>(L(f'*g')) = \<rho>(L(f')*L(g')) by \<rho> condition (1).\<close>
     \<comment> \<open>Step 4: \<rho>(L(f')*L(g')) = \<rho>(L(f'))\<cdot>\<rho>(L(g')) by \<rho> condition (2) (\<phi>1 hom).\<close>
     \<comment> \<open>Step 5: \<sigma>(f'*g') = \<rho>(L(f'*g')) = \<rho>(L(f'))\<cdot>\<rho>(L(g')) = \<sigma>(f')\<cdot>\<sigma>(g').\<close>
@@ -3392,16 +3430,6 @@ proof -
     let ?Lf = "top1_path_product (\<alpha> ?x) (top1_path_product f' (top1_path_reverse (\<alpha> ?y)))"
     let ?Lg = "top1_path_product (\<alpha> ?y) (top1_path_product g' (top1_path_reverse (\<alpha> ?z)))"
     let ?Lfg = "top1_path_product (\<alpha> ?x) (top1_path_product (top1_path_product f' g') (top1_path_reverse (\<alpha> ?z)))"
-    have h0I: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
-    have h1I: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
-    have hxU: "?x \<in> U" using hf'U h0I by (by100 blast)
-    have hyU: "?y \<in> U" using hf'U h1I by (by100 blast)
-    have hzU: "?z \<in> U" using hg'U h1I by (by100 blast)
-    have h\<alpha>x: "top1_is_path_on U ?TU x0 ?x (\<alpha> ?x)" by (rule h\<alpha>_in_U[OF hxU])
-    have h\<alpha>y: "top1_is_path_on U ?TU x0 ?y (\<alpha> ?y)" by (rule h\<alpha>_in_U[OF hyU])
-    have h\<alpha>z: "top1_is_path_on U ?TU x0 ?z (\<alpha> ?z)" by (rule h\<alpha>_in_U[OF hzU])
-    have hg'_path2: "top1_is_path_on U ?TU ?y ?z g'"
-      using hg'_path hfg by (by100 presburger)
     have hLf_loop: "top1_is_loop_on U ?TU x0 ?Lf"
       unfolding top1_is_loop_on_def
       by (rule top1_path_product_is_path[OF hTopU h\<alpha>x
