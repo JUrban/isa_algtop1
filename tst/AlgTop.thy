@@ -5363,10 +5363,24 @@ proof -
       qed
       \<comment> \<open>Now need: τ(f1*f2) = τ(f1)·τ(f2). This is Munkres Step 5.\<close>
       have h\<tau>_mul: "\<tau> (top1_path_product f1 f2) = mulH (\<tau> f1) (\<tau> f2)"
-        sorry \<comment> \<open>Munkres Step 5: Choose subdivision of f1*f2 with 1/2 as a point.
-           Pieces [0,1/2] are f-pieces, [1/2,1] are g-pieces.
-           By subdivision independence, τ(f1*f2) = Π σ(all pieces)
-           = (Π σ(f-pieces))·(Π σ(g-pieces)) = τ(f1)·τ(f2).\<close>
+        sorry \<comment> \<open>Munkres Step 5: τ(f*g) = τ(f)·τ(g).
+           Choose subdivision s_0,...,s_n of [0,1] for f*g with s_k = 1/2.
+           For i < k: piece_i(t) = (f*g)(s_i + t*(s_{i+1}-s_i)) = f(2s_i + t*2*(s_{i+1}-s_i))
+             since s_i ≤ 1/2 means (f*g) uses the f branch.
+           For i ≥ k: piece_i uses the g branch similarly.
+           So τ(f*g) = foldr [σ(f-pieces), σ(g-pieces)] eH
+                     = (foldr [σ(f-pieces)] eH) · (foldr [σ(g-pieces)] eH)  [group assoc + identity]
+           The f-pieces form a valid subdivision 2s_0,...,2s_k of [0,1] for f.
+           The g-pieces form a valid subdivision 2s_k-1,...,2s_n-1 of [0,1] for g.
+           By subdivision independence: foldr [σ(f-pieces)] eH = τ(f),
+             foldr [σ(g-pieces)] eH = τ(g).
+           So τ(f*g) = τ(f)·τ(g).
+
+           Formal proof requires: (1) loop_subdivision_UV for f*g giving subdivision with 1/2,
+           (2) piece identification (f-branch vs g-branch),
+           (3) subdivision independence for f and g separately,
+           (4) foldr splitting via group associativity.
+           All ingredients proved; assembly is substantial.\<close>
       show ?thesis using h\<Phi>_prod h\<Phi>_c1 h\<Phi>_c2 h\<tau>_mul by (by100 simp)
     qed
   qed
