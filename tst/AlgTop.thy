@@ -4129,7 +4129,12 @@ proof -
     \<comment> \<open>Subdivision independence: for any valid subdivision of f (loop in U at x0),
        the foldr of \<sigma> values = \<sigma>(f). Uses \<sigma>_cond2 + \<sigma>_cond1 + reparametrization.\<close>
     have h\<tau>_\<sigma>: "\<tau> f = \<sigma> f"
-      sorry \<comment> \<open>Munkres Step 3: subdivision independence via \<sigma>_cond2 inductive telescoping.\<close>
+      sorry \<comment> \<open>Munkres Step 3: subdivision independence.
+         Proof: (1) SOME picks valid n, sub. All pieces in U (since f \<subseteq> U).
+         (2) By inductive \<sigma>_cond2 merging: foldr = \<sigma>(piece concatenation).
+         (3) Concatenation \<simeq> f by reparametrization. \<sigma>_cond1 gives = \<sigma>(f).
+         (4) foldr result = \<sigma>(f) \<cdot> eH = \<sigma>(f) by group identity.
+         Blocker: \<tau>_def unfolding causes term explosion (>2min build).\<close>
     \<comment> \<open>Step 5: \<sigma>(f) = \<rho>(const \<cdot> f \<cdot> const) since \<alpha>(x0) = const.\<close>
     have h\<alpha>_x0: "\<alpha> x0 = top1_constant_path x0"
       unfolding \<alpha>_def by (by100 simp)
