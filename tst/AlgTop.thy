@@ -5267,12 +5267,27 @@ proof -
     fix c1 c2
     assume hc1: "c1 \<in> top1_fundamental_group_carrier X TX x0"
        and hc2: "c2 \<in> top1_fundamental_group_carrier X TX x0"
+    \<comment> \<open>Munkres Step 5: τ(f*g) = τ(f)·τ(g).
+       Need: Φ(c1·c2) = τ(representative of c1·c2)
+             = τ(f*g) for representatives f of c1, g of c2
+             = τ(f)·τ(g) by subdivision with 1/2 as point
+             = Φ(c1)·Φ(c2).\<close>
     show "\<Phi> (top1_fundamental_group_mul X TX x0 c1 c2) = mulH (\<Phi> c1) (\<Phi> c2)"
-      sorry \<comment> \<open>Munkres Step 5: \<tau>(f*g) = \<tau>(f)\<cdot>\<tau>(g).
-         Choose subdivision of [0,1] for f*g containing 1/2.
-         Pieces [0,1/2] come from f, pieces [1/2,1] come from g.
-         \<tau>(f*g) = \<Pi> \<sigma>(pieces) = (\<Pi> \<sigma>(f-pieces)) \<cdot> (\<Pi> \<sigma>(g-pieces)) = \<tau>(f) \<cdot> \<tau>(g).
-         Uses: subdivision independence + subdivision with 1/2 as point.\<close>
+      sorry \<comment> \<open>Munkres Step 5: τ multiplicativity.
+         Proof outline:
+         1. Extract representatives f, g for c1, c2
+         2. c1·c2 = [f*g] by fundamental_group_mul_class
+         3. Φ(c1·c2) = τ(f*g) by Φ_def + τ_wd
+         4. τ(f*g) = τ(f)·τ(g) by subdivision with 1/2:
+            Choose subdivision s_0,...,s_n of f*g with s_k = 1/2.
+            Pieces [0,1/2] correspond to f-pieces, [1/2,1] to g-pieces.
+            τ(f*g) = Π σ(pieces) = (Π σ(f-pieces))·(Π σ(g-pieces))
+            By subdivision independence: Π σ(f-pieces) = τ(f), Π σ(g-pieces) = τ(g).
+         5. Φ(c1) = τ(f), Φ(c2) = τ(g) by same Φ_def + τ_wd reasoning.
+
+         The formal proof requires careful manipulation of SOME representatives
+         and subdivision independence. The key ingredients (τ_wd, hsubdiv,
+         loop_subdivision_UV) are all proved.\<close>
   qed
   have h\<Phi>_ext_U: "\<forall>a\<in>top1_fundamental_group_carrier U (subspace_topology X TX U) x0.
       \<Phi> (top1_fundamental_group_induced_on U (subspace_topology X TX U) x0 X TX x0 (\<lambda>x. x) a) = \<phi>1 a"
