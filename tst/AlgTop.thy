@@ -3031,9 +3031,33 @@ proof -
         (top1_path_product (\<alpha> (f' 0)) (top1_path_product g' (top1_path_reverse (\<alpha> (f' 1)))))"
       by (rule path_homotopic_product_right[OF hTopU h_inner h\<alpha>_path])
     \<comment> \<open>\<rho>(L(f')) = \<rho>(L(g')) by \<rho> condition (1): same equiv class \<Rightarrow> same \<rho>.\<close>
-    have "\<rho> (top1_path_product (\<alpha> (f' 0)) (top1_path_product f' (top1_path_reverse (\<alpha> (f' 1)))))
-        = \<rho> (top1_path_product (\<alpha> (f' 0)) (top1_path_product g' (top1_path_reverse (\<alpha> (f' 1)))))"
-      sorry \<comment> \<open>From hL_hom: L(f') \<simeq> L(g') in U \<Rightarrow> same equiv class \<Rightarrow> same \<rho>.\<close>
+    \<comment> \<open>\<rho>(L(f')) = \<rho>(L(g')) because both loops at x0 in U, same homotopy class.\<close>
+    let ?Lf = "top1_path_product (\<alpha> (f' 0)) (top1_path_product f' (top1_path_reverse (\<alpha> (f' 1))))"
+    let ?Lg = "top1_path_product (\<alpha> (f' 0)) (top1_path_product g' (top1_path_reverse (\<alpha> (f' 1))))"
+    have hLf_loop: "top1_is_loop_on U ?TU x0 ?Lf"
+      using hL_hom unfolding top1_path_homotopic_on_def top1_is_loop_on_def by (by100 blast)
+    have hLg_loop: "top1_is_loop_on U ?TU x0 ?Lg"
+      using hL_hom unfolding top1_path_homotopic_on_def top1_is_loop_on_def by (by100 blast)
+    have hLf_in_U: "\<forall>s\<in>I_set. ?Lf s \<in> U"
+      using hLf_loop unfolding top1_is_loop_on_def top1_is_path_on_def
+                                top1_continuous_map_on_def by (by100 blast)
+    have hLg_in_U: "\<forall>s\<in>I_set. ?Lg s \<in> U"
+      using hLg_loop unfolding top1_is_loop_on_def top1_is_path_on_def
+                                top1_continuous_map_on_def by (by100 blast)
+    have hLf_equiv_Lg: "top1_loop_equiv_on U ?TU x0 ?Lf ?Lg"
+      unfolding top1_loop_equiv_on_def using hLf_loop hLg_loop hL_hom by (by100 blast)
+    have hclass_eq: "{h. top1_loop_equiv_on U ?TU x0 ?Lf h} = {h. top1_loop_equiv_on U ?TU x0 ?Lg h}"
+    proof (rule equalityI; rule subsetI)
+      fix h assume "h \<in> {h. top1_loop_equiv_on U ?TU x0 ?Lf h}"
+      thus "h \<in> {h. top1_loop_equiv_on U ?TU x0 ?Lg h}"
+        using top1_loop_equiv_on_trans[OF hTopU top1_loop_equiv_on_sym[OF hLf_equiv_Lg]] by (by100 fast)
+    next
+      fix h assume "h \<in> {h. top1_loop_equiv_on U ?TU x0 ?Lg h}"
+      thus "h \<in> {h. top1_loop_equiv_on U ?TU x0 ?Lf h}"
+        using top1_loop_equiv_on_trans[OF hTopU hLf_equiv_Lg] by (by100 fast)
+    qed
+    have "\<rho> ?Lf = \<rho> ?Lg"
+      unfolding \<rho>_def using hLf_in_U hLg_in_U hclass_eq by (by100 simp)
     thus "\<sigma> f' = \<sigma> g'" using h\<sigma>_f h\<sigma>_g by (by100 presburger)
   qed
   have h\<sigma>_cond1_V: "\<And>f' g'. top1_path_homotopic_on V ?TV (f' 0) (f' 1) f' g'
