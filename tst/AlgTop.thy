@@ -3035,7 +3035,58 @@ proof -
     qed
   qed
   have h\<alpha>_in_V: "\<And>x. x \<in> V \<Longrightarrow> top1_is_path_on V ?TV x0 x (\<alpha> x)"
-    sorry \<comment> \<open>Same structure as h\<alpha>_in_U with V. Cases: x=x0 (const), x\<in>U\<inter>V (path in U\<inter>V \<subseteq> V), x\<in>V\\U (path in V).\<close>
+  proof -
+    fix x assume hxV: "x \<in> V"
+    show "top1_is_path_on V ?TV x0 x (\<alpha> x)"
+    proof (cases "x = x0")
+      case True
+      hence "\<alpha> x = top1_constant_path x0" unfolding \<alpha>_def by (by100 simp)
+      thus ?thesis using True top1_constant_path_is_path[OF hTopV hx0_V] by (by100 simp)
+    next
+      case False
+      show ?thesis
+      proof (cases "x \<in> U \<inter> V")
+        case True
+        hence h\<alpha>_eq: "\<alpha> x = (SOME p. top1_is_path_on (U \<inter> V) ?TUV x0 x p)"
+          unfolding \<alpha>_def using False by (by100 simp)
+        have "\<exists>p. top1_is_path_on (U \<inter> V) ?TUV x0 x p"
+          using hUVpc hx0 True unfolding top1_path_connected_on_def by (by100 auto)
+        hence hpath_UV: "top1_is_path_on (U \<inter> V) ?TUV x0 x (\<alpha> x)"
+          unfolding h\<alpha>_eq by (rule someI_ex)
+        have hpath_UV_cont: "top1_continuous_map_on I_set I_top (U \<inter> V) ?TUV (\<alpha> x)"
+          using hpath_UV unfolding top1_is_path_on_def by (by100 blast)
+        have hpath_UV_range: "\<forall>s\<in>I_set. \<alpha> x s \<in> U \<inter> V"
+          using hpath_UV_cont unfolding top1_continuous_map_on_def by (by100 blast)
+        have h\<alpha>_cont_V: "top1_continuous_map_on I_set I_top V ?TV (\<alpha> x)"
+          unfolding top1_continuous_map_on_def
+        proof (intro conjI ballI)
+          fix s assume "s \<in> I_set" thus "\<alpha> x s \<in> V" using hpath_UV_range by (by100 blast)
+        next
+          fix W assume "W \<in> ?TV"
+          then obtain W' where "W' \<in> TX" "W = V \<inter> W'"
+            unfolding subspace_topology_def by (by100 blast)
+          have "{s \<in> I_set. \<alpha> x s \<in> W} = {s \<in> I_set. \<alpha> x s \<in> (U \<inter> V) \<inter> W'}"
+            using hpath_UV_range \<open>W = V \<inter> W'\<close> by (by100 blast)
+          also have "\<dots> \<in> I_top"
+          proof -
+            have "(U \<inter> V) \<inter> W' \<in> ?TUV"
+              unfolding subspace_topology_def using \<open>W' \<in> TX\<close> by (by100 blast)
+            thus ?thesis using hpath_UV_cont unfolding top1_continuous_map_on_def by (by100 blast)
+          qed
+          finally show "{s \<in> I_set. \<alpha> x s \<in> W} \<in> I_top" .
+        qed
+        show ?thesis unfolding top1_is_path_on_def
+          using h\<alpha>_cont_V hpath_UV unfolding top1_is_path_on_def by (by100 blast)
+      next
+        case False
+        hence h\<alpha>_eq: "\<alpha> x = (SOME p. top1_is_path_on V ?TV x0 x p)"
+          unfolding \<alpha>_def using \<open>x \<noteq> x0\<close> False hxV by (by100 simp)
+        have "\<exists>p. top1_is_path_on V ?TV x0 x p"
+          using hVpc hx0_V hxV unfolding top1_path_connected_on_def by (by100 auto)
+        thus ?thesis unfolding h\<alpha>_eq by (rule someI_ex)
+      qed
+    qed
+  qed
   \<comment> \<open>Step 3: Define \<sigma>(f) = \<rho>(\<alpha>_{f(0)} \<cdot> f \<cdot> rev(\<alpha>_{f(1)})) for paths f in U or V.\<close>
   define \<sigma> where "\<sigma> f = \<rho> (top1_path_product (\<alpha> (f 0)) (top1_path_product f (top1_path_reverse (\<alpha> (f 1)))))" for f
   \<comment> \<open>Step 4: Define \<tau>(f) for a loop f at x_0 in X.
