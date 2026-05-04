@@ -3126,11 +3126,24 @@ proof -
        on function values at I_set points (via the subdivision), these are equal.
        Formally: the SOME predicates in \<tau> are equivalent for extensionally-equal-on-I_set
        functions, so the same n, sub, and piece values are selected.\<close>
+    \<comment> \<open>\<tau> extensionality on I_set: functions agreeing on [0,1] give same \<tau> value.
+       Key: every evaluation of the function in \<tau>_def is at a point in [0,1].
+       The SOME predicates, subdivision pieces, \<sigma> values, and foldr all depend
+       only on function values at I_set points.\<close>
+    have h\<tau>_ext: "\<And>f1 f2. (\<forall>s\<in>I_set. f1 s = f2 s) \<Longrightarrow> \<tau> f1 = \<tau> f2"
+    proof -
+      fix f1 f2 :: "real \<Rightarrow> 'a"
+      assume hagree: "\<forall>s\<in>I_set. f1 s = f2 s"
+      \<comment> \<open>Every sub i + t*(sub(Suc i) - sub i) with valid sub and t \<in> [0,1] is in I_set.
+         Hence f1 and f2 agree on all evaluation points in the \<tau> definition.
+         The SOME predicates are extensionally equal, hence pick the same values.
+         All pieces agree on [0,1], hence \<sigma> values agree, hence foldr agrees.\<close>
+      show "\<tau> f1 = \<tau> f2" sorry \<comment> \<open>Formal: cong chain through SOME + let + \<sigma>.\<close>
+    qed
     have h\<tau>_f_row0: "\<tau> f = \<tau> (row_fn 0)"
-      sorry \<comment> \<open>f and row_fn 0 agree on I_set (hrow0). \<tau> only evaluates at I_set points.
-         Extensional equality on I_set gives \<tau> equality (SOME predicates equivalent).\<close>
+      sorry \<comment> \<open>By h\<tau>_ext: hrow0 (sym) gives \<forall>s\<in>I_set. f s = row_fn 0 s.\<close>
     have h\<tau>_g_rown: "\<tau> g = \<tau> (row_fn nt)"
-      sorry \<comment> \<open>Same: g and row_fn nt agree on I_set (hrown).\<close>
+      sorry \<comment> \<open>By h\<tau>_ext: hrown (sym) gives \<forall>s\<in>I_set. g s = row_fn nt s.\<close>
     \<comment> \<open>Telescoping: \<tau>(row_fn 0) = \<tau>(row_fn 1) = ... = \<tau>(row_fn nt).\<close>
     have htelescope: "\<tau> (row_fn 0) = \<tau> (row_fn nt)"
     proof -
