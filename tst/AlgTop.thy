@@ -5404,9 +5404,17 @@ proof -
                 thus ?thesis by (rule h\<sigma>_path_in_H)
               qed
               have htail_H: "?tail \<in> H"
-                sorry \<comment> \<open>Group closure: foldr mulH (map σ-values) eH ∈ H.
-                   Each σ(piece j sub) ∈ H by h_σ_path_in_H + hpiece_in_U.
-                   eH ∈ H, mulH closed on H. Standard list induction.\<close>
+              proof -
+                have heH: "eH \<in> H" using hH unfolding top1_is_group_on_def by (by100 fast)
+                have hmcl: "\<And>a b. a \<in> H \<Longrightarrow> b \<in> H \<Longrightarrow> mulH a b \<in> H"
+                  using hH unfolding top1_is_group_on_def by (by100 blast)
+                have "\<And>k. k \<le> length [Suc 1..<n] \<Longrightarrow>
+                    foldr mulH (take k (map (\<lambda>i. \<sigma> (piece i sub)) [Suc 1..<n])) eH \<in> H"
+                  sorry \<comment> \<open>Induction on k: base eH \<in> H; step uses hmcl + h_σ_path_in_H.\<close>
+                hence "foldr mulH (take (length [Suc 1..<n]) (map (\<lambda>i. \<sigma> (piece i sub)) [Suc 1..<n])) eH \<in> H"
+                  by (by100 force)
+                thus ?thesis by (by100 simp)
+              qed
               \<comment> \<open>Group associativity: mulH a (mulH b c) = mulH (mulH a b) c.\<close>
               have hassoc_raw: "\<forall>x\<in>H. \<forall>y\<in>H. \<forall>z\<in>H. mulH (mulH x y) z = mulH x (mulH y z)"
                 using hH unfolding top1_is_group_on_def by (by100 fast)
