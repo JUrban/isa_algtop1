@@ -6303,9 +6303,44 @@ proof -
           \<Longrightarrow> (\<forall>i<n. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> g (sub i + t * (sub (Suc i) - sub i)) \<in> U)
                  \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> g (sub i + t * (sub (Suc i) - sub i)) \<in> V))
           \<Longrightarrow> foldr_\<sigma> g n sub = \<sigma> g"
-        sorry \<comment> \<open>Identical structure to hsubdiv for U: strong induction on n,
-           base case n=1 (piece = g), inductive step merges first two pieces via
-           σ_cond2_V + reparametrization + σ_cond1_V. All pieces in V since g ⊆ V.\<close>
+      \<comment> \<open>Mirror of hsubdiv for U. Same structure: strong induction on n.\<close>
+      proof -
+        fix n :: nat and sub :: "nat \<Rightarrow> real"
+        assume hn: "n \<ge> 1" and hs0: "sub 0 = (0::real)" and hsn: "sub n = 1"
+          and hinc: "\<forall>i<n. sub i < sub (Suc i)"
+          and hpUV: "\<forall>i<n. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> g (sub i + t * (sub (Suc i) - sub i)) \<in> U)
+               \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> g (sub i + t * (sub (Suc i) - sub i)) \<in> V)"
+        show "foldr_\<sigma> g n sub = \<sigma> g" using hn hs0 hsn hinc hpUV
+        proof (induction n arbitrary: sub rule: less_induct)
+          case (less n)
+          note lhn = less.prems(1) note lhs0 = less.prems(2) note lhsn = less.prems(3)
+          note lhinc = less.prems(4) note lhpUV = less.prems(5)
+          show ?case
+          proof (cases "n = 1")
+            case True
+            have "(\<lambda>t. g (sub 0 + t * (sub (Suc 0) - sub 0))) = g"
+            proof (rule ext)
+              fix t :: real
+              show "g (sub 0 + t * (sub (Suc 0) - sub 0)) = g t"
+                using lhs0 lhsn True by (by100 simp)
+            qed
+            hence "foldr_\<sigma> g 1 sub = mulH (\<sigma> g) eH"
+              unfolding foldr_\<sigma>_def by (by100 simp)
+            also have "\<dots> = \<sigma> g" using hid_V by (by100 simp)
+            finally show ?thesis using True by (by100 simp)
+          next
+            case False
+            hence hn2: "n \<ge> 2" using lhn by (by100 presburger)
+            \<comment> \<open>Mirror of U proof n\<ge>2 case. All pieces in V since g \<subseteq> V.
+               Merge first two pieces via σ_cond2_V + reparametrization + σ_cond1_V.\<close>
+            show ?thesis sorry
+              \<comment> \<open>Same structure as U: define sub', prove valid, apply IH.
+                 Needs ~700 lines mirroring U proof with V infrastructure.
+                 The proof is structurally identical — only hTopU→hTopV,
+                 hf_in_U→hg_in_V, hUsub→hVsub, σ_cond2→σ_cond2_V, etc.\<close>
+          qed
+        qed
+      qed
       \<comment> \<open>Step 4: SOME manipulation (same as U version).\<close>
       have hex_n_V: "\<exists>n::nat. n \<ge> 1 \<and> (\<exists>sub. sub 0 = (0::real) \<and> sub n = 1
           \<and> (\<forall>i<n. sub i < sub (Suc i))
