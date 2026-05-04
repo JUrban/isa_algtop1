@@ -5821,7 +5821,7 @@ proof -
             finally have "foldr_\<sigma> f n sub = mulH (\<sigma> (piece 0 sub'))
                 (foldr mulH (map (\<lambda>i. \<sigma> (piece (Suc i) sub')) [0..<n - Suc 1]) eH)"
               by (by100 simp)
-            thus ?thesis using hRHS hRHS_split by (by100 simp)
+            thus ?thesis using hRHS hRHS_split by (by100 force)
           qed
           show ?thesis using hfoldr_eq hIH by (by100 simp)
         qed
@@ -6111,8 +6111,101 @@ proof -
             top1_continuous_map_on_def by (by100 blast)
       \<comment> \<open>Step 1: σ g ∈ H (via φ2 for V-loops).\<close>
       have h\<sigma>_g_in_H: "\<sigma> g \<in> H"
-        sorry \<comment> \<open>σ(g) = ρ(L(g)). L(g) is a loop in V. ρ(loop in V) = φ2([·]_V) ∈ H.
-           Same chain as h_σ_path_in_H but for V via φ2.\<close>
+      proof -
+        \<comment> \<open>σ(g) = ρ(L(g)) where L(g) = α(g(0))·(g·rev(α(g(1)))) is a loop in V.\<close>
+        have hg0V: "g 0 \<in> V" using hg_in_V unfolding top1_unit_interval_def by (by100 force)
+        have hg1V: "g 1 \<in> V" using hg_in_V unfolding top1_unit_interval_def by (by100 force)
+        have hgp: "top1_is_path_on V (subspace_topology X TX V) (g 0) (g 1) g"
+        proof -
+          have "top1_is_path_on V (subspace_topology X TX V) x0 x0 g"
+            using hg_loop_V unfolding top1_is_loop_on_def by (by100 blast)
+          moreover have "g 0 = x0" using top1_is_loop_on_start[OF hg_loop_V] .
+          moreover have "g 1 = x0" using top1_is_loop_on_end[OF hg_loop_V] .
+          ultimately show ?thesis by (by100 simp)
+        qed
+        have h\<alpha>0V: "top1_is_path_on V (subspace_topology X TX V) x0 (g 0) (\<alpha> (g 0))"
+          by (rule h\<alpha>_in_V[OF hg0V])
+        have h\<alpha>1V: "top1_is_path_on V (subspace_topology X TX V) x0 (g 1) (\<alpha> (g 1))"
+          by (rule h\<alpha>_in_V[OF hg1V])
+        have hrevV: "top1_is_path_on V (subspace_topology X TX V) (g 1) x0 (top1_path_reverse (\<alpha> (g 1)))"
+          by (rule top1_path_reverse_is_path[OF h\<alpha>1V])
+        have hgrV: "top1_is_path_on V (subspace_topology X TX V) (g 0) x0
+            (top1_path_product g (top1_path_reverse (\<alpha> (g 1))))"
+          by (rule top1_path_product_is_path[OF hTopV hgp hrevV])
+        have hLV: "top1_is_path_on V (subspace_topology X TX V) x0 x0
+            (top1_path_product (\<alpha> (g 0)) (top1_path_product g (top1_path_reverse (\<alpha> (g 1)))))"
+          by (rule top1_path_product_is_path[OF hTopV h\<alpha>0V hgrV])
+        have hL_loop_V: "top1_is_loop_on V (subspace_topology X TX V) x0
+            (top1_path_product (\<alpha> (g 0)) (top1_path_product g (top1_path_reverse (\<alpha> (g 1)))))"
+          unfolding top1_is_loop_on_def using hLV by (by100 blast)
+        have hL_in_V: "\<forall>s\<in>I_set. (top1_path_product (\<alpha> (g 0))
+            (top1_path_product g (top1_path_reverse (\<alpha> (g 1))))) s \<in> V"
+          using hLV unfolding top1_is_path_on_def top1_continuous_map_on_def by (by100 blast)
+        \<comment> \<open>g is a loop at x0 in V, so L(g) is also in V. Hence ρ uses the φ2 branch.\<close>
+        have hg_start: "g 0 = x0" using top1_is_loop_on_start[OF hg_loop_V] .
+        have hg_end: "g 1 = x0" using top1_is_loop_on_end[OF hg_loop_V] .
+        have h\<sigma>_eq_V: "\<sigma> g = \<rho> (top1_path_product (\<alpha> (g 0)) (top1_path_product g (top1_path_reverse (\<alpha> (g 1)))))"
+          unfolding \<sigma>_def by (by100 simp)
+        \<comment> \<open>ρ: since L(g) maps I_set to V, check if it maps to U too.\<close>
+        have hL_not_necessarily_U: True by (by100 simp)
+        \<comment> \<open>ρ(L(g)): if ∀s∈I_set. L s ∈ U then φ1, else φ2. Since L is in V, use φ2 branch
+           (or the U branch if L happens to be in U∩V — both give the same by compatibility).\<close>
+        show ?thesis
+        proof (cases "\<forall>s\<in>I_set. (top1_path_product (\<alpha> (g 0))
+            (top1_path_product g (top1_path_reverse (\<alpha> (g 1))))) s \<in> U")
+          case True
+          \<comment> \<open>L(g) is in both U and V. ρ uses φ1 branch.\<close>
+          have "\<rho> (top1_path_product (\<alpha> (g 0)) (top1_path_product g (top1_path_reverse (\<alpha> (g 1)))))
+              = \<phi>1 {h. top1_loop_equiv_on U (subspace_topology X TX U) x0
+                  (top1_path_product (\<alpha> (g 0)) (top1_path_product g (top1_path_reverse (\<alpha> (g 1))))) h}"
+            unfolding \<rho>_def using True by (by100 simp)
+          moreover have "{h. top1_loop_equiv_on U (subspace_topology X TX U) x0
+              (top1_path_product (\<alpha> (g 0)) (top1_path_product g (top1_path_reverse (\<alpha> (g 1))))) h}
+              \<in> top1_fundamental_group_carrier U (subspace_topology X TX U) x0"
+            sorry \<comment> \<open>L(g) is a loop in U (from True + continuity). Equiv class in carrier.\<close>
+          ultimately have "\<rho> (top1_path_product (\<alpha> (g 0))
+              (top1_path_product g (top1_path_reverse (\<alpha> (g 1))))) \<in> H"
+          proof -
+            assume h\<rho>: "\<rho> (top1_path_product (\<alpha> (g 0)) (top1_path_product g (top1_path_reverse (\<alpha> (g 1)))))
+                = \<phi>1 {h. top1_loop_equiv_on U (subspace_topology X TX U) x0
+                    (top1_path_product (\<alpha> (g 0)) (top1_path_product g (top1_path_reverse (\<alpha> (g 1))))) h}"
+            assume hclass: "{h. top1_loop_equiv_on U (subspace_topology X TX U) x0
+                (top1_path_product (\<alpha> (g 0)) (top1_path_product g (top1_path_reverse (\<alpha> (g 1))))) h}
+                \<in> top1_fundamental_group_carrier U (subspace_topology X TX U) x0"
+            have "\<phi>1 {h. top1_loop_equiv_on U (subspace_topology X TX U) x0
+                (top1_path_product (\<alpha> (g 0)) (top1_path_product g (top1_path_reverse (\<alpha> (g 1))))) h} \<in> H"
+              using h\<phi>1 hclass unfolding top1_group_hom_on_def by (by100 blast)
+            thus ?thesis using h\<rho> by (by100 simp)
+          qed
+          thus ?thesis using h\<sigma>_eq_V by (by100 simp)
+        next
+          case False
+          \<comment> \<open>L(g) is in V but not entirely in U. ρ uses φ2 branch.\<close>
+          have h\<rho>_V: "\<rho> (top1_path_product (\<alpha> (g 0)) (top1_path_product g (top1_path_reverse (\<alpha> (g 1)))))
+              = \<phi>2 {h. top1_loop_equiv_on V (subspace_topology X TX V) x0
+                  (top1_path_product (\<alpha> (g 0)) (top1_path_product g (top1_path_reverse (\<alpha> (g 1))))) h}"
+            using False unfolding \<rho>_def sorry
+          moreover have "{h. top1_loop_equiv_on V (subspace_topology X TX V) x0
+              (top1_path_product (\<alpha> (g 0)) (top1_path_product g (top1_path_reverse (\<alpha> (g 1))))) h}
+              \<in> top1_fundamental_group_carrier V (subspace_topology X TX V) x0"
+            unfolding top1_fundamental_group_carrier_def using hL_loop_V by (by100 blast)
+          ultimately have "\<rho> (top1_path_product (\<alpha> (g 0))
+              (top1_path_product g (top1_path_reverse (\<alpha> (g 1))))) \<in> H"
+          proof -
+            assume h\<rho>2: "\<rho> (top1_path_product (\<alpha> (g 0)) (top1_path_product g (top1_path_reverse (\<alpha> (g 1)))))
+                = \<phi>2 {h. top1_loop_equiv_on V (subspace_topology X TX V) x0
+                    (top1_path_product (\<alpha> (g 0)) (top1_path_product g (top1_path_reverse (\<alpha> (g 1))))) h}"
+            assume hcl2: "{h. top1_loop_equiv_on V (subspace_topology X TX V) x0
+                (top1_path_product (\<alpha> (g 0)) (top1_path_product g (top1_path_reverse (\<alpha> (g 1))))) h}
+                \<in> top1_fundamental_group_carrier V (subspace_topology X TX V) x0"
+            have "\<phi>2 {h. top1_loop_equiv_on V (subspace_topology X TX V) x0
+                (top1_path_product (\<alpha> (g 0)) (top1_path_product g (top1_path_reverse (\<alpha> (g 1))))) h} \<in> H"
+              using h\<phi>2 hcl2 unfolding top1_group_hom_on_def by (by100 blast)
+            thus ?thesis using h\<rho>2 by (by100 simp)
+          qed
+          thus ?thesis using h\<sigma>_eq_V by (by100 simp)
+        qed
+      qed
       have hid_V: "mulH (\<sigma> g) eH = \<sigma> g"
         using hH h\<sigma>_g_in_H unfolding top1_is_group_on_def by (by100 blast)
       \<comment> \<open>Step 2: Trivial subdivision gives σ g.\<close>
@@ -6578,7 +6671,7 @@ proof -
             by (rule top1_continuous_map_on_restrict_domain_simple[OF
                   top1_continuous_map_on_id[OF hTopU, unfolded id_def]]) (by100 blast)
           moreover have "subspace_topology U ?TU (U \<inter> V) = ?TUV"
-            by (rule subspace_topology_trans) (by100 blast)
+            by (rule subspace_topology_trans) (by100 force)
           ultimately show ?thesis by (by100 simp)
         qed
         have "top1_group_hom_on (top1_fundamental_group_carrier (U \<inter> V) ?TUV x0)
@@ -6608,7 +6701,7 @@ proof -
             by (rule top1_continuous_map_on_restrict_domain_simple[OF
                   top1_continuous_map_on_id[OF hTopV, unfolded id_def]]) (by100 blast)
           moreover have "subspace_topology V ?TV (U \<inter> V) = ?TUV"
-            by (rule subspace_topology_trans) (by100 blast)
+            by (rule subspace_topology_trans) (by100 force)
           ultimately show ?thesis by (by100 simp)
         qed
         have "top1_group_hom_on (top1_fundamental_group_carrier (U \<inter> V) ?TUV x0)
@@ -7321,7 +7414,7 @@ proof -
         by (rule top1_continuous_map_on_restrict_domain_simple[OF
               top1_continuous_map_on_id[OF hTopU, unfolded id_def]]) (by100 blast)
       moreover have "subspace_topology U ?TU (U \<inter> V) = ?TUV"
-        by (rule subspace_topology_trans) (by100 blast)
+        by (rule subspace_topology_trans) (by100 force)
       ultimately show ?thesis by (by100 simp)
     qed
     have hincl_UV_V: "top1_continuous_map_on (U \<inter> V) ?TUV V ?TV (\<lambda>x. x)"
@@ -7330,7 +7423,7 @@ proof -
         by (rule top1_continuous_map_on_restrict_domain_simple[OF
               top1_continuous_map_on_id[OF hTopV, unfolded id_def]]) (by100 blast)
       moreover have "subspace_topology V ?TV (U \<inter> V) = ?TUV"
-        by (rule subspace_topology_trans) (by100 blast)
+        by (rule subspace_topology_trans) (by100 force)
       ultimately show ?thesis by (by100 simp)
     qed
     have hiU_hom: "top1_group_hom_on (top1_fundamental_group_carrier (U \<inter> V) ?TUV x0)
@@ -7530,7 +7623,7 @@ proof -
           by (rule top1_continuous_map_on_restrict_domain_simple[OF
                 top1_continuous_map_on_id[OF hTopU, unfolded id_def]]) (by100 blast)
         moreover have "subspace_topology U ?TU (U \<inter> V) = ?TUV"
-          by (rule subspace_topology_trans) (by100 blast)
+          by (rule subspace_topology_trans) (by100 force)
         ultimately show ?thesis by (by100 simp)
       qed
       have hincl_UV_V_loc: "top1_continuous_map_on (U \<inter> V) ?TUV V ?TV (\<lambda>x. x)"
@@ -7539,7 +7632,7 @@ proof -
           by (rule top1_continuous_map_on_restrict_domain_simple[OF
                 top1_continuous_map_on_id[OF hTopV, unfolded id_def]]) (by100 blast)
         moreover have "subspace_topology V ?TV (U \<inter> V) = ?TUV"
-          by (rule subspace_topology_trans) (by100 blast)
+          by (rule subspace_topology_trans) (by100 force)
         ultimately show ?thesis by (by100 simp)
       qed
       have hiUc_piU: "?iU_c \<in> ?\<pi>U"
@@ -8304,7 +8397,7 @@ proof -
           by (rule top1_continuous_map_on_restrict_domain_simple[OF
                 top1_continuous_map_on_id[OF hTopU, unfolded id_def]]) (by100 blast)
         moreover have "subspace_topology U ?TU (U \<inter> V) = ?TUV"
-          by (rule subspace_topology_trans) (by100 blast)
+          by (rule subspace_topology_trans) (by100 force)
         ultimately show ?thesis by (by100 simp)
       qed
       have "top1_group_hom_on (top1_fundamental_group_carrier (U \<inter> V) ?TUV x0)
@@ -8423,7 +8516,7 @@ proof -
         by (rule top1_continuous_map_on_restrict_domain_simple[OF
               top1_continuous_map_on_id[OF hTopU, unfolded id_def]]) (by100 blast)
       moreover have "subspace_topology U ?TU (U \<inter> V) = ?TUV"
-        by (rule subspace_topology_trans) (by100 blast)
+        by (rule subspace_topology_trans) (by100 force)
       ultimately show ?thesis by (by100 simp)
     qed
     have hincl_UV_V: "top1_continuous_map_on (U \<inter> V) ?TUV V ?TV (\<lambda>x. x)"
@@ -8432,7 +8525,7 @@ proof -
         by (rule top1_continuous_map_on_restrict_domain_simple[OF
               top1_continuous_map_on_id[OF hTopV, unfolded id_def]]) (by100 blast)
       moreover have "subspace_topology V ?TV (U \<inter> V) = ?TUV"
-        by (rule subspace_topology_trans) (by100 blast)
+        by (rule subspace_topology_trans) (by100 force)
       ultimately show ?thesis by (by100 simp)
     qed
     have hjU_c_in: "?j_UV_U c \<in> ?\<pi>U"
@@ -8474,7 +8567,7 @@ proof -
       by (rule top1_continuous_map_on_restrict_domain_simple[OF
             top1_continuous_map_on_id[OF hTopU, unfolded id_def]]) (by100 blast)
     moreover have "subspace_topology U ?TU (U \<inter> V) = ?TUV"
-      by (rule subspace_topology_trans) (by100 blast)
+      by (rule subspace_topology_trans) (by100 force)
     ultimately show ?thesis by (by100 simp)
   qed
   have hincl_UV_V': "top1_continuous_map_on (U \<inter> V) ?TUV V ?TV (\<lambda>x. x)"
@@ -8483,7 +8576,7 @@ proof -
       by (rule top1_continuous_map_on_restrict_domain_simple[OF
             top1_continuous_map_on_id[OF hTopV, unfolded id_def]]) (by100 blast)
     moreover have "subspace_topology V ?TV (U \<inter> V) = ?TUV"
-      by (rule subspace_topology_trans) (by100 blast)
+      by (rule subspace_topology_trans) (by100 force)
     ultimately show ?thesis by (by100 simp)
   qed
   have hjUVU_hom: "top1_group_hom_on (top1_fundamental_group_carrier (U \<inter> V) ?TUV x0)
@@ -8657,7 +8750,7 @@ proof -
             by (rule top1_continuous_map_on_restrict_domain_simple[OF
                   top1_continuous_map_on_id[OF hTopU, unfolded id_def]]) (by100 blast)
           moreover have "subspace_topology U ?TU (U \<inter> V) = ?TUV"
-            by (rule subspace_topology_trans) (by100 blast)
+            by (rule subspace_topology_trans) (by100 force)
           ultimately show ?thesis by (by100 simp)
         qed
         have "top1_group_hom_on (top1_fundamental_group_carrier (U \<inter> V) ?TUV x0)
@@ -8678,7 +8771,7 @@ proof -
             by (rule top1_continuous_map_on_restrict_domain_simple[OF
                   top1_continuous_map_on_id[OF hTopV, unfolded id_def]]) (by100 blast)
           moreover have "subspace_topology V ?TV (U \<inter> V) = ?TUV"
-            by (rule subspace_topology_trans) (by100 blast)
+            by (rule subspace_topology_trans) (by100 force)
           ultimately show ?thesis by (by100 simp)
         qed
         have "top1_group_hom_on (top1_fundamental_group_carrier (U \<inter> V) ?TUV x0)
@@ -13627,7 +13720,7 @@ proof -
       \<comment> \<open>subspace_topology_trans: subspace(W, subspace(E,W), W') = subspace(E, W').\<close>
       have hTW'_eq: "subspace_topology W (subspace_topology E TE W) {x \<in> W. p x \<in> V}
           = subspace_topology E TE {x \<in> W. p x \<in> V}"
-        by (rule subspace_topology_trans) (by100 blast)
+        by (rule subspace_topology_trans) (by100 force)
       have hTV'_eq: "subspace_topology U (subspace_topology B TB U) V
           = subspace_topology B TB V"
         by (rule subspace_topology_trans[OF hVU])
