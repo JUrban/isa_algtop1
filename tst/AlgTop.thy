@@ -4203,10 +4203,8 @@ proof -
          Every sub-expression in \<tau>_def evaluates f at I_set points only.
          Hence the SOME predicates, picked values, pieces, and final foldr all agree.\<close>
       have hfext: "\<And>s. s \<in> I_set \<Longrightarrow> f1 s = f2 s" using hagree by (by100 blast)
-      show "\<tau> f1 = \<tau> f2"
-        sorry \<comment> \<open>\<tau> extensionality on I_set. The unfolded \<tau>_def is too large for any tactic.
-           Need a different approach: restrict f1,f2 to I_set, show restrictions equal,
-           then use arg_cong. But restriction introduces new function that SOME can't match.\<close>
+      show "\<tau> f1 = \<tau> f2" unfolding \<tau>_def Let_def
+        sorry \<comment> \<open>After unfolding \<tau>_def (now uses foldr_\<sigma>): need SOME predicates equal.\<close>
     qed
     have hrow0_sym: "\<forall>s\<in>I_set. f s = row_fn 0 s"
     proof
@@ -4361,7 +4359,18 @@ proof -
       have htrivial: "foldr_\<sigma> f 1 (\<lambda>i. real i) = mulH (\<sigma> f) eH"
         unfolding foldr_\<sigma>_def by (by100 simp)
       have h\<sigma>_in_H: "\<sigma> f \<in> H"
-        sorry \<comment> \<open>\<sigma>(f) = \<rho>(L(f)) = \<phi>1([L(f)]_U) \<in> H.\<close>
+      proof -
+        have "\<sigma> f = \<rho> f" by (rule h\<sigma>_ext_\<rho>[OF hf_loop_U])
+        also have "\<rho> f = \<phi>1 {g. top1_loop_equiv_on U (subspace_topology X TX U) x0 f g}"
+          unfolding \<rho>_def using hf_in_U by (by100 simp)
+        finally have h\<sigma>_eq: "\<sigma> f = \<phi>1 {g. top1_loop_equiv_on U (subspace_topology X TX U) x0 f g}" .
+        have "{g. top1_loop_equiv_on U (subspace_topology X TX U) x0 f g}
+            \<in> top1_fundamental_group_carrier U (subspace_topology X TX U) x0"
+          unfolding top1_fundamental_group_carrier_def using hf_loop_U by (by100 blast)
+        hence "\<phi>1 {g. top1_loop_equiv_on U (subspace_topology X TX U) x0 f g} \<in> H"
+          using h\<phi>1 unfolding top1_group_hom_on_def by (by100 blast)
+        thus ?thesis using h\<sigma>_eq by (by100 simp)
+      qed
       have hid: "mulH (\<sigma> f) eH = \<sigma> f"
         using hH h\<sigma>_in_H unfolding top1_is_group_on_def by (by100 blast)
       have htrivial_eq: "foldr_\<sigma> f 1 (\<lambda>i. real i) = \<sigma> f"
