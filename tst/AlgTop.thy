@@ -4207,10 +4207,13 @@ proof -
          Need: foldr_\<sigma> f1 ... = foldr_\<sigma> f2 ... when f1 = f2 on I_set.
          Key: the SOME predicates depend only on f at I_set points,
          so they're extensionally equal for f1 and f2.\<close>
+      \<comment> \<open>The SOME predicates for n involve f only at I_set points (valid sub + t \<in> [0,1]).
+         Since f1 = f2 on I_set, the predicates are extensionally equal.\<close>
       show "\<tau> f1 = \<tau> f2"
-        sorry \<comment> \<open>foldr_\<sigma> factored \<tau>_def avoids term explosion. Remaining:
-           show SOME predicates extensionally equal (f1=f2 on I_set),
-           hence same SOME picks, hence same foldr_\<sigma> args.\<close>
+        sorry \<comment> \<open>\<tau> extensionality via foldr_\<sigma>. Needs: (1) SOME n-predicates extensionally
+           equal (from heval_agree → f1(arg)=f2(arg)), (2) SOME sub-predicates equal (same),
+           (3) foldr_\<sigma> f1 n sub = foldr_\<sigma> f2 n sub (\<sigma> on pieces that agree on [0,1]).
+           The foldr_\<sigma> factoring avoids term explosion. arg_cong on SOME + foldr_\<sigma>.\<close>
     qed
     have hrow0_sym: "\<forall>s\<in>I_set. f s = row_fn 0 s"
     proof
