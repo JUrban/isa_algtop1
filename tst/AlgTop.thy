@@ -6571,7 +6571,100 @@ proof -
                 qed
               qed
               have hphic_cont: "top1_continuous_map_on I_set I_top I_set I_top \<phi>c"
-                sorry \<comment> \<open>Piecewise linear: same as U hphi_concat_cont.\<close>
+              proof -
+                have hrange_V: "\<And>s. s \<in> I_set \<Longrightarrow> \<phi>c s \<in> I_set"
+                proof -
+                  fix s :: real assume hs: "s \<in> I_set"
+                  have hs0: "0 \<le> s" and hs1: "s \<le> 1" using hs unfolding top1_unit_interval_def by (by100 simp)+
+                  have h01: "sub 0 \<le> sub (Suc 0)" using lhinc h0n by (by100 force)
+                  have h12: "sub (Suc 0) \<le> sub (Suc (Suc 0))" using lhinc h1n by (by100 force)
+                  show "\<phi>c s \<in> I_set"
+                  proof (cases "s \<le> 1/2")
+                    case True
+                    have hd01: "0 \<le> sub (Suc 0) - sub 0" using h01 by (by100 linarith)
+                    have h2s: "0 \<le> 2*s" using hs0 by (by100 linarith)
+                    have "0 \<le> 2*s * (sub (Suc 0) - sub 0)" by (rule mult_nonneg_nonneg[OF h2s hd01])
+                    hence hlo: "0 \<le> sub 0 + 2*s * (sub (Suc 0) - sub 0)" using hsub0_ge_V by (by100 linarith)
+                    have "2*s \<le> 1" using True by (by100 linarith)
+                    have "2*s * (sub (Suc 0) - sub 0) \<le> 1 * (sub (Suc 0) - sub 0)"
+                      by (rule mult_right_mono[OF \<open>2*s \<le> 1\<close> hd01])
+                    hence "2*s * (sub (Suc 0) - sub 0) \<le> sub (Suc 0) - sub 0" by (by100 simp)
+                    hence "sub 0 + 2*s * (sub (Suc 0) - sub 0) \<le> sub (Suc 0)" by (by100 linarith)
+                    hence hhi: "sub 0 + 2*s * (sub (Suc 0) - sub 0) \<le> 1"
+                      using hsub_hi_V2[of "Suc 0"] h1n by (by100 force)
+                    show ?thesis unfolding \<phi>c_def using True hlo hhi unfolding top1_unit_interval_def by (by100 force)
+                  next
+                    case False
+                    have hd12: "0 \<le> sub (Suc (Suc 0)) - sub (Suc 0)" using h12 by (by100 linarith)
+                    have h2s1: "0 \<le> 2*s - 1" using False by (by100 linarith)
+                    have "0 \<le> (2*s - 1) * (sub (Suc (Suc 0)) - sub (Suc 0))"
+                      by (rule mult_nonneg_nonneg[OF h2s1 hd12])
+                    hence hlo: "0 \<le> sub (Suc 0) + (2*s - 1) * (sub (Suc (Suc 0)) - sub (Suc 0))"
+                      using hsub_lo_V2[of "Suc 0"] h1n by (by100 force)
+                    have "2*s - 1 \<le> 1" using hs1 by (by100 linarith)
+                    have "(2*s - 1) * (sub (Suc (Suc 0)) - sub (Suc 0)) \<le> 1 * (sub (Suc (Suc 0)) - sub (Suc 0))"
+                      by (rule mult_right_mono[OF \<open>2*s - 1 \<le> 1\<close> hd12])
+                    hence "(2*s - 1) * (sub (Suc (Suc 0)) - sub (Suc 0)) \<le> sub (Suc (Suc 0)) - sub (Suc 0)"
+                      by (by100 simp)
+                    hence "sub (Suc 0) + (2*s - 1) * (sub (Suc (Suc 0)) - sub (Suc 0)) \<le> sub (Suc (Suc 0))"
+                      by (by100 linarith)
+                    hence hhi: "sub (Suc 0) + (2*s - 1) * (sub (Suc (Suc 0)) - sub (Suc 0)) \<le> 1"
+                      using hsub2_le1_V by (by100 linarith)
+                    show ?thesis unfolding \<phi>c_def using False hlo hhi unfolding top1_unit_interval_def by (by100 force)
+                  qed
+                qed
+                let ?f1 = "\<lambda>s::real. sub 0 + 2*s * (sub (Suc 0) - sub 0)"
+                let ?f2 = "\<lambda>s::real. sub (Suc 0) + (2*s - 1) * (sub (Suc (Suc 0)) - sub (Suc 0))"
+                have hf1c: "continuous_on {0..1/2} ?f1" by (intro continuous_intros)
+                have hf2c: "continuous_on {1/2..1} ?f2" by (intro continuous_intros)
+                have hAeq: "\<And>s::real. s \<in> {0..1/2} \<Longrightarrow> \<phi>c s = ?f1 s" unfolding \<phi>c_def by (by100 simp)
+                have hA': "continuous_on {0..1/2} \<phi>c"
+                  using continuous_on_cong[of "{0..1/2::real}" "{0..1/2}" ?f1 \<phi>c] hAeq hf1c by (by100 force)
+                have hBeq: "\<And>s::real. s \<in> {1/2..1} \<Longrightarrow> \<phi>c s = ?f2 s"
+                proof -
+                  fix s :: real assume hs: "s \<in> {1/2..1::real}"
+                  show "\<phi>c s = ?f2 s"
+                  proof (cases "s \<le> 1/2")
+                    case True
+                    have "s \<ge> 1/2" using hs by (by100 simp)
+                    hence "s = 1/2" using True by (by100 linarith)
+                    have h_eq: "\<phi>c s = ?f2 s" unfolding \<phi>c_def using \<open>s = 1/2\<close> by (by100 force)
+                    thus ?thesis using h_eq by (by100 simp)
+                  next
+                    case False thus ?thesis unfolding \<phi>c_def by (by100 simp)
+                  qed
+                qed
+                have hB': "continuous_on {1/2..1} \<phi>c"
+                proof -
+                  have "\<And>s. s \<in> {1/2..1::real} \<Longrightarrow> ?f2 s = \<phi>c s" using hBeq by (by100 simp)
+                  thus ?thesis using continuous_on_cong[of "{1/2..1::real}" "{1/2..1}" ?f2 \<phi>c] hf2c by (by100 force)
+                qed
+                have hIeq: "I_set = {0..1/2} \<union> {1/2..1::real}" unfolding top1_unit_interval_def by (by100 auto)
+                have "closed {0..1/2::real}" by (by100 auto)
+                moreover have "closed {1/2..1::real}" by (by100 auto)
+                ultimately have hcont: "continuous_on I_set \<phi>c"
+                  unfolding hIeq by (rule continuous_on_closed_Un[OF _ _ hA' hB'])
+                show ?thesis unfolding top1_continuous_map_on_def
+                proof (intro conjI ballI)
+                  fix s assume "s \<in> I_set" thus "\<phi>c s \<in> I_set" by (rule hrange_V)
+                next
+                  fix V' assume hV': "V' \<in> I_top"
+                  obtain W where hW: "open W" and hVW: "V' = I_set \<inter> W"
+                    using hV' unfolding top1_unit_interval_topology_def subspace_topology_def
+                      top1_open_sets_def by (by100 blast)
+                  have "\<exists>T. open T \<and> T \<inter> I_set = \<phi>c -` W \<inter> I_set"
+                    using hcont hW unfolding continuous_on_open_invariant by (by100 force)
+                  then obtain T where hT: "open T" and hTeq: "T \<inter> I_set = \<phi>c -` W \<inter> I_set"
+                    by (by100 blast)
+                  have "{s \<in> I_set. \<phi>c s \<in> V'} = {s \<in> I_set. \<phi>c s \<in> W}"
+                    using hVW hrange_V by (by100 blast)
+                  also have "\<dots> = I_set \<inter> T" using hTeq by (by100 blast)
+                  finally have "{s \<in> I_set. \<phi>c s \<in> V'} = I_set \<inter> T" .
+                  moreover have "T \<in> top1_open_sets" using hT unfolding top1_open_sets_def by (by100 blast)
+                  ultimately show "{s \<in> I_set. \<phi>c s \<in> V'} \<in> I_top"
+                    unfolding top1_unit_interval_topology_def subspace_topology_def by (by100 blast)
+                qed
+              qed
               have hpsil_cont: "top1_continuous_map_on I_set I_top I_set I_top \<psi>l"
                 unfolding \<psi>l_def
                 by (rule affine_map_continuous_I_to_I[OF hsub0_ge_V hsub02_le_V hsub2_le1_V])
