@@ -3386,15 +3386,40 @@ proof -
     let ?Lf = "top1_path_product (\<alpha> ?x) (top1_path_product f' (top1_path_reverse (\<alpha> ?y)))"
     let ?Lg = "top1_path_product (\<alpha> ?y) (top1_path_product g' (top1_path_reverse (\<alpha> ?z)))"
     let ?Lfg = "top1_path_product (\<alpha> ?x) (top1_path_product (top1_path_product f' g') (top1_path_reverse (\<alpha> ?z)))"
+    have h0I: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+    have h1I: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+    have hxU: "?x \<in> U" using hf'U h0I by (by100 blast)
+    have hyU: "?y \<in> U" using hf'U h1I by (by100 blast)
+    have hzU: "?z \<in> U" using hg'U h1I by (by100 blast)
+    have h\<alpha>x: "top1_is_path_on U ?TU x0 ?x (\<alpha> ?x)" by (rule h\<alpha>_in_U[OF hxU])
+    have h\<alpha>y: "top1_is_path_on U ?TU x0 ?y (\<alpha> ?y)" by (rule h\<alpha>_in_U[OF hyU])
+    have h\<alpha>z: "top1_is_path_on U ?TU x0 ?z (\<alpha> ?z)" by (rule h\<alpha>_in_U[OF hzU])
+    have hf'_path: "top1_is_path_on U ?TU ?x ?y f'"
+      sorry \<comment> \<open>f' is a path in U from f'(0) to f'(1). Needs continuity of f' in U.\<close>
+    have hg'_path: "top1_is_path_on U ?TU ?y ?z g'"
+      sorry \<comment> \<open>g' is a path in U. Uses hfg: f'(1) = g'(0).\<close>
     have hLf_loop: "top1_is_loop_on U ?TU x0 ?Lf"
-      sorry \<comment> \<open>Composition of paths in U at x0.\<close>
+      unfolding top1_is_loop_on_def
+      by (rule top1_path_product_is_path[OF hTopU h\<alpha>x
+           top1_path_product_is_path[OF hTopU hf'_path
+             top1_path_reverse_is_path[OF h\<alpha>y]]])
     have hLg_loop: "top1_is_loop_on U ?TU x0 ?Lg"
-      sorry \<comment> \<open>Same.\<close>
+      unfolding top1_is_loop_on_def
+      by (rule top1_path_product_is_path[OF hTopU h\<alpha>y
+           top1_path_product_is_path[OF hTopU hg'_path
+             top1_path_reverse_is_path[OF h\<alpha>z]]])
+    have hfg_path: "top1_is_path_on U ?TU ?x ?z (top1_path_product f' g')"
+      by (rule top1_path_product_is_path[OF hTopU hf'_path hg'_path])
     have hLfg_loop: "top1_is_loop_on U ?TU x0 ?Lfg"
-      sorry \<comment> \<open>Same.\<close>
+      unfolding top1_is_loop_on_def
+      by (rule top1_path_product_is_path[OF hTopU h\<alpha>x
+           top1_path_product_is_path[OF hTopU hfg_path
+             top1_path_reverse_is_path[OF h\<alpha>z]]])
     \<comment> \<open>\<rho> condition (1): L(f'*g') \<simeq> L(f')*L(g') \<Rightarrow> \<rho>(L(f'*g')) = \<rho>(L(f')*L(g')).\<close>
     have hLfg_loop2: "top1_is_loop_on U ?TU x0 (top1_path_product ?Lf ?Lg)"
-      sorry \<comment> \<open>Product of loops at x0 is a loop.\<close>
+      unfolding top1_is_loop_on_def
+      by (rule top1_path_product_is_path[OF hTopU
+           hLf_loop[unfolded top1_is_loop_on_def] hLg_loop[unfolded top1_is_loop_on_def]])
     have hLfg_equiv: "top1_loop_equiv_on U ?TU x0 (top1_path_product ?Lf ?Lg) ?Lfg"
       unfolding top1_loop_equiv_on_def using hLfg_loop2 hLfg_loop hL_fg_hom by (by100 blast)
     have h\<rho>_eq: "\<rho> (top1_path_product ?Lf ?Lg) = \<rho> ?Lfg"
