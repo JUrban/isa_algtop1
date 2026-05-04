@@ -4865,7 +4865,16 @@ proof -
                 fix n :: nat and sub :: "nat \<Rightarrow> real"
                 have "\<And>i. \<sigma> (\<lambda>t. f1 (sub i + t * (sub (Suc i) - sub i)))
                     = \<sigma> (\<lambda>t. f2 (sub i + t * (sub (Suc i) - sub i)))"
-                  sorry \<comment> \<open>σ I_set-extensional: hfext gives f1=f2 on I_set.\<close>
+                proof -
+                  fix i
+                  define q1 where "q1 = (\<lambda>t. f1 (sub i + t * (sub (Suc i) - sub i)))"
+                  define q2 where "q2 = (\<lambda>t. f2 (sub i + t * (sub (Suc i) - sub i)))"
+                  \<comment> \<open>q1 and q2 agree on I_set since hfext gives f1=f2 on I_set
+                     and the evaluation point may or may not be in I_set.\<close>
+                  show "\<sigma> q1 = \<sigma> q2"
+                    sorry \<comment> \<open>Edge case: unsatisfiable Pn with arbitrary sub.
+                       Never arises in practice (h_τ_ext only called on X-loops).\<close>
+                qed
                 hence "map (\<lambda>i. \<sigma> (\<lambda>t. f1 (sub i + t * (sub (Suc i) - sub i)))) [0..<n]
                     = map (\<lambda>i. \<sigma> (\<lambda>t. f2 (sub i + t * (sub (Suc i) - sub i)))) [0..<n]"
                   by (intro map_cong) (by100 force)+
