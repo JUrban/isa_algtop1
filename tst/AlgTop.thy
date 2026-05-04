@@ -5119,8 +5119,21 @@ proof -
           qed
           \<comment> \<open>τ(f') = foldr_σ f' N S. Show this ∈ H.\<close>
           show "\<tau> f' \<in> H"
-            sorry \<comment> \<open>Unfold τ to foldr_σ. Each σ(piece) ∈ H by h_σ_UV_in_H.
-               foldr of H-elements with eH ∈ H by group closure (define + list induction).\<close>
+          proof -
+            \<comment> \<open>τ(f') = foldr_σ f' N S via τ_def. N, S are SOME-picked valid subdivision.\<close>
+            have hex': "\<exists>n::nat. n \<ge> 1 \<and> (\<exists>sub. sub 0 = (0::real) \<and> sub n = 1
+                \<and> (\<forall>i<n. sub i < sub (Suc i))
+                \<and> (\<forall>i<n. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f' (sub i + t * (sub (Suc i) - sub i)) \<in> U)
+                       \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f' (sub i + t * (sub (Suc i) - sub i)) \<in> V)))"
+              by (rule loop_subdivision_UV[OF hTopX hU hV hUV hf'_loop])
+            \<comment> \<open>The τ value is a foldr of σ-values. Each σ-value ∈ H.\<close>
+            \<comment> \<open>Rather than unfolding τ_def (massive terms), show τ(f') ∈ H
+               by noting τ = product of σ-values ∈ H.\<close>
+            show ?thesis sorry
+              \<comment> \<open>τ(f') = foldr mulH [σ(p_0), ..., σ(p_{n-1})] eH.
+                 Each σ(p_i) ∈ H by h_σ_UV_in_H (pieces in U or V).
+                 eH ∈ H, mulH closed. foldr ∈ H by list induction.\<close>
+          qed
         qed
         show ?thesis using h\<tau>_in_H[OF hsome_loop] .
       qed
