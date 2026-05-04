@@ -6114,10 +6114,55 @@ proof -
               ((\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f' (sub' i + t * (sub' (Suc i) - sub' i)) \<in> U)
                \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f' (sub' i + t * (sub' (Suc i) - sub' i)) \<in> V)) \<Longrightarrow>
               \<sigma> (\<lambda>t. f' (sub' i + t * (sub' (Suc i) - sub' i))) \<in> H"
-            sorry \<comment> \<open>Proof: piece = f' ∘ affine. affine_map_continuous_I_to_I gives I→I continuity.
-               f' loop ⟹ continuous I→X. top1_continuous_map_on_comp gives piece continuous I→X.
-               Image ⊆ U (or V) by assumption. codomain_shrink ⟹ path in U.
-               Then h_σ_path_in_H (or _V) gives σ ∈ H.\<close>
+          proof -
+            fix f' :: "real \<Rightarrow> 'a" and sub' :: "nat \<Rightarrow> real" and i n'
+            assume hf'_loop: "top1_is_loop_on X TX x0 f'"
+               and hi: "i < n'"
+               and hge: "0 \<le> sub' i" and hmono: "sub' i \<le> sub' (Suc i)" and hle: "sub' (Suc i) \<le> 1"
+               and hUV: "(\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f' (sub' i + t * (sub' (Suc i) - sub' i)) \<in> U)
+                   \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f' (sub' i + t * (sub' (Suc i) - sub' i)) \<in> V)"
+            define piece where "piece t = f' (sub' i + t * (sub' (Suc i) - sub' i))" for t
+            \<comment> \<open>piece = f' ∘ affine. Continuity by composition.\<close>
+            have hf'_cont: "top1_continuous_map_on I_set I_top X TX f'"
+              using hf'_loop unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+            have haff_cont: "top1_continuous_map_on I_set I_top I_set I_top (\<lambda>t. sub' i + t * (sub' (Suc i) - sub' i))"
+              by (rule affine_map_continuous_I_to_I[OF hge hmono hle])
+            have hpiece_cont: "top1_continuous_map_on I_set I_top X TX piece"
+              unfolding piece_def using top1_continuous_map_on_comp[OF haff_cont hf'_cont]
+              unfolding comp_def by (by100 simp)
+            \<comment> \<open>piece is a path from piece(0) to piece(1) in X.\<close>
+            have hpiece_path: "top1_is_path_on X TX (piece 0) (piece 1) piece"
+              unfolding top1_is_path_on_def using hpiece_cont by (by100 blast)
+            \<comment> \<open>Image ⊆ U or V.\<close>
+            have hpiece_img: "(\<forall>s\<in>I_set. piece s \<in> U) \<or> (\<forall>s\<in>I_set. piece s \<in> V)"
+            proof -
+              have "\<And>s. s \<in> I_set \<Longrightarrow> 0 \<le> s \<and> s \<le> 1"
+                unfolding top1_unit_interval_def by (by100 simp)
+              thus ?thesis using hUV unfolding piece_def by (by100 fast)
+            qed
+            \<comment> \<open>Shrink codomain and apply h_σ_path_in_H or h_σ_path_in_H_V.\<close>
+            show "\<sigma> (\<lambda>t. f' (sub' i + t * (sub' (Suc i) - sub' i))) \<in> H"
+            proof (cases "\<forall>s\<in>I_set. piece s \<in> U")
+              case True
+              have "piece ` I_set \<subseteq> U" using True by (by100 blast)
+              have "top1_continuous_map_on I_set I_top U (subspace_topology X TX U) piece"
+                by (rule top1_continuous_map_on_codomain_shrink[OF hpiece_cont \<open>piece ` I_set \<subseteq> U\<close> hUsub])
+              hence "top1_is_path_on U (subspace_topology X TX U) (piece 0) (piece 1) piece"
+                unfolding top1_is_path_on_def by (by100 blast)
+              hence "\<sigma> piece \<in> H" by (rule h\<sigma>_path_in_H)
+              thus ?thesis unfolding piece_def by (by100 simp)
+            next
+              case False
+              hence "\<forall>s\<in>I_set. piece s \<in> V" using hpiece_img by (by100 blast)
+              hence "piece ` I_set \<subseteq> V" by (by100 blast)
+              have "top1_continuous_map_on I_set I_top V (subspace_topology X TX V) piece"
+                by (rule top1_continuous_map_on_codomain_shrink[OF hpiece_cont \<open>piece ` I_set \<subseteq> V\<close> hVsub])
+              hence "top1_is_path_on V (subspace_topology X TX V) (piece 0) (piece 1) piece"
+                unfolding top1_is_path_on_def by (by100 blast)
+              hence "\<sigma> piece \<in> H" by (rule h\<sigma>_path_in_H_V)
+              thus ?thesis unfolding piece_def by (by100 simp)
+            qed
+          qed
           have h\<sigma>_in_H_all: "(\<forall>x \<in> set (map F1 [0..<n1]). x \<in> H)
               \<and> (\<forall>x \<in> set (map F2 [0..<n2]). x \<in> H)"
           proof (rule conjI; intro ballI)
