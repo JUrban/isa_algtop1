@@ -3535,40 +3535,50 @@ proof -
         thus "h \<in> {h. top1_loop_equiv_on V ?TV x0 ?compV h}"
           using top1_loop_equiv_on_trans[OF hTopV h_equiv_V] by (by100 fast)
       qed
-      \<comment> \<open>Both sides use \<rho> which checks if-in-U or if-in-V.\<close>
-      \<comment> \<open>Case analysis: comp in U or not, g in U or not.\<close>
-      show ?thesis
-      proof (cases "\<forall>s\<in>I_set. ?compV s \<in> U")
-        case True
-        \<comment> \<open>compV and g both in U. ρ(compV) = φ1([compV]_U), ρ(g) = φ1([g]_U).
-           Since compV ≃_V g and both in U: compV ≃_U g (via subspace topology).
-           Hence [compV]_U = [g]_U and ρ(compV) = ρ(g).\<close>
-        \<comment> \<open>compV loop-equiv to g in V. Since both in U∩V, also loop-equiv in U.\<close>
-        have hcomp_in_U: "\<forall>s\<in>I_set. ?compV s \<in> U" by (rule True)
-        have hg_in_U_too: "\<forall>s\<in>I_set. g s \<in> U" sorry \<comment> \<open>g may or may not be in U.\<close>
-        have hcomp_class_U: "{h. top1_loop_equiv_on U ?TU x0 ?compV h}
-            = {h. top1_loop_equiv_on U ?TU x0 g h}"
-          sorry \<comment> \<open>compV ≃_U g (lift equiv from V to U via U∩V).\<close>
-        have lhs: "\<rho> ?compV = \<phi>1 {h. top1_loop_equiv_on U ?TU x0 ?compV h}"
-          unfolding \<rho>_def using hcomp_in_U by (by100 simp)
-        have rhs: "\<rho> g = \<phi>1 {h. top1_loop_equiv_on U ?TU x0 g h}"
-          unfolding \<rho>_def using hg_in_U_too by (by100 simp)
-        show ?thesis using lhs rhs hcomp_class_U by (by100 simp)
-      next
-        case False
-        have lhs: "\<rho> ?compV = \<phi>2 {h. top1_loop_equiv_on V ?TV x0 ?compV h}"
-          unfolding \<rho>_def by (rule if_not_P[OF False])
-        show ?thesis
-        proof (cases "\<forall>s\<in>I_set. g s \<in> U")
-          case True
-          show ?thesis sorry \<comment> \<open>comp not in U but g in U: needs compatibility.\<close>
+      \<comment> \<open>Helper: for any loop f in V, \<rho>(f) = \<phi>2([f]_V).
+         If f \<notin> U: \<rho>(f) = \<phi>2([f]_V) directly. If f \<in> U: \<rho>(f) = \<phi>1([f]_U) = \<phi>2([f]_V)
+         by compatibility (since f \<in> U\<inter>V).\<close>
+      have h\<rho>_to_\<phi>2: "\<And>f0. top1_is_loop_on V ?TV x0 f0 \<Longrightarrow>
+          \<rho> f0 = \<phi>2 {h. top1_loop_equiv_on V ?TV x0 f0 h}"
+      proof -
+        fix f0 assume hf0: "top1_is_loop_on V ?TV x0 f0"
+        have hf0_V: "\<forall>s\<in>I_set. f0 s \<in> V" using hf0 unfolding top1_is_loop_on_def
+            top1_is_path_on_def top1_continuous_map_on_def by (by100 blast)
+        show "\<rho> f0 = \<phi>2 {h. top1_loop_equiv_on V ?TV x0 f0 h}"
+        proof (cases "\<forall>s\<in>I_set. f0 s \<in> U")
+          case False
+          thus ?thesis unfolding \<rho>_def by (rule if_not_P)
         next
-          case False2: False
-          have rhs: "\<rho> g = \<phi>2 {h. top1_loop_equiv_on V ?TV x0 g h}"
-            unfolding \<rho>_def by (rule if_not_P[OF False2])
-          show ?thesis using lhs rhs hclass_eq_V by (by100 simp)
+          case True
+          \<comment> \<open>f0 \<in> U\<inter>V. Use compatibility: \<phi>1([f0]_U) = \<phi>2([f0]_V).\<close>
+          have hf0_loop_UV: "top1_is_loop_on (U \<inter> V) ?TUV x0 f0"
+            sorry \<comment> \<open>f0 maps into U\<inter>V, continuous via subspace topology.\<close>
+          let ?c0 = "{h. top1_loop_equiv_on (U \<inter> V) ?TUV x0 f0 h}"
+          have "?c0 \<in> top1_fundamental_group_carrier (U \<inter> V) ?TUV x0"
+            unfolding top1_fundamental_group_carrier_def using hf0_loop_UV by (by100 blast)
+          note hc0 = hcompat[rule_format, OF this]
+          have "top1_fundamental_group_induced_on (U \<inter> V) ?TUV x0 U ?TU x0 (\<lambda>x. x) ?c0
+              = {h. top1_loop_equiv_on U ?TU x0 f0 h}"
+            sorry \<comment> \<open>Induced map U\<inter>V \<hookrightarrow> U (same as hind_U pattern).\<close>
+          moreover have "top1_fundamental_group_induced_on (U \<inter> V) ?TUV x0 V ?TV x0 (\<lambda>x. x) ?c0
+              = {h. top1_loop_equiv_on V ?TV x0 f0 h}"
+            sorry \<comment> \<open>Induced map U\<inter>V \<hookrightarrow> V.\<close>
+          ultimately have "\<phi>1 {h. top1_loop_equiv_on U ?TU x0 f0 h}
+              = \<phi>2 {h. top1_loop_equiv_on V ?TV x0 f0 h}"
+            using hc0 by (by100 simp)
+          moreover have "\<rho> f0 = \<phi>1 {h. top1_loop_equiv_on U ?TU x0 f0 h}"
+            unfolding \<rho>_def using True by (by100 simp)
+          ultimately show ?thesis by (by100 simp)
         qed
       qed
+      \<comment> \<open>\<rho>(?compV) = \<phi>2([?compV]_V) and \<rho>(g) = \<phi>2([g]_V) by helper.
+         [?compV]_V = [g]_V from hclass_eq_V. Hence \<rho>(?compV) = \<rho>(g).\<close>
+      have "\<rho> ?compV = \<phi>2 {h. top1_loop_equiv_on V ?TV x0 ?compV h}"
+        by (rule h\<rho>_to_\<phi>2[OF hcomp_loop_V])
+      also have "\<dots> = \<phi>2 {h. top1_loop_equiv_on V ?TV x0 g h}"
+        using hclass_eq_V by (by100 simp)
+      also have "\<dots> = \<rho> g" by (rule h\<rho>_to_\<phi>2[OF hg_loop_V, symmetric])
+      finally show ?thesis .
     qed
     have h\<rho>_val_V: "\<rho> g = \<phi>2 b"
     proof -
