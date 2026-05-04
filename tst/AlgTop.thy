@@ -5462,7 +5462,29 @@ proof -
           \<and> (\<forall>i<n. sub i < sub (Suc i))
           \<and> (\<forall>i<n. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> U)
                  \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> V)))"
-        sorry \<comment> \<open>Witness: n=1, sub=\<lambda>i. real i. Piece 0 maps [0,1] to U since f \<subseteq> U.\<close>
+      proof (rule exI[of _ 1], intro conjI)
+        show "(1::nat) \<ge> 1" by (by100 simp)
+        show "\<exists>sub. sub 0 = (0::real) \<and> sub 1 = 1
+            \<and> (\<forall>i<1. sub i < sub (Suc i))
+            \<and> (\<forall>i<1. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> U)
+                   \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> V))"
+        proof (rule exI[of _ "\<lambda>i. real i"], intro conjI)
+          show "(real (0::nat) :: real) = 0" by (by100 simp)
+          show "real (1::nat) = (1::real)" by (by100 simp)
+          show "\<forall>i<(1::nat). (real i :: real) < real (Suc i)" by (by100 simp)
+          show "\<forall>i<(1::nat). (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (real i + t * (real (Suc i) - real i)) \<in> U)
+              \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (real i + t * (real (Suc i) - real i)) \<in> V)"
+          proof (intro allI impI, rule disjI1, intro allI impI)
+            fix i :: nat and t :: real assume "i < 1" "0 \<le> t \<and> t \<le> 1"
+            hence "i = 0" by (by100 presburger)
+            hence "real i + t * (real (Suc i) - real i) = t" by (by100 simp)
+            moreover have "t \<in> I_set" using \<open>0 \<le> t \<and> t \<le> 1\<close>
+              unfolding top1_unit_interval_def by (by100 force)
+            ultimately show "f (real i + t * (real (Suc i) - real i)) \<in> U"
+              using hf_in_U by (by100 force)
+          qed
+        qed
+      qed
       \<comment> \<open>Apply someI to get SOME-picked values satisfy the predicate.\<close>
       \<comment> \<open>Then hsubdiv gives foldr_\<sigma> f (SOME n) (SOME sub) = \<sigma> f.\<close>
       \<comment> \<open>Combined with h\<tau>_eq: \<tau> f = foldr_\<sigma> f (SOME n) (SOME sub) = \<sigma> f.\<close>
