@@ -4940,10 +4940,25 @@ proof -
     fix c assume hc: "c \<in> top1_fundamental_group_carrier X TX x0"
     \<comment> \<open>\<Phi>(c) = \<tau>(SOME f. loop f \<and> c = [f]). \<tau>(f) = \<sigma>(f) for loops in U or V.
        \<sigma>(f) = \<rho>(L(f)) = \<phi>1/\<phi>2([L(f)]) \<in> H.\<close>
+    \<comment> \<open>\<Phi>(c) = \<tau>(representative f). \<tau>(f) = foldr_\<sigma> f N S where N, S are SOME-picked.
+       Each \<sigma>(piece) \<in> H, eH \<in> H, mulH closed. So foldr \<in> H.\<close>
     show "\<Phi> c \<in> H"
-      sorry \<comment> \<open>\<Phi>(c) = \<tau>(representative). \<tau> = \<sigma> for loops in U/V (by h\<tau>_\<sigma>/h\<tau>_\<sigma>_V).
-         \<sigma> maps to H (by h_\<sigma>_path_in_H / h_\<sigma>_g_in_H).
-         For general X-loops: use subdivision into U/V pieces, then foldr of H-elements.\<close>
+    proof -
+      obtain f where hf_loop: "top1_is_loop_on X TX x0 f"
+          and hc_eq: "c = {g. top1_loop_equiv_on X TX x0 f g}"
+        using hc unfolding top1_fundamental_group_carrier_def by (by100 blast)
+      let ?P = "\<lambda>f'. top1_is_loop_on X TX x0 f' \<and> c = {g. top1_loop_equiv_on X TX x0 f' g}"
+      have "\<exists>f'. ?P f'" using hf_loop hc_eq by (by100 blast)
+      hence hPsome: "?P (SOME f'. ?P f')" by (rule someI_ex)
+      hence hsome_loop: "top1_is_loop_on X TX x0 (SOME f'. ?P f')" by (by100 blast)
+      \<comment> \<open>\<Phi>(c) = \<tau>(SOME f'). \<tau>(f') = foldr_\<sigma> f' N S.\<close>
+      have h\<Phi>_eq: "\<Phi> c = \<tau> (SOME f'. ?P f')" unfolding \<Phi>_def by (by100 simp)
+      \<comment> \<open>\<tau>(f') is a foldr of \<sigma>-values in H, hence in H.\<close>
+      show ?thesis sorry
+        \<comment> \<open>\<tau>(loop in X) \<in> H: the \<tau>_def picks a valid subdivision (by loop_subdivision_UV),
+           each \<sigma>(piece) \<in> H (by h_\<sigma>_path_in_H for U-pieces or h_\<sigma>_V_path_in_H for V-pieces),
+           eH \<in> H, mulH closed. So foldr mulH [\<sigma>(pieces)] eH \<in> H.\<close>
+    qed
   next
     \<comment> \<open>Part 2: \<Phi> preserves multiplication.\<close>
     fix c1 c2
@@ -7908,7 +7923,16 @@ proof -
         have "i - 1 < m" using hi by (by100 linarith)
         have "S (i-1) = U \<or> S (i-1) = V" using hS_UV \<open>i - 1 < m\<close> by (by100 blast)
         moreover have "S i = U \<or> S i = V" using hS_UV hi by (by100 blast)
-        ultimately have "S (i-1) \<inter> S i \<in> {U, V, U \<inter> V}" by (by100 auto)
+        ultimately have "S (i-1) \<inter> S i \<in> {U, V, U \<inter> V}"
+        proof (elim disjE)
+          assume "S (i - 1) = U" "S i = U" thus ?thesis by (by100 blast)
+        next
+          assume "S (i - 1) = U" "S i = V" thus ?thesis by (by100 blast)
+        next
+          assume "S (i - 1) = V" "S i = U" thus ?thesis by (by100 blast)
+        next
+          assume "S (i - 1) = V" "S i = V" thus ?thesis by (by100 blast)
+        qed
         moreover have "top1_path_connected_on U (subspace_topology X TX U)"
           using assms(6) by (by100 simp)
         moreover have "top1_path_connected_on V (subspace_topology X TX V)"
