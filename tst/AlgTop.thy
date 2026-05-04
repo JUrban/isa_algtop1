@@ -6446,9 +6446,56 @@ proof -
             have hIH_V: "foldr_\<sigma> g (n - 1) sub' = \<sigma> g"
               by (rule less.IH[OF \<open>n - 1 < n\<close> \<open>n - 1 \<ge> 1\<close> hsub'_0 hsub'_n hsub'_inc hsub'_UV])
             \<comment> \<open>foldr_σ g n sub = foldr_σ g (n-1) sub' by merging first two pieces.\<close>
+            \<comment> \<open>Mirror of U algebraic merge step.\<close>
+            define piece_V where "piece_V j s = (\<lambda>t. g (s j + t * (s (Suc j) - s j)))" for j s
+            \<comment> \<open>Pieces are paths in V.\<close>
+            have hsub_lo_V2: "\<And>j. j \<le> n \<Longrightarrow> 0 \<le> sub j"
+            proof -
+              fix j show "j \<le> n \<Longrightarrow> 0 \<le> sub j"
+              proof (induction j)
+                case 0 show ?case using lhs0 by (by100 simp)
+              next
+                case (Suc k)
+                have "k < n" using Suc.prems by (by100 presburger)
+                have "k \<le> n" using Suc.prems by (by100 presburger)
+                have "0 \<le> sub k" using Suc.IH[OF \<open>k \<le> n\<close>] .
+                moreover have "sub k < sub (Suc k)" using lhinc \<open>k < n\<close> by (by100 force)
+                ultimately show ?case by (by100 linarith)
+              qed
+            qed
+            have hsub_hi_V2: "\<And>j. j \<le> n \<Longrightarrow> sub j \<le> 1"
+              sorry \<comment> \<open>Same monotonicity chain as U version.\<close>
+            have hpiece_V_path: "\<And>j. j < n \<Longrightarrow>
+                top1_is_path_on V (subspace_topology X TX V) (g (sub j)) (g (sub (Suc j))) (piece_V j sub)"
+            proof -
+              fix j assume hj: "j < n"
+              have hge: "0 \<le> sub j" using hsub_lo_V2 hj by (by100 force)
+              have hle: "sub (Suc j) \<le> 1" using hsub_hi_V2 hj by (by100 force)
+              have hmono: "sub j \<le> sub (Suc j)" using lhinc hj by (by100 force)
+              have haffine: "top1_continuous_map_on I_set I_top I_set I_top
+                  (\<lambda>t. sub j + t * (sub (Suc j) - sub j))"
+                by (rule affine_map_continuous_I_to_I[OF hge hmono hle])
+              have hg_V: "top1_continuous_map_on I_set I_top V (subspace_topology X TX V) g"
+                using hg_loop_V unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+              have hcomp: "top1_continuous_map_on I_set I_top V (subspace_topology X TX V) (piece_V j sub)"
+              proof -
+                have "top1_continuous_map_on I_set I_top V (subspace_topology X TX V)
+                    (g \<circ> (\<lambda>t. sub j + t * (sub (Suc j) - sub j)))"
+                  by (rule top1_continuous_map_on_comp[OF haffine hg_V])
+                moreover have "(g \<circ> (\<lambda>t. sub j + t * (sub (Suc j) - sub j))) = piece_V j sub"
+                  unfolding piece_V_def comp_def by (by100 simp)
+                ultimately show ?thesis by (by100 simp)
+              qed
+              have hep0: "piece_V j sub 0 = g (sub j)" unfolding piece_V_def by (by100 simp)
+              have hep1: "piece_V j sub 1 = g (sub (Suc j))" unfolding piece_V_def by (by100 simp)
+              show "top1_is_path_on V (subspace_topology X TX V) (g (sub j)) (g (sub (Suc j))) (piece_V j sub)"
+                unfolding top1_is_path_on_def using hcomp hep0 hep1 by (by100 blast)
+            qed
+            \<comment> \<open>The foldr merge uses the same algebraic structure as U.
+               Sorry this for now — the proof is ~200 lines mirroring the U version.\<close>
             have hfoldr_eq_V: "foldr_\<sigma> g n sub = foldr_\<sigma> g (n - 1) sub'"
-              sorry \<comment> \<open>Same algebraic manipulation as U: unfold foldr, use group assoc +
-                 σ_cond2_V + reparametrization + σ_cond1_V + htail_map equality.\<close>
+              sorry \<comment> \<open>Algebraic merge: group assoc + σ_cond2_V + reparam + σ_cond1_V + htail equality.
+                 Structurally identical to U version.\<close>
             show ?thesis using hfoldr_eq_V hIH_V by (by100 simp)
           qed
         qed
