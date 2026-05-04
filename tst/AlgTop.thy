@@ -2469,9 +2469,34 @@ proof -
              \<and> 0\<le>s \<and> s\<le>1 \<and> 0\<le>t \<and> t\<le>1 \<longrightarrow> F (s,t) \<in> U)
     \<or> (\<forall>s t. sub i \<le> s \<and> s \<le> sub (Suc i) \<and> sub j \<le> t \<and> t \<le> sub (Suc j)
            \<and> 0\<le>s \<and> s\<le>1 \<and> 0\<le>t \<and> t\<le>1 \<longrightarrow> F (s,t) \<in> V)"
-    sorry \<comment> \<open>Each cell \<subseteq> I\<times>I with d_max-diameter \<le> 1/n < \<delta>.
-       By h\<delta>_cover, cell \<subseteq> F\<inverse>(U) or F\<inverse>(V). Needs: d_max-diameter of cell \<le> 1/n,
-       and top1_metric_diam_on applied to the cell set.\<close>
+  proof (intro allI impI)
+    fix i j :: nat assume hi: "i < n" and hj: "j < n"
+    let ?cell = "{(s,t). sub i \<le> s \<and> s \<le> sub (Suc i) \<and> sub j \<le> t \<and> t \<le> sub (Suc j)
+                          \<and> 0\<le>s \<and> s\<le>1 \<and> 0\<le>t \<and> t\<le>1}"
+    \<comment> \<open>Cell \<subseteq> I\<times>I.\<close>
+    have hcell_sub: "?cell \<subseteq> I_set \<times> I_set"
+      unfolding top1_unit_interval_def by (by100 auto)
+    \<comment> \<open>Cell width = sub(i+1) - sub(i) = 1/n.\<close>
+    have hwidth: "sub (Suc i) - sub i = 1 / real n"
+      unfolding sub_def using hn by (simp add: field_simps)
+    have hheight: "sub (Suc j) - sub j = 1 / real n"
+      unfolding sub_def using hn by (simp add: field_simps)
+    \<comment> \<open>d_max-diameter of cell \<le> 1/n.\<close>
+    have hdiam: "top1_metric_diam_on (I_set \<times> I_set) d_max ?cell < \<delta>"
+      sorry \<comment> \<open>Diameter = Sup{d_max p q | p,q \<in> cell} \<le> max(width,height) = 1/n < \<delta>.
+         Needs cSup_le + boundedness of {d_max p q | p,q \<in> cell}.\<close>
+    \<comment> \<open>Apply h\<delta>_cover: cell has small diameter \<Rightarrow> cell \<subseteq> F\<inverse>(U) or F\<inverse>(V).\<close>
+    note h\<delta>_inst = h\<delta>_cover[rule_format, of ?cell]
+    have "\<exists>W \<in> {{p \<in> I_set \<times> I_set. F p \<in> U}, {p \<in> I_set \<times> I_set. F p \<in> V}}. ?cell \<subseteq> W"
+      using h\<delta>_inst hcell_sub hdiam by (by100 blast)
+    then obtain W where hW: "W \<in> {{p \<in> I_set \<times> I_set. F p \<in> U}, {p \<in> I_set \<times> I_set. F p \<in> V}}"
+        and hcW: "?cell \<subseteq> W" by (elim bexE) (by100 blast)
+    from hW show "(\<forall>s t. sub i \<le> s \<and> s \<le> sub (Suc i) \<and> sub j \<le> t \<and> t \<le> sub (Suc j)
+                         \<and> 0\<le>s \<and> s\<le>1 \<and> 0\<le>t \<and> t\<le>1 \<longrightarrow> F (s,t) \<in> U)
+               \<or> (\<forall>s t. sub i \<le> s \<and> s \<le> sub (Suc i) \<and> sub j \<le> t \<and> t \<le> sub (Suc j)
+                       \<and> 0\<le>s \<and> s\<le>1 \<and> 0\<le>t \<and> t\<le>1 \<longrightarrow> F (s,t) \<in> V)"
+      using hcW by (by100 blast)
+  qed
   show ?thesis
     using hn hsub0 hsubn hsubinc hcell by (by100 blast)
 qed
