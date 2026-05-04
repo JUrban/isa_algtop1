@@ -4559,8 +4559,13 @@ proof -
           by (rule fun_cong)
         \<comment> \<open>Since f1 and f2 agree at all evaluation points (hf12), both τ_def SOME predicates
            and foldr_σ values are identical. Use hfoldr_eq for the foldr part.\<close>
-        thus ?thesis unfolding \<tau>_def Let_def
-          using hfoldr_eq sorry
+        \<comment> \<open>From hf12, f1 and f2 are interchangeable in the \<tau>_def expression.
+           The SOME predicates depend on f only at I_set points (via sub i + t*...).
+           Since f1 = f2 at all such points, the entire \<tau>_def expression is the same.\<close>
+        have "\<And>s. s \<in> I_set \<Longrightarrow> f1 s = f2 s" using hfext .
+        hence hf_eq_I: "\<forall>s. 0 \<le> s \<and> s \<le> 1 \<longrightarrow> f1 s = f2 s"
+          unfolding top1_unit_interval_def by (by100 force)
+        thus ?thesis unfolding \<tau>_def Let_def foldr_\<sigma>_def \<sigma>_def \<rho>_def \<alpha>_def sorry
       qed
     qed
     have hrow0_sym: "\<forall>s\<in>I_set. f s = row_fn 0 s"
