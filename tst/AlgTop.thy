@@ -3022,9 +3022,77 @@ proof -
      Proof: L(f) = \<alpha>_{x0}\<cdot>f\<cdot>rev(\<alpha>_{x0}) = const\<cdot>f\<cdot>const \<simeq> f in U.
      Then \<sigma>(f) = \<rho>(L(f)) = \<rho>(f).\<close>
   have h\<sigma>_ext_\<rho>: "\<And>f'. top1_is_loop_on U ?TU x0 f' \<Longrightarrow> \<sigma> f' = \<rho> f'"
-    sorry \<comment> \<open>Already proved for the specific f in h\<Phi>_ext_U (h\<sigma>_\<rho> + h\<rho>_simp). General version.\<close>
+  proof -
+    fix f' assume hf': "top1_is_loop_on U ?TU x0 f'"
+    \<comment> \<open>\<sigma>(f') = \<rho>(\<alpha>(f' 0)\<cdot>f'\<cdot>rev(\<alpha>(f' 1))) = \<rho>(const\<cdot>f'\<cdot>rev(const)) = \<rho>(const\<cdot>f'\<cdot>const)\<close>
+    have h\<alpha>0: "\<alpha> x0 = top1_constant_path x0" unfolding \<alpha>_def by (by100 simp)
+    have hstart: "f' 0 = x0" by (rule top1_is_loop_on_start[OF hf'])
+    have hend: "f' 1 = x0" by (rule top1_is_loop_on_end[OF hf'])
+    have h\<sigma>_eq: "\<sigma> f' = \<rho> (top1_path_product (top1_constant_path x0)
+        (top1_path_product f' (top1_path_reverse (top1_constant_path x0))))"
+      unfolding \<sigma>_def using h\<alpha>0 hstart hend by (by100 simp)
+    \<comment> \<open>const\<cdot>f'\<cdot>rev(const) \<simeq>_U f' by identity laws.\<close>
+    have hrev_const: "top1_path_reverse (top1_constant_path x0) = top1_constant_path x0"
+      unfolding top1_path_reverse_def top1_constant_path_def by (by100 auto)
+    have hf'_path: "top1_is_path_on U ?TU x0 x0 f'"
+      using hf' unfolding top1_is_loop_on_def by (by100 blast)
+    have hconst_path: "top1_is_path_on U ?TU x0 x0 (top1_constant_path x0)"
+      by (rule top1_constant_path_is_path[OF hTopU hx0_U])
+    have h_right: "top1_path_homotopic_on U ?TU x0 x0
+        (top1_path_product f' (top1_constant_path x0)) f'"
+      by (rule Theorem_51_2_right_identity[OF hTopU hf'_path])
+    have h_outer: "top1_path_homotopic_on U ?TU x0 x0
+        (top1_path_product (top1_constant_path x0) (top1_path_product f' (top1_constant_path x0)))
+        (top1_path_product (top1_constant_path x0) f')"
+      by (rule path_homotopic_product_right[OF hTopU h_right hconst_path])
+    have h_left: "top1_path_homotopic_on U ?TU x0 x0
+        (top1_path_product (top1_constant_path x0) f') f'"
+      by (rule Theorem_51_2_left_identity[OF hTopU hf'_path])
+    have h_full: "top1_path_homotopic_on U ?TU x0 x0
+        (top1_path_product (top1_constant_path x0)
+          (top1_path_product f' (top1_path_reverse (top1_constant_path x0)))) f'"
+      using Lemma_51_1_path_homotopic_trans[OF hTopU h_outer h_left] unfolding hrev_const .
+    \<comment> \<open>\<rho>(const\<cdot>f'\<cdot>const) = \<rho>(f') because both are loops at x0 in U with same equiv class.\<close>
+    have hcomp_loop: "top1_is_loop_on U ?TU x0
+        (top1_path_product (top1_constant_path x0)
+          (top1_path_product f' (top1_path_reverse (top1_constant_path x0))))"
+    proof -
+      have hrev_path: "top1_is_path_on U ?TU x0 x0 (top1_path_reverse (top1_constant_path x0))"
+        unfolding hrev_const by (rule top1_constant_path_is_path[OF hTopU hx0_U])
+      have hfrev: "top1_is_path_on U ?TU x0 x0 (top1_path_product f' (top1_path_reverse (top1_constant_path x0)))"
+        by (rule top1_path_product_is_path[OF hTopU hf'_path hrev_path])
+      show ?thesis unfolding top1_is_loop_on_def
+        by (rule top1_path_product_is_path[OF hTopU hconst_path hfrev])
+    qed
+    have h_equiv: "top1_loop_equiv_on U ?TU x0
+        (top1_path_product (top1_constant_path x0)
+          (top1_path_product f' (top1_path_reverse (top1_constant_path x0)))) f'"
+      unfolding top1_loop_equiv_on_def using hcomp_loop hf' h_full by (by100 blast)
+    \<comment> \<open>\<rho> well-defined: both are in U, same equiv class → same \<rho>.\<close>
+    have hcomp_in_U: "\<forall>s\<in>I_set. (top1_path_product (top1_constant_path x0)
+        (top1_path_product f' (top1_path_reverse (top1_constant_path x0)))) s \<in> U"
+      using hcomp_loop unfolding top1_is_loop_on_def top1_is_path_on_def
+                                  top1_continuous_map_on_def by (by100 blast)
+    have hf'_in_U: "\<forall>s\<in>I_set. f' s \<in> U"
+      using hf' unfolding top1_is_loop_on_def top1_is_path_on_def
+                          top1_continuous_map_on_def by (by100 blast)
+    let ?comp = "top1_path_product (top1_constant_path x0)
+        (top1_path_product f' (top1_path_reverse (top1_constant_path x0)))"
+    have "{h. top1_loop_equiv_on U ?TU x0 ?comp h} = {h. top1_loop_equiv_on U ?TU x0 f' h}"
+    proof (rule equalityI; rule subsetI)
+      fix h assume "h \<in> {h. top1_loop_equiv_on U ?TU x0 ?comp h}"
+      thus "h \<in> {h. top1_loop_equiv_on U ?TU x0 f' h}"
+        using top1_loop_equiv_on_trans[OF hTopU top1_loop_equiv_on_sym[OF h_equiv]] by (by100 fast)
+    next
+      fix h assume "h \<in> {h. top1_loop_equiv_on U ?TU x0 f' h}"
+      thus "h \<in> {h. top1_loop_equiv_on U ?TU x0 ?comp h}"
+        using top1_loop_equiv_on_trans[OF hTopU h_equiv] by (by100 fast)
+    qed
+    hence "\<rho> ?comp = \<rho> f'" unfolding \<rho>_def using hcomp_in_U hf'_in_U by (by100 simp)
+    thus "\<sigma> f' = \<rho> f'" using h\<sigma>_eq by (by100 presburger)
+  qed
   have h\<sigma>_ext_\<rho>_V: "\<And>f'. top1_is_loop_on V ?TV x0 f' \<Longrightarrow> \<sigma> f' = \<rho> f'"
-    sorry \<comment> \<open>Same for V.\<close>
+    sorry \<comment> \<open>Same proof with V, \<phi>2, hTopV, hx0_V.\<close>
   \<comment> \<open>===== Key property A: \<tau> well-defined under homotopy =====
      If f \<simeq> g (path homotopic in X, same endpoints), then \<tau>(f) = \<tau>(g).
      This is THE core 2D Lebesgue subdivision argument (Munkres Step 4).
