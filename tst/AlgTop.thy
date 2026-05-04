@@ -3371,8 +3371,8 @@ proof -
           (top1_path_product (\<alpha> ?x) (top1_path_product f' (top1_path_reverse (\<alpha> ?y))))
           (top1_path_product (\<alpha> ?y) (top1_path_product g' (top1_path_reverse (\<alpha> ?z)))))
         (top1_path_product (\<alpha> ?x) (top1_path_product (top1_path_product f' g') (top1_path_reverse (\<alpha> ?z))))"
-      sorry \<comment> \<open>Path homotopy in U: associativity + inverse + identity laws (Theorem_51_2).
-         (α_x·(f'·rev(α_y)))·(α_y·(g'·rev(α_z))) ≃ α_x·((f'·g')·rev(α_z)).\<close>
+      sorry \<comment> \<open>Munkres Step 2 core: L(f)*L(g) path-homotopic to L(f*g) in U.
+         Uses Theorem_51_2 associativity, inverse, identity laws repeatedly.\<close>
     \<comment> \<open>Step 3: \<rho>(L(f'*g')) = \<rho>(L(f')*L(g')) by \<rho> condition (1).\<close>
     \<comment> \<open>Step 4: \<rho>(L(f')*L(g')) = \<rho>(L(f'))\<cdot>\<rho>(L(g')) by \<rho> condition (2) (\<phi>1 hom).\<close>
     \<comment> \<open>Step 5: \<sigma>(f'*g') = \<rho>(L(f'*g')) = \<rho>(L(f'))\<cdot>\<rho>(L(g')) = \<sigma>(f')\<cdot>\<sigma>(g').\<close>
