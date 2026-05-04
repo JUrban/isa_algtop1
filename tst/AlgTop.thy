@@ -1189,7 +1189,13 @@ proof (intro conjI)
     have "?mul c1 c2 = {k. top1_loop_equiv_on X TX x0 (top1_path_product f g) k}"
       unfolding hc1 hc2 by (rule top1_fundamental_group_mul_class[OF hTX hf hg])
     hence hlhs: "?mul (?mul c1 c2) c3 = {k. top1_loop_equiv_on X TX x0 (top1_path_product (top1_path_product f g) h) k}"
-      unfolding hc3 by (by100 simp) (rule top1_fundamental_group_mul_class[OF hTX hfg hh])
+    proof -
+      assume h12: "?mul c1 c2 = {k. top1_loop_equiv_on X TX x0 (top1_path_product f g) k}"
+      have "?mul {k. top1_loop_equiv_on X TX x0 (top1_path_product f g) k} c3
+          = {k. top1_loop_equiv_on X TX x0 (top1_path_product (top1_path_product f g) h) k}"
+        unfolding hc3 by (rule top1_fundamental_group_mul_class[OF hTX hfg hh])
+      thus ?thesis using h12 by (by100 simp)
+    qed
     \<comment> \<open>RHS: c1*(c2*c3) = [f*(g*h)].\<close>
     have "?mul c2 c3 = {k. top1_loop_equiv_on X TX x0 (top1_path_product g h) k}"
       unfolding hc2 hc3 by (rule top1_fundamental_group_mul_class[OF hTX hg hh])
@@ -4535,18 +4541,24 @@ proof -
           unfolding foldr_\<sigma>_def .
       qed
       \<comment> \<open>The n-predicate is the same for f1 and f2.\<close>
-      have hPn_eq: "\<And>n. (n \<ge> 1 \<and> (\<exists>sub. sub 0 = (0::real) \<and> sub n = 1
-          \<and> (\<forall>i<n. sub i < sub (Suc i))
-          \<and> (\<forall>i<n. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f1 (sub i + t * (sub (Suc i) - sub i)) \<in> U)
-                 \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f1 (sub i + t * (sub (Suc i) - sub i)) \<in> V))))
-        = (n \<ge> 1 \<and> (\<exists>sub. sub 0 = (0::real) \<and> sub n = 1
-          \<and> (\<forall>i<n. sub i < sub (Suc i))
-          \<and> (\<forall>i<n. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f2 (sub i + t * (sub (Suc i) - sub i)) \<in> U)
-                 \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f2 (sub i + t * (sub (Suc i) - sub i)) \<in> V))))"
-        sorry \<comment> \<open>f1=f2 on I_set implies f1(arg)=f2(arg) for all eval points,
-           hence membership in U/V is the same. Needs pointwise substitution.\<close>
-      show "\<tau> f1 = \<tau> f2" unfolding \<tau>_def Let_def
-        using hPn_eq hfoldr_eq sorry
+      \<comment> \<open>Key: f1 and f2 agree on I_set, so they're interchangeable in \<tau>_def.
+         Use hpiece_eq to show \<lambda>t. f1(...) = \<lambda>t. f2(...) for each piece,
+         then the entire \<tau>_def expression is the same.\<close>
+      show "\<tau> f1 = \<tau> f2"
+      proof -
+        \<comment> \<open>Every occurrence of f in \<tau>_def is at an I_set point.
+           Show: the \<tau>_def lambda (\<lambda>f. ...) applied to f1 and f2 gives the same result
+           because f1 and f2 are extensionally equal on all relevant points.\<close>
+        have "\<And>sub n i. sub 0 = (0::real) \<Longrightarrow> sub n = 1 \<Longrightarrow> (\<forall>j<n. sub j < sub (Suc j))
+            \<Longrightarrow> i < n \<Longrightarrow>
+            (\<lambda>t. f1 (sub i + t * (sub (Suc i) - sub i)))
+            = (\<lambda>t. f2 (sub i + t * (sub (Suc i) - sub i)))"
+          using hpiece_eq .
+        hence hf12: "\<And>sub n i t. sub 0 = (0::real) \<Longrightarrow> sub n = 1 \<Longrightarrow> (\<forall>j<n. sub j < sub (Suc j))
+            \<Longrightarrow> i < n \<Longrightarrow> f1 (sub i + t * (sub (Suc i) - sub i)) = f2 (sub i + t * (sub (Suc i) - sub i))"
+          by (rule fun_cong)
+        thus ?thesis unfolding \<tau>_def Let_def foldr_\<sigma>_def sorry
+      qed
     qed
     have hrow0_sym: "\<forall>s\<in>I_set. f s = row_fn 0 s"
     proof
