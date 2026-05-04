@@ -4596,7 +4596,55 @@ proof -
                      \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> g (sub i + t * (sub (Suc i) - sub i)) \<in> V)))"
             for g :: "real \<Rightarrow> 'a" and n :: nat
           have hPn_eq: "Pn f1 = Pn f2"
-            sorry \<comment> \<open>From hf12: f1=f2 at all I_set eval points \<Rightarrow> predicates extensionally equal.\<close>
+          proof (rule ext, rule iffI)
+            fix n assume "Pn f1 n"
+            hence h1: "n \<ge> 1" and h2: "\<exists>sub. sub 0 = (0::real) \<and> sub n = 1
+                \<and> (\<forall>i<n. sub i < sub (Suc i))
+                \<and> (\<forall>i<n. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f1 (sub i + t * (sub (Suc i) - sub i)) \<in> U)
+                       \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f1 (sub i + t * (sub (Suc i) - sub i)) \<in> V))"
+              unfolding Pn_def by (by100 blast)+
+            from h2 obtain sub where hsub: "sub 0 = 0" "sub n = 1" "\<forall>i<n. sub i < sub (Suc i)"
+                "\<forall>i<n. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f1 (sub i + t * (sub (Suc i) - sub i)) \<in> U)
+                       \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f1 (sub i + t * (sub (Suc i) - sub i)) \<in> V)"
+              by (by100 fast)
+            have "\<forall>i<n. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f2 (sub i + t * (sub (Suc i) - sub i)) \<in> U)
+                       \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f2 (sub i + t * (sub (Suc i) - sub i)) \<in> V)"
+            proof (intro allI impI)
+              fix i assume "i < n"
+              have hsubst: "\<And>t. 0 \<le> t \<Longrightarrow> t \<le> 1 \<Longrightarrow>
+                  f1 (sub i + t * (sub (Suc i) - sub i)) = f2 (sub i + t * (sub (Suc i) - sub i))"
+                using hf12[OF hsub(1) hsub(2) hsub(3) \<open>i < n\<close>] by (by100 blast)
+              from hsub(4) \<open>i < n\<close>
+              show "(\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f2 (sub i + t * (sub (Suc i) - sub i)) \<in> U)
+                  \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f2 (sub i + t * (sub (Suc i) - sub i)) \<in> V)"
+                using hsubst by (by100 force)
+            qed
+            thus "Pn f2 n" unfolding Pn_def using h1 hsub(1-3) by (by100 blast)
+          next
+            fix n assume "Pn f2 n"
+            hence h1: "n \<ge> 1" and h2: "\<exists>sub. sub 0 = (0::real) \<and> sub n = 1
+                \<and> (\<forall>i<n. sub i < sub (Suc i))
+                \<and> (\<forall>i<n. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f2 (sub i + t * (sub (Suc i) - sub i)) \<in> U)
+                       \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f2 (sub i + t * (sub (Suc i) - sub i)) \<in> V))"
+              unfolding Pn_def by (by100 blast)+
+            from h2 obtain sub where hsub: "sub 0 = 0" "sub n = 1" "\<forall>i<n. sub i < sub (Suc i)"
+                "\<forall>i<n. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f2 (sub i + t * (sub (Suc i) - sub i)) \<in> U)
+                       \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f2 (sub i + t * (sub (Suc i) - sub i)) \<in> V)"
+              by (by100 fast)
+            have "\<forall>i<n. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f1 (sub i + t * (sub (Suc i) - sub i)) \<in> U)
+                       \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f1 (sub i + t * (sub (Suc i) - sub i)) \<in> V)"
+            proof (intro allI impI)
+              fix i assume "i < n"
+              have hsubst: "\<And>t. 0 \<le> t \<Longrightarrow> t \<le> 1 \<Longrightarrow>
+                  f2 (sub i + t * (sub (Suc i) - sub i)) = f1 (sub i + t * (sub (Suc i) - sub i))"
+                using hf12[OF hsub(1) hsub(2) hsub(3) \<open>i < n\<close>] by (by100 simp)
+              from hsub(4) \<open>i < n\<close>
+              show "(\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f1 (sub i + t * (sub (Suc i) - sub i)) \<in> U)
+                  \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f1 (sub i + t * (sub (Suc i) - sub i)) \<in> V)"
+                using hsubst by (by100 force)
+            qed
+            thus "Pn f1 n" unfolding Pn_def using h1 hsub(1-3) by (by100 blast)
+          qed
           hence hN_eq: "(SOME n. Pn f1 n) = (SOME n. Pn f2 n)" by (by100 simp)
           \<comment> \<open>Show the sub-SOME predicates are extensionally equal (with same n).\<close>
           define Qsub where "Qsub g n sub \<equiv> sub 0 = (0::real) \<and> sub n = 1
@@ -4605,7 +4653,56 @@ proof -
                      \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> g (sub i + t * (sub (Suc i) - sub i)) \<in> V))"
             for g :: "real \<Rightarrow> 'a" and n :: nat and sub :: "nat \<Rightarrow> real"
           have hQsub_eq: "\<And>n. Qsub f1 n = Qsub f2 n"
-            sorry \<comment> \<open>Same reasoning as hPn_eq.\<close>
+          proof (rule ext)
+            fix n sub
+            show "Qsub f1 n sub = Qsub f2 n sub"
+            proof (rule iffI)
+              assume h: "Qsub f1 n sub"
+              hence hs: "sub 0 = 0" "sub n = 1" "\<forall>i<n. sub i < sub (Suc i)" unfolding Qsub_def by (by100 blast)+
+              have "\<forall>i<n. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f2 (sub i + t * (sub (Suc i) - sub i)) \<in> U)
+                     \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f2 (sub i + t * (sub (Suc i) - sub i)) \<in> V)"
+              proof (intro allI impI)
+                fix i assume "i < n"
+                have "\<And>t. 0 \<le> t \<Longrightarrow> t \<le> 1 \<Longrightarrow>
+                    f1 (sub i + t * (sub (Suc i) - sub i)) = f2 (sub i + t * (sub (Suc i) - sub i))"
+                  using hf12[OF hs(1) hs(2) hs(3) \<open>i < n\<close>] by (by100 blast)
+                hence hsubst_fwd: "\<And>t. 0 \<le> t \<Longrightarrow> t \<le> 1 \<Longrightarrow>
+                    (f1 (sub i + t * (sub (Suc i) - sub i)) \<in> U) = (f2 (sub i + t * (sub (Suc i) - sub i)) \<in> U)"
+                  by (by100 simp)
+                have hsubst_fwd_V: "\<And>t. 0 \<le> t \<Longrightarrow> t \<le> 1 \<Longrightarrow>
+                    (f1 (sub i + t * (sub (Suc i) - sub i)) \<in> V) = (f2 (sub i + t * (sub (Suc i) - sub i)) \<in> V)"
+                  using hf12[OF hs(1) hs(2) hs(3) \<open>i < n\<close>] by (by100 simp)
+                from h \<open>i < n\<close> have "(\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f1 (sub i + t * (sub (Suc i) - sub i)) \<in> U)
+                    \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f1 (sub i + t * (sub (Suc i) - sub i)) \<in> V)"
+                  unfolding Qsub_def by (by100 blast)
+                thus "(\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f2 (sub i + t * (sub (Suc i) - sub i)) \<in> U)
+                    \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f2 (sub i + t * (sub (Suc i) - sub i)) \<in> V)"
+                  using hsubst_fwd hsubst_fwd_V by (by100 blast)
+              qed
+              thus "Qsub f2 n sub" unfolding Qsub_def using hs by (by100 blast)
+            next
+              assume h: "Qsub f2 n sub"
+              hence hs: "sub 0 = 0" "sub n = 1" "\<forall>i<n. sub i < sub (Suc i)" unfolding Qsub_def by (by100 blast)+
+              have "\<forall>i<n. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f1 (sub i + t * (sub (Suc i) - sub i)) \<in> U)
+                     \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f1 (sub i + t * (sub (Suc i) - sub i)) \<in> V)"
+              proof (intro allI impI)
+                fix i assume "i < n"
+                have hsubst_rev: "\<And>t. 0 \<le> t \<Longrightarrow> t \<le> 1 \<Longrightarrow>
+                    (f2 (sub i + t * (sub (Suc i) - sub i)) \<in> U) = (f1 (sub i + t * (sub (Suc i) - sub i)) \<in> U)"
+                  using hf12[OF hs(1) hs(2) hs(3) \<open>i < n\<close>] by (by100 simp)
+                have hsubst_rev_V: "\<And>t. 0 \<le> t \<Longrightarrow> t \<le> 1 \<Longrightarrow>
+                    (f2 (sub i + t * (sub (Suc i) - sub i)) \<in> V) = (f1 (sub i + t * (sub (Suc i) - sub i)) \<in> V)"
+                  using hf12[OF hs(1) hs(2) hs(3) \<open>i < n\<close>] by (by100 simp)
+                from h \<open>i < n\<close> have "(\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f2 (sub i + t * (sub (Suc i) - sub i)) \<in> U)
+                    \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f2 (sub i + t * (sub (Suc i) - sub i)) \<in> V)"
+                  unfolding Qsub_def by (by100 blast)
+                thus "(\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f1 (sub i + t * (sub (Suc i) - sub i)) \<in> U)
+                    \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f1 (sub i + t * (sub (Suc i) - sub i)) \<in> V)"
+                  using hsubst_rev hsubst_rev_V by (by100 blast)
+              qed
+              thus "Qsub f1 n sub" unfolding Qsub_def using hs by (by100 blast)
+            qed
+          qed
           hence hS_eq: "\<And>n. (SOME sub. Qsub f1 n sub) = (SOME sub. Qsub f2 n sub)" by (by100 simp)
           \<comment> \<open>Assemble: \<tau> f1 = foldr_\<sigma> f1 N S = foldr_\<sigma> f2 N S = \<tau> f2.\<close>
           have "\<tau> f1 = foldr_\<sigma> f1 (SOME n. Pn f1 n) (SOME sub. Qsub f1 (SOME n. Pn f1 n) sub)"
