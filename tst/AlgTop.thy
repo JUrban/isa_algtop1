@@ -6464,7 +6464,32 @@ proof -
               qed
             qed
             have hsub_hi_V2: "\<And>j. j \<le> n \<Longrightarrow> sub j \<le> 1"
-              sorry \<comment> \<open>Same monotonicity chain as U version.\<close>
+            proof -
+              fix j show "j \<le> n \<Longrightarrow> sub j \<le> 1"
+              proof -
+                assume hj: "j \<le> n"
+                have "\<And>k. k + j \<le> n \<Longrightarrow> sub j \<le> sub (k + j)"
+                proof -
+                  fix k show "k + j \<le> n \<Longrightarrow> sub j \<le> sub (k + j)"
+                  proof (induction k)
+                    case 0 thus ?case by (by100 simp)
+                  next
+                    case (Suc m)
+                    have "m + j \<le> n" using Suc.prems by (by100 presburger)
+                    have "sub j \<le> sub (m + j)" using Suc.IH[OF \<open>m + j \<le> n\<close>] .
+                    moreover have "m + j < n" using Suc.prems by (by100 presburger)
+                    moreover have "sub (m + j) < sub (Suc m + j)" using lhinc calculation(2) by (by100 force)
+                    ultimately show ?case by (by100 linarith)
+                  qed
+                qed
+                have hkj_le: "(n - j) + j \<le> n" using hj by (by100 presburger)
+                have "sub j \<le> sub ((n - j) + j)"
+                  using \<open>\<And>k. k + j \<le> n \<Longrightarrow> sub j \<le> sub (k + j)\<close>[OF hkj_le] .
+                moreover have "(n - j) + j = n" using hj by (by100 presburger)
+                ultimately have "sub j \<le> sub n" by (by100 presburger)
+                thus ?thesis using lhsn by (by100 linarith)
+              qed
+            qed
             have hpiece_V_path: "\<And>j. j < n \<Longrightarrow>
                 top1_is_path_on V (subspace_topology X TX V) (g (sub j)) (g (sub (Suc j))) (piece_V j sub)"
             proof -
