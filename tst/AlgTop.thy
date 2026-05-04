@@ -4595,10 +4595,23 @@ proof -
         \<comment> \<open>ρ only depends on I_set values. Since L(p1)=L(p2) on I_set,
            the ρ value is the same. ρ is defined via if-then-else on membership
            and φ1/φ2 on equivalence classes, both I_set-dependent.\<close>
-        show "\<sigma> p1 = \<sigma> p2"
-          sorry \<comment> \<open>From hL_I_agree: L(p1)=L(p2) on I_set. Need ρ I_set-extensional.
-             ρ(L) = φ1([L]_U) or φ2([L]_V). The if-condition and equiv class
-             both depend on L only at I_set points. Hence ρ(L(p1)) = ρ(L(p2)).\<close>
+        \<comment> \<open>ρ only depends on I_set values: the if-condition ∀s∈I_set and the equiv class.\<close>
+        define L1 where "L1 = top1_path_product (\<alpha> (p1 0)) (top1_path_product p1 (top1_path_reverse (\<alpha> (p1 1))))"
+        define L2 where "L2 = top1_path_product (\<alpha> (p2 0)) (top1_path_product p2 (top1_path_reverse (\<alpha> (p2 1))))"
+        have hL12_I: "\<forall>s\<in>I_set. L1 s = L2 s" using hL_I_agree unfolding L1_def L2_def by (by100 blast)
+        \<comment> \<open>The if-condition is the same.\<close>
+        have hif_eq: "(\<forall>s\<in>I_set. L1 s \<in> U) = (\<forall>s\<in>I_set. L2 s \<in> U)"
+          using hL12_I by (by100 force)
+        \<comment> \<open>The equiv classes are the same (loop_equiv only uses I_set values).\<close>
+        have hclass_U_eq: "{g. top1_loop_equiv_on U (subspace_topology X TX U) x0 L1 g}
+            = {g. top1_loop_equiv_on U (subspace_topology X TX U) x0 L2 g}"
+          sorry \<comment> \<open>loop_equiv_on depends on L only at I_set points (via path homotopy).
+             Since L1=L2 on I_set, the equiv classes are equal.\<close>
+        have hclass_V_eq: "{g. top1_loop_equiv_on V (subspace_topology X TX V) x0 L1 g}
+            = {g. top1_loop_equiv_on V (subspace_topology X TX V) x0 L2 g}"
+          sorry \<comment> \<open>Same reasoning for V.\<close>
+        have "\<rho> L1 = \<rho> L2" unfolding \<rho>_def using hif_eq hclass_U_eq hclass_V_eq by (by100 simp)
+        thus "\<sigma> p1 = \<sigma> p2" using hL1 hL2 unfolding L1_def L2_def by (by100 simp)
       qed
       \<comment> \<open>foldr_\<sigma> f1 = foldr_\<sigma> f2 for any valid subdivision.\<close>
       have hfoldr_eq: "\<And>n sub. sub 0 = (0::real) \<Longrightarrow> sub n = 1 \<Longrightarrow> (\<forall>j<n. sub j < sub (Suc j))
@@ -4670,10 +4683,19 @@ proof -
               have hsubst: "\<And>t. 0 \<le> t \<Longrightarrow> t \<le> 1 \<Longrightarrow>
                   f1 (sub i + t * (sub (Suc i) - sub i)) = f2 (sub i + t * (sub (Suc i) - sub i))"
                 using hf12[OF hsub(1) hsub(2) hsub(3) \<open>i < n\<close>] by (by100 blast)
+              have hsubst_U: "\<And>t. 0 \<le> t \<Longrightarrow> t \<le> 1 \<Longrightarrow>
+                  (f1 (sub i + t * (sub (Suc i) - sub i)) \<in> U) = (f2 (sub i + t * (sub (Suc i) - sub i)) \<in> U)"
+                using hsubst by (by100 simp)
+              have hsubst_V: "\<And>t. 0 \<le> t \<Longrightarrow> t \<le> 1 \<Longrightarrow>
+                  (f1 (sub i + t * (sub (Suc i) - sub i)) \<in> V) = (f2 (sub i + t * (sub (Suc i) - sub i)) \<in> V)"
+                using hsubst by (by100 simp)
               from hsub(4) \<open>i < n\<close>
-              show "(\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f2 (sub i + t * (sub (Suc i) - sub i)) \<in> U)
+              have "(\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f1 (sub i + t * (sub (Suc i) - sub i)) \<in> U)
+                  \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f1 (sub i + t * (sub (Suc i) - sub i)) \<in> V)"
+                by (by100 blast)
+              thus "(\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f2 (sub i + t * (sub (Suc i) - sub i)) \<in> U)
                   \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f2 (sub i + t * (sub (Suc i) - sub i)) \<in> V)"
-                using hsubst by (by100 force)
+                using hsubst_U hsubst_V by (by100 blast)
             qed
             thus "Pn f2 n" unfolding Pn_def using h1 hsub(1-3) by (by100 blast)
           next
