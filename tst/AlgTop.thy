@@ -4203,8 +4203,14 @@ proof -
          Every sub-expression in \<tau>_def evaluates f at I_set points only.
          Hence the SOME predicates, picked values, pieces, and final foldr all agree.\<close>
       have hfext: "\<And>s. s \<in> I_set \<Longrightarrow> f1 s = f2 s" using hagree by (by100 blast)
-      show "\<tau> f1 = \<tau> f2" unfolding \<tau>_def Let_def
-        sorry \<comment> \<open>After unfolding \<tau>_def (now uses foldr_\<sigma>): need SOME predicates equal.\<close>
+      \<comment> \<open>With foldr_\<sigma>: \<tau> f = foldr_\<sigma> f (SOME n) (SOME sub).
+         Need: foldr_\<sigma> f1 ... = foldr_\<sigma> f2 ... when f1 = f2 on I_set.
+         Key: the SOME predicates depend only on f at I_set points,
+         so they're extensionally equal for f1 and f2.\<close>
+      show "\<tau> f1 = \<tau> f2"
+        sorry \<comment> \<open>foldr_\<sigma> factored \<tau>_def avoids term explosion. Remaining:
+           show SOME predicates extensionally equal (f1=f2 on I_set),
+           hence same SOME picks, hence same foldr_\<sigma> args.\<close>
     qed
     have hrow0_sym: "\<forall>s\<in>I_set. f s = row_fn 0 s"
     proof
