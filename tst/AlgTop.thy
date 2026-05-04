@@ -4929,10 +4929,47 @@ proof -
           have hn1_unfold: "[(1::nat)..<n] = 1 # [Suc 1..<n]"
             using upt_rec[of 1 n] h1n by (by100 simp)
           \<comment> \<open>The algebraic manipulation needs group associativity + σ values in H.\<close>
+          \<comment> \<open>LHS unfolds: foldr [σ(p0), σ(p1), σ(p2), ...] eH
+             = mulH (σ p0) (mulH (σ p1) (foldr [σ(p2), ...] eH))
+             By group assoc: = mulH (mulH (σ p0) (σ p1)) (foldr [σ(p2), ...] eH)
+             By hmerge_eq: = mulH (σ(piece 0 sub')) (foldr [σ(p2), ...] eH)
+             By htail_eq: p_j for j\<ge>2 = piece (j-1) sub'
+             So foldr [σ(p2), ...] eH = foldr [σ(piece 1 sub'), ...] eH
+             Hence LHS = foldr [σ(piece 0 sub'), σ(piece 1 sub'), ...] eH = RHS.\<close>
+          \<comment> \<open>Unfold LHS: map splits into [σ(p0), σ(p1)] ++ map ... [2..<n].\<close>
+          have hmap_split: "map (\<lambda>i. \<sigma> (piece i sub)) [0..<n] =
+              \<sigma> (piece 0 sub) # \<sigma> (piece 1 sub) # map (\<lambda>i. \<sigma> (piece i sub)) [Suc 1..<n]"
+            using hn_unfold hn1_unfold by (by100 simp)
+          have hfoldr_split: "foldr mulH (map (\<lambda>i. \<sigma> (piece i sub)) [0..<n]) eH =
+              mulH (\<sigma> (piece 0 sub)) (mulH (\<sigma> (piece 1 sub))
+                (foldr mulH (map (\<lambda>i. \<sigma> (piece i sub)) [Suc 1..<n]) eH))"
+            using hmap_split by (by100 simp)
+          \<comment> \<open>Tail equality: map (λi. σ(piece i sub)) [Suc 1..<n] = map (λi. σ(piece i sub')) [1..<n-1].\<close>
+          have htail_map: "map (\<lambda>i. \<sigma> (piece i sub)) [Suc 1..<n] =
+              map (\<lambda>i. \<sigma> (piece (Suc i) sub')) [0..<n - Suc 1]"
+            sorry \<comment> \<open>From htail_eq: piece j sub = piece (j-1) sub' for j \<ge> 2.\<close>
+          \<comment> \<open>RHS unfolds: map splits into [σ(piece 0 sub')] ++ map ... [1..<n-1].\<close>
+          have hRHS_split: "foldr mulH (map (\<lambda>i. \<sigma> (piece i sub')) [0..<n-1]) eH =
+              mulH (\<sigma> (piece 0 sub')) (foldr mulH (map (\<lambda>i. \<sigma> (piece (Suc i) sub')) [0..<n - Suc 1]) eH)"
+            sorry \<comment> \<open>Unfolding map/foldr for [0..<n-1] = 0 # [1..<n-1].\<close>
+          \<comment> \<open>Now: LHS = mulH (σ p0) (mulH (σ p1) tail)
+                     = mulH (σ(piece 0 sub')) tail  [by group assoc + hmerge_eq]
+                     = RHS.\<close>
           have hfoldr_eq: "foldr_\<sigma> f n sub = foldr_\<sigma> f (n - 1) sub'"
-            sorry \<comment> \<open>Algebraic: unfold both sides, use hmerge_eq + htail_eq + group assoc.
-               The tail pieces match by htail_eq. The head merges by hmerge_eq.
-               Group assoc gives mulH a (mulH b c) = mulH (mulH a b) c.\<close>
+          proof -
+            let ?tail = "foldr mulH (map (\<lambda>i. \<sigma> (piece i sub)) [Suc 1..<n]) eH"
+            have "foldr_\<sigma> f n sub = mulH (\<sigma> (piece 0 sub)) (mulH (\<sigma> (piece 1 sub)) ?tail)"
+              using hLHS hfoldr_split by (by100 simp)
+            \<comment> \<open>Use hmerge_eq + group assoc to replace mulH (σ p0) (mulH (σ p1) tail) with mulH (σ(piece 0 sub')) tail.\<close>
+            also have "\<dots> = mulH (\<sigma> (piece 0 sub')) ?tail"
+              sorry \<comment> \<open>Group assoc: mulH a (mulH b c) = mulH (mulH a b) c, then hmerge_eq.\<close>
+            also have "?tail = foldr mulH (map (\<lambda>i. \<sigma> (piece (Suc i) sub')) [0..<n - Suc 1]) eH"
+              using htail_map by (by100 simp)
+            finally have "foldr_\<sigma> f n sub = mulH (\<sigma> (piece 0 sub'))
+                (foldr mulH (map (\<lambda>i. \<sigma> (piece (Suc i) sub')) [0..<n - Suc 1]) eH)"
+              by (by100 simp)
+            thus ?thesis using hRHS hRHS_split by (by100 simp)
+          qed
           show ?thesis using hfoldr_eq hIH by (by100 simp)
         qed
       qed
