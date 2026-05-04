@@ -5457,9 +5457,16 @@ proof -
       qed
       qed
       \<comment> \<open>Step 4: Apply subdivision independence to SOME-picked subdivision.\<close>
-      show ?thesis
-        sorry \<comment> \<open>From h\<tau>_eq + hsubdiv + someI. The SOME-picked n, sub are valid,
-           so hsubdiv gives foldr_\<sigma> = \<sigma> f, hence \<tau> f = \<sigma> f.\<close>
+      \<comment> \<open>The trivial subdivision (n=1, sub=\<lambda>i. real i) satisfies the n-predicate.\<close>
+      have hex_n: "\<exists>n::nat. n \<ge> 1 \<and> (\<exists>sub. sub 0 = (0::real) \<and> sub n = 1
+          \<and> (\<forall>i<n. sub i < sub (Suc i))
+          \<and> (\<forall>i<n. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> U)
+                 \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> V)))"
+        sorry \<comment> \<open>Witness: n=1, sub=\<lambda>i. real i. Piece 0 maps [0,1] to U since f \<subseteq> U.\<close>
+      \<comment> \<open>Apply someI to get SOME-picked values satisfy the predicate.\<close>
+      \<comment> \<open>Then hsubdiv gives foldr_\<sigma> f (SOME n) (SOME sub) = \<sigma> f.\<close>
+      \<comment> \<open>Combined with h\<tau>_eq: \<tau> f = foldr_\<sigma> f (SOME n) (SOME sub) = \<sigma> f.\<close>
+      show ?thesis sorry
     qed
     \<comment> \<open>Step 5: \<sigma>(f) = \<rho>(const \<cdot> f \<cdot> const) since \<alpha>(x0) = const.\<close>
     have h\<alpha>_x0: "\<alpha> x0 = top1_constant_path x0"
