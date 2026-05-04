@@ -3483,11 +3483,32 @@ proof -
             and hg1: "top1_loop_equiv_on U ?TU x0 ?Lg g1"
             and hfg1: "top1_loop_equiv_on U ?TU x0 (top1_path_product f1 g1) h" by (by100 fast)
         \<comment> \<open>Lf*Lg \<simeq> f1*g1 by product compatibility, then f1*g1 \<simeq> h.\<close>
+        have hf1_loop: "top1_is_loop_on U ?TU x0 f1"
+          using hf1 unfolding top1_loop_equiv_on_def by (by100 blast)
+        have hg1_loop: "top1_is_loop_on U ?TU x0 g1"
+          using hg1 unfolding top1_loop_equiv_on_def by (by100 blast)
+        have hf1_path: "top1_is_path_on U ?TU x0 x0 f1"
+          using hf1_loop unfolding top1_is_loop_on_def by (by100 blast)
+        have hg1_path: "top1_is_path_on U ?TU x0 x0 g1"
+          using hg1_loop unfolding top1_is_loop_on_def by (by100 blast)
+        have hf1g1_loop: "top1_is_loop_on U ?TU x0 (top1_path_product f1 g1)"
+          unfolding top1_is_loop_on_def
+          by (rule top1_path_product_is_path[OF hTopU hf1_path hg1_path])
+        have hLf_hom_f1: "top1_path_homotopic_on U ?TU x0 x0 ?Lf f1"
+          using hf1 unfolding top1_loop_equiv_on_def by (by100 blast)
+        have hLg_hom_g1: "top1_path_homotopic_on U ?TU x0 x0 ?Lg g1"
+          using hg1 unfolding top1_loop_equiv_on_def by (by100 blast)
         have "top1_path_homotopic_on U ?TU x0 x0 (top1_path_product ?Lf ?Lg) (top1_path_product f1 g1)"
-          sorry \<comment> \<open>Lf \<simeq> f1 and Lg \<simeq> g1 \<Rightarrow> Lf*Lg \<simeq> f1*g1 (product compat).\<close>
+        proof -
+          have h1: "top1_path_homotopic_on U ?TU x0 x0 (top1_path_product ?Lf ?Lg) (top1_path_product f1 ?Lg)"
+            by (rule path_homotopic_product_left[OF hTopU hLf_hom_f1
+                 hLg_loop[unfolded top1_is_loop_on_def]])
+          have h2: "top1_path_homotopic_on U ?TU x0 x0 (top1_path_product f1 ?Lg) (top1_path_product f1 g1)"
+            by (rule path_homotopic_product_right[OF hTopU hLg_hom_g1 hf1_path])
+          show ?thesis by (rule Lemma_51_1_path_homotopic_trans[OF hTopU h1 h2])
+        qed
         hence "top1_loop_equiv_on U ?TU x0 (top1_path_product ?Lf ?Lg) (top1_path_product f1 g1)"
-          unfolding top1_loop_equiv_on_def using hLfg_loop2
-          sorry \<comment> \<open>Need f1*g1 is a loop.\<close>
+          unfolding top1_loop_equiv_on_def using hLfg_loop2 hf1g1_loop by (by100 blast)
         thus "h \<in> {h. top1_loop_equiv_on U ?TU x0 (top1_path_product ?Lf ?Lg) h}"
           using top1_loop_equiv_on_trans[OF hTopU] hfg1 by (by100 fast)
       qed
