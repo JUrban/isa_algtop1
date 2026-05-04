@@ -3140,14 +3140,63 @@ proof -
          All pieces agree on [0,1], hence \<sigma> values agree, hence foldr agrees.\<close>
       \<comment> \<open>Key: every evaluation of f in \<tau>_def is at a point in I_set.
          If f1 = f2 on I_set, all evaluations agree, making predicates identical.\<close>
-      have harg_I: "\<And>sub i t. (0::real) \<le> sub i \<Longrightarrow> sub (i+1) \<le> 1
-          \<Longrightarrow> sub i \<le> sub (i+1) \<Longrightarrow> 0 \<le> t \<Longrightarrow> t \<le> 1
-          \<Longrightarrow> sub i + t * (sub (i+1) - sub i) \<in> I_set"
+      have harg_I: "\<And>sub i t. (0::real) \<le> sub i \<Longrightarrow> sub (Suc i) \<le> 1
+          \<Longrightarrow> sub i \<le> sub (Suc i) \<Longrightarrow> 0 \<le> t \<Longrightarrow> t \<le> 1
+          \<Longrightarrow> sub i + t * (sub (Suc i) - sub i) \<in> I_set"
         sorry \<comment> \<open>Convex combination [sub i, sub(i+1)] \<subseteq> [0,1]. Needs nlinarith for mult.\<close>
+      \<comment> \<open>Helper: monotone sub from 0 to 1 has all values in [0,1].\<close>
+      have hsub_bounds: "\<And>sub n (i::nat). sub 0 = (0::real) \<Longrightarrow> sub n = 1
+          \<Longrightarrow> (\<forall>j<n. sub j < sub (Suc j)) \<Longrightarrow> i \<le> n \<Longrightarrow> 0 \<le> sub i \<and> sub i \<le> 1"
+      proof -
+        fix sub :: "nat \<Rightarrow> real" and n i :: nat
+        assume hs0: "sub 0 = 0" and hsn: "sub n = 1" and hinc: "\<forall>j<n. sub j < sub (Suc j)"
+           and hin: "i \<le> n"
+        have h_ge0: "\<forall>j\<le>n. 0 \<le> sub j"
+        proof (intro allI impI)
+          fix j show "j \<le> n \<Longrightarrow> 0 \<le> sub j"
+          proof (induction j)
+            case 0 show ?case using hs0 by (by100 simp)
+          next
+            case (Suc k) hence "0 \<le> sub k" by (by100 simp)
+            moreover have "sub k < sub (Suc k)" using hinc Suc(2) by (by100 force)
+            ultimately show ?case by (by100 linarith)
+          qed
+        qed
+        have h_le1: "sub i \<le> 1"
+        proof -
+          have "\<And>j. j \<le> n \<Longrightarrow> sub j \<le> sub n"
+          proof -
+            fix j assume "j \<le> n"
+            thus "sub j \<le> sub n"
+            proof (induction rule: dec_induct)
+              case base show ?case by (by100 simp)
+            next
+              case (step k)
+              hence "sub k < sub (Suc k)" using hinc by (by100 blast)
+              thus ?case using step by (by100 linarith)
+            qed
+          qed
+          thus ?thesis using hin hsn by (by100 presburger)
+        qed
+        show "0 \<le> sub i \<and> sub i \<le> 1" using h_ge0[rule_format, OF hin] h_le1 by (by100 blast)
+      qed
       have "\<And>sub n i t. sub 0 = (0::real) \<Longrightarrow> sub n = 1 \<Longrightarrow> (\<forall>j<n. sub j < sub (Suc j))
           \<Longrightarrow> i < n \<Longrightarrow> 0 \<le> t \<Longrightarrow> t \<le> 1
           \<Longrightarrow> f1 (sub i + t * (sub (Suc i) - sub i)) = f2 (sub i + t * (sub (Suc i) - sub i))"
-        sorry \<comment> \<open>Evaluation point is in I_set (by harg_I), so f1 = f2 there (by hagree).\<close>
+      proof -
+        fix sub :: "nat \<Rightarrow> real" and n i :: nat and t :: real
+        assume hs0: "sub 0 = 0" and hsn: "sub n = 1" and hinc: "\<forall>j<n. sub j < sub (Suc j)"
+           and hi: "i < n" and ht0: "0 \<le> t" and ht1: "t \<le> 1"
+        have hbi: "0 \<le> sub i \<and> sub i \<le> 1" using hsub_bounds[OF hs0 hsn hinc, of i] hi by (by100 linarith)
+        have hbsi: "0 \<le> sub (Suc i) \<and> sub (Suc i) \<le> 1" using hsub_bounds[OF hs0 hsn hinc, of "Suc i"] hi by (by100 linarith)
+        have hge0: "0 \<le> sub i" using hbi by (by100 blast)
+        have hle1: "sub (Suc i) \<le> 1" using hbsi by (by100 blast)
+        have hmon: "sub i \<le> sub (Suc i)" using hinc hi by (by100 force)
+        have "sub i + t * (sub (Suc i) - sub i) \<in> I_set"
+          by (rule harg_I[OF hge0 hle1 hmon ht0 ht1])
+        thus "f1 (sub i + t * (sub (Suc i) - sub i)) = f2 (sub i + t * (sub (Suc i) - sub i))"
+          using hagree by (by100 blast)
+      qed
       show "\<tau> f1 = \<tau> f2"
         sorry \<comment> \<open>From the above: SOME predicates extensionally equal \<Rightarrow> same n, sub, pieces, \<sigma>, foldr.\<close>
     qed
