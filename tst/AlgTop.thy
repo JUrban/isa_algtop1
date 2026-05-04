@@ -4516,8 +4516,24 @@ proof -
       \<comment> \<open>foldr_\<sigma> f1 = foldr_\<sigma> f2 for any valid subdivision.\<close>
       have hfoldr_eq: "\<And>n sub. sub 0 = (0::real) \<Longrightarrow> sub n = 1 \<Longrightarrow> (\<forall>j<n. sub j < sub (Suc j))
           \<Longrightarrow> foldr_\<sigma> f1 n sub = foldr_\<sigma> f2 n sub"
-        sorry \<comment> \<open>From hpiece_eq: each piece function is extensionally equal,
-           hence each \<sigma> value is equal, hence foldr gives the same result.\<close>
+      proof -
+        fix n :: nat and sub :: "nat \<Rightarrow> real"
+        assume hs0: "sub 0 = 0" and hsn: "sub n = 1" and hinc: "\<forall>j<n. sub j < sub (Suc j)"
+        have "\<And>i. i < n \<Longrightarrow>
+            (\<lambda>t. f1 (sub i + t * (sub (Suc i) - sub i))) = (\<lambda>t. f2 (sub i + t * (sub (Suc i) - sub i)))"
+          using hpiece_eq[OF hs0 hsn hinc] .
+        hence "\<And>i. i < n \<Longrightarrow>
+            \<sigma> (\<lambda>t. f1 (sub i + t * (sub (Suc i) - sub i))) = \<sigma> (\<lambda>t. f2 (sub i + t * (sub (Suc i) - sub i)))"
+          by (by100 simp)
+        hence "map (\<lambda>i. \<sigma> (\<lambda>t. f1 (sub i + t * (sub (Suc i) - sub i)))) [0..<n]
+            = map (\<lambda>i. \<sigma> (\<lambda>t. f2 (sub i + t * (sub (Suc i) - sub i)))) [0..<n]"
+          by (intro map_cong) (by100 force)+
+        hence "foldr mulH (map (\<lambda>i. \<sigma> (\<lambda>t. f1 (sub i + t * (sub (Suc i) - sub i)))) [0..<n]) eH
+            = foldr mulH (map (\<lambda>i. \<sigma> (\<lambda>t. f2 (sub i + t * (sub (Suc i) - sub i)))) [0..<n]) eH"
+          by (rule arg_cong[of _ _ "\<lambda>xs. foldr mulH xs eH"])
+        thus "foldr_\<sigma> f1 n sub = foldr_\<sigma> f2 n sub"
+          unfolding foldr_\<sigma>_def .
+      qed
       \<comment> \<open>The n-predicate is the same for f1 and f2.\<close>
       have hPn_eq: "\<And>n. (n \<ge> 1 \<and> (\<exists>sub. sub 0 = (0::real) \<and> sub n = 1
           \<and> (\<forall>i<n. sub i < sub (Suc i))
