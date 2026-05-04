@@ -5404,8 +5404,9 @@ proof -
                 thus ?thesis by (rule h\<sigma>_path_in_H)
               qed
               have htail_H: "?tail \<in> H"
-                sorry \<comment> \<open>foldr mulH (map σ-values) eH ∈ H: each σ(piece j sub) ∈ H
-                   by h_σ_path_in_H, eH ∈ H, mulH closed. List induction.\<close>
+                sorry \<comment> \<open>Group closure: foldr mulH (map σ-values) eH ∈ H.
+                   Each σ(piece j sub) ∈ H by h_σ_path_in_H + hpiece_in_U.
+                   eH ∈ H, mulH closed on H. Standard list induction.\<close>
               \<comment> \<open>Group associativity: mulH a (mulH b c) = mulH (mulH a b) c.\<close>
               have hassoc_raw: "\<forall>x\<in>H. \<forall>y\<in>H. \<forall>z\<in>H. mulH (mulH x y) z = mulH x (mulH y z)"
                 using hH unfolding top1_is_group_on_def by (by100 fast)
@@ -7135,7 +7136,11 @@ proof -
           qed
           also have "\<dots> = ?mulQ (?\<pi>_q x) (?\<pi>_q y)" using hx_eq hy_eq by (by100 simp)
           also have "\<dots> = ?\<pi>_q (mulFP x y)"
-            using hpiq_hom hxFP hyFP unfolding top1_group_hom_on_def by (by100 simp)
+          proof -
+            have "?\<pi>_q (mulFP x y) = ?mulQ (?\<pi>_q x) (?\<pi>_q y)"
+              using hpiq_hom hxFP hyFP unfolding top1_group_hom_on_def by (by100 blast)
+            thus ?thesis by (by100 simp)
+          qed
           finally show "mulFP x y \<in> ?A" using hxy_FP by (by100 blast)
         qed
         \<comment> \<open>Closure under inv.\<close>
@@ -8193,7 +8198,7 @@ proof -
                (invgFP (\<iota>fam 1 (top1_fundamental_group_induced_on (U \<inter> V) ?TUV x0 V ?TV x0 (\<lambda>x. x) c)))
        | c. c \<in> top1_fundamental_group_carrier (U \<inter> V) ?TUV x0 } \<subseteq> K
              \<and> top1_normal_subgroup_on FP mulFP eFP invgFP K}"
-        using hw hN'_def_eq by (by100 simp)
+        using hw hN'_def_eq by (by100 force)
       hence "w \<in> top1_group_kernel_on FP ?eQ \<psi>"
         using hgens_in_ker2 hker_normal_FP by (by100 blast)
       thus ?thesis .
