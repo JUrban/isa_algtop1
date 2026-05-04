@@ -3138,7 +3138,18 @@ proof -
          Hence f1 and f2 agree on all evaluation points in the \<tau> definition.
          The SOME predicates are extensionally equal, hence pick the same values.
          All pieces agree on [0,1], hence \<sigma> values agree, hence foldr agrees.\<close>
-      show "\<tau> f1 = \<tau> f2" sorry \<comment> \<open>Formal: cong chain through SOME + let + \<sigma>.\<close>
+      \<comment> \<open>Key: every evaluation of f in \<tau>_def is at a point in I_set.
+         If f1 = f2 on I_set, all evaluations agree, making predicates identical.\<close>
+      have harg_I: "\<And>sub i t. sub 0 = (0::real) \<Longrightarrow> sub (i+1) \<le> 1
+          \<Longrightarrow> sub i \<le> sub (i+1) \<Longrightarrow> 0 \<le> t \<Longrightarrow> t \<le> 1
+          \<Longrightarrow> sub i + t * (sub (i+1) - sub i) \<in> I_set"
+        sorry \<comment> \<open>Convex combination of [0,1] values in [0,1]. Needs nlinarith.\<close>
+      have "\<And>sub n i t. sub 0 = (0::real) \<Longrightarrow> sub n = 1 \<Longrightarrow> (\<forall>j<n. sub j < sub (Suc j))
+          \<Longrightarrow> i < n \<Longrightarrow> 0 \<le> t \<Longrightarrow> t \<le> 1
+          \<Longrightarrow> f1 (sub i + t * (sub (Suc i) - sub i)) = f2 (sub i + t * (sub (Suc i) - sub i))"
+        sorry \<comment> \<open>Evaluation point is in I_set (by harg_I), so f1 = f2 there (by hagree).\<close>
+      show "\<tau> f1 = \<tau> f2"
+        sorry \<comment> \<open>From the above: SOME predicates extensionally equal \<Rightarrow> same n, sub, pieces, \<sigma>, foldr.\<close>
     qed
     have hrow0_sym: "\<forall>s\<in>I_set. f s = row_fn 0 s"
     proof
@@ -3272,8 +3283,13 @@ proof -
     qed
     \<comment> \<open>Step 4: \<tau>(f) = \<sigma>(f) (trivial subdivision: f already in U, use n=1).\<close>
     have h\<tau>_\<sigma>: "\<tau> f = \<sigma> f"
-      sorry \<comment> \<open>With trivial subdivision n=1, sub = (0,1): piece_0 = f, \<tau> f = \<sigma> f \<cdot> eH = \<sigma> f.
-         Needs subdivision independence: SOME-picked subdivision gives same as trivial.\<close>
+      sorry \<comment> \<open>\<tau>-\<sigma> telescoping for f \<subseteq> U. Key: does NOT need subdivision independence.
+         Proof: (1) f \<subseteq> U so trivial subdiv n=1 satisfies SOME predicate.
+         (2) For ANY SOME-picked n,sub: all pieces in U (since f \<subseteq> U).
+         (3) Each \<sigma>(piece_i) = \<phi>1([A_i]) where A_i = \<alpha>(x_i)\<cdot>p_i\<cdot>rev(\<alpha>(x_{i+1})).
+         (4) \<phi>1 hom: \<Pi>\<phi>1([A_i]) = \<phi>1([A_0\<cdot>...\<cdot>A_{n-1}]).
+         (5) Telescoping: A_0\<cdot>...\<cdot>A_{n-1} \<simeq>_U \<alpha>(f(0))\<cdot>f\<cdot>rev(\<alpha>(f(1))) (cancellation).
+         (6) foldr mulH [v_i] eH = (\<Pi>v_i)\<cdot>eH = \<sigma>(f)\<cdot>eH = \<sigma>(f) (H-identity).\<close>
     \<comment> \<open>Step 5: \<sigma>(f) = \<rho>(const \<cdot> f \<cdot> const) since \<alpha>(x0) = const.\<close>
     have h\<alpha>_x0: "\<alpha> x0 = top1_constant_path x0"
       unfolding \<alpha>_def by (by100 simp)
@@ -3466,7 +3482,7 @@ proof -
     qed
     \<comment> \<open>Remaining steps: \<tau>(g) = \<sigma>(g) = \<rho>(const\<cdot>g\<cdot>const) = \<rho>(g) = \<phi>2([g]_V).\<close>
     have h\<tau>_\<sigma>_V: "\<tau> g = \<sigma> g"
-      sorry \<comment> \<open>Subdivision independence (same as U case).\<close>
+      sorry \<comment> \<open>Same telescoping as h\<tau>_\<sigma> but with V and \<phi>2. All pieces in V, \<phi>2 hom.\<close>
     have h\<alpha>_x0_V: "\<alpha> x0 = top1_constant_path x0" unfolding \<alpha>_def by (by100 simp)
     have h\<sigma>_\<rho>_V: "\<sigma> g = \<rho> (top1_path_product (top1_constant_path x0)
         (top1_path_product g (top1_path_reverse (top1_constant_path x0))))"
