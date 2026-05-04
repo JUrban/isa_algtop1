@@ -4557,7 +4557,10 @@ proof -
         hence hf12: "\<And>sub n i t. sub 0 = (0::real) \<Longrightarrow> sub n = 1 \<Longrightarrow> (\<forall>j<n. sub j < sub (Suc j))
             \<Longrightarrow> i < n \<Longrightarrow> f1 (sub i + t * (sub (Suc i) - sub i)) = f2 (sub i + t * (sub (Suc i) - sub i))"
           by (rule fun_cong)
-        thus ?thesis unfolding \<tau>_def Let_def foldr_\<sigma>_def sorry
+        \<comment> \<open>Since f1 and f2 agree at all evaluation points (hf12), both τ_def SOME predicates
+           and foldr_σ values are identical. Use hfoldr_eq for the foldr part.\<close>
+        thus ?thesis unfolding \<tau>_def Let_def
+          using hfoldr_eq sorry
       qed
     qed
     have hrow0_sym: "\<forall>s\<in>I_set. f s = row_fn 0 s"
