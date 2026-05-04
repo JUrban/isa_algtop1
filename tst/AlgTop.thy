@@ -3193,8 +3193,14 @@ proof -
   have h\<Phi>_hom: "top1_group_hom_on
       (top1_fundamental_group_carrier X TX x0)
       (top1_fundamental_group_mul X TX x0) H mulH \<Phi>"
-    sorry \<comment> \<open>From h\<tau>_wd + \<tau> multiplicativity. The multiplicativity is a 1D argument:
-       \<tau>(f*g) uses subdivision of f*g = subdivision of f + subdivision of g.\<close>
+    sorry \<comment> \<open>\<Phi> is a group homomorphism. Proof:
+       (1) Well-defined on equiv classes: from h\<tau>_wd (if f \<simeq> g then \<tau> f = \<tau> g).
+       (2) Carrier map: \<Phi>([f]) = \<tau>(f) \<in> H by \<sigma> values in H + mulH closure.
+       (3) Homomorphism: \<Phi>([f]\<cdot>[g]) = \<Phi>([f*g]) = \<tau>(f*g).
+           \<tau>(f*g) = \<tau>(f)\<cdot>\<tau>(g): the SOME-picked subdivision of f*g can be refined
+           to include the midpoint 1/2. Then pieces 0..k come from f, pieces k+1..n from g.
+           Telescoping for each half gives \<tau>(f) and \<tau>(g) respectively.
+           Uses same \<phi>1/\<phi>2 homomorphism + \<alpha> cancellation as h\<tau>_\<sigma>.\<close>
   have h\<Phi>_ext_U: "\<forall>a\<in>top1_fundamental_group_carrier U ?TU x0.
       \<Phi> (top1_fundamental_group_induced_on U ?TU x0 X TX x0 (\<lambda>x. x) a) = \<phi>1 a"
   proof
