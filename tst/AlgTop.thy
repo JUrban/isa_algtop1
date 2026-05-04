@@ -3140,10 +3140,22 @@ proof -
          All pieces agree on [0,1], hence \<sigma> values agree, hence foldr agrees.\<close>
       show "\<tau> f1 = \<tau> f2" sorry \<comment> \<open>Formal: cong chain through SOME + let + \<sigma>.\<close>
     qed
+    have hrow0_sym: "\<forall>s\<in>I_set. f s = row_fn 0 s"
+    proof
+      fix s assume hs: "s \<in> I_set"
+      have "row_fn 0 s = f s" using hrow0 hs by (by100 blast)
+      thus "f s = row_fn 0 s" by (by100 presburger)
+    qed
     have h\<tau>_f_row0: "\<tau> f = \<tau> (row_fn 0)"
-      sorry \<comment> \<open>By h\<tau>_ext: hrow0 (sym) gives \<forall>s\<in>I_set. f s = row_fn 0 s.\<close>
+      by (rule h\<tau>_ext[OF hrow0_sym])
+    have hrown_sym: "\<forall>s\<in>I_set. g s = row_fn nt s"
+    proof
+      fix s assume hs: "s \<in> I_set"
+      have "row_fn nt s = g s" using hrown hs by (by100 blast)
+      thus "g s = row_fn nt s" by (by100 presburger)
+    qed
     have h\<tau>_g_rown: "\<tau> g = \<tau> (row_fn nt)"
-      sorry \<comment> \<open>By h\<tau>_ext: hrown (sym) gives \<forall>s\<in>I_set. g s = row_fn nt s.\<close>
+      by (rule h\<tau>_ext[OF hrown_sym])
     \<comment> \<open>Telescoping: \<tau>(row_fn 0) = \<tau>(row_fn 1) = ... = \<tau>(row_fn nt).\<close>
     have htelescope: "\<tau> (row_fn 0) = \<tau> (row_fn nt)"
     proof -
@@ -3575,7 +3587,25 @@ proof -
           unfolding \<rho>_def using True by (by100 simp)
         \<comment> \<open>By compatibility: \<phi>1([g]_U) = \<phi>2([g]_V).\<close>
         have hcompat_g: "\<phi>1 {h. top1_loop_equiv_on U ?TU x0 g h} = \<phi>2 {h. top1_loop_equiv_on V ?TV x0 g h}"
-          sorry \<comment> \<open>Needs: g is loop in U\<inter>V, apply hcompat with induced map.\<close>
+        proof -
+          \<comment> \<open>g is a loop in U\<inter>V.\<close>
+          have hg_loop_UV: "top1_is_loop_on (U \<inter> V) ?TUV x0 g"
+            sorry \<comment> \<open>g maps into U\<inter>V (hg_UV), continuous via subspace topology.\<close>
+          let ?c_UV = "{h. top1_loop_equiv_on (U \<inter> V) ?TUV x0 g h}"
+          have hc_carrier: "?c_UV \<in> top1_fundamental_group_carrier (U \<inter> V) ?TUV x0"
+            unfolding top1_fundamental_group_carrier_def using hg_loop_UV by (by100 blast)
+          \<comment> \<open>By hcompat: \<phi>1(i_U*([g]_{U\<inter>V})) = \<phi>2(i_V*([g]_{U\<inter>V})).\<close>
+          note hc = hcompat[rule_format, OF hc_carrier]
+          \<comment> \<open>i_U*([g]_{U\<inter>V}) = [g]_U.\<close>
+          have hind_U: "top1_fundamental_group_induced_on (U \<inter> V) ?TUV x0 U ?TU x0 (\<lambda>x. x) ?c_UV
+              = {h. top1_loop_equiv_on U ?TU x0 g h}"
+            sorry \<comment> \<open>Induced map of inclusion sends [g] to [g] (loop_equiv_subspace_superspace).\<close>
+          \<comment> \<open>i_V*([g]_{U\<inter>V}) = [g]_V.\<close>
+          have hind_V: "top1_fundamental_group_induced_on (U \<inter> V) ?TUV x0 V ?TV x0 (\<lambda>x. x) ?c_UV
+              = {h. top1_loop_equiv_on V ?TV x0 g h}"
+            sorry \<comment> \<open>Same for V.\<close>
+          show ?thesis using hc hind_U hind_V by (by100 simp)
+        qed
         show ?thesis using h\<rho>_U hcompat_g hb_eq by (by100 simp)
       next
         case False
