@@ -3404,8 +3404,8 @@ proof -
       note trans_partial = Lemma_51_1_path_homotopic_trans[OF hTopU s1]
       \<comment> \<open>trans_partial expects: middle \<simeq> RHS. s3 is: middle \<simeq> RHS.
          But OF chain fails — need to check actual terms.\<close>
-      show ?thesis sorry \<comment> \<open>Combine s1 + s3 via Lemma_51_1_path_homotopic_trans.
-         Rule application fails due to term structure mismatch between note-derived facts and goal.\<close>
+      show ?thesis sorry \<comment> \<open>s1 (outer assoc) + s3 (propagated inner) via Lemma_51_1_path_homotopic_trans.
+         The note-derived facts s1,s3 have terms that don't match have-goals due to let-expansion.\<close>
     qed
     \<comment> \<open>Step 3: \<rho>(L(f'*g')) = \<rho>(L(f')*L(g')) by \<rho> condition (1).\<close>
     \<comment> \<open>Step 4: \<rho>(L(f')*L(g')) = \<rho>(L(f'))\<cdot>\<rho>(L(g')) by \<rho> condition (2) (\<phi>1 hom).\<close>
