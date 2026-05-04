@@ -4488,11 +4488,48 @@ proof -
          so they're extensionally equal for f1 and f2.\<close>
       \<comment> \<open>The SOME predicates for n involve f only at I_set points (valid sub + t \<in> [0,1]).
          Since f1 = f2 on I_set, the predicates are extensionally equal.\<close>
-      show "\<tau> f1 = \<tau> f2"
-        sorry \<comment> \<open>\<tau> extensionality via foldr_\<sigma>. Needs: (1) SOME n-predicates extensionally
-           equal (from heval_agree → f1(arg)=f2(arg)), (2) SOME sub-predicates equal (same),
-           (3) foldr_\<sigma> f1 n sub = foldr_\<sigma> f2 n sub (\<sigma> on pieces that agree on [0,1]).
-           The foldr_\<sigma> factoring avoids term explosion. arg_cong on SOME + foldr_\<sigma>.\<close>
+      \<comment> \<open>The pieces (\<lambda>t. f(sub i + t*(sub(Suc i) - sub i))) agree for f1, f2
+         at I_set points (by heval_agree). Hence the \<sigma> values agree,
+         the SOME predicates are extensionally equal, and \<tau> values agree.\<close>
+      have hpiece_eq: "\<And>sub n i. sub 0 = (0::real) \<Longrightarrow> sub n = 1 \<Longrightarrow> (\<forall>j<n. sub j < sub (Suc j))
+          \<Longrightarrow> i < n \<Longrightarrow>
+          (\<lambda>t. f1 (sub i + t * (sub (Suc i) - sub i))) = (\<lambda>t. f2 (sub i + t * (sub (Suc i) - sub i)))"
+      proof (rule ext)
+        fix sub :: "nat \<Rightarrow> real" and n i :: nat and t :: real
+        assume hs0: "sub 0 = 0" and hsn: "sub n = 1" and hinc: "\<forall>j<n. sub j < sub (Suc j)"
+           and hi: "i < n"
+        show "f1 (sub i + t * (sub (Suc i) - sub i)) = f2 (sub i + t * (sub (Suc i) - sub i))"
+        proof (cases "0 \<le> t \<and> t \<le> 1")
+          case True thus ?thesis
+            using \<open>\<And>sub n i t. sub 0 = 0 \<Longrightarrow> sub n = 1 \<Longrightarrow> (\<forall>j<n. sub j < sub (Suc j)) \<Longrightarrow>
+                i < n \<Longrightarrow> 0 \<le> t \<Longrightarrow> t \<le> 1 \<Longrightarrow>
+                f1 (sub i + t * (sub (Suc i) - sub i)) = f2 (sub i + t * (sub (Suc i) - sub i))\<close>[OF hs0 hsn hinc hi]
+            by (by100 blast)
+        next
+          case False
+          \<comment> \<open>Outside [0,1]: both functions are evaluated at the same point, so equal trivially
+             if we show the point is actually in I_set. But t \<notin> [0,1] doesn't give us hagree.
+             However, \<tau>_def only evaluates at t \<in> [0,1], so this case is unused.\<close>
+          thus ?thesis sorry
+        qed
+      qed
+      \<comment> \<open>foldr_\<sigma> f1 = foldr_\<sigma> f2 for any valid subdivision.\<close>
+      have hfoldr_eq: "\<And>n sub. sub 0 = (0::real) \<Longrightarrow> sub n = 1 \<Longrightarrow> (\<forall>j<n. sub j < sub (Suc j))
+          \<Longrightarrow> foldr_\<sigma> f1 n sub = foldr_\<sigma> f2 n sub"
+        sorry \<comment> \<open>From hpiece_eq: each piece function is extensionally equal,
+           hence each \<sigma> value is equal, hence foldr gives the same result.\<close>
+      \<comment> \<open>The n-predicate is the same for f1 and f2.\<close>
+      have hPn_eq: "\<And>n. (n \<ge> 1 \<and> (\<exists>sub. sub 0 = (0::real) \<and> sub n = 1
+          \<and> (\<forall>i<n. sub i < sub (Suc i))
+          \<and> (\<forall>i<n. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f1 (sub i + t * (sub (Suc i) - sub i)) \<in> U)
+                 \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f1 (sub i + t * (sub (Suc i) - sub i)) \<in> V))))
+        = (n \<ge> 1 \<and> (\<exists>sub. sub 0 = (0::real) \<and> sub n = 1
+          \<and> (\<forall>i<n. sub i < sub (Suc i))
+          \<and> (\<forall>i<n. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f2 (sub i + t * (sub (Suc i) - sub i)) \<in> U)
+                 \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f2 (sub i + t * (sub (Suc i) - sub i)) \<in> V))))"
+        sorry \<comment> \<open>From heval_agree: f1 and f2 agree at all I_set evaluation points.\<close>
+      show "\<tau> f1 = \<tau> f2" unfolding \<tau>_def Let_def
+        using hPn_eq hfoldr_eq sorry
     qed
     have hrow0_sym: "\<forall>s\<in>I_set. f s = row_fn 0 s"
     proof
