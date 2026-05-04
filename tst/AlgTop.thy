@@ -5767,18 +5767,41 @@ proof -
             qed
           qed
         qed
-        \<comment> \<open>General subdivision independence: any valid subdivision gives the same foldr_σ = τ.
-           Proof strategy: take common refinement of SOME-picked and given subdivisions.
-           Splitting a piece preserves foldr_σ by σ_cond2 (both sub-pieces in same U or V).
-           This is the content of hsubdiv generalized from U-loops to X-loops.\<close>
+        \<comment> \<open>General subdivision independence (Munkres Step 3): any valid subdivision gives τ.
+           Proof: adjoining a single point preserves foldr_σ (σ_cond1 + σ_cond2).
+           Any two valid subdivisions share a common refinement (union of points).
+           Each can be refined to the common by adding one point at a time.\<close>
+        have h_gen_subdiv_indep: "\<And>f n sub. top1_is_loop_on X TX x0 f \<Longrightarrow>
+            n \<ge> 1 \<Longrightarrow> sub 0 = (0::real) \<Longrightarrow> sub n = 1 \<Longrightarrow>
+            (\<forall>i<n. sub i < sub (Suc i)) \<Longrightarrow>
+            (\<forall>i<n. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> U)
+                 \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> V)) \<Longrightarrow>
+            \<tau> f = foldr_\<sigma> f n sub"
+          sorry \<comment> \<open>Core Step 3 argument: point insertion preserves foldr_σ via
+             σ_cond1 (piece ≃ piece'*piece'' by reparametrization) + σ_cond2 (σ multiplicative).
+             Then τ_def's SOME picks some valid subdivision, and any other valid one gives the
+             same foldr_σ by iterating point insertion to reach common refinement.\<close>
         have h_gen_indep_12: "\<tau> (top1_path_product f1 f2) = foldr_\<sigma> (top1_path_product f1 f2) (n1+n2) sub_m"
-          sorry \<comment> \<open>General subdivision independence for f1*f2. The SOME-picked subdivision and
-             (n1+n2, sub_m) both satisfy the predicate. Any two valid subdivisions of an X-loop
-             give the same foldr_σ value (by common refinement + σ_cond2 splitting argument).\<close>
+        proof -
+          have "n1 + n2 \<ge> 1" using hn1' by (by100 presburger)
+          show ?thesis by (rule h_gen_subdiv_indep[OF hf12_loop \<open>n1+n2 \<ge> 1\<close> hm_0 hm_n hm_inc hm_UV])
+        qed
         have h_gen_indep_1: "\<tau> f1 = foldr_\<sigma> f1 n1 sub1"
-          sorry \<comment> \<open>General subdivision independence for f1: (n1, sub1) is valid for f1.\<close>
+        proof -
+          have hn1_ge: "n1 \<ge> 1" using hn1' by (by100 presburger)
+          have hs1_UV_raw: "\<forall>i<n1. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f1 (sub1 i + t * (sub1 (Suc i) - sub1 i)) \<in> U)
+              \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f1 (sub1 i + t * (sub1 (Suc i) - sub1 i)) \<in> V)"
+            using hs1_UV unfolding sub1_def by (by100 blast)
+          show ?thesis by (rule h_gen_subdiv_indep[OF hf1_loop hn1_ge hs1_0' hs1_n' hs1_inc' hs1_UV_raw])
+        qed
         have h_gen_indep_2: "\<tau> f2 = foldr_\<sigma> f2 n2 sub2"
-          sorry \<comment> \<open>General subdivision independence for f2: (n2, sub2) is valid for f2.\<close>
+        proof -
+          have hn2_ge: "n2 \<ge> 1" using hn2' by (by100 presburger)
+          have hs2_UV_raw: "\<forall>i<n2. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f2 (sub2 i + t * (sub2 (Suc i) - sub2 i)) \<in> U)
+              \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f2 (sub2 i + t * (sub2 (Suc i) - sub2 i)) \<in> V)"
+            using hs2_UV unfolding sub2_def by (by100 blast)
+          show ?thesis by (rule h_gen_subdiv_indep[OF hf2_loop hn2_ge hs2_0' hs2_n' hs2_inc' hs2_UV_raw])
+        qed
         \<comment> \<open>Piece identification: σ(piece_i of f1*f2) = σ(piece_i of f1) for i < n1,
            σ(piece_i of f1*f2) = σ(piece_{i-n1} of f2) for i ≥ n1.
            Then foldr splits: [0..<n1+n2] = [0..<n1] @ [n1..<n1+n2].
