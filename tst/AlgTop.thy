@@ -4590,23 +4590,8 @@ proof -
         \<comment> \<open>From hf12, f1 and f2 are interchangeable in the \<tau>_def expression.
            The SOME predicates depend on f only at I_set points (via sub i + t*...).
            Since f1 = f2 at all such points, the entire \<tau>_def expression is the same.\<close>
-        \<comment> \<open>Show foldr_\<sigma> f1 = foldr_\<sigma> f2 as functions (for any n, sub).\<close>
-        have hfoldr_\<sigma>_ext: "foldr_\<sigma> f1 = foldr_\<sigma> f2"
-        proof (rule ext, rule ext)
-          fix n :: nat and sub :: "nat \<Rightarrow> real"
-          show "foldr_\<sigma> f1 n sub = foldr_\<sigma> f2 n sub"
-          proof (cases "n \<ge> 1 \<and> sub 0 = 0 \<and> sub n = 1 \<and> (\<forall>j<n. sub j < sub (Suc j))")
-            case True
-            thus ?thesis using hfoldr_eq by (by100 blast)
-          next
-            case False
-            \<comment> \<open>Invalid subdivision: both foldr_\<sigma> compute the same (possibly meaningless) value
-               because the piece functions (\<lambda>t. f(sub i + t*...)) still agree for all t via hpiece_eq
-               when sub is valid, and for invalid sub the σ values might differ.
-               But hpiece_eq requires valid sub. Use sorry for this edge case.\<close>
-            thus ?thesis sorry
-          qed
-        qed
+        \<comment> \<open>hfoldr_eq gives foldr_\<sigma> f1 n sub = foldr_\<sigma> f2 n sub for valid (n, sub).
+           The SOME-picked values are always valid (by someI), so this suffices.\<close>
         \<comment> \<open>\<tau>_def structure: \<tau> f = foldr_\<sigma> f (SOME n. P(f,n)) (SOME sub. Q(f,n,sub)).
            Since foldr_\<sigma> f1 = foldr_\<sigma> f2, and the SOME predicates involve f only
            at I_set points (where f1=f2), the entire \<tau> expression is the same.\<close>
@@ -4736,7 +4721,25 @@ proof -
           have "\<tau> f1 = foldr_\<sigma> f1 (SOME n. Pn f1 n) (SOME sub. Qsub f1 (SOME n. Pn f1 n) sub)"
             unfolding \<tau>_def Let_def Pn_def Qsub_def by (by100 simp)
           also have "\<dots> = foldr_\<sigma> f2 (SOME n. Pn f2 n) (SOME sub. Qsub f2 (SOME n. Pn f2 n) sub)"
-            using hN_eq hS_eq hfoldr_\<sigma>_ext by (by100 simp)
+          proof -
+            \<comment> \<open>SOME n equal, SOME sub equal, foldr_\<sigma> equal for the SOME-picked valid sub.\<close>
+            have "foldr_\<sigma> f1 (SOME n. Pn f1 n) (SOME sub. Qsub f1 (SOME n. Pn f1 n) sub)
+                = foldr_\<sigma> f2 (SOME n. Pn f1 n) (SOME sub. Qsub f1 (SOME n. Pn f1 n) sub)"
+            proof -
+              \<comment> \<open>The SOME-picked n and sub are valid, so hfoldr_eq applies.\<close>
+              have hvalid: "Pn f1 (SOME n. Pn f1 n)" sorry
+              hence "Qsub f1 (SOME n. Pn f1 n) (SOME sub. Qsub f1 (SOME n. Pn f1 n) sub)" sorry
+              hence "((SOME sub. Qsub f1 (SOME n. Pn f1 n) sub) 0 = 0)"
+                  "((SOME sub. Qsub f1 (SOME n. Pn f1 n) sub) (SOME n. Pn f1 n) = 1)"
+                  "(\<forall>j<(SOME n. Pn f1 n). (SOME sub. Qsub f1 (SOME n. Pn f1 n) sub) j
+                      < (SOME sub. Qsub f1 (SOME n. Pn f1 n) sub) (Suc j))"
+                unfolding Qsub_def by (by100 blast)+
+              thus ?thesis using hfoldr_eq by (by100 blast)
+            qed
+            also have "\<dots> = foldr_\<sigma> f2 (SOME n. Pn f2 n) (SOME sub. Qsub f2 (SOME n. Pn f2 n) sub)"
+              using hN_eq hS_eq by (by100 simp)
+            finally show ?thesis .
+          qed
           also have "\<dots> = \<tau> f2"
             unfolding \<tau>_def Let_def Pn_def Qsub_def by (by100 simp)
           finally show ?thesis .
