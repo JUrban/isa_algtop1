@@ -4412,8 +4412,21 @@ proof -
           \<Longrightarrow> (\<forall>i<n. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> U)
                  \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> V))
           \<Longrightarrow> foldr_\<sigma> f n sub = \<sigma> f"
-        sorry \<comment> \<open>Induction on n. Base n=1: piece = f (reparametrized), \<sigma>(piece) = \<sigma>(f).
-           Step: merge pieces 0,1 via \<sigma>_cond2, reduce to n-1.\<close>
+      proof -
+        fix n sub assume hn: "n \<ge> 1" and hs0: "sub 0 = (0::real)" and hsn: "sub n = 1"
+            and hinc: "\<forall>i<n. sub i < sub (Suc i)"
+            and hpUV: "\<forall>i<n. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> U)
+                 \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> V)"
+        \<comment> \<open>All pieces are in U (since f \<subseteq> U). So the U-or-V disjunction is always U.\<close>
+        have hall_U: "\<forall>i<n. \<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> U"
+          sorry \<comment> \<open>All evaluation points in I_set (from harg_I + sub bounds), f \<subseteq> U on I_set.\<close>
+        show "foldr_\<sigma> f n sub = \<sigma> f"
+          sorry \<comment> \<open>With all pieces in U: merge inductively via \<sigma>_cond2.
+             foldr_\<sigma> f n sub = \<sigma>(piece_0)\<cdot>...\<cdot>\<sigma>(piece_{n-1})\<cdot>eH
+             = \<sigma>(piece_0*...*piece_{n-1})\<cdot>eH [by \<sigma>_cond2 iteratively]
+             = \<sigma>(f)\<cdot>eH [\<sigma>_cond1 + reparametrization: concatenation \<simeq> f]
+             = \<sigma>(f) [group identity].\<close>
+      qed
       \<comment> \<open>Step 4: Apply subdivision independence to SOME-picked subdivision.\<close>
       show ?thesis
         sorry \<comment> \<open>From h\<tau>_eq + hsubdiv + someI. The SOME-picked n, sub are valid,
