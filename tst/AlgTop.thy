@@ -6540,7 +6540,105 @@ proof -
             have hsub2_le1_V: "sub (Suc (Suc 0)) \<le> 1" using hsub_hi_V2 hn2 by (by100 force)
             \<comment> \<open>Reparam + σ_cond1_V gives σ(p0*p1) = σ(piece 0 sub').\<close>
             have hreparam_V: "\<sigma> (top1_path_product (piece_V 0 sub) (piece_V 1 sub)) = \<sigma> (piece_V 0 sub')"
-              sorry \<comment> \<open>Same reparametrization as U: reparam_path_homotopy + σ_cond1_V.\<close>
+            proof -
+              \<comment> \<open>Mirror of U hreparam: define φ_concat and ψ_linear for V.\<close>
+              define \<phi>c where "\<phi>c s = (if s \<le> 1/2 then sub 0 + 2*s * (sub (Suc 0) - sub 0)
+                   else sub (Suc 0) + (2*s - 1) * (sub (Suc (Suc 0)) - sub (Suc 0)))" for s :: real
+              define \<psi>l where "\<psi>l s = sub 0 + s * (sub (Suc (Suc 0)) - sub 0)" for s :: real
+              \<comment> \<open>path_product = g ∘ φc, piece 0 sub' = g ∘ ψl on I_set.\<close>
+              have hprod_eq_V: "\<And>s. s \<in> I_set \<Longrightarrow>
+                  top1_path_product (piece_V 0 sub) (piece_V 1 sub) s = g (\<phi>c s)"
+                unfolding top1_path_product_def piece_V_def \<phi>c_def by (by100 simp)
+              have hmerged_eq_V: "\<And>s. piece_V 0 sub' s = g (\<psi>l s)"
+                unfolding piece_V_def sub'_def \<psi>l_def by (by100 simp)
+              \<comment> \<open>Apply reparam_path_homotopy.\<close>
+              have hg_cont_X: "top1_continuous_map_on I_set I_top X TX g"
+              proof -
+                have "top1_continuous_map_on I_set I_top V (subspace_topology X TX V) g"
+                  using hg_loop_V unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+                hence hg_range: "\<forall>s\<in>I_set. g s \<in> V"
+                  unfolding top1_continuous_map_on_def by (by100 blast)
+                show ?thesis unfolding top1_continuous_map_on_def
+                proof (intro conjI ballI)
+                  fix s assume "s \<in> I_set" thus "g s \<in> X" using hg_range hVsub by (by100 blast)
+                next
+                  fix W assume hW: "W \<in> TX"
+                  have "W \<inter> V \<in> subspace_topology X TX V" unfolding subspace_topology_def using hW by (by100 blast)
+                  have "{s \<in> I_set. g s \<in> W} = {s \<in> I_set. g s \<in> W \<inter> V}" using hg_range by (by100 blast)
+                  also have "\<dots> \<in> I_top" using \<open>top1_continuous_map_on I_set I_top V (subspace_topology X TX V) g\<close>
+                    \<open>W \<inter> V \<in> subspace_topology X TX V\<close> unfolding top1_continuous_map_on_def by (by100 blast)
+                  finally show "{s \<in> I_set. g s \<in> W} \<in> I_top" .
+                qed
+              qed
+              have hphic_cont: "top1_continuous_map_on I_set I_top I_set I_top \<phi>c"
+                sorry \<comment> \<open>Piecewise linear: same as U hphi_concat_cont.\<close>
+              have hpsil_cont: "top1_continuous_map_on I_set I_top I_set I_top \<psi>l"
+                unfolding \<psi>l_def
+                by (rule affine_map_continuous_I_to_I[OF hsub0_ge_V hsub02_le_V hsub2_le1_V])
+              have hphic0: "\<phi>c 0 = sub 0" unfolding \<phi>c_def by (by100 simp)
+              have hphic1: "\<phi>c 1 = sub (Suc (Suc 0))" unfolding \<phi>c_def by (by100 simp)
+              have hpsil0: "\<psi>l 0 = sub 0" unfolding \<psi>l_def by (by100 simp)
+              have hpsil1: "\<psi>l 1 = sub (Suc (Suc 0))" unfolding \<psi>l_def by (by100 simp)
+              have hsub0_I_V: "sub 0 \<in> I_set" using lhs0 unfolding top1_unit_interval_def by (by100 force)
+              have hsub2_I_V: "sub (Suc (Suc 0)) \<in> I_set"
+                using hsub_lo_V2 hsub_hi_V2 hn2 unfolding top1_unit_interval_def by (by100 force)
+              have hhom_V: "top1_path_homotopic_on V (subspace_topology X TX V)
+                  (g (sub 0)) (g (sub (Suc (Suc 0)))) (g \<circ> \<phi>c) (g \<circ> \<psi>l)"
+                by (rule reparam_path_homotopy[OF hTopX hg_cont_X hg_in_V hVsub hTopV
+                    hphic_cont hpsil_cont hphic0 hphic1 hpsil0 hpsil1 hsub0_I_V hsub2_I_V])
+              \<comment> \<open>Transfer to path_product and piece via extensional equality.\<close>
+              from hhom_V obtain F where
+                  hFc: "top1_continuous_map_on (I_set \<times> I_set) II_topology V (subspace_topology X TX V) F"
+                  and hF0: "\<forall>s\<in>I_set. F (s, 0) = (g \<circ> \<phi>c) s"
+                  and hF1: "\<forall>s\<in>I_set. F (s, 1) = (g \<circ> \<psi>l) s"
+                  and hFleft: "\<forall>t\<in>I_set. F (0, t) = g (sub 0)"
+                  and hFright: "\<forall>t\<in>I_set. F (1, t) = g (sub (Suc (Suc 0)))"
+                unfolding top1_path_homotopic_on_def top1_is_path_on_def by (by100 fast)
+              have hF0': "\<forall>s\<in>I_set. F (s, 0) = top1_path_product (piece_V 0 sub) (piece_V 1 sub) s"
+                using hF0 hprod_eq_V by (by100 force)
+              have hF1': "\<forall>s\<in>I_set. F (s, 1) = piece_V 0 sub' s"
+                using hF1 hmerged_eq_V by (by100 force)
+              have hpp_V: "top1_is_path_on V (subspace_topology X TX V) (g (sub 0)) (g (sub (Suc (Suc 0))))
+                  (top1_path_product (piece_V 0 sub) (piece_V 1 sub))"
+              proof -
+                have hp0p: "top1_is_path_on V (subspace_topology X TX V) (g (sub 0)) (g (sub (Suc 0))) (piece_V 0 sub)"
+                  using hpiece_V_path[OF h0n] unfolding piece_V_def by (by100 simp)
+                have hp1p: "top1_is_path_on V (subspace_topology X TX V) (g (sub (Suc 0))) (g (sub (Suc (Suc 0)))) (piece_V 1 sub)"
+                  using hpiece_V_path[OF h1n] unfolding piece_V_def by (by100 simp)
+                show ?thesis by (rule top1_path_product_is_path[OF hTopV hp0p hp1p])
+              qed
+              have hm_V: "top1_is_path_on V (subspace_topology X TX V) (g (sub 0)) (g (sub (Suc (Suc 0))))
+                  (piece_V 0 sub')"
+              proof -
+                have hg_V: "top1_continuous_map_on I_set I_top V (subspace_topology X TX V) g"
+                  using hg_loop_V unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+                have "top1_continuous_map_on I_set I_top V (subspace_topology X TX V)
+                    (g \<circ> (\<lambda>t. sub 0 + t * (sub (Suc (Suc 0)) - sub 0)))"
+                  by (rule top1_continuous_map_on_comp[OF
+                      affine_map_continuous_I_to_I[OF hsub0_ge_V hsub02_le_V hsub2_le1_V] hg_V])
+                moreover have "(g \<circ> (\<lambda>t. sub 0 + t * (sub (Suc (Suc 0)) - sub 0))) = piece_V 0 sub'"
+                  unfolding piece_V_def sub'_def comp_def by (by100 simp)
+                ultimately have hcomp: "top1_continuous_map_on I_set I_top V (subspace_topology X TX V) (piece_V 0 sub')"
+                  by (by100 simp)
+                have "piece_V 0 sub' 0 = g (sub 0)" unfolding piece_V_def sub'_def by (by100 simp)
+                moreover have "piece_V 0 sub' 1 = g (sub (Suc (Suc 0)))" unfolding piece_V_def sub'_def by (by100 simp)
+                ultimately show ?thesis unfolding top1_is_path_on_def using hcomp by (by100 blast)
+              qed
+              have hhom2_V: "top1_path_homotopic_on V (subspace_topology X TX V)
+                  (g (sub 0)) (g (sub (Suc (Suc 0)))) (top1_path_product (piece_V 0 sub) (piece_V 1 sub)) (piece_V 0 sub')"
+                unfolding top1_path_homotopic_on_def
+                using hpp_V hm_V hFc hF0' hF1' hFleft hFright by (by100 blast)
+              have hpp0_V: "top1_path_product (piece_V 0 sub) (piece_V 1 sub) 0 = g (sub 0)"
+                unfolding top1_path_product_def piece_V_def by (by100 simp)
+              have hpp1_V: "top1_path_product (piece_V 0 sub) (piece_V 1 sub) 1 = g (sub (Suc (Suc 0)))"
+                unfolding top1_path_product_def piece_V_def by (by100 simp)
+              have hhom3_V: "top1_path_homotopic_on V (subspace_topology X TX V)
+                  (top1_path_product (piece_V 0 sub) (piece_V 1 sub) 0)
+                  (top1_path_product (piece_V 0 sub) (piece_V 1 sub) 1)
+                  (top1_path_product (piece_V 0 sub) (piece_V 1 sub)) (piece_V 0 sub')"
+                using hhom2_V hpp0_V hpp1_V by (by100 simp)
+              show ?thesis by (rule h\<sigma>_cond1_V[OF hhom3_V])
+            qed
             have hmerge_eq_V: "mulH (\<sigma> (piece_V 0 sub)) (\<sigma> (piece_V 1 sub)) = \<sigma> (piece_V 0 sub')"
               using hcond2_V hreparam_V by (by100 simp)
             \<comment> \<open>Tail equality + group assoc + merge = foldr equality.\<close>
