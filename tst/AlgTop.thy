@@ -5001,7 +5001,21 @@ proof -
               using hLHS hfoldr_split by (by100 simp)
             \<comment> \<open>Use hmerge_eq + group assoc to replace mulH (σ p0) (mulH (σ p1) tail) with mulH (σ(piece 0 sub')) tail.\<close>
             also have "\<dots> = mulH (\<sigma> (piece 0 sub')) ?tail"
-              sorry \<comment> \<open>Group assoc: mulH a (mulH b c) = mulH (mulH a b) c, then hmerge_eq.\<close>
+            proof -
+              \<comment> \<open>Need σ values in H for group assoc.\<close>
+              have h\<sigma>0_H: "\<sigma> (piece 0 sub) \<in> H" sorry
+              have h\<sigma>1_H: "\<sigma> (piece 1 sub) \<in> H" sorry
+              have htail_H: "?tail \<in> H" sorry
+              \<comment> \<open>Group associativity: mulH a (mulH b c) = mulH (mulH a b) c.\<close>
+              have hassoc_raw: "\<forall>x\<in>H. \<forall>y\<in>H. \<forall>z\<in>H. mulH (mulH x y) z = mulH x (mulH y z)"
+                using hH unfolding top1_is_group_on_def by (by100 fast)
+              have hassoc: "mulH (\<sigma> (piece 0 sub)) (mulH (\<sigma> (piece 1 sub)) ?tail)
+                  = mulH (mulH (\<sigma> (piece 0 sub)) (\<sigma> (piece 1 sub))) ?tail"
+                using hassoc_raw[rule_format, OF h\<sigma>0_H h\<sigma>1_H htail_H] by (by100 simp)
+              also have "\<dots> = mulH (\<sigma> (piece 0 sub')) ?tail"
+                using hmerge_eq by (by100 simp)
+              finally show ?thesis .
+            qed
             also have "?tail = foldr mulH (map (\<lambda>i. \<sigma> (piece (Suc i) sub')) [0..<n - Suc 1]) eH"
               using htail_map by (by100 simp)
             finally have "foldr_\<sigma> f n sub = mulH (\<sigma> (piece 0 sub'))
