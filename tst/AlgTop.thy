@@ -54,10 +54,14 @@ proof -
      and the loop f alternates between U and V, creating a nontrivial element.\<close>
   let ?X = "top1_S2 - {p} - {q}" and ?TX = "subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p} - {q})"
   let ?U = "top1_S2 - e13" and ?V = "top1_S2 - e24"
-  \<comment> \<open>Proof: decompose S²-{p,q} = (S²-e13) ∪ (S²-e24). Their intersection S²-(e13∪e24)
-     has two components. The 4-cycle loop f alternates between the components,
-     creating a nontrivial element by Theorem 63.1.\<close>
-  show ?thesis sorry
+  \<comment> \<open>Step 1: S²-{p,q} = U \<union> V where U = S²-e13, V = S²-e24.
+     Both U, V are open in S²-{p,q}. U \<inter> V = S²-(e13 \<union> e24) has two path-components.\<close>
+  \<comment> \<open>Step 2: U and V are each simply connected (S² minus a point is contractible to the
+     opposite hemisphere; S² minus an arc is still simply connected).\<close>
+  \<comment> \<open>Step 3: f alternates between U and V (traversing edges alternately in each).
+     By Theorem 63.1 (generalized SvK for non-trivial intersection),
+     the path-class [f] is non-trivial in \<pi>_1(S²-{p,q}).\<close>
+  show ?thesis sorry \<comment> \<open>Theorem 63.1: alternating loop in U\<union>V is non-trivial when U\<inter>V disconnected.\<close>
 qed
 
 (** from \<S>65 Theorem 65.2: inclusion C \<rightarrow> S^2 - p - q induces fundamental group iso **)
@@ -563,10 +567,15 @@ proof -
     ultimately show False by (by100 simp)
   qed
   have hbase: "n = 0 \<longrightarrow> ?thesis" using hn_pos by (by100 simp)
-  \<comment> \<open>n=1: X = single circle ≅ S¹, π₁ = Z = free on 1 generator.
-     n≥2: decompose X = X_{n-1} ∪ C_n, intersection {p}. Apply SvK.
-     π₁(X) ≅ π₁(X_{n-1}) * π₁(C_n) ≅ free(n-1) * Z ≅ free(n).\<close>
-  show ?thesis sorry
+  \<comment> \<open>Base case n=1: X \<cong> S¹, \<pi>_1(X) \<cong> Z which is free on 1 generator.\<close>
+  have hbase1: "n = 1 \<longrightarrow> ?thesis"
+    sorry \<comment> \<open>\<pi>_1(S¹) \<cong> Z (Theorem 54.5). Z is free on {0}.\<close>
+  \<comment> \<open>Inductive step: n \<ge> 2. Decompose X = X_{n-1} \<union> C_n, intersection = {p}.
+     By IH: \<pi>_1(X_{n-1}) free on n-1 generators. \<pi>_1(C_n) \<cong> Z, free on 1.
+     X_{n-1} \<inter> C_n = {p} simply connected. Corollary 70.4 \<Rightarrow> free product.
+     Theorem 69.2: free(n-1) * free(1) = free(n).\<close>
+  show ?thesis sorry \<comment> \<open>Induction on n. Base: n=1, S¹ has \<pi>_1 \<cong> Z (free on 1).
+     Step: SvK (Cor 70.4) + free product of free groups (Thm 69.2).\<close>
 qed
 
 text \<open>Lemma 60.5 (Munkres): The fundamental group of the figure eight is not abelian.\<close>
@@ -696,10 +705,13 @@ proof -
      argument. Each finite sub-wedge gives a free group on that subset of generators.
      The direct limit over finite subsets gives the free group on all of J.
      Alternatively: cover X = \<Union>_\<alpha> (X - C_\<alpha> interior) and apply SvK iteratively.\<close>
-  \<comment> \<open>Step 1: For each finite F \<subseteq> J, the sub-wedge X_F has free fundamental group on F.\<close>
-  \<comment> \<open>Step 2: The direct limit of these free groups (as F ranges over finite subsets)
-     is the free group on J.\<close>
-  show ?thesis sorry
+  \<comment> \<open>Step 1: For each finite F \<subseteq> J, the sub-wedge X_F has free \<pi>_1 on F
+     (by Theorem 71.1 for finite wedges).\<close>
+  \<comment> \<open>Step 2: The inclusions X_F \<hookrightarrow> X_G for F \<subseteq> G give a directed system.
+     The direct limit of free groups on finite subsets = free group on J.\<close>
+  \<comment> \<open>Step 3: \<pi>_1(X) = direct limit of \<pi>_1(X_F) by the weak topology on X
+     (a loop in X is compact, hence contained in some finite sub-wedge).\<close>
+  show ?thesis sorry \<comment> \<open>Direct limit argument: finite sub-wedges (Thm 71.1) + compactness of loops.\<close>
 qed
 
 section \<open>\<S>72 Adjoining a Two-Cell\<close>
@@ -6968,7 +6980,10 @@ proof -
      Take T = {\<Delta>} (a single copy of the standard simplex) for each triangle,
      and q = the pasting of all h0(T). But q needs to be a SINGLE function.
      For a faithful proof, we need disjoint copies of the standard simplex.\<close>
-  show ?thesis sorry
+  \<comment> \<open>Step 4: Place disjoint copies of the simplex in R² (translated apart).
+     Define q by pasting all h0(T) on corresponding copies.
+     The edge identifications recreate X from the disjoint union.\<close>
+  show ?thesis sorry \<comment> \<open>Disjoint simplex copies + pasting map gives quotient presentation.\<close>
 qed
 
 (** from \<S>78 Theorem 78.2: connected compact triangulable surfaces are
@@ -6991,9 +7006,13 @@ proof -
      exactly one edge with the current polygon; paste it along that edge
      to get a polygon with 2 more sides (minus the shared edge = net +0 or +1).
      Repeat until all triangles are incorporated.\<close>
-  \<comment> \<open>By Theorem 78.1, X is a quotient of finitely many triangles.\<close>
-  \<comment> \<open>Iteratively merge adjacent triangles into a single polygon.\<close>
-  show ?thesis sorry
+  \<comment> \<open>Step 1: By Theorem 78.1, X = quotient of finitely many triangles.\<close>
+  \<comment> \<open>Step 2: Since X is connected, the dual graph of the triangulation is connected.
+     Choose a spanning tree. Walk the tree, merging triangles along shared edges.
+     Each merge: paste two polygons along a common edge to get a larger polygon.\<close>
+  \<comment> \<open>Step 3: After merging all triangles, we have a single polygon P with
+     boundary identifications reproducing X.\<close>
+  show ?thesis sorry \<comment> \<open>Iterative merging via spanning tree of dual graph.\<close>
 qed
 
 section \<open>\<S>77 The Classification Theorem\<close>
