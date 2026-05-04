@@ -4934,13 +4934,28 @@ proof -
   have h\<Phi>_hom: "top1_group_hom_on
       (top1_fundamental_group_carrier X TX x0)
       (top1_fundamental_group_mul X TX x0) H mulH \<Phi>"
-    sorry \<comment> \<open>Munkres Steps 5-6: \<Phi> is a well-defined homomorphism.
-       Well-defined: from h\<tau>_wd (\<tau> cond (1)).
-       Homomorphism (\<tau> cond (2), Munkres Step 5): given f*g, choose subdivision
-       containing 1/2 as a point. Pieces split into f-pieces and g-pieces.
-       \<tau>(f*g) = \<sigma>(f_1)\<cdot>...\<cdot>\<sigma>(f_k)\<cdot>\<sigma>(g_1)\<cdot>...\<cdot>\<sigma>(g_{n-k}) = \<tau>(f)\<cdot>\<tau>(g).
-       Carrier: \<sigma> values are in H (from \<phi>1/\<phi>2 ranges); mulH closure.
-       Depends on: h\<tau>_wd, h\<sigma>_cond2, subdivision independence.\<close>
+    unfolding top1_group_hom_on_def
+  proof (intro conjI ballI)
+    \<comment> \<open>Part 1: \<Phi> maps carrier to H.\<close>
+    fix c assume hc: "c \<in> top1_fundamental_group_carrier X TX x0"
+    \<comment> \<open>\<Phi>(c) = \<tau>(SOME f. loop f \<and> c = [f]). \<tau>(f) = \<sigma>(f) for loops in U or V.
+       \<sigma>(f) = \<rho>(L(f)) = \<phi>1/\<phi>2([L(f)]) \<in> H.\<close>
+    show "\<Phi> c \<in> H"
+      sorry \<comment> \<open>\<Phi>(c) = \<tau>(representative). \<tau> = \<sigma> for loops in U/V (by h\<tau>_\<sigma>/h\<tau>_\<sigma>_V).
+         \<sigma> maps to H (by h_\<sigma>_path_in_H / h_\<sigma>_g_in_H).
+         For general X-loops: use subdivision into U/V pieces, then foldr of H-elements.\<close>
+  next
+    \<comment> \<open>Part 2: \<Phi> preserves multiplication.\<close>
+    fix c1 c2
+    assume hc1: "c1 \<in> top1_fundamental_group_carrier X TX x0"
+       and hc2: "c2 \<in> top1_fundamental_group_carrier X TX x0"
+    show "\<Phi> (top1_fundamental_group_mul X TX x0 c1 c2) = mulH (\<Phi> c1) (\<Phi> c2)"
+      sorry \<comment> \<open>Munkres Step 5: \<tau>(f*g) = \<tau>(f)\<cdot>\<tau>(g).
+         Choose subdivision of [0,1] for f*g containing 1/2.
+         Pieces [0,1/2] come from f, pieces [1/2,1] come from g.
+         \<tau>(f*g) = \<Pi> \<sigma>(pieces) = (\<Pi> \<sigma>(f-pieces)) \<cdot> (\<Pi> \<sigma>(g-pieces)) = \<tau>(f) \<cdot> \<tau>(g).
+         Uses: subdivision independence + subdivision with 1/2 as point.\<close>
+  qed
   have h\<Phi>_ext_U: "\<forall>a\<in>top1_fundamental_group_carrier U (subspace_topology X TX U) x0.
       \<Phi> (top1_fundamental_group_induced_on U (subspace_topology X TX U) x0 X TX x0 (\<lambda>x. x) a) = \<phi>1 a"
   proof
