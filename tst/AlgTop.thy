@@ -4504,18 +4504,21 @@ proof -
         fix sub :: "nat \<Rightarrow> real" and n i :: nat and t :: real
         assume hs0: "sub 0 = 0" and hsn: "sub n = 1" and hinc: "\<forall>j<n. sub j < sub (Suc j)"
            and hi: "i < n"
+        \<comment> \<open>The evaluation point sub i + t*(sub(Suc i) - sub i) is in I_set for any t,
+           because sub maps to [0,1] and the affine combination stays in [0,1]
+           when t \<in> [0,1]. For t outside [0,1], the point might be outside [0,1],
+           but we still need equality. Use the fact that hagree covers I_set,
+           and for points outside I_set, f1 and f2 are arbitrary but the σ/τ
+           evaluation never reaches those points.\<close>
         show "f1 (sub i + t * (sub (Suc i) - sub i)) = f2 (sub i + t * (sub (Suc i) - sub i))"
-        proof (cases "0 \<le> t \<and> t \<le> 1")
-          case True thus ?thesis
-            using \<open>\<And>sub n i t. sub 0 = 0 \<Longrightarrow> sub n = 1 \<Longrightarrow> (\<forall>j<n. sub j < sub (Suc j)) \<Longrightarrow>
-                i < n \<Longrightarrow> 0 \<le> t \<Longrightarrow> t \<le> 1 \<Longrightarrow>
-                f1 (sub i + t * (sub (Suc i) - sub i)) = f2 (sub i + t * (sub (Suc i) - sub i))\<close>[OF hs0 hsn hinc hi]
-            by (by100 blast)
+        proof (cases "sub i + t * (sub (Suc i) - sub i) \<in> I_set")
+          case True thus ?thesis using hagree by (by100 blast)
         next
           case False
-          \<comment> \<open>Outside [0,1]: both functions are evaluated at the same point, so equal trivially
-             if we show the point is actually in I_set. But t \<notin> [0,1] doesn't give us hagree.
-             However, \<tau>_def only evaluates at t \<in> [0,1], so this case is unused.\<close>
+          \<comment> \<open>Point outside I_set: f1 and f2 might differ here, but this case
+             is never reached by τ_def (which uses t \<in> [0,1] and valid sub).
+             We need full extensional equality for the proof structure.
+             Since the point is outside [0,1], we cannot use hagree.\<close>
           thus ?thesis sorry
         qed
       qed
