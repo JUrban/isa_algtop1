@@ -5082,9 +5082,46 @@ proof -
         \<comment> \<open>τ = foldr_σ. Each σ(piece) ∈ H (U-piece: h_σ_path_in_H, V-piece: h_σ_path_in_H_V).
            foldr of H-elements ∈ H by group closure.\<close>
         have h\<tau>_in_H: "\<And>f'. top1_is_loop_on X TX x0 f' \<Longrightarrow> \<tau> f' \<in> H"
-          sorry \<comment> \<open>τ(X-loop) ∈ H: τ = foldr_σ with SOME-picked subdivision.
-             Each σ(piece) ∈ H by h_σ_path_in_H (U) or h_σ_path_in_H_V (V).
-             eH ∈ H, mulH closed. foldr ∈ H.\<close>
+        proof -
+          fix f' assume hf'_loop: "top1_is_loop_on X TX x0 f'"
+          \<comment> \<open>τ(f') = foldr_σ f' N S. The SOME picks valid N, S.\<close>
+          \<comment> \<open>Each σ(piece) ∈ H: piece in U → h_σ_path_in_H, piece in V → h_σ_path_in_H_V.\<close>
+          have heH: "eH \<in> H" using hH unfolding top1_is_group_on_def by (by100 fast)
+          have hmcl: "\<And>a b. a \<in> H \<Longrightarrow> b \<in> H \<Longrightarrow> mulH a b \<in> H"
+            using hH unfolding top1_is_group_on_def by (by100 blast)
+          \<comment> \<open>σ of any piece (in U or V) is in H.\<close>
+          have h\<sigma>_UV_in_H: "\<And>p. (\<forall>s\<in>I_set. p s \<in> U) \<or> (\<forall>s\<in>I_set. p s \<in> V) \<Longrightarrow>
+              top1_is_path_on X TX (p 0) (p 1) p \<Longrightarrow> \<sigma> p \<in> H"
+          proof -
+            fix p assume hpUV: "(\<forall>s\<in>I_set. p s \<in> U) \<or> (\<forall>s\<in>I_set. p s \<in> V)"
+               and hpX: "top1_is_path_on X TX (p 0) (p 1) p"
+            have hpX_cont: "top1_continuous_map_on I_set I_top X TX p"
+              using hpX unfolding top1_is_path_on_def by (by100 blast)
+            show "\<sigma> p \<in> H"
+            proof (cases "\<forall>s\<in>I_set. p s \<in> U")
+              case True
+              have himg: "p ` I_set \<subseteq> U" using True by (by100 blast)
+              have "top1_continuous_map_on I_set I_top U (subspace_topology X TX U) p"
+                by (rule top1_continuous_map_on_codomain_shrink[OF hpX_cont himg hUsub])
+              hence "top1_is_path_on U (subspace_topology X TX U) (p 0) (p 1) p"
+                unfolding top1_is_path_on_def using hpX unfolding top1_is_path_on_def by (by100 blast)
+              thus ?thesis by (rule h\<sigma>_path_in_H)
+            next
+              case False
+              hence "\<forall>s\<in>I_set. p s \<in> V" using hpUV by (by100 blast)
+              hence himg: "p ` I_set \<subseteq> V" by (by100 blast)
+              have "top1_continuous_map_on I_set I_top V (subspace_topology X TX V) p"
+                by (rule top1_continuous_map_on_codomain_shrink[OF hpX_cont himg hVsub])
+              hence "top1_is_path_on V (subspace_topology X TX V) (p 0) (p 1) p"
+                unfolding top1_is_path_on_def using hpX unfolding top1_is_path_on_def by (by100 blast)
+              thus ?thesis by (rule h\<sigma>_path_in_H_V)
+            qed
+          qed
+          \<comment> \<open>τ(f') = foldr_σ f' N S. Show this ∈ H.\<close>
+          show "\<tau> f' \<in> H"
+            sorry \<comment> \<open>Unfold τ to foldr_σ. Each σ(piece) ∈ H by h_σ_UV_in_H.
+               foldr of H-elements with eH ∈ H by group closure (define + list induction).\<close>
+        qed
         show ?thesis using h\<tau>_in_H[OF hsome_loop] .
       qed
       thus ?thesis using h\<Phi>_eq by (by100 simp)
