@@ -4895,7 +4895,36 @@ proof -
             unfolding piece_def sub'_def \<psi>_linear_def by (by100 simp)
           \<comment> \<open>Apply reparam_path_homotopy: need \<phi>_concat, \<psi>_linear continuous I\<rightarrow>I.\<close>
           have hphi_concat_cont: "top1_continuous_map_on I_set I_top I_set I_top \<phi>_concat"
-            sorry \<comment> \<open>Piecewise linear, matching at 1/2. Range in [sub 0, sub 2] \<subseteq> [0,1].\<close>
+          proof -
+            \<comment> \<open>Range: \<phi>_concat maps I_set to [sub 0, sub(Suc(Suc 0))] \<subseteq> I_set.\<close>
+            have hrange: "\<And>s. s \<in> I_set \<Longrightarrow> \<phi>_concat s \<in> I_set"
+              sorry \<comment> \<open>Case split s \<le> 1/2 vs s > 1/2; affine image in [sub 0, sub(Suc(Suc 0))] \<subseteq> [0,1].\<close>
+            \<comment> \<open>Continuity: piecewise linear, matching at 1/2.\<close>
+            have hcont: "continuous_on I_set \<phi>_concat"
+              sorry \<comment> \<open>Piecewise linear on {0..1/2} and {1/2..1}, matching at 1/2.
+                 Uses continuous_on_closed_Un with closed {0..1/2} and {1/2..1}.\<close>
+            \<comment> \<open>Transfer: continuous_on + range \<Rightarrow> top1_continuous_map_on.\<close>
+            show ?thesis unfolding top1_continuous_map_on_def
+            proof (intro conjI ballI)
+              fix s assume "s \<in> I_set" thus "\<phi>_concat s \<in> I_set" by (rule hrange)
+            next
+              fix V assume hV: "V \<in> I_top"
+              obtain W where hW: "open W" and hVW: "V = I_set \<inter> W"
+                using hV unfolding top1_unit_interval_topology_def subspace_topology_def
+                  top1_open_sets_def by (by100 blast)
+              have "\<exists>T. open T \<and> T \<inter> I_set = \<phi>_concat -` W \<inter> I_set"
+                using hcont hW unfolding continuous_on_open_invariant by (by100 force)
+              then obtain T where hT: "open T" and hTeq: "T \<inter> I_set = \<phi>_concat -` W \<inter> I_set"
+                by (by100 blast)
+              have "{s \<in> I_set. \<phi>_concat s \<in> V} = {s \<in> I_set. \<phi>_concat s \<in> W}"
+                using hVW hrange by (by100 blast)
+              also have "\<dots> = I_set \<inter> T" using hTeq by (by100 blast)
+              finally have "{s \<in> I_set. \<phi>_concat s \<in> V} = I_set \<inter> T" .
+              moreover have "T \<in> top1_open_sets" using hT unfolding top1_open_sets_def by (by100 blast)
+              ultimately show "{s \<in> I_set. \<phi>_concat s \<in> V} \<in> I_top"
+                unfolding top1_unit_interval_topology_def subspace_topology_def by (by100 blast)
+            qed
+          qed
           have hsub0_ge: "0 \<le> sub 0" using lhs0 by (by100 simp)
           have hsub02_le: "sub 0 \<le> sub (Suc (Suc 0))"
           proof -
@@ -5197,13 +5226,10 @@ proof -
             also have "\<dots> = mulH (\<sigma> (piece 0 sub')) ?tail"
             proof -
               \<comment> \<open>Need σ values in H for group assoc.\<close>
-              \<comment> \<open>\<sigma>(path in U) \<in> H: \<sigma>(f') = \<rho>(L(f')) where L wraps f' into a loop,
-                 \<rho>(loop in U) = \<phi>1([loop]_U), and \<phi>1 maps \<pi>1(U) to H.\<close>
+              \<comment> \<open>\<sigma>(path in U) \<in> H: via \<sigma> \<rightarrow> \<rho> \<rightarrow> \<phi>1 chain.\<close>
               have h\<sigma>0_H: "\<sigma> (piece 0 sub) \<in> H" sorry
               have h\<sigma>1_H: "\<sigma> (piece 1 sub) \<in> H" sorry
               have htail_H: "?tail \<in> H" sorry
-              \<comment> \<open>These require: (1) L(piece j sub) is a loop in U, (2) \<rho> maps to H via \<phi>1,
-                 (3) tail is closed under mulH in H (group closure + eH \<in> H).\<close>
               \<comment> \<open>Group associativity: mulH a (mulH b c) = mulH (mulH a b) c.\<close>
               have hassoc_raw: "\<forall>x\<in>H. \<forall>y\<in>H. \<forall>z\<in>H. mulH (mulH x y) z = mulH x (mulH y z)"
                 using hH unfolding top1_is_group_on_def by (by100 fast)
