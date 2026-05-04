@@ -2412,8 +2412,8 @@ proof -
     unfolding II_topology_def by (rule Theorem_26_7[OF hI_compact hI_compact])
   \<comment> \<open>d_max is a metric on I\<times>I.\<close>
   have hd_metric: "top1_metric_on (I_set \<times> I_set) d_max"
-    sorry \<comment> \<open>Standard: d_max is non-negative, symmetric, triangle inequality.
-       Each property follows from max and abs properties.\<close>
+    unfolding top1_metric_on_def d_max_def
+    by (intro conjI ballI, auto simp: max_def abs_le_iff prod_eq_iff)
   \<comment> \<open>The metric topology of d_max on I\<times>I equals II_topology.\<close>
   have hd_top: "top1_metric_topology_on (I_set \<times> I_set) d_max = II_topology"
     sorry \<comment> \<open>The sup metric generates the product topology on [0,1]\<times>[0,1].
