@@ -3489,11 +3489,26 @@ proof -
      Proof: the composite path path_product(α(p 0), path_product(p, reverse(α(p 1))))
      evaluates p only at [0,1] points. If p = q on [0,1], the composites are ext-equal.\<close>
   have h\<sigma>_I_cong: "\<And>p q. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> p t = q t) \<Longrightarrow> \<sigma> p = \<sigma> q"
-    sorry \<comment> \<open>σ depends on I_set values only. Approach: unfolding σ_def, apply arg_cong[of _ _ ρ],
-       apply ext, then case split on s ≤ 1/2 and 2s-1 ≤ 1/2.
-       s ≤ 1/2: outer pp uses α(p 0) = α(q 0) since p 0 = q 0.
-       1/2 < s ≤ 3/4: inner pp uses p(2*(2s-1)) = q(2*(2s-1)) since 2*(2s-1) ∈ [0,1].
-       s > 3/4: inner pp uses rev(α(p 1)) = rev(α(q 1)) since p 1 = q 1.\<close>
+    unfolding \<sigma>_def
+    apply (rule arg_cong[of _ _ \<rho>])
+    apply (rule ext)
+    subgoal for p q s
+      unfolding top1_path_product_def top1_path_reverse_def
+      apply (cases "s \<le> 1/2")
+      subgoal \<comment> \<open>s ≤ 1/2: outer pp uses α(p 0). Need p 0 = q 0.\<close>
+        apply (drule_tac x=0 in spec)
+        by (by100 simp)
+      subgoal \<comment> \<open>s > 1/2\<close>
+        apply (cases "2 * s - 1 \<le> 1/2")
+        subgoal \<comment> \<open>1/2 < s ≤ 3/4: inner pp uses p at 2*(2s-1) ∈ [0,1].\<close>
+          apply (drule_tac x="2 * (2 * s - 1)" in spec)
+          by (by100 simp)
+        subgoal \<comment> \<open>s > 3/4: inner pp uses rev(α(p 1)). Need p 1 = q 1.\<close>
+          apply (drule_tac x=1 in spec)
+          by (by100 simp)
+        done
+      done
+    done
   \<comment> \<open>Step 4: Define \<tau>(f) for a loop f at x_0 in X.
      Pick SOME subdivision into U-or-V pieces, apply \<sigma> to each, multiply in H.
      The pieces are reparametrized sub-paths.\<close>
