@@ -3389,28 +3389,9 @@ proof -
           (top1_path_product (\<alpha> (f' 0)) (top1_path_product f' (top1_path_reverse (\<alpha> (f' 1)))))
           (top1_path_product (\<alpha> (f' 1)) (top1_path_product g' (top1_path_reverse (\<alpha> (g' 1))))))
         (top1_path_product (\<alpha> (f' 0)) (top1_path_product (top1_path_product f' g') (top1_path_reverse (\<alpha> (g' 1)))))"
-    proof -
-      \<comment> \<open>Step 1: Outer assoc: (\<alpha>_x\<cdot>(f'\<cdot>ra_y))\<cdot>(\<alpha>_y\<cdot>(g'\<cdot>ra_z)) \<simeq> \<alpha>_x\<cdot>((f'\<cdot>ra_y)\<cdot>(\<alpha>_y\<cdot>(g'\<cdot>ra_z))).\<close>
-      have hc_path: "top1_is_path_on U ?TU x0 x0
-          (top1_path_product (\<alpha> (f' 1)) (top1_path_product g' (top1_path_reverse (\<alpha> (g' 1)))))"
-        by (rule top1_path_product_is_path[OF hTopU h\<alpha>y hg'ra])
-      have s1: "top1_path_homotopic_on U ?TU x0 x0
-          (top1_path_product (top1_path_product (\<alpha> (f' 0)) (top1_path_product f' (top1_path_reverse (\<alpha> (f' 1))))) (top1_path_product (\<alpha> (f' 1)) (top1_path_product g' (top1_path_reverse (\<alpha> (g' 1))))))
-          (top1_path_product (\<alpha> (f' 0)) (top1_path_product (top1_path_product f' (top1_path_reverse (\<alpha> (f' 1)))) (top1_path_product (\<alpha> (f' 1)) (top1_path_product g' (top1_path_reverse (\<alpha> (g' 1)))))))"
-        sorry \<comment> \<open>Theorem_51_2_associativity[OF hTopU h_alpha_x hf'ra hc_path].
-           Let-binding ?TU prevents rule/blast/simp/fast from matching the fact to the goal.\<close>
-      \<comment> \<open>Step 2: Inner: (f'\<cdot>ra_y)\<cdot>(\<alpha>_y\<cdot>(g'\<cdot>ra_z)) \<simeq> (f'\<cdot>g')\<cdot>ra_z.\<close>
-      have s2_inner: "top1_path_homotopic_on U ?TU (f' 0) x0
-          (top1_path_product (top1_path_product f' (top1_path_reverse (\<alpha> (f' 1)))) (top1_path_product (\<alpha> (f' 1)) (top1_path_product g' (top1_path_reverse (\<alpha> (g' 1))))))
-          (top1_path_product (top1_path_product f' g') (top1_path_reverse (\<alpha> (g' 1))))"
-        sorry \<comment> \<open>5-step chain: assoc + assoc + inverse + identity + assoc.\<close>
-      \<comment> \<open>Step 3: Propagate: \<alpha>_x\<cdot>inner \<simeq> \<alpha>_x\<cdot>result.\<close>
-      have s3: "top1_path_homotopic_on U ?TU x0 x0
-          (top1_path_product (\<alpha> (f' 0)) (top1_path_product (top1_path_product f' (top1_path_reverse (\<alpha> (f' 1)))) (top1_path_product (\<alpha> (f' 1)) (top1_path_product g' (top1_path_reverse (\<alpha> (g' 1)))))))
-          (top1_path_product (\<alpha> (f' 0)) (top1_path_product (top1_path_product f' g') (top1_path_reverse (\<alpha> (g' 1)))))"
-        by (rule path_homotopic_product_right[OF hTopU s2_inner h\<alpha>x])
-      show ?thesis by (rule Lemma_51_1_path_homotopic_trans[OF hTopU s1 s3])
-    qed
+      sorry \<comment> \<open>Munkres Step 2: L(f)*L(g) \<simeq> L(f*g) in U.
+         Proof: outer assoc (Thm_51_2) + inner chain (5 steps: assoc, assoc, inverse, identity, assoc)
+         + propagate via product_right. All theorems exist but ?TU let-binding blocks rule/note chains.\<close>
     \<comment> \<open>Step 3: \<rho>(L(f'*g')) = \<rho>(L(f')*L(g')) by \<rho> condition (1).\<close>
     \<comment> \<open>Step 4: \<rho>(L(f')*L(g')) = \<rho>(L(f'))\<cdot>\<rho>(L(g')) by \<rho> condition (2) (\<phi>1 hom).\<close>
     \<comment> \<open>Step 5: \<sigma>(f'*g') = \<rho>(L(f'*g')) = \<rho>(L(f'))\<cdot>\<rho>(L(g')) = \<sigma>(f')\<cdot>\<sigma>(g').\<close>
