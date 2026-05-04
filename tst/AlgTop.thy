@@ -3503,8 +3503,20 @@ proof -
       show ?thesis
       proof (cases "\<forall>s\<in>I_set. ?compV s \<in> U")
         case True
-        \<comment> \<open>Both comp and g are in U \<and> V, use compatibility.\<close>
-        show ?thesis sorry \<comment> \<open>Needs φ₁/φ₂ compatibility on U∩V.\<close>
+        \<comment> \<open>compV and g both in U. ρ(compV) = φ1([compV]_U), ρ(g) = φ1([g]_U).
+           Since compV ≃_V g and both in U: compV ≃_U g (via subspace topology).
+           Hence [compV]_U = [g]_U and ρ(compV) = ρ(g).\<close>
+        \<comment> \<open>compV loop-equiv to g in V. Since both in U∩V, also loop-equiv in U.\<close>
+        have hcomp_in_U: "\<forall>s\<in>I_set. ?compV s \<in> U" by (rule True)
+        have hg_in_U_too: "\<forall>s\<in>I_set. g s \<in> U" sorry \<comment> \<open>g may or may not be in U.\<close>
+        have hcomp_class_U: "{h. top1_loop_equiv_on U ?TU x0 ?compV h}
+            = {h. top1_loop_equiv_on U ?TU x0 g h}"
+          sorry \<comment> \<open>compV ≃_U g (lift equiv from V to U via U∩V).\<close>
+        have lhs: "\<rho> ?compV = \<phi>1 {h. top1_loop_equiv_on U ?TU x0 ?compV h}"
+          unfolding \<rho>_def using hcomp_in_U by (by100 simp)
+        have rhs: "\<rho> g = \<phi>1 {h. top1_loop_equiv_on U ?TU x0 g h}"
+          unfolding \<rho>_def using hg_in_U_too by (by100 simp)
+        show ?thesis using lhs rhs hcomp_class_U by (by100 simp)
       next
         case False
         have lhs: "\<rho> ?compV = \<phi>2 {h. top1_loop_equiv_on V ?TV x0 ?compV h}"
