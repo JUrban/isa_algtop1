@@ -6333,11 +6333,123 @@ proof -
             hence hn2: "n \<ge> 2" using lhn by (by100 presburger)
             \<comment> \<open>Mirror of U proof n\<ge>2 case. All pieces in V since g \<subseteq> V.
                Merge first two pieces via σ_cond2_V + reparametrization + σ_cond1_V.\<close>
-            show ?thesis sorry
-              \<comment> \<open>Same structure as U: define sub', prove valid, apply IH.
-                 Needs ~700 lines mirroring U proof with V infrastructure.
-                 The proof is structurally identical — only hTopU→hTopV,
-                 hf_in_U→hg_in_V, hUsub→hVsub, σ_cond2→σ_cond2_V, etc.\<close>
+            \<comment> \<open>Mirror of U n≥2 case. All pieces in V since g ⊆ V.\<close>
+            define sub' where "sub' i = (if i = 0 then sub 0 else sub (Suc i))" for i
+            have hsub'_0: "sub' 0 = (0::real)" unfolding sub'_def using lhs0 by (by100 simp)
+            have hsub'_n: "sub' (n - 1) = 1" unfolding sub'_def using lhsn hn2 by (by100 simp)
+            have hsub'_inc: "\<forall>i<n-1. sub' i < sub' (Suc i)"
+            proof (intro allI impI)
+              fix i assume hi: "i < n - 1"
+              show "sub' i < sub' (Suc i)"
+              proof (cases "i = 0")
+                case True
+                have h0n: "(0::nat) < n" using hn2 by (by100 presburger)
+                have h1n: "(1::nat) < n" using hn2 by (by100 presburger)
+                have "sub 0 < sub (Suc 0)" using lhinc h0n by (by100 force)
+                moreover have "sub (Suc 0) < sub (Suc (Suc 0))" using lhinc h1n by (by100 force)
+                ultimately have "sub 0 < sub (Suc (Suc 0))" by (by100 linarith)
+                thus ?thesis unfolding sub'_def using True by (by100 simp)
+              next
+                case False
+                have "Suc i < n" using hi hn2 by (by100 presburger)
+                hence "sub (Suc i) < sub (Suc (Suc i))" using lhinc by (by100 blast)
+                thus ?thesis unfolding sub'_def using False by (by100 simp)
+              qed
+            qed
+            \<comment> \<open>All pieces of sub' map to V (since g maps I_set to V).\<close>
+            have hsub'_UV: "\<forall>i<n-1. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow>
+                g (sub' i + t * (sub' (Suc i) - sub' i)) \<in> U)
+                \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow>
+                g (sub' i + t * (sub' (Suc i) - sub' i)) \<in> V)"
+            proof (intro allI impI, rule disjI2, intro allI impI)
+              fix i and t :: real assume hi: "i < n - 1" and ht: "0 \<le> t \<and> t \<le> 1"
+              \<comment> \<open>sub' bounds from sub bounds, then convex combo in I_set, then g maps to V.\<close>
+              have "sub' i + t * (sub' (Suc i) - sub' i) \<in> I_set"
+              proof -
+                \<comment> \<open>Sub bounds: 0 \<le> sub' i and sub'(Suc i) \<le> 1.\<close>
+                have hsub_lo_V: "\<And>j. j \<le> n \<Longrightarrow> 0 \<le> sub j"
+                proof -
+                  fix j show "j \<le> n \<Longrightarrow> 0 \<le> sub j"
+                  proof (induction j)
+                    case 0 show ?case using lhs0 by (by100 simp)
+                  next
+                    case (Suc k)
+                    have "k < n" using Suc.prems by (by100 presburger)
+                    have "k \<le> n" using Suc.prems by (by100 presburger)
+                    have "0 \<le> sub k" using Suc.IH[OF \<open>k \<le> n\<close>] .
+                    moreover have "sub k < sub (Suc k)" using lhinc \<open>k < n\<close> by (by100 force)
+                    ultimately show ?case by (by100 linarith)
+                  qed
+                qed
+                have hsub_hi_V: "\<And>j. j \<le> n \<Longrightarrow> sub j \<le> 1"
+                proof -
+                  fix j show "j \<le> n \<Longrightarrow> sub j \<le> 1"
+                  proof -
+                    assume hj: "j \<le> n"
+                    have "\<And>k. k + j \<le> n \<Longrightarrow> sub j \<le> sub (k + j)"
+                    proof -
+                      fix k show "k + j \<le> n \<Longrightarrow> sub j \<le> sub (k + j)"
+                      proof (induction k)
+                        case 0 thus ?case by (by100 simp)
+                      next
+                        case (Suc m)
+                        have "m + j \<le> n" using Suc.prems by (by100 presburger)
+                        have "sub j \<le> sub (m + j)" using Suc.IH[OF \<open>m + j \<le> n\<close>] .
+                        moreover have "m + j < n" using Suc.prems by (by100 presburger)
+                        moreover have "sub (m + j) < sub (Suc m + j)" using lhinc calculation(2) by (by100 force)
+                        ultimately show ?case by (by100 linarith)
+                      qed
+                    qed
+                    have hkj_le: "(n - j) + j \<le> n" using hj by (by100 presburger)
+                    have "sub j \<le> sub ((n - j) + j)"
+                      using \<open>\<And>k. k + j \<le> n \<Longrightarrow> sub j \<le> sub (k + j)\<close>[OF hkj_le] .
+                    moreover have "(n - j) + j = n" using hj by (by100 presburger)
+                    ultimately have "sub j \<le> sub n" by (by100 presburger)
+                    thus ?thesis using lhsn by (by100 linarith)
+                  qed
+                qed
+                have hge: "0 \<le> sub' i"
+                proof (cases "i = 0")
+                  case True thus ?thesis using hsub'_0 by (by100 simp)
+                next
+                  case False
+                  hence "sub' i = sub (Suc i)" unfolding sub'_def by (by100 simp)
+                  moreover have "Suc i \<le> n" using hi hn2 by (by100 presburger)
+                  ultimately show ?thesis using hsub_lo_V by (by100 force)
+                qed
+                have hle: "sub' (Suc i) \<le> 1"
+                proof -
+                  have "sub' (Suc i) = sub (Suc (Suc i))" unfolding sub'_def by (by100 simp)
+                  moreover have "Suc (Suc i) \<le> n" using hi hn2 by (by100 presburger)
+                  ultimately show ?thesis using hsub_hi_V by (by100 force)
+                qed
+                have hmon: "sub' i \<le> sub' (Suc i)" using hsub'_inc hi by (by100 force)
+                have ht0: "0 \<le> t" using ht by (by100 blast)
+                have ht1: "t \<le> 1" using ht by (by100 blast)
+                have hdiff: "0 \<le> sub' (Suc i) - sub' i" using hmon by (by100 linarith)
+                have hprod: "0 \<le> t * (sub' (Suc i) - sub' i)"
+                  by (rule mult_nonneg_nonneg[OF ht0 hdiff])
+                have hlo: "0 \<le> sub' i + t * (sub' (Suc i) - sub' i)" using hge hprod by (by100 linarith)
+                have "t * (sub' (Suc i) - sub' i) \<le> 1 * (sub' (Suc i) - sub' i)"
+                  by (rule mult_right_mono[OF ht1 hdiff])
+                hence "t * (sub' (Suc i) - sub' i) \<le> sub' (Suc i) - sub' i" by (by100 simp)
+                hence "sub' i + t * (sub' (Suc i) - sub' i) \<le> sub' (Suc i)" by (by100 linarith)
+                hence hhi: "sub' i + t * (sub' (Suc i) - sub' i) \<le> 1" using hle by (by100 linarith)
+                show ?thesis using hlo hhi unfolding top1_unit_interval_def by (by100 force)
+              qed
+              thus "g (sub' i + t * (sub' (Suc i) - sub' i)) \<in> V"
+                using hg_in_V by (by100 blast)
+            qed
+            \<comment> \<open>Apply IH for n-1.\<close>
+            have "n - 1 < n" using hn2 by (by100 presburger)
+            have "n - 1 \<ge> 1" using hn2 by (by100 presburger)
+            have hIH_V: "foldr_\<sigma> g (n - 1) sub' = \<sigma> g"
+              by (rule less.IH[OF \<open>n - 1 < n\<close> \<open>n - 1 \<ge> 1\<close> hsub'_0 hsub'_n hsub'_inc hsub'_UV])
+            \<comment> \<open>foldr_σ g n sub = foldr_σ g (n-1) sub' by merging first two pieces.\<close>
+            have hfoldr_eq_V: "foldr_\<sigma> g n sub = foldr_\<sigma> g (n - 1) sub'"
+              sorry \<comment> \<open>Same algebraic manipulation as U: unfold foldr, use group assoc +
+                 σ_cond2_V + reparametrization + σ_cond1_V + htail_map equality.\<close>
+            show ?thesis using hfoldr_eq_V hIH_V by (by100 simp)
           qed
         qed
       qed
