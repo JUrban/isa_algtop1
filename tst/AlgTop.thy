@@ -2604,7 +2604,7 @@ proof -
           \<comment> \<open>Extract ambient open sets from subspace topology\<close>
           obtain Os where hOs: "open Os" and hUs_eq: "Us = I_set \<inter> Os"
             using hUs unfolding top1_unit_interval_topology_def subspace_topology_def
-                               top1_open_sets_def by (by100 blast)
+                               top1_open_sets_def by (by100 fast)
           obtain Ot where hOt: "open Ot" and hVt_eq: "Vt = I_set \<inter> Ot"
             using hVt unfolding top1_unit_interval_topology_def subspace_topology_def
                                top1_open_sets_def by (by100 blast)
@@ -4603,13 +4603,46 @@ proof -
         have hif_eq: "(\<forall>s\<in>I_set. L1 s \<in> U) = (\<forall>s\<in>I_set. L2 s \<in> U)"
           using hL12_I by (by100 force)
         \<comment> \<open>The equiv classes are the same (loop_equiv only uses I_set values).\<close>
+        \<comment> \<open>loop_equiv_on X TX x0 L g ⟷ is_loop_on L ∧ is_loop_on g ∧ path_homotopic L g.
+           All three depend on L only at I_set: is_loop_on uses continuous_map_on
+           (range at I_set, preimage at I_set), path_homotopic uses F(s,0)=L(s) for s∈I_set.
+           Since L1=L2 on I_set, all three conditions are equivalent.\<close>
+        have hloop_ext: "\<And>Y TY g. top1_loop_equiv_on Y TY x0 L1 g = top1_loop_equiv_on Y TY x0 L2 g"
+        proof -
+          fix Y :: "'a set" and TY :: "'a set set" and g :: "real \<Rightarrow> 'a"
+          \<comment> \<open>is_loop_on: continuous_map_on I_set I_top Y TY L ∧ L 0 = x0 ∧ L 1 = x0.
+             continuous_map_on depends on L at I_set only (range + preimage).
+             L1(0)=L2(0) and L1(1)=L2(1) from hL12_I.\<close>
+          have h0I: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+          have h1I: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+          have hL0: "L1 0 = L2 0" using hL12_I h0I by (by100 blast)
+          have hL1_1: "L1 1 = L2 1" using hL12_I h1I by (by100 blast)
+          \<comment> \<open>continuous_map_on is I_set-extensional: range and preimage only use I_set values.\<close>
+          have hcont_ext: "top1_continuous_map_on I_set I_top Y TY L1
+              = top1_continuous_map_on I_set I_top Y TY L2"
+          proof -
+            have hrange: "(\<forall>s\<in>I_set. L1 s \<in> Y) = (\<forall>s\<in>I_set. L2 s \<in> Y)"
+              using hL12_I by (by100 force)
+            have hpre: "\<And>V. {s \<in> I_set. L1 s \<in> V} = {s \<in> I_set. L2 s \<in> V}"
+              using hL12_I by (by100 force)
+            show ?thesis unfolding top1_continuous_map_on_def using hrange hpre by (by100 force)
+          qed
+          have hloop_ext: "top1_is_loop_on Y TY x0 L1 = top1_is_loop_on Y TY x0 L2"
+            unfolding top1_is_loop_on_def top1_is_path_on_def using hcont_ext hL0 hL1_1 by (by100 force)
+          \<comment> \<open>path_homotopic_on: ∃F continuous. F(s,0)=L(s) for s∈I_set, etc.
+             Since L1=L2 on I_set, the same F works for both.\<close>
+          have hhom_ext: "top1_path_homotopic_on Y TY x0 x0 L1 g = top1_path_homotopic_on Y TY x0 x0 L2 g"
+            unfolding top1_path_homotopic_on_def top1_is_path_on_def
+            using hcont_ext hL0 hL1_1 hL12_I by (by100 force)
+          show "top1_loop_equiv_on Y TY x0 L1 g = top1_loop_equiv_on Y TY x0 L2 g"
+            unfolding top1_loop_equiv_on_def using hloop_ext hhom_ext by (by100 force)
+        qed
         have hclass_U_eq: "{g. top1_loop_equiv_on U (subspace_topology X TX U) x0 L1 g}
             = {g. top1_loop_equiv_on U (subspace_topology X TX U) x0 L2 g}"
-          sorry \<comment> \<open>loop_equiv_on depends on L only at I_set points (via path homotopy).
-             Since L1=L2 on I_set, the equiv classes are equal.\<close>
+          using hloop_ext by (by100 force)
         have hclass_V_eq: "{g. top1_loop_equiv_on V (subspace_topology X TX V) x0 L1 g}
             = {g. top1_loop_equiv_on V (subspace_topology X TX V) x0 L2 g}"
-          sorry \<comment> \<open>Same reasoning for V.\<close>
+          using hloop_ext by (by100 force)
         have "\<rho> L1 = \<rho> L2" unfolding \<rho>_def using hif_eq hclass_U_eq hclass_V_eq by (by100 simp)
         thus "\<sigma> p1 = \<sigma> p2" using hL1 hL2 unfolding L1_def L2_def by (by100 simp)
       qed
@@ -7601,7 +7634,7 @@ proof -
           note s3 = hom_preserves_inv[OF hFP_grp hQ_grp' hpiq_hom hxFP]
           \<comment> \<open>s3: \<pi>_q(invgFP x) = invg_Q(\<pi>_q x)\<close>
           have "\<Phi> (j (invgFP x)) = ?\<pi>_q (invgFP x)"
-            using s1 s2 s3 hx_eq by (by100 simp)
+            using s1 s2 s3 hx_eq by (by100 force)
           thus "invgFP x \<in> ?A" using hinvx_FP by (by100 blast)
         qed
         \<comment> \<open>Assemble group axioms.\<close>
