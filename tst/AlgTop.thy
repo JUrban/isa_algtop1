@@ -4947,7 +4947,35 @@ proof -
           \<comment> \<open>Tail equality: map (λi. σ(piece i sub)) [Suc 1..<n] = map (λi. σ(piece i sub')) [1..<n-1].\<close>
           have htail_map: "map (\<lambda>i. \<sigma> (piece i sub)) [Suc 1..<n] =
               map (\<lambda>i. \<sigma> (piece (Suc i) sub')) [0..<n - Suc 1]"
-            sorry \<comment> \<open>From htail_eq: piece j sub = piece (j-1) sub' for j \<ge> 2.\<close>
+          proof -
+            have hlen: "length [Suc 1..<n] = n - Suc 1" by (by100 simp)
+            have hlen2: "length (map (\<lambda>i. \<sigma> (piece (Suc i) sub')) [0..<n - Suc 1]) = n - Suc 1"
+              by (by100 simp)
+            show ?thesis
+            proof (rule nth_equalityI)
+              show "length (map (\<lambda>i. \<sigma> (piece i sub)) [Suc 1..<n]) =
+                  length (map (\<lambda>i. \<sigma> (piece (Suc i) sub')) [0..<n - Suc 1])"
+                by (by100 simp)
+            next
+              fix k assume hk: "k < length (map (\<lambda>i. \<sigma> (piece i sub)) [Suc 1..<n])"
+              hence hk2: "k < n - Suc 1" by (by100 simp)
+              have "map (\<lambda>i. \<sigma> (piece i sub)) [Suc 1..<n] ! k = \<sigma> (piece (k + Suc 1) sub)"
+                using hk by (by100 simp)
+              also have "\<dots> = \<sigma> (piece (Suc k) sub')"
+              proof -
+                have "k + Suc 1 \<ge> 2" by (by100 presburger)
+                moreover have "k + Suc 1 < n" using hk2 by (by100 presburger)
+                ultimately have "piece (k + Suc 1) sub = piece (k + Suc 1 - 1) sub'"
+                  using htail_eq by (by100 force)
+                moreover have "k + Suc 1 - 1 = Suc k" by (by100 presburger)
+                ultimately show ?thesis by (by100 simp)
+              qed
+              also have "\<dots> = map (\<lambda>i. \<sigma> (piece (Suc i) sub')) [0..<n - Suc 1] ! k"
+                using hk2 by (by100 simp)
+              finally show "map (\<lambda>i. \<sigma> (piece i sub)) [Suc 1..<n] ! k =
+                  map (\<lambda>i. \<sigma> (piece (Suc i) sub')) [0..<n - Suc 1] ! k" .
+            qed
+          qed
           \<comment> \<open>RHS unfolds: map splits into [σ(piece 0 sub')] ++ map ... [1..<n-1].\<close>
           have hRHS_split: "foldr mulH (map (\<lambda>i. \<sigma> (piece i sub')) [0..<n-1]) eH =
               mulH (\<sigma> (piece 0 sub')) (foldr mulH (map (\<lambda>i. \<sigma> (piece (Suc i) sub')) [0..<n - Suc 1]) eH)"
