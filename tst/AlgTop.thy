@@ -4780,7 +4780,8 @@ proof -
           have hphi_concat_cont: "top1_continuous_map_on I_set I_top I_set I_top \<phi>_concat"
             sorry \<comment> \<open>Piecewise linear, matching at 1/2. Range in [sub 0, sub 2] \<subseteq> [0,1].\<close>
           have hpsi_linear_cont: "top1_continuous_map_on I_set I_top I_set I_top \<psi>_linear"
-            sorry \<comment> \<open>Affine map. Range in [sub 0, sub 2] \<subseteq> [0,1].\<close>
+            sorry \<comment> \<open>Affine: continuous_on I_set \<psi>_linear (continuous_intros) + range in I_set
+               + open_invariant → top1_continuous_map_on. Same pattern as hcont_transfer in reparam.\<close>
           have hphi0: "\<phi>_concat 0 = sub 0" unfolding \<phi>_concat_def by (by100 simp)
           have hphi1: "\<phi>_concat 1 = sub (Suc (Suc 0))" unfolding \<phi>_concat_def by (by100 simp)
           have hpsi0: "\<psi>_linear 0 = sub 0" unfolding \<psi>_linear_def by (by100 simp)
