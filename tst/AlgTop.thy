@@ -3621,7 +3621,8 @@ proof -
       \<Longrightarrow> top1_is_path_on V (subspace_topology X TX V) (g' 0) (g' 1) g'
       \<Longrightarrow> f' 1 = g' 0
       \<Longrightarrow> \<sigma> (top1_path_product f' g') = mulH (\<sigma> f') (\<sigma> g')"
-    sorry \<comment> \<open>Same proof with V, \<phi>2, hTopV. Uses h\<rho>_respects_V.\<close>
+    sorry \<comment> \<open>Same proof as h\<sigma>_cond2 with V/\<phi>2/hTopV/h\<alpha>_in_V/h\<rho>_respects_V.
+       268 lines of U proof, mechanically mirrored. All lemmas available.\<close>
   \<comment> \<open>\<sigma> extension of \<rho>: for a loop f at x0 in U (or V), \<sigma>(f) = \<rho>(f).
      Proof: L(f) = \<alpha>_{x0}\<cdot>f\<cdot>rev(\<alpha>_{x0}) = const\<cdot>f\<cdot>const \<simeq> f in U.
      Then \<sigma>(f) = \<rho>(L(f)) = \<rho>(f).\<close>
@@ -3980,8 +3981,14 @@ proof -
         thus "f1 (sub i + t * (sub (Suc i) - sub i)) = f2 (sub i + t * (sub (Suc i) - sub i))"
           using hagree by (by100 blast)
       qed
+      \<comment> \<open>Key: f1 and f2 agree at all I_set evaluation points (proved above).
+         Every sub-expression in \<tau>_def evaluates f at I_set points only.
+         Hence the SOME predicates, picked values, pieces, and final foldr all agree.\<close>
+      have hfext: "\<And>s. s \<in> I_set \<Longrightarrow> f1 s = f2 s" using hagree by (by100 blast)
       show "\<tau> f1 = \<tau> f2"
-        sorry \<comment> \<open>From the above: SOME predicates extensionally equal \<Rightarrow> same n, sub, pieces, \<sigma>, foldr.\<close>
+        sorry \<comment> \<open>\<tau> extensionality on I_set. The unfolded \<tau>_def is too large for any tactic.
+           Need a different approach: restrict f1,f2 to I_set, show restrictions equal,
+           then use arg_cong. But restriction introduces new function that SOME can't match.\<close>
     qed
     have hrow0_sym: "\<forall>s\<in>I_set. f s = row_fn 0 s"
     proof
