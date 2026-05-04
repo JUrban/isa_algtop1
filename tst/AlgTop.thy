@@ -6162,7 +6162,55 @@ proof -
           moreover have "{h. top1_loop_equiv_on U (subspace_topology X TX U) x0
               (top1_path_product (\<alpha> (g 0)) (top1_path_product g (top1_path_reverse (\<alpha> (g 1))))) h}
               \<in> top1_fundamental_group_carrier U (subspace_topology X TX U) x0"
-            sorry \<comment> \<open>L(g) is a loop in U (from True + continuity). Equiv class in carrier.\<close>
+          proof -
+            \<comment> \<open>L(g) is a loop in V. Since it maps I_set to U (True), it's also a loop in U.
+               Need: continuous I \<rightarrow> U with subspace topology.\<close>
+            have hL_cont_V: "top1_continuous_map_on I_set I_top V (subspace_topology X TX V)
+                (top1_path_product (\<alpha> (g 0)) (top1_path_product g (top1_path_reverse (\<alpha> (g 1)))))"
+              using hL_loop_V unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+            have hL_range_U: "\<forall>s\<in>I_set. (top1_path_product (\<alpha> (g 0))
+                (top1_path_product g (top1_path_reverse (\<alpha> (g 1))))) s \<in> U" using True .
+            \<comment> \<open>Continuous I \<rightarrow> X (from V continuity + V \<subseteq> X).\<close>
+            have hL_cont_X: "top1_continuous_map_on I_set I_top X TX
+                (top1_path_product (\<alpha> (g 0)) (top1_path_product g (top1_path_reverse (\<alpha> (g 1)))))"
+            proof -
+              have hL_range_X: "\<forall>s\<in>I_set. (top1_path_product (\<alpha> (g 0))
+                  (top1_path_product g (top1_path_reverse (\<alpha> (g 1))))) s \<in> X"
+                using hL_in_V hVsub by (by100 blast)
+              show ?thesis unfolding top1_continuous_map_on_def
+              proof (intro conjI ballI)
+                fix s assume "s \<in> I_set"
+                thus "(top1_path_product (\<alpha> (g 0)) (top1_path_product g (top1_path_reverse (\<alpha> (g 1))))) s \<in> X"
+                  using hL_range_X by (by100 blast)
+              next
+                fix W assume hW: "W \<in> TX"
+                have "W \<inter> V \<in> subspace_topology X TX V" unfolding subspace_topology_def
+                  using hW by (by100 blast)
+                have "{s \<in> I_set. (top1_path_product (\<alpha> (g 0))
+                    (top1_path_product g (top1_path_reverse (\<alpha> (g 1))))) s \<in> W}
+                    = {s \<in> I_set. (top1_path_product (\<alpha> (g 0))
+                    (top1_path_product g (top1_path_reverse (\<alpha> (g 1))))) s \<in> W \<inter> V}"
+                  using hL_in_V by (by100 blast)
+                also have "\<dots> \<in> I_top"
+                  using hL_cont_V \<open>W \<inter> V \<in> subspace_topology X TX V\<close>
+                  unfolding top1_continuous_map_on_def by (by100 blast)
+                finally show "{s \<in> I_set. (top1_path_product (\<alpha> (g 0))
+                    (top1_path_product g (top1_path_reverse (\<alpha> (g 1))))) s \<in> W} \<in> I_top" .
+              qed
+            qed
+            have hL_img_U: "(top1_path_product (\<alpha> (g 0)) (top1_path_product g (top1_path_reverse (\<alpha> (g 1))))) ` I_set \<subseteq> U"
+              using hL_range_U by (by100 blast)
+            have hL_cont_U: "top1_continuous_map_on I_set I_top U (subspace_topology X TX U)
+                (top1_path_product (\<alpha> (g 0)) (top1_path_product g (top1_path_reverse (\<alpha> (g 1)))))"
+              by (rule top1_continuous_map_on_codomain_shrink[OF hL_cont_X hL_img_U hUsub])
+            have hL_loop_U: "top1_is_loop_on U (subspace_topology X TX U) x0
+                (top1_path_product (\<alpha> (g 0)) (top1_path_product g (top1_path_reverse (\<alpha> (g 1)))))"
+              unfolding top1_is_loop_on_def top1_is_path_on_def
+              using hL_cont_U top1_is_loop_on_start[OF hL_loop_V]
+                    top1_is_loop_on_end[OF hL_loop_V] by (by100 blast)
+            show ?thesis unfolding top1_fundamental_group_carrier_def
+              using hL_loop_U by (by100 blast)
+          qed
           ultimately have "\<rho> (top1_path_product (\<alpha> (g 0))
               (top1_path_product g (top1_path_reverse (\<alpha> (g 1))))) \<in> H"
           proof -
