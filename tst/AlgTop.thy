@@ -3374,6 +3374,117 @@ proof -
       using h\<phi>1 hclass_in unfolding top1_group_hom_on_def by (by100 blast)
     thus "\<sigma> f' \<in> H" using h\<sigma>_eq h\<rho>_eq by (by100 simp)
   qed
+  \<comment> \<open>General fact: σ of any path in V maps to H (mirror of h_σ_path_in_H).\<close>
+  have h\<sigma>_path_in_H_V: "\<And>f'. top1_is_path_on V (subspace_topology X TX V) (f' 0) (f' 1) f' \<Longrightarrow> \<sigma> f' \<in> H"
+  proof -
+    fix f' assume hf'p: "top1_is_path_on V (subspace_topology X TX V) (f' 0) (f' 1) f'"
+    have hf'_range: "\<forall>s\<in>I_set. f' s \<in> V"
+      using hf'p unfolding top1_is_path_on_def top1_continuous_map_on_def by (by100 blast)
+    have h0I: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+    have h1I: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+    have hf0V: "f' 0 \<in> V" using hf'_range h0I by (by100 blast)
+    have hf1V: "f' 1 \<in> V" using hf'_range h1I by (by100 blast)
+    have h\<alpha>0V: "top1_is_path_on V (subspace_topology X TX V) x0 (f' 0) (\<alpha> (f' 0))"
+      by (rule h\<alpha>_in_V[OF hf0V])
+    have h\<alpha>1V: "top1_is_path_on V (subspace_topology X TX V) x0 (f' 1) (\<alpha> (f' 1))"
+      by (rule h\<alpha>_in_V[OF hf1V])
+    have hrevV: "top1_is_path_on V (subspace_topology X TX V) (f' 1) x0 (top1_path_reverse (\<alpha> (f' 1)))"
+      by (rule top1_path_reverse_is_path[OF h\<alpha>1V])
+    have hfrV: "top1_is_path_on V (subspace_topology X TX V) (f' 0) x0
+        (top1_path_product f' (top1_path_reverse (\<alpha> (f' 1))))"
+      by (rule top1_path_product_is_path[OF hTopV hf'p hrevV])
+    have hLV: "top1_is_loop_on V (subspace_topology X TX V) x0
+        (top1_path_product (\<alpha> (f' 0)) (top1_path_product f' (top1_path_reverse (\<alpha> (f' 1)))))"
+      unfolding top1_is_loop_on_def
+      by (rule top1_path_product_is_path[OF hTopV h\<alpha>0V hfrV])
+    have hL_in_V: "\<forall>s\<in>I_set. (top1_path_product (\<alpha> (f' 0))
+        (top1_path_product f' (top1_path_reverse (\<alpha> (f' 1))))) s \<in> V"
+      using hLV unfolding top1_is_loop_on_def top1_is_path_on_def top1_continuous_map_on_def by (by100 blast)
+    have h\<sigma>_eq: "\<sigma> f' = \<rho> (top1_path_product (\<alpha> (f' 0)) (top1_path_product f' (top1_path_reverse (\<alpha> (f' 1)))))"
+      unfolding \<sigma>_def by (by100 simp)
+    show "\<sigma> f' \<in> H"
+    proof (cases "\<forall>s\<in>I_set. (top1_path_product (\<alpha> (f' 0))
+        (top1_path_product f' (top1_path_reverse (\<alpha> (f' 1))))) s \<in> U")
+      case True
+      have "\<rho> (top1_path_product (\<alpha> (f' 0)) (top1_path_product f' (top1_path_reverse (\<alpha> (f' 1)))))
+          = \<phi>1 {g. top1_loop_equiv_on U (subspace_topology X TX U) x0
+              (top1_path_product (\<alpha> (f' 0)) (top1_path_product f' (top1_path_reverse (\<alpha> (f' 1))))) g}"
+        unfolding \<rho>_def using True by (by100 simp)
+      moreover have "{g. top1_loop_equiv_on U (subspace_topology X TX U) x0
+          (top1_path_product (\<alpha> (f' 0)) (top1_path_product f' (top1_path_reverse (\<alpha> (f' 1))))) g}
+          \<in> top1_fundamental_group_carrier U (subspace_topology X TX U) x0"
+      proof -
+        have hL_cont_V: "top1_continuous_map_on I_set I_top V (subspace_topology X TX V)
+            (top1_path_product (\<alpha> (f' 0)) (top1_path_product f' (top1_path_reverse (\<alpha> (f' 1)))))"
+          using hLV unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+        have hL_cont_X: "top1_continuous_map_on I_set I_top X TX
+            (top1_path_product (\<alpha> (f' 0)) (top1_path_product f' (top1_path_reverse (\<alpha> (f' 1)))))"
+          unfolding top1_continuous_map_on_def
+        proof (intro conjI ballI)
+          fix s assume "s \<in> I_set"
+          thus "(top1_path_product (\<alpha> (f' 0)) (top1_path_product f' (top1_path_reverse (\<alpha> (f' 1))))) s \<in> X"
+            using hL_in_V hVsub by (by100 blast)
+        next
+          fix W assume hW: "W \<in> TX"
+          have "W \<inter> V \<in> subspace_topology X TX V" unfolding subspace_topology_def using hW by (by100 blast)
+          have "{s \<in> I_set. (top1_path_product (\<alpha> (f' 0)) (top1_path_product f' (top1_path_reverse (\<alpha> (f' 1))))) s \<in> W}
+              = {s \<in> I_set. (top1_path_product (\<alpha> (f' 0)) (top1_path_product f' (top1_path_reverse (\<alpha> (f' 1))))) s \<in> W \<inter> V}"
+            using hL_in_V by (by100 blast)
+          also have "\<dots> \<in> I_top" using hL_cont_V \<open>W \<inter> V \<in> subspace_topology X TX V\<close>
+            unfolding top1_continuous_map_on_def by (by100 blast)
+          finally show "{s \<in> I_set. (top1_path_product (\<alpha> (f' 0)) (top1_path_product f' (top1_path_reverse (\<alpha> (f' 1))))) s \<in> W} \<in> I_top" .
+        qed
+        have hL_img_U: "(top1_path_product (\<alpha> (f' 0)) (top1_path_product f' (top1_path_reverse (\<alpha> (f' 1))))) ` I_set \<subseteq> U"
+          using True by (by100 blast)
+        have hL_cont_U: "top1_continuous_map_on I_set I_top U (subspace_topology X TX U)
+            (top1_path_product (\<alpha> (f' 0)) (top1_path_product f' (top1_path_reverse (\<alpha> (f' 1)))))"
+          by (rule top1_continuous_map_on_codomain_shrink[OF hL_cont_X hL_img_U hUsub])
+        have hL_loop_U: "top1_is_loop_on U (subspace_topology X TX U) x0
+            (top1_path_product (\<alpha> (f' 0)) (top1_path_product f' (top1_path_reverse (\<alpha> (f' 1)))))"
+          unfolding top1_is_loop_on_def top1_is_path_on_def
+          using hL_cont_U top1_is_loop_on_start[OF hLV] top1_is_loop_on_end[OF hLV] by (by100 blast)
+        show ?thesis unfolding top1_fundamental_group_carrier_def using hL_loop_U by (by100 blast)
+      qed
+      ultimately have "\<rho> (top1_path_product (\<alpha> (f' 0)) (top1_path_product f' (top1_path_reverse (\<alpha> (f' 1))))) \<in> H"
+      proof -
+        assume h\<rho>1: "\<rho> (top1_path_product (\<alpha> (f' 0)) (top1_path_product f' (top1_path_reverse (\<alpha> (f' 1)))))
+            = \<phi>1 {g. top1_loop_equiv_on U (subspace_topology X TX U) x0
+                (top1_path_product (\<alpha> (f' 0)) (top1_path_product f' (top1_path_reverse (\<alpha> (f' 1))))) g}"
+        assume hcl1: "{g. top1_loop_equiv_on U (subspace_topology X TX U) x0
+            (top1_path_product (\<alpha> (f' 0)) (top1_path_product f' (top1_path_reverse (\<alpha> (f' 1))))) g}
+            \<in> top1_fundamental_group_carrier U (subspace_topology X TX U) x0"
+        have "\<phi>1 {g. top1_loop_equiv_on U (subspace_topology X TX U) x0
+            (top1_path_product (\<alpha> (f' 0)) (top1_path_product f' (top1_path_reverse (\<alpha> (f' 1))))) g} \<in> H"
+          using h\<phi>1 hcl1 unfolding top1_group_hom_on_def by (by100 blast)
+        thus ?thesis using h\<rho>1 by (by100 simp)
+      qed
+      thus ?thesis using h\<sigma>_eq by (by100 simp)
+    next
+      case False
+      have hnotU: "\<not> (\<forall>s\<in>I_set. (top1_path_product (\<alpha> (f' 0))
+          (top1_path_product f' (top1_path_reverse (\<alpha> (f' 1))))) s \<in> U)" using False .
+      have "\<rho> (top1_path_product (\<alpha> (f' 0)) (top1_path_product f' (top1_path_reverse (\<alpha> (f' 1))))) =
+          (if (\<forall>s\<in>I_set. (top1_path_product (\<alpha> (f' 0))
+              (top1_path_product f' (top1_path_reverse (\<alpha> (f' 1))))) s \<in> U)
+          then \<phi>1 {g. top1_loop_equiv_on U (subspace_topology X TX U) x0
+              (top1_path_product (\<alpha> (f' 0)) (top1_path_product f' (top1_path_reverse (\<alpha> (f' 1))))) g}
+          else \<phi>2 {g. top1_loop_equiv_on V (subspace_topology X TX V) x0
+              (top1_path_product (\<alpha> (f' 0)) (top1_path_product f' (top1_path_reverse (\<alpha> (f' 1))))) g})"
+        unfolding \<rho>_def by (by100 blast)
+      hence h\<rho>_V: "\<rho> (top1_path_product (\<alpha> (f' 0)) (top1_path_product f' (top1_path_reverse (\<alpha> (f' 1)))))
+          = \<phi>2 {g. top1_loop_equiv_on V (subspace_topology X TX V) x0
+              (top1_path_product (\<alpha> (f' 0)) (top1_path_product f' (top1_path_reverse (\<alpha> (f' 1))))) g}"
+        using hnotU by (by100 simp)
+      have "{g. top1_loop_equiv_on V (subspace_topology X TX V) x0
+          (top1_path_product (\<alpha> (f' 0)) (top1_path_product f' (top1_path_reverse (\<alpha> (f' 1))))) g}
+          \<in> top1_fundamental_group_carrier V (subspace_topology X TX V) x0"
+        unfolding top1_fundamental_group_carrier_def using hLV by (by100 blast)
+      hence "\<phi>2 {g. top1_loop_equiv_on V (subspace_topology X TX V) x0
+          (top1_path_product (\<alpha> (f' 0)) (top1_path_product f' (top1_path_reverse (\<alpha> (f' 1))))) g} \<in> H"
+        using h\<phi>2 unfolding top1_group_hom_on_def by (by100 blast)
+      thus ?thesis using h\<sigma>_eq h\<rho>_V by (by100 simp)
+    qed
+  qed
   \<comment> \<open>Step 4: Define \<tau>(f) for a loop f at x_0 in X.
      Pick SOME subdivision into U-or-V pieces, apply \<sigma> to each, multiply in H.
      The pieces are reparametrized sub-paths.\<close>
@@ -4954,10 +5065,26 @@ proof -
       \<comment> \<open>\<Phi>(c) = \<tau>(SOME f'). \<tau>(f') = foldr_\<sigma> f' N S.\<close>
       have h\<Phi>_eq: "\<Phi> c = \<tau> (SOME f'. ?P f')" unfolding \<Phi>_def by (by100 simp)
       \<comment> \<open>\<tau>(f') is a foldr of \<sigma>-values in H, hence in H.\<close>
-      show ?thesis sorry
-        \<comment> \<open>\<tau>(loop in X) \<in> H: the \<tau>_def picks a valid subdivision (by loop_subdivision_UV),
-           each \<sigma>(piece) \<in> H (by h_\<sigma>_path_in_H for U-pieces or h_\<sigma>_V_path_in_H for V-pieces),
-           eH \<in> H, mulH closed. So foldr mulH [\<sigma>(pieces)] eH \<in> H.\<close>
+      \<comment> \<open>\<tau>(f') = foldr_\<sigma> f' N S. The SOME picks a valid subdivision.
+         Each \<sigma>(piece) \<in> H since pieces are in U or V. foldr of H-elements ∈ H.\<close>
+      let ?f' = "SOME f'. ?P f'"
+      \<comment> \<open>\<tau>(f') = foldr mulH (map σ-pieces) eH. Show this is in H.\<close>
+      have "\<tau> ?f' \<in> H"
+      proof -
+        \<comment> \<open>Unfold τ to foldr_σ. The SOME-picked n and sub give a valid subdivision.\<close>
+        have hex: "\<exists>n::nat. n \<ge> 1 \<and> (\<exists>sub. sub 0 = (0::real) \<and> sub n = 1
+            \<and> (\<forall>i<n. sub i < sub (Suc i))
+            \<and> (\<forall>i<n. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> ?f' (sub i + t * (sub (Suc i) - sub i)) \<in> U)
+                   \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> ?f' (sub i + t * (sub (Suc i) - sub i)) \<in> V)))"
+          by (rule loop_subdivision_UV[OF hTopX hU hV hUV hsome_loop])
+        \<comment> \<open>The foldr of σ-values is in H by group closure.\<close>
+        \<comment> \<open>Each σ(piece in U) ∈ H by h_σ_path_in_H. Each σ(piece in V) ∈ H similarly.\<close>
+        show ?thesis sorry
+          \<comment> \<open>Needs: unfold τ to foldr_σ, show each σ-value ∈ H (piece in U: h_σ_path_in_H,
+             piece in V: h_σ_V_path_in_H from hsubdiv_V context — but that's local!),
+             then foldr closure. The σ ∈ H for V-paths requires the general helper.\<close>
+      qed
+      thus ?thesis using h\<Phi>_eq by (by100 simp)
     qed
   next
     \<comment> \<open>Part 2: \<Phi> preserves multiplication.\<close>
