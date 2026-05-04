@@ -2764,6 +2764,171 @@ proof -
     using hn hsub0 hsubn hsubinc hcell by (by100 blast)
 qed
 
+text \<open>Reparametrization lemma: if two continuous maps \<phi>, \<psi>: I \<rightarrow> I agree at 0 and 1,
+   then f \<circ> \<phi> and f \<circ> \<psi> are path-homotopic (straight-line homotopy on the parameter).\<close>
+lemma reparam_path_homotopy:
+  assumes hTopX: "is_topology_on X TX"
+    and hf: "top1_continuous_map_on I_set I_top X TX f"
+    and hfU: "\<forall>s\<in>I_set. f s \<in> U" and hUsub: "U \<subseteq> X"
+    and hTopU: "is_topology_on U (subspace_topology X TX U)"
+    and hphi: "top1_continuous_map_on I_set I_top I_set I_top \<phi>"
+    and hpsi: "top1_continuous_map_on I_set I_top I_set I_top \<psi>"
+    and hphi0: "\<phi> 0 = a" and hphi1: "\<phi> 1 = b"
+    and hpsi0: "\<psi> 0 = a" and hpsi1: "\<psi> 1 = b"
+    and ha: "a \<in> I_set" and hb: "b \<in> I_set"
+  shows "top1_path_homotopic_on U (subspace_topology X TX U)
+    (f a) (f b) (f \<circ> \<phi>) (f \<circ> \<psi>)"
+proof -
+  \<comment> \<open>Homotopy: H(s,t) = f((1-t)\<cdot>\<phi>(s) + t\<cdot>\<psi>(s)).\<close>
+  let ?g = "\<lambda>(s::real, t::real). (1 - t) * \<phi> s + t * \<psi> s"
+  let ?H = "\<lambda>p. f (?g p)"
+  \<comment> \<open>Step 1: ?g maps I\<times>I to I_set (convexity of [0,1]).\<close>
+  have hg_range: "\<And>s t. s \<in> I_set \<Longrightarrow> t \<in> I_set \<Longrightarrow> ?g (s, t) \<in> I_set"
+  proof -
+    fix s t :: real assume hs: "s \<in> I_set" and ht: "t \<in> I_set"
+    have ht0: "0 \<le> t" and ht1: "t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 simp)+
+    have hphi_I: "\<phi> s \<in> I_set" using hphi hs unfolding top1_continuous_map_on_def by (by100 blast)
+    have hpsi_I: "\<psi> s \<in> I_set" using hpsi hs unfolding top1_continuous_map_on_def by (by100 blast)
+    have hp0: "0 \<le> \<phi> s" and hp1: "\<phi> s \<le> 1"
+      using hphi_I unfolding top1_unit_interval_def by (by100 simp)+
+    have hq0: "0 \<le> \<psi> s" and hq1: "\<psi> s \<le> 1"
+      using hpsi_I unfolding top1_unit_interval_def by (by100 simp)+
+    have hlo: "0 \<le> (1 - t) * \<phi> s + t * \<psi> s"
+    proof -
+      have h1mt: "0 \<le> 1 - t" using ht1 by (by100 linarith)
+      have "0 \<le> (1 - t) * \<phi> s" by (rule mult_nonneg_nonneg[OF h1mt hp0])
+      moreover have "0 \<le> t * \<psi> s" by (rule mult_nonneg_nonneg[OF ht0 hq0])
+      ultimately show ?thesis by (by100 linarith)
+    qed
+    have hhi: "(1 - t) * \<phi> s + t * \<psi> s \<le> 1"
+    proof -
+      have h1mt2: "0 \<le> 1 - t" using ht1 by (by100 linarith)
+      have h1: "(1 - t) * \<phi> s \<le> (1 - t) * 1" by (rule mult_left_mono[OF hp1 h1mt2])
+      hence h2: "(1 - t) * \<phi> s \<le> 1 - t" by (by100 simp)
+      have h3: "t * \<psi> s \<le> t * 1" by (rule mult_left_mono[OF hq1 ht0])
+      hence h4: "t * \<psi> s \<le> t" by (by100 simp)
+      show ?thesis using h2 h4 by (by100 linarith)
+    qed
+    show "?g (s, t) \<in> I_set" using hlo hhi unfolding top1_unit_interval_def by (by100 force)
+  qed
+  \<comment> \<open>Step 2: ?g is continuous_on I\<times>I (standard analysis).\<close>
+  \<comment> \<open>\<phi> and \<psi> are continuous_on I_set (transfer from top1_continuous_map_on).\<close>
+  have hcont_transfer: "\<And>h. top1_continuous_map_on I_set I_top I_set I_top h \<Longrightarrow> continuous_on I_set h"
+  proof -
+    fix h :: "real \<Rightarrow> real" assume hh: "top1_continuous_map_on I_set I_top I_set I_top h"
+    show "continuous_on I_set h"
+      unfolding continuous_on_open_invariant
+    proof (intro allI impI)
+      fix W :: "real set" assume hW: "open W"
+      have hW_os: "W \<in> top1_open_sets" using hW unfolding top1_open_sets_def by (by100 blast)
+      have hW_I: "I_set \<inter> W \<in> I_top"
+        unfolding top1_unit_interval_topology_def subspace_topology_def
+        using hW_os by (by100 blast)
+      have hpre: "{s \<in> I_set. h s \<in> I_set \<inter> W} \<in> I_top"
+        using hh hW_I unfolding top1_continuous_map_on_def by (by100 blast)
+      \<comment> \<open>Unpack: I_top element = I_set \<inter> V for some open V.\<close>
+      obtain V where hVo: "V \<in> top1_open_sets" and hVeq: "{s \<in> I_set. h s \<in> I_set \<inter> W} = I_set \<inter> V"
+        using hpre unfolding top1_unit_interval_topology_def subspace_topology_def by (by100 blast)
+      have hVopen: "open V" using hVo unfolding top1_open_sets_def by (by100 blast)
+      have "h -` W \<inter> I_set = {s \<in> I_set. h s \<in> W}"  by (by100 blast)
+      also have "\<dots> = {s \<in> I_set. h s \<in> I_set \<inter> W}"
+      proof -
+        have "\<forall>s\<in>I_set. h s \<in> I_set" using hh unfolding top1_continuous_map_on_def by (by100 blast)
+        thus ?thesis by (by100 blast)
+      qed
+      also have "\<dots> = I_set \<inter> V" using hVeq .
+      also have "\<dots> = V \<inter> I_set" by (by100 blast)
+      finally show "\<exists>T. open T \<and> T \<inter> I_set = h -` W \<inter> I_set"
+        using hVopen by (by100 blast)
+    qed
+  qed
+  have hphi_cont: "continuous_on I_set \<phi>" by (rule hcont_transfer[OF hphi])
+  have hpsi_cont: "continuous_on I_set \<psi>" by (rule hcont_transfer[OF hpsi])
+  have hg_cont2: "continuous_on (I_set \<times> I_set) ?g"
+  proof -
+    have hfst_I: "fst ` (I_set \<times> I_set) \<subseteq> I_set" by (by100 force)
+    have hid_cont: "continuous_on (I_set \<times> I_set) (\<lambda>p. p)" by (rule continuous_on_id)
+    have hfst_cont: "continuous_on (I_set \<times> I_set) (\<lambda>p. fst p)" by (rule continuous_on_fst[OF hid_cont])
+    have hsnd_cont: "continuous_on (I_set \<times> I_set) (\<lambda>p. snd p)" by (rule continuous_on_snd[OF hid_cont])
+    have hphi_fst: "continuous_on (I_set \<times> I_set) (\<lambda>p. \<phi> (fst p))"
+    proof -
+      have "continuous_on (I_set \<times> I_set) (\<phi> \<circ> (\<lambda>p. fst p))"
+        by (rule continuous_on_compose[OF hfst_cont continuous_on_subset[OF hphi_cont hfst_I]])
+      thus ?thesis unfolding comp_def .
+    qed
+    have hpsi_fst: "continuous_on (I_set \<times> I_set) (\<lambda>p. \<psi> (fst p))"
+    proof -
+      have "continuous_on (I_set \<times> I_set) (\<psi> \<circ> (\<lambda>p. fst p))"
+        by (rule continuous_on_compose[OF hfst_cont continuous_on_subset[OF hpsi_cont hfst_I]])
+      thus ?thesis unfolding comp_def .
+    qed
+    have h1mt: "continuous_on (I_set \<times> I_set) (\<lambda>p. (1::real) - snd p)"
+      by (rule continuous_on_diff[OF continuous_on_const hsnd_cont])
+    have hterm1: "continuous_on (I_set \<times> I_set) (\<lambda>p. ((1::real) - snd p) * \<phi> (fst p))"
+      by (rule continuous_on_mult[OF h1mt hphi_fst])
+    have hterm2: "continuous_on (I_set \<times> I_set) (\<lambda>p. snd p * \<psi> (fst p))"
+      by (rule continuous_on_mult[OF hsnd_cont hpsi_fst])
+    have hsum: "continuous_on (I_set \<times> I_set) (\<lambda>p. ((1::real) - snd p) * \<phi> (fst p) + snd p * \<psi> (fst p))"
+      by (rule continuous_on_add[OF hterm1 hterm2])
+    have heq: "\<And>p. p \<in> I_set \<times> I_set \<Longrightarrow>
+        ((1::real) - snd p) * \<phi> (fst p) + snd p * \<psi> (fst p) = ?g p"
+    proof -
+      fix p assume "p \<in> I_set \<times> I_set"
+      then obtain s t where "p = (s, t)" by (by100 blast)
+      thus "((1::real) - snd p) * \<phi> (fst p) + snd p * \<psi> (fst p) = ?g p" by (by100 simp)
+    qed
+    show ?thesis using continuous_on_cong[of "I_set \<times> I_set" "I_set \<times> I_set"
+        "\<lambda>p. ((1::real) - snd p) * \<phi> (fst p) + snd p * \<psi> (fst p)" ?g]
+        heq hsum by (by100 force)
+  qed
+  \<comment> \<open>Step 3: ?g is top1_continuous_map_on from I\<times>I to I.\<close>
+  have hg_top: "top1_continuous_map_on (I_set \<times> I_set) II_topology I_set I_top ?g"
+    unfolding II_topology_def
+  proof (rule top1_continuous_map_on_II_to_I)
+    fix p assume hp: "p \<in> I_set \<times> I_set"
+    then obtain s t where hst: "p = (s, t)" "s \<in> I_set" "t \<in> I_set" by (by100 blast)
+    show "?g p \<in> I_set" using hg_range[OF hst(2) hst(3)] hst(1) by (by100 simp)
+  next
+    show "continuous_on (I_set \<times> I_set) ?g" by (rule hg_cont2)
+  qed
+  \<comment> \<open>Step 4: H = f \<circ> ?g is continuous from I\<times>I to U.\<close>
+  have hf_cont: "top1_continuous_map_on I_set I_top U (subspace_topology X TX U) f"
+  proof (rule top1_continuous_map_on_codomain_shrink[OF hf _ hUsub])
+    show "f ` I_set \<subseteq> U" using hfU by (by100 blast)
+  qed
+  have hH_cont: "top1_continuous_map_on (I_set \<times> I_set) II_topology U (subspace_topology X TX U) (f \<circ> ?g)"
+    by (rule top1_continuous_map_on_comp[OF hg_top hf_cont])
+  \<comment> \<open>Step 5: Boundary conditions for f \<circ> ?g.\<close>
+  have hH0: "\<And>s. s \<in> I_set \<Longrightarrow> (f \<circ> ?g) (s, 0) = (f \<circ> \<phi>) s" by (by100 simp)
+  have hH1: "\<And>s. s \<in> I_set \<Longrightarrow> (f \<circ> ?g) (s, 1) = (f \<circ> \<psi>) s" by (by100 simp)
+  have hHleft: "\<And>t. t \<in> I_set \<Longrightarrow> (f \<circ> ?g) (0, t) = f a"
+  proof -
+    fix t :: real assume "t \<in> I_set"
+    have "(1 - t) * a + t * a = ((1 - t) + t) * a" by (rule distrib_right[symmetric])
+    also have "\<dots> = a" by (by100 simp)
+    finally show "(f \<circ> ?g) (0, t) = f a" using hphi0 hpsi0 by (by100 simp)
+  qed
+  have hHright: "\<And>t. t \<in> I_set \<Longrightarrow> (f \<circ> ?g) (1, t) = f b"
+  proof -
+    fix t :: real assume "t \<in> I_set"
+    have "(1 - t) * b + t * b = ((1 - t) + t) * b" by (rule distrib_right[symmetric])
+    also have "\<dots> = b" by (by100 simp)
+    finally show "(f \<circ> ?g) (1, t) = f b" using hphi1 hpsi1 by (by100 simp)
+  qed
+  \<comment> \<open>Step 6: f\<circ>\<phi> and f\<circ>\<psi> are paths from f(a) to f(b) in U.\<close>
+  have hfphi_cont: "top1_continuous_map_on I_set I_top U (subspace_topology X TX U) (f \<circ> \<phi>)"
+    by (rule top1_continuous_map_on_comp[OF hphi hf_cont])
+  have hfphi_path: "top1_is_path_on U (subspace_topology X TX U) (f a) (f b) (f \<circ> \<phi>)"
+    unfolding top1_is_path_on_def using hfphi_cont hphi0 hpsi0 hphi1 hpsi1 by (by100 simp)
+  have hfpsi_cont: "top1_continuous_map_on I_set I_top U (subspace_topology X TX U) (f \<circ> \<psi>)"
+    by (rule top1_continuous_map_on_comp[OF hpsi hf_cont])
+  have hfpsi_path: "top1_is_path_on U (subspace_topology X TX U) (f a) (f b) (f \<circ> \<psi>)"
+    unfolding top1_is_path_on_def using hfpsi_cont hphi0 hpsi0 hphi1 hpsi1 by (by100 simp)
+  \<comment> \<open>Step 7: Assemble the path homotopy.\<close>
+  show ?thesis unfolding top1_path_homotopic_on_def
+    using hfphi_path hfpsi_path hH_cont hH0 hH1 hHleft hHright by (by100 blast)
+qed
+
 text \<open>Helper: subdivide a loop in X = U \<union> V into pieces each in U or V.\<close>
 lemma loop_subdivision_UV:
   assumes hTopX: "is_topology_on X TX" and hU: "openin_on X TX U" and hV: "openin_on X TX V"
@@ -4412,20 +4577,256 @@ proof -
           \<Longrightarrow> (\<forall>i<n. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> U)
                  \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> V))
           \<Longrightarrow> foldr_\<sigma> f n sub = \<sigma> f"
+      \<comment> \<open>By strong induction on n (Munkres Step 3: merging).\<close>
       proof -
-        fix n sub assume hn: "n \<ge> 1" and hs0: "sub 0 = (0::real)" and hsn: "sub n = 1"
-            and hinc: "\<forall>i<n. sub i < sub (Suc i)"
-            and hpUV: "\<forall>i<n. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> U)
-                 \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> V)"
-        \<comment> \<open>All pieces are in U (since f \<subseteq> U). So the U-or-V disjunction is always U.\<close>
-        have hall_U: "\<forall>i<n. \<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> U"
-          sorry \<comment> \<open>All evaluation points in I_set (from harg_I + sub bounds), f \<subseteq> U on I_set.\<close>
-        show "foldr_\<sigma> f n sub = \<sigma> f"
-          sorry \<comment> \<open>With all pieces in U: merge inductively via \<sigma>_cond2.
-             foldr_\<sigma> f n sub = \<sigma>(piece_0)\<cdot>...\<cdot>\<sigma>(piece_{n-1})\<cdot>eH
-             = \<sigma>(piece_0*...*piece_{n-1})\<cdot>eH [by \<sigma>_cond2 iteratively]
-             = \<sigma>(f)\<cdot>eH [\<sigma>_cond1 + reparametrization: concatenation \<simeq> f]
-             = \<sigma>(f) [group identity].\<close>
+        fix n :: nat and sub :: "nat \<Rightarrow> real"
+        assume hn: "n \<ge> 1" and hs0: "sub 0 = (0::real)" and hsn: "sub n = 1"
+          and hinc: "\<forall>i<n. sub i < sub (Suc i)"
+          and hpUV: "\<forall>i<n. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> U)
+               \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> V)"
+        show "foldr_\<sigma> f n sub = \<sigma> f" using hn hs0 hsn hinc hpUV
+        proof (induction n arbitrary: sub rule: less_induct)
+          case (less n)
+          note lhn = less.prems(1) \<comment> \<open>n \<ge> 1\<close>
+          note lhs0 = less.prems(2) \<comment> \<open>sub 0 = 0\<close>
+          note lhsn = less.prems(3) \<comment> \<open>sub n = 1\<close>
+          note lhinc = less.prems(4) \<comment> \<open>strict increasing\<close>
+          note lhpUV = less.prems(5) \<comment> \<open>pieces in U or V\<close>
+          show ?case
+          proof (cases "n = 1")
+          case True
+          have hsub0: "sub 0 = (0::real)" using lhs0 by (by100 simp)
+          have hsub1: "sub (Suc 0) = (1::real)" using lhsn True by (by100 simp)
+          have "(\<lambda>t. f (sub 0 + t * (sub (Suc 0) - sub 0))) = f"
+          proof (rule ext)
+            fix t :: real
+            show "f (sub 0 + t * (sub (Suc 0) - sub 0)) = f t"
+              using hsub0 hsub1 by (by100 simp)
+          qed
+          hence "foldr_\<sigma> f 1 sub = mulH (\<sigma> f) eH"
+            unfolding foldr_\<sigma>_def by (by100 simp)
+          also have "\<dots> = \<sigma> f" using hid by (by100 simp)
+          finally show ?thesis using True by (by100 simp)
+        next
+          case False
+          hence hn2: "n \<ge> 2" using lhn by (by100 presburger)
+          \<comment> \<open>Merged subdivision: skip sub(1), keeping sub(0) and shifting rest.\<close>
+          define sub' where "sub' i = (if i = 0 then sub 0 else sub (Suc i))" for i
+          \<comment> \<open>sub' is valid for n-1.\<close>
+          have hsub'_0: "sub' 0 = (0::real)" unfolding sub'_def using lhs0 by (by100 simp)
+          have hsub'_n: "sub' (n - 1) = 1" unfolding sub'_def using lhsn hn2 by (by100 simp)
+          have hsub'_inc: "\<forall>i<n-1. sub' i < sub' (Suc i)"
+          proof (intro allI impI)
+            fix i assume hi: "i < n - 1"
+            show "sub' i < sub' (Suc i)"
+            proof (cases "i = 0")
+              case True
+              \<comment> \<open>sub'(0) = sub(0) < sub(2) since sub(0) < sub(1) < sub(2).\<close>
+              have h0n: "(0::nat) < n" using hn2 by (by100 presburger)
+              have h1n: "(1::nat) < n" using hn2 by (by100 presburger)
+              have "sub 0 < sub (Suc 0)" using lhinc h0n by (by100 force)
+              moreover have "sub (Suc 0) < sub (Suc (Suc 0))" using lhinc h1n by (by100 force)
+              ultimately have "sub 0 < sub (Suc (Suc 0))" by (by100 linarith)
+              thus ?thesis unfolding sub'_def using True by (by100 simp)
+            next
+              case False
+              \<comment> \<open>sub'(i) = sub(i+1) < sub(i+2) = sub'(i+1), from lhinc at i+1.\<close>
+              have "Suc i < n" using hi hn2 by (by100 presburger)
+              hence "sub (Suc i) < sub (Suc (Suc i))" using lhinc by (by100 blast)
+              thus ?thesis unfolding sub'_def using False by (by100 simp)
+            qed
+          qed
+          have hsub'_UV: "\<forall>i<n-1. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow>
+              f (sub' i + t * (sub' (Suc i) - sub' i)) \<in> U)
+              \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow>
+              f (sub' i + t * (sub' (Suc i) - sub' i)) \<in> V)"
+          proof (intro allI impI, rule disjI1, intro allI impI)
+            fix i and t :: real assume hi: "i < n - 1" and ht: "0 \<le> t \<and> t \<le> 1"
+            \<comment> \<open>sub' maps into [0,1], so the convex combo is in [0,1], and f maps [0,1] to U.\<close>
+            \<comment> \<open>sub' bounds from sub bounds.\<close>
+            have hge: "0 \<le> sub' i"
+            proof (cases "i = 0")
+              case True thus ?thesis using hsub'_0 by (by100 simp)
+            next
+              case False
+              hence "sub' i = sub (Suc i)" unfolding sub'_def by (by100 simp)
+              moreover have "0 \<le> sub 0" using lhs0 by (by100 simp)
+              moreover have "sub 0 \<le> sub (Suc i)"
+              proof -
+                have "\<And>k. k \<le> Suc i \<Longrightarrow> sub 0 \<le> sub k"
+                proof -
+                  fix k show "k \<le> Suc i \<Longrightarrow> sub 0 \<le> sub k"
+                  proof (induction k)
+                    case 0 thus ?case by (by100 simp)
+                  next
+                    case (Suc m)
+                    have "m < n" using Suc.prems hi hn2 by (by100 presburger)
+                    have "m \<le> Suc i" using Suc.prems by (by100 presburger)
+                    have "sub 0 \<le> sub m" using Suc.IH[OF \<open>m \<le> Suc i\<close>] .
+                    moreover have "sub m < sub (Suc m)" using lhinc \<open>m < n\<close> by (by100 force)
+                    ultimately show ?case by (by100 linarith)
+                  qed
+                qed
+                thus ?thesis by (by100 force)
+              qed
+              ultimately show ?thesis by (by100 linarith)
+            qed
+            have hle: "sub' (Suc i) \<le> 1"
+            proof -
+              have "sub' (Suc i) = sub (Suc (Suc i))" unfolding sub'_def by (by100 simp)
+              moreover have "sub (Suc (Suc i)) \<le> sub n"
+              proof -
+                have hSSi: "Suc (Suc i) \<le> n" using hi hn2 by (by100 presburger)
+                have "\<And>k. k + Suc (Suc i) \<le> n \<Longrightarrow>
+                    sub (Suc (Suc i)) \<le> sub (k + Suc (Suc i))"
+                proof -
+                  fix k show "k + Suc (Suc i) \<le> n \<Longrightarrow>
+                      sub (Suc (Suc i)) \<le> sub (k + Suc (Suc i))"
+                  proof (induction k)
+                    case 0 thus ?case by (by100 simp)
+                  next
+                    case (Suc m)
+                    have "m + Suc (Suc i) < n" using Suc.prems by (by100 presburger)
+                    have "m + Suc (Suc i) \<le> n" using Suc.prems by (by100 presburger)
+                    have "sub (Suc (Suc i)) \<le> sub (m + Suc (Suc i))"
+                      using Suc.IH[OF \<open>m + Suc (Suc i) \<le> n\<close>] .
+                    moreover have "sub (m + Suc (Suc i)) < sub (Suc m + Suc (Suc i))"
+                      using lhinc \<open>m + Suc (Suc i) < n\<close> by (by100 force)
+                    ultimately show ?case by (by100 linarith)
+                  qed
+                qed
+                have hk_le: "(n - Suc (Suc i)) + Suc (Suc i) \<le> n"
+                  using hSSi by (by100 presburger)
+                have "sub (Suc (Suc i)) \<le> sub ((n - Suc (Suc i)) + Suc (Suc i))"
+                  using \<open>\<And>k. k + Suc (Suc i) \<le> n \<Longrightarrow> sub (Suc (Suc i)) \<le> sub (k + Suc (Suc i))\<close>[OF hk_le] .
+                moreover have "(n - Suc (Suc i)) + Suc (Suc i) = n"
+                  using hSSi by (by100 presburger)
+                ultimately have "sub (Suc (Suc i)) \<le> sub n" by (by100 presburger)
+                thus ?thesis by (by100 simp)
+              qed
+              ultimately show ?thesis using lhsn by (by100 linarith)
+            qed
+            have hmon: "sub' i \<le> sub' (Suc i)" using hsub'_inc hi by (by100 force)
+            have ht0: "0 \<le> t" using ht by (by100 blast)
+            have ht1: "t \<le> 1" using ht by (by100 blast)
+            have hdiff: "0 \<le> sub' (Suc i) - sub' i" using hmon by (by100 linarith)
+            have hprod: "0 \<le> t * (sub' (Suc i) - sub' i)"
+              by (rule mult_nonneg_nonneg[OF ht0 hdiff])
+            have hlo: "0 \<le> sub' i + t * (sub' (Suc i) - sub' i)" using hge hprod by (by100 linarith)
+            have "t * (sub' (Suc i) - sub' i) \<le> 1 * (sub' (Suc i) - sub' i)"
+              by (rule mult_right_mono[OF ht1 hdiff])
+            hence "t * (sub' (Suc i) - sub' i) \<le> sub' (Suc i) - sub' i" by (by100 simp)
+            hence "sub' i + t * (sub' (Suc i) - sub' i) \<le> sub' (Suc i)" by (by100 linarith)
+            hence hhi: "sub' i + t * (sub' (Suc i) - sub' i) \<le> 1" using hle by (by100 linarith)
+            have "sub' i + t * (sub' (Suc i) - sub' i) \<in> I_set"
+              using hlo hhi unfolding top1_unit_interval_def by (by100 force)
+            thus "f (sub' i + t * (sub' (Suc i) - sub' i)) \<in> U"
+              using hf_in_U by (by100 blast)
+          qed
+          \<comment> \<open>Apply IH for n-1.\<close>
+          have "n - 1 < n" using hn2 by (by100 presburger)
+          have "n - 1 \<ge> 1" using hn2 by (by100 presburger)
+          have hIH: "foldr_\<sigma> f (n - 1) sub' = \<sigma> f"
+            by (rule less.IH[OF \<open>n - 1 < n\<close> \<open>n - 1 \<ge> 1\<close> hsub'_0 hsub'_n hsub'_inc hsub'_UV])
+          \<comment> \<open>Now show foldr_\<sigma> f n sub = foldr_\<sigma> f (n-1) sub'.
+             This requires: mulH (\<sigma>(piece 0)) (mulH (\<sigma>(piece 1)) rest) = mulH (\<sigma>(merged01)) rest
+             where merged01 covers [sub 0, sub 2].
+             By \<sigma>_cond2: mulH (\<sigma>(p0)) (\<sigma>(p1)) = \<sigma>(p0*p1)
+             By reparam homotopy: p0*p1 \<simeq>_U merged01
+             By \<sigma>_cond1: \<sigma>(p0*p1) = \<sigma>(merged01)
+             By group assoc: mulH (\<sigma>(p0)) (mulH (\<sigma>(p1)) rest) = mulH (mulH (\<sigma>(p0)) (\<sigma>(p1))) rest\<close>
+          \<comment> \<open>Define pieces for the original subdivision.\<close>
+          define piece where "piece j s = (\<lambda>t. f (s j + t * (s (Suc j) - s j)))" for j s
+          \<comment> \<open>Step A: pieces are paths in U.\<close>
+          have hpiece_in_U: "\<And>j. j < n \<Longrightarrow>
+              top1_is_path_on U (subspace_topology X TX U) (piece j sub 0) (piece j sub 1) (piece j sub)"
+            sorry \<comment> \<open>Continuity of affine composition; range from hf_in_U + convex combo in I_set.\<close>
+          have hp0: "piece 0 sub 0 = f (sub 0)" unfolding piece_def by (by100 simp)
+          have hp0_1: "piece 0 sub 1 = f (sub (Suc 0))" unfolding piece_def by (by100 simp)
+          have hp1: "piece 1 sub 0 = f (sub 1)" unfolding piece_def by (by100 simp)
+          have hp1_1: "piece 1 sub 1 = f (sub (Suc 1))" unfolding piece_def by (by100 simp)
+          have hmatch: "piece 0 sub 1 = piece 1 sub 0" unfolding piece_def by (by100 simp)
+          \<comment> \<open>Step B: \<sigma>_cond2: \<sigma>(p0 * p1) = \<sigma>(p0) \<cdot> \<sigma>(p1).\<close>
+          have h0n: "(0::nat) < n" using hn2 by (by100 presburger)
+          have h1n: "(1::nat) < n" using hn2 by (by100 presburger)
+          have hp0_path: "top1_is_path_on U (subspace_topology X TX U) (piece 0 sub 0) (piece 0 sub 1) (piece 0 sub)"
+            using hpiece_in_U[OF h0n] .
+          have hp1_path: "top1_is_path_on U (subspace_topology X TX U) (piece 1 sub 0) (piece 1 sub 1) (piece 1 sub)"
+            using hpiece_in_U[OF h1n] .
+          have hcond2: "\<sigma> (top1_path_product (piece 0 sub) (piece 1 sub)) = mulH (\<sigma> (piece 0 sub)) (\<sigma> (piece 1 sub))"
+            by (rule h\<sigma>_cond2[OF hp0_path hp1_path hmatch])
+          \<comment> \<open>Step C: Reparametrization: (piece 0 sub) * (piece 1 sub) \<simeq>_U (piece 0 sub').
+             Both are paths from f(sub 0) to f(sub 2) in U.
+             Homotopy: H(s,t) = f((1-t)\<cdot>concat(s) + t\<cdot>linear(s)) where
+             concat = piecewise affine from path product, linear = affine from sub(0) to sub(2).
+             All parameter values stay in [sub 0, sub 2] \<subseteq> [0,1], so H maps to U.\<close>
+          \<comment> \<open>Express path product as f \<circ> \<phi> and merged piece as f \<circ> \<psi>.\<close>
+          define \<phi>_concat where "\<phi>_concat s =
+            (if s \<le> 1/2 then sub 0 + 2*s * (sub 1 - sub 0)
+             else sub 1 + (2*s - 1) * (sub 2 - sub 1))" for s :: real
+          define \<psi>_linear where "\<psi>_linear s = sub 0 + s * (sub 2 - sub 0)" for s :: real
+          \<comment> \<open>path_product (piece 0 sub) (piece 1 sub) = f \<circ> \<phi>_concat on I_set.\<close>
+          have hprod_eq: "\<And>s. s \<in> I_set \<Longrightarrow>
+              top1_path_product (piece 0 sub) (piece 1 sub) s = f (\<phi>_concat s)"
+            unfolding top1_path_product_def piece_def \<phi>_concat_def sorry
+          \<comment> \<open>piece 0 sub' = f \<circ> \<psi>_linear on I_set.\<close>
+          have hmerged_eq: "\<And>s. piece 0 sub' s = f (\<psi>_linear s)"
+            unfolding piece_def sub'_def \<psi>_linear_def sorry
+          \<comment> \<open>Apply reparam_path_homotopy: need \<phi>_concat, \<psi>_linear continuous I\<rightarrow>I.\<close>
+          have hphi_concat_cont: "top1_continuous_map_on I_set I_top I_set I_top \<phi>_concat"
+            sorry \<comment> \<open>Piecewise linear, matching at 1/2. Range in [sub 0, sub 2] \<subseteq> [0,1].\<close>
+          have hpsi_linear_cont: "top1_continuous_map_on I_set I_top I_set I_top \<psi>_linear"
+            sorry \<comment> \<open>Affine map. Range in [sub 0, sub 2] \<subseteq> [0,1].\<close>
+          have hphi0: "\<phi>_concat 0 = sub 0" unfolding \<phi>_concat_def by (by100 simp)
+          have hphi1: "\<phi>_concat 1 = sub 2" unfolding \<phi>_concat_def by (by100 simp)
+          have hpsi0: "\<psi>_linear 0 = sub 0" unfolding \<psi>_linear_def by (by100 simp)
+          have hpsi1: "\<psi>_linear 1 = sub 2" unfolding \<psi>_linear_def by (by100 simp)
+          have hsub0_I: "sub 0 \<in> I_set" sorry
+          have hsub2_I: "sub 2 \<in> I_set" sorry
+          have hf_cont_I: "top1_continuous_map_on I_set I_top X TX f" sorry
+          have hf_in_U: "\<forall>s\<in>I_set. f s \<in> U" sorry
+          \<comment> \<open>Apply the reparametrization lemma.\<close>
+          have hhom: "top1_path_homotopic_on U (subspace_topology X TX U)
+              (f (sub 0)) (f (sub 2)) (f \<circ> \<phi>_concat) (f \<circ> \<psi>_linear)"
+            by (rule reparam_path_homotopy[OF hTopX hf_cont_I hf_in_U hUsub hTopU
+                hphi_concat_cont hpsi_linear_cont hphi0 hphi1 hpsi0 hpsi1 hsub0_I hsub2_I])
+          \<comment> \<open>Transfer: path_product agrees with f\<circ>\<phi>_concat, piece 0 sub' agrees with f\<circ>\<psi>_linear.\<close>
+          have hhom2: "top1_path_homotopic_on U (subspace_topology X TX U)
+              (f (sub 0)) (f (sub 2)) (top1_path_product (piece 0 sub) (piece 1 sub)) (piece 0 sub')"
+            sorry \<comment> \<open>From hhom + hprod_eq + hmerged_eq: extensional equality on I_set.\<close>
+          \<comment> \<open>Now \<sigma>_cond1: path-homotopic paths have the same \<sigma> value.\<close>
+          have hreparam: "\<sigma> (top1_path_product (piece 0 sub) (piece 1 sub)) = \<sigma> (piece 0 sub')"
+            sorry \<comment> \<open>From hhom2 + h\<sigma>_cond1. Needs endpoint matching for \<sigma>_cond1 application.\<close>
+          \<comment> \<open>Step D: \<sigma>(p0) \<cdot> \<sigma>(p1) = \<sigma>(merged piece) = \<sigma>(piece 0 sub').\<close>
+          have hmerge_eq: "mulH (\<sigma> (piece 0 sub)) (\<sigma> (piece 1 sub)) = \<sigma> (piece 0 sub')"
+            using hcond2 hreparam by (by100 simp)
+          \<comment> \<open>Step E: Tail of foldr is the same for sub and sub' (shifted indices).\<close>
+          have htail_eq: "\<And>j. 2 \<le> j \<Longrightarrow> j < n \<Longrightarrow> piece j sub = piece (j - 1) sub'"
+            unfolding piece_def sub'_def by (by100 simp)
+          \<comment> \<open>Step F: Algebraic. Group associativity + merge + tail equality.\<close>
+          \<comment> \<open>Unfold foldr_\<sigma> for the LHS.\<close>
+          have hLHS: "foldr_\<sigma> f n sub =
+              foldr mulH (map (\<lambda>i. \<sigma> (piece i sub)) [0..<n]) eH"
+            unfolding foldr_\<sigma>_def piece_def by (by100 simp)
+          \<comment> \<open>Unfold foldr_\<sigma> for the RHS.\<close>
+          have hRHS: "foldr_\<sigma> f (n - 1) sub' =
+              foldr mulH (map (\<lambda>i. \<sigma> (piece i sub')) [0..<n-1]) eH"
+            unfolding foldr_\<sigma>_def piece_def sub'_def by (by100 simp)
+          \<comment> \<open>For n \<ge> 2: [0..<n] = 0 # 1 # [2..<n], and the foldr unfolds.\<close>
+          have h0n: "(0::nat) < n" using hn2 by (by100 presburger)
+          have hn_unfold: "[0..<n] = 0 # [1..<n]"
+            using upt_rec[of 0 n] h0n by (by100 simp)
+          have h1n: "(1::nat) < n" using hn2 by (by100 presburger)
+          have hn1_unfold: "[(1::nat)..<n] = 1 # [Suc 1..<n]"
+            using upt_rec[of 1 n] h1n by (by100 simp)
+          \<comment> \<open>The algebraic manipulation needs group associativity + σ values in H.\<close>
+          have hfoldr_eq: "foldr_\<sigma> f n sub = foldr_\<sigma> f (n - 1) sub'"
+            sorry \<comment> \<open>Algebraic: unfold both sides, use hmerge_eq + htail_eq + group assoc.
+               The tail pieces match by htail_eq. The head merges by hmerge_eq.
+               Group assoc gives mulH a (mulH b c) = mulH (mulH a b) c.\<close>
+          show ?thesis using hfoldr_eq hIH by (by100 simp)
+        qed
+      qed
       qed
       \<comment> \<open>Step 4: Apply subdivision independence to SOME-picked subdivision.\<close>
       show ?thesis
