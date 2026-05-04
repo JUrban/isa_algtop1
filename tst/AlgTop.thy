@@ -4497,30 +4497,36 @@ proof -
       \<comment> \<open>The pieces (\<lambda>t. f(sub i + t*(sub(Suc i) - sub i))) agree for f1, f2
          at I_set points (by heval_agree). Hence the \<sigma> values agree,
          the SOME predicates are extensionally equal, and \<tau> values agree.\<close>
+      \<comment> \<open>Pointwise equality at I_set evaluation points.\<close>
+      have hf12: "\<And>sub n i t. sub 0 = (0::real) \<Longrightarrow> sub n = 1 \<Longrightarrow> (\<forall>j<n. sub j < sub (Suc j))
+          \<Longrightarrow> i < n \<Longrightarrow> 0 \<le> t \<Longrightarrow> t \<le> 1
+          \<Longrightarrow> f1 (sub i + t * (sub (Suc i) - sub i)) = f2 (sub i + t * (sub (Suc i) - sub i))"
+        using \<open>\<And>sub n i t. sub 0 = 0 \<Longrightarrow> sub n = 1 \<Longrightarrow> (\<forall>j<n. sub j < sub (Suc j)) \<Longrightarrow>
+            i < n \<Longrightarrow> 0 \<le> t \<Longrightarrow> t \<le> 1 \<Longrightarrow>
+            f1 (sub i + t * (sub (Suc i) - sub i)) = f2 (sub i + t * (sub (Suc i) - sub i))\<close>
+        by (by100 blast)
+      \<comment> \<open>σ-equality for each piece: σ only evaluates at I_set points, so hf12 suffices.\<close>
       have hpiece_eq: "\<And>sub n i. sub 0 = (0::real) \<Longrightarrow> sub n = 1 \<Longrightarrow> (\<forall>j<n. sub j < sub (Suc j))
           \<Longrightarrow> i < n \<Longrightarrow>
-          (\<lambda>t. f1 (sub i + t * (sub (Suc i) - sub i))) = (\<lambda>t. f2 (sub i + t * (sub (Suc i) - sub i)))"
-      proof (rule ext)
-        fix sub :: "nat \<Rightarrow> real" and n i :: nat and t :: real
+          \<sigma> (\<lambda>t. f1 (sub i + t * (sub (Suc i) - sub i))) = \<sigma> (\<lambda>t. f2 (sub i + t * (sub (Suc i) - sub i)))"
+      proof -
+        fix sub :: "nat \<Rightarrow> real" and n i :: nat
         assume hs0: "sub 0 = 0" and hsn: "sub n = 1" and hinc: "\<forall>j<n. sub j < sub (Suc j)"
            and hi: "i < n"
-        \<comment> \<open>The evaluation point sub i + t*(sub(Suc i) - sub i) is in I_set for any t,
-           because sub maps to [0,1] and the affine combination stays in [0,1]
-           when t \<in> [0,1]. For t outside [0,1], the point might be outside [0,1],
-           but we still need equality. Use the fact that hagree covers I_set,
-           and for points outside I_set, f1 and f2 are arbitrary but the σ/τ
-           evaluation never reaches those points.\<close>
-        show "f1 (sub i + t * (sub (Suc i) - sub i)) = f2 (sub i + t * (sub (Suc i) - sub i))"
-        proof (cases "sub i + t * (sub (Suc i) - sub i) \<in> I_set")
-          case True thus ?thesis using hagree by (by100 blast)
-        next
-          case False
-          \<comment> \<open>Point outside I_set: f1 and f2 might differ here, but this case
-             is never reached by τ_def (which uses t \<in> [0,1] and valid sub).
-             We need full extensional equality for the proof structure.
-             Since the point is outside [0,1], we cannot use hagree.\<close>
-          thus ?thesis sorry
-        qed
+        \<comment> \<open>σ(f') = ρ(α(f'(0)) · (f' · rev(α(f'(1))))). The endpoints f'(0) and f'(1)
+           are at t=0 and t=1 (in I_set). The path product and α only evaluate f' at I_set points.
+           So σ only depends on f' values at I_set points.\<close>
+        have hep0: "f1 (sub i + 0 * (sub (Suc i) - sub i)) = f2 (sub i + 0 * (sub (Suc i) - sub i))"
+          using hf12[OF hs0 hsn hinc hi, of 0] by (by100 simp)
+        have hep1: "f1 (sub i + 1 * (sub (Suc i) - sub i)) = f2 (sub i + 1 * (sub (Suc i) - sub i))"
+          using hf12[OF hs0 hsn hinc hi, of 1] by (by100 simp)
+        \<comment> \<open>σ unfolds to ρ(α(f'(0)) · (f' · rev(α(f'(1))))). With f'(0) and f'(1)
+           equal for f1 and f2, the α paths are the same. The inner product depends
+           on f' at I_set points only (via path product definition with t ∈ [0,1]).\<close>
+        show "\<sigma> (\<lambda>t. f1 (sub i + t * (sub (Suc i) - sub i)))
+            = \<sigma> (\<lambda>t. f2 (sub i + t * (sub (Suc i) - sub i)))"
+          sorry \<comment> \<open>σ depends on f' only at I_set points: endpoints + path product evaluation.
+             All at I_set by hf12. Technical: need to show σ is I_set-extensional.\<close>
       qed
       \<comment> \<open>foldr_\<sigma> f1 = foldr_\<sigma> f2 for any valid subdivision.\<close>
       have hfoldr_eq: "\<And>n sub. sub 0 = (0::real) \<Longrightarrow> sub n = 1 \<Longrightarrow> (\<forall>j<n. sub j < sub (Suc j))
@@ -4529,11 +4535,8 @@ proof -
         fix n :: nat and sub :: "nat \<Rightarrow> real"
         assume hs0: "sub 0 = 0" and hsn: "sub n = 1" and hinc: "\<forall>j<n. sub j < sub (Suc j)"
         have "\<And>i. i < n \<Longrightarrow>
-            (\<lambda>t. f1 (sub i + t * (sub (Suc i) - sub i))) = (\<lambda>t. f2 (sub i + t * (sub (Suc i) - sub i)))"
-          using hpiece_eq[OF hs0 hsn hinc] .
-        hence "\<And>i. i < n \<Longrightarrow>
             \<sigma> (\<lambda>t. f1 (sub i + t * (sub (Suc i) - sub i))) = \<sigma> (\<lambda>t. f2 (sub i + t * (sub (Suc i) - sub i)))"
-          by (by100 simp)
+          using hpiece_eq[OF hs0 hsn hinc] by (by100 blast)
         hence "map (\<lambda>i. \<sigma> (\<lambda>t. f1 (sub i + t * (sub (Suc i) - sub i)))) [0..<n]
             = map (\<lambda>i. \<sigma> (\<lambda>t. f2 (sub i + t * (sub (Suc i) - sub i)))) [0..<n]"
           by (intro map_cong) (by100 force)+
@@ -4552,14 +4555,7 @@ proof -
         \<comment> \<open>Every occurrence of f in \<tau>_def is at an I_set point.
            Show: the \<tau>_def lambda (\<lambda>f. ...) applied to f1 and f2 gives the same result
            because f1 and f2 are extensionally equal on all relevant points.\<close>
-        have "\<And>sub n i. sub 0 = (0::real) \<Longrightarrow> sub n = 1 \<Longrightarrow> (\<forall>j<n. sub j < sub (Suc j))
-            \<Longrightarrow> i < n \<Longrightarrow>
-            (\<lambda>t. f1 (sub i + t * (sub (Suc i) - sub i)))
-            = (\<lambda>t. f2 (sub i + t * (sub (Suc i) - sub i)))"
-          using hpiece_eq .
-        hence hf12: "\<And>sub n i t. sub 0 = (0::real) \<Longrightarrow> sub n = 1 \<Longrightarrow> (\<forall>j<n. sub j < sub (Suc j))
-            \<Longrightarrow> i < n \<Longrightarrow> f1 (sub i + t * (sub (Suc i) - sub i)) = f2 (sub i + t * (sub (Suc i) - sub i))"
-          by (rule fun_cong)
+        note hf12_loc = hf12
         \<comment> \<open>Since f1 and f2 agree at all evaluation points (hf12), both τ_def SOME predicates
            and foldr_σ values are identical. Use hfoldr_eq for the foldr part.\<close>
         \<comment> \<open>From hf12, f1 and f2 are interchangeable in the \<tau>_def expression.
