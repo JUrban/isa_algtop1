@@ -4554,11 +4554,51 @@ proof -
            hence the ρ values are equal.\<close>
         \<comment> \<open>L(p1) and L(p2) agree on I_set: α(p1(0)) = α(p2(0)), α(p1(1)) = α(p2(1)),
            and the path product only evaluates p at I_set points.\<close>
+        \<comment> \<open>Show L(p1) = L(p2) on I_set, hence ρ gives same value.
+           L(p) = α(p(0)) · (p · rev(α(p(1)))). Since p1(0)=p2(0) and p1(1)=p2(1),
+           the α paths are identical. The inner product evaluates p at 2t (for t ≤ 1/2)
+           where 2t ∈ I_set, and rev(α) at 2t-1 (for t > 1/2) which doesn't use p.
+           So L(p1)(s) = L(p2)(s) for all s ∈ I_set.
+           Then ρ only depends on I_set values (via equivalence classes + φ1/φ2).\<close>
+        have hp_I: "\<forall>s\<in>I_set. p1 s = p2 s"
+          unfolding p1_def p2_def using hagree_piece by (by100 blast)
+        have h\<alpha>0_eq: "\<alpha> (p1 0) = \<alpha> (p2 0)" using hp0_eq by (by100 simp)
+        have h\<alpha>1_eq: "\<alpha> (p1 1) = \<alpha> (p2 1)" using hp1_eq by (by100 simp)
+        have hL_I_agree: "\<forall>s\<in>I_set.
+            top1_path_product (\<alpha> (p1 0)) (top1_path_product p1 (top1_path_reverse (\<alpha> (p1 1)))) s
+            = top1_path_product (\<alpha> (p2 0)) (top1_path_product p2 (top1_path_reverse (\<alpha> (p2 1)))) s"
+        proof
+          fix s assume hs: "s \<in> I_set"
+          have hs0: "0 \<le> s" "s \<le> 1" using hs unfolding top1_unit_interval_def by (by100 simp)+
+          show "top1_path_product (\<alpha> (p1 0)) (top1_path_product p1 (top1_path_reverse (\<alpha> (p1 1)))) s
+              = top1_path_product (\<alpha> (p2 0)) (top1_path_product p2 (top1_path_reverse (\<alpha> (p2 1)))) s"
+          proof (cases "s \<le> 1/2")
+            case True \<comment> \<open>Outer product uses α at 2s.\<close>
+            thus ?thesis unfolding top1_path_product_def using h\<alpha>0_eq by (by100 simp)
+          next
+            case False \<comment> \<open>Outer product uses inner product at 2s-1.\<close>
+            hence "2 * s - 1 \<ge> 0" "2 * s - 1 \<le> 1" using hs0 by (by100 linarith)+
+            show ?thesis
+            proof (cases "2 * s - 1 \<le> 1/2")
+              case True \<comment> \<open>Inner product uses p at 2*(2s-1).\<close>
+              have "2 * (2 * s - 1) \<in> I_set"
+                using \<open>2 * s - 1 \<ge> 0\<close> True unfolding top1_unit_interval_def by (by100 force)
+              hence "p1 (2 * (2 * s - 1)) = p2 (2 * (2 * s - 1))" using hp_I by (by100 blast)
+              thus ?thesis unfolding top1_path_product_def using False True by (by100 simp)
+            next
+              case inner_False: False \<comment> \<open>Inner product uses rev(α) at 2*(2s-1)-1.\<close>
+              thus ?thesis unfolding top1_path_product_def top1_path_reverse_def
+                using False h\<alpha>1_eq by (by100 simp)
+            qed
+          qed
+        qed
+        \<comment> \<open>ρ only depends on I_set values. Since L(p1)=L(p2) on I_set,
+           the ρ value is the same. ρ is defined via if-then-else on membership
+           and φ1/φ2 on equivalence classes, both I_set-dependent.\<close>
         show "\<sigma> p1 = \<sigma> p2"
-          sorry \<comment> \<open>σ only evaluates at I_set points: endpoints (0,1) + path product (2t, 2t-1).
-             hagree_piece gives p1=p2 on I_set. hp0_eq/hp1_eq give same α paths.
-             Hence L(p1) = L(p2) on I_set, so ρ gives same value.
-             Needs: path product evaluates at I_set points only + ρ I_set-extensional.\<close>
+          sorry \<comment> \<open>From hL_I_agree: L(p1)=L(p2) on I_set. Need ρ I_set-extensional.
+             ρ(L) = φ1([L]_U) or φ2([L]_V). The if-condition and equiv class
+             both depend on L only at I_set points. Hence ρ(L(p1)) = ρ(L(p2)).\<close>
       qed
       \<comment> \<open>foldr_\<sigma> f1 = foldr_\<sigma> f2 for any valid subdivision.\<close>
       have hfoldr_eq: "\<And>n sub. sub 0 = (0::real) \<Longrightarrow> sub n = 1 \<Longrightarrow> (\<forall>j<n. sub j < sub (Suc j))
