@@ -3320,7 +3320,114 @@ proof -
   qed
   have h\<Phi>_ext_V: "\<forall>b\<in>top1_fundamental_group_carrier V ?TV x0.
       \<Phi> (top1_fundamental_group_induced_on V ?TV x0 X TX x0 (\<lambda>x. x) b) = \<phi>2 b"
-    sorry \<comment> \<open>Same as ext_U but for V.\<close>
+  proof
+    fix b assume hb: "b \<in> top1_fundamental_group_carrier V ?TV x0"
+    obtain g where hg_loop_V: "top1_is_loop_on V ?TV x0 g"
+        and hb_eq: "b = {h. top1_loop_equiv_on V ?TV x0 g h}"
+      using hb unfolding top1_fundamental_group_carrier_def by (by100 blast)
+    \<comment> \<open>g is a loop in X (V \<subseteq> X).\<close>
+    have hg_loop_X: "top1_is_loop_on X TX x0 g"
+    proof -
+      have hg_cont_V: "top1_continuous_map_on I_set I_top V ?TV g"
+        using hg_loop_V unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+      have hg_range_V: "\<forall>s\<in>I_set. g s \<in> V"
+        using hg_cont_V unfolding top1_continuous_map_on_def by (by100 blast)
+      have hg_cont_X: "top1_continuous_map_on I_set I_top X TX g"
+        unfolding top1_continuous_map_on_def
+      proof (intro conjI ballI)
+        fix s assume "s \<in> I_set" thus "g s \<in> X" using hg_range_V hVsub by (by100 blast)
+      next
+        fix V' assume hV': "V' \<in> TX"
+        have hV'V: "V' \<inter> V \<in> ?TV" unfolding subspace_topology_def using hV' by (by100 blast)
+        have "{s \<in> I_set. g s \<in> V'} = {s \<in> I_set. g s \<in> V' \<inter> V}"
+          using hg_range_V by (by100 blast)
+        also have "\<dots> \<in> I_top" using hg_cont_V hV'V unfolding top1_continuous_map_on_def by (by100 blast)
+        finally show "{s \<in> I_set. g s \<in> V'} \<in> I_top" .
+      qed
+      show ?thesis unfolding top1_is_loop_on_def top1_is_path_on_def
+        using hg_cont_X top1_is_loop_on_start[OF hg_loop_V] top1_is_loop_on_end[OF hg_loop_V]
+        by (by100 blast)
+    qed
+    \<comment> \<open>Induced map sends [g]_V to [g]_X.\<close>
+    have hind_V: "top1_fundamental_group_induced_on V ?TV x0 X TX x0 (\<lambda>x. x) b
+        = {h. top1_loop_equiv_on X TX x0 g h}"
+      unfolding top1_fundamental_group_induced_on_def hb_eq
+    proof (rule equalityI; rule subsetI)
+      fix h assume "h \<in> {h. \<exists>f'\<in>{h'. top1_loop_equiv_on V ?TV x0 g h'}.
+          top1_loop_equiv_on X TX x0 ((\<lambda>x. x) \<circ> f') h}"
+      then obtain f' where hf'V: "top1_loop_equiv_on V ?TV x0 g f'"
+          and hf'h: "top1_loop_equiv_on X TX x0 ((\<lambda>x. x) \<circ> f') h" by (by100 fast)
+      have hf'_X: "top1_loop_equiv_on X TX x0 g f'"
+        by (rule loop_equiv_subspace_superspace[OF hVsub hTopX _ hf'V]) (by100 simp)
+      have hid_f': "(\<lambda>x. x) \<circ> f' = f'" by (by100 auto)
+      have "top1_loop_equiv_on X TX x0 f' h" using hf'h unfolding hid_f' .
+      thus "h \<in> {h. top1_loop_equiv_on X TX x0 g h}"
+        using top1_loop_equiv_on_trans[OF hTopX hf'_X] by (by100 fast)
+    next
+      fix h assume "h \<in> {h. top1_loop_equiv_on X TX x0 g h}"
+      hence hgh: "top1_loop_equiv_on X TX x0 g h" by (by100 blast)
+      have hgg: "top1_loop_equiv_on V ?TV x0 g g" by (rule top1_loop_equiv_on_refl[OF hg_loop_V])
+      have "g \<in> {h'. top1_loop_equiv_on V ?TV x0 g h'}" using hgg by (by100 blast)
+      moreover have hid_g: "(\<lambda>x. x) \<circ> g = g" by (by100 auto)
+      moreover have "top1_loop_equiv_on X TX x0 ((\<lambda>x. x) \<circ> g) h" unfolding hid_g using hgh .
+      ultimately show "h \<in> {h. \<exists>f'\<in>{h'. top1_loop_equiv_on V ?TV x0 g h'}.
+          top1_loop_equiv_on X TX x0 ((\<lambda>x. x) \<circ> f') h}" by (by100 fast)
+    qed
+    \<comment> \<open>\<Phi>([g]_X) = \<tau>(g) by h\<tau>_wd.\<close>
+    have h\<Phi>_val_V: "\<Phi> {h. top1_loop_equiv_on X TX x0 g h} = \<tau> g"
+    proof -
+      let ?c = "{h. top1_loop_equiv_on X TX x0 g h}"
+      let ?P = "\<lambda>g'. top1_is_loop_on X TX x0 g' \<and> ?c = {h. top1_loop_equiv_on X TX x0 g' h}"
+      have hPg: "?P g" using hg_loop_X by (by100 blast)
+      have "\<exists>g'. ?P g'" using hPg by (by100 blast)
+      hence hPsome: "?P (SOME g'. ?P g')" by (rule someI_ex)
+      hence hsome_loop: "top1_is_loop_on X TX x0 (SOME g'. ?P g')" by (by100 blast)
+      have hsome_class: "?c = {h. top1_loop_equiv_on X TX x0 (SOME g'. ?P g') h}"
+        using hPsome by (by100 blast)
+      have hg_in_c: "g \<in> ?c" using top1_loop_equiv_on_refl[OF hg_loop_X] by (by100 blast)
+      have "g \<in> {h. top1_loop_equiv_on X TX x0 (SOME g'. ?P g') h}"
+        using hg_in_c hsome_class by (by100 fast)
+      hence "top1_loop_equiv_on X TX x0 (SOME g'. ?P g') g" by (by100 blast)
+      hence "top1_path_homotopic_on X TX x0 x0 (SOME g'. ?P g') g"
+        unfolding top1_loop_equiv_on_def by (by100 blast)
+      from h\<tau>_wd[OF hsome_loop hg_loop_X this]
+      have h\<tau>_eq_V: "\<tau> (SOME g'. ?P g') = \<tau> g" .
+      show ?thesis unfolding \<Phi>_def using h\<tau>_eq_V by (by100 simp)
+    qed
+    \<comment> \<open>Remaining steps: \<tau>(g) = \<sigma>(g) = \<rho>(const\<cdot>g\<cdot>const) = \<rho>(g) = \<phi>2([g]_V).\<close>
+    have h\<tau>_\<sigma>_V: "\<tau> g = \<sigma> g"
+      sorry \<comment> \<open>Subdivision independence (same as U case).\<close>
+    have h\<alpha>_x0_V: "\<alpha> x0 = top1_constant_path x0" unfolding \<alpha>_def by (by100 simp)
+    have h\<sigma>_\<rho>_V: "\<sigma> g = \<rho> (top1_path_product (top1_constant_path x0)
+        (top1_path_product g (top1_path_reverse (top1_constant_path x0))))"
+      unfolding \<sigma>_def using h\<alpha>_x0_V top1_is_loop_on_start[OF hg_loop_V]
+                             top1_is_loop_on_end[OF hg_loop_V] by (by100 simp)
+    have h\<rho>_simp_V: "\<rho> (top1_path_product (top1_constant_path x0)
+        (top1_path_product g (top1_path_reverse (top1_constant_path x0)))) = \<rho> g"
+      sorry \<comment> \<open>Identity laws (same structure as U case).\<close>
+    have h\<rho>_val_V: "\<rho> g = \<phi>2 b"
+    proof -
+      have hg_in_V: "\<forall>s\<in>I_set. g s \<in> V"
+        using hg_loop_V unfolding top1_is_loop_on_def top1_is_path_on_def
+                                  top1_continuous_map_on_def by (by100 blast)
+      have hg_not_U: "\<not>(\<forall>s\<in>I_set. g s \<in> U) \<or> (\<forall>s\<in>I_set. g s \<in> U)"
+        by (by100 blast)
+      show ?thesis
+      proof (cases "\<forall>s\<in>I_set. g s \<in> U")
+        case True
+        \<comment> \<open>If g is also in U: use compatibility \<phi>1([g]_U) = \<phi>2([g]_V).\<close>
+        show ?thesis sorry
+      next
+        case False
+        have hif: "\<not>(\<forall>s\<in>I_set. g s \<in> U)" by (rule False)
+        have h\<rho>_eq: "\<rho> g = \<phi>2 {h. top1_loop_equiv_on V ?TV x0 g h}"
+          unfolding \<rho>_def by (rule if_not_P[OF hif])
+        show ?thesis using h\<rho>_eq hb_eq by (by100 simp)
+      qed
+    qed
+    show "\<Phi> (top1_fundamental_group_induced_on V ?TV x0 X TX x0 (\<lambda>x. x) b) = \<phi>2 b"
+      using hind_V h\<Phi>_val_V h\<tau>_\<sigma>_V h\<sigma>_\<rho>_V h\<rho>_simp_V h\<rho>_val_V by (by100 simp)
+  qed
   show ?thesis using h\<Phi>_hom h\<Phi>_ext_U h\<Phi>_ext_V by (by100 blast)
 qed
 
