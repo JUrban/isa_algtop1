@@ -3384,30 +3384,30 @@ proof -
     have hg'ra: "top1_is_path_on U ?TU ?y x0 (top1_path_product g' (top1_path_reverse (\<alpha> ?z)))"
       by (rule top1_path_product_is_path[OF hTopU hg'_path2 hra_z])
     \<comment> \<open>Step 2: L(f')*L(g') \<simeq> L(f'*g') in U.\<close>
-    let ?ra_y = "top1_path_reverse (\<alpha> (f' 1))" and ?ra_z = "top1_path_reverse (\<alpha> (g' 1))"
     have hL_fg_hom: "top1_path_homotopic_on U ?TU x0 x0
         (top1_path_product
-          (top1_path_product (\<alpha> (f' 0)) (top1_path_product f' ?ra_y))
-          (top1_path_product (\<alpha> (f' 1)) (top1_path_product g' ?ra_z)))
-        (top1_path_product (\<alpha> (f' 0)) (top1_path_product (top1_path_product f' g') ?ra_z))"
+          (top1_path_product (\<alpha> ?x) (top1_path_product f' (top1_path_reverse (\<alpha> ?y))))
+          (top1_path_product (\<alpha> ?y) (top1_path_product g' (top1_path_reverse (\<alpha> ?z)))))
+        (top1_path_product (\<alpha> ?x) (top1_path_product (top1_path_product f' g') (top1_path_reverse (\<alpha> ?z))))"
     proof -
-      \<comment> \<open>Step 1: Outer assoc: (a\<cdot>b)\<cdot>c \<simeq> a\<cdot>(b\<cdot>c).\<close>
+      \<comment> \<open>Step 1: Outer assoc: (\<alpha>_x\<cdot>(f'\<cdot>ra_y))\<cdot>(\<alpha>_y\<cdot>(g'\<cdot>ra_z)) \<simeq> \<alpha>_x\<cdot>((f'\<cdot>ra_y)\<cdot>(\<alpha>_y\<cdot>(g'\<cdot>ra_z))).\<close>
       have hc_path: "top1_is_path_on U ?TU x0 x0
-          (top1_path_product (\<alpha> (f' 1)) (top1_path_product g' ?ra_z))"
+          (top1_path_product (\<alpha> ?y) (top1_path_product g' (top1_path_reverse (\<alpha> ?z))))"
         by (rule top1_path_product_is_path[OF hTopU h\<alpha>y hg'ra])
       have s1: "top1_path_homotopic_on U ?TU x0 x0
-          (top1_path_product (top1_path_product (\<alpha> ?x) (top1_path_product f' ?ra_y)) (top1_path_product (\<alpha> ?y) (top1_path_product g' ?ra_z)))
-          (top1_path_product (\<alpha> ?x) (top1_path_product (top1_path_product f' ?ra_y) (top1_path_product (\<alpha> ?y) (top1_path_product g' ?ra_z))))"
-        sorry \<comment> \<open>Theorem_51_2_associativity[OF hTopU h_alpha_x hf'ra hc_path]. Rule app fails.\<close>
+          (top1_path_product (top1_path_product (\<alpha> ?x) (top1_path_product f' (top1_path_reverse (\<alpha> ?y)))) (top1_path_product (\<alpha> ?y) (top1_path_product g' (top1_path_reverse (\<alpha> ?z)))))
+          (top1_path_product (\<alpha> ?x) (top1_path_product (top1_path_product f' (top1_path_reverse (\<alpha> ?y))) (top1_path_product (\<alpha> ?y) (top1_path_product g' (top1_path_reverse (\<alpha> ?z))))))"
+        sorry \<comment> \<open>Outer assoc. Theorem_51_2_associativity[OF hTopU h_alpha_x hf'ra hc_path] should
+           give this but let-bindings prevent rule unification. Try: unfold lets first.\<close>
       \<comment> \<open>Step 2: Inner: (f'\<cdot>ra_y)\<cdot>(\<alpha>_y\<cdot>(g'\<cdot>ra_z)) \<simeq> (f'\<cdot>g')\<cdot>ra_z.\<close>
-      have s2_inner: "top1_path_homotopic_on U ?TU (f' 0) x0
-          (top1_path_product (top1_path_product f' ?ra_y) (top1_path_product (\<alpha> (f' 1)) (top1_path_product g' ?ra_z)))
-          (top1_path_product (top1_path_product f' g') ?ra_z)"
+      have s2_inner: "top1_path_homotopic_on U ?TU ?x x0
+          (top1_path_product (top1_path_product f' (top1_path_reverse (\<alpha> ?y))) (top1_path_product (\<alpha> ?y) (top1_path_product g' (top1_path_reverse (\<alpha> ?z)))))
+          (top1_path_product (top1_path_product f' g') (top1_path_reverse (\<alpha> ?z)))"
         sorry \<comment> \<open>5-step chain: assoc + assoc + inverse + identity + assoc.\<close>
       \<comment> \<open>Step 3: Propagate: \<alpha>_x\<cdot>inner \<simeq> \<alpha>_x\<cdot>result.\<close>
       have s3: "top1_path_homotopic_on U ?TU x0 x0
-          (top1_path_product (\<alpha> (f' 0)) (top1_path_product (top1_path_product f' ?ra_y) (top1_path_product (\<alpha> (f' 1)) (top1_path_product g' ?ra_z))))
-          (top1_path_product (\<alpha> (f' 0)) (top1_path_product (top1_path_product f' g') ?ra_z))"
+          (top1_path_product (\<alpha> ?x) (top1_path_product (top1_path_product f' (top1_path_reverse (\<alpha> ?y))) (top1_path_product (\<alpha> ?y) (top1_path_product g' (top1_path_reverse (\<alpha> ?z))))))
+          (top1_path_product (\<alpha> ?x) (top1_path_product (top1_path_product f' g') (top1_path_reverse (\<alpha> ?z))))"
         by (rule path_homotopic_product_right[OF hTopU s2_inner h\<alpha>x])
       show ?thesis by (rule Lemma_51_1_path_homotopic_trans[OF hTopU s1 s3])
     qed
