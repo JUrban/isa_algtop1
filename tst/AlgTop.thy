@@ -4395,6 +4395,2100 @@ proof -
     have "\<rho> ?comp = \<rho> f'" by (rule h\<rho>_respects_V[OF hcomp_loop hf' h_equiv])
     thus "\<sigma> f' = \<rho> f'" using h\<sigma>_eq by (by100 presburger)
   qed
+  have h\<sigma>_piece_in_H: "\<And>f' sub' i n'.
+      top1_is_loop_on X TX x0 f' \<Longrightarrow>
+      i < n' \<Longrightarrow> 0 \<le> sub' i \<Longrightarrow> sub' i \<le> sub' (Suc i) \<Longrightarrow> sub' (Suc i) \<le> 1 \<Longrightarrow>
+      ((\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f' (sub' i + t * (sub' (Suc i) - sub' i)) \<in> U)
+       \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f' (sub' i + t * (sub' (Suc i) - sub' i)) \<in> V)) \<Longrightarrow>
+      \<sigma> (\<lambda>t. f' (sub' i + t * (sub' (Suc i) - sub' i))) \<in> H"
+  proof -
+    fix f' :: "real \<Rightarrow> 'a" and sub' :: "nat \<Rightarrow> real" and i n'
+    assume hf'_loop: "top1_is_loop_on X TX x0 f'"
+       and hi: "i < n'"
+       and hge: "0 \<le> sub' i" and hmono: "sub' i \<le> sub' (Suc i)" and hle: "sub' (Suc i) \<le> 1"
+       and hUV_arg: "(\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f' (sub' i + t * (sub' (Suc i) - sub' i)) \<in> U)
+           \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f' (sub' i + t * (sub' (Suc i) - sub' i)) \<in> V)"
+    define piece where "piece t = f' (sub' i + t * (sub' (Suc i) - sub' i))" for t
+    have hf'_cont: "top1_continuous_map_on I_set I_top X TX f'"
+      using hf'_loop unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+    have haff_cont: "top1_continuous_map_on I_set I_top I_set I_top (\<lambda>t. sub' i + t * (sub' (Suc i) - sub' i))"
+      by (rule affine_map_continuous_I_to_I[OF hge hmono hle])
+    have hpiece_cont: "top1_continuous_map_on I_set I_top X TX piece"
+      unfolding piece_def using top1_continuous_map_on_comp[OF haff_cont hf'_cont]
+      unfolding comp_def by (by100 simp)
+    have hpiece_img: "(\<forall>s\<in>I_set. piece s \<in> U) \<or> (\<forall>s\<in>I_set. piece s \<in> V)"
+    proof -
+      have "\<And>s. s \<in> I_set \<Longrightarrow> 0 \<le> s \<and> s \<le> 1"
+        unfolding top1_unit_interval_def by (by100 simp)
+      thus ?thesis using hUV_arg unfolding piece_def by (by100 fast)
+    qed
+    show "\<sigma> (\<lambda>t. f' (sub' i + t * (sub' (Suc i) - sub' i))) \<in> H"
+    proof (cases "\<forall>s\<in>I_set. piece s \<in> U")
+      case True
+      have "piece ` I_set \<subseteq> U" using True by (by100 blast)
+      have "top1_continuous_map_on I_set I_top U (subspace_topology X TX U) piece"
+        by (rule top1_continuous_map_on_codomain_shrink[OF hpiece_cont \<open>piece ` I_set \<subseteq> U\<close> hUsub])
+      hence "top1_is_path_on U (subspace_topology X TX U) (piece 0) (piece 1) piece"
+        unfolding top1_is_path_on_def by (by100 blast)
+      hence "\<sigma> piece \<in> H" by (rule h\<sigma>_path_in_H)
+      thus ?thesis unfolding piece_def by (by100 simp)
+    next
+      case False
+      hence "\<forall>s\<in>I_set. piece s \<in> V" using hpiece_img by (by100 blast)
+      hence "piece ` I_set \<subseteq> V" by (by100 blast)
+      have "top1_continuous_map_on I_set I_top V (subspace_topology X TX V) piece"
+        by (rule top1_continuous_map_on_codomain_shrink[OF hpiece_cont \<open>piece ` I_set \<subseteq> V\<close> hVsub])
+      hence "top1_is_path_on V (subspace_topology X TX V) (piece 0) (piece 1) piece"
+        unfolding top1_is_path_on_def by (by100 blast)
+      hence "\<sigma> piece \<in> H" by (rule h\<sigma>_path_in_H_V)
+      thus ?thesis unfolding piece_def by (by100 simp)
+    qed
+  qed
+  \<comment> \<open>General subdivision independence (Munkres Step 3): any valid subdivision gives τ.
+     Proof: adjoining a single point preserves foldr_σ (σ_cond1 + σ_cond2).
+     Any two valid subdivisions share a common refinement (union of points).
+     Each can be refined to the common by adding one point at a time.\<close>
+  have h_gen_subdiv_indep: "\<And>f n sub. top1_is_loop_on X TX x0 f \<Longrightarrow>
+      n \<ge> 1 \<Longrightarrow> sub 0 = (0::real) \<Longrightarrow> sub n = 1 \<Longrightarrow>
+      (\<forall>i<n. sub i < sub (Suc i)) \<Longrightarrow>
+      (\<forall>i<n. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> U)
+           \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> V)) \<Longrightarrow>
+      \<tau> f = foldr_\<sigma> f n sub"
+  proof -
+    fix f and n :: nat and sub :: "nat \<Rightarrow> real"
+    assume hf_loop: "top1_is_loop_on X TX x0 f"
+       and hn: "n \<ge> 1" and hs0: "sub 0 = (0::real)" and hsn: "sub n = 1"
+       and hinc: "\<forall>i<n. sub i < sub (Suc i)"
+       and hpUV: "\<forall>i<n. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> U)
+           \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> V)"
+    \<comment> \<open>Unfold τ: get SOME-picked (N, S) with Pn/Psub pattern.\<close>
+    define Pn where "Pn m \<equiv> m \<ge> 1 \<and> (\<exists>s. s 0 = (0::real) \<and> s m = 1
+        \<and> (\<forall>i<m. s i < s (Suc i))
+        \<and> (\<forall>i<m. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (s i + t * (s (Suc i) - s i)) \<in> U)
+               \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (s i + t * (s (Suc i) - s i)) \<in> V)))" for m
+    have "Pn (SOME m. Pn m)"
+    proof -
+      have "\<exists>m. Pn m" unfolding Pn_def using hn hs0 hsn hinc hpUV by (by100 blast)
+      thus ?thesis by (rule someI_ex)
+    qed
+    define N where "N = (SOME m. Pn m)"
+    have hN_ge: "N \<ge> 1" using \<open>Pn (SOME m. Pn m)\<close> unfolding N_def Pn_def by (by100 blast)
+    have hN_sub: "\<exists>s. s 0 = (0::real) \<and> s N = 1 \<and> (\<forall>i<N. s i < s (Suc i))
+        \<and> (\<forall>i<N. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (s i + t * (s (Suc i) - s i)) \<in> U)
+               \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (s i + t * (s (Suc i) - s i)) \<in> V))"
+      using \<open>Pn (SOME m. Pn m)\<close> unfolding N_def Pn_def by (by100 blast)
+    define Psub where "Psub s \<equiv> s 0 = (0::real) \<and> s N = 1 \<and> (\<forall>i<N. s i < s (Suc i))
+        \<and> (\<forall>i<N. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (s i + t * (s (Suc i) - s i)) \<in> U)
+               \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (s i + t * (s (Suc i) - s i)) \<in> V))" for s
+    have "Psub (SOME s. Psub s)"
+    proof -
+      have "\<exists>s. Psub s" using hN_sub unfolding Psub_def by (by100 blast)
+      thus ?thesis by (rule someI_ex)
+    qed
+    define S where "S = (SOME s. Psub s)"
+    have hS0: "S 0 = (0::real)" and hSN: "S N = 1"
+        and hSinc: "\<forall>i<N. S i < S (Suc i)"
+        and hS_UV: "\<forall>i<N. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (S i + t * (S (Suc i) - S i)) \<in> U)
+               \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (S i + t * (S (Suc i) - S i)) \<in> V)"
+      using \<open>Psub (SOME s. Psub s)\<close> unfolding S_def Psub_def by (by100 blast)+
+    have h\<tau>_eq: "\<tau> f = foldr_\<sigma> f N S"
+      unfolding N_def Pn_def S_def Psub_def \<tau>_def Let_def by (by100 simp)
+    \<comment> \<open>Core: foldr_σ f N S = foldr_σ f n sub (subdivision independence).
+       Proof: point insertion argument from Munkres Step 3.\<close>
+    \<comment> \<open>Point insertion lemma: inserting one point into a valid subdivision preserves foldr_σ.
+       Munkres Step 3: σ(f_i) = σ(f_i') · σ(f_i'') by reparametrization + σ_cond1/2.\<close>
+    have h_point_insert: "\<And>m s k p.
+        m \<ge> 1 \<Longrightarrow> s 0 = (0::real) \<Longrightarrow> s m = 1 \<Longrightarrow>
+        (\<forall>i<m. s i < s (Suc i)) \<Longrightarrow>
+        (\<forall>i<m. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (s i + t * (s (Suc i) - s i)) \<in> U)
+             \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (s i + t * (s (Suc i) - s i)) \<in> V)) \<Longrightarrow>
+        k < m \<Longrightarrow> s k < p \<Longrightarrow> p < s (Suc k) \<Longrightarrow>
+        foldr_\<sigma> f (Suc m) (\<lambda>i. if i \<le> k then s i else if i = Suc k then p else s (i - 1))
+        = foldr_\<sigma> f m s"
+    proof -
+      fix m :: nat and s :: "nat \<Rightarrow> real" and k :: nat and p :: real
+      assume hm: "m \<ge> 1" and hs0: "s 0 = (0::real)" and hsm: "s m = 1"
+         and hinc: "\<forall>i<m. s i < s (Suc i)"
+         and hUV: "\<forall>i<m. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (s i + t * (s (Suc i) - s i)) \<in> U)
+             \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (s i + t * (s (Suc i) - s i)) \<in> V)"
+         and hk: "k < m" and hpL: "s k < p" and hpR: "p < s (Suc k)"
+      define s' where "s' i = (if i \<le> k then s i else if i = Suc k then p else s (i - 1))" for i
+      \<comment> \<open>Subdivision bounds for piece k.\<close>
+      have hsk_ge0: "0 \<le> s k"
+      proof -
+        have "s 0 \<le> s k" using hk
+        proof (induct k)
+          case 0 show ?case by (by100 simp)
+        next
+          case (Suc j)
+          have "j < m" using Suc.prems by (by100 presburger)
+          have "s 0 \<le> s j" using Suc.hyps \<open>j < m\<close> by (by100 presburger)
+          moreover have "s j < s (Suc j)" using hinc \<open>j < m\<close> by (by100 blast)
+          ultimately show ?case by (by100 linarith)
+        qed
+        thus ?thesis using hs0 by (by100 simp)
+      qed
+      have hsk1_le1: "s (Suc k) \<le> 1"
+      proof -
+        have hSk_le: "Suc k \<le> m" using hk by (by100 presburger)
+        have "s (Suc k) \<le> s m" using hSk_le
+        proof (induct rule: dec_induct)
+          case base show ?case by (by100 simp)
+        next
+          case (step n)
+          have "s n < s (Suc n)" using hinc step.hyps(2) by (by100 blast)
+          thus ?case using step.hyps(3) by (by100 linarith)
+        qed
+        thus ?thesis using hsm by (by100 simp)
+      qed
+      have hsk_le_p: "s k \<le> p" using hpL by (by100 linarith)
+      have hp_le_sk1: "p \<le> s (Suc k)" using hpR by (by100 linarith)
+      have hp_ge0: "0 \<le> p" using hsk_ge0 hpL by (by100 linarith)
+      have hp_le1: "p \<le> 1" using hsk1_le1 hpR by (by100 linarith)
+      have hsk_le_sk1: "s k \<le> s (Suc k)" using hinc hk by (by100 force)
+      have hd_pos: "s (Suc k) - s k > 0" using hinc hk by (by100 force)
+      \<comment> \<open>Core σ-splitting: σ(piece_k) = σ(first_half) · σ(second_half).
+         piece_k(t) = f(s(k) + t*(s(k+1)-s(k)))
+         first_half(t) = f(s(k) + t*(p-s(k)))
+         second_half(t) = f(p + t*(s(k+1)-p))
+         piece_k ≃ first_half * second_half by reparametrization in U (or V).
+         Then σ_cond1 + σ_cond2.\<close>
+      have h\<sigma>_split: "\<sigma> (\<lambda>t. f (s k + t * (s (Suc k) - s k)))
+          = mulH (\<sigma> (\<lambda>t. f (s k + t * (p - s k)))) (\<sigma> (\<lambda>t. f (p + t * (s (Suc k) - p))))"
+      proof -
+        define piece where "piece t = f (s k + t * (s (Suc k) - s k))" for t
+        define first_h where "first_h t = f (s k + t * (p - s k))" for t
+        define second_h where "second_h t = f (p + t * (s (Suc k) - p))" for t
+        \<comment> \<open>Piece k maps to U or V.\<close>
+        have hpUV_k: "(\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> piece t \<in> U)
+            \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> piece t \<in> V)"
+          using hUV hk unfolding piece_def by (by100 blast)
+        \<comment> \<open>Sub-pieces also map to U (or V) since they're sub-intervals.\<close>
+        have hd_pos: "s (Suc k) - s k > 0" using hinc hk by (by100 force)
+        \<comment> \<open>Sub-piece UV membership: first_h(t) = piece(u) where u ∈ [0,1].\<close>
+        have hfirst_as_piece: "\<And>t. first_h t = piece (t * (p - s k) / (s (Suc k) - s k))"
+          unfolding first_h_def piece_def using hd_pos by (by100 simp)
+        have hsecond_as_piece: "\<And>t. second_h t = piece ((p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k))"
+          unfolding second_h_def piece_def using hd_pos by (by100 simp)
+        have hfirst_u01: "\<And>t. 0 \<le> t \<Longrightarrow> t \<le> 1 \<Longrightarrow>
+            0 \<le> t * (p - s k) / (s (Suc k) - s k) \<and> t * (p - s k) / (s (Suc k) - s k) \<le> 1"
+        proof -
+          fix t :: real assume ht0: "0 \<le> t" and ht1: "t \<le> 1"
+          have "0 \<le> p - s k" using hpL by (by100 linarith)
+          hence hnn: "0 \<le> t * (p - s k)" using ht0 by (by100 simp)
+          have "t * (p - s k) \<le> 1 * (p - s k)"
+            by (rule mult_right_mono[OF ht1 \<open>0 \<le> p - s k\<close>])
+          hence "t * (p - s k) \<le> p - s k" by (by100 simp)
+          hence "t * (p - s k) \<le> s (Suc k) - s k" using hpR by (by100 linarith)
+          thus "0 \<le> t * (p - s k) / (s (Suc k) - s k) \<and> t * (p - s k) / (s (Suc k) - s k) \<le> 1"
+            using hnn hd_pos by (by100 simp)
+        qed
+        have hsecond_u01: "\<And>t. 0 \<le> t \<Longrightarrow> t \<le> 1 \<Longrightarrow>
+            0 \<le> (p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k)
+            \<and> (p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k) \<le> 1"
+        proof -
+          fix t :: real assume ht0: "0 \<le> t" and ht1: "t \<le> 1"
+          have "0 \<le> p - s k" using hpL by (by100 linarith)
+          have "0 \<le> s (Suc k) - p" using hpR by (by100 linarith)
+          hence hnn: "0 \<le> p - s k + t * (s (Suc k) - p)"
+            using ht0 \<open>0 \<le> p - s k\<close> by (by100 simp)
+          have "t * (s (Suc k) - p) \<le> 1 * (s (Suc k) - p)"
+            by (rule mult_right_mono[OF ht1 \<open>0 \<le> s (Suc k) - p\<close>])
+          hence "t * (s (Suc k) - p) \<le> s (Suc k) - p" by (by100 simp)
+          hence "p - s k + t * (s (Suc k) - p) \<le> s (Suc k) - s k" by (by100 linarith)
+          thus "0 \<le> (p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k)
+              \<and> (p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k) \<le> 1"
+            using hnn hd_pos by (by100 simp)
+        qed
+        have hfirst_in: "(\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> first_h t \<in> U)
+            \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> first_h t \<in> V)"
+          using hpUV_k
+        proof
+          assume hU: "\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> piece t \<in> U"
+          show ?thesis proof (rule disjI1, intro allI impI)
+            fix t :: real assume ht: "0 \<le> t \<and> t \<le> 1"
+            have hu: "0 \<le> t * (p - s k) / (s (Suc k) - s k)
+                \<and> t * (p - s k) / (s (Suc k) - s k) \<le> 1"
+              using hfirst_u01 ht by (by100 blast)
+            have "piece (t * (p - s k) / (s (Suc k) - s k)) \<in> U"
+              using hU hu by (by100 fast)
+            thus "first_h t \<in> U" using hfirst_as_piece by (by100 simp)
+          qed
+        next
+          assume hV: "\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> piece t \<in> V"
+          show ?thesis proof (rule disjI2, intro allI impI)
+            fix t :: real assume ht: "0 \<le> t \<and> t \<le> 1"
+            have hu: "0 \<le> t * (p - s k) / (s (Suc k) - s k)
+                \<and> t * (p - s k) / (s (Suc k) - s k) \<le> 1"
+              using hfirst_u01 ht by (by100 blast)
+            have "piece (t * (p - s k) / (s (Suc k) - s k)) \<in> V"
+              using hV hu by (by100 blast)
+            thus "first_h t \<in> V" using hfirst_as_piece by (by100 simp)
+          qed
+        qed
+        have hsecond_in: "(\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> second_h t \<in> U)
+            \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> second_h t \<in> V)"
+          using hpUV_k
+        proof
+          assume hU: "\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> piece t \<in> U"
+          show ?thesis proof (rule disjI1, intro allI impI)
+            fix t :: real assume ht: "0 \<le> t \<and> t \<le> 1"
+            have hu: "0 \<le> (p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k)
+                \<and> (p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k) \<le> 1"
+              using hsecond_u01 ht by (by100 blast)
+            have "piece ((p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k)) \<in> U"
+              using hU hu by (by100 fast)
+            thus "second_h t \<in> U" using hsecond_as_piece by (by100 simp)
+          qed
+        next
+          assume hV: "\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> piece t \<in> V"
+          show ?thesis proof (rule disjI2, intro allI impI)
+            fix t :: real assume ht: "0 \<le> t \<and> t \<le> 1"
+            have hu: "0 \<le> (p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k)
+                \<and> (p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k) \<le> 1"
+              using hsecond_u01 ht by (by100 blast)
+            have "piece ((p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k)) \<in> V"
+              using hV hu by (by100 blast)
+            thus "second_h t \<in> V" using hsecond_as_piece by (by100 simp)
+          qed
+        qed
+        \<comment> \<open>Step 1: piece ≃ first_h * second_h in U (or V) by reparametrization.\<close>
+        \<comment> \<open>Reparametrization: piece = g∘id and pp(first_h,second_h) = g∘ψ where g = piece.
+           ψ(t) = if t≤1/2 then 2t*(p-s(k))/(s(k+1)-s(k)) else (p-s(k)+(2t-1)*(s(k+1)-p))/(s(k+1)-s(k)).
+           Apply reparam_path_homotopy with g=piece, φ=id, ψ=ψ.\<close>
+        have hf_cont_X: "top1_continuous_map_on I_set I_top X TX f"
+          using hf_loop unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+        have hpiece_cont: "top1_continuous_map_on I_set I_top X TX piece"
+        proof -
+          have haff: "top1_continuous_map_on I_set I_top I_set I_top
+              (\<lambda>t. s k + t * (s (Suc k) - s k))"
+            by (rule affine_map_continuous_I_to_I[OF hsk_ge0 hsk_le_sk1 hsk1_le1])
+          show ?thesis unfolding piece_def
+            using top1_continuous_map_on_comp[OF haff hf_cont_X] unfolding comp_def by (by100 simp)
+        qed
+        have hpiece_I_U: "(\<forall>s\<in>I_set. piece s \<in> U) \<or> (\<forall>s\<in>I_set. piece s \<in> V)"
+        proof -
+          have "\<And>t. t \<in> I_set \<Longrightarrow> 0 \<le> t \<and> t \<le> 1"
+            unfolding top1_unit_interval_def by (by100 simp)
+          thus ?thesis using hpUV_k by (by100 fast)
+        qed
+        \<comment> \<open>pp(first_h, second_h) agrees with piece∘ψ on I_set, hence homotopic.\<close>
+        have hpp_eq_piece_psi: "\<And>t. t \<in> I_set \<Longrightarrow>
+            top1_path_product first_h second_h t = piece
+              (if t \<le> 1/2 then 2 * t * (p - s k) / (s (Suc k) - s k)
+               else (p - s k + (2*t-1) * (s (Suc k) - p)) / (s (Suc k) - s k))"
+          unfolding top1_path_product_def first_h_def second_h_def piece_def
+          using hd_pos by (by100 simp)
+        \<comment> \<open>Define ψ: piecewise linear reparametrization I→I.\<close>
+        define \<psi> where "\<psi> t = (if t \<le> 1/2 then 2 * t * (p - s k) / (s (Suc k) - s k)
+            else (p - s k + (2*t-1) * (s (Suc k) - p)) / (s (Suc k) - s k))" for t
+        have h\<psi>0: "\<psi> 0 = 0" unfolding \<psi>_def using hd_pos by (by100 simp)
+        have h\<psi>1: "\<psi> 1 = 1" unfolding \<psi>_def using hd_pos by (by100 simp)
+        have h\<psi>_cont: "top1_continuous_map_on I_set I_top I_set I_top \<psi>"
+        proof -
+          have hIeq: "I_set = {0..1/2::real} \<union> {1/2..1}"
+            unfolding top1_unit_interval_def by (by100 auto)
+          have hdnz: "s (Suc k) - s k \<noteq> 0" using hd_pos by (by100 linarith)
+          define f1_br where "f1_br t = 2 * t * (p - s k) / (s (Suc k) - s k)" for t :: real
+          define f2_br where "f2_br t = (p - s k + (2*t-1) * (s (Suc k) - p)) / (s (Suc k) - s k)" for t :: real
+          have "\<psi> = (\<lambda>t. if t \<le> 1/2 then f1_br t else f2_br t)"
+            unfolding \<psi>_def f1_br_def f2_br_def by (rule ext, by100 simp)
+          have hcont_f1: "continuous_on {0..1/2::real} f1_br"
+            unfolding f1_br_def using hdnz apply (intro continuous_intros) by (by100 blast)
+          have hcont_f2: "continuous_on {1/2..1::real} f2_br"
+            unfolding f2_br_def using hdnz apply (intro continuous_intros) by (by100 blast)
+          have hmatch: "\<forall>x. (x \<in> {0..1/2} \<and> \<not> x \<le> 1/2) \<or> (x \<in> {1/2..1} \<and> x \<le> 1/2)
+              \<longrightarrow> f1_br x = f2_br x"
+          proof (intro allI impI)
+            fix x :: real
+            assume "(x \<in> {0..1/2} \<and> \<not> x \<le> 1/2) \<or> (x \<in> {1/2..1} \<and> x \<le> 1/2)"
+            hence hx12: "x = 1/2" by (by100 force)
+            have "f1_br x = f1_br (1/2)" unfolding hx12 by (by100 simp)
+            also have "\<dots> = (p - s k) / (s (Suc k) - s k)" unfolding f1_br_def by (by100 simp)
+            also have "\<dots> = f2_br (1/2)" unfolding f2_br_def by (by100 simp)
+            also have "\<dots> = f2_br x" unfolding hx12 by (by100 simp)
+            finally show "f1_br x = f2_br x" .
+          qed
+          have hcl1: "closed {0..1/2::real}" by (by100 auto)
+          have hcl2: "closed {1/2..1::real}" by (by100 auto)
+          have "continuous_on ({0..1/2} \<union> {1/2..1}) \<psi>"
+            unfolding \<open>\<psi> = (\<lambda>t. if t \<le> 1/2 then f1_br t else f2_br t)\<close>
+            by (rule continuous_on_cases[OF hcl1 hcl2 hcont_f1 hcont_f2 hmatch])
+          hence hcont: "continuous_on I_set \<psi>" unfolding hIeq .
+          \<comment> \<open>Range: ψ maps I_set into I_set.\<close>
+          have hrange: "\<And>t. t \<in> I_set \<Longrightarrow> \<psi> t \<in> I_set"
+          proof -
+            fix t assume ht: "t \<in> I_set"
+            have ht01: "0 \<le> t \<and> t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 simp)
+            show "\<psi> t \<in> I_set"
+            proof (cases "t \<le> 1/2")
+              case True
+              hence "\<psi> t = 2 * t * (p - s k) / (s (Suc k) - s k)" unfolding \<psi>_def by (by100 simp)
+              moreover have "0 \<le> 2 * t * (p - s k) / (s (Suc k) - s k)
+                  \<and> 2 * t * (p - s k) / (s (Suc k) - s k) \<le> 1"
+              proof -
+                have "0 \<le> t" and "t \<le> 1/2" using ht01 True by (by100 blast)+
+                have "0 \<le> p - s k" using hpL by (by100 linarith)
+                have "0 \<le> 2 * t * (p - s k)" using \<open>0 \<le> t\<close> \<open>0 \<le> p - s k\<close> by (by100 simp)
+                moreover have "2 * t * (p - s k) \<le> s (Suc k) - s k"
+                proof -
+                  have "2 * t \<le> 1" using \<open>t \<le> 1/2\<close> by (by100 linarith)
+                  have "2 * t * (p - s k) \<le> 1 * (p - s k)"
+                    by (rule mult_right_mono[OF \<open>2*t \<le> 1\<close> \<open>0 \<le> p - s k\<close>])
+                  hence "2 * t * (p - s k) \<le> p - s k" by (by100 simp)
+                  thus ?thesis using hpR by (by100 linarith)
+                qed
+                ultimately show ?thesis using hd_pos by (by100 simp)
+              qed
+              ultimately show ?thesis unfolding top1_unit_interval_def by (by100 simp)
+            next
+              case False
+              hence "\<psi> t = (p - s k + (2*t-1) * (s (Suc k) - p)) / (s (Suc k) - s k)"
+                unfolding \<psi>_def by (by100 simp)
+              moreover have "0 \<le> (p - s k + (2*t-1) * (s (Suc k) - p)) / (s (Suc k) - s k)
+                  \<and> (p - s k + (2*t-1) * (s (Suc k) - p)) / (s (Suc k) - s k) \<le> 1"
+                using hsecond_u01[of "2*t-1"] ht01 False by (by100 simp)
+              ultimately show ?thesis unfolding top1_unit_interval_def by (by100 simp)
+            qed
+          qed
+          show ?thesis unfolding top1_continuous_map_on_def
+          proof (intro conjI ballI)
+            fix t assume "t \<in> I_set" thus "\<psi> t \<in> I_set" by (rule hrange)
+          next
+            fix V assume hV: "V \<in> I_top"
+            obtain W where hW: "open W" and hVW: "V = I_set \<inter> W"
+              using hV unfolding top1_unit_interval_topology_def subspace_topology_def
+                top1_open_sets_def by (by100 blast)
+            have hpre_W: "{t \<in> I_set. \<psi> t \<in> W} \<in> I_top"
+            proof -
+              have "\<exists>T. open T \<and> T \<inter> I_set = \<psi> -` W \<inter> I_set"
+                using hcont hW unfolding continuous_on_open_invariant by (by100 force)
+              then obtain T where hT: "open T" and hTeq: "T \<inter> I_set = \<psi> -` W \<inter> I_set"
+                by (by100 blast)
+              have "{t \<in> I_set. \<psi> t \<in> W} = I_set \<inter> T" using hTeq by (by100 blast)
+              moreover have "T \<in> top1_open_sets" using hT unfolding top1_open_sets_def by (by100 blast)
+              ultimately show ?thesis
+                unfolding top1_unit_interval_topology_def subspace_topology_def by (by100 blast)
+            qed
+            have "{t \<in> I_set. \<psi> t \<in> V} = {t \<in> I_set. \<psi> t \<in> W}"
+              using hVW hrange by (by100 blast)
+            thus "{t \<in> I_set. \<psi> t \<in> V} \<in> I_top" using hpre_W by (by100 simp)
+          qed
+        qed
+        \<comment> \<open>reparam gives: piece∘id ≃ piece∘ψ in U (or V).\<close>
+        have hpp_as_comp: "\<And>t. t \<in> I_set \<Longrightarrow> top1_path_product first_h second_h t = (piece \<circ> \<psi>) t"
+          using hpp_eq_piece_psi unfolding comp_def \<psi>_def by (by100 simp)
+        have hhom: "(\<exists>S. S = U \<and> top1_path_homotopic_on S (subspace_topology X TX S)
+            (piece 0) (piece 1) piece (top1_path_product first_h second_h))
+            \<or> (\<exists>S. S = V \<and> top1_path_homotopic_on S (subspace_topology X TX S)
+            (piece 0) (piece 1) piece (top1_path_product first_h second_h))"
+        proof -
+          have h0I: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+          have h1I: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+          \<comment> \<open>piece = piece∘id, and reparam gives piece∘id ≃ piece∘ψ.\<close>
+          have hid_cont: "top1_continuous_map_on I_set I_top I_set I_top (\<lambda>t. t)"
+          proof -
+            have "top1_continuous_map_on I_set I_top I_set I_top id"
+              by (rule top1_continuous_map_on_id[OF top1_unit_interval_topology_is_topology_on])
+            thus ?thesis unfolding id_def by (by100 simp)
+          qed
+          \<comment> \<open>Transfer from piece∘ψ to pp first_h second_h (agree on I_set).\<close>
+          have hid0: "(\<lambda>t::real. t) 0 = (0::real)" by (by100 simp)
+          have hid1: "(\<lambda>t::real. t) 1 = (1::real)" by (by100 simp)
+          have hcomp_id: "piece \<circ> (\<lambda>t. t) = piece"
+            unfolding comp_def by (rule ext, by100 simp)
+          have haff1_loc: "top1_continuous_map_on I_set I_top I_set I_top (\<lambda>t. s k + t * (p - s k))"
+            by (rule affine_map_continuous_I_to_I[OF hsk_ge0 hsk_le_p hp_le1])
+          have haff2_loc: "top1_continuous_map_on I_set I_top I_set I_top (\<lambda>t. p + t * (s (Suc k) - p))"
+            by (rule affine_map_continuous_I_to_I[OF hp_ge0 hp_le_sk1 hsk1_le1])
+          have hfirst_cont_loc: "top1_continuous_map_on I_set I_top X TX first_h"
+            unfolding first_h_def using top1_continuous_map_on_comp[OF haff1_loc hf_cont_X]
+            unfolding comp_def by (by100 simp)
+          have hsecond_cont_loc: "top1_continuous_map_on I_set I_top X TX second_h"
+            unfolding second_h_def using top1_continuous_map_on_comp[OF haff2_loc hf_cont_X]
+            unfolding comp_def by (by100 simp)
+          show ?thesis using hpiece_I_U
+          proof
+            assume hU: "\<forall>s\<in>I_set. piece s \<in> U"
+            have hreparam: "top1_path_homotopic_on U (subspace_topology X TX U)
+                (piece 0) (piece 1) (piece \<circ> (\<lambda>t. t)) (piece \<circ> \<psi>)"
+              by (rule reparam_path_homotopy[OF hTopX hpiece_cont hU hUsub hTopU
+                  hid_cont h\<psi>_cont hid0 hid1 h\<psi>0 h\<psi>1 h0I h1I])
+            have hreparam2: "top1_path_homotopic_on U (subspace_topology X TX U)
+                (piece 0) (piece 1) piece (piece \<circ> \<psi>)"
+              using hreparam unfolding hcomp_id .
+            have hfirst_img_U: "first_h ` I_set \<subseteq> U"
+            proof (intro subsetI)
+              fix x assume "x \<in> first_h ` I_set"
+              then obtain t where ht: "t \<in> I_set" and hx: "x = first_h t" by (by100 blast)
+              have ht01: "0 \<le> t \<and> t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 simp)
+              have hu: "0 \<le> t * (p - s k) / (s (Suc k) - s k)
+                  \<and> t * (p - s k) / (s (Suc k) - s k) \<le> 1"
+                using hfirst_u01 ht01 by (by100 blast)
+              have "t * (p - s k) / (s (Suc k) - s k) \<in> I_set"
+                using hu unfolding top1_unit_interval_def by (by100 simp)
+              have "piece (t * (p - s k) / (s (Suc k) - s k)) \<in> U"
+                using hU \<open>t * (p - s k) / (s (Suc k) - s k) \<in> I_set\<close> by (by100 blast)
+              thus "x \<in> U" using hx hfirst_as_piece by (by100 simp)
+            qed
+            have hsecond_img_U: "second_h ` I_set \<subseteq> U"
+            proof (intro subsetI)
+              fix x assume "x \<in> second_h ` I_set"
+              then obtain t where ht: "t \<in> I_set" and hx: "x = second_h t" by (by100 blast)
+              have ht01: "0 \<le> t \<and> t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 simp)
+              have hu: "0 \<le> (p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k)
+                  \<and> (p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k) \<le> 1"
+                using hsecond_u01 ht01 by (by100 blast)
+              have "(p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k) \<in> I_set"
+                using hu unfolding top1_unit_interval_def by (by100 simp)
+              have "piece ((p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k)) \<in> U"
+                using hU \<open>(p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k) \<in> I_set\<close> by (by100 blast)
+              thus "x \<in> U" using hx hsecond_as_piece by (by100 simp)
+            qed
+            have hfirst_path_U: "top1_is_path_on U (subspace_topology X TX U) (first_h 0) (first_h 1) first_h"
+              unfolding top1_is_path_on_def
+              using top1_continuous_map_on_codomain_shrink[OF hfirst_cont_loc hfirst_img_U hUsub] by (by100 blast)
+            have hsecond_path_U: "top1_is_path_on U (subspace_topology X TX U) (second_h 0) (second_h 1) second_h"
+              unfolding top1_is_path_on_def
+              using top1_continuous_map_on_codomain_shrink[OF hsecond_cont_loc hsecond_img_U hUsub] by (by100 blast)
+            have hfirst0: "first_h 0 = piece 0" unfolding first_h_def piece_def by (by100 simp)
+            have hsecond1: "second_h 1 = piece 1" unfolding second_h_def piece_def by (by100 simp)
+            have hpp_path_U: "top1_is_path_on U (subspace_topology X TX U)
+                (piece 0) (piece 1) (top1_path_product first_h second_h)"
+            proof -
+              have hmatch_loc: "first_h 1 = second_h 0"
+                unfolding first_h_def second_h_def by (by100 simp)
+              have hsecond_path_U': "top1_is_path_on U (subspace_topology X TX U)
+                  (first_h 1) (second_h 1) second_h"
+                using hsecond_path_U hmatch_loc by (by100 simp)
+              have "top1_is_path_on U (subspace_topology X TX U) (first_h 0) (second_h 1)
+                  (top1_path_product first_h second_h)"
+                by (rule top1_path_product_is_path[OF hTopU hfirst_path_U hsecond_path_U'])
+              thus ?thesis using hfirst0 hsecond1 by (by100 simp)
+            qed
+            have "top1_path_homotopic_on U (subspace_topology X TX U)
+                (piece 0) (piece 1) piece (top1_path_product first_h second_h)"
+            proof -
+              from hreparam2 obtain F where
+                  hF_cont: "top1_continuous_map_on (I_set \<times> I_set) II_topology U (subspace_topology X TX U) F"
+                  and hF0: "\<forall>s\<in>I_set. F (s, 0) = piece s"
+                  and hF1: "\<forall>s\<in>I_set. F (s, 1) = (piece \<circ> \<psi>) s"
+                  and hFb0: "\<forall>t\<in>I_set. F (0, t) = piece 0"
+                  and hFb1: "\<forall>t\<in>I_set. F (1, t) = piece 1"
+                unfolding top1_path_homotopic_on_def top1_is_path_on_def by blast
+              \<comment> \<open>F(s,1) = (piece∘ψ)(s) = pp(s) for s ∈ I_set.\<close>
+              have hF1_pp: "\<forall>s\<in>I_set. F (s, 1) = top1_path_product first_h second_h s"
+              proof (intro ballI)
+                fix t assume ht: "t \<in> I_set"
+                have "F (t, 1) = (piece \<circ> \<psi>) t" using hF1 ht by (by100 blast)
+                also have "\<dots> = top1_path_product first_h second_h t"
+                  using hpp_as_comp[OF ht, symmetric] .
+                finally show "F (t, 1) = top1_path_product first_h second_h t" .
+              qed
+              have hpiece_path_U: "top1_is_path_on U (subspace_topology X TX U)
+                  (piece 0) (piece 1) piece"
+              proof -
+                have "piece ` I_set \<subseteq> U" using hU unfolding top1_unit_interval_def by (by100 blast)
+                hence "top1_continuous_map_on I_set I_top U (subspace_topology X TX U) piece"
+                  by (rule top1_continuous_map_on_codomain_shrink[OF hpiece_cont _ hUsub])
+                thus ?thesis unfolding top1_is_path_on_def by (by100 blast)
+              qed
+              show ?thesis unfolding top1_path_homotopic_on_def
+                using hpiece_path_U hpp_path_U hF_cont hF0 hF1_pp hFb0 hFb1 by (by100 blast)
+            qed
+            thus ?thesis by (by100 blast)
+          next
+            assume hV: "\<forall>s\<in>I_set. piece s \<in> V"
+            have hreparam_V: "top1_path_homotopic_on V (subspace_topology X TX V)
+                (piece 0) (piece 1) (piece \<circ> (\<lambda>t. t)) (piece \<circ> \<psi>)"
+              by (rule reparam_path_homotopy[OF hTopX hpiece_cont hV hVsub hTopV
+                  hid_cont h\<psi>_cont hid0 hid1 h\<psi>0 h\<psi>1 h0I h1I])
+            have hreparam2_V: "top1_path_homotopic_on V (subspace_topology X TX V)
+                (piece 0) (piece 1) piece (piece \<circ> \<psi>)"
+              using hreparam_V unfolding hcomp_id .
+            have hfirst_img_V: "first_h ` I_set \<subseteq> V"
+            proof (intro subsetI)
+              fix x assume "x \<in> first_h ` I_set"
+              then obtain t where ht: "t \<in> I_set" and hx: "x = first_h t" by (by100 blast)
+              have ht01: "0 \<le> t \<and> t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 simp)
+              have hu: "0 \<le> t * (p - s k) / (s (Suc k) - s k)
+                  \<and> t * (p - s k) / (s (Suc k) - s k) \<le> 1"
+                using hfirst_u01 ht01 by (by100 blast)
+              have "t * (p - s k) / (s (Suc k) - s k) \<in> I_set"
+                using hu unfolding top1_unit_interval_def by (by100 simp)
+              thus "x \<in> V" using hV hx hfirst_as_piece
+                \<open>t * (p - s k) / (s (Suc k) - s k) \<in> I_set\<close> by (by100 simp)
+            qed
+            have hsecond_img_V: "second_h ` I_set \<subseteq> V"
+            proof (intro subsetI)
+              fix x assume "x \<in> second_h ` I_set"
+              then obtain t where ht: "t \<in> I_set" and hx: "x = second_h t" by (by100 blast)
+              have ht01: "0 \<le> t \<and> t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 simp)
+              have hu: "0 \<le> (p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k)
+                  \<and> (p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k) \<le> 1"
+                using hsecond_u01 ht01 by (by100 blast)
+              have "(p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k) \<in> I_set"
+                using hu unfolding top1_unit_interval_def by (by100 simp)
+              thus "x \<in> V" using hV hx hsecond_as_piece
+                \<open>(p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k) \<in> I_set\<close> by (by100 simp)
+            qed
+            have hfirst_path_V: "top1_is_path_on V (subspace_topology X TX V) (first_h 0) (first_h 1) first_h"
+              unfolding top1_is_path_on_def
+              using top1_continuous_map_on_codomain_shrink[OF hfirst_cont_loc hfirst_img_V hVsub] by (by100 blast)
+            have hsecond_path_V: "top1_is_path_on V (subspace_topology X TX V) (second_h 0) (second_h 1) second_h"
+              unfolding top1_is_path_on_def
+              using top1_continuous_map_on_codomain_shrink[OF hsecond_cont_loc hsecond_img_V hVsub] by (by100 blast)
+            have hpp_path_V: "top1_is_path_on V (subspace_topology X TX V)
+                (piece 0) (piece 1) (top1_path_product first_h second_h)"
+            proof -
+              have hmatch_V: "first_h 1 = second_h 0"
+                unfolding first_h_def second_h_def by (by100 simp)
+              have hsecond_path_V': "top1_is_path_on V (subspace_topology X TX V)
+                  (first_h 1) (second_h 1) second_h"
+                using hsecond_path_V hmatch_V by (by100 simp)
+              have "top1_is_path_on V (subspace_topology X TX V) (first_h 0) (second_h 1)
+                  (top1_path_product first_h second_h)"
+                by (rule top1_path_product_is_path[OF hTopV hfirst_path_V hsecond_path_V'])
+              thus ?thesis unfolding first_h_def second_h_def piece_def by (by100 simp)
+            qed
+            have "top1_path_homotopic_on V (subspace_topology X TX V)
+                (piece 0) (piece 1) piece (top1_path_product first_h second_h)"
+            proof -
+              from hreparam2_V obtain F where
+                  hF_cont: "top1_continuous_map_on (I_set \<times> I_set) II_topology V (subspace_topology X TX V) F"
+                  and hF0: "\<forall>s\<in>I_set. F (s, 0) = piece s"
+                  and hF1: "\<forall>s\<in>I_set. F (s, 1) = (piece \<circ> \<psi>) s"
+                  and hFb0: "\<forall>t\<in>I_set. F (0, t) = piece 0"
+                  and hFb1: "\<forall>t\<in>I_set. F (1, t) = piece 1"
+                unfolding top1_path_homotopic_on_def top1_is_path_on_def by blast
+              have hF1_pp: "\<forall>s\<in>I_set. F (s, 1) = top1_path_product first_h second_h s"
+              proof (intro ballI)
+                fix t assume ht: "t \<in> I_set"
+                have "F (t, 1) = (piece \<circ> \<psi>) t" using hF1 ht by (by100 blast)
+                also have "\<dots> = top1_path_product first_h second_h t"
+                  using hpp_as_comp[OF ht, symmetric] .
+                finally show "F (t, 1) = top1_path_product first_h second_h t" .
+              qed
+              have hpiece_path_V: "top1_is_path_on V (subspace_topology X TX V) (piece 0) (piece 1) piece"
+              proof -
+                have "piece ` I_set \<subseteq> V" using hV unfolding top1_unit_interval_def by (by100 blast)
+                hence "top1_continuous_map_on I_set I_top V (subspace_topology X TX V) piece"
+                  by (rule top1_continuous_map_on_codomain_shrink[OF hpiece_cont _ hVsub])
+                thus ?thesis unfolding top1_is_path_on_def by (by100 blast)
+              qed
+              show ?thesis unfolding top1_path_homotopic_on_def
+                using hpiece_path_V hpp_path_V hF_cont hF0 hF1_pp hFb0 hFb1 by (by100 blast)
+            qed
+            thus ?thesis by (by100 blast)
+          qed
+        qed
+        \<comment> \<open>Step 2: σ(piece) = σ(first*second) by σ_cond1.\<close>
+        have h\<sigma>_eq: "\<sigma> piece = \<sigma> (top1_path_product first_h second_h)"
+          using hhom
+        proof
+          assume "\<exists>S. S = U \<and> top1_path_homotopic_on S (subspace_topology X TX S)
+              (piece 0) (piece 1) piece (top1_path_product first_h second_h)"
+          then obtain S where "S = U" and hhom_S: "top1_path_homotopic_on U (subspace_topology X TX U)
+              (piece 0) (piece 1) piece (top1_path_product first_h second_h)"
+            by (by100 blast)
+          show ?thesis by (rule h\<sigma>_cond1[OF hhom_S])
+        next
+          assume "\<exists>S. S = V \<and> top1_path_homotopic_on S (subspace_topology X TX S)
+              (piece 0) (piece 1) piece (top1_path_product first_h second_h)"
+          then obtain S where "S = V" and hhom_S: "top1_path_homotopic_on V (subspace_topology X TX V)
+              (piece 0) (piece 1) piece (top1_path_product first_h second_h)"
+            by (by100 blast)
+          show ?thesis by (rule h\<sigma>_cond1_V[OF hhom_S])
+        qed
+        \<comment> \<open>Step 3: σ(first*second) = σ(first)·σ(second) by σ_cond2.\<close>
+        \<comment> \<open>first_h and second_h are paths in U (or V) by affine+composition+codomain_shrink.\<close>
+        have haff1: "top1_continuous_map_on I_set I_top I_set I_top (\<lambda>t. s k + t * (p - s k))"
+          by (rule affine_map_continuous_I_to_I[OF hsk_ge0 hsk_le_p hp_le1])
+        have haff2: "top1_continuous_map_on I_set I_top I_set I_top (\<lambda>t. p + t * (s (Suc k) - p))"
+          by (rule affine_map_continuous_I_to_I[OF hp_ge0 hp_le_sk1 hsk1_le1])
+        have hfirst_cont: "top1_continuous_map_on I_set I_top X TX first_h"
+          unfolding first_h_def using top1_continuous_map_on_comp[OF haff1 hf_cont_X]
+          unfolding comp_def by (by100 simp)
+        have hsecond_cont: "top1_continuous_map_on I_set I_top X TX second_h"
+          unfolding second_h_def using top1_continuous_map_on_comp[OF haff2 hf_cont_X]
+          unfolding comp_def by (by100 simp)
+        have hmatch: "first_h 1 = second_h 0"
+          unfolding first_h_def second_h_def by (by100 simp)
+        have h\<sigma>_mul: "\<sigma> (top1_path_product first_h second_h)
+            = mulH (\<sigma> first_h) (\<sigma> second_h)"
+          using hpUV_k
+        proof
+          assume hU: "\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> piece t \<in> U"
+          have hfirst_U: "first_h ` I_set \<subseteq> U"
+          proof (intro subsetI)
+            fix x assume "x \<in> first_h ` I_set"
+            then obtain t where ht: "t \<in> I_set" and hx: "x = first_h t" by (by100 blast)
+            have ht01: "0 \<le> t \<and> t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 simp)
+            have "piece (t * (p - s k) / (s (Suc k) - s k)) \<in> U"
+              using hU hfirst_u01 ht01 by (by100 blast)
+            thus "x \<in> U" using hx hfirst_as_piece by (by100 simp)
+          qed
+          have hsecond_U: "second_h ` I_set \<subseteq> U"
+          proof (intro subsetI)
+            fix x assume "x \<in> second_h ` I_set"
+            then obtain t where ht: "t \<in> I_set" and hx: "x = second_h t" by (by100 blast)
+            have ht01: "0 \<le> t \<and> t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 simp)
+            have "piece ((p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k)) \<in> U"
+              using hU hsecond_u01 ht01 by (by100 blast)
+            thus "x \<in> U" using hx hsecond_as_piece by (by100 simp)
+          qed
+          have hf1_path: "top1_is_path_on U (subspace_topology X TX U) (first_h 0) (first_h 1) first_h"
+            unfolding top1_is_path_on_def
+            using top1_continuous_map_on_codomain_shrink[OF hfirst_cont hfirst_U hUsub] by (by100 blast)
+          have hf2_path: "top1_is_path_on U (subspace_topology X TX U) (second_h 0) (second_h 1) second_h"
+            unfolding top1_is_path_on_def
+            using top1_continuous_map_on_codomain_shrink[OF hsecond_cont hsecond_U hUsub] by (by100 blast)
+          show ?thesis by (rule h\<sigma>_cond2[OF hf1_path hf2_path hmatch])
+        next
+          assume hV: "\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> piece t \<in> V"
+          have hfirst_V: "first_h ` I_set \<subseteq> V"
+          proof (intro subsetI)
+            fix x assume "x \<in> first_h ` I_set"
+            then obtain t where ht: "t \<in> I_set" and hx: "x = first_h t" by (by100 blast)
+            have ht01: "0 \<le> t \<and> t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 simp)
+            have "piece (t * (p - s k) / (s (Suc k) - s k)) \<in> V"
+              using hV hfirst_u01 ht01 by (by100 blast)
+            thus "x \<in> V" using hx hfirst_as_piece by (by100 simp)
+          qed
+          have hsecond_V: "second_h ` I_set \<subseteq> V"
+          proof (intro subsetI)
+            fix x assume "x \<in> second_h ` I_set"
+            then obtain t where ht: "t \<in> I_set" and hx: "x = second_h t" by (by100 blast)
+            have ht01: "0 \<le> t \<and> t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 simp)
+            have "piece ((p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k)) \<in> V"
+              using hV hsecond_u01 ht01 by (by100 blast)
+            thus "x \<in> V" using hx hsecond_as_piece by (by100 simp)
+          qed
+          have hf1_path: "top1_is_path_on V (subspace_topology X TX V) (first_h 0) (first_h 1) first_h"
+            unfolding top1_is_path_on_def
+            using top1_continuous_map_on_codomain_shrink[OF hfirst_cont hfirst_V hVsub] by (by100 blast)
+          have hf2_path: "top1_is_path_on V (subspace_topology X TX V) (second_h 0) (second_h 1) second_h"
+            unfolding top1_is_path_on_def
+            using top1_continuous_map_on_codomain_shrink[OF hsecond_cont hsecond_V hVsub] by (by100 blast)
+          show ?thesis by (rule h\<sigma>_cond2_V[OF hf1_path hf2_path hmatch])
+        qed
+        from h\<sigma>_eq h\<sigma>_mul have "\<sigma> piece = mulH (\<sigma> first_h) (\<sigma> second_h)"
+          by (by100 simp)
+        thus ?thesis unfolding piece_def first_h_def second_h_def by (by100 simp)
+      qed
+      \<comment> \<open>Map/foldr manipulation: the new subdivision's foldr differs only at position k,
+         where σ(piece_k) is replaced by σ(first)·σ(second). By h_σ_split they're equal.
+         Group associativity: mulH a (mulH b c) = mulH (mulH a b) c handles the foldr.\<close>
+      \<comment> \<open>The new subdivision's pieces: for i<k same as old, at k split into first/second,
+         for i>k+1 same as old shifted. h_σ_split gives σ(piece_k) = σ(first)·σ(second).
+         Group associativity: foldr [...,a,b,...] = foldr [...,mulH a b,...] when elements ∈ H.\<close>
+      show "foldr_\<sigma> f (Suc m) s' = foldr_\<sigma> f m s"
+      proof -
+        define F where "F i = \<sigma> (\<lambda>t. f (s i + t * (s (Suc i) - s i)))" for i
+        define G where "G i = \<sigma> (\<lambda>t. f (s' i + t * (s' (Suc i) - s' i)))" for i
+        \<comment> \<open>For i < k: G(i) = F(i) since s'(i) = s(i) and s'(Suc i) = s(Suc i).\<close>
+        have hG_eq_F: "\<And>i. i < k \<Longrightarrow> G i = F i"
+          unfolding G_def F_def s'_def using hk by (by100 simp)
+        \<comment> \<open>G(k) = σ(first_half), G(k+1) = σ(second_half).\<close>
+        have hG_k: "G k = \<sigma> (\<lambda>t. f (s k + t * (p - s k)))"
+          unfolding G_def s'_def by (by100 simp)
+        have hG_Sk: "G (Suc k) = \<sigma> (\<lambda>t. f (p + t * (s (Suc k) - p)))"
+          unfolding G_def s'_def using hk by (by100 simp)
+        \<comment> \<open>For i > k+1: G(i) = F(i-1).\<close>
+        have hG_shift: "\<And>i. Suc k < i \<Longrightarrow> i < Suc m \<Longrightarrow> G i = F (i - 1)"
+          unfolding G_def F_def s'_def by (by100 simp)
+        \<comment> \<open>Assemble: foldr_σ with s' = foldr with s via h_σ_split.\<close>
+        have hLHS: "foldr_\<sigma> f (Suc m) s' = foldr mulH (map G [0..<Suc m]) eH"
+          unfolding foldr_\<sigma>_def G_def by (by100 simp)
+        have hRHS: "foldr_\<sigma> f m s = foldr mulH (map F [0..<m]) eH"
+          unfolding foldr_\<sigma>_def F_def by (by100 simp)
+        \<comment> \<open>Key group property: foldr(...[a,b]...) = foldr(...[mulH a b]...).\<close>
+        have hassoc_grp: "\<And>a b c. a \<in> H \<Longrightarrow> b \<in> H \<Longrightarrow> c \<in> H \<Longrightarrow>
+            mulH (mulH a b) c = mulH a (mulH b c)"
+          using hH unfolding top1_is_group_on_def by (by100 blast)
+        \<comment> \<open>All σ-values of valid pieces are in H.\<close>
+        have hF_in_H: "\<And>i. i < m \<Longrightarrow> F i \<in> H"
+        proof -
+          fix i assume hi_m: "i < m"
+          have hge_i: "0 \<le> s i"
+          proof -
+            have "s 0 \<le> s i" using hi_m
+            proof (induct i)
+              case 0 show ?case by (by100 simp)
+            next
+              case (Suc j)
+              have "j < m" using Suc.prems by (by100 presburger)
+              have "s 0 \<le> s j" using Suc.hyps \<open>j < m\<close> by (by100 presburger)
+              moreover have "s j < s (Suc j)" using hinc \<open>j < m\<close> by (by100 blast)
+              ultimately show ?case by (by100 linarith)
+            qed
+            thus ?thesis using hs0 by (by100 simp)
+          qed
+          have hmono_i: "s i \<le> s (Suc i)" using hinc hi_m by (by100 force)
+          have hle_i: "s (Suc i) \<le> 1"
+          proof -
+            have "Suc i \<le> m" using hi_m by (by100 presburger)
+            have "s (Suc i) \<le> s m" using \<open>Suc i \<le> m\<close>
+            proof (induct rule: dec_induct)
+              case base show ?case by (by100 simp)
+            next
+              case (step n)
+              have "s n < s (Suc n)" using hinc step.hyps(2) by (by100 blast)
+              thus ?case using step.hyps(3) by (by100 linarith)
+            qed
+            thus ?thesis using hsm by (by100 simp)
+          qed
+          show "F i \<in> H" unfolding F_def
+            by (rule h\<sigma>_piece_in_H[OF hf_loop hi_m hge_i hmono_i hle_i])
+               (rule hUV[rule_format, OF hi_m])
+        qed
+        \<comment> \<open>Sub-piece UV membership (re-derived from hUV via sub-interval argument).\<close>
+        have hpUV_k_loc: "(\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (s k + t * (s (Suc k) - s k)) \<in> U)
+            \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (s k + t * (s (Suc k) - s k)) \<in> V)"
+          using hUV hk by (by100 blast)
+        have hfirst_as_pl: "\<And>t. f (s k + t * (p - s k))
+            = f (s k + (t * (p - s k) / (s (Suc k) - s k)) * (s (Suc k) - s k))"
+          using hd_pos by (by100 simp)
+        have hfu01: "\<And>t. 0 \<le> t \<Longrightarrow> t \<le> 1 \<Longrightarrow>
+            0 \<le> t * (p - s k) / (s (Suc k) - s k) \<and> t * (p - s k) / (s (Suc k) - s k) \<le> 1"
+        proof -
+          fix t :: real assume ht0: "0 \<le> t" and ht1: "t \<le> 1"
+          have hpsk: "0 \<le> p - s k" using hpL by (by100 linarith)
+          have hnn: "0 \<le> t * (p - s k)" using ht0 hpsk by (by100 simp)
+          have "t * (p - s k) \<le> 1 * (p - s k)" by (rule mult_right_mono[OF ht1 hpsk])
+          hence "t * (p - s k) \<le> p - s k" by (by100 simp)
+          hence "t * (p - s k) \<le> s (Suc k) - s k" using hpR by (by100 linarith)
+          thus "0 \<le> t * (p - s k) / (s (Suc k) - s k) \<and> t * (p - s k) / (s (Suc k) - s k) \<le> 1"
+            using hnn hd_pos by (by100 simp)
+        qed
+        have hfirst_UV_loc: "(\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (s k + t * (p - s k)) \<in> U)
+            \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (s k + t * (p - s k)) \<in> V)"
+          using hpUV_k_loc
+        proof
+          assume hU: "\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (s k + t * (s (Suc k) - s k)) \<in> U"
+          show ?thesis proof (rule disjI1, intro allI impI)
+            fix t :: real assume ht: "0 \<le> t \<and> t \<le> 1"
+            have "f (s k + (t * (p - s k) / (s (Suc k) - s k)) * (s (Suc k) - s k)) \<in> U"
+              using hU hfu01 ht by (by100 blast)
+            thus "f (s k + t * (p - s k)) \<in> U" using hfirst_as_pl by (by100 simp)
+          qed
+        next
+          assume hV: "\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (s k + t * (s (Suc k) - s k)) \<in> V"
+          show ?thesis proof (rule disjI2, intro allI impI)
+            fix t :: real assume ht: "0 \<le> t \<and> t \<le> 1"
+            have "f (s k + (t * (p - s k) / (s (Suc k) - s k)) * (s (Suc k) - s k)) \<in> V"
+              using hV hfu01 ht by (by100 blast)
+            thus "f (s k + t * (p - s k)) \<in> V" using hfirst_as_pl by (by100 simp)
+          qed
+        qed
+        have hsecond_as_pl: "\<And>t. f (p + t * (s (Suc k) - p))
+            = f (s k + ((p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k)) * (s (Suc k) - s k))"
+          using hd_pos by (by100 simp)
+        have hsu01: "\<And>t. 0 \<le> t \<Longrightarrow> t \<le> 1 \<Longrightarrow>
+            0 \<le> (p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k)
+            \<and> (p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k) \<le> 1"
+        proof -
+          fix t :: real assume ht0: "0 \<le> t" and ht1: "t \<le> 1"
+          have hpsk: "0 \<le> p - s k" using hpL by (by100 linarith)
+          have hskp: "0 \<le> s (Suc k) - p" using hpR by (by100 linarith)
+          have hnn: "0 \<le> p - s k + t * (s (Suc k) - p)" using ht0 hpsk hskp by (by100 simp)
+          have "t * (s (Suc k) - p) \<le> 1 * (s (Suc k) - p)" by (rule mult_right_mono[OF ht1 hskp])
+          hence "t * (s (Suc k) - p) \<le> s (Suc k) - p" by (by100 simp)
+          hence "p - s k + t * (s (Suc k) - p) \<le> s (Suc k) - s k" by (by100 linarith)
+          thus "0 \<le> (p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k)
+              \<and> (p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k) \<le> 1"
+            using hnn hd_pos by (by100 simp)
+        qed
+        have hsecond_UV_loc: "(\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (p + t * (s (Suc k) - p)) \<in> U)
+            \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (p + t * (s (Suc k) - p)) \<in> V)"
+          using hpUV_k_loc
+        proof
+          assume hU: "\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (s k + t * (s (Suc k) - s k)) \<in> U"
+          show ?thesis proof (rule disjI1, intro allI impI)
+            fix t :: real assume ht: "0 \<le> t \<and> t \<le> 1"
+            have "f (s k + ((p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k)) * (s (Suc k) - s k)) \<in> U"
+              using hU hsu01 ht by (by100 blast)
+            thus "f (p + t * (s (Suc k) - p)) \<in> U" using hsecond_as_pl by (by100 simp)
+          qed
+        next
+          assume hV: "\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (s k + t * (s (Suc k) - s k)) \<in> V"
+          show ?thesis proof (rule disjI2, intro allI impI)
+            fix t :: real assume ht: "0 \<le> t \<and> t \<le> 1"
+            have "f (s k + ((p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k)) * (s (Suc k) - s k)) \<in> V"
+              using hV hsu01 ht by (by100 blast)
+            thus "f (p + t * (s (Suc k) - p)) \<in> V" using hsecond_as_pl by (by100 simp)
+          qed
+        qed
+        have hfc_loc: "top1_continuous_map_on I_set I_top X TX f"
+          using hf_loop unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+        have hG_k_H: "G k \<in> H"
+        proof -
+          have hcont1: "top1_continuous_map_on I_set I_top X TX (\<lambda>t. f (s k + t * (p - s k)))"
+            using top1_continuous_map_on_comp[OF affine_map_continuous_I_to_I[OF hsk_ge0 hsk_le_p hp_le1] hfc_loc]
+            unfolding comp_def by (by100 simp)
+          have himg1: "(\<forall>r\<in>I_set. f (s k + r * (p - s k)) \<in> U) \<or> (\<forall>r\<in>I_set. f (s k + r * (p - s k)) \<in> V)"
+          proof -
+            have "\<And>t. t \<in> I_set \<Longrightarrow> 0 \<le> t \<and> t \<le> 1" unfolding top1_unit_interval_def by (by100 simp)
+            thus ?thesis using hfirst_UV_loc by (by100 fast)
+          qed
+          show ?thesis using hG_k himg1
+          proof (cases "\<forall>r\<in>I_set. f (s k + r * (p - s k)) \<in> U")
+            case True
+            have "(\<lambda>t. f (s k + t * (p - s k))) ` I_set \<subseteq> U" using True by (by100 blast)
+            have "top1_is_path_on U (subspace_topology X TX U)
+                ((\<lambda>t. f (s k + t * (p - s k))) 0) ((\<lambda>t. f (s k + t * (p - s k))) 1)
+                (\<lambda>t. f (s k + t * (p - s k)))"
+              unfolding top1_is_path_on_def
+              using top1_continuous_map_on_codomain_shrink[OF hcont1
+                  \<open>(\<lambda>t. f (s k + t * (p - s k))) ` I_set \<subseteq> U\<close> hUsub] by (by100 blast)
+            hence "\<sigma> (\<lambda>t. f (s k + t * (p - s k))) \<in> H" by (rule h\<sigma>_path_in_H)
+            thus ?thesis using hG_k by (by100 simp)
+          next
+            case False
+            hence "\<forall>r\<in>I_set. f (s k + r * (p - s k)) \<in> V" using himg1 by (by100 blast)
+            hence "(\<lambda>t. f (s k + t * (p - s k))) ` I_set \<subseteq> V" by (by100 blast)
+            have "top1_is_path_on V (subspace_topology X TX V)
+                ((\<lambda>t. f (s k + t * (p - s k))) 0) ((\<lambda>t. f (s k + t * (p - s k))) 1)
+                (\<lambda>t. f (s k + t * (p - s k)))"
+              unfolding top1_is_path_on_def
+              using top1_continuous_map_on_codomain_shrink[OF hcont1
+                  \<open>(\<lambda>t. f (s k + t * (p - s k))) ` I_set \<subseteq> V\<close> hVsub] by (by100 blast)
+            hence "\<sigma> (\<lambda>t. f (s k + t * (p - s k))) \<in> H" by (rule h\<sigma>_path_in_H_V)
+            thus ?thesis using hG_k by (by100 simp)
+          qed
+        qed
+        have hG_Sk_H: "G (Suc k) \<in> H"
+        proof -
+          have hcont2: "top1_continuous_map_on I_set I_top X TX (\<lambda>t. f (p + t * (s (Suc k) - p)))"
+            using top1_continuous_map_on_comp[OF affine_map_continuous_I_to_I[OF hp_ge0 hp_le_sk1 hsk1_le1] hfc_loc]
+            unfolding comp_def by (by100 simp)
+          have himg2: "(\<forall>r\<in>I_set. f (p + r * (s (Suc k) - p)) \<in> U) \<or> (\<forall>r\<in>I_set. f (p + r * (s (Suc k) - p)) \<in> V)"
+          proof -
+            have "\<And>t. t \<in> I_set \<Longrightarrow> 0 \<le> t \<and> t \<le> 1" unfolding top1_unit_interval_def by (by100 simp)
+            thus ?thesis using hsecond_UV_loc by (by100 fast)
+          qed
+          show ?thesis using hG_Sk himg2
+          proof (cases "\<forall>r\<in>I_set. f (p + r * (s (Suc k) - p)) \<in> U")
+            case True
+            have "(\<lambda>t. f (p + t * (s (Suc k) - p))) ` I_set \<subseteq> U" using True by (by100 blast)
+            have "top1_is_path_on U (subspace_topology X TX U)
+                ((\<lambda>t. f (p + t * (s (Suc k) - p))) 0) ((\<lambda>t. f (p + t * (s (Suc k) - p))) 1)
+                (\<lambda>t. f (p + t * (s (Suc k) - p)))"
+              unfolding top1_is_path_on_def
+              using top1_continuous_map_on_codomain_shrink[OF hcont2
+                  \<open>(\<lambda>t. f (p + t * (s (Suc k) - p))) ` I_set \<subseteq> U\<close> hUsub] by (by100 blast)
+            hence "\<sigma> (\<lambda>t. f (p + t * (s (Suc k) - p))) \<in> H" by (rule h\<sigma>_path_in_H)
+            thus ?thesis using hG_Sk by (by100 simp)
+          next
+            case False
+            hence "\<forall>r\<in>I_set. f (p + r * (s (Suc k) - p)) \<in> V" using himg2 by (by100 blast)
+            hence "(\<lambda>t. f (p + t * (s (Suc k) - p))) ` I_set \<subseteq> V" by (by100 blast)
+            have "top1_is_path_on V (subspace_topology X TX V)
+                ((\<lambda>t. f (p + t * (s (Suc k) - p))) 0) ((\<lambda>t. f (p + t * (s (Suc k) - p))) 1)
+                (\<lambda>t. f (p + t * (s (Suc k) - p)))"
+              unfolding top1_is_path_on_def
+              using top1_continuous_map_on_codomain_shrink[OF hcont2
+                  \<open>(\<lambda>t. f (p + t * (s (Suc k) - p))) ` I_set \<subseteq> V\<close> hVsub] by (by100 blast)
+            hence "\<sigma> (\<lambda>t. f (p + t * (s (Suc k) - p))) \<in> H" by (rule h\<sigma>_path_in_H_V)
+            thus ?thesis using hG_Sk by (by100 simp)
+          qed
+        qed
+        \<comment> \<open>The equality reduces to: replacing [G k, G(Suc k)] by [F k] preserves foldr,
+           since F k = mulH (G k) (G(Suc k)). The rest of the map is identical.\<close>
+        \<comment> \<open>h_σ_split in terms of F and G:\<close>
+        have hFk_eq: "F k = mulH (G k) (G (Suc k))"
+          unfolding F_def using h\<sigma>_split hG_k hG_Sk by (by100 simp)
+        \<comment> \<open>Map decomposition: map G [0..<Suc m] splits at k.\<close>
+        have hmap_G: "map G [0..<Suc m] = map F [0..<k] @ [G k, G (Suc k)] @ map F [Suc k..<m]"
+        proof -
+          \<comment> \<open>Step 1: split [0..<Suc m] = [0..<k] @ [k..<Suc m]\<close>
+          have hk_le: "k \<le> Suc m" using hk by (by100 presburger)
+          have "[0..<Suc m] = [0..<k] @ [k..<Suc m]"
+            using upt_add_eq_append[of 0 k "Suc m - k"] hk_le by (by100 force)
+          \<comment> \<open>Step 2: [k..<Suc m] = k # Suc k # [Suc(Suc k)..<Suc m]\<close>
+          moreover have "[k..<Suc m] = k # Suc k # [Suc (Suc k)..<Suc m]"
+          proof -
+            have "k < Suc m" using hk by (by100 presburger)
+            hence "[k..<Suc m] = k # [Suc k..<Suc m]" by (rule upt_conv_Cons)
+            moreover have "Suc k < Suc m" using hk hm by (by100 presburger)
+            hence "[Suc k..<Suc m] = Suc k # [Suc (Suc k)..<Suc m]" by (rule upt_conv_Cons)
+            ultimately show ?thesis by (by100 simp)
+          qed
+          ultimately have hsplit: "[0..<Suc m] = [0..<k] @ k # Suc k # [Suc (Suc k)..<Suc m]"
+            by (by100 simp)
+          \<comment> \<open>Step 3: map G on each piece.\<close>
+          have "map G [0..<Suc m] = map G [0..<k] @ G k # G (Suc k) # map G [Suc (Suc k)..<Suc m]"
+            using hsplit by (by100 simp)
+          moreover have hbelow: "map G [0..<k] = map F [0..<k]"
+          proof (rule map_cong)
+            show "[0..<k] = [0..<k]" by (by100 simp)
+          next
+            fix x assume "x \<in> set [0..<k]"
+            hence "x < k" by (by100 simp)
+            thus "G x = F x" by (rule hG_eq_F)
+          qed
+          moreover have habove: "map G [Suc (Suc k)..<Suc m] = map F [Suc k..<m]"
+          proof -
+            have "map G [Suc (Suc k)..<Suc m] = map (G \<circ> Suc) [Suc k..<m]"
+              using map_Suc_upt[of "Suc k" m, symmetric] unfolding map_map[symmetric]
+              by (by100 simp)
+            also have "\<dots> = map F [Suc k..<m]"
+            proof (rule map_cong)
+              show "[Suc k..<m] = [Suc k..<m]" by (by100 simp)
+            next
+              fix x assume "x \<in> set [Suc k..<m]"
+              hence hx_ge: "Suc k \<le> x" and hx_lt: "x < m" by (by100 simp)+
+              have "Suc k < Suc x" using hx_ge by (by100 presburger)
+              have "Suc x < Suc m" using hx_lt by (by100 presburger)
+              have "(G \<circ> Suc) x = G (Suc x)" unfolding comp_def by (by100 simp)
+              also have "\<dots> = F (Suc x - 1)" using hG_shift[OF \<open>Suc k < Suc x\<close> \<open>Suc x < Suc m\<close>] .
+              also have "\<dots> = F x" by (by100 simp)
+              finally show "(G \<circ> Suc) x = F x" .
+            qed
+            finally show ?thesis .
+          qed
+          ultimately have "map G [0..<Suc m] = map F [0..<k] @ G k # G (Suc k) # map F [Suc k..<m]"
+            by (by100 presburger)
+          thus ?thesis by (by100 simp)
+        qed
+        have hmap_F: "map F [0..<m] = map F [0..<k] @ [F k] @ map F [Suc k..<m]"
+        proof -
+          have "[0..<m] = [0..<k] @ k # [Suc k..<m]"
+            using upt_conv_Cons[of k m] hk upt_add_eq_append[of 0 k "m-k"]
+            by (by100 force)
+          thus ?thesis by (by100 simp)
+        qed
+        \<comment> \<open>foldr with [G k, G(Suc k)] vs [F k] = [mulH (G k) (G(Suc k))]: group associativity.\<close>
+        have heH_in: "eH \<in> H" using hH unfolding top1_is_group_on_def by (by100 fast)
+        have hfoldr_tail_H: "foldr mulH (map F [Suc k..<m]) eH \<in> H"
+        proof -
+          have "\<And>xs. (\<forall>x \<in> set xs. x \<in> H) \<Longrightarrow> foldr mulH xs eH \<in> H"
+          proof -
+            fix xs show "(\<forall>x \<in> set xs. x \<in> H) \<Longrightarrow> foldr mulH xs eH \<in> H"
+            proof (induct xs)
+              case Nil thus ?case using heH_in by (by100 simp)
+            next
+              case (Cons a xs)
+              have "a \<in> H" using Cons.prems by (by100 simp)
+              have "foldr mulH xs eH \<in> H" using Cons by (by100 simp)
+              have "mulH a (foldr mulH xs eH) \<in> H"
+                using hH \<open>a \<in> H\<close> \<open>foldr mulH xs eH \<in> H\<close> unfolding top1_is_group_on_def by (by100 blast)
+              thus ?case by (by100 simp)
+            qed
+          qed
+          moreover have "\<forall>x \<in> set (map F [Suc k..<m]). x \<in> H"
+            using hF_in_H by (by100 force)
+          ultimately show ?thesis by (by100 blast)
+        qed
+        have hassoc_app: "mulH (G k) (mulH (G (Suc k)) (foldr mulH (map F [Suc k..<m]) eH))
+            = mulH (mulH (G k) (G (Suc k))) (foldr mulH (map F [Suc k..<m]) eH)"
+          using hassoc_grp[OF hG_k_H hG_Sk_H hfoldr_tail_H, symmetric] .
+        \<comment> \<open>Assemble: LHS = foldr(mapF[0..k] @ [Gk,GSk] @ mapF[Sk..m]) eH
+           = foldr(mapF[0..k])(mulH Gk (mulH GSk (foldr mapF[Sk..m] eH)))
+           = foldr(mapF[0..k])(mulH (mulH Gk GSk) (foldr mapF[Sk..m] eH))  [by hassoc_app]
+           = foldr(mapF[0..k])(mulH Fk (foldr mapF[Sk..m] eH))  [by hFk_eq]
+           = foldr(mapF[0..k] @ [Fk] @ mapF[Sk..m]) eH
+           = RHS\<close>
+        have "foldr mulH (map G [0..<Suc m]) eH
+            = foldr mulH (map F [0..<k] @ [G k, G (Suc k)] @ map F [Suc k..<m]) eH"
+          using hmap_G by (by100 simp)
+        also have "\<dots> = foldr mulH (map F [0..<k])
+            (mulH (G k) (mulH (G (Suc k)) (foldr mulH (map F [Suc k..<m]) eH)))"
+          by (by100 simp)
+        also have "\<dots> = foldr mulH (map F [0..<k])
+            (mulH (mulH (G k) (G (Suc k))) (foldr mulH (map F [Suc k..<m]) eH))"
+          using hassoc_app by (by100 simp)
+        also have "\<dots> = foldr mulH (map F [0..<k])
+            (mulH (F k) (foldr mulH (map F [Suc k..<m]) eH))"
+          using hFk_eq by (by100 simp)
+        also have "\<dots> = foldr mulH (map F [0..<k] @ [F k] @ map F [Suc k..<m]) eH"
+          by (by100 simp)
+        also have "\<dots> = foldr mulH (map F [0..<m]) eH"
+          using hmap_F by (by100 simp)
+        finally show ?thesis using hLHS hRHS by (by100 simp)
+      qed
+    qed
+    \<comment> \<open>Subdivision independence: both (N,S) and (n,sub) refine to common refinement.\<close>
+    \<comment> \<open>Subdivision independence via common refinement.
+       Key insight: h_point_insert shows inserting ONE point preserves foldr_σ.
+       Both (N,S) and (n,sub) can be refined to their common refinement by
+       iterating point insertion. The common refinement has the same foldr_σ value
+       when reached from either direction. Hence foldr_σ f N S = foldr_σ f n sub.
+       Formal proof requires:
+       1. Define common refinement (union of S-points and sub-points)
+       2. Induction on |points to add| for each direction
+       3. At each step: find insertable point, apply h_point_insert\<close>
+    \<comment> \<open>Helper: inserting all points of one subdivision into another preserves foldr_σ.
+       By induction on extra points to add. Each step uses h_point_insert.\<close>
+    have h_refine: "\<And>M T. M \<ge> 1 \<Longrightarrow> T 0 = (0::real) \<Longrightarrow> T M = 1 \<Longrightarrow>
+        (\<forall>i<M. T i < T (Suc i)) \<Longrightarrow>
+        (\<forall>i<M. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T i + t * (T (Suc i) - T i)) \<in> U)
+             \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T i + t * (T (Suc i) - T i)) \<in> V)) \<Longrightarrow>
+        (\<forall>i\<le>n. \<exists>j\<le>M. T j = sub i) \<Longrightarrow>
+        foldr_\<sigma> f M T = foldr_\<sigma> f n sub"
+    proof -
+      fix M and T :: "nat \<Rightarrow> real"
+      assume hM: "M \<ge> 1" and hT0: "T 0 = (0::real)" and hTM: "T M = 1"
+         and hTinc: "\<forall>i<M. T i < T (Suc i)"
+         and hTUV: "\<forall>i<M. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T i + t * (T (Suc i) - T i)) \<in> U)
+             \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T i + t * (T (Suc i) - T i)) \<in> V)"
+         and hrefines: "\<forall>i\<le>n. \<exists>j\<le>M. T j = sub i"
+      show "foldr_\<sigma> f M T = foldr_\<sigma> f n sub" using hM hT0 hTM hTinc hTUV hrefines
+      proof (induction M arbitrary: T rule: less_induct)
+        case (less M)
+        show ?case
+        proof (cases "M = n")
+          case True
+          \<comment> \<open>Base: M = n, T has same #pieces as sub. Since T ⊇ sub and both strictly
+             increasing with same endpoints, T = sub on [0..n].\<close>
+          have hT_mono: "\<And>a b. a \<le> b \<Longrightarrow> b \<le> M \<Longrightarrow> T a \<le> T b"
+          proof -
+            fix a b :: nat assume hab: "a \<le> b" and hbM: "b \<le> M"
+            show "T a \<le> T b" using hab hbM
+            proof (induct b)
+              case 0 thus ?case by (by100 simp)
+            next
+              case (Suc b')
+              show ?case
+              proof (cases "a \<le> b'")
+                case True
+                have "b' \<le> M" using Suc.prems(2) by (by100 presburger)
+                have "T a \<le> T b'" using Suc.hyps[OF True \<open>b' \<le> M\<close>] .
+                moreover have "b' < M" using Suc.prems(2) by (by100 presburger)
+                hence "T b' < T (Suc b')" using less.prems(4) by (by100 force)
+                ultimately show ?thesis by (by100 linarith)
+              next
+                case False
+                hence "a = Suc b'" using Suc.prems(1) by (by100 presburger)
+                thus ?thesis by (by100 simp)
+              qed
+            qed
+          qed
+          have hT_range_eq: "T ` {0..n} = sub ` {0..n}"
+          proof (rule card_subset_eq[symmetric])
+            show "finite (T ` {0..n})" by (by100 simp)
+            show "sub ` {0..n} \<subseteq> T ` {0..n}"
+            proof
+              fix x assume "x \<in> sub ` {0..n}"
+              then obtain k where hk: "k \<le> n" and hkx: "x = sub k" by (by100 force)
+              from less.prems(6) hk obtain j where "j \<le> M" and "T j = sub k"
+                using True by (by100 blast)
+              thus "x \<in> T ` {0..n}" using hkx True by (by100 force)
+            qed
+            show "card (sub ` {0..n}) = card (T ` {0..n})"
+            proof -
+              have hT_inj: "inj_on T {0..n}"
+              proof (rule inj_onI)
+                fix a b assume ha: "a \<in> {0..n}" and hb: "b \<in> {0..n}" and heq: "T a = T b"
+                have haM: "a \<le> M" and hbM: "b \<le> M" using ha hb True by (by100 simp)+
+                show "a = b"
+                proof (rule ccontr)
+                  assume "a \<noteq> b"
+                  hence "a < b \<or> b < a" by (by100 presburger)
+                  thus False
+                  proof
+                    assume "a < b"
+                    hence "T a \<le> T (b-1)" using hT_mono hbM by (by100 force)
+                    moreover have "b - 1 < M" using \<open>a < b\<close> hbM by (by100 presburger)
+                    hence "T (b-1) < T (Suc (b-1))" using less.prems(4) by (by100 force)
+                    moreover have "Suc (b-1) = b" using \<open>a < b\<close> by (by100 presburger)
+                    hence "T (Suc (b-1)) = T b" by (by100 simp)
+                    ultimately have "T a < T b" by (by100 linarith)
+                    thus False using heq by (by100 linarith)
+                  next
+                    assume "b < a"
+                    hence "T b \<le> T (a-1)" using hT_mono haM by (by100 force)
+                    moreover have "a - 1 < M" using \<open>b < a\<close> haM by (by100 presburger)
+                    hence "T (a-1) < T (Suc (a-1))" using less.prems(4) by (by100 force)
+                    moreover have "Suc (a-1) = a" using \<open>b < a\<close> by (by100 presburger)
+                    hence "T (Suc (a-1)) = T a" by (by100 simp)
+                    ultimately have "T b < T a" by (by100 linarith)
+                    thus False using heq by (by100 linarith)
+                  qed
+                qed
+              qed
+              have hsub_inj: "inj_on sub {0..n}"
+              proof (rule inj_onI)
+                fix a b assume ha: "a \<in> {0..n}" and hb: "b \<in> {0..n}" and heq: "sub a = sub b"
+                show "a = b"
+                proof (rule ccontr)
+                  assume "a \<noteq> b"
+                  hence "a < b \<or> b < a" by (by100 presburger)
+                  thus False
+                  proof
+                    assume "a < b"
+                    have "sub a < sub b" using \<open>a < b\<close> hb hinc
+                    proof (induct b)
+                      case 0 thus ?case by (by100 simp)
+                    next
+                      case (Suc b')
+                      show ?case
+                      proof (cases "a = b'")
+                        case True thus ?thesis using hinc Suc.prems(2) by (by100 force)
+                      next
+                        case False
+                        hence "a < b'" using Suc.prems(1) by (by100 presburger)
+                        have "b' \<in> {0..n}" using Suc.prems(2) by (by100 force)
+                        have "sub a < sub b'" using Suc.hyps[OF \<open>a < b'\<close> \<open>b' \<in> {0..n}\<close> hinc] .
+                        moreover have "b' < n" using Suc.prems(2) by (by100 force)
+                        hence "sub b' < sub (Suc b')" using hinc by (by100 force)
+                        ultimately show ?thesis by (by100 linarith)
+                      qed
+                    qed
+                    thus False using heq by (by100 linarith)
+                  next
+                    assume "b < a"
+                    have "sub b < sub a" using \<open>b < a\<close> ha hinc
+                    proof (induct a)
+                      case 0 thus ?case by (by100 simp)
+                    next
+                      case (Suc a')
+                      show ?case
+                      proof (cases "b = a'")
+                        case True thus ?thesis using hinc Suc.prems(2) by (by100 force)
+                      next
+                        case False
+                        hence "b < a'" using Suc.prems(1) by (by100 presburger)
+                        have "a' \<in> {0..n}" using Suc.prems(2) by (by100 force)
+                        have "sub b < sub a'" using Suc.hyps[OF \<open>b < a'\<close> \<open>a' \<in> {0..n}\<close> hinc] .
+                        moreover have "a' < n" using Suc.prems(2) by (by100 force)
+                        hence "sub a' < sub (Suc a')" using hinc by (by100 force)
+                        ultimately show ?thesis by (by100 linarith)
+                      qed
+                    qed
+                    thus False using heq by (by100 linarith)
+                  qed
+                qed
+              qed
+              show ?thesis using card_image[OF hT_inj] card_image[OF hsub_inj] by (by100 simp)
+            qed
+          qed
+          have hT_eq_sub: "\<forall>i\<le>n. T i = sub i"
+          proof (intro allI impI)
+            fix i assume hi: "i \<le> n"
+            show "T i = sub i" using hi
+            proof (induct i)
+              case 0
+              show ?case using less.prems(2) hs0 by (by100 simp)
+            next
+              case (Suc i')
+              have "i' \<le> n" using Suc.prems by (by100 presburger)
+              hence hIH: "T i' = sub i'" using Suc.hyps by (by100 simp)
+              have hSi_le: "Suc i' \<le> n" using Suc.prems by (by100 presburger)
+              \<comment> \<open>sub(Suc i') appears in T at some index j ≤ n.\<close>
+              from less.prems(6) hSi_le obtain j where hj_le: "j \<le> n" and hj_eq: "T j = sub (Suc i')"
+                using True by (by100 blast)
+              \<comment> \<open>j > i' (from T strict inc + T(j) = sub(Suc i') > sub(i') = T(i')).\<close>
+              have "sub (Suc i') > sub i'" using hinc Suc.prems by (by100 force)
+              hence "T j > T i'" using hj_eq hIH by (by100 linarith)
+              hence "j > i'"
+              proof -
+                have "\<not> (j \<le> i')"
+                proof
+                  assume "j \<le> i'"
+                  hence "T j \<le> T i'"
+                  proof (cases "j = i'")
+                    case True thus ?thesis by (by100 simp)
+                  next
+                    case False
+                    hence "j < i'" using \<open>j \<le> i'\<close> by (by100 presburger)
+                    have "j \<le> i'" using \<open>j < i'\<close> by (by100 presburger)
+                    have "i' \<le> M" using hSi_le True by (by100 presburger)
+                    show ?thesis using hT_mono[OF \<open>j \<le> i'\<close> \<open>i' \<le> M\<close>] .
+                  qed
+                  thus False using \<open>T j > T i'\<close> by (by100 linarith)
+                qed
+                thus ?thesis by (by100 presburger)
+              qed
+              hence "j \<ge> Suc i'" by (by100 presburger)
+              \<comment> \<open>T(Suc i') ≤ T(j) = sub(Suc i') from j ≥ Suc i' and T strict inc.\<close>
+              have "j \<le> M" using hj_le True by (by100 simp)
+              have "T (Suc i') \<le> T j"
+                using hT_mono[OF \<open>j \<ge> Suc i'\<close> \<open>j \<le> M\<close>] .
+              hence "T (Suc i') \<le> sub (Suc i')" using hj_eq by (by100 simp)
+              \<comment> \<open>Also T(Suc i') ≥ sub(Suc i'): T(Suc i') is a sub-value ≥ sub(Suc i').\<close>
+              moreover have "T (Suc i') \<ge> sub (Suc i')"
+              proof -
+                have "Suc i' \<le> n" using hSi_le .
+                hence "T (Suc i') \<in> T ` {0..n}" by (by100 force)
+                hence "T (Suc i') \<in> sub ` {0..n}" using hT_range_eq by (by100 simp)
+                then obtain k where hk: "k \<le> n" and hk_eq: "sub k = T (Suc i')"
+                  by (by100 force)
+                have "i' < M" using hSi_le True by (by100 presburger)
+                have "T i' < T (Suc i')" using less.prems(4) \<open>i' < M\<close> by (by100 force)
+                have hsk_gt: "sub k > sub i'" using hk_eq hIH \<open>T i' < T (Suc i')\<close>
+                  by (by100 linarith)
+                have "k > i'"
+                proof (rule ccontr)
+                  assume "\<not> k > i'"
+                  hence "k \<le> i'" by (by100 presburger)
+                  hence "sub k \<le> sub i'" using hT_mono hk hinc
+                  proof (cases "k = i'")
+                    case True thus ?thesis by (by100 simp)
+                  next
+                    case False
+                    hence "k < i'" using \<open>k \<le> i'\<close> by (by100 presburger)
+                    have "i' < n" using hSi_le by (by100 presburger)
+                    have "sub k < sub i'" using \<open>k < i'\<close> \<open>i' < n\<close> hinc
+                    proof (induct i')
+                      case 0 thus ?case by (by100 simp)
+                    next
+                      case (Suc i'')
+                      show ?case
+                      proof (cases "k = i''")
+                        case True thus ?thesis using hinc Suc.prems(2) by (by100 force)
+                      next
+                        case False
+                        hence "k < i''" using Suc.prems(1) by (by100 presburger)
+                        have "i'' < n" using Suc.prems(2) by (by100 presburger)
+                        have "sub k < sub i''" using Suc.hyps[OF \<open>k < i''\<close> \<open>i'' < n\<close> hinc] .
+                        moreover have "sub i'' < sub (Suc i'')" using hinc \<open>i'' < n\<close> by (by100 force)
+                        ultimately show ?thesis by (by100 linarith)
+                      qed
+                    qed
+                    thus ?thesis by (by100 linarith)
+                  qed
+                  thus False using hsk_gt by (by100 linarith)
+                qed
+                hence "k \<ge> Suc i'" by (by100 presburger)
+                hence "sub k \<ge> sub (Suc i')"
+                proof (cases "k = Suc i'")
+                  case True thus ?thesis by (by100 simp)
+                next
+                  case False
+                  hence "k > Suc i'" using \<open>k \<ge> Suc i'\<close> by (by100 presburger)
+                  hence "sub (Suc i') < sub k" using hk hinc
+                  proof (induct k)
+                    case 0 thus ?case by (by100 simp)
+                  next
+                    case (Suc k')
+                    show ?case
+                    proof (cases "Suc i' = k'")
+                      case True thus ?thesis using hinc Suc.prems(2) by (by100 force)
+                    next
+                      case False
+                      hence "Suc i' < k'" using Suc.prems(1) by (by100 presburger)
+                      have "k' \<le> n" using Suc.prems(2) by (by100 force)
+                      have "sub (Suc i') < sub k'"
+                        using Suc.hyps[OF \<open>Suc i' < k'\<close> \<open>k' \<le> n\<close> hinc] .
+                      moreover have "k' < n" using Suc.prems(2) by (by100 force)
+                      hence "sub k' < sub (Suc k')" using hinc by (by100 force)
+                      ultimately show ?thesis by (by100 linarith)
+                    qed
+                  qed
+                  thus ?thesis by (by100 linarith)
+                qed
+                thus ?thesis using hk_eq by (by100 linarith)
+              qed
+              ultimately show "T (Suc i') = sub (Suc i')" by (by100 linarith)
+            qed
+          qed
+          have "foldr_\<sigma> f n T = foldr_\<sigma> f n sub"
+          proof -
+            have "\<And>i. i < n \<Longrightarrow> T i = sub i \<and> T (Suc i) = sub (Suc i)"
+              using hT_eq_sub by (by100 force)
+            hence hmap_eq: "map (\<lambda>i. \<sigma> (\<lambda>t. f (T i + t * (T (Suc i) - T i)))) [0..<n]
+                = map (\<lambda>i. \<sigma> (\<lambda>t. f (sub i + t * (sub (Suc i) - sub i)))) [0..<n]"
+              by (intro map_cong, by100 simp, by100 simp)
+            show ?thesis unfolding foldr_\<sigma>_def using hmap_eq by (by100 presburger)
+          qed
+          thus ?thesis using True by (by100 simp)
+        next
+          case False
+          \<comment> \<open>T strictly increasing ⟹ injective.\<close>
+          have hT_inj: "\<And>a b. a \<le> M \<Longrightarrow> b \<le> M \<Longrightarrow> T a = T b \<Longrightarrow> a = b"
+            proof -
+              fix a b assume ha: "a \<le> M" and hb: "b \<le> M" and heq: "T a = T b"
+              show "a = b"
+              proof (rule ccontr)
+                assume "a \<noteq> b"
+                hence "a < b \<or> b < a" by (by100 presburger)
+                thus False
+                proof
+                  assume "a < b"
+                  hence "T a < T b"
+                  proof -
+                    from \<open>a < b\<close> hb show ?thesis
+                    proof (induct b)
+                      case 0 thus ?case by (by100 simp)
+                    next
+                      case (Suc b')
+                      show ?case
+                      proof (cases "a = b'")
+                        case True
+                        thus ?thesis using less.prems(4) Suc.prems(2) by (by100 force)
+                      next
+                        case False
+                        hence "a < b'" using Suc.prems(1) by (by100 presburger)
+                        have "b' \<le> M" using Suc.prems(2) by (by100 presburger)
+                        have "T a < T b'" using Suc.hyps[OF \<open>a < b'\<close> \<open>b' \<le> M\<close>] .
+                        moreover have "b' < M" using Suc.prems(2) by (by100 presburger)
+                        hence "T b' < T (Suc b')" using less.prems(4) by (by100 force)
+                        ultimately show ?thesis by (by100 linarith)
+                      qed
+                    qed
+                  qed
+                  thus False using heq by (by100 linarith)
+                next
+                  assume "b < a"
+                  hence "T b < T a"
+                  proof -
+                    from \<open>b < a\<close> ha show ?thesis
+                    proof (induct a)
+                      case 0 thus ?case by (by100 simp)
+                    next
+                      case (Suc a')
+                      show ?case
+                      proof (cases "b = a'")
+                        case True
+                        thus ?thesis using less.prems(4) Suc.prems(2) by (by100 force)
+                      next
+                        case False
+                        hence "b < a'" using Suc.prems(1) by (by100 presburger)
+                        have "a' \<le> M" using Suc.prems(2) by (by100 presburger)
+                        have "T b < T a'" using Suc.hyps[OF \<open>b < a'\<close> \<open>a' \<le> M\<close>] .
+                        moreover have "a' < M" using Suc.prems(2) by (by100 presburger)
+                        hence "T a' < T (Suc a')" using less.prems(4) by (by100 force)
+                        ultimately show ?thesis by (by100 linarith)
+                      qed
+                    qed
+                  qed
+                  thus False using heq by (by100 linarith)
+                qed
+              qed
+            qed
+          have hT_mono_F: "\<And>a b. a \<le> b \<Longrightarrow> b \<le> M \<Longrightarrow> T a \<le> T b"
+          proof -
+            fix a b :: nat assume hab: "a \<le> b" and hbM: "b \<le> M"
+            show "T a \<le> T b" using hab hbM
+            proof (induct b)
+              case 0 thus ?case by (by100 simp)
+            next
+              case (Suc b')
+              show ?case
+              proof (cases "a \<le> b'")
+                case True
+                have "b' \<le> M" using Suc.prems(2) by (by100 presburger)
+                have "T a \<le> T b'" using Suc.hyps[OF True \<open>b' \<le> M\<close>] .
+                moreover have "b' < M" using Suc.prems(2) by (by100 presburger)
+                hence "T b' < T (Suc b')" using less.prems(4) by (by100 force)
+                ultimately show ?thesis by (by100 linarith)
+              next
+                case False
+                hence "a = Suc b'" using Suc.prems(1) by (by100 presburger)
+                thus ?thesis by (by100 simp)
+              qed
+            qed
+          qed
+          have "M \<ge> n"
+          proof -
+            \<comment> \<open>Sub values all appear in T. n+1 distinct values in {0..M} ⟹ n+1 ≤ M+1.\<close>
+            define w where "w i = (SOME j. j \<le> M \<and> T j = sub i)" for i
+            have hw: "\<And>i. i \<le> n \<Longrightarrow> w i \<le> M \<and> T (w i) = sub i"
+            proof -
+              fix i assume "i \<le> n"
+              from less.prems(6) \<open>i \<le> n\<close> have "\<exists>j. j \<le> M \<and> T j = sub i" by (by100 blast)
+              thus "w i \<le> M \<and> T (w i) = sub i" unfolding w_def by (rule someI_ex)
+            qed
+            have hw_inj: "inj_on w {0..n}"
+            proof (rule inj_onI)
+              fix a b assume ha: "a \<in> {0..n}" and hb: "b \<in> {0..n}" and heq: "w a = w b"
+              have "T (w a) = sub a" using hw ha by (by100 simp)
+              moreover have "T (w b) = sub b" using hw hb by (by100 simp)
+              ultimately have "sub a = sub b" using heq by (by100 simp)
+              \<comment> \<open>sub injective (strictly increasing).\<close>
+              have hsub_inj: "\<And>x y. x \<le> n \<Longrightarrow> y \<le> n \<Longrightarrow> sub x = sub y \<Longrightarrow> x = y"
+              proof -
+                fix x y assume hx: "x \<le> n" and hy: "y \<le> n" and heqs: "sub x = sub y"
+                show "x = y"
+                proof (rule ccontr)
+                  assume "x \<noteq> y"
+                  hence "x < y \<or> y < x" by (by100 presburger)
+                  thus False
+                  proof
+                    assume "x < y"
+                    have "sub x < sub y" using \<open>x < y\<close> hy
+                    proof (induct y)
+                      case 0 thus ?case by (by100 simp)
+                    next
+                      case (Suc y')
+                      show ?case
+                      proof (cases "x = y'")
+                        case True thus ?thesis using hinc Suc.prems(2) by (by100 force)
+                      next
+                        case False
+                        hence "x < y'" using Suc.prems(1) by (by100 presburger)
+                        have "y' \<le> n" using Suc.prems(2) by (by100 presburger)
+                        have "y' < n" using Suc.prems(2) by (by100 presburger)
+                        show ?thesis using Suc.hyps[OF \<open>x < y'\<close> \<open>y' \<le> n\<close>]
+                            hinc \<open>y' < n\<close> by (by100 force)
+                      qed
+                    qed
+                    thus False using heqs by (by100 linarith)
+                  next
+                    assume "y < x"
+                    have "sub y < sub x" using \<open>y < x\<close> hx
+                    proof (induct x)
+                      case 0 thus ?case by (by100 simp)
+                    next
+                      case (Suc x')
+                      show ?case
+                      proof (cases "y = x'")
+                        case True thus ?thesis using hinc Suc.prems(2) by (by100 force)
+                      next
+                        case False
+                        hence "y < x'" using Suc.prems(1) by (by100 presburger)
+                        have "x' \<le> n" using Suc.prems(2) by (by100 presburger)
+                        have "x' < n" using Suc.prems(2) by (by100 presburger)
+                        show ?thesis using Suc.hyps[OF \<open>y < x'\<close> \<open>x' \<le> n\<close>]
+                            hinc \<open>x' < n\<close> by (by100 force)
+                      qed
+                    qed
+                    thus False using heqs by (by100 linarith)
+                  qed
+                qed
+              qed
+              show "a = b" using hsub_inj ha hb \<open>sub a = sub b\<close> by (by100 force)
+            qed
+            have hw_range: "w ` {0..n} \<subseteq> {0..M}" using hw by (by100 force)
+            have "card {0..n} \<le> card {0..M}"
+              by (rule card_inj_on_le[OF hw_inj hw_range], by100 simp)
+            thus ?thesis by (by100 simp)
+          qed
+          hence hMgt: "M > n" using False by (by100 presburger)
+          \<comment> \<open>Step: M > n. Find removable point T(j) not in sub.\<close>
+          have "\<exists>j. 0 < j \<and> j < M \<and> (\<forall>i\<le>n. T j \<noteq> sub i)"
+          proof (rule ccontr)
+            assume "\<not> (\<exists>j. 0 < j \<and> j < M \<and> (\<forall>i\<le>n. T j \<noteq> sub i))"
+            hence hcontra: "\<And>j. 0 < j \<Longrightarrow> j < M \<Longrightarrow> \<exists>i\<le>n. T j = sub i"
+              by (by100 blast)
+            \<comment> \<open>Map each j ∈ {1..<M} to the unique i with T(j)=sub(i).
+               Since T(j)∈(0,1), i∈{1,..,n-1}. Injective → M-1 ≤ n-1 → contradiction.\<close>
+            define g where "g j = (SOME i. i \<le> n \<and> T j = sub i)" for j
+            have hg: "\<And>j. 0 < j \<Longrightarrow> j < M \<Longrightarrow> g j \<le> n \<and> T j = sub (g j)"
+            proof -
+              fix j assume "0 < j" "j < M"
+              from hcontra[OF this] have "\<exists>i. i \<le> n \<and> T j = sub i" by (by100 blast)
+              thus "g j \<le> n \<and> T j = sub (g j)" unfolding g_def by (rule someI_ex)
+            qed
+            have hg_pos: "\<And>j. 0 < j \<Longrightarrow> j < M \<Longrightarrow> g j > 0"
+            proof -
+              fix j assume hj1: "0 < j" and hj2: "j < M"
+              have "T j > T 0" using less.prems(4) hj1 hj2
+              proof (induct j)
+                case 0 thus ?case by (by100 simp)
+              next
+                case (Suc j')
+                show ?case
+                proof (cases "j' = 0")
+                  case True
+                  have "0 < M" using Suc.prems(3) by (by100 presburger)
+                  have "T 0 < T (Suc 0)" using less.prems(4) \<open>0 < M\<close> by (by100 force)
+                  thus ?thesis using True by (by100 simp)
+                next
+                  case False
+                  hence "0 < j'" by (by100 presburger)
+                  have "j' < M" using Suc.prems(3) by (by100 presburger)
+                  have "T 0 < T j'" using Suc.hyps[OF Suc.prems(1) \<open>0 < j'\<close> \<open>j' < M\<close>] .
+                  moreover have "T j' < T (Suc j')" using less.prems(4) \<open>j' < M\<close> by (by100 force)
+                  ultimately show ?thesis by (by100 linarith)
+                qed
+              qed
+              hence "T j \<noteq> 0" using less.prems(2) by (by100 linarith)
+              hence hsub_g_ne: "sub (g j) \<noteq> sub 0" using hg[OF hj1 hj2] hs0 by (by100 simp)
+              show "g j > 0"
+              proof (rule ccontr)
+                assume "\<not> g j > 0"
+                hence "g j = 0" by (by100 presburger)
+                hence "sub (g j) = sub 0" by (by100 simp)
+                thus False using hsub_g_ne by (by100 simp)
+              qed
+            qed
+            have hg_lt_n: "\<And>j. 0 < j \<Longrightarrow> j < M \<Longrightarrow> g j < n"
+            proof -
+              fix j assume hj1: "0 < j" and hj2: "j < M"
+              have "T j < T M"
+              proof -
+                have hTmono: "\<And>a b. a < b \<Longrightarrow> b \<le> M \<Longrightarrow> T a < T b"
+                proof -
+                  fix a b :: nat assume hab: "a < b" and hbM: "b \<le> M"
+                  show "T a < T b" using hab hbM
+                  proof (induct b)
+                    case 0 thus ?case by (by100 simp)
+                  next
+                    case (Suc b')
+                    show ?case
+                    proof (cases "a = b'")
+                      case True thus ?thesis using less.prems(4) Suc.prems(2) by (by100 force)
+                    next
+                      case False
+                      hence "a < b'" using Suc.prems(1) by (by100 presburger)
+                      have "b' \<le> M" using Suc.prems(2) by (by100 presburger)
+                      have "T a < T b'" using Suc.hyps[OF \<open>a < b'\<close> \<open>b' \<le> M\<close>] .
+                      moreover have "b' < M" using Suc.prems(2) by (by100 presburger)
+                      hence "T b' < T (Suc b')" using less.prems(4) by (by100 force)
+                      ultimately show ?thesis by (by100 linarith)
+                    qed
+                  qed
+                qed
+                show ?thesis using hTmono[OF hj2 le_refl] .
+              qed
+              hence "T j \<noteq> 1" using less.prems(3) by (by100 linarith)
+              hence "sub (g j) \<noteq> sub n" using hg[OF hj1 hj2] hsn by (by100 simp)
+              have "g j \<le> n" using hg[OF hj1 hj2] by (by100 simp)
+              show "g j < n"
+              proof (rule ccontr)
+                assume "\<not> g j < n"
+                hence "g j = n" using \<open>g j \<le> n\<close> by (by100 presburger)
+                hence "sub (g j) = sub n" by (by100 simp)
+                thus False using \<open>sub (g j) \<noteq> sub n\<close> by (by100 simp)
+              qed
+            qed
+            have hg_inj: "inj_on g {1..<M}"
+            proof (rule inj_onI)
+              fix a b assume ha: "a \<in> {1..<M}" and hb: "b \<in> {1..<M}" and heq: "g a = g b"
+              have "T a = sub (g a)" using hg ha by (by100 force)
+              moreover have "T b = sub (g b)" using hg hb by (by100 force)
+              ultimately have "T a = T b" using heq by (by100 simp)
+              have "a \<le> M" using ha by (by100 force)
+              have "b \<le> M" using hb by (by100 force)
+              show "a = b" using hT_inj[OF \<open>a \<le> M\<close> \<open>b \<le> M\<close> \<open>T a = T b\<close>] .
+            qed
+            have hg_range: "g ` {1..<M} \<subseteq> {1..<n}"
+            proof
+              fix x assume "x \<in> g ` {1..<M}"
+              then obtain j where hj: "j \<in> {1..<M}" and hx: "x = g j" by (by100 blast)
+              have "0 < j" and "j < M" using hj by (by100 force)+
+              show "x \<in> {1..<n}" using hg_pos[OF \<open>0 < j\<close> \<open>j < M\<close>]
+                  hg_lt_n[OF \<open>0 < j\<close> \<open>j < M\<close>] hx by (by100 force)
+            qed
+            have "card {1..<M} \<le> card {1..<(n::nat)}"
+              by (rule card_inj_on_le[OF hg_inj hg_range], by100 simp)
+            hence "M - 1 \<le> n - 1" by (by100 simp)
+            hence "M \<le> n" using less.prems(1) hn by (by100 presburger)
+            thus False using hMgt by (by100 linarith)
+          qed
+          then obtain j where hj_pos: "0 < j" and hj_lt: "j < M"
+              and hj_not_sub: "\<forall>i\<le>n. T j \<noteq> sub i" by (by100 blast)
+          \<comment> \<open>Remove T(j): define T'(i) = T(i) for i<j, T'(i) = T(i+1) for i≥j.\<close>
+          define T' where "T' i = (if i < j then T i else T (Suc i))" for i
+          \<comment> \<open>T' is valid with M-1 pieces.\<close>
+          have hT'_ge: "M - 1 \<ge> 1" using hMgt hn by (by100 presburger)
+          have hT'_0: "T' 0 = (0::real)" unfolding T'_def using hj_pos less.prems(2) by (by100 presburger)
+          have hT'_M1: "T' (M-1) = 1"
+          proof -
+            have "\<not> (M - 1 < j)" using hj_lt by (by100 presburger)
+            hence "T' (M-1) = T (Suc (M-1))" unfolding T'_def by (by100 simp)
+            moreover have "Suc (M-1) = M" using hMgt hn by (by100 presburger)
+            ultimately show ?thesis using less.prems(3) by (by100 simp)
+          qed
+          have hT'_inc: "\<forall>i<M-1. T' i < T' (Suc i)"
+          proof (intro allI impI)
+            fix i assume hi: "i < M - 1"
+            have hi_M: "i < M" and hSi_M: "Suc i < M" using hi by (by100 presburger)+
+            show "T' i < T' (Suc i)"
+            proof (cases "Suc i < j")
+              case True
+              have "T' i = T i" unfolding T'_def using True by (by100 presburger)
+              moreover have "T' (Suc i) = T (Suc i)" unfolding T'_def using True by (by100 presburger)
+              ultimately show ?thesis using less.prems(4) hi_M by (by100 force)
+            next
+              case False
+              show ?thesis
+              proof (cases "i < j")
+                case True \<comment> \<open>i < j ≤ Suc i, so Suc i = j\<close>
+                have "T' i = T i" unfolding T'_def using True by (by100 presburger)
+                have "\<not> (Suc i < j)" using False .
+                hence "T' (Suc i) = T (Suc (Suc i))" unfolding T'_def by (by100 simp)
+                have "T i < T (Suc i)" using less.prems(4) hi_M by (by100 force)
+                have "T (Suc i) < T (Suc (Suc i))" using less.prems(4) hSi_M by (by100 force)
+                show ?thesis using \<open>T' i = T i\<close> \<open>T' (Suc i) = T (Suc (Suc i))\<close>
+                    \<open>T i < T (Suc i)\<close> \<open>T (Suc i) < T (Suc (Suc i))\<close> by (by100 linarith)
+              next
+                case inner_False: False
+                have "T' i = T (Suc i)" unfolding T'_def using inner_False by (by100 simp)
+                have "\<not> (Suc i < j)" using inner_False by (by100 presburger)
+                have "T' (Suc i) = T (Suc (Suc i))" unfolding T'_def using \<open>\<not>(Suc i < j)\<close> by (by100 simp)
+                show ?thesis using \<open>T' i = T (Suc i)\<close> \<open>T' (Suc i) = T (Suc (Suc i))\<close>
+                    less.prems(4) hSi_M by (by100 force)
+              qed
+            qed
+          qed
+          have hT'_UV: "\<forall>i<M-1. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T' i + t * (T' (Suc i) - T' i)) \<in> U)
+               \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T' i + t * (T' (Suc i) - T' i)) \<in> V)"
+          proof (intro allI impI)
+            fix i assume hi: "i < M - 1"
+            \<comment> \<open>T'-piece [T'(i), T'(Suc i)] is a sub-interval of some T-piece or merge.\<close>
+            show "(\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T' i + t * (T' (Suc i) - T' i)) \<in> U)
+                \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T' i + t * (T' (Suc i) - T' i)) \<in> V)"
+            proof (cases "Suc i < j")
+              case True \<comment> \<open>Both below j: T'-piece = T-piece at index i.\<close>
+              have "T' i = T i" unfolding T'_def using True by (by100 presburger)
+              have "T' (Suc i) = T (Suc i)" unfolding T'_def using True by (by100 presburger)
+              have "i < M" using hi by (by100 presburger)
+              show ?thesis using \<open>T' i = T i\<close> \<open>T' (Suc i) = T (Suc i)\<close> less.prems(5) \<open>i < M\<close>
+                by (by100 force)
+            next
+              case False
+              show ?thesis
+              proof (cases "i < j")
+                case True \<comment> \<open>i = j-1: merge of T-pieces at j-1 and j.\<close>
+                \<comment> \<open>T'-piece = [T(j-1), T(j+1)]. This is within some sub-piece [sub(k), sub(k+1)]
+                   because T(j) ∉ sub, so T(j-1) and T(j+1) are in the same sub-interval.\<close>
+                have "T' i = T i" unfolding T'_def using True by (by100 presburger)
+                have "\<not> (Suc i < j)" using False .
+                have "T' (Suc i) = T (Suc (Suc i))" unfolding T'_def using \<open>\<not>(Suc i < j)\<close> by (by100 simp)
+                \<comment> \<open>The key: [T(i), T(Suc(Suc i))] = [T(j-1), T(j+1)] is within a sub-piece.
+                   T(j) is not a sub-point, so both T(j-1) to T(j) and T(j) to T(j+1) are
+                   sub-intervals of the SAME sub-piece. Hence the merge also maps to U or V.\<close>
+                \<comment> \<open>i = j-1 (since i < j ≤ Suc i).\<close>
+                have hi_eq: "i = j - 1" using True \<open>\<not>(Suc i < j)\<close> by (by100 presburger)
+                hence hSi_eq: "Suc i = j" using hj_pos by (by100 presburger)
+                have hSSi_eq: "Suc (Suc i) = Suc j" using hSi_eq by (by100 simp)
+                \<comment> \<open>Find k < n with sub(k) ≤ T(j-1) and T(j+1) ≤ sub(k+1).
+                   Key: T(j) not a sub-value, so no sub-value in (T(j-1), T(j+1)).\<close>
+                have hTj_pos: "T j > 0"
+                proof -
+                  have "T 0 < T j"
+                  proof -
+                    have "0 < j" using hj_pos .
+                    have "j \<le> M" using hj_lt by (by100 presburger)
+                    show ?thesis using hT_inj less.prems(4) hj_pos hj_lt
+                    proof -
+                      show ?thesis using less.prems(4) hj_pos hj_lt
+                      proof (induct j)
+                        case 0 thus ?case by (by100 simp)
+                      next
+                        case (Suc j')
+                        show ?case
+                        proof (cases "j' = 0")
+                          case True
+                          have "0 < M" using Suc.prems(3) by (by100 presburger)
+                          thus ?thesis using less.prems(4) True by (by100 force)
+                        next
+                          case False
+                          hence "0 < j'" by (by100 presburger)
+                          have "j' < M" using Suc.prems(3) by (by100 presburger)
+                          have "T 0 < T j'" using Suc.hyps[OF Suc.prems(1) \<open>0 < j'\<close> \<open>j' < M\<close>] .
+                          moreover have "T j' < T (Suc j')" using less.prems(4) \<open>j' < M\<close> by (by100 force)
+                          ultimately show ?thesis by (by100 linarith)
+                        qed
+                      qed
+                    qed
+                  qed
+                  thus ?thesis using less.prems(2) by (by100 linarith)
+                qed
+                have hTj_lt1: "T j < 1"
+                proof -
+                  have "T j < T M" using less.prems(4) hj_lt
+                  proof (induct "M - j" arbitrary: j)
+                    case 0 thus ?case by (by100 simp)
+                  next
+                    case (Suc d)
+                    show ?case
+                    proof (cases "Suc j = M")
+                      case True thus ?thesis using less.prems(4) Suc.prems(2) by (by100 force)
+                    next
+                      case False
+                      hence "Suc j < M" using Suc.prems(2) by (by100 presburger)
+                      have "d = M - Suc j" using Suc.hyps(2) Suc.prems(2) by (by100 presburger)
+                      have "T (Suc j) < T M"
+                        using Suc.hyps(1)[OF \<open>d = M - Suc j\<close> Suc.prems(1) \<open>Suc j < M\<close>] .
+                      moreover have "T j < T (Suc j)" using less.prems(4) Suc.prems(2) by (by100 force)
+                      ultimately show ?thesis by (by100 linarith)
+                    qed
+                  qed
+                  thus ?thesis using less.prems(3) by (by100 linarith)
+                qed
+                \<comment> \<open>T(j) lies strictly between consecutive sub-values.\<close>
+                have "\<exists>k. k < n \<and> sub k < T j \<and> T j < sub (Suc k)"
+                proof -
+                  \<comment> \<open>sub(0)=0 < T(j) < 1=sub(n). Find the gap.\<close>
+                  define S where "S = {l. l \<le> n \<and> sub l \<le> T j}"
+                  have "0 \<in> S" unfolding S_def using hs0 hTj_pos by (by100 force)
+                  hence "S \<noteq> {}" by (by100 blast)
+                  have "finite S" unfolding S_def by (by100 simp)
+                  have "S \<subseteq> {0..n}" unfolding S_def by (by100 force)
+                  define k where "k = Max S"
+                  have hk_in: "k \<in> S" unfolding k_def using \<open>S \<noteq> {}\<close> \<open>finite S\<close> by (by100 simp)
+                  hence hk_le: "k \<le> n" and hk_bound: "sub k \<le> T j" unfolding S_def by (by100 force)+
+                  have hk_max: "\<And>l. l \<in> S \<Longrightarrow> l \<le> k" unfolding k_def using \<open>finite S\<close> by (by100 simp)
+                  have "k < n"
+                  proof (rule ccontr)
+                    assume "\<not> k < n"
+                    hence "k = n" using hk_le by (by100 presburger)
+                    hence "sub n \<le> T j" using hk_bound by (by100 simp)
+                    hence "1 \<le> T j" using hsn by (by100 linarith)
+                    thus False using hTj_lt1 by (by100 linarith)
+                  qed
+                  have "sub k \<noteq> T j"
+                  proof
+                    assume "sub k = T j"
+                    hence "T j = sub k" by (by100 simp)
+                    thus False using hj_not_sub hk_le by (by100 blast)
+                  qed
+                  hence "sub k < T j" using hk_bound by (by100 linarith)
+                  have "T j < sub (Suc k)"
+                  proof (rule ccontr)
+                    assume "\<not> T j < sub (Suc k)"
+                    hence "sub (Suc k) \<le> T j" by (by100 linarith)
+                    have "Suc k \<le> n" using \<open>k < n\<close> by (by100 presburger)
+                    hence "Suc k \<in> S" unfolding S_def using \<open>sub (Suc k) \<le> T j\<close> by (by100 force)
+                    hence "Suc k \<le> k" using hk_max by (by100 blast)
+                    thus False by (by100 presburger)
+                  qed
+                  show ?thesis using \<open>k < n\<close> \<open>sub k < T j\<close> \<open>T j < sub (Suc k)\<close> by (by100 blast)
+                qed
+                then obtain k where hk_lt: "k < n" and hk_lo: "sub k < T j"
+                    and hk_hi: "T j < sub (Suc k)" by (by100 blast)
+                \<comment> \<open>T(j-1) ≥ sub(k): no sub-value in (T(j-1), T(j)).\<close>
+                have hTi_ge: "T i \<ge> sub k"
+                proof (rule ccontr)
+                  assume "\<not> T i \<ge> sub k"
+                  hence "T i < sub k" by (by100 linarith)
+                  \<comment> \<open>sub(k) ∈ (T(i), T(j)). sub(k) = T(w(k)) ⟹ i < w(k) < j — impossible.\<close>
+                  have "sub k > T i" and "sub k < T j" using \<open>T i < sub k\<close> hk_lo by (by100 linarith)+
+                  from less.prems(6) have "\<exists>jk\<le>M. T jk = sub k"
+                    using hk_lt by (by100 force)
+                  then obtain jk where hjk_le: "jk \<le> M" and hjk_eq: "T jk = sub k" by (by100 blast)
+                  have "T jk > T i" using hjk_eq \<open>sub k > T i\<close> by (by100 linarith)
+                  have "T jk < T j" using hjk_eq \<open>sub k < T j\<close> by (by100 linarith)
+                  have "jk > i" using hT_inj \<open>T jk > T i\<close>
+                  proof -
+                    have "\<not> jk \<le> i"
+                    proof
+                      assume "jk \<le> i"
+                      hence "T jk \<le> T i" using less.prems(4)
+                      proof (cases "jk = i")
+                        case True thus ?thesis by (by100 simp)
+                      next
+                        case False
+                        hence "jk < i" using \<open>jk \<le> i\<close> by (by100 presburger)
+                        have "i \<le> M" using hi hj_lt by (by100 presburger)
+                        show ?thesis using hT_mono_F[OF \<open>jk \<le> i\<close> \<open>i \<le> M\<close>] .
+                      qed
+                      thus False using \<open>T jk > T i\<close> by (by100 linarith)
+                    qed
+                    thus ?thesis by (by100 presburger)
+                  qed
+                  have "jk < j"
+                  proof -
+                    have "\<not> jk \<ge> j"
+                    proof
+                      assume "jk \<ge> j"
+                      hence "T jk \<ge> T j" using less.prems(4)
+                      proof (cases "jk = j")
+                        case True thus ?thesis by (by100 simp)
+                      next
+                        case False
+                        hence "jk > j" using \<open>jk \<ge> j\<close> by (by100 presburger)
+                        show ?thesis using hT_mono_F[OF \<open>jk \<ge> j\<close> hjk_le] .
+                      qed
+                      thus False using \<open>T jk < T j\<close> by (by100 linarith)
+                    qed
+                    thus ?thesis by (by100 presburger)
+                  qed
+                  \<comment> \<open>i < jk < j but Suc i = j, so no natural between them.\<close>
+                  have "Suc i = j" using hSi_eq .
+                  hence False using \<open>jk > i\<close> \<open>jk < j\<close> by (by100 presburger)
+                  thus False .
+                qed
+                \<comment> \<open>T(j+1) ≤ sub(k+1): no sub-value in (T(j), T(j+1)).\<close>
+                have hTSj_le: "T (Suc j) \<le> sub (Suc k)"
+                proof (rule ccontr)
+                  assume "\<not> T (Suc j) \<le> sub (Suc k)"
+                  hence "T (Suc j) > sub (Suc k)" by (by100 linarith)
+                  \<comment> \<open>sub(k+1) ∈ (T(j), T(j+1)). sub(k+1) = T(jk1) ⟹ j < jk1 < j+1 — impossible.\<close>
+                  have "sub (Suc k) > T j" and "sub (Suc k) < T (Suc j)"
+                    using hk_hi \<open>T (Suc j) > sub (Suc k)\<close> by (by100 linarith)+
+                  have "Suc k \<le> n" using hk_lt by (by100 presburger)
+                  from less.prems(6) \<open>Suc k \<le> n\<close> obtain jk1 where hjk1_le: "jk1 \<le> M"
+                      and hjk1_eq: "T jk1 = sub (Suc k)" by (by100 blast)
+                  have "T jk1 > T j" using hjk1_eq \<open>sub (Suc k) > T j\<close> by (by100 linarith)
+                  have "T jk1 < T (Suc j)" using hjk1_eq \<open>sub (Suc k) < T (Suc j)\<close> by (by100 linarith)
+                  have "jk1 > j"
+                  proof -
+                    have "\<not> jk1 \<le> j"
+                    proof
+                      assume "jk1 \<le> j"
+                      have "j \<le> M" using hj_lt by (by100 presburger)
+                      have "T jk1 \<le> T j" using hT_mono_F[OF \<open>jk1 \<le> j\<close> \<open>j \<le> M\<close>] .
+                      thus False using \<open>T jk1 > T j\<close> by (by100 linarith)
+                    qed
+                    thus ?thesis by (by100 presburger)
+                  qed
+                  have "jk1 < Suc j"
+                  proof -
+                    have "\<not> jk1 \<ge> Suc j"
+                    proof
+                      assume "jk1 \<ge> Suc j"
+                      have "T jk1 \<ge> T (Suc j)" using hT_mono_F[OF \<open>jk1 \<ge> Suc j\<close> hjk1_le] .
+                      thus False using \<open>T jk1 < T (Suc j)\<close> by (by100 linarith)
+                    qed
+                    thus ?thesis by (by100 presburger)
+                  qed
+                  thus False using \<open>jk1 > j\<close> by (by100 presburger)
+                qed
+                \<comment> \<open>Now use hpUV at index k: sub-piece k maps to U or V.\<close>
+                have hpk: "(\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub k + t * (sub (Suc k) - sub k)) \<in> U)
+                    \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub k + t * (sub (Suc k) - sub k)) \<in> V)"
+                  using hpUV hk_lt by (by100 force)
+                \<comment> \<open>Merged piece maps to same U or V by reparametrization.\<close>
+                have hsubk_lt: "sub k < sub (Suc k)" using hinc hk_lt by (by100 force)
+                show ?thesis
+                proof (cases "(\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub k + t * (sub (Suc k) - sub k)) \<in> U)")
+                  case True
+                  show ?thesis
+                  proof (rule disjI1, intro allI impI)
+                    fix t :: real assume ht: "0 \<le> t \<and> t \<le> 1"
+                    let ?x = "T' i + t * (T' (Suc i) - T' i)"
+                    have hx_eq: "?x = T i + t * (T (Suc (Suc i)) - T i)"
+                      using \<open>T' i = T i\<close> \<open>T' (Suc i) = T (Suc (Suc i))\<close> by (by100 simp)
+                    have "T i \<ge> sub k" using hTi_ge .
+                    have "T (Suc (Suc i)) \<le> sub (Suc k)" using hTSj_le hSSi_eq by (by100 simp)
+                    have hTi_le_TSSi: "T i \<le> T (Suc (Suc i))"
+                    proof -
+                      have "i \<le> Suc (Suc i)" by (by100 presburger)
+                      have "Suc (Suc i) \<le> M" using hi hj_lt hSi_eq by (by100 presburger)
+                      show ?thesis using hT_mono_F[OF \<open>i \<le> Suc (Suc i)\<close> \<open>Suc (Suc i) \<le> M\<close>] .
+                    qed
+                    have hx_val: "?x = T i + t * (T (Suc (Suc i)) - T i)" using hx_eq .
+                    have hdiff_ge: "T (Suc (Suc i)) - T i \<ge> 0" using hTi_le_TSSi by (by100 linarith)
+                    have ht0: "0 \<le> t" and ht1: "t \<le> 1" using ht by (by100 linarith)+
+                    have hprod_ge: "t * (T (Suc (Suc i)) - T i) \<ge> 0"
+                      by (rule mult_nonneg_nonneg[OF ht0 hdiff_ge])
+                    have hprod_le: "t * (T (Suc (Suc i)) - T i) \<le> T (Suc (Suc i)) - T i"
+                    proof -
+                      have "t * (T (Suc (Suc i)) - T i) \<le> 1 * (T (Suc (Suc i)) - T i)"
+                        by (rule mult_right_mono[OF ht1 hdiff_ge])
+                      thus ?thesis by (by100 simp)
+                    qed
+                    have hx_ge: "?x \<ge> sub k"
+                      using hx_val hprod_ge \<open>T i \<ge> sub k\<close> by (by100 linarith)
+                    have hx_le: "?x \<le> sub (Suc k)"
+                      using hx_val hprod_le \<open>T (Suc (Suc i)) \<le> sub (Suc k)\<close> by (by100 linarith)
+                    define s where "s = (?x - sub k) / (sub (Suc k) - sub k)"
+                    have hs_ge: "s \<ge> 0" unfolding s_def using hx_ge hsubk_lt by (by100 simp)
+                    have hs_le: "s \<le> 1" unfolding s_def using hx_le hsubk_lt by (by100 simp)
+                    have "sub k + s * (sub (Suc k) - sub k) = ?x"
+                      unfolding s_def using hsubk_lt by (by100 simp)
+                    hence "f ?x = f (sub k + s * (sub (Suc k) - sub k))" by (by100 simp)
+                    also have "... \<in> U" using True hs_ge hs_le by (by100 force)
+                    finally show "f ?x \<in> U" .
+                  qed
+                next
+                  case False
+                  hence "(\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub k + t * (sub (Suc k) - sub k)) \<in> V)"
+                    using hpk by (by100 blast)
+                  show ?thesis
+                  proof (rule disjI2, intro allI impI)
+                    fix t :: real assume ht: "0 \<le> t \<and> t \<le> 1"
+                    let ?x = "T' i + t * (T' (Suc i) - T' i)"
+                    have hx_eq: "?x = T i + t * (T (Suc (Suc i)) - T i)"
+                      using \<open>T' i = T i\<close> \<open>T' (Suc i) = T (Suc (Suc i))\<close> by (by100 simp)
+                    have "T i \<ge> sub k" using hTi_ge .
+                    have "T (Suc (Suc i)) \<le> sub (Suc k)" using hTSj_le hSSi_eq by (by100 simp)
+                    have hTi_le_TSSi: "T i \<le> T (Suc (Suc i))"
+                    proof -
+                      have "i \<le> Suc (Suc i)" by (by100 presburger)
+                      have "Suc (Suc i) \<le> M" using hi hj_lt hSi_eq by (by100 presburger)
+                      show ?thesis using hT_mono_F[OF \<open>i \<le> Suc (Suc i)\<close> \<open>Suc (Suc i) \<le> M\<close>] .
+                    qed
+                    have hx_val: "?x = T i + t * (T (Suc (Suc i)) - T i)" using hx_eq .
+                    have hdiff_ge: "T (Suc (Suc i)) - T i \<ge> 0" using hTi_le_TSSi by (by100 linarith)
+                    have ht0: "0 \<le> t" and ht1: "t \<le> 1" using ht by (by100 linarith)+
+                    have hprod_ge: "t * (T (Suc (Suc i)) - T i) \<ge> 0"
+                      by (rule mult_nonneg_nonneg[OF ht0 hdiff_ge])
+                    have hprod_le: "t * (T (Suc (Suc i)) - T i) \<le> T (Suc (Suc i)) - T i"
+                    proof -
+                      have "t * (T (Suc (Suc i)) - T i) \<le> 1 * (T (Suc (Suc i)) - T i)"
+                        by (rule mult_right_mono[OF ht1 hdiff_ge])
+                      thus ?thesis by (by100 simp)
+                    qed
+                    have hx_ge: "?x \<ge> sub k"
+                      using hx_val hprod_ge \<open>T i \<ge> sub k\<close> by (by100 linarith)
+                    have hx_le: "?x \<le> sub (Suc k)"
+                      using hx_val hprod_le \<open>T (Suc (Suc i)) \<le> sub (Suc k)\<close> by (by100 linarith)
+                    define s where "s = (?x - sub k) / (sub (Suc k) - sub k)"
+                    have hs_ge: "s \<ge> 0" unfolding s_def using hx_ge hsubk_lt by (by100 simp)
+                    have hs_le: "s \<le> 1" unfolding s_def using hx_le hsubk_lt by (by100 simp)
+                    have "sub k + s * (sub (Suc k) - sub k) = ?x"
+                      unfolding s_def using hsubk_lt by (by100 simp)
+                    hence "f ?x = f (sub k + s * (sub (Suc k) - sub k))" by (by100 simp)
+                    also have "... \<in> V"
+                      using \<open>\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub k + t * (sub (Suc k) - sub k)) \<in> V\<close>
+                          hs_ge hs_le by (by100 force)
+                    finally show "f ?x \<in> V" .
+                  qed
+                qed
+              next
+                case inner_False: False \<comment> \<open>Both above j: T'-piece = T-piece at index Suc i.\<close>
+                have "T' i = T (Suc i)" unfolding T'_def using inner_False by (by100 simp)
+                have "\<not> (Suc i < j)" using inner_False by (by100 presburger)
+                have "T' (Suc i) = T (Suc (Suc i))" unfolding T'_def using \<open>\<not>(Suc i < j)\<close> by (by100 simp)
+                have "Suc i < M" using hi by (by100 presburger)
+                show ?thesis using \<open>T' i = T (Suc i)\<close> \<open>T' (Suc i) = T (Suc (Suc i))\<close>
+                    less.prems(5) \<open>Suc i < M\<close> by (by100 force)
+              qed
+            qed
+          qed
+          have hT'_valid: "M - 1 \<ge> 1 \<and> T' 0 = 0 \<and> T' (M-1) = 1
+              \<and> (\<forall>i<M-1. T' i < T' (Suc i))
+              \<and> (\<forall>i<M-1. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T' i + t * (T' (Suc i) - T' i)) \<in> U)
+                   \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T' i + t * (T' (Suc i) - T' i)) \<in> V))"
+            using hT'_ge hT'_0 hT'_M1 hT'_inc hT'_UV by (by100 blast)
+          \<comment> \<open>T' still refines sub (removing non-sub point preserves containment).\<close>
+          have hT'_refines: "\<forall>i\<le>n. \<exists>j'\<le>M-1. T' j' = sub i"
+          proof (intro allI impI)
+            fix i assume hi: "i \<le> n"
+            from less.prems(6) hi obtain k where hk_le: "k \<le> M" and hk_eq: "T k = sub i"
+              by (by100 blast)
+            have "k \<noteq> j" using hj_not_sub hi hk_eq by (by100 blast)
+            show "\<exists>j'\<le>M-1. T' j' = sub i"
+            proof (cases "k < j")
+              case True
+              have "T' k = T k" unfolding T'_def using True by (by100 presburger)
+              have "k < M" using True hj_lt by (by100 presburger)
+              hence "k \<le> M - 1" by (by100 presburger)
+              have "T' k = sub i" using \<open>T' k = T k\<close> hk_eq by (by100 simp)
+              show ?thesis using \<open>T' k = sub i\<close> \<open>k \<le> M - 1\<close> by (by100 blast)
+            next
+              case False
+              hence "k > j" using \<open>k \<noteq> j\<close> by (by100 presburger)
+              hence "\<not> (k - 1 < j)" by (by100 presburger)
+              have "T' (k-1) = T (Suc (k-1))" unfolding T'_def using \<open>\<not>(k-1 < j)\<close> by (by100 simp)
+              moreover have "Suc (k-1) = k" using \<open>k > j\<close> hj_pos by (by100 presburger)
+              ultimately have "T' (k-1) = T k" by (by100 simp)
+              have "k - 1 \<le> M - 1" using hk_le by (by100 presburger)
+              have "T' (k-1) = sub i" using \<open>T' (k-1) = T k\<close> hk_eq by (by100 simp)
+              show ?thesis using \<open>T' (k-1) = sub i\<close> \<open>k-1 \<le> M-1\<close> by (by100 blast)
+            qed
+          qed
+          \<comment> \<open>h_point_insert gives: foldr_σ f M T = foldr_σ f (M-1) T'.\<close>
+          have hinsert: "foldr_\<sigma> f M T = foldr_\<sigma> f (M - 1) T'"
+          proof -
+            have hM1: "M - 1 \<ge> 1" using hT'_valid by (by100 blast)
+            have hSuc_j1: "Suc (j - 1) = j" using hj_pos by (by100 presburger)
+            have hk_lt: "j - 1 < M - 1" using hj_lt hj_pos by (by100 presburger)
+            have hpL_loc: "T' (j-1) < T j"
+            proof -
+              have "T' (j-1) = T (j-1)" unfolding T'_def using hj_pos by (by100 simp)
+              moreover have "j - 1 < M" using hj_lt by (by100 presburger)
+              hence "T (j-1) < T (Suc (j-1))" using less.prems(4) by (by100 blast)
+              hence "T (j-1) < T j" using hSuc_j1 by (by100 simp)
+              ultimately show ?thesis by (by100 simp)
+            qed
+            have hpR_loc: "T j < T' (Suc (j-1))"
+            proof -
+              have "T' (Suc (j-1)) = T' j" using hSuc_j1 by (by100 simp)
+              also have "\<dots> = T (Suc j)" unfolding T'_def by (by100 simp)
+              finally have "T' (Suc (j-1)) = T (Suc j)" .
+              moreover have "T j < T (Suc j)" using less.prems(4) hj_lt by (by100 force)
+              ultimately show ?thesis by (by100 simp)
+            qed
+            have hpi: "foldr_\<sigma> f (Suc (M-1))
+                (\<lambda>i. if i \<le> j-1 then T' i else if i = Suc (j-1) then T j else T' (i-1))
+                = foldr_\<sigma> f (M-1) T'"
+            proof -
+              have hT'0_loc: "T' 0 = (0::real)" using hT'_valid by (by100 blast)
+              have hT'M_loc: "T' (M-1) = 1" using hT'_valid by (by100 blast)
+              have hT'inc_loc: "\<forall>i<M-1. T' i < T' (Suc i)" using hT'_valid by (by100 blast)
+              have hT'UV_loc: "\<forall>i<M-1. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T' i + t * (T' (Suc i) - T' i)) \<in> U)
+                   \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T' i + t * (T' (Suc i) - T' i)) \<in> V)"
+                using hT'_valid by (by100 blast)
+              show ?thesis
+                by (rule h_point_insert[OF hM1 hT'0_loc hT'M_loc hT'inc_loc hT'UV_loc hk_lt hpL_loc hpR_loc])
+            qed
+            \<comment> \<open>The s' function equals T. Proved by showing foldr_σ arguments match.\<close>
+            have "Suc (M - 1) = M" using hMgt hn by (by100 presburger)
+            moreover have "(\<lambda>i. if i \<le> j-1 then T' i else if i = Suc (j-1) then T j else T' (i-1)) = T"
+            proof (rule ext)
+              fix i show "(if i \<le> j-1 then T' i else if i = Suc (j-1) then T j else T' (i-1)) = T i"
+              proof (cases "i < j")
+                case True
+                hence "i \<le> j - 1" using hj_pos by (by100 presburger)
+                have "T' i = T i" unfolding T'_def using True by (by100 presburger)
+                thus ?thesis using \<open>i \<le> j - 1\<close> by (by100 simp)
+              next
+                case False
+                show ?thesis
+                proof (cases "i = j")
+                  case True
+                  hence "i = Suc (j - 1)" using hSuc_j1 by (by100 simp)
+                  have "\<not> (i \<le> j - 1)" using True hj_pos by (by100 presburger)
+                  thus ?thesis using \<open>i = Suc (j-1)\<close> True by (by100 simp)
+                next
+                  case False2: False
+                  hence "i > j" using False by (by100 presburger)
+                  hence "\<not> (i \<le> j - 1)" by (by100 presburger)
+                  have "i \<noteq> Suc (j - 1)" using \<open>i > j\<close> hSuc_j1 by (by100 presburger)
+                  have "\<not> (i - 1 < j)" using \<open>i > j\<close> by (by100 presburger)
+                  have "T' (i-1) = T (Suc (i-1))" unfolding T'_def using \<open>\<not>(i-1 < j)\<close> by (by100 simp)
+                  moreover have "Suc (i-1) = i" using \<open>i > j\<close> hj_pos by (by100 presburger)
+                  ultimately have "T' (i-1) = T i" by (by100 simp)
+                  moreover have "(if i \<le> j-1 then T' i else if i = Suc(j-1) then T j else T' (i-1)) = T' (i-1)"
+                    using \<open>\<not>(i \<le> j-1)\<close> \<open>i \<noteq> Suc(j-1)\<close> by (by100 simp)
+                  ultimately show ?thesis by (by100 simp)
+                qed
+              qed
+            qed
+            ultimately show ?thesis using hpi by (by100 simp)
+          qed
+          \<comment> \<open>IH: foldr_σ f (M-1) T' = foldr_σ f n sub.\<close>
+          have hM1_lt: "M - 1 < M" using hMgt hn by (by100 presburger)
+          have hT'1: "M - 1 \<ge> 1" using hT'_valid by (by100 blast)
+          have hT'2: "T' 0 = (0::real)" using hT'_valid by (by100 blast)
+          have hT'3: "T' (M-1) = 1" using hT'_valid by (by100 blast)
+          have hT'4: "\<forall>i<M-1. T' i < T' (Suc i)" using hT'_valid by (by100 blast)
+          have hT'5: "\<forall>i<M-1. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T' i + t * (T' (Suc i) - T' i)) \<in> U)
+               \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T' i + t * (T' (Suc i) - T' i)) \<in> V)"
+            using hT'_valid by (by100 blast)
+          have "foldr_\<sigma> f (M - 1) T' = foldr_\<sigma> f n sub"
+            using less.IH[OF hM1_lt hT'1 hT'2 hT'3 hT'4 hT'5 hT'_refines] .
+          thus ?thesis using hinsert by (by100 simp)
+        qed
+      qed
+    qed
+    have h_indep: "foldr_\<sigma> f N S = foldr_\<sigma> f n sub"
+    proof -
+      \<comment> \<open>h_refine works for ANY valid target subdivision. Apply it symmetrically:
+         (1) h_refine: any valid T refining sub gives foldr_σ T = foldr_σ sub
+         (2) By identical argument with (N,S) in place of (n,sub):
+             any valid T refining S gives foldr_σ T = foldr_σ S
+         Then for common refinement C: foldr_σ C = foldr_σ sub ∧ foldr_σ C = foldr_σ S.\<close>
+      have h_refine_S: "\<And>M T. M \<ge> 1 \<Longrightarrow> T 0 = (0::real) \<Longrightarrow> T M = 1 \<Longrightarrow>
+          (\<forall>i<M. T i < T (Suc i)) \<Longrightarrow>
+          (\<forall>i<M. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T i + t * (T (Suc i) - T i)) \<in> U)
+               \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T i + t * (T (Suc i) - T i)) \<in> V)) \<Longrightarrow>
+          (\<forall>i\<le>N. \<exists>j\<le>M. T j = S i) \<Longrightarrow>
+          foldr_\<sigma> f M T = foldr_\<sigma> f N S"
+        sorry \<comment> \<open>Identical proof to h_refine with (N, S, hS0, hSN, hSinc, hS_UV)
+           in place of (n, sub, hs0, hsn, hinc, hpUV).\<close>
+      \<comment> \<open>Common refinement: sorted merge of S-values and sub-values.\<close>
+      have "\<exists>M C. M \<ge> 1 \<and> C 0 = (0::real) \<and> C M = 1
+          \<and> (\<forall>i<M. C i < C (Suc i))
+          \<and> (\<forall>i<M. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (C i + t * (C (Suc i) - C i)) \<in> U)
+               \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (C i + t * (C (Suc i) - C i)) \<in> V))
+          \<and> (\<forall>i\<le>n. \<exists>j\<le>M. C j = sub i)
+          \<and> (\<forall>i\<le>N. \<exists>j\<le>M. C j = S i)"
+        sorry \<comment> \<open>Common refinement exists: sorted merge of {S(0),..,S(N)} ∪ {sub(0),..,sub(n)}
+           gives strictly increasing enumeration. UV holds because each C-piece is
+           a sub-interval of some S-piece (which maps to U or V).\<close>
+      then obtain M C where hCM: "M \<ge> 1" and hC0: "C 0 = (0::real)" and hCend: "C M = 1"
+          and hCinc: "\<forall>i<M. C i < C (Suc i)"
+          and hCUV: "\<forall>i<M. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (C i + t * (C (Suc i) - C i)) \<in> U)
+               \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (C i + t * (C (Suc i) - C i)) \<in> V)"
+          and hC_ref_sub: "\<forall>i\<le>n. \<exists>j\<le>M. C j = sub i"
+          and hC_ref_S: "\<forall>i\<le>N. \<exists>j\<le>M. C j = S i"
+        by auto
+      have "foldr_\<sigma> f M C = foldr_\<sigma> f n sub"
+        using h_refine[OF hCM hC0 hCend hCinc hCUV hC_ref_sub] .
+      moreover have "foldr_\<sigma> f M C = foldr_\<sigma> f N S"
+        using h_refine_S[OF hCM hC0 hCend hCinc hCUV hC_ref_S] .
+      ultimately show ?thesis by (by100 simp)
+    qed
+    show "\<tau> f = foldr_\<sigma> f n sub" using h\<tau>_eq h_indep by (by100 simp)
+  qed
   \<comment> \<open>===== Key property A: \<tau> well-defined under homotopy =====
      If f \<simeq> g (path homotopic in X, same endpoints), then \<tau>(f) = \<tau>(g).
      This is THE core 2D Lebesgue subdivision argument (Munkres Step 4).
@@ -4520,12 +6614,39 @@ proof -
       define piece_bot where "piece_bot i = (\<lambda>t. row_fn (Suc j) (sub_s' i + t * (sub_s' (Suc i) - sub_s' i)))" for i
       define \<beta> where "\<beta> i = (\<lambda>t. F (sub_s' i, sub_t j + t * (sub_t (Suc j) - sub_t j)))" for i
       \<comment> \<open>τ(row_fn j) uses subdivision sub_s' with ns' pieces.\<close>
+      \<comment> \<open>row_fn j is a loop (F(0,t_j) = F(1,t_j) = x0).\<close>
+      have hrowj_loop: "top1_is_loop_on X TX x0 (row_fn j)"
+        sorry \<comment> \<open>row_fn j continuous (F continuous + composition), endpoints x0\<close>
+      have hrowSj_loop: "top1_is_loop_on X TX x0 (row_fn (Suc j))"
+        sorry \<comment> \<open>Same for Suc j\<close>
+      \<comment> \<open>sub_s' is a valid UV-subdivision for row_fn j.\<close>
+      have hUV_top: "\<forall>i<ns'. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> row_fn j (sub_s' i + t * (sub_s' (Suc i) - sub_s' i)) \<in> U)
+           \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> row_fn j (sub_s' i + t * (sub_s' (Suc i) - sub_s' i)) \<in> V)"
+        sorry \<comment> \<open>From hcell_UV: each cell [s'_i,s'_{i+1}]×[t_j,t_{j+1}] maps to U or V.
+           For row_fn j at fixed t_j, the s-strip maps to U or V.\<close>
+      have hUV_bot: "\<forall>i<ns'. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> row_fn (Suc j) (sub_s' i + t * (sub_s' (Suc i) - sub_s' i)) \<in> U)
+           \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> row_fn (Suc j) (sub_s' i + t * (sub_s' (Suc i) - sub_s' i)) \<in> V)"
+        sorry \<comment> \<open>Same for Suc j.\<close>
       have h\<tau>_top: "\<tau> (row_fn j) = foldr mulH (map (\<lambda>i. \<sigma> (piece_top i)) [0..<ns']) eH"
-        sorry \<comment> \<open>By subdivision independence (h_gen_subdiv_indep) applied to row_fn j
-           with the subdivision sub_s'. Each piece of row_fn j w.r.t. sub_s' maps into U or V
-           (from hcell_UV at row j).\<close>
+      proof -
+        have "\<tau> (row_fn j) = foldr_\<sigma> (row_fn j) ns' sub_s'"
+          by (rule h_gen_subdiv_indep[OF hrowj_loop hns' hs0' hsn' hsinc' hUV_top])
+        also have "\<dots> = foldr mulH (map (\<lambda>i. \<sigma> (\<lambda>t. row_fn j (sub_s' i + t * (sub_s' (Suc i) - sub_s' i)))) [0..<ns']) eH"
+          unfolding foldr_\<sigma>_def by (by100 simp)
+        also have "\<dots> = foldr mulH (map (\<lambda>i. \<sigma> (piece_top i)) [0..<ns']) eH"
+          unfolding piece_top_def by (by100 simp)
+        finally show ?thesis .
+      qed
       have h\<tau>_bot: "\<tau> (row_fn (Suc j)) = foldr mulH (map (\<lambda>i. \<sigma> (piece_bot i)) [0..<ns']) eH"
-        sorry \<comment> \<open>Same argument for row_fn (Suc j) with subdivision sub_s'.\<close>
+      proof -
+        have "\<tau> (row_fn (Suc j)) = foldr_\<sigma> (row_fn (Suc j)) ns' sub_s'"
+          by (rule h_gen_subdiv_indep[OF hrowSj_loop hns' hs0' hsn' hsinc' hUV_bot])
+        also have "\<dots> = foldr mulH (map (\<lambda>i. \<sigma> (\<lambda>t. row_fn (Suc j) (sub_s' i + t * (sub_s' (Suc i) - sub_s' i)))) [0..<ns']) eH"
+          unfolding foldr_\<sigma>_def by (by100 simp)
+        also have "\<dots> = foldr mulH (map (\<lambda>i. \<sigma> (piece_bot i)) [0..<ns']) eH"
+          unfolding piece_bot_def by (by100 simp)
+        finally show ?thesis .
+      qed
       \<comment> \<open>Key: broken-line homotopy in each cell gives σ equation.\<close>
       have h\<sigma>_cell: "\<And>i. i < ns' \<Longrightarrow>
           \<sigma> (piece_top i) = mulH (\<sigma> (\<beta> i)) (mulH (\<sigma> (piece_bot i)) (invH (\<sigma> (\<beta> (Suc i)))))"
@@ -5974,2100 +8095,6 @@ proof -
           qed
         qed
         \<comment> \<open>Helper: σ of any piece (in U or V) ∈ H, given f is a loop.\<close>
-        have h\<sigma>_piece_in_H: "\<And>f' sub' i n'.
-            top1_is_loop_on X TX x0 f' \<Longrightarrow>
-            i < n' \<Longrightarrow> 0 \<le> sub' i \<Longrightarrow> sub' i \<le> sub' (Suc i) \<Longrightarrow> sub' (Suc i) \<le> 1 \<Longrightarrow>
-            ((\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f' (sub' i + t * (sub' (Suc i) - sub' i)) \<in> U)
-             \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f' (sub' i + t * (sub' (Suc i) - sub' i)) \<in> V)) \<Longrightarrow>
-            \<sigma> (\<lambda>t. f' (sub' i + t * (sub' (Suc i) - sub' i))) \<in> H"
-        proof -
-          fix f' :: "real \<Rightarrow> 'a" and sub' :: "nat \<Rightarrow> real" and i n'
-          assume hf'_loop: "top1_is_loop_on X TX x0 f'"
-             and hi: "i < n'"
-             and hge: "0 \<le> sub' i" and hmono: "sub' i \<le> sub' (Suc i)" and hle: "sub' (Suc i) \<le> 1"
-             and hUV_arg: "(\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f' (sub' i + t * (sub' (Suc i) - sub' i)) \<in> U)
-                 \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f' (sub' i + t * (sub' (Suc i) - sub' i)) \<in> V)"
-          define piece where "piece t = f' (sub' i + t * (sub' (Suc i) - sub' i))" for t
-          have hf'_cont: "top1_continuous_map_on I_set I_top X TX f'"
-            using hf'_loop unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
-          have haff_cont: "top1_continuous_map_on I_set I_top I_set I_top (\<lambda>t. sub' i + t * (sub' (Suc i) - sub' i))"
-            by (rule affine_map_continuous_I_to_I[OF hge hmono hle])
-          have hpiece_cont: "top1_continuous_map_on I_set I_top X TX piece"
-            unfolding piece_def using top1_continuous_map_on_comp[OF haff_cont hf'_cont]
-            unfolding comp_def by (by100 simp)
-          have hpiece_img: "(\<forall>s\<in>I_set. piece s \<in> U) \<or> (\<forall>s\<in>I_set. piece s \<in> V)"
-          proof -
-            have "\<And>s. s \<in> I_set \<Longrightarrow> 0 \<le> s \<and> s \<le> 1"
-              unfolding top1_unit_interval_def by (by100 simp)
-            thus ?thesis using hUV_arg unfolding piece_def by (by100 fast)
-          qed
-          show "\<sigma> (\<lambda>t. f' (sub' i + t * (sub' (Suc i) - sub' i))) \<in> H"
-          proof (cases "\<forall>s\<in>I_set. piece s \<in> U")
-            case True
-            have "piece ` I_set \<subseteq> U" using True by (by100 blast)
-            have "top1_continuous_map_on I_set I_top U (subspace_topology X TX U) piece"
-              by (rule top1_continuous_map_on_codomain_shrink[OF hpiece_cont \<open>piece ` I_set \<subseteq> U\<close> hUsub])
-            hence "top1_is_path_on U (subspace_topology X TX U) (piece 0) (piece 1) piece"
-              unfolding top1_is_path_on_def by (by100 blast)
-            hence "\<sigma> piece \<in> H" by (rule h\<sigma>_path_in_H)
-            thus ?thesis unfolding piece_def by (by100 simp)
-          next
-            case False
-            hence "\<forall>s\<in>I_set. piece s \<in> V" using hpiece_img by (by100 blast)
-            hence "piece ` I_set \<subseteq> V" by (by100 blast)
-            have "top1_continuous_map_on I_set I_top V (subspace_topology X TX V) piece"
-              by (rule top1_continuous_map_on_codomain_shrink[OF hpiece_cont \<open>piece ` I_set \<subseteq> V\<close> hVsub])
-            hence "top1_is_path_on V (subspace_topology X TX V) (piece 0) (piece 1) piece"
-              unfolding top1_is_path_on_def by (by100 blast)
-            hence "\<sigma> piece \<in> H" by (rule h\<sigma>_path_in_H_V)
-            thus ?thesis unfolding piece_def by (by100 simp)
-          qed
-        qed
-        \<comment> \<open>General subdivision independence (Munkres Step 3): any valid subdivision gives τ.
-           Proof: adjoining a single point preserves foldr_σ (σ_cond1 + σ_cond2).
-           Any two valid subdivisions share a common refinement (union of points).
-           Each can be refined to the common by adding one point at a time.\<close>
-        have h_gen_subdiv_indep: "\<And>f n sub. top1_is_loop_on X TX x0 f \<Longrightarrow>
-            n \<ge> 1 \<Longrightarrow> sub 0 = (0::real) \<Longrightarrow> sub n = 1 \<Longrightarrow>
-            (\<forall>i<n. sub i < sub (Suc i)) \<Longrightarrow>
-            (\<forall>i<n. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> U)
-                 \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> V)) \<Longrightarrow>
-            \<tau> f = foldr_\<sigma> f n sub"
-        proof -
-          fix f and n :: nat and sub :: "nat \<Rightarrow> real"
-          assume hf_loop: "top1_is_loop_on X TX x0 f"
-             and hn: "n \<ge> 1" and hs0: "sub 0 = (0::real)" and hsn: "sub n = 1"
-             and hinc: "\<forall>i<n. sub i < sub (Suc i)"
-             and hpUV: "\<forall>i<n. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> U)
-                 \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> V)"
-          \<comment> \<open>Unfold τ: get SOME-picked (N, S) with Pn/Psub pattern.\<close>
-          define Pn where "Pn m \<equiv> m \<ge> 1 \<and> (\<exists>s. s 0 = (0::real) \<and> s m = 1
-              \<and> (\<forall>i<m. s i < s (Suc i))
-              \<and> (\<forall>i<m. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (s i + t * (s (Suc i) - s i)) \<in> U)
-                     \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (s i + t * (s (Suc i) - s i)) \<in> V)))" for m
-          have "Pn (SOME m. Pn m)"
-          proof -
-            have "\<exists>m. Pn m" unfolding Pn_def using hn hs0 hsn hinc hpUV by (by100 blast)
-            thus ?thesis by (rule someI_ex)
-          qed
-          define N where "N = (SOME m. Pn m)"
-          have hN_ge: "N \<ge> 1" using \<open>Pn (SOME m. Pn m)\<close> unfolding N_def Pn_def by (by100 blast)
-          have hN_sub: "\<exists>s. s 0 = (0::real) \<and> s N = 1 \<and> (\<forall>i<N. s i < s (Suc i))
-              \<and> (\<forall>i<N. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (s i + t * (s (Suc i) - s i)) \<in> U)
-                     \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (s i + t * (s (Suc i) - s i)) \<in> V))"
-            using \<open>Pn (SOME m. Pn m)\<close> unfolding N_def Pn_def by (by100 blast)
-          define Psub where "Psub s \<equiv> s 0 = (0::real) \<and> s N = 1 \<and> (\<forall>i<N. s i < s (Suc i))
-              \<and> (\<forall>i<N. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (s i + t * (s (Suc i) - s i)) \<in> U)
-                     \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (s i + t * (s (Suc i) - s i)) \<in> V))" for s
-          have "Psub (SOME s. Psub s)"
-          proof -
-            have "\<exists>s. Psub s" using hN_sub unfolding Psub_def by (by100 blast)
-            thus ?thesis by (rule someI_ex)
-          qed
-          define S where "S = (SOME s. Psub s)"
-          have hS0: "S 0 = (0::real)" and hSN: "S N = 1"
-              and hSinc: "\<forall>i<N. S i < S (Suc i)"
-              and hS_UV: "\<forall>i<N. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (S i + t * (S (Suc i) - S i)) \<in> U)
-                     \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (S i + t * (S (Suc i) - S i)) \<in> V)"
-            using \<open>Psub (SOME s. Psub s)\<close> unfolding S_def Psub_def by (by100 blast)+
-          have h\<tau>_eq: "\<tau> f = foldr_\<sigma> f N S"
-            unfolding N_def Pn_def S_def Psub_def \<tau>_def Let_def by (by100 simp)
-          \<comment> \<open>Core: foldr_σ f N S = foldr_σ f n sub (subdivision independence).
-             Proof: point insertion argument from Munkres Step 3.\<close>
-          \<comment> \<open>Point insertion lemma: inserting one point into a valid subdivision preserves foldr_σ.
-             Munkres Step 3: σ(f_i) = σ(f_i') · σ(f_i'') by reparametrization + σ_cond1/2.\<close>
-          have h_point_insert: "\<And>m s k p.
-              m \<ge> 1 \<Longrightarrow> s 0 = (0::real) \<Longrightarrow> s m = 1 \<Longrightarrow>
-              (\<forall>i<m. s i < s (Suc i)) \<Longrightarrow>
-              (\<forall>i<m. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (s i + t * (s (Suc i) - s i)) \<in> U)
-                   \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (s i + t * (s (Suc i) - s i)) \<in> V)) \<Longrightarrow>
-              k < m \<Longrightarrow> s k < p \<Longrightarrow> p < s (Suc k) \<Longrightarrow>
-              foldr_\<sigma> f (Suc m) (\<lambda>i. if i \<le> k then s i else if i = Suc k then p else s (i - 1))
-              = foldr_\<sigma> f m s"
-          proof -
-            fix m :: nat and s :: "nat \<Rightarrow> real" and k :: nat and p :: real
-            assume hm: "m \<ge> 1" and hs0: "s 0 = (0::real)" and hsm: "s m = 1"
-               and hinc: "\<forall>i<m. s i < s (Suc i)"
-               and hUV: "\<forall>i<m. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (s i + t * (s (Suc i) - s i)) \<in> U)
-                   \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (s i + t * (s (Suc i) - s i)) \<in> V)"
-               and hk: "k < m" and hpL: "s k < p" and hpR: "p < s (Suc k)"
-            define s' where "s' i = (if i \<le> k then s i else if i = Suc k then p else s (i - 1))" for i
-            \<comment> \<open>Subdivision bounds for piece k.\<close>
-            have hsk_ge0: "0 \<le> s k"
-            proof -
-              have "s 0 \<le> s k" using hk
-              proof (induct k)
-                case 0 show ?case by (by100 simp)
-              next
-                case (Suc j)
-                have "j < m" using Suc.prems by (by100 presburger)
-                have "s 0 \<le> s j" using Suc.hyps \<open>j < m\<close> by (by100 presburger)
-                moreover have "s j < s (Suc j)" using hinc \<open>j < m\<close> by (by100 blast)
-                ultimately show ?case by (by100 linarith)
-              qed
-              thus ?thesis using hs0 by (by100 simp)
-            qed
-            have hsk1_le1: "s (Suc k) \<le> 1"
-            proof -
-              have hSk_le: "Suc k \<le> m" using hk by (by100 presburger)
-              have "s (Suc k) \<le> s m" using hSk_le
-              proof (induct rule: dec_induct)
-                case base show ?case by (by100 simp)
-              next
-                case (step n)
-                have "s n < s (Suc n)" using hinc step.hyps(2) by (by100 blast)
-                thus ?case using step.hyps(3) by (by100 linarith)
-              qed
-              thus ?thesis using hsm by (by100 simp)
-            qed
-            have hsk_le_p: "s k \<le> p" using hpL by (by100 linarith)
-            have hp_le_sk1: "p \<le> s (Suc k)" using hpR by (by100 linarith)
-            have hp_ge0: "0 \<le> p" using hsk_ge0 hpL by (by100 linarith)
-            have hp_le1: "p \<le> 1" using hsk1_le1 hpR by (by100 linarith)
-            have hsk_le_sk1: "s k \<le> s (Suc k)" using hinc hk by (by100 force)
-            have hd_pos: "s (Suc k) - s k > 0" using hinc hk by (by100 force)
-            \<comment> \<open>Core σ-splitting: σ(piece_k) = σ(first_half) · σ(second_half).
-               piece_k(t) = f(s(k) + t*(s(k+1)-s(k)))
-               first_half(t) = f(s(k) + t*(p-s(k)))
-               second_half(t) = f(p + t*(s(k+1)-p))
-               piece_k ≃ first_half * second_half by reparametrization in U (or V).
-               Then σ_cond1 + σ_cond2.\<close>
-            have h\<sigma>_split: "\<sigma> (\<lambda>t. f (s k + t * (s (Suc k) - s k)))
-                = mulH (\<sigma> (\<lambda>t. f (s k + t * (p - s k)))) (\<sigma> (\<lambda>t. f (p + t * (s (Suc k) - p))))"
-            proof -
-              define piece where "piece t = f (s k + t * (s (Suc k) - s k))" for t
-              define first_h where "first_h t = f (s k + t * (p - s k))" for t
-              define second_h where "second_h t = f (p + t * (s (Suc k) - p))" for t
-              \<comment> \<open>Piece k maps to U or V.\<close>
-              have hpUV_k: "(\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> piece t \<in> U)
-                  \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> piece t \<in> V)"
-                using hUV hk unfolding piece_def by (by100 blast)
-              \<comment> \<open>Sub-pieces also map to U (or V) since they're sub-intervals.\<close>
-              have hd_pos: "s (Suc k) - s k > 0" using hinc hk by (by100 force)
-              \<comment> \<open>Sub-piece UV membership: first_h(t) = piece(u) where u ∈ [0,1].\<close>
-              have hfirst_as_piece: "\<And>t. first_h t = piece (t * (p - s k) / (s (Suc k) - s k))"
-                unfolding first_h_def piece_def using hd_pos by (by100 simp)
-              have hsecond_as_piece: "\<And>t. second_h t = piece ((p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k))"
-                unfolding second_h_def piece_def using hd_pos by (by100 simp)
-              have hfirst_u01: "\<And>t. 0 \<le> t \<Longrightarrow> t \<le> 1 \<Longrightarrow>
-                  0 \<le> t * (p - s k) / (s (Suc k) - s k) \<and> t * (p - s k) / (s (Suc k) - s k) \<le> 1"
-              proof -
-                fix t :: real assume ht0: "0 \<le> t" and ht1: "t \<le> 1"
-                have "0 \<le> p - s k" using hpL by (by100 linarith)
-                hence hnn: "0 \<le> t * (p - s k)" using ht0 by (by100 simp)
-                have "t * (p - s k) \<le> 1 * (p - s k)"
-                  by (rule mult_right_mono[OF ht1 \<open>0 \<le> p - s k\<close>])
-                hence "t * (p - s k) \<le> p - s k" by (by100 simp)
-                hence "t * (p - s k) \<le> s (Suc k) - s k" using hpR by (by100 linarith)
-                thus "0 \<le> t * (p - s k) / (s (Suc k) - s k) \<and> t * (p - s k) / (s (Suc k) - s k) \<le> 1"
-                  using hnn hd_pos by (by100 simp)
-              qed
-              have hsecond_u01: "\<And>t. 0 \<le> t \<Longrightarrow> t \<le> 1 \<Longrightarrow>
-                  0 \<le> (p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k)
-                  \<and> (p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k) \<le> 1"
-              proof -
-                fix t :: real assume ht0: "0 \<le> t" and ht1: "t \<le> 1"
-                have "0 \<le> p - s k" using hpL by (by100 linarith)
-                have "0 \<le> s (Suc k) - p" using hpR by (by100 linarith)
-                hence hnn: "0 \<le> p - s k + t * (s (Suc k) - p)"
-                  using ht0 \<open>0 \<le> p - s k\<close> by (by100 simp)
-                have "t * (s (Suc k) - p) \<le> 1 * (s (Suc k) - p)"
-                  by (rule mult_right_mono[OF ht1 \<open>0 \<le> s (Suc k) - p\<close>])
-                hence "t * (s (Suc k) - p) \<le> s (Suc k) - p" by (by100 simp)
-                hence "p - s k + t * (s (Suc k) - p) \<le> s (Suc k) - s k" by (by100 linarith)
-                thus "0 \<le> (p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k)
-                    \<and> (p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k) \<le> 1"
-                  using hnn hd_pos by (by100 simp)
-              qed
-              have hfirst_in: "(\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> first_h t \<in> U)
-                  \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> first_h t \<in> V)"
-                using hpUV_k
-              proof
-                assume hU: "\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> piece t \<in> U"
-                show ?thesis proof (rule disjI1, intro allI impI)
-                  fix t :: real assume ht: "0 \<le> t \<and> t \<le> 1"
-                  have hu: "0 \<le> t * (p - s k) / (s (Suc k) - s k)
-                      \<and> t * (p - s k) / (s (Suc k) - s k) \<le> 1"
-                    using hfirst_u01 ht by (by100 blast)
-                  have "piece (t * (p - s k) / (s (Suc k) - s k)) \<in> U"
-                    using hU hu by (by100 fast)
-                  thus "first_h t \<in> U" using hfirst_as_piece by (by100 simp)
-                qed
-              next
-                assume hV: "\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> piece t \<in> V"
-                show ?thesis proof (rule disjI2, intro allI impI)
-                  fix t :: real assume ht: "0 \<le> t \<and> t \<le> 1"
-                  have hu: "0 \<le> t * (p - s k) / (s (Suc k) - s k)
-                      \<and> t * (p - s k) / (s (Suc k) - s k) \<le> 1"
-                    using hfirst_u01 ht by (by100 blast)
-                  have "piece (t * (p - s k) / (s (Suc k) - s k)) \<in> V"
-                    using hV hu by (by100 blast)
-                  thus "first_h t \<in> V" using hfirst_as_piece by (by100 simp)
-                qed
-              qed
-              have hsecond_in: "(\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> second_h t \<in> U)
-                  \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> second_h t \<in> V)"
-                using hpUV_k
-              proof
-                assume hU: "\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> piece t \<in> U"
-                show ?thesis proof (rule disjI1, intro allI impI)
-                  fix t :: real assume ht: "0 \<le> t \<and> t \<le> 1"
-                  have hu: "0 \<le> (p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k)
-                      \<and> (p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k) \<le> 1"
-                    using hsecond_u01 ht by (by100 blast)
-                  have "piece ((p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k)) \<in> U"
-                    using hU hu by (by100 fast)
-                  thus "second_h t \<in> U" using hsecond_as_piece by (by100 simp)
-                qed
-              next
-                assume hV: "\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> piece t \<in> V"
-                show ?thesis proof (rule disjI2, intro allI impI)
-                  fix t :: real assume ht: "0 \<le> t \<and> t \<le> 1"
-                  have hu: "0 \<le> (p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k)
-                      \<and> (p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k) \<le> 1"
-                    using hsecond_u01 ht by (by100 blast)
-                  have "piece ((p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k)) \<in> V"
-                    using hV hu by (by100 blast)
-                  thus "second_h t \<in> V" using hsecond_as_piece by (by100 simp)
-                qed
-              qed
-              \<comment> \<open>Step 1: piece ≃ first_h * second_h in U (or V) by reparametrization.\<close>
-              \<comment> \<open>Reparametrization: piece = g∘id and pp(first_h,second_h) = g∘ψ where g = piece.
-                 ψ(t) = if t≤1/2 then 2t*(p-s(k))/(s(k+1)-s(k)) else (p-s(k)+(2t-1)*(s(k+1)-p))/(s(k+1)-s(k)).
-                 Apply reparam_path_homotopy with g=piece, φ=id, ψ=ψ.\<close>
-              have hf_cont_X: "top1_continuous_map_on I_set I_top X TX f"
-                using hf_loop unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
-              have hpiece_cont: "top1_continuous_map_on I_set I_top X TX piece"
-              proof -
-                have haff: "top1_continuous_map_on I_set I_top I_set I_top
-                    (\<lambda>t. s k + t * (s (Suc k) - s k))"
-                  by (rule affine_map_continuous_I_to_I[OF hsk_ge0 hsk_le_sk1 hsk1_le1])
-                show ?thesis unfolding piece_def
-                  using top1_continuous_map_on_comp[OF haff hf_cont_X] unfolding comp_def by (by100 simp)
-              qed
-              have hpiece_I_U: "(\<forall>s\<in>I_set. piece s \<in> U) \<or> (\<forall>s\<in>I_set. piece s \<in> V)"
-              proof -
-                have "\<And>t. t \<in> I_set \<Longrightarrow> 0 \<le> t \<and> t \<le> 1"
-                  unfolding top1_unit_interval_def by (by100 simp)
-                thus ?thesis using hpUV_k by (by100 fast)
-              qed
-              \<comment> \<open>pp(first_h, second_h) agrees with piece∘ψ on I_set, hence homotopic.\<close>
-              have hpp_eq_piece_psi: "\<And>t. t \<in> I_set \<Longrightarrow>
-                  top1_path_product first_h second_h t = piece
-                    (if t \<le> 1/2 then 2 * t * (p - s k) / (s (Suc k) - s k)
-                     else (p - s k + (2*t-1) * (s (Suc k) - p)) / (s (Suc k) - s k))"
-                unfolding top1_path_product_def first_h_def second_h_def piece_def
-                using hd_pos by (by100 simp)
-              \<comment> \<open>Define ψ: piecewise linear reparametrization I→I.\<close>
-              define \<psi> where "\<psi> t = (if t \<le> 1/2 then 2 * t * (p - s k) / (s (Suc k) - s k)
-                  else (p - s k + (2*t-1) * (s (Suc k) - p)) / (s (Suc k) - s k))" for t
-              have h\<psi>0: "\<psi> 0 = 0" unfolding \<psi>_def using hd_pos by (by100 simp)
-              have h\<psi>1: "\<psi> 1 = 1" unfolding \<psi>_def using hd_pos by (by100 simp)
-              have h\<psi>_cont: "top1_continuous_map_on I_set I_top I_set I_top \<psi>"
-              proof -
-                have hIeq: "I_set = {0..1/2::real} \<union> {1/2..1}"
-                  unfolding top1_unit_interval_def by (by100 auto)
-                have hdnz: "s (Suc k) - s k \<noteq> 0" using hd_pos by (by100 linarith)
-                define f1_br where "f1_br t = 2 * t * (p - s k) / (s (Suc k) - s k)" for t :: real
-                define f2_br where "f2_br t = (p - s k + (2*t-1) * (s (Suc k) - p)) / (s (Suc k) - s k)" for t :: real
-                have "\<psi> = (\<lambda>t. if t \<le> 1/2 then f1_br t else f2_br t)"
-                  unfolding \<psi>_def f1_br_def f2_br_def by (rule ext, by100 simp)
-                have hcont_f1: "continuous_on {0..1/2::real} f1_br"
-                  unfolding f1_br_def using hdnz apply (intro continuous_intros) by (by100 blast)
-                have hcont_f2: "continuous_on {1/2..1::real} f2_br"
-                  unfolding f2_br_def using hdnz apply (intro continuous_intros) by (by100 blast)
-                have hmatch: "\<forall>x. (x \<in> {0..1/2} \<and> \<not> x \<le> 1/2) \<or> (x \<in> {1/2..1} \<and> x \<le> 1/2)
-                    \<longrightarrow> f1_br x = f2_br x"
-                proof (intro allI impI)
-                  fix x :: real
-                  assume "(x \<in> {0..1/2} \<and> \<not> x \<le> 1/2) \<or> (x \<in> {1/2..1} \<and> x \<le> 1/2)"
-                  hence hx12: "x = 1/2" by (by100 force)
-                  have "f1_br x = f1_br (1/2)" unfolding hx12 by (by100 simp)
-                  also have "\<dots> = (p - s k) / (s (Suc k) - s k)" unfolding f1_br_def by (by100 simp)
-                  also have "\<dots> = f2_br (1/2)" unfolding f2_br_def by (by100 simp)
-                  also have "\<dots> = f2_br x" unfolding hx12 by (by100 simp)
-                  finally show "f1_br x = f2_br x" .
-                qed
-                have hcl1: "closed {0..1/2::real}" by (by100 auto)
-                have hcl2: "closed {1/2..1::real}" by (by100 auto)
-                have "continuous_on ({0..1/2} \<union> {1/2..1}) \<psi>"
-                  unfolding \<open>\<psi> = (\<lambda>t. if t \<le> 1/2 then f1_br t else f2_br t)\<close>
-                  by (rule continuous_on_cases[OF hcl1 hcl2 hcont_f1 hcont_f2 hmatch])
-                hence hcont: "continuous_on I_set \<psi>" unfolding hIeq .
-                \<comment> \<open>Range: ψ maps I_set into I_set.\<close>
-                have hrange: "\<And>t. t \<in> I_set \<Longrightarrow> \<psi> t \<in> I_set"
-                proof -
-                  fix t assume ht: "t \<in> I_set"
-                  have ht01: "0 \<le> t \<and> t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 simp)
-                  show "\<psi> t \<in> I_set"
-                  proof (cases "t \<le> 1/2")
-                    case True
-                    hence "\<psi> t = 2 * t * (p - s k) / (s (Suc k) - s k)" unfolding \<psi>_def by (by100 simp)
-                    moreover have "0 \<le> 2 * t * (p - s k) / (s (Suc k) - s k)
-                        \<and> 2 * t * (p - s k) / (s (Suc k) - s k) \<le> 1"
-                    proof -
-                      have "0 \<le> t" and "t \<le> 1/2" using ht01 True by (by100 blast)+
-                      have "0 \<le> p - s k" using hpL by (by100 linarith)
-                      have "0 \<le> 2 * t * (p - s k)" using \<open>0 \<le> t\<close> \<open>0 \<le> p - s k\<close> by (by100 simp)
-                      moreover have "2 * t * (p - s k) \<le> s (Suc k) - s k"
-                      proof -
-                        have "2 * t \<le> 1" using \<open>t \<le> 1/2\<close> by (by100 linarith)
-                        have "2 * t * (p - s k) \<le> 1 * (p - s k)"
-                          by (rule mult_right_mono[OF \<open>2*t \<le> 1\<close> \<open>0 \<le> p - s k\<close>])
-                        hence "2 * t * (p - s k) \<le> p - s k" by (by100 simp)
-                        thus ?thesis using hpR by (by100 linarith)
-                      qed
-                      ultimately show ?thesis using hd_pos by (by100 simp)
-                    qed
-                    ultimately show ?thesis unfolding top1_unit_interval_def by (by100 simp)
-                  next
-                    case False
-                    hence "\<psi> t = (p - s k + (2*t-1) * (s (Suc k) - p)) / (s (Suc k) - s k)"
-                      unfolding \<psi>_def by (by100 simp)
-                    moreover have "0 \<le> (p - s k + (2*t-1) * (s (Suc k) - p)) / (s (Suc k) - s k)
-                        \<and> (p - s k + (2*t-1) * (s (Suc k) - p)) / (s (Suc k) - s k) \<le> 1"
-                      using hsecond_u01[of "2*t-1"] ht01 False by (by100 simp)
-                    ultimately show ?thesis unfolding top1_unit_interval_def by (by100 simp)
-                  qed
-                qed
-                show ?thesis unfolding top1_continuous_map_on_def
-                proof (intro conjI ballI)
-                  fix t assume "t \<in> I_set" thus "\<psi> t \<in> I_set" by (rule hrange)
-                next
-                  fix V assume hV: "V \<in> I_top"
-                  obtain W where hW: "open W" and hVW: "V = I_set \<inter> W"
-                    using hV unfolding top1_unit_interval_topology_def subspace_topology_def
-                      top1_open_sets_def by (by100 blast)
-                  have hpre_W: "{t \<in> I_set. \<psi> t \<in> W} \<in> I_top"
-                  proof -
-                    have "\<exists>T. open T \<and> T \<inter> I_set = \<psi> -` W \<inter> I_set"
-                      using hcont hW unfolding continuous_on_open_invariant by (by100 force)
-                    then obtain T where hT: "open T" and hTeq: "T \<inter> I_set = \<psi> -` W \<inter> I_set"
-                      by (by100 blast)
-                    have "{t \<in> I_set. \<psi> t \<in> W} = I_set \<inter> T" using hTeq by (by100 blast)
-                    moreover have "T \<in> top1_open_sets" using hT unfolding top1_open_sets_def by (by100 blast)
-                    ultimately show ?thesis
-                      unfolding top1_unit_interval_topology_def subspace_topology_def by (by100 blast)
-                  qed
-                  have "{t \<in> I_set. \<psi> t \<in> V} = {t \<in> I_set. \<psi> t \<in> W}"
-                    using hVW hrange by (by100 blast)
-                  thus "{t \<in> I_set. \<psi> t \<in> V} \<in> I_top" using hpre_W by (by100 simp)
-                qed
-              qed
-              \<comment> \<open>reparam gives: piece∘id ≃ piece∘ψ in U (or V).\<close>
-              have hpp_as_comp: "\<And>t. t \<in> I_set \<Longrightarrow> top1_path_product first_h second_h t = (piece \<circ> \<psi>) t"
-                using hpp_eq_piece_psi unfolding comp_def \<psi>_def by (by100 simp)
-              have hhom: "(\<exists>S. S = U \<and> top1_path_homotopic_on S (subspace_topology X TX S)
-                  (piece 0) (piece 1) piece (top1_path_product first_h second_h))
-                  \<or> (\<exists>S. S = V \<and> top1_path_homotopic_on S (subspace_topology X TX S)
-                  (piece 0) (piece 1) piece (top1_path_product first_h second_h))"
-              proof -
-                have h0I: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
-                have h1I: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
-                \<comment> \<open>piece = piece∘id, and reparam gives piece∘id ≃ piece∘ψ.\<close>
-                have hid_cont: "top1_continuous_map_on I_set I_top I_set I_top (\<lambda>t. t)"
-                proof -
-                  have "top1_continuous_map_on I_set I_top I_set I_top id"
-                    by (rule top1_continuous_map_on_id[OF top1_unit_interval_topology_is_topology_on])
-                  thus ?thesis unfolding id_def by (by100 simp)
-                qed
-                \<comment> \<open>Transfer from piece∘ψ to pp first_h second_h (agree on I_set).\<close>
-                have hid0: "(\<lambda>t::real. t) 0 = (0::real)" by (by100 simp)
-                have hid1: "(\<lambda>t::real. t) 1 = (1::real)" by (by100 simp)
-                have hcomp_id: "piece \<circ> (\<lambda>t. t) = piece"
-                  unfolding comp_def by (rule ext, by100 simp)
-                have haff1_loc: "top1_continuous_map_on I_set I_top I_set I_top (\<lambda>t. s k + t * (p - s k))"
-                  by (rule affine_map_continuous_I_to_I[OF hsk_ge0 hsk_le_p hp_le1])
-                have haff2_loc: "top1_continuous_map_on I_set I_top I_set I_top (\<lambda>t. p + t * (s (Suc k) - p))"
-                  by (rule affine_map_continuous_I_to_I[OF hp_ge0 hp_le_sk1 hsk1_le1])
-                have hfirst_cont_loc: "top1_continuous_map_on I_set I_top X TX first_h"
-                  unfolding first_h_def using top1_continuous_map_on_comp[OF haff1_loc hf_cont_X]
-                  unfolding comp_def by (by100 simp)
-                have hsecond_cont_loc: "top1_continuous_map_on I_set I_top X TX second_h"
-                  unfolding second_h_def using top1_continuous_map_on_comp[OF haff2_loc hf_cont_X]
-                  unfolding comp_def by (by100 simp)
-                show ?thesis using hpiece_I_U
-                proof
-                  assume hU: "\<forall>s\<in>I_set. piece s \<in> U"
-                  have hreparam: "top1_path_homotopic_on U (subspace_topology X TX U)
-                      (piece 0) (piece 1) (piece \<circ> (\<lambda>t. t)) (piece \<circ> \<psi>)"
-                    by (rule reparam_path_homotopy[OF hTopX hpiece_cont hU hUsub hTopU
-                        hid_cont h\<psi>_cont hid0 hid1 h\<psi>0 h\<psi>1 h0I h1I])
-                  have hreparam2: "top1_path_homotopic_on U (subspace_topology X TX U)
-                      (piece 0) (piece 1) piece (piece \<circ> \<psi>)"
-                    using hreparam unfolding hcomp_id .
-                  have hfirst_img_U: "first_h ` I_set \<subseteq> U"
-                  proof (intro subsetI)
-                    fix x assume "x \<in> first_h ` I_set"
-                    then obtain t where ht: "t \<in> I_set" and hx: "x = first_h t" by (by100 blast)
-                    have ht01: "0 \<le> t \<and> t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 simp)
-                    have hu: "0 \<le> t * (p - s k) / (s (Suc k) - s k)
-                        \<and> t * (p - s k) / (s (Suc k) - s k) \<le> 1"
-                      using hfirst_u01 ht01 by (by100 blast)
-                    have "t * (p - s k) / (s (Suc k) - s k) \<in> I_set"
-                      using hu unfolding top1_unit_interval_def by (by100 simp)
-                    have "piece (t * (p - s k) / (s (Suc k) - s k)) \<in> U"
-                      using hU \<open>t * (p - s k) / (s (Suc k) - s k) \<in> I_set\<close> by (by100 blast)
-                    thus "x \<in> U" using hx hfirst_as_piece by (by100 simp)
-                  qed
-                  have hsecond_img_U: "second_h ` I_set \<subseteq> U"
-                  proof (intro subsetI)
-                    fix x assume "x \<in> second_h ` I_set"
-                    then obtain t where ht: "t \<in> I_set" and hx: "x = second_h t" by (by100 blast)
-                    have ht01: "0 \<le> t \<and> t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 simp)
-                    have hu: "0 \<le> (p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k)
-                        \<and> (p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k) \<le> 1"
-                      using hsecond_u01 ht01 by (by100 blast)
-                    have "(p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k) \<in> I_set"
-                      using hu unfolding top1_unit_interval_def by (by100 simp)
-                    have "piece ((p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k)) \<in> U"
-                      using hU \<open>(p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k) \<in> I_set\<close> by (by100 blast)
-                    thus "x \<in> U" using hx hsecond_as_piece by (by100 simp)
-                  qed
-                  have hfirst_path_U: "top1_is_path_on U (subspace_topology X TX U) (first_h 0) (first_h 1) first_h"
-                    unfolding top1_is_path_on_def
-                    using top1_continuous_map_on_codomain_shrink[OF hfirst_cont_loc hfirst_img_U hUsub] by (by100 blast)
-                  have hsecond_path_U: "top1_is_path_on U (subspace_topology X TX U) (second_h 0) (second_h 1) second_h"
-                    unfolding top1_is_path_on_def
-                    using top1_continuous_map_on_codomain_shrink[OF hsecond_cont_loc hsecond_img_U hUsub] by (by100 blast)
-                  have hfirst0: "first_h 0 = piece 0" unfolding first_h_def piece_def by (by100 simp)
-                  have hsecond1: "second_h 1 = piece 1" unfolding second_h_def piece_def by (by100 simp)
-                  have hpp_path_U: "top1_is_path_on U (subspace_topology X TX U)
-                      (piece 0) (piece 1) (top1_path_product first_h second_h)"
-                  proof -
-                    have hmatch_loc: "first_h 1 = second_h 0"
-                      unfolding first_h_def second_h_def by (by100 simp)
-                    have hsecond_path_U': "top1_is_path_on U (subspace_topology X TX U)
-                        (first_h 1) (second_h 1) second_h"
-                      using hsecond_path_U hmatch_loc by (by100 simp)
-                    have "top1_is_path_on U (subspace_topology X TX U) (first_h 0) (second_h 1)
-                        (top1_path_product first_h second_h)"
-                      by (rule top1_path_product_is_path[OF hTopU hfirst_path_U hsecond_path_U'])
-                    thus ?thesis using hfirst0 hsecond1 by (by100 simp)
-                  qed
-                  have "top1_path_homotopic_on U (subspace_topology X TX U)
-                      (piece 0) (piece 1) piece (top1_path_product first_h second_h)"
-                  proof -
-                    from hreparam2 obtain F where
-                        hF_cont: "top1_continuous_map_on (I_set \<times> I_set) II_topology U (subspace_topology X TX U) F"
-                        and hF0: "\<forall>s\<in>I_set. F (s, 0) = piece s"
-                        and hF1: "\<forall>s\<in>I_set. F (s, 1) = (piece \<circ> \<psi>) s"
-                        and hFb0: "\<forall>t\<in>I_set. F (0, t) = piece 0"
-                        and hFb1: "\<forall>t\<in>I_set. F (1, t) = piece 1"
-                      unfolding top1_path_homotopic_on_def top1_is_path_on_def by blast
-                    \<comment> \<open>F(s,1) = (piece∘ψ)(s) = pp(s) for s ∈ I_set.\<close>
-                    have hF1_pp: "\<forall>s\<in>I_set. F (s, 1) = top1_path_product first_h second_h s"
-                    proof (intro ballI)
-                      fix t assume ht: "t \<in> I_set"
-                      have "F (t, 1) = (piece \<circ> \<psi>) t" using hF1 ht by (by100 blast)
-                      also have "\<dots> = top1_path_product first_h second_h t"
-                        using hpp_as_comp[OF ht, symmetric] .
-                      finally show "F (t, 1) = top1_path_product first_h second_h t" .
-                    qed
-                    have hpiece_path_U: "top1_is_path_on U (subspace_topology X TX U)
-                        (piece 0) (piece 1) piece"
-                    proof -
-                      have "piece ` I_set \<subseteq> U" using hU unfolding top1_unit_interval_def by (by100 blast)
-                      hence "top1_continuous_map_on I_set I_top U (subspace_topology X TX U) piece"
-                        by (rule top1_continuous_map_on_codomain_shrink[OF hpiece_cont _ hUsub])
-                      thus ?thesis unfolding top1_is_path_on_def by (by100 blast)
-                    qed
-                    show ?thesis unfolding top1_path_homotopic_on_def
-                      using hpiece_path_U hpp_path_U hF_cont hF0 hF1_pp hFb0 hFb1 by (by100 blast)
-                  qed
-                  thus ?thesis by (by100 blast)
-                next
-                  assume hV: "\<forall>s\<in>I_set. piece s \<in> V"
-                  have hreparam_V: "top1_path_homotopic_on V (subspace_topology X TX V)
-                      (piece 0) (piece 1) (piece \<circ> (\<lambda>t. t)) (piece \<circ> \<psi>)"
-                    by (rule reparam_path_homotopy[OF hTopX hpiece_cont hV hVsub hTopV
-                        hid_cont h\<psi>_cont hid0 hid1 h\<psi>0 h\<psi>1 h0I h1I])
-                  have hreparam2_V: "top1_path_homotopic_on V (subspace_topology X TX V)
-                      (piece 0) (piece 1) piece (piece \<circ> \<psi>)"
-                    using hreparam_V unfolding hcomp_id .
-                  have hfirst_img_V: "first_h ` I_set \<subseteq> V"
-                  proof (intro subsetI)
-                    fix x assume "x \<in> first_h ` I_set"
-                    then obtain t where ht: "t \<in> I_set" and hx: "x = first_h t" by (by100 blast)
-                    have ht01: "0 \<le> t \<and> t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 simp)
-                    have hu: "0 \<le> t * (p - s k) / (s (Suc k) - s k)
-                        \<and> t * (p - s k) / (s (Suc k) - s k) \<le> 1"
-                      using hfirst_u01 ht01 by (by100 blast)
-                    have "t * (p - s k) / (s (Suc k) - s k) \<in> I_set"
-                      using hu unfolding top1_unit_interval_def by (by100 simp)
-                    thus "x \<in> V" using hV hx hfirst_as_piece
-                      \<open>t * (p - s k) / (s (Suc k) - s k) \<in> I_set\<close> by (by100 simp)
-                  qed
-                  have hsecond_img_V: "second_h ` I_set \<subseteq> V"
-                  proof (intro subsetI)
-                    fix x assume "x \<in> second_h ` I_set"
-                    then obtain t where ht: "t \<in> I_set" and hx: "x = second_h t" by (by100 blast)
-                    have ht01: "0 \<le> t \<and> t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 simp)
-                    have hu: "0 \<le> (p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k)
-                        \<and> (p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k) \<le> 1"
-                      using hsecond_u01 ht01 by (by100 blast)
-                    have "(p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k) \<in> I_set"
-                      using hu unfolding top1_unit_interval_def by (by100 simp)
-                    thus "x \<in> V" using hV hx hsecond_as_piece
-                      \<open>(p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k) \<in> I_set\<close> by (by100 simp)
-                  qed
-                  have hfirst_path_V: "top1_is_path_on V (subspace_topology X TX V) (first_h 0) (first_h 1) first_h"
-                    unfolding top1_is_path_on_def
-                    using top1_continuous_map_on_codomain_shrink[OF hfirst_cont_loc hfirst_img_V hVsub] by (by100 blast)
-                  have hsecond_path_V: "top1_is_path_on V (subspace_topology X TX V) (second_h 0) (second_h 1) second_h"
-                    unfolding top1_is_path_on_def
-                    using top1_continuous_map_on_codomain_shrink[OF hsecond_cont_loc hsecond_img_V hVsub] by (by100 blast)
-                  have hpp_path_V: "top1_is_path_on V (subspace_topology X TX V)
-                      (piece 0) (piece 1) (top1_path_product first_h second_h)"
-                  proof -
-                    have hmatch_V: "first_h 1 = second_h 0"
-                      unfolding first_h_def second_h_def by (by100 simp)
-                    have hsecond_path_V': "top1_is_path_on V (subspace_topology X TX V)
-                        (first_h 1) (second_h 1) second_h"
-                      using hsecond_path_V hmatch_V by (by100 simp)
-                    have "top1_is_path_on V (subspace_topology X TX V) (first_h 0) (second_h 1)
-                        (top1_path_product first_h second_h)"
-                      by (rule top1_path_product_is_path[OF hTopV hfirst_path_V hsecond_path_V'])
-                    thus ?thesis unfolding first_h_def second_h_def piece_def by (by100 simp)
-                  qed
-                  have "top1_path_homotopic_on V (subspace_topology X TX V)
-                      (piece 0) (piece 1) piece (top1_path_product first_h second_h)"
-                  proof -
-                    from hreparam2_V obtain F where
-                        hF_cont: "top1_continuous_map_on (I_set \<times> I_set) II_topology V (subspace_topology X TX V) F"
-                        and hF0: "\<forall>s\<in>I_set. F (s, 0) = piece s"
-                        and hF1: "\<forall>s\<in>I_set. F (s, 1) = (piece \<circ> \<psi>) s"
-                        and hFb0: "\<forall>t\<in>I_set. F (0, t) = piece 0"
-                        and hFb1: "\<forall>t\<in>I_set. F (1, t) = piece 1"
-                      unfolding top1_path_homotopic_on_def top1_is_path_on_def by blast
-                    have hF1_pp: "\<forall>s\<in>I_set. F (s, 1) = top1_path_product first_h second_h s"
-                    proof (intro ballI)
-                      fix t assume ht: "t \<in> I_set"
-                      have "F (t, 1) = (piece \<circ> \<psi>) t" using hF1 ht by (by100 blast)
-                      also have "\<dots> = top1_path_product first_h second_h t"
-                        using hpp_as_comp[OF ht, symmetric] .
-                      finally show "F (t, 1) = top1_path_product first_h second_h t" .
-                    qed
-                    have hpiece_path_V: "top1_is_path_on V (subspace_topology X TX V) (piece 0) (piece 1) piece"
-                    proof -
-                      have "piece ` I_set \<subseteq> V" using hV unfolding top1_unit_interval_def by (by100 blast)
-                      hence "top1_continuous_map_on I_set I_top V (subspace_topology X TX V) piece"
-                        by (rule top1_continuous_map_on_codomain_shrink[OF hpiece_cont _ hVsub])
-                      thus ?thesis unfolding top1_is_path_on_def by (by100 blast)
-                    qed
-                    show ?thesis unfolding top1_path_homotopic_on_def
-                      using hpiece_path_V hpp_path_V hF_cont hF0 hF1_pp hFb0 hFb1 by (by100 blast)
-                  qed
-                  thus ?thesis by (by100 blast)
-                qed
-              qed
-              \<comment> \<open>Step 2: σ(piece) = σ(first*second) by σ_cond1.\<close>
-              have h\<sigma>_eq: "\<sigma> piece = \<sigma> (top1_path_product first_h second_h)"
-                using hhom
-              proof
-                assume "\<exists>S. S = U \<and> top1_path_homotopic_on S (subspace_topology X TX S)
-                    (piece 0) (piece 1) piece (top1_path_product first_h second_h)"
-                then obtain S where "S = U" and hhom_S: "top1_path_homotopic_on U (subspace_topology X TX U)
-                    (piece 0) (piece 1) piece (top1_path_product first_h second_h)"
-                  by (by100 blast)
-                show ?thesis by (rule h\<sigma>_cond1[OF hhom_S])
-              next
-                assume "\<exists>S. S = V \<and> top1_path_homotopic_on S (subspace_topology X TX S)
-                    (piece 0) (piece 1) piece (top1_path_product first_h second_h)"
-                then obtain S where "S = V" and hhom_S: "top1_path_homotopic_on V (subspace_topology X TX V)
-                    (piece 0) (piece 1) piece (top1_path_product first_h second_h)"
-                  by (by100 blast)
-                show ?thesis by (rule h\<sigma>_cond1_V[OF hhom_S])
-              qed
-              \<comment> \<open>Step 3: σ(first*second) = σ(first)·σ(second) by σ_cond2.\<close>
-              \<comment> \<open>first_h and second_h are paths in U (or V) by affine+composition+codomain_shrink.\<close>
-              have haff1: "top1_continuous_map_on I_set I_top I_set I_top (\<lambda>t. s k + t * (p - s k))"
-                by (rule affine_map_continuous_I_to_I[OF hsk_ge0 hsk_le_p hp_le1])
-              have haff2: "top1_continuous_map_on I_set I_top I_set I_top (\<lambda>t. p + t * (s (Suc k) - p))"
-                by (rule affine_map_continuous_I_to_I[OF hp_ge0 hp_le_sk1 hsk1_le1])
-              have hfirst_cont: "top1_continuous_map_on I_set I_top X TX first_h"
-                unfolding first_h_def using top1_continuous_map_on_comp[OF haff1 hf_cont_X]
-                unfolding comp_def by (by100 simp)
-              have hsecond_cont: "top1_continuous_map_on I_set I_top X TX second_h"
-                unfolding second_h_def using top1_continuous_map_on_comp[OF haff2 hf_cont_X]
-                unfolding comp_def by (by100 simp)
-              have hmatch: "first_h 1 = second_h 0"
-                unfolding first_h_def second_h_def by (by100 simp)
-              have h\<sigma>_mul: "\<sigma> (top1_path_product first_h second_h)
-                  = mulH (\<sigma> first_h) (\<sigma> second_h)"
-                using hpUV_k
-              proof
-                assume hU: "\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> piece t \<in> U"
-                have hfirst_U: "first_h ` I_set \<subseteq> U"
-                proof (intro subsetI)
-                  fix x assume "x \<in> first_h ` I_set"
-                  then obtain t where ht: "t \<in> I_set" and hx: "x = first_h t" by (by100 blast)
-                  have ht01: "0 \<le> t \<and> t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 simp)
-                  have "piece (t * (p - s k) / (s (Suc k) - s k)) \<in> U"
-                    using hU hfirst_u01 ht01 by (by100 blast)
-                  thus "x \<in> U" using hx hfirst_as_piece by (by100 simp)
-                qed
-                have hsecond_U: "second_h ` I_set \<subseteq> U"
-                proof (intro subsetI)
-                  fix x assume "x \<in> second_h ` I_set"
-                  then obtain t where ht: "t \<in> I_set" and hx: "x = second_h t" by (by100 blast)
-                  have ht01: "0 \<le> t \<and> t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 simp)
-                  have "piece ((p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k)) \<in> U"
-                    using hU hsecond_u01 ht01 by (by100 blast)
-                  thus "x \<in> U" using hx hsecond_as_piece by (by100 simp)
-                qed
-                have hf1_path: "top1_is_path_on U (subspace_topology X TX U) (first_h 0) (first_h 1) first_h"
-                  unfolding top1_is_path_on_def
-                  using top1_continuous_map_on_codomain_shrink[OF hfirst_cont hfirst_U hUsub] by (by100 blast)
-                have hf2_path: "top1_is_path_on U (subspace_topology X TX U) (second_h 0) (second_h 1) second_h"
-                  unfolding top1_is_path_on_def
-                  using top1_continuous_map_on_codomain_shrink[OF hsecond_cont hsecond_U hUsub] by (by100 blast)
-                show ?thesis by (rule h\<sigma>_cond2[OF hf1_path hf2_path hmatch])
-              next
-                assume hV: "\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> piece t \<in> V"
-                have hfirst_V: "first_h ` I_set \<subseteq> V"
-                proof (intro subsetI)
-                  fix x assume "x \<in> first_h ` I_set"
-                  then obtain t where ht: "t \<in> I_set" and hx: "x = first_h t" by (by100 blast)
-                  have ht01: "0 \<le> t \<and> t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 simp)
-                  have "piece (t * (p - s k) / (s (Suc k) - s k)) \<in> V"
-                    using hV hfirst_u01 ht01 by (by100 blast)
-                  thus "x \<in> V" using hx hfirst_as_piece by (by100 simp)
-                qed
-                have hsecond_V: "second_h ` I_set \<subseteq> V"
-                proof (intro subsetI)
-                  fix x assume "x \<in> second_h ` I_set"
-                  then obtain t where ht: "t \<in> I_set" and hx: "x = second_h t" by (by100 blast)
-                  have ht01: "0 \<le> t \<and> t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 simp)
-                  have "piece ((p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k)) \<in> V"
-                    using hV hsecond_u01 ht01 by (by100 blast)
-                  thus "x \<in> V" using hx hsecond_as_piece by (by100 simp)
-                qed
-                have hf1_path: "top1_is_path_on V (subspace_topology X TX V) (first_h 0) (first_h 1) first_h"
-                  unfolding top1_is_path_on_def
-                  using top1_continuous_map_on_codomain_shrink[OF hfirst_cont hfirst_V hVsub] by (by100 blast)
-                have hf2_path: "top1_is_path_on V (subspace_topology X TX V) (second_h 0) (second_h 1) second_h"
-                  unfolding top1_is_path_on_def
-                  using top1_continuous_map_on_codomain_shrink[OF hsecond_cont hsecond_V hVsub] by (by100 blast)
-                show ?thesis by (rule h\<sigma>_cond2_V[OF hf1_path hf2_path hmatch])
-              qed
-              from h\<sigma>_eq h\<sigma>_mul have "\<sigma> piece = mulH (\<sigma> first_h) (\<sigma> second_h)"
-                by (by100 simp)
-              thus ?thesis unfolding piece_def first_h_def second_h_def by (by100 simp)
-            qed
-            \<comment> \<open>Map/foldr manipulation: the new subdivision's foldr differs only at position k,
-               where σ(piece_k) is replaced by σ(first)·σ(second). By h_σ_split they're equal.
-               Group associativity: mulH a (mulH b c) = mulH (mulH a b) c handles the foldr.\<close>
-            \<comment> \<open>The new subdivision's pieces: for i<k same as old, at k split into first/second,
-               for i>k+1 same as old shifted. h_σ_split gives σ(piece_k) = σ(first)·σ(second).
-               Group associativity: foldr [...,a,b,...] = foldr [...,mulH a b,...] when elements ∈ H.\<close>
-            show "foldr_\<sigma> f (Suc m) s' = foldr_\<sigma> f m s"
-            proof -
-              define F where "F i = \<sigma> (\<lambda>t. f (s i + t * (s (Suc i) - s i)))" for i
-              define G where "G i = \<sigma> (\<lambda>t. f (s' i + t * (s' (Suc i) - s' i)))" for i
-              \<comment> \<open>For i < k: G(i) = F(i) since s'(i) = s(i) and s'(Suc i) = s(Suc i).\<close>
-              have hG_eq_F: "\<And>i. i < k \<Longrightarrow> G i = F i"
-                unfolding G_def F_def s'_def using hk by (by100 simp)
-              \<comment> \<open>G(k) = σ(first_half), G(k+1) = σ(second_half).\<close>
-              have hG_k: "G k = \<sigma> (\<lambda>t. f (s k + t * (p - s k)))"
-                unfolding G_def s'_def by (by100 simp)
-              have hG_Sk: "G (Suc k) = \<sigma> (\<lambda>t. f (p + t * (s (Suc k) - p)))"
-                unfolding G_def s'_def using hk by (by100 simp)
-              \<comment> \<open>For i > k+1: G(i) = F(i-1).\<close>
-              have hG_shift: "\<And>i. Suc k < i \<Longrightarrow> i < Suc m \<Longrightarrow> G i = F (i - 1)"
-                unfolding G_def F_def s'_def by (by100 simp)
-              \<comment> \<open>Assemble: foldr_σ with s' = foldr with s via h_σ_split.\<close>
-              have hLHS: "foldr_\<sigma> f (Suc m) s' = foldr mulH (map G [0..<Suc m]) eH"
-                unfolding foldr_\<sigma>_def G_def by (by100 simp)
-              have hRHS: "foldr_\<sigma> f m s = foldr mulH (map F [0..<m]) eH"
-                unfolding foldr_\<sigma>_def F_def by (by100 simp)
-              \<comment> \<open>Key group property: foldr(...[a,b]...) = foldr(...[mulH a b]...).\<close>
-              have hassoc_grp: "\<And>a b c. a \<in> H \<Longrightarrow> b \<in> H \<Longrightarrow> c \<in> H \<Longrightarrow>
-                  mulH (mulH a b) c = mulH a (mulH b c)"
-                using hH unfolding top1_is_group_on_def by (by100 blast)
-              \<comment> \<open>All σ-values of valid pieces are in H.\<close>
-              have hF_in_H: "\<And>i. i < m \<Longrightarrow> F i \<in> H"
-              proof -
-                fix i assume hi_m: "i < m"
-                have hge_i: "0 \<le> s i"
-                proof -
-                  have "s 0 \<le> s i" using hi_m
-                  proof (induct i)
-                    case 0 show ?case by (by100 simp)
-                  next
-                    case (Suc j)
-                    have "j < m" using Suc.prems by (by100 presburger)
-                    have "s 0 \<le> s j" using Suc.hyps \<open>j < m\<close> by (by100 presburger)
-                    moreover have "s j < s (Suc j)" using hinc \<open>j < m\<close> by (by100 blast)
-                    ultimately show ?case by (by100 linarith)
-                  qed
-                  thus ?thesis using hs0 by (by100 simp)
-                qed
-                have hmono_i: "s i \<le> s (Suc i)" using hinc hi_m by (by100 force)
-                have hle_i: "s (Suc i) \<le> 1"
-                proof -
-                  have "Suc i \<le> m" using hi_m by (by100 presburger)
-                  have "s (Suc i) \<le> s m" using \<open>Suc i \<le> m\<close>
-                  proof (induct rule: dec_induct)
-                    case base show ?case by (by100 simp)
-                  next
-                    case (step n)
-                    have "s n < s (Suc n)" using hinc step.hyps(2) by (by100 blast)
-                    thus ?case using step.hyps(3) by (by100 linarith)
-                  qed
-                  thus ?thesis using hsm by (by100 simp)
-                qed
-                show "F i \<in> H" unfolding F_def
-                  by (rule h\<sigma>_piece_in_H[OF hf_loop hi_m hge_i hmono_i hle_i])
-                     (rule hUV[rule_format, OF hi_m])
-              qed
-              \<comment> \<open>Sub-piece UV membership (re-derived from hUV via sub-interval argument).\<close>
-              have hpUV_k_loc: "(\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (s k + t * (s (Suc k) - s k)) \<in> U)
-                  \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (s k + t * (s (Suc k) - s k)) \<in> V)"
-                using hUV hk by (by100 blast)
-              have hfirst_as_pl: "\<And>t. f (s k + t * (p - s k))
-                  = f (s k + (t * (p - s k) / (s (Suc k) - s k)) * (s (Suc k) - s k))"
-                using hd_pos by (by100 simp)
-              have hfu01: "\<And>t. 0 \<le> t \<Longrightarrow> t \<le> 1 \<Longrightarrow>
-                  0 \<le> t * (p - s k) / (s (Suc k) - s k) \<and> t * (p - s k) / (s (Suc k) - s k) \<le> 1"
-              proof -
-                fix t :: real assume ht0: "0 \<le> t" and ht1: "t \<le> 1"
-                have hpsk: "0 \<le> p - s k" using hpL by (by100 linarith)
-                have hnn: "0 \<le> t * (p - s k)" using ht0 hpsk by (by100 simp)
-                have "t * (p - s k) \<le> 1 * (p - s k)" by (rule mult_right_mono[OF ht1 hpsk])
-                hence "t * (p - s k) \<le> p - s k" by (by100 simp)
-                hence "t * (p - s k) \<le> s (Suc k) - s k" using hpR by (by100 linarith)
-                thus "0 \<le> t * (p - s k) / (s (Suc k) - s k) \<and> t * (p - s k) / (s (Suc k) - s k) \<le> 1"
-                  using hnn hd_pos by (by100 simp)
-              qed
-              have hfirst_UV_loc: "(\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (s k + t * (p - s k)) \<in> U)
-                  \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (s k + t * (p - s k)) \<in> V)"
-                using hpUV_k_loc
-              proof
-                assume hU: "\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (s k + t * (s (Suc k) - s k)) \<in> U"
-                show ?thesis proof (rule disjI1, intro allI impI)
-                  fix t :: real assume ht: "0 \<le> t \<and> t \<le> 1"
-                  have "f (s k + (t * (p - s k) / (s (Suc k) - s k)) * (s (Suc k) - s k)) \<in> U"
-                    using hU hfu01 ht by (by100 blast)
-                  thus "f (s k + t * (p - s k)) \<in> U" using hfirst_as_pl by (by100 simp)
-                qed
-              next
-                assume hV: "\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (s k + t * (s (Suc k) - s k)) \<in> V"
-                show ?thesis proof (rule disjI2, intro allI impI)
-                  fix t :: real assume ht: "0 \<le> t \<and> t \<le> 1"
-                  have "f (s k + (t * (p - s k) / (s (Suc k) - s k)) * (s (Suc k) - s k)) \<in> V"
-                    using hV hfu01 ht by (by100 blast)
-                  thus "f (s k + t * (p - s k)) \<in> V" using hfirst_as_pl by (by100 simp)
-                qed
-              qed
-              have hsecond_as_pl: "\<And>t. f (p + t * (s (Suc k) - p))
-                  = f (s k + ((p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k)) * (s (Suc k) - s k))"
-                using hd_pos by (by100 simp)
-              have hsu01: "\<And>t. 0 \<le> t \<Longrightarrow> t \<le> 1 \<Longrightarrow>
-                  0 \<le> (p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k)
-                  \<and> (p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k) \<le> 1"
-              proof -
-                fix t :: real assume ht0: "0 \<le> t" and ht1: "t \<le> 1"
-                have hpsk: "0 \<le> p - s k" using hpL by (by100 linarith)
-                have hskp: "0 \<le> s (Suc k) - p" using hpR by (by100 linarith)
-                have hnn: "0 \<le> p - s k + t * (s (Suc k) - p)" using ht0 hpsk hskp by (by100 simp)
-                have "t * (s (Suc k) - p) \<le> 1 * (s (Suc k) - p)" by (rule mult_right_mono[OF ht1 hskp])
-                hence "t * (s (Suc k) - p) \<le> s (Suc k) - p" by (by100 simp)
-                hence "p - s k + t * (s (Suc k) - p) \<le> s (Suc k) - s k" by (by100 linarith)
-                thus "0 \<le> (p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k)
-                    \<and> (p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k) \<le> 1"
-                  using hnn hd_pos by (by100 simp)
-              qed
-              have hsecond_UV_loc: "(\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (p + t * (s (Suc k) - p)) \<in> U)
-                  \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (p + t * (s (Suc k) - p)) \<in> V)"
-                using hpUV_k_loc
-              proof
-                assume hU: "\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (s k + t * (s (Suc k) - s k)) \<in> U"
-                show ?thesis proof (rule disjI1, intro allI impI)
-                  fix t :: real assume ht: "0 \<le> t \<and> t \<le> 1"
-                  have "f (s k + ((p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k)) * (s (Suc k) - s k)) \<in> U"
-                    using hU hsu01 ht by (by100 blast)
-                  thus "f (p + t * (s (Suc k) - p)) \<in> U" using hsecond_as_pl by (by100 simp)
-                qed
-              next
-                assume hV: "\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (s k + t * (s (Suc k) - s k)) \<in> V"
-                show ?thesis proof (rule disjI2, intro allI impI)
-                  fix t :: real assume ht: "0 \<le> t \<and> t \<le> 1"
-                  have "f (s k + ((p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k)) * (s (Suc k) - s k)) \<in> V"
-                    using hV hsu01 ht by (by100 blast)
-                  thus "f (p + t * (s (Suc k) - p)) \<in> V" using hsecond_as_pl by (by100 simp)
-                qed
-              qed
-              have hfc_loc: "top1_continuous_map_on I_set I_top X TX f"
-                using hf_loop unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
-              have hG_k_H: "G k \<in> H"
-              proof -
-                have hcont1: "top1_continuous_map_on I_set I_top X TX (\<lambda>t. f (s k + t * (p - s k)))"
-                  using top1_continuous_map_on_comp[OF affine_map_continuous_I_to_I[OF hsk_ge0 hsk_le_p hp_le1] hfc_loc]
-                  unfolding comp_def by (by100 simp)
-                have himg1: "(\<forall>r\<in>I_set. f (s k + r * (p - s k)) \<in> U) \<or> (\<forall>r\<in>I_set. f (s k + r * (p - s k)) \<in> V)"
-                proof -
-                  have "\<And>t. t \<in> I_set \<Longrightarrow> 0 \<le> t \<and> t \<le> 1" unfolding top1_unit_interval_def by (by100 simp)
-                  thus ?thesis using hfirst_UV_loc by (by100 fast)
-                qed
-                show ?thesis using hG_k himg1
-                proof (cases "\<forall>r\<in>I_set. f (s k + r * (p - s k)) \<in> U")
-                  case True
-                  have "(\<lambda>t. f (s k + t * (p - s k))) ` I_set \<subseteq> U" using True by (by100 blast)
-                  have "top1_is_path_on U (subspace_topology X TX U)
-                      ((\<lambda>t. f (s k + t * (p - s k))) 0) ((\<lambda>t. f (s k + t * (p - s k))) 1)
-                      (\<lambda>t. f (s k + t * (p - s k)))"
-                    unfolding top1_is_path_on_def
-                    using top1_continuous_map_on_codomain_shrink[OF hcont1
-                        \<open>(\<lambda>t. f (s k + t * (p - s k))) ` I_set \<subseteq> U\<close> hUsub] by (by100 blast)
-                  hence "\<sigma> (\<lambda>t. f (s k + t * (p - s k))) \<in> H" by (rule h\<sigma>_path_in_H)
-                  thus ?thesis using hG_k by (by100 simp)
-                next
-                  case False
-                  hence "\<forall>r\<in>I_set. f (s k + r * (p - s k)) \<in> V" using himg1 by (by100 blast)
-                  hence "(\<lambda>t. f (s k + t * (p - s k))) ` I_set \<subseteq> V" by (by100 blast)
-                  have "top1_is_path_on V (subspace_topology X TX V)
-                      ((\<lambda>t. f (s k + t * (p - s k))) 0) ((\<lambda>t. f (s k + t * (p - s k))) 1)
-                      (\<lambda>t. f (s k + t * (p - s k)))"
-                    unfolding top1_is_path_on_def
-                    using top1_continuous_map_on_codomain_shrink[OF hcont1
-                        \<open>(\<lambda>t. f (s k + t * (p - s k))) ` I_set \<subseteq> V\<close> hVsub] by (by100 blast)
-                  hence "\<sigma> (\<lambda>t. f (s k + t * (p - s k))) \<in> H" by (rule h\<sigma>_path_in_H_V)
-                  thus ?thesis using hG_k by (by100 simp)
-                qed
-              qed
-              have hG_Sk_H: "G (Suc k) \<in> H"
-              proof -
-                have hcont2: "top1_continuous_map_on I_set I_top X TX (\<lambda>t. f (p + t * (s (Suc k) - p)))"
-                  using top1_continuous_map_on_comp[OF affine_map_continuous_I_to_I[OF hp_ge0 hp_le_sk1 hsk1_le1] hfc_loc]
-                  unfolding comp_def by (by100 simp)
-                have himg2: "(\<forall>r\<in>I_set. f (p + r * (s (Suc k) - p)) \<in> U) \<or> (\<forall>r\<in>I_set. f (p + r * (s (Suc k) - p)) \<in> V)"
-                proof -
-                  have "\<And>t. t \<in> I_set \<Longrightarrow> 0 \<le> t \<and> t \<le> 1" unfolding top1_unit_interval_def by (by100 simp)
-                  thus ?thesis using hsecond_UV_loc by (by100 fast)
-                qed
-                show ?thesis using hG_Sk himg2
-                proof (cases "\<forall>r\<in>I_set. f (p + r * (s (Suc k) - p)) \<in> U")
-                  case True
-                  have "(\<lambda>t. f (p + t * (s (Suc k) - p))) ` I_set \<subseteq> U" using True by (by100 blast)
-                  have "top1_is_path_on U (subspace_topology X TX U)
-                      ((\<lambda>t. f (p + t * (s (Suc k) - p))) 0) ((\<lambda>t. f (p + t * (s (Suc k) - p))) 1)
-                      (\<lambda>t. f (p + t * (s (Suc k) - p)))"
-                    unfolding top1_is_path_on_def
-                    using top1_continuous_map_on_codomain_shrink[OF hcont2
-                        \<open>(\<lambda>t. f (p + t * (s (Suc k) - p))) ` I_set \<subseteq> U\<close> hUsub] by (by100 blast)
-                  hence "\<sigma> (\<lambda>t. f (p + t * (s (Suc k) - p))) \<in> H" by (rule h\<sigma>_path_in_H)
-                  thus ?thesis using hG_Sk by (by100 simp)
-                next
-                  case False
-                  hence "\<forall>r\<in>I_set. f (p + r * (s (Suc k) - p)) \<in> V" using himg2 by (by100 blast)
-                  hence "(\<lambda>t. f (p + t * (s (Suc k) - p))) ` I_set \<subseteq> V" by (by100 blast)
-                  have "top1_is_path_on V (subspace_topology X TX V)
-                      ((\<lambda>t. f (p + t * (s (Suc k) - p))) 0) ((\<lambda>t. f (p + t * (s (Suc k) - p))) 1)
-                      (\<lambda>t. f (p + t * (s (Suc k) - p)))"
-                    unfolding top1_is_path_on_def
-                    using top1_continuous_map_on_codomain_shrink[OF hcont2
-                        \<open>(\<lambda>t. f (p + t * (s (Suc k) - p))) ` I_set \<subseteq> V\<close> hVsub] by (by100 blast)
-                  hence "\<sigma> (\<lambda>t. f (p + t * (s (Suc k) - p))) \<in> H" by (rule h\<sigma>_path_in_H_V)
-                  thus ?thesis using hG_Sk by (by100 simp)
-                qed
-              qed
-              \<comment> \<open>The equality reduces to: replacing [G k, G(Suc k)] by [F k] preserves foldr,
-                 since F k = mulH (G k) (G(Suc k)). The rest of the map is identical.\<close>
-              \<comment> \<open>h_σ_split in terms of F and G:\<close>
-              have hFk_eq: "F k = mulH (G k) (G (Suc k))"
-                unfolding F_def using h\<sigma>_split hG_k hG_Sk by (by100 simp)
-              \<comment> \<open>Map decomposition: map G [0..<Suc m] splits at k.\<close>
-              have hmap_G: "map G [0..<Suc m] = map F [0..<k] @ [G k, G (Suc k)] @ map F [Suc k..<m]"
-              proof -
-                \<comment> \<open>Step 1: split [0..<Suc m] = [0..<k] @ [k..<Suc m]\<close>
-                have hk_le: "k \<le> Suc m" using hk by (by100 presburger)
-                have "[0..<Suc m] = [0..<k] @ [k..<Suc m]"
-                  using upt_add_eq_append[of 0 k "Suc m - k"] hk_le by (by100 force)
-                \<comment> \<open>Step 2: [k..<Suc m] = k # Suc k # [Suc(Suc k)..<Suc m]\<close>
-                moreover have "[k..<Suc m] = k # Suc k # [Suc (Suc k)..<Suc m]"
-                proof -
-                  have "k < Suc m" using hk by (by100 presburger)
-                  hence "[k..<Suc m] = k # [Suc k..<Suc m]" by (rule upt_conv_Cons)
-                  moreover have "Suc k < Suc m" using hk hm by (by100 presburger)
-                  hence "[Suc k..<Suc m] = Suc k # [Suc (Suc k)..<Suc m]" by (rule upt_conv_Cons)
-                  ultimately show ?thesis by (by100 simp)
-                qed
-                ultimately have hsplit: "[0..<Suc m] = [0..<k] @ k # Suc k # [Suc (Suc k)..<Suc m]"
-                  by (by100 simp)
-                \<comment> \<open>Step 3: map G on each piece.\<close>
-                have "map G [0..<Suc m] = map G [0..<k] @ G k # G (Suc k) # map G [Suc (Suc k)..<Suc m]"
-                  using hsplit by (by100 simp)
-                moreover have hbelow: "map G [0..<k] = map F [0..<k]"
-                proof (rule map_cong)
-                  show "[0..<k] = [0..<k]" by (by100 simp)
-                next
-                  fix x assume "x \<in> set [0..<k]"
-                  hence "x < k" by (by100 simp)
-                  thus "G x = F x" by (rule hG_eq_F)
-                qed
-                moreover have habove: "map G [Suc (Suc k)..<Suc m] = map F [Suc k..<m]"
-                proof -
-                  have "map G [Suc (Suc k)..<Suc m] = map (G \<circ> Suc) [Suc k..<m]"
-                    using map_Suc_upt[of "Suc k" m, symmetric] unfolding map_map[symmetric]
-                    by (by100 simp)
-                  also have "\<dots> = map F [Suc k..<m]"
-                  proof (rule map_cong)
-                    show "[Suc k..<m] = [Suc k..<m]" by (by100 simp)
-                  next
-                    fix x assume "x \<in> set [Suc k..<m]"
-                    hence hx_ge: "Suc k \<le> x" and hx_lt: "x < m" by (by100 simp)+
-                    have "Suc k < Suc x" using hx_ge by (by100 presburger)
-                    have "Suc x < Suc m" using hx_lt by (by100 presburger)
-                    have "(G \<circ> Suc) x = G (Suc x)" unfolding comp_def by (by100 simp)
-                    also have "\<dots> = F (Suc x - 1)" using hG_shift[OF \<open>Suc k < Suc x\<close> \<open>Suc x < Suc m\<close>] .
-                    also have "\<dots> = F x" by (by100 simp)
-                    finally show "(G \<circ> Suc) x = F x" .
-                  qed
-                  finally show ?thesis .
-                qed
-                ultimately have "map G [0..<Suc m] = map F [0..<k] @ G k # G (Suc k) # map F [Suc k..<m]"
-                  by (by100 presburger)
-                thus ?thesis by (by100 simp)
-              qed
-              have hmap_F: "map F [0..<m] = map F [0..<k] @ [F k] @ map F [Suc k..<m]"
-              proof -
-                have "[0..<m] = [0..<k] @ k # [Suc k..<m]"
-                  using upt_conv_Cons[of k m] hk upt_add_eq_append[of 0 k "m-k"]
-                  by (by100 force)
-                thus ?thesis by (by100 simp)
-              qed
-              \<comment> \<open>foldr with [G k, G(Suc k)] vs [F k] = [mulH (G k) (G(Suc k))]: group associativity.\<close>
-              have heH_in: "eH \<in> H" using hH unfolding top1_is_group_on_def by (by100 fast)
-              have hfoldr_tail_H: "foldr mulH (map F [Suc k..<m]) eH \<in> H"
-              proof -
-                have "\<And>xs. (\<forall>x \<in> set xs. x \<in> H) \<Longrightarrow> foldr mulH xs eH \<in> H"
-                proof -
-                  fix xs show "(\<forall>x \<in> set xs. x \<in> H) \<Longrightarrow> foldr mulH xs eH \<in> H"
-                  proof (induct xs)
-                    case Nil thus ?case using heH_in by (by100 simp)
-                  next
-                    case (Cons a xs)
-                    have "a \<in> H" using Cons.prems by (by100 simp)
-                    have "foldr mulH xs eH \<in> H" using Cons by (by100 simp)
-                    have "mulH a (foldr mulH xs eH) \<in> H"
-                      using hH \<open>a \<in> H\<close> \<open>foldr mulH xs eH \<in> H\<close> unfolding top1_is_group_on_def by (by100 blast)
-                    thus ?case by (by100 simp)
-                  qed
-                qed
-                moreover have "\<forall>x \<in> set (map F [Suc k..<m]). x \<in> H"
-                  using hF_in_H by (by100 force)
-                ultimately show ?thesis by (by100 blast)
-              qed
-              have hassoc_app: "mulH (G k) (mulH (G (Suc k)) (foldr mulH (map F [Suc k..<m]) eH))
-                  = mulH (mulH (G k) (G (Suc k))) (foldr mulH (map F [Suc k..<m]) eH)"
-                using hassoc_grp[OF hG_k_H hG_Sk_H hfoldr_tail_H, symmetric] .
-              \<comment> \<open>Assemble: LHS = foldr(mapF[0..k] @ [Gk,GSk] @ mapF[Sk..m]) eH
-                 = foldr(mapF[0..k])(mulH Gk (mulH GSk (foldr mapF[Sk..m] eH)))
-                 = foldr(mapF[0..k])(mulH (mulH Gk GSk) (foldr mapF[Sk..m] eH))  [by hassoc_app]
-                 = foldr(mapF[0..k])(mulH Fk (foldr mapF[Sk..m] eH))  [by hFk_eq]
-                 = foldr(mapF[0..k] @ [Fk] @ mapF[Sk..m]) eH
-                 = RHS\<close>
-              have "foldr mulH (map G [0..<Suc m]) eH
-                  = foldr mulH (map F [0..<k] @ [G k, G (Suc k)] @ map F [Suc k..<m]) eH"
-                using hmap_G by (by100 simp)
-              also have "\<dots> = foldr mulH (map F [0..<k])
-                  (mulH (G k) (mulH (G (Suc k)) (foldr mulH (map F [Suc k..<m]) eH)))"
-                by (by100 simp)
-              also have "\<dots> = foldr mulH (map F [0..<k])
-                  (mulH (mulH (G k) (G (Suc k))) (foldr mulH (map F [Suc k..<m]) eH))"
-                using hassoc_app by (by100 simp)
-              also have "\<dots> = foldr mulH (map F [0..<k])
-                  (mulH (F k) (foldr mulH (map F [Suc k..<m]) eH))"
-                using hFk_eq by (by100 simp)
-              also have "\<dots> = foldr mulH (map F [0..<k] @ [F k] @ map F [Suc k..<m]) eH"
-                by (by100 simp)
-              also have "\<dots> = foldr mulH (map F [0..<m]) eH"
-                using hmap_F by (by100 simp)
-              finally show ?thesis using hLHS hRHS by (by100 simp)
-            qed
-          qed
-          \<comment> \<open>Subdivision independence: both (N,S) and (n,sub) refine to common refinement.\<close>
-          \<comment> \<open>Subdivision independence via common refinement.
-             Key insight: h_point_insert shows inserting ONE point preserves foldr_σ.
-             Both (N,S) and (n,sub) can be refined to their common refinement by
-             iterating point insertion. The common refinement has the same foldr_σ value
-             when reached from either direction. Hence foldr_σ f N S = foldr_σ f n sub.
-             Formal proof requires:
-             1. Define common refinement (union of S-points and sub-points)
-             2. Induction on |points to add| for each direction
-             3. At each step: find insertable point, apply h_point_insert\<close>
-          \<comment> \<open>Helper: inserting all points of one subdivision into another preserves foldr_σ.
-             By induction on extra points to add. Each step uses h_point_insert.\<close>
-          have h_refine: "\<And>M T. M \<ge> 1 \<Longrightarrow> T 0 = (0::real) \<Longrightarrow> T M = 1 \<Longrightarrow>
-              (\<forall>i<M. T i < T (Suc i)) \<Longrightarrow>
-              (\<forall>i<M. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T i + t * (T (Suc i) - T i)) \<in> U)
-                   \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T i + t * (T (Suc i) - T i)) \<in> V)) \<Longrightarrow>
-              (\<forall>i\<le>n. \<exists>j\<le>M. T j = sub i) \<Longrightarrow>
-              foldr_\<sigma> f M T = foldr_\<sigma> f n sub"
-          proof -
-            fix M and T :: "nat \<Rightarrow> real"
-            assume hM: "M \<ge> 1" and hT0: "T 0 = (0::real)" and hTM: "T M = 1"
-               and hTinc: "\<forall>i<M. T i < T (Suc i)"
-               and hTUV: "\<forall>i<M. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T i + t * (T (Suc i) - T i)) \<in> U)
-                   \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T i + t * (T (Suc i) - T i)) \<in> V)"
-               and hrefines: "\<forall>i\<le>n. \<exists>j\<le>M. T j = sub i"
-            show "foldr_\<sigma> f M T = foldr_\<sigma> f n sub" using hM hT0 hTM hTinc hTUV hrefines
-            proof (induction M arbitrary: T rule: less_induct)
-              case (less M)
-              show ?case
-              proof (cases "M = n")
-                case True
-                \<comment> \<open>Base: M = n, T has same #pieces as sub. Since T ⊇ sub and both strictly
-                   increasing with same endpoints, T = sub on [0..n].\<close>
-                have hT_mono: "\<And>a b. a \<le> b \<Longrightarrow> b \<le> M \<Longrightarrow> T a \<le> T b"
-                proof -
-                  fix a b :: nat assume hab: "a \<le> b" and hbM: "b \<le> M"
-                  show "T a \<le> T b" using hab hbM
-                  proof (induct b)
-                    case 0 thus ?case by (by100 simp)
-                  next
-                    case (Suc b')
-                    show ?case
-                    proof (cases "a \<le> b'")
-                      case True
-                      have "b' \<le> M" using Suc.prems(2) by (by100 presburger)
-                      have "T a \<le> T b'" using Suc.hyps[OF True \<open>b' \<le> M\<close>] .
-                      moreover have "b' < M" using Suc.prems(2) by (by100 presburger)
-                      hence "T b' < T (Suc b')" using less.prems(4) by (by100 force)
-                      ultimately show ?thesis by (by100 linarith)
-                    next
-                      case False
-                      hence "a = Suc b'" using Suc.prems(1) by (by100 presburger)
-                      thus ?thesis by (by100 simp)
-                    qed
-                  qed
-                qed
-                have hT_range_eq: "T ` {0..n} = sub ` {0..n}"
-                proof (rule card_subset_eq[symmetric])
-                  show "finite (T ` {0..n})" by (by100 simp)
-                  show "sub ` {0..n} \<subseteq> T ` {0..n}"
-                  proof
-                    fix x assume "x \<in> sub ` {0..n}"
-                    then obtain k where hk: "k \<le> n" and hkx: "x = sub k" by (by100 force)
-                    from less.prems(6) hk obtain j where "j \<le> M" and "T j = sub k"
-                      using True by (by100 blast)
-                    thus "x \<in> T ` {0..n}" using hkx True by (by100 force)
-                  qed
-                  show "card (sub ` {0..n}) = card (T ` {0..n})"
-                  proof -
-                    have hT_inj: "inj_on T {0..n}"
-                    proof (rule inj_onI)
-                      fix a b assume ha: "a \<in> {0..n}" and hb: "b \<in> {0..n}" and heq: "T a = T b"
-                      have haM: "a \<le> M" and hbM: "b \<le> M" using ha hb True by (by100 simp)+
-                      show "a = b"
-                      proof (rule ccontr)
-                        assume "a \<noteq> b"
-                        hence "a < b \<or> b < a" by (by100 presburger)
-                        thus False
-                        proof
-                          assume "a < b"
-                          hence "T a \<le> T (b-1)" using hT_mono hbM by (by100 force)
-                          moreover have "b - 1 < M" using \<open>a < b\<close> hbM by (by100 presburger)
-                          hence "T (b-1) < T (Suc (b-1))" using less.prems(4) by (by100 force)
-                          moreover have "Suc (b-1) = b" using \<open>a < b\<close> by (by100 presburger)
-                          hence "T (Suc (b-1)) = T b" by (by100 simp)
-                          ultimately have "T a < T b" by (by100 linarith)
-                          thus False using heq by (by100 linarith)
-                        next
-                          assume "b < a"
-                          hence "T b \<le> T (a-1)" using hT_mono haM by (by100 force)
-                          moreover have "a - 1 < M" using \<open>b < a\<close> haM by (by100 presburger)
-                          hence "T (a-1) < T (Suc (a-1))" using less.prems(4) by (by100 force)
-                          moreover have "Suc (a-1) = a" using \<open>b < a\<close> by (by100 presburger)
-                          hence "T (Suc (a-1)) = T a" by (by100 simp)
-                          ultimately have "T b < T a" by (by100 linarith)
-                          thus False using heq by (by100 linarith)
-                        qed
-                      qed
-                    qed
-                    have hsub_inj: "inj_on sub {0..n}"
-                    proof (rule inj_onI)
-                      fix a b assume ha: "a \<in> {0..n}" and hb: "b \<in> {0..n}" and heq: "sub a = sub b"
-                      show "a = b"
-                      proof (rule ccontr)
-                        assume "a \<noteq> b"
-                        hence "a < b \<or> b < a" by (by100 presburger)
-                        thus False
-                        proof
-                          assume "a < b"
-                          have "sub a < sub b" using \<open>a < b\<close> hb hinc
-                          proof (induct b)
-                            case 0 thus ?case by (by100 simp)
-                          next
-                            case (Suc b')
-                            show ?case
-                            proof (cases "a = b'")
-                              case True thus ?thesis using hinc Suc.prems(2) by (by100 force)
-                            next
-                              case False
-                              hence "a < b'" using Suc.prems(1) by (by100 presburger)
-                              have "b' \<in> {0..n}" using Suc.prems(2) by (by100 force)
-                              have "sub a < sub b'" using Suc.hyps[OF \<open>a < b'\<close> \<open>b' \<in> {0..n}\<close> hinc] .
-                              moreover have "b' < n" using Suc.prems(2) by (by100 force)
-                              hence "sub b' < sub (Suc b')" using hinc by (by100 force)
-                              ultimately show ?thesis by (by100 linarith)
-                            qed
-                          qed
-                          thus False using heq by (by100 linarith)
-                        next
-                          assume "b < a"
-                          have "sub b < sub a" using \<open>b < a\<close> ha hinc
-                          proof (induct a)
-                            case 0 thus ?case by (by100 simp)
-                          next
-                            case (Suc a')
-                            show ?case
-                            proof (cases "b = a'")
-                              case True thus ?thesis using hinc Suc.prems(2) by (by100 force)
-                            next
-                              case False
-                              hence "b < a'" using Suc.prems(1) by (by100 presburger)
-                              have "a' \<in> {0..n}" using Suc.prems(2) by (by100 force)
-                              have "sub b < sub a'" using Suc.hyps[OF \<open>b < a'\<close> \<open>a' \<in> {0..n}\<close> hinc] .
-                              moreover have "a' < n" using Suc.prems(2) by (by100 force)
-                              hence "sub a' < sub (Suc a')" using hinc by (by100 force)
-                              ultimately show ?thesis by (by100 linarith)
-                            qed
-                          qed
-                          thus False using heq by (by100 linarith)
-                        qed
-                      qed
-                    qed
-                    show ?thesis using card_image[OF hT_inj] card_image[OF hsub_inj] by (by100 simp)
-                  qed
-                qed
-                have hT_eq_sub: "\<forall>i\<le>n. T i = sub i"
-                proof (intro allI impI)
-                  fix i assume hi: "i \<le> n"
-                  show "T i = sub i" using hi
-                  proof (induct i)
-                    case 0
-                    show ?case using less.prems(2) hs0 by (by100 simp)
-                  next
-                    case (Suc i')
-                    have "i' \<le> n" using Suc.prems by (by100 presburger)
-                    hence hIH: "T i' = sub i'" using Suc.hyps by (by100 simp)
-                    have hSi_le: "Suc i' \<le> n" using Suc.prems by (by100 presburger)
-                    \<comment> \<open>sub(Suc i') appears in T at some index j ≤ n.\<close>
-                    from less.prems(6) hSi_le obtain j where hj_le: "j \<le> n" and hj_eq: "T j = sub (Suc i')"
-                      using True by (by100 blast)
-                    \<comment> \<open>j > i' (from T strict inc + T(j) = sub(Suc i') > sub(i') = T(i')).\<close>
-                    have "sub (Suc i') > sub i'" using hinc Suc.prems by (by100 force)
-                    hence "T j > T i'" using hj_eq hIH by (by100 linarith)
-                    hence "j > i'"
-                    proof -
-                      have "\<not> (j \<le> i')"
-                      proof
-                        assume "j \<le> i'"
-                        hence "T j \<le> T i'"
-                        proof (cases "j = i'")
-                          case True thus ?thesis by (by100 simp)
-                        next
-                          case False
-                          hence "j < i'" using \<open>j \<le> i'\<close> by (by100 presburger)
-                          have "j \<le> i'" using \<open>j < i'\<close> by (by100 presburger)
-                          have "i' \<le> M" using hSi_le True by (by100 presburger)
-                          show ?thesis using hT_mono[OF \<open>j \<le> i'\<close> \<open>i' \<le> M\<close>] .
-                        qed
-                        thus False using \<open>T j > T i'\<close> by (by100 linarith)
-                      qed
-                      thus ?thesis by (by100 presburger)
-                    qed
-                    hence "j \<ge> Suc i'" by (by100 presburger)
-                    \<comment> \<open>T(Suc i') ≤ T(j) = sub(Suc i') from j ≥ Suc i' and T strict inc.\<close>
-                    have "j \<le> M" using hj_le True by (by100 simp)
-                    have "T (Suc i') \<le> T j"
-                      using hT_mono[OF \<open>j \<ge> Suc i'\<close> \<open>j \<le> M\<close>] .
-                    hence "T (Suc i') \<le> sub (Suc i')" using hj_eq by (by100 simp)
-                    \<comment> \<open>Also T(Suc i') ≥ sub(Suc i'): T(Suc i') is a sub-value ≥ sub(Suc i').\<close>
-                    moreover have "T (Suc i') \<ge> sub (Suc i')"
-                    proof -
-                      have "Suc i' \<le> n" using hSi_le .
-                      hence "T (Suc i') \<in> T ` {0..n}" by (by100 force)
-                      hence "T (Suc i') \<in> sub ` {0..n}" using hT_range_eq by (by100 simp)
-                      then obtain k where hk: "k \<le> n" and hk_eq: "sub k = T (Suc i')"
-                        by (by100 force)
-                      have "i' < M" using hSi_le True by (by100 presburger)
-                      have "T i' < T (Suc i')" using less.prems(4) \<open>i' < M\<close> by (by100 force)
-                      have hsk_gt: "sub k > sub i'" using hk_eq hIH \<open>T i' < T (Suc i')\<close>
-                        by (by100 linarith)
-                      have "k > i'"
-                      proof (rule ccontr)
-                        assume "\<not> k > i'"
-                        hence "k \<le> i'" by (by100 presburger)
-                        hence "sub k \<le> sub i'" using hT_mono hk hinc
-                        proof (cases "k = i'")
-                          case True thus ?thesis by (by100 simp)
-                        next
-                          case False
-                          hence "k < i'" using \<open>k \<le> i'\<close> by (by100 presburger)
-                          have "i' < n" using hSi_le by (by100 presburger)
-                          have "sub k < sub i'" using \<open>k < i'\<close> \<open>i' < n\<close> hinc
-                          proof (induct i')
-                            case 0 thus ?case by (by100 simp)
-                          next
-                            case (Suc i'')
-                            show ?case
-                            proof (cases "k = i''")
-                              case True thus ?thesis using hinc Suc.prems(2) by (by100 force)
-                            next
-                              case False
-                              hence "k < i''" using Suc.prems(1) by (by100 presburger)
-                              have "i'' < n" using Suc.prems(2) by (by100 presburger)
-                              have "sub k < sub i''" using Suc.hyps[OF \<open>k < i''\<close> \<open>i'' < n\<close> hinc] .
-                              moreover have "sub i'' < sub (Suc i'')" using hinc \<open>i'' < n\<close> by (by100 force)
-                              ultimately show ?thesis by (by100 linarith)
-                            qed
-                          qed
-                          thus ?thesis by (by100 linarith)
-                        qed
-                        thus False using hsk_gt by (by100 linarith)
-                      qed
-                      hence "k \<ge> Suc i'" by (by100 presburger)
-                      hence "sub k \<ge> sub (Suc i')"
-                      proof (cases "k = Suc i'")
-                        case True thus ?thesis by (by100 simp)
-                      next
-                        case False
-                        hence "k > Suc i'" using \<open>k \<ge> Suc i'\<close> by (by100 presburger)
-                        hence "sub (Suc i') < sub k" using hk hinc
-                        proof (induct k)
-                          case 0 thus ?case by (by100 simp)
-                        next
-                          case (Suc k')
-                          show ?case
-                          proof (cases "Suc i' = k'")
-                            case True thus ?thesis using hinc Suc.prems(2) by (by100 force)
-                          next
-                            case False
-                            hence "Suc i' < k'" using Suc.prems(1) by (by100 presburger)
-                            have "k' \<le> n" using Suc.prems(2) by (by100 force)
-                            have "sub (Suc i') < sub k'"
-                              using Suc.hyps[OF \<open>Suc i' < k'\<close> \<open>k' \<le> n\<close> hinc] .
-                            moreover have "k' < n" using Suc.prems(2) by (by100 force)
-                            hence "sub k' < sub (Suc k')" using hinc by (by100 force)
-                            ultimately show ?thesis by (by100 linarith)
-                          qed
-                        qed
-                        thus ?thesis by (by100 linarith)
-                      qed
-                      thus ?thesis using hk_eq by (by100 linarith)
-                    qed
-                    ultimately show "T (Suc i') = sub (Suc i')" by (by100 linarith)
-                  qed
-                qed
-                have "foldr_\<sigma> f n T = foldr_\<sigma> f n sub"
-                proof -
-                  have "\<And>i. i < n \<Longrightarrow> T i = sub i \<and> T (Suc i) = sub (Suc i)"
-                    using hT_eq_sub by (by100 force)
-                  hence hmap_eq: "map (\<lambda>i. \<sigma> (\<lambda>t. f (T i + t * (T (Suc i) - T i)))) [0..<n]
-                      = map (\<lambda>i. \<sigma> (\<lambda>t. f (sub i + t * (sub (Suc i) - sub i)))) [0..<n]"
-                    by (intro map_cong, by100 simp, by100 simp)
-                  show ?thesis unfolding foldr_\<sigma>_def using hmap_eq by (by100 presburger)
-                qed
-                thus ?thesis using True by (by100 simp)
-              next
-                case False
-                \<comment> \<open>T strictly increasing ⟹ injective.\<close>
-                have hT_inj: "\<And>a b. a \<le> M \<Longrightarrow> b \<le> M \<Longrightarrow> T a = T b \<Longrightarrow> a = b"
-                  proof -
-                    fix a b assume ha: "a \<le> M" and hb: "b \<le> M" and heq: "T a = T b"
-                    show "a = b"
-                    proof (rule ccontr)
-                      assume "a \<noteq> b"
-                      hence "a < b \<or> b < a" by (by100 presburger)
-                      thus False
-                      proof
-                        assume "a < b"
-                        hence "T a < T b"
-                        proof -
-                          from \<open>a < b\<close> hb show ?thesis
-                          proof (induct b)
-                            case 0 thus ?case by (by100 simp)
-                          next
-                            case (Suc b')
-                            show ?case
-                            proof (cases "a = b'")
-                              case True
-                              thus ?thesis using less.prems(4) Suc.prems(2) by (by100 force)
-                            next
-                              case False
-                              hence "a < b'" using Suc.prems(1) by (by100 presburger)
-                              have "b' \<le> M" using Suc.prems(2) by (by100 presburger)
-                              have "T a < T b'" using Suc.hyps[OF \<open>a < b'\<close> \<open>b' \<le> M\<close>] .
-                              moreover have "b' < M" using Suc.prems(2) by (by100 presburger)
-                              hence "T b' < T (Suc b')" using less.prems(4) by (by100 force)
-                              ultimately show ?thesis by (by100 linarith)
-                            qed
-                          qed
-                        qed
-                        thus False using heq by (by100 linarith)
-                      next
-                        assume "b < a"
-                        hence "T b < T a"
-                        proof -
-                          from \<open>b < a\<close> ha show ?thesis
-                          proof (induct a)
-                            case 0 thus ?case by (by100 simp)
-                          next
-                            case (Suc a')
-                            show ?case
-                            proof (cases "b = a'")
-                              case True
-                              thus ?thesis using less.prems(4) Suc.prems(2) by (by100 force)
-                            next
-                              case False
-                              hence "b < a'" using Suc.prems(1) by (by100 presburger)
-                              have "a' \<le> M" using Suc.prems(2) by (by100 presburger)
-                              have "T b < T a'" using Suc.hyps[OF \<open>b < a'\<close> \<open>a' \<le> M\<close>] .
-                              moreover have "a' < M" using Suc.prems(2) by (by100 presburger)
-                              hence "T a' < T (Suc a')" using less.prems(4) by (by100 force)
-                              ultimately show ?thesis by (by100 linarith)
-                            qed
-                          qed
-                        qed
-                        thus False using heq by (by100 linarith)
-                      qed
-                    qed
-                  qed
-                have hT_mono_F: "\<And>a b. a \<le> b \<Longrightarrow> b \<le> M \<Longrightarrow> T a \<le> T b"
-                proof -
-                  fix a b :: nat assume hab: "a \<le> b" and hbM: "b \<le> M"
-                  show "T a \<le> T b" using hab hbM
-                  proof (induct b)
-                    case 0 thus ?case by (by100 simp)
-                  next
-                    case (Suc b')
-                    show ?case
-                    proof (cases "a \<le> b'")
-                      case True
-                      have "b' \<le> M" using Suc.prems(2) by (by100 presburger)
-                      have "T a \<le> T b'" using Suc.hyps[OF True \<open>b' \<le> M\<close>] .
-                      moreover have "b' < M" using Suc.prems(2) by (by100 presburger)
-                      hence "T b' < T (Suc b')" using less.prems(4) by (by100 force)
-                      ultimately show ?thesis by (by100 linarith)
-                    next
-                      case False
-                      hence "a = Suc b'" using Suc.prems(1) by (by100 presburger)
-                      thus ?thesis by (by100 simp)
-                    qed
-                  qed
-                qed
-                have "M \<ge> n"
-                proof -
-                  \<comment> \<open>Sub values all appear in T. n+1 distinct values in {0..M} ⟹ n+1 ≤ M+1.\<close>
-                  define w where "w i = (SOME j. j \<le> M \<and> T j = sub i)" for i
-                  have hw: "\<And>i. i \<le> n \<Longrightarrow> w i \<le> M \<and> T (w i) = sub i"
-                  proof -
-                    fix i assume "i \<le> n"
-                    from less.prems(6) \<open>i \<le> n\<close> have "\<exists>j. j \<le> M \<and> T j = sub i" by (by100 blast)
-                    thus "w i \<le> M \<and> T (w i) = sub i" unfolding w_def by (rule someI_ex)
-                  qed
-                  have hw_inj: "inj_on w {0..n}"
-                  proof (rule inj_onI)
-                    fix a b assume ha: "a \<in> {0..n}" and hb: "b \<in> {0..n}" and heq: "w a = w b"
-                    have "T (w a) = sub a" using hw ha by (by100 simp)
-                    moreover have "T (w b) = sub b" using hw hb by (by100 simp)
-                    ultimately have "sub a = sub b" using heq by (by100 simp)
-                    \<comment> \<open>sub injective (strictly increasing).\<close>
-                    have hsub_inj: "\<And>x y. x \<le> n \<Longrightarrow> y \<le> n \<Longrightarrow> sub x = sub y \<Longrightarrow> x = y"
-                    proof -
-                      fix x y assume hx: "x \<le> n" and hy: "y \<le> n" and heqs: "sub x = sub y"
-                      show "x = y"
-                      proof (rule ccontr)
-                        assume "x \<noteq> y"
-                        hence "x < y \<or> y < x" by (by100 presburger)
-                        thus False
-                        proof
-                          assume "x < y"
-                          have "sub x < sub y" using \<open>x < y\<close> hy
-                          proof (induct y)
-                            case 0 thus ?case by (by100 simp)
-                          next
-                            case (Suc y')
-                            show ?case
-                            proof (cases "x = y'")
-                              case True thus ?thesis using hinc Suc.prems(2) by (by100 force)
-                            next
-                              case False
-                              hence "x < y'" using Suc.prems(1) by (by100 presburger)
-                              have "y' \<le> n" using Suc.prems(2) by (by100 presburger)
-                              have "y' < n" using Suc.prems(2) by (by100 presburger)
-                              show ?thesis using Suc.hyps[OF \<open>x < y'\<close> \<open>y' \<le> n\<close>]
-                                  hinc \<open>y' < n\<close> by (by100 force)
-                            qed
-                          qed
-                          thus False using heqs by (by100 linarith)
-                        next
-                          assume "y < x"
-                          have "sub y < sub x" using \<open>y < x\<close> hx
-                          proof (induct x)
-                            case 0 thus ?case by (by100 simp)
-                          next
-                            case (Suc x')
-                            show ?case
-                            proof (cases "y = x'")
-                              case True thus ?thesis using hinc Suc.prems(2) by (by100 force)
-                            next
-                              case False
-                              hence "y < x'" using Suc.prems(1) by (by100 presburger)
-                              have "x' \<le> n" using Suc.prems(2) by (by100 presburger)
-                              have "x' < n" using Suc.prems(2) by (by100 presburger)
-                              show ?thesis using Suc.hyps[OF \<open>y < x'\<close> \<open>x' \<le> n\<close>]
-                                  hinc \<open>x' < n\<close> by (by100 force)
-                            qed
-                          qed
-                          thus False using heqs by (by100 linarith)
-                        qed
-                      qed
-                    qed
-                    show "a = b" using hsub_inj ha hb \<open>sub a = sub b\<close> by (by100 force)
-                  qed
-                  have hw_range: "w ` {0..n} \<subseteq> {0..M}" using hw by (by100 force)
-                  have "card {0..n} \<le> card {0..M}"
-                    by (rule card_inj_on_le[OF hw_inj hw_range], by100 simp)
-                  thus ?thesis by (by100 simp)
-                qed
-                hence hMgt: "M > n" using False by (by100 presburger)
-                \<comment> \<open>Step: M > n. Find removable point T(j) not in sub.\<close>
-                have "\<exists>j. 0 < j \<and> j < M \<and> (\<forall>i\<le>n. T j \<noteq> sub i)"
-                proof (rule ccontr)
-                  assume "\<not> (\<exists>j. 0 < j \<and> j < M \<and> (\<forall>i\<le>n. T j \<noteq> sub i))"
-                  hence hcontra: "\<And>j. 0 < j \<Longrightarrow> j < M \<Longrightarrow> \<exists>i\<le>n. T j = sub i"
-                    by (by100 blast)
-                  \<comment> \<open>Map each j ∈ {1..<M} to the unique i with T(j)=sub(i).
-                     Since T(j)∈(0,1), i∈{1,..,n-1}. Injective → M-1 ≤ n-1 → contradiction.\<close>
-                  define g where "g j = (SOME i. i \<le> n \<and> T j = sub i)" for j
-                  have hg: "\<And>j. 0 < j \<Longrightarrow> j < M \<Longrightarrow> g j \<le> n \<and> T j = sub (g j)"
-                  proof -
-                    fix j assume "0 < j" "j < M"
-                    from hcontra[OF this] have "\<exists>i. i \<le> n \<and> T j = sub i" by (by100 blast)
-                    thus "g j \<le> n \<and> T j = sub (g j)" unfolding g_def by (rule someI_ex)
-                  qed
-                  have hg_pos: "\<And>j. 0 < j \<Longrightarrow> j < M \<Longrightarrow> g j > 0"
-                  proof -
-                    fix j assume hj1: "0 < j" and hj2: "j < M"
-                    have "T j > T 0" using less.prems(4) hj1 hj2
-                    proof (induct j)
-                      case 0 thus ?case by (by100 simp)
-                    next
-                      case (Suc j')
-                      show ?case
-                      proof (cases "j' = 0")
-                        case True
-                        have "0 < M" using Suc.prems(3) by (by100 presburger)
-                        have "T 0 < T (Suc 0)" using less.prems(4) \<open>0 < M\<close> by (by100 force)
-                        thus ?thesis using True by (by100 simp)
-                      next
-                        case False
-                        hence "0 < j'" by (by100 presburger)
-                        have "j' < M" using Suc.prems(3) by (by100 presburger)
-                        have "T 0 < T j'" using Suc.hyps[OF Suc.prems(1) \<open>0 < j'\<close> \<open>j' < M\<close>] .
-                        moreover have "T j' < T (Suc j')" using less.prems(4) \<open>j' < M\<close> by (by100 force)
-                        ultimately show ?thesis by (by100 linarith)
-                      qed
-                    qed
-                    hence "T j \<noteq> 0" using less.prems(2) by (by100 linarith)
-                    hence hsub_g_ne: "sub (g j) \<noteq> sub 0" using hg[OF hj1 hj2] hs0 by (by100 simp)
-                    show "g j > 0"
-                    proof (rule ccontr)
-                      assume "\<not> g j > 0"
-                      hence "g j = 0" by (by100 presburger)
-                      hence "sub (g j) = sub 0" by (by100 simp)
-                      thus False using hsub_g_ne by (by100 simp)
-                    qed
-                  qed
-                  have hg_lt_n: "\<And>j. 0 < j \<Longrightarrow> j < M \<Longrightarrow> g j < n"
-                  proof -
-                    fix j assume hj1: "0 < j" and hj2: "j < M"
-                    have "T j < T M"
-                    proof -
-                      have hTmono: "\<And>a b. a < b \<Longrightarrow> b \<le> M \<Longrightarrow> T a < T b"
-                      proof -
-                        fix a b :: nat assume hab: "a < b" and hbM: "b \<le> M"
-                        show "T a < T b" using hab hbM
-                        proof (induct b)
-                          case 0 thus ?case by (by100 simp)
-                        next
-                          case (Suc b')
-                          show ?case
-                          proof (cases "a = b'")
-                            case True thus ?thesis using less.prems(4) Suc.prems(2) by (by100 force)
-                          next
-                            case False
-                            hence "a < b'" using Suc.prems(1) by (by100 presburger)
-                            have "b' \<le> M" using Suc.prems(2) by (by100 presburger)
-                            have "T a < T b'" using Suc.hyps[OF \<open>a < b'\<close> \<open>b' \<le> M\<close>] .
-                            moreover have "b' < M" using Suc.prems(2) by (by100 presburger)
-                            hence "T b' < T (Suc b')" using less.prems(4) by (by100 force)
-                            ultimately show ?thesis by (by100 linarith)
-                          qed
-                        qed
-                      qed
-                      show ?thesis using hTmono[OF hj2 le_refl] .
-                    qed
-                    hence "T j \<noteq> 1" using less.prems(3) by (by100 linarith)
-                    hence "sub (g j) \<noteq> sub n" using hg[OF hj1 hj2] hsn by (by100 simp)
-                    have "g j \<le> n" using hg[OF hj1 hj2] by (by100 simp)
-                    show "g j < n"
-                    proof (rule ccontr)
-                      assume "\<not> g j < n"
-                      hence "g j = n" using \<open>g j \<le> n\<close> by (by100 presburger)
-                      hence "sub (g j) = sub n" by (by100 simp)
-                      thus False using \<open>sub (g j) \<noteq> sub n\<close> by (by100 simp)
-                    qed
-                  qed
-                  have hg_inj: "inj_on g {1..<M}"
-                  proof (rule inj_onI)
-                    fix a b assume ha: "a \<in> {1..<M}" and hb: "b \<in> {1..<M}" and heq: "g a = g b"
-                    have "T a = sub (g a)" using hg ha by (by100 force)
-                    moreover have "T b = sub (g b)" using hg hb by (by100 force)
-                    ultimately have "T a = T b" using heq by (by100 simp)
-                    have "a \<le> M" using ha by (by100 force)
-                    have "b \<le> M" using hb by (by100 force)
-                    show "a = b" using hT_inj[OF \<open>a \<le> M\<close> \<open>b \<le> M\<close> \<open>T a = T b\<close>] .
-                  qed
-                  have hg_range: "g ` {1..<M} \<subseteq> {1..<n}"
-                  proof
-                    fix x assume "x \<in> g ` {1..<M}"
-                    then obtain j where hj: "j \<in> {1..<M}" and hx: "x = g j" by (by100 blast)
-                    have "0 < j" and "j < M" using hj by (by100 force)+
-                    show "x \<in> {1..<n}" using hg_pos[OF \<open>0 < j\<close> \<open>j < M\<close>]
-                        hg_lt_n[OF \<open>0 < j\<close> \<open>j < M\<close>] hx by (by100 force)
-                  qed
-                  have "card {1..<M} \<le> card {1..<(n::nat)}"
-                    by (rule card_inj_on_le[OF hg_inj hg_range], by100 simp)
-                  hence "M - 1 \<le> n - 1" by (by100 simp)
-                  hence "M \<le> n" using less.prems(1) hn by (by100 presburger)
-                  thus False using hMgt by (by100 linarith)
-                qed
-                then obtain j where hj_pos: "0 < j" and hj_lt: "j < M"
-                    and hj_not_sub: "\<forall>i\<le>n. T j \<noteq> sub i" by (by100 blast)
-                \<comment> \<open>Remove T(j): define T'(i) = T(i) for i<j, T'(i) = T(i+1) for i≥j.\<close>
-                define T' where "T' i = (if i < j then T i else T (Suc i))" for i
-                \<comment> \<open>T' is valid with M-1 pieces.\<close>
-                have hT'_ge: "M - 1 \<ge> 1" using hMgt hn by (by100 presburger)
-                have hT'_0: "T' 0 = (0::real)" unfolding T'_def using hj_pos less.prems(2) by (by100 presburger)
-                have hT'_M1: "T' (M-1) = 1"
-                proof -
-                  have "\<not> (M - 1 < j)" using hj_lt by (by100 presburger)
-                  hence "T' (M-1) = T (Suc (M-1))" unfolding T'_def by (by100 simp)
-                  moreover have "Suc (M-1) = M" using hMgt hn by (by100 presburger)
-                  ultimately show ?thesis using less.prems(3) by (by100 simp)
-                qed
-                have hT'_inc: "\<forall>i<M-1. T' i < T' (Suc i)"
-                proof (intro allI impI)
-                  fix i assume hi: "i < M - 1"
-                  have hi_M: "i < M" and hSi_M: "Suc i < M" using hi by (by100 presburger)+
-                  show "T' i < T' (Suc i)"
-                  proof (cases "Suc i < j")
-                    case True
-                    have "T' i = T i" unfolding T'_def using True by (by100 presburger)
-                    moreover have "T' (Suc i) = T (Suc i)" unfolding T'_def using True by (by100 presburger)
-                    ultimately show ?thesis using less.prems(4) hi_M by (by100 force)
-                  next
-                    case False
-                    show ?thesis
-                    proof (cases "i < j")
-                      case True \<comment> \<open>i < j ≤ Suc i, so Suc i = j\<close>
-                      have "T' i = T i" unfolding T'_def using True by (by100 presburger)
-                      have "\<not> (Suc i < j)" using False .
-                      hence "T' (Suc i) = T (Suc (Suc i))" unfolding T'_def by (by100 simp)
-                      have "T i < T (Suc i)" using less.prems(4) hi_M by (by100 force)
-                      have "T (Suc i) < T (Suc (Suc i))" using less.prems(4) hSi_M by (by100 force)
-                      show ?thesis using \<open>T' i = T i\<close> \<open>T' (Suc i) = T (Suc (Suc i))\<close>
-                          \<open>T i < T (Suc i)\<close> \<open>T (Suc i) < T (Suc (Suc i))\<close> by (by100 linarith)
-                    next
-                      case inner_False: False
-                      have "T' i = T (Suc i)" unfolding T'_def using inner_False by (by100 simp)
-                      have "\<not> (Suc i < j)" using inner_False by (by100 presburger)
-                      have "T' (Suc i) = T (Suc (Suc i))" unfolding T'_def using \<open>\<not>(Suc i < j)\<close> by (by100 simp)
-                      show ?thesis using \<open>T' i = T (Suc i)\<close> \<open>T' (Suc i) = T (Suc (Suc i))\<close>
-                          less.prems(4) hSi_M by (by100 force)
-                    qed
-                  qed
-                qed
-                have hT'_UV: "\<forall>i<M-1. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T' i + t * (T' (Suc i) - T' i)) \<in> U)
-                     \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T' i + t * (T' (Suc i) - T' i)) \<in> V)"
-                proof (intro allI impI)
-                  fix i assume hi: "i < M - 1"
-                  \<comment> \<open>T'-piece [T'(i), T'(Suc i)] is a sub-interval of some T-piece or merge.\<close>
-                  show "(\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T' i + t * (T' (Suc i) - T' i)) \<in> U)
-                      \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T' i + t * (T' (Suc i) - T' i)) \<in> V)"
-                  proof (cases "Suc i < j")
-                    case True \<comment> \<open>Both below j: T'-piece = T-piece at index i.\<close>
-                    have "T' i = T i" unfolding T'_def using True by (by100 presburger)
-                    have "T' (Suc i) = T (Suc i)" unfolding T'_def using True by (by100 presburger)
-                    have "i < M" using hi by (by100 presburger)
-                    show ?thesis using \<open>T' i = T i\<close> \<open>T' (Suc i) = T (Suc i)\<close> less.prems(5) \<open>i < M\<close>
-                      by (by100 force)
-                  next
-                    case False
-                    show ?thesis
-                    proof (cases "i < j")
-                      case True \<comment> \<open>i = j-1: merge of T-pieces at j-1 and j.\<close>
-                      \<comment> \<open>T'-piece = [T(j-1), T(j+1)]. This is within some sub-piece [sub(k), sub(k+1)]
-                         because T(j) ∉ sub, so T(j-1) and T(j+1) are in the same sub-interval.\<close>
-                      have "T' i = T i" unfolding T'_def using True by (by100 presburger)
-                      have "\<not> (Suc i < j)" using False .
-                      have "T' (Suc i) = T (Suc (Suc i))" unfolding T'_def using \<open>\<not>(Suc i < j)\<close> by (by100 simp)
-                      \<comment> \<open>The key: [T(i), T(Suc(Suc i))] = [T(j-1), T(j+1)] is within a sub-piece.
-                         T(j) is not a sub-point, so both T(j-1) to T(j) and T(j) to T(j+1) are
-                         sub-intervals of the SAME sub-piece. Hence the merge also maps to U or V.\<close>
-                      \<comment> \<open>i = j-1 (since i < j ≤ Suc i).\<close>
-                      have hi_eq: "i = j - 1" using True \<open>\<not>(Suc i < j)\<close> by (by100 presburger)
-                      hence hSi_eq: "Suc i = j" using hj_pos by (by100 presburger)
-                      have hSSi_eq: "Suc (Suc i) = Suc j" using hSi_eq by (by100 simp)
-                      \<comment> \<open>Find k < n with sub(k) ≤ T(j-1) and T(j+1) ≤ sub(k+1).
-                         Key: T(j) not a sub-value, so no sub-value in (T(j-1), T(j+1)).\<close>
-                      have hTj_pos: "T j > 0"
-                      proof -
-                        have "T 0 < T j"
-                        proof -
-                          have "0 < j" using hj_pos .
-                          have "j \<le> M" using hj_lt by (by100 presburger)
-                          show ?thesis using hT_inj less.prems(4) hj_pos hj_lt
-                          proof -
-                            show ?thesis using less.prems(4) hj_pos hj_lt
-                            proof (induct j)
-                              case 0 thus ?case by (by100 simp)
-                            next
-                              case (Suc j')
-                              show ?case
-                              proof (cases "j' = 0")
-                                case True
-                                have "0 < M" using Suc.prems(3) by (by100 presburger)
-                                thus ?thesis using less.prems(4) True by (by100 force)
-                              next
-                                case False
-                                hence "0 < j'" by (by100 presburger)
-                                have "j' < M" using Suc.prems(3) by (by100 presburger)
-                                have "T 0 < T j'" using Suc.hyps[OF Suc.prems(1) \<open>0 < j'\<close> \<open>j' < M\<close>] .
-                                moreover have "T j' < T (Suc j')" using less.prems(4) \<open>j' < M\<close> by (by100 force)
-                                ultimately show ?thesis by (by100 linarith)
-                              qed
-                            qed
-                          qed
-                        qed
-                        thus ?thesis using less.prems(2) by (by100 linarith)
-                      qed
-                      have hTj_lt1: "T j < 1"
-                      proof -
-                        have "T j < T M" using less.prems(4) hj_lt
-                        proof (induct "M - j" arbitrary: j)
-                          case 0 thus ?case by (by100 simp)
-                        next
-                          case (Suc d)
-                          show ?case
-                          proof (cases "Suc j = M")
-                            case True thus ?thesis using less.prems(4) Suc.prems(2) by (by100 force)
-                          next
-                            case False
-                            hence "Suc j < M" using Suc.prems(2) by (by100 presburger)
-                            have "d = M - Suc j" using Suc.hyps(2) Suc.prems(2) by (by100 presburger)
-                            have "T (Suc j) < T M"
-                              using Suc.hyps(1)[OF \<open>d = M - Suc j\<close> Suc.prems(1) \<open>Suc j < M\<close>] .
-                            moreover have "T j < T (Suc j)" using less.prems(4) Suc.prems(2) by (by100 force)
-                            ultimately show ?thesis by (by100 linarith)
-                          qed
-                        qed
-                        thus ?thesis using less.prems(3) by (by100 linarith)
-                      qed
-                      \<comment> \<open>T(j) lies strictly between consecutive sub-values.\<close>
-                      have "\<exists>k. k < n \<and> sub k < T j \<and> T j < sub (Suc k)"
-                      proof -
-                        \<comment> \<open>sub(0)=0 < T(j) < 1=sub(n). Find the gap.\<close>
-                        define S where "S = {l. l \<le> n \<and> sub l \<le> T j}"
-                        have "0 \<in> S" unfolding S_def using hs0 hTj_pos by (by100 force)
-                        hence "S \<noteq> {}" by (by100 blast)
-                        have "finite S" unfolding S_def by (by100 simp)
-                        have "S \<subseteq> {0..n}" unfolding S_def by (by100 force)
-                        define k where "k = Max S"
-                        have hk_in: "k \<in> S" unfolding k_def using \<open>S \<noteq> {}\<close> \<open>finite S\<close> by (by100 simp)
-                        hence hk_le: "k \<le> n" and hk_bound: "sub k \<le> T j" unfolding S_def by (by100 force)+
-                        have hk_max: "\<And>l. l \<in> S \<Longrightarrow> l \<le> k" unfolding k_def using \<open>finite S\<close> by (by100 simp)
-                        have "k < n"
-                        proof (rule ccontr)
-                          assume "\<not> k < n"
-                          hence "k = n" using hk_le by (by100 presburger)
-                          hence "sub n \<le> T j" using hk_bound by (by100 simp)
-                          hence "1 \<le> T j" using hsn by (by100 linarith)
-                          thus False using hTj_lt1 by (by100 linarith)
-                        qed
-                        have "sub k \<noteq> T j"
-                        proof
-                          assume "sub k = T j"
-                          hence "T j = sub k" by (by100 simp)
-                          thus False using hj_not_sub hk_le by (by100 blast)
-                        qed
-                        hence "sub k < T j" using hk_bound by (by100 linarith)
-                        have "T j < sub (Suc k)"
-                        proof (rule ccontr)
-                          assume "\<not> T j < sub (Suc k)"
-                          hence "sub (Suc k) \<le> T j" by (by100 linarith)
-                          have "Suc k \<le> n" using \<open>k < n\<close> by (by100 presburger)
-                          hence "Suc k \<in> S" unfolding S_def using \<open>sub (Suc k) \<le> T j\<close> by (by100 force)
-                          hence "Suc k \<le> k" using hk_max by (by100 blast)
-                          thus False by (by100 presburger)
-                        qed
-                        show ?thesis using \<open>k < n\<close> \<open>sub k < T j\<close> \<open>T j < sub (Suc k)\<close> by (by100 blast)
-                      qed
-                      then obtain k where hk_lt: "k < n" and hk_lo: "sub k < T j"
-                          and hk_hi: "T j < sub (Suc k)" by (by100 blast)
-                      \<comment> \<open>T(j-1) ≥ sub(k): no sub-value in (T(j-1), T(j)).\<close>
-                      have hTi_ge: "T i \<ge> sub k"
-                      proof (rule ccontr)
-                        assume "\<not> T i \<ge> sub k"
-                        hence "T i < sub k" by (by100 linarith)
-                        \<comment> \<open>sub(k) ∈ (T(i), T(j)). sub(k) = T(w(k)) ⟹ i < w(k) < j — impossible.\<close>
-                        have "sub k > T i" and "sub k < T j" using \<open>T i < sub k\<close> hk_lo by (by100 linarith)+
-                        from less.prems(6) have "\<exists>jk\<le>M. T jk = sub k"
-                          using hk_lt by (by100 force)
-                        then obtain jk where hjk_le: "jk \<le> M" and hjk_eq: "T jk = sub k" by (by100 blast)
-                        have "T jk > T i" using hjk_eq \<open>sub k > T i\<close> by (by100 linarith)
-                        have "T jk < T j" using hjk_eq \<open>sub k < T j\<close> by (by100 linarith)
-                        have "jk > i" using hT_inj \<open>T jk > T i\<close>
-                        proof -
-                          have "\<not> jk \<le> i"
-                          proof
-                            assume "jk \<le> i"
-                            hence "T jk \<le> T i" using less.prems(4)
-                            proof (cases "jk = i")
-                              case True thus ?thesis by (by100 simp)
-                            next
-                              case False
-                              hence "jk < i" using \<open>jk \<le> i\<close> by (by100 presburger)
-                              have "i \<le> M" using hi hj_lt by (by100 presburger)
-                              show ?thesis using hT_mono_F[OF \<open>jk \<le> i\<close> \<open>i \<le> M\<close>] .
-                            qed
-                            thus False using \<open>T jk > T i\<close> by (by100 linarith)
-                          qed
-                          thus ?thesis by (by100 presburger)
-                        qed
-                        have "jk < j"
-                        proof -
-                          have "\<not> jk \<ge> j"
-                          proof
-                            assume "jk \<ge> j"
-                            hence "T jk \<ge> T j" using less.prems(4)
-                            proof (cases "jk = j")
-                              case True thus ?thesis by (by100 simp)
-                            next
-                              case False
-                              hence "jk > j" using \<open>jk \<ge> j\<close> by (by100 presburger)
-                              show ?thesis using hT_mono_F[OF \<open>jk \<ge> j\<close> hjk_le] .
-                            qed
-                            thus False using \<open>T jk < T j\<close> by (by100 linarith)
-                          qed
-                          thus ?thesis by (by100 presburger)
-                        qed
-                        \<comment> \<open>i < jk < j but Suc i = j, so no natural between them.\<close>
-                        have "Suc i = j" using hSi_eq .
-                        hence False using \<open>jk > i\<close> \<open>jk < j\<close> by (by100 presburger)
-                        thus False .
-                      qed
-                      \<comment> \<open>T(j+1) ≤ sub(k+1): no sub-value in (T(j), T(j+1)).\<close>
-                      have hTSj_le: "T (Suc j) \<le> sub (Suc k)"
-                      proof (rule ccontr)
-                        assume "\<not> T (Suc j) \<le> sub (Suc k)"
-                        hence "T (Suc j) > sub (Suc k)" by (by100 linarith)
-                        \<comment> \<open>sub(k+1) ∈ (T(j), T(j+1)). sub(k+1) = T(jk1) ⟹ j < jk1 < j+1 — impossible.\<close>
-                        have "sub (Suc k) > T j" and "sub (Suc k) < T (Suc j)"
-                          using hk_hi \<open>T (Suc j) > sub (Suc k)\<close> by (by100 linarith)+
-                        have "Suc k \<le> n" using hk_lt by (by100 presburger)
-                        from less.prems(6) \<open>Suc k \<le> n\<close> obtain jk1 where hjk1_le: "jk1 \<le> M"
-                            and hjk1_eq: "T jk1 = sub (Suc k)" by (by100 blast)
-                        have "T jk1 > T j" using hjk1_eq \<open>sub (Suc k) > T j\<close> by (by100 linarith)
-                        have "T jk1 < T (Suc j)" using hjk1_eq \<open>sub (Suc k) < T (Suc j)\<close> by (by100 linarith)
-                        have "jk1 > j"
-                        proof -
-                          have "\<not> jk1 \<le> j"
-                          proof
-                            assume "jk1 \<le> j"
-                            have "j \<le> M" using hj_lt by (by100 presburger)
-                            have "T jk1 \<le> T j" using hT_mono_F[OF \<open>jk1 \<le> j\<close> \<open>j \<le> M\<close>] .
-                            thus False using \<open>T jk1 > T j\<close> by (by100 linarith)
-                          qed
-                          thus ?thesis by (by100 presburger)
-                        qed
-                        have "jk1 < Suc j"
-                        proof -
-                          have "\<not> jk1 \<ge> Suc j"
-                          proof
-                            assume "jk1 \<ge> Suc j"
-                            have "T jk1 \<ge> T (Suc j)" using hT_mono_F[OF \<open>jk1 \<ge> Suc j\<close> hjk1_le] .
-                            thus False using \<open>T jk1 < T (Suc j)\<close> by (by100 linarith)
-                          qed
-                          thus ?thesis by (by100 presburger)
-                        qed
-                        thus False using \<open>jk1 > j\<close> by (by100 presburger)
-                      qed
-                      \<comment> \<open>Now use hpUV at index k: sub-piece k maps to U or V.\<close>
-                      have hpk: "(\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub k + t * (sub (Suc k) - sub k)) \<in> U)
-                          \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub k + t * (sub (Suc k) - sub k)) \<in> V)"
-                        using hpUV hk_lt by (by100 force)
-                      \<comment> \<open>Merged piece maps to same U or V by reparametrization.\<close>
-                      have hsubk_lt: "sub k < sub (Suc k)" using hinc hk_lt by (by100 force)
-                      show ?thesis
-                      proof (cases "(\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub k + t * (sub (Suc k) - sub k)) \<in> U)")
-                        case True
-                        show ?thesis
-                        proof (rule disjI1, intro allI impI)
-                          fix t :: real assume ht: "0 \<le> t \<and> t \<le> 1"
-                          let ?x = "T' i + t * (T' (Suc i) - T' i)"
-                          have hx_eq: "?x = T i + t * (T (Suc (Suc i)) - T i)"
-                            using \<open>T' i = T i\<close> \<open>T' (Suc i) = T (Suc (Suc i))\<close> by (by100 simp)
-                          have "T i \<ge> sub k" using hTi_ge .
-                          have "T (Suc (Suc i)) \<le> sub (Suc k)" using hTSj_le hSSi_eq by (by100 simp)
-                          have hTi_le_TSSi: "T i \<le> T (Suc (Suc i))"
-                          proof -
-                            have "i \<le> Suc (Suc i)" by (by100 presburger)
-                            have "Suc (Suc i) \<le> M" using hi hj_lt hSi_eq by (by100 presburger)
-                            show ?thesis using hT_mono_F[OF \<open>i \<le> Suc (Suc i)\<close> \<open>Suc (Suc i) \<le> M\<close>] .
-                          qed
-                          have hx_val: "?x = T i + t * (T (Suc (Suc i)) - T i)" using hx_eq .
-                          have hdiff_ge: "T (Suc (Suc i)) - T i \<ge> 0" using hTi_le_TSSi by (by100 linarith)
-                          have ht0: "0 \<le> t" and ht1: "t \<le> 1" using ht by (by100 linarith)+
-                          have hprod_ge: "t * (T (Suc (Suc i)) - T i) \<ge> 0"
-                            by (rule mult_nonneg_nonneg[OF ht0 hdiff_ge])
-                          have hprod_le: "t * (T (Suc (Suc i)) - T i) \<le> T (Suc (Suc i)) - T i"
-                          proof -
-                            have "t * (T (Suc (Suc i)) - T i) \<le> 1 * (T (Suc (Suc i)) - T i)"
-                              by (rule mult_right_mono[OF ht1 hdiff_ge])
-                            thus ?thesis by (by100 simp)
-                          qed
-                          have hx_ge: "?x \<ge> sub k"
-                            using hx_val hprod_ge \<open>T i \<ge> sub k\<close> by (by100 linarith)
-                          have hx_le: "?x \<le> sub (Suc k)"
-                            using hx_val hprod_le \<open>T (Suc (Suc i)) \<le> sub (Suc k)\<close> by (by100 linarith)
-                          define s where "s = (?x - sub k) / (sub (Suc k) - sub k)"
-                          have hs_ge: "s \<ge> 0" unfolding s_def using hx_ge hsubk_lt by (by100 simp)
-                          have hs_le: "s \<le> 1" unfolding s_def using hx_le hsubk_lt by (by100 simp)
-                          have "sub k + s * (sub (Suc k) - sub k) = ?x"
-                            unfolding s_def using hsubk_lt by (by100 simp)
-                          hence "f ?x = f (sub k + s * (sub (Suc k) - sub k))" by (by100 simp)
-                          also have "... \<in> U" using True hs_ge hs_le by (by100 force)
-                          finally show "f ?x \<in> U" .
-                        qed
-                      next
-                        case False
-                        hence "(\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub k + t * (sub (Suc k) - sub k)) \<in> V)"
-                          using hpk by (by100 blast)
-                        show ?thesis
-                        proof (rule disjI2, intro allI impI)
-                          fix t :: real assume ht: "0 \<le> t \<and> t \<le> 1"
-                          let ?x = "T' i + t * (T' (Suc i) - T' i)"
-                          have hx_eq: "?x = T i + t * (T (Suc (Suc i)) - T i)"
-                            using \<open>T' i = T i\<close> \<open>T' (Suc i) = T (Suc (Suc i))\<close> by (by100 simp)
-                          have "T i \<ge> sub k" using hTi_ge .
-                          have "T (Suc (Suc i)) \<le> sub (Suc k)" using hTSj_le hSSi_eq by (by100 simp)
-                          have hTi_le_TSSi: "T i \<le> T (Suc (Suc i))"
-                          proof -
-                            have "i \<le> Suc (Suc i)" by (by100 presburger)
-                            have "Suc (Suc i) \<le> M" using hi hj_lt hSi_eq by (by100 presburger)
-                            show ?thesis using hT_mono_F[OF \<open>i \<le> Suc (Suc i)\<close> \<open>Suc (Suc i) \<le> M\<close>] .
-                          qed
-                          have hx_val: "?x = T i + t * (T (Suc (Suc i)) - T i)" using hx_eq .
-                          have hdiff_ge: "T (Suc (Suc i)) - T i \<ge> 0" using hTi_le_TSSi by (by100 linarith)
-                          have ht0: "0 \<le> t" and ht1: "t \<le> 1" using ht by (by100 linarith)+
-                          have hprod_ge: "t * (T (Suc (Suc i)) - T i) \<ge> 0"
-                            by (rule mult_nonneg_nonneg[OF ht0 hdiff_ge])
-                          have hprod_le: "t * (T (Suc (Suc i)) - T i) \<le> T (Suc (Suc i)) - T i"
-                          proof -
-                            have "t * (T (Suc (Suc i)) - T i) \<le> 1 * (T (Suc (Suc i)) - T i)"
-                              by (rule mult_right_mono[OF ht1 hdiff_ge])
-                            thus ?thesis by (by100 simp)
-                          qed
-                          have hx_ge: "?x \<ge> sub k"
-                            using hx_val hprod_ge \<open>T i \<ge> sub k\<close> by (by100 linarith)
-                          have hx_le: "?x \<le> sub (Suc k)"
-                            using hx_val hprod_le \<open>T (Suc (Suc i)) \<le> sub (Suc k)\<close> by (by100 linarith)
-                          define s where "s = (?x - sub k) / (sub (Suc k) - sub k)"
-                          have hs_ge: "s \<ge> 0" unfolding s_def using hx_ge hsubk_lt by (by100 simp)
-                          have hs_le: "s \<le> 1" unfolding s_def using hx_le hsubk_lt by (by100 simp)
-                          have "sub k + s * (sub (Suc k) - sub k) = ?x"
-                            unfolding s_def using hsubk_lt by (by100 simp)
-                          hence "f ?x = f (sub k + s * (sub (Suc k) - sub k))" by (by100 simp)
-                          also have "... \<in> V"
-                            using \<open>\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub k + t * (sub (Suc k) - sub k)) \<in> V\<close>
-                                hs_ge hs_le by (by100 force)
-                          finally show "f ?x \<in> V" .
-                        qed
-                      qed
-                    next
-                      case inner_False: False \<comment> \<open>Both above j: T'-piece = T-piece at index Suc i.\<close>
-                      have "T' i = T (Suc i)" unfolding T'_def using inner_False by (by100 simp)
-                      have "\<not> (Suc i < j)" using inner_False by (by100 presburger)
-                      have "T' (Suc i) = T (Suc (Suc i))" unfolding T'_def using \<open>\<not>(Suc i < j)\<close> by (by100 simp)
-                      have "Suc i < M" using hi by (by100 presburger)
-                      show ?thesis using \<open>T' i = T (Suc i)\<close> \<open>T' (Suc i) = T (Suc (Suc i))\<close>
-                          less.prems(5) \<open>Suc i < M\<close> by (by100 force)
-                    qed
-                  qed
-                qed
-                have hT'_valid: "M - 1 \<ge> 1 \<and> T' 0 = 0 \<and> T' (M-1) = 1
-                    \<and> (\<forall>i<M-1. T' i < T' (Suc i))
-                    \<and> (\<forall>i<M-1. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T' i + t * (T' (Suc i) - T' i)) \<in> U)
-                         \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T' i + t * (T' (Suc i) - T' i)) \<in> V))"
-                  using hT'_ge hT'_0 hT'_M1 hT'_inc hT'_UV by (by100 blast)
-                \<comment> \<open>T' still refines sub (removing non-sub point preserves containment).\<close>
-                have hT'_refines: "\<forall>i\<le>n. \<exists>j'\<le>M-1. T' j' = sub i"
-                proof (intro allI impI)
-                  fix i assume hi: "i \<le> n"
-                  from less.prems(6) hi obtain k where hk_le: "k \<le> M" and hk_eq: "T k = sub i"
-                    by (by100 blast)
-                  have "k \<noteq> j" using hj_not_sub hi hk_eq by (by100 blast)
-                  show "\<exists>j'\<le>M-1. T' j' = sub i"
-                  proof (cases "k < j")
-                    case True
-                    have "T' k = T k" unfolding T'_def using True by (by100 presburger)
-                    have "k < M" using True hj_lt by (by100 presburger)
-                    hence "k \<le> M - 1" by (by100 presburger)
-                    have "T' k = sub i" using \<open>T' k = T k\<close> hk_eq by (by100 simp)
-                    show ?thesis using \<open>T' k = sub i\<close> \<open>k \<le> M - 1\<close> by (by100 blast)
-                  next
-                    case False
-                    hence "k > j" using \<open>k \<noteq> j\<close> by (by100 presburger)
-                    hence "\<not> (k - 1 < j)" by (by100 presburger)
-                    have "T' (k-1) = T (Suc (k-1))" unfolding T'_def using \<open>\<not>(k-1 < j)\<close> by (by100 simp)
-                    moreover have "Suc (k-1) = k" using \<open>k > j\<close> hj_pos by (by100 presburger)
-                    ultimately have "T' (k-1) = T k" by (by100 simp)
-                    have "k - 1 \<le> M - 1" using hk_le by (by100 presburger)
-                    have "T' (k-1) = sub i" using \<open>T' (k-1) = T k\<close> hk_eq by (by100 simp)
-                    show ?thesis using \<open>T' (k-1) = sub i\<close> \<open>k-1 \<le> M-1\<close> by (by100 blast)
-                  qed
-                qed
-                \<comment> \<open>h_point_insert gives: foldr_σ f M T = foldr_σ f (M-1) T'.\<close>
-                have hinsert: "foldr_\<sigma> f M T = foldr_\<sigma> f (M - 1) T'"
-                proof -
-                  have hM1: "M - 1 \<ge> 1" using hT'_valid by (by100 blast)
-                  have hSuc_j1: "Suc (j - 1) = j" using hj_pos by (by100 presburger)
-                  have hk_lt: "j - 1 < M - 1" using hj_lt hj_pos by (by100 presburger)
-                  have hpL_loc: "T' (j-1) < T j"
-                  proof -
-                    have "T' (j-1) = T (j-1)" unfolding T'_def using hj_pos by (by100 simp)
-                    moreover have "j - 1 < M" using hj_lt by (by100 presburger)
-                    hence "T (j-1) < T (Suc (j-1))" using less.prems(4) by (by100 blast)
-                    hence "T (j-1) < T j" using hSuc_j1 by (by100 simp)
-                    ultimately show ?thesis by (by100 simp)
-                  qed
-                  have hpR_loc: "T j < T' (Suc (j-1))"
-                  proof -
-                    have "T' (Suc (j-1)) = T' j" using hSuc_j1 by (by100 simp)
-                    also have "\<dots> = T (Suc j)" unfolding T'_def by (by100 simp)
-                    finally have "T' (Suc (j-1)) = T (Suc j)" .
-                    moreover have "T j < T (Suc j)" using less.prems(4) hj_lt by (by100 force)
-                    ultimately show ?thesis by (by100 simp)
-                  qed
-                  have hpi: "foldr_\<sigma> f (Suc (M-1))
-                      (\<lambda>i. if i \<le> j-1 then T' i else if i = Suc (j-1) then T j else T' (i-1))
-                      = foldr_\<sigma> f (M-1) T'"
-                  proof -
-                    have hT'0_loc: "T' 0 = (0::real)" using hT'_valid by (by100 blast)
-                    have hT'M_loc: "T' (M-1) = 1" using hT'_valid by (by100 blast)
-                    have hT'inc_loc: "\<forall>i<M-1. T' i < T' (Suc i)" using hT'_valid by (by100 blast)
-                    have hT'UV_loc: "\<forall>i<M-1. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T' i + t * (T' (Suc i) - T' i)) \<in> U)
-                         \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T' i + t * (T' (Suc i) - T' i)) \<in> V)"
-                      using hT'_valid by (by100 blast)
-                    show ?thesis
-                      by (rule h_point_insert[OF hM1 hT'0_loc hT'M_loc hT'inc_loc hT'UV_loc hk_lt hpL_loc hpR_loc])
-                  qed
-                  \<comment> \<open>The s' function equals T. Proved by showing foldr_σ arguments match.\<close>
-                  have "Suc (M - 1) = M" using hMgt hn by (by100 presburger)
-                  moreover have "(\<lambda>i. if i \<le> j-1 then T' i else if i = Suc (j-1) then T j else T' (i-1)) = T"
-                  proof (rule ext)
-                    fix i show "(if i \<le> j-1 then T' i else if i = Suc (j-1) then T j else T' (i-1)) = T i"
-                    proof (cases "i < j")
-                      case True
-                      hence "i \<le> j - 1" using hj_pos by (by100 presburger)
-                      have "T' i = T i" unfolding T'_def using True by (by100 presburger)
-                      thus ?thesis using \<open>i \<le> j - 1\<close> by (by100 simp)
-                    next
-                      case False
-                      show ?thesis
-                      proof (cases "i = j")
-                        case True
-                        hence "i = Suc (j - 1)" using hSuc_j1 by (by100 simp)
-                        have "\<not> (i \<le> j - 1)" using True hj_pos by (by100 presburger)
-                        thus ?thesis using \<open>i = Suc (j-1)\<close> True by (by100 simp)
-                      next
-                        case False2: False
-                        hence "i > j" using False by (by100 presburger)
-                        hence "\<not> (i \<le> j - 1)" by (by100 presburger)
-                        have "i \<noteq> Suc (j - 1)" using \<open>i > j\<close> hSuc_j1 by (by100 presburger)
-                        have "\<not> (i - 1 < j)" using \<open>i > j\<close> by (by100 presburger)
-                        have "T' (i-1) = T (Suc (i-1))" unfolding T'_def using \<open>\<not>(i-1 < j)\<close> by (by100 simp)
-                        moreover have "Suc (i-1) = i" using \<open>i > j\<close> hj_pos by (by100 presburger)
-                        ultimately have "T' (i-1) = T i" by (by100 simp)
-                        moreover have "(if i \<le> j-1 then T' i else if i = Suc(j-1) then T j else T' (i-1)) = T' (i-1)"
-                          using \<open>\<not>(i \<le> j-1)\<close> \<open>i \<noteq> Suc(j-1)\<close> by (by100 simp)
-                        ultimately show ?thesis by (by100 simp)
-                      qed
-                    qed
-                  qed
-                  ultimately show ?thesis using hpi by (by100 simp)
-                qed
-                \<comment> \<open>IH: foldr_σ f (M-1) T' = foldr_σ f n sub.\<close>
-                have hM1_lt: "M - 1 < M" using hMgt hn by (by100 presburger)
-                have hT'1: "M - 1 \<ge> 1" using hT'_valid by (by100 blast)
-                have hT'2: "T' 0 = (0::real)" using hT'_valid by (by100 blast)
-                have hT'3: "T' (M-1) = 1" using hT'_valid by (by100 blast)
-                have hT'4: "\<forall>i<M-1. T' i < T' (Suc i)" using hT'_valid by (by100 blast)
-                have hT'5: "\<forall>i<M-1. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T' i + t * (T' (Suc i) - T' i)) \<in> U)
-                     \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T' i + t * (T' (Suc i) - T' i)) \<in> V)"
-                  using hT'_valid by (by100 blast)
-                have "foldr_\<sigma> f (M - 1) T' = foldr_\<sigma> f n sub"
-                  using less.IH[OF hM1_lt hT'1 hT'2 hT'3 hT'4 hT'5 hT'_refines] .
-                thus ?thesis using hinsert by (by100 simp)
-              qed
-            qed
-          qed
-          have h_indep: "foldr_\<sigma> f N S = foldr_\<sigma> f n sub"
-          proof -
-            \<comment> \<open>h_refine works for ANY valid target subdivision. Apply it symmetrically:
-               (1) h_refine: any valid T refining sub gives foldr_σ T = foldr_σ sub
-               (2) By identical argument with (N,S) in place of (n,sub):
-                   any valid T refining S gives foldr_σ T = foldr_σ S
-               Then for common refinement C: foldr_σ C = foldr_σ sub ∧ foldr_σ C = foldr_σ S.\<close>
-            have h_refine_S: "\<And>M T. M \<ge> 1 \<Longrightarrow> T 0 = (0::real) \<Longrightarrow> T M = 1 \<Longrightarrow>
-                (\<forall>i<M. T i < T (Suc i)) \<Longrightarrow>
-                (\<forall>i<M. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T i + t * (T (Suc i) - T i)) \<in> U)
-                     \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T i + t * (T (Suc i) - T i)) \<in> V)) \<Longrightarrow>
-                (\<forall>i\<le>N. \<exists>j\<le>M. T j = S i) \<Longrightarrow>
-                foldr_\<sigma> f M T = foldr_\<sigma> f N S"
-              sorry \<comment> \<open>Identical proof to h_refine with (N, S, hS0, hSN, hSinc, hS_UV)
-                 in place of (n, sub, hs0, hsn, hinc, hpUV).\<close>
-            \<comment> \<open>Common refinement: sorted merge of S-values and sub-values.\<close>
-            have "\<exists>M C. M \<ge> 1 \<and> C 0 = (0::real) \<and> C M = 1
-                \<and> (\<forall>i<M. C i < C (Suc i))
-                \<and> (\<forall>i<M. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (C i + t * (C (Suc i) - C i)) \<in> U)
-                     \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (C i + t * (C (Suc i) - C i)) \<in> V))
-                \<and> (\<forall>i\<le>n. \<exists>j\<le>M. C j = sub i)
-                \<and> (\<forall>i\<le>N. \<exists>j\<le>M. C j = S i)"
-              sorry \<comment> \<open>Common refinement exists: sorted merge of {S(0),..,S(N)} ∪ {sub(0),..,sub(n)}
-                 gives strictly increasing enumeration. UV holds because each C-piece is
-                 a sub-interval of some S-piece (which maps to U or V).\<close>
-            then obtain M C where hCM: "M \<ge> 1" and hC0: "C 0 = (0::real)" and hCend: "C M = 1"
-                and hCinc: "\<forall>i<M. C i < C (Suc i)"
-                and hCUV: "\<forall>i<M. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (C i + t * (C (Suc i) - C i)) \<in> U)
-                     \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (C i + t * (C (Suc i) - C i)) \<in> V)"
-                and hC_ref_sub: "\<forall>i\<le>n. \<exists>j\<le>M. C j = sub i"
-                and hC_ref_S: "\<forall>i\<le>N. \<exists>j\<le>M. C j = S i"
-              by auto
-            have "foldr_\<sigma> f M C = foldr_\<sigma> f n sub"
-              using h_refine[OF hCM hC0 hCend hCinc hCUV hC_ref_sub] .
-            moreover have "foldr_\<sigma> f M C = foldr_\<sigma> f N S"
-              using h_refine_S[OF hCM hC0 hCend hCinc hCUV hC_ref_S] .
-            ultimately show ?thesis by (by100 simp)
-          qed
-          show "\<tau> f = foldr_\<sigma> f n sub" using h\<tau>_eq h_indep by (by100 simp)
-        qed
         have h_gen_indep_12: "\<tau> (top1_path_product f1 f2) = foldr_\<sigma> (top1_path_product f1 f2) (n1+n2) sub_m"
         proof -
           have "n1 + n2 \<ge> 1" using hn1' by (by100 presburger)
