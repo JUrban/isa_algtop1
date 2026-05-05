@@ -6633,19 +6633,79 @@ proof -
                   thus "f (p + t * (s (Suc k) - p)) \<in> V" using hsecond_as_pl by (by100 simp)
                 qed
               qed
+              have hfc_loc: "top1_continuous_map_on I_set I_top X TX f"
+                using hf_loop unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
               have hG_k_H: "G k \<in> H"
               proof -
-                have "G k = \<sigma> (\<lambda>t. f (s k + t * (p - s k)))" by (rule hG_k)
-                also have "\<dots> \<in> H" using hfirst_UV_loc
-                  sorry \<comment> \<open>Same as h_σ_piece_in_H with endpoints (s k, p): affine+comp+codomain_shrink.\<close>
-                finally show ?thesis .
+                have hcont1: "top1_continuous_map_on I_set I_top X TX (\<lambda>t. f (s k + t * (p - s k)))"
+                  using top1_continuous_map_on_comp[OF affine_map_continuous_I_to_I[OF hsk_ge0 hsk_le_p hp_le1] hfc_loc]
+                  unfolding comp_def by (by100 simp)
+                have himg1: "(\<forall>r\<in>I_set. f (s k + r * (p - s k)) \<in> U) \<or> (\<forall>r\<in>I_set. f (s k + r * (p - s k)) \<in> V)"
+                proof -
+                  have "\<And>t. t \<in> I_set \<Longrightarrow> 0 \<le> t \<and> t \<le> 1" unfolding top1_unit_interval_def by (by100 simp)
+                  thus ?thesis using hfirst_UV_loc by (by100 fast)
+                qed
+                show ?thesis using hG_k himg1
+                proof (cases "\<forall>r\<in>I_set. f (s k + r * (p - s k)) \<in> U")
+                  case True
+                  have "(\<lambda>t. f (s k + t * (p - s k))) ` I_set \<subseteq> U" using True by (by100 blast)
+                  have "top1_is_path_on U (subspace_topology X TX U)
+                      ((\<lambda>t. f (s k + t * (p - s k))) 0) ((\<lambda>t. f (s k + t * (p - s k))) 1)
+                      (\<lambda>t. f (s k + t * (p - s k)))"
+                    unfolding top1_is_path_on_def
+                    using top1_continuous_map_on_codomain_shrink[OF hcont1
+                        \<open>(\<lambda>t. f (s k + t * (p - s k))) ` I_set \<subseteq> U\<close> hUsub] by (by100 blast)
+                  hence "\<sigma> (\<lambda>t. f (s k + t * (p - s k))) \<in> H" by (rule h\<sigma>_path_in_H)
+                  thus ?thesis using hG_k by (by100 simp)
+                next
+                  case False
+                  hence "\<forall>r\<in>I_set. f (s k + r * (p - s k)) \<in> V" using himg1 by (by100 blast)
+                  hence "(\<lambda>t. f (s k + t * (p - s k))) ` I_set \<subseteq> V" by (by100 blast)
+                  have "top1_is_path_on V (subspace_topology X TX V)
+                      ((\<lambda>t. f (s k + t * (p - s k))) 0) ((\<lambda>t. f (s k + t * (p - s k))) 1)
+                      (\<lambda>t. f (s k + t * (p - s k)))"
+                    unfolding top1_is_path_on_def
+                    using top1_continuous_map_on_codomain_shrink[OF hcont1
+                        \<open>(\<lambda>t. f (s k + t * (p - s k))) ` I_set \<subseteq> V\<close> hVsub] by (by100 blast)
+                  hence "\<sigma> (\<lambda>t. f (s k + t * (p - s k))) \<in> H" by (rule h\<sigma>_path_in_H_V)
+                  thus ?thesis using hG_k by (by100 simp)
+                qed
               qed
               have hG_Sk_H: "G (Suc k) \<in> H"
               proof -
-                have "G (Suc k) = \<sigma> (\<lambda>t. f (p + t * (s (Suc k) - p)))" by (rule hG_Sk)
-                also have "\<dots> \<in> H" using hsecond_UV_loc
-                  sorry \<comment> \<open>Same as h_σ_piece_in_H with endpoints (p, s(Suc k)).\<close>
-                finally show ?thesis .
+                have hcont2: "top1_continuous_map_on I_set I_top X TX (\<lambda>t. f (p + t * (s (Suc k) - p)))"
+                  using top1_continuous_map_on_comp[OF affine_map_continuous_I_to_I[OF hp_ge0 hp_le_sk1 hsk1_le1] hfc_loc]
+                  unfolding comp_def by (by100 simp)
+                have himg2: "(\<forall>r\<in>I_set. f (p + r * (s (Suc k) - p)) \<in> U) \<or> (\<forall>r\<in>I_set. f (p + r * (s (Suc k) - p)) \<in> V)"
+                proof -
+                  have "\<And>t. t \<in> I_set \<Longrightarrow> 0 \<le> t \<and> t \<le> 1" unfolding top1_unit_interval_def by (by100 simp)
+                  thus ?thesis using hsecond_UV_loc by (by100 fast)
+                qed
+                show ?thesis using hG_Sk himg2
+                proof (cases "\<forall>r\<in>I_set. f (p + r * (s (Suc k) - p)) \<in> U")
+                  case True
+                  have "(\<lambda>t. f (p + t * (s (Suc k) - p))) ` I_set \<subseteq> U" using True by (by100 blast)
+                  have "top1_is_path_on U (subspace_topology X TX U)
+                      ((\<lambda>t. f (p + t * (s (Suc k) - p))) 0) ((\<lambda>t. f (p + t * (s (Suc k) - p))) 1)
+                      (\<lambda>t. f (p + t * (s (Suc k) - p)))"
+                    unfolding top1_is_path_on_def
+                    using top1_continuous_map_on_codomain_shrink[OF hcont2
+                        \<open>(\<lambda>t. f (p + t * (s (Suc k) - p))) ` I_set \<subseteq> U\<close> hUsub] by (by100 blast)
+                  hence "\<sigma> (\<lambda>t. f (p + t * (s (Suc k) - p))) \<in> H" by (rule h\<sigma>_path_in_H)
+                  thus ?thesis using hG_Sk by (by100 simp)
+                next
+                  case False
+                  hence "\<forall>r\<in>I_set. f (p + r * (s (Suc k) - p)) \<in> V" using himg2 by (by100 blast)
+                  hence "(\<lambda>t. f (p + t * (s (Suc k) - p))) ` I_set \<subseteq> V" by (by100 blast)
+                  have "top1_is_path_on V (subspace_topology X TX V)
+                      ((\<lambda>t. f (p + t * (s (Suc k) - p))) 0) ((\<lambda>t. f (p + t * (s (Suc k) - p))) 1)
+                      (\<lambda>t. f (p + t * (s (Suc k) - p)))"
+                    unfolding top1_is_path_on_def
+                    using top1_continuous_map_on_codomain_shrink[OF hcont2
+                        \<open>(\<lambda>t. f (p + t * (s (Suc k) - p))) ` I_set \<subseteq> V\<close> hVsub] by (by100 blast)
+                  hence "\<sigma> (\<lambda>t. f (p + t * (s (Suc k) - p))) \<in> H" by (rule h\<sigma>_path_in_H_V)
+                  thus ?thesis using hG_Sk by (by100 simp)
+                qed
               qed
               \<comment> \<open>The equality reduces to: replacing [G k, G(Suc k)] by [F k] preserves foldr,
                  since F k = mulH (G k) (G(Suc k)). The rest of the map is identical.\<close>
