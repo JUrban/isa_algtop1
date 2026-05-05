@@ -1,0 +1,1058 @@
+
+### Theorem_35_1_R [PROVED]
+File: AlgTopCached.thy:147
+  text \<open>Tietze extension to R (unbounded version). Uses Theorem_35_1 (bounded version)
+  lemma Theorem_35_1_R:
+  assumes hX: "top1_normal_on X TX" and hA: "closedin_on X TX A"
+  assumes hf: "top1_continuous_map_on A (subspace_topology X TX A)
+  (UNIV::real set) order_topology_on_UNIV f"
+  shows "\<exists>F. top1_continuous_map_on X TX (UNIV::real set) order_topology_on_UNIV F
+  \<and> (\<forall>x\<in>A. F x = f x)"
+  proof -
+
+
+### Corollary_52_2_basepoint_independent [PROVED]
+File: AlgTopCached.thy:690
+  text \<open>Corollary 52.2 (Munkres): If X is path connected and x0, x1 \<in> X, then
+  corollary Corollary_52_2_basepoint_independent:
+  assumes "top1_path_connected_on X TX" and "x0 \<in> X" and "x1 \<in> X"
+  shows "top1_groups_isomorphic_on
+  (top1_fundamental_group_carrier X TX x0) (top1_fundamental_group_mul X TX x0)
+  (top1_fundamental_group_carrier X TX x1) (top1_fundamental_group_mul X TX x1)"
+  proof -
+
+
+### Lemma_52_3_simply_connected_unique_paths [PROVED]
+File: AlgTopCached.thy:704
+  text \<open>Lemma 52.3 (Munkres): In a simply connected space, any two paths with the same
+  lemma Lemma_52_3_simply_connected_unique_paths:
+  assumes "top1_simply_connected_on X TX"
+  and "top1_is_path_on X TX x0 x1 f" and "top1_is_path_on X TX x0 x1 g"
+  and "x0 \<in> X"
+  shows "top1_path_homotopic_on X TX x0 x1 f g"
+  by (rule simply_connected_paths_homotopic[OF assms])
+
+
+### Corollary_52_5_homeomorphism_iso [PROVED]
+File: AlgTopCached.thy:713
+  text \<open>Corollary 52.5 (Munkres): If h: (X, x0) \<rightarrow> (Y, y0) is a homeomorphism then
+  corollary Corollary_52_5_homeomorphism_iso:
+  assumes "is_topology_on X TX" and "is_topology_on Y TY"
+  and "top1_homeomorphism_on X TX Y TY h"
+  and "x0 \<in> X" and "h x0 = y0"
+  shows "top1_groups_isomorphic_on
+  (top1_fundamental_group_carrier X TX x0) (top1_fundamental_group_mul X TX x0)
+  (top1_fundamental_group_carrier Y TY y0) (top1_fundamental_group_mul Y TY y0)"
+  proof -
+
+
+### Theorem_57_2_no_antipode_S2_to_S1 [PROVED]
+File: AlgTopCached.thy:804
+  text \<open>Theorem 57.2 (Munkres): There is no continuous antipode-preserving map g : S^2 \<rightarrow> S^1.
+  theorem Theorem_57_2_no_antipode_S2_to_S1:
+  assumes hg: "top1_continuous_map_on top1_S2 top1_S2_topology top1_S1 top1_S1_topology g"
+  and hanti: "\<forall>x\<in>top1_S2. g (- fst x, - fst (snd x), - snd (snd x)) =
+  (- fst (g x), - snd (g x))"
+  shows False
+  proof -
+
+
+### Corollary_60_2_torus_pi1 [PROVED]
+File: AlgTopCached.thy:963
+  text \<open>Corollary 60.2 (Munkres): pi_1(T^2) is isomorphic to Z x Z.\<close>
+  corollary Corollary_60_2_torus_pi1:
+  assumes "is_topology_on X TX" and "is_topology_on Y TY"
+  and "top1_homeomorphism_on X TX (top1_S1 \<times> top1_S1)
+  (product_topology_on top1_S1_topology top1_S1_topology) h"
+  and "x0 \<in> X"
+  shows "top1_groups_isomorphic_on
+  (top1_fundamental_group_carrier X TX x0) (top1_fundamental_group_mul X TX x0)
+  (UNIV :: (int \<times> int) set) (\<lambda>(a1, a2) (b1, b2). (a1 + b1, a2 + b2))"
+  proof -
+
+
+### Lemma_62_1_homotopy_extension [PROVED]
+File: AlgTopCached.thy:1087
+  text \<open>Lemma 62.1 (Homotopy extension lemma). If X \<times> I is normal, A closed in X,
+  lemma Lemma_62_1_homotopy_extension:
+  fixes f :: "'a \<Rightarrow> real \<times> real"
+  assumes hTX_top: "is_topology_on X TX"
+  and hX_normal: "top1_normal_on X TX"
+  and hXI_normal: "top1_normal_on (X \<times> I_set) (product_topology_on TX I_top)"
+  and hA_closed: "closedin_on X TX A"
+  and hY_open: "Y \<in> product_topology_on top1_open_sets top1_open_sets"
+  and hf: "top1_continuous_map_on A (subspace_topology X TX A) Y
+  (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) Y) f"
+  and hnul: "top1_nulhomotopic_on A (subspace_topology X TX A) Y
+  (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) Y) f"
+  shows "\<exists>g. top1_continuous_map_on X TX Y
+  (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) Y) g
+  \<and> (\<forall>x\<in>A. g x = f x)
+  \<and> top1_nulhomotopic_on X TX Y
+  (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) Y) g"
+  proof -
+
+
+### Lemma_62_2_BorsukLemma [PROVED]
+File: AlgTopCached.thy:1997
+  lemma Lemma_62_2_BorsukLemma:
+  fixes A :: "'a set" and TA :: "'a set set" and f :: "'a \<Rightarrow> real \<times> real \<times> real"
+  and a b :: "real \<times> real \<times> real"
+  assumes hT: "is_topology_on_strict top1_S2 top1_S2_topology"
+  and hcomp: "top1_compact_on A TA"
+  and ha: "a \<in> top1_S2" and hb: "b \<in> top1_S2" and hab: "a \<noteq> b"
+  and hf: "top1_continuous_map_on A TA
+  (top1_S2 - {a, b}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {a, b})) f"
+  and hinj: "inj_on f A"
+  and hnul: "top1_nulhomotopic_on A TA
+  (top1_S2 - {a, b}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {a, b})) f"
+  shows "\<exists>C. C \<in> top1_components_on (top1_S2 - f ` A)
+  (subspace_topology top1_S2 top1_S2_topology (top1_S2 - f ` A))
+  \<and> a \<in> C \<and> b \<in> C"
+  proof -
+
+
+### Theorem_62_3_invariance_of_domain [PROVED]
+File: AlgTopCached.thy:4337
+  theorem Theorem_62_3_invariance_of_domain:
+  fixes U :: "(real \<times> real) set" and f :: "real \<times> real \<Rightarrow> real \<times> real"
+  assumes "U \<in> product_topology_on top1_open_sets top1_open_sets"
+  and "top1_continuous_map_on U
+  (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) U)
+  UNIV (product_topology_on top1_open_sets top1_open_sets) f"
+  and "inj_on f U"
+  shows "f ` U \<in> product_topology_on top1_open_sets top1_open_sets"
+  proof -
+
+
+### Theorem_67_4_direct_sum_exists [PROVED]
+File: AlgTopCached.thy:7095
+  (** from \<S>67 Theorem 67.4: existence of external direct sum of abelian groups.
+  theorem Theorem_67_4_direct_sum_exists:
+  assumes hG: "\<forall>\<alpha>\<in>(J::'i set). top1_is_abelian_group_on (G \<alpha>::'g set) (mul \<alpha>) (e \<alpha>) (invg \<alpha>)"
+  shows "\<exists>\<iota>fam.
+  top1_is_abelian_group_on
+  (top1_direct_sum_carrier J G e)
+  (\<lambda>f g. \<lambda>\<alpha>. if \<alpha> \<in> J then mul \<alpha> (f \<alpha>) (g \<alpha>) else e \<alpha>)
+  e
+  (\<lambda>f. \<lambda>\<alpha>. if \<alpha> \<in> J then invg \<alpha> (f \<alpha>) else e \<alpha>)
+  \<and> (\<forall>\<alpha>\<in>J. top1_group_hom_on (G \<alpha>) (mul \<alpha>)
+  (top1_direct_sum_carrier J G e)
+  (\<lambda>f g. \<lambda>\<beta>. if \<beta> \<in> J then mul \<beta> (f \<beta>) (g \<beta>) else e \<beta>)
+  (\<iota>fam \<alpha>))
+  \<and> (\<forall>\<alpha>\<in>J. inj_on (\<iota>fam \<alpha>) (G \<alpha>))
+  \<and> (\<forall>\<alpha>\<in>J. \<forall>x\<in>G \<alpha>. \<iota>fam \<alpha> x \<alpha> = x \<and>
+  (\<forall>\<beta>. \<beta> \<noteq> \<alpha> \<longrightarrow> \<iota>fam \<alpha> x \<beta> = e \<beta>))"
+  proof -
+
+
+### Theorem_67_6_direct_sum_unique [PROVED]
+File: AlgTopCached.thy:7402
+  (** from \<S>67 Theorem 67.6: uniqueness of external direct sum.
+  theorem Theorem_67_6_direct_sum_unique:
+  fixes J :: "'i set"
+  and G :: "'i \<Rightarrow> 'g set" and mul :: "'i \<Rightarrow> 'g \<Rightarrow> 'g \<Rightarrow> 'g"
+  and eG :: "'i \<Rightarrow> 'g" and invgG :: "'i \<Rightarrow> 'g \<Rightarrow> 'g"
+  and H1 H2 :: "'h set" and mulH1 mulH2 :: "'h \<Rightarrow> 'h \<Rightarrow> 'h"
+  and eH1 eH2 :: 'h and invgH1 invgH2 :: "'h \<Rightarrow> 'h"
+  and \<iota>fam1 \<iota>fam2 :: "'i \<Rightarrow> 'g \<Rightarrow> 'h"
+  assumes hG: "\<forall>\<alpha>\<in>J. top1_is_abelian_group_on (G \<alpha>) (mul \<alpha>) (eG \<alpha>) (invgG \<alpha>)"
+  and "top1_is_direct_sum_of_on H1 mulH1 eH1 invgH1 J G mul eG \<iota>fam1"
+  and "top1_is_direct_sum_of_on H2 mulH2 eH2 invgH2 J G mul eG \<iota>fam2"
+  shows "top1_groups_isomorphic_on H1 mulH1 H2 mulH2"
+  proof -
+
+
+### Lemma_68_9_normal_closure_conjugates [PROVED]
+File: AlgTopCached.thy:8263
+  text \<open>Lemma 68.9 (Munkres): The least normal subgroup of G containing S equals the subgroup
+  lemma Lemma_68_9_normal_closure_conjugates:
+  assumes hG: "top1_is_group_on G mul e invg" and hS: "S \<subseteq> G"
+  shows "top1_normal_subgroup_generated_on G mul e invg S =
+  top1_subgroup_generated_on G mul e invg { mul (mul g s) (invg g) | g s. g \<in> G \<and> s \<in> S }"
+  proof -
+
+
+### Lemma_69_3_commutator_in_kernel [PROVED]
+File: AlgTopCached.thy:8523
+  text \<open>Lemma 69.3 part 3 (Munkres): If h: G \<rightarrow> H is a homomorphism to an abelian group H,
+  lemma Lemma_69_3_commutator_in_kernel:
+  assumes hG: "top1_is_group_on G mul e invg"
+  and hH: "top1_is_abelian_group_on H mulH eH invgH"
+  and hh: "top1_group_hom_on G mul H mulH h"
+  shows "top1_commutator_subgroup_on G mul e invg
+  \<subseteq> top1_group_kernel_on G eH h"
+  proof -
+
+
+### Theorem_68_2_free_product_exists [PROVED]
+File: AlgTopCached.thy:9600
+  (** from \<S>68 Theorem 68.2: given a family of groups, a free product exists.
+  theorem Theorem_68_2_free_product_exists:
+  assumes hgroups: "\<forall>\<alpha>\<in>(J::'i set). top1_is_group_on (GG \<alpha>::'gg set) (mulGG \<alpha>) (eGG \<alpha>) (invgGG \<alpha>)"
+  shows "\<exists>(G::('i \<times> 'gg) list set) mul e invg
+  (\<iota>fam :: 'i \<Rightarrow> 'gg \<Rightarrow> ('i \<times> 'gg) list).
+  top1_is_free_product_on G mul e invg GG mulGG \<iota>fam J"
+  proof -
+
+
+### Lemma_68_3_extension_property [PROVED]
+File: AlgTopCached.thy:11289
+  lemma Lemma_68_3_extension_property:
+  assumes hFP: "top1_is_free_product_on G mul e invg GG mulGG \<iota>fam J"
+  and hH: "top1_is_group_on H mulH eH invgH"
+  and hfam: "\<forall>\<alpha>\<in>J. top1_group_hom_on (GG \<alpha>) (mulGG \<alpha>) H mulH (hfam \<alpha>)"
+  and hGG_grps: "\<forall>\<alpha>\<in>J. top1_is_group_on (GG \<alpha>) (mulGG \<alpha>) (eGG \<alpha>) (invgGG \<alpha>)"
+  shows "\<exists>h. top1_group_hom_on G mul H mulH h
+  \<and> (\<forall>\<alpha>\<in>J. \<forall>x\<in>GG \<alpha>. h (\<iota>fam \<alpha> x) = hfam \<alpha> x)
+  \<and> (\<forall>h'. top1_group_hom_on G mul H mulH h'
+  \<longrightarrow> (\<forall>\<alpha>\<in>J. \<forall>x\<in>GG \<alpha>. h' (\<iota>fam \<alpha> x) = hfam \<alpha> x)
+  \<longrightarrow> (\<forall>g\<in>G. h' g = h g))"
+  proof -
+
+
+### Theorem_68_4_free_product_unique [PROVED]
+File: AlgTopCached.thy:12544
+  (** from \<S>68 Theorem 68.4: uniqueness of free product — any two
+  theorem Theorem_68_4_free_product_unique:
+  assumes hG1: "top1_is_free_product_on (G1::'g set) mul1 e1 invg1 GG mulGG \<iota>1 J"
+  and hG2: "top1_is_free_product_on (G2::'g set) mul2 e2 invg2 GG mulGG \<iota>2 J"
+  and hGG_grps: "\<forall>\<alpha>\<in>J. top1_is_group_on (GG \<alpha>) (mulGG \<alpha>) (eGG \<alpha>) (invgGG \<alpha>)"
+  shows "top1_groups_isomorphic_on G1 mul1 G2 mul2"
+  proof -
+
+
+### Theorem_68_7_quotient_free_product [PROVED]
+File: AlgTopCached.thy:12795
+  (** from \<S>68 Theorem 68.7: if G = G_1 * G_2 is a free product and N_i \<lhd> G_i are
+  theorem Theorem_68_7_quotient_free_product:
+  fixes G1 G2 :: "'g set"
+  and mul1 mul2 :: "'g \<Rightarrow> 'g \<Rightarrow> 'g"
+  and e1 e2 :: 'g
+  and invg1 invg2 :: "'g \<Rightarrow> 'g"
+  and N1 N2 :: "'g set"
+  assumes "top1_is_group_on G1 mul1 e1 invg1"
+  and "top1_is_group_on G2 mul2 e2 invg2"
+  and "top1_normal_subgroup_on G1 mul1 e1 invg1 N1"
+  and "top1_normal_subgroup_on G2 mul2 e2 invg2 N2"
+  shows "\<exists>(FP :: (nat \<times> 'g) list set) mulFP eFP invgFP \<iota>fam12
+  (FPQ :: (nat \<times> 'g set) list set) mulFPQ eFPQ invgFPQ \<iota>famQ.
+  top1_is_free_product_on FP mulFP eFP invgFP
+  (\<lambda>i::nat. if i = 0 then G1 else G2)
+  (\<lambda>i. if i = 0 then mul1 else mul2)
+  \<iota>fam12 {0, 1}
+  \<and> top1_is_free_product_on FPQ mulFPQ eFPQ invgFPQ
+  (\<lambda>i::nat. if i = 0
+  then top1_quotient_group_carrier_on G1 mul1 N1
+  else top1_quotient_group_carrier_on G2 mul2 N2)
+  (\<lambda>i::nat. top1_quotient_group_mul_on (if i = 0 then mul1 else mul2))
+  \<iota>famQ {0, 1}
+  \<and> top1_groups_isomorphic_on
+  (top1_quotient_group_carrier_on FP mulFP
+  (top1_normal_subgroup_generated_on FP mulFP eFP invgFP
+  (\<iota>fam12 0 ` N1 \<union> \<iota>fam12 1 ` N2)))
+  (top1_quotient_group_mul_on mulFP)
+  FPQ mulFPQ"
+  proof -
+
+
+### Theorem_70_2_SvK [OOPS (abandoned)]
+File: AlgTopCached.thy:14103
+  (** from \<S>70 Theorem 70.2 (Seifert-van Kampen, classical version): if X = U \<union> V
+  theorem Theorem_70_2_SvK:
+  assumes "is_topology_on_strict X TX" and "openin_on X TX U" and "openin_on X TX V"
+  and "U \<union> V = X"
+  and "top1_path_connected_on (U \<inter> V) (subspace_topology X TX (U \<inter> V))"
+  and "top1_path_connected_on U (subspace_topology X TX U)"
+  and "top1_path_connected_on V (subspace_topology X TX V)"
+  and "x0 \<in> U \<inter> V"
+  shows "\<exists>(FP::'f set) mulFP eFP invgFP \<iota>fam.
+  top1_is_free_product_on FP mulFP eFP invgFP
+  (\<lambda>i::nat. if i = 0
+  then top1_fundamental_group_carrier U (subspace_topology X TX U) x0
+  else top1_fundamental_group_carrier V (subspace_topology X TX V) x0)
+  (\<lambda>i. if i = 0
+  then top1_fundamental_group_mul U (subspace_topology X TX U) x0
+  else top1_fundamental_group_mul V (subspace_topology X TX V) x0)
+  \<iota>fam {0, 1}
+  \<and> top1_groups_isomorphic_on
+  (top1_fundamental_group_carrier X TX x0)
+  (top1_fundamental_group_mul X TX x0)
+  (top1_quotient_group_carrier_on FP mulFP
+  (top1_normal_subgroup_generated_on FP mulFP eFP invgFP
+  { mulFP (\<iota>fam 0 (top1_fundamental_group_induced_on
+  (U \<inter> V) (subspace_topology X TX (U \<inter> V)) x0
+  U (subspace_topology X TX U) x0 (\<lambda>x. x) c))
+  (invgFP (\<iota>fam 1 (top1_fundamental_group_induced_on
+  (U \<inter> V) (subspace_topology X TX (U \<inter> V)) x0
+  V (subspace_topology X TX V) x0 (\<lambda>x. x) c)))
+  | c. c \<in> top1_fundamental_group_carrier
+  (U \<inter> V) (subspace_topology X TX (U \<inter> V)) x0 }))
+  (top1_quotient_group_mul_on mulFP)"
+
+
+### Theorem_70_1_universal_property [PROVED]
+File: AlgTopCached.thy:15854
+  text \<open>Theorem 70.1 (Seifert-van Kampen, universal property):
+  lemma Theorem_70_1_universal_property:
+  assumes hTX: "is_topology_on_strict X TX" and hU: "openin_on X TX U" and hV: "openin_on X TX V"
+  and hUV: "U \<union> V = X"
+  and hUVpc: "top1_path_connected_on (U \<inter> V) (subspace_topology X TX (U \<inter> V))"
+  and hUpc: "top1_path_connected_on U (subspace_topology X TX U)"
+  and hVpc: "top1_path_connected_on V (subspace_topology X TX V)"
+  and hx0: "x0 \<in> U \<inter> V"
+  and hH: "top1_is_group_on H mulH eH invgH"
+  and h\<phi>1: "top1_group_hom_on
+  (top1_fundamental_group_carrier U (subspace_topology X TX U) x0)
+  (top1_fundamental_group_mul U (subspace_topology X TX U) x0) H mulH \<phi>1"
+  and h\<phi>2: "top1_group_hom_on
+  (top1_fundamental_group_carrier V (subspace_topology X TX V) x0)
+  (top1_fundamental_group_mul V (subspace_topology X TX V) x0) H mulH \<phi>2"
+  and hcompat: "\<forall>c\<in>top1_fundamental_group_carrier (U \<inter> V) (subspace_topology X TX (U \<inter> V)) x0.
+  \<phi>1 (top1_fundamental_group_induced_on (U \<inter> V) (subspace_topology X TX (U \<inter> V)) x0
+  U (subspace_topology X TX U) x0 (\<lambda>x. x) c)
+  = \<phi>2 (top1_fundamental_group_induced_on (U \<inter> V) (subspace_topology X TX (U \<inter> V)) x0
+  V (subspace_topology X TX V) x0 (\<lambda>x. x) c)"
+  shows "\<exists>\<Phi>. top1_group_hom_on
+  (top1_fundamental_group_carrier X TX x0)
+  (top1_fundamental_group_mul X TX x0) H mulH \<Phi>
+  \<and> (\<forall>a\<in>top1_fundamental_group_carrier U (subspace_topology X TX U) x0.
+  \<Phi> (top1_fundamental_group_induced_on U (subspace_topology X TX U) x0 X TX x0 (\<lambda>x. x) a) = \<phi>1 a)
+  \<and> (\<forall>b\<in>top1_fundamental_group_carrier V (subspace_topology X TX V) x0.
+  \<Phi> (top1_fundamental_group_induced_on V (subspace_topology X TX V) x0 X TX x0 (\<lambda>x. x) b) = \<phi>2 b)"
+  proof -
+
+
+### Theorem_70_2_SvK_parameterized [PROVED]
+File: AlgTopCached.thy:25801
+  text \<open>Parameterized SvK: given a free product FP of π₁(U) and π₁(V),
+  theorem Theorem_70_2_SvK_parameterized:
+  assumes "is_topology_on_strict X TX" and "openin_on X TX U" and "openin_on X TX V"
+  and "U \<union> V = X"
+  and "top1_path_connected_on (U \<inter> V) (subspace_topology X TX (U \<inter> V))"
+  and "top1_path_connected_on U (subspace_topology X TX U)"
+  and "top1_path_connected_on V (subspace_topology X TX V)"
+  and "x0 \<in> U \<inter> V"
+  and hFP: "top1_is_free_product_on FP mulFP eFP invgFP
+  (\<lambda>i::nat. if i = 0
+  then top1_fundamental_group_carrier U (subspace_topology X TX U) x0
+  else top1_fundamental_group_carrier V (subspace_topology X TX V) x0)
+  (\<lambda>i. if i = 0
+  then top1_fundamental_group_mul U (subspace_topology X TX U) x0
+  else top1_fundamental_group_mul V (subspace_topology X TX V) x0)
+  \<iota>fam {0, 1}"
+  shows "top1_groups_isomorphic_on
+  (top1_fundamental_group_carrier X TX x0)
+  (top1_fundamental_group_mul X TX x0)
+  (top1_quotient_group_carrier_on FP mulFP
+  (top1_normal_subgroup_generated_on FP mulFP eFP invgFP
+  { mulFP (\<iota>fam 0 (top1_fundamental_group_induced_on
+  (U \<inter> V) (subspace_topology X TX (U \<inter> V)) x0
+  U (subspace_topology X TX U) x0 (\<lambda>x. x) c))
+  (invgFP (\<iota>fam 1 (top1_fundamental_group_induced_on
+  (U \<inter> V) (subspace_topology X TX (U \<inter> V)) x0
+  V (subspace_topology X TX V) x0 (\<lambda>x. x) c)))
+  | c. c \<in> top1_fundamental_group_carrier
+  (U \<inter> V) (subspace_topology X TX (U \<inter> V)) x0 }))
+  (top1_quotient_group_mul_on mulFP)"
+  proof -
+
+
+### Corollary_70_3_simply_connected_intersection [OOPS (abandoned)]
+File: AlgTopCached.thy:27110
+  text \<open>Corollary 70.3 (Munkres): If U \<inter> V is simply connected, then
+  corollary Corollary_70_3_simply_connected_intersection:
+  assumes "is_topology_on_strict X TX" and "openin_on X TX U" and "openin_on X TX V"
+  and "U \<union> V = X"
+  and "top1_simply_connected_on (U \<inter> V) (subspace_topology X TX (U \<inter> V))"
+  and "top1_path_connected_on U (subspace_topology X TX U)"
+  and "top1_path_connected_on V (subspace_topology X TX V)"
+  and "x0 \<in> U \<inter> V"
+  shows "\<exists>(FP::'f set) mulFP.
+  top1_groups_isomorphic_on
+  (top1_fundamental_group_carrier X TX x0)
+  (top1_fundamental_group_mul X TX x0) FP mulFP
+  \<and> (\<exists>eFP invgFP \<iota>fam.
+  top1_is_free_product_on FP mulFP eFP invgFP
+  (\<lambda>i::nat. if i = 0
+  then top1_fundamental_group_carrier U (subspace_topology X TX U) x0
+  else top1_fundamental_group_carrier V (subspace_topology X TX V) x0)
+  (\<lambda>i. if i = 0
+  then top1_fundamental_group_mul U (subspace_topology X TX U) x0
+  else top1_fundamental_group_mul V (subspace_topology X TX V) x0)
+  \<iota>fam {0, 1})"
+  \<comment> \<open>UNPROVABLE: same type variable issue as Theorem_70_2_SvK.\<close>
+  oops
+
+
+### Corollary_70_4_simply_connected_V [PROVED]
+File: AlgTopCached.thy:27422
+  corollary Corollary_70_4_simply_connected_V:
+  assumes "is_topology_on_strict X TX" and "openin_on X TX U" and "openin_on X TX V"
+  and "U \<union> V = X"
+  and "top1_path_connected_on (U \<inter> V) (subspace_topology X TX (U \<inter> V))"
+  and "top1_path_connected_on U (subspace_topology X TX U)"
+  and "top1_simply_connected_on V (subspace_topology X TX V)"
+  and "x0 \<in> U \<inter> V"
+  shows "top1_groups_isomorphic_on
+  (top1_fundamental_group_carrier X TX x0)
+  (top1_fundamental_group_mul X TX x0)
+  (top1_quotient_group_carrier_on
+  (top1_fundamental_group_carrier U (subspace_topology X TX U) x0)
+  (top1_fundamental_group_mul U (subspace_topology X TX U) x0)
+  (top1_normal_subgroup_generated_on
+  (top1_fundamental_group_carrier U (subspace_topology X TX U) x0)
+  (top1_fundamental_group_mul U (subspace_topology X TX U) x0)
+  (top1_fundamental_group_id U (subspace_topology X TX U) x0)
+  (top1_fundamental_group_invg U (subspace_topology X TX U) x0)
+  (top1_fundamental_group_induced_on
+  (U \<inter> V) (subspace_topology X TX (U \<inter> V)) x0
+  U (subspace_topology X TX U) x0 (\<lambda>x. x)
+  ` top1_fundamental_group_carrier (U \<inter> V) (subspace_topology X TX (U \<inter> V)) x0)))
+  (top1_quotient_group_mul_on
+  (top1_fundamental_group_mul U (subspace_topology X TX U) x0))"
+  proof -
+
+
+### Theorem_70_1_uniqueness [HAS SORRY]
+File: AlgTop.thy:11
+  text \<open>Theorem 70.1 uniqueness: the homomorphism \<Phi> extending \<phi>1 and \<phi>2 is unique.
+  lemma Theorem_70_1_uniqueness:
+  assumes hTX: "is_topology_on_strict X TX" and hU: "openin_on X TX U" and hV: "openin_on X TX V"
+  and hUV: "U \<union> V = X"
+  and hUVpc: "top1_path_connected_on (U \<inter> V) (subspace_topology X TX (U \<inter> V))"
+  and hUpc: "top1_path_connected_on U (subspace_topology X TX U)"
+  and hVpc: "top1_path_connected_on V (subspace_topology X TX V)"
+  and hx0: "x0 \<in> U \<inter> V"
+  and hH: "top1_is_group_on H mulH eH invgH"
+  and h\<Phi>: "top1_group_hom_on
+  (top1_fundamental_group_carrier X TX x0)
+  (top1_fundamental_group_mul X TX x0) H mulH \<Phi>"
+  and h\<Psi>: "top1_group_hom_on
+  (top1_fundamental_group_carrier X TX x0)
+  (top1_fundamental_group_mul X TX x0) H mulH \<Psi>"
+  and h\<Phi>U: "\<forall>a\<in>top1_fundamental_group_carrier U (subspace_topology X TX U) x0.
+  \<Phi> (top1_fundamental_group_induced_on U (subspace_topology X TX U) x0 X TX x0 (\<lambda>x. x) a)
+  = \<Psi> (top1_fundamental_group_induced_on U (subspace_topology X TX U) x0 X TX x0 (\<lambda>x. x) a)"
+  and h\<Phi>V: "\<forall>b\<in>top1_fundamental_group_carrier V (subspace_topology X TX V) x0.
+  \<Phi> (top1_fundamental_group_induced_on V (subspace_topology X TX V) x0 X TX x0 (\<lambda>x. x) b)
+  = \<Psi> (top1_fundamental_group_induced_on V (subspace_topology X TX V) x0 X TX x0 (\<lambda>x. x) b)"
+  shows "\<forall>c\<in>top1_fundamental_group_carrier X TX x0. \<Phi> c = \<Psi> c"
+  \<comment> \<open>By Theorem 59.1, every loop class in \<pi>_1(X) is a product of classes from U and V.
+  Since \<Phi> and \<Psi> agree on all U-classes and V-classes (by h\<Phi>U and h\<Phi>V), and both
+  are homomorphisms, they agree on all products, hence on all of \<pi>_1(X).\<close>
+  sorry
+
+
+### Lemma_65_1_K4_subgraph [PROVED]
+File: AlgTop.thy:43
+  (** from \<S>65 Lemma 65.1: for K_4 subspace of S^2 with vertices a_1, ..., a_4 and
+  lemma Lemma_65_1_K4_subgraph:
+  fixes a1 a2 a3 a4 :: "real \<times> real \<times> real"
+  and e12 e23 e34 e41 e13 e24 :: "(real \<times> real \<times> real) set"
+  and C :: "(real \<times> real \<times> real) set"
+  and p q :: "real \<times> real \<times> real"
+  and f :: "real \<Rightarrow> real \<times> real \<times> real"
+  and x0 :: "real \<times> real \<times> real"
+  assumes "is_topology_on_strict top1_S2 top1_S2_topology"
+  \<comment> \<open>K_4 structure: 4 distinct vertices on S^2, plus 6 arcs between them.\<close>
+  and "card {a1, a2, a3, a4} = 4"
+  and "{a1, a2, a3, a4} \<subseteq> top1_S2"
+  \<comment> \<open>All 6 arcs are subsets of S^2.\<close>
+  and "e12 \<subseteq> top1_S2" and "e23 \<subseteq> top1_S2" and "e34 \<subseteq> top1_S2"
+  and "e41 \<subseteq> top1_S2" and "e13 \<subseteq> top1_S2" and "e24 \<subseteq> top1_S2"
+  and "top1_is_arc_on e12 (subspace_topology top1_S2 top1_S2_topology e12)"
+  and "top1_is_arc_on e23 (subspace_topology top1_S2 top1_S2_topology e23)"
+  and "top1_is_arc_on e34 (subspace_topology top1_S2 top1_S2_topology e34)"
+  and "top1_is_arc_on e41 (subspace_topology top1_S2 top1_S2_topology e41)"
+  and "top1_is_arc_on e13 (subspace_topology top1_S2 top1_S2_topology e13)"
+  and "top1_is_arc_on e24 (subspace_topology top1_S2 top1_S2_topology e24)"
+  and "top1_arc_endpoints_on e12 (subspace_topology top1_S2 top1_S2_topology e12) = {a1,a2}"
+  and "top1_arc_endpoints_on e23 (subspace_topology top1_S2 top1_S2_topology e23) = {a2,a3}"
+  and "top1_arc_endpoints_on e34 (subspace_topology top1_S2 top1_S2_topology e34) = {a3,a4}"
+  and "top1_arc_endpoints_on e41 (subspace_topology top1_S2 top1_S2_topology e41) = {a4,a1}"
+  and "top1_arc_endpoints_on e13 (subspace_topology top1_S2 top1_S2_topology e13) = {a1,a3}"
+  and "top1_arc_endpoints_on e24 (subspace_topology top1_S2 top1_S2_topology e24) = {a2,a4}"
+  \<comment> \<open>p, q are interior points of the two 'diagonal' edges.\<close>
+  and "p \<in> e13 - {a1, a3}" and "q \<in> e24 - {a2, a4}"
+  \<comment> \<open>C is the 4-cycle a_1 a_2 a_3 a_4 a_1.\<close>
+  and "C = e12 \<union> e23 \<union> e34 \<union> e41"
+
+
+### Theorem_65_2 [HAS SORRY]
+File: AlgTop.thy:99
+  (** from \<S>65 Theorem 65.2: inclusion C \<rightarrow> S^2 - p - q induces fundamental group iso **)
+  theorem Theorem_65_2:
+  assumes "is_topology_on_strict top1_S2 top1_S2_topology"
+  and "top1_simple_closed_curve_on top1_S2 top1_S2_topology C"
+  and "p \<in> top1_S2 - C" and "q \<in> top1_S2 - C"
+  \<comment> \<open>p, q in different path-components of S^2 - C (stronger than 'not connected').\<close>
+  and "\<not> (\<exists>f. top1_is_path_on (top1_S2 - C)
+  (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) p q f)"
+  and "c0 \<in> C"
+  shows "top1_groups_isomorphic_on
+  (top1_fundamental_group_carrier C (subspace_topology top1_S2 top1_S2_topology C) c0)
+  (top1_fundamental_group_mul C (subspace_topology top1_S2 top1_S2_topology C) c0)
+  (top1_fundamental_group_carrier (top1_S2 - {p} - {q})
+  (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p} - {q})) c0)
+  (top1_fundamental_group_mul (top1_S2 - {p} - {q})
+  (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p} - {q})) c0)"
+  proof -
+
+
+### Theorem_67_8_rank_unique [HAS SORRY]
+File: AlgTop.thy:189
+  (** from \<S>67 Theorem 67.8: rank of free abelian group is well-defined.
+  theorem Theorem_67_8_rank_unique:
+  fixes G :: "'g set" and mul :: "'g \<Rightarrow> 'g \<Rightarrow> 'g"
+  and e :: 'g and invg :: "'g \<Rightarrow> 'g"
+  and iota1 :: "'s1 \<Rightarrow> 'g" and S1 :: "'s1 set"
+  and iota2 :: "'s2 \<Rightarrow> 'g" and S2 :: "'s2 set"
+  assumes "top1_is_free_abelian_group_full_on G mul e invg iota1 S1"
+  and "top1_is_free_abelian_group_full_on G mul e invg iota2 S2"
+  shows "\<exists>f. bij_betw f S1 S2"
+  proof -
+
+
+### Theorem_69_2 [PROVED]
+File: AlgTop.thy:234
+  (** from \<S>69 Theorem 69.2: free product of free groups on S1, S2 (disjoint)
+  theorem Theorem_69_2:
+  fixes G1 G2 :: "'g set"
+  and mul1 mul2 :: "'g \<Rightarrow> 'g \<Rightarrow> 'g"
+  and e1 e2 :: 'g
+  and invg1 invg2 :: "'g \<Rightarrow> 'g"
+  and \<iota>1 \<iota>2 :: "'s \<Rightarrow> 'g"
+  and S1 S2 :: "'s set"
+  assumes "top1_is_free_group_full_on G1 mul1 e1 invg1 \<iota>1 S1"
+  and "top1_is_free_group_full_on G2 mul2 e2 invg2 \<iota>2 S2"
+  and "S1 \<inter> S2 = {}"
+  shows "\<exists>(FP :: (nat \<times> 'g) list set) mulFP eFP invgFP \<iota>fam12 \<iota>S12.
+  top1_is_free_product_on FP mulFP eFP invgFP
+  (\<lambda>i::nat. if i = 0 then G1 else G2)
+  (\<lambda>i. if i = 0 then mul1 else mul2)
+  \<iota>fam12 {0, 1}
+  \<and> top1_is_free_group_full_on FP mulFP eFP invgFP \<iota>S12 (S1 \<union> S2)
+  \<and> (\<forall>s\<in>S1. \<iota>S12 s = \<iota>fam12 0 (\<iota>1 s))
+  \<and> (\<forall>s\<in>S2. \<iota>S12 s = \<iota>fam12 1 (\<iota>2 s))"
+  proof -
+
+
+### Theorem_69_4 [HAS SORRY]
+File: AlgTop.thy:294
+  (** from \<S>69 Theorem 69.4: abelianization of free group is free abelian.
+  theorem Theorem_69_4:
+  fixes G :: "'g set"
+  and mul :: "'g \<Rightarrow> 'g \<Rightarrow> 'g"
+  and e :: 'g
+  and invg :: "'g \<Rightarrow> 'g"
+  and \<iota> :: "'s \<Rightarrow> 'g"
+  and S :: "'s set"
+  assumes "top1_is_free_group_full_on G mul e invg \<iota> S"
+  shows "\<exists>(H :: 'g set set) mulH eH invgH \<phi> \<iota>H.
+  top1_is_abelianization_of H mulH eH invgH G mul e invg \<phi>
+  \<and> top1_is_free_abelian_group_full_on H mulH eH invgH \<iota>H S
+  \<and> (\<forall>s\<in>S. \<iota>H s = \<phi> (\<iota> s))"
+  proof -
+
+
+### Theorem_71_1_wedge_of_circles_finite [PROVED]
+File: AlgTop.thy:581
+  (** from \<S>71 Theorem 71.1: finite wedge of circles has free fundamental group
+  theorem Theorem_71_1_wedge_of_circles_finite:
+  fixes n :: nat and X :: "'a set" and TX :: "'a set set" and p :: 'a
+  assumes "top1_is_wedge_of_circles_on X TX {..<n} p"
+  shows "\<exists>(G::'g set) mul e invg (\<iota>::nat \<Rightarrow> 'g).
+  top1_is_free_group_full_on G mul e invg \<iota> {..<n}
+  \<and> top1_groups_isomorphic_on G mul
+  (top1_fundamental_group_carrier X TX p)
+  (top1_fundamental_group_mul X TX p)"
+  proof -
+
+
+### Lemma_60_5_figure_eight_not_abelian [PROVED]
+File: AlgTop.thy:620
+  text \<open>Lemma 60.5 (Munkres): The fundamental group of the figure eight is not abelian.\<close>
+  lemma Lemma_60_5_figure_eight_not_abelian:
+  assumes "is_topology_on X TX"
+  and "top1_is_wedge_of_circles_on X TX {0::nat, 1} p"
+  shows "\<not> (\<forall>a\<in>top1_fundamental_group_carrier X TX p.
+  \<forall>b\<in>top1_fundamental_group_carrier X TX p.
+  top1_fundamental_group_mul X TX p a b = top1_fundamental_group_mul X TX p b a)"
+  proof -
+
+
+### Theorem_71_3_wedge_of_circles_general [PROVED]
+File: AlgTop.thy:733
+  (** from \<S>71 Theorem 71.3: arbitrary (possibly infinite) wedge of circles. **)
+  theorem Theorem_71_3_wedge_of_circles_general:
+  fixes J :: "'i set" and X :: "'a set" and TX :: "'a set set" and p :: 'a
+  assumes "top1_is_wedge_of_circles_on X TX J p"
+  shows "\<exists>(G::'g set) mul e invg (\<iota>::'i \<Rightarrow> 'g).
+  top1_is_free_group_full_on G mul e invg \<iota> J
+  \<and> top1_groups_isomorphic_on G mul
+  (top1_fundamental_group_carrier X TX p)
+  (top1_fundamental_group_mul X TX p)"
+  proof -
+
+
+### Theorem_72_1_attaching_two_cell [PROVED]
+File: AlgTop.thy:761
+  (** from \<S>72 Theorem 72.1: attaching a 2-cell kills the homotopy class of
+  theorem Theorem_72_1_attaching_two_cell:
+  fixes X :: "'a set" and TX :: "'a set set" and A :: "'a set"
+  and h :: "real \<times> real \<Rightarrow> 'a" and a :: 'a
+  assumes "is_topology_on_strict X TX"
+  and "is_hausdorff_on X TX"
+  and "closedin_on X TX A"
+  and "top1_path_connected_on A (subspace_topology X TX A)"
+  and "top1_continuous_map_on top1_B2 top1_B2_topology X TX h"
+  and "a \<in> A"
+  \<comment> \<open>h restricted to Int(B²) = B² - S¹ is a homeomorphism onto X - A.\<close>
+  and "top1_homeomorphism_on
+  (top1_B2 - top1_S1)
+  (subspace_topology top1_B2 top1_B2_topology (top1_B2 - top1_S1))
+  (X - A)
+  (subspace_topology X TX (X - A))
+  h"
+  and "h ` top1_S1 \<subseteq> A"
+  and "h (1, 0) = a"
+  shows "\<exists>\<iota>.
+  top1_continuous_map_on top1_S1 top1_S1_topology A
+  (subspace_topology X TX A) \<iota>
+  \<and> (\<forall>z\<in>top1_S1. \<iota> z = h z)
+  \<and> top1_groups_isomorphic_on
+  (top1_fundamental_group_carrier X TX a)
+  (top1_fundamental_group_mul X TX a)
+  (top1_quotient_group_carrier_on
+  (top1_fundamental_group_carrier A (subspace_topology X TX A) a)
+  (top1_fundamental_group_mul A (subspace_topology X TX A) a)
+  (top1_normal_subgroup_generated_on
+  (top1_fundamental_group_carrier A (subspace_topology X TX A) a)
+
+
+### Theorem_73_1_torus_presentation [PROVED]
+File: AlgTop.thy:867
+  (** from \<S>73 Theorem 73.1: \<pi>_1(torus) has presentation <\<alpha>, \<beta> | \<alpha>\<beta>\<alpha>^{-1}\<beta>^{-1}>,
+  theorem Theorem_73_1_torus_presentation:
+  fixes T_torus :: "'a set" and TT :: "'a set set" and x0 :: 'a
+  assumes "top1_is_torus_on T_torus TT"
+  and "x0 \<in> T_torus"
+  shows "top1_groups_isomorphic_on
+  (top1_fundamental_group_carrier T_torus TT x0)
+  (top1_fundamental_group_mul T_torus TT x0)
+  (UNIV::(int \<times> int) set)
+  (\<lambda>(a1, a2) (b1, b2). (a1 + b1, a2 + b2))"
+  proof -
+
+
+### Theorem_73_4_dunce_cap [PROVED]
+File: AlgTop.thy:908
+  (** from \<S>73 Theorem 73.4: the n-fold dunce cap has fundamental group Z/nZ. **)
+  theorem Theorem_73_4_dunce_cap:
+  fixes n :: nat and X :: "'a set" and TX :: "'a set set" and x0 :: 'a
+  assumes "n > 0"
+  and "top1_is_dunce_cap_on X TX n"
+  and "x0 \<in> X"
+  shows "top1_groups_isomorphic_on
+  (top1_fundamental_group_carrier X TX x0)
+  (top1_fundamental_group_mul X TX x0)
+  (top1_Zn_group n)
+  (top1_Zn_mul n)"
+  proof -
+
+
+### Theorem_74_1_polygon_quotient_compact_hausdorff [PROVED]
+File: AlgTop.thy:1572
+  (** from \<S>74 Theorem 74.1: polygonal quotients are compact Hausdorff **)
+  theorem Theorem_74_1_polygon_quotient_compact_hausdorff:
+  fixes X :: "'a set" and TX :: "'a set set"
+  assumes "is_topology_on_strict X TX"
+  and "top1_is_polygonal_quotient_on X TX"
+  shows "top1_compact_on X TX \<and> is_hausdorff_on X TX"
+  proof -
+
+
+### Theorem_74_3_fund_group_n_torus [PROVED]
+File: AlgTop.thy:1650
+  (** from \<S>74 Theorem 74.3: fundamental group of n-fold torus T_n has the
+  theorem Theorem_74_3_fund_group_n_torus:
+  fixes n :: nat and X :: "'a set" and TX :: "'a set set" and x0 :: 'a
+  assumes "top1_is_n_fold_torus_on X TX n"
+  and "x0 \<in> X"
+  shows "\<exists>(G::'g set) mul e invg.
+  top1_group_presented_by_on G mul e invg ({..<2*n}::nat set)
+  { concat (map (\<lambda>i. [(2*i, True), (2*i+1, True),
+  (2*i, False), (2*i+1, False)]) [0..<n]) }
+  \<and> top1_groups_isomorphic_on G mul
+  (top1_fundamental_group_carrier X TX x0)
+  (top1_fundamental_group_mul X TX x0)"
+  proof -
+
+
+### Theorem_74_4_fund_group_m_projective [PROVED]
+File: AlgTop.thy:1682
+  (** from \<S>74 Theorem 74.4: \<pi>_1(P_m) has presentation \<langle>a_1, \<dots>, a_m | a_1² \<cdots> a_m²\<rangle>.
+  theorem Theorem_74_4_fund_group_m_projective:
+  fixes m :: nat and X :: "'a set" and TX :: "'a set set" and x0 :: 'a
+  assumes "top1_is_m_fold_projective_on X TX m"
+  and "x0 \<in> X"
+  shows "\<exists>(G::'g set) mul e invg.
+  top1_group_presented_by_on G mul e invg ({..<m}::nat set)
+  { concat (map (\<lambda>i. [(i, True), (i, True)]) [0..<m]) }
+  \<and> top1_groups_isomorphic_on G mul
+  (top1_fundamental_group_carrier X TX x0)
+  (top1_fundamental_group_mul X TX x0)"
+  proof -
+
+
+### Theorem_76_elementary_operations [HAS SORRY]
+File: AlgTop.thy:1713
+  (** from \<S>76: elementary operations on schemes preserve the resulting quotient space.
+  theorem Theorem_76_elementary_operations:
+  fixes scheme1 scheme2 :: "('a \<times> bool) list"
+  and X1 X2 :: "'x set" and TX1 TX2 :: "'x set set"
+  assumes "is_topology_on_strict X1 TX1" and "is_topology_on_strict X2 TX2"
+  and "top1_elementary_scheme_operation scheme1 scheme2"
+  and "top1_quotient_of_scheme_on X1 TX1 scheme1
+  \<and> top1_quotient_of_scheme_on X2 TX2 scheme2"
+  shows "\<exists>h. top1_homeomorphism_on X1 TX1 X2 TX2 h"
+  proof -
+
+
+### Theorem_75_1_H1_abelianization [PROVED]
+File: AlgTop.thy:1741
+  (** from \<S>75 Theorem 75.1: H_1(X, x_0) is the abelianization of \<pi>_1(X, x_0).
+  theorem Theorem_75_1_H1_abelianization:
+  fixes X :: "'a set" and TX :: "'a set set" and x0 :: 'a
+  assumes "is_topology_on X TX" and "x0 \<in> X"
+  shows "\<exists>(H :: (real \<Rightarrow> 'a) set set set) mulH eH invgH \<phi>.
+  top1_is_abelianization_of H mulH eH invgH
+  (top1_fundamental_group_carrier X TX x0)
+  (top1_fundamental_group_mul X TX x0)
+  (top1_fundamental_group_id X TX x0)
+  (top1_fundamental_group_invg X TX x0)
+  \<phi>"
+  proof -
+
+
+### Theorem_75_3_H1_n_torus [PROVED]
+File: AlgTop.thy:1839
+  (** from \<S>75 Theorem 75.3: H_1 of n-fold torus is free abelian of rank 2n.
+  theorem Theorem_75_3_H1_n_torus:
+  fixes n :: nat and X :: "'a set" and TX :: "'a set set" and x0 :: 'a
+  assumes "top1_is_n_fold_torus_on X TX n"
+  and "x0 \<in> X"
+  shows "\<exists>(H::'h set) mulH eH invgH \<iota>_S \<phi>.
+  top1_is_abelianization_of H mulH eH invgH
+  (top1_fundamental_group_carrier X TX x0)
+  (top1_fundamental_group_mul X TX x0)
+  (top1_fundamental_group_id X TX x0)
+  (top1_fundamental_group_invg X TX x0)
+  \<phi>
+  \<and> top1_is_free_abelian_group_full_on H mulH eH invgH
+  (\<iota>_S::nat \<Rightarrow> 'h) {..<2*n}"
+  proof -
+
+
+### Theorem_75_4_H1_m_projective [PROVED]
+File: AlgTop.thy:1875
+  (** from \<S>75 Theorem 75.4: H_1(m-fold projective plane):
+  theorem Theorem_75_4_H1_m_projective:
+  fixes m :: nat and X :: "'a set" and TX :: "'a set set" and x0 :: 'a
+  assumes "top1_is_m_fold_projective_on X TX m"
+  and "x0 \<in> X"
+  shows "\<exists>(H::'h set) mulH eH invgH \<phi>.
+  top1_is_abelianization_of H mulH eH invgH
+  (top1_fundamental_group_carrier X TX x0)
+  (top1_fundamental_group_mul X TX x0)
+  (top1_fundamental_group_id X TX x0)
+  (top1_fundamental_group_invg X TX x0)
+  \<phi>
+  \<and> card (top1_torsion_subgroup_on H mulH eH) = 2
+  \<and> (\<exists>(K::'h set) (\<iota>_S::nat \<Rightarrow> 'h).
+  K \<subseteq> H
+  \<and> top1_is_free_abelian_group_full_on K mulH eH invgH \<iota>_S {..<m-1}
+  \<and> K \<inter> top1_torsion_subgroup_on H mulH eH = {eH}
+  \<and> (\<forall>h\<in>H. \<exists>k\<in>K. \<exists>t\<in>top1_torsion_subgroup_on H mulH eH.
+  h = mulH k t))"
+  proof -
+
+
+### Theorem_78_1_triangulable_surface [PROVED]
+File: AlgTop.thy:2021
+  (** from \<S>78 Theorem 78.1: compact triangulable surfaces are quotients of
+  theorem Theorem_78_1_triangulable_surface:
+  fixes X :: "'a set" and TX :: "'a set set"
+  assumes "top1_is_surface_on X TX"
+  and "top1_is_triangulable_on X TX"
+  shows "\<exists>(\<T> :: (real \<times> real) set set) q.
+  finite \<T>
+  \<and> \<T> \<noteq> {}
+  \<and> (\<forall>T \<in> \<T>. top1_is_polygonal_region_on T 3)
+  \<comment> \<open>q on each triangle is continuous (not necessarily surjective).\<close>
+  \<and> (\<forall>T \<in> \<T>. top1_continuous_map_on T
+  (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) T)
+  X TX q)
+  \<comment> \<open>Together the triangles' images cover X.\<close>
+  \<and> (\<Union>T\<in>\<T>. q ` T) = X
+  \<comment> \<open>X has the final (quotient) topology w.r.t. q from the disjoint union of T's:
+  U \<subseteq> X is open iff its pre-image in every triangle is open there.\<close>
+  \<and> (\<forall>U. U \<subseteq> X \<longrightarrow>
+  (U \<in> TX \<longleftrightarrow>
+  (\<forall>T\<in>\<T>. {p\<in>T. q p \<in> U} \<in>
+  subspace_topology UNIV
+  (product_topology_on top1_open_sets top1_open_sets) T)))"
+  proof -
+
+
+### Theorem_78_2_connected_polygonal_quotient [PROVED]
+File: AlgTop.thy:2073
+  (** from \<S>78 Theorem 78.2: connected compact triangulable surfaces are
+  theorem Theorem_78_2_connected_polygonal_quotient:
+  fixes X :: "'a set" and TX :: "'a set set"
+  assumes "top1_is_surface_on X TX"
+  and "top1_connected_on X TX"
+  and "top1_is_triangulable_on X TX"
+  shows "\<exists>(P :: (real \<times> real) set) n q.
+  top1_is_polygonal_region_on P n
+  \<and> top1_quotient_map_on P
+  (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P)
+  X TX q"
+  proof -
+
+
+### Theorem_77_5_classification [PROVED]
+File: AlgTop.thy:2107
+  (** from \<S>77 Theorem 77.5: Classification theorem for compact surfaces.
+  theorem Theorem_77_5_classification:
+  fixes X :: "'a set" and TX :: "'a set set"
+  assumes "top1_is_surface_on X TX"
+  and "top1_is_triangulable_on X TX"
+  shows "(\<exists>h. top1_homeomorphism_on X TX top1_S2 top1_S2_topology h)
+  \<or> (\<exists>n > 0. \<exists>(T_n::'a set) TT h.
+  top1_is_n_fold_torus_on T_n TT n
+  \<and> top1_homeomorphism_on X TX T_n TT h)
+  \<or> (\<exists>m > 0. \<exists>(P_m::'a set) TP h.
+  top1_is_m_fold_projective_on P_m TP m
+  \<and> top1_homeomorphism_on X TX P_m TP h)"
+  proof -
+
+
+### Theorem_79_2 [PROVED]
+File: AlgTop.thy:3494
+  (** from \<S>79 Theorem 79.2: pointed covering equivalence iff fundamental group
+  theorem Theorem_79_2:
+  assumes "is_topology_on_strict E TE" and "is_topology_on_strict B TB"
+  and "is_topology_on_strict E' TE'"
+  and "top1_covering_map_on E TE B TB p" and "p e0 = b0"
+  and "top1_covering_map_on E' TE' B TB p'" and "p' e0' = b0"
+  and "top1_path_connected_on E TE" and "top1_path_connected_on E' TE'"
+  and "top1_locally_path_connected_on E TE" and "top1_locally_path_connected_on E' TE'"
+  and "e0 \<in> E" and "e0' \<in> E'" and "b0 \<in> B"
+  shows "(\<exists>h. top1_homeomorphism_on E TE E' TE' h \<and> (\<forall>e\<in>E. p' (h e) = p e)
+  \<and> h e0 = e0') \<longleftrightarrow>
+  top1_fundamental_group_image_hom E TE e0 B TB b0 p
+  = top1_fundamental_group_image_hom E' TE' e0' B TB b0 p'"
+  proof
+
+
+### Theorem_79_4 [PROVED]
+File: AlgTop.thy:4303
+  (** from \<S>79 Theorem 79.4: coverings are equivalent iff their subgroup images
+  theorem Theorem_79_4:
+  assumes "is_topology_on_strict E TE" and "is_topology_on_strict B TB"
+  and "is_topology_on_strict E' TE'"
+  and "top1_covering_map_on E TE B TB p" and "p e0 = b0"
+  and "top1_covering_map_on E' TE' B TB p'" and "p' e0' = b0"
+  and "top1_path_connected_on E TE" and "top1_path_connected_on E' TE'"
+  and "top1_locally_path_connected_on E TE" and "top1_locally_path_connected_on E' TE'"
+  and "e0 \<in> E" and "e0' \<in> E'" and "b0 \<in> B"
+  shows "(\<exists>h. top1_homeomorphism_on E TE E' TE' h \<and> (\<forall>e\<in>E. p' (h e) = p e)) \<longleftrightarrow>
+  (\<exists>c \<in> top1_fundamental_group_carrier B TB b0.
+  top1_fundamental_group_image_hom E' TE' e0' B TB b0 p'
+  = (\<lambda>H. (top1_fundamental_group_mul B TB b0 c)
+  ` ((\<lambda>h. top1_fundamental_group_mul B TB b0 h
+  (top1_fundamental_group_invg B TB b0 c)) ` H))
+  (top1_fundamental_group_image_hom E TE e0 B TB b0 p))"
+  proof
+
+
+### Theorem_80_1_universal_unique [PROVED]
+File: AlgTop.thy:5315
+  (** from \<S>80: any two universal covering spaces are equivalent (via Theorem 79.4). **)
+  theorem Theorem_80_1_universal_unique:
+  assumes "is_topology_on_strict B TB"
+  and "top1_is_universal_covering_on E TE B TB p"
+  and "top1_is_universal_covering_on E' TE' B TB p'"
+  and "is_topology_on_strict E TE" and "is_topology_on_strict E' TE'"
+  and "top1_path_connected_on E TE" and "top1_path_connected_on E' TE'"
+  and "top1_locally_path_connected_on E TE" and "top1_locally_path_connected_on E' TE'"
+  and "p e0 = b0" and "p' e0' = b0"
+  and "e0 \<in> E" and "e0' \<in> E'"
+  shows "\<exists>h. top1_homeomorphism_on E TE E' TE' h \<and> (\<forall>e\<in>E. p' (h e) = p e)"
+  proof -
+
+
+### Theorem_80_3_universal [PROVED]
+File: AlgTop.thy:5784
+  (** from \<S>80 Theorem 80.3: universal covering factors through any covering **)
+  theorem Theorem_80_3_universal:
+  assumes "is_topology_on_strict E TE" and "is_topology_on_strict B TB"
+  and "is_topology_on_strict Y TY"
+  and "top1_covering_map_on E TE B TB p"
+  and "top1_simply_connected_on E TE"
+  and "top1_covering_map_on Y TY B TB r"
+  and "top1_locally_path_connected_on E TE"
+  shows "\<exists>q. top1_covering_map_on E TE Y TY q \<and> (\<forall>e\<in>E. r (q e) = p e)"
+  proof (cases "E = {}")
+
+
+### Theorem_80_3_universal_strict [HAS SORRY]
+File: AlgTop.thy:6046
+  text \<open>Strict version of Theorem_80_3 — same statement but with simply_connected_strict.\<close>
+  corollary Theorem_80_3_universal_strict:
+  assumes "top1_simply_connected_strict E TE"
+  and "is_topology_on_strict B TB"
+  and "is_topology_on_strict Y TY"
+  and "top1_covering_map_on E TE B TB p"
+  and "top1_covering_map_on Y TY B TB r"
+  and "top1_locally_path_connected_on E TE"
+  shows "\<exists>q. top1_covering_map_on E TE Y TY q \<and> (\<forall>e\<in>E. r (q e) = p e)"
+  using Theorem_80_3_universal[of E TE B TB Y TY p r]
+  top1_simply_connected_strict_imp[OF assms(1)]
+  top1_simply_connected_strict_is_topology_strict[OF assms(1)]
+  assms(2-6) by (by100 blast)
+  
+  section \<open>*\<S>81 Covering Transformations\<close>
+  
+  text \<open>A covering transformation of p : E \<rightarrow> B is a homeomorphism h : E \<rightarrow> E
+  with p \<circ> h = p. The group of covering transformations acts on the fiber.\<close>
+  definition top1_covering_transformation_on :: "'e set \<Rightarrow> 'e set set \<Rightarrow> 'b set \<Rightarrow> 'b set set
+  \<Rightarrow> ('e \<Rightarrow> 'b) \<Rightarrow> ('e \<Rightarrow> 'e) \<Rightarrow> bool" where
+  "top1_covering_transformation_on E TE B TB p h \<longleftrightarrow>
+  top1_homeomorphism_on E TE E TE h \<and> (\<forall>e\<in>E. p (h e) = p e)"
+  
+  (** from *\<S>81 Theorem 81.2: the group of covering transformations Cov(p) is
+  isomorphic to N(H)/H, where H = p_*(\<pi>_1(E, e_0)) and N(H) is its normalizer
+  in \<pi>_1(B, b_0). **)
+  theorem Theorem_81_2_covering_group_iso:
+  fixes E :: "'e set" and TE :: "'e set set"
+  and B :: "'b set" and TB :: "'b set set"
+  and p :: "'e \<Rightarrow> 'b" and b0 :: 'b and e0 :: 'e
+  assumes "is_topology_on_strict E TE" and "is_topology_on_strict B TB"
+
+
+### Theorem_81_2_covering_group_iso [HAS SORRY]
+File: AlgTop.thy:6071
+  (** from *\<S>81 Theorem 81.2: the group of covering transformations Cov(p) is
+  theorem Theorem_81_2_covering_group_iso:
+  fixes E :: "'e set" and TE :: "'e set set"
+  and B :: "'b set" and TB :: "'b set set"
+  and p :: "'e \<Rightarrow> 'b" and b0 :: 'b and e0 :: 'e
+  assumes "is_topology_on_strict E TE" and "is_topology_on_strict B TB"
+  and "top1_covering_map_on E TE B TB p"
+  and "top1_path_connected_on E TE"
+  and "top1_locally_path_connected_on E TE"
+  and "e0 \<in> E" and "p e0 = b0"
+  shows "\<exists>(Cov::('e \<Rightarrow> 'e) set) eC invgC.
+  Cov = {h. top1_covering_transformation_on E TE B TB p h}
+  \<and> top1_is_group_on Cov (\<lambda>h k e. h (k e)) eC invgC
+  \<and> top1_groups_isomorphic_on Cov (\<lambda>h k e. h (k e))
+  (top1_quotient_group_carrier_on
+  (top1_normalizer_on
+  (top1_fundamental_group_carrier B TB b0)
+  (top1_fundamental_group_mul B TB b0)
+  (top1_fundamental_group_invg B TB b0)
+  (top1_fundamental_group_image_hom E TE e0 B TB b0 p))
+  (top1_fundamental_group_mul B TB b0)
+  (top1_fundamental_group_image_hom E TE e0 B TB b0 p))
+  (top1_quotient_group_mul_on (top1_fundamental_group_mul B TB b0))"
+  proof -
+
+
+### Theorem_82_1_covering_existence [PROVED]
+File: AlgTop.thy:6134
+  (** from \<S>82 Theorem 82.1: existence of covering space for any subgroup.
+  theorem Theorem_82_1_covering_existence:
+  assumes "is_topology_on_strict B TB"
+  and "top1_path_connected_on B TB"
+  and "top1_locally_path_connected_on B TB"
+  and "top1_semilocally_simply_connected_on B TB"
+  and "b0 \<in> B"
+  and "H \<subseteq> top1_fundamental_group_carrier B TB b0"
+  \<comment> \<open>H must be a subgroup, not just a subset.\<close>
+  and "top1_is_group_on H
+  (top1_fundamental_group_mul B TB b0)
+  (top1_fundamental_group_id B TB b0)
+  (top1_fundamental_group_invg B TB b0)"
+  shows "\<exists>E TE p e0. is_topology_on_strict E TE
+  \<and> top1_covering_map_on E TE B TB p
+  \<and> top1_path_connected_on E TE
+  \<and> top1_locally_path_connected_on E TE
+  \<and> e0 \<in> E \<and> p e0 = b0
+  \<and> top1_fundamental_group_image_hom E TE e0 B TB b0 p = H"
+  proof -
+
+
+### Theorem_83_2_covering_of_graph_is_graph [PROVED]
+File: AlgTop.thy:6231
+  (** from \<S>83 Theorem 83.2: any covering space of a graph is itself a graph. **)
+  theorem Theorem_83_2_covering_of_graph_is_graph:
+  assumes "top1_is_graph_on B TB"
+  and "top1_covering_map_on E TE B TB p"
+  shows "top1_is_graph_on E TE"
+  proof -
+
+
+### Theorem_84_7_fund_group_graph_is_free [PROVED]
+File: AlgTop.thy:6266
+  (** from \<S>84 Theorem 84.7: the fundamental group of a connected graph is free.
+  theorem Theorem_84_7_fund_group_graph_is_free:
+  fixes X :: "'a set" and TX :: "'a set set" and x0 :: 'a
+  assumes "top1_is_graph_on X TX"
+  and "top1_connected_on X TX"
+  and "x0 \<in> X"
+  shows "\<exists>(G::'g set) mul e invg (\<iota>::'s \<Rightarrow> 'g) S.
+  top1_is_free_group_full_on G mul e invg \<iota> S
+  \<and> top1_groups_isomorphic_on G mul
+  (top1_fundamental_group_carrier X TX x0)
+  (top1_fundamental_group_mul X TX x0)"
+  proof -
+
+
+### Theorem_85_1_Nielsen_Schreier [PROVED]
+File: AlgTop.thy:6323
+  (** from \<S>85 Theorem 85.1 (Nielsen-Schreier): subgroups of free groups are free.
+  theorem Theorem_85_1_Nielsen_Schreier:
+  fixes G :: "'g set" and mul :: "'g \<Rightarrow> 'g \<Rightarrow> 'g"
+  and e :: 'g and invg :: "'g \<Rightarrow> 'g"
+  and \<iota> :: "'s \<Rightarrow> 'g" and S :: "'s set"
+  and H :: "'g set"
+  assumes "top1_is_free_group_full_on G mul e invg \<iota> S"
+  and "top1_is_group_on H mul e invg"
+  and "H \<subseteq> G"
+  shows "\<exists>(\<iota>H::'t \<Rightarrow> 'g) SH.
+  top1_is_free_group_full_on H mul e invg \<iota>H SH"
+  proof -
+
+
+### Theorem_85_3_Schreier_index [PROVED]
+File: AlgTop.thy:6363
+  (** from \<S>85 Theorem 85.3: Schreier index formula.
+  theorem Theorem_85_3_Schreier_index:
+  fixes F :: "'g set" and mul :: "'g \<Rightarrow> 'g \<Rightarrow> 'g"
+  and e :: 'g and invg :: "'g \<Rightarrow> 'g"
+  and \<iota>F :: "'s \<Rightarrow> 'g" and S :: "'s set"
+  and H :: "'g set"
+  and n k :: nat
+  assumes "top1_is_free_group_full_on F mul e invg \<iota>F S"
+  and "card S = n + 1"
+  and "H \<subseteq> F"
+  and "top1_is_group_on H mul e invg"
+  and "top1_subgroup_has_index_on F mul H k"
+  shows "\<exists>(\<iota>H::'t \<Rightarrow> 'g) SH.
+  top1_is_free_group_full_on H mul e invg \<iota>H SH
+  \<and> card SH = k * n + 1"
+  proof -
+
