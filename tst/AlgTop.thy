@@ -6117,17 +6117,24 @@ proof -
                 proof (intro conjI ballI)
                   fix t assume "t \<in> I_set" thus "\<psi> t \<in> I_set" by (rule hrange)
                 next
-                  fix W assume "W \<in> I_top"
-                  have "{t \<in> I_set. \<psi> t \<in> W} = \<psi> -` W \<inter> I_set" by (by100 blast)
-                  also have "\<dots> \<in> I_top"
+                  fix V assume hV: "V \<in> I_top"
+                  obtain W where hW: "open W" and hVW: "V = I_set \<inter> W"
+                    using hV unfolding top1_unit_interval_topology_def subspace_topology_def
+                      top1_open_sets_def by (by100 blast)
+                  have hpre_W: "{t \<in> I_set. \<psi> t \<in> W} \<in> I_top"
                   proof -
-                    have "open_in (top_of_set I_set) (\<psi> -` W \<inter> I_set)"
-                      using hcont \<open>W \<in> I_top\<close>
-                      sorry \<comment> \<open>continuous_on I_set ψ + W open in I_top → preimage open in I_top.
-                         Needs the equivalence between continuous_on and preimage-open.\<close>
-                    thus ?thesis sorry
+                    have "\<exists>T. open T \<and> T \<inter> I_set = \<psi> -` W \<inter> I_set"
+                      using hcont hW unfolding continuous_on_open_invariant by (by100 force)
+                    then obtain T where hT: "open T" and hTeq: "T \<inter> I_set = \<psi> -` W \<inter> I_set"
+                      by (by100 blast)
+                    have "{t \<in> I_set. \<psi> t \<in> W} = I_set \<inter> T" using hTeq by (by100 blast)
+                    moreover have "T \<in> top1_open_sets" using hT unfolding top1_open_sets_def by (by100 blast)
+                    ultimately show ?thesis
+                      unfolding top1_unit_interval_topology_def subspace_topology_def by (by100 blast)
                   qed
-                  finally show "{t \<in> I_set. \<psi> t \<in> W} \<in> I_top" .
+                  have "{t \<in> I_set. \<psi> t \<in> V} = {t \<in> I_set. \<psi> t \<in> W}"
+                    using hVW hrange by (by100 blast)
+                  thus "{t \<in> I_set. \<psi> t \<in> V} \<in> I_top" using hpre_W by (by100 simp)
                 qed
               qed
               \<comment> \<open>reparam gives: piece∘id ≃ piece∘ψ in U (or V).\<close>
