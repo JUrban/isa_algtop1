@@ -6037,9 +6037,10 @@ proof -
               \<comment> \<open>pp(first_h, second_h) agrees with piece∘ψ on I_set, hence homotopic.\<close>
               have hpp_eq_piece_psi: "\<And>t. t \<in> I_set \<Longrightarrow>
                   top1_path_product first_h second_h t = piece
-                    (if t \<le> 1/2 then t * (p - s k) / (s (Suc k) - s k) * 2
+                    (if t \<le> 1/2 then 2 * t * (p - s k) / (s (Suc k) - s k)
                      else (p - s k + (2*t-1) * (s (Suc k) - p)) / (s (Suc k) - s k))"
-                sorry \<comment> \<open>Algebra: unfold pp/first_h/second_h/piece, use hd_pos to cancel denominators.\<close>
+                unfolding top1_path_product_def first_h_def second_h_def piece_def
+                using hd_pos by (by100 simp)
               have hhom: "(\<exists>S. S = U \<and> top1_path_homotopic_on S (subspace_topology X TX S)
                   (piece 0) (piece 1) piece (top1_path_product first_h second_h))
                   \<or> (\<exists>S. S = V \<and> top1_path_homotopic_on S (subspace_topology X TX S)
