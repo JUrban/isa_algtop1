@@ -6867,188 +6867,6 @@ proof -
           unfolding piece_bot_def by (by100 simp)
         finally show ?thesis .
       qed
-      \<comment> \<open>Key: broken-line homotopy in each cell gives σ equation.\<close>
-      have h\<sigma>_cell: "\<And>i. i < ns' \<Longrightarrow>
-          \<sigma> (piece_top i) = mulH (\<sigma> (\<beta> i)) (mulH (\<sigma> (piece_bot i)) (invgH (\<sigma> (\<beta> (Suc i)))))"
-      proof -
-        fix i assume hi: "i < ns'"
-        \<comment> \<open>Step 1: piece_top i * β(Suc i) ≃_p β i * piece_bot i (in U or V).
-           Both are paths from F(sub_s' i, sub_t j) to F(sub_s'(Suc i), sub_t(Suc j)),
-           traversing the boundary of the cell via different edges.
-           The straight-line homotopy in the convex cell [s_i,s_{i+1}]×[t_j,t_{j+1}],
-           composed with F, gives a path homotopy in U (or V).\<close>
-        define pp1 where "pp1 = top1_path_product (piece_top i) (\<beta> (Suc i))"
-        define pp2 where "pp2 = top1_path_product (\<beta> i) (piece_bot i)"
-        have hpath_hom: "top1_path_homotopic_on U (subspace_topology X TX U) (pp1 0) (pp1 1) pp1 pp2
-          \<or> top1_path_homotopic_on V (subspace_topology X TX V) (pp1 0) (pp1 1) pp1 pp2"
-          sorry \<comment> \<open>Broken-line homotopy: straight-line in convex rectangle composed with F.
-             Both broken-line paths traverse cell boundary from corner (s_i, t_j) to (s_{i+1}, t_{j+1}).
-             The cell is convex, so any two paths between same endpoints are path-homotopic.
-             Composed with F (continuous, cell→U or V), gives path homotopy in U or V.\<close>
-        \<comment> \<open>Step 2: σ_cond1 gives σ-equality of the path products.\<close>
-        have h\<sigma>_products: "\<sigma> pp1 = \<sigma> pp2"
-        proof -
-          from hpath_hom show ?thesis
-          proof
-            assume "top1_path_homotopic_on U (subspace_topology X TX U) (pp1 0) (pp1 1) pp1 pp2"
-            thus ?thesis by (rule h\<sigma>_cond1)
-          next
-            assume "top1_path_homotopic_on V (subspace_topology X TX V) (pp1 0) (pp1 1) pp1 pp2"
-            thus ?thesis by (rule h\<sigma>_cond1_V)
-          qed
-        qed
-        \<comment> \<open>Step 3: σ_cond2 splits the products.\<close>
-        have h_split_LHS: "\<sigma> pp1 = mulH (\<sigma> (piece_top i)) (\<sigma> (\<beta> (Suc i)))"
-          sorry \<comment> \<open>σ_cond2: piece_top i is path in U/V, β(Suc i) is path in U/V, endpoints match.\<close>
-        have h_split_RHS: "\<sigma> pp2 = mulH (\<sigma> (\<beta> i)) (\<sigma> (piece_bot i))"
-          sorry \<comment> \<open>σ_cond2: β i is path in U/V, piece_bot i is path in U/V, endpoints match.\<close>
-        \<comment> \<open>Step 4: Combine and rearrange.\<close>
-        have h_eq: "mulH (\<sigma> (piece_top i)) (\<sigma> (\<beta> (Suc i))) = mulH (\<sigma> (\<beta> i)) (\<sigma> (piece_bot i))"
-          using h\<sigma>_products h_split_LHS h_split_RHS by (by100 simp)
-        \<comment> \<open>Rearrange: σ(pt) = σ(β i) · σ(pb) · inv(σ(β(i+1)))\<close>
-        have hpt_H: "\<sigma> (piece_top i) \<in> H"
-          sorry \<comment> \<open>h_σ_piece_in_H applied to row_fn j\<close>
-        have hpb_H: "\<sigma> (piece_bot i) \<in> H"
-          sorry \<comment> \<open>h_σ_piece_in_H applied to row_fn (Suc j)\<close>
-        have h\<beta>i_H: "\<sigma> (\<beta> i) \<in> H"
-          sorry \<comment> \<open>From h_β_H proof pattern (β in U or V)\<close>
-        have h\<beta>Si_H: "\<sigma> (\<beta> (Suc i)) \<in> H"
-          sorry \<comment> \<open>Same\<close>
-        show "\<sigma> (piece_top i) = mulH (\<sigma> (\<beta> i)) (mulH (\<sigma> (piece_bot i)) (invgH (\<sigma> (\<beta> (Suc i)))))"
-          sorry \<comment> \<open>Group algebra: from h_eq (σ(pt)·σ(β_{i+1}) = σ(β_i)·σ(pb)),
-             multiply by inv(σ(β_{i+1})) on right, then cancel + reassociate.
-             Uses: associativity, right inverse, right identity.
-             All group facts available from hH once hmulH_assoc etc are in scope.\<close>
-      qed
-      \<comment> \<open>β_0 is constant at x0 (since sub_s' 0 = 0 and F(0,t) = x0).\<close>
-      \<comment> \<open>σ of a constant-on-I_set path = eH.\<close>
-      have h\<sigma>_const: "\<And>c. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> c t = x0) \<Longrightarrow> \<sigma> c = eH"
-      proof -
-        fix c :: "real \<Rightarrow> 'a" assume hc: "\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> c t = x0"
-        \<comment> \<open>c agrees with constant_path x0 on I_set.\<close>
-        have hc_eq: "\<sigma> c = \<sigma> (\<lambda>_. x0)"
-        proof (rule h\<sigma>_I_cong, intro allI impI)
-          fix t :: real assume "0 \<le> t \<and> t \<le> 1"
-          thus "c t = (\<lambda>_. x0) t" using hc by (by100 simp)
-        qed
-        \<comment> \<open>σ(constant_path x0) = eH via group law.\<close>
-        define cx where "cx = (\<lambda>_::real. x0)"
-        have hcx_loop_U: "top1_is_path_on U (subspace_topology X TX U) x0 x0 cx"
-          unfolding cx_def using top1_constant_path_is_path[OF hTopU hx0_U]
-          unfolding top1_constant_path_def by (by100 simp)
-        have hcx_pp: "\<sigma> (top1_path_product cx cx) = \<sigma> cx"
-        proof (rule h\<sigma>_I_cong, intro allI impI)
-          fix t :: real assume ht: "0 \<le> t \<and> t \<le> 1"
-          show "top1_path_product cx cx t = cx t"
-            unfolding top1_path_product_def cx_def by (by100 simp)
-        qed
-        have hcx0: "cx 0 = x0" and hcx1: "cx 1 = x0" unfolding cx_def by (by100 simp)+
-        have hcx_path_gen: "top1_is_path_on U (subspace_topology X TX U) (cx 0) (cx 1) cx"
-          using hcx_loop_U hcx0 hcx1 by (by100 simp)
-        have hcx_match: "cx 1 = cx 0" using hcx0 hcx1 by (by100 simp)
-        have h1: "\<sigma> (top1_path_product cx cx) = mulH (\<sigma> cx) (\<sigma> cx)"
-          using h\<sigma>_cond2[OF hcx_path_gen hcx_path_gen hcx_match] .
-        have h\<sigma>cx_H: "\<sigma> cx \<in> H" using h\<sigma>_path_in_H[OF hcx_path_gen] .
-        have hidem: "mulH (\<sigma> cx) (\<sigma> cx) = \<sigma> cx" using h1 hcx_pp by (by100 simp)
-        have "\<sigma> cx = eH"
-        proof -
-          have hinvH: "invgH (\<sigma> cx) \<in> H" by (rule group_inv_closed[OF hH h\<sigma>cx_H])
-          have "mulH (\<sigma> cx) (invgH (\<sigma> cx)) = eH" by (rule group_inv_right[OF hH h\<sigma>cx_H])
-          have "mulH (mulH (\<sigma> cx) (\<sigma> cx)) (invgH (\<sigma> cx))
-              = mulH (\<sigma> cx) (invgH (\<sigma> cx))" using hidem by (by100 simp)
-          moreover have "mulH (mulH (\<sigma> cx) (\<sigma> cx)) (invgH (\<sigma> cx))
-              = mulH (\<sigma> cx) (mulH (\<sigma> cx) (invgH (\<sigma> cx)))"
-            using hH h\<sigma>cx_H hinvH unfolding top1_is_group_on_def by (by100 force)
-          ultimately have "mulH (\<sigma> cx) (mulH (\<sigma> cx) (invgH (\<sigma> cx))) = eH"
-            using \<open>mulH (\<sigma> cx) (invgH (\<sigma> cx)) = eH\<close> by (by100 simp)
-          hence "mulH (\<sigma> cx) eH = eH"
-            using \<open>mulH (\<sigma> cx) (invgH (\<sigma> cx)) = eH\<close> by (by100 simp)
-          thus ?thesis using group_id_right[OF hH h\<sigma>cx_H] by (by100 simp)
-        qed
-        thus "\<sigma> c = eH" using hc_eq cx_def by (by100 simp)
-      qed
-      have h\<beta>0: "\<sigma> (\<beta> 0) = eH"
-      proof (rule h\<sigma>_const)
-        show "\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> \<beta> 0 t = x0"
-        proof (intro allI impI)
-          fix t :: real assume "0 \<le> t \<and> t \<le> 1"
-          have "\<beta> 0 t = F (sub_s' 0, sub_t j + t * (sub_t (Suc j) - sub_t j))"
-            unfolding \<beta>_def by (by100 simp)
-          also have "sub_s' 0 = 0" using hs0' .
-          hence "F (sub_s' 0, sub_t j + t * (sub_t (Suc j) - sub_t j))
-              = F (0, sub_t j + t * (sub_t (Suc j) - sub_t j))" by (by100 simp)
-          also have "\<dots> = x0"
-          proof -
-            have "sub_t j + t * (sub_t (Suc j) - sub_t j) \<in> I_set"
-            proof -
-              have "j \<le> nt" using hj by (by100 presburger)
-              have "Suc j \<le> nt" using hj by (by100 presburger)
-              have "0 \<le> sub_t j" using hsubt_ge[OF \<open>j \<le> nt\<close>] .
-              have "sub_t (Suc j) \<le> 1" using hsubt_le[OF \<open>Suc j \<le> nt\<close>] .
-              have "sub_t j \<le> sub_t (Suc j)" using htinc hj by (by100 force)
-              have "sub_t (Suc j) - sub_t j \<ge> 0" using \<open>sub_t j \<le> sub_t (Suc j)\<close> by (by100 linarith)
-              have "t * (sub_t (Suc j) - sub_t j) \<ge> 0"
-                by (rule mult_nonneg_nonneg) (use \<open>0 \<le> t \<and> t \<le> 1\<close> \<open>sub_t (Suc j) - sub_t j \<ge> 0\<close> in \<open>by100 linarith\<close>)+
-              have "t * (sub_t (Suc j) - sub_t j) \<le> sub_t (Suc j) - sub_t j"
-              proof -
-                have "t \<le> 1" using \<open>0 \<le> t \<and> t \<le> 1\<close> by (by100 linarith)
-                have "t * (sub_t (Suc j) - sub_t j) \<le> 1 * (sub_t (Suc j) - sub_t j)"
-                  by (rule mult_right_mono[OF \<open>t \<le> 1\<close> \<open>sub_t (Suc j) - sub_t j \<ge> 0\<close>])
-                thus ?thesis by (by100 simp)
-              qed
-              have hge: "sub_t j + t * (sub_t (Suc j) - sub_t j) \<ge> 0"
-                using \<open>0 \<le> sub_t j\<close> \<open>t * (sub_t (Suc j) - sub_t j) \<ge> 0\<close> by (by100 linarith)
-              have hle: "sub_t j + t * (sub_t (Suc j) - sub_t j) \<le> 1"
-                using \<open>sub_t (Suc j) \<le> 1\<close> \<open>t * (sub_t (Suc j) - sub_t j) \<le> sub_t (Suc j) - sub_t j\<close>
-                by (by100 linarith)
-              show ?thesis unfolding top1_unit_interval_def using hge hle by (by100 force)
-            qed
-            thus ?thesis using hF_0t by (by100 blast)
-          qed
-          finally show "\<beta> 0 t = x0" .
-        qed
-      qed
-      have h\<beta>n: "\<sigma> (\<beta> ns') = eH"
-      proof (rule h\<sigma>_const)
-        show "\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> \<beta> ns' t = x0"
-        proof (intro allI impI)
-          fix t :: real assume "0 \<le> t \<and> t \<le> 1"
-          have "\<beta> ns' t = F (sub_s' ns', sub_t j + t * (sub_t (Suc j) - sub_t j))"
-            unfolding \<beta>_def by (by100 simp)
-          also have "sub_s' ns' = 1" using hsn' .
-          hence "F (sub_s' ns', sub_t j + t * (sub_t (Suc j) - sub_t j))
-              = F (1, sub_t j + t * (sub_t (Suc j) - sub_t j))" by (by100 simp)
-          also have "\<dots> = x0"
-          proof -
-            have "sub_t j + t * (sub_t (Suc j) - sub_t j) \<in> I_set"
-            proof -
-              have "0 \<le> sub_t j" using hsubt_ge[OF hj_le_nt] .
-              have "sub_t (Suc j) \<le> 1" using hsubt_le[OF hSj_le_nt] .
-              have "sub_t j \<le> sub_t (Suc j)" using htinc hj by (by100 force)
-              have "sub_t (Suc j) - sub_t j \<ge> 0" using \<open>sub_t j \<le> sub_t (Suc j)\<close> by (by100 linarith)
-              have "t * (sub_t (Suc j) - sub_t j) \<ge> 0"
-                by (rule mult_nonneg_nonneg) (use \<open>0 \<le> t \<and> t \<le> 1\<close> \<open>sub_t (Suc j) - sub_t j \<ge> 0\<close> in \<open>by100 linarith\<close>)+
-              have "t * (sub_t (Suc j) - sub_t j) \<le> sub_t (Suc j) - sub_t j"
-              proof -
-                have "t \<le> 1" using \<open>0 \<le> t \<and> t \<le> 1\<close> by (by100 linarith)
-                have "t * (sub_t (Suc j) - sub_t j) \<le> 1 * (sub_t (Suc j) - sub_t j)"
-                  by (rule mult_right_mono[OF \<open>t \<le> 1\<close> \<open>sub_t (Suc j) - sub_t j \<ge> 0\<close>])
-                thus ?thesis by (by100 simp)
-              qed
-              have hge: "sub_t j + t * (sub_t (Suc j) - sub_t j) \<ge> 0"
-                using \<open>0 \<le> sub_t j\<close> \<open>t * (sub_t (Suc j) - sub_t j) \<ge> 0\<close> by (by100 linarith)
-              have hle: "sub_t j + t * (sub_t (Suc j) - sub_t j) \<le> 1"
-                using \<open>sub_t (Suc j) \<le> 1\<close> \<open>t * (sub_t (Suc j) - sub_t j) \<le> sub_t (Suc j) - sub_t j\<close>
-                by (by100 linarith)
-              show ?thesis unfolding top1_unit_interval_def using hge hle by (by100 force)
-            qed
-            thus ?thesis using hF_1t by (by100 blast)
-          qed
-          finally show "\<beta> ns' t = x0" .
-        qed
-      qed
-      \<comment> \<open>Telescoping: Π σ(piece_top_i) = σ(β_0) · Π σ(piece_bot_i) · σ(β_{ns'})⁻¹ = Π σ(piece_bot_i).\<close>
-      \<comment> \<open>Group facts needed for telescoping.\<close>
       have heH: "eH \<in> H" using hH unfolding top1_is_group_on_def by (by100 fast)
       have hmulH_assoc: "\<And>a b c. a \<in> H \<Longrightarrow> b \<in> H \<Longrightarrow> c \<in> H \<Longrightarrow> mulH (mulH a b) c = mulH a (mulH b c)"
         using hH unfolding top1_is_group_on_def by (by100 blast)
@@ -7097,12 +6915,27 @@ proof -
         fix i assume hi: "i \<le> ns'"
         show "\<sigma> (\<beta> i) \<in> H"
         proof (cases "i = 0")
-          case True thus ?thesis using h\<beta>0 heH by (by100 simp)
+          case True
+          \<comment> \<open>β(0) is constant at x0 → σ(β 0) = eH (same argument as h_σ_const)\<close>
+          have "\<sigma> (\<beta> 0) \<in> H"
+          proof -
+            have "top1_is_path_on U (subspace_topology X TX U) (\<beta> 0 0) (\<beta> 0 1) (\<beta> 0)"
+              sorry \<comment> \<open>β 0 constant at x0, x0 ∈ U, continuous → path in U\<close>
+            thus ?thesis by (rule h\<sigma>_path_in_H)
+          qed
+          thus ?thesis using True by (by100 simp)
         next
           case False
           show ?thesis
           proof (cases "i = ns'")
-            case True thus ?thesis using h\<beta>n heH by (by100 simp)
+            case True
+            have "\<sigma> (\<beta> ns') \<in> H"
+            proof -
+              have "top1_is_path_on U (subspace_topology X TX U) (\<beta> ns' 0) (\<beta> ns' 1) (\<beta> ns')"
+                sorry \<comment> \<open>β ns' constant at x0, x0 ∈ U, continuous → path in U\<close>
+              thus ?thesis by (rule h\<sigma>_path_in_H)
+            qed
+            thus ?thesis using True by (by100 simp)
           next
             case False2: False
             \<comment> \<open>0 < i < ns'. β(i) lies on boundary of cell (i-1, j) which maps to U or V.\<close>
@@ -7273,6 +7106,201 @@ proof -
           qed
         qed
       qed
+      \<comment> \<open>Key: broken-line homotopy in each cell gives σ equation.\<close>
+      have h\<sigma>_cell: "\<And>i. i < ns' \<Longrightarrow>
+          \<sigma> (piece_top i) = mulH (\<sigma> (\<beta> i)) (mulH (\<sigma> (piece_bot i)) (invgH (\<sigma> (\<beta> (Suc i)))))"
+      proof -
+        fix i assume hi: "i < ns'"
+        \<comment> \<open>Step 1: piece_top i * β(Suc i) ≃_p β i * piece_bot i (in U or V).
+           Both are paths from F(sub_s' i, sub_t j) to F(sub_s'(Suc i), sub_t(Suc j)),
+           traversing the boundary of the cell via different edges.
+           The straight-line homotopy in the convex cell [s_i,s_{i+1}]×[t_j,t_{j+1}],
+           composed with F, gives a path homotopy in U (or V).\<close>
+        define pp1 where "pp1 = top1_path_product (piece_top i) (\<beta> (Suc i))"
+        define pp2 where "pp2 = top1_path_product (\<beta> i) (piece_bot i)"
+        have hpath_hom: "top1_path_homotopic_on U (subspace_topology X TX U) (pp1 0) (pp1 1) pp1 pp2
+          \<or> top1_path_homotopic_on V (subspace_topology X TX V) (pp1 0) (pp1 1) pp1 pp2"
+          sorry \<comment> \<open>Broken-line homotopy: straight-line in convex rectangle composed with F.
+             Both broken-line paths traverse cell boundary from corner (s_i, t_j) to (s_{i+1}, t_{j+1}).
+             The cell is convex, so any two paths between same endpoints are path-homotopic.
+             Composed with F (continuous, cell→U or V), gives path homotopy in U or V.\<close>
+        \<comment> \<open>Step 2: σ_cond1 gives σ-equality of the path products.\<close>
+        have h\<sigma>_products: "\<sigma> pp1 = \<sigma> pp2"
+        proof -
+          from hpath_hom show ?thesis
+          proof
+            assume "top1_path_homotopic_on U (subspace_topology X TX U) (pp1 0) (pp1 1) pp1 pp2"
+            thus ?thesis by (rule h\<sigma>_cond1)
+          next
+            assume "top1_path_homotopic_on V (subspace_topology X TX V) (pp1 0) (pp1 1) pp1 pp2"
+            thus ?thesis by (rule h\<sigma>_cond1_V)
+          qed
+        qed
+        \<comment> \<open>Step 3: σ_cond2 splits the products.\<close>
+        have h_split_LHS: "\<sigma> pp1 = mulH (\<sigma> (piece_top i)) (\<sigma> (\<beta> (Suc i)))"
+          sorry \<comment> \<open>σ_cond2: piece_top i is path in U/V, β(Suc i) is path in U/V, endpoints match.\<close>
+        have h_split_RHS: "\<sigma> pp2 = mulH (\<sigma> (\<beta> i)) (\<sigma> (piece_bot i))"
+          sorry \<comment> \<open>σ_cond2: β i is path in U/V, piece_bot i is path in U/V, endpoints match.\<close>
+        \<comment> \<open>Step 4: Combine and rearrange.\<close>
+        have h_eq: "mulH (\<sigma> (piece_top i)) (\<sigma> (\<beta> (Suc i))) = mulH (\<sigma> (\<beta> i)) (\<sigma> (piece_bot i))"
+          using h\<sigma>_products h_split_LHS h_split_RHS by (by100 simp)
+        \<comment> \<open>Rearrange: σ(pt) = σ(β i) · σ(pb) · inv(σ(β(i+1)))\<close>
+        have hpt_H: "\<sigma> (piece_top i) \<in> H" using h\<sigma>_top_H[OF hi] .
+        have hpb_H: "\<sigma> (piece_bot i) \<in> H" using h\<sigma>_bot_H[OF hi] .
+        have h\<beta>i_H: "\<sigma> (\<beta> i) \<in> H" using h\<beta>_H hi by (by100 force)
+        have h\<beta>Si_H: "\<sigma> (\<beta> (Suc i)) \<in> H" using h\<beta>_H hi by (by100 force)
+        \<comment> \<open>From h_eq, multiply by inv(σ(β_{i+1})) on right and simplify.\<close>
+        show "\<sigma> (piece_top i) = mulH (\<sigma> (\<beta> i)) (mulH (\<sigma> (piece_bot i)) (invgH (\<sigma> (\<beta> (Suc i)))))"
+        proof -
+          have "mulH (mulH (\<sigma> (piece_top i)) (\<sigma> (\<beta> (Suc i)))) (invgH (\<sigma> (\<beta> (Suc i))))
+              = mulH (mulH (\<sigma> (\<beta> i)) (\<sigma> (piece_bot i))) (invgH (\<sigma> (\<beta> (Suc i))))"
+            using h_eq by (by100 simp)
+          have hinv\<beta>Si_H: "invgH (\<sigma> (\<beta> (Suc i))) \<in> H" using hinvH_closed[OF h\<beta>Si_H] .
+          moreover have "mulH (mulH (\<sigma> (piece_top i)) (\<sigma> (\<beta> (Suc i)))) (invgH (\<sigma> (\<beta> (Suc i))))
+              = \<sigma> (piece_top i)"
+            using hmulH_assoc[OF hpt_H h\<beta>Si_H hinv\<beta>Si_H]
+                hinvH_r[OF h\<beta>Si_H] hmulH_eH[OF hpt_H] by (by100 simp)
+          have hassoc_RHS: "mulH (mulH (\<sigma> (\<beta> i)) (\<sigma> (piece_bot i))) (invgH (\<sigma> (\<beta> (Suc i))))
+              = mulH (\<sigma> (\<beta> i)) (mulH (\<sigma> (piece_bot i)) (invgH (\<sigma> (\<beta> (Suc i)))))"
+            using hmulH_assoc[OF h\<beta>i_H hpb_H hinv\<beta>Si_H] .
+          \<comment> \<open>Chain: σ(pt) = LHS of eq1 = RHS of eq1 = RHS reassociated.\<close>
+          from \<open>mulH (mulH (\<sigma> (piece_top i)) (\<sigma> (\<beta> (Suc i)))) (invgH (\<sigma> (\<beta> (Suc i))))
+              = mulH (mulH (\<sigma> (\<beta> i)) (\<sigma> (piece_bot i))) (invgH (\<sigma> (\<beta> (Suc i))))\<close>
+          have "mulH (mulH (\<sigma> (\<beta> i)) (\<sigma> (piece_bot i))) (invgH (\<sigma> (\<beta> (Suc i)))) = \<sigma> (piece_top i)"
+            using \<open>mulH (mulH (\<sigma> (piece_top i)) (\<sigma> (\<beta> (Suc i)))) (invgH (\<sigma> (\<beta> (Suc i)))) = \<sigma> (piece_top i)\<close>
+            by (by100 simp)
+          thus ?thesis using hassoc_RHS by (by100 simp)
+        qed
+      qed
+      \<comment> \<open>β_0 is constant at x0 (since sub_s' 0 = 0 and F(0,t) = x0).\<close>
+      \<comment> \<open>σ of a constant-on-I_set path = eH.\<close>
+      have h\<sigma>_const: "\<And>c. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> c t = x0) \<Longrightarrow> \<sigma> c = eH"
+      proof -
+        fix c :: "real \<Rightarrow> 'a" assume hc: "\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> c t = x0"
+        \<comment> \<open>c agrees with constant_path x0 on I_set.\<close>
+        have hc_eq: "\<sigma> c = \<sigma> (\<lambda>_. x0)"
+        proof (rule h\<sigma>_I_cong, intro allI impI)
+          fix t :: real assume "0 \<le> t \<and> t \<le> 1"
+          thus "c t = (\<lambda>_. x0) t" using hc by (by100 simp)
+        qed
+        \<comment> \<open>σ(constant_path x0) = eH via group law.\<close>
+        define cx where "cx = (\<lambda>_::real. x0)"
+        have hcx_loop_U: "top1_is_path_on U (subspace_topology X TX U) x0 x0 cx"
+          unfolding cx_def using top1_constant_path_is_path[OF hTopU hx0_U]
+          unfolding top1_constant_path_def by (by100 simp)
+        have hcx_pp: "\<sigma> (top1_path_product cx cx) = \<sigma> cx"
+        proof (rule h\<sigma>_I_cong, intro allI impI)
+          fix t :: real assume ht: "0 \<le> t \<and> t \<le> 1"
+          show "top1_path_product cx cx t = cx t"
+            unfolding top1_path_product_def cx_def by (by100 simp)
+        qed
+        have hcx0: "cx 0 = x0" and hcx1: "cx 1 = x0" unfolding cx_def by (by100 simp)+
+        have hcx_path_gen: "top1_is_path_on U (subspace_topology X TX U) (cx 0) (cx 1) cx"
+          using hcx_loop_U hcx0 hcx1 by (by100 simp)
+        have hcx_match: "cx 1 = cx 0" using hcx0 hcx1 by (by100 simp)
+        have h1: "\<sigma> (top1_path_product cx cx) = mulH (\<sigma> cx) (\<sigma> cx)"
+          using h\<sigma>_cond2[OF hcx_path_gen hcx_path_gen hcx_match] .
+        have h\<sigma>cx_H: "\<sigma> cx \<in> H" using h\<sigma>_path_in_H[OF hcx_path_gen] .
+        have hidem: "mulH (\<sigma> cx) (\<sigma> cx) = \<sigma> cx" using h1 hcx_pp by (by100 simp)
+        have "\<sigma> cx = eH"
+        proof -
+          have hinvH: "invgH (\<sigma> cx) \<in> H" by (rule group_inv_closed[OF hH h\<sigma>cx_H])
+          have "mulH (\<sigma> cx) (invgH (\<sigma> cx)) = eH" by (rule group_inv_right[OF hH h\<sigma>cx_H])
+          have "mulH (mulH (\<sigma> cx) (\<sigma> cx)) (invgH (\<sigma> cx))
+              = mulH (\<sigma> cx) (invgH (\<sigma> cx))" using hidem by (by100 simp)
+          moreover have "mulH (mulH (\<sigma> cx) (\<sigma> cx)) (invgH (\<sigma> cx))
+              = mulH (\<sigma> cx) (mulH (\<sigma> cx) (invgH (\<sigma> cx)))"
+            using hH h\<sigma>cx_H hinvH unfolding top1_is_group_on_def by (by100 force)
+          ultimately have "mulH (\<sigma> cx) (mulH (\<sigma> cx) (invgH (\<sigma> cx))) = eH"
+            using \<open>mulH (\<sigma> cx) (invgH (\<sigma> cx)) = eH\<close> by (by100 simp)
+          hence "mulH (\<sigma> cx) eH = eH"
+            using \<open>mulH (\<sigma> cx) (invgH (\<sigma> cx)) = eH\<close> by (by100 simp)
+          thus ?thesis using group_id_right[OF hH h\<sigma>cx_H] by (by100 simp)
+        qed
+        thus "\<sigma> c = eH" using hc_eq cx_def by (by100 simp)
+      qed
+      have h\<beta>0: "\<sigma> (\<beta> 0) = eH"
+      proof (rule h\<sigma>_const)
+        show "\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> \<beta> 0 t = x0"
+        proof (intro allI impI)
+          fix t :: real assume "0 \<le> t \<and> t \<le> 1"
+          have "\<beta> 0 t = F (sub_s' 0, sub_t j + t * (sub_t (Suc j) - sub_t j))"
+            unfolding \<beta>_def by (by100 simp)
+          also have "sub_s' 0 = 0" using hs0' .
+          hence "F (sub_s' 0, sub_t j + t * (sub_t (Suc j) - sub_t j))
+              = F (0, sub_t j + t * (sub_t (Suc j) - sub_t j))" by (by100 simp)
+          also have "\<dots> = x0"
+          proof -
+            have "sub_t j + t * (sub_t (Suc j) - sub_t j) \<in> I_set"
+            proof -
+              have "j \<le> nt" using hj by (by100 presburger)
+              have "Suc j \<le> nt" using hj by (by100 presburger)
+              have "0 \<le> sub_t j" using hsubt_ge[OF \<open>j \<le> nt\<close>] .
+              have "sub_t (Suc j) \<le> 1" using hsubt_le[OF \<open>Suc j \<le> nt\<close>] .
+              have "sub_t j \<le> sub_t (Suc j)" using htinc hj by (by100 force)
+              have "sub_t (Suc j) - sub_t j \<ge> 0" using \<open>sub_t j \<le> sub_t (Suc j)\<close> by (by100 linarith)
+              have "t * (sub_t (Suc j) - sub_t j) \<ge> 0"
+                by (rule mult_nonneg_nonneg) (use \<open>0 \<le> t \<and> t \<le> 1\<close> \<open>sub_t (Suc j) - sub_t j \<ge> 0\<close> in \<open>by100 linarith\<close>)+
+              have "t * (sub_t (Suc j) - sub_t j) \<le> sub_t (Suc j) - sub_t j"
+              proof -
+                have "t \<le> 1" using \<open>0 \<le> t \<and> t \<le> 1\<close> by (by100 linarith)
+                have "t * (sub_t (Suc j) - sub_t j) \<le> 1 * (sub_t (Suc j) - sub_t j)"
+                  by (rule mult_right_mono[OF \<open>t \<le> 1\<close> \<open>sub_t (Suc j) - sub_t j \<ge> 0\<close>])
+                thus ?thesis by (by100 simp)
+              qed
+              have hge: "sub_t j + t * (sub_t (Suc j) - sub_t j) \<ge> 0"
+                using \<open>0 \<le> sub_t j\<close> \<open>t * (sub_t (Suc j) - sub_t j) \<ge> 0\<close> by (by100 linarith)
+              have hle: "sub_t j + t * (sub_t (Suc j) - sub_t j) \<le> 1"
+                using \<open>sub_t (Suc j) \<le> 1\<close> \<open>t * (sub_t (Suc j) - sub_t j) \<le> sub_t (Suc j) - sub_t j\<close>
+                by (by100 linarith)
+              show ?thesis unfolding top1_unit_interval_def using hge hle by (by100 force)
+            qed
+            thus ?thesis using hF_0t by (by100 blast)
+          qed
+          finally show "\<beta> 0 t = x0" .
+        qed
+      qed
+      have h\<beta>n: "\<sigma> (\<beta> ns') = eH"
+      proof (rule h\<sigma>_const)
+        show "\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> \<beta> ns' t = x0"
+        proof (intro allI impI)
+          fix t :: real assume "0 \<le> t \<and> t \<le> 1"
+          have "\<beta> ns' t = F (sub_s' ns', sub_t j + t * (sub_t (Suc j) - sub_t j))"
+            unfolding \<beta>_def by (by100 simp)
+          also have "sub_s' ns' = 1" using hsn' .
+          hence "F (sub_s' ns', sub_t j + t * (sub_t (Suc j) - sub_t j))
+              = F (1, sub_t j + t * (sub_t (Suc j) - sub_t j))" by (by100 simp)
+          also have "\<dots> = x0"
+          proof -
+            have "sub_t j + t * (sub_t (Suc j) - sub_t j) \<in> I_set"
+            proof -
+              have "0 \<le> sub_t j" using hsubt_ge[OF hj_le_nt] .
+              have "sub_t (Suc j) \<le> 1" using hsubt_le[OF hSj_le_nt] .
+              have "sub_t j \<le> sub_t (Suc j)" using htinc hj by (by100 force)
+              have "sub_t (Suc j) - sub_t j \<ge> 0" using \<open>sub_t j \<le> sub_t (Suc j)\<close> by (by100 linarith)
+              have "t * (sub_t (Suc j) - sub_t j) \<ge> 0"
+                by (rule mult_nonneg_nonneg) (use \<open>0 \<le> t \<and> t \<le> 1\<close> \<open>sub_t (Suc j) - sub_t j \<ge> 0\<close> in \<open>by100 linarith\<close>)+
+              have "t * (sub_t (Suc j) - sub_t j) \<le> sub_t (Suc j) - sub_t j"
+              proof -
+                have "t \<le> 1" using \<open>0 \<le> t \<and> t \<le> 1\<close> by (by100 linarith)
+                have "t * (sub_t (Suc j) - sub_t j) \<le> 1 * (sub_t (Suc j) - sub_t j)"
+                  by (rule mult_right_mono[OF \<open>t \<le> 1\<close> \<open>sub_t (Suc j) - sub_t j \<ge> 0\<close>])
+                thus ?thesis by (by100 simp)
+              qed
+              have hge: "sub_t j + t * (sub_t (Suc j) - sub_t j) \<ge> 0"
+                using \<open>0 \<le> sub_t j\<close> \<open>t * (sub_t (Suc j) - sub_t j) \<ge> 0\<close> by (by100 linarith)
+              have hle: "sub_t j + t * (sub_t (Suc j) - sub_t j) \<le> 1"
+                using \<open>sub_t (Suc j) \<le> 1\<close> \<open>t * (sub_t (Suc j) - sub_t j) \<le> sub_t (Suc j) - sub_t j\<close>
+                by (by100 linarith)
+              show ?thesis unfolding top1_unit_interval_def using hge hle by (by100 force)
+            qed
+            thus ?thesis using hF_1t by (by100 blast)
+          qed
+          finally show "\<beta> ns' t = x0" .
+        qed
+      qed
+      \<comment> \<open>Telescoping: Π σ(piece_top_i) = σ(β_0) · Π σ(piece_bot_i) · σ(β_{ns'})⁻¹ = Π σ(piece_bot_i).\<close>
+      \<comment> \<open>Group facts needed for telescoping.\<close>
       have htelescope: "foldr mulH (map (\<lambda>i. \<sigma> (piece_top i)) [0..<ns']) eH
           = foldr mulH (map (\<lambda>i. \<sigma> (piece_bot i)) [0..<ns']) eH"
       proof -
