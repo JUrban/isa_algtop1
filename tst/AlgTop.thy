@@ -7016,19 +7016,40 @@ proof -
         by (rule group_inv_right[OF hH])
       have hinvH_l: "\<And>a. a \<in> H \<Longrightarrow> mulH (invgH a) a = eH"
         using hH unfolding top1_is_group_on_def by (by100 blast)
-      have hinvH_eH: "invgH eH = eH"
-        sorry \<comment> \<open>inv(e) = e in any group: e·inv(e) = e = e·e, cancel\<close>
       have hinvH_closed: "\<And>a. a \<in> H \<Longrightarrow> invgH a \<in> H"
         by (rule group_inv_closed[OF hH])
       have hmulH_closed: "\<And>a b. a \<in> H \<Longrightarrow> b \<in> H \<Longrightarrow> mulH a b \<in> H"
         using hH unfolding top1_is_group_on_def by (by100 blast)
+      have hinvH_eH: "invgH eH = eH"
+      proof -
+        have "mulH eH (invgH eH) = eH" by (rule hinvH_r[OF heH])
+        moreover have "mulH eH (invgH eH) = invgH eH"
+          using hmulH_eH_l[OF hinvH_closed[OF heH]] .
+        ultimately show ?thesis by (by100 simp)
+      qed
       \<comment> \<open>σ values are in H.\<close>
       have h\<sigma>_top_H: "\<And>i. i < ns' \<Longrightarrow> \<sigma> (piece_top i) \<in> H"
-        sorry \<comment> \<open>From h_σ_piece_in_H applied to row_fn j\<close>
+      proof -
+        fix i assume hi: "i < ns'"
+        have "i \<le> ns'" using hi by (by100 presburger)
+        have "Suc i \<le> ns'" using hi by (by100 presburger)
+        show "\<sigma> (piece_top i) \<in> H" unfolding piece_top_def
+          using h\<sigma>_piece_in_H[OF hrowj_loop hi hsubs_ge[OF \<open>i \<le> ns'\<close>]
+              _ hsubs_le[OF \<open>Suc i \<le> ns'\<close>]]
+          hsinc' hi hUV_top by (by100 force)
+      qed
       have h\<sigma>_bot_H: "\<And>i. i < ns' \<Longrightarrow> \<sigma> (piece_bot i) \<in> H"
-        sorry \<comment> \<open>From h_σ_piece_in_H applied to row_fn (Suc j)\<close>
+      proof -
+        fix i assume hi: "i < ns'"
+        have "i \<le> ns'" using hi by (by100 presburger)
+        have "Suc i \<le> ns'" using hi by (by100 presburger)
+        show "\<sigma> (piece_bot i) \<in> H" unfolding piece_bot_def
+          using h\<sigma>_piece_in_H[OF hrowSj_loop hi hsubs_ge[OF \<open>i \<le> ns'\<close>]
+              _ hsubs_le[OF \<open>Suc i \<le> ns'\<close>]]
+          hsinc' hi hUV_bot by (by100 force)
+      qed
       have h\<beta>_H: "\<And>i. i \<le> ns' \<Longrightarrow> \<sigma> (\<beta> i) \<in> H"
-        sorry \<comment> \<open>β paths are in U or V, so σ(β) ∈ H\<close>
+        sorry \<comment> \<open>β i is a path in U or V (from hcell_UV boundary), so σ(β i) ∈ H\<close>
       have htelescope: "foldr mulH (map (\<lambda>i. \<sigma> (piece_top i)) [0..<ns']) eH
           = foldr mulH (map (\<lambda>i. \<sigma> (piece_bot i)) [0..<ns']) eH"
       proof -
