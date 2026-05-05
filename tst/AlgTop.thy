@@ -6755,8 +6755,58 @@ proof -
                     have hk_UV: "(\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T k + t * (T (Suc k) - T k)) \<in> U)
                         \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T k + t * (T (Suc k) - T k)) \<in> V)"
                       using less.prems(5) hk by (by100 force)
-                    show ?thesis using \<open>T' i = sub i0\<close> \<open>T' (Suc i) = T (Suc k)\<close> hk_UV hTk hTSk
-                      sorry \<comment> \<open>[sub(i0), T(Suc k)] ⊆ [T(k), T(Suc k)] → reparametrize.\<close>
+                    from hk_UV show ?thesis
+                    proof
+                      assume hU: "\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T k + t * (T (Suc k) - T k)) \<in> U"
+                      show ?thesis proof (rule disjI1, intro allI impI)
+                        fix t :: real assume ht: "0 \<le> t \<and> t \<le> 1"
+                        have hx: "T' i + t * (T' (Suc i) - T' i) = sub i0 + t * (T (Suc k) - sub i0)"
+                          using \<open>T' i = sub i0\<close> \<open>T' (Suc i) = T (Suc k)\<close> by (by100 simp)
+                        define s where "s = (sub i0 - T k + t * (T (Suc k) - sub i0)) / (T (Suc k) - T k)"
+                        have hdiff: "T (Suc k) - T k > 0" using hTk hTSk by (by100 linarith)
+                        have hd1: "sub i0 - T k \<ge> 0" using hTk by (by100 linarith)
+                        have hd2: "T (Suc k) - sub i0 \<ge> 0" using hTSk by (by100 linarith)
+                        have hprod: "t * (T (Suc k) - sub i0) \<ge> 0"
+                          by (rule mult_nonneg_nonneg) (use ht hd2 in \<open>by100 linarith\<close>)+
+                        have hs0: "s \<ge> 0" unfolding s_def using hd1 hprod hdiff by (by100 force)
+                        have "t * (T (Suc k) - sub i0) \<le> 1 * (T (Suc k) - sub i0)"
+                          by (rule mult_right_mono) (use ht hd2 in \<open>by100 linarith\<close>)+
+                        hence "t * (T (Suc k) - sub i0) \<le> T (Suc k) - sub i0" by (by100 simp)
+                        hence "sub i0 - T k + t * (T (Suc k) - sub i0) \<le> T (Suc k) - T k"
+                          by (by100 linarith)
+                        hence hs1: "s \<le> 1" unfolding s_def using hdiff by (by100 force)
+                        have "T k + s * (T (Suc k) - T k) = sub i0 + t * (T (Suc k) - sub i0)"
+                          unfolding s_def using hdiff by (by100 simp)
+                        hence "f (sub i0 + t * (T (Suc k) - sub i0)) \<in> U"
+                          using hU hs0 hs1 by (by100 force)
+                        thus "f (T' i + t * (T' (Suc i) - T' i)) \<in> U" using hx by (by100 simp)
+                      qed
+                    next
+                      assume hV: "\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T k + t * (T (Suc k) - T k)) \<in> V"
+                      show ?thesis proof (rule disjI2, intro allI impI)
+                        fix t :: real assume ht: "0 \<le> t \<and> t \<le> 1"
+                        have hx: "T' i + t * (T' (Suc i) - T' i) = sub i0 + t * (T (Suc k) - sub i0)"
+                          using \<open>T' i = sub i0\<close> \<open>T' (Suc i) = T (Suc k)\<close> by (by100 simp)
+                        define s where "s = (sub i0 - T k + t * (T (Suc k) - sub i0)) / (T (Suc k) - T k)"
+                        have hdiff: "T (Suc k) - T k > 0" using hTk hTSk by (by100 linarith)
+                        have hd1: "sub i0 - T k \<ge> 0" using hTk by (by100 linarith)
+                        have hd2: "T (Suc k) - sub i0 \<ge> 0" using hTSk by (by100 linarith)
+                        have hprod: "t * (T (Suc k) - sub i0) \<ge> 0"
+                          by (rule mult_nonneg_nonneg) (use ht hd2 in \<open>by100 linarith\<close>)+
+                        have hs0: "s \<ge> 0" unfolding s_def using hd1 hprod hdiff by (by100 force)
+                        have "t * (T (Suc k) - sub i0) \<le> 1 * (T (Suc k) - sub i0)"
+                          by (rule mult_right_mono) (use ht hd2 in \<open>by100 linarith\<close>)+
+                        hence "t * (T (Suc k) - sub i0) \<le> T (Suc k) - sub i0" by (by100 simp)
+                        hence "sub i0 - T k + t * (T (Suc k) - sub i0) \<le> T (Suc k) - T k"
+                          by (by100 linarith)
+                        hence hs1: "s \<le> 1" unfolding s_def using hdiff by (by100 force)
+                        have "T k + s * (T (Suc k) - T k) = sub i0 + t * (T (Suc k) - sub i0)"
+                          unfolding s_def using hdiff by (by100 simp)
+                        hence "f (sub i0 + t * (T (Suc k) - sub i0)) \<in> V"
+                          using hV hs0 hs1 by (by100 force)
+                        thus "f (T' i + t * (T' (Suc i) - T' i)) \<in> V" using hx by (by100 simp)
+                      qed
+                    qed
                   next
                     case False3: False \<comment> \<open>Both above insertion: T'-piece = T-piece shifted.\<close>
                     hence "i > Suc k" using False False2 by (by100 presburger)
