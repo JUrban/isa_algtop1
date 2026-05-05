@@ -6714,8 +6714,55 @@ proof -
                 unfolding F_def using h\<sigma>_split hG_k hG_Sk by (by100 simp)
               \<comment> \<open>Map decomposition: map G [0..<Suc m] splits at k.\<close>
               have hmap_G: "map G [0..<Suc m] = map F [0..<k] @ [G k, G (Suc k)] @ map F [Suc k..<m]"
-                sorry \<comment> \<open>List decomp: proved mathematically (hG_eq_F below k, hG_shift above k+1),
-                   blocked by Isabelle's upt_Suc expansion + by100 nat arithmetic limits.\<close>
+              proof -
+                \<comment> \<open>Step 1: split [0..<Suc m] = [0..<k] @ [k..<Suc m]\<close>
+                have hk_le: "k \<le> Suc m" using hk by (by100 presburger)
+                have "[0..<Suc m] = [0..<k] @ [k..<Suc m]"
+                  using upt_add_eq_append[of 0 k "Suc m - k"] hk_le by (by100 force)
+                \<comment> \<open>Step 2: [k..<Suc m] = k # Suc k # [Suc(Suc k)..<Suc m]\<close>
+                moreover have "[k..<Suc m] = k # Suc k # [Suc (Suc k)..<Suc m]"
+                proof -
+                  have "k < Suc m" using hk by (by100 presburger)
+                  hence "[k..<Suc m] = k # [Suc k..<Suc m]" by (rule upt_conv_Cons)
+                  moreover have "Suc k < Suc m" using hk hm by (by100 presburger)
+                  hence "[Suc k..<Suc m] = Suc k # [Suc (Suc k)..<Suc m]" by (rule upt_conv_Cons)
+                  ultimately show ?thesis by (by100 simp)
+                qed
+                ultimately have hsplit: "[0..<Suc m] = [0..<k] @ k # Suc k # [Suc (Suc k)..<Suc m]"
+                  by (by100 simp)
+                \<comment> \<open>Step 3: map G on each piece.\<close>
+                have "map G [0..<Suc m] = map G [0..<k] @ G k # G (Suc k) # map G [Suc (Suc k)..<Suc m]"
+                  using hsplit by (by100 simp)
+                moreover have hbelow: "map G [0..<k] = map F [0..<k]"
+                proof (rule map_cong)
+                  show "[0..<k] = [0..<k]" by (by100 simp)
+                next
+                  fix x assume "x \<in> set [0..<k]"
+                  hence "x < k" by (by100 simp)
+                  thus "G x = F x" by (rule hG_eq_F)
+                qed
+                moreover have habove: "map G [Suc (Suc k)..<Suc m] = map F [Suc k..<m]"
+                proof -
+                  have "map G [Suc (Suc k)..<Suc m] = map (G \<circ> Suc) [Suc k..<m]"
+                    using map_Suc_upt[of "Suc k" m, symmetric] unfolding map_map[symmetric]
+                    by (by100 simp)
+                  also have "\<dots> = map F [Suc k..<m]"
+                  proof (rule map_cong)
+                    show "[Suc k..<m] = [Suc k..<m]" by (by100 simp)
+                  next
+                    fix x assume "x \<in> set [Suc k..<m]"
+                    hence hx_ge: "Suc k \<le> x" and hx_lt: "x < m" by (by100 simp)+
+                    have "Suc k < Suc x" using hx_ge by (by100 presburger)
+                    have "Suc x < Suc m" using hx_lt by (by100 presburger)
+                    have "(G \<circ> Suc) x = G (Suc x)" unfolding comp_def by (by100 simp)
+                    also have "\<dots> = F (Suc x - 1)" using hG_shift[OF \<open>Suc k < Suc x\<close> \<open>Suc x < Suc m\<close>] .
+                    also have "\<dots> = F x" by (by100 simp)
+                    finally show "(G \<circ> Suc) x = F x" .
+                  qed
+                  finally show ?thesis .
+                qed
+                ultimately show ?thesis by (by100 simp)
+              qed
               have hmap_F: "map F [0..<m] = map F [0..<k] @ [F k] @ map F [Suc k..<m]"
               proof -
                 have "[0..<m] = [0..<k] @ k # [Suc k..<m]"
