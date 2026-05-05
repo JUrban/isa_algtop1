@@ -6872,13 +6872,56 @@ proof -
                 \<comment> \<open>Remove T(j): define T'(i) = T(i) for i<j, T'(i) = T(i+1) for i≥j.\<close>
                 define T' where "T' i = (if i < j then T i else T (Suc i))" for i
                 \<comment> \<open>T' is valid with M-1 pieces.\<close>
+                have hT'_ge: "M - 1 \<ge> 1" using hMgt hn by (by100 presburger)
+                have hT'_0: "T' 0 = (0::real)" unfolding T'_def using hj_pos less.prems(2) by (by100 presburger)
+                have hT'_M1: "T' (M-1) = 1"
+                proof -
+                  have "\<not> (M - 1 < j)" using hj_lt by (by100 presburger)
+                  hence "T' (M-1) = T (Suc (M-1))" unfolding T'_def by (by100 simp)
+                  moreover have "Suc (M-1) = M" using hMgt hn by (by100 presburger)
+                  ultimately show ?thesis using less.prems(3) by (by100 simp)
+                qed
+                have hT'_inc: "\<forall>i<M-1. T' i < T' (Suc i)"
+                proof (intro allI impI)
+                  fix i assume hi: "i < M - 1"
+                  have hi_M: "i < M" and hSi_M: "Suc i < M" using hi by (by100 presburger)+
+                  show "T' i < T' (Suc i)"
+                  proof (cases "Suc i < j")
+                    case True
+                    have "T' i = T i" unfolding T'_def using True by (by100 presburger)
+                    moreover have "T' (Suc i) = T (Suc i)" unfolding T'_def using True by (by100 presburger)
+                    ultimately show ?thesis using less.prems(4) hi_M by (by100 force)
+                  next
+                    case False
+                    show ?thesis
+                    proof (cases "i < j")
+                      case True \<comment> \<open>i < j ≤ Suc i, so Suc i = j\<close>
+                      have "T' i = T i" unfolding T'_def using True by (by100 presburger)
+                      have "\<not> (Suc i < j)" using False .
+                      hence "T' (Suc i) = T (Suc (Suc i))" unfolding T'_def by (by100 simp)
+                      have "T i < T (Suc i)" using less.prems(4) hi_M by (by100 force)
+                      have "T (Suc i) < T (Suc (Suc i))" using less.prems(4) hSi_M by (by100 force)
+                      show ?thesis using \<open>T' i = T i\<close> \<open>T' (Suc i) = T (Suc (Suc i))\<close>
+                          \<open>T i < T (Suc i)\<close> \<open>T (Suc i) < T (Suc (Suc i))\<close> by (by100 linarith)
+                    next
+                      case inner_False: False
+                      have "T' i = T (Suc i)" unfolding T'_def using inner_False by (by100 simp)
+                      have "\<not> (Suc i < j)" using inner_False by (by100 presburger)
+                      have "T' (Suc i) = T (Suc (Suc i))" unfolding T'_def using \<open>\<not>(Suc i < j)\<close> by (by100 simp)
+                      show ?thesis using \<open>T' i = T (Suc i)\<close> \<open>T' (Suc i) = T (Suc (Suc i))\<close>
+                          less.prems(4) hSi_M by (by100 force)
+                    qed
+                  qed
+                qed
+                have hT'_UV: "\<forall>i<M-1. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T' i + t * (T' (Suc i) - T' i)) \<in> U)
+                     \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T' i + t * (T' (Suc i) - T' i)) \<in> V)"
+                  sorry \<comment> \<open>Each T'-piece is a sub-interval of some T-piece (or merge of adjacent T-pieces
+                     within a single sub-piece). The sub-piece maps to U or V, so the T'-piece does too.\<close>
                 have hT'_valid: "M - 1 \<ge> 1 \<and> T' 0 = 0 \<and> T' (M-1) = 1
                     \<and> (\<forall>i<M-1. T' i < T' (Suc i))
                     \<and> (\<forall>i<M-1. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T' i + t * (T' (Suc i) - T' i)) \<in> U)
                          \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T' i + t * (T' (Suc i) - T' i)) \<in> V))"
-                  sorry \<comment> \<open>T' valid: endpoints preserved, monotonicity from T, UV from T
-                     (each T' piece is either a T piece or a merge of two adjacent T pieces,
-                     both mapping to U or V — actually it's a sub-interval of a T-piece).\<close>
+                  using hT'_ge hT'_0 hT'_M1 hT'_inc hT'_UV by (by100 blast)
                 \<comment> \<open>T' still refines sub (removing non-sub point preserves containment).\<close>
                 have hT'_refines: "\<forall>i\<le>n. \<exists>j'\<le>M-1. T' j' = sub i"
                 proof (intro allI impI)
