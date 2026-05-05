@@ -7461,17 +7461,13 @@ proof -
             have hG_hom: "top1_path_homotopic_on U (subspace_topology X TX U)
                 (G (0,0)) (G (1,1)) (G \<circ> ?\<beta>1) (G \<circ> ?\<beta>2)"
               by (rule continuous_preserves_path_homotopic[OF hTII hTU hG_cont_U h\<beta>_hom])
-            \<comment> \<open>G(0,0) = pp1 0 and G(1,1) = pp1 1.\<close>
-            have "G (0,0) = pp1 0"
-            proof -
-              have "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 force)
-              thus ?thesis using hG\<beta>1 sorry \<comment> \<open>G(β₁(0)) = pp1(0), β₁(0) = (0,0)\<close>
-            qed
-            have "G (1,1) = pp1 1" sorry \<comment> \<open>From hG_β1 at s=1: G(β₁(1)) = pp1(1)\<close>
-            \<comment> \<open>G∘β₁ = pp1 and G∘β₂ = pp2 on I_set → same path-homotopy class.\<close>
+            \<comment> \<open>Transfer: G∘β₁≃G∘β₂ in U → pp1≃pp2 in U (extensional equality on I_set).\<close>
             have "top1_path_homotopic_on U (subspace_topology X TX U) (pp1 0) (pp1 1) pp1 pp2"
-              sorry \<comment> \<open>From hG_hom + hG_β1/hG_β2: extensional equality on I_set → same homotopy.
-                 Uses h_σ_I_cong pattern or path_homotopic_on extensional.\<close>
+              sorry \<comment> \<open>From hG_hom (G∘β₁≃G∘β₂ in U at endpoints G(0,0),G(1,1))
+                 + hGβ1 (G∘β₁=pp1 on I_set) + hGβ2 (G∘β₂=pp2 on I_set).
+                 G(0,0) = (G∘β₁)(0) = pp1(0), G(1,1) = (G∘β₁)(1) = pp1(1).
+                 Path homotopy between extensionally-equal-on-I_set functions.
+                 Needs: path_homotopic_on respects I_set-extensional equality.\<close>
             thus ?thesis by (by100 blast)
           next
             assume hV: "\<forall>s t. sub_s' i \<le> s \<and> s \<le> sub_s' (Suc i) \<and> sub_t j \<le> t \<and> t \<le> sub_t (Suc j)
