@@ -7349,10 +7349,39 @@ proof -
           sorry \<comment> \<open>piece_bot = top edge of cell. Same argument.\<close>
         have h_split_LHS: "\<sigma> pp1 = mulH (\<sigma> (piece_top i)) (\<sigma> (\<beta> (Suc i)))"
           unfolding pp1_def
-          sorry \<comment> \<open>From hpt_path_UV + h_β_Si_path_UV (both in same U or V from cell) + hep1 + σ_cond2.\<close>
+        proof -
+          from hpt_path_UV show "\<sigma> (top1_path_product (piece_top i) (\<beta> (Suc i)))
+              = mulH (\<sigma> (piece_top i)) (\<sigma> (\<beta> (Suc i)))"
+          proof
+            assume hU: "top1_is_path_on U (subspace_topology X TX U) (piece_top i 0) (piece_top i 1) (piece_top i)"
+            \<comment> \<open>β(Suc i) must also be in U (same cell).\<close>
+            from h\<beta>Si_path_UV have "top1_is_path_on U (subspace_topology X TX U) (\<beta> (Suc i) 0) (\<beta> (Suc i) 1) (\<beta> (Suc i))"
+              sorry \<comment> \<open>Both in same U from same cell\<close>
+            thus ?thesis using h\<sigma>_cond2[OF hU] hep1 by (by100 force)
+          next
+            assume hV: "top1_is_path_on V (subspace_topology X TX V) (piece_top i 0) (piece_top i 1) (piece_top i)"
+            from h\<beta>Si_path_UV have "top1_is_path_on V (subspace_topology X TX V) (\<beta> (Suc i) 0) (\<beta> (Suc i) 1) (\<beta> (Suc i))"
+              sorry \<comment> \<open>Both in same V from same cell\<close>
+            thus ?thesis using h\<sigma>_cond2_V[OF hV] hep1 by (by100 force)
+          qed
+        qed
         have h_split_RHS: "\<sigma> pp2 = mulH (\<sigma> (\<beta> i)) (\<sigma> (piece_bot i))"
           unfolding pp2_def
-          sorry \<comment> \<open>From h_β_i_path_UV + hpb_path_UV (both in same U or V from cell) + hep2 + σ_cond2.\<close>
+        proof -
+          from h\<beta>i_path_UV show "\<sigma> (top1_path_product (\<beta> i) (piece_bot i))
+              = mulH (\<sigma> (\<beta> i)) (\<sigma> (piece_bot i))"
+          proof
+            assume hU: "top1_is_path_on U (subspace_topology X TX U) (\<beta> i 0) (\<beta> i 1) (\<beta> i)"
+            from hpb_path_UV have "top1_is_path_on U (subspace_topology X TX U) (piece_bot i 0) (piece_bot i 1) (piece_bot i)"
+              sorry \<comment> \<open>Both in same U from same cell\<close>
+            thus ?thesis using h\<sigma>_cond2[OF hU] hep2 by (by100 force)
+          next
+            assume hV: "top1_is_path_on V (subspace_topology X TX V) (\<beta> i 0) (\<beta> i 1) (\<beta> i)"
+            from hpb_path_UV have "top1_is_path_on V (subspace_topology X TX V) (piece_bot i 0) (piece_bot i 1) (piece_bot i)"
+              sorry \<comment> \<open>Both in same V from same cell\<close>
+            thus ?thesis using h\<sigma>_cond2_V[OF hV] hep2 by (by100 force)
+          qed
+        qed
         \<comment> \<open>Step 4: Combine and rearrange.\<close>
         have h_eq: "mulH (\<sigma> (piece_top i)) (\<sigma> (\<beta> (Suc i))) = mulH (\<sigma> (\<beta> i)) (\<sigma> (piece_bot i))"
           using h\<sigma>_products h_split_LHS h_split_RHS by (by100 simp)
