@@ -7126,8 +7126,55 @@ proof -
               show ?thesis by (rule ssubst[OF hf1[symmetric]]) (rule hfma)
             qed
             show ?case
-              sorry \<comment> \<open>Group algebra: substitute hIH + hcell_k into happ,
-                 cancel inv(σ(β k)) · σ(β k) = eH, regroup using happ_bot.\<close>
+            proof -
+              \<comment> \<open>Abbreviate for readability.\<close>
+              define A where "A = \<sigma> (\<beta> 0)"
+              define B where "B = foldr mulH (map (\<lambda>i. \<sigma> (piece_bot i)) [0..<k]) eH"
+              define C where "C = invgH (\<sigma> (\<beta> k))"
+              define D where "D = \<sigma> (\<beta> k)"
+              define E where "E = \<sigma> (piece_bot k)"
+              define F where "F = invgH (\<sigma> (\<beta> (Suc k)))"
+              \<comment> \<open>H-membership.\<close>
+              have hAH: "A \<in> H" unfolding A_def using h\<beta>_H by (by100 force)
+              have hBH: "B \<in> H" unfolding B_def sorry \<comment> \<open>foldr of H-elements in H\<close>
+              have hCH: "C \<in> H" unfolding C_def using hinvH_closed h\<beta>_H hk_le by (by100 force)
+              have hDH: "D \<in> H" unfolding D_def using h\<beta>_H hk_le by (by100 force)
+              have hEH: "E \<in> H" unfolding E_def using h\<sigma>_bot_H hk by (by100 force)
+              have hFH: "F \<in> H" unfolding F_def using hinvH_closed h\<beta>_H Suc.prems by (by100 force)
+              \<comment> \<open>Key cancellation: C · D = inv(σ(β k)) · σ(β k) = eH.\<close>
+              have hCD: "mulH C D = eH" unfolding C_def D_def
+                using hinvH_l[OF h\<beta>_H[of k]] hk_le by (by100 force)
+              \<comment> \<open>LHS: from happ + hIH + hcell_k.\<close>
+              have hLHS: "foldr mulH (map (\<lambda>i. \<sigma> (piece_top i)) [0..<Suc k]) eH
+                  = mulH (mulH A (mulH B C)) (mulH D (mulH E F))"
+                using happ hIH hcell_k unfolding A_def B_def C_def D_def E_def F_def by (by100 simp)
+              \<comment> \<open>RHS target.\<close>
+              have hRHS: "mulH A (mulH (mulH B E) F)
+                  = mulH (\<sigma> (\<beta> 0)) (mulH (foldr mulH (map (\<lambda>i. \<sigma> (piece_bot i)) [0..<Suc k]) eH)
+                      (invgH (\<sigma> (\<beta> (Suc k)))))"
+                using happ_bot unfolding A_def B_def E_def F_def by (by100 simp)
+              \<comment> \<open>Pre-compute composite H-memberships.\<close>
+              have hBCH: "mulH B C \<in> H" using hmulH_closed[OF hBH hCH] .
+              have hEFH: "mulH E F \<in> H" using hmulH_closed[OF hEH hFH] .
+              have hDEFH: "mulH D (mulH E F) \<in> H" using hmulH_closed[OF hDH hEFH] .
+              have hBEH: "mulH B E \<in> H" using hmulH_closed[OF hBH hEH] .
+              \<comment> \<open>Group algebra step by step.\<close>
+              have step1: "mulH (mulH A (mulH B C)) (mulH D (mulH E F))
+                  = mulH A (mulH (mulH B C) (mulH D (mulH E F)))"
+                using hmulH_assoc[OF hAH hBCH hDEFH] .
+              have step2: "mulH (mulH B C) (mulH D (mulH E F))
+                  = mulH B (mulH C (mulH D (mulH E F)))"
+                using hmulH_assoc[OF hBH hCH hDEFH] .
+              have step3: "mulH C (mulH D (mulH E F)) = mulH (mulH C D) (mulH E F)"
+                using hmulH_assoc[OF hCH hDH hEFH] by (by100 simp)
+              have step4: "mulH (mulH C D) (mulH E F) = mulH E F"
+                using hCD hmulH_eH_l[OF hEFH] by (by100 simp)
+              have step5: "mulH B (mulH E F) = mulH (mulH B E) F"
+                using hmulH_assoc[OF hBH hEH hFH] by (by100 simp)
+              have "mulH (mulH A (mulH B C)) (mulH D (mulH E F)) = mulH A (mulH (mulH B E) F)"
+                using step1 step2 step3 step4 step5 by (by100 simp)
+              thus ?thesis using hLHS hRHS by (by100 simp)
+            qed
           qed
         qed
         from hinter[of ns'] have
