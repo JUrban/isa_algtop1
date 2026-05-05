@@ -7346,15 +7346,74 @@ proof -
         have htSj_le1: "sub_t (Suc j) \<le> 1" using hsubt_le[OF hSj_le_nt] .
         have hsi_le_Ssi: "sub_s' i \<le> sub_s' (Suc i)" using hsinc' hi by (by100 force)
         have htj_le_tSj: "sub_t j \<le> sub_t (Suc j)" using htinc hj by (by100 force)
-        \<comment> \<open>All 4 edges continuous (F ∘ affine, independent of U/V).\<close>
+        \<comment> \<open>All 4 edges continuous (F ∘ affine via Theorem_18_4 + F composition).\<close>
+        have hTI: "is_topology_on I_set I_top" by (rule top1_unit_interval_topology_is_topology_on)
+        have htj_I: "sub_t j \<in> I_set" unfolding top1_unit_interval_def using htj_ge0 htj_le1 by (by100 force)
+        have htSj_I: "sub_t (Suc j) \<in> I_set" unfolding top1_unit_interval_def using htSj_ge0 htSj_le1 by (by100 force)
+        have hsi_I: "sub_s' i \<in> I_set" unfolding top1_unit_interval_def using hsi_ge0 hsi_le1 by (by100 force)
+        have hSsi_I: "sub_s' (Suc i) \<in> I_set" unfolding top1_unit_interval_def using hSsi_ge0 hSsi_le1 by (by100 force)
+        have haffine_s: "top1_continuous_map_on I_set I_top I_set I_top
+            (\<lambda>t. sub_s' i + t * (sub_s' (Suc i) - sub_s' i))"
+          by (rule affine_map_continuous_I_to_I[OF hsi_ge0 hsi_le_Ssi hSsi_le1])
+        have haffine_t: "top1_continuous_map_on I_set I_top I_set I_top
+            (\<lambda>t. sub_t j + t * (sub_t (Suc j) - sub_t j))"
+          by (rule affine_map_continuous_I_to_I[OF htj_ge0 htj_le_tSj htSj_le1])
+        \<comment> \<open>piece_top: F ∘ (affine_s, const sub_t j).\<close>
         have hpt_cont: "top1_continuous_map_on I_set I_top X TX (piece_top i)"
-          sorry \<comment> \<open>F ∘ (affine_s, const sub_t j) via Theorem_18_4 + F comp\<close>
+        proof -
+          have "top1_continuous_map_on I_set I_top (I_set \<times> I_set) II_topology
+              (\<lambda>t. (sub_s' i + t * (sub_s' (Suc i) - sub_s' i), sub_t j))"
+            using iffD2[OF Theorem_18_4[OF hTI hTI hTI]]
+            sorry \<comment> \<open>pi1∘pair = affine_s (continuous), pi2∘pair = const sub_t j (continuous)\<close>
+          hence "top1_continuous_map_on I_set I_top X TX
+              (F \<circ> (\<lambda>t. (sub_s' i + t * (sub_s' (Suc i) - sub_s' i), sub_t j)))"
+            using top1_continuous_map_on_comp[of _ _ "I_set \<times> I_set" II_topology] hF_cont by (by100 blast)
+          moreover have "\<And>t. (F \<circ> (\<lambda>t. (sub_s' i + t * (sub_s' (Suc i) - sub_s' i), sub_t j))) t = piece_top i t"
+            unfolding comp_def piece_top_def row_fn_def by (by100 simp)
+          ultimately show ?thesis by (by100 presburger)
+        qed
+        \<comment> \<open>β(Suc i): F ∘ (const sub_s'(Suc i), affine_t).\<close>
         have h\<beta>Si_cont: "top1_continuous_map_on I_set I_top X TX (\<beta> (Suc i))"
-          sorry \<comment> \<open>F ∘ (const sub_s'(Suc i), affine_t) via Theorem_18_4 + F comp\<close>
+        proof -
+          have "top1_continuous_map_on I_set I_top (I_set \<times> I_set) II_topology
+              (\<lambda>t. (sub_s' (Suc i), sub_t j + t * (sub_t (Suc j) - sub_t j)))"
+            using iffD2[OF Theorem_18_4[OF hTI hTI hTI]]
+            sorry \<comment> \<open>pi1 = const sub_s'(Suc i), pi2 = affine_t\<close>
+          hence "top1_continuous_map_on I_set I_top X TX
+              (F \<circ> (\<lambda>t. (sub_s' (Suc i), sub_t j + t * (sub_t (Suc j) - sub_t j))))"
+            using top1_continuous_map_on_comp[of _ _ "I_set \<times> I_set" II_topology] hF_cont by (by100 blast)
+          moreover have "\<And>t. (F \<circ> (\<lambda>t. (sub_s' (Suc i), sub_t j + t * (sub_t (Suc j) - sub_t j)))) t = \<beta> (Suc i) t"
+            unfolding comp_def \<beta>_def by (by100 simp)
+          ultimately show ?thesis by (by100 presburger)
+        qed
+        \<comment> \<open>β i: F ∘ (const sub_s' i, affine_t).\<close>
         have h\<beta>i_cont: "top1_continuous_map_on I_set I_top X TX (\<beta> i)"
-          sorry \<comment> \<open>Same pattern\<close>
+        proof -
+          have "top1_continuous_map_on I_set I_top (I_set \<times> I_set) II_topology
+              (\<lambda>t. (sub_s' i, sub_t j + t * (sub_t (Suc j) - sub_t j)))"
+            using iffD2[OF Theorem_18_4[OF hTI hTI hTI]]
+            sorry \<comment> \<open>pi1 = const sub_s' i, pi2 = affine_t\<close>
+          hence "top1_continuous_map_on I_set I_top X TX
+              (F \<circ> (\<lambda>t. (sub_s' i, sub_t j + t * (sub_t (Suc j) - sub_t j))))"
+            using top1_continuous_map_on_comp[of _ _ "I_set \<times> I_set" II_topology] hF_cont by (by100 blast)
+          moreover have "\<And>t. (F \<circ> (\<lambda>t. (sub_s' i, sub_t j + t * (sub_t (Suc j) - sub_t j)))) t = \<beta> i t"
+            unfolding comp_def \<beta>_def by (by100 simp)
+          ultimately show ?thesis by (by100 presburger)
+        qed
+        \<comment> \<open>piece_bot: F ∘ (affine_s, const sub_t(Suc j)).\<close>
         have hpb_cont: "top1_continuous_map_on I_set I_top X TX (piece_bot i)"
-          sorry \<comment> \<open>Same as piece_top with sub_t(Suc j)\<close>
+        proof -
+          have "top1_continuous_map_on I_set I_top (I_set \<times> I_set) II_topology
+              (\<lambda>t. (sub_s' i + t * (sub_s' (Suc i) - sub_s' i), sub_t (Suc j)))"
+            using iffD2[OF Theorem_18_4[OF hTI hTI hTI]]
+            sorry \<comment> \<open>pi1 = affine_s, pi2 = const sub_t(Suc j)\<close>
+          hence "top1_continuous_map_on I_set I_top X TX
+              (F \<circ> (\<lambda>t. (sub_s' i + t * (sub_s' (Suc i) - sub_s' i), sub_t (Suc j))))"
+            using top1_continuous_map_on_comp[of _ _ "I_set \<times> I_set" II_topology] hF_cont by (by100 blast)
+          moreover have "\<And>t. (F \<circ> (\<lambda>t. (sub_s' i + t * (sub_s' (Suc i) - sub_s' i), sub_t (Suc j)))) t = piece_bot i t"
+            unfolding comp_def piece_bot_def row_fn_def by (by100 simp)
+          ultimately show ?thesis by (by100 presburger)
+        qed
         \<comment> \<open>piece_top i and β(Suc i) are paths in the same U (or V) — both edges of cell.\<close>
         have hpt_path_U: "top1_is_path_on U (subspace_topology X TX U) (piece_top i 0) (piece_top i 1) (piece_top i)"
             and h\<beta>Si_path_U: "top1_is_path_on U (subspace_topology X TX U) (\<beta> (Suc i) 0) (\<beta> (Suc i) 1) (\<beta> (Suc i))"
