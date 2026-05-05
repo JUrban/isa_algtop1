@@ -6495,8 +6495,15 @@ proof -
               sorry \<comment> \<open>h_point_insert with T'_def\<close>
             \<comment> \<open>T' is valid with Suc M pieces.\<close>
             have hT'1: "Suc M \<ge> 1" by (by100 presburger)
-            have hT'0: "T' 0 = (0::real)" sorry
-            have hT'M: "T' (Suc M) = 1" sorry
+            have hT'0: "T' 0 = (0::real)" unfolding T'_def using less.prems(2) by (by100 simp)
+            have hT'M: "T' (Suc M) = 1"
+            proof -
+              have "\<not> (Suc M \<le> k)" using hk by (by100 presburger)
+              have "Suc M \<noteq> Suc k" using hk by (by100 presburger)
+              hence "T' (Suc M) = T (Suc M - 1)" unfolding T'_def using \<open>\<not>(Suc M \<le> k)\<close> by (by100 simp)
+              moreover have "Suc M - 1 = M" by (by100 simp)
+              ultimately show ?thesis using less.prems(3) by (by100 simp)
+            qed
             have hT'inc: "\<forall>i<Suc M. T' i < T' (Suc i)" sorry
             have hT'UV: "\<forall>i<Suc M. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T' i + t * (T' (Suc i) - T' i)) \<in> U)
                  \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T' i + t * (T' (Suc i) - T' i)) \<in> V)"
