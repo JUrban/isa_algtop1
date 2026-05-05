@@ -6869,7 +6869,7 @@ proof -
       qed
       \<comment> \<open>Key: broken-line homotopy in each cell gives σ equation.\<close>
       have h\<sigma>_cell: "\<And>i. i < ns' \<Longrightarrow>
-          \<sigma> (piece_top i) = mulH (\<sigma> (\<beta> i)) (mulH (\<sigma> (piece_bot i)) (invH (\<sigma> (\<beta> (Suc i)))))"
+          \<sigma> (piece_top i) = mulH (\<sigma> (\<beta> i)) (mulH (\<sigma> (piece_bot i)) (invgH (\<sigma> (\<beta> (Suc i)))))"
         sorry \<comment> \<open>For each cell [s'_i, s'_{i+1}] × [t_j, t_{j+1}]:
            1. Cell maps into U or V (hcell_UV)
            2. Broken-line homotopy: piece_top * β_{i+1} ≃_p β_i * piece_bot (in U/V)
@@ -7058,10 +7058,48 @@ proof -
             foldr mulH (map (\<lambda>i. \<sigma> (piece_top i)) [0..<k]) eH
             = mulH (\<sigma> (\<beta> 0)) (mulH (foldr mulH (map (\<lambda>i. \<sigma> (piece_bot i)) [0..<k]) eH)
                 (invgH (\<sigma> (\<beta> k))))"
-          sorry \<comment> \<open>Induction on k using h_σ_cell + group associativity + inverse cancellation.
-             Base k=0: eH = σ(β 0) · eH · inv(σ(β 0)) = σ(β 0) · inv(σ(β 0)) = eH ✓
-             Step k→k+1: use h_σ_cell at index k to expand σ(piece_top k), then
-             cancel inv(σ(β k)) · σ(β k) = eH in the middle.\<close>
+        proof -
+          fix k show "k \<le> ns' \<Longrightarrow>
+              foldr mulH (map (\<lambda>i. \<sigma> (piece_top i)) [0..<k]) eH
+              = mulH (\<sigma> (\<beta> 0)) (mulH (foldr mulH (map (\<lambda>i. \<sigma> (piece_bot i)) [0..<k]) eH)
+                  (invgH (\<sigma> (\<beta> k))))"
+          proof (induct k)
+            case 0
+            \<comment> \<open>eH = σ(β 0) · eH · inv(σ(β 0)) = σ(β 0) · inv(σ(β 0)) = eH\<close>
+            have h\<beta>0H: "\<sigma> (\<beta> 0) \<in> H" using h\<beta>_H by (by100 force)
+            have hinv\<beta>0H: "invgH (\<sigma> (\<beta> 0)) \<in> H" using hinvH_closed[OF h\<beta>0H] .
+            have "mulH eH (invgH (\<sigma> (\<beta> 0))) = invgH (\<sigma> (\<beta> 0))"
+              using hmulH_eH_l[OF hinv\<beta>0H] .
+            hence "mulH (\<sigma> (\<beta> 0)) (mulH eH (invgH (\<sigma> (\<beta> 0)))) = mulH (\<sigma> (\<beta> 0)) (invgH (\<sigma> (\<beta> 0)))"
+              by (by100 simp)
+            also have "\<dots> = eH" using hinvH_r[OF h\<beta>0H] .
+            finally show ?case by (by100 simp)
+          next
+            case (Suc k)
+            hence hk: "k < ns'" by (by100 presburger)
+            have hk_le: "k \<le> ns'" using Suc.prems by (by100 presburger)
+            \<comment> \<open>IH: foldr_top(0..k) = σ(β 0) · foldr_bot(0..k) · inv(σ(β k))\<close>
+            have hIH: "foldr mulH (map (\<lambda>i. \<sigma> (piece_top i)) [0..<k]) eH
+                = mulH (\<sigma> (\<beta> 0)) (mulH (foldr mulH (map (\<lambda>i. \<sigma> (piece_bot i)) [0..<k]) eH)
+                    (invgH (\<sigma> (\<beta> k))))" using Suc.hyps[OF hk_le] .
+            \<comment> \<open>foldr_top(0..k+1) = foldr_top(0..k) · σ(piece_top k)\<close>
+            have happ: "foldr mulH (map (\<lambda>i. \<sigma> (piece_top i)) [0..<Suc k]) eH
+                = mulH (foldr mulH (map (\<lambda>i. \<sigma> (piece_top i)) [0..<k]) eH) (\<sigma> (piece_top k))"
+              sorry \<comment> \<open>foldr append: [0..<Suc k] = [0..<k] @ [k]\<close>
+            \<comment> \<open>Substitute IH and h_σ_cell:\<close>
+            have hcell_k: "\<sigma> (piece_top k) = mulH (\<sigma> (\<beta> k)) (mulH (\<sigma> (piece_bot k)) (invgH (\<sigma> (\<beta> (Suc k)))))"
+              using h\<sigma>_cell[OF hk] .
+            \<comment> \<open>RHS = σ(β 0) · foldr_bot(0..k) · inv(σ(β k)) · σ(β k) · σ(piece_bot k) · inv(σ(β(k+1)))
+               = σ(β 0) · foldr_bot(0..k) · σ(piece_bot k) · inv(σ(β(k+1)))
+               = σ(β 0) · foldr_bot(0..k+1) · inv(σ(β(k+1)))\<close>
+            have happ_bot: "foldr mulH (map (\<lambda>i. \<sigma> (piece_bot i)) [0..<Suc k]) eH
+                = mulH (foldr mulH (map (\<lambda>i. \<sigma> (piece_bot i)) [0..<k]) eH) (\<sigma> (piece_bot k))"
+              sorry \<comment> \<open>foldr append: [0..<Suc k] = [0..<k] @ [k]\<close>
+            show ?case
+              sorry \<comment> \<open>Group algebra: substitute hIH + hcell_k into happ,
+                 cancel inv(σ(β k)) · σ(β k) = eH, regroup using happ_bot.\<close>
+          qed
+        qed
         from hinter[of ns'] have
           "foldr mulH (map (\<lambda>i. \<sigma> (piece_top i)) [0..<ns']) eH
            = mulH (\<sigma> (\<beta> 0)) (mulH (foldr mulH (map (\<lambda>i. \<sigma> (piece_bot i)) [0..<ns']) eH)
