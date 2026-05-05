@@ -6952,7 +6952,56 @@ proof -
                     ultimately have "sub a = sub b" using heq by (by100 simp)
                     \<comment> \<open>sub injective (strictly increasing).\<close>
                     have hsub_inj: "\<And>x y. x \<le> n \<Longrightarrow> y \<le> n \<Longrightarrow> sub x = sub y \<Longrightarrow> x = y"
-                      sorry \<comment> \<open>Same as hT_inj but for sub. Strictly increasing ⟹ injective.\<close>
+                    proof -
+                      fix x y assume hx: "x \<le> n" and hy: "y \<le> n" and heqs: "sub x = sub y"
+                      show "x = y"
+                      proof (rule ccontr)
+                        assume "x \<noteq> y"
+                        hence "x < y \<or> y < x" by (by100 presburger)
+                        thus False
+                        proof
+                          assume "x < y"
+                          have "sub x < sub y" using \<open>x < y\<close> hy
+                          proof (induct y)
+                            case 0 thus ?case by (by100 simp)
+                          next
+                            case (Suc y')
+                            show ?case
+                            proof (cases "x = y'")
+                              case True thus ?thesis using hinc Suc.prems(2) by (by100 force)
+                            next
+                              case False
+                              hence "x < y'" using Suc.prems(1) by (by100 presburger)
+                              have "y' \<le> n" using Suc.prems(2) by (by100 presburger)
+                              have "y' < n" using Suc.prems(2) by (by100 presburger)
+                              show ?thesis using Suc.hyps[OF \<open>x < y'\<close> \<open>y' \<le> n\<close>]
+                                  hinc \<open>y' < n\<close> by (by100 force)
+                            qed
+                          qed
+                          thus False using heqs by (by100 linarith)
+                        next
+                          assume "y < x"
+                          have "sub y < sub x" using \<open>y < x\<close> hx
+                          proof (induct x)
+                            case 0 thus ?case by (by100 simp)
+                          next
+                            case (Suc x')
+                            show ?case
+                            proof (cases "y = x'")
+                              case True thus ?thesis using hinc Suc.prems(2) by (by100 force)
+                            next
+                              case False
+                              hence "y < x'" using Suc.prems(1) by (by100 presburger)
+                              have "x' \<le> n" using Suc.prems(2) by (by100 presburger)
+                              have "x' < n" using Suc.prems(2) by (by100 presburger)
+                              show ?thesis using Suc.hyps[OF \<open>y < x'\<close> \<open>x' \<le> n\<close>]
+                                  hinc \<open>x' < n\<close> by (by100 force)
+                            qed
+                          qed
+                          thus False using heqs by (by100 linarith)
+                        qed
+                      qed
+                    qed
                     show "a = b" using hsub_inj ha hb \<open>sub a = sub b\<close> by (by100 force)
                   qed
                   have hw_range: "w ` {0..n} \<subseteq> {0..M}" using hw by (by100 force)
