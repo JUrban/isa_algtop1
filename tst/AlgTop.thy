@@ -4538,9 +4538,50 @@ proof -
       \<comment> \<open>β_0 is constant at x0 (since sub_s' 0 = 0 and F(0,t) = x0).\<close>
       \<comment> \<open>σ of a constant-on-I_set path = eH.\<close>
       have h\<sigma>_const: "\<And>c. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> c t = x0) \<Longrightarrow> \<sigma> c = eH"
-        sorry \<comment> \<open>c agrees with constant_path x0 on I_set. σ(constant) = eH because:
-           constant*constant ≃_p constant in U (x0 ∈ U∩V ⊆ U), so
-           σ(c·c) = σ(c)·σ(c) = σ(c). Group law: σ(c)·σ(c) = σ(c) ⟹ σ(c) = eH.\<close>
+      proof -
+        fix c :: "real \<Rightarrow> 'a" assume hc: "\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> c t = x0"
+        \<comment> \<open>c agrees with constant_path x0 on I_set.\<close>
+        have hc_eq: "\<sigma> c = \<sigma> (\<lambda>_. x0)"
+        proof (rule h\<sigma>_I_cong, intro allI impI)
+          fix t :: real assume "0 \<le> t \<and> t \<le> 1"
+          thus "c t = (\<lambda>_. x0) t" using hc by (by100 simp)
+        qed
+        \<comment> \<open>σ(constant_path x0) = eH via group law.\<close>
+        define cx where "cx = (\<lambda>_::real. x0)"
+        have hcx_loop_U: "top1_is_path_on U (subspace_topology X TX U) x0 x0 cx"
+          unfolding cx_def using top1_constant_path_is_path[OF hTopU hx0_U]
+          unfolding top1_constant_path_def by (by100 simp)
+        have hcx_pp: "\<sigma> (top1_path_product cx cx) = \<sigma> cx"
+        proof (rule h\<sigma>_I_cong, intro allI impI)
+          fix t :: real assume ht: "0 \<le> t \<and> t \<le> 1"
+          show "top1_path_product cx cx t = cx t"
+            unfolding top1_path_product_def cx_def by (by100 simp)
+        qed
+        have hcx0: "cx 0 = x0" and hcx1: "cx 1 = x0" unfolding cx_def by (by100 simp)+
+        have hcx_path_gen: "top1_is_path_on U (subspace_topology X TX U) (cx 0) (cx 1) cx"
+          using hcx_loop_U hcx0 hcx1 by (by100 simp)
+        have hcx_match: "cx 1 = cx 0" using hcx0 hcx1 by (by100 simp)
+        have h1: "\<sigma> (top1_path_product cx cx) = mulH (\<sigma> cx) (\<sigma> cx)"
+          using h\<sigma>_cond2[OF hcx_path_gen hcx_path_gen hcx_match] .
+        have h\<sigma>cx_H: "\<sigma> cx \<in> H" sorry \<comment> \<open>from h_σ_piece_in_H or group closure\<close>
+        have hidem: "mulH (\<sigma> cx) (\<sigma> cx) = \<sigma> cx" using h1 hcx_pp by (by100 simp)
+        have "\<sigma> cx = eH"
+        proof -
+          have hinvH: "invgH (\<sigma> cx) \<in> H" by (rule group_inv_closed[OF hH h\<sigma>cx_H])
+          have "mulH (\<sigma> cx) (invgH (\<sigma> cx)) = eH" by (rule group_inv_right[OF hH h\<sigma>cx_H])
+          have "mulH (mulH (\<sigma> cx) (\<sigma> cx)) (invgH (\<sigma> cx))
+              = mulH (\<sigma> cx) (invgH (\<sigma> cx))" using hidem by (by100 simp)
+          moreover have "mulH (mulH (\<sigma> cx) (\<sigma> cx)) (invgH (\<sigma> cx))
+              = mulH (\<sigma> cx) (mulH (\<sigma> cx) (invgH (\<sigma> cx)))"
+            using hH h\<sigma>cx_H hinvH unfolding top1_is_group_on_def by (by100 force)
+          ultimately have "mulH (\<sigma> cx) (mulH (\<sigma> cx) (invgH (\<sigma> cx))) = eH"
+            using \<open>mulH (\<sigma> cx) (invgH (\<sigma> cx)) = eH\<close> by (by100 simp)
+          hence "mulH (\<sigma> cx) eH = eH"
+            using \<open>mulH (\<sigma> cx) (invgH (\<sigma> cx)) = eH\<close> by (by100 simp)
+          thus ?thesis using group_id_right[OF hH h\<sigma>cx_H] by (by100 simp)
+        qed
+        thus "\<sigma> c = eH" using hc_eq cx_def by (by100 simp)
+      qed
       have h\<beta>0: "\<sigma> (\<beta> 0) = eH"
       proof (rule h\<sigma>_const)
         show "\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> \<beta> 0 t = x0"
