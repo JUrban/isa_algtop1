@@ -3525,7 +3525,11 @@ proof -
     foldr mulH (map (\<lambda>i. \<sigma> (\<lambda>t. f (sub i + t * (sub (Suc i) - sub i)))) [0..<n]) eH" for f n sub
   \<comment> \<open>\<tau>(f) = foldr_\<sigma> f (SOME n) (SOME sub) where SOME picks a valid subdivision.\<close>
   define \<tau> where "\<tau> f = (
-    let n = SOME n::nat. n \<ge> 1 \<and> (\<exists>sub. sub 0 = 0 \<and> sub n = 1
+    if (\<exists>n::nat. n \<ge> 1 \<and> (\<exists>sub. sub 0 = 0 \<and> sub n = 1
+        \<and> (\<forall>i<n. sub i < sub (Suc i))
+        \<and> (\<forall>i<n. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> U)
+               \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> V))))
+    then (let n = SOME n::nat. n \<ge> 1 \<and> (\<exists>sub. sub 0 = 0 \<and> sub n = 1
         \<and> (\<forall>i<n. sub i < sub (Suc i))
         \<and> (\<forall>i<n. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> U)
                \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> V)));
@@ -3533,7 +3537,7 @@ proof -
             \<and> (\<forall>i<n. sub i < sub (Suc i))
             \<and> (\<forall>i<n. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> U)
                    \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> V))
-    in foldr_\<sigma> f n sub)" for f
+    in foldr_\<sigma> f n sub) else eH)" for f
   \<comment> \<open>Step 5: Define \<Phi>([f]) = \<tau>(f) for a SOME representative f of the class.\<close>
   define \<Phi> where "\<Phi> c = \<tau> (SOME f. top1_is_loop_on X TX x0 f
       \<and> c = {g. top1_loop_equiv_on X TX x0 f g})" for c
@@ -4493,7 +4497,10 @@ proof -
                \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (S i + t * (S (Suc i) - S i)) \<in> V)"
       using \<open>Psub (SOME s. Psub s)\<close> unfolding S_def Psub_def by (by100 blast)+
     have h\<tau>_eq: "\<tau> f = foldr_\<sigma> f N S"
-      unfolding N_def Pn_def S_def Psub_def \<tau>_def Let_def by (by100 simp)
+    proof -
+      have hexists: "\<exists>m. Pn m" unfolding Pn_def using hn hs0 hsn hinc hpUV by (by100 blast)
+      thus ?thesis unfolding N_def Pn_def S_def Psub_def \<tau>_def Let_def by (by100 simp)
+    qed
     \<comment> \<open>Core: foldr_σ f N S = foldr_σ f n sub (subdivision independence).
        Proof: point insertion argument from Munkres Step 3.\<close>
     \<comment> \<open>Point insertion lemma: inserting one point into a valid subdivision preserves foldr_σ.
@@ -9525,73 +9532,54 @@ proof -
           qed
           hence hS_eq: "\<And>n. (SOME sub. Qsub f1 n sub) = (SOME sub. Qsub f2 n sub)" by (by100 simp)
           \<comment> \<open>Assemble: \<tau> f1 = foldr_\<sigma> f1 N S = foldr_\<sigma> f2 N S = \<tau> f2.\<close>
-          have "\<tau> f1 = foldr_\<sigma> f1 (SOME n. Pn f1 n) (SOME sub. Qsub f1 (SOME n. Pn f1 n) sub)"
-            unfolding \<tau>_def Let_def Pn_def Qsub_def by (by100 simp)
-          also have "\<dots> = foldr_\<sigma> f2 (SOME n. Pn f2 n) (SOME sub. Qsub f2 (SOME n. Pn f2 n) sub)"
-          proof -
-            \<comment> \<open>Since Pn f1 = Pn f2 and Qsub f1 = Qsub f2, the SOME values are identical.
-               So foldr_\<sigma> f1 N S = foldr_\<sigma> f2 N' S' where N=N' and S=S'.\<close>
-            have "foldr_\<sigma> f1 (SOME n. Pn f1 n) (SOME sub. Qsub f1 (SOME n. Pn f1 n) sub)
-                = foldr_\<sigma> f1 (SOME n. Pn f2 n) (SOME sub. Qsub f2 (SOME n. Pn f2 n) sub)"
-              using hN_eq hS_eq by (by100 simp)
-            also have "\<dots> = foldr_\<sigma> f2 (SOME n. Pn f2 n) (SOME sub. Qsub f2 (SOME n. Pn f2 n) sub)"
-            proof (cases "\<exists>n. Pn f2 n")
-              case True
-              hence hPn_valid: "Pn f2 (SOME n. Pn f2 n)" by (rule someI_ex)
-              hence hN_ge: "(SOME n. Pn f2 n) \<ge> 1" unfolding Pn_def by (by100 blast)
-              from hPn_valid have "\<exists>sub. Qsub f2 (SOME n. Pn f2 n) sub"
-                unfolding Pn_def Qsub_def by (by100 fast)
-              hence hQsub_valid: "Qsub f2 (SOME n. Pn f2 n) (SOME sub. Qsub f2 (SOME n. Pn f2 n) sub)"
-                by (rule someI_ex)
-              hence hS0: "(SOME sub. Qsub f2 (SOME n. Pn f2 n) sub) 0 = 0"
-                  and hSN: "(SOME sub. Qsub f2 (SOME n. Pn f2 n) sub) (SOME n. Pn f2 n) = 1"
-                  and hSinc: "\<forall>j<(SOME n. Pn f2 n). (SOME sub. Qsub f2 (SOME n. Pn f2 n) sub) j
-                      < (SOME sub. Qsub f2 (SOME n. Pn f2 n) sub) (Suc j)"
-                unfolding Qsub_def by (by100 blast)+
-              show ?thesis using hfoldr_eq[OF hS0 hSN hSinc] by (by100 simp)
-            next
-              case False
-              \<comment> \<open>No valid subdivision exists. Then τ picks arbitrary SOME values.
-                 Since Pn f1 = Pn f2, there's no valid subdivision for f1 either.
-                 Both τ values use the same SOME-picked (meaningless) n and sub.\<close>
-              \<comment> \<open>Unsatisfiable Pn: the τ values are both the same "default" since
-                 SOME picks the same arbitrary values (hN_eq, hS_eq), and foldr_σ with
-                 those values uses σ on pieces. Since hfext gives f1=f2 on I_set,
-                 and σ uses pieces at I_set points, we get σ-equality.\<close>
-              \<comment> \<open>Both use same SOME n and sub. foldr_σ values equal by hpiece_eq.\<close>
-              \<comment> \<open>Both use same SOME n and sub. Show foldr_σ f1 = foldr_σ f2 via σ-equality.\<close>
-              have "foldr_\<sigma> f1 = foldr_\<sigma> f2"
-              proof (rule ext, rule ext)
-                fix n :: nat and sub :: "nat \<Rightarrow> real"
-                have "\<And>i. \<sigma> (\<lambda>t. f1 (sub i + t * (sub (Suc i) - sub i)))
-                    = \<sigma> (\<lambda>t. f2 (sub i + t * (sub (Suc i) - sub i)))"
-                proof -
-                  fix i
-                  define q1 where "q1 = (\<lambda>t. f1 (sub i + t * (sub (Suc i) - sub i)))"
-                  define q2 where "q2 = (\<lambda>t. f2 (sub i + t * (sub (Suc i) - sub i)))"
-                  \<comment> \<open>q1 and q2 agree on I_set since hfext gives f1=f2 on I_set
-                     and the evaluation point may or may not be in I_set.\<close>
-                  show "\<sigma> q1 = \<sigma> q2"
-                    sorry \<comment> \<open>Edge case: unsatisfiable Pn with arbitrary sub.
-                       This case never arises when h_τ_ext is applied to X-loops
-                       (which always have valid subdivisions, so the True branch is taken).
-                       Closing this would require showing σ is extensional on ALL of ℝ,
-                       which is not needed for the theorem.\<close>
-                qed
-                hence "map (\<lambda>i. \<sigma> (\<lambda>t. f1 (sub i + t * (sub (Suc i) - sub i)))) [0..<n]
-                    = map (\<lambda>i. \<sigma> (\<lambda>t. f2 (sub i + t * (sub (Suc i) - sub i)))) [0..<n]"
-                  by (intro map_cong) (by100 force)+
-                thus "foldr_\<sigma> f1 n sub = foldr_\<sigma> f2 n sub"
-                  unfolding foldr_\<sigma>_def
-                  by (rule arg_cong[of _ _ "\<lambda>xs. foldr mulH xs eH"])
-              qed
-              thus ?thesis using hN_eq hS_eq by (by100 simp)
+          show ?thesis
+          proof (cases "\<exists>n. Pn f2 n")
+            case True
+            \<comment> \<open>Valid subdivision exists for f2, hence also for f1 (since Pn f1 = Pn f2).\<close>
+            hence hPn_f1: "\<exists>n. Pn f1 n" using hPn_eq by (by100 simp)
+            have h\<tau>_f1: "\<tau> f1 = foldr_\<sigma> f1 (SOME n. Pn f1 n) (SOME sub. Qsub f1 (SOME n. Pn f1 n) sub)"
+              using hPn_f1 unfolding \<tau>_def Let_def Pn_def Qsub_def by (by100 simp)
+            have h\<tau>_f2: "\<tau> f2 = foldr_\<sigma> f2 (SOME n. Pn f2 n) (SOME sub. Qsub f2 (SOME n. Pn f2 n) sub)"
+              using True unfolding \<tau>_def Let_def Pn_def Qsub_def by (by100 simp)
+            have hPn_valid: "Pn f2 (SOME n. Pn f2 n)" using True by (rule someI_ex)
+            hence hN_ge: "(SOME n. Pn f2 n) \<ge> 1" unfolding Pn_def by (by100 blast)
+            from hPn_valid have "\<exists>sub. Qsub f2 (SOME n. Pn f2 n) sub"
+              unfolding Pn_def Qsub_def by (by100 fast)
+            hence hQsub_valid: "Qsub f2 (SOME n. Pn f2 n) (SOME sub. Qsub f2 (SOME n. Pn f2 n) sub)"
+              by (rule someI_ex)
+            hence hS0: "(SOME sub. Qsub f2 (SOME n. Pn f2 n) sub) 0 = 0"
+                and hSN: "(SOME sub. Qsub f2 (SOME n. Pn f2 n) sub) (SOME n. Pn f2 n) = 1"
+                and hSinc: "\<forall>j<(SOME n. Pn f2 n). (SOME sub. Qsub f2 (SOME n. Pn f2 n) sub) j
+                    < (SOME sub. Qsub f2 (SOME n. Pn f2 n) sub) (Suc j)"
+              unfolding Qsub_def by (by100 blast)+
+            have "foldr_\<sigma> f1 (SOME n. Pn f2 n) (SOME sub. Qsub f2 (SOME n. Pn f2 n) sub)
+                = foldr_\<sigma> f2 (SOME n. Pn f2 n) (SOME sub. Qsub f2 (SOME n. Pn f2 n) sub)"
+              using hfoldr_eq[OF hS0 hSN hSinc] by (by100 simp)
+            thus ?thesis using h\<tau>_f1 h\<tau>_f2 hN_eq hS_eq by (by100 simp)
+          next
+            case False
+            \<comment> \<open>No valid subdivision: τ defaults to eH for both f1 and f2.\<close>
+            hence hno_f1: "\<not>(\<exists>n. Pn f1 n)" using hPn_eq by (by100 simp)
+            have h\<tau>_f1: "\<tau> f1 = eH"
+            proof -
+              define P1 where "P1 \<equiv> (\<exists>n::nat. n \<ge> 1 \<and> (\<exists>sub. sub 0 = 0 \<and> sub n = 1
+                  \<and> (\<forall>i<n. sub i < sub (Suc i))
+                  \<and> (\<forall>i<n. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f1 (sub i + t * (sub (Suc i) - sub i)) \<in> U)
+                         \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f1 (sub i + t * (sub (Suc i) - sub i)) \<in> V))))"
+              have hnP1: "\<not> P1" using hno_f1 unfolding Pn_def P1_def by (by100 simp)
+              show ?thesis unfolding \<tau>_def P1_def[symmetric] using hnP1 by (by100 simp)
             qed
-            finally show ?thesis .
+            have h\<tau>_f2: "\<tau> f2 = eH"
+            proof -
+              define P2 where "P2 \<equiv> (\<exists>n::nat. n \<ge> 1 \<and> (\<exists>sub. sub 0 = 0 \<and> sub n = 1
+                  \<and> (\<forall>i<n. sub i < sub (Suc i))
+                  \<and> (\<forall>i<n. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f2 (sub i + t * (sub (Suc i) - sub i)) \<in> U)
+                         \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f2 (sub i + t * (sub (Suc i) - sub i)) \<in> V))))"
+              have hnP2: "\<not> P2" using False unfolding Pn_def P2_def by (by100 simp)
+              show ?thesis unfolding \<tau>_def P2_def[symmetric] using hnP2 by (by100 simp)
+            qed
+            show ?thesis using h\<tau>_f1 h\<tau>_f2 by (by100 simp)
           qed
-          also have "\<dots> = \<tau> f2"
-            unfolding \<tau>_def Let_def Pn_def Qsub_def by (by100 simp)
-          finally show ?thesis .
         qed
       qed
     qed
@@ -9749,7 +9737,7 @@ proof -
             define S' where "S' = (SOME sub. Psub' sub)"
             \<comment> \<open>τ(f') = foldr_σ f' N' S'.\<close>
             have h\<tau>_eq': "\<tau> f' = foldr_\<sigma> f' N' S'"
-              unfolding N'_def Pn'_def S'_def Psub'_def \<tau>_def Let_def by (by100 simp)
+              using hex' unfolding N'_def Pn'_def S'_def Psub'_def \<tau>_def Let_def by (by100 simp)
             \<comment> \<open>foldr_σ f' N' S' = foldr mulH [σ(pieces)] eH. Show ∈ H.\<close>
             have "foldr_\<sigma> f' N' S' \<in> H"
             proof -
@@ -10818,6 +10806,11 @@ proof -
       have htrivial_eq: "foldr_\<sigma> f 1 (\<lambda>i. real i) = \<sigma> f"
         using htrivial hid by (by100 simp)
       \<comment> \<open>Step 2: \<tau> f = foldr_\<sigma> f n sub for the SOME-picked n, sub.\<close>
+      have hex_f: "\<exists>n::nat. n \<ge> 1 \<and> (\<exists>sub::nat\<Rightarrow>real. sub 0 = 0 \<and> sub n = 1
+          \<and> (\<forall>i<n. sub i < sub (Suc i))
+          \<and> (\<forall>i<n. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> U)
+                 \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> V)))"
+        by (rule loop_subdivision_UV[OF hTopX hU hV hUV hf_loop_X])
       have h\<tau>_eq: "\<tau> f = foldr_\<sigma> f (SOME n. n \<ge> 1 \<and> (\<exists>sub. sub 0 = 0 \<and> sub n = 1
           \<and> (\<forall>i<n. sub i < sub (Suc i))
           \<and> (\<forall>i<n. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> U)
@@ -10836,7 +10829,7 @@ proof -
                  \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> V)))).
               (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> U)
            \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> V)))"
-        unfolding \<tau>_def Let_def by (by100 simp)
+        using hex_f unfolding \<tau>_def Let_def by (by100 simp)
       \<comment> \<open>Step 3: Subdivision independence: any valid (n, sub) gives foldr_\<sigma> f n sub = \<sigma> f.
          Then h\<tau>_eq + subdivision independence + htrivial_eq give \<tau> f = \<sigma> f.\<close>
       \<comment> \<open>Step 3: Subdivision independence.\<close>
@@ -12816,7 +12809,7 @@ proof -
       have hsubdiv_V_app: "foldr_\<sigma> g N_V S_V = \<sigma> g"
         by (rule hsubdiv_V[OF hN_V_ge hS_V_0 hS_V_N hS_V_inc hS_V_UV])
       have h\<tau>_foldr_V: "\<tau> g = foldr_\<sigma> g N_V S_V"
-        unfolding N_V_def Pn_V_def S_V_def Psub_V_def \<tau>_def Let_def by (by100 simp)
+        using hPn_V_ex unfolding N_V_def Pn_V_def S_V_def Psub_V_def \<tau>_def Let_def by (by100 simp)
       show ?thesis using h\<tau>_foldr_V hsubdiv_V_app by (by100 simp)
     qed
     have h\<alpha>_x0_V: "\<alpha> x0 = top1_constant_path x0" unfolding \<alpha>_def by (by100 simp)
