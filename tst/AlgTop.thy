@@ -6885,8 +6885,75 @@ proof -
                      If k > j: T'(k-1) = T(k) = sub(i). k ≠ j by hj_not_sub.\<close>
                 \<comment> \<open>h_point_insert gives: foldr_σ f M T = foldr_σ f (M-1) T'.\<close>
                 have hinsert: "foldr_\<sigma> f M T = foldr_\<sigma> f (M - 1) T'"
-                  sorry \<comment> \<open>h_point_insert[symmetric] with k=j-1, p=T(j): inserting T(j) between
-                     T'(j-1)=T(j-1) and T'(j)=T(j+1) gives back T. So foldr_σ f M T = foldr_σ f (M-1) T'.\<close>
+                proof -
+                  \<comment> \<open>h_point_insert with m=M-1, s=T', k=j-1, p=T(j).\<close>
+                  have hM1: "M - 1 \<ge> 1" using hMgt hn by (by100 presburger)
+                  have hT'0: "T' 0 = (0::real)" unfolding T'_def using hj_pos less.prems(2) by (by100 simp)
+                  have "\<not> (M - 1 < j)" using hj_lt by (by100 presburger)
+                  have hT'M1: "T' (M-1) = 1" unfolding T'_def
+                    using \<open>\<not> (M - 1 < j)\<close> hj_lt less.prems(3) by (by100 simp)
+                  have hk_lt: "j - 1 < M - 1" using hj_lt hj_pos by (by100 presburger)
+                  have hpL: "T' (j-1) < T j"
+                  proof -
+                    have "T' (j-1) = T (j-1)" unfolding T'_def using hj_pos by (by100 simp)
+                    moreover have "T (j-1) < T j"
+                    proof -
+                      have "j - 1 < M" using hj_lt by (by100 presburger)
+                      have "T (j-1) < T (Suc (j-1))" using less.prems(4) \<open>j-1 < M\<close> by (by100 blast)
+                      moreover have "Suc (j-1) = j" using hj_pos by (by100 presburger)
+                      ultimately show ?thesis by (by100 simp)
+                    qed
+                    ultimately show ?thesis by (by100 simp)
+                  qed
+                  have hSuc_j1: "Suc (j - 1) = j" using hj_pos by (by100 presburger)
+                  have hpR: "T j < T' (Suc (j-1))"
+                  proof -
+                    have "T' (Suc (j-1)) = T' j" using hSuc_j1 by (by100 simp)
+                    also have "T' j = T (Suc j)" unfolding T'_def by (by100 simp)
+                    finally have "T' (Suc (j-1)) = T (Suc j)" .
+                    moreover have "T j < T (Suc j)" using less.prems(4) hj_lt by (by100 force)
+                    ultimately show ?thesis by (by100 simp)
+                  qed
+                  \<comment> \<open>h_point_insert gives: foldr_σ f (Suc(M-1)) s' = foldr_σ f (M-1) T'
+                     where s'(i) = if i≤j-1 then T'(i) else if i=j then T(j) else T'(i-1).\<close>
+                  have hT'inc: "\<forall>i<M-1. T' i < T' (Suc i)" using hT'_valid by (by100 blast)
+                  have hT'UV: "\<forall>i<M-1. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T' i + t * (T' (Suc i) - T' i)) \<in> U)
+                       \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T' i + t * (T' (Suc i) - T' i)) \<in> V)"
+                    using hT'_valid by (by100 blast)
+                  have hpi: "foldr_\<sigma> f (Suc (M-1))
+                      (\<lambda>i. if i \<le> j-1 then T' i else if i = Suc (j-1) then T j else T' (i-1))
+                      = foldr_\<sigma> f (M-1) T'"
+                    by (rule h_point_insert[OF hM1 hT'0 hT'M1 hT'inc hT'UV hk_lt hpL hpR])
+                  \<comment> \<open>The s' function equals T on [0..M].\<close>
+                  have hs'_T: "(\<lambda>i. if i \<le> j-1 then T' i else if i = Suc (j-1) then T j else T' (i-1)) = T"
+                  proof (rule ext)
+                    fix i show "(if i \<le> j-1 then T' i else if i = Suc (j-1) then T j else T' (i-1)) = T i"
+                    proof (cases "i \<le> j - 1")
+                      case True
+                      hence "i < j" using hj_pos by (by100 presburger)
+                      have "T' i = T i" unfolding T'_def using \<open>i < j\<close> by (by100 presburger)
+                      thus ?thesis using True by (by100 simp)
+                    next
+                      case False
+                      show ?thesis
+                      proof (cases "i = Suc (j-1)")
+                        case True
+                        hence "i = j" using hSuc_j1 by (by100 simp)
+                        thus ?thesis using False True by (by100 simp)
+                      next
+                        case False2: False
+                        hence "i > j" using False hj_pos by (by100 presburger)
+                        hence "\<not> (i - 1 < j)" by (by100 presburger)
+                        hence "T' (i-1) = T (Suc (i-1))" unfolding T'_def by (by100 simp)
+                        moreover have "Suc (i-1) = i" using \<open>i > j\<close> hj_pos by (by100 presburger)
+                        ultimately have "T' (i-1) = T i" by (by100 simp)
+                        thus ?thesis using False False2 by (by100 simp)
+                      qed
+                    qed
+                  qed
+                  have "Suc (M-1) = M" using hMgt hn by (by100 presburger)
+                  thus ?thesis using hpi hs'_T by (by100 simp)
+                qed
                 \<comment> \<open>IH: foldr_σ f (M-1) T' = foldr_σ f n sub.\<close>
                 have "foldr_\<sigma> f (M - 1) T' = foldr_\<sigma> f n sub"
                   sorry \<comment> \<open>IH application: M-1 < M, T' valid with M-1 pieces, T' refines sub.\<close>
