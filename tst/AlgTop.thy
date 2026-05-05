@@ -6853,9 +6853,22 @@ proof -
                 case True
                 \<comment> \<open>Base: M = n, T has same #pieces as sub. Since T ⊇ sub and both strictly
                    increasing with same endpoints, T = sub on [0..n].\<close>
-                have "T = sub"
-                  sorry \<comment> \<open>Two strictly increasing functions [0..n]→[0,1] with same endpoints
-                     and range(T) ⊇ range(sub) and |range(T)| = |range(sub)| ⟹ T = sub on [0..n].\<close>
+                have hT_eq_sub: "\<forall>i\<le>n. T i = sub i"
+                  sorry \<comment> \<open>Both strictly increasing with n+1 points, same endpoints, T ⊇ sub-values.
+                     Two strict-inc enumerations of n+1 values from the same superset of size n+1
+                     must be identical. Proof: induction on i, using T(0) = sub(0) = 0 as base,
+                     and at each step: T(i+1) is the smallest T-value > T(i) = sub(i),
+                     and sub(i+1) is in T, so sub(i+1) ≥ T(i+1), but also T(i+1) ≥ sub(i+1)
+                     because sub(i+1) is the next sub-value and must appear in T at some index ≤ i+1.\<close>
+                have "foldr_\<sigma> f n T = foldr_\<sigma> f n sub"
+                proof -
+                  have "\<And>i. i < n \<Longrightarrow> T i = sub i \<and> T (Suc i) = sub (Suc i)"
+                    using hT_eq_sub by (by100 force)
+                  hence hmap_eq: "map (\<lambda>i. \<sigma> (\<lambda>t. f (T i + t * (T (Suc i) - T i)))) [0..<n]
+                      = map (\<lambda>i. \<sigma> (\<lambda>t. f (sub i + t * (sub (Suc i) - sub i)))) [0..<n]"
+                    by (intro map_cong, by100 simp, by100 simp)
+                  show ?thesis unfolding foldr_\<sigma>_def using hmap_eq by (by100 presburger)
+                qed
                 thus ?thesis using True by (by100 simp)
               next
                 case False
