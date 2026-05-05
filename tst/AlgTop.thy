@@ -7648,11 +7648,47 @@ proof -
               assume hx: "x \<in> I_set \<times> I_set" and hy: "y \<in> I_set \<times> I_set"
               \<comment> \<open>Straight line from x to y stays in I×I.\<close>
               let ?\<gamma> = "\<lambda>t::real. ((1-t) * fst x + t * fst y, (1-t) * snd x + t * snd y)"
-              have "\<exists>f. top1_is_path_on (I_set \<times> I_set) II_topology x y f"
-                sorry \<comment> \<open>γ is continuous (continuous_intros + Theorem_18_4) and maps I_set into I×I
-                   (convex combination: (1-t)*a+t*b ∈ [0,1] for a,b ∈ [0,1], t ∈ [0,1]).
-                   γ(0) = x, γ(1) = y. Full proof: ~80 lines from Top1_Ch9_13.thy:14104.\<close>
-              thus "\<exists>f. top1_is_path_on (I_set \<times> I_set) II_topology x y f" .
+              have hTI_loc: "is_topology_on I_set I_top" by (rule top1_unit_interval_topology_is_topology_on)
+              \<comment> \<open>Each component of γ maps I_set into I_set (convex combination).\<close>
+              have hc1_range: "\<And>t. t \<in> I_set \<Longrightarrow> (1-t) * fst x + t * fst y \<in> I_set"
+              proof -
+                fix t assume ht: "t \<in> I_set"
+                have ht': "0 \<le> t" "t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 force)+
+                have ha: "0 \<le> fst x" "fst x \<le> 1" using hx unfolding top1_unit_interval_def by (by100 force)+
+                have hb: "0 \<le> fst y" "fst y \<le> 1" using hy unfolding top1_unit_interval_def by (by100 force)+
+                have "0 \<le> 1 - t" using ht' by (by100 linarith)
+                have "0 \<le> (1-t) * fst x + t * fst y"
+                  using mult_nonneg_nonneg[OF \<open>0 \<le> 1 - t\<close> ha(1)] mult_nonneg_nonneg[OF ht'(1) hb(1)]
+                  by (by100 linarith)
+                moreover have "(1-t) * fst x + t * fst y \<le> 1"
+                  by (rule convex_bound_le[OF ha(2) hb(2) \<open>0 \<le> 1 - t\<close> ht'(1)]) (by100 simp)
+                ultimately show "(1-t) * fst x + t * fst y \<in> I_set"
+                  unfolding top1_unit_interval_def by (by100 force)
+              qed
+              have hc2_range: "\<And>t. t \<in> I_set \<Longrightarrow> (1-t) * snd x + t * snd y \<in> I_set"
+              proof -
+                fix t assume ht: "t \<in> I_set"
+                have ht': "0 \<le> t" "t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 force)+
+                have ha: "0 \<le> snd x" "snd x \<le> 1" using hx unfolding top1_unit_interval_def by (by100 force)+
+                have hb: "0 \<le> snd y" "snd y \<le> 1" using hy unfolding top1_unit_interval_def by (by100 force)+
+                have "0 \<le> 1 - t" using ht' by (by100 linarith)
+                have "0 \<le> (1-t) * snd x + t * snd y"
+                  using mult_nonneg_nonneg[OF \<open>0 \<le> 1 - t\<close> ha(1)] mult_nonneg_nonneg[OF ht'(1) hb(1)]
+                  by (by100 linarith)
+                moreover have "(1-t) * snd x + t * snd y \<le> 1"
+                  by (rule convex_bound_le[OF ha(2) hb(2) \<open>0 \<le> 1 - t\<close> ht'(1)]) (by100 simp)
+                ultimately show "(1-t) * snd x + t * snd y \<in> I_set"
+                  unfolding top1_unit_interval_def by (by100 force)
+              qed
+              \<comment> \<open>γ continuous via Theorem_18_4.\<close>
+              have hg_cont: "top1_continuous_map_on I_set I_top (I_set \<times> I_set) II_topology ?\<gamma>"
+                sorry \<comment> \<open>pi1∘γ = (λt. (1-t)*fst x + t*fst y) continuous (continuous_on UNIV by continuous_intros,
+                   restrict to I_set). pi2∘γ same. Theorem_18_4 gives pair continuous. ~30 lines.\<close>
+              have hg0: "?\<gamma> 0 = x" by (by100 simp)
+              have hg1: "?\<gamma> 1 = y" by (by100 simp)
+              have "top1_is_path_on (I_set \<times> I_set) II_topology x y ?\<gamma>"
+                unfolding top1_is_path_on_def using hg_cont hg0 hg1 by (by100 blast)
+              thus "\<exists>f. top1_is_path_on (I_set \<times> I_set) II_topology x y f" by (by100 blast)
             qed
           next
             show "\<forall>x0\<in>I_set \<times> I_set. \<forall>f. top1_is_loop_on (I_set \<times> I_set) II_topology x0 f \<longrightarrow>
