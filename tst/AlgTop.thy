@@ -6921,8 +6921,44 @@ proof -
                 qed
                 have hT'_UV: "\<forall>i<M-1. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T' i + t * (T' (Suc i) - T' i)) \<in> U)
                      \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T' i + t * (T' (Suc i) - T' i)) \<in> V)"
-                  sorry \<comment> \<open>Each T'-piece is a sub-interval of some T-piece (or merge of adjacent T-pieces
-                     within a single sub-piece). The sub-piece maps to U or V, so the T'-piece does too.\<close>
+                proof (intro allI impI)
+                  fix i assume hi: "i < M - 1"
+                  \<comment> \<open>T'-piece [T'(i), T'(Suc i)] is a sub-interval of some T-piece or merge.\<close>
+                  show "(\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T' i + t * (T' (Suc i) - T' i)) \<in> U)
+                      \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T' i + t * (T' (Suc i) - T' i)) \<in> V)"
+                  proof (cases "Suc i < j")
+                    case True \<comment> \<open>Both below j: T'-piece = T-piece at index i.\<close>
+                    have "T' i = T i" unfolding T'_def using True by (by100 presburger)
+                    have "T' (Suc i) = T (Suc i)" unfolding T'_def using True by (by100 presburger)
+                    have "i < M" using hi by (by100 presburger)
+                    show ?thesis using \<open>T' i = T i\<close> \<open>T' (Suc i) = T (Suc i)\<close> less.prems(5) \<open>i < M\<close>
+                      by (by100 force)
+                  next
+                    case False
+                    show ?thesis
+                    proof (cases "i < j")
+                      case True \<comment> \<open>i = j-1: merge of T-pieces at j-1 and j.\<close>
+                      \<comment> \<open>T'-piece = [T(j-1), T(j+1)]. This is within some sub-piece [sub(k), sub(k+1)]
+                         because T(j) ∉ sub, so T(j-1) and T(j+1) are in the same sub-interval.\<close>
+                      have "T' i = T i" unfolding T'_def using True by (by100 presburger)
+                      have "\<not> (Suc i < j)" using False .
+                      have "T' (Suc i) = T (Suc (Suc i))" unfolding T'_def using \<open>\<not>(Suc i < j)\<close> by (by100 simp)
+                      \<comment> \<open>The key: [T(i), T(Suc(Suc i))] = [T(j-1), T(j+1)] is within a sub-piece.
+                         T(j) is not a sub-point, so both T(j-1) to T(j) and T(j) to T(j+1) are
+                         sub-intervals of the SAME sub-piece. Hence the merge also maps to U or V.\<close>
+                      show ?thesis sorry \<comment> \<open>Merged piece UV: needs ∃k. sub(k) ≤ T(j-1) < T(j+1) ≤ sub(k+1)
+                         and sub-piece [sub(k), sub(k+1)] maps to U or V.\<close>
+                    next
+                      case inner_False: False \<comment> \<open>Both above j: T'-piece = T-piece at index Suc i.\<close>
+                      have "T' i = T (Suc i)" unfolding T'_def using inner_False by (by100 simp)
+                      have "\<not> (Suc i < j)" using inner_False by (by100 presburger)
+                      have "T' (Suc i) = T (Suc (Suc i))" unfolding T'_def using \<open>\<not>(Suc i < j)\<close> by (by100 simp)
+                      have "Suc i < M" using hi by (by100 presburger)
+                      show ?thesis using \<open>T' i = T (Suc i)\<close> \<open>T' (Suc i) = T (Suc (Suc i))\<close>
+                          less.prems(5) \<open>Suc i < M\<close> by (by100 force)
+                    qed
+                  qed
+                qed
                 have hT'_valid: "M - 1 \<ge> 1 \<and> T' 0 = 0 \<and> T' (M-1) = 1
                     \<and> (\<forall>i<M-1. T' i < T' (Suc i))
                     \<and> (\<forall>i<M-1. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T' i + t * (T' (Suc i) - T' i)) \<in> U)
