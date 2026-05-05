@@ -7099,7 +7099,7 @@ proof -
                 using foldr_mul_append[OF hH hxs hys] hmap_split by (by100 simp)
               have hf1: "foldr mulH [\<sigma> (piece_top k)] eH = \<sigma> (piece_top k)"
                 using hmulH_eH[OF h\<sigma>_top_H[OF hk]] by (by100 simp)
-              show ?thesis using hfma hf1 sorry \<comment> \<open>trivial: subst foldr [x] e = x into hfma\<close>
+              show ?thesis by (rule ssubst[OF hf1[symmetric]]) (rule hfma)
             qed
             \<comment> \<open>Substitute IH and h_σ_cell:\<close>
             have hcell_k: "\<sigma> (piece_top k) = mulH (\<sigma> (\<beta> k)) (mulH (\<sigma> (piece_bot k)) (invgH (\<sigma> (\<beta> (Suc k)))))"
@@ -7111,19 +7111,19 @@ proof -
                 = mulH (foldr mulH (map (\<lambda>i. \<sigma> (piece_bot i)) [0..<k]) eH) (\<sigma> (piece_bot k))"
             proof -
               have "[0..<Suc k] = [0..<k] @ [k]" by (by100 simp)
-              hence hmap_split: "map (\<lambda>i. \<sigma> (piece_top i)) [0..<Suc k]
-                  = map (\<lambda>i. \<sigma> (piece_top i)) [0..<k] @ [\<sigma> (piece_top k)]" by (by100 simp)
-              have hxs: "\<forall>i<length (map (\<lambda>i. \<sigma> (piece_top i)) [0..<k]). (map (\<lambda>i. \<sigma> (piece_top i)) [0..<k])!i \<in> H"
-                using h\<sigma>_top_H hk by (by100 force)
-              have hys: "\<forall>i<length [\<sigma> (piece_top k)]. [\<sigma> (piece_top k)]!i \<in> H"
-                using h\<sigma>_top_H hk by (by100 force)
-              have hfma: "foldr mulH (map (\<lambda>i. \<sigma> (piece_top i)) [0..<Suc k]) eH
-                  = mulH (foldr mulH (map (\<lambda>i. \<sigma> (piece_top i)) [0..<k]) eH)
-                         (foldr mulH [\<sigma> (piece_top k)] eH)"
+              hence hmap_split: "map (\<lambda>i. \<sigma> (piece_bot i)) [0..<Suc k]
+                  = map (\<lambda>i. \<sigma> (piece_bot i)) [0..<k] @ [\<sigma> (piece_bot k)]" by (by100 simp)
+              have hxs: "\<forall>i<length (map (\<lambda>i. \<sigma> (piece_bot i)) [0..<k]). (map (\<lambda>i. \<sigma> (piece_bot i)) [0..<k])!i \<in> H"
+                using h\<sigma>_bot_H hk by (by100 force)
+              have hys: "\<forall>i<length [\<sigma> (piece_bot k)]. [\<sigma> (piece_bot k)]!i \<in> H"
+                using h\<sigma>_bot_H hk by (by100 force)
+              have hfma: "foldr mulH (map (\<lambda>i. \<sigma> (piece_bot i)) [0..<Suc k]) eH
+                  = mulH (foldr mulH (map (\<lambda>i. \<sigma> (piece_bot i)) [0..<k]) eH)
+                         (foldr mulH [\<sigma> (piece_bot k)] eH)"
                 using foldr_mul_append[OF hH hxs hys] hmap_split by (by100 simp)
-              have hf1: "foldr mulH [\<sigma> (piece_top k)] eH = \<sigma> (piece_top k)"
-                using hmulH_eH[OF h\<sigma>_top_H[OF hk]] by (by100 simp)
-              show ?thesis using hfma hf1 sorry \<comment> \<open>trivial: subst foldr [x] e = x into hfma\<close>
+              have hf1: "foldr mulH [\<sigma> (piece_bot k)] eH = \<sigma> (piece_bot k)"
+                using hmulH_eH[OF h\<sigma>_bot_H[OF hk]] by (by100 simp)
+              show ?thesis by (rule ssubst[OF hf1[symmetric]]) (rule hfma)
             qed
             show ?case
               sorry \<comment> \<open>Group algebra: substitute hIH + hcell_k into happ,
