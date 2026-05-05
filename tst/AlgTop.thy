@@ -6197,8 +6197,8 @@ definition top1_is_graph_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> bo
              (closedin_on X TX C \<longleftrightarrow>
               (\<forall>A\<in>\<A>. closedin_on A (subspace_topology X TX A) (A \<inter> C)))))"
 
-(** from \<S>83 Theorem 83.2: any covering space of a graph is itself a graph. **)
-theorem Theorem_83_2_covering_of_graph_is_graph:
+(** from \<S>83 Theorem 83.4 (Munkres numbering): any covering space of a graph is itself a graph. **)
+theorem Theorem_83_4_covering_of_graph_is_graph:
   assumes "top1_is_graph_on B TB"
       and "top1_covering_map_on E TE B TB p"
   shows "top1_is_graph_on E TE"
