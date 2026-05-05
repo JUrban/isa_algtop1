@@ -7137,7 +7137,24 @@ proof -
               \<comment> \<open>H-membership.\<close>
               have hAH: "A \<in> H" unfolding A_def using h\<beta>_H by (by100 force)
               have hBH: "B \<in> H" unfolding B_def
-                sorry \<comment> \<open>foldr of H-elements in H (same proof as line ~7204)\<close>
+              proof -
+                have "\<And>xs. (\<forall>x \<in> set xs. x \<in> H) \<Longrightarrow> foldr mulH xs eH \<in> H"
+                proof -
+                  fix xs show "(\<forall>x \<in> set xs. x \<in> H) \<Longrightarrow> foldr mulH xs eH \<in> H"
+                  proof (induct xs)
+                    case Nil thus ?case using heH by (by100 simp)
+                  next
+                    case (Cons a xs)
+                    have "a \<in> H" using Cons.prems by (by100 simp)
+                    have "foldr mulH xs eH \<in> H" using Cons.hyps Cons.prems by (by100 simp)
+                    show ?case using hmulH_closed[OF \<open>a \<in> H\<close> \<open>foldr mulH xs eH \<in> H\<close>] by (by100 simp)
+                  qed
+                qed
+                have "\<forall>x \<in> set (map (\<lambda>i. \<sigma> (piece_bot i)) [0..<k]). x \<in> H"
+                  using h\<sigma>_bot_H hk by (by100 force)
+                thus "foldr mulH (map (\<lambda>i. \<sigma> (piece_bot i)) [0..<k]) eH \<in> H"
+                  using \<open>\<And>xs. (\<forall>x \<in> set xs. x \<in> H) \<Longrightarrow> foldr mulH xs eH \<in> H\<close> by (by100 blast)
+              qed
               have hCH: "C \<in> H" unfolding C_def using hinvH_closed h\<beta>_H hk_le by (by100 force)
               have hDH: "D \<in> H" unfolding D_def using h\<beta>_H hk_le by (by100 force)
               have hEH: "E \<in> H" unfolding E_def using h\<sigma>_bot_H hk by (by100 force)
