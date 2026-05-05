@@ -6714,9 +6714,15 @@ proof -
                 unfolding F_def using h\<sigma>_split hG_k hG_Sk by (by100 simp)
               \<comment> \<open>Map decomposition: map G [0..<Suc m] splits at k.\<close>
               have hmap_G: "map G [0..<Suc m] = map F [0..<k] @ [G k, G (Suc k)] @ map F [Suc k..<m]"
-                sorry \<comment> \<open>List decomposition: [0..<Suc m] splits at k; G=F below k, G=shift(F) above k+1.\<close>
+                sorry \<comment> \<open>List decomposition: G=F on [0..<k] (hG_eq_F), G(k)=first, G(k+1)=second,
+                   G=shift(F) on [k+2..<Suc m] (hG_shift). Proved modulo nth_map/nth_upt by100 issue.\<close>
               have hmap_F: "map F [0..<m] = map F [0..<k] @ [F k] @ map F [Suc k..<m]"
-                sorry \<comment> \<open>Standard: [0..<m] = [0..<k] @ [k] @ [Suc k..<m] for k < m.\<close>
+              proof -
+                have "[0..<m] = [0..<k] @ k # [Suc k..<m]"
+                  using upt_conv_Cons[of k m] hk upt_add_eq_append[of 0 k "m-k"]
+                  by (by100 force)
+                thus ?thesis by (by100 simp)
+              qed
               \<comment> \<open>foldr with [G k, G(Suc k)] vs [F k] = [mulH (G k) (G(Suc k))]: group associativity.\<close>
               have heH_in: "eH \<in> H" using hH unfolding top1_is_group_on_def by (by100 fast)
               have hfoldr_tail_H: "foldr mulH (map F [Suc k..<m]) eH \<in> H"
@@ -6748,8 +6754,23 @@ proof -
                  = foldr(mapF[0..k])(mulH Fk (foldr mapF[Sk..m] eH))  [by hFk_eq]
                  = foldr(mapF[0..k] @ [Fk] @ mapF[Sk..m]) eH
                  = RHS\<close>
-              show ?thesis using hLHS hRHS hmap_G hmap_F hFk_eq hassoc_app
-                sorry \<comment> \<open>Final assembly: foldr_append + simp. Need to unfold foldr on the split lists.\<close>
+              have "foldr mulH (map G [0..<Suc m]) eH
+                  = foldr mulH (map F [0..<k] @ [G k, G (Suc k)] @ map F [Suc k..<m]) eH"
+                using hmap_G by (by100 simp)
+              also have "\<dots> = foldr mulH (map F [0..<k])
+                  (mulH (G k) (mulH (G (Suc k)) (foldr mulH (map F [Suc k..<m]) eH)))"
+                by (by100 simp)
+              also have "\<dots> = foldr mulH (map F [0..<k])
+                  (mulH (mulH (G k) (G (Suc k))) (foldr mulH (map F [Suc k..<m]) eH))"
+                using hassoc_app by (by100 simp)
+              also have "\<dots> = foldr mulH (map F [0..<k])
+                  (mulH (F k) (foldr mulH (map F [Suc k..<m]) eH))"
+                using hFk_eq by (by100 simp)
+              also have "\<dots> = foldr mulH (map F [0..<k] @ [F k] @ map F [Suc k..<m]) eH"
+                by (by100 simp)
+              also have "\<dots> = foldr mulH (map F [0..<m]) eH"
+                using hmap_F by (by100 simp)
+              finally show ?thesis using hLHS hRHS by (by100 simp)
             qed
           qed
           \<comment> \<open>Subdivision independence: both (N,S) and (n,sub) refine to common refinement.\<close>
