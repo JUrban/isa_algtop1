@@ -4535,6 +4535,36 @@ proof -
               (straight-line homotopy in convex rectangle, composed with F)
            3. σ_cond1 + σ_cond2: σ(piece_top) · σ(β_{i+1}) = σ(β_i) · σ(piece_bot)
            4. Rearrange: σ(piece_top) = σ(β_i) · σ(piece_bot) · σ(β_{i+1})⁻¹\<close>
+      \<comment> \<open>sub_t bounds: values in [0,1].\<close>
+      have hsubt_ge: "\<And>j'. j' \<le> nt \<Longrightarrow> 0 \<le> sub_t j'"
+      proof -
+        fix j' show "j' \<le> nt \<Longrightarrow> 0 \<le> sub_t j'"
+        proof (induct j')
+          case 0 thus ?case using ht0 by (by100 simp)
+        next
+          case (Suc j'')
+          have "j'' \<le> nt" using Suc.prems by (by100 presburger)
+          have "j'' < nt" using Suc.prems by (by100 presburger)
+          have "sub_t j'' < sub_t (Suc j'')" using htinc \<open>j'' < nt\<close> by (by100 force)
+          moreover have "0 \<le> sub_t j''" using Suc.hyps[OF \<open>j'' \<le> nt\<close>] .
+          ultimately show ?case by (by100 linarith)
+        qed
+      qed
+      have hsubt_le: "\<And>j'. j' \<le> nt \<Longrightarrow> sub_t j' \<le> 1"
+      proof -
+        fix j' show "j' \<le> nt \<Longrightarrow> sub_t j' \<le> 1"
+        proof (induct "nt - j'" arbitrary: j')
+          case 0 thus ?case using htn by (by100 simp)
+        next
+          case (Suc d)
+          have "j' < nt" using Suc.hyps(2) by (by100 presburger)
+          have "Suc j' \<le> nt" using \<open>j' < nt\<close> by (by100 presburger)
+          have "d = nt - Suc j'" using Suc.hyps(2) by (by100 presburger)
+          have "sub_t (Suc j') \<le> 1" using Suc.hyps(1)[OF \<open>d = nt - Suc j'\<close> \<open>Suc j' \<le> nt\<close>] .
+          moreover have "sub_t j' < sub_t (Suc j')" using htinc \<open>j' < nt\<close> by (by100 force)
+          ultimately show ?case by (by100 linarith)
+        qed
+      qed
       \<comment> \<open>β_0 is constant at x0 (since sub_s' 0 = 0 and F(0,t) = x0).\<close>
       \<comment> \<open>σ of a constant-on-I_set path = eH.\<close>
       have h\<sigma>_const: "\<And>c. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> c t = x0) \<Longrightarrow> \<sigma> c = eH"
@@ -4563,7 +4593,7 @@ proof -
         have hcx_match: "cx 1 = cx 0" using hcx0 hcx1 by (by100 simp)
         have h1: "\<sigma> (top1_path_product cx cx) = mulH (\<sigma> cx) (\<sigma> cx)"
           using h\<sigma>_cond2[OF hcx_path_gen hcx_path_gen hcx_match] .
-        have h\<sigma>cx_H: "\<sigma> cx \<in> H" sorry \<comment> \<open>from h_σ_piece_in_H or group closure\<close>
+        have h\<sigma>cx_H: "\<sigma> cx \<in> H" using h\<sigma>_path_in_H[OF hcx_path_gen] .
         have hidem: "mulH (\<sigma> cx) (\<sigma> cx) = \<sigma> cx" using h1 hcx_pp by (by100 simp)
         have "\<sigma> cx = eH"
         proof -
@@ -4595,8 +4625,29 @@ proof -
           also have "\<dots> = x0"
           proof -
             have "sub_t j + t * (sub_t (Suc j) - sub_t j) \<in> I_set"
-              unfolding top1_unit_interval_def
-              sorry \<comment> \<open>0 ≤ sub_t j ≤ sub_t(Suc j) ≤ 1, t ∈ [0,1] → convex combination ∈ [0,1]\<close>
+            proof -
+              have "j \<le> nt" using hj by (by100 presburger)
+              have "Suc j \<le> nt" using hj by (by100 presburger)
+              have "0 \<le> sub_t j" using hsubt_ge[OF \<open>j \<le> nt\<close>] .
+              have "sub_t (Suc j) \<le> 1" using hsubt_le[OF \<open>Suc j \<le> nt\<close>] .
+              have "sub_t j \<le> sub_t (Suc j)" using htinc hj by (by100 force)
+              have "sub_t (Suc j) - sub_t j \<ge> 0" using \<open>sub_t j \<le> sub_t (Suc j)\<close> by (by100 linarith)
+              have "t * (sub_t (Suc j) - sub_t j) \<ge> 0"
+                by (rule mult_nonneg_nonneg) (use \<open>0 \<le> t \<and> t \<le> 1\<close> \<open>sub_t (Suc j) - sub_t j \<ge> 0\<close> in \<open>by100 linarith\<close>)+
+              have "t * (sub_t (Suc j) - sub_t j) \<le> sub_t (Suc j) - sub_t j"
+              proof -
+                have "t \<le> 1" using \<open>0 \<le> t \<and> t \<le> 1\<close> by (by100 linarith)
+                have "t * (sub_t (Suc j) - sub_t j) \<le> 1 * (sub_t (Suc j) - sub_t j)"
+                  by (rule mult_right_mono[OF \<open>t \<le> 1\<close> \<open>sub_t (Suc j) - sub_t j \<ge> 0\<close>])
+                thus ?thesis by (by100 simp)
+              qed
+              have hge: "sub_t j + t * (sub_t (Suc j) - sub_t j) \<ge> 0"
+                using \<open>0 \<le> sub_t j\<close> \<open>t * (sub_t (Suc j) - sub_t j) \<ge> 0\<close> by (by100 linarith)
+              have hle: "sub_t j + t * (sub_t (Suc j) - sub_t j) \<le> 1"
+                using \<open>sub_t (Suc j) \<le> 1\<close> \<open>t * (sub_t (Suc j) - sub_t j) \<le> sub_t (Suc j) - sub_t j\<close>
+                by (by100 linarith)
+              show ?thesis unfolding top1_unit_interval_def using hge hle by (by100 force)
+            qed
             thus ?thesis using hF_0t by (by100 blast)
           qed
           finally show "\<beta> 0 t = x0" .
