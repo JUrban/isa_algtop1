@@ -28365,4 +28365,364 @@ proof
     using hgs hlen by (by100 simp)
   show "\<Phi> c = \<Psi> c" using hc_foldr hinduct[OF hgs'] by (by100 simp)
 qed
+text \<open>Corollary 70.3 (parameterized): If U \<inter> V is simply connected and FP is the
+  free product of \<pi>_1(U) and \<pi>_1(V), then \<pi>_1(X) \<cong> FP.
+  Proof: by Theorem 70.2, \<pi>_1(X) \<cong> FP/N where N = normal closure of
+  {i_1(c) \<cdot> i_2(c)^{-1} | c \<in> \<pi>_1(U\<inter>V)}. When U\<inter>V is simply connected,
+  \<pi>_1(U\<inter>V) = \{e\}, so N = \{e\}, and FP/\{e\} \<cong> FP.\<close>
+corollary Corollary_70_3_simply_connected_intersection_param:
+  assumes "is_topology_on_strict X TX" and "openin_on X TX U" and "openin_on X TX V"
+      and "U \<union> V = X"
+      and "top1_simply_connected_on (U \<inter> V) (subspace_topology X TX (U \<inter> V))"
+      and "top1_path_connected_on U (subspace_topology X TX U)"
+      and "top1_path_connected_on V (subspace_topology X TX V)"
+      and "x0 \<in> U \<inter> V"
+      and hFP: "top1_is_free_product_on FP mulFP eFP invgFP
+          (\<lambda>i::nat. if i = 0
+             then top1_fundamental_group_carrier U (subspace_topology X TX U) x0
+             else top1_fundamental_group_carrier V (subspace_topology X TX V) x0)
+          (\<lambda>i. if i = 0
+             then top1_fundamental_group_mul U (subspace_topology X TX U) x0
+             else top1_fundamental_group_mul V (subspace_topology X TX V) x0)
+          \<iota>fam {0, 1}"
+  shows "top1_groups_isomorphic_on
+      (top1_fundamental_group_carrier X TX x0)
+      (top1_fundamental_group_mul X TX x0) FP mulFP"
+proof -
+  let ?TU = "subspace_topology X TX U" and ?TV = "subspace_topology X TX V"
+  let ?TUV = "subspace_topology X TX (U \<inter> V)"
+  let ?\<pi>U = "top1_fundamental_group_carrier U ?TU x0"
+  let ?mulU = "top1_fundamental_group_mul U ?TU x0"
+  let ?eU = "top1_fundamental_group_id U ?TU x0"
+  let ?invgU = "top1_fundamental_group_invg U ?TU x0"
+  let ?\<pi>V = "top1_fundamental_group_carrier V ?TV x0"
+  let ?mulV = "top1_fundamental_group_mul V ?TV x0"
+  let ?eV = "top1_fundamental_group_id V ?TV x0"
+  let ?invgV = "top1_fundamental_group_invg V ?TV x0"
+  let ?\<pi>X = "top1_fundamental_group_carrier X TX x0"
+  let ?mulX = "top1_fundamental_group_mul X TX x0"
+  let ?eUV = "top1_fundamental_group_id (U \<inter> V) ?TUV x0"
+  let ?j_UV_U = "top1_fundamental_group_induced_on (U \<inter> V) ?TUV x0 U ?TU x0 (\<lambda>x. x)"
+  let ?j_UV_V = "top1_fundamental_group_induced_on (U \<inter> V) ?TUV x0 V ?TV x0 (\<lambda>x. x)"
+  let ?N = "top1_normal_subgroup_generated_on FP mulFP eFP invgFP
+     { mulFP (\<iota>fam 0 (?j_UV_U c)) (invgFP (\<iota>fam 1 (?j_UV_V c)))
+       | c. c \<in> top1_fundamental_group_carrier (U \<inter> V) ?TUV x0 }"
+  \<comment> \<open>Basic topology facts.\<close>
+  have hTopX: "is_topology_on X TX" using assms(1) unfolding is_topology_on_strict_def
+    by (by100 blast)
+  have hUsub: "U \<subseteq> X" using assms(2) unfolding openin_on_def by (by100 blast)
+  have hVsub: "V \<subseteq> X" using assms(3) unfolding openin_on_def by (by100 blast)
+  have hTopU: "is_topology_on U ?TU" by (rule subspace_topology_is_topology_on[OF hTopX hUsub])
+  have hTopV: "is_topology_on V ?TV" by (rule subspace_topology_is_topology_on[OF hTopX hVsub])
+  have hUV_sub: "U \<inter> V \<subseteq> X" using hUsub hVsub by (by100 blast)
+  have hTopUV: "is_topology_on (U \<inter> V) ?TUV"
+    by (rule subspace_topology_is_topology_on[OF hTopX hUV_sub])
+  have hx0_U: "x0 \<in> U" using assms(8) by (by100 blast)
+  have hx0_V: "x0 \<in> V" using assms(8) by (by100 blast)
+  have hx0_X: "x0 \<in> X" using assms(8) hUsub by (by100 blast)
+  have hx0_UV: "x0 \<in> U \<inter> V" using assms(8) by (by100 blast)
+  \<comment> \<open>Group structures.\<close>
+  have hFP_grp: "top1_is_group_on FP mulFP eFP invgFP"
+    using hFP unfolding top1_is_free_product_on_def by (by100 blast)
+  have h\<pi>U_grp: "top1_is_group_on ?\<pi>U ?mulU ?eU ?invgU"
+    by (rule top1_fundamental_group_is_group[OF hTopU hx0_U])
+  have h\<pi>V_grp: "top1_is_group_on ?\<pi>V ?mulV ?eV ?invgV"
+    by (rule top1_fundamental_group_is_group[OF hTopV hx0_V])
+  have h\<pi>UV_grp: "top1_is_group_on
+    (top1_fundamental_group_carrier (U \<inter> V) ?TUV x0)
+    (top1_fundamental_group_mul (U \<inter> V) ?TUV x0)
+    ?eUV (top1_fundamental_group_invg (U \<inter> V) ?TUV x0)"
+    by (rule top1_fundamental_group_is_group[OF hTopUV hx0_UV])
+  \<comment> \<open>Step 1: U \<inter> V is simply connected \<Longrightarrow> path connected and \<pi>_1(U\<inter>V) = {e}.\<close>
+  have hUV_pc: "top1_path_connected_on (U \<inter> V) ?TUV"
+    using assms(5) unfolding top1_simply_connected_on_def by (by100 blast)
+  have hPiUV_trivial: "top1_fundamental_group_carrier (U \<inter> V) ?TUV x0 = {?eUV}"
+    by (rule simply_connected_trivial_carrier[OF assms(5) hx0_UV])
+  \<comment> \<open>Step 2: Apply SvK to get \<pi>_1(X) \<cong> FP/N.\<close>
+  have hSvK: "top1_groups_isomorphic_on ?\<pi>X ?mulX
+      (top1_quotient_group_carrier_on FP mulFP ?N)
+      (top1_quotient_group_mul_on mulFP)"
+    by (rule Theorem_70_2_SvK_parameterized[OF assms(1-4) hUV_pc assms(6-7) assms(8) hFP])
+  \<comment> \<open>Step 3: The generating set of N simplifies to {eFP}.\<close>
+  \<comment> \<open>Step 3a: Inclusion maps are continuous.\<close>
+  have hincl_UV_U: "top1_continuous_map_on (U \<inter> V) ?TUV U ?TU (\<lambda>x. x)"
+  proof -
+    have "top1_continuous_map_on (U \<inter> V) (subspace_topology U ?TU (U \<inter> V)) U ?TU (\<lambda>x. x)"
+      by (rule top1_continuous_map_on_restrict_domain_simple[OF
+            top1_continuous_map_on_id[OF hTopU, unfolded id_def]]) (by100 blast)
+    moreover have "subspace_topology U ?TU (U \<inter> V) = ?TUV"
+      by (rule subspace_topology_trans) (by100 force)
+    ultimately show ?thesis by (by100 simp)
+  qed
+  have hincl_UV_V: "top1_continuous_map_on (U \<inter> V) ?TUV V ?TV (\<lambda>x. x)"
+  proof -
+    have "top1_continuous_map_on (U \<inter> V) (subspace_topology V ?TV (U \<inter> V)) V ?TV (\<lambda>x. x)"
+      by (rule top1_continuous_map_on_restrict_domain_simple[OF
+            top1_continuous_map_on_id[OF hTopV, unfolded id_def]]) (by100 blast)
+    moreover have "subspace_topology V ?TV (U \<inter> V) = ?TUV"
+      by (rule subspace_topology_trans) (by100 force)
+    ultimately show ?thesis by (by100 simp)
+  qed
+  \<comment> \<open>Step 3b: Induced maps are group homomorphisms.\<close>
+  have hjUVU_hom: "top1_group_hom_on (top1_fundamental_group_carrier (U \<inter> V) ?TUV x0)
+      (top1_fundamental_group_mul (U \<inter> V) ?TUV x0) ?\<pi>U ?mulU ?j_UV_U"
+    by (rule top1_fundamental_group_induced_on_is_hom[OF hTopUV hTopU hx0_UV hx0_U hincl_UV_U])
+       (by100 simp)
+  have hjUVV_hom: "top1_group_hom_on (top1_fundamental_group_carrier (U \<inter> V) ?TUV x0)
+      (top1_fundamental_group_mul (U \<inter> V) ?TUV x0) ?\<pi>V ?mulV ?j_UV_V"
+    by (rule top1_fundamental_group_induced_on_is_hom[OF hTopUV hTopV hx0_UV hx0_V hincl_UV_V])
+       (by100 simp)
+  \<comment> \<open>Step 3c: Induced maps preserve identity.\<close>
+  have hjUVU_id: "?j_UV_U ?eUV = ?eU"
+    by (rule hom_preserves_id[OF h\<pi>UV_grp h\<pi>U_grp hjUVU_hom])
+  have hjUVV_id: "?j_UV_V ?eUV = ?eV"
+    by (rule hom_preserves_id[OF h\<pi>UV_grp h\<pi>V_grp hjUVV_hom])
+  \<comment> \<open>Step 3d: \<iota>fam maps identities to eFP.\<close>
+  have h\<iota>0_hom: "top1_group_hom_on ?\<pi>U ?mulU FP mulFP (\<iota>fam 0)"
+    unfolding top1_group_hom_on_def
+  proof (intro conjI ballI)
+    fix x assume hx: "x \<in> ?\<pi>U"
+    thus "\<iota>fam 0 x \<in> FP"
+    proof -
+      have "\<forall>\<alpha>\<in>{0::nat,1}. \<forall>x\<in>(if \<alpha>=0 then ?\<pi>U else ?\<pi>V). \<iota>fam \<alpha> x \<in> FP"
+        using hFP unfolding top1_is_free_product_on_def by (by100 blast)
+      hence "\<forall>x\<in>(if (0::nat)=0 then ?\<pi>U else ?\<pi>V). \<iota>fam 0 x \<in> FP" by (by100 blast)
+      hence "\<forall>x\<in>?\<pi>U. \<iota>fam 0 x \<in> FP" by (by100 simp)
+      thus ?thesis using hx by (by100 blast)
+    qed
+  next
+    fix x y assume "x \<in> ?\<pi>U" "y \<in> ?\<pi>U"
+    thus "\<iota>fam 0 (?mulU x y) = mulFP (\<iota>fam 0 x) (\<iota>fam 0 y)"
+    proof -
+      have h_all: "\<forall>\<alpha>\<in>{0::nat,1}. \<forall>x\<in>(if \<alpha>=0 then ?\<pi>U else ?\<pi>V).
+            \<forall>y\<in>(if \<alpha>=0 then ?\<pi>U else ?\<pi>V).
+          \<iota>fam \<alpha> ((if \<alpha>=0 then ?mulU else ?mulV) x y) = mulFP (\<iota>fam \<alpha> x) (\<iota>fam \<alpha> y)"
+        using hFP unfolding top1_is_free_product_on_def by (by100 blast)
+      hence "\<forall>x\<in>(if (0::nat)=0 then ?\<pi>U else ?\<pi>V).
+            \<forall>y\<in>(if (0::nat)=0 then ?\<pi>U else ?\<pi>V).
+          \<iota>fam 0 ((if (0::nat)=0 then ?mulU else ?mulV) x y) = mulFP (\<iota>fam 0 x) (\<iota>fam 0 y)"
+        by (by100 blast)
+      hence "\<forall>x\<in>?\<pi>U. \<forall>y\<in>?\<pi>U. \<iota>fam 0 (?mulU x y) = mulFP (\<iota>fam 0 x) (\<iota>fam 0 y)"
+        by (by100 simp)
+      thus ?thesis using \<open>x \<in> ?\<pi>U\<close> \<open>y \<in> ?\<pi>U\<close> by (by100 blast)
+    qed
+  qed
+  have h\<iota>1_hom: "top1_group_hom_on ?\<pi>V ?mulV FP mulFP (\<iota>fam 1)"
+    unfolding top1_group_hom_on_def
+  proof (intro conjI ballI)
+    fix x assume hx: "x \<in> ?\<pi>V"
+    thus "\<iota>fam 1 x \<in> FP"
+    proof -
+      have "\<forall>\<alpha>\<in>{0::nat,1}. \<forall>x\<in>(if \<alpha>=0 then ?\<pi>U else ?\<pi>V). \<iota>fam \<alpha> x \<in> FP"
+        using hFP unfolding top1_is_free_product_on_def by (by100 blast)
+      hence "\<forall>x\<in>(if (1::nat)=0 then ?\<pi>U else ?\<pi>V). \<iota>fam 1 x \<in> FP" by (by100 blast)
+      hence "\<forall>x\<in>?\<pi>V. \<iota>fam 1 x \<in> FP" by (by100 simp)
+      thus ?thesis using hx by (by100 blast)
+    qed
+  next
+    fix x y assume "x \<in> ?\<pi>V" "y \<in> ?\<pi>V"
+    thus "\<iota>fam 1 (?mulV x y) = mulFP (\<iota>fam 1 x) (\<iota>fam 1 y)"
+    proof -
+      have h_all: "\<forall>\<alpha>\<in>{0::nat,1}. \<forall>x\<in>(if \<alpha>=0 then ?\<pi>U else ?\<pi>V).
+            \<forall>y\<in>(if \<alpha>=0 then ?\<pi>U else ?\<pi>V).
+          \<iota>fam \<alpha> ((if \<alpha>=0 then ?mulU else ?mulV) x y) = mulFP (\<iota>fam \<alpha> x) (\<iota>fam \<alpha> y)"
+        using hFP unfolding top1_is_free_product_on_def by (by100 blast)
+      hence "\<forall>x\<in>(if (1::nat)=0 then ?\<pi>U else ?\<pi>V).
+            \<forall>y\<in>(if (1::nat)=0 then ?\<pi>U else ?\<pi>V).
+          \<iota>fam 1 ((if (1::nat)=0 then ?mulU else ?mulV) x y) = mulFP (\<iota>fam 1 x) (\<iota>fam 1 y)"
+        by (by100 blast)
+      hence "\<forall>x\<in>?\<pi>V. \<forall>y\<in>?\<pi>V. \<iota>fam 1 (?mulV x y) = mulFP (\<iota>fam 1 x) (\<iota>fam 1 y)"
+        by (by100 simp)
+      thus ?thesis using \<open>x \<in> ?\<pi>V\<close> \<open>y \<in> ?\<pi>V\<close> by (by100 blast)
+    qed
+  qed
+  have h\<iota>0_eU: "\<iota>fam 0 ?eU = eFP"
+    by (rule hom_preserves_id[OF h\<pi>U_grp hFP_grp h\<iota>0_hom])
+  have h\<iota>1_eV: "\<iota>fam 1 ?eV = eFP"
+    by (rule hom_preserves_id[OF h\<pi>V_grp hFP_grp h\<iota>1_hom])
+  \<comment> \<open>Step 3e: invgFP(eFP) = eFP.\<close>
+  have hinvFP_eFP: "invgFP eFP = eFP"
+  proof -
+    have heFP: "eFP \<in> FP" using group_e_mem[OF hFP_grp] .
+    have "mulFP eFP (invgFP eFP) = eFP" by (rule group_inv_right[OF hFP_grp heFP])
+    moreover have "mulFP eFP (invgFP eFP) = invgFP eFP"
+      using group_id_left[OF hFP_grp group_inv_closed[OF hFP_grp heFP]] by (by100 blast)
+    ultimately show ?thesis by (by100 simp)
+  qed
+  \<comment> \<open>Step 3f: The generating set = {eFP}.\<close>
+  have hgens_eq: "{ mulFP (\<iota>fam 0 (?j_UV_U c)) (invgFP (\<iota>fam 1 (?j_UV_V c)))
+       | c. c \<in> top1_fundamental_group_carrier (U \<inter> V) ?TUV x0 } = {eFP}"
+  proof (rule set_eqI, rule iffI)
+    fix x assume "x \<in> { mulFP (\<iota>fam 0 (?j_UV_U c)) (invgFP (\<iota>fam 1 (?j_UV_V c)))
+       | c. c \<in> top1_fundamental_group_carrier (U \<inter> V) ?TUV x0 }"
+    then obtain c where hc: "c \<in> top1_fundamental_group_carrier (U \<inter> V) ?TUV x0"
+        and hx: "x = mulFP (\<iota>fam 0 (?j_UV_U c)) (invgFP (\<iota>fam 1 (?j_UV_V c)))"
+      by (by100 blast)
+    have "c = ?eUV" using hc hPiUV_trivial by (by100 blast)
+    hence "x = mulFP (\<iota>fam 0 (?j_UV_U ?eUV)) (invgFP (\<iota>fam 1 (?j_UV_V ?eUV)))"
+      using hx by (by100 simp)
+    also have "\<dots> = mulFP (\<iota>fam 0 ?eU) (invgFP (\<iota>fam 1 ?eV))"
+      using hjUVU_id hjUVV_id by (by100 simp)
+    also have "\<dots> = mulFP eFP (invgFP eFP)" using h\<iota>0_eU h\<iota>1_eV by (by100 simp)
+    also have "\<dots> = mulFP eFP eFP" using hinvFP_eFP by (by100 simp)
+    also have "\<dots> = eFP" using group_id_left[OF hFP_grp group_e_mem[OF hFP_grp]]
+      by (by100 blast)
+    finally show "x \<in> {eFP}" by (by100 blast)
+  next
+    fix x assume "x \<in> {eFP}"
+    hence "x = eFP" by (by100 blast)
+    moreover have "?eUV \<in> top1_fundamental_group_carrier (U \<inter> V) ?TUV x0"
+      using hPiUV_trivial by (by100 blast)
+    moreover have "mulFP (\<iota>fam 0 (?j_UV_U ?eUV)) (invgFP (\<iota>fam 1 (?j_UV_V ?eUV))) = eFP"
+    proof -
+      have "mulFP (\<iota>fam 0 (?j_UV_U ?eUV)) (invgFP (\<iota>fam 1 (?j_UV_V ?eUV)))
+          = mulFP (\<iota>fam 0 ?eU) (invgFP (\<iota>fam 1 ?eV))"
+        using hjUVU_id hjUVV_id by (by100 simp)
+      also have "\<dots> = mulFP eFP (invgFP eFP)" using h\<iota>0_eU h\<iota>1_eV by (by100 simp)
+      also have "\<dots> = mulFP eFP eFP" using hinvFP_eFP by (by100 simp)
+      also have "\<dots> = eFP" using group_id_left[OF hFP_grp group_e_mem[OF hFP_grp]]
+        by (by100 blast)
+      finally show ?thesis .
+    qed
+    ultimately show "x \<in> { mulFP (\<iota>fam 0 (?j_UV_U c)) (invgFP (\<iota>fam 1 (?j_UV_V c)))
+       | c. c \<in> top1_fundamental_group_carrier (U \<inter> V) ?TUV x0 }"
+      by (by100 blast)
+  qed
+  \<comment> \<open>Step 4: N = normal_subgroup_generated({eFP}) = {eFP}.\<close>
+  have hN_eq: "?N = {eFP}"
+  proof -
+    have hN_unfold: "?N = top1_normal_subgroup_generated_on FP mulFP eFP invgFP {eFP}"
+      using hgens_eq by (by100 simp)
+    \<comment> \<open>{eFP} is a normal subgroup of FP.\<close>
+    have heFP_normal: "top1_normal_subgroup_on FP mulFP eFP invgFP {eFP}"
+      unfolding top1_normal_subgroup_on_def
+    proof (intro conjI)
+      show "{eFP} \<subseteq> FP" using group_e_mem[OF hFP_grp] by (by100 blast)
+    next
+      show "top1_is_group_on {eFP} mulFP eFP invgFP"
+        unfolding top1_is_group_on_def
+      proof (intro conjI)
+        show "eFP \<in> {eFP}" by (by100 blast)
+      next
+        show "\<forall>x\<in>{eFP}. \<forall>y\<in>{eFP}. mulFP x y \<in> {eFP}"
+          using group_id_left[OF hFP_grp group_e_mem[OF hFP_grp]] by (by100 blast)
+      next
+        show "\<forall>x\<in>{eFP}. invgFP x \<in> {eFP}" using hinvFP_eFP by (by100 blast)
+      next
+        have hee: "mulFP eFP eFP = eFP"
+          using group_id_left[OF hFP_grp group_e_mem[OF hFP_grp]] by (by100 blast)
+        show "\<forall>x\<in>{eFP}. \<forall>y\<in>{eFP}. \<forall>z\<in>{eFP}. mulFP (mulFP x y) z = mulFP x (mulFP y z)"
+          using hee by (by100 simp)
+      next
+        have hee: "mulFP eFP eFP = eFP"
+          using group_id_left[OF hFP_grp group_e_mem[OF hFP_grp]] by (by100 blast)
+        show "\<forall>x\<in>{eFP}. mulFP eFP x = x \<and> mulFP x eFP = x"
+          using hee by (by100 simp)
+      next
+        have hee: "mulFP eFP eFP = eFP"
+          using group_id_left[OF hFP_grp group_e_mem[OF hFP_grp]] by (by100 blast)
+        show "\<forall>x\<in>{eFP}. mulFP (invgFP x) x = eFP \<and> mulFP x (invgFP x) = eFP"
+          using hee hinvFP_eFP by (by100 simp)
+      qed
+    next
+      show "\<forall>g\<in>FP. \<forall>n\<in>{eFP}. mulFP (mulFP g n) (invgFP g) \<in> {eFP}"
+      proof (intro ballI)
+        fix g n assume "g \<in> FP" "n \<in> {eFP}"
+        hence "n = eFP" by (by100 blast)
+        hence "mulFP (mulFP g n) (invgFP g) = mulFP (mulFP g eFP) (invgFP g)"
+          by (by100 simp)
+        also have "\<dots> = mulFP g (invgFP g)"
+          using group_id_right[OF hFP_grp \<open>g \<in> FP\<close>] by (by100 simp)
+        also have "\<dots> = eFP" by (rule group_inv_right[OF hFP_grp \<open>g \<in> FP\<close>])
+        finally show "mulFP (mulFP g n) (invgFP g) \<in> {eFP}" by (by100 blast)
+      qed
+    qed
+    \<comment> \<open>normal_subgroup_generated({eFP}) = {eFP} since {eFP} is already normal and contains {eFP}.\<close>
+    have "top1_normal_subgroup_generated_on FP mulFP eFP invgFP {eFP} = {eFP}"
+      unfolding top1_normal_subgroup_generated_on_def
+    proof (rule set_eqI, rule iffI)
+      fix x assume "x \<in> \<Inter>{N. {eFP} \<subseteq> N \<and> top1_normal_subgroup_on FP mulFP eFP invgFP N}"
+      hence "\<forall>N. {eFP} \<subseteq> N \<and> top1_normal_subgroup_on FP mulFP eFP invgFP N \<longrightarrow> x \<in> N"
+        by (by100 blast)
+      hence "x \<in> {eFP}" using heFP_normal by (by100 blast)
+      thus "x \<in> {eFP}" .
+    next
+      fix x assume "x \<in> {eFP}"
+      show "x \<in> \<Inter>{N. {eFP} \<subseteq> N \<and> top1_normal_subgroup_on FP mulFP eFP invgFP N}"
+        using \<open>x \<in> {eFP}\<close> by (by100 blast)
+    qed
+    thus ?thesis using hN_unfold by (by100 simp)
+  qed
+  \<comment> \<open>Step 5: FP/{eFP} \<cong> FP (quotient by trivial subgroup).\<close>
+  have hQ_iso_FP: "top1_groups_isomorphic_on
+      (top1_quotient_group_carrier_on FP mulFP {eFP})
+      (top1_quotient_group_mul_on mulFP) FP mulFP"
+  proof -
+    \<comment> \<open>The identity map id: FP \<rightarrow> FP is a surjective hom with kernel {eFP}.
+       By first isomorphism theorem: FP \<cong> FP/{eFP}.\<close>
+    have hid_hom: "top1_group_hom_on FP mulFP FP mulFP id"
+      unfolding top1_group_hom_on_def by (by100 simp)
+    have hid_surj: "id ` FP = FP" by (by100 simp)
+    have hid_ker: "top1_group_kernel_on FP eFP id = {eFP}"
+      unfolding top1_group_kernel_on_def id_def using group_e_mem[OF hFP_grp] by (by100 blast)
+    have heFP_normal': "top1_normal_subgroup_on FP mulFP eFP invgFP {eFP}"
+      unfolding top1_normal_subgroup_on_def
+    proof (intro conjI)
+      show "{eFP} \<subseteq> FP" using group_e_mem[OF hFP_grp] by (by100 blast)
+    next
+      show "top1_is_group_on {eFP} mulFP eFP invgFP"
+        unfolding top1_is_group_on_def
+      proof (intro conjI)
+        show "eFP \<in> {eFP}" by (by100 blast)
+      next
+        show "\<forall>x\<in>{eFP}. \<forall>y\<in>{eFP}. mulFP x y \<in> {eFP}"
+          using group_id_left[OF hFP_grp group_e_mem[OF hFP_grp]] by (by100 blast)
+      next
+        show "\<forall>x\<in>{eFP}. invgFP x \<in> {eFP}" using hinvFP_eFP by (by100 blast)
+      next
+        have hee: "mulFP eFP eFP = eFP"
+          using group_id_left[OF hFP_grp group_e_mem[OF hFP_grp]] by (by100 blast)
+        show "\<forall>x\<in>{eFP}. \<forall>y\<in>{eFP}. \<forall>z\<in>{eFP}. mulFP (mulFP x y) z = mulFP x (mulFP y z)"
+          using hee by (by100 simp)
+      next
+        have hee: "mulFP eFP eFP = eFP"
+          using group_id_left[OF hFP_grp group_e_mem[OF hFP_grp]] by (by100 blast)
+        show "\<forall>x\<in>{eFP}. mulFP eFP x = x \<and> mulFP x eFP = x"
+          using hee by (by100 simp)
+      next
+        have hee: "mulFP eFP eFP = eFP"
+          using group_id_left[OF hFP_grp group_e_mem[OF hFP_grp]] by (by100 blast)
+        show "\<forall>x\<in>{eFP}. mulFP (invgFP x) x = eFP \<and> mulFP x (invgFP x) = eFP"
+          using hee hinvFP_eFP by (by100 simp)
+      qed
+    next
+      show "\<forall>g\<in>FP. \<forall>n\<in>{eFP}. mulFP (mulFP g n) (invgFP g) \<in> {eFP}"
+      proof (intro ballI)
+        fix g n assume "g \<in> FP" "n \<in> {eFP}"
+        hence "n = eFP" by (by100 blast)
+        hence "mulFP (mulFP g n) (invgFP g) = mulFP (mulFP g eFP) (invgFP g)"
+          by (by100 simp)
+        also have "\<dots> = mulFP g (invgFP g)"
+          using group_id_right[OF hFP_grp \<open>g \<in> FP\<close>] by (by100 simp)
+        also have "\<dots> = eFP" by (rule group_inv_right[OF hFP_grp \<open>g \<in> FP\<close>])
+        finally show "mulFP (mulFP g n) (invgFP g) \<in> {eFP}" by (by100 blast)
+      qed
+    qed
+    have "top1_groups_isomorphic_on FP mulFP
+        (top1_quotient_group_carrier_on FP mulFP {eFP})
+        (top1_quotient_group_mul_on mulFP)"
+      by (rule first_isomorphism_theorem[OF hFP_grp heFP_normal' hFP_grp hid_hom hid_surj hid_ker])
+    thus ?thesis
+      by (rule top1_groups_isomorphic_on_sym[OF _ hFP_grp])
+         (rule quotient_group_is_group[OF hFP_grp heFP_normal'])
+  qed
+  \<comment> \<open>Step 6: Compose: \<pi>_1(X) \<cong> FP/N = FP/{eFP} \<cong> FP.\<close>
+  have hSvK_simp: "top1_groups_isomorphic_on ?\<pi>X ?mulX
+      (top1_quotient_group_carrier_on FP mulFP {eFP})
+      (top1_quotient_group_mul_on mulFP)"
+    using hSvK hN_eq by (by100 simp)
+  show ?thesis
+    by (rule groups_isomorphic_trans_fwd[OF hSvK_simp hQ_iso_FP])
+qed
 end
+
