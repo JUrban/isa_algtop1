@@ -7746,12 +7746,24 @@ proof -
               have hH_0t: "\<forall>t\<in>I_set. ?H (0, t) = x0"
               proof (intro ballI)
                 fix t :: real assume "t \<in> I_set"
-                show "?H (0, t) = x0" sorry \<comment> \<open>(1-t)*a+t*a = a for each component + f(0)=x0\<close>
+                have "?H (0, t) = ((1-t) * fst x0 + t * fst x0, (1-t) * snd x0 + t * snd x0)"
+                  using hf0 by (by100 simp)
+                moreover have "(1 - t) * fst x0 + t * fst x0 = fst x0"
+                  using distrib_right[of "1-t" t "fst x0"] by (by100 simp)
+                moreover have "(1 - t) * snd x0 + t * snd x0 = snd x0"
+                  using distrib_right[of "1-t" t "snd x0"] by (by100 simp)
+                ultimately show "?H (0, t) = x0" by (by100 simp)
               qed
               have hH_1t: "\<forall>t\<in>I_set. ?H (1, t) = x0"
               proof (intro ballI)
                 fix t :: real assume "t \<in> I_set"
-                show "?H (1, t) = x0" sorry \<comment> \<open>Same with f(1)=x0\<close>
+                have "?H (1, t) = ((1-t) * fst x0 + t * fst x0, (1-t) * snd x0 + t * snd x0)"
+                  using hf1 by (by100 simp)
+                moreover have "(1 - t) * fst x0 + t * fst x0 = fst x0"
+                  using distrib_right[of "1-t" t "fst x0"] by (by100 simp)
+                moreover have "(1 - t) * snd x0 + t * snd x0 = snd x0"
+                  using distrib_right[of "1-t" t "snd x0"] by (by100 simp)
+                ultimately show "?H (1, t) = x0" by (by100 simp)
               qed
               \<comment> \<open>f is a path in I×I (from loop).\<close>
               have hf_path: "top1_is_path_on (I_set \<times> I_set) II_topology x0 x0 f"
