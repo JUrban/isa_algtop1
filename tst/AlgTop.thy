@@ -7428,7 +7428,28 @@ proof -
             assume hU: "\<forall>s t. sub_s' i \<le> s \<and> s \<le> sub_s' (Suc i) \<and> sub_t j \<le> t \<and> t \<le> sub_t (Suc j)
                 \<and> 0\<le>s \<and> s\<le>1 \<and> 0\<le>t \<and> t\<le>1 \<longrightarrow> F (s,t) \<in> U"
             have hG_img_U: "G ` (I_set \<times> I_set) \<subseteq> U"
-              sorry \<comment> \<open>φ maps I×I into cell (affine bounds), cell maps to U (hU).\<close>
+            proof
+              fix x assume "x \<in> G ` (I_set \<times> I_set)"
+              then obtain p where hp: "p \<in> I_set \<times> I_set" and hx: "x = G p" by (by100 blast)
+              have hs: "0 \<le> fst p" "fst p \<le> 1" and ht: "0 \<le> snd p" "snd p \<le> 1"
+                using hp unfolding top1_unit_interval_def by (by100 force)+
+              have hconv_fst: "sub_s' i \<le> sub_s' i + fst p * (sub_s' (Suc i) - sub_s' i)
+                  \<and> sub_s' i + fst p * (sub_s' (Suc i) - sub_s' i) \<le> sub_s' (Suc i)
+                  \<and> 0 \<le> sub_s' i + fst p * (sub_s' (Suc i) - sub_s' i)
+                  \<and> sub_s' i + fst p * (sub_s' (Suc i) - sub_s' i) \<le> 1"
+                using hconv_s[OF hi hs(1) hs(2)] .
+              have hdiff_t: "sub_t (Suc j) - sub_t j \<ge> 0" using htinc hj by (by100 force)
+              have hprod_ge: "snd p * (sub_t (Suc j) - sub_t j) \<ge> 0"
+                by (rule mult_nonneg_nonneg) (use ht(1) hdiff_t in \<open>by100 linarith\<close>)+
+              have "snd p * (sub_t (Suc j) - sub_t j) \<le> 1 * (sub_t (Suc j) - sub_t j)"
+                by (rule mult_right_mono) (use ht(2) hdiff_t in \<open>by100 linarith\<close>)+
+              hence hprod_le: "snd p * (sub_t (Suc j) - sub_t j) \<le> sub_t (Suc j) - sub_t j"
+                by (by100 simp)
+              have "0 \<le> sub_t j" using hsubt_ge[OF hj_le_nt] .
+              have "sub_t (Suc j) \<le> 1" using hsubt_le[OF hSj_le_nt] .
+              show "x \<in> U" unfolding hx G_def \<phi>_def
+                using hU hconv_fst hprod_ge hprod_le \<open>0 \<le> sub_t j\<close> \<open>sub_t (Suc j) \<le> 1\<close> by (by100 force)
+            qed
             have hG_cont_U: "top1_continuous_map_on (I_set \<times> I_set) II_topology U (subspace_topology X TX U) G"
               by (rule top1_continuous_map_on_codomain_shrink[OF hG_cont hG_img_U hUsub])
             have hTII: "is_topology_on (I_set \<times> I_set) II_topology"
