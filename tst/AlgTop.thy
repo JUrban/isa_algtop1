@@ -7073,7 +7073,23 @@ proof -
         also have "\<dots> = foldr mulH (map (\<lambda>i. \<sigma> (piece_bot i)) [0..<ns']) eH"
         proof -
           have "foldr mulH (map (\<lambda>i. \<sigma> (piece_bot i)) [0..<ns']) eH \<in> H"
-            sorry \<comment> \<open>foldr of H-elements with eH is in H\<close>
+          proof -
+            have "\<And>xs. (\<forall>x \<in> set xs. x \<in> H) \<Longrightarrow> foldr mulH xs eH \<in> H"
+            proof -
+              fix xs show "(\<forall>x \<in> set xs. x \<in> H) \<Longrightarrow> foldr mulH xs eH \<in> H"
+              proof (induct xs)
+                case Nil thus ?case using heH by (by100 simp)
+              next
+                case (Cons a xs)
+                have "a \<in> H" using Cons.prems by (by100 simp)
+                have "foldr mulH xs eH \<in> H" using Cons.hyps Cons.prems by (by100 simp)
+                show ?case using hmulH_closed[OF \<open>a \<in> H\<close> \<open>foldr mulH xs eH \<in> H\<close>] by (by100 simp)
+              qed
+            qed
+            moreover have "\<forall>x \<in> set (map (\<lambda>i. \<sigma> (piece_bot i)) [0..<ns']). x \<in> H"
+              using h\<sigma>_bot_H by (by100 force)
+            ultimately show ?thesis by (by100 blast)
+          qed
           thus ?thesis using hmulH_eH hmulH_eH_l by (by100 simp)
         qed
         finally show ?thesis .
