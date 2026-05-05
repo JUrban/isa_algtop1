@@ -5894,14 +5894,94 @@ proof -
                   \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> piece t \<in> V)"
                 using hUV hk unfolding piece_def by (by100 blast)
               \<comment> \<open>Sub-pieces also map to U (or V) since they're sub-intervals.\<close>
+              have hd_pos: "s (Suc k) - s k > 0" using hinc hk by (by100 force)
+              \<comment> \<open>Sub-piece UV membership: first_h(t) = piece(u) where u ∈ [0,1].\<close>
+              have hfirst_as_piece: "\<And>t. first_h t = piece (t * (p - s k) / (s (Suc k) - s k))"
+                unfolding first_h_def piece_def using hd_pos by (by100 simp)
+              have hsecond_as_piece: "\<And>t. second_h t = piece ((p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k))"
+                unfolding second_h_def piece_def using hd_pos by (by100 simp)
+              have hfirst_u01: "\<And>t. 0 \<le> t \<Longrightarrow> t \<le> 1 \<Longrightarrow>
+                  0 \<le> t * (p - s k) / (s (Suc k) - s k) \<and> t * (p - s k) / (s (Suc k) - s k) \<le> 1"
+              proof -
+                fix t :: real assume ht0: "0 \<le> t" and ht1: "t \<le> 1"
+                have "0 \<le> p - s k" using hpL by (by100 linarith)
+                hence hnn: "0 \<le> t * (p - s k)" using ht0 by (by100 simp)
+                have "t * (p - s k) \<le> 1 * (p - s k)"
+                  by (rule mult_right_mono[OF ht1 \<open>0 \<le> p - s k\<close>])
+                hence "t * (p - s k) \<le> p - s k" by (by100 simp)
+                hence "t * (p - s k) \<le> s (Suc k) - s k" using hpR by (by100 linarith)
+                thus "0 \<le> t * (p - s k) / (s (Suc k) - s k) \<and> t * (p - s k) / (s (Suc k) - s k) \<le> 1"
+                  using hnn hd_pos by (by100 simp)
+              qed
+              have hsecond_u01: "\<And>t. 0 \<le> t \<Longrightarrow> t \<le> 1 \<Longrightarrow>
+                  0 \<le> (p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k)
+                  \<and> (p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k) \<le> 1"
+              proof -
+                fix t :: real assume ht0: "0 \<le> t" and ht1: "t \<le> 1"
+                have "0 \<le> p - s k" using hpL by (by100 linarith)
+                have "0 \<le> s (Suc k) - p" using hpR by (by100 linarith)
+                hence hnn: "0 \<le> p - s k + t * (s (Suc k) - p)"
+                  using ht0 \<open>0 \<le> p - s k\<close> by (by100 simp)
+                have "t * (s (Suc k) - p) \<le> 1 * (s (Suc k) - p)"
+                  by (rule mult_right_mono[OF ht1 \<open>0 \<le> s (Suc k) - p\<close>])
+                hence "t * (s (Suc k) - p) \<le> s (Suc k) - p" by (by100 simp)
+                hence "p - s k + t * (s (Suc k) - p) \<le> s (Suc k) - s k" by (by100 linarith)
+                thus "0 \<le> (p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k)
+                    \<and> (p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k) \<le> 1"
+                  using hnn hd_pos by (by100 simp)
+              qed
               have hfirst_in: "(\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> first_h t \<in> U)
                   \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> first_h t \<in> V)"
-                sorry \<comment> \<open>first_h(t) = piece(t*(p-s(k))/(s(k+1)-s(k))) with u ∈ [0,1].
-                   Piece maps [0,1] to U or V, so first_h does too.\<close>
+                using hpUV_k
+              proof
+                assume hU: "\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> piece t \<in> U"
+                show ?thesis proof (rule disjI1, intro allI impI)
+                  fix t :: real assume ht: "0 \<le> t \<and> t \<le> 1"
+                  have hu: "0 \<le> t * (p - s k) / (s (Suc k) - s k)
+                      \<and> t * (p - s k) / (s (Suc k) - s k) \<le> 1"
+                    using hfirst_u01 ht by (by100 blast)
+                  have "piece (t * (p - s k) / (s (Suc k) - s k)) \<in> U"
+                    using hU hu by (by100 blast)
+                  thus "first_h t \<in> U" using hfirst_as_piece by (by100 simp)
+                qed
+              next
+                assume hV: "\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> piece t \<in> V"
+                show ?thesis proof (rule disjI2, intro allI impI)
+                  fix t :: real assume ht: "0 \<le> t \<and> t \<le> 1"
+                  have hu: "0 \<le> t * (p - s k) / (s (Suc k) - s k)
+                      \<and> t * (p - s k) / (s (Suc k) - s k) \<le> 1"
+                    using hfirst_u01 ht by (by100 blast)
+                  have "piece (t * (p - s k) / (s (Suc k) - s k)) \<in> V"
+                    using hV hu by (by100 blast)
+                  thus "first_h t \<in> V" using hfirst_as_piece by (by100 simp)
+                qed
+              qed
               have hsecond_in: "(\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> second_h t \<in> U)
                   \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> second_h t \<in> V)"
-                sorry \<comment> \<open>second_h(t) = piece((p-s(k)+t*(s(k+1)-p))/(s(k+1)-s(k))) with u ∈ [0,1].
-                   Piece maps [0,1] to U or V, so second_h does too.\<close>
+                using hpUV_k
+              proof
+                assume hU: "\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> piece t \<in> U"
+                show ?thesis proof (rule disjI1, intro allI impI)
+                  fix t :: real assume ht: "0 \<le> t \<and> t \<le> 1"
+                  have hu: "0 \<le> (p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k)
+                      \<and> (p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k) \<le> 1"
+                    using hsecond_u01 ht by (by100 blast)
+                  have "piece ((p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k)) \<in> U"
+                    using hU hu by (by100 blast)
+                  thus "second_h t \<in> U" using hsecond_as_piece by (by100 simp)
+                qed
+              next
+                assume hV: "\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> piece t \<in> V"
+                show ?thesis proof (rule disjI2, intro allI impI)
+                  fix t :: real assume ht: "0 \<le> t \<and> t \<le> 1"
+                  have hu: "0 \<le> (p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k)
+                      \<and> (p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k) \<le> 1"
+                    using hsecond_u01 ht by (by100 blast)
+                  have "piece ((p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k)) \<in> V"
+                    using hV hu by (by100 blast)
+                  thus "second_h t \<in> V" using hsecond_as_piece by (by100 simp)
+                qed
+              qed
               \<comment> \<open>Step 1: piece ≃ first_h * second_h in U (or V) by reparametrization.\<close>
               have hhom: "(\<exists>S. S = U \<and> top1_path_homotopic_on S (subspace_topology X TX S)
                   (piece 0) (piece 1) piece (top1_path_product first_h second_h))
