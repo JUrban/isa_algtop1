@@ -6486,7 +6486,58 @@ proof -
               by (by100 blast)
             \<comment> \<open>sub(i₀) ∈ (0,1). Find k with T(k) < sub(i₀) < T(k+1).\<close>
             have "\<exists>k. k < M \<and> T k < sub i0 \<and> sub i0 < T (Suc k)"
-              sorry \<comment> \<open>sub(i₀) ∈ (0,1), T strict inc from 0 to 1, sub(i₀) ∉ T-range.\<close>
+            proof -
+              \<comment> \<open>sub(i₀) ∈ (0,1): i0>0 (sub(0)=0=T(0) ∈ T-range), i0<n (sub(n)=1=T(M) ∈ T-range).\<close>
+              have "i0 > 0"
+              proof (rule ccontr)
+                assume "\<not> i0 > 0" hence "i0 = 0" by (by100 presburger)
+                hence "sub i0 = 0" using hs0 by (by100 simp)
+                hence "T 0 = sub i0" using less.prems(2) by (by100 simp)
+                thus False using hi0_miss by (by100 force)
+              qed
+              have "i0 < n"
+              proof (rule ccontr)
+                assume "\<not> i0 < n" hence "i0 = n" using hi0 by (by100 presburger)
+                hence "sub i0 = 1" using hsn by (by100 simp)
+                hence "T M = sub i0" using less.prems(3) by (by100 simp)
+                thus False using hi0_miss by (by100 force)
+              qed
+              have hsi0_pos: "sub i0 > 0" using hinc \<open>i0 > 0\<close> hs0
+                sorry \<comment> \<open>sub strict inc: 0 < i0 ≤ n → sub(0)=0 < sub(i0)\<close>
+              have hsi0_lt1: "sub i0 < 1" using hinc \<open>i0 < n\<close> hsn
+                sorry \<comment> \<open>sub strict inc: i0 < n → sub(i0) < sub(n)=1\<close>
+              \<comment> \<open>sub(i₀) ∈ (T(0), T(M)) = (0,1). Find gap in T containing sub(i₀).\<close>
+              define S_set where "S_set = {j. j < M \<and> T j < sub i0}"
+              have "0 \<in> S_set" unfolding S_set_def using less.prems(1-2) hsi0_pos by (by100 force)
+              hence "S_set \<noteq> {}" by (by100 blast)
+              have "finite S_set" unfolding S_set_def by (by100 simp)
+              define k where "k = Max S_set"
+              have hk_in: "k \<in> S_set" unfolding k_def using \<open>S_set \<noteq> {}\<close> \<open>finite S_set\<close> by (by100 simp)
+              hence hk_lt: "k < M" and hk_below: "T k < sub i0" unfolding S_set_def by (by100 force)+
+              have hk_max: "\<And>j. j \<in> S_set \<Longrightarrow> j \<le> k" unfolding k_def using \<open>finite S_set\<close> by (by100 simp)
+              have "sub i0 < T (Suc k)"
+              proof (rule ccontr)
+                assume "\<not> sub i0 < T (Suc k)"
+                hence "T (Suc k) \<le> sub i0" by (by100 linarith)
+                show False
+                proof (cases "T (Suc k) = sub i0")
+                  case True thus False using hi0_miss hk_lt by (by100 force)
+                next
+                  case False
+                  hence "T (Suc k) < sub i0" using \<open>T (Suc k) \<le> sub i0\<close> by (by100 linarith)
+                  have "Suc k < M"
+                  proof (rule ccontr)
+                    assume "\<not> Suc k < M" hence "Suc k = M" using hk_lt by (by100 presburger)
+                    hence "T M < sub i0" using \<open>T (Suc k) < sub i0\<close> by (by100 simp)
+                    thus False using less.prems(3) hsi0_lt1 by (by100 linarith)
+                  qed
+                  hence "Suc k \<in> S_set" unfolding S_set_def using \<open>T (Suc k) < sub i0\<close> by (by100 force)
+                  hence "Suc k \<le> k" using hk_max by (by100 blast)
+                  thus False by (by100 presburger)
+                qed
+              qed
+              show ?thesis using hk_lt hk_below \<open>sub i0 < T (Suc k)\<close> by (by100 blast)
+            qed
             then obtain k where hk: "k < M" and hTk: "T k < sub i0" and hTSk: "sub i0 < T (Suc k)"
               by (by100 blast)
             \<comment> \<open>Insert sub(i₀) at position k. T' has Suc M pieces.\<close>
