@@ -7320,10 +7320,39 @@ proof -
           qed
         qed
         \<comment> \<open>Step 3: σ_cond2 splits the products.\<close>
+        \<comment> \<open>Endpoint matching for σ_cond2.\<close>
+        have hep1: "piece_top i 1 = \<beta> (Suc i) 0"
+          unfolding piece_top_def \<beta>_def row_fn_def by (by100 simp)
+        have hep2: "\<beta> i 1 = piece_bot i 0"
+          unfolding piece_bot_def \<beta>_def row_fn_def by (by100 simp)
+        \<comment> \<open>piece_top i and β(Suc i) are paths in U or V (from cell (i,j)).\<close>
+        have hpt_path_UV: "top1_is_path_on U (subspace_topology X TX U)
+              (piece_top i 0) (piece_top i 1) (piece_top i)
+            \<or> top1_is_path_on V (subspace_topology X TX V)
+              (piece_top i 0) (piece_top i 1) (piece_top i)"
+          sorry \<comment> \<open>piece_top = bottom edge of cell. Cell maps to U or V.
+             Continuous (F ∘ affine) + image ⊆ U/V → path in U/V.\<close>
+        have h\<beta>Si_path_UV: "top1_is_path_on U (subspace_topology X TX U)
+              (\<beta> (Suc i) 0) (\<beta> (Suc i) 1) (\<beta> (Suc i))
+            \<or> top1_is_path_on V (subspace_topology X TX V)
+              (\<beta> (Suc i) 0) (\<beta> (Suc i) 1) (\<beta> (Suc i))"
+          sorry \<comment> \<open>β(Suc i) = right edge of cell. Same argument.\<close>
+        have h\<beta>i_path_UV: "top1_is_path_on U (subspace_topology X TX U)
+              (\<beta> i 0) (\<beta> i 1) (\<beta> i)
+            \<or> top1_is_path_on V (subspace_topology X TX V)
+              (\<beta> i 0) (\<beta> i 1) (\<beta> i)"
+          sorry \<comment> \<open>β i = left edge of cell (or right of cell i-1). Same argument.\<close>
+        have hpb_path_UV: "top1_is_path_on U (subspace_topology X TX U)
+              (piece_bot i 0) (piece_bot i 1) (piece_bot i)
+            \<or> top1_is_path_on V (subspace_topology X TX V)
+              (piece_bot i 0) (piece_bot i 1) (piece_bot i)"
+          sorry \<comment> \<open>piece_bot = top edge of cell. Same argument.\<close>
         have h_split_LHS: "\<sigma> pp1 = mulH (\<sigma> (piece_top i)) (\<sigma> (\<beta> (Suc i)))"
-          sorry \<comment> \<open>σ_cond2: piece_top i is path in U/V, β(Suc i) is path in U/V, endpoints match.\<close>
+          unfolding pp1_def
+          sorry \<comment> \<open>From hpt_path_UV + h_β_Si_path_UV (both in same U or V from cell) + hep1 + σ_cond2.\<close>
         have h_split_RHS: "\<sigma> pp2 = mulH (\<sigma> (\<beta> i)) (\<sigma> (piece_bot i))"
-          sorry \<comment> \<open>σ_cond2: β i is path in U/V, piece_bot i is path in U/V, endpoints match.\<close>
+          unfolding pp2_def
+          sorry \<comment> \<open>From h_β_i_path_UV + hpb_path_UV (both in same U or V from cell) + hep2 + σ_cond2.\<close>
         \<comment> \<open>Step 4: Combine and rearrange.\<close>
         have h_eq: "mulH (\<sigma> (piece_top i)) (\<sigma> (\<beta> (Suc i))) = mulH (\<sigma> (\<beta> i)) (\<sigma> (piece_bot i))"
           using h\<sigma>_products h_split_LHS h_split_RHS by (by100 simp)
