@@ -132,10 +132,17 @@ proof -
       have "C \<subseteq> ?Xpq" using hC_sub_Xpq .
       from top1_continuous_map_on_restrict_domain_simple[OF hid_Xpq this]
       have "top1_continuous_map_on C (subspace_topology ?Xpq ?TXpq C) ?Xpq ?TXpq id" .
-      moreover have "subspace_topology ?Xpq ?TXpq C = ?TC"
+      have hsub_eq: "subspace_topology ?Xpq ?TXpq C = ?TC"
         using subspace_topology_trans[OF \<open>C \<subseteq> ?Xpq\<close>] by (by100 simp)
-      moreover have "id = (\<lambda>x::(real\<times>real\<times>real). x)" by (rule ext) (by100 simp)
-      ultimately show ?thesis by (by100 simp)
+      have hid_eq: "id = (\<lambda>x::(real\<times>real\<times>real). x)" by (rule ext) (by100 simp)
+      show ?thesis
+      proof -
+        have h1: "top1_continuous_map_on C (subspace_topology ?Xpq ?TXpq C) ?Xpq ?TXpq id"
+          using top1_continuous_map_on_restrict_domain_simple[OF hid_Xpq \<open>C \<subseteq> ?Xpq\<close>] .
+        have h2: "top1_continuous_map_on C ?TC ?Xpq ?TXpq id"
+          using h1 hsub_eq by (by100 presburger)
+        show ?thesis using h2 hid_eq by (by100 presburger)
+      qed
     qed
     show ?thesis
       by (rule top1_fundamental_group_induced_on_is_hom[OF hTC hTXpq hc0_C hc0_Xpq hincl]) (by100 simp)
@@ -6761,7 +6768,9 @@ proof -
                   qed
                   finally show ?thesis .
                 qed
-                ultimately show ?thesis by (by100 simp)
+                ultimately have "map G [0..<Suc m] = map F [0..<k] @ G k # G (Suc k) # map F [Suc k..<m]"
+                  by (by100 presburger)
+                thus ?thesis by (by100 simp)
               qed
               have hmap_F: "map F [0..<m] = map F [0..<k] @ [F k] @ map F [Suc k..<m]"
               proof -
@@ -6853,13 +6862,248 @@ proof -
                 case True
                 \<comment> \<open>Base: M = n, T has same #pieces as sub. Since T ⊇ sub and both strictly
                    increasing with same endpoints, T = sub on [0..n].\<close>
+                have hT_mono: "\<And>a b. a \<le> b \<Longrightarrow> b \<le> M \<Longrightarrow> T a \<le> T b"
+                proof -
+                  fix a b :: nat assume hab: "a \<le> b" and hbM: "b \<le> M"
+                  show "T a \<le> T b" using hab hbM
+                  proof (induct b)
+                    case 0 thus ?case by (by100 simp)
+                  next
+                    case (Suc b')
+                    show ?case
+                    proof (cases "a \<le> b'")
+                      case True
+                      have "b' \<le> M" using Suc.prems(2) by (by100 presburger)
+                      have "T a \<le> T b'" using Suc.hyps[OF True \<open>b' \<le> M\<close>] .
+                      moreover have "b' < M" using Suc.prems(2) by (by100 presburger)
+                      hence "T b' < T (Suc b')" using less.prems(4) by (by100 force)
+                      ultimately show ?thesis by (by100 linarith)
+                    next
+                      case False
+                      hence "a = Suc b'" using Suc.prems(1) by (by100 presburger)
+                      thus ?thesis by (by100 simp)
+                    qed
+                  qed
+                qed
+                have hT_range_eq: "T ` {0..n} = sub ` {0..n}"
+                proof (rule card_subset_eq[symmetric])
+                  show "finite (T ` {0..n})" by (by100 simp)
+                  show "sub ` {0..n} \<subseteq> T ` {0..n}"
+                  proof
+                    fix x assume "x \<in> sub ` {0..n}"
+                    then obtain k where hk: "k \<le> n" and hkx: "x = sub k" by (by100 force)
+                    from less.prems(6) hk obtain j where "j \<le> M" and "T j = sub k"
+                      using True by (by100 blast)
+                    thus "x \<in> T ` {0..n}" using hkx True by (by100 force)
+                  qed
+                  show "card (sub ` {0..n}) = card (T ` {0..n})"
+                  proof -
+                    have hT_inj: "inj_on T {0..n}"
+                    proof (rule inj_onI)
+                      fix a b assume ha: "a \<in> {0..n}" and hb: "b \<in> {0..n}" and heq: "T a = T b"
+                      have haM: "a \<le> M" and hbM: "b \<le> M" using ha hb True by (by100 simp)+
+                      show "a = b"
+                      proof (rule ccontr)
+                        assume "a \<noteq> b"
+                        hence "a < b \<or> b < a" by (by100 presburger)
+                        thus False
+                        proof
+                          assume "a < b"
+                          hence "T a \<le> T (b-1)" using hT_mono hbM by (by100 force)
+                          moreover have "b - 1 < M" using \<open>a < b\<close> hbM by (by100 presburger)
+                          hence "T (b-1) < T (Suc (b-1))" using less.prems(4) by (by100 force)
+                          moreover have "Suc (b-1) = b" using \<open>a < b\<close> by (by100 presburger)
+                          hence "T (Suc (b-1)) = T b" by (by100 simp)
+                          ultimately have "T a < T b" by (by100 linarith)
+                          thus False using heq by (by100 linarith)
+                        next
+                          assume "b < a"
+                          hence "T b \<le> T (a-1)" using hT_mono haM by (by100 force)
+                          moreover have "a - 1 < M" using \<open>b < a\<close> haM by (by100 presburger)
+                          hence "T (a-1) < T (Suc (a-1))" using less.prems(4) by (by100 force)
+                          moreover have "Suc (a-1) = a" using \<open>b < a\<close> by (by100 presburger)
+                          hence "T (Suc (a-1)) = T a" by (by100 simp)
+                          ultimately have "T b < T a" by (by100 linarith)
+                          thus False using heq by (by100 linarith)
+                        qed
+                      qed
+                    qed
+                    have hsub_inj: "inj_on sub {0..n}"
+                    proof (rule inj_onI)
+                      fix a b assume ha: "a \<in> {0..n}" and hb: "b \<in> {0..n}" and heq: "sub a = sub b"
+                      show "a = b"
+                      proof (rule ccontr)
+                        assume "a \<noteq> b"
+                        hence "a < b \<or> b < a" by (by100 presburger)
+                        thus False
+                        proof
+                          assume "a < b"
+                          have "sub a < sub b" using \<open>a < b\<close> hb hinc
+                          proof (induct b)
+                            case 0 thus ?case by (by100 simp)
+                          next
+                            case (Suc b')
+                            show ?case
+                            proof (cases "a = b'")
+                              case True thus ?thesis using hinc Suc.prems(2) by (by100 force)
+                            next
+                              case False
+                              hence "a < b'" using Suc.prems(1) by (by100 presburger)
+                              have "b' \<in> {0..n}" using Suc.prems(2) by (by100 force)
+                              have "sub a < sub b'" using Suc.hyps[OF \<open>a < b'\<close> \<open>b' \<in> {0..n}\<close> hinc] .
+                              moreover have "b' < n" using Suc.prems(2) by (by100 force)
+                              hence "sub b' < sub (Suc b')" using hinc by (by100 force)
+                              ultimately show ?thesis by (by100 linarith)
+                            qed
+                          qed
+                          thus False using heq by (by100 linarith)
+                        next
+                          assume "b < a"
+                          have "sub b < sub a" using \<open>b < a\<close> ha hinc
+                          proof (induct a)
+                            case 0 thus ?case by (by100 simp)
+                          next
+                            case (Suc a')
+                            show ?case
+                            proof (cases "b = a'")
+                              case True thus ?thesis using hinc Suc.prems(2) by (by100 force)
+                            next
+                              case False
+                              hence "b < a'" using Suc.prems(1) by (by100 presburger)
+                              have "a' \<in> {0..n}" using Suc.prems(2) by (by100 force)
+                              have "sub b < sub a'" using Suc.hyps[OF \<open>b < a'\<close> \<open>a' \<in> {0..n}\<close> hinc] .
+                              moreover have "a' < n" using Suc.prems(2) by (by100 force)
+                              hence "sub a' < sub (Suc a')" using hinc by (by100 force)
+                              ultimately show ?thesis by (by100 linarith)
+                            qed
+                          qed
+                          thus False using heq by (by100 linarith)
+                        qed
+                      qed
+                    qed
+                    show ?thesis using card_image[OF hT_inj] card_image[OF hsub_inj] by (by100 simp)
+                  qed
+                qed
                 have hT_eq_sub: "\<forall>i\<le>n. T i = sub i"
-                  sorry \<comment> \<open>Both strictly increasing with n+1 points, same endpoints, T ⊇ sub-values.
-                     Two strict-inc enumerations of n+1 values from the same superset of size n+1
-                     must be identical. Proof: induction on i, using T(0) = sub(0) = 0 as base,
-                     and at each step: T(i+1) is the smallest T-value > T(i) = sub(i),
-                     and sub(i+1) is in T, so sub(i+1) ≥ T(i+1), but also T(i+1) ≥ sub(i+1)
-                     because sub(i+1) is the next sub-value and must appear in T at some index ≤ i+1.\<close>
+                proof (intro allI impI)
+                  fix i assume hi: "i \<le> n"
+                  show "T i = sub i" using hi
+                  proof (induct i)
+                    case 0
+                    show ?case using less.prems(2) hs0 by (by100 simp)
+                  next
+                    case (Suc i')
+                    have "i' \<le> n" using Suc.prems by (by100 presburger)
+                    hence hIH: "T i' = sub i'" using Suc.hyps by (by100 simp)
+                    have hSi_le: "Suc i' \<le> n" using Suc.prems by (by100 presburger)
+                    \<comment> \<open>sub(Suc i') appears in T at some index j ≤ n.\<close>
+                    from less.prems(6) hSi_le obtain j where hj_le: "j \<le> n" and hj_eq: "T j = sub (Suc i')"
+                      using True by (by100 blast)
+                    \<comment> \<open>j > i' (from T strict inc + T(j) = sub(Suc i') > sub(i') = T(i')).\<close>
+                    have "sub (Suc i') > sub i'" using hinc Suc.prems by (by100 force)
+                    hence "T j > T i'" using hj_eq hIH by (by100 linarith)
+                    hence "j > i'"
+                    proof -
+                      have "\<not> (j \<le> i')"
+                      proof
+                        assume "j \<le> i'"
+                        hence "T j \<le> T i'"
+                        proof (cases "j = i'")
+                          case True thus ?thesis by (by100 simp)
+                        next
+                          case False
+                          hence "j < i'" using \<open>j \<le> i'\<close> by (by100 presburger)
+                          have "j \<le> i'" using \<open>j < i'\<close> by (by100 presburger)
+                          have "i' \<le> M" using hSi_le True by (by100 presburger)
+                          show ?thesis using hT_mono[OF \<open>j \<le> i'\<close> \<open>i' \<le> M\<close>] .
+                        qed
+                        thus False using \<open>T j > T i'\<close> by (by100 linarith)
+                      qed
+                      thus ?thesis by (by100 presburger)
+                    qed
+                    hence "j \<ge> Suc i'" by (by100 presburger)
+                    \<comment> \<open>T(Suc i') ≤ T(j) = sub(Suc i') from j ≥ Suc i' and T strict inc.\<close>
+                    have "j \<le> M" using hj_le True by (by100 simp)
+                    have "T (Suc i') \<le> T j"
+                      using hT_mono[OF \<open>j \<ge> Suc i'\<close> \<open>j \<le> M\<close>] .
+                    hence "T (Suc i') \<le> sub (Suc i')" using hj_eq by (by100 simp)
+                    \<comment> \<open>Also T(Suc i') ≥ sub(Suc i'): T(Suc i') is a sub-value ≥ sub(Suc i').\<close>
+                    moreover have "T (Suc i') \<ge> sub (Suc i')"
+                    proof -
+                      have "Suc i' \<le> n" using hSi_le .
+                      hence "T (Suc i') \<in> T ` {0..n}" by (by100 force)
+                      hence "T (Suc i') \<in> sub ` {0..n}" using hT_range_eq by (by100 simp)
+                      then obtain k where hk: "k \<le> n" and hk_eq: "sub k = T (Suc i')"
+                        by (by100 force)
+                      have "i' < M" using hSi_le True by (by100 presburger)
+                      have "T i' < T (Suc i')" using less.prems(4) \<open>i' < M\<close> by (by100 force)
+                      have hsk_gt: "sub k > sub i'" using hk_eq hIH \<open>T i' < T (Suc i')\<close>
+                        by (by100 linarith)
+                      have "k > i'"
+                      proof (rule ccontr)
+                        assume "\<not> k > i'"
+                        hence "k \<le> i'" by (by100 presburger)
+                        hence "sub k \<le> sub i'" using hT_mono hk hinc
+                        proof (cases "k = i'")
+                          case True thus ?thesis by (by100 simp)
+                        next
+                          case False
+                          hence "k < i'" using \<open>k \<le> i'\<close> by (by100 presburger)
+                          have "i' < n" using hSi_le by (by100 presburger)
+                          have "sub k < sub i'" using \<open>k < i'\<close> \<open>i' < n\<close> hinc
+                          proof (induct i')
+                            case 0 thus ?case by (by100 simp)
+                          next
+                            case (Suc i'')
+                            show ?case
+                            proof (cases "k = i''")
+                              case True thus ?thesis using hinc Suc.prems(2) by (by100 force)
+                            next
+                              case False
+                              hence "k < i''" using Suc.prems(1) by (by100 presburger)
+                              have "i'' < n" using Suc.prems(2) by (by100 presburger)
+                              have "sub k < sub i''" using Suc.hyps[OF \<open>k < i''\<close> \<open>i'' < n\<close> hinc] .
+                              moreover have "sub i'' < sub (Suc i'')" using hinc \<open>i'' < n\<close> by (by100 force)
+                              ultimately show ?thesis by (by100 linarith)
+                            qed
+                          qed
+                          thus ?thesis by (by100 linarith)
+                        qed
+                        thus False using hsk_gt by (by100 linarith)
+                      qed
+                      hence "k \<ge> Suc i'" by (by100 presburger)
+                      hence "sub k \<ge> sub (Suc i')"
+                      proof (cases "k = Suc i'")
+                        case True thus ?thesis by (by100 simp)
+                      next
+                        case False
+                        hence "k > Suc i'" using \<open>k \<ge> Suc i'\<close> by (by100 presburger)
+                        hence "sub (Suc i') < sub k" using hk hinc
+                        proof (induct k)
+                          case 0 thus ?case by (by100 simp)
+                        next
+                          case (Suc k')
+                          show ?case
+                          proof (cases "Suc i' = k'")
+                            case True thus ?thesis using hinc Suc.prems(2) by (by100 force)
+                          next
+                            case False
+                            hence "Suc i' < k'" using Suc.prems(1) by (by100 presburger)
+                            have "k' \<le> n" using Suc.prems(2) by (by100 force)
+                            have "sub (Suc i') < sub k'"
+                              using Suc.hyps[OF \<open>Suc i' < k'\<close> \<open>k' \<le> n\<close> hinc] .
+                            moreover have "k' < n" using Suc.prems(2) by (by100 force)
+                            hence "sub k' < sub (Suc k')" using hinc by (by100 force)
+                            ultimately show ?thesis by (by100 linarith)
+                          qed
+                        qed
+                        thus ?thesis by (by100 linarith)
+                      qed
+                      thus ?thesis using hk_eq by (by100 linarith)
+                    qed
+                    ultimately show "T (Suc i') = sub (Suc i')" by (by100 linarith)
+                  qed
+                qed
                 have "foldr_\<sigma> f n T = foldr_\<sigma> f n sub"
                 proof -
                   have "\<And>i. i < n \<Longrightarrow> T i = sub i \<and> T (Suc i) = sub (Suc i)"
@@ -6872,11 +7116,8 @@ proof -
                 thus ?thesis using True by (by100 simp)
               next
                 case False
-                have "M \<ge> n"
-                proof -
-                  \<comment> \<open>T strictly increasing ⟹ injective. Sub values all appear in T.
-                     n+1 distinct values in {0..M} ⟹ n+1 ≤ M+1.\<close>
-                  have hT_inj: "\<And>a b. a \<le> M \<Longrightarrow> b \<le> M \<Longrightarrow> T a = T b \<Longrightarrow> a = b"
+                \<comment> \<open>T strictly increasing ⟹ injective.\<close>
+                have hT_inj: "\<And>a b. a \<le> M \<Longrightarrow> b \<le> M \<Longrightarrow> T a = T b \<Longrightarrow> a = b"
                   proof -
                     fix a b assume ha: "a \<le> M" and hb: "b \<le> M" and heq: "T a = T b"
                     show "a = b"
@@ -6937,6 +7178,32 @@ proof -
                       qed
                     qed
                   qed
+                have hT_mono_F: "\<And>a b. a \<le> b \<Longrightarrow> b \<le> M \<Longrightarrow> T a \<le> T b"
+                proof -
+                  fix a b :: nat assume hab: "a \<le> b" and hbM: "b \<le> M"
+                  show "T a \<le> T b" using hab hbM
+                  proof (induct b)
+                    case 0 thus ?case by (by100 simp)
+                  next
+                    case (Suc b')
+                    show ?case
+                    proof (cases "a \<le> b'")
+                      case True
+                      have "b' \<le> M" using Suc.prems(2) by (by100 presburger)
+                      have "T a \<le> T b'" using Suc.hyps[OF True \<open>b' \<le> M\<close>] .
+                      moreover have "b' < M" using Suc.prems(2) by (by100 presburger)
+                      hence "T b' < T (Suc b')" using less.prems(4) by (by100 force)
+                      ultimately show ?thesis by (by100 linarith)
+                    next
+                      case False
+                      hence "a = Suc b'" using Suc.prems(1) by (by100 presburger)
+                      thus ?thesis by (by100 simp)
+                    qed
+                  qed
+                qed
+                have "M \<ge> n"
+                proof -
+                  \<comment> \<open>Sub values all appear in T. n+1 distinct values in {0..M} ⟹ n+1 ≤ M+1.\<close>
                   define w where "w i = (SOME j. j \<le> M \<and> T j = sub i)" for i
                   have hw: "\<And>i. i \<le> n \<Longrightarrow> w i \<le> M \<and> T (w i) = sub i"
                   proof -
@@ -7012,9 +7279,116 @@ proof -
                 hence hMgt: "M > n" using False by (by100 presburger)
                 \<comment> \<open>Step: M > n. Find removable point T(j) not in sub.\<close>
                 have "\<exists>j. 0 < j \<and> j < M \<and> (\<forall>i\<le>n. T j \<noteq> sub i)"
-                  sorry \<comment> \<open>Pigeonhole: T has M+1 points, sub has n+1 < M+1 points.
-                     T(0) = sub(0) = 0 and T(M) = sub(n) = 1. Among T(1)..T(M-1),
-                     at most n-1 can match sub(1)..sub(n-1). Since M-1 > n-1, one is extra.\<close>
+                proof (rule ccontr)
+                  assume "\<not> (\<exists>j. 0 < j \<and> j < M \<and> (\<forall>i\<le>n. T j \<noteq> sub i))"
+                  hence hcontra: "\<And>j. 0 < j \<Longrightarrow> j < M \<Longrightarrow> \<exists>i\<le>n. T j = sub i"
+                    by (by100 blast)
+                  \<comment> \<open>Map each j ∈ {1..<M} to the unique i with T(j)=sub(i).
+                     Since T(j)∈(0,1), i∈{1,..,n-1}. Injective → M-1 ≤ n-1 → contradiction.\<close>
+                  define g where "g j = (SOME i. i \<le> n \<and> T j = sub i)" for j
+                  have hg: "\<And>j. 0 < j \<Longrightarrow> j < M \<Longrightarrow> g j \<le> n \<and> T j = sub (g j)"
+                  proof -
+                    fix j assume "0 < j" "j < M"
+                    from hcontra[OF this] have "\<exists>i. i \<le> n \<and> T j = sub i" by (by100 blast)
+                    thus "g j \<le> n \<and> T j = sub (g j)" unfolding g_def by (rule someI_ex)
+                  qed
+                  have hg_pos: "\<And>j. 0 < j \<Longrightarrow> j < M \<Longrightarrow> g j > 0"
+                  proof -
+                    fix j assume hj1: "0 < j" and hj2: "j < M"
+                    have "T j > T 0" using less.prems(4) hj1 hj2
+                    proof (induct j)
+                      case 0 thus ?case by (by100 simp)
+                    next
+                      case (Suc j')
+                      show ?case
+                      proof (cases "j' = 0")
+                        case True
+                        have "0 < M" using Suc.prems(3) by (by100 presburger)
+                        have "T 0 < T (Suc 0)" using less.prems(4) \<open>0 < M\<close> by (by100 force)
+                        thus ?thesis using True by (by100 simp)
+                      next
+                        case False
+                        hence "0 < j'" by (by100 presburger)
+                        have "j' < M" using Suc.prems(3) by (by100 presburger)
+                        have "T 0 < T j'" using Suc.hyps[OF Suc.prems(1) \<open>0 < j'\<close> \<open>j' < M\<close>] .
+                        moreover have "T j' < T (Suc j')" using less.prems(4) \<open>j' < M\<close> by (by100 force)
+                        ultimately show ?thesis by (by100 linarith)
+                      qed
+                    qed
+                    hence "T j \<noteq> 0" using less.prems(2) by (by100 linarith)
+                    hence hsub_g_ne: "sub (g j) \<noteq> sub 0" using hg[OF hj1 hj2] hs0 by (by100 simp)
+                    show "g j > 0"
+                    proof (rule ccontr)
+                      assume "\<not> g j > 0"
+                      hence "g j = 0" by (by100 presburger)
+                      hence "sub (g j) = sub 0" by (by100 simp)
+                      thus False using hsub_g_ne by (by100 simp)
+                    qed
+                  qed
+                  have hg_lt_n: "\<And>j. 0 < j \<Longrightarrow> j < M \<Longrightarrow> g j < n"
+                  proof -
+                    fix j assume hj1: "0 < j" and hj2: "j < M"
+                    have "T j < T M"
+                    proof -
+                      have hTmono: "\<And>a b. a < b \<Longrightarrow> b \<le> M \<Longrightarrow> T a < T b"
+                      proof -
+                        fix a b :: nat assume hab: "a < b" and hbM: "b \<le> M"
+                        show "T a < T b" using hab hbM
+                        proof (induct b)
+                          case 0 thus ?case by (by100 simp)
+                        next
+                          case (Suc b')
+                          show ?case
+                          proof (cases "a = b'")
+                            case True thus ?thesis using less.prems(4) Suc.prems(2) by (by100 force)
+                          next
+                            case False
+                            hence "a < b'" using Suc.prems(1) by (by100 presburger)
+                            have "b' \<le> M" using Suc.prems(2) by (by100 presburger)
+                            have "T a < T b'" using Suc.hyps[OF \<open>a < b'\<close> \<open>b' \<le> M\<close>] .
+                            moreover have "b' < M" using Suc.prems(2) by (by100 presburger)
+                            hence "T b' < T (Suc b')" using less.prems(4) by (by100 force)
+                            ultimately show ?thesis by (by100 linarith)
+                          qed
+                        qed
+                      qed
+                      show ?thesis using hTmono[OF hj2 le_refl] .
+                    qed
+                    hence "T j \<noteq> 1" using less.prems(3) by (by100 linarith)
+                    hence "sub (g j) \<noteq> sub n" using hg[OF hj1 hj2] hsn by (by100 simp)
+                    have "g j \<le> n" using hg[OF hj1 hj2] by (by100 simp)
+                    show "g j < n"
+                    proof (rule ccontr)
+                      assume "\<not> g j < n"
+                      hence "g j = n" using \<open>g j \<le> n\<close> by (by100 presburger)
+                      hence "sub (g j) = sub n" by (by100 simp)
+                      thus False using \<open>sub (g j) \<noteq> sub n\<close> by (by100 simp)
+                    qed
+                  qed
+                  have hg_inj: "inj_on g {1..<M}"
+                  proof (rule inj_onI)
+                    fix a b assume ha: "a \<in> {1..<M}" and hb: "b \<in> {1..<M}" and heq: "g a = g b"
+                    have "T a = sub (g a)" using hg ha by (by100 force)
+                    moreover have "T b = sub (g b)" using hg hb by (by100 force)
+                    ultimately have "T a = T b" using heq by (by100 simp)
+                    have "a \<le> M" using ha by (by100 force)
+                    have "b \<le> M" using hb by (by100 force)
+                    show "a = b" using hT_inj[OF \<open>a \<le> M\<close> \<open>b \<le> M\<close> \<open>T a = T b\<close>] .
+                  qed
+                  have hg_range: "g ` {1..<M} \<subseteq> {1..<n}"
+                  proof
+                    fix x assume "x \<in> g ` {1..<M}"
+                    then obtain j where hj: "j \<in> {1..<M}" and hx: "x = g j" by (by100 blast)
+                    have "0 < j" and "j < M" using hj by (by100 force)+
+                    show "x \<in> {1..<n}" using hg_pos[OF \<open>0 < j\<close> \<open>j < M\<close>]
+                        hg_lt_n[OF \<open>0 < j\<close> \<open>j < M\<close>] hx by (by100 force)
+                  qed
+                  have "card {1..<M} \<le> card {1..<(n::nat)}"
+                    by (rule card_inj_on_le[OF hg_inj hg_range], by100 simp)
+                  hence "M - 1 \<le> n - 1" by (by100 simp)
+                  hence "M \<le> n" using less.prems(1) hn by (by100 presburger)
+                  thus False using hMgt by (by100 linarith)
+                qed
                 then obtain j where hj_pos: "0 < j" and hj_lt: "j < M"
                     and hj_not_sub: "\<forall>i\<le>n. T j \<noteq> sub i" by (by100 blast)
                 \<comment> \<open>Remove T(j): define T'(i) = T(i) for i<j, T'(i) = T(i+1) for i≥j.\<close>
@@ -7088,8 +7462,286 @@ proof -
                       \<comment> \<open>The key: [T(i), T(Suc(Suc i))] = [T(j-1), T(j+1)] is within a sub-piece.
                          T(j) is not a sub-point, so both T(j-1) to T(j) and T(j) to T(j+1) are
                          sub-intervals of the SAME sub-piece. Hence the merge also maps to U or V.\<close>
-                      show ?thesis sorry \<comment> \<open>Merged piece UV: needs ∃k. sub(k) ≤ T(j-1) < T(j+1) ≤ sub(k+1)
-                         and sub-piece [sub(k), sub(k+1)] maps to U or V.\<close>
+                      \<comment> \<open>i = j-1 (since i < j ≤ Suc i).\<close>
+                      have hi_eq: "i = j - 1" using True \<open>\<not>(Suc i < j)\<close> by (by100 presburger)
+                      hence hSi_eq: "Suc i = j" using hj_pos by (by100 presburger)
+                      have hSSi_eq: "Suc (Suc i) = Suc j" using hSi_eq by (by100 simp)
+                      \<comment> \<open>Find k < n with sub(k) ≤ T(j-1) and T(j+1) ≤ sub(k+1).
+                         Key: T(j) not a sub-value, so no sub-value in (T(j-1), T(j+1)).\<close>
+                      have hTj_pos: "T j > 0"
+                      proof -
+                        have "T 0 < T j"
+                        proof -
+                          have "0 < j" using hj_pos .
+                          have "j \<le> M" using hj_lt by (by100 presburger)
+                          show ?thesis using hT_inj less.prems(4) hj_pos hj_lt
+                          proof -
+                            show ?thesis using less.prems(4) hj_pos hj_lt
+                            proof (induct j)
+                              case 0 thus ?case by (by100 simp)
+                            next
+                              case (Suc j')
+                              show ?case
+                              proof (cases "j' = 0")
+                                case True
+                                have "0 < M" using Suc.prems(3) by (by100 presburger)
+                                thus ?thesis using less.prems(4) True by (by100 force)
+                              next
+                                case False
+                                hence "0 < j'" by (by100 presburger)
+                                have "j' < M" using Suc.prems(3) by (by100 presburger)
+                                have "T 0 < T j'" using Suc.hyps[OF Suc.prems(1) \<open>0 < j'\<close> \<open>j' < M\<close>] .
+                                moreover have "T j' < T (Suc j')" using less.prems(4) \<open>j' < M\<close> by (by100 force)
+                                ultimately show ?thesis by (by100 linarith)
+                              qed
+                            qed
+                          qed
+                        qed
+                        thus ?thesis using less.prems(2) by (by100 linarith)
+                      qed
+                      have hTj_lt1: "T j < 1"
+                      proof -
+                        have "T j < T M" using less.prems(4) hj_lt
+                        proof (induct "M - j" arbitrary: j)
+                          case 0 thus ?case by (by100 simp)
+                        next
+                          case (Suc d)
+                          show ?case
+                          proof (cases "Suc j = M")
+                            case True thus ?thesis using less.prems(4) Suc.prems(2) by (by100 force)
+                          next
+                            case False
+                            hence "Suc j < M" using Suc.prems(2) by (by100 presburger)
+                            have "d = M - Suc j" using Suc.hyps(2) Suc.prems(2) by (by100 presburger)
+                            have "T (Suc j) < T M"
+                              using Suc.hyps(1)[OF \<open>d = M - Suc j\<close> Suc.prems(1) \<open>Suc j < M\<close>] .
+                            moreover have "T j < T (Suc j)" using less.prems(4) Suc.prems(2) by (by100 force)
+                            ultimately show ?thesis by (by100 linarith)
+                          qed
+                        qed
+                        thus ?thesis using less.prems(3) by (by100 linarith)
+                      qed
+                      \<comment> \<open>T(j) lies strictly between consecutive sub-values.\<close>
+                      have "\<exists>k. k < n \<and> sub k < T j \<and> T j < sub (Suc k)"
+                      proof -
+                        \<comment> \<open>sub(0)=0 < T(j) < 1=sub(n). Find the gap.\<close>
+                        define S where "S = {l. l \<le> n \<and> sub l \<le> T j}"
+                        have "0 \<in> S" unfolding S_def using hs0 hTj_pos by (by100 force)
+                        hence "S \<noteq> {}" by (by100 blast)
+                        have "finite S" unfolding S_def by (by100 simp)
+                        have "S \<subseteq> {0..n}" unfolding S_def by (by100 force)
+                        define k where "k = Max S"
+                        have hk_in: "k \<in> S" unfolding k_def using \<open>S \<noteq> {}\<close> \<open>finite S\<close> by (by100 simp)
+                        hence hk_le: "k \<le> n" and hk_bound: "sub k \<le> T j" unfolding S_def by (by100 force)+
+                        have hk_max: "\<And>l. l \<in> S \<Longrightarrow> l \<le> k" unfolding k_def using \<open>finite S\<close> by (by100 simp)
+                        have "k < n"
+                        proof (rule ccontr)
+                          assume "\<not> k < n"
+                          hence "k = n" using hk_le by (by100 presburger)
+                          hence "sub n \<le> T j" using hk_bound by (by100 simp)
+                          hence "1 \<le> T j" using hsn by (by100 linarith)
+                          thus False using hTj_lt1 by (by100 linarith)
+                        qed
+                        have "sub k \<noteq> T j"
+                        proof
+                          assume "sub k = T j"
+                          hence "T j = sub k" by (by100 simp)
+                          thus False using hj_not_sub hk_le by (by100 blast)
+                        qed
+                        hence "sub k < T j" using hk_bound by (by100 linarith)
+                        have "T j < sub (Suc k)"
+                        proof (rule ccontr)
+                          assume "\<not> T j < sub (Suc k)"
+                          hence "sub (Suc k) \<le> T j" by (by100 linarith)
+                          have "Suc k \<le> n" using \<open>k < n\<close> by (by100 presburger)
+                          hence "Suc k \<in> S" unfolding S_def using \<open>sub (Suc k) \<le> T j\<close> by (by100 force)
+                          hence "Suc k \<le> k" using hk_max by (by100 blast)
+                          thus False by (by100 presburger)
+                        qed
+                        show ?thesis using \<open>k < n\<close> \<open>sub k < T j\<close> \<open>T j < sub (Suc k)\<close> by (by100 blast)
+                      qed
+                      then obtain k where hk_lt: "k < n" and hk_lo: "sub k < T j"
+                          and hk_hi: "T j < sub (Suc k)" by (by100 blast)
+                      \<comment> \<open>T(j-1) ≥ sub(k): no sub-value in (T(j-1), T(j)).\<close>
+                      have hTi_ge: "T i \<ge> sub k"
+                      proof (rule ccontr)
+                        assume "\<not> T i \<ge> sub k"
+                        hence "T i < sub k" by (by100 linarith)
+                        \<comment> \<open>sub(k) ∈ (T(i), T(j)). sub(k) = T(w(k)) ⟹ i < w(k) < j — impossible.\<close>
+                        have "sub k > T i" and "sub k < T j" using \<open>T i < sub k\<close> hk_lo by (by100 linarith)+
+                        from less.prems(6) have "\<exists>jk\<le>M. T jk = sub k"
+                          using hk_lt by (by100 force)
+                        then obtain jk where hjk_le: "jk \<le> M" and hjk_eq: "T jk = sub k" by (by100 blast)
+                        have "T jk > T i" using hjk_eq \<open>sub k > T i\<close> by (by100 linarith)
+                        have "T jk < T j" using hjk_eq \<open>sub k < T j\<close> by (by100 linarith)
+                        have "jk > i" using hT_inj \<open>T jk > T i\<close>
+                        proof -
+                          have "\<not> jk \<le> i"
+                          proof
+                            assume "jk \<le> i"
+                            hence "T jk \<le> T i" using less.prems(4)
+                            proof (cases "jk = i")
+                              case True thus ?thesis by (by100 simp)
+                            next
+                              case False
+                              hence "jk < i" using \<open>jk \<le> i\<close> by (by100 presburger)
+                              have "i \<le> M" using hi hj_lt by (by100 presburger)
+                              show ?thesis using hT_mono_F[OF \<open>jk \<le> i\<close> \<open>i \<le> M\<close>] .
+                            qed
+                            thus False using \<open>T jk > T i\<close> by (by100 linarith)
+                          qed
+                          thus ?thesis by (by100 presburger)
+                        qed
+                        have "jk < j"
+                        proof -
+                          have "\<not> jk \<ge> j"
+                          proof
+                            assume "jk \<ge> j"
+                            hence "T jk \<ge> T j" using less.prems(4)
+                            proof (cases "jk = j")
+                              case True thus ?thesis by (by100 simp)
+                            next
+                              case False
+                              hence "jk > j" using \<open>jk \<ge> j\<close> by (by100 presburger)
+                              show ?thesis using hT_mono_F[OF \<open>jk \<ge> j\<close> hjk_le] .
+                            qed
+                            thus False using \<open>T jk < T j\<close> by (by100 linarith)
+                          qed
+                          thus ?thesis by (by100 presburger)
+                        qed
+                        \<comment> \<open>i < jk < j but Suc i = j, so no natural between them.\<close>
+                        have "Suc i = j" using hSi_eq .
+                        hence False using \<open>jk > i\<close> \<open>jk < j\<close> by (by100 presburger)
+                        thus False .
+                      qed
+                      \<comment> \<open>T(j+1) ≤ sub(k+1): no sub-value in (T(j), T(j+1)).\<close>
+                      have hTSj_le: "T (Suc j) \<le> sub (Suc k)"
+                      proof (rule ccontr)
+                        assume "\<not> T (Suc j) \<le> sub (Suc k)"
+                        hence "T (Suc j) > sub (Suc k)" by (by100 linarith)
+                        \<comment> \<open>sub(k+1) ∈ (T(j), T(j+1)). sub(k+1) = T(jk1) ⟹ j < jk1 < j+1 — impossible.\<close>
+                        have "sub (Suc k) > T j" and "sub (Suc k) < T (Suc j)"
+                          using hk_hi \<open>T (Suc j) > sub (Suc k)\<close> by (by100 linarith)+
+                        have "Suc k \<le> n" using hk_lt by (by100 presburger)
+                        from less.prems(6) \<open>Suc k \<le> n\<close> obtain jk1 where hjk1_le: "jk1 \<le> M"
+                            and hjk1_eq: "T jk1 = sub (Suc k)" by (by100 blast)
+                        have "T jk1 > T j" using hjk1_eq \<open>sub (Suc k) > T j\<close> by (by100 linarith)
+                        have "T jk1 < T (Suc j)" using hjk1_eq \<open>sub (Suc k) < T (Suc j)\<close> by (by100 linarith)
+                        have "jk1 > j"
+                        proof -
+                          have "\<not> jk1 \<le> j"
+                          proof
+                            assume "jk1 \<le> j"
+                            have "j \<le> M" using hj_lt by (by100 presburger)
+                            have "T jk1 \<le> T j" using hT_mono_F[OF \<open>jk1 \<le> j\<close> \<open>j \<le> M\<close>] .
+                            thus False using \<open>T jk1 > T j\<close> by (by100 linarith)
+                          qed
+                          thus ?thesis by (by100 presburger)
+                        qed
+                        have "jk1 < Suc j"
+                        proof -
+                          have "\<not> jk1 \<ge> Suc j"
+                          proof
+                            assume "jk1 \<ge> Suc j"
+                            have "T jk1 \<ge> T (Suc j)" using hT_mono_F[OF \<open>jk1 \<ge> Suc j\<close> hjk1_le] .
+                            thus False using \<open>T jk1 < T (Suc j)\<close> by (by100 linarith)
+                          qed
+                          thus ?thesis by (by100 presburger)
+                        qed
+                        thus False using \<open>jk1 > j\<close> by (by100 presburger)
+                      qed
+                      \<comment> \<open>Now use hpUV at index k: sub-piece k maps to U or V.\<close>
+                      have hpk: "(\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub k + t * (sub (Suc k) - sub k)) \<in> U)
+                          \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub k + t * (sub (Suc k) - sub k)) \<in> V)"
+                        using hpUV hk_lt by (by100 force)
+                      \<comment> \<open>Merged piece maps to same U or V by reparametrization.\<close>
+                      have hsubk_lt: "sub k < sub (Suc k)" using hinc hk_lt by (by100 force)
+                      show ?thesis
+                      proof (cases "(\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub k + t * (sub (Suc k) - sub k)) \<in> U)")
+                        case True
+                        show ?thesis
+                        proof (rule disjI1, intro allI impI)
+                          fix t :: real assume ht: "0 \<le> t \<and> t \<le> 1"
+                          let ?x = "T' i + t * (T' (Suc i) - T' i)"
+                          have hx_eq: "?x = T i + t * (T (Suc (Suc i)) - T i)"
+                            using \<open>T' i = T i\<close> \<open>T' (Suc i) = T (Suc (Suc i))\<close> by (by100 simp)
+                          have "T i \<ge> sub k" using hTi_ge .
+                          have "T (Suc (Suc i)) \<le> sub (Suc k)" using hTSj_le hSSi_eq by (by100 simp)
+                          have hTi_le_TSSi: "T i \<le> T (Suc (Suc i))"
+                          proof -
+                            have "i \<le> Suc (Suc i)" by (by100 presburger)
+                            have "Suc (Suc i) \<le> M" using hi hj_lt hSi_eq by (by100 presburger)
+                            show ?thesis using hT_mono_F[OF \<open>i \<le> Suc (Suc i)\<close> \<open>Suc (Suc i) \<le> M\<close>] .
+                          qed
+                          have hx_val: "?x = T i + t * (T (Suc (Suc i)) - T i)" using hx_eq .
+                          have hdiff_ge: "T (Suc (Suc i)) - T i \<ge> 0" using hTi_le_TSSi by (by100 linarith)
+                          have ht0: "0 \<le> t" and ht1: "t \<le> 1" using ht by (by100 linarith)+
+                          have hprod_ge: "t * (T (Suc (Suc i)) - T i) \<ge> 0"
+                            by (rule mult_nonneg_nonneg[OF ht0 hdiff_ge])
+                          have hprod_le: "t * (T (Suc (Suc i)) - T i) \<le> T (Suc (Suc i)) - T i"
+                          proof -
+                            have "t * (T (Suc (Suc i)) - T i) \<le> 1 * (T (Suc (Suc i)) - T i)"
+                              by (rule mult_right_mono[OF ht1 hdiff_ge])
+                            thus ?thesis by (by100 simp)
+                          qed
+                          have hx_ge: "?x \<ge> sub k"
+                            using hx_val hprod_ge \<open>T i \<ge> sub k\<close> by (by100 linarith)
+                          have hx_le: "?x \<le> sub (Suc k)"
+                            using hx_val hprod_le \<open>T (Suc (Suc i)) \<le> sub (Suc k)\<close> by (by100 linarith)
+                          define s where "s = (?x - sub k) / (sub (Suc k) - sub k)"
+                          have hs_ge: "s \<ge> 0" unfolding s_def using hx_ge hsubk_lt by (by100 simp)
+                          have hs_le: "s \<le> 1" unfolding s_def using hx_le hsubk_lt by (by100 simp)
+                          have "sub k + s * (sub (Suc k) - sub k) = ?x"
+                            unfolding s_def using hsubk_lt by (by100 simp)
+                          hence "f ?x = f (sub k + s * (sub (Suc k) - sub k))" by (by100 simp)
+                          also have "... \<in> U" using True hs_ge hs_le by (by100 force)
+                          finally show "f ?x \<in> U" .
+                        qed
+                      next
+                        case False
+                        hence "(\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub k + t * (sub (Suc k) - sub k)) \<in> V)"
+                          using hpk by (by100 blast)
+                        show ?thesis
+                        proof (rule disjI2, intro allI impI)
+                          fix t :: real assume ht: "0 \<le> t \<and> t \<le> 1"
+                          let ?x = "T' i + t * (T' (Suc i) - T' i)"
+                          have hx_eq: "?x = T i + t * (T (Suc (Suc i)) - T i)"
+                            using \<open>T' i = T i\<close> \<open>T' (Suc i) = T (Suc (Suc i))\<close> by (by100 simp)
+                          have "T i \<ge> sub k" using hTi_ge .
+                          have "T (Suc (Suc i)) \<le> sub (Suc k)" using hTSj_le hSSi_eq by (by100 simp)
+                          have hTi_le_TSSi: "T i \<le> T (Suc (Suc i))"
+                          proof -
+                            have "i \<le> Suc (Suc i)" by (by100 presburger)
+                            have "Suc (Suc i) \<le> M" using hi hj_lt hSi_eq by (by100 presburger)
+                            show ?thesis using hT_mono_F[OF \<open>i \<le> Suc (Suc i)\<close> \<open>Suc (Suc i) \<le> M\<close>] .
+                          qed
+                          have hx_val: "?x = T i + t * (T (Suc (Suc i)) - T i)" using hx_eq .
+                          have hdiff_ge: "T (Suc (Suc i)) - T i \<ge> 0" using hTi_le_TSSi by (by100 linarith)
+                          have ht0: "0 \<le> t" and ht1: "t \<le> 1" using ht by (by100 linarith)+
+                          have hprod_ge: "t * (T (Suc (Suc i)) - T i) \<ge> 0"
+                            by (rule mult_nonneg_nonneg[OF ht0 hdiff_ge])
+                          have hprod_le: "t * (T (Suc (Suc i)) - T i) \<le> T (Suc (Suc i)) - T i"
+                          proof -
+                            have "t * (T (Suc (Suc i)) - T i) \<le> 1 * (T (Suc (Suc i)) - T i)"
+                              by (rule mult_right_mono[OF ht1 hdiff_ge])
+                            thus ?thesis by (by100 simp)
+                          qed
+                          have hx_ge: "?x \<ge> sub k"
+                            using hx_val hprod_ge \<open>T i \<ge> sub k\<close> by (by100 linarith)
+                          have hx_le: "?x \<le> sub (Suc k)"
+                            using hx_val hprod_le \<open>T (Suc (Suc i)) \<le> sub (Suc k)\<close> by (by100 linarith)
+                          define s where "s = (?x - sub k) / (sub (Suc k) - sub k)"
+                          have hs_ge: "s \<ge> 0" unfolding s_def using hx_ge hsubk_lt by (by100 simp)
+                          have hs_le: "s \<le> 1" unfolding s_def using hx_le hsubk_lt by (by100 simp)
+                          have "sub k + s * (sub (Suc k) - sub k) = ?x"
+                            unfolding s_def using hsubk_lt by (by100 simp)
+                          hence "f ?x = f (sub k + s * (sub (Suc k) - sub k))" by (by100 simp)
+                          also have "... \<in> V"
+                            using \<open>\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub k + t * (sub (Suc k) - sub k)) \<in> V\<close>
+                                hs_ge hs_le by (by100 force)
+                          finally show "f ?x \<in> V" .
+                        qed
+                      qed
                     next
                       case inner_False: False \<comment> \<open>Both above j: T'-piece = T-piece at index Suc i.\<close>
                       have "T' i = T (Suc i)" unfolding T'_def using inner_False by (by100 simp)
