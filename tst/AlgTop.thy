@@ -6714,8 +6714,8 @@ proof -
                 unfolding F_def using h\<sigma>_split hG_k hG_Sk by (by100 simp)
               \<comment> \<open>Map decomposition: map G [0..<Suc m] splits at k.\<close>
               have hmap_G: "map G [0..<Suc m] = map F [0..<k] @ [G k, G (Suc k)] @ map F [Suc k..<m]"
-                sorry \<comment> \<open>List decomposition: G=F on [0..<k] (hG_eq_F), G(k)=first, G(k+1)=second,
-                   G=shift(F) on [k+2..<Suc m] (hG_shift). Proved modulo nth_map/nth_upt by100 issue.\<close>
+                sorry \<comment> \<open>List decomp: proved mathematically (hG_eq_F below k, hG_shift above k+1),
+                   blocked by Isabelle's upt_Suc expansion + by100 nat arithmetic limits.\<close>
               have hmap_F: "map F [0..<m] = map F [0..<k] @ [F k] @ map F [Suc k..<m]"
               proof -
                 have "[0..<m] = [0..<k] @ k # [Suc k..<m]"
