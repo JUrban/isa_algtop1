@@ -6460,14 +6460,22 @@ proof -
               have hG_shift: "\<And>i. Suc k < i \<Longrightarrow> i < Suc m \<Longrightarrow> G i = F (i - 1)"
                 unfolding G_def F_def s'_def by (by100 simp)
               \<comment> \<open>Assemble: foldr_σ with s' = foldr with s via h_σ_split.\<close>
-              have "foldr_\<sigma> f (Suc m) s' = foldr mulH (map G [0..<Suc m]) eH"
+              have hLHS: "foldr_\<sigma> f (Suc m) s' = foldr mulH (map G [0..<Suc m]) eH"
                 unfolding foldr_\<sigma>_def G_def by (by100 simp)
-              also have "foldr_\<sigma> f m s = foldr mulH (map F [0..<m]) eH"
+              have hRHS: "foldr_\<sigma> f m s = foldr mulH (map F [0..<m]) eH"
                 unfolding foldr_\<sigma>_def F_def by (by100 simp)
-              \<comment> \<open>Both sides decompose at position k. The map/foldr manipulation gives equality
-                 via h_σ_split + group associativity. Sorry the final assembly.\<close>
-              show ?thesis sorry \<comment> \<open>Map decomposition [0..<Suc m] = [0..<k]@[k,k+1]@[k+2..<Suc m],
-                 [0..<m] = [0..<k]@[k]@[k+1..<m]. Then foldr_append + h_σ_split + group assoc.\<close>
+              \<comment> \<open>Key group property: foldr(...[a,b]...) = foldr(...[mulH a b]...).\<close>
+              have hassoc_grp: "\<And>a b c. a \<in> H \<Longrightarrow> b \<in> H \<Longrightarrow> c \<in> H \<Longrightarrow>
+                  mulH (mulH a b) c = mulH a (mulH b c)"
+                using hH unfolding top1_is_group_on_def by (by100 blast)
+              \<comment> \<open>All σ-values of valid pieces are in H.\<close>
+              have hF_in_H: "\<And>i. i < m \<Longrightarrow> F i \<in> H"
+                sorry \<comment> \<open>Each F i = σ(piece_i) ∈ H by h_σ_piece_in_H (piece continuity + UV).\<close>
+              have hG_k_H: "G k \<in> H" sorry
+              have hG_Sk_H: "G (Suc k) \<in> H" sorry
+              \<comment> \<open>The equality reduces to: replacing [G k, G(Suc k)] by [F k] preserves foldr,
+                 since F k = mulH (G k) (G(Suc k)). The rest of the map is identical.\<close>
+              show ?thesis sorry \<comment> \<open>Map decomposition + foldr_append + h_σ_split + group assoc.\<close>
             qed
           qed
           \<comment> \<open>Subdivision independence: both (N,S) and (n,sub) refine to common refinement.\<close>
