@@ -6613,6 +6613,8 @@ proof -
       define piece_top where "piece_top i = (\<lambda>t. row_fn j (sub_s' i + t * (sub_s' (Suc i) - sub_s' i)))" for i
       define piece_bot where "piece_bot i = (\<lambda>t. row_fn (Suc j) (sub_s' i + t * (sub_s' (Suc i) - sub_s' i)))" for i
       define \<beta> where "\<beta> i = (\<lambda>t. F (sub_s' i, sub_t j + t * (sub_t (Suc j) - sub_t j)))" for i
+      have hSj_le_nt: "Suc j \<le> nt" using hj by (by100 presburger)
+      have hj_le_nt: "j \<le> nt" using hj by (by100 presburger)
       \<comment> \<open>sub_t bounds: values in [0,1].\<close>
       have hsubt_ge: "\<And>j'. j' \<le> nt \<Longrightarrow> 0 \<le> sub_t j'"
       proof -
@@ -6702,9 +6704,27 @@ proof -
       \<comment> \<open>τ(row_fn j) uses subdivision sub_s' with ns' pieces.\<close>
       \<comment> \<open>row_fn j is a loop (F(0,t_j) = F(1,t_j) = x0).\<close>
       have hrowj_loop: "top1_is_loop_on X TX x0 (row_fn j)"
-        sorry \<comment> \<open>row_fn j continuous (F continuous + composition), endpoints x0\<close>
+      proof -
+        have htj_I: "sub_t j \<in> I_set" unfolding top1_unit_interval_def
+          using hsubt_ge[OF hj_le_nt] hsubt_le[OF hj_le_nt] by (by100 force)
+        have h0: "row_fn j 0 = x0" unfolding row_fn_def using hF_0t \<open>sub_t j \<in> I_set\<close> by (by100 blast)
+        have h1: "row_fn j 1 = x0" unfolding row_fn_def using hF_1t \<open>sub_t j \<in> I_set\<close> by (by100 blast)
+        have hcont: "top1_continuous_map_on I_set I_top X TX (row_fn j)"
+          sorry \<comment> \<open>F continuous on I×I → X, fixing second coordinate at sub_t j ∈ I gives slice continuous\<close>
+        show ?thesis unfolding top1_is_loop_on_def top1_is_path_on_def
+          using hcont h0 h1 by (by100 blast)
+      qed
       have hrowSj_loop: "top1_is_loop_on X TX x0 (row_fn (Suc j))"
-        sorry \<comment> \<open>Same for Suc j\<close>
+      proof -
+        have htSj_I: "sub_t (Suc j) \<in> I_set" unfolding top1_unit_interval_def
+          using hsubt_ge[OF hSj_le_nt] hsubt_le[OF hSj_le_nt] by (by100 force)
+        have h0: "row_fn (Suc j) 0 = x0" unfolding row_fn_def using hF_0t \<open>sub_t (Suc j) \<in> I_set\<close> by (by100 blast)
+        have h1: "row_fn (Suc j) 1 = x0" unfolding row_fn_def using hF_1t \<open>sub_t (Suc j) \<in> I_set\<close> by (by100 blast)
+        have hcont: "top1_continuous_map_on I_set I_top X TX (row_fn (Suc j))"
+          sorry \<comment> \<open>Same: F continuous, fixing second coordinate at sub_t(Suc j)\<close>
+        show ?thesis unfolding top1_is_loop_on_def top1_is_path_on_def
+          using hcont h0 h1 by (by100 blast)
+      qed
       \<comment> \<open>sub_s' is a valid UV-subdivision for row_fn j.\<close>
       have hUV_top: "\<forall>i<ns'. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> row_fn j (sub_s' i + t * (sub_s' (Suc i) - sub_s' i)) \<in> U)
            \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> row_fn j (sub_s' i + t * (sub_s' (Suc i) - sub_s' i)) \<in> V)"
@@ -6938,7 +6958,27 @@ proof -
           also have "\<dots> = x0"
           proof -
             have "sub_t j + t * (sub_t (Suc j) - sub_t j) \<in> I_set"
-              sorry \<comment> \<open>Same as above\<close>
+            proof -
+              have "0 \<le> sub_t j" using hsubt_ge[OF hj_le_nt] .
+              have "sub_t (Suc j) \<le> 1" using hsubt_le[OF hSj_le_nt] .
+              have "sub_t j \<le> sub_t (Suc j)" using htinc hj by (by100 force)
+              have "sub_t (Suc j) - sub_t j \<ge> 0" using \<open>sub_t j \<le> sub_t (Suc j)\<close> by (by100 linarith)
+              have "t * (sub_t (Suc j) - sub_t j) \<ge> 0"
+                by (rule mult_nonneg_nonneg) (use \<open>0 \<le> t \<and> t \<le> 1\<close> \<open>sub_t (Suc j) - sub_t j \<ge> 0\<close> in \<open>by100 linarith\<close>)+
+              have "t * (sub_t (Suc j) - sub_t j) \<le> sub_t (Suc j) - sub_t j"
+              proof -
+                have "t \<le> 1" using \<open>0 \<le> t \<and> t \<le> 1\<close> by (by100 linarith)
+                have "t * (sub_t (Suc j) - sub_t j) \<le> 1 * (sub_t (Suc j) - sub_t j)"
+                  by (rule mult_right_mono[OF \<open>t \<le> 1\<close> \<open>sub_t (Suc j) - sub_t j \<ge> 0\<close>])
+                thus ?thesis by (by100 simp)
+              qed
+              have hge: "sub_t j + t * (sub_t (Suc j) - sub_t j) \<ge> 0"
+                using \<open>0 \<le> sub_t j\<close> \<open>t * (sub_t (Suc j) - sub_t j) \<ge> 0\<close> by (by100 linarith)
+              have hle: "sub_t j + t * (sub_t (Suc j) - sub_t j) \<le> 1"
+                using \<open>sub_t (Suc j) \<le> 1\<close> \<open>t * (sub_t (Suc j) - sub_t j) \<le> sub_t (Suc j) - sub_t j\<close>
+                by (by100 linarith)
+              show ?thesis unfolding top1_unit_interval_def using hge hle by (by100 force)
+            qed
             thus ?thesis using hF_1t by (by100 blast)
           qed
           finally show "\<beta> ns' t = x0" .
