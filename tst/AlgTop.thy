@@ -7720,11 +7720,56 @@ proof -
           next
             show "\<forall>x0\<in>I_set \<times> I_set. \<forall>f. top1_is_loop_on (I_set \<times> I_set) II_topology x0 f \<longrightarrow>
                 top1_path_homotopic_on (I_set \<times> I_set) II_topology x0 x0 f (top1_constant_path x0)"
-              sorry \<comment> \<open>For any loop f at x0 in I×I, the straight-line homotopy
-                 H(s,t) = ((1-t)*fst(f(s))+t*fst(x0), (1-t)*snd(f(s))+t*snd(x0))
-                 contracts f to const_x0. H continuous (f continuous + linear combination),
-                 H stays in I×I (convex), H(s,0)=f(s), H(s,1)=x0, H(0,t)=H(1,t)=x0.
-                 Full proof: ~120 lines from Top1_Ch9_13.thy:14160.\<close>
+            proof (intro ballI allI impI)
+              fix x0 :: "real \<times> real" and f :: "real \<Rightarrow> real \<times> real"
+              assume hx0: "x0 \<in> I_set \<times> I_set"
+                 and hf: "top1_is_loop_on (I_set \<times> I_set) II_topology x0 f"
+              \<comment> \<open>H(s,t) = ((1-t)*fst(f(s))+t*fst(x0), (1-t)*snd(f(s))+t*snd(x0))\<close>
+              let ?H = "\<lambda>(s::real, t::real). ((1-t) * fst (f s) + t * fst x0,
+                                              (1-t) * snd (f s) + t * snd x0)"
+              have hf_cont: "top1_continuous_map_on I_set I_top (I_set \<times> I_set) II_topology f"
+                using hf unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+              have hf0: "f 0 = x0" using hf unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+              have hf1: "f 1 = x0" using hf unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+              have hf_range: "\<And>s. s \<in> I_set \<Longrightarrow> f s \<in> I_set \<times> I_set"
+                using hf_cont unfolding top1_continuous_map_on_def by (by100 blast)
+              \<comment> \<open>H continuous, stays in I×I, boundary conditions.\<close>
+              have hH_cont: "top1_continuous_map_on (I_set \<times> I_set) II_topology
+                  (I_set \<times> I_set) II_topology ?H"
+                sorry \<comment> \<open>Components are continuous (f continuous + affine in t).
+                   Each component: (1-t)*fst(f(s))+t*fst(x0) continuous on I×I.
+                   Range in I_set: convex combination of values in [0,1].
+                   ~80 lines using continuous_on bridge + Theorem_18_4.\<close>
+              have hH_s0: "\<forall>s\<in>I_set. ?H (s, 0) = f s" by (by100 force)
+              have hH_s1: "\<forall>s\<in>I_set. ?H (s, 1) = top1_constant_path x0 s"
+                unfolding top1_constant_path_def by (by100 force)
+              have hH_0t: "\<forall>t\<in>I_set. ?H (0, t) = x0"
+              proof (intro ballI)
+                fix t :: real assume "t \<in> I_set"
+                show "?H (0, t) = x0" sorry \<comment> \<open>(1-t)*a+t*a = a for each component + f(0)=x0\<close>
+              qed
+              have hH_1t: "\<forall>t\<in>I_set. ?H (1, t) = x0"
+              proof (intro ballI)
+                fix t :: real assume "t \<in> I_set"
+                show "?H (1, t) = x0" sorry \<comment> \<open>Same with f(1)=x0\<close>
+              qed
+              \<comment> \<open>f is a path in I×I (from loop).\<close>
+              have hf_path: "top1_is_path_on (I_set \<times> I_set) II_topology x0 x0 f"
+                using hf unfolding top1_is_loop_on_def by (by100 simp)
+              \<comment> \<open>const x0 is a path in I×I.\<close>
+              have hconst_path: "top1_is_path_on (I_set \<times> I_set) II_topology x0 x0 (top1_constant_path x0)"
+              proof -
+                have hTI_loc2: "is_topology_on I_set I_top" by (rule top1_unit_interval_topology_is_topology_on)
+                have hTII_loc: "is_topology_on (I_set \<times> I_set) II_topology"
+                  unfolding II_topology_def
+                  by (rule product_topology_on_is_topology_on[OF hTI_loc2 hTI_loc2])
+                show ?thesis using top1_constant_path_is_path[OF hTII_loc hx0]
+                  unfolding top1_is_loop_on_def by (by100 simp)
+              qed
+              show "top1_path_homotopic_on (I_set \<times> I_set) II_topology x0 x0 f (top1_constant_path x0)"
+                unfolding top1_path_homotopic_on_def
+                using hf_path hconst_path hH_cont hH_s0 hH_s1 hH_0t hH_1t by (by100 blast)
+            qed
           qed
           \<comment> \<open>β₁ and β₂ are paths in I×I from (0,0) to (1,1).\<close>
           have h0I: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 force)
