@@ -7004,11 +7004,59 @@ proof -
         qed
       qed
       \<comment> \<open>Telescoping: Π σ(piece_top_i) = σ(β_0) · Π σ(piece_bot_i) · σ(β_{ns'})⁻¹ = Π σ(piece_bot_i).\<close>
+      \<comment> \<open>Group facts needed for telescoping.\<close>
+      have heH: "eH \<in> H" using hH unfolding top1_is_group_on_def by (by100 fast)
+      have hmulH_assoc: "\<And>a b c. a \<in> H \<Longrightarrow> b \<in> H \<Longrightarrow> c \<in> H \<Longrightarrow> mulH (mulH a b) c = mulH a (mulH b c)"
+        using hH unfolding top1_is_group_on_def by (by100 blast)
+      have hmulH_eH: "\<And>a. a \<in> H \<Longrightarrow> mulH a eH = a"
+        by (rule group_id_right[OF hH])
+      have hmulH_eH_l: "\<And>a. a \<in> H \<Longrightarrow> mulH eH a = a"
+        using hH unfolding top1_is_group_on_def by (by100 blast)
+      have hinvH_r: "\<And>a. a \<in> H \<Longrightarrow> mulH a (invgH a) = eH"
+        by (rule group_inv_right[OF hH])
+      have hinvH_l: "\<And>a. a \<in> H \<Longrightarrow> mulH (invgH a) a = eH"
+        using hH unfolding top1_is_group_on_def by (by100 blast)
+      have hinvH_eH: "invgH eH = eH"
+        sorry \<comment> \<open>inv(e) = e in any group: e·inv(e) = e = e·e, cancel\<close>
+      have hinvH_closed: "\<And>a. a \<in> H \<Longrightarrow> invgH a \<in> H"
+        by (rule group_inv_closed[OF hH])
+      have hmulH_closed: "\<And>a b. a \<in> H \<Longrightarrow> b \<in> H \<Longrightarrow> mulH a b \<in> H"
+        using hH unfolding top1_is_group_on_def by (by100 blast)
+      \<comment> \<open>σ values are in H.\<close>
+      have h\<sigma>_top_H: "\<And>i. i < ns' \<Longrightarrow> \<sigma> (piece_top i) \<in> H"
+        sorry \<comment> \<open>From h_σ_piece_in_H applied to row_fn j\<close>
+      have h\<sigma>_bot_H: "\<And>i. i < ns' \<Longrightarrow> \<sigma> (piece_bot i) \<in> H"
+        sorry \<comment> \<open>From h_σ_piece_in_H applied to row_fn (Suc j)\<close>
+      have h\<beta>_H: "\<And>i. i \<le> ns' \<Longrightarrow> \<sigma> (\<beta> i) \<in> H"
+        sorry \<comment> \<open>β paths are in U or V, so σ(β) ∈ H\<close>
       have htelescope: "foldr mulH (map (\<lambda>i. \<sigma> (piece_top i)) [0..<ns']) eH
           = foldr mulH (map (\<lambda>i. \<sigma> (piece_bot i)) [0..<ns']) eH"
-        sorry \<comment> \<open>Substitute h_σ_cell into the product. After cancellation of σ(β_i) terms,
-           using σ(β_0) = eH and σ(β_{ns'}) = eH, the products are equal.
-           Formally: induction on ns' with group associativity + inverse cancellation.\<close>
+      proof -
+        \<comment> \<open>Intermediate formula: foldr_top(0..k) = σ(β 0) · foldr_bot(0..k) · inv(σ(β k))\<close>
+        have hinter: "\<And>k. k \<le> ns' \<Longrightarrow>
+            foldr mulH (map (\<lambda>i. \<sigma> (piece_top i)) [0..<k]) eH
+            = mulH (\<sigma> (\<beta> 0)) (mulH (foldr mulH (map (\<lambda>i. \<sigma> (piece_bot i)) [0..<k]) eH)
+                (invgH (\<sigma> (\<beta> k))))"
+          sorry \<comment> \<open>Induction on k using h_σ_cell + group associativity + inverse cancellation.
+             Base k=0: eH = σ(β 0) · eH · inv(σ(β 0)) = σ(β 0) · inv(σ(β 0)) = eH ✓
+             Step k→k+1: use h_σ_cell at index k to expand σ(piece_top k), then
+             cancel inv(σ(β k)) · σ(β k) = eH in the middle.\<close>
+        from hinter[of ns'] have
+          "foldr mulH (map (\<lambda>i. \<sigma> (piece_top i)) [0..<ns']) eH
+           = mulH (\<sigma> (\<beta> 0)) (mulH (foldr mulH (map (\<lambda>i. \<sigma> (piece_bot i)) [0..<ns']) eH)
+               (invgH (\<sigma> (\<beta> ns'))))" by (by100 simp)
+        also have "\<dots> = mulH eH (mulH (foldr mulH (map (\<lambda>i. \<sigma> (piece_bot i)) [0..<ns']) eH)
+               (invgH eH))" using h\<beta>0 h\<beta>n by (by100 simp)
+        also have "\<dots> = mulH eH (mulH (foldr mulH (map (\<lambda>i. \<sigma> (piece_bot i)) [0..<ns']) eH) eH)"
+          using hinvH_eH by (by100 simp)
+        also have "\<dots> = foldr mulH (map (\<lambda>i. \<sigma> (piece_bot i)) [0..<ns']) eH"
+        proof -
+          have "foldr mulH (map (\<lambda>i. \<sigma> (piece_bot i)) [0..<ns']) eH \<in> H"
+            sorry \<comment> \<open>foldr of H-elements with eH is in H\<close>
+          thus ?thesis using hmulH_eH hmulH_eH_l by (by100 simp)
+        qed
+        finally show ?thesis .
+      qed
       show "\<tau> (row_fn j) = \<tau> (row_fn (Suc j))"
         using h\<tau>_top h\<tau>_bot htelescope by (by100 simp)
     qed
