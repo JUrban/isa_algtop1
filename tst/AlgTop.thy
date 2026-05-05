@@ -6712,22 +6712,8 @@ proof -
         have h1: "row_fn j 1 = x0" unfolding row_fn_def using hF_1t \<open>sub_t j \<in> I_set\<close> by (by100 blast)
         have hcont: "top1_continuous_map_on I_set I_top X TX (row_fn j)"
         proof -
-          have hTI: "is_topology_on I_set I_top" by (rule top1_unit_interval_topology_is_topology_on)
-          have "top1_continuous_map_on I_set I_top (I_set \<times> I_set) II_topology (\<lambda>s. (s, sub_t j))"
-          proof -
-            have hid: "top1_continuous_map_on I_set I_top I_set I_top id"
-              by (rule top1_continuous_map_on_id[OF hTI])
-            have hconst: "top1_continuous_map_on I_set I_top I_set I_top (\<lambda>_. sub_t j)"
-              sorry \<comment> \<open>Constant map continuous: preimage of V is ∅ or I_set, both open\<close>
-            have heq1: "(pi1 \<circ> (\<lambda>s. (s, sub_t j))) = id" unfolding pi1_def comp_def id_def by (rule ext) (by100 simp)
-            have hid': "top1_continuous_map_on I_set I_top I_set I_top (pi1 \<circ> (\<lambda>s. (s, sub_t j)))"
-              using hid[folded heq1] .
-            have heq2: "(pi2 \<circ> (\<lambda>s. (s, sub_t j))) = (\<lambda>_. sub_t j)" unfolding pi2_def comp_def by (rule ext) (by100 simp)
-            have hconst': "top1_continuous_map_on I_set I_top I_set I_top (pi2 \<circ> (\<lambda>s. (s, sub_t j)))"
-              using hconst[folded heq2] .
-            show ?thesis using iffD2[OF Theorem_18_4[OF hTI hTI hTI]] hid' hconst'
-              unfolding II_topology_def by (by100 blast)
-          qed
+          have hpair: "top1_continuous_map_on I_set I_top (I_set \<times> I_set) II_topology (\<lambda>s. (s, sub_t j))"
+            by (rule pair_s_const_continuous[OF htj_I])
           hence "top1_continuous_map_on I_set I_top X TX (F \<circ> (\<lambda>s. (s, sub_t j)))"
             using top1_continuous_map_on_comp[of I_set I_top "I_set \<times> I_set" II_topology _ X TX F]
                 hF_cont by (by100 blast)
@@ -6745,7 +6731,16 @@ proof -
         have h0: "row_fn (Suc j) 0 = x0" unfolding row_fn_def using hF_0t \<open>sub_t (Suc j) \<in> I_set\<close> by (by100 blast)
         have h1: "row_fn (Suc j) 1 = x0" unfolding row_fn_def using hF_1t \<open>sub_t (Suc j) \<in> I_set\<close> by (by100 blast)
         have hcont: "top1_continuous_map_on I_set I_top X TX (row_fn (Suc j))"
-          sorry \<comment> \<open>Same: F continuous, fixing second coordinate at sub_t(Suc j)\<close>
+        proof -
+          have hpair: "top1_continuous_map_on I_set I_top (I_set \<times> I_set) II_topology (\<lambda>s. (s, sub_t (Suc j)))"
+            by (rule pair_s_const_continuous[OF htSj_I])
+          hence "top1_continuous_map_on I_set I_top X TX (F \<circ> (\<lambda>s. (s, sub_t (Suc j))))"
+            using top1_continuous_map_on_comp[of I_set I_top "I_set \<times> I_set" II_topology _ X TX F]
+                hF_cont by (by100 blast)
+          moreover have "(F \<circ> (\<lambda>s. (s, sub_t (Suc j)))) = row_fn (Suc j)"
+            unfolding comp_def row_fn_def by (rule ext) (by100 simp)
+          ultimately show ?thesis by (by100 simp)
+        qed
         show ?thesis unfolding top1_is_loop_on_def top1_is_path_on_def
           using hcont h0 h1 by (by100 blast)
       qed
