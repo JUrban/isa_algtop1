@@ -7071,8 +7071,49 @@ proof -
               sorry \<comment> \<open>From hcell_UV at (i-1, j): β(i) on right boundary of that cell.\<close>
             \<comment> \<open>β(i) is continuous (F ∘ affine).\<close>
             have h\<beta>_cont: "top1_continuous_map_on I_set I_top X TX (\<beta> i)"
-              sorry \<comment> \<open>Composition: (λt. (sub_s' i, sub_t j + t*diff)) continuous from I to I×I,
-                 then F continuous from I×I to X.\<close>
+            proof -
+              have hTI: "is_topology_on I_set I_top" by (rule top1_unit_interval_topology_is_topology_on)
+              have hsi_I: "sub_s' i \<in> I_set" unfolding top1_unit_interval_def
+                using hsubs_ge[OF hi] hsubs_le[OF hi] by (by100 force)
+              have htj_ge: "0 \<le> sub_t j" using hsubt_ge[OF hj_le_nt] .
+              have htj_le: "sub_t j \<le> sub_t (Suc j)" using htinc hj by (by100 force)
+              have htSj_le: "sub_t (Suc j) \<le> 1" using hsubt_le[OF hSj_le_nt] .
+              have haffine: "top1_continuous_map_on I_set I_top I_set I_top
+                  (\<lambda>t. sub_t j + t * (sub_t (Suc j) - sub_t j))"
+                by (rule affine_map_continuous_I_to_I[OF htj_ge htj_le htSj_le])
+              \<comment> \<open>Constant first component.\<close>
+              have hconst_fst: "top1_continuous_map_on I_set I_top I_set I_top (\<lambda>_. sub_s' i)"
+                sorry \<comment> \<open>Constant map continuous (trivial topology fact, same pattern as row loop)\<close>
+              \<comment> \<open>Map into product.\<close>
+              have hpair: "top1_continuous_map_on I_set I_top (I_set \<times> I_set) II_topology
+                  (\<lambda>t. (sub_s' i, sub_t j + t * (sub_t (Suc j) - sub_t j)))"
+              proof -
+                have h1: "top1_continuous_map_on I_set I_top I_set I_top
+                    (pi1 \<circ> (\<lambda>t. (sub_s' i, sub_t j + t * (sub_t (Suc j) - sub_t j))))"
+                proof -
+                  have "(pi1 \<circ> (\<lambda>t. (sub_s' i, sub_t j + t * (sub_t (Suc j) - sub_t j)))) = (\<lambda>_. sub_s' i)"
+                    unfolding pi1_def comp_def by (rule ext) (by100 simp)
+                  thus ?thesis using hconst_fst by (by100 simp)
+                qed
+                have h2: "top1_continuous_map_on I_set I_top I_set I_top
+                    (pi2 \<circ> (\<lambda>t. (sub_s' i, sub_t j + t * (sub_t (Suc j) - sub_t j))))"
+                proof -
+                  have "(pi2 \<circ> (\<lambda>t. (sub_s' i, sub_t j + t * (sub_t (Suc j) - sub_t j))))
+                      = (\<lambda>t. sub_t j + t * (sub_t (Suc j) - sub_t j))"
+                    unfolding pi2_def comp_def by (rule ext) (by100 simp)
+                  thus ?thesis using haffine by (by100 simp)
+                qed
+                show ?thesis using iffD2[OF Theorem_18_4[OF hTI hTI hTI]] h1 h2
+                  unfolding II_topology_def by (by100 blast)
+              qed
+              \<comment> \<open>Compose with F.\<close>
+              have "top1_continuous_map_on I_set I_top X TX
+                  (F \<circ> (\<lambda>t. (sub_s' i, sub_t j + t * (sub_t (Suc j) - sub_t j))))"
+                using top1_continuous_map_on_comp[OF hpair hF_cont] .
+              moreover have "(F \<circ> (\<lambda>t. (sub_s' i, sub_t j + t * (sub_t (Suc j) - sub_t j)))) = \<beta> i"
+                unfolding comp_def \<beta>_def by (rule ext) (by100 simp)
+              ultimately show ?thesis by (by100 simp)
+            qed
             \<comment> \<open>From path-in-U/V + continuity: σ(β i) ∈ H.\<close>
             from h\<beta>_maps show ?thesis
             proof
