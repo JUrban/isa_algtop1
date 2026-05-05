@@ -6452,41 +6452,24 @@ proof -
     qed
     have h_indep: "foldr_\<sigma> f N S = foldr_\<sigma> f n sub"
     proof -
-      \<comment> \<open>h_refine works for ANY valid target subdivision. Apply it symmetrically:
-         (1) h_refine: any valid T refining sub gives foldr_σ T = foldr_σ sub
-         (2) By identical argument with (N,S) in place of (n,sub):
-             any valid T refining S gives foldr_σ T = foldr_σ S
-         Then for common refinement C: foldr_σ C = foldr_σ sub ∧ foldr_σ C = foldr_σ S.\<close>
-      have h_refine_S: "\<And>M T. M \<ge> 1 \<Longrightarrow> T 0 = (0::real) \<Longrightarrow> T M = 1 \<Longrightarrow>
+      \<comment> \<open>Insert sub-points into S one by one via h_point_insert, then apply h_refine.
+         This avoids needing h_refine_S or common refinement construction.\<close>
+      \<comment> \<open>Generalized: any valid T containing S-points, with foldr_σ T = foldr_σ S,
+         can be extended to refine sub. Then h_refine gives = foldr_σ sub.\<close>
+      have h_insert_all: "\<And>M T. M \<ge> 1 \<Longrightarrow> T 0 = (0::real) \<Longrightarrow> T M = 1 \<Longrightarrow>
           (\<forall>i<M. T i < T (Suc i)) \<Longrightarrow>
           (\<forall>i<M. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T i + t * (T (Suc i) - T i)) \<in> U)
                \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T i + t * (T (Suc i) - T i)) \<in> V)) \<Longrightarrow>
-          (\<forall>i\<le>N. \<exists>j\<le>M. T j = S i) \<Longrightarrow>
-          foldr_\<sigma> f M T = foldr_\<sigma> f N S"
-        sorry \<comment> \<open>Identical proof to h_refine with (N, S, hS0, hSN, hSinc, hS_UV)
-           in place of (n, sub, hs0, hsn, hinc, hpUV).\<close>
-      \<comment> \<open>Common refinement: sorted merge of S-values and sub-values.\<close>
-      have "\<exists>M C. M \<ge> 1 \<and> C 0 = (0::real) \<and> C M = 1
-          \<and> (\<forall>i<M. C i < C (Suc i))
-          \<and> (\<forall>i<M. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (C i + t * (C (Suc i) - C i)) \<in> U)
-               \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (C i + t * (C (Suc i) - C i)) \<in> V))
-          \<and> (\<forall>i\<le>n. \<exists>j\<le>M. C j = sub i)
-          \<and> (\<forall>i\<le>N. \<exists>j\<le>M. C j = S i)"
-        sorry \<comment> \<open>Common refinement exists: sorted merge of {S(0),..,S(N)} ∪ {sub(0),..,sub(n)}
-           gives strictly increasing enumeration. UV holds because each C-piece is
-           a sub-interval of some S-piece (which maps to U or V).\<close>
-      then obtain M C where hCM: "M \<ge> 1" and hC0: "C 0 = (0::real)" and hCend: "C M = 1"
-          and hCinc: "\<forall>i<M. C i < C (Suc i)"
-          and hCUV: "\<forall>i<M. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (C i + t * (C (Suc i) - C i)) \<in> U)
-               \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (C i + t * (C (Suc i) - C i)) \<in> V)"
-          and hC_ref_sub: "\<forall>i\<le>n. \<exists>j\<le>M. C j = sub i"
-          and hC_ref_S: "\<forall>i\<le>N. \<exists>j\<le>M. C j = S i"
-        by auto
-      have "foldr_\<sigma> f M C = foldr_\<sigma> f n sub"
-        using h_refine[OF hCM hC0 hCend hCinc hCUV hC_ref_sub] .
-      moreover have "foldr_\<sigma> f M C = foldr_\<sigma> f N S"
-        using h_refine_S[OF hCM hC0 hCend hCinc hCUV hC_ref_S] .
-      ultimately show ?thesis by (by100 simp)
+          foldr_\<sigma> f M T = foldr_\<sigma> f n sub"
+        sorry \<comment> \<open>Proof: by strong induction on card {i ≤ n. sub(i) ∉ T-range}.
+           Base: all sub-points in T → T refines sub → h_refine gives result.
+           Step: find sub(i) not in T. Find k with T(k) < sub(i) < T(k+1).
+           Apply h_point_insert[symmetric] to insert sub(i): foldr_σ T = foldr_σ T'.
+           T' has one fewer missing sub-point. By IH: foldr_σ T' = foldr_σ sub.
+           Chain: foldr_σ T = foldr_σ sub.
+           Essentially the REVERSE of h_refine's False case (adding instead of removing).\<close>
+      show ?thesis
+        using h_insert_all[OF hN_ge hS0 hSN hSinc hS_UV] .
     qed
     show "\<tau> f = foldr_\<sigma> f n sub" using h\<tau>_eq h_indep by (by100 simp)
   qed
