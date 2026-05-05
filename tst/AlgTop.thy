@@ -5818,10 +5818,55 @@ proof -
             (\<forall>i<n. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> U)
                  \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> V)) \<Longrightarrow>
             \<tau> f = foldr_\<sigma> f n sub"
-          sorry \<comment> \<open>Core Step 3 argument: point insertion preserves foldr_σ via
-             σ_cond1 (piece ≃ piece'*piece'' by reparametrization) + σ_cond2 (σ multiplicative).
-             Then τ_def's SOME picks some valid subdivision, and any other valid one gives the
-             same foldr_σ by iterating point insertion to reach common refinement.\<close>
+        proof -
+          fix f and n :: nat and sub :: "nat \<Rightarrow> real"
+          assume hf_loop: "top1_is_loop_on X TX x0 f"
+             and hn: "n \<ge> 1" and hs0: "sub 0 = (0::real)" and hsn: "sub n = 1"
+             and hinc: "\<forall>i<n. sub i < sub (Suc i)"
+             and hpUV: "\<forall>i<n. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> U)
+                 \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> V)"
+          \<comment> \<open>Unfold τ: get SOME-picked (N, S) with Pn/Psub pattern.\<close>
+          define Pn where "Pn m \<equiv> m \<ge> 1 \<and> (\<exists>s. s 0 = (0::real) \<and> s m = 1
+              \<and> (\<forall>i<m. s i < s (Suc i))
+              \<and> (\<forall>i<m. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (s i + t * (s (Suc i) - s i)) \<in> U)
+                     \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (s i + t * (s (Suc i) - s i)) \<in> V)))" for m
+          have "Pn (SOME m. Pn m)"
+          proof -
+            have "\<exists>m. Pn m" unfolding Pn_def using hn hs0 hsn hinc hpUV by (by100 blast)
+            thus ?thesis by (rule someI_ex)
+          qed
+          define N where "N = (SOME m. Pn m)"
+          have hN_ge: "N \<ge> 1" using \<open>Pn (SOME m. Pn m)\<close> unfolding N_def Pn_def by (by100 blast)
+          have hN_sub: "\<exists>s. s 0 = (0::real) \<and> s N = 1 \<and> (\<forall>i<N. s i < s (Suc i))
+              \<and> (\<forall>i<N. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (s i + t * (s (Suc i) - s i)) \<in> U)
+                     \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (s i + t * (s (Suc i) - s i)) \<in> V))"
+            using \<open>Pn (SOME m. Pn m)\<close> unfolding N_def Pn_def by (by100 blast)
+          define Psub where "Psub s \<equiv> s 0 = (0::real) \<and> s N = 1 \<and> (\<forall>i<N. s i < s (Suc i))
+              \<and> (\<forall>i<N. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (s i + t * (s (Suc i) - s i)) \<in> U)
+                     \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (s i + t * (s (Suc i) - s i)) \<in> V))" for s
+          have "Psub (SOME s. Psub s)"
+          proof -
+            have "\<exists>s. Psub s" using hN_sub unfolding Psub_def by (by100 blast)
+            thus ?thesis by (rule someI_ex)
+          qed
+          define S where "S = (SOME s. Psub s)"
+          have hS0: "S 0 = (0::real)" and hSN: "S N = 1"
+              and hSinc: "\<forall>i<N. S i < S (Suc i)"
+              and hS_UV: "\<forall>i<N. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (S i + t * (S (Suc i) - S i)) \<in> U)
+                     \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (S i + t * (S (Suc i) - S i)) \<in> V)"
+            using \<open>Psub (SOME s. Psub s)\<close> unfolding S_def Psub_def by (by100 blast)+
+          have h\<tau>_eq: "\<tau> f = foldr_\<sigma> f N S"
+            unfolding N_def Pn_def S_def Psub_def \<tau>_def Let_def by (by100 simp)
+          \<comment> \<open>Core: foldr_σ f N S = foldr_σ f n sub (subdivision independence).
+             Proof: point insertion argument from Munkres Step 3.\<close>
+          have h_indep: "foldr_\<sigma> f N S = foldr_\<sigma> f n sub"
+            sorry \<comment> \<open>Any two valid subdivisions give same foldr_σ: adjoin one point at a time
+               to reach common refinement. Each point insertion preserves foldr_σ via:
+               piece_k ≃ piece_k' * piece_k'' (reparametrization in U or V) ⟹
+               σ(piece_k) = σ(piece_k') · σ(piece_k'') (by σ_cond1 + σ_cond2) ⟹
+               foldr unchanged (group associativity).\<close>
+          show "\<tau> f = foldr_\<sigma> f n sub" using h\<tau>_eq h_indep by (by100 simp)
+        qed
         have h_gen_indep_12: "\<tau> (top1_path_product f1 f2) = foldr_\<sigma> (top1_path_product f1 f2) (n1+n2) sub_m"
         proof -
           have "n1 + n2 \<ge> 1" using hn1' by (by100 presburger)
