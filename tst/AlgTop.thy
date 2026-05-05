@@ -6937,7 +6937,28 @@ proof -
                       qed
                     qed
                   qed
-                  show ?thesis sorry \<comment> \<open>n+1 distinct witnesses in {0..M} via inj + hrefines ⟹ n ≤ M.\<close>
+                  define w where "w i = (SOME j. j \<le> M \<and> T j = sub i)" for i
+                  have hw: "\<And>i. i \<le> n \<Longrightarrow> w i \<le> M \<and> T (w i) = sub i"
+                  proof -
+                    fix i assume "i \<le> n"
+                    from less.prems(6) \<open>i \<le> n\<close> have "\<exists>j. j \<le> M \<and> T j = sub i" by (by100 blast)
+                    thus "w i \<le> M \<and> T (w i) = sub i" unfolding w_def by (rule someI_ex)
+                  qed
+                  have hw_inj: "inj_on w {0..n}"
+                  proof (rule inj_onI)
+                    fix a b assume ha: "a \<in> {0..n}" and hb: "b \<in> {0..n}" and heq: "w a = w b"
+                    have "T (w a) = sub a" using hw ha by (by100 simp)
+                    moreover have "T (w b) = sub b" using hw hb by (by100 simp)
+                    ultimately have "sub a = sub b" using heq by (by100 simp)
+                    \<comment> \<open>sub injective (strictly increasing).\<close>
+                    have hsub_inj: "\<And>x y. x \<le> n \<Longrightarrow> y \<le> n \<Longrightarrow> sub x = sub y \<Longrightarrow> x = y"
+                      sorry \<comment> \<open>Same as hT_inj but for sub. Strictly increasing ⟹ injective.\<close>
+                    show "a = b" using hsub_inj ha hb \<open>sub a = sub b\<close> by (by100 force)
+                  qed
+                  have hw_range: "w ` {0..n} \<subseteq> {0..M}" using hw by (by100 force)
+                  have "card {0..n} \<le> card {0..M}"
+                    by (rule card_inj_on_le[OF hw_inj hw_range], by100 simp)
+                  thus ?thesis by (by100 simp)
                 qed
                 hence hMgt: "M > n" using False by (by100 presburger)
                 \<comment> \<open>Step: M > n. Find removable point T(j) not in sub.\<close>
