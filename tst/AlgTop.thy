@@ -2505,7 +2505,8 @@ proof -
     qed
   next
     fix x y z assume "x \<in> I_set \<times> I_set" "y \<in> I_set \<times> I_set" "z \<in> I_set \<times> I_set"
-    have "\<bar>fst x - fst z\<bar> \<le> \<bar>fst x - fst y\<bar> + \<bar>fst y - fst z\<bar>" by (by100 linarith)
+    have "\<bar>fst x - fst z\<bar> \<le> \<bar>fst x - fst y\<bar> + \<bar>fst y - fst z\<bar>"
+      using abs_le_D1[of "fst x - fst y" "fst y - fst z"] by (by100 linarith)
     moreover have "\<bar>fst x - fst y\<bar> \<le> d_max x y" unfolding d_max_def by (rule max.cobounded1)
     moreover have "\<bar>fst y - fst z\<bar> \<le> d_max y z" unfolding d_max_def by (rule max.cobounded1)
     ultimately have h1: "\<bar>fst x - fst z\<bar> \<le> d_max x y + d_max y z" by (by100 linarith)
@@ -6710,7 +6711,30 @@ proof -
         have h0: "row_fn j 0 = x0" unfolding row_fn_def using hF_0t \<open>sub_t j \<in> I_set\<close> by (by100 blast)
         have h1: "row_fn j 1 = x0" unfolding row_fn_def using hF_1t \<open>sub_t j \<in> I_set\<close> by (by100 blast)
         have hcont: "top1_continuous_map_on I_set I_top X TX (row_fn j)"
-          sorry \<comment> \<open>F continuous on I×I → X, fixing second coordinate at sub_t j ∈ I gives slice continuous\<close>
+        proof -
+          have hTI: "is_topology_on I_set I_top" by (rule top1_unit_interval_topology_is_topology_on)
+          have "top1_continuous_map_on I_set I_top (I_set \<times> I_set) II_topology (\<lambda>s. (s, sub_t j))"
+          proof -
+            have hid: "top1_continuous_map_on I_set I_top I_set I_top id"
+              by (rule top1_continuous_map_on_id[OF hTI])
+            have hconst: "top1_continuous_map_on I_set I_top I_set I_top (\<lambda>_. sub_t j)"
+              sorry \<comment> \<open>Constant map continuous: preimage of V is ∅ or I_set, both open\<close>
+            have heq1: "(pi1 \<circ> (\<lambda>s. (s, sub_t j))) = id" unfolding pi1_def comp_def id_def by (rule ext) (by100 simp)
+            have hid': "top1_continuous_map_on I_set I_top I_set I_top (pi1 \<circ> (\<lambda>s. (s, sub_t j)))"
+              using hid[folded heq1] .
+            have heq2: "(pi2 \<circ> (\<lambda>s. (s, sub_t j))) = (\<lambda>_. sub_t j)" unfolding pi2_def comp_def by (rule ext) (by100 simp)
+            have hconst': "top1_continuous_map_on I_set I_top I_set I_top (pi2 \<circ> (\<lambda>s. (s, sub_t j)))"
+              using hconst[folded heq2] .
+            show ?thesis using iffD2[OF Theorem_18_4[OF hTI hTI hTI]] hid' hconst'
+              unfolding II_topology_def by (by100 blast)
+          qed
+          hence "top1_continuous_map_on I_set I_top X TX (F \<circ> (\<lambda>s. (s, sub_t j)))"
+            using top1_continuous_map_on_comp[of I_set I_top "I_set \<times> I_set" II_topology _ X TX F]
+                hF_cont by (by100 blast)
+          moreover have "(F \<circ> (\<lambda>s. (s, sub_t j))) = row_fn j"
+            unfolding comp_def row_fn_def by (rule ext) (by100 simp)
+          ultimately show ?thesis by (by100 simp)
+        qed
         show ?thesis unfolding top1_is_loop_on_def top1_is_path_on_def
           using hcont h0 h1 by (by100 blast)
       qed
