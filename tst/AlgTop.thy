@@ -6821,9 +6821,19 @@ proof -
             qed
           qed
           \<comment> \<open>Subdivision independence: both (N,S) and (n,sub) refine to common refinement.\<close>
+          \<comment> \<open>Subdivision independence via common refinement.
+             Key insight: h_point_insert shows inserting ONE point preserves foldr_σ.
+             Both (N,S) and (n,sub) can be refined to their common refinement by
+             iterating point insertion. The common refinement has the same foldr_σ value
+             when reached from either direction. Hence foldr_σ f N S = foldr_σ f n sub.
+             Formal proof requires:
+             1. Define common refinement (union of S-points and sub-points)
+             2. Induction on |points to add| for each direction
+             3. At each step: find insertable point, apply h_point_insert\<close>
           have h_indep: "foldr_\<sigma> f N S = foldr_\<sigma> f n sub"
-            sorry \<comment> \<open>Iterate h_point_insert: add points of sub into S one at a time,
-               add points of S into sub one at a time. Both reach common refinement.\<close>
+            sorry \<comment> \<open>Point insertion iteration: both subdivisions refine to common via finitely
+               many point insertions. Each preserves foldr_σ (by h_point_insert). Standard
+               well-founded induction on |target points \ current points|.\<close>
           show "\<tau> f = foldr_\<sigma> f n sub" using h\<tau>_eq h_indep by (by100 simp)
         qed
         have h_gen_indep_12: "\<tau> (top1_path_product f1 f2) = foldr_\<sigma> (top1_path_product f1 f2) (n1+n2) sub_m"
