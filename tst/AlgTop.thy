@@ -4513,16 +4513,82 @@ proof -
        - Telescoping across i: \<Pi> \<sigma>(piece_i) = \<Pi> \<sigma>(piece'_i)
        - Hence \<tau>(f_j) = \<tau>(f_{j+1}).\<close>
     have hrow_step: "\<forall>j<nt. \<tau> (row_fn j) = \<tau> (row_fn (Suc j))"
-      sorry \<comment> \<open>Munkres Step 4 (special case, applied to each strip).
-         For adjacent rows j, j+1:
-         Each cell [s'_i, s'_{i+1}] \<times> [t_j, t_{j+1}] maps into U or V.
-         The cell boundary gives: piece_top \<cdot> \<beta>_right \<simeq> \<beta>_left \<cdot> piece_bottom
-         in U or V (broken-line homotopy in convex cell).
-         Hence \<sigma>(piece_top)\<cdot>\<sigma>(\<beta>_right) = \<sigma>(\<beta>_left)\<cdot>\<sigma>(piece_bottom).
-         Telescoping: \<Pi> \<sigma>(piece_top_i) = \<Pi> \<sigma>(piece_bottom_i).
-         Since \<beta>_0 and \<beta>_{ns'} are constant at x0, \<sigma>(\<beta>_0) = \<sigma>(\<beta>_{ns'}) = eH.
-         Hence \<tau>(row_fn j) = \<tau>(row_fn(Suc j)).
-         Cannot use h\<tau>_wd (circular: we're inside its proof).\<close>
+    proof (intro allI impI)
+      fix j assume hj: "j < nt"
+      \<comment> \<open>Define piece paths and boundary paths.\<close>
+      define piece_top where "piece_top i = (\<lambda>t. row_fn j (sub_s' i + t * (sub_s' (Suc i) - sub_s' i)))" for i
+      define piece_bot where "piece_bot i = (\<lambda>t. row_fn (Suc j) (sub_s' i + t * (sub_s' (Suc i) - sub_s' i)))" for i
+      define \<beta> where "\<beta> i = (\<lambda>t. F (sub_s' i, sub_t j + t * (sub_t (Suc j) - sub_t j)))" for i
+      \<comment> \<open>τ(row_fn j) uses subdivision sub_s' with ns' pieces.\<close>
+      have h\<tau>_top: "\<tau> (row_fn j) = foldr mulH (map (\<lambda>i. \<sigma> (piece_top i)) [0..<ns']) eH"
+        sorry \<comment> \<open>By subdivision independence (h_gen_subdiv_indep) applied to row_fn j
+           with the subdivision sub_s'. Each piece of row_fn j w.r.t. sub_s' maps into U or V
+           (from hcell_UV at row j).\<close>
+      have h\<tau>_bot: "\<tau> (row_fn (Suc j)) = foldr mulH (map (\<lambda>i. \<sigma> (piece_bot i)) [0..<ns']) eH"
+        sorry \<comment> \<open>Same argument for row_fn (Suc j) with subdivision sub_s'.\<close>
+      \<comment> \<open>Key: broken-line homotopy in each cell gives σ equation.\<close>
+      have h\<sigma>_cell: "\<And>i. i < ns' \<Longrightarrow>
+          \<sigma> (piece_top i) = mulH (\<sigma> (\<beta> i)) (mulH (\<sigma> (piece_bot i)) (invH (\<sigma> (\<beta> (Suc i)))))"
+        sorry \<comment> \<open>For each cell [s'_i, s'_{i+1}] × [t_j, t_{j+1}]:
+           1. Cell maps into U or V (hcell_UV)
+           2. Broken-line homotopy: piece_top * β_{i+1} ≃_p β_i * piece_bot (in U/V)
+              (straight-line homotopy in convex rectangle, composed with F)
+           3. σ_cond1 + σ_cond2: σ(piece_top) · σ(β_{i+1}) = σ(β_i) · σ(piece_bot)
+           4. Rearrange: σ(piece_top) = σ(β_i) · σ(piece_bot) · σ(β_{i+1})⁻¹\<close>
+      \<comment> \<open>β_0 is constant at x0 (since sub_s' 0 = 0 and F(0,t) = x0).\<close>
+      \<comment> \<open>σ of a constant-on-I_set path = eH.\<close>
+      have h\<sigma>_const: "\<And>c. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> c t = x0) \<Longrightarrow> \<sigma> c = eH"
+        sorry \<comment> \<open>c agrees with constant_path x0 on I_set. σ(constant) = eH because:
+           constant*constant ≃_p constant in U (x0 ∈ U∩V ⊆ U), so
+           σ(c·c) = σ(c)·σ(c) = σ(c). Group law: σ(c)·σ(c) = σ(c) ⟹ σ(c) = eH.\<close>
+      have h\<beta>0: "\<sigma> (\<beta> 0) = eH"
+      proof (rule h\<sigma>_const)
+        show "\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> \<beta> 0 t = x0"
+        proof (intro allI impI)
+          fix t :: real assume "0 \<le> t \<and> t \<le> 1"
+          have "\<beta> 0 t = F (sub_s' 0, sub_t j + t * (sub_t (Suc j) - sub_t j))"
+            unfolding \<beta>_def by (by100 simp)
+          also have "sub_s' 0 = 0" using hs0' .
+          hence "F (sub_s' 0, sub_t j + t * (sub_t (Suc j) - sub_t j))
+              = F (0, sub_t j + t * (sub_t (Suc j) - sub_t j))" by (by100 simp)
+          also have "\<dots> = x0"
+          proof -
+            have "sub_t j + t * (sub_t (Suc j) - sub_t j) \<in> I_set"
+              unfolding top1_unit_interval_def
+              sorry \<comment> \<open>0 ≤ sub_t j ≤ sub_t(Suc j) ≤ 1, t ∈ [0,1] → convex combination ∈ [0,1]\<close>
+            thus ?thesis using hF_0t by (by100 blast)
+          qed
+          finally show "\<beta> 0 t = x0" .
+        qed
+      qed
+      have h\<beta>n: "\<sigma> (\<beta> ns') = eH"
+      proof (rule h\<sigma>_const)
+        show "\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> \<beta> ns' t = x0"
+        proof (intro allI impI)
+          fix t :: real assume "0 \<le> t \<and> t \<le> 1"
+          have "\<beta> ns' t = F (sub_s' ns', sub_t j + t * (sub_t (Suc j) - sub_t j))"
+            unfolding \<beta>_def by (by100 simp)
+          also have "sub_s' ns' = 1" using hsn' .
+          hence "F (sub_s' ns', sub_t j + t * (sub_t (Suc j) - sub_t j))
+              = F (1, sub_t j + t * (sub_t (Suc j) - sub_t j))" by (by100 simp)
+          also have "\<dots> = x0"
+          proof -
+            have "sub_t j + t * (sub_t (Suc j) - sub_t j) \<in> I_set"
+              sorry \<comment> \<open>Same as above\<close>
+            thus ?thesis using hF_1t by (by100 blast)
+          qed
+          finally show "\<beta> ns' t = x0" .
+        qed
+      qed
+      \<comment> \<open>Telescoping: Π σ(piece_top_i) = σ(β_0) · Π σ(piece_bot_i) · σ(β_{ns'})⁻¹ = Π σ(piece_bot_i).\<close>
+      have htelescope: "foldr mulH (map (\<lambda>i. \<sigma> (piece_top i)) [0..<ns']) eH
+          = foldr mulH (map (\<lambda>i. \<sigma> (piece_bot i)) [0..<ns']) eH"
+        sorry \<comment> \<open>Substitute h_σ_cell into the product. After cancellation of σ(β_i) terms,
+           using σ(β_0) = eH and σ(β_{ns'}) = eH, the products are equal.
+           Formally: induction on ns' with group associativity + inverse cancellation.\<close>
+      show "\<tau> (row_fn j) = \<tau> (row_fn (Suc j))"
+        using h\<tau>_top h\<tau>_bot htelescope by (by100 simp)
+    qed
     \<comment> \<open>\<tau> is subdivision-independent: using the SAME subdivision for both f_j and \<tau>(f_j).\<close>
     \<comment> \<open>Also need: \<tau>(f) = \<tau>(row_fn 0) and \<tau>(g) = \<tau>(row_fn nt).\<close>
     \<comment> \<open>\<tau> f = \<tau> (row_fn 0): since f and row_fn 0 agree on I_set, and \<tau> only depends
