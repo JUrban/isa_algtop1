@@ -7323,10 +7323,25 @@ proof -
             sorry \<comment> \<open>Standard: I×I path-connected (straight lines) + all loops contractible.
                Proved inline at Top1_Ch9_13.thy:14089 (~200 lines).\<close>
           \<comment> \<open>β₁ and β₂ are paths in I×I from (0,0) to (1,1).\<close>
+          have h0I: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 force)
+          have h1I: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 force)
+          have hTII: "is_topology_on (I_set \<times> I_set) II_topology"
+            unfolding II_topology_def
+            by (rule product_topology_on_is_topology_on[OF
+                  top1_unit_interval_topology_is_topology_on
+                  top1_unit_interval_topology_is_topology_on])
+          have hbot_path: "top1_is_path_on (I_set \<times> I_set) II_topology (0,0) (1,0) ?bot"
+            unfolding top1_is_path_on_def using pair_s_const_continuous[OF h0I] by (by100 simp)
+          have hright_path: "top1_is_path_on (I_set \<times> I_set) II_topology (1,0) (1,1) ?right'"
+            unfolding top1_is_path_on_def using pair_const_t_continuous[OF h1I] by (by100 simp)
+          have hleft_path: "top1_is_path_on (I_set \<times> I_set) II_topology (0,0) (0,1) ?left'"
+            unfolding top1_is_path_on_def using pair_const_t_continuous[OF h0I] by (by100 simp)
+          have htop_path: "top1_is_path_on (I_set \<times> I_set) II_topology (0,1) (1,1) ?top'"
+            unfolding top1_is_path_on_def using pair_s_const_continuous[OF h1I] by (by100 simp)
           have h\<beta>1_path: "top1_is_path_on (I_set \<times> I_set) II_topology (0,0) (1,1) ?\<beta>1"
-            sorry \<comment> \<open>bot: (0,0)→(1,0), right: (1,0)→(1,1). Continuous paths, product is path.\<close>
+            by (rule top1_path_product_is_path[OF hTII hbot_path hright_path])
           have h\<beta>2_path: "top1_is_path_on (I_set \<times> I_set) II_topology (0,0) (1,1) ?\<beta>2"
-            sorry \<comment> \<open>left: (0,0)→(0,1), top: (0,1)→(1,1). Same.\<close>
+            by (rule top1_path_product_is_path[OF hTII hleft_path htop_path])
           have h00: "(0::real, 0::real) \<in> I_set \<times> I_set"
             unfolding top1_unit_interval_def by (by100 force)
           \<comment> \<open>β₁ ≃ β₂ in I×I (simply connected).\<close>
@@ -7445,10 +7460,17 @@ proof -
                 by (rule mult_right_mono) (use ht(2) hdiff_t in \<open>by100 linarith\<close>)+
               hence hprod_le: "snd p * (sub_t (Suc j) - sub_t j) \<le> sub_t (Suc j) - sub_t j"
                 by (by100 simp)
-              have "0 \<le> sub_t j" using hsubt_ge[OF hj_le_nt] .
-              have "sub_t (Suc j) \<le> 1" using hsubt_le[OF hSj_le_nt] .
-              show "x \<in> U" unfolding hx G_def \<phi>_def
-                using hU hconv_fst hprod_ge hprod_le \<open>0 \<le> sub_t j\<close> \<open>sub_t (Suc j) \<le> 1\<close> by (by100 force)
+              have htj0: "0 \<le> sub_t j" using hsubt_ge[OF hj_le_nt] .
+              have htSj1: "sub_t (Suc j) \<le> 1" using hsubt_le[OF hSj_le_nt] .
+              have "sub_t j \<le> sub_t j + snd p * (sub_t (Suc j) - sub_t j)" using hprod_ge by (by100 linarith)
+              moreover have "sub_t j + snd p * (sub_t (Suc j) - sub_t j) \<le> sub_t (Suc j)"
+                using hprod_le by (by100 linarith)
+              moreover have "0 \<le> sub_t j + snd p * (sub_t (Suc j) - sub_t j)"
+                using htj0 hprod_ge by (by100 linarith)
+              moreover have "sub_t j + snd p * (sub_t (Suc j) - sub_t j) \<le> 1"
+                using htSj1 hprod_le by (by100 linarith)
+              ultimately show "x \<in> U" unfolding hx G_def \<phi>_def
+                using hU hconv_fst by (by100 blast)
             qed
             have hG_cont_U: "top1_continuous_map_on (I_set \<times> I_set) II_topology U (subspace_topology X TX U) G"
               by (rule top1_continuous_map_on_codomain_shrink[OF hG_cont hG_img_U hUsub])
