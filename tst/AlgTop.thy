@@ -5869,9 +5869,31 @@ proof -
               k < m \<Longrightarrow> s k < p \<Longrightarrow> p < s (Suc k) \<Longrightarrow>
               foldr_\<sigma> f (Suc m) (\<lambda>i. if i \<le> k then s i else if i = Suc k then p else s (i - 1))
               = foldr_\<sigma> f m s"
-            sorry \<comment> \<open>Core point insertion: σ(piece_k) = σ(piece_k') · σ(piece_k'')
-               via reparam_path_homotopy (piece_k ≃ piece_k'*piece_k'' in U or V),
-               then σ_cond1 + σ_cond2, then group associativity for foldr.\<close>
+          proof -
+            fix m :: nat and s :: "nat \<Rightarrow> real" and k :: nat and p :: real
+            assume hm: "m \<ge> 1" and hs0: "s 0 = (0::real)" and hsm: "s m = 1"
+               and hinc: "\<forall>i<m. s i < s (Suc i)"
+               and hUV: "\<forall>i<m. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (s i + t * (s (Suc i) - s i)) \<in> U)
+                   \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (s i + t * (s (Suc i) - s i)) \<in> V)"
+               and hk: "k < m" and hpL: "s k < p" and hpR: "p < s (Suc k)"
+            define s' where "s' i = (if i \<le> k then s i else if i = Suc k then p else s (i - 1))" for i
+            \<comment> \<open>Core σ-splitting: σ(piece_k) = σ(first_half) · σ(second_half).
+               piece_k(t) = f(s(k) + t*(s(k+1)-s(k)))
+               first_half(t) = f(s(k) + t*(p-s(k)))
+               second_half(t) = f(p + t*(s(k+1)-p))
+               piece_k ≃ first_half * second_half by reparametrization in U (or V).
+               Then σ_cond1 + σ_cond2.\<close>
+            have h\<sigma>_split: "\<sigma> (\<lambda>t. f (s k + t * (s (Suc k) - s k)))
+                = mulH (\<sigma> (\<lambda>t. f (s k + t * (p - s k)))) (\<sigma> (\<lambda>t. f (p + t * (s (Suc k) - p))))"
+              sorry \<comment> \<open>reparam_path_homotopy gives piece_k ≃ first*second in U (or V).
+                 σ_cond1: σ(piece_k) = σ(first*second).
+                 σ_cond2: σ(first*second) = σ(first)·σ(second).\<close>
+            \<comment> \<open>Map/foldr manipulation: the new subdivision's foldr differs only at position k,
+               where σ(piece_k) is replaced by σ(first)·σ(second). By h_σ_split they're equal.
+               Group associativity: mulH a (mulH b c) = mulH (mulH a b) c handles the foldr.\<close>
+            show "foldr_\<sigma> f (Suc m) s' = foldr_\<sigma> f m s"
+              sorry \<comment> \<open>List decomposition at position k + h_σ_split + group associativity.\<close>
+          qed
           \<comment> \<open>Subdivision independence: both (N,S) and (n,sub) refine to common refinement.\<close>
           have h_indep: "foldr_\<sigma> f N S = foldr_\<sigma> f n sub"
             sorry \<comment> \<open>Iterate h_point_insert: add points of sub into S one at a time,
