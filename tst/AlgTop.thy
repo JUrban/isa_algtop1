@@ -6532,8 +6532,15 @@ proof -
                   have "i \<le> k" using True by (by100 presburger)
                   have "T' i = T i" unfolding T'_def using \<open>i \<le> k\<close> by (by100 simp)
                   have "T' (Suc i) = sub i0" unfolding T'_def using \<open>Suc i = Suc k\<close> by (by100 simp)
-                  have "T i \<le> T k" using less.prems(4) True hk sorry \<comment> \<open>T monotone: i < k < M\<close>
-                  thus ?thesis using \<open>T' i = T i\<close> \<open>T' (Suc i) = sub i0\<close> hTk by (by100 linarith)
+                  \<comment> \<open>i < k and Suc i > k (from False) → Suc i = Suc k → i = k. But True says i < k.
+                     Actually: Suc i = Suc k means i = k, contradicting i < k.
+                     So this case is actually: Suc i = k (from i < k and ¬(Suc i ≤ k))...
+                     Wait: ¬(Suc i ≤ k) means Suc i > k, i.e., i ≥ k. Combined with i < k: impossible.
+                     Actually False (outer) = ¬(Suc i ≤ k) and True (inner) = i < k.
+                     i < k and Suc i > k means k = i+1... no, k ≤ Suc i - 1 = i.
+                     But i < k gives i ≤ k - 1, and Suc i > k gives i ≥ k. Contradiction!\<close>
+                  have "False" using True False by (by100 presburger)
+                  thus ?thesis by (by100 simp)
                 next
                   case inner_False: False \<comment> \<open>i ≥ k\<close>
                   show ?thesis
