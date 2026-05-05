@@ -7077,13 +7077,23 @@ proof -
             from h\<beta>_maps show ?thesis
             proof
               assume hU: "\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> \<beta> i t \<in> U"
+              have himg: "(\<beta> i) ` I_set \<subseteq> U"
+                using hU unfolding top1_unit_interval_def by (by100 force)
+              have hUsub_loc: "U \<subseteq> X" using hUsub .
+              have hcont_U: "top1_continuous_map_on I_set I_top U (subspace_topology X TX U) (\<beta> i)"
+                by (rule top1_continuous_map_on_codomain_shrink[OF h\<beta>_cont himg hUsub_loc])
               have "top1_is_path_on U (subspace_topology X TX U) (\<beta> i 0) (\<beta> i 1) (\<beta> i)"
-                sorry \<comment> \<open>From h_β_cont + hU: continuous path with values in U.\<close>
+                unfolding top1_is_path_on_def using hcont_U by (by100 blast)
               thus ?thesis by (rule h\<sigma>_path_in_H)
             next
               assume hV: "\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> \<beta> i t \<in> V"
+              have himg: "(\<beta> i) ` I_set \<subseteq> V"
+                using hV unfolding top1_unit_interval_def by (by100 force)
+              have hVsub_loc: "V \<subseteq> X" using hVsub .
+              have hcont_V: "top1_continuous_map_on I_set I_top V (subspace_topology X TX V) (\<beta> i)"
+                by (rule top1_continuous_map_on_codomain_shrink[OF h\<beta>_cont himg hVsub_loc])
               have "top1_is_path_on V (subspace_topology X TX V) (\<beta> i 0) (\<beta> i 1) (\<beta> i)"
-                sorry \<comment> \<open>From h_β_cont + hV: continuous path with values in V.\<close>
+                unfolding top1_is_path_on_def using hcont_V by (by100 blast)
               thus ?thesis by (rule h\<sigma>_path_in_H_V)
             qed
           qed
