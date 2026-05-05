@@ -6585,7 +6585,10 @@ proof -
             qed
             have hT'UV: "\<forall>i<Suc M. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T' i + t * (T' (Suc i) - T' i)) \<in> U)
                  \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T' i + t * (T' (Suc i) - T' i)) \<in> V)"
-              sorry
+              sorry \<comment> \<open>Each T'-piece is a sub-interval of some T-piece.
+                 For i < k: T'[i,i+1] = T[i,i+1] (same piece). For i = k: T'[k,k+1] = [T(k), sub(i0)] ⊆ T[k,k+1].
+                 For i = Suc k: T'[k+1,k+2] = [sub(i0), T(k+1)] ⊆ T[k,k+1].
+                 For i > Suc k: T'[i,i+1] = T[i-1,i] (shifted). All inherit UV from T.\<close>
             \<comment> \<open>T' has fewer missing sub-points (sub(i₀) now at Suc k).\<close>
             have hmiss_less: "card {i. i \<le> n \<and> (\<forall>j\<le>Suc M. T' j \<noteq> sub i)} < miss'"
               sorry \<comment> \<open>sub(i₀) now in T'-range → one fewer missing\<close>
