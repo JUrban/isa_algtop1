@@ -6698,8 +6698,48 @@ proof -
                   have hk_UV: "(\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T k + t * (T (Suc k) - T k)) \<in> U)
                       \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T k + t * (T (Suc k) - T k)) \<in> V)"
                     using less.prems(5) hk by (by100 force)
-                  show ?thesis using \<open>T' i = T k\<close> \<open>T' (Suc i) = sub i0\<close> hk_UV hTk hTSk
-                    sorry \<comment> \<open>[T(k), sub(i0)] ⊆ [T(k), T(Suc k)] → reparametrize.\<close>
+                  from hk_UV show ?thesis
+                  proof
+                    assume hU: "\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T k + t * (T (Suc k) - T k)) \<in> U"
+                    show ?thesis proof (rule disjI1, intro allI impI)
+                      fix t :: real assume ht: "0 \<le> t \<and> t \<le> 1"
+                      have hx: "T' i + t * (T' (Suc i) - T' i) = T k + t * (sub i0 - T k)"
+                        using \<open>T' i = T k\<close> \<open>T' (Suc i) = sub i0\<close> by (by100 simp)
+                      define s where "s = t * (sub i0 - T k) / (T (Suc k) - T k)"
+                      have hdiff: "T (Suc k) - T k > 0" using hTk hTSk by (by100 linarith)
+                      have hd2: "sub i0 - T k \<ge> 0" using hTk by (by100 linarith)
+                      have hs0: "s \<ge> 0" unfolding s_def using ht hd2 hdiff by (by100 force)
+                      have "t * (sub i0 - T k) \<le> 1 * (sub i0 - T k)"
+                        by (rule mult_right_mono) (use ht hd2 in \<open>by100 linarith\<close>)+
+                      hence "t * (sub i0 - T k) \<le> sub i0 - T k" by (by100 simp)
+                      hence "t * (sub i0 - T k) \<le> T (Suc k) - T k" using hTSk by (by100 linarith)
+                      hence hs1: "s \<le> 1" unfolding s_def using hdiff by (by100 force)
+                      have "T k + s * (T (Suc k) - T k) = T k + t * (sub i0 - T k)"
+                        unfolding s_def using hdiff by (by100 simp)
+                      hence "f (T k + t * (sub i0 - T k)) \<in> U" using hU hs0 hs1 by (by100 force)
+                      thus "f (T' i + t * (T' (Suc i) - T' i)) \<in> U" using hx by (by100 simp)
+                    qed
+                  next
+                    assume hV: "\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T k + t * (T (Suc k) - T k)) \<in> V"
+                    show ?thesis proof (rule disjI2, intro allI impI)
+                      fix t :: real assume ht: "0 \<le> t \<and> t \<le> 1"
+                      have hx: "T' i + t * (T' (Suc i) - T' i) = T k + t * (sub i0 - T k)"
+                        using \<open>T' i = T k\<close> \<open>T' (Suc i) = sub i0\<close> by (by100 simp)
+                      define s where "s = t * (sub i0 - T k) / (T (Suc k) - T k)"
+                      have hdiff: "T (Suc k) - T k > 0" using hTk hTSk by (by100 linarith)
+                      have hd2: "sub i0 - T k \<ge> 0" using hTk by (by100 linarith)
+                      have hs0: "s \<ge> 0" unfolding s_def using ht hd2 hdiff by (by100 force)
+                      have "t * (sub i0 - T k) \<le> 1 * (sub i0 - T k)"
+                        by (rule mult_right_mono) (use ht hd2 in \<open>by100 linarith\<close>)+
+                      hence "t * (sub i0 - T k) \<le> sub i0 - T k" by (by100 simp)
+                      hence "t * (sub i0 - T k) \<le> T (Suc k) - T k" using hTSk by (by100 linarith)
+                      hence hs1: "s \<le> 1" unfolding s_def using hdiff by (by100 force)
+                      have "T k + s * (T (Suc k) - T k) = T k + t * (sub i0 - T k)"
+                        unfolding s_def using hdiff by (by100 simp)
+                      hence "f (T k + t * (sub i0 - T k)) \<in> V" using hV hs0 hs1 by (by100 force)
+                      thus "f (T' i + t * (T' (Suc i) - T' i)) \<in> V" using hx by (by100 simp)
+                    qed
+                  qed
                 next
                   case False2: False
                   show ?thesis
