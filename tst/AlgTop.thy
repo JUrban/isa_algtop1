@@ -6456,33 +6456,25 @@ proof -
          This avoids needing h_refine_S or common refinement construction.\<close>
       \<comment> \<open>Generalized: any valid T containing S-points, with foldr_σ T = foldr_σ S,
          can be extended to refine sub. Then h_refine gives = foldr_σ sub.\<close>
+      \<comment> \<open>Key: for ANY valid T, foldr_σ f M T = foldr_σ f n sub (subdivision independence).
+         Proof: insert missing sub-points one by one via h_point_insert, then h_refine.\<close>
       have h_insert_all: "\<And>M T. M \<ge> 1 \<Longrightarrow> T 0 = (0::real) \<Longrightarrow> T M = 1 \<Longrightarrow>
           (\<forall>i<M. T i < T (Suc i)) \<Longrightarrow>
           (\<forall>i<M. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T i + t * (T (Suc i) - T i)) \<in> U)
                \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T i + t * (T (Suc i) - T i)) \<in> V)) \<Longrightarrow>
           foldr_\<sigma> f M T = foldr_\<sigma> f n sub"
-      proof -
-        fix M and T :: "nat \<Rightarrow> real"
-        assume hM: "M \<ge> 1" and hT0: "T 0 = (0::real)" and hTM: "T M = 1"
-           and hTinc: "\<forall>i<M. T i < T (Suc i)"
-           and hTUV: "\<forall>i<M. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T i + t * (T (Suc i) - T i)) \<in> U)
-               \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T i + t * (T (Suc i) - T i)) \<in> V)"
-        \<comment> \<open>If T already refines sub, done by h_refine. Otherwise, insert a missing sub-point.\<close>
-        show "foldr_\<sigma> f M T = foldr_\<sigma> f n sub"
-        proof (cases "\<forall>i\<le>n. \<exists>j\<le>M. T j = sub i")
-          case True
-          \<comment> \<open>T refines sub. Apply h_refine directly.\<close>
-          show ?thesis by (rule h_refine[OF hM hT0 hTM hTinc hTUV True])
-        next
-          case False
-          \<comment> \<open>Some sub-point missing. Insert it and recurse.
-             This case needs strong induction. We sorry it for now — the argument
-             is the reverse of h_refine's False case (adding points instead of removing).
-             Each insertion preserves foldr_σ via h_point_insert[symmetric].
-             After finitely many insertions, T refines sub, and h_refine applies.\<close>
-          show ?thesis sorry
-        qed
-      qed
+        sorry \<comment> \<open>Subdivision independence for any valid T. Proof sketch:
+           By well-founded induction on card {i ≤ n. ∀j≤M. T j ≠ sub i} (missing sub-points).
+           Base (0 missing): T refines sub → h_refine gives result.
+           Step (k+1 missing): find sub(i₀) not in T.
+           Since sub(i₀) ∈ (0,1) = (T(0), T(M)) and T strictly increasing,
+           ∃k<M. T(k) < sub(i₀) < T(k+1) (no sub-value between consecutive T-values
+           because T is injective and sub(i₀) ∉ T-range).
+           Define T'(j) = if j≤k then T(j) else if j=Suc k then sub(i₀) else T(j-1).
+           h_point_insert[symmetric]: foldr_σ f M T = foldr_σ f (Suc M) T'.
+           T' valid (endpoints, increasing, UV from cell containment) and has k missing sub-points.
+           IH: foldr_σ f (Suc M) T' = foldr_σ f n sub.
+           Chain: foldr_σ f M T = foldr_σ f n sub.\<close>
       show ?thesis
         using h_insert_all[OF hN_ge hS0 hSN hSinc hS_UV] .
     qed
