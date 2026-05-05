@@ -7303,10 +7303,11 @@ proof -
         define pp2 where "pp2 = top1_path_product (\<beta> i) (piece_bot i)"
         have hpath_hom: "top1_path_homotopic_on U (subspace_topology X TX U) (pp1 0) (pp1 1) pp1 pp2
           \<or> top1_path_homotopic_on V (subspace_topology X TX V) (pp1 0) (pp1 1) pp1 pp2"
-          sorry \<comment> \<open>Broken-line homotopy: straight-line in convex rectangle composed with F.
-             Both broken-line paths traverse cell boundary from corner (s_i, t_j) to (s_{i+1}, t_{j+1}).
-             The cell is convex, so any two paths between same endpoints are path-homotopic.
-             Composed with F (continuous, cell→U or V), gives path homotopy in U or V.\<close>
+          sorry \<comment> \<open>Straight-line homotopy in convex cell composed with F.
+             Both broken-line paths go from (sub_s' i, sub_t j) to (sub_s'(Suc i), sub_t(Suc j)).
+             H(s,u) = (1-u)*bl1(s) + u*bl2(s) stays in convex cell.
+             F∘H gives path homotopy in U or V (via continuous_preserves_path_homotopic).
+             Needs: H continuous, image ⊆ cell, boundary conditions, F∘bl1=pp1, F∘bl2=pp2.\<close>
         \<comment> \<open>Step 2: σ_cond1 gives σ-equality of the path products.\<close>
         have h\<sigma>_products: "\<sigma> pp1 = \<sigma> pp2"
         proof -
