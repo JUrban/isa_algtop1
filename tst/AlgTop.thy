@@ -7684,12 +7684,18 @@ proof -
               have hg_cont: "top1_continuous_map_on I_set I_top (I_set \<times> I_set) II_topology ?\<gamma>"
               proof -
                 \<comment> \<open>Each component is continuous on I_set via continuous_on restriction.\<close>
+                have hc1_eu: "continuous_on UNIV (\<lambda>t::real. (1-t) * fst x + t * fst y)"
+                  by (intro continuous_intros)
+                have hc2_eu: "continuous_on UNIV (\<lambda>t::real. (1-t) * snd x + t * snd y)"
+                  by (intro continuous_intros)
                 have hc1_cont: "top1_continuous_map_on I_set I_top I_set I_top
                     (\<lambda>t. (1-t) * fst x + t * fst y)"
-                  sorry \<comment> \<open>continuous_on UNIV (by continuous_intros), restrict to I_set, range in I_set (hc1_range)\<close>
+                  unfolding top1_unit_interval_topology_def
+                  by (rule top1_continuous_map_on_real_subspace_open_sets[OF hc1_range hc1_eu])
                 have hc2_cont: "top1_continuous_map_on I_set I_top I_set I_top
                     (\<lambda>t. (1-t) * snd x + t * snd y)"
-                  sorry \<comment> \<open>Same for second component\<close>
+                  unfolding top1_unit_interval_topology_def
+                  by (rule top1_continuous_map_on_real_subspace_open_sets[OF hc2_range hc2_eu])
                 have h1: "top1_continuous_map_on I_set I_top I_set I_top (pi1 \<circ> ?\<gamma>)"
                 proof -
                   have "(pi1 \<circ> ?\<gamma>) = (\<lambda>t. (1-t) * fst x + t * fst y)"
