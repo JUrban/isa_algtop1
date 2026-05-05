@@ -6721,7 +6721,7 @@ proof -
               thus ?thesis unfolding less.prems(6) .
             qed
             have "foldr_\<sigma> f (Suc M) T' = foldr_\<sigma> f n sub"
-              sorry \<comment> \<open>IH: less(1)[OF hmiss_less ...] with miss_new_def. Unification issue with less_induct.\<close>
+              using less(1)[OF hmiss_less hT'1 hT'0 hT'M hT'inc hT'UV] by (by100 simp)
             thus ?thesis using hinsert by (by100 simp)
           qed
         qed
