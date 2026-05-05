@@ -6622,11 +6622,52 @@ proof -
       \<comment> \<open>sub_s' is a valid UV-subdivision for row_fn j.\<close>
       have hUV_top: "\<forall>i<ns'. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> row_fn j (sub_s' i + t * (sub_s' (Suc i) - sub_s' i)) \<in> U)
            \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> row_fn j (sub_s' i + t * (sub_s' (Suc i) - sub_s' i)) \<in> V)"
-        sorry \<comment> \<open>From hcell_UV: each cell [s'_i,s'_{i+1}]×[t_j,t_{j+1}] maps to U or V.
-           For row_fn j at fixed t_j, the s-strip maps to U or V.\<close>
+      proof (intro allI impI)
+        fix i assume hi: "i < ns'"
+        \<comment> \<open>From hcell_UV at (i, j): the cell maps to U or V.\<close>
+        from hcell_UV have hcell: "(\<forall>s t. sub_s' i \<le> s \<and> s \<le> sub_s' (Suc i)
+            \<and> sub_t j \<le> t \<and> t \<le> sub_t (Suc j) \<and> 0\<le>s \<and> s\<le>1 \<and> 0\<le>t \<and> t\<le>1 \<longrightarrow> F (s,t) \<in> U)
+            \<or> (\<forall>s t. sub_s' i \<le> s \<and> s \<le> sub_s' (Suc i)
+                   \<and> sub_t j \<le> t \<and> t \<le> sub_t (Suc j) \<and> 0\<le>s \<and> s\<le>1 \<and> 0\<le>t \<and> t\<le>1 \<longrightarrow> F (s,t) \<in> V)"
+          using hi hj by (by100 blast)
+        \<comment> \<open>sub_t j is in [sub_t j, sub_t(Suc j)] and in [0,1].\<close>
+        have htj_bounds: "0 \<le> sub_t j" "sub_t j \<le> 1" "sub_t j \<le> sub_t (Suc j)"
+          sorry \<comment> \<open>From hsubt_ge/hsubt_le/htinc\<close>
+        show "(\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> row_fn j (sub_s' i + t * (sub_s' (Suc i) - sub_s' i)) \<in> U)
+           \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> row_fn j (sub_s' i + t * (sub_s' (Suc i) - sub_s' i)) \<in> V)"
+        proof (cases "(\<forall>s t. sub_s' i \<le> s \<and> s \<le> sub_s' (Suc i)
+            \<and> sub_t j \<le> t \<and> t \<le> sub_t (Suc j) \<and> 0\<le>s \<and> s\<le>1 \<and> 0\<le>t \<and> t\<le>1 \<longrightarrow> F (s,t) \<in> U)")
+          case True
+          show ?thesis
+          proof (rule disjI1, intro allI impI)
+            fix t :: real assume ht: "0 \<le> t \<and> t \<le> 1"
+            define s where "s = sub_s' i + t * (sub_s' (Suc i) - sub_s' i)"
+            have "sub_s' i \<le> s \<and> s \<le> sub_s' (Suc i) \<and> 0 \<le> s \<and> s \<le> 1"
+              sorry \<comment> \<open>Convex combination bounds (same as I_set argument)\<close>
+            hence "F (s, sub_t j) \<in> U" using True htj_bounds by (by100 force)
+            thus "row_fn j (sub_s' i + t * (sub_s' (Suc i) - sub_s' i)) \<in> U"
+              unfolding row_fn_def s_def by (by100 simp)
+          qed
+        next
+          case False
+          hence "(\<forall>s t. sub_s' i \<le> s \<and> s \<le> sub_s' (Suc i)
+                   \<and> sub_t j \<le> t \<and> t \<le> sub_t (Suc j) \<and> 0\<le>s \<and> s\<le>1 \<and> 0\<le>t \<and> t\<le>1 \<longrightarrow> F (s,t) \<in> V)"
+            using hcell by (by100 blast)
+          show ?thesis
+          proof (rule disjI2, intro allI impI)
+            fix t :: real assume ht: "0 \<le> t \<and> t \<le> 1"
+            define s where "s = sub_s' i + t * (sub_s' (Suc i) - sub_s' i)"
+            have "sub_s' i \<le> s \<and> s \<le> sub_s' (Suc i) \<and> 0 \<le> s \<and> s \<le> 1"
+              sorry \<comment> \<open>Convex combination bounds\<close>
+            hence "F (s, sub_t j) \<in> V" using \<open>\<forall>s t. _\<close> htj_bounds by (by100 force)
+            thus "row_fn j (sub_s' i + t * (sub_s' (Suc i) - sub_s' i)) \<in> V"
+              unfolding row_fn_def s_def by (by100 simp)
+          qed
+        qed
+      qed
       have hUV_bot: "\<forall>i<ns'. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> row_fn (Suc j) (sub_s' i + t * (sub_s' (Suc i) - sub_s' i)) \<in> U)
            \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> row_fn (Suc j) (sub_s' i + t * (sub_s' (Suc i) - sub_s' i)) \<in> V)"
-        sorry \<comment> \<open>Same for Suc j.\<close>
+        sorry \<comment> \<open>Same argument as hUV_top with sub_t(Suc j) in place of sub_t j.\<close>
       have h\<tau>_top: "\<tau> (row_fn j) = foldr mulH (map (\<lambda>i. \<sigma> (piece_top i)) [0..<ns']) eH"
       proof -
         have "\<tau> (row_fn j) = foldr_\<sigma> (row_fn j) ns' sub_s'"
