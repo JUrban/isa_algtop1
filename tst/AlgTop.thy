@@ -7338,10 +7338,84 @@ proof -
                G = F ∘ φ continuous by composition.\<close>
           \<comment> \<open>G∘β₁ agrees with pp1 on I_set, G∘β₂ agrees with pp2 on I_set.\<close>
           have hG\<beta>1: "\<forall>s\<in>I_set. (G \<circ> ?\<beta>1) s = pp1 s"
-            sorry \<comment> \<open>Case s≤1/2: G(2s,0) = F(φ(2s,0)) = F(affine_s(2s), sub_t j) = piece_top(2s) = pp1(s).
-               Case s>1/2: G(1,2s-1) = F(sub_s'(Si), affine_t(2s-1)) = β(Si)(2s-1) = pp1(s).\<close>
+          proof (intro ballI)
+            fix s :: real assume hs: "s \<in> I_set"
+            show "(G \<circ> ?\<beta>1) s = pp1 s"
+            proof (cases "s \<le> 1/2")
+              case True
+              \<comment> \<open>β₁(s) = (2s, 0). G(2s,0) = F(sub_s' i + 2s*diff_s, sub_t j) = piece_top(2s).\<close>
+              have "(G \<circ> ?\<beta>1) s = G (2*s, 0)"
+                unfolding comp_def top1_path_product_def using True hs
+                unfolding top1_unit_interval_def by (by100 force)
+              also have "\<dots> = F (sub_s' i + 2*s * (sub_s' (Suc i) - sub_s' i), sub_t j)"
+                unfolding G_def \<phi>_def by (by100 simp)
+              also have "\<dots> = piece_top i (2*s)"
+                unfolding piece_top_def row_fn_def by (by100 simp)
+              also have "\<dots> = pp1 s"
+                unfolding pp1_def top1_path_product_def using True hs
+                unfolding top1_unit_interval_def by (by100 force)
+              finally show ?thesis .
+            next
+              case False
+              hence "s > 1/2" by (by100 linarith)
+              \<comment> \<open>β₁(s) = (1, 2s-1). G(1,2s-1) = F(sub_s'(Si), sub_t j + (2s-1)*diff_t) = β(Si)(2s-1).\<close>
+              have "(G \<circ> ?\<beta>1) s = G (1, 2*s - 1)"
+                unfolding comp_def top1_path_product_def using False hs
+                unfolding top1_unit_interval_def by (by100 force)
+              also have "\<dots> = F (sub_s' i + 1 * (sub_s' (Suc i) - sub_s' i),
+                  sub_t j + (2*s - 1) * (sub_t (Suc j) - sub_t j))"
+                unfolding G_def \<phi>_def by (by100 simp)
+              also have "\<dots> = F (sub_s' (Suc i), sub_t j + (2*s - 1) * (sub_t (Suc j) - sub_t j))"
+                by (by100 simp)
+              also have "\<dots> = \<beta> (Suc i) (2*s - 1)"
+                unfolding \<beta>_def by (by100 simp)
+              also have "\<dots> = pp1 s"
+                unfolding pp1_def top1_path_product_def using False hs
+                unfolding top1_unit_interval_def by (by100 force)
+              finally show ?thesis .
+            qed
+          qed
           have hG\<beta>2: "\<forall>s\<in>I_set. (G \<circ> ?\<beta>2) s = pp2 s"
-            sorry \<comment> \<open>Same: G(0,2s) = β(i)(2s) for s≤1/2, G(2s-1,1) = piece_bot(2s-1) for s>1/2.\<close>
+          proof (intro ballI)
+            fix s :: real assume hs: "s \<in> I_set"
+            show "(G \<circ> ?\<beta>2) s = pp2 s"
+            proof (cases "s \<le> 1/2")
+              case True
+              \<comment> \<open>β₂(s) = (0, 2s). G(0,2s) = F(sub_s' i, sub_t j + 2s*diff_t) = β(i)(2s).\<close>
+              have "(G \<circ> ?\<beta>2) s = G (0, 2*s)"
+                unfolding comp_def top1_path_product_def using True hs
+                unfolding top1_unit_interval_def by (by100 force)
+              also have "\<dots> = F (sub_s' i + 0 * (sub_s' (Suc i) - sub_s' i),
+                  sub_t j + 2*s * (sub_t (Suc j) - sub_t j))"
+                unfolding G_def \<phi>_def by (by100 simp)
+              also have "\<dots> = F (sub_s' i, sub_t j + 2*s * (sub_t (Suc j) - sub_t j))"
+                by (by100 simp)
+              also have "\<dots> = \<beta> i (2*s)"
+                unfolding \<beta>_def by (by100 simp)
+              also have "\<dots> = pp2 s"
+                unfolding pp2_def top1_path_product_def using True hs
+                unfolding top1_unit_interval_def by (by100 force)
+              finally show ?thesis .
+            next
+              case False
+              hence "s > 1/2" by (by100 linarith)
+              \<comment> \<open>β₂(s) = (2s-1, 1). G(2s-1,1) = F(sub_s' i + (2s-1)*diff_s, sub_t(Sj)) = piece_bot(2s-1).\<close>
+              have "(G \<circ> ?\<beta>2) s = G (2*s - 1, 1)"
+                unfolding comp_def top1_path_product_def using False hs
+                unfolding top1_unit_interval_def by (by100 force)
+              also have "\<dots> = F (sub_s' i + (2*s - 1) * (sub_s' (Suc i) - sub_s' i),
+                  sub_t j + 1 * (sub_t (Suc j) - sub_t j))"
+                unfolding G_def \<phi>_def by (by100 simp)
+              also have "\<dots> = F (sub_s' i + (2*s - 1) * (sub_s' (Suc i) - sub_s' i), sub_t (Suc j))"
+                by (by100 simp)
+              also have "\<dots> = piece_bot i (2*s - 1)"
+                unfolding piece_bot_def row_fn_def by (by100 simp)
+              also have "\<dots> = pp2 s"
+                unfolding pp2_def top1_path_product_def using False hs
+                unfolding top1_unit_interval_def by (by100 force)
+              finally show ?thesis .
+            qed
+          qed
           \<comment> \<open>G maps I×I into U or V (cell maps to U or V).\<close>
           from hcell_UV hi hj have hcell_ij_loc:
             "(\<forall>s t. sub_s' i \<le> s \<and> s \<le> sub_s' (Suc i)
