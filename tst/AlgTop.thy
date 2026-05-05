@@ -6838,9 +6838,24 @@ proof -
                    \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T i + t * (T (Suc i) - T i)) \<in> V)) \<Longrightarrow>
               (\<forall>i\<le>n. \<exists>j\<le>M. T j = sub i) \<Longrightarrow>
               foldr_\<sigma> f M T = foldr_\<sigma> f n sub"
-            sorry \<comment> \<open>Induction on M - n. Base: M = n implies T = sub (both strictly increasing
-               with same endpoints and T contains all sub points). Step: M > n, find extra
-               point T(j) not in sub, remove it via h_point_insert[symmetric], apply IH.\<close>
+          proof -
+            fix M and T :: "nat \<Rightarrow> real"
+            assume hM: "M \<ge> 1" and hT0: "T 0 = (0::real)" and hTM: "T M = 1"
+               and hTinc: "\<forall>i<M. T i < T (Suc i)"
+               and hTUV: "\<forall>i<M. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T i + t * (T (Suc i) - T i)) \<in> U)
+                   \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T i + t * (T (Suc i) - T i)) \<in> V)"
+               and hrefines: "\<forall>i\<le>n. \<exists>j\<le>M. T j = sub i"
+            show "foldr_\<sigma> f M T = foldr_\<sigma> f n sub"
+              sorry \<comment> \<open>Induction on M - n ≥ 0.
+                 Base M = n: T has n pieces, strictly increasing, same endpoints as sub,
+                 and contains all sub-points ⟹ T = sub on [0..n] ⟹ foldr_σ equal.
+                 Step M > n: ∃j. T(j) not in sub (pigeonhole: M+1 points in [0,1] with only
+                 n+1 matching sub). T(j) is between sub(i) and sub(i+1) for some i.
+                 Remove T(j) via h_point_insert[symmetric] to get T' with M-1 pieces.
+                 T' still refines sub (removing a non-sub point preserves sub-containment).
+                 By IH: foldr_σ f (M-1) T' = foldr_σ f n sub.
+                 h_point_insert: foldr_σ f M T = foldr_σ f (M-1) T'. Done.\<close>
+          qed
           have h_indep: "foldr_\<sigma> f N S = foldr_\<sigma> f n sub"
           proof -
             \<comment> \<open>Build common refinement: insert sub's points into S, then show it refines sub.\<close>
