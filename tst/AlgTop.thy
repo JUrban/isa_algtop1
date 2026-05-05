@@ -6502,10 +6502,48 @@ proof -
                 hence "T M = sub i0" using less.prems(3) by (by100 simp)
                 thus False using hi0_miss by (by100 force)
               qed
-              have hsi0_pos: "sub i0 > 0" using hinc \<open>i0 > 0\<close> hs0
-                sorry \<comment> \<open>sub strict inc: 0 < i0 ≤ n → sub(0)=0 < sub(i0)\<close>
-              have hsi0_lt1: "sub i0 < 1" using hinc \<open>i0 < n\<close> hsn
-                sorry \<comment> \<open>sub strict inc: i0 < n → sub(i0) < sub(n)=1\<close>
+              have hsi0_pos: "sub i0 > 0"
+              proof -
+                have "sub 0 < sub i0" using \<open>i0 > 0\<close> hi0 hinc
+                proof (induct i0)
+                  case 0 thus ?case by (by100 simp)
+                next
+                  case (Suc i0')
+                  show ?case
+                  proof (cases "i0' = 0")
+                    case True thus ?thesis using hinc Suc.prems(2) by (by100 force)
+                  next
+                    case False hence "0 < i0'" by (by100 presburger)
+                    have "i0' \<le> n" using Suc.prems(2) by (by100 presburger)
+                    have "i0' < n" using Suc.prems(2) by (by100 presburger)
+                    have "sub 0 < sub i0'" using Suc.hyps[OF \<open>0 < i0'\<close> \<open>i0' \<le> n\<close> hinc] .
+                    moreover have "sub i0' < sub (Suc i0')" using hinc \<open>i0' < n\<close> by (by100 force)
+                    ultimately show ?thesis by (by100 linarith)
+                  qed
+                qed
+                thus ?thesis using hs0 by (by100 linarith)
+              qed
+              have hsi0_lt1: "sub i0 < 1"
+              proof -
+                have "sub i0 < sub n" using \<open>i0 < n\<close> hinc
+                proof (induct "n - i0" arbitrary: i0)
+                  case 0 thus ?case by (by100 simp)
+                next
+                  case (Suc d)
+                  have "i0 < n" using Suc.hyps(2) by (by100 presburger)
+                  show ?case
+                  proof (cases "Suc i0 = n")
+                    case True thus ?thesis using hinc \<open>i0 < n\<close> by (by100 force)
+                  next
+                    case False hence "Suc i0 < n" using \<open>i0 < n\<close> by (by100 presburger)
+                    have "d = n - Suc i0" using Suc.hyps(2) \<open>i0 < n\<close> by (by100 presburger)
+                    have "sub (Suc i0) < sub n" using Suc.hyps(1)[OF \<open>d = n - Suc i0\<close> \<open>Suc i0 < n\<close> hinc] .
+                    moreover have "sub i0 < sub (Suc i0)" using hinc \<open>i0 < n\<close> by (by100 force)
+                    ultimately show ?thesis by (by100 linarith)
+                  qed
+                qed
+                thus ?thesis using hsn by (by100 linarith)
+              qed
               \<comment> \<open>sub(i₀) ∈ (T(0), T(M)) = (0,1). Find gap in T containing sub(i₀).\<close>
               define S_set where "S_set = {j. j < M \<and> T j < sub i0}"
               have "0 \<in> S_set" unfolding S_set_def using less.prems(1-2) hsi0_pos by (by100 force)
