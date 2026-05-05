@@ -6864,7 +6864,66 @@ proof -
                   \<comment> \<open>T strictly increasing ⟹ injective. Sub values all appear in T.
                      n+1 distinct values in {0..M} ⟹ n+1 ≤ M+1.\<close>
                   have hT_inj: "\<And>a b. a \<le> M \<Longrightarrow> b \<le> M \<Longrightarrow> T a = T b \<Longrightarrow> a = b"
-                    sorry \<comment> \<open>Strictly increasing ⟹ injective.\<close>
+                  proof -
+                    fix a b assume ha: "a \<le> M" and hb: "b \<le> M" and heq: "T a = T b"
+                    show "a = b"
+                    proof (rule ccontr)
+                      assume "a \<noteq> b"
+                      hence "a < b \<or> b < a" by (by100 presburger)
+                      thus False
+                      proof
+                        assume "a < b"
+                        hence "T a < T b"
+                        proof -
+                          from \<open>a < b\<close> hb show ?thesis
+                          proof (induct b)
+                            case 0 thus ?case by (by100 simp)
+                          next
+                            case (Suc b')
+                            show ?case
+                            proof (cases "a = b'")
+                              case True
+                              thus ?thesis using less.prems(4) Suc.prems(2) by (by100 force)
+                            next
+                              case False
+                              hence "a < b'" using Suc.prems(1) by (by100 presburger)
+                              have "b' \<le> M" using Suc.prems(2) by (by100 presburger)
+                              have "T a < T b'" using Suc.hyps[OF \<open>a < b'\<close> \<open>b' \<le> M\<close>] .
+                              moreover have "b' < M" using Suc.prems(2) by (by100 presburger)
+                              hence "T b' < T (Suc b')" using less.prems(4) by (by100 force)
+                              ultimately show ?thesis by (by100 linarith)
+                            qed
+                          qed
+                        qed
+                        thus False using heq by (by100 linarith)
+                      next
+                        assume "b < a"
+                        hence "T b < T a"
+                        proof -
+                          from \<open>b < a\<close> ha show ?thesis
+                          proof (induct a)
+                            case 0 thus ?case by (by100 simp)
+                          next
+                            case (Suc a')
+                            show ?case
+                            proof (cases "b = a'")
+                              case True
+                              thus ?thesis using less.prems(4) Suc.prems(2) by (by100 force)
+                            next
+                              case False
+                              hence "b < a'" using Suc.prems(1) by (by100 presburger)
+                              have "a' \<le> M" using Suc.prems(2) by (by100 presburger)
+                              have "T b < T a'" using Suc.hyps[OF \<open>b < a'\<close> \<open>a' \<le> M\<close>] .
+                              moreover have "a' < M" using Suc.prems(2) by (by100 presburger)
+                              hence "T a' < T (Suc a')" using less.prems(4) by (by100 force)
+                              ultimately show ?thesis by (by100 linarith)
+                            qed
+                          qed
+                        qed
+                        thus False using heq by (by100 linarith)
+                      qed
+                    qed
+                  qed
                   show ?thesis sorry \<comment> \<open>n+1 distinct witnesses in {0..M} via inj + hrefines ⟹ n ≤ M.\<close>
                 qed
                 hence hMgt: "M > n" using False by (by100 presburger)
