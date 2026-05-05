@@ -252,7 +252,930 @@ proof -
   \<comment> \<open>Step 2: Since G1, G2 are free on S1, S2, reduced words in FP correspond to
      reduced words in S1 \<union> S2. Define \<iota>S12.\<close>
   have h_free_on_union: "\<exists>\<iota>S12. top1_is_free_group_full_on FP mulFP eFP invgFP \<iota>S12 (S1 \<union> S2)
-    \<and> (\<forall>s\<in>S1. \<iota>S12 s = \<iota>fam12 0 (\<iota>1 s)) \<and> (\<forall>s\<in>S2. \<iota>S12 s = \<iota>fam12 1 (\<iota>2 s))" sorry
+    \<and> (\<forall>s\<in>S1. \<iota>S12 s = \<iota>fam12 0 (\<iota>1 s)) \<and> (\<forall>s\<in>S2. \<iota>S12 s = \<iota>fam12 1 (\<iota>2 s))"
+  proof -
+    \<comment> \<open>Extract properties of the factor free groups\<close>
+    have hG1_grp: "top1_is_group_on G1 mul1 e1 invg1"
+      using assms(1) unfolding top1_is_free_group_full_on_def by (by100 blast)
+    have hG2_grp: "top1_is_group_on G2 mul2 e2 invg2"
+      using assms(2) unfolding top1_is_free_group_full_on_def by (by100 blast)
+    have h\<iota>1_in: "\<forall>s\<in>S1. \<iota>1 s \<in> G1"
+      using assms(1) unfolding top1_is_free_group_full_on_def by (by100 blast)
+    have h\<iota>2_in: "\<forall>s\<in>S2. \<iota>2 s \<in> G2"
+      using assms(2) unfolding top1_is_free_group_full_on_def by (by100 blast)
+    have h\<iota>1_inj: "inj_on \<iota>1 S1"
+      using assms(1) unfolding top1_is_free_group_full_on_def by (by100 blast)
+    have h\<iota>2_inj: "inj_on \<iota>2 S2"
+      using assms(2) unfolding top1_is_free_group_full_on_def by (by100 blast)
+    have hG1_gen: "G1 = top1_subgroup_generated_on G1 mul1 e1 invg1 (\<iota>1 ` S1)"
+      using assms(1) unfolding top1_is_free_group_full_on_def by (by100 blast)
+    have hG2_gen: "G2 = top1_subgroup_generated_on G2 mul2 e2 invg2 (\<iota>2 ` S2)"
+      using assms(2) unfolding top1_is_free_group_full_on_def by (by100 blast)
+    have hG1_red: "\<And>ws. ws \<noteq> [] \<Longrightarrow>
+        top1_is_reduced_word (map (\<lambda>(s, b). (\<iota>1 s, b)) ws) \<Longrightarrow>
+        (\<forall>i<length ws. fst (ws!i) \<in> S1) \<Longrightarrow>
+        top1_group_word_product mul1 e1 invg1 (map (\<lambda>(s, b). (\<iota>1 s, b)) ws) \<noteq> e1"
+      using assms(1) unfolding top1_is_free_group_full_on_def by (by100 blast)
+    have hG2_red: "\<And>ws. ws \<noteq> [] \<Longrightarrow>
+        top1_is_reduced_word (map (\<lambda>(s, b). (\<iota>2 s, b)) ws) \<Longrightarrow>
+        (\<forall>i<length ws. fst (ws!i) \<in> S2) \<Longrightarrow>
+        top1_group_word_product mul2 e2 invg2 (map (\<lambda>(s, b). (\<iota>2 s, b)) ws) \<noteq> e2"
+      using assms(2) unfolding top1_is_free_group_full_on_def by (by100 blast)
+    \<comment> \<open>Extract properties of the free product\<close>
+    have hFP_grp: "top1_is_group_on FP mulFP eFP invgFP"
+      using hFP unfolding top1_is_free_product_on_def by (by100 blast)
+    have h\<iota>fam_in: "\<forall>\<alpha>\<in>{0::nat,1}. \<forall>x\<in>(if \<alpha> = 0 then G1 else G2). \<iota>fam12 \<alpha> x \<in> FP"
+      using hFP unfolding top1_is_free_product_on_def by (by100 blast)
+    have h\<iota>fam_hom: "\<forall>\<alpha>\<in>{0::nat,1}. \<forall>x\<in>(if \<alpha> = 0 then G1 else G2). \<forall>y\<in>(if \<alpha> = 0 then G1 else G2).
+        \<iota>fam12 \<alpha> ((if \<alpha> = 0 then mul1 else mul2) x y) = mulFP (\<iota>fam12 \<alpha> x) (\<iota>fam12 \<alpha> y)"
+      using hFP unfolding top1_is_free_product_on_def by (by100 blast)
+    have h\<iota>fam_inj: "\<forall>\<alpha>\<in>{0::nat,1}. inj_on (\<iota>fam12 \<alpha>) (if \<alpha> = 0 then G1 else G2)"
+      using hFP unfolding top1_is_free_product_on_def by (by100 blast)
+    have hFP_gen: "FP = top1_subgroup_generated_on FP mulFP eFP invgFP
+        (\<Union>\<alpha>\<in>{0::nat,1}. \<iota>fam12 \<alpha> ` (if \<alpha> = 0 then G1 else G2))"
+      using hFP unfolding top1_is_free_product_on_def by (by100 blast)
+    have hFP_reduced: "\<And>indices word.
+        length indices = length word \<Longrightarrow>
+        length indices > 0 \<Longrightarrow>
+        (\<forall>i<length indices. indices!i \<in> {0::nat,1} \<and> word!i \<in> (if indices!i = 0 then G1 else G2)
+                          \<and> \<iota>fam12 (indices!i) (word!i) \<noteq> eFP) \<Longrightarrow>
+        (\<forall>i. i + 1 < length indices \<longrightarrow> indices!i \<noteq> indices!(i+1)) \<Longrightarrow>
+        foldr mulFP (map (\<lambda>i. \<iota>fam12 (indices!i) (word!i)) [0..<length indices]) eFP \<noteq> eFP"
+      using hFP unfolding top1_is_free_product_on_def by (by100 blast)
+    \<comment> \<open>Define \<iota>S12\<close>
+    define \<iota>S12 :: "'s \<Rightarrow> (nat \<times> 'g) list" where
+      "\<iota>S12 = (\<lambda>s. if s \<in> S1 then \<iota>fam12 0 (\<iota>1 s) else \<iota>fam12 1 (\<iota>2 s))"
+    have hcomp1: "\<forall>s\<in>S1. \<iota>S12 s = \<iota>fam12 0 (\<iota>1 s)"
+      unfolding \<iota>S12_def by (by100 simp)
+    have hcomp2: "\<forall>s\<in>S2. \<iota>S12 s = \<iota>fam12 1 (\<iota>2 s)"
+      using assms(3) unfolding \<iota>S12_def by (by100 auto)
+    \<comment> \<open>Condition 1: FP is a group\<close>
+    \<comment> \<open>Condition 2: \<iota>S12 maps S1 \<union> S2 into FP\<close>
+    have h\<iota>S12_in: "\<forall>s\<in>S1 \<union> S2. \<iota>S12 s \<in> FP"
+    proof (intro ballI)
+      fix s assume hs: "s \<in> S1 \<union> S2"
+      show "\<iota>S12 s \<in> FP"
+      proof (cases "s \<in> S1")
+        case True
+        hence "\<iota>S12 s = \<iota>fam12 0 (\<iota>1 s)" using hcomp1 by (by100 blast)
+        moreover have "\<iota>1 s \<in> G1" using h\<iota>1_in True by (by100 blast)
+        moreover have "\<iota>fam12 0 (\<iota>1 s) \<in> FP"
+          using h\<iota>fam_in calculation(2) by (by100 auto)
+        ultimately show ?thesis by (by100 simp)
+      next
+        case False
+        hence hs2: "s \<in> S2" using hs by (by100 blast)
+        hence "\<iota>S12 s = \<iota>fam12 1 (\<iota>2 s)" using hcomp2 by (by100 blast)
+        moreover have "\<iota>2 s \<in> G2" using h\<iota>2_in hs2 by (by100 blast)
+        moreover have "\<iota>fam12 1 (\<iota>2 s) \<in> FP"
+          using h\<iota>fam_in calculation(2) by (by100 auto)
+        ultimately show ?thesis by (by100 simp)
+      qed
+    qed
+    \<comment> \<open>Condition 3: inj_on \<iota>S12 (S1 \<union> S2)\<close>
+    have h\<iota>S12_inj: "inj_on \<iota>S12 (S1 \<union> S2)"
+    proof (rule inj_onI)
+      fix s t assume hs: "s \<in> S1 \<union> S2" and ht: "t \<in> S1 \<union> S2" and heq: "\<iota>S12 s = \<iota>S12 t"
+      show "s = t"
+      proof (cases "s \<in> S1")
+        case True
+        note hs1 = True
+        show ?thesis
+        proof (cases "t \<in> S1")
+          case True
+          \<comment> \<open>Both in S1: \<iota>fam12 0 (\<iota>1 s) = \<iota>fam12 0 (\<iota>1 t), injectivity gives \<iota>1 s = \<iota>1 t, then s = t\<close>
+          have "\<iota>fam12 0 (\<iota>1 s) = \<iota>fam12 0 (\<iota>1 t)"
+            using heq hcomp1 hs1 True by (by100 simp)
+          moreover have "\<iota>1 s \<in> G1" using h\<iota>1_in hs1 by (by100 blast)
+          moreover have "\<iota>1 t \<in> G1" using h\<iota>1_in True by (by100 blast)
+          moreover have "inj_on (\<iota>fam12 0) G1" using h\<iota>fam_inj by (by100 auto)
+          ultimately have "\<iota>1 s = \<iota>1 t" unfolding inj_on_def by (by100 blast)
+          thus ?thesis using h\<iota>1_inj hs1 True unfolding inj_on_def by (by100 blast)
+        next
+          case False
+          \<comment> \<open>s \<in> S1, t \<in> S2: \<iota>fam12 0 (\<iota>1 s) = \<iota>fam12 1 (\<iota>2 t), contradiction\<close>
+          hence ht2: "t \<in> S2" using ht by (by100 blast)
+          have heq': "\<iota>fam12 0 (\<iota>1 s) = \<iota>fam12 1 (\<iota>2 t)"
+            using heq hcomp1 hcomp2 hs1 ht2 by (by100 simp)
+          \<comment> \<open>First show \<iota>1 s \<noteq> e1: single-letter reduced word [(s,True)] in S1
+             evaluates to \<iota>1 s via top1_group_word_product. If \<iota>1 s = e1 that gives e1 \<noteq> e1.\<close>
+          have h\<iota>1s_ne: "\<iota>1 s \<noteq> e1"
+          proof (rule ccontr)
+            assume "\<not> \<iota>1 s \<noteq> e1"
+            hence h_eq_e1: "\<iota>1 s = e1" by (by100 simp)
+            have "[(s, True)] \<noteq> ([] :: ('s \<times> bool) list)" by (by100 simp)
+            moreover have "top1_is_reduced_word (map (\<lambda>(s, b). (\<iota>1 s, b)) [(s, True)])"
+              by (by100 simp)
+            moreover have "\<forall>i<length [(s, True)]. fst ([(s, True)]!i) \<in> S1"
+              using hs1 by (by100 simp)
+            moreover have "top1_group_word_product mul1 e1 invg1
+                (map (\<lambda>(s, b). (\<iota>1 s, b)) [(s, True)]) = mul1 (\<iota>1 s) e1"
+              by (by100 simp)
+            moreover have "mul1 (\<iota>1 s) e1 = mul1 e1 e1"
+              using h_eq_e1 by (by100 simp)
+            moreover have "mul1 e1 e1 = e1"
+              using hG1_grp unfolding top1_is_group_on_def by (by100 blast)
+            ultimately show False using hG1_red[of "[(s, True)]"] by (by100 simp)
+          qed
+          \<comment> \<open>Show \<iota>fam12 0 e1 = eFP using hom property + idempotent argument\<close>
+          have h\<iota>fam0_hom_on: "top1_group_hom_on G1 mul1 FP mulFP (\<iota>fam12 0)"
+            unfolding top1_group_hom_on_def
+          proof (intro conjI ballI)
+            fix x assume "x \<in> G1"
+            thus "\<iota>fam12 0 x \<in> FP" using h\<iota>fam_in by (by100 auto)
+          next
+            fix x y assume hx: "x \<in> G1" and hy: "y \<in> G1"
+            show "\<iota>fam12 0 (mul1 x y) = mulFP (\<iota>fam12 0 x) (\<iota>fam12 0 y)"
+              using h\<iota>fam_hom hx hy by (by100 auto)
+          qed
+          have h\<iota>fam0_e: "\<iota>fam12 0 e1 = eFP"
+            by (rule hom_preserves_id[OF hG1_grp hFP_grp h\<iota>fam0_hom_on])
+          \<comment> \<open>Now \<iota>fam12 0 (\<iota>1 s) \<noteq> eFP by injectivity of \<iota>fam12 0 on G1\<close>
+          have h\<iota>1s_in_G1: "\<iota>1 s \<in> G1" using h\<iota>1_in hs1 by (by100 blast)
+          have he1_in_G1: "e1 \<in> G1" using hG1_grp unfolding top1_is_group_on_def by (by100 blast)
+          have hinj0: "inj_on (\<iota>fam12 0) G1" using h\<iota>fam_inj by (by100 auto)
+          have h\<iota>fam0_ne: "\<iota>fam12 0 (\<iota>1 s) \<noteq> eFP"
+          proof
+            assume "\<iota>fam12 0 (\<iota>1 s) = eFP"
+            hence "\<iota>fam12 0 (\<iota>1 s) = \<iota>fam12 0 e1" using h\<iota>fam0_e by (by100 simp)
+            hence "\<iota>1 s = e1" using hinj0 h\<iota>1s_in_G1 he1_in_G1
+              unfolding inj_on_def by (by100 blast)
+            thus False using h\<iota>1s_ne by (by100 simp)
+          qed
+          \<comment> \<open>Similarly show \<iota>2 t \<noteq> e2\<close>
+          have h\<iota>2t_ne: "\<iota>2 t \<noteq> e2"
+          proof (rule ccontr)
+            assume "\<not> \<iota>2 t \<noteq> e2"
+            hence h_eq_e2: "\<iota>2 t = e2" by (by100 simp)
+            have "[(t, True)] \<noteq> ([] :: ('s \<times> bool) list)" by (by100 simp)
+            moreover have "top1_is_reduced_word (map (\<lambda>(s, b). (\<iota>2 s, b)) [(t, True)])"
+              by (by100 simp)
+            moreover have "\<forall>i<length [(t, True)]. fst ([(t, True)]!i) \<in> S2"
+              using ht2 by (by100 simp)
+            moreover have "top1_group_word_product mul2 e2 invg2
+                (map (\<lambda>(s, b). (\<iota>2 s, b)) [(t, True)]) = mul2 (\<iota>2 t) e2"
+              by (by100 simp)
+            moreover have "mul2 (\<iota>2 t) e2 = mul2 e2 e2"
+              using h_eq_e2 by (by100 simp)
+            moreover have "mul2 e2 e2 = e2"
+              using hG2_grp unfolding top1_is_group_on_def by (by100 blast)
+            ultimately show False using hG2_red[of "[(t, True)]"] by (by100 simp)
+          qed
+          \<comment> \<open>Get invg2(\<iota>2 t) \<in> G2 and \<noteq> e2\<close>
+          have h\<iota>2t_in_G2: "\<iota>2 t \<in> G2" using h\<iota>2_in ht2 by (by100 blast)
+          have hinv\<iota>2t_in_G2: "invg2 (\<iota>2 t) \<in> G2"
+            using hG2_grp h\<iota>2t_in_G2 unfolding top1_is_group_on_def by (by100 blast)
+          have hinv\<iota>2t_ne: "invg2 (\<iota>2 t) \<noteq> e2"
+          proof
+            assume "invg2 (\<iota>2 t) = e2"
+            hence "mul2 (invg2 (\<iota>2 t)) (\<iota>2 t) = mul2 e2 (\<iota>2 t)" by (by100 simp)
+            moreover have "mul2 (invg2 (\<iota>2 t)) (\<iota>2 t) = e2"
+              using hG2_grp h\<iota>2t_in_G2 unfolding top1_is_group_on_def by (by100 blast)
+            moreover have "mul2 e2 (\<iota>2 t) = \<iota>2 t"
+              using hG2_grp h\<iota>2t_in_G2 unfolding top1_is_group_on_def by (by100 blast)
+            ultimately have "\<iota>2 t = e2" by (by100 simp)
+            thus False using h\<iota>2t_ne by (by100 simp)
+          qed
+          \<comment> \<open>\<iota>fam12 1 (invg2(\<iota>2 t)) \<noteq> eFP\<close>
+          have h\<iota>fam1_hom_on: "top1_group_hom_on G2 mul2 FP mulFP (\<iota>fam12 1)"
+            unfolding top1_group_hom_on_def
+          proof (intro conjI ballI)
+            fix x assume "x \<in> G2"
+            thus "\<iota>fam12 1 x \<in> FP" using h\<iota>fam_in by (by100 auto)
+          next
+            fix x y assume hx: "x \<in> G2" and hy: "y \<in> G2"
+            show "\<iota>fam12 1 (mul2 x y) = mulFP (\<iota>fam12 1 x) (\<iota>fam12 1 y)"
+              using h\<iota>fam_hom hx hy by (by100 auto)
+          qed
+          have h\<iota>fam1_e: "\<iota>fam12 1 e2 = eFP"
+            by (rule hom_preserves_id[OF hG2_grp hFP_grp h\<iota>fam1_hom_on])
+          have hinj1: "inj_on (\<iota>fam12 1) G2" using h\<iota>fam_inj by (by100 auto)
+          have he2_in_G2: "e2 \<in> G2" using hG2_grp unfolding top1_is_group_on_def by (by100 blast)
+          have h\<iota>fam1_inv_ne: "\<iota>fam12 1 (invg2 (\<iota>2 t)) \<noteq> eFP"
+          proof
+            assume "\<iota>fam12 1 (invg2 (\<iota>2 t)) = eFP"
+            hence "\<iota>fam12 1 (invg2 (\<iota>2 t)) = \<iota>fam12 1 e2" using h\<iota>fam1_e by (by100 simp)
+            hence "invg2 (\<iota>2 t) = e2" using hinj1 hinv\<iota>2t_in_G2 he2_in_G2
+              unfolding inj_on_def by (by100 blast)
+            thus False using hinv\<iota>2t_ne by (by100 simp)
+          qed
+          \<comment> \<open>Now apply hFP_reduced with indices=[0,1], word=[\<iota>1 s, invg2(\<iota>2 t)]
+             The product is mulFP (\<iota>fam12 0 (\<iota>1 s)) (mulFP (\<iota>fam12 1 (invg2(\<iota>2 t))) eFP).
+             = mulFP g (invgFP g) = eFP by homomorphism. Contradiction.\<close>
+          \<comment> \<open>Product mulFP (\<iota>fam12 0 (\<iota>1 s)) (\<iota>fam12 1 (invg2(\<iota>2 t))) = eFP
+             via hom property: \<iota>fam12 1 (mul2 (\<iota>2 t) (invg2(\<iota>2 t))) = mulFP(...)(...)
+             and mul2 (\<iota>2 t) (invg2(\<iota>2 t)) = e2, \<iota>fam12 1 e2 = eFP.
+             Then using heq': \<iota>fam12 0 (\<iota>1 s) = \<iota>fam12 1 (\<iota>2 t):
+             mulFP (\<iota>fam12 1 (\<iota>2 t)) (\<iota>fam12 1 (invg2(\<iota>2 t)))
+             = \<iota>fam12 1 (mul2 (\<iota>2 t) (invg2(\<iota>2 t))) = \<iota>fam12 1 e2 = eFP.\<close>
+          have hprod_eFP: "mulFP (\<iota>fam12 0 (\<iota>1 s)) (\<iota>fam12 1 (invg2 (\<iota>2 t))) = eFP"
+          proof -
+            have "mulFP (\<iota>fam12 1 (\<iota>2 t)) (\<iota>fam12 1 (invg2 (\<iota>2 t)))
+                = \<iota>fam12 1 (mul2 (\<iota>2 t) (invg2 (\<iota>2 t)))"
+              using h\<iota>fam_hom h\<iota>2t_in_G2 hinv\<iota>2t_in_G2 by (by100 auto)
+            moreover have "mul2 (\<iota>2 t) (invg2 (\<iota>2 t)) = e2"
+              using hG2_grp h\<iota>2t_in_G2 unfolding top1_is_group_on_def by (by100 blast)
+            moreover have "\<iota>fam12 1 e2 = eFP" by (rule h\<iota>fam1_e)
+            ultimately have "mulFP (\<iota>fam12 1 (\<iota>2 t)) (\<iota>fam12 1 (invg2 (\<iota>2 t))) = eFP"
+              by (by100 simp)
+            thus ?thesis using heq' by (by100 simp)
+          qed
+          \<comment> \<open>But hFP_reduced with indices=[0,1], word=[\<iota>1 s, invg2(\<iota>2 t)] gives \<noteq> eFP\<close>
+          have hlen: "length [0::nat,1] = length [\<iota>1 s, invg2 (\<iota>2 t)]" by (by100 simp)
+          have hpos: "length [0::nat,1] > 0" by (by100 simp)
+          have hvals: "\<forall>i<length [0::nat,1]. [0::nat,1]!i \<in> {0,1}
+              \<and> [\<iota>1 s, invg2 (\<iota>2 t)]!i \<in> (if [0::nat,1]!i = 0 then G1 else G2)
+              \<and> \<iota>fam12 ([0::nat,1]!i) ([\<iota>1 s, invg2 (\<iota>2 t)]!i) \<noteq> eFP"
+          proof (intro allI impI)
+            fix i assume hi: "i < length [0::nat,1]"
+            hence "i = 0 \<or> i = 1" by (by100 auto)
+            thus "[0::nat,1]!i \<in> {0,1}
+                \<and> [\<iota>1 s, invg2 (\<iota>2 t)]!i \<in> (if [0::nat,1]!i = 0 then G1 else G2)
+                \<and> \<iota>fam12 ([0::nat,1]!i) ([\<iota>1 s, invg2 (\<iota>2 t)]!i) \<noteq> eFP"
+            proof
+              assume "i = 0"
+              thus ?thesis using h\<iota>1s_in_G1 h\<iota>fam0_ne by (by100 simp)
+            next
+              assume "i = 1"
+              thus ?thesis using hinv\<iota>2t_in_G2 h\<iota>fam1_inv_ne by (by100 simp)
+            qed
+          qed
+          have hadj: "\<forall>i. i + 1 < length [0::nat,1] \<longrightarrow> [0::nat,1]!i \<noteq> [0::nat,1]!(i+1)"
+            by (by100 auto)
+          \<comment> \<open>Direct contradiction via the free product reduced word property\<close>
+          have hcontra: "foldr mulFP (map (\<lambda>i. \<iota>fam12 ([0,1::nat]!i) ([\<iota>1 s, invg2 (\<iota>2 t)]!i)) [0..<length [0::nat,1]]) eFP \<noteq> eFP"
+            using hFP_reduced[OF hlen hpos hvals hadj] .
+          \<comment> \<open>But the product evaluates to eFP\<close>
+          have hmul_e: "mulFP (\<iota>fam12 1 (invg2 (\<iota>2 t))) eFP = \<iota>fam12 1 (invg2 (\<iota>2 t))"
+          proof -
+            have "\<iota>fam12 1 (invg2 (\<iota>2 t)) \<in> FP"
+              using h\<iota>fam_in hinv\<iota>2t_in_G2 by (by100 auto)
+            thus ?thesis using hFP_grp unfolding top1_is_group_on_def by (by100 blast)
+          qed
+          have hfoldr_eq: "foldr mulFP [\<iota>fam12 0 (\<iota>1 s), \<iota>fam12 1 (invg2 (\<iota>2 t))] eFP
+              = mulFP (\<iota>fam12 0 (\<iota>1 s)) (\<iota>fam12 1 (invg2 (\<iota>2 t)))"
+            using hmul_e by (by100 simp)
+          have hfoldr_eFP: "foldr mulFP [\<iota>fam12 0 (\<iota>1 s), \<iota>fam12 1 (invg2 (\<iota>2 t))] eFP = eFP"
+            using hfoldr_eq hprod_eFP by (by100 simp)
+          \<comment> \<open>Connect the two forms\<close>
+          have hmap_eq: "map (\<lambda>i. \<iota>fam12 ([0,1::nat]!i) ([\<iota>1 s, invg2 (\<iota>2 t)]!i)) [0..<length [0::nat,1]]
+              = [\<iota>fam12 0 (\<iota>1 s), \<iota>fam12 1 (invg2 (\<iota>2 t))]"
+            by (by100 simp)
+          show ?thesis using hcontra hfoldr_eFP hmap_eq by (by100 simp)
+        qed
+      next
+        case False
+        note hs2 = False
+        hence hs2': "s \<in> S2" using hs by (by100 blast)
+        show ?thesis
+        proof (cases "t \<in> S1")
+          case True
+          \<comment> \<open>Symmetric to s\<in>S1, t\<in>S2 case: \<iota>fam12 1 (\<iota>2 s) = \<iota>fam12 0 (\<iota>1 t)\<close>
+          have heq': "\<iota>fam12 1 (\<iota>2 s) = \<iota>fam12 0 (\<iota>1 t)"
+            using heq hcomp1 hcomp2 hs2' True by (by100 simp)
+          \<comment> \<open>\<iota>2 s \<noteq> e2\<close>
+          have h\<iota>2s_ne: "\<iota>2 s \<noteq> e2"
+          proof (rule ccontr)
+            assume "\<not> \<iota>2 s \<noteq> e2"
+            hence h_eq_e2: "\<iota>2 s = e2" by (by100 simp)
+            have "[(s, True)] \<noteq> ([] :: ('s \<times> bool) list)" by (by100 simp)
+            moreover have "top1_is_reduced_word (map (\<lambda>(s, b). (\<iota>2 s, b)) [(s, True)])"
+              by (by100 simp)
+            moreover have "\<forall>i<length [(s, True)]. fst ([(s, True)]!i) \<in> S2"
+              using hs2' by (by100 simp)
+            moreover have "top1_group_word_product mul2 e2 invg2
+                (map (\<lambda>(s, b). (\<iota>2 s, b)) [(s, True)]) = mul2 (\<iota>2 s) e2"
+              by (by100 simp)
+            moreover have "mul2 (\<iota>2 s) e2 = mul2 e2 e2"
+              using h_eq_e2 by (by100 simp)
+            moreover have "mul2 e2 e2 = e2"
+              using hG2_grp unfolding top1_is_group_on_def by (by100 blast)
+            ultimately show False using hG2_red[of "[(s, True)]"] by (by100 simp)
+          qed
+          \<comment> \<open>\<iota>1 t \<noteq> e1\<close>
+          have h\<iota>1t_ne: "\<iota>1 t \<noteq> e1"
+          proof (rule ccontr)
+            assume "\<not> \<iota>1 t \<noteq> e1"
+            hence h_eq_e1: "\<iota>1 t = e1" by (by100 simp)
+            have "[(t, True)] \<noteq> ([] :: ('s \<times> bool) list)" by (by100 simp)
+            moreover have "top1_is_reduced_word (map (\<lambda>(s, b). (\<iota>1 s, b)) [(t, True)])"
+              by (by100 simp)
+            moreover have "\<forall>i<length [(t, True)]. fst ([(t, True)]!i) \<in> S1"
+              using True by (by100 simp)
+            moreover have "top1_group_word_product mul1 e1 invg1
+                (map (\<lambda>(s, b). (\<iota>1 s, b)) [(t, True)]) = mul1 (\<iota>1 t) e1"
+              by (by100 simp)
+            moreover have "mul1 (\<iota>1 t) e1 = mul1 e1 e1"
+              using h_eq_e1 by (by100 simp)
+            moreover have "mul1 e1 e1 = e1"
+              using hG1_grp unfolding top1_is_group_on_def by (by100 blast)
+            ultimately show False using hG1_red[of "[(t, True)]"] by (by100 simp)
+          qed
+          \<comment> \<open>ιfam identities\<close>
+          have h\<iota>fam1_hom_on': "top1_group_hom_on G2 mul2 FP mulFP (\<iota>fam12 1)"
+            unfolding top1_group_hom_on_def
+          proof (intro conjI ballI)
+            fix x assume "x \<in> G2"
+            thus "\<iota>fam12 1 x \<in> FP" using h\<iota>fam_in by (by100 auto)
+          next
+            fix x y assume hx: "x \<in> G2" and hy: "y \<in> G2"
+            show "\<iota>fam12 1 (mul2 x y) = mulFP (\<iota>fam12 1 x) (\<iota>fam12 1 y)"
+              using h\<iota>fam_hom hx hy by (by100 auto)
+          qed
+          have h\<iota>fam1_e': "\<iota>fam12 1 e2 = eFP"
+            by (rule hom_preserves_id[OF hG2_grp hFP_grp h\<iota>fam1_hom_on'])
+          have h\<iota>fam0_hom_on': "top1_group_hom_on G1 mul1 FP mulFP (\<iota>fam12 0)"
+            unfolding top1_group_hom_on_def
+          proof (intro conjI ballI)
+            fix x assume "x \<in> G1"
+            thus "\<iota>fam12 0 x \<in> FP" using h\<iota>fam_in by (by100 auto)
+          next
+            fix x y assume hx: "x \<in> G1" and hy: "y \<in> G1"
+            show "\<iota>fam12 0 (mul1 x y) = mulFP (\<iota>fam12 0 x) (\<iota>fam12 0 y)"
+              using h\<iota>fam_hom hx hy by (by100 auto)
+          qed
+          have h\<iota>fam0_e': "\<iota>fam12 0 e1 = eFP"
+            by (rule hom_preserves_id[OF hG1_grp hFP_grp h\<iota>fam0_hom_on'])
+          \<comment> \<open>\<iota>fam12 1 (\<iota>2 s) \<noteq> eFP\<close>
+          have h\<iota>2s_in_G2: "\<iota>2 s \<in> G2" using h\<iota>2_in hs2' by (by100 blast)
+          have hinj1': "inj_on (\<iota>fam12 1) G2" using h\<iota>fam_inj by (by100 auto)
+          have he2_in_G2': "e2 \<in> G2" using hG2_grp unfolding top1_is_group_on_def by (by100 blast)
+          have h\<iota>fam1_ne: "\<iota>fam12 1 (\<iota>2 s) \<noteq> eFP"
+          proof
+            assume "\<iota>fam12 1 (\<iota>2 s) = eFP"
+            hence "\<iota>fam12 1 (\<iota>2 s) = \<iota>fam12 1 e2" using h\<iota>fam1_e' by (by100 simp)
+            hence "\<iota>2 s = e2" using hinj1' h\<iota>2s_in_G2 he2_in_G2'
+              unfolding inj_on_def by (by100 blast)
+            thus False using h\<iota>2s_ne by (by100 simp)
+          qed
+          \<comment> \<open>invg1(\<iota>1 t) \<in> G1, \<noteq> e1\<close>
+          have h\<iota>1t_in_G1: "\<iota>1 t \<in> G1" using h\<iota>1_in True by (by100 blast)
+          have hinv\<iota>1t_in_G1: "invg1 (\<iota>1 t) \<in> G1"
+            using hG1_grp h\<iota>1t_in_G1 unfolding top1_is_group_on_def by (by100 blast)
+          have hinv\<iota>1t_ne: "invg1 (\<iota>1 t) \<noteq> e1"
+          proof
+            assume "invg1 (\<iota>1 t) = e1"
+            hence "mul1 (invg1 (\<iota>1 t)) (\<iota>1 t) = mul1 e1 (\<iota>1 t)" by (by100 simp)
+            moreover have "mul1 (invg1 (\<iota>1 t)) (\<iota>1 t) = e1"
+              using hG1_grp h\<iota>1t_in_G1 unfolding top1_is_group_on_def by (by100 blast)
+            moreover have "mul1 e1 (\<iota>1 t) = \<iota>1 t"
+              using hG1_grp h\<iota>1t_in_G1 unfolding top1_is_group_on_def by (by100 blast)
+            ultimately have "\<iota>1 t = e1" by (by100 simp)
+            thus False using h\<iota>1t_ne by (by100 simp)
+          qed
+          \<comment> \<open>\<iota>fam12 0 (invg1(\<iota>1 t)) \<noteq> eFP\<close>
+          have hinj0': "inj_on (\<iota>fam12 0) G1" using h\<iota>fam_inj by (by100 auto)
+          have he1_in_G1': "e1 \<in> G1" using hG1_grp unfolding top1_is_group_on_def by (by100 blast)
+          have h\<iota>fam0_inv_ne: "\<iota>fam12 0 (invg1 (\<iota>1 t)) \<noteq> eFP"
+          proof
+            assume "\<iota>fam12 0 (invg1 (\<iota>1 t)) = eFP"
+            hence "\<iota>fam12 0 (invg1 (\<iota>1 t)) = \<iota>fam12 0 e1" using h\<iota>fam0_e' by (by100 simp)
+            hence "invg1 (\<iota>1 t) = e1" using hinj0' hinv\<iota>1t_in_G1 he1_in_G1'
+              unfolding inj_on_def by (by100 blast)
+            thus False using hinv\<iota>1t_ne by (by100 simp)
+          qed
+          \<comment> \<open>Product = eFP via hom + heq'\<close>
+          have hprod_eFP: "mulFP (\<iota>fam12 1 (\<iota>2 s)) (\<iota>fam12 0 (invg1 (\<iota>1 t))) = eFP"
+          proof -
+            have "mulFP (\<iota>fam12 0 (\<iota>1 t)) (\<iota>fam12 0 (invg1 (\<iota>1 t)))
+                = \<iota>fam12 0 (mul1 (\<iota>1 t) (invg1 (\<iota>1 t)))"
+              using h\<iota>fam_hom h\<iota>1t_in_G1 hinv\<iota>1t_in_G1 by (by100 auto)
+            moreover have "mul1 (\<iota>1 t) (invg1 (\<iota>1 t)) = e1"
+              using hG1_grp h\<iota>1t_in_G1 unfolding top1_is_group_on_def by (by100 blast)
+            ultimately have "mulFP (\<iota>fam12 0 (\<iota>1 t)) (\<iota>fam12 0 (invg1 (\<iota>1 t))) = eFP"
+              using h\<iota>fam0_e' by (by100 simp)
+            thus ?thesis using heq' by (by100 simp)
+          qed
+          \<comment> \<open>Contradiction via hFP_reduced with indices=[1,0], word=[\<iota>2 s, invg1(\<iota>1 t)]\<close>
+          have hlen': "length [1::nat,0] = length [\<iota>2 s, invg1 (\<iota>1 t)]" by (by100 simp)
+          have hpos': "length [1::nat,0] > 0" by (by100 simp)
+          have hvals': "\<forall>i<length [1::nat,0]. [1::nat,0]!i \<in> {0,1}
+              \<and> [\<iota>2 s, invg1 (\<iota>1 t)]!i \<in> (if [1::nat,0]!i = 0 then G1 else G2)
+              \<and> \<iota>fam12 ([1::nat,0]!i) ([\<iota>2 s, invg1 (\<iota>1 t)]!i) \<noteq> eFP"
+          proof (intro allI impI)
+            fix i assume hi: "i < length [1::nat,0]"
+            hence "i = 0 \<or> i = 1" by (by100 auto)
+            thus "[1::nat,0]!i \<in> {0,1}
+                \<and> [\<iota>2 s, invg1 (\<iota>1 t)]!i \<in> (if [1::nat,0]!i = 0 then G1 else G2)
+                \<and> \<iota>fam12 ([1::nat,0]!i) ([\<iota>2 s, invg1 (\<iota>1 t)]!i) \<noteq> eFP"
+            proof
+              assume "i = 0"
+              thus ?thesis using h\<iota>2s_in_G2 h\<iota>fam1_ne by (by100 simp)
+            next
+              assume "i = 1"
+              thus ?thesis using hinv\<iota>1t_in_G1 h\<iota>fam0_inv_ne by (by100 simp)
+            qed
+          qed
+          have hadj': "\<forall>i. i + 1 < length [1::nat,0] \<longrightarrow> [1::nat,0]!i \<noteq> [1::nat,0]!(i+1)"
+            by (by100 auto)
+          \<comment> \<open>Direct contradiction: the foldr from hFP_reduced equals eFP\<close>
+          have hcontra: "foldr mulFP (map (\<lambda>i. \<iota>fam12 ([1,0::nat]!i) ([\<iota>2 s, invg1 (\<iota>1 t)]!i)) [0..<length [1::nat,0]]) eFP \<noteq> eFP"
+            using hFP_reduced[OF hlen' hpos' hvals' hadj'] .
+          \<comment> \<open>But the product evaluates to eFP\<close>
+          have hmul_e': "mulFP (\<iota>fam12 0 (invg1 (\<iota>1 t))) eFP = \<iota>fam12 0 (invg1 (\<iota>1 t))"
+          proof -
+            have "\<iota>fam12 0 (invg1 (\<iota>1 t)) \<in> FP"
+              using h\<iota>fam_in hinv\<iota>1t_in_G1 by (by100 auto)
+            thus ?thesis using hFP_grp unfolding top1_is_group_on_def by (by100 blast)
+          qed
+          have hfoldr_eq: "foldr mulFP [\<iota>fam12 1 (\<iota>2 s), \<iota>fam12 0 (invg1 (\<iota>1 t))] eFP
+              = mulFP (\<iota>fam12 1 (\<iota>2 s)) (\<iota>fam12 0 (invg1 (\<iota>1 t)))"
+            using hmul_e' by (by100 simp)
+          have hfoldr_eFP: "foldr mulFP [\<iota>fam12 1 (\<iota>2 s), \<iota>fam12 0 (invg1 (\<iota>1 t))] eFP = eFP"
+            using hfoldr_eq hprod_eFP by (by100 simp)
+          \<comment> \<open>Connect the two forms\<close>
+          have hmap_eq: "map (\<lambda>i. \<iota>fam12 ([1,0::nat]!i) ([\<iota>2 s, invg1 (\<iota>1 t)]!i)) [0..<length [1::nat,0]]
+              = [\<iota>fam12 1 (\<iota>2 s), \<iota>fam12 0 (invg1 (\<iota>1 t))]"
+            by (by100 simp)
+          show ?thesis using hcontra hfoldr_eFP hmap_eq by (by100 simp)
+        next
+          case False
+          \<comment> \<open>Both in S2\<close>
+          hence ht2: "t \<in> S2" using ht by (by100 blast)
+          have "\<iota>fam12 1 (\<iota>2 s) = \<iota>fam12 1 (\<iota>2 t)"
+            using heq hcomp2 hs2' ht2 by (by100 simp)
+          moreover have "\<iota>2 s \<in> G2" using h\<iota>2_in hs2' by (by100 blast)
+          moreover have "\<iota>2 t \<in> G2" using h\<iota>2_in ht2 by (by100 blast)
+          moreover have "inj_on (\<iota>fam12 1) G2" using h\<iota>fam_inj by (by100 auto)
+          ultimately have "\<iota>2 s = \<iota>2 t" unfolding inj_on_def by (by100 blast)
+          thus ?thesis using h\<iota>2_inj hs2' ht2 unfolding inj_on_def by (by100 blast)
+        qed
+      qed
+    qed
+    \<comment> \<open>Condition 4: FP = subgroup_generated by \<iota>S12 ` (S1 \<union> S2)\<close>
+    have h\<iota>S12_gen: "FP = top1_subgroup_generated_on FP mulFP eFP invgFP (\<iota>S12 ` (S1 \<union> S2))"
+    proof (rule equalityI)
+      \<comment> \<open>Direction 2 (\<supseteq>): subgroup_generated \<subseteq> FP\<close>
+      have h\<iota>S12_img_sub: "\<iota>S12 ` (S1 \<union> S2) \<subseteq> FP"
+        using h\<iota>S12_in by (by100 blast)
+      show "top1_subgroup_generated_on FP mulFP eFP invgFP (\<iota>S12 ` (S1 \<union> S2)) \<subseteq> FP"
+        by (rule subgroup_generated_subset[OF hFP_grp h\<iota>S12_img_sub])
+    next
+      \<comment> \<open>Direction 1 (\<subseteq>): FP \<subseteq> subgroup_generated (\<iota>S12 ` (S1\<union>S2))\<close>
+      let ?SG = "top1_subgroup_generated_on FP mulFP eFP invgFP (\<iota>S12 ` (S1 \<union> S2))"
+      \<comment> \<open>We know FP = subgroup_generated FP ... (\<Union>\<alpha>. \<iota>fam12 \<alpha> ` G\<alpha>).
+         It suffices to show \<Union>\<alpha>. \<iota>fam12 \<alpha> ` G\<alpha> \<subseteq> ?SG, then by minimality FP \<subseteq> ?SG.\<close>
+      have h\<iota>S12_img_sub0: "\<iota>S12 ` (S1 \<union> S2) \<subseteq> FP" using h\<iota>S12_in by (by100 blast)
+      have hSG_sub: "?SG \<subseteq> FP"
+        by (rule subgroup_generated_subset[OF hFP_grp h\<iota>S12_img_sub0])
+      have hSG_grp0: "top1_is_group_on ?SG mulFP eFP invgFP"
+        by (rule intersection_of_subgroups_is_group[OF hFP_grp h\<iota>S12_img_sub0])
+      \<comment> \<open>Key: generators \<iota>S12(s) for s\<in>S1\<union>S2 are in ?SG\<close>
+      have h\<iota>S12_gens_in_SG: "\<forall>s\<in>S1 \<union> S2. \<iota>S12 s \<in> ?SG"
+      proof (intro ballI)
+        fix s assume hs: "s \<in> S1 \<union> S2"
+        have "\<iota>S12 s \<in> \<iota>S12 ` (S1 \<union> S2)" using hs by (by100 blast)
+        thus "\<iota>S12 s \<in> ?SG"
+          by (rule subgroup_generated_contains[OF hFP_grp h\<iota>S12_img_sub0])
+      qed
+      \<comment> \<open>Since ?SG is a group containing all \<iota>fam12 0 (\<iota>1 s) for s \<in> S1 (= \<iota>S12 s),
+         and G1 = subgroup_generated G1 ... (\<iota>1 ` S1), we get \<iota>fam12 0 ` G1 \<subseteq> ?SG.
+         Similarly for G2. Full formal proof requires word representation.\<close>
+      \<comment> \<open>ιfam12 0 ` G1 \<subseteq> ?SG: for any g \<in> G1, by G1 = subgroup_generated(ι1`S1),
+         g is either e1 or a product of ι1(s_i) and their inverses.
+         ιfam12 0 e1 = eFP \<in> ?SG (since ?SG is a group).
+         ιfam12 0 (ι1 s) = ιS12 s \<in> ?SG (proved above).
+         ιfam12 0 (invg1(ι1 s)) = invgFP(ιS12 s) \<in> ?SG (since ?SG closed under invg).
+         ιfam12 0 (mul1 x y) = mulFP (ιfam12 0 x) (ιfam12 0 y) \<in> ?SG (closure under mul).
+         So the entire word product lands in ?SG.\<close>
+      \<comment> \<open>Preimage argument: {g \<in> G1. \<iota>fam12 0 g \<in> ?SG} is a subgroup of G1 containing \<iota>1 ` S1\<close>
+      have hfam0_sub: "\<iota>fam12 0 ` G1 \<subseteq> ?SG"
+      proof -
+        let ?H = "{g \<in> G1. \<iota>fam12 0 g \<in> ?SG}"
+        have h\<iota>1_sub: "\<iota>1 ` S1 \<subseteq> G1" using h\<iota>1_in by (by100 blast)
+        \<comment> \<open>\<iota>1 ` S1 \<subseteq> ?H\<close>
+        have hgens_in_H: "\<iota>1 ` S1 \<subseteq> ?H"
+        proof (rule subsetI)
+          fix x assume "x \<in> \<iota>1 ` S1"
+          then obtain s where hs: "s \<in> S1" and hxs: "x = \<iota>1 s" by (by100 blast)
+          have hxG: "x \<in> G1" using h\<iota>1_in hs hxs by (by100 blast)
+          have hfx_eq: "\<iota>fam12 0 x = \<iota>S12 s" using hcomp1 hs hxs by (by100 simp)
+          have h\<iota>s_SG: "\<iota>S12 s \<in> ?SG" using h\<iota>S12_gens_in_SG hs by (by100 blast)
+          have "\<iota>fam12 0 x \<in> ?SG" using hfx_eq h\<iota>s_SG by (by100 simp)
+          thus "x \<in> ?H" using hxG by (by100 blast)
+        qed
+        \<comment> \<open>?H is a subgroup of G1\<close>
+        have hH_sub: "?H \<subseteq> G1" by (by100 blast)
+        have hH_grp: "top1_is_group_on ?H mul1 e1 invg1"
+        proof -
+          have h\<iota>fam0_hom': "top1_group_hom_on G1 mul1 FP mulFP (\<iota>fam12 0)"
+            unfolding top1_group_hom_on_def
+          proof (intro conjI ballI)
+            fix a assume "a \<in> G1" thus "\<iota>fam12 0 a \<in> FP" using h\<iota>fam_in by (by100 auto)
+          next
+            fix a b assume ha: "a \<in> G1" and hb: "b \<in> G1"
+            show "\<iota>fam12 0 (mul1 a b) = mulFP (\<iota>fam12 0 a) (\<iota>fam12 0 b)"
+              using h\<iota>fam_hom ha hb by (by100 auto)
+          qed
+          have h\<iota>fam0_e': "\<iota>fam12 0 e1 = eFP"
+            by (rule hom_preserves_id[OF hG1_grp hFP_grp h\<iota>fam0_hom'])
+          show ?thesis unfolding top1_is_group_on_def
+          proof (intro conjI ballI)
+            \<comment> \<open>e1 \<in> ?H\<close>
+            show "e1 \<in> ?H"
+              using hG1_grp h\<iota>fam0_e' hSG_grp0
+              unfolding top1_is_group_on_def by (by100 blast)
+          next
+            \<comment> \<open>closure under mul1\<close>
+            fix x y assume hx: "x \<in> ?H" and hy: "y \<in> ?H"
+            hence hxG: "x \<in> G1" and hyG: "y \<in> G1" by (by100 blast)+
+            have hfx: "\<iota>fam12 0 x \<in> ?SG" and hfy: "\<iota>fam12 0 y \<in> ?SG"
+              using hx hy by (by100 blast)+
+            have hxyG: "mul1 x y \<in> G1"
+              using hG1_grp hxG hyG unfolding top1_is_group_on_def by (by100 blast)
+            have hfxy: "\<iota>fam12 0 (mul1 x y) = mulFP (\<iota>fam12 0 x) (\<iota>fam12 0 y)"
+              using h\<iota>fam_hom hxG hyG by (by100 auto)
+            have hmulSG: "mulFP (\<iota>fam12 0 x) (\<iota>fam12 0 y) \<in> ?SG"
+              using hSG_grp0 hfx hfy unfolding top1_is_group_on_def by (by100 blast)
+            have "\<iota>fam12 0 (mul1 x y) \<in> ?SG" using hfxy hmulSG by (by100 simp)
+            thus "mul1 x y \<in> ?H" using hxyG by (by100 blast)
+          next
+            \<comment> \<open>closure under invg1\<close>
+            fix x assume hx: "x \<in> ?H"
+            hence hxG: "x \<in> G1" by (by100 blast)
+            have hfx: "\<iota>fam12 0 x \<in> ?SG" using hx by (by100 blast)
+            have "invg1 x \<in> G1"
+              using hG1_grp hxG unfolding top1_is_group_on_def by (by100 blast)
+            moreover have "\<iota>fam12 0 (invg1 x) \<in> ?SG"
+            proof -
+              \<comment> \<open>\<iota>fam12 0 (invg1 x) = invgFP (\<iota>fam12 0 x) since hom preserves inverses\<close>
+              have hfx_FP: "\<iota>fam12 0 x \<in> FP" using hSG_sub hfx by (by100 blast)
+              have hinvx_G1: "invg1 x \<in> G1"
+                using hG1_grp hxG unfolding top1_is_group_on_def by (by100 blast)
+              have "mulFP (\<iota>fam12 0 x) (\<iota>fam12 0 (invg1 x))
+                  = \<iota>fam12 0 (mul1 x (invg1 x))"
+                using h\<iota>fam_hom hxG hinvx_G1 by (by100 auto)
+              moreover have "mul1 x (invg1 x) = e1"
+                using hG1_grp hxG unfolding top1_is_group_on_def by (by100 blast)
+              ultimately have "mulFP (\<iota>fam12 0 x) (\<iota>fam12 0 (invg1 x)) = eFP"
+                using h\<iota>fam0_e' by (by100 simp)
+              \<comment> \<open>So \<iota>fam12 0 (invg1 x) = invgFP (\<iota>fam12 0 x)\<close>
+              moreover have hfinv_FP: "\<iota>fam12 0 (invg1 x) \<in> FP"
+                using h\<iota>fam_in hinvx_G1 by (by100 auto)
+              ultimately have heq_inv: "\<iota>fam12 0 (invg1 x) = invgFP (\<iota>fam12 0 x)"
+              proof -
+                assume hprod: "mulFP (\<iota>fam12 0 x) (\<iota>fam12 0 (invg1 x)) = eFP"
+                assume hb_FP: "\<iota>fam12 0 (invg1 x) \<in> FP"
+                \<comment> \<open>b = mulFP eFP b = mulFP (mulFP (invgFP a) a) b = mulFP (invgFP a) (mulFP a b) = mulFP (invgFP a) eFP = invgFP a\<close>
+                have hinva: "invgFP (\<iota>fam12 0 x) \<in> FP"
+                  using hFP_grp hfx_FP unfolding top1_is_group_on_def by (by100 blast)
+                have "mulFP (invgFP (\<iota>fam12 0 x)) (mulFP (\<iota>fam12 0 x) (\<iota>fam12 0 (invg1 x)))
+                    = mulFP (mulFP (invgFP (\<iota>fam12 0 x)) (\<iota>fam12 0 x)) (\<iota>fam12 0 (invg1 x))"
+                  using group_assoc[OF hFP_grp hinva hfx_FP hb_FP] by (by100 simp)
+                moreover have "mulFP (invgFP (\<iota>fam12 0 x)) (\<iota>fam12 0 x) = eFP"
+                  using group_inv_left[OF hFP_grp hfx_FP] by (by100 simp)
+                moreover have "mulFP eFP (\<iota>fam12 0 (invg1 x)) = \<iota>fam12 0 (invg1 x)"
+                  using group_id_left[OF hFP_grp hb_FP] by (by100 simp)
+                ultimately have "mulFP (invgFP (\<iota>fam12 0 x)) eFP = \<iota>fam12 0 (invg1 x)"
+                  using hprod by (by100 simp)
+                moreover have "mulFP (invgFP (\<iota>fam12 0 x)) eFP = invgFP (\<iota>fam12 0 x)"
+                  using group_id_right[OF hFP_grp hinva] by (by100 simp)
+                ultimately show "\<iota>fam12 0 (invg1 x) = invgFP (\<iota>fam12 0 x)" by (by100 simp)
+              qed
+              have "invgFP (\<iota>fam12 0 x) \<in> ?SG"
+                using hSG_grp0 hfx unfolding top1_is_group_on_def by (by100 blast)
+              thus ?thesis using heq_inv by (by100 simp)
+            qed
+            ultimately show "invg1 x \<in> ?H" by (by100 blast)
+          next
+            \<comment> \<open>associativity, identity, inverse laws follow from G1\<close>
+            fix x y z assume hx: "x \<in> ?H" and hy: "y \<in> ?H" and hz: "z \<in> ?H"
+            thus "mul1 (mul1 x y) z = mul1 x (mul1 y z)"
+              using hG1_grp unfolding top1_is_group_on_def by (by100 blast)
+          next
+            fix x assume hx: "x \<in> ?H"
+            thus "mul1 e1 x = x" using hG1_grp unfolding top1_is_group_on_def by (by100 blast)
+          next
+            fix x assume hx: "x \<in> ?H"
+            thus "mul1 x e1 = x" using hG1_grp unfolding top1_is_group_on_def by (by100 blast)
+          next
+            fix x assume hx: "x \<in> ?H"
+            thus "mul1 (invg1 x) x = e1" using hG1_grp unfolding top1_is_group_on_def by (by100 blast)
+          next
+            fix x assume hx: "x \<in> ?H"
+            thus "mul1 x (invg1 x) = e1" using hG1_grp unfolding top1_is_group_on_def by (by100 blast)
+          qed
+        qed
+        \<comment> \<open>By minimality: G1 = subgroup_generated G1 ... (\<iota>1 ` S1) \<subseteq> ?H\<close>
+        have "top1_subgroup_generated_on G1 mul1 e1 invg1 (\<iota>1 ` S1) \<subseteq> ?H"
+          by (rule subgroup_generated_minimal[OF hgens_in_H hH_sub hH_grp])
+        hence "G1 \<subseteq> ?H" using hG1_gen by (by100 simp)
+        thus ?thesis by (by100 blast)
+      qed
+      have hfam1_sub: "\<iota>fam12 1 ` G2 \<subseteq> ?SG"
+      proof -
+        let ?H2 = "{g \<in> G2. \<iota>fam12 1 g \<in> ?SG}"
+        have h\<iota>2_sub: "\<iota>2 ` S2 \<subseteq> G2" using h\<iota>2_in by (by100 blast)
+        have hgens2_in_H: "\<iota>2 ` S2 \<subseteq> ?H2"
+        proof (rule subsetI)
+          fix x assume "x \<in> \<iota>2 ` S2"
+          then obtain s where hs: "s \<in> S2" and hxs: "x = \<iota>2 s" by (by100 blast)
+          have hxG: "x \<in> G2" using h\<iota>2_in hs hxs by (by100 blast)
+          have hfx_eq: "\<iota>fam12 1 x = \<iota>S12 s" using hcomp2 hs hxs by (by100 simp)
+          have h\<iota>s_SG: "\<iota>S12 s \<in> ?SG" using h\<iota>S12_gens_in_SG hs by (by100 blast)
+          have "\<iota>fam12 1 x \<in> ?SG" using hfx_eq h\<iota>s_SG by (by100 simp)
+          thus "x \<in> ?H2" using hxG by (by100 blast)
+        qed
+        have hH2_sub: "?H2 \<subseteq> G2" by (by100 blast)
+        have hH2_grp: "top1_is_group_on ?H2 mul2 e2 invg2"
+        proof -
+          have h\<iota>fam1_hom': "top1_group_hom_on G2 mul2 FP mulFP (\<iota>fam12 1)"
+            unfolding top1_group_hom_on_def
+          proof (intro conjI ballI)
+            fix a assume "a \<in> G2" thus "\<iota>fam12 1 a \<in> FP" using h\<iota>fam_in by (by100 auto)
+          next
+            fix a b assume ha: "a \<in> G2" and hb: "b \<in> G2"
+            show "\<iota>fam12 1 (mul2 a b) = mulFP (\<iota>fam12 1 a) (\<iota>fam12 1 b)"
+              using h\<iota>fam_hom ha hb by (by100 auto)
+          qed
+          have h\<iota>fam1_e': "\<iota>fam12 1 e2 = eFP"
+            by (rule hom_preserves_id[OF hG2_grp hFP_grp h\<iota>fam1_hom'])
+          show ?thesis unfolding top1_is_group_on_def
+          proof (intro conjI ballI)
+            show "e2 \<in> ?H2"
+              using hG2_grp h\<iota>fam1_e' hSG_grp0
+              unfolding top1_is_group_on_def by (by100 blast)
+          next
+            fix x y assume hx: "x \<in> ?H2" and hy: "y \<in> ?H2"
+            hence hxG: "x \<in> G2" and hyG: "y \<in> G2" by (by100 blast)+
+            have hfx: "\<iota>fam12 1 x \<in> ?SG" and hfy: "\<iota>fam12 1 y \<in> ?SG"
+              using hx hy by (by100 blast)+
+            have hxyG: "mul2 x y \<in> G2"
+              using hG2_grp hxG hyG unfolding top1_is_group_on_def by (by100 blast)
+            have hfxy: "\<iota>fam12 1 (mul2 x y) = mulFP (\<iota>fam12 1 x) (\<iota>fam12 1 y)"
+              using h\<iota>fam_hom hxG hyG by (by100 auto)
+            have hmulSG: "mulFP (\<iota>fam12 1 x) (\<iota>fam12 1 y) \<in> ?SG"
+              using hSG_grp0 hfx hfy unfolding top1_is_group_on_def by (by100 blast)
+            have "\<iota>fam12 1 (mul2 x y) \<in> ?SG" using hfxy hmulSG by (by100 simp)
+            thus "mul2 x y \<in> ?H2" using hxyG by (by100 blast)
+          next
+            fix x assume hx: "x \<in> ?H2"
+            hence hxG: "x \<in> G2" by (by100 blast)
+            have hfx: "\<iota>fam12 1 x \<in> ?SG" using hx by (by100 blast)
+            have hinvx_G2: "invg2 x \<in> G2"
+              using hG2_grp hxG unfolding top1_is_group_on_def by (by100 blast)
+            have hfx_FP: "\<iota>fam12 1 x \<in> FP" using hSG_sub hfx by (by100 blast)
+            have "mulFP (\<iota>fam12 1 x) (\<iota>fam12 1 (invg2 x))
+                = \<iota>fam12 1 (mul2 x (invg2 x))"
+              using h\<iota>fam_hom hxG hinvx_G2 by (by100 auto)
+            moreover have "mul2 x (invg2 x) = e2"
+              using hG2_grp hxG unfolding top1_is_group_on_def by (by100 blast)
+            ultimately have hprod_e: "mulFP (\<iota>fam12 1 x) (\<iota>fam12 1 (invg2 x)) = eFP"
+              using h\<iota>fam1_e' by (by100 simp)
+            have hfinv_FP: "\<iota>fam12 1 (invg2 x) \<in> FP"
+              using h\<iota>fam_in hinvx_G2 by (by100 auto)
+            have hinva: "invgFP (\<iota>fam12 1 x) \<in> FP"
+              using hFP_grp hfx_FP unfolding top1_is_group_on_def by (by100 blast)
+            have "mulFP (invgFP (\<iota>fam12 1 x)) (mulFP (\<iota>fam12 1 x) (\<iota>fam12 1 (invg2 x)))
+                = mulFP (mulFP (invgFP (\<iota>fam12 1 x)) (\<iota>fam12 1 x)) (\<iota>fam12 1 (invg2 x))"
+              using group_assoc[OF hFP_grp hinva hfx_FP hfinv_FP] by (by100 simp)
+            moreover have "mulFP (invgFP (\<iota>fam12 1 x)) (\<iota>fam12 1 x) = eFP"
+              using group_inv_left[OF hFP_grp hfx_FP] by (by100 simp)
+            moreover have "mulFP eFP (\<iota>fam12 1 (invg2 x)) = \<iota>fam12 1 (invg2 x)"
+              using group_id_left[OF hFP_grp hfinv_FP] by (by100 simp)
+            ultimately have "mulFP (invgFP (\<iota>fam12 1 x)) eFP = \<iota>fam12 1 (invg2 x)"
+              using hprod_e by (by100 simp)
+            moreover have "mulFP (invgFP (\<iota>fam12 1 x)) eFP = invgFP (\<iota>fam12 1 x)"
+              using group_id_right[OF hFP_grp hinva] by (by100 simp)
+            ultimately have heq_inv: "\<iota>fam12 1 (invg2 x) = invgFP (\<iota>fam12 1 x)" by (by100 simp)
+            have "invgFP (\<iota>fam12 1 x) \<in> ?SG"
+              using hSG_grp0 hfx unfolding top1_is_group_on_def by (by100 blast)
+            hence "\<iota>fam12 1 (invg2 x) \<in> ?SG" using heq_inv by (by100 simp)
+            thus "invg2 x \<in> ?H2" using hinvx_G2 by (by100 blast)
+          next
+            fix x y z assume hx: "x \<in> ?H2" and hy: "y \<in> ?H2" and hz: "z \<in> ?H2"
+            thus "mul2 (mul2 x y) z = mul2 x (mul2 y z)"
+              using hG2_grp unfolding top1_is_group_on_def by (by100 blast)
+          next
+            fix x assume hx: "x \<in> ?H2"
+            thus "mul2 e2 x = x" using hG2_grp unfolding top1_is_group_on_def by (by100 blast)
+          next
+            fix x assume hx: "x \<in> ?H2"
+            thus "mul2 x e2 = x" using hG2_grp unfolding top1_is_group_on_def by (by100 blast)
+          next
+            fix x assume hx: "x \<in> ?H2"
+            thus "mul2 (invg2 x) x = e2" using hG2_grp unfolding top1_is_group_on_def by (by100 blast)
+          next
+            fix x assume hx: "x \<in> ?H2"
+            thus "mul2 x (invg2 x) = e2" using hG2_grp unfolding top1_is_group_on_def by (by100 blast)
+          qed
+        qed
+        have "top1_subgroup_generated_on G2 mul2 e2 invg2 (\<iota>2 ` S2) \<subseteq> ?H2"
+          by (rule subgroup_generated_minimal[OF hgens2_in_H hH2_sub hH2_grp])
+        hence "G2 \<subseteq> ?H2" using hG2_gen by (by100 simp)
+        thus ?thesis by (by100 blast)
+      qed
+      have hfam_gens: "(\<Union>\<alpha>\<in>{0::nat,1}. \<iota>fam12 \<alpha> ` (if \<alpha> = 0 then G1 else G2)) \<subseteq> ?SG"
+      proof (rule subsetI)
+        fix x assume "x \<in> (\<Union>\<alpha>\<in>{0::nat,1}. \<iota>fam12 \<alpha> ` (if \<alpha> = 0 then G1 else G2))"
+        then obtain \<alpha> where h\<alpha>: "\<alpha> \<in> {0::nat,1}" and hx_in: "x \<in> \<iota>fam12 \<alpha> ` (if \<alpha> = 0 then G1 else G2)"
+          by (by100 blast)
+        from h\<alpha> have "\<alpha> = 0 \<or> \<alpha> = 1" by (by100 blast)
+        thus "x \<in> ?SG"
+        proof
+          assume "\<alpha> = 0"
+          thus ?thesis using hx_in hfam0_sub by (by100 auto)
+        next
+          assume "\<alpha> = 1"
+          thus ?thesis using hx_in hfam1_sub by (by100 auto)
+        qed
+      qed
+      show "FP \<subseteq> ?SG"
+      proof -
+        have hFP_eq: "FP = top1_subgroup_generated_on FP mulFP eFP invgFP
+            (\<Union>\<alpha>\<in>{0::nat,1}. \<iota>fam12 \<alpha> ` (if \<alpha> = 0 then G1 else G2))"
+          by (rule hFP_gen)
+        have h\<iota>S12_img_sub: "\<iota>S12 ` (S1 \<union> S2) \<subseteq> FP" using h\<iota>S12_in by (by100 blast)
+        have hSG_sub: "?SG \<subseteq> FP"
+          by (rule subgroup_generated_subset[OF hFP_grp h\<iota>S12_img_sub])
+        \<comment> \<open>?SG is a subgroup of FP containing the generators of FP, so FP \<subseteq> ?SG by minimality\<close>
+        have hSG_grp: "top1_is_group_on ?SG mulFP eFP invgFP"
+          by (rule intersection_of_subgroups_is_group[OF hFP_grp h\<iota>S12_img_sub])
+        show ?thesis
+          using hFP_eq subgroup_generated_minimal[OF hfam_gens hSG_sub hSG_grp] by (by100 simp)
+      qed
+    qed
+    \<comment> \<open>Condition 5: reduced words in S1 \<union> S2 evaluate to non-identity.
+       Strategy: group ws into maximal consecutive same-source runs.
+       Each run evaluates to a non-identity element in the respective G_i (by freeness of G_i).
+       The non-identity elements form an alternating word in the free product FP.
+       By the free product reduced word property, the product \<noteq> eFP.\<close>
+    have h\<iota>S12_red: "\<forall>ws::('s \<times> bool) list.
+        ws \<noteq> [] \<longrightarrow>
+        top1_is_reduced_word (map (\<lambda>(s, b). (\<iota>S12 s, b)) ws) \<longrightarrow>
+        (\<forall>i<length ws. fst (ws!i) \<in> S1 \<union> S2) \<longrightarrow>
+        top1_group_word_product mulFP eFP invgFP (map (\<lambda>(s, b). (\<iota>S12 s, b)) ws) \<noteq> eFP"
+    proof (intro allI impI)
+      fix ws :: "('s \<times> bool) list"
+      assume hne: "ws \<noteq> []"
+      assume hred: "top1_is_reduced_word (map (\<lambda>(s, b). (\<iota>S12 s, b)) ws)"
+      assume hall: "\<forall>i<length ws. fst (ws!i) \<in> S1 \<union> S2"
+      \<comment> \<open>Key helper: \<iota>fam12 preserves identity and inverts\<close>
+      have h\<iota>fam0_hom_on: "top1_group_hom_on G1 mul1 FP mulFP (\<iota>fam12 0)"
+        unfolding top1_group_hom_on_def
+      proof (intro conjI ballI)
+        fix x assume "x \<in> G1" thus "\<iota>fam12 0 x \<in> FP" using h\<iota>fam_in by (by100 auto)
+      next
+        fix x y assume hx: "x \<in> G1" and hy: "y \<in> G1"
+        show "\<iota>fam12 0 (mul1 x y) = mulFP (\<iota>fam12 0 x) (\<iota>fam12 0 y)"
+          using h\<iota>fam_hom hx hy by (by100 auto)
+      qed
+      have h\<iota>fam1_hom_on: "top1_group_hom_on G2 mul2 FP mulFP (\<iota>fam12 1)"
+        unfolding top1_group_hom_on_def
+      proof (intro conjI ballI)
+        fix x assume "x \<in> G2" thus "\<iota>fam12 1 x \<in> FP" using h\<iota>fam_in by (by100 auto)
+      next
+        fix x y assume hx: "x \<in> G2" and hy: "y \<in> G2"
+        show "\<iota>fam12 1 (mul2 x y) = mulFP (\<iota>fam12 1 x) (\<iota>fam12 1 y)"
+          using h\<iota>fam_hom hx hy by (by100 auto)
+      qed
+      have h\<iota>fam0_e: "\<iota>fam12 0 e1 = eFP"
+        by (rule hom_preserves_id[OF hG1_grp hFP_grp h\<iota>fam0_hom_on])
+      have h\<iota>fam1_e: "\<iota>fam12 1 e2 = eFP"
+        by (rule hom_preserves_id[OF hG2_grp hFP_grp h\<iota>fam1_hom_on])
+      \<comment> \<open>The word product in FP can be expressed as a product of \<iota>fam12 images.
+         Group into maximal same-source runs and use freeness of G1, G2 and the free product property.\<close>
+      \<comment> \<open>Key step: express the word product as a free product reduced word.
+         Each letter (s,b) in ws contributes \<iota>fam12 \<alpha> g where:
+         - \<alpha> = 0 if s \<in> S1, \<alpha> = 1 if s \<in> S2
+         - g = (if b then \<iota>_\<alpha> s else invg_\<alpha>(\<iota>_\<alpha> s)) \<in> G_\<alpha>
+         Group consecutive same-\<alpha> letters into blocks. Each block evaluates via the hom
+         to a single element in G_\<alpha>. That element is \<noteq> e_\<alpha> by freeness of G_\<alpha>
+         (since each block is a reduced subword in S_\<alpha>). The blocks alternate between
+         indices 0 and 1, giving a non-trivial reduced word in the free product.
+         By hFP_reduced, the product \<noteq> eFP.\<close>
+      \<comment> \<open>Helper: for s \<in> S1\<union>S2, the contribution of (s,b) to the word product.
+         word_elem s b = (if s \<in> S1 then \<iota>fam12 0 (if b then \<iota>1 s else invg1(\<iota>1 s))
+                          else \<iota>fam12 1 (if b then \<iota>2 s else invg2(\<iota>2 s)))\<close>
+      \<comment> \<open>invgFP (\<iota>fam12 0 (\<iota>1 s)) = \<iota>fam12 0 (invg1 (\<iota>1 s)) for s \<in> S1\<close>
+      have hinv_fam0: "\<And>s. s \<in> S1 \<Longrightarrow> invgFP (\<iota>fam12 0 (\<iota>1 s)) = \<iota>fam12 0 (invg1 (\<iota>1 s))"
+      proof -
+        fix s assume hs: "s \<in> S1"
+        have hs_G1: "\<iota>1 s \<in> G1" using h\<iota>1_in hs by (by100 blast)
+        have hinvs_G1: "invg1 (\<iota>1 s) \<in> G1"
+          using hG1_grp hs_G1 unfolding top1_is_group_on_def by (by100 blast)
+        have hprod: "mulFP (\<iota>fam12 0 (\<iota>1 s)) (\<iota>fam12 0 (invg1 (\<iota>1 s)))
+            = \<iota>fam12 0 (mul1 (\<iota>1 s) (invg1 (\<iota>1 s)))"
+          using h\<iota>fam_hom hs_G1 hinvs_G1 by (by100 auto)
+        have "mul1 (\<iota>1 s) (invg1 (\<iota>1 s)) = e1"
+          using hG1_grp hs_G1 unfolding top1_is_group_on_def by (by100 blast)
+        hence hprod_e: "mulFP (\<iota>fam12 0 (\<iota>1 s)) (\<iota>fam12 0 (invg1 (\<iota>1 s))) = eFP"
+          using hprod h\<iota>fam0_e by (by100 simp)
+        have hfx_FP: "\<iota>fam12 0 (\<iota>1 s) \<in> FP" using h\<iota>fam_in hs_G1 by (by100 auto)
+        have hfinv_FP: "\<iota>fam12 0 (invg1 (\<iota>1 s)) \<in> FP" using h\<iota>fam_in hinvs_G1 by (by100 auto)
+        have hinva: "invgFP (\<iota>fam12 0 (\<iota>1 s)) \<in> FP"
+          using hFP_grp hfx_FP unfolding top1_is_group_on_def by (by100 blast)
+        \<comment> \<open>From mulFP a b = eFP, derive b = invgFP a\<close>
+        have "mulFP (invgFP (\<iota>fam12 0 (\<iota>1 s))) (mulFP (\<iota>fam12 0 (\<iota>1 s)) (\<iota>fam12 0 (invg1 (\<iota>1 s))))
+            = mulFP (mulFP (invgFP (\<iota>fam12 0 (\<iota>1 s))) (\<iota>fam12 0 (\<iota>1 s))) (\<iota>fam12 0 (invg1 (\<iota>1 s)))"
+          using group_assoc[OF hFP_grp hinva hfx_FP hfinv_FP] by (by100 simp)
+        moreover have "mulFP (invgFP (\<iota>fam12 0 (\<iota>1 s))) (\<iota>fam12 0 (\<iota>1 s)) = eFP"
+          using group_inv_left[OF hFP_grp hfx_FP] by (by100 simp)
+        moreover have "mulFP eFP (\<iota>fam12 0 (invg1 (\<iota>1 s))) = \<iota>fam12 0 (invg1 (\<iota>1 s))"
+          using group_id_left[OF hFP_grp hfinv_FP] by (by100 simp)
+        ultimately have "mulFP (invgFP (\<iota>fam12 0 (\<iota>1 s))) eFP = \<iota>fam12 0 (invg1 (\<iota>1 s))"
+          using hprod_e by (by100 simp)
+        moreover have "mulFP (invgFP (\<iota>fam12 0 (\<iota>1 s))) eFP = invgFP (\<iota>fam12 0 (\<iota>1 s))"
+          using group_id_right[OF hFP_grp hinva] by (by100 simp)
+        ultimately show "invgFP (\<iota>fam12 0 (\<iota>1 s)) = \<iota>fam12 0 (invg1 (\<iota>1 s))" by (by100 simp)
+      qed
+      \<comment> \<open>Similarly for G2\<close>
+      have hinv_fam1: "\<And>s. s \<in> S2 \<Longrightarrow> invgFP (\<iota>fam12 1 (\<iota>2 s)) = \<iota>fam12 1 (invg2 (\<iota>2 s))"
+      proof -
+        fix s assume hs: "s \<in> S2"
+        have hs_G2: "\<iota>2 s \<in> G2" using h\<iota>2_in hs by (by100 blast)
+        have hinvs_G2: "invg2 (\<iota>2 s) \<in> G2"
+          using hG2_grp hs_G2 unfolding top1_is_group_on_def by (by100 blast)
+        have hprod: "mulFP (\<iota>fam12 1 (\<iota>2 s)) (\<iota>fam12 1 (invg2 (\<iota>2 s)))
+            = \<iota>fam12 1 (mul2 (\<iota>2 s) (invg2 (\<iota>2 s)))"
+          using h\<iota>fam_hom hs_G2 hinvs_G2 by (by100 auto)
+        have "mul2 (\<iota>2 s) (invg2 (\<iota>2 s)) = e2"
+          using hG2_grp hs_G2 unfolding top1_is_group_on_def by (by100 blast)
+        hence hprod_e: "mulFP (\<iota>fam12 1 (\<iota>2 s)) (\<iota>fam12 1 (invg2 (\<iota>2 s))) = eFP"
+          using hprod h\<iota>fam1_e by (by100 simp)
+        have hfx_FP: "\<iota>fam12 1 (\<iota>2 s) \<in> FP" using h\<iota>fam_in hs_G2 by (by100 auto)
+        have hfinv_FP: "\<iota>fam12 1 (invg2 (\<iota>2 s)) \<in> FP" using h\<iota>fam_in hinvs_G2 by (by100 auto)
+        have hinva: "invgFP (\<iota>fam12 1 (\<iota>2 s)) \<in> FP"
+          using hFP_grp hfx_FP unfolding top1_is_group_on_def by (by100 blast)
+        have "mulFP (invgFP (\<iota>fam12 1 (\<iota>2 s))) (mulFP (\<iota>fam12 1 (\<iota>2 s)) (\<iota>fam12 1 (invg2 (\<iota>2 s))))
+            = mulFP (mulFP (invgFP (\<iota>fam12 1 (\<iota>2 s))) (\<iota>fam12 1 (\<iota>2 s))) (\<iota>fam12 1 (invg2 (\<iota>2 s)))"
+          using group_assoc[OF hFP_grp hinva hfx_FP hfinv_FP] by (by100 simp)
+        moreover have "mulFP (invgFP (\<iota>fam12 1 (\<iota>2 s))) (\<iota>fam12 1 (\<iota>2 s)) = eFP"
+          using group_inv_left[OF hFP_grp hfx_FP] by (by100 simp)
+        moreover have "mulFP eFP (\<iota>fam12 1 (invg2 (\<iota>2 s))) = \<iota>fam12 1 (invg2 (\<iota>2 s))"
+          using group_id_left[OF hFP_grp hfinv_FP] by (by100 simp)
+        ultimately have "mulFP (invgFP (\<iota>fam12 1 (\<iota>2 s))) eFP = \<iota>fam12 1 (invg2 (\<iota>2 s))"
+          using hprod_e by (by100 simp)
+        moreover have "mulFP (invgFP (\<iota>fam12 1 (\<iota>2 s))) eFP = invgFP (\<iota>fam12 1 (\<iota>2 s))"
+          using group_id_right[OF hFP_grp hinva] by (by100 simp)
+        ultimately show "invgFP (\<iota>fam12 1 (\<iota>2 s)) = \<iota>fam12 1 (invg2 (\<iota>2 s))" by (by100 simp)
+      qed
+      have hword_elem: "\<And>s b. s \<in> S1 \<union> S2 \<Longrightarrow>
+          (if b then \<iota>S12 s else invgFP (\<iota>S12 s)) =
+          (if s \<in> S1 then \<iota>fam12 0 (if b then \<iota>1 s else invg1 (\<iota>1 s))
+           else \<iota>fam12 1 (if b then \<iota>2 s else invg2 (\<iota>2 s)))"
+      proof -
+        fix s :: 's and b :: bool assume hs: "s \<in> S1 \<union> S2"
+        show "(if b then \<iota>S12 s else invgFP (\<iota>S12 s)) =
+          (if s \<in> S1 then \<iota>fam12 0 (if b then \<iota>1 s else invg1 (\<iota>1 s))
+           else \<iota>fam12 1 (if b then \<iota>2 s else invg2 (\<iota>2 s)))"
+        proof (cases "s \<in> S1")
+          case True
+          have h\<iota>eq: "\<iota>S12 s = \<iota>fam12 0 (\<iota>1 s)" using hcomp1 True by (by100 blast)
+          have hinv_eq: "invgFP (\<iota>S12 s) = \<iota>fam12 0 (invg1 (\<iota>1 s))"
+            using h\<iota>eq hinv_fam0[OF True] by (by100 simp)
+          show ?thesis using True h\<iota>eq hinv_eq by (by100 simp)
+        next
+          case False
+          hence hs2: "s \<in> S2" using hs by (by100 blast)
+          have h\<iota>eq: "\<iota>S12 s = \<iota>fam12 1 (\<iota>2 s)" using hcomp2 hs2 by (by100 blast)
+          have hinv_eq: "invgFP (\<iota>S12 s) = \<iota>fam12 1 (invg2 (\<iota>2 s))"
+            using h\<iota>eq hinv_fam1[OF hs2] by (by100 simp)
+          show ?thesis using False h\<iota>eq hinv_eq by (by100 simp)
+        qed
+      qed
+      \<comment> \<open>The full argument requires a block decomposition lemma showing that the foldr
+         product of the mapped word equals a free product alternating word.
+         This combinatorial fact, together with the freeness conditions on G1 and G2
+         ensuring each block \<noteq> e_\<alpha>, gives the desired contradiction via hFP_reduced.\<close>
+      \<comment> \<open>Proof by constructing an alternating free product word.
+         Define the source index \<alpha>(s) and value val(s,b) for each letter.
+         Group consecutive same-source letters and use hom property to combine.
+         Each group evaluates to non-identity by freeness of G_\<alpha>.
+         Apply hFP_reduced to the resulting alternating word.\<close>
+      \<comment> \<open>For each letter (s,b), define the source element in G_\<alpha>:
+         elem(s,b) = if b then \<iota>_\<alpha> s else invg_\<alpha>(\<iota>_\<alpha> s) where \<alpha> = source(s)\<close>
+      define source :: "'s \<Rightarrow> nat" where "source = (\<lambda>s. if s \<in> S1 then 0 else 1)"
+      define elem :: "'s \<Rightarrow> bool \<Rightarrow> 'g" where
+        "elem = (\<lambda>s b. if s \<in> S1 then (if b then \<iota>1 s else invg1 (\<iota>1 s))
+                        else (if b then \<iota>2 s else invg2 (\<iota>2 s)))"
+      \<comment> \<open>Key: top1_group_word_product mulFP eFP invgFP (map (\<lambda>(s,b). (\<iota>S12 s, b)) ws)
+         = foldr mulFP (map (\<lambda>(s,b). \<iota>fam12 (source s) (elem s b)) ws) eFP
+         This follows from hword_elem and the definition of group_word_product.\<close>
+      \<comment> \<open>We construct the alternating word by combining consecutive same-source runs.
+         The key combinatorial fact: given any non-empty list of (source, element) pairs
+         where elements are non-identity, we can combine consecutive same-source pairs
+         (using the group operation) to get an alternating list. If any combined element
+         becomes identity, we drop it and continue. The result is either:
+         (a) empty (meaning the whole product = eFP), or
+         (b) a non-empty alternating word with all elements \<noteq> e\<alpha>.
+         Case (b) directly contradicts hFP_reduced.
+         For case (a), we need to show this can't happen, using the freeness of G1/G2.
+
+         For the formal proof, we use the following key fact:
+         Each maximal consecutive same-source block in ws is a reduced word in S\<alpha>.
+         By freeness of G\<alpha>, it evaluates to \<noteq> e\<alpha> in G\<alpha>. Hence its image under
+         \<iota>fam12 \<alpha> is \<noteq> eFP (by injectivity). So no block collapses to identity.
+         The alternating word thus has all entries \<noteq> eFP, giving the contradiction.\<close>
+      show "top1_group_word_product mulFP eFP invgFP (map (\<lambda>(s, b). (\<iota>S12 s, b)) ws) \<noteq> eFP"
+        sorry
+    qed
+    \<comment> \<open>Assemble\<close>
+    have "top1_is_free_group_full_on FP mulFP eFP invgFP \<iota>S12 (S1 \<union> S2)"
+      unfolding top1_is_free_group_full_on_def
+      using hFP_grp h\<iota>S12_in h\<iota>S12_inj h\<iota>S12_gen h\<iota>S12_red by (by100 blast)
+    thus ?thesis using hcomp1 hcomp2 by (by100 blast)
+  qed
   obtain \<iota>S12 where h\<iota>: "top1_is_free_group_full_on FP mulFP eFP invgFP \<iota>S12 (S1 \<union> S2)"
       and hcomp1: "\<forall>s\<in>S1. \<iota>S12 s = \<iota>fam12 0 (\<iota>1 s)"
       and hcomp2: "\<forall>s\<in>S2. \<iota>S12 s = \<iota>fam12 1 (\<iota>2 s)"
