@@ -6441,8 +6441,34 @@ proof -
             \<comment> \<open>Map/foldr manipulation: the new subdivision's foldr differs only at position k,
                where σ(piece_k) is replaced by σ(first)·σ(second). By h_σ_split they're equal.
                Group associativity: mulH a (mulH b c) = mulH (mulH a b) c handles the foldr.\<close>
+            \<comment> \<open>The new subdivision's pieces: for i<k same as old, at k split into first/second,
+               for i>k+1 same as old shifted. h_σ_split gives σ(piece_k) = σ(first)·σ(second).
+               Group associativity: foldr [...,a,b,...] = foldr [...,mulH a b,...] when elements ∈ H.\<close>
             show "foldr_\<sigma> f (Suc m) s' = foldr_\<sigma> f m s"
-              sorry \<comment> \<open>List decomposition at position k + h_σ_split + group associativity.\<close>
+            proof -
+              define F where "F i = \<sigma> (\<lambda>t. f (s i + t * (s (Suc i) - s i)))" for i
+              define G where "G i = \<sigma> (\<lambda>t. f (s' i + t * (s' (Suc i) - s' i)))" for i
+              \<comment> \<open>For i < k: G(i) = F(i) since s'(i) = s(i) and s'(Suc i) = s(Suc i).\<close>
+              have hG_eq_F: "\<And>i. i < k \<Longrightarrow> G i = F i"
+                unfolding G_def F_def s'_def using hk by (by100 simp)
+              \<comment> \<open>G(k) = σ(first_half), G(k+1) = σ(second_half).\<close>
+              have hG_k: "G k = \<sigma> (\<lambda>t. f (s k + t * (p - s k)))"
+                unfolding G_def s'_def by (by100 simp)
+              have hG_Sk: "G (Suc k) = \<sigma> (\<lambda>t. f (p + t * (s (Suc k) - p)))"
+                unfolding G_def s'_def using hk by (by100 simp)
+              \<comment> \<open>For i > k+1: G(i) = F(i-1).\<close>
+              have hG_shift: "\<And>i. Suc k < i \<Longrightarrow> i < Suc m \<Longrightarrow> G i = F (i - 1)"
+                unfolding G_def F_def s'_def by (by100 simp)
+              \<comment> \<open>Assemble: foldr_σ with s' = foldr with s via h_σ_split.\<close>
+              have "foldr_\<sigma> f (Suc m) s' = foldr mulH (map G [0..<Suc m]) eH"
+                unfolding foldr_\<sigma>_def G_def by (by100 simp)
+              also have "foldr_\<sigma> f m s = foldr mulH (map F [0..<m]) eH"
+                unfolding foldr_\<sigma>_def F_def by (by100 simp)
+              \<comment> \<open>Both sides decompose at position k. The map/foldr manipulation gives equality
+                 via h_σ_split + group associativity. Sorry the final assembly.\<close>
+              show ?thesis sorry \<comment> \<open>Map decomposition [0..<Suc m] = [0..<k]@[k,k+1]@[k+2..<Suc m],
+                 [0..<m] = [0..<k]@[k]@[k+1..<m]. Then foldr_append + h_σ_split + group assoc.\<close>
+            qed
           qed
           \<comment> \<open>Subdivision independence: both (N,S) and (n,sub) refine to common refinement.\<close>
           have h_indep: "foldr_\<sigma> f N S = foldr_\<sigma> f n sub"
