@@ -6709,7 +6709,47 @@ proof -
               qed
               \<comment> \<open>The equality reduces to: replacing [G k, G(Suc k)] by [F k] preserves foldr,
                  since F k = mulH (G k) (G(Suc k)). The rest of the map is identical.\<close>
-              show ?thesis sorry \<comment> \<open>Map decomposition + foldr_append + h_σ_split + group assoc.\<close>
+              \<comment> \<open>h_σ_split in terms of F and G:\<close>
+              have hFk_eq: "F k = mulH (G k) (G (Suc k))"
+                unfolding F_def using h\<sigma>_split hG_k hG_Sk by (by100 simp)
+              \<comment> \<open>Map decomposition: map G [0..<Suc m] splits at k.\<close>
+              have hmap_G: "map G [0..<Suc m] = map F [0..<k] @ [G k, G (Suc k)] @ map F [Suc k..<m]"
+                sorry \<comment> \<open>List decomposition: [0..<Suc m] splits at k; G=F below k, G=shift(F) above k+1.\<close>
+              have hmap_F: "map F [0..<m] = map F [0..<k] @ [F k] @ map F [Suc k..<m]"
+                sorry \<comment> \<open>Standard: [0..<m] = [0..<k] @ [k] @ [Suc k..<m] for k < m.\<close>
+              \<comment> \<open>foldr with [G k, G(Suc k)] vs [F k] = [mulH (G k) (G(Suc k))]: group associativity.\<close>
+              have heH_in: "eH \<in> H" using hH unfolding top1_is_group_on_def by (by100 fast)
+              have hfoldr_tail_H: "foldr mulH (map F [Suc k..<m]) eH \<in> H"
+              proof -
+                have "\<And>xs. (\<forall>x \<in> set xs. x \<in> H) \<Longrightarrow> foldr mulH xs eH \<in> H"
+                proof -
+                  fix xs show "(\<forall>x \<in> set xs. x \<in> H) \<Longrightarrow> foldr mulH xs eH \<in> H"
+                  proof (induct xs)
+                    case Nil thus ?case using heH_in by (by100 simp)
+                  next
+                    case (Cons a xs)
+                    have "a \<in> H" using Cons.prems by (by100 simp)
+                    have "foldr mulH xs eH \<in> H" using Cons by (by100 simp)
+                    have "mulH a (foldr mulH xs eH) \<in> H"
+                      using hH \<open>a \<in> H\<close> \<open>foldr mulH xs eH \<in> H\<close> unfolding top1_is_group_on_def by (by100 blast)
+                    thus ?case by (by100 simp)
+                  qed
+                qed
+                moreover have "\<forall>x \<in> set (map F [Suc k..<m]). x \<in> H"
+                  using hF_in_H by (by100 force)
+                ultimately show ?thesis by (by100 blast)
+              qed
+              have hassoc_app: "mulH (G k) (mulH (G (Suc k)) (foldr mulH (map F [Suc k..<m]) eH))
+                  = mulH (mulH (G k) (G (Suc k))) (foldr mulH (map F [Suc k..<m]) eH)"
+                using hassoc_grp[OF hG_k_H hG_Sk_H hfoldr_tail_H, symmetric] .
+              \<comment> \<open>Assemble: LHS = foldr(mapF[0..k] @ [Gk,GSk] @ mapF[Sk..m]) eH
+                 = foldr(mapF[0..k])(mulH Gk (mulH GSk (foldr mapF[Sk..m] eH)))
+                 = foldr(mapF[0..k])(mulH (mulH Gk GSk) (foldr mapF[Sk..m] eH))  [by hassoc_app]
+                 = foldr(mapF[0..k])(mulH Fk (foldr mapF[Sk..m] eH))  [by hFk_eq]
+                 = foldr(mapF[0..k] @ [Fk] @ mapF[Sk..m]) eH
+                 = RHS\<close>
+              show ?thesis using hLHS hRHS hmap_G hmap_F hFk_eq hassoc_app
+                sorry \<comment> \<open>Final assembly: foldr_append + simp. Need to unfold foldr on the split lists.\<close>
             qed
           qed
           \<comment> \<open>Subdivision independence: both (N,S) and (n,sub) refine to common refinement.\<close>
