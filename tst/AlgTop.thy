@@ -7343,6 +7343,18 @@ proof -
           sorry \<comment> \<open>Same pattern\<close>
         have hpb_cont: "top1_continuous_map_on I_set I_top X TX (piece_bot i)"
           sorry \<comment> \<open>F ∘ (affine_s, const sub_t(Suc j))\<close>
+        \<comment> \<open>Cell edge bounds (shared by U and V cases).\<close>
+        have hi_le: "i \<le> ns'" and hSi_le: "Suc i \<le> ns'" using hi by (by100 presburger)+
+        have hsi_ge0: "0 \<le> sub_s' i" using hsubs_ge[OF hi_le] .
+        have hsi_le1: "sub_s' i \<le> 1" using hsubs_le[OF hi_le] .
+        have hSsi_ge0: "0 \<le> sub_s' (Suc i)" using hsubs_ge[OF hSi_le] .
+        have hSsi_le1: "sub_s' (Suc i) \<le> 1" using hsubs_le[OF hSi_le] .
+        have htj_ge0: "0 \<le> sub_t j" using hsubt_ge[OF hj_le_nt] .
+        have htj_le1: "sub_t j \<le> 1" using hsubt_le[OF hj_le_nt] .
+        have htSj_ge0: "0 \<le> sub_t (Suc j)" using hsubt_ge[OF hSj_le_nt] .
+        have htSj_le1: "sub_t (Suc j) \<le> 1" using hsubt_le[OF hSj_le_nt] .
+        have hsi_le_Ssi: "sub_s' i \<le> sub_s' (Suc i)" using hsinc' hi by (by100 force)
+        have htj_le_tSj: "sub_t j \<le> sub_t (Suc j)" using htinc hj by (by100 force)
         \<comment> \<open>piece_top i and β(Suc i) are paths in the same U (or V) — both edges of cell.\<close>
         have hpt_path_U: "top1_is_path_on U (subspace_topology X TX U) (piece_top i 0) (piece_top i 1) (piece_top i)"
             and h\<beta>Si_path_U: "top1_is_path_on U (subspace_topology X TX U) (\<beta> (Suc i) 0) (\<beta> (Suc i) 1) (\<beta> (Suc i))"
@@ -7351,18 +7363,6 @@ proof -
           if hU_cell: "\<forall>s t. sub_s' i \<le> s \<and> s \<le> sub_s' (Suc i) \<and> sub_t j \<le> t \<and> t \<le> sub_t (Suc j) \<and> 0\<le>s \<and> s\<le>1 \<and> 0\<le>t \<and> t\<le>1 \<longrightarrow> F (s,t) \<in> U"
         proof -
           \<comment> \<open>All edges map I_set into U (from hU_cell + convex bounds in cell).\<close>
-          \<comment> \<open>Bounds for cell edges (needed to show each edge point lies in cell).\<close>
-          have hi_le: "i \<le> ns'" and hSi_le: "Suc i \<le> ns'" using hi by (by100 presburger)+
-          have hsi_ge0: "0 \<le> sub_s' i" using hsubs_ge[OF hi_le] .
-          have hsi_le1: "sub_s' i \<le> 1" using hsubs_le[OF hi_le] .
-          have hSsi_ge0: "0 \<le> sub_s' (Suc i)" using hsubs_ge[OF hSi_le] .
-          have hSsi_le1: "sub_s' (Suc i) \<le> 1" using hsubs_le[OF hSi_le] .
-          have htj_ge0: "0 \<le> sub_t j" using hsubt_ge[OF hj_le_nt] .
-          have htj_le1: "sub_t j \<le> 1" using hsubt_le[OF hj_le_nt] .
-          have htSj_ge0: "0 \<le> sub_t (Suc j)" using hsubt_ge[OF hSj_le_nt] .
-          have htSj_le1: "sub_t (Suc j) \<le> 1" using hsubt_le[OF hSj_le_nt] .
-          have hsi_le_Ssi: "sub_s' i \<le> sub_s' (Suc i)" using hsinc' hi by (by100 force)
-          have htj_le_tSj: "sub_t j \<le> sub_t (Suc j)" using htinc hj by (by100 force)
           have hpt_img: "(piece_top i) ` I_set \<subseteq> U"
           proof
             fix x assume "x \<in> (piece_top i) ` I_set"
@@ -7377,11 +7377,48 @@ proof -
               using hU_cell hconv htj_ge0 htj_le1 htj_le_tSj by (by100 force)
           qed
           have h\<beta>Si_img: "(\<beta> (Suc i)) ` I_set \<subseteq> U"
-            sorry \<comment> \<open>Right edge: same pattern with s=sub_s'(Suc i), t varies via hconv_t\<close>
+          proof
+            fix x assume "x \<in> (\<beta> (Suc i)) ` I_set"
+            then obtain t where ht: "t \<in> I_set" and hx: "x = \<beta> (Suc i) t" by (by100 blast)
+            have "0 \<le> t" "t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 force)+
+            have hdiff: "sub_t (Suc j) - sub_t j \<ge> 0" using htj_le_tSj by (by100 linarith)
+            have hprod_ge: "t * (sub_t (Suc j) - sub_t j) \<ge> 0"
+              by (rule mult_nonneg_nonneg) (use \<open>0 \<le> t\<close> hdiff in \<open>by100 linarith\<close>)+
+            have "t * (sub_t (Suc j) - sub_t j) \<le> 1 * (sub_t (Suc j) - sub_t j)"
+              by (rule mult_right_mono) (use \<open>t \<le> 1\<close> hdiff in \<open>by100 linarith\<close>)+
+            hence hprod_le: "t * (sub_t (Suc j) - sub_t j) \<le> sub_t (Suc j) - sub_t j" by (by100 simp)
+            show "x \<in> U" unfolding hx \<beta>_def
+              using hU_cell hsi_le_Ssi hSsi_ge0 hSsi_le1 htj_ge0 htSj_le1 hprod_ge hprod_le
+              by (by100 force)
+          qed
           have h\<beta>i_img: "(\<beta> i) ` I_set \<subseteq> U"
-            sorry \<comment> \<open>Left edge: s=sub_s' i, t varies\<close>
+          proof
+            fix x assume "x \<in> (\<beta> i) ` I_set"
+            then obtain t where ht: "t \<in> I_set" and hx: "x = \<beta> i t" by (by100 blast)
+            have "0 \<le> t" "t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 force)+
+            have hdiff: "sub_t (Suc j) - sub_t j \<ge> 0" using htj_le_tSj by (by100 linarith)
+            have hprod_ge: "t * (sub_t (Suc j) - sub_t j) \<ge> 0"
+              by (rule mult_nonneg_nonneg) (use \<open>0 \<le> t\<close> hdiff in \<open>by100 linarith\<close>)+
+            have "t * (sub_t (Suc j) - sub_t j) \<le> 1 * (sub_t (Suc j) - sub_t j)"
+              by (rule mult_right_mono) (use \<open>t \<le> 1\<close> hdiff in \<open>by100 linarith\<close>)+
+            hence hprod_le: "t * (sub_t (Suc j) - sub_t j) \<le> sub_t (Suc j) - sub_t j" by (by100 simp)
+            show "x \<in> U" unfolding hx \<beta>_def
+              using hU_cell hsi_le_Ssi hsi_ge0 hsi_le1 htj_ge0 htSj_le1 hprod_ge hprod_le
+              by (by100 force)
+          qed
           have hpb_img: "(piece_bot i) ` I_set \<subseteq> U"
-            sorry \<comment> \<open>Top edge: s varies via hconv_s, t=sub_t(Suc j)\<close>
+          proof
+            fix x assume "x \<in> (piece_bot i) ` I_set"
+            then obtain t where ht: "t \<in> I_set" and hx: "x = piece_bot i t" by (by100 blast)
+            have "0 \<le> t" "t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 force)+
+            have hconv: "sub_s' i \<le> sub_s' i + t * (sub_s' (Suc i) - sub_s' i)
+                \<and> sub_s' i + t * (sub_s' (Suc i) - sub_s' i) \<le> sub_s' (Suc i)
+                \<and> 0 \<le> sub_s' i + t * (sub_s' (Suc i) - sub_s' i)
+                \<and> sub_s' i + t * (sub_s' (Suc i) - sub_s' i) \<le> 1"
+              using hconv_s[OF hi \<open>0 \<le> t\<close> \<open>t \<le> 1\<close>] .
+            show "x \<in> U" unfolding hx piece_bot_def row_fn_def
+              using hU_cell hconv htSj_ge0 htSj_le1 htj_le_tSj by (by100 force)
+          qed
           \<comment> \<open>codomain_shrink + path_on.\<close>
           show "top1_is_path_on U (subspace_topology X TX U) (piece_top i 0) (piece_top i 1) (piece_top i)"
             unfolding top1_is_path_on_def
@@ -7403,10 +7440,51 @@ proof -
           if hV_cell: "\<forall>s t. sub_s' i \<le> s \<and> s \<le> sub_s' (Suc i) \<and> sub_t j \<le> t \<and> t \<le> sub_t (Suc j) \<and> 0\<le>s \<and> s\<le>1 \<and> 0\<le>t \<and> t\<le>1 \<longrightarrow> F (s,t) \<in> V"
         proof -
           have hpt_img: "(piece_top i) ` I_set \<subseteq> V"
-            sorry \<comment> \<open>Same as U case with V\<close>
-          have h\<beta>Si_img: "(\<beta> (Suc i)) ` I_set \<subseteq> V" sorry
-          have h\<beta>i_img: "(\<beta> i) ` I_set \<subseteq> V" sorry
-          have hpb_img: "(piece_bot i) ` I_set \<subseteq> V" sorry
+          proof
+            fix x assume "x \<in> (piece_top i) ` I_set"
+            then obtain t where ht: "t \<in> I_set" and hx: "x = piece_top i t" by (by100 blast)
+            have "0 \<le> t" "t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 force)+
+            show "x \<in> V" unfolding hx piece_top_def row_fn_def
+              using hV_cell hconv_s[OF hi \<open>0 \<le> t\<close> \<open>t \<le> 1\<close>] htj_ge0 htj_le1 htj_le_tSj by (by100 force)
+          qed
+          have h\<beta>Si_img: "(\<beta> (Suc i)) ` I_set \<subseteq> V"
+          proof
+            fix x assume "x \<in> (\<beta> (Suc i)) ` I_set"
+            then obtain t where ht: "t \<in> I_set" and hx: "x = \<beta> (Suc i) t" by (by100 blast)
+            have "0 \<le> t" "t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 force)+
+            have hdiff: "sub_t (Suc j) - sub_t j \<ge> 0" using htj_le_tSj by (by100 linarith)
+            have hprod_ge: "t * (sub_t (Suc j) - sub_t j) \<ge> 0"
+              by (rule mult_nonneg_nonneg) (use \<open>0 \<le> t\<close> hdiff in \<open>by100 linarith\<close>)+
+            have "t * (sub_t (Suc j) - sub_t j) \<le> 1 * (sub_t (Suc j) - sub_t j)"
+              by (rule mult_right_mono) (use \<open>t \<le> 1\<close> hdiff in \<open>by100 linarith\<close>)+
+            hence hprod_le: "t * (sub_t (Suc j) - sub_t j) \<le> sub_t (Suc j) - sub_t j" by (by100 simp)
+            show "x \<in> V" unfolding hx \<beta>_def
+              using hV_cell hsi_le_Ssi hSsi_ge0 hSsi_le1 htj_ge0 htSj_le1 hprod_ge hprod_le
+              by (by100 force)
+          qed
+          have h\<beta>i_img: "(\<beta> i) ` I_set \<subseteq> V"
+          proof
+            fix x assume "x \<in> (\<beta> i) ` I_set"
+            then obtain t where ht: "t \<in> I_set" and hx: "x = \<beta> i t" by (by100 blast)
+            have "0 \<le> t" "t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 force)+
+            have hdiff: "sub_t (Suc j) - sub_t j \<ge> 0" using htj_le_tSj by (by100 linarith)
+            have hprod_ge: "t * (sub_t (Suc j) - sub_t j) \<ge> 0"
+              by (rule mult_nonneg_nonneg) (use \<open>0 \<le> t\<close> hdiff in \<open>by100 linarith\<close>)+
+            have "t * (sub_t (Suc j) - sub_t j) \<le> 1 * (sub_t (Suc j) - sub_t j)"
+              by (rule mult_right_mono) (use \<open>t \<le> 1\<close> hdiff in \<open>by100 linarith\<close>)+
+            hence hprod_le: "t * (sub_t (Suc j) - sub_t j) \<le> sub_t (Suc j) - sub_t j" by (by100 simp)
+            show "x \<in> V" unfolding hx \<beta>_def
+              using hV_cell hsi_le_Ssi hsi_ge0 hsi_le1 htj_ge0 htSj_le1 hprod_ge hprod_le
+              by (by100 force)
+          qed
+          have hpb_img: "(piece_bot i) ` I_set \<subseteq> V"
+          proof
+            fix x assume "x \<in> (piece_bot i) ` I_set"
+            then obtain t where ht: "t \<in> I_set" and hx: "x = piece_bot i t" by (by100 blast)
+            have "0 \<le> t" "t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 force)+
+            show "x \<in> V" unfolding hx piece_bot_def row_fn_def
+              using hV_cell hconv_s[OF hi \<open>0 \<le> t\<close> \<open>t \<le> 1\<close>] htSj_ge0 htSj_le1 htj_le_tSj by (by100 force)
+          qed
           \<comment> \<open>Continuity from outer scope (hpt_cont, h_βSi_cont, h_βi_cont, hpb_cont).\<close>
           show "top1_is_path_on V (subspace_topology X TX V) (piece_top i 0) (piece_top i 1) (piece_top i)"
             unfolding top1_is_path_on_def
