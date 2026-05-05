@@ -7334,15 +7334,6 @@ proof -
               \<and> sub_t j \<le> t \<and> t \<le> sub_t (Suc j) \<and> 0\<le>s \<and> s\<le>1 \<and> 0\<le>t \<and> t\<le>1
               \<longrightarrow> F (s,t) \<in> V)"
           using hcell_UV hi hj by (by100 blast)
-        \<comment> \<open>All 4 edges continuous (F ∘ affine, independent of U/V).\<close>
-        have hpt_cont: "top1_continuous_map_on I_set I_top X TX (piece_top i)"
-          sorry \<comment> \<open>F ∘ (affine_s, const sub_t j) via pair_s_const + F comp\<close>
-        have h\<beta>Si_cont: "top1_continuous_map_on I_set I_top X TX (\<beta> (Suc i))"
-          sorry \<comment> \<open>F ∘ (const sub_s'(Suc i), affine_t) via Theorem_18_4 + F comp\<close>
-        have h\<beta>i_cont: "top1_continuous_map_on I_set I_top X TX (\<beta> i)"
-          sorry \<comment> \<open>Same pattern\<close>
-        have hpb_cont: "top1_continuous_map_on I_set I_top X TX (piece_bot i)"
-          sorry \<comment> \<open>F ∘ (affine_s, const sub_t(Suc j))\<close>
         \<comment> \<open>Cell edge bounds (shared by U and V cases).\<close>
         have hi_le: "i \<le> ns'" and hSi_le: "Suc i \<le> ns'" using hi by (by100 presburger)+
         have hsi_ge0: "0 \<le> sub_s' i" using hsubs_ge[OF hi_le] .
@@ -7355,6 +7346,15 @@ proof -
         have htSj_le1: "sub_t (Suc j) \<le> 1" using hsubt_le[OF hSj_le_nt] .
         have hsi_le_Ssi: "sub_s' i \<le> sub_s' (Suc i)" using hsinc' hi by (by100 force)
         have htj_le_tSj: "sub_t j \<le> sub_t (Suc j)" using htinc hj by (by100 force)
+        \<comment> \<open>All 4 edges continuous (F ∘ affine, independent of U/V).\<close>
+        have hpt_cont: "top1_continuous_map_on I_set I_top X TX (piece_top i)"
+          sorry \<comment> \<open>F ∘ (affine_s, const sub_t j) via Theorem_18_4 + F comp\<close>
+        have h\<beta>Si_cont: "top1_continuous_map_on I_set I_top X TX (\<beta> (Suc i))"
+          sorry \<comment> \<open>F ∘ (const sub_s'(Suc i), affine_t) via Theorem_18_4 + F comp\<close>
+        have h\<beta>i_cont: "top1_continuous_map_on I_set I_top X TX (\<beta> i)"
+          sorry \<comment> \<open>Same pattern\<close>
+        have hpb_cont: "top1_continuous_map_on I_set I_top X TX (piece_bot i)"
+          sorry \<comment> \<open>Same as piece_top with sub_t(Suc j)\<close>
         \<comment> \<open>piece_top i and β(Suc i) are paths in the same U (or V) — both edges of cell.\<close>
         have hpt_path_U: "top1_is_path_on U (subspace_topology X TX U) (piece_top i 0) (piece_top i 1) (piece_top i)"
             and h\<beta>Si_path_U: "top1_is_path_on U (subspace_topology X TX U) (\<beta> (Suc i) 0) (\<beta> (Suc i) 1) (\<beta> (Suc i))"
