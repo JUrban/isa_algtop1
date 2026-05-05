@@ -5885,9 +5885,42 @@ proof -
                Then σ_cond1 + σ_cond2.\<close>
             have h\<sigma>_split: "\<sigma> (\<lambda>t. f (s k + t * (s (Suc k) - s k)))
                 = mulH (\<sigma> (\<lambda>t. f (s k + t * (p - s k)))) (\<sigma> (\<lambda>t. f (p + t * (s (Suc k) - p))))"
-              sorry \<comment> \<open>reparam_path_homotopy gives piece_k ≃ first*second in U (or V).
-                 σ_cond1: σ(piece_k) = σ(first*second).
-                 σ_cond2: σ(first*second) = σ(first)·σ(second).\<close>
+            proof -
+              define piece where "piece t = f (s k + t * (s (Suc k) - s k))" for t
+              define first_h where "first_h t = f (s k + t * (p - s k))" for t
+              define second_h where "second_h t = f (p + t * (s (Suc k) - p))" for t
+              \<comment> \<open>Piece k maps to U or V.\<close>
+              have hpUV_k: "(\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> piece t \<in> U)
+                  \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> piece t \<in> V)"
+                using hUV hk unfolding piece_def by (by100 blast)
+              \<comment> \<open>Sub-pieces also map to U (or V) since they're sub-intervals.\<close>
+              have hfirst_in: "(\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> first_h t \<in> U)
+                  \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> first_h t \<in> V)"
+                sorry \<comment> \<open>first_h(t) = piece(t*(p-s(k))/(s(k+1)-s(k))) with u ∈ [0,1].
+                   Piece maps [0,1] to U or V, so first_h does too.\<close>
+              have hsecond_in: "(\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> second_h t \<in> U)
+                  \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> second_h t \<in> V)"
+                sorry \<comment> \<open>second_h(t) = piece((p-s(k)+t*(s(k+1)-p))/(s(k+1)-s(k))) with u ∈ [0,1].
+                   Piece maps [0,1] to U or V, so second_h does too.\<close>
+              \<comment> \<open>Step 1: piece ≃ first_h * second_h in U (or V) by reparametrization.\<close>
+              have hhom: "(\<exists>S. S = U \<and> top1_path_homotopic_on S (subspace_topology X TX S)
+                  (piece 0) (piece 1) piece (top1_path_product first_h second_h))
+                  \<or> (\<exists>S. S = V \<and> top1_path_homotopic_on S (subspace_topology X TX S)
+                  (piece 0) (piece 1) piece (top1_path_product first_h second_h))"
+                sorry \<comment> \<open>reparam_path_homotopy with φ = linear, ψ = concat (piecewise linear).
+                   Both map I→I with same endpoints s(k), s(k+1).\<close>
+              \<comment> \<open>Step 2: σ(piece) = σ(first*second) by σ_cond1.\<close>
+              have h\<sigma>_eq: "\<sigma> piece = \<sigma> (top1_path_product first_h second_h)"
+                sorry \<comment> \<open>From hhom: piece ≃ first*second in U or V. Apply σ_cond1 (or _V).\<close>
+              \<comment> \<open>Step 3: σ(first*second) = σ(first)·σ(second) by σ_cond2.\<close>
+              have h\<sigma>_mul: "\<sigma> (top1_path_product first_h second_h)
+                  = mulH (\<sigma> first_h) (\<sigma> second_h)"
+                sorry \<comment> \<open>first_h and second_h are paths in U (or V) with matching endpoint.
+                   Apply σ_cond2 (or _V).\<close>
+              from h\<sigma>_eq h\<sigma>_mul have "\<sigma> piece = mulH (\<sigma> first_h) (\<sigma> second_h)"
+                by (by100 simp)
+              thus ?thesis unfolding piece_def first_h_def second_h_def by (by100 simp)
+            qed
             \<comment> \<open>Map/foldr manipulation: the new subdivision's foldr differs only at position k,
                where σ(piece_k) is replaced by σ(first)·σ(second). By h_σ_split they're equal.
                Group associativity: mulH a (mulH b c) = mulH (mulH a b) c handles the foldr.\<close>
