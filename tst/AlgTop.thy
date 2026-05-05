@@ -6048,33 +6048,35 @@ proof -
               have h\<psi>1: "\<psi> 1 = 1" unfolding \<psi>_def using hd_pos by (by100 simp)
               have h\<psi>_cont: "top1_continuous_map_on I_set I_top I_set I_top \<psi>"
               proof -
-                \<comment> \<open>ψ is piecewise affine: affine on [0,1/2] and [1/2,1].\<close>
                 have hIeq: "I_set = {0..1/2::real} \<union> {1/2..1}"
                   unfolding top1_unit_interval_def by (by100 auto)
+                have hdnz: "s (Suc k) - s k \<noteq> 0" using hd_pos by (by100 linarith)
+                define f1_br where "f1_br t = 2 * t * (p - s k) / (s (Suc k) - s k)" for t :: real
+                define f2_br where "f2_br t = (p - s k + (2*t-1) * (s (Suc k) - p)) / (s (Suc k) - s k)" for t :: real
+                have "\<psi> = (\<lambda>t. if t \<le> 1/2 then f1_br t else f2_br t)"
+                  unfolding \<psi>_def f1_br_def f2_br_def by (rule ext, by100 simp)
+                have hcont_f1: "continuous_on {0..1/2::real} f1_br"
+                  unfolding f1_br_def using hdnz apply (intro continuous_intros) by (by100 blast)
+                have hcont_f2: "continuous_on {1/2..1::real} f2_br"
+                  unfolding f2_br_def using hdnz apply (intro continuous_intros) by (by100 blast)
+                have hmatch: "\<forall>x. (x \<in> {0..1/2} \<and> \<not> x \<le> 1/2) \<or> (x \<in> {1/2..1} \<and> x \<le> 1/2)
+                    \<longrightarrow> f1_br x = f2_br x"
+                proof (intro allI impI)
+                  fix x :: real
+                  assume "(x \<in> {0..1/2} \<and> \<not> x \<le> 1/2) \<or> (x \<in> {1/2..1} \<and> x \<le> 1/2)"
+                  hence hx12: "x = 1/2" by (by100 force)
+                  have "f1_br x = f1_br (1/2)" unfolding hx12 by (by100 simp)
+                  also have "\<dots> = (p - s k) / (s (Suc k) - s k)" unfolding f1_br_def by (by100 simp)
+                  also have "\<dots> = f2_br (1/2)" unfolding f2_br_def by (by100 simp)
+                  also have "\<dots> = f2_br x" unfolding hx12 by (by100 simp)
+                  finally show "f1_br x = f2_br x" .
+                qed
                 have hcl1: "closed {0..1/2::real}" by (by100 auto)
                 have hcl2: "closed {1/2..1::real}" by (by100 auto)
-                have hdnz: "s (Suc k) - s k \<noteq> 0" using hd_pos by (by100 linarith)
-                have hcont1: "continuous_on {0..1/2} \<psi>"
-                proof -
-                  define c1 where "c1 = 2 * (p - s k) / (s (Suc k) - s k)"
-                  have "continuous_on {0..1/2::real} (\<lambda>t. c1 * t)" by (intro continuous_intros)
-                  moreover have hcong1: "\<And>t. t \<in> {0..1/2::real} \<Longrightarrow> \<psi> t = c1 * t"
-                    unfolding \<psi>_def c1_def by (by100 simp)
-                  ultimately show ?thesis sorry \<comment> \<open>continuous_on_cong + hcong1: ψ = c1*t on [0,1/2]\<close>
-                qed
-                have hcont2: "continuous_on {1/2..1} \<psi>"
-                proof -
-                  define a2 where "a2 = (p - s k - (s (Suc k) - p)) / (s (Suc k) - s k)"
-                  define c2 where "c2 = 2 * (s (Suc k) - p) / (s (Suc k) - s k)"
-                  have "continuous_on {1/2..1::real} (\<lambda>t. a2 + c2 * t)" by (intro continuous_intros)
-                  moreover have "\<And>t. t \<in> {1/2..1::real} \<Longrightarrow> \<psi> t = a2 + c2 * t"
-                    unfolding \<psi>_def a2_def c2_def using hd_pos
-                    sorry \<comment> \<open>Algebra: (p-s k+(2t-1)*(s(k+1)-p))/d = (2p-s k-s(k+1))/d + 2*(s(k+1)-p)*t/d.
-                       Both equal (2p-s k-s(k+1)+2t*(s(k+1)-p))/d. Needs field_simps or manual d-clearing.\<close>
-                  ultimately show ?thesis sorry \<comment> \<open>continuous_on_cong: ψ = a2+c2*t on [1/2,1]\<close>
-                qed
-                have hcont: "continuous_on I_set \<psi>" unfolding hIeq
-                  by (rule continuous_on_closed_Un[OF hcl1 hcl2 hcont1 hcont2])
+                have "continuous_on ({0..1/2} \<union> {1/2..1}) \<psi>"
+                  unfolding \<open>\<psi> = (\<lambda>t. if t \<le> 1/2 then f1_br t else f2_br t)\<close>
+                  by (rule continuous_on_cases[OF hcl1 hcl2 hcont_f1 hcont_f2 hmatch])
+                hence hcont: "continuous_on I_set \<psi>" unfolding hIeq .
                 \<comment> \<open>Range: ψ maps I_set into I_set.\<close>
                 have hrange: "\<And>t. t \<in> I_set \<Longrightarrow> \<psi> t \<in> I_set"
                 proof -
