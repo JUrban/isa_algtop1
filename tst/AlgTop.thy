@@ -7633,8 +7633,11 @@ proof -
           let ?\<beta>2 = "top1_path_product ?left' ?top'"
           \<comment> \<open>I×I is simply connected.\<close>
           have hII_sc: "top1_simply_connected_on (I_set \<times> I_set) II_topology"
-            sorry \<comment> \<open>Standard: I×I path-connected (straight lines) + all loops contractible.
-               Proved inline at Top1_Ch9_13.thy:14089 (~200 lines).\<close>
+            sorry \<comment> \<open>I×I convex ⟹ simply connected. Standard topology fact.
+               Path-connected: straight line γ(t) = (1-t)x + ty stays in I×I (convex comb).
+               Loops contractible: H(s,t) = (1-t)*f(s) + t*x₀ contracts loop to point.
+               Both continuous via continuous_intros + Theorem_18_4.
+               Full inline proof at Top1_Ch9_13.thy:14089 (~200 lines).\<close>
           \<comment> \<open>β₁ and β₂ are paths in I×I from (0,0) to (1,1).\<close>
           have h0I: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 force)
           have h1I: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 force)
