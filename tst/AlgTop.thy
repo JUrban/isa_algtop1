@@ -6680,9 +6680,48 @@ proof -
                  For i > Suc k: T'[i,i+1] = T[i-1,i] (shifted). All inherit UV from T.\<close>
             \<comment> \<open>T' has fewer missing sub-points (sub(i₀) now at Suc k).\<close>
             have hmiss_less: "card {i. i \<le> n \<and> (\<forall>j\<le>Suc M. T' j \<noteq> sub i)} < miss'"
-              sorry \<comment> \<open>sub(i₀) now in T'-range → one fewer missing\<close>
+            proof -
+              \<comment> \<open>sub(i₀) is now at position Suc k in T'.\<close>
+              have hT'_has_i0: "T' (Suc k) = sub i0" unfolding T'_def by (by100 simp)
+              have hSk_le: "Suc k \<le> Suc M" using hk by (by100 presburger)
+              hence "\<not> (\<forall>j\<le>Suc M. T' j \<noteq> sub i0)" using hT'_has_i0 by (by100 blast)
+              hence "i0 \<notin> {i. i \<le> n \<and> (\<forall>j\<le>Suc M. T' j \<noteq> sub i)}" by (by100 blast)
+              moreover have "i0 \<in> {i. i \<le> n \<and> (\<forall>j\<le>M. T j \<noteq> sub i)}" using hi0 hi0_miss by (by100 blast)
+              moreover have "{i. i \<le> n \<and> (\<forall>j\<le>Suc M. T' j \<noteq> sub i)} \<subseteq> {i. i \<le> n \<and> (\<forall>j\<le>M. T j \<noteq> sub i)}"
+              proof
+                fix i assume "i \<in> {i. i \<le> n \<and> (\<forall>j\<le>Suc M. T' j \<noteq> sub i)}"
+                hence hi_le: "i \<le> n" and hi_miss: "\<forall>j\<le>Suc M. T' j \<noteq> sub i" by (by100 blast)+
+                have "\<forall>j\<le>M. T j \<noteq> sub i"
+                proof (intro allI impI)
+                  fix j assume "j \<le> M"
+                  show "T j \<noteq> sub i"
+                  proof (cases "j \<le> k")
+                    case True hence "T' j = T j" unfolding T'_def by (by100 simp)
+                    moreover have "T' j \<noteq> sub i" using hi_miss \<open>j \<le> M\<close> by (by100 force)
+                    ultimately show ?thesis by (by100 simp)
+                  next
+                    case False
+                    hence "j > k" by (by100 presburger)
+                    hence "\<not> (Suc j \<le> k)" by (by100 presburger)
+                    have "Suc j \<noteq> Suc k" using \<open>j > k\<close> by (by100 presburger)
+                    hence "T' (Suc j) = T (Suc j - 1)" unfolding T'_def using \<open>\<not>(Suc j \<le> k)\<close> by (by100 simp)
+                    hence "T' (Suc j) = T j" by (by100 simp)
+                    moreover have "T' (Suc j) \<noteq> sub i" using hi_miss \<open>j \<le> M\<close> by (by100 force)
+                    ultimately show ?thesis by (by100 simp)
+                  qed
+                qed
+                thus "i \<in> {i. i \<le> n \<and> (\<forall>j\<le>M. T j \<noteq> sub i)}" using hi_le by (by100 blast)
+              qed
+              moreover have "finite {i. i \<le> n \<and> (\<forall>j\<le>M. T j \<noteq> sub i)}" by (by100 simp)
+              ultimately have hpsubset: "{i. i \<le> n \<and> (\<forall>j\<le>Suc M. T' j \<noteq> sub i)} \<subset> {i. i \<le> n \<and> (\<forall>j\<le>M. T j \<noteq> sub i)}"
+                by (by100 blast)
+              have "finite {i. i \<le> n \<and> (\<forall>j\<le>M. T j \<noteq> sub i)}" by (by100 simp)
+              hence "card {i. i \<le> n \<and> (\<forall>j\<le>Suc M. T' j \<noteq> sub i)} < card {i. i \<le> n \<and> (\<forall>j\<le>M. T j \<noteq> sub i)}"
+                using psubset_card_mono[OF _ hpsubset] by (by100 blast)
+              thus ?thesis unfolding less.prems(6) .
+            qed
             have "foldr_\<sigma> f (Suc M) T' = foldr_\<sigma> f n sub"
-              sorry \<comment> \<open>IH application: missing count decreased, T' valid → result by IH\<close>
+              sorry \<comment> \<open>IH: less(1)[OF hmiss_less ...] with miss_new_def. Unification issue with less_induct.\<close>
             thus ?thesis using hinsert by (by100 simp)
           qed
         qed
