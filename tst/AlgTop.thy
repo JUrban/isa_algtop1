@@ -7349,8 +7349,55 @@ proof -
             by (rule simply_connected_paths_homotopic[OF hII_sc h\<beta>1_path h\<beta>2_path h00])
           \<comment> \<open>G = F ∘ φ is continuous I×I → X.\<close>
           have hG_cont: "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX G"
-            sorry \<comment> \<open>φ: I×I → I×I continuous (componentwise affine), F: I×I → X continuous.
-               G = F ∘ φ continuous by composition.\<close>
+          proof -
+            have hTI: "is_topology_on I_set I_top" by (rule top1_unit_interval_topology_is_topology_on)
+            have haffine_s: "top1_continuous_map_on I_set I_top I_set I_top
+                (\<lambda>s. sub_s' i + s * (sub_s' (Suc i) - sub_s' i))"
+            proof -
+              have "i \<le> ns'" using hi by (by100 presburger)
+              have "Suc i \<le> ns'" using hi by (by100 presburger)
+              have "sub_s' i \<le> sub_s' (Suc i)" using hsinc' hi by (by100 force)
+              show ?thesis using affine_map_continuous_I_to_I[OF hsubs_ge[OF \<open>i \<le> ns'\<close>] \<open>sub_s' i \<le> sub_s' (Suc i)\<close> hsubs_le[OF \<open>Suc i \<le> ns'\<close>]] .
+            qed
+            have haffine_t: "top1_continuous_map_on I_set I_top I_set I_top
+                (\<lambda>t. sub_t j + t * (sub_t (Suc j) - sub_t j))"
+            proof -
+              have "sub_t j \<le> sub_t (Suc j)" using htinc hj by (by100 force)
+              show ?thesis using affine_map_continuous_I_to_I[OF hsubt_ge[OF hj_le_nt] \<open>sub_t j \<le> sub_t (Suc j)\<close> hsubt_le[OF hSj_le_nt]] .
+            qed
+            \<comment> \<open>φ: I×I → I×I via Theorem_18_4 on products.\<close>
+            have h\<phi>_cont: "top1_continuous_map_on (I_set \<times> I_set) II_topology (I_set \<times> I_set) II_topology \<phi>"
+            proof -
+              have hpi1: "top1_continuous_map_on (I_set \<times> I_set) II_topology I_set I_top pi1"
+                unfolding II_topology_def by (rule top1_continuous_pi1[OF hTI hTI])
+              have hpi2: "top1_continuous_map_on (I_set \<times> I_set) II_topology I_set I_top pi2"
+                unfolding II_topology_def by (rule top1_continuous_pi2[OF hTI hTI])
+              have hfst: "top1_continuous_map_on (I_set \<times> I_set) II_topology I_set I_top
+                  (\<lambda>p. sub_s' i + fst p * (sub_s' (Suc i) - sub_s' i))"
+                using top1_continuous_map_on_comp[OF hpi1 haffine_s] unfolding comp_def pi1_def .
+              have hsnd: "top1_continuous_map_on (I_set \<times> I_set) II_topology I_set I_top
+                  (\<lambda>p. sub_t j + snd p * (sub_t (Suc j) - sub_t j))"
+                using top1_continuous_map_on_comp[OF hpi2 haffine_t] unfolding comp_def pi2_def .
+              have h1: "top1_continuous_map_on (I_set \<times> I_set) II_topology I_set I_top (pi1 \<circ> \<phi>)"
+              proof -
+                have "(pi1 \<circ> \<phi>) = (\<lambda>p. sub_s' i + fst p * (sub_s' (Suc i) - sub_s' i))"
+                  unfolding pi1_def \<phi>_def comp_def by (rule ext) (by100 simp)
+                thus ?thesis using hfst by (by100 simp)
+              qed
+              have h2: "top1_continuous_map_on (I_set \<times> I_set) II_topology I_set I_top (pi2 \<circ> \<phi>)"
+              proof -
+                have "(pi2 \<circ> \<phi>) = (\<lambda>p. sub_t j + snd p * (sub_t (Suc j) - sub_t j))"
+                  unfolding pi2_def \<phi>_def comp_def by (rule ext) (by100 simp)
+                thus ?thesis using hsnd by (by100 simp)
+              qed
+              show ?thesis using iffD2[OF Theorem_18_4[OF hTII hTI hTI]] h1 h2
+                unfolding II_topology_def by (by100 blast)
+            qed
+            have "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX (F \<circ> \<phi>)"
+              using top1_continuous_map_on_comp[OF h\<phi>_cont hF_cont] .
+            moreover have "(F \<circ> \<phi>) = G" unfolding comp_def G_def by (rule ext) (by100 simp)
+            ultimately show ?thesis by (by100 simp)
+          qed
           \<comment> \<open>G∘β₁ agrees with pp1 on I_set, G∘β₂ agrees with pp2 on I_set.\<close>
           have hG\<beta>1: "\<forall>s\<in>I_set. (G \<circ> ?\<beta>1) s = pp1 s"
           proof (intro ballI)
