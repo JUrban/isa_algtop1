@@ -7736,10 +7736,41 @@ proof -
               \<comment> \<open>H continuous, stays in I×I, boundary conditions.\<close>
               have hH_cont: "top1_continuous_map_on (I_set \<times> I_set) II_topology
                   (I_set \<times> I_set) II_topology ?H"
-                sorry \<comment> \<open>Components are continuous (f continuous + affine in t).
-                   Each component: (1-t)*fst(f(s))+t*fst(x0) continuous on I×I.
-                   Range in I_set: convex combination of values in [0,1].
-                   ~80 lines using continuous_on bridge + Theorem_18_4.\<close>
+              proof -
+                \<comment> \<open>Each component maps I×I into I_set (convex combination).\<close>
+                have hH_range: "\<And>p. p \<in> I_set \<times> I_set \<Longrightarrow> ?H p \<in> I_set \<times> I_set"
+                proof -
+                  fix p :: "real \<times> real" assume hp: "p \<in> I_set \<times> I_set"
+                  obtain s t where hst: "p = (s, t)" using prod.exhaust by (by100 blast)
+                  have hs: "s \<in> I_set" and ht: "t \<in> I_set" using hp hst by (by100 force)+
+                  have hfs: "f s \<in> I_set \<times> I_set" using hf_range hs .
+                  have hfs1: "0 \<le> fst (f s)" "fst (f s) \<le> 1"
+                    using hfs unfolding top1_unit_interval_def by (by100 force)+
+                  have hfs2: "0 \<le> snd (f s)" "snd (f s) \<le> 1"
+                    using hfs unfolding top1_unit_interval_def by (by100 force)+
+                  have hx01: "0 \<le> fst x0" "fst x0 \<le> 1"
+                    using hx0 unfolding top1_unit_interval_def by (by100 force)+
+                  have hx02: "0 \<le> snd x0" "snd x0 \<le> 1"
+                    using hx0 unfolding top1_unit_interval_def by (by100 force)+
+                  have ht': "0 \<le> t" "t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 force)+
+                  have h0t: "0 \<le> 1 - t" using ht' by (by100 linarith)
+                  have hc1_ge: "0 \<le> (1-t) * fst (f s) + t * fst x0"
+                    using mult_nonneg_nonneg[OF h0t hfs1(1)] mult_nonneg_nonneg[OF ht'(1) hx01(1)]
+                    by (by100 linarith)
+                  have hc1_le: "(1-t) * fst (f s) + t * fst x0 \<le> 1"
+                    by (rule convex_bound_le[OF hfs1(2) hx01(2) h0t ht'(1)]) (by100 simp)
+                  have hc2_ge: "0 \<le> (1-t) * snd (f s) + t * snd x0"
+                    using mult_nonneg_nonneg[OF h0t hfs2(1)] mult_nonneg_nonneg[OF ht'(1) hx02(1)]
+                    by (by100 linarith)
+                  have hc2_le: "(1-t) * snd (f s) + t * snd x0 \<le> 1"
+                    by (rule convex_bound_le[OF hfs2(2) hx02(2) h0t ht'(1)]) (by100 simp)
+                  show "?H p \<in> I_set \<times> I_set" unfolding hst top1_unit_interval_def
+                    using hc1_ge hc1_le hc2_ge hc2_le by (by100 force)
+                qed
+                show ?thesis using hH_range
+                  sorry \<comment> \<open>Component continuity + range + Theorem_18_4.
+                     Each component continuous via continuous_on bridge.\<close>
+              qed
               have hH_s0: "\<forall>s\<in>I_set. ?H (s, 0) = f s" by (by100 force)
               have hH_s1: "\<forall>s\<in>I_set. ?H (s, 1) = top1_constant_path x0 s"
                 unfolding top1_constant_path_def by (by100 force)
