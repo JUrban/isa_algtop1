@@ -6968,7 +6968,9 @@ proof -
                         have "T' (i-1) = T (Suc (i-1))" unfolding T'_def using \<open>\<not>(i-1 < j)\<close> by (by100 simp)
                         moreover have "Suc (i-1) = i" using \<open>i > j\<close> hj_pos by (by100 presburger)
                         ultimately have "T' (i-1) = T i" by (by100 simp)
-                        thus ?thesis using \<open>\<not>(i \<le> j-1)\<close> \<open>i \<noteq> Suc(j-1)\<close> by (by100 simp)
+                        moreover have "(if i \<le> j-1 then T' i else if i = Suc(j-1) then T j else T' (i-1)) = T' (i-1)"
+                          using \<open>\<not>(i \<le> j-1)\<close> \<open>i \<noteq> Suc(j-1)\<close> by (by100 simp)
+                        ultimately show ?thesis by (by100 simp)
                       qed
                     qed
                   qed
