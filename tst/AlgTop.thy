@@ -6881,8 +6881,31 @@ proof -
                      both mapping to U or V — actually it's a sub-interval of a T-piece).\<close>
                 \<comment> \<open>T' still refines sub (removing non-sub point preserves containment).\<close>
                 have hT'_refines: "\<forall>i\<le>n. \<exists>j'\<le>M-1. T' j' = sub i"
-                  sorry \<comment> \<open>For each sub(i): was at T(k) for some k. If k < j: T'(k) = T(k) = sub(i).
-                     If k > j: T'(k-1) = T(k) = sub(i). k ≠ j by hj_not_sub.\<close>
+                proof (intro allI impI)
+                  fix i assume hi: "i \<le> n"
+                  from less.prems(6) hi obtain k where hk_le: "k \<le> M" and hk_eq: "T k = sub i"
+                    by (by100 blast)
+                  have "k \<noteq> j" using hj_not_sub hi hk_eq by (by100 blast)
+                  show "\<exists>j'\<le>M-1. T' j' = sub i"
+                  proof (cases "k < j")
+                    case True
+                    have "T' k = T k" unfolding T'_def using True by (by100 presburger)
+                    have "k < M" using True hj_lt by (by100 presburger)
+                    hence "k \<le> M - 1" by (by100 presburger)
+                    have "T' k = sub i" using \<open>T' k = T k\<close> hk_eq by (by100 simp)
+                    show ?thesis using \<open>T' k = sub i\<close> \<open>k \<le> M - 1\<close> by (by100 blast)
+                  next
+                    case False
+                    hence "k > j" using \<open>k \<noteq> j\<close> by (by100 presburger)
+                    hence "\<not> (k - 1 < j)" by (by100 presburger)
+                    have "T' (k-1) = T (Suc (k-1))" unfolding T'_def using \<open>\<not>(k-1 < j)\<close> by (by100 simp)
+                    moreover have "Suc (k-1) = k" using \<open>k > j\<close> hj_pos by (by100 presburger)
+                    ultimately have "T' (k-1) = T k" by (by100 simp)
+                    have "k - 1 \<le> M - 1" using hk_le by (by100 presburger)
+                    have "T' (k-1) = sub i" using \<open>T' (k-1) = T k\<close> hk_eq by (by100 simp)
+                    show ?thesis using \<open>T' (k-1) = sub i\<close> \<open>k-1 \<le> M-1\<close> by (by100 blast)
+                  qed
+                qed
                 \<comment> \<open>h_point_insert gives: foldr_σ f M T = foldr_σ f (M-1) T'.\<close>
                 have hinsert: "foldr_\<sigma> f M T = foldr_\<sigma> f (M - 1) T'"
                 proof -
