@@ -7633,11 +7633,36 @@ proof -
           let ?\<beta>2 = "top1_path_product ?left' ?top'"
           \<comment> \<open>I×I is simply connected.\<close>
           have hII_sc: "top1_simply_connected_on (I_set \<times> I_set) II_topology"
-            sorry \<comment> \<open>I×I convex ⟹ simply connected. Standard topology fact.
-               Path-connected: straight line γ(t) = (1-t)x + ty stays in I×I (convex comb).
-               Loops contractible: H(s,t) = (1-t)*f(s) + t*x₀ contracts loop to point.
-               Both continuous via continuous_intros + Theorem_18_4.
-               Full inline proof at Top1_Ch9_13.thy:14089 (~200 lines).\<close>
+            unfolding top1_simply_connected_on_def
+          proof (intro conjI)
+            show "top1_path_connected_on (I_set \<times> I_set) II_topology"
+              unfolding top1_path_connected_on_def
+            proof (intro conjI ballI)
+              show "is_topology_on (I_set \<times> I_set) II_topology"
+                unfolding II_topology_def
+                by (rule product_topology_on_is_topology_on[OF
+                      top1_unit_interval_topology_is_topology_on
+                      top1_unit_interval_topology_is_topology_on])
+            next
+              fix x y :: "real \<times> real"
+              assume hx: "x \<in> I_set \<times> I_set" and hy: "y \<in> I_set \<times> I_set"
+              \<comment> \<open>Straight line from x to y stays in I×I.\<close>
+              let ?\<gamma> = "\<lambda>t::real. ((1-t) * fst x + t * fst y, (1-t) * snd x + t * snd y)"
+              have "\<exists>f. top1_is_path_on (I_set \<times> I_set) II_topology x y f"
+                sorry \<comment> \<open>γ is continuous (continuous_intros + Theorem_18_4) and maps I_set into I×I
+                   (convex combination: (1-t)*a+t*b ∈ [0,1] for a,b ∈ [0,1], t ∈ [0,1]).
+                   γ(0) = x, γ(1) = y. Full proof: ~80 lines from Top1_Ch9_13.thy:14104.\<close>
+              thus "\<exists>f. top1_is_path_on (I_set \<times> I_set) II_topology x y f" .
+            qed
+          next
+            show "\<forall>x0\<in>I_set \<times> I_set. \<forall>f. top1_is_loop_on (I_set \<times> I_set) II_topology x0 f \<longrightarrow>
+                top1_path_homotopic_on (I_set \<times> I_set) II_topology x0 x0 f (top1_constant_path x0)"
+              sorry \<comment> \<open>For any loop f at x0 in I×I, the straight-line homotopy
+                 H(s,t) = ((1-t)*fst(f(s))+t*fst(x0), (1-t)*snd(f(s))+t*snd(x0))
+                 contracts f to const_x0. H continuous (f continuous + linear combination),
+                 H stays in I×I (convex), H(s,0)=f(s), H(s,1)=x0, H(0,t)=H(1,t)=x0.
+                 Full proof: ~120 lines from Top1_Ch9_13.thy:14160.\<close>
+          qed
           \<comment> \<open>β₁ and β₂ are paths in I×I from (0,0) to (1,1).\<close>
           have h0I: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 force)
           have h1I: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 force)
