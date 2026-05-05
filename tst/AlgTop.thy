@@ -7937,7 +7937,130 @@ proof -
             assume hV: "\<forall>s t. sub_s' i \<le> s \<and> s \<le> sub_s' (Suc i) \<and> sub_t j \<le> t \<and> t \<le> sub_t (Suc j)
                 \<and> 0\<le>s \<and> s\<le>1 \<and> 0\<le>t \<and> t\<le>1 \<longrightarrow> F (s,t) \<in> V"
             have "top1_path_homotopic_on V (subspace_topology X TX V) (pp1 0) (pp1 1) pp1 pp2"
-              sorry \<comment> \<open>Same argument as U case with V.\<close>
+            proof -
+              have hG_img_V: "G ` (I_set \<times> I_set) \<subseteq> V"
+              proof
+                fix x assume "x \<in> G ` (I_set \<times> I_set)"
+                then obtain p where hp: "p \<in> I_set \<times> I_set" and hx: "x = G p" by (by100 blast)
+                have hs: "0 \<le> fst p" "fst p \<le> 1" and ht: "0 \<le> snd p" "snd p \<le> 1"
+                  using hp unfolding top1_unit_interval_def by (by100 force)+
+                have hconv_fst: "sub_s' i \<le> sub_s' i + fst p * (sub_s' (Suc i) - sub_s' i)
+                    \<and> sub_s' i + fst p * (sub_s' (Suc i) - sub_s' i) \<le> sub_s' (Suc i)
+                    \<and> 0 \<le> sub_s' i + fst p * (sub_s' (Suc i) - sub_s' i)
+                    \<and> sub_s' i + fst p * (sub_s' (Suc i) - sub_s' i) \<le> 1"
+                  using hconv_s[OF hi hs(1) hs(2)] .
+                have hdiff_t: "sub_t (Suc j) - sub_t j \<ge> 0" using htinc hj by (by100 force)
+                have hprod_ge: "snd p * (sub_t (Suc j) - sub_t j) \<ge> 0"
+                  by (rule mult_nonneg_nonneg) (use ht(1) hdiff_t in \<open>by100 linarith\<close>)+
+                have "snd p * (sub_t (Suc j) - sub_t j) \<le> 1 * (sub_t (Suc j) - sub_t j)"
+                  by (rule mult_right_mono) (use ht(2) hdiff_t in \<open>by100 linarith\<close>)+
+                hence hprod_le: "snd p * (sub_t (Suc j) - sub_t j) \<le> sub_t (Suc j) - sub_t j"
+                  by (by100 simp)
+                have "0 \<le> sub_t j" using hsubt_ge[OF hj_le_nt] .
+                have "sub_t (Suc j) \<le> 1" using hsubt_le[OF hSj_le_nt] .
+                have "sub_t j \<le> sub_t j + snd p * (sub_t (Suc j) - sub_t j)" using hprod_ge by (by100 linarith)
+                moreover have "sub_t j + snd p * (sub_t (Suc j) - sub_t j) \<le> sub_t (Suc j)"
+                  using hprod_le by (by100 linarith)
+                moreover have "0 \<le> sub_t j + snd p * (sub_t (Suc j) - sub_t j)"
+                  using \<open>0 \<le> sub_t j\<close> hprod_ge by (by100 linarith)
+                moreover have "sub_t j + snd p * (sub_t (Suc j) - sub_t j) \<le> 1"
+                  using \<open>sub_t (Suc j) \<le> 1\<close> hprod_le by (by100 linarith)
+                ultimately show "x \<in> V" unfolding hx G_def \<phi>_def
+                  using hV hconv_fst by (by100 blast)
+              qed
+              have hG_cont_V: "top1_continuous_map_on (I_set \<times> I_set) II_topology V (subspace_topology X TX V) G"
+                by (rule top1_continuous_map_on_codomain_shrink[OF hG_cont hG_img_V hVsub])
+              have hTV: "is_topology_on V (subspace_topology X TX V)" using hTopV .
+              have hG_hom_V: "top1_path_homotopic_on V (subspace_topology X TX V)
+                  (G (0,0)) (G (1,1)) (G \<circ> ?\<beta>1) (G \<circ> ?\<beta>2)"
+              proof -
+                have hTII_loc: "is_topology_on (I_set \<times> I_set) II_topology"
+                  unfolding II_topology_def
+                  by (rule product_topology_on_is_topology_on[OF
+                        top1_unit_interval_topology_is_topology_on
+                        top1_unit_interval_topology_is_topology_on])
+                show ?thesis by (rule continuous_preserves_path_homotopic[OF hTII_loc hTV hG_cont_V h\<beta>_hom])
+              qed
+              show ?thesis unfolding top1_path_homotopic_on_def
+              proof (intro conjI)
+                show "top1_is_path_on V (subspace_topology X TX V) (pp1 0) (pp1 1) pp1"
+                proof -
+                  have hep_match: "piece_top i 1 = \<beta> (Suc i) 0"
+                    unfolding piece_top_def \<beta>_def row_fn_def by (by100 simp)
+                  hence h\<beta>Si_adj: "top1_is_path_on V (subspace_topology X TX V) (piece_top i 1) (\<beta> (Suc i) 1) (\<beta> (Suc i))"
+                    using h\<beta>Si_path_V[OF hV] by (by100 simp)
+                  have "top1_is_path_on V (subspace_topology X TX V) (piece_top i 0) (\<beta> (Suc i) 1)
+                      (top1_path_product (piece_top i) (\<beta> (Suc i)))"
+                    by (rule top1_path_product_is_path[OF hTopV hpt_path_V[OF hV] h\<beta>Si_adj])
+                  moreover have "pp1 = top1_path_product (piece_top i) (\<beta> (Suc i))"
+                    unfolding pp1_def by (by100 simp)
+                  moreover have "pp1 0 = piece_top i 0"
+                    unfolding pp1_def top1_path_product_def top1_unit_interval_def by (by100 force)
+                  moreover have "pp1 1 = \<beta> (Suc i) 1"
+                    unfolding pp1_def top1_path_product_def top1_unit_interval_def by (by100 force)
+                  ultimately show ?thesis by (by100 presburger)
+                qed
+                have "pp1 0 = pp2 0" unfolding pp1_def pp2_def top1_path_product_def
+                    piece_top_def piece_bot_def \<beta>_def row_fn_def by (by100 simp)
+                moreover have "pp1 1 = pp2 1" unfolding pp1_def pp2_def top1_path_product_def
+                    piece_top_def piece_bot_def \<beta>_def row_fn_def by (by100 simp)
+                moreover have "top1_is_path_on V (subspace_topology X TX V) (pp2 0) (pp2 1) pp2"
+                proof -
+                  have hep_match2: "\<beta> i 1 = piece_bot i 0"
+                    unfolding piece_bot_def \<beta>_def row_fn_def by (by100 simp)
+                  hence hpb_adj: "top1_is_path_on V (subspace_topology X TX V) (\<beta> i 1) (piece_bot i 1) (piece_bot i)"
+                    using hpb_path_V[OF hV] by (by100 simp)
+                  have "top1_is_path_on V (subspace_topology X TX V) (\<beta> i 0) (piece_bot i 1)
+                      (top1_path_product (\<beta> i) (piece_bot i))"
+                    by (rule top1_path_product_is_path[OF hTopV h\<beta>i_path_V[OF hV] hpb_adj])
+                  moreover have "pp2 = top1_path_product (\<beta> i) (piece_bot i)"
+                    unfolding pp2_def by (by100 simp)
+                  moreover have "pp2 0 = \<beta> i 0"
+                    unfolding pp2_def top1_path_product_def top1_unit_interval_def by (by100 force)
+                  moreover have "pp2 1 = piece_bot i 1"
+                    unfolding pp2_def top1_path_product_def top1_unit_interval_def by (by100 force)
+                  ultimately show ?thesis by (by100 presburger)
+                qed
+                ultimately show "top1_is_path_on V (subspace_topology X TX V) (pp1 0) (pp1 1) pp2"
+                  by (by100 simp)
+                from hG_hom_V have "\<exists>H. top1_continuous_map_on (I_set \<times> I_set) II_topology
+                    V (subspace_topology X TX V) H
+                    \<and> (\<forall>s\<in>I_set. H (s, 0) = (G \<circ> ?\<beta>1) s) \<and> (\<forall>s\<in>I_set. H (s, 1) = (G \<circ> ?\<beta>2) s)
+                    \<and> (\<forall>t\<in>I_set. H (0, t) = G (0,0)) \<and> (\<forall>t\<in>I_set. H (1, t) = G (1,1))"
+                  unfolding top1_path_homotopic_on_def by (by100 blast)
+                then obtain H where hH_cont: "top1_continuous_map_on (I_set \<times> I_set) II_topology
+                    V (subspace_topology X TX V) H"
+                  and hH0: "\<forall>s\<in>I_set. H (s, 0) = (G \<circ> ?\<beta>1) s"
+                  and hH1: "\<forall>s\<in>I_set. H (s, 1) = (G \<circ> ?\<beta>2) s"
+                  and hHL: "\<forall>t\<in>I_set. H (0, t) = G (0,0)"
+                  and hHR: "\<forall>t\<in>I_set. H (1, t) = G (1,1)" by auto
+                have "\<forall>s\<in>I_set. H (s, 0) = pp1 s" using hH0 hG\<beta>1 by (by100 force)
+                moreover have "\<forall>s\<in>I_set. H (s, 1) = pp2 s" using hH1 hG\<beta>2 by (by100 force)
+                moreover have "\<forall>t\<in>I_set. H (0, t) = pp1 0"
+                proof (intro ballI)
+                  fix t assume "t \<in> I_set"
+                  have "H (0, t) = G (0, 0)" using hHL \<open>t \<in> I_set\<close> by (by100 blast)
+                  also have "\<dots> = (G \<circ> ?\<beta>1) 0" unfolding comp_def top1_path_product_def
+                    unfolding top1_unit_interval_def by (by100 force)
+                  also have "\<dots> = pp1 0" using hG\<beta>1 unfolding top1_unit_interval_def by (by100 force)
+                  finally show "H (0, t) = pp1 0" .
+                qed
+                moreover have "\<forall>t\<in>I_set. H (1, t) = pp1 1"
+                proof (intro ballI)
+                  fix t assume "t \<in> I_set"
+                  have "H (1, t) = G (1, 1)" using hHR \<open>t \<in> I_set\<close> by (by100 blast)
+                  also have "\<dots> = (G \<circ> ?\<beta>1) 1" unfolding comp_def top1_path_product_def
+                    unfolding top1_unit_interval_def by (by100 force)
+                  also have "\<dots> = pp1 1" using hG\<beta>1 unfolding top1_unit_interval_def by (by100 force)
+                  finally show "H (1, t) = pp1 1" .
+                qed
+                ultimately show "\<exists>H. top1_continuous_map_on (I_set \<times> I_set) II_topology
+                    V (subspace_topology X TX V) H
+                    \<and> (\<forall>s\<in>I_set. H (s, 0) = pp1 s) \<and> (\<forall>s\<in>I_set. H (s, 1) = pp2 s)
+                    \<and> (\<forall>t\<in>I_set. H (0, t) = pp1 0) \<and> (\<forall>t\<in>I_set. H (1, t) = pp1 1)"
+                  using hH_cont by (by100 blast)
+              qed
+            qed
             thus ?thesis by (by100 blast)
           qed
         qed
