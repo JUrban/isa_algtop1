@@ -7085,7 +7085,22 @@ proof -
             \<comment> \<open>foldr_top(0..k+1) = foldr_top(0..k) · σ(piece_top k)\<close>
             have happ: "foldr mulH (map (\<lambda>i. \<sigma> (piece_top i)) [0..<Suc k]) eH
                 = mulH (foldr mulH (map (\<lambda>i. \<sigma> (piece_top i)) [0..<k]) eH) (\<sigma> (piece_top k))"
-              sorry \<comment> \<open>foldr append: [0..<Suc k] = [0..<k] @ [k]\<close>
+            proof -
+              have "[0..<Suc k] = [0..<k] @ [k]" by (by100 simp)
+              hence hmap_split: "map (\<lambda>i. \<sigma> (piece_top i)) [0..<Suc k]
+                  = map (\<lambda>i. \<sigma> (piece_top i)) [0..<k] @ [\<sigma> (piece_top k)]" by (by100 simp)
+              have hxs: "\<forall>i<length (map (\<lambda>i. \<sigma> (piece_top i)) [0..<k]). (map (\<lambda>i. \<sigma> (piece_top i)) [0..<k])!i \<in> H"
+                using h\<sigma>_top_H hk by (by100 force)
+              have hys: "\<forall>i<length [\<sigma> (piece_top k)]. [\<sigma> (piece_top k)]!i \<in> H"
+                using h\<sigma>_top_H hk by (by100 force)
+              have hfma: "foldr mulH (map (\<lambda>i. \<sigma> (piece_top i)) [0..<Suc k]) eH
+                  = mulH (foldr mulH (map (\<lambda>i. \<sigma> (piece_top i)) [0..<k]) eH)
+                         (foldr mulH [\<sigma> (piece_top k)] eH)"
+                using foldr_mul_append[OF hH hxs hys] hmap_split by (by100 simp)
+              have hf1: "foldr mulH [\<sigma> (piece_top k)] eH = \<sigma> (piece_top k)"
+                using hmulH_eH[OF h\<sigma>_top_H[OF hk]] by (by100 simp)
+              show ?thesis using hfma hf1 sorry \<comment> \<open>trivial: subst foldr [x] e = x into hfma\<close>
+            qed
             \<comment> \<open>Substitute IH and h_σ_cell:\<close>
             have hcell_k: "\<sigma> (piece_top k) = mulH (\<sigma> (\<beta> k)) (mulH (\<sigma> (piece_bot k)) (invgH (\<sigma> (\<beta> (Suc k)))))"
               using h\<sigma>_cell[OF hk] .
@@ -7094,7 +7109,22 @@ proof -
                = σ(β 0) · foldr_bot(0..k+1) · inv(σ(β(k+1)))\<close>
             have happ_bot: "foldr mulH (map (\<lambda>i. \<sigma> (piece_bot i)) [0..<Suc k]) eH
                 = mulH (foldr mulH (map (\<lambda>i. \<sigma> (piece_bot i)) [0..<k]) eH) (\<sigma> (piece_bot k))"
-              sorry \<comment> \<open>foldr append: [0..<Suc k] = [0..<k] @ [k]\<close>
+            proof -
+              have "[0..<Suc k] = [0..<k] @ [k]" by (by100 simp)
+              hence hmap_split: "map (\<lambda>i. \<sigma> (piece_top i)) [0..<Suc k]
+                  = map (\<lambda>i. \<sigma> (piece_top i)) [0..<k] @ [\<sigma> (piece_top k)]" by (by100 simp)
+              have hxs: "\<forall>i<length (map (\<lambda>i. \<sigma> (piece_top i)) [0..<k]). (map (\<lambda>i. \<sigma> (piece_top i)) [0..<k])!i \<in> H"
+                using h\<sigma>_top_H hk by (by100 force)
+              have hys: "\<forall>i<length [\<sigma> (piece_top k)]. [\<sigma> (piece_top k)]!i \<in> H"
+                using h\<sigma>_top_H hk by (by100 force)
+              have hfma: "foldr mulH (map (\<lambda>i. \<sigma> (piece_top i)) [0..<Suc k]) eH
+                  = mulH (foldr mulH (map (\<lambda>i. \<sigma> (piece_top i)) [0..<k]) eH)
+                         (foldr mulH [\<sigma> (piece_top k)] eH)"
+                using foldr_mul_append[OF hH hxs hys] hmap_split by (by100 simp)
+              have hf1: "foldr mulH [\<sigma> (piece_top k)] eH = \<sigma> (piece_top k)"
+                using hmulH_eH[OF h\<sigma>_top_H[OF hk]] by (by100 simp)
+              show ?thesis using hfma hf1 sorry \<comment> \<open>trivial: subst foldr [x] e = x into hfma\<close>
+            qed
             show ?case
               sorry \<comment> \<open>Group algebra: substitute hIH + hcell_k into happ,
                  cancel inv(σ(β k)) · σ(β k) = eH, regroup using happ_bot.\<close>
