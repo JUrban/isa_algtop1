@@ -6463,18 +6463,9 @@ proof -
           (\<forall>i<M. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T i + t * (T (Suc i) - T i)) \<in> U)
                \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T i + t * (T (Suc i) - T i)) \<in> V)) \<Longrightarrow>
           foldr_\<sigma> f M T = foldr_\<sigma> f n sub"
-        sorry \<comment> \<open>Subdivision independence for any valid T. Proof sketch:
-           By well-founded induction on card {i ≤ n. ∀j≤M. T j ≠ sub i} (missing sub-points).
-           Base (0 missing): T refines sub → h_refine gives result.
-           Step (k+1 missing): find sub(i₀) not in T.
-           Since sub(i₀) ∈ (0,1) = (T(0), T(M)) and T strictly increasing,
-           ∃k<M. T(k) < sub(i₀) < T(k+1) (no sub-value between consecutive T-values
-           because T is injective and sub(i₀) ∉ T-range).
-           Define T'(j) = if j≤k then T(j) else if j=Suc k then sub(i₀) else T(j-1).
-           h_point_insert[symmetric]: foldr_σ f M T = foldr_σ f (Suc M) T'.
-           T' valid (endpoints, increasing, UV from cell containment) and has k missing sub-points.
-           IH: foldr_σ f (Suc M) T' = foldr_σ f n sub.
-           Chain: foldr_σ f M T = foldr_σ f n sub.\<close>
+        sorry \<comment> \<open>Subdivision independence. Induction on card {i≤n. sub(i) ∉ T-range} (decreasing).
+           Base: T refines sub → h_refine. Step: insert missing sub-point via h_point_insert[sym],
+           which preserves foldr_σ and decreases the missing count.\<close>
       show ?thesis
         using h_insert_all[OF hN_ge hS0 hSN hSinc hS_UV] .
     qed
