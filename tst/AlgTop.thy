@@ -6557,12 +6557,82 @@ proof -
                      (rule hUV[rule_format, OF hi_m])
               qed
               \<comment> \<open>Sub-piece UV membership (re-derived from hUV via sub-interval argument).\<close>
+              have hpUV_k_loc: "(\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (s k + t * (s (Suc k) - s k)) \<in> U)
+                  \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (s k + t * (s (Suc k) - s k)) \<in> V)"
+                using hUV hk by (by100 blast)
+              have hfirst_as_pl: "\<And>t. f (s k + t * (p - s k))
+                  = f (s k + (t * (p - s k) / (s (Suc k) - s k)) * (s (Suc k) - s k))"
+                using hd_pos by (by100 simp)
+              have hfu01: "\<And>t. 0 \<le> t \<Longrightarrow> t \<le> 1 \<Longrightarrow>
+                  0 \<le> t * (p - s k) / (s (Suc k) - s k) \<and> t * (p - s k) / (s (Suc k) - s k) \<le> 1"
+              proof -
+                fix t :: real assume ht0: "0 \<le> t" and ht1: "t \<le> 1"
+                have hpsk: "0 \<le> p - s k" using hpL by (by100 linarith)
+                have hnn: "0 \<le> t * (p - s k)" using ht0 hpsk by (by100 simp)
+                have "t * (p - s k) \<le> 1 * (p - s k)" by (rule mult_right_mono[OF ht1 hpsk])
+                hence "t * (p - s k) \<le> p - s k" by (by100 simp)
+                hence "t * (p - s k) \<le> s (Suc k) - s k" using hpR by (by100 linarith)
+                thus "0 \<le> t * (p - s k) / (s (Suc k) - s k) \<and> t * (p - s k) / (s (Suc k) - s k) \<le> 1"
+                  using hnn hd_pos by (by100 simp)
+              qed
               have hfirst_UV_loc: "(\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (s k + t * (p - s k)) \<in> U)
                   \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (s k + t * (p - s k)) \<in> V)"
-                sorry \<comment> \<open>Sub-interval of piece k: first half maps to same U/V as piece k.\<close>
+                using hpUV_k_loc
+              proof
+                assume hU: "\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (s k + t * (s (Suc k) - s k)) \<in> U"
+                show ?thesis proof (rule disjI1, intro allI impI)
+                  fix t :: real assume ht: "0 \<le> t \<and> t \<le> 1"
+                  have "f (s k + (t * (p - s k) / (s (Suc k) - s k)) * (s (Suc k) - s k)) \<in> U"
+                    using hU hfu01 ht by (by100 blast)
+                  thus "f (s k + t * (p - s k)) \<in> U" using hfirst_as_pl by (by100 simp)
+                qed
+              next
+                assume hV: "\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (s k + t * (s (Suc k) - s k)) \<in> V"
+                show ?thesis proof (rule disjI2, intro allI impI)
+                  fix t :: real assume ht: "0 \<le> t \<and> t \<le> 1"
+                  have "f (s k + (t * (p - s k) / (s (Suc k) - s k)) * (s (Suc k) - s k)) \<in> V"
+                    using hV hfu01 ht by (by100 blast)
+                  thus "f (s k + t * (p - s k)) \<in> V" using hfirst_as_pl by (by100 simp)
+                qed
+              qed
+              have hsecond_as_pl: "\<And>t. f (p + t * (s (Suc k) - p))
+                  = f (s k + ((p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k)) * (s (Suc k) - s k))"
+                using hd_pos by (by100 simp)
+              have hsu01: "\<And>t. 0 \<le> t \<Longrightarrow> t \<le> 1 \<Longrightarrow>
+                  0 \<le> (p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k)
+                  \<and> (p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k) \<le> 1"
+              proof -
+                fix t :: real assume ht0: "0 \<le> t" and ht1: "t \<le> 1"
+                have hpsk: "0 \<le> p - s k" using hpL by (by100 linarith)
+                have hskp: "0 \<le> s (Suc k) - p" using hpR by (by100 linarith)
+                have hnn: "0 \<le> p - s k + t * (s (Suc k) - p)" using ht0 hpsk hskp by (by100 simp)
+                have "t * (s (Suc k) - p) \<le> 1 * (s (Suc k) - p)" by (rule mult_right_mono[OF ht1 hskp])
+                hence "t * (s (Suc k) - p) \<le> s (Suc k) - p" by (by100 simp)
+                hence "p - s k + t * (s (Suc k) - p) \<le> s (Suc k) - s k" by (by100 linarith)
+                thus "0 \<le> (p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k)
+                    \<and> (p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k) \<le> 1"
+                  using hnn hd_pos by (by100 simp)
+              qed
               have hsecond_UV_loc: "(\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (p + t * (s (Suc k) - p)) \<in> U)
                   \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (p + t * (s (Suc k) - p)) \<in> V)"
-                sorry \<comment> \<open>Sub-interval of piece k: second half maps to same U/V as piece k.\<close>
+                using hpUV_k_loc
+              proof
+                assume hU: "\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (s k + t * (s (Suc k) - s k)) \<in> U"
+                show ?thesis proof (rule disjI1, intro allI impI)
+                  fix t :: real assume ht: "0 \<le> t \<and> t \<le> 1"
+                  have "f (s k + ((p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k)) * (s (Suc k) - s k)) \<in> U"
+                    using hU hsu01 ht by (by100 blast)
+                  thus "f (p + t * (s (Suc k) - p)) \<in> U" using hsecond_as_pl by (by100 simp)
+                qed
+              next
+                assume hV: "\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (s k + t * (s (Suc k) - s k)) \<in> V"
+                show ?thesis proof (rule disjI2, intro allI impI)
+                  fix t :: real assume ht: "0 \<le> t \<and> t \<le> 1"
+                  have "f (s k + ((p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k)) * (s (Suc k) - s k)) \<in> V"
+                    using hV hsu01 ht by (by100 blast)
+                  thus "f (p + t * (s (Suc k) - p)) \<in> V" using hsecond_as_pl by (by100 simp)
+                qed
+              qed
               have hG_k_H: "G k \<in> H"
               proof -
                 have "G k = \<sigma> (\<lambda>t. f (s k + t * (p - s k)))" by (rule hG_k)
