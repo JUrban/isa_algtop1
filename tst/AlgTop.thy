@@ -7340,13 +7340,67 @@ proof -
             and h\<beta>i_path_U: "top1_is_path_on U (subspace_topology X TX U) (\<beta> i 0) (\<beta> i 1) (\<beta> i)"
             and hpb_path_U: "top1_is_path_on U (subspace_topology X TX U) (piece_bot i 0) (piece_bot i 1) (piece_bot i)"
           if hU_cell: "\<forall>s t. sub_s' i \<le> s \<and> s \<le> sub_s' (Suc i) \<and> sub_t j \<le> t \<and> t \<le> sub_t (Suc j) \<and> 0\<le>s \<and> s\<le>1 \<and> 0\<le>t \<and> t\<le>1 \<longrightarrow> F (s,t) \<in> U"
-          sorry \<comment> \<open>Each edge: continuous (F∘affine) + image ⊆ U (from hU_cell + bounds) + codomain_shrink.\<close>
+        proof -
+          \<comment> \<open>All edges map I_set into U (from hU_cell + convex bounds in cell).\<close>
+          have hpt_img: "(piece_top i) ` I_set \<subseteq> U"
+            sorry \<comment> \<open>Bottom edge: F(affine_s(t), sub_t j) with affine_s ∈ [s_i, s_{i+1}] ⊆ cell\<close>
+          have h\<beta>Si_img: "(\<beta> (Suc i)) ` I_set \<subseteq> U"
+            sorry \<comment> \<open>Right edge: F(sub_s'(Suc i), affine_t(t)) with affine_t ∈ [t_j, t_{j+1}] ⊆ cell\<close>
+          have h\<beta>i_img: "(\<beta> i) ` I_set \<subseteq> U"
+            sorry \<comment> \<open>Left edge: F(sub_s' i, affine_t(t)) ⊆ cell\<close>
+          have hpb_img: "(piece_bot i) ` I_set \<subseteq> U"
+            sorry \<comment> \<open>Top edge: F(affine_s(t), sub_t(Suc j)) ⊆ cell\<close>
+          \<comment> \<open>All edges continuous on I_set (F ∘ affine, already established pattern).\<close>
+          have hpt_cont: "top1_continuous_map_on I_set I_top X TX (piece_top i)"
+            sorry \<comment> \<open>F ∘ (affine_s, const sub_t j) — same as row_fn j piece\<close>
+          have h\<beta>Si_cont: "top1_continuous_map_on I_set I_top X TX (\<beta> (Suc i))"
+            sorry \<comment> \<open>F ∘ (const sub_s'(Suc i), affine_t) — same as h_β_cont\<close>
+          have h\<beta>i_cont: "top1_continuous_map_on I_set I_top X TX (\<beta> i)"
+            sorry \<comment> \<open>Same pattern\<close>
+          have hpb_cont: "top1_continuous_map_on I_set I_top X TX (piece_bot i)"
+            sorry \<comment> \<open>Same pattern\<close>
+          \<comment> \<open>codomain_shrink + path_on.\<close>
+          show "top1_is_path_on U (subspace_topology X TX U) (piece_top i 0) (piece_top i 1) (piece_top i)"
+            unfolding top1_is_path_on_def
+            using top1_continuous_map_on_codomain_shrink[OF hpt_cont hpt_img hUsub] by (by100 blast)
+          show "top1_is_path_on U (subspace_topology X TX U) (\<beta> (Suc i) 0) (\<beta> (Suc i) 1) (\<beta> (Suc i))"
+            unfolding top1_is_path_on_def
+            using top1_continuous_map_on_codomain_shrink[OF h\<beta>Si_cont h\<beta>Si_img hUsub] by (by100 blast)
+          show "top1_is_path_on U (subspace_topology X TX U) (\<beta> i 0) (\<beta> i 1) (\<beta> i)"
+            unfolding top1_is_path_on_def
+            using top1_continuous_map_on_codomain_shrink[OF h\<beta>i_cont h\<beta>i_img hUsub] by (by100 blast)
+          show "top1_is_path_on U (subspace_topology X TX U) (piece_bot i 0) (piece_bot i 1) (piece_bot i)"
+            unfolding top1_is_path_on_def
+            using top1_continuous_map_on_codomain_shrink[OF hpb_cont hpb_img hUsub] by (by100 blast)
+        qed
         have hpt_path_V: "top1_is_path_on V (subspace_topology X TX V) (piece_top i 0) (piece_top i 1) (piece_top i)"
             and h\<beta>Si_path_V: "top1_is_path_on V (subspace_topology X TX V) (\<beta> (Suc i) 0) (\<beta> (Suc i) 1) (\<beta> (Suc i))"
             and h\<beta>i_path_V: "top1_is_path_on V (subspace_topology X TX V) (\<beta> i 0) (\<beta> i 1) (\<beta> i)"
             and hpb_path_V: "top1_is_path_on V (subspace_topology X TX V) (piece_bot i 0) (piece_bot i 1) (piece_bot i)"
           if hV_cell: "\<forall>s t. sub_s' i \<le> s \<and> s \<le> sub_s' (Suc i) \<and> sub_t j \<le> t \<and> t \<le> sub_t (Suc j) \<and> 0\<le>s \<and> s\<le>1 \<and> 0\<le>t \<and> t\<le>1 \<longrightarrow> F (s,t) \<in> V"
-          sorry \<comment> \<open>Same for V.\<close>
+        proof -
+          have hpt_img: "(piece_top i) ` I_set \<subseteq> V"
+            sorry \<comment> \<open>Same as U case with V\<close>
+          have h\<beta>Si_img: "(\<beta> (Suc i)) ` I_set \<subseteq> V" sorry
+          have h\<beta>i_img: "(\<beta> i) ` I_set \<subseteq> V" sorry
+          have hpb_img: "(piece_bot i) ` I_set \<subseteq> V" sorry
+          have hpt_cont: "top1_continuous_map_on I_set I_top X TX (piece_top i)" sorry
+          have h\<beta>Si_cont: "top1_continuous_map_on I_set I_top X TX (\<beta> (Suc i))" sorry
+          have h\<beta>i_cont: "top1_continuous_map_on I_set I_top X TX (\<beta> i)" sorry
+          have hpb_cont: "top1_continuous_map_on I_set I_top X TX (piece_bot i)" sorry
+          show "top1_is_path_on V (subspace_topology X TX V) (piece_top i 0) (piece_top i 1) (piece_top i)"
+            unfolding top1_is_path_on_def
+            using top1_continuous_map_on_codomain_shrink[OF hpt_cont hpt_img hVsub] by (by100 blast)
+          show "top1_is_path_on V (subspace_topology X TX V) (\<beta> (Suc i) 0) (\<beta> (Suc i) 1) (\<beta> (Suc i))"
+            unfolding top1_is_path_on_def
+            using top1_continuous_map_on_codomain_shrink[OF h\<beta>Si_cont h\<beta>Si_img hVsub] by (by100 blast)
+          show "top1_is_path_on V (subspace_topology X TX V) (\<beta> i 0) (\<beta> i 1) (\<beta> i)"
+            unfolding top1_is_path_on_def
+            using top1_continuous_map_on_codomain_shrink[OF h\<beta>i_cont h\<beta>i_img hVsub] by (by100 blast)
+          show "top1_is_path_on V (subspace_topology X TX V) (piece_bot i 0) (piece_bot i 1) (piece_bot i)"
+            unfolding top1_is_path_on_def
+            using top1_continuous_map_on_codomain_shrink[OF hpb_cont hpb_img hVsub] by (by100 blast)
+        qed
         have h_split_LHS: "\<sigma> pp1 = mulH (\<sigma> (piece_top i)) (\<sigma> (\<beta> (Suc i)))"
         proof -
           from hcell_ij show ?thesis
