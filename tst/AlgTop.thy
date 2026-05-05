@@ -6613,6 +6613,36 @@ proof -
       define piece_top where "piece_top i = (\<lambda>t. row_fn j (sub_s' i + t * (sub_s' (Suc i) - sub_s' i)))" for i
       define piece_bot where "piece_bot i = (\<lambda>t. row_fn (Suc j) (sub_s' i + t * (sub_s' (Suc i) - sub_s' i)))" for i
       define \<beta> where "\<beta> i = (\<lambda>t. F (sub_s' i, sub_t j + t * (sub_t (Suc j) - sub_t j)))" for i
+      \<comment> \<open>sub_t bounds: values in [0,1].\<close>
+      have hsubt_ge: "\<And>j'. j' \<le> nt \<Longrightarrow> 0 \<le> sub_t j'"
+      proof -
+        fix j' show "j' \<le> nt \<Longrightarrow> 0 \<le> sub_t j'"
+        proof (induct j')
+          case 0 thus ?case using ht0 by (by100 simp)
+        next
+          case (Suc j'')
+          have "j'' \<le> nt" using Suc.prems by (by100 presburger)
+          have "j'' < nt" using Suc.prems by (by100 presburger)
+          have "sub_t j'' < sub_t (Suc j'')" using htinc \<open>j'' < nt\<close> by (by100 force)
+          moreover have "0 \<le> sub_t j''" using Suc.hyps[OF \<open>j'' \<le> nt\<close>] .
+          ultimately show ?case by (by100 linarith)
+        qed
+      qed
+      have hsubt_le: "\<And>j'. j' \<le> nt \<Longrightarrow> sub_t j' \<le> 1"
+      proof -
+        fix j' show "j' \<le> nt \<Longrightarrow> sub_t j' \<le> 1"
+        proof (induct "nt - j'" arbitrary: j')
+          case 0 thus ?case using htn by (by100 simp)
+        next
+          case (Suc d)
+          have "j' < nt" using Suc.hyps(2) by (by100 presburger)
+          have "Suc j' \<le> nt" using \<open>j' < nt\<close> by (by100 presburger)
+          have "d = nt - Suc j'" using Suc.hyps(2) by (by100 presburger)
+          have "sub_t (Suc j') \<le> 1" using Suc.hyps(1)[OF \<open>d = nt - Suc j'\<close> \<open>Suc j' \<le> nt\<close>] .
+          moreover have "sub_t j' < sub_t (Suc j')" using htinc \<open>j' < nt\<close> by (by100 force)
+          ultimately show ?case by (by100 linarith)
+        qed
+      qed
       \<comment> \<open>τ(row_fn j) uses subdivision sub_s' with ns' pieces.\<close>
       \<comment> \<open>row_fn j is a loop (F(0,t_j) = F(1,t_j) = x0).\<close>
       have hrowj_loop: "top1_is_loop_on X TX x0 (row_fn j)"
@@ -6631,8 +6661,10 @@ proof -
                    \<and> sub_t j \<le> t \<and> t \<le> sub_t (Suc j) \<and> 0\<le>s \<and> s\<le>1 \<and> 0\<le>t \<and> t\<le>1 \<longrightarrow> F (s,t) \<in> V)"
           using hi hj by (by100 blast)
         \<comment> \<open>sub_t j is in [sub_t j, sub_t(Suc j)] and in [0,1].\<close>
+        have "j \<le> nt" using hj by (by100 presburger)
+        have "Suc j \<le> nt" using hj by (by100 presburger)
         have htj_bounds: "0 \<le> sub_t j" "sub_t j \<le> 1" "sub_t j \<le> sub_t (Suc j)"
-          sorry \<comment> \<open>From hsubt_ge/hsubt_le/htinc\<close>
+          using hsubt_ge[OF \<open>j \<le> nt\<close>] hsubt_le[OF \<open>j \<le> nt\<close>] htinc hj by (by100 force)+
         show "(\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> row_fn j (sub_s' i + t * (sub_s' (Suc i) - sub_s' i)) \<in> U)
            \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> row_fn j (sub_s' i + t * (sub_s' (Suc i) - sub_s' i)) \<in> V)"
         proof (cases "(\<forall>s t. sub_s' i \<le> s \<and> s \<le> sub_s' (Suc i)
@@ -6643,7 +6675,7 @@ proof -
             fix t :: real assume ht: "0 \<le> t \<and> t \<le> 1"
             define s where "s = sub_s' i + t * (sub_s' (Suc i) - sub_s' i)"
             have "sub_s' i \<le> s \<and> s \<le> sub_s' (Suc i) \<and> 0 \<le> s \<and> s \<le> 1"
-              sorry \<comment> \<open>Convex combination bounds (same as I_set argument)\<close>
+              sorry \<comment> \<open>sub_s' i ≤ s ≤ sub_s'(i+1) from convex; 0 ≤ sub_s' i; sub_s'(i+1) ≤ 1\<close>
             hence "F (s, sub_t j) \<in> U" using True htj_bounds by (by100 force)
             thus "row_fn j (sub_s' i + t * (sub_s' (Suc i) - sub_s' i)) \<in> U"
               unfolding row_fn_def s_def by (by100 simp)
@@ -6697,36 +6729,6 @@ proof -
               (straight-line homotopy in convex rectangle, composed with F)
            3. σ_cond1 + σ_cond2: σ(piece_top) · σ(β_{i+1}) = σ(β_i) · σ(piece_bot)
            4. Rearrange: σ(piece_top) = σ(β_i) · σ(piece_bot) · σ(β_{i+1})⁻¹\<close>
-      \<comment> \<open>sub_t bounds: values in [0,1].\<close>
-      have hsubt_ge: "\<And>j'. j' \<le> nt \<Longrightarrow> 0 \<le> sub_t j'"
-      proof -
-        fix j' show "j' \<le> nt \<Longrightarrow> 0 \<le> sub_t j'"
-        proof (induct j')
-          case 0 thus ?case using ht0 by (by100 simp)
-        next
-          case (Suc j'')
-          have "j'' \<le> nt" using Suc.prems by (by100 presburger)
-          have "j'' < nt" using Suc.prems by (by100 presburger)
-          have "sub_t j'' < sub_t (Suc j'')" using htinc \<open>j'' < nt\<close> by (by100 force)
-          moreover have "0 \<le> sub_t j''" using Suc.hyps[OF \<open>j'' \<le> nt\<close>] .
-          ultimately show ?case by (by100 linarith)
-        qed
-      qed
-      have hsubt_le: "\<And>j'. j' \<le> nt \<Longrightarrow> sub_t j' \<le> 1"
-      proof -
-        fix j' show "j' \<le> nt \<Longrightarrow> sub_t j' \<le> 1"
-        proof (induct "nt - j'" arbitrary: j')
-          case 0 thus ?case using htn by (by100 simp)
-        next
-          case (Suc d)
-          have "j' < nt" using Suc.hyps(2) by (by100 presburger)
-          have "Suc j' \<le> nt" using \<open>j' < nt\<close> by (by100 presburger)
-          have "d = nt - Suc j'" using Suc.hyps(2) by (by100 presburger)
-          have "sub_t (Suc j') \<le> 1" using Suc.hyps(1)[OF \<open>d = nt - Suc j'\<close> \<open>Suc j' \<le> nt\<close>] .
-          moreover have "sub_t j' < sub_t (Suc j')" using htinc \<open>j' < nt\<close> by (by100 force)
-          ultimately show ?case by (by100 linarith)
-        qed
-      qed
       \<comment> \<open>β_0 is constant at x0 (since sub_s' 0 = 0 and F(0,t) = x0).\<close>
       \<comment> \<open>σ of a constant-on-I_set path = eH.\<close>
       have h\<sigma>_const: "\<And>c. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> c t = x0) \<Longrightarrow> \<sigma> c = eH"
