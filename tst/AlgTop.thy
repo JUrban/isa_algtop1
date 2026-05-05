@@ -6047,8 +6047,87 @@ proof -
               have h\<psi>0: "\<psi> 0 = 0" unfolding \<psi>_def using hd_pos by (by100 simp)
               have h\<psi>1: "\<psi> 1 = 1" unfolding \<psi>_def using hd_pos by (by100 simp)
               have h\<psi>_cont: "top1_continuous_map_on I_set I_top I_set I_top \<psi>"
-                sorry \<comment> \<open>Piecewise linear: [0,1/2] affine + [1/2,1] affine, matching at 1/2.
-                   Use continuous_on_closed_Un for I_set = [0,1/2] ∪ [1/2,1].\<close>
+              proof -
+                \<comment> \<open>ψ is piecewise affine: affine on [0,1/2] and [1/2,1].\<close>
+                have hIeq: "I_set = {0..1/2::real} \<union> {1/2..1}"
+                  unfolding top1_unit_interval_def by (by100 auto)
+                have hcl1: "closed {0..1/2::real}" by (by100 auto)
+                have hcl2: "closed {1/2..1::real}" by (by100 auto)
+                have hdnz: "s (Suc k) - s k \<noteq> 0" using hd_pos by (by100 linarith)
+                have hcont1: "continuous_on {0..1/2} \<psi>"
+                proof -
+                  define c1 where "c1 = 2 * (p - s k) / (s (Suc k) - s k)"
+                  have "continuous_on {0..1/2::real} (\<lambda>t. c1 * t)" by (intro continuous_intros)
+                  moreover have hcong1: "\<And>t. t \<in> {0..1/2::real} \<Longrightarrow> \<psi> t = c1 * t"
+                    unfolding \<psi>_def c1_def by (by100 simp)
+                  ultimately show ?thesis sorry \<comment> \<open>continuous_on_cong + hcong1: ψ = c1*t on [0,1/2]\<close>
+                qed
+                have hcont2: "continuous_on {1/2..1} \<psi>"
+                proof -
+                  define a2 where "a2 = (p - s k - (s (Suc k) - p)) / (s (Suc k) - s k)"
+                  define c2 where "c2 = 2 * (s (Suc k) - p) / (s (Suc k) - s k)"
+                  have "continuous_on {1/2..1::real} (\<lambda>t. a2 + c2 * t)" by (intro continuous_intros)
+                  moreover have "\<And>t. t \<in> {1/2..1::real} \<Longrightarrow> \<psi> t = a2 + c2 * t"
+                    unfolding \<psi>_def a2_def c2_def using hd_pos
+                    sorry \<comment> \<open>Algebra: (p-s k+(2t-1)*(s(k+1)-p))/d = (2p-s k-s(k+1))/d + 2*(s(k+1)-p)*t/d.
+                       Both equal (2p-s k-s(k+1)+2t*(s(k+1)-p))/d. Needs field_simps or manual d-clearing.\<close>
+                  ultimately show ?thesis sorry \<comment> \<open>continuous_on_cong: ψ = a2+c2*t on [1/2,1]\<close>
+                qed
+                have hcont: "continuous_on I_set \<psi>" unfolding hIeq
+                  by (rule continuous_on_closed_Un[OF hcl1 hcl2 hcont1 hcont2])
+                \<comment> \<open>Range: ψ maps I_set into I_set.\<close>
+                have hrange: "\<And>t. t \<in> I_set \<Longrightarrow> \<psi> t \<in> I_set"
+                proof -
+                  fix t assume ht: "t \<in> I_set"
+                  have ht01: "0 \<le> t \<and> t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 simp)
+                  show "\<psi> t \<in> I_set"
+                  proof (cases "t \<le> 1/2")
+                    case True
+                    hence "\<psi> t = 2 * t * (p - s k) / (s (Suc k) - s k)" unfolding \<psi>_def by (by100 simp)
+                    moreover have "0 \<le> 2 * t * (p - s k) / (s (Suc k) - s k)
+                        \<and> 2 * t * (p - s k) / (s (Suc k) - s k) \<le> 1"
+                    proof -
+                      have "0 \<le> t" and "t \<le> 1/2" using ht01 True by (by100 blast)+
+                      have "0 \<le> p - s k" using hpL by (by100 linarith)
+                      have "0 \<le> 2 * t * (p - s k)" using \<open>0 \<le> t\<close> \<open>0 \<le> p - s k\<close> by (by100 simp)
+                      moreover have "2 * t * (p - s k) \<le> s (Suc k) - s k"
+                      proof -
+                        have "2 * t \<le> 1" using \<open>t \<le> 1/2\<close> by (by100 linarith)
+                        have "2 * t * (p - s k) \<le> 1 * (p - s k)"
+                          by (rule mult_right_mono[OF \<open>2*t \<le> 1\<close> \<open>0 \<le> p - s k\<close>])
+                        hence "2 * t * (p - s k) \<le> p - s k" by (by100 simp)
+                        thus ?thesis using hpR by (by100 linarith)
+                      qed
+                      ultimately show ?thesis using hd_pos by (by100 simp)
+                    qed
+                    ultimately show ?thesis unfolding top1_unit_interval_def by (by100 simp)
+                  next
+                    case False
+                    hence "\<psi> t = (p - s k + (2*t-1) * (s (Suc k) - p)) / (s (Suc k) - s k)"
+                      unfolding \<psi>_def by (by100 simp)
+                    moreover have "0 \<le> (p - s k + (2*t-1) * (s (Suc k) - p)) / (s (Suc k) - s k)
+                        \<and> (p - s k + (2*t-1) * (s (Suc k) - p)) / (s (Suc k) - s k) \<le> 1"
+                      using hsecond_u01[of "2*t-1"] ht01 False by (by100 simp)
+                    ultimately show ?thesis unfolding top1_unit_interval_def by (by100 simp)
+                  qed
+                qed
+                show ?thesis unfolding top1_continuous_map_on_def
+                proof (intro conjI ballI)
+                  fix t assume "t \<in> I_set" thus "\<psi> t \<in> I_set" by (rule hrange)
+                next
+                  fix W assume "W \<in> I_top"
+                  have "{t \<in> I_set. \<psi> t \<in> W} = \<psi> -` W \<inter> I_set" by (by100 blast)
+                  also have "\<dots> \<in> I_top"
+                  proof -
+                    have "open_in (top_of_set I_set) (\<psi> -` W \<inter> I_set)"
+                      using hcont \<open>W \<in> I_top\<close>
+                      sorry \<comment> \<open>continuous_on I_set ψ + W open in I_top → preimage open in I_top.
+                         Needs the equivalence between continuous_on and preimage-open.\<close>
+                    thus ?thesis sorry
+                  qed
+                  finally show "{t \<in> I_set. \<psi> t \<in> W} \<in> I_top" .
+                qed
+              qed
               \<comment> \<open>reparam gives: piece∘id ≃ piece∘ψ in U (or V).\<close>
               have hpp_as_comp: "\<And>t. t \<in> I_set \<Longrightarrow> top1_path_product first_h second_h t = (piece \<circ> \<psi>) t"
                 using hpp_eq_piece_psi unfolding comp_def \<psi>_def by (by100 simp)
