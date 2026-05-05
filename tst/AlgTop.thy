@@ -6888,8 +6888,16 @@ proof -
                   sorry \<comment> \<open>h_point_insert[symmetric] with k=j-1, p=T(j): inserting T(j) between
                      T'(j-1)=T(j-1) and T'(j)=T(j+1) gives back T. So foldr_σ f M T = foldr_σ f (M-1) T'.\<close>
                 \<comment> \<open>IH: foldr_σ f (M-1) T' = foldr_σ f n sub.\<close>
+                have hM1_lt: "M - 1 < M" using hMgt hn by (by100 presburger)
+                have hT'1: "M - 1 \<ge> 1" using hT'_valid by (by100 blast)
+                have hT'2: "T' 0 = (0::real)" using hT'_valid by (by100 blast)
+                have hT'3: "T' (M-1) = 1" using hT'_valid by (by100 blast)
+                have hT'4: "\<forall>i<M-1. T' i < T' (Suc i)" using hT'_valid by (by100 blast)
+                have hT'5: "\<forall>i<M-1. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T' i + t * (T' (Suc i) - T' i)) \<in> U)
+                     \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T' i + t * (T' (Suc i) - T' i)) \<in> V)"
+                  using hT'_valid by (by100 blast)
                 have "foldr_\<sigma> f (M - 1) T' = foldr_\<sigma> f n sub"
-                  sorry \<comment> \<open>IH application: M-1 < M, T' valid with M-1 pieces, T' refines sub.\<close>
+                  using less.IH[OF hM1_lt hT'1 hT'2 hT'3 hT'4 hT'5 hT'_refines] .
                 thus ?thesis using hinsert by (by100 simp)
               qed
             qed
