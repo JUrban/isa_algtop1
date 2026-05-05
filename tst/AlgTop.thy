@@ -6933,14 +6933,83 @@ proof -
                   hence "F (sub_s' 0, sub_t j + t * (sub_t (Suc j) - sub_t j))
                       = F (0, sub_t j + t * (sub_t (Suc j) - sub_t j))" by (by100 simp)
                   also have "\<dots> = x0"
-                    using hF_0t sorry \<comment> \<open>F(0, t') = x0: needs t' ∈ I_set (convex comb of sub_t)\<close>
+                  proof -
+                    have hdiff: "sub_t (Suc j) - sub_t j \<ge> 0" using htinc hj by (by100 force)
+                    have hprod_ge: "t * (sub_t (Suc j) - sub_t j) \<ge> 0"
+                      by (rule mult_nonneg_nonneg) (use \<open>0 \<le> t \<and> t \<le> 1\<close> hdiff in \<open>by100 linarith\<close>)+
+                    have "t * (sub_t (Suc j) - sub_t j) \<le> 1 * (sub_t (Suc j) - sub_t j)"
+                      by (rule mult_right_mono) (use \<open>0 \<le> t \<and> t \<le> 1\<close> hdiff in \<open>by100 linarith\<close>)+
+                    hence hprod_le: "t * (sub_t (Suc j) - sub_t j) \<le> sub_t (Suc j) - sub_t j"
+                      by (by100 simp)
+                    have "sub_t j + t * (sub_t (Suc j) - sub_t j) \<in> I_set"
+                      unfolding top1_unit_interval_def
+                      using hprod_ge hprod_le hsubt_ge[OF hj_le_nt] hsubt_le[OF hSj_le_nt]
+                      by (by100 force)
+                    thus ?thesis using hF_0t by (by100 blast)
+                  qed
                   finally show ?thesis .
                 qed
               qed
               have h\<beta>0_img: "(\<beta> 0) ` I_set \<subseteq> U"
                 using h\<beta>0_const hx0_U unfolding top1_unit_interval_def by (by100 force)
               have h\<beta>0_cont: "top1_continuous_map_on I_set I_top X TX (\<beta> 0)"
-                sorry \<comment> \<open>Same continuity pattern as h_β_cont (F ∘ affine)\<close>
+              proof -
+                have hTI: "is_topology_on I_set I_top" by (rule top1_unit_interval_topology_is_topology_on)
+                have h0_I: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 force)
+                have hpair: "top1_continuous_map_on I_set I_top (I_set \<times> I_set) II_topology
+                    (\<lambda>t. (0, sub_t j + t * (sub_t (Suc j) - sub_t j)))"
+                proof -
+                  have htj_ge: "0 \<le> sub_t j" using hsubt_ge[OF hj_le_nt] .
+                  have htj_le: "sub_t j \<le> sub_t (Suc j)" using htinc hj by (by100 force)
+                  have htSj_le: "sub_t (Suc j) \<le> 1" using hsubt_le[OF hSj_le_nt] .
+                  have haffine: "top1_continuous_map_on I_set I_top I_set I_top
+                      (\<lambda>t. sub_t j + t * (sub_t (Suc j) - sub_t j))"
+                    by (rule affine_map_continuous_I_to_I[OF htj_ge htj_le htSj_le])
+                  have hconst: "top1_continuous_map_on I_set I_top I_set I_top (\<lambda>_. (0::real))"
+                    unfolding top1_continuous_map_on_def
+                  proof (intro conjI ballI)
+                    fix x assume "x \<in> I_set" show "(0::real) \<in> I_set" using h0_I .
+                  next
+                    fix V assume "V \<in> I_top"
+                    have hI_in: "I_set \<in> I_top" using hTI unfolding is_topology_on_def by (by100 blast)
+                    have hempty_in: "{} \<in> I_top" using hTI unfolding is_topology_on_def by (by100 blast)
+                    show "{x \<in> I_set. (0::real) \<in> V} \<in> I_top"
+                    proof (cases "(0::real) \<in> V")
+                      case True have "{x \<in> I_set. (0::real) \<in> V} = I_set" using True by (by100 force)
+                      thus ?thesis using hI_in by (by100 presburger)
+                    next
+                      case False have "{x \<in> I_set. (0::real) \<in> V} = {}" using False by (by100 force)
+                      thus ?thesis using hempty_in by (by100 presburger)
+                    qed
+                  qed
+                  have h1: "top1_continuous_map_on I_set I_top I_set I_top
+                      (pi1 \<circ> (\<lambda>t. (0::real, sub_t j + t * (sub_t (Suc j) - sub_t j))))"
+                  proof -
+                    have "(pi1 \<circ> (\<lambda>t. (0::real, sub_t j + t * (sub_t (Suc j) - sub_t j)))) = (\<lambda>_. (0::real))"
+                      unfolding pi1_def comp_def by (rule ext) (by100 simp)
+                    thus ?thesis using hconst by (by100 simp)
+                  qed
+                  have h2: "top1_continuous_map_on I_set I_top I_set I_top
+                      (pi2 \<circ> (\<lambda>t. (0::real, sub_t j + t * (sub_t (Suc j) - sub_t j))))"
+                  proof -
+                    have "(pi2 \<circ> (\<lambda>t. (0::real, sub_t j + t * (sub_t (Suc j) - sub_t j))))
+                        = (\<lambda>t. sub_t j + t * (sub_t (Suc j) - sub_t j))"
+                      unfolding pi2_def comp_def by (rule ext) (by100 simp)
+                    thus ?thesis using haffine by (by100 simp)
+                  qed
+                  show ?thesis using iffD2[OF Theorem_18_4[OF hTI hTI hTI]] h1 h2
+                    unfolding II_topology_def by (by100 blast)
+                qed
+                have "top1_continuous_map_on I_set I_top X TX
+                    (F \<circ> (\<lambda>t. (0, sub_t j + t * (sub_t (Suc j) - sub_t j))))"
+                  using top1_continuous_map_on_comp[OF hpair hF_cont] .
+                moreover have "(F \<circ> (\<lambda>t. (0, sub_t j + t * (sub_t (Suc j) - sub_t j)))) = \<beta> 0"
+                proof (rule ext)
+                  fix t show "(F \<circ> (\<lambda>t. (0, sub_t j + t * (sub_t (Suc j) - sub_t j)))) t = \<beta> 0 t"
+                    unfolding comp_def \<beta>_def using hs0' by (by100 simp)
+                qed
+                ultimately show ?thesis by (by100 simp)
+              qed
               have h\<beta>0_cont_U: "top1_continuous_map_on I_set I_top U (subspace_topology X TX U) (\<beta> 0)"
                 by (rule top1_continuous_map_on_codomain_shrink[OF h\<beta>0_cont h\<beta>0_img hUsub])
               show ?thesis unfolding top1_is_path_on_def using h\<beta>0_cont_U by (by100 blast)
@@ -6968,7 +7037,20 @@ proof -
                     hence "F (sub_s' ns', sub_t j + t * (sub_t (Suc j) - sub_t j))
                         = F (1, sub_t j + t * (sub_t (Suc j) - sub_t j))" by (by100 simp)
                     also have "\<dots> = x0"
-                      using hF_1t sorry \<comment> \<open>F(1, t') = x0: needs t' ∈ I_set (convex comb of sub_t)\<close>
+                    proof -
+                      have hdiff: "sub_t (Suc j) - sub_t j \<ge> 0" using htinc hj by (by100 force)
+                      have hprod_ge: "t * (sub_t (Suc j) - sub_t j) \<ge> 0"
+                        by (rule mult_nonneg_nonneg) (use \<open>0 \<le> t \<and> t \<le> 1\<close> hdiff in \<open>by100 linarith\<close>)+
+                      have "t * (sub_t (Suc j) - sub_t j) \<le> 1 * (sub_t (Suc j) - sub_t j)"
+                        by (rule mult_right_mono) (use \<open>0 \<le> t \<and> t \<le> 1\<close> hdiff in \<open>by100 linarith\<close>)+
+                      hence hprod_le: "t * (sub_t (Suc j) - sub_t j) \<le> sub_t (Suc j) - sub_t j"
+                        by (by100 simp)
+                      have "sub_t j + t * (sub_t (Suc j) - sub_t j) \<in> I_set"
+                        unfolding top1_unit_interval_def
+                        using hprod_ge hprod_le hsubt_ge[OF hj_le_nt] hsubt_le[OF hSj_le_nt]
+                        by (by100 force)
+                      thus ?thesis using hF_1t by (by100 blast)
+                    qed
                     finally show ?thesis .
                   qed
                 qed
