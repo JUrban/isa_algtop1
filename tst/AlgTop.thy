@@ -6511,7 +6511,71 @@ proof -
               moreover have "Suc M - 1 = M" by (by100 simp)
               ultimately show ?thesis using less.prems(3) by (by100 simp)
             qed
-            have hT'inc: "\<forall>i<Suc M. T' i < T' (Suc i)" sorry
+            have hT'inc: "\<forall>i<Suc M. T' i < T' (Suc i)"
+            proof (intro allI impI)
+              fix i assume hi: "i < Suc M"
+              show "T' i < T' (Suc i)"
+              proof (cases "Suc i \<le> k")
+                case True \<comment> \<open>Both below insertion: T' i = T i, T'(Suc i) = T(Suc i)\<close>
+                have "i \<le> k" using True by (by100 presburger)
+                have "T' i = T i" unfolding T'_def using \<open>i \<le> k\<close> by (by100 simp)
+                have "T' (Suc i) = T (Suc i)" unfolding T'_def using True by (by100 simp)
+                have "i < M" using hi True hk by (by100 presburger)
+                show ?thesis using \<open>T' i = T i\<close> \<open>T' (Suc i) = T (Suc i)\<close> less.prems(4) \<open>i < M\<close>
+                  by (by100 force)
+              next
+                case False
+                show ?thesis
+                proof (cases "i < k")
+                  case True \<comment> \<open>i < k, Suc i > k, so Suc i = Suc k (insertion point)\<close>
+                  hence "Suc i = Suc k" using False by (by100 presburger)
+                  have "i \<le> k" using True by (by100 presburger)
+                  have "T' i = T i" unfolding T'_def using \<open>i \<le> k\<close> by (by100 simp)
+                  have "T' (Suc i) = sub i0" unfolding T'_def using \<open>Suc i = Suc k\<close> by (by100 simp)
+                  have "T i \<le> T k" using less.prems(4) True hk sorry \<comment> \<open>T monotone: i < k < M\<close>
+                  thus ?thesis using \<open>T' i = T i\<close> \<open>T' (Suc i) = sub i0\<close> hTk by (by100 linarith)
+                next
+                  case inner_False: False \<comment> \<open>i ≥ k\<close>
+                  show ?thesis
+                  proof (cases "i = k")
+                    case True \<comment> \<open>T' k = T k, T'(Suc k) = sub i0\<close>
+                    have "T' i = T k" unfolding T'_def using True by (by100 simp)
+                    have "T' (Suc i) = sub i0" unfolding T'_def using True by (by100 simp)
+                    show ?thesis using \<open>T' i = T k\<close> \<open>T' (Suc i) = sub i0\<close> hTk by (by100 linarith)
+                  next
+                    case False2: False \<comment> \<open>i > k\<close>
+                    hence "i > k" using inner_False by (by100 presburger)
+                    show ?thesis
+                    proof (cases "i = Suc k")
+                      case True \<comment> \<open>T'(Suc k) = sub i0, T'(Suc(Suc k)) = T(Suc k)\<close>
+                      have "T' i = sub i0" unfolding T'_def using True by (by100 simp)
+                      have "\<not> (Suc i \<le> k)" using True by (by100 presburger)
+                      have "Suc i \<noteq> Suc k" using True by (by100 presburger)
+                      have "T' (Suc i) = T (Suc i - 1)" unfolding T'_def using \<open>\<not>(Suc i \<le> k)\<close> \<open>Suc i \<noteq> Suc k\<close> by (by100 simp)
+                      have "Suc i - 1 = Suc k" using True by (by100 simp)
+                      have "T' (Suc i) = T (Suc k)" using \<open>T' (Suc i) = T (Suc i - 1)\<close> \<open>Suc i - 1 = Suc k\<close> by (by100 simp)
+                      show ?thesis using \<open>T' i = sub i0\<close> \<open>T' (Suc i) = T (Suc k)\<close> hTSk by (by100 linarith)
+                    next
+                      case False3: False \<comment> \<open>i > Suc k: both shifted\<close>
+                      hence "i > Suc k" using \<open>i > k\<close> by (by100 presburger)
+                      have "\<not> (i \<le> k)" using \<open>i > k\<close> by (by100 presburger)
+                      have "i \<noteq> Suc k" using False3 .
+                      have "T' i = T (i - 1)" unfolding T'_def using \<open>\<not>(i \<le> k)\<close> \<open>i \<noteq> Suc k\<close> by (by100 simp)
+                      have "\<not> (Suc i \<le> k)" using \<open>i > k\<close> by (by100 presburger)
+                      have "Suc i \<noteq> Suc k" using \<open>i > Suc k\<close> by (by100 presburger)
+                      have "T' (Suc i) = T (Suc i - 1)" unfolding T'_def using \<open>\<not>(Suc i \<le> k)\<close> \<open>Suc i \<noteq> Suc k\<close> by (by100 simp)
+                      have "Suc i - 1 = i" by (by100 simp)
+                      have "i - 1 < M" using hi \<open>i > Suc k\<close> by (by100 presburger)
+                      have "T' (Suc i) = T i" using \<open>T' (Suc i) = T (Suc i - 1)\<close> \<open>Suc i - 1 = i\<close> by (by100 simp)
+                      have "Suc (i - 1) = i" using \<open>i > Suc k\<close> by (by100 presburger)
+                      have "T (i-1) < T (Suc (i-1))" using less.prems(4) \<open>i - 1 < M\<close> by (by100 force)
+                      hence "T (i-1) < T i" using \<open>Suc (i-1) = i\<close> by (by100 simp)
+                      show ?thesis using \<open>T' i = T (i-1)\<close> \<open>T' (Suc i) = T i\<close> \<open>T (i-1) < T i\<close> by (by100 linarith)
+                    qed
+                  qed
+                qed
+              qed
+            qed
             have hT'UV: "\<forall>i<Suc M. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T' i + t * (T' (Suc i) - T' i)) \<in> U)
                  \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T' i + t * (T' (Suc i) - T' i)) \<in> V)"
               sorry
