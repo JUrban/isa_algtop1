@@ -6920,7 +6920,31 @@ proof -
           have "\<sigma> (\<beta> 0) \<in> H"
           proof -
             have "top1_is_path_on U (subspace_topology X TX U) (\<beta> 0 0) (\<beta> 0 1) (\<beta> 0)"
-              sorry \<comment> \<open>β 0 constant at x0, x0 ∈ U, continuous → path in U\<close>
+            proof -
+              \<comment> \<open>β 0 is constant at x0 (since sub_s' 0 = 0 and F(0,t) = x0).\<close>
+              have h\<beta>0_const: "\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> \<beta> 0 t = x0"
+              proof (intro allI impI)
+                fix t :: real assume "0 \<le> t \<and> t \<le> 1"
+                show "\<beta> 0 t = x0"
+                proof -
+                  have "\<beta> 0 t = F (sub_s' 0, sub_t j + t * (sub_t (Suc j) - sub_t j))"
+                    unfolding \<beta>_def by (by100 simp)
+                  also have "sub_s' 0 = 0" using hs0' .
+                  hence "F (sub_s' 0, sub_t j + t * (sub_t (Suc j) - sub_t j))
+                      = F (0, sub_t j + t * (sub_t (Suc j) - sub_t j))" by (by100 simp)
+                  also have "\<dots> = x0"
+                    using hF_0t sorry \<comment> \<open>F(0, t') = x0: needs t' ∈ I_set (convex comb of sub_t)\<close>
+                  finally show ?thesis .
+                qed
+              qed
+              have h\<beta>0_img: "(\<beta> 0) ` I_set \<subseteq> U"
+                using h\<beta>0_const hx0_U unfolding top1_unit_interval_def by (by100 force)
+              have h\<beta>0_cont: "top1_continuous_map_on I_set I_top X TX (\<beta> 0)"
+                sorry \<comment> \<open>Same continuity pattern as h_β_cont (F ∘ affine)\<close>
+              have h\<beta>0_cont_U: "top1_continuous_map_on I_set I_top U (subspace_topology X TX U) (\<beta> 0)"
+                by (rule top1_continuous_map_on_codomain_shrink[OF h\<beta>0_cont h\<beta>0_img hUsub])
+              show ?thesis unfolding top1_is_path_on_def using h\<beta>0_cont_U by (by100 blast)
+            qed
             thus ?thesis by (rule h\<sigma>_path_in_H)
           qed
           thus ?thesis using True by (by100 simp)
@@ -6932,7 +6956,30 @@ proof -
             have "\<sigma> (\<beta> ns') \<in> H"
             proof -
               have "top1_is_path_on U (subspace_topology X TX U) (\<beta> ns' 0) (\<beta> ns' 1) (\<beta> ns')"
-                sorry \<comment> \<open>β ns' constant at x0, x0 ∈ U, continuous → path in U\<close>
+              proof -
+                have h\<beta>n_const: "\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> \<beta> ns' t = x0"
+                proof (intro allI impI)
+                  fix t :: real assume "0 \<le> t \<and> t \<le> 1"
+                  show "\<beta> ns' t = x0"
+                  proof -
+                    have "\<beta> ns' t = F (sub_s' ns', sub_t j + t * (sub_t (Suc j) - sub_t j))"
+                      unfolding \<beta>_def by (by100 simp)
+                    also have "sub_s' ns' = 1" using hsn' .
+                    hence "F (sub_s' ns', sub_t j + t * (sub_t (Suc j) - sub_t j))
+                        = F (1, sub_t j + t * (sub_t (Suc j) - sub_t j))" by (by100 simp)
+                    also have "\<dots> = x0"
+                      using hF_1t sorry \<comment> \<open>F(1, t') = x0: needs t' ∈ I_set (convex comb of sub_t)\<close>
+                    finally show ?thesis .
+                  qed
+                qed
+                have h\<beta>n_img: "(\<beta> ns') ` I_set \<subseteq> U"
+                  using h\<beta>n_const hx0_U unfolding top1_unit_interval_def by (by100 force)
+                have h\<beta>n_cont: "top1_continuous_map_on I_set I_top X TX (\<beta> ns')"
+                  sorry \<comment> \<open>Same continuity pattern (F ∘ affine)\<close>
+                have h\<beta>n_cont_U: "top1_continuous_map_on I_set I_top U (subspace_topology X TX U) (\<beta> ns')"
+                  by (rule top1_continuous_map_on_codomain_shrink[OF h\<beta>n_cont h\<beta>n_img hUsub])
+                show ?thesis unfolding top1_is_path_on_def using h\<beta>n_cont_U by (by100 blast)
+              qed
               thus ?thesis by (rule h\<sigma>_path_in_H)
             qed
             thus ?thesis using True by (by100 simp)
