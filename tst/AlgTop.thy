@@ -6845,16 +6845,54 @@ proof -
                and hTUV: "\<forall>i<M. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T i + t * (T (Suc i) - T i)) \<in> U)
                    \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T i + t * (T (Suc i) - T i)) \<in> V)"
                and hrefines: "\<forall>i\<le>n. \<exists>j\<le>M. T j = sub i"
-            show "foldr_\<sigma> f M T = foldr_\<sigma> f n sub"
-              sorry \<comment> \<open>Induction on M - n ≥ 0.
-                 Base M = n: T has n pieces, strictly increasing, same endpoints as sub,
-                 and contains all sub-points ⟹ T = sub on [0..n] ⟹ foldr_σ equal.
-                 Step M > n: ∃j. T(j) not in sub (pigeonhole: M+1 points in [0,1] with only
-                 n+1 matching sub). T(j) is between sub(i) and sub(i+1) for some i.
-                 Remove T(j) via h_point_insert[symmetric] to get T' with M-1 pieces.
-                 T' still refines sub (removing a non-sub point preserves sub-containment).
-                 By IH: foldr_σ f (M-1) T' = foldr_σ f n sub.
-                 h_point_insert: foldr_σ f M T = foldr_σ f (M-1) T'. Done.\<close>
+            show "foldr_\<sigma> f M T = foldr_\<sigma> f n sub" using hM hT0 hTM hTinc hTUV hrefines
+            proof (induction M arbitrary: T rule: less_induct)
+              case (less M)
+              show ?case
+              proof (cases "M = n")
+                case True
+                \<comment> \<open>Base: M = n, T has same #pieces as sub. Since T ⊇ sub and both strictly
+                   increasing with same endpoints, T = sub on [0..n].\<close>
+                have "T = sub"
+                  sorry \<comment> \<open>Two strictly increasing functions [0..n]→[0,1] with same endpoints
+                     and range(T) ⊇ range(sub) and |range(T)| = |range(sub)| ⟹ T = sub on [0..n].\<close>
+                thus ?thesis using True by (by100 simp)
+              next
+                case False
+                have "M \<ge> n"
+                  sorry \<comment> \<open>T has M+1 distinct values containing n+1 sub-values ⟹ M+1 ≥ n+1.\<close>
+                hence hMgt: "M > n" using False by (by100 presburger)
+                \<comment> \<open>Step: M > n. Find removable point T(j) not in sub.\<close>
+                have "\<exists>j. 0 < j \<and> j < M \<and> (\<forall>i\<le>n. T j \<noteq> sub i)"
+                  sorry \<comment> \<open>Pigeonhole: T has M+1 points, sub has n+1 < M+1 points.
+                     T(0) = sub(0) = 0 and T(M) = sub(n) = 1. Among T(1)..T(M-1),
+                     at most n-1 can match sub(1)..sub(n-1). Since M-1 > n-1, one is extra.\<close>
+                then obtain j where hj_pos: "0 < j" and hj_lt: "j < M"
+                    and hj_not_sub: "\<forall>i\<le>n. T j \<noteq> sub i" by (by100 blast)
+                \<comment> \<open>Remove T(j): define T'(i) = T(i) for i<j, T'(i) = T(i+1) for i≥j.\<close>
+                define T' where "T' i = (if i < j then T i else T (Suc i))" for i
+                \<comment> \<open>T' is valid with M-1 pieces.\<close>
+                have hT'_valid: "M - 1 \<ge> 1 \<and> T' 0 = 0 \<and> T' (M-1) = 1
+                    \<and> (\<forall>i<M-1. T' i < T' (Suc i))
+                    \<and> (\<forall>i<M-1. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T' i + t * (T' (Suc i) - T' i)) \<in> U)
+                         \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T' i + t * (T' (Suc i) - T' i)) \<in> V))"
+                  sorry \<comment> \<open>T' valid: endpoints preserved, monotonicity from T, UV from T
+                     (each T' piece is either a T piece or a merge of two adjacent T pieces,
+                     both mapping to U or V — actually it's a sub-interval of a T-piece).\<close>
+                \<comment> \<open>T' still refines sub (removing non-sub point preserves containment).\<close>
+                have hT'_refines: "\<forall>i\<le>n. \<exists>j'\<le>M-1. T' j' = sub i"
+                  sorry \<comment> \<open>For each sub(i): was at T(k) for some k. If k < j: T'(k) = T(k) = sub(i).
+                     If k > j: T'(k-1) = T(k) = sub(i). k ≠ j by hj_not_sub.\<close>
+                \<comment> \<open>h_point_insert gives: foldr_σ f M T = foldr_σ f (M-1) T'.\<close>
+                have hinsert: "foldr_\<sigma> f M T = foldr_\<sigma> f (M - 1) T'"
+                  sorry \<comment> \<open>h_point_insert[symmetric] with k=j-1, p=T(j): inserting T(j) between
+                     T'(j-1)=T(j-1) and T'(j)=T(j+1) gives back T. So foldr_σ f M T = foldr_σ f (M-1) T'.\<close>
+                \<comment> \<open>IH: foldr_σ f (M-1) T' = foldr_σ f n sub.\<close>
+                have "foldr_\<sigma> f (M - 1) T' = foldr_\<sigma> f n sub"
+                  sorry \<comment> \<open>IH application: M-1 < M, T' valid with M-1 pieces, T' refines sub.\<close>
+                thus ?thesis using hinsert by (by100 simp)
+              qed
+            qed
           qed
           have h_indep: "foldr_\<sigma> f N S = foldr_\<sigma> f n sub"
           proof -
