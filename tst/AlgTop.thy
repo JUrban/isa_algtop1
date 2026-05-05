@@ -3,6 +3,37 @@ theory AlgTop
 begin
 
 
+\<comment> \<open>===== SvK uniqueness (Theorem 70.1 complement) =====\<close>
+
+text \<open>Theorem 70.1 uniqueness: the homomorphism \<Phi> extending \<phi>1 and \<phi>2 is unique.
+  This follows from Theorem 59.1: the images of j_1 and j_2 generate \<pi>_1(X),
+  so any homomorphism is determined by its values on these generators.\<close>
+lemma Theorem_70_1_uniqueness:
+  assumes hTX: "is_topology_on_strict X TX" and hU: "openin_on X TX U" and hV: "openin_on X TX V"
+      and hUV: "U \<union> V = X"
+      and hUVpc: "top1_path_connected_on (U \<inter> V) (subspace_topology X TX (U \<inter> V))"
+      and hUpc: "top1_path_connected_on U (subspace_topology X TX U)"
+      and hVpc: "top1_path_connected_on V (subspace_topology X TX V)"
+      and hx0: "x0 \<in> U \<inter> V"
+      and hH: "top1_is_group_on H mulH eH invgH"
+      and h\<Phi>: "top1_group_hom_on
+          (top1_fundamental_group_carrier X TX x0)
+          (top1_fundamental_group_mul X TX x0) H mulH \<Phi>"
+      and h\<Psi>: "top1_group_hom_on
+          (top1_fundamental_group_carrier X TX x0)
+          (top1_fundamental_group_mul X TX x0) H mulH \<Psi>"
+      and h\<Phi>U: "\<forall>a\<in>top1_fundamental_group_carrier U (subspace_topology X TX U) x0.
+          \<Phi> (top1_fundamental_group_induced_on U (subspace_topology X TX U) x0 X TX x0 (\<lambda>x. x) a)
+        = \<Psi> (top1_fundamental_group_induced_on U (subspace_topology X TX U) x0 X TX x0 (\<lambda>x. x) a)"
+      and h\<Phi>V: "\<forall>b\<in>top1_fundamental_group_carrier V (subspace_topology X TX V) x0.
+          \<Phi> (top1_fundamental_group_induced_on V (subspace_topology X TX V) x0 X TX x0 (\<lambda>x. x) b)
+        = \<Psi> (top1_fundamental_group_induced_on V (subspace_topology X TX V) x0 X TX x0 (\<lambda>x. x) b)"
+  shows "\<forall>c\<in>top1_fundamental_group_carrier X TX x0. \<Phi> c = \<Psi> c"
+  \<comment> \<open>By Theorem 59.1, every loop class in \<pi>_1(X) is a product of classes from U and V.
+     Since \<Phi> and \<Psi> agree on all U-classes and V-classes (by h\<Phi>U and h\<Phi>V), and both
+     are homomorphisms, they agree on all products, hence on all of \<pi>_1(X).\<close>
+  sorry
+
 \<comment> \<open>===== Theorems with sorry, moved here for caching =====\<close>
 
 
