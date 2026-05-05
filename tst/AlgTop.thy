@@ -7083,7 +7083,25 @@ proof -
                 by (rule affine_map_continuous_I_to_I[OF htj_ge htj_le htSj_le])
               \<comment> \<open>Constant first component.\<close>
               have hconst_fst: "top1_continuous_map_on I_set I_top I_set I_top (\<lambda>_. sub_s' i)"
-                sorry \<comment> \<open>Constant map continuous (trivial topology fact, same pattern as row loop)\<close>
+                unfolding top1_continuous_map_on_def
+              proof (intro conjI ballI)
+                fix x assume "x \<in> I_set"
+                show "sub_s' i \<in> I_set" using hsi_I .
+              next
+                fix V assume "V \<in> I_top"
+                have hI_in: "I_set \<in> I_top" using hTI unfolding is_topology_on_def by (by100 blast)
+                have hempty_in: "{} \<in> I_top" using hTI unfolding is_topology_on_def by (by100 blast)
+                show "{x \<in> I_set. sub_s' i \<in> V} \<in> I_top"
+                proof (cases "sub_s' i \<in> V")
+                  case True
+                  have "{x \<in> I_set. sub_s' i \<in> V} = I_set" using True by (by100 force)
+                  thus ?thesis using hI_in by (by100 presburger)
+                next
+                  case False
+                  have "{x \<in> I_set. sub_s' i \<in> V} = {}" using False by (by100 force)
+                  thus ?thesis using hempty_in by (by100 presburger)
+                qed
+              qed
               \<comment> \<open>Map into product.\<close>
               have hpair: "top1_continuous_map_on I_set I_top (I_set \<times> I_set) II_topology
                   (\<lambda>t. (sub_s' i, sub_t j + t * (sub_t (Suc j) - sub_t j)))"
