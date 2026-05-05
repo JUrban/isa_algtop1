@@ -7767,9 +7767,51 @@ proof -
                   show "?H p \<in> I_set \<times> I_set" unfolding hst top1_unit_interval_def
                     using hc1_ge hc1_le hc2_ge hc2_le by (by100 force)
                 qed
-                show ?thesis using hH_range
-                  sorry \<comment> \<open>Component continuity + range + Theorem_18_4.
-                     Each component continuous via continuous_on bridge.\<close>
+                \<comment> \<open>Bridge f to continuous_on, then build H continuous_on, then bridge back.\<close>
+                have hf_cont_on: "continuous_on I_set f"
+                proof (unfold continuous_on_open_invariant, intro allI impI)
+                  fix W :: "(real \<times> real) set" assume hWo: "open W"
+                  have "W \<in> (top1_open_sets :: (real\<times>real) set set)"
+                    using hWo unfolding top1_open_sets_def by (by100 blast)
+                  hence "W \<in> product_topology_on (top1_open_sets::real set set) top1_open_sets"
+                    using product_topology_on_open_sets_real2 by (by100 metis)
+                  hence "(I_set \<times> I_set) \<inter> W \<in> II_topology"
+                    unfolding II_topology_def II_topology_eq_subspace subspace_topology_def
+                    by (by100 blast)
+                  hence "{x \<in> I_set. f x \<in> (I_set \<times> I_set) \<inter> W} \<in> I_top"
+                    using hf_cont unfolding top1_continuous_map_on_def by (by100 blast)
+                  moreover have "{x \<in> I_set. f x \<in> W} = {x \<in> I_set. f x \<in> (I_set \<times> I_set) \<inter> W}"
+                    using hf_range by (by100 force)
+                  ultimately have "{x \<in> I_set. f x \<in> W} \<in> I_top" by (by100 simp)
+                  then obtain V where hVo: "open V" and hVeq: "{x \<in> I_set. f x \<in> W} = I_set \<inter> V"
+                    unfolding top1_unit_interval_topology_def subspace_topology_def
+                              top1_open_sets_def by (by100 force)
+                  have "V \<inter> I_set = f -` W \<inter> I_set" using hVeq by (by100 blast)
+                  thus "\<exists>A. open A \<and> A \<inter> I_set = f -` W \<inter> I_set"
+                    using hVo by (by100 blast)
+                qed
+                have hf_fst_co: "continuous_on (I_set \<times> I_set) (\<lambda>p. f (fst p))"
+                  by (rule continuous_on_compose2[OF hf_cont_on continuous_on_fst]) (by100 auto)
+                let ?H' = "\<lambda>p::real\<times>real. ((1 - snd p) * fst (f (fst p)) + snd p * fst x0,
+                                            (1 - snd p) * snd (f (fst p)) + snd p * snd x0)"
+                have hH'_co: "continuous_on (I_set \<times> I_set) ?H'"
+                  by (intro continuous_on_Pair continuous_on_add continuous_on_mult
+                         continuous_on_diff continuous_on_const continuous_on_fst continuous_on_snd
+                         continuous_on_id hf_fst_co)
+                have hH_eq: "?H' = ?H"
+                proof (rule ext)
+                  fix p :: "real \<times> real"
+                  show "?H' p = ?H p" by (cases p) (by100 simp)
+                qed
+                have hH_co: "continuous_on (I_set \<times> I_set) ?H" using hH'_co hH_eq by (by100 presburger)
+                have "top1_continuous_map_on (I_set \<times> I_set)
+                    (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets)
+                        (I_set \<times> I_set))
+                    (I_set \<times> I_set)
+                    (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets)
+                        (I_set \<times> I_set)) ?H"
+                  by (rule top1_continuous_map_on_real2_subspace_general[OF hH_range hH_co])
+                thus ?thesis unfolding II_topology_def II_topology_eq_subspace .
               qed
               have hH_s0: "\<forall>s\<in>I_set. ?H (s, 0) = f s" by (by100 force)
               have hH_s1: "\<forall>s\<in>I_set. ?H (s, 1) = top1_constant_path x0 s"
