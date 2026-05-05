@@ -6854,13 +6854,15 @@ definition top1_is_free_group_full_on ::
         (\<forall>i<length ws. fst (ws!i) \<in> S) \<longrightarrow>
         top1_group_word_product mul e invg (map (\<lambda>(s, b). (\<iota> s, b)) ws) \<noteq> e)"
 
-text \<open>External universal property for free groups: for a specific test type,
-  any function S \<rightarrow> H extends uniquely to a homomorphism G \<rightarrow> H.\<close>
+text \<open>External universal property for free groups: for a specific test (H, \<phi>),
+  H is a group, \<phi> maps S into H, and \<phi> extends uniquely to a homomorphism G \<rightarrow> H.
+  (Fixed: was using implication instead of conjunction, making it vacuously true
+  when H is not a group.)\<close>
 definition top1_free_group_universal_prop ::
   "'g set \<Rightarrow> ('g \<Rightarrow> 'g \<Rightarrow> 'g) \<Rightarrow> ('s \<Rightarrow> 'g) \<Rightarrow> 's set \<Rightarrow>
    'h set \<Rightarrow> ('h \<Rightarrow> 'h \<Rightarrow> 'h) \<Rightarrow> 'h \<Rightarrow> ('h \<Rightarrow> 'h) \<Rightarrow> ('s \<Rightarrow> 'h) \<Rightarrow> bool" where
   "top1_free_group_universal_prop G mul \<iota> S H mulH eH invgH \<phi> \<longleftrightarrow>
-     top1_is_group_on H mulH eH invgH \<and> (\<forall>s\<in>S. \<phi> s \<in> H) \<longrightarrow>
+     top1_is_group_on H mulH eH invgH \<and> (\<forall>s\<in>S. \<phi> s \<in> H) \<and>
      (\<exists>!\<psi>. top1_group_hom_on G mul H mulH \<psi>
         \<and> (\<forall>s\<in>S. \<psi> (\<iota> s) = \<phi> s))"
 
