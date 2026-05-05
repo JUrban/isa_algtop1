@@ -5983,12 +5983,68 @@ proof -
                 qed
               qed
               \<comment> \<open>Step 1: piece ≃ first_h * second_h in U (or V) by reparametrization.\<close>
+              \<comment> \<open>Reparametrization: piece = g∘id and pp(first_h,second_h) = g∘ψ where g = piece.
+                 ψ(t) = if t≤1/2 then 2t*(p-s(k))/(s(k+1)-s(k)) else (p-s(k)+(2t-1)*(s(k+1)-p))/(s(k+1)-s(k)).
+                 Apply reparam_path_homotopy with g=piece, φ=id, ψ=ψ.\<close>
+              have hsk_ge0: "0 \<le> s k"
+              proof -
+                have "s 0 \<le> s k" using hk
+                proof (induct k)
+                  case 0 show ?case by (by100 simp)
+                next
+                  case (Suc j)
+                  have "j < m" using Suc.prems by (by100 presburger)
+                  have "s 0 \<le> s j" using Suc.hyps \<open>j < m\<close> by (by100 presburger)
+                  moreover have "s j < s (Suc j)" using hinc \<open>j < m\<close> by (by100 blast)
+                  ultimately show ?case by (by100 linarith)
+                qed
+                thus ?thesis using hs0 by (by100 simp)
+              qed
+              have hsk1_le1: "s (Suc k) \<le> 1"
+              proof -
+                have hSk_le: "Suc k \<le> m" using hk by (by100 presburger)
+                have "s (Suc k) \<le> s m" using hSk_le
+                proof (induct rule: dec_induct)
+                  case base show ?case by (by100 simp)
+                next
+                  case (step n)
+                  have "s n < s (Suc n)" using hinc step.hyps(2) by (by100 blast)
+                  thus ?case using step.hyps(3) by (by100 linarith)
+                qed
+                thus ?thesis using hsm by (by100 simp)
+              qed
+              have hsk_le_p: "s k \<le> p" using hpL by (by100 linarith)
+              have hp_le_sk1: "p \<le> s (Suc k)" using hpR by (by100 linarith)
+              have hp_ge0: "0 \<le> p" using hsk_ge0 hpL by (by100 linarith)
+              have hp_le1: "p \<le> 1" using hsk1_le1 hpR by (by100 linarith)
+              have hf_cont_X: "top1_continuous_map_on I_set I_top X TX f"
+                using hf_loop unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+              have hsk_le_sk1: "s k \<le> s (Suc k)" using hinc hk by (by100 force)
+              have hpiece_cont: "top1_continuous_map_on I_set I_top X TX piece"
+              proof -
+                have haff: "top1_continuous_map_on I_set I_top I_set I_top
+                    (\<lambda>t. s k + t * (s (Suc k) - s k))"
+                  by (rule affine_map_continuous_I_to_I[OF hsk_ge0 hsk_le_sk1 hsk1_le1])
+                show ?thesis unfolding piece_def
+                  using top1_continuous_map_on_comp[OF haff hf_cont_X] unfolding comp_def by (by100 simp)
+              qed
+              have hpiece_I_U: "(\<forall>s\<in>I_set. piece s \<in> U) \<or> (\<forall>s\<in>I_set. piece s \<in> V)"
+              proof -
+                have "\<And>t. t \<in> I_set \<Longrightarrow> 0 \<le> t \<and> t \<le> 1"
+                  unfolding top1_unit_interval_def by (by100 simp)
+                thus ?thesis using hpUV_k by (by100 fast)
+              qed
+              \<comment> \<open>pp(first_h, second_h) agrees with piece∘ψ on I_set, hence homotopic.\<close>
+              have hpp_eq_piece_psi: "\<And>t. t \<in> I_set \<Longrightarrow>
+                  top1_path_product first_h second_h t = piece
+                    (if t \<le> 1/2 then t * (p - s k) / (s (Suc k) - s k) * 2
+                     else (p - s k + (2*t-1) * (s (Suc k) - p)) / (s (Suc k) - s k))"
+                sorry \<comment> \<open>Algebra: unfold pp/first_h/second_h/piece, use hd_pos to cancel denominators.\<close>
               have hhom: "(\<exists>S. S = U \<and> top1_path_homotopic_on S (subspace_topology X TX S)
                   (piece 0) (piece 1) piece (top1_path_product first_h second_h))
                   \<or> (\<exists>S. S = V \<and> top1_path_homotopic_on S (subspace_topology X TX S)
                   (piece 0) (piece 1) piece (top1_path_product first_h second_h))"
-                sorry \<comment> \<open>reparam_path_homotopy with φ = linear, ψ = concat (piecewise linear).
-                   Both map I→I with same endpoints s(k), s(k+1).\<close>
+                sorry \<comment> \<open>From hpiece_I_U + reparam_path_homotopy + hpp_eq_piece_psi + h_σ_I_cong.\<close>
               \<comment> \<open>Step 2: σ(piece) = σ(first*second) by σ_cond1.\<close>
               have h\<sigma>_eq: "\<sigma> piece = \<sigma> (top1_path_product first_h second_h)"
                 using hhom
@@ -6009,48 +6065,15 @@ proof -
               qed
               \<comment> \<open>Step 3: σ(first*second) = σ(first)·σ(second) by σ_cond2.\<close>
               \<comment> \<open>first_h and second_h are paths in U (or V) by affine+composition+codomain_shrink.\<close>
-              have hf_cont: "top1_continuous_map_on I_set I_top X TX f"
-                using hf_loop unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
-              have hsk_ge: "0 \<le> s k"
-              proof -
-                have "s 0 \<le> s k" using hk
-                proof (induct k)
-                  case 0 show ?case by (by100 simp)
-                next
-                  case (Suc j)
-                  have "j < m" using Suc.prems by (by100 presburger)
-                  have "s j < s (Suc j)" using hinc \<open>j < m\<close> by (by100 blast)
-                  moreover have "s 0 \<le> s j" using Suc.hyps \<open>j < m\<close> by (by100 presburger)
-                  ultimately show ?case by (by100 linarith)
-                qed
-                thus ?thesis using hs0 by (by100 simp)
-              qed
-              have hsk1_le: "s (Suc k) \<le> 1"
-              proof -
-                have hSk_le: "Suc k \<le> m" using hk by (by100 presburger)
-                have "s (Suc k) \<le> s m" using hSk_le
-                proof (induct rule: dec_induct)
-                  case base show ?case by (by100 simp)
-                next
-                  case (step n)
-                  have "s n < s (Suc n)" using hinc step.hyps(2) by (by100 blast)
-                  thus ?case using step.hyps(3) by (by100 linarith)
-                qed
-                thus ?thesis using hsm by (by100 simp)
-              qed
-              have hp_ge: "0 \<le> p" using hsk_ge hpL by (by100 linarith)
-              have hp_le: "p \<le> 1" using hsk1_le hpR by (by100 linarith)
-              have hsk_le_p: "s k \<le> p" using hpL by (by100 linarith)
-              have hp_le_sk1: "p \<le> s (Suc k)" using hpR by (by100 linarith)
               have haff1: "top1_continuous_map_on I_set I_top I_set I_top (\<lambda>t. s k + t * (p - s k))"
-                by (rule affine_map_continuous_I_to_I[OF hsk_ge hsk_le_p hp_le])
+                by (rule affine_map_continuous_I_to_I[OF hsk_ge0 hsk_le_p hp_le1])
               have haff2: "top1_continuous_map_on I_set I_top I_set I_top (\<lambda>t. p + t * (s (Suc k) - p))"
-                by (rule affine_map_continuous_I_to_I[OF hp_ge hp_le_sk1 hsk1_le])
+                by (rule affine_map_continuous_I_to_I[OF hp_ge0 hp_le_sk1 hsk1_le1])
               have hfirst_cont: "top1_continuous_map_on I_set I_top X TX first_h"
-                unfolding first_h_def using top1_continuous_map_on_comp[OF haff1 hf_cont]
+                unfolding first_h_def using top1_continuous_map_on_comp[OF haff1 hf_cont_X]
                 unfolding comp_def by (by100 simp)
               have hsecond_cont: "top1_continuous_map_on I_set I_top X TX second_h"
-                unfolding second_h_def using top1_continuous_map_on_comp[OF haff2 hf_cont]
+                unfolding second_h_def using top1_continuous_map_on_comp[OF haff2 hf_cont_X]
                 unfolding comp_def by (by100 simp)
               have hmatch: "first_h 1 = second_h 0"
                 unfolding first_h_def second_h_def by (by100 simp)
