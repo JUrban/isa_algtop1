@@ -6008,10 +6008,110 @@ proof -
                 show ?thesis by (rule h\<sigma>_cond1_V[OF hhom_S])
               qed
               \<comment> \<open>Step 3: σ(first*second) = σ(first)·σ(second) by σ_cond2.\<close>
+              \<comment> \<open>first_h and second_h are paths in U (or V) by affine+composition+codomain_shrink.\<close>
+              have hf_cont: "top1_continuous_map_on I_set I_top X TX f"
+                using hf_loop unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+              have hsk_ge: "0 \<le> s k"
+              proof -
+                have "s 0 \<le> s k" using hk
+                proof (induct k)
+                  case 0 show ?case by (by100 simp)
+                next
+                  case (Suc j)
+                  have "j < m" using Suc.prems by (by100 presburger)
+                  have "s j < s (Suc j)" using hinc \<open>j < m\<close> by (by100 blast)
+                  moreover have "s 0 \<le> s j" using Suc.hyps \<open>j < m\<close> by (by100 presburger)
+                  ultimately show ?case by (by100 linarith)
+                qed
+                thus ?thesis using hs0 by (by100 simp)
+              qed
+              have hsk1_le: "s (Suc k) \<le> 1"
+              proof -
+                have hSk_le: "Suc k \<le> m" using hk by (by100 presburger)
+                have "s (Suc k) \<le> s m" using hSk_le
+                proof (induct rule: dec_induct)
+                  case base show ?case by (by100 simp)
+                next
+                  case (step n)
+                  have "s n < s (Suc n)" using hinc step.hyps(2) by (by100 blast)
+                  thus ?case using step.hyps(3) by (by100 linarith)
+                qed
+                thus ?thesis using hsm by (by100 simp)
+              qed
+              have hp_ge: "0 \<le> p" using hsk_ge hpL by (by100 linarith)
+              have hp_le: "p \<le> 1" using hsk1_le hpR by (by100 linarith)
+              have hsk_le_p: "s k \<le> p" using hpL by (by100 linarith)
+              have hp_le_sk1: "p \<le> s (Suc k)" using hpR by (by100 linarith)
+              have haff1: "top1_continuous_map_on I_set I_top I_set I_top (\<lambda>t. s k + t * (p - s k))"
+                by (rule affine_map_continuous_I_to_I[OF hsk_ge hsk_le_p hp_le])
+              have haff2: "top1_continuous_map_on I_set I_top I_set I_top (\<lambda>t. p + t * (s (Suc k) - p))"
+                by (rule affine_map_continuous_I_to_I[OF hp_ge hp_le_sk1 hsk1_le])
+              have hfirst_cont: "top1_continuous_map_on I_set I_top X TX first_h"
+                unfolding first_h_def using top1_continuous_map_on_comp[OF haff1 hf_cont]
+                unfolding comp_def by (by100 simp)
+              have hsecond_cont: "top1_continuous_map_on I_set I_top X TX second_h"
+                unfolding second_h_def using top1_continuous_map_on_comp[OF haff2 hf_cont]
+                unfolding comp_def by (by100 simp)
+              have hmatch: "first_h 1 = second_h 0"
+                unfolding first_h_def second_h_def by (by100 simp)
               have h\<sigma>_mul: "\<sigma> (top1_path_product first_h second_h)
                   = mulH (\<sigma> first_h) (\<sigma> second_h)"
-                sorry \<comment> \<open>first_h and second_h are paths in U (or V) with matching endpoint.
-                   Apply σ_cond2 (or _V).\<close>
+                using hpUV_k
+              proof
+                assume hU: "\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> piece t \<in> U"
+                have hfirst_U: "first_h ` I_set \<subseteq> U"
+                proof (intro subsetI)
+                  fix x assume "x \<in> first_h ` I_set"
+                  then obtain t where ht: "t \<in> I_set" and hx: "x = first_h t" by (by100 blast)
+                  have ht01: "0 \<le> t \<and> t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 simp)
+                  have "piece (t * (p - s k) / (s (Suc k) - s k)) \<in> U"
+                    using hU hfirst_u01 ht01 by (by100 blast)
+                  thus "x \<in> U" using hx hfirst_as_piece by (by100 simp)
+                qed
+                have hsecond_U: "second_h ` I_set \<subseteq> U"
+                proof (intro subsetI)
+                  fix x assume "x \<in> second_h ` I_set"
+                  then obtain t where ht: "t \<in> I_set" and hx: "x = second_h t" by (by100 blast)
+                  have ht01: "0 \<le> t \<and> t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 simp)
+                  have "piece ((p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k)) \<in> U"
+                    using hU hsecond_u01 ht01 by (by100 blast)
+                  thus "x \<in> U" using hx hsecond_as_piece by (by100 simp)
+                qed
+                have hf1_path: "top1_is_path_on U (subspace_topology X TX U) (first_h 0) (first_h 1) first_h"
+                  unfolding top1_is_path_on_def
+                  using top1_continuous_map_on_codomain_shrink[OF hfirst_cont hfirst_U hUsub] by (by100 blast)
+                have hf2_path: "top1_is_path_on U (subspace_topology X TX U) (second_h 0) (second_h 1) second_h"
+                  unfolding top1_is_path_on_def
+                  using top1_continuous_map_on_codomain_shrink[OF hsecond_cont hsecond_U hUsub] by (by100 blast)
+                show ?thesis by (rule h\<sigma>_cond2[OF hf1_path hf2_path hmatch])
+              next
+                assume hV: "\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> piece t \<in> V"
+                have hfirst_V: "first_h ` I_set \<subseteq> V"
+                proof (intro subsetI)
+                  fix x assume "x \<in> first_h ` I_set"
+                  then obtain t where ht: "t \<in> I_set" and hx: "x = first_h t" by (by100 blast)
+                  have ht01: "0 \<le> t \<and> t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 simp)
+                  have "piece (t * (p - s k) / (s (Suc k) - s k)) \<in> V"
+                    using hV hfirst_u01 ht01 by (by100 blast)
+                  thus "x \<in> V" using hx hfirst_as_piece by (by100 simp)
+                qed
+                have hsecond_V: "second_h ` I_set \<subseteq> V"
+                proof (intro subsetI)
+                  fix x assume "x \<in> second_h ` I_set"
+                  then obtain t where ht: "t \<in> I_set" and hx: "x = second_h t" by (by100 blast)
+                  have ht01: "0 \<le> t \<and> t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 simp)
+                  have "piece ((p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k)) \<in> V"
+                    using hV hsecond_u01 ht01 by (by100 blast)
+                  thus "x \<in> V" using hx hsecond_as_piece by (by100 simp)
+                qed
+                have hf1_path: "top1_is_path_on V (subspace_topology X TX V) (first_h 0) (first_h 1) first_h"
+                  unfolding top1_is_path_on_def
+                  using top1_continuous_map_on_codomain_shrink[OF hfirst_cont hfirst_V hVsub] by (by100 blast)
+                have hf2_path: "top1_is_path_on V (subspace_topology X TX V) (second_h 0) (second_h 1) second_h"
+                  unfolding top1_is_path_on_def
+                  using top1_continuous_map_on_codomain_shrink[OF hsecond_cont hsecond_V hVsub] by (by100 blast)
+                show ?thesis by (rule h\<sigma>_cond2_V[OF hf1_path hf2_path hmatch])
+              qed
               from h\<sigma>_eq h\<sigma>_mul have "\<sigma> piece = mulH (\<sigma> first_h) (\<sigma> second_h)"
                 by (by100 simp)
               thus ?thesis unfolding piece_def first_h_def second_h_def by (by100 simp)
