@@ -7334,6 +7334,15 @@ proof -
               \<and> sub_t j \<le> t \<and> t \<le> sub_t (Suc j) \<and> 0\<le>s \<and> s\<le>1 \<and> 0\<le>t \<and> t\<le>1
               \<longrightarrow> F (s,t) \<in> V)"
           using hcell_UV hi hj by (by100 blast)
+        \<comment> \<open>All 4 edges continuous (F ∘ affine, independent of U/V).\<close>
+        have hpt_cont: "top1_continuous_map_on I_set I_top X TX (piece_top i)"
+          sorry \<comment> \<open>F ∘ (affine_s, const sub_t j) via pair_s_const + F comp\<close>
+        have h\<beta>Si_cont: "top1_continuous_map_on I_set I_top X TX (\<beta> (Suc i))"
+          sorry \<comment> \<open>F ∘ (const sub_s'(Suc i), affine_t) via Theorem_18_4 + F comp\<close>
+        have h\<beta>i_cont: "top1_continuous_map_on I_set I_top X TX (\<beta> i)"
+          sorry \<comment> \<open>Same pattern\<close>
+        have hpb_cont: "top1_continuous_map_on I_set I_top X TX (piece_bot i)"
+          sorry \<comment> \<open>F ∘ (affine_s, const sub_t(Suc j))\<close>
         \<comment> \<open>piece_top i and β(Suc i) are paths in the same U (or V) — both edges of cell.\<close>
         have hpt_path_U: "top1_is_path_on U (subspace_topology X TX U) (piece_top i 0) (piece_top i 1) (piece_top i)"
             and h\<beta>Si_path_U: "top1_is_path_on U (subspace_topology X TX U) (\<beta> (Suc i) 0) (\<beta> (Suc i) 1) (\<beta> (Suc i))"
@@ -7350,15 +7359,6 @@ proof -
             sorry \<comment> \<open>Left edge: F(sub_s' i, affine_t(t)) ⊆ cell\<close>
           have hpb_img: "(piece_bot i) ` I_set \<subseteq> U"
             sorry \<comment> \<open>Top edge: F(affine_s(t), sub_t(Suc j)) ⊆ cell\<close>
-          \<comment> \<open>All edges continuous on I_set (F ∘ affine, already established pattern).\<close>
-          have hpt_cont: "top1_continuous_map_on I_set I_top X TX (piece_top i)"
-            sorry \<comment> \<open>F ∘ (affine_s, const sub_t j) — same as row_fn j piece\<close>
-          have h\<beta>Si_cont: "top1_continuous_map_on I_set I_top X TX (\<beta> (Suc i))"
-            sorry \<comment> \<open>F ∘ (const sub_s'(Suc i), affine_t) — same as h_β_cont\<close>
-          have h\<beta>i_cont: "top1_continuous_map_on I_set I_top X TX (\<beta> i)"
-            sorry \<comment> \<open>Same pattern\<close>
-          have hpb_cont: "top1_continuous_map_on I_set I_top X TX (piece_bot i)"
-            sorry \<comment> \<open>Same pattern\<close>
           \<comment> \<open>codomain_shrink + path_on.\<close>
           show "top1_is_path_on U (subspace_topology X TX U) (piece_top i 0) (piece_top i 1) (piece_top i)"
             unfolding top1_is_path_on_def
@@ -7384,10 +7384,7 @@ proof -
           have h\<beta>Si_img: "(\<beta> (Suc i)) ` I_set \<subseteq> V" sorry
           have h\<beta>i_img: "(\<beta> i) ` I_set \<subseteq> V" sorry
           have hpb_img: "(piece_bot i) ` I_set \<subseteq> V" sorry
-          have hpt_cont: "top1_continuous_map_on I_set I_top X TX (piece_top i)" sorry
-          have h\<beta>Si_cont: "top1_continuous_map_on I_set I_top X TX (\<beta> (Suc i))" sorry
-          have h\<beta>i_cont: "top1_continuous_map_on I_set I_top X TX (\<beta> i)" sorry
-          have hpb_cont: "top1_continuous_map_on I_set I_top X TX (piece_bot i)" sorry
+          \<comment> \<open>Continuity from outer scope (hpt_cont, h_βSi_cont, h_βi_cont, hpb_cont).\<close>
           show "top1_is_path_on V (subspace_topology X TX V) (piece_top i 0) (piece_top i 1) (piece_top i)"
             unfolding top1_is_path_on_def
             using top1_continuous_map_on_codomain_shrink[OF hpt_cont hpt_img hVsub] by (by100 blast)
