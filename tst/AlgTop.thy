@@ -6921,7 +6921,34 @@ proof -
                   \<comment> \<open>The s' function equals T. Proved by showing foldr_σ arguments match.\<close>
                   have "Suc (M - 1) = M" using hMgt hn by (by100 presburger)
                   moreover have "(\<lambda>i. if i \<le> j-1 then T' i else if i = Suc (j-1) then T j else T' (i-1)) = T"
-                    sorry \<comment> \<open>ext: i<j → T'(i)=T(i); i=j → T(j); i>j → T'(i-1)=T(i). Needs nat arith.\<close>
+                  proof (rule ext)
+                    fix i show "(if i \<le> j-1 then T' i else if i = Suc (j-1) then T j else T' (i-1)) = T i"
+                    proof (cases "i < j")
+                      case True
+                      hence "i \<le> j - 1" using hj_pos by (by100 presburger)
+                      have "T' i = T i" unfolding T'_def using True by (by100 presburger)
+                      thus ?thesis using \<open>i \<le> j - 1\<close> by (by100 simp)
+                    next
+                      case False
+                      show ?thesis
+                      proof (cases "i = j")
+                        case True
+                        hence "i = Suc (j - 1)" using hSuc_j1 by (by100 simp)
+                        have "\<not> (i \<le> j - 1)" using True hj_pos by (by100 presburger)
+                        thus ?thesis using \<open>i = Suc (j-1)\<close> True by (by100 simp)
+                      next
+                        case False2: False
+                        hence "i > j" using False by (by100 presburger)
+                        hence "\<not> (i \<le> j - 1)" by (by100 presburger)
+                        have "i \<noteq> Suc (j - 1)" using \<open>i > j\<close> hSuc_j1 by (by100 presburger)
+                        have "\<not> (i - 1 < j)" using \<open>i > j\<close> by (by100 presburger)
+                        have "T' (i-1) = T (Suc (i-1))" unfolding T'_def using \<open>\<not>(i-1 < j)\<close> by (by100 simp)
+                        moreover have "Suc (i-1) = i" using \<open>i > j\<close> hj_pos by (by100 presburger)
+                        ultimately have "T' (i-1) = T i" by (by100 simp)
+                        thus ?thesis using \<open>\<not>(i \<le> j-1)\<close> \<open>i \<noteq> Suc(j-1)\<close> by (by100 simp)
+                      qed
+                    qed
+                  qed
                   ultimately show ?thesis using hpi by (by100 simp)
                 qed
                 \<comment> \<open>IH: foldr_σ f (M-1) T' = foldr_σ f n sub.\<close>
