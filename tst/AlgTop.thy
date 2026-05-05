@@ -7850,7 +7850,23 @@ proof -
             proof (intro conjI)
               \<comment> \<open>pp1 is a path in U.\<close>
               show "top1_is_path_on U (subspace_topology X TX U) (pp1 0) (pp1 1) pp1"
-                sorry \<comment> \<open>pp1 = piece_top*β(Si), path_product_is_path. Edge path facts defined later.\<close>
+              proof -
+                have hep_match: "piece_top i 1 = \<beta> (Suc i) 0"
+                  unfolding piece_top_def \<beta>_def row_fn_def by (by100 simp)
+                have "\<beta> (Suc i) 0 = piece_top i 1" using hep_match by (by100 simp)
+                hence h\<beta>Si_adj: "top1_is_path_on U (subspace_topology X TX U) (piece_top i 1) (\<beta> (Suc i) 1) (\<beta> (Suc i))"
+                  using h\<beta>Si_path_U[OF hU] by (by100 simp)
+                have "top1_is_path_on U (subspace_topology X TX U) (piece_top i 0) (\<beta> (Suc i) 1)
+                    (top1_path_product (piece_top i) (\<beta> (Suc i)))"
+                  by (rule top1_path_product_is_path[OF hTopU hpt_path_U[OF hU] h\<beta>Si_adj])
+                moreover have "pp1 = top1_path_product (piece_top i) (\<beta> (Suc i))"
+                  unfolding pp1_def by (by100 simp)
+                moreover have "pp1 0 = piece_top i 0"
+                  unfolding pp1_def top1_path_product_def top1_unit_interval_def by (by100 force)
+                moreover have "pp1 1 = \<beta> (Suc i) 1"
+                  unfolding pp1_def top1_path_product_def top1_unit_interval_def by (by100 force)
+                ultimately show ?thesis by (by100 presburger)
+              qed
               \<comment> \<open>pp2 is a path in U. Endpoints: pp2 0 = β(i)(0) = F(s_i,t_j) = pp1 0,
                  pp2 1 = piece_bot(1) = F(s_{i+1},t_{j+1}) = pp1 1.\<close>
               have "pp1 0 = pp2 0" unfolding pp1_def pp2_def top1_path_product_def
@@ -7858,7 +7874,23 @@ proof -
               moreover have "pp1 1 = pp2 1" unfolding pp1_def pp2_def top1_path_product_def
                   piece_top_def piece_bot_def \<beta>_def row_fn_def by (by100 simp)
               moreover have "top1_is_path_on U (subspace_topology X TX U) (pp2 0) (pp2 1) pp2"
-                sorry \<comment> \<open>pp2 = β(i)*piece_bot, same pattern. Edge path facts defined later.\<close>
+              proof -
+                have hep_match2: "\<beta> i 1 = piece_bot i 0"
+                  unfolding piece_bot_def \<beta>_def row_fn_def by (by100 simp)
+                have "piece_bot i 0 = \<beta> i 1" using hep_match2 by (by100 simp)
+                hence hpb_adj: "top1_is_path_on U (subspace_topology X TX U) (\<beta> i 1) (piece_bot i 1) (piece_bot i)"
+                  using hpb_path_U[OF hU] by (by100 simp)
+                have "top1_is_path_on U (subspace_topology X TX U) (\<beta> i 0) (piece_bot i 1)
+                    (top1_path_product (\<beta> i) (piece_bot i))"
+                  by (rule top1_path_product_is_path[OF hTopU h\<beta>i_path_U[OF hU] hpb_adj])
+                moreover have "pp2 = top1_path_product (\<beta> i) (piece_bot i)"
+                  unfolding pp2_def by (by100 simp)
+                moreover have "pp2 0 = \<beta> i 0"
+                  unfolding pp2_def top1_path_product_def top1_unit_interval_def by (by100 force)
+                moreover have "pp2 1 = piece_bot i 1"
+                  unfolding pp2_def top1_path_product_def top1_unit_interval_def by (by100 force)
+                ultimately show ?thesis by (by100 presburger)
+              qed
               ultimately show "top1_is_path_on U (subspace_topology X TX U) (pp1 0) (pp1 1) pp2"
                 by (by100 simp)
               \<comment> \<open>Homotopy witness: same H from hG_hom, with I_set extensional substitution.\<close>
