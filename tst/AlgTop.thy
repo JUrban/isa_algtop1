@@ -6870,12 +6870,56 @@ proof -
       \<comment> \<open>Key: broken-line homotopy in each cell gives σ equation.\<close>
       have h\<sigma>_cell: "\<And>i. i < ns' \<Longrightarrow>
           \<sigma> (piece_top i) = mulH (\<sigma> (\<beta> i)) (mulH (\<sigma> (piece_bot i)) (invgH (\<sigma> (\<beta> (Suc i)))))"
-        sorry \<comment> \<open>For each cell [s'_i, s'_{i+1}] × [t_j, t_{j+1}]:
-           1. Cell maps into U or V (hcell_UV)
-           2. Broken-line homotopy: piece_top * β_{i+1} ≃_p β_i * piece_bot (in U/V)
-              (straight-line homotopy in convex rectangle, composed with F)
-           3. σ_cond1 + σ_cond2: σ(piece_top) · σ(β_{i+1}) = σ(β_i) · σ(piece_bot)
-           4. Rearrange: σ(piece_top) = σ(β_i) · σ(piece_bot) · σ(β_{i+1})⁻¹\<close>
+      proof -
+        fix i assume hi: "i < ns'"
+        \<comment> \<open>Step 1: piece_top i * β(Suc i) ≃_p β i * piece_bot i (in U or V).
+           Both are paths from F(sub_s' i, sub_t j) to F(sub_s'(Suc i), sub_t(Suc j)),
+           traversing the boundary of the cell via different edges.
+           The straight-line homotopy in the convex cell [s_i,s_{i+1}]×[t_j,t_{j+1}],
+           composed with F, gives a path homotopy in U (or V).\<close>
+        define pp1 where "pp1 = top1_path_product (piece_top i) (\<beta> (Suc i))"
+        define pp2 where "pp2 = top1_path_product (\<beta> i) (piece_bot i)"
+        have hpath_hom: "top1_path_homotopic_on U (subspace_topology X TX U) (pp1 0) (pp1 1) pp1 pp2
+          \<or> top1_path_homotopic_on V (subspace_topology X TX V) (pp1 0) (pp1 1) pp1 pp2"
+          sorry \<comment> \<open>Broken-line homotopy: straight-line in convex rectangle composed with F.
+             Both broken-line paths traverse cell boundary from corner (s_i, t_j) to (s_{i+1}, t_{j+1}).
+             The cell is convex, so any two paths between same endpoints are path-homotopic.
+             Composed with F (continuous, cell→U or V), gives path homotopy in U or V.\<close>
+        \<comment> \<open>Step 2: σ_cond1 gives σ-equality of the path products.\<close>
+        have h\<sigma>_products: "\<sigma> pp1 = \<sigma> pp2"
+        proof -
+          from hpath_hom show ?thesis
+          proof
+            assume "top1_path_homotopic_on U (subspace_topology X TX U) (pp1 0) (pp1 1) pp1 pp2"
+            thus ?thesis by (rule h\<sigma>_cond1)
+          next
+            assume "top1_path_homotopic_on V (subspace_topology X TX V) (pp1 0) (pp1 1) pp1 pp2"
+            thus ?thesis by (rule h\<sigma>_cond1_V)
+          qed
+        qed
+        \<comment> \<open>Step 3: σ_cond2 splits the products.\<close>
+        have h_split_LHS: "\<sigma> pp1 = mulH (\<sigma> (piece_top i)) (\<sigma> (\<beta> (Suc i)))"
+          sorry \<comment> \<open>σ_cond2: piece_top i is path in U/V, β(Suc i) is path in U/V, endpoints match.\<close>
+        have h_split_RHS: "\<sigma> pp2 = mulH (\<sigma> (\<beta> i)) (\<sigma> (piece_bot i))"
+          sorry \<comment> \<open>σ_cond2: β i is path in U/V, piece_bot i is path in U/V, endpoints match.\<close>
+        \<comment> \<open>Step 4: Combine and rearrange.\<close>
+        have h_eq: "mulH (\<sigma> (piece_top i)) (\<sigma> (\<beta> (Suc i))) = mulH (\<sigma> (\<beta> i)) (\<sigma> (piece_bot i))"
+          using h\<sigma>_products h_split_LHS h_split_RHS by (by100 simp)
+        \<comment> \<open>Rearrange: σ(pt) = σ(β i) · σ(pb) · inv(σ(β(i+1)))\<close>
+        have hpt_H: "\<sigma> (piece_top i) \<in> H"
+          sorry \<comment> \<open>h_σ_piece_in_H applied to row_fn j\<close>
+        have hpb_H: "\<sigma> (piece_bot i) \<in> H"
+          sorry \<comment> \<open>h_σ_piece_in_H applied to row_fn (Suc j)\<close>
+        have h\<beta>i_H: "\<sigma> (\<beta> i) \<in> H"
+          sorry \<comment> \<open>From h_β_H proof pattern (β in U or V)\<close>
+        have h\<beta>Si_H: "\<sigma> (\<beta> (Suc i)) \<in> H"
+          sorry \<comment> \<open>Same\<close>
+        show "\<sigma> (piece_top i) = mulH (\<sigma> (\<beta> i)) (mulH (\<sigma> (piece_bot i)) (invgH (\<sigma> (\<beta> (Suc i)))))"
+          sorry \<comment> \<open>Group algebra: from h_eq (σ(pt)·σ(β_{i+1}) = σ(β_i)·σ(pb)),
+             multiply by inv(σ(β_{i+1})) on right, then cancel + reassociate.
+             Uses: associativity, right inverse, right identity.
+             All group facts available from hH once hmulH_assoc etc are in scope.\<close>
+      qed
       \<comment> \<open>β_0 is constant at x0 (since sub_s' 0 = 0 and F(0,t) = x0).\<close>
       \<comment> \<open>σ of a constant-on-I_set path = eH.\<close>
       have h\<sigma>_const: "\<And>c. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> c t = x0) \<Longrightarrow> \<sigma> c = eH"
