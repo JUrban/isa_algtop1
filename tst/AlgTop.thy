@@ -5941,7 +5941,7 @@ proof -
                       \<and> t * (p - s k) / (s (Suc k) - s k) \<le> 1"
                     using hfirst_u01 ht by (by100 blast)
                   have "piece (t * (p - s k) / (s (Suc k) - s k)) \<in> U"
-                    using hU hu by (by100 blast)
+                    using hU hu by (by100 fast)
                   thus "first_h t \<in> U" using hfirst_as_piece by (by100 simp)
                 qed
               next
@@ -5967,7 +5967,7 @@ proof -
                       \<and> (p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k) \<le> 1"
                     using hsecond_u01 ht by (by100 blast)
                   have "piece ((p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k)) \<in> U"
-                    using hU hu by (by100 blast)
+                    using hU hu by (by100 fast)
                   thus "second_h t \<in> U" using hsecond_as_piece by (by100 simp)
                 qed
               next
@@ -6084,9 +6084,65 @@ proof -
                     using hreparam unfolding hcomp_id .
                   \<comment> \<open>Transfer: piece∘ψ agrees with pp on I_set → homotopy transfers.\<close>
                   \<comment> \<open>Transfer: piece∘ψ → pp in the homotopy. They agree on I_set.\<close>
+                  have haff1_loc: "top1_continuous_map_on I_set I_top I_set I_top (\<lambda>t. s k + t * (p - s k))"
+                    by (rule affine_map_continuous_I_to_I[OF hsk_ge0 hsk_le_p hp_le1])
+                  have haff2_loc: "top1_continuous_map_on I_set I_top I_set I_top (\<lambda>t. p + t * (s (Suc k) - p))"
+                    by (rule affine_map_continuous_I_to_I[OF hp_ge0 hp_le_sk1 hsk1_le1])
+                  have hfirst_cont_loc: "top1_continuous_map_on I_set I_top X TX first_h"
+                    unfolding first_h_def using top1_continuous_map_on_comp[OF haff1_loc hf_cont_X]
+                    unfolding comp_def by (by100 simp)
+                  have hsecond_cont_loc: "top1_continuous_map_on I_set I_top X TX second_h"
+                    unfolding second_h_def using top1_continuous_map_on_comp[OF haff2_loc hf_cont_X]
+                    unfolding comp_def by (by100 simp)
+                  have hfirst_img_U: "first_h ` I_set \<subseteq> U"
+                  proof (intro subsetI)
+                    fix x assume "x \<in> first_h ` I_set"
+                    then obtain t where ht: "t \<in> I_set" and hx: "x = first_h t" by (by100 blast)
+                    have ht01: "0 \<le> t \<and> t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 simp)
+                    have hu: "0 \<le> t * (p - s k) / (s (Suc k) - s k)
+                        \<and> t * (p - s k) / (s (Suc k) - s k) \<le> 1"
+                      using hfirst_u01 ht01 by (by100 blast)
+                    have "t * (p - s k) / (s (Suc k) - s k) \<in> I_set"
+                      using hu unfolding top1_unit_interval_def by (by100 simp)
+                    have "piece (t * (p - s k) / (s (Suc k) - s k)) \<in> U"
+                      using hU \<open>t * (p - s k) / (s (Suc k) - s k) \<in> I_set\<close> by (by100 blast)
+                    thus "x \<in> U" using hx hfirst_as_piece by (by100 simp)
+                  qed
+                  have hsecond_img_U: "second_h ` I_set \<subseteq> U"
+                  proof (intro subsetI)
+                    fix x assume "x \<in> second_h ` I_set"
+                    then obtain t where ht: "t \<in> I_set" and hx: "x = second_h t" by (by100 blast)
+                    have ht01: "0 \<le> t \<and> t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 simp)
+                    have hu: "0 \<le> (p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k)
+                        \<and> (p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k) \<le> 1"
+                      using hsecond_u01 ht01 by (by100 blast)
+                    have "(p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k) \<in> I_set"
+                      using hu unfolding top1_unit_interval_def by (by100 simp)
+                    have "piece ((p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k)) \<in> U"
+                      using hU \<open>(p - s k + t * (s (Suc k) - p)) / (s (Suc k) - s k) \<in> I_set\<close> by (by100 blast)
+                    thus "x \<in> U" using hx hsecond_as_piece by (by100 simp)
+                  qed
+                  have hfirst_path_U: "top1_is_path_on U (subspace_topology X TX U) (first_h 0) (first_h 1) first_h"
+                    unfolding top1_is_path_on_def
+                    using top1_continuous_map_on_codomain_shrink[OF hfirst_cont_loc hfirst_img_U hUsub] by (by100 blast)
+                  have hsecond_path_U: "top1_is_path_on U (subspace_topology X TX U) (second_h 0) (second_h 1) second_h"
+                    unfolding top1_is_path_on_def
+                    using top1_continuous_map_on_codomain_shrink[OF hsecond_cont_loc hsecond_img_U hUsub] by (by100 blast)
+                  have hfirst0: "first_h 0 = piece 0" unfolding first_h_def piece_def by (by100 simp)
+                  have hsecond1: "second_h 1 = piece 1" unfolding second_h_def piece_def by (by100 simp)
                   have hpp_path_U: "top1_is_path_on U (subspace_topology X TX U)
                       (piece 0) (piece 1) (top1_path_product first_h second_h)"
-                    sorry \<comment> \<open>pp is a path in U: first_h, second_h paths in U + matching endpoints.\<close>
+                  proof -
+                    have hmatch_loc: "first_h 1 = second_h 0"
+                      unfolding first_h_def second_h_def by (by100 simp)
+                    have hsecond_path_U': "top1_is_path_on U (subspace_topology X TX U)
+                        (first_h 1) (second_h 1) second_h"
+                      using hsecond_path_U hmatch_loc by (by100 simp)
+                    have "top1_is_path_on U (subspace_topology X TX U) (first_h 0) (second_h 1)
+                        (top1_path_product first_h second_h)"
+                      by (rule top1_path_product_is_path[OF hTopU hfirst_path_U hsecond_path_U'])
+                    thus ?thesis using hfirst0 hsecond1 by (by100 simp)
+                  qed
                   have "top1_path_homotopic_on U (subspace_topology X TX U)
                       (piece 0) (piece 1) piece (top1_path_product first_h second_h)"
                   proof -
