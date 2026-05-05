@@ -7531,12 +7531,55 @@ proof -
                 (G (0,0)) (G (1,1)) (G \<circ> ?\<beta>1) (G \<circ> ?\<beta>2)"
               by (rule continuous_preserves_path_homotopic[OF hTII hTU hG_cont_U h\<beta>_hom])
             \<comment> \<open>Transfer: G∘β₁≃G∘β₂ in U → pp1≃pp2 in U (extensional equality on I_set).\<close>
+            \<comment> \<open>Unfold hG_hom to extract the homotopy witness H, then rebuild for pp1/pp2.\<close>
             have "top1_path_homotopic_on U (subspace_topology X TX U) (pp1 0) (pp1 1) pp1 pp2"
-              sorry \<comment> \<open>From hG_hom (G∘β₁≃G∘β₂ in U at endpoints G(0,0),G(1,1))
-                 + hGβ1 (G∘β₁=pp1 on I_set) + hGβ2 (G∘β₂=pp2 on I_set).
-                 G(0,0) = (G∘β₁)(0) = pp1(0), G(1,1) = (G∘β₁)(1) = pp1(1).
-                 Path homotopy between extensionally-equal-on-I_set functions.
-                 Needs: path_homotopic_on respects I_set-extensional equality.\<close>
+              unfolding top1_path_homotopic_on_def
+            proof (intro conjI)
+              \<comment> \<open>pp1 is a path in U.\<close>
+              show "top1_is_path_on U (subspace_topology X TX U) (pp1 0) (pp1 1) pp1"
+                sorry \<comment> \<open>pp1 = piece_top*β(Si), both continuous in U, product is path.\<close>
+              \<comment> \<open>pp2 is a path in U.\<close>
+              show "top1_is_path_on U (subspace_topology X TX U) (pp1 0) (pp1 1) pp2"
+                sorry \<comment> \<open>pp2 = β(i)*piece_bot, both continuous in U, endpoints match pp1.\<close>
+              \<comment> \<open>Homotopy witness: same H from hG_hom, with I_set extensional substitution.\<close>
+              from hG_hom have "\<exists>H. top1_continuous_map_on (I_set \<times> I_set) II_topology
+                  U (subspace_topology X TX U) H
+                  \<and> (\<forall>s\<in>I_set. H (s, 0) = (G \<circ> ?\<beta>1) s) \<and> (\<forall>s\<in>I_set. H (s, 1) = (G \<circ> ?\<beta>2) s)
+                  \<and> (\<forall>t\<in>I_set. H (0, t) = G (0,0)) \<and> (\<forall>t\<in>I_set. H (1, t) = G (1,1))"
+                unfolding top1_path_homotopic_on_def by (by100 blast)
+              then obtain H where hH_cont: "top1_continuous_map_on (I_set \<times> I_set) II_topology
+                  U (subspace_topology X TX U) H"
+                and hH0: "\<forall>s\<in>I_set. H (s, 0) = (G \<circ> ?\<beta>1) s"
+                and hH1: "\<forall>s\<in>I_set. H (s, 1) = (G \<circ> ?\<beta>2) s"
+                and hHL: "\<forall>t\<in>I_set. H (0, t) = G (0,0)"
+                and hHR: "\<forall>t\<in>I_set. H (1, t) = G (1,1)" by auto
+              \<comment> \<open>Substitute G∘β = pp on I_set.\<close>
+              have "\<forall>s\<in>I_set. H (s, 0) = pp1 s" using hH0 hG\<beta>1 by (by100 force)
+              moreover have "\<forall>s\<in>I_set. H (s, 1) = pp2 s" using hH1 hG\<beta>2 by (by100 force)
+              moreover have "\<forall>t\<in>I_set. H (0, t) = pp1 0"
+              proof (intro ballI)
+                fix t assume "t \<in> I_set"
+                have "H (0, t) = G (0, 0)" using hHL \<open>t \<in> I_set\<close> by (by100 blast)
+                also have "\<dots> = (G \<circ> ?\<beta>1) 0" unfolding comp_def top1_path_product_def
+                  unfolding top1_unit_interval_def by (by100 force)
+                also have "\<dots> = pp1 0" using hG\<beta>1 unfolding top1_unit_interval_def by (by100 force)
+                finally show "H (0, t) = pp1 0" .
+              qed
+              moreover have "\<forall>t\<in>I_set. H (1, t) = pp1 1"
+              proof (intro ballI)
+                fix t assume "t \<in> I_set"
+                have "H (1, t) = G (1, 1)" using hHR \<open>t \<in> I_set\<close> by (by100 blast)
+                also have "\<dots> = (G \<circ> ?\<beta>1) 1" unfolding comp_def top1_path_product_def
+                  unfolding top1_unit_interval_def by (by100 force)
+                also have "\<dots> = pp1 1" using hG\<beta>1 unfolding top1_unit_interval_def by (by100 force)
+                finally show "H (1, t) = pp1 1" .
+              qed
+              ultimately show "\<exists>H. top1_continuous_map_on (I_set \<times> I_set) II_topology
+                  U (subspace_topology X TX U) H
+                  \<and> (\<forall>s\<in>I_set. H (s, 0) = pp1 s) \<and> (\<forall>s\<in>I_set. H (s, 1) = pp2 s)
+                  \<and> (\<forall>t\<in>I_set. H (0, t) = pp1 0) \<and> (\<forall>t\<in>I_set. H (1, t) = pp1 1)"
+                using hH_cont by (by100 blast)
+            qed
             thus ?thesis by (by100 blast)
           next
             assume hV: "\<forall>s t. sub_s' i \<le> s \<and> s \<le> sub_s' (Suc i) \<and> sub_t j \<le> t \<and> t \<le> sub_t (Suc j)
