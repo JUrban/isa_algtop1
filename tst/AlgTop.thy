@@ -6830,10 +6830,23 @@ proof -
              1. Define common refinement (union of S-points and sub-points)
              2. Induction on |points to add| for each direction
              3. At each step: find insertable point, apply h_point_insert\<close>
+          \<comment> \<open>Helper: inserting all points of one subdivision into another preserves foldr_σ.
+             By induction on extra points to add. Each step uses h_point_insert.\<close>
+          have h_refine: "\<And>M T. M \<ge> 1 \<Longrightarrow> T 0 = (0::real) \<Longrightarrow> T M = 1 \<Longrightarrow>
+              (\<forall>i<M. T i < T (Suc i)) \<Longrightarrow>
+              (\<forall>i<M. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T i + t * (T (Suc i) - T i)) \<in> U)
+                   \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T i + t * (T (Suc i) - T i)) \<in> V)) \<Longrightarrow>
+              (\<forall>i\<le>n. \<exists>j\<le>M. T j = sub i) \<Longrightarrow>
+              foldr_\<sigma> f M T = foldr_\<sigma> f n sub"
+            sorry \<comment> \<open>Induction on M - n. Base: M = n implies T = sub (both strictly increasing
+               with same endpoints and T contains all sub points). Step: M > n, find extra
+               point T(j) not in sub, remove it via h_point_insert[symmetric], apply IH.\<close>
           have h_indep: "foldr_\<sigma> f N S = foldr_\<sigma> f n sub"
-            sorry \<comment> \<open>Point insertion iteration: both subdivisions refine to common via finitely
-               many point insertions. Each preserves foldr_σ (by h_point_insert). Standard
-               well-founded induction on |target points \ current points|.\<close>
+          proof -
+            \<comment> \<open>Build common refinement: insert sub's points into S, then show it refines sub.\<close>
+            \<comment> \<open>Use h_refine on (common, sub) and h_point_insert iteration on (S → common).\<close>
+            show ?thesis sorry \<comment> \<open>Apply h_refine to common refinement from both sides.\<close>
+          qed
           show "\<tau> f = foldr_\<sigma> f n sub" using h\<tau>_eq h_indep by (by100 simp)
         qed
         have h_gen_indep_12: "\<tau> (top1_path_product f1 f2) = foldr_\<sigma> (top1_path_product f1 f2) (n1+n2) sub_m"
