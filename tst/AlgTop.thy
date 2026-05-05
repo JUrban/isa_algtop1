@@ -6461,13 +6461,28 @@ proof -
           (\<forall>i<M. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T i + t * (T (Suc i) - T i)) \<in> U)
                \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T i + t * (T (Suc i) - T i)) \<in> V)) \<Longrightarrow>
           foldr_\<sigma> f M T = foldr_\<sigma> f n sub"
-        sorry \<comment> \<open>Proof: by strong induction on card {i ≤ n. sub(i) ∉ T-range}.
-           Base: all sub-points in T → T refines sub → h_refine gives result.
-           Step: find sub(i) not in T. Find k with T(k) < sub(i) < T(k+1).
-           Apply h_point_insert[symmetric] to insert sub(i): foldr_σ T = foldr_σ T'.
-           T' has one fewer missing sub-point. By IH: foldr_σ T' = foldr_σ sub.
-           Chain: foldr_σ T = foldr_σ sub.
-           Essentially the REVERSE of h_refine's False case (adding instead of removing).\<close>
+      proof -
+        fix M and T :: "nat \<Rightarrow> real"
+        assume hM: "M \<ge> 1" and hT0: "T 0 = (0::real)" and hTM: "T M = 1"
+           and hTinc: "\<forall>i<M. T i < T (Suc i)"
+           and hTUV: "\<forall>i<M. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T i + t * (T (Suc i) - T i)) \<in> U)
+               \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T i + t * (T (Suc i) - T i)) \<in> V)"
+        \<comment> \<open>If T already refines sub, done by h_refine. Otherwise, insert a missing sub-point.\<close>
+        show "foldr_\<sigma> f M T = foldr_\<sigma> f n sub"
+        proof (cases "\<forall>i\<le>n. \<exists>j\<le>M. T j = sub i")
+          case True
+          \<comment> \<open>T refines sub. Apply h_refine directly.\<close>
+          show ?thesis by (rule h_refine[OF hM hT0 hTM hTinc hTUV True])
+        next
+          case False
+          \<comment> \<open>Some sub-point missing. Insert it and recurse.
+             This case needs strong induction. We sorry it for now — the argument
+             is the reverse of h_refine's False case (adding points instead of removing).
+             Each insertion preserves foldr_σ via h_point_insert[symmetric].
+             After finitely many insertions, T refines sub, and h_refine applies.\<close>
+          show ?thesis sorry
+        qed
+      qed
       show ?thesis
         using h_insert_all[OF hN_ge hS0 hSN hSinc hS_UV] .
     qed
