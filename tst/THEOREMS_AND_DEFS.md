@@ -78,7 +78,7 @@ strictly_finer_than                            Top1_Ch2                   line 1
 subspace_topology                              Top1_Ch2                   line 3701
 top1_AN_48                                     Top1_Ch5_8                 line 24188
 top1_antipode_preserving_S1                    Top1_Ch9_13                line 14646
-top1_arc_endpoints_on                          AlgTop                     line 18823
+top1_arc_endpoints_on                          AlgTop                     line 18930
 top1_B2                                        Top1_Ch9_13                line 11554
 top1_B2_topology                               Top1_Ch9_13                line 11557
 top1_baire_on                                  Top1_Ch5_8                 line 22237
@@ -119,7 +119,7 @@ top1_countable                                 Top1_Ch4                   line 1
 top1_countable_neighborhood_basis_at           Top1_Ch4                   line 436
 top1_countably_compact_on                      Top1_Ch3                   line 10373
 top1_covering_map_on                           Top1_Ch9_13                line 3918
-top1_covering_transformation_on                AlgTop                     line 18680
+top1_covering_transformation_on                AlgTop                     line 18787
 top1_cover_order_le_on                         Top1_Ch5_8                 line 26322
 top1_deformation_retract_of_on                 AlgTop_JCT_Base0           line 4031
 top1_Delta49                                   Top1_Ch5_8                 line 25038
@@ -137,7 +137,7 @@ top1_dyadic                                    Top1_Ch4                   line 6
 top1_embedding_on                              Top1_Ch2                   line 7084
 top1_eq_on                                     Top1_Ch5_8                 line 1467
 top1_equicontinuous_family_on                  Top1_Ch5_8                 line 14316
-top1_equivalent_coverings_on                   AlgTop                     line 16102
+top1_equivalent_coverings_on                   AlgTop                     line 16209
 top1_equiv_compactification_via_on             Top1_Ch5_8                 line 1470
 top1_euclidean_metric_real_on                  Top1_Ch2                   line 12953
 top1_evenly_covered_on                         Top1_Ch9_13                line 3907
@@ -166,11 +166,11 @@ top1_induced_homomorphism_on                   Top1_Ch9_13                line 2
 top1_in_same_component_on                      Top1_Ch3                   line 2466
 top1_in_same_path_component_on                 Top1_Ch3                   line 3057
 top1_interval_encode                           Top1_Ch3                   line 9643
-top1_is_2_manifold_on                          AlgTop                     line 13564
+top1_is_2_manifold_on                          AlgTop                     line 13671
 top1_is_abelian_group_on                       Top1_Ch9_13                line 3124
 top1_is_arc_on                                 AlgTop_JCT_Base            line 10034
 top1_is_dunce_cap_on                           AlgTop                     line 432
-top1_is_graph_on                               AlgTop                     line 18833
+top1_is_graph_on                               AlgTop                     line 18940
 top1_is_group_on                               Top1_Ch9_13                line 3114
 top1_is_lifting_on                             Top1_Ch9_13                line 3966
 top1_is_loop_on                                Top1_Ch9_13                line 2335
@@ -185,11 +185,11 @@ top1_is_polygonal_region_on                    AlgTop                     line 3
 top1_is_retraction_on                          Top1_Ch9_13                line 11432
 top1_is_separation_on                          Top1_Ch3                   line 25
 top1_is_subnet                                 Top1_Ch5_8                 line 33607
-top1_is_surface_on                             AlgTop                     line 13578
+top1_is_surface_on                             AlgTop                     line 13685
 top1_is_torus_on                               AlgTop                     line 457
-top1_is_tree_on                                AlgTop                     line 18874
+top1_is_tree_on                                AlgTop                     line 18981
 top1_is_triangulable_on                        AlgTop                     line 485
-top1_is_universal_covering_on                  AlgTop                     line 17783
+top1_is_universal_covering_on                  AlgTop                     line 17890
 top1_is_wedge_of_circles_on                    AlgTop                     line 303
 top1_left_cosets_on                            AlgTop                     line 535
 top1_limit_point_compact_on                    Top1_Ch3                   line 10363
@@ -268,7 +268,7 @@ top1_SC_TZ                                     Top1_Ch5_8                 line 2
 top1_SC_Y                                      Top1_Ch5_8                 line 20789
 top1_SC_Z                                      Top1_Ch5_8                 line 20782
 top1_second_countable_on                       Top1_Ch4                   line 447
-top1_semilocally_simply_connected_on           AlgTop                     line 18741
+top1_semilocally_simply_connected_on           AlgTop                     line 18848
 top1_separates_on                              AlgTop_JCT_Base            line 3763
 top1_sequentially_compact_on                   Top1_Ch5_8                 line 32828
 top1_sigma_locally_finite_family_on            Top1_Ch5_8                 line 2835
@@ -337,7 +337,7 @@ arc_connected                                  AlgTop0                    line 4
 arc_in_S2_closed                               AlgTop0                    line 4883
 arc_joining_lemma                              AlgTop0                    line 5615
 arc_split_at_midpoint                          AlgTop0                    line 4954
-basepoint_change_image_hom                     AlgTop                     line 16420
+basepoint_change_image_hom                     AlgTop                     line 16527
 basis_elem_in_generated_topology               Top1_Ch5_8                 line 16011
 basis_elem_open_if_basis_for                   Top1_Ch2                   line 1918
 basis_elem_open_in_generated_topology          Top1_Ch2                   line 1882
@@ -388,7 +388,7 @@ closedin_subspace_from_ambient                 Top1_Ch5_8                 line 2
 closed_interval_01_is_topology                 Top1_Ch5_8                 line 12409
 closed_interval_hausdorff                      Top1_Ch5_8                 line 1946
 closedin_Union_finite                          Top1_Ch2                   line 4920
-closed_subset_compact                          AlgTop                     line 13640
+closed_subset_compact                          AlgTop                     line 13747
 closed_subset_complete                         Top1_Ch5_8                 line 11512
 closure_cc_cont_on_compact                     Top1_Ch5_8                 line 16493
 closure_equicontinuous                         Top1_Ch5_8                 line 14831
@@ -406,11 +406,11 @@ closure_on_subset_of_closed                    Top1_Ch2                   line 5
 closure_pointwise_bounded                      Top1_Ch5_8                 line 14941
 compact_closed_FIP_inter_ne                    Top1_Ch5_8                 line 781
 compact_embedding_dim_le                       Top1_Ch5_8                 line 32033
-compact_finite                                 AlgTop                     line 13850
+compact_finite                                 AlgTop                     line 13957
 compact_finite_subcover                        Top1_Ch3                   line 4655
 compact_hausdorff_continuous_closed_map        Top1_Ch3                   line 6863
 compact_hausdorff_shrink_into_open             Top1_Ch3                   line 11093
-compact_Icc_Times                              AlgTop                     line 13861
+compact_Icc_Times                              AlgTop                     line 13968
 compact_imp_complete                           Top1_Ch5_8                 line 13783
 compact_imp_countably_compact                  Top1_Ch3                   line 10379
 compact_imp_totally_bounded                    Top1_Ch5_8                 line 13745
@@ -422,13 +422,13 @@ compact_metric_small_cover                     Top1_Ch5_8                 line 2
 compact_onI                                    Top1_Ch3                   line 4660
 compact_on_subspace_self                       Top1_Ch5_8                 line 19223
 compact_real_imp_top1_bounded_set              Top1_Ch3                   line 7671
-compact_singleton                              AlgTop                     line 13841
+compact_singleton                              AlgTop                     line 13948
 compact_strict                                 Top1_Ch3                   line 4674
 compact_strict_cover_sub                       Top1_Ch3                   line 4689
 compact_subspace_strict                        Top1_Ch3                   line 4683
-compact_Times_general                          AlgTop                     line 13683
-compact_Un                                     AlgTop                     line 13596
-compact_Union                                  AlgTop                     line 13625
+compact_Times_general                          AlgTop                     line 13790
+compact_Un                                     AlgTop                     line 13703
+compact_Union                                  AlgTop                     line 13732
 completely_regular_imp_regular_on              Top1_Ch4                   line 8222
 complete_metric_baire_aux                      Top1_Ch5_8                 line 23104
 complete_tb_convergent_subseq                  Top1_Ch5_8                 line 13892
@@ -458,10 +458,10 @@ continuous_preserves_path_homotopic            Top1_Ch9_13                line 1
 continuous_restrict_to_interval                Top1_Ch5_8                 line 12486
 convergent_lim_ge                              Top1_Ch5_8                 line 11940
 convergent_lim_le                              Top1_Ch5_8                 line 11922
-convex_hull_compact                            AlgTop                     line 14181
-convex_hull_compact_general                    AlgTop                     line 14119
-convex_hull_cone_sub                           AlgTop                     line 13992
-convex_hull_cone_sup                           AlgTop                     line 13938
+convex_hull_compact                            AlgTop                     line 14288
+convex_hull_compact_general                    AlgTop                     line 14226
+convex_hull_cone_sub                           AlgTop                     line 14099
+convex_hull_cone_sup                           AlgTop                     line 14045
 convex_in_not_mem_imp_all_gt                   Top1_Ch2                   line 4468
 convex_in_not_mem_imp_all_lt                   Top1_Ch2                   line 4496
 convex_in_refine_basis_intersection            Top1_Ch2                   line 4525
@@ -470,7 +470,7 @@ cos_sin_eq_small_diff                          AlgTop0                    line 7
 co_subbasis_in_cc_subspace                     Top1_Ch5_8                 line 18552
 countable_union_sigma_lf                       Top1_Ch5_8                 line 2963
 covering_lift_endpoint_contradiction           AlgTop0                    line 2577
-covering_lift_unique_connected                 AlgTop                     line 14774
+covering_lift_unique_connected                 AlgTop                     line 14881
 dense_in_compact_image                         Top1_Ch5_8                 line 12068
 dense_in_own_closure                           Top1_Ch5_8                 line 20742
 diff_Inter_eq                                  Top1_Ch2                   line 4890
@@ -486,7 +486,7 @@ equicont_from_tb_cover                         Top1_Ch5_8                 line 1
 equicontinuous_covering_bound                  Top1_Ch5_8                 line 21437
 equicontinuous_subset                          Top1_Ch5_8                 line 14789
 eval_continuous_compact_convergence            Top1_Ch5_8                 line 21706
-evenly_covered_open_subset                     AlgTop                     line 18266
+evenly_covered_open_subset                     AlgTop                     line 18373
 exists_pow2_inv_lt                             Top1_Ch4                   line 6770
 exists_top1_dyadic_between_01                  Top1_Ch4                   line 6793
 expansion_E_open                               Top1_Ch5_8                 line 7915
@@ -513,11 +513,11 @@ foldr_path_product_base_homotopic              AlgTop_JCT_Base0           line 5
 foldr_path_product_is_path                     AlgTop_JCT_Base0           line 5640
 foldr_path_product_nulhomotopic                AlgTop_JCT_Base            line 278
 four_strips_connected                          AlgTopHelpers              line 19
-free_product_trivial_factor_surj               AlgTop                     line 12592
+free_product_trivial_factor_surj               AlgTop                     line 12699
 fundamental_group_class_members_equiv          Top1_Ch9_13                line 10872
 fundamental_group_invg_class                   AlgTop                     line 1070
 fundamental_group_mul_eq_class                 Top1_Ch9_13                line 10888
-general_lifting_criterion                      AlgTop                     line 15079
+general_lifting_criterion                      AlgTop                     line 15186
 general_position_extend                        Top1_Ch5_8                 line 28761
 generated_topology_contains_basis_elem         Top1_Ch5_8                 line 16006
 geom_cauchy_bound                              Top1_Ch5_8                 line 11839
@@ -565,7 +565,7 @@ homeomorphism_preserves_path_connected         AlgTop_JCT_Base            line 1
 homeomorphism_preserves_simply_connected       AlgTop_JCT_Base            line 1205
 homeomorphism_preserves_simply_connected_forward  AlgTop_JCT_Base            line 5751
 homeomorphism_reflects_simply_connected        AlgTop_JCT_Base            line 5757
-homeomorphism_restrict_open                    AlgTop                     line 18164
+homeomorphism_restrict_open                    AlgTop                     line 18271
 homeomorphism_restrict_point                   AlgTop_JCT_Base            line 5763
 homotopy_concat_continuous                     Top1_Ch9_13                line 502
 homotopy_const_continuous                      Top1_Ch9_13                line 356
@@ -751,7 +751,7 @@ paracompact_hausdorff_imp_regular              Top1_Ch5_8                 line 6
 paracompact_regular_imp_normal                 Top1_Ch5_8                 line 7193
 pasting_lemma_two_closed                       Top1_Ch5_8                 line 12415
 path_connected_imp_connected                   AlgTop_JCT_Base            line 6977
-path_connected_imp_connected                   AlgTop                     line 15006
+path_connected_imp_connected                   AlgTop                     line 15113
 path_connected_union                           AlgTop_JCT_Base            line 81
 path_homotopic_path_power                      AlgTop0                    line 4005
 path_homotopic_product_left                    Top1_Ch9_13                line 2486
@@ -778,7 +778,7 @@ PiE_inter                                      Top1_Ch5_8                 line 2
 pointwise_bounded_subset                       Top1_Ch5_8                 line 14813
 pointwise_d_imp_bm_le                          Top1_Ch5_8                 line 16103
 pointwise_d_imp_sup_bm_strict                  Top1_Ch5_8                 line 16119
-preimage_normal_subgroup                       AlgTop                     line 12709
+preimage_normal_subgroup                       AlgTop                     line 12816
 product_basis_finitely_many_nontrivial         Top1_Ch2                   line 8863
 product_basis_subspace_iff                     Top1_Ch5_8                 line 20332
 product_coarser_than_box                       Top1_Ch2                   line 8900
@@ -873,8 +873,8 @@ simple_closed_curve_boundary_meets_component   AlgTop0                    line 8
 simple_closed_curve_proper_subset              AlgTop_JCT_Base            line 10712
 simple_closed_curve_subset                     AlgTop_JCT_Base            line 4790
 simply_connected_paths_homotopic               Top1_Ch9_13                line 10166
-simply_connected_trivial_carrier               AlgTop                     line 12820
-simply_connected_trivial_image                 AlgTop                     line 17790
+simply_connected_trivial_carrier               AlgTop                     line 12927
+simply_connected_trivial_image                 AlgTop                     line 17897
 singleton_closed_in_hausdorff                  Top1_Ch2                   line 5909
 singleton_not_open_in_S2                       AlgTop_JCT_Base            line 7226
 Sn_interpolation_at_1                          AlgTop_JCT_Base            line 853
@@ -885,7 +885,7 @@ Sn_normalized_interpolation_path               AlgTop_JCT_Base            line 4
 sqnorm_memI                                    AlgTopHelpers              line 5
 squaring_map_covering                          AlgTop_JCT_Base0           line 12
 squaring_map_factorization                     AlgTop_JCT_Base0           line 2522
-standard_simplex_is_polygonal_region           AlgTop                     line 14527
+standard_simplex_is_polygonal_region           AlgTop                     line 14634
 stereo_denom_ne                                AlgTop_JCT_Base            line 3799
 stereo_denom_pos                               AlgTop_JCT_Base            line 3796
 stereographic_inv_in_S2                        AlgTop_JCT_Base            line 3802
@@ -1341,7 +1341,7 @@ topology_inter2                                Top1_Ch2                   line 7
 topology_inter_open                            AlgTop_JCT_Base            line 6179
 topology_union2                                Top1_Ch2                   line 1008
 translation_homeo_R2                           AlgTop_JCT_Base            line 8430
-triangle_compact                               AlgTop                     line 13866
+triangle_compact                               AlgTop                     line 13973
 tri_arg_metric                                 Top1_Ch5_8                 line 14381
 tychonoff_coord_point                          Top1_Ch5_8                 line 809
 Tychonoff_general                              Top1_Ch5_8                 line 21154
@@ -1557,32 +1557,32 @@ Theorem_67_8_rank_unique                       AlgTop                     line 1
 Theorem_69_2                                   AlgTop                     line 203
 Theorem_69_4                                   AlgTop                     line 263
 Theorem_70_2_SvK                               AlgTop                     line 1421
-Theorem_70_2_SvK_parameterized                 AlgTop                     line 11258
+Theorem_70_2_SvK_parameterized                 AlgTop                     line 11365
 Theorem_71_1_wedge_of_circles_finite           AlgTop                     line 550
 Theorem_71_3_wedge_of_circles_general          AlgTop                     line 702
 Theorem_72_1_attaching_two_cell                AlgTop                     line 730
 Theorem_73_1_torus_presentation                AlgTop                     line 836
 Theorem_73_4_dunce_cap                         AlgTop                     line 877
-Theorem_74_1_polygon_quotient_compact_hausdorff  AlgTop                     line 14189
-Theorem_74_3_fund_group_n_torus                AlgTop                     line 14267
-Theorem_74_4_fund_group_m_projective           AlgTop                     line 14299
-Theorem_75_1_H1_abelianization                 AlgTop                     line 14358
-Theorem_75_3_H1_n_torus                        AlgTop                     line 14456
-Theorem_75_4_H1_m_projective                   AlgTop                     line 14492
-Theorem_76_elementary_operations               AlgTop                     line 14330
-Theorem_77_5_classification                    AlgTop                     line 14724
-Theorem_78_1_triangulable_surface              AlgTop                     line 14638
-Theorem_78_2_connected_polygonal_quotient      AlgTop                     line 14690
-Theorem_79_2                                   AlgTop                     line 16111
-Theorem_79_4                                   AlgTop                     line 16920
-Theorem_80_1_universal_unique                  AlgTop                     line 17932
-Theorem_80_3_universal                         AlgTop                     line 18401
-Theorem_81_2_covering_group_iso                AlgTop                     line 18688
-Theorem_82_1_covering_existence                AlgTop                     line 18751
-Theorem_83_2_covering_of_graph_is_graph        AlgTop                     line 18848
-Theorem_84_7_fund_group_graph_is_free          AlgTop                     line 18883
-Theorem_85_1_Nielsen_Schreier                  AlgTop                     line 18940
-Theorem_85_3_Schreier_index                    AlgTop                     line 18980
+Theorem_74_1_polygon_quotient_compact_hausdorff  AlgTop                     line 14296
+Theorem_74_3_fund_group_n_torus                AlgTop                     line 14374
+Theorem_74_4_fund_group_m_projective           AlgTop                     line 14406
+Theorem_75_1_H1_abelianization                 AlgTop                     line 14465
+Theorem_75_3_H1_n_torus                        AlgTop                     line 14563
+Theorem_75_4_H1_m_projective                   AlgTop                     line 14599
+Theorem_76_elementary_operations               AlgTop                     line 14437
+Theorem_77_5_classification                    AlgTop                     line 14831
+Theorem_78_1_triangulable_surface              AlgTop                     line 14745
+Theorem_78_2_connected_polygonal_quotient      AlgTop                     line 14797
+Theorem_79_2                                   AlgTop                     line 16218
+Theorem_79_4                                   AlgTop                     line 17027
+Theorem_80_1_universal_unique                  AlgTop                     line 18039
+Theorem_80_3_universal                         AlgTop                     line 18508
+Theorem_81_2_covering_group_iso                AlgTop                     line 18795
+Theorem_82_1_covering_existence                AlgTop                     line 18858
+Theorem_83_2_covering_of_graph_is_graph        AlgTop                     line 18955
+Theorem_84_7_fund_group_graph_is_free          AlgTop                     line 18990
+Theorem_85_1_Nielsen_Schreier                  AlgTop                     line 19047
+Theorem_85_3_Schreier_index                    AlgTop                     line 19087
 
 ## corollarys (58)
 
@@ -1615,8 +1615,8 @@ Corollary_50_8                                 Top1_Ch5_8                 line 3
 Corollary_50_9                                 Top1_Ch5_8                 line 32516
 Corollary_55_4_inclusion_not_nulhomotopic      Top1_Ch9_13                line 12998
 Corollary_59_2                                 AlgTop_JCT_Base            line 318
-Corollary_70_3_simply_connected_intersection   AlgTop                     line 12567
-Corollary_70_4_simply_connected_V              AlgTop                     line 12879
+Corollary_70_3_simply_connected_intersection   AlgTop                     line 12674
+Corollary_70_4_simply_connected_V              AlgTop                     line 12986
 Lemma_13_3_on                                  Top1_Ch2                   line 1509
 Lemma_23_2_disjoint                            Top1_Ch3                   line 330
 lp_compact_iff_seq_compact_metric              Top1_Ch5_8                 line 33369
@@ -1642,7 +1642,7 @@ Theorem_50_2_finite_dim                        Top1_Ch5_8                 line 2
 Theorem_56_1_FTA_leading                       Top1_Ch9_13                line 16020
 Theorem_58_7_strict                            AlgTop_JCT_Base0           line 5548
 Theorem_59_3_path_connected                    AlgTop_JCT_Base            line 3249
-Theorem_80_3_universal_strict                  AlgTop                     line 18663
+Theorem_80_3_universal_strict                  AlgTop                     line 18770
 top1_same_homotopy_type_strict                 AlgTop_JCT_Base0           line 5560
 
 ## DUPLICATES (10 names appear in multiple locations)
@@ -1658,7 +1658,7 @@ top1_same_homotopy_type_strict                 AlgTop_JCT_Base0           line 5
     Top1_Ch5_8                 lemma  line 5230
   path_connected_imp_connected:
     AlgTop_JCT_Base            lemma  line 6977
-    AlgTop                     lemma  line 15006
+    AlgTop                     lemma  line 15113
   path_in_subspace_is_path_in_ambient:
     AlgTop_JCT_Base0           lemma  line 5576
     AlgTop_JCT_Base            lemma  line 19
