@@ -6492,7 +6492,14 @@ proof -
             \<comment> \<open>Insert sub(i₀) at position k. T' has Suc M pieces.\<close>
             define T' where "T' j = (if j \<le> k then T j else if j = Suc k then sub i0 else T (j - 1))" for j
             have hinsert: "foldr_\<sigma> f (Suc M) T' = foldr_\<sigma> f M T"
-              sorry \<comment> \<open>h_point_insert with T'_def\<close>
+            proof -
+              have "foldr_\<sigma> f (Suc M) (\<lambda>i. if i \<le> k then T i else if i = Suc k then sub i0 else T (i - 1))
+                  = foldr_\<sigma> f M T"
+                by (rule h_point_insert[OF less.prems(1-5) hk hTk hTSk])
+              moreover have "(\<lambda>i. if i \<le> k then T i else if i = Suc k then sub i0 else T (i - 1)) = T'"
+                unfolding T'_def by (rule ext) (by100 simp)
+              ultimately show ?thesis by (by100 presburger)
+            qed
             \<comment> \<open>T' is valid with Suc M pieces.\<close>
             have hT'1: "Suc M \<ge> 1" by (by100 presburger)
             have hT'0: "T' 0 = (0::real)" unfolding T'_def using less.prems(2) by (by100 simp)
