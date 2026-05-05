@@ -5859,12 +5859,23 @@ proof -
             unfolding N_def Pn_def S_def Psub_def \<tau>_def Let_def by (by100 simp)
           \<comment> \<open>Core: foldr_σ f N S = foldr_σ f n sub (subdivision independence).
              Proof: point insertion argument from Munkres Step 3.\<close>
+          \<comment> \<open>Point insertion lemma: inserting one point into a valid subdivision preserves foldr_σ.
+             Munkres Step 3: σ(f_i) = σ(f_i') · σ(f_i'') by reparametrization + σ_cond1/2.\<close>
+          have h_point_insert: "\<And>m s k p.
+              m \<ge> 1 \<Longrightarrow> s 0 = (0::real) \<Longrightarrow> s m = 1 \<Longrightarrow>
+              (\<forall>i<m. s i < s (Suc i)) \<Longrightarrow>
+              (\<forall>i<m. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (s i + t * (s (Suc i) - s i)) \<in> U)
+                   \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (s i + t * (s (Suc i) - s i)) \<in> V)) \<Longrightarrow>
+              k < m \<Longrightarrow> s k < p \<Longrightarrow> p < s (Suc k) \<Longrightarrow>
+              foldr_\<sigma> f (Suc m) (\<lambda>i. if i \<le> k then s i else if i = Suc k then p else s (i - 1))
+              = foldr_\<sigma> f m s"
+            sorry \<comment> \<open>Core point insertion: σ(piece_k) = σ(piece_k') · σ(piece_k'')
+               via reparam_path_homotopy (piece_k ≃ piece_k'*piece_k'' in U or V),
+               then σ_cond1 + σ_cond2, then group associativity for foldr.\<close>
+          \<comment> \<open>Subdivision independence: both (N,S) and (n,sub) refine to common refinement.\<close>
           have h_indep: "foldr_\<sigma> f N S = foldr_\<sigma> f n sub"
-            sorry \<comment> \<open>Any two valid subdivisions give same foldr_σ: adjoin one point at a time
-               to reach common refinement. Each point insertion preserves foldr_σ via:
-               piece_k ≃ piece_k' * piece_k'' (reparametrization in U or V) ⟹
-               σ(piece_k) = σ(piece_k') · σ(piece_k'') (by σ_cond1 + σ_cond2) ⟹
-               foldr unchanged (group associativity).\<close>
+            sorry \<comment> \<open>Iterate h_point_insert: add points of sub into S one at a time,
+               add points of S into sub one at a time. Both reach common refinement.\<close>
           show "\<tau> f = foldr_\<sigma> f n sub" using h\<tau>_eq h_indep by (by100 simp)
         qed
         have h_gen_indep_12: "\<tau> (top1_path_product f1 f2) = foldr_\<sigma> (top1_path_product f1 f2) (n1+n2) sub_m"
@@ -8107,7 +8118,10 @@ proof -
                     map (\<lambda>i. \<sigma> (piece_V (Suc i) sub')) [0..<n - Suc 1] ! k"
                   using hk hk2 by (by100 simp)
               qed
-              ultimately show ?thesis using hRHS_V by (by100 simp)
+              ultimately have "map (\<lambda>i. \<sigma> (piece_V i sub')) [0..<n-1] =
+                  \<sigma> (piece_V 0 sub') # map (\<lambda>i. \<sigma> (piece_V (Suc i) sub')) [0..<n - Suc 1]"
+                by (by100 simp)
+              thus ?thesis using hRHS_V unfolding foldr_\<sigma>_def by (by100 simp)
             qed
             \<comment> \<open>Group associativity + merge.\<close>
             \<comment> \<open>σ(V-path) ∈ H: same chain as h_σ_g_in_H (ρ case split on U/V).\<close>
