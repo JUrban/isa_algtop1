@@ -7537,10 +7537,17 @@ proof -
             proof (intro conjI)
               \<comment> \<open>pp1 is a path in U.\<close>
               show "top1_is_path_on U (subspace_topology X TX U) (pp1 0) (pp1 1) pp1"
-                sorry \<comment> \<open>pp1 = piece_top*β(Si), both continuous in U, product is path.\<close>
-              \<comment> \<open>pp2 is a path in U.\<close>
-              show "top1_is_path_on U (subspace_topology X TX U) (pp1 0) (pp1 1) pp2"
-                sorry \<comment> \<open>pp2 = β(i)*piece_bot, both continuous in U, endpoints match pp1.\<close>
+                sorry \<comment> \<open>pp1 = piece_top*β(Si), path_product_is_path. Edge path facts defined later.\<close>
+              \<comment> \<open>pp2 is a path in U. Endpoints: pp2 0 = β(i)(0) = F(s_i,t_j) = pp1 0,
+                 pp2 1 = piece_bot(1) = F(s_{i+1},t_{j+1}) = pp1 1.\<close>
+              have "pp1 0 = pp2 0" unfolding pp1_def pp2_def top1_path_product_def
+                  piece_top_def piece_bot_def \<beta>_def row_fn_def by (by100 simp)
+              moreover have "pp1 1 = pp2 1" unfolding pp1_def pp2_def top1_path_product_def
+                  piece_top_def piece_bot_def \<beta>_def row_fn_def by (by100 simp)
+              moreover have "top1_is_path_on U (subspace_topology X TX U) (pp2 0) (pp2 1) pp2"
+                sorry \<comment> \<open>pp2 = β(i)*piece_bot, same pattern. Edge path facts defined later.\<close>
+              ultimately show "top1_is_path_on U (subspace_topology X TX U) (pp1 0) (pp1 1) pp2"
+                by (by100 simp)
               \<comment> \<open>Homotopy witness: same H from hG_hom, with I_set extensional substitution.\<close>
               from hG_hom have "\<exists>H. top1_continuous_map_on (I_set \<times> I_set) II_topology
                   U (subspace_topology X TX U) H
