@@ -7358,13 +7358,48 @@ proof -
         have haffine_t: "top1_continuous_map_on I_set I_top I_set I_top
             (\<lambda>t. sub_t j + t * (sub_t (Suc j) - sub_t j))"
           by (rule affine_map_continuous_I_to_I[OF htj_ge0 htj_le_tSj htSj_le1])
+        \<comment> \<open>Constant map helper for Theorem_18_4.\<close>
+        have hI_in: "I_set \<in> I_top" using hTI unfolding is_topology_on_def by (by100 blast)
+        have hempty_in: "{} \<in> I_top" using hTI unfolding is_topology_on_def by (by100 blast)
+        have hconst_cont: "\<And>c. c \<in> I_set \<Longrightarrow> top1_continuous_map_on I_set I_top I_set I_top (\<lambda>_. c)"
+          unfolding top1_continuous_map_on_def
+        proof (intro conjI ballI)
+          fix c x assume "c \<in> I_set" "x \<in> I_set" show "c \<in> I_set" using \<open>c \<in> I_set\<close> .
+        next
+          fix c V assume hc: "c \<in> I_set" and "V \<in> I_top"
+          show "{x \<in> I_set. c \<in> V} \<in> I_top"
+          proof (cases "c \<in> V")
+            case True have "{x \<in> I_set. c \<in> V} = I_set" using True by (by100 force)
+            thus ?thesis using hI_in by (by100 presburger)
+          next
+            case False have "{x \<in> I_set. c \<in> V} = {}" using False by (by100 force)
+            thus ?thesis using hempty_in by (by100 presburger)
+          qed
+        qed
         \<comment> \<open>piece_top: F ∘ (affine_s, const sub_t j).\<close>
         have hpt_cont: "top1_continuous_map_on I_set I_top X TX (piece_top i)"
         proof -
           have "top1_continuous_map_on I_set I_top (I_set \<times> I_set) II_topology
               (\<lambda>t. (sub_s' i + t * (sub_s' (Suc i) - sub_s' i), sub_t j))"
-            using iffD2[OF Theorem_18_4[OF hTI hTI hTI]]
-            sorry \<comment> \<open>pi1∘pair = affine_s (continuous), pi2∘pair = const sub_t j (continuous)\<close>
+          proof -
+            have h1: "top1_continuous_map_on I_set I_top I_set I_top
+                (pi1 \<circ> (\<lambda>t. (sub_s' i + t * (sub_s' (Suc i) - sub_s' i), sub_t j)))"
+            proof -
+              have "(pi1 \<circ> (\<lambda>t. (sub_s' i + t * (sub_s' (Suc i) - sub_s' i), sub_t j)))
+                  = (\<lambda>t. sub_s' i + t * (sub_s' (Suc i) - sub_s' i))"
+                unfolding pi1_def comp_def by (rule ext) (by100 simp)
+              thus ?thesis using haffine_s by (by100 simp)
+            qed
+            have h2: "top1_continuous_map_on I_set I_top I_set I_top
+                (pi2 \<circ> (\<lambda>t. (sub_s' i + t * (sub_s' (Suc i) - sub_s' i), sub_t j)))"
+            proof -
+              have "(pi2 \<circ> (\<lambda>t. (sub_s' i + t * (sub_s' (Suc i) - sub_s' i), sub_t j)))
+                  = (\<lambda>_. sub_t j)" unfolding pi2_def comp_def by (rule ext) (by100 simp)
+              thus ?thesis using hconst_cont[OF htj_I] by (by100 simp)
+            qed
+            show ?thesis using iffD2[OF Theorem_18_4[OF hTI hTI hTI]] h1 h2
+              unfolding II_topology_def by (by100 blast)
+          qed
           hence "top1_continuous_map_on I_set I_top X TX
               (F \<circ> (\<lambda>t. (sub_s' i + t * (sub_s' (Suc i) - sub_s' i), sub_t j)))"
             using top1_continuous_map_on_comp[of _ _ "I_set \<times> I_set" II_topology] hF_cont by (by100 blast)
@@ -7378,7 +7413,25 @@ proof -
           have "top1_continuous_map_on I_set I_top (I_set \<times> I_set) II_topology
               (\<lambda>t. (sub_s' (Suc i), sub_t j + t * (sub_t (Suc j) - sub_t j)))"
             using iffD2[OF Theorem_18_4[OF hTI hTI hTI]]
-            sorry \<comment> \<open>pi1 = const sub_s'(Suc i), pi2 = affine_t\<close>
+          proof -
+            have h1: "top1_continuous_map_on I_set I_top I_set I_top
+                (pi1 \<circ> (\<lambda>t. (sub_s' (Suc i), sub_t j + t * (sub_t (Suc j) - sub_t j))))"
+            proof -
+              have "(pi1 \<circ> (\<lambda>t. (sub_s' (Suc i), sub_t j + t * (sub_t (Suc j) - sub_t j)))) = (\<lambda>_. sub_s' (Suc i))"
+                unfolding pi1_def comp_def by (rule ext) (by100 simp)
+              thus ?thesis using hconst_cont[OF hSsi_I] by (by100 simp)
+            qed
+            have h2: "top1_continuous_map_on I_set I_top I_set I_top
+                (pi2 \<circ> (\<lambda>t. (sub_s' (Suc i), sub_t j + t * (sub_t (Suc j) - sub_t j))))"
+            proof -
+              have "(pi2 \<circ> (\<lambda>t. (sub_s' (Suc i), sub_t j + t * (sub_t (Suc j) - sub_t j))))
+                  = (\<lambda>t. sub_t j + t * (sub_t (Suc j) - sub_t j))"
+                unfolding pi2_def comp_def by (rule ext) (by100 simp)
+              thus ?thesis using haffine_t by (by100 simp)
+            qed
+            show ?thesis using iffD2[OF Theorem_18_4[OF hTI hTI hTI]] h1 h2
+              unfolding II_topology_def by (by100 blast)
+          qed
           hence "top1_continuous_map_on I_set I_top X TX
               (F \<circ> (\<lambda>t. (sub_s' (Suc i), sub_t j + t * (sub_t (Suc j) - sub_t j))))"
             using top1_continuous_map_on_comp[of _ _ "I_set \<times> I_set" II_topology] hF_cont by (by100 blast)
@@ -7392,7 +7445,25 @@ proof -
           have "top1_continuous_map_on I_set I_top (I_set \<times> I_set) II_topology
               (\<lambda>t. (sub_s' i, sub_t j + t * (sub_t (Suc j) - sub_t j)))"
             using iffD2[OF Theorem_18_4[OF hTI hTI hTI]]
-            sorry \<comment> \<open>pi1 = const sub_s' i, pi2 = affine_t\<close>
+          proof -
+            have h1: "top1_continuous_map_on I_set I_top I_set I_top
+                (pi1 \<circ> (\<lambda>t. (sub_s' i, sub_t j + t * (sub_t (Suc j) - sub_t j))))"
+            proof -
+              have "(pi1 \<circ> (\<lambda>t. (sub_s' i, sub_t j + t * (sub_t (Suc j) - sub_t j)))) = (\<lambda>_. sub_s' i)"
+                unfolding pi1_def comp_def by (rule ext) (by100 simp)
+              thus ?thesis using hconst_cont[OF hsi_I] by (by100 simp)
+            qed
+            have h2: "top1_continuous_map_on I_set I_top I_set I_top
+                (pi2 \<circ> (\<lambda>t. (sub_s' i, sub_t j + t * (sub_t (Suc j) - sub_t j))))"
+            proof -
+              have "(pi2 \<circ> (\<lambda>t. (sub_s' i, sub_t j + t * (sub_t (Suc j) - sub_t j))))
+                  = (\<lambda>t. sub_t j + t * (sub_t (Suc j) - sub_t j))"
+                unfolding pi2_def comp_def by (rule ext) (by100 simp)
+              thus ?thesis using haffine_t by (by100 simp)
+            qed
+            show ?thesis using iffD2[OF Theorem_18_4[OF hTI hTI hTI]] h1 h2
+              unfolding II_topology_def by (by100 blast)
+          qed
           hence "top1_continuous_map_on I_set I_top X TX
               (F \<circ> (\<lambda>t. (sub_s' i, sub_t j + t * (sub_t (Suc j) - sub_t j))))"
             using top1_continuous_map_on_comp[of _ _ "I_set \<times> I_set" II_topology] hF_cont by (by100 blast)
@@ -7406,7 +7477,25 @@ proof -
           have "top1_continuous_map_on I_set I_top (I_set \<times> I_set) II_topology
               (\<lambda>t. (sub_s' i + t * (sub_s' (Suc i) - sub_s' i), sub_t (Suc j)))"
             using iffD2[OF Theorem_18_4[OF hTI hTI hTI]]
-            sorry \<comment> \<open>pi1 = affine_s, pi2 = const sub_t(Suc j)\<close>
+          proof -
+            have h1: "top1_continuous_map_on I_set I_top I_set I_top
+                (pi1 \<circ> (\<lambda>t. (sub_s' i + t * (sub_s' (Suc i) - sub_s' i), sub_t (Suc j))))"
+            proof -
+              have "(pi1 \<circ> (\<lambda>t. (sub_s' i + t * (sub_s' (Suc i) - sub_s' i), sub_t (Suc j))))
+                  = (\<lambda>t. sub_s' i + t * (sub_s' (Suc i) - sub_s' i))"
+                unfolding pi1_def comp_def by (rule ext) (by100 simp)
+              thus ?thesis using haffine_s by (by100 simp)
+            qed
+            have h2: "top1_continuous_map_on I_set I_top I_set I_top
+                (pi2 \<circ> (\<lambda>t. (sub_s' i + t * (sub_s' (Suc i) - sub_s' i), sub_t (Suc j))))"
+            proof -
+              have "(pi2 \<circ> (\<lambda>t. (sub_s' i + t * (sub_s' (Suc i) - sub_s' i), sub_t (Suc j))))
+                  = (\<lambda>_. sub_t (Suc j))" unfolding pi2_def comp_def by (rule ext) (by100 simp)
+              thus ?thesis using hconst_cont[OF htSj_I] by (by100 simp)
+            qed
+            show ?thesis using iffD2[OF Theorem_18_4[OF hTI hTI hTI]] h1 h2
+              unfolding II_topology_def by (by100 blast)
+          qed
           hence "top1_continuous_map_on I_set I_top X TX
               (F \<circ> (\<lambda>t. (sub_s' i + t * (sub_s' (Suc i) - sub_s' i), sub_t (Suc j))))"
             using top1_continuous_map_on_comp[of _ _ "I_set \<times> I_set" II_topology] hF_cont by (by100 blast)
