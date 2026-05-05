@@ -5991,7 +5991,22 @@ proof -
                    Both map I→I with same endpoints s(k), s(k+1).\<close>
               \<comment> \<open>Step 2: σ(piece) = σ(first*second) by σ_cond1.\<close>
               have h\<sigma>_eq: "\<sigma> piece = \<sigma> (top1_path_product first_h second_h)"
-                sorry \<comment> \<open>From hhom: piece ≃ first*second in U or V. Apply σ_cond1 (or _V).\<close>
+                using hhom
+              proof
+                assume "\<exists>S. S = U \<and> top1_path_homotopic_on S (subspace_topology X TX S)
+                    (piece 0) (piece 1) piece (top1_path_product first_h second_h)"
+                then obtain S where "S = U" and hhom_S: "top1_path_homotopic_on U (subspace_topology X TX U)
+                    (piece 0) (piece 1) piece (top1_path_product first_h second_h)"
+                  by (by100 blast)
+                show ?thesis by (rule h\<sigma>_cond1[OF hhom_S])
+              next
+                assume "\<exists>S. S = V \<and> top1_path_homotopic_on S (subspace_topology X TX S)
+                    (piece 0) (piece 1) piece (top1_path_product first_h second_h)"
+                then obtain S where "S = V" and hhom_S: "top1_path_homotopic_on V (subspace_topology X TX V)
+                    (piece 0) (piece 1) piece (top1_path_product first_h second_h)"
+                  by (by100 blast)
+                show ?thesis by (rule h\<sigma>_cond1_V[OF hhom_S])
+              qed
               \<comment> \<open>Step 3: σ(first*second) = σ(first)·σ(second) by σ_cond2.\<close>
               have h\<sigma>_mul: "\<sigma> (top1_path_product first_h second_h)
                   = mulH (\<sigma> first_h) (\<sigma> second_h)"
