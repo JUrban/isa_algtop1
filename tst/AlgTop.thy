@@ -6041,11 +6041,60 @@ proof -
                      else (p - s k + (2*t-1) * (s (Suc k) - p)) / (s (Suc k) - s k))"
                 unfolding top1_path_product_def first_h_def second_h_def piece_def
                 using hd_pos by (by100 simp)
+              \<comment> \<open>Define ψ: piecewise linear reparametrization I→I.\<close>
+              define \<psi> where "\<psi> t = (if t \<le> 1/2 then 2 * t * (p - s k) / (s (Suc k) - s k)
+                  else (p - s k + (2*t-1) * (s (Suc k) - p)) / (s (Suc k) - s k))" for t
+              have h\<psi>0: "\<psi> 0 = 0" unfolding \<psi>_def using hd_pos by (by100 simp)
+              have h\<psi>1: "\<psi> 1 = 1" unfolding \<psi>_def using hd_pos by (by100 simp)
+              have h\<psi>_cont: "top1_continuous_map_on I_set I_top I_set I_top \<psi>"
+                sorry \<comment> \<open>Piecewise linear: [0,1/2] affine + [1/2,1] affine, matching at 1/2.
+                   Use continuous_on_closed_Un for I_set = [0,1/2] ∪ [1/2,1].\<close>
+              \<comment> \<open>reparam gives: piece∘id ≃ piece∘ψ in U (or V).\<close>
+              have hpp_as_comp: "\<And>t. t \<in> I_set \<Longrightarrow> top1_path_product first_h second_h t = (piece \<circ> \<psi>) t"
+                using hpp_eq_piece_psi unfolding comp_def \<psi>_def by (by100 simp)
               have hhom: "(\<exists>S. S = U \<and> top1_path_homotopic_on S (subspace_topology X TX S)
                   (piece 0) (piece 1) piece (top1_path_product first_h second_h))
                   \<or> (\<exists>S. S = V \<and> top1_path_homotopic_on S (subspace_topology X TX S)
                   (piece 0) (piece 1) piece (top1_path_product first_h second_h))"
-                sorry \<comment> \<open>From hpiece_I_U + reparam_path_homotopy + hpp_eq_piece_psi + h_σ_I_cong.\<close>
+              proof -
+                have h0I: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+                have h1I: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+                \<comment> \<open>piece = piece∘id, and reparam gives piece∘id ≃ piece∘ψ.\<close>
+                have hid_cont: "top1_continuous_map_on I_set I_top I_set I_top (\<lambda>t. t)"
+                proof -
+                  have "top1_continuous_map_on I_set I_top I_set I_top id"
+                    by (rule top1_continuous_map_on_id[OF top1_unit_interval_topology_is_topology_on])
+                  thus ?thesis unfolding id_def by (by100 simp)
+                qed
+                \<comment> \<open>Transfer from piece∘ψ to pp first_h second_h (agree on I_set).\<close>
+                show ?thesis using hpiece_I_U
+                proof
+                  assume hU: "\<forall>s\<in>I_set. piece s \<in> U"
+                  have hid0: "(\<lambda>t::real. t) 0 = (0::real)" by (by100 simp)
+                  have hid1: "(\<lambda>t::real. t) 1 = (1::real)" by (by100 simp)
+                  have hreparam: "top1_path_homotopic_on U (subspace_topology X TX U)
+                      (piece 0) (piece 1) (piece \<circ> (\<lambda>t. t)) (piece \<circ> \<psi>)"
+                    by (rule reparam_path_homotopy[OF hTopX hpiece_cont hU hUsub hTopU
+                        hid_cont h\<psi>_cont hid0 hid1 h\<psi>0 h\<psi>1 h0I h1I])
+                  \<comment> \<open>piece∘id = piece, and piece∘ψ agrees with pp on I_set.\<close>
+                  have hcomp_id: "piece \<circ> (\<lambda>t. t) = piece"
+                    unfolding comp_def by (rule ext, by100 simp)
+                  have hreparam2: "top1_path_homotopic_on U (subspace_topology X TX U)
+                      (piece 0) (piece 1) piece (piece \<circ> \<psi>)"
+                    using hreparam unfolding hcomp_id .
+                  \<comment> \<open>Transfer: piece∘ψ agrees with pp on I_set → homotopy transfers.\<close>
+                  have "top1_path_homotopic_on U (subspace_topology X TX U)
+                      (piece 0) (piece 1) piece (top1_path_product first_h second_h)"
+                    sorry \<comment> \<open>From hreparam2 + hpp_as_comp: rewrite f' in path_homotopic_on.\<close>
+                  thus ?thesis by (by100 blast)
+                next
+                  assume hV: "\<forall>s\<in>I_set. piece s \<in> V"
+                  have "top1_path_homotopic_on V (subspace_topology X TX V)
+                      (piece 0) (piece 1) piece (top1_path_product first_h second_h)"
+                    sorry \<comment> \<open>Mirror of U case.\<close>
+                  thus ?thesis by (by100 blast)
+                qed
+              qed
               \<comment> \<open>Step 2: σ(piece) = σ(first*second) by σ_cond1.\<close>
               have h\<sigma>_eq: "\<sigma> piece = \<sigma> (top1_path_product first_h second_h)"
                 using hhom
