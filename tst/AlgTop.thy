@@ -7049,7 +7049,46 @@ proof -
           hsinc' hi hUV_bot by (by100 force)
       qed
       have h\<beta>_H: "\<And>i. i \<le> ns' \<Longrightarrow> \<sigma> (\<beta> i) \<in> H"
-        sorry \<comment> \<open>β i is a path in U or V (from hcell_UV boundary), so σ(β i) ∈ H\<close>
+      proof -
+        fix i assume hi: "i \<le> ns'"
+        show "\<sigma> (\<beta> i) \<in> H"
+        proof (cases "i = 0")
+          case True thus ?thesis using h\<beta>0 heH by (by100 simp)
+        next
+          case False
+          show ?thesis
+          proof (cases "i = ns'")
+            case True thus ?thesis using h\<beta>n heH by (by100 simp)
+          next
+            case False2: False
+            \<comment> \<open>0 < i < ns'. β(i) lies on boundary of cell (i-1, j) which maps to U or V.\<close>
+            have hi_pos: "i > 0" using False by (by100 presburger)
+            have hi_lt: "i < ns'" using hi False2 by (by100 presburger)
+            have him1: "i - 1 < ns'" using hi_lt by (by100 presburger)
+            \<comment> \<open>β(i) maps [0,1] into U or V (from cell (i-1, j)).\<close>
+            have h\<beta>_maps: "(\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> \<beta> i t \<in> U)
+                \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> \<beta> i t \<in> V)"
+              sorry \<comment> \<open>From hcell_UV at (i-1, j): β(i) on right boundary of that cell.\<close>
+            \<comment> \<open>β(i) is continuous (F ∘ affine).\<close>
+            have h\<beta>_cont: "top1_continuous_map_on I_set I_top X TX (\<beta> i)"
+              sorry \<comment> \<open>Composition: (λt. (sub_s' i, sub_t j + t*diff)) continuous from I to I×I,
+                 then F continuous from I×I to X.\<close>
+            \<comment> \<open>From path-in-U/V + continuity: σ(β i) ∈ H.\<close>
+            from h\<beta>_maps show ?thesis
+            proof
+              assume hU: "\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> \<beta> i t \<in> U"
+              have "top1_is_path_on U (subspace_topology X TX U) (\<beta> i 0) (\<beta> i 1) (\<beta> i)"
+                sorry \<comment> \<open>From h_β_cont + hU: continuous path with values in U.\<close>
+              thus ?thesis by (rule h\<sigma>_path_in_H)
+            next
+              assume hV: "\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> \<beta> i t \<in> V"
+              have "top1_is_path_on V (subspace_topology X TX V) (\<beta> i 0) (\<beta> i 1) (\<beta> i)"
+                sorry \<comment> \<open>From h_β_cont + hV: continuous path with values in V.\<close>
+              thus ?thesis by (rule h\<sigma>_path_in_H_V)
+            qed
+          qed
+        qed
+      qed
       have htelescope: "foldr mulH (map (\<lambda>i. \<sigma> (piece_top i)) [0..<ns']) eH
           = foldr mulH (map (\<lambda>i. \<sigma> (piece_bot i)) [0..<ns']) eH"
       proof -
