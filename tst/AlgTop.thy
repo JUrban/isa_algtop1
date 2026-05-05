@@ -7066,9 +7066,80 @@ proof -
             have hi_lt: "i < ns'" using hi False2 by (by100 presburger)
             have him1: "i - 1 < ns'" using hi_lt by (by100 presburger)
             \<comment> \<open>β(i) maps [0,1] into U or V (from cell (i-1, j)).\<close>
+            have hSuci1: "Suc (i - 1) = i" using hi_pos by (by100 presburger)
             have h\<beta>_maps: "(\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> \<beta> i t \<in> U)
                 \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> \<beta> i t \<in> V)"
-              sorry \<comment> \<open>From hcell_UV at (i-1, j): β(i) on right boundary of that cell.\<close>
+            proof -
+              from hcell_UV him1 hj have hcell_im1:
+                "(\<forall>s t. sub_s' (i-1) \<le> s \<and> s \<le> sub_s' (Suc (i-1))
+                    \<and> sub_t j \<le> t \<and> t \<le> sub_t (Suc j) \<and> 0\<le>s \<and> s\<le>1 \<and> 0\<le>t \<and> t\<le>1
+                    \<longrightarrow> F (s,t) \<in> U)
+                \<or> (\<forall>s t. sub_s' (i-1) \<le> s \<and> s \<le> sub_s' (Suc (i-1))
+                    \<and> sub_t j \<le> t \<and> t \<le> sub_t (Suc j) \<and> 0\<le>s \<and> s\<le>1 \<and> 0\<le>t \<and> t\<le>1
+                    \<longrightarrow> F (s,t) \<in> V)" by (by100 blast)
+              \<comment> \<open>Key facts for instantiation.\<close>
+              have "sub_s' (i-1) < sub_s' (Suc (i-1))" using hsinc' him1 by (by100 force)
+              hence "sub_s' (i-1) < sub_s' i" using hSuci1 by (by100 simp)
+              hence hsi_ge: "sub_s' (i-1) \<le> sub_s' i" by (by100 linarith)
+              have hsi_le: "sub_s' i \<le> sub_s' (Suc (i-1))" using hSuci1 by (by100 simp)
+              have hsi_ge0: "0 \<le> sub_s' i" using hsubs_ge hi by (by100 force)
+              have hsi_le1: "sub_s' i \<le> 1" using hsubs_le hi by (by100 force)
+              have htj_ge0: "0 \<le> sub_t j" using hsubt_ge[OF hj_le_nt] .
+              have htSj_le1: "sub_t (Suc j) \<le> 1" using hsubt_le[OF hSj_le_nt] .
+              have htj_le: "sub_t j \<le> sub_t (Suc j)" using htinc hj by (by100 force)
+              from hcell_im1 show ?thesis
+              proof
+                assume hU: "\<forall>s t. sub_s' (i-1) \<le> s \<and> s \<le> sub_s' (Suc (i-1))
+                    \<and> sub_t j \<le> t \<and> t \<le> sub_t (Suc j) \<and> 0\<le>s \<and> s\<le>1 \<and> 0\<le>t \<and> t\<le>1
+                    \<longrightarrow> F (s,t) \<in> U"
+                show ?thesis
+                proof (rule disjI1, intro allI impI)
+                  fix t :: real assume ht: "0 \<le> t \<and> t \<le> 1"
+                  have ht_in: "sub_t j \<le> sub_t j + t * (sub_t (Suc j) - sub_t j)
+                      \<and> sub_t j + t * (sub_t (Suc j) - sub_t j) \<le> sub_t (Suc j)
+                      \<and> 0 \<le> sub_t j + t * (sub_t (Suc j) - sub_t j)
+                      \<and> sub_t j + t * (sub_t (Suc j) - sub_t j) \<le> 1"
+                  proof -
+                    have hdiff: "sub_t (Suc j) - sub_t j \<ge> 0" using htj_le by (by100 linarith)
+                    have hprod_ge: "t * (sub_t (Suc j) - sub_t j) \<ge> 0"
+                      by (rule mult_nonneg_nonneg) (use ht hdiff in \<open>by100 linarith\<close>)+
+                    have "t * (sub_t (Suc j) - sub_t j) \<le> 1 * (sub_t (Suc j) - sub_t j)"
+                      by (rule mult_right_mono) (use ht hdiff in \<open>by100 linarith\<close>)+
+                    hence hprod_le: "t * (sub_t (Suc j) - sub_t j) \<le> sub_t (Suc j) - sub_t j"
+                      by (by100 simp)
+                    show ?thesis using hprod_ge hprod_le htj_ge0 htSj_le1 by (by100 linarith)
+                  qed
+                  have "F (sub_s' i, sub_t j + t * (sub_t (Suc j) - sub_t j)) \<in> U"
+                    using hU hsi_ge hsi_le hsi_ge0 hsi_le1 ht_in by (by100 blast)
+                  thus "\<beta> i t \<in> U" unfolding \<beta>_def by (by100 simp)
+                qed
+              next
+                assume hV: "\<forall>s t. sub_s' (i-1) \<le> s \<and> s \<le> sub_s' (Suc (i-1))
+                    \<and> sub_t j \<le> t \<and> t \<le> sub_t (Suc j) \<and> 0\<le>s \<and> s\<le>1 \<and> 0\<le>t \<and> t\<le>1
+                    \<longrightarrow> F (s,t) \<in> V"
+                show ?thesis
+                proof (rule disjI2, intro allI impI)
+                  fix t :: real assume ht: "0 \<le> t \<and> t \<le> 1"
+                  have ht_in: "sub_t j \<le> sub_t j + t * (sub_t (Suc j) - sub_t j)
+                      \<and> sub_t j + t * (sub_t (Suc j) - sub_t j) \<le> sub_t (Suc j)
+                      \<and> 0 \<le> sub_t j + t * (sub_t (Suc j) - sub_t j)
+                      \<and> sub_t j + t * (sub_t (Suc j) - sub_t j) \<le> 1"
+                  proof -
+                    have hdiff: "sub_t (Suc j) - sub_t j \<ge> 0" using htj_le by (by100 linarith)
+                    have hprod_ge: "t * (sub_t (Suc j) - sub_t j) \<ge> 0"
+                      by (rule mult_nonneg_nonneg) (use ht hdiff in \<open>by100 linarith\<close>)+
+                    have "t * (sub_t (Suc j) - sub_t j) \<le> 1 * (sub_t (Suc j) - sub_t j)"
+                      by (rule mult_right_mono) (use ht hdiff in \<open>by100 linarith\<close>)+
+                    hence hprod_le: "t * (sub_t (Suc j) - sub_t j) \<le> sub_t (Suc j) - sub_t j"
+                      by (by100 simp)
+                    show ?thesis using hprod_ge hprod_le htj_ge0 htSj_le1 by (by100 linarith)
+                  qed
+                  have "F (sub_s' i, sub_t j + t * (sub_t (Suc j) - sub_t j)) \<in> V"
+                    using hV hsi_ge hsi_le hsi_ge0 hsi_le1 ht_in by (by100 blast)
+                  thus "\<beta> i t \<in> V" unfolding \<beta>_def by (by100 simp)
+                qed
+              qed
+            qed
             \<comment> \<open>β(i) is continuous (F ∘ affine).\<close>
             have h\<beta>_cont: "top1_continuous_map_on I_set I_top X TX (\<beta> i)"
             proof -
