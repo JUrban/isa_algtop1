@@ -6955,8 +6955,9 @@ proof -
                   thus ?thesis using hpi hs'_T by (by100 simp)
                 qed
                 \<comment> \<open>IH: foldr_σ f (M-1) T' = foldr_σ f n sub.\<close>
+                have hM1_lt: "M - 1 < M" using hMgt hn by (by100 presburger)
                 have "foldr_\<sigma> f (M - 1) T' = foldr_\<sigma> f n sub"
-                  sorry \<comment> \<open>IH application: M-1 < M, T' valid with M-1 pieces, T' refines sub.\<close>
+                  using less.IH[OF hM1_lt] hT'_valid hT'_refines by (by100 blast)
                 thus ?thesis using hinsert by (by100 simp)
               qed
             qed
