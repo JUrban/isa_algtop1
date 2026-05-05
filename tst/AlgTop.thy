@@ -7136,7 +7136,8 @@ proof -
               define F where "F = invgH (\<sigma> (\<beta> (Suc k)))"
               \<comment> \<open>H-membership.\<close>
               have hAH: "A \<in> H" unfolding A_def using h\<beta>_H by (by100 force)
-              have hBH: "B \<in> H" unfolding B_def sorry \<comment> \<open>foldr of H-elements in H\<close>
+              have hBH: "B \<in> H" unfolding B_def
+                sorry \<comment> \<open>foldr of H-elements in H (same proof as line ~7204)\<close>
               have hCH: "C \<in> H" unfolding C_def using hinvH_closed h\<beta>_H hk_le by (by100 force)
               have hDH: "D \<in> H" unfolding D_def using h\<beta>_H hk_le by (by100 force)
               have hEH: "E \<in> H" unfolding E_def using h\<sigma>_bot_H hk by (by100 force)
