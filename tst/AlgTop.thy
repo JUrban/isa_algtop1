@@ -6643,6 +6643,62 @@ proof -
           ultimately show ?case by (by100 linarith)
         qed
       qed
+      \<comment> \<open>sub_s' bounds: values in [0,1].\<close>
+      have hsubs_ge: "\<And>i'. i' \<le> ns' \<Longrightarrow> 0 \<le> sub_s' i'"
+      proof -
+        fix i' show "i' \<le> ns' \<Longrightarrow> 0 \<le> sub_s' i'"
+        proof (induct i')
+          case 0 thus ?case using hs0' by (by100 simp)
+        next
+          case (Suc i'')
+          have "i'' \<le> ns'" using Suc.prems by (by100 presburger)
+          have "i'' < ns'" using Suc.prems by (by100 presburger)
+          have "sub_s' i'' < sub_s' (Suc i'')" using hsinc' \<open>i'' < ns'\<close> by (by100 force)
+          moreover have "0 \<le> sub_s' i''" using Suc.hyps[OF \<open>i'' \<le> ns'\<close>] .
+          ultimately show ?case by (by100 linarith)
+        qed
+      qed
+      have hsubs_le: "\<And>i'. i' \<le> ns' \<Longrightarrow> sub_s' i' \<le> 1"
+      proof -
+        fix i' show "i' \<le> ns' \<Longrightarrow> sub_s' i' \<le> 1"
+        proof (induct "ns' - i'" arbitrary: i')
+          case 0 thus ?case using hsn' by (by100 simp)
+        next
+          case (Suc d)
+          have "i' < ns'" using Suc.hyps(2) by (by100 presburger)
+          have "Suc i' \<le> ns'" using \<open>i' < ns'\<close> by (by100 presburger)
+          have "d = ns' - Suc i'" using Suc.hyps(2) by (by100 presburger)
+          have "sub_s' (Suc i') \<le> 1" using Suc.hyps(1)[OF \<open>d = ns' - Suc i'\<close> \<open>Suc i' \<le> ns'\<close>] .
+          moreover have "sub_s' i' < sub_s' (Suc i')" using hsinc' \<open>i' < ns'\<close> by (by100 force)
+          ultimately show ?case by (by100 linarith)
+        qed
+      qed
+      \<comment> \<open>Convex combination helper for sub_s'.\<close>
+      have hconv_s: "\<And>i' t. i' < ns' \<Longrightarrow> 0 \<le> t \<Longrightarrow> t \<le> 1 \<Longrightarrow>
+          sub_s' i' \<le> sub_s' i' + t * (sub_s' (Suc i') - sub_s' i')
+          \<and> sub_s' i' + t * (sub_s' (Suc i') - sub_s' i') \<le> sub_s' (Suc i')
+          \<and> 0 \<le> sub_s' i' + t * (sub_s' (Suc i') - sub_s' i')
+          \<and> sub_s' i' + t * (sub_s' (Suc i') - sub_s' i') \<le> 1"
+      proof -
+        fix i' :: nat and t :: real assume hi': "i' < ns'" and ht0: "0 \<le> t" and ht1: "t \<le> 1"
+        have hdiff: "sub_s' (Suc i') - sub_s' i' \<ge> 0" using hsinc' hi' by (by100 force)
+        have hprod_ge: "t * (sub_s' (Suc i') - sub_s' i') \<ge> 0"
+          by (rule mult_nonneg_nonneg[OF ht0 hdiff])
+        have hprod_le: "t * (sub_s' (Suc i') - sub_s' i') \<le> sub_s' (Suc i') - sub_s' i'"
+        proof -
+          have "t * (sub_s' (Suc i') - sub_s' i') \<le> 1 * (sub_s' (Suc i') - sub_s' i')"
+            by (rule mult_right_mono[OF ht1 hdiff])
+          thus ?thesis by (by100 simp)
+        qed
+        have "i' \<le> ns'" using hi' by (by100 presburger)
+        have "Suc i' \<le> ns'" using hi' by (by100 presburger)
+        show "sub_s' i' \<le> sub_s' i' + t * (sub_s' (Suc i') - sub_s' i')
+            \<and> sub_s' i' + t * (sub_s' (Suc i') - sub_s' i') \<le> sub_s' (Suc i')
+            \<and> 0 \<le> sub_s' i' + t * (sub_s' (Suc i') - sub_s' i')
+            \<and> sub_s' i' + t * (sub_s' (Suc i') - sub_s' i') \<le> 1"
+          using hprod_ge hprod_le hsubs_ge[OF \<open>i' \<le> ns'\<close>] hsubs_le[OF \<open>Suc i' \<le> ns'\<close>]
+          by (by100 linarith)
+      qed
       \<comment> \<open>τ(row_fn j) uses subdivision sub_s' with ns' pieces.\<close>
       \<comment> \<open>row_fn j is a loop (F(0,t_j) = F(1,t_j) = x0).\<close>
       have hrowj_loop: "top1_is_loop_on X TX x0 (row_fn j)"
@@ -6675,7 +6731,7 @@ proof -
             fix t :: real assume ht: "0 \<le> t \<and> t \<le> 1"
             define s where "s = sub_s' i + t * (sub_s' (Suc i) - sub_s' i)"
             have "sub_s' i \<le> s \<and> s \<le> sub_s' (Suc i) \<and> 0 \<le> s \<and> s \<le> 1"
-              sorry \<comment> \<open>sub_s' i ≤ s ≤ sub_s'(i+1) from convex; 0 ≤ sub_s' i; sub_s'(i+1) ≤ 1\<close>
+              unfolding s_def using hconv_s[OF hi] ht by (by100 blast)
             hence "F (s, sub_t j) \<in> U" using True htj_bounds by (by100 force)
             thus "row_fn j (sub_s' i + t * (sub_s' (Suc i) - sub_s' i)) \<in> U"
               unfolding row_fn_def s_def by (by100 simp)
@@ -6690,16 +6746,68 @@ proof -
             fix t :: real assume ht: "0 \<le> t \<and> t \<le> 1"
             define s where "s = sub_s' i + t * (sub_s' (Suc i) - sub_s' i)"
             have "sub_s' i \<le> s \<and> s \<le> sub_s' (Suc i) \<and> 0 \<le> s \<and> s \<le> 1"
-              sorry \<comment> \<open>Convex combination bounds\<close>
+              unfolding s_def using hconv_s[OF hi] ht by (by100 blast)
             hence "F (s, sub_t j) \<in> V" using \<open>\<forall>s t. _\<close> htj_bounds by (by100 force)
             thus "row_fn j (sub_s' i + t * (sub_s' (Suc i) - sub_s' i)) \<in> V"
               unfolding row_fn_def s_def by (by100 simp)
           qed
         qed
       qed
+      have hSj_le_nt: "Suc j \<le> nt" using hj by (by100 presburger)
+      have hj_le_nt: "j \<le> nt" using hj by (by100 presburger)
+      have htSj_bounds: "0 \<le> sub_t (Suc j)" "sub_t (Suc j) \<le> 1" "sub_t j \<le> sub_t (Suc j)"
+        using hsubt_ge[OF hSj_le_nt] hsubt_le[OF hSj_le_nt] htinc hj by (by100 force)+
       have hUV_bot: "\<forall>i<ns'. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> row_fn (Suc j) (sub_s' i + t * (sub_s' (Suc i) - sub_s' i)) \<in> U)
            \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> row_fn (Suc j) (sub_s' i + t * (sub_s' (Suc i) - sub_s' i)) \<in> V)"
-        sorry \<comment> \<open>Same argument as hUV_top with sub_t(Suc j) in place of sub_t j.\<close>
+      proof (intro allI impI)
+        fix i assume hi: "i < ns'"
+        from hcell_UV have hcell: "(\<forall>s t. sub_s' i \<le> s \<and> s \<le> sub_s' (Suc i)
+            \<and> sub_t j \<le> t \<and> t \<le> sub_t (Suc j) \<and> 0\<le>s \<and> s\<le>1 \<and> 0\<le>t \<and> t\<le>1 \<longrightarrow> F (s,t) \<in> U)
+            \<or> (\<forall>s t. sub_s' i \<le> s \<and> s \<le> sub_s' (Suc i)
+                   \<and> sub_t j \<le> t \<and> t \<le> sub_t (Suc j) \<and> 0\<le>s \<and> s\<le>1 \<and> 0\<le>t \<and> t\<le>1 \<longrightarrow> F (s,t) \<in> V)"
+          using hi hj by (by100 blast)
+        show "(\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> row_fn (Suc j) (sub_s' i + t * (sub_s' (Suc i) - sub_s' i)) \<in> U)
+           \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> row_fn (Suc j) (sub_s' i + t * (sub_s' (Suc i) - sub_s' i)) \<in> V)"
+        proof (cases "(\<forall>s t. sub_s' i \<le> s \<and> s \<le> sub_s' (Suc i)
+            \<and> sub_t j \<le> t \<and> t \<le> sub_t (Suc j) \<and> 0\<le>s \<and> s\<le>1 \<and> 0\<le>t \<and> t\<le>1 \<longrightarrow> F (s,t) \<in> U)")
+          case True
+          show ?thesis
+          proof (rule disjI1, intro allI impI)
+            fix t :: real assume ht: "0 \<le> t \<and> t \<le> 1"
+            define s where "s = sub_s' i + t * (sub_s' (Suc i) - sub_s' i)"
+            have "sub_s' i \<le> s \<and> s \<le> sub_s' (Suc i) \<and> 0 \<le> s \<and> s \<le> 1"
+              unfolding s_def using hconv_s[OF hi] ht by (by100 blast)
+            hence hsbounds: "sub_s' i \<le> s" "s \<le> sub_s' (Suc i)" "0 \<le> s" "s \<le> 1"
+              by (by100 blast)+
+            have "sub_t j \<le> sub_t (Suc j)" "0 \<le> sub_t (Suc j)" "sub_t (Suc j) \<le> 1"
+              using htSj_bounds by (by100 blast)+
+            hence "F (s, sub_t (Suc j)) \<in> U"
+              using True hsbounds by (by100 force)
+            thus "row_fn (Suc j) (sub_s' i + t * (sub_s' (Suc i) - sub_s' i)) \<in> U"
+              unfolding row_fn_def s_def by (by100 simp)
+          qed
+        next
+          case False
+          hence "(\<forall>s t. sub_s' i \<le> s \<and> s \<le> sub_s' (Suc i)
+                   \<and> sub_t j \<le> t \<and> t \<le> sub_t (Suc j) \<and> 0\<le>s \<and> s\<le>1 \<and> 0\<le>t \<and> t\<le>1 \<longrightarrow> F (s,t) \<in> V)"
+            using hcell by (by100 blast)
+          show ?thesis
+          proof (rule disjI2, intro allI impI)
+            fix t :: real assume ht: "0 \<le> t \<and> t \<le> 1"
+            define s where "s = sub_s' i + t * (sub_s' (Suc i) - sub_s' i)"
+            have "sub_s' i \<le> s \<and> s \<le> sub_s' (Suc i) \<and> 0 \<le> s \<and> s \<le> 1"
+              unfolding s_def using hconv_s[OF hi] ht by (by100 blast)
+            hence hsbounds: "sub_s' i \<le> s" "s \<le> sub_s' (Suc i)" "0 \<le> s" "s \<le> 1"
+              by (by100 blast)+
+            have "sub_t j \<le> sub_t (Suc j)" "0 \<le> sub_t (Suc j)" "sub_t (Suc j) \<le> 1"
+              using htSj_bounds by (by100 blast)+
+            hence "F (s, sub_t (Suc j)) \<in> V"
+              using \<open>\<forall>s t. _\<close> hsbounds by (by100 force)
+            thus "row_fn (Suc j) (sub_s' i + t * (sub_s' (Suc i) - sub_s' i)) \<in> V"
+              unfolding row_fn_def s_def by (by100 simp)
+          qed
+        qed
+      qed
       have h\<tau>_top: "\<tau> (row_fn j) = foldr mulH (map (\<lambda>i. \<sigma> (piece_top i)) [0..<ns']) eH"
       proof -
         have "\<tau> (row_fn j) = foldr_\<sigma> (row_fn j) ns' sub_s'"
