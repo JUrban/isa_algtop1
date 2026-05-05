@@ -6083,9 +6083,34 @@ proof -
                       (piece 0) (piece 1) piece (piece \<circ> \<psi>)"
                     using hreparam unfolding hcomp_id .
                   \<comment> \<open>Transfer: piece∘ψ agrees with pp on I_set → homotopy transfers.\<close>
+                  \<comment> \<open>Transfer: piece∘ψ → pp in the homotopy. They agree on I_set.\<close>
+                  have hpp_path_U: "top1_is_path_on U (subspace_topology X TX U)
+                      (piece 0) (piece 1) (top1_path_product first_h second_h)"
+                    sorry \<comment> \<open>pp is a path in U: first_h, second_h paths in U + matching endpoints.\<close>
                   have "top1_path_homotopic_on U (subspace_topology X TX U)
                       (piece 0) (piece 1) piece (top1_path_product first_h second_h)"
-                    sorry \<comment> \<open>From hreparam2 + hpp_as_comp: rewrite f' in path_homotopic_on.\<close>
+                  proof -
+                    from hreparam2 obtain F where
+                        hF_cont: "top1_continuous_map_on (I_set \<times> I_set) II_topology U (subspace_topology X TX U) F"
+                        and hF0: "\<forall>s\<in>I_set. F (s, 0) = piece s"
+                        and hF1: "\<forall>s\<in>I_set. F (s, 1) = (piece \<circ> \<psi>) s"
+                        and hFb0: "\<forall>t\<in>I_set. F (0, t) = piece 0"
+                        and hFb1: "\<forall>t\<in>I_set. F (1, t) = piece 1"
+                      unfolding top1_path_homotopic_on_def top1_is_path_on_def by blast
+                    \<comment> \<open>F(s,1) = (piece∘ψ)(s) = pp(s) for s ∈ I_set.\<close>
+                    have hF1_pp: "\<forall>s\<in>I_set. F (s, 1) = top1_path_product first_h second_h s"
+                    proof (intro ballI)
+                      fix t assume ht: "t \<in> I_set"
+                      have "F (t, 1) = (piece \<circ> \<psi>) t" using hF1 ht by (by100 blast)
+                      also have "\<dots> = top1_path_product first_h second_h t"
+                        using hpp_as_comp[OF ht, symmetric] .
+                      finally show "F (t, 1) = top1_path_product first_h second_h t" .
+                    qed
+                    show ?thesis unfolding top1_path_homotopic_on_def
+                      using hpiece_cont hpiece_I_U hU hpp_path_U hF_cont hF0 hF1_pp hFb0 hFb1
+                      sorry \<comment> \<open>Reassemble path_homotopic_on: piece is path in U,
+                         pp is path in U (hpp_path_U), F witnesses the homotopy.\<close>
+                  qed
                   thus ?thesis by (by100 blast)
                 next
                   assume hV: "\<forall>s\<in>I_set. piece s \<in> V"
