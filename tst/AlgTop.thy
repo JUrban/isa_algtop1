@@ -6860,7 +6860,13 @@ proof -
               next
                 case False
                 have "M \<ge> n"
-                  sorry \<comment> \<open>T has M+1 distinct values containing n+1 sub-values ⟹ M+1 ≥ n+1.\<close>
+                proof -
+                  \<comment> \<open>T strictly increasing ⟹ injective. Sub values all appear in T.
+                     n+1 distinct values in {0..M} ⟹ n+1 ≤ M+1.\<close>
+                  have hT_inj: "\<And>a b. a \<le> M \<Longrightarrow> b \<le> M \<Longrightarrow> T a = T b \<Longrightarrow> a = b"
+                    sorry \<comment> \<open>Strictly increasing ⟹ injective.\<close>
+                  show ?thesis sorry \<comment> \<open>n+1 distinct witnesses in {0..M} via inj + hrefines ⟹ n ≤ M.\<close>
+                qed
                 hence hMgt: "M > n" using False by (by100 presburger)
                 \<comment> \<open>Step: M > n. Find removable point T(j) not in sub.\<close>
                 have "\<exists>j. 0 < j \<and> j < M \<and> (\<forall>i\<le>n. T j \<noteq> sub i)"
