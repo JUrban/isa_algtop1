@@ -6106,10 +6106,16 @@ proof -
                         using hpp_as_comp[OF ht, symmetric] .
                       finally show "F (t, 1) = top1_path_product first_h second_h t" .
                     qed
+                    have hpiece_path_U: "top1_is_path_on U (subspace_topology X TX U)
+                        (piece 0) (piece 1) piece"
+                    proof -
+                      have "piece ` I_set \<subseteq> U" using hU unfolding top1_unit_interval_def by (by100 blast)
+                      hence "top1_continuous_map_on I_set I_top U (subspace_topology X TX U) piece"
+                        by (rule top1_continuous_map_on_codomain_shrink[OF hpiece_cont _ hUsub])
+                      thus ?thesis unfolding top1_is_path_on_def by (by100 blast)
+                    qed
                     show ?thesis unfolding top1_path_homotopic_on_def
-                      using hpiece_cont hpiece_I_U hU hpp_path_U hF_cont hF0 hF1_pp hFb0 hFb1
-                      sorry \<comment> \<open>Reassemble path_homotopic_on: piece is path in U,
-                         pp is path in U (hpp_path_U), F witnesses the homotopy.\<close>
+                      using hpiece_path_U hpp_path_U hF_cont hF0 hF1_pp hFb0 hFb1 by (by100 blast)
                   qed
                   thus ?thesis by (by100 blast)
                 next
