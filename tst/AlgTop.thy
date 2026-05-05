@@ -7303,11 +7303,89 @@ proof -
         define pp2 where "pp2 = top1_path_product (\<beta> i) (piece_bot i)"
         have hpath_hom: "top1_path_homotopic_on U (subspace_topology X TX U) (pp1 0) (pp1 1) pp1 pp2
           \<or> top1_path_homotopic_on V (subspace_topology X TX V) (pp1 0) (pp1 1) pp1 pp2"
-          sorry \<comment> \<open>Straight-line homotopy in convex cell composed with F.
-             Both broken-line paths go from (sub_s' i, sub_t j) to (sub_s'(Suc i), sub_t(Suc j)).
-             H(s,u) = (1-u)*bl1(s) + u*bl2(s) stays in convex cell.
-             F∘H gives path homotopy in U or V (via continuous_preserves_path_homotopic).
-             Needs: H continuous, image ⊆ cell, boundary conditions, F∘bl1=pp1, F∘bl2=pp2.\<close>
+        proof -
+          \<comment> \<open>Define G = F ∘ φ where φ rescales I×I to the cell.
+             Broken-line paths in I×I map to cell edges under φ.
+             I×I simply connected → broken lines homotopic.
+             Compose with G → homotopy in U or V.\<close>
+          define \<phi> where "\<phi> p = (sub_s' i + fst p * (sub_s' (Suc i) - sub_s' i),
+              sub_t j + snd p * (sub_t (Suc j) - sub_t j))" for p :: "real \<times> real"
+          define G where "G p = F (\<phi> p)" for p :: "real \<times> real"
+          \<comment> \<open>Broken-line paths in I×I.\<close>
+          let ?bot = "\<lambda>s::real. (s, 0::real)"
+          let ?right' = "\<lambda>t::real. (1::real, t)"
+          let ?left' = "\<lambda>t::real. (0::real, t)"
+          let ?top' = "\<lambda>s::real. (s, 1::real)"
+          let ?\<beta>1 = "top1_path_product ?bot ?right'"
+          let ?\<beta>2 = "top1_path_product ?left' ?top'"
+          \<comment> \<open>I×I is simply connected.\<close>
+          have hII_sc: "top1_simply_connected_on (I_set \<times> I_set) II_topology"
+            sorry \<comment> \<open>Standard: I×I path-connected (straight lines) + all loops contractible.
+               Proved inline at Top1_Ch9_13.thy:14089 (~200 lines).\<close>
+          \<comment> \<open>β₁ and β₂ are paths in I×I from (0,0) to (1,1).\<close>
+          have h\<beta>1_path: "top1_is_path_on (I_set \<times> I_set) II_topology (0,0) (1,1) ?\<beta>1"
+            sorry \<comment> \<open>bot: (0,0)→(1,0), right: (1,0)→(1,1). Continuous paths, product is path.\<close>
+          have h\<beta>2_path: "top1_is_path_on (I_set \<times> I_set) II_topology (0,0) (1,1) ?\<beta>2"
+            sorry \<comment> \<open>left: (0,0)→(0,1), top: (0,1)→(1,1). Same.\<close>
+          have h00: "(0::real, 0::real) \<in> I_set \<times> I_set"
+            unfolding top1_unit_interval_def by (by100 force)
+          \<comment> \<open>β₁ ≃ β₂ in I×I (simply connected).\<close>
+          have h\<beta>_hom: "top1_path_homotopic_on (I_set \<times> I_set) II_topology (0,0) (1,1) ?\<beta>1 ?\<beta>2"
+            by (rule simply_connected_paths_homotopic[OF hII_sc h\<beta>1_path h\<beta>2_path h00])
+          \<comment> \<open>G = F ∘ φ is continuous I×I → X.\<close>
+          have hG_cont: "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX G"
+            sorry \<comment> \<open>φ: I×I → I×I continuous (componentwise affine), F: I×I → X continuous.
+               G = F ∘ φ continuous by composition.\<close>
+          \<comment> \<open>G∘β₁ agrees with pp1 on I_set, G∘β₂ agrees with pp2 on I_set.\<close>
+          have hG\<beta>1: "\<forall>s\<in>I_set. (G \<circ> ?\<beta>1) s = pp1 s"
+            sorry \<comment> \<open>Case s≤1/2: G(2s,0) = F(φ(2s,0)) = F(affine_s(2s), sub_t j) = piece_top(2s) = pp1(s).
+               Case s>1/2: G(1,2s-1) = F(sub_s'(Si), affine_t(2s-1)) = β(Si)(2s-1) = pp1(s).\<close>
+          have hG\<beta>2: "\<forall>s\<in>I_set. (G \<circ> ?\<beta>2) s = pp2 s"
+            sorry \<comment> \<open>Same: G(0,2s) = β(i)(2s) for s≤1/2, G(2s-1,1) = piece_bot(2s-1) for s>1/2.\<close>
+          \<comment> \<open>G maps I×I into U or V (cell maps to U or V).\<close>
+          from hcell_UV hi hj have hcell_ij_loc:
+            "(\<forall>s t. sub_s' i \<le> s \<and> s \<le> sub_s' (Suc i)
+              \<and> sub_t j \<le> t \<and> t \<le> sub_t (Suc j) \<and> 0\<le>s \<and> s\<le>1 \<and> 0\<le>t \<and> t\<le>1 \<longrightarrow> F (s,t) \<in> U)
+            \<or> (\<forall>s t. sub_s' i \<le> s \<and> s \<le> sub_s' (Suc i)
+              \<and> sub_t j \<le> t \<and> t \<le> sub_t (Suc j) \<and> 0\<le>s \<and> s\<le>1 \<and> 0\<le>t \<and> t\<le>1 \<longrightarrow> F (s,t) \<in> V)"
+            by (by100 blast)
+          from hcell_ij_loc show ?thesis
+          proof
+            assume hU: "\<forall>s t. sub_s' i \<le> s \<and> s \<le> sub_s' (Suc i) \<and> sub_t j \<le> t \<and> t \<le> sub_t (Suc j)
+                \<and> 0\<le>s \<and> s\<le>1 \<and> 0\<le>t \<and> t\<le>1 \<longrightarrow> F (s,t) \<in> U"
+            have hG_img_U: "G ` (I_set \<times> I_set) \<subseteq> U"
+              sorry \<comment> \<open>φ maps I×I into cell (affine bounds), cell maps to U (hU).\<close>
+            have hG_cont_U: "top1_continuous_map_on (I_set \<times> I_set) II_topology U (subspace_topology X TX U) G"
+              by (rule top1_continuous_map_on_codomain_shrink[OF hG_cont hG_img_U hUsub])
+            have hTII: "is_topology_on (I_set \<times> I_set) II_topology"
+              unfolding II_topology_def
+              by (rule product_topology_on_is_topology_on[OF
+                    top1_unit_interval_topology_is_topology_on
+                    top1_unit_interval_topology_is_topology_on])
+            have hTU: "is_topology_on U (subspace_topology X TX U)" using hTopU .
+            have hG_hom: "top1_path_homotopic_on U (subspace_topology X TX U)
+                (G (0,0)) (G (1,1)) (G \<circ> ?\<beta>1) (G \<circ> ?\<beta>2)"
+              by (rule continuous_preserves_path_homotopic[OF hTII hTU hG_cont_U h\<beta>_hom])
+            \<comment> \<open>G(0,0) = pp1 0 and G(1,1) = pp1 1.\<close>
+            have "G (0,0) = pp1 0"
+            proof -
+              have "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 force)
+              thus ?thesis using hG\<beta>1 sorry \<comment> \<open>G(β₁(0)) = pp1(0), β₁(0) = (0,0)\<close>
+            qed
+            have "G (1,1) = pp1 1" sorry \<comment> \<open>From hG_β1 at s=1: G(β₁(1)) = pp1(1)\<close>
+            \<comment> \<open>G∘β₁ = pp1 and G∘β₂ = pp2 on I_set → same path-homotopy class.\<close>
+            have "top1_path_homotopic_on U (subspace_topology X TX U) (pp1 0) (pp1 1) pp1 pp2"
+              sorry \<comment> \<open>From hG_hom + hG_β1/hG_β2: extensional equality on I_set → same homotopy.
+                 Uses h_σ_I_cong pattern or path_homotopic_on extensional.\<close>
+            thus ?thesis by (by100 blast)
+          next
+            assume hV: "\<forall>s t. sub_s' i \<le> s \<and> s \<le> sub_s' (Suc i) \<and> sub_t j \<le> t \<and> t \<le> sub_t (Suc j)
+                \<and> 0\<le>s \<and> s\<le>1 \<and> 0\<le>t \<and> t\<le>1 \<longrightarrow> F (s,t) \<in> V"
+            have "top1_path_homotopic_on V (subspace_topology X TX V) (pp1 0) (pp1 1) pp1 pp2"
+              sorry \<comment> \<open>Same argument as U case with V.\<close>
+            thus ?thesis by (by100 blast)
+          qed
+        qed
         \<comment> \<open>Step 2: σ_cond1 gives σ-equality of the path products.\<close>
         have h\<sigma>_products: "\<sigma> pp1 = \<sigma> pp2"
         proof -
