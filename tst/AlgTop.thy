@@ -7301,6 +7301,319 @@ proof -
            composed with F, gives a path homotopy in U (or V).\<close>
         define pp1 where "pp1 = top1_path_product (piece_top i) (\<beta> (Suc i))"
         define pp2 where "pp2 = top1_path_product (\<beta> i) (piece_bot i)"
+        \<comment> \<open>Cell edge bounds (shared by U and V cases).\<close>
+        have hi_le: "i \<le> ns'" and hSi_le: "Suc i \<le> ns'" using hi by (by100 presburger)+
+        have hsi_ge0: "0 \<le> sub_s' i" using hsubs_ge[OF hi_le] .
+        have hsi_le1: "sub_s' i \<le> 1" using hsubs_le[OF hi_le] .
+        have hSsi_ge0: "0 \<le> sub_s' (Suc i)" using hsubs_ge[OF hSi_le] .
+        have hSsi_le1: "sub_s' (Suc i) \<le> 1" using hsubs_le[OF hSi_le] .
+        have htj_ge0: "0 \<le> sub_t j" using hsubt_ge[OF hj_le_nt] .
+        have htj_le1: "sub_t j \<le> 1" using hsubt_le[OF hj_le_nt] .
+        have htSj_ge0: "0 \<le> sub_t (Suc j)" using hsubt_ge[OF hSj_le_nt] .
+        have htSj_le1: "sub_t (Suc j) \<le> 1" using hsubt_le[OF hSj_le_nt] .
+        have hsi_le_Ssi: "sub_s' i \<le> sub_s' (Suc i)" using hsinc' hi by (by100 force)
+        have htj_le_tSj: "sub_t j \<le> sub_t (Suc j)" using htinc hj by (by100 force)
+        \<comment> \<open>All 4 edges continuous (F ∘ affine via Theorem_18_4 + F composition).\<close>
+        have hTI: "is_topology_on I_set I_top" by (rule top1_unit_interval_topology_is_topology_on)
+        have htj_I: "sub_t j \<in> I_set" unfolding top1_unit_interval_def using htj_ge0 htj_le1 by (by100 force)
+        have htSj_I: "sub_t (Suc j) \<in> I_set" unfolding top1_unit_interval_def using htSj_ge0 htSj_le1 by (by100 force)
+        have hsi_I: "sub_s' i \<in> I_set" unfolding top1_unit_interval_def using hsi_ge0 hsi_le1 by (by100 force)
+        have hSsi_I: "sub_s' (Suc i) \<in> I_set" unfolding top1_unit_interval_def using hSsi_ge0 hSsi_le1 by (by100 force)
+        have haffine_s: "top1_continuous_map_on I_set I_top I_set I_top
+            (\<lambda>t. sub_s' i + t * (sub_s' (Suc i) - sub_s' i))"
+          by (rule affine_map_continuous_I_to_I[OF hsi_ge0 hsi_le_Ssi hSsi_le1])
+        have haffine_t: "top1_continuous_map_on I_set I_top I_set I_top
+            (\<lambda>t. sub_t j + t * (sub_t (Suc j) - sub_t j))"
+          by (rule affine_map_continuous_I_to_I[OF htj_ge0 htj_le_tSj htSj_le1])
+        \<comment> \<open>Constant map helper for Theorem_18_4.\<close>
+        have hI_in: "I_set \<in> I_top" using hTI unfolding is_topology_on_def by (by100 blast)
+        have hempty_in: "{} \<in> I_top" using hTI unfolding is_topology_on_def by (by100 blast)
+        have hconst_cont: "\<And>c. c \<in> I_set \<Longrightarrow> top1_continuous_map_on I_set I_top I_set I_top (\<lambda>_. c)"
+          unfolding top1_continuous_map_on_def
+        proof (intro conjI ballI)
+          fix c x assume "c \<in> I_set" "x \<in> I_set" show "c \<in> I_set" using \<open>c \<in> I_set\<close> .
+        next
+          fix c V assume hc: "c \<in> I_set" and "V \<in> I_top"
+          show "{x \<in> I_set. c \<in> V} \<in> I_top"
+          proof (cases "c \<in> V")
+            case True have "{x \<in> I_set. c \<in> V} = I_set" using True by (by100 force)
+            thus ?thesis using hI_in by (by100 presburger)
+          next
+            case False have "{x \<in> I_set. c \<in> V} = {}" using False by (by100 force)
+            thus ?thesis using hempty_in by (by100 presburger)
+          qed
+        qed
+        \<comment> \<open>piece_top: F ∘ (affine_s, const sub_t j).\<close>
+        have hpt_cont: "top1_continuous_map_on I_set I_top X TX (piece_top i)"
+        proof -
+          have "top1_continuous_map_on I_set I_top (I_set \<times> I_set) II_topology
+              (\<lambda>t. (sub_s' i + t * (sub_s' (Suc i) - sub_s' i), sub_t j))"
+          proof -
+            have h1: "top1_continuous_map_on I_set I_top I_set I_top
+                (pi1 \<circ> (\<lambda>t. (sub_s' i + t * (sub_s' (Suc i) - sub_s' i), sub_t j)))"
+            proof -
+              have "(pi1 \<circ> (\<lambda>t. (sub_s' i + t * (sub_s' (Suc i) - sub_s' i), sub_t j)))
+                  = (\<lambda>t. sub_s' i + t * (sub_s' (Suc i) - sub_s' i))"
+                unfolding pi1_def comp_def by (rule ext) (by100 simp)
+              thus ?thesis using haffine_s by (by100 simp)
+            qed
+            have h2: "top1_continuous_map_on I_set I_top I_set I_top
+                (pi2 \<circ> (\<lambda>t. (sub_s' i + t * (sub_s' (Suc i) - sub_s' i), sub_t j)))"
+            proof -
+              have "(pi2 \<circ> (\<lambda>t. (sub_s' i + t * (sub_s' (Suc i) - sub_s' i), sub_t j)))
+                  = (\<lambda>_. sub_t j)" unfolding pi2_def comp_def by (rule ext) (by100 simp)
+              thus ?thesis using hconst_cont[OF htj_I] by (by100 simp)
+            qed
+            show ?thesis using iffD2[OF Theorem_18_4[OF hTI hTI hTI]] h1 h2
+              unfolding II_topology_def by (by100 blast)
+          qed
+          hence "top1_continuous_map_on I_set I_top X TX
+              (F \<circ> (\<lambda>t. (sub_s' i + t * (sub_s' (Suc i) - sub_s' i), sub_t j)))"
+            using top1_continuous_map_on_comp[of _ _ "I_set \<times> I_set" II_topology] hF_cont by (by100 blast)
+          moreover have "\<And>t. (F \<circ> (\<lambda>t. (sub_s' i + t * (sub_s' (Suc i) - sub_s' i), sub_t j))) t = piece_top i t"
+            unfolding comp_def piece_top_def row_fn_def by (by100 simp)
+          ultimately show ?thesis by (by100 presburger)
+        qed
+        \<comment> \<open>β(Suc i): F ∘ (const sub_s'(Suc i), affine_t).\<close>
+        have h\<beta>Si_cont: "top1_continuous_map_on I_set I_top X TX (\<beta> (Suc i))"
+        proof -
+          have "top1_continuous_map_on I_set I_top (I_set \<times> I_set) II_topology
+              (\<lambda>t. (sub_s' (Suc i), sub_t j + t * (sub_t (Suc j) - sub_t j)))"
+            using iffD2[OF Theorem_18_4[OF hTI hTI hTI]]
+          proof -
+            have h1: "top1_continuous_map_on I_set I_top I_set I_top
+                (pi1 \<circ> (\<lambda>t. (sub_s' (Suc i), sub_t j + t * (sub_t (Suc j) - sub_t j))))"
+            proof -
+              have "(pi1 \<circ> (\<lambda>t. (sub_s' (Suc i), sub_t j + t * (sub_t (Suc j) - sub_t j)))) = (\<lambda>_. sub_s' (Suc i))"
+                unfolding pi1_def comp_def by (rule ext) (by100 simp)
+              thus ?thesis using hconst_cont[OF hSsi_I] by (by100 simp)
+            qed
+            have h2: "top1_continuous_map_on I_set I_top I_set I_top
+                (pi2 \<circ> (\<lambda>t. (sub_s' (Suc i), sub_t j + t * (sub_t (Suc j) - sub_t j))))"
+            proof -
+              have "(pi2 \<circ> (\<lambda>t. (sub_s' (Suc i), sub_t j + t * (sub_t (Suc j) - sub_t j))))
+                  = (\<lambda>t. sub_t j + t * (sub_t (Suc j) - sub_t j))"
+                unfolding pi2_def comp_def by (rule ext) (by100 simp)
+              thus ?thesis using haffine_t by (by100 simp)
+            qed
+            show ?thesis using iffD2[OF Theorem_18_4[OF hTI hTI hTI]] h1 h2
+              unfolding II_topology_def by (by100 blast)
+          qed
+          hence "top1_continuous_map_on I_set I_top X TX
+              (F \<circ> (\<lambda>t. (sub_s' (Suc i), sub_t j + t * (sub_t (Suc j) - sub_t j))))"
+            using top1_continuous_map_on_comp[of _ _ "I_set \<times> I_set" II_topology] hF_cont by (by100 blast)
+          moreover have "\<And>t. (F \<circ> (\<lambda>t. (sub_s' (Suc i), sub_t j + t * (sub_t (Suc j) - sub_t j)))) t = \<beta> (Suc i) t"
+            unfolding comp_def \<beta>_def by (by100 simp)
+          ultimately show ?thesis by (by100 presburger)
+        qed
+        \<comment> \<open>β i: F ∘ (const sub_s' i, affine_t).\<close>
+        have h\<beta>i_cont: "top1_continuous_map_on I_set I_top X TX (\<beta> i)"
+        proof -
+          have "top1_continuous_map_on I_set I_top (I_set \<times> I_set) II_topology
+              (\<lambda>t. (sub_s' i, sub_t j + t * (sub_t (Suc j) - sub_t j)))"
+            using iffD2[OF Theorem_18_4[OF hTI hTI hTI]]
+          proof -
+            have h1: "top1_continuous_map_on I_set I_top I_set I_top
+                (pi1 \<circ> (\<lambda>t. (sub_s' i, sub_t j + t * (sub_t (Suc j) - sub_t j))))"
+            proof -
+              have "(pi1 \<circ> (\<lambda>t. (sub_s' i, sub_t j + t * (sub_t (Suc j) - sub_t j)))) = (\<lambda>_. sub_s' i)"
+                unfolding pi1_def comp_def by (rule ext) (by100 simp)
+              thus ?thesis using hconst_cont[OF hsi_I] by (by100 simp)
+            qed
+            have h2: "top1_continuous_map_on I_set I_top I_set I_top
+                (pi2 \<circ> (\<lambda>t. (sub_s' i, sub_t j + t * (sub_t (Suc j) - sub_t j))))"
+            proof -
+              have "(pi2 \<circ> (\<lambda>t. (sub_s' i, sub_t j + t * (sub_t (Suc j) - sub_t j))))
+                  = (\<lambda>t. sub_t j + t * (sub_t (Suc j) - sub_t j))"
+                unfolding pi2_def comp_def by (rule ext) (by100 simp)
+              thus ?thesis using haffine_t by (by100 simp)
+            qed
+            show ?thesis using iffD2[OF Theorem_18_4[OF hTI hTI hTI]] h1 h2
+              unfolding II_topology_def by (by100 blast)
+          qed
+          hence "top1_continuous_map_on I_set I_top X TX
+              (F \<circ> (\<lambda>t. (sub_s' i, sub_t j + t * (sub_t (Suc j) - sub_t j))))"
+            using top1_continuous_map_on_comp[of _ _ "I_set \<times> I_set" II_topology] hF_cont by (by100 blast)
+          moreover have "\<And>t. (F \<circ> (\<lambda>t. (sub_s' i, sub_t j + t * (sub_t (Suc j) - sub_t j)))) t = \<beta> i t"
+            unfolding comp_def \<beta>_def by (by100 simp)
+          ultimately show ?thesis by (by100 presburger)
+        qed
+        \<comment> \<open>piece_bot: F ∘ (affine_s, const sub_t(Suc j)).\<close>
+        have hpb_cont: "top1_continuous_map_on I_set I_top X TX (piece_bot i)"
+        proof -
+          have "top1_continuous_map_on I_set I_top (I_set \<times> I_set) II_topology
+              (\<lambda>t. (sub_s' i + t * (sub_s' (Suc i) - sub_s' i), sub_t (Suc j)))"
+            using iffD2[OF Theorem_18_4[OF hTI hTI hTI]]
+          proof -
+            have h1: "top1_continuous_map_on I_set I_top I_set I_top
+                (pi1 \<circ> (\<lambda>t. (sub_s' i + t * (sub_s' (Suc i) - sub_s' i), sub_t (Suc j))))"
+            proof -
+              have "(pi1 \<circ> (\<lambda>t. (sub_s' i + t * (sub_s' (Suc i) - sub_s' i), sub_t (Suc j))))
+                  = (\<lambda>t. sub_s' i + t * (sub_s' (Suc i) - sub_s' i))"
+                unfolding pi1_def comp_def by (rule ext) (by100 simp)
+              thus ?thesis using haffine_s by (by100 simp)
+            qed
+            have h2: "top1_continuous_map_on I_set I_top I_set I_top
+                (pi2 \<circ> (\<lambda>t. (sub_s' i + t * (sub_s' (Suc i) - sub_s' i), sub_t (Suc j))))"
+            proof -
+              have "(pi2 \<circ> (\<lambda>t. (sub_s' i + t * (sub_s' (Suc i) - sub_s' i), sub_t (Suc j))))
+                  = (\<lambda>_. sub_t (Suc j))" unfolding pi2_def comp_def by (rule ext) (by100 simp)
+              thus ?thesis using hconst_cont[OF htSj_I] by (by100 simp)
+            qed
+            show ?thesis using iffD2[OF Theorem_18_4[OF hTI hTI hTI]] h1 h2
+              unfolding II_topology_def by (by100 blast)
+          qed
+          hence "top1_continuous_map_on I_set I_top X TX
+              (F \<circ> (\<lambda>t. (sub_s' i + t * (sub_s' (Suc i) - sub_s' i), sub_t (Suc j))))"
+            using top1_continuous_map_on_comp[of _ _ "I_set \<times> I_set" II_topology] hF_cont by (by100 blast)
+          moreover have "\<And>t. (F \<circ> (\<lambda>t. (sub_s' i + t * (sub_s' (Suc i) - sub_s' i), sub_t (Suc j)))) t = piece_bot i t"
+            unfolding comp_def piece_bot_def row_fn_def by (by100 simp)
+          ultimately show ?thesis by (by100 presburger)
+        qed
+        \<comment> \<open>piece_top i and β(Suc i) are paths in the same U (or V) — both edges of cell.\<close>
+        have hpt_path_U: "top1_is_path_on U (subspace_topology X TX U) (piece_top i 0) (piece_top i 1) (piece_top i)"
+            and h\<beta>Si_path_U: "top1_is_path_on U (subspace_topology X TX U) (\<beta> (Suc i) 0) (\<beta> (Suc i) 1) (\<beta> (Suc i))"
+            and h\<beta>i_path_U: "top1_is_path_on U (subspace_topology X TX U) (\<beta> i 0) (\<beta> i 1) (\<beta> i)"
+            and hpb_path_U: "top1_is_path_on U (subspace_topology X TX U) (piece_bot i 0) (piece_bot i 1) (piece_bot i)"
+          if hU_cell: "\<forall>s t. sub_s' i \<le> s \<and> s \<le> sub_s' (Suc i) \<and> sub_t j \<le> t \<and> t \<le> sub_t (Suc j) \<and> 0\<le>s \<and> s\<le>1 \<and> 0\<le>t \<and> t\<le>1 \<longrightarrow> F (s,t) \<in> U"
+        proof -
+          \<comment> \<open>All edges map I_set into U (from hU_cell + convex bounds in cell).\<close>
+          have hpt_img: "(piece_top i) ` I_set \<subseteq> U"
+          proof
+            fix x assume "x \<in> (piece_top i) ` I_set"
+            then obtain t where ht: "t \<in> I_set" and hx: "x = piece_top i t" by (by100 blast)
+            have "0 \<le> t" "t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 force)+
+            have hconv: "sub_s' i \<le> sub_s' i + t * (sub_s' (Suc i) - sub_s' i)
+                \<and> sub_s' i + t * (sub_s' (Suc i) - sub_s' i) \<le> sub_s' (Suc i)
+                \<and> 0 \<le> sub_s' i + t * (sub_s' (Suc i) - sub_s' i)
+                \<and> sub_s' i + t * (sub_s' (Suc i) - sub_s' i) \<le> 1"
+              using hconv_s[OF hi \<open>0 \<le> t\<close> \<open>t \<le> 1\<close>] .
+            show "x \<in> U" unfolding hx piece_top_def row_fn_def
+              using hU_cell hconv htj_ge0 htj_le1 htj_le_tSj by (by100 force)
+          qed
+          have h\<beta>Si_img: "(\<beta> (Suc i)) ` I_set \<subseteq> U"
+          proof
+            fix x assume "x \<in> (\<beta> (Suc i)) ` I_set"
+            then obtain t where ht: "t \<in> I_set" and hx: "x = \<beta> (Suc i) t" by (by100 blast)
+            have "0 \<le> t" "t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 force)+
+            have hdiff: "sub_t (Suc j) - sub_t j \<ge> 0" using htj_le_tSj by (by100 linarith)
+            have hprod_ge: "t * (sub_t (Suc j) - sub_t j) \<ge> 0"
+              by (rule mult_nonneg_nonneg) (use \<open>0 \<le> t\<close> hdiff in \<open>by100 linarith\<close>)+
+            have "t * (sub_t (Suc j) - sub_t j) \<le> 1 * (sub_t (Suc j) - sub_t j)"
+              by (rule mult_right_mono) (use \<open>t \<le> 1\<close> hdiff in \<open>by100 linarith\<close>)+
+            hence hprod_le: "t * (sub_t (Suc j) - sub_t j) \<le> sub_t (Suc j) - sub_t j" by (by100 simp)
+            show "x \<in> U" unfolding hx \<beta>_def
+              using hU_cell hsi_le_Ssi hSsi_ge0 hSsi_le1 htj_ge0 htSj_le1 hprod_ge hprod_le
+              by (by100 force)
+          qed
+          have h\<beta>i_img: "(\<beta> i) ` I_set \<subseteq> U"
+          proof
+            fix x assume "x \<in> (\<beta> i) ` I_set"
+            then obtain t where ht: "t \<in> I_set" and hx: "x = \<beta> i t" by (by100 blast)
+            have "0 \<le> t" "t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 force)+
+            have hdiff: "sub_t (Suc j) - sub_t j \<ge> 0" using htj_le_tSj by (by100 linarith)
+            have hprod_ge: "t * (sub_t (Suc j) - sub_t j) \<ge> 0"
+              by (rule mult_nonneg_nonneg) (use \<open>0 \<le> t\<close> hdiff in \<open>by100 linarith\<close>)+
+            have "t * (sub_t (Suc j) - sub_t j) \<le> 1 * (sub_t (Suc j) - sub_t j)"
+              by (rule mult_right_mono) (use \<open>t \<le> 1\<close> hdiff in \<open>by100 linarith\<close>)+
+            hence hprod_le: "t * (sub_t (Suc j) - sub_t j) \<le> sub_t (Suc j) - sub_t j" by (by100 simp)
+            show "x \<in> U" unfolding hx \<beta>_def
+              using hU_cell hsi_le_Ssi hsi_ge0 hsi_le1 htj_ge0 htSj_le1 hprod_ge hprod_le
+              by (by100 force)
+          qed
+          have hpb_img: "(piece_bot i) ` I_set \<subseteq> U"
+          proof
+            fix x assume "x \<in> (piece_bot i) ` I_set"
+            then obtain t where ht: "t \<in> I_set" and hx: "x = piece_bot i t" by (by100 blast)
+            have "0 \<le> t" "t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 force)+
+            have hconv: "sub_s' i \<le> sub_s' i + t * (sub_s' (Suc i) - sub_s' i)
+                \<and> sub_s' i + t * (sub_s' (Suc i) - sub_s' i) \<le> sub_s' (Suc i)
+                \<and> 0 \<le> sub_s' i + t * (sub_s' (Suc i) - sub_s' i)
+                \<and> sub_s' i + t * (sub_s' (Suc i) - sub_s' i) \<le> 1"
+              using hconv_s[OF hi \<open>0 \<le> t\<close> \<open>t \<le> 1\<close>] .
+            show "x \<in> U" unfolding hx piece_bot_def row_fn_def
+              using hU_cell hconv htSj_ge0 htSj_le1 htj_le_tSj by (by100 force)
+          qed
+          \<comment> \<open>codomain_shrink + path_on.\<close>
+          show "top1_is_path_on U (subspace_topology X TX U) (piece_top i 0) (piece_top i 1) (piece_top i)"
+            unfolding top1_is_path_on_def
+            using top1_continuous_map_on_codomain_shrink[OF hpt_cont hpt_img hUsub] by (by100 blast)
+          show "top1_is_path_on U (subspace_topology X TX U) (\<beta> (Suc i) 0) (\<beta> (Suc i) 1) (\<beta> (Suc i))"
+            unfolding top1_is_path_on_def
+            using top1_continuous_map_on_codomain_shrink[OF h\<beta>Si_cont h\<beta>Si_img hUsub] by (by100 blast)
+          show "top1_is_path_on U (subspace_topology X TX U) (\<beta> i 0) (\<beta> i 1) (\<beta> i)"
+            unfolding top1_is_path_on_def
+            using top1_continuous_map_on_codomain_shrink[OF h\<beta>i_cont h\<beta>i_img hUsub] by (by100 blast)
+          show "top1_is_path_on U (subspace_topology X TX U) (piece_bot i 0) (piece_bot i 1) (piece_bot i)"
+            unfolding top1_is_path_on_def
+            using top1_continuous_map_on_codomain_shrink[OF hpb_cont hpb_img hUsub] by (by100 blast)
+        qed
+        have hpt_path_V: "top1_is_path_on V (subspace_topology X TX V) (piece_top i 0) (piece_top i 1) (piece_top i)"
+            and h\<beta>Si_path_V: "top1_is_path_on V (subspace_topology X TX V) (\<beta> (Suc i) 0) (\<beta> (Suc i) 1) (\<beta> (Suc i))"
+            and h\<beta>i_path_V: "top1_is_path_on V (subspace_topology X TX V) (\<beta> i 0) (\<beta> i 1) (\<beta> i)"
+            and hpb_path_V: "top1_is_path_on V (subspace_topology X TX V) (piece_bot i 0) (piece_bot i 1) (piece_bot i)"
+          if hV_cell: "\<forall>s t. sub_s' i \<le> s \<and> s \<le> sub_s' (Suc i) \<and> sub_t j \<le> t \<and> t \<le> sub_t (Suc j) \<and> 0\<le>s \<and> s\<le>1 \<and> 0\<le>t \<and> t\<le>1 \<longrightarrow> F (s,t) \<in> V"
+        proof -
+          have hpt_img: "(piece_top i) ` I_set \<subseteq> V"
+          proof
+            fix x assume "x \<in> (piece_top i) ` I_set"
+            then obtain t where ht: "t \<in> I_set" and hx: "x = piece_top i t" by (by100 blast)
+            have "0 \<le> t" "t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 force)+
+            show "x \<in> V" unfolding hx piece_top_def row_fn_def
+              using hV_cell hconv_s[OF hi \<open>0 \<le> t\<close> \<open>t \<le> 1\<close>] htj_ge0 htj_le1 htj_le_tSj by (by100 force)
+          qed
+          have h\<beta>Si_img: "(\<beta> (Suc i)) ` I_set \<subseteq> V"
+          proof
+            fix x assume "x \<in> (\<beta> (Suc i)) ` I_set"
+            then obtain t where ht: "t \<in> I_set" and hx: "x = \<beta> (Suc i) t" by (by100 blast)
+            have "0 \<le> t" "t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 force)+
+            have hdiff: "sub_t (Suc j) - sub_t j \<ge> 0" using htj_le_tSj by (by100 linarith)
+            have hprod_ge: "t * (sub_t (Suc j) - sub_t j) \<ge> 0"
+              by (rule mult_nonneg_nonneg) (use \<open>0 \<le> t\<close> hdiff in \<open>by100 linarith\<close>)+
+            have "t * (sub_t (Suc j) - sub_t j) \<le> 1 * (sub_t (Suc j) - sub_t j)"
+              by (rule mult_right_mono) (use \<open>t \<le> 1\<close> hdiff in \<open>by100 linarith\<close>)+
+            hence hprod_le: "t * (sub_t (Suc j) - sub_t j) \<le> sub_t (Suc j) - sub_t j" by (by100 simp)
+            show "x \<in> V" unfolding hx \<beta>_def
+              using hV_cell hsi_le_Ssi hSsi_ge0 hSsi_le1 htj_ge0 htSj_le1 hprod_ge hprod_le
+              by (by100 force)
+          qed
+          have h\<beta>i_img: "(\<beta> i) ` I_set \<subseteq> V"
+          proof
+            fix x assume "x \<in> (\<beta> i) ` I_set"
+            then obtain t where ht: "t \<in> I_set" and hx: "x = \<beta> i t" by (by100 blast)
+            have "0 \<le> t" "t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 force)+
+            have hdiff: "sub_t (Suc j) - sub_t j \<ge> 0" using htj_le_tSj by (by100 linarith)
+            have hprod_ge: "t * (sub_t (Suc j) - sub_t j) \<ge> 0"
+              by (rule mult_nonneg_nonneg) (use \<open>0 \<le> t\<close> hdiff in \<open>by100 linarith\<close>)+
+            have "t * (sub_t (Suc j) - sub_t j) \<le> 1 * (sub_t (Suc j) - sub_t j)"
+              by (rule mult_right_mono) (use \<open>t \<le> 1\<close> hdiff in \<open>by100 linarith\<close>)+
+            hence hprod_le: "t * (sub_t (Suc j) - sub_t j) \<le> sub_t (Suc j) - sub_t j" by (by100 simp)
+            show "x \<in> V" unfolding hx \<beta>_def
+              using hV_cell hsi_le_Ssi hsi_ge0 hsi_le1 htj_ge0 htSj_le1 hprod_ge hprod_le
+              by (by100 force)
+          qed
+          have hpb_img: "(piece_bot i) ` I_set \<subseteq> V"
+          proof
+            fix x assume "x \<in> (piece_bot i) ` I_set"
+            then obtain t where ht: "t \<in> I_set" and hx: "x = piece_bot i t" by (by100 blast)
+            have "0 \<le> t" "t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 force)+
+            show "x \<in> V" unfolding hx piece_bot_def row_fn_def
+              using hV_cell hconv_s[OF hi \<open>0 \<le> t\<close> \<open>t \<le> 1\<close>] htSj_ge0 htSj_le1 htj_le_tSj by (by100 force)
+          qed
+          \<comment> \<open>Continuity from outer scope (hpt_cont, h_βSi_cont, h_βi_cont, hpb_cont).\<close>
+          show "top1_is_path_on V (subspace_topology X TX V) (piece_top i 0) (piece_top i 1) (piece_top i)"
+            unfolding top1_is_path_on_def
+            using top1_continuous_map_on_codomain_shrink[OF hpt_cont hpt_img hVsub] by (by100 blast)
+          show "top1_is_path_on V (subspace_topology X TX V) (\<beta> (Suc i) 0) (\<beta> (Suc i) 1) (\<beta> (Suc i))"
+            unfolding top1_is_path_on_def
+            using top1_continuous_map_on_codomain_shrink[OF h\<beta>Si_cont h\<beta>Si_img hVsub] by (by100 blast)
+          show "top1_is_path_on V (subspace_topology X TX V) (\<beta> i 0) (\<beta> i 1) (\<beta> i)"
+            unfolding top1_is_path_on_def
+            using top1_continuous_map_on_codomain_shrink[OF h\<beta>i_cont h\<beta>i_img hVsub] by (by100 blast)
+          show "top1_is_path_on V (subspace_topology X TX V) (piece_bot i 0) (piece_bot i 1) (piece_bot i)"
+            unfolding top1_is_path_on_def
+            using top1_continuous_map_on_codomain_shrink[OF hpb_cont hpb_img hVsub] by (by100 blast)
+        qed
         have hpath_hom: "top1_path_homotopic_on U (subspace_topology X TX U) (pp1 0) (pp1 1) pp1 pp2
           \<or> top1_path_homotopic_on V (subspace_topology X TX V) (pp1 0) (pp1 1) pp1 pp2"
         proof -
@@ -7623,319 +7936,6 @@ proof -
               \<and> sub_t j \<le> t \<and> t \<le> sub_t (Suc j) \<and> 0\<le>s \<and> s\<le>1 \<and> 0\<le>t \<and> t\<le>1
               \<longrightarrow> F (s,t) \<in> V)"
           using hcell_UV hi hj by (by100 blast)
-        \<comment> \<open>Cell edge bounds (shared by U and V cases).\<close>
-        have hi_le: "i \<le> ns'" and hSi_le: "Suc i \<le> ns'" using hi by (by100 presburger)+
-        have hsi_ge0: "0 \<le> sub_s' i" using hsubs_ge[OF hi_le] .
-        have hsi_le1: "sub_s' i \<le> 1" using hsubs_le[OF hi_le] .
-        have hSsi_ge0: "0 \<le> sub_s' (Suc i)" using hsubs_ge[OF hSi_le] .
-        have hSsi_le1: "sub_s' (Suc i) \<le> 1" using hsubs_le[OF hSi_le] .
-        have htj_ge0: "0 \<le> sub_t j" using hsubt_ge[OF hj_le_nt] .
-        have htj_le1: "sub_t j \<le> 1" using hsubt_le[OF hj_le_nt] .
-        have htSj_ge0: "0 \<le> sub_t (Suc j)" using hsubt_ge[OF hSj_le_nt] .
-        have htSj_le1: "sub_t (Suc j) \<le> 1" using hsubt_le[OF hSj_le_nt] .
-        have hsi_le_Ssi: "sub_s' i \<le> sub_s' (Suc i)" using hsinc' hi by (by100 force)
-        have htj_le_tSj: "sub_t j \<le> sub_t (Suc j)" using htinc hj by (by100 force)
-        \<comment> \<open>All 4 edges continuous (F ∘ affine via Theorem_18_4 + F composition).\<close>
-        have hTI: "is_topology_on I_set I_top" by (rule top1_unit_interval_topology_is_topology_on)
-        have htj_I: "sub_t j \<in> I_set" unfolding top1_unit_interval_def using htj_ge0 htj_le1 by (by100 force)
-        have htSj_I: "sub_t (Suc j) \<in> I_set" unfolding top1_unit_interval_def using htSj_ge0 htSj_le1 by (by100 force)
-        have hsi_I: "sub_s' i \<in> I_set" unfolding top1_unit_interval_def using hsi_ge0 hsi_le1 by (by100 force)
-        have hSsi_I: "sub_s' (Suc i) \<in> I_set" unfolding top1_unit_interval_def using hSsi_ge0 hSsi_le1 by (by100 force)
-        have haffine_s: "top1_continuous_map_on I_set I_top I_set I_top
-            (\<lambda>t. sub_s' i + t * (sub_s' (Suc i) - sub_s' i))"
-          by (rule affine_map_continuous_I_to_I[OF hsi_ge0 hsi_le_Ssi hSsi_le1])
-        have haffine_t: "top1_continuous_map_on I_set I_top I_set I_top
-            (\<lambda>t. sub_t j + t * (sub_t (Suc j) - sub_t j))"
-          by (rule affine_map_continuous_I_to_I[OF htj_ge0 htj_le_tSj htSj_le1])
-        \<comment> \<open>Constant map helper for Theorem_18_4.\<close>
-        have hI_in: "I_set \<in> I_top" using hTI unfolding is_topology_on_def by (by100 blast)
-        have hempty_in: "{} \<in> I_top" using hTI unfolding is_topology_on_def by (by100 blast)
-        have hconst_cont: "\<And>c. c \<in> I_set \<Longrightarrow> top1_continuous_map_on I_set I_top I_set I_top (\<lambda>_. c)"
-          unfolding top1_continuous_map_on_def
-        proof (intro conjI ballI)
-          fix c x assume "c \<in> I_set" "x \<in> I_set" show "c \<in> I_set" using \<open>c \<in> I_set\<close> .
-        next
-          fix c V assume hc: "c \<in> I_set" and "V \<in> I_top"
-          show "{x \<in> I_set. c \<in> V} \<in> I_top"
-          proof (cases "c \<in> V")
-            case True have "{x \<in> I_set. c \<in> V} = I_set" using True by (by100 force)
-            thus ?thesis using hI_in by (by100 presburger)
-          next
-            case False have "{x \<in> I_set. c \<in> V} = {}" using False by (by100 force)
-            thus ?thesis using hempty_in by (by100 presburger)
-          qed
-        qed
-        \<comment> \<open>piece_top: F ∘ (affine_s, const sub_t j).\<close>
-        have hpt_cont: "top1_continuous_map_on I_set I_top X TX (piece_top i)"
-        proof -
-          have "top1_continuous_map_on I_set I_top (I_set \<times> I_set) II_topology
-              (\<lambda>t. (sub_s' i + t * (sub_s' (Suc i) - sub_s' i), sub_t j))"
-          proof -
-            have h1: "top1_continuous_map_on I_set I_top I_set I_top
-                (pi1 \<circ> (\<lambda>t. (sub_s' i + t * (sub_s' (Suc i) - sub_s' i), sub_t j)))"
-            proof -
-              have "(pi1 \<circ> (\<lambda>t. (sub_s' i + t * (sub_s' (Suc i) - sub_s' i), sub_t j)))
-                  = (\<lambda>t. sub_s' i + t * (sub_s' (Suc i) - sub_s' i))"
-                unfolding pi1_def comp_def by (rule ext) (by100 simp)
-              thus ?thesis using haffine_s by (by100 simp)
-            qed
-            have h2: "top1_continuous_map_on I_set I_top I_set I_top
-                (pi2 \<circ> (\<lambda>t. (sub_s' i + t * (sub_s' (Suc i) - sub_s' i), sub_t j)))"
-            proof -
-              have "(pi2 \<circ> (\<lambda>t. (sub_s' i + t * (sub_s' (Suc i) - sub_s' i), sub_t j)))
-                  = (\<lambda>_. sub_t j)" unfolding pi2_def comp_def by (rule ext) (by100 simp)
-              thus ?thesis using hconst_cont[OF htj_I] by (by100 simp)
-            qed
-            show ?thesis using iffD2[OF Theorem_18_4[OF hTI hTI hTI]] h1 h2
-              unfolding II_topology_def by (by100 blast)
-          qed
-          hence "top1_continuous_map_on I_set I_top X TX
-              (F \<circ> (\<lambda>t. (sub_s' i + t * (sub_s' (Suc i) - sub_s' i), sub_t j)))"
-            using top1_continuous_map_on_comp[of _ _ "I_set \<times> I_set" II_topology] hF_cont by (by100 blast)
-          moreover have "\<And>t. (F \<circ> (\<lambda>t. (sub_s' i + t * (sub_s' (Suc i) - sub_s' i), sub_t j))) t = piece_top i t"
-            unfolding comp_def piece_top_def row_fn_def by (by100 simp)
-          ultimately show ?thesis by (by100 presburger)
-        qed
-        \<comment> \<open>β(Suc i): F ∘ (const sub_s'(Suc i), affine_t).\<close>
-        have h\<beta>Si_cont: "top1_continuous_map_on I_set I_top X TX (\<beta> (Suc i))"
-        proof -
-          have "top1_continuous_map_on I_set I_top (I_set \<times> I_set) II_topology
-              (\<lambda>t. (sub_s' (Suc i), sub_t j + t * (sub_t (Suc j) - sub_t j)))"
-            using iffD2[OF Theorem_18_4[OF hTI hTI hTI]]
-          proof -
-            have h1: "top1_continuous_map_on I_set I_top I_set I_top
-                (pi1 \<circ> (\<lambda>t. (sub_s' (Suc i), sub_t j + t * (sub_t (Suc j) - sub_t j))))"
-            proof -
-              have "(pi1 \<circ> (\<lambda>t. (sub_s' (Suc i), sub_t j + t * (sub_t (Suc j) - sub_t j)))) = (\<lambda>_. sub_s' (Suc i))"
-                unfolding pi1_def comp_def by (rule ext) (by100 simp)
-              thus ?thesis using hconst_cont[OF hSsi_I] by (by100 simp)
-            qed
-            have h2: "top1_continuous_map_on I_set I_top I_set I_top
-                (pi2 \<circ> (\<lambda>t. (sub_s' (Suc i), sub_t j + t * (sub_t (Suc j) - sub_t j))))"
-            proof -
-              have "(pi2 \<circ> (\<lambda>t. (sub_s' (Suc i), sub_t j + t * (sub_t (Suc j) - sub_t j))))
-                  = (\<lambda>t. sub_t j + t * (sub_t (Suc j) - sub_t j))"
-                unfolding pi2_def comp_def by (rule ext) (by100 simp)
-              thus ?thesis using haffine_t by (by100 simp)
-            qed
-            show ?thesis using iffD2[OF Theorem_18_4[OF hTI hTI hTI]] h1 h2
-              unfolding II_topology_def by (by100 blast)
-          qed
-          hence "top1_continuous_map_on I_set I_top X TX
-              (F \<circ> (\<lambda>t. (sub_s' (Suc i), sub_t j + t * (sub_t (Suc j) - sub_t j))))"
-            using top1_continuous_map_on_comp[of _ _ "I_set \<times> I_set" II_topology] hF_cont by (by100 blast)
-          moreover have "\<And>t. (F \<circ> (\<lambda>t. (sub_s' (Suc i), sub_t j + t * (sub_t (Suc j) - sub_t j)))) t = \<beta> (Suc i) t"
-            unfolding comp_def \<beta>_def by (by100 simp)
-          ultimately show ?thesis by (by100 presburger)
-        qed
-        \<comment> \<open>β i: F ∘ (const sub_s' i, affine_t).\<close>
-        have h\<beta>i_cont: "top1_continuous_map_on I_set I_top X TX (\<beta> i)"
-        proof -
-          have "top1_continuous_map_on I_set I_top (I_set \<times> I_set) II_topology
-              (\<lambda>t. (sub_s' i, sub_t j + t * (sub_t (Suc j) - sub_t j)))"
-            using iffD2[OF Theorem_18_4[OF hTI hTI hTI]]
-          proof -
-            have h1: "top1_continuous_map_on I_set I_top I_set I_top
-                (pi1 \<circ> (\<lambda>t. (sub_s' i, sub_t j + t * (sub_t (Suc j) - sub_t j))))"
-            proof -
-              have "(pi1 \<circ> (\<lambda>t. (sub_s' i, sub_t j + t * (sub_t (Suc j) - sub_t j)))) = (\<lambda>_. sub_s' i)"
-                unfolding pi1_def comp_def by (rule ext) (by100 simp)
-              thus ?thesis using hconst_cont[OF hsi_I] by (by100 simp)
-            qed
-            have h2: "top1_continuous_map_on I_set I_top I_set I_top
-                (pi2 \<circ> (\<lambda>t. (sub_s' i, sub_t j + t * (sub_t (Suc j) - sub_t j))))"
-            proof -
-              have "(pi2 \<circ> (\<lambda>t. (sub_s' i, sub_t j + t * (sub_t (Suc j) - sub_t j))))
-                  = (\<lambda>t. sub_t j + t * (sub_t (Suc j) - sub_t j))"
-                unfolding pi2_def comp_def by (rule ext) (by100 simp)
-              thus ?thesis using haffine_t by (by100 simp)
-            qed
-            show ?thesis using iffD2[OF Theorem_18_4[OF hTI hTI hTI]] h1 h2
-              unfolding II_topology_def by (by100 blast)
-          qed
-          hence "top1_continuous_map_on I_set I_top X TX
-              (F \<circ> (\<lambda>t. (sub_s' i, sub_t j + t * (sub_t (Suc j) - sub_t j))))"
-            using top1_continuous_map_on_comp[of _ _ "I_set \<times> I_set" II_topology] hF_cont by (by100 blast)
-          moreover have "\<And>t. (F \<circ> (\<lambda>t. (sub_s' i, sub_t j + t * (sub_t (Suc j) - sub_t j)))) t = \<beta> i t"
-            unfolding comp_def \<beta>_def by (by100 simp)
-          ultimately show ?thesis by (by100 presburger)
-        qed
-        \<comment> \<open>piece_bot: F ∘ (affine_s, const sub_t(Suc j)).\<close>
-        have hpb_cont: "top1_continuous_map_on I_set I_top X TX (piece_bot i)"
-        proof -
-          have "top1_continuous_map_on I_set I_top (I_set \<times> I_set) II_topology
-              (\<lambda>t. (sub_s' i + t * (sub_s' (Suc i) - sub_s' i), sub_t (Suc j)))"
-            using iffD2[OF Theorem_18_4[OF hTI hTI hTI]]
-          proof -
-            have h1: "top1_continuous_map_on I_set I_top I_set I_top
-                (pi1 \<circ> (\<lambda>t. (sub_s' i + t * (sub_s' (Suc i) - sub_s' i), sub_t (Suc j))))"
-            proof -
-              have "(pi1 \<circ> (\<lambda>t. (sub_s' i + t * (sub_s' (Suc i) - sub_s' i), sub_t (Suc j))))
-                  = (\<lambda>t. sub_s' i + t * (sub_s' (Suc i) - sub_s' i))"
-                unfolding pi1_def comp_def by (rule ext) (by100 simp)
-              thus ?thesis using haffine_s by (by100 simp)
-            qed
-            have h2: "top1_continuous_map_on I_set I_top I_set I_top
-                (pi2 \<circ> (\<lambda>t. (sub_s' i + t * (sub_s' (Suc i) - sub_s' i), sub_t (Suc j))))"
-            proof -
-              have "(pi2 \<circ> (\<lambda>t. (sub_s' i + t * (sub_s' (Suc i) - sub_s' i), sub_t (Suc j))))
-                  = (\<lambda>_. sub_t (Suc j))" unfolding pi2_def comp_def by (rule ext) (by100 simp)
-              thus ?thesis using hconst_cont[OF htSj_I] by (by100 simp)
-            qed
-            show ?thesis using iffD2[OF Theorem_18_4[OF hTI hTI hTI]] h1 h2
-              unfolding II_topology_def by (by100 blast)
-          qed
-          hence "top1_continuous_map_on I_set I_top X TX
-              (F \<circ> (\<lambda>t. (sub_s' i + t * (sub_s' (Suc i) - sub_s' i), sub_t (Suc j))))"
-            using top1_continuous_map_on_comp[of _ _ "I_set \<times> I_set" II_topology] hF_cont by (by100 blast)
-          moreover have "\<And>t. (F \<circ> (\<lambda>t. (sub_s' i + t * (sub_s' (Suc i) - sub_s' i), sub_t (Suc j)))) t = piece_bot i t"
-            unfolding comp_def piece_bot_def row_fn_def by (by100 simp)
-          ultimately show ?thesis by (by100 presburger)
-        qed
-        \<comment> \<open>piece_top i and β(Suc i) are paths in the same U (or V) — both edges of cell.\<close>
-        have hpt_path_U: "top1_is_path_on U (subspace_topology X TX U) (piece_top i 0) (piece_top i 1) (piece_top i)"
-            and h\<beta>Si_path_U: "top1_is_path_on U (subspace_topology X TX U) (\<beta> (Suc i) 0) (\<beta> (Suc i) 1) (\<beta> (Suc i))"
-            and h\<beta>i_path_U: "top1_is_path_on U (subspace_topology X TX U) (\<beta> i 0) (\<beta> i 1) (\<beta> i)"
-            and hpb_path_U: "top1_is_path_on U (subspace_topology X TX U) (piece_bot i 0) (piece_bot i 1) (piece_bot i)"
-          if hU_cell: "\<forall>s t. sub_s' i \<le> s \<and> s \<le> sub_s' (Suc i) \<and> sub_t j \<le> t \<and> t \<le> sub_t (Suc j) \<and> 0\<le>s \<and> s\<le>1 \<and> 0\<le>t \<and> t\<le>1 \<longrightarrow> F (s,t) \<in> U"
-        proof -
-          \<comment> \<open>All edges map I_set into U (from hU_cell + convex bounds in cell).\<close>
-          have hpt_img: "(piece_top i) ` I_set \<subseteq> U"
-          proof
-            fix x assume "x \<in> (piece_top i) ` I_set"
-            then obtain t where ht: "t \<in> I_set" and hx: "x = piece_top i t" by (by100 blast)
-            have "0 \<le> t" "t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 force)+
-            have hconv: "sub_s' i \<le> sub_s' i + t * (sub_s' (Suc i) - sub_s' i)
-                \<and> sub_s' i + t * (sub_s' (Suc i) - sub_s' i) \<le> sub_s' (Suc i)
-                \<and> 0 \<le> sub_s' i + t * (sub_s' (Suc i) - sub_s' i)
-                \<and> sub_s' i + t * (sub_s' (Suc i) - sub_s' i) \<le> 1"
-              using hconv_s[OF hi \<open>0 \<le> t\<close> \<open>t \<le> 1\<close>] .
-            show "x \<in> U" unfolding hx piece_top_def row_fn_def
-              using hU_cell hconv htj_ge0 htj_le1 htj_le_tSj by (by100 force)
-          qed
-          have h\<beta>Si_img: "(\<beta> (Suc i)) ` I_set \<subseteq> U"
-          proof
-            fix x assume "x \<in> (\<beta> (Suc i)) ` I_set"
-            then obtain t where ht: "t \<in> I_set" and hx: "x = \<beta> (Suc i) t" by (by100 blast)
-            have "0 \<le> t" "t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 force)+
-            have hdiff: "sub_t (Suc j) - sub_t j \<ge> 0" using htj_le_tSj by (by100 linarith)
-            have hprod_ge: "t * (sub_t (Suc j) - sub_t j) \<ge> 0"
-              by (rule mult_nonneg_nonneg) (use \<open>0 \<le> t\<close> hdiff in \<open>by100 linarith\<close>)+
-            have "t * (sub_t (Suc j) - sub_t j) \<le> 1 * (sub_t (Suc j) - sub_t j)"
-              by (rule mult_right_mono) (use \<open>t \<le> 1\<close> hdiff in \<open>by100 linarith\<close>)+
-            hence hprod_le: "t * (sub_t (Suc j) - sub_t j) \<le> sub_t (Suc j) - sub_t j" by (by100 simp)
-            show "x \<in> U" unfolding hx \<beta>_def
-              using hU_cell hsi_le_Ssi hSsi_ge0 hSsi_le1 htj_ge0 htSj_le1 hprod_ge hprod_le
-              by (by100 force)
-          qed
-          have h\<beta>i_img: "(\<beta> i) ` I_set \<subseteq> U"
-          proof
-            fix x assume "x \<in> (\<beta> i) ` I_set"
-            then obtain t where ht: "t \<in> I_set" and hx: "x = \<beta> i t" by (by100 blast)
-            have "0 \<le> t" "t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 force)+
-            have hdiff: "sub_t (Suc j) - sub_t j \<ge> 0" using htj_le_tSj by (by100 linarith)
-            have hprod_ge: "t * (sub_t (Suc j) - sub_t j) \<ge> 0"
-              by (rule mult_nonneg_nonneg) (use \<open>0 \<le> t\<close> hdiff in \<open>by100 linarith\<close>)+
-            have "t * (sub_t (Suc j) - sub_t j) \<le> 1 * (sub_t (Suc j) - sub_t j)"
-              by (rule mult_right_mono) (use \<open>t \<le> 1\<close> hdiff in \<open>by100 linarith\<close>)+
-            hence hprod_le: "t * (sub_t (Suc j) - sub_t j) \<le> sub_t (Suc j) - sub_t j" by (by100 simp)
-            show "x \<in> U" unfolding hx \<beta>_def
-              using hU_cell hsi_le_Ssi hsi_ge0 hsi_le1 htj_ge0 htSj_le1 hprod_ge hprod_le
-              by (by100 force)
-          qed
-          have hpb_img: "(piece_bot i) ` I_set \<subseteq> U"
-          proof
-            fix x assume "x \<in> (piece_bot i) ` I_set"
-            then obtain t where ht: "t \<in> I_set" and hx: "x = piece_bot i t" by (by100 blast)
-            have "0 \<le> t" "t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 force)+
-            have hconv: "sub_s' i \<le> sub_s' i + t * (sub_s' (Suc i) - sub_s' i)
-                \<and> sub_s' i + t * (sub_s' (Suc i) - sub_s' i) \<le> sub_s' (Suc i)
-                \<and> 0 \<le> sub_s' i + t * (sub_s' (Suc i) - sub_s' i)
-                \<and> sub_s' i + t * (sub_s' (Suc i) - sub_s' i) \<le> 1"
-              using hconv_s[OF hi \<open>0 \<le> t\<close> \<open>t \<le> 1\<close>] .
-            show "x \<in> U" unfolding hx piece_bot_def row_fn_def
-              using hU_cell hconv htSj_ge0 htSj_le1 htj_le_tSj by (by100 force)
-          qed
-          \<comment> \<open>codomain_shrink + path_on.\<close>
-          show "top1_is_path_on U (subspace_topology X TX U) (piece_top i 0) (piece_top i 1) (piece_top i)"
-            unfolding top1_is_path_on_def
-            using top1_continuous_map_on_codomain_shrink[OF hpt_cont hpt_img hUsub] by (by100 blast)
-          show "top1_is_path_on U (subspace_topology X TX U) (\<beta> (Suc i) 0) (\<beta> (Suc i) 1) (\<beta> (Suc i))"
-            unfolding top1_is_path_on_def
-            using top1_continuous_map_on_codomain_shrink[OF h\<beta>Si_cont h\<beta>Si_img hUsub] by (by100 blast)
-          show "top1_is_path_on U (subspace_topology X TX U) (\<beta> i 0) (\<beta> i 1) (\<beta> i)"
-            unfolding top1_is_path_on_def
-            using top1_continuous_map_on_codomain_shrink[OF h\<beta>i_cont h\<beta>i_img hUsub] by (by100 blast)
-          show "top1_is_path_on U (subspace_topology X TX U) (piece_bot i 0) (piece_bot i 1) (piece_bot i)"
-            unfolding top1_is_path_on_def
-            using top1_continuous_map_on_codomain_shrink[OF hpb_cont hpb_img hUsub] by (by100 blast)
-        qed
-        have hpt_path_V: "top1_is_path_on V (subspace_topology X TX V) (piece_top i 0) (piece_top i 1) (piece_top i)"
-            and h\<beta>Si_path_V: "top1_is_path_on V (subspace_topology X TX V) (\<beta> (Suc i) 0) (\<beta> (Suc i) 1) (\<beta> (Suc i))"
-            and h\<beta>i_path_V: "top1_is_path_on V (subspace_topology X TX V) (\<beta> i 0) (\<beta> i 1) (\<beta> i)"
-            and hpb_path_V: "top1_is_path_on V (subspace_topology X TX V) (piece_bot i 0) (piece_bot i 1) (piece_bot i)"
-          if hV_cell: "\<forall>s t. sub_s' i \<le> s \<and> s \<le> sub_s' (Suc i) \<and> sub_t j \<le> t \<and> t \<le> sub_t (Suc j) \<and> 0\<le>s \<and> s\<le>1 \<and> 0\<le>t \<and> t\<le>1 \<longrightarrow> F (s,t) \<in> V"
-        proof -
-          have hpt_img: "(piece_top i) ` I_set \<subseteq> V"
-          proof
-            fix x assume "x \<in> (piece_top i) ` I_set"
-            then obtain t where ht: "t \<in> I_set" and hx: "x = piece_top i t" by (by100 blast)
-            have "0 \<le> t" "t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 force)+
-            show "x \<in> V" unfolding hx piece_top_def row_fn_def
-              using hV_cell hconv_s[OF hi \<open>0 \<le> t\<close> \<open>t \<le> 1\<close>] htj_ge0 htj_le1 htj_le_tSj by (by100 force)
-          qed
-          have h\<beta>Si_img: "(\<beta> (Suc i)) ` I_set \<subseteq> V"
-          proof
-            fix x assume "x \<in> (\<beta> (Suc i)) ` I_set"
-            then obtain t where ht: "t \<in> I_set" and hx: "x = \<beta> (Suc i) t" by (by100 blast)
-            have "0 \<le> t" "t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 force)+
-            have hdiff: "sub_t (Suc j) - sub_t j \<ge> 0" using htj_le_tSj by (by100 linarith)
-            have hprod_ge: "t * (sub_t (Suc j) - sub_t j) \<ge> 0"
-              by (rule mult_nonneg_nonneg) (use \<open>0 \<le> t\<close> hdiff in \<open>by100 linarith\<close>)+
-            have "t * (sub_t (Suc j) - sub_t j) \<le> 1 * (sub_t (Suc j) - sub_t j)"
-              by (rule mult_right_mono) (use \<open>t \<le> 1\<close> hdiff in \<open>by100 linarith\<close>)+
-            hence hprod_le: "t * (sub_t (Suc j) - sub_t j) \<le> sub_t (Suc j) - sub_t j" by (by100 simp)
-            show "x \<in> V" unfolding hx \<beta>_def
-              using hV_cell hsi_le_Ssi hSsi_ge0 hSsi_le1 htj_ge0 htSj_le1 hprod_ge hprod_le
-              by (by100 force)
-          qed
-          have h\<beta>i_img: "(\<beta> i) ` I_set \<subseteq> V"
-          proof
-            fix x assume "x \<in> (\<beta> i) ` I_set"
-            then obtain t where ht: "t \<in> I_set" and hx: "x = \<beta> i t" by (by100 blast)
-            have "0 \<le> t" "t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 force)+
-            have hdiff: "sub_t (Suc j) - sub_t j \<ge> 0" using htj_le_tSj by (by100 linarith)
-            have hprod_ge: "t * (sub_t (Suc j) - sub_t j) \<ge> 0"
-              by (rule mult_nonneg_nonneg) (use \<open>0 \<le> t\<close> hdiff in \<open>by100 linarith\<close>)+
-            have "t * (sub_t (Suc j) - sub_t j) \<le> 1 * (sub_t (Suc j) - sub_t j)"
-              by (rule mult_right_mono) (use \<open>t \<le> 1\<close> hdiff in \<open>by100 linarith\<close>)+
-            hence hprod_le: "t * (sub_t (Suc j) - sub_t j) \<le> sub_t (Suc j) - sub_t j" by (by100 simp)
-            show "x \<in> V" unfolding hx \<beta>_def
-              using hV_cell hsi_le_Ssi hsi_ge0 hsi_le1 htj_ge0 htSj_le1 hprod_ge hprod_le
-              by (by100 force)
-          qed
-          have hpb_img: "(piece_bot i) ` I_set \<subseteq> V"
-          proof
-            fix x assume "x \<in> (piece_bot i) ` I_set"
-            then obtain t where ht: "t \<in> I_set" and hx: "x = piece_bot i t" by (by100 blast)
-            have "0 \<le> t" "t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 force)+
-            show "x \<in> V" unfolding hx piece_bot_def row_fn_def
-              using hV_cell hconv_s[OF hi \<open>0 \<le> t\<close> \<open>t \<le> 1\<close>] htSj_ge0 htSj_le1 htj_le_tSj by (by100 force)
-          qed
-          \<comment> \<open>Continuity from outer scope (hpt_cont, h_βSi_cont, h_βi_cont, hpb_cont).\<close>
-          show "top1_is_path_on V (subspace_topology X TX V) (piece_top i 0) (piece_top i 1) (piece_top i)"
-            unfolding top1_is_path_on_def
-            using top1_continuous_map_on_codomain_shrink[OF hpt_cont hpt_img hVsub] by (by100 blast)
-          show "top1_is_path_on V (subspace_topology X TX V) (\<beta> (Suc i) 0) (\<beta> (Suc i) 1) (\<beta> (Suc i))"
-            unfolding top1_is_path_on_def
-            using top1_continuous_map_on_codomain_shrink[OF h\<beta>Si_cont h\<beta>Si_img hVsub] by (by100 blast)
-          show "top1_is_path_on V (subspace_topology X TX V) (\<beta> i 0) (\<beta> i 1) (\<beta> i)"
-            unfolding top1_is_path_on_def
-            using top1_continuous_map_on_codomain_shrink[OF h\<beta>i_cont h\<beta>i_img hVsub] by (by100 blast)
-          show "top1_is_path_on V (subspace_topology X TX V) (piece_bot i 0) (piece_bot i 1) (piece_bot i)"
-            unfolding top1_is_path_on_def
-            using top1_continuous_map_on_codomain_shrink[OF hpb_cont hpb_img hVsub] by (by100 blast)
-        qed
         have h_split_LHS: "\<sigma> pp1 = mulH (\<sigma> (piece_top i)) (\<sigma> (\<beta> (Suc i)))"
         proof -
           from hcell_ij show ?thesis
