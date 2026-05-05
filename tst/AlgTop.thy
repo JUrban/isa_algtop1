@@ -6674,10 +6674,82 @@ proof -
             qed
             have hT'UV: "\<forall>i<Suc M. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T' i + t * (T' (Suc i) - T' i)) \<in> U)
                  \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T' i + t * (T' (Suc i) - T' i)) \<in> V)"
-              sorry \<comment> \<open>Each T'-piece is a sub-interval of some T-piece.
-                 For i < k: T'[i,i+1] = T[i,i+1] (same piece). For i = k: T'[k,k+1] = [T(k), sub(i0)] ⊆ T[k,k+1].
-                 For i = Suc k: T'[k+1,k+2] = [sub(i0), T(k+1)] ⊆ T[k,k+1].
-                 For i > Suc k: T'[i,i+1] = T[i-1,i] (shifted). All inherit UV from T.\<close>
+            proof (intro allI impI)
+              fix i assume hi: "i < Suc M"
+              show "(\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T' i + t * (T' (Suc i) - T' i)) \<in> U)
+                 \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T' i + t * (T' (Suc i) - T' i)) \<in> V)"
+              proof (cases "Suc i \<le> k")
+                case True \<comment> \<open>Both below insertion: T'-piece = T-piece at i.\<close>
+                have "i \<le> k" using True by (by100 presburger)
+                have "T' i = T i" unfolding T'_def using \<open>i \<le> k\<close> by (by100 simp)
+                have "T' (Suc i) = T (Suc i)" unfolding T'_def using True by (by100 simp)
+                have "i < M" using True hk by (by100 presburger)
+                show ?thesis using \<open>T' i = T i\<close> \<open>T' (Suc i) = T (Suc i)\<close> less.prems(5) \<open>i < M\<close>
+                  by (by100 force)
+              next
+                case False
+                show ?thesis
+                proof (cases "i = k")
+                  case True \<comment> \<open>T'[k, Suc k] = [T(k), sub(i0)] ⊆ T[k, Suc k].\<close>
+                  have "T' i = T k" unfolding T'_def using True by (by100 simp)
+                  have "T' (Suc i) = sub i0" unfolding T'_def using True by (by100 simp)
+                  \<comment> \<open>For any t ∈ [0,1]: T(k) + t*(sub(i0)-T(k)) ∈ [T(k), sub(i0)] ⊆ [T(k), T(Suc k)].
+                     So f at this point is in U or V (from T-piece k).\<close>
+                  have hk_UV: "(\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T k + t * (T (Suc k) - T k)) \<in> U)
+                      \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T k + t * (T (Suc k) - T k)) \<in> V)"
+                    using less.prems(5) hk by (by100 force)
+                  show ?thesis using \<open>T' i = T k\<close> \<open>T' (Suc i) = sub i0\<close> hk_UV hTk hTSk
+                    sorry \<comment> \<open>[T(k), sub(i0)] ⊆ [T(k), T(Suc k)] → reparametrize.\<close>
+                next
+                  case False2: False
+                  show ?thesis
+                  proof (cases "i = Suc k")
+                    case True \<comment> \<open>T'[Suc k, Suc(Suc k)] = [sub(i0), T(Suc k)] ⊆ T[k, Suc k].\<close>
+                    have "T' i = sub i0" unfolding T'_def using True by (by100 simp)
+                    have "\<not> (Suc i \<le> k)" using True by (by100 presburger)
+                    have "Suc i \<noteq> Suc k" using True by (by100 presburger)
+                    have "T' (Suc i) = T (Suc i - 1)" unfolding T'_def
+                      using \<open>\<not>(Suc i \<le> k)\<close> \<open>Suc i \<noteq> Suc k\<close> by (by100 simp)
+                    have "Suc i - 1 = Suc k" using True by (by100 simp)
+                    hence "T' (Suc i) = T (Suc k)" using \<open>T' (Suc i) = T (Suc i - 1)\<close> by (by100 simp)
+                    have hk_UV: "(\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T k + t * (T (Suc k) - T k)) \<in> U)
+                        \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T k + t * (T (Suc k) - T k)) \<in> V)"
+                      using less.prems(5) hk by (by100 force)
+                    show ?thesis using \<open>T' i = sub i0\<close> \<open>T' (Suc i) = T (Suc k)\<close> hk_UV hTk hTSk
+                      sorry \<comment> \<open>[sub(i0), T(Suc k)] ⊆ [T(k), T(Suc k)] → reparametrize.\<close>
+                  next
+                    case False3: False \<comment> \<open>Both above insertion: T'-piece = T-piece shifted.\<close>
+                    hence "i > Suc k" using False False2 by (by100 presburger)
+                    have "\<not> (i \<le> k)" using \<open>i > Suc k\<close> by (by100 presburger)
+                    have "i \<noteq> Suc k" using \<open>i > Suc k\<close> by (by100 presburger)
+                    have "T' i = T (i - 1)" unfolding T'_def using \<open>\<not>(i \<le> k)\<close> \<open>i \<noteq> Suc k\<close> by (by100 simp)
+                    have "\<not> (Suc i \<le> k)" using \<open>i > Suc k\<close> by (by100 presburger)
+                    have "Suc i \<noteq> Suc k" using \<open>i > Suc k\<close> by (by100 presburger)
+                    have "T' (Suc i) = T (Suc i - 1)" unfolding T'_def
+                      using \<open>\<not>(Suc i \<le> k)\<close> \<open>Suc i \<noteq> Suc k\<close> by (by100 simp)
+                    have "Suc i - 1 = i" by (by100 simp)
+                    hence "T' (Suc i) = T i" using \<open>T' (Suc i) = T (Suc i - 1)\<close> by (by100 simp)
+                    have "i - 1 < M" using hi \<open>i > Suc k\<close> by (by100 presburger)
+                    have "Suc (i - 1) = i" using \<open>i > Suc k\<close> by (by100 presburger)
+                    have "(\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T (i-1) + t * (T (Suc (i-1)) - T (i-1))) \<in> U)
+                        \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T (i-1) + t * (T (Suc (i-1)) - T (i-1))) \<in> V)"
+                      using less.prems(5) \<open>i - 1 < M\<close> by (by100 blast)
+                    hence "(\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T (i-1) + t * (T i - T (i-1))) \<in> U)
+                        \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T (i-1) + t * (T i - T (i-1))) \<in> V)"
+                      using \<open>Suc (i-1) = i\<close> by (by100 simp)
+                    \<comment> \<open>T'-piece equals T-piece: T' i = T(i-1), T'(Suc i) = T i.\<close>
+                    thus ?thesis
+                    proof
+                      assume "\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T (i-1) + t * (T i - T (i-1))) \<in> U"
+                      thus ?thesis using \<open>T' i = T (i-1)\<close> \<open>T' (Suc i) = T i\<close> by (by100 simp)
+                    next
+                      assume "\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T (i-1) + t * (T i - T (i-1))) \<in> V"
+                      thus ?thesis using \<open>T' i = T (i-1)\<close> \<open>T' (Suc i) = T i\<close> by (by100 simp)
+                    qed
+                  qed
+                qed
+              qed
+            qed
             \<comment> \<open>T' has fewer missing sub-points (sub(i₀) now at Suc k).\<close>
             have hmiss_less: "card {i. i \<le> n \<and> (\<forall>j\<le>Suc M. T' j \<noteq> sub i)} < miss'"
             proof -
