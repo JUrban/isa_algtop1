@@ -6463,9 +6463,53 @@ proof -
           (\<forall>i<M. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T i + t * (T (Suc i) - T i)) \<in> U)
                \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T i + t * (T (Suc i) - T i)) \<in> V)) \<Longrightarrow>
           foldr_\<sigma> f M T = foldr_\<sigma> f n sub"
-        sorry \<comment> \<open>Subdivision independence. Induction on card {i≤n. sub(i) ∉ T-range} (decreasing).
-           Base: T refines sub → h_refine. Step: insert missing sub-point via h_point_insert[sym],
-           which preserves foldr_σ and decreases the missing count.\<close>
+      proof -
+        fix M and T :: "nat \<Rightarrow> real"
+        assume hM: "M \<ge> 1" and hT0: "T 0 = (0::real)" and hTM: "T M = 1"
+           and hTinc: "\<forall>i<M. T i < T (Suc i)"
+           and hTUV: "\<forall>i<M. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T i + t * (T (Suc i) - T i)) \<in> U)
+               \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T i + t * (T (Suc i) - T i)) \<in> V)"
+        \<comment> \<open>Define missing count as measure for well-founded induction.\<close>
+        \<comment> \<open>Induction on missing sub-point count.\<close>
+        define miss where "miss = card {i. i \<le> n \<and> (\<forall>j\<le>M. T j \<noteq> sub i)}"
+        show "foldr_\<sigma> f M T = foldr_\<sigma> f n sub" using hM hT0 hTM hTinc hTUV miss_def
+        proof (induction miss arbitrary: M T rule: less_induct)
+          case (less miss')
+          show ?case
+          proof (cases "\<forall>i\<le>n. \<exists>j\<le>M. T j = sub i")
+            case True
+            show ?thesis by (rule h_refine[OF less.prems(1-5) True])
+          next
+            case False
+            \<comment> \<open>Some sub(i₀) not in T. Find it and insert it.\<close>
+            from False obtain i0 where hi0: "i0 \<le> n" and hi0_miss: "\<forall>j\<le>M. T j \<noteq> sub i0"
+              by (by100 blast)
+            \<comment> \<open>sub(i₀) ∈ (0,1). Find k with T(k) < sub(i₀) < T(k+1).\<close>
+            have "\<exists>k. k < M \<and> T k < sub i0 \<and> sub i0 < T (Suc k)"
+              sorry \<comment> \<open>sub(i₀) ∈ (0,1), T strict inc from 0 to 1, sub(i₀) ∉ T-range.\<close>
+            then obtain k where hk: "k < M" and hTk: "T k < sub i0" and hTSk: "sub i0 < T (Suc k)"
+              by (by100 blast)
+            \<comment> \<open>Insert sub(i₀) at position k. T' has Suc M pieces.\<close>
+            define T' where "T' j = (if j \<le> k then T j else if j = Suc k then sub i0 else T (j - 1))" for j
+            have hinsert: "foldr_\<sigma> f (Suc M) T' = foldr_\<sigma> f M T"
+              sorry \<comment> \<open>h_point_insert with T'_def\<close>
+            \<comment> \<open>T' is valid with Suc M pieces.\<close>
+            have hT'1: "Suc M \<ge> 1" by (by100 presburger)
+            have hT'0: "T' 0 = (0::real)" sorry
+            have hT'M: "T' (Suc M) = 1" sorry
+            have hT'inc: "\<forall>i<Suc M. T' i < T' (Suc i)" sorry
+            have hT'UV: "\<forall>i<Suc M. (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T' i + t * (T' (Suc i) - T' i)) \<in> U)
+                 \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (T' i + t * (T' (Suc i) - T' i)) \<in> V)"
+              sorry
+            \<comment> \<open>T' has fewer missing sub-points (sub(i₀) now at Suc k).\<close>
+            have hmiss_less: "card {i. i \<le> n \<and> (\<forall>j\<le>Suc M. T' j \<noteq> sub i)} < miss'"
+              sorry \<comment> \<open>sub(i₀) now in T'-range → one fewer missing\<close>
+            have "foldr_\<sigma> f (Suc M) T' = foldr_\<sigma> f n sub"
+              sorry \<comment> \<open>IH application: missing count decreased, T' valid → result by IH\<close>
+            thus ?thesis using hinsert by (by100 simp)
+          qed
+        qed
+      qed
       show ?thesis
         using h_insert_all[OF hN_ge hS0 hSN hSinc hS_UV] .
     qed
