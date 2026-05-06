@@ -2010,7 +2010,46 @@ proof -
           qed
           \<comment> \<open>Step 2: interp maps B2\{0} \<times> I into B2.\<close>
           have hinterp_range: "\<forall>p \<in> ?B2_0 \<times> I_set. ?interp p \<in> top1_B2"
-            sorry \<comment> \<open>Convex combination stays in B2 (already proved earlier for fixed y,t).\<close>
+          proof (intro ballI)
+            fix p assume "p \<in> ?B2_0 \<times> I_set"
+            hence hy: "fst p \<in> top1_B2" and hy_ne: "fst p \<noteq> (0::real, 0)" and ht: "snd p \<in> I_set"
+              by (by100 auto)+
+            have ht0: "0 \<le> snd p" and ht1: "snd p \<le> 1"
+              using ht unfolding top1_unit_interval_def by (by100 simp)+
+            have "fst p \<noteq> (0::real, 0)" using hy_ne by (by100 blast)
+            hence "fst (fst p) ^ 2 + snd (fst p) ^ 2 > 0"
+            proof -
+              have "fst (fst p) \<noteq> 0 \<or> snd (fst p) \<noteq> 0" using hy_ne by (cases "fst p") (by100 simp)
+              hence "fst (fst p) ^ 2 > 0 \<or> snd (fst p) ^ 2 > 0" by (by100 auto)
+              moreover have "fst (fst p) ^ 2 \<ge> 0" "snd (fst p) ^ 2 \<ge> 0" by (by100 simp)+
+              ultimately show ?thesis by (by100 linarith)
+            qed
+            let ?n = "sqrt (fst (fst p) ^ 2 + snd (fst p) ^ 2)"
+            let ?q = "(fst (fst p) / ?n, snd (fst p) / ?n)"
+            have hn_pos: "?n > 0" using \<open>fst (fst p) ^ 2 + snd (fst p) ^ 2 > 0\<close> by (by100 simp)
+            have hq_S1: "fst ?q ^ 2 + snd ?q ^ 2 = 1"
+            proof -
+              have hpd1: "(fst (fst p) / ?n) ^ 2 = fst (fst p) ^ 2 / ?n ^ 2" by (rule power_divide)
+              have hpd2: "(snd (fst p) / ?n) ^ 2 = snd (fst p) ^ 2 / ?n ^ 2" by (rule power_divide)
+              have hn2: "?n ^ 2 = fst (fst p) ^ 2 + snd (fst p) ^ 2"
+                using \<open>fst (fst p) ^ 2 + snd (fst p) ^ 2 > 0\<close>
+                by (rule real_sqrt_pow2[OF order_less_imp_le])
+              have "fst (fst p) ^ 2 / ?n ^ 2 + snd (fst p) ^ 2 / ?n ^ 2
+                  = (fst (fst p) ^ 2 + snd (fst p) ^ 2) / ?n ^ 2"
+                by (rule add_divide_distrib[symmetric])
+              also have "\<dots> = ?n ^ 2 / ?n ^ 2" using hn2 by (by100 simp)
+              also have "\<dots> = 1" using hn_pos by (by100 auto)
+              finally show ?thesis using hpd1 hpd2 by (by100 simp)
+            qed
+            have hq_B2: "?q \<in> top1_B2" using hq_S1 unfolding top1_B2_def by (by100 simp)
+            have "((1 - snd p) * fst (fst p) + snd p * fst ?q,
+                   (1 - snd p) * snd (fst p) + snd p * snd ?q) \<in> top1_B2"
+              using top1_B2_convex[OF hy hq_B2 ht0 ht1] by (by100 simp)
+            moreover have "?interp p = ((1 - snd p) * fst (fst p) + snd p * fst ?q,
+                                    (1 - snd p) * snd (fst p) + snd p * snd ?q)"
+              sorry \<comment> \<open>Field associativity: a*b/c = a*(b/c).\<close>
+            ultimately show "?interp p \<in> top1_B2" by (by100 simp)
+          qed
           \<comment> \<open>Step 3: Bridge to top1: interp is top1_continuous_map_on.\<close>
           have hinterp_top1: "top1_continuous_map_on (?B2_0 \<times> I_set)
               (subspace_topology UNIV top1_open_sets (?B2_0 \<times> I_set))
@@ -8974,6 +9013,12 @@ end
 
 
 
+ 
+ 
+ 
+ 
+ 
+ 
  
  
  
