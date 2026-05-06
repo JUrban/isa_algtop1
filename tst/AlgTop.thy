@@ -280,11 +280,24 @@ proof -
       (?\<pi>' eG') (\<lambda>C. ?\<pi>' (invgG' (SOME g'. g' \<in> G' \<and> C = ?\<pi>' g')))"
     by (rule quotient_group_is_group[OF assms(2) hphiN_normal])
   \<comment> \<open>Step 3: \<pi>' \<circ> \<phi> is a surjective homomorphism G \<rightarrow> G'/\<phi>(N) with kernel N.\<close>
+  have hphi_hom: "top1_group_hom_on G mulG G' mulG' \<phi>"
+    using assms(3) unfolding top1_group_iso_on_def by (by100 blast)
+  have hpi_hom: "top1_group_hom_on G' mulG' (top1_quotient_group_carrier_on G' mulG' (\<phi> ` N))
+      (top1_quotient_group_mul_on mulG') ?\<pi>'"
+    using quotient_projection_properties[OF assms(2) hphiN_normal] by (by100 blast)
   have hpi_phi_hom: "top1_group_hom_on G mulG (top1_quotient_group_carrier_on G' mulG' (\<phi> ` N))
       (top1_quotient_group_mul_on mulG') (?\<pi>' \<circ> \<phi>)"
-    sorry \<comment> \<open>Composition of \<phi> (hom from iso) and \<pi>' (quotient projection hom).\<close>
+    by (rule group_hom_comp[OF hphi_hom hpi_hom])
   have hpi_phi_surj: "(?\<pi>' \<circ> \<phi>) ` G = top1_quotient_group_carrier_on G' mulG' (\<phi> ` N)"
-    sorry \<comment> \<open>\<phi> surjective onto G', \<pi>' surjective onto G'/\<phi>(N).\<close>
+  proof -
+    have hphi_surj: "\<phi> ` G = G'" using assms(3) unfolding top1_group_iso_on_def bij_betw_def by (by100 blast)
+    have hpi_surj: "?\<pi>' ` G' = top1_quotient_group_carrier_on G' mulG' (\<phi> ` N)"
+      using quotient_projection_properties[OF assms(2) hphiN_normal] by (by100 blast)
+    have "(?\<pi>' \<circ> \<phi>) ` G = ?\<pi>' ` (\<phi> ` G)" by (by100 auto)
+    also have "\<dots> = ?\<pi>' ` G'" using hphi_surj by (by100 simp)
+    also have "\<dots> = top1_quotient_group_carrier_on G' mulG' (\<phi> ` N)" by (rule hpi_surj)
+    finally show ?thesis .
+  qed
   have hpi_phi_ker: "top1_group_kernel_on G (?\<pi>' eG') (?\<pi>' \<circ> \<phi>) = N"
     sorry \<comment> \<open>kernel = {g \<in> G | \<pi>'(\<phi>(g)) = \<pi>'(eG')} = {g \<in> G | \<phi>(g) \<in> \<phi>(N)} = N (injectivity).\<close>
   \<comment> \<open>Step 4: By first isomorphism theorem.\<close>
@@ -9583,6 +9596,8 @@ end
 
 
 
+ 
+ 
  
  
  
