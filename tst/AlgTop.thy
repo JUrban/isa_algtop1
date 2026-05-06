@@ -1435,7 +1435,7 @@ proof -
         have hh_restr: "top1_continuous_map_on ?P (subspace_topology ?D ?TD ?P) ?V ?TV h"
           by (rule top1_continuous_map_on_restrict_domain_simple[OF hh_cont hP_sub_D])
         have hh_restr2: "top1_continuous_map_on ?P ?TP ?V ?TV h"
-          using hh_restr hTP_eq by (by100 simp)
+          using hh_restr hTP_eq by simp
         have himg: "h ` ?P \<subseteq> ?UV"
         proof
           fix y assume "y \<in> h ` ?P"
