@@ -1194,8 +1194,81 @@ proof -
      \<pi>: B2 \<rightarrow> C = h(B2) to a deformation retraction of C - {x0} onto \<pi>(S1),
      then extends to all of U by keeping A fixed.\<close>
   have hA_deformation_retract_U: "top1_deformation_retract_of_on ?U ?TU A"
-    sorry \<comment> \<open>Full deformation retraction: quotient-map argument from Munkres Step 1.
-       Uses radial retraction of B2-{0} onto S1, composed with h, extended to U by fixing A.\<close>
+  proof -
+    have hA_sub_U: "A \<subseteq> ?U" using hA_sub_X hx0_notin_A by (by100 blast)
+    \<comment> \<open>Define the homotopy H on U \<times> I.
+       On A: H(x,t) = x (identity).
+       On V\<setminus>{x0} = (X-A)\<setminus>{h(0,0)}: H(x,t) = h((1-t)\<cdot>h\<inverse>(x) + t\<cdot>h\<inverse>(x)/|h\<inverse>(x)|)
+       where h\<inverse> = inv_into (B2-S1) h and |.| = sqrt(fst^2+snd^2).
+       The radial interpolation moves h\<inverse>(x) toward S1, then h maps back.\<close>
+    let ?D = "top1_B2 - top1_S1"
+    let ?hinv = "inv_into ?D h"
+    let ?norm = "\<lambda>p::real\<times>real. sqrt (fst p ^ 2 + snd p ^ 2)"
+    define H_U :: "'a \<times> real \<Rightarrow> 'a" where
+      "H_U = (\<lambda>(x, t). if x \<in> A then x
+              else let y = ?hinv x; n = ?norm y in
+                h ((1 - t) * fst y + t * fst y / n, (1 - t) * snd y + t * snd y / n))"
+    \<comment> \<open>Properties verified modulo continuity.\<close>
+    have hbij: "bij_betw h ?D (X - A)"
+      using assms(7) unfolding top1_homeomorphism_on_def by (by100 blast)
+    have hinj_D: "inj_on h ?D" using hbij unfolding bij_betw_def by (by100 blast)
+    have hsurj_D: "h ` ?D = X - A" using hbij unfolding bij_betw_def by (by100 blast)
+    have hH_0: "\<forall>x\<in>?U. H_U (x, 0) = x"
+    proof (intro ballI)
+      fix x assume hx: "x \<in> ?U"
+      show "H_U (x, 0) = x"
+      proof (cases "x \<in> A")
+        case True thus ?thesis unfolding H_U_def by (by100 simp)
+      next
+        case False
+        hence hxV: "x \<in> X - A" using hx hA_sub_X by (by100 blast)
+        hence hx_img: "x \<in> h ` ?D" using hsurj_D by (by100 simp)
+        have hinv_D: "?hinv x \<in> ?D" using inv_into_into[OF hx_img] .
+        have hh_inv: "h (?hinv x) = x" using f_inv_into_f[OF hx_img] .
+        show ?thesis unfolding H_U_def Let_def using False hh_inv by (by100 simp)
+      qed
+    qed
+    have hH_1: "\<forall>x\<in>?U. H_U (x, 1) \<in> A"
+    proof (intro ballI)
+      fix x assume hx: "x \<in> ?U"
+      show "H_U (x, 1) \<in> A"
+      proof (cases "x \<in> A")
+        case True thus ?thesis unfolding H_U_def by (by100 simp)
+      next
+        case False
+        hence hxV: "x \<in> X - A" using hx hA_sub_X by (by100 blast)
+        hence hx_img: "x \<in> h ` ?D" using hsurj_D by (by100 simp)
+        have hinv_D: "?hinv x \<in> ?D" using inv_into_into[OF hx_img] .
+        hence hinv_B2: "?hinv x \<in> top1_B2" by (by100 blast)
+        have hx_ne: "x \<noteq> ?x0" using hx by (by100 blast)
+        have hinv_ne: "?hinv x \<noteq> (0, 0)"
+        proof
+          assume "?hinv x = (0, 0)"
+          hence "h (?hinv x) = h (0, 0)" by (by100 simp)
+          hence "x = ?x0" using f_inv_into_f[OF hx_img] by (by100 simp)
+          thus False using hx_ne by (by100 blast)
+        qed
+        have hnorm_pos: "?norm (?hinv x) > 0"
+          sorry \<comment> \<open>sqrt(a^2+b^2) > 0 when (a,b) \<noteq> (0,0). Needs real_sqrt_gt_zero + arithmetic.\<close>
+        \<comment> \<open>y/|y| \<in> S1.\<close>
+        have hy_norm_S1: "(fst (?hinv x) / ?norm (?hinv x), snd (?hinv x) / ?norm (?hinv x)) \<in> top1_S1"
+          sorry \<comment> \<open>Standard: (a/sqrt(a^2+b^2))^2 + (b/sqrt(a^2+b^2))^2 = 1.\<close>
+        hence "h (fst (?hinv x) / ?norm (?hinv x), snd (?hinv x) / ?norm (?hinv x)) \<in> h ` top1_S1"
+          by (by100 blast)
+        hence "h (fst (?hinv x) / ?norm (?hinv x), snd (?hinv x) / ?norm (?hinv x)) \<in> A"
+          using assms(8) by (by100 blast)
+        thus ?thesis unfolding H_U_def Let_def using False by (by100 simp)
+      qed
+    qed
+    have hH_A: "\<forall>a\<in>A. \<forall>t\<in>I_set. H_U (a, t) = a"
+      unfolding H_U_def by (by100 simp)
+    have hH_cont: "top1_continuous_map_on (?U \<times> I_set) (product_topology_on ?TU I_top) ?U ?TU H_U"
+      sorry \<comment> \<open>Continuity: pasting_lemma_two_closed on A\<times>I (identity, closed) and
+         h(B2)\<inter>U \<times> I (quotient descent of radial retraction, closed).
+         Uses Theorem_22_2 for the quotient descent.\<close>
+    show ?thesis unfolding top1_deformation_retract_of_on_def
+      using hA_sub_U hH_cont hH_0 hH_1 hH_A by (by100 blast)
+  qed
 
   \<comment> \<open>--- Step 2e: U is path connected ---\<close>
   have hTopX_ns: "is_topology_on X TX" using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
