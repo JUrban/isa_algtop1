@@ -326,7 +326,7 @@ proof -
     have "t^2 * (?c^2 + ?d^2) < t^2 * 1"
       by (rule mult_strict_left_mono[OF hq2']) (simp add: power2_eq_square ht2pos)
     hence ht2_strict: "t^2 * (?c^2 + ?d^2) < t^2" by (by100 simp)
-    thus ?thesis using hexp ht1_le ht3_le hsum by (by100 linarith)
+    thus ?thesis using hexp ht1_le ht3_le hsum by linarith
   qed
   have hnotS1: "((1-t)*?a + t*?c, (1-t)*?b + t*?d) \<notin> top1_S1"
     unfolding top1_S1_def using hstrict by (by100 simp)
@@ -1289,9 +1289,39 @@ proof -
     have hH_A: "\<forall>a\<in>A. \<forall>t\<in>I_set. H_U (a, t) = a"
       unfolding H_U_def by (by100 simp)
     have hH_cont: "top1_continuous_map_on (?U \<times> I_set) (product_topology_on ?TU I_top) ?U ?TU H_U"
-      sorry \<comment> \<open>Continuity: pasting_lemma_two_closed on A\<times>I (identity, closed) and
-         h(B2)\<inter>U \<times> I (quotient descent of radial retraction, closed).
-         Uses Theorem_22_2 for the quotient descent.\<close>
+    proof -
+      \<comment> \<open>Strategy: paste H_U on two closed subsets of U \<times> I.
+         Piece 1: A \<times> I (H_U = identity, closed in U \<times> I).
+         Piece 2: (h(B2) \<inter> U) \<times> I (H_U = descended radial retraction, closed in U \<times> I).
+         Overlap: h(S1) \<times> I (both pieces agree: identity = retraction on boundary).\<close>
+      let ?C = "h ` top1_B2" \<comment> \<open>C = h(B2), the image of the disk.\<close>
+      let ?CU = "?C \<inter> ?U" \<comment> \<open>C \<inter> U = C - {x0}.\<close>
+      \<comment> \<open>A and CU are both closed in U and cover U.\<close>
+      have hU_sub_X: "?U \<subseteq> X" by (by100 blast)
+      have hA_closed_U: "closedin_on ?U ?TU A"
+        sorry \<comment> \<open>A closed in X, A \<subseteq> U \<subseteq> X, Theorem_17_2 backward.\<close>
+      have hC_closed_X: "closedin_on X TX ?C"
+        sorry \<comment> \<open>h(B2) is compact image (B2 compact + h continuous) in Hausdorff X, hence closed.\<close>
+      have hCU_closed_U: "closedin_on ?U ?TU ?CU"
+        sorry \<comment> \<open>C closed in X, C \<inter> U closed in U by Theorem_17_2.\<close>
+      have hcover: "A \<union> ?CU = ?U"
+        sorry \<comment> \<open>U = X-{x0}, A \<union> (h(B2)-{x0}) covers X-{x0} since X = A \<union> h(B2).\<close>
+      \<comment> \<open>Continuity on A \<times> I: H_U = projection, continuous.\<close>
+      have hH_cont_A: "top1_continuous_map_on (A \<times> I_set)
+          (product_topology_on (subspace_topology ?U ?TU A) I_top) ?U ?TU H_U"
+        sorry \<comment> \<open>H_U = fst on A \<times> I. Projection is continuous, codomain A \<subseteq> U.\<close>
+      \<comment> \<open>Continuity on CU \<times> I: H_U = h((1-t)*y + t*y/|y|) via quotient descent.\<close>
+      have hH_cont_CU: "top1_continuous_map_on (?CU \<times> I_set)
+          (product_topology_on (subspace_topology ?U ?TU ?CU) I_top) ?U ?TU H_U"
+        sorry \<comment> \<open>Quotient descent: h: B2 \<rightarrow> C is quotient map (compact to Hausdorff).
+           Radial retraction g(y,t) = h((1-t)y + t*y/|y|) is continuous on (B2-{0}) \<times> I.
+           g respects h-fibers. By Theorem_22_2, g descends to continuous H_C on CU \<times> I.
+           H_U agrees with H_C on CU.\<close>
+      \<comment> \<open>Paste via pasting_lemma_two_closed.\<close>
+      show ?thesis
+        sorry \<comment> \<open>Apply pasting_lemma_two_closed with A \<times> I and CU \<times> I.
+           Need: product topologies, closedness in product, cover, agreement on overlap.\<close>
+    qed
     show ?thesis unfolding top1_deformation_retract_of_on_def
       using hA_sub_U hH_cont hH_0 hH_1 hH_A by (by100 blast)
   qed
