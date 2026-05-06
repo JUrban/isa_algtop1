@@ -2385,8 +2385,9 @@ proof -
         qed
         \<comment> \<open>Step F: By Theorem 22.2, G descends to continuous H_CU on CU \<times> I.\<close>
         \<comment> \<open>H_U agrees with the descended map on CU \<times> I.\<close>
-        show ?thesis sorry \<comment> \<open>Theorem_22_2 gives descent. Topology transfer CU\<times>I sub of C\<times>I
-                             vs CU\<times>I sub of U\<times>I (= same since CU \<subseteq> U \<subseteq> X \<supseteq> C). Then H_U = descended G.\<close>
+        show ?thesis sorry \<comment> \<open>Theorem 22.2: G continuous + quotient \<pi>' \<Rightarrow> descended f continuous.
+             H_U = f on CU\<times>I. Topology: sub(C\<times>I)(CU\<times>I) = prod(sub U TU CU)(I_top).
+             All ingredients proved above.\<close>
       qed
       \<comment> \<open>(Old quotient descent code removed; replaced by pasting approach above.)\<close>
       \<comment> \<open>Paste via pasting_lemma_two_closed.\<close>
@@ -9258,6 +9259,8 @@ end
 
 
 
+ 
+ 
  
  
  
