@@ -4092,9 +4092,108 @@ using assms proof (induction n arbitrary: X TX p rule: less_induct)
                     (product_topology_on ?TWn ?TI)
                     (UNIV :: real set) top1_open_sets
                     (\<lambda>(x,t). (1 - t) * angle_n x + t * \<theta>p_n)"
-                  sorry \<comment> \<open>From hangle_n_cont + pi2 continuous + arithmetic of continuous maps.
-                     The map is (1-pi2) * (angle_n \<circ> pi1) + pi2 * \<theta>p_n.
-                     Requires bridging top1_open_sets with order_topology_on_UNIV.\<close>
+                proof -
+                  \<comment> \<open>Bridge: order_topology_on_UNIV = top1_open_sets for reals.\<close>
+                  have hTR_eq: "(order_topology_on_UNIV :: real set set) = top1_open_sets"
+                  proof (rule set_eqI)
+                    fix U :: "real set"
+                    show "U \<in> order_topology_on_UNIV \<longleftrightarrow> U \<in> top1_open_sets"
+                      using order_topology_on_UNIV_eq_HOL_open unfolding top1_open_sets_def
+                      by (by100 simp)
+                  qed
+                  let ?TR = "order_topology_on_UNIV :: real set set"
+                  have hTR: "is_topology_on (UNIV::real set) ?TR"
+                    by (rule order_topology_on_UNIV_is_topology_on)
+                  have hTWnI: "is_topology_on (W (n-1) \<times> I_set) (product_topology_on ?TWn ?TI)"
+                    by (rule product_topology_on_is_topology_on[OF hTWn hTI])
+                  \<comment> \<open>I_top = subspace_topology UNIV top1_open_sets I_set.\<close>
+                  have hItop_eq: "I_top = subspace_topology (UNIV::real set) top1_open_sets I_set"
+                    unfolding top1_unit_interval_topology_def top1_unit_interval_def
+                    by (by100 simp)
+                  \<comment> \<open>angle_n \<circ> pi1 continuous W(n-1)\<times>I \<rightarrow> UNIV (order_topology_on_UNIV).\<close>
+                  have hangle_pi1: "top1_continuous_map_on (W (n-1) \<times> I_set)
+                      (product_topology_on ?TWn ?TI) (UNIV::real set) ?TR (angle_n \<circ> pi1)"
+                  proof -
+                    have hpi1_cont: "top1_continuous_map_on (W (n-1) \<times> I_set)
+                        (product_topology_on ?TWn ?TI) (W (n-1)) ?TWn pi1"
+                      by (rule top1_continuous_pi1[OF hTWn hTI])
+                    have "top1_continuous_map_on (W (n-1) \<times> I_set)
+                        (product_topology_on ?TWn ?TI) (UNIV::real set) top1_open_sets
+                        (angle_n \<circ> pi1)"
+                      by (rule top1_continuous_map_on_comp[OF hpi1_cont hangle_n_cont])
+                    thus ?thesis unfolding hTR_eq .
+                  qed
+                  \<comment> \<open>pi2 continuous W(n-1)\<times>I \<rightarrow> I_set, then enlarge to UNIV.\<close>
+                  have hpi2_R: "top1_continuous_map_on (W (n-1) \<times> I_set)
+                      (product_topology_on ?TWn ?TI) (UNIV::real set) ?TR pi2"
+                  proof -
+                    have hpi2_I: "top1_continuous_map_on (W (n-1) \<times> I_set)
+                        (product_topology_on ?TWn ?TI) I_set I_top pi2"
+                      by (rule top1_continuous_pi2[OF hTWn hTI])
+                    have h1: "top1_continuous_map_on (W (n-1) \<times> I_set)
+                        (product_topology_on ?TWn ?TI) I_set
+                        (subspace_topology UNIV top1_open_sets I_set) pi2"
+                      using hpi2_I unfolding hItop_eq .
+                    have h2: "top1_continuous_map_on (W (n-1) \<times> I_set)
+                        (product_topology_on ?TWn ?TI) (UNIV::real set)
+                        (subspace_topology UNIV top1_open_sets UNIV) pi2"
+                      using top1_continuous_map_on_codomain_enlarge[OF h1]
+                      by (by100 simp)
+                    have h3: "top1_continuous_map_on (W (n-1) \<times> I_set)
+                        (product_topology_on ?TWn ?TI) (UNIV::real set) top1_open_sets pi2"
+                      using h2 unfolding subspace_topology_UNIV_self .
+                    thus ?thesis unfolding hTR_eq .
+                  qed
+                  \<comment> \<open>Constant 1 continuous.\<close>
+                  have hconst1: "top1_continuous_map_on (W (n-1) \<times> I_set)
+                      (product_topology_on ?TWn ?TI) (UNIV::real set) ?TR (\<lambda>_. 1::real)"
+                    using top1_continuous_map_on_const[OF hTWnI hTR UNIV_I]
+                    by (by100 simp)
+                  \<comment> \<open>Constant \<theta>p_n continuous.\<close>
+                  have hconst_\<theta>pn: "top1_continuous_map_on (W (n-1) \<times> I_set)
+                      (product_topology_on ?TWn ?TI) (UNIV::real set) ?TR (\<lambda>_. \<theta>p_n)"
+                    using top1_continuous_map_on_const[OF hTWnI hTR UNIV_I]
+                    by (by100 simp)
+                  \<comment> \<open>(1 - pi2) continuous.\<close>
+                  have h1_minus_t: "top1_continuous_map_on (W (n-1) \<times> I_set)
+                      (product_topology_on ?TWn ?TI) (UNIV::real set) ?TR
+                      (\<lambda>p. 1 - pi2 p)"
+                    by (rule top1_continuous_diff_real[OF hTWnI hconst1 hpi2_R])
+                  \<comment> \<open>(1 - pi2) * (angle_n \<circ> pi1) continuous.\<close>
+                  have hterm1: "top1_continuous_map_on (W (n-1) \<times> I_set)
+                      (product_topology_on ?TWn ?TI) (UNIV::real set) ?TR
+                      (\<lambda>p. (1 - pi2 p) * (angle_n \<circ> pi1) p)"
+                    by (rule top1_continuous_mul_real[OF hTWnI h1_minus_t hangle_pi1])
+                  \<comment> \<open>pi2 * \<theta>p_n continuous.\<close>
+                  have hterm2: "top1_continuous_map_on (W (n-1) \<times> I_set)
+                      (product_topology_on ?TWn ?TI) (UNIV::real set) ?TR
+                      (\<lambda>p. pi2 p * \<theta>p_n)"
+                    by (rule top1_continuous_mul_real[OF hTWnI hpi2_R hconst_\<theta>pn])
+                  \<comment> \<open>Sum: (1-t)*angle_n(x) + t*\<theta>p_n continuous (in order_topology_on_UNIV).\<close>
+                  have hsum_OT: "top1_continuous_map_on (W (n-1) \<times> I_set)
+                      (product_topology_on ?TWn ?TI) (UNIV::real set) ?TR
+                      (\<lambda>p. (1 - pi2 p) * (angle_n \<circ> pi1) p + pi2 p * \<theta>p_n)"
+                    by (rule top1_continuous_add_real[OF hTWnI hterm1 hterm2])
+                  \<comment> \<open>Switch to top1_open_sets via bridge.\<close>
+                  have hsum_OS: "top1_continuous_map_on (W (n-1) \<times> I_set)
+                      (product_topology_on ?TWn ?TI) (UNIV::real set) top1_open_sets
+                      (\<lambda>p. (1 - pi2 p) * (angle_n \<circ> pi1) p + pi2 p * \<theta>p_n)"
+                    using hsum_OT unfolding hTR_eq .
+                  \<comment> \<open>Rewrite the function to match the goal.\<close>
+                  have hfun_eq: "\<forall>p \<in> W (n-1) \<times> I_set.
+                      (1 - pi2 p) * (angle_n \<circ> pi1) p + pi2 p * \<theta>p_n =
+                      (case p of (x,t) \<Rightarrow> (1 - t) * angle_n x + t * \<theta>p_n)"
+                  proof (intro ballI)
+                    fix p assume "p \<in> W (n-1) \<times> I_set"
+                    obtain x t where hp: "p = (x, t)" by (cases p)
+                    show "(1 - pi2 p) * (angle_n \<circ> pi1) p + pi2 p * \<theta>p_n =
+                        (case p of (x,t) \<Rightarrow> (1 - t) * angle_n x + t * \<theta>p_n)"
+                      unfolding hp pi1_def pi2_def by (by100 simp)
+                  qed
+                  show ?thesis
+                    using iffD1[OF top1_continuous_map_on_cong[OF hfun_eq]] hsum_OS
+                    by (by100 blast)
+                qed
                 \<comment> \<open>Step C: Compose with R_to_S1: W(n-1) \<times> I \<rightarrow> S1.\<close>
                 have hR_S1: "top1_continuous_map_on (UNIV::real set) top1_open_sets
                     top1_S1 top1_S1_topology top1_R_to_S1"
