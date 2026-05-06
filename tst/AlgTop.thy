@@ -1377,8 +1377,210 @@ using assms proof (induction n arbitrary: X TX p rule: less_induct)
       define V_def where "V_def = (\<Union>\<alpha>\<in>{..<(n-1)}. W \<alpha>) \<union> C (n-1)"
       show ?thesis
       proof (rule that[of U_def V_def])
-        show "openin_on X TX U_def" sorry \<comment> \<open>U open: coherent topology.\<close>
-        show "openin_on X TX V_def" sorry \<comment> \<open>V open: coherent topology.\<close>
+        show "openin_on X TX U_def"
+        proof -
+          \<comment> \<open>U_def \<subseteq> X\<close>
+          have hU_sub: "U_def \<subseteq> X"
+          proof -
+            have h1: "(\<Union>\<alpha>\<in>{..<(n-1)}. C \<alpha>) \<subseteq> X"
+              using hX'_sub by (by100 blast)
+            have h2: "W (n-1) \<subseteq> C (n-1)" unfolding W_def by (by100 blast)
+            have h3: "C (n-1) \<subseteq> X" using hCn_sub by (by100 blast)
+            show ?thesis unfolding U_def_def using h1 h2 h3 by (by100 blast)
+          qed
+          \<comment> \<open>X - U_def \<subseteq> X\<close>
+          have hcompl_sub: "X - U_def \<subseteq> X" by (by100 blast)
+          \<comment> \<open>For each \<alpha> < n, C \<alpha> \<inter> (X - U_def) is closed in C \<alpha>\<close>
+          have hall: "\<forall>\<alpha>\<in>{..<n}. closedin_on (C \<alpha>) (subspace_topology X TX (C \<alpha>)) (C \<alpha> \<inter> (X - U_def))"
+          proof (intro ballI)
+            fix \<alpha> assume h\<alpha>: "\<alpha> \<in> {..<n}"
+            show "closedin_on (C \<alpha>) (subspace_topology X TX (C \<alpha>)) (C \<alpha> \<inter> (X - U_def))"
+            proof (cases "\<alpha> \<in> {..<(n-1)}")
+              case True
+              \<comment> \<open>C \<alpha> \<subseteq> U_def, so C \<alpha> \<inter> (X - U_def) = {}\<close>
+              have "C \<alpha> \<subseteq> (\<Union>\<beta>\<in>{..<(n-1)}. C \<beta>)" using True by (by100 blast)
+              hence "C \<alpha> \<subseteq> U_def" unfolding U_def_def by (by100 blast)
+              hence "C \<alpha> \<inter> (X - U_def) = {}" by (by100 blast)
+              moreover have "is_topology_on (C \<alpha>) (subspace_topology X TX (C \<alpha>))"
+              proof -
+                have "C \<alpha> \<subseteq> X" using hC_props h\<alpha> by (by100 blast)
+                thus ?thesis by (rule subspace_topology_is_topology_on[OF hTX])
+              qed
+              ultimately show ?thesis using closedin_empty by (by100 simp)
+            next
+              case False
+              hence h\<alpha>_eq: "\<alpha> = n - 1" using h\<alpha> by (by100 simp)
+              \<comment> \<open>C(n-1) \<inter> (X - U_def) = {q(n-1)}\<close>
+              have hCn_inter: "C (n-1) \<inter> (X - U_def) = {q (n-1)}"
+              proof -
+                \<comment> \<open>q(n-1) \<in> C(n-1)\<close>
+                have hq_in: "q (n-1) \<in> C (n-1)" using hq hn1_in by (by100 blast)
+                \<comment> \<open>q(n-1) \<notin> W(n-1)\<close>
+                have hq_not_W: "q (n-1) \<notin> W (n-1)" unfolding W_def by (by100 blast)
+                \<comment> \<open>q(n-1) \<notin> \<Union>{C \<beta> | \<beta> < n-1}: because C \<beta> \<inter> C(n-1) = {p} and q(n-1) \<noteq> p\<close>
+                have hq_ne_p: "q (n-1) \<noteq> p" using hq hn1_in by (by100 blast)
+                have hq_not_X': "q (n-1) \<notin> (\<Union>\<beta>\<in>{..<(n-1)}. C \<beta>)"
+                proof (rule ccontr)
+                  assume "\<not> q (n-1) \<notin> (\<Union>\<beta>\<in>{..<(n-1)}. C \<beta>)"
+                  hence "q (n-1) \<in> (\<Union>\<beta>\<in>{..<(n-1)}. C \<beta>)" by (by100 blast)
+                  then obtain \<beta> where h\<beta>: "\<beta> \<in> {..<(n-1)}" and hq\<beta>: "q (n-1) \<in> C \<beta>" by (by100 blast)
+                  have h\<beta>n: "\<beta> \<in> {..<n}" using h\<beta> hn2 by (by100 simp)
+                  have h\<beta>_ne: "\<beta> \<noteq> n - 1" using h\<beta> by (by100 simp)
+                  have "C \<beta> \<inter> C (n-1) = {p}" using hC_inter h\<beta>n hn1_in h\<beta>_ne by (by100 blast)
+                  hence "q (n-1) = p" using hq\<beta> hq_in by (by100 blast)
+                  thus False using hq_ne_p by (by100 blast)
+                qed
+                \<comment> \<open>So q(n-1) \<notin> U_def\<close>
+                have hq_not_U: "q (n-1) \<notin> U_def"
+                  unfolding U_def_def using hq_not_X' hq_not_W by (by100 blast)
+                \<comment> \<open>q(n-1) \<in> X\<close>
+                have hq_X: "q (n-1) \<in> X" using hq_in hCn_sub by (by100 blast)
+                \<comment> \<open>So q(n-1) \<in> C(n-1) \<inter> (X - U_def)\<close>
+                have hq_mem: "q (n-1) \<in> C (n-1) \<inter> (X - U_def)" using hq_in hq_X hq_not_U by (by100 blast)
+                \<comment> \<open>Conversely, if x \<in> C(n-1) \<inter> (X - U_def) then x = q(n-1)\<close>
+                moreover have "\<forall>x. x \<in> C (n-1) \<inter> (X - U_def) \<longrightarrow> x = q (n-1)"
+                proof (intro allI impI)
+                  fix x assume hx: "x \<in> C (n-1) \<inter> (X - U_def)"
+                  hence hx_Cn: "x \<in> C (n-1)" and hx_not_U: "x \<notin> U_def" by (by100 blast)+
+                  \<comment> \<open>x \<notin> W(n-1) = C(n-1) - {q(n-1)}, so x = q(n-1)\<close>
+                  have "x \<notin> W (n-1)" using hx_not_U unfolding U_def_def by (by100 blast)
+                  hence "x \<notin> C (n-1) - {q (n-1)}" unfolding W_def by (by100 blast)
+                  thus "x = q (n-1)" using hx_Cn by (by100 blast)
+                qed
+                ultimately show ?thesis by (by100 blast)
+              qed
+              \<comment> \<open>{q(n-1)} is closed in C(n-1) (Hausdorff)\<close>
+              have hCn_hausdorff: "is_hausdorff_on (C (n-1)) (subspace_topology X TX (C (n-1)))"
+                using conjunct2[OF conjunct2[OF Theorem_17_11]] hHausdorff hCn_sub by (by100 blast)
+              have hq_closed: "closedin_on (C (n-1)) (subspace_topology X TX (C (n-1))) {q (n-1)}"
+              proof -
+                have "q (n-1) \<in> C (n-1)" using hq hn1_in by (by100 blast)
+                thus ?thesis by (rule singleton_closed_in_hausdorff[OF hCn_hausdorff])
+              qed
+              show ?thesis using hCn_inter hq_closed h\<alpha>_eq by (by100 simp)
+            qed
+          qed
+          \<comment> \<open>By hC_weak: X - U_def is closed in X\<close>
+          have hclosed: "closedin_on X TX (X - U_def)"
+            using hC_weak hcompl_sub hall by (by100 blast)
+          \<comment> \<open>Hence U_def is open\<close>
+          have "X - (X - U_def) = U_def" using hU_sub by (by100 blast)
+          hence "U_def \<in> TX" using hclosed unfolding closedin_on_def by (by100 simp)
+          thus ?thesis unfolding openin_on_def using hU_sub by (by100 blast)
+        qed
+        show "openin_on X TX V_def"
+        proof -
+          \<comment> \<open>V_def \<subseteq> X\<close>
+          have hV_sub: "V_def \<subseteq> X"
+          proof -
+            have h1: "\<forall>\<alpha>\<in>{..<(n-1)}. W \<alpha> \<subseteq> X"
+            proof (intro ballI)
+              fix \<alpha> assume h\<alpha>: "\<alpha> \<in> {..<(n-1)}"
+              have h\<alpha>n: "\<alpha> \<in> {..<n}" using h\<alpha> hn2 by (by100 simp)
+              have "W \<alpha> \<subseteq> C \<alpha>" unfolding W_def by (by100 blast)
+              thus "W \<alpha> \<subseteq> X" using hC_props h\<alpha>n by (by100 blast)
+            qed
+            hence "(\<Union>\<alpha>\<in>{..<(n-1)}. W \<alpha>) \<subseteq> X" by (by100 blast)
+            moreover have "C (n-1) \<subseteq> X" using hCn_sub by (by100 blast)
+            ultimately show ?thesis unfolding V_def_def by (by100 blast)
+          qed
+          \<comment> \<open>X - V_def \<subseteq> X\<close>
+          have hcompl_sub: "X - V_def \<subseteq> X" by (by100 blast)
+          \<comment> \<open>For each \<alpha> < n, C \<alpha> \<inter> (X - V_def) is closed in C \<alpha>\<close>
+          have hall: "\<forall>\<alpha>\<in>{..<n}. closedin_on (C \<alpha>) (subspace_topology X TX (C \<alpha>)) (C \<alpha> \<inter> (X - V_def))"
+          proof (intro ballI)
+            fix \<alpha> assume h\<alpha>: "\<alpha> \<in> {..<n}"
+            show "closedin_on (C \<alpha>) (subspace_topology X TX (C \<alpha>)) (C \<alpha> \<inter> (X - V_def))"
+            proof (cases "\<alpha> = n - 1")
+              case True
+              \<comment> \<open>C(n-1) \<subseteq> V_def, so C(n-1) \<inter> (X - V_def) = {}\<close>
+              have "C (n-1) \<subseteq> V_def" unfolding V_def_def by (by100 blast)
+              hence "C (n-1) \<inter> (X - V_def) = {}" by (by100 blast)
+              moreover have "is_topology_on (C (n-1)) (subspace_topology X TX (C (n-1)))"
+                by (rule subspace_topology_is_topology_on[OF hTX hCn_sub])
+              ultimately show ?thesis using closedin_empty True by (by100 simp)
+            next
+              case False
+              hence h\<alpha>_lt: "\<alpha> \<in> {..<(n-1)}" using h\<alpha> by (by100 simp)
+              \<comment> \<open>C \<alpha> \<inter> (X - V_def) = {q \<alpha>}\<close>
+              have hC\<alpha>_inter: "C \<alpha> \<inter> (X - V_def) = {q \<alpha>}"
+              proof -
+                \<comment> \<open>q \<alpha> \<in> C \<alpha>\<close>
+                have hq_in: "q \<alpha> \<in> C \<alpha>" using hq h\<alpha> by (by100 blast)
+                \<comment> \<open>q \<alpha> \<notin> W \<alpha>\<close>
+                have hq_not_W: "q \<alpha> \<notin> W \<alpha>" unfolding W_def by (by100 blast)
+                \<comment> \<open>q \<alpha> \<notin> C(n-1): C \<alpha> \<inter> C(n-1) = {p} and q \<alpha> \<noteq> p\<close>
+                have hq_ne_p: "q \<alpha> \<noteq> p" using hq h\<alpha> by (by100 blast)
+                have hq_not_Cn: "q \<alpha> \<notin> C (n-1)"
+                proof (rule ccontr)
+                  assume "\<not> q \<alpha> \<notin> C (n-1)"
+                  hence "q \<alpha> \<in> C (n-1)" by (by100 blast)
+                  hence "q \<alpha> \<in> C \<alpha> \<inter> C (n-1)" using hq_in by (by100 blast)
+                  moreover have "C \<alpha> \<inter> C (n-1) = {p}" using hC_inter h\<alpha> hn1_in False by (by100 blast)
+                  ultimately have "q \<alpha> = p" by (by100 blast)
+                  thus False using hq_ne_p by (by100 blast)
+                qed
+                \<comment> \<open>q \<alpha> \<notin> W \<beta> for \<beta> < n-1, \<beta> \<noteq> \<alpha>: because q \<alpha> \<notin> C \<beta> (as C \<alpha> \<inter> C \<beta> = {p})\<close>
+                have hq_not_other_W: "\<forall>\<beta>\<in>{..<(n-1)}. \<beta> \<noteq> \<alpha> \<longrightarrow> q \<alpha> \<notin> W \<beta>"
+                proof (intro ballI impI)
+                  fix \<beta> assume h\<beta>: "\<beta> \<in> {..<(n-1)}" and hne: "\<beta> \<noteq> \<alpha>"
+                  have h\<beta>n: "\<beta> \<in> {..<n}" using h\<beta> hn2 by (by100 simp)
+                  have "C \<alpha> \<inter> C \<beta> = {p}" using hC_inter h\<alpha> h\<beta>n hne by (by100 blast)
+                  hence "q \<alpha> \<notin> C \<beta>" using hq_in hq_ne_p by (by100 blast)
+                  thus "q \<alpha> \<notin> W \<beta>" unfolding W_def by (by100 blast)
+                qed
+                \<comment> \<open>Combine: q \<alpha> \<notin> W \<beta> for ALL \<beta> < n-1\<close>
+                have hq_not_all_W: "\<forall>\<beta>\<in>{..<(n-1)}. q \<alpha> \<notin> W \<beta>"
+                proof (intro ballI)
+                  fix \<beta> assume h\<beta>: "\<beta> \<in> {..<(n-1)}"
+                  show "q \<alpha> \<notin> W \<beta>"
+                  proof (cases "\<beta> = \<alpha>")
+                    case True thus ?thesis using hq_not_W by (by100 simp)
+                  next
+                    case False thus ?thesis using hq_not_other_W h\<beta> by (by100 blast)
+                  qed
+                qed
+                hence hq_not_union_W: "q \<alpha> \<notin> (\<Union>\<beta>\<in>{..<(n-1)}. W \<beta>)" by (by100 blast)
+                \<comment> \<open>So q \<alpha> \<notin> V_def\<close>
+                have hq_not_V: "q \<alpha> \<notin> V_def"
+                  unfolding V_def_def using hq_not_union_W hq_not_Cn by (by100 blast)
+                \<comment> \<open>q \<alpha> \<in> X\<close>
+                have hq_X: "q \<alpha> \<in> X" using hq_in hC_props h\<alpha> by (by100 blast)
+                \<comment> \<open>So q \<alpha> \<in> C \<alpha> \<inter> (X - V_def)\<close>
+                have hq_mem: "q \<alpha> \<in> C \<alpha> \<inter> (X - V_def)" using hq_in hq_X hq_not_V by (by100 blast)
+                \<comment> \<open>Conversely, if x \<in> C \<alpha> \<inter> (X - V_def) then x = q \<alpha>\<close>
+                moreover have "\<forall>x. x \<in> C \<alpha> \<inter> (X - V_def) \<longrightarrow> x = q \<alpha>"
+                proof (intro allI impI)
+                  fix x assume hx: "x \<in> C \<alpha> \<inter> (X - V_def)"
+                  hence hx_C: "x \<in> C \<alpha>" and hx_not_V: "x \<notin> V_def" by (by100 blast)+
+                  \<comment> \<open>x \<notin> W \<alpha> (since W \<alpha> \<subseteq> V_def)\<close>
+                  have "W \<alpha> \<subseteq> V_def" unfolding V_def_def using h\<alpha>_lt by (by100 blast)
+                  hence "x \<notin> W \<alpha>" using hx_not_V by (by100 blast)
+                  hence "x \<notin> C \<alpha> - {q \<alpha>}" unfolding W_def by (by100 blast)
+                  thus "x = q \<alpha>" using hx_C by (by100 blast)
+                qed
+                ultimately show ?thesis by (by100 blast)
+              qed
+              \<comment> \<open>{q \<alpha>} is closed in C \<alpha> (Hausdorff)\<close>
+              have "C \<alpha> \<subseteq> X" using hC_props h\<alpha> by (by100 blast)
+              hence hC\<alpha>_hausdorff: "is_hausdorff_on (C \<alpha>) (subspace_topology X TX (C \<alpha>))"
+                using conjunct2[OF conjunct2[OF Theorem_17_11]] hHausdorff by (by100 blast)
+              have hq_closed: "closedin_on (C \<alpha>) (subspace_topology X TX (C \<alpha>)) {q \<alpha>}"
+              proof -
+                have "q \<alpha> \<in> C \<alpha>" using hq h\<alpha> by (by100 blast)
+                thus ?thesis by (rule singleton_closed_in_hausdorff[OF hC\<alpha>_hausdorff])
+              qed
+              show ?thesis using hC\<alpha>_inter hq_closed by (by100 simp)
+            qed
+          qed
+          \<comment> \<open>By hC_weak: X - V_def is closed in X\<close>
+          have hclosed: "closedin_on X TX (X - V_def)"
+            using hC_weak hcompl_sub hall by (by100 blast)
+          \<comment> \<open>Hence V_def is open\<close>
+          have "X - (X - V_def) = V_def" using hV_sub by (by100 blast)
+          hence "V_def \<in> TX" using hclosed unfolding closedin_on_def by (by100 simp)
+          thus ?thesis unfolding openin_on_def using hV_sub by (by100 blast)
+        qed
         show "U_def \<union> V_def = X"
         proof -
           have "U_def \<union> V_def = (\<Union>\<alpha>\<in>{..<(n-1)}. C \<alpha>) \<union> C (n-1)"
