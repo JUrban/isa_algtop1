@@ -299,7 +299,30 @@ proof -
     finally show ?thesis .
   qed
   have hpi_phi_ker: "top1_group_kernel_on G (?\<pi>' eG') (?\<pi>' \<circ> \<phi>) = N"
-    sorry \<comment> \<open>kernel = {g \<in> G | \<pi>'(\<phi>(g)) = \<pi>'(eG')} = {g \<in> G | \<phi>(g) \<in> \<phi>(N)} = N (injectivity).\<close>
+  proof -
+    have hpi_ker: "top1_group_kernel_on G' (?\<pi>' eG') ?\<pi>' = \<phi> ` N"
+      using quotient_projection_properties[OF assms(2) hphiN_normal] by (by100 blast)
+    have hphi_inj: "inj_on \<phi> G" using assms(3) unfolding top1_group_iso_on_def bij_betw_def by (by100 blast)
+    have hN_sub_G: "N \<subseteq> G" using assms(4) unfolding top1_normal_subgroup_on_def by (by100 blast)
+    \<comment> \<open>kernel(\<pi>'\<circ>\<phi>) = {g\<in>G. \<pi>'(\<phi>(g)) = \<pi>'(eG')} = {g\<in>G. \<phi>(g) \<in> \<phi>(N)} = N.\<close>
+    show ?thesis unfolding top1_group_kernel_on_def comp_def
+    proof (rule set_eqI, rule iffI)
+      fix g assume "g \<in> {x \<in> G. ?\<pi>' (\<phi> x) = ?\<pi>' eG'}"
+      hence hg: "g \<in> G" and "?\<pi>' (\<phi> g) = ?\<pi>' eG'" by (by100 auto)+
+      hence "\<phi> g \<in> {x \<in> G'. ?\<pi>' x = ?\<pi>' eG'}" using hphi_hom unfolding top1_group_hom_on_def by (by100 blast)
+      hence "\<phi> g \<in> \<phi> ` N" using hpi_ker unfolding top1_group_kernel_on_def by (by100 blast)
+      then obtain n where "n \<in> N" "\<phi> n = \<phi> g" by (by100 auto)
+      hence "n = g" using inj_onD[OF hphi_inj] hN_sub_G hg by (by100 blast)
+      thus "g \<in> N" using \<open>n \<in> N\<close> by (by100 simp)
+    next
+      fix g assume "g \<in> N"
+      hence "g \<in> G" using hN_sub_G by (by100 blast)
+      have "\<phi> g \<in> \<phi> ` N" using \<open>g \<in> N\<close> by (by100 blast)
+      hence "\<phi> g \<in> {x \<in> G'. ?\<pi>' x = ?\<pi>' eG'}" using hpi_ker unfolding top1_group_kernel_on_def by (by100 blast)
+      hence "?\<pi>' (\<phi> g) = ?\<pi>' eG'" by (by100 blast)
+      thus "g \<in> {x \<in> G. ?\<pi>' (\<phi> x) = ?\<pi>' eG'}" using \<open>g \<in> G\<close> by (by100 blast)
+    qed
+  qed
   \<comment> \<open>Step 4: By first isomorphism theorem.\<close>
   have "top1_groups_isomorphic_on
       (top1_quotient_group_carrier_on G' mulG' (\<phi> ` N)) (top1_quotient_group_mul_on mulG')
@@ -9596,6 +9619,8 @@ end
 
 
 
+ 
+ 
  
  
  
