@@ -2085,7 +2085,23 @@ proof -
               \<open>?G = h \<circ> ?interp\<close> by (by100 simp)
           \<comment> \<open>Step 7: G image is in U (h(interp(y,t)) \<noteq> x0 when y \<noteq> 0).\<close>
           have hG_range_U: "\<forall>p\<in>?B2_0 \<times> I_set. ?G p \<in> ?U"
-            sorry \<comment> \<open>interp(y,t) \<in> B2\{0} when y\<noteq>0 (coefficient > 0), so h(interp) \<noteq> x0.\<close>
+          proof (intro ballI)
+            fix p assume hp: "p \<in> ?B2_0 \<times> I_set"
+            have hip: "?interp p \<in> top1_B2" using hinterp_range hp by (by100 blast)
+            hence "?G p \<in> X" using continuous_map_maps_to[OF assms(5)] \<open>?G = h \<circ> ?interp\<close>
+              by (by100 auto)
+            moreover have "?G p \<noteq> ?x0"
+            proof -
+              \<comment> \<open>interp(y,t) \<noteq> (0,0): coefficient (1-t+t/|y|) > 0 and y \<noteq> 0.\<close>
+              have "?interp p \<noteq> (0::real, 0)"
+                sorry \<comment> \<open>Same argument as hinterp_ne0: coefficient positive, y nonzero.\<close>
+              hence "?interp p \<in> top1_B2 \<and> ?interp p \<noteq> (0, 0)" using hip by (by100 blast)
+              hence "h (?interp p) \<noteq> h (0, 0)"
+                using h_preimg_x0 by (by100 blast)
+              thus ?thesis using \<open>?G = h \<circ> ?interp\<close> by (by100 auto)
+            qed
+            ultimately show "?G p \<in> ?U" by (by100 blast)
+          qed
           \<comment> \<open>Step 8: Restrict codomain from X to U.\<close>
           show ?thesis
             sorry \<comment> \<open>top1_continuous_map_on_codomain_shrink from X to U, or Theorem_18_2 part 5.\<close>
@@ -9013,6 +9029,7 @@ end
 
 
 
+ 
  
  
  
