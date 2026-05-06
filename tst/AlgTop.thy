@@ -1820,11 +1820,46 @@ proof -
               using \<open>U_loc \<times> I_set - ?CU \<times> I_set = (U_loc - ?CU) \<times> I_set\<close> by (by100 simp)
           qed
           show "A \<times> I_set \<union> ?CU \<times> I_set = UI" unfolding UI_def U_loc_def using hcover by (by100 blast)
-          show "\<forall>x\<in>UI. H_U x \<in> U_loc" sorry \<comment> \<open>Range of H_U.\<close>
+          show "\<forall>x\<in>UI. H_U x \<in> U_loc"
+          proof
+            fix xt assume "xt \<in> UI"
+            hence hx_U: "fst xt \<in> U_loc" and ht_I: "snd xt \<in> I_set"
+              unfolding UI_def by (by100 auto)+
+            show "H_U xt \<in> U_loc"
+            proof (cases "fst xt \<in> A")
+              case True
+              hence "H_U xt = fst xt" unfolding H_U_def by (cases xt) (by100 simp)
+              thus ?thesis using hx_U by (by100 simp)
+            next
+              case False
+              hence "fst xt \<in> ?U" using hx_U hU_eq by (by100 simp)
+              \<comment> \<open>H_U maps into U: either via hH_0 (t=0 gives x) or hH_1 (t=1 gives A\<subseteq>U)
+                 or intermediate (h of interpolation stays in h(B2) which is in X).\<close>
+              show ?thesis sorry \<comment> \<open>H_U maps into U_loc for non-A points.\<close>
+            qed
+          qed
           show "top1_continuous_map_on (A \<times> I_set) (subspace_topology UI TUI (A \<times> I_set)) U_loc TU_loc H_U"
-            sorry \<comment> \<open>From hH_cont_A' with topology rewrite.\<close>
+          proof -
+            have "subspace_topology UI TUI (A \<times> I_set)
+                = product_topology_on (subspace_topology U_loc TU_loc A) (subspace_topology I_set I_top I_set)"
+              unfolding UI_def TUI_def by (rule Theorem_16_3[OF hTopU_loc hTI, symmetric])
+            moreover have "subspace_topology I_set I_top I_set = I_top"
+              sorry \<comment> \<open>I_top is a topology on I_set with T \<subseteq> Pow I_set.\<close>
+            ultimately have "subspace_topology UI TUI (A \<times> I_set)
+                = product_topology_on (subspace_topology U_loc TU_loc A) I_top" by (by100 simp)
+            thus ?thesis using hH_cont_A unfolding hU_eq hTU_eq by (by100 simp)
+          qed
           show "top1_continuous_map_on (?CU \<times> I_set) (subspace_topology UI TUI (?CU \<times> I_set)) U_loc TU_loc H_U"
-            sorry \<comment> \<open>From hH_cont_CU with topology rewrite.\<close>
+          proof -
+            have "subspace_topology UI TUI (?CU \<times> I_set)
+                = product_topology_on (subspace_topology U_loc TU_loc ?CU) (subspace_topology I_set I_top I_set)"
+              unfolding UI_def TUI_def by (rule Theorem_16_3[OF hTopU_loc hTI, symmetric])
+            moreover have "subspace_topology I_set I_top I_set = I_top"
+              sorry \<comment> \<open>Same as above: I_top is subspace-self.\<close>
+            ultimately have "subspace_topology UI TUI (?CU \<times> I_set)
+                = product_topology_on (subspace_topology U_loc TU_loc ?CU) I_top" by (by100 simp)
+            thus ?thesis using hH_cont_CU unfolding hU_eq hTU_eq sorry
+          qed
         qed
         thus ?thesis unfolding UI_def TUI_def U_loc_def TU_loc_def by (by100 simp)
       qed
