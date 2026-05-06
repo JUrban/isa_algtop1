@@ -1844,7 +1844,11 @@ proof -
                 = product_topology_on (subspace_topology U_loc TU_loc A) (subspace_topology I_set I_top I_set)"
               unfolding UI_def TUI_def by (rule Theorem_16_3[OF hTopU_loc hTI, symmetric])
             moreover have "subspace_topology I_set I_top I_set = I_top"
-              sorry \<comment> \<open>I_top is a topology on I_set with T \<subseteq> Pow I_set.\<close>
+            proof (rule subspace_topology_self, intro ballI)
+              fix V assume "V \<in> I_top"
+              thus "V \<subseteq> I_set" unfolding top1_unit_interval_topology_def subspace_topology_def
+                by (by100 blast)
+            qed
             ultimately have "subspace_topology UI TUI (A \<times> I_set)
                 = product_topology_on (subspace_topology U_loc TU_loc A) I_top" by (by100 simp)
             thus ?thesis using hH_cont_A unfolding hU_eq hTU_eq by (by100 simp)
@@ -1855,10 +1859,15 @@ proof -
                 = product_topology_on (subspace_topology U_loc TU_loc ?CU) (subspace_topology I_set I_top I_set)"
               unfolding UI_def TUI_def by (rule Theorem_16_3[OF hTopU_loc hTI, symmetric])
             moreover have "subspace_topology I_set I_top I_set = I_top"
-              sorry \<comment> \<open>Same as above: I_top is subspace-self.\<close>
-            ultimately have "subspace_topology UI TUI (?CU \<times> I_set)
+            proof (rule subspace_topology_self, intro ballI)
+              fix V assume "V \<in> I_top"
+              thus "V \<subseteq> I_set" unfolding top1_unit_interval_topology_def subspace_topology_def
+                by (by100 blast)
+            qed
+            ultimately have hTCUI_eq: "subspace_topology UI TUI (?CU \<times> I_set)
                 = product_topology_on (subspace_topology U_loc TU_loc ?CU) I_top" by (by100 simp)
-            thus ?thesis using hH_cont_CU unfolding hU_eq hTU_eq sorry
+            show ?thesis using hH_cont_CU hTCUI_eq unfolding hU_eq hTU_eq
+              sorry \<comment> \<open>Pure topology rewrite: substitute hTCUI_eq into goal. Simp timeout.\<close>
           qed
         qed
         thus ?thesis unfolding UI_def TUI_def U_loc_def TU_loc_def by (by100 simp)
