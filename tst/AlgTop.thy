@@ -2470,12 +2470,36 @@ proof -
           qed
           ultimately show ?thesis by (by100 simp)
         qed
-        \<comment> \<open>Theorem 22.2 descent: G continuous \<Leftrightarrow> descended map continuous.\<close>
-        show ?thesis sorry \<comment> \<open>Theorem_22_2 descent. All ingredients proved:
-             h\<pi>'_quot (quotient), hG_cont, hG_range_U, hG_fiber, htop_CUI.
-             Remaining: extract f from Theorem_22_2, show H_U = f, apply cong.
-             The obtain from Theorem_22_2 and the H_U=f equality need larger by100 budget
-             or define-opaque approach for the lambda terms.\<close>
+        \<comment> \<open>Direct proof via quotient open-set characterization.\<close>
+        \<comment> \<open>V \<in> TU \<Rightarrow> {p\<in>CU\<times>I. H_U p \<in> V} open. By quotient: \<leftrightarrow> G\<inverse>(V) open. G continuous \<Rightarrow> \<checkmark>.\<close>
+        show ?thesis unfolding htop_CUI[symmetric] top1_continuous_map_on_def
+        proof (intro conjI ballI)
+          fix p assume "p \<in> ?CU \<times> I_set"
+          show "H_U p \<in> ?U" sorry \<comment> \<open>H_U maps CU\<times>I to U (from range proof).\<close>
+        next
+          fix V assume hV: "V \<in> ?TU"
+          \<comment> \<open>Need: {p\<in>CU\<times>I. H_U p \<in> V} \<in> sub(C\<times>I)(prod TC I_top)(CU\<times>I).\<close>
+          \<comment> \<open>By quotient property of \<pi>': equivalent to \<pi>'\<inverse>({p. H_U p \<in> V}) open in B2_0\<times>I.\<close>
+          let ?preimg_HU = "{p \<in> ?CU \<times> I_set. H_U p \<in> V}"
+          have "?preimg_HU \<subseteq> ?CU \<times> I_set" by (by100 blast)
+          \<comment> \<open>\<pi>'\<inverse>(preimg_HU) = {q \<in> B2_0\<times>I. H_U(\<pi>I q) \<in> V} = {q \<in> B2_0\<times>I. G q \<in> V}.\<close>
+          have hpreimg_eq: "{q \<in> ?B2_0 \<times> I_set. ?\<pi>I q \<in> ?preimg_HU} =
+              {q \<in> ?B2_0 \<times> I_set. ?G q \<in> V}"
+            sorry \<comment> \<open>H_U(\<pi>I q) = G q for q \<in> B2_0\<times>I (proved above modulo sorry).\<close>
+          \<comment> \<open>G continuous + V \<in> TU \<Rightarrow> G\<inverse>(V) open in B2_0\<times>I.\<close>
+          have hG_preimg_open: "{q \<in> ?B2_0 \<times> I_set. ?G q \<in> V} \<in>
+              subspace_topology (top1_B2 \<times> I_set) (product_topology_on top1_B2_topology I_top)
+                (?B2_0 \<times> I_set)"
+            using hG_cont hV unfolding top1_continuous_map_on_def by (by100 blast)
+          \<comment> \<open>By quotient: preimg open \<Rightarrow> set open in CU\<times>I.\<close>
+          have hpreimg_piI_open: "{q \<in> ?B2_0 \<times> I_set. ?\<pi>I q \<in> ?preimg_HU} \<in>
+              subspace_topology (top1_B2 \<times> I_set) (product_topology_on top1_B2_topology I_top)
+                (?B2_0 \<times> I_set)"
+            using hG_preimg_open hpreimg_eq by (by100 simp)
+          show "?preimg_HU \<in> subspace_topology (?C \<times> I_set) (product_topology_on ?TC I_top) (?CU \<times> I_set)"
+            using h\<pi>'_quot hpreimg_piI_open \<open>?preimg_HU \<subseteq> ?CU \<times> I_set\<close>
+            unfolding top1_quotient_map_on_def by (by100 blast)
+        qed
       qed
       \<comment> \<open>(Old quotient descent code removed; replaced by pasting approach above.)\<close>
       \<comment> \<open>Paste via pasting_lemma_two_closed.\<close>
@@ -9347,6 +9371,12 @@ end
 
 
 
+ 
+ 
+ 
+ 
+ 
+ 
  
  
  
