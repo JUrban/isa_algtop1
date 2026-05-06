@@ -2017,8 +2017,8 @@ proof -
         have h\<pi>I_quot: "top1_quotient_map_on (top1_B2 \<times> I_set)
             (product_topology_on top1_B2_topology I_top)
             (?C \<times> I_set) (product_topology_on ?TC I_top) ?\<pi>I"
-          sorry \<comment> \<open>Closed + continuous + surjective \<Rightarrow> quotient.
-                   From h\<pi>I_closed, h\<pi>I_cont, surjective (C = h ` B2).\<close>
+          sorry \<comment> \<open>Closed continuous surjection = quotient. From hπI_closed, hπI_cont.
+                   Proof: V open iff complement-preimage closed, closed map sends to closed, surjectivity.\<close>
         have h\<pi>'_quot: "top1_quotient_map_on (?B2_0 \<times> I_set)
             (subspace_topology (top1_B2 \<times> I_set) (product_topology_on top1_B2_topology I_top)
               (?B2_0 \<times> I_set))
@@ -9178,6 +9178,11 @@ end
 
 
 
+ 
+ 
+ 
+ 
+ 
  
  
  
