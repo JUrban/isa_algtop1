@@ -31,7 +31,8 @@ while i < len(lines):
             l = lines[j].rstrip()
             stmt.append(l.strip())
             ls = l.strip()
-            if any(ls.startswith(k) for k in ['proof','sorry','oops','by ','unfolding','using']) and j > i:
+            if any(ls.startswith(k) for k in ['proof','sorry','oops','by ','unfolding','using',
+                    'lemma','theorem','corollary','definition','text','section','subsection','end']) and j > i:
                 break
             j += 1
         # flatten to one line
@@ -43,14 +44,43 @@ while i < len(lines):
             sig = shows_m.group(1)
             if assumes_m:
                 sig = assumes_m.group(1)[:100] + ' ==> ' + sig
+        elif kind == 'definition':
+            # For definitions, prefer the where "..." clause (the body)
+            where_m = re.search(r'where\s+"([^"]{1,500})', flat)
+            if where_m:
+                sig = where_m.group(1)
+            else:
+                # Fall back to type signature
+                type_m = re.search(r'::\s+"([^"]{1,200})', flat)
+                sig = type_m.group(1) if type_m else flat[:300]
         else:
             def_m = re.search(r'"([^"]{1,400})', flat)
             sig = def_m.group(1) if def_m else flat[:300]
-        # strip Isabelle unicode escapes for searchability
-        sig = re.sub(r'\\<(\w+)>', r'\1', sig)
-        sig = sig.replace('\n', ' ')
-        if len(sig) > 400:
-            sig = sig[:397] + '...'
+        # Map Isabelle unicode escapes to readable ASCII
+        sym_map = {
+            'forall': 'ALL ', 'exists': 'EX ', 'nexists': '~EX ',
+            'in': ' : ', 'notin': ' ~: ', 'subseteq': ' <= ',
+            'subset': ' < ', 'supseteq': ' >= ',
+            'union': ' Un ', 'inter': ' Int ', 'Union': 'UN', 'Inter': 'IN',
+            'Rightarrow': ' => ', 'Longrightarrow': ' ==> ',
+            'longrightarrow': ' --> ', 'longleftrightarrow': ' <-> ',
+            'and': ' & ', 'or': ' | ', 'not': '~',
+            'lambda': '%', 'Lambda': '%',
+            'equiv': ' == ', 'noteq': ' ~= ',
+            'le': ' <= ', 'ge': ' >= ', 'times': ' * ',
+            'circ': ' o ', 'lbrakk': '[', 'rbrakk': ']',
+            'open': '', 'close': '',
+            'pi': 'pi', 'sigma': 'sigma', 'tau': 'tau',
+            'alpha': 'a', 'beta': 'b', 'gamma': 'g',
+            'iota': 'iota', 'phi': 'phi', 'Phi': 'Phi', 'Psi': 'Psi',
+        }
+        def replace_sym(m):
+            name = m.group(1)
+            return sym_map.get(name, name)
+        sig = re.sub(r'\\<(\w+)>', replace_sym, sig)
+        sig = re.sub(r'\s+', ' ', sig).strip()
+        if len(sig) > 500:
+            sig = sig[:497] + '...'
         print(f'{f}:{i+1} {kind} {name} :: {sig}')
     i += 1
 PYEND
