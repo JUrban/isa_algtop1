@@ -1770,132 +1770,36 @@ proof -
       have hH_cont_CU: "top1_continuous_map_on (?CU \<times> I_set)
           (product_topology_on (subspace_topology ?U ?TU ?CU) I_top) ?U ?TU H_U"
       proof -
-        let ?B2_0 = "top1_B2 - {(0::real, 0::real)}"
-        let ?TB2_0 = "subspace_topology top1_B2 top1_B2_topology ?B2_0"
-        \<comment> \<open>g(y,t) = h((1-t)*y + t*y/|y|) is the radial interpolation on B2\{0} \<times> I.\<close>
-        let ?g = "\<lambda>(y, t). h ((1 - t) * fst y + t * fst y / ?norm y,
-                              (1 - t) * snd y + t * snd y / ?norm y)"
-        \<comment> \<open>Step 1: g is continuous on B2\{0} \<times> I.\<close>
-        have hg_cont: "top1_continuous_map_on (?B2_0 \<times> I_set)
-            (product_topology_on ?TB2_0 I_top) X TX ?g"
-          sorry \<comment> \<open>Composition: radial interpolation is continuous (no division by zero
-                   since B2\{0} avoids origin), then compose with h continuous.\<close>
-        \<comment> \<open>Step 2: CU = h(B2\{0}), and h is a quotient map B2\{0} \<rightarrow> CU.\<close>
-        have hCU_eq: "?CU = h ` ?B2_0"
-        proof -
-          have hS1_sub_B2: "top1_S1 \<subseteq> top1_B2" unfolding top1_S1_def top1_B2_def by (by100 auto)
-          have "h ` top1_B2 = h ` (top1_B2 - top1_S1) \<union> h ` top1_S1"
-            using hS1_sub_B2 by (by100 auto)
-          also have "\<dots> = (X - A) \<union> h ` top1_S1" using hsurj_D by (by100 simp)
-          finally have hC_eq: "h ` top1_B2 = (X - A) \<union> h ` top1_S1" .
-          \<comment> \<open>Only (0,0) in B2 maps to x0 (h injective on Int, h(S1)\<subseteq>A but x0\<notin>A).\<close>
-          have h_preimg_x0: "h -` {?x0} \<inter> top1_B2 = {(0, 0)}"
-          proof (rule set_eqI, rule iffI)
-            fix y assume "y \<in> h -` {?x0} \<inter> top1_B2"
-            hence hy_B2: "y \<in> top1_B2" and hy_eq: "h y = ?x0" by (by100 auto)+
-            show "y \<in> {(0, 0)}"
-            proof (cases "y \<in> top1_S1")
-              case True
-              hence "h y \<in> A" using assms(8) by (by100 blast)
-              hence "?x0 \<in> A" using hy_eq by (by100 simp)
-              thus ?thesis using hx0_notin_A by (by100 blast)
-            next
-              case False
-              hence hy_D: "y \<in> top1_B2 - top1_S1" using hy_B2 by (by100 blast)
-              hence "y = (0, 0)"
-                using inj_on_eq_iff[OF hinj_D hy_D h00_intB2] hy_eq by (by100 simp)
-              thus ?thesis by (by100 simp)
-            qed
-          next
-            fix y assume "y \<in> {(0::real, 0::real)}"
-            thus "y \<in> h -` {?x0} \<inter> top1_B2" using h00_B2 by (by100 simp)
-          qed
-          show ?thesis
-          proof (rule set_eqI, rule iffI)
-            fix x assume "x \<in> ?CU"
-            hence hxC: "x \<in> h ` top1_B2" and hxU: "x \<in> ?U" by (by100 auto)+
-            then obtain y where hy: "y \<in> top1_B2" "h y = x" by (by100 blast)
-            have "y \<noteq> (0, 0)" using hy hxU by (by100 auto)
-            hence "y \<in> ?B2_0" using hy(1) by (by100 blast)
-            thus "x \<in> h ` ?B2_0" using hy(2) by (by100 blast)
-          next
-            fix x assume "x \<in> h ` ?B2_0"
-            then obtain y where hy: "y \<in> ?B2_0" "h y = x" by (by100 blast)
-            have "y \<in> top1_B2" using hy(1) by (by100 blast)
-            hence "x \<in> h ` top1_B2" using hy(2) by (by100 blast)
-            moreover have "x \<noteq> ?x0"
-            proof
-              assume "x = ?x0"
-              hence "h y = ?x0" using hy(2) by (by100 simp)
-              hence "y \<in> h -` {?x0} \<inter> top1_B2" using \<open>y \<in> top1_B2\<close> by (by100 blast)
-              hence "y = (0, 0)" using h_preimg_x0 by (by100 blast)
-              thus False using hy(1) by (by100 blast)
-            qed
-            moreover have "x \<in> X"
-              using continuous_map_maps_to[OF assms(5) \<open>y \<in> top1_B2\<close>] hy(2) by (by100 simp)
-            ultimately show "x \<in> ?CU" by (by100 blast)
-          qed
-        qed
-        have hh_quot_B20: "top1_quotient_map_on ?B2_0 ?TB2_0 ?CU (subspace_topology ?U ?TU ?CU) h"
-          sorry \<comment> \<open>h: B2\<rightarrow>h(B2) is quotient (compact\<rightarrow>Hausdorff). Removing point (0,0)\<mapsto>x0
-                   preserves quotient property (sole preimage). Hence h: B2\{0}\<rightarrow>CU is quotient.\<close>
-        \<comment> \<open>Step 3: g respects h-fibers on B2\{0}.\<close>
-        have hg_fiber: "\<forall>y1\<in>?B2_0. \<forall>y2\<in>?B2_0. h y1 = h y2 \<longrightarrow>
-            (\<forall>t\<in>I_set. ?g (y1, t) = ?g (y2, t))"
-        proof (intro ballI impI)
-          fix y1 y2 t assume hy1: "y1 \<in> ?B2_0" and hy2: "y2 \<in> ?B2_0"
-            and heq: "h y1 = h y2" and ht: "t \<in> I_set"
-          \<comment> \<open>Case split: both in D (injective), both on S1 (interp=id), mixed impossible.\<close>
-          have "y1 \<in> top1_B2 - top1_S1 \<or> y1 \<in> top1_S1" using hy1 by (by100 blast)
-          moreover have "y2 \<in> top1_B2 - top1_S1 \<or> y2 \<in> top1_S1" using hy2 by (by100 blast)
-          ultimately show "?g (y1, t) = ?g (y2, t)"
-          proof (elim disjE)
-            assume "y1 \<in> top1_B2 - top1_S1" and "y2 \<in> top1_B2 - top1_S1"
-            hence "y1 = y2" using inj_onD[OF hinj_D heq] by (by100 blast)
-            thus ?thesis by (by100 simp)
-          next
-            assume hy1S: "y1 \<in> top1_S1" and hy2S: "y2 \<in> top1_S1"
-            \<comment> \<open>On S1: |y|=1, so interp(y,t)=y. Hence g(y1,t)=h(y1)=h(y2)=g(y2,t).\<close>
-            have hn1: "?norm y1 = 1" using hy1S unfolding top1_S1_def by (by100 auto)
-            have hn2: "?norm y2 = 1" using hy2S unfolding top1_S1_def by (by100 auto)
-            have "?g (y1, t) = h ((1 - t) * fst y1 + t * fst y1,
-                                  (1 - t) * snd y1 + t * snd y1)"
-              using hn1 by (by100 simp)
-            have hrw: "\<And>a::real. (1 - t) * a + t * a = a"
-            proof -
-              fix a :: real
-              have "(1 - t) * a + t * a = ((1 - t) + t) * a" by (rule distrib_right[symmetric])
-              also have "\<dots> = a" by (by100 simp)
-              finally show "(1 - t) * a + t * a = a" .
-            qed
-            hence hg1: "?g (y1, t) = h y1"
-              using \<open>?g (y1, t) = h ((1 - t) * fst y1 + t * fst y1, _)\<close>
-              by (cases y1) (by100 simp)
-            have "?g (y2, t) = h ((1 - t) * fst y2 + t * fst y2,
-                                  (1 - t) * snd y2 + t * snd y2)"
-              using hn2 by (by100 simp)
-            hence hg2: "?g (y2, t) = h y2" using hrw by (cases y2) (by100 simp)
-            have "?g (y1, t) = h y1" by (rule hg1)
-            moreover have "?g (y2, t) = h y2" by (rule hg2)
-            ultimately show ?thesis using heq by (by100 simp)
-          next
-            assume hy1D: "y1 \<in> top1_B2 - top1_S1" and hy2S: "y2 \<in> top1_S1"
-            \<comment> \<open>h(y1) \<in> X-A and h(y2) \<in> A: disjoint, so h(y1)\<noteq>h(y2). Contradiction.\<close>
-            have "h y1 \<in> X - A" using hy1D hsurj_D by (by100 blast)
-            moreover have "h y2 \<in> A" using hy2S assms(8) by (by100 blast)
-            ultimately have "h y1 \<in> X - A \<and> h y1 \<in> A" using heq by (by100 simp)
-            thus ?thesis by (by100 blast)
-          next
-            assume hy1S: "y1 \<in> top1_S1" and hy2D: "y2 \<in> top1_B2 - top1_S1"
-            have "h y1 \<in> A" using hy1S assms(8) by (by100 blast)
-            moreover have "h y2 \<in> X - A" using hy2D hsurj_D by (by100 blast)
-            ultimately have "h y1 \<in> A \<and> h y1 \<in> X - A" using heq by (by100 simp)
-            thus ?thesis by (by100 blast)
-          qed
-        qed
-        \<comment> \<open>Step 4: By Theorem_22_2 (universal property), g descends to continuous H_U on CU \<times> I.\<close>
-        show ?thesis sorry \<comment> \<open>Apply Theorem_22_2 to get descent, then verify H_U = descended map.\<close>
+        let ?D = "top1_B2 - top1_S1"
+        let ?hD0 = "(X - A) - {?x0}" \<comment> \<open>= h(D\setminus\{0\}), image of punctured open disk\<close>
+        let ?hS1 = "h ` top1_S1"     \<comment> \<open>image of boundary circle, subset of A\<close>
+        \<comment> \<open>CU = hD0 \<union> hS1, a disjoint decomposition (since h(D\{0}) \<subseteq> X-A, h(S1) \<subseteq> A).\<close>
+        have hhS1_sub_A: "?hS1 \<subseteq> A" using assms(8) by (by100 blast)
+        have hdisjoint: "?hD0 \<inter> ?hS1 = {}" using hhS1_sub_A by (by100 blast)
+        have hCU_decomp: "?CU = ?hD0 \<union> ?hS1" sorry
+          \<comment> \<open>h(B2) = h(D) \<union> h(S1) = (X-A) \<union> h(S1); CU = h(B2)\<inter>U; decompose.\<close>
+        \<comment> \<open>Both pieces are closed in CU (clopen in a disjoint union).\<close>
+        have hhD0_closed: "closedin_on ?CU (subspace_topology ?U ?TU ?CU) ?hD0"
+          sorry \<comment> \<open>hD0 = (X-A)-{x0} is open in X (complement of closed A \<union> {x0}),
+                   hence open in CU; complement hS1 is closed. So hD0 clopen in CU.\<close>
+        have hhS1_closed: "closedin_on ?CU (subspace_topology ?U ?TU ?CU) ?hS1"
+          sorry \<comment> \<open>hS1 = CU-hD0, complement of open hD0 in CU, hence closed.\<close>
+        \<comment> \<open>H_U on hD0 \<times> I: uses h \<circ> interp \<circ> h\<inverse> composition, continuous.\<close>
+        have hcont_hD0: "top1_continuous_map_on (?hD0 \<times> I_set)
+            (subspace_topology (?CU \<times> I_set) (product_topology_on (subspace_topology ?U ?TU ?CU) I_top)
+              (?hD0 \<times> I_set))
+            ?U ?TU H_U"
+          sorry \<comment> \<open>h\<inverse> continuous (homeomorphism on D), interp continuous (analysis), h continuous.\<close>
+        \<comment> \<open>H_U on hS1 \<times> I: identity (x \<in> h(S1) \<subseteq> A, so H_U(x,t) = x).\<close>
+        have hcont_hS1: "top1_continuous_map_on (?hS1 \<times> I_set)
+            (subspace_topology (?CU \<times> I_set) (product_topology_on (subspace_topology ?U ?TU ?CU) I_top)
+              (?hS1 \<times> I_set))
+            ?U ?TU H_U"
+          sorry \<comment> \<open>H_U = fst on hS1\<times>I, which is the projection = continuous.\<close>
+        \<comment> \<open>Paste via pasting_lemma_two_closed on the product.\<close>
+        show ?thesis sorry \<comment> \<open>Apply pasting_lemma_two_closed on hD0\<times>I and hS1\<times>I.\<close>
       qed
+      \<comment> \<open>(Old quotient descent code removed; replaced by pasting approach above.)\<close>
       \<comment> \<open>Paste via pasting_lemma_two_closed.\<close>
       \<comment> \<open>Paste: A \<times> I and CU \<times> I are closed in U \<times> I, cover U \<times> I, H_U continuous on each.\<close>
       show ?thesis
@@ -8765,6 +8669,16 @@ end
 
 
 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
  
  
  
