@@ -1928,8 +1928,31 @@ proof -
                (1 - t) * snd y + t * snd y / sqrt (fst y ^ 2 + snd y ^ 2))"
           \<comment> \<open>Step 1: interp is continuous_on in HOL Analysis sense.\<close>
           have hinterp_cont_on: "continuous_on (?B2_0 \<times> I_set) ?interp"
-            sorry \<comment> \<open>continuous_intros: projections, arithmetic, sqrt, division.
-                     Division OK since y \<noteq> 0 on B2\{0}, so sqrt(fst y^2+snd y^2) > 0.\<close>
+          proof -
+            have hsqrt_pos: "\<forall>p \<in> ?B2_0 \<times> I_set. sqrt (fst (fst p) ^ 2 + snd (fst p) ^ 2) > 0"
+            proof (intro ballI)
+              fix p assume "p \<in> ?B2_0 \<times> I_set"
+              hence "fst p \<in> ?B2_0" by (by100 auto)
+              hence "fst p \<noteq> (0::real, 0::real)" by (by100 blast)
+              hence "fst (fst p) \<noteq> 0 \<or> snd (fst p) \<noteq> 0" by (cases "fst p") (by100 simp)
+              hence "fst (fst p) ^ 2 > 0 \<or> snd (fst p) ^ 2 > 0" by (by100 auto)
+              moreover have "fst (fst p) ^ 2 \<ge> 0" "snd (fst p) ^ 2 \<ge> 0" by (by100 simp)+
+              ultimately have "fst (fst p) ^ 2 + snd (fst p) ^ 2 > 0" by (by100 linarith)
+              thus "sqrt (fst (fst p) ^ 2 + snd (fst p) ^ 2) > 0" by (by100 simp)
+            qed
+            have hsqrt_ne0: "\<forall>p \<in> ?B2_0 \<times> I_set. sqrt (fst (fst p) ^ 2 + snd (fst p) ^ 2) \<noteq> 0"
+              using hsqrt_pos by (by100 auto)
+            \<comment> \<open>continuous_on for the whole thing: use continuous_on_Pair + continuous_intros.\<close>
+            have "continuous_on UNIV (\<lambda>p::(real\<times>real)\<times>real. fst (fst p))" by (intro continuous_intros)
+            have "continuous_on UNIV (\<lambda>p::(real\<times>real)\<times>real. snd (fst p))" by (intro continuous_intros)
+            have "continuous_on UNIV (\<lambda>p::(real\<times>real)\<times>real. snd p)" by (intro continuous_intros)
+            have "continuous_on UNIV (\<lambda>p::(real\<times>real)\<times>real. fst (fst p) ^ 2 + snd (fst p) ^ 2)"
+              by (intro continuous_intros)
+            have hsqrt_cont: "continuous_on (?B2_0 \<times> I_set)
+                (\<lambda>p::(real\<times>real)\<times>real. sqrt (fst (fst p) ^ 2 + snd (fst p) ^ 2))"
+              sorry \<comment> \<open>sqrt \<circ> (sum of squares) continuous on domain where sum > 0.\<close>
+            show ?thesis sorry \<comment> \<open>Assemble from component continuity + division by nonzero sqrt.\<close>
+          qed
           \<comment> \<open>Step 2: interp maps B2\{0} \<times> I into B2.\<close>
           have hinterp_range: "\<forall>p \<in> ?B2_0 \<times> I_set. ?interp p \<in> top1_B2"
             sorry \<comment> \<open>Convex combination stays in B2 (already proved earlier for fixed y,t).\<close>
@@ -8896,6 +8919,9 @@ end
 
 
 
+ 
+ 
+ 
  
  
  
