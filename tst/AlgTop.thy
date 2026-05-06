@@ -1312,7 +1312,9 @@ proof -
         have hC_sub: "?C \<subseteq> X"
           using assms(5) unfolding top1_continuous_map_on_def by (by100 blast)
         have hB2_compact: "compact top1_B2"
-          sorry \<comment> \<open>B2 compact: closed (preimage of closed under continuous) + bounded.\<close>
+          sorry \<comment> \<open>B2 is compact. Needs: closed (preimage of {..1} under continuous fst^2+snd^2)
+             + bounded (subset of [-1,1]^2) + Heine-Borel (compact_eq_bounded_closed).
+             All tools available in HOL-Analysis but type class bridging needed.\<close>
         have "top1_compact_on top1_B2 top1_B2_topology"
         proof -
           have "top1_B2_topology = subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) top1_B2"
