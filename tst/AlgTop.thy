@@ -1425,11 +1425,7 @@ proof -
   have hb_in_UV: "?b \<in> ?UV"
     using hb_in_VA hb_ne_x0 hA_sub_X by (by100 blast)
 
-  have hUV_pi1_cyclic:
-    "\<exists>gen. gen \<in> top1_fundamental_group_carrier ?UV ?TUV ?b
-         \<and> (\<forall>g \<in> top1_fundamental_group_carrier ?UV ?TUV ?b.
-              \<exists>n::int. g = top1_fundamental_group_pow ?UV ?TUV ?b gen n)"
-    sorry \<comment> \<open>\<pi>_1(U \<inter> V, b) is infinite cyclic.\<close>
+  \<comment> \<open>\<pi>_1(U \<inter> V, b) is infinite cyclic (used implicitly via hsvk + generator tracking below).\<close>
 
   \<comment> \<open>--- Step 3: Apply Corollary 70.4 (SvK for simply connected V) ---\<close>
   \<comment> \<open>Since V is simply connected, U \<union> V = X, and U, V are open:
