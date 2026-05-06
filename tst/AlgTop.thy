@@ -3757,15 +3757,857 @@ using assms proof (induction n arbitrary: X TX p rule: less_induct)
       \<and> top1_groups_isomorphic_on G mul
           (top1_fundamental_group_carrier X TX p)
           (top1_fundamental_group_mul X TX p)"
-      sorry \<comment> \<open>Needs two pieces of infrastructure not yet formalized:
-         (a) Free product functoriality: if G_i \<cong> H_i for i=0,1 and FP_G is a free product
-             of G_0, G_1, and FP_H is a free product of H_0, H_1, then FP_G \<cong> FP_H.
-             (This would follow from Theorem_68_4_free_product_unique if we could view
-             the isomorphic groups as the same factor groups.)
-         (b) Free group relabeling: Z (free on {0}) is also free on {n-1} (singleton relabel).
-         With (a) and (b): apply Theorem_69_2 to GU (free on {..<(n-1)}) and Z (free on {n-1}),
-         get FP' free on {..<n}. By (a), FP' \<cong> FP. By hSvK_iso, \<pi>_1(X) \<cong> FP.
-         By transitivity, \<pi>_1(X) \<cong> FP' which is free on {..<n}.\<close>
+    proof -
+      \<comment> \<open>Extract free group structures from hpiU_free and hpiV_free.\<close>
+      obtain GU :: "int set" and mulU :: "int \<Rightarrow> int \<Rightarrow> int"
+          and eU :: int and invgU :: "int \<Rightarrow> int" and \<iota>U :: "nat \<Rightarrow> int" where
+          hGU_free: "top1_is_free_group_full_on GU mulU eU invgU \<iota>U {..<(n-1)}"
+          and hGU_iso: "top1_groups_isomorphic_on GU mulU ?piU ?mulU"
+        using hpiU_free by (by100 blast)
+      obtain GV :: "int set" and mulV :: "int \<Rightarrow> int \<Rightarrow> int"
+          and eV :: int and invgV :: "int \<Rightarrow> int" and \<iota>V :: "nat \<Rightarrow> int" where
+          hGV_free: "top1_is_free_group_full_on GV mulV eV invgV \<iota>V {0::nat}"
+          and hGV_iso: "top1_groups_isomorphic_on GV mulV ?piV ?mulV"
+        using hpiV_free by (by100 blast)
+      \<comment> \<open>Step A: Relabel GV from {0} to {n-1}.\<close>
+      define \<iota>V' :: "nat \<Rightarrow> int" where "\<iota>V' = (\<lambda>k. \<iota>V 0)"
+      have hGV_free': "top1_is_free_group_full_on GV mulV eV invgV \<iota>V' {n - 1}"
+      proof -
+        have hGV_grp: "top1_is_group_on GV mulV eV invgV"
+          using hGV_free unfolding top1_is_free_group_full_on_def by (by100 blast)
+        have h\<iota>V_in: "\<iota>V 0 \<in> GV"
+          using hGV_free unfolding top1_is_free_group_full_on_def by (by100 force)
+        have h\<iota>V'_in: "\<forall>s\<in>{n-1}. \<iota>V' s \<in> GV"
+          using h\<iota>V_in unfolding \<iota>V'_def by (by100 simp)
+        have h\<iota>V'_inj: "inj_on \<iota>V' {n-1}"
+          by (by100 simp)
+        have h\<iota>V'_image: "\<iota>V' ` {n-1} = \<iota>V ` {0::nat}"
+          unfolding \<iota>V'_def by (by100 force)
+        have hgen: "GV = top1_subgroup_generated_on GV mulV eV invgV (\<iota>V' ` {n-1})"
+          using hGV_free h\<iota>V'_image unfolding top1_is_free_group_full_on_def by (by100 simp)
+        have hred: "\<And>ws :: (nat \<times> bool) list. ws \<noteq> [] \<Longrightarrow>
+            top1_is_reduced_word (map (\<lambda>(s, b). (\<iota>V' s, b)) ws) \<Longrightarrow>
+            (\<forall>i<length ws. fst (ws!i) \<in> {n-1}) \<Longrightarrow>
+            top1_group_word_product mulV eV invgV (map (\<lambda>(s, b). (\<iota>V' s, b)) ws) \<noteq> eV"
+        proof -
+          fix ws :: "(nat \<times> bool) list"
+          assume hws_ne: "ws \<noteq> []"
+              and hws_red: "top1_is_reduced_word (map (\<lambda>(s, b). (\<iota>V' s, b)) ws)"
+              and hws_in: "\<forall>i<length ws. fst (ws!i) \<in> {n-1}"
+          \<comment> \<open>Since all generators are n-1, and \<iota>V'(n-1) = \<iota>V(0), the mapped word is the same
+             as mapping through \<iota>V with all indices replaced by 0.\<close>
+          define ws0 :: "(nat \<times> bool) list" where "ws0 = map (\<lambda>(s,b). (0::nat, b)) ws"
+          have hws0_ne: "ws0 \<noteq> []" using hws_ne unfolding ws0_def by (by100 simp)
+          have hlen_eq: "length ws0 = length ws" unfolding ws0_def by (by100 simp)
+          have hws0_in: "\<forall>i<length ws0. fst (ws0!i) \<in> {0::nat}"
+          proof (intro allI impI)
+            fix i assume hi: "i < length ws0"
+            hence hi': "i < length ws" using hlen_eq by (by100 simp)
+            obtain s b where hwsi: "ws ! i = (s, b)" by (cases "ws ! i")
+            have "ws0 ! i = (0::nat, b)"
+              unfolding ws0_def using hi' hwsi nth_map[of i ws "\<lambda>(s,b). (0::nat, b)"]
+              by (by100 simp)
+            thus "fst (ws0 ! i) \<in> {0::nat}" by (by100 simp)
+          qed
+          have hmap_eq: "map (\<lambda>(s, b). (\<iota>V' s, b)) ws = map (\<lambda>(s, b). (\<iota>V (0::nat), b)) ws"
+            unfolding \<iota>V'_def using hws_in by (by100 auto)
+          have hmap_eq2: "map (\<lambda>(s, b). (\<iota>V 0, b)) ws = map (\<lambda>(s, b). (\<iota>V s, b)) ws0"
+            unfolding ws0_def by (by100 auto)
+          have hmap_combined: "map (\<lambda>(s, b). (\<iota>V' s, b)) ws = map (\<lambda>(s, b). (\<iota>V s, b)) ws0"
+            using hmap_eq hmap_eq2 by (by100 simp)
+          have hws0_red: "top1_is_reduced_word (map (\<lambda>(s, b). (\<iota>V s, b)) ws0)"
+            using hws_red hmap_combined by (by100 simp)
+          have hred_V: "top1_group_word_product mulV eV invgV
+              (map (\<lambda>(s, b). (\<iota>V s, b)) ws0) \<noteq> eV"
+            using hGV_free hws0_ne hws0_red hws0_in hlen_eq
+            unfolding top1_is_free_group_full_on_def by (by100 blast)
+          thus "top1_group_word_product mulV eV invgV (map (\<lambda>(s, b). (\<iota>V' s, b)) ws) \<noteq> eV"
+            using hmap_combined by (by100 simp)
+        qed
+        show ?thesis unfolding top1_is_free_group_full_on_def
+          using hGV_grp h\<iota>V'_in h\<iota>V'_inj hgen hred by (by100 blast)
+      qed
+      \<comment> \<open>Step B: The generator sets are disjoint: {..<(n-1)} \<inter> {n-1} = {}.\<close>
+      have hS_disj: "{..<(n-1)} \<inter> {n - 1 :: nat} = {}"
+        using hn2 by (by100 auto)
+      \<comment> \<open>Step C: Apply Theorem 69.2 to get a free product that is free on {..<n}.\<close>
+      from Theorem_69_2[OF hGU_free hGV_free' hS_disj]
+      obtain FPZ :: "(nat \<times> int) list set" and mulFPZ eFPZ invgFPZ
+          and \<iota>fam_Z :: "nat \<Rightarrow> int \<Rightarrow> (nat \<times> int) list"
+          and \<iota>Z :: "nat \<Rightarrow> (nat \<times> int) list" where
+          hFPZ: "top1_is_free_product_on FPZ mulFPZ eFPZ invgFPZ
+              (\<lambda>i::nat. if i = 0 then GU else GV)
+              (\<lambda>i. if i = 0 then mulU else mulV)
+              \<iota>fam_Z {0, 1}"
+          and hFPZ_free: "top1_is_free_group_full_on FPZ mulFPZ eFPZ invgFPZ \<iota>Z ({..<(n-1)} \<union> {n-1})"
+          and hFPZ_comp1: "\<forall>s\<in>{..<(n-1)}. \<iota>Z s = \<iota>fam_Z 0 (\<iota>U s)"
+          and hFPZ_comp2: "\<forall>s\<in>{n-1}. \<iota>Z s = \<iota>fam_Z 1 (\<iota>V' s)"
+        by (by100 blast)
+      \<comment> \<open>{..<(n-1)} \<union> {n-1} = {..<n}\<close>
+      have hS_union: "{..<(n-1)} \<union> {n - 1 :: nat} = {..<n}"
+        using hn2 by (by100 auto)
+      have hFPZ_free_n: "top1_is_free_group_full_on FPZ mulFPZ eFPZ invgFPZ \<iota>Z {..<n}"
+        using hFPZ_free hS_union by (by100 simp)
+      \<comment> \<open>Step D: Build isomorphism FPZ \<cong> FP using extension property.
+         We have GU \<cong> \<pi>U and GV \<cong> \<pi>V, and both FPZ and FP are free products
+         of (GU, GV) and (\<pi>U, \<pi>V) respectively. We use the isomorphisms to
+         create homomorphisms from the factors of FPZ into FP, then extend.\<close>
+      have hFPZ_grp: "top1_is_group_on FPZ mulFPZ eFPZ invgFPZ"
+        using hFPZ unfolding top1_is_free_product_on_def by (by100 blast)
+      have hFP_grp: "top1_is_group_on FP mulFP eFP invgFP"
+        using hFP unfolding top1_is_free_product_on_def by (by100 blast)
+      have hGU_grp: "top1_is_group_on GU mulU eU invgU"
+        using hGU_free unfolding top1_is_free_group_full_on_def by (by100 blast)
+      have hGV_grp: "top1_is_group_on GV mulV eV invgV"
+        using hGV_free unfolding top1_is_free_group_full_on_def by (by100 blast)
+      \<comment> \<open>Get isomorphism witnesses fU: GU \<rightarrow> \<pi>U and fV: GV \<rightarrow> \<pi>V.\<close>
+      obtain fU where hfU_hom: "top1_group_hom_on GU mulU ?piU ?mulU fU"
+          and hfU_bij: "bij_betw fU GU ?piU"
+        using hGU_iso unfolding top1_groups_isomorphic_on_def top1_group_iso_on_def
+        by (by100 blast)
+      obtain fV where hfV_hom: "top1_group_hom_on GV mulV ?piV ?mulV fV"
+          and hfV_bij: "bij_betw fV GV ?piV"
+        using hGV_iso unfolding top1_groups_isomorphic_on_def top1_group_iso_on_def
+        by (by100 blast)
+      \<comment> \<open>Build homomorphisms from factors of FPZ into FP:
+         h0 = \<iota>fam(0) \<circ> fU : GU \<rightarrow> FP  and  h1 = \<iota>fam(1) \<circ> fV : GV \<rightarrow> FP.\<close>
+      have h\<iota>fam_in: "\<forall>\<alpha>\<in>{0::nat,1}. \<forall>x\<in>(if \<alpha> = 0 then ?piU else ?piV). \<iota>fam \<alpha> x \<in> FP"
+        using hFP unfolding top1_is_free_product_on_def by (by100 blast)
+      have h\<iota>fam_hom: "\<forall>\<alpha>\<in>{0::nat,1}. \<forall>x\<in>(if \<alpha> = 0 then ?piU else ?piV).
+          \<forall>y\<in>(if \<alpha> = 0 then ?piU else ?piV).
+          \<iota>fam \<alpha> ((if \<alpha> = 0 then ?mulU else ?mulV) x y) = mulFP (\<iota>fam \<alpha> x) (\<iota>fam \<alpha> y)"
+        using hFP unfolding top1_is_free_product_on_def by (by100 blast)
+      \<comment> \<open>h0 = \<iota>fam 0 \<circ> fU is a group hom GU \<rightarrow> FP.\<close>
+      have h0_hom: "top1_group_hom_on GU mulU FP mulFP (\<lambda>x. \<iota>fam 0 (fU x))"
+        unfolding top1_group_hom_on_def
+      proof (intro conjI ballI)
+        fix x assume hx: "x \<in> GU"
+        have "fU x \<in> ?piU" using hfU_bij hx unfolding bij_betw_def by (by100 blast)
+        thus "\<iota>fam 0 (fU x) \<in> FP" using h\<iota>fam_in by (by100 auto)
+      next
+        fix x y assume hx: "x \<in> GU" and hy: "y \<in> GU"
+        have hfUx: "fU x \<in> ?piU" using hfU_bij hx unfolding bij_betw_def by (by100 blast)
+        have hfUy: "fU y \<in> ?piU" using hfU_bij hy unfolding bij_betw_def by (by100 blast)
+        have "fU (mulU x y) = ?mulU (fU x) (fU y)"
+          using hfU_hom hx hy unfolding top1_group_hom_on_def by (by100 blast)
+        thus "\<iota>fam 0 (fU (mulU x y)) = mulFP (\<iota>fam 0 (fU x)) (\<iota>fam 0 (fU y))"
+          using h\<iota>fam_hom hfUx hfUy by (by100 auto)
+      qed
+      \<comment> \<open>h1 = \<iota>fam 1 \<circ> fV is a group hom GV \<rightarrow> FP.\<close>
+      have h1_hom: "top1_group_hom_on GV mulV FP mulFP (\<lambda>x. \<iota>fam 1 (fV x))"
+        unfolding top1_group_hom_on_def
+      proof (intro conjI ballI)
+        fix x assume hx: "x \<in> GV"
+        have "fV x \<in> ?piV" using hfV_bij hx unfolding bij_betw_def by (by100 blast)
+        thus "\<iota>fam 1 (fV x) \<in> FP" using h\<iota>fam_in by (by100 auto)
+      next
+        fix x y assume hx: "x \<in> GV" and hy: "y \<in> GV"
+        have hfVx: "fV x \<in> ?piV" using hfV_bij hx unfolding bij_betw_def by (by100 blast)
+        have hfVy: "fV y \<in> ?piV" using hfV_bij hy unfolding bij_betw_def by (by100 blast)
+        have "fV (mulV x y) = ?mulV (fV x) (fV y)"
+          using hfV_hom hx hy unfolding top1_group_hom_on_def by (by100 blast)
+        thus "\<iota>fam 1 (fV (mulV x y)) = mulFP (\<iota>fam 1 (fV x)) (\<iota>fam 1 (fV y))"
+          using h\<iota>fam_hom hfVx hfVy by (by100 auto)
+      qed
+      \<comment> \<open>Assemble homomorphism family for extension property.\<close>
+      define hfam_fwd :: "nat \<Rightarrow> int \<Rightarrow> (nat \<times> (real \<Rightarrow> 'a) set) list" where
+        "hfam_fwd = (\<lambda>\<alpha>. if \<alpha> = 0 then (\<lambda>x. \<iota>fam 0 (fU x)) else (\<lambda>x. \<iota>fam 1 (fV x)))"
+      have hfam_fwd_hom: "\<forall>\<alpha>\<in>{0::nat,1}. top1_group_hom_on
+          (if \<alpha> = 0 then GU else GV) (if \<alpha> = 0 then mulU else mulV)
+          FP mulFP (hfam_fwd \<alpha>)"
+      proof (intro ballI)
+        fix \<alpha> :: nat assume h\<alpha>: "\<alpha> \<in> {0, 1}"
+        hence "\<alpha> = 0 \<or> \<alpha> = 1" by (by100 blast)
+        thus "top1_group_hom_on (if \<alpha> = 0 then GU else GV) (if \<alpha> = 0 then mulU else mulV)
+            FP mulFP (hfam_fwd \<alpha>)"
+        proof
+          assume "\<alpha> = 0"
+          thus ?thesis using h0_hom unfolding hfam_fwd_def by (by100 simp)
+        next
+          assume "\<alpha> = 1"
+          thus ?thesis using h1_hom unfolding hfam_fwd_def by (by100 simp)
+        qed
+      qed
+      have hGG_grps: "\<forall>\<alpha>\<in>{0::nat,1}. top1_is_group_on
+          (if \<alpha> = 0 then GU else GV) (if \<alpha> = 0 then mulU else mulV)
+          (if \<alpha> = 0 then eU else eV) (if \<alpha> = 0 then invgU else invgV)"
+      proof (intro ballI)
+        fix \<alpha> :: nat assume "\<alpha> \<in> {0, 1}"
+        hence "\<alpha> = 0 \<or> \<alpha> = 1" by (by100 blast)
+        thus "top1_is_group_on (if \<alpha> = 0 then GU else GV) (if \<alpha> = 0 then mulU else mulV)
+            (if \<alpha> = 0 then eU else eV) (if \<alpha> = 0 then invgU else invgV)"
+        proof
+          assume "\<alpha> = 0" thus ?thesis using hGU_grp by (by100 simp)
+        next
+          assume "\<alpha> = 1" thus ?thesis using hGV_grp by (by100 simp)
+        qed
+      qed
+      \<comment> \<open>Apply extension property to get \<Phi>: FPZ \<rightarrow> FP.\<close>
+      obtain \<Phi> where h\<Phi>_hom: "top1_group_hom_on FPZ mulFPZ FP mulFP \<Phi>"
+          and h\<Phi>_ext: "\<forall>\<alpha>\<in>{0::nat,1}. \<forall>x\<in>(if \<alpha> = 0 then GU else GV).
+              \<Phi> (\<iota>fam_Z \<alpha> x) = hfam_fwd \<alpha> x"
+        using Lemma_68_3_extension_property[OF hFPZ hFP_grp hfam_fwd_hom hGG_grps]
+        by (by100 blast)
+      \<comment> \<open>Step E: Show \<Phi> is an isomorphism, i.e. FPZ \<cong> FP.
+         This requires building the reverse map \<Psi>: FP \<rightarrow> FPZ and showing \<Psi>\<circ>\<Phi> = id, \<Phi>\<circ>\<Psi> = id
+         via the uniqueness part of the extension property. This is detailed but routine.\<close>
+      have hFPZ_iso_FP: "top1_groups_isomorphic_on FPZ mulFPZ FP mulFP"
+      proof -
+        \<comment> \<open>Build reverse: inverse isomorphisms fU\<inverse>: \<pi>U \<rightarrow> GU and fV\<inverse>: \<pi>V \<rightarrow> GV.\<close>
+        define fU_inv where "fU_inv = inv_into GU fU"
+        define fV_inv where "fV_inv = inv_into GV fV"
+        have hfU_inv_bij: "bij_betw fU_inv ?piU GU"
+          unfolding fU_inv_def by (rule bij_betw_inv_into[OF hfU_bij])
+        have hfV_inv_bij: "bij_betw fV_inv ?piV GV"
+          unfolding fV_inv_def by (rule bij_betw_inv_into[OF hfV_bij])
+        \<comment> \<open>fU_inv is a group hom \<pi>U \<rightarrow> GU.\<close>
+        have hfU_inv_hom: "top1_group_hom_on ?piU ?mulU GU mulU fU_inv"
+          unfolding top1_group_hom_on_def
+        proof (intro conjI ballI)
+          fix x assume hx: "x \<in> ?piU"
+          show "fU_inv x \<in> GU" using hfU_inv_bij hx unfolding bij_betw_def by (by100 blast)
+        next
+          fix x y assume hx: "x \<in> ?piU" and hy: "y \<in> ?piU"
+          show "fU_inv (?mulU x y) = mulU (fU_inv x) (fU_inv y)"
+          proof -
+            have hfU_inv_x: "fU_inv x \<in> GU"
+              using hfU_inv_bij hx unfolding bij_betw_def by (by100 blast)
+            have hfU_inv_y: "fU_inv y \<in> GU"
+              using hfU_inv_bij hy unfolding bij_betw_def by (by100 blast)
+            have hfU_fU_inv_x: "fU (fU_inv x) = x"
+              unfolding fU_inv_def by (rule bij_betw_inv_into_right[OF hfU_bij hx])
+            have hfU_fU_inv_y: "fU (fU_inv y) = y"
+              unfolding fU_inv_def by (rule bij_betw_inv_into_right[OF hfU_bij hy])
+            have hmul_in: "mulU (fU_inv x) (fU_inv y) \<in> GU"
+              by (rule group_mul_closed[OF hGU_grp hfU_inv_x hfU_inv_y])
+            have "fU (mulU (fU_inv x) (fU_inv y)) = ?mulU (fU (fU_inv x)) (fU (fU_inv y))"
+              using hfU_hom hfU_inv_x hfU_inv_y unfolding top1_group_hom_on_def by (by100 blast)
+            hence "fU (mulU (fU_inv x) (fU_inv y)) = ?mulU x y"
+              using hfU_fU_inv_x hfU_fU_inv_y by (by100 simp)
+            moreover have hmul_piU: "?mulU x y \<in> ?piU"
+              using group_mul_closed[OF hpiU_grp hx hy]
+              by (by100 blast)
+            moreover have "fU (fU_inv (?mulU x y)) = ?mulU x y"
+              unfolding fU_inv_def by (rule bij_betw_inv_into_right[OF hfU_bij hmul_piU])
+            ultimately have "fU (mulU (fU_inv x) (fU_inv y)) = fU (fU_inv (?mulU x y))"
+              by (by100 simp)
+            moreover have "mulU (fU_inv x) (fU_inv y) \<in> GU" by (rule hmul_in)
+            moreover have "fU_inv (?mulU x y) \<in> GU"
+              using hfU_inv_bij hmul_piU unfolding bij_betw_def by (by100 blast)
+            moreover have "inj_on fU GU" using hfU_bij unfolding bij_betw_def by (by100 blast)
+            ultimately show ?thesis unfolding inj_on_def by (by100 blast)
+          qed
+        qed
+        \<comment> \<open>fV_inv is a group hom \<pi>V \<rightarrow> GV.\<close>
+        have hfV_inv_hom: "top1_group_hom_on ?piV ?mulV GV mulV fV_inv"
+          unfolding top1_group_hom_on_def
+        proof (intro conjI ballI)
+          fix x assume hx: "x \<in> ?piV"
+          show "fV_inv x \<in> GV" using hfV_inv_bij hx unfolding bij_betw_def by (by100 blast)
+        next
+          fix x y assume hx: "x \<in> ?piV" and hy: "y \<in> ?piV"
+          show "fV_inv (?mulV x y) = mulV (fV_inv x) (fV_inv y)"
+          proof -
+            have hfV_inv_x: "fV_inv x \<in> GV"
+              using hfV_inv_bij hx unfolding bij_betw_def by (by100 blast)
+            have hfV_inv_y: "fV_inv y \<in> GV"
+              using hfV_inv_bij hy unfolding bij_betw_def by (by100 blast)
+            have hfV_fV_inv_x: "fV (fV_inv x) = x"
+              unfolding fV_inv_def by (rule bij_betw_inv_into_right[OF hfV_bij hx])
+            have hfV_fV_inv_y: "fV (fV_inv y) = y"
+              unfolding fV_inv_def by (rule bij_betw_inv_into_right[OF hfV_bij hy])
+            have hmul_in: "mulV (fV_inv x) (fV_inv y) \<in> GV"
+              by (rule group_mul_closed[OF hGV_grp hfV_inv_x hfV_inv_y])
+            have "fV (mulV (fV_inv x) (fV_inv y)) = ?mulV (fV (fV_inv x)) (fV (fV_inv y))"
+              using hfV_hom hfV_inv_x hfV_inv_y unfolding top1_group_hom_on_def by (by100 blast)
+            hence "fV (mulV (fV_inv x) (fV_inv y)) = ?mulV x y"
+              using hfV_fV_inv_x hfV_fV_inv_y by (by100 simp)
+            moreover have hmul_piV: "?mulV x y \<in> ?piV"
+              using group_mul_closed[OF hpiV_grp hx hy]
+              by (by100 blast)
+            moreover have "fV (fV_inv (?mulV x y)) = ?mulV x y"
+              unfolding fV_inv_def by (rule bij_betw_inv_into_right[OF hfV_bij hmul_piV])
+            ultimately have "fV (mulV (fV_inv x) (fV_inv y)) = fV (fV_inv (?mulV x y))"
+              by (by100 simp)
+            moreover have "mulV (fV_inv x) (fV_inv y) \<in> GV" by (rule hmul_in)
+            moreover have "fV_inv (?mulV x y) \<in> GV"
+              using hfV_inv_bij hmul_piV unfolding bij_betw_def by (by100 blast)
+            moreover have "inj_on fV GV" using hfV_bij unfolding bij_betw_def by (by100 blast)
+            ultimately show ?thesis unfolding inj_on_def by (by100 blast)
+          qed
+        qed
+        \<comment> \<open>Build reverse hom family: \<pi>U \<rightarrow> FPZ via \<iota>fam_Z(0) \<circ> fU\<inverse> and \<pi>V \<rightarrow> FPZ via \<iota>fam_Z(1) \<circ> fV\<inverse>.\<close>
+        have h\<iota>fam_Z_in: "\<forall>\<alpha>\<in>{0::nat,1}. \<forall>x\<in>(if \<alpha> = 0 then GU else GV). \<iota>fam_Z \<alpha> x \<in> FPZ"
+          using hFPZ unfolding top1_is_free_product_on_def by (by100 blast)
+        have h\<iota>fam_Z_hom: "\<forall>\<alpha>\<in>{0::nat,1}. \<forall>x\<in>(if \<alpha> = 0 then GU else GV).
+            \<forall>y\<in>(if \<alpha> = 0 then GU else GV).
+            \<iota>fam_Z \<alpha> ((if \<alpha> = 0 then mulU else mulV) x y) = mulFPZ (\<iota>fam_Z \<alpha> x) (\<iota>fam_Z \<alpha> y)"
+          using hFPZ unfolding top1_is_free_product_on_def by (by100 blast)
+        \<comment> \<open>\<iota>fam_Z(0) \<circ> fU\<inverse> : \<pi>U \<rightarrow> FPZ is a group hom.\<close>
+        have h0_rev_hom: "top1_group_hom_on ?piU ?mulU FPZ mulFPZ (\<lambda>x. \<iota>fam_Z 0 (fU_inv x))"
+          unfolding top1_group_hom_on_def
+        proof (intro conjI ballI)
+          fix x assume hx: "x \<in> ?piU"
+          have "fU_inv x \<in> GU" using hfU_inv_bij hx unfolding bij_betw_def by (by100 blast)
+          thus "\<iota>fam_Z 0 (fU_inv x) \<in> FPZ" using h\<iota>fam_Z_in by (by100 auto)
+        next
+          fix x y assume hx: "x \<in> ?piU" and hy: "y \<in> ?piU"
+          have hfUix: "fU_inv x \<in> GU" using hfU_inv_bij hx unfolding bij_betw_def by (by100 blast)
+          have hfUiy: "fU_inv y \<in> GU" using hfU_inv_bij hy unfolding bij_betw_def by (by100 blast)
+          have "fU_inv (?mulU x y) = mulU (fU_inv x) (fU_inv y)"
+            using hfU_inv_hom hx hy unfolding top1_group_hom_on_def by (by100 blast)
+          thus "\<iota>fam_Z 0 (fU_inv (?mulU x y)) = mulFPZ (\<iota>fam_Z 0 (fU_inv x)) (\<iota>fam_Z 0 (fU_inv y))"
+            using h\<iota>fam_Z_hom hfUix hfUiy by (by100 auto)
+        qed
+        \<comment> \<open>\<iota>fam_Z(1) \<circ> fV\<inverse> : \<pi>V \<rightarrow> FPZ is a group hom.\<close>
+        have h1_rev_hom: "top1_group_hom_on ?piV ?mulV FPZ mulFPZ (\<lambda>x. \<iota>fam_Z 1 (fV_inv x))"
+          unfolding top1_group_hom_on_def
+        proof (intro conjI ballI)
+          fix x assume hx: "x \<in> ?piV"
+          have "fV_inv x \<in> GV" using hfV_inv_bij hx unfolding bij_betw_def by (by100 blast)
+          thus "\<iota>fam_Z 1 (fV_inv x) \<in> FPZ" using h\<iota>fam_Z_in by (by100 auto)
+        next
+          fix x y assume hx: "x \<in> ?piV" and hy: "y \<in> ?piV"
+          have hfVix: "fV_inv x \<in> GV" using hfV_inv_bij hx unfolding bij_betw_def by (by100 blast)
+          have hfViy: "fV_inv y \<in> GV" using hfV_inv_bij hy unfolding bij_betw_def by (by100 blast)
+          have "fV_inv (?mulV x y) = mulV (fV_inv x) (fV_inv y)"
+            using hfV_inv_hom hx hy unfolding top1_group_hom_on_def by (by100 blast)
+          thus "\<iota>fam_Z 1 (fV_inv (?mulV x y)) = mulFPZ (\<iota>fam_Z 1 (fV_inv x)) (\<iota>fam_Z 1 (fV_inv y))"
+            using h\<iota>fam_Z_hom hfVix hfViy by (by100 auto)
+        qed
+        \<comment> \<open>Assemble reverse hom family for FP's extension property.\<close>
+        define hfam_rev :: "nat \<Rightarrow> (real \<Rightarrow> 'a) set \<Rightarrow> (nat \<times> int) list" where
+          "hfam_rev = (\<lambda>\<alpha>. if \<alpha> = 0 then (\<lambda>x. \<iota>fam_Z 0 (fU_inv x))
+                                       else (\<lambda>x. \<iota>fam_Z 1 (fV_inv x)))"
+        have hfam_rev_hom: "\<forall>\<alpha>\<in>{0::nat,1}. top1_group_hom_on
+            (if \<alpha> = 0 then ?piU else ?piV) (if \<alpha> = 0 then ?mulU else ?mulV)
+            FPZ mulFPZ (hfam_rev \<alpha>)"
+        proof (intro ballI)
+          fix \<alpha> :: nat assume h\<alpha>: "\<alpha> \<in> {0, 1}"
+          hence "\<alpha> = 0 \<or> \<alpha> = 1" by (by100 blast)
+          thus "top1_group_hom_on (if \<alpha> = 0 then ?piU else ?piV) (if \<alpha> = 0 then ?mulU else ?mulV)
+              FPZ mulFPZ (hfam_rev \<alpha>)"
+          proof
+            assume "\<alpha> = 0" thus ?thesis using h0_rev_hom unfolding hfam_rev_def by (by100 simp)
+          next
+            assume "\<alpha> = 1" thus ?thesis using h1_rev_hom unfolding hfam_rev_def by (by100 simp)
+          qed
+        qed
+        \<comment> \<open>Apply extension property to get \<Psi>: FP \<rightarrow> FPZ.\<close>
+        obtain \<Psi> where h\<Psi>_hom: "top1_group_hom_on FP mulFP FPZ mulFPZ \<Psi>"
+            and h\<Psi>_ext: "\<forall>\<alpha>\<in>{0::nat,1}. \<forall>x\<in>(if \<alpha> = 0 then ?piU else ?piV).
+                \<Psi> (\<iota>fam \<alpha> x) = hfam_rev \<alpha> x"
+            and h\<Psi>_unique: "\<forall>h'. top1_group_hom_on FP mulFP FPZ mulFPZ h'
+                \<longrightarrow> (\<forall>\<alpha>\<in>{0::nat,1}. \<forall>x\<in>(if \<alpha> = 0 then ?piU else ?piV).
+                    h' (\<iota>fam \<alpha> x) = hfam_rev \<alpha> x)
+                \<longrightarrow> (\<forall>g\<in>FP. h' g = \<Psi> g)"
+          using Lemma_68_3_extension_property[OF hFP hFPZ_grp hfam_rev_hom hgroups_UV]
+          by (by100 blast)
+        \<comment> \<open>Show \<Psi> \<circ> \<Phi> = id on FPZ via uniqueness of 68.3 on FPZ.
+           On generators: for x \<in> GU, (\<Psi>\<circ>\<Phi>)(\<iota>fam_Z 0 x) = \<Psi>(\<iota>fam 0 (fU x)) = \<iota>fam_Z 0 (fU\<inverse>(fU x)) = \<iota>fam_Z 0 x.
+           Similarly for x \<in> GV.\<close>
+        have h\<Psi>\<Phi>_on_gens: "\<forall>\<alpha>\<in>{0::nat,1}. \<forall>x\<in>(if \<alpha> = 0 then GU else GV).
+            \<Psi> (\<Phi> (\<iota>fam_Z \<alpha> x)) = \<iota>fam_Z \<alpha> x"
+        proof (intro ballI)
+          fix \<alpha> :: nat and x :: int assume h\<alpha>: "\<alpha> \<in> {0, 1}" and hx: "x \<in> (if \<alpha> = 0 then GU else GV)"
+          have "\<alpha> = 0 \<or> \<alpha> = 1" using h\<alpha> by (by100 blast)
+          thus "\<Psi> (\<Phi> (\<iota>fam_Z \<alpha> x)) = \<iota>fam_Z \<alpha> x"
+          proof
+            assume h\<alpha>0: "\<alpha> = 0"
+            hence hx_GU: "x \<in> GU" using hx by (by100 simp)
+            have "\<Phi> (\<iota>fam_Z 0 x) = hfam_fwd 0 x" using h\<Phi>_ext hx_GU by (by100 auto)
+            hence "\<Phi> (\<iota>fam_Z 0 x) = \<iota>fam 0 (fU x)" unfolding hfam_fwd_def by (by100 simp)
+            moreover have "\<Psi> (\<iota>fam 0 (fU x)) = hfam_rev 0 (fU x)"
+            proof -
+              have "fU x \<in> ?piU" using hfU_bij hx_GU unfolding bij_betw_def by (by100 blast)
+              thus ?thesis using h\<Psi>_ext by (by100 auto)
+            qed
+            moreover have "hfam_rev 0 (fU x) = \<iota>fam_Z 0 (fU_inv (fU x))"
+              unfolding hfam_rev_def by (by100 simp)
+            moreover have "fU_inv (fU x) = x"
+              unfolding fU_inv_def using hfU_bij hx_GU
+              by (rule inv_into_f_f[OF bij_betw_imp_inj_on])
+            ultimately show ?thesis using h\<alpha>0 by (by100 simp)
+          next
+            assume h\<alpha>1: "\<alpha> = 1"
+            hence hx_GV: "x \<in> GV" using hx by (by100 simp)
+            have "\<Phi> (\<iota>fam_Z 1 x) = hfam_fwd 1 x" using h\<Phi>_ext hx_GV by (by100 auto)
+            hence "\<Phi> (\<iota>fam_Z 1 x) = \<iota>fam 1 (fV x)" unfolding hfam_fwd_def by (by100 simp)
+            moreover have "\<Psi> (\<iota>fam 1 (fV x)) = hfam_rev 1 (fV x)"
+            proof -
+              have "fV x \<in> ?piV" using hfV_bij hx_GV unfolding bij_betw_def by (by100 blast)
+              thus ?thesis using h\<Psi>_ext by (by100 auto)
+            qed
+            moreover have "hfam_rev 1 (fV x) = \<iota>fam_Z 1 (fV_inv (fV x))"
+              unfolding hfam_rev_def by (by100 simp)
+            moreover have "fV_inv (fV x) = x"
+              unfolding fV_inv_def using hfV_bij hx_GV
+              by (rule inv_into_f_f[OF bij_betw_imp_inj_on])
+            ultimately show ?thesis using h\<alpha>1 by (by100 simp)
+          qed
+        qed
+        \<comment> \<open>By uniqueness on FPZ: \<Psi>\<circ>\<Phi> agrees with id on generators, hence on all of FPZ.\<close>
+        have hid_on_gens: "\<forall>\<alpha>\<in>{0::nat,1}. \<forall>x\<in>(if \<alpha> = 0 then GU else GV).
+            (\<lambda>g. g) (\<iota>fam_Z \<alpha> x) = \<iota>fam_Z \<alpha> x"
+          by (by100 blast)
+        \<comment> \<open>id: FPZ \<rightarrow> FPZ is a group hom.\<close>
+        have hid_hom: "top1_group_hom_on FPZ mulFPZ FPZ mulFPZ (\<lambda>g. g)"
+          unfolding top1_group_hom_on_def
+        proof (intro conjI ballI)
+          fix x assume "x \<in> FPZ" thus "x \<in> FPZ" .
+        next
+          fix x y assume "x \<in> FPZ" "y \<in> FPZ"
+          thus "mulFPZ x y = mulFPZ x y" by (by100 simp)
+        qed
+        \<comment> \<open>\<Psi>\<circ>\<Phi>: FPZ \<rightarrow> FPZ is a group hom.\<close>
+        have h\<Psi>\<Phi>_hom: "top1_group_hom_on FPZ mulFPZ FPZ mulFPZ (\<lambda>g. \<Psi> (\<Phi> g))"
+          unfolding top1_group_hom_on_def
+        proof (intro conjI ballI)
+          fix x assume hx: "x \<in> FPZ"
+          have "\<Phi> x \<in> FP" using h\<Phi>_hom hx unfolding top1_group_hom_on_def by (by100 blast)
+          thus "\<Psi> (\<Phi> x) \<in> FPZ" using h\<Psi>_hom unfolding top1_group_hom_on_def by (by100 blast)
+        next
+          fix x y assume hx: "x \<in> FPZ" and hy: "y \<in> FPZ"
+          have h\<Phi>x: "\<Phi> x \<in> FP" using h\<Phi>_hom hx unfolding top1_group_hom_on_def by (by100 blast)
+          have h\<Phi>y: "\<Phi> y \<in> FP" using h\<Phi>_hom hy unfolding top1_group_hom_on_def by (by100 blast)
+          have "\<Phi> (mulFPZ x y) = mulFP (\<Phi> x) (\<Phi> y)"
+            using h\<Phi>_hom hx hy unfolding top1_group_hom_on_def by (by100 blast)
+          moreover have "\<Psi> (mulFP (\<Phi> x) (\<Phi> y)) = mulFPZ (\<Psi> (\<Phi> x)) (\<Psi> (\<Phi> y))"
+            using h\<Psi>_hom h\<Phi>x h\<Phi>y unfolding top1_group_hom_on_def by (by100 blast)
+          ultimately show "\<Psi> (\<Phi> (mulFPZ x y)) = mulFPZ (\<Psi> (\<Phi> x)) (\<Psi> (\<Phi> y))" by (by100 simp)
+        qed
+        \<comment> \<open>By uniqueness: both \<Psi>\<circ>\<Phi> and id agree on generators, hence on all of FPZ.\<close>
+        have h\<iota>Z_id_hom: "\<forall>\<alpha>\<in>{0::nat,1}. top1_group_hom_on
+            (if \<alpha> = 0 then GU else GV) (if \<alpha> = 0 then mulU else mulV)
+            FPZ mulFPZ (\<iota>fam_Z \<alpha>)"
+        proof (intro ballI)
+          fix \<alpha> :: nat assume h\<alpha>: "\<alpha> \<in> {0, 1}"
+          show "top1_group_hom_on (if \<alpha> = 0 then GU else GV)
+              (if \<alpha> = 0 then mulU else mulV) FPZ mulFPZ (\<iota>fam_Z \<alpha>)"
+            unfolding top1_group_hom_on_def
+          proof (intro conjI ballI)
+            fix x assume hx: "x \<in> (if \<alpha> = 0 then GU else GV)"
+            show "\<iota>fam_Z \<alpha> x \<in> FPZ" using h\<iota>fam_Z_in h\<alpha> hx by (by100 blast)
+          next
+            fix x y assume hx: "x \<in> (if \<alpha> = 0 then GU else GV)"
+                and hy: "y \<in> (if \<alpha> = 0 then GU else GV)"
+            show "\<iota>fam_Z \<alpha> ((if \<alpha> = 0 then mulU else mulV) x y) =
+                mulFPZ (\<iota>fam_Z \<alpha> x) (\<iota>fam_Z \<alpha> y)"
+              using h\<iota>fam_Z_hom h\<alpha> hx hy by (by100 blast)
+          qed
+        qed
+        have h68_3_FPZ: "\<exists>h. top1_group_hom_on FPZ mulFPZ FPZ mulFPZ h
+            \<and> (\<forall>\<alpha>\<in>{0::nat,1}. \<forall>x\<in>(if \<alpha> = 0 then GU else GV). h (\<iota>fam_Z \<alpha> x) = \<iota>fam_Z \<alpha> x)
+            \<and> (\<forall>h'. top1_group_hom_on FPZ mulFPZ FPZ mulFPZ h'
+                \<longrightarrow> (\<forall>\<alpha>\<in>{0::nat,1}. \<forall>x\<in>(if \<alpha> = 0 then GU else GV). h' (\<iota>fam_Z \<alpha> x) = \<iota>fam_Z \<alpha> x)
+                \<longrightarrow> (\<forall>g\<in>FPZ. h' g = h g))"
+          using Lemma_68_3_extension_property[OF hFPZ hFPZ_grp h\<iota>Z_id_hom hGG_grps] .
+        \<comment> \<open>The uniqueness part of the extension property on FPZ: any two homs agreeing on
+           generators agree everywhere.\<close>
+        \<comment> \<open>Both id and \<Psi>\<circ>\<Phi> agree on generators, so they agree on all of FPZ.\<close>
+        have h\<Psi>\<Phi>_is_id: "\<forall>g\<in>FPZ. \<Psi> (\<Phi> g) = g"
+        proof -
+          \<comment> \<open>\<Psi>\<circ>\<Phi> and id both agree on generators of FPZ, so by uniqueness of the
+             extension property they agree everywhere. We use Lemma_68_3 directly.\<close>
+          note h68_3_result = Lemma_68_3_extension_property[OF hFPZ hFPZ_grp h\<iota>Z_id_hom hGG_grps]
+          \<comment> \<open>Extract uniqueness: any two homs agreeing on generators agree everywhere.\<close>
+          show ?thesis
+          proof (rule ballI)
+            fix g assume hg: "g \<in> FPZ"
+            from h68_3_result obtain hZ where
+                hZ_uniq: "\<forall>h'. top1_group_hom_on FPZ mulFPZ FPZ mulFPZ h'
+                    \<longrightarrow> (\<forall>\<alpha>\<in>{0::nat,1}. \<forall>x\<in>(if \<alpha> = 0 then GU else GV). h' (\<iota>fam_Z \<alpha> x) = \<iota>fam_Z \<alpha> x)
+                    \<longrightarrow> (\<forall>g\<in>FPZ. h' g = hZ g)"
+            proof -
+              from h68_3_result
+              have "\<exists>hZ0. (\<forall>h'. top1_group_hom_on FPZ mulFPZ FPZ mulFPZ h'
+                       \<longrightarrow> (\<forall>\<alpha>\<in>{0::nat,1}. \<forall>x\<in>(if \<alpha> = 0 then GU else GV). h' (\<iota>fam_Z \<alpha> x) = \<iota>fam_Z \<alpha> x)
+                       \<longrightarrow> (\<forall>g\<in>FPZ. h' g = hZ0 g))"
+                apply (elim exE conjE)
+                apply (rule exI)
+                apply assumption
+                done
+              then obtain hZ0 where hZ0_uniq: "\<forall>h'. top1_group_hom_on FPZ mulFPZ FPZ mulFPZ h'
+                       \<longrightarrow> (\<forall>\<alpha>\<in>{0::nat,1}. \<forall>x\<in>(if \<alpha> = 0 then GU else GV). h' (\<iota>fam_Z \<alpha> x) = \<iota>fam_Z \<alpha> x)
+                       \<longrightarrow> (\<forall>g\<in>FPZ. h' g = hZ0 g)"
+                by (by100 blast)
+              thus ?thesis using that by (by100 blast)
+            qed
+            have "(\<lambda>g. \<Psi> (\<Phi> g)) g = hZ g"
+              using hZ_uniq h\<Psi>\<Phi>_hom h\<Psi>\<Phi>_on_gens hg by (by100 blast)
+            moreover have "g = hZ g"
+              using hZ_uniq hid_hom hid_on_gens hg by (by100 blast)
+            ultimately show "\<Psi> (\<Phi> g) = g" by (by100 simp)
+          qed
+        qed
+        \<comment> \<open>Similarly show \<Phi>\<circ>\<Psi> = id on FP.\<close>
+        have h\<Phi>\<Psi>_on_gens: "\<forall>\<alpha>\<in>{0::nat,1}. \<forall>x\<in>(if \<alpha> = 0 then ?piU else ?piV).
+            \<Phi> (\<Psi> (\<iota>fam \<alpha> x)) = \<iota>fam \<alpha> x"
+        proof (intro ballI)
+          fix \<alpha> :: nat and x assume h\<alpha>: "\<alpha> \<in> {0::nat, 1}"
+              and hx: "x \<in> (if \<alpha> = 0 then ?piU else ?piV)"
+          have "\<alpha> = 0 \<or> \<alpha> = 1" using h\<alpha> by (by100 blast)
+          thus "\<Phi> (\<Psi> (\<iota>fam \<alpha> x)) = \<iota>fam \<alpha> x"
+          proof
+            assume h\<alpha>0: "\<alpha> = 0"
+            hence hx_piU: "x \<in> ?piU" using hx by (by100 simp)
+            have h1: "\<Psi> (\<iota>fam 0 x) = hfam_rev 0 x"
+              using h\<Psi>_ext hx_piU by (by100 auto)
+            have h2: "hfam_rev 0 x = \<iota>fam_Z 0 (fU_inv x)"
+              unfolding hfam_rev_def by (by100 simp)
+            have hfUi_in: "fU_inv x \<in> GU"
+              using hfU_inv_bij hx_piU unfolding bij_betw_def by (by100 blast)
+            have h3: "\<Phi> (\<iota>fam_Z 0 (fU_inv x)) = hfam_fwd 0 (fU_inv x)"
+              using h\<Phi>_ext hfUi_in by (by100 auto)
+            have h4: "hfam_fwd 0 (fU_inv x) = \<iota>fam 0 (fU (fU_inv x))"
+              unfolding hfam_fwd_def by (by100 simp)
+            have h5: "fU (fU_inv x) = x"
+              unfolding fU_inv_def by (rule bij_betw_inv_into_right[OF hfU_bij hx_piU])
+            show ?thesis using h\<alpha>0 h1 h2 h3 h4 h5 by (by100 simp)
+          next
+            assume h\<alpha>1: "\<alpha> = 1"
+            hence hx_piV: "x \<in> ?piV" using hx by (by100 simp)
+            have h1: "\<Psi> (\<iota>fam 1 x) = hfam_rev 1 x"
+              using h\<Psi>_ext hx_piV by (by100 auto)
+            have h2: "hfam_rev 1 x = \<iota>fam_Z 1 (fV_inv x)"
+              unfolding hfam_rev_def by (by100 simp)
+            have hfVi_in: "fV_inv x \<in> GV"
+              using hfV_inv_bij hx_piV unfolding bij_betw_def by (by100 blast)
+            have h3: "\<Phi> (\<iota>fam_Z 1 (fV_inv x)) = hfam_fwd 1 (fV_inv x)"
+              using h\<Phi>_ext hfVi_in by (by100 auto)
+            have h4: "hfam_fwd 1 (fV_inv x) = \<iota>fam 1 (fV (fV_inv x))"
+              unfolding hfam_fwd_def by (by100 simp)
+            have h5: "fV (fV_inv x) = x"
+              unfolding fV_inv_def by (rule bij_betw_inv_into_right[OF hfV_bij hx_piV])
+            show ?thesis using h\<alpha>1 h1 h2 h3 h4 h5 by (by100 simp)
+          qed
+        qed
+        \<comment> \<open>By uniqueness on FP: \<Phi>\<circ>\<Psi> = id on FP.
+           Uses the same uniqueness argument as for FPZ above.\<close>
+        have h\<Phi>\<Psi>_is_id: "\<forall>g\<in>FP. \<Phi> (\<Psi> g) = g"
+        proof -
+          \<comment> \<open>Build hom family: \<iota>fam_\<alpha> is a hom from factor_\<alpha> to FP.\<close>
+          have h\<iota>fam_id_hom: "\<forall>\<alpha>\<in>{0::nat,1}. top1_group_hom_on
+              (if \<alpha> = 0 then ?piU else ?piV) (if \<alpha> = 0 then ?mulU else ?mulV)
+              FP mulFP (\<iota>fam \<alpha>)"
+          proof (intro ballI)
+            fix \<alpha> :: nat assume h\<alpha>: "\<alpha> \<in> {0, 1}"
+            show "top1_group_hom_on (if \<alpha> = 0 then ?piU else ?piV)
+                (if \<alpha> = 0 then ?mulU else ?mulV) FP mulFP (\<iota>fam \<alpha>)"
+              unfolding top1_group_hom_on_def
+            proof (intro conjI ballI)
+              fix x assume hx: "x \<in> (if \<alpha> = 0 then ?piU else ?piV)"
+              show "\<iota>fam \<alpha> x \<in> FP" using h\<iota>fam_in h\<alpha> hx by (by100 blast)
+            next
+              fix x y assume hx: "x \<in> (if \<alpha> = 0 then ?piU else ?piV)"
+                  and hy: "y \<in> (if \<alpha> = 0 then ?piU else ?piV)"
+              show "\<iota>fam \<alpha> ((if \<alpha> = 0 then ?mulU else ?mulV) x y) =
+                  mulFP (\<iota>fam \<alpha> x) (\<iota>fam \<alpha> y)"
+                using h\<iota>fam_hom h\<alpha> hx hy by (by100 blast)
+            qed
+          qed
+          note h68_3_FP = Lemma_68_3_extension_property[OF hFP hFP_grp h\<iota>fam_id_hom hgroups_UV]
+          show ?thesis
+          proof (rule ballI)
+            fix g assume hg: "g \<in> FP"
+            from h68_3_FP
+            have "\<exists>hFP0. (\<forall>h'. top1_group_hom_on FP mulFP FP mulFP h'
+                       \<longrightarrow> (\<forall>\<alpha>\<in>{0::nat,1}. \<forall>x\<in>(if \<alpha> = 0 then ?piU else ?piV). h' (\<iota>fam \<alpha> x) = \<iota>fam \<alpha> x)
+                       \<longrightarrow> (\<forall>g\<in>FP. h' g = hFP0 g))"
+              apply (elim exE conjE)
+              apply (rule exI)
+              apply assumption
+              done
+            then obtain hFP0 where hFP0_uniq: "\<forall>h'. top1_group_hom_on FP mulFP FP mulFP h'
+                       \<longrightarrow> (\<forall>\<alpha>\<in>{0::nat,1}. \<forall>x\<in>(if \<alpha> = 0 then ?piU else ?piV). h' (\<iota>fam \<alpha> x) = \<iota>fam \<alpha> x)
+                       \<longrightarrow> (\<forall>g\<in>FP. h' g = hFP0 g)"
+              by (by100 blast)
+            \<comment> \<open>\<Phi>\<circ>\<Psi> is a group hom FP \<rightarrow> FP.\<close>
+            have h\<Phi>\<Psi>_hom: "top1_group_hom_on FP mulFP FP mulFP (\<lambda>g. \<Phi> (\<Psi> g))"
+              unfolding top1_group_hom_on_def
+            proof (intro conjI ballI)
+              fix x assume hx: "x \<in> FP"
+              have "\<Psi> x \<in> FPZ" using h\<Psi>_hom hx unfolding top1_group_hom_on_def by (by100 blast)
+              thus "\<Phi> (\<Psi> x) \<in> FP" using h\<Phi>_hom unfolding top1_group_hom_on_def by (by100 blast)
+            next
+              fix x y assume hx: "x \<in> FP" and hy: "y \<in> FP"
+              have h\<Psi>x: "\<Psi> x \<in> FPZ" using h\<Psi>_hom hx unfolding top1_group_hom_on_def by (by100 blast)
+              have h\<Psi>y: "\<Psi> y \<in> FPZ" using h\<Psi>_hom hy unfolding top1_group_hom_on_def by (by100 blast)
+              have "\<Psi> (mulFP x y) = mulFPZ (\<Psi> x) (\<Psi> y)"
+                using h\<Psi>_hom hx hy unfolding top1_group_hom_on_def by (by100 blast)
+              moreover have "\<Phi> (mulFPZ (\<Psi> x) (\<Psi> y)) = mulFP (\<Phi> (\<Psi> x)) (\<Phi> (\<Psi> y))"
+                using h\<Phi>_hom h\<Psi>x h\<Psi>y unfolding top1_group_hom_on_def by (by100 blast)
+              ultimately show "\<Phi> (\<Psi> (mulFP x y)) = mulFP (\<Phi> (\<Psi> x)) (\<Phi> (\<Psi> y))" by (by100 simp)
+            qed
+            have hid_FP_hom: "top1_group_hom_on FP mulFP FP mulFP (\<lambda>g. g)"
+              unfolding top1_group_hom_on_def by (by100 blast)
+            have "(\<lambda>g. \<Phi> (\<Psi> g)) g = hFP0 g"
+              using hFP0_uniq h\<Phi>\<Psi>_hom h\<Phi>\<Psi>_on_gens hg by (by100 blast)
+            moreover have "g = hFP0 g"
+              using hFP0_uniq hid_FP_hom hg by (by100 auto)
+            ultimately show "\<Phi> (\<Psi> g) = g" by (by100 simp)
+          qed
+        qed
+        \<comment> \<open>Now \<Phi> is a bijection with inverse \<Psi>.\<close>
+        have h\<Phi>_surj: "\<Phi> ` FPZ = FP"
+        proof
+          show "\<Phi> ` FPZ \<subseteq> FP"
+            using h\<Phi>_hom unfolding top1_group_hom_on_def by (by100 blast)
+        next
+          show "FP \<subseteq> \<Phi> ` FPZ"
+          proof
+            fix y assume hy: "y \<in> FP"
+            have h\<Psi>y: "\<Psi> y \<in> FPZ"
+              using h\<Psi>_hom hy unfolding top1_group_hom_on_def by (by100 blast)
+            have h\<Phi>\<Psi>y: "\<Phi> (\<Psi> y) = y" using h\<Phi>\<Psi>_is_id hy by (by100 blast)
+            have "y = \<Phi> (\<Psi> y)" using h\<Phi>\<Psi>y by (by100 simp)
+            thus "y \<in> \<Phi> ` FPZ" using h\<Psi>y by (by100 force)
+          qed
+        qed
+        have h\<Phi>_inj: "inj_on \<Phi> FPZ"
+        proof (rule inj_onI)
+          fix x y assume hx: "x \<in> FPZ" and hy: "y \<in> FPZ" and heq: "\<Phi> x = \<Phi> y"
+          have hx': "\<Psi> (\<Phi> x) = x" using h\<Psi>\<Phi>_is_id hx by (by100 blast)
+          have hy': "\<Psi> (\<Phi> y) = y" using h\<Psi>\<Phi>_is_id hy by (by100 blast)
+          have "\<Psi> (\<Phi> x) = \<Psi> (\<Phi> y)" using heq by (by100 simp)
+          thus "x = y" using hx' hy' by (by100 simp)
+        qed
+        have h\<Phi>_bij: "bij_betw \<Phi> FPZ FP"
+          unfolding bij_betw_def using h\<Phi>_inj h\<Phi>_surj by (by100 blast)
+        \<comment> \<open>Conclude FPZ \<cong> FP.\<close>
+        show ?thesis
+          unfolding top1_groups_isomorphic_on_def top1_group_iso_on_def
+          using h\<Phi>_hom h\<Phi>_bij by (by100 blast)
+      qed
+      \<comment> \<open>Step F: Chain isomorphisms: FPZ \<cong> FP and \<pi>_1(X) \<cong> FP, so FPZ \<cong> \<pi>_1(X).\<close>
+      have hFPZ_iso_piX: "top1_groups_isomorphic_on FPZ mulFPZ
+          (top1_fundamental_group_carrier X TX p)
+          (top1_fundamental_group_mul X TX p)"
+        by (rule groups_isomorphic_trans_fwd[OF hFPZ_iso_FP
+            top1_groups_isomorphic_on_sym[OF hSvK_iso
+              top1_fundamental_group_is_group[OF hTX hp_X]
+              hFP_grp]])
+      \<comment> \<open>FPZ is free on {..<n} and isomorphic to \<pi>_1(X).
+         Type transfer: FPZ :: (nat \<times> int) list set, but we need G :: int set.
+         Since (nat \<times> int) list is countable, there exists a bijection to int.
+         Transport the group structure through this bijection to get a free group on int set.\<close>
+      have hFPZ_free_and_iso: "top1_is_free_group_full_on FPZ mulFPZ eFPZ invgFPZ \<iota>Z {..<n}
+          \<and> top1_groups_isomorphic_on FPZ mulFPZ
+              (top1_fundamental_group_carrier X TX p)
+              (top1_fundamental_group_mul X TX p)"
+        using hFPZ_free_n hFPZ_iso_piX by (by100 blast)
+      \<comment> \<open>Transport via encoding: there exists a bijection \<sigma>: (nat \<times> int) list \<rightarrow> int.
+         Define G = \<sigma> ` FPZ, mul_G a b = \<sigma> (mulFPZ (\<sigma>\<inverse> a) (\<sigma>\<inverse> b)), etc.
+         Then G :: int set is a free group on {..<n} and isomorphic to \<pi>_1(X).\<close>
+      obtain \<sigma> :: "(nat \<times> int) list \<Rightarrow> int" where
+          h\<sigma>_bij: "bij \<sigma>"
+        sorry \<comment> \<open>(nat \<times> int) list and int are both countably infinite, so a bijection exists.
+           This is a set-theoretic fact about cardinalities.\<close>
+      define G_int :: "int set" where "G_int = \<sigma> ` FPZ"
+      define \<sigma>_inv :: "int \<Rightarrow> (nat \<times> int) list" where "\<sigma>_inv = inv_into UNIV \<sigma>"
+      have h\<sigma>_surj: "surj \<sigma>" using h\<sigma>_bij unfolding bij_def by (by100 blast)
+      have h\<sigma>_inj: "inj \<sigma>" using h\<sigma>_bij unfolding bij_def by (by100 blast)
+      have h\<sigma>_inv: "\<And>x. \<sigma> (\<sigma>_inv x) = x"
+        unfolding \<sigma>_inv_def using h\<sigma>_surj surj_f_inv_f
+        by (by100 fastforce)
+      have h\<sigma>_inv2: "\<And>x. \<sigma>_inv (\<sigma> x) = x"
+        unfolding \<sigma>_inv_def using h\<sigma>_inj inv_into_f_f
+        by (by100 fastforce)
+      define mul_int :: "int \<Rightarrow> int \<Rightarrow> int" where "mul_int = (\<lambda>a b. \<sigma> (mulFPZ (\<sigma>_inv a) (\<sigma>_inv b)))"
+      define e_int :: int where "e_int = \<sigma> eFPZ"
+      define invg_int :: "int \<Rightarrow> int" where "invg_int = (\<lambda>a. \<sigma> (invgFPZ (\<sigma>_inv a)))"
+      define \<iota>_int :: "nat \<Rightarrow> int" where "\<iota>_int = (\<lambda>s. \<sigma> (\<iota>Z s))"
+      \<comment> \<open>First prove G_int is a group (needed for both free group and isomorphism proofs).\<close>
+      have he_FPZ: "eFPZ \<in> FPZ" using hFPZ_grp unfolding top1_is_group_on_def by (by100 blast)
+      have hmul_FPZ: "\<And>a b. a \<in> FPZ \<Longrightarrow> b \<in> FPZ \<Longrightarrow> mulFPZ a b \<in> FPZ"
+        using hFPZ_grp by (rule group_mul_closed)
+      have hinv_FPZ: "\<And>a. a \<in> FPZ \<Longrightarrow> invgFPZ a \<in> FPZ"
+        using hFPZ_grp by (rule group_inv_closed)
+      have hmul_transport: "\<And>a b. a \<in> FPZ \<Longrightarrow> b \<in> FPZ \<Longrightarrow>
+          mul_int (\<sigma> a) (\<sigma> b) = \<sigma> (mulFPZ a b)"
+        unfolding mul_int_def using h\<sigma>_inv2 by (by100 simp)
+      have hinvg_transport: "\<And>a. a \<in> FPZ \<Longrightarrow>
+          invg_int (\<sigma> a) = \<sigma> (invgFPZ a)"
+        unfolding invg_int_def using h\<sigma>_inv2 by (by100 simp)
+      have hG_int_grp: "top1_is_group_on G_int mul_int e_int invg_int"
+      proof -
+        have hassoc_FPZ: "\<And>a b c. a \<in> FPZ \<Longrightarrow> b \<in> FPZ \<Longrightarrow> c \<in> FPZ \<Longrightarrow>
+            mulFPZ (mulFPZ a b) c = mulFPZ a (mulFPZ b c)"
+          using hFPZ_grp unfolding top1_is_group_on_def by (by100 blast)
+        have hid_FPZ: "\<And>a. a \<in> FPZ \<Longrightarrow> mulFPZ eFPZ a = a \<and> mulFPZ a eFPZ = a"
+          using hFPZ_grp unfolding top1_is_group_on_def by (by100 blast)
+        have hinvlaw_FPZ: "\<And>a. a \<in> FPZ \<Longrightarrow> mulFPZ (invgFPZ a) a = eFPZ \<and> mulFPZ a (invgFPZ a) = eFPZ"
+          using hFPZ_grp unfolding top1_is_group_on_def by (by100 blast)
+        show ?thesis unfolding top1_is_group_on_def
+        proof (intro conjI)
+          show "e_int \<in> G_int" unfolding G_int_def e_int_def using he_FPZ by (by100 blast)
+        next
+          show "\<forall>x\<in>G_int. \<forall>y\<in>G_int. mul_int x y \<in> G_int"
+          proof (intro ballI)
+            fix x y assume hx: "x \<in> G_int" and hy: "y \<in> G_int"
+            obtain x' where hx': "x' \<in> FPZ" "x = \<sigma> x'" using hx unfolding G_int_def by (by100 blast)
+            obtain y' where hy': "y' \<in> FPZ" "y = \<sigma> y'" using hy unfolding G_int_def by (by100 blast)
+            have "mul_int x y = \<sigma> (mulFPZ x' y')" using hmul_transport[OF hx'(1) hy'(1)] hx'(2) hy'(2) by (by100 simp)
+            thus "mul_int x y \<in> G_int" unfolding G_int_def using hmul_FPZ[OF hx'(1) hy'(1)] by (by100 blast)
+          qed
+        next
+          show "\<forall>x\<in>G_int. invg_int x \<in> G_int"
+          proof (intro ballI)
+            fix x assume hx: "x \<in> G_int"
+            obtain x' where hx': "x' \<in> FPZ" "x = \<sigma> x'" using hx unfolding G_int_def by (by100 blast)
+            have "invg_int x = \<sigma> (invgFPZ x')" using hinvg_transport[OF hx'(1)] hx'(2) by (by100 simp)
+            thus "invg_int x \<in> G_int" unfolding G_int_def using hinv_FPZ[OF hx'(1)] by (by100 blast)
+          qed
+        next
+          show "\<forall>x\<in>G_int. \<forall>y\<in>G_int. \<forall>z\<in>G_int.
+              mul_int (mul_int x y) z = mul_int x (mul_int y z)"
+          proof (intro ballI)
+            fix x y z assume hx: "x \<in> G_int" and hy: "y \<in> G_int" and hz: "z \<in> G_int"
+            obtain x' where hx': "x' \<in> FPZ" "x = \<sigma> x'" using hx unfolding G_int_def by (by100 blast)
+            obtain y' where hy': "y' \<in> FPZ" "y = \<sigma> y'" using hy unfolding G_int_def by (by100 blast)
+            obtain z' where hz': "z' \<in> FPZ" "z = \<sigma> z'" using hz unfolding G_int_def by (by100 blast)
+            have hxy: "mulFPZ x' y' \<in> FPZ" by (rule hmul_FPZ[OF hx'(1) hy'(1)])
+            have hyz: "mulFPZ y' z' \<in> FPZ" by (rule hmul_FPZ[OF hy'(1) hz'(1)])
+            show "mul_int (mul_int x y) z = mul_int x (mul_int y z)"
+              unfolding mul_int_def hx'(2) hy'(2) hz'(2)
+              using h\<sigma>_inv2 hassoc_FPZ[OF hx'(1) hy'(1) hz'(1)] by (by100 simp)
+          qed
+        next
+          show "\<forall>x\<in>G_int. mul_int e_int x = x \<and> mul_int x e_int = x"
+          proof (intro ballI)
+            fix x assume hx: "x \<in> G_int"
+            obtain x' where hx': "x' \<in> FPZ" "x = \<sigma> x'" using hx unfolding G_int_def by (by100 blast)
+            show "mul_int e_int x = x \<and> mul_int x e_int = x"
+              unfolding mul_int_def e_int_def hx'(2) using h\<sigma>_inv2 hid_FPZ[OF hx'(1)] by (by100 simp)
+          qed
+        next
+          show "\<forall>x\<in>G_int. mul_int (invg_int x) x = e_int \<and> mul_int x (invg_int x) = e_int"
+          proof (intro ballI)
+            fix x assume hx: "x \<in> G_int"
+            obtain x' where hx': "x' \<in> FPZ" "x = \<sigma> x'" using hx unfolding G_int_def by (by100 blast)
+            have hinvx: "invgFPZ x' \<in> FPZ" by (rule hinv_FPZ[OF hx'(1)])
+            show "mul_int (invg_int x) x = e_int \<and> mul_int x (invg_int x) = e_int"
+              unfolding mul_int_def invg_int_def e_int_def hx'(2) using h\<sigma>_inv2 hinvlaw_FPZ[OF hx'(1)] by (by100 simp)
+          qed
+        qed
+      qed
+      \<comment> \<open>Transfer the free group property and isomorphism through \<sigma>.\<close>
+      have hG_int_free: "top1_is_free_group_full_on G_int mul_int e_int invg_int \<iota>_int {..<n}"
+      proof -
+        note hfree = hFPZ_free_n[unfolded top1_is_free_group_full_on_def]
+        have h\<iota>Z_in: "\<forall>s\<in>{..<n}. \<iota>Z s \<in> FPZ" using hfree by (by100 blast)
+        have h\<iota>Z_inj: "inj_on \<iota>Z {..<n}" using hfree by (by100 blast)
+        \<comment> \<open>Condition 1: G_int is a group (already proved).\<close>
+        \<comment> \<open>Condition 2: \<iota>_int maps {..<n} into G_int.\<close>
+        have h\<iota>_int_in: "\<forall>s\<in>{..<n}. \<iota>_int s \<in> G_int"
+        proof (intro ballI)
+          fix s assume hs: "s \<in> {..<n}"
+          have "\<iota>Z s \<in> FPZ" using h\<iota>Z_in hs by (by100 blast)
+          thus "\<iota>_int s \<in> G_int" unfolding \<iota>_int_def G_int_def by (by100 blast)
+        qed
+        \<comment> \<open>Condition 3: \<iota>_int is injective on {..<n}.\<close>
+        have h\<iota>_int_inj: "inj_on \<iota>_int {..<n}"
+        proof (rule inj_onI)
+          fix s t assume hs: "s \<in> {..<n}" and ht: "t \<in> {..<n}" and heq: "\<iota>_int s = \<iota>_int t"
+          have "\<sigma> (\<iota>Z s) = \<sigma> (\<iota>Z t)" using heq unfolding \<iota>_int_def by (by100 simp)
+          hence "\<iota>Z s = \<iota>Z t" using h\<sigma>_inj unfolding inj_def by (by100 blast)
+          thus "s = t" using h\<iota>Z_inj hs ht unfolding inj_on_def by (by100 blast)
+        qed
+        \<comment> \<open>Conditions 4 (generation) and 5 (reduced word) transport through \<sigma>.\<close>
+        have hgen_FPZ: "FPZ = top1_subgroup_generated_on FPZ mulFPZ eFPZ invgFPZ (\<iota>Z ` {..<n})"
+          using hfree by (by100 blast)
+        have hred_FPZ: "\<And>ws :: (nat \<times> bool) list. ws \<noteq> [] \<Longrightarrow>
+            top1_is_reduced_word (map (\<lambda>(s, b). (\<iota>Z s, b)) ws) \<Longrightarrow>
+            (\<forall>i<length ws. fst (ws!i) \<in> {..<n}) \<Longrightarrow>
+            top1_group_word_product mulFPZ eFPZ invgFPZ (map (\<lambda>(s, b). (\<iota>Z s, b)) ws) \<noteq> eFPZ"
+          using hfree by (by100 blast)
+        \<comment> \<open>Generation: G_int = \<sigma>(FPZ) = \<sigma>(generated by \<iota>Z({..<n}))
+           = generated by \<sigma>(\<iota>Z({..<n})) = generated by \<iota>_int({..<n}).\<close>
+        have hgen_int: "G_int = top1_subgroup_generated_on G_int mul_int e_int invg_int (\<iota>_int ` {..<n})"
+          sorry \<comment> \<open>Transport of subgroup generation through \<sigma>:
+             \<sigma> maps products/inverses of \<iota>Z-generators to products/inverses of \<iota>_int-generators,
+             and every element of G_int = \<sigma>(FPZ) comes from such a product.\<close>
+        \<comment> \<open>Reduced word property: transport through \<sigma>.\<close>
+        have hred_int: "\<And>ws :: (nat \<times> bool) list. ws \<noteq> [] \<Longrightarrow>
+            top1_is_reduced_word (map (\<lambda>(s, b). (\<iota>_int s, b)) ws) \<Longrightarrow>
+            (\<forall>i<length ws. fst (ws!i) \<in> {..<n}) \<Longrightarrow>
+            top1_group_word_product mul_int e_int invg_int (map (\<lambda>(s, b). (\<iota>_int s, b)) ws) \<noteq> e_int"
+        proof -
+          fix ws :: "(nat \<times> bool) list"
+          assume hne: "ws \<noteq> []"
+              and hred: "top1_is_reduced_word (map (\<lambda>(s, b). (\<iota>_int s, b)) ws)"
+              and hin: "\<forall>i<length ws. fst (ws!i) \<in> {..<n}"
+          \<comment> \<open>Key: map (\<lambda>(s,b). (\<iota>_int s, b)) ws = map (\<lambda>(s,b). (\<sigma>(\<iota>Z s), b)) ws.
+             Since \<sigma> is injective, the reduced word property on \<iota>_int-words
+             is equivalent to the reduced word property on \<iota>Z-words.\<close>
+          have hmap_eq: "map (\<lambda>(s, b). (\<iota>_int s, b)) ws = map (\<lambda>(s, b). (\<sigma> (\<iota>Z s), b)) ws"
+            unfolding \<iota>_int_def by (by100 simp)
+          \<comment> \<open>reduced_word(\<iota>_int) \<longleftrightarrow> reduced_word(\<iota>Z) since \<sigma> is injective.\<close>
+          have hred_Z: "top1_is_reduced_word (map (\<lambda>(s, b). (\<iota>Z s, b)) ws)"
+          proof -
+            \<comment> \<open>top1_is_reduced_word checks that consecutive pairs differ.
+               Since \<sigma> is injective, (\<sigma>(\<iota>Z s), b) pairs differ iff (\<iota>Z s, b) pairs differ.\<close>
+            have "top1_is_reduced_word (map (\<lambda>(s, b). (\<sigma> (\<iota>Z s), b)) ws)"
+              using hred hmap_eq by (by100 simp)
+            thus ?thesis sorry \<comment> \<open>Injectivity of \<sigma> transfers reduced word property.\<close>
+          qed
+          have hprod_ne: "top1_group_word_product mulFPZ eFPZ invgFPZ
+              (map (\<lambda>(s, b). (\<iota>Z s, b)) ws) \<noteq> eFPZ"
+            using hred_FPZ[OF hne hred_Z hin] .
+          \<comment> \<open>The word product with \<iota>_int = \<sigma> \<circ> \<iota>Z and mul_int = \<sigma> \<circ> mulFPZ \<circ> (\<sigma>\<inverse> \<times> \<sigma>\<inverse>)
+             equals \<sigma>(word product with \<iota>Z and mulFPZ).\<close>
+          have hprod_transport: "top1_group_word_product mul_int e_int invg_int
+              (map (\<lambda>(s, b). (\<iota>_int s, b)) ws) =
+              \<sigma> (top1_group_word_product mulFPZ eFPZ invgFPZ (map (\<lambda>(s, b). (\<iota>Z s, b)) ws))"
+            sorry \<comment> \<open>Induction on ws: word product transports through \<sigma>.\<close>
+          show "top1_group_word_product mul_int e_int invg_int
+              (map (\<lambda>(s, b). (\<iota>_int s, b)) ws) \<noteq> e_int"
+          proof
+            assume "top1_group_word_product mul_int e_int invg_int
+                (map (\<lambda>(s, b). (\<iota>_int s, b)) ws) = e_int"
+            hence "\<sigma> (top1_group_word_product mulFPZ eFPZ invgFPZ
+                (map (\<lambda>(s, b). (\<iota>Z s, b)) ws)) = \<sigma> eFPZ"
+              using hprod_transport unfolding e_int_def by (by100 simp)
+            hence "top1_group_word_product mulFPZ eFPZ invgFPZ
+                (map (\<lambda>(s, b). (\<iota>Z s, b)) ws) = eFPZ"
+              using h\<sigma>_inj unfolding inj_def by (by100 blast)
+            thus False using hprod_ne by (by100 simp)
+          qed
+        qed
+        show ?thesis unfolding top1_is_free_group_full_on_def
+          using hG_int_grp h\<iota>_int_in h\<iota>_int_inj hgen_int hred_int by (by100 blast)
+      qed
+      have hG_int_iso: "top1_groups_isomorphic_on G_int mul_int
+          (top1_fundamental_group_carrier X TX p)
+          (top1_fundamental_group_mul X TX p)"
+      proof -
+        \<comment> \<open>\<sigma>: FPZ \<rightarrow> G_int is an isomorphism by construction.\<close>
+        have h\<sigma>_hom: "top1_group_hom_on FPZ mulFPZ G_int mul_int \<sigma>"
+          unfolding top1_group_hom_on_def
+        proof (intro conjI ballI)
+          fix x assume "x \<in> FPZ"
+          thus "\<sigma> x \<in> G_int" unfolding G_int_def by (by100 blast)
+        next
+          fix x y assume hx: "x \<in> FPZ" and hy: "y \<in> FPZ"
+          show "\<sigma> (mulFPZ x y) = mul_int (\<sigma> x) (\<sigma> y)"
+            unfolding mul_int_def using h\<sigma>_inv2 by (by100 simp)
+        qed
+        have h\<sigma>_bij_betw: "bij_betw \<sigma> FPZ G_int"
+          unfolding bij_betw_def G_int_def
+        proof (intro conjI)
+          show "inj_on \<sigma> FPZ" using h\<sigma>_inj unfolding inj_on_def by (by100 blast)
+        next
+          show "\<sigma> ` FPZ = \<sigma> ` FPZ" by (by100 blast)
+        qed
+        have h\<sigma>_iso: "top1_groups_isomorphic_on FPZ mulFPZ G_int mul_int"
+          unfolding top1_groups_isomorphic_on_def top1_group_iso_on_def
+          using h\<sigma>_hom h\<sigma>_bij_betw by (by100 blast)
+        have h\<sigma>_iso_rev: "top1_groups_isomorphic_on G_int mul_int FPZ mulFPZ"
+          by (rule top1_groups_isomorphic_on_sym[OF h\<sigma>_iso hFPZ_grp hG_int_grp])
+        show ?thesis by (rule groups_isomorphic_trans_fwd[OF h\<sigma>_iso_rev hFPZ_iso_piX])
+      qed
+      show ?thesis using hG_int_free hG_int_iso by (by100 blast)
+    qed
     show "\<exists>(G::int set) mul e invg (\<iota>::nat \<Rightarrow> int).
            top1_is_free_group_full_on G mul e invg \<iota> {..<n}
          \<and> top1_groups_isomorphic_on G mul
