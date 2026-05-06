@@ -1964,14 +1964,43 @@ proof -
               thus ?thesis by (intro continuous_intros)
             qed
             \<comment> \<open>Each component: (1-t)*a + t*a/sqrt(...) is continuous (projections + arith + div).\<close>
-            have hcomp1_cont: "continuous_on (?B2_0 \<times> I_set)
+            \<comment> \<open>Prove on UNIV first (fast), then restrict to B2\{0}\<times>I.\<close>
+            let ?S = "?B2_0 \<times> I_set"
+            have hA1_univ: "continuous_on UNIV (\<lambda>p::(real\<times>real)\<times>real. (1 - snd p) * fst (fst p))"
+              by (intro continuous_intros)
+            have hA2_univ: "continuous_on UNIV (\<lambda>p::(real\<times>real)\<times>real. (1 - snd p) * snd (fst p))"
+              by (intro continuous_intros)
+            have hN1_univ: "continuous_on UNIV (\<lambda>p::(real\<times>real)\<times>real. snd p * fst (fst p))"
+              by (intro continuous_intros)
+            have hN2_univ: "continuous_on UNIV (\<lambda>p::(real\<times>real)\<times>real. snd p * snd (fst p))"
+              by (intro continuous_intros)
+            \<comment> \<open>Restrict to S = B2\{0} \<times> I.\<close>
+            have hA1: "continuous_on ?S (\<lambda>p::(real\<times>real)\<times>real. (1 - snd p) * fst (fst p))"
+              using continuous_on_subset[OF hA1_univ] by (by100 blast)
+            have hA2: "continuous_on ?S (\<lambda>p::(real\<times>real)\<times>real. (1 - snd p) * snd (fst p))"
+              using continuous_on_subset[OF hA2_univ] by (by100 blast)
+            have hN1: "continuous_on ?S (\<lambda>p::(real\<times>real)\<times>real. snd p * fst (fst p))"
+              using continuous_on_subset[OF hN1_univ] by (by100 blast)
+            have hN2: "continuous_on ?S (\<lambda>p::(real\<times>real)\<times>real. snd p * snd (fst p))"
+              using continuous_on_subset[OF hN2_univ] by (by100 blast)
+            \<comment> \<open>Division by sqrt (nonzero on S).\<close>
+            have hD1: "continuous_on ?S
+                (\<lambda>p::(real\<times>real)\<times>real. snd p * fst (fst p) / sqrt (fst (fst p) ^ 2 + snd (fst p) ^ 2))"
+              apply (rule continuous_on_divide[OF hN1 hsqrt_cont])
+              using hsqrt_ne0 by (by100 blast)
+            have hD2: "continuous_on ?S
+                (\<lambda>p::(real\<times>real)\<times>real. snd p * snd (fst p) / sqrt (fst (fst p) ^ 2 + snd (fst p) ^ 2))"
+              apply (rule continuous_on_divide[OF hN2 hsqrt_cont])
+              using hsqrt_ne0 by (by100 blast)
+            \<comment> \<open>Sum of the two terms.\<close>
+            have hcomp1_cont: "continuous_on ?S
                 (\<lambda>p::(real\<times>real)\<times>real. (1 - snd p) * fst (fst p) +
                   snd p * fst (fst p) / sqrt (fst (fst p) ^ 2 + snd (fst p) ^ 2))"
-              sorry \<comment> \<open>continuous_on: projections + arithmetic + division by nonzero sqrt.\<close>
-            have hcomp2_cont: "continuous_on (?B2_0 \<times> I_set)
+              by (rule continuous_on_add[OF hA1 hD1])
+            have hcomp2_cont: "continuous_on ?S
                 (\<lambda>p::(real\<times>real)\<times>real. (1 - snd p) * snd (fst p) +
                   snd p * snd (fst p) / sqrt (fst (fst p) ^ 2 + snd (fst p) ^ 2))"
-              sorry \<comment> \<open>Same structure but snd component.\<close>
+              by (rule continuous_on_add[OF hA2 hD2])
             have "?interp = (\<lambda>p. ((1 - snd p) * fst (fst p) +
                 snd p * fst (fst p) / sqrt (fst (fst p) ^ 2 + snd (fst p) ^ 2),
                 (1 - snd p) * snd (fst p) +
@@ -8945,6 +8974,8 @@ end
 
 
 
+ 
+ 
  
  
  
