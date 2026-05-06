@@ -271,8 +271,37 @@ lemma quotient_group_iso_transfer:
 proof -
   \<comment> \<open>Step 1: \<phi>(N) is a normal subgroup of G'.\<close>
   have hphiN_normal: "top1_normal_subgroup_on G' mulG' eG' invgG' (\<phi> ` N)"
-    sorry \<comment> \<open>Image of normal under isomorphism is normal:
-         \<phi>(g) \<cdot> \<phi>(N) \<cdot> \<phi>(g)\<inverse> = \<phi>(g N g\<inverse>) = \<phi>(N).\<close>
+    unfolding top1_normal_subgroup_on_def
+  proof (intro conjI ballI)
+    \<comment> \<open>\<phi>(N) \<subseteq> G'.\<close>
+    have hN_sub: "N \<subseteq> G" using assms(4) unfolding top1_normal_subgroup_on_def by (by100 blast)
+    have hphi_maps: "\<forall>g\<in>G. \<phi> g \<in> G'" using assms(3) unfolding top1_group_iso_on_def top1_group_hom_on_def by (by100 blast)
+    show "\<phi> ` N \<subseteq> G'" using hN_sub hphi_maps by (by100 blast)
+    \<comment> \<open>\<phi>(N) is a subgroup.\<close>
+    show "top1_is_group_on (\<phi> ` N) mulG' eG' invgG'"
+      sorry \<comment> \<open>Image of subgroup under iso is subgroup: e'\<in>\<phi>(N), closure, inverse.\<close>
+    \<comment> \<open>Conjugation: \<forall>g'\<in>G'. \<forall>m\<in>\<phi>(N). g'\<cdot>m\<cdot>g'\<inverse> \<in> \<phi>(N).\<close>
+    fix g' m assume hg': "g' \<in> G'" and hm: "m \<in> \<phi> ` N"
+    show "mulG' (mulG' g' m) (invgG' g') \<in> \<phi> ` N"
+    proof -
+      \<comment> \<open>g' = \<phi>(g) for some g \<in> G (surjectivity).\<close>
+      have hphi_surj: "\<phi> ` G = G'" using assms(3) unfolding top1_group_iso_on_def bij_betw_def by (by100 blast)
+      obtain g where hg: "g \<in> G" "\<phi> g = g'" using hphi_surj hg' by (by100 blast)
+      obtain n where hn: "n \<in> N" "\<phi> n = m" using hm by (by100 blast)
+      \<comment> \<open>\<phi> is a homomorphism: \<phi>(g\<cdot>n\<cdot>g\<inverse>) = \<phi>(g)\<cdot>\<phi>(n)\<cdot>\<phi>(g\<inverse>) = g'\<cdot>m\<cdot>\<phi>(g\<inverse>).\<close>
+      have hphi_hom_loc: "top1_group_hom_on G mulG G' mulG' \<phi>"
+        using assms(3) unfolding top1_group_iso_on_def by (by100 blast)
+      \<comment> \<open>g\<cdot>n\<cdot>g\<inverse> \<in> N (normality).\<close>
+      have hconj: "mulG (mulG g n) (invgG g) \<in> N"
+        using assms(4) hg(1) hn(1) unfolding top1_normal_subgroup_on_def by (by100 blast)
+      \<comment> \<open>\<phi>(g\<cdot>n\<cdot>g\<inverse>) \<in> \<phi>(N).\<close>
+      have "\<phi> (mulG (mulG g n) (invgG g)) \<in> \<phi> ` N" using hconj by (by100 blast)
+      \<comment> \<open>\<phi>(g\<cdot>n\<cdot>g\<inverse>) = \<phi>(g)\<cdot>\<phi>(n)\<cdot>\<phi>(g\<inverse>) = g'\<cdot>m\<cdot>invgG'(g').\<close>
+      moreover have "\<phi> (mulG (mulG g n) (invgG g)) = mulG' (mulG' g' m) (invgG' g')"
+        sorry \<comment> \<open>Homomorphism: \<phi>(a\<cdot>b) = \<phi>(a)\<cdot>\<phi>(b) and \<phi>(g\<inverse>) = \<phi>(g)\<inverse>.\<close>
+      ultimately show ?thesis by (by100 simp)
+    qed
+  qed
   \<comment> \<open>Step 2: G'/\<phi>(N) is a group.\<close>
   let ?\<pi>' = "\<lambda>g'. top1_group_coset_on G' mulG' (\<phi> ` N) g'"
   have hQ'_group: "top1_is_group_on (top1_quotient_group_carrier_on G' mulG' (\<phi> ` N))
@@ -329,8 +358,13 @@ proof -
       (top1_quotient_group_carrier_on G mulG N) (top1_quotient_group_mul_on mulG)"
     by (rule first_isomorphism_theorem[OF assms(1) assms(4) hQ'_group hpi_phi_hom hpi_phi_surj hpi_phi_ker])
   \<comment> \<open>Symmetry: G/N \<cong> G'/\<phi>(N).\<close>
-  thus ?thesis
-    sorry \<comment> \<open>Symmetry: groups_isomorphic_on_sym with quotient_group_is_group.\<close>
+  hence "top1_groups_isomorphic_on
+      (top1_quotient_group_carrier_on G mulG N) (top1_quotient_group_mul_on mulG)
+      (top1_quotient_group_carrier_on G' mulG' (\<phi> ` N)) (top1_quotient_group_mul_on mulG')"
+    apply (rule top1_groups_isomorphic_on_sym)
+     apply (rule hQ'_group)
+    by (rule quotient_group_is_group[OF assms(1) assms(4)])
+  thus ?thesis .
 qed
 
 section \<open>\<S>72 Adjoining a Two-Cell\<close>
@@ -9619,6 +9653,10 @@ end
 
 
 
+ 
+ 
+ 
+ 
  
  
  
