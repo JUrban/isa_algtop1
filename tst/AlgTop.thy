@@ -1774,9 +1774,26 @@ proof -
            g respects h-fibers. By Theorem_22_2, g descends to continuous H_C on CU \<times> I.
            H_U agrees with H_C on CU.\<close>
       \<comment> \<open>Paste via pasting_lemma_two_closed.\<close>
+      \<comment> \<open>Paste: A \<times> I and CU \<times> I are closed in U \<times> I, cover U \<times> I, H_U continuous on each.\<close>
       show ?thesis
-        sorry \<comment> \<open>Apply pasting_lemma_two_closed with A \<times> I and CU \<times> I.
-           Need: product topologies, closedness in product, cover, agreement on overlap.\<close>
+      proof -
+        define UI where "UI = U_loc \<times> I_set"
+        define TUI where "TUI = product_topology_on TU_loc I_top"
+        have "top1_continuous_map_on UI TUI U_loc TU_loc H_U"
+        proof (rule pasting_lemma_two_closed[where A="A \<times> I_set" and B="?CU \<times> I_set"])
+          show "is_topology_on UI TUI" sorry \<comment> \<open>Product topology.\<close>
+          show "is_topology_on U_loc TU_loc" by (rule hTopU_loc)
+          show "closedin_on UI TUI (A \<times> I_set)" sorry \<comment> \<open>A closed in U, product with I closed.\<close>
+          show "closedin_on UI TUI (?CU \<times> I_set)" sorry \<comment> \<open>CU closed in U, product.\<close>
+          show "A \<times> I_set \<union> ?CU \<times> I_set = UI" unfolding UI_def U_loc_def using hcover by (by100 blast)
+          show "\<forall>x\<in>UI. H_U x \<in> U_loc" sorry \<comment> \<open>Range of H_U.\<close>
+          show "top1_continuous_map_on (A \<times> I_set) (subspace_topology UI TUI (A \<times> I_set)) U_loc TU_loc H_U"
+            sorry \<comment> \<open>From hH_cont_A' with topology rewrite.\<close>
+          show "top1_continuous_map_on (?CU \<times> I_set) (subspace_topology UI TUI (?CU \<times> I_set)) U_loc TU_loc H_U"
+            sorry \<comment> \<open>From hH_cont_CU with topology rewrite.\<close>
+        qed
+        thus ?thesis unfolding UI_def TUI_def U_loc_def TU_loc_def by (by100 simp)
+      qed
     qed
     show ?thesis unfolding top1_deformation_retract_of_on_def
       using hA_sub_U hH_cont hH_0 hH_1 hH_A by (by100 blast)
