@@ -254,6 +254,24 @@ proof -
   show ?thesis sorry \<comment> \<open>Direct limit argument: finite sub-wedges (Thm 71.1) + compactness of loops.\<close>
 qed
 
+\<comment> \<open>Helper: isomorphism transfers quotient group structure.\<close>
+lemma quotient_group_iso_transfer:
+  fixes G :: "'g set" and mulG :: "'g \<Rightarrow> 'g \<Rightarrow> 'g"
+    and G' :: "'g' set" and mulG' :: "'g' \<Rightarrow> 'g' \<Rightarrow> 'g'"
+    and N :: "'g set"
+  assumes "top1_is_group_on G mulG eG invgG"
+      and "top1_is_group_on G' mulG' eG' invgG'"
+      and "top1_group_iso_on G mulG G' mulG' \<phi>"
+      and "top1_normal_subgroup_on G mulG eG invgG N"
+  shows "top1_groups_isomorphic_on
+           (top1_quotient_group_carrier_on G mulG N)
+           (top1_quotient_group_mul_on mulG)
+           (top1_quotient_group_carrier_on G' mulG' (\<phi> ` N))
+           (top1_quotient_group_mul_on mulG')"
+  sorry \<comment> \<open>Standard group theory: \<phi>: G\<rightarrow>G' iso, N\<lhd>G \<Rightarrow> G/N \<cong> G'/\<phi>(N).
+     Proof via first isomorphism theorem: the map \<pi>'\<circ>\<phi>: G \<rightarrow> G'/\<phi>(N)
+     is a surjective homomorphism with kernel N.\<close>
+
 section \<open>\<S>72 Adjoining a Two-Cell\<close>
 
 text \<open>Open disk B2 - S1 is simply connected. The proof uses convexity of the open disk:
@@ -9525,6 +9543,8 @@ end
 
 
 
+ 
+ 
  
  
  
