@@ -1311,8 +1311,21 @@ proof -
       proof -
         have hC_sub: "?C \<subseteq> X"
           using assms(5) unfolding top1_continuous_map_on_def by (by100 blast)
+        have hB2_compact: "compact top1_B2"
+          sorry \<comment> \<open>B2 compact: closed (preimage of closed under continuous) + bounded.\<close>
+        have "top1_compact_on top1_B2 top1_B2_topology"
+        proof -
+          have "top1_B2_topology = subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) top1_B2"
+            unfolding top1_B2_topology_def ..
+          hence "top1_compact_on top1_B2 top1_B2_topology \<longleftrightarrow> compact top1_B2"
+            sorry \<comment> \<open>Bridge: top1_compact_on via subspace UNIV iff compact (HOL).\<close>
+          thus ?thesis using hB2_compact by (by100 simp)
+        qed
         have "top1_compact_on ?C (subspace_topology X TX ?C)"
-          sorry \<comment> \<open>B2 compact + h continuous + compact image.\<close>
+        proof -
+          have hTX_t: "is_topology_on X TX" using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
+          show ?thesis by (rule top1_compact_on_continuous_image[OF \<open>top1_compact_on top1_B2 top1_B2_topology\<close> hTX_t assms(5)])
+        qed
         thus ?thesis
           by (rule compact_in_strict_hausdorff_closedin_on[OF assms(2) assms(1) hC_sub])
       qed
