@@ -938,16 +938,49 @@ proof -
   \<comment> \<open>The deformation retraction of B2 - {0} onto S1 descends via the quotient map
      \<pi>: B2 \<rightarrow> C = h(B2) to a deformation retraction of C - {x0} onto \<pi>(S1),
      then extends to all of U by keeping A fixed.\<close>
-  have hA_deformation_retract_U:
-    "top1_path_connected_on ?U ?TU
-     \<and> (\<exists>r. top1_continuous_map_on ?U ?TU A ?TA r
-            \<and> (\<forall>x\<in>A. r x = x)
-            \<and> top1_homotopic_to_on ?U ?TU ?U ?TU (\<lambda>x. x) (\<lambda>x. undefined) )"
-    sorry \<comment> \<open>Full deformation retraction: needs quotient-map argument from Munkres Step 1.\<close>
+  have hA_deformation_retract_U: "top1_deformation_retract_of_on ?U ?TU A"
+    sorry \<comment> \<open>Full deformation retraction: quotient-map argument from Munkres Step 1.
+       Uses radial retraction of B2-{0} onto S1, composed with h, extended to U by fixing A.\<close>
 
   \<comment> \<open>--- Step 2e: U is path connected ---\<close>
+  have hTopX_ns: "is_topology_on X TX" using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
+  have hTopU: "is_topology_on ?U ?TU"
+    by (rule subspace_topology_is_topology_on[OF hTopX_ns]) (by100 blast)
   have hU_pc: "top1_path_connected_on ?U ?TU"
-    using hA_deformation_retract_U by (by100 blast)
+  proof -
+    \<comment> \<open>Deformation retract A of U implies U is path-connected (A is path-connected).\<close>
+    have "A \<subseteq> ?U" using hA_sub_X hx0_notin_A by (by100 blast)
+    hence hTA_eq: "subspace_topology ?U ?TU A = ?TA" by (rule subspace_topology_trans)
+    have hA_pc_U: "top1_path_connected_on A (subspace_topology ?U ?TU A)"
+      using assms(4) hTA_eq by (by100 simp)
+    \<comment> \<open>A deformation retract of U: every point of U can be connected to A.\<close>
+    obtain H where hH: "top1_continuous_map_on (?U \<times> I_set) (product_topology_on ?TU I_top) ?U ?TU H"
+        and hH0: "\<forall>x\<in>?U. H (x, 0) = x" and hH1: "\<forall>x\<in>?U. H (x, 1) \<in> A"
+        and hHA: "\<forall>a\<in>A. \<forall>t\<in>I_set. H (a, t) = a"
+    proof -
+      from hA_deformation_retract_U \<open>A \<subseteq> ?U\<close>
+      obtain H0 where "top1_continuous_map_on (?U \<times> I_set) (product_topology_on ?TU I_top) ?U ?TU H0"
+          "\<forall>x\<in>?U. H0 (x, 0) = x" "\<forall>x\<in>?U. H0 (x, 1) \<in> A" "\<forall>a\<in>A. \<forall>t\<in>I_set. H0 (a, t) = a"
+        unfolding top1_deformation_retract_of_on_def by fast
+      thus ?thesis using that by (by100 blast)
+    qed
+    show ?thesis unfolding top1_path_connected_on_def
+    proof (intro conjI ballI)
+      show "is_topology_on ?U ?TU" by (rule hTopU)
+    next
+      fix x y assume hx: "x \<in> ?U" and hy: "y \<in> ?U"
+      \<comment> \<open>Path: x to H(x,1)\<in>A via t\<mapsto>H(x,t), then H(x,1) to H(y,1) in A, then H(y,1) to y.\<close>
+      have hx1: "H (x, 1) \<in> A" using hH1 hx by (by100 blast)
+      have hy1: "H (y, 1) \<in> A" using hH1 hy by (by100 blast)
+      \<comment> \<open>Get path from H(x,1) to H(y,1) in A.\<close>
+      have hx1_U: "H (x, 1) \<in> ?U" using hx1 \<open>A \<subseteq> ?U\<close> by (by100 blast)
+      have hy1_U: "H (y, 1) \<in> ?U" using hy1 \<open>A \<subseteq> ?U\<close> by (by100 blast)
+      obtain fA where hfA: "top1_is_path_on A (subspace_topology ?U ?TU A) (H(x,1)) (H(y,1)) fA"
+        using hA_pc_U hx1 hy1 unfolding top1_path_connected_on_def by (by100 blast)
+      \<comment> \<open>Paths via H: t \<mapsto> H(x, 1-t) from H(x,1) to x, and t \<mapsto> H(y, t) from y to H(y,1).\<close>
+      show "\<exists>f. top1_is_path_on ?U ?TU x y f" sorry
+    qed
+  qed
 
   \<comment> \<open>--- Step 2f: U \<inter> V = V - {x0} is path connected ---\<close>
   \<comment> \<open>UV is path-connected: h restricts to a homeomorphism from Int(B2) - {0} onto UV.
@@ -1009,7 +1042,8 @@ proof -
                  ` (top1_fundamental_group_carrier ?UV ?TUV ?b))))
         (top1_quotient_group_mul_on
            (top1_fundamental_group_mul ?U ?TU ?b))"
-    sorry \<comment> \<open>Corollary 70.4 (SvK with simply connected V).\<close>
+    by (rule Corollary_70_4_simply_connected_V[OF assms(1) hU_open hV_open hU_union_V
+            hUV_pc hU_pc hV_sc hb_in_UV])
 
   \<comment> \<open>--- Step 4: A is deformation retract of U \<Longrightarrow> \<pi>_1(U, a) \<cong> \<pi>_1(A, a) ---\<close>
   have hU_A_iso: "top1_groups_isomorphic_on
@@ -1017,7 +1051,43 @@ proof -
         (top1_fundamental_group_mul ?U ?TU a)
         (top1_fundamental_group_carrier A ?TA a)
         (top1_fundamental_group_mul A ?TA a)"
-    sorry \<comment> \<open>Deformation retraction induces \<pi>_1 isomorphism (Corollary 58.4).\<close>
+  proof -
+    have hTopX_ns: "is_topology_on X TX" using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
+    have hTopU: "is_topology_on ?U ?TU"
+      by (rule subspace_topology_is_topology_on[OF hTopX_ns]) (by100 blast)
+    have hiso_AU: "top1_groups_isomorphic_on
+        (top1_fundamental_group_carrier A (subspace_topology ?U ?TU A) a)
+        (top1_fundamental_group_mul A (subspace_topology ?U ?TU A) a)
+        (top1_fundamental_group_carrier ?U ?TU a)
+        (top1_fundamental_group_mul ?U ?TU a)"
+      by (rule Theorem_58_3[OF hA_deformation_retract_U hTopU assms(6)])
+    moreover have "subspace_topology ?U ?TU A = ?TA"
+    proof -
+      have "A \<subseteq> ?U" using hA_sub_X hx0_notin_A by (by100 blast)
+      thus ?thesis by (rule subspace_topology_trans)
+    qed
+    ultimately have "top1_groups_isomorphic_on
+        (top1_fundamental_group_carrier A ?TA a)
+        (top1_fundamental_group_mul A ?TA a)
+        (top1_fundamental_group_carrier ?U ?TU a)
+        (top1_fundamental_group_mul ?U ?TU a)"
+      by (by100 simp)
+    have ha_U: "a \<in> ?U" using assms(6) hA_sub_X hx0_notin_A by (by100 blast)
+    have hgrpA: "top1_is_group_on
+        (top1_fundamental_group_carrier A ?TA a) (top1_fundamental_group_mul A ?TA a)
+        (top1_fundamental_group_id A ?TA a) (top1_fundamental_group_invg A ?TA a)"
+      by (rule top1_fundamental_group_is_group[OF subspace_topology_is_topology_on[OF hTopX_ns hA_sub_X] assms(6)])
+    have hgrpU: "top1_is_group_on
+        (top1_fundamental_group_carrier ?U ?TU a) (top1_fundamental_group_mul ?U ?TU a)
+        (top1_fundamental_group_id ?U ?TU a) (top1_fundamental_group_invg ?U ?TU a)"
+      by (rule top1_fundamental_group_is_group[OF hTopU ha_U])
+    from \<open>top1_groups_isomorphic_on
+        (top1_fundamental_group_carrier A ?TA a)
+        (top1_fundamental_group_mul A ?TA a)
+        (top1_fundamental_group_carrier ?U ?TU a)
+        (top1_fundamental_group_mul ?U ?TU a)\<close> hgrpA hgrpU
+    show ?thesis by (rule top1_groups_isomorphic_on_sym)
+  qed
 
   \<comment> \<open>--- Step 5: Base point change from b to a (Munkres Step 3) ---\<close>
   \<comment> \<open>Let \<gamma> be the straight-line path in B2 from q to p = (1,0).
