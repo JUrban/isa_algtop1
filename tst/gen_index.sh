@@ -15,6 +15,7 @@ THEORIES=(
   b0/AlgTop_JCT_Base0.thy
   b/AlgTop_JCT_Base.thy
   a0/AlgTop0.thy
+  ac/AlgTopCached.thy
   AlgTop.thy
 )
 
@@ -30,7 +31,7 @@ for f in "${THEORIES[@]}"; do
     content=$(echo "$content" | sed 's/^[[:space:]]*//')
     name=$(echo "$content" | sed 's/^\(lemma\|theorem\|corollary\|definition\|fun\|abbreviation\) \+\([a-zA-Z0-9_]*\).*/\2/')
     kind=$(echo "$content" | sed 's/^\([a-z]*\) .*/\1/')
-    [ -n "$name" ] && echo "$session|$kind|$name|$line"
+    [ -n "$name" ] && echo "$f|$kind|$name|$line"
   done
 done | sort -t'|' -k2,2 -k3,3 >> "$TXT"
 
@@ -41,9 +42,9 @@ ndups=$(awk -F'|' '{print $3}' "$TXT" | sort | uniq -d | wc -l)
 {
   echo "# Theorem and Definition Index"
   echo "# Generated: $(date -u +%Y-%m-%d)"
-  echo "# Format: session | kind | name | line"
+  echo "# Format: file | kind | name | line"
   echo "#"
-  echo "# Sessions: $(printf '%s' "${THEORIES[*]}" | sed 's|[^ ]*/||g; s/\.thy//g; s/ /, /g')"
+  echo "# Files: $(printf '%s\n' "${THEORIES[@]}" | tr '\n' ', ' | sed 's/,$//')"
   echo "#"
   echo "# Total entries: $total"
   echo "# Duplicate names: $ndups"
@@ -54,7 +55,7 @@ ndups=$(awk -F'|' '{print $3}' "$TXT" | sort | uniq -d | wc -l)
     [ "$count" -eq 0 ] && continue
     echo "## ${kind}s ($count)"
     echo ""
-    grep "|${kind}|" "$TXT" | awk -F'|' '{printf "%-45s  %-25s  line %s\n", $3, $1, $4}'
+    grep "|${kind}|" "$TXT" | awk -F'|' '{printf "%-45s  %-35s  line %s\n", $3, $1, $4}'
     echo ""
   done
 
@@ -63,7 +64,7 @@ ndups=$(awk -F'|' '{print $3}' "$TXT" | sort | uniq -d | wc -l)
     echo ""
     awk -F'|' '{print $3}' "$TXT" | sort | uniq -d | while read -r dup; do
       echo "  $dup:"
-      grep "|$dup|" "$TXT" | awk -F'|' '{printf "    %-25s  %s  line %s\n", $1, $2, $4}'
+      grep "|$dup|" "$TXT" | awk -F'|' '{printf "    %-35s  %s  line %s\n", $1, $2, $4}'
     done
     echo ""
   fi
