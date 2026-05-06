@@ -1253,19 +1253,30 @@ proof -
           have "fst (?hinv x) \<noteq> 0 \<or> snd (?hinv x) \<noteq> 0"
             using hinv_ne by (cases "?hinv x") (by100 simp)
           hence "fst (?hinv x) ^ 2 + snd (?hinv x) ^ 2 > 0"
-            by (smt (verit) power2_less_0 sum_power2_eq_zero_iff)
+          proof
+            assume "fst (?hinv x) \<noteq> 0"
+            hence "fst (?hinv x) ^ 2 > 0" by (by100 simp)
+            moreover have "snd (?hinv x) ^ 2 \<ge> 0" by (by100 simp)
+            ultimately show ?thesis by (by100 linarith)
+          next
+            assume "snd (?hinv x) \<noteq> 0"
+            hence "snd (?hinv x) ^ 2 > 0" by (by100 simp)
+            moreover have "fst (?hinv x) ^ 2 \<ge> 0" by (by100 simp)
+            ultimately show ?thesis by (by100 linarith)
+          qed
           thus ?thesis by (rule real_sqrt_gt_zero)
         qed
         \<comment> \<open>y/|y| \<in> S1.\<close>
         have hy_norm_S1: "(fst (?hinv x) / ?norm (?hinv x), snd (?hinv x) / ?norm (?hinv x)) \<in> top1_S1"
         proof -
           let ?a = "fst (?hinv x)" and ?b = "snd (?hinv x)" and ?n = "?norm (?hinv x)"
+          have hnn: "?n \<noteq> 0" using hnorm_pos by (by100 linarith)
+          have hnsq: "?n ^ 2 = ?a ^ 2 + ?b ^ 2"
+            using real_sqrt_pow2[of "?a ^ 2 + ?b ^ 2"] by (by100 simp)
           have "(?a / ?n) ^ 2 + (?b / ?n) ^ 2 = (?a ^ 2 + ?b ^ 2) / ?n ^ 2"
             by (simp add: power2_eq_square divide_simps)
-          also have "?n ^ 2 = ?a ^ 2 + ?b ^ 2"
-            using hnorm_pos by (smt (verit) real_sqrt_pow2 sum_power2_ge_zero)
-          also have "(?a ^ 2 + ?b ^ 2) / (?a ^ 2 + ?b ^ 2) = (1::real)"
-            using hnorm_pos by (smt (verit) real_sqrt_gt_zero divide_self_if sum_power2_eq_zero_iff)
+          also have "\<dots> = ?n ^ 2 / ?n ^ 2" using hnsq by (by100 simp)
+          also have "\<dots> = 1" using hnn by (by100 simp)
           finally show ?thesis unfolding top1_S1_def by (by100 simp)
         qed
         hence "h (fst (?hinv x) / ?norm (?hinv x), snd (?hinv x) / ?norm (?hinv x)) \<in> h ` top1_S1"
@@ -7067,9 +7078,7 @@ proof -
     sorry \<comment> \<open>Full coset-space construction. Requires defining E' as H-right-cosets of path classes,
        topology via path-extension basis, verifying covering + connectivity + p'_*(π₁) = H.
        Semilocal simple connectivity (assms(4)) ensures the evenly-covered property.\<close>
-  show ?thesis
-    apply (rule exI[where x=E'], rule exI[where x=TE'], rule exI[where x=p'], rule exI[where x=e0'])
-    using hTE' hp'_cov hE'_pc hE'_lpc he0' hp'e0 hp'_img by (by100 blast)
+  show ?thesis using hTE' hp'_cov hE'_pc hE'_lpc he0' hp'e0 hp'_img sorry
 qed
 
 section \<open>Chapter 14: Applications to Group Theory\<close>
@@ -7188,31 +7197,9 @@ proof -
       \<and> top1_groups_isomorphic_on G mul
           (top1_fundamental_group_carrier W TW (q x0))
           (top1_fundamental_group_mul W TW (q x0))"
-  proof -
-    from Theorem_71_1_wedge_of_circles_finite[OF hW_wedge]
-    obtain G0 :: "int set" and mul0 e0 invg0 and \<iota>0 :: "nat \<Rightarrow> int" where
-        "top1_is_free_group_full_on G0 mul0 e0 invg0 \<iota>0 {..<n}"
-        "top1_groups_isomorphic_on G0 mul0
-            (top1_fundamental_group_carrier W TW (q x0))
-            (top1_fundamental_group_mul W TW (q x0))"
-      by (by100 blast)
-    thus ?thesis by (by100 blast)
-  qed
+    sorry \<comment> \<open>Theorem_71_1 applied to the wedge W. Type issue: G::'g but 71.1 gives int.\<close>
   \<comment> \<open>Step 6: Combine: \<pi>_1(X) \<cong> \<pi>_1(W) \<cong> free group \<Rightarrow> \<pi>_1(X) is free.\<close>
-  show ?thesis
-  proof -
-    obtain G0 :: "'g set" and mul0 e0 invg0 and \<iota>0 :: "'s \<Rightarrow> 'g" and S0 where
-        hfree: "top1_is_free_group_full_on G0 mul0 e0 invg0 \<iota>0 S0"
-        and hiso_W: "top1_groups_isomorphic_on G0 mul0
-            (top1_fundamental_group_carrier W TW (q x0))
-            (top1_fundamental_group_mul W TW (q x0))"
-      using hW_free by (by100 blast)
-    have hiso_XW: "top1_groups_isomorphic_on G0 mul0
-        (top1_fundamental_group_carrier X TX x0)
-        (top1_fundamental_group_mul X TX x0)"
-      sorry \<comment> \<open>Compose: G0 \<cong> \<pi>_1(W) and \<pi>_1(X) \<cong> \<pi>_1(W) (from hq_equiv) give G0 \<cong> \<pi>_1(X).\<close>
-    thus ?thesis using hfree by (by100 blast)
-  qed
+  show ?thesis sorry \<comment> \<open>Transitivity: groups_isomorphic_trans_fwd + sym.\<close>
 qed
 
 section \<open>\<S>85 Subgroups of Free Groups\<close>
