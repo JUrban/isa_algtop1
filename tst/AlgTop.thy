@@ -356,29 +356,36 @@ proof -
 
   \<comment> \<open>--- Step 1: Basic set-theoretic facts ---\<close>
   have hA_sub_X: "A \<subseteq> X"
-    using assms(3) unfolding closedin_on_def sorry
+    using closedin_sub[OF assms(3)] by (by100 simp)
+  have h00_B2: "(0::real, 0::real) \<in> top1_B2"
+    unfolding top1_B2_def by (by100 simp)
   have hx0_in_X: "?x0 \<in> X"
-    sorry \<comment> \<open>h(0,0) \<in> X since (0,0) \<in> B2 and h : B2 \<rightarrow> X\<close>
+    using continuous_map_maps_to[OF assms(5) h00_B2] by (by100 simp)
+  have h00_intB2: "(0::real, 0::real) \<in> top1_B2 - top1_S1"
+    unfolding top1_B2_def top1_S1_def by (by100 simp)
   have hx0_in_VA: "?x0 \<in> X - A"
-    sorry \<comment> \<open>(0,0) \<in> Int B2, h|_{Int B2} is bijection onto X-A, so h(0,0) \<in> X-A\<close>
+    using assms(7) h00_intB2 unfolding top1_homeomorphism_on_def bij_betw_def
+    by (by100 blast)
   have hx0_notin_A: "?x0 \<notin> A"
-    using hx0_in_VA sorry
+    using hx0_in_VA by (by100 blast)
   have hUV_eq: "?UV = ?V - {?x0}"
-    sorry \<comment> \<open>U \<inter> V = (X - {x0}) \<inter> (X - A) = (X - A) - {x0} = V - {x0}\<close>
+    by (by100 blast)
   have hU_union_V: "?U \<union> ?V = X"
-    sorry \<comment> \<open>x \<in> X: if x = x0 then x \<in> V (since x0 \<notin> A); if x \<noteq> x0 then x \<in> U.\<close>
+    using hx0_notin_A hx0_in_X hA_sub_X by (by100 blast)
 
   \<comment> \<open>--- Step 2a: V = X - A is open in X (complement of closed set) ---\<close>
   have hV_open: "openin_on X TX ?V"
-    sorry \<comment> \<open>A is closed in X \<Longrightarrow> X - A is open in X\<close>
+    using assms(3) hA_sub_X unfolding openin_on_def closedin_on_def by (by100 blast)
 
   \<comment> \<open>--- Step 2b: V is simply connected (homeomorphic to Int B2 \<cong> R2) ---\<close>
   have hV_sc: "top1_simply_connected_on ?V ?TV"
     sorry \<comment> \<open>assms(7): h|_{Int B2} is homeomorphism onto X-A = V; Int B2 is simply connected.\<close>
 
   \<comment> \<open>--- Step 2c: U = X - {x0} is open in X (Hausdorff \<Longrightarrow> points are closed) ---\<close>
+  have hx0_closed: "closedin_on X TX {?x0}"
+    using singleton_closed_in_hausdorff[OF assms(2) hx0_in_X] by (by100 simp)
   have hU_open: "openin_on X TX ?U"
-    sorry \<comment> \<open>X is Hausdorff \<Longrightarrow> {x0} is closed \<Longrightarrow> X - {x0} is open.\<close>
+    using hx0_closed hx0_in_X unfolding openin_on_def closedin_on_def by (by100 blast)
 
   \<comment> \<open>--- Step 2d: A is a deformation retract of U (Munkres Step 1) ---\<close>
   \<comment> \<open>The deformation retraction of B2 - {0} onto S1 descends via the quotient map
@@ -404,8 +411,25 @@ proof -
   \<comment> \<open>Pick a basepoint b \<in> U \<inter> V. Munkres uses b = h(q) where q = midpoint of 0 to p.\<close>
   let ?q = "(1/2 :: real, 0 :: real)"
   let ?b = "h ?q"
+  have hq_intB2: "?q \<in> top1_B2 - top1_S1"
+  proof -
+    have h1: "fst ?q ^ 2 + snd ?q ^ 2 = (1/4::real)"
+      using power2_eq_square[of "1/2::real"] by (by100 simp)
+    show ?thesis unfolding top1_B2_def top1_S1_def using h1 by (by100 simp)
+  qed
+  have hq_ne_00: "?q \<noteq> (0::real, 0::real)" by (by100 simp)
+  have hb_in_VA: "?b \<in> X - A"
+    using assms(7) hq_intB2 unfolding top1_homeomorphism_on_def bij_betw_def
+    by (by100 blast)
+  have hb_ne_x0: "?b \<noteq> ?x0"
+  proof -
+    have hinj: "inj_on h (top1_B2 - top1_S1)"
+      using assms(7) unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+    show ?thesis using hq_ne_00 hq_intB2 h00_intB2
+      using inj_on_eq_iff[OF hinj hq_intB2 h00_intB2] by (by100 simp)
+  qed
   have hb_in_UV: "?b \<in> ?UV"
-    sorry \<comment> \<open>q = (1/2, 0) \<in> Int B2 - {0}, so h(q) \<in> V - {x0} = U \<inter> V.\<close>
+    using hb_in_VA hb_ne_x0 hA_sub_X by (by100 blast)
 
   have hUV_pi1_cyclic:
     "\<exists>gen. gen \<in> top1_fundamental_group_carrier ?UV ?TUV ?b
@@ -447,7 +471,7 @@ proof -
      The isomorphism \<hat>\<delta> commutes with inclusion-induced maps,
      so the kernel at base point a corresponds to the kernel at base point b.\<close>
   have ha_in_U: "a \<in> ?U"
-    sorry \<comment> \<open>a \<in> A and x0 \<notin> A, so a \<noteq> x0, hence a \<in> X - {x0} = U.\<close>
+    using assms(6) hA_sub_X hx0_notin_A by (by100 blast)
 
   have hbasepoint_change:
     "top1_groups_isomorphic_on
