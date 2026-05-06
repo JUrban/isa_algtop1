@@ -492,7 +492,9 @@ theorem Theorem_71_1_wedge_of_circles_finite:
          \<and> top1_groups_isomorphic_on G mul
              (top1_fundamental_group_carrier X TX p)
              (top1_fundamental_group_mul X TX p)"
-proof -
+using assms proof (induction n arbitrary: X TX p rule: less_induct)
+  case (less n)
+  hence hwedge: "top1_is_wedge_of_circles_on X TX {..<n} p" by simp
   \<comment> \<open>Munkres 71.1: Apply Seifert-van Kampen (Theorem 70.2) by induction on n.
      Base case n=1: X = S^1, \<pi>_1 = Z which is free on 1 generator.
      Inductive step: X = X_{n-1} \<cup> C_n where C_n \<cong> S^1.
@@ -505,14 +507,14 @@ proof -
     assume "\<not> n > 0"
     hence "n = 0" by (by100 simp)
     hence "{..<n} = ({} :: nat set)" by (by100 simp)
-    moreover from assms obtain C where "(\<Union>\<alpha>\<in>{..<n}. C \<alpha>) = X" and "p \<in> X"
+    moreover from hwedge obtain C where "(\<Union>\<alpha>\<in>{..<n}. C \<alpha>) = X" and "p \<in> X"
       unfolding top1_is_wedge_of_circles_on_def
       apply (elim conjE exE) by (by100 blast)
     ultimately show False by (by100 simp)
   qed
-  have hbase: "n = 0 \<longrightarrow> ?thesis" using hn_pos by (by100 simp)
+  have hbase: "n = 0 \<longrightarrow> ?case" using hn_pos by (by100 simp)
   \<comment> \<open>Base case n=1: X \<cong> S¹, \<pi>_1(X) \<cong> Z which is free on 1 generator.\<close>
-  have hbase1: "n = 1 \<longrightarrow> ?thesis"
+  have hbase1: "n = 1 \<longrightarrow> ?case"
   proof (intro impI)
     assume hn1: "n = 1"
     hence hJ1: "{..<n} = {0::nat}" by (by100 auto)
@@ -520,7 +522,7 @@ proof -
     let ?invg = "top1_Z_invg" and ?\<iota> = "\<lambda>(_::nat). (1::int)"
     \<comment> \<open>Step 1: Extract the wedge structure for n=1.\<close>
     have hX_strict: "is_topology_on_strict X TX"
-      using assms unfolding top1_is_wedge_of_circles_on_def by (by100 blast)
+      using hwedge unfolding top1_is_wedge_of_circles_on_def by (by100 blast)
     have hC_ex: "\<exists>C. (\<forall>\<alpha>\<in>{..<n}. C \<alpha> \<subseteq> X \<and> p \<in> C \<alpha>
           \<and> (\<exists>h. top1_homeomorphism_on top1_S1 top1_S1_topology
                 (C \<alpha>) (subspace_topology X TX (C \<alpha>)) h))
@@ -535,7 +537,7 @@ proof -
             \<and> (\<forall>D. D \<subseteq> X \<longrightarrow>
                  (closedin_on X TX D \<longleftrightarrow>
                   (\<forall>\<alpha>\<in>{..<n}. closedin_on (C \<alpha>) (subspace_topology X TX (C \<alpha>)) (C \<alpha> \<inter> D)))))"
-        using assms[unfolded top1_is_wedge_of_circles_on_def] .
+        using hwedge[unfolded top1_is_wedge_of_circles_on_def] .
       have hC_full_ex: "\<exists>C. (\<forall>\<alpha>\<in>{..<n}. C \<alpha> \<subseteq> X \<and> p \<in> C \<alpha>
               \<and> (\<exists>h. top1_homeomorphism_on top1_S1 top1_S1_topology
                     (C \<alpha>) (subspace_topology X TX (C \<alpha>)) h))
@@ -603,7 +605,7 @@ proof -
     let ?hinv = "inv_into top1_S1 h"
     have hhinv: "top1_homeomorphism_on X TX top1_S1 top1_S1_topology ?hinv"
       by (rule homeomorphism_inverse[OF hh2])
-    have hp_X: "p \<in> X" using assms unfolding top1_is_wedge_of_circles_on_def by (by100 blast)
+    have hp_X: "p \<in> X" using hwedge unfolding top1_is_wedge_of_circles_on_def by (by100 blast)
     have hhinv_p_S1: "?hinv p \<in> top1_S1"
       using hhinv hp_X unfolding top1_homeomorphism_on_def top1_continuous_map_on_def
       by (by100 blast)
@@ -965,29 +967,29 @@ proof -
      By IH: \<pi>_1(X_{n-1}) free on n-1 generators. \<pi>_1(C_n) \<cong> Z, free on 1.
      X_{n-1} \<inter> C_n = {p} simply connected. Corollary 70.3 \<Rightarrow> free product.
      Theorem 69.2: free(n-1) * free(1) = free(n).\<close>
-  have hstep: "n \<ge> 2 \<longrightarrow> ?thesis"
+  have hstep: "n \<ge> 2 \<longrightarrow> ?case"
   proof (intro impI)
     assume hn2: "n \<ge> 2"
     \<comment> \<open>Step 0: Strong induction hypothesis. We assume the theorem holds for n-1.\<close>
     have hn1_pos: "n - 1 > 0" using hn2 by (by100 linarith)
     have hn1_lt: "n - 1 < n" using hn2 by (by100 linarith)
-    have hIH: "\<forall>(Y::'a set) TY.
-        top1_is_wedge_of_circles_on Y TY {..<(n-1)} p \<longrightarrow>
+    have hIH: "\<forall>(Y::'a set) TY q.
+        top1_is_wedge_of_circles_on Y TY {..<(n-1)} q \<longrightarrow>
         (\<exists>(G::int set) mul e invg (\<iota>::nat \<Rightarrow> int).
            top1_is_free_group_full_on G mul e invg \<iota> {..<(n-1)}
          \<and> top1_groups_isomorphic_on G mul
-             (top1_fundamental_group_carrier Y TY p)
-             (top1_fundamental_group_mul Y TY p))"
-      sorry \<comment> \<open>Strong induction hypothesis: the theorem for n-1 < n.\<close>
+             (top1_fundamental_group_carrier Y TY q)
+             (top1_fundamental_group_mul Y TY q))"
+      using less.IH[OF hn1_lt] by (by100 blast)
     \<comment> \<open>Step 1: Extract the circle family C from the wedge definition.\<close>
     have hX_strict: "is_topology_on_strict X TX"
-      using assms unfolding top1_is_wedge_of_circles_on_def by (by100 blast)
+      using hwedge unfolding top1_is_wedge_of_circles_on_def by (by100 blast)
     have hTX: "is_topology_on X TX"
       using hX_strict unfolding is_topology_on_strict_def by (by100 blast)
     have hp_X: "p \<in> X"
-      using assms unfolding top1_is_wedge_of_circles_on_def by (by100 blast)
+      using hwedge unfolding top1_is_wedge_of_circles_on_def by (by100 blast)
     have hHausdorff: "is_hausdorff_on X TX"
-      using assms unfolding top1_is_wedge_of_circles_on_def by (by100 blast)
+      using hwedge unfolding top1_is_wedge_of_circles_on_def by (by100 blast)
     obtain C where
         hC_props: "\<forall>\<alpha>\<in>{..<n}. C \<alpha> \<subseteq> X \<and> p \<in> C \<alpha>
             \<and> (\<exists>h. top1_homeomorphism_on top1_S1 top1_S1_topology
@@ -997,7 +999,7 @@ proof -
         and hC_weak: "\<forall>D. D \<subseteq> X \<longrightarrow>
              (closedin_on X TX D \<longleftrightarrow>
               (\<forall>\<alpha>\<in>{..<n}. closedin_on (C \<alpha>) (subspace_topology X TX (C \<alpha>)) (C \<alpha> \<inter> D)))"
-      using assms unfolding top1_is_wedge_of_circles_on_def
+      using hwedge unfolding top1_is_wedge_of_circles_on_def
       by (elim conjE exE) (rule that, assumption+)
     \<comment> \<open>Step 2: Define X' = \<Union>{C(\<alpha>) | \<alpha> < n-1}, the sub-wedge of n-1 circles.
        Define Cn = C(n-1), the last circle.\<close>
@@ -1200,10 +1202,10 @@ proof -
              (top1_fundamental_group_mul X TX p)"
       using hfinal by (by100 blast)
   qed
-  show ?thesis using hbase1 hstep hn_pos
+  show ?case
   proof -
     have "n = 1 \<or> n \<ge> 2" using hn_pos by (by100 linarith)
-    thus ?thesis using hbase1 hstep by (by100 blast)
+    thus ?case using hbase1 hstep by (by100 blast)
   qed
 qed
 
