@@ -1770,70 +1770,171 @@ proof -
       have hH_cont_CU: "top1_continuous_map_on (?CU \<times> I_set)
           (product_topology_on (subspace_topology ?U ?TU ?CU) I_top) ?U ?TU H_U"
       proof -
-        let ?D = "top1_B2 - top1_S1"
-        let ?hD0 = "(X - A) - {?x0}" \<comment> \<open>= h(D\setminus\{0\}), image of punctured open disk\<close>
-        let ?hS1 = "h ` top1_S1"     \<comment> \<open>image of boundary circle, subset of A\<close>
-        \<comment> \<open>CU = hD0 \<union> hS1, a disjoint decomposition (since h(D\{0}) \<subseteq> X-A, h(S1) \<subseteq> A).\<close>
-        have hhS1_sub_A: "?hS1 \<subseteq> A" using assms(8) by (by100 blast)
-        have hdisjoint: "?hD0 \<inter> ?hS1 = {}" using hhS1_sub_A by (by100 blast)
-        have hS1_sub_B2: "top1_S1 \<subseteq> top1_B2" unfolding top1_S1_def top1_B2_def by (by100 auto)
-        have hC_eq: "h ` top1_B2 = (X - A) \<union> ?hS1"
-        proof -
-          have "h ` top1_B2 = h ` ?D \<union> h ` top1_S1" using hS1_sub_B2 by (by100 auto)
-          thus ?thesis using hsurj_D by (by100 simp)
+        \<comment> \<open>Following Munkres Step 1: use quotient map \<pi> \<times> id to descend the retraction.\<close>
+        let ?C = "h ` top1_B2"
+        let ?TC = "subspace_topology X TX ?C"
+        let ?B2_0 = "top1_B2 - {(0::real, 0::real)}"
+        \<comment> \<open>Step A: \<pi> \<times> id: B2 \<times> I \<rightarrow> C \<times> I is a quotient map.\<close>
+        \<comment> \<open>(Compact \<times> compact \<rightarrow> Hausdorff \<times> Hausdorff, continuous surjection \<Rightarrow> closed \<Rightarrow> quotient.)\<close>
+        let ?\<pi>I = "\<lambda>(y, t). (h y, t)"
+        have h\<pi>I_quot: "top1_quotient_map_on (top1_B2 \<times> I_set)
+            (product_topology_on top1_B2_topology I_top)
+            (?C \<times> I_set) (product_topology_on ?TC I_top) ?\<pi>I"
+          sorry \<comment> \<open>h \<times> id is continuous surjection from compact B2\<times>I to Hausdorff C\<times>I,
+                   hence closed map, hence quotient map.\<close>
+        \<comment> \<open>Step B: (B2\{0}) \<times> I is open in B2 \<times> I and saturated w.r.t. \<pi> \<times> id.\<close>
+        have hB20I_open: "openin_on (top1_B2 \<times> I_set)
+            (product_topology_on top1_B2_topology I_top) (?B2_0 \<times> I_set)"
+          sorry \<comment> \<open>B2\{0} is open in B2 (complement of closed {0}), product with I is open.\<close>
+        have h_preimg_x0: "\<forall>y\<in>top1_B2. h y = ?x0 \<longrightarrow> y = (0, 0)"
+        proof (intro ballI impI)
+          fix y assume "y \<in> top1_B2" "h y = ?x0"
+          show "y = (0, 0)"
+          proof (cases "y \<in> top1_S1")
+            case True
+            hence "h y \<in> A" using assms(8) by (by100 blast)
+            hence "?x0 \<in> A" using \<open>h y = ?x0\<close> by (by100 simp)
+            thus ?thesis using hx0_notin_A by (by100 blast)
+          next
+            case False
+            hence "y \<in> top1_B2 - top1_S1" using \<open>y \<in> top1_B2\<close> by (by100 blast)
+            thus ?thesis using inj_on_eq_iff[OF hinj_D \<open>y \<in> top1_B2 - top1_S1\<close> h00_intB2]
+              \<open>h y = ?x0\<close> by (by100 simp)
+          qed
         qed
-        have hx0_notin_hS1: "?x0 \<notin> ?hS1" using hhS1_sub_A hx0_notin_A by (by100 blast)
-        have hCU_decomp: "?CU = ?hD0 \<union> ?hS1"
+        have hB20I_sat: "top1_saturated_with_respect_to_on (top1_B2 \<times> I_set) ?\<pi>I (?B2_0 \<times> I_set)"
+          unfolding top1_saturated_with_respect_to_on_def
+        proof (intro conjI)
+          show "?B2_0 \<times> I_set \<subseteq> top1_B2 \<times> I_set" by (by100 blast)
+        next
+          show "\<forall>x\<in>?B2_0 \<times> I_set. \<forall>y\<in>top1_B2 \<times> I_set. ?\<pi>I y = ?\<pi>I x \<longrightarrow> y \<in> ?B2_0 \<times> I_set"
+          proof (intro ballI impI)
+            fix p1 p2
+            assume hp1: "p1 \<in> ?B2_0 \<times> I_set" and hp2: "p2 \<in> top1_B2 \<times> I_set"
+              and heq: "?\<pi>I p2 = ?\<pi>I p1"
+            obtain y1 t1 where "p1 = (y1, t1)" "y1 \<in> ?B2_0" "t1 \<in> I_set"
+              using hp1 by (by100 blast)
+            obtain y2 t2 where "p2 = (y2, t2)" "y2 \<in> top1_B2" "t2 \<in> I_set"
+              using hp2 by (by100 blast)
+            have "h y2 = h y1" "t2 = t1"
+              using heq \<open>p1 = (y1, t1)\<close> \<open>p2 = (y2, t2)\<close> by (by100 simp)+
+            have "y1 \<noteq> (0, 0)" using \<open>y1 \<in> ?B2_0\<close> by (by100 blast)
+            hence "h y1 \<noteq> ?x0" using h_preimg_x0 \<open>y1 \<in> ?B2_0\<close> by (by100 blast)
+            hence "h y2 \<noteq> ?x0" using \<open>h y2 = h y1\<close> by (by100 simp)
+            hence "y2 \<noteq> (0, 0)" using h_preimg_x0 \<open>y2 \<in> top1_B2\<close> by (by100 blast)
+            hence "y2 \<in> ?B2_0" using \<open>y2 \<in> top1_B2\<close> by (by100 blast)
+            thus "p2 \<in> ?B2_0 \<times> I_set" using \<open>p2 = (y2, t2)\<close> \<open>t2 \<in> I_set\<close> \<open>t2 = t1\<close>
+              by (by100 blast)
+          qed
+        qed
+        \<comment> \<open>CU \<times> I = \<pi>I(B2\{0} \<times> I) = (C - {x0}) \<times> I.\<close>
+        have hCU_eq_img: "?CU = h ` ?B2_0"
         proof (rule set_eqI, rule iffI)
           fix x assume "x \<in> ?CU"
-          hence hxhB2: "x \<in> h ` top1_B2" and hxne: "x \<noteq> ?x0" and hxX: "x \<in> X" by (by100 auto)+
-          show "x \<in> ?hD0 \<union> ?hS1"
-          proof (cases "x \<in> A")
-            case True
-            have "x \<in> h ` top1_B2 \<and> x \<in> A" using hxhB2 True by (by100 blast)
-            hence "x \<in> (X - A) \<and> x \<in> A \<or> x \<in> ?hS1"
-              using hC_eq by (by100 blast)
-            hence "x \<in> ?hS1" by (by100 blast)
+          hence "x \<in> h ` top1_B2" "x \<noteq> ?x0" "x \<in> X" by (by100 auto)+
+          then obtain y where "y \<in> top1_B2" "h y = x" by (by100 blast)
+          have "y \<noteq> (0, 0)" using \<open>h y = x\<close> \<open>x \<noteq> ?x0\<close> by (by100 auto)
+          thus "x \<in> h ` ?B2_0" using \<open>y \<in> top1_B2\<close> \<open>h y = x\<close> by (by100 blast)
+        next
+          fix x assume "x \<in> h ` ?B2_0"
+          then obtain y where "y \<in> ?B2_0" "h y = x" by (by100 blast)
+          have "y \<in> top1_B2" using \<open>y \<in> ?B2_0\<close> by (by100 blast)
+          have "x \<in> h ` top1_B2" using \<open>y \<in> top1_B2\<close> \<open>h y = x\<close> by (by100 blast)
+          moreover have "x \<noteq> ?x0"
+            using h_preimg_x0 \<open>y \<in> top1_B2\<close> \<open>y \<in> ?B2_0\<close> \<open>h y = x\<close> by (by100 blast)
+          moreover have "x \<in> X"
+            using continuous_map_maps_to[OF assms(5) \<open>y \<in> top1_B2\<close>] \<open>h y = x\<close> by (by100 simp)
+          ultimately show "x \<in> ?CU" by (by100 blast)
+        qed
+        have hCU_times_eq: "?CU \<times> I_set = ?\<pi>I ` (?B2_0 \<times> I_set)"
+        proof (rule set_eqI, rule iffI)
+          fix p assume "p \<in> ?CU \<times> I_set"
+          then obtain x t where "p = (x, t)" "x \<in> ?CU" "t \<in> I_set" by (by100 blast)
+          hence "x \<in> h ` ?B2_0" using hCU_eq_img by (by100 blast)
+          then obtain y where "y \<in> ?B2_0" "h y = x" by (by100 blast)
+          hence "?\<pi>I (y, t) = p" using \<open>p = (x, t)\<close> by (by100 simp)
+          moreover have "(y, t) \<in> ?B2_0 \<times> I_set" using \<open>y \<in> ?B2_0\<close> \<open>t \<in> I_set\<close> by (by100 blast)
+          ultimately show "p \<in> ?\<pi>I ` (?B2_0 \<times> I_set)" by (by100 blast)
+        next
+          fix p assume "p \<in> ?\<pi>I ` (?B2_0 \<times> I_set)"
+          then obtain y t where "y \<in> ?B2_0" "t \<in> I_set" "p = (h y, t)" by (by100 auto)
+          have "h y \<in> ?CU" using hCU_eq_img \<open>y \<in> ?B2_0\<close> by (by100 blast)
+          thus "p \<in> ?CU \<times> I_set" using \<open>p = (h y, t)\<close> \<open>t \<in> I_set\<close> by (by100 blast)
+        qed
+        \<comment> \<open>Step C: By Theorem 22.1, \<pi>' = (\<pi> \<times> id)|_{B2\{0} \<times> I} is a quotient map.\<close>
+        \<comment> \<open>We use: \<pi> \<times> id is a closed map (\<Rightarrow> part 2 of Theorem 22.1).\<close>
+        have h\<pi>I_closed: "top1_closed_map_on (top1_B2 \<times> I_set)
+            (product_topology_on top1_B2_topology I_top)
+            (?C \<times> I_set) (product_topology_on ?TC I_top) ?\<pi>I"
+          sorry \<comment> \<open>Continuous from compact to Hausdorff is closed.\<close>
+        have h\<pi>'_quot: "top1_quotient_map_on (?B2_0 \<times> I_set)
+            (subspace_topology (top1_B2 \<times> I_set) (product_topology_on top1_B2_topology I_top)
+              (?B2_0 \<times> I_set))
+            (?CU \<times> I_set)
+            (subspace_topology (?C \<times> I_set) (product_topology_on ?TC I_top) (?CU \<times> I_set))
+            ?\<pi>I"
+          sorry \<comment> \<open>Apply Theorem_22_1 part 2 (closed map \<Rightarrow> restriction to saturated is quotient).\<close>
+        \<comment> \<open>Step D: The radial retraction G(y,t) = h(interp(y,t)) is continuous on B2\{0} \<times> I.\<close>
+        let ?G = "\<lambda>(y, t). h ((1 - t) * fst y + t * fst y / ?norm y,
+                              (1 - t) * snd y + t * snd y / ?norm y)"
+        have hG_cont: "top1_continuous_map_on (?B2_0 \<times> I_set)
+            (subspace_topology (top1_B2 \<times> I_set) (product_topology_on top1_B2_topology I_top)
+              (?B2_0 \<times> I_set))
+            ?U ?TU ?G"
+          sorry \<comment> \<open>Radial interpolation continuous on B2\{0} (field ops + sqrt, y\<noteq>0),
+                   composed with h continuous B2 \<rightarrow> X, restricted codomain to U.\<close>
+        \<comment> \<open>Step E: G is constant on fibers of \<pi>'.\<close>
+        have hG_fiber: "\<forall>p1\<in>?B2_0 \<times> I_set. \<forall>p2\<in>?B2_0 \<times> I_set.
+            ?\<pi>I p1 = ?\<pi>I p2 \<longrightarrow> ?G p1 = ?G p2"
+        proof (intro ballI impI)
+          fix p1 p2 assume hp1: "p1 \<in> ?B2_0 \<times> I_set" and hp2: "p2 \<in> ?B2_0 \<times> I_set"
+            and heqp: "?\<pi>I p1 = ?\<pi>I p2"
+          obtain y1 t1 where hp1_eq: "p1 = (y1, t1)" and hy1: "y1 \<in> ?B2_0" "t1 \<in> I_set"
+            using hp1 by (by100 blast)
+          obtain y2 t2 where hp2_eq: "p2 = (y2, t2)" and hy2: "y2 \<in> ?B2_0" "t2 \<in> I_set"
+            using hp2 by (by100 blast)
+          have "h y1 = h y2" and "t1 = t2" using heqp unfolding hp1_eq hp2_eq by (by100 simp)+
+          \<comment> \<open>Fiber respect: h(y1)=h(y2) \<Longrightarrow> G(y1,t)=G(y2,t) (same as earlier proof).\<close>
+          have "y1 \<in> top1_B2 - top1_S1 \<or> y1 \<in> top1_S1" using hy1(1) by (by100 blast)
+          moreover have "y2 \<in> top1_B2 - top1_S1 \<or> y2 \<in> top1_S1" using hy2(1) by (by100 blast)
+          ultimately have "?G (y1, t1) = ?G (y2, t1)"
+          proof (elim disjE)
+            assume "y1 \<in> top1_B2 - top1_S1" and "y2 \<in> top1_B2 - top1_S1"
+            hence "y1 = y2" using inj_onD[OF hinj_D \<open>h y1 = h y2\<close>] by (by100 blast)
+            thus ?thesis by (by100 simp)
+          next
+            assume hy1S: "y1 \<in> top1_S1" and hy2S: "y2 \<in> top1_S1"
+            have hn1: "?norm y1 = 1" using hy1S unfolding top1_S1_def by (by100 auto)
+            have hn2: "?norm y2 = 1" using hy2S unfolding top1_S1_def by (by100 auto)
+            have hrw: "\<And>a::real. (1 - t1) * a + t1 * a = a"
+            proof -
+              fix a :: real
+              have "(1 - t1) * a + t1 * a = ((1 - t1) + t1) * a" by (rule distrib_right[symmetric])
+              also have "\<dots> = a" by (by100 simp)
+              finally show "(1 - t1) * a + t1 * a = a" .
+            qed
+            have "?G (y1, t1) = h y1" using hn1 hrw by (cases y1) (by100 simp)
+            moreover have "?G (y2, t1) = h y2" using hn2 hrw by (cases y2) (by100 simp)
+            ultimately show ?thesis using \<open>h y1 = h y2\<close> by (by100 simp)
+          next
+            assume "y1 \<in> top1_B2 - top1_S1" and "y2 \<in> top1_S1"
+            have "h y1 \<in> X - A" using \<open>y1 \<in> top1_B2 - top1_S1\<close> hsurj_D by (by100 blast)
+            moreover have "h y2 \<in> A" using \<open>y2 \<in> top1_S1\<close> assms(8) by (by100 blast)
+            ultimately have "h y1 \<in> X - A \<and> h y1 \<in> A" using \<open>h y1 = h y2\<close> by (by100 simp)
             thus ?thesis by (by100 blast)
           next
-            case False thus ?thesis using hxX hxne by (by100 blast)
+            assume "y1 \<in> top1_S1" and "y2 \<in> top1_B2 - top1_S1"
+            have "h y1 \<in> A" using \<open>y1 \<in> top1_S1\<close> assms(8) by (by100 blast)
+            moreover have "h y2 \<in> X - A" using \<open>y2 \<in> top1_B2 - top1_S1\<close> hsurj_D by (by100 blast)
+            ultimately have "h y1 \<in> A \<and> h y1 \<in> X - A" using \<open>h y1 = h y2\<close> by (by100 simp)
+            thus ?thesis by (by100 blast)
           qed
-        next
-          fix x assume "x \<in> ?hD0 \<union> ?hS1"
-          thus "x \<in> ?CU"
-          proof (elim UnE)
-            assume hxhD0: "x \<in> ?hD0"
-            have "x \<in> h ` ?D" using hxhD0 hsurj_D by (by100 blast)
-            hence "x \<in> h ` top1_B2" by (by100 blast)
-            thus "x \<in> ?CU" using hxhD0 by (by100 blast)
-          next
-            assume "x \<in> ?hS1"
-            hence "x \<in> h ` top1_B2" using hS1_sub_B2 by (by100 blast)
-            moreover have "x \<in> A" using \<open>x \<in> ?hS1\<close> hhS1_sub_A by (by100 blast)
-            hence "x \<in> X" "x \<noteq> ?x0" using hA_sub_X hx0_notin_A by (by100 blast)+
-            ultimately show "x \<in> ?CU" by (by100 blast)
-          qed
+          thus "?G p1 = ?G p2" unfolding hp1_eq hp2_eq using \<open>t1 = t2\<close> by (by100 simp)
         qed
-        \<comment> \<open>Both pieces are closed in CU (clopen in a disjoint union).\<close>
-        have hhD0_closed: "closedin_on ?CU (subspace_topology ?U ?TU ?CU) ?hD0"
-          sorry \<comment> \<open>hD0 = (X-A)-{x0} is open in X (complement of closed A \<union> {x0}),
-                   hence open in CU; complement hS1 is closed. So hD0 clopen in CU.\<close>
-        have hhS1_closed: "closedin_on ?CU (subspace_topology ?U ?TU ?CU) ?hS1"
-          sorry \<comment> \<open>hS1 = CU-hD0, complement of open hD0 in CU, hence closed.\<close>
-        \<comment> \<open>H_U on hD0 \<times> I: uses h \<circ> interp \<circ> h\<inverse> composition, continuous.\<close>
-        have hcont_hD0: "top1_continuous_map_on (?hD0 \<times> I_set)
-            (subspace_topology (?CU \<times> I_set) (product_topology_on (subspace_topology ?U ?TU ?CU) I_top)
-              (?hD0 \<times> I_set))
-            ?U ?TU H_U"
-          sorry \<comment> \<open>h\<inverse> continuous (homeomorphism on D), interp continuous (analysis), h continuous.\<close>
-        \<comment> \<open>H_U on hS1 \<times> I: identity (x \<in> h(S1) \<subseteq> A, so H_U(x,t) = x).\<close>
-        have hcont_hS1: "top1_continuous_map_on (?hS1 \<times> I_set)
-            (subspace_topology (?CU \<times> I_set) (product_topology_on (subspace_topology ?U ?TU ?CU) I_top)
-              (?hS1 \<times> I_set))
-            ?U ?TU H_U"
-          sorry \<comment> \<open>H_U = fst on hS1\<times>I, which is the projection = continuous.\<close>
-        \<comment> \<open>Paste via pasting_lemma_two_closed on the product.\<close>
-        show ?thesis sorry \<comment> \<open>Apply pasting_lemma_two_closed on hD0\<times>I and hS1\<times>I.\<close>
+        \<comment> \<open>Step F: By Theorem 22.2, G descends to continuous H_CU on CU \<times> I.\<close>
+        \<comment> \<open>H_U agrees with the descended map on CU \<times> I.\<close>
+        show ?thesis sorry \<comment> \<open>Theorem_22_2 gives descent. Topology transfer CU\<times>I sub of C\<times>I
+                             vs CU\<times>I sub of U\<times>I (= same since CU \<subseteq> U \<subseteq> X \<supseteq> C). Then H_U = descended G.\<close>
       qed
       \<comment> \<open>(Old quotient descent code removed; replaced by pasting approach above.)\<close>
       \<comment> \<open>Paste via pasting_lemma_two_closed.\<close>
@@ -8705,6 +8806,15 @@ end
 
 
 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
  
  
  
