@@ -4401,8 +4401,196 @@ using assms proof (induction n arbitrary: X TX p rule: less_induct)
          Then G :: int set is a free group on {..<n} and isomorphic to \<pi>_1(X).\<close>
       obtain \<sigma> :: "(nat \<times> int) list \<Rightarrow> int" where
           h\<sigma>_bij: "bij \<sigma>"
-        sorry \<comment> \<open>(nat \<times> int) list and int are both countably infinite, so a bijection exists.
-           This is a set-theoretic fact about cardinalities.\<close>
+      proof -
+        \<comment> \<open>Define int_to_nat: injective encoding of int as nat.\<close>
+        define int_to_nat :: "int \<Rightarrow> nat" where
+          "int_to_nat i = (if i \<ge> 0 then 2 * nat i else 2 * nat (- i - 1) + 1)" for i
+        have int_to_nat_inj: "inj int_to_nat"
+        proof (rule injI)
+          fix i j :: int assume h: "int_to_nat i = int_to_nat j"
+          show "i = j"
+          proof (cases "i \<ge> 0")
+            case True note hi = True
+            show ?thesis
+            proof (cases "j \<ge> 0")
+              case True
+              have "2 * nat i = 2 * nat j" using h hi True unfolding int_to_nat_def by (by100 simp)
+              hence "nat i = nat j" by (by100 simp)
+              thus ?thesis using hi True by (by100 simp)
+            next
+              case False
+              have h2: "2 * nat i = 2 * nat (- j - 1) + 1"
+                using h hi False unfolding int_to_nat_def by (by100 simp)
+              have "even (2 * nat i :: nat)" by (by100 simp)
+              hence "even (2 * nat (- j - 1) + 1 :: nat)" using h2 by (by100 simp)
+              moreover have "odd (2 * nat (- j - 1) + 1 :: nat)" by (by100 simp)
+              ultimately show ?thesis by (by100 simp)
+            qed
+          next
+            case False note hi = False
+            show ?thesis
+            proof (cases "j \<ge> 0")
+              case True
+              have "2 * nat (- i - 1) + 1 = 2 * nat j"
+                using h hi True unfolding int_to_nat_def by (by100 simp)
+              hence "even (2 * nat (- i - 1) + 1 :: nat)" by (by100 simp)
+              thus ?thesis by (by100 simp)
+            next
+              case False
+              have "2 * nat (- i - 1) + 1 = 2 * nat (- j - 1) + 1"
+                using h hi False unfolding int_to_nat_def by (by100 simp)
+              hence "nat (- i - 1) = nat (- j - 1)" by (by100 simp)
+              thus ?thesis using hi False by (by100 simp)
+            qed
+          qed
+        qed
+        \<comment> \<open>Define modified Cantor pairing (without div, using 2*cantor pairing).\<close>
+        define cpair :: "nat \<Rightarrow> nat \<Rightarrow> nat" where
+          "cpair m n = (m + n) * (m + n + 1) + 2 * m" for m n
+        have cpair_inj: "\<And>m1 n1 m2 n2. cpair m1 n1 = cpair m2 n2 \<Longrightarrow> m1 = m2 \<and> n1 = n2"
+        proof -
+          fix m1 n1 m2 n2 :: nat
+          assume h: "cpair m1 n1 = cpair m2 n2"
+          define s1 where "s1 = m1 + n1"
+          define s2 where "s2 = m2 + n2"
+          have hc1: "cpair m1 n1 = s1 * (s1 + 1) + 2 * m1"
+            unfolding cpair_def s1_def by (by100 simp)
+          have hc2: "cpair m2 n2 = s2 * (s2 + 1) + 2 * m2"
+            unfolding cpair_def s2_def by (by100 simp)
+          have hm1_le: "m1 \<le> s1" unfolding s1_def by (by100 simp)
+          have hm2_le: "m2 \<le> s2" unfolding s2_def by (by100 simp)
+          \<comment> \<open>Key: s*(s+1) \<le> cpair m n \<le> s*(s+1) + 2*s < (s+1)*(s+2), so s is determined.\<close>
+          have hbound1: "cpair m1 n1 < (s1 + 1) * (s1 + 2)"
+          proof -
+            have "cpair m1 n1 \<le> s1 * (s1 + 1) + 2 * s1" using hc1 hm1_le by (by100 linarith)
+            also have "\<dots> = s1 * s1 + 3 * s1" by (by100 simp)
+            also have "\<dots> < s1 * s1 + 3 * s1 + 2" by (by100 simp)
+            also have "\<dots> = (s1 + 1) * (s1 + 2)" by (by100 simp)
+            finally show ?thesis .
+          qed
+          have hbound2: "cpair m2 n2 < (s2 + 1) * (s2 + 2)"
+          proof -
+            have "cpair m2 n2 \<le> s2 * (s2 + 1) + 2 * s2" using hc2 hm2_le by (by100 linarith)
+            also have "\<dots> = s2 * s2 + 3 * s2" by (by100 simp)
+            also have "\<dots> < s2 * s2 + 3 * s2 + 2" by (by100 simp)
+            also have "\<dots> = (s2 + 1) * (s2 + 2)" by (by100 simp)
+            finally show ?thesis .
+          qed
+          have hlower1: "s1 * (s1 + 1) \<le> cpair m1 n1"
+            using hc1 by (by100 linarith)
+          have hlower2: "s2 * (s2 + 1) \<le> cpair m2 n2"
+            using hc2 by (by100 linarith)
+          have hs_eq: "s1 = s2"
+          proof (rule ccontr)
+            assume "s1 \<noteq> s2"
+            show False
+            proof (cases "s1 < s2")
+              case True
+              hence "s1 + 1 \<le> s2" by (by100 simp)
+              have hs12: "s1 + 2 \<le> s2 + 1" using \<open>s1 + 1 \<le> s2\<close> by (by100 simp)
+              have "(s1 + 1) * (s1 + 2) \<le> s2 * (s2 + 1)"
+                using mult_le_mono[OF \<open>s1 + 1 \<le> s2\<close> hs12] by (by100 simp)
+              hence "cpair m1 n1 < cpair m2 n2"
+                using hbound1 hlower2 by (by100 linarith)
+              thus False using h by (by100 simp)
+            next
+              case False
+              hence "s2 < s1" using \<open>s1 \<noteq> s2\<close> by (by100 simp)
+              hence "s2 + 1 \<le> s1" by (by100 simp)
+              have hs22: "s2 + 2 \<le> s1 + 1" using \<open>s2 + 1 \<le> s1\<close> by (by100 simp)
+              have "(s2 + 1) * (s2 + 2) \<le> s1 * (s1 + 1)"
+                using mult_le_mono[OF \<open>s2 + 1 \<le> s1\<close> hs22] by (by100 simp)
+              hence "cpair m2 n2 < cpair m1 n1"
+                using hbound2 hlower1 by (by100 linarith)
+              thus False using h by (by100 simp)
+            qed
+          qed
+          have hceq: "s1 * (s1 + 1) + 2 * m1 = s2 * (s2 + 1) + 2 * m2"
+            using h hc1 hc2 by (by100 linarith)
+          hence "2 * m1 = 2 * m2" using hs_eq by (by100 simp)
+          hence "m1 = m2" by (by100 simp)
+          moreover hence "n1 = n2" using hs_eq unfolding s1_def s2_def by (by100 simp)
+          ultimately show "m1 = m2 \<and> n1 = n2" by (by100 blast)
+        qed
+        \<comment> \<open>Define encoding of (nat \<times> int) as nat.\<close>
+        define pair_enc :: "nat \<times> int \<Rightarrow> nat" where
+          "pair_enc p = cpair (fst p) (int_to_nat (snd p))" for p
+        have pair_enc_inj: "inj pair_enc"
+        proof (rule injI)
+          fix p q :: "nat \<times> int" assume h: "pair_enc p = pair_enc q"
+          have "fst p = fst q \<and> int_to_nat (snd p) = int_to_nat (snd q)"
+            using cpair_inj h unfolding pair_enc_def by (by100 blast)
+          hence "fst p = fst q" "snd p = snd q"
+            using injD[OF int_to_nat_inj] by (by100 blast)+
+          thus "p = q" by (cases p, cases q) (by100 simp)
+        qed
+        \<comment> \<open>Define encoding of (nat \<times> int) list as nat.\<close>
+        define list_enc :: "(nat \<times> int) list \<Rightarrow> nat" where
+          "list_enc xs = rec_list 0 (\<lambda>x _ r. cpair (pair_enc x + 1) r + 1) xs" for xs
+        have list_enc_nil: "list_enc [] = 0"
+          unfolding list_enc_def by (by100 simp)
+        have list_enc_cons: "\<And>x xs. list_enc (x # xs) = cpair (pair_enc x + 1) (list_enc xs) + 1"
+          unfolding list_enc_def by (by100 simp)
+        have list_enc_inj: "inj list_enc"
+        proof (rule injI)
+          fix xs ys :: "(nat \<times> int) list"
+          show "list_enc xs = list_enc ys \<Longrightarrow> xs = ys"
+          proof (induction xs arbitrary: ys)
+            case Nil
+            thus ?case
+            proof (cases ys)
+              case Nil thus ?thesis by (by100 simp)
+            next
+              case (Cons b bs)
+              have "0 = cpair (pair_enc b + 1) (list_enc bs) + 1"
+                using \<open>list_enc [] = list_enc ys\<close> list_enc_nil list_enc_cons Cons by (by100 simp)
+              thus ?thesis by (by100 simp)
+            qed
+          next
+            case (Cons a as)
+            thus ?case
+            proof (cases ys)
+              case Nil
+              have "cpair (pair_enc a + 1) (list_enc as) + 1 = 0"
+                using Cons.prems Nil list_enc_nil list_enc_cons by (by100 simp)
+              thus ?thesis by (by100 simp)
+            next
+              case (Cons b bs)
+              have ha: "list_enc (a # as) = cpair (pair_enc a + 1) (list_enc as) + 1"
+                using list_enc_cons by (by100 simp)
+              have hb: "list_enc (b # bs) = cpair (pair_enc b + 1) (list_enc bs) + 1"
+                using list_enc_cons by (by100 simp)
+              have "cpair (pair_enc a + 1) (list_enc as) = cpair (pair_enc b + 1) (list_enc bs)"
+                using Cons.prems Cons ha hb by (by100 simp)
+              hence "pair_enc a + 1 = pair_enc b + 1 \<and> list_enc as = list_enc bs"
+                using cpair_inj by (by100 blast)
+              hence "pair_enc a = pair_enc b" "list_enc as = list_enc bs" by (by100 simp)+
+              hence "a = b" using injD[OF pair_enc_inj] by (by100 blast)
+              moreover have "as = bs" using Cons.IH \<open>list_enc as = list_enc bs\<close> .
+              ultimately show ?thesis using Cons by (by100 simp)
+            qed
+          qed
+        qed
+        \<comment> \<open>Compose: list_enc followed by of_nat gives injection (nat \<times> int) list \<rightarrow> int.\<close>
+        have f_inj: "inj (int \<circ> list_enc)"
+          using inj_of_nat list_enc_inj by (rule inj_compose)
+        \<comment> \<open>The other direction: int \<rightarrow> (nat \<times> int) list via \<lambda>i. [(0, i)].\<close>
+        have g_inj: "inj (\<lambda>i::int. [(0::nat, i)])"
+          by (rule injI) (by100 simp)
+        \<comment> \<open>Apply Schroeder-Bernstein to get a bijection.\<close>
+        have "\<exists>h. bij_betw h (UNIV :: (nat \<times> int) list set) (UNIV :: int set)"
+          using Schroeder_Bernstein[where f="int \<circ> list_enc" and g="\<lambda>i. [(0, i)]"
+              and A=UNIV and B=UNIV]
+          using f_inj g_inj by (by100 simp)
+        then obtain h :: "(nat \<times> int) list \<Rightarrow> int" where "bij_betw h UNIV UNIV" by (by100 blast)
+        hence "bij h"
+        proof -
+          have "inj h" using \<open>bij_betw h UNIV UNIV\<close> unfolding bij_betw_def inj_on_def by (by100 blast)
+          moreover have "surj h" using \<open>bij_betw h UNIV UNIV\<close> using bij_betw_imp_surj by (by100 blast)
+          ultimately show "bij h" unfolding bij_def by (by100 blast)
+        qed
+        thus ?thesis using that by (by100 blast)
+      qed
       define G_int :: "int set" where "G_int = \<sigma> ` FPZ"
       define \<sigma>_inv :: "int \<Rightarrow> (nat \<times> int) list" where "\<sigma>_inv = inv_into UNIV \<sigma>"
       have h\<sigma>_surj: "surj \<sigma>" using h\<sigma>_bij unfolding bij_def by (by100 blast)
@@ -4524,9 +4712,139 @@ using assms proof (induction n arbitrary: X TX p rule: less_induct)
         \<comment> \<open>Generation: G_int = \<sigma>(FPZ) = \<sigma>(generated by \<iota>Z({..<n}))
            = generated by \<sigma>(\<iota>Z({..<n})) = generated by \<iota>_int({..<n}).\<close>
         have hgen_int: "G_int = top1_subgroup_generated_on G_int mul_int e_int invg_int (\<iota>_int ` {..<n})"
-          sorry \<comment> \<open>Transport of subgroup generation through \<sigma>:
-             \<sigma> maps products/inverses of \<iota>Z-generators to products/inverses of \<iota>_int-generators,
-             and every element of G_int = \<sigma>(FPZ) comes from such a product.\<close>
+        proof (rule antisym)
+          have h\<iota>_int_im_sub: "\<iota>_int ` {..<n} \<subseteq> G_int"
+            using h\<iota>_int_in by (by100 blast)
+          show "top1_subgroup_generated_on G_int mul_int e_int invg_int (\<iota>_int ` {..<n}) \<subseteq> G_int"
+            using subgroup_generated_subset[OF hG_int_grp h\<iota>_int_im_sub] .
+        next
+          show "G_int \<subseteq> top1_subgroup_generated_on G_int mul_int e_int invg_int (\<iota>_int ` {..<n})"
+            unfolding top1_subgroup_generated_on_def
+          proof (rule Inter_greatest)
+            fix H assume hH: "H \<in> {H. \<iota>_int ` {..<n} \<subseteq> H \<and> H \<subseteq> G_int \<and> top1_is_group_on H mul_int e_int invg_int}"
+            hence hgens_H: "\<iota>_int ` {..<n} \<subseteq> H" and hH_sub: "H \<subseteq> G_int"
+                and hH_grp: "top1_is_group_on H mul_int e_int invg_int"
+              by (by100 blast)+
+            \<comment> \<open>Define H' = \<sigma>_inv ` H, and show it is a subgroup of FPZ containing \<iota>Z ` {..<n}.\<close>
+            define H' where "H' = \<sigma>_inv ` H"
+            have hH'_sub_FPZ: "H' \<subseteq> FPZ"
+            proof (rule subsetI)
+              fix x assume "x \<in> H'"
+              then obtain h where hh: "h \<in> H" "x = \<sigma>_inv h" unfolding H'_def by (by100 blast)
+              have "h \<in> G_int" using hh(1) hH_sub by (by100 blast)
+              then obtain f where hf: "f \<in> FPZ" "h = \<sigma> f" unfolding G_int_def by (by100 blast)
+              have "x = \<sigma>_inv (\<sigma> f)" using hh(2) hf(2) by (by100 simp)
+              hence "x = f" using h\<sigma>_inv2 by (by100 simp)
+              thus "x \<in> FPZ" using hf(1) by (by100 simp)
+            qed
+            have hgens_H': "\<iota>Z ` {..<n} \<subseteq> H'"
+            proof (rule subsetI)
+              fix x assume "x \<in> \<iota>Z ` {..<n}"
+              then obtain s where hs: "s \<in> {..<n}" "x = \<iota>Z s" by (by100 blast)
+              have "\<iota>_int s \<in> H" using hgens_H hs(1) by (by100 blast)
+              have "\<sigma>_inv (\<iota>_int s) = \<sigma>_inv (\<sigma> (\<iota>Z s))" unfolding \<iota>_int_def by (by100 simp)
+              also have "\<dots> = \<iota>Z s" using h\<sigma>_inv2 by (by100 simp)
+              finally have "\<sigma>_inv (\<iota>_int s) = \<iota>Z s" .
+              hence "\<iota>Z s \<in> H'" unfolding H'_def using \<open>\<iota>_int s \<in> H\<close> by (by100 force)
+              thus "x \<in> H'" using hs(2) by (by100 simp)
+            qed
+            have hH'_grp: "top1_is_group_on H' mulFPZ eFPZ invgFPZ"
+              unfolding top1_is_group_on_def
+            proof (intro conjI)
+              have he_H: "e_int \<in> H" using hH_grp unfolding top1_is_group_on_def by (by100 blast)
+              have "\<sigma>_inv e_int = \<sigma>_inv (\<sigma> eFPZ)" unfolding e_int_def by (by100 simp)
+              hence "\<sigma>_inv e_int = eFPZ" using h\<sigma>_inv2 by (by100 simp)
+              thus "eFPZ \<in> H'" unfolding H'_def using he_H by (by100 force)
+            next
+              show "\<forall>x\<in>H'. \<forall>y\<in>H'. mulFPZ x y \<in> H'"
+              proof (intro ballI)
+                fix x y assume hx: "x \<in> H'" and hy: "y \<in> H'"
+                obtain hx0 where hhx: "hx0 \<in> H" "x = \<sigma>_inv hx0" using hx unfolding H'_def by (by100 blast)
+                obtain hy0 where hhy: "hy0 \<in> H" "y = \<sigma>_inv hy0" using hy unfolding H'_def by (by100 blast)
+                have hx0_G: "hx0 \<in> G_int" using hhx(1) hH_sub by (by100 blast)
+                have hy0_G: "hy0 \<in> G_int" using hhy(1) hH_sub by (by100 blast)
+                have hmul_H: "mul_int hx0 hy0 \<in> H"
+                  using hH_grp hhx(1) hhy(1) unfolding top1_is_group_on_def by (by100 blast)
+                obtain x' where hx': "x' \<in> FPZ" "hx0 = \<sigma> x'"
+                  using hx0_G unfolding G_int_def by (by100 blast)
+                obtain y' where hy': "y' \<in> FPZ" "hy0 = \<sigma> y'"
+                  using hy0_G unfolding G_int_def by (by100 blast)
+                have "x = x'" using hhx(2) hx'(2) h\<sigma>_inv2 by (by100 simp)
+                have "y = y'" using hhy(2) hy'(2) h\<sigma>_inv2 by (by100 simp)
+                have "mul_int hx0 hy0 = \<sigma> (mulFPZ x' y')"
+                  using hmul_transport[OF hx'(1) hy'(1)] hx'(2) hy'(2) by (by100 simp)
+                hence "\<sigma>_inv (mul_int hx0 hy0) = mulFPZ x' y'"
+                  using h\<sigma>_inv2 by (by100 simp)
+                hence "\<sigma>_inv (mul_int hx0 hy0) = mulFPZ x y"
+                  using \<open>x = x'\<close> \<open>y = y'\<close> by (by100 simp)
+                thus "mulFPZ x y \<in> H'" unfolding H'_def using hmul_H by (by100 force)
+              qed
+            next
+              show "\<forall>x\<in>H'. invgFPZ x \<in> H'"
+              proof (intro ballI)
+                fix x assume hx: "x \<in> H'"
+                obtain hx0 where hhx: "hx0 \<in> H" "x = \<sigma>_inv hx0" using hx unfolding H'_def by (by100 blast)
+                have hx0_G: "hx0 \<in> G_int" using hhx(1) hH_sub by (by100 blast)
+                have hinv_H: "invg_int hx0 \<in> H"
+                  using hH_grp hhx(1) unfolding top1_is_group_on_def by (by100 blast)
+                obtain x' where hx': "x' \<in> FPZ" "hx0 = \<sigma> x'"
+                  using hx0_G unfolding G_int_def by (by100 blast)
+                have "x = x'" using hhx(2) hx'(2) h\<sigma>_inv2 by (by100 simp)
+                have "invg_int hx0 = \<sigma> (invgFPZ x')"
+                  using hinvg_transport[OF hx'(1)] hx'(2) by (by100 simp)
+                hence "\<sigma>_inv (invg_int hx0) = invgFPZ x'"
+                  using h\<sigma>_inv2 by (by100 simp)
+                hence "\<sigma>_inv (invg_int hx0) = invgFPZ x"
+                  using \<open>x = x'\<close> by (by100 simp)
+                thus "invgFPZ x \<in> H'" unfolding H'_def using hinv_H by (by100 force)
+              qed
+            next
+              show "\<forall>x\<in>H'. \<forall>y\<in>H'. \<forall>z\<in>H'. mulFPZ (mulFPZ x y) z = mulFPZ x (mulFPZ y z)"
+              proof (intro ballI)
+                fix x y z assume "x \<in> H'" "y \<in> H'" "z \<in> H'"
+                hence "x \<in> FPZ" "y \<in> FPZ" "z \<in> FPZ" using hH'_sub_FPZ by (by100 blast)+
+                thus "mulFPZ (mulFPZ x y) z = mulFPZ x (mulFPZ y z)"
+                  using hFPZ_grp unfolding top1_is_group_on_def by (by100 blast)
+              qed
+            next
+              show "\<forall>x\<in>H'. mulFPZ eFPZ x = x \<and> mulFPZ x eFPZ = x"
+              proof (intro ballI)
+                fix x assume "x \<in> H'"
+                hence "x \<in> FPZ" using hH'_sub_FPZ by (by100 blast)
+                thus "mulFPZ eFPZ x = x \<and> mulFPZ x eFPZ = x"
+                  using hFPZ_grp unfolding top1_is_group_on_def by (by100 blast)
+              qed
+            next
+              show "\<forall>x\<in>H'. mulFPZ (invgFPZ x) x = eFPZ \<and> mulFPZ x (invgFPZ x) = eFPZ"
+              proof (intro ballI)
+                fix x assume "x \<in> H'"
+                hence "x \<in> FPZ" using hH'_sub_FPZ by (by100 blast)
+                thus "mulFPZ (invgFPZ x) x = eFPZ \<and> mulFPZ x (invgFPZ x) = eFPZ"
+                  using hFPZ_grp unfolding top1_is_group_on_def by (by100 blast)
+              qed
+            qed
+            \<comment> \<open>Since FPZ = subgroup_generated by \<iota>Z ` {..<n}, and H' is a subgroup containing those generators,
+               FPZ \<subseteq> H'. Therefore G_int = \<sigma> ` FPZ \<subseteq> \<sigma> ` H' = H.\<close>
+            have "FPZ \<subseteq> H'"
+            proof -
+              have "H' \<in> {K. \<iota>Z ` {..<n} \<subseteq> K \<and> K \<subseteq> FPZ \<and> top1_is_group_on K mulFPZ eFPZ invgFPZ}"
+                using hgens_H' hH'_sub_FPZ hH'_grp by (by100 blast)
+              hence "top1_subgroup_generated_on FPZ mulFPZ eFPZ invgFPZ (\<iota>Z ` {..<n}) \<subseteq> H'"
+                unfolding top1_subgroup_generated_on_def by (rule Inter_lower)
+              thus ?thesis using hgen_FPZ by (by100 simp)
+            qed
+            show "G_int \<subseteq> H"
+            proof (rule subsetI)
+              fix x assume "x \<in> G_int"
+              then obtain f where hf: "f \<in> FPZ" "x = \<sigma> f" unfolding G_int_def by (by100 blast)
+              have "f \<in> H'" using \<open>FPZ \<subseteq> H'\<close> hf(1) by (by100 blast)
+              then obtain h where hh: "h \<in> H" "f = \<sigma>_inv h" unfolding H'_def by (by100 blast)
+              have "x = \<sigma> (\<sigma>_inv h)" using hf(2) hh(2) by (by100 simp)
+              hence "x = h" using h\<sigma>_inv by (by100 simp)
+              thus "x \<in> H" using hh(1) by (by100 simp)
+            qed
+          qed
+        qed
         \<comment> \<open>Reduced word property: transport through \<sigma>.\<close>
         have hred_int: "\<And>ws :: (nat \<times> bool) list. ws \<noteq> [] \<Longrightarrow>
             top1_is_reduced_word (map (\<lambda>(s, b). (\<iota>_int s, b)) ws) \<Longrightarrow>
@@ -4549,7 +4867,38 @@ using assms proof (induction n arbitrary: X TX p rule: less_induct)
                Since \<sigma> is injective, (\<sigma>(\<iota>Z s), b) pairs differ iff (\<iota>Z s, b) pairs differ.\<close>
             have "top1_is_reduced_word (map (\<lambda>(s, b). (\<sigma> (\<iota>Z s), b)) ws)"
               using hred hmap_eq by (by100 simp)
-            thus ?thesis sorry \<comment> \<open>Injectivity of \<sigma> transfers reduced word property.\<close>
+            have hred_transfer: "\<And>ws'. top1_is_reduced_word (map (\<lambda>(s, b). (\<sigma> (\<iota>Z s), b)) ws')
+                \<Longrightarrow> top1_is_reduced_word (map (\<lambda>(s, b). (\<iota>Z s, b)) ws')"
+            proof -
+              fix ws' :: "(nat \<times> bool) list"
+              show "top1_is_reduced_word (map (\<lambda>(s, b). (\<sigma> (\<iota>Z s), b)) ws')
+                  \<Longrightarrow> top1_is_reduced_word (map (\<lambda>(s, b). (\<iota>Z s, b)) ws')"
+              proof (induction ws' rule: top1_is_reduced_word.induct)
+                case 1 thus ?case by (by100 simp)
+              next
+                case (2 x) thus ?case by (by100 simp)
+              next
+                case (3 x bx y cy ws'')
+                have hpair: "\<sigma> (\<iota>Z x) \<noteq> \<sigma> (\<iota>Z y) \<or> bx = cy"
+                  using 3(2) by (by100 simp)
+                have hpair': "\<iota>Z x \<noteq> \<iota>Z y \<or> bx = cy"
+                proof (cases "bx = cy")
+                  case True thus ?thesis by (by100 simp)
+                next
+                  case False
+                  hence "\<sigma> (\<iota>Z x) \<noteq> \<sigma> (\<iota>Z y)" using hpair by (by100 simp)
+                  hence "\<iota>Z x \<noteq> \<iota>Z y" using injD[OF h\<sigma>_inj] by (by100 metis)
+                  thus ?thesis by (by100 simp)
+                qed
+                have htail: "top1_is_reduced_word (map (\<lambda>(s, b). (\<sigma> (\<iota>Z s), b)) ((y, cy) # ws''))"
+                  using 3(2) by (by100 simp)
+                have htail': "top1_is_reduced_word (map (\<lambda>(s, b). (\<iota>Z s, b)) ((y, cy) # ws''))"
+                  using 3(1)[OF htail] .
+                show ?case using hpair' htail' by (by100 simp)
+              qed
+            qed
+            from this[OF \<open>top1_is_reduced_word (map (\<lambda>(s, b). (\<sigma> (\<iota>Z s), b)) ws)\<close>]
+            show ?thesis .
           qed
           have hprod_ne: "top1_group_word_product mulFPZ eFPZ invgFPZ
               (map (\<lambda>(s, b). (\<iota>Z s, b)) ws) \<noteq> eFPZ"
@@ -4559,7 +4908,65 @@ using assms proof (induction n arbitrary: X TX p rule: less_induct)
           have hprod_transport: "top1_group_word_product mul_int e_int invg_int
               (map (\<lambda>(s, b). (\<iota>_int s, b)) ws) =
               \<sigma> (top1_group_word_product mulFPZ eFPZ invgFPZ (map (\<lambda>(s, b). (\<iota>Z s, b)) ws))"
-            sorry \<comment> \<open>Induction on ws: word product transports through \<sigma>.\<close>
+          proof -
+            have haux: "\<And>ws'. top1_group_word_product mul_int e_int invg_int
+                (map (\<lambda>(s, b). (\<iota>_int s, b)) ws') =
+                \<sigma> (top1_group_word_product mulFPZ eFPZ invgFPZ (map (\<lambda>(s, b). (\<iota>Z s, b)) ws'))"
+            proof -
+              fix ws' :: "(nat \<times> bool) list"
+              show "top1_group_word_product mul_int e_int invg_int
+                  (map (\<lambda>(s, b). (\<iota>_int s, b)) ws') =
+                  \<sigma> (top1_group_word_product mulFPZ eFPZ invgFPZ (map (\<lambda>(s, b). (\<iota>Z s, b)) ws'))"
+              proof (induction ws')
+                case Nil
+                show ?case unfolding e_int_def by (by100 simp)
+              next
+                case (Cons a ws'')
+                obtain s b where ha: "a = (s, b)" by (cases a)
+                show ?case
+                proof (cases b)
+                  case True
+                  have "top1_group_word_product mul_int e_int invg_int
+                      (map (\<lambda>(s, b). (\<iota>_int s, b)) (a # ws''))
+                      = mul_int (\<iota>_int s) (top1_group_word_product mul_int e_int invg_int
+                          (map (\<lambda>(s, b). (\<iota>_int s, b)) ws''))"
+                    using ha True by (by100 simp)
+                  also have "\<dots> = mul_int (\<iota>_int s)
+                      (\<sigma> (top1_group_word_product mulFPZ eFPZ invgFPZ
+                          (map (\<lambda>(s, b). (\<iota>Z s, b)) ws'')))"
+                    using Cons.IH by (by100 simp)
+                  also have "\<dots> = \<sigma> (mulFPZ (\<iota>Z s)
+                      (top1_group_word_product mulFPZ eFPZ invgFPZ
+                          (map (\<lambda>(s, b). (\<iota>Z s, b)) ws'')))"
+                    unfolding mul_int_def \<iota>_int_def using h\<sigma>_inv2 by (by100 simp)
+                  also have "\<dots> = \<sigma> (top1_group_word_product mulFPZ eFPZ invgFPZ
+                      (map (\<lambda>(s, b). (\<iota>Z s, b)) (a # ws'')))"
+                    using ha True by (by100 simp)
+                  finally show ?thesis .
+                next
+                  case False
+                  have "top1_group_word_product mul_int e_int invg_int
+                      (map (\<lambda>(s, b). (\<iota>_int s, b)) (a # ws''))
+                      = mul_int (invg_int (\<iota>_int s)) (top1_group_word_product mul_int e_int invg_int
+                          (map (\<lambda>(s, b). (\<iota>_int s, b)) ws''))"
+                    using ha False by (by100 simp)
+                  also have "\<dots> = mul_int (invg_int (\<iota>_int s))
+                      (\<sigma> (top1_group_word_product mulFPZ eFPZ invgFPZ
+                          (map (\<lambda>(s, b). (\<iota>Z s, b)) ws'')))"
+                    using Cons.IH by (by100 simp)
+                  also have "\<dots> = \<sigma> (mulFPZ (invgFPZ (\<iota>Z s))
+                      (top1_group_word_product mulFPZ eFPZ invgFPZ
+                          (map (\<lambda>(s, b). (\<iota>Z s, b)) ws'')))"
+                    unfolding mul_int_def invg_int_def \<iota>_int_def using h\<sigma>_inv2 by (by100 simp)
+                  also have "\<dots> = \<sigma> (top1_group_word_product mulFPZ eFPZ invgFPZ
+                      (map (\<lambda>(s, b). (\<iota>Z s, b)) (a # ws'')))"
+                    using ha False by (by100 simp)
+                  finally show ?thesis .
+                qed
+              qed
+            qed
+            show ?thesis using haux[of ws] .
+          qed
           show "top1_group_word_product mul_int e_int invg_int
               (map (\<lambda>(s, b). (\<iota>_int s, b)) ws) \<noteq> e_int"
           proof
