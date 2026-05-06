@@ -2014,11 +2014,77 @@ proof -
           show "closedin_on (?C \<times> I_set) (product_topology_on ?TC I_top) (?\<pi>I ` A)"
             by (rule compact_hausdorff_continuous_closed_map[OF hB2I_compact hCI_hausdorff h\<pi>I_cont hA])
         qed
+        \<comment> \<open>Use define to make \<pi>I opaque, avoiding lambda explosion in set operations.\<close>
+        define piI :: "(real\<times>real) \<times> real \<Rightarrow> 'a \<times> real" where "piI = ?\<pi>I"
+        have hpiI_cont: "top1_continuous_map_on (top1_B2 \<times> I_set)
+            (product_topology_on top1_B2_topology I_top) (?C \<times> I_set) (product_topology_on ?TC I_top) piI"
+          using h\<pi>I_cont unfolding piI_def .
+        have hpiI_closed: "top1_closed_map_on (top1_B2 \<times> I_set)
+            (product_topology_on top1_B2_topology I_top) (?C \<times> I_set) (product_topology_on ?TC I_top) piI"
+          using h\<pi>I_closed unfolding piI_def .
+        have hpiI_surj: "piI ` (top1_B2 \<times> I_set) = ?C \<times> I_set"
+          unfolding piI_def by (by100 auto)
+        have hTBI_loc: "is_topology_on (top1_B2 \<times> I_set) (product_topology_on top1_B2_topology I_top)"
+          using hB2I_compact unfolding top1_compact_on_def by (by100 blast)
+        have hTCI_loc: "is_topology_on (?C \<times> I_set) (product_topology_on ?TC I_top)"
+          using hCI_hausdorff unfolding is_hausdorff_on_def by (by100 blast)
         have h\<pi>I_quot: "top1_quotient_map_on (top1_B2 \<times> I_set)
             (product_topology_on top1_B2_topology I_top)
             (?C \<times> I_set) (product_topology_on ?TC I_top) ?\<pi>I"
-          sorry \<comment> \<open>Closed continuous surjection = quotient. From hπI_closed, hπI_cont.
-                   Proof: V open iff complement-preimage closed, closed map sends to closed, surjectivity.\<close>
+        proof -
+          have "top1_quotient_map_on (top1_B2 \<times> I_set)
+              (product_topology_on top1_B2_topology I_top)
+              (?C \<times> I_set) (product_topology_on ?TC I_top) piI"
+            unfolding top1_quotient_map_on_def
+          proof (intro conjI allI impI)
+            show "is_topology_on (top1_B2 \<times> I_set) (product_topology_on top1_B2_topology I_top)"
+              by (rule hTBI_loc)
+            show "is_topology_on (?C \<times> I_set) (product_topology_on ?TC I_top)"
+              by (rule hTCI_loc)
+            show "top1_continuous_map_on (top1_B2 \<times> I_set) (product_topology_on top1_B2_topology I_top)
+                (?C \<times> I_set) (product_topology_on ?TC I_top) piI" by (rule hpiI_cont)
+            show "piI ` (top1_B2 \<times> I_set) = ?C \<times> I_set" by (rule hpiI_surj)
+            fix V assume hV_sub: "V \<subseteq> ?C \<times> I_set"
+              and hV_pre: "{x \<in> top1_B2 \<times> I_set. piI x \<in> V} \<in> product_topology_on top1_B2_topology I_top"
+            have hcomp_closed: "closedin_on (top1_B2 \<times> I_set)
+                (product_topology_on top1_B2_topology I_top)
+                {x \<in> top1_B2 \<times> I_set. piI x \<notin> V}"
+              unfolding closedin_on_def
+            proof (intro conjI)
+              show "{x \<in> top1_B2 \<times> I_set. piI x \<notin> V} \<subseteq> top1_B2 \<times> I_set" by (by100 blast)
+              have "(top1_B2 \<times> I_set) - {x \<in> top1_B2 \<times> I_set. piI x \<notin> V}
+                  = {x \<in> top1_B2 \<times> I_set. piI x \<in> V}" by (by100 blast)
+              thus "(top1_B2 \<times> I_set) - {x \<in> top1_B2 \<times> I_set. piI x \<notin> V}
+                  \<in> product_topology_on top1_B2_topology I_top"
+                using hV_pre by (by100 simp)
+            qed
+            have himg_closed: "closedin_on (?C \<times> I_set) (product_topology_on ?TC I_top)
+                (piI ` {x \<in> top1_B2 \<times> I_set. piI x \<notin> V})"
+              using hpiI_closed hcomp_closed unfolding top1_closed_map_on_def by (by100 blast)
+            have himg_eq: "piI ` {x \<in> top1_B2 \<times> I_set. piI x \<notin> V} = (?C \<times> I_set) - V"
+            proof (rule set_eqI, rule iffI)
+              fix z assume "z \<in> piI ` {x \<in> top1_B2 \<times> I_set. piI x \<notin> V}"
+              then obtain x where hx: "x \<in> top1_B2 \<times> I_set" "piI x \<notin> V" "piI x = z" by (by100 blast)
+              have "z \<in> ?C \<times> I_set" using hx(1) hx(3) hpiI_surj by (by100 blast)
+              moreover have "z \<notin> V" using hx(2) hx(3) by (by100 simp)
+              ultimately show "z \<in> (?C \<times> I_set) - V" by (by100 blast)
+            next
+              fix z assume hz: "z \<in> (?C \<times> I_set) - V"
+              hence "z \<in> piI ` (top1_B2 \<times> I_set)" using hpiI_surj by (by100 blast)
+              then obtain x where "x \<in> top1_B2 \<times> I_set" "piI x = z" by (by100 blast)
+              hence "piI x \<notin> V" using hz by (by100 blast)
+              thus "z \<in> piI ` {x \<in> top1_B2 \<times> I_set. piI x \<notin> V}"
+                using \<open>x \<in> top1_B2 \<times> I_set\<close> \<open>piI x = z\<close> by (by100 blast)
+            qed
+            have "closedin_on (?C \<times> I_set) (product_topology_on ?TC I_top) ((?C \<times> I_set) - V)"
+              using himg_closed himg_eq by (by100 simp)
+            have "(?C \<times> I_set) - ((?C \<times> I_set) - V) = V" using hV_sub by (by100 blast)
+            thus "V \<in> product_topology_on ?TC I_top"
+              using \<open>closedin_on (?C \<times> I_set) _ ((?C \<times> I_set) - V)\<close>
+              unfolding closedin_on_def by (by100 simp)
+          qed
+          thus ?thesis unfolding piI_def .
+        qed
         have h\<pi>'_quot: "top1_quotient_map_on (?B2_0 \<times> I_set)
             (subspace_topology (top1_B2 \<times> I_set) (product_topology_on top1_B2_topology I_top)
               (?B2_0 \<times> I_set))
@@ -9178,6 +9244,12 @@ end
 
 
 
+ 
+ 
+ 
+ 
+ 
+ 
  
  
  
