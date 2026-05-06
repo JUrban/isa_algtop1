@@ -7654,7 +7654,14 @@ proof -
     sorry \<comment> \<open>Full coset-space construction. Requires defining E' as H-right-cosets of path classes,
        topology via path-extension basis, verifying covering + connectivity + p'_*(π₁) = H.
        Semilocal simple connectivity (assms(4)) ensures the evenly-covered property.\<close>
-  show ?thesis using hTE' hp'_cov hE'_pc hE'_lpc he0' hp'e0 hp'_img sorry
+  have hall: "is_topology_on_strict E' TE'
+    \<and> top1_covering_map_on E' TE' B TB p'
+    \<and> top1_path_connected_on E' TE'
+    \<and> top1_locally_path_connected_on E' TE'
+    \<and> e0' \<in> E' \<and> p' e0' = b0
+    \<and> top1_fundamental_group_image_hom E' TE' e0' B TB b0 p' = H"
+    using hTE' hp'_cov hE'_pc hE'_lpc he0' hp'e0 hp'_img by (by100 fast)
+  show ?thesis using hall sorry
 qed
 
 section \<open>Chapter 14: Applications to Group Theory\<close>
@@ -7693,6 +7700,7 @@ definition top1_is_graph_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> bo
 theorem Theorem_83_4_covering_of_graph_is_graph:
   assumes "top1_is_graph_on B TB"
       and "top1_covering_map_on E TE B TB p"
+      and "is_topology_on_strict E TE"
   shows "top1_is_graph_on E TE"
 proof -
   \<comment> \<open>Munkres 83.2: Each arc A in B lifts to arcs in E (sheets over A).
@@ -7708,7 +7716,88 @@ proof -
     sorry \<comment> \<open>Lift arcs: each evenly-covered neighborhood splits A into sheets.\<close>
   \<comment> \<open>Step 2: E is Hausdorff (covering space of Hausdorff is Hausdorff).\<close>
   have hE_hausdorff: "is_hausdorff_on E TE"
-    sorry \<comment> \<open>Local homeomorphism + Hausdorff base = Hausdorff total space.\<close>
+  proof -
+    have hB_haus: "is_hausdorff_on B TB"
+      using assms(1) unfolding top1_is_graph_on_def by (by100 blast)
+    have hTB: "is_topology_on B TB"
+      using hB_haus unfolding is_hausdorff_on_def by (by100 blast)
+    have hTE: "is_topology_on E TE"
+      using assms(3) unfolding is_topology_on_strict_def by (by100 blast)
+    have hp_cont: "top1_continuous_map_on E TE B TB p"
+      using assms(2) unfolding top1_covering_map_on_def by (by100 blast)
+    have hp_surj: "p ` E = B"
+      using assms(2) unfolding top1_covering_map_on_def by (by100 blast)
+    show ?thesis unfolding is_hausdorff_on_def neighborhood_of_def
+    proof (intro conjI ballI impI)
+      show "is_topology_on E TE" by (rule hTE)
+    next
+      fix x y assume hx: "x \<in> E" and hy: "y \<in> E" and hne: "x \<noteq> y"
+      show "\<exists>U V. (U \<in> TE \<and> x \<in> U) \<and> (V \<in> TE \<and> y \<in> V) \<and> U \<inter> V = {}"
+      proof (cases "p x = p y")
+        case False
+        \<comment> \<open>Separate in B, pull back preimages.\<close>
+        have hpx: "p x \<in> B" using hp_surj hx by (by100 blast)
+        have hpy: "p y \<in> B" using hp_surj hy by (by100 blast)
+        obtain U1 V1 where hU1: "U1 \<in> TB" "p x \<in> U1" and hV1: "V1 \<in> TB" "p y \<in> V1"
+            and hdisj: "U1 \<inter> V1 = {}"
+          using hB_haus hpx hpy False unfolding is_hausdorff_on_def neighborhood_of_def
+          by (by100 blast)
+        have hpU: "{e \<in> E. p e \<in> U1} \<in> TE"
+          using hp_cont hU1(1) unfolding top1_continuous_map_on_def by (by100 blast)
+        have hpV: "{e \<in> E. p e \<in> V1} \<in> TE"
+          using hp_cont hV1(1) unfolding top1_continuous_map_on_def by (by100 blast)
+        have "x \<in> {e \<in> E. p e \<in> U1}" using hx hU1(2) by (by100 blast)
+        moreover have "y \<in> {e \<in> E. p e \<in> V1}" using hy hV1(2) by (by100 blast)
+        moreover have "{e \<in> E. p e \<in> U1} \<inter> {e \<in> E. p e \<in> V1} = {}"
+          using hdisj by (by100 blast)
+        ultimately show ?thesis using hpU hpV by (by100 blast)
+      next
+        case True
+        \<comment> \<open>Same fiber: x, y in different sheets.\<close>
+        have hb: "p x \<in> B" using hp_surj hx by (by100 blast)
+        obtain U0 where hbU: "p x \<in> U0"
+            and hev: "top1_evenly_covered_on E TE B TB p U0"
+          using assms(2) hb unfolding top1_covering_map_on_def by (by100 blast)
+        obtain \<V> where hV_all: "(\<forall>V\<in>\<V>. openin_on E TE V)
+            \<and> (\<forall>V\<in>\<V>. \<forall>V'\<in>\<V>. V \<noteq> V' \<longrightarrow> V \<inter> V' = {})
+            \<and> {e \<in> E. p e \<in> U0} = \<Union>\<V>
+            \<and> (\<forall>V\<in>\<V>. top1_homeomorphism_on V (subspace_topology E TE V)
+                U0 (subspace_topology B TB U0) p)"
+          using hev unfolding top1_evenly_covered_on_def
+          apply (elim conjE exE)
+          apply (rule that)
+          apply (by100 blast)+
+          done
+        have hV_open: "\<forall>V\<in>\<V>. openin_on E TE V" using hV_all by (by100 blast)
+        have hV_disj: "\<forall>V\<in>\<V>. \<forall>V'\<in>\<V>. V \<noteq> V' \<longrightarrow> V \<inter> V' = {}" using hV_all by (by100 blast)
+        have hV_union: "{e \<in> E. p e \<in> U0} = \<Union>\<V>" using hV_all by (by100 blast)
+        have hV_homeo: "\<forall>V\<in>\<V>. top1_homeomorphism_on V (subspace_topology E TE V)
+            U0 (subspace_topology B TB U0) p" using hV_all by (by100 blast)
+        have hx_in_V: "x \<in> \<Union>\<V>" using hx hbU hV_union by (by100 blast)
+        have "p y \<in> U0" using hbU True by (by100 simp)
+        have hy_in_V: "y \<in> \<Union>\<V>" using hy \<open>p y \<in> U0\<close> hV_union by (by100 blast)
+        obtain Vx where hVx: "Vx \<in> \<V>" "x \<in> Vx" using hx_in_V by (by100 blast)
+        obtain Vy where hVy: "Vy \<in> \<V>" "y \<in> Vy" using hy_in_V by (by100 blast)
+        have "Vx \<noteq> Vy"
+        proof
+          assume heq: "Vx = Vy"
+          \<comment> \<open>p is injective on Vx (homeomorphism), p x = p y, so x = y. Contradiction.\<close>
+          have "inj_on p Vx"
+            using hV_homeo hVx(1) unfolding top1_homeomorphism_on_def bij_betw_def
+            by (by100 blast)
+          have "y \<in> Vx" using hVy(2) heq by (by100 simp)
+          have "x = y" using inj_onD[OF \<open>inj_on p Vx\<close> True hVx(2) \<open>y \<in> Vx\<close>] .
+          thus False using hne by (by100 simp)
+        qed
+        hence "Vx \<inter> Vy = {}" using hV_disj hVx(1) hVy(1) by (by100 blast)
+        moreover have "Vx \<in> TE" using hV_open hVx(1)
+          unfolding openin_on_def by (by100 blast)
+        moreover have "Vy \<in> TE" using hV_open hVy(1)
+          unfolding openin_on_def by (by100 blast)
+        ultimately show ?thesis using hVx(2) hVy(2) by (by100 blast)
+      qed
+    qed
+  qed
   \<comment> \<open>Step 3: Intersection and weak topology conditions lift from B to E.\<close>
   show ?thesis sorry \<comment> \<open>Combine: lifted arcs + Hausdorff + intersection + weak topology.\<close>
 qed
@@ -8634,3 +8723,37 @@ end
 
 
 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
