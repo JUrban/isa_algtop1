@@ -1776,8 +1776,44 @@ proof -
         \<comment> \<open>CU = hD0 \<union> hS1, a disjoint decomposition (since h(D\{0}) \<subseteq> X-A, h(S1) \<subseteq> A).\<close>
         have hhS1_sub_A: "?hS1 \<subseteq> A" using assms(8) by (by100 blast)
         have hdisjoint: "?hD0 \<inter> ?hS1 = {}" using hhS1_sub_A by (by100 blast)
-        have hCU_decomp: "?CU = ?hD0 \<union> ?hS1" sorry
-          \<comment> \<open>h(B2) = h(D) \<union> h(S1) = (X-A) \<union> h(S1); CU = h(B2)\<inter>U; decompose.\<close>
+        have hS1_sub_B2: "top1_S1 \<subseteq> top1_B2" unfolding top1_S1_def top1_B2_def by (by100 auto)
+        have hC_eq: "h ` top1_B2 = (X - A) \<union> ?hS1"
+        proof -
+          have "h ` top1_B2 = h ` ?D \<union> h ` top1_S1" using hS1_sub_B2 by (by100 auto)
+          thus ?thesis using hsurj_D by (by100 simp)
+        qed
+        have hx0_notin_hS1: "?x0 \<notin> ?hS1" using hhS1_sub_A hx0_notin_A by (by100 blast)
+        have hCU_decomp: "?CU = ?hD0 \<union> ?hS1"
+        proof (rule set_eqI, rule iffI)
+          fix x assume "x \<in> ?CU"
+          hence hxhB2: "x \<in> h ` top1_B2" and hxne: "x \<noteq> ?x0" and hxX: "x \<in> X" by (by100 auto)+
+          show "x \<in> ?hD0 \<union> ?hS1"
+          proof (cases "x \<in> A")
+            case True
+            have "x \<in> h ` top1_B2 \<and> x \<in> A" using hxhB2 True by (by100 blast)
+            hence "x \<in> (X - A) \<and> x \<in> A \<or> x \<in> ?hS1"
+              using hC_eq by (by100 blast)
+            hence "x \<in> ?hS1" by (by100 blast)
+            thus ?thesis by (by100 blast)
+          next
+            case False thus ?thesis using hxX hxne by (by100 blast)
+          qed
+        next
+          fix x assume "x \<in> ?hD0 \<union> ?hS1"
+          thus "x \<in> ?CU"
+          proof (elim UnE)
+            assume hxhD0: "x \<in> ?hD0"
+            have "x \<in> h ` ?D" using hxhD0 hsurj_D by (by100 blast)
+            hence "x \<in> h ` top1_B2" by (by100 blast)
+            thus "x \<in> ?CU" using hxhD0 by (by100 blast)
+          next
+            assume "x \<in> ?hS1"
+            hence "x \<in> h ` top1_B2" using hS1_sub_B2 by (by100 blast)
+            moreover have "x \<in> A" using \<open>x \<in> ?hS1\<close> hhS1_sub_A by (by100 blast)
+            hence "x \<in> X" "x \<noteq> ?x0" using hA_sub_X hx0_notin_A by (by100 blast)+
+            ultimately show "x \<in> ?CU" by (by100 blast)
+          qed
+        qed
         \<comment> \<open>Both pieces are closed in CU (clopen in a disjoint union).\<close>
         have hhD0_closed: "closedin_on ?CU (subspace_topology ?U ?TU ?CU) ?hD0"
           sorry \<comment> \<open>hD0 = (X-A)-{x0} is open in X (complement of closed A \<union> {x0}),
@@ -8669,6 +8705,11 @@ end
 
 
 
+ 
+ 
+ 
+ 
+ 
  
  
  
