@@ -38,24 +38,35 @@ while i < len(lines):
         # flatten to one line
         flat = ' '.join(stmt)
         # extract shows/assumes or definition body
-        shows_m = re.search(r'shows\s+"([^"]{1,400})', flat)
-        assumes_m = re.search(r'assumes\s+"([^"]{1,200})', flat)
-        if shows_m:
-            sig = shows_m.group(1)
-            if assumes_m:
-                sig = assumes_m.group(1)[:100] + ' ==> ' + sig
+        # For shows: grab everything after 'shows' up to proof/sorry/oops
+        shows_pos = flat.find(' shows ')
+        assumes_pos = flat.find(' assumes ')
+        if shows_pos >= 0:
+            shows_text = flat[shows_pos+7:]
+            # Extract all quoted strings from the shows clause
+            sig = ' '.join(m.group(1) for m in re.finditer(r'"([^"]*)"', shows_text))
+            if not sig:
+                sig = shows_text[:600]
+            if assumes_pos >= 0 and assumes_pos < shows_pos:
+                assumes_text = flat[assumes_pos+9:shows_pos]
+                asig = ' '.join(m.group(1) for m in re.finditer(r'"([^"]*)"', assumes_text))
+                if asig:
+                    sig = asig[:300] + ' ==> ' + sig
         elif kind == 'definition':
             # For definitions, prefer the where "..." clause (the body)
-            where_m = re.search(r'where\s+"([^"]{1,500})', flat)
-            if where_m:
-                sig = where_m.group(1)
+            where_pos = flat.find(' where')
+            if where_pos >= 0:
+                where_text = flat[where_pos+6:]
+                sig = ' '.join(m.group(1) for m in re.finditer(r'"([^"]*)"', where_text))
+                if not sig:
+                    sig = where_text[:600]
             else:
-                # Fall back to type signature
                 type_m = re.search(r'::\s+"([^"]{1,200})', flat)
                 sig = type_m.group(1) if type_m else flat[:300]
         else:
-            def_m = re.search(r'"([^"]{1,400})', flat)
-            sig = def_m.group(1) if def_m else flat[:300]
+            # Fallback: grab all quoted strings
+            quoted = [m.group(1) for m in re.finditer(r'"([^"]*)"', flat)]
+            sig = ' '.join(quoted)[:600] if quoted else flat[:300]
         # Map Isabelle unicode escapes to readable ASCII
         sym_map = {
             'forall': 'ALL ', 'exists': 'EX ', 'nexists': '~EX ',
@@ -79,8 +90,8 @@ while i < len(lines):
             return sym_map.get(name, name)
         sig = re.sub(r'\\<(\w+)>', replace_sym, sig)
         sig = re.sub(r'\s+', ' ', sig).strip()
-        if len(sig) > 500:
-            sig = sig[:497] + '...'
+        if len(sig) > 800:
+            sig = sig[:797] + '...'
         print(f'{f}:{i+1} {kind} {name} :: {sig}')
     i += 1
 PYEND
