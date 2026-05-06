@@ -3857,8 +3857,237 @@ using assms proof (induction n arbitrary: X TX p rule: less_induct)
                    arithmetic combination of continuous maps on a product space.\<close>
                 have hangle_n_cont: "top1_continuous_map_on (W (n-1)) ?TWn
                     (UNIV :: real set) top1_open_sets angle_n"
-                  sorry \<comment> \<open>Covering map inverse: R_to_S1 on (\<theta>q_n, \<theta>q_n+1) is a homeomorphism,
-                     so angle_n = its inverse \<circ> hinv_n is continuous.\<close>
+                proof (rule continuous_map_onI)
+                  show "\<forall>x\<in>W (n-1). angle_n x \<in> (UNIV :: real set)" by (by100 blast)
+                next
+                  show "\<forall>V\<in>top1_open_sets. {x \<in> W (n-1). angle_n x \<in> V} \<in> ?TWn"
+                  proof (intro ballI)
+                    fix V assume hV: "V \<in> (top1_open_sets :: real set set)"
+                    \<comment> \<open>We show the preimage is open via top1_open_of_local_subsets.\<close>
+                    let ?pre = "{x \<in> W (n-1). angle_n x \<in> V}"
+                    have hpre_sub: "?pre \<subseteq> W (n-1)" by (by100 blast)
+                    show "?pre \<in> ?TWn"
+                    proof (rule top1_open_of_local_subsets[OF hTWn hpre_sub])
+                      show "\<forall>x\<in>?pre. \<exists>U\<in>?TWn. x \<in> U \<and> U \<subseteq> ?pre"
+                      proof (intro ballI)
+                        fix x assume hx_pre: "x \<in> ?pre"
+                        hence hxW: "x \<in> W (n-1)" and hax_V: "angle_n x \<in> V" by (by100 blast)+
+                        have hxC: "x \<in> ?Cn" using hxW unfolding W_def by (by100 blast)
+                        have hx_ne_q: "x \<noteq> q (n-1)" using hxW unfolding W_def by (by100 blast)
+                        \<comment> \<open>hinv_n x is in S1 and is not q'_n.\<close>
+                        have hhinv_x_S1: "?hinv_n x \<in> top1_S1"
+                          using hbij_inv_n hxC unfolding bij_betw_def by (by100 blast)
+                        have hhinv_x_ne_q': "?hinv_n x \<noteq> q'_n"
+                        proof
+                          assume "?hinv_n x = q'_n"
+                          hence "h_n (?hinv_n x) = h_n q'_n" by (by100 simp)
+                          hence "x = q (n-1)"
+                            using bij_betw_inv_into_right[OF hbij_n hxC]
+                              bij_betw_inv_into_right[OF hbij_n hq_in_n]
+                            unfolding q'_n_def by (by100 simp)
+                          thus False using hx_ne_q by (by100 blast)
+                        qed
+                        \<comment> \<open>Get angle_n spec for x.\<close>
+                        have hspec_x: "\<theta>q_n < angle_n x \<and> angle_n x < \<theta>q_n + 1 \<and>
+                            top1_R_to_S1 (angle_n x) = ?hinv_n x"
+                          using hangle_n_spec[OF hxW] by (by100 blast)
+                        \<comment> \<open>From covering map, get evenly covered neighborhood of hinv_n x.\<close>
+                        obtain Ux where hhinv_x_Ux: "?hinv_n x \<in> Ux"
+                            and hUx_ec: "top1_evenly_covered_on UNIV top1_open_sets
+                                top1_S1 top1_S1_topology top1_R_to_S1 Ux"
+                          using top1_covering_map_on_evenly_covered[OF Theorem_53_1 hhinv_x_S1]
+                          by (by100 blast)
+                        \<comment> \<open>Get the partition of sheets.\<close>
+                        have hUx_ec_unf: "openin_on top1_S1 top1_S1_topology Ux \<and>
+                            (\<exists>\<V>x.
+                            (\<forall>Vs\<in>\<V>x. openin_on (UNIV::real set) top1_open_sets Vs) \<and>
+                            (\<forall>Vs\<in>\<V>x. \<forall>Vs'\<in>\<V>x. Vs \<noteq> Vs' \<longrightarrow> Vs \<inter> Vs' = {}) \<and>
+                            {t\<in>(UNIV::real set). top1_R_to_S1 t \<in> Ux} = \<Union>\<V>x \<and>
+                            (\<forall>Vs\<in>\<V>x. top1_homeomorphism_on Vs
+                                (subspace_topology UNIV top1_open_sets Vs)
+                                Ux (subspace_topology top1_S1 top1_S1_topology Ux) top1_R_to_S1))"
+                          using hUx_ec unfolding top1_evenly_covered_on_def by (by100 fast)
+                        obtain \<V>x where hVx_conj:
+                            "(\<forall>Vs\<in>\<V>x. openin_on (UNIV::real set) top1_open_sets Vs) \<and>
+                            (\<forall>Vs\<in>\<V>x. \<forall>Vs'\<in>\<V>x. Vs \<noteq> Vs' \<longrightarrow> Vs \<inter> Vs' = {}) \<and>
+                            {t\<in>(UNIV::real set). top1_R_to_S1 t \<in> Ux} = \<Union>\<V>x \<and>
+                            (\<forall>Vs\<in>\<V>x. top1_homeomorphism_on Vs
+                                (subspace_topology UNIV top1_open_sets Vs)
+                                Ux (subspace_topology top1_S1 top1_S1_topology Ux) top1_R_to_S1)"
+                          using conjunct2[OF hUx_ec_unf] by blast
+                        have hVx_open: "\<forall>Vs\<in>\<V>x. openin_on (UNIV::real set) top1_open_sets Vs"
+                          and hVx_disj: "\<forall>Vs\<in>\<V>x. \<forall>Vs'\<in>\<V>x. Vs \<noteq> Vs' \<longrightarrow> Vs \<inter> Vs' = {}"
+                          and hVx_union: "{t\<in>(UNIV::real set). top1_R_to_S1 t \<in> Ux} = \<Union>\<V>x"
+                          and hVx_homeo: "\<forall>Vs\<in>\<V>x. top1_homeomorphism_on Vs
+                                (subspace_topology UNIV top1_open_sets Vs)
+                                Ux (subspace_topology top1_S1 top1_S1_topology Ux) top1_R_to_S1"
+                          using hVx_conj by (by100 blast)+
+                        \<comment> \<open>angle_n x is in the preimage of Ux, so it's in some sheet.\<close>
+                        have hax_preim: "angle_n x \<in> {t\<in>(UNIV::real set). top1_R_to_S1 t \<in> Ux}"
+                          using hspec_x hhinv_x_Ux by (by100 simp)
+                        hence "angle_n x \<in> \<Union>\<V>x" using hVx_union by (by100 simp)
+                        then obtain Vsheet where hVs_in: "Vsheet \<in> \<V>x"
+                            and hax_Vs: "angle_n x \<in> Vsheet"
+                          by (by100 blast)
+                        \<comment> \<open>R_to_S1 : Vsheet \<rightarrow> Ux is a homeomorphism.\<close>
+                        have hVs_homeo: "top1_homeomorphism_on Vsheet
+                            (subspace_topology UNIV top1_open_sets Vsheet)
+                            Ux (subspace_topology top1_S1 top1_S1_topology Ux) top1_R_to_S1"
+                          using hVx_homeo hVs_in by (by100 blast)
+                        \<comment> \<open>Vsheet is open in R.\<close>
+                        have hVs_open: "Vsheet \<in> top1_open_sets"
+                          using hVx_open hVs_in unfolding openin_on_def by (by100 blast)
+                        \<comment> \<open>inv_into Vsheet R_to_S1 is continuous Ux \<rightarrow> Vsheet.\<close>
+                        have hVs_inv_cont: "top1_continuous_map_on Ux
+                            (subspace_topology top1_S1 top1_S1_topology Ux)
+                            Vsheet (subspace_topology UNIV top1_open_sets Vsheet)
+                            (inv_into Vsheet top1_R_to_S1)"
+                          using hVs_homeo unfolding top1_homeomorphism_on_def
+                          by (by100 blast)
+                        \<comment> \<open>The key open set in S1: points in Ux whose lift in Vsheet is in V \<inter> (\<theta>q, \<theta>q+1).\<close>
+                        define I_interval where "I_interval = {\<theta>::real. \<theta>q_n < \<theta> \<and> \<theta> < \<theta>q_n + 1}"
+                        have hI_open: "I_interval \<in> top1_open_sets"
+                        proof -
+                          have "I_interval = {\<theta>q_n <..< \<theta>q_n + 1}"
+                            unfolding I_interval_def by (by100 auto)
+                          thus ?thesis unfolding top1_open_sets_def
+                            using open_greaterThanLessThan[of \<theta>q_n "\<theta>q_n + 1"] by (by100 simp)
+                        qed
+                        \<comment> \<open>V \<inter> Vsheet \<inter> I_interval is open in R.\<close>
+                        have hVVI_open: "V \<inter> Vsheet \<inter> I_interval \<in> top1_open_sets"
+                        proof -
+                          have h1: "V \<inter> Vsheet \<in> top1_open_sets"
+                            using topology_inter2[OF top1_open_sets_is_topology_on_UNIV hV hVs_open] .
+                          show ?thesis
+                            using topology_inter2[OF top1_open_sets_is_topology_on_UNIV h1 hI_open] .
+                        qed
+                        have hax_in_VVI: "angle_n x \<in> V \<inter> Vsheet \<inter> I_interval"
+                          using hax_V hax_Vs hspec_x unfolding I_interval_def by (by100 blast)
+                        \<comment> \<open>R_to_S1 maps V \<inter> Vsheet \<inter> I_interval homeomorphically to an open subset of Ux.\<close>
+                        \<comment> \<open>The preimage under inv_into Vsheet R_to_S1 of V \<inter> Vsheet \<inter> I_interval
+                           is open in (Ux, subspace topology from S1).\<close>
+                        have hVVI_sub_Vs: "V \<inter> Vsheet \<inter> I_interval \<subseteq> Vsheet" by (by100 blast)
+                        have hVVI_in_sub: "V \<inter> Vsheet \<inter> I_interval \<in>
+                            subspace_topology UNIV top1_open_sets Vsheet"
+                          unfolding subspace_topology_def using hVVI_open by (by100 blast)
+                        \<comment> \<open>The preimage of V \<inter> Vsheet \<inter> I_interval under inv_into Vsheet R_to_S1
+                           is open in Ux (by continuity of the inverse).\<close>
+                        define Sx where "Sx = {s \<in> Ux. inv_into Vsheet top1_R_to_S1 s \<in>
+                            V \<inter> Vsheet \<inter> I_interval}"
+                        have hSx_open: "Sx \<in> subspace_topology top1_S1 top1_S1_topology Ux"
+                          unfolding Sx_def
+                          using continuous_map_preimage_open[OF hVs_inv_cont hVVI_in_sub] .
+                        have hhinv_x_Sx: "?hinv_n x \<in> Sx"
+                        proof -
+                          have "inv_into Vsheet top1_R_to_S1 (?hinv_n x) = angle_n x"
+                          proof -
+                            have hbij_Vs: "bij_betw top1_R_to_S1 Vsheet Ux"
+                              using hVs_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+                            have "top1_R_to_S1 (angle_n x) = ?hinv_n x" using hspec_x by (by100 blast)
+                            moreover have "angle_n x \<in> Vsheet" using hax_Vs .
+                            ultimately show ?thesis
+                              using inv_into_f_eq[OF bij_betw_imp_inj_on[OF hbij_Vs] hax_Vs]
+                              by (by100 simp)
+                          qed
+                          thus ?thesis unfolding Sx_def
+                            using hhinv_x_Ux hax_in_VVI by (by100 simp)
+                        qed
+                        \<comment> \<open>Sx is open in S1 (contained in Ux which is open in S1).\<close>
+                        obtain Ux_outer where hUx_outer: "Ux_outer \<in> top1_S1_topology"
+                            and hSx_eq: "Sx = Ux \<inter> Ux_outer"
+                          using hSx_open unfolding subspace_topology_def by (by100 blast)
+                        \<comment> \<open>Ux is open in S1.\<close>
+                        have hUx_open_S1: "openin_on top1_S1 top1_S1_topology Ux"
+                          using top1_evenly_covered_on_openin_on[OF hUx_ec] .
+                        hence hUx_in_S1T: "Ux \<in> top1_S1_topology"
+                          unfolding openin_on_def by (by100 blast)
+                        \<comment> \<open>Sx \<in> S1 topology.\<close>
+                        have hTS1: "is_topology_on top1_S1 top1_S1_topology"
+                          using top1_S1_is_topology_on_strict unfolding is_topology_on_strict_def
+                          by (by100 blast)
+                        have hSx_in_S1T: "Sx \<in> top1_S1_topology"
+                          using topology_inter2[OF hTS1 hUx_in_S1T hUx_outer] hSx_eq by (by100 simp)
+                        \<comment> \<open>hinv_n is continuous from C(n-1) to S1.\<close>
+                        have hcont_hinv_Cn: "top1_continuous_map_on ?Cn
+                            (subspace_topology X TX ?Cn) top1_S1 top1_S1_topology ?hinv_n"
+                          using hhinv_n unfolding top1_homeomorphism_on_def by (by100 blast)
+                        \<comment> \<open>Restrict to W(n-1).\<close>
+                        have hWn_sub_Cn: "W (n-1) \<subseteq> ?Cn" unfolding W_def by (by100 blast)
+                        have hcont_hinv_Wn: "top1_continuous_map_on (W (n-1)) ?TWn
+                            top1_S1 top1_S1_topology ?hinv_n"
+                        proof -
+                          have "?TWn = subspace_topology ?Cn (subspace_topology X TX ?Cn) (W (n-1))"
+                            by (rule subspace_topology_trans[OF hWn_sub_Cn, symmetric])
+                          thus ?thesis using top1_continuous_map_on_restrict_domain_simple[OF
+                              hcont_hinv_Cn hWn_sub_Cn] by (by100 simp)
+                        qed
+                        \<comment> \<open>Preimage of Sx under hinv_n in W(n-1) is open.\<close>
+                        have hSx_preim: "{x' \<in> W (n-1). ?hinv_n x' \<in> Sx} \<in> ?TWn"
+                          using continuous_map_preimage_open[OF hcont_hinv_Wn hSx_in_S1T] .
+                        \<comment> \<open>This preimage is a subset of ?pre.\<close>
+                        have hSx_preim_sub: "{x' \<in> W (n-1). ?hinv_n x' \<in> Sx} \<subseteq> ?pre"
+                        proof (intro subsetI)
+                          fix y assume hy: "y \<in> {x' \<in> W (n-1). ?hinv_n x' \<in> Sx}"
+                          hence hyW: "y \<in> W (n-1)" and hhinv_y_Sx: "?hinv_n y \<in> Sx"
+                            by (by100 blast)+
+                          \<comment> \<open>inv_into Vsheet R_to_S1 (hinv_n y) is in V \<inter> Vsheet \<inter> I_interval.\<close>
+                          have hinv_y_VVI: "inv_into Vsheet top1_R_to_S1 (?hinv_n y) \<in>
+                              V \<inter> Vsheet \<inter> I_interval"
+                            using hhinv_y_Sx unfolding Sx_def by (by100 blast)
+                          define \<theta>y where "\<theta>y = inv_into Vsheet top1_R_to_S1 (?hinv_n y)"
+                          have h\<theta>y_V: "\<theta>y \<in> V" and h\<theta>y_Vs: "\<theta>y \<in> Vsheet"
+                              and h\<theta>y_I: "\<theta>q_n < \<theta>y \<and> \<theta>y < \<theta>q_n + 1"
+                            using hinv_y_VVI unfolding \<theta>y_def I_interval_def by (by100 blast)+
+                          \<comment> \<open>R_to_S1 \<theta>y = hinv_n y.\<close>
+                          have hbij_Vs: "bij_betw top1_R_to_S1 Vsheet Ux"
+                            using hVs_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+                          have hhinv_y_Ux: "?hinv_n y \<in> Ux"
+                            using hhinv_y_Sx unfolding Sx_def by (by100 blast)
+                          have hR_\<theta>y: "top1_R_to_S1 \<theta>y = ?hinv_n y"
+                            unfolding \<theta>y_def
+                            using f_inv_into_f[of "?hinv_n y" top1_R_to_S1 Vsheet]
+                              hhinv_y_Ux hbij_Vs unfolding bij_betw_def by (by100 blast)
+                          \<comment> \<open>Since \<theta>y \<in> I_interval and R_to_S1 \<theta>y = hinv_n y, by uniqueness
+                             angle_n y = \<theta>y.\<close>
+                          have "\<theta>q_n < \<theta>y \<and> \<theta>y < \<theta>q_n + 1 \<and> top1_R_to_S1 \<theta>y = ?hinv_n y"
+                            using h\<theta>y_I hR_\<theta>y by (by100 blast)
+                          hence "angle_n y = \<theta>y"
+                          proof -
+                            have hspec_y: "\<theta>q_n < angle_n y \<and> angle_n y < \<theta>q_n + 1 \<and>
+                                top1_R_to_S1 (angle_n y) = ?hinv_n y"
+                              using hangle_n_spec[OF hyW] by (by100 blast)
+                            \<comment> \<open>Both \<theta>y and angle_n y are in (\<theta>q, \<theta>q+1) and map to hinv_n y.
+                               By injectivity of R_to_S1 on length < 1 intervals, they are equal.\<close>
+                            have "top1_R_to_S1 \<theta>y = top1_R_to_S1 (angle_n y)"
+                              using hR_\<theta>y hspec_y by (by100 simp)
+                            hence "sin (2 * pi * \<theta>y) = sin (2 * pi * angle_n y)
+                                \<and> cos (2 * pi * \<theta>y) = cos (2 * pi * angle_n y)"
+                              unfolding top1_R_to_S1_def by (by100 auto)
+                            then obtain k :: int where
+                                hk: "2*pi*\<theta>y = 2*pi*(angle_n y) + 2*pi*of_int k"
+                              using iffD1[OF sin_cos_eq_iff] by (by100 blast)
+                            hence "2*pi*(\<theta>y - angle_n y) = 2*pi*of_int k"
+                              by (simp add: algebra_simps)
+                            hence "\<theta>y - angle_n y = of_int k" using pi_gt_zero
+                              by (by100 simp)
+                            moreover have "\<bar>\<theta>y - angle_n y\<bar> < 1"
+                              using h\<theta>y_I hspec_y by (by100 linarith)
+                            hence "k = 0" using \<open>\<theta>y - angle_n y = of_int k\<close> by (by100 linarith)
+                            ultimately show "angle_n y = \<theta>y" by (by100 linarith)
+                          qed
+                          hence "angle_n y \<in> V" using h\<theta>y_V by (by100 simp)
+                          thus "y \<in> ?pre" using hyW by (by100 blast)
+                        qed
+                        \<comment> \<open>x is in the preimage.\<close>
+                        have hx_in_preim: "x \<in> {x' \<in> W (n-1). ?hinv_n x' \<in> Sx}"
+                          using hxW hhinv_x_Sx by (by100 blast)
+                        show "\<exists>U\<in>?TWn. x \<in> U \<and> U \<subseteq> ?pre"
+                          apply (rule bexI[of _ "{x' \<in> W (n-1). ?hinv_n x' \<in> Sx}"])
+                          using hx_in_preim hSx_preim_sub hSx_preim by (by100 blast)+
+                      qed
+                    qed
+                  qed
+                qed
                 have hinterp_cont: "top1_continuous_map_on (W (n-1) \<times> I_set)
                     (product_topology_on ?TWn ?TI)
                     (UNIV :: real set) top1_open_sets
