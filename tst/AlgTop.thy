@@ -1158,7 +1158,10 @@ using assms proof (induction n arbitrary: X TX p rule: less_induct)
             (\<lambda>i::nat. if i = 0 then ?piU else ?piV)
             (\<lambda>i. if i = 0 then ?mulU else ?mulV)
             \<iota>fam {0, 1}"
-      sorry \<comment> \<open>Theorem 68.2: the free product of \<pi>_1(U) and \<pi>_1(V) exists.\<close>
+    proof -
+      from Theorem_68_2_free_product_exists[OF hgroups_UV]
+      show ?thesis using that by (by100 blast)
+    qed
     \<comment> \<open>Step 9: Apply Corollary 70.3 (parameterized): \<pi>_1(X,p) \<cong> FP.\<close>
     have hSvK_iso: "top1_groups_isomorphic_on
         (top1_fundamental_group_carrier X TX p)
