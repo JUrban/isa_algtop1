@@ -1781,10 +1781,44 @@ proof -
         define TUI where "TUI = product_topology_on TU_loc I_top"
         have "top1_continuous_map_on UI TUI U_loc TU_loc H_U"
         proof (rule pasting_lemma_two_closed[where A="A \<times> I_set" and B="?CU \<times> I_set"])
-          show "is_topology_on UI TUI" sorry \<comment> \<open>Product topology.\<close>
+          have hTI: "is_topology_on I_set I_top" by (rule top1_unit_interval_topology_is_topology_on)
+          show "is_topology_on UI TUI" unfolding UI_def TUI_def
+            by (rule product_topology_on_is_topology_on[OF hTopU_loc hTI])
           show "is_topology_on U_loc TU_loc" by (rule hTopU_loc)
-          show "closedin_on UI TUI (A \<times> I_set)" sorry \<comment> \<open>A closed in U, product with I closed.\<close>
-          show "closedin_on UI TUI (?CU \<times> I_set)" sorry \<comment> \<open>CU closed in U, product.\<close>
+          show "closedin_on UI TUI (A \<times> I_set)"
+            unfolding closedin_on_def UI_def TUI_def
+          proof (intro conjI)
+            show "A \<times> I_set \<subseteq> U_loc \<times> I_set" using hA_sub_U_loc by (by100 blast)
+            have "U_loc \<times> I_set - A \<times> I_set = (U_loc - A) \<times> I_set" by (by100 blast)
+            moreover have "U_loc - A \<in> TU_loc"
+            proof -
+              have "?U - A \<in> ?TU" using hA_closed_U unfolding closedin_on_def by (by100 blast)
+              thus ?thesis using hU_eq hTU_eq by simp
+            qed
+            moreover have hI_in: "I_set \<in> I_top"
+              using hTI unfolding is_topology_on_def by (by100 blast)
+            ultimately have "(U_loc - A) \<times> I_set \<in> product_topology_on TU_loc I_top"
+              using product_rect_open by (by100 blast)
+            thus "U_loc \<times> I_set - A \<times> I_set \<in> product_topology_on TU_loc I_top"
+              using \<open>U_loc \<times> I_set - A \<times> I_set = (U_loc - A) \<times> I_set\<close> by (by100 simp)
+          qed
+          show "closedin_on UI TUI (?CU \<times> I_set)"
+            unfolding closedin_on_def UI_def TUI_def
+          proof (intro conjI)
+            show "?CU \<times> I_set \<subseteq> U_loc \<times> I_set" unfolding U_loc_def by (by100 blast)
+            have "U_loc \<times> I_set - ?CU \<times> I_set = (U_loc - ?CU) \<times> I_set" by (by100 blast)
+            moreover have "U_loc - ?CU \<in> TU_loc"
+            proof -
+              have "?U - ?CU \<in> ?TU" using hCU_closed_U unfolding closedin_on_def by (by100 blast)
+              thus ?thesis using hU_eq hTU_eq by simp
+            qed
+            moreover have hI_in2: "I_set \<in> I_top"
+              using hTI unfolding is_topology_on_def by (by100 blast)
+            ultimately have "(U_loc - ?CU) \<times> I_set \<in> product_topology_on TU_loc I_top"
+              using product_rect_open[of "U_loc - ?CU" TU_loc I_set I_top] by (by100 blast)
+            thus "U_loc \<times> I_set - ?CU \<times> I_set \<in> product_topology_on TU_loc I_top"
+              using \<open>U_loc \<times> I_set - ?CU \<times> I_set = (U_loc - ?CU) \<times> I_set\<close> by (by100 simp)
+          qed
           show "A \<times> I_set \<union> ?CU \<times> I_set = UI" unfolding UI_def U_loc_def using hcover by (by100 blast)
           show "\<forall>x\<in>UI. H_U x \<in> U_loc" sorry \<comment> \<open>Range of H_U.\<close>
           show "top1_continuous_map_on (A \<times> I_set) (subspace_topology UI TUI (A \<times> I_set)) U_loc TU_loc H_U"
