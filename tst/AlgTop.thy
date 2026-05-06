@@ -966,13 +966,240 @@ proof -
      X_{n-1} \<inter> C_n = {p} simply connected. Corollary 70.3 \<Rightarrow> free product.
      Theorem 69.2: free(n-1) * free(1) = free(n).\<close>
   have hstep: "n \<ge> 2 \<longrightarrow> ?thesis"
-    sorry \<comment> \<open>Inductive step: decompose X = X_{n-1} \<union> C_{n-1}.
-       X_{n-1} is wedge of n-1 circles, C_{n-1} \<cong> S¹.
-       By IH (n-1): \<pi>_1(X_{n-1}) free on n-1 generators.
-       By base case: \<pi>_1(C_{n-1}) \<cong> Z free on {0}.
-       Intersection = {p} simply connected.
-       Cor 70.3 param: \<pi>_1(X) \<cong> free product.
-       Thm 69.2: free(n-1) * free(1) = free(n).\<close>
+  proof (intro impI)
+    assume hn2: "n \<ge> 2"
+    \<comment> \<open>Step 0: Strong induction hypothesis. We assume the theorem holds for n-1.\<close>
+    have hn1_pos: "n - 1 > 0" using hn2 by (by100 linarith)
+    have hn1_lt: "n - 1 < n" using hn2 by (by100 linarith)
+    have hIH: "\<forall>(Y::'a set) TY.
+        top1_is_wedge_of_circles_on Y TY {..<(n-1)} p \<longrightarrow>
+        (\<exists>(G::int set) mul e invg (\<iota>::nat \<Rightarrow> int).
+           top1_is_free_group_full_on G mul e invg \<iota> {..<(n-1)}
+         \<and> top1_groups_isomorphic_on G mul
+             (top1_fundamental_group_carrier Y TY p)
+             (top1_fundamental_group_mul Y TY p))"
+      sorry \<comment> \<open>Strong induction hypothesis: the theorem for n-1 < n.\<close>
+    \<comment> \<open>Step 1: Extract the circle family C from the wedge definition.\<close>
+    have hX_strict: "is_topology_on_strict X TX"
+      using assms unfolding top1_is_wedge_of_circles_on_def by (by100 blast)
+    have hTX: "is_topology_on X TX"
+      using hX_strict unfolding is_topology_on_strict_def by (by100 blast)
+    have hp_X: "p \<in> X"
+      using assms unfolding top1_is_wedge_of_circles_on_def by (by100 blast)
+    have hHausdorff: "is_hausdorff_on X TX"
+      using assms unfolding top1_is_wedge_of_circles_on_def by (by100 blast)
+    obtain C where
+        hC_props: "\<forall>\<alpha>\<in>{..<n}. C \<alpha> \<subseteq> X \<and> p \<in> C \<alpha>
+            \<and> (\<exists>h. top1_homeomorphism_on top1_S1 top1_S1_topology
+                  (C \<alpha>) (subspace_topology X TX (C \<alpha>)) h)"
+        and hC_union: "(\<Union>\<alpha>\<in>{..<n}. C \<alpha>) = X"
+        and hC_inter: "\<forall>\<alpha>\<in>{..<n}. \<forall>\<beta>\<in>{..<n}. \<alpha> \<noteq> \<beta> \<longrightarrow> C \<alpha> \<inter> C \<beta> = {p}"
+        and hC_weak: "\<forall>D. D \<subseteq> X \<longrightarrow>
+             (closedin_on X TX D \<longleftrightarrow>
+              (\<forall>\<alpha>\<in>{..<n}. closedin_on (C \<alpha>) (subspace_topology X TX (C \<alpha>)) (C \<alpha> \<inter> D)))"
+      using assms unfolding top1_is_wedge_of_circles_on_def
+      by (elim conjE exE) (rule that, assumption+)
+    \<comment> \<open>Step 2: Define X' = \<Union>{C(\<alpha>) | \<alpha> < n-1}, the sub-wedge of n-1 circles.
+       Define Cn = C(n-1), the last circle.\<close>
+    let ?X' = "\<Union>\<alpha>\<in>{..<(n-1)}. C \<alpha>"
+    let ?Cn = "C (n - 1)"
+    have hn1_in: "n - 1 \<in> {..<n}" using hn2 by (by100 simp)
+    have hCn_sub: "?Cn \<subseteq> X" using hC_props hn1_in by (by100 blast)
+    have hp_Cn: "p \<in> ?Cn" using hC_props hn1_in by (by100 blast)
+    have hX'_sub: "?X' \<subseteq> X"
+    proof -
+      have "\<forall>\<alpha>\<in>{..<(n-1)}. C \<alpha> \<subseteq> X"
+      proof (intro ballI)
+        fix \<alpha> assume "\<alpha> \<in> {..<(n-1)}"
+        hence "\<alpha> \<in> {..<n}" using hn2 by (by100 simp)
+        thus "C \<alpha> \<subseteq> X" using hC_props by (by100 blast)
+      qed
+      thus ?thesis by (by100 blast)
+    qed
+    have hp_X': "p \<in> ?X'"
+    proof -
+      have "(0::nat) \<in> {..<(n-1)}" using hn2 by (by100 simp)
+      moreover have "p \<in> C 0"
+      proof -
+        have "(0::nat) \<in> {..<n}" using hn_pos by (by100 simp)
+        thus ?thesis using hC_props by (by100 blast)
+      qed
+      ultimately show ?thesis by (by100 blast)
+    qed
+    \<comment> \<open>Step 2a: X = X' \<union> C(n-1).\<close>
+    have hX_decomp: "X = ?X' \<union> ?Cn"
+    proof -
+      have "{..<n} = {..<(n-1)} \<union> {n-1}" using hn2 by (by100 auto)
+      hence "(\<Union>\<alpha>\<in>{..<n}. C \<alpha>) = (\<Union>\<alpha>\<in>{..<(n-1)}. C \<alpha>) \<union> C (n-1)"
+        by (by100 auto)
+      thus ?thesis using hC_union by (by100 simp)
+    qed
+    \<comment> \<open>Step 2b: X' \<inter> C(n-1) = {p}.\<close>
+    have hX'_Cn_inter: "?X' \<inter> ?Cn = {p}"
+    proof -
+      have "\<forall>\<alpha>\<in>{..<(n-1)}. C \<alpha> \<inter> C (n-1) = {p}"
+      proof (intro ballI)
+        fix \<alpha> assume h\<alpha>: "\<alpha> \<in> {..<(n-1)}"
+        hence h\<alpha>n: "\<alpha> \<in> {..<n}" using hn2 by (by100 simp)
+        have h\<alpha>_ne: "\<alpha> \<noteq> n - 1" using h\<alpha> by (by100 simp)
+        show "C \<alpha> \<inter> C (n-1) = {p}" using hC_inter h\<alpha>n hn1_in h\<alpha>_ne by (by100 blast)
+      qed
+      moreover have "p \<in> ?X' \<inter> ?Cn" using hp_X' hp_Cn by (by100 blast)
+      ultimately show ?thesis by (by100 blast)
+    qed
+    \<comment> \<open>Step 3: X' with the subspace topology is a wedge of n-1 circles.\<close>
+    let ?TX' = "subspace_topology X TX ?X'"
+    have hX'_wedge: "top1_is_wedge_of_circles_on ?X' ?TX' {..<(n-1)} p"
+      sorry \<comment> \<open>Subspace of a wedge on the first n-1 circles is a wedge.
+         The weak/coherent topology condition restricts from n circles to n-1.\<close>
+    \<comment> \<open>Step 4: Apply IH to X': \<pi>_1(X', p) is free on n-1 generators.\<close>
+    obtain G' :: "int set" and mul' :: "int \<Rightarrow> int \<Rightarrow> int"
+        and e' :: int and invg' :: "int \<Rightarrow> int" and \<iota>' :: "nat \<Rightarrow> int" where
+        hG'_free: "top1_is_free_group_full_on G' mul' e' invg' \<iota>' {..<(n-1)}"
+        and hG'_iso: "top1_groups_isomorphic_on G' mul'
+            (top1_fundamental_group_carrier ?X' ?TX' p)
+            (top1_fundamental_group_mul ?X' ?TX' p)"
+      using hIH hX'_wedge by (by100 blast)
+    \<comment> \<open>Step 5: C(n-1) \<cong> S¹, so \<pi>_1(C(n-1), p) \<cong> Z, free on 1 generator.\<close>
+    let ?TCn = "subspace_topology X TX ?Cn"
+    have hCn_pi1_free: "\<exists>(G2::int set) mul2 e2 invg2 (\<iota>2::nat \<Rightarrow> int).
+        top1_is_free_group_full_on G2 mul2 e2 invg2 \<iota>2 {0::nat}
+      \<and> top1_groups_isomorphic_on G2 mul2
+          (top1_fundamental_group_carrier ?Cn ?TCn p)
+          (top1_fundamental_group_mul ?Cn ?TCn p)"
+      sorry \<comment> \<open>C(n-1) is homeomorphic to S¹, so \<pi>_1(C(n-1)) \<cong> Z \<cong> free on {0}.\<close>
+    obtain G2 :: "int set" and mul2 :: "int \<Rightarrow> int \<Rightarrow> int"
+        and e2 :: int and invg2 :: "int \<Rightarrow> int" and \<iota>2 :: "nat \<Rightarrow> int" where
+        hG2_free: "top1_is_free_group_full_on G2 mul2 e2 invg2 \<iota>2 {0::nat}"
+        and hG2_iso: "top1_groups_isomorphic_on G2 mul2
+            (top1_fundamental_group_carrier ?Cn ?TCn p)
+            (top1_fundamental_group_mul ?Cn ?TCn p)"
+      using hCn_pi1_free by (by100 blast)
+    \<comment> \<open>Step 6: Build open sets U, V covering X with simply connected intersection.
+       U is an open neighborhood of X' (all of C(\<alpha>) for \<alpha><n-1, plus an arc of C(n-1) containing p).
+       V is an open neighborhood of C(n-1) (C(n-1) plus arcs of each C(\<alpha>) containing p).
+       U \<inter> V deformation-retracts to {p}, hence is simply connected.\<close>
+    obtain U V :: "'a set" where
+        hU_open: "openin_on X TX U" and hV_open: "openin_on X TX V"
+        and hUV_cover: "U \<union> V = X"
+        and hUV_sc: "top1_simply_connected_on (U \<inter> V) (subspace_topology X TX (U \<inter> V))"
+        and hU_pc: "top1_path_connected_on U (subspace_topology X TX U)"
+        and hV_pc: "top1_path_connected_on V (subspace_topology X TX V)"
+        and hp_UV: "p \<in> U \<inter> V"
+        \<comment> \<open>U deformation-retracts to X', V deformation-retracts to C(n-1).\<close>
+        and hU_pi1: "top1_groups_isomorphic_on
+            (top1_fundamental_group_carrier U (subspace_topology X TX U) p)
+            (top1_fundamental_group_mul U (subspace_topology X TX U) p)
+            (top1_fundamental_group_carrier ?X' ?TX' p)
+            (top1_fundamental_group_mul ?X' ?TX' p)"
+        and hV_pi1: "top1_groups_isomorphic_on
+            (top1_fundamental_group_carrier V (subspace_topology X TX V) p)
+            (top1_fundamental_group_mul V (subspace_topology X TX V) p)
+            (top1_fundamental_group_carrier ?Cn ?TCn p)
+            (top1_fundamental_group_mul ?Cn ?TCn p)"
+      sorry \<comment> \<open>Topology: construct U, V from removing points q(\<alpha>) from complementary circles.
+         Each W(\<alpha>) = C(\<alpha>) - {q(\<alpha>)} is contractible (arc). U = C(0) \<union> ... \<union> C(n-2) \<union> W(n-1),
+         V = W(0) \<union> ... \<union> W(n-2) \<union> C(n-1). U, V open by weak topology.
+         U deformation-retracts to X', V deformation-retracts to C(n-1).
+         U \<inter> V = W(0) \<union> ... \<union> W(n-1) deformation-retracts to {p}.\<close>
+    \<comment> \<open>Step 7: \<pi>_1(U) is free on n-1 generators (via isomorphism with \<pi>_1(X')).\<close>
+    let ?piU = "top1_fundamental_group_carrier U (subspace_topology X TX U) p"
+    let ?mulU = "top1_fundamental_group_mul U (subspace_topology X TX U) p"
+    let ?piV = "top1_fundamental_group_carrier V (subspace_topology X TX V) p"
+    let ?mulV = "top1_fundamental_group_mul V (subspace_topology X TX V) p"
+    \<comment> \<open>Step 8: Build the free product of \<pi>_1(U) and \<pi>_1(V).\<close>
+    have hU_sub: "U \<subseteq> X" using hU_open unfolding openin_on_def by (by100 blast)
+    have hV_sub: "V \<subseteq> X" using hV_open unfolding openin_on_def by (by100 blast)
+    have hTopU: "is_topology_on U (subspace_topology X TX U)"
+      by (rule subspace_topology_is_topology_on[OF hTX hU_sub])
+    have hTopV: "is_topology_on V (subspace_topology X TX V)"
+      by (rule subspace_topology_is_topology_on[OF hTX hV_sub])
+    have hp_U: "p \<in> U" using hp_UV by (by100 blast)
+    have hp_V: "p \<in> V" using hp_UV by (by100 blast)
+    have hpiU_grp: "top1_is_group_on ?piU ?mulU
+        (top1_fundamental_group_id U (subspace_topology X TX U) p)
+        (top1_fundamental_group_invg U (subspace_topology X TX U) p)"
+      by (rule top1_fundamental_group_is_group[OF hTopU hp_U])
+    have hpiV_grp: "top1_is_group_on ?piV ?mulV
+        (top1_fundamental_group_id V (subspace_topology X TX V) p)
+        (top1_fundamental_group_invg V (subspace_topology X TX V) p)"
+      by (rule top1_fundamental_group_is_group[OF hTopV hp_V])
+    \<comment> \<open>Build the free product FP of \<pi>_1(U) and \<pi>_1(V) using Theorem 68.2.\<close>
+    have hgroups_UV: "\<forall>\<alpha>\<in>({0,1}::nat set). top1_is_group_on
+        (if \<alpha> = 0 then ?piU else ?piV)
+        (if \<alpha> = 0 then ?mulU else ?mulV)
+        (if \<alpha> = 0 then top1_fundamental_group_id U (subspace_topology X TX U) p
+                   else top1_fundamental_group_id V (subspace_topology X TX V) p)
+        (if \<alpha> = 0 then top1_fundamental_group_invg U (subspace_topology X TX U) p
+                   else top1_fundamental_group_invg V (subspace_topology X TX V) p)"
+    proof (intro ballI)
+      fix \<alpha> :: nat assume "\<alpha> \<in> {0, 1}"
+      hence "\<alpha> = 0 \<or> \<alpha> = 1" by (by100 blast)
+      thus "top1_is_group_on (if \<alpha> = 0 then ?piU else ?piV)
+          (if \<alpha> = 0 then ?mulU else ?mulV)
+          (if \<alpha> = 0 then top1_fundamental_group_id U (subspace_topology X TX U) p
+                     else top1_fundamental_group_id V (subspace_topology X TX V) p)
+          (if \<alpha> = 0 then top1_fundamental_group_invg U (subspace_topology X TX U) p
+                     else top1_fundamental_group_invg V (subspace_topology X TX V) p)"
+      proof
+        assume "\<alpha> = 0"
+        thus ?thesis using hpiU_grp by (by100 simp)
+      next
+        assume "\<alpha> = 1"
+        thus ?thesis using hpiV_grp by (by100 simp)
+      qed
+    qed
+    obtain FP :: "(nat \<times> (real \<Rightarrow> 'a) set) list set"
+        and mulFP eFP invgFP
+        and \<iota>fam :: "nat \<Rightarrow> (real \<Rightarrow> 'a) set \<Rightarrow> (nat \<times> (real \<Rightarrow> 'a) set) list" where
+        hFP: "top1_is_free_product_on FP mulFP eFP invgFP
+            (\<lambda>i::nat. if i = 0 then ?piU else ?piV)
+            (\<lambda>i. if i = 0 then ?mulU else ?mulV)
+            \<iota>fam {0, 1}"
+      sorry \<comment> \<open>Theorem 68.2: the free product of \<pi>_1(U) and \<pi>_1(V) exists.\<close>
+    \<comment> \<open>Step 9: Apply Corollary 70.3 (parameterized): \<pi>_1(X,p) \<cong> FP.\<close>
+    have hSvK_iso: "top1_groups_isomorphic_on
+        (top1_fundamental_group_carrier X TX p)
+        (top1_fundamental_group_mul X TX p)
+        FP mulFP"
+      by (rule Corollary_70_3_simply_connected_intersection_param[OF
+            hX_strict hU_open hV_open hUV_cover hUV_sc hU_pc hV_pc hp_UV hFP])
+    \<comment> \<open>Step 10: \<pi>_1(U) \<cong> \<pi>_1(X') is free on n-1 generators.
+       \<pi>_1(V) \<cong> \<pi>_1(C(n-1)) is free on 1 generator.
+       We need to transfer the free group structures through the isomorphisms.\<close>
+    \<comment> \<open>Step 10a: Get free group structures on \<pi>_1(U) and \<pi>_1(V) themselves.\<close>
+    have hpiU_free: "\<exists>(GU::int set) mulU eU invgU (\<iota>U::nat \<Rightarrow> int).
+        top1_is_free_group_full_on GU mulU eU invgU \<iota>U {..<(n-1)}
+      \<and> top1_groups_isomorphic_on GU mulU ?piU ?mulU"
+      sorry \<comment> \<open>Compose: G' \<cong> \<pi>_1(X') and \<pi>_1(U) \<cong> \<pi>_1(X') give G' \<cong> \<pi>_1(U).\<close>
+    have hpiV_free: "\<exists>(GV::int set) mulV eV invgV (\<iota>V::nat \<Rightarrow> int).
+        top1_is_free_group_full_on GV mulV eV invgV \<iota>V {0::nat}
+      \<and> top1_groups_isomorphic_on GV mulV ?piV ?mulV"
+      sorry \<comment> \<open>Compose: G2 \<cong> \<pi>_1(C(n-1)) and \<pi>_1(V) \<cong> \<pi>_1(C(n-1)) give G2 \<cong> \<pi>_1(V).\<close>
+    \<comment> \<open>Step 11: The free product of free groups is free (Theorem 69.2).
+       free(n-1) * free(1) = free({..<n-1} \<union> {0}) where {0} is disjoint from {..<n-1}.
+       Since we use shifted generators, the union gives {..<n}.\<close>
+    \<comment> \<open>Step 11a: FP is isomorphic to \<pi>_1(X), and FP itself is a free product of
+       groups isomorphic to free groups on n-1 and 1 generators.
+       By composing these isomorphisms with the free product structure,
+       we get that \<pi>_1(X) is isomorphic to a free group on n generators.\<close>
+    have hfinal: "\<exists>(G::int set) mul e invg (\<iota>::nat \<Rightarrow> int).
+        top1_is_free_group_full_on G mul e invg \<iota> {..<n}
+      \<and> top1_groups_isomorphic_on G mul
+          (top1_fundamental_group_carrier X TX p)
+          (top1_fundamental_group_mul X TX p)"
+      sorry \<comment> \<open>Compose all isomorphisms:
+         1. \<pi>_1(X) \<cong> FP(\<pi>_1(U), \<pi>_1(V))  [by Cor 70.3]
+         2. \<pi>_1(U) \<cong> free(n-1), \<pi>_1(V) \<cong> free(1)
+         3. FP(free(n-1), free(1)) is free on n generators  [by Thm 69.2]
+         4. Hence \<pi>_1(X) \<cong> free(n).\<close>
+    show "\<exists>(G::int set) mul e invg (\<iota>::nat \<Rightarrow> int).
+           top1_is_free_group_full_on G mul e invg \<iota> {..<n}
+         \<and> top1_groups_isomorphic_on G mul
+             (top1_fundamental_group_carrier X TX p)
+             (top1_fundamental_group_mul X TX p)"
+      using hfinal by (by100 blast)
+  qed
   show ?thesis using hbase1 hstep hn_pos
   proof -
     have "n = 1 \<or> n \<ge> 2" using hn_pos by (by100 linarith)
