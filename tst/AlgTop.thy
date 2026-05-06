@@ -2047,7 +2047,7 @@ proof -
               using top1_B2_convex[OF hy hq_B2 ht0 ht1] by (by100 simp)
             moreover have "?interp p = ((1 - snd p) * fst (fst p) + snd p * fst ?q,
                                     (1 - snd p) * snd (fst p) + snd p * snd ?q)"
-              sorry \<comment> \<open>Field associativity: a*b/c = a*(b/c).\<close>
+              by (cases p) (by100 simp)
             ultimately show "?interp p \<in> top1_B2" by (by100 simp)
           qed
           \<comment> \<open>Step 3: Bridge to top1: interp is top1_continuous_map_on.\<close>
@@ -2094,7 +2094,7 @@ proof -
             proof -
               \<comment> \<open>interp(y,t) \<noteq> (0,0): coefficient (1-t+t/|y|) > 0 and y \<noteq> 0.\<close>
               have "?interp p \<noteq> (0::real, 0)"
-                sorry \<comment> \<open>Same argument as hinterp_ne0: coefficient positive, y nonzero.\<close>
+                sorry \<comment> \<open>Coefficient (1-t+t/|y|) > 0 when y \<noteq> 0; multiply-by-nn trick + distrib_right.\<close>
               hence "?interp p \<in> top1_B2 \<and> ?interp p \<noteq> (0, 0)" using hip by (by100 blast)
               hence "h (?interp p) \<noteq> h (0, 0)"
                 using h_preimg_x0 by (by100 blast)
@@ -2103,8 +2103,17 @@ proof -
             ultimately show "?G p \<in> ?U" by (by100 blast)
           qed
           \<comment> \<open>Step 8: Restrict codomain from X to U.\<close>
+          have hG_img_U: "?G ` (?B2_0 \<times> I_set) \<subseteq> ?U"
+          proof (rule image_subsetI)
+            fix p assume "p \<in> ?B2_0 \<times> I_set"
+            thus "?G p \<in> ?U" using hG_range_U by (by100 blast)
+          qed
+          have hU_sub_X: "?U \<subseteq> X" by (by100 blast)
           show ?thesis
-            sorry \<comment> \<open>top1_continuous_map_on_codomain_shrink from X to U, or Theorem_18_2 part 5.\<close>
+            apply (rule top1_continuous_map_on_codomain_shrink)
+              apply (rule hG_cont_X)
+             apply (rule hG_img_U)
+            by (by100 blast)
         qed
         \<comment> \<open>Step E: G is constant on fibers of \<pi>'.\<close>
         have hG_fiber: "\<forall>p1\<in>?B2_0 \<times> I_set. \<forall>p2\<in>?B2_0 \<times> I_set.
@@ -9029,6 +9038,15 @@ end
 
 
 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
  
  
  
