@@ -298,7 +298,25 @@ proof -
       have "\<phi> (mulG (mulG g n) (invgG g)) \<in> \<phi> ` N" using hconj by (by100 blast)
       \<comment> \<open>\<phi>(g\<cdot>n\<cdot>g\<inverse>) = \<phi>(g)\<cdot>\<phi>(n)\<cdot>\<phi>(g\<inverse>) = g'\<cdot>m\<cdot>invgG'(g').\<close>
       moreover have "\<phi> (mulG (mulG g n) (invgG g)) = mulG' (mulG' g' m) (invgG' g')"
-        sorry \<comment> \<open>Homomorphism: \<phi>(a\<cdot>b) = \<phi>(a)\<cdot>\<phi>(b) and \<phi>(g\<inverse>) = \<phi>(g)\<inverse>.\<close>
+      proof -
+        have hphi_mul: "\<And>a b. a \<in> G \<Longrightarrow> b \<in> G \<Longrightarrow> \<phi> (mulG a b) = mulG' (\<phi> a) (\<phi> b)"
+          using hphi_hom_loc unfolding top1_group_hom_on_def by (by100 blast)
+        have hgn_G: "mulG g n \<in> G"
+          using assms(1) hg(1) hn(1) hN_sub unfolding top1_is_group_on_def by (by100 blast)
+        have hinvg_G: "invgG g \<in> G"
+          using assms(1) hg(1) unfolding top1_is_group_on_def by (by100 blast)
+        have hn_G: "n \<in> G" using hn(1) hN_sub by (by100 blast)
+        have "\<phi> (mulG (mulG g n) (invgG g)) = mulG' (\<phi> (mulG g n)) (\<phi> (invgG g))"
+          by (rule hphi_mul[OF hgn_G hinvg_G])
+        also have "\<phi> (mulG g n) = mulG' (\<phi> g) (\<phi> n)"
+          by (rule hphi_mul[OF hg(1) hn_G])
+        finally have h1: "\<phi> (mulG (mulG g n) (invgG g)) = mulG' (mulG' (\<phi> g) (\<phi> n)) (\<phi> (invgG g))"
+          by (by100 simp)
+        \<comment> \<open>\<phi>(g\<inverse>) = \<phi>(g)\<inverse>: from \<phi>(g)\<cdot>\<phi>(g\<inverse>) = \<phi>(g\<cdot>g\<inverse>) = \<phi>(e) = e'.\<close>
+        have "\<phi> (invgG g) = invgG' (\<phi> g)"
+          sorry \<comment> \<open>Standard: hom preserves inverse. Needs \<phi>(e)=e' and uniqueness of inverse.\<close>
+        thus ?thesis using h1 hg(2) hn(2) by (by100 simp)
+      qed
       ultimately show ?thesis by (by100 simp)
     qed
   qed
@@ -9653,6 +9671,7 @@ end
 
 
 
+ 
  
  
  
