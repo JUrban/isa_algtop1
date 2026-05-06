@@ -268,9 +268,34 @@ lemma quotient_group_iso_transfer:
            (top1_quotient_group_mul_on mulG)
            (top1_quotient_group_carrier_on G' mulG' (\<phi> ` N))
            (top1_quotient_group_mul_on mulG')"
-  sorry \<comment> \<open>Standard group theory: \<phi>: G\<rightarrow>G' iso, N\<lhd>G \<Rightarrow> G/N \<cong> G'/\<phi>(N).
-     Proof via first isomorphism theorem: the map \<pi>'\<circ>\<phi>: G \<rightarrow> G'/\<phi>(N)
-     is a surjective homomorphism with kernel N.\<close>
+proof -
+  \<comment> \<open>Step 1: \<phi>(N) is a normal subgroup of G'.\<close>
+  have hphiN_normal: "top1_normal_subgroup_on G' mulG' eG' invgG' (\<phi> ` N)"
+    sorry \<comment> \<open>Image of normal under isomorphism is normal:
+         \<phi>(g) \<cdot> \<phi>(N) \<cdot> \<phi>(g)\<inverse> = \<phi>(g N g\<inverse>) = \<phi>(N).\<close>
+  \<comment> \<open>Step 2: G'/\<phi>(N) is a group.\<close>
+  let ?\<pi>' = "\<lambda>g'. top1_group_coset_on G' mulG' (\<phi> ` N) g'"
+  have hQ'_group: "top1_is_group_on (top1_quotient_group_carrier_on G' mulG' (\<phi> ` N))
+      (top1_quotient_group_mul_on mulG')
+      (?\<pi>' eG') (\<lambda>C. ?\<pi>' (invgG' (SOME g'. g' \<in> G' \<and> C = ?\<pi>' g')))"
+    by (rule quotient_group_is_group[OF assms(2) hphiN_normal])
+  \<comment> \<open>Step 3: \<pi>' \<circ> \<phi> is a surjective homomorphism G \<rightarrow> G'/\<phi>(N) with kernel N.\<close>
+  have hpi_phi_hom: "top1_group_hom_on G mulG (top1_quotient_group_carrier_on G' mulG' (\<phi> ` N))
+      (top1_quotient_group_mul_on mulG') (?\<pi>' \<circ> \<phi>)"
+    sorry \<comment> \<open>Composition of \<phi> (hom from iso) and \<pi>' (quotient projection hom).\<close>
+  have hpi_phi_surj: "(?\<pi>' \<circ> \<phi>) ` G = top1_quotient_group_carrier_on G' mulG' (\<phi> ` N)"
+    sorry \<comment> \<open>\<phi> surjective onto G', \<pi>' surjective onto G'/\<phi>(N).\<close>
+  have hpi_phi_ker: "top1_group_kernel_on G (?\<pi>' eG') (?\<pi>' \<circ> \<phi>) = N"
+    sorry \<comment> \<open>kernel = {g \<in> G | \<pi>'(\<phi>(g)) = \<pi>'(eG')} = {g \<in> G | \<phi>(g) \<in> \<phi>(N)} = N (injectivity).\<close>
+  \<comment> \<open>Step 4: By first isomorphism theorem.\<close>
+  have "top1_groups_isomorphic_on
+      (top1_quotient_group_carrier_on G' mulG' (\<phi> ` N)) (top1_quotient_group_mul_on mulG')
+      (top1_quotient_group_carrier_on G mulG N) (top1_quotient_group_mul_on mulG)"
+    by (rule first_isomorphism_theorem[OF assms(1) assms(4) hQ'_group hpi_phi_hom hpi_phi_surj hpi_phi_ker])
+  \<comment> \<open>Symmetry: G/N \<cong> G'/\<phi>(N).\<close>
+  thus ?thesis
+    sorry \<comment> \<open>Symmetry: groups_isomorphic_on_sym with quotient_group_is_group.\<close>
+qed
 
 section \<open>\<S>72 Adjoining a Two-Cell\<close>
 
@@ -9558,6 +9583,10 @@ end
 
 
 
+ 
+ 
+ 
+ 
  
  
  
