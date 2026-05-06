@@ -1299,13 +1299,56 @@ proof -
       \<comment> \<open>A and CU are both closed in U and cover U.\<close>
       have hU_sub_X: "?U \<subseteq> X" by (by100 blast)
       have hA_closed_U: "closedin_on ?U ?TU A"
-        sorry \<comment> \<open>A closed in X, A \<subseteq> U \<subseteq> X, Theorem_17_2 backward.\<close>
+      proof -
+        \<comment> \<open>A closed in X means X-A \<in> TX. In subspace U: U-A = U \<inter> (X-A) \<in> TU.\<close>
+        have "X - A \<in> TX" using assms(3) unfolding closedin_on_def by (by100 blast)
+        hence "?U \<inter> (X - A) \<in> ?TU" unfolding subspace_topology_def by (by100 blast)
+        moreover have "?U - A = ?U \<inter> (X - A)" by (by100 blast)
+        ultimately have "?U - A \<in> ?TU" by (by100 simp)
+        thus ?thesis unfolding closedin_on_def using hA_sub_U by (by100 blast)
+      qed
       have hC_closed_X: "closedin_on X TX ?C"
-        sorry \<comment> \<open>h(B2) is compact image (B2 compact + h continuous) in Hausdorff X, hence closed.\<close>
+      proof -
+        have hC_sub: "?C \<subseteq> X"
+          using assms(5) unfolding top1_continuous_map_on_def by (by100 blast)
+        have "top1_compact_on ?C (subspace_topology X TX ?C)"
+          sorry \<comment> \<open>B2 compact + h continuous + compact image.\<close>
+        thus ?thesis
+          by (rule compact_in_strict_hausdorff_closedin_on[OF assms(2) assms(1) hC_sub])
+      qed
       have hCU_closed_U: "closedin_on ?U ?TU ?CU"
-        sorry \<comment> \<open>C closed in X, C \<inter> U closed in U by Theorem_17_2.\<close>
+      proof -
+        have "X - ?C \<in> TX" using hC_closed_X unfolding closedin_on_def by (by100 blast)
+        hence "?U \<inter> (X - ?C) \<in> ?TU" unfolding subspace_topology_def by (by100 blast)
+        moreover have "?U - ?CU = ?U \<inter> (X - ?C)" by (by100 blast)
+        ultimately have "?U - ?CU \<in> ?TU" by (by100 simp)
+        moreover have "?CU \<subseteq> ?U" by (by100 blast)
+        ultimately show ?thesis unfolding closedin_on_def by (by100 blast)
+      qed
       have hcover: "A \<union> ?CU = ?U"
-        sorry \<comment> \<open>U = X-{x0}, A \<union> (h(B2)-{x0}) covers X-{x0} since X = A \<union> h(B2).\<close>
+      proof (rule set_eqI, rule iffI)
+        fix x assume "x \<in> A \<union> ?CU"
+        thus "x \<in> ?U" using hA_sub_U by (by100 blast)
+      next
+        fix x assume hx: "x \<in> ?U"
+        hence hx_X: "x \<in> X" and hx_ne: "x \<noteq> ?x0" by (by100 blast)+
+        show "x \<in> A \<union> ?CU"
+        proof (cases "x \<in> A")
+          case True thus ?thesis by (by100 blast)
+        next
+          case False
+          hence "x \<in> X - A" using hx_X by (by100 blast)
+          hence "x \<in> h ` ?D" using hsurj_D by (by100 simp)
+          hence "x \<in> h ` top1_B2"
+          proof -
+            have "?D \<subseteq> top1_B2" by (by100 blast)
+            thus ?thesis using \<open>x \<in> h ` ?D\<close> by (by100 blast)
+          qed
+          hence "x \<in> ?C" by (by100 blast)
+          hence "x \<in> ?CU" using hx_ne hx_X by (by100 blast)
+          thus ?thesis by (by100 blast)
+        qed
+      qed
       \<comment> \<open>Continuity on A \<times> I: H_U = projection, continuous.\<close>
       have hH_cont_A: "top1_continuous_map_on (A \<times> I_set)
           (product_topology_on (subspace_topology ?U ?TU A) I_top) ?U ?TU H_U"
