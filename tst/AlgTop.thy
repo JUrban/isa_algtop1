@@ -8337,7 +8337,7 @@ proof -
         using hh unfolding top1_covering_transformation_on_def by (by100 blast)
       \<comment> \<open>inv_into E h is the inverse homeomorphism.\<close>
       have hinv_homeo: "top1_homeomorphism_on E TE E TE (inv_into E h)"
-        sorry \<comment> \<open>Inverse of homeomorphism is homeomorphism. Should be in library.\<close>
+        by (rule homeomorphism_inverse[OF hh_homeo])
       moreover have "\<forall>e\<in>E. p (inv_into E h e) = p e"
       proof (intro ballI)
         fix e assume "e \<in> E"
@@ -9519,6 +9519,7 @@ end
 
 
 
+ 
  
  
  
