@@ -2061,8 +2061,36 @@ proof -
           have hdom_top_eq: "subspace_topology UNIV top1_open_sets (?B2_0 \<times> I_set)
               = subspace_topology (top1_B2 \<times> I_set) (product_topology_on top1_B2_topology I_top)
                   (?B2_0 \<times> I_set)"
-            sorry \<comment> \<open>Subspace transitivity: sub UNIV open (B2\{0}\<times>I) = sub (B2\<times>I) (prod B2top Itop) (B2\{0}\<times>I).
-                     Uses product_topology_on_open_sets and subspace_topology_trans.\<close>
+          proof -
+            have hTB2: "is_topology_on (UNIV::(real\<times>real) set) (top1_open_sets::(real\<times>real) set set)"
+              using top1_R2_is_hausdorff unfolding is_hausdorff_on_def
+              using product_topology_on_open_sets[where ?'a = real and ?'b = real] by (by100 simp)
+            have hTR: "is_topology_on (UNIV::real set) (top1_open_sets::real set set)"
+              using top1_R_is_hausdorff unfolding is_hausdorff_on_def by (by100 blast)
+            \<comment> \<open>prod B2_top I_top = sub UNIV open (B2\<times>I) by Theorem 16.3.\<close>
+            have "product_topology_on top1_B2_topology I_top
+                = product_topology_on (subspace_topology UNIV top1_open_sets top1_B2)
+                    (subspace_topology UNIV top1_open_sets I_set)"
+              unfolding top1_B2_topology_def top1_unit_interval_topology_def
+              using product_topology_on_open_sets[where ?'a = real and ?'b = real]
+              by (by100 simp)
+            also have "\<dots> = subspace_topology (UNIV \<times> UNIV) (product_topology_on top1_open_sets top1_open_sets)
+                (top1_B2 \<times> I_set)"
+              by (rule Theorem_16_3[OF hTB2 hTR])
+            also have "\<dots> = subspace_topology UNIV top1_open_sets (top1_B2 \<times> I_set)"
+              using product_topology_on_open_sets[where ?'a = "real\<times>real" and ?'b = real]
+              by (by100 simp)
+            finally have hprod_eq: "product_topology_on top1_B2_topology I_top
+                = subspace_topology UNIV top1_open_sets (top1_B2 \<times> I_set)" .
+            \<comment> \<open>By subspace transitivity: sub (B2\<times>I) (sub UNIV open (B2\<times>I)) (B2_0\<times>I) = sub UNIV open (B2_0\<times>I).\<close>
+            have "subspace_topology (top1_B2 \<times> I_set) (product_topology_on top1_B2_topology I_top)
+                (?B2_0 \<times> I_set) =
+                subspace_topology (top1_B2 \<times> I_set) (subspace_topology UNIV top1_open_sets (top1_B2 \<times> I_set))
+                (?B2_0 \<times> I_set)" using hprod_eq by (by100 simp)
+            also have "\<dots> = subspace_topology UNIV top1_open_sets (?B2_0 \<times> I_set)"
+              by (rule subspace_topology_trans) (by100 blast)
+            finally show ?thesis by (by100 simp)
+          qed
           have hcod_top_eq: "subspace_topology UNIV top1_open_sets top1_B2 = top1_B2_topology"
             unfolding top1_B2_topology_def
             using product_topology_on_open_sets[where ?'a = real and ?'b = real]
@@ -9038,6 +9066,9 @@ end
 
 
 
+ 
+ 
+ 
  
  
  
