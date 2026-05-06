@@ -1154,8 +1154,10 @@ using assms proof (induction n arbitrary: X TX p rule: less_induct)
             \<comment> \<open>Rewrite using subspace_topology_trans and hCD_eq\<close>
             hence "closedin_on (C \<alpha>) (subspace_topology X TX (C \<alpha>)) (C \<alpha> \<inter> D)"
               using hCD_eq by (by100 simp)
-            thus "closedin_on (C \<alpha>) (subspace_topology ?X' ?TX' (C \<alpha>)) (C \<alpha> \<inter> D)"
+            moreover have "subspace_topology ?X' ?TX' (C \<alpha>) = subspace_topology X TX (C \<alpha>)"
               using hsub_eq h\<alpha> by (by100 simp)
+            ultimately show "closedin_on (C \<alpha>) (subspace_topology ?X' ?TX' (C \<alpha>)) (C \<alpha> \<inter> D)"
+              using hCD_eq by (by100 simp)
           qed
         }
         \<comment> \<open>Backward: each C(\<alpha>) \<inter> D closed in C(\<alpha>) \<Rightarrow> D closed in X'\<close>
@@ -2130,7 +2132,13 @@ using assms proof (induction n arbitrary: X TX p rule: less_induct)
             hence h\<alpha>_eq: "\<alpha> = n - 1" using h\<alpha> by (by100 simp)
             \<comment> \<open>W(n-1) \<subseteq> U_def, and W(n-1) \<subseteq> C(n-1) \<subseteq> V_def.\<close>
             have "x \<in> U_def" using hx\<alpha> hWn_sub_U h\<alpha>_eq by (by100 blast)
-            moreover have "x \<in> V_def" using hx\<alpha> hW_sub_C h\<alpha> hCn_sub_V h\<alpha>_eq by (by100 blast)
+            moreover have "x \<in> V_def"
+            proof -
+              have "x \<in> W \<alpha>" using hx\<alpha> by (by100 blast)
+              hence "x \<in> C \<alpha>" using hW_sub_C h\<alpha> by (by100 blast)
+              hence "x \<in> C (n-1)" using h\<alpha>_eq by (by100 simp)
+              thus ?thesis using hCn_sub_V by (by100 blast)
+            qed
             ultimately show ?thesis by (by100 blast)
           qed
         qed
@@ -3098,8 +3106,88 @@ using assms proof (induction n arbitrary: X TX p rule: less_induct)
             have hangle_n_spec: "\<And>x. x \<in> W (n-1) \<Longrightarrow>
                 \<theta>q_n < angle_n x \<and> angle_n x < \<theta>q_n + 1 \<and>
                 top1_R_to_S1 (angle_n x) = ?hinv_n x"
-              sorry \<comment> \<open>This is the same argument as h_angle_spec in hH_U_0, extracted as a standalone fact.
-                 For x \<in> W(n-1): hinv(x) \<in> S1-{q'}, lift to (\<theta>q, \<theta>q+1), apply THE uniqueness.\<close>
+            proof -
+              fix x assume hxW: "x \<in> W (n-1)"
+              hence hx_Cn: "x \<in> ?Cn" unfolding W_def by (by100 blast)
+              have hhinv_x: "?hinv_n x \<in> top1_S1"
+                using hbij_inv_n hx_Cn unfolding bij_betw_def by (by100 blast)
+              have hhinv_x_ne_q': "?hinv_n x \<noteq> q'_n"
+              proof
+                assume "?hinv_n x = q'_n"
+                hence "h_n (?hinv_n x) = h_n q'_n" by (by100 simp)
+                hence "x = q (n-1)"
+                  using bij_betw_inv_into_right[OF hbij_n hx_Cn]
+                  unfolding q'_n_def using bij_betw_inv_into_right[OF hbij_n hq_in_n] by (by100 simp)
+                moreover have "x \<noteq> q (n-1)" using hxW unfolding W_def by (by100 blast)
+                ultimately show False by (by100 blast)
+              qed
+              \<comment> \<open>Step 1: get \<theta>0 with R_to_S1(\<theta>0) = hinv(x) and \<theta>q_n < \<theta>0 < \<theta>q_n + 1.\<close>
+              have heq_x: "fst (?hinv_n x) ^ 2 + snd (?hinv_n x) ^ 2 = 1"
+                using hhinv_x unfolding top1_S1_def by (by100 simp)
+              obtain \<theta>r where hcos_x: "fst (?hinv_n x) = cos \<theta>r" and hsin_x: "snd (?hinv_n x) = sin \<theta>r"
+                using sincos_total_2pi heq_x by (by100 metis)
+              define \<theta>_raw_x where "\<theta>_raw_x = \<theta>r / (2 * pi)"
+              have h_raw_x: "top1_R_to_S1 \<theta>_raw_x = ?hinv_n x"
+                unfolding top1_R_to_S1_def \<theta>_raw_x_def using hcos_x hsin_x by (simp add: prod_eq_iff)
+              define k_x where "k_x = \<lfloor>\<theta>_raw_x - \<theta>q_n\<rfloor>"
+              define \<theta>0_x where "\<theta>0_x = \<theta>_raw_x - of_int k_x"
+              have h\<theta>0_x_R: "top1_R_to_S1 \<theta>0_x = ?hinv_n x"
+              proof -
+                have "top1_R_to_S1 \<theta>0_x = top1_R_to_S1 (\<theta>_raw_x + of_int (-k_x))"
+                  unfolding \<theta>0_x_def by (by100 simp)
+                also have "\<dots> = top1_R_to_S1 \<theta>_raw_x" by (rule top1_R_to_S1_int_shift_early)
+                also have "\<dots> = ?hinv_n x" by (rule h_raw_x)
+                finally show ?thesis .
+              qed
+              have h\<theta>0_x_range: "\<theta>q_n \<le> \<theta>0_x \<and> \<theta>0_x < \<theta>q_n + 1"
+                unfolding \<theta>0_x_def k_x_def by linarith
+              have "\<theta>0_x \<noteq> \<theta>q_n"
+              proof
+                assume "\<theta>0_x = \<theta>q_n"
+                hence "top1_R_to_S1 \<theta>0_x = top1_R_to_S1 \<theta>q_n" by (by100 simp)
+                hence "?hinv_n x = q'_n" using h\<theta>0_x_R h\<theta>q_n by (by100 simp)
+                thus False using hhinv_x_ne_q' by (by100 blast)
+              qed
+              hence h\<theta>0_x_strict: "\<theta>q_n < \<theta>0_x" using h\<theta>0_x_range by (by100 linarith)
+              have h\<theta>0_x: "\<theta>q_n < \<theta>0_x \<and> \<theta>0_x < \<theta>q_n + 1 \<and> top1_R_to_S1 \<theta>0_x = ?hinv_n x"
+                using h\<theta>0_x_strict h\<theta>0_x_range h\<theta>0_x_R by (by100 blast)
+              \<comment> \<open>Uniqueness.\<close>
+              have huniq_x: "\<And>\<theta>. \<theta>q_n < \<theta> \<and> \<theta> < \<theta>q_n + 1 \<and> top1_R_to_S1 \<theta> = ?hinv_n x \<Longrightarrow> \<theta> = \<theta>0_x"
+              proof -
+                fix \<theta> assume h\<theta>: "\<theta>q_n < \<theta> \<and> \<theta> < \<theta>q_n + 1 \<and> top1_R_to_S1 \<theta> = ?hinv_n x"
+                hence "top1_R_to_S1 \<theta> = top1_R_to_S1 \<theta>0_x" using h\<theta>0_x_R by (by100 simp)
+                hence "cos (2*pi*\<theta>) = cos (2*pi*\<theta>0_x) \<and> sin (2*pi*\<theta>) = sin (2*pi*\<theta>0_x)"
+                  unfolding top1_R_to_S1_def by (by100 simp)
+                hence "sin (2*pi*\<theta>) = sin (2*pi*\<theta>0_x) \<and> cos (2*pi*\<theta>) = cos (2*pi*\<theta>0_x)"
+                  by (by100 blast)
+                then obtain j :: int where hj: "2*pi*\<theta> = 2*pi*\<theta>0_x + 2*pi*of_int j"
+                  using iffD1[OF sin_cos_eq_iff] by (by100 blast)
+                have "2*pi*\<theta> - 2*pi*\<theta>0_x = 2*pi*of_int j" using hj by (by100 linarith)
+                hence hd: "2*pi*(\<theta> - \<theta>0_x) = 2*pi*of_int j" by (simp only: right_diff_distrib)
+                have "pi \<noteq> 0" using pi_gt_zero by (by100 linarith)
+                hence "2*pi \<noteq> 0" by (by100 linarith)
+                hence "\<theta> - \<theta>0_x = of_int j" using hd by (by100 simp)
+                moreover have "\<theta> - \<theta>0_x > -1 \<and> \<theta> - \<theta>0_x < 1" using h\<theta> h\<theta>0_x by (by100 linarith)
+                ultimately have "of_int j > (-1::real) \<and> of_int j < (1::real)" by (by100 linarith)
+                hence "j = 0" by (by100 linarith)
+                thus "\<theta> = \<theta>0_x" using \<open>\<theta> - \<theta>0_x = of_int j\<close> by (by100 simp)
+              qed
+              \<comment> \<open>THE gives the unique \<theta>0_x.\<close>
+              have hex1_x: "\<exists>!\<theta>. \<theta>q_n < \<theta> \<and> \<theta> < \<theta>q_n + 1 \<and> top1_R_to_S1 \<theta> = ?hinv_n x"
+              proof (rule ex_ex1I)
+                show "\<exists>\<theta>. \<theta>q_n < \<theta> \<and> \<theta> < \<theta>q_n + 1 \<and> top1_R_to_S1 \<theta> = ?hinv_n x"
+                  using h\<theta>0_x by (by100 blast)
+              next
+                fix a b assume ha: "\<theta>q_n < a \<and> a < \<theta>q_n + 1 \<and> top1_R_to_S1 a = ?hinv_n x"
+                    and hb: "\<theta>q_n < b \<and> b < \<theta>q_n + 1 \<and> top1_R_to_S1 b = ?hinv_n x"
+                show "a = b" using huniq_x[OF ha] huniq_x[OF hb] by (by100 simp)
+              qed
+              have hthe_x: "(THE \<theta>. \<theta>q_n < \<theta> \<and> \<theta> < \<theta>q_n + 1 \<and> top1_R_to_S1 \<theta> = ?hinv_n x) = \<theta>0_x"
+                by (rule the1_equality[OF hex1_x h\<theta>0_x])
+              show "\<theta>q_n < angle_n x \<and> angle_n x < \<theta>q_n + 1 \<and>
+                  top1_R_to_S1 (angle_n x) = ?hinv_n x"
+                unfolding angle_n_def using hthe_x h\<theta>0_x by (by100 simp)
+            qed
             \<comment> \<open>Note: for x \<in> X' \<inter> W(n-1) = {p}, both branches agree:
                x = p, and angle_n p = \<theta>p_n, so
                h_n(R_to_S1((1-t)*\<theta>p_n + t*\<theta>p_n)) = h_n(R_to_S1(\<theta>p_n)) = h_n(p'_n) = p.\<close>
@@ -3371,7 +3459,12 @@ using assms proof (induction n arbitrary: X TX p rule: less_induct)
                     proof
                       assume "q (n-1) \<in> ?X'"
                       then obtain \<beta> where h\<beta>: "\<beta> \<in> {..<(n-1)}" and hq\<beta>: "q (n-1) \<in> C \<beta>" by (by100 blast)
-                      have h\<beta>n: "\<beta> \<in> {..<n}" using h\<beta> hn2 by (by100 simp)
+                      have h\<beta>n: "\<beta> \<in> {..<n}"
+                      proof -
+                        have "\<beta> < n - 1" using h\<beta> by (by100 simp)
+                        hence "\<beta> < n" using hn2 by (by100 simp)
+                        thus ?thesis by (by100 simp)
+                      qed
                       have "\<beta> \<noteq> n - 1" using h\<beta> by (by100 simp)
                       hence "C \<beta> \<inter> ?Cn = {p}" using hC_inter h\<beta>n hn1_in by (by100 blast)
                       hence "q (n-1) = p" using hq\<beta> hq_in_n by (by100 blast)
@@ -3661,7 +3754,7 @@ using assms proof (induction n arbitrary: X TX p rule: less_induct)
               (top1_fundamental_group_mul ?X' ?TX' p)
               (top1_fundamental_group_carrier U_def (subspace_topology X TX U_def) p)
               (top1_fundamental_group_mul U_def (subspace_topology X TX U_def) p)"
-            by (by100 simp)
+            by (simp only:)
           show ?thesis
             by (rule top1_groups_isomorphic_on_sym[OF h_iso_XU
                 top1_fundamental_group_is_group[OF
@@ -3813,6 +3906,99 @@ using assms proof (induction n arbitrary: X TX p rule: less_induct)
             define angle_fam :: "nat \<Rightarrow> 'a \<Rightarrow> real" where
               "angle_fam \<alpha> x = (THE \<theta>. \<theta>q_fam \<alpha> < \<theta> \<and> \<theta> < \<theta>q_fam \<alpha> + 1
                 \<and> top1_R_to_S1 \<theta> = inv_into top1_S1 (h_fam \<alpha>) x)" for \<alpha> x
+            \<comment> \<open>Standalone angle_fam spec: for \<alpha> < n and x \<in> W(\<alpha>), angle_fam gives the angle.\<close>
+            have hangle_fam_spec: "\<And>\<alpha> x. \<alpha> \<in> {..<n} \<Longrightarrow> x \<in> W \<alpha> \<Longrightarrow>
+                \<theta>q_fam \<alpha> < angle_fam \<alpha> x \<and> angle_fam \<alpha> x < \<theta>q_fam \<alpha> + 1 \<and>
+                top1_R_to_S1 (angle_fam \<alpha> x) = inv_into top1_S1 (h_fam \<alpha>) x"
+            proof -
+              fix \<alpha> x assume h\<alpha>: "\<alpha> \<in> {..<n}" and hxW: "x \<in> W \<alpha>"
+              have hx_C: "x \<in> C \<alpha>" using hxW unfolding W_def by (by100 blast)
+              let ?hinv' = "inv_into top1_S1 (h_fam \<alpha>)"
+              have hh\<alpha>: "top1_homeomorphism_on top1_S1 top1_S1_topology
+                  (C \<alpha>) (subspace_topology X TX (C \<alpha>)) (h_fam \<alpha>)"
+                using hfam h\<alpha> by (by100 blast)
+              have hbij': "bij_betw (h_fam \<alpha>) top1_S1 (C \<alpha>)"
+                using hh\<alpha> unfolding top1_homeomorphism_on_def by (by100 blast)
+              have hbij_inv': "bij_betw ?hinv' (C \<alpha>) top1_S1"
+                using homeomorphism_inverse[OF hh\<alpha>]
+                unfolding top1_homeomorphism_on_def by (by100 blast)
+              have hhinv'_x: "?hinv' x \<in> top1_S1" using hbij_inv' hx_C unfolding bij_betw_def by (by100 blast)
+              have hx_neq_q: "x \<noteq> q \<alpha>" using hxW unfolding W_def by (by100 blast)
+              have hq_in': "q \<alpha> \<in> C \<alpha>" using hq h\<alpha> by (by100 blast)
+              have hhinv'_x_ne_q: "?hinv' x \<noteq> ?hinv' (q \<alpha>)"
+              proof
+                assume heqq: "?hinv' x = ?hinv' (q \<alpha>)"
+                hence "h_fam \<alpha> (?hinv' x) = h_fam \<alpha> (?hinv' (q \<alpha>))" by (by100 simp)
+                hence "x = q \<alpha>" using bij_betw_inv_into_right[OF hbij' hx_C]
+                    bij_betw_inv_into_right[OF hbij' hq_in'] by (by100 simp)
+                thus False using hx_neq_q by (by100 blast)
+              qed
+              have h\<theta>q_eq: "top1_R_to_S1 (\<theta>q_fam \<alpha>) = ?hinv' (q \<alpha>)"
+                using hfam h\<alpha> by (by100 blast)
+              have heq_x: "fst (?hinv' x) ^ 2 + snd (?hinv' x) ^ 2 = 1"
+                using hhinv'_x unfolding top1_S1_def by (by100 simp)
+              obtain \<theta>r where hcos_x: "fst (?hinv' x) = cos \<theta>r" and hsin_x: "snd (?hinv' x) = sin \<theta>r"
+                using sincos_total_2pi heq_x by (by100 metis)
+              define \<theta>_raw_x where "\<theta>_raw_x = \<theta>r / (2 * pi)"
+              have h_raw_x: "top1_R_to_S1 \<theta>_raw_x = ?hinv' x"
+                unfolding top1_R_to_S1_def \<theta>_raw_x_def using hcos_x hsin_x by (simp add: prod_eq_iff)
+              define k_x where "k_x = \<lfloor>\<theta>_raw_x - \<theta>q_fam \<alpha>\<rfloor>"
+              define \<theta>0_x where "\<theta>0_x = \<theta>_raw_x - of_int k_x"
+              have h\<theta>0_x_R: "top1_R_to_S1 \<theta>0_x = ?hinv' x"
+              proof -
+                have "top1_R_to_S1 \<theta>0_x = top1_R_to_S1 (\<theta>_raw_x + of_int (-k_x))"
+                  unfolding \<theta>0_x_def by (by100 simp)
+                also have "\<dots> = top1_R_to_S1 \<theta>_raw_x" by (rule top1_R_to_S1_int_shift_early)
+                also have "\<dots> = ?hinv' x" by (rule h_raw_x)
+                finally show ?thesis .
+              qed
+              have h\<theta>0_x_range: "\<theta>q_fam \<alpha> \<le> \<theta>0_x \<and> \<theta>0_x < \<theta>q_fam \<alpha> + 1"
+                unfolding \<theta>0_x_def k_x_def by linarith
+              have "\<theta>0_x \<noteq> \<theta>q_fam \<alpha>"
+              proof
+                assume "\<theta>0_x = \<theta>q_fam \<alpha>"
+                hence "top1_R_to_S1 \<theta>0_x = top1_R_to_S1 (\<theta>q_fam \<alpha>)" by (by100 simp)
+                hence "?hinv' x = ?hinv' (q \<alpha>)" using h\<theta>0_x_R h\<theta>q_eq by (by100 simp)
+                thus False using hhinv'_x_ne_q by (by100 blast)
+              qed
+              hence h\<theta>0_x_strict: "\<theta>q_fam \<alpha> < \<theta>0_x" using h\<theta>0_x_range by (by100 linarith)
+              have h\<theta>0_x: "\<theta>q_fam \<alpha> < \<theta>0_x \<and> \<theta>0_x < \<theta>q_fam \<alpha> + 1 \<and> top1_R_to_S1 \<theta>0_x = ?hinv' x"
+                using h\<theta>0_x_strict h\<theta>0_x_range h\<theta>0_x_R by (by100 blast)
+              have huniq_x: "\<And>\<theta>. \<theta>q_fam \<alpha> < \<theta> \<and> \<theta> < \<theta>q_fam \<alpha> + 1 \<and> top1_R_to_S1 \<theta> = ?hinv' x \<Longrightarrow> \<theta> = \<theta>0_x"
+              proof -
+                fix \<theta> assume h\<theta>: "\<theta>q_fam \<alpha> < \<theta> \<and> \<theta> < \<theta>q_fam \<alpha> + 1 \<and> top1_R_to_S1 \<theta> = ?hinv' x"
+                hence "top1_R_to_S1 \<theta> = top1_R_to_S1 \<theta>0_x" using h\<theta>0_x_R by (by100 simp)
+                hence "cos (2*pi*\<theta>) = cos (2*pi*\<theta>0_x) \<and> sin (2*pi*\<theta>) = sin (2*pi*\<theta>0_x)"
+                  unfolding top1_R_to_S1_def by (by100 simp)
+                hence "sin (2*pi*\<theta>) = sin (2*pi*\<theta>0_x) \<and> cos (2*pi*\<theta>) = cos (2*pi*\<theta>0_x)"
+                  by (by100 blast)
+                then obtain j :: int where hj: "2*pi*\<theta> = 2*pi*\<theta>0_x + 2*pi*of_int j"
+                  using iffD1[OF sin_cos_eq_iff] by (by100 blast)
+                have "2*pi*\<theta> - 2*pi*\<theta>0_x = 2*pi*of_int j" using hj by (by100 linarith)
+                hence hd: "2*pi*(\<theta> - \<theta>0_x) = 2*pi*of_int j" by (simp only: right_diff_distrib)
+                have "pi \<noteq> 0" using pi_gt_zero by (by100 linarith)
+                hence "2*pi \<noteq> 0" by (by100 linarith)
+                hence "\<theta> - \<theta>0_x = of_int j" using hd by (by100 simp)
+                moreover have "\<theta> - \<theta>0_x > -1 \<and> \<theta> - \<theta>0_x < 1" using h\<theta> h\<theta>0_x by (by100 linarith)
+                ultimately have "of_int j > (-1::real) \<and> of_int j < (1::real)" by (by100 linarith)
+                hence "j = 0" by (by100 linarith)
+                thus "\<theta> = \<theta>0_x" using \<open>\<theta> - \<theta>0_x = of_int j\<close> by (by100 simp)
+              qed
+              have hex1_x: "\<exists>!\<theta>. \<theta>q_fam \<alpha> < \<theta> \<and> \<theta> < \<theta>q_fam \<alpha> + 1 \<and> top1_R_to_S1 \<theta> = ?hinv' x"
+              proof (rule ex_ex1I)
+                show "\<exists>\<theta>. \<theta>q_fam \<alpha> < \<theta> \<and> \<theta> < \<theta>q_fam \<alpha> + 1 \<and> top1_R_to_S1 \<theta> = ?hinv' x"
+                  using h\<theta>0_x by (by100 blast)
+              next
+                fix a b assume ha: "\<theta>q_fam \<alpha> < a \<and> a < \<theta>q_fam \<alpha> + 1 \<and> top1_R_to_S1 a = ?hinv' x"
+                    and hb: "\<theta>q_fam \<alpha> < b \<and> b < \<theta>q_fam \<alpha> + 1 \<and> top1_R_to_S1 b = ?hinv' x"
+                show "a = b" using huniq_x[OF ha] huniq_x[OF hb] by (by100 simp)
+              qed
+              have hthe_x: "(THE \<theta>. \<theta>q_fam \<alpha> < \<theta> \<and> \<theta> < \<theta>q_fam \<alpha> + 1 \<and> top1_R_to_S1 \<theta> = ?hinv' x) = \<theta>0_x"
+                by (rule the1_equality[OF hex1_x h\<theta>0_x])
+              show "\<theta>q_fam \<alpha> < angle_fam \<alpha> x \<and> angle_fam \<alpha> x < \<theta>q_fam \<alpha> + 1 \<and>
+                  top1_R_to_S1 (angle_fam \<alpha> x) = inv_into top1_S1 (h_fam \<alpha>) x"
+                unfolding angle_fam_def using hthe_x h\<theta>0_x by (by100 simp)
+            qed
             \<comment> \<open>Define H_V: for x \<in> C(n-1), H_V(x,t) = x.
                For x \<in> W(\<alpha>) with \<alpha> < n-1, contract x to p via angle interpolation.\<close>
             define H_V :: "'a \<times> real \<Rightarrow> 'a" where
@@ -4207,9 +4393,154 @@ using assms proof (induction n arbitrary: X TX p rule: less_induct)
               qed
               \<comment> \<open>Step 6: H_V maps V_def \<times> I_set into V_def.\<close>
               have hH_V_range: "\<forall>p\<in>V_def \<times> I_set. H_V p \<in> V_def"
-                sorry \<comment> \<open>Range: on C(n-1), H_V = identity (in V_def).
-                   On each W(\<alpha>), angle interpolation image is in C(\<alpha>) avoiding q(\<alpha>),
-                   so in W(\<alpha>) \<subseteq> V_def.\<close>
+              proof (intro ballI)
+                fix xt assume hxt: "xt \<in> V_def \<times> I_set"
+                obtain x t where hxt_eq: "xt = (x, t)" and hx: "x \<in> V_def" and ht: "t \<in> I_set"
+                  using hxt by (by100 blast)
+                show "H_V xt \<in> V_def"
+                proof (cases "x \<in> ?Cn")
+                  case True
+                  have "H_V xt = x" unfolding hxt_eq using hH_V_Cn[OF True] by (by100 simp)
+                  thus ?thesis using True hCn_sub_Vd by (by100 blast)
+                next
+                  case False
+                  hence "x \<in> (\<Union>\<alpha>\<in>{..<(n-1)}. W \<alpha>)" using hx unfolding V_def_def by (by100 blast)
+                  then obtain \<alpha>0 where h\<alpha>0: "\<alpha>0 \<in> {..<(n-1)}" and hx\<alpha>0: "x \<in> W \<alpha>0" by (by100 blast)
+                  obtain \<alpha>' where h\<alpha>': "\<alpha>' \<in> {..<(n-1)}" and hx\<alpha>': "x \<in> W \<alpha>'"
+                      and hH_eq: "H_V (x, t) = h_fam \<alpha>' (top1_R_to_S1 ((1 - t) * angle_fam \<alpha>' x + t * \<theta>p_fam \<alpha>'))"
+                    using hH_V_W[OF False h\<alpha>0 hx\<alpha>0] by (by100 blast)
+                  have h\<alpha>'n: "\<alpha>' \<in> {..<n}" using h\<alpha>' hn2 by (by100 simp)
+                  \<comment> \<open>angle_fam \<alpha>' x is in (\<theta>q, \<theta>q+1).\<close>
+                  have h_angle_spec: "\<theta>q_fam \<alpha>' < angle_fam \<alpha>' x \<and> angle_fam \<alpha>' x < \<theta>q_fam \<alpha>' + 1"
+                    using hangle_fam_spec[OF h\<alpha>'n hx\<alpha>'] by (by100 blast)
+                  \<comment> \<open>\<theta>p_fam \<alpha>' is in (\<theta>q, \<theta>q+1).\<close>
+                  have h\<theta>p_range: "\<theta>q_fam \<alpha>' < \<theta>p_fam \<alpha>' \<and> \<theta>p_fam \<alpha>' < \<theta>q_fam \<alpha>' + 1"
+                    using hfam h\<alpha>'n by (by100 blast)
+                  \<comment> \<open>Convex combination stays in (\<theta>q, \<theta>q+1).\<close>
+                  have ht_range: "0 \<le> t \<and> t \<le> 1"
+                  proof -
+                    have "t \<in> {0..1::real}" using ht unfolding top1_unit_interval_def by (by100 simp)
+                    thus ?thesis by (by100 simp)
+                  qed
+                  have hconv: "\<theta>q_fam \<alpha>' < (1 - t) * angle_fam \<alpha>' x + t * \<theta>p_fam \<alpha>'
+                      \<and> (1 - t) * angle_fam \<alpha>' x + t * \<theta>p_fam \<alpha>' < \<theta>q_fam \<alpha>' + 1"
+                  proof (intro conjI)
+                    have h1t_nn: "(1-t) \<ge> 0" using ht_range by (by100 linarith)
+                    have ht_nn: "t \<ge> 0" using ht_range by (by100 linarith)
+                    have h1: "(1-t) * angle_fam \<alpha>' x \<ge> (1-t) * \<theta>q_fam \<alpha>'"
+                      using mult_left_mono[of "\<theta>q_fam \<alpha>'" "angle_fam \<alpha>' x" "1-t"]
+                        h_angle_spec h1t_nn by (by100 linarith)
+                    have h2: "t * \<theta>p_fam \<alpha>' \<ge> t * \<theta>q_fam \<alpha>'"
+                      using mult_left_mono[of "\<theta>q_fam \<alpha>'" "\<theta>p_fam \<alpha>'" t]
+                        h\<theta>p_range ht_nn by (by100 linarith)
+                    show "\<theta>q_fam \<alpha>' < (1 - t) * angle_fam \<alpha>' x + t * \<theta>p_fam \<alpha>'"
+                    proof (cases "t = 1")
+                      case True thus ?thesis using h\<theta>p_range by (by100 simp)
+                    next
+                      case False
+                      hence h1t_pos: "(1-t) > 0" using ht_range by (by100 linarith)
+                      have "(1-t) * \<theta>q_fam \<alpha>' < (1-t) * angle_fam \<alpha>' x"
+                        using mult_strict_left_mono[of "\<theta>q_fam \<alpha>'" "angle_fam \<alpha>' x" "1-t"]
+                          h_angle_spec h1t_pos by (by100 linarith)
+                      hence "(1-t) * \<theta>q_fam \<alpha>' + t * \<theta>q_fam \<alpha>'
+                          < (1-t) * angle_fam \<alpha>' x + t * \<theta>p_fam \<alpha>'"
+                        using h2 by (by100 linarith)
+                      moreover have "(1-t) * \<theta>q_fam \<alpha>' + t * \<theta>q_fam \<alpha>' = \<theta>q_fam \<alpha>'"
+                        by (simp add: algebra_simps)
+                      ultimately show ?thesis by (by100 linarith)
+                    qed
+                    show "(1 - t) * angle_fam \<alpha>' x + t * \<theta>p_fam \<alpha>' < \<theta>q_fam \<alpha>' + 1"
+                    proof -
+                      have h3: "(1 - t) * angle_fam \<alpha>' x \<le> (1 - t) * (\<theta>q_fam \<alpha>' + 1)"
+                        using mult_left_mono[of "angle_fam \<alpha>' x" "\<theta>q_fam \<alpha>' + 1" "1-t"]
+                          h_angle_spec h1t_nn by (by100 linarith)
+                      have h4: "t * \<theta>p_fam \<alpha>' \<le> t * (\<theta>q_fam \<alpha>' + 1)"
+                        using mult_left_mono[of "\<theta>p_fam \<alpha>'" "\<theta>q_fam \<alpha>' + 1" t]
+                          h\<theta>p_range ht_nn by (by100 linarith)
+                      have "(1-t) * angle_fam \<alpha>' x + t * \<theta>p_fam \<alpha>'
+                          \<le> (1-t) * (\<theta>q_fam \<alpha>' + 1) + t * (\<theta>q_fam \<alpha>' + 1)"
+                        using h3 h4 by (by100 linarith)
+                      moreover have "(1-t) * (\<theta>q_fam \<alpha>' + 1) + t * (\<theta>q_fam \<alpha>' + 1) = \<theta>q_fam \<alpha>' + 1"
+                        by (simp add: algebra_simps)
+                      ultimately have "(1-t) * angle_fam \<alpha>' x + t * \<theta>p_fam \<alpha>' \<le> \<theta>q_fam \<alpha>' + 1"
+                        by (by100 linarith)
+                      moreover have "(1-t) * angle_fam \<alpha>' x + t * \<theta>p_fam \<alpha>' \<noteq> \<theta>q_fam \<alpha>' + 1"
+                      proof (cases "t = 0")
+                        case True thus ?thesis using h_angle_spec by (by100 simp)
+                      next
+                        case False
+                        hence "t > 0" using ht_range by (by100 linarith)
+                        hence "t * \<theta>p_fam \<alpha>' < t * (\<theta>q_fam \<alpha>' + 1)"
+                          using mult_strict_left_mono[of "\<theta>p_fam \<alpha>'" "\<theta>q_fam \<alpha>' + 1" t]
+                            h\<theta>p_range by (by100 linarith)
+                        hence "(1-t) * angle_fam \<alpha>' x + t * \<theta>p_fam \<alpha>'
+                            < (1-t) * (\<theta>q_fam \<alpha>' + 1) + t * (\<theta>q_fam \<alpha>' + 1)"
+                          using h3 by (by100 linarith)
+                        moreover have "(1-t) * (\<theta>q_fam \<alpha>' + 1) + t * (\<theta>q_fam \<alpha>' + 1) = \<theta>q_fam \<alpha>' + 1"
+                          by (simp add: algebra_simps)
+                        ultimately show ?thesis by (by100 linarith)
+                      qed
+                      ultimately show ?thesis by (by100 linarith)
+                    qed
+                  qed
+                  \<comment> \<open>The interpolated angle is not \<theta>q_fam, so R_to_S1 of it is not q'.\<close>
+                  let ?\<theta>_interp = "(1 - t) * angle_fam \<alpha>' x + t * \<theta>p_fam \<alpha>'"
+                  have h\<theta>_neq_q: "top1_R_to_S1 ?\<theta>_interp \<noteq> inv_into top1_S1 (h_fam \<alpha>') (q \<alpha>')"
+                  proof
+                    assume heqq: "top1_R_to_S1 ?\<theta>_interp = inv_into top1_S1 (h_fam \<alpha>') (q \<alpha>')"
+                    have h\<theta>q_eq: "top1_R_to_S1 (\<theta>q_fam \<alpha>') = inv_into top1_S1 (h_fam \<alpha>') (q \<alpha>')"
+                      using hfam h\<alpha>'n by (by100 blast)
+                    hence "top1_R_to_S1 ?\<theta>_interp = top1_R_to_S1 (\<theta>q_fam \<alpha>')" using heqq by (by100 simp)
+                    hence "cos (2*pi*?\<theta>_interp) = cos (2*pi*\<theta>q_fam \<alpha>') \<and> sin (2*pi*?\<theta>_interp) = sin (2*pi*\<theta>q_fam \<alpha>')"
+                      unfolding top1_R_to_S1_def by (by100 simp)
+                    hence "sin (2*pi*?\<theta>_interp) = sin (2*pi*\<theta>q_fam \<alpha>') \<and> cos (2*pi*?\<theta>_interp) = cos (2*pi*\<theta>q_fam \<alpha>')"
+                      by (by100 blast)
+                    then obtain j :: int where hj: "2*pi*?\<theta>_interp = 2*pi*\<theta>q_fam \<alpha>' + 2*pi*of_int j"
+                      using iffD1[OF sin_cos_eq_iff] by (by100 blast)
+                    have "2*pi*(?\<theta>_interp - \<theta>q_fam \<alpha>') = 2*pi*of_int j"
+                      using hj by (simp only: right_diff_distrib)
+                    moreover have "pi \<noteq> 0" using pi_gt_zero by (by100 linarith)
+                    hence "2*pi \<noteq> 0" by (by100 linarith)
+                    ultimately have "?\<theta>_interp - \<theta>q_fam \<alpha>' = of_int j" by (by100 simp)
+                    moreover have "?\<theta>_interp - \<theta>q_fam \<alpha>' > 0 \<and> ?\<theta>_interp - \<theta>q_fam \<alpha>' < 1"
+                      using hconv by (by100 linarith)
+                    ultimately have hj_bounds: "of_int j > (0::real) \<and> of_int j < (1::real)" by (by100 linarith)
+                    hence "of_int j > (-1::real) \<and> of_int j < (1::real)" by (by100 linarith)
+                    hence "j = 0" by (by100 linarith)
+                    hence "of_int j = (0::real)" by (by100 simp)
+                    thus False using hj_bounds by (by100 linarith)
+                  qed
+                  \<comment> \<open>R_to_S1 of interp is in S1.\<close>
+                  have hinterp_S1: "top1_R_to_S1 ?\<theta>_interp \<in> top1_S1"
+                    unfolding top1_S1_def top1_R_to_S1_def by (by100 simp)
+                  \<comment> \<open>h_fam maps S1 to C(\<alpha>'), so h_fam(R_to_S1(interp)) \<in> C(\<alpha>').\<close>
+                  have hbij': "bij_betw (h_fam \<alpha>') top1_S1 (C \<alpha>')"
+                    using hfam h\<alpha>'n unfolding top1_homeomorphism_on_def by (by100 blast)
+                  have hresult_C: "h_fam \<alpha>' (top1_R_to_S1 ?\<theta>_interp) \<in> C \<alpha>'"
+                    using hbij' hinterp_S1 unfolding bij_betw_def by (by100 blast)
+                  \<comment> \<open>It's not q(\<alpha>').\<close>
+                  have hresult_neq_q: "h_fam \<alpha>' (top1_R_to_S1 ?\<theta>_interp) \<noteq> q \<alpha>'"
+                  proof
+                    assume "h_fam \<alpha>' (top1_R_to_S1 ?\<theta>_interp) = q \<alpha>'"
+                    have hq_in': "q \<alpha>' \<in> C \<alpha>'" using hq h\<alpha>'n by (by100 blast)
+                    have "inv_into top1_S1 (h_fam \<alpha>') (h_fam \<alpha>' (top1_R_to_S1 ?\<theta>_interp))
+                        = inv_into top1_S1 (h_fam \<alpha>') (q \<alpha>')"
+                      using \<open>h_fam \<alpha>' (top1_R_to_S1 ?\<theta>_interp) = q \<alpha>'\<close> by (by100 simp)
+                    moreover have "inv_into top1_S1 (h_fam \<alpha>') (h_fam \<alpha>' (top1_R_to_S1 ?\<theta>_interp))
+                        = top1_R_to_S1 ?\<theta>_interp"
+                      using bij_betw_inv_into_left[OF hbij' hinterp_S1] .
+                    ultimately have "top1_R_to_S1 ?\<theta>_interp = inv_into top1_S1 (h_fam \<alpha>') (q \<alpha>')"
+                      by (by100 simp)
+                    thus False using h\<theta>_neq_q by (by100 blast)
+                  qed
+                  \<comment> \<open>So h_fam(interp) \<in> W(\<alpha>') = C(\<alpha>') - {q(\<alpha>')}.\<close>
+                  have "h_fam \<alpha>' (top1_R_to_S1 ?\<theta>_interp) \<in> W \<alpha>'"
+                    using hresult_C hresult_neq_q unfolding W_def by (by100 blast)
+                  hence "H_V xt \<in> W \<alpha>'" unfolding hxt_eq using hH_eq by (by100 simp)
+                  moreover have "W \<alpha>' \<subseteq> V_def" unfolding V_def_def using h\<alpha>' by (by100 blast)
+                  ultimately show ?thesis by (by100 blast)
+                qed
+              qed
               \<comment> \<open>Step 7: H_V continuous on C(n-1) \<times> I_set (identity/projection).\<close>
               have hH_V_Cn: "top1_continuous_map_on (?Cn \<times> I_set)
                   (subspace_topology (V_def \<times> I_set) ?TVI (?Cn \<times> I_set))
@@ -5788,7 +6119,8 @@ proof -
         = mul (\<iota> 0) (mul (\<iota> 1) (mul (invg (\<iota> 0)) (invg (\<iota> 1))))"
       using hwp_unfold hid_inv1 by (by100 simp)
     moreover note \<open>top1_group_word_product mul e invg (map (\<lambda>(s,b). (\<iota> s, b)) ?ws) \<noteq> e\<close>
-    ultimately show False using hcomm by (by100 simp)
+    ultimately have "mul (\<iota> 0) (mul (\<iota> 1) (mul (invg (\<iota> 0)) (invg (\<iota> 1)))) \<noteq> e" by (by100 simp)
+    thus False using hcomm by (by100 blast)
   qed
   \<comment> \<open>Transfer via isomorphism: G non-abelian + G \<cong> \<pi>_1(X) \<Rightarrow> \<pi>_1(X) non-abelian.\<close>
   \<comment> \<open>Transfer: G non-abelian + G \<cong> \<pi>_1(X) \<Rightarrow> \<pi>_1(X) non-abelian.\<close>
@@ -6084,8 +6416,8 @@ proof (rule compactI)
   proof (rule compactE[OF assms(2) hB_cov])
     fix U assume "U \<in> \<U>" thus "open U" using hopen by (by100 blast)
   next
-    fix F' assume "F' \<subseteq> \<U>" "finite F'" "B \<subseteq> \<Union>F'"
-    thus thesis using that by (by100 blast)
+    fix F' assume hF'1: "F' \<subseteq> \<U>" and hF'2: "finite F'" and hF'3: "B \<subseteq> \<Union>F'"
+    show thesis by (rule that[OF hF'2 hF'1 hF'3])
   qed
   have "finite (FA \<union> FB)" using hFA(1) hFB(1) by (by100 blast)
   moreover have "FA \<union> FB \<subseteq> \<U>" using hFA(2) hFB(2) by (by100 blast)
@@ -7488,11 +7820,19 @@ proof (intro conjI)
     assume "\<exists>U V. U \<in> TX \<and> V \<in> TX \<and> U \<noteq> {} \<and> V \<noteq> {} \<and> U \<inter> V = {} \<and> U \<union> V = X"
     then obtain U0 V0 where hU0: "U0 \<in> TX" and hV0: "V0 \<in> TX" and hU0ne: "U0 \<noteq> {}"
         and hV0ne: "V0 \<noteq> {}" and hdisj: "U0 \<inter> V0 = {}" and hcover: "U0 \<union> V0 = X"
-      by (by100 blast)
+      by blast
     obtain a where ha: "a \<in> U0" using hU0ne by (by100 blast)
     obtain b where hb: "b \<in> V0" using hV0ne by (by100 blast)
-    have haX: "a \<in> X" using ha hcover by (by100 blast)
-    have hbX: "b \<in> X" using hb hcover by (by100 blast)
+    have haX: "a \<in> X"
+    proof -
+      have "a \<in> U0 \<union> V0" using ha by (by100 blast)
+      thus ?thesis using hcover by (by100 simp)
+    qed
+    have hbX: "b \<in> X"
+    proof -
+      have "b \<in> U0 \<union> V0" using hb by (by100 blast)
+      thus ?thesis using hcover by (by100 simp)
+    qed
     \<comment> \<open>Path from a to b (path-connected).\<close>
     obtain \<gamma> where h\<gamma>: "top1_is_path_on X TX a b \<gamma>"
       using assms haX hbX unfolding top1_path_connected_on_def by (by100 auto)
@@ -10540,7 +10880,7 @@ proof -
             and hg: "top1_loop_equiv_on B TB b0 (top1_constant_path b0) g"
             and hfg: "top1_loop_equiv_on B TB b0 (top1_path_product f g) h"
           unfolding top1_fundamental_group_mul_def top1_fundamental_group_id_def
-          by (by100 blast)
+          by (by100 fast)
         \<comment> \<open>const ≃ f and const ≃ g. So f*g ≃ const*const ≃ const.\<close>
         have hf_path: "top1_is_path_on B TB b0 b0 f"
           using hf unfolding top1_loop_equiv_on_def top1_is_loop_on_def by (by100 blast)
