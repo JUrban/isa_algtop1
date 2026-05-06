@@ -1690,11 +1690,49 @@ using assms proof (induction n arbitrary: X TX p rule: less_induct)
     have hpiU_free: "\<exists>(GU::int set) mulU eU invgU (\<iota>U::nat \<Rightarrow> int).
         top1_is_free_group_full_on GU mulU eU invgU \<iota>U {..<(n-1)}
       \<and> top1_groups_isomorphic_on GU mulU ?piU ?mulU"
-      sorry \<comment> \<open>Compose: G' \<cong> \<pi>_1(X') and \<pi>_1(U) \<cong> \<pi>_1(X') give G' \<cong> \<pi>_1(U).\<close>
+    proof -
+      \<comment> \<open>Get group axioms for \<pi>_1(X').\<close>
+      have hTX': "is_topology_on ?X' ?TX'"
+        by (rule subspace_topology_is_topology_on[OF hTX hX'_sub])
+      have hpiX'_grp: "top1_is_group_on
+          (top1_fundamental_group_carrier ?X' ?TX' p)
+          (top1_fundamental_group_mul ?X' ?TX' p)
+          (top1_fundamental_group_id ?X' ?TX' p)
+          (top1_fundamental_group_invg ?X' ?TX' p)"
+        by (rule top1_fundamental_group_is_group[OF hTX' hp_X'])
+      \<comment> \<open>Reverse hU_pi1: \<pi>_1(X') \<cong> \<pi>_1(U).\<close>
+      have hX'_iso_U: "top1_groups_isomorphic_on
+          (top1_fundamental_group_carrier ?X' ?TX' p)
+          (top1_fundamental_group_mul ?X' ?TX' p) ?piU ?mulU"
+        by (rule top1_groups_isomorphic_on_sym[OF hU_pi1 hpiU_grp hpiX'_grp])
+      \<comment> \<open>Compose: G' \<cong> \<pi>_1(X') \<cong> \<pi>_1(U).\<close>
+      have hG'_iso_U: "top1_groups_isomorphic_on G' mul' ?piU ?mulU"
+        by (rule groups_isomorphic_trans_fwd[OF hG'_iso hX'_iso_U])
+      thus ?thesis using hG'_free by (by100 blast)
+    qed
     have hpiV_free: "\<exists>(GV::int set) mulV eV invgV (\<iota>V::nat \<Rightarrow> int).
         top1_is_free_group_full_on GV mulV eV invgV \<iota>V {0::nat}
       \<and> top1_groups_isomorphic_on GV mulV ?piV ?mulV"
-      sorry \<comment> \<open>Compose: G2 \<cong> \<pi>_1(C(n-1)) and \<pi>_1(V) \<cong> \<pi>_1(C(n-1)) give G2 \<cong> \<pi>_1(V).\<close>
+    proof -
+      \<comment> \<open>Get group axioms for \<pi>_1(C(n-1)).\<close>
+      have hTCn': "is_topology_on ?Cn ?TCn"
+        by (rule subspace_topology_is_topology_on[OF hTX hCn_sub])
+      have hpiCn_grp: "top1_is_group_on
+          (top1_fundamental_group_carrier ?Cn ?TCn p)
+          (top1_fundamental_group_mul ?Cn ?TCn p)
+          (top1_fundamental_group_id ?Cn ?TCn p)
+          (top1_fundamental_group_invg ?Cn ?TCn p)"
+        by (rule top1_fundamental_group_is_group[OF hTCn' hp_Cn])
+      \<comment> \<open>Reverse hV_pi1: \<pi>_1(C(n-1)) \<cong> \<pi>_1(V).\<close>
+      have hCn_iso_V: "top1_groups_isomorphic_on
+          (top1_fundamental_group_carrier ?Cn ?TCn p)
+          (top1_fundamental_group_mul ?Cn ?TCn p) ?piV ?mulV"
+        by (rule top1_groups_isomorphic_on_sym[OF hV_pi1 hpiV_grp hpiCn_grp])
+      \<comment> \<open>Compose: G2 \<cong> \<pi>_1(C(n-1)) \<cong> \<pi>_1(V).\<close>
+      have hG2_iso_V: "top1_groups_isomorphic_on G2 mul2 ?piV ?mulV"
+        by (rule groups_isomorphic_trans_fwd[OF hG2_iso hCn_iso_V])
+      thus ?thesis using hG2_free by (by100 blast)
+    qed
     \<comment> \<open>Step 11: The free product of free groups is free (Theorem 69.2).
        free(n-1) * free(1) = free({..<n-1} \<union> {0}) where {0} is disjoint from {..<n-1}.
        Since we use shifted generators, the union gives {..<n}.\<close>
@@ -1707,11 +1745,15 @@ using assms proof (induction n arbitrary: X TX p rule: less_induct)
       \<and> top1_groups_isomorphic_on G mul
           (top1_fundamental_group_carrier X TX p)
           (top1_fundamental_group_mul X TX p)"
-      sorry \<comment> \<open>Compose all isomorphisms:
-         1. \<pi>_1(X) \<cong> FP(\<pi>_1(U), \<pi>_1(V))  [by Cor 70.3]
-         2. \<pi>_1(U) \<cong> free(n-1), \<pi>_1(V) \<cong> free(1)
-         3. FP(free(n-1), free(1)) is free on n generators  [by Thm 69.2]
-         4. Hence \<pi>_1(X) \<cong> free(n).\<close>
+      sorry \<comment> \<open>Needs two pieces of infrastructure not yet formalized:
+         (a) Free product functoriality: if G_i \<cong> H_i for i=0,1 and FP_G is a free product
+             of G_0, G_1, and FP_H is a free product of H_0, H_1, then FP_G \<cong> FP_H.
+             (This would follow from Theorem_68_4_free_product_unique if we could view
+             the isomorphic groups as the same factor groups.)
+         (b) Free group relabeling: Z (free on {0}) is also free on {n-1} (singleton relabel).
+         With (a) and (b): apply Theorem_69_2 to GU (free on {..<(n-1)}) and Z (free on {n-1}),
+         get FP' free on {..<n}. By (a), FP' \<cong> FP. By hSvK_iso, \<pi>_1(X) \<cong> FP.
+         By transitivity, \<pi>_1(X) \<cong> FP' which is free on {..<n}.\<close>
     show "\<exists>(G::int set) mul e invg (\<iota>::nat \<Rightarrow> int).
            top1_is_free_group_full_on G mul e invg \<iota> {..<n}
          \<and> top1_groups_isomorphic_on G mul
