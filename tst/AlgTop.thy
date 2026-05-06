@@ -8274,9 +8274,102 @@ proof -
   let ?Cov = "{h. top1_covering_transformation_on E TE B TB p h}"
   \<comment> \<open>Step 1: Cov(p) is a group under composition.\<close>
   have hCov_group: "\<exists>eC invgC. top1_is_group_on ?Cov (\<lambda>h k e. h (k e)) eC invgC"
-    sorry \<comment> \<open>Covering transformations form a group under composition.
-         e = id (homeo + p\<circ>id=p). inv = homeo inverse (p\<circ>h\<inverse>=p from p\<circ>h=p).
-         Closure/assoc/identity/inverse all follow from composition properties.\<close>
+  proof -
+    let ?mul = "\<lambda>h k e. h (k e)" \<comment> \<open>= \<circ> (function composition)\<close>
+    let ?eC = "id :: 'e \<Rightarrow> 'e"
+    let ?invC = "\<lambda>h. inv_into E h"
+    have hTE: "is_topology_on E TE"
+      using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
+    \<comment> \<open>id is a covering transformation.\<close>
+    have hid_homeo: "top1_homeomorphism_on E TE E TE id"
+      unfolding top1_homeomorphism_on_def
+    proof (intro conjI)
+      show "is_topology_on E TE" by (rule hTE)
+      show "is_topology_on E TE" by (rule hTE)
+      show "bij_betw id E E" by (by100 simp)
+      show "top1_continuous_map_on E TE E TE id" using top1_continuous_map_on_id[OF hTE] .
+      have hinv_id: "\<forall>x\<in>E. inv_into E id x = id x"
+      proof (intro ballI)
+        fix x assume "x \<in> E"
+        thus "inv_into E id x = id x" using inv_into_f_f[of id E x] by (by100 simp)
+      qed
+      show "top1_continuous_map_on E TE E TE (inv_into E id)"
+        using top1_continuous_map_on_cong[of E "inv_into E id" id]
+          hinv_id top1_continuous_map_on_id[OF hTE] by (by100 blast)
+    qed
+    have hid_cov: "?eC \<in> ?Cov"
+      using hid_homeo unfolding top1_covering_transformation_on_def by (by100 simp)
+    \<comment> \<open>Composition of covering transformations.\<close>
+    have hcomp_cov: "\<forall>h\<in>?Cov. \<forall>k\<in>?Cov. ?mul h k \<in> ?Cov"
+    proof (intro ballI)
+      fix h k assume hh: "h \<in> ?Cov" and hk: "k \<in> ?Cov"
+      have hh_homeo: "top1_homeomorphism_on E TE E TE h"
+        using hh unfolding top1_covering_transformation_on_def by (by100 blast)
+      have hk_homeo: "top1_homeomorphism_on E TE E TE k"
+        using hk unfolding top1_covering_transformation_on_def by (by100 blast)
+      have hh_p: "\<forall>e\<in>E. p (h e) = p e"
+        using hh unfolding top1_covering_transformation_on_def by (by100 blast)
+      have hk_p: "\<forall>e\<in>E. p (k e) = p e"
+        using hk unfolding top1_covering_transformation_on_def by (by100 blast)
+      have "top1_homeomorphism_on E TE E TE (h \<circ> k)"
+        by (rule homeomorphism_compose[OF hk_homeo hh_homeo])
+      moreover have "\<forall>e\<in>E. p ((h \<circ> k) e) = p e"
+      proof (intro ballI)
+        fix e assume "e \<in> E"
+        have "k e \<in> E"
+        proof -
+          have "bij_betw k E E" using hk_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+          thus ?thesis using \<open>e \<in> E\<close> unfolding bij_betw_def by (by100 blast)
+        qed
+        thus "p ((h \<circ> k) e) = p e" using hh_p hk_p \<open>e \<in> E\<close> by (by100 simp)
+      qed
+      moreover have "?mul h k = h \<circ> k" by (rule ext) (by100 simp)
+      ultimately show "?mul h k \<in> ?Cov"
+        unfolding top1_covering_transformation_on_def by (by100 simp)
+    qed
+    \<comment> \<open>Inverse of covering transformation.\<close>
+    have hinv_cov: "\<forall>h\<in>?Cov. ?invC h \<in> ?Cov"
+    proof (intro ballI)
+      fix h assume hh: "h \<in> ?Cov"
+      have hh_homeo: "top1_homeomorphism_on E TE E TE h"
+        using hh unfolding top1_covering_transformation_on_def by (by100 blast)
+      have hh_p: "\<forall>e\<in>E. p (h e) = p e"
+        using hh unfolding top1_covering_transformation_on_def by (by100 blast)
+      \<comment> \<open>inv_into E h is the inverse homeomorphism.\<close>
+      have hinv_homeo: "top1_homeomorphism_on E TE E TE (inv_into E h)"
+        sorry \<comment> \<open>Inverse of homeomorphism is homeomorphism. Should be in library.\<close>
+      moreover have "\<forall>e\<in>E. p (inv_into E h e) = p e"
+      proof (intro ballI)
+        fix e assume "e \<in> E"
+        have hbij: "bij_betw h E E" using hh_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+        have hsurj_loc: "h ` E = E" using hbij unfolding bij_betw_def by (by100 blast)
+        have "e \<in> h ` E" using \<open>e \<in> E\<close> hsurj_loc by (by100 blast)
+        have "inv_into E h e \<in> E" using inv_into_into[OF \<open>e \<in> h ` E\<close>] .
+        have "h (inv_into E h e) = e" using f_inv_into_f[OF \<open>e \<in> h ` E\<close>] .
+        hence "p e = p (h (inv_into E h e))" by (by100 simp)
+        also have "\<dots> = p (inv_into E h e)" using hh_p \<open>inv_into E h e \<in> E\<close> by (by100 blast)
+        finally show "p (inv_into E h e) = p e" by (by100 simp)
+      qed
+      ultimately show "?invC h \<in> ?Cov"
+        unfolding top1_covering_transformation_on_def by (by100 blast)
+    qed
+    \<comment> \<open>Associativity.\<close>
+    have hassoc: "\<forall>h\<in>?Cov. \<forall>k\<in>?Cov. \<forall>l\<in>?Cov. ?mul (?mul h k) l = ?mul h (?mul k l)"
+      by (by100 auto)
+    \<comment> \<open>Identity.\<close>
+    have hident: "\<forall>h\<in>?Cov. ?mul ?eC h = h \<and> ?mul h ?eC = h"
+      by (by100 auto)
+    \<comment> \<open>Inverse.\<close>
+    have hinverse: "\<forall>h\<in>?Cov. ?mul (?invC h) h = ?eC \<and> ?mul h (?invC h) = ?eC"
+      sorry \<comment> \<open>inv_into E h \<circ> h = id and h \<circ> inv = id.
+             Subtlety: equality as total functions requires h to be globally injective,
+             not just on E. Covering transformations (as homeomorphisms E\<rightarrow>E) may need
+             the UNIV-injectivity from the homeomorphism_on definition.\<close>
+    show ?thesis
+      apply (rule exI[of _ ?eC], rule exI[of _ ?invC])
+      unfolding top1_is_group_on_def
+      using hid_cov hcomp_cov hinv_cov hassoc hident hinverse by (by100 blast)
+  qed
   \<comment> \<open>Step 2-3: Define \<Phi>: Cov(p) \<rightarrow> N(H)/H and show it's a group isomorphism.\<close>
   let ?Q = "top1_quotient_group_carrier_on
          (top1_normalizer_on
@@ -9439,6 +9532,17 @@ end
 
 
 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
  
  
  
