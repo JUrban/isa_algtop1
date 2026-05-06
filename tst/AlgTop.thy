@@ -1769,10 +1769,91 @@ proof -
       \<comment> \<open>Continuity on CU \<times> I: H_U = h((1-t)*y + t*y/|y|) via quotient descent.\<close>
       have hH_cont_CU: "top1_continuous_map_on (?CU \<times> I_set)
           (product_topology_on (subspace_topology ?U ?TU ?CU) I_top) ?U ?TU H_U"
-        sorry \<comment> \<open>Quotient descent: h: B2 \<rightarrow> C is quotient map (compact to Hausdorff).
-           Radial retraction g(y,t) = h((1-t)y + t*y/|y|) is continuous on (B2-{0}) \<times> I.
-           g respects h-fibers. By Theorem_22_2, g descends to continuous H_C on CU \<times> I.
-           H_U agrees with H_C on CU.\<close>
+      proof -
+        let ?D = "top1_B2 - top1_S1"
+        let ?D0 = "top1_B2 - top1_S1 - {(0::real, 0::real)}"
+        let ?TD0 = "subspace_topology top1_B2 top1_B2_topology ?D0"
+        \<comment> \<open>g(y,t) = h((1-t)*y + t*y/|y|) is the radial interpolation on D0 \<times> I.\<close>
+        let ?g = "\<lambda>(y, t). h ((1 - t) * fst y + t * fst y / ?norm y,
+                              (1 - t) * snd y + t * snd y / ?norm y)"
+        \<comment> \<open>Step 1: g is continuous on D0 \<times> I.\<close>
+        have hg_cont: "top1_continuous_map_on (?D0 \<times> I_set)
+            (product_topology_on ?TD0 I_top) X TX ?g"
+          sorry \<comment> \<open>Composition: radial interpolation is continuous (no division by zero
+                   since D0 avoids origin), then compose with h continuous.\<close>
+        \<comment> \<open>Step 2: h restricts to a quotient map D0 \<rightarrow> CU (= h(D0)).\<close>
+        let ?B2_0 = "top1_B2 - {(0::real, 0::real)}"
+        have hCU_eq: "?CU = h ` ?B2_0"
+        proof -
+          have hS1_sub_B2: "top1_S1 \<subseteq> top1_B2" unfolding top1_S1_def top1_B2_def by (by100 auto)
+          have "h ` top1_B2 = h ` (top1_B2 - top1_S1) \<union> h ` top1_S1"
+            using hS1_sub_B2 by (by100 auto)
+          also have "\<dots> = (X - A) \<union> h ` top1_S1" using hsurj_D by (by100 simp)
+          finally have hC_eq: "h ` top1_B2 = (X - A) \<union> h ` top1_S1" .
+          \<comment> \<open>Only (0,0) in B2 maps to x0 (h injective on Int, h(S1)\<subseteq>A but x0\<notin>A).\<close>
+          have h_preimg_x0: "h -` {?x0} \<inter> top1_B2 = {(0, 0)}"
+          proof (rule set_eqI, rule iffI)
+            fix y assume "y \<in> h -` {?x0} \<inter> top1_B2"
+            hence hy_B2: "y \<in> top1_B2" and hy_eq: "h y = ?x0" by (by100 auto)+
+            show "y \<in> {(0, 0)}"
+            proof (cases "y \<in> top1_S1")
+              case True
+              hence "h y \<in> A" using assms(8) by (by100 blast)
+              hence "?x0 \<in> A" using hy_eq by (by100 simp)
+              thus ?thesis using hx0_notin_A by (by100 blast)
+            next
+              case False
+              hence hy_D: "y \<in> top1_B2 - top1_S1" using hy_B2 by (by100 blast)
+              hence "y = (0, 0)"
+                using inj_on_eq_iff[OF hinj_D hy_D h00_intB2] hy_eq by (by100 simp)
+              thus ?thesis by (by100 simp)
+            qed
+          next
+            fix y assume "y \<in> {(0::real, 0::real)}"
+            thus "y \<in> h -` {?x0} \<inter> top1_B2" using h00_B2 by (by100 simp)
+          qed
+          show ?thesis
+          proof (rule set_eqI, rule iffI)
+            fix x assume "x \<in> ?CU"
+            hence hxC: "x \<in> h ` top1_B2" and hxU: "x \<in> ?U" by (by100 auto)+
+            then obtain y where hy: "y \<in> top1_B2" "h y = x" by (by100 blast)
+            have "y \<noteq> (0, 0)" using hy hxU by (by100 auto)
+            hence "y \<in> ?B2_0" using hy(1) by (by100 blast)
+            thus "x \<in> h ` ?B2_0" using hy(2) by (by100 blast)
+          next
+            fix x assume "x \<in> h ` ?B2_0"
+            then obtain y where hy: "y \<in> ?B2_0" "h y = x" by (by100 blast)
+            have "y \<in> top1_B2" using hy(1) by (by100 blast)
+            hence "x \<in> h ` top1_B2" using hy(2) by (by100 blast)
+            moreover have "x \<noteq> ?x0"
+            proof
+              assume "x = ?x0"
+              hence "h y = ?x0" using hy(2) by (by100 simp)
+              hence "y \<in> h -` {?x0} \<inter> top1_B2" using \<open>y \<in> top1_B2\<close> by (by100 blast)
+              hence "y = (0, 0)" using h_preimg_x0 by (by100 blast)
+              thus False using hy(1) by (by100 blast)
+            qed
+            moreover have "x \<in> X"
+              using continuous_map_maps_to[OF assms(5) \<open>y \<in> top1_B2\<close>] hy(2) by (by100 simp)
+            ultimately show "x \<in> ?CU" by (by100 blast)
+          qed
+        qed
+        have hh_quot_D0: "top1_quotient_map_on ?D0 ?TD0 ?CU (subspace_topology ?U ?TU ?CU) h"
+          sorry \<comment> \<open>h is injective on D, hence on D0; injective continuous from compact-ish to
+                   Hausdorff is embedding; embedding restricts to quotient map on image.\<close>
+        \<comment> \<open>Step 3: g respects h-fibers on D0 (h injective on D0, so trivially).\<close>
+        have hinj_D0: "inj_on h ?D0"
+          using hinj_D by (rule inj_on_subset) (by100 blast)
+        have hg_fiber: "\<forall>y1\<in>?D0. \<forall>y2\<in>?D0. h y1 = h y2 \<longrightarrow> (\<forall>t\<in>I_set. ?g (y1, t) = ?g (y2, t))"
+        proof (intro ballI impI)
+          fix y1 y2 t assume hy1: "y1 \<in> ?D0" and hy2: "y2 \<in> ?D0"
+            and heq: "h y1 = h y2" and ht: "t \<in> I_set"
+          have "y1 = y2" using inj_onD[OF hinj_D0 heq hy1 hy2] .
+          thus "?g (y1, t) = ?g (y2, t)" by (by100 simp)
+        qed
+        \<comment> \<open>Step 4: By Theorem_22_2 (universal property), g descends to continuous H_U on CU \<times> I.\<close>
+        show ?thesis sorry \<comment> \<open>Apply Theorem_22_2 to get descent, then verify H_U = descended map.\<close>
+      qed
       \<comment> \<open>Paste via pasting_lemma_two_closed.\<close>
       \<comment> \<open>Paste: A \<times> I and CU \<times> I are closed in U \<times> I, cover U \<times> I, H_U continuous on each.\<close>
       show ?thesis
@@ -1850,10 +1931,164 @@ proof -
                 thus False using \<open>fst xt \<in> ?U\<close> by (by100 blast)
               qed
               \<comment> \<open>H_U(xt) = h(interpolation). Show this is in h(B2) and \<noteq> x0.\<close>
+              let ?y = "?hinv (fst xt)" and ?t = "snd xt"
+              let ?n = "?norm ?y"
+              let ?interp = "((1 - ?t) * fst ?y + ?t * fst ?y / ?n,
+                              (1 - ?t) * snd ?y + ?t * snd ?y / ?n)"
+              have hHU_val: "H_U xt = h ?interp"
+                unfolding H_U_def Let_def using False by (cases xt) (by100 simp)
+              have hinterp_B2: "?interp \<in> top1_B2"
+              proof -
+                have hy_B2: "?y \<in> top1_B2" using hinv_D by (by100 blast)
+                have ht0: "0 \<le> ?t" and ht1: "?t \<le> 1"
+                  using ht_I unfolding top1_unit_interval_def by (by100 simp)+
+                define yf where "yf = fst ?y"
+                define ys where "ys = snd ?y"
+                define nn where "nn = ?n"
+                \<comment> \<open>Show y/|y| \<in> B2 (norm = 1)\<close>
+                have hsum_pos: "yf ^ 2 + ys ^ 2 > 0"
+                proof -
+                  have "yf \<noteq> 0 \<or> ys \<noteq> 0"
+                    using hinv_ne0 unfolding yf_def ys_def by (cases "?y") (by100 simp)
+                  hence "yf ^ 2 > 0 \<or> ys ^ 2 > 0" by (by100 auto)
+                  moreover have "yf ^ 2 \<ge> 0" "ys ^ 2 \<ge> 0" by (by100 simp)+
+                  ultimately show ?thesis by (by100 linarith)
+                qed
+                have hnn_eq: "nn = sqrt (yf ^ 2 + ys ^ 2)" unfolding nn_def yf_def ys_def by (by100 simp)
+                have hn_pos: "nn > 0" using hsum_pos unfolding hnn_eq by (by100 simp)
+                have hnn2: "nn ^ 2 = yf ^ 2 + ys ^ 2"
+                  using hsum_pos unfolding hnn_eq by (rule real_sqrt_pow2[OF order_less_imp_le])
+                have hnn_ne0: "nn \<noteq> 0" using hn_pos by (by100 simp)
+                have hq_norm: "(yf / nn) ^ 2 + (ys / nn) ^ 2 = 1"
+                proof -
+                  have "yf ^ 2 / nn ^ 2 + ys ^ 2 / nn ^ 2 = (yf ^ 2 + ys ^ 2) / nn ^ 2"
+                    by (rule add_divide_distrib[symmetric])
+                  also have "\<dots> = nn ^ 2 / nn ^ 2" using hnn2 by (by100 simp)
+                  also have "\<dots> = 1" using hnn_ne0 by (by100 simp)
+                  finally have "yf ^ 2 / nn ^ 2 + ys ^ 2 / nn ^ 2 = 1" .
+                  moreover have "(yf / nn) ^ 2 = yf ^ 2 / nn ^ 2" by (rule power_divide)
+                  moreover have "(ys / nn) ^ 2 = ys ^ 2 / nn ^ 2" by (rule power_divide)
+                  ultimately show ?thesis by (by100 simp)
+                qed
+                \<comment> \<open>y/|y| \<in> S1 \<subseteq> B2.\<close>
+                have hq_B2: "(yf / nn, ys / nn) \<in> top1_B2"
+                  using hq_norm unfolding top1_B2_def by (by100 simp)
+                \<comment> \<open>Transfer to ?q via unfolding.\<close>
+                let ?q = "(fst ?y / ?n, snd ?y / ?n)"
+                have "?q = (yf / nn, ys / nn)"
+                  unfolding yf_def ys_def nn_def by (by100 simp)
+                hence hq_B2': "?q \<in> top1_B2" using hq_B2 by (by100 simp)
+                \<comment> \<open>interp is convex combination of y and q, which are both in B2.\<close>
+                have heq_interp: "?interp = ((1 - ?t) * fst ?y + ?t * fst ?q,
+                                              (1 - ?t) * snd ?y + ?t * snd ?q)"
+                  by (by100 simp)
+                show ?thesis unfolding heq_interp
+                  using top1_B2_convex[OF hy_B2 hq_B2' ht0 ht1] .
+              qed
               have "H_U xt \<in> h ` top1_B2"
-                sorry \<comment> \<open>Interpolation stays in B2: convex combination of y\<in>B2 and y/|y|\<in>S1\<subseteq>B2.\<close>
+                using hHU_val hinterp_B2 by (by100 blast)
               moreover have "H_U xt \<noteq> ?x0"
-                sorry \<comment> \<open>h injective on Int B2 and interpolation \<noteq> (0,0).\<close>
+              proof -
+                have hinterp_ne0: "?interp \<noteq> (0, 0)"
+                proof
+                  assume h0: "?interp = (0, 0)"
+                  define yf where "yf = fst ?y"
+                  define ys where "ys = snd ?y"
+                  define nn where "nn = ?n"
+                  have hyf_ne: "yf \<noteq> 0 \<or> ys \<noteq> 0"
+                    using hinv_ne0 unfolding yf_def ys_def by (cases "?y") (by100 simp)
+                  have hsum_pos: "yf ^ 2 + ys ^ 2 > 0"
+                  proof -
+                    have "yf ^ 2 > 0 \<or> ys ^ 2 > 0" using hyf_ne by (by100 auto)
+                    moreover have "yf ^ 2 \<ge> 0" "ys ^ 2 \<ge> 0" by (by100 simp)+
+                    ultimately show ?thesis by (by100 linarith)
+                  qed
+                  have hnn_eq: "nn = sqrt (yf ^ 2 + ys ^ 2)"
+                    unfolding nn_def yf_def ys_def by (by100 simp)
+                  have hn_pos: "nn > 0" using hsum_pos unfolding hnn_eq by (by100 simp)
+                  have hnn_ne0: "nn \<noteq> 0" using hn_pos by (by100 simp)
+                  have ht0: "0 \<le> ?t" and ht1: "?t \<le> 1"
+                    using ht_I unfolding top1_unit_interval_def by (by100 simp)+
+                  \<comment> \<open>From ?interp = 0, extract component equations.\<close>
+                  have hfst0: "(1 - ?t) * yf + ?t * yf / nn = 0"
+                  proof -
+                    have "fst ?interp = (1 - ?t) * yf + ?t * yf / nn"
+                      unfolding yf_def nn_def by (by100 simp)
+                    moreover have "fst ?interp = 0" using h0 by (by100 simp)
+                    ultimately show ?thesis by (by100 simp)
+                  qed
+                  have hsnd0: "(1 - ?t) * ys + ?t * ys / nn = 0"
+                  proof -
+                    have "snd ?interp = (1 - ?t) * ys + ?t * ys / nn"
+                      unfolding ys_def nn_def by (by100 simp)
+                    moreover have "snd ?interp = 0" using h0 by (by100 simp)
+                    ultimately show ?thesis by (by100 simp)
+                  qed
+                  \<comment> \<open>Clear division via distrib_left + cancel to get ring form.\<close>
+                  have h_cancel_yf: "nn * (?t * yf / nn) = ?t * yf"
+                    using hnn_ne0 by (by100 simp)
+                  have h_distrib_yf: "nn * ((1 - ?t) * yf + ?t * yf / nn) =
+                                      nn * ((1 - ?t) * yf) + nn * (?t * yf / nn)"
+                    by (rule distrib_left)
+                  have h_assoc_yf: "nn * ((1 - ?t) * yf) = (1 - ?t) * nn * yf" by (by100 simp)
+                  have h_ring_yf: "(1 - ?t) * nn * yf + ?t * yf = 0"
+                  proof -
+                    have "nn * ((1 - ?t) * yf + ?t * yf / nn) = (1 - ?t) * nn * yf + ?t * yf"
+                      using h_distrib_yf h_cancel_yf h_assoc_yf by (by100 simp)
+                    thus ?thesis using hfst0 by (by100 simp)
+                  qed
+                  have h_factor_yf: "(1 - ?t) * nn * yf + ?t * yf = ((1 - ?t) * nn + ?t) * yf"
+                    by (rule distrib_right[symmetric])
+                  have h_yf: "((1 - ?t) * nn + ?t) * yf = 0"
+                    using h_ring_yf h_factor_yf by (by100 simp)
+                  have h_cancel_ys: "nn * (?t * ys / nn) = ?t * ys"
+                    using hnn_ne0 by (by100 simp)
+                  have h_distrib_ys: "nn * ((1 - ?t) * ys + ?t * ys / nn) =
+                                      nn * ((1 - ?t) * ys) + nn * (?t * ys / nn)"
+                    by (rule distrib_left)
+                  have h_assoc_ys: "nn * ((1 - ?t) * ys) = (1 - ?t) * nn * ys" by (by100 simp)
+                  have h_ring_ys: "(1 - ?t) * nn * ys + ?t * ys = 0"
+                  proof -
+                    have "nn * ((1 - ?t) * ys + ?t * ys / nn) = (1 - ?t) * nn * ys + ?t * ys"
+                      using h_distrib_ys h_cancel_ys h_assoc_ys by (by100 simp)
+                    thus ?thesis using hsnd0 by (by100 simp)
+                  qed
+                  have h_factor_ys: "(1 - ?t) * nn * ys + ?t * ys = ((1 - ?t) * nn + ?t) * ys"
+                    by (rule distrib_right[symmetric])
+                  have h_ys: "((1 - ?t) * nn + ?t) * ys = 0"
+                    using h_ring_ys h_factor_ys by (by100 simp)
+                  have hcoeff_pos: "(1 - ?t) * nn + ?t > 0"
+                  proof -
+                    have "(1 - ?t) * nn \<ge> 0" using ht1 hn_pos by (by100 simp)
+                    moreover have "?t \<ge> 0" using ht0 .
+                    moreover have "(1 - ?t) * nn > 0 \<or> ?t > 0"
+                    proof (cases "?t = 0")
+                      case True thus ?thesis using hn_pos by (by100 simp)
+                    next
+                      case False thus ?thesis using ht0 by (by100 linarith)
+                    qed
+                    ultimately show ?thesis by (by100 linarith)
+                  qed
+                  have "yf = 0" using h_yf hcoeff_pos by (by100 simp)
+                  moreover have "ys = 0" using h_ys hcoeff_pos by (by100 simp)
+                  ultimately show False using hyf_ne by (by100 simp)
+                qed
+                show ?thesis
+                proof (cases "?interp \<in> ?D")
+                  case True \<comment> \<open>interp in Int B2: h injective, interp \<noteq> 0, so h(interp) \<noteq> h(0).\<close>
+                  have "?interp \<noteq> (0::real, 0::real)" using hinterp_ne0 .
+                  hence "h ?interp \<noteq> h (0, 0)"
+                    using inj_on_eq_iff[OF hinj_D True h00_intB2] by (by100 simp)
+                  thus ?thesis using hHU_val by (by100 simp)
+                next
+                  case False \<comment> \<open>interp on S1: h(interp) \<in> h(S1) \<subseteq> A, but x0 \<notin> A.\<close>
+                  hence "?interp \<in> top1_S1" using hinterp_B2 by (by100 blast)
+                  hence "h ?interp \<in> A" using assms(8) by (by100 blast)
+                  hence "H_U xt \<in> A" using hHU_val by (by100 simp)
+                  moreover have "h (0::real, 0::real) \<notin> A" using hx0_notin_A by (by100 simp)
+                  ultimately show ?thesis by (by100 metis)
+                qed
+              qed
               moreover have "h ` top1_B2 \<subseteq> X"
                 using assms(5) unfolding top1_continuous_map_on_def by (by100 blast)
               ultimately have "H_U xt \<in> X \<and> H_U xt \<noteq> ?x0" by (by100 blast)
@@ -1937,7 +2172,70 @@ proof -
       obtain fA where hfA: "top1_is_path_on A (subspace_topology ?U ?TU A) (H(x,1)) (H(y,1)) fA"
         using hA_pc_U hx1 hy1 unfolding top1_path_connected_on_def by (by100 blast)
       \<comment> \<open>Paths via H: t \<mapsto> H(x, 1-t) from H(x,1) to x, and t \<mapsto> H(y, t) from y to H(y,1).\<close>
-      show "\<exists>f. top1_is_path_on ?U ?TU x y f" sorry
+      show "\<exists>f. top1_is_path_on ?U ?TU x y f"
+      proof -
+        \<comment> \<open>Path p1: x to H(x,1) via t \<mapsto> H(x,t).\<close>
+        have p1: "top1_is_path_on ?U ?TU x (H(x,1)) (\<lambda>t. H(x,t))"
+          unfolding top1_is_path_on_def
+        proof (intro conjI)
+          have hTI: "is_topology_on I_set I_top"
+            by (rule top1_unit_interval_topology_is_topology_on)
+          let ?g = "\<lambda>t. (x, t)"
+          have "(\<lambda>t. H(x,t)) = H \<circ> ?g" by (by100 auto)
+          moreover have "top1_continuous_map_on I_set I_top (?U \<times> I_set) (product_topology_on ?TU I_top) ?g"
+          proof (rule iffD2[OF Theorem_18_4[OF hTI hTopU hTI]], intro conjI)
+            have hpi1: "pi1 \<circ> ?g = top1_constant_path x" unfolding pi1_def top1_constant_path_def by (by100 auto)
+            show "top1_continuous_map_on I_set I_top ?U ?TU (pi1 \<circ> ?g)"
+              unfolding hpi1 using top1_constant_path_continuous[OF hTopU hx] .
+          next
+            have hpi2: "pi2 \<circ> ?g = id" unfolding pi2_def by (by100 auto)
+            show "top1_continuous_map_on I_set I_top I_set I_top (pi2 \<circ> ?g)"
+              unfolding hpi2 using top1_continuous_map_on_id[OF hTI] .
+          qed
+          ultimately show "top1_continuous_map_on I_set I_top ?U ?TU (\<lambda>t. H(x,t))"
+            using top1_continuous_map_on_comp[of I_set I_top "?U \<times> I_set" "product_topology_on ?TU I_top"
+                    ?g ?U ?TU H] hH by (by100 simp)
+          show "(\<lambda>t. H (x, t)) 0 = x" using hH0 hx by (by100 blast)
+          show "(\<lambda>t. H (x, t)) 1 = H (x, 1)" by (by100 simp)
+        qed
+        \<comment> \<open>Lift fA from A to U.\<close>
+        have fA_U: "top1_is_path_on ?U ?TU (H(x,1)) (H(y,1)) fA"
+          using hfA path_in_subspace_is_path_in_ambient[OF hTopU \<open>A \<subseteq> ?U\<close>]
+          by (by100 blast)
+        \<comment> \<open>Path p3: H(y,1) to y via t \<mapsto> H(y,1-t).\<close>
+        have p3: "top1_is_path_on ?U ?TU (H(y,1)) y (\<lambda>t. H(y, 1-t))"
+        proof -
+          have hTI: "is_topology_on I_set I_top"
+            by (rule top1_unit_interval_topology_is_topology_on)
+          let ?gy = "\<lambda>t. (y, t)"
+          have hgy_cont: "top1_continuous_map_on I_set I_top (?U \<times> I_set) (product_topology_on ?TU I_top) ?gy"
+          proof (rule iffD2[OF Theorem_18_4[OF hTI hTopU hTI]], intro conjI)
+            have hpi1: "pi1 \<circ> ?gy = top1_constant_path y" unfolding pi1_def top1_constant_path_def by (by100 auto)
+            show "top1_continuous_map_on I_set I_top ?U ?TU (pi1 \<circ> ?gy)"
+              unfolding hpi1 using top1_constant_path_continuous[OF hTopU hy] .
+          next
+            have hpi2: "pi2 \<circ> ?gy = id" unfolding pi2_def by (by100 auto)
+            show "top1_continuous_map_on I_set I_top I_set I_top (pi2 \<circ> ?gy)"
+              unfolding hpi2 using top1_continuous_map_on_id[OF hTI] .
+          qed
+          have hcomp: "(\<lambda>t. H(y,t)) = H \<circ> ?gy" by (by100 auto)
+          have py: "top1_is_path_on ?U ?TU y (H(y,1)) (\<lambda>t. H(y,t))"
+            unfolding top1_is_path_on_def
+          proof (intro conjI)
+            show "top1_continuous_map_on I_set I_top ?U ?TU (\<lambda>t. H(y,t))"
+              unfolding hcomp using top1_continuous_map_on_comp[OF hgy_cont hH] .
+            show "(\<lambda>t. H (y, t)) 0 = y" using hH0 hy by (by100 blast)
+            show "(\<lambda>t. H (y, t)) 1 = H (y, 1)" by (by100 simp)
+          qed
+          show ?thesis using top1_is_path_on_reverse[OF hTopU py] by (by100 simp)
+        qed
+        \<comment> \<open>Concatenate p1 * fA * p3.\<close>
+        have "top1_is_path_on ?U ?TU x y
+          (top1_path_product (\<lambda>t. H(x,t)) (top1_path_product fA (\<lambda>t. H(y, 1-t))))"
+          using top1_path_product_is_path[OF hTopU p1
+                  top1_path_product_is_path[OF hTopU fA_U p3]] .
+        thus ?thesis by (by100 blast)
+      qed
     qed
   qed
 
