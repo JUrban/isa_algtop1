@@ -428,6 +428,15 @@ proof -
   show ?thesis unfolding top1_path_connected_on_def using hTD hpath by (by100 blast)
 qed
 
+text \<open>Punctured open disk Int B2 - {0} is path-connected.
+  Strategy: connect every point to (1/2, 0) via at most two straight-line segments,
+  all staying in Int(B2)\{0}.\<close>
+
+lemma punctured_open_disk_path_connected:
+  "top1_path_connected_on (top1_B2 - top1_S1 - {(0::real, 0::real)})
+     (subspace_topology top1_B2 top1_B2_topology (top1_B2 - top1_S1 - {(0, 0)}))"
+  sorry
+
 lemma open_disk_simply_connected:
   "top1_simply_connected_on (top1_B2 - top1_S1)
      (subspace_topology top1_B2 top1_B2_topology (top1_B2 - top1_S1))"
@@ -622,6 +631,50 @@ qed
 
 text \<open>Homeomorphism preserves simply-connected: if h: A \<rightarrow> B is a homeomorphism
   and A is simply connected, then B is simply connected.\<close>
+
+lemma homeomorphism_preserves_path_connected:
+  assumes hhomeo: "top1_homeomorphism_on A TA B TB h"
+      and hpc: "top1_path_connected_on A TA"
+  shows "top1_path_connected_on B TB"
+proof -
+  have hTA: "is_topology_on A TA"
+    using hhomeo unfolding top1_homeomorphism_on_def by (by100 blast)
+  have hTB: "is_topology_on B TB"
+    using hhomeo unfolding top1_homeomorphism_on_def by (by100 blast)
+  have hbij: "bij_betw h A B"
+    using hhomeo unfolding top1_homeomorphism_on_def by (by100 blast)
+  have hh_cont: "top1_continuous_map_on A TA B TB h"
+    using hhomeo unfolding top1_homeomorphism_on_def by (by100 blast)
+  have hh_surj: "h ` A = B"
+    using hbij unfolding bij_betw_def by (by100 blast)
+  have hhinv_cont: "top1_continuous_map_on B TB A TA (inv_into A h)"
+    using hhomeo unfolding top1_homeomorphism_on_def by (by100 blast)
+  have paths: "\<forall>x\<in>B. \<forall>y\<in>B. \<exists>f. top1_is_path_on B TB x y f"
+  proof (intro ballI)
+    fix x y assume hx: "x \<in> B" and hy: "y \<in> B"
+    have hx': "inv_into A h x \<in> A"
+      using inv_into_into[of x h A] hx hh_surj by (by100 blast)
+    have hy': "inv_into A h y \<in> A"
+      using inv_into_into[of y h A] hy hh_surj by (by100 blast)
+    obtain f where hf: "top1_is_path_on A TA (inv_into A h x) (inv_into A h y) f"
+      using hpc hx' hy' unfolding top1_path_connected_on_def by (by100 blast)
+    have hf_cont: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology A TA f"
+      using hf unfolding top1_is_path_on_def by (by100 blast)
+    have hf0: "f 0 = inv_into A h x" and hf1: "f 1 = inv_into A h y"
+      using hf unfolding top1_is_path_on_def by (by100 blast)+
+    \<comment> \<open>h \<circ> f is a path from x to y in B.\<close>
+    have hhf_cont: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology B TB (h \<circ> f)"
+      by (rule top1_continuous_map_on_comp[OF hf_cont hh_cont])
+    have hhf0: "(h \<circ> f) 0 = x"
+      using hf0 f_inv_into_f[of x h A] hx hh_surj by (by100 simp)
+    have hhf1: "(h \<circ> f) 1 = y"
+      using hf1 f_inv_into_f[of y h A] hy hh_surj by (by100 simp)
+    have "top1_is_path_on B TB x y (h \<circ> f)"
+      unfolding top1_is_path_on_def using hhf_cont hhf0 hhf1 by (by100 blast)
+    thus "\<exists>f. top1_is_path_on B TB x y f" by (by100 blast)
+  qed
+  show ?thesis unfolding top1_path_connected_on_def using hTB paths by (by100 blast)
+qed
 
 lemma homeomorphism_preserves_simply_connected:
   assumes hhomeo: "top1_homeomorphism_on A TA B TB h"
@@ -894,11 +947,18 @@ proof -
 
   \<comment> \<open>--- Step 2e: U is path connected ---\<close>
   have hU_pc: "top1_path_connected_on ?U ?TU"
-    sorry \<comment> \<open>A is path connected and A is deformation retract of U.\<close>
+    using hA_deformation_retract_U by (by100 blast)
 
   \<comment> \<open>--- Step 2f: U \<inter> V = V - {x0} is path connected ---\<close>
+  \<comment> \<open>UV is path-connected: h restricts to a homeomorphism from Int(B2) - {0} onto UV.
+     Then apply homeomorphism_preserves_path_connected + punctured_open_disk_path_connected.\<close>
+  have hUV_homeo: "top1_homeomorphism_on
+    (top1_B2 - top1_S1 - {(0::real, 0::real)})
+    (subspace_topology top1_B2 top1_B2_topology (top1_B2 - top1_S1 - {(0, 0)}))
+    ?UV ?TUV h"
+    sorry \<comment> \<open>h restricted to punctured open disk is homeomorphism onto UV.\<close>
   have hUV_pc: "top1_path_connected_on ?UV ?TUV"
-    sorry \<comment> \<open>V - {x0} \<cong> Int B2 - {0} which is path connected (punctured open disk).\<close>
+    by (rule homeomorphism_preserves_path_connected[OF hUV_homeo punctured_open_disk_path_connected])
 
   \<comment> \<open>--- Step 2g: \<pi>_1(U \<inter> V) is infinite cyclic ---\<close>
   \<comment> \<open>U \<inter> V = V - {x0} \<cong> Int B2 - {0} \<cong> S1 \<times> R, so \<pi>_1 \<cong> Z.\<close>
@@ -967,13 +1027,108 @@ proof -
   have ha_in_U: "a \<in> ?U"
     using assms(6) hA_sub_X hx0_notin_A by (by100 blast)
 
+  \<comment> \<open>Construct path \<delta> from a to b in X: \<delta>(t) = h(1 - t/2, 0).
+     This is h composed with the straight line from (1,0) to (1/2,0) in B2.\<close>
+  let ?\<delta> = "\<lambda>t::real. h (1 - t/2, 0::real)"
+  have h\<delta>_0: "?\<delta> 0 = a"
+    using assms(9) by (by100 simp)
+  have h\<delta>_1: "?\<delta> 1 = ?b"
+    by (by100 simp)
+  have h\<delta>_in_B2: "\<And>t. t \<in> top1_unit_interval \<Longrightarrow> (1 - t/2, 0::real) \<in> top1_B2"
+  proof -
+    fix t :: real assume ht: "t \<in> top1_unit_interval"
+    hence ht01: "0 \<le> t" "t \<le> 1" unfolding top1_unit_interval_def by (by100 simp)+
+    have hfst: "(1 - t/2) ^ 2 + (0::real) ^ 2 = (1 - t/2) ^ 2" by (by100 simp)
+    have hle: "(1 - t/2) ^ 2 \<le> 1"
+    proof -
+      have "1/2 \<le> 1 - t/2" "1 - t/2 \<le> 1" using ht01 by (by100 simp)+
+      hence "0 \<le> 1 - t/2" "1 - t/2 \<le> 1" by (by100 simp)+
+      thus ?thesis
+        using power_le_one[of "1 - t/2" 2] by (by100 simp)
+    qed
+    show "(1 - t/2, 0::real) \<in> top1_B2"
+      unfolding top1_B2_def using hfst hle by (by100 simp)
+  qed
+  have h\<delta>_in_X: "\<And>t. t \<in> top1_unit_interval \<Longrightarrow> ?\<delta> t \<in> X"
+  proof -
+    fix t assume ht: "t \<in> top1_unit_interval"
+    have "(1 - t/2, 0::real) \<in> top1_B2" by (rule h\<delta>_in_B2[OF ht])
+    thus "?\<delta> t \<in> X"
+      using continuous_map_maps_to[OF assms(5)] by (by100 blast)
+  qed
+  have h\<delta>_cont: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology X TX ?\<delta>"
+  proof -
+    \<comment> \<open>Step 1: Setup topology constants.\<close>
+    let ?I = "top1_unit_interval"
+    let ?TI = "top1_unit_interval_topology"
+    let ?R = "UNIV :: real set"
+    let ?TR = "top1_open_sets"
+    let ?R2 = "?R \<times> ?R"
+    let ?TR2 = "product_topology_on ?TR ?TR"
+    let ?\<gamma> = "\<lambda>t::real. (1 - t/2, 0::real)"
+    have hTR: "is_topology_on ?R ?TR"
+      by (rule top1_open_sets_is_topology_on_UNIV)
+    have hTI: "is_topology_on ?I ?TI"
+      by (rule top1_unit_interval_topology_is_topology_on)
+    have hI_eq: "?TI = subspace_topology ?R ?TR ?I"
+      unfolding top1_unit_interval_topology_def by rule
+    have hUNIV_eq: "subspace_topology ?R ?TR ?R = ?TR"
+      by (rule subspace_topology_UNIV_self)
+    \<comment> \<open>Step 2: Each component of \<gamma> is continuous on UNIV.\<close>
+    have hc1: "continuous_on UNIV (\<lambda>t::real. 1 - t/2)"
+      by (intro continuous_intros; simp)
+    have hc2: "continuous_on UNIV (\<lambda>t::real. 0::real)"
+      by (intro continuous_intros)
+    \<comment> \<open>Step 3: Each component is top1_continuous_map_on I \<rightarrow> R.\<close>
+    have hcm1: "top1_continuous_map_on ?I ?TI ?R ?TR (\<lambda>t::real. 1 - t/2)"
+      using top1_continuous_map_on_real_subspace_open_sets[of ?I "\<lambda>t. 1 - t/2" ?R, OF _ hc1]
+      unfolding hI_eq hUNIV_eq by (by100 auto)
+    have hcm2: "top1_continuous_map_on ?I ?TI ?R ?TR (\<lambda>t::real. 0::real)"
+      using top1_continuous_map_on_real_subspace_open_sets[of ?I "\<lambda>t. (0::real)" ?R, OF _ hc2]
+      unfolding hI_eq hUNIV_eq by (by100 auto)
+    \<comment> \<open>Step 4: pi1 \<circ> \<gamma> and pi2 \<circ> \<gamma> are continuous.\<close>
+    have hpi1: "top1_continuous_map_on ?I ?TI ?R ?TR (pi1 \<circ> ?\<gamma>)"
+    proof -
+      have "pi1 \<circ> ?\<gamma> = (\<lambda>t. 1 - t/2)" unfolding pi1_def comp_def by (by100 auto)
+      thus ?thesis using hcm1 by (by100 simp)
+    qed
+    have hpi2: "top1_continuous_map_on ?I ?TI ?R ?TR (pi2 \<circ> ?\<gamma>)"
+    proof -
+      have "pi2 \<circ> ?\<gamma> = (\<lambda>t. 0::real)" unfolding pi2_def comp_def by (by100 auto)
+      thus ?thesis using hcm2 by (by100 simp)
+    qed
+    \<comment> \<open>Step 5: Combine via Theorem 18.4: \<gamma> continuous I \<rightarrow> R\<times>R.\<close>
+    have hUU: "?R \<times> ?R = (UNIV::(real\<times>real) set)" by (by100 simp)
+    have h\<gamma>_cont_R2: "top1_continuous_map_on ?I ?TI
+        (UNIV::(real\<times>real) set) ?TR2 ?\<gamma>"
+      using iffD2[OF Theorem_18_4[OF hTI hTR hTR, of ?\<gamma>]]
+      using hpi1 hpi2 unfolding hUU by (by100 blast)
+    \<comment> \<open>Step 6: Image of \<gamma> is in B2.\<close>
+    have h\<gamma>_img: "?\<gamma> ` ?I \<subseteq> top1_B2"
+      using h\<delta>_in_B2 by (by100 blast)
+    \<comment> \<open>Step 7: Restrict codomain to B2.\<close>
+    have h\<gamma>_cont_B2: "top1_continuous_map_on ?I ?TI top1_B2 top1_B2_topology ?\<gamma>"
+      using top1_continuous_map_on_codomain_shrink[OF h\<gamma>_cont_R2 h\<gamma>_img]
+      unfolding top1_B2_topology_def by (by100 simp)
+    \<comment> \<open>Step 8: Compose with h to get \<delta> = h \<circ> \<gamma> continuous I \<rightarrow> X.\<close>
+    have h\<delta>_comp: "top1_continuous_map_on ?I ?TI X TX (h \<circ> ?\<gamma>)"
+      by (rule top1_continuous_map_on_comp[OF h\<gamma>_cont_B2 assms(5)])
+    \<comment> \<open>Step 9: h \<circ> \<gamma> = \<delta> pointwise.\<close>
+    have h_eq: "(h \<circ> ?\<gamma>) = ?\<delta>"
+      unfolding comp_def by (by100 simp)
+    show ?thesis using h\<delta>_comp unfolding h_eq .
+  qed
+  have h\<delta>_path: "top1_is_path_on X TX a ?b ?\<delta>"
+    unfolding top1_is_path_on_def using h\<delta>_cont h\<delta>_0 h\<delta>_1 by (by100 blast)
+  have hTX: "is_topology_on X TX"
+    using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
   have hbasepoint_change:
     "top1_groups_isomorphic_on
         (top1_fundamental_group_carrier X TX a)
         (top1_fundamental_group_mul X TX a)
         (top1_fundamental_group_carrier X TX ?b)
         (top1_fundamental_group_mul X TX ?b)"
-    sorry \<comment> \<open>Base point change along path \<delta> = h \<circ> \<gamma>.\<close>
+    by (rule basepoint_change_iso_via_path[OF hTX h\<delta>_path])
 
   \<comment> \<open>--- Step 6: The generator of \<pi>_1(U \<inter> V, b) maps to [k \<circ> p] in \<pi>_1(A, a) ---\<close>
   \<comment> \<open>Munkres: f0 is a loop in Int B2 - {0} based at q representing a generator.
