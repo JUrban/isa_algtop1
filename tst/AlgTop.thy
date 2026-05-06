@@ -1771,7 +1771,8 @@ proof -
       \<and> top1_groups_isomorphic_on F mulF
           (top1_fundamental_group_carrier A (subspace_topology T_torus TT A) x0)
           (top1_fundamental_group_mul A (subspace_topology T_torus TT A) x0)"
-    sorry \<comment> \<open>\<pi>_1 of wedge of 2 circles is free on 2 generators (Theorem 71.1).\<close>
+    sorry \<comment> \<open>\<pi>_1 of wedge of 2 circles is free on 2 generators (Theorem 71.1).
+       Type issue: Theorem_71_1 gives G::int set, but goal needs F::'g set.\<close>
   \<comment> \<open>Step 3: The quotient F({a,b})/\<langle>\<langle>aba\<inverse>b\<inverse>\<rangle>\<rangle>: since aba\<inverse>b\<inverse>=1 means ab=ba,
      the quotient is the free abelian group on {a,b}, which is Z \<times> Z.\<close>
   have hquotient_ZZ: "top1_groups_isomorphic_on
