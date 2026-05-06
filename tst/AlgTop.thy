@@ -8452,25 +8452,12 @@ proof -
      E locally path-connected: basis elements are path-connected.\<close>
   \<comment> \<open>Step 6: p_*(\<pi>_1(E, e0)) = H. A loop \<gamma> at b0 lifts to a path from e0 = [const]H
      to [\<gamma>]H. Lift is a loop iff [\<gamma>]H = [const]H iff [\<gamma>] \<in> H.\<close>
-  \<comment> \<open>Existentially package the construction.\<close>
-  obtain E' TE' p' e0' where
-        hTE': "is_topology_on_strict E' TE'"
-    and hp'_cov: "top1_covering_map_on E' TE' B TB p'"
-    and hE'_pc: "top1_path_connected_on E' TE'"
-    and hE'_lpc: "top1_locally_path_connected_on E' TE'"
-    and he0': "e0' \<in> E'" and hp'e0: "p' e0' = b0"
-    and hp'_img: "top1_fundamental_group_image_hom E' TE' e0' B TB b0 p' = H"
-    sorry \<comment> \<open>Full coset-space construction. Requires defining E' as H-right-cosets of path classes,
-       topology via path-extension basis, verifying covering + connectivity + p'_*(π₁) = H.
-       Semilocal simple connectivity (assms(4)) ensures the evenly-covered property.\<close>
-  have hall: "is_topology_on_strict E' TE'
-    \<and> top1_covering_map_on E' TE' B TB p'
-    \<and> top1_path_connected_on E' TE'
-    \<and> top1_locally_path_connected_on E' TE'
-    \<and> e0' \<in> E' \<and> p' e0' = b0
-    \<and> top1_fundamental_group_image_hom E' TE' e0' B TB b0 p' = H"
-    using hTE' hp'_cov hE'_pc hE'_lpc he0' hp'e0 hp'_img by (by100 fast)
-  show ?thesis using hall sorry
+  show ?thesis
+    sorry \<comment> \<open>Full coset-space construction (Munkres 82.1):
+       Define E' = H-right-cosets of path classes from b0.
+       Topology via path-extension basis.
+       Verify: covering map (semilocal simple connectivity) + connected + locally path-connected.
+       p'_*(pi_1(E', e0')) = H.\<close>
 qed
 
 section \<open>Chapter 14: Applications to Group Theory\<close>
@@ -9532,6 +9519,8 @@ end
 
 
 
+ 
+ 
  
  
  
