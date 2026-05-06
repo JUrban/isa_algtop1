@@ -2470,12 +2470,63 @@ proof -
           qed
           ultimately show ?thesis by (by100 simp)
         qed
+        \<comment> \<open>Key functional equality: H_U \<circ> \<pi>' = G on B2\{0}\<times>I.\<close>
+        have hHU_piI_eq_G: "\<forall>q\<in>?B2_0 \<times> I_set. H_U (?\<pi>I q) = ?G q"
+        proof (intro ballI)
+          fix q assume hq: "q \<in> ?B2_0 \<times> I_set"
+          obtain y0 t0 where hq_eq: "q = (y0, t0)" and hy0: "y0 \<in> ?B2_0" and ht0: "t0 \<in> I_set"
+            using hq by (by100 blast)
+          have "?\<pi>I q = (h y0, t0)" using hq_eq by (by100 simp)
+          show "H_U (?\<pi>I q) = ?G q"
+          proof (cases "y0 \<in> top1_S1")
+            case True
+            hence "h y0 \<in> A" using assms(8) by (by100 blast)
+            hence "H_U (h y0, t0) = h y0" unfolding H_U_def by (by100 simp)
+            moreover have "?norm y0 = 1" using True unfolding top1_S1_def by (by100 auto)
+            hence "?G (y0, t0) = h y0"
+            proof -
+              have hrw: "\<And>a::real. (1 - t0) * a + t0 * a = a"
+              proof -
+                fix a :: real
+                have "(1 - t0) * a + t0 * a = ((1 - t0) + t0) * a" by (rule distrib_right[symmetric])
+                also have "\<dots> = a" by (by100 simp)
+                finally show "(1 - t0) * a + t0 * a = a" .
+              qed
+              show ?thesis using \<open>?norm y0 = 1\<close> hrw by (cases y0) (by100 simp)
+            qed
+            ultimately show ?thesis using \<open>?\<pi>I q = (h y0, t0)\<close> hq_eq by (by100 simp)
+          next
+            case False
+            hence hy0_D: "y0 \<in> ?D" using hy0 by (by100 blast)
+            hence "h y0 \<notin> A"
+            proof -
+              have "h y0 \<in> X - A" using hy0_D hsurj_D by (by100 blast)
+              thus ?thesis by (by100 blast)
+            qed
+            have hhiny0: "?hinv (h y0) = y0"
+              using inv_into_f_eq[OF hinj_D] hy0_D by (by100 blast)
+            have "H_U (h y0, t0) = h ((1 - t0) * fst (?hinv (h y0)) + t0 * fst (?hinv (h y0)) / ?norm (?hinv (h y0)),
+                (1 - t0) * snd (?hinv (h y0)) + t0 * snd (?hinv (h y0)) / ?norm (?hinv (h y0)))"
+              unfolding H_U_def Let_def using \<open>h y0 \<notin> A\<close> by (by100 simp)
+            hence "H_U (h y0, t0) = ?G (y0, t0)" using hhiny0 by (by100 simp)
+            thus ?thesis using \<open>?\<pi>I q = (h y0, t0)\<close> hq_eq by (by100 simp)
+          qed
+        qed
         \<comment> \<open>Direct proof via quotient open-set characterization.\<close>
         \<comment> \<open>V \<in> TU \<Rightarrow> {p\<in>CU\<times>I. H_U p \<in> V} open. By quotient: \<leftrightarrow> G\<inverse>(V) open. G continuous \<Rightarrow> \<checkmark>.\<close>
         show ?thesis unfolding htop_CUI[symmetric] top1_continuous_map_on_def
         proof (intro conjI ballI)
-          fix p assume "p \<in> ?CU \<times> I_set"
-          show "H_U p \<in> ?U" sorry \<comment> \<open>H_U maps CU\<times>I to U (from range proof).\<close>
+          fix p assume hp: "p \<in> ?CU \<times> I_set"
+          show "H_U p \<in> ?U"
+          proof -
+            have "p \<in> ?\<pi>I ` (?B2_0 \<times> I_set)" using hCU_times_eq hp by (by100 simp)
+            then obtain q where hq: "q \<in> ?B2_0 \<times> I_set" "?\<pi>I q = p" by (by100 blast)
+            have "H_U (?\<pi>I q) = ?G q" using hHU_piI_eq_G hq(1) by (by100 blast)
+            hence "H_U p = ?G q" using hq(2) by (by100 simp)
+            moreover have "?G q \<in> ?U" using hG_cont hq(1) unfolding top1_continuous_map_on_def
+              by (by100 blast)
+            ultimately show ?thesis by (by100 simp)
+          qed
         next
           fix V assume hV: "V \<in> ?TU"
           \<comment> \<open>Need: {p\<in>CU\<times>I. H_U p \<in> V} \<in> sub(C\<times>I)(prod TC I_top)(CU\<times>I).\<close>
@@ -2485,7 +2536,21 @@ proof -
           \<comment> \<open>\<pi>'\<inverse>(preimg_HU) = {q \<in> B2_0\<times>I. H_U(\<pi>I q) \<in> V} = {q \<in> B2_0\<times>I. G q \<in> V}.\<close>
           have hpreimg_eq: "{q \<in> ?B2_0 \<times> I_set. ?\<pi>I q \<in> ?preimg_HU} =
               {q \<in> ?B2_0 \<times> I_set. ?G q \<in> V}"
-            sorry \<comment> \<open>H_U(\<pi>I q) = G q for q \<in> B2_0\<times>I (proved above modulo sorry).\<close>
+          proof (rule set_eqI, rule iffI)
+            fix q assume "q \<in> {q \<in> ?B2_0 \<times> I_set. ?\<pi>I q \<in> ?preimg_HU}"
+            hence hq: "q \<in> ?B2_0 \<times> I_set" and "H_U (?\<pi>I q) \<in> V" by (by100 auto)+
+            have "H_U (?\<pi>I q) = ?G q" using hHU_piI_eq_G hq by (by100 blast)
+            hence "?G q = H_U (?\<pi>I q)" by (by100 simp)
+            hence "?G q \<in> V" using \<open>H_U (?\<pi>I q) \<in> V\<close> by (by100 simp)
+            thus "q \<in> {q \<in> ?B2_0 \<times> I_set. ?G q \<in> V}" using hq by (by100 blast)
+          next
+            fix q assume "q \<in> {q \<in> ?B2_0 \<times> I_set. ?G q \<in> V}"
+            hence hq: "q \<in> ?B2_0 \<times> I_set" and "?G q \<in> V" by (by100 auto)+
+            have "H_U (?\<pi>I q) = ?G q" using hHU_piI_eq_G hq by (by100 blast)
+            hence "H_U (?\<pi>I q) \<in> V" using \<open>?G q \<in> V\<close> by (by100 simp)
+            moreover have "?\<pi>I q \<in> ?CU \<times> I_set" using hCU_times_eq hq by (by100 simp)
+            ultimately show "q \<in> {q \<in> ?B2_0 \<times> I_set. ?\<pi>I q \<in> ?preimg_HU}" using hq by (by100 blast)
+          qed
           \<comment> \<open>G continuous + V \<in> TU \<Rightarrow> G\<inverse>(V) open in B2_0\<times>I.\<close>
           have hG_preimg_open: "{q \<in> ?B2_0 \<times> I_set. ?G q \<in> V} \<in>
               subspace_topology (top1_B2 \<times> I_set) (product_topology_on top1_B2_topology I_top)
@@ -9371,6 +9436,13 @@ end
 
 
 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
  
  
  
