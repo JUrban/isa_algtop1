@@ -7067,7 +7067,9 @@ proof -
     sorry \<comment> \<open>Full coset-space construction. Requires defining E' as H-right-cosets of path classes,
        topology via path-extension basis, verifying covering + connectivity + p'_*(π₁) = H.
        Semilocal simple connectivity (assms(4)) ensures the evenly-covered property.\<close>
-  show ?thesis sorry \<comment> \<open>Assembly: existential packing with type unification. E'::path-set set, etc.\<close>
+  show ?thesis
+    apply (rule exI[where x=E'], rule exI[where x=TE'], rule exI[where x=p'], rule exI[where x=e0'])
+    using hTE' hp'_cov hE'_pc hE'_lpc he0' hp'e0 hp'_img by (by100 blast)
 qed
 
 section \<open>Chapter 14: Applications to Group Theory\<close>
@@ -7186,9 +7188,31 @@ proof -
       \<and> top1_groups_isomorphic_on G mul
           (top1_fundamental_group_carrier W TW (q x0))
           (top1_fundamental_group_mul W TW (q x0))"
-    sorry \<comment> \<open>Theorem_71_1 applied to the wedge W.\<close>
+  proof -
+    from Theorem_71_1_wedge_of_circles_finite[OF hW_wedge]
+    obtain G0 :: "int set" and mul0 e0 invg0 and \<iota>0 :: "nat \<Rightarrow> int" where
+        "top1_is_free_group_full_on G0 mul0 e0 invg0 \<iota>0 {..<n}"
+        "top1_groups_isomorphic_on G0 mul0
+            (top1_fundamental_group_carrier W TW (q x0))
+            (top1_fundamental_group_mul W TW (q x0))"
+      by (by100 blast)
+    thus ?thesis by (by100 blast)
+  qed
   \<comment> \<open>Step 6: Combine: \<pi>_1(X) \<cong> \<pi>_1(W) \<cong> free group \<Rightarrow> \<pi>_1(X) is free.\<close>
-  show ?thesis sorry \<comment> \<open>Transitivity: groups_isomorphic_trans_fwd + sym. Needs group axioms for sym.\<close>
+  show ?thesis
+  proof -
+    obtain G0 :: "'g set" and mul0 e0 invg0 and \<iota>0 :: "'s \<Rightarrow> 'g" and S0 where
+        hfree: "top1_is_free_group_full_on G0 mul0 e0 invg0 \<iota>0 S0"
+        and hiso_W: "top1_groups_isomorphic_on G0 mul0
+            (top1_fundamental_group_carrier W TW (q x0))
+            (top1_fundamental_group_mul W TW (q x0))"
+      using hW_free by (by100 blast)
+    have hiso_XW: "top1_groups_isomorphic_on G0 mul0
+        (top1_fundamental_group_carrier X TX x0)
+        (top1_fundamental_group_mul X TX x0)"
+      sorry \<comment> \<open>Compose: G0 \<cong> \<pi>_1(W) and \<pi>_1(X) \<cong> \<pi>_1(W) (from hq_equiv) give G0 \<cong> \<pi>_1(X).\<close>
+    thus ?thesis using hfree by (by100 blast)
+  qed
 qed
 
 section \<open>\<S>85 Subgroups of Free Groups\<close>
