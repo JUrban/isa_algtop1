@@ -1060,8 +1060,168 @@ using assms proof (induction n arbitrary: X TX p rule: less_induct)
     \<comment> \<open>Step 3: X' with the subspace topology is a wedge of n-1 circles.\<close>
     let ?TX' = "subspace_topology X TX ?X'"
     have hX'_wedge: "top1_is_wedge_of_circles_on ?X' ?TX' {..<(n-1)} p"
-      sorry \<comment> \<open>Subspace of a wedge on the first n-1 circles is a wedge.
-         The weak/coherent topology condition restricts from n circles to n-1.\<close>
+    proof -
+      \<comment> \<open>Condition 1: strict topology on X'\<close>
+      have hX'_strict: "is_topology_on_strict ?X' ?TX'"
+        by (rule subspace_topology_is_strict[OF hX_strict hX'_sub])
+      \<comment> \<open>Condition 2: Hausdorff on X'\<close>
+      have hX'_hausdorff: "is_hausdorff_on ?X' ?TX'"
+        using conjunct2[OF conjunct2[OF Theorem_17_11]] hHausdorff hX'_sub by (by100 blast)
+      \<comment> \<open>Condition 4: For each \<alpha> < n-1, subspace_topology X' TX' (C \<alpha>) = subspace_topology X TX (C \<alpha>)\<close>
+      have hC_sub_X': "\<forall>\<alpha>\<in>{..<(n-1)}. C \<alpha> \<subseteq> ?X'"
+        by (by100 blast)
+      have hsub_eq: "\<forall>\<alpha>\<in>{..<(n-1)}.
+          subspace_topology ?X' ?TX' (C \<alpha>) = subspace_topology X TX (C \<alpha>)"
+      proof (intro ballI)
+        fix \<alpha> assume h\<alpha>: "\<alpha> \<in> {..<(n-1)}"
+        have "C \<alpha> \<subseteq> ?X'" using hC_sub_X' h\<alpha> by (by100 blast)
+        thus "subspace_topology ?X' ?TX' (C \<alpha>) = subspace_topology X TX (C \<alpha>)"
+          by (rule subspace_topology_trans)
+      qed
+      \<comment> \<open>Condition 4 full: circles in X', p in each, homeomorphic to S1\<close>
+      have hC_props': "\<forall>\<alpha>\<in>{..<(n-1)}. C \<alpha> \<subseteq> ?X' \<and> p \<in> C \<alpha>
+              \<and> (\<exists>h. top1_homeomorphism_on top1_S1 top1_S1_topology
+                    (C \<alpha>) (subspace_topology ?X' ?TX' (C \<alpha>)) h)"
+      proof (intro ballI conjI)
+        fix \<alpha> assume h\<alpha>: "\<alpha> \<in> {..<(n-1)}"
+        show "C \<alpha> \<subseteq> ?X'" using hC_sub_X' h\<alpha> by (by100 blast)
+        have h\<alpha>n: "\<alpha> \<in> {..<n}" using h\<alpha> hn2 by (by100 simp)
+        show "p \<in> C \<alpha>" using hC_props h\<alpha>n by (by100 blast)
+        have "subspace_topology ?X' ?TX' (C \<alpha>) = subspace_topology X TX (C \<alpha>)"
+          using hsub_eq h\<alpha> by (by100 blast)
+        moreover have "\<exists>h. top1_homeomorphism_on top1_S1 top1_S1_topology
+              (C \<alpha>) (subspace_topology X TX (C \<alpha>)) h"
+          using hC_props h\<alpha>n by (by100 blast)
+        ultimately show "\<exists>h. top1_homeomorphism_on top1_S1 top1_S1_topology
+              (C \<alpha>) (subspace_topology ?X' ?TX' (C \<alpha>)) h"
+          by (by100 simp)
+      qed
+      \<comment> \<open>Condition 5: union = X'\<close>
+      have hC_union': "(\<Union>\<alpha>\<in>{..<(n-1)}. C \<alpha>) = ?X'"
+        by (by100 simp)
+      \<comment> \<open>Condition 6: pairwise intersection = {p}\<close>
+      have hC_inter': "\<forall>\<alpha>\<in>{..<(n-1)}. \<forall>\<beta>\<in>{..<(n-1)}. \<alpha> \<noteq> \<beta> \<longrightarrow> C \<alpha> \<inter> C \<beta> = {p}"
+      proof (intro ballI impI)
+        fix \<alpha> \<beta> assume h\<alpha>: "\<alpha> \<in> {..<(n-1)}" and h\<beta>: "\<beta> \<in> {..<(n-1)}" and hne: "\<alpha> \<noteq> \<beta>"
+        have h\<alpha>n: "\<alpha> \<in> {..<n}" using h\<alpha> hn2 by (by100 simp)
+        have h\<beta>n: "\<beta> \<in> {..<n}" using h\<beta> hn2 by (by100 simp)
+        show "C \<alpha> \<inter> C \<beta> = {p}" using hC_inter h\<alpha>n h\<beta>n hne by (by100 blast)
+      qed
+      \<comment> \<open>Condition 7: coherent/weak topology\<close>
+      have hTX': "is_topology_on ?X' ?TX'"
+        using hX'_strict unfolding is_topology_on_strict_def by (by100 blast)
+      have hC_coh': "\<forall>D. D \<subseteq> ?X' \<longrightarrow>
+             (closedin_on ?X' ?TX' D \<longleftrightarrow>
+              (\<forall>\<alpha>\<in>{..<(n-1)}. closedin_on (C \<alpha>) (subspace_topology ?X' ?TX' (C \<alpha>)) (C \<alpha> \<inter> D)))"
+      proof (intro allI impI iffI)
+        fix D assume hDsub: "D \<subseteq> ?X'"
+        \<comment> \<open>Forward: D closed in X' \<Rightarrow> each C(\<alpha>) \<inter> D closed in C(\<alpha>)\<close>
+        { assume hDcl: "closedin_on ?X' ?TX' D"
+          show "\<forall>\<alpha>\<in>{..<(n-1)}. closedin_on (C \<alpha>) (subspace_topology ?X' ?TX' (C \<alpha>)) (C \<alpha> \<inter> D)"
+          proof (intro ballI)
+            fix \<alpha> assume h\<alpha>: "\<alpha> \<in> {..<(n-1)}"
+            \<comment> \<open>By Theorem_17_2: D closed in X' iff D = F \<inter> X' for some F closed in X\<close>
+            have "closedin_on ?X' ?TX' D \<longleftrightarrow>
+                (\<exists>F. closedin_on X TX F \<and> D = F \<inter> ?X')"
+              by (rule Theorem_17_2[OF hTX hX'_sub])
+            then obtain F where hFcl: "closedin_on X TX F" and hDeq: "D = F \<inter> ?X'"
+              using hDcl by (by100 blast)
+            \<comment> \<open>D \<subseteq> X, so F \<inter> X is relevant for hC_weak\<close>
+            have hDX: "D \<subseteq> X" using hDsub hX'_sub by (by100 blast)
+            have hFsub: "F \<subseteq> X" using hFcl by (rule closedin_sub)
+            \<comment> \<open>C(\<alpha>) \<inter> D = C(\<alpha>) \<inter> F since C(\<alpha>) \<subseteq> X'\<close>
+            have hCa_sub: "C \<alpha> \<subseteq> ?X'" using hC_sub_X' h\<alpha> by (by100 blast)
+            have hCD_eq: "C \<alpha> \<inter> D = C \<alpha> \<inter> F"
+            proof -
+              have "D = F \<inter> ?X'" using hDeq .
+              hence "C \<alpha> \<inter> D = C \<alpha> \<inter> (F \<inter> ?X')" by (by100 simp)
+              also have "\<dots> = (C \<alpha> \<inter> ?X') \<inter> F" by (by100 blast)
+              also have "C \<alpha> \<inter> ?X' = C \<alpha>" using hCa_sub by (by100 blast)
+              finally show ?thesis by (by100 simp)
+            qed
+            \<comment> \<open>F closed in X \<Rightarrow> C(\<alpha>) \<inter> F closed in C(\<alpha>) w.r.t. subspace_topology X TX\<close>
+            have h\<alpha>n: "\<alpha> \<in> {..<n}" using h\<alpha> hn2 by (by100 simp)
+            have "closedin_on (C \<alpha>) (subspace_topology X TX (C \<alpha>)) (C \<alpha> \<inter> F)"
+            proof -
+              have "C \<alpha> \<subseteq> X" using hC_props h\<alpha>n by (by100 blast)
+              hence "closedin_on (C \<alpha>) (subspace_topology X TX (C \<alpha>)) (C \<alpha> \<inter> F) \<longleftrightarrow>
+                  (\<exists>G. closedin_on X TX G \<and> C \<alpha> \<inter> F = G \<inter> C \<alpha>)"
+                by (rule Theorem_17_2[OF hTX])
+              moreover have "\<exists>G. closedin_on X TX G \<and> C \<alpha> \<inter> F = G \<inter> C \<alpha>"
+                using hFcl by (by100 blast)
+              ultimately show ?thesis by (by100 simp)
+            qed
+            \<comment> \<open>Rewrite using subspace_topology_trans and hCD_eq\<close>
+            hence "closedin_on (C \<alpha>) (subspace_topology X TX (C \<alpha>)) (C \<alpha> \<inter> D)"
+              using hCD_eq by (by100 simp)
+            thus "closedin_on (C \<alpha>) (subspace_topology ?X' ?TX' (C \<alpha>)) (C \<alpha> \<inter> D)"
+              using hsub_eq h\<alpha> by (by100 simp)
+          qed
+        }
+        \<comment> \<open>Backward: each C(\<alpha>) \<inter> D closed in C(\<alpha>) \<Rightarrow> D closed in X'\<close>
+        { assume hall: "\<forall>\<alpha>\<in>{..<(n-1)}. closedin_on (C \<alpha>) (subspace_topology ?X' ?TX' (C \<alpha>)) (C \<alpha> \<inter> D)"
+          \<comment> \<open>Convert to subspace_topology X TX via hsub_eq\<close>
+          have hall_X: "\<forall>\<alpha>\<in>{..<(n-1)}. closedin_on (C \<alpha>) (subspace_topology X TX (C \<alpha>)) (C \<alpha> \<inter> D)"
+          proof (intro ballI)
+            fix \<alpha> assume h\<alpha>: "\<alpha> \<in> {..<(n-1)}"
+            have "closedin_on (C \<alpha>) (subspace_topology ?X' ?TX' (C \<alpha>)) (C \<alpha> \<inter> D)"
+              using hall h\<alpha> by (by100 blast)
+            thus "closedin_on (C \<alpha>) (subspace_topology X TX (C \<alpha>)) (C \<alpha> \<inter> D)"
+              using hsub_eq h\<alpha> by (by100 simp)
+          qed
+          \<comment> \<open>For \<alpha> = n-1: D \<inter> C(n-1) \<subseteq> X' \<inter> C(n-1) = {p}, so it's {} or {p}\<close>
+          have hDCn: "D \<inter> ?Cn \<subseteq> {p}"
+            using hDsub hX'_Cn_inter by (by100 blast)
+          have hCn_inter_D: "?Cn \<inter> D = D \<inter> ?Cn" by (by100 blast)
+          \<comment> \<open>C(n-1) is homeomorphic to S1, so Hausdorff, so singletons are closed\<close>
+          have hTCn: "is_topology_on ?Cn (subspace_topology X TX ?Cn)"
+            by (rule subspace_topology_is_topology_on[OF hTX hCn_sub])
+          have hCn_hausdorff: "is_hausdorff_on ?Cn (subspace_topology X TX ?Cn)"
+            using conjunct2[OF conjunct2[OF Theorem_17_11]] hHausdorff hCn_sub by (by100 blast)
+          have hp_closed_Cn: "closedin_on ?Cn (subspace_topology X TX ?Cn) {p}"
+            by (rule singleton_closed_in_hausdorff[OF hCn_hausdorff hp_Cn])
+          have hempty_closed_Cn: "closedin_on ?Cn (subspace_topology X TX ?Cn) {}"
+            by (rule closedin_empty[OF hTCn])
+          have hCn_inter_closed: "closedin_on ?Cn (subspace_topology X TX ?Cn) (?Cn \<inter> D)"
+          proof (cases "D \<inter> ?Cn = {}")
+            case True
+            hence "?Cn \<inter> D = {}" by (by100 blast)
+            thus ?thesis using hempty_closed_Cn by (by100 simp)
+          next
+            case False
+            hence "D \<inter> ?Cn = {p}" using hDCn by (by100 blast)
+            hence "?Cn \<inter> D = {p}" by (by100 blast)
+            thus ?thesis using hp_closed_Cn by (by100 simp)
+          qed
+          \<comment> \<open>Now: for ALL \<alpha> < n, C(\<alpha>) \<inter> D closed in C(\<alpha>) w.r.t. subspace_topology X TX\<close>
+          have hall_all: "\<forall>\<alpha>\<in>{..<n}. closedin_on (C \<alpha>) (subspace_topology X TX (C \<alpha>)) (C \<alpha> \<inter> D)"
+          proof (intro ballI)
+            fix \<alpha> assume h\<alpha>: "\<alpha> \<in> {..<n}"
+            show "closedin_on (C \<alpha>) (subspace_topology X TX (C \<alpha>)) (C \<alpha> \<inter> D)"
+            proof (cases "\<alpha> \<in> {..<(n-1)}")
+              case True
+              thus ?thesis using hall_X by (by100 blast)
+            next
+              case False
+              hence "\<alpha> = n - 1" using h\<alpha> by (by100 simp)
+              thus ?thesis using hCn_inter_closed by (by100 simp)
+            qed
+          qed
+          \<comment> \<open>By hC_weak: D closed in X\<close>
+          have hDX: "D \<subseteq> X" using hDsub hX'_sub by (by100 blast)
+          have "closedin_on X TX D"
+            using hC_weak hDX hall_all by (by100 blast)
+          \<comment> \<open>D \<subseteq> X' and D closed in X \<Rightarrow> D = D \<inter> X' \<Rightarrow> D closed in X' by Theorem_17_2\<close>
+          moreover have "D = D \<inter> ?X'" using hDsub by (by100 blast)
+          ultimately show "closedin_on ?X' ?TX' D"
+            using Theorem_17_2[OF hTX hX'_sub] by (by100 blast)
+        }
+      qed
+      show ?thesis
+        unfolding top1_is_wedge_of_circles_on_def
+        using hX'_strict hX'_hausdorff hp_X' hC_props' hC_union' hC_inter' hC_coh'
+        by (by100 blast)
+    qed
     \<comment> \<open>Step 4: Apply IH to X': \<pi>_1(X', p) is free on n-1 generators.\<close>
     obtain G' :: "int set" and mul' :: "int \<Rightarrow> int \<Rightarrow> int"
         and e' :: int and invg' :: "int \<Rightarrow> int" and \<iota>' :: "nat \<Rightarrow> int" where
