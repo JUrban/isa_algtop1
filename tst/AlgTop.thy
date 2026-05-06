@@ -1670,7 +1670,15 @@ proof -
             thus "p \<in> {-1..1} \<times> {-1..1}" by (simp add: mem_Times_iff)
           qed
           have "closed top1_B2"
-            sorry \<comment> \<open>{p. fst p^2 + snd p^2 \<le> 1} is closed.\<close>
+          proof -
+            have "top1_B2 = (\<lambda>p::real\<times>real. fst p ^ 2 + snd p ^ 2) -` {..1}"
+              unfolding top1_B2_def by (by100 auto)
+            moreover have "continuous_on UNIV (\<lambda>p::real\<times>real. fst p ^ 2 + snd p ^ 2)"
+              by (intro continuous_intros)
+            hence "closed ((\<lambda>p::real\<times>real. fst p ^ 2 + snd p ^ 2) -` {..1})"
+              by (intro closed_vimage closed_atMost) (simp add: continuous_on_eq_continuous_at open_UNIV)
+            ultimately show ?thesis by (by100 simp)
+          qed
           thus ?thesis
             using closed_subset_compact[OF compact_Icc_Times _ hB2_sub] by (by100 blast)
         qed
@@ -1678,8 +1686,10 @@ proof -
         proof -
           have "top1_B2_topology = subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) top1_B2"
             unfolding top1_B2_topology_def ..
+          hence "top1_B2_topology = subspace_topology (UNIV::((real\<times>real) set)) (top1_open_sets::((real\<times>real) set set)) top1_B2"
+            using product_topology_on_open_sets[where 'a=real and 'b=real] by simp
           hence "top1_compact_on top1_B2 top1_B2_topology \<longleftrightarrow> compact top1_B2"
-            sorry \<comment> \<open>Bridge: top1_compact_on via subspace UNIV iff compact (HOL).\<close>
+            using top1_compact_on_subspace_UNIV_iff_compact[of top1_B2] by simp
           thus ?thesis using hB2_compact by (by100 simp)
         qed
         have "top1_compact_on ?C (subspace_topology X TX ?C)"
