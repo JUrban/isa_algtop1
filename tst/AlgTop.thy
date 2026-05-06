@@ -1062,6 +1062,347 @@ qed
     the attaching map. There exists an isomorphism \<pi>_1(X, a) \<cong>
     \<pi>_1(A, a) / normal-closure(k_*[p]) where p is the standard loop of S^1
     and k : S^1 \<rightarrow> A is the restriction of h : B^2 \<rightarrow> X to the boundary. **)
+text \<open>Union of two compact sets is compact.\<close>
+lemma compact_Un:
+  assumes "compact A" and "compact B"
+  shows "compact (A \<union> B)"
+proof (rule compactI)
+  fix \<U> :: "'a set set"
+  assume hopen: "\<forall>U\<in>\<U>. open U" and hcover: "A \<union> B \<subseteq> \<Union>\<U>"
+  have hA_cov: "A \<subseteq> \<Union>\<U>" using hcover by (by100 blast)
+  have hB_cov: "B \<subseteq> \<Union>\<U>" using hcover by (by100 blast)
+  obtain FA where hFA: "finite FA" "FA \<subseteq> \<U>" "A \<subseteq> \<Union>FA"
+  proof (rule compactE[OF assms(1) hA_cov])
+    fix U assume "U \<in> \<U>" thus "open U" using hopen by (by100 blast)
+  next
+    fix F' assume "F' \<subseteq> \<U>" "finite F'" "A \<subseteq> \<Union>F'"
+    thus thesis using that by (by100 blast)
+  qed
+  obtain FB where hFB: "finite FB" "FB \<subseteq> \<U>" "B \<subseteq> \<Union>FB"
+  proof (rule compactE[OF assms(2) hB_cov])
+    fix U assume "U \<in> \<U>" thus "open U" using hopen by (by100 blast)
+  next
+    fix F' assume hF'1: "F' \<subseteq> \<U>" and hF'2: "finite F'" and hF'3: "B \<subseteq> \<Union>F'"
+    show thesis by (rule that[OF hF'2 hF'1 hF'3])
+  qed
+  have "finite (FA \<union> FB)" using hFA(1) hFB(1) by (by100 blast)
+  moreover have "FA \<union> FB \<subseteq> \<U>" using hFA(2) hFB(2) by (by100 blast)
+  moreover have "A \<union> B \<subseteq> \<Union>(FA \<union> FB)" using hFA(3) hFB(3) by (by100 blast)
+  ultimately show "\<exists>\<F>'\<subseteq>\<U>. finite \<F>' \<and> A \<union> B \<subseteq> \<Union>\<F>'" by (by100 blast)
+qed
+
+text \<open>Finite union of compact sets is compact.\<close>
+lemma compact_Union:
+  assumes "finite F" and "\<forall>S\<in>F. compact S"
+  shows "compact (\<Union>F)"
+  using assms
+proof (induction F rule: finite_induct)
+  case empty thus ?case by (simp add: compact_empty)
+next
+  case (insert S F)
+  have "compact (\<Union>F)" using insert.IH insert.prems by (by100 blast)
+  moreover have "compact S" using insert.prems by (by100 blast)
+  ultimately have "compact (S \<union> \<Union>F)" by (rule compact_Un[rotated])
+  thus "compact (\<Union>(insert S F))" by (by100 simp)
+qed
+
+text \<open>Closed subset of compact is compact.\<close>
+lemma closed_subset_compact:
+  assumes "compact S" and "closed C" and "C \<subseteq> S"
+  shows "compact C"
+proof (rule compactI)
+  fix \<U> :: "'a set set"
+  assume hopen: "\<forall>U\<in>\<U>. open U" and hcover: "C \<subseteq> \<Union>\<U>"
+  \<comment> \<open>S - C is open (C closed). So \<U> \<union> {S - C} covers S.\<close>
+  have hSC_open: "open (- C)" using assms(2) unfolding closed_def by blast
+  have hS_cov: "S \<subseteq> \<Union>(\<U> \<union> {- C})"
+  proof
+    fix x assume hx: "x \<in> S"
+    show "x \<in> \<Union>(\<U> \<union> {- C})"
+    proof (cases "x \<in> C")
+      case True thus ?thesis using hcover by (by100 blast)
+    next
+      case False thus ?thesis by (by100 blast)
+    qed
+  qed
+  have hopen2: "\<forall>U\<in>\<U> \<union> {- C}. open U" using hopen hSC_open by (by100 blast)
+  obtain \<F> where hfin: "finite \<F>" and hsub: "\<F> \<subseteq> \<U> \<union> {- C}" and hcov: "S \<subseteq> \<Union>\<F>"
+  proof (rule compactE[OF assms(1) hS_cov])
+    fix U assume "U \<in> \<U> \<union> {- C}"
+    thus "open U" using hopen hSC_open by (by100 blast)
+  next
+    fix \<F>' assume "\<F>' \<subseteq> \<U> \<union> {- C}" "finite \<F>'" "S \<subseteq> \<Union>\<F>'"
+    thus thesis using that by (by100 blast)
+  qed
+  let ?\<F>' = "\<F> - {- C}"
+  have "finite ?\<F>'" using hfin by (by100 blast)
+  moreover have "?\<F>' \<subseteq> \<U>" using hsub by (by100 blast)
+  moreover have "C \<subseteq> \<Union>?\<F>'"
+  proof
+    fix x assume hx: "x \<in> C"
+    hence "x \<in> S" using assms(3) by (by100 blast)
+    hence "x \<in> \<Union>\<F>" using hcov by (by100 blast)
+    moreover have "x \<notin> - C" using hx by (by100 blast)
+    ultimately show "x \<in> \<Union>?\<F>'" by (by100 blast)
+  qed
+  ultimately show "\<exists>\<F>'\<subseteq>\<U>. finite \<F>' \<and> C \<subseteq> \<Union>\<F>'" by (by100 blast)
+qed
+
+text \<open>Binary product of compact sets in R is compact in R^2.
+  This is a special case of Tychonoff; proved via the tube lemma.\<close>
+lemma compact_Times_general:
+  assumes "compact (A :: 'a::topological_space set)" and "compact (B :: 'b::topological_space set)"
+  shows "compact (A \<times> B :: ('a \<times> 'b) set)"
+proof (rule compactI)
+  fix \<C> :: "('a \<times> 'b) set set"
+  assume h\<C>_open: "\<forall>c\<in>\<C>. open c" and h\<C>_cover: "A \<times> B \<subseteq> \<Union>\<C>"
+  \<comment> \<open>For each a \<in> A, {a} \<times> B is covered by \<C>. B compact gives finite subcover F_a.
+     Tube lemma: \<exists> W_a open, a \<in> W_a, W_a \<times> B \<subseteq> \<Union>F_a.
+     {W_a | a \<in> A} covers A. A compact gives finite subcover.\<close>
+  \<comment> \<open>Step 1: For each a \<in> A, get a finite subcover of {a} \<times> B.\<close>
+  have hslice: "\<forall>a\<in>A. \<exists>F_a. finite F_a \<and> F_a \<subseteq> \<C> \<and> {a} \<times> B \<subseteq> \<Union>F_a"
+  proof (intro ballI)
+    fix a assume ha: "a \<in> A"
+    \<comment> \<open>{a} \<times> B is the image of B under (\<lambda>b. (a, b)). This map is continuous.
+       B is compact, so its image {a} \<times> B is compact.\<close>
+    have hslice_compact: "compact ({a} \<times> B)"
+    proof -
+      have "continuous_on B (\<lambda>b. (a, b))"
+        by (rule continuous_on_Pair) (simp_all add: continuous_on_const continuous_on_id)
+      moreover have "{a} \<times> B = (\<lambda>b. (a, b)) ` B" by (by100 blast)
+      ultimately show ?thesis using compact_continuous_image[OF _ assms(2)] by (by100 simp)
+    qed
+    have hslice_sub: "{a} \<times> B \<subseteq> \<Union>\<C>" using h\<C>_cover ha by (by100 blast)
+    show "\<exists>F_a. finite F_a \<and> F_a \<subseteq> \<C> \<and> {a} \<times> B \<subseteq> \<Union>F_a"
+    proof (rule compactE[OF hslice_compact hslice_sub])
+      fix c assume "c \<in> \<C>" thus "open c" using h\<C>_open by (by100 blast)
+    next
+      fix F' assume "F' \<subseteq> \<C>" "finite F'" "{a} \<times> B \<subseteq> \<Union>F'"
+      thus ?thesis by (by100 blast)
+    qed
+  qed
+  \<comment> \<open>Step 2: Tube lemma. For each a \<in> A, find open W_a with W_a \<times> B \<subseteq> \<Union>F_a.\<close>
+  have htube: "\<forall>a\<in>A. \<exists>W_a F_a. open W_a \<and> a \<in> W_a \<and> finite F_a \<and> F_a \<subseteq> \<C> \<and> W_a \<times> B \<subseteq> \<Union>F_a"
+  proof (intro ballI)
+    fix a assume ha: "a \<in> A"
+    \<comment> \<open>For each b \<in> B, pick C_b \<in> \<C> with (a,b) \<in> C_b, then open U_b, V_b with (a,b) \<in> U_b \<times> V_b \<subseteq> C_b.\<close>
+    have hpick: "\<forall>b\<in>B. \<exists>Cb Ub Vb. Cb \<in> \<C> \<and> open Ub \<and> open Vb \<and> a \<in> Ub \<and> b \<in> Vb \<and> Ub \<times> Vb \<subseteq> Cb"
+    proof (intro ballI)
+      fix b assume hb: "b \<in> B"
+      have hab: "(a, b) \<in> \<Union>\<C>" using h\<C>_cover ha hb by (by100 blast)
+      then obtain Cb where hCb: "Cb \<in> \<C>" "(a, b) \<in> Cb" by (by100 blast)
+      have "open Cb" using h\<C>_open hCb(1) by (by100 blast)
+      from open_prod_elim[OF this hCb(2)]
+      obtain Ub Vb where "open Ub" "open Vb" "(a, b) \<in> Ub \<times> Vb" "Ub \<times> Vb \<subseteq> Cb" by (by100 blast)
+      thus "\<exists>Cb Ub Vb. Cb \<in> \<C> \<and> open Ub \<and> open Vb \<and> a \<in> Ub \<and> b \<in> Vb \<and> Ub \<times> Vb \<subseteq> Cb"
+        using hCb(1) by (by100 blast)
+    qed
+    \<comment> \<open>Choice: pick Cb, Ub, Vb for each b.\<close>
+    \<comment> \<open>Choice: pick Cb, Ub, Vb for each b (3x bchoice from hpick).\<close>
+    obtain Cb Ub Vb where hCUV: "\<forall>b\<in>B. Cb b \<in> \<C> \<and> open (Ub b) \<and> open (Vb b)
+        \<and> a \<in> Ub b \<and> b \<in> Vb b \<and> Ub b \<times> Vb b \<subseteq> Cb b"
+    proof -
+      have "\<exists>Cb. \<forall>b\<in>B. \<exists>Ub Vb. Cb b \<in> \<C> \<and> open Ub \<and> open Vb \<and> a \<in> Ub \<and> b \<in> Vb \<and> Ub \<times> Vb \<subseteq> Cb b"
+        using hpick by (rule bchoice)
+      then obtain Cb where hCb: "\<forall>b\<in>B. \<exists>Ub Vb. Cb b \<in> \<C> \<and> open Ub \<and> open Vb \<and> a \<in> Ub \<and> b \<in> Vb \<and> Ub \<times> Vb \<subseteq> Cb b"
+        by blast
+      have "\<exists>Ub. \<forall>b\<in>B. \<exists>Vb. Cb b \<in> \<C> \<and> open (Ub b) \<and> open Vb \<and> a \<in> Ub b \<and> b \<in> Vb \<and> Ub b \<times> Vb \<subseteq> Cb b"
+        using hCb by (rule bchoice)
+      then obtain Ub where hUb: "\<forall>b\<in>B. \<exists>Vb. Cb b \<in> \<C> \<and> open (Ub b) \<and> open Vb \<and> a \<in> Ub b \<and> b \<in> Vb \<and> Ub b \<times> Vb \<subseteq> Cb b"
+        by blast
+      have "\<exists>Vb. \<forall>b\<in>B. Cb b \<in> \<C> \<and> open (Ub b) \<and> open (Vb b) \<and> a \<in> Ub b \<and> b \<in> Vb b \<and> Ub b \<times> Vb b \<subseteq> Cb b"
+        using hUb by (rule bchoice)
+      then obtain Vb where "\<forall>b\<in>B. Cb b \<in> \<C> \<and> open (Ub b) \<and> open (Vb b) \<and> a \<in> Ub b \<and> b \<in> Vb b \<and> Ub b \<times> Vb b \<subseteq> Cb b"
+        by blast
+      thus ?thesis using that by blast
+    qed
+    \<comment> \<open>{Vb b | b \<in> B} covers B. B compact → finite B' with \<Union>(Vb ` B') \<supseteq> B.\<close>
+    have hVb_cover: "B \<subseteq> \<Union>(Vb ` B)" using hCUV by (by100 blast)
+    obtain B' where hB': "finite B'" "B' \<subseteq> B" "B \<subseteq> \<Union>(Vb ` B')"
+    proof (rule compactE_image[OF assms(2)])
+      fix b assume "b \<in> B" thus "open (Vb b)" using hCUV by (by100 blast)
+    next
+      show "B \<subseteq> \<Union>(Vb ` B)" by (rule hVb_cover)
+    next
+      fix B'' assume "B'' \<subseteq> B" "finite B''" "B \<subseteq> \<Union>(Vb ` B'')"
+      thus thesis using that by (by100 blast)
+    qed
+    \<comment> \<open>W_a = \<Inter>(Ub ` B') (finite intersection of opens containing a).\<close>
+    let ?W = "\<Inter>(Ub ` B')"
+    have hW_open: "open ?W"
+    proof -
+      have "finite (Ub ` B')" using hB'(1) by (by100 blast)
+      moreover have "\<forall>U\<in>Ub ` B'. open U" using hCUV hB'(2) by (by100 blast)
+      ultimately show ?thesis by (rule open_Inter)
+    qed
+    have hW_a: "a \<in> ?W" using hCUV hB'(2) by (by100 blast)
+    let ?F = "Cb ` B'"
+    have hF_fin: "finite ?F" using hB'(1) by (by100 blast)
+    have hF_sub: "?F \<subseteq> \<C>" using hCUV hB'(2) by (by100 blast)
+    have hWB_sub: "?W \<times> B \<subseteq> \<Union>?F"
+    proof
+      fix p assume hp: "p \<in> ?W \<times> B"
+      obtain x y where hxy: "p = (x, y)" "x \<in> ?W" "y \<in> B" using hp by (by100 blast)
+      obtain b where hb: "b \<in> B'" "y \<in> Vb b" using hB'(3) hxy(3) by (by100 blast)
+      have "x \<in> Ub b" using hxy(2) hb(1) by (by100 blast)
+      hence "(x, y) \<in> Ub b \<times> Vb b" using hb(2) by (by100 blast)
+      hence "(x, y) \<in> Cb b" using hCUV hB'(2) hb(1) by (by100 blast)
+      thus "p \<in> \<Union>?F" using hxy(1) hb(1) by (by100 blast)
+    qed
+    show "\<exists>W_a F_a. open W_a \<and> a \<in> W_a \<and> finite F_a \<and> F_a \<subseteq> \<C> \<and> W_a \<times> B \<subseteq> \<Union>F_a"
+      using hW_open hW_a hF_fin hF_sub hWB_sub by (by100 blast)
+  qed
+  \<comment> \<open>Step 3: {W_a | a \<in> A} covers A. A compact → finite subcover.\<close>
+  \<comment> \<open>Pick W and F functions via choice.\<close>
+  obtain W F where hWF: "\<forall>a\<in>A. open (W a) \<and> a \<in> W a \<and> finite (F a) \<and> F a \<subseteq> \<C> \<and> W a \<times> B \<subseteq> \<Union>(F a)"
+  proof -
+    from htube have "\<forall>a\<in>A. \<exists>W F. open W \<and> a \<in> W \<and> finite F \<and> F \<subseteq> \<C> \<and> W \<times> B \<subseteq> \<Union>F" .
+    hence "\<exists>W. \<forall>a\<in>A. \<exists>F. open (W a) \<and> a \<in> W a \<and> finite F \<and> F \<subseteq> \<C> \<and> W a \<times> B \<subseteq> \<Union>F"
+      by (rule bchoice)
+    then obtain W where hW: "\<forall>a\<in>A. \<exists>F. open (W a) \<and> a \<in> W a \<and> finite F \<and> F \<subseteq> \<C> \<and> W a \<times> B \<subseteq> \<Union>F"
+      by (by100 blast)
+    hence "\<exists>F. \<forall>a\<in>A. open (W a) \<and> a \<in> W a \<and> finite (F a) \<and> F a \<subseteq> \<C> \<and> W a \<times> B \<subseteq> \<Union>(F a)"
+      by (rule bchoice)
+    then obtain F where "\<forall>a\<in>A. open (W a) \<and> a \<in> W a \<and> finite (F a) \<and> F a \<subseteq> \<C> \<and> W a \<times> B \<subseteq> \<Union>(F a)"
+      by (by100 blast)
+    thus ?thesis using that by (by100 blast)
+  qed
+  \<comment> \<open>{W a | a \<in> A} covers A.\<close>
+  have "A \<subseteq> \<Union>(W ` A)"
+  proof
+    fix a assume "a \<in> A"
+    thus "a \<in> \<Union>(W ` A)" using hWF by (by100 blast)
+  qed
+  \<comment> \<open>A compact → finite subcover.\<close>
+  have hW_open: "\<forall>a\<in>A. open (W a)" using hWF by (by100 blast)
+  have hA_cov: "A \<subseteq> \<Union>(W ` A)" using hWF by (by100 blast)
+  obtain A' where hA': "finite A'" "A' \<subseteq> A" "A \<subseteq> \<Union>(W ` A')"
+  proof (rule compactE_image[OF assms(1)])
+    fix a assume "a \<in> A" thus "open (W a)" using hW_open by (by100 blast)
+  next
+    show "A \<subseteq> \<Union>(W ` A)" by (rule hA_cov)
+  next
+    fix A'' assume "A'' \<subseteq> A" "finite A''" "A \<subseteq> \<Union>(W ` A'')"
+    thus thesis using that by (by100 blast)
+  qed
+  \<comment> \<open>\<Union>{F a | a \<in> A'} is a finite subcover of A \<times> B.\<close>
+  let ?C' = "\<Union>(F ` A')"
+  have "finite ?C'" using hA'(1) hWF hA'(2) by (by100 force)
+  moreover have "?C' \<subseteq> \<C>"
+  proof
+    fix c assume "c \<in> ?C'"
+    then obtain a where "a \<in> A'" "c \<in> F a" by (by100 blast)
+    thus "c \<in> \<C>" using hWF hA'(2) by (by100 blast)
+  qed
+  moreover have "A \<times> B \<subseteq> \<Union>?C'"
+  proof
+    fix p assume hp: "p \<in> A \<times> B"
+    obtain x y where hxy: "p = (x, y)" "x \<in> A" "y \<in> B" using hp by (by100 blast)
+    obtain a where ha: "a \<in> A'" "x \<in> W a" using hA'(3) hxy(2) by (by100 blast)
+    have "(x, y) \<in> W a \<times> B" using ha(2) hxy(3) by (by100 blast)
+    hence "(x, y) \<in> \<Union>(F a)" using hWF hA'(2) ha(1) by (by100 blast)
+    thus "p \<in> \<Union>?C'" using hxy(1) ha(1) by (by100 blast)
+  qed
+  ultimately show "\<exists>C'\<subseteq>\<C>. finite C' \<and> A \<times> B \<subseteq> \<Union>C'" by (by100 blast)
+qed
+
+text \<open>Compact for product intervals.\<close>
+text \<open>Singleton set is compact.\<close>
+lemma compact_singleton: "compact {x :: 'a::topological_space}"
+proof (rule compactI)
+  fix \<U> :: "'a set set"
+  assume hopen: "\<forall>U\<in>\<U>. open U" and hcover: "{x} \<subseteq> \<Union>\<U>"
+  then obtain U where "U \<in> \<U>" "x \<in> U" by (by100 blast)
+  thus "\<exists>\<F>\<subseteq>\<U>. finite \<F> \<and> {x} \<subseteq> \<Union>\<F>" by (rule_tac x="{U}" in exI) (by100 blast)
+qed
+
+text \<open>Finite set is compact.\<close>
+lemma compact_finite: "finite S \<Longrightarrow> compact (S :: 'a::topological_space set)"
+proof (induction S rule: finite_induct)
+  case empty thus ?case by (simp add: compact_empty)
+next
+  case (insert x S)
+  have hx: "compact {x}" by (rule compact_singleton)
+  have hS: "compact S" by (rule insert.IH)
+  have "compact ({x} \<union> S)" by (rule compact_Un[OF hx hS])
+  thus ?case by (by100 simp)
+qed
+
+lemma compact_Icc_Times:
+  "compact ({a..b::real} \<times> {c..d::real})"
+  by (rule compact_Times_general[OF compact_Icc compact_Icc])
+
+text \<open>A triangle (convex hull of 3 points) in R^2 is compact.\<close>
+lemma triangle_compact:
+  fixes ax ay bx by' cx cy :: real
+  shows "compact {(x, y). \<exists>s t::real. 0 \<le> s \<and> 0 \<le> t \<and> s + t \<le> 1
+      \<and> x = (1 - s - t) * ax + s * bx + t * cx
+      \<and> y = (1 - s - t) * ay + s * by' + t * cy}"
+proof -
+  let ?T = "{(x, y). \<exists>s t::real. 0 \<le> s \<and> 0 \<le> t \<and> s + t \<le> 1
+      \<and> x = (1 - s - t) * ax + s * bx + t * cx
+      \<and> y = (1 - s - t) * ay + s * by' + t * cy}"
+  let ?f = "\<lambda>(s::real, t::real). ((1 - s - t) * ax + s * bx + t * cx,
+                                  (1 - s - t) * ay + s * by' + t * cy)"
+  let ?D = "{(s, t). (0::real) \<le> s \<and> 0 \<le> t \<and> s + t \<le> 1}"
+  have hT_eq: "?T = ?f ` ?D"
+  proof
+    show "?T \<subseteq> ?f ` ?D"
+    proof
+      fix p assume "p \<in> ?T"
+      then obtain x y s t where "p = (x, y)" "0 \<le> s" "0 \<le> t" "s + t \<le> 1"
+          "x = (1 - s - t) * ax + s * bx + t * cx"
+          "y = (1 - s - t) * ay + s * by' + t * cy" by (by100 blast)
+      hence "(s, t) \<in> ?D \<and> p = ?f (s, t)" by (by100 auto)
+      thus "p \<in> ?f ` ?D" by (by100 blast)
+    qed
+  next
+    show "?f ` ?D \<subseteq> ?T" by (by100 auto)
+  qed
+  \<comment> \<open>?D is a closed subset of [0,1]^2, hence compact.\<close>
+  have hD_sub: "?D \<subseteq> {0..1} \<times> {0..1}"
+  proof
+    fix p assume "p \<in> ?D"
+    then obtain s t where "p = (s, t)" "0 \<le> s" "0 \<le> t" "s + t \<le> 1" by (by100 blast)
+    thus "p \<in> {0..1} \<times> {0..1}" by (by100 force)
+  qed
+  have hD_closed: "closed ?D"
+  proof -
+    have h1: "closed {p :: real \<times> real. 0 \<le> fst p}"
+      by (rule closed_Collect_le[of "\<lambda>p. 0" fst]) (simp_all add: continuous_on_const continuous_on_fst)
+    have h2: "closed {p :: real \<times> real. 0 \<le> snd p}"
+      by (rule closed_Collect_le[of "\<lambda>p. 0" snd]) (simp_all add: continuous_on_const continuous_on_snd)
+    have h3: "closed {p :: real \<times> real. fst p + snd p \<le> 1}"
+      by (rule closed_Collect_le[of "\<lambda>p. fst p + snd p" "\<lambda>p. 1"])
+         (simp_all add: continuous_on_add continuous_on_fst continuous_on_snd continuous_on_const)
+    have "?D = {p. 0 \<le> fst p} \<inter> {p. 0 \<le> snd p} \<inter> {p. fst p + snd p \<le> 1}"
+      by (by100 auto)
+    thus ?thesis using h1 h2 h3 by (by100 auto)
+  qed
+  have hD_compact: "compact ?D"
+    by (rule closed_subset_compact[OF compact_Icc_Times hD_closed hD_sub])
+  \<comment> \<open>?f is continuous.\<close>
+  have hf_cont: "continuous_on ?D ?f"
+  proof -
+    let ?fx = "\<lambda>(s::real,t::real). (1 - s - t) * ax + s * bx + t * cx"
+    let ?fy = "\<lambda>(s::real,t::real). (1 - s - t) * ay + s * by' + t * cy"
+    have hfx: "continuous_on UNIV ?fx"
+      unfolding split_def
+      by (intro continuous_on_add continuous_on_mult continuous_on_id
+          continuous_on_diff continuous_on_fst continuous_on_snd continuous_on_const)
+    have hfy: "continuous_on UNIV ?fy"
+      unfolding split_def
+      by (intro continuous_on_add continuous_on_mult continuous_on_id
+          continuous_on_diff continuous_on_fst continuous_on_snd continuous_on_const)
+    have "continuous_on UNIV (\<lambda>p. (?fx p, ?fy p))"
+      by (rule continuous_on_Pair[OF hfx hfy])
+    hence "continuous_on UNIV ?f"
+      unfolding split_def by (by100 simp)
+    thus ?thesis by (rule continuous_on_subset) (by100 blast)
+  qed
+  show ?thesis unfolding hT_eq
+    by (rule compact_continuous_image[OF hf_cont hD_compact])
+qed
 theorem Theorem_72_1_attaching_two_cell:
   fixes X :: "'a set" and TX :: "'a set set" and A :: "'a set"
     and h :: "real \<times> real \<Rightarrow> 'a" and a :: 'a
@@ -1312,9 +1653,27 @@ proof -
         have hC_sub: "?C \<subseteq> X"
           using assms(5) unfolding top1_continuous_map_on_def by (by100 blast)
         have hB2_compact: "compact top1_B2"
-          sorry \<comment> \<open>B2 is compact. Needs: closed (preimage of {..1} under continuous fst^2+snd^2)
-             + bounded (subset of [-1,1]^2) + Heine-Borel (compact_eq_bounded_closed).
-             All tools available in HOL-Analysis but type class bridging needed.\<close>
+        proof -
+          have hB2_sub: "top1_B2 \<subseteq> {-1..1} \<times> {-1..1::real}"
+          proof
+            fix p :: "real \<times> real" assume "p \<in> top1_B2"
+            hence h: "fst p ^ 2 + snd p ^ 2 \<le> 1" unfolding top1_B2_def by (by100 simp)
+            have "0 \<le> snd p ^ 2" by (by100 simp)
+            hence "fst p ^ 2 \<le> 1" using h by (by100 linarith)
+            hence "\<bar>fst p\<bar> \<le> 1" using power2_le_imp_le[of "\<bar>fst p\<bar>" 1] by (by100 simp)
+            moreover have "0 \<le> fst p ^ 2" by (by100 simp)
+            moreover have "snd p ^ 2 \<le> 1" using h calculation by (by100 linarith)
+            hence "\<bar>snd p\<bar> \<le> 1" using power2_le_imp_le[of "\<bar>snd p\<bar>" 1] by (by100 simp)
+            hence "- 1 \<le> snd p \<and> snd p \<le> 1" by (by100 linarith)
+            moreover from \<open>\<bar>fst p\<bar> \<le> 1\<close> have "- 1 \<le> fst p \<and> fst p \<le> 1" by (by100 linarith)
+            ultimately have "fst p \<in> {-1..1} \<and> snd p \<in> {-1..1}" by (by100 simp)
+            thus "p \<in> {-1..1} \<times> {-1..1}" by (simp add: mem_Times_iff)
+          qed
+          have "closed top1_B2"
+            sorry \<comment> \<open>{p. fst p^2 + snd p^2 \<le> 1} is closed.\<close>
+          thus ?thesis
+            using closed_subset_compact[OF compact_Icc_Times _ hB2_sub] by (by100 blast)
+        qed
         have "top1_compact_on top1_B2 top1_B2_topology"
         proof -
           have "top1_B2_topology = subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) top1_B2"
@@ -1955,347 +2314,6 @@ section \<open>\<S>74 Fundamental Groups of Surfaces\<close>
     removed. Use top1_is_n_fold_torus_on and top1_is_m_fold_projective_on predicates
     (defined earlier) on a space (X, TX) instead.\<close>
 
-text \<open>Union of two compact sets is compact.\<close>
-lemma compact_Un:
-  assumes "compact A" and "compact B"
-  shows "compact (A \<union> B)"
-proof (rule compactI)
-  fix \<U> :: "'a set set"
-  assume hopen: "\<forall>U\<in>\<U>. open U" and hcover: "A \<union> B \<subseteq> \<Union>\<U>"
-  have hA_cov: "A \<subseteq> \<Union>\<U>" using hcover by (by100 blast)
-  have hB_cov: "B \<subseteq> \<Union>\<U>" using hcover by (by100 blast)
-  obtain FA where hFA: "finite FA" "FA \<subseteq> \<U>" "A \<subseteq> \<Union>FA"
-  proof (rule compactE[OF assms(1) hA_cov])
-    fix U assume "U \<in> \<U>" thus "open U" using hopen by (by100 blast)
-  next
-    fix F' assume "F' \<subseteq> \<U>" "finite F'" "A \<subseteq> \<Union>F'"
-    thus thesis using that by (by100 blast)
-  qed
-  obtain FB where hFB: "finite FB" "FB \<subseteq> \<U>" "B \<subseteq> \<Union>FB"
-  proof (rule compactE[OF assms(2) hB_cov])
-    fix U assume "U \<in> \<U>" thus "open U" using hopen by (by100 blast)
-  next
-    fix F' assume hF'1: "F' \<subseteq> \<U>" and hF'2: "finite F'" and hF'3: "B \<subseteq> \<Union>F'"
-    show thesis by (rule that[OF hF'2 hF'1 hF'3])
-  qed
-  have "finite (FA \<union> FB)" using hFA(1) hFB(1) by (by100 blast)
-  moreover have "FA \<union> FB \<subseteq> \<U>" using hFA(2) hFB(2) by (by100 blast)
-  moreover have "A \<union> B \<subseteq> \<Union>(FA \<union> FB)" using hFA(3) hFB(3) by (by100 blast)
-  ultimately show "\<exists>\<F>'\<subseteq>\<U>. finite \<F>' \<and> A \<union> B \<subseteq> \<Union>\<F>'" by (by100 blast)
-qed
-
-text \<open>Finite union of compact sets is compact.\<close>
-lemma compact_Union:
-  assumes "finite F" and "\<forall>S\<in>F. compact S"
-  shows "compact (\<Union>F)"
-  using assms
-proof (induction F rule: finite_induct)
-  case empty thus ?case by (simp add: compact_empty)
-next
-  case (insert S F)
-  have "compact (\<Union>F)" using insert.IH insert.prems by (by100 blast)
-  moreover have "compact S" using insert.prems by (by100 blast)
-  ultimately have "compact (S \<union> \<Union>F)" by (rule compact_Un[rotated])
-  thus "compact (\<Union>(insert S F))" by (by100 simp)
-qed
-
-text \<open>Closed subset of compact is compact.\<close>
-lemma closed_subset_compact:
-  assumes "compact S" and "closed C" and "C \<subseteq> S"
-  shows "compact C"
-proof (rule compactI)
-  fix \<U> :: "'a set set"
-  assume hopen: "\<forall>U\<in>\<U>. open U" and hcover: "C \<subseteq> \<Union>\<U>"
-  \<comment> \<open>S - C is open (C closed). So \<U> \<union> {S - C} covers S.\<close>
-  have hSC_open: "open (- C)" using assms(2) unfolding closed_def by blast
-  have hS_cov: "S \<subseteq> \<Union>(\<U> \<union> {- C})"
-  proof
-    fix x assume hx: "x \<in> S"
-    show "x \<in> \<Union>(\<U> \<union> {- C})"
-    proof (cases "x \<in> C")
-      case True thus ?thesis using hcover by (by100 blast)
-    next
-      case False thus ?thesis by (by100 blast)
-    qed
-  qed
-  have hopen2: "\<forall>U\<in>\<U> \<union> {- C}. open U" using hopen hSC_open by (by100 blast)
-  obtain \<F> where hfin: "finite \<F>" and hsub: "\<F> \<subseteq> \<U> \<union> {- C}" and hcov: "S \<subseteq> \<Union>\<F>"
-  proof (rule compactE[OF assms(1) hS_cov])
-    fix U assume "U \<in> \<U> \<union> {- C}"
-    thus "open U" using hopen hSC_open by (by100 blast)
-  next
-    fix \<F>' assume "\<F>' \<subseteq> \<U> \<union> {- C}" "finite \<F>'" "S \<subseteq> \<Union>\<F>'"
-    thus thesis using that by (by100 blast)
-  qed
-  let ?\<F>' = "\<F> - {- C}"
-  have "finite ?\<F>'" using hfin by (by100 blast)
-  moreover have "?\<F>' \<subseteq> \<U>" using hsub by (by100 blast)
-  moreover have "C \<subseteq> \<Union>?\<F>'"
-  proof
-    fix x assume hx: "x \<in> C"
-    hence "x \<in> S" using assms(3) by (by100 blast)
-    hence "x \<in> \<Union>\<F>" using hcov by (by100 blast)
-    moreover have "x \<notin> - C" using hx by (by100 blast)
-    ultimately show "x \<in> \<Union>?\<F>'" by (by100 blast)
-  qed
-  ultimately show "\<exists>\<F>'\<subseteq>\<U>. finite \<F>' \<and> C \<subseteq> \<Union>\<F>'" by (by100 blast)
-qed
-
-text \<open>Binary product of compact sets in R is compact in R^2.
-  This is a special case of Tychonoff; proved via the tube lemma.\<close>
-lemma compact_Times_general:
-  assumes "compact (A :: 'a::topological_space set)" and "compact (B :: 'b::topological_space set)"
-  shows "compact (A \<times> B :: ('a \<times> 'b) set)"
-proof (rule compactI)
-  fix \<C> :: "('a \<times> 'b) set set"
-  assume h\<C>_open: "\<forall>c\<in>\<C>. open c" and h\<C>_cover: "A \<times> B \<subseteq> \<Union>\<C>"
-  \<comment> \<open>For each a \<in> A, {a} \<times> B is covered by \<C>. B compact gives finite subcover F_a.
-     Tube lemma: \<exists> W_a open, a \<in> W_a, W_a \<times> B \<subseteq> \<Union>F_a.
-     {W_a | a \<in> A} covers A. A compact gives finite subcover.\<close>
-  \<comment> \<open>Step 1: For each a \<in> A, get a finite subcover of {a} \<times> B.\<close>
-  have hslice: "\<forall>a\<in>A. \<exists>F_a. finite F_a \<and> F_a \<subseteq> \<C> \<and> {a} \<times> B \<subseteq> \<Union>F_a"
-  proof (intro ballI)
-    fix a assume ha: "a \<in> A"
-    \<comment> \<open>{a} \<times> B is the image of B under (\<lambda>b. (a, b)). This map is continuous.
-       B is compact, so its image {a} \<times> B is compact.\<close>
-    have hslice_compact: "compact ({a} \<times> B)"
-    proof -
-      have "continuous_on B (\<lambda>b. (a, b))"
-        by (rule continuous_on_Pair) (simp_all add: continuous_on_const continuous_on_id)
-      moreover have "{a} \<times> B = (\<lambda>b. (a, b)) ` B" by (by100 blast)
-      ultimately show ?thesis using compact_continuous_image[OF _ assms(2)] by (by100 simp)
-    qed
-    have hslice_sub: "{a} \<times> B \<subseteq> \<Union>\<C>" using h\<C>_cover ha by (by100 blast)
-    show "\<exists>F_a. finite F_a \<and> F_a \<subseteq> \<C> \<and> {a} \<times> B \<subseteq> \<Union>F_a"
-    proof (rule compactE[OF hslice_compact hslice_sub])
-      fix c assume "c \<in> \<C>" thus "open c" using h\<C>_open by (by100 blast)
-    next
-      fix F' assume "F' \<subseteq> \<C>" "finite F'" "{a} \<times> B \<subseteq> \<Union>F'"
-      thus ?thesis by (by100 blast)
-    qed
-  qed
-  \<comment> \<open>Step 2: Tube lemma. For each a \<in> A, find open W_a with W_a \<times> B \<subseteq> \<Union>F_a.\<close>
-  have htube: "\<forall>a\<in>A. \<exists>W_a F_a. open W_a \<and> a \<in> W_a \<and> finite F_a \<and> F_a \<subseteq> \<C> \<and> W_a \<times> B \<subseteq> \<Union>F_a"
-  proof (intro ballI)
-    fix a assume ha: "a \<in> A"
-    \<comment> \<open>For each b \<in> B, pick C_b \<in> \<C> with (a,b) \<in> C_b, then open U_b, V_b with (a,b) \<in> U_b \<times> V_b \<subseteq> C_b.\<close>
-    have hpick: "\<forall>b\<in>B. \<exists>Cb Ub Vb. Cb \<in> \<C> \<and> open Ub \<and> open Vb \<and> a \<in> Ub \<and> b \<in> Vb \<and> Ub \<times> Vb \<subseteq> Cb"
-    proof (intro ballI)
-      fix b assume hb: "b \<in> B"
-      have hab: "(a, b) \<in> \<Union>\<C>" using h\<C>_cover ha hb by (by100 blast)
-      then obtain Cb where hCb: "Cb \<in> \<C>" "(a, b) \<in> Cb" by (by100 blast)
-      have "open Cb" using h\<C>_open hCb(1) by (by100 blast)
-      from open_prod_elim[OF this hCb(2)]
-      obtain Ub Vb where "open Ub" "open Vb" "(a, b) \<in> Ub \<times> Vb" "Ub \<times> Vb \<subseteq> Cb" by (by100 blast)
-      thus "\<exists>Cb Ub Vb. Cb \<in> \<C> \<and> open Ub \<and> open Vb \<and> a \<in> Ub \<and> b \<in> Vb \<and> Ub \<times> Vb \<subseteq> Cb"
-        using hCb(1) by (by100 blast)
-    qed
-    \<comment> \<open>Choice: pick Cb, Ub, Vb for each b.\<close>
-    \<comment> \<open>Choice: pick Cb, Ub, Vb for each b (3x bchoice from hpick).\<close>
-    obtain Cb Ub Vb where hCUV: "\<forall>b\<in>B. Cb b \<in> \<C> \<and> open (Ub b) \<and> open (Vb b)
-        \<and> a \<in> Ub b \<and> b \<in> Vb b \<and> Ub b \<times> Vb b \<subseteq> Cb b"
-    proof -
-      have "\<exists>Cb. \<forall>b\<in>B. \<exists>Ub Vb. Cb b \<in> \<C> \<and> open Ub \<and> open Vb \<and> a \<in> Ub \<and> b \<in> Vb \<and> Ub \<times> Vb \<subseteq> Cb b"
-        using hpick by (rule bchoice)
-      then obtain Cb where hCb: "\<forall>b\<in>B. \<exists>Ub Vb. Cb b \<in> \<C> \<and> open Ub \<and> open Vb \<and> a \<in> Ub \<and> b \<in> Vb \<and> Ub \<times> Vb \<subseteq> Cb b"
-        by blast
-      have "\<exists>Ub. \<forall>b\<in>B. \<exists>Vb. Cb b \<in> \<C> \<and> open (Ub b) \<and> open Vb \<and> a \<in> Ub b \<and> b \<in> Vb \<and> Ub b \<times> Vb \<subseteq> Cb b"
-        using hCb by (rule bchoice)
-      then obtain Ub where hUb: "\<forall>b\<in>B. \<exists>Vb. Cb b \<in> \<C> \<and> open (Ub b) \<and> open Vb \<and> a \<in> Ub b \<and> b \<in> Vb \<and> Ub b \<times> Vb \<subseteq> Cb b"
-        by blast
-      have "\<exists>Vb. \<forall>b\<in>B. Cb b \<in> \<C> \<and> open (Ub b) \<and> open (Vb b) \<and> a \<in> Ub b \<and> b \<in> Vb b \<and> Ub b \<times> Vb b \<subseteq> Cb b"
-        using hUb by (rule bchoice)
-      then obtain Vb where "\<forall>b\<in>B. Cb b \<in> \<C> \<and> open (Ub b) \<and> open (Vb b) \<and> a \<in> Ub b \<and> b \<in> Vb b \<and> Ub b \<times> Vb b \<subseteq> Cb b"
-        by blast
-      thus ?thesis using that by blast
-    qed
-    \<comment> \<open>{Vb b | b \<in> B} covers B. B compact → finite B' with \<Union>(Vb ` B') \<supseteq> B.\<close>
-    have hVb_cover: "B \<subseteq> \<Union>(Vb ` B)" using hCUV by (by100 blast)
-    obtain B' where hB': "finite B'" "B' \<subseteq> B" "B \<subseteq> \<Union>(Vb ` B')"
-    proof (rule compactE_image[OF assms(2)])
-      fix b assume "b \<in> B" thus "open (Vb b)" using hCUV by (by100 blast)
-    next
-      show "B \<subseteq> \<Union>(Vb ` B)" by (rule hVb_cover)
-    next
-      fix B'' assume "B'' \<subseteq> B" "finite B''" "B \<subseteq> \<Union>(Vb ` B'')"
-      thus thesis using that by (by100 blast)
-    qed
-    \<comment> \<open>W_a = \<Inter>(Ub ` B') (finite intersection of opens containing a).\<close>
-    let ?W = "\<Inter>(Ub ` B')"
-    have hW_open: "open ?W"
-    proof -
-      have "finite (Ub ` B')" using hB'(1) by (by100 blast)
-      moreover have "\<forall>U\<in>Ub ` B'. open U" using hCUV hB'(2) by (by100 blast)
-      ultimately show ?thesis by (rule open_Inter)
-    qed
-    have hW_a: "a \<in> ?W" using hCUV hB'(2) by (by100 blast)
-    let ?F = "Cb ` B'"
-    have hF_fin: "finite ?F" using hB'(1) by (by100 blast)
-    have hF_sub: "?F \<subseteq> \<C>" using hCUV hB'(2) by (by100 blast)
-    have hWB_sub: "?W \<times> B \<subseteq> \<Union>?F"
-    proof
-      fix p assume hp: "p \<in> ?W \<times> B"
-      obtain x y where hxy: "p = (x, y)" "x \<in> ?W" "y \<in> B" using hp by (by100 blast)
-      obtain b where hb: "b \<in> B'" "y \<in> Vb b" using hB'(3) hxy(3) by (by100 blast)
-      have "x \<in> Ub b" using hxy(2) hb(1) by (by100 blast)
-      hence "(x, y) \<in> Ub b \<times> Vb b" using hb(2) by (by100 blast)
-      hence "(x, y) \<in> Cb b" using hCUV hB'(2) hb(1) by (by100 blast)
-      thus "p \<in> \<Union>?F" using hxy(1) hb(1) by (by100 blast)
-    qed
-    show "\<exists>W_a F_a. open W_a \<and> a \<in> W_a \<and> finite F_a \<and> F_a \<subseteq> \<C> \<and> W_a \<times> B \<subseteq> \<Union>F_a"
-      using hW_open hW_a hF_fin hF_sub hWB_sub by (by100 blast)
-  qed
-  \<comment> \<open>Step 3: {W_a | a \<in> A} covers A. A compact → finite subcover.\<close>
-  \<comment> \<open>Pick W and F functions via choice.\<close>
-  obtain W F where hWF: "\<forall>a\<in>A. open (W a) \<and> a \<in> W a \<and> finite (F a) \<and> F a \<subseteq> \<C> \<and> W a \<times> B \<subseteq> \<Union>(F a)"
-  proof -
-    from htube have "\<forall>a\<in>A. \<exists>W F. open W \<and> a \<in> W \<and> finite F \<and> F \<subseteq> \<C> \<and> W \<times> B \<subseteq> \<Union>F" .
-    hence "\<exists>W. \<forall>a\<in>A. \<exists>F. open (W a) \<and> a \<in> W a \<and> finite F \<and> F \<subseteq> \<C> \<and> W a \<times> B \<subseteq> \<Union>F"
-      by (rule bchoice)
-    then obtain W where hW: "\<forall>a\<in>A. \<exists>F. open (W a) \<and> a \<in> W a \<and> finite F \<and> F \<subseteq> \<C> \<and> W a \<times> B \<subseteq> \<Union>F"
-      by (by100 blast)
-    hence "\<exists>F. \<forall>a\<in>A. open (W a) \<and> a \<in> W a \<and> finite (F a) \<and> F a \<subseteq> \<C> \<and> W a \<times> B \<subseteq> \<Union>(F a)"
-      by (rule bchoice)
-    then obtain F where "\<forall>a\<in>A. open (W a) \<and> a \<in> W a \<and> finite (F a) \<and> F a \<subseteq> \<C> \<and> W a \<times> B \<subseteq> \<Union>(F a)"
-      by (by100 blast)
-    thus ?thesis using that by (by100 blast)
-  qed
-  \<comment> \<open>{W a | a \<in> A} covers A.\<close>
-  have "A \<subseteq> \<Union>(W ` A)"
-  proof
-    fix a assume "a \<in> A"
-    thus "a \<in> \<Union>(W ` A)" using hWF by (by100 blast)
-  qed
-  \<comment> \<open>A compact → finite subcover.\<close>
-  have hW_open: "\<forall>a\<in>A. open (W a)" using hWF by (by100 blast)
-  have hA_cov: "A \<subseteq> \<Union>(W ` A)" using hWF by (by100 blast)
-  obtain A' where hA': "finite A'" "A' \<subseteq> A" "A \<subseteq> \<Union>(W ` A')"
-  proof (rule compactE_image[OF assms(1)])
-    fix a assume "a \<in> A" thus "open (W a)" using hW_open by (by100 blast)
-  next
-    show "A \<subseteq> \<Union>(W ` A)" by (rule hA_cov)
-  next
-    fix A'' assume "A'' \<subseteq> A" "finite A''" "A \<subseteq> \<Union>(W ` A'')"
-    thus thesis using that by (by100 blast)
-  qed
-  \<comment> \<open>\<Union>{F a | a \<in> A'} is a finite subcover of A \<times> B.\<close>
-  let ?C' = "\<Union>(F ` A')"
-  have "finite ?C'" using hA'(1) hWF hA'(2) by (by100 force)
-  moreover have "?C' \<subseteq> \<C>"
-  proof
-    fix c assume "c \<in> ?C'"
-    then obtain a where "a \<in> A'" "c \<in> F a" by (by100 blast)
-    thus "c \<in> \<C>" using hWF hA'(2) by (by100 blast)
-  qed
-  moreover have "A \<times> B \<subseteq> \<Union>?C'"
-  proof
-    fix p assume hp: "p \<in> A \<times> B"
-    obtain x y where hxy: "p = (x, y)" "x \<in> A" "y \<in> B" using hp by (by100 blast)
-    obtain a where ha: "a \<in> A'" "x \<in> W a" using hA'(3) hxy(2) by (by100 blast)
-    have "(x, y) \<in> W a \<times> B" using ha(2) hxy(3) by (by100 blast)
-    hence "(x, y) \<in> \<Union>(F a)" using hWF hA'(2) ha(1) by (by100 blast)
-    thus "p \<in> \<Union>?C'" using hxy(1) ha(1) by (by100 blast)
-  qed
-  ultimately show "\<exists>C'\<subseteq>\<C>. finite C' \<and> A \<times> B \<subseteq> \<Union>C'" by (by100 blast)
-qed
-
-text \<open>Compact for product intervals.\<close>
-text \<open>Singleton set is compact.\<close>
-lemma compact_singleton: "compact {x :: 'a::topological_space}"
-proof (rule compactI)
-  fix \<U> :: "'a set set"
-  assume hopen: "\<forall>U\<in>\<U>. open U" and hcover: "{x} \<subseteq> \<Union>\<U>"
-  then obtain U where "U \<in> \<U>" "x \<in> U" by (by100 blast)
-  thus "\<exists>\<F>\<subseteq>\<U>. finite \<F> \<and> {x} \<subseteq> \<Union>\<F>" by (rule_tac x="{U}" in exI) (by100 blast)
-qed
-
-text \<open>Finite set is compact.\<close>
-lemma compact_finite: "finite S \<Longrightarrow> compact (S :: 'a::topological_space set)"
-proof (induction S rule: finite_induct)
-  case empty thus ?case by (simp add: compact_empty)
-next
-  case (insert x S)
-  have hx: "compact {x}" by (rule compact_singleton)
-  have hS: "compact S" by (rule insert.IH)
-  have "compact ({x} \<union> S)" by (rule compact_Un[OF hx hS])
-  thus ?case by (by100 simp)
-qed
-
-lemma compact_Icc_Times:
-  "compact ({a..b::real} \<times> {c..d::real})"
-  by (rule compact_Times_general[OF compact_Icc compact_Icc])
-
-text \<open>A triangle (convex hull of 3 points) in R^2 is compact.\<close>
-lemma triangle_compact:
-  fixes ax ay bx by' cx cy :: real
-  shows "compact {(x, y). \<exists>s t::real. 0 \<le> s \<and> 0 \<le> t \<and> s + t \<le> 1
-      \<and> x = (1 - s - t) * ax + s * bx + t * cx
-      \<and> y = (1 - s - t) * ay + s * by' + t * cy}"
-proof -
-  let ?T = "{(x, y). \<exists>s t::real. 0 \<le> s \<and> 0 \<le> t \<and> s + t \<le> 1
-      \<and> x = (1 - s - t) * ax + s * bx + t * cx
-      \<and> y = (1 - s - t) * ay + s * by' + t * cy}"
-  let ?f = "\<lambda>(s::real, t::real). ((1 - s - t) * ax + s * bx + t * cx,
-                                  (1 - s - t) * ay + s * by' + t * cy)"
-  let ?D = "{(s, t). (0::real) \<le> s \<and> 0 \<le> t \<and> s + t \<le> 1}"
-  have hT_eq: "?T = ?f ` ?D"
-  proof
-    show "?T \<subseteq> ?f ` ?D"
-    proof
-      fix p assume "p \<in> ?T"
-      then obtain x y s t where "p = (x, y)" "0 \<le> s" "0 \<le> t" "s + t \<le> 1"
-          "x = (1 - s - t) * ax + s * bx + t * cx"
-          "y = (1 - s - t) * ay + s * by' + t * cy" by (by100 blast)
-      hence "(s, t) \<in> ?D \<and> p = ?f (s, t)" by (by100 auto)
-      thus "p \<in> ?f ` ?D" by (by100 blast)
-    qed
-  next
-    show "?f ` ?D \<subseteq> ?T" by (by100 auto)
-  qed
-  \<comment> \<open>?D is a closed subset of [0,1]^2, hence compact.\<close>
-  have hD_sub: "?D \<subseteq> {0..1} \<times> {0..1}"
-  proof
-    fix p assume "p \<in> ?D"
-    then obtain s t where "p = (s, t)" "0 \<le> s" "0 \<le> t" "s + t \<le> 1" by (by100 blast)
-    thus "p \<in> {0..1} \<times> {0..1}" by (by100 force)
-  qed
-  have hD_closed: "closed ?D"
-  proof -
-    have h1: "closed {p :: real \<times> real. 0 \<le> fst p}"
-      by (rule closed_Collect_le[of "\<lambda>p. 0" fst]) (simp_all add: continuous_on_const continuous_on_fst)
-    have h2: "closed {p :: real \<times> real. 0 \<le> snd p}"
-      by (rule closed_Collect_le[of "\<lambda>p. 0" snd]) (simp_all add: continuous_on_const continuous_on_snd)
-    have h3: "closed {p :: real \<times> real. fst p + snd p \<le> 1}"
-      by (rule closed_Collect_le[of "\<lambda>p. fst p + snd p" "\<lambda>p. 1"])
-         (simp_all add: continuous_on_add continuous_on_fst continuous_on_snd continuous_on_const)
-    have "?D = {p. 0 \<le> fst p} \<inter> {p. 0 \<le> snd p} \<inter> {p. fst p + snd p \<le> 1}"
-      by (by100 auto)
-    thus ?thesis using h1 h2 h3 by (by100 auto)
-  qed
-  have hD_compact: "compact ?D"
-    by (rule closed_subset_compact[OF compact_Icc_Times hD_closed hD_sub])
-  \<comment> \<open>?f is continuous.\<close>
-  have hf_cont: "continuous_on ?D ?f"
-  proof -
-    let ?fx = "\<lambda>(s::real,t::real). (1 - s - t) * ax + s * bx + t * cx"
-    let ?fy = "\<lambda>(s::real,t::real). (1 - s - t) * ay + s * by' + t * cy"
-    have hfx: "continuous_on UNIV ?fx"
-      unfolding split_def
-      by (intro continuous_on_add continuous_on_mult continuous_on_id
-          continuous_on_diff continuous_on_fst continuous_on_snd continuous_on_const)
-    have hfy: "continuous_on UNIV ?fy"
-      unfolding split_def
-      by (intro continuous_on_add continuous_on_mult continuous_on_id
-          continuous_on_diff continuous_on_fst continuous_on_snd continuous_on_const)
-    have "continuous_on UNIV (\<lambda>p. (?fx p, ?fy p))"
-      by (rule continuous_on_Pair[OF hfx hfy])
-    hence "continuous_on UNIV ?f"
-      unfolding split_def by (by100 simp)
-    thus ?thesis by (rule continuous_on_subset) (by100 blast)
-  qed
-  show ?thesis unfolding hT_eq
-    by (rule compact_continuous_image[OF hf_cont hD_compact])
-qed
 
 text \<open>Cone superset: cone(conv n, v_n) \<subseteq> conv(Suc n).\<close>
 lemma convex_hull_cone_sup:
