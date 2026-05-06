@@ -482,6 +482,302 @@ definition top1_subgroup_has_index_on ::
          predicate (or by asserting infinite (top1_left_cosets_on ...)), not by k = 0.\<close>
 
 
+(** Z is free on {0} with generator map \<iota>(0) = 1.
+    Extracted from the base case of Theorem 71.1 for reuse. **)
+lemma Z_is_free_on_one_generator:
+  "top1_is_free_group_full_on top1_Z_group top1_Z_mul top1_Z_id top1_Z_invg
+      (\<lambda>(_::nat). (1::int)) {0::nat}"
+proof -
+  have hZ_grp: "top1_is_group_on top1_Z_group top1_Z_mul top1_Z_id top1_Z_invg"
+    using top1_Z_is_abelian_group unfolding top1_is_abelian_group_on_def by (by100 blast)
+  have hZ_in: "\<forall>s\<in>{0::nat}. (\<lambda>(_::nat). (1::int)) s \<in> top1_Z_group"
+    unfolding top1_Z_group_def by (by100 simp)
+  have hZ_inj: "inj_on (\<lambda>(_::nat). (1::int)) {0::nat}"
+    unfolding inj_on_def by (by100 simp)
+  have hZ_gen: "top1_Z_group = top1_subgroup_generated_on top1_Z_group top1_Z_mul top1_Z_id top1_Z_invg
+        ((\<lambda>(_::nat). (1::int)) ` {0::nat})"
+  proof -
+    have himg: "(\<lambda>(_::nat). (1::int)) ` {0::nat} = {1::int}" by (by100 simp)
+    have himg_sub: "{1::int} \<subseteq> top1_Z_group" unfolding top1_Z_group_def by (by100 simp)
+    \<comment> \<open>UNIV \<subseteq> subgroup_generated: every integer is in every subgroup containing 1.\<close>
+    have hsub: "top1_Z_group \<subseteq> top1_subgroup_generated_on top1_Z_group top1_Z_mul top1_Z_id top1_Z_invg {1::int}"
+    proof (rule subsetI)
+      fix n :: int assume "n \<in> top1_Z_group"
+      \<comment> \<open>Need: n \<in> \<Inter>{H. {1} \<subseteq> H \<and> H \<subseteq> UNIV \<and> group H}.\<close>
+      show "n \<in> top1_subgroup_generated_on top1_Z_group top1_Z_mul top1_Z_id top1_Z_invg {1::int}"
+        unfolding top1_subgroup_generated_on_def
+      proof (rule InterI)
+        fix H assume hH: "H \<in> {H. {1::int} \<subseteq> H \<and> H \<subseteq> top1_Z_group \<and>
+            top1_is_group_on H top1_Z_mul top1_Z_id top1_Z_invg}"
+        hence h1_in: "(1::int) \<in> H" and hH_grp: "top1_is_group_on H top1_Z_mul top1_Z_id top1_Z_invg"
+          by (by100 blast)+
+        \<comment> \<open>H is a subgroup of Z containing 1. Show n \<in> H by induction on |n|.\<close>
+        have h0_in: "top1_Z_id \<in> H"
+          using hH_grp unfolding top1_is_group_on_def by (by100 blast)
+        have hinv_cl: "\<And>x. x \<in> H \<Longrightarrow> top1_Z_invg x \<in> H"
+          using hH_grp unfolding top1_is_group_on_def by (by100 blast)
+        have hmul_cl: "\<And>x y. x \<in> H \<Longrightarrow> y \<in> H \<Longrightarrow> top1_Z_mul x y \<in> H"
+          using hH_grp unfolding top1_is_group_on_def by (by100 blast)
+        have hm1_in: "(-1::int) \<in> H"
+          using hinv_cl[OF h1_in] unfolding top1_Z_invg_def by (by100 simp)
+        \<comment> \<open>Positive integers: int k \<in> H for all k by induction.\<close>
+        have hpos: "\<And>k::nat. int k \<in> H"
+        proof -
+          fix k :: nat show "int k \<in> H"
+          proof (induction k)
+            case 0 thus ?case using h0_in unfolding top1_Z_id_def by (by100 simp)
+          next
+            case (Suc k)
+            have "int (Suc k) = top1_Z_mul 1 (int k)"
+              unfolding top1_Z_mul_def by (by100 simp)
+            thus ?case using hmul_cl[OF h1_in Suc.IH] by (by100 simp)
+          qed
+        qed
+        \<comment> \<open>Negative integers: - int k \<in> H for all k.\<close>
+        have hneg: "\<And>k::nat. - int k \<in> H"
+        proof -
+          fix k :: nat show "- int k \<in> H"
+          proof (induction k)
+            case 0 thus ?case using h0_in unfolding top1_Z_id_def by (by100 simp)
+          next
+            case (Suc k)
+            have "- int (Suc k) = top1_Z_mul (-1) (- int k)"
+              unfolding top1_Z_mul_def by (by100 simp)
+            thus ?case using hmul_cl[OF hm1_in Suc.IH] by (by100 simp)
+          qed
+        qed
+        \<comment> \<open>Every integer is either int k or - int k.\<close>
+        show "n \<in> H"
+        proof (cases "n \<ge> 0")
+          case True
+          then obtain k where "n = int k" by (rule nonneg_int_cases)
+          thus ?thesis using hpos by (by100 simp)
+        next
+          case False
+          hence "n < 0" by (by100 simp)
+          hence "- n \<ge> 0" by (by100 simp)
+          then obtain k where hk: "- n = int k" by (rule nonneg_int_cases)
+          hence "n = - int k" by (by100 simp)
+          thus ?thesis using hneg by (by100 simp)
+        qed
+      qed
+    qed
+    \<comment> \<open>Reverse inclusion: subgroup_generated \<subseteq> top1_Z_group.\<close>
+    have hsup: "top1_subgroup_generated_on top1_Z_group top1_Z_mul top1_Z_id top1_Z_invg {1::int} \<subseteq> top1_Z_group"
+      by (rule subgroup_generated_subset[OF hZ_grp himg_sub])
+    have hsub': "top1_Z_group \<subseteq> top1_subgroup_generated_on top1_Z_group top1_Z_mul top1_Z_id top1_Z_invg
+        ((\<lambda>(_::nat). (1::int)) ` {0::nat})"
+      using hsub himg by (by100 simp)
+    have hsup': "top1_subgroup_generated_on top1_Z_group top1_Z_mul top1_Z_id top1_Z_invg
+        ((\<lambda>(_::nat). (1::int)) ` {0::nat}) \<subseteq> top1_Z_group"
+      using hsup himg by (by100 simp)
+    from hsub' hsup' show ?thesis by (rule equalityI)
+  qed
+  \<comment> \<open>Reduced words with single generator: product = int(length) \<noteq> 0.\<close>
+  have hword_prod_true: "\<And>k::nat. k > 0 \<Longrightarrow>
+      top1_group_word_product top1_Z_mul top1_Z_id top1_Z_invg
+        (replicate k ((1::int), True)) = int k"
+  proof -
+    fix k :: nat
+    show "k > 0 \<Longrightarrow>
+        top1_group_word_product top1_Z_mul top1_Z_id top1_Z_invg
+          (replicate k ((1::int), True)) = int k"
+    proof (induction k)
+      case 0 thus ?case by (by100 simp)
+    next
+      case (Suc k)
+      show ?case
+      proof (cases "k = 0")
+        case True
+        thus ?thesis unfolding top1_Z_mul_def top1_Z_id_def by (by100 simp)
+      next
+        case False
+        hence "k > 0" by (by100 simp)
+        have "replicate (Suc k) ((1::int), True) = ((1::int), True) # replicate k ((1::int), True)"
+          by (by100 simp)
+        hence "top1_group_word_product top1_Z_mul top1_Z_id top1_Z_invg
+            (replicate (Suc k) ((1::int), True))
+          = top1_Z_mul 1 (top1_group_word_product top1_Z_mul top1_Z_id top1_Z_invg
+              (replicate k ((1::int), True)))"
+          by (by100 simp)
+        also have "\<dots> = top1_Z_mul 1 (int k)"
+          using Suc.IH \<open>k > 0\<close> by (by100 simp)
+        also have "\<dots> = int (Suc k)"
+          unfolding top1_Z_mul_def by (by100 simp)
+        finally show ?thesis .
+      qed
+    qed
+  qed
+  have hword_prod_false: "\<And>k::nat. k > 0 \<Longrightarrow>
+      top1_group_word_product top1_Z_mul top1_Z_id top1_Z_invg
+        (replicate k ((1::int), False)) = - int k"
+  proof -
+    fix k :: nat
+    show "k > 0 \<Longrightarrow>
+        top1_group_word_product top1_Z_mul top1_Z_id top1_Z_invg
+          (replicate k ((1::int), False)) = - int k"
+    proof (induction k)
+      case 0 thus ?case by (by100 simp)
+    next
+      case (Suc k)
+      show ?case
+      proof (cases "k = 0")
+        case True
+        thus ?thesis unfolding top1_Z_mul_def top1_Z_id_def top1_Z_invg_def by (by100 simp)
+      next
+        case False
+        hence "k > 0" by (by100 simp)
+        have "replicate (Suc k) ((1::int), False) = ((1::int), False) # replicate k ((1::int), False)"
+          by (by100 simp)
+        hence "top1_group_word_product top1_Z_mul top1_Z_id top1_Z_invg
+            (replicate (Suc k) ((1::int), False))
+          = top1_Z_mul (top1_Z_invg 1) (top1_group_word_product top1_Z_mul top1_Z_id top1_Z_invg
+              (replicate k ((1::int), False)))"
+          by (by100 simp)
+        also have "\<dots> = top1_Z_mul (top1_Z_invg 1) (- int k)"
+          using Suc.IH \<open>k > 0\<close> by (by100 simp)
+        also have "\<dots> = - int (Suc k)"
+          unfolding top1_Z_mul_def top1_Z_invg_def by (by100 simp)
+        finally show ?thesis .
+      qed
+    qed
+  qed
+  \<comment> \<open>A reduced word where all entries are mapped to (1,b) must be replicate k (1,b).\<close>
+  \<comment> \<open>Helper: mapped word has constant boolean in reduced case.\<close>
+  have hconst_bool: "\<And>ws :: (nat \<times> bool) list. ws \<noteq> [] \<Longrightarrow>
+      top1_is_reduced_word (map (\<lambda>(s, b). ((1::int), b)) ws) \<Longrightarrow>
+      \<exists>b. map (\<lambda>(s, b). ((1::int), b)) ws = replicate (length ws) ((1::int), b)"
+  proof -
+    fix ws :: "(nat \<times> bool) list"
+    assume hne: "ws \<noteq> []"
+    assume hred: "top1_is_reduced_word (map (\<lambda>(s, b). ((1::int), b)) ws)"
+    \<comment> \<open>All booleans in ws are equal. First show the mapped word has constant entries.\<close>
+    let ?mws = "map (\<lambda>(s, b). ((1::int), b)) ws"
+    have hred_const: "\<And>xs :: (int \<times> bool) list. xs \<noteq> [] \<Longrightarrow>
+        top1_is_reduced_word xs \<Longrightarrow> (\<forall>i < length xs. fst (xs ! i) = fst (hd xs)) \<Longrightarrow>
+        xs = replicate (length xs) (hd xs)"
+    proof -
+      fix xs :: "(int \<times> bool) list"
+      show "xs \<noteq> [] \<Longrightarrow> top1_is_reduced_word xs \<Longrightarrow>
+          (\<forall>i < length xs. fst (xs ! i) = fst (hd xs)) \<Longrightarrow>
+          xs = replicate (length xs) (hd xs)"
+      proof (induction xs rule: induct_list012)
+        case 1 thus ?case by (by100 simp)
+      next
+        case (2 x)
+        thus ?case by (by100 simp)
+      next
+      case (3 x y zs)
+        obtain gx bx where hx: "x = (gx, bx)" by (cases x) (by100 simp)
+        obtain gy cy where hy: "y = (gy, cy)" by (cases y) (by100 simp)
+        \<comment> \<open>The reduced-word condition for the first two elements gives gx\<noteq>gy \<or> bx=cy.\<close>
+        have hred_full: "top1_is_reduced_word (x # y # zs)" using "3.prems"(2) by (by100 simp)
+        have hred_pair: "(gx \<noteq> gy \<or> bx = cy) \<and> top1_is_reduced_word (y # zs)"
+          using hred_full hx hy by (by100 simp)
+        have hfst_all: "\<forall>i < length (x # y # zs). fst ((x # y # zs) ! i) = gx"
+          using "3.prems"(3) hx by (by100 simp)
+        have hgy_eq: "gy = gx" using hfst_all hy by (by100 force)
+        hence hcy_eq: "bx = cy" using hred_pair by (by100 simp)
+        hence hy_eq: "y = x" using hx hy hgy_eq by (by100 simp)
+        have hred_tail: "top1_is_reduced_word (y # zs)" using hred_pair by (by100 blast)
+        show ?case
+        proof (cases "zs = []")
+          case True thus ?thesis using hy_eq by (by100 simp)
+        next
+          case False
+          hence hyzs_ne: "y # zs \<noteq> []" by (by100 simp)
+          have hfst_tail: "\<forall>i < length (y # zs). fst ((y # zs) ! i) = fst (hd (y # zs))"
+          proof (intro allI impI)
+            fix i assume "i < length (y # zs)"
+            hence "i + 1 < length (x # y # zs)" by (by100 simp)
+            have "(x # y # zs) ! (i + 1) = (y # zs) ! i" by (by100 simp)
+            hence "fst ((y # zs) ! i) = gx" using hfst_all \<open>i + 1 < _\<close> by (by100 force)
+            thus "fst ((y # zs) ! i) = fst (hd (y # zs))" using hy hgy_eq by (by100 simp)
+          qed
+          have hIH: "y # zs = replicate (length (y # zs)) (hd (y # zs))"
+            using "3.IH"(2)[OF hyzs_ne hred_tail hfst_tail] .
+          hence "y # zs = replicate (length (y # zs)) y" by (by100 simp)
+          thus ?thesis using hy_eq by (by100 simp)
+        qed
+      qed
+    qed
+    \<comment> \<open>Apply to our mapped word.\<close>
+    have hfst_const: "\<forall>i < length ?mws. fst (?mws ! i) = fst (hd ?mws)"
+    proof (intro allI impI)
+      fix i assume hi: "i < length ?mws"
+      hence hi': "i < length ws" by (by100 simp)
+      have "?mws ! i = (\<lambda>(s, b). ((1::int), b)) (ws ! i)"
+        using hi' by (by100 simp)
+      hence "fst (?mws ! i) = (1::int)" by (cases "ws ! i") (by100 simp)
+      moreover have "fst (hd ?mws) = (1::int)"
+      proof -
+        obtain a rest where hws: "ws = a # rest" using hne
+          by (cases ws) (by100 simp_all)
+        show ?thesis unfolding hws by (cases a) (by100 simp)
+      qed
+      ultimately show "fst (?mws ! i) = fst (hd ?mws)" by (by100 simp)
+    qed
+    have hmws_ne: "?mws \<noteq> []" using hne by (by100 simp)
+    have hmws_repl: "?mws = replicate (length ?mws) (hd ?mws)"
+      using hred_const[OF hmws_ne hred hfst_const] .
+    \<comment> \<open>Extract the common boolean value from hd.\<close>
+    have h0_lt: "0 < length ws" using hne by (by100 simp)
+    let ?b = "snd (hd ws)"
+    have hhead_eq: "hd ?mws = ((1::int), ?b)"
+    proof -
+      obtain a rest where hws: "ws = a # rest" using hne
+        by (cases ws) (by100 simp_all)
+      show ?thesis unfolding hws by (cases a) (by100 simp)
+    qed
+    have hmap_eq: "map (\<lambda>(s, b). ((1::int), b)) ws = replicate (length ws) ((1::int), ?b)"
+      using hmws_repl hhead_eq by (by100 simp)
+    show "\<exists>b. map (\<lambda>(s, b). ((1::int), b)) ws = replicate (length ws) ((1::int), b)"
+      using hmap_eq by (by100 blast)
+  qed
+  have hZ_red: "\<forall>ws :: (nat \<times> bool) list.
+        ws \<noteq> [] \<longrightarrow>
+        top1_is_reduced_word (map (\<lambda>(s, b). ((\<lambda>_. 1::int) s, b)) ws) \<longrightarrow>
+        (\<forall>i<length ws. fst (ws ! i) \<in> {0::nat}) \<longrightarrow>
+        top1_group_word_product top1_Z_mul top1_Z_id top1_Z_invg
+          (map (\<lambda>(s, b). ((\<lambda>_. 1::int) s, b)) ws) \<noteq> top1_Z_id"
+  proof (intro allI impI)
+    fix ws :: "(nat \<times> bool) list"
+    assume hne: "ws \<noteq> []"
+    assume hred: "top1_is_reduced_word (map (\<lambda>(s, b). ((\<lambda>_. 1::int) s, b)) ws)"
+    assume hS: "\<forall>i<length ws. fst (ws ! i) \<in> {0::nat}"
+    have hred': "top1_is_reduced_word (map (\<lambda>(s, b). ((1::int), b)) ws)"
+      using hred by (by100 simp)
+    from hconst_bool[OF hne hred']
+    obtain b where hb: "map (\<lambda>(s, b). ((1::int), b)) ws = replicate (length ws) ((1::int), b)"
+      by (by100 blast)
+    have hlen: "length ws > 0" using hne by (by100 simp)
+    have hmap_eq: "map (\<lambda>(s, b). ((\<lambda>_. 1::int) s, b)) ws = map (\<lambda>(s, b). ((1::int), b)) ws"
+      by (by100 simp)
+    show "top1_group_word_product top1_Z_mul top1_Z_id top1_Z_invg
+          (map (\<lambda>(s, b). ((\<lambda>_. 1::int) s, b)) ws) \<noteq> top1_Z_id"
+    proof (cases b)
+      case True
+      have heq: "map (\<lambda>(s, b). ((\<lambda>_. 1::int) s, b)) ws = replicate (length ws) ((1::int), True)"
+        using hb hmap_eq True by (by100 simp)
+      have "top1_group_word_product top1_Z_mul top1_Z_id top1_Z_invg
+          (replicate (length ws) ((1::int), True)) = int (length ws)"
+        using hword_prod_true[OF hlen] .
+      thus ?thesis unfolding top1_Z_id_def using hlen heq by (by100 simp)
+    next
+      case False
+      have heq: "map (\<lambda>(s, b). ((\<lambda>_. 1::int) s, b)) ws = replicate (length ws) ((1::int), False)"
+        using hb hmap_eq False by (by100 simp)
+      have "top1_group_word_product top1_Z_mul top1_Z_id top1_Z_invg
+          (replicate (length ws) ((1::int), False)) = - int (length ws)"
+        using hword_prod_false[OF hlen] .
+      thus ?thesis unfolding top1_Z_id_def using hlen heq by (by100 simp)
+    qed
+  qed
+  show ?thesis using hZ_grp hZ_in hZ_inj hZ_gen hZ_red
+    unfolding top1_is_free_group_full_on_def by (by100 blast)
+qed
+
+
 (** from \<S>71 Theorem 71.1: finite wedge of circles has free fundamental group
     generated by the individual circle loops. **)
 theorem Theorem_71_1_wedge_of_circles_finite:
@@ -649,295 +945,7 @@ using assms proof (induction n arbitrary: X TX p rule: less_induct)
     \<comment> \<open>Step 7: Z is free on {0::nat} with \<iota>(0) = 1.\<close>
     have hZ_free: "top1_is_free_group_full_on top1_Z_group top1_Z_mul top1_Z_id top1_Z_invg
         (\<lambda>(_::nat). (1::int)) {0::nat}"
-    proof -
-      have hZ_grp: "top1_is_group_on top1_Z_group top1_Z_mul top1_Z_id top1_Z_invg"
-        using top1_Z_is_abelian_group unfolding top1_is_abelian_group_on_def by (by100 blast)
-      have hZ_in: "\<forall>s\<in>{0::nat}. (\<lambda>(_::nat). (1::int)) s \<in> top1_Z_group"
-        unfolding top1_Z_group_def by (by100 simp)
-      have hZ_inj: "inj_on (\<lambda>(_::nat). (1::int)) {0::nat}"
-        unfolding inj_on_def by (by100 simp)
-      have hZ_gen: "top1_Z_group = top1_subgroup_generated_on top1_Z_group top1_Z_mul top1_Z_id top1_Z_invg
-            ((\<lambda>(_::nat). (1::int)) ` {0::nat})"
-      proof -
-        have himg: "(\<lambda>(_::nat). (1::int)) ` {0::nat} = {1::int}" by (by100 simp)
-        have himg_sub: "{1::int} \<subseteq> top1_Z_group" unfolding top1_Z_group_def by (by100 simp)
-        \<comment> \<open>UNIV \<subseteq> subgroup_generated: every integer is in every subgroup containing 1.\<close>
-        have hsub: "top1_Z_group \<subseteq> top1_subgroup_generated_on top1_Z_group top1_Z_mul top1_Z_id top1_Z_invg {1::int}"
-        proof (rule subsetI)
-          fix n :: int assume "n \<in> top1_Z_group"
-          \<comment> \<open>Need: n \<in> \<Inter>{H. {1} \<subseteq> H \<and> H \<subseteq> UNIV \<and> group H}.\<close>
-          show "n \<in> top1_subgroup_generated_on top1_Z_group top1_Z_mul top1_Z_id top1_Z_invg {1::int}"
-            unfolding top1_subgroup_generated_on_def
-          proof (rule InterI)
-            fix H assume hH: "H \<in> {H. {1::int} \<subseteq> H \<and> H \<subseteq> top1_Z_group \<and>
-                top1_is_group_on H top1_Z_mul top1_Z_id top1_Z_invg}"
-            hence h1_in: "(1::int) \<in> H" and hH_grp: "top1_is_group_on H top1_Z_mul top1_Z_id top1_Z_invg"
-              by (by100 blast)+
-            \<comment> \<open>H is a subgroup of Z containing 1. Show n \<in> H by induction on |n|.\<close>
-            have h0_in: "top1_Z_id \<in> H"
-              using hH_grp unfolding top1_is_group_on_def by (by100 blast)
-            have hinv_cl: "\<And>x. x \<in> H \<Longrightarrow> top1_Z_invg x \<in> H"
-              using hH_grp unfolding top1_is_group_on_def by (by100 blast)
-            have hmul_cl: "\<And>x y. x \<in> H \<Longrightarrow> y \<in> H \<Longrightarrow> top1_Z_mul x y \<in> H"
-              using hH_grp unfolding top1_is_group_on_def by (by100 blast)
-            have hm1_in: "(-1::int) \<in> H"
-              using hinv_cl[OF h1_in] unfolding top1_Z_invg_def by (by100 simp)
-            \<comment> \<open>Positive integers: int k \<in> H for all k by induction.\<close>
-            have hpos: "\<And>k::nat. int k \<in> H"
-            proof -
-              fix k :: nat show "int k \<in> H"
-              proof (induction k)
-                case 0 thus ?case using h0_in unfolding top1_Z_id_def by (by100 simp)
-              next
-                case (Suc k)
-                have "int (Suc k) = top1_Z_mul 1 (int k)"
-                  unfolding top1_Z_mul_def by (by100 simp)
-                thus ?case using hmul_cl[OF h1_in Suc.IH] by (by100 simp)
-              qed
-            qed
-            \<comment> \<open>Negative integers: - int k \<in> H for all k.\<close>
-            have hneg: "\<And>k::nat. - int k \<in> H"
-            proof -
-              fix k :: nat show "- int k \<in> H"
-              proof (induction k)
-                case 0 thus ?case using h0_in unfolding top1_Z_id_def by (by100 simp)
-              next
-                case (Suc k)
-                have "- int (Suc k) = top1_Z_mul (-1) (- int k)"
-                  unfolding top1_Z_mul_def by (by100 simp)
-                thus ?case using hmul_cl[OF hm1_in Suc.IH] by (by100 simp)
-              qed
-            qed
-            \<comment> \<open>Every integer is either int k or - int k.\<close>
-            show "n \<in> H"
-            proof (cases "n \<ge> 0")
-              case True
-              then obtain k where "n = int k" by (rule nonneg_int_cases)
-              thus ?thesis using hpos by (by100 simp)
-            next
-              case False
-              hence "n < 0" by (by100 simp)
-              hence "- n \<ge> 0" by (by100 simp)
-              then obtain k where hk: "- n = int k" by (rule nonneg_int_cases)
-              hence "n = - int k" by (by100 simp)
-              thus ?thesis using hneg by (by100 simp)
-            qed
-          qed
-        qed
-        \<comment> \<open>Reverse inclusion: subgroup_generated \<subseteq> top1_Z_group.\<close>
-        have hsup: "top1_subgroup_generated_on top1_Z_group top1_Z_mul top1_Z_id top1_Z_invg {1::int} \<subseteq> top1_Z_group"
-          by (rule subgroup_generated_subset[OF hZ_grp himg_sub])
-        have hsub': "top1_Z_group \<subseteq> top1_subgroup_generated_on top1_Z_group top1_Z_mul top1_Z_id top1_Z_invg
-            ((\<lambda>(_::nat). (1::int)) ` {0::nat})"
-          using hsub himg by (by100 simp)
-        have hsup': "top1_subgroup_generated_on top1_Z_group top1_Z_mul top1_Z_id top1_Z_invg
-            ((\<lambda>(_::nat). (1::int)) ` {0::nat}) \<subseteq> top1_Z_group"
-          using hsup himg by (by100 simp)
-        from hsub' hsup' show ?thesis by (rule equalityI)
-      qed
-      \<comment> \<open>Reduced words with single generator: product = int(length) \<noteq> 0.\<close>
-      have hword_prod_true: "\<And>k::nat. k > 0 \<Longrightarrow>
-          top1_group_word_product top1_Z_mul top1_Z_id top1_Z_invg
-            (replicate k ((1::int), True)) = int k"
-      proof -
-        fix k :: nat
-        show "k > 0 \<Longrightarrow>
-            top1_group_word_product top1_Z_mul top1_Z_id top1_Z_invg
-              (replicate k ((1::int), True)) = int k"
-        proof (induction k)
-          case 0 thus ?case by (by100 simp)
-        next
-          case (Suc k)
-          show ?case
-          proof (cases "k = 0")
-            case True
-            thus ?thesis unfolding top1_Z_mul_def top1_Z_id_def by (by100 simp)
-          next
-            case False
-            hence "k > 0" by (by100 simp)
-            have "replicate (Suc k) ((1::int), True) = ((1::int), True) # replicate k ((1::int), True)"
-              by (by100 simp)
-            hence "top1_group_word_product top1_Z_mul top1_Z_id top1_Z_invg
-                (replicate (Suc k) ((1::int), True))
-              = top1_Z_mul 1 (top1_group_word_product top1_Z_mul top1_Z_id top1_Z_invg
-                  (replicate k ((1::int), True)))"
-              by (by100 simp)
-            also have "\<dots> = top1_Z_mul 1 (int k)"
-              using Suc.IH \<open>k > 0\<close> by (by100 simp)
-            also have "\<dots> = int (Suc k)"
-              unfolding top1_Z_mul_def by (by100 simp)
-            finally show ?thesis .
-          qed
-        qed
-      qed
-      have hword_prod_false: "\<And>k::nat. k > 0 \<Longrightarrow>
-          top1_group_word_product top1_Z_mul top1_Z_id top1_Z_invg
-            (replicate k ((1::int), False)) = - int k"
-      proof -
-        fix k :: nat
-        show "k > 0 \<Longrightarrow>
-            top1_group_word_product top1_Z_mul top1_Z_id top1_Z_invg
-              (replicate k ((1::int), False)) = - int k"
-        proof (induction k)
-          case 0 thus ?case by (by100 simp)
-        next
-          case (Suc k)
-          show ?case
-          proof (cases "k = 0")
-            case True
-            thus ?thesis unfolding top1_Z_mul_def top1_Z_id_def top1_Z_invg_def by (by100 simp)
-          next
-            case False
-            hence "k > 0" by (by100 simp)
-            have "replicate (Suc k) ((1::int), False) = ((1::int), False) # replicate k ((1::int), False)"
-              by (by100 simp)
-            hence "top1_group_word_product top1_Z_mul top1_Z_id top1_Z_invg
-                (replicate (Suc k) ((1::int), False))
-              = top1_Z_mul (top1_Z_invg 1) (top1_group_word_product top1_Z_mul top1_Z_id top1_Z_invg
-                  (replicate k ((1::int), False)))"
-              by (by100 simp)
-            also have "\<dots> = top1_Z_mul (top1_Z_invg 1) (- int k)"
-              using Suc.IH \<open>k > 0\<close> by (by100 simp)
-            also have "\<dots> = - int (Suc k)"
-              unfolding top1_Z_mul_def top1_Z_invg_def by (by100 simp)
-            finally show ?thesis .
-          qed
-        qed
-      qed
-      \<comment> \<open>A reduced word where all entries are mapped to (1,b) must be replicate k (1,b).\<close>
-      \<comment> \<open>Helper: mapped word has constant boolean in reduced case.\<close>
-      have hconst_bool: "\<And>ws :: (nat \<times> bool) list. ws \<noteq> [] \<Longrightarrow>
-          top1_is_reduced_word (map (\<lambda>(s, b). ((1::int), b)) ws) \<Longrightarrow>
-          \<exists>b. map (\<lambda>(s, b). ((1::int), b)) ws = replicate (length ws) ((1::int), b)"
-      proof -
-        fix ws :: "(nat \<times> bool) list"
-        assume hne: "ws \<noteq> []"
-        assume hred: "top1_is_reduced_word (map (\<lambda>(s, b). ((1::int), b)) ws)"
-        \<comment> \<open>All booleans in ws are equal. First show the mapped word has constant entries.\<close>
-        let ?mws = "map (\<lambda>(s, b). ((1::int), b)) ws"
-        have hred_const: "\<And>xs :: (int \<times> bool) list. xs \<noteq> [] \<Longrightarrow>
-            top1_is_reduced_word xs \<Longrightarrow> (\<forall>i < length xs. fst (xs ! i) = fst (hd xs)) \<Longrightarrow>
-            xs = replicate (length xs) (hd xs)"
-        proof -
-          fix xs :: "(int \<times> bool) list"
-          show "xs \<noteq> [] \<Longrightarrow> top1_is_reduced_word xs \<Longrightarrow>
-              (\<forall>i < length xs. fst (xs ! i) = fst (hd xs)) \<Longrightarrow>
-              xs = replicate (length xs) (hd xs)"
-          proof (induction xs rule: induct_list012)
-            case 1 thus ?case by (by100 simp)
-          next
-            case (2 x)
-            thus ?case by (by100 simp)
-          next
-          case (3 x y zs)
-            obtain gx bx where hx: "x = (gx, bx)" by (cases x) (by100 simp)
-            obtain gy cy where hy: "y = (gy, cy)" by (cases y) (by100 simp)
-            \<comment> \<open>The reduced-word condition for the first two elements gives gx\<noteq>gy \<or> bx=cy.\<close>
-            have hred_full: "top1_is_reduced_word (x # y # zs)" using "3.prems"(2) by (by100 simp)
-            have hred_pair: "(gx \<noteq> gy \<or> bx = cy) \<and> top1_is_reduced_word (y # zs)"
-              using hred_full hx hy by (by100 simp)
-            have hfst_all: "\<forall>i < length (x # y # zs). fst ((x # y # zs) ! i) = gx"
-              using "3.prems"(3) hx by (by100 simp)
-            have hgy_eq: "gy = gx" using hfst_all hy by (by100 force)
-            hence hcy_eq: "bx = cy" using hred_pair by (by100 simp)
-            hence hy_eq: "y = x" using hx hy hgy_eq by (by100 simp)
-            have hred_tail: "top1_is_reduced_word (y # zs)" using hred_pair by (by100 blast)
-            show ?case
-            proof (cases "zs = []")
-              case True thus ?thesis using hy_eq by (by100 simp)
-            next
-              case False
-              hence hyzs_ne: "y # zs \<noteq> []" by (by100 simp)
-              have hfst_tail: "\<forall>i < length (y # zs). fst ((y # zs) ! i) = fst (hd (y # zs))"
-              proof (intro allI impI)
-                fix i assume "i < length (y # zs)"
-                hence "i + 1 < length (x # y # zs)" by (by100 simp)
-                have "(x # y # zs) ! (i + 1) = (y # zs) ! i" by (by100 simp)
-                hence "fst ((y # zs) ! i) = gx" using hfst_all \<open>i + 1 < _\<close> by (by100 force)
-                thus "fst ((y # zs) ! i) = fst (hd (y # zs))" using hy hgy_eq by (by100 simp)
-              qed
-              have hIH: "y # zs = replicate (length (y # zs)) (hd (y # zs))"
-                using "3.IH"(2)[OF hyzs_ne hred_tail hfst_tail] .
-              hence "y # zs = replicate (length (y # zs)) y" by (by100 simp)
-              thus ?thesis using hy_eq by (by100 simp)
-            qed
-          qed
-        qed
-        \<comment> \<open>Apply to our mapped word.\<close>
-        have hfst_const: "\<forall>i < length ?mws. fst (?mws ! i) = fst (hd ?mws)"
-        proof (intro allI impI)
-          fix i assume hi: "i < length ?mws"
-          hence hi': "i < length ws" by (by100 simp)
-          have "?mws ! i = (\<lambda>(s, b). ((1::int), b)) (ws ! i)"
-            using hi' by (by100 simp)
-          hence "fst (?mws ! i) = (1::int)" by (cases "ws ! i") (by100 simp)
-          moreover have "fst (hd ?mws) = (1::int)"
-          proof -
-            obtain a rest where hws: "ws = a # rest" using hne
-              by (cases ws) (by100 simp_all)
-            show ?thesis unfolding hws by (cases a) (by100 simp)
-          qed
-          ultimately show "fst (?mws ! i) = fst (hd ?mws)" by (by100 simp)
-        qed
-        have hmws_ne: "?mws \<noteq> []" using hne by (by100 simp)
-        have hmws_repl: "?mws = replicate (length ?mws) (hd ?mws)"
-          using hred_const[OF hmws_ne hred hfst_const] .
-        \<comment> \<open>Extract the common boolean value from hd.\<close>
-        have h0_lt: "0 < length ws" using hne by (by100 simp)
-        let ?b = "snd (hd ws)"
-        have hhead_eq: "hd ?mws = ((1::int), ?b)"
-        proof -
-          obtain a rest where hws: "ws = a # rest" using hne
-            by (cases ws) (by100 simp_all)
-          show ?thesis unfolding hws by (cases a) (by100 simp)
-        qed
-        have hmap_eq: "map (\<lambda>(s, b). ((1::int), b)) ws = replicate (length ws) ((1::int), ?b)"
-          using hmws_repl hhead_eq by (by100 simp)
-        show "\<exists>b. map (\<lambda>(s, b). ((1::int), b)) ws = replicate (length ws) ((1::int), b)"
-          using hmap_eq by (by100 blast)
-      qed
-      have hZ_red: "\<forall>ws :: (nat \<times> bool) list.
-            ws \<noteq> [] \<longrightarrow>
-            top1_is_reduced_word (map (\<lambda>(s, b). ((\<lambda>_. 1::int) s, b)) ws) \<longrightarrow>
-            (\<forall>i<length ws. fst (ws ! i) \<in> {0::nat}) \<longrightarrow>
-            top1_group_word_product top1_Z_mul top1_Z_id top1_Z_invg
-              (map (\<lambda>(s, b). ((\<lambda>_. 1::int) s, b)) ws) \<noteq> top1_Z_id"
-      proof (intro allI impI)
-        fix ws :: "(nat \<times> bool) list"
-        assume hne: "ws \<noteq> []"
-        assume hred: "top1_is_reduced_word (map (\<lambda>(s, b). ((\<lambda>_. 1::int) s, b)) ws)"
-        assume hS: "\<forall>i<length ws. fst (ws ! i) \<in> {0::nat}"
-        have hred': "top1_is_reduced_word (map (\<lambda>(s, b). ((1::int), b)) ws)"
-          using hred by (by100 simp)
-        from hconst_bool[OF hne hred']
-        obtain b where hb: "map (\<lambda>(s, b). ((1::int), b)) ws = replicate (length ws) ((1::int), b)"
-          by (by100 blast)
-        have hlen: "length ws > 0" using hne by (by100 simp)
-        have hmap_eq: "map (\<lambda>(s, b). ((\<lambda>_. 1::int) s, b)) ws = map (\<lambda>(s, b). ((1::int), b)) ws"
-          by (by100 simp)
-        show "top1_group_word_product top1_Z_mul top1_Z_id top1_Z_invg
-              (map (\<lambda>(s, b). ((\<lambda>_. 1::int) s, b)) ws) \<noteq> top1_Z_id"
-        proof (cases b)
-          case True
-          have heq: "map (\<lambda>(s, b). ((\<lambda>_. 1::int) s, b)) ws = replicate (length ws) ((1::int), True)"
-            using hb hmap_eq True by (by100 simp)
-          have "top1_group_word_product top1_Z_mul top1_Z_id top1_Z_invg
-              (replicate (length ws) ((1::int), True)) = int (length ws)"
-            using hword_prod_true[OF hlen] .
-          thus ?thesis unfolding top1_Z_id_def using hlen heq by (by100 simp)
-        next
-          case False
-          have heq: "map (\<lambda>(s, b). ((\<lambda>_. 1::int) s, b)) ws = replicate (length ws) ((1::int), False)"
-            using hb hmap_eq False by (by100 simp)
-          have "top1_group_word_product top1_Z_mul top1_Z_id top1_Z_invg
-              (replicate (length ws) ((1::int), False)) = - int (length ws)"
-            using hword_prod_false[OF hlen] .
-          thus ?thesis unfolding top1_Z_id_def using hlen heq by (by100 simp)
-        qed
-      qed
-      show ?thesis using hZ_grp hZ_in hZ_inj hZ_gen hZ_red
-        unfolding top1_is_free_group_full_on_def by (by100 blast)
-    qed
+      by (rule Z_is_free_on_one_generator)
     \<comment> \<open>Step 8: Combine: free group on {0} isomorphic to \<pi>_1(X,p).\<close>
     have hZ_iso_rev: "top1_groups_isomorphic_on top1_Z_group top1_Z_mul
         (top1_fundamental_group_carrier X TX p)
@@ -1069,7 +1077,79 @@ using assms proof (induction n arbitrary: X TX p rule: less_induct)
       \<and> top1_groups_isomorphic_on G2 mul2
           (top1_fundamental_group_carrier ?Cn ?TCn p)
           (top1_fundamental_group_mul ?Cn ?TCn p)"
-      sorry \<comment> \<open>C(n-1) is homeomorphic to S¹, so \<pi>_1(C(n-1)) \<cong> Z \<cong> free on {0}.\<close>
+    proof -
+      \<comment> \<open>Step 5a: Extract the homeomorphism h: S¹ \<rightarrow> C(n-1) from hC_props.\<close>
+      obtain h where hh: "top1_homeomorphism_on top1_S1 top1_S1_topology
+            ?Cn (subspace_topology X TX ?Cn) h"
+        using hC_props hn1_in by (by100 blast)
+      \<comment> \<open>Step 5b: Get the inverse homeomorphism hinv: C(n-1) \<rightarrow> S¹.\<close>
+      let ?hinv_Cn = "inv_into top1_S1 h"
+      have hhinv_Cn: "top1_homeomorphism_on ?Cn ?TCn top1_S1 top1_S1_topology ?hinv_Cn"
+        by (rule homeomorphism_inverse[OF hh])
+      \<comment> \<open>Step 5c: Topology facts.\<close>
+      have hTCn: "is_topology_on ?Cn ?TCn"
+        by (rule subspace_topology_is_topology_on[OF hTX hCn_sub])
+      have hTS1: "is_topology_on top1_S1 top1_S1_topology"
+        using top1_S1_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
+      \<comment> \<open>Step 5d: p \<in> C(n-1) and hinv(p) \<in> S¹.\<close>
+      have hhinv_p_S1: "?hinv_Cn p \<in> top1_S1"
+        using hhinv_Cn hp_Cn unfolding top1_homeomorphism_on_def top1_continuous_map_on_def
+        by (by100 blast)
+      \<comment> \<open>Step 5e: \<pi>_1(C(n-1), p) \<cong> \<pi>_1(S¹, hinv(p)) via homeomorphism.\<close>
+      have hhinv_p_eq: "?hinv_Cn p = ?hinv_Cn p" by (by100 simp)
+      have h_pi1_Cn_S1: "top1_groups_isomorphic_on
+          (top1_fundamental_group_carrier ?Cn ?TCn p)
+          (top1_fundamental_group_mul ?Cn ?TCn p)
+          (top1_fundamental_group_carrier top1_S1 top1_S1_topology (?hinv_Cn p))
+          (top1_fundamental_group_mul top1_S1 top1_S1_topology (?hinv_Cn p))"
+        by (rule Corollary_52_5_homeomorphism_iso[OF hTCn hTS1 hhinv_Cn hp_Cn hhinv_p_eq])
+      \<comment> \<open>Step 5f: \<pi>_1(S¹, hinv(p)) \<cong> \<pi>_1(S¹, (1,0)) by basepoint independence.\<close>
+      have h10_S1: "(1::real, 0::real) \<in> top1_S1"
+        unfolding top1_S1_def by (by100 simp)
+      have h_pi1_bp_Cn: "top1_groups_isomorphic_on
+          (top1_fundamental_group_carrier top1_S1 top1_S1_topology (?hinv_Cn p))
+          (top1_fundamental_group_mul top1_S1 top1_S1_topology (?hinv_Cn p))
+          (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
+          (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))"
+        by (rule Corollary_52_2_basepoint_independent[OF S1_path_connected hhinv_p_S1 h10_S1])
+      \<comment> \<open>Step 5g: \<pi>_1(S¹, (1,0)) \<cong> Z by Theorem 54.5.\<close>
+      have h_pi1_Z_Cn: "top1_groups_isomorphic_on
+          (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
+          (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))
+          top1_Z_group top1_Z_mul"
+        by (rule Theorem_54_5_iso)
+      \<comment> \<open>Step 5h: Chain: \<pi>_1(C(n-1), p) \<cong> Z.\<close>
+      have hchain1: "top1_groups_isomorphic_on
+          (top1_fundamental_group_carrier top1_S1 top1_S1_topology (?hinv_Cn p))
+          (top1_fundamental_group_mul top1_S1 top1_S1_topology (?hinv_Cn p))
+          top1_Z_group top1_Z_mul"
+        by (rule groups_isomorphic_trans_fwd[OF h_pi1_bp_Cn h_pi1_Z_Cn])
+      have hchain2: "top1_groups_isomorphic_on
+          (top1_fundamental_group_carrier ?Cn ?TCn p)
+          (top1_fundamental_group_mul ?Cn ?TCn p)
+          top1_Z_group top1_Z_mul"
+        by (rule groups_isomorphic_trans_fwd[OF h_pi1_Cn_S1 hchain1])
+      \<comment> \<open>Step 5i: Z \<cong> \<pi>_1(C(n-1), p) (reverse direction for the conclusion).\<close>
+      have hZ_grp_Cn: "top1_is_group_on top1_Z_group top1_Z_mul top1_Z_id top1_Z_invg"
+        using top1_Z_is_abelian_group unfolding top1_is_abelian_group_on_def by (by100 blast)
+      have hpi_grp_Cn: "top1_is_group_on
+          (top1_fundamental_group_carrier ?Cn ?TCn p)
+          (top1_fundamental_group_mul ?Cn ?TCn p)
+          (top1_fundamental_group_id ?Cn ?TCn p)
+          (top1_fundamental_group_invg ?Cn ?TCn p)"
+        by (rule top1_fundamental_group_is_group[OF hTCn hp_Cn])
+      have hZ_iso_Cn: "top1_groups_isomorphic_on top1_Z_group top1_Z_mul
+          (top1_fundamental_group_carrier ?Cn ?TCn p)
+          (top1_fundamental_group_mul ?Cn ?TCn p)"
+        by (rule top1_groups_isomorphic_on_sym[OF hchain2 hpi_grp_Cn hZ_grp_Cn])
+      \<comment> \<open>Step 5j: Z is free on {0}.\<close>
+      have hZ_free_Cn: "top1_is_free_group_full_on top1_Z_group top1_Z_mul top1_Z_id top1_Z_invg
+          (\<lambda>(_::nat). (1::int)) {0::nat}"
+        by (rule Z_is_free_on_one_generator)
+      \<comment> \<open>Step 5k: Combine.\<close>
+      show ?thesis
+        using hZ_free_Cn hZ_iso_Cn by (by100 blast)
+    qed
     obtain G2 :: "int set" and mul2 :: "int \<Rightarrow> int \<Rightarrow> int"
         and e2 :: int and invg2 :: "int \<Rightarrow> int" and \<iota>2 :: "nat \<Rightarrow> int" where
         hG2_free: "top1_is_free_group_full_on G2 mul2 e2 invg2 \<iota>2 {0::nat}"
