@@ -1882,8 +1882,27 @@ proof -
         qed
         \<comment> \<open>Step C: By Theorem 22.1, \<pi>' = (\<pi> \<times> id)|_{B2\{0} \<times> I} is a quotient map.\<close>
         \<comment> \<open>We use: \<pi> \<times> id is a closed map (\<Rightarrow> part 2 of Theorem 22.1).\<close>
+        have hB2_compact_top1: "top1_compact_on top1_B2 top1_B2_topology"
+        proof -
+          have "compact top1_B2"
+            sorry \<comment> \<open>B2 = {(x,y)|x^2+y^2\<le>1} compact (closed bounded in R2).\<close>
+          moreover have "top1_B2_topology = subspace_topology UNIV top1_open_sets top1_B2"
+            unfolding top1_B2_topology_def
+            using product_topology_on_open_sets[where ?'a=real and ?'b=real] by (by100 simp)
+          ultimately show ?thesis
+            using top1_compact_on_subspace_UNIV_iff_compact[of top1_B2] by (by100 simp)
+        qed
+        have hI_compact_top1: "top1_compact_on I_set I_top"
+        proof -
+          have "compact I_set" unfolding top1_unit_interval_def
+            using top1_compact_Icc_linear_continuum[of "0::real" 1] by (by100 simp)
+          moreover have "I_top = subspace_topology UNIV top1_open_sets I_set"
+            unfolding top1_unit_interval_topology_def by (by100 simp)
+          ultimately show ?thesis
+            using top1_compact_on_subspace_UNIV_iff_compact[of I_set] by (by100 simp)
+        qed
         have hB2I_compact: "top1_compact_on (top1_B2 \<times> I_set) (product_topology_on top1_B2_topology I_top)"
-          sorry \<comment> \<open>B2 compact (closed bounded in R2) \<times> I compact ([0,1]). Product of compact.\<close>
+          by (rule Theorem_26_7[OF hB2_compact_top1 hI_compact_top1])
         have hCI_hausdorff: "is_hausdorff_on (?C \<times> I_set) (product_topology_on ?TC I_top)"
           sorry \<comment> \<open>C \<subseteq> X Hausdorff, I \<subseteq> R Hausdorff. Subspace \<times> subspace of Hausdorff.\<close>
         have h\<pi>I_cont: "top1_continuous_map_on (top1_B2 \<times> I_set) (product_topology_on top1_B2_topology I_top)
@@ -9066,6 +9085,7 @@ end
 
 
 
+ 
  
  
  
