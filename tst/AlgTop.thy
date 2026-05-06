@@ -432,10 +432,265 @@ text \<open>Punctured open disk Int B2 - {0} is path-connected.
   Strategy: connect every point to (1/2, 0) via at most two straight-line segments,
   all staying in Int(B2)\{0}.\<close>
 
+text \<open>Helper: a straight-line path between two points in the punctured open disk,
+  provided the segment avoids (0,0).\<close>
+lemma line_path_in_punctured_disk:
+  assumes hp: "p \<in> top1_B2 - top1_S1 - {(0::real, 0::real)}"
+      and hq: "q \<in> top1_B2 - top1_S1 - {(0::real, 0::real)}"
+      and havoid: "\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow>
+          ((1-t) * fst p + t * fst q, (1-t) * snd p + t * snd q) \<noteq> (0::real, 0::real)"
+  shows "\<exists>f. top1_is_path_on (top1_B2 - top1_S1 - {(0, 0)})
+     (subspace_topology top1_B2 top1_B2_topology (top1_B2 - top1_S1 - {(0, 0)})) p q f"
+proof -
+  let ?P = "top1_B2 - top1_S1 - {(0::real, 0::real)}"
+  let ?TP = "subspace_topology top1_B2 top1_B2_topology ?P"
+  let ?D = "top1_B2 - top1_S1"
+  let ?f = "\<lambda>t::real. ((1-t) * fst p + t * fst q, (1-t) * snd p + t * snd q)"
+  have hp_D: "p \<in> ?D" using hp by (by100 blast)
+  have hq_D: "q \<in> ?D" using hq by (by100 blast)
+  \<comment> \<open>The segment stays in the open disk by convexity.\<close>
+  have hf_in_D: "\<forall>t\<in>I_set. ?f t \<in> ?D"
+  proof
+    fix t assume ht: "t \<in> I_set"
+    have ht0: "0 \<le> t" and ht1: "t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 auto)
+    show "?f t \<in> ?D" by (rule open_disk_convex[OF hp_D hq_D ht0 ht1])
+  qed
+  \<comment> \<open>The segment avoids (0,0).\<close>
+  have hf_ne_0: "\<forall>t\<in>I_set. ?f t \<noteq> (0::real, 0::real)"
+  proof
+    fix t assume ht: "t \<in> I_set"
+    have ht0: "0 \<le> t" and ht1: "t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 auto)
+    show "?f t \<noteq> (0::real, 0::real)" using havoid ht0 ht1 by (by100 blast)
+  qed
+  have hf_in_P: "\<forall>t\<in>I_set. ?f t \<in> ?P" using hf_in_D hf_ne_0 by (by100 blast)
+  have hf_img: "?f ` I_set \<subseteq> ?P" using hf_in_P by (by100 fast)
+  \<comment> \<open>Continuity of ?f: I \<rightarrow> R2 (same as in open_disk_path_connected).\<close>
+  have hTR: "is_topology_on (UNIV::real set) top1_open_sets"
+    by (rule top1_open_sets_is_topology_on_UNIV)
+  have hTI: "is_topology_on I_set I_top"
+    by (rule top1_unit_interval_topology_is_topology_on)
+  have hI_eq: "I_top = subspace_topology UNIV top1_open_sets I_set"
+    unfolding top1_unit_interval_topology_def by (by100 rule)
+  have hUNIV_eq: "subspace_topology UNIV top1_open_sets (UNIV::real set) = top1_open_sets"
+    by (rule subspace_topology_UNIV_self)
+  have hc1: "continuous_on UNIV (\<lambda>t::real. (1-t) * fst p + t * fst q)"
+    by (intro continuous_intros)
+  have hc2: "continuous_on UNIV (\<lambda>t::real. (1-t) * snd p + t * snd q)"
+    by (intro continuous_intros)
+  have hcm1: "top1_continuous_map_on I_set I_top (UNIV::real set) top1_open_sets
+      (\<lambda>t. (1-t) * fst p + t * fst q)"
+    using top1_continuous_map_on_real_subspace_open_sets[of I_set "\<lambda>t. (1-t)*fst p + t*fst q" UNIV, OF _ hc1]
+    unfolding hI_eq hUNIV_eq by (by100 auto)
+  have hcm2: "top1_continuous_map_on I_set I_top (UNIV::real set) top1_open_sets
+      (\<lambda>t. (1-t) * snd p + t * snd q)"
+    using top1_continuous_map_on_real_subspace_open_sets[of I_set "\<lambda>t. (1-t)*snd p + t*snd q" UNIV, OF _ hc2]
+    unfolding hI_eq hUNIV_eq by (by100 auto)
+  have hpi1: "top1_continuous_map_on I_set I_top (UNIV::real set) top1_open_sets (pi1 \<circ> ?f)"
+  proof -
+    have "pi1 \<circ> ?f = (\<lambda>t. (1-t) * fst p + t * fst q)" unfolding pi1_def comp_def by (by100 auto)
+    thus ?thesis using hcm1 by (by100 simp)
+  qed
+  have hpi2: "top1_continuous_map_on I_set I_top (UNIV::real set) top1_open_sets (pi2 \<circ> ?f)"
+  proof -
+    have "pi2 \<circ> ?f = (\<lambda>t. (1-t) * snd p + t * snd q)" unfolding pi2_def comp_def by (by100 auto)
+    thus ?thesis using hcm2 by (by100 simp)
+  qed
+  have hUU: "(UNIV::real set) \<times> (UNIV::real set) = (UNIV::(real\<times>real) set)" by (by100 simp)
+  have hf_cont_R2: "top1_continuous_map_on I_set I_top
+      (UNIV::(real\<times>real) set) (product_topology_on top1_open_sets top1_open_sets) ?f"
+    using iffD2[OF Theorem_18_4[OF hTI hTR hTR, of ?f]]
+    using hpi1 hpi2 unfolding hUU by (by100 blast)
+  have hP_sub: "?P \<subseteq> (UNIV::(real\<times>real) set)" by (by100 simp)
+  have hTP_eq: "?TP = subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) ?P"
+  proof -
+    have "?P \<subseteq> top1_B2" by (by100 blast)
+    thus ?thesis unfolding top1_B2_topology_def by (rule subspace_topology_trans)
+  qed
+  have hf_cont_P: "top1_continuous_map_on I_set I_top ?P ?TP ?f"
+    using top1_continuous_map_on_codomain_shrink[OF hf_cont_R2 hf_img hP_sub]
+    unfolding hTP_eq .
+  have hstart: "?f 0 = p" by (by100 simp)
+  have hend: "?f 1 = q" by (by100 simp)
+  show ?thesis
+    unfolding top1_is_path_on_def using hf_cont_P hstart hend by (by100 blast)
+qed
+
+text \<open>Helper: line segment from p to (1/2, 0) avoids (0,0)
+  when snd p \<noteq> 0 or fst p > 0.\<close>
+lemma line_to_hub_avoids_zero:
+  assumes hp: "p \<in> top1_B2 - top1_S1 - {(0::real, 0::real)}"
+      and hcond: "snd p \<noteq> 0 \<or> fst p > 0"
+      and ht0: "0 \<le> t" and ht1: "t \<le> 1"
+  shows "((1-t) * fst p + t * (1/2), (1-t) * snd p + t * 0) \<noteq> (0::real, 0::real)"
+proof
+  assume heq: "((1-t) * fst p + t * (1/2), (1-t) * snd p + t * 0) = (0::real, 0::real)"
+  hence hfst: "(1-t) * fst p + t / 2 = 0" and hsnd: "(1-t) * snd p = 0"
+    by (by100 auto)
+  show False
+  proof (cases "snd p \<noteq> 0")
+    case True
+    hence "1 - t = 0" using hsnd by (by100 simp)
+    hence "t = 1" by (by100 linarith)
+    hence "1/2 = (0::real)" using hfst by (by100 simp)
+    thus False by (by100 simp)
+  next
+    case False
+    hence "snd p = 0" by (by100 simp)
+    hence "fst p > 0" using hcond by (by100 simp)
+    \<comment> \<open>From hfst: (1-t) * fst p + t/2 = 0, but both terms are \<ge> 0.\<close>
+    have h1: "(1-t) * fst p \<ge> 0"
+      using \<open>fst p > 0\<close> ht0 ht1 mult_nonneg_nonneg[of "1-t" "fst p"] by (by100 linarith)
+    have h2: "t / 2 \<ge> 0" using ht0 by (by100 simp)
+    have "(1-t) * fst p + t / 2 \<ge> 0" using h1 h2 by (by100 linarith)
+    moreover have "(1-t) * fst p + t / 2 = 0" using hfst by (by100 simp)
+    ultimately have "(1-t) * fst p = 0 \<and> t / 2 = 0" using h1 h2 by (by100 linarith)
+    hence "t = 0" by (by100 simp)
+    hence "fst p = 0" using hfst by (by100 simp)
+    thus False using \<open>fst p > 0\<close> by (by100 linarith)
+  qed
+qed
+
+text \<open>Helper: line from (0, 1/2) to (1/2, 0) avoids (0,0).\<close>
+lemma line_0half_to_half0_avoids_zero:
+  assumes ht0: "0 \<le> t" and ht1: "t \<le> 1"
+  shows "((1-t) * 0 + t * (1/2::real), (1-t) * (1/2::real) + t * 0) \<noteq> (0::real, 0::real)"
+proof
+  assume heq: "((1-t) * 0 + t * (1/2), (1-t) * (1/2) + t * 0) = (0::real, 0::real)"
+  hence "t * (1/2) = 0" and "(1-t) * (1/2) = 0" by (by100 auto)+
+  hence "t = 0" and "1 - t = 0" by (by100 simp)+
+  thus False by (by100 linarith)
+qed
+
 lemma punctured_open_disk_path_connected:
   "top1_path_connected_on (top1_B2 - top1_S1 - {(0::real, 0::real)})
      (subspace_topology top1_B2 top1_B2_topology (top1_B2 - top1_S1 - {(0, 0)}))"
-  sorry
+proof -
+  let ?P = "top1_B2 - top1_S1 - {(0::real, 0::real)}"
+  let ?TP = "subspace_topology top1_B2 top1_B2_topology ?P"
+  let ?r = "(1/2::real, 0::real)"  \<comment> \<open>Hub point\<close>
+  let ?m = "(0::real, 1/2::real)"  \<comment> \<open>Intermediate point for negative x-axis\<close>
+  have hTP: "is_topology_on ?P ?TP"
+  proof -
+    have "?P \<subseteq> top1_B2" by (by100 blast)
+    have hTB2: "is_topology_on top1_B2 top1_B2_topology"
+    proof -
+      have hTR: "is_topology_on (UNIV::real set) top1_open_sets"
+        by (rule top1_open_sets_is_topology_on_UNIV)
+      have "is_topology_on ((UNIV::real set) \<times> (UNIV::real set))
+                (product_topology_on top1_open_sets top1_open_sets)"
+        by (rule product_topology_on_is_topology_on[OF hTR hTR])
+      hence hTR2: "is_topology_on (UNIV::(real\<times>real) set) (product_topology_on top1_open_sets top1_open_sets)"
+        by (by100 simp)
+      show ?thesis unfolding top1_B2_topology_def
+        by (rule subspace_topology_is_topology_on[OF hTR2]) (by100 simp)
+    qed
+    show ?thesis by (rule subspace_topology_is_topology_on[OF hTB2 \<open>?P \<subseteq> top1_B2\<close>])
+  qed
+  \<comment> \<open>Hub and intermediate points are in the punctured disk.\<close>
+  have hr_P: "?r \<in> ?P"
+  proof -
+    have h14: "(1/2::real)^2 + (0::real)^2 = 1/4" using power2_eq_square[of "1/2::real"] by (by100 simp)
+    hence "(1/2::real)^2 + (0::real)^2 < 1" by (by100 simp)
+    moreover have "(1/2::real)^2 + (0::real)^2 \<noteq> 1" using h14 by (by100 simp)
+    ultimately show ?thesis unfolding top1_B2_def top1_S1_def by (by100 simp)
+  qed
+  have hm_P: "?m \<in> ?P"
+  proof -
+    have h14: "(0::real)^2 + (1/2::real)^2 = 1/4" using power2_eq_square[of "1/2::real"] by (by100 simp)
+    hence "(0::real)^2 + (1/2::real)^2 < 1" by (by100 simp)
+    moreover have "(0::real)^2 + (1/2::real)^2 \<noteq> 1" using h14 by (by100 simp)
+    ultimately show ?thesis unfolding top1_B2_def top1_S1_def by (by100 simp)
+  qed
+  \<comment> \<open>Path from any point to the hub.\<close>
+  have hpath_to_hub: "\<forall>p\<in>?P. \<exists>f. top1_is_path_on ?P ?TP p ?r f"
+  proof
+    fix p assume hp: "p \<in> ?P"
+    show "\<exists>f. top1_is_path_on ?P ?TP p ?r f"
+    proof (cases "snd p \<noteq> 0 \<or> fst p > 0")
+      case True
+      \<comment> \<open>Direct line segment to (1/2, 0) avoids (0,0).\<close>
+      have havoid: "\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow>
+          ((1-t) * fst p + t * fst ?r, (1-t) * snd p + t * snd ?r) \<noteq> (0::real, 0::real)"
+      proof (intro allI impI)
+        fix t :: real assume ht: "0 \<le> t \<and> t \<le> 1"
+        have hfr: "fst ?r = (1/2::real)" and hsr: "snd ?r = (0::real)" by (by100 simp)+
+        have "((1-t) * fst p + t * (1/2), (1-t) * snd p + t * 0) \<noteq> (0::real, 0::real)"
+          using line_to_hub_avoids_zero[OF hp True, of t] ht by (by100 simp)
+        thus "((1-t) * fst p + t * fst ?r, (1-t) * snd p + t * snd ?r) \<noteq> (0::real, 0::real)"
+          using hfr hsr by (by100 simp)
+      qed
+      show ?thesis by (rule line_path_in_punctured_disk[OF hp hr_P havoid])
+    next
+      case False
+      hence hsnd0: "snd p = 0" and hfst_le: "fst p \<le> 0" by (by100 simp)+
+      have hp_ne_0: "p \<noteq> (0::real, 0::real)" using hp by (by100 blast)
+      hence hfst_neg: "fst p < 0"
+      proof -
+        have "fst p \<noteq> 0"
+        proof
+          assume "fst p = 0"
+          hence "p = (0, 0)" using hsnd0 by (cases p) (by100 simp)
+          thus False using hp_ne_0 by (by100 simp)
+        qed
+        thus ?thesis using hfst_le by (by100 linarith)
+      qed
+      \<comment> \<open>Two-segment path: p \<rightarrow> (0, 1/2) \<rightarrow> (1/2, 0).\<close>
+      \<comment> \<open>First segment: p to (0, 1/2) avoids 0.\<close>
+      have havoid1: "\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow>
+          ((1-t) * fst p + t * fst ?m, (1-t) * snd p + t * snd ?m) \<noteq> (0::real, 0::real)"
+      proof (intro allI impI)
+        fix t :: real assume ht: "0 \<le> t \<and> t \<le> 1"
+        show "((1-t) * fst p + t * fst ?m, (1-t) * snd p + t * snd ?m) \<noteq> (0::real, 0::real)"
+        proof
+          assume heq: "((1-t) * fst p + t * fst ?m, (1-t) * snd p + t * snd ?m) = (0::real, 0::real)"
+          have "fst ?m = (0::real)" and "snd ?m = (1/2::real)" by (by100 simp)+
+          hence hfst_eq: "(1-t) * fst p = 0" and hsnd_eq: "(1-t) * snd p + t * (1/2) = 0"
+            using heq by (by100 auto)
+          have hsnd_eq2: "t * (1/2) = 0" using hsnd_eq hsnd0 by (by100 simp)
+          hence "t = 0" by (by100 simp)
+          hence "(1-t) * fst p = fst p" by (by100 simp)
+          hence "fst p = 0" using hfst_eq \<open>t = 0\<close> by (by100 simp)
+          thus False using hfst_neg by (by100 linarith)
+        qed
+      qed
+      obtain f1 where hf1: "top1_is_path_on ?P ?TP p ?m f1"
+        using line_path_in_punctured_disk[OF hp hm_P havoid1] by (by100 blast)
+      \<comment> \<open>Second segment: (0, 1/2) to (1/2, 0) avoids 0.\<close>
+      have havoid2: "\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow>
+          ((1-t) * fst ?m + t * fst ?r, (1-t) * snd ?m + t * snd ?r) \<noteq> (0::real, 0::real)"
+      proof (intro allI impI)
+        fix t :: real assume ht: "0 \<le> t \<and> t \<le> 1"
+        have "fst ?m = (0::real)" and "snd ?m = (1/2::real)" by (by100 simp)+
+        moreover have "fst ?r = (1/2::real)" and "snd ?r = (0::real)" by (by100 simp)+
+        moreover have "((1-t) * 0 + t * (1/2::real), (1-t) * (1/2::real) + t * 0) \<noteq> (0::real, 0::real)"
+          by (rule line_0half_to_half0_avoids_zero) (use ht in \<open>by100 linarith\<close>)+
+        ultimately show "((1-t) * fst ?m + t * fst ?r, (1-t) * snd ?m + t * snd ?r) \<noteq> (0::real, 0::real)"
+          by (by100 simp)
+      qed
+      obtain f2 where hf2: "top1_is_path_on ?P ?TP ?m ?r f2"
+        using line_path_in_punctured_disk[OF hm_P hr_P havoid2] by (by100 blast)
+      \<comment> \<open>Concatenate: path product f1 * f2.\<close>
+      have "top1_is_path_on ?P ?TP p ?r (top1_path_product f1 f2)"
+        by (rule top1_path_product_is_path[OF hTP hf1 hf2])
+      thus ?thesis by (by100 blast)
+    qed
+  qed
+  \<comment> \<open>For any p, q: compose path p \<rightarrow> r with reverse of path q \<rightarrow> r.\<close>
+  have hpath: "\<forall>x\<in>?P. \<forall>y\<in>?P. \<exists>f. top1_is_path_on ?P ?TP x y f"
+  proof (intro ballI)
+    fix x y assume hx: "x \<in> ?P" and hy: "y \<in> ?P"
+    obtain fx where hfx: "top1_is_path_on ?P ?TP x ?r fx"
+      using hpath_to_hub hx by (by100 blast)
+    obtain fy where hfy: "top1_is_path_on ?P ?TP y ?r fy"
+      using hpath_to_hub hy by (by100 blast)
+    have hfy_rev: "top1_is_path_on ?P ?TP ?r y (top1_path_reverse fy)"
+      by (rule top1_path_reverse_is_path[OF hfy])
+    have "top1_is_path_on ?P ?TP x y (top1_path_product fx (top1_path_reverse fy))"
+      by (rule top1_path_product_is_path[OF hTP hfx hfy_rev])
+    thus "\<exists>f. top1_is_path_on ?P ?TP x y f" by (by100 blast)
+  qed
+  show ?thesis unfolding top1_path_connected_on_def using hTP hpath by (by100 blast)
+qed
 
 lemma open_disk_simply_connected:
   "top1_simply_connected_on (top1_B2 - top1_S1)
@@ -989,7 +1244,159 @@ proof -
     (top1_B2 - top1_S1 - {(0::real, 0::real)})
     (subspace_topology top1_B2 top1_B2_topology (top1_B2 - top1_S1 - {(0, 0)}))
     ?UV ?TUV h"
-    sorry \<comment> \<open>h restricted to punctured open disk is homeomorphism onto UV.\<close>
+  proof -
+    let ?D = "top1_B2 - top1_S1"
+    let ?TD = "subspace_topology top1_B2 top1_B2_topology ?D"
+    let ?P = "top1_B2 - top1_S1 - {(0::real, 0::real)}"
+    let ?TP = "subspace_topology top1_B2 top1_B2_topology ?P"
+    have hD_homeo: "top1_homeomorphism_on ?D ?TD ?V ?TV h" by (rule assms(7))
+    have hTD: "is_topology_on ?D ?TD"
+      using hD_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+    have hTV: "is_topology_on ?V ?TV"
+      using hD_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+    have hbij: "bij_betw h ?D ?V"
+      using hD_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+    have hinj: "inj_on h ?D" using hbij unfolding bij_betw_def by (by100 blast)
+    have hsurj: "h ` ?D = ?V" using hbij unfolding bij_betw_def by (by100 blast)
+    have hh_cont: "top1_continuous_map_on ?D ?TD ?V ?TV h"
+      using hD_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+    have hhinv_cont: "top1_continuous_map_on ?V ?TV ?D ?TD (inv_into ?D h)"
+      using hD_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+    \<comment> \<open>UV \<subseteq> V\<close>
+    have hUV_sub_V: "?UV \<subseteq> ?V" by (by100 blast)
+    have hP_sub_D: "?P \<subseteq> ?D" by (by100 blast)
+    \<comment> \<open>Show {x \<in> D. h x \<in> UV} = P (punctured disk).\<close>
+    have hpreimage_eq: "{x \<in> ?D. h x \<in> ?UV} = ?P"
+    proof (rule set_eqI)
+      fix x show "x \<in> {x \<in> ?D. h x \<in> ?UV} \<longleftrightarrow> x \<in> ?P"
+      proof
+        assume hx: "x \<in> {x \<in> ?D. h x \<in> ?UV}"
+        hence hxD: "x \<in> ?D" and hhxUV: "h x \<in> ?UV" by (by100 blast)+
+        have hhx_ne: "h x \<noteq> ?x0" using hhxUV by (by100 blast)
+        have "x \<noteq> (0::real, 0::real)"
+        proof
+          assume "x = (0, 0)"
+          hence "h x = h (0, 0)" by (by100 simp)
+          thus False using hhx_ne by (by100 simp)
+        qed
+        thus "x \<in> ?P" using hxD by (by100 blast)
+      next
+        assume hx: "x \<in> ?P"
+        hence hxD: "x \<in> ?D" and hx_ne: "x \<noteq> (0::real, 0::real)" by (by100 blast)+
+        have "h x \<in> ?V"
+          using hbij hxD unfolding bij_betw_def by (by100 blast)
+        moreover have "h x \<noteq> ?x0"
+          using hinj hx_ne hxD h00_intB2 inj_on_eq_iff[of h ?D x "(0, 0)"] by (by100 blast)
+        ultimately show "x \<in> {x \<in> ?D. h x \<in> ?UV}" using hxD by (by100 blast)
+      qed
+    qed
+    \<comment> \<open>Subspace topology equalities.\<close>
+    have hTP_eq: "subspace_topology ?D ?TD ?P = ?TP"
+      by (rule subspace_topology_trans[OF hP_sub_D])
+    have hTUV_eq: "subspace_topology ?V ?TV ?UV = ?TUV"
+      by (rule subspace_topology_trans[OF hUV_sub_V])
+    \<comment> \<open>Build the homeomorphism directly.\<close>
+    have hTP_top: "is_topology_on ?P ?TP"
+      using subspace_topology_is_topology_on[OF hTD hP_sub_D] hTP_eq by (by100 simp)
+    have hTUV_top: "is_topology_on ?UV ?TUV"
+      using subspace_topology_is_topology_on[OF hTV hUV_sub_V] hTUV_eq by (by100 simp)
+    show ?thesis unfolding top1_homeomorphism_on_def
+    proof (intro conjI)
+      show "is_topology_on ?P ?TP" by (rule hTP_top)
+      show "is_topology_on ?UV ?TUV" by (rule hTUV_top)
+      \<comment> \<open>Bijectivity.\<close>
+      show "bij_betw h ?P ?UV"
+      proof -
+        have "inj_on h ?P" by (rule inj_on_subset[OF hinj hP_sub_D])
+        moreover have "h ` ?P = ?UV"
+        proof (rule set_eqI)
+          fix y show "y \<in> h ` ?P \<longleftrightarrow> y \<in> ?UV"
+          proof
+            assume "y \<in> h ` ?P"
+            then obtain x where hxP: "x \<in> ?P" and hfx: "y = h x" by (by100 blast)
+            have "x \<in> {x \<in> ?D. h x \<in> ?UV}" using hxP hpreimage_eq by (by100 blast)
+            hence "h x \<in> ?UV" by (by100 blast)
+            thus "y \<in> ?UV" using hfx by (by100 simp)
+          next
+            assume hy: "y \<in> ?UV"
+            hence "y \<in> ?V" by (by100 blast)
+            hence "y \<in> h ` ?D" using hsurj by (by100 blast)
+            then obtain x where hxD: "x \<in> ?D" and hfx: "h x = y" by (by100 blast)
+            have "h x \<in> ?UV" using hy hfx by (by100 simp)
+            hence "x \<in> {x \<in> ?D. h x \<in> ?UV}" using hxD by (by100 blast)
+            hence "x \<in> ?P" using hpreimage_eq by (by100 blast)
+            thus "y \<in> h ` ?P" using hfx by (by100 blast)
+          qed
+        qed
+        ultimately show ?thesis unfolding bij_betw_def by (by100 blast)
+      qed
+      \<comment> \<open>Continuity: h restricted to P \<rightarrow> UV.\<close>
+      show "top1_continuous_map_on ?P ?TP ?UV ?TUV h"
+      proof -
+        have hh_restr: "top1_continuous_map_on ?P (subspace_topology ?D ?TD ?P) ?V ?TV h"
+          by (rule top1_continuous_map_on_restrict_domain_simple[OF hh_cont hP_sub_D])
+        have hh_restr2: "top1_continuous_map_on ?P ?TP ?V ?TV h"
+          using hh_restr hTP_eq by (by100 simp)
+        have himg: "h ` ?P \<subseteq> ?UV"
+        proof
+          fix y assume "y \<in> h ` ?P"
+          then obtain x where hxP: "x \<in> ?P" and hy: "y = h x" by (by100 blast)
+          have "x \<in> {x \<in> ?D. h x \<in> ?UV}" using hxP hpreimage_eq by (by100 blast)
+          hence "h x \<in> ?UV" by (by100 blast)
+          thus "y \<in> ?UV" using hy by (by100 simp)
+        qed
+        show ?thesis
+          using top1_continuous_map_on_codomain_shrink[OF hh_restr2 himg hUV_sub_V]
+          hTUV_eq by (by100 simp)
+      qed
+      \<comment> \<open>Inverse continuity: inv_into P h on UV \<rightarrow> P.\<close>
+      show "top1_continuous_map_on ?UV ?TUV ?P ?TP (inv_into ?P h)"
+      proof -
+        \<comment> \<open>inv_into P h agrees with inv_into D h on UV.\<close>
+        have hinv_agree: "\<forall>y\<in>?UV. inv_into ?P h y = inv_into ?D h y"
+        proof
+          fix y assume hy: "y \<in> ?UV"
+          hence "y \<in> ?V" by (by100 blast)
+          hence "y \<in> h ` ?D" using hsurj by (by100 blast)
+          hence hiy_D: "inv_into ?D h y \<in> ?D" by (rule inv_into_into)
+          have hfy: "h (inv_into ?D h y) = y"
+            using \<open>y \<in> h ` ?D\<close> by (rule f_inv_into_f)
+          hence "h (inv_into ?D h y) \<in> ?UV" using hy by (by100 simp)
+          hence "inv_into ?D h y \<in> {x \<in> ?D. h x \<in> ?UV}" using hiy_D by (by100 blast)
+          hence "inv_into ?D h y \<in> ?P" using hpreimage_eq by (by100 blast)
+          thus "inv_into ?P h y = inv_into ?D h y"
+            by (intro inv_into_f_eq[OF inj_on_subset[OF hinj hP_sub_D]])
+               (use hfy in \<open>by100 blast\<close>)
+        qed
+        \<comment> \<open>Restrict inv_into D h: V \<rightarrow> D to UV \<rightarrow> D.\<close>
+        have hinv_restr: "top1_continuous_map_on ?UV (subspace_topology ?V ?TV ?UV) ?D ?TD (inv_into ?D h)"
+          by (rule top1_continuous_map_on_restrict_domain_simple[OF hhinv_cont hUV_sub_V])
+        have hinv_restr2: "top1_continuous_map_on ?UV ?TUV ?D ?TD (inv_into ?D h)"
+          using hinv_restr hTUV_eq by (by100 simp)
+        \<comment> \<open>Codomain shrink from D to P.\<close>
+        have hinv_img: "(inv_into ?D h) ` ?UV \<subseteq> ?P"
+        proof
+          fix x assume "x \<in> (inv_into ?D h) ` ?UV"
+          then obtain y where hy: "y \<in> ?UV" and hx: "x = inv_into ?D h y" by (by100 blast)
+          have "y \<in> h ` ?D" using hy hsurj by (by100 blast)
+          hence hiy: "inv_into ?D h y \<in> ?D" by (rule inv_into_into)
+          have "h (inv_into ?D h y) = y" using \<open>y \<in> h ` ?D\<close> by (rule f_inv_into_f)
+          hence "h (inv_into ?D h y) \<in> ?UV" using hy by (by100 simp)
+          hence "inv_into ?D h y \<in> {x \<in> ?D. h x \<in> ?UV}" using hiy by (by100 blast)
+          hence "inv_into ?D h y \<in> ?P" using hpreimage_eq by (by100 blast)
+          thus "x \<in> ?P" using hx by (by100 simp)
+        qed
+        have hinv_shrink: "top1_continuous_map_on ?UV ?TUV ?P (subspace_topology ?D ?TD ?P) (inv_into ?D h)"
+          by (rule top1_continuous_map_on_codomain_shrink[OF hinv_restr2 hinv_img hP_sub_D])
+        have hinv_shrink2: "top1_continuous_map_on ?UV ?TUV ?P ?TP (inv_into ?D h)"
+          using hinv_shrink hTP_eq by (by100 simp)
+        \<comment> \<open>Transfer: inv_into P h = inv_into D h on UV.\<close>
+        show ?thesis
+          by (rule top1_continuous_map_on_agree'[OF hinv_shrink2])
+             (use hinv_agree in \<open>by100 simp\<close>)
+      qed
+    qed
+  qed
   have hUV_pc: "top1_path_connected_on ?UV ?TUV"
     by (rule homeomorphism_preserves_path_connected[OF hUV_homeo punctured_open_disk_path_connected])
 
