@@ -1921,8 +1921,58 @@ proof -
             (subspace_topology (top1_B2 \<times> I_set) (product_topology_on top1_B2_topology I_top)
               (?B2_0 \<times> I_set))
             ?U ?TU ?G"
-          sorry \<comment> \<open>Radial interpolation continuous on B2\{0} (field ops + sqrt, y\<noteq>0),
-                   composed with h continuous B2 \<rightarrow> X, restricted codomain to U.\<close>
+        proof -
+          \<comment> \<open>Decompose G = h \<circ> interp where interp(y,t) = radial interpolation.\<close>
+          let ?interp = "\<lambda>(y::real\<times>real, t::real).
+              ((1 - t) * fst y + t * fst y / sqrt (fst y ^ 2 + snd y ^ 2),
+               (1 - t) * snd y + t * snd y / sqrt (fst y ^ 2 + snd y ^ 2))"
+          \<comment> \<open>Step 1: interp is continuous_on in HOL Analysis sense.\<close>
+          have hinterp_cont_on: "continuous_on (?B2_0 \<times> I_set) ?interp"
+            sorry \<comment> \<open>continuous_intros: projections, arithmetic, sqrt, division.
+                     Division OK since y \<noteq> 0 on B2\{0}, so sqrt(fst y^2+snd y^2) > 0.\<close>
+          \<comment> \<open>Step 2: interp maps B2\{0} \<times> I into B2.\<close>
+          have hinterp_range: "\<forall>p \<in> ?B2_0 \<times> I_set. ?interp p \<in> top1_B2"
+            sorry \<comment> \<open>Convex combination stays in B2 (already proved earlier for fixed y,t).\<close>
+          \<comment> \<open>Step 3: Bridge to top1: interp is top1_continuous_map_on.\<close>
+          have hinterp_top1: "top1_continuous_map_on (?B2_0 \<times> I_set)
+              (subspace_topology UNIV top1_open_sets (?B2_0 \<times> I_set))
+              top1_B2 (subspace_topology UNIV top1_open_sets top1_B2)
+              ?interp"
+            using top1_continuous_map_on_subspace_open_sets_on[OF _ hinterp_cont_on]
+              hinterp_range by (by100 blast)
+          \<comment> \<open>Step 4: Topology equalities for domain and codomain.\<close>
+          have hdom_top_eq: "subspace_topology UNIV top1_open_sets (?B2_0 \<times> I_set)
+              = subspace_topology (top1_B2 \<times> I_set) (product_topology_on top1_B2_topology I_top)
+                  (?B2_0 \<times> I_set)"
+            sorry \<comment> \<open>Subspace transitivity: sub UNIV open (B2\{0}\<times>I) = sub (B2\<times>I) (prod B2top Itop) (B2\{0}\<times>I).
+                     Uses product_topology_on_open_sets and subspace_topology_trans.\<close>
+          have hcod_top_eq: "subspace_topology UNIV top1_open_sets top1_B2 = top1_B2_topology"
+            unfolding top1_B2_topology_def
+            using product_topology_on_open_sets[where ?'a = real and ?'b = real]
+            by (by100 simp)
+          \<comment> \<open>Step 5: Compose interp with h to get G.\<close>
+          have hinterp_top1': "top1_continuous_map_on (?B2_0 \<times> I_set)
+              (subspace_topology (top1_B2 \<times> I_set) (product_topology_on top1_B2_topology I_top)
+                (?B2_0 \<times> I_set))
+              top1_B2 top1_B2_topology ?interp"
+            using hinterp_top1 hdom_top_eq hcod_top_eq by (by100 simp)
+          have hG_eq: "?G = (\<lambda>p. h (?interp p))"
+            by (rule ext) (by100 auto)
+          have "?G = h \<circ> ?interp" using hG_eq by (by100 auto)
+          \<comment> \<open>Step 6: Compose with h continuous and restrict codomain to U.\<close>
+          have hG_cont_X: "top1_continuous_map_on (?B2_0 \<times> I_set)
+              (subspace_topology (top1_B2 \<times> I_set) (product_topology_on top1_B2_topology I_top)
+                (?B2_0 \<times> I_set))
+              X TX ?G"
+            using top1_continuous_map_on_comp[OF hinterp_top1' assms(5)]
+              \<open>?G = h \<circ> ?interp\<close> by (by100 simp)
+          \<comment> \<open>Step 7: G image is in U (h(interp(y,t)) \<noteq> x0 when y \<noteq> 0).\<close>
+          have hG_range_U: "\<forall>p\<in>?B2_0 \<times> I_set. ?G p \<in> ?U"
+            sorry \<comment> \<open>interp(y,t) \<in> B2\{0} when y\<noteq>0 (coefficient > 0), so h(interp) \<noteq> x0.\<close>
+          \<comment> \<open>Step 8: Restrict codomain from X to U.\<close>
+          show ?thesis
+            sorry \<comment> \<open>top1_continuous_map_on_codomain_shrink from X to U, or Theorem_18_2 part 5.\<close>
+        qed
         \<comment> \<open>Step E: G is constant on fibers of \<pi>'.\<close>
         have hG_fiber: "\<forall>p1\<in>?B2_0 \<times> I_set. \<forall>p2\<in>?B2_0 \<times> I_set.
             ?\<pi>I p1 = ?\<pi>I p2 \<longrightarrow> ?G p1 = ?G p2"
@@ -8846,6 +8896,8 @@ end
 
 
 
+ 
+ 
  
  
  
