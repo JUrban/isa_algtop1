@@ -1835,7 +1835,29 @@ proof -
               hence "fst xt \<in> ?U" using hx_U hU_eq by (by100 simp)
               \<comment> \<open>H_U maps into U: either via hH_0 (t=0 gives x) or hH_1 (t=1 gives A\<subseteq>U)
                  or intermediate (h of interpolation stays in h(B2) which is in X).\<close>
-              show ?thesis sorry \<comment> \<open>H_U maps into U_loc for non-A points.\<close>
+              \<comment> \<open>fst xt \<in> X-A, so hinv(fst xt) \<in> Int B2\{0}. Interpolation stays in B2\{0}.
+                 h maps B2\{0} into X, and h(point) \<noteq> x0 since h injective on Int B2.
+                 Hence H_U xt \<in> X-{x0} = U = U_loc.\<close>
+              have hx_VA: "fst xt \<in> X - A" using \<open>fst xt \<in> ?U\<close> False by (by100 blast)
+              hence hx_img: "fst xt \<in> h ` ?D" using hsurj_D by (by100 simp)
+              have hinv_D: "?hinv (fst xt) \<in> ?D" using inv_into_into[OF hx_img] .
+              have hh_inv_xt: "h (?hinv (fst xt)) = fst xt" using f_inv_into_f[OF hx_img] .
+              have hinv_ne0: "?hinv (fst xt) \<noteq> (0, 0)"
+              proof
+                assume "?hinv (fst xt) = (0, 0)"
+                hence "h (?hinv (fst xt)) = ?x0" by (by100 simp)
+                hence "fst xt = ?x0" using hh_inv_xt by (by100 simp)
+                thus False using \<open>fst xt \<in> ?U\<close> by (by100 blast)
+              qed
+              \<comment> \<open>H_U(xt) = h(interpolation). Show this is in h(B2) and \<noteq> x0.\<close>
+              have "H_U xt \<in> h ` top1_B2"
+                sorry \<comment> \<open>Interpolation stays in B2: convex combination of y\<in>B2 and y/|y|\<in>S1\<subseteq>B2.\<close>
+              moreover have "H_U xt \<noteq> ?x0"
+                sorry \<comment> \<open>h injective on Int B2 and interpolation \<noteq> (0,0).\<close>
+              moreover have "h ` top1_B2 \<subseteq> X"
+                using assms(5) unfolding top1_continuous_map_on_def by (by100 blast)
+              ultimately have "H_U xt \<in> X \<and> H_U xt \<noteq> ?x0" by (by100 blast)
+              thus ?thesis unfolding U_loc_def by (by100 blast)
             qed
           qed
           show "top1_continuous_map_on (A \<times> I_set) (subspace_topology UI TUI (A \<times> I_set)) U_loc TU_loc H_U"
