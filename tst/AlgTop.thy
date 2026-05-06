@@ -1941,7 +1941,12 @@ proof -
               thus "sqrt (fst (fst p) ^ 2 + snd (fst p) ^ 2) > 0" by (by100 simp)
             qed
             have hsqrt_ne0: "\<forall>p \<in> ?B2_0 \<times> I_set. sqrt (fst (fst p) ^ 2 + snd (fst p) ^ 2) \<noteq> 0"
-              using hsqrt_pos by (by100 auto)
+            proof (intro ballI)
+              fix p assume "p \<in> ?B2_0 \<times> I_set"
+              have "sqrt (fst (fst p) ^ 2 + snd (fst p) ^ 2) > 0"
+                using hsqrt_pos \<open>p \<in> ?B2_0 \<times> I_set\<close> by (by100 blast)
+              thus "sqrt (fst (fst p) ^ 2 + snd (fst p) ^ 2) \<noteq> 0" by (by100 linarith)
+            qed
             \<comment> \<open>continuous_on for the whole thing: use continuous_on_Pair + continuous_intros.\<close>
             have "continuous_on UNIV (\<lambda>p::(real\<times>real)\<times>real. fst (fst p))" by (intro continuous_intros)
             have "continuous_on UNIV (\<lambda>p::(real\<times>real)\<times>real. snd (fst p))" by (intro continuous_intros)
@@ -1950,8 +1955,29 @@ proof -
               by (intro continuous_intros)
             have hsqrt_cont: "continuous_on (?B2_0 \<times> I_set)
                 (\<lambda>p::(real\<times>real)\<times>real. sqrt (fst (fst p) ^ 2 + snd (fst p) ^ 2))"
-              sorry \<comment> \<open>sqrt \<circ> (sum of squares) continuous on domain where sum > 0.\<close>
-            show ?thesis sorry \<comment> \<open>Assemble from component continuity + division by nonzero sqrt.\<close>
+            proof -
+              have "continuous_on UNIV (\<lambda>p::(real\<times>real)\<times>real. fst (fst p) ^ 2 + snd (fst p) ^ 2)"
+                by (intro continuous_intros)
+              hence "continuous_on (?B2_0 \<times> I_set)
+                  (\<lambda>p::(real\<times>real)\<times>real. fst (fst p) ^ 2 + snd (fst p) ^ 2)"
+                by (rule continuous_on_subset) (by100 blast)
+              thus ?thesis by (intro continuous_intros)
+            qed
+            \<comment> \<open>Each component: (1-t)*a + t*a/sqrt(...) is continuous (projections + arith + div).\<close>
+            have hcomp1_cont: "continuous_on (?B2_0 \<times> I_set)
+                (\<lambda>p::(real\<times>real)\<times>real. (1 - snd p) * fst (fst p) +
+                  snd p * fst (fst p) / sqrt (fst (fst p) ^ 2 + snd (fst p) ^ 2))"
+              sorry \<comment> \<open>continuous_on: projections + arithmetic + division by nonzero sqrt.\<close>
+            have hcomp2_cont: "continuous_on (?B2_0 \<times> I_set)
+                (\<lambda>p::(real\<times>real)\<times>real. (1 - snd p) * snd (fst p) +
+                  snd p * snd (fst p) / sqrt (fst (fst p) ^ 2 + snd (fst p) ^ 2))"
+              sorry \<comment> \<open>Same structure but snd component.\<close>
+            have "?interp = (\<lambda>p. ((1 - snd p) * fst (fst p) +
+                snd p * fst (fst p) / sqrt (fst (fst p) ^ 2 + snd (fst p) ^ 2),
+                (1 - snd p) * snd (fst p) +
+                snd p * snd (fst p) / sqrt (fst (fst p) ^ 2 + snd (fst p) ^ 2)))"
+              by (rule ext) (by100 auto)
+            thus ?thesis using continuous_on_Pair[OF hcomp1_cont hcomp2_cont] by (by100 simp)
           qed
           \<comment> \<open>Step 2: interp maps B2\{0} \<times> I into B2.\<close>
           have hinterp_range: "\<forall>p \<in> ?B2_0 \<times> I_set. ?interp p \<in> top1_B2"
@@ -8919,6 +8945,13 @@ end
 
 
 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
  
  
  
