@@ -3314,15 +3314,838 @@ using assms proof (induction n arbitrary: X TX p rule: less_induct)
                  F^{-1}(D) = \<Union>_\<alpha> (D-preimage on f^{-1}(W(\<alpha>))\<times>I), finite union of closed = closed.\<close>
               have hF_cont: "top1_continuous_map_on (I_set \<times> I_set) II_topology
                   (U_def \<inter> V_def) (subspace_topology X TX (U_def \<inter> V_def)) F"
-                sorry \<comment> \<open>Finite closed pasting argument.
-                   Key ingredients already established:
-                   (1) hW_closed_UV: each W(\<alpha>) is closed in \<Union>W(\<alpha>)
-                   (2) hfam: h_fam and angle_fam give per-piece continuous contraction
-                   (3) hf_cont: f is continuous I \<rightarrow> \<Union>W(\<alpha>)
-                   (4) F on f^{-1}(W(\<alpha>))\<times>I equals h_fam(\<alpha>) \<circ> R_to_S1 \<circ> (linear interp with angle_fam)
-                   which is a composition of continuous maps.
-                   The proof uses Theorem_18_1(2) (preimage of closed is closed)
-                   + closedin_Union_finite + Theorem_17_3.\<close>
+              proof -
+                let ?TI = "I_top"
+                let ?TR = "order_topology_on_UNIV :: real set set"
+                let ?TII = "II_topology"
+                let ?TUV = "subspace_topology X TX (U_def \<inter> V_def)"
+                have hTI: "is_topology_on I_set ?TI"
+                  by (rule top1_unit_interval_topology_is_topology_on)
+                have hTII: "is_topology_on (I_set \<times> I_set) ?TII"
+                  unfolding II_topology_def
+                  by (rule product_topology_on_is_topology_on[OF hTI hTI])
+                have hTR: "is_topology_on (UNIV::real set) ?TR"
+                  by (rule order_topology_on_UNIV_is_topology_on)
+                have hTR_eq: "top1_open_sets = (order_topology_on_UNIV :: real set set)"
+                proof (rule set_eqI)
+                  fix U :: "real set"
+                  show "U \<in> top1_open_sets \<longleftrightarrow> U \<in> order_topology_on_UNIV"
+                    using order_topology_on_UNIV_eq_HOL_open unfolding top1_open_sets_def
+                    by (by100 simp)
+                qed
+                have hItop_eq: "?TI = subspace_topology UNIV top1_open_sets I_set"
+                  unfolding top1_unit_interval_topology_def top1_unit_interval_def
+                  by (by100 simp)
+                \<comment> \<open>Define preimage sets.\<close>
+                define fW :: "nat \<Rightarrow> real set" where
+                  "fW \<alpha> = {s \<in> I_set. f s \<in> W \<alpha>}" for \<alpha>
+                \<comment> \<open>Preimage sets cover I_set.\<close>
+                have hfW_cover: "I_set = (\<Union>\<alpha>\<in>{..<n}. fW \<alpha>)"
+                proof (intro set_eqI iffI)
+                  fix s assume hs: "s \<in> I_set"
+                  have "f s \<in> U_def \<inter> V_def" using hf_range hs by (by100 blast)
+                  hence "f s \<in> (\<Union>\<alpha>\<in>{..<n}. W \<alpha>)" using hUV_eq by (by100 blast)
+                  then obtain \<alpha> where h\<alpha>: "\<alpha> \<in> {..<n}" and hfs: "f s \<in> W \<alpha>" by (by100 blast)
+                  thus "s \<in> (\<Union>\<alpha>\<in>{..<n}. fW \<alpha>)" unfolding fW_def using hs by (by100 blast)
+                next
+                  fix s assume "s \<in> (\<Union>\<alpha>\<in>{..<n}. fW \<alpha>)"
+                  thus "s \<in> I_set" unfolding fW_def by (by100 blast)
+                qed
+                \<comment> \<open>Each fW(\<alpha>) is closed in I_set (preimage of closed under continuous f).\<close>
+                have hfW_closed: "\<forall>\<alpha>\<in>{..<n}. closedin_on I_set ?TI (fW \<alpha>)"
+                proof (intro ballI)
+                  fix \<alpha> assume h\<alpha>: "\<alpha> \<in> {..<n}"
+                  have hW_cl: "closedin_on (U_def \<inter> V_def) ?TUV (W \<alpha>)"
+                    using hW_closed_UV h\<alpha> by (by100 blast)
+                  have hfW_eq: "fW \<alpha> = {s \<in> I_set. f s \<in> W \<alpha>}" unfolding fW_def by (by100 blast)
+                  show "closedin_on I_set ?TI (fW \<alpha>)"
+                    using iffD1[OF Theorem_18_1(2)[OF hTI hTUV] hf_cont] hW_cl
+                    unfolding hfW_eq by (by100 blast)
+                qed
+                \<comment> \<open>Each fW(\<alpha>) \<times> I_set is closed in I_set \<times> I_set.\<close>
+                have hfWI_closed: "\<forall>\<alpha>\<in>{..<n}. closedin_on (I_set \<times> I_set) ?TII (fW \<alpha> \<times> I_set)"
+                proof (intro ballI)
+                  fix \<alpha> assume h\<alpha>: "\<alpha> \<in> {..<n}"
+                  have hfW_cl: "closedin_on I_set ?TI (fW \<alpha>)"
+                    using hfW_closed h\<alpha> by (by100 blast)
+                  show "closedin_on (I_set \<times> I_set) ?TII (fW \<alpha> \<times> I_set)"
+                  proof (rule closedin_intro)
+                    show "fW \<alpha> \<times> I_set \<subseteq> I_set \<times> I_set"
+                      using hfW_cl unfolding closedin_on_def by (by100 blast)
+                  next
+                    have hdiff_eq: "I_set \<times> I_set - fW \<alpha> \<times> I_set = (I_set - fW \<alpha>) \<times> I_set"
+                    proof -
+                      have "fW \<alpha> \<subseteq> I_set" using hfW_cl unfolding closedin_on_def by (by100 blast)
+                      thus ?thesis by (by100 blast)
+                    qed
+                    have hopen: "(I_set - fW \<alpha>) \<in> ?TI"
+                      using hfW_cl unfolding closedin_on_def by (by100 blast)
+                    have hI_open: "I_set \<in> ?TI"
+                      using hTI unfolding is_topology_on_def by (by100 blast)
+                    have "(I_set - fW \<alpha>) \<times> I_set \<in> ?TII"
+                      unfolding II_topology_def
+                      by (rule product_rect_open[OF hopen hI_open])
+                    thus "I_set \<times> I_set - fW \<alpha> \<times> I_set \<in> ?TII"
+                      using hdiff_eq by (by100 simp)
+                  qed
+                qed
+                \<comment> \<open>Subspace topology on fW(\<alpha>) \<times> I from II_topology = product on fW(\<alpha>) \<times> I.\<close>
+                have hfW_subspace_eq: "\<forall>\<alpha>\<in>{..<n}.
+                    product_topology_on (subspace_topology I_set ?TI (fW \<alpha>)) ?TI
+                    = subspace_topology (I_set \<times> I_set) ?TII (fW \<alpha> \<times> I_set)"
+                proof (intro ballI)
+                  fix \<alpha> assume h\<alpha>: "\<alpha> \<in> {..<n}"
+                  have hfW_sub: "fW \<alpha> \<subseteq> I_set" using hfW_closed h\<alpha> unfolding closedin_on_def
+                    by (by100 blast)
+                  have h1: "subspace_topology I_set ?TI (fW \<alpha>)
+                      = subspace_topology I_set ?TI (fW \<alpha>)" by (by100 simp)
+                  have h2: "subspace_topology I_set ?TI I_set = ?TI"
+                  proof (rule subspace_topology_self)
+                    show "\<forall>U\<in>?TI. U \<subseteq> I_set"
+                    proof (intro ballI)
+                      fix U assume "U \<in> ?TI"
+                      thus "U \<subseteq> I_set"
+                        unfolding top1_unit_interval_topology_def subspace_topology_def
+                        by (by100 blast)
+                    qed
+                  qed
+                  have hT163: "product_topology_on (subspace_topology I_set ?TI (fW \<alpha>)) (subspace_topology I_set ?TI I_set)
+                      = subspace_topology (I_set \<times> I_set) (product_topology_on ?TI ?TI) (fW \<alpha> \<times> I_set)"
+                    by (rule Theorem_16_3[OF hTI hTI])
+                  show "product_topology_on (subspace_topology I_set ?TI (fW \<alpha>)) ?TI
+                      = subspace_topology (I_set \<times> I_set) ?TII (fW \<alpha> \<times> I_set)"
+                    using hT163 h2 unfolding II_topology_def by (by100 simp)
+                qed
+                \<comment> \<open>F range: F maps I\<times>I into U_def \<inter> V_def.
+                   F(s,t) \<in> W(\<alpha>_of(s)) \<subseteq> \<Union>W(\<beta>) = U\<inter>V.\<close>
+                have hF_in_W: "\<And>s t. s \<in> I_set \<Longrightarrow> t \<in> I_set \<Longrightarrow> F (s, t) \<in> W (\<alpha>_of s)"
+                proof -
+                  fix s t assume hs: "s \<in> I_set" and ht: "t \<in> I_set"
+                  have h\<alpha>s: "\<alpha>_of s \<in> {..<n}" and hfsW: "f s \<in> W (\<alpha>_of s)"
+                    using h\<alpha>_of_spec[OF hs] by (by100 blast)+
+                  have ht_range: "0 \<le> t \<and> t \<le> 1" using ht unfolding top1_unit_interval_def
+                    by (by100 simp)
+                  have hangle: "\<theta>q_fam (\<alpha>_of s) < angle_fam (\<alpha>_of s) (f s) \<and>
+                      angle_fam (\<alpha>_of s) (f s) < \<theta>q_fam (\<alpha>_of s) + 1"
+                    using hangle_spec[OF h\<alpha>s hfsW] by (by100 blast)
+                  have h\<theta>p_range: "\<theta>q_fam (\<alpha>_of s) < \<theta>p_fam (\<alpha>_of s) \<and>
+                      \<theta>p_fam (\<alpha>_of s) < \<theta>q_fam (\<alpha>_of s) + 1"
+                    using hfam h\<alpha>s by (by100 blast)
+                  let ?\<theta> = "(1 - t) * angle_fam (\<alpha>_of s) (f s) + t * \<theta>p_fam (\<alpha>_of s)"
+                  have h\<theta>_lb: "\<theta>q_fam (\<alpha>_of s) < ?\<theta>"
+                  proof (cases "t = 1")
+                    case True thus ?thesis using h\<theta>p_range by (by100 simp)
+                  next
+                    case False
+                    hence h1t: "(1-t) > 0" using ht_range by (by100 linarith)
+                    have "(1-t) * \<theta>q_fam (\<alpha>_of s) < (1-t) * angle_fam (\<alpha>_of s) (f s)"
+                      using mult_strict_left_mono[of "\<theta>q_fam (\<alpha>_of s)" "angle_fam (\<alpha>_of s) (f s)" "1-t"]
+                        hangle h1t by (by100 linarith)
+                    moreover have "t * \<theta>q_fam (\<alpha>_of s) \<le> t * \<theta>p_fam (\<alpha>_of s)"
+                      using mult_left_mono[of "\<theta>q_fam (\<alpha>_of s)" "\<theta>p_fam (\<alpha>_of s)" t]
+                        h\<theta>p_range ht_range by (by100 linarith)
+                    ultimately have "(1-t)*\<theta>q_fam (\<alpha>_of s) + t*\<theta>q_fam (\<alpha>_of s) < ?\<theta>"
+                      by (by100 linarith)
+                    moreover have "(1-t)*\<theta>q_fam (\<alpha>_of s) + t*\<theta>q_fam (\<alpha>_of s) = \<theta>q_fam (\<alpha>_of s)"
+                      by (simp add: algebra_simps)
+                    ultimately show ?thesis by (by100 linarith)
+                  qed
+                  have h\<theta>_ub: "?\<theta> < \<theta>q_fam (\<alpha>_of s) + 1"
+                  proof (cases "t = 0")
+                    case True thus ?thesis using hangle by (by100 simp)
+                  next
+                    case False hence "t > 0" using ht_range by (by100 linarith)
+                    have "t*(\<theta>p_fam (\<alpha>_of s) - (\<theta>q_fam (\<alpha>_of s)+1)) < 0"
+                      using h\<theta>p_range \<open>t > 0\<close> by (simp add: mult_pos_neg)
+                    moreover have "(1-t)*(angle_fam (\<alpha>_of s) (f s) - (\<theta>q_fam (\<alpha>_of s)+1)) \<le> 0"
+                      using hangle ht_range by (intro mult_nonneg_nonpos) linarith+
+                    ultimately have "?\<theta> < (1-t)*(\<theta>q_fam (\<alpha>_of s)+1) + t*(\<theta>q_fam (\<alpha>_of s)+1)"
+                      by (simp add: algebra_simps)
+                    moreover have "(1-t)*(\<theta>q_fam (\<alpha>_of s)+1) + t*(\<theta>q_fam (\<alpha>_of s)+1) = \<theta>q_fam (\<alpha>_of s) + 1"
+                      by (simp add: algebra_simps)
+                    ultimately show ?thesis by (by100 linarith)
+                  qed
+                  have hR_S1: "top1_R_to_S1 ?\<theta> \<in> top1_S1"
+                    unfolding top1_R_to_S1_def top1_S1_def by (by100 simp)
+                  have hbij: "bij_betw (h_fam (\<alpha>_of s)) top1_S1 (C (\<alpha>_of s))"
+                    using hfam h\<alpha>s unfolding top1_homeomorphism_on_def by (by100 blast)
+                  have hresult_C: "h_fam (\<alpha>_of s) (top1_R_to_S1 ?\<theta>) \<in> C (\<alpha>_of s)"
+                    using hbij hR_S1 unfolding bij_betw_def by (by100 blast)
+                  have hresult_neq_q: "h_fam (\<alpha>_of s) (top1_R_to_S1 ?\<theta>) \<noteq> q (\<alpha>_of s)"
+                  proof
+                    assume "h_fam (\<alpha>_of s) (top1_R_to_S1 ?\<theta>) = q (\<alpha>_of s)"
+                    have "inv_into top1_S1 (h_fam (\<alpha>_of s)) (h_fam (\<alpha>_of s) (top1_R_to_S1 ?\<theta>))
+                        = inv_into top1_S1 (h_fam (\<alpha>_of s)) (q (\<alpha>_of s))"
+                      using \<open>h_fam (\<alpha>_of s) (top1_R_to_S1 ?\<theta>) = q (\<alpha>_of s)\<close> by (by100 simp)
+                    moreover have "inv_into top1_S1 (h_fam (\<alpha>_of s)) (h_fam (\<alpha>_of s) (top1_R_to_S1 ?\<theta>))
+                        = top1_R_to_S1 ?\<theta>"
+                      using bij_betw_inv_into_left[OF hbij hR_S1] .
+                    ultimately have hR_eq_inv: "top1_R_to_S1 ?\<theta> = inv_into top1_S1 (h_fam (\<alpha>_of s)) (q (\<alpha>_of s))"
+                      by (by100 simp)
+                    have h\<theta>q_eq: "top1_R_to_S1 (\<theta>q_fam (\<alpha>_of s)) = inv_into top1_S1 (h_fam (\<alpha>_of s)) (q (\<alpha>_of s))"
+                      using hfam h\<alpha>s by (by100 blast)
+                    hence "top1_R_to_S1 ?\<theta> = top1_R_to_S1 (\<theta>q_fam (\<alpha>_of s))"
+                      using hR_eq_inv by (by100 simp)
+                    hence "cos(2*pi*?\<theta>) = cos(2*pi*\<theta>q_fam (\<alpha>_of s)) \<and>
+                           sin(2*pi*?\<theta>) = sin(2*pi*\<theta>q_fam (\<alpha>_of s))"
+                      unfolding top1_R_to_S1_def by (by100 simp)
+                    hence "sin(2*pi*?\<theta>) = sin(2*pi*\<theta>q_fam (\<alpha>_of s)) \<and>
+                           cos(2*pi*?\<theta>) = cos(2*pi*\<theta>q_fam (\<alpha>_of s))"
+                      by (by100 blast)
+                    then obtain j::int where hj: "2*pi*?\<theta> = 2*pi*\<theta>q_fam (\<alpha>_of s) + 2*pi*of_int j"
+                      using iffD1[OF sin_cos_eq_iff] by (by100 blast)
+                    have "2*pi*(?\<theta> - \<theta>q_fam (\<alpha>_of s)) = 2*pi*of_int j"
+                      using hj by (simp only: right_diff_distrib)
+                    moreover have "pi \<noteq> 0" using pi_gt_zero by (by100 linarith)
+                    hence "2*pi \<noteq> 0" by (by100 linarith)
+                    ultimately have "?\<theta> - \<theta>q_fam (\<alpha>_of s) = of_int j" by (by100 simp)
+                    moreover have "?\<theta> - \<theta>q_fam (\<alpha>_of s) > 0 \<and> ?\<theta> - \<theta>q_fam (\<alpha>_of s) < 1"
+                      using h\<theta>_lb h\<theta>_ub by (by100 linarith)
+                    ultimately have "of_int j > (0::real) \<and> of_int j < (1::real)" by (by100 linarith)
+                    hence "j > 0 \<and> j < 1" by (by100 linarith)
+                    thus False by (by100 linarith)
+                  qed
+                  show "F (s, t) \<in> W (\<alpha>_of s)"
+                    unfolding F_def W_def using hresult_C hresult_neq_q by (by100 simp)
+                qed
+                have hF_range: "\<forall>st\<in>I_set \<times> I_set. F st \<in> U_def \<inter> V_def"
+                proof (intro ballI)
+                  fix st assume hst: "st \<in> I_set \<times> I_set"
+                  obtain s t where hst_eq: "st = (s, t)" and hs: "s \<in> I_set" and ht: "t \<in> I_set"
+                    using hst by (by100 blast)
+                  have "F (s, t) \<in> W (\<alpha>_of s)" by (rule hF_in_W[OF hs ht])
+                  moreover have h\<alpha>s: "\<alpha>_of s \<in> {..<n}" using h\<alpha>_of_spec[OF hs] by (by100 blast)
+                  moreover have "W (\<alpha>_of s) \<subseteq> U_def \<inter> V_def"
+                    using hUV_eq h\<alpha>s by (by100 blast)
+                  ultimately show "F st \<in> U_def \<inter> V_def" unfolding hst_eq by (by100 blast)
+                qed
+                \<comment> \<open>F agrees with per-piece formula on each piece.\<close>
+                have hF_agree: "\<And>\<alpha> s t. \<alpha> \<in> {..<n} \<Longrightarrow> s \<in> I_set \<Longrightarrow> t \<in> I_set \<Longrightarrow> f s \<in> W \<alpha> \<Longrightarrow>
+                    F (s, t) = h_fam \<alpha> (top1_R_to_S1 ((1 - t) * angle_fam \<alpha> (f s) + t * \<theta>p_fam \<alpha>))"
+                proof -
+                  fix \<alpha> s t
+                  assume h\<alpha>: "\<alpha> \<in> {..<n}" and hs: "s \<in> I_set" and ht: "t \<in> I_set"
+                      and hfsW: "f s \<in> W \<alpha>"
+                  have h\<alpha>s: "\<alpha>_of s \<in> {..<n}" and hfsW': "f s \<in> W (\<alpha>_of s)"
+                    using h\<alpha>_of_spec[OF hs] by (by100 blast)+
+                  show "F (s, t) = h_fam \<alpha> (top1_R_to_S1 ((1 - t) * angle_fam \<alpha> (f s) + t * \<theta>p_fam \<alpha>))"
+                  proof (cases "\<alpha>_of s = \<alpha>")
+                    case True
+                    thus ?thesis unfolding F_def by (by100 simp)
+                  next
+                    case False
+                    \<comment> \<open>f(s) \<in> W(\<alpha>) \<inter> W(\<alpha>_of s), \<alpha> \<noteq> \<alpha>_of s, so f(s) = p.\<close>
+                    have "C \<alpha> \<inter> C (\<alpha>_of s) = {p}"
+                      using hC_inter h\<alpha> h\<alpha>s False by (by100 blast)
+                    moreover have "f s \<in> C \<alpha>" using hfsW unfolding W_def by (by100 blast)
+                    moreover have "f s \<in> C (\<alpha>_of s)" using hfsW' unfolding W_def by (by100 blast)
+                    ultimately have hfsp: "f s = p" by (by100 blast)
+                    have lhs: "F (s, t) = p"
+                    proof -
+                      have "F (s, t) = h_fam (\<alpha>_of s) (top1_R_to_S1 ((1 - t) * angle_fam (\<alpha>_of s) (f s) + t * \<theta>p_fam (\<alpha>_of s)))"
+                        unfolding F_def by (by100 simp)
+                      also have "\<dots> = h_fam (\<alpha>_of s) (top1_R_to_S1 ((1 - t) * \<theta>p_fam (\<alpha>_of s) + t * \<theta>p_fam (\<alpha>_of s)))"
+                        using hangle_p[OF h\<alpha>s] hfsp by (by100 simp)
+                      also have "\<dots> = h_fam (\<alpha>_of s) (top1_R_to_S1 (\<theta>p_fam (\<alpha>_of s)))"
+                        by (simp add: algebra_simps)
+                      also have "\<dots> = p" using hh_fam_p[OF h\<alpha>s] .
+                      finally show ?thesis .
+                    qed
+                    have rhs: "h_fam \<alpha> (top1_R_to_S1 ((1 - t) * angle_fam \<alpha> (f s) + t * \<theta>p_fam \<alpha>)) = p"
+                    proof -
+                      have "h_fam \<alpha> (top1_R_to_S1 ((1 - t) * angle_fam \<alpha> (f s) + t * \<theta>p_fam \<alpha>))
+                          = h_fam \<alpha> (top1_R_to_S1 ((1 - t) * \<theta>p_fam \<alpha> + t * \<theta>p_fam \<alpha>))"
+                        using hangle_p[OF h\<alpha>] hfsp by (by100 simp)
+                      also have "\<dots> = h_fam \<alpha> (top1_R_to_S1 (\<theta>p_fam \<alpha>))"
+                        by (simp add: algebra_simps)
+                      also have "\<dots> = p" using hh_fam_p[OF h\<alpha>] .
+                      finally show ?thesis .
+                    qed
+                    show ?thesis using lhs rhs by (by100 simp)
+                  qed
+                qed
+                \<comment> \<open>Per-piece continuity of F on each fW(\<alpha>) \<times> I.\<close>
+                have hF_each: "\<forall>\<alpha>\<in>{..<n}. top1_continuous_map_on (fW \<alpha> \<times> I_set)
+                    (product_topology_on (subspace_topology I_set ?TI (fW \<alpha>)) ?TI)
+                    (U_def \<inter> V_def) ?TUV F"
+                proof (intro ballI)
+                  fix \<alpha> assume h\<alpha>: "\<alpha> \<in> {..<n}"
+                  \<comment> \<open>On fW(\<alpha>) \<times> I, F agrees with per-piece formula.\<close>
+                  define F\<alpha> :: "real \<times> real \<Rightarrow> 'a" where
+                    "F\<alpha> st = h_fam \<alpha> (top1_R_to_S1 ((1 - snd st) * angle_fam \<alpha> (f (fst st)) + snd st * \<theta>p_fam \<alpha>))" for st
+                  have hF_eq_F\<alpha>: "\<forall>st\<in>fW \<alpha> \<times> I_set. F st = F\<alpha> st"
+                  proof (intro ballI)
+                    fix st assume hst: "st \<in> fW \<alpha> \<times> I_set"
+                    obtain s t where hst_eq: "st = (s, t)" and hs_fW: "s \<in> fW \<alpha>" and ht: "t \<in> I_set"
+                      using hst by (by100 blast)
+                    have hs: "s \<in> I_set" and hfsW: "f s \<in> W \<alpha>"
+                      using hs_fW unfolding fW_def by (by100 blast)+
+                    have "F (s, t) = h_fam \<alpha> (top1_R_to_S1 ((1 - t) * angle_fam \<alpha> (f s) + t * \<theta>p_fam \<alpha>))"
+                      by (rule hF_agree[OF h\<alpha> hs ht hfsW])
+                    also have "\<dots> = F\<alpha> (s, t)" unfolding F\<alpha>_def by (by100 simp)
+                    finally show "F st = F\<alpha> st" unfolding hst_eq .
+                  qed
+                  \<comment> \<open>F\<alpha> is continuous on fW(\<alpha>) \<times> I.\<close>
+                  have hF\<alpha>_cont: "top1_continuous_map_on (fW \<alpha> \<times> I_set)
+                      (product_topology_on (subspace_topology I_set ?TI (fW \<alpha>)) ?TI)
+                      (U_def \<inter> V_def) ?TUV F\<alpha>"
+                  proof -
+                    let ?TfW = "subspace_topology I_set ?TI (fW \<alpha>)"
+                    let ?TfWI = "product_topology_on ?TfW ?TI"
+                    let ?TW\<alpha> = "subspace_topology X TX (W \<alpha>)"
+                    let ?C\<alpha> = "C \<alpha>"
+                    let ?TC\<alpha> = "subspace_topology X TX ?C\<alpha>"
+                    have hfW_sub: "fW \<alpha> \<subseteq> I_set"
+                      using hfW_closed h\<alpha> unfolding closedin_on_def by (by100 blast)
+                    have hTfW: "is_topology_on (fW \<alpha>) ?TfW"
+                      by (rule subspace_topology_is_topology_on[OF hTI hfW_sub])
+                    have hTfWI: "is_topology_on (fW \<alpha> \<times> I_set) ?TfWI"
+                      by (rule product_topology_on_is_topology_on[OF hTfW hTI])
+                    have h\<alpha>n: "\<alpha> \<in> {..<n}" using h\<alpha> .
+                    have hW\<alpha>_sub_X: "W \<alpha> \<subseteq> X"
+                    proof -
+                      have "W \<alpha> \<subseteq> C \<alpha>" unfolding W_def by (by100 blast)
+                      moreover have "C \<alpha> \<subseteq> X" using hC_props h\<alpha>n by (by100 blast)
+                      ultimately show ?thesis by (by100 blast)
+                    qed
+                    have hTW\<alpha>: "is_topology_on (W \<alpha>) ?TW\<alpha>"
+                      by (rule subspace_topology_is_topology_on[OF hTX hW\<alpha>_sub_X])
+                    have hh\<alpha>: "top1_homeomorphism_on top1_S1 top1_S1_topology
+                        ?C\<alpha> ?TC\<alpha> (h_fam \<alpha>)"
+                      using hfam h\<alpha>n by (by100 blast)
+                    have hbij\<alpha>: "bij_betw (h_fam \<alpha>) top1_S1 ?C\<alpha>"
+                      using hh\<alpha> unfolding top1_homeomorphism_on_def by (by100 blast)
+                    have h\<theta>p_range: "\<theta>q_fam \<alpha> < \<theta>p_fam \<alpha> \<and> \<theta>p_fam \<alpha> < \<theta>q_fam \<alpha> + 1"
+                      using hfam h\<alpha>n by (by100 blast)
+                    \<comment> \<open>Step 1: angle_fam \<alpha> is continuous W(\<alpha>) \<rightarrow> R.\<close>
+                    let ?hinv\<alpha> = "inv_into top1_S1 (h_fam \<alpha>)"
+                    have hbij_inv\<alpha>: "bij_betw ?hinv\<alpha> ?C\<alpha> top1_S1"
+                      using homeomorphism_inverse[OF hh\<alpha>]
+                      unfolding top1_homeomorphism_on_def by (by100 blast)
+                    have hq_in\<alpha>: "q \<alpha> \<in> ?C\<alpha>" using hq h\<alpha>n by (by100 blast)
+                    have hp_in\<alpha>: "p \<in> ?C\<alpha>" using hC_props h\<alpha>n by (by100 blast)
+                    have hangle_cont: "top1_continuous_map_on (W \<alpha>) ?TW\<alpha>
+                        (UNIV :: real set) top1_open_sets (angle_fam \<alpha>)"
+                    proof (rule continuous_map_onI)
+                      show "\<forall>x\<in>W \<alpha>. angle_fam \<alpha> x \<in> (UNIV :: real set)" by (by100 blast)
+                    next
+                      show "\<forall>V\<in>top1_open_sets. {x \<in> W \<alpha>. angle_fam \<alpha> x \<in> V} \<in> ?TW\<alpha>"
+                      proof (intro ballI)
+                        fix V assume hV: "V \<in> (top1_open_sets :: real set set)"
+                        let ?pre = "{x \<in> W \<alpha>. angle_fam \<alpha> x \<in> V}"
+                        have hpre_sub: "?pre \<subseteq> W \<alpha>" by (by100 blast)
+                        show "?pre \<in> ?TW\<alpha>"
+                        proof (rule top1_open_of_local_subsets[OF hTW\<alpha> hpre_sub])
+                          show "\<forall>x\<in>?pre. \<exists>U\<in>?TW\<alpha>. x \<in> U \<and> U \<subseteq> ?pre"
+                          proof (intro ballI)
+                            fix x assume hx_pre: "x \<in> ?pre"
+                            hence hxW: "x \<in> W \<alpha>" and hax_V: "angle_fam \<alpha> x \<in> V" by (by100 blast)+
+                            have hxC: "x \<in> ?C\<alpha>" using hxW unfolding W_def by (by100 blast)
+                            have hx_ne_q: "x \<noteq> q \<alpha>" using hxW unfolding W_def by (by100 blast)
+                            have hhinv_x_S1: "?hinv\<alpha> x \<in> top1_S1"
+                              using hbij_inv\<alpha> hxC unfolding bij_betw_def by (by100 blast)
+                            have hhinv_x_ne_q': "?hinv\<alpha> x \<noteq> ?hinv\<alpha> (q \<alpha>)"
+                            proof
+                              assume "?hinv\<alpha> x = ?hinv\<alpha> (q \<alpha>)"
+                              hence "h_fam \<alpha> (?hinv\<alpha> x) = h_fam \<alpha> (?hinv\<alpha> (q \<alpha>))" by (by100 simp)
+                              hence "x = q \<alpha>"
+                                using bij_betw_inv_into_right[OF hbij\<alpha> hxC]
+                                  bij_betw_inv_into_right[OF hbij\<alpha> hq_in\<alpha>]
+                                by (by100 simp)
+                              thus False using hx_ne_q by (by100 blast)
+                            qed
+                            have hspec_x: "\<theta>q_fam \<alpha> < angle_fam \<alpha> x \<and> angle_fam \<alpha> x < \<theta>q_fam \<alpha> + 1 \<and>
+                                top1_R_to_S1 (angle_fam \<alpha> x) = ?hinv\<alpha> x"
+                              using hangle_spec[OF h\<alpha>n hxW] by (by100 blast)
+                            obtain Ux where hhinv_x_Ux: "?hinv\<alpha> x \<in> Ux"
+                                and hUx_ec: "top1_evenly_covered_on UNIV top1_open_sets
+                                    top1_S1 top1_S1_topology top1_R_to_S1 Ux"
+                              using top1_covering_map_on_evenly_covered[OF Theorem_53_1 hhinv_x_S1]
+                              by (by100 blast)
+                            have hUx_ec_unf: "openin_on top1_S1 top1_S1_topology Ux \<and>
+                                (\<exists>\<V>x.
+                                (\<forall>Vs\<in>\<V>x. openin_on (UNIV::real set) top1_open_sets Vs) \<and>
+                                (\<forall>Vs\<in>\<V>x. \<forall>Vs'\<in>\<V>x. Vs \<noteq> Vs' \<longrightarrow> Vs \<inter> Vs' = {}) \<and>
+                                {t\<in>(UNIV::real set). top1_R_to_S1 t \<in> Ux} = \<Union>\<V>x \<and>
+                                (\<forall>Vs\<in>\<V>x. top1_homeomorphism_on Vs
+                                    (subspace_topology UNIV top1_open_sets Vs)
+                                    Ux (subspace_topology top1_S1 top1_S1_topology Ux) top1_R_to_S1))"
+                              using hUx_ec unfolding top1_evenly_covered_on_def by (by100 fast)
+                            obtain \<V>x where hVx_conj:
+                                "(\<forall>Vs\<in>\<V>x. openin_on (UNIV::real set) top1_open_sets Vs) \<and>
+                                (\<forall>Vs\<in>\<V>x. \<forall>Vs'\<in>\<V>x. Vs \<noteq> Vs' \<longrightarrow> Vs \<inter> Vs' = {}) \<and>
+                                {t\<in>(UNIV::real set). top1_R_to_S1 t \<in> Ux} = \<Union>\<V>x \<and>
+                                (\<forall>Vs\<in>\<V>x. top1_homeomorphism_on Vs
+                                    (subspace_topology UNIV top1_open_sets Vs)
+                                    Ux (subspace_topology top1_S1 top1_S1_topology Ux) top1_R_to_S1)"
+                              using conjunct2[OF hUx_ec_unf] by blast
+                            have hVx_open: "\<forall>Vs\<in>\<V>x. openin_on (UNIV::real set) top1_open_sets Vs"
+                              and hVx_disj: "\<forall>Vs\<in>\<V>x. \<forall>Vs'\<in>\<V>x. Vs \<noteq> Vs' \<longrightarrow> Vs \<inter> Vs' = {}"
+                              and hVx_union: "{t\<in>(UNIV::real set). top1_R_to_S1 t \<in> Ux} = \<Union>\<V>x"
+                              and hVx_homeo: "\<forall>Vs\<in>\<V>x. top1_homeomorphism_on Vs
+                                    (subspace_topology UNIV top1_open_sets Vs)
+                                    Ux (subspace_topology top1_S1 top1_S1_topology Ux) top1_R_to_S1"
+                              using hVx_conj by (by100 blast)+
+                            have hax_preim: "angle_fam \<alpha> x \<in> {t\<in>(UNIV::real set). top1_R_to_S1 t \<in> Ux}"
+                              using hspec_x hhinv_x_Ux by (by100 simp)
+                            hence "angle_fam \<alpha> x \<in> \<Union>\<V>x" using hVx_union by (by100 simp)
+                            then obtain Vsheet where hVs_in: "Vsheet \<in> \<V>x"
+                                and hax_Vs: "angle_fam \<alpha> x \<in> Vsheet"
+                              by (by100 blast)
+                            have hVs_homeo: "top1_homeomorphism_on Vsheet
+                                (subspace_topology UNIV top1_open_sets Vsheet)
+                                Ux (subspace_topology top1_S1 top1_S1_topology Ux) top1_R_to_S1"
+                              using hVx_homeo hVs_in by (by100 blast)
+                            have hVs_open: "Vsheet \<in> top1_open_sets"
+                              using hVx_open hVs_in unfolding openin_on_def by (by100 blast)
+                            have hVs_inv_cont: "top1_continuous_map_on Ux
+                                (subspace_topology top1_S1 top1_S1_topology Ux)
+                                Vsheet (subspace_topology UNIV top1_open_sets Vsheet)
+                                (inv_into Vsheet top1_R_to_S1)"
+                              using hVs_homeo unfolding top1_homeomorphism_on_def
+                              by (by100 blast)
+                            define I_interval where "I_interval = {\<theta>::real. \<theta>q_fam \<alpha> < \<theta> \<and> \<theta> < \<theta>q_fam \<alpha> + 1}"
+                            have hI_open: "I_interval \<in> top1_open_sets"
+                            proof -
+                              have "I_interval = {\<theta>q_fam \<alpha> <..< \<theta>q_fam \<alpha> + 1}"
+                                unfolding I_interval_def by (by100 auto)
+                              thus ?thesis unfolding top1_open_sets_def
+                                using open_greaterThanLessThan[of "\<theta>q_fam \<alpha>" "\<theta>q_fam \<alpha> + 1"] by (by100 simp)
+                            qed
+                            have hVVI_open: "V \<inter> Vsheet \<inter> I_interval \<in> top1_open_sets"
+                            proof -
+                              have h1: "V \<inter> Vsheet \<in> top1_open_sets"
+                                using topology_inter2[OF top1_open_sets_is_topology_on_UNIV hV hVs_open] .
+                              show ?thesis
+                                using topology_inter2[OF top1_open_sets_is_topology_on_UNIV h1 hI_open] .
+                            qed
+                            have hax_in_VVI: "angle_fam \<alpha> x \<in> V \<inter> Vsheet \<inter> I_interval"
+                              using hax_V hax_Vs hspec_x unfolding I_interval_def by (by100 blast)
+                            have hVVI_in_sub: "V \<inter> Vsheet \<inter> I_interval \<in>
+                                subspace_topology UNIV top1_open_sets Vsheet"
+                              unfolding subspace_topology_def using hVVI_open by (by100 blast)
+                            define Sx where "Sx = {s \<in> Ux. inv_into Vsheet top1_R_to_S1 s \<in>
+                                V \<inter> Vsheet \<inter> I_interval}"
+                            have hSx_open: "Sx \<in> subspace_topology top1_S1 top1_S1_topology Ux"
+                              unfolding Sx_def
+                              using continuous_map_preimage_open[OF hVs_inv_cont hVVI_in_sub] .
+                            have hhinv_x_Sx: "?hinv\<alpha> x \<in> Sx"
+                            proof -
+                              have "inv_into Vsheet top1_R_to_S1 (?hinv\<alpha> x) = angle_fam \<alpha> x"
+                              proof -
+                                have hbij_Vs: "bij_betw top1_R_to_S1 Vsheet Ux"
+                                  using hVs_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+                                have "top1_R_to_S1 (angle_fam \<alpha> x) = ?hinv\<alpha> x" using hspec_x by (by100 blast)
+                                moreover have "angle_fam \<alpha> x \<in> Vsheet" using hax_Vs .
+                                ultimately show ?thesis
+                                  using inv_into_f_eq[OF bij_betw_imp_inj_on[OF hbij_Vs] hax_Vs]
+                                  by (by100 simp)
+                              qed
+                              thus ?thesis unfolding Sx_def
+                                using hhinv_x_Ux hax_in_VVI by (by100 simp)
+                            qed
+                            obtain Ux_outer where hUx_outer: "Ux_outer \<in> top1_S1_topology"
+                                and hSx_eq: "Sx = Ux \<inter> Ux_outer"
+                              using hSx_open unfolding subspace_topology_def by (by100 blast)
+                            have hUx_open_S1: "openin_on top1_S1 top1_S1_topology Ux"
+                              using top1_evenly_covered_on_openin_on[OF hUx_ec] .
+                            hence hUx_in_S1T: "Ux \<in> top1_S1_topology"
+                              unfolding openin_on_def by (by100 blast)
+                            have hTS1: "is_topology_on top1_S1 top1_S1_topology"
+                              using top1_S1_is_topology_on_strict unfolding is_topology_on_strict_def
+                              by (by100 blast)
+                            have hSx_in_S1T: "Sx \<in> top1_S1_topology"
+                              using topology_inter2[OF hTS1 hUx_in_S1T hUx_outer] hSx_eq by (by100 simp)
+                            \<comment> \<open>hinv_\<alpha> is continuous from C(\<alpha>) to S1.\<close>
+                            have hcont_hinv\<alpha>: "top1_continuous_map_on ?C\<alpha> ?TC\<alpha>
+                                top1_S1 top1_S1_topology ?hinv\<alpha>"
+                              using hh\<alpha> unfolding top1_homeomorphism_on_def by (by100 blast)
+                            have hW\<alpha>_sub_C\<alpha>: "W \<alpha> \<subseteq> ?C\<alpha>" unfolding W_def by (by100 blast)
+                            have hcont_hinv_W\<alpha>: "top1_continuous_map_on (W \<alpha>) ?TW\<alpha>
+                                top1_S1 top1_S1_topology ?hinv\<alpha>"
+                            proof -
+                              have "?TW\<alpha> = subspace_topology ?C\<alpha> ?TC\<alpha> (W \<alpha>)"
+                                by (rule subspace_topology_trans[OF hW\<alpha>_sub_C\<alpha>, symmetric])
+                              thus ?thesis using top1_continuous_map_on_restrict_domain_simple[OF
+                                  hcont_hinv\<alpha> hW\<alpha>_sub_C\<alpha>] by (by100 simp)
+                            qed
+                            have hSx_preim: "{x' \<in> W \<alpha>. ?hinv\<alpha> x' \<in> Sx} \<in> ?TW\<alpha>"
+                              using continuous_map_preimage_open[OF hcont_hinv_W\<alpha> hSx_in_S1T] .
+                            have hSx_preim_sub: "{x' \<in> W \<alpha>. ?hinv\<alpha> x' \<in> Sx} \<subseteq> ?pre"
+                            proof (intro subsetI)
+                              fix y assume hy: "y \<in> {x' \<in> W \<alpha>. ?hinv\<alpha> x' \<in> Sx}"
+                              hence hyW: "y \<in> W \<alpha>" and hhinv_y_Sx: "?hinv\<alpha> y \<in> Sx"
+                                by (by100 blast)+
+                              have hinv_y_VVI: "inv_into Vsheet top1_R_to_S1 (?hinv\<alpha> y) \<in>
+                                  V \<inter> Vsheet \<inter> I_interval"
+                                using hhinv_y_Sx unfolding Sx_def by (by100 blast)
+                              define \<theta>y where "\<theta>y = inv_into Vsheet top1_R_to_S1 (?hinv\<alpha> y)"
+                              have h\<theta>y_V: "\<theta>y \<in> V" and h\<theta>y_Vs: "\<theta>y \<in> Vsheet"
+                                  and h\<theta>y_I: "\<theta>q_fam \<alpha> < \<theta>y \<and> \<theta>y < \<theta>q_fam \<alpha> + 1"
+                                using hinv_y_VVI unfolding \<theta>y_def I_interval_def by (by100 blast)+
+                              have hbij_Vs: "bij_betw top1_R_to_S1 Vsheet Ux"
+                                using hVs_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+                              have hhinv_y_Ux: "?hinv\<alpha> y \<in> Ux"
+                                using hhinv_y_Sx unfolding Sx_def by (by100 blast)
+                              have hR_\<theta>y: "top1_R_to_S1 \<theta>y = ?hinv\<alpha> y"
+                                unfolding \<theta>y_def
+                                using f_inv_into_f[of "?hinv\<alpha> y" top1_R_to_S1 Vsheet]
+                                  hhinv_y_Ux hbij_Vs unfolding bij_betw_def by (by100 blast)
+                              have "\<theta>q_fam \<alpha> < \<theta>y \<and> \<theta>y < \<theta>q_fam \<alpha> + 1 \<and> top1_R_to_S1 \<theta>y = ?hinv\<alpha> y"
+                                using h\<theta>y_I hR_\<theta>y by (by100 blast)
+                              hence "angle_fam \<alpha> y = \<theta>y"
+                              proof -
+                                have hspec_y: "\<theta>q_fam \<alpha> < angle_fam \<alpha> y \<and> angle_fam \<alpha> y < \<theta>q_fam \<alpha> + 1 \<and>
+                                    top1_R_to_S1 (angle_fam \<alpha> y) = ?hinv\<alpha> y"
+                                  using hangle_spec[OF h\<alpha>n hyW] by (by100 blast)
+                                have "top1_R_to_S1 \<theta>y = top1_R_to_S1 (angle_fam \<alpha> y)"
+                                  using hR_\<theta>y hspec_y by (by100 simp)
+                                hence "sin (2 * pi * \<theta>y) = sin (2 * pi * angle_fam \<alpha> y)
+                                    \<and> cos (2 * pi * \<theta>y) = cos (2 * pi * angle_fam \<alpha> y)"
+                                  unfolding top1_R_to_S1_def by (by100 auto)
+                                then obtain k :: int where
+                                    hk: "2*pi*\<theta>y = 2*pi*(angle_fam \<alpha> y) + 2*pi*of_int k"
+                                  using iffD1[OF sin_cos_eq_iff] by (by100 blast)
+                                hence "2*pi*(\<theta>y - angle_fam \<alpha> y) = 2*pi*of_int k"
+                                  by (simp add: algebra_simps)
+                                hence "\<theta>y - angle_fam \<alpha> y = of_int k" using pi_gt_zero
+                                  by (by100 simp)
+                                moreover have "\<bar>\<theta>y - angle_fam \<alpha> y\<bar> < 1"
+                                  using h\<theta>y_I hspec_y by (by100 linarith)
+                                hence "k = 0" using \<open>\<theta>y - angle_fam \<alpha> y = of_int k\<close> by (by100 linarith)
+                                ultimately show "angle_fam \<alpha> y = \<theta>y" by (by100 linarith)
+                              qed
+                              hence "angle_fam \<alpha> y \<in> V" using h\<theta>y_V by (by100 simp)
+                              thus "y \<in> ?pre" using hyW by (by100 blast)
+                            qed
+                            have hx_in_preim: "x \<in> {x' \<in> W \<alpha>. ?hinv\<alpha> x' \<in> Sx}"
+                              using hxW hhinv_x_Sx by (by100 blast)
+                            show "\<exists>U\<in>?TW\<alpha>. x \<in> U \<and> U \<subseteq> ?pre"
+                              apply (rule bexI[of _ "{x' \<in> W \<alpha>. ?hinv\<alpha> x' \<in> Sx}"])
+                              using hx_in_preim hSx_preim_sub hSx_preim by (by100 blast)+
+                          qed
+                        qed
+                      qed
+                    qed
+                    \<comment> \<open>Step 2: f restricted to fW(\<alpha>) maps into W(\<alpha>).\<close>
+                    have hf_fW_cont: "top1_continuous_map_on (fW \<alpha>) ?TfW
+                        (U_def \<inter> V_def) ?TUV f"
+                      by (rule top1_continuous_map_on_restrict_domain_simple[OF hf_cont hfW_sub])
+                    have hf_fW_range: "\<forall>s\<in>fW \<alpha>. f s \<in> W \<alpha>"
+                      unfolding fW_def by (by100 blast)
+                    have hW_sub_UV: "W \<alpha> \<subseteq> U_def \<inter> V_def"
+                      using hUV_eq h\<alpha>n by (by100 blast)
+                    have hf_fW_W: "top1_continuous_map_on (fW \<alpha>) ?TfW (W \<alpha>) ?TW\<alpha> f"
+                    proof -
+                      have himg: "f ` (fW \<alpha>) \<subseteq> W \<alpha>" using hf_fW_range by (by100 blast)
+                      have hW_sub_UV': "W \<alpha> \<subseteq> U_def \<inter> V_def" using hW_sub_UV .
+                      have hshrunk: "top1_continuous_map_on (fW \<alpha>) ?TfW
+                          (W \<alpha>) (subspace_topology (U_def \<inter> V_def) ?TUV (W \<alpha>)) f"
+                        by (rule top1_continuous_map_on_codomain_shrink[OF hf_fW_cont himg hW_sub_UV'])
+                      have hsub_trans: "subspace_topology (U_def \<inter> V_def) ?TUV (W \<alpha>) = ?TW\<alpha>"
+                        by (rule subspace_topology_trans[OF hW_sub_UV'])
+                      show ?thesis using hshrunk hsub_trans by (by100 simp)
+                    qed
+                    \<comment> \<open>Step 3: angle_fam(\<alpha>) \<circ> f continuous fW(\<alpha>) \<rightarrow> R.\<close>
+                    have hangle_f: "top1_continuous_map_on (fW \<alpha>) ?TfW
+                        (UNIV :: real set) top1_open_sets (angle_fam \<alpha> \<circ> f)"
+                      by (rule top1_continuous_map_on_comp[OF hf_fW_W hangle_cont])
+                    \<comment> \<open>Step 4: Build the interpolation on fW(\<alpha>) \<times> I_set.\<close>
+                    have hangle_f_pi1: "top1_continuous_map_on (fW \<alpha> \<times> I_set)
+                        ?TfWI (UNIV::real set) ?TR ((angle_fam \<alpha> \<circ> f) \<circ> pi1)"
+                    proof -
+                      have hpi1_cont: "top1_continuous_map_on (fW \<alpha> \<times> I_set) ?TfWI
+                          (fW \<alpha>) ?TfW pi1"
+                        by (rule top1_continuous_pi1[OF hTfW hTI])
+                      have "top1_continuous_map_on (fW \<alpha> \<times> I_set) ?TfWI
+                          (UNIV::real set) top1_open_sets ((angle_fam \<alpha> \<circ> f) \<circ> pi1)"
+                        by (rule top1_continuous_map_on_comp[OF hpi1_cont hangle_f])
+                      thus ?thesis unfolding hTR_eq .
+                    qed
+                    have hpi2_R: "top1_continuous_map_on (fW \<alpha> \<times> I_set) ?TfWI
+                        (UNIV::real set) ?TR pi2"
+                    proof -
+                      have hpi2_I: "top1_continuous_map_on (fW \<alpha> \<times> I_set) ?TfWI
+                          I_set ?TI pi2"
+                        by (rule top1_continuous_pi2[OF hTfW hTI])
+                      have h1: "top1_continuous_map_on (fW \<alpha> \<times> I_set) ?TfWI
+                          I_set (subspace_topology UNIV top1_open_sets I_set) pi2"
+                        using hpi2_I unfolding hItop_eq .
+                      have h2: "top1_continuous_map_on (fW \<alpha> \<times> I_set) ?TfWI
+                          (UNIV::real set) (subspace_topology UNIV top1_open_sets UNIV) pi2"
+                        using top1_continuous_map_on_codomain_enlarge[OF h1] by (by100 simp)
+                      have h3: "top1_continuous_map_on (fW \<alpha> \<times> I_set) ?TfWI
+                          (UNIV::real set) top1_open_sets pi2"
+                        using h2 unfolding subspace_topology_UNIV_self .
+                      thus ?thesis unfolding hTR_eq .
+                    qed
+                    have hconst1: "top1_continuous_map_on (fW \<alpha> \<times> I_set) ?TfWI
+                        (UNIV::real set) ?TR (\<lambda>_. 1::real)"
+                      using top1_continuous_map_on_const[OF hTfWI hTR UNIV_I] by (by100 simp)
+                    have hconst_\<theta>p: "top1_continuous_map_on (fW \<alpha> \<times> I_set) ?TfWI
+                        (UNIV::real set) ?TR (\<lambda>_. \<theta>p_fam \<alpha>)"
+                      using top1_continuous_map_on_const[OF hTfWI hTR UNIV_I] by (by100 simp)
+                    have h1_minus_t: "top1_continuous_map_on (fW \<alpha> \<times> I_set) ?TfWI
+                        (UNIV::real set) ?TR (\<lambda>p. 1 - pi2 p)"
+                      by (rule top1_continuous_diff_real[OF hTfWI hconst1 hpi2_R])
+                    have hterm1: "top1_continuous_map_on (fW \<alpha> \<times> I_set) ?TfWI
+                        (UNIV::real set) ?TR (\<lambda>p. (1 - pi2 p) * ((angle_fam \<alpha> \<circ> f) \<circ> pi1) p)"
+                      by (rule top1_continuous_mul_real[OF hTfWI h1_minus_t hangle_f_pi1])
+                    have hterm2: "top1_continuous_map_on (fW \<alpha> \<times> I_set) ?TfWI
+                        (UNIV::real set) ?TR (\<lambda>p. pi2 p * \<theta>p_fam \<alpha>)"
+                      by (rule top1_continuous_mul_real[OF hTfWI hpi2_R hconst_\<theta>p])
+                    have hsum_OT: "top1_continuous_map_on (fW \<alpha> \<times> I_set) ?TfWI
+                        (UNIV::real set) ?TR
+                        (\<lambda>p. (1 - pi2 p) * ((angle_fam \<alpha> \<circ> f) \<circ> pi1) p + pi2 p * \<theta>p_fam \<alpha>)"
+                      by (rule top1_continuous_add_real[OF hTfWI hterm1 hterm2])
+                    have hsum_OS: "top1_continuous_map_on (fW \<alpha> \<times> I_set) ?TfWI
+                        (UNIV::real set) top1_open_sets
+                        (\<lambda>p. (1 - pi2 p) * ((angle_fam \<alpha> \<circ> f) \<circ> pi1) p + pi2 p * \<theta>p_fam \<alpha>)"
+                      using hsum_OT unfolding hTR_eq .
+                    have hinterp_cont: "top1_continuous_map_on (fW \<alpha> \<times> I_set) ?TfWI
+                        (UNIV :: real set) top1_open_sets
+                        (\<lambda>(s,t). (1 - t) * angle_fam \<alpha> (f s) + t * \<theta>p_fam \<alpha>)"
+                    proof -
+                      have hfun_eq: "\<forall>p \<in> fW \<alpha> \<times> I_set.
+                          (1 - pi2 p) * ((angle_fam \<alpha> \<circ> f) \<circ> pi1) p + pi2 p * \<theta>p_fam \<alpha> =
+                          (case p of (s,t) \<Rightarrow> (1 - t) * angle_fam \<alpha> (f s) + t * \<theta>p_fam \<alpha>)"
+                      proof (intro ballI)
+                        fix p assume "p \<in> fW \<alpha> \<times> I_set"
+                        obtain s t where hp: "p = (s, t)" by (cases p)
+                        show "(1 - pi2 p) * ((angle_fam \<alpha> \<circ> f) \<circ> pi1) p + pi2 p * \<theta>p_fam \<alpha> =
+                            (case p of (s,t) \<Rightarrow> (1 - t) * angle_fam \<alpha> (f s) + t * \<theta>p_fam \<alpha>)"
+                          unfolding hp pi1_def pi2_def by (by100 simp)
+                      qed
+                      show ?thesis
+                        using iffD1[OF top1_continuous_map_on_cong[OF hfun_eq]] hsum_OS
+                        by (by100 blast)
+                    qed
+                    \<comment> \<open>Step 5: Compose with R_to_S1.\<close>
+                    have hR_S1: "top1_continuous_map_on (UNIV::real set) top1_open_sets
+                        top1_S1 top1_S1_topology top1_R_to_S1"
+                      by (rule top1_covering_map_on_continuous[OF Theorem_53_1])
+                    have hRS1_comp: "top1_continuous_map_on (fW \<alpha> \<times> I_set) ?TfWI
+                        top1_S1 top1_S1_topology
+                        (\<lambda>(s,t). top1_R_to_S1 ((1 - t) * angle_fam \<alpha> (f s) + t * \<theta>p_fam \<alpha>))"
+                    proof -
+                      have hcomp: "top1_continuous_map_on (fW \<alpha> \<times> I_set) ?TfWI
+                          top1_S1 top1_S1_topology
+                          (top1_R_to_S1 \<circ> (\<lambda>(s,t). (1 - t) * angle_fam \<alpha> (f s) + t * \<theta>p_fam \<alpha>))"
+                        by (rule top1_continuous_map_on_comp[OF hinterp_cont hR_S1])
+                      have heq: "\<forall>st\<in>fW \<alpha> \<times> I_set.
+                          (top1_R_to_S1 \<circ> (\<lambda>(s,t). (1 - t) * angle_fam \<alpha> (f s) + t * \<theta>p_fam \<alpha>)) st =
+                          (\<lambda>(s,t). top1_R_to_S1 ((1 - t) * angle_fam \<alpha> (f s) + t * \<theta>p_fam \<alpha>)) st"
+                        by (by100 auto)
+                      show ?thesis
+                        using iffD1[OF top1_continuous_map_on_cong[OF heq]] hcomp by (by100 blast)
+                    qed
+                    \<comment> \<open>Step 6: Compose with h_fam \<alpha>.\<close>
+                    have hcont_h\<alpha>: "top1_continuous_map_on top1_S1 top1_S1_topology
+                        ?C\<alpha> ?TC\<alpha> (h_fam \<alpha>)"
+                      using hh\<alpha> unfolding top1_homeomorphism_on_def by (by100 blast)
+                    have hfull_comp: "top1_continuous_map_on (fW \<alpha> \<times> I_set) ?TfWI
+                        ?C\<alpha> ?TC\<alpha>
+                        (\<lambda>(s,t). h_fam \<alpha> (top1_R_to_S1 ((1 - t) * angle_fam \<alpha> (f s) + t * \<theta>p_fam \<alpha>)))"
+                    proof -
+                      have hcomp: "top1_continuous_map_on (fW \<alpha> \<times> I_set) ?TfWI
+                          ?C\<alpha> ?TC\<alpha>
+                          (h_fam \<alpha> \<circ> (\<lambda>(s,t). top1_R_to_S1 ((1 - t) * angle_fam \<alpha> (f s) + t * \<theta>p_fam \<alpha>)))"
+                        by (rule top1_continuous_map_on_comp[OF hRS1_comp hcont_h\<alpha>])
+                      have heq: "\<forall>st\<in>fW \<alpha> \<times> I_set.
+                          (h_fam \<alpha> \<circ> (\<lambda>(s,t). top1_R_to_S1 ((1 - t) * angle_fam \<alpha> (f s) + t * \<theta>p_fam \<alpha>))) st =
+                          (\<lambda>(s,t). h_fam \<alpha> (top1_R_to_S1 ((1 - t) * angle_fam \<alpha> (f s) + t * \<theta>p_fam \<alpha>))) st"
+                        by (by100 auto)
+                      show ?thesis
+                        using iffD1[OF top1_continuous_map_on_cong[OF heq]] hcomp by (by100 blast)
+                    qed
+                    \<comment> \<open>Step 7: Shrink codomain to W(\<alpha>), enlarge to U\<inter>V.\<close>
+                    have himg_W: "(\<lambda>(s,t). h_fam \<alpha> (top1_R_to_S1 ((1 - t) * angle_fam \<alpha> (f s) + t * \<theta>p_fam \<alpha>))) ` (fW \<alpha> \<times> I_set) \<subseteq> W \<alpha>"
+                    proof (intro image_subsetI)
+                      fix st assume hst: "st \<in> fW \<alpha> \<times> I_set"
+                      obtain s t where hst_eq: "st = (s, t)" and hs_fW: "s \<in> fW \<alpha>" and ht: "t \<in> I_set"
+                        using hst by (by100 blast)
+                      have hs: "s \<in> I_set" and hfsW: "f s \<in> W \<alpha>"
+                        using hs_fW unfolding fW_def by (by100 blast)+
+                      \<comment> \<open>Use hF_agree to relate to F, which maps into W(\<alpha>_of s).
+                         But the explicit formula with \<alpha> = the formula F uses (via hF_agree).
+                         So it equals F(s,t), which is in W(\<alpha>_of s).
+                         If \<alpha>_of s = \<alpha>, done. Otherwise f(s) = p and result = p \<in> W(\<alpha>).\<close>
+                      have hresult_eq: "h_fam \<alpha> (top1_R_to_S1 ((1 - t) * angle_fam \<alpha> (f s) + t * \<theta>p_fam \<alpha>)) = F (s, t)"
+                        using hF_agree[OF h\<alpha> hs ht hfsW] unfolding F_def by (by100 simp)
+                      have "F (s, t) \<in> W (\<alpha>_of s)" by (rule hF_in_W[OF hs ht])
+                      show "(\<lambda>(s,t). h_fam \<alpha> (top1_R_to_S1 ((1 - t) * angle_fam \<alpha> (f s) + t * \<theta>p_fam \<alpha>))) st \<in> W \<alpha>"
+                      proof (cases "\<alpha>_of s = \<alpha>")
+                        case True
+                        thus ?thesis unfolding hst_eq using \<open>F (s, t) \<in> W (\<alpha>_of s)\<close> hresult_eq
+                          by (by100 simp)
+                      next
+                        case False
+                        have h\<alpha>s: "\<alpha>_of s \<in> {..<n}" using h\<alpha>_of_spec[OF hs] by (by100 blast)
+                        have hfsW': "f s \<in> W (\<alpha>_of s)" using h\<alpha>_of_spec[OF hs] by (by100 blast)
+                        have "C \<alpha> \<inter> C (\<alpha>_of s) = {p}" using hC_inter h\<alpha>n h\<alpha>s False by (by100 blast)
+                        moreover have "f s \<in> C \<alpha>" using hfsW unfolding W_def by (by100 blast)
+                        moreover have "f s \<in> C (\<alpha>_of s)" using hfsW' unfolding W_def by (by100 blast)
+                        ultimately have hfsp: "f s = p" by (by100 blast)
+                        have "h_fam \<alpha> (top1_R_to_S1 ((1 - t) * angle_fam \<alpha> (f s) + t * \<theta>p_fam \<alpha>))
+                            = h_fam \<alpha> (top1_R_to_S1 ((1 - t) * \<theta>p_fam \<alpha> + t * \<theta>p_fam \<alpha>))"
+                          using hangle_p[OF h\<alpha>n] hfsp by (by100 simp)
+                        also have "\<dots> = h_fam \<alpha> (top1_R_to_S1 (\<theta>p_fam \<alpha>))"
+                          by (simp add: algebra_simps)
+                        also have "\<dots> = p" using hh_fam_p[OF h\<alpha>n] .
+                        finally have "h_fam \<alpha> (top1_R_to_S1 ((1 - t) * angle_fam \<alpha> (f s) + t * \<theta>p_fam \<alpha>)) = p" .
+                        thus ?thesis unfolding hst_eq using hp_W h\<alpha>n by (by100 simp)
+                      qed
+                    qed
+                    have hW\<alpha>_sub_C: "W \<alpha> \<subseteq> ?C\<alpha>" unfolding W_def by (by100 blast)
+                    have hfull_comp_W: "top1_continuous_map_on (fW \<alpha> \<times> I_set) ?TfWI
+                        (W \<alpha>) (subspace_topology ?C\<alpha> ?TC\<alpha> (W \<alpha>))
+                        (\<lambda>(s,t). h_fam \<alpha> (top1_R_to_S1 ((1 - t) * angle_fam \<alpha> (f s) + t * \<theta>p_fam \<alpha>)))"
+                      by (rule top1_continuous_map_on_codomain_shrink[OF hfull_comp himg_W hW\<alpha>_sub_C])
+                    have hW\<alpha>_subspace_eq: "subspace_topology ?C\<alpha> ?TC\<alpha> (W \<alpha>) = ?TW\<alpha>"
+                      by (rule subspace_topology_trans[OF hW\<alpha>_sub_C])
+                    have hfull_comp_W': "top1_continuous_map_on (fW \<alpha> \<times> I_set) ?TfWI
+                        (W \<alpha>) ?TW\<alpha>
+                        (\<lambda>(s,t). h_fam \<alpha> (top1_R_to_S1 ((1 - t) * angle_fam \<alpha> (f s) + t * \<theta>p_fam \<alpha>)))"
+                      using hfull_comp_W hW\<alpha>_subspace_eq by (by100 simp)
+                    have hfull_comp_UV: "top1_continuous_map_on (fW \<alpha> \<times> I_set) ?TfWI
+                        (U_def \<inter> V_def) ?TUV
+                        (\<lambda>(s,t). h_fam \<alpha> (top1_R_to_S1 ((1 - t) * angle_fam \<alpha> (f s) + t * \<theta>p_fam \<alpha>)))"
+                      by (rule top1_continuous_map_on_codomain_enlarge[OF hfull_comp_W' hW_sub_UV hUV_sub])
+                    \<comment> \<open>Step 8: Transfer to F\<alpha>.\<close>
+                    have hF\<alpha>_eq: "\<forall>st\<in>fW \<alpha> \<times> I_set.
+                        (\<lambda>(s,t). h_fam \<alpha> (top1_R_to_S1 ((1 - t) * angle_fam \<alpha> (f s) + t * \<theta>p_fam \<alpha>))) st = F\<alpha> st"
+                    proof (intro ballI)
+                      fix st assume "st \<in> fW \<alpha> \<times> I_set"
+                      obtain s t where hst: "st = (s, t)" by (cases st)
+                      show "(\<lambda>(s,t). h_fam \<alpha> (top1_R_to_S1 ((1 - t) * angle_fam \<alpha> (f s) + t * \<theta>p_fam \<alpha>))) st = F\<alpha> st"
+                        unfolding hst F\<alpha>_def by (by100 simp)
+                    qed
+                    show ?thesis
+                      using iffD1[OF top1_continuous_map_on_cong[OF hF\<alpha>_eq]] hfull_comp_UV
+                      by (by100 blast)
+                  qed
+                  show "top1_continuous_map_on (fW \<alpha> \<times> I_set)
+                      (product_topology_on (subspace_topology I_set ?TI (fW \<alpha>)) ?TI)
+                      (U_def \<inter> V_def) ?TUV F"
+                    using iffD2[OF top1_continuous_map_on_cong[OF hF_eq_F\<alpha>]] hF\<alpha>_cont by (by100 blast)
+                qed
+                \<comment> \<open>Each F restricted to fW(\<alpha>) \<times> I is continuous with subspace topology from II.\<close>
+                have hF_each_sub: "\<forall>\<alpha>\<in>{..<n}. top1_continuous_map_on (fW \<alpha> \<times> I_set)
+                    (subspace_topology (I_set \<times> I_set) ?TII (fW \<alpha> \<times> I_set))
+                    (U_def \<inter> V_def) ?TUV F"
+                proof (intro ballI)
+                  fix \<alpha> assume h\<alpha>: "\<alpha> \<in> {..<n}"
+                  have heq: "subspace_topology (I_set \<times> I_set) ?TII (fW \<alpha> \<times> I_set)
+                      = product_topology_on (subspace_topology I_set ?TI (fW \<alpha>)) ?TI"
+                    using hfW_subspace_eq h\<alpha> by (by100 blast)
+                  show "top1_continuous_map_on (fW \<alpha> \<times> I_set)
+                      (subspace_topology (I_set \<times> I_set) ?TII (fW \<alpha> \<times> I_set))
+                      (U_def \<inter> V_def) ?TUV F"
+                    using hF_each h\<alpha> heq by (by100 simp)
+                qed
+                \<comment> \<open>Apply Theorem_18_1(2): closed preimage characterization.\<close>
+                show ?thesis
+                proof (rule iffD2[OF Theorem_18_1(2)[OF hTII hTUV]])
+                  show "(\<forall>x\<in>I_set \<times> I_set. F x \<in> U_def \<inter> V_def) \<and>
+                      (\<forall>B. closedin_on (U_def \<inter> V_def) ?TUV B \<longrightarrow>
+                        closedin_on (I_set \<times> I_set) ?TII {x \<in> I_set \<times> I_set. F x \<in> B})"
+                  proof (intro conjI allI impI)
+                    show "\<forall>x\<in>I_set \<times> I_set. F x \<in> U_def \<inter> V_def"
+                      using hF_range .
+                  next
+                    fix B assume hB: "closedin_on (U_def \<inter> V_def) ?TUV B"
+                    \<comment> \<open>Each piece preimage is closed in fW(\<alpha>)\<times>I (subspace from I\<times>I).\<close>
+                    have hpre_closed_each: "\<forall>\<alpha>\<in>{..<n}.
+                        closedin_on (fW \<alpha> \<times> I_set)
+                          (subspace_topology (I_set \<times> I_set) ?TII (fW \<alpha> \<times> I_set))
+                          {st \<in> fW \<alpha> \<times> I_set. F st \<in> B}"
+                    proof (intro ballI)
+                      fix \<alpha> assume h\<alpha>: "\<alpha> \<in> {..<n}"
+                      have hcont_sub: "top1_continuous_map_on (fW \<alpha> \<times> I_set)
+                          (subspace_topology (I_set \<times> I_set) ?TII (fW \<alpha> \<times> I_set))
+                          (U_def \<inter> V_def) ?TUV F"
+                        using hF_each_sub h\<alpha> by (by100 blast)
+                      have hfW_sub: "fW \<alpha> \<subseteq> I_set"
+                        using hfW_closed h\<alpha> unfolding closedin_on_def by (by100 blast)
+                      have hTfWI_sub: "is_topology_on (fW \<alpha> \<times> I_set)
+                          (subspace_topology (I_set \<times> I_set) ?TII (fW \<alpha> \<times> I_set))"
+                      proof (rule subspace_topology_is_topology_on[OF hTII])
+                        show "fW \<alpha> \<times> I_set \<subseteq> I_set \<times> I_set" using hfW_sub by (by100 blast)
+                      qed
+                      show "closedin_on (fW \<alpha> \<times> I_set)
+                          (subspace_topology (I_set \<times> I_set) ?TII (fW \<alpha> \<times> I_set))
+                          {st \<in> fW \<alpha> \<times> I_set. F st \<in> B}"
+                        using iffD1[OF Theorem_18_1(2)[OF hTfWI_sub hTUV] hcont_sub] hB
+                        by (by100 blast)
+                    qed
+                    \<comment> \<open>Each piece is closed in I\<times>I (closed in closed subspace \<Longrightarrow> closed in ambient).\<close>
+                    have hpre_closed_II: "\<forall>\<alpha>\<in>{..<n}.
+                        closedin_on (I_set \<times> I_set) ?TII {st \<in> fW \<alpha> \<times> I_set. F st \<in> B}"
+                    proof (intro ballI)
+                      fix \<alpha> assume h\<alpha>: "\<alpha> \<in> {..<n}"
+                      have hcl_piece: "closedin_on (fW \<alpha> \<times> I_set)
+                          (subspace_topology (I_set \<times> I_set) ?TII (fW \<alpha> \<times> I_set))
+                          {st \<in> fW \<alpha> \<times> I_set. F st \<in> B}"
+                        using hpre_closed_each h\<alpha> by (by100 blast)
+                      have hfWI_cl: "closedin_on (I_set \<times> I_set) ?TII (fW \<alpha> \<times> I_set)"
+                        using hfWI_closed h\<alpha> by (by100 blast)
+                      have hfW_sub: "fW \<alpha> \<times> I_set \<subseteq> I_set \<times> I_set"
+                        using hfW_closed h\<alpha> unfolding closedin_on_def by (by100 blast)
+                      obtain Cl where hCl: "closedin_on (I_set \<times> I_set) ?TII Cl"
+                          and hSeq: "{st \<in> fW \<alpha> \<times> I_set. F st \<in> B} = Cl \<inter> (fW \<alpha> \<times> I_set)"
+                        using iffD1[OF Theorem_17_2[OF hTII hfW_sub]] hcl_piece by (by100 blast)
+                      have "closedin_on (I_set \<times> I_set) ?TII (Cl \<inter> (fW \<alpha> \<times> I_set))"
+                      proof -
+                        have hinter_rule: "\<forall>F. F \<noteq> {} \<longrightarrow> (\<forall>A\<in>F. closedin_on (I_set \<times> I_set) ?TII A) \<longrightarrow>
+                            closedin_on (I_set \<times> I_set) ?TII (\<Inter>F)"
+                          using conjunct1[OF conjunct2[OF conjunct2[OF Theorem_17_1[OF hTII]]]] .
+                        have "closedin_on (I_set \<times> I_set) ?TII (\<Inter>{Cl, fW \<alpha> \<times> I_set})"
+                        proof (rule mp[OF mp[OF spec[OF hinter_rule]]])
+                          show "{Cl, fW \<alpha> \<times> I_set} \<noteq> {}" by (by100 blast)
+                          show "\<forall>A\<in>{Cl, fW \<alpha> \<times> I_set}. closedin_on (I_set \<times> I_set) ?TII A"
+                            using hCl hfWI_cl by (by100 blast)
+                        qed
+                        moreover have "\<Inter>{Cl, fW \<alpha> \<times> I_set} = Cl \<inter> (fW \<alpha> \<times> I_set)" by (by100 blast)
+                        ultimately show ?thesis by (by100 simp)
+                      qed
+                      thus "closedin_on (I_set \<times> I_set) ?TII {st \<in> fW \<alpha> \<times> I_set. F st \<in> B}"
+                        using hSeq by (by100 simp)
+                    qed
+                    \<comment> \<open>Finite union of closed = closed.\<close>
+                    have hfin_img: "finite ((\<lambda>\<alpha>. {st \<in> fW \<alpha> \<times> I_set. F st \<in> B}) ` {..<n})"
+                      using finite_imageI[OF finite_lessThan] .
+                    have hall_closed: "\<forall>S\<in>(\<lambda>\<alpha>. {st \<in> fW \<alpha> \<times> I_set. F st \<in> B}) ` {..<n}.
+                        closedin_on (I_set \<times> I_set) ?TII S"
+                      using hpre_closed_II by (by100 blast)
+                    have hunion_closed: "closedin_on (I_set \<times> I_set) ?TII
+                        (\<Union>((\<lambda>\<alpha>. {st \<in> fW \<alpha> \<times> I_set. F st \<in> B}) ` {..<n}))"
+                      using conjunct2[OF conjunct2[OF conjunct2[OF Theorem_17_1[OF hTII]]]]
+                        hfin_img hall_closed by (by100 blast)
+                    have hunion_eq: "(\<Union>((\<lambda>\<alpha>. {st \<in> fW \<alpha> \<times> I_set. F st \<in> B}) ` {..<n}))
+                        = {st \<in> I_set \<times> I_set. F st \<in> B}"
+                    proof (intro set_eqI iffI)
+                      fix st assume "st \<in> (\<Union>((\<lambda>\<alpha>. {st \<in> fW \<alpha> \<times> I_set. F st \<in> B}) ` {..<n}))"
+                      then obtain \<alpha> where h\<alpha>: "\<alpha> \<in> {..<n}" and hst: "st \<in> {st \<in> fW \<alpha> \<times> I_set. F st \<in> B}"
+                        by (by100 blast)
+                      have "st \<in> fW \<alpha> \<times> I_set" and "F st \<in> B" using hst by (by100 blast)+
+                      moreover have "fW \<alpha> \<subseteq> I_set" using hfW_closed h\<alpha> unfolding closedin_on_def by (by100 blast)
+                      ultimately show "st \<in> {st \<in> I_set \<times> I_set. F st \<in> B}" by (by100 blast)
+                    next
+                      fix st assume hst: "st \<in> {st \<in> I_set \<times> I_set. F st \<in> B}"
+                      hence hstII: "st \<in> I_set \<times> I_set" and hFB: "F st \<in> B" by (by100 blast)+
+                      obtain s t where hst_eq: "st = (s, t)" and hs: "s \<in> I_set" and ht: "t \<in> I_set"
+                        using hstII by (by100 blast)
+                      have "s \<in> (\<Union>\<alpha>\<in>{..<n}. fW \<alpha>)" using hfW_cover hs by (by100 blast)
+                      then obtain \<alpha> where h\<alpha>: "\<alpha> \<in> {..<n}" and hs_fW: "s \<in> fW \<alpha>" by (by100 blast)
+                      have "st \<in> fW \<alpha> \<times> I_set" using hs_fW ht hst_eq by (by100 blast)
+                      thus "st \<in> (\<Union>((\<lambda>\<alpha>. {st \<in> fW \<alpha> \<times> I_set. F st \<in> B}) ` {..<n}))"
+                        using h\<alpha> hFB by (by100 blast)
+                    qed
+                    show "closedin_on (I_set \<times> I_set) ?TII {x \<in> I_set \<times> I_set. F x \<in> B}"
+                      using hunion_closed hunion_eq by (by100 simp)
+                  qed
+                qed
+              qed
               \<comment> \<open>Step 8: Assemble the path homotopy.\<close>
               have hconst_path: "top1_is_path_on (U_def \<inter> V_def) (subspace_topology X TX (U_def \<inter> V_def)) p p (top1_constant_path p)"
                 by (rule top1_constant_path_is_path[OF hTUV hp_UV])
