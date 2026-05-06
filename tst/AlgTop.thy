@@ -1249,10 +1249,25 @@ proof -
           thus False using hx_ne by (by100 blast)
         qed
         have hnorm_pos: "?norm (?hinv x) > 0"
-          sorry \<comment> \<open>sqrt(a^2+b^2) > 0 when (a,b) \<noteq> (0,0). Needs real_sqrt_gt_zero + arithmetic.\<close>
+        proof -
+          have "fst (?hinv x) \<noteq> 0 \<or> snd (?hinv x) \<noteq> 0"
+            using hinv_ne by (cases "?hinv x") (by100 simp)
+          hence "fst (?hinv x) ^ 2 + snd (?hinv x) ^ 2 > 0"
+            by (smt (verit) power2_less_0 sum_power2_eq_zero_iff)
+          thus ?thesis by (rule real_sqrt_gt_zero)
+        qed
         \<comment> \<open>y/|y| \<in> S1.\<close>
         have hy_norm_S1: "(fst (?hinv x) / ?norm (?hinv x), snd (?hinv x) / ?norm (?hinv x)) \<in> top1_S1"
-          sorry \<comment> \<open>Standard: (a/sqrt(a^2+b^2))^2 + (b/sqrt(a^2+b^2))^2 = 1.\<close>
+        proof -
+          let ?a = "fst (?hinv x)" and ?b = "snd (?hinv x)" and ?n = "?norm (?hinv x)"
+          have "(?a / ?n) ^ 2 + (?b / ?n) ^ 2 = (?a ^ 2 + ?b ^ 2) / ?n ^ 2"
+            by (simp add: power2_eq_square divide_simps)
+          also have "?n ^ 2 = ?a ^ 2 + ?b ^ 2"
+            using hnorm_pos by (smt (verit) real_sqrt_pow2 sum_power2_ge_zero)
+          also have "(?a ^ 2 + ?b ^ 2) / (?a ^ 2 + ?b ^ 2) = (1::real)"
+            using hnorm_pos by (smt (verit) real_sqrt_gt_zero divide_self_if sum_power2_eq_zero_iff)
+          finally show ?thesis unfolding top1_S1_def by (by100 simp)
+        qed
         hence "h (fst (?hinv x) / ?norm (?hinv x), snd (?hinv x) / ?norm (?hinv x)) \<in> h ` top1_S1"
           by (by100 blast)
         hence "h (fst (?hinv x) / ?norm (?hinv x), snd (?hinv x) / ?norm (?hinv x)) \<in> A"
@@ -1462,7 +1477,7 @@ proof -
         have hinv_shrink: "top1_continuous_map_on ?UV ?TUV ?P (subspace_topology ?D ?TD ?P) (inv_into ?D h)"
           by (rule top1_continuous_map_on_codomain_shrink[OF hinv_restr2 hinv_img hP_sub_D])
         have hinv_shrink2: "top1_continuous_map_on ?UV ?TUV ?P ?TP (inv_into ?D h)"
-          using hinv_shrink hTP_eq by (by100 simp)
+          using hinv_shrink hTP_eq by simp
         \<comment> \<open>Transfer: inv_into P h = inv_into D h on UV.\<close>
         show ?thesis
           by (rule top1_continuous_map_on_agree'[OF hinv_shrink2])
