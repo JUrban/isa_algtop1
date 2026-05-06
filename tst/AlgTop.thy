@@ -1736,7 +1736,7 @@ proof -
       \<comment> \<open>Continuity on A \<times> I: H_U = projection, continuous.\<close>
       have hH_cont_A: "top1_continuous_map_on (A \<times> I_set)
           (product_topology_on (subspace_topology ?U ?TU A) I_top) ?U ?TU H_U"
-        sorry \<comment> \<open>H_U = fst on A \<times> I. Projection is continuous, codomain A \<subseteq> U.\<close>
+        sorry \<comment> \<open>H_U = fst on A×I. Projection continuous + codomain enlarge A⊆U.\<close>
       \<comment> \<open>Continuity on CU \<times> I: H_U = h((1-t)*y + t*y/|y|) via quotient descent.\<close>
       have hH_cont_CU: "top1_continuous_map_on (?CU \<times> I_set)
           (product_topology_on (subspace_topology ?U ?TU ?CU) I_top) ?U ?TU H_U"
