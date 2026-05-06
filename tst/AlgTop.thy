@@ -1866,8 +1866,10 @@ proof -
             qed
             ultimately have hTCUI_eq: "subspace_topology UI TUI (?CU \<times> I_set)
                 = product_topology_on (subspace_topology U_loc TU_loc ?CU) I_top" by (by100 simp)
-            show ?thesis using hH_cont_CU hTCUI_eq unfolding hU_eq hTU_eq
-              sorry \<comment> \<open>Pure topology rewrite: substitute hTCUI_eq into goal. Simp timeout.\<close>
+            have hgoal: "top1_continuous_map_on (?CU \<times> I_set)
+                (product_topology_on (subspace_topology U_loc TU_loc ?CU) I_top) U_loc TU_loc H_U"
+              using hH_cont_CU hU_eq hTU_eq by (by100 simp)
+            show ?thesis by (rule ssubst[OF hTCUI_eq]) (rule hgoal)
           qed
         qed
         thus ?thesis unfolding UI_def TUI_def U_loc_def TU_loc_def by (by100 simp)
