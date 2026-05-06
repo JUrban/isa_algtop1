@@ -1777,11 +1777,7 @@ proof -
         \<comment> \<open>Step A: \<pi> \<times> id: B2 \<times> I \<rightarrow> C \<times> I is a quotient map.\<close>
         \<comment> \<open>(Compact \<times> compact \<rightarrow> Hausdorff \<times> Hausdorff, continuous surjection \<Rightarrow> closed \<Rightarrow> quotient.)\<close>
         let ?\<pi>I = "\<lambda>(y, t). (h y, t)"
-        have h\<pi>I_quot: "top1_quotient_map_on (top1_B2 \<times> I_set)
-            (product_topology_on top1_B2_topology I_top)
-            (?C \<times> I_set) (product_topology_on ?TC I_top) ?\<pi>I"
-          sorry \<comment> \<open>h \<times> id is continuous surjection from compact B2\<times>I to Hausdorff C\<times>I,
-                   hence closed map, hence quotient map.\<close>
+        \<comment> \<open>h\<pi>I_quot is derived after Step C from hB2I_compact, hCI_hausdorff, h\<pi>I_cont.\<close>
         \<comment> \<open>Step B: (B2\{0}) \<times> I is open in B2 \<times> I and saturated w.r.t. \<pi> \<times> id.\<close>
         have hB20I_open: "openin_on (top1_B2 \<times> I_set)
             (product_topology_on top1_B2_topology I_top) (?B2_0 \<times> I_set)"
@@ -1886,17 +1882,38 @@ proof -
         qed
         \<comment> \<open>Step C: By Theorem 22.1, \<pi>' = (\<pi> \<times> id)|_{B2\{0} \<times> I} is a quotient map.\<close>
         \<comment> \<open>We use: \<pi> \<times> id is a closed map (\<Rightarrow> part 2 of Theorem 22.1).\<close>
+        have hB2I_compact: "top1_compact_on (top1_B2 \<times> I_set) (product_topology_on top1_B2_topology I_top)"
+          sorry \<comment> \<open>B2 compact (closed bounded in R2) \<times> I compact ([0,1]). Product of compact.\<close>
+        have hCI_hausdorff: "is_hausdorff_on (?C \<times> I_set) (product_topology_on ?TC I_top)"
+          sorry \<comment> \<open>C \<subseteq> X Hausdorff, I \<subseteq> R Hausdorff. Subspace \<times> subspace of Hausdorff.\<close>
+        have h\<pi>I_cont: "top1_continuous_map_on (top1_B2 \<times> I_set) (product_topology_on top1_B2_topology I_top)
+            (?C \<times> I_set) (product_topology_on ?TC I_top) ?\<pi>I"
+          sorry \<comment> \<open>h continuous B2 \<rightarrow> C (restriction of assms(5)), id continuous I \<rightarrow> I.\<close>
         have h\<pi>I_closed: "top1_closed_map_on (top1_B2 \<times> I_set)
             (product_topology_on top1_B2_topology I_top)
             (?C \<times> I_set) (product_topology_on ?TC I_top) ?\<pi>I"
-          sorry \<comment> \<open>Continuous from compact to Hausdorff is closed.\<close>
+          unfolding top1_closed_map_on_def
+        proof (intro conjI ballI allI impI)
+          fix p assume "p \<in> top1_B2 \<times> I_set"
+          then obtain y t where "p = (y, t)" "y \<in> top1_B2" "t \<in> I_set" by (by100 blast)
+          show "?\<pi>I p \<in> ?C \<times> I_set" using \<open>p = (y,t)\<close> \<open>y \<in> top1_B2\<close> \<open>t \<in> I_set\<close> by (by100 auto)
+        next
+          fix A assume hA: "closedin_on (top1_B2 \<times> I_set) (product_topology_on top1_B2_topology I_top) A"
+          show "closedin_on (?C \<times> I_set) (product_topology_on ?TC I_top) (?\<pi>I ` A)"
+            by (rule compact_hausdorff_continuous_closed_map[OF hB2I_compact hCI_hausdorff h\<pi>I_cont hA])
+        qed
+        have h\<pi>I_quot: "top1_quotient_map_on (top1_B2 \<times> I_set)
+            (product_topology_on top1_B2_topology I_top)
+            (?C \<times> I_set) (product_topology_on ?TC I_top) ?\<pi>I"
+          sorry \<comment> \<open>Closed + continuous + surjective \<Rightarrow> quotient.
+                   From h\<pi>I_closed, h\<pi>I_cont, surjective (C = h ` B2).\<close>
         have h\<pi>'_quot: "top1_quotient_map_on (?B2_0 \<times> I_set)
             (subspace_topology (top1_B2 \<times> I_set) (product_topology_on top1_B2_topology I_top)
               (?B2_0 \<times> I_set))
             (?CU \<times> I_set)
             (subspace_topology (?C \<times> I_set) (product_topology_on ?TC I_top) (?CU \<times> I_set))
             ?\<pi>I"
-          sorry \<comment> \<open>Apply Theorem_22_1 part 2 (closed map \<Rightarrow> restriction to saturated is quotient).\<close>
+          sorry \<comment> \<open>Theorem_22_1[OF h\<pi>I_quot hB20I_sat], part 2 (closed map). Image = CU\<times>I.\<close>
         \<comment> \<open>Step D: The radial retraction G(y,t) = h(interp(y,t)) is continuous on B2\{0} \<times> I.\<close>
         let ?G = "\<lambda>(y, t). h ((1 - t) * fst y + t * fst y / ?norm y,
                               (1 - t) * snd y + t * snd y / ?norm y)"
@@ -8829,6 +8846,12 @@ end
 
 
 
+ 
+ 
+ 
+ 
+ 
+ 
  
  
  
