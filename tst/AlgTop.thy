@@ -1785,7 +1785,30 @@ proof -
         \<comment> \<open>Step B: (B2\{0}) \<times> I is open in B2 \<times> I and saturated w.r.t. \<pi> \<times> id.\<close>
         have hB20I_open: "openin_on (top1_B2 \<times> I_set)
             (product_topology_on top1_B2_topology I_top) (?B2_0 \<times> I_set)"
-          sorry \<comment> \<open>B2\{0} is open in B2 (complement of closed {0}), product with I is open.\<close>
+        proof -
+          have hTI: "is_topology_on I_set I_top"
+            by (rule top1_unit_interval_topology_is_topology_on)
+          have hI_in: "I_set \<in> I_top" using hTI unfolding is_topology_on_def by (by100 blast)
+          \<comment> \<open>B2\{0} is open in B2: {0} closed in Hausdorff B2, complement is open.\<close>
+          have hB20_open_B2: "?B2_0 \<in> top1_B2_topology"
+          proof -
+            \<comment> \<open>B2_top = sub UNIV R2_top B2. B2\{0} = B2 \<inter> (UNIV-{0}). (UNIV-{0}) open in R2.\<close>
+            have "(UNIV :: (real\<times>real) set) - {(0,0)} \<in> product_topology_on top1_open_sets top1_open_sets"
+            proof -
+              have "closedin_on (UNIV :: (real\<times>real) set)
+                  (product_topology_on top1_open_sets top1_open_sets) {(0::real, 0::real)}"
+                by (rule singleton_closed_in_hausdorff[OF top1_R2_is_hausdorff]) (by100 simp)
+              thus ?thesis unfolding closedin_on_def by (by100 blast)
+            qed
+            moreover have "?B2_0 = top1_B2 \<inter> ((UNIV :: (real\<times>real) set) - {(0,0)})" by (by100 blast)
+            ultimately show ?thesis unfolding top1_B2_topology_def subspace_topology_def
+              by (by100 blast)
+          qed
+          have "?B2_0 \<times> I_set \<in> product_topology_on top1_B2_topology I_top"
+            by (rule product_rect_open[OF hB20_open_B2 hI_in])
+          moreover have "?B2_0 \<times> I_set \<subseteq> top1_B2 \<times> I_set" by (by100 blast)
+          ultimately show ?thesis unfolding openin_on_def by (by100 blast)
+        qed
         have h_preimg_x0: "\<forall>y\<in>top1_B2. h y = ?x0 \<longrightarrow> y = (0, 0)"
         proof (intro ballI impI)
           fix y assume "y \<in> top1_B2" "h y = ?x0"
@@ -8806,6 +8829,8 @@ end
 
 
 
+ 
+ 
  
  
  
