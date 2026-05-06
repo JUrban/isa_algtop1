@@ -1885,7 +1885,34 @@ proof -
         have hB2_compact_top1: "top1_compact_on top1_B2 top1_B2_topology"
         proof -
           have "compact top1_B2"
-            sorry \<comment> \<open>B2 = {(x,y)|x^2+y^2\<le>1} compact (closed bounded in R2).\<close>
+          proof -
+            have hB2_sub: "top1_B2 \<subseteq> {-1..1} \<times> {-1..1::real}"
+            proof
+              fix p :: "real \<times> real" assume "p \<in> top1_B2"
+              hence h: "fst p ^ 2 + snd p ^ 2 \<le> 1" unfolding top1_B2_def by (by100 simp)
+              have "0 \<le> snd p ^ 2" by (by100 simp)
+              hence "fst p ^ 2 \<le> 1" using h by (by100 linarith)
+              hence "\<bar>fst p\<bar> \<le> 1" using power2_le_imp_le[of "\<bar>fst p\<bar>" 1] by (by100 simp)
+              hence hf: "- 1 \<le> fst p \<and> fst p \<le> 1" by (by100 linarith)
+              have "0 \<le> fst p ^ 2" by (by100 simp)
+              hence "snd p ^ 2 \<le> 1" using h by (by100 linarith)
+              hence "\<bar>snd p\<bar> \<le> 1" using power2_le_imp_le[of "\<bar>snd p\<bar>" 1] by (by100 simp)
+              hence "- 1 \<le> snd p \<and> snd p \<le> 1" by (by100 linarith)
+              thus "p \<in> {-1..1} \<times> {-1..1}" using hf by (simp add: mem_Times_iff)
+            qed
+            have "closed top1_B2"
+            proof -
+              have "top1_B2 = (\<lambda>p::real\<times>real. fst p ^ 2 + snd p ^ 2) -` {..1}"
+                unfolding top1_B2_def by (by100 auto)
+              moreover have "continuous_on UNIV (\<lambda>p::real\<times>real. fst p ^ 2 + snd p ^ 2)"
+                by (intro continuous_intros)
+              hence "closed ((\<lambda>p::real\<times>real. fst p ^ 2 + snd p ^ 2) -` {..1})"
+                by (intro closed_vimage closed_atMost)
+                   (simp add: continuous_on_eq_continuous_at open_UNIV)
+              ultimately show ?thesis by (by100 simp)
+            qed
+            thus ?thesis using closed_subset_compact[OF compact_Icc_Times _ hB2_sub] by (by100 blast)
+          qed
           moreover have "top1_B2_topology = subspace_topology UNIV top1_open_sets top1_B2"
             unfolding top1_B2_topology_def
             using product_topology_on_open_sets[where ?'a=real and ?'b=real] by (by100 simp)
@@ -1904,7 +1931,24 @@ proof -
         have hB2I_compact: "top1_compact_on (top1_B2 \<times> I_set) (product_topology_on top1_B2_topology I_top)"
           by (rule Theorem_26_7[OF hB2_compact_top1 hI_compact_top1])
         have hCI_hausdorff: "is_hausdorff_on (?C \<times> I_set) (product_topology_on ?TC I_top)"
-          sorry \<comment> \<open>C \<subseteq> X Hausdorff, I \<subseteq> R Hausdorff. Subspace \<times> subspace of Hausdorff.\<close>
+        proof -
+          \<comment> \<open>Extract sub-Hausdorff and product-Hausdorff from Theorem 17.11.\<close>
+          have hsub_haus: "\<And>X0 T0 Y0. is_hausdorff_on X0 T0 \<Longrightarrow> Y0 \<subseteq> X0 \<Longrightarrow>
+              is_hausdorff_on Y0 (subspace_topology X0 T0 Y0)"
+            using conjunct2[OF conjunct2[OF Theorem_17_11]] by (by100 blast)
+          have hprod_haus: "\<And>X1 T1 X2 T2. is_hausdorff_on X1 T1 \<Longrightarrow> is_hausdorff_on X2 T2 \<Longrightarrow>
+              is_hausdorff_on (X1 \<times> X2) (product_topology_on T1 T2)"
+            using conjunct1[OF conjunct2[OF Theorem_17_11]] by (by100 blast)
+          have hC_sub_X: "?C \<subseteq> X" using assms(5) unfolding top1_continuous_map_on_def by (by100 blast)
+          have hC_haus: "is_hausdorff_on ?C ?TC" by (rule hsub_haus[OF assms(2) hC_sub_X])
+          have hI_haus: "is_hausdorff_on I_set I_top"
+          proof -
+            have "I_top = subspace_topology (UNIV::real set) top1_open_sets I_set"
+              unfolding top1_unit_interval_topology_def by (by100 simp)
+            thus ?thesis using hsub_haus[OF top1_R_is_hausdorff, of I_set] by (by100 simp)
+          qed
+          show ?thesis by (rule hprod_haus[OF hC_haus hI_haus])
+        qed
         have h\<pi>I_cont: "top1_continuous_map_on (top1_B2 \<times> I_set) (product_topology_on top1_B2_topology I_top)
             (?C \<times> I_set) (product_topology_on ?TC I_top) ?\<pi>I"
           sorry \<comment> \<open>h continuous B2 \<rightarrow> C (restriction of assms(5)), id continuous I \<rightarrow> I.\<close>
@@ -9085,6 +9129,13 @@ end
 
 
 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
  
  
  
