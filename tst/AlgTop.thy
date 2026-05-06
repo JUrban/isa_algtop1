@@ -1339,11 +1339,83 @@ using assms proof (induction n arbitrary: X TX p rule: less_induct)
             (top1_fundamental_group_mul V (subspace_topology X TX V) p)
             (top1_fundamental_group_carrier ?Cn ?TCn p)
             (top1_fundamental_group_mul ?Cn ?TCn p)"
-      sorry \<comment> \<open>Topology: construct U, V from removing points q(\<alpha>) from complementary circles.
-         Each W(\<alpha>) = C(\<alpha>) - {q(\<alpha>)} is contractible (arc). U = C(0) \<union> ... \<union> C(n-2) \<union> W(n-1),
-         V = W(0) \<union> ... \<union> W(n-2) \<union> C(n-1). U, V open by weak topology.
-         U deformation-retracts to X', V deformation-retracts to C(n-1).
-         U \<inter> V = W(0) \<union> ... \<union> W(n-1) deformation-retracts to {p}.\<close>
+    proof -
+      \<comment> \<open>Choose points q(\<alpha>) \<noteq> p on each circle.\<close>
+      have hq_exists: "\<forall>\<alpha>\<in>{..<n}. \<exists>q. q \<in> C \<alpha> \<and> q \<noteq> p"
+      proof (intro ballI)
+        fix \<alpha> assume h\<alpha>: "\<alpha> \<in> {..<n}"
+        obtain h where hh: "top1_homeomorphism_on top1_S1 top1_S1_topology
+            (C \<alpha>) (subspace_topology X TX (C \<alpha>)) h" using hC_props h\<alpha> by (by100 blast)
+        have hbij: "bij_betw h top1_S1 (C \<alpha>)" using hh unfolding top1_homeomorphism_on_def by (by100 blast)
+        have hp_in: "p \<in> C \<alpha>" using hC_props h\<alpha> by (by100 blast)
+        \<comment> \<open>S¹ has more than one point.\<close>
+        have "(1::real, 0::real) \<in> top1_S1 \<and> (- 1, 0) \<in> top1_S1 \<and> (1::real, 0) \<noteq> (- 1::real, 0)"
+          unfolding top1_S1_def by (by100 auto)
+        then obtain a b :: "real \<times> real" where "a \<in> top1_S1" "b \<in> top1_S1" "a \<noteq> b" by (by100 blast)
+        hence "h a \<in> C \<alpha> \<and> h b \<in> C \<alpha> \<and> h a \<noteq> h b"
+          using hbij unfolding bij_betw_def inj_on_def by (by100 blast)
+        hence "h a \<noteq> p \<or> h b \<noteq> p" by (by100 force)
+        thus "\<exists>q. q \<in> C \<alpha> \<and> q \<noteq> p" using \<open>h a \<in> C \<alpha> \<and> h b \<in> C \<alpha> \<and> h a \<noteq> h b\<close> by (by100 blast)
+      qed
+      obtain q :: "nat \<Rightarrow> 'a" where hq: "\<forall>\<alpha>\<in>{..<n}. q \<alpha> \<in> C \<alpha> \<and> q \<alpha> \<noteq> p"
+      proof -
+        from hq_exists have "\<forall>\<alpha>\<in>{..<n}. \<exists>q. q \<in> C \<alpha> \<and> q \<noteq> p" .
+        define q0 where "q0 = (\<lambda>\<alpha>. SOME q. q \<in> C \<alpha> \<and> q \<noteq> p)"
+        have "\<forall>\<alpha>\<in>{..<n}. q0 \<alpha> \<in> C \<alpha> \<and> q0 \<alpha> \<noteq> p"
+        proof (intro ballI)
+          fix \<alpha> assume "\<alpha> \<in> {..<n}"
+          hence "\<exists>q. q \<in> C \<alpha> \<and> q \<noteq> p" using hq_exists by (by100 blast)
+          thus "q0 \<alpha> \<in> C \<alpha> \<and> q0 \<alpha> \<noteq> p" unfolding q0_def by (rule someI_ex)
+        qed
+        hence "\<exists>q. \<forall>\<alpha>\<in>{..<n}. q \<alpha> \<in> C \<alpha> \<and> q \<alpha> \<noteq> p"
+          by (by100 blast)
+        thus ?thesis using that by (by100 blast)
+      qed
+      \<comment> \<open>Define W(\<alpha>) = C(\<alpha>) - {q(\<alpha>)}, U, V.\<close>
+      define W where "W \<alpha> = C \<alpha> - {q \<alpha>}" for \<alpha>
+      define U_def where "U_def = (\<Union>\<alpha>\<in>{..<(n-1)}. C \<alpha>) \<union> W (n-1)"
+      define V_def where "V_def = (\<Union>\<alpha>\<in>{..<(n-1)}. W \<alpha>) \<union> C (n-1)"
+      show ?thesis
+      proof (rule that[of U_def V_def])
+        show "openin_on X TX U_def" sorry \<comment> \<open>U open: coherent topology.\<close>
+        show "openin_on X TX V_def" sorry \<comment> \<open>V open: coherent topology.\<close>
+        show "U_def \<union> V_def = X"
+        proof -
+          have "U_def \<union> V_def = (\<Union>\<alpha>\<in>{..<(n-1)}. C \<alpha>) \<union> C (n-1)"
+            unfolding U_def_def V_def_def W_def by (by100 blast)
+          thus ?thesis using hX_decomp by (by100 simp)
+        qed
+        show "top1_simply_connected_on (U_def \<inter> V_def) (subspace_topology X TX (U_def \<inter> V_def))"
+          sorry \<comment> \<open>U \<inter> V = \<union>W(\<alpha>) deformation-retracts to {p}.\<close>
+        show "top1_path_connected_on U_def (subspace_topology X TX U_def)"
+          sorry \<comment> \<open>U is path-connected (union of path-connected at p).\<close>
+        show "top1_path_connected_on V_def (subspace_topology X TX V_def)"
+          sorry \<comment> \<open>V is path-connected.\<close>
+        show "p \<in> U_def \<inter> V_def"
+        proof -
+          have "p \<in> U_def"
+            unfolding U_def_def using hp_X' by (by100 blast)
+          moreover have "p \<in> V_def"
+          proof -
+            have "p \<in> C (n-1)" using hp_Cn .
+            thus ?thesis unfolding V_def_def by (by100 blast)
+          qed
+          ultimately show ?thesis by (by100 blast)
+        qed
+        show "top1_groups_isomorphic_on
+            (top1_fundamental_group_carrier U_def (subspace_topology X TX U_def) p)
+            (top1_fundamental_group_mul U_def (subspace_topology X TX U_def) p)
+            (top1_fundamental_group_carrier ?X' ?TX' p)
+            (top1_fundamental_group_mul ?X' ?TX' p)"
+          sorry \<comment> \<open>U deformation-retracts to X' \<Rightarrow> \<pi>_1(U) \<cong> \<pi>_1(X').\<close>
+        show "top1_groups_isomorphic_on
+            (top1_fundamental_group_carrier V_def (subspace_topology X TX V_def) p)
+            (top1_fundamental_group_mul V_def (subspace_topology X TX V_def) p)
+            (top1_fundamental_group_carrier ?Cn ?TCn p)
+            (top1_fundamental_group_mul ?Cn ?TCn p)"
+          sorry \<comment> \<open>V deformation-retracts to C(n-1) \<Rightarrow> \<pi>_1(V) \<cong> \<pi>_1(C(n-1)).\<close>
+      qed
+    qed
     \<comment> \<open>Step 7: \<pi>_1(U) is free on n-1 generators (via isomorphism with \<pi>_1(X')).\<close>
     let ?piU = "top1_fundamental_group_carrier U (subspace_topology X TX U) p"
     let ?mulU = "top1_fundamental_group_mul U (subspace_topology X TX U) p"
