@@ -1589,10 +1589,701 @@ using assms proof (induction n arbitrary: X TX p rule: less_induct)
         qed
         show "top1_simply_connected_on (U_def \<inter> V_def) (subspace_topology X TX (U_def \<inter> V_def))"
           sorry \<comment> \<open>U \<inter> V = \<union>W(\<alpha>) deformation-retracts to {p}.\<close>
+        \<comment> \<open>Helper: Each C(alpha) is path-connected (via homeomorphism with S1).\<close>
+        have hC_pc: "\<forall>\<alpha>\<in>{..<n}. top1_path_connected_on (C \<alpha>) (subspace_topology X TX (C \<alpha>))"
+        proof (intro ballI)
+          fix \<alpha> assume h\<alpha>: "\<alpha> \<in> {..<n}"
+          obtain h where hh: "top1_homeomorphism_on top1_S1 top1_S1_topology
+              (C \<alpha>) (subspace_topology X TX (C \<alpha>)) h"
+            using hC_props h\<alpha> by (by100 blast)
+          have hbij: "bij_betw h top1_S1 (C \<alpha>)"
+            using hh unfolding top1_homeomorphism_on_def by (by100 blast)
+          have hcont_h: "top1_continuous_map_on top1_S1 top1_S1_topology
+              (C \<alpha>) (subspace_topology X TX (C \<alpha>)) h"
+            using hh unfolding top1_homeomorphism_on_def by (by100 blast)
+          have hTS1: "is_topology_on top1_S1 top1_S1_topology"
+            using top1_S1_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
+          have hTC\<alpha>: "is_topology_on (C \<alpha>) (subspace_topology X TX (C \<alpha>))"
+          proof -
+            have "C \<alpha> \<subseteq> X" using hC_props h\<alpha> by (by100 blast)
+            thus ?thesis by (rule subspace_topology_is_topology_on[OF hTX])
+          qed
+          show "top1_path_connected_on (C \<alpha>) (subspace_topology X TX (C \<alpha>))"
+            unfolding top1_path_connected_on_def
+          proof (intro conjI ballI)
+            show "is_topology_on (C \<alpha>) (subspace_topology X TX (C \<alpha>))" using hTC\<alpha> .
+          next
+            fix x y assume hx: "x \<in> C \<alpha>" and hy: "y \<in> C \<alpha>"
+            \<comment> \<open>Get preimages in S1.\<close>
+            have hinv: "top1_homeomorphism_on (C \<alpha>) (subspace_topology X TX (C \<alpha>))
+                top1_S1 top1_S1_topology (inv_into top1_S1 h)"
+              by (rule homeomorphism_inverse[OF hh])
+            have hx': "inv_into top1_S1 h x \<in> top1_S1"
+              using hinv hx unfolding top1_homeomorphism_on_def top1_continuous_map_on_def by (by100 blast)
+            have hy': "inv_into top1_S1 h y \<in> top1_S1"
+              using hinv hy unfolding top1_homeomorphism_on_def top1_continuous_map_on_def by (by100 blast)
+            \<comment> \<open>Get a path in S1 from inv(x) to inv(y).\<close>
+            obtain f where hf: "top1_is_path_on top1_S1 top1_S1_topology
+                (inv_into top1_S1 h x) (inv_into top1_S1 h y) f"
+              using S1_path_connected hx' hy' unfolding top1_path_connected_on_def by (by100 blast)
+            \<comment> \<open>Compose: h \<circ> f is a path in C(\<alpha>).\<close>
+            have hcont_f: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+                top1_S1 top1_S1_topology f"
+              using hf unfolding top1_is_path_on_def by (by100 blast)
+            have hcont_hf: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+                (C \<alpha>) (subspace_topology X TX (C \<alpha>)) (h \<circ> f)"
+              by (rule top1_continuous_map_on_comp[OF hcont_f hcont_h])
+            have hf0: "f 0 = inv_into top1_S1 h x" and hf1: "f 1 = inv_into top1_S1 h y"
+              using hf unfolding top1_is_path_on_def by (by100 blast)+
+            have hx_eq: "h (inv_into top1_S1 h x) = x"
+              using bij_betw_inv_into_right[OF hbij hx] .
+            have hy_eq: "h (inv_into top1_S1 h y) = y"
+              using bij_betw_inv_into_right[OF hbij hy] .
+            have "(h \<circ> f) 0 = x" using hf0 hx_eq by (by100 simp)
+            moreover have "(h \<circ> f) 1 = y" using hf1 hy_eq by (by100 simp)
+            ultimately have "top1_is_path_on (C \<alpha>) (subspace_topology X TX (C \<alpha>)) x y (h \<circ> f)"
+              unfolding top1_is_path_on_def using hcont_hf by (by100 blast)
+            thus "\<exists>f. top1_is_path_on (C \<alpha>) (subspace_topology X TX (C \<alpha>)) x y f"
+              by (by100 blast)
+          qed
+        qed
+        \<comment> \<open>Helper: W(alpha) = C(alpha) - {q(alpha)} is path-connected.
+           Proof: C(alpha) is homeomorphic to S1 via h. S1 minus a point is
+           path-connected (parameterize via covering map R_to_S1, use convex
+           interpolation avoiding the removed point). Transfer via h.\<close>
+        have hW_pc: "\<forall>\<alpha>\<in>{..<n}. top1_path_connected_on (W \<alpha>) (subspace_topology X TX (W \<alpha>))"
+        proof (intro ballI)
+          fix \<alpha> assume h\<alpha>: "\<alpha> \<in> {..<n}"
+          \<comment> \<open>Get homeomorphism h: S1 -> C(alpha).\<close>
+          obtain h where hh: "top1_homeomorphism_on top1_S1 top1_S1_topology
+              (C \<alpha>) (subspace_topology X TX (C \<alpha>)) h"
+            using hC_props h\<alpha> by (by100 blast)
+          have hbij: "bij_betw h top1_S1 (C \<alpha>)"
+            using hh unfolding top1_homeomorphism_on_def by (by100 blast)
+          have hcont_h: "top1_continuous_map_on top1_S1 top1_S1_topology
+              (C \<alpha>) (subspace_topology X TX (C \<alpha>)) h"
+            using hh unfolding top1_homeomorphism_on_def by (by100 blast)
+          have hTS1: "is_topology_on top1_S1 top1_S1_topology"
+            using top1_S1_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
+          have hC\<alpha>_sub: "C \<alpha> \<subseteq> X" using hC_props h\<alpha> by (by100 blast)
+          have hTC\<alpha>: "is_topology_on (C \<alpha>) (subspace_topology X TX (C \<alpha>))"
+            by (rule subspace_topology_is_topology_on[OF hTX hC\<alpha>_sub])
+          \<comment> \<open>Inverse homeomorphism.\<close>
+          let ?hinv = "inv_into top1_S1 h"
+          have hhinv: "top1_homeomorphism_on (C \<alpha>) (subspace_topology X TX (C \<alpha>))
+              top1_S1 top1_S1_topology ?hinv"
+            by (rule homeomorphism_inverse[OF hh])
+          have hbij_inv: "bij_betw ?hinv (C \<alpha>) top1_S1"
+            using hhinv unfolding top1_homeomorphism_on_def by (by100 blast)
+          have hcont_hinv: "top1_continuous_map_on (C \<alpha>) (subspace_topology X TX (C \<alpha>))
+              top1_S1 top1_S1_topology ?hinv"
+            using hhinv unfolding top1_homeomorphism_on_def by (by100 blast)
+          \<comment> \<open>q' = h^{-1}(q(alpha)) in S1.\<close>
+          have hq_in: "q \<alpha> \<in> C \<alpha>" using hq h\<alpha> by (by100 blast)
+          define q' where "q' = ?hinv (q \<alpha>)"
+          have hq'_S1: "q' \<in> top1_S1"
+            using hbij_inv hq_in unfolding q'_def bij_betw_def by (by100 blast)
+          have hq'_eq: "h q' = q \<alpha>"
+            unfolding q'_def using bij_betw_inv_into_right[OF hbij hq_in] .
+          \<comment> \<open>W(alpha) = h ` (S1 - {q'}).\<close>
+          have hW_eq: "W \<alpha> = h ` (top1_S1 - {q'})"
+          proof (intro set_eqI iffI)
+            fix x assume hx: "x \<in> W \<alpha>"
+            hence hx_C: "x \<in> C \<alpha>" and hx_nq: "x \<noteq> q \<alpha>" unfolding W_def by (by100 blast)+
+            have "?hinv x \<in> top1_S1" using hbij_inv hx_C unfolding bij_betw_def by (by100 blast)
+            moreover have "?hinv x \<noteq> q'"
+            proof
+              assume "?hinv x = q'"
+              hence "h (?hinv x) = h q'" by (by100 simp)
+              hence "x = q \<alpha>" using bij_betw_inv_into_right[OF hbij hx_C] hq'_eq by (by100 simp)
+              thus False using hx_nq by (by100 blast)
+            qed
+            ultimately have hinv_mem: "?hinv x \<in> top1_S1 - {q'}" by (by100 blast)
+            have "h (?hinv x) = x" using bij_betw_inv_into_right[OF hbij hx_C] .
+            hence "x = h (?hinv x)" by (by100 simp)
+            thus "x \<in> h ` (top1_S1 - {q'})" using hinv_mem by (rule image_eqI)
+          next
+            fix x assume "x \<in> h ` (top1_S1 - {q'})"
+            then obtain s where hs: "s \<in> top1_S1 - {q'}" and hxs: "x = h s" by (by100 blast)
+            have hs_S1: "s \<in> top1_S1" using hs by (by100 blast)
+            have hs_nq': "s \<noteq> q'" using hs by (by100 blast)
+            have hx_C: "x \<in> C \<alpha>" using hbij hs_S1 hxs unfolding bij_betw_def by (by100 blast)
+            have hx_nq: "x \<noteq> q \<alpha>"
+            proof
+              assume "x = q \<alpha>"
+              hence "h s = q \<alpha>" using hxs by (by100 simp)
+              hence "h s = h q'" using hq'_eq by (by100 simp)
+              hence "s = q'" using bij_betw_def hbij hs_S1 hq'_S1
+                unfolding bij_betw_def inj_on_def by (by100 blast)
+              thus False using hs_nq' by (by100 blast)
+            qed
+            show "x \<in> W \<alpha>" unfolding W_def using hx_C hx_nq by (by100 blast)
+          qed
+          \<comment> \<open>Now prove path connectivity of W(alpha) by transferring from S1 - {q'}.
+             For x, y in W(alpha), get preimages x', y' in S1 - {q'},
+             build a path in S1 - {q'} via the covering map, compose with h.\<close>
+          have hW_sub: "W \<alpha> \<subseteq> C \<alpha>" unfolding W_def by (by100 blast)
+          have hW_sub_X: "W \<alpha> \<subseteq> X" using hW_sub hC\<alpha>_sub by (by100 blast)
+          have hTW: "is_topology_on (W \<alpha>) (subspace_topology X TX (W \<alpha>))"
+            by (rule subspace_topology_is_topology_on[OF hTX hW_sub_X])
+          show "top1_path_connected_on (W \<alpha>) (subspace_topology X TX (W \<alpha>))"
+            unfolding top1_path_connected_on_def
+          proof (intro conjI ballI)
+            show "is_topology_on (W \<alpha>) (subspace_topology X TX (W \<alpha>))" using hTW .
+          next
+            fix x y assume hx: "x \<in> W \<alpha>" and hy: "y \<in> W \<alpha>"
+            \<comment> \<open>Get preimages in S1 - {q'}.\<close>
+            have hx_C: "x \<in> C \<alpha>" using hx unfolding W_def by (by100 blast)
+            have hy_C: "y \<in> C \<alpha>" using hy unfolding W_def by (by100 blast)
+            define x' where "x' = ?hinv x"
+            define y' where "y' = ?hinv y"
+            have hx'_S1: "x' \<in> top1_S1"
+              using hbij_inv hx_C unfolding x'_def bij_betw_def by (by100 blast)
+            have hy'_S1: "y' \<in> top1_S1"
+              using hbij_inv hy_C unfolding y'_def bij_betw_def by (by100 blast)
+            have hx'_nq: "x' \<noteq> q'"
+            proof
+              assume "x' = q'"
+              hence "h x' = h q'" by (by100 simp)
+              hence "x = q \<alpha>"
+                using bij_betw_inv_into_right[OF hbij hx_C] hq'_eq
+                unfolding x'_def by (by100 simp)
+              thus False using hx unfolding W_def by (by100 blast)
+            qed
+            have hy'_nq: "y' \<noteq> q'"
+            proof
+              assume "y' = q'"
+              hence "h y' = h q'" by (by100 simp)
+              hence "y = q \<alpha>"
+                using bij_betw_inv_into_right[OF hbij hy_C] hq'_eq
+                unfolding y'_def by (by100 simp)
+              thus False using hy unfolding W_def by (by100 blast)
+            qed
+            have hx'_recover: "h x' = x"
+              unfolding x'_def using bij_betw_inv_into_right[OF hbij hx_C] .
+            have hy'_recover: "h y' = y"
+              unfolding y'_def using bij_betw_inv_into_right[OF hbij hy_C] .
+            \<comment> \<open>Use covering map: get \<theta>_q, \<theta>_x, \<theta>_y with R_to_S1(\<theta>) = point.\<close>
+            obtain \<theta>q where h\<theta>q: "top1_R_to_S1 \<theta>q = q'"
+            proof -
+              have "q' \<in> top1_S1" using hq'_S1 .
+              hence heq: "fst q' ^ 2 + snd q' ^ 2 = 1" unfolding top1_S1_def by (by100 simp)
+              obtain \<theta> where hcos: "fst q' = cos \<theta>" and hsin: "snd q' = sin \<theta>"
+                using sincos_total_2pi[of "fst q'" "snd q'"] heq by (by100 metis)
+              have "top1_R_to_S1 (\<theta> / (2 * pi)) = (cos \<theta>, sin \<theta>)"
+                unfolding top1_R_to_S1_def by (by100 simp)
+              hence "top1_R_to_S1 (\<theta> / (2 * pi)) = q'"
+                using hcos hsin by (simp add: prod_eq_iff)
+              thus ?thesis using that by (by100 blast)
+            qed
+            \<comment> \<open>Helper: for any a \<in> S1 - {q'}, get \<theta> \<in> (\<theta>q, \<theta>q + 1) with R_to_S1(\<theta>) = a.\<close>
+            have preimage_in_interval: "\<And>a. a \<in> top1_S1 \<Longrightarrow> a \<noteq> q' \<Longrightarrow>
+                \<exists>\<theta>. top1_R_to_S1 \<theta> = a \<and> \<theta>q < \<theta> \<and> \<theta> < \<theta>q + 1"
+            proof -
+              fix a assume ha_S1: "a \<in> top1_S1" and ha_nq: "a \<noteq> q'"
+              \<comment> \<open>Get some \<theta>0 with R_to_S1(\<theta>0) = a.\<close>
+              have heq_a: "fst a ^ 2 + snd a ^ 2 = 1"
+                using ha_S1 unfolding top1_S1_def by (by100 simp)
+              obtain \<theta>0_raw where hcos_a: "fst a = cos \<theta>0_raw" and hsin_a: "snd a = sin \<theta>0_raw"
+                using sincos_total_2pi[of "fst a" "snd a"] heq_a by (by100 metis)
+              define \<theta>0 where "\<theta>0 = \<theta>0_raw / (2 * pi)"
+              have h\<theta>0: "top1_R_to_S1 \<theta>0 = a"
+              proof -
+                have "top1_R_to_S1 \<theta>0 = (cos \<theta>0_raw, sin \<theta>0_raw)"
+                  unfolding top1_R_to_S1_def \<theta>0_def by (by100 simp)
+                thus ?thesis using hcos_a hsin_a by (simp add: prod_eq_iff)
+              qed
+              \<comment> \<open>Shift \<theta>0 into (\<theta>q, \<theta>q + 1]: let k = floor(\<theta>0 - \<theta>q), \<theta>a = \<theta>0 - k.\<close>
+              define k where "k = \<lfloor>\<theta>0 - \<theta>q\<rfloor>"
+              define \<theta>a where "\<theta>a = \<theta>0 - of_int k"
+              have h\<theta>a_R: "top1_R_to_S1 \<theta>a = a"
+              proof -
+                have "top1_R_to_S1 \<theta>a = top1_R_to_S1 (\<theta>0 + of_int (-k))"
+                  unfolding \<theta>a_def by (by100 simp)
+                also have "... = top1_R_to_S1 \<theta>0"
+                  by (rule top1_R_to_S1_int_shift_early)
+                finally show ?thesis using h\<theta>0 by (by100 simp)
+              qed
+              \<comment> \<open>\<theta>a \<in> [\<theta>q, \<theta>q + 1): by floor properties.\<close>
+              have h_floor_lb: "of_int k \<le> \<theta>0 - \<theta>q"
+                unfolding k_def using of_int_floor_le[of "\<theta>0 - \<theta>q"] by (by100 linarith)
+              have h_floor_ub: "\<theta>0 - \<theta>q < of_int k + 1"
+              proof -
+                have "\<lfloor>\<theta>0 - \<theta>q\<rfloor> < \<lfloor>\<theta>0 - \<theta>q\<rfloor> + 1" by (by100 linarith)
+                hence "\<theta>0 - \<theta>q < of_int (\<lfloor>\<theta>0 - \<theta>q\<rfloor> + 1)"
+                  using floor_less_iff[of "\<lfloor>\<theta>0 - \<theta>q\<rfloor> + 1"] by (by100 linarith)
+                thus ?thesis unfolding k_def by (by100 linarith)
+              qed
+              have h_floor: "\<theta>0 - \<theta>q - of_int k \<ge> 0 \<and> \<theta>0 - \<theta>q - of_int k < 1"
+                using h_floor_lb h_floor_ub by (by100 linarith)
+              hence h\<theta>a_ge: "\<theta>a \<ge> \<theta>q" and h\<theta>a_lt: "\<theta>a < \<theta>q + 1"
+                unfolding \<theta>a_def by (by100 linarith)+
+              \<comment> \<open>\<theta>a \<noteq> \<theta>q: otherwise R_to_S1(\<theta>a) = R_to_S1(\<theta>q) = q', but a \<noteq> q'.\<close>
+              have h\<theta>a_ne: "\<theta>a \<noteq> \<theta>q"
+              proof
+                assume "\<theta>a = \<theta>q"
+                hence "top1_R_to_S1 \<theta>a = top1_R_to_S1 \<theta>q" by (by100 simp)
+                hence "a = q'" using h\<theta>a_R h\<theta>q by (by100 simp)
+                thus False using ha_nq by (by100 blast)
+              qed
+              hence "\<theta>q < \<theta>a" using h\<theta>a_ge by (by100 linarith)
+              thus "\<exists>\<theta>. top1_R_to_S1 \<theta> = a \<and> \<theta>q < \<theta> \<and> \<theta> < \<theta>q + 1"
+                using h\<theta>a_R h\<theta>a_lt by (by100 blast)
+            qed
+            \<comment> \<open>For x' \<in> S1 - {q'}: get \<theta>_x \<in> (\<theta>q, \<theta>q + 1) with R_to_S1(\<theta>_x) = x'.\<close>
+            obtain \<theta>x where h\<theta>x: "top1_R_to_S1 \<theta>x = x'" and h\<theta>x_range: "\<theta>q < \<theta>x \<and> \<theta>x < \<theta>q + 1"
+              using preimage_in_interval[OF hx'_S1 hx'_nq] by (by100 blast)
+            obtain \<theta>y where h\<theta>y: "top1_R_to_S1 \<theta>y = y'" and h\<theta>y_range: "\<theta>q < \<theta>y \<and> \<theta>y < \<theta>q + 1"
+              using preimage_in_interval[OF hy'_S1 hy'_nq] by (by100 blast)
+            \<comment> \<open>Build path: t \<mapsto> h(R_to_S1((1-t)*\<theta>x + t*\<theta>y)). This stays in W(alpha).\<close>
+            define \<gamma> where "\<gamma> t = h (top1_R_to_S1 ((1 - t) * \<theta>x + t * \<theta>y))" for t
+            \<comment> \<open>For t in [0,1]: (1-t)*theta_x + t*theta_y in (theta_q, theta_q+1) (convex combination).\<close>
+            have h\<gamma>_range: "\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow>
+                \<theta>q < (1 - t) * \<theta>x + t * \<theta>y \<and> (1 - t) * \<theta>x + t * \<theta>y < \<theta>q + 1"
+            proof (intro allI impI)
+              fix t :: real assume ht: "0 \<le> t \<and> t \<le> 1"
+              have ht0: "0 \<le> t" and ht1: "t \<le> 1" using ht by (by100 blast)+
+              have h1t: "0 \<le> 1 - t" using ht1 by (by100 linarith)
+              \<comment> \<open>Lower bound: (1-t)*theta_x + t*theta_y >= (1-t)*theta_q + t*theta_q = theta_q,
+                 with strict inequality because at least one term is strict.\<close>
+              have h_lb1: "(1 - t) * \<theta>x \<ge> (1 - t) * \<theta>q"
+                using h1t h\<theta>x_range by (simp add: mult_left_mono less_imp_le)
+              have h_lb2: "t * \<theta>y \<ge> t * \<theta>q"
+                using ht0 h\<theta>y_range by (simp add: mult_left_mono less_imp_le)
+              have h_sum_lb: "(1 - t) * \<theta>x + t * \<theta>y \<ge> (1 - t) * \<theta>q + t * \<theta>q"
+                using h_lb1 h_lb2 by (by100 linarith)
+              have h_sum_eq: "(1 - t) * \<theta>q + t * \<theta>q = \<theta>q"
+                by (simp add: algebra_simps)
+              \<comment> \<open>Strict: if t < 1 then (1-t)*(theta_x - theta_q) > 0; if t > 0 then t*(theta_y - theta_q) > 0.\<close>
+              have h_strict_lb: "(1 - t) * \<theta>x + t * \<theta>y > \<theta>q"
+              proof (cases "t < 1")
+                case True
+                hence "1 - t > 0" by (by100 linarith)
+                hence "(1 - t) * \<theta>x > (1 - t) * \<theta>q"
+                  using h\<theta>x_range by (simp add: mult_strict_left_mono)
+                thus ?thesis using h_lb2 h_sum_eq by (by100 linarith)
+              next
+                case False
+                hence ht_eq: "t = 1" using ht1 by (by100 linarith)
+                hence "t * \<theta>y > t * \<theta>q"
+                  using h\<theta>y_range by (by100 simp)
+                thus ?thesis using ht_eq by (by100 simp)
+              qed
+              \<comment> \<open>Upper bound: similar argument.\<close>
+              have h_ub1: "(1 - t) * \<theta>x \<le> (1 - t) * (\<theta>q + 1)"
+                using h1t h\<theta>x_range by (simp add: mult_left_mono less_imp_le)
+              have h_ub2: "t * \<theta>y \<le> t * (\<theta>q + 1)"
+                using ht0 h\<theta>y_range by (simp add: mult_left_mono less_imp_le)
+              have h_sum_ub_eq: "(1 - t) * (\<theta>q + 1) + t * (\<theta>q + 1) = \<theta>q + 1"
+                by (simp add: algebra_simps)
+              have h_strict_ub: "(1 - t) * \<theta>x + t * \<theta>y < \<theta>q + 1"
+              proof (cases "t < 1")
+                case True
+                hence "1 - t > 0" by (by100 linarith)
+                hence "(1 - t) * \<theta>x < (1 - t) * (\<theta>q + 1)"
+                  using h\<theta>x_range by (simp add: mult_strict_left_mono)
+                thus ?thesis using h_ub2 h_sum_ub_eq by (by100 linarith)
+              next
+                case False
+                hence ht_eq: "t = 1" using ht1 by (by100 linarith)
+                hence "t * \<theta>y < t * (\<theta>q + 1)"
+                  using h\<theta>y_range by (by100 simp)
+                thus ?thesis using ht_eq by (by100 simp)
+              qed
+              show "\<theta>q < (1 - t) * \<theta>x + t * \<theta>y \<and> (1 - t) * \<theta>x + t * \<theta>y < \<theta>q + 1"
+                using h_strict_lb h_strict_ub by (by100 blast)
+            qed
+            \<comment> \<open>So R_to_S1((1-t)*\<theta>x + t*\<theta>y) \<noteq> q' for t \<in> [0,1].\<close>
+            have h\<gamma>_avoids_q: "\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> top1_R_to_S1 ((1 - t) * \<theta>x + t * \<theta>y) \<noteq> q'"
+            proof (intro allI impI)
+              fix t :: real assume ht: "0 \<le> t \<and> t \<le> 1"
+              let ?\<theta> = "(1 - t) * \<theta>x + t * \<theta>y"
+              have hrange: "\<theta>q < ?\<theta> \<and> ?\<theta> < \<theta>q + 1" using h\<gamma>_range ht by (by100 blast)
+              show "top1_R_to_S1 ?\<theta> \<noteq> q'"
+              proof
+                assume heq: "top1_R_to_S1 ?\<theta> = q'"
+                hence "top1_R_to_S1 ?\<theta> = top1_R_to_S1 \<theta>q" using h\<theta>q by (by100 simp)
+                \<comment> \<open>By sin_cos_eq_iff: 2\<pi>*?\<theta> = 2\<pi>*\<theta>q + 2\<pi>*k for some integer k.\<close>
+                hence "cos (2*pi*?\<theta>) = cos (2*pi*\<theta>q) \<and> sin (2*pi*?\<theta>) = sin (2*pi*\<theta>q)"
+                  unfolding top1_R_to_S1_def by (by100 simp)
+                hence "sin (2*pi*?\<theta>) = sin (2*pi*\<theta>q) \<and> cos (2*pi*?\<theta>) = cos (2*pi*\<theta>q)"
+                  by (by100 blast)
+                then obtain k :: int where hk: "2*pi*?\<theta> = 2*pi*\<theta>q + 2*pi*of_int k"
+                  using iffD1[OF sin_cos_eq_iff] by (by100 blast)
+                hence "2*pi*?\<theta> - 2*pi*\<theta>q = 2*pi*of_int k" by (by100 linarith)
+                hence h_diff: "2*pi*(?\<theta> - \<theta>q) = 2*pi*of_int k"
+                  by (simp add: algebra_simps)
+                hence "?\<theta> - \<theta>q = of_int k" using pi_gt_zero by (by100 simp)
+                \<comment> \<open>But ?\<theta> - \<theta>q \<in> (0, 1), so k must be 0, contradiction.\<close>
+                moreover have "?\<theta> - \<theta>q > 0 \<and> ?\<theta> - \<theta>q < 1" using hrange by (by100 linarith)
+                ultimately have hk_bounds: "of_int k > (0::real) \<and> of_int k < (1::real)" by (by100 linarith)
+                hence "k > 0 \<and> k < 1" by (by100 linarith)
+                thus False by (by100 linarith)
+              qed
+            qed
+            \<comment> \<open>So \<gamma> maps [0,1] into S1 - {q'}, hence into W(alpha).\<close>
+            have h\<gamma>_in_S1: "\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> top1_R_to_S1 ((1 - t) * \<theta>x + t * \<theta>y) \<in> top1_S1"
+            proof (intro allI impI)
+              fix t :: real assume "0 \<le> t \<and> t \<le> 1"
+              show "top1_R_to_S1 ((1 - t) * \<theta>x + t * \<theta>y) \<in> top1_S1"
+                unfolding top1_R_to_S1_def top1_S1_def
+                using sin_squared_eq by (by100 simp)
+            qed
+            have h\<gamma>_in_S1_minus: "\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow>
+                top1_R_to_S1 ((1 - t) * \<theta>x + t * \<theta>y) \<in> top1_S1 - {q'}"
+            proof (intro allI impI)
+              fix t :: real assume ht: "0 \<le> t \<and> t \<le> 1"
+              show "top1_R_to_S1 ((1 - t) * \<theta>x + t * \<theta>y) \<in> top1_S1 - {q'}"
+                using h\<gamma>_in_S1[rule_format, OF ht] h\<gamma>_avoids_q[rule_format, OF ht] by (by100 blast)
+            qed
+            have h\<gamma>_in_W: "\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> \<gamma> t \<in> W \<alpha>"
+            proof (intro allI impI)
+              fix t :: real assume ht: "0 \<le> t \<and> t \<le> 1"
+              have "top1_R_to_S1 ((1 - t) * \<theta>x + t * \<theta>y) \<in> top1_S1 - {q'}"
+                using h\<gamma>_in_S1_minus ht by (by100 blast)
+              hence "h (top1_R_to_S1 ((1 - t) * \<theta>x + t * \<theta>y)) \<in> h ` (top1_S1 - {q'})"
+                by (by100 blast)
+              thus "\<gamma> t \<in> W \<alpha>" unfolding \<gamma>_def hW_eq by (by100 blast)
+            qed
+            \<comment> \<open>gamma is continuous: composition of continuous functions.\<close>
+            have h\<gamma>_cont: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+                (W \<alpha>) (subspace_topology X TX (W \<alpha>)) \<gamma>"
+            proof -
+              \<comment> \<open>Step 1: linear map t \<mapsto> (1-t)*\<theta>x + t*\<theta>y is continuous [0,1] \<rightarrow> R.\<close>
+              have hlin_cont_on: "continuous_on UNIV (\<lambda>t::real. (1 - t) * \<theta>x + t * \<theta>y)"
+                by (intro continuous_intros)
+              have hlin_map: "\<And>t::real. t \<in> top1_unit_interval \<Longrightarrow>
+                  (1 - t) * \<theta>x + t * \<theta>y \<in> (UNIV::real set)" by (by100 blast)
+              have hlin: "top1_continuous_map_on top1_unit_interval
+                  (subspace_topology UNIV top1_open_sets top1_unit_interval)
+                  (UNIV::real set) (subspace_topology UNIV top1_open_sets UNIV)
+                  (\<lambda>t. (1 - t) * \<theta>x + t * \<theta>y)"
+                by (rule top1_continuous_map_on_real_subspace_open_sets[OF hlin_map hlin_cont_on])
+              have hUNIV_sub: "subspace_topology (UNIV::real set) (top1_open_sets::real set set) UNIV = top1_open_sets"
+                by (rule subspace_topology_UNIV_self)
+              have hlin': "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+                  (UNIV::real set) top1_open_sets (\<lambda>t. (1 - t) * \<theta>x + t * \<theta>y)"
+                using hlin unfolding top1_unit_interval_topology_def hUNIV_sub by (by100 simp)
+              \<comment> \<open>Step 2: R_to_S1 is continuous R \<rightarrow> S1.\<close>
+              have hR_S1: "top1_continuous_map_on (UNIV::real set) top1_open_sets
+                  top1_S1 top1_S1_topology top1_R_to_S1"
+                by (rule top1_covering_map_on_continuous[OF Theorem_53_1])
+              \<comment> \<open>Step 3: compose linear + R_to_S1: [0,1] \<rightarrow> S1.\<close>
+              have hcomp1: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+                  top1_S1 top1_S1_topology (top1_R_to_S1 \<circ> (\<lambda>t. (1 - t) * \<theta>x + t * \<theta>y))"
+                by (rule top1_continuous_map_on_comp[OF hlin' hR_S1])
+              have hcomp1': "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+                  top1_S1 top1_S1_topology (\<lambda>t. top1_R_to_S1 ((1 - t) * \<theta>x + t * \<theta>y))"
+              proof -
+                have heq: "\<forall>t\<in>top1_unit_interval.
+                    (top1_R_to_S1 \<circ> (\<lambda>t. (1 - t) * \<theta>x + t * \<theta>y)) t =
+                    (\<lambda>t. top1_R_to_S1 ((1 - t) * \<theta>x + t * \<theta>y)) t"
+                  by (by100 simp)
+                thus ?thesis using iffD1[OF top1_continuous_map_on_cong[OF heq]] hcomp1 by (by100 blast)
+              qed
+              \<comment> \<open>Step 4: compose with h: [0,1] \<rightarrow> C(alpha).\<close>
+              have hcomp2: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+                  (C \<alpha>) (subspace_topology X TX (C \<alpha>))
+                  (h \<circ> (\<lambda>t. top1_R_to_S1 ((1 - t) * \<theta>x + t * \<theta>y)))"
+                by (rule top1_continuous_map_on_comp[OF hcomp1' hcont_h])
+              have hcomp2': "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+                  (C \<alpha>) (subspace_topology X TX (C \<alpha>)) \<gamma>"
+              proof -
+                have heq2: "\<forall>t\<in>top1_unit_interval.
+                    (h \<circ> (\<lambda>t. top1_R_to_S1 ((1 - t) * \<theta>x + t * \<theta>y))) t = \<gamma> t"
+                  unfolding \<gamma>_def by (by100 simp)
+                thus ?thesis using iffD1[OF top1_continuous_map_on_cong[OF heq2]] hcomp2 by (by100 blast)
+              qed
+              \<comment> \<open>Step 5: shrink codomain from C(alpha) to W(alpha).\<close>
+              have h\<gamma>_img: "\<gamma> ` top1_unit_interval \<subseteq> W \<alpha>"
+              proof (rule image_subsetI)
+                fix t assume "t \<in> top1_unit_interval"
+                hence "0 \<le> t \<and> t \<le> 1" unfolding top1_unit_interval_def by (by100 simp)
+                thus "\<gamma> t \<in> W \<alpha>" using h\<gamma>_in_W by (by100 blast)
+              qed
+              have hW_sub_C: "W \<alpha> \<subseteq> C \<alpha>" unfolding W_def by (by100 blast)
+              have h\<gamma>_shrunk: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+                  (W \<alpha>) (subspace_topology (C \<alpha>) (subspace_topology X TX (C \<alpha>)) (W \<alpha>)) \<gamma>"
+                by (rule top1_continuous_map_on_codomain_shrink[OF hcomp2' h\<gamma>_img hW_sub_C])
+              \<comment> \<open>By subspace_topology_trans: subspace C(alpha) (subspace X TX C(alpha)) W(alpha)
+                 = subspace X TX W(alpha).\<close>
+              have hsub_trans: "subspace_topology (C \<alpha>) (subspace_topology X TX (C \<alpha>)) (W \<alpha>)
+                  = subspace_topology X TX (W \<alpha>)"
+                by (rule subspace_topology_trans[OF hW_sub_C])
+              show ?thesis using h\<gamma>_shrunk hsub_trans by (by100 simp)
+            qed
+            \<comment> \<open>\<gamma> 0 = x, \<gamma> 1 = y.\<close>
+            have h\<gamma>_0: "\<gamma> 0 = x"
+              unfolding \<gamma>_def using h\<theta>x hx'_recover by (by100 simp)
+            have h\<gamma>_1: "\<gamma> 1 = y"
+              unfolding \<gamma>_def using h\<theta>y hy'_recover by (by100 simp)
+            have "top1_is_path_on (W \<alpha>) (subspace_topology X TX (W \<alpha>)) x y \<gamma>"
+              unfolding top1_is_path_on_def using h\<gamma>_cont h\<gamma>_0 h\<gamma>_1 by (by100 blast)
+            thus "\<exists>f. top1_is_path_on (W \<alpha>) (subspace_topology X TX (W \<alpha>)) x y f"
+              by (by100 blast)
+          qed
+        qed
+        \<comment> \<open>Helper: p \<in> W \<alpha> for all \<alpha> < n.\<close>
+        have hp_W: "\<forall>\<alpha>\<in>{..<n}. p \<in> W \<alpha>"
+        proof (intro ballI)
+          fix \<alpha> assume h\<alpha>: "\<alpha> \<in> {..<n}"
+          have "p \<in> C \<alpha>" using hC_props h\<alpha> by (by100 blast)
+          moreover have "p \<noteq> q \<alpha>" using hq h\<alpha> by (by100 blast)
+          ultimately show "p \<in> W \<alpha>" unfolding W_def by (by100 blast)
+        qed
+        \<comment> \<open>Helper: W \<alpha> \<subseteq> C \<alpha> \<subseteq> X.\<close>
+        have hW_sub_C: "\<forall>\<alpha>\<in>{..<n}. W \<alpha> \<subseteq> C \<alpha>" unfolding W_def by (by100 blast)
+        have hW_sub_X: "\<forall>\<alpha>\<in>{..<n}. W \<alpha> \<subseteq> X"
+        proof (intro ballI)
+          fix \<alpha> assume h\<alpha>: "\<alpha> \<in> {..<n}"
+          have "W \<alpha> \<subseteq> C \<alpha>" using hW_sub_C h\<alpha> by (by100 blast)
+          moreover have "C \<alpha> \<subseteq> X" using hC_props h\<alpha> by (by100 blast)
+          ultimately show "W \<alpha> \<subseteq> X" by (by100 blast)
+        qed
+        \<comment> \<open>Helper: U_def \<subseteq> X and V_def \<subseteq> X.\<close>
+        have hU_sub: "U_def \<subseteq> X"
+        proof -
+          have "(\<Union>\<alpha>\<in>{..<(n-1)}. C \<alpha>) \<subseteq> X" using hX'_sub by (by100 blast)
+          moreover have "W (n-1) \<subseteq> X" using hW_sub_X hn1_in by (by100 blast)
+          ultimately show ?thesis unfolding U_def_def by (by100 blast)
+        qed
+        have hV_sub: "V_def \<subseteq> X"
+        proof -
+          have "(\<Union>\<alpha>\<in>{..<(n-1)}. W \<alpha>) \<subseteq> X"
+          proof (rule UN_least)
+            fix \<alpha> assume "\<alpha> \<in> {..<(n-1)}"
+            hence "\<alpha> \<in> {..<n}" using hn2 by (by100 simp)
+            thus "W \<alpha> \<subseteq> X" using hW_sub_X by (by100 blast)
+          qed
+          moreover have "C (n-1) \<subseteq> X" using hCn_sub .
+          ultimately show ?thesis unfolding V_def_def by (by100 blast)
+        qed
+        \<comment> \<open>Helper: p \<in> U_def and p \<in> V_def.\<close>
+        have hp_U: "p \<in> U_def" unfolding U_def_def using hp_X' by (by100 blast)
+        have hp_V: "p \<in> V_def" unfolding V_def_def using hp_Cn by (by100 blast)
+        \<comment> \<open>Helper: C \<alpha> \<subseteq> U_def for \<alpha> < n-1.\<close>
+        have hC_sub_U: "\<forall>\<alpha>\<in>{..<(n-1)}. C \<alpha> \<subseteq> U_def"
+          unfolding U_def_def by (by100 blast)
+        \<comment> \<open>Helper: W(n-1) \<subseteq> U_def.\<close>
+        have hWn_sub_U: "W (n-1) \<subseteq> U_def" unfolding U_def_def by (by100 blast)
+        \<comment> \<open>Helper: W \<alpha> \<subseteq> V_def for \<alpha> < n-1.\<close>
+        have hW_sub_V: "\<forall>\<alpha>\<in>{..<(n-1)}. W \<alpha> \<subseteq> V_def"
+          unfolding V_def_def by (by100 blast)
+        \<comment> \<open>Helper: C(n-1) \<subseteq> V_def.\<close>
+        have hCn_sub_V: "C (n-1) \<subseteq> V_def" unfolding V_def_def by (by100 blast)
+        \<comment> \<open>Key lemma: path in a piece lifts to a path in U_def or V_def.\<close>
+        \<comment> \<open>If f is a path in A w.r.t. subspace_topology X TX A, and A \<subseteq> B \<subseteq> X,
+            then f is a path in B w.r.t. subspace_topology X TX B.\<close>
         show "top1_path_connected_on U_def (subspace_topology X TX U_def)"
-          sorry \<comment> \<open>U is path-connected (union of path-connected at p).\<close>
+          unfolding top1_path_connected_on_def
+        proof (intro conjI ballI)
+          show "is_topology_on U_def (subspace_topology X TX U_def)"
+            by (rule subspace_topology_is_topology_on[OF hTX hU_sub])
+        next
+          fix x y assume hx: "x \<in> U_def" and hy: "y \<in> U_def"
+          \<comment> \<open>Get path from x to p in some piece of U_def.\<close>
+          have "\<exists>f. top1_is_path_on U_def (subspace_topology X TX U_def) x p f"
+          proof -
+            \<comment> \<open>x is in some C(\<alpha>) with \<alpha> < n-1, or in W(n-1).\<close>
+            have "x \<in> (\<Union>\<alpha>\<in>{..<(n-1)}. C \<alpha>) \<or> x \<in> W (n-1)"
+              using hx unfolding U_def_def by (by100 blast)
+            thus ?thesis
+            proof
+              assume "x \<in> (\<Union>\<alpha>\<in>{..<(n-1)}. C \<alpha>)"
+              then obtain \<alpha> where h\<alpha>: "\<alpha> \<in> {..<(n-1)}" and hx\<alpha>: "x \<in> C \<alpha>" by (by100 blast)
+              have h\<alpha>n: "\<alpha> \<in> {..<n}" using h\<alpha> hn2 by (by100 simp)
+              \<comment> \<open>Path from x to p in C(\<alpha>).\<close>
+              have hp\<alpha>: "p \<in> C \<alpha>" using hC_props h\<alpha>n by (by100 blast)
+              obtain f where hf: "top1_is_path_on (C \<alpha>) (subspace_topology X TX (C \<alpha>)) x p f"
+                using hC_pc h\<alpha>n hx\<alpha> hp\<alpha> unfolding top1_path_connected_on_def by (by100 blast)
+              \<comment> \<open>Lift path from C(\<alpha>) to U_def using codomain_enlarge.\<close>
+              have hcont_f: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+                  (C \<alpha>) (subspace_topology X TX (C \<alpha>)) f"
+                using hf unfolding top1_is_path_on_def by (by100 blast)
+              have hC\<alpha>_sub_U: "C \<alpha> \<subseteq> U_def" using hC_sub_U h\<alpha> by (by100 blast)
+              have hcont_U: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+                  U_def (subspace_topology X TX U_def) f"
+                by (rule top1_continuous_map_on_codomain_enlarge[OF hcont_f hC\<alpha>_sub_U hU_sub])
+              have hf0: "f 0 = x" and hf1: "f 1 = p"
+                using hf unfolding top1_is_path_on_def by (by100 blast)+
+              have "top1_is_path_on U_def (subspace_topology X TX U_def) x p f"
+                unfolding top1_is_path_on_def using hcont_U hf0 hf1 by (by100 blast)
+              thus ?thesis by (by100 blast)
+            next
+              assume hxW: "x \<in> W (n-1)"
+              \<comment> \<open>Path from x to p in W(n-1).\<close>
+              have hp_Wn: "p \<in> W (n-1)" using hp_W hn1_in by (by100 blast)
+              obtain f where hf: "top1_is_path_on (W (n-1)) (subspace_topology X TX (W (n-1))) x p f"
+                using hW_pc hn1_in hxW hp_Wn unfolding top1_path_connected_on_def by (by100 blast)
+              have hcont_f: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+                  (W (n-1)) (subspace_topology X TX (W (n-1))) f"
+                using hf unfolding top1_is_path_on_def by (by100 blast)
+              have hcont_U: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+                  U_def (subspace_topology X TX U_def) f"
+                by (rule top1_continuous_map_on_codomain_enlarge[OF hcont_f hWn_sub_U hU_sub])
+              have hf0: "f 0 = x" and hf1: "f 1 = p"
+                using hf unfolding top1_is_path_on_def by (by100 blast)+
+              have "top1_is_path_on U_def (subspace_topology X TX U_def) x p f"
+                unfolding top1_is_path_on_def using hcont_U hf0 hf1 by (by100 blast)
+              thus ?thesis by (by100 blast)
+            qed
+          qed
+          then obtain f1 where hf1: "top1_is_path_on U_def (subspace_topology X TX U_def) x p f1"
+            by (by100 blast)
+          \<comment> \<open>Get path from p to y in some piece of U_def.\<close>
+          have "\<exists>f. top1_is_path_on U_def (subspace_topology X TX U_def) p y f"
+          proof -
+            have "y \<in> (\<Union>\<alpha>\<in>{..<(n-1)}. C \<alpha>) \<or> y \<in> W (n-1)"
+              using hy unfolding U_def_def by (by100 blast)
+            thus ?thesis
+            proof
+              assume "y \<in> (\<Union>\<alpha>\<in>{..<(n-1)}. C \<alpha>)"
+              then obtain \<beta> where h\<beta>: "\<beta> \<in> {..<(n-1)}" and hy\<beta>: "y \<in> C \<beta>" by (by100 blast)
+              have h\<beta>n: "\<beta> \<in> {..<n}" using h\<beta> hn2 by (by100 simp)
+              have hp\<beta>: "p \<in> C \<beta>" using hC_props h\<beta>n by (by100 blast)
+              obtain g where hg: "top1_is_path_on (C \<beta>) (subspace_topology X TX (C \<beta>)) p y g"
+                using hC_pc h\<beta>n hp\<beta> hy\<beta> unfolding top1_path_connected_on_def by (by100 blast)
+              have hcont_g: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+                  (C \<beta>) (subspace_topology X TX (C \<beta>)) g"
+                using hg unfolding top1_is_path_on_def by (by100 blast)
+              have hC\<beta>_sub_U: "C \<beta> \<subseteq> U_def" using hC_sub_U h\<beta> by (by100 blast)
+              have hcont_U: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+                  U_def (subspace_topology X TX U_def) g"
+                by (rule top1_continuous_map_on_codomain_enlarge[OF hcont_g hC\<beta>_sub_U hU_sub])
+              have hg0: "g 0 = p" and hg1: "g 1 = y"
+                using hg unfolding top1_is_path_on_def by (by100 blast)+
+              have "top1_is_path_on U_def (subspace_topology X TX U_def) p y g"
+                unfolding top1_is_path_on_def using hcont_U hg0 hg1 by (by100 blast)
+              thus ?thesis by (by100 blast)
+            next
+              assume hyW: "y \<in> W (n-1)"
+              have hp_Wn: "p \<in> W (n-1)" using hp_W hn1_in by (by100 blast)
+              obtain g where hg: "top1_is_path_on (W (n-1)) (subspace_topology X TX (W (n-1))) p y g"
+                using hW_pc hn1_in hp_Wn hyW unfolding top1_path_connected_on_def by (by100 blast)
+              have hcont_g: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+                  (W (n-1)) (subspace_topology X TX (W (n-1))) g"
+                using hg unfolding top1_is_path_on_def by (by100 blast)
+              have hcont_U: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+                  U_def (subspace_topology X TX U_def) g"
+                by (rule top1_continuous_map_on_codomain_enlarge[OF hcont_g hWn_sub_U hU_sub])
+              have hg0: "g 0 = p" and hg1: "g 1 = y"
+                using hg unfolding top1_is_path_on_def by (by100 blast)+
+              have "top1_is_path_on U_def (subspace_topology X TX U_def) p y g"
+                unfolding top1_is_path_on_def using hcont_U hg0 hg1 by (by100 blast)
+              thus ?thesis by (by100 blast)
+            qed
+          qed
+          then obtain f2 where hf2: "top1_is_path_on U_def (subspace_topology X TX U_def) p y f2"
+            by (by100 blast)
+          \<comment> \<open>Concatenate paths x \<rightarrow> p and p \<rightarrow> y.\<close>
+          have hTU: "is_topology_on U_def (subspace_topology X TX U_def)"
+            by (rule subspace_topology_is_topology_on[OF hTX hU_sub])
+          show "\<exists>f. top1_is_path_on U_def (subspace_topology X TX U_def) x y f"
+            using top1_is_path_on_append[OF hTU hf1 hf2] by (by100 blast)
+        qed
         show "top1_path_connected_on V_def (subspace_topology X TX V_def)"
-          sorry \<comment> \<open>V is path-connected.\<close>
+          unfolding top1_path_connected_on_def
+        proof (intro conjI ballI)
+          show "is_topology_on V_def (subspace_topology X TX V_def)"
+            by (rule subspace_topology_is_topology_on[OF hTX hV_sub])
+        next
+          fix x y assume hx: "x \<in> V_def" and hy: "y \<in> V_def"
+          \<comment> \<open>Get path from x to p in some piece of V_def.\<close>
+          have "\<exists>f. top1_is_path_on V_def (subspace_topology X TX V_def) x p f"
+          proof -
+            have "x \<in> (\<Union>\<alpha>\<in>{..<(n-1)}. W \<alpha>) \<or> x \<in> C (n-1)"
+              using hx unfolding V_def_def by (by100 blast)
+            thus ?thesis
+            proof
+              assume "x \<in> (\<Union>\<alpha>\<in>{..<(n-1)}. W \<alpha>)"
+              then obtain \<alpha> where h\<alpha>: "\<alpha> \<in> {..<(n-1)}" and hx\<alpha>: "x \<in> W \<alpha>" by (by100 blast)
+              have h\<alpha>n: "\<alpha> \<in> {..<n}" using h\<alpha> hn2 by (by100 simp)
+              have hp\<alpha>: "p \<in> W \<alpha>" using hp_W h\<alpha>n by (by100 blast)
+              obtain f where hf: "top1_is_path_on (W \<alpha>) (subspace_topology X TX (W \<alpha>)) x p f"
+                using hW_pc h\<alpha>n hx\<alpha> hp\<alpha> unfolding top1_path_connected_on_def by (by100 blast)
+              have hcont_f: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+                  (W \<alpha>) (subspace_topology X TX (W \<alpha>)) f"
+                using hf unfolding top1_is_path_on_def by (by100 blast)
+              have hW\<alpha>_sub_V: "W \<alpha> \<subseteq> V_def" using hW_sub_V h\<alpha> by (by100 blast)
+              have hcont_V: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+                  V_def (subspace_topology X TX V_def) f"
+                by (rule top1_continuous_map_on_codomain_enlarge[OF hcont_f hW\<alpha>_sub_V hV_sub])
+              have hf0: "f 0 = x" and hf1: "f 1 = p"
+                using hf unfolding top1_is_path_on_def by (by100 blast)+
+              have "top1_is_path_on V_def (subspace_topology X TX V_def) x p f"
+                unfolding top1_is_path_on_def using hcont_V hf0 hf1 by (by100 blast)
+              thus ?thesis by (by100 blast)
+            next
+              assume hxCn: "x \<in> C (n-1)"
+              have hp_Cn': "p \<in> C (n-1)" using hp_Cn .
+              obtain f where hf: "top1_is_path_on (C (n-1)) (subspace_topology X TX (C (n-1))) x p f"
+                using hC_pc hn1_in hxCn hp_Cn' unfolding top1_path_connected_on_def by (by100 blast)
+              have hcont_f: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+                  (C (n-1)) (subspace_topology X TX (C (n-1))) f"
+                using hf unfolding top1_is_path_on_def by (by100 blast)
+              have hcont_V: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+                  V_def (subspace_topology X TX V_def) f"
+                by (rule top1_continuous_map_on_codomain_enlarge[OF hcont_f hCn_sub_V hV_sub])
+              have hf0: "f 0 = x" and hf1: "f 1 = p"
+                using hf unfolding top1_is_path_on_def by (by100 blast)+
+              have "top1_is_path_on V_def (subspace_topology X TX V_def) x p f"
+                unfolding top1_is_path_on_def using hcont_V hf0 hf1 by (by100 blast)
+              thus ?thesis by (by100 blast)
+            qed
+          qed
+          then obtain f1 where hf1: "top1_is_path_on V_def (subspace_topology X TX V_def) x p f1"
+            by (by100 blast)
+          \<comment> \<open>Get path from p to y.\<close>
+          have "\<exists>f. top1_is_path_on V_def (subspace_topology X TX V_def) p y f"
+          proof -
+            have "y \<in> (\<Union>\<alpha>\<in>{..<(n-1)}. W \<alpha>) \<or> y \<in> C (n-1)"
+              using hy unfolding V_def_def by (by100 blast)
+            thus ?thesis
+            proof
+              assume "y \<in> (\<Union>\<alpha>\<in>{..<(n-1)}. W \<alpha>)"
+              then obtain \<beta> where h\<beta>: "\<beta> \<in> {..<(n-1)}" and hy\<beta>: "y \<in> W \<beta>" by (by100 blast)
+              have h\<beta>n: "\<beta> \<in> {..<n}" using h\<beta> hn2 by (by100 simp)
+              have hp\<beta>: "p \<in> W \<beta>" using hp_W h\<beta>n by (by100 blast)
+              obtain g where hg: "top1_is_path_on (W \<beta>) (subspace_topology X TX (W \<beta>)) p y g"
+                using hW_pc h\<beta>n hp\<beta> hy\<beta> unfolding top1_path_connected_on_def by (by100 blast)
+              have hcont_g: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+                  (W \<beta>) (subspace_topology X TX (W \<beta>)) g"
+                using hg unfolding top1_is_path_on_def by (by100 blast)
+              have hW\<beta>_sub_V: "W \<beta> \<subseteq> V_def" using hW_sub_V h\<beta> by (by100 blast)
+              have hcont_V: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+                  V_def (subspace_topology X TX V_def) g"
+                by (rule top1_continuous_map_on_codomain_enlarge[OF hcont_g hW\<beta>_sub_V hV_sub])
+              have hg0: "g 0 = p" and hg1: "g 1 = y"
+                using hg unfolding top1_is_path_on_def by (by100 blast)+
+              have "top1_is_path_on V_def (subspace_topology X TX V_def) p y g"
+                unfolding top1_is_path_on_def using hcont_V hg0 hg1 by (by100 blast)
+              thus ?thesis by (by100 blast)
+            next
+              assume hyCn: "y \<in> C (n-1)"
+              have hp_Cn': "p \<in> C (n-1)" using hp_Cn .
+              obtain g where hg: "top1_is_path_on (C (n-1)) (subspace_topology X TX (C (n-1))) p y g"
+                using hC_pc hn1_in hp_Cn' hyCn unfolding top1_path_connected_on_def by (by100 blast)
+              have hcont_g: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+                  (C (n-1)) (subspace_topology X TX (C (n-1))) g"
+                using hg unfolding top1_is_path_on_def by (by100 blast)
+              have hcont_V: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+                  V_def (subspace_topology X TX V_def) g"
+                by (rule top1_continuous_map_on_codomain_enlarge[OF hcont_g hCn_sub_V hV_sub])
+              have hg0: "g 0 = p" and hg1: "g 1 = y"
+                using hg unfolding top1_is_path_on_def by (by100 blast)+
+              have "top1_is_path_on V_def (subspace_topology X TX V_def) p y g"
+                unfolding top1_is_path_on_def using hcont_V hg0 hg1 by (by100 blast)
+              thus ?thesis by (by100 blast)
+            qed
+          qed
+          then obtain f2 where hf2: "top1_is_path_on V_def (subspace_topology X TX V_def) p y f2"
+            by (by100 blast)
+          \<comment> \<open>Concatenate paths x \<rightarrow> p and p \<rightarrow> y.\<close>
+          have hTV: "is_topology_on V_def (subspace_topology X TX V_def)"
+            by (rule subspace_topology_is_topology_on[OF hTX hV_sub])
+          show "\<exists>f. top1_is_path_on V_def (subspace_topology X TX V_def) x y f"
+            using top1_is_path_on_append[OF hTV hf1 hf2] by (by100 blast)
+        qed
         show "p \<in> U_def \<inter> V_def"
         proof -
           have "p \<in> U_def"
