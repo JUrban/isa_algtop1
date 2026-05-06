@@ -2443,9 +2443,39 @@ proof -
         qed
         \<comment> \<open>Step F: By Theorem 22.2, G descends to continuous H_CU on CU \<times> I.\<close>
         \<comment> \<open>H_U agrees with the descended map on CU \<times> I.\<close>
-        show ?thesis sorry \<comment> \<open>Theorem 22.2: G continuous + quotient \<pi>' \<Rightarrow> descended f continuous.
-             H_U = f on CU\<times>I. Topology: sub(C\<times>I)(CU\<times>I) = prod(sub U TU CU)(I_top).
-             All ingredients proved above.\<close>
+        \<comment> \<open>Topology transfer: sub(C\<times>I)(prod TC I_top)(CU\<times>I) = prod(sub U TU CU)(I_top).\<close>
+        have htop_CUI: "subspace_topology (?C \<times> I_set) (product_topology_on ?TC I_top) (?CU \<times> I_set)
+            = product_topology_on (subspace_topology ?U ?TU ?CU) I_top"
+        proof -
+          have hTI: "is_topology_on I_set I_top" by (rule top1_unit_interval_topology_is_topology_on)
+          have hTX: "is_topology_on X TX" using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
+          have hC_sub_X: "?C \<subseteq> X" using assms(5) unfolding top1_continuous_map_on_def by (by100 blast)
+          have hTC: "is_topology_on ?C ?TC" by (rule subspace_topology_is_topology_on[OF hTX hC_sub_X])
+          have hCU_sub_C: "?CU \<subseteq> ?C" by (by100 blast)
+          have "subspace_topology (?C \<times> I_set) (product_topology_on ?TC I_top) (?CU \<times> I_set)
+              = product_topology_on (subspace_topology ?C ?TC ?CU) (subspace_topology I_set I_top I_set)"
+            by (rule Theorem_16_3[OF hTC hTI, symmetric])
+          moreover have "subspace_topology I_set I_top I_set = I_top"
+          proof (rule subspace_topology_self, intro ballI)
+            fix V assume "V \<in> I_top"
+            thus "V \<subseteq> I_set" unfolding top1_unit_interval_topology_def subspace_topology_def
+              by (by100 blast)
+          qed
+          moreover have "subspace_topology ?C ?TC ?CU = subspace_topology X TX ?CU"
+            by (rule subspace_topology_trans[OF hCU_sub_C])
+          moreover have "subspace_topology X TX ?CU = subspace_topology ?U ?TU ?CU"
+          proof -
+            have "?CU \<subseteq> ?U" by (by100 blast)
+            thus ?thesis by (rule subspace_topology_trans[symmetric])
+          qed
+          ultimately show ?thesis by (by100 simp)
+        qed
+        \<comment> \<open>Theorem 22.2 descent: G continuous \<Leftrightarrow> descended map continuous.\<close>
+        show ?thesis sorry \<comment> \<open>Theorem_22_2 descent. All ingredients proved:
+             h\<pi>'_quot (quotient), hG_cont, hG_range_U, hG_fiber, htop_CUI.
+             Remaining: extract f from Theorem_22_2, show H_U = f, apply cong.
+             The obtain from Theorem_22_2 and the H_U=f equality need larger by100 budget
+             or define-opaque approach for the lambda terms.\<close>
       qed
       \<comment> \<open>(Old quotient descent code removed; replaced by pasting approach above.)\<close>
       \<comment> \<open>Paste via pasting_lemma_two_closed.\<close>
@@ -9317,6 +9347,11 @@ end
 
 
 
+ 
+ 
+ 
+ 
+ 
  
  
  
