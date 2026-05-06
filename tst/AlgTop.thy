@@ -2314,7 +2314,65 @@ proof -
             proof -
               \<comment> \<open>interp(y,t) \<noteq> (0,0): coefficient (1-t+t/|y|) > 0 and y \<noteq> 0.\<close>
               have "?interp p \<noteq> (0::real, 0)"
-                sorry \<comment> \<open>Coefficient (1-t+t/|y|) > 0 when y \<noteq> 0; multiply-by-nn trick + distrib_right.\<close>
+              proof
+                assume h0: "?interp p = (0, 0)"
+                define yf where "yf = fst (fst p)"
+                define ys where "ys = snd (fst p)"
+                define tt where "tt = snd p"
+                define nn where "nn = sqrt (yf ^ 2 + ys ^ 2)"
+                have hyf_ne: "yf \<noteq> 0 \<or> ys \<noteq> 0"
+                  using hp unfolding yf_def ys_def by (cases "fst p") (by100 auto)
+                have hnn_pos: "nn > 0"
+                proof -
+                  have "yf ^ 2 > 0 \<or> ys ^ 2 > 0" using hyf_ne by (by100 auto)
+                  moreover have "yf ^ 2 \<ge> 0" "ys ^ 2 \<ge> 0" by (by100 simp)+
+                  ultimately have "yf ^ 2 + ys ^ 2 > 0" by (by100 linarith)
+                  thus ?thesis unfolding nn_def by (by100 simp)
+                qed
+                have hnn_ne0: "nn \<noteq> 0" using hnn_pos by (by100 linarith)
+                have ht0: "0 \<le> tt" and ht1: "tt \<le> 1"
+                  using hp unfolding tt_def top1_unit_interval_def by (by100 auto)+
+                \<comment> \<open>From interp = (0,0): first component = 0.\<close>
+                have hfst0: "(1 - tt) * yf + tt * yf / nn = 0"
+                  using h0 unfolding yf_def ys_def tt_def nn_def by (cases p) (by100 simp)
+                \<comment> \<open>Multiply by nn to clear division.\<close>
+                have h_distrib_yf: "nn * ((1 - tt) * yf + tt * yf / nn)
+                    = nn * ((1 - tt) * yf) + nn * (tt * yf / nn)" by (rule distrib_left)
+                have h_cancel_yf: "nn * (tt * yf / nn) = tt * yf" using hnn_ne0 by (by100 simp)
+                have h_assoc_yf: "nn * ((1 - tt) * yf) = (1 - tt) * nn * yf" by (by100 simp)
+                have "(1 - tt) * nn * yf + tt * yf = 0"
+                  using h_distrib_yf h_cancel_yf h_assoc_yf hfst0 by (by100 simp)
+                have h_factor_yf: "(1 - tt) * nn * yf + tt * yf = ((1 - tt) * nn + tt) * yf"
+                  by (rule distrib_right[symmetric])
+                hence h_ring_yf: "((1 - tt) * nn + tt) * yf = 0"
+                  using \<open>(1 - tt) * nn * yf + tt * yf = 0\<close> by (by100 simp)
+                \<comment> \<open>Similarly for snd.\<close>
+                have hsnd0: "(1 - tt) * ys + tt * ys / nn = 0"
+                  using h0 unfolding yf_def ys_def tt_def nn_def by (cases p) (by100 simp)
+                have h_distrib_ys: "nn * ((1 - tt) * ys + tt * ys / nn)
+                    = nn * ((1 - tt) * ys) + nn * (tt * ys / nn)" by (rule distrib_left)
+                have h_cancel_ys: "nn * (tt * ys / nn) = tt * ys" using hnn_ne0 by (by100 simp)
+                have h_assoc_ys: "nn * ((1 - tt) * ys) = (1 - tt) * nn * ys" by (by100 simp)
+                have "(1 - tt) * nn * ys + tt * ys = 0"
+                  using h_distrib_ys h_cancel_ys h_assoc_ys hsnd0 by (by100 simp)
+                have h_factor_ys: "(1 - tt) * nn * ys + tt * ys = ((1 - tt) * nn + tt) * ys"
+                  by (rule distrib_right[symmetric])
+                hence h_ring_ys: "((1 - tt) * nn + tt) * ys = 0"
+                  using \<open>(1 - tt) * nn * ys + tt * ys = 0\<close> by (by100 simp)
+                \<comment> \<open>Coefficient > 0, so yf = 0 and ys = 0.\<close>
+                have hcoeff_pos: "(1 - tt) * nn + tt > 0"
+                proof (cases "tt = 0")
+                  case True thus ?thesis using hnn_pos by (by100 simp)
+                next
+                  case False
+                  have "(1 - tt) * nn \<ge> 0" using ht1 hnn_pos by (by100 simp)
+                  moreover have "tt > 0" using ht0 False by (by100 linarith)
+                  ultimately show ?thesis by (by100 linarith)
+                qed
+                have "yf = 0" using h_ring_yf hcoeff_pos by (by100 simp)
+                moreover have "ys = 0" using h_ring_ys hcoeff_pos by (by100 simp)
+                ultimately show False using hyf_ne by (by100 simp)
+              qed
               hence "?interp p \<in> top1_B2 \<and> ?interp p \<noteq> (0, 0)" using hip by (by100 blast)
               hence "h (?interp p) \<noteq> h (0, 0)"
                 using h_preimg_x0 by (by100 blast)
@@ -9259,6 +9317,10 @@ end
 
 
 
+ 
+ 
+ 
+ 
  
  
  
