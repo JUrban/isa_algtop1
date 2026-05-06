@@ -1734,10 +1734,38 @@ proof -
         qed
       qed
       \<comment> \<open>Continuity on A \<times> I: H_U = projection, continuous.\<close>
+      \<comment> \<open>Use define to avoid term explosion in continuity proofs.\<close>
+      define U_loc where "U_loc = ?U"
+      define TU_loc where "TU_loc = ?TU"
+      have hU_eq: "?U = U_loc" and hTU_eq: "?TU = TU_loc"
+        unfolding U_loc_def TU_loc_def by simp+
+      have hTopX_ns: "is_topology_on X TX" using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
+      have hU_sub_X2: "U_loc \<subseteq> X" unfolding U_loc_def by (by100 blast)
+      have hTopU_loc: "is_topology_on U_loc TU_loc"
+        unfolding TU_loc_def U_loc_def by (rule subspace_topology_is_topology_on[OF hTopX_ns]) (by100 blast)
+      have hA_sub_U_loc: "A \<subseteq> U_loc" using hA_sub_U hU_eq by simp
       have hH_cont_A: "top1_continuous_map_on (A \<times> I_set)
+          (product_topology_on (subspace_topology U_loc TU_loc A) I_top) U_loc TU_loc H_U"
+      proof -
+        have hid_cont: "top1_continuous_map_on U_loc TU_loc U_loc TU_loc id"
+          by (rule top1_continuous_map_on_id[OF hTopU_loc])
+        have hincl: "top1_continuous_map_on A (subspace_topology U_loc TU_loc A) U_loc TU_loc id"
+          by (rule top1_continuous_map_on_restrict_domain_simple[OF hid_cont hA_sub_U_loc])
+        have hincl': "top1_continuous_map_on A (subspace_topology U_loc TU_loc A) U_loc TU_loc (\<lambda>x. x)"
+          using hincl unfolding id_def by (by100 simp)
+        have hTAU: "is_topology_on A (subspace_topology U_loc TU_loc A)"
+          by (rule subspace_topology_is_topology_on[OF hTopU_loc hA_sub_U_loc])
+        have hfst_cont: "top1_continuous_map_on (A \<times> I_set)
+            (product_topology_on (subspace_topology U_loc TU_loc A) I_top) U_loc TU_loc (\<lambda>p. fst p)"
+          using homotopy_const_continuous[OF hincl' hTAU] by (by100 simp)
+        have "\<forall>p\<in>A \<times> I_set. H_U p = fst p"
+          unfolding H_U_def by force
+        thus ?thesis using top1_continuous_map_on_cong hfst_cont by (by100 blast)
+      qed
+      \<comment> \<open>Convert back from U_loc/TU_loc to ?U/?TU.\<close>
+      hence hH_cont_A': "top1_continuous_map_on (A \<times> I_set)
           (product_topology_on (subspace_topology ?U ?TU A) I_top) ?U ?TU H_U"
-        sorry \<comment> \<open>H_U = fst on A×I. Approach: id continuous + restrict_domain + homotopy_const.
-           Blocked by term-size issues with subspace_topology_is_topology_on.\<close>
+        using hU_eq hTU_eq by simp
       \<comment> \<open>Continuity on CU \<times> I: H_U = h((1-t)*y + t*y/|y|) via quotient descent.\<close>
       have hH_cont_CU: "top1_continuous_map_on (?CU \<times> I_set)
           (product_topology_on (subspace_topology ?U ?TU ?CU) I_top) ?U ?TU H_U"
