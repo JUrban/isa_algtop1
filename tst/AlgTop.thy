@@ -1766,13 +1766,26 @@ proof -
     sorry \<comment> \<open>From torus definition: quotient of square by aba\<inverse>b\<inverse>. 1-skeleton = wedge of 2 circles.\<close>
   \<comment> \<open>Step 2: By Theorem 72.1, \<pi>_1(T) \<cong> \<pi>_1(A)/\<langle>\<langle>k_*([p])\<rangle>\<rangle> where k = h|_{S¹}.
      \<pi>_1(A) is free on {a, b}. The relator is aba\<inverse>b\<inverse>.\<close>
-  have hA_free: "\<exists>(F::'g set) mulF eF invgF (\<iota>F::nat \<Rightarrow> 'g).
+  have hA_free: "\<exists>(F::int set) mulF eF invgF (\<iota>F::nat \<Rightarrow> int).
       top1_is_free_group_full_on F mulF eF invgF \<iota>F {0::nat, 1}
       \<and> top1_groups_isomorphic_on F mulF
           (top1_fundamental_group_carrier A (subspace_topology T_torus TT A) x0)
           (top1_fundamental_group_mul A (subspace_topology T_torus TT A) x0)"
-    sorry \<comment> \<open>\<pi>_1 of wedge of 2 circles is free on 2 generators (Theorem 71.1).
-       Type issue: Theorem_71_1 gives G::int set, but goal needs F::'g set.\<close>
+  proof -
+    have hset_eq: "{0::nat, 1} = {..<(2::nat)}" by (by100 auto)
+    have hwedge2: "top1_is_wedge_of_circles_on A (subspace_topology T_torus TT A) {..<(2::nat)} x0"
+      using hA_wedge hset_eq by (by100 simp)
+    from Theorem_71_1_wedge_of_circles_finite[OF hwedge2]
+    obtain G0 :: "int set" and mul0 e0 invg0 and \<iota>0 :: "nat \<Rightarrow> int" where
+        hG0f: "top1_is_free_group_full_on G0 mul0 e0 invg0 \<iota>0 {..<2::nat}" and
+        hG0i: "top1_groups_isomorphic_on G0 mul0
+            (top1_fundamental_group_carrier A (subspace_topology T_torus TT A) x0)
+            (top1_fundamental_group_mul A (subspace_topology T_torus TT A) x0)"
+      by (elim exE conjE) (rule that, assumption+)
+    have "top1_is_free_group_full_on G0 mul0 e0 invg0 \<iota>0 {0::nat, 1}"
+      using hG0f hset_eq by (by100 simp)
+    thus ?thesis using hG0i by (by100 blast)
+  qed
   \<comment> \<open>Step 3: The quotient F({a,b})/\<langle>\<langle>aba\<inverse>b\<inverse>\<rangle>\<rangle>: since aba\<inverse>b\<inverse>=1 means ab=ba,
      the quotient is the free abelian group on {a,b}, which is Z \<times> Z.\<close>
   have hquotient_ZZ: "top1_groups_isomorphic_on
