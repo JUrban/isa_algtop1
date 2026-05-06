@@ -2091,7 +2091,21 @@ proof -
             (?CU \<times> I_set)
             (subspace_topology (?C \<times> I_set) (product_topology_on ?TC I_top) (?CU \<times> I_set))
             ?\<pi>I"
-          sorry \<comment> \<open>Theorem_22_1[OF h\<pi>I_quot hB20I_sat], part 2 (closed map). Image = CU\<times>I.\<close>
+        proof -
+          \<comment> \<open>By Theorem 22.1 part 2: closed map \<Rightarrow> restriction to saturated is quotient.\<close>
+          from Theorem_22_1[OF h\<pi>I_quot hB20I_sat]
+          have h22_1: "(top1_closed_map_on (top1_B2 \<times> I_set) (product_topology_on top1_B2_topology I_top)
+                (?C \<times> I_set) (product_topology_on ?TC I_top) ?\<pi>I) \<longrightarrow>
+              top1_quotient_map_on (?B2_0 \<times> I_set)
+                (subspace_topology (top1_B2 \<times> I_set) (product_topology_on top1_B2_topology I_top)
+                  (?B2_0 \<times> I_set))
+                (?\<pi>I ` (?B2_0 \<times> I_set))
+                (subspace_topology (?C \<times> I_set) (product_topology_on ?TC I_top) (?\<pi>I ` (?B2_0 \<times> I_set)))
+                ?\<pi>I"
+            by (by100 blast)
+          have "?\<pi>I ` (?B2_0 \<times> I_set) = ?CU \<times> I_set" using hCU_times_eq by (by100 simp)
+          thus ?thesis using h22_1 h\<pi>I_closed by (by100 simp)
+        qed
         \<comment> \<open>Step D: The radial retraction G(y,t) = h(interp(y,t)) is continuous on B2\{0} \<times> I.\<close>
         let ?G = "\<lambda>(y, t). h ((1 - t) * fst y + t * fst y / ?norm y,
                               (1 - t) * snd y + t * snd y / ?norm y)"
@@ -9244,6 +9258,7 @@ end
 
 
 
+ 
  
  
  
