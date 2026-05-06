@@ -856,7 +856,7 @@ using assms proof (induction n arbitrary: X TX p rule: less_induct)
           \<and> (\<exists>h. top1_homeomorphism_on top1_S1 top1_S1_topology
                 (C \<alpha>) (subspace_topology X TX (C \<alpha>)) h)"
         and hX_eq_full: "(\<Union>\<alpha>\<in>{..<n}. C \<alpha>) = X"
-      by (by100 blast)
+      by blast
     have hX_eq: "(\<Union>\<alpha>\<in>{0::nat}. C \<alpha>) = X" using hX_eq_full hJ1 by (by100 simp)
     have h0_in: "(0::nat) \<in> {..<n}" using hn1 by (by100 simp)
     have hC0: "C (0::nat) \<subseteq> X" using hC_all h0_in by (by100 blast)
@@ -1587,8 +1587,6 @@ using assms proof (induction n arbitrary: X TX p rule: less_induct)
             unfolding U_def_def V_def_def W_def by (by100 blast)
           thus ?thesis using hX_decomp by (by100 simp)
         qed
-        show "top1_simply_connected_on (U_def \<inter> V_def) (subspace_topology X TX (U_def \<inter> V_def))"
-          sorry \<comment> \<open>U \<inter> V = \<union>W(\<alpha>) deformation-retracts to {p}.\<close>
         \<comment> \<open>Helper: Each C(alpha) is path-connected (via homeomorphism with S1).\<close>
         have hC_pc: "\<forall>\<alpha>\<in>{..<n}. top1_path_connected_on (C \<alpha>) (subspace_topology X TX (C \<alpha>))"
         proof (intro ballI)
@@ -2071,6 +2069,700 @@ using assms proof (induction n arbitrary: X TX p rule: less_induct)
           unfolding V_def_def by (by100 blast)
         \<comment> \<open>Helper: C(n-1) \<subseteq> V_def.\<close>
         have hCn_sub_V: "C (n-1) \<subseteq> V_def" unfolding V_def_def by (by100 blast)
+        \<comment> \<open>U_def \<inter> V_def = \<Union>{W \<alpha> | \<alpha> < n}.\<close>
+        have hUV_eq: "U_def \<inter> V_def = (\<Union>\<alpha>\<in>{..<n}. W \<alpha>)"
+        proof (intro set_eqI iffI)
+          fix x assume hx: "x \<in> U_def \<inter> V_def"
+          hence hxU: "x \<in> U_def" and hxV: "x \<in> V_def" by (by100 blast)+
+          show "x \<in> (\<Union>\<alpha>\<in>{..<n}. W \<alpha>)"
+          proof -
+            from hxU have "x \<in> (\<Union>\<alpha>\<in>{..<(n-1)}. C \<alpha>) \<or> x \<in> W (n-1)"
+              unfolding U_def_def by (by100 blast)
+            thus ?thesis
+            proof
+              assume "x \<in> (\<Union>\<alpha>\<in>{..<(n-1)}. C \<alpha>)"
+              then obtain \<alpha> where h\<alpha>: "\<alpha> \<in> {..<(n-1)}" and hx\<alpha>: "x \<in> C \<alpha>" by (by100 blast)
+              have h\<alpha>n: "\<alpha> \<in> {..<n}" using h\<alpha> hn2 by (by100 simp)
+              \<comment> \<open>x \<in> V_def, so x \<in> (\<Union>\<beta><n-1. W \<beta>) \<union> C(n-1).
+                 If x \<in> C(n-1), then x \<in> C \<alpha> \<inter> C(n-1) = {p}, so x = p.
+                 p \<in> W \<alpha> (since p \<noteq> q \<alpha>).\<close>
+              show ?thesis
+              proof (cases "x \<in> (\<Union>\<beta>\<in>{..<(n-1)}. W \<beta>)")
+                case True
+                then obtain \<beta> where h\<beta>: "\<beta> \<in> {..<(n-1)}" and hx\<beta>: "x \<in> W \<beta>" by (by100 blast)
+                have h\<beta>n: "\<beta> \<in> {..<n}" using h\<beta> hn2 by (by100 simp)
+                thus ?thesis using hx\<beta> by (by100 blast)
+              next
+                case False
+                hence "x \<in> C (n-1)" using hxV unfolding V_def_def by (by100 blast)
+                hence "x \<in> C \<alpha> \<inter> C (n-1)" using hx\<alpha> by (by100 blast)
+                hence "x = p" using hC_inter h\<alpha>n hn1_in
+                proof -
+                  have h\<alpha>_ne: "\<alpha> \<noteq> n - 1" using h\<alpha> by (by100 simp)
+                  have "C \<alpha> \<inter> C (n-1) = {p}" using hC_inter h\<alpha>n hn1_in h\<alpha>_ne by (by100 blast)
+                  thus ?thesis using \<open>x \<in> C \<alpha> \<inter> C (n-1)\<close> by (by100 blast)
+                qed
+                hence "x \<in> W \<alpha>" using hp_W h\<alpha>n by (by100 blast)
+                thus ?thesis using h\<alpha>n by (by100 blast)
+              qed
+            next
+              assume "x \<in> W (n-1)"
+              thus ?thesis using hn1_in by (by100 blast)
+            qed
+          qed
+        next
+          fix x assume hx: "x \<in> (\<Union>\<alpha>\<in>{..<n}. W \<alpha>)"
+          then obtain \<alpha> where h\<alpha>: "\<alpha> \<in> {..<n}" and hx\<alpha>: "x \<in> W \<alpha>" by (by100 blast)
+          show "x \<in> U_def \<inter> V_def"
+          proof (cases "\<alpha> \<in> {..<(n-1)}")
+            case True
+            \<comment> \<open>W \<alpha> \<subseteq> C \<alpha> \<subseteq> U_def, and W \<alpha> \<subseteq> V_def.\<close>
+            have "x \<in> U_def" using hx\<alpha> hW_sub_C h\<alpha> hC_sub_U True by (by100 blast)
+            moreover have "x \<in> V_def" using hx\<alpha> hW_sub_V True by (by100 blast)
+            ultimately show ?thesis by (by100 blast)
+          next
+            case False
+            hence h\<alpha>_eq: "\<alpha> = n - 1" using h\<alpha> by (by100 simp)
+            \<comment> \<open>W(n-1) \<subseteq> U_def, and W(n-1) \<subseteq> C(n-1) \<subseteq> V_def.\<close>
+            have "x \<in> U_def" using hx\<alpha> hWn_sub_U h\<alpha>_eq by (by100 blast)
+            moreover have "x \<in> V_def" using hx\<alpha> hW_sub_C h\<alpha> hCn_sub_V h\<alpha>_eq by (by100 blast)
+            ultimately show ?thesis by (by100 blast)
+          qed
+        qed
+        \<comment> \<open>Simply connected proof for U_def \<inter> V_def = \<Union>W(\<alpha>).\<close>
+        have hUV_sub: "U_def \<inter> V_def \<subseteq> X"
+          using hU_sub hV_sub by (by100 blast)
+        have hTUV: "is_topology_on (U_def \<inter> V_def) (subspace_topology X TX (U_def \<inter> V_def))"
+          by (rule subspace_topology_is_topology_on[OF hTX hUV_sub])
+        have hp_UV: "p \<in> U_def \<inter> V_def"
+          using hp_U hp_V by (by100 blast)
+        show "top1_simply_connected_on (U_def \<inter> V_def) (subspace_topology X TX (U_def \<inter> V_def))"
+        proof (rule top1_simply_connected_from_one_point[OF hTUV _ hp_UV])
+          \<comment> \<open>Part 1: U_def \<inter> V_def is path-connected.\<close>
+          show "top1_path_connected_on (U_def \<inter> V_def) (subspace_topology X TX (U_def \<inter> V_def))"
+            unfolding top1_path_connected_on_def
+          proof (intro conjI ballI)
+            show "is_topology_on (U_def \<inter> V_def) (subspace_topology X TX (U_def \<inter> V_def))"
+              using hTUV .
+          next
+            fix x y assume hx: "x \<in> U_def \<inter> V_def" and hy: "y \<in> U_def \<inter> V_def"
+            \<comment> \<open>x \<in> \<Union>W(\<alpha>), so x \<in> W(\<alpha>) for some \<alpha>. Get path x \<rightarrow> p in W(\<alpha>).\<close>
+            have hx_W: "x \<in> (\<Union>\<alpha>\<in>{..<n}. W \<alpha>)" using hx hUV_eq by (by100 blast)
+            then obtain \<alpha> where h\<alpha>: "\<alpha> \<in> {..<n}" and hx\<alpha>: "x \<in> W \<alpha>" by (by100 blast)
+            have hp\<alpha>: "p \<in> W \<alpha>" using hp_W h\<alpha> by (by100 blast)
+            obtain f1 where hf1: "top1_is_path_on (W \<alpha>) (subspace_topology X TX (W \<alpha>)) x p f1"
+              using hW_pc h\<alpha> hx\<alpha> hp\<alpha> unfolding top1_path_connected_on_def by (by100 blast)
+            \<comment> \<open>Lift path from W(\<alpha>) to U_def \<inter> V_def.\<close>
+            have hcont_f1: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+                (W \<alpha>) (subspace_topology X TX (W \<alpha>)) f1"
+              using hf1 unfolding top1_is_path_on_def by (by100 blast)
+            have hW\<alpha>_sub_UV: "W \<alpha> \<subseteq> U_def \<inter> V_def"
+              using hUV_eq h\<alpha> by (by100 blast)
+            have hcont_UV1: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+                (U_def \<inter> V_def) (subspace_topology X TX (U_def \<inter> V_def)) f1"
+              by (rule top1_continuous_map_on_codomain_enlarge[OF hcont_f1 hW\<alpha>_sub_UV hUV_sub])
+            have hf1_0: "f1 0 = x" and hf1_1: "f1 1 = p"
+              using hf1 unfolding top1_is_path_on_def by (by100 blast)+
+            have hpath_xp: "top1_is_path_on (U_def \<inter> V_def) (subspace_topology X TX (U_def \<inter> V_def)) x p f1"
+              unfolding top1_is_path_on_def using hcont_UV1 hf1_0 hf1_1 by (by100 blast)
+            \<comment> \<open>Similarly y \<rightarrow> p.\<close>
+            have hy_W: "y \<in> (\<Union>\<alpha>\<in>{..<n}. W \<alpha>)" using hy hUV_eq by (by100 blast)
+            then obtain \<beta> where h\<beta>: "\<beta> \<in> {..<n}" and hy\<beta>: "y \<in> W \<beta>" by (by100 blast)
+            have hp\<beta>: "p \<in> W \<beta>" using hp_W h\<beta> by (by100 blast)
+            obtain f2 where hf2: "top1_is_path_on (W \<beta>) (subspace_topology X TX (W \<beta>)) p y f2"
+              using hW_pc h\<beta> hp\<beta> hy\<beta> unfolding top1_path_connected_on_def by (by100 blast)
+            have hcont_f2: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+                (W \<beta>) (subspace_topology X TX (W \<beta>)) f2"
+              using hf2 unfolding top1_is_path_on_def by (by100 blast)
+            have hW\<beta>_sub_UV: "W \<beta> \<subseteq> U_def \<inter> V_def"
+              using hUV_eq h\<beta> by (by100 blast)
+            have hcont_UV2: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+                (U_def \<inter> V_def) (subspace_topology X TX (U_def \<inter> V_def)) f2"
+              by (rule top1_continuous_map_on_codomain_enlarge[OF hcont_f2 hW\<beta>_sub_UV hUV_sub])
+            have hf2_0: "f2 0 = p" and hf2_1: "f2 1 = y"
+              using hf2 unfolding top1_is_path_on_def by (by100 blast)+
+            have hpath_py: "top1_is_path_on (U_def \<inter> V_def) (subspace_topology X TX (U_def \<inter> V_def)) p y f2"
+              unfolding top1_is_path_on_def using hcont_UV2 hf2_0 hf2_1 by (by100 blast)
+            \<comment> \<open>Concatenate: x \<rightarrow> p \<rightarrow> y.\<close>
+            show "\<exists>f. top1_is_path_on (U_def \<inter> V_def) (subspace_topology X TX (U_def \<inter> V_def)) x y f"
+              using top1_is_path_on_append[OF hTUV hpath_xp hpath_py] by (by100 blast)
+          qed
+        next
+          \<comment> \<open>Part 2: Every loop at p in U_def \<inter> V_def is nulhomotopic.
+             Key idea: Each W(\<alpha>) is simply connected (homeomorphic to R via
+             the covering map parameterization). Any loop at p in \<Union>W(\<alpha>) can
+             be decomposed into sub-loops each staying in a single W(\<alpha>).
+             Each sub-loop is nulhomotopic since W(\<alpha>) is simply connected.
+             The product of nulhomotopic loops is nulhomotopic.\<close>
+          \<comment> \<open>Helper: Each W(\<alpha>) is simply connected.
+             W(\<alpha>) is homeomorphic to an open interval in R (via the covering map
+             parameterization). R is simply connected. The straight-line homotopy
+             in R stays within the open interval, hence transfers to W(\<alpha>).\<close>
+          have hW_sc: "\<forall>\<alpha>\<in>{..<n}. top1_simply_connected_on (W \<alpha>) (subspace_topology X TX (W \<alpha>))"
+          proof (intro ballI)
+            fix \<alpha> assume h\<alpha>: "\<alpha> \<in> {..<n}"
+            have hW\<alpha>_sub: "W \<alpha> \<subseteq> X" using hW_sub_X h\<alpha> by (by100 blast)
+            have hTW\<alpha>: "is_topology_on (W \<alpha>) (subspace_topology X TX (W \<alpha>))"
+              by (rule subspace_topology_is_topology_on[OF hTX hW\<alpha>_sub])
+            have hp\<alpha>: "p \<in> W \<alpha>" using hp_W h\<alpha> by (by100 blast)
+            have hW_pc\<alpha>: "top1_path_connected_on (W \<alpha>) (subspace_topology X TX (W \<alpha>))"
+              using hW_pc h\<alpha> by (by100 blast)
+            show "top1_simply_connected_on (W \<alpha>) (subspace_topology X TX (W \<alpha>))"
+            proof (rule top1_simply_connected_from_one_point[OF hTW\<alpha> hW_pc\<alpha> hp\<alpha>])
+              \<comment> \<open>Every loop at p in W(\<alpha>) is nulhomotopic.
+                 Use the covering map parameterization: a loop at p maps to a
+                 loop in the interval (\<theta>_q, \<theta>_q + 1) which contracts via
+                 straight-line homotopy.\<close>
+              show "\<forall>f. top1_is_loop_on (W \<alpha>) (subspace_topology X TX (W \<alpha>)) p f \<longrightarrow>
+                  top1_path_homotopic_on (W \<alpha>) (subspace_topology X TX (W \<alpha>)) p p f (top1_constant_path p)"
+              proof (intro allI impI)
+                fix f assume hloop: "top1_is_loop_on (W \<alpha>) (subspace_topology X TX (W \<alpha>)) p f"
+                \<comment> \<open>Get homeomorphism h: S1 -> C(\<alpha>) and covering map parameterization.\<close>
+                obtain h where hh: "top1_homeomorphism_on top1_S1 top1_S1_topology
+                    (C \<alpha>) (subspace_topology X TX (C \<alpha>)) h"
+                  using hC_props h\<alpha> by (by100 blast)
+                have hbij: "bij_betw h top1_S1 (C \<alpha>)"
+                  using hh unfolding top1_homeomorphism_on_def by (by100 blast)
+                have hcont_h: "top1_continuous_map_on top1_S1 top1_S1_topology
+                    (C \<alpha>) (subspace_topology X TX (C \<alpha>)) h"
+                  using hh unfolding top1_homeomorphism_on_def by (by100 blast)
+                let ?hinv = "inv_into top1_S1 h"
+                have hhinv: "top1_homeomorphism_on (C \<alpha>) (subspace_topology X TX (C \<alpha>))
+                    top1_S1 top1_S1_topology ?hinv"
+                  by (rule homeomorphism_inverse[OF hh])
+                have hbij_inv: "bij_betw ?hinv (C \<alpha>) top1_S1"
+                  using hhinv unfolding top1_homeomorphism_on_def by (by100 blast)
+                have hcont_hinv: "top1_continuous_map_on (C \<alpha>) (subspace_topology X TX (C \<alpha>))
+                    top1_S1 top1_S1_topology ?hinv"
+                  using hhinv unfolding top1_homeomorphism_on_def by (by100 blast)
+                \<comment> \<open>q' = h^{-1}(q(\<alpha>)), the removed point in S1.\<close>
+                have hq_in: "q \<alpha> \<in> C \<alpha>" using hq h\<alpha> by (by100 blast)
+                define q' where "q' = ?hinv (q \<alpha>)"
+                have hq'_S1: "q' \<in> top1_S1"
+                  using hbij_inv hq_in unfolding q'_def bij_betw_def by (by100 blast)
+                \<comment> \<open>p' = h^{-1}(p), the basepoint in S1.\<close>
+                have hp_C: "p \<in> C \<alpha>" using hC_props h\<alpha> by (by100 blast)
+                define p' where "p' = ?hinv p"
+                have hp'_S1: "p' \<in> top1_S1"
+                  using hbij_inv hp_C unfolding p'_def bij_betw_def by (by100 blast)
+                have hp'_ne_q': "p' \<noteq> q'"
+                proof
+                  assume "p' = q'"
+                  hence "?hinv p = ?hinv (q \<alpha>)" unfolding p'_def q'_def .
+                  hence "h (?hinv p) = h (?hinv (q \<alpha>))" by (by100 simp)
+                  hence "p = q \<alpha>"
+                    using bij_betw_inv_into_right[OF hbij hp_C]
+                          bij_betw_inv_into_right[OF hbij hq_in] by (by100 simp)
+                  thus False using hq h\<alpha> by (by100 blast)
+                qed
+                \<comment> \<open>Get angle parameters for q' and p'.\<close>
+                obtain \<theta>q where h\<theta>q: "top1_R_to_S1 \<theta>q = q'"
+                proof -
+                  have heq: "fst q' ^ 2 + snd q' ^ 2 = 1" using hq'_S1 unfolding top1_S1_def by (by100 simp)
+                  obtain \<theta> where "fst q' = cos \<theta>" "snd q' = sin \<theta>"
+                    using sincos_total_2pi heq by (by100 metis)
+                  hence "top1_R_to_S1 (\<theta> / (2 * pi)) = q'"
+                    unfolding top1_R_to_S1_def by (simp add: prod_eq_iff)
+                  thus ?thesis using that by (by100 blast)
+                qed
+                obtain \<theta>p where h\<theta>p: "top1_R_to_S1 \<theta>p = p'" and h\<theta>p_range: "\<theta>q < \<theta>p \<and> \<theta>p < \<theta>q + 1"
+                proof -
+                  have heq: "fst p' ^ 2 + snd p' ^ 2 = 1" using hp'_S1 unfolding top1_S1_def by (by100 simp)
+                  obtain \<theta>0_raw where hcos: "fst p' = cos \<theta>0_raw" and hsin: "snd p' = sin \<theta>0_raw"
+                    using sincos_total_2pi heq by (by100 metis)
+                  define \<theta>0 where "\<theta>0 = \<theta>0_raw / (2 * pi)"
+                  have h\<theta>0: "top1_R_to_S1 \<theta>0 = p'"
+                    unfolding top1_R_to_S1_def \<theta>0_def using hcos hsin by (simp add: prod_eq_iff)
+                  define k where "k = \<lfloor>\<theta>0 - \<theta>q\<rfloor>"
+                  define \<theta>a where "\<theta>a = \<theta>0 - of_int k"
+                  have h\<theta>a_R: "top1_R_to_S1 \<theta>a = p'"
+                  proof -
+                    have "top1_R_to_S1 \<theta>a = top1_R_to_S1 (\<theta>0 + of_int (-k))"
+                      unfolding \<theta>a_def by (by100 simp)
+                    also have "... = top1_R_to_S1 \<theta>0" by (rule top1_R_to_S1_int_shift_early)
+                    finally show ?thesis using h\<theta>0 by (by100 simp)
+                  qed
+                  have h_floor_lb: "of_int k \<le> \<theta>0 - \<theta>q" unfolding k_def using of_int_floor_le by (by100 linarith)
+                  have h_floor_ub: "\<theta>0 - \<theta>q < of_int k + 1"
+                  proof -
+                    have "\<lfloor>\<theta>0 - \<theta>q\<rfloor> < \<lfloor>\<theta>0 - \<theta>q\<rfloor> + 1" by (by100 linarith)
+                    thus ?thesis unfolding k_def using floor_less_iff by (by100 linarith)
+                  qed
+                  have h\<theta>a_ge: "\<theta>a \<ge> \<theta>q" and h\<theta>a_lt: "\<theta>a < \<theta>q + 1"
+                    unfolding \<theta>a_def using h_floor_lb h_floor_ub by (by100 linarith)+
+                  have h\<theta>a_ne: "\<theta>a \<noteq> \<theta>q"
+                  proof
+                    assume "\<theta>a = \<theta>q"
+                    hence "top1_R_to_S1 \<theta>a = top1_R_to_S1 \<theta>q" by (by100 simp)
+                    hence "p' = q'" using h\<theta>a_R h\<theta>q by (by100 simp)
+                    thus False using hp'_ne_q' by (by100 blast)
+                  qed
+                  hence "\<theta>q < \<theta>a" using h\<theta>a_ge by (by100 linarith)
+                  thus ?thesis using that h\<theta>a_R h\<theta>a_lt by (by100 blast)
+                qed
+                \<comment> \<open>The loop f maps I to W(\<alpha>) with f(0) = f(1) = p.
+                   Compose with h^{-1} to get a loop in S1 - {q'}.
+                   Lift to get a path in (\<theta>_q, \<theta>_q + 1) starting and ending at \<theta>_p.
+                   Use straight-line homotopy in R to contract to constant \<theta>_p.
+                   Push forward through h \<circ> R_to_S1 to get null-homotopy in W(\<alpha>).\<close>
+                \<comment> \<open>Step A: h^{-1} \<circ> f is a loop in S1 at p'.\<close>
+                have hf_path: "top1_is_path_on (W \<alpha>) (subspace_topology X TX (W \<alpha>)) p p f"
+                  using hloop unfolding top1_is_loop_on_def .
+                have hf_cont: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+                    (W \<alpha>) (subspace_topology X TX (W \<alpha>)) f"
+                  using hf_path unfolding top1_is_path_on_def by (by100 blast)
+                have hf0: "f 0 = p" and hf1: "f 1 = p"
+                  using hf_path unfolding top1_is_path_on_def by (by100 blast)+
+                \<comment> \<open>f maps to W \<alpha> \<subseteq> C \<alpha>, so composing with h^{-1} gives a path in S1.\<close>
+                have hW_sub_C_here: "W \<alpha> \<subseteq> C \<alpha>" using hW_sub_C h\<alpha> by (by100 blast)
+                have hC\<alpha>_sub: "C \<alpha> \<subseteq> X" using hC_props h\<alpha> by (by100 blast)
+                have hTC\<alpha>: "is_topology_on (C \<alpha>) (subspace_topology X TX (C \<alpha>))"
+                  by (rule subspace_topology_is_topology_on[OF hTX hC\<alpha>_sub])
+                \<comment> \<open>Enlarge codomain of f from W \<alpha> to C \<alpha>.\<close>
+                have hf_C: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+                    (C \<alpha>) (subspace_topology X TX (C \<alpha>)) f"
+                  by (rule top1_continuous_map_on_codomain_enlarge[OF hf_cont hW_sub_C_here hC\<alpha>_sub])
+                \<comment> \<open>h^{-1} \<circ> f is continuous [0,1] \<rightarrow> S1.\<close>
+                have hhinvf_cont: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+                    top1_S1 top1_S1_topology (?hinv \<circ> f)"
+                  by (rule top1_continuous_map_on_comp[OF hf_C hcont_hinv])
+                have hhinvf_0: "(?hinv \<circ> f) 0 = p'"
+                  unfolding p'_def using hf0 by (by100 simp)
+                have hhinvf_1: "(?hinv \<circ> f) 1 = p'"
+                  unfolding p'_def using hf1 by (by100 simp)
+                have hhinvf_path: "top1_is_path_on top1_S1 top1_S1_topology p' p' (?hinv \<circ> f)"
+                  unfolding top1_is_path_on_def using hhinvf_cont hhinvf_0 hhinvf_1 by (by100 blast)
+                \<comment> \<open>Step B: Lift h^{-1} \<circ> f to a path g_tilde in R starting at \<theta>p.\<close>
+                have hTS1: "is_topology_on top1_S1 top1_S1_topology"
+                  using top1_S1_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
+                have hTR: "is_topology_on (UNIV::real set) top1_open_sets"
+                  by (rule top1_open_sets_is_topology_on_UNIV)
+                have h\<theta>p_UNIV: "\<theta>p \<in> (UNIV::real set)" by (by100 blast)
+                have hR_to_S1_\<theta>p: "top1_R_to_S1 \<theta>p = p'" using h\<theta>p by (by100 blast)
+                obtain g_tilde where hgtilde_path: "top1_is_path_on (UNIV::real set) top1_open_sets
+                    \<theta>p (g_tilde 1) g_tilde"
+                    and hgtilde_proj: "\<forall>s\<in>I_set. top1_R_to_S1 (g_tilde s) = (?hinv \<circ> f) s"
+                  using Lemma_54_1_path_lifting[OF Theorem_53_1 h\<theta>p_UNIV hR_to_S1_\<theta>p
+                      hhinvf_path hTS1 hTR] by (by100 blast)
+                have hgtilde_cont: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+                    (UNIV::real set) top1_open_sets g_tilde"
+                  using hgtilde_path unfolding top1_is_path_on_def by (by100 blast)
+                have hgtilde_0: "g_tilde 0 = \<theta>p"
+                  using hgtilde_path unfolding top1_is_path_on_def by (by100 blast)
+                \<comment> \<open>Step C: Show g_tilde stays in (\<theta>q, \<theta>q + 1).
+                   Key: f maps to W \<alpha> = C \<alpha> - {q \<alpha>}, so h^{-1}(f(s)) \<in> S1 - {q'}.
+                   Hence R_to_S1(g_tilde(s)) \<noteq> q' for all s.
+                   By connectedness + IVT, g_tilde stays in (\<theta>q, \<theta>q + 1).\<close>
+                have hgtilde_avoids_q: "\<forall>s\<in>I_set. top1_R_to_S1 (g_tilde s) \<noteq> q'"
+                proof (intro ballI)
+                  fix s assume hs: "s \<in> I_set"
+                  have "top1_R_to_S1 (g_tilde s) = (?hinv \<circ> f) s" using hgtilde_proj hs by (by100 blast)
+                  also have "... = ?hinv (f s)" by (by100 simp)
+                  finally have hR: "top1_R_to_S1 (g_tilde s) = ?hinv (f s)" .
+                  \<comment> \<open>f(s) \<in> W \<alpha> = C \<alpha> - {q \<alpha>}, so f(s) \<noteq> q \<alpha>.\<close>
+                  have hfs_W: "f s \<in> W \<alpha>"
+                    using hf_cont hs unfolding top1_continuous_map_on_def by (by100 blast)
+                  hence "f s \<noteq> q \<alpha>" unfolding W_def by (by100 blast)
+                  hence "?hinv (f s) \<noteq> ?hinv (q \<alpha>)"
+                  proof -
+                    have hfs_C: "f s \<in> C \<alpha>" using hfs_W hW_sub_C_here by (by100 blast)
+                    assume hne: "f s \<noteq> q \<alpha>"
+                    show "?hinv (f s) \<noteq> ?hinv (q \<alpha>)"
+                    proof
+                      assume "?hinv (f s) = ?hinv (q \<alpha>)"
+                      hence "h (?hinv (f s)) = h (?hinv (q \<alpha>))" by (by100 simp)
+                      hence "f s = q \<alpha>"
+                        using bij_betw_inv_into_right[OF hbij hfs_C]
+                              bij_betw_inv_into_right[OF hbij hq_in] by (by100 simp)
+                      thus False using hne by (by100 blast)
+                    qed
+                  qed
+                  hence "?hinv (f s) \<noteq> q'" unfolding q'_def .
+                  thus "top1_R_to_S1 (g_tilde s) \<noteq> q'" using hR by (by100 simp)
+                qed
+                \<comment> \<open>Get continuous_on for g_tilde on I_set (needed for IVT).\<close>
+                have hgtilde_cont_on: "continuous_on I_set g_tilde"
+                proof -
+                  have h: "top1_continuous_map_on I_set I_top UNIV top1_open_sets g_tilde"
+                    using hgtilde_cont unfolding top1_unit_interval_topology_def .
+                  show ?thesis unfolding continuous_on_open_invariant
+                  proof (intro allI impI)
+                    fix B :: "real set" assume hBo: "open B"
+                    have "B \<in> top1_open_sets" using hBo unfolding top1_open_sets_def by (by100 blast)
+                    hence "{s \<in> I_set. g_tilde s \<in> B} \<in> I_top"
+                      using h unfolding top1_continuous_map_on_def by (by100 blast)
+                    hence "{s \<in> I_set. g_tilde s \<in> B} \<in> subspace_topology UNIV top1_open_sets I_set"
+                      unfolding top1_unit_interval_topology_def .
+                    then obtain W where hW: "W \<in> top1_open_sets" and heq: "{s \<in> I_set. g_tilde s \<in> B} = I_set \<inter> W"
+                      unfolding subspace_topology_def by (by100 blast)
+                    have "open W" using hW unfolding top1_open_sets_def by (by100 blast)
+                    moreover have "W \<inter> I_set = g_tilde -` B \<inter> I_set" using heq by (by100 blast)
+                    ultimately show "\<exists>A. open A \<and> A \<inter> I_set = g_tilde -` B \<inter> I_set" by (by100 blast)
+                  qed
+                qed
+                \<comment> \<open>g_tilde stays in (\<theta>q, \<theta>q + 1): since g_tilde(0) = \<theta>p \<in> (\<theta>q, \<theta>q+1),
+                   and g_tilde is continuous, and g_tilde never hits \<theta>q + k (any integer k)
+                   (because R_to_S1 would equal q'), by IVT g_tilde stays in (\<theta>q, \<theta>q + 1).\<close>
+                \<comment> \<open>g_tilde avoids \<theta>q + k for ALL integers k.\<close>
+                have hgtilde_avoids_lattice: "\<forall>s\<in>I_set. \<forall>k::int. g_tilde s \<noteq> \<theta>q + of_int k"
+                proof (intro ballI allI)
+                  fix s :: real and k :: int assume hs: "s \<in> I_set"
+                  show "g_tilde s \<noteq> \<theta>q + of_int k"
+                  proof
+                    assume heq: "g_tilde s = \<theta>q + of_int k"
+                    hence "top1_R_to_S1 (g_tilde s) = top1_R_to_S1 (\<theta>q + of_int k)" by (by100 simp)
+                    also have "... = top1_R_to_S1 \<theta>q" by (rule top1_R_to_S1_int_shift_early)
+                    also have "... = q'" using h\<theta>q .
+                    finally have "top1_R_to_S1 (g_tilde s) = q'" .
+                    thus False using hgtilde_avoids_q hs by (by100 blast)
+                  qed
+                qed
+                have hgtilde_range: "\<forall>s\<in>I_set. \<theta>q < g_tilde s \<and> g_tilde s < \<theta>q + 1"
+                proof (intro ballI)
+                  fix s assume hs: "s \<in> I_set"
+                  have hs_range: "0 \<le> s \<and> s \<le> 1" using hs unfolding top1_unit_interval_def by (by100 simp)
+                  \<comment> \<open>Lower bound: g_tilde(s) > \<theta>q.\<close>
+                  have h_lb: "g_tilde s > \<theta>q"
+                  proof (rule ccontr)
+                    assume "\<not> \<theta>q < g_tilde s"
+                    hence hle: "g_tilde s \<le> \<theta>q" by (by100 linarith)
+                    \<comment> \<open>g_tilde(0) = \<theta>p > \<theta>q and g_tilde(s) \<le> \<theta>q.
+                       By IVT, \<exists>s' \<in> [0, s] with g_tilde(s') = \<theta>q.\<close>
+                    have hg0: "g_tilde 0 = \<theta>p" using hgtilde_0 .
+                    have hg0_gt: "g_tilde 0 > \<theta>q" using hg0 h\<theta>p_range by (by100 linarith)
+                    have hs_le1: "s \<le> 1" using hs_range by (by100 blast)
+                    have h0_le_s: "0 \<le> s" using hs_range by (by100 blast)
+                    have h_cont_seg: "continuous_on {0..s} g_tilde"
+                    proof (rule continuous_on_subset[OF hgtilde_cont_on])
+                      show "{0..s} \<subseteq> I_set" using hs_range unfolding top1_unit_interval_def by (by100 auto)
+                    qed
+                    have "g_tilde s \<le> \<theta>q" using hle .
+                    moreover have "\<theta>q \<le> g_tilde 0" using hg0_gt by (by100 linarith)
+                    ultimately obtain s' where hs': "0 \<le> s' \<and> s' \<le> s" and hgs': "g_tilde s' = \<theta>q"
+                      using IVT2'[OF _ _ h0_le_s h_cont_seg] by (by100 blast)
+                    have "s' \<in> I_set" using hs' hs_range unfolding top1_unit_interval_def by (by100 auto)
+                    hence "g_tilde s' \<noteq> \<theta>q + of_int 0"
+                      using hgtilde_avoids_lattice by (by100 blast)
+                    hence "g_tilde s' \<noteq> \<theta>q" by (by100 simp)
+                    thus False using hgs' by (by100 blast)
+                  qed
+                  \<comment> \<open>Upper bound: g_tilde(s) < \<theta>q + 1.\<close>
+                  have h_ub: "g_tilde s < \<theta>q + 1"
+                  proof (rule ccontr)
+                    assume "\<not> g_tilde s < \<theta>q + 1"
+                    hence hge: "g_tilde s \<ge> \<theta>q + 1" by (by100 linarith)
+                    have hg0: "g_tilde 0 = \<theta>p" using hgtilde_0 .
+                    have hg0_lt: "g_tilde 0 < \<theta>q + 1" using hg0 h\<theta>p_range by (by100 linarith)
+                    have h0_le_s: "0 \<le> s" using hs_range by (by100 blast)
+                    have h_cont_seg: "continuous_on {0..s} g_tilde"
+                    proof (rule continuous_on_subset[OF hgtilde_cont_on])
+                      show "{0..s} \<subseteq> I_set" using hs_range unfolding top1_unit_interval_def by (by100 auto)
+                    qed
+                    have "g_tilde 0 \<le> \<theta>q + 1" using hg0_lt by (by100 linarith)
+                    moreover have "\<theta>q + 1 \<le> g_tilde s" using hge by (by100 linarith)
+                    ultimately obtain s' where hs': "0 \<le> s' \<and> s' \<le> s" and hgs': "g_tilde s' = \<theta>q + 1"
+                      using IVT'[OF _ _ h0_le_s h_cont_seg] by (by100 blast)
+                    have "s' \<in> I_set" using hs' hs_range unfolding top1_unit_interval_def by (by100 auto)
+                    hence "g_tilde s' \<noteq> \<theta>q + of_int 1"
+                      using hgtilde_avoids_lattice by (by100 blast)
+                    hence "g_tilde s' \<noteq> \<theta>q + 1" by (by100 simp)
+                    thus False using hgs' by (by100 blast)
+                  qed
+                  show "\<theta>q < g_tilde s \<and> g_tilde s < \<theta>q + 1"
+                    using h_lb h_ub by (by100 blast)
+                qed
+                \<comment> \<open>Step D: g_tilde(1) = \<theta>p (lift of loop is a loop in (\<theta>q, \<theta>q + 1)).\<close>
+                have hgtilde_1: "g_tilde 1 = \<theta>p"
+                proof -
+                  have h1I: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+                  have "top1_R_to_S1 (g_tilde 1) = (?hinv \<circ> f) 1"
+                    using hgtilde_proj h1I by (by100 blast)
+                  also have "... = ?hinv (f 1)" by (by100 simp)
+                  also have "... = ?hinv p" using hf1 by (by100 simp)
+                  also have "... = p'" unfolding p'_def by (by100 simp)
+                  finally have hR1: "top1_R_to_S1 (g_tilde 1) = p'" .
+                  \<comment> \<open>g_tilde(1) \<in> (\<theta>q, \<theta>q+1) and R_to_S1(g_tilde(1)) = p' = R_to_S1(\<theta>p).
+                     By injectivity of R_to_S1 on (\<theta>q, \<theta>q + 1), g_tilde(1) = \<theta>p.\<close>
+                  have hg1_range: "\<theta>q < g_tilde 1 \<and> g_tilde 1 < \<theta>q + 1"
+                    using hgtilde_range h1I by (by100 blast)
+                  have hR1_eq: "top1_R_to_S1 (g_tilde 1) = top1_R_to_S1 \<theta>p"
+                    using hR1 h\<theta>p by (by100 simp)
+                  \<comment> \<open>cos(2\<pi> g_tilde(1)) = cos(2\<pi> \<theta>p) and sin(2\<pi> g_tilde(1)) = sin(2\<pi> \<theta>p).\<close>
+                  have "cos (2*pi* g_tilde 1) = cos (2*pi*\<theta>p) \<and> sin (2*pi* g_tilde 1) = sin (2*pi*\<theta>p)"
+                    using hR1_eq unfolding top1_R_to_S1_def by (by100 simp)
+                  hence "sin (2*pi*g_tilde 1) = sin (2*pi*\<theta>p) \<and> cos (2*pi*g_tilde 1) = cos (2*pi*\<theta>p)"
+                    by (by100 blast)
+                  then obtain k :: int where hk: "2*pi*g_tilde 1 = 2*pi*\<theta>p + 2*pi*of_int k"
+                    using iffD1[OF sin_cos_eq_iff] by (by100 blast)
+                  hence h_diff: "2*pi*(g_tilde 1 - \<theta>p) = 2*pi*of_int k"
+                    by (simp add: algebra_simps)
+                  hence "g_tilde 1 - \<theta>p = of_int k"
+                    using pi_gt_zero by (by100 simp)
+                  moreover have "g_tilde 1 - \<theta>p > -1 \<and> g_tilde 1 - \<theta>p < 1"
+                    using hg1_range h\<theta>p_range by (by100 linarith)
+                  ultimately have "of_int k > (-1::real) \<and> of_int k < (1::real)" by (by100 linarith)
+                  hence "k = 0" by (by100 linarith)
+                  thus "g_tilde 1 = \<theta>p" using \<open>g_tilde 1 - \<theta>p = of_int k\<close> by (by100 simp)
+                qed
+                \<comment> \<open>Step E: Construct the homotopy F = h \<circ> R_to_S1 \<circ> SLH(g_tilde, \<theta>p).
+                   SLH(s,t) = (1-t)*g_tilde(s) + t*\<theta>p stays in (\<theta>q, \<theta>q + 1) by convexity.\<close>
+                \<comment> \<open>Construct the straight-line homotopy extension.\<close>
+                define SLH where "SLH = top1_slh_ext g_tilde \<theta>p"
+                have hSLH_cont: "continuous_on UNIV SLH"
+                  unfolding SLH_def by (rule top1_slh_ext_continuous[OF hgtilde_cont_on])
+                \<comment> \<open>SLH agrees with (1-t)*g_tilde(s) + t*\<theta>p on I \<times> I.\<close>
+                have hSLH_agrees: "\<And>s t. s \<in> I_set \<Longrightarrow> t \<in> I_set \<Longrightarrow>
+                    SLH (s, t) = (1 - t) * g_tilde s + t * \<theta>p"
+                proof -
+                  fix s t :: real assume hs: "s \<in> I_set" and ht: "t \<in> I_set"
+                  have "(s, t) \<in> top1_unit_interval \<times> top1_unit_interval"
+                    using hs ht unfolding top1_unit_interval_def by (by100 blast)
+                  thus "SLH (s, t) = (1 - t) * g_tilde s + t * \<theta>p"
+                    unfolding SLH_def using top1_slh_ext_agrees[of "(s, t)"]
+                    unfolding top1_unit_interval_def by (by100 auto)
+                qed
+                \<comment> \<open>SLH on I \<times> I stays in (\<theta>q, \<theta>q + 1): convex combination of points in the interval.\<close>
+                have hSLH_range: "\<forall>s\<in>I_set. \<forall>t\<in>I_set. \<theta>q < SLH (s, t) \<and> SLH (s, t) < \<theta>q + 1"
+                proof (intro ballI)
+                  fix s t assume hs: "s \<in> I_set" and ht: "t \<in> I_set"
+                  have hSLH_eq: "SLH (s, t) = (1 - t) * g_tilde s + t * \<theta>p"
+                    using hSLH_agrees hs ht .
+                  have hgs: "\<theta>q < g_tilde s \<and> g_tilde s < \<theta>q + 1"
+                    using hgtilde_range hs by (by100 blast)
+                  have ht_range: "0 \<le> t \<and> t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 simp)
+                  have h1t: "0 \<le> 1 - t" using ht_range by (by100 linarith)
+                  \<comment> \<open>Lower bound: (1-t)*g(s) + t*\<theta>p > (1-t)*\<theta>q + t*\<theta>q = \<theta>q.\<close>
+                  have hlb1: "(1 - t) * g_tilde s > (1 - t) * \<theta>q \<or> t > 0"
+                  proof (cases "t < 1")
+                    case True
+                    hence "1 - t > 0" by (by100 linarith)
+                    hence "(1 - t) * g_tilde s > (1 - t) * \<theta>q"
+                      using hgs by (simp add: mult_strict_left_mono)
+                    thus ?thesis by (by100 blast)
+                  next
+                    case False
+                    hence "t = 1" using ht_range by (by100 linarith)
+                    hence "t > 0" by (by100 linarith)
+                    thus ?thesis by (by100 blast)
+                  qed
+                  have h_lb: "SLH (s, t) > \<theta>q"
+                  proof (cases "t < 1")
+                    case True
+                    hence "1 - t > 0" by (by100 linarith)
+                    hence "(1 - t) * g_tilde s > (1 - t) * \<theta>q"
+                      using hgs by (simp add: mult_strict_left_mono)
+                    moreover have "t * \<theta>p \<ge> t * \<theta>q"
+                      using ht_range h\<theta>p_range by (simp add: mult_left_mono less_imp_le)
+                    ultimately have "(1 - t) * g_tilde s + t * \<theta>p > (1 - t) * \<theta>q + t * \<theta>q"
+                      by (by100 linarith)
+                    moreover have "(1 - t) * \<theta>q + t * \<theta>q = \<theta>q" by (simp add: algebra_simps)
+                    ultimately show ?thesis using hSLH_eq by (by100 linarith)
+                  next
+                    case False
+                    hence "t = 1" using ht_range by (by100 linarith)
+                    hence "SLH (s, t) = \<theta>p" using hSLH_eq by (by100 simp)
+                    thus ?thesis using h\<theta>p_range by (by100 linarith)
+                  qed
+                  \<comment> \<open>Upper bound: similar.\<close>
+                  have h_ub: "SLH (s, t) < \<theta>q + 1"
+                  proof (cases "t < 1")
+                    case True
+                    hence "1 - t > 0" by (by100 linarith)
+                    hence "(1 - t) * g_tilde s < (1 - t) * (\<theta>q + 1)"
+                      using hgs by (simp add: mult_strict_left_mono)
+                    moreover have "t * \<theta>p \<le> t * (\<theta>q + 1)"
+                      using ht_range h\<theta>p_range by (simp add: mult_left_mono less_imp_le)
+                    ultimately have "(1 - t) * g_tilde s + t * \<theta>p < (1 - t) * (\<theta>q + 1) + t * (\<theta>q + 1)"
+                      by (by100 linarith)
+                    moreover have "(1 - t) * (\<theta>q + 1) + t * (\<theta>q + 1) = \<theta>q + 1"
+                      by (simp add: algebra_simps)
+                    ultimately show ?thesis using hSLH_eq by (by100 linarith)
+                  next
+                    case False
+                    hence "t = 1" using ht_range by (by100 linarith)
+                    hence "SLH (s, t) = \<theta>p" using hSLH_eq by (by100 simp)
+                    thus ?thesis using h\<theta>p_range by (by100 linarith)
+                  qed
+                  show "\<theta>q < SLH (s, t) \<and> SLH (s, t) < \<theta>q + 1"
+                    using h_lb h_ub by (by100 blast)
+                qed
+                \<comment> \<open>Step F: Push forward through h \<circ> R_to_S1: define F(s,t) = h(R_to_S1(SLH(s,t))).\<close>
+                define F where "F st = h (top1_R_to_S1 (SLH st))" for st :: "real \<times> real"
+                \<comment> \<open>F is continuous I\<times>I \<rightarrow> C \<alpha>.\<close>
+                have hF_cont_C: "top1_continuous_map_on (I_set \<times> I_set) II_topology
+                    (C \<alpha>) (subspace_topology X TX (C \<alpha>)) F"
+                proof -
+                  \<comment> \<open>SLH is continuous UNIV \<rightarrow> UNIV.\<close>
+                  have hSLH_cont_map: "top1_continuous_map_on (I_set \<times> I_set) II_topology
+                      (UNIV::real set) top1_open_sets SLH"
+                    by (rule top1_continuous_map_on_II_to_UNIV[OF hSLH_cont])
+                  \<comment> \<open>R_to_S1 is continuous UNIV \<rightarrow> S1.\<close>
+                  have hR_S1_cont: "top1_continuous_map_on (UNIV::real set) top1_open_sets
+                      top1_S1 top1_S1_topology top1_R_to_S1"
+                    by (rule top1_covering_map_on_continuous[OF Theorem_53_1])
+                  \<comment> \<open>R_to_S1 \<circ> SLH: I\<times>I \<rightarrow> S1.\<close>
+                  have hR_SLH: "top1_continuous_map_on (I_set \<times> I_set) II_topology
+                      top1_S1 top1_S1_topology (top1_R_to_S1 \<circ> SLH)"
+                    by (rule top1_continuous_map_on_comp[OF hSLH_cont_map hR_S1_cont])
+                  \<comment> \<open>h \<circ> (R_to_S1 \<circ> SLH): I\<times>I \<rightarrow> C \<alpha>.\<close>
+                  have hF_eq: "\<forall>st\<in>I_set \<times> I_set. (h \<circ> (top1_R_to_S1 \<circ> SLH)) st = F st"
+                    unfolding F_def by (by100 simp)
+                  have hcomp: "top1_continuous_map_on (I_set \<times> I_set) II_topology
+                      (C \<alpha>) (subspace_topology X TX (C \<alpha>)) (h \<circ> (top1_R_to_S1 \<circ> SLH))"
+                    by (rule top1_continuous_map_on_comp[OF hR_SLH hcont_h])
+                  show ?thesis using iffD1[OF top1_continuous_map_on_cong[OF hF_eq]] hcomp by (by100 blast)
+                qed
+                \<comment> \<open>F maps I\<times>I to W \<alpha> (since SLH stays in (\<theta>q, \<theta>q+1), R_to_S1 avoids q', h avoids q \<alpha>).\<close>
+                have hF_range: "\<forall>st\<in>I_set \<times> I_set. F st \<in> W \<alpha>"
+                proof (intro ballI)
+                  fix st assume hst: "st \<in> I_set \<times> I_set"
+                  obtain s t where hst_eq: "st = (s, t)" and hs: "s \<in> I_set" and ht: "t \<in> I_set"
+                    using hst by (by100 blast)
+                  have hSLH_in: "\<theta>q < SLH (s, t) \<and> SLH (s, t) < \<theta>q + 1"
+                    using hSLH_range hs ht by (by100 blast)
+                  \<comment> \<open>R_to_S1(SLH(s,t)) \<in> S1 - {q'}.\<close>
+                  have hR_in_S1: "top1_R_to_S1 (SLH (s, t)) \<in> top1_S1"
+                    unfolding top1_R_to_S1_def top1_S1_def using sin_squared_eq by (by100 simp)
+                  have hR_ne_q': "top1_R_to_S1 (SLH (s, t)) \<noteq> q'"
+                  proof
+                    assume heq: "top1_R_to_S1 (SLH (s, t)) = q'"
+                    hence "top1_R_to_S1 (SLH (s, t)) = top1_R_to_S1 \<theta>q" using h\<theta>q by (by100 simp)
+                    hence "cos (2*pi*SLH(s,t)) = cos (2*pi*\<theta>q) \<and> sin (2*pi*SLH(s,t)) = sin (2*pi*\<theta>q)"
+                      unfolding top1_R_to_S1_def by (by100 simp)
+                    hence "sin (2*pi*SLH(s,t)) = sin (2*pi*\<theta>q) \<and> cos (2*pi*SLH(s,t)) = cos (2*pi*\<theta>q)"
+                      by (by100 blast)
+                    then obtain k :: int where hk2: "2*pi*SLH(s,t) = 2*pi*\<theta>q + 2*pi*of_int k"
+                      using iffD1[OF sin_cos_eq_iff] by (by100 blast)
+                    hence "2*pi*(SLH(s,t) - \<theta>q) = 2*pi*of_int k" by (simp add: algebra_simps)
+                    hence "SLH(s,t) - \<theta>q = of_int k" using pi_gt_zero by (by100 simp)
+                    moreover have "SLH(s,t) - \<theta>q > 0 \<and> SLH(s,t) - \<theta>q < 1"
+                      using hSLH_in by (by100 linarith)
+                    ultimately have "of_int k > (0::real) \<and> of_int k < (1::real)" by (by100 linarith)
+                    hence "k > 0 \<and> k < 1" by (by100 linarith)
+                    thus False by (by100 linarith)
+                  qed
+                  \<comment> \<open>h(R_to_S1(SLH(s,t))) \<in> C \<alpha> - {q \<alpha>} = W \<alpha>.\<close>
+                  have hh_in_C: "h (top1_R_to_S1 (SLH (s, t))) \<in> C \<alpha>"
+                    using hbij hR_in_S1 unfolding bij_betw_def by (by100 blast)
+                  have hh_ne_q: "h (top1_R_to_S1 (SLH (s, t))) \<noteq> q \<alpha>"
+                  proof
+                    assume "h (top1_R_to_S1 (SLH (s, t))) = q \<alpha>"
+                    hence "h (top1_R_to_S1 (SLH (s, t))) = h q'"
+                      using bij_betw_inv_into_right[OF hbij hq_in]
+                      unfolding q'_def by (by100 simp)
+                    hence "top1_R_to_S1 (SLH (s, t)) = q'"
+                      using hbij hR_in_S1 hq'_S1 unfolding bij_betw_def inj_on_def by (by100 blast)
+                    thus False using hR_ne_q' by (by100 blast)
+                  qed
+                  show "F st \<in> W \<alpha>"
+                    unfolding F_def hst_eq W_def using hh_in_C hh_ne_q by (by100 blast)
+                qed
+                \<comment> \<open>Shrink codomain from C \<alpha> to W \<alpha>.\<close>
+                have hF_cont_W: "top1_continuous_map_on (I_set \<times> I_set) II_topology
+                    (W \<alpha>) (subspace_topology X TX (W \<alpha>)) F"
+                proof -
+                  have hF_img: "F ` (I_set \<times> I_set) \<subseteq> W \<alpha>"
+                    using hF_range by (by100 blast)
+                  have hW_sub_C': "W \<alpha> \<subseteq> C \<alpha>" using hW_sub_C_here .
+                  have hF_shrunk: "top1_continuous_map_on (I_set \<times> I_set) II_topology
+                      (W \<alpha>) (subspace_topology (C \<alpha>) (subspace_topology X TX (C \<alpha>)) (W \<alpha>)) F"
+                    by (rule top1_continuous_map_on_codomain_shrink[OF hF_cont_C hF_img hW_sub_C'])
+                  have hsub_trans: "subspace_topology (C \<alpha>) (subspace_topology X TX (C \<alpha>)) (W \<alpha>)
+                      = subspace_topology X TX (W \<alpha>)"
+                    by (rule subspace_topology_trans[OF hW_sub_C'])
+                  show ?thesis using hF_shrunk hsub_trans by (by100 simp)
+                qed
+                \<comment> \<open>Step G: Verify boundary conditions.\<close>
+                have hF_s0: "\<forall>s\<in>I_set. F (s, 0) = f s"
+                proof (intro ballI)
+                  fix s assume hs: "s \<in> I_set"
+                  have h0I: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+                  have "SLH (s, 0) = (1 - 0) * g_tilde s + 0 * \<theta>p"
+                    using hSLH_agrees hs h0I by (by100 blast)
+                  hence "SLH (s, 0) = g_tilde s" by (by100 simp)
+                  hence "F (s, 0) = h (top1_R_to_S1 (g_tilde s))" unfolding F_def by (by100 simp)
+                  also have "... = h ((?hinv \<circ> f) s)" using hgtilde_proj hs by (by100 simp)
+                  also have "... = h (?hinv (f s))" by (by100 simp)
+                  also have "... = f s"
+                  proof -
+                    have "f s \<in> W \<alpha>" using hf_cont hs unfolding top1_continuous_map_on_def by (by100 blast)
+                    hence "f s \<in> C \<alpha>" using hW_sub_C_here by (by100 blast)
+                    thus ?thesis using bij_betw_inv_into_right[OF hbij] by (by100 blast)
+                  qed
+                  finally show "F (s, 0) = f s" .
+                qed
+                have hF_s1: "\<forall>s\<in>I_set. F (s, 1) = p"
+                proof (intro ballI)
+                  fix s assume hs: "s \<in> I_set"
+                  have h1I: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+                  have "SLH (s, 1) = (1 - 1) * g_tilde s + 1 * \<theta>p"
+                    using hSLH_agrees hs h1I by (by100 blast)
+                  hence "SLH (s, 1) = \<theta>p" by (by100 simp)
+                  hence "F (s, 1) = h (top1_R_to_S1 \<theta>p)" unfolding F_def by (by100 simp)
+                  also have "... = h p'" using h\<theta>p by (by100 simp)
+                  also have "... = p"
+                    unfolding p'_def using bij_betw_inv_into_right[OF hbij hp_C] by (by100 blast)
+                  finally show "F (s, 1) = p" .
+                qed
+                have hF_0t: "\<forall>t\<in>I_set. F (0, t) = p"
+                proof (intro ballI)
+                  fix t assume ht: "t \<in> I_set"
+                  have h0I: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+                  have "SLH (0, t) = (1 - t) * g_tilde 0 + t * \<theta>p"
+                    using hSLH_agrees h0I ht by (by100 blast)
+                  hence "SLH (0, t) = (1 - t) * \<theta>p + t * \<theta>p" using hgtilde_0 by (by100 simp)
+                  hence "SLH (0, t) = \<theta>p" by (simp add: algebra_simps)
+                  hence "F (0, t) = h (top1_R_to_S1 \<theta>p)" unfolding F_def by (by100 simp)
+                  also have "... = h p'" using h\<theta>p by (by100 simp)
+                  also have "... = p"
+                    unfolding p'_def using bij_betw_inv_into_right[OF hbij hp_C] by (by100 blast)
+                  finally show "F (0, t) = p" .
+                qed
+                have hF_1t: "\<forall>t\<in>I_set. F (1, t) = p"
+                proof (intro ballI)
+                  fix t assume ht: "t \<in> I_set"
+                  have h1I: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+                  have "SLH (1, t) = (1 - t) * g_tilde 1 + t * \<theta>p"
+                    using hSLH_agrees h1I ht by (by100 blast)
+                  hence "SLH (1, t) = (1 - t) * \<theta>p + t * \<theta>p" using hgtilde_1 by (by100 simp)
+                  hence "SLH (1, t) = \<theta>p" by (simp add: algebra_simps)
+                  hence "F (1, t) = h (top1_R_to_S1 \<theta>p)" unfolding F_def by (by100 simp)
+                  also have "... = h p'" using h\<theta>p by (by100 simp)
+                  also have "... = p"
+                    unfolding p'_def using bij_betw_inv_into_right[OF hbij hp_C] by (by100 blast)
+                  finally show "F (1, t) = p" .
+                qed
+                \<comment> \<open>Step H: Assemble the path homotopy.\<close>
+                have hf_path_W: "top1_is_path_on (W \<alpha>) (subspace_topology X TX (W \<alpha>)) p p f"
+                  using hloop unfolding top1_is_loop_on_def .
+                have hconst_path: "top1_is_path_on (W \<alpha>) (subspace_topology X TX (W \<alpha>)) p p (top1_constant_path p)"
+                proof -
+                  have hW\<alpha>_sub_X: "W \<alpha> \<subseteq> X" using hW_sub_X h\<alpha> by (by100 blast)
+                  have hTW: "is_topology_on (W \<alpha>) (subspace_topology X TX (W \<alpha>))"
+                    by (rule subspace_topology_is_topology_on[OF hTX hW\<alpha>_sub_X])
+                  show ?thesis by (rule top1_constant_path_is_path[OF hTW hp\<alpha>])
+                qed
+                have hF_s1_const: "\<forall>s\<in>I_set. F (s, 1) = top1_constant_path p s"
+                proof (intro ballI)
+                  fix s assume hs: "s \<in> I_set"
+                  show "F (s, 1) = top1_constant_path p s"
+                    using hF_s1 hs unfolding top1_constant_path_def by (by100 simp)
+                qed
+                show "top1_path_homotopic_on (W \<alpha>) (subspace_topology X TX (W \<alpha>)) p p f (top1_constant_path p)"
+                  unfolding top1_path_homotopic_on_def
+                  using hf_path_W hconst_path hF_cont_W hF_s0 hF_s1_const hF_0t hF_1t by (by100 blast)
+              qed
+            qed
+          qed
+          \<comment> \<open>Main result: every loop at p in U_def \<inter> V_def is nulhomotopic.
+             Decompose the loop into sub-loops each in a single W(\<alpha>) using the
+             weak-topology open cover, contract each in W(\<alpha>), and concatenate.
+             Key: the connected components of (\<Union>W \<alpha>) \\ {p} are precisely
+             the W \<alpha> \\ {p}, so the loop decomposes naturally at passages through p.\<close>
+          show "\<forall>f. top1_is_loop_on (U_def \<inter> V_def) (subspace_topology X TX (U_def \<inter> V_def)) p f \<longrightarrow>
+              top1_path_homotopic_on (U_def \<inter> V_def) (subspace_topology X TX (U_def \<inter> V_def)) p p f (top1_constant_path p)"
+            sorry \<comment> \<open>Uses hW_sc + loop decomposition at p + nulhomotopy concatenation.\<close>
+        qed
         \<comment> \<open>Key lemma: path in a piece lifts to a path in U_def or V_def.\<close>
         \<comment> \<open>If f is a path in A w.r.t. subspace_topology X TX A, and A \<subseteq> B \<subseteq> X,
             then f is a path in B w.r.t. subspace_topology X TX B.\<close>
