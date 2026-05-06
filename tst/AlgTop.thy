@@ -2992,13 +2992,67 @@ using assms proof (induction n arbitrary: X TX p rule: less_induct)
             (top1_fundamental_group_mul U_def (subspace_topology X TX U_def) p)
             (top1_fundamental_group_carrier ?X' ?TX' p)
             (top1_fundamental_group_mul ?X' ?TX' p)"
-          sorry \<comment> \<open>U deformation-retracts to X' \<Rightarrow> \<pi>_1(U) \<cong> \<pi>_1(X').\<close>
+        proof -
+          have hdef_U: "top1_deformation_retract_of_on U_def (subspace_topology X TX U_def) ?X'"
+            sorry \<comment> \<open>U = X' \<union> W(n-1) deformation-retracts to X': contract W(n-1) to p.\<close>
+          have hTopU: "is_topology_on U_def (subspace_topology X TX U_def)"
+            by (rule subspace_topology_is_topology_on[OF hTX]) (rule hU_sub)
+          from Theorem_58_3[OF hdef_U hTopU hp_X']
+          have "top1_groups_isomorphic_on
+              (top1_fundamental_group_carrier ?X' (subspace_topology U_def (subspace_topology X TX U_def) ?X') p)
+              (top1_fundamental_group_mul ?X' (subspace_topology U_def (subspace_topology X TX U_def) ?X') p)
+              (top1_fundamental_group_carrier U_def (subspace_topology X TX U_def) p)
+              (top1_fundamental_group_mul U_def (subspace_topology X TX U_def) p)" .
+          moreover have "subspace_topology U_def (subspace_topology X TX U_def) ?X' = ?TX'"
+          proof -
+            have "?X' \<subseteq> U_def" unfolding U_def_def by (by100 blast)
+            thus ?thesis by (rule subspace_topology_trans)
+          qed
+          ultimately have h_iso_XU: "top1_groups_isomorphic_on
+              (top1_fundamental_group_carrier ?X' ?TX' p)
+              (top1_fundamental_group_mul ?X' ?TX' p)
+              (top1_fundamental_group_carrier U_def (subspace_topology X TX U_def) p)
+              (top1_fundamental_group_mul U_def (subspace_topology X TX U_def) p)"
+            by (by100 simp)
+          show ?thesis
+            by (rule top1_groups_isomorphic_on_sym[OF h_iso_XU
+                top1_fundamental_group_is_group[OF
+                  subspace_topology_is_topology_on[OF hTX hX'_sub] hp_X']
+                top1_fundamental_group_is_group[OF hTopU hp_U]])
+        qed
         show "top1_groups_isomorphic_on
             (top1_fundamental_group_carrier V_def (subspace_topology X TX V_def) p)
             (top1_fundamental_group_mul V_def (subspace_topology X TX V_def) p)
             (top1_fundamental_group_carrier ?Cn ?TCn p)
             (top1_fundamental_group_mul ?Cn ?TCn p)"
-          sorry \<comment> \<open>V deformation-retracts to C(n-1) \<Rightarrow> \<pi>_1(V) \<cong> \<pi>_1(C(n-1)).\<close>
+        proof -
+          have hdef_V: "top1_deformation_retract_of_on V_def (subspace_topology X TX V_def) ?Cn"
+            sorry \<comment> \<open>V = \<union>W(\<alpha><n-1) \<union> C(n-1) deformation-retracts to C(n-1): contract each W(\<alpha>) to p.\<close>
+          have hTopV: "is_topology_on V_def (subspace_topology X TX V_def)"
+            by (rule subspace_topology_is_topology_on[OF hTX]) (rule hV_sub)
+          from Theorem_58_3[OF hdef_V hTopV hp_Cn]
+          have "top1_groups_isomorphic_on
+              (top1_fundamental_group_carrier ?Cn (subspace_topology V_def (subspace_topology X TX V_def) ?Cn) p)
+              (top1_fundamental_group_mul ?Cn (subspace_topology V_def (subspace_topology X TX V_def) ?Cn) p)
+              (top1_fundamental_group_carrier V_def (subspace_topology X TX V_def) p)
+              (top1_fundamental_group_mul V_def (subspace_topology X TX V_def) p)" .
+          moreover have "subspace_topology V_def (subspace_topology X TX V_def) ?Cn = ?TCn"
+          proof -
+            have "?Cn \<subseteq> V_def" unfolding V_def_def by (by100 blast)
+            thus ?thesis by (rule subspace_topology_trans)
+          qed
+          ultimately have h_iso_CV: "top1_groups_isomorphic_on
+              (top1_fundamental_group_carrier ?Cn ?TCn p)
+              (top1_fundamental_group_mul ?Cn ?TCn p)
+              (top1_fundamental_group_carrier V_def (subspace_topology X TX V_def) p)
+              (top1_fundamental_group_mul V_def (subspace_topology X TX V_def) p)"
+            by (by100 simp)
+          show ?thesis
+            by (rule top1_groups_isomorphic_on_sym[OF h_iso_CV
+                top1_fundamental_group_is_group[OF
+                  subspace_topology_is_topology_on[OF hTX hCn_sub] hp_Cn]
+                top1_fundamental_group_is_group[OF hTopV hp_V]])
+        qed
       qed
     qed
     \<comment> \<open>Step 7: \<pi>_1(U) is free on n-1 generators (via isomorphism with \<pi>_1(X')).\<close>
