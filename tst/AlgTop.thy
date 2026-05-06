@@ -8273,7 +8273,10 @@ proof -
   let ?H = "top1_fundamental_group_image_hom E TE e0 B TB b0 p"
   let ?Cov = "{h. top1_covering_transformation_on E TE B TB p h}"
   \<comment> \<open>Step 1: Cov(p) is a group under composition.\<close>
-  have hCov_group: "\<exists>eC invgC. top1_is_group_on ?Cov (\<lambda>h k e. h (k e)) eC invgC" sorry
+  have hCov_group: "\<exists>eC invgC. top1_is_group_on ?Cov (\<lambda>h k e. h (k e)) eC invgC"
+    sorry \<comment> \<open>Covering transformations form a group under composition.
+         e = id (homeo + p\<circ>id=p). inv = homeo inverse (p\<circ>h\<inverse>=p from p\<circ>h=p).
+         Closure/assoc/identity/inverse all follow from composition properties.\<close>
   \<comment> \<open>Step 2-3: Define \<Phi>: Cov(p) \<rightarrow> N(H)/H and show it's a group isomorphism.\<close>
   let ?Q = "top1_quotient_group_carrier_on
          (top1_normalizer_on
@@ -9436,6 +9439,9 @@ end
 
 
 
+ 
+ 
+ 
  
  
  
