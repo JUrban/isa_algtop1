@@ -256,6 +256,500 @@ qed
 
 section \<open>\<S>72 Adjoining a Two-Cell\<close>
 
+text \<open>Open disk B2 - S1 is simply connected. The proof uses convexity of the open disk:
+  any straight-line combination of two interior points stays in the interior.\<close>
+
+lemma open_disk_convex:
+  assumes hp: "p \<in> top1_B2 - top1_S1" and hq: "q \<in> top1_B2 - top1_S1"
+      and ht0: "0 \<le> t" and ht1: "t \<le> 1"
+  shows "((1-t) * fst p + t * fst q, (1-t) * snd p + t * snd q) \<in> top1_B2 - top1_S1"
+proof -
+  let ?a = "fst p" and ?b = "snd p" and ?c = "fst q" and ?d = "snd q"
+  have hp2: "?a^2 + ?b^2 < 1" using hp unfolding top1_B2_def top1_S1_def by (by100 force)
+  have hq2: "?c^2 + ?d^2 < 1" using hq unfolding top1_B2_def top1_S1_def by (by100 force)
+  have hs: "0 \<le> 1 - t" using ht1 by (by100 linarith)
+  \<comment> \<open>The convex combination is in B2 by the existing lemma.\<close>
+  have hB2p: "p \<in> top1_B2" using hp by (by100 blast)
+  have hB2q: "q \<in> top1_B2" using hq by (by100 blast)
+  have hin_B2: "((1-t)*?a + t*?c, (1-t)*?b + t*?d) \<in> top1_B2"
+    by (rule top1_B2_convex[OF hB2p hB2q ht0 ht1])
+  \<comment> \<open>Show strict inequality for norm.\<close>
+  have hexp: "((1-t)*?a + t*?c)^2 + ((1-t)*?b + t*?d)^2
+    = (1-t)^2 * (?a^2 + ?b^2) + t^2 * (?c^2 + ?d^2) + 2*t*(1-t)*(?a*?c + ?b*?d)"
+    by (simp add: power2_eq_square algebra_simps)
+  \<comment> \<open>Cauchy-Schwarz: (ac+bd)^2 \<le> (a^2+b^2)(c^2+d^2) \<le> 1.\<close>
+  have hCS: "(?a*?c + ?b*?d)^2 \<le> (?a^2 + ?b^2) * (?c^2 + ?d^2)"
+  proof -
+    have hnn: "0 \<le> (?a*?d - ?b*?c)^2" by (by100 simp)
+    have "(?a*?c + ?b*?d)^2 + (?a*?d - ?b*?c)^2 = (?a^2 + ?b^2) * (?c^2 + ?d^2)"
+      by (simp add: power2_eq_square algebra_simps)
+    thus ?thesis using hnn by (by100 linarith)
+  qed
+  have hprod_lt1: "(?a^2 + ?b^2) * (?c^2 + ?d^2) < 1"
+  proof -
+    have h0a: "0 \<le> ?a^2 + ?b^2" by (simp add: sum_power2_ge_zero)
+    have h0c: "0 \<le> ?c^2 + ?d^2" by (simp add: sum_power2_ge_zero)
+    have "(?a^2 + ?b^2) * (?c^2 + ?d^2) \<le> (?a^2 + ?b^2) * 1"
+    proof (rule mult_left_mono)
+      show "?c^2 + ?d^2 \<le> 1" using hq2 by (by100 linarith)
+      show "0 \<le> ?a^2 + ?b^2" by (rule h0a)
+    qed
+    also have "\<dots> < 1" using hp2 by (by100 simp)
+    finally show ?thesis .
+  qed
+  have hac_bd_le1: "?a*?c + ?b*?d \<le> 1"
+  proof -
+    have "(?a*?c + ?b*?d)^2 \<le> 1" using hCS hprod_lt1 by (by100 linarith)
+    hence "(?a*?c + ?b*?d)^2 \<le> 1^2" by (by100 simp)
+    thus ?thesis
+      by (rule power2_le_imp_le) simp
+  qed
+  \<comment> \<open>Bound each term.\<close>
+  have ht1_le: "(1-t)^2 * (?a^2 + ?b^2) \<le> (1-t)^2"
+    using hp2 by (simp add: power2_eq_square mult_left_le)
+  have ht2_le: "t^2 * (?c^2 + ?d^2) \<le> t^2"
+    using hq2 by (simp add: power2_eq_square mult_left_le)
+  have ht3_le: "2*t*(1-t)*(?a*?c + ?b*?d) \<le> 2*t*(1-t)"
+    using hac_bd_le1 hs ht0 by (simp add: mult_left_le)
+  have hsum: "(1-t)^2 + t^2 + 2*t*(1-t) = 1"
+    by (simp add: power2_eq_square algebra_simps)
+  \<comment> \<open>Strict: either t or (1-t) is nonzero, giving strict inequality in one term.\<close>
+  have hstrict: "((1-t)*?a + t*?c)^2 + ((1-t)*?b + t*?d)^2 < 1"
+  proof (cases "t = 0")
+    case True thus ?thesis using hexp hp2 by (simp add: power2_eq_square)
+  next
+    case False
+    hence htpos: "t > 0" using ht0 by (by100 linarith)
+    hence ht2pos: "t * t > 0" by (by100 simp)
+    have hq2': "?c^2 + ?d^2 < 1" by (rule hq2)
+    hence hq2'': "?c * ?c + ?d * ?d < 1" by (simp add: power2_eq_square)
+    have "t^2 * (?c^2 + ?d^2) < t^2 * 1"
+      by (rule mult_strict_left_mono[OF hq2']) (simp add: power2_eq_square ht2pos)
+    hence ht2_strict: "t^2 * (?c^2 + ?d^2) < t^2" by (by100 simp)
+    thus ?thesis using hexp ht1_le ht3_le hsum by (by100 linarith)
+  qed
+  have hnotS1: "((1-t)*?a + t*?c, (1-t)*?b + t*?d) \<notin> top1_S1"
+    unfolding top1_S1_def using hstrict by (by100 simp)
+  show ?thesis using hin_B2 hnotS1 by (by100 blast)
+qed
+
+lemma open_disk_topology_eq:
+  "subspace_topology top1_B2 top1_B2_topology (top1_B2 - top1_S1)
+   = subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (top1_B2 - top1_S1)"
+proof -
+  have hsub: "top1_B2 - top1_S1 \<subseteq> top1_B2" by (by100 blast)
+  show ?thesis
+    unfolding top1_B2_topology_def
+    by (rule subspace_topology_trans[OF hsub])
+qed
+
+lemma open_disk_is_topology:
+  "is_topology_on (top1_B2 - top1_S1)
+     (subspace_topology top1_B2 top1_B2_topology (top1_B2 - top1_S1))"
+proof -
+  have hTR: "is_topology_on (UNIV::real set) top1_open_sets"
+    by (rule top1_open_sets_is_topology_on_UNIV)
+  have hTR2: "is_topology_on (UNIV::(real\<times>real) set) (product_topology_on top1_open_sets top1_open_sets)"
+  proof -
+    have "is_topology_on ((UNIV::real set) \<times> (UNIV::real set))
+              (product_topology_on top1_open_sets top1_open_sets)"
+      by (rule product_topology_on_is_topology_on[OF hTR hTR])
+    thus ?thesis by (by100 simp)
+  qed
+  show ?thesis
+    unfolding open_disk_topology_eq
+    by (rule subspace_topology_is_topology_on[OF hTR2]) simp
+qed
+
+text \<open>Continuous map from I to open disk: build linear path, restrict.\<close>
+
+lemma open_disk_path_connected:
+  "top1_path_connected_on (top1_B2 - top1_S1)
+     (subspace_topology top1_B2 top1_B2_topology (top1_B2 - top1_S1))"
+proof -
+  let ?D = "top1_B2 - top1_S1"
+  let ?TD = "subspace_topology top1_B2 top1_B2_topology ?D"
+  have hTD: "is_topology_on ?D ?TD" by (rule open_disk_is_topology)
+  have hTR: "is_topology_on (UNIV::real set) top1_open_sets"
+    by (rule top1_open_sets_is_topology_on_UNIV)
+  have hTI: "is_topology_on I_set I_top"
+    by (rule top1_unit_interval_topology_is_topology_on)
+  have hI_eq: "I_top = subspace_topology UNIV top1_open_sets I_set"
+    unfolding top1_unit_interval_topology_def by (by100 rule)
+  have hUNIV_eq: "subspace_topology UNIV top1_open_sets (UNIV::real set) = top1_open_sets"
+    by (rule subspace_topology_UNIV_self)
+  have hpath: "\<forall>x\<in>?D. \<forall>y\<in>?D. \<exists>f. top1_is_path_on ?D ?TD x y f"
+  proof (intro ballI)
+    fix x y :: "real \<times> real" assume hx: "x \<in> ?D" and hy: "y \<in> ?D"
+    let ?f = "\<lambda>t::real. ((1-t) * fst x + t * fst y, (1-t) * snd x + t * snd y)"
+    have hc1: "continuous_on UNIV (\<lambda>t::real. (1-t) * fst x + t * fst y)"
+      by (intro continuous_intros)
+    have hc2: "continuous_on UNIV (\<lambda>t::real. (1-t) * snd x + t * snd y)"
+      by (intro continuous_intros)
+    have hcm1: "top1_continuous_map_on I_set I_top (UNIV::real set) top1_open_sets
+        (\<lambda>t. (1-t) * fst x + t * fst y)"
+      using top1_continuous_map_on_real_subspace_open_sets[of I_set "\<lambda>t. (1-t)*fst x + t*fst y" UNIV, OF _ hc1]
+      unfolding hI_eq hUNIV_eq by (by100 auto)
+    have hcm2: "top1_continuous_map_on I_set I_top (UNIV::real set) top1_open_sets
+        (\<lambda>t. (1-t) * snd x + t * snd y)"
+      using top1_continuous_map_on_real_subspace_open_sets[of I_set "\<lambda>t. (1-t)*snd x + t*snd y" UNIV, OF _ hc2]
+      unfolding hI_eq hUNIV_eq by (by100 auto)
+    have hpi1: "top1_continuous_map_on I_set I_top (UNIV::real set) top1_open_sets (pi1 \<circ> ?f)"
+    proof -
+      have "pi1 \<circ> ?f = (\<lambda>t. (1-t) * fst x + t * fst y)" unfolding pi1_def comp_def by (by100 auto)
+      thus ?thesis using hcm1 by (by100 simp)
+    qed
+    have hpi2: "top1_continuous_map_on I_set I_top (UNIV::real set) top1_open_sets (pi2 \<circ> ?f)"
+    proof -
+      have "pi2 \<circ> ?f = (\<lambda>t. (1-t) * snd x + t * snd y)" unfolding pi2_def comp_def by (by100 auto)
+      thus ?thesis using hcm2 by (by100 simp)
+    qed
+    have hUU: "(UNIV::real set) \<times> (UNIV::real set) = (UNIV::(real\<times>real) set)" by (by100 simp)
+    have hf_cont_R2: "top1_continuous_map_on I_set I_top
+        (UNIV::(real\<times>real) set) (product_topology_on top1_open_sets top1_open_sets) ?f"
+      using iffD2[OF Theorem_18_4[OF hTI hTR hTR, of ?f]]
+      using hpi1 hpi2 unfolding hUU by (by100 blast)
+    have hf_in_D: "\<forall>t\<in>I_set. ?f t \<in> ?D"
+    proof
+      fix t assume ht: "t \<in> I_set"
+      have ht0: "0 \<le> t" and ht1: "t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 auto)
+      show "?f t \<in> ?D" by (rule open_disk_convex[OF hx hy ht0 ht1])
+    qed
+    have hf_img: "?f ` I_set \<subseteq> ?D" using hf_in_D by (by100 blast)
+    have hD_sub: "?D \<subseteq> (UNIV::(real\<times>real) set)" by (by100 simp)
+    have hf_cont_D: "top1_continuous_map_on I_set I_top ?D ?TD ?f"
+      using top1_continuous_map_on_codomain_shrink[OF hf_cont_R2 hf_img hD_sub]
+      unfolding open_disk_topology_eq .
+    have hstart: "?f 0 = x" by (by100 simp)
+    have hend: "?f 1 = y" by (by100 simp)
+    show "\<exists>f. top1_is_path_on ?D ?TD x y f"
+      unfolding top1_is_path_on_def using hf_cont_D hstart hend by (by100 blast)
+  qed
+  show ?thesis unfolding top1_path_connected_on_def using hTD hpath by (by100 blast)
+qed
+
+lemma open_disk_simply_connected:
+  "top1_simply_connected_on (top1_B2 - top1_S1)
+     (subspace_topology top1_B2 top1_B2_topology (top1_B2 - top1_S1))"
+proof -
+  let ?D = "top1_B2 - top1_S1"
+  let ?TD = "subspace_topology top1_B2 top1_B2_topology ?D"
+  have hpc: "top1_path_connected_on ?D ?TD"
+    by (rule open_disk_path_connected)
+  have hTD: "is_topology_on ?D ?TD" by (rule open_disk_is_topology)
+  have hTR: "is_topology_on (UNIV::real set) top1_open_sets"
+    by (rule top1_open_sets_is_topology_on_UNIV)
+  have hTII: "is_topology_on (I_set \<times> I_set) II_topology"
+  proof -
+    have hTI: "is_topology_on I_set I_top"
+      by (rule top1_unit_interval_topology_is_topology_on)
+    show ?thesis
+      unfolding II_topology_def by (rule product_topology_on_is_topology_on[OF hTI hTI])
+  qed
+  have h00D: "(0::real, 0::real) \<in> ?D"
+    unfolding top1_B2_def top1_S1_def by (by100 simp)
+  \<comment> \<open>It suffices to show all loops at (0,0) are null-homotopic (by from\_one\_point).\<close>
+  have hloops: "\<forall>x0\<in>?D. \<forall>f. top1_is_loop_on ?D ?TD x0 f \<longrightarrow>
+      top1_path_homotopic_on ?D ?TD x0 x0 f (top1_constant_path x0)"
+  proof (intro ballI allI impI)
+    fix x0 :: "real \<times> real" and f
+    assume hx0: "x0 \<in> ?D" and hloop: "top1_is_loop_on ?D ?TD x0 f"
+    have hfcont: "top1_continuous_map_on I_set I_top ?D ?TD f"
+      using hloop unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+    have hf0: "f 0 = x0" and hf1: "f 1 = x0"
+      using hloop unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)+
+    have hf_in_D: "\<forall>s\<in>I_set. f s \<in> ?D"
+      using hfcont unfolding top1_continuous_map_on_def by (by100 blast)
+    \<comment> \<open>Build the straight-line homotopy H(s,t) = (1-t)*f(s) + t*x0.\<close>
+    let ?H1 = "top1_slh_ext (fst \<circ> f) (fst x0)"
+    let ?H2 = "top1_slh_ext (snd \<circ> f) (snd x0)"
+    let ?H = "\<lambda>p. (?H1 p, ?H2 p)"
+    \<comment> \<open>Need continuity of fst \<circ> f and snd \<circ> f on I_set.\<close>
+    \<comment> \<open>f maps I to D \<subseteq> B2 \<subseteq> R2, so fst \<circ> f and snd \<circ> f are continuous.\<close>
+    have hD_sub_B2: "?D \<subseteq> top1_B2" by (by100 blast)
+    have hf_B2: "top1_continuous_map_on I_set I_top top1_B2 top1_B2_topology f"
+    proof -
+      have hTI: "is_topology_on I_set I_top"
+        by (rule top1_unit_interval_topology_is_topology_on)
+      have hTB2: "is_topology_on top1_B2 top1_B2_topology"
+      proof -
+        have hTR': "is_topology_on (UNIV::real set) top1_open_sets"
+          by (rule top1_open_sets_is_topology_on_UNIV)
+        have hTR2': "is_topology_on (UNIV::(real\<times>real) set) (product_topology_on top1_open_sets top1_open_sets)"
+        proof -
+          have "is_topology_on ((UNIV::real set) \<times> (UNIV::real set))
+                    (product_topology_on top1_open_sets top1_open_sets)"
+            by (rule product_topology_on_is_topology_on[OF hTR' hTR'])
+          thus ?thesis by (by100 simp)
+        qed
+        show ?thesis
+          unfolding top1_B2_topology_def
+          by (rule subspace_topology_is_topology_on[OF hTR2']) simp
+      qed
+      \<comment> \<open>Use expand_range: f continuous to D (subspace of B2), hence to B2.\<close>
+      have hcond: "top1_continuous_map_on I_set I_top ?D ?TD f \<and> ?D \<subseteq> top1_B2
+          \<and> ?TD = subspace_topology top1_B2 top1_B2_topology ?D"
+        using hfcont hD_sub_B2 by (by100 blast)
+      show ?thesis
+        using Theorem_18_2(6)[OF hTI hTD hTB2, rule_format, OF hcond] .
+    qed
+    have hfst_cont: "continuous_on I_set (fst \<circ> f)"
+      by (rule top1_B2_cont_fst[OF hf_B2])
+    have hsnd_cont: "continuous_on I_set (snd \<circ> f)"
+      by (rule top1_B2_cont_snd[OF hf_B2])
+    have hH1_cont_univ: "continuous_on UNIV ?H1"
+      by (rule top1_slh_ext_continuous[OF hfst_cont])
+    have hH2_cont_univ: "continuous_on UNIV ?H2"
+      by (rule top1_slh_ext_continuous[OF hsnd_cont])
+    have hH1_cont: "top1_continuous_map_on (I_set \<times> I_set) II_topology
+        (UNIV::real set) top1_open_sets ?H1"
+      by (rule top1_continuous_map_on_II_to_UNIV[OF hH1_cont_univ])
+    have hH2_cont: "top1_continuous_map_on (I_set \<times> I_set) II_topology
+        (UNIV::real set) top1_open_sets ?H2"
+      by (rule top1_continuous_map_on_II_to_UNIV[OF hH2_cont_univ])
+    have hH_pi1: "top1_continuous_map_on (I_set \<times> I_set) II_topology
+        (UNIV::real set) top1_open_sets (pi1 \<circ> ?H)"
+    proof -
+      have "pi1 \<circ> ?H = ?H1" unfolding pi1_def comp_def by (by100 auto)
+      thus ?thesis using hH1_cont by (by100 simp)
+    qed
+    have hH_pi2: "top1_continuous_map_on (I_set \<times> I_set) II_topology
+        (UNIV::real set) top1_open_sets (pi2 \<circ> ?H)"
+    proof -
+      have "pi2 \<circ> ?H = ?H2" unfolding pi2_def comp_def by (by100 auto)
+      thus ?thesis using hH2_cont by (by100 simp)
+    qed
+    have hUU: "(UNIV::real set) \<times> (UNIV::real set) = (UNIV::(real\<times>real) set)" by (by100 simp)
+    have hH_cont_R2: "top1_continuous_map_on (I_set \<times> I_set) II_topology
+        (UNIV::(real\<times>real) set) (product_topology_on top1_open_sets top1_open_sets) ?H"
+      using iffD2[OF Theorem_18_4[OF hTII hTR hTR, of ?H]]
+      using hH_pi1 hH_pi2 unfolding hUU by (by100 blast)
+    \<comment> \<open>Image of I\<times>I is in D = B2 - S1 (by open\_disk\_convex).\<close>
+    have hH_in_D: "\<forall>p\<in>I_set \<times> I_set. ?H p \<in> ?D"
+    proof (intro ballI)
+      fix p assume hp: "p \<in> I_set \<times> I_set"
+      have hs: "fst p \<in> I_set" and ht: "snd p \<in> I_set" using hp by (by100 auto)
+      have ht0: "0 \<le> snd p" and ht1: "snd p \<le> 1"
+        using ht unfolding top1_unit_interval_def by (by100 auto)
+      have hfp: "f (fst p) \<in> ?D"
+        using hf_in_D hs by (by100 blast)
+      have hagree1: "?H1 p = (1 - snd p) * (fst \<circ> f) (fst p) + snd p * fst x0"
+        by (rule top1_slh_ext_agrees[OF hp])
+      have hagree2: "?H2 p = (1 - snd p) * (snd \<circ> f) (fst p) + snd p * snd x0"
+        by (rule top1_slh_ext_agrees[OF hp])
+      have "?H p = ((1 - snd p) * fst (f (fst p)) + snd p * fst x0,
+                     (1 - snd p) * snd (f (fst p)) + snd p * snd x0)"
+        using hagree1 hagree2 by (simp add: comp_def)
+      also have "\<dots> \<in> ?D"
+        by (rule open_disk_convex[OF hfp hx0 ht0 ht1])
+      finally show "?H p \<in> ?D" .
+    qed
+    have hH_img: "?H ` (I_set \<times> I_set) \<subseteq> ?D"
+      using hH_in_D by (by100 blast)
+    have hD_sub_UNIV: "?D \<subseteq> (UNIV::(real\<times>real) set)" by (by100 simp)
+    have hH_cont_D: "top1_continuous_map_on (I_set \<times> I_set) II_topology ?D ?TD ?H"
+      using top1_continuous_map_on_codomain_shrink[OF hH_cont_R2 hH_img hD_sub_UNIV]
+      unfolding open_disk_topology_eq .
+    \<comment> \<open>Boundary conditions.\<close>
+    have hFs0: "\<forall>s\<in>I_set. ?H (s, 0) = f s"
+    proof
+      fix s assume hs: "s \<in> I_set"
+      have hp: "(s, 0::real) \<in> I_set \<times> I_set"
+        using hs unfolding top1_unit_interval_def by (by100 auto)
+      have "?H1 (s, 0) = (1 - 0) * (fst \<circ> f) s + 0 * fst x0"
+        using top1_slh_ext_agrees[OF hp] by (by100 simp)
+      hence h1: "?H1 (s, 0) = fst (f s)" by (simp add: comp_def)
+      have "?H2 (s, 0) = (1 - 0) * (snd \<circ> f) s + 0 * snd x0"
+        using top1_slh_ext_agrees[OF hp] by (by100 simp)
+      hence h2: "?H2 (s, 0) = snd (f s)" by (simp add: comp_def)
+      show "?H (s, 0) = f s" using h1 h2 by (by100 simp)
+    qed
+    have hFs1: "\<forall>s\<in>I_set. ?H (s, 1) = x0"
+    proof
+      fix s assume hs: "s \<in> I_set"
+      have hp: "(s, 1::real) \<in> I_set \<times> I_set"
+        using hs unfolding top1_unit_interval_def by (by100 auto)
+      have "?H1 (s, 1) = (1 - 1) * (fst \<circ> f) s + 1 * fst x0"
+        using top1_slh_ext_agrees[OF hp] by (by100 simp)
+      hence h1: "?H1 (s, 1) = fst x0" by (by100 simp)
+      have "?H2 (s, 1) = (1 - 1) * (snd \<circ> f) s + 1 * snd x0"
+        using top1_slh_ext_agrees[OF hp] by (by100 simp)
+      hence h2: "?H2 (s, 1) = snd x0" by (by100 simp)
+      show "?H (s, 1) = x0" using h1 h2 by (by100 simp)
+    qed
+    have hF0t: "\<forall>t\<in>I_set. ?H (0, t) = x0"
+    proof
+      fix t assume ht: "t \<in> I_set"
+      have hp: "(0::real, t) \<in> I_set \<times> I_set"
+        using ht unfolding top1_unit_interval_def by (by100 auto)
+      have "?H1 (0, t) = (1 - t) * (fst \<circ> f) 0 + t * fst x0"
+        using top1_slh_ext_agrees[OF hp] by (by100 simp)
+      hence h1: "?H1 (0, t) = fst x0"
+        using hf0 by (simp add: comp_def algebra_simps)
+      have "?H2 (0, t) = (1 - t) * (snd \<circ> f) 0 + t * snd x0"
+        using top1_slh_ext_agrees[OF hp] by (by100 simp)
+      hence h2: "?H2 (0, t) = snd x0"
+        using hf0 by (simp add: comp_def algebra_simps)
+      show "?H (0, t) = x0" using h1 h2 by (by100 simp)
+    qed
+    have hF1t: "\<forall>t\<in>I_set. ?H (1, t) = x0"
+    proof
+      fix t assume ht: "t \<in> I_set"
+      have hp: "(1::real, t) \<in> I_set \<times> I_set"
+        using ht unfolding top1_unit_interval_def by (by100 auto)
+      have "?H1 (1, t) = (1 - t) * (fst \<circ> f) 1 + t * fst x0"
+        using top1_slh_ext_agrees[OF hp] by (by100 simp)
+      hence h1: "?H1 (1, t) = fst x0"
+        using hf1 by (simp add: comp_def algebra_simps)
+      have "?H2 (1, t) = (1 - t) * (snd \<circ> f) 1 + t * snd x0"
+        using top1_slh_ext_agrees[OF hp] by (by100 simp)
+      hence h2: "?H2 (1, t) = snd x0"
+        using hf1 by (simp add: comp_def algebra_simps)
+      show "?H (1, t) = x0" using h1 h2 by (by100 simp)
+    qed
+    have hfpath: "top1_is_path_on ?D ?TD x0 x0 f"
+      using hloop unfolding top1_is_loop_on_def .
+    have hcpath: "top1_is_path_on ?D ?TD x0 x0 (top1_constant_path x0)"
+      by (rule top1_constant_path_is_path[OF hTD hx0])
+    show "top1_path_homotopic_on ?D ?TD x0 x0 f (top1_constant_path x0)"
+      unfolding top1_path_homotopic_on_def top1_constant_path_def
+      using hfpath hcpath hH_cont_D hFs0 hFs1 hF0t hF1t
+      unfolding top1_is_path_on_def top1_constant_path_def by (by100 blast)
+  qed
+  show ?thesis
+    unfolding top1_simply_connected_on_def using hpc hloops by (by100 blast)
+qed
+
+text \<open>Homeomorphism preserves simply-connected: if h: A \<rightarrow> B is a homeomorphism
+  and A is simply connected, then B is simply connected.\<close>
+
+lemma homeomorphism_preserves_simply_connected:
+  assumes hhomeo: "top1_homeomorphism_on A TA B TB h"
+      and hsc: "top1_simply_connected_on A TA"
+  shows "top1_simply_connected_on B TB"
+proof -
+  let ?hinv = "inv_into A h"
+  have hTA: "is_topology_on A TA"
+    using hhomeo unfolding top1_homeomorphism_on_def by (by100 blast)
+  have hTB: "is_topology_on B TB"
+    using hhomeo unfolding top1_homeomorphism_on_def by (by100 blast)
+  have hbij: "bij_betw h A B"
+    using hhomeo unfolding top1_homeomorphism_on_def by (by100 blast)
+  have hh_cont: "top1_continuous_map_on A TA B TB h"
+    using hhomeo unfolding top1_homeomorphism_on_def by (by100 blast)
+  have hhinv_cont: "top1_continuous_map_on B TB A TA ?hinv"
+    using hhomeo unfolding top1_homeomorphism_on_def by (by100 blast)
+  have hh_surj: "h ` A = B"
+    using hbij unfolding bij_betw_def by (by100 blast)
+  have hinv_in_A: "\<And>y. y \<in> B \<Longrightarrow> ?hinv y \<in> A"
+  proof -
+    fix y assume "y \<in> B"
+    hence "y \<in> h ` A" using hh_surj by (by100 blast)
+    thus "?hinv y \<in> A" using inv_into_into[of y h A] by (by100 blast)
+  qed
+  have hh_inv_cancel: "\<And>y. y \<in> B \<Longrightarrow> h (?hinv y) = y"
+  proof -
+    fix y assume "y \<in> B"
+    hence "y \<in> h ` A" using hh_surj by (by100 blast)
+    thus "h (?hinv y) = y" using f_inv_into_f[of y h A] by (by100 blast)
+  qed
+  have hinv_h_cancel: "\<And>x. x \<in> A \<Longrightarrow> ?hinv (h x) = x"
+  proof -
+    fix x assume "x \<in> A"
+    have "inj_on h A" using hbij unfolding bij_betw_def by (by100 blast)
+    thus "?hinv (h x) = x" using \<open>x \<in> A\<close> by (by100 simp)
+  qed
+  have hpc_A: "top1_path_connected_on A TA"
+    using hsc unfolding top1_simply_connected_on_def by (by100 blast)
+  \<comment> \<open>Step 1: B is path connected.\<close>
+  have hpc_B: "top1_path_connected_on B TB"
+    unfolding top1_path_connected_on_def
+  proof (intro conjI ballI)
+    show "is_topology_on B TB" by (rule hTB)
+  next
+    fix y1 y2 assume hy1: "y1 \<in> B" and hy2: "y2 \<in> B"
+    have hx1: "?hinv y1 \<in> A" by (rule hinv_in_A[OF hy1])
+    have hx2: "?hinv y2 \<in> A" by (rule hinv_in_A[OF hy2])
+    obtain p where hp: "top1_is_path_on A TA (?hinv y1) (?hinv y2) p"
+      using hpc_A hx1 hx2 unfolding top1_path_connected_on_def by (by100 blast)
+    have hp_cont: "top1_continuous_map_on I_set I_top A TA p"
+      using hp unfolding top1_is_path_on_def by (by100 blast)
+    have hhp_cont: "top1_continuous_map_on I_set I_top B TB (h \<circ> p)"
+      by (rule top1_continuous_map_on_comp[OF hp_cont hh_cont])
+    have hhp_0: "(h \<circ> p) 0 = y1"
+      using hp hh_inv_cancel[OF hy1] unfolding top1_is_path_on_def by (by100 simp)
+    have hhp_1: "(h \<circ> p) 1 = y2"
+      using hp hh_inv_cancel[OF hy2] unfolding top1_is_path_on_def by (by100 simp)
+    have "top1_is_path_on B TB y1 y2 (h \<circ> p)"
+      unfolding top1_is_path_on_def using hhp_cont hhp_0 hhp_1 by (by100 blast)
+    thus "\<exists>f. top1_is_path_on B TB y1 y2 f" by (by100 blast)
+  qed
+  \<comment> \<open>Step 2: Every loop in B is null-homotopic.\<close>
+  have hloops: "\<forall>y0\<in>B. \<forall>g. top1_is_loop_on B TB y0 g \<longrightarrow>
+      top1_path_homotopic_on B TB y0 y0 g (top1_constant_path y0)"
+  proof (intro ballI allI impI)
+    fix y0 g assume hy0: "y0 \<in> B" and hloop: "top1_is_loop_on B TB y0 g"
+    let ?x0 = "?hinv y0"
+    have hx0: "?x0 \<in> A" by (rule hinv_in_A[OF hy0])
+    have hy0_eq: "h ?x0 = y0" by (rule hh_inv_cancel[OF hy0])
+    \<comment> \<open>Pull back: hinv \<circ> g is a loop in A at x0.\<close>
+    have hg_cont: "top1_continuous_map_on I_set I_top B TB g"
+      using hloop unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+    have hg0: "g 0 = y0" and hg1: "g 1 = y0"
+      using hloop unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)+
+    have hinvg_cont: "top1_continuous_map_on I_set I_top A TA (?hinv \<circ> g)"
+      by (rule top1_continuous_map_on_comp[OF hg_cont hhinv_cont])
+    have hinvg_0: "(?hinv \<circ> g) 0 = ?x0" using hg0 by (by100 simp)
+    have hinvg_1: "(?hinv \<circ> g) 1 = ?x0" using hg1 by (by100 simp)
+    have hinvg_loop: "top1_is_loop_on A TA ?x0 (?hinv \<circ> g)"
+      unfolding top1_is_loop_on_def top1_is_path_on_def
+      using hinvg_cont hinvg_0 hinvg_1 by (by100 blast)
+    \<comment> \<open>By A simply connected, hinv \<circ> g is null-homotopic.\<close>
+    have hinvg_nul: "top1_path_homotopic_on A TA ?x0 ?x0 (?hinv \<circ> g) (top1_constant_path ?x0)"
+      using hsc hx0 hinvg_loop unfolding top1_simply_connected_on_def by (by100 blast)
+    \<comment> \<open>Push forward: h \<circ> (hinv \<circ> g) is path-homotopic to h \<circ> constant\_path(x0) in B.\<close>
+    have hpush: "top1_path_homotopic_on B TB (h ?x0) (h ?x0)
+        (h \<circ> (?hinv \<circ> g)) (h \<circ> top1_constant_path ?x0)"
+      by (rule continuous_preserves_path_homotopic[OF hTA hTB hh_cont hinvg_nul])
+    \<comment> \<open>h \<circ> (hinv \<circ> g) = g on I\_set (since g maps to B and h \<circ> hinv = id on B).\<close>
+    have hcomp_eq: "\<And>s. s \<in> I_set \<Longrightarrow> (h \<circ> (?hinv \<circ> g)) s = g s"
+    proof -
+      fix s assume hs: "s \<in> I_set"
+      have "g s \<in> B" using hg_cont hs unfolding top1_continuous_map_on_def by (by100 blast)
+      thus "(h \<circ> (?hinv \<circ> g)) s = g s" using hh_inv_cancel by (by100 simp)
+    qed
+    have hconst_eq: "\<And>s. (h \<circ> top1_constant_path ?x0) s = top1_constant_path y0 s"
+      unfolding top1_constant_path_def using hy0_eq by (by100 simp)
+    \<comment> \<open>Extract the homotopy witness from hpush and reuse it for g.\<close>
+    have hpush': "top1_path_homotopic_on B TB y0 y0 (h \<circ> (?hinv \<circ> g)) (h \<circ> top1_constant_path ?x0)"
+      using hpush hy0_eq by (by100 simp)
+    \<comment> \<open>Unpack: the homotopy F witnesses F(s,0) = (h \<circ> hinv \<circ> g)(s) = g(s) and
+         F(s,1) = (h \<circ> const x0)(s) = y0 = const y0(s).\<close>
+    obtain F where hF_cont: "top1_continuous_map_on (I_set \<times> I_set) II_topology B TB F"
+        and hF0: "\<forall>s\<in>I_set. F (s, 0) = (h \<circ> (?hinv \<circ> g)) s"
+        and hF1: "\<forall>s\<in>I_set. F (s, 1) = (h \<circ> top1_constant_path ?x0) s"
+        and hFl: "\<forall>t\<in>I_set. F (0, t) = y0"
+        and hFr: "\<forall>t\<in>I_set. F (1, t) = y0"
+      using hpush' unfolding top1_path_homotopic_on_def top1_is_path_on_def by (by100 auto)
+    \<comment> \<open>Rewrite boundary conditions using the equalities.\<close>
+    have hF0': "\<forall>s\<in>I_set. F (s, 0) = g s"
+      using hF0 hcomp_eq by (by100 simp)
+    have hF1': "\<forall>s\<in>I_set. F (s, 1) = top1_constant_path y0 s"
+      using hF1 hconst_eq by (by100 simp)
+    \<comment> \<open>g and constant\_path y0 are paths in B.\<close>
+    have hg_path: "top1_is_path_on B TB y0 y0 g"
+      using hloop unfolding top1_is_loop_on_def .
+    have hconst_path: "top1_is_path_on B TB y0 y0 (top1_constant_path y0)"
+      by (rule top1_constant_path_is_path[OF hTB hy0])
+    \<comment> \<open>Assemble the path homotopy.\<close>
+    show "top1_path_homotopic_on B TB y0 y0 g (top1_constant_path y0)"
+      unfolding top1_path_homotopic_on_def
+      using hg_path hconst_path hF_cont hF0' hF1' hFl hFr by (by100 blast)
+  qed
+  show ?thesis
+    unfolding top1_simply_connected_on_def using hpc_B hloops by (by100 blast)
+qed
+
 (** from \<S>72 Theorem 72.1: attaching a 2-cell kills the homotopy class of
     the attaching map. There exists an isomorphism \<pi>_1(X, a) \<cong>
     \<pi>_1(A, a) / normal-closure(k_*[p]) where p is the standard loop of S^1
@@ -379,7 +873,7 @@ proof -
 
   \<comment> \<open>--- Step 2b: V is simply connected (homeomorphic to Int B2 \<cong> R2) ---\<close>
   have hV_sc: "top1_simply_connected_on ?V ?TV"
-    sorry \<comment> \<open>assms(7): h|_{Int B2} is homeomorphism onto X-A = V; Int B2 is simply connected.\<close>
+    by (rule homeomorphism_preserves_simply_connected[OF assms(7) open_disk_simply_connected])
 
   \<comment> \<open>--- Step 2c: U = X - {x0} is open in X (Hausdorff \<Longrightarrow> points are closed) ---\<close>
   have hx0_closed: "closedin_on X TX {?x0}"
