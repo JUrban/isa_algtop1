@@ -6856,7 +6856,41 @@ proof -
                     \<comment> \<open>Step 5: [h\<circ>(r\<circ>ell_disk)]_U = (h|_{S1})_*([r\<circ>ell_disk]) \<in> image(\<psi>).\<close>
                     have hr_class: "{k. top1_loop_equiv_on ?U ?TU a
                         ((\<lambda>z. h z) \<circ> (\<lambda>t. H_ret (?ell_disk t, 1))) k} \<in> ?\<psi> ` top1_Z_group"
-                      sorry \<comment> \<open>(h|_{S1})_*([r\<circ>ell_disk]) = \<psi>(\<phi>([r\<circ>ell_disk])). In image.\<close>
+                    proof -
+                      \<comment> \<open>r\<circ>ell_disk is an S1 loop. Its class is in \<pi>_1(S1).
+                         (h|_{S1})_* maps it to \<pi>_1(U,a). And image = \<psi> ` Z.\<close>
+                      let ?rloop = "\<lambda>t. H_ret (?ell_disk t, 1)"
+                      \<comment> \<open>[r\<circ>ell_disk]_{S1} \<in> \<pi>_1(S1).\<close>
+                      have hrloop_carrier: "{k. top1_loop_equiv_on top1_S1 top1_S1_topology (1,0) ?rloop k}
+                          \<in> top1_fundamental_group_carrier top1_S1 top1_S1_topology (1,0)"
+                        using hr_ell_loop_S1 unfolding top1_fundamental_group_carrier_def by (by100 blast)
+                      \<comment> \<open>(h|_{S1})_*([r\<circ>ell_disk]) = [h\<circ>r\<circ>ell_disk]_U.\<close>
+                      have h_induced: "(top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1,0)
+                          ?U ?TU a (\<lambda>z. h z))
+                          {k. top1_loop_equiv_on top1_S1 top1_S1_topology (1,0) ?rloop k}
+                        = {k. top1_loop_equiv_on ?U ?TU a ((\<lambda>z. h z) \<circ> ?rloop) k}"
+                        sorry \<comment> \<open>Induced map computation: (h|_{S1})_*([g]) = [h\<circ>g]_U.\<close>
+                      \<comment> \<open>This is in image of (h|_{S1})_* hence in image of \<psi>.\<close>
+                      have "(top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1,0)
+                          ?U ?TU a (\<lambda>z. h z))
+                          {k. top1_loop_equiv_on top1_S1 top1_S1_topology (1,0) ?rloop k}
+                        \<in> (top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1,0)
+                            ?U ?TU a (\<lambda>z. h z)) `
+                          top1_fundamental_group_carrier top1_S1 top1_S1_topology (1,0)"
+                        using hrloop_carrier by (by100 blast)
+                      hence "{k. top1_loop_equiv_on ?U ?TU a ((\<lambda>z. h z) \<circ> ?rloop) k}
+                          \<in> (top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1,0)
+                              ?U ?TU a (\<lambda>z. h z)) `
+                            top1_fundamental_group_carrier top1_S1 top1_S1_topology (1,0)"
+                        using h_induced by (by100 simp)
+                      \<comment> \<open>image((h|_{S1})_*) = \<psi> ` Z (since \<psi> = (h|_{S1})_* \<circ> \<phi>\<inverse> and \<phi> bijective).\<close>
+                      moreover have "(top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1,0)
+                              ?U ?TU a (\<lambda>z. h z)) `
+                            top1_fundamental_group_carrier top1_S1 top1_S1_topology (1,0)
+                          = ?\<psi> ` top1_Z_group"
+                        sorry \<comment> \<open>image((h|_{S1})_*) = image(\<psi>) since \<phi> bijective.\<close>
+                      ultimately show ?thesis by (by100 simp)
+                    qed
                     \<comment> \<open>Step 6: [h\<circ>ell_disk]_U = [h\<circ>(r\<circ>ell_disk)]_U (from homotopy).\<close>
                     have "{k. top1_loop_equiv_on ?U ?TU a ((\<lambda>z. h z) \<circ> ?ell_disk) k}
                         = {k. top1_loop_equiv_on ?U ?TU a ((\<lambda>z. h z) \<circ> (\<lambda>t. H_ret (?ell_disk t, 1))) k}"
