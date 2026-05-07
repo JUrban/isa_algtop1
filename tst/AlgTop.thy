@@ -345,17 +345,10 @@ proof -
   qed
 qed
 
-\<comment> \<open>Reusable: if A1 \<inter> A2 = {c} for arcs, then c \<in> endpoints of A1.\<close>
-lemma arc_single_intersection_is_endpoint:
-  assumes hT: "is_topology_on_strict X TX" and hH: "is_hausdorff_on X TX"
-      and hA1: "top1_is_arc_on A1 (subspace_topology X TX A1)" and hA1X: "A1 \<subseteq> X"
-      and hA2: "top1_is_arc_on A2 (subspace_topology X TX A2)" and hA2X: "A2 \<subseteq> X"
-      and hinter: "A1 \<inter> A2 = {c}"
-  shows "c \<in> top1_arc_endpoints_on A1 (subspace_topology X TX A1)"
-  sorry \<comment> \<open>If c were interior to A1, removing c disconnects A1.
-     Since A2-{c} \<cap> A1-{c} = \<emptyset>, we'd get 3+ components in A1\<union>A2-{c}.
-     But A1\<union>A2 path-connected and Hausdorff, so removing 1 point
-     can give at most 2 components. Contradiction.\<close>
+\<comment> \<open>Note: the general claim "A1\<inter>A2={c} implies c is endpoint of A1" is FALSE.
+   Counterexample: A1=[-1,1]\<times>{0}, A2={0}\<times>[0,1], c=(0,0) is interior to A1.
+   The correct claim: c must be an endpoint of at least one arc, OR
+   one must ADD the endpoint assumption. We add it to arcs_concatenation_is_arc.\<close>
 
 \<comment> \<open>===== Theorems with sorry, moved here for caching =====\<close>
 
@@ -448,6 +441,8 @@ lemma arcs_concatenation_is_arc:
       and hA1: "top1_is_arc_on A1 (subspace_topology X TX A1)" and hA1X: "A1 \<subseteq> X"
       and hA2: "top1_is_arc_on A2 (subspace_topology X TX A2)" and hA2X: "A2 \<subseteq> X"
       and hinter: "A1 \<inter> A2 = {c}"
+      and hc_ep1: "c \<in> top1_arc_endpoints_on A1 (subspace_topology X TX A1)"
+      and hc_ep2: "c \<in> top1_arc_endpoints_on A2 (subspace_topology X TX A2)"
   shows "top1_is_arc_on (A1 \<union> A2) (subspace_topology X TX (A1 \<union> A2))"
 proof -
   let ?TD = "subspace_topology X TX (A1 \<union> A2)"
@@ -574,7 +569,7 @@ proof -
       moreover have "h1 0 = c"
       proof -
         have hc_ep: "c \<in> top1_arc_endpoints_on A1 (subspace_topology X TX A1)"
-          by (rule arc_single_intersection_is_endpoint[OF hT hH hA1 hA1X hA2 hA2X hinter])
+          by (rule hc_ep1)
         have heps: "top1_arc_endpoints_on A1 (subspace_topology X TX A1) = {h1 0, h1 1}"
           by (rule arc_endpoints_are_boundary[OF hT hH hA1X hA1 hh1])
         from hc_ep[unfolded heps] False show ?thesis by (by100 blast)
@@ -604,9 +599,8 @@ proof -
       have "(h2 \<circ> (\<lambda>t::real. 1 - t)) 0 = h2 1" unfolding comp_def by (by100 simp)
       moreover have "h2 1 = c"
       proof -
-        have hinter2: "A2 \<inter> A1 = {c}" using hinter by (by100 blast)
         have hc_ep: "c \<in> top1_arc_endpoints_on A2 (subspace_topology X TX A2)"
-          by (rule arc_single_intersection_is_endpoint[OF hT hH hA2 hA2X hA1 hA1X hinter2])
+          by (rule hc_ep2)
         have heps: "top1_arc_endpoints_on A2 (subspace_topology X TX A2) = {h2 0, h2 1}"
           by (rule arc_endpoints_are_boundary[OF hT hH hA2X hA2 hh2])
         from hc_ep[unfolded heps] False show ?thesis by (by100 blast)
