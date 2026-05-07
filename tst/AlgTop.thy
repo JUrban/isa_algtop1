@@ -4464,8 +4464,28 @@ proof -
                   {top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1, 0) ?U ?TU a
                      (\<lambda>z. h z) {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) ?f g}}
           \<Longrightarrow> c \<in> ?relator"
-        sorry \<comment> \<open>(A\<hookrightarrow>U)* maps [k\<circ>p]_A to [k\<circ>p]_U (inclusion is identity on loops).
-             Preimage of normal closure under iso = normal closure of preimage.\<close>
+      proof -
+        fix c assume hc_A: "c \<in> top1_fundamental_group_carrier A ?TA a"
+        let ?iota_c = "(top1_fundamental_group_induced_on A ?TA a ?U ?TU a (\<lambda>x. x)) c"
+        let ?kp_U = "top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1, 0) ?U ?TU a
+                     (\<lambda>z. h z) {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) ?f g}"
+        let ?N_U = "top1_normal_subgroup_generated_on
+                  (top1_fundamental_group_carrier ?U ?TU a) (top1_fundamental_group_mul ?U ?TU a)
+                  (top1_fundamental_group_id ?U ?TU a) (top1_fundamental_group_invg ?U ?TU a)
+                  {?kp_U}"
+        assume h_iota_c_in: "?iota_c \<in> ?N_U"
+        \<comment> \<open>The (A\<hookrightarrow>U) inclusion maps [k\<circ>p]_A to [k\<circ>p]_U (both are the same loop).
+           The inclusion-induced map is injective (deformation retract gives iso).
+           For any normal subgroup M of \<pi>_1(A,a) containing [k\<circ>p]_A:
+           (A\<hookrightarrow>U)*(M) is a normal subgroup of \<pi>_1(U,a) containing [k\<circ>p]_U.
+           So \<langle>\<langle>{[k\<circ>p]_U}\<rangle>\<rangle> \<subseteq> (A\<hookrightarrow>U)*(M).
+           Since (A\<hookrightarrow>U)*(c) \<in> \<langle>\<langle>{[k\<circ>p]_U}\<rangle>\<rangle> \<subseteq> (A\<hookrightarrow>U)*(M), injectivity gives c \<in> M.
+           Since M was arbitrary: c \<in> \<langle>\<langle>{[k\<circ>p]_A}\<rangle>\<rangle> = ?relator.\<close>
+        show "c \<in> ?relator"
+          sorry \<comment> \<open>Preimage of normal closure under injective hom \<subseteq> normal closure of preimage.
+               Uses: (A\<hookrightarrow>U)* injective (from hA_U_iso), [k\<circ>p] maps to [k\<circ>p] (inclusion_induced_class),
+               normal closure definition as intersection of normal subgroups.\<close>
+      qed
       \<comment> \<open>Combine steps 1-3.\<close>
       show ?thesis
       proof
