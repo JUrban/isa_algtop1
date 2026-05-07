@@ -3658,8 +3658,7 @@ proof -
     have hAU_surj: "(top1_fundamental_group_induced_on A ?TA a ?U ?TU a (\<lambda>x. x))
         ` (top1_fundamental_group_carrier A ?TA a)
       = top1_fundamental_group_carrier ?U ?TU a"
-    proof (rule equalityI)
-      \<comment> \<open>Forward: image \<subseteq> carrier (from hom property).\<close>
+    proof -
       have hTopU_d: "is_topology_on ?U ?TU"
         by (rule subspace_topology_is_topology_on[OF hTopX_ns]) (by100 blast)
       have ha_U_d: "a \<in> ?U" using assms(6) hA_sub_X hx0_notin_A by (by100 blast)
@@ -3677,6 +3676,7 @@ proof -
           (top1_fundamental_group_induced_on A ?TA a ?U ?TU a (\<lambda>x. x))"
         by (rule top1_fundamental_group_induced_on_is_hom[OF hTA_top hTopU_d assms(6) ha_U_d hAU_cont_d])
            (by100 simp)
+      show ?thesis proof (rule equalityI)
       show "(top1_fundamental_group_induced_on A ?TA a ?U ?TU a (\<lambda>x. x))
           ` (top1_fundamental_group_carrier A ?TA a) \<subseteq> top1_fundamental_group_carrier ?U ?TU a"
         using hAU_hom unfolding top1_group_hom_on_def by (by100 blast)
@@ -3686,11 +3686,76 @@ proof -
       show "top1_fundamental_group_carrier ?U ?TU a
           \<subseteq> (top1_fundamental_group_induced_on A ?TA a ?U ?TU a (\<lambda>x. x))
               ` (top1_fundamental_group_carrier A ?TA a)"
-        sorry \<comment> \<open>Surjectivity of \<iota>_*: for [f] \<in> \<pi>_1(U,a), take [r\<circ>f] \<in> \<pi>_1(A,a).
-             \<iota>_*([r\<circ>f]) = [r\<circ>f]_U = [f]_U by deformation retract homotopy.
-             Needs: extract retraction r from hA_deformation_retract_U,
-             show r\<circ>f is loop in A, apply Lemma_58_1_basepoint_fixed.\<close>
-    qed
+      proof
+        fix c assume hc: "c \<in> top1_fundamental_group_carrier ?U ?TU a"
+        \<comment> \<open>Extract a loop f from the class c.\<close>
+        obtain f where hf_loop: "top1_is_loop_on ?U ?TU a f"
+            and hc_eq: "c = {g. top1_loop_equiv_on ?U ?TU a f g}"
+          using hc unfolding top1_fundamental_group_carrier_def by (by100 blast)
+        \<comment> \<open>Extract the deformation retract homotopy H and retraction r.\<close>
+        obtain H_deform where hHcont: "top1_continuous_map_on (?U \<times> I_set)
+            (product_topology_on ?TU I_top) ?U ?TU H_deform"
+            and hH0: "\<forall>x\<in>?U. H_deform (x, 0) = x"
+            and hH1: "\<forall>x\<in>?U. H_deform (x, 1) \<in> A"
+            and hHfix: "\<forall>a'\<in>A. \<forall>t\<in>I_set. H_deform (a', t) = a'"
+          using hA_deformation_retract_U unfolding top1_deformation_retract_of_on_def by (by100 auto)
+        let ?r = "\<lambda>x. H_deform (x, 1)"
+        \<comment> \<open>r(a) = a since a \<in> A.\<close>
+        have h1_in_I: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+        have hra: "?r a = a" using hHfix assms(6) h1_in_I by (by100 blast)
+        \<comment> \<open>r\<circ>f is a loop in A at a.\<close>
+        have hrf_loop_A: "top1_is_loop_on A ?TA a (?r \<circ> f)"
+          sorry \<comment> \<open>r continuous U\<rightarrow>A, f loop in U at a, r(a)=a \<Longrightarrow> r\<circ>f loop in A at a.\<close>
+        \<comment> \<open>The class of r\<circ>f in \<pi>_1(A,a).\<close>
+        let ?rf_class = "{g. top1_loop_equiv_on A ?TA a (?r \<circ> f) g}"
+        have hrf_in_carrier: "?rf_class \<in> top1_fundamental_group_carrier A ?TA a"
+          unfolding top1_fundamental_group_carrier_def using hrf_loop_A by (by100 blast)
+        \<comment> \<open>\<iota>_*([r\<circ>f]_A) = [r\<circ>f]_U (since \<iota> = inclusion, loop_equiv in A implies loop_equiv in U).\<close>
+        have h\<iota>_rf: "top1_fundamental_group_induced_on A ?TA a ?U ?TU a (\<lambda>x. x) ?rf_class
+            = {g. top1_loop_equiv_on ?U ?TU a (?r \<circ> f) g}"
+          sorry \<comment> \<open>Inclusion-induced map on class: \<iota>_*([g]_A) = [g]_U when A \<subseteq> U subspace.\<close>
+        \<comment> \<open>r\<circ>f \<simeq> f in U (from deformation: \<iota>\<circ>r \<simeq> id via H, basepoint a fixed).\<close>
+        have hrf_equiv_f: "top1_loop_equiv_on ?U ?TU a (?r \<circ> f) f"
+        proof -
+          \<comment> \<open>Apply Lemma_58_1 with h=id, k=\<iota>\<circ>r. H(x,0)=x=id(x), H(x,1)=\<iota>(r(x)).
+             Conclusion: path_homotopic(id\<circ>f, (\<iota>\<circ>r)\<circ>f) = path_homotopic(f, r\<circ>f).\<close>
+          have h_id_cont: "top1_continuous_map_on ?U ?TU ?U ?TU (\<lambda>x. x)"
+          proof -
+            have "(id::'a\<Rightarrow>'a) = (\<lambda>x. x)" unfolding id_def by (by100 blast)
+            thus ?thesis using top1_continuous_map_on_id[OF hTopU_d] by (by100 simp)
+          qed
+          have h_ir_cont: "top1_continuous_map_on ?U ?TU ?U ?TU (\<lambda>x. H_deform (x, 1))"
+            sorry \<comment> \<open>\<iota>\<circ>r = (\<lambda>x. H_deform(x,1)) continuous: composition of H with (\<lambda>x.(x,1)).\<close>
+          have hH_fix_a: "\<forall>t\<in>I_set. H_deform (a, t) = a"
+            using hHfix assms(6) by (by100 blast)
+          have hH_hom: "\<exists>Hh. top1_continuous_map_on (?U \<times> I_set) (product_topology_on ?TU I_top)
+              ?U ?TU Hh \<and> (\<forall>x\<in>?U. Hh (x, 0) = (\<lambda>x. x) x) \<and>
+              (\<forall>x\<in>?U. Hh (x, 1) = (\<lambda>x. H_deform (x, 1)) x) \<and>
+              (\<forall>t\<in>I_set. Hh (a, t) = a)"
+            using hHcont hH0 hH1 hHfix assms(6) by (rule_tac x=H_deform in exI) (by100 auto)
+          from Lemma_58_1_basepoint_fixed[OF hTopU_d h_id_cont h_ir_cont _ _ hH_hom hf_loop]
+          have "top1_path_homotopic_on ?U ?TU a a
+              (top1_induced_homomorphism_on ?U ?TU ?U ?TU (\<lambda>x. x) f)
+              (top1_induced_homomorphism_on ?U ?TU ?U ?TU (\<lambda>x. H_deform (x, 1)) f)"
+            using hra by (by100 auto)
+          \<comment> \<open>induced_hom(id, f) = f and induced_hom(\<iota>\<circ>r, f) = r\<circ>f.\<close>
+          hence "top1_path_homotopic_on ?U ?TU a a f (?r \<circ> f)"
+            unfolding top1_induced_homomorphism_on_def comp_def by (by100 simp)
+          thus ?thesis unfolding top1_loop_equiv_on_def top1_path_homotopic_on_def
+            using hf_loop
+            sorry \<comment> \<open>path_homotopic(f, r\<circ>f) \<Longrightarrow> loop_equiv(r\<circ>f, f) (reverse + definition).\<close>
+        qed
+        \<comment> \<open>[r\<circ>f]_U = [f]_U (from hrf_equiv_f).\<close>
+        have hclass_eq: "{g. top1_loop_equiv_on ?U ?TU a (?r \<circ> f) g} = c"
+          sorry \<comment> \<open>r\<circ>f loop-equiv to f \<Longrightarrow> {g. equiv(r\<circ>f, g)} = {g. equiv(f, g)} = c.\<close>
+        \<comment> \<open>Combine: \<iota>_*([r\<circ>f]_A) = [r\<circ>f]_U = c.\<close>
+        have h\<iota>_rf_img: "top1_fundamental_group_induced_on A ?TA a ?U ?TU a (\<lambda>x. x) ?rf_class = c"
+          using h\<iota>_rf hclass_eq by (by100 simp)
+        thus "c \<in> (top1_fundamental_group_induced_on A ?TA a ?U ?TU a (\<lambda>x. x))
+            ` (top1_fundamental_group_carrier A ?TA a)"
+          using hrf_in_carrier by (by100 blast)
+      qed
+    qed qed
     \<comment> \<open>Combine: j_* = (U\<rightarrow>X)_* \<circ> (A\<rightarrow>U)_*, both surjective.\<close>
     show ?thesis
     proof (rule equalityI)
@@ -10593,6 +10658,7 @@ end
  
   
  
+
 
 
 
