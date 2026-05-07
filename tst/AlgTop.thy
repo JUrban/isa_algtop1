@@ -6168,16 +6168,70 @@ proof -
             proof -
               \<comment> \<open>Step 1: every class in the image of (h|_{S1})_* is in N.
                  Proof: compose with iso\<inverse> \<pi>_1(S1) \<cong> Z, apply hom_from_Z_image_in_subgroup.\<close>
-              have h_all_S1_in_N: "\<And>g. top1_is_loop_on top1_S1 top1_S1_topology (1,0) g \<Longrightarrow>
-                  {k. top1_loop_equiv_on ?U ?TU a (h \<circ> g) k} \<in> N"
-                sorry \<comment> \<open>Key claim. Uses: Theorem_54_5_iso + bij_hom_inv_is_hom + group_hom_comp
-                     + hom_from_Z_image_in_subgroup. \<psi>(1) = \<pm>kp_class \<in> N.\<close>
-              \<comment> \<open>Step 2: bc_back(f0) = h \<circ> \<ell> where \<ell> is a loop at (1,0) in B2-{0}.
-                 Since \<pi>_1(S1) iso \<pi>_1(B2-{0}) (surjective): \<ell> \<simeq> some S1-loop g in B2-{0}.
-                 So h\<circ>\<ell> \<simeq> h\<circ>g in U. Hence [h\<circ>\<ell>]_U = [h\<circ>g]_U \<in> N.\<close>
+              \<comment> \<open>Step 1: construct the composed hom \<psi>: Z \<rightarrow> \<pi>_1(U,a).\<close>
+              \<comment> \<open>Extract iso \<phi>: \<pi>_1(S1) \<rightarrow> Z from Theorem_54_5_iso.\<close>
+              obtain \<phi>_S1 where h\<phi>_bij: "bij_betw \<phi>_S1
+                    (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1,0)) top1_Z_group"
+                  and h\<phi>_hom: "top1_group_hom_on
+                    (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1,0))
+                    (top1_fundamental_group_mul top1_S1 top1_S1_topology (1,0))
+                    top1_Z_group top1_Z_mul \<phi>_S1"
+                using Theorem_54_5_iso
+                unfolding top1_groups_isomorphic_on_def top1_group_iso_on_def by (by100 blast)
+              \<comment> \<open>\<phi>\<inverse> is a hom Z \<rightarrow> \<pi>_1(S1).\<close>
+              have hS1_top: "is_topology_on top1_S1 top1_S1_topology"
+              proof -
+                have hR2: "is_topology_on (UNIV::(real\<times>real) set)
+                    (product_topology_on top1_open_sets top1_open_sets)"
+                  using product_topology_on_is_topology_on[OF
+                      top1_open_sets_is_topology_on_UNIV top1_open_sets_is_topology_on_UNIV] by (by100 simp)
+                show ?thesis unfolding top1_S1_topology_def
+                  by (rule subspace_topology_is_topology_on[OF hR2]) (by100 simp)
+              qed
+              have h10_S1: "(1::real, 0::real) \<in> top1_S1" unfolding top1_S1_def by (by100 simp)
+              have hS1_grp: "top1_is_group_on
+                  (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1,0))
+                  (top1_fundamental_group_mul top1_S1 top1_S1_topology (1,0))
+                  (top1_fundamental_group_id top1_S1 top1_S1_topology (1,0))
+                  (top1_fundamental_group_invg top1_S1 top1_S1_topology (1,0))"
+                by (rule top1_fundamental_group_is_group[OF hS1_top h10_S1])
+              have hZ_grp: "top1_is_group_on top1_Z_group top1_Z_mul top1_Z_id top1_Z_invg"
+                using top1_Z_is_abelian_group unfolding top1_is_abelian_group_on_def by (by100 blast)
+              have h\<phi>_inv_hom: "top1_group_hom_on top1_Z_group top1_Z_mul
+                  (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1,0))
+                  (top1_fundamental_group_mul top1_S1 top1_S1_topology (1,0))
+                  (inv_into (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1,0)) \<phi>_S1)"
+                by (rule bij_hom_inv_is_hom[OF hS1_grp hZ_grp h\<phi>_bij h\<phi>_hom])
+              \<comment> \<open>Construct (h|_{S1})_* as hom.\<close>
+              have h_hS1_hom: "top1_group_hom_on
+                  (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1,0))
+                  (top1_fundamental_group_mul top1_S1 top1_S1_topology (1,0))
+                  (top1_fundamental_group_carrier ?U ?TU a)
+                  (top1_fundamental_group_mul ?U ?TU a)
+                  (top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1,0) ?U ?TU a (\<lambda>z. h z))"
+                sorry \<comment> \<open>h: S1 \<rightarrow> U continuous (h maps S1 into A \<subseteq> U), h(1,0) = a.\<close>
+              \<comment> \<open>Compose: \<psi> = (h|_{S1})_* \<circ> \<phi>\<inverse>: Z \<rightarrow> \<pi>_1(U,a) is a hom.\<close>
+              let ?\<psi> = "(top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1,0)
+                  ?U ?TU a (\<lambda>z. h z)) \<circ>
+                  (inv_into (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1,0)) \<phi>_S1)"
+              have h\<psi>_hom: "top1_group_hom_on top1_Z_group top1_Z_mul
+                  (top1_fundamental_group_carrier ?U ?TU a) (top1_fundamental_group_mul ?U ?TU a) ?\<psi>"
+                by (rule group_hom_comp[OF h\<phi>_inv_hom h_hS1_hom])
+              \<comment> \<open>\<psi>(1) \<in> N.\<close>
+              have h\<psi>1_N: "?\<psi> 1 \<in> N"
+                sorry \<comment> \<open>\<phi>\<inverse>(1) \<in> {[f],[f]\<inverse>}, so \<psi>(1) \<in> {kp, kp\<inverse>} \<subseteq> N.\<close>
+              have hpiU_a_grp: "top1_is_group_on
+                  (top1_fundamental_group_carrier ?U ?TU a) (top1_fundamental_group_mul ?U ?TU a)
+                  (top1_fundamental_group_id ?U ?TU a) (top1_fundamental_group_invg ?U ?TU a)"
+                by (rule top1_fundamental_group_is_group[OF hTopU_outer ha_U_outer])
+              \<comment> \<open>By hom_from_Z_image_in_subgroup: image(\<psi>) \<subseteq> N.\<close>
+              have h\<psi>_img_N: "?\<psi> ` top1_Z_group \<subseteq> N"
+                by (rule hom_from_Z_image_in_subgroup[OF hpiU_a_grp h\<psi>_hom hN_grp hN_sub h\<psi>1_N])
+              \<comment> \<open>Step 2: [bc_back(f0)]_U \<in> image(\<psi>) (via h factoring through S1).\<close>
               show ?thesis
-                sorry \<comment> \<open>Connect bc_back(f0) to h \<circ> (S1-loop) via comp_basepoint_change
-                     + S1_pi1_iso surjectivity + h_all_S1_in_N.\<close>
+                sorry \<comment> \<open>bc_back(f0) = h \<circ> \<ell> (comp_bc_change). \<ell> at p in B2-{0}.
+                     By S1_pi1_iso surj: [\<ell>] = incl*([g]) for S1-loop g.
+                     [h\<circ>\<ell>] = (h|_{S1})_*([g]) = \<psi>(\<phi>([g])) \<in> image(\<psi>) \<subseteq> N.\<close>
             qed
           qed
           \<comment> \<open>The preimage M = {x \<in> \<pi>_1(U,b) : bc_back_class(x) \<in> N} is normal.\<close>
