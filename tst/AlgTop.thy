@@ -91,10 +91,45 @@ proof -
       \<comment> \<open>Restrict h\<inverse> to A-{p}.\<close>
       have hhinv_restr: "top1_continuous_map_on (A - {p}) (subspace_topology A ?TA (A - {p}))
           top1_unit_interval top1_unit_interval_topology (inv_into top1_unit_interval h)"
-        sorry \<comment> \<open>Restrict domain of hhinv to A-{p} \<subseteq> A.\<close>
+      proof -
+        from top1_continuous_map_on_restrict_domain_simple[OF hhinv hAp_sub]
+        have "top1_continuous_map_on (A - {p}) (subspace_topology A ?TA (A - {p}))
+            top1_unit_interval top1_unit_interval_topology (inv_into top1_unit_interval h)"
+          using subspace_topology_trans[OF hAp_sub] by (by100 simp)
+        thus ?thesis .
+      qed
       \<comment> \<open>Image: h\<inverse>(A-{p}) = I-{t}.\<close>
       have hinv_img: "(inv_into top1_unit_interval h) ` (A - {p}) = top1_unit_interval - {t}"
-        sorry \<comment> \<open>Bijection inverse maps A-{p} to I-{t}.\<close>
+      proof -
+        have "A - {p} = h ` (top1_unit_interval - {t})"
+        proof -
+          have "h ` (top1_unit_interval - {t}) = h ` top1_unit_interval - {h t}"
+          proof -
+            have "{t} \<subseteq> top1_unit_interval" using ht(1) by (by100 blast)
+            from inj_on_image_set_diff[OF hinj _ this]
+            show ?thesis by (by100 simp)
+          qed
+          thus ?thesis using himg ht(2) by (by100 simp)
+        qed
+        hence "(inv_into top1_unit_interval h) ` (A - {p})
+            = (inv_into top1_unit_interval h) ` (h ` (top1_unit_interval - {t}))" by (by100 simp)
+        also have "\<dots> = top1_unit_interval - {t}"
+        proof (rule set_eqI, rule iffI)
+          fix s assume "s \<in> inv_into top1_unit_interval h ` h ` (top1_unit_interval - {t})"
+          then obtain u where hu: "u \<in> top1_unit_interval - {t}" "s = inv_into top1_unit_interval h (h u)"
+            by (by100 blast)
+          hence "s = u" using inv_into_f_f[OF hinj] by (by100 blast)
+          thus "s \<in> top1_unit_interval - {t}" using hu(1) by (by100 simp)
+        next
+          fix s assume hs: "s \<in> top1_unit_interval - {t}"
+          hence "h s \<in> h ` (top1_unit_interval - {t})" by (by100 blast)
+          moreover have "inv_into top1_unit_interval h (h s) = s"
+            using inv_into_f_f[OF hinj] hs by (by100 blast)
+          ultimately show "s \<in> inv_into top1_unit_interval h ` h ` (top1_unit_interval - {t})"
+            by (by100 force)
+        qed
+        finally show ?thesis .
+      qed
       \<comment> \<open>Continuous image of connected is connected.\<close>
       have hIt_conn: "top1_connected_on (top1_unit_interval - {t})
           (subspace_topology top1_unit_interval top1_unit_interval_topology (top1_unit_interval - {t}))"
