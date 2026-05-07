@@ -305,9 +305,21 @@ proof -
            Images disjoint except c at boundary. Combined: h bij [0,1]\<rightarrow>A1\<union>A2.\<close>
     \<comment> \<open>Step 4c: continuous bijection from compact to Hausdorff is homeomorphism.\<close>
     have hI_compact: "top1_compact_on top1_unit_interval top1_unit_interval_topology"
-      sorry \<comment> \<open>[0,1] is compact (Heine-Borel).\<close>
+    proof -
+      have "compact (top1_unit_interval :: real set)"
+        unfolding top1_unit_interval_def by (rule compact_Icc)
+      hence "top1_compact_on top1_unit_interval
+          (subspace_topology (UNIV::real set) top1_open_sets top1_unit_interval)"
+        using top1_compact_on_subspace_UNIV_iff_compact by (by100 blast)
+      thus ?thesis unfolding top1_unit_interval_topology_def by (by100 simp)
+    qed
     have hD_hausdorff: "is_hausdorff_on (A1 \<union> A2) ?TD"
-      sorry \<comment> \<open>Subspace of Hausdorff is Hausdorff.\<close>
+    proof -
+      have hHX: "is_hausdorff_on X TX" using hH .
+      have hAX: "A1 \<union> A2 \<subseteq> X" using hA1X hA2X by (by100 blast)
+      show ?thesis using conjunct2[OF conjunct2[OF Theorem_17_11]]
+        hHX hAX by (by100 blast)
+    qed
     have hTD_top: "is_topology_on (A1 \<union> A2) ?TD"
     proof -
       have hTopX: "is_topology_on X TX" using hT unfolding is_topology_on_strict_def by (by100 blast)
@@ -315,7 +327,8 @@ proof -
         (use hA1X hA2X in \<open>by100 blast\<close>)
     qed
     show ?thesis
-      sorry \<comment> \<open>Theorem_26_6: compact + Hausdorff + continuous + bijective = homeomorphism.\<close>
+      by (rule Theorem_26_6[OF top1_unit_interval_topology_is_topology_on hTD_top
+          hI_compact hD_hausdorff hh_cont hh_bij])
   qed
   have hTD_strict: "is_topology_on_strict (A1 \<union> A2) ?TD"
   proof -
