@@ -308,9 +308,41 @@ proof -
         by (rule subspace_topology_is_topology_on[OF hTopX]) (use hA1X hA2X in \<open>by100 blast\<close>)
       \<comment> \<open>?IL and ?IR are closed in [0,1].\<close>
       have hIL_closed: "closedin_on top1_unit_interval top1_unit_interval_topology ?IL"
-        sorry \<comment> \<open>[0,1/2] is closed in [0,1].\<close>
+        unfolding closedin_on_def
+      proof (intro conjI)
+        show "?IL \<subseteq> top1_unit_interval" by (by100 blast)
+        show "top1_unit_interval - ?IL \<in> top1_unit_interval_topology"
+        proof -
+          have "top1_unit_interval - ?IL = top1_unit_interval \<inter> {t. t > 1/2}" by (by100 force)
+          moreover have "{t::real. t > 1/2} \<in> top1_open_sets"
+          proof -
+            have "open {(1/2::real)<..}" by (rule open_greaterThan)
+            hence "open {t::real. 1/2 < t}" unfolding greaterThan_def by (by100 simp)
+            hence "{t::real. 1/2 < t} \<in> top1_open_sets" unfolding top1_open_sets_def by (by100 blast)
+            moreover have "{t::real. t > 1/2} = {t. 1/2 < t}" by (by100 blast)
+            ultimately show ?thesis by (by100 simp)
+          qed
+          ultimately show ?thesis
+            unfolding top1_unit_interval_topology_def subspace_topology_def by (by100 blast)
+        qed
+      qed
       have hIR_closed: "closedin_on top1_unit_interval top1_unit_interval_topology ?IR"
-        sorry \<comment> \<open>[1/2,1] is closed in [0,1].\<close>
+        unfolding closedin_on_def
+      proof (intro conjI)
+        show "?IR \<subseteq> top1_unit_interval" by (by100 blast)
+        show "top1_unit_interval - ?IR \<in> top1_unit_interval_topology"
+        proof -
+          have "top1_unit_interval - ?IR = top1_unit_interval \<inter> {t. t < 1/2}" by (by100 force)
+          moreover have "{t::real. t < 1/2} \<in> top1_open_sets"
+          proof -
+            have "open {..<(1/2::real)}" by (rule open_lessThan)
+            hence "open {t::real. t < 1/2}" unfolding lessThan_def by (by100 simp)
+            thus ?thesis unfolding top1_open_sets_def by (by100 blast)
+          qed
+          ultimately show ?thesis
+            unfolding top1_unit_interval_topology_def subspace_topology_def by (by100 blast)
+        qed
+      qed
       have hILR_union: "?IL \<union> ?IR = top1_unit_interval" by (by100 force)
       \<comment> \<open>h maps into A1 \<union> A2.\<close>
       have hh_maps: "\<forall>x\<in>top1_unit_interval. h x \<in> A1 \<union> A2"
