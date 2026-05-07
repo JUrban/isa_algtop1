@@ -45,6 +45,11 @@ lemma card_three_le: "card {a, b, c::'a} \<le> 3"
   apply (rule card_insert_le_m1) apply simp
   apply (rule card_insert_le_m1) apply simp apply simp done
 
+text \<open>Endpoints of an arc A are the two (distinct) points p, q such that
+  A - p and A - q are both connected.\<close>
+definition top1_arc_endpoints_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> 'a set" where
+  "top1_arc_endpoints_on A TA =
+     {p. p \<in> A \<and> top1_connected_on (A - {p}) (subspace_topology A TA (A - {p}))}"
 \<comment> \<open>Reusable: arc endpoint characterization. If h: [0,1] \<rightarrow> A is a homeomorphism,
    then the arc endpoints of A are exactly {h(0), h(1)}.\<close>
 lemma arc_endpoints_are_boundary:
@@ -54,8 +59,8 @@ lemma arc_endpoints_are_boundary:
       and hh: "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
           A (subspace_topology X TX A) h"
   shows "top1_arc_endpoints_on A (subspace_topology X TX A) = {h 0, h 1}"
-  sorry \<comment> \<open>h maps {0,1} to endpoints. Interior [0,1] points map to cutpoints.
-     Connected: [0,t)\<union>(t,1] disconnected for t\<in>(0,1); [0,1) and (0,1] connected.\<close>
+  sorry \<comment> \<open>Forward: p endpoint \<Rightarrow> A-{p} connected \<Rightarrow> h^{-1}(A-{p}) = [0,1]-{t} connected \<Rightarrow> t \<in> {0,1}.
+     Backward: h(0) endpoint because (0,1] connected; h(1) because [0,1) connected.\<close>
 
 \<comment> \<open>Reusable: if A1 \<inter> A2 = {c} for arcs, then c \<in> endpoints of A1.\<close>
 lemma arc_single_intersection_is_endpoint:
@@ -6736,11 +6741,6 @@ section \<open>\<S>83 Covering Spaces of a Graph\<close>
 
 text \<open>An arc is a space homeomorphic to the closed unit interval [0, 1].\<close>
 
-text \<open>Endpoints of an arc A are the two (distinct) points p, q such that
-  A - p and A - q are both connected.\<close>
-definition top1_arc_endpoints_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> 'a set" where
-  "top1_arc_endpoints_on A TA =
-     {p. p \<in> A \<and> top1_connected_on (A - {p}) (subspace_topology A TA (A - {p}))}"
 
 text \<open>A graph (Munkres §83): a Hausdorff space X with a collection \<A> of subspaces
   (arcs), each homeomorphic to [0,1], such that:
