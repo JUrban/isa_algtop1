@@ -3854,8 +3854,102 @@ proof -
   have hAU_surj_outer: "(top1_fundamental_group_induced_on A ?TA a ?U ?TU a (\<lambda>x. x))
       ` (top1_fundamental_group_carrier A ?TA a)
     = top1_fundamental_group_carrier ?U ?TU a"
-    sorry \<comment> \<open>Deformation retract: for [f]\<in>\<pi>_1(U,a), r\<circ>f is in A and \<iota>*(r\<circ>f)=[f].
-         Uses H_dr, Lemma_58_1_basepoint_fixed, inclusion_induced_class.\<close>
+  proof (rule equalityI)
+    \<comment> \<open>Forward: image \<subseteq> carrier (from hom property).\<close>
+    show "(top1_fundamental_group_induced_on A ?TA a ?U ?TU a (\<lambda>x. x))
+        ` top1_fundamental_group_carrier A ?TA a \<subseteq> top1_fundamental_group_carrier ?U ?TU a"
+      using hAU_hom_outer unfolding top1_group_hom_on_def by (by100 blast)
+  next
+    \<comment> \<open>Backward: for [f] \<in> \<pi>_1(U,a), take r\<circ>f \<in> \<pi>_1(A,a). Then \<iota>*(r\<circ>f) = [f].\<close>
+    show "top1_fundamental_group_carrier ?U ?TU a
+        \<subseteq> (top1_fundamental_group_induced_on A ?TA a ?U ?TU a (\<lambda>x. x))
+            ` top1_fundamental_group_carrier A ?TA a"
+    proof
+      fix c assume hc: "c \<in> top1_fundamental_group_carrier ?U ?TU a"
+      obtain f where hf_loop: "top1_is_loop_on ?U ?TU a f"
+          and hc_eq: "c = {g. top1_loop_equiv_on ?U ?TU a f g}"
+        using hc unfolding top1_fundamental_group_carrier_def by (by100 blast)
+      let ?r = "\<lambda>x. H_dr (x, 1)"
+      \<comment> \<open>r\<circ>f is a loop in A at a.\<close>
+      have hrf_loop_A: "top1_is_loop_on A ?TA a (?r \<circ> f)"
+        using top1_continuous_map_loop_early[OF hr_cont_outer hf_loop] hra_outer by (by100 simp)
+      \<comment> \<open>\<iota>*(class_A(r\<circ>f)) = class_U(r\<circ>f) by inclusion_induced_class.\<close>
+      have h\<iota>_rf: "(top1_fundamental_group_induced_on A ?TA a ?U ?TU a (\<lambda>x. x))
+          {k. top1_loop_equiv_on A ?TA a (?r \<circ> f) k}
+        = {k. top1_loop_equiv_on ?U ?TU a (?r \<circ> f) k}"
+        by (rule inclusion_induced_class[OF hA_sub_U_outer hTopU_outer
+            subspace_topology_trans[OF hA_sub_U_outer] hrf_loop_A])
+      \<comment> \<open>r\<circ>f \<simeq> f in U (from deformation: H_dr is homotopy id \<simeq> \<iota>\<circ>r, basepoint a fixed).
+         By Lemma_58_1: path_homotopic(U, id\<circ>f, (\<iota>\<circ>r)\<circ>f) = path_homotopic(U, f, r\<circ>f).\<close>
+      have hrf_equiv_f: "top1_loop_equiv_on ?U ?TU a (?r \<circ> f) f"
+      proof -
+        have h_id_cont: "top1_continuous_map_on ?U ?TU ?U ?TU (\<lambda>x. x)"
+          using top1_continuous_map_on_id[OF hTopU_outer] unfolding id_def by (by100 simp)
+        have hAU_cont2: "top1_continuous_map_on A ?TA ?U ?TU (\<lambda>x. x)"
+        proof -
+          from top1_continuous_map_on_restrict_domain_simple[OF
+              top1_continuous_map_on_id[OF hTopU_outer] hA_sub_U_outer]
+          show ?thesis using subspace_topology_trans[OF hA_sub_U_outer] unfolding id_def by (by100 simp)
+        qed
+        have h_ir_cont: "top1_continuous_map_on ?U ?TU ?U ?TU (\<lambda>x. H_dr (x, 1))"
+        proof -
+          have hcomp: "(\<lambda>x. x) \<circ> (\<lambda>x. H_dr (x, 1)) = (\<lambda>x. H_dr (x, 1))" by (rule ext) (by100 simp)
+          from top1_continuous_map_on_comp[OF hr_cont_outer hAU_cont2]
+          show ?thesis using hcomp by (by100 simp)
+        qed
+        have hH_hom: "\<exists>Hh. top1_continuous_map_on (?U \<times> I_set) (product_topology_on ?TU I_top)
+            ?U ?TU Hh \<and> (\<forall>x\<in>?U. Hh (x, 0) = (\<lambda>x. x) x) \<and>
+            (\<forall>x\<in>?U. Hh (x, 1) = (\<lambda>x. H_dr (x, 1)) x) \<and>
+            (\<forall>t\<in>I_set. Hh (a, t) = a)"
+          using hHdr_cont hHdr_0 hHdr_1 hHdr_fix assms(6)
+          by (rule_tac x=H_dr in exI) (by100 auto)
+        from Lemma_58_1_basepoint_fixed[OF hTopU_outer h_id_cont h_ir_cont _ _ hH_hom hf_loop]
+        have "top1_path_homotopic_on ?U ?TU a a
+            (top1_induced_homomorphism_on ?U ?TU ?U ?TU (\<lambda>x. x) f)
+            (top1_induced_homomorphism_on ?U ?TU ?U ?TU (\<lambda>x. H_dr (x, 1)) f)"
+          using hra_outer by (by100 auto)
+        hence "top1_path_homotopic_on ?U ?TU a a f (?r \<circ> f)"
+          unfolding top1_induced_homomorphism_on_def comp_def by (by100 simp)
+        hence "top1_path_homotopic_on ?U ?TU a a (?r \<circ> f) f"
+          by (rule Lemma_51_1_path_homotopic_sym)
+        moreover have "top1_is_loop_on ?U ?TU a (?r \<circ> f)"
+          using top1_continuous_map_loop_early[OF h_ir_cont hf_loop] hra_outer by (by100 simp)
+        ultimately show ?thesis unfolding top1_loop_equiv_on_def using hf_loop by (by100 blast)
+      qed
+      \<comment> \<open>class_U(r\<circ>f) = class_U(f) = c.\<close>
+      have hclass_eq: "{k. top1_loop_equiv_on ?U ?TU a (?r \<circ> f) k} = c"
+      proof -
+        have hd1: "\<And>k'. top1_loop_equiv_on ?U ?TU a (?r \<circ> f) k'
+            \<Longrightarrow> top1_loop_equiv_on ?U ?TU a f k'"
+        proof -
+          fix k' assume "top1_loop_equiv_on ?U ?TU a (?r \<circ> f) k'"
+          show "top1_loop_equiv_on ?U ?TU a f k'"
+            using top1_loop_equiv_on_trans[OF hTopU_outer
+                top1_loop_equiv_on_sym[OF hrf_equiv_f]
+                \<open>top1_loop_equiv_on ?U ?TU a (?r \<circ> f) k'\<close>] .
+        qed
+        have hd2: "\<And>k'. top1_loop_equiv_on ?U ?TU a f k'
+            \<Longrightarrow> top1_loop_equiv_on ?U ?TU a (?r \<circ> f) k'"
+        proof -
+          fix k' assume "top1_loop_equiv_on ?U ?TU a f k'"
+          show "top1_loop_equiv_on ?U ?TU a (?r \<circ> f) k'"
+            using top1_loop_equiv_on_trans[OF hTopU_outer hrf_equiv_f
+                \<open>top1_loop_equiv_on ?U ?TU a f k'\<close>] .
+        qed
+        show ?thesis using hd1 hd2 hc_eq by (by100 blast)
+      qed
+      \<comment> \<open>\<iota>*(class_A(r\<circ>f)) = c.\<close>
+      have "(top1_fundamental_group_induced_on A ?TA a ?U ?TU a (\<lambda>x. x))
+          {k. top1_loop_equiv_on A ?TA a (?r \<circ> f) k} = c"
+        using h\<iota>_rf hclass_eq by (by100 simp)
+      moreover have "{k. top1_loop_equiv_on A ?TA a (?r \<circ> f) k}
+          \<in> top1_fundamental_group_carrier A ?TA a"
+        unfolding top1_fundamental_group_carrier_def using hrf_loop_A by (by100 blast)
+      ultimately show "c \<in> (top1_fundamental_group_induced_on A ?TA a ?U ?TU a (\<lambda>x. x))
+          ` top1_fundamental_group_carrier A ?TA a"
+        by (by100 blast)
+    qed
+  qed
   \<comment> \<open>(A\<hookrightarrow>U)* injective (retraction left-inverse: r*\<circ>\<iota>*=id on \<pi>_1(A)).\<close>
   have hAU_inj_outer: "inj_on (top1_fundamental_group_induced_on A ?TA a ?U ?TU a (\<lambda>x. x))
       (top1_fundamental_group_carrier A ?TA a)"
@@ -11735,6 +11829,7 @@ end
  
   
  
+
 
 
 
