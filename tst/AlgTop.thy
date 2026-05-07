@@ -3741,7 +3741,13 @@ proof -
         \<comment> \<open>\<iota>_*([r\<circ>f]_A) = [r\<circ>f]_U (since \<iota> = inclusion, loop_equiv in A implies loop_equiv in U).\<close>
         have h\<iota>_rf: "top1_fundamental_group_induced_on A ?TA a ?U ?TU a (\<lambda>x. x) ?rf_class
             = {g. top1_loop_equiv_on ?U ?TU a (?r \<circ> f) g}"
-          sorry \<comment> \<open>Inclusion-induced map on class: \<iota>_*([g]_A) = [g]_U when A \<subseteq> U subspace.\<close>
+        proof -
+          have hA_sub_U_loc: "A \<subseteq> ?U" using hA_sub_X hx0_notin_A by (by100 blast)
+          have hTA_eq_loc: "subspace_topology ?U ?TU A = ?TA"
+            using subspace_topology_trans[OF hA_sub_U_loc] by (by100 simp)
+          show ?thesis
+            by (rule inclusion_induced_class[OF hA_sub_U_loc hTopU_d hTA_eq_loc hrf_loop_A])
+        qed
         \<comment> \<open>r\<circ>f \<simeq> f in U (from deformation: \<iota>\<circ>r \<simeq> id via H, basepoint a fixed).\<close>
         have hrf_equiv_f: "top1_loop_equiv_on ?U ?TU a (?r \<circ> f) f"
         proof -
