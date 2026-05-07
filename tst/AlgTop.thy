@@ -3656,8 +3656,43 @@ proof -
         by (rule SvK_simply_connected_V_surj_kernel(1)[OF assms(1) hU_open hV_open hU_union_V
                 hUV_pc hU_pc hV_sc hb_in_UV])
       \<comment> \<open>Transfer from base b to base a via naturality of base change with inclusion.\<close>
-      show ?thesis using hincl_surj_b
-        sorry \<comment> \<open>Base change naturality: surj at b + base change diagram \<Longrightarrow> surj at a.\<close>
+      show ?thesis
+      proof (rule equalityI)
+        \<comment> \<open>Forward: image \<subseteq> carrier.\<close>
+        show "(top1_fundamental_group_induced_on ?U ?TU a X TX a (\<lambda>x. x))
+            ` top1_fundamental_group_carrier ?U ?TU a \<subseteq> top1_fundamental_group_carrier X TX a"
+        proof -
+          have hTopU_s: "is_topology_on ?U ?TU"
+            by (rule subspace_topology_is_topology_on[OF hTopX_ns]) (by100 blast)
+          have ha_U_s: "a \<in> ?U" using assms(6) hA_sub_X hx0_notin_A by (by100 blast)
+          have hincl_s: "top1_continuous_map_on ?U ?TU X TX (\<lambda>x. x)"
+          proof -
+            from top1_continuous_map_on_restrict_domain_simple[OF top1_continuous_map_on_id[OF hTopX_ns] Diff_subset]
+            show ?thesis unfolding id_def by (by100 simp)
+          qed
+          have hh: "top1_group_hom_on (top1_fundamental_group_carrier ?U ?TU a)
+              (top1_fundamental_group_mul ?U ?TU a)
+              (top1_fundamental_group_carrier X TX a) (top1_fundamental_group_mul X TX a)
+              (top1_fundamental_group_induced_on ?U ?TU a X TX a (\<lambda>x. x))"
+            by (rule top1_fundamental_group_induced_on_is_hom[OF hTopU_s hTopX_ns ha_U_s ha_X hincl_s])
+               (by100 simp)
+          show ?thesis using hh unfolding top1_group_hom_on_def by (by100 blast)
+        qed
+      next
+        \<comment> \<open>Backward: carrier \<subseteq> image. Use surjectivity at b + inclusion = identity on functions.\<close>
+        show "top1_fundamental_group_carrier X TX a
+            \<subseteq> (top1_fundamental_group_induced_on ?U ?TU a X TX a (\<lambda>x. x))
+                ` top1_fundamental_group_carrier ?U ?TU a"
+          \<comment> \<open>For any [f] \<in> \<pi>_1(X,a): f is a loop in X at a.
+             Since a \<in> U and \<delta> from a to b is in U:
+             \<delta>-hat_X(f) = rev(\<delta>)*(f*\<delta>) is a loop in X at b.
+             By surj at b: \<exists>g loop in U at b with [g]_X = [\<delta>-hat_X(f)]_X.
+             Then rev(\<delta>)-hat_U(g) = \<delta>*(g*rev(\<delta>)) is a loop in U at a.
+             Since inclusion is identity: [rev(\<delta>)-hat_U(g)]_X = [rev(\<delta>)-hat_X(g)]_X.
+             And rev(\<delta>)-hat_X(\<delta>-hat_X(f)) = [f] (roundtrip).
+             So incl*_a([rev(\<delta>)-hat_U(g)]) = [f].\<close>
+          sorry \<comment> \<open>Base change argument: surj at b \<Longrightarrow> surj at a via \<delta>-transfer.\<close>
+      qed
     qed
     \<comment> \<open>Step (c): j_* = (U\<hookrightarrow>X)_* \<circ> (A\<hookrightarrow>U)_* by functoriality.\<close>
     have hj_comp: "\<forall>c \<in> top1_fundamental_group_carrier A ?TA a.
@@ -10823,6 +10858,7 @@ end
  
   
  
+
 
 
 
