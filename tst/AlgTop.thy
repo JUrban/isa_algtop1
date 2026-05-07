@@ -8,6 +8,22 @@ begin
 \<comment> \<open>===== Theorems with sorry, moved here for caching =====\<close>
 
 
+\<comment> \<open>Reusable: splitting an arc at a given interior point produces two sub-arcs.
+   Each endpoint of D goes to a different sub-arc.\<close>
+lemma arc_split_at_given_point:
+  assumes hT: "is_topology_on_strict X TX" and hH: "is_hausdorff_on X TX"
+      and hDX: "D \<subseteq> X"
+      and hArc: "top1_is_arc_on D (subspace_topology X TX D)"
+      and hp: "p \<in> D" and hp_int: "p \<notin> top1_arc_endpoints_on D (subspace_topology X TX D)"
+      and hep: "top1_arc_endpoints_on D (subspace_topology X TX D) = {a, b}" and hab: "a \<noteq> b"
+  shows "\<exists>D1 D2. D = D1 \<union> D2 \<and> D1 \<inter> D2 = {p}
+      \<and> top1_is_arc_on D1 (subspace_topology X TX D1)
+      \<and> top1_is_arc_on D2 (subspace_topology X TX D2)
+      \<and> a \<in> D1 \<and> b \<in> D2 \<and> p \<in> D1 \<and> p \<in> D2
+      \<and> D1 \<subseteq> X \<and> D2 \<subseteq> X"
+  sorry \<comment> \<open>Follows arc_split_at_midpoint: homeomorphism h: [0,1] -> D with h(0)=a, h(1)=b.
+     t0 = h^{-1}(p) in (0,1). D1 = h([0,t0]), D2 = h([t0,1]).\<close>
+
 (** from \<S>65 Lemma 65.1: for K_4 subspace of S^2 with vertices a_1, ..., a_4 and
     closed-curve edge C = a_1 a_2 a_3 a_4 a_1, and interior points p, q of opposite
     edges a_1 a_3 and a_2 a_4, the loop traversing C is nontrivial in \<pi>_1(S^2-p-q, x_0). **)
@@ -84,6 +100,10 @@ proof -
     using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
   have hTX: "is_topology_on ?X ?TX"
     by (rule subspace_topology_is_topology_on[OF hTopS2]) (by100 blast)
+  have he13_sub: "e13 \<subseteq> top1_S2" by (rule assms(8))
+  have he24_sub: "e24 \<subseteq> top1_S2" by (rule assms(9))
+  have he23_sub: "e23 \<subseteq> top1_S2" by (rule assms(5))
+  have he41_sub: "e41 \<subseteq> top1_S2" by (rule assms(7))
   \<comment> \<open>Step 2: The loop f traverses the 4-cycle a1-a2-a3-a4-a1.
      Decompose f into two paths:
      \<alpha>: portion of f in U (edges e12, e34, not touching e13)
@@ -99,19 +119,38 @@ proof -
      D_2 = sub-arc of e24 from q to a4, then e41, then sub-arc of e13 to p.
      D = D_1 \<union> D_2 is a simple closed curve.\<close>
   \<comment> \<open>Split e13 at p into two sub-arcs: e13_a1p (from a1 to p) and e13_pa3 (from p to a3).\<close>
+  have hp_e13: "p \<in> e13 - {a1, a3}" sorry \<comment> \<open>From assumptions.\<close>
+  have hq_e24: "q \<in> e24 - {a2, a4}" sorry \<comment> \<open>From assumptions.\<close>
+  have he13_ep: "top1_arc_endpoints_on e13 (subspace_topology top1_S2 top1_S2_topology e13) = {a1,a3}"
+    sorry \<comment> \<open>From assumptions.\<close>
+  have he24_ep: "top1_arc_endpoints_on e24 (subspace_topology top1_S2 top1_S2_topology e24) = {a2,a4}"
+    sorry \<comment> \<open>From assumptions.\<close>
+  have he13_arc: "top1_is_arc_on e13 (subspace_topology top1_S2 top1_S2_topology e13)"
+    sorry \<comment> \<open>From assumptions.\<close>
+  have he24_arc: "top1_is_arc_on e24 (subspace_topology top1_S2 top1_S2_topology e24)"
+    sorry \<comment> \<open>From assumptions.\<close>
+  have hp_not_ep: "p \<notin> top1_arc_endpoints_on e13 (subspace_topology top1_S2 top1_S2_topology e13)"
+    using he13_ep hp_e13 by (by100 blast)
+  have hq_not_ep: "q \<notin> top1_arc_endpoints_on e24 (subspace_topology top1_S2 top1_S2_topology e24)"
+    using he24_ep hq_e24 by (by100 blast)
+  have hS2_strict: "is_topology_on_strict top1_S2 top1_S2_topology" sorry
+  have hS2_haus: "is_hausdorff_on top1_S2 top1_S2_topology"
+    sorry \<comment> \<open>S2 is Hausdorff.\<close>
+  have ha1_ne_a3: "a1 \<noteq> a3" sorry
+  have ha2_ne_a4: "a2 \<noteq> a4" sorry
   obtain e13_a1p e13_pa3 where he13_split: "e13 = e13_a1p \<union> e13_pa3"
       "e13_a1p \<inter> e13_pa3 = {p}"
       "top1_is_arc_on e13_a1p (subspace_topology top1_S2 top1_S2_topology e13_a1p)"
       "top1_is_arc_on e13_pa3 (subspace_topology top1_S2 top1_S2_topology e13_pa3)"
       "a1 \<in> e13_a1p" "a3 \<in> e13_pa3" "p \<in> e13_a1p" "p \<in> e13_pa3"
-    sorry \<comment> \<open>Arc splitting at interior point p.\<close>
+    sorry \<comment> \<open>Uses arc_split_at_given_point on e13 at p.\<close>
   \<comment> \<open>Split e24 at q into two sub-arcs.\<close>
   obtain e24_a2q e24_qa4 where he24_split: "e24 = e24_a2q \<union> e24_qa4"
       "e24_a2q \<inter> e24_qa4 = {q}"
       "top1_is_arc_on e24_a2q (subspace_topology top1_S2 top1_S2_topology e24_a2q)"
       "top1_is_arc_on e24_qa4 (subspace_topology top1_S2 top1_S2_topology e24_qa4)"
       "a2 \<in> e24_a2q" "a4 \<in> e24_qa4" "q \<in> e24_a2q" "q \<in> e24_qa4"
-    sorry \<comment> \<open>Arc splitting at interior point q.\<close>
+    sorry \<comment> \<open>Uses arc_split_at_given_point on e24 at q.\<close>
   \<comment> \<open>D_1 = e13_pa3 \<union> e23 \<union> e24_a2q (arc from p through a3, a2 to q).
      D_2 = e24_qa4 \<union> e41 \<union> e13_a1p (arc from q through a4, a1 to p).\<close>
   let ?D1 = "e13_pa3 \<union> e23 \<union> e24_a2q"
@@ -121,10 +160,6 @@ proof -
     sorry \<comment> \<open>Concatenation of three arcs meeting at endpoints.\<close>
   have hD2_arc: "top1_is_arc_on ?D2 (subspace_topology top1_S2 top1_S2_topology ?D2)"
     sorry \<comment> \<open>Concatenation of three arcs meeting at endpoints.\<close>
-  have he13_sub: "e13 \<subseteq> top1_S2" by (rule assms(8))
-  have he24_sub: "e24 \<subseteq> top1_S2" by (rule assms(9))
-  have he23_sub: "e23 \<subseteq> top1_S2" by (rule assms(5))
-  have he41_sub: "e41 \<subseteq> top1_S2" by (rule assms(7))
   have hD1_sub: "?D1 \<subseteq> top1_S2"
     using he13_sub he23_sub he24_sub he13_split(1) he24_split(1) by (by100 blast)
   have hD2_sub: "?D2 \<subseteq> top1_S2"
