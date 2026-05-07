@@ -2184,8 +2184,63 @@ proof -
       \<comment> \<open>Apply svk_pieces_in_subgroup: [foldr(*,gs,const)] \<in> image(j_U).\<close>
       have hfoldr_in_img: "{g. top1_loop_equiv_on X TX x0
           (foldr top1_path_product gs (top1_constant_path x0)) g} \<in> ?j_U ` ?piU"
-        sorry \<comment> \<open>svk_pieces_in_subgroup[OF hTopX hUsub hVsub assms(6) hV_pc assms(5) assms(8)
-             himg_grp hU_in_img hV_in_img ...]\<close>
+      proof -
+        \<comment> \<open>Extract requirements of svk_pieces_in_subgroup from hgs.\<close>
+        have hps_UV: "\<And>i. i < n \<Longrightarrow> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> (gs!i) t \<in> U)
+            \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> (gs!i) t \<in> V)"
+        proof -
+          fix i assume hi: "i < n"
+          from hgs have himg: "gs!i ` I_set \<subseteq> U \<or> gs!i ` I_set \<subseteq> V" using hi by (by100 blast)
+          show "(\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> (gs!i) t \<in> U)
+              \<or> (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> (gs!i) t \<in> V)"
+          proof (cases "gs!i ` I_set \<subseteq> U")
+            case True
+            have "\<forall>t::real. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> (gs!i) t \<in> U"
+            proof (intro allI impI)
+              fix t :: real assume "0 \<le> t \<and> t \<le> 1"
+              hence "(gs!i) t \<in> (gs!i) ` I_set"
+                unfolding top1_unit_interval_def by (by100 force)
+              thus "(gs!i) t \<in> U" using True by (by100 blast)
+            qed
+            thus ?thesis by (by100 blast)
+          next
+            case False
+            hence "gs!i ` I_set \<subseteq> V" using himg by (by100 blast)
+            hence "\<forall>t::real. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> (gs!i) t \<in> V"
+            proof (intro allI impI)
+              fix t :: real assume "0 \<le> t \<and> t \<le> 1"
+              hence "(gs!i) t \<in> (gs!i) ` I_set"
+                unfolding top1_unit_interval_def by (by100 force)
+              thus "(gs!i) t \<in> V" using \<open>gs!i ` I_set \<subseteq> V\<close> by (by100 blast)
+            qed
+            thus ?thesis by (by100 blast)
+          qed
+        qed
+        have hps_cont: "\<And>i. i < n \<Longrightarrow> top1_continuous_map_on I_set I_top X TX (gs!i)"
+        proof -
+          fix i assume "i < n"
+          from hgs have "top1_is_loop_on X TX x0 (gs!i)" using \<open>i < n\<close> by (by100 blast)
+          thus "top1_continuous_map_on I_set I_top X TX (gs!i)"
+            unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+        qed
+        have hps_endpts: "\<And>i. i < n \<Longrightarrow> (gs!i) 0 = (if i = 0 then x0 else (gs!(i-1)) 1)"
+        proof -
+          fix i assume hi: "i < n"
+          have "(gs!i) 0 = x0" using hgs hi
+            unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+          moreover {
+            assume "i > 0"
+            hence "(gs!(i-1)) 1 = x0" using hgs hi
+              unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 force)
+          }
+          ultimately show "(gs!i) 0 = (if i = 0 then x0 else (gs!(i-1)) 1)" by (by100 auto)
+        qed
+        have hps_end: "(gs!(n-1)) 1 = x0"
+          using hgs hn unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 force)
+        show ?thesis
+          by (rule svk_pieces_in_subgroup[OF hTopX hUsub hVsub assms(6) hV_pc assms(5) assms(8)
+              himg_grp hU_in_img hV_in_img hn hlen hps_UV hps_cont hps_endpts hps_end])
+      qed
       \<comment> \<open>c = [f]_X = [foldr]_X since f \<simeq> foldr.\<close>
       have "c = {g. top1_loop_equiv_on X TX x0 (foldr top1_path_product gs (top1_constant_path x0)) g}"
       proof -
