@@ -2034,30 +2034,150 @@ proof -
   have hTopV: "is_topology_on V ?TV" by (rule subspace_topology_is_topology_on[OF hTopX hVsub])
   have hV_pc: "top1_path_connected_on V ?TV"
     using assms(7) unfolding top1_simply_connected_on_def by (by100 blast)
+  have hincl_UX: "top1_continuous_map_on U ?TU X TX (\<lambda>x. x)"
+    by (rule top1_continuous_map_on_restrict_domain_simple[OF
+          top1_continuous_map_on_id[OF hTopX, unfolded id_def] hUsub])
+  have hj_hom: "top1_group_hom_on ?piU ?mulU ?piX ?mulX ?j_U"
+    using top1_fundamental_group_induced_on_is_hom[OF hTopU hTopX hx0_U hx0_X hincl_UX]
+    by (by100 simp)
   \<comment> \<open>Part 1: Surjectivity of j_U via loop decomposition + V simply connected.\<close>
   show "?j_U ` ?piU = ?piX"
   proof (rule set_eqI, rule iffI)
     \<comment> \<open>Forward: image of hom \<subseteq> carrier.\<close>
     fix c assume "c \<in> ?j_U ` ?piU"
     then obtain u where "u \<in> ?piU" "c = ?j_U u" by (by100 blast)
-    have hj_hom: "top1_group_hom_on ?piU ?mulU ?piX ?mulX ?j_U"
-    proof -
-      have hincl: "top1_continuous_map_on U ?TU X TX (\<lambda>x. x)"
-        by (rule top1_continuous_map_on_restrict_domain_simple[OF
-              top1_continuous_map_on_id[OF hTopX, unfolded id_def] hUsub])
-      from top1_fundamental_group_induced_on_is_hom[OF hTopU hTopX hx0_U hx0_X hincl]
-      show ?thesis by (by100 simp)
-    qed
-    thus "c \<in> ?piX" using \<open>u \<in> ?piU\<close> \<open>c = ?j_U u\<close>
-      unfolding top1_group_hom_on_def by (by100 blast)
+    thus "c \<in> ?piX" using hj_hom unfolding top1_group_hom_on_def by (by100 blast)
   next
     \<comment> \<open>Backward: every class in \<pi>_1(X) is in image of j_U.\<close>
     fix c assume hc: "c \<in> ?piX"
     \<comment> \<open>Use Theorem_59_1 + svk_pieces_in_subgroup with H = image(j_U).\<close>
     show "c \<in> ?j_U ` ?piU"
-      sorry \<comment> \<open>Decompose representative loop into U/V pieces (Theorem_59_1).
-           V-pieces nulhomotopic (V simply connected), so class = e = j_U(e_U).
-           U-pieces have classes = j_U(class in U). Product is in image(j_U) (subgroup).\<close>
+    proof -
+      \<comment> \<open>Extract representative loop.\<close>
+      obtain f where hf: "top1_is_loop_on X TX x0 f" "c = {k. top1_loop_equiv_on X TX x0 f k}"
+        using hc unfolding top1_fundamental_group_carrier_def by (by100 blast)
+      \<comment> \<open>image(j_U) is a subgroup of \<pi>_1(X).\<close>
+      have hpiX_grp: "top1_is_group_on ?piX ?mulX ?eX ?invgX"
+        by (rule top1_fundamental_group_is_group[OF hTopX hx0_X])
+      have himg_grp: "top1_is_group_on (?j_U ` ?piU) ?mulX ?eX ?invgX"
+        by (rule hom_image_is_subgroup[OF
+            top1_fundamental_group_is_group[OF hTopU hx0_U] hpiX_grp hj_hom])
+      \<comment> \<open>U-loop classes are in image(j_U).\<close>
+      have hU_in_img: "\<And>g. top1_is_loop_on U ?TU x0 g \<Longrightarrow>
+          {h. top1_loop_equiv_on X TX x0 g h} \<in> ?j_U ` ?piU"
+      proof -
+        fix g assume hg: "top1_is_loop_on U ?TU x0 g"
+        have "{k. top1_loop_equiv_on U ?TU x0 g k} \<in> ?piU"
+          using hg unfolding top1_fundamental_group_carrier_def by (by100 blast)
+        moreover have "?j_U {k. top1_loop_equiv_on U ?TU x0 g k}
+            = {k. top1_loop_equiv_on X TX x0 g k}"
+        proof -
+          have "subspace_topology X TX U = ?TU" by (by100 simp)
+          from inclusion_induced_class[OF hUsub hTopX this hg]
+          show ?thesis .
+        qed
+        ultimately show "{h. top1_loop_equiv_on X TX x0 g h} \<in> ?j_U ` ?piU" by (by100 blast)
+      qed
+      \<comment> \<open>V-loop classes are in image(j_U) (they equal e_X = j_U(e_U)).\<close>
+      have hV_in_img: "\<And>g. top1_is_loop_on V ?TV x0 g \<Longrightarrow>
+          {h. top1_loop_equiv_on X TX x0 g h} \<in> ?j_U ` ?piU"
+      proof -
+        fix g assume hg: "top1_is_loop_on V ?TV x0 g"
+        \<comment> \<open>Since V simply connected, every V-loop is nulhomotopic in V, hence in X.\<close>
+        have hg_null_X: "top1_loop_equiv_on X TX x0 g (top1_constant_path x0)"
+        proof -
+          \<comment> \<open>V simply connected: \<pi>_1(V) = {e}.\<close>
+          have "{h. top1_loop_equiv_on V ?TV x0 g h} \<in>
+              top1_fundamental_group_carrier V ?TV x0"
+            using hg unfolding top1_fundamental_group_carrier_def by (by100 blast)
+          hence hg_class_V: "{h. top1_loop_equiv_on V ?TV x0 g h}
+              = top1_fundamental_group_id V ?TV x0"
+            using simply_connected_trivial_carrier[OF assms(7) hx0_V] by (by100 force)
+          \<comment> \<open>g \<simeq> const in V.\<close>
+          have hg_null_V: "top1_loop_equiv_on V ?TV x0 g (top1_constant_path x0)"
+          proof -
+            have "top1_constant_path x0 \<in> {h. top1_loop_equiv_on V ?TV x0 g h}"
+              using hg_class_V top1_loop_equiv_on_refl[OF top1_constant_path_is_loop[OF hTopV hx0_V]]
+              unfolding top1_fundamental_group_id_def by (by100 simp)
+            thus ?thesis by (by100 blast)
+          qed
+          \<comment> \<open>Transfer to X: V \<subseteq> X.\<close>
+          have "top1_path_homotopic_on V ?TV x0 x0 g (top1_constant_path x0)"
+            using hg_null_V unfolding top1_loop_equiv_on_def by (by100 blast)
+          hence "top1_path_homotopic_on X TX x0 x0 g (top1_constant_path x0)"
+            sorry \<comment> \<open>Homotopy in V transfers to X (subspace inclusion).\<close>
+          thus ?thesis
+          proof -
+            have hg_X: "top1_is_loop_on X TX x0 g"
+              sorry \<comment> \<open>V-loop is X-loop.\<close>
+            have hconst_X: "top1_is_loop_on X TX x0 (top1_constant_path x0)"
+              by (rule top1_constant_path_is_loop[OF hTopX hx0_X])
+            show ?thesis using \<open>top1_path_homotopic_on X TX x0 x0 g (top1_constant_path x0)\<close>
+              hg_X hconst_X unfolding top1_loop_equiv_on_def by (by100 blast)
+          qed
+        qed
+        have "{h. top1_loop_equiv_on X TX x0 g h} = ?eX"
+        proof -
+          have hconst_X: "top1_is_loop_on X TX x0 (top1_constant_path x0)"
+            by (rule top1_constant_path_is_loop[OF hTopX hx0_X])
+          show ?thesis
+          proof (rule set_eqI, rule iffI)
+            fix k assume "k \<in> {h. top1_loop_equiv_on X TX x0 g h}"
+            hence "top1_loop_equiv_on X TX x0 g k" by (by100 blast)
+            from top1_loop_equiv_on_trans[OF hTopX top1_loop_equiv_on_sym[OF hg_null_X] this]
+            show "k \<in> ?eX" unfolding top1_fundamental_group_id_def by (by100 simp)
+          next
+            fix k assume "k \<in> ?eX"
+            hence "top1_loop_equiv_on X TX x0 (top1_constant_path x0) k"
+              unfolding top1_fundamental_group_id_def by (by100 simp)
+            from top1_loop_equiv_on_trans[OF hTopX hg_null_X this]
+            show "k \<in> {h. top1_loop_equiv_on X TX x0 g h}" by (by100 blast)
+          qed
+        qed
+        moreover have "?eX \<in> ?j_U ` ?piU"
+        proof -
+          have hpiU_grp: "top1_is_group_on ?piU ?mulU ?eU ?invgU"
+            by (rule top1_fundamental_group_is_group[OF hTopU hx0_U])
+          have "?j_U ?eU = ?eX"
+            by (rule hom_preserves_id[OF hpiU_grp hpiX_grp hj_hom])
+          moreover have "?eU \<in> ?piU"
+            using hpiU_grp unfolding top1_is_group_on_def by (by100 blast)
+          ultimately show ?thesis by (by100 blast)
+        qed
+        ultimately show "{h. top1_loop_equiv_on X TX x0 g h} \<in> ?j_U ` ?piU" by (by100 simp)
+      qed
+      \<comment> \<open>Apply svk_pieces_in_subgroup with H = image(j_U).\<close>
+      have himg_sub: "?j_U ` ?piU \<subseteq> ?piX"
+        using hj_hom unfolding top1_group_hom_on_def by (by100 blast)
+      \<comment> \<open>Decompose f via Theorem_59_1.\<close>
+      obtain n gs where hn: "n \<ge> 1" and hlen: "length gs = n"
+          and hgs: "\<forall>i<n. top1_is_loop_on X TX x0 (gs!i) \<and>
+                    (gs!i ` I_set \<subseteq> U \<or> gs!i ` I_set \<subseteq> V)"
+          and hf_eq: "top1_path_homotopic_on X TX x0 x0 f
+                    (foldr top1_path_product gs (top1_constant_path x0))"
+      proof -
+        have hT59: "\<forall>f. top1_is_loop_on X TX x0 f \<longrightarrow>
+            (\<exists>n\<ge>1. \<exists>gs. length gs = n \<and>
+              (\<forall>i<n. top1_is_loop_on X TX x0 (gs!i) \<and> (gs!i ` I_set \<subseteq> U \<or> gs!i ` I_set \<subseteq> V)) \<and>
+              top1_path_homotopic_on X TX x0 x0 f (foldr top1_path_product gs (top1_constant_path x0)))"
+          by (rule Theorem_59_1[OF assms(1-4) assms(5) assms(8)])
+        from hT59[rule_format, OF hf(1)]
+        obtain n gs where hn: "n \<ge> 1" and hlen: "length gs = n"
+            and hgs: "\<forall>i<n. top1_is_loop_on X TX x0 (gs!i) \<and> (gs!i ` I_set \<subseteq> U \<or> gs!i ` I_set \<subseteq> V)"
+            and hf_eq: "top1_path_homotopic_on X TX x0 x0 f (foldr top1_path_product gs (top1_constant_path x0))"
+          by blast
+        show ?thesis using that[OF hn hlen hgs hf_eq] .
+      qed
+      \<comment> \<open>Apply svk_pieces_in_subgroup: [foldr(*,gs,const)] \<in> image(j_U).\<close>
+      have hfoldr_in_img: "{g. top1_loop_equiv_on X TX x0
+          (foldr top1_path_product gs (top1_constant_path x0)) g} \<in> ?j_U ` ?piU"
+        sorry \<comment> \<open>svk_pieces_in_subgroup[OF hTopX hUsub hVsub assms(6) hV_pc assms(5) assms(8)
+             himg_grp hU_in_img hV_in_img ...]\<close>
+      \<comment> \<open>c = [f]_X = [foldr]_X since f \<simeq> foldr.\<close>
+      have "c = {g. top1_loop_equiv_on X TX x0 (foldr top1_path_product gs (top1_constant_path x0)) g}"
+        sorry \<comment> \<open>f \<simeq> foldr implies [f] = [foldr] as classes.\<close>
+      thus ?thesis using hfoldr_in_img by (by100 simp)
+    qed
   qed
   \<comment> \<open>Part 2: Kernel of j_U = N.\<close>
   show "top1_group_kernel_on ?piU ?eX ?j_U = ?N"
