@@ -6816,7 +6816,12 @@ proof -
                      and h preserves homotopy (continuous map).\<close>
                   have "{k. top1_loop_equiv_on ?U ?TU a ((\<lambda>z. h z) \<circ> ?ell_disk) k}
                       \<in> ?\<psi> ` top1_Z_group"
-                    sorry \<comment> \<open>Proof: image(\<psi>) = image((h|_{S1})_*) (since \<phi>\<inverse> surjects onto \<pi>_1(S1)).
+                    sorry \<comment> \<open>Proof: By deformation retract S1_deformation_retract_B2_minus_zero:
+                         ell_disk \<simeq> r\<circ>ell_disk in B2-{0} (where r(x) = x/|x| is retraction).
+                         r\<circ>ell_disk is an S1-loop. h continuous B2-{0}\<rightarrow>U preserves homotopy.
+                         [h\<circ>ell_disk]_U = [h\<circ>(r\<circ>ell_disk)]_U = (h|_{S1})_*([r\<circ>ell_disk]_{S1}).
+                         And (h|_{S1})_*([r\<circ>ell_disk]) = \<psi>(\<phi>([r\<circ>ell_disk])) \<in> image(\<psi>).
+                         Needs: ell_disk is loop in B2-{0}, h continuous, inclusion_induced_class.
                        ell_disk is B2-{0} loop. By S1_pi1_iso surj: ell_disk \<simeq> S1-loop g in B2-{0}.
                        h continuous B2-{0}\<rightarrow>U: h\<circ>ell_disk \<simeq> h\<circ>g in U.
                        [h\<circ>g]_U = (h|_{S1})_*([g]) \<in> image((h|_{S1})_*) = image(\<psi>).
