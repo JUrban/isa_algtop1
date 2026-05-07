@@ -1813,6 +1813,35 @@ proof -
       hcomp by (by100 simp)
 qed
 
+\<comment> \<open>The standard circle loop (cos 2\<pi>s, sin 2\<pi>s) is a loop in S1 at (1,0).\<close>
+lemma standard_S1_loop_is_loop:
+  "top1_is_loop_on top1_S1 top1_S1_topology (1, 0)
+     (\<lambda>s. (cos (2 * pi * s), sin (2 * pi * s)))"
+  unfolding top1_is_loop_on_def top1_is_path_on_def
+proof (intro conjI)
+  have hf_eq: "(\<lambda>s. (cos (2*pi*s), sin (2*pi*s))) = top1_R_to_S1"
+  proof (rule ext)
+    fix s :: real show "(cos (2*pi*s), sin (2*pi*s)) = top1_R_to_S1 s"
+      unfolding top1_R_to_S1_def by (by100 simp)
+  qed
+  have "top1_continuous_map_on (UNIV::real set) top1_open_sets top1_S1 top1_S1_topology top1_R_to_S1"
+    using Theorem_53_1 unfolding top1_covering_map_on_def by (by100 blast)
+  from top1_continuous_map_on_restrict_domain_simple[OF this subset_UNIV]
+  show "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+      top1_S1 top1_S1_topology (\<lambda>s. (cos (2*pi*s), sin (2*pi*s)))"
+    unfolding top1_unit_interval_topology_def hf_eq
+    using subspace_topology_UNIV_self by (by100 simp)
+next show "(cos (2*pi*(0::real)), sin (2*pi*0)) = (1::real, 0::real)" by (by100 simp)
+next show "(cos (2*pi*(1::real)), sin (2*pi*1)) = (1::real, 0::real)" by (by100 simp)
+qed
+
+\<comment> \<open>The standard loop class is in \<pi>_1(S1, (1,0)).\<close>
+lemma standard_S1_loop_class_in_carrier:
+  "{g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0)
+       (\<lambda>s. (cos (2*pi*s), sin (2*pi*s))) g}
+   \<in> top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0)"
+  unfolding top1_fundamental_group_carrier_def using standard_S1_loop_is_loop by (by100 blast)
+
 theorem Theorem_72_1_attaching_two_cell:
   fixes X :: "'a set" and TX :: "'a set set" and A :: "'a set"
     and h :: "real \<times> real \<Rightarrow> 'a" and a :: 'a
@@ -4723,7 +4752,21 @@ proof -
         have hAU_inj_k: "inj_on ?AU (top1_fundamental_group_carrier A ?TA a)"
           sorry \<comment> \<open>(A\<hookrightarrow>U)* injective — from r*\<circ>\<iota>*=id (retraction left-inverse).\<close>
         have hkpA_sub: "{?kp_A} \<subseteq> top1_fundamental_group_carrier A ?TA a"
-          sorry \<comment> \<open>[k\<circ>p]_A \<in> carrier(A): hom(S1\<rightarrow>A) maps carrier to carrier.\<close>
+        proof -
+          have hS1_top: "is_topology_on top1_S1 top1_S1_topology"
+            using top1_S1_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
+          have h10: "(1::real, 0::real) \<in> top1_S1" unfolding top1_S1_def by (by100 simp)
+          have "?\<iota> (1, 0) = a" using assms(9) by (by100 simp)
+          have hiota_hom: "top1_group_hom_on
+              (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
+              (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))
+              (top1_fundamental_group_carrier A ?TA a) (top1_fundamental_group_mul A ?TA a)
+              (top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1, 0) A ?TA a ?\<iota>)"
+            by (rule top1_fundamental_group_induced_on_is_hom[OF hS1_top hTA_top h10 assms(6)
+                h\<iota>_cont \<open>?\<iota> (1, 0) = a\<close>])
+          show ?thesis using hiota_hom standard_S1_loop_class_in_carrier
+            unfolding top1_group_hom_on_def by (by100 blast)
+        qed
         have hrelator_normal_k: "top1_normal_subgroup_on
             (top1_fundamental_group_carrier A ?TA a) (top1_fundamental_group_mul A ?TA a)
             (top1_fundamental_group_id A ?TA a) (top1_fundamental_group_invg A ?TA a) ?relator"
@@ -11470,6 +11513,7 @@ end
  
   
  
+
 
 
 
