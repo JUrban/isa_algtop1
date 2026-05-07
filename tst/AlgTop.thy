@@ -460,7 +460,7 @@ proof -
     hence "{a1, a2, a3, a4} = {a1, a3, a4}" by (by100 blast)
     hence "card {a1, a2, a3, a4} \<le> card {a1, a3, a4}" by (by100 simp)
     moreover have "card {a1, a3, a4} \<le> 3"
-      sorry \<comment> \<open>card {x,y,z} \<le> 3 for any x,y,z.\<close>
+      by (rule card_three_le)
     ultimately show False using assms(2) by (by100 simp)
   qed
   obtain e13_a1p e13_pa3 where he13_split: "e13 = e13_a1p \<union> e13_pa3"
