@@ -3729,7 +3729,44 @@ proof -
           have hTopU_loc: "is_topology_on ?U ?TU"
             by (rule subspace_topology_is_topology_on[OF hTopX_ns]) (by100 blast)
           have hrevd_path_U: "top1_is_path_on ?U ?TU ?b a ?revd"
-            sorry \<comment> \<open>rev(\<delta>) is a path in U from b to a (reverse of \<delta> which is in U).\<close>
+          proof -
+            have h\<delta>_img_U: "?\<delta> ` top1_unit_interval \<subseteq> ?U"
+            proof
+              fix y assume "y \<in> ?\<delta> ` top1_unit_interval"
+              then obtain t where ht: "t \<in> top1_unit_interval" "y = h (1 - t/2, 0::real)" by (by100 blast)
+              have ht01: "0 \<le> t" "t \<le> 1" using ht(1) unfolding top1_unit_interval_def by (by100 simp)+
+              have hne00: "(1 - t/2, 0::real) \<noteq> (0::real, 0::real)"
+                using ht01 by (by100 auto)
+              have hy_X: "y \<in> X"
+                using continuous_map_maps_to[OF assms(5) h\<delta>_in_B2[OF ht(1)]] ht(2) by (by100 simp)
+              have "y \<noteq> ?x0"
+              proof (cases "t = 0")
+                case True thus ?thesis using ht(2) assms(9) hx0_notin_A assms(6) by (by100 auto)
+              next
+                case False
+                hence "t > 0" using ht01(1) by (by100 linarith)
+                hence h_intB2: "(1 - t/2, 0::real) \<in> top1_B2 - top1_S1"
+                  using ht01 h\<delta>_in_B2[OF ht(1)]
+                  unfolding top1_B2_def top1_S1_def
+                  sorry \<comment> \<open>0 < t \<le> 1 \<Longrightarrow> (1-t/2, 0) \<in> IntB2 (norm < 1 since 1-t/2 < 1).\<close>
+                moreover have hinj: "inj_on h (top1_B2 - top1_S1)"
+                  using assms(7) unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+                ultimately have "h (1 - t/2, 0) \<noteq> h (0, 0)"
+                  using hne00 h00_intB2 inj_on_contraD[OF hinj] by (by100 blast)
+                thus ?thesis using ht(2) by (by100 simp)
+              qed
+              thus "y \<in> ?U" using hy_X by (by100 blast)
+            qed
+            have h\<delta>_path_U: "top1_is_path_on ?U ?TU a ?b ?\<delta>"
+              unfolding top1_is_path_on_def
+            proof (intro conjI)
+              show "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology ?U ?TU ?\<delta>"
+                using top1_continuous_map_on_codomain_shrink[OF h\<delta>_cont h\<delta>_img_U] by (by100 simp)
+            next show "?\<delta> 0 = a" using h\<delta>_0 .
+            next show "?\<delta> 1 = ?b" using h\<delta>_1 .
+            qed
+            show ?thesis by (rule top1_path_reverse_is_path[OF h\<delta>_path_U])
+          qed
           have hg'_loop_U: "top1_is_loop_on ?U ?TU a ?g'"
             by (rule top1_basepoint_change_is_loop[OF hTopU_loc hrevd_path_U hg(1)])
           have hg'_class_U: "{k. top1_loop_equiv_on ?U ?TU a ?g' k}
@@ -10946,6 +10983,7 @@ end
  
   
  
+
 
 
 
