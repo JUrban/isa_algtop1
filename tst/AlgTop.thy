@@ -2096,6 +2096,15 @@ next
     using \<open>f (mulG x y) = mulH (f x) (f y)\<close> by (by100 simp)
 qed
 
+\<comment> \<open>Reusable: basepoint_change agrees on I_set when the loop argument agrees on I_set.
+   bc = rev(\<alpha>)*(f*\<alpha>) evaluates f only at points in I_set (via path_product structure).\<close>
+lemma basepoint_change_cong_on_I:
+  assumes "\<forall>t\<in>top1_unit_interval. f t = g t"
+  shows "\<forall>t\<in>top1_unit_interval. top1_basepoint_change_on X TX x0 x1 \<alpha> f t
+      = top1_basepoint_change_on X TX x0 x1 \<alpha> g t"
+  sorry \<comment> \<open>bc evaluates f only at 2*(2t-1) for t \<in> (1/2, 3/4],
+     giving 2*(2t-1) \<in> [0,1]. So agreement on I_set suffices.\<close>
+
 \<comment> \<open>Reusable: under any iso \<pi>_1(S1) \<cong> Z, the standard loop maps to \<pm>1.
    This is because the lifting correspondence sends [f] to the endpoint 1 of its lift,
    and 1 generates Z. For any other iso, the image is still a generator of Z, hence \<pm>1.\<close>
@@ -6589,9 +6598,50 @@ proof -
                      = (h\<circ>rev(revgam)) * ((h\<circ>h\<inverse>\<circ>f0) * (h\<circ>revgam)) [comp distributes]
                      = rev(rev(\<delta>)) * (f0 * rev(\<delta>)) [substituting h\<circ>rev(\<gamma>)=rev(\<delta>), h\<circ>h\<inverse>\<circ>f0=f0 on I]
                      = bc_f0.\<close>
-                have hbc_eq_comp: "?bc_f0 = (\<lambda>z. h z) \<circ> ?ell_disk"
-                  sorry \<comment> \<open>Pointwise identity via comp_basepoint_change + h\<circ>rev(\<gamma>)=rev(\<delta>)
-                       + h\<circ>h\<inverse>\<circ>f0 = f0 on I_set (path_product only evaluates in I_set).\<close>
+                \<comment> \<open>bc_f0 and h\<circ>ell_disk agree on I_set, hence same class.\<close>
+                have hbc_agree_I: "\<forall>t\<in>top1_unit_interval. ?bc_f0 t = ((\<lambda>z. h z) \<circ> ?ell_disk) t"
+                proof -
+                  \<comment> \<open>h\<circ>h\<inverse>\<circ>f0 agrees with f0 on I_set.\<close>
+                  have h_hinv_on_I: "\<forall>t\<in>top1_unit_interval. ((\<lambda>z. h z) \<circ> ?hinv_f0) t = f0 t"
+                  proof (intro ballI)
+                    fix t assume ht: "t \<in> top1_unit_interval"
+                    have hsurj: "h ` (top1_B2 - top1_S1) = X - A"
+                      using assms(7) unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+                    have hf0_cont: "top1_continuous_map_on top1_unit_interval
+                        top1_unit_interval_topology ?UV ?TUV f0"
+                      using hf0_loop unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+                    have "f0 t \<in> ?UV" using continuous_map_maps_to[OF hf0_cont ht] .
+                    hence "f0 t \<in> X - A" using hA_sub_X by (by100 blast)
+                    hence "f0 t \<in> h ` (top1_B2 - top1_S1)" using hsurj by (by100 blast)
+                    thus "((\<lambda>z. h z) \<circ> ?hinv_f0) t = f0 t"
+                      unfolding comp_def using f_inv_into_f by (by100 blast)
+                  qed
+                  \<comment> \<open>By comp_basepoint_change (pointwise on ℝ): h\<circ>ell_disk = bc(Y,b,a,h\<circ>revgam,h\<circ>h\<inverse>\<circ>f0).
+                     By basepoint_change_cong_on_I: bc(Y,b,a,h\<circ>revgam,h\<circ>h\<inverse>\<circ>f0) agrees with
+                     bc(Y,b,a,h\<circ>revgam,f0) on I_set. And h\<circ>revgam = rev(\<delta>) (pointwise).
+                     So bc(Y,b,a,rev(\<delta>),f0) = bc_f0 on I_set.\<close>
+                  have hcomp_eq: "\<forall>t\<in>top1_unit_interval. ((\<lambda>z. h z) \<circ> ?ell_disk) t =
+                      (top1_basepoint_change_on ?U ?TU ?b a
+                        ((\<lambda>z. h z) \<circ> ?revgam) ((\<lambda>z. h z) \<circ> ?hinv_f0)) t"
+                    sorry \<comment> \<open>comp_basepoint_change on I_set.\<close>
+                  have hbc_subst: "\<forall>t\<in>top1_unit_interval.
+                      (top1_basepoint_change_on ?U ?TU ?b a
+                        ((\<lambda>z. h z) \<circ> ?revgam) ((\<lambda>z. h z) \<circ> ?hinv_f0)) t
+                      = (top1_basepoint_change_on ?U ?TU ?b a ?rev\<delta> f0) t"
+                  proof -
+                    have "\<forall>t\<in>top1_unit_interval.
+                        (top1_basepoint_change_on ?U ?TU ?b a ((\<lambda>z. h z) \<circ> ?revgam) ((\<lambda>z. h z) \<circ> ?hinv_f0)) t
+                        = (top1_basepoint_change_on ?U ?TU ?b a ((\<lambda>z. h z) \<circ> ?revgam) f0) t"
+                      by (rule basepoint_change_cong_on_I[OF h_hinv_on_I])
+                    moreover have "(\<lambda>z. h z) \<circ> ?revgam = ?rev\<delta>"
+                      using h_revgam_eq .
+                    ultimately show ?thesis by (by100 simp)
+                  qed
+                  have "\<forall>t\<in>top1_unit_interval.
+                      (top1_basepoint_change_on ?U ?TU ?b a ?rev\<delta> f0) t = ?bc_f0 t"
+                    unfolding top1_basepoint_change_on_def by (intro ballI) (by100 simp)
+                  thus ?thesis using hcomp_eq hbc_subst by (by100 force)
+                qed
                 \<comment> \<open>Step B: [h\<circ>\<ell>]_U \<in> image(\<psi>).\<close>
                 \<comment> \<open>Since \<ell> is a loop at (1,0) in B2-{0} and (h|_{S1})_* is surjective
                    from \<pi>_1(S1) onto its image, and \<psi> = (h|_{S1})_* \<circ> \<phi>\<inverse> with
@@ -6613,10 +6663,11 @@ proof -
                          (4) [h\<circ>g]_U = (h|_{S1})_*([g]) = \<psi>(\<phi>([g])).\<close>
                   thus ?thesis using h\<psi>_img_N by (by100 blast)
                 qed
-                \<comment> \<open>Step C: [?bc_f0]_U = [h\<circ>\<ell>]_U (from the pointwise equality).\<close>
+                \<comment> \<open>Step C: [?bc_f0]_U = [h\<circ>\<ell>]_U (from agreement on I_set + loop_agree_on_I).\<close>
                 have "{k. top1_loop_equiv_on ?U ?TU a ?bc_f0 k}
                     = {k. top1_loop_equiv_on ?U ?TU a ((\<lambda>z. h z) \<circ> ?ell_disk) k}"
-                  using hbc_eq_comp by (by100 simp)
+                  sorry \<comment> \<open>bc_f0 and h\<circ>ell_disk agree on I (hbc_agree_I), both loops at a.
+                       By loop_agree_on_I: bc_f0 \<simeq> h\<circ>ell_disk. So classes equal.\<close>
                 thus ?thesis using hbc_class_in_N by (by100 simp)
               qed
             qed
