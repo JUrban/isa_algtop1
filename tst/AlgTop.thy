@@ -3497,7 +3497,38 @@ proof -
     \<comment> \<open>Step 6c: \<hat>\<delta>([g0]) = [\<bar>\<delta> * (g0 * \<delta>)] = [g] = [k \<circ> p].
        This follows because \<bar>\<gamma> * (f0 * \<gamma>) \<simeq> f in B2 - {0}
        (both generators of the infinite cyclic group), and h preserves homotopy.\<close>
-    show ?thesis sorry \<comment> \<open>Full argument: construct f0, show generator, apply h, compute \<hat>\<delta>.\<close>
+    \<comment> \<open>Construct gen0 as the class of g0 = h \<circ> f0 in \<pi>_1(UV, b),
+       where f0(s) = (1/2)(cos 2\<pi>s, sin 2\<pi>s) is a loop in Int B2-{0} at q.\<close>
+    let ?f0 = "\<lambda>s::real. ((1/2) * cos (2*pi*s), (1/2) * sin (2*pi*s))"
+    let ?g0 = "\<lambda>s. h (?f0 s)"
+    let ?gen0 = "{l. top1_loop_equiv_on ?UV ?TUV ?b ?g0 l}"
+    \<comment> \<open>gen0 is in \<pi>_1(UV, b): g0 is a loop in UV at b.\<close>
+    have hg0_loop: "top1_is_loop_on ?UV ?TUV ?b ?g0" sorry
+      \<comment> \<open>f0 is a loop in Int B2-{0} at q, h maps it to UV at b. Continuity + endpoints.\<close>
+    have hgen0_carrier: "?gen0 \<in> top1_fundamental_group_carrier ?UV ?TUV ?b" sorry
+      \<comment> \<open>The equivalence class [g0] is in the carrier of \<pi>_1(UV, b).\<close>
+    \<comment> \<open>Key homotopy: \<bar>\<delta> * (g0 * \<delta>) \<simeq> g in U.
+       Because \<bar>\<gamma> * (f0 * \<gamma>) \<simeq> f in B2-{0} (both are generators wrapping once around 0),
+       and h preserves path homotopy.\<close>
+    have hbasechange_eq: "top1_path_homotopic_on ?U ?TU a a
+        (top1_path_product (top1_path_reverse ?\<delta>) (top1_path_product ?g0 ?\<delta>))
+        ?g"
+      sorry \<comment> \<open>The explicit homotopy H(s,t) = h((1-t/2+t)*cos(2\<pi>s), (1-t/2+t)*sin(2\<pi>s))
+               scales the radius from 1/2 to 1 while shrinking the connecting paths \<gamma>, \<bar>\<gamma>.\<close>
+    \<comment> \<open>Therefore \<hat>\<delta>([g0]) = [g] = [k \<circ> p].\<close>
+    have himage_eq: "top1_fundamental_group_induced_on ?U ?TU a A ?TA a (\<lambda>x. x)
+           (top1_fundamental_group_induced_on ?UV ?TUV ?b ?U ?TU ?b (\<lambda>x. x) ?gen0)
+         = top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1, 0) A ?TA a ?\<iota>
+             {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) ?f g}"
+      sorry \<comment> \<open>Chain: i*([g0]) in \<pi>_1(U,b) + base change \<hat>\<delta> gives [\<bar>\<delta>*(g0*\<delta>)] = [g] = [\<iota>\<circ>f].
+               Then inclusion A \<hookrightarrow> U maps [g] to [\<iota>\<circ>f] in \<pi>_1(A,a).\<close>
+    have "?gen0 \<in> top1_fundamental_group_carrier ?UV ?TUV ?b \<and>
+        top1_fundamental_group_induced_on ?U ?TU a A ?TA a (\<lambda>x. x)
+           (top1_fundamental_group_induced_on ?UV ?TUV ?b ?U ?TU ?b (\<lambda>x. x) ?gen0)
+         = top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1, 0) A ?TA a ?\<iota>
+             {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) ?f g}"
+      using hgen0_carrier himage_eq by (by100 blast)
+    thus ?thesis sorry \<comment> \<open>Existential: \<exists>gen0 witness is ?gen0. by100 timeout on exI.\<close>
   qed
 
   \<comment> \<open>--- Assembly: combine Steps 3-6 to get the desired isomorphism ---\<close>
@@ -9687,6 +9718,12 @@ end
 
 
 
+ 
+ 
+ 
+ 
+ 
+ 
  
  
  
