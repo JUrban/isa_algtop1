@@ -6726,10 +6726,12 @@ proof -
                      and h preserves homotopy (continuous map).\<close>
                   have "{k. top1_loop_equiv_on ?U ?TU a ((\<lambda>z. h z) \<circ> ?ell_disk) k}
                       \<in> ?\<psi> ` top1_Z_group"
-                    sorry \<comment> \<open>Needs: (1) ell_disk loop at (1,0) in B2-{0},
-                         (2) S1_pi1_iso surj: [\<ell>]=incl*([g]),
-                         (3) h continuous B2-{0}\<rightarrow>U preserves homotopy,
-                         (4) [h\<circ>g]_U = (h|_{S1})_*([g]) = \<psi>(\<phi>([g])).\<close>
+                    sorry \<comment> \<open>Proof: image(\<psi>) = image((h|_{S1})_*) (since \<phi>\<inverse> surjects onto \<pi>_1(S1)).
+                       ell_disk is B2-{0} loop. By S1_pi1_iso surj: ell_disk \<simeq> S1-loop g in B2-{0}.
+                       h continuous B2-{0}\<rightarrow>U: h\<circ>ell_disk \<simeq> h\<circ>g in U.
+                       [h\<circ>g]_U = (h|_{S1})_*([g]) \<in> image((h|_{S1})_*) = image(\<psi>).
+                       Needs: S1_pi1_iso (PROVED), continuous_preserves_path_homotopic,
+                       h: B2-{0}\<rightarrow>U continuous (from assms + A\<subseteq>U + h(IntB2)\<subseteq>UV\<subseteq>U).\<close>
                   thus ?thesis using h\<psi>_img_N by (by100 blast)
                 qed
                 \<comment> \<open>Step C: [?bc_f0]_U = [h\<circ>\<ell>]_U (from agreement on I_set + loop_agree_on_I).\<close>
