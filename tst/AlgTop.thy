@@ -3786,6 +3786,21 @@ proof -
   have hTA_top: "is_topology_on A ?TA"
     by (rule subspace_topology_is_topology_on[OF hTopX_ns hA_sub_X])
   have ha_X: "a \<in> X" using assms(6) hA_sub_X by (by100 blast)
+  \<comment> \<open>Outer-level facts about (A\<hookrightarrow>U)* that are used in multiple sub-proofs.\<close>
+  have hTopU_outer: "is_topology_on ?U ?TU"
+    by (rule subspace_topology_is_topology_on[OF hTopX_ns]) (by100 blast)
+  have ha_U_outer: "a \<in> ?U" using assms(6) hA_sub_X hx0_notin_A by (by100 blast)
+  have hA_sub_U_outer: "A \<subseteq> ?U" using hA_sub_X hx0_notin_A by (by100 blast)
+  have hAU_hom_outer: "top1_group_hom_on
+      (top1_fundamental_group_carrier A ?TA a) (top1_fundamental_group_mul A ?TA a)
+      (top1_fundamental_group_carrier ?U ?TU a) (top1_fundamental_group_mul ?U ?TU a)
+      (top1_fundamental_group_induced_on A ?TA a ?U ?TU a (\<lambda>x. x))"
+  proof -
+    have hTA_eq: "subspace_topology ?U ?TU A = ?TA"
+      using subspace_topology_trans[OF hA_sub_U_outer] by (by100 simp)
+    from subspace_inclusion_induced_hom[OF hTopU_outer hA_sub_U_outer assms(6)]
+    show ?thesis using hTA_eq by (by100 simp)
+  qed
   \<comment> \<open>Step 1: j_* is a homomorphism.\<close>
   have hincl_AX_cont: "top1_continuous_map_on A ?TA X TX (\<lambda>x. x)"
   proof -
@@ -4748,7 +4763,7 @@ proof -
         qed
         have hAU_surj_k: "?AU ` top1_fundamental_group_carrier A ?TA a
             = top1_fundamental_group_carrier ?U ?TU a"
-          sorry \<comment> \<open>(A\<hookrightarrow>U)* surjective — from deformation retract (proved in hAU_surj block).\<close>
+          sorry \<comment> \<open>(A\<hookrightarrow>U)* surjective — deformation retract + Lemma_58_1.\<close>
         have hAU_inj_k: "inj_on ?AU (top1_fundamental_group_carrier A ?TA a)"
           sorry \<comment> \<open>(A\<hookrightarrow>U)* injective — from r*\<circ>\<iota>*=id (retraction left-inverse).\<close>
         have hkpA_sub: "{?kp_A} \<subseteq> top1_fundamental_group_carrier A ?TA a"
