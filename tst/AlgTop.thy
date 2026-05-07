@@ -3710,7 +3710,7 @@ proof -
             by (rule ext) (by100 simp)
           have hpair_cont: "top1_continuous_map_on ?U ?TU (?U \<times> I_set)
               (product_topology_on ?TU I_top) (\<lambda>x. (x, 1::real))"
-            sorry \<comment> \<open>(x, const) continuous: id \<times> const via Theorem 18.4.\<close>
+            sorry \<comment> \<open>(x, const 1) continuous via Theorem 18.4 (pi1=id, pi2=const).\<close>
           show ?thesis unfolding hcomp_eq
             by (rule top1_continuous_map_on_comp[OF hpair_cont hHcont])
         qed
