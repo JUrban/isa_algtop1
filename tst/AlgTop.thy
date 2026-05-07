@@ -1984,6 +1984,62 @@ lemma hom_from_cyclic_Z_image_in_subgroup:
   shows "\<psi> ` G \<subseteq> N"
   using hgen by (by100 blast)
 
+\<comment> \<open>Reusable: inverse of a bijective hom is a hom.\<close>
+lemma bij_hom_inv_is_hom:
+  assumes hG: "top1_is_group_on G mulG eG invgG"
+      and hH: "top1_is_group_on H mulH eH invgH"
+      and hbij: "bij_betw \<phi> G H"
+      and hhom: "top1_group_hom_on G mulG H mulH \<phi>"
+  shows "top1_group_hom_on H mulH G mulG (inv_into G \<phi>)"
+  unfolding top1_group_hom_on_def
+proof (intro conjI ballI)
+  fix y assume hy: "y \<in> H"
+  show "inv_into G \<phi> y \<in> G"
+  proof -
+    have "\<phi> ` G = H" using hbij unfolding bij_betw_def by (by100 blast)
+    hence "y \<in> \<phi> ` G" using hy by (by100 blast)
+    thus ?thesis by (rule inv_into_into)
+  qed
+next
+  fix y1 y2 assume hy1: "y1 \<in> H" and hy2: "y2 \<in> H"
+  have hinj: "inj_on \<phi> G" using hbij unfolding bij_betw_def by (by100 blast)
+  have hsurj: "\<phi> ` G = H" using hbij unfolding bij_betw_def by (by100 blast)
+  obtain x1 where hx1: "x1 \<in> G" "\<phi> x1 = y1" using hsurj hy1 by (by100 blast)
+  obtain x2 where hx2: "x2 \<in> G" "\<phi> x2 = y2" using hsurj hy2 by (by100 blast)
+  have "inv_into G \<phi> y1 = x1" using inv_into_f_eq[OF hinj hx1(1) hx1(2)] .
+  have "inv_into G \<phi> y2 = x2" using inv_into_f_eq[OF hinj hx2(1) hx2(2)] .
+  have hx12: "mulG x1 x2 \<in> G" using hG hx1(1) hx2(1) unfolding top1_is_group_on_def by (by100 blast)
+  have "\<phi> (mulG x1 x2) = mulH (\<phi> x1) (\<phi> x2)"
+    using hhom hx1(1) hx2(1) unfolding top1_group_hom_on_def by (by100 blast)
+  hence "\<phi> (mulG x1 x2) = mulH y1 y2" using hx1(2) hx2(2) by (by100 simp)
+  hence "inv_into G \<phi> (mulH y1 y2) = mulG x1 x2"
+    using inv_into_f_eq[OF hinj hx12] by (by100 simp)
+  thus "inv_into G \<phi> (mulH y1 y2) = mulG (inv_into G \<phi> y1) (inv_into G \<phi> y2)"
+    using \<open>inv_into G \<phi> y1 = x1\<close> \<open>inv_into G \<phi> y2 = x2\<close> by (by100 simp)
+qed
+
+\<comment> \<open>Reusable: composition of two group homs is a hom.\<close>
+lemma group_hom_comp:
+  assumes "top1_group_hom_on G mulG H mulH f"
+      and "top1_group_hom_on H mulH K mulK g"
+  shows "top1_group_hom_on G mulG K mulK (g \<circ> f)"
+  unfolding top1_group_hom_on_def comp_def
+proof (intro conjI ballI)
+  fix x assume "x \<in> G"
+  hence "f x \<in> H" using assms(1) unfolding top1_group_hom_on_def by (by100 blast)
+  thus "g (f x) \<in> K" using assms(2) unfolding top1_group_hom_on_def by (by100 blast)
+next
+  fix x y assume "x \<in> G" "y \<in> G"
+  have "f (mulG x y) = mulH (f x) (f y)"
+    using assms(1) \<open>x \<in> G\<close> \<open>y \<in> G\<close> unfolding top1_group_hom_on_def by (by100 blast)
+  moreover have "f x \<in> H" "f y \<in> H"
+    using assms(1) \<open>x \<in> G\<close> \<open>y \<in> G\<close> unfolding top1_group_hom_on_def by (by100 blast)+
+  hence "g (mulH (f x) (f y)) = mulK (g (f x)) (g (f y))"
+    using assms(2) \<open>f x \<in> H\<close> \<open>f y \<in> H\<close> unfolding top1_group_hom_on_def by (by100 blast)
+  thus "g (f (mulG x y)) = mulK (g (f x)) (g (f y))"
+    using \<open>f (mulG x y) = mulH (f x) (f y)\<close> by (by100 simp)
+qed
+
 \<comment> \<open>Helper: under SvK conditions with V simply connected, the inclusion U \<hookrightarrow> X
    induces a surjective homomorphism on \<pi>_1 with kernel = normal closure of
    inclusion-induced image of \<pi>_1(U\<inter>V). This is the content of Cor 70.4's proof
