@@ -4481,10 +4481,14 @@ proof -
            So \<langle>\<langle>{[k\<circ>p]_U}\<rangle>\<rangle> \<subseteq> (A\<hookrightarrow>U)*(M).
            Since (A\<hookrightarrow>U)*(c) \<in> \<langle>\<langle>{[k\<circ>p]_U}\<rangle>\<rangle> \<subseteq> (A\<hookrightarrow>U)*(M), injectivity gives c \<in> M.
            Since M was arbitrary: c \<in> \<langle>\<langle>{[k\<circ>p]_A}\<rangle>\<rangle> = ?relator.\<close>
+        \<comment> \<open>c \<in> ?relator = \<langle>\<langle>{[k\<circ>p]_A}\<rangle>\<rangle> = \<Inter>{N. [k\<circ>p]_A \<in> N \<and> normal N}.
+           For any such N, (A\<hookrightarrow>U)*(N) is normal in \<pi>_1(U,a) containing [k\<circ>p]_U.
+           So ?N_U \<subseteq> (A\<hookrightarrow>U)*(N). Since (A\<hookrightarrow>U)*(c) \<in> ?N_U \<subseteq> (A\<hookrightarrow>U)*(N),
+           injectivity of (A\<hookrightarrow>U)* gives c \<in> N. Since N arbitrary, c \<in> ?relator.\<close>
         show "c \<in> ?relator"
-          sorry \<comment> \<open>Preimage of normal closure under injective hom \<subseteq> normal closure of preimage.
-               Uses: (A\<hookrightarrow>U)* injective (from hA_U_iso), [k\<circ>p] maps to [k\<circ>p] (inclusion_induced_class),
-               normal closure definition as intersection of normal subgroups.\<close>
+          sorry \<comment> \<open>Preimage of normal closure under injective hom.
+               For any normal N of \<pi>_1(A,a) with [k\<circ>p]_A \<in> N: (A\<hookrightarrow>U)*(N) normal in \<pi>_1(U,a)
+               containing [k\<circ>p]_U. So N_U \<subseteq> (A\<hookrightarrow>U)*(N). Injectivity gives c \<in> N.\<close>
       qed
       \<comment> \<open>Combine steps 1-3.\<close>
       show ?thesis
@@ -11214,6 +11218,7 @@ end
  
   
  
+
 
 
 
