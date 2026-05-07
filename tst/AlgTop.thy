@@ -1664,8 +1664,47 @@ lemma surj_hom_image_normal:
       and "f ` G = H"
       and "top1_normal_subgroup_on G mul e invg N"
   shows "top1_normal_subgroup_on H mulH eH invgH (f ` N)"
-  sorry \<comment> \<open>Standard group theory: for h\<in>H, n'\<in>f(N): h=f(g), n'=f(n),
-     h*n'*h\<inverse>=f(g)*f(n)*f(g\<inverse>)=f(g*n*g\<inverse>)\<in>f(N). Subgroup: similar.\<close>
+  unfolding top1_normal_subgroup_on_def
+proof (intro conjI)
+  have hN_sub: "N \<subseteq> G" using assms(5) unfolding top1_normal_subgroup_on_def by (by100 blast)
+  show "f ` N \<subseteq> H" using hN_sub assms(3) unfolding top1_group_hom_on_def by (by100 blast)
+  show "top1_is_group_on (f ` N) mulH eH invgH"
+  proof -
+    have hN_grp: "top1_is_group_on N mul e invg"
+      using assms(5) unfolding top1_normal_subgroup_on_def by (by100 blast)
+    have hf_N_hom: "top1_group_hom_on N mul H mulH f"
+      using assms(3) hN_sub unfolding top1_group_hom_on_def by (by100 blast)
+    show ?thesis by (rule hom_image_is_subgroup[OF hN_grp assms(2) hf_N_hom])
+  qed
+  show "\<forall>h'\<in>H. \<forall>n'\<in>f ` N. mulH (mulH h' n') (invgH h') \<in> f ` N"
+  proof (intro ballI)
+    fix h' n' assume hh': "h' \<in> H" and hn': "n' \<in> f ` N"
+    obtain g where hg: "g \<in> G" "f g = h'" using assms(4) hh' by (by100 blast)
+    obtain n where hn: "n \<in> N" "f n = n'" using hn' by (by100 blast)
+    have hn_G: "n \<in> G" using hn(1) hN_sub by (by100 blast)
+    have hconj: "mul (mul g n) (invg g) \<in> N"
+      using assms(5) hg(1) hn(1) unfolding top1_normal_subgroup_on_def by (by100 blast)
+    have hgn_G: "mul g n \<in> G"
+      using assms(1) hg(1) hn_G unfolding top1_is_group_on_def by (by100 blast)
+    have hinvg_G: "invg g \<in> G"
+      using assms(1) hg(1) unfolding top1_is_group_on_def by (by100 blast)
+    have hf_mul: "\<And>a b. a \<in> G \<Longrightarrow> b \<in> G \<Longrightarrow> f (mul a b) = mulH (f a) (f b)"
+      using assms(3) unfolding top1_group_hom_on_def by (by100 blast)
+    have "f (mul (mul g n) (invg g)) = mulH (f (mul g n)) (f (invg g))"
+      by (rule hf_mul[OF hgn_G hinvg_G])
+    also have "f (mul g n) = mulH (f g) (f n)"
+      by (rule hf_mul[OF hg(1) hn_G])
+    finally have "f (mul (mul g n) (invg g)) = mulH (mulH (f g) (f n)) (f (invg g))"
+      by (by100 simp)
+    moreover have "f (invg g) = invgH (f g)"
+      by (rule hom_preserves_inv[OF assms(1) assms(2) assms(3) hg(1)])
+    ultimately have "f (mul (mul g n) (invg g)) = mulH (mulH h' n') (invgH h')"
+      using hg(2) hn(2) by (by100 simp)
+    hence "mulH (mulH h' n') (invgH h') = f (mul (mul g n) (invg g))" by (by100 simp)
+    thus "mulH (mulH h' n') (invgH h') \<in> f ` N"
+      using hconj by (by100 blast)
+  qed
+qed
 
 \<comment> \<open>Helper: injective hom + image in target set implies preimage in source set.\<close>
 lemma inj_hom_preimage_normal_closure:
@@ -11264,6 +11303,7 @@ end
  
   
  
+
 
 
 
