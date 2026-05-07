@@ -3858,10 +3858,22 @@ proof -
               = top1_basepoint_change_on X TX ?b a ?revd g"
             unfolding top1_basepoint_change_on_def top1_path_product_def top1_path_reverse_def
             by (by100 simp)
+          \<comment> \<open>Step A: incl_a*([g']_U) = [g']_X (inclusion_induced_class for U \<subseteq> X).\<close>
+          have hU_sub_X: "?U \<subseteq> X" by (by100 blast)
+          have hTU_eq_X: "subspace_topology X TX ?U = ?TU" by (by100 simp)
+          have hincl_g': "top1_fundamental_group_induced_on ?U ?TU a X TX a (\<lambda>x. x)
+              {k. top1_loop_equiv_on ?U ?TU a ?g' k}
+            = {k. top1_loop_equiv_on X TX a ?g' k}"
+            by (rule inclusion_induced_class[OF hU_sub_X hTopX_ns hTU_eq_X hg'_loop_U])
+          \<comment> \<open>Chain: incl_a*([g']_U) = [g']_X = [rev(\<delta>)^_X(g)]_X [by hg'_eq_X]
+                 = [rev(\<delta>)^_X(f')]_X [by hrevg_equiv]
+                 = [f]_X [by hroundtrip] = c [by hf(2)].\<close>
           show "c \<in> (top1_fundamental_group_induced_on ?U ?TU a X TX a (\<lambda>x. x))
               ` top1_fundamental_group_carrier ?U ?TU a"
-            sorry \<comment> \<open>Final assembly: combine g'_class_U, inclusion_induced_class,
-                 hg'_eq_X, hrevg_equiv, hroundtrip, hf(2) to get incl_a*([g']_U) = c.\<close>
+            using hg'_class_U hincl_g' hg'_eq_X hrevg_equiv hroundtrip hf hTopX_ns
+              top1_loop_equiv_on_trans top1_loop_equiv_on_sym top1_loop_equiv_on_refl
+              top1_basepoint_change_is_loop[OF hTopX_ns hrevd_path_X hf'_loop]
+            sorry \<comment> \<open>Chain of class equalities via loop_equiv trans/sym + roundtrip.\<close>
         qed
       qed
     qed
