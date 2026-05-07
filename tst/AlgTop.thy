@@ -143,7 +143,48 @@ proof -
       \<comment> \<open>But I-{t} is disconnected for t \<in> (0,1).\<close>
       have "\<not> top1_connected_on (top1_unit_interval - {t})
           (subspace_topology top1_unit_interval top1_unit_interval_topology (top1_unit_interval - {t}))"
-        sorry \<comment> \<open>[0,t) and (t,1] non-empty disjoint open partition of I-{t}.\<close>
+      proof -
+        let ?It = "top1_unit_interval - {t}"
+        let ?TIt = "subspace_topology top1_unit_interval top1_unit_interval_topology ?It"
+        let ?L = "{s \<in> ?It. s < t}" and ?R = "{s \<in> ?It. s > t}"
+        have hne_L: "?L \<noteq> {}" using \<open>0 < t\<close> h0I by (by100 force)
+        have hne_R: "?R \<noteq> {}" using \<open>t < 1\<close> h1I by (by100 force)
+        have hdisj: "?L \<inter> ?R = {}" by (by100 force)
+        have hunion: "?L \<union> ?R = ?It" by (by100 force)
+        \<comment> \<open>?L and ?R are open in the subspace topology of I-{t}.\<close>
+        have hL_open: "?L \<in> ?TIt"
+        proof -
+          have "open {..<t}" by (rule open_lessThan)
+          hence "{..<t} \<in> top1_open_sets" unfolding top1_open_sets_def by (by100 blast)
+          hence "{s \<in> top1_unit_interval. s \<in> {..<t}} \<in> top1_unit_interval_topology"
+            unfolding top1_unit_interval_topology_def subspace_topology_def by (by100 blast)
+          moreover have "{s \<in> top1_unit_interval. s \<in> {..<t}} = {s \<in> top1_unit_interval. s < t}"
+            by (by100 blast)
+          ultimately have "{s \<in> top1_unit_interval. s < t} \<in> top1_unit_interval_topology"
+            by (by100 simp)
+          moreover have "?L = ?It \<inter> {s \<in> top1_unit_interval. s < t}" by (by100 force)
+          ultimately show ?thesis unfolding subspace_topology_def by (by100 blast)
+        qed
+        have hR_open: "?R \<in> ?TIt"
+        proof -
+          have "open {t<..}" by (rule open_greaterThan)
+          hence "{t<..} \<in> top1_open_sets" unfolding top1_open_sets_def by (by100 blast)
+          hence "{s \<in> top1_unit_interval. s \<in> {t<..}} \<in> top1_unit_interval_topology"
+            unfolding top1_unit_interval_topology_def subspace_topology_def by (by100 blast)
+          moreover have "{s \<in> top1_unit_interval. s \<in> {t<..}} = {s \<in> top1_unit_interval. s > t}"
+            by (by100 blast)
+          ultimately have "{s \<in> top1_unit_interval. s > t} \<in> top1_unit_interval_topology"
+            by (by100 simp)
+          moreover have "?R = ?It \<inter> {s \<in> top1_unit_interval. s > t}" by (by100 force)
+          ultimately show ?thesis unfolding subspace_topology_def by (by100 blast)
+        qed
+        have "\<exists>U V. U \<in> ?TIt \<and> V \<in> ?TIt \<and> U \<noteq> {} \<and> V \<noteq> {} \<and> U \<inter> V = {} \<and> U \<union> V = ?It"
+        proof (rule exI[of _ ?L], rule exI[of _ ?R])
+          show "?L \<in> ?TIt \<and> ?R \<in> ?TIt \<and> ?L \<noteq> {} \<and> ?R \<noteq> {} \<and> ?L \<inter> ?R = {} \<and> ?L \<union> ?R = ?It"
+            using hL_open hR_open hne_L hne_R hdisj hunion by (by100 blast)
+        qed
+        thus ?thesis unfolding top1_connected_on_def by (by100 blast)
+      qed
       show False using hIt_conn \<open>\<not> top1_connected_on _ _\<close> by (by100 blast)
     qed
     thus "p \<in> {h 0, h 1}" using ht(2) by (by100 blast)
