@@ -31,7 +31,70 @@ lemma arcs_concatenation_is_arc:
       and hA2: "top1_is_arc_on A2 (subspace_topology X TX A2)" and hA2X: "A2 \<subseteq> X"
       and hinter: "A1 \<inter> A2 = {c}"
   shows "top1_is_arc_on (A1 \<union> A2) (subspace_topology X TX (A1 \<union> A2))"
-  sorry \<comment> \<open>Concatenation of homeomorphisms [0,1/2] -> A1 and [1/2,1] -> A2 gives [0,1] -> A1\<union>A2.\<close>
+proof -
+  let ?TD = "subspace_topology X TX (A1 \<union> A2)"
+  \<comment> \<open>Step 1: Get homeomorphisms from [0,1] to each arc.\<close>
+  obtain h1 where hh1: "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
+      A1 (subspace_topology X TX A1) h1"
+    using hA1 unfolding top1_is_arc_on_def by (by100 blast)
+  obtain h2 where hh2: "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
+      A2 (subspace_topology X TX A2) h2"
+    using hA2 unfolding top1_is_arc_on_def by (by100 blast)
+  \<comment> \<open>Step 2: c is the shared point. Orient h1 so h1(1)=c, h2 so h2(0)=c.
+     Since c \<in> A1 \<inter> A2 = {c}, c \<in> h1(I) and c \<in> h2(I).
+     The set {h1^{-1}(c)} is a single point in [0,1].
+     If h1^{-1}(c) \<noteq> 1, compose h1 with t \<mapsto> 1-t (reverse).
+     Similarly for h2.\<close>
+  \<comment> \<open>Define oriented homeomorphisms g1, g2 with g1(1)=c=g2(0).\<close>
+  obtain g1 where hg1: "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
+      A1 (subspace_topology X TX A1) g1" "g1 1 = c"
+  proof -
+    have hc_A1: "c \<in> A1" using hinter by (by100 blast)
+    have hbij1: "bij_betw h1 top1_unit_interval A1"
+      using hh1 unfolding top1_homeomorphism_on_def by (by100 blast)
+    have h1_in: "h1 1 \<in> A1" and h0_in: "h1 0 \<in> A1"
+    proof -
+      have "(1::real) \<in> top1_unit_interval" unfolding top1_unit_interval_def by (by100 simp)
+      thus "h1 1 \<in> A1" using hbij1 unfolding bij_betw_def by (by100 blast)
+      have "(0::real) \<in> top1_unit_interval" unfolding top1_unit_interval_def by (by100 simp)
+      thus "h1 0 \<in> A1" using hbij1 unfolding bij_betw_def by (by100 blast)
+    qed
+    show ?thesis
+    proof (cases "h1 1 = c")
+      case True thus ?thesis using that[OF hh1] by (by100 simp)
+    next
+      case False
+      \<comment> \<open>h1(0) must be c (since c \<in> A1 = h1(I), and arc endpoints are {h1(0), h1(1)}).\<close>
+      \<comment> \<open>Define g1 = h1 \<circ> (\<lambda>t. 1-t): reverses the orientation.\<close>
+      let ?rev = "\<lambda>t::real. 1 - t"
+      have hrev_homeo: "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
+          top1_unit_interval top1_unit_interval_topology ?rev"
+        sorry \<comment> \<open>t \<mapsto> 1-t is a self-homeomorphism of [0,1].\<close>
+      have hg1_homeo: "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
+          A1 (subspace_topology X TX A1) (h1 \<circ> ?rev)"
+        sorry \<comment> \<open>Composition of homeomorphisms.\<close>
+      have "(h1 \<circ> ?rev) 1 = h1 0" unfolding comp_def by (by100 simp)
+      moreover have "h1 0 = c"
+        sorry \<comment> \<open>c \<in> A1 = {h1(0), h1(1), ...}. h1(1) \<noteq> c implies h1(0) = c
+             (since arc has exactly 2 endpoints and c must be one).\<close>
+      ultimately have "(h1 \<circ> ?rev) 1 = c" by (by100 simp)
+      thus ?thesis using that[OF hg1_homeo] by (by100 simp)
+    qed
+  qed
+  obtain g2 where hg2: "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
+      A2 (subspace_topology X TX A2) g2" "g2 0 = c"
+    sorry \<comment> \<open>Orient h2: if h2(0)\<noteq>c then compose with t\<mapsto>1-t.\<close>
+  \<comment> \<open>Step 3: Define concatenated map h: [0,1] \<rightarrow> A1 \<union> A2.\<close>
+  define h where "h t = (if t \<le> 1/2 then g1 (2*t) else g2 (2*t - 1))" for t :: real
+  \<comment> \<open>Step 4: h is a homeomorphism [0,1] \<rightarrow> A1 \<union> A2.\<close>
+  have hh_homeo: "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology (A1 \<union> A2) ?TD h"
+    sorry \<comment> \<open>Continuity: pasting_lemma_two_closed on [0,1/2] and [1/2,1].
+         Bijectivity: g1 bij on [0,1/2]\<rightarrow>A1, g2 bij on [1/2,1]\<rightarrow>A2, images meet only at c.
+         Inverse continuous: compact-to-Hausdorff or direct argument.\<close>
+  have hTD_strict: "is_topology_on_strict (A1 \<union> A2) ?TD"
+    sorry \<comment> \<open>Subspace of strict topology is strict.\<close>
+  show ?thesis unfolding top1_is_arc_on_def using hh_homeo hTD_strict by (by100 blast)
+qed
 
 \<comment> \<open>Reusable: splitting an arc at a given interior point produces two sub-arcs.
    Each endpoint of D goes to a different sub-arc.\<close>
@@ -804,7 +867,11 @@ proof -
                      sin (2*pi*real k/real n) * fst z + cos (2*pi*real k/real n) * snd z))"
       and hq_inj: "inj_on q (top1_B2 - top1_S1)"
       and hq_sep: "\<forall>z\<in>top1_B2 - top1_S1. \<forall>z'\<in>top1_S1. q z \<noteq> q z'"
-    using assms(2) unfolding top1_is_dunce_cap_on_def by (by100 blast)
+    using assms(2) unfolding top1_is_dunce_cap_on_def
+    apply (elim exE conjE)
+    apply (rule that)
+    apply assumption+
+    done
   \<comment> \<open>A = q(S1) is the 1-skeleton, h = q is the attaching map.\<close>
   let ?A_loc = "q ` top1_S1"
   have hq_cont: "top1_continuous_map_on top1_B2 top1_B2_topology X TX q"
