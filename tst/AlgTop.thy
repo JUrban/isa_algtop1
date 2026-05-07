@@ -644,10 +644,61 @@ proof -
         thus "y \<in> A1 \<union> A2"
           using hh_cont unfolding top1_continuous_map_on_def by (by100 blast)
       next
-        fix y assume "y \<in> A1 \<union> A2"
+        fix y assume hy: "y \<in> A1 \<union> A2"
+        have hg1_bij: "bij_betw g1 top1_unit_interval A1"
+          using hg1(1) unfolding top1_homeomorphism_on_def by (by100 blast)
+        have hg2_bij: "bij_betw g2 top1_unit_interval A2"
+          using hg2(1) unfolding top1_homeomorphism_on_def by (by100 blast)
         show "y \<in> h ` top1_unit_interval"
-          sorry \<comment> \<open>y \<in> A1: g1^{-1}(y) \<in> I, t = g1^{-1}(y)/2 gives h(t) = y.
-               y \<in> A2: g2^{-1}(y) \<in> I, t = (g2^{-1}(y)+1)/2 gives h(t) = y.\<close>
+        proof (cases "y \<in> A1")
+          case True
+          then obtain s where hs: "s \<in> top1_unit_interval" "g1 s = y"
+            using hg1_bij unfolding bij_betw_def by (by100 blast)
+          let ?t = "s / 2"
+          have "?t \<in> top1_unit_interval" using hs(1) unfolding top1_unit_interval_def by (by100 auto)
+          moreover have "h ?t = y"
+          proof -
+            have "?t \<le> 1/2" using hs(1) unfolding top1_unit_interval_def by (by100 auto)
+            hence "h ?t = g1 (2 * ?t)" unfolding h_def by (by100 simp)
+            also have "2 * ?t = s" by (by100 simp)
+            finally show ?thesis using hs(2) by (by100 simp)
+          qed
+          ultimately show ?thesis by (by100 blast)
+        next
+          case False hence hyA2: "y \<in> A2" using hy by (by100 blast)
+          then obtain s where hs: "s \<in> top1_unit_interval" "g2 s = y"
+            using hg2_bij unfolding bij_betw_def by (by100 blast)
+          let ?t = "(s + 1) / 2"
+          have "?t \<in> top1_unit_interval" using hs(1) unfolding top1_unit_interval_def by (by100 auto)
+          have "?t > 1/2 \<or> ?t = 1/2"
+          proof (cases "s = 0")
+            case True thus ?thesis by (by100 simp)
+          next
+            case False hence "s > 0" using hs(1) unfolding top1_unit_interval_def by (by100 auto)
+            thus ?thesis by (by100 simp)
+          qed
+          moreover have "h ?t = y"
+          proof (cases "?t \<le> 1/2")
+            case True
+            hence "s = 0" using hs(1) unfolding top1_unit_interval_def by (by100 auto)
+            hence "h ?t = g1 1" unfolding h_def using True by (by100 simp)
+            also have "\<dots> = c" using hg1(2) .
+            also have "c = g2 0" using hg2(2)[symmetric] .
+            finally have "h ?t = g2 0" .
+            also have "g2 0 = y" using hs(2) \<open>s = 0\<close> by (by100 simp)
+            finally show ?thesis .
+          next
+            case False
+            hence "h ?t = g2 (2 * ?t - 1)" unfolding h_def by (by100 simp)
+            also have "2 * ?t - 1 = s"
+            proof -
+              have "2 * ((s + 1) / 2) = s + 1" by (by100 simp)
+              thus ?thesis by (by100 linarith)
+            qed
+            finally show ?thesis using hs(2) by (by100 simp)
+          qed
+          ultimately show ?thesis using \<open>?t \<in> top1_unit_interval\<close> by (by100 blast)
+        qed
       qed
     qed
     \<comment> \<open>Step 4c: continuous bijection from compact to Hausdorff is homeomorphism.\<close>
