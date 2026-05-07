@@ -13,6 +13,37 @@ lemma card_three_le: "card {a, b, c::'a} \<le> 3"
 \<comment> \<open>===== Theorems with sorry, moved here for caching =====\<close>
 
 
+\<comment> \<open>Reusable: composition of homeomorphisms is a homeomorphism.\<close>
+lemma homeomorphism_on_comp:
+  assumes "top1_homeomorphism_on A TA B TB f" and "top1_homeomorphism_on B TB C TC g"
+  shows "top1_homeomorphism_on A TA C TC (g \<circ> f)"
+proof -
+  have hfbij: "bij_betw f A B" and hgbij: "bij_betw g B C"
+    using assms unfolding top1_homeomorphism_on_def by (by100 blast)+
+  have hfcont: "top1_continuous_map_on A TA B TB f"
+    and hgcont: "top1_continuous_map_on B TB C TC g"
+    using assms unfolding top1_homeomorphism_on_def by (by100 blast)+
+  have hfinv: "top1_continuous_map_on B TB A TA (inv_into A f)"
+    and hginv: "top1_continuous_map_on C TC B TB (inv_into B g)"
+    using assms unfolding top1_homeomorphism_on_def by (by100 blast)+
+  have hTA: "is_topology_on A TA" and hTB: "is_topology_on B TB" and hTC: "is_topology_on C TC"
+    using assms unfolding top1_homeomorphism_on_def by (by100 blast)+
+  show ?thesis unfolding top1_homeomorphism_on_def
+  proof (intro conjI)
+    show "is_topology_on A TA" by (rule hTA)
+    show "is_topology_on C TC" by (rule hTC)
+    show "bij_betw (g \<circ> f) A C" by (rule bij_betw_trans[OF hfbij hgbij])
+    show "top1_continuous_map_on A TA C TC (g \<circ> f)"
+      by (rule top1_continuous_map_on_comp[OF hfcont hgcont])
+    show "top1_continuous_map_on C TC A TA (inv_into A (g \<circ> f))"
+    proof -
+      have "inv_into A (g \<circ> f) = inv_into A f \<circ> inv_into B g"
+        sorry \<comment> \<open>Standard: (g \<circ> f)^{-1} = f^{-1} \<circ> g^{-1} for bijections.\<close>
+      thus ?thesis using top1_continuous_map_on_comp[OF hginv hfinv] by (by100 simp)
+    qed
+  qed
+qed
+
 \<comment> \<open>Reusable: two arcs meeting only at their two endpoints form a simple closed curve.\<close>
 lemma arcs_form_simple_closed_curve:
   assumes hT: "is_topology_on_strict X TX" and hH: "is_hausdorff_on X TX"
@@ -45,6 +76,10 @@ proof -
      The set {h1^{-1}(c)} is a single point in [0,1].
      If h1^{-1}(c) \<noteq> 1, compose h1 with t \<mapsto> 1-t (reverse).
      Similarly for h2.\<close>
+  \<comment> \<open>Reversal t \<mapsto> 1-t is a self-homeomorphism of [0,1].\<close>
+  have hrev_homeo: "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
+      top1_unit_interval top1_unit_interval_topology (\<lambda>t::real. 1 - t)"
+    sorry \<comment> \<open>Continuous self-inverse on [0,1]. Standard.\<close>
   \<comment> \<open>Define oriented homeomorphisms g1, g2 with g1(1)=c=g2(0).\<close>
   obtain g1 where hg1: "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
       A1 (subspace_topology X TX A1) g1" "g1 1 = c"
@@ -69,10 +104,10 @@ proof -
       let ?rev = "\<lambda>t::real. 1 - t"
       have hrev_homeo: "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
           top1_unit_interval top1_unit_interval_topology ?rev"
-        sorry \<comment> \<open>t \<mapsto> 1-t is a self-homeomorphism of [0,1].\<close>
+        by (rule hrev_homeo)
       have hg1_homeo: "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
           A1 (subspace_topology X TX A1) (h1 \<circ> ?rev)"
-        sorry \<comment> \<open>Composition of homeomorphisms.\<close>
+        by (rule homeomorphism_on_comp[OF hrev_homeo hh1])
       have "(h1 \<circ> ?rev) 1 = h1 0" unfolding comp_def by (by100 simp)
       moreover have "h1 0 = c"
         sorry \<comment> \<open>c \<in> A1 = {h1(0), h1(1), ...}. h1(1) \<noteq> c implies h1(0) = c
@@ -83,7 +118,29 @@ proof -
   qed
   obtain g2 where hg2: "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
       A2 (subspace_topology X TX A2) g2" "g2 0 = c"
-    sorry \<comment> \<open>Orient h2: if h2(0)\<noteq>c then compose with t\<mapsto>1-t.\<close>
+  proof -
+    have hc_A2: "c \<in> A2" using hinter by (by100 blast)
+    have hbij2: "bij_betw h2 top1_unit_interval A2"
+      using hh2 unfolding top1_homeomorphism_on_def by (by100 blast)
+    show ?thesis
+    proof (cases "h2 0 = c")
+      case True thus ?thesis using that[OF hh2] by (by100 simp)
+    next
+      case False
+      \<comment> \<open>h2(1) must be c. Define g2 = h2 \<circ> (\<lambda>t. 1-t).\<close>
+      have hrev_homeo: "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
+          top1_unit_interval top1_unit_interval_topology (\<lambda>t::real. 1 - t)"
+        by (rule hrev_homeo)
+      have hg2_homeo: "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
+          A2 (subspace_topology X TX A2) (h2 \<circ> (\<lambda>t::real. 1 - t))"
+        by (rule homeomorphism_on_comp[OF hrev_homeo hh2])
+      have "(h2 \<circ> (\<lambda>t::real. 1 - t)) 0 = h2 1" unfolding comp_def by (by100 simp)
+      moreover have "h2 1 = c"
+        sorry \<comment> \<open>c \<in> A2 = h2(I). h2(0) \<noteq> c. Arc has 2 endpoints, c must be h2(1).\<close>
+      ultimately have "(h2 \<circ> (\<lambda>t::real. 1 - t)) 0 = c" by (by100 simp)
+      thus ?thesis using that[OF hg2_homeo] by (by100 simp)
+    qed
+  qed
   \<comment> \<open>Step 3: Define concatenated map h: [0,1] \<rightarrow> A1 \<union> A2.\<close>
   define h where "h t = (if t \<le> 1/2 then g1 (2*t) else g2 (2*t - 1))" for t :: real
   \<comment> \<open>Step 4: h is a homeomorphism [0,1] \<rightarrow> A1 \<union> A2.\<close>
@@ -92,7 +149,19 @@ proof -
          Bijectivity: g1 bij on [0,1/2]\<rightarrow>A1, g2 bij on [1/2,1]\<rightarrow>A2, images meet only at c.
          Inverse continuous: compact-to-Hausdorff or direct argument.\<close>
   have hTD_strict: "is_topology_on_strict (A1 \<union> A2) ?TD"
-    sorry \<comment> \<open>Subspace of strict topology is strict.\<close>
+  proof -
+    have "A1 \<union> A2 \<subseteq> X" using hA1X hA2X by (by100 blast)
+    have hTopX: "is_topology_on X TX" using hT unfolding is_topology_on_strict_def by (by100 blast)
+    have hTop: "is_topology_on (A1 \<union> A2) ?TD"
+      by (rule subspace_topology_is_topology_on[OF hTopX \<open>A1 \<union> A2 \<subseteq> X\<close>])
+    have hPow: "?TD \<subseteq> Pow (A1 \<union> A2)"
+    proof
+      fix U assume "U \<in> ?TD"
+      thus "U \<in> Pow (A1 \<union> A2)" using hTop unfolding is_topology_on_def subspace_topology_def
+        by (by100 blast)
+    qed
+    show ?thesis unfolding is_topology_on_strict_def using hTop hPow by (by100 blast)
+  qed
   show ?thesis unfolding top1_is_arc_on_def using hh_homeo hTD_strict by (by100 blast)
 qed
 
