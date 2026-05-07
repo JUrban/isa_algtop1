@@ -2188,7 +2188,32 @@ proof -
              himg_grp hU_in_img hV_in_img ...]\<close>
       \<comment> \<open>c = [f]_X = [foldr]_X since f \<simeq> foldr.\<close>
       have "c = {g. top1_loop_equiv_on X TX x0 (foldr top1_path_product gs (top1_constant_path x0)) g}"
-        sorry \<comment> \<open>f \<simeq> foldr implies [f] = [foldr] as classes.\<close>
+      proof -
+        have hf_equiv_foldr: "top1_loop_equiv_on X TX x0 f
+            (foldr top1_path_product gs (top1_constant_path x0))"
+        proof -
+          have hfoldr_loop: "top1_is_loop_on X TX x0 (foldr top1_path_product gs (top1_constant_path x0))"
+            sorry \<comment> \<open>foldr of loops is a loop.\<close>
+          show ?thesis unfolding top1_loop_equiv_on_def
+            using hf(1) hfoldr_loop hf_eq by (by100 blast)
+        qed
+        show ?thesis
+        proof (rule set_eqI, rule iffI)
+          fix k assume "k \<in> c"
+          hence "top1_loop_equiv_on X TX x0 f k" using hf(2) by (by100 blast)
+          from top1_loop_equiv_on_trans[OF hTopX
+              top1_loop_equiv_on_sym[OF hf_equiv_foldr] this]
+          show "k \<in> {g. top1_loop_equiv_on X TX x0
+              (foldr top1_path_product gs (top1_constant_path x0)) g}" by (by100 blast)
+        next
+          fix k assume "k \<in> {g. top1_loop_equiv_on X TX x0
+              (foldr top1_path_product gs (top1_constant_path x0)) g}"
+          hence "top1_loop_equiv_on X TX x0 (foldr top1_path_product gs (top1_constant_path x0)) k"
+            by (by100 blast)
+          from top1_loop_equiv_on_trans[OF hTopX hf_equiv_foldr this]
+          show "k \<in> c" using hf(2) by (by100 blast)
+        qed
+      qed
       thus ?thesis using hfoldr_in_img by (by100 simp)
     qed
   qed
