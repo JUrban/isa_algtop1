@@ -6816,17 +6816,53 @@ proof -
                      and h preserves homotopy (continuous map).\<close>
                   have "{k. top1_loop_equiv_on ?U ?TU a ((\<lambda>z. h z) \<circ> ?ell_disk) k}
                       \<in> ?\<psi> ` top1_Z_group"
-                    sorry \<comment> \<open>Proof: By deformation retract S1_deformation_retract_B2_minus_zero:
-                         ell_disk \<simeq> r\<circ>ell_disk in B2-{0} (where r(x) = x/|x| is retraction).
-                         r\<circ>ell_disk is an S1-loop. h continuous B2-{0}\<rightarrow>U preserves homotopy.
-                         [h\<circ>ell_disk]_U = [h\<circ>(r\<circ>ell_disk)]_U = (h|_{S1})_*([r\<circ>ell_disk]_{S1}).
-                         And (h|_{S1})_*([r\<circ>ell_disk]) = \<psi>(\<phi>([r\<circ>ell_disk])) \<in> image(\<psi>).
-                         Needs: ell_disk is loop in B2-{0}, h continuous, inclusion_induced_class.
-                       ell_disk is B2-{0} loop. By S1_pi1_iso surj: ell_disk \<simeq> S1-loop g in B2-{0}.
-                       h continuous B2-{0}\<rightarrow>U: h\<circ>ell_disk \<simeq> h\<circ>g in U.
-                       [h\<circ>g]_U = (h|_{S1})_*([g]) \<in> image((h|_{S1})_*) = image(\<psi>).
-                       Needs: S1_pi1_iso (PROVED), continuous_preserves_path_homotopic,
-                       h: B2-{0}\<rightarrow>U continuous (from assms + A\<subseteq>U + h(IntB2)\<subseteq>UV\<subseteq>U).\<close>
+                  proof -
+                    let ?B2_0 = "top1_B2 - {(0::real,0)}"
+                    let ?TB2_0 = "subspace_topology top1_B2 top1_B2_topology ?B2_0"
+                    \<comment> \<open>Step 1: extract retraction from deformation retract.\<close>
+                    obtain H_ret where hH_cont: "top1_continuous_map_on (?B2_0 \<times> I_set)
+                          (product_topology_on ?TB2_0 I_top) ?B2_0 ?TB2_0 H_ret"
+                        and hH0: "\<forall>x\<in>?B2_0. H_ret (x, 0) = x"
+                        and hH1: "\<forall>x\<in>?B2_0. H_ret (x, 1) \<in> top1_S1"
+                        and hH_fix: "\<forall>a\<in>top1_S1. \<forall>t\<in>I_set. H_ret (a, t) = a"
+                      using S1_deformation_retract_B2_minus_zero
+                      unfolding top1_deformation_retract_of_on_def by blast
+                    let ?r = "\<lambda>x. H_ret (x, 1)"
+                    \<comment> \<open>Step 2: ell_disk is a loop at (1,0) in B2-{0}.\<close>
+                    have hell_loop: "top1_is_loop_on ?B2_0 ?TB2_0 (1::real,0) ?ell_disk"
+                      sorry \<comment> \<open>bc(B2-{0},q,(1,0),revgam,hinv_f0) is loop: needs revgam path in B2-{0},
+                           hinv_f0 loop at q in Int B2-{0} \<subseteq> B2-{0}.\<close>
+                    \<comment> \<open>Step 3: by Lemma_58_1: ell_disk \<simeq> r\<circ>ell_disk in B2-{0}.
+                       Use id and r as continuous maps B2-{0} \<rightarrow> B2-{0} with homotopy H_ret.\<close>
+                    have hr_ell_S1: "?r \<circ> ?ell_disk = (\<lambda>t. H_ret (?ell_disk t, 1))"
+                      by (rule ext) (by100 simp)
+                    \<comment> \<open>r\<circ>ell_disk is a loop in S1 at (1,0).\<close>
+                    have hr_ell_loop_S1: "top1_is_loop_on top1_S1 top1_S1_topology (1,0)
+                        (\<lambda>t. H_ret (?ell_disk t, 1))"
+                      sorry \<comment> \<open>Continuous composition + H maps into S1 + H fixes (1,0).\<close>
+                    \<comment> \<open>Step 4: h\<circ>ell_disk \<simeq> h\<circ>(r\<circ>ell_disk) in U.
+                       First: ell_disk \<simeq> r\<circ>ell_disk in B2-{0} (Lemma_58_1).
+                       Then: h continuous B2-{0} \<rightarrow> U preserves homotopy.\<close>
+                    have hell_hom_rell: "top1_path_homotopic_on ?B2_0 ?TB2_0 (1,0) (1,0)
+                        ?ell_disk (\<lambda>t. H_ret (?ell_disk t, 1))"
+                      sorry \<comment> \<open>Lemma_58_1_basepoint_fixed[OF ... id r H_ret hell_loop].\<close>
+                    \<comment> \<open>h continuous B2-{0} \<rightarrow> U.\<close>
+                    have hh_B2_U: "top1_continuous_map_on ?B2_0 ?TB2_0 ?U ?TU (\<lambda>z. h z)"
+                      sorry \<comment> \<open>h: B2\<rightarrow>X maps S1\<rightarrow>A\<subseteq>U and Int B2-{0}\<rightarrow>UV\<subseteq>U.\<close>
+                    \<comment> \<open>h preserves homotopy: h\<circ>ell_disk \<simeq> h\<circ>(r\<circ>ell_disk) in U.\<close>
+                    have hh_hom: "top1_path_homotopic_on ?U ?TU a a
+                        ((\<lambda>z. h z) \<circ> ?ell_disk) ((\<lambda>z. h z) \<circ> (\<lambda>t. H_ret (?ell_disk t, 1)))"
+                      sorry \<comment> \<open>continuous_preserves_path_homotopic[OF ... hh_B2_U hell_hom_rell].\<close>
+                    \<comment> \<open>Step 5: [h\<circ>(r\<circ>ell_disk)]_U = (h|_{S1})_*([r\<circ>ell_disk]) \<in> image(\<psi>).\<close>
+                    have hr_class: "{k. top1_loop_equiv_on ?U ?TU a
+                        ((\<lambda>z. h z) \<circ> (\<lambda>t. H_ret (?ell_disk t, 1))) k} \<in> ?\<psi> ` top1_Z_group"
+                      sorry \<comment> \<open>(h|_{S1})_*([r\<circ>ell_disk]) = \<psi>(\<phi>([r\<circ>ell_disk])). In image.\<close>
+                    \<comment> \<open>Step 6: [h\<circ>ell_disk]_U = [h\<circ>(r\<circ>ell_disk)]_U (from homotopy).\<close>
+                    have "{k. top1_loop_equiv_on ?U ?TU a ((\<lambda>z. h z) \<circ> ?ell_disk) k}
+                        = {k. top1_loop_equiv_on ?U ?TU a ((\<lambda>z. h z) \<circ> (\<lambda>t. H_ret (?ell_disk t, 1))) k}"
+                      sorry \<comment> \<open>Homotopic loops have same class.\<close>
+                    thus ?thesis using hr_class by (by100 simp)
+                  qed
                   thus ?thesis using h\<psi>_img_N by (by100 blast)
                 qed
                 \<comment> \<open>Step C: [?bc_f0]_U = [h\<circ>\<ell>]_U (from agreement on I_set + loop_agree_on_I).\<close>
