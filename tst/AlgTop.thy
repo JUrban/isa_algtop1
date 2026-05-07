@@ -3778,8 +3778,19 @@ proof -
       \<comment> \<open>Step 5: By functoriality, j_*(\<iota>_*([f])) = (j \<circ> \<iota>)_*([f]) = [h \<circ> f] = id.\<close>
       \<comment> \<open>Need: j_*(\<iota>_*([f])) = class of (j \<circ> \<iota>) \<circ> f = class of h \<circ> f.
          Since h \<circ> f ~ constant in X, this class = id_X.\<close>
-      show ?thesis
-        sorry \<comment> \<open>Remaining: connect functoriality + path_homotopic to fundamental_group_id.\<close>
+      \<comment> \<open>By functoriality: j_*(\<iota>_*([f])) = (j \<circ> \<iota>)_*([f]) where j \<circ> \<iota> = h|_{S1}.\<close>
+      have hfunct: "?jAX (top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1, 0)
+          A ?TA a ?\<iota> {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) ?f g})
+        = top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1, 0) X TX a ?h_S1
+            {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) ?f g}"
+        sorry \<comment> \<open>Functoriality: j_*(\<iota>_*([f])) = (j\<circ>\<iota>)_*([f]) = h|_{S1 *}([f]).\<close>
+      \<comment> \<open>h|_{S1 *}([f]) = class of h \<circ> f in \<pi>_1(X,a).\<close>
+      \<comment> \<open>Since h \<circ> f is path-homotopic to constant, this class = id_X.\<close>
+      have hclass_id: "top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1, 0) X TX a ?h_S1
+          {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) ?f g}
+        = top1_fundamental_group_id X TX a"
+        sorry \<comment> \<open>Induced class of nulhomotopic map on loop = id (from htriv).\<close>
+      show ?thesis using hfunct hclass_id by (by100 simp)
     qed
     \<comment> \<open>Step (b): ker(j_*) \<subseteq> \<langle>\<langle>{[k\<circ>p]}\<rangle>\<rangle>. From SvK at base b + base change + retraction.\<close>
     have hker_sub_relator: "top1_group_kernel_on
