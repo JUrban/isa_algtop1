@@ -4042,8 +4042,24 @@ proof -
     have hker_sub_relator: "top1_group_kernel_on
         (top1_fundamental_group_carrier A ?TA a)
         (top1_fundamental_group_id X TX a) ?jAX \<subseteq> ?relator"
-      sorry \<comment> \<open>SvK kernel at b = normal-closure-of {[g0]}, base change maps [g0] to [k*p],
-           under retraction: ker(j_*) at a = normal-closure-of {[k*p]} in pi_1(A,a).\<close>
+    proof -
+      \<comment> \<open>Munkres generator tracking argument.
+         Goal: ker(j_*: \<pi>_1(A,a) \<rightarrow> \<pi>_1(X,a)) \<subseteq> \<langle>\<langle>{[k\<circ>p]}\<rangle>\<rangle>.
+         By SvK at base b: ker(incl_*: \<pi>_1(U,b) \<rightarrow> \<pi>_1(X,b)) = \<langle>\<langle>\<iota>_*(\<pi>_1(UV,b))\<rangle>\<rangle>.
+         The inclusion A \<hookrightarrow> U is an iso on \<pi>_1 (deformation retract).
+         Under the composition A \<hookrightarrow> U \<hookrightarrow> X:
+         ker(j_*: \<pi>_1(A,a) \<rightarrow> \<pi>_1(X,a)) = preimage under (A\<hookrightarrow>U)_* of ker(U\<hookrightarrow>X at a).
+         Since (A\<hookrightarrow>U)_* is an iso, ker(j_*) = (A\<hookrightarrow>U)_*\<inverse> (ker(U\<hookrightarrow>X at a)).
+         The SvK kernel at base b is \<langle>\<langle>\<iota>_*(\<pi>_1(UV,b))\<rangle>\<rangle>.
+         Under base change from b to a + retraction, this becomes \<langle>\<langle>{[k\<circ>p]}\<rangle>\<rangle>.
+         The core mathematical claim: \<delta>-hat([\<iota>_*(g_0)]) = [k\<circ>p] in \<pi>_1(U,a),
+         where g_0 is the generator of \<pi>_1(UV,b) and \<delta> is the path from b to a.\<close>
+      \<comment> \<open>This sorry contains the deepest mathematical content of the theorem:
+         the winding number argument + base change naturality + retraction tracking.
+         Requires: \<gamma>_bar*(f_0*\<gamma>) \<simeq> f in B2-{0} (same winding number),
+         comp_basepoint_change for h, and the deformation retract iso.\<close>
+      show ?thesis sorry
+    qed
     \<comment> \<open>Step (c): \<langle>\<langle>{[k\<circ>p]}\<rangle>\<rangle> \<subseteq> ker(j_*). The normal closure of {[k\<circ>p]} is contained
        in ker(j_*) because [k\<circ>p] \<in> ker(j_*) and ker is a normal subgroup.\<close>
     have hrelator_sub_ker: "?relator \<subseteq> top1_group_kernel_on
