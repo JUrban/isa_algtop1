@@ -45,6 +45,30 @@ lemma card_three_le: "card {a, b, c::'a} \<le> 3"
   apply (rule card_insert_le_m1) apply simp
   apply (rule card_insert_le_m1) apply simp apply simp done
 
+\<comment> \<open>Reusable: arc endpoint characterization. If h: [0,1] \<rightarrow> A is a homeomorphism,
+   then the arc endpoints of A are exactly {h(0), h(1)}.\<close>
+lemma arc_endpoints_are_boundary:
+  assumes hT: "is_topology_on_strict X TX" and hH: "is_hausdorff_on X TX"
+      and hAX: "A \<subseteq> X"
+      and hArc: "top1_is_arc_on A (subspace_topology X TX A)"
+      and hh: "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
+          A (subspace_topology X TX A) h"
+  shows "top1_arc_endpoints_on A (subspace_topology X TX A) = {h 0, h 1}"
+  sorry \<comment> \<open>h maps {0,1} to endpoints. Interior [0,1] points map to cutpoints.
+     Connected: [0,t)\<union>(t,1] disconnected for t\<in>(0,1); [0,1) and (0,1] connected.\<close>
+
+\<comment> \<open>Reusable: if A1 \<inter> A2 = {c} for arcs, then c \<in> endpoints of A1.\<close>
+lemma arc_single_intersection_is_endpoint:
+  assumes hT: "is_topology_on_strict X TX" and hH: "is_hausdorff_on X TX"
+      and hA1: "top1_is_arc_on A1 (subspace_topology X TX A1)" and hA1X: "A1 \<subseteq> X"
+      and hA2: "top1_is_arc_on A2 (subspace_topology X TX A2)" and hA2X: "A2 \<subseteq> X"
+      and hinter: "A1 \<inter> A2 = {c}"
+  shows "c \<in> top1_arc_endpoints_on A1 (subspace_topology X TX A1)"
+  sorry \<comment> \<open>If c were interior to A1, removing c disconnects A1.
+     Since A2-{c} \<cap> A1-{c} = \<emptyset>, we'd get 3+ components in A1\<union>A2-{c}.
+     But A1\<union>A2 path-connected and Hausdorff, so removing 1 point
+     can give at most 2 components. Contradiction.\<close>
+
 \<comment> \<open>===== Theorems with sorry, moved here for caching =====\<close>
 
 
@@ -260,8 +284,13 @@ proof -
         by (rule homeomorphism_on_comp[OF hrev_homeo hh1])
       have "(h1 \<circ> ?rev) 1 = h1 0" unfolding comp_def by (by100 simp)
       moreover have "h1 0 = c"
-        sorry \<comment> \<open>c \<in> A1 = {h1(0), h1(1), ...}. h1(1) \<noteq> c implies h1(0) = c
-             (since arc has exactly 2 endpoints and c must be one).\<close>
+      proof -
+        have hc_ep: "c \<in> top1_arc_endpoints_on A1 (subspace_topology X TX A1)"
+          by (rule arc_single_intersection_is_endpoint[OF hT hH hA1 hA1X hA2 hA2X hinter])
+        have heps: "top1_arc_endpoints_on A1 (subspace_topology X TX A1) = {h1 0, h1 1}"
+          by (rule arc_endpoints_are_boundary[OF hT hH hA1X hA1 hh1])
+        from hc_ep[unfolded heps] False show ?thesis by (by100 blast)
+      qed
       ultimately have "(h1 \<circ> ?rev) 1 = c" by (by100 simp)
       thus ?thesis using that[OF hg1_homeo] by (by100 simp)
     qed
@@ -286,7 +315,14 @@ proof -
         by (rule homeomorphism_on_comp[OF hrev_homeo hh2])
       have "(h2 \<circ> (\<lambda>t::real. 1 - t)) 0 = h2 1" unfolding comp_def by (by100 simp)
       moreover have "h2 1 = c"
-        sorry \<comment> \<open>c \<in> A2 = h2(I). h2(0) \<noteq> c. Arc has 2 endpoints, c must be h2(1).\<close>
+      proof -
+        have hinter2: "A2 \<inter> A1 = {c}" using hinter by (by100 blast)
+        have hc_ep: "c \<in> top1_arc_endpoints_on A2 (subspace_topology X TX A2)"
+          by (rule arc_single_intersection_is_endpoint[OF hT hH hA2 hA2X hA1 hA1X hinter2])
+        have heps: "top1_arc_endpoints_on A2 (subspace_topology X TX A2) = {h2 0, h2 1}"
+          by (rule arc_endpoints_are_boundary[OF hT hH hA2X hA2 hh2])
+        from hc_ep[unfolded heps] False show ?thesis by (by100 blast)
+      qed
       ultimately have "(h2 \<circ> (\<lambda>t::real. 1 - t)) 0 = c" by (by100 simp)
       thus ?thesis using that[OF hg2_homeo] by (by100 simp)
     qed
