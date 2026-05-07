@@ -7081,7 +7081,52 @@ proof -
                         sorry \<comment> \<open>Continuous composition + H maps into S1 + H fixes (1,0).\<close>
                       \<comment> \<open>h continuous B2-{0} \<rightarrow> U: preserves homotopy.\<close>
                       have hh_B20_U: "top1_continuous_map_on ?B2_0 ?TB2_0 ?U ?TU (\<lambda>z. h z)"
-                        sorry \<comment> \<open>h: B2\<rightarrow>X maps B2-{0} into U (S1\<rightarrow>A\<subseteq>U, IntB2-{0}\<rightarrow>UV\<subseteq>U).\<close>
+                      proof -
+                        \<comment> \<open>h: B2 \<rightarrow> X continuous. Restrict domain to B2-{0} \<subseteq> B2, codomain to U \<subseteq> X.\<close>
+                        have hB20_B2: "?B2_0 \<subseteq> top1_B2" by (by100 blast)
+                        have hh_B20_X: "top1_continuous_map_on ?B2_0 ?TB2_0 X TX (\<lambda>z. h z)"
+                        proof -
+                          from top1_continuous_map_on_restrict_domain_simple[OF assms(5) hB20_B2]
+                          have "top1_continuous_map_on ?B2_0 (subspace_topology top1_B2 top1_B2_topology ?B2_0) X TX h" .
+                          thus ?thesis by (by100 simp)
+                        qed
+                        have hh_img_U: "(\<lambda>z. h z) ` ?B2_0 \<subseteq> ?U"
+                        proof
+                          fix y assume "y \<in> (\<lambda>z. h z) ` ?B2_0"
+                          then obtain z where hz: "z \<in> ?B2_0" "y = h z" by (by100 blast)
+                          have "z \<in> top1_B2" using hz(1) by (by100 blast)
+                          have "z \<noteq> (0::real, 0)" using hz(1) by (by100 blast)
+                          show "y \<in> ?U"
+                          proof (cases "z \<in> top1_S1")
+                            case True
+                            hence "h z \<in> A" using assms(8) by (by100 blast)
+                            hence "h z \<in> X" using hA_sub_X by (by100 blast)
+                            moreover have "h z \<noteq> h (0,0)"
+                            proof -
+                              have "h ` (top1_B2 - top1_S1) = X - A"
+                                using assms(7) unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+                              hence "h (0,0) \<in> X - A" using h00_intB2 by (by100 blast)
+                              thus ?thesis using \<open>h z \<in> A\<close> by (by100 force)
+                            qed
+                            ultimately show ?thesis using hz(2) by (by100 force)
+                          next
+                            case False
+                            hence "z \<in> top1_B2 - top1_S1" using \<open>z \<in> top1_B2\<close> by (by100 blast)
+                            have "h ` (top1_B2 - top1_S1) = X - A"
+                              using assms(7) unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+                            hence "h z \<in> X - A" using \<open>z \<in> top1_B2 - top1_S1\<close> by (by100 blast)
+                            moreover have hinj: "inj_on h (top1_B2 - top1_S1)"
+                              using assms(7) unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+                            have "h z \<noteq> h (0,0)"
+                              using inj_on_eq_iff[OF hinj \<open>z \<in> top1_B2 - top1_S1\<close> h00_intB2]
+                              \<open>z \<noteq> (0,0)\<close> by (by100 simp)
+                            ultimately show ?thesis using hz(2) by (by100 force)
+                          qed
+                        qed
+                        have hU_sub: "?U \<subseteq> X" by (by100 blast)
+                        show ?thesis using top1_continuous_map_on_codomain_shrink[OF hh_B20_X hh_img_U hU_sub]
+                          by (by100 simp)
+                      qed
                       have hh_hom: "top1_path_homotopic_on ?U ?TU (h (1,0)) (h (1,0))
                           ((\<lambda>z. h z) \<circ> ?ell_disk) ((\<lambda>z. h z) \<circ> ?r_ell)"
                         by (rule continuous_preserves_path_homotopic[OF hTopB20 hTopU_outer
