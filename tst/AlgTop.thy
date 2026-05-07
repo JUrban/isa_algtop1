@@ -3399,10 +3399,114 @@ proof -
     \<comment> \<open>Direction \<subseteq>: ker(j_U) \<subseteq> \<langle>\<langle>\<iota>*(\<pi>_1(UV))\<rangle>\<rangle>.
        Hard direction: nulhomotopic U-loop is product of conjugates of UV-loops.
        Requires SvK universal property / free product argument.\<close>
-    fix c assume "c \<in> top1_group_kernel_on ?piU ?eX ?j_U"
+    fix c assume hc_ker: "c \<in> top1_group_kernel_on ?piU ?eX ?j_U"
     show "c \<in> ?N"
-      sorry \<comment> \<open>Hard direction: uses homotopy rectangle subdivision + SvK.
-           Proof exists in Corollary_70_4_simply_connected_V (AlgTopCached).\<close>
+    proof -
+      \<comment> \<open>Strategy: apply Theorem_70_1 universal property with H = \<pi>_1(U)/N.
+         \<phi>_1 = quotient projection, \<phi>_2 = trivial map.
+         The universal \<Phi>: \<pi>_1(X) \<rightarrow> \<pi>_1(U)/N satisfies \<Phi>(j_U(c)) = [c]_N.
+         Since c \<in> ker(j_U): \<Phi>(e_X) = e_Q = [c]_N, hence c \<in> N.\<close>
+      have hpiU_grp: "top1_is_group_on ?piU ?mulU ?eU ?invgU"
+        by (rule top1_fundamental_group_is_group[OF hTopU hx0_U])
+      have hpiX_grp: "top1_is_group_on ?piX ?mulX ?eX ?invgX"
+        by (rule top1_fundamental_group_is_group[OF hTopX hx0_X])
+      \<comment> \<open>N is normal in \<pi>_1(U).\<close>
+      have hgens_sub: "?j_UV_U ` top1_fundamental_group_carrier (U \<inter> V) ?TUV x0 \<subseteq> ?piU"
+      proof (rule image_subsetI)
+        fix cls assume "cls \<in> top1_fundamental_group_carrier (U \<inter> V) ?TUV x0"
+        have hUV_sub_U: "U \<inter> V \<subseteq> U" by (by100 blast)
+        have hTUV_eq: "subspace_topology U ?TU (U \<inter> V) = ?TUV"
+          using subspace_topology_trans[OF hUV_sub_U, of X TX] by (by100 simp)
+        have hUV_sub: "U \<inter> V \<subseteq> X" using hUsub by (by100 blast)
+        have hTUV_top: "is_topology_on (U \<inter> V) ?TUV"
+          by (rule subspace_topology_is_topology_on[OF hTopX hUV_sub])
+        have hx0_UV: "x0 \<in> U \<inter> V" using assms(8) by (by100 blast)
+        have hincl_UV_U: "top1_continuous_map_on (U \<inter> V) ?TUV U ?TU (\<lambda>x. x)"
+        proof -
+          from top1_continuous_map_on_restrict_domain_simple[OF
+              top1_continuous_map_on_id[OF hTopU, unfolded id_def] hUV_sub_U]
+          show ?thesis using hTUV_eq by (by100 simp)
+        qed
+        have hj_UV_U_hom: "top1_group_hom_on
+            (top1_fundamental_group_carrier (U \<inter> V) ?TUV x0)
+            (top1_fundamental_group_mul (U \<inter> V) ?TUV x0) ?piU ?mulU ?j_UV_U"
+          by (rule top1_fundamental_group_induced_on_is_hom[OF hTUV_top hTopU hx0_UV hx0_U hincl_UV_U])
+             (by100 simp)
+        thus "?j_UV_U cls \<in> ?piU"
+          using \<open>cls \<in> _\<close> hj_UV_U_hom unfolding top1_group_hom_on_def by (by100 blast)
+      qed
+      have hN_normal: "top1_normal_subgroup_on ?piU ?mulU ?eU ?invgU ?N"
+        by (rule normal_subgroup_generated_is_normal[OF hpiU_grp hgens_sub])
+      \<comment> \<open>Quotient group.\<close>
+      let ?Q = "top1_quotient_group_carrier_on ?piU ?mulU ?N"
+      let ?mulQ = "top1_quotient_group_mul_on ?mulU"
+      let ?eQ = "top1_group_coset_on ?piU ?mulU ?N ?eU"
+      let ?invgQ = "\<lambda>C. top1_group_coset_on ?piU ?mulU ?N
+          (?invgU (SOME g. g \<in> ?piU \<and> C = top1_group_coset_on ?piU ?mulU ?N g))"
+      have hQ_grp: "top1_is_group_on ?Q ?mulQ ?eQ ?invgQ"
+        by (rule quotient_group_is_group[OF hpiU_grp hN_normal])
+      \<comment> \<open>\<phi>_1 = quotient projection: \<pi>_1(U) \<rightarrow> \<pi>_1(U)/N.\<close>
+      let ?\<phi>1 = "\<lambda>g. top1_group_coset_on ?piU ?mulU ?N g"
+      have h\<phi>1_hom: "top1_group_hom_on ?piU ?mulU ?Q ?mulQ ?\<phi>1"
+        by (rule quotient_projection_properties(1)[OF hpiU_grp hN_normal])
+      have h\<phi>1_ker: "top1_group_kernel_on ?piU ?eQ ?\<phi>1 = ?N"
+        by (rule quotient_projection_properties(3)[OF hpiU_grp hN_normal])
+      \<comment> \<open>\<phi>_2 = trivial map: \<pi>_1(V) \<rightarrow> {e_Q}.\<close>
+      let ?\<phi>2 = "\<lambda>v. ?eQ"
+      have h\<phi>2_hom: "top1_group_hom_on
+          (top1_fundamental_group_carrier V ?TV x0) (top1_fundamental_group_mul V ?TV x0)
+          ?Q ?mulQ ?\<phi>2"
+        unfolding top1_group_hom_on_def
+      proof (intro conjI ballI)
+        fix x assume "x \<in> top1_fundamental_group_carrier V ?TV x0"
+        show "?eQ \<in> ?Q" using hQ_grp unfolding top1_is_group_on_def by (by100 blast)
+      next
+        fix x y assume "x \<in> top1_fundamental_group_carrier V ?TV x0"
+            "y \<in> top1_fundamental_group_carrier V ?TV x0"
+        have "?eQ \<in> ?Q" using hQ_grp unfolding top1_is_group_on_def by (by100 blast)
+        show "?eQ = ?mulQ ?eQ ?eQ"
+          using group_id_left[OF hQ_grp \<open>?eQ \<in> ?Q\<close>] by (by100 simp)
+      qed
+      \<comment> \<open>Compatibility: for c' \<in> \<pi>_1(UV), \<phi>_1(j_{UV\<rightarrow>U}(c')) = \<phi>_2(j_{UV\<rightarrow>V}(c')).
+         LHS = [j_{UV\<rightarrow>U}(c')]_N.  RHS = e_Q.
+         Need: j_{UV\<rightarrow>U}(c') \<in> N. True by definition of N.\<close>
+      have hcompat: "\<forall>c'\<in>top1_fundamental_group_carrier (U \<inter> V) ?TUV x0.
+          ?\<phi>1 (?j_UV_U c') = ?\<phi>2 (top1_fundamental_group_induced_on (U \<inter> V) ?TUV x0 V ?TV x0 (\<lambda>x. x) c')"
+      proof (intro ballI)
+        fix c' assume hc': "c' \<in> top1_fundamental_group_carrier (U \<inter> V) ?TUV x0"
+        \<comment> \<open>RHS = e_Q. LHS = [j_{UV\<rightarrow>U}(c')]_N. Need j_{UV\<rightarrow>U}(c') \<in> N.\<close>
+        have "?j_UV_U c' \<in> ?j_UV_U ` top1_fundamental_group_carrier (U \<inter> V) ?TUV x0"
+          using hc' by (by100 blast)
+        hence hj_in_N: "?j_UV_U c' \<in> ?N"
+          unfolding top1_normal_subgroup_generated_on_def by (by100 blast)
+        have "?j_UV_U c' \<in> top1_group_kernel_on ?piU ?eQ ?\<phi>1"
+          using hj_in_N h\<phi>1_ker by (by100 simp)
+        hence "?\<phi>1 (?j_UV_U c') = ?eQ" unfolding top1_group_kernel_on_def by (by100 blast)
+        thus "?\<phi>1 (?j_UV_U c') = ?\<phi>2 (top1_fundamental_group_induced_on (U \<inter> V) ?TUV x0 V ?TV x0 (\<lambda>x. x) c')"
+          by (by100 simp)
+      qed
+      \<comment> \<open>Apply Theorem_70_1: get \<Phi>: \<pi>_1(X) \<rightarrow> \<pi>_1(U)/N with \<Phi>(j_U(a)) = [a]_N.\<close>
+      obtain \<Phi> where h\<Phi>_hom: "top1_group_hom_on ?piX ?mulX ?Q ?mulQ \<Phi>"
+          and h\<Phi>_U: "\<forall>a\<in>?piU. \<Phi> (?j_U a) = ?\<phi>1 a"
+          and h\<Phi>_V: "\<forall>b\<in>top1_fundamental_group_carrier V ?TV x0.
+              \<Phi> (top1_fundamental_group_induced_on V ?TV x0 X TX x0 (\<lambda>x. x) b) = ?\<phi>2 b"
+        using Theorem_70_1_universal_property[OF assms(1-6) hV_pc assms(8) hQ_grp h\<phi>1_hom h\<phi>2_hom hcompat]
+        by (by100 blast)
+      \<comment> \<open>c \<in> ker(j_U) means c \<in> \<pi>_1(U) and j_U(c) = e_X.\<close>
+      have hc_piU: "c \<in> ?piU" using hc_ker unfolding top1_group_kernel_on_def by (by100 blast)
+      have hj_c: "?j_U c = ?eX" using hc_ker unfolding top1_group_kernel_on_def by (by100 blast)
+      \<comment> \<open>\<Phi>(j_U(c)) = [c]_N = \<phi>_1(c).\<close>
+      have h\<Phi>c: "\<Phi> (?j_U c) = ?\<phi>1 c" using h\<Phi>_U[rule_format, OF hc_piU] .
+      \<comment> \<open>\<Phi>(e_X) = e_Q (hom preserves identity).\<close>
+      have h\<Phi>_id: "\<Phi> ?eX = ?eQ"
+        by (rule hom_preserves_id[OF hpiX_grp hQ_grp h\<Phi>_hom])
+      \<comment> \<open>Combine: [c]_N = e_Q, hence c \<in> N.\<close>
+      have h\<phi>1c_eQ: "?\<phi>1 c = ?eQ" using h\<Phi>c hj_c h\<Phi>_id by (by100 simp)
+      \<comment> \<open>kernel of quotient projection = N.\<close>
+      have "c \<in> top1_group_kernel_on ?piU ?eQ ?\<phi>1"
+        unfolding top1_group_kernel_on_def using hc_piU h\<phi>1c_eQ by (by100 blast)
+      thus "c \<in> ?N" using h\<phi>1_ker by (by100 simp)
+    qed
   qed
 qed
 
