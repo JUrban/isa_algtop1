@@ -279,7 +279,23 @@ proof -
     show "\<phi> ` N \<subseteq> G'" using hN_sub hphi_maps by (by100 blast)
     \<comment> \<open>\<phi>(N) is a subgroup.\<close>
     show "top1_is_group_on (\<phi> ` N) mulG' eG' invgG'"
-      sorry \<comment> \<open>Image of subgroup under iso is subgroup: e'\<in>\<phi>(N), closure, inverse.\<close>
+    proof -
+      have hN_group: "top1_is_group_on N mulG eG invgG"
+        using assms(4) unfolding top1_normal_subgroup_on_def by (by100 blast)
+      have hphi_N_hom: "top1_group_hom_on N mulG G' mulG' \<phi>"
+      proof -
+        have "\<forall>x\<in>N. \<phi> x \<in> G'" using hN_sub hphi_maps by (by100 blast)
+        moreover have "\<forall>x\<in>N. \<forall>y\<in>N. \<phi> (mulG x y) = mulG' (\<phi> x) (\<phi> y)"
+        proof (intro ballI)
+          fix x y assume "x \<in> N" "y \<in> N"
+          hence "x \<in> G" "y \<in> G" using hN_sub by (by100 blast)+
+          thus "\<phi> (mulG x y) = mulG' (\<phi> x) (\<phi> y)"
+            using assms(3) unfolding top1_group_iso_on_def top1_group_hom_on_def by (by100 blast)
+        qed
+        ultimately show ?thesis unfolding top1_group_hom_on_def by (by100 blast)
+      qed
+      show ?thesis by (rule hom_image_is_subgroup[OF hN_group assms(2) hphi_N_hom])
+    qed
     \<comment> \<open>Conjugation: \<forall>g'\<in>G'. \<forall>m\<in>\<phi>(N). g'\<cdot>m\<cdot>g'\<inverse> \<in> \<phi>(N).\<close>
     fix g' m assume hg': "g' \<in> G'" and hm: "m \<in> \<phi> ` N"
     show "mulG' (mulG' g' m) (invgG' g') \<in> \<phi> ` N"
@@ -314,7 +330,7 @@ proof -
           by (by100 simp)
         \<comment> \<open>\<phi>(g\<inverse>) = \<phi>(g)\<inverse>: from \<phi>(g)\<cdot>\<phi>(g\<inverse>) = \<phi>(g\<cdot>g\<inverse>) = \<phi>(e) = e'.\<close>
         have "\<phi> (invgG g) = invgG' (\<phi> g)"
-          sorry \<comment> \<open>Standard: hom preserves inverse. Needs \<phi>(e)=e' and uniqueness of inverse.\<close>
+          by (rule hom_preserves_inv[OF assms(1) assms(2) hphi_hom_loc hg(1)])
         thus ?thesis using h1 hg(2) hn(2) by (by100 simp)
       qed
       ultimately show ?thesis by (by100 simp)
@@ -9671,6 +9687,9 @@ end
 
 
 
+ 
+ 
+ 
  
  
  
