@@ -254,6 +254,21 @@ project/bin/isabelle eval_at -t -d . -l Top0 AlgTop.thy [second-to-last-line] > 
 
 Use timing regularly; aim for total runtime well below ~30s.
 
+### Searchable indexes
+
+Two indexes cover all sessions. **Regenerate after caching or adding theorems.**
+
+```bash
+cd /project/tst && bash gen_index.sh       # THEOREMS_AND_DEFS.txt – name/kind/file/line
+cd /project/tst && bash gen_stmt_index.sh   # STMT_INDEX.txt – name + statement fragment
+```
+
+Before stating a new lemma/definition, **grep both indexes** to avoid duplicates:
+
+```bash
+grep -i "keyword" THEOREMS_AND_DEFS.txt STMT_INDEX.txt
+```
+
 ---
 
 ## Change management
