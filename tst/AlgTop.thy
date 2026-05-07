@@ -469,7 +469,41 @@ proof -
         have hcomp_cont: "top1_continuous_map_on ?IR
             (subspace_topology top1_unit_interval top1_unit_interval_topology ?IR)
             (A1 \<union> A2) ?TD (g2 \<circ> (\<lambda>t. 2*t - 1))"
-          sorry \<comment> \<open>Composition: (\<lambda>t. 2*t-1) continuous ?IR\<rightarrow>I, g2 continuous I\<rightarrow>A2, enlarge to A1\<union>A2.\<close>
+        proof -
+          have hdbl_cont: "top1_continuous_map_on ?IR
+              (subspace_topology top1_unit_interval top1_unit_interval_topology ?IR)
+              top1_unit_interval top1_unit_interval_topology (\<lambda>t. 2*t - 1)"
+            sorry \<comment> \<open>Affine map on subinterval. Standard.\<close>
+          have hg2_cont: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+              A2 (subspace_topology X TX A2) g2"
+            using hg2(1) unfolding top1_homeomorphism_on_def by (by100 blast)
+          have hg2_cont_D: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+              (A1 \<union> A2) ?TD g2"
+          proof -
+            have hA2_sub: "A2 \<subseteq> A1 \<union> A2" by (by100 blast)
+            have hA2_sub_X: "A2 \<subseteq> X" by (rule hA2X)
+            have hA1D_sub_X: "A1 \<union> A2 \<subseteq> X" using hA1X hA2X by (by100 blast)
+            have hg2_X: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology X TX g2"
+            proof -
+              from top1_continuous_map_on_codomain_enlarge[OF hg2_cont hA2_sub_X]
+              have "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+                  X (subspace_topology X TX X) g2" by (by100 simp)
+              moreover have "subspace_topology X TX X = TX"
+                by (rule subspace_topology_self)
+                  (use hT in \<open>unfold is_topology_on_strict_def Pow_def; by100 blast\<close>)
+              ultimately show ?thesis by (by100 simp)
+            qed
+            have hg2_img: "g2 ` top1_unit_interval \<subseteq> A1 \<union> A2"
+            proof -
+              have "g2 ` top1_unit_interval = A2"
+                using hg2(1) unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+              thus ?thesis by (by100 blast)
+            qed
+            show ?thesis
+              using top1_continuous_map_on_codomain_shrink[OF hg2_X hg2_img hA1D_sub_X] by (by100 simp)
+          qed
+          show ?thesis by (rule top1_continuous_map_on_comp[OF hdbl_cont hg2_cont_D])
+        qed
         show ?thesis
           by (rule top1_continuous_map_on_agree[OF hcomp_cont]) (use hagree in \<open>by100 simp\<close>)
       qed
