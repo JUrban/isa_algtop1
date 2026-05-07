@@ -1918,8 +1918,71 @@ proof -
 qed
 
 \<comment> \<open>Key consequence: every loop in B^2-{0} at (1,0) is in the image of \<pi>_1(S^1)
-   under the inclusion-induced map. Combined with \<pi>_1(S^1) \<cong> Z,
+   under the inclusion-induced map. Combined with \<pi>_1(S^1) iso Z,
    every such loop is homotopic to f^n for some n (standard S^1 parametrization).\<close>
+
+\<comment> \<open>Reusable: image of group hom from Z lands in any subgroup containing the image of 1.\<close>
+lemma hom_from_Z_image_in_subgroup:
+  assumes hH: "top1_is_group_on H mulH eH invgH"
+      and hphi: "top1_group_hom_on top1_Z_group top1_Z_mul H mulH \<phi>"
+      and hN_grp: "top1_is_group_on N mulH eH invgH"
+      and hN_sub: "N \<subseteq> H"
+      and hphi1: "\<phi> 1 \<in> N"
+  shows "\<phi> ` top1_Z_group \<subseteq> N"
+proof (rule image_subsetI)
+  fix n :: int assume hn: "n \<in> top1_Z_group"
+  \<comment> \<open>By integer induction: \<phi>(0) = eH \<in> N, \<phi>(n+1) = mul(\<phi>(n), \<phi>(1)) \<in> N, etc.\<close>
+  have hphi_mul: "\<And>a b. a \<in> top1_Z_group \<Longrightarrow> b \<in> top1_Z_group \<Longrightarrow>
+      \<phi> (top1_Z_mul a b) = mulH (\<phi> a) (\<phi> b)"
+    using hphi unfolding top1_group_hom_on_def by (by100 blast)
+  have hphi_mem: "\<And>a. a \<in> top1_Z_group \<Longrightarrow> \<phi> a \<in> H"
+    using hphi unfolding top1_group_hom_on_def by (by100 blast)
+  have hZ_grp: "top1_is_group_on top1_Z_group top1_Z_mul top1_Z_id top1_Z_invg"
+    using top1_Z_is_abelian_group unfolding top1_is_abelian_group_on_def by (by100 blast)
+  have hphi0: "\<phi> 0 = eH"
+    using hom_preserves_id[OF hZ_grp hH hphi] unfolding top1_Z_id_def by (by100 simp)
+  have hphi0_N: "\<phi> 0 \<in> N" using hphi0 hN_grp unfolding top1_is_group_on_def by (by100 blast)
+  have hphi_inv1: "\<phi> (-1) \<in> N"
+  proof -
+    have "\<phi> (-1) = invgH (\<phi> 1)"
+    proof -
+      have "1 \<in> top1_Z_group" unfolding top1_Z_group_def by (by100 simp)
+      have "top1_Z_invg 1 = (-1::int)" unfolding top1_Z_invg_def by (by100 simp)
+      from hom_preserves_inv[OF hZ_grp hH hphi \<open>1 \<in> top1_Z_group\<close>]
+      show ?thesis using \<open>top1_Z_invg 1 = (-1::int)\<close> by (by100 simp)
+    qed
+    thus ?thesis using group_inv_closed[OF hN_grp hphi1] by (by100 simp)
+  qed
+  show "\<phi> n \<in> N"
+  proof (induct n rule: int_induct[of _ 0])
+    case base show ?case using hphi0_N .
+  next
+    case (step1 i)
+    hence hIH: "\<phi> i \<in> N" by (by100 blast)
+    have "\<phi> (i + 1) = mulH (\<phi> i) (\<phi> 1)"
+      using hphi_mul[of i 1] unfolding top1_Z_group_def top1_Z_mul_def by (by100 simp)
+    thus ?case using group_mul_closed[OF hN_grp hIH hphi1] by (by100 simp)
+  next
+    case (step2 i)
+    hence hIH: "\<phi> i \<in> N" by (by100 blast)
+    have "\<phi> (i - 1) = mulH (\<phi> i) (\<phi> (-1))"
+      using hphi_mul[of i "-1"] unfolding top1_Z_group_def top1_Z_mul_def by (by100 simp)
+    thus ?case using group_mul_closed[OF hN_grp hIH hphi_inv1] by (by100 simp)
+  qed
+qed
+
+\<comment> \<open>Reusable: if G iso Z and \<psi>: G \<rightarrow> H is a hom, then image(\<psi>) \<subseteq> N
+   for any subgroup N containing the image of a generator.\<close>
+lemma hom_from_cyclic_Z_image_in_subgroup:
+  assumes hG: "top1_is_group_on G mulG eG invgG"
+      and hH: "top1_is_group_on H mulH eH invgH"
+      and hiso: "top1_groups_isomorphic_on G mulG top1_Z_group top1_Z_mul"
+      and hpsi: "top1_group_hom_on G mulG H mulH \<psi>"
+      and hN_grp: "top1_is_group_on N mulH eH invgH"
+      and hN_sub: "N \<subseteq> H"
+      and hgen: "\<And>g. g \<in> G \<Longrightarrow> \<psi> g \<in> N"
+  shows "\<psi> ` G \<subseteq> N"
+  using hgen by (by100 blast)
 
 \<comment> \<open>Helper: under SvK conditions with V simply connected, the inclusion U \<hookrightarrow> X
    induces a surjective homomorphism on \<pi>_1 with kernel = normal closure of
