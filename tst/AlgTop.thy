@@ -6735,8 +6735,57 @@ proof -
                 \<comment> \<open>Step C: [?bc_f0]_U = [h\<circ>\<ell>]_U (from agreement on I_set + loop_agree_on_I).\<close>
                 have "{k. top1_loop_equiv_on ?U ?TU a ?bc_f0 k}
                     = {k. top1_loop_equiv_on ?U ?TU a ((\<lambda>z. h z) \<circ> ?ell_disk) k}"
-                  sorry \<comment> \<open>bc_f0 and h\<circ>ell_disk agree on I (hbc_agree_I), both loops at a.
-                       By loop_agree_on_I: bc_f0 \<simeq> h\<circ>ell_disk. So classes equal.\<close>
+                proof -
+                  \<comment> \<open>h\<circ>ell_disk agrees with bc_f0 on I (symmetric of hbc_agree_I).\<close>
+                  have "\<forall>t\<in>top1_unit_interval. ((\<lambda>z. h z) \<circ> ?ell_disk) t = ?bc_f0 t"
+                    using hbc_agree_I by (by100 force)
+                  \<comment> \<open>bc_f0 is a loop at a in U.\<close>
+                  have hf0_U_loop: "top1_is_loop_on ?U ?TU ?b f0"
+                  proof -
+                    have hUV_sub_U_loc: "?UV \<subseteq> ?U" by (by100 blast)
+                    have "subspace_topology ?U ?TU ?UV = ?TUV"
+                      using subspace_topology_trans[OF hUV_sub_U_loc] by (by100 simp)
+                    have "top1_continuous_map_on ?UV ?TUV ?U ?TU (\<lambda>x. x)"
+                    proof -
+                      from top1_continuous_map_on_restrict_domain_simple[OF
+                          top1_continuous_map_on_id[OF hTopU_outer, unfolded id_def] hUV_sub_U_loc]
+                      show ?thesis using \<open>subspace_topology ?U ?TU ?UV = ?TUV\<close> by (by100 simp)
+                    qed
+                    have "top1_is_loop_on ?U ?TU ((\<lambda>x. x) ?b) ((\<lambda>x. x) \<circ> f0)"
+                      by (rule top1_continuous_map_loop_early[OF \<open>top1_continuous_map_on ?UV ?TUV ?U ?TU (\<lambda>x. x)\<close> hf0_loop])
+                    moreover have "(\<lambda>x::'a. x) \<circ> f0 = f0" by (rule ext) (by100 simp)
+                    moreover have "(\<lambda>x::'a. x) ?b = ?b" by (by100 simp)
+                    ultimately show ?thesis by (by100 simp)
+                  qed
+                  have hbc_f0_loop: "top1_is_loop_on ?U ?TU a ?bc_f0"
+                    by (rule top1_basepoint_change_is_loop[OF hTopU_outer hrev\<delta>_path_U hf0_U_loop])
+                  \<comment> \<open>By loop_agree_on_I: h\<circ>ell_disk is a loop and bc_f0 \<simeq> h\<circ>ell_disk.\<close>
+                  from loop_agree_on_I[OF hbc_f0_loop \<open>\<forall>t\<in>top1_unit_interval. ((\<lambda>z. h z) \<circ> ?ell_disk) t = ?bc_f0 t\<close>]
+                  have h_hom: "top1_path_homotopic_on ?U ?TU a a ?bc_f0 ((\<lambda>z. h z) \<circ> ?ell_disk)"
+                    by (by100 blast)
+                  have h_hom_le: "top1_loop_equiv_on ?U ?TU a ?bc_f0 ((\<lambda>z. h z) \<circ> ?ell_disk)"
+                  proof -
+                    have "top1_is_loop_on ?U ?TU a ((\<lambda>z. h z) \<circ> ?ell_disk)"
+                      using loop_agree_on_I[OF hbc_f0_loop
+                          \<open>\<forall>t\<in>top1_unit_interval. ((\<lambda>z. h z) \<circ> ?ell_disk) t = ?bc_f0 t\<close>]
+                      by (by100 blast)
+                    thus ?thesis unfolding top1_loop_equiv_on_def using hbc_f0_loop h_hom by (by100 blast)
+                  qed
+                  show ?thesis
+                  proof (rule set_eqI, rule iffI)
+                    fix k assume hk: "k \<in> {k. top1_loop_equiv_on ?U ?TU a ?bc_f0 k}"
+                    hence "top1_loop_equiv_on ?U ?TU a ?bc_f0 k" by (by100 blast)
+                    from top1_loop_equiv_on_trans[OF hTopU_outer
+                        top1_loop_equiv_on_sym[OF h_hom_le] this]
+                    show "k \<in> {k. top1_loop_equiv_on ?U ?TU a ((\<lambda>z. h z) \<circ> ?ell_disk) k}"
+                      by (by100 blast)
+                  next
+                    fix k assume "k \<in> {k. top1_loop_equiv_on ?U ?TU a ((\<lambda>z. h z) \<circ> ?ell_disk) k}"
+                    hence "top1_loop_equiv_on ?U ?TU a ((\<lambda>z. h z) \<circ> ?ell_disk) k" by (by100 blast)
+                    from top1_loop_equiv_on_trans[OF hTopU_outer h_hom_le this]
+                    show "k \<in> {k. top1_loop_equiv_on ?U ?TU a ?bc_f0 k}" by (by100 blast)
+                  qed
+                qed
                 thus ?thesis using hbc_class_in_N by (by100 simp)
               qed
             qed
