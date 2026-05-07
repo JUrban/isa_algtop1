@@ -2102,8 +2102,56 @@ lemma basepoint_change_cong_on_I:
   assumes "\<forall>t\<in>top1_unit_interval. f t = g t"
   shows "\<forall>t\<in>top1_unit_interval. top1_basepoint_change_on X TX x0 x1 \<alpha> f t
       = top1_basepoint_change_on X TX x0 x1 \<alpha> g t"
-  sorry \<comment> \<open>bc evaluates f only at 2*(2t-1) for t \<in> (1/2, 3/4],
-     giving 2*(2t-1) \<in> [0,1]. So agreement on I_set suffices.\<close>
+proof (intro ballI)
+  fix t assume ht: "t \<in> top1_unit_interval"
+  hence ht01: "0 \<le> t" "t \<le> 1" unfolding top1_unit_interval_def by (by100 simp)+
+  \<comment> \<open>bc(f)(t) = (rev(\<alpha>)*(f*\<alpha>))(t).
+     For t \<le> 1/2: rev(\<alpha>)(2t). No f/g.
+     For t > 1/2: (f*\<alpha>)(2t-1).
+       For 2t-1 \<le> 1/2 (t \<le> 3/4): f(2*(2t-1)) = f(4t-2) with 4t-2 \<in> [0,1]. Agrees.
+       For 2t-1 > 1/2 (t > 3/4): \<alpha>(2*(2t-1)-1). No f/g.\<close>
+  let ?pp = top1_path_product and ?pr = top1_path_reverse
+  have hbc_f: "top1_basepoint_change_on X TX x0 x1 \<alpha> f t = ?pp (?pr \<alpha>) (?pp f \<alpha>) t"
+    unfolding top1_basepoint_change_on_def by (by100 simp)
+  have hbc_g: "top1_basepoint_change_on X TX x0 x1 \<alpha> g t = ?pp (?pr \<alpha>) (?pp g \<alpha>) t"
+    unfolding top1_basepoint_change_on_def by (by100 simp)
+  show "top1_basepoint_change_on X TX x0 x1 \<alpha> f t = top1_basepoint_change_on X TX x0 x1 \<alpha> g t"
+  proof (cases "t \<le> 1/2")
+    case True
+    have "?pp (?pr \<alpha>) (?pp f \<alpha>) t = ?pr \<alpha> (2*t)"
+      unfolding top1_path_product_def using True by (by100 simp)
+    moreover have "?pp (?pr \<alpha>) (?pp g \<alpha>) t = ?pr \<alpha> (2*t)"
+      unfolding top1_path_product_def using True by (by100 simp)
+    ultimately show ?thesis using hbc_f hbc_g by (by100 simp)
+  next
+    case False
+    hence hgt: "t > 1/2" by (by100 simp)
+    have h2t1: "0 \<le> 2*t-1" "2*t-1 \<le> 1" using ht01 hgt by (by100 simp)+
+    have hout_f: "?pp (?pr \<alpha>) (?pp f \<alpha>) t = ?pp f \<alpha> (2*t-1)"
+      unfolding top1_path_product_def using hgt by (by100 simp)
+    have hout_g: "?pp (?pr \<alpha>) (?pp g \<alpha>) t = ?pp g \<alpha> (2*t-1)"
+      unfolding top1_path_product_def using hgt by (by100 simp)
+    show ?thesis
+    proof (cases "2*t-1 \<le> 1/2")
+      case True
+      have "?pp f \<alpha> (2*t-1) = f (2*(2*t-1))"
+        unfolding top1_path_product_def using True by (by100 simp)
+      moreover have "?pp g \<alpha> (2*t-1) = g (2*(2*t-1))"
+        unfolding top1_path_product_def using True by (by100 simp)
+      moreover have "0 \<le> 2*(2*t-1)" "2*(2*t-1) \<le> 1" using True h2t1 by (by100 simp)+
+      hence "2*(2*t-1) \<in> top1_unit_interval" unfolding top1_unit_interval_def by (by100 simp)
+      hence "f (2*(2*t-1)) = g (2*(2*t-1))" using assms by (by100 blast)
+      ultimately show ?thesis using hbc_f hbc_g hout_f hout_g by (by100 simp)
+    next
+      case False
+      have "?pp f \<alpha> (2*t-1) = \<alpha> (2*(2*t-1)-1)"
+        unfolding top1_path_product_def using False by (by100 simp)
+      moreover have "?pp g \<alpha> (2*t-1) = \<alpha> (2*(2*t-1)-1)"
+        unfolding top1_path_product_def using False by (by100 simp)
+      ultimately show ?thesis using hbc_f hbc_g hout_f hout_g by (by100 simp)
+    qed
+  qed
+qed
 
 \<comment> \<open>Reusable: under any iso \<pi>_1(S1) \<cong> Z, the standard loop maps to \<pm>1.
    This is because the lifting correspondence sends [f] to the endpoint 1 of its lift,
@@ -6613,8 +6661,10 @@ proof -
                     have "f0 t \<in> ?UV" using continuous_map_maps_to[OF hf0_cont ht] .
                     hence "f0 t \<in> X - A" using hA_sub_X by (by100 blast)
                     hence "f0 t \<in> h ` (top1_B2 - top1_S1)" using hsurj by (by100 blast)
+                    hence "h (inv_into (top1_B2 - top1_S1) h (f0 t)) = f0 t"
+                      by (rule f_inv_into_f)
                     thus "((\<lambda>z. h z) \<circ> ?hinv_f0) t = f0 t"
-                      unfolding comp_def using f_inv_into_f by (by100 blast)
+                      unfolding comp_def by (by100 simp)
                   qed
                   \<comment> \<open>By comp_basepoint_change (pointwise on ℝ): h\<circ>ell_disk = bc(Y,b,a,h\<circ>revgam,h\<circ>h\<inverse>\<circ>f0).
                      By basepoint_change_cong_on_I: bc(Y,b,a,h\<circ>revgam,h\<circ>h\<inverse>\<circ>f0) agrees with
