@@ -7012,7 +7012,39 @@ proof -
                       have hid_cont: "top1_continuous_map_on ?B2_0 ?TB2_0 ?B2_0 ?TB2_0 (\<lambda>x. x)"
                         using top1_continuous_map_on_id[OF hTopB20] unfolding id_def by (by100 simp)
                       have hr_cont: "top1_continuous_map_on ?B2_0 ?TB2_0 ?B2_0 ?TB2_0 (\<lambda>x. H_ret (x, 1))"
-                        sorry \<comment> \<open>r = H_ret(\<cdot>,1) continuous: composition of H_ret with pairing.\<close>
+                      proof -
+                        have hcomp: "(\<lambda>x. H_ret (x, 1)) = H_ret \<circ> (\<lambda>x. (x, 1::real))"
+                          by (rule ext) (by100 simp)
+                        have hI_top: "is_topology_on I_set I_top"
+                          by (rule top1_unit_interval_topology_is_topology_on)
+                        have h1_I: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+                        have hpair_cont: "top1_continuous_map_on ?B2_0 ?TB2_0 (?B2_0 \<times> I_set)
+                            (product_topology_on ?TB2_0 I_top) (\<lambda>x. (x, 1::real))"
+                        proof -
+                          have hpi1: "top1_continuous_map_on ?B2_0 ?TB2_0 ?B2_0 ?TB2_0 (pi1 \<circ> (\<lambda>x. (x, 1::real)))"
+                          proof -
+                            have "pi1 \<circ> (\<lambda>x::(real\<times>real). (x, 1::real)) = (\<lambda>x. x)"
+                              unfolding pi1_def by (rule ext) (by100 simp)
+                            thus ?thesis using hid_cont by (by100 simp)
+                          qed
+                          have hpi2: "top1_continuous_map_on ?B2_0 ?TB2_0 I_set I_top (pi2 \<circ> (\<lambda>x::(real\<times>real). (x, 1::real)))"
+                          proof -
+                            have "pi2 \<circ> (\<lambda>x::(real\<times>real). (x, 1::real)) = (\<lambda>_. 1::real)"
+                              unfolding pi2_def by (rule ext) (by100 simp)
+                            moreover have "top1_continuous_map_on ?B2_0 ?TB2_0 I_set I_top (\<lambda>_::(real\<times>real). 1::real)"
+                            proof -
+                              have "\<forall>y0\<in>I_set. top1_continuous_map_on ?B2_0 ?TB2_0 I_set I_top (\<lambda>_. y0)"
+                                using Theorem_18_2[OF hTopB20 hI_top hI_top] by (by100 blast)
+                              thus ?thesis using h1_I by (by100 blast)
+                            qed
+                            ultimately show ?thesis by (by100 simp)
+                          qed
+                          from iffD2[OF Theorem_18_4[OF hTopB20 hTopB20 hI_top]] hpi1 hpi2
+                          show ?thesis by (by100 blast)
+                        qed
+                        show ?thesis unfolding hcomp
+                          by (rule top1_continuous_map_on_comp[OF hpair_cont hHr_cont])
+                      qed
                       have hid10: "(\<lambda>x::(real\<times>real). x) (1,0) = (1::real,0)" by (by100 simp)
                       have hr10: "(\<lambda>x. H_ret (x, 1)) (1,0) = (1::real,0)"
                         using hHr_fix unfolding top1_S1_def top1_unit_interval_def by (by100 auto)
