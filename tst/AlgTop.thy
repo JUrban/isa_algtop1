@@ -795,13 +795,27 @@ proof -
      \<pi>_1(X) \<cong> Z/\<langle>\<langle>a^n\<rangle>\<rangle> \<cong> Z/nZ.\<close>
   \<comment> \<open>Step 1: The dunce cap has 1-skeleton A = single circle (\<cong> S¹).
      The attaching map wraps S¹ n times around A.\<close>
+  \<comment> \<open>Extract quotient map q from dunce cap definition.\<close>
+  obtain q where hq_quot: "top1_quotient_map_on top1_B2 top1_B2_topology X TX q"
+      and hq_S1: "\<forall>z\<in>top1_S1. \<forall>z'\<in>top1_S1.
+            q z = q z' \<longleftrightarrow>
+            (\<exists>k::nat. k < n \<and>
+               z' = (cos (2*pi*real k/real n) * fst z - sin (2*pi*real k/real n) * snd z,
+                     sin (2*pi*real k/real n) * fst z + cos (2*pi*real k/real n) * snd z))"
+      and hq_inj: "inj_on q (top1_B2 - top1_S1)"
+      and hq_sep: "\<forall>z\<in>top1_B2 - top1_S1. \<forall>z'\<in>top1_S1. q z \<noteq> q z'"
+    using assms(2) unfolding top1_is_dunce_cap_on_def by (by100 blast)
+  \<comment> \<open>A = q(S1) is the 1-skeleton, h = q is the attaching map.\<close>
+  let ?A_loc = "q ` top1_S1"
+  have hq_cont: "top1_continuous_map_on top1_B2 top1_B2_topology X TX q"
+    using hq_quot unfolding top1_quotient_map_on_def by (by100 blast)
   obtain A :: "'a set" and h :: "real \<times> real \<Rightarrow> 'a"
     where hA_circle: "\<exists>f. top1_homeomorphism_on top1_S1 top1_S1_topology
              A (subspace_topology X TX A) f"
       and hh_att: "top1_continuous_map_on top1_B2 top1_B2_topology X TX h"
       and hh_wrap: "\<forall>s\<in>I_set. h (cos (2*pi*s), sin (2*pi*s)) = h (cos (2*pi*n*s), sin (2*pi*n*s))"
       and hx0_A: "x0 \<in> A" and hA_sub: "A \<subseteq> X"
-    sorry \<comment> \<open>From dunce cap definition: quotient of B² by n-fold rotation on S¹.\<close>
+    sorry \<comment> \<open>From dunce cap: A = q(S1), h = q. Circle homeomorphism from quotient structure.\<close>
   \<comment> \<open>Step 2: \<pi>_1(A) \<cong> Z (fundamental group of circle).\<close>
   have hA_Z: "\<exists>f. top1_group_iso_on
       (top1_fundamental_group_carrier A (subspace_topology X TX A) x0)
