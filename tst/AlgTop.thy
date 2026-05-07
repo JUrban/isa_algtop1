@@ -4383,11 +4383,17 @@ proof -
          Therefore rev(\<delta>)-hat([g0]) = [k \<circ> p] in \<pi>_1(U,a).
          Since ker(incl*_a) \<subseteq> rev(\<delta>)-hat(ker(incl*_b)) = rev(\<delta>)-hat(\<langle>\<langle>{[g0]}\<rangle>\<rangle>) = \<langle>\<langle>{[k\<circ>p]}\<rangle>\<rangle>,
          and ker(j*) \<subseteq> (A\<hookrightarrow>U)*\<inverse>(ker(incl*_a)), we get ker(j*) \<subseteq> \<langle>\<langle>{[k\<circ>p]}\<rangle>\<rangle>.\<close>
+      \<comment> \<open>Step 1: ker(j*) = (A\<hookrightarrow>U)*\<inverse>(ker((U\<hookrightarrow>X)*_a)) since j* = (U\<hookrightarrow>X)* \<circ> (A\<hookrightarrow>U)*.\<close>
+      \<comment> \<open>Step 2: ker((U\<hookrightarrow>X)*_a) \<subseteq> \<langle>\<langle>{[k\<circ>p]}\<rangle>\<rangle>_U.
+         From hincl_ker_b + base change naturality + generator tracking.\<close>
+      \<comment> \<open>Step 3: (A\<hookrightarrow>U)*\<inverse>(\<langle>\<langle>{[k\<circ>p]}\<rangle>\<rangle>_U) = \<langle>\<langle>{[k\<circ>p]}\<rangle>\<rangle>_A since (A\<hookrightarrow>U)* is iso mapping [k\<circ>p] to [k\<circ>p].\<close>
+      \<comment> \<open>All three steps combined give ker(j*) \<subseteq> \<langle>\<langle>{[k\<circ>p]}\<rangle>\<rangle>_A = ?relator.\<close>
+      \<comment> \<open>The core difficulty is Step 2, which needs the winding number argument.\<close>
       show ?thesis
-        sorry \<comment> \<open>Generator tracking. Proved modulo: winding number homotopy
-             bc(B2-{0}, q, p, \<gamma>, f0) \<simeq> f in B2-{0} (both wind once around origin).
-             All other steps use: comp_basepoint_change, hg_eq_kp, inclusion_induced_class,
-             base change roundtrip, hincl_ker_b.\<close>
+        sorry \<comment> \<open>Generator tracking. The sorry reduces to:
+             bc(B2-{0}, q, p, \<gamma>, f0) \<simeq> f^(\<plusminus>1) in B2-{0} (winding number \<plusminus>1).
+             This implies rev(\<delta>)-hat([\<iota>*(g0)]) \<in> \<langle>\<langle>{[k\<circ>p]}\<rangle>\<rangle> (via comp_basepoint_change + hg_eq_kp).
+             Then base change naturality + (A\<hookrightarrow>U)* iso gives the result.\<close>
     qed
     \<comment> \<open>Step (c): \<langle>\<langle>{[k\<circ>p]}\<rangle>\<rangle> \<subseteq> ker(j_*). The normal closure of {[k\<circ>p]} is contained
        in ker(j_*) because [k\<circ>p] \<in> ker(j_*) and ker is a normal subgroup.\<close>
@@ -11096,6 +11102,7 @@ end
  
   
  
+
 
 
 
