@@ -78,7 +78,38 @@ proof -
       assume "\<not> (t = 0 \<or> t = 1)"
       hence "0 < t" "t < 1" using ht(1) unfolding top1_unit_interval_def by (by100 auto)+
       \<comment> \<open>[0,1]-{t} disconnected but A-{p} connected: contradiction via homeomorphism.\<close>
-      show False sorry \<comment> \<open>Key: h\<inverse> continuous + connected \<Rightarrow> [0,1]-{t} connected. But it's not.\<close>
+      \<comment> \<open>h\<inverse> continuous, A-{p} connected \<Rightarrow> h\<inverse>(A-{p}) connected. But h\<inverse>(A-{p}) = I-{t} disconnected.\<close>
+      have hhinv: "top1_continuous_map_on A ?TA top1_unit_interval top1_unit_interval_topology
+          (inv_into top1_unit_interval h)"
+        using hh unfolding top1_homeomorphism_on_def by (by100 blast)
+      have hTA_loc: "is_topology_on A ?TA" by (rule subspace_topology_is_topology_on[OF hTopX hAX])
+      have hAp_sub: "A - {p} \<subseteq> A" by (by100 blast)
+      have hTAp: "is_topology_on (A - {p}) (subspace_topology A ?TA (A - {p}))"
+        by (rule subspace_topology_is_topology_on[OF hTA_loc hAp_sub])
+      have hTI: "is_topology_on top1_unit_interval top1_unit_interval_topology"
+        by (rule top1_unit_interval_topology_is_topology_on)
+      \<comment> \<open>Restrict h\<inverse> to A-{p}.\<close>
+      have hhinv_restr: "top1_continuous_map_on (A - {p}) (subspace_topology A ?TA (A - {p}))
+          top1_unit_interval top1_unit_interval_topology (inv_into top1_unit_interval h)"
+        sorry \<comment> \<open>Restrict domain of hhinv to A-{p} \<subseteq> A.\<close>
+      \<comment> \<open>Image: h\<inverse>(A-{p}) = I-{t}.\<close>
+      have hinv_img: "(inv_into top1_unit_interval h) ` (A - {p}) = top1_unit_interval - {t}"
+        sorry \<comment> \<open>Bijection inverse maps A-{p} to I-{t}.\<close>
+      \<comment> \<open>Continuous image of connected is connected.\<close>
+      have hIt_conn: "top1_connected_on (top1_unit_interval - {t})
+          (subspace_topology top1_unit_interval top1_unit_interval_topology (top1_unit_interval - {t}))"
+      proof -
+        from Theorem_23_5[OF hTAp hTI hconn hhinv_restr]
+        have "top1_connected_on ((inv_into top1_unit_interval h) ` (A - {p}))
+            (subspace_topology top1_unit_interval top1_unit_interval_topology
+                ((inv_into top1_unit_interval h) ` (A - {p})))" .
+        thus ?thesis using hinv_img by (by100 simp)
+      qed
+      \<comment> \<open>But I-{t} is disconnected for t \<in> (0,1).\<close>
+      have "\<not> top1_connected_on (top1_unit_interval - {t})
+          (subspace_topology top1_unit_interval top1_unit_interval_topology (top1_unit_interval - {t}))"
+        sorry \<comment> \<open>[0,t) and (t,1] non-empty disjoint open partition of I-{t}.\<close>
+      show False using hIt_conn \<open>\<not> top1_connected_on _ _\<close> by (by100 blast)
     qed
     thus "p \<in> {h 0, h 1}" using ht(2) by (by100 blast)
   next
