@@ -1750,7 +1750,35 @@ proof (intro conjI)
           hence hx: "fst p \<in> ?X" and ht: "snd p \<in> I_set" by (by100 force)+
           \<comment> \<open>H(p) = interp(p) \<in> B2 (convexity: convex combination of x and x/|x|, both in B2).\<close>
           have "?interp p \<in> top1_B2"
-            sorry \<comment> \<open>Convexity of B2: (1-t)*x + t*(x/|x|) \<in> B2 when x \<in> B2 and x/|x| \<in> S1 \<subseteq> B2.\<close>
+          proof -
+            have hx_B2: "fst p \<in> top1_B2" using hx by (by100 blast)
+            have hn: "?nrm (fst p) > 0" by (rule h_nrm_pos[OF hx])
+            let ?q = "(fst (fst p) / ?nrm (fst p), snd (fst p) / ?nrm (fst p))"
+            have hq_S1: "fst ?q ^ 2 + snd ?q ^ 2 = 1"
+            proof -
+              have hge0: "(0::real) \<le> fst (fst p) ^ 2 + snd (fst p) ^ 2"
+                by (rule add_nonneg_nonneg; by100 simp)
+              have hn2: "?nrm (fst p) ^ 2 = fst (fst p) ^ 2 + snd (fst p) ^ 2"
+                using real_sqrt_pow2[OF hge0] power2_eq_square[of "?nrm (fst p)"] by (by100 force)
+              have hnn: "?nrm (fst p) \<noteq> 0" using hn by (by100 linarith)
+              have "fst (fst p) ^ 2 / ?nrm (fst p) ^ 2 + snd (fst p) ^ 2 / ?nrm (fst p) ^ 2
+                  = (fst (fst p) ^ 2 + snd (fst p) ^ 2) / ?nrm (fst p) ^ 2"
+                by (rule add_divide_distrib[symmetric])
+              also have "... = ?nrm (fst p) ^ 2 / ?nrm (fst p) ^ 2" using hn2 by (by100 simp)
+              also have "... = 1" using hnn by (by100 auto)
+              finally show ?thesis by (simp add: power_divide)
+            qed
+            have hq_B2: "?q \<in> top1_B2" using hq_S1 unfolding top1_B2_def by (by100 simp)
+            have ht0: "0 \<le> snd p" and ht1: "snd p \<le> 1"
+              using ht unfolding top1_unit_interval_def by (by100 simp)+
+            have "((1 - snd p) * fst (fst p) + snd p * fst ?q,
+                   (1 - snd p) * snd (fst p) + snd p * snd ?q) \<in> top1_B2"
+              by (rule top1_B2_convex[OF hx_B2 hq_B2 ht0 ht1])
+            moreover have "?interp p = ((1 - snd p) * fst (fst p) + snd p * fst ?q,
+                                    (1 - snd p) * snd (fst p) + snd p * snd ?q)"
+              by (cases p) (by100 simp)
+            ultimately show ?thesis by (by100 simp)
+          qed
           \<comment> \<open>H(p) \<noteq> (0,0) since \<alpha> = (1-t+t/|x|) > 0 and x \<noteq> 0.\<close>
           moreover have "H p \<noteq> (0::real, 0)"
           proof -
