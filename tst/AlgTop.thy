@@ -4525,10 +4525,16 @@ proof -
            For any such N, (A\<hookrightarrow>U)*(N) is normal in \<pi>_1(U,a) containing [k\<circ>p]_U.
            So ?N_U \<subseteq> (A\<hookrightarrow>U)*(N). Since (A\<hookrightarrow>U)*(c) \<in> ?N_U \<subseteq> (A\<hookrightarrow>U)*(N),
            injectivity of (A\<hookrightarrow>U)* gives c \<in> N. Since N arbitrary, c \<in> ?relator.\<close>
+        \<comment> \<open>Use inj_hom_preimage_normal_closure with:
+           G = \<pi>_1(A,a), H = \<pi>_1(U,a), f = (A\<hookrightarrow>U)*, N = ?relator,
+           s = [k\<circ>p]_A. Need: f(s) = [k\<circ>p]_U (by functoriality: (A\<hookrightarrow>U)* \<circ> (S1\<hookrightarrow>A)* = (S1\<hookrightarrow>U)*).
+           Then f(c) \<in> \<langle>\<langle>{f(s)}\<rangle>\<rangle>_U = \<langle>\<langle>{[k\<circ>p]_U}\<rangle>\<rangle> (from h_iota_c_in).
+           Conclusion: c \<in> \<langle>\<langle>{s}\<rangle>\<rangle>_A = ?relator.\<close>
         show "c \<in> ?relator"
-          sorry \<comment> \<open>Preimage of normal closure under injective hom.
-               For any normal N of \<pi>_1(A,a) with [k\<circ>p]_A \<in> N: (A\<hookrightarrow>U)*(N) normal in \<pi>_1(U,a)
-               containing [k\<circ>p]_U. So N_U \<subseteq> (A\<hookrightarrow>U)*(N). Injectivity gives c \<in> N.\<close>
+          sorry \<comment> \<open>Apply inj_hom_preimage_normal_closure. Needs:
+               (A\<hookrightarrow>U)* hom + surj + inj + relator normal + [k\<circ>p]_A \<in> relator +
+               c \<in> carrier(A) + f(c) \<in> \<langle>\<langle>{f(kp_A)}\<rangle>\<rangle>_U.
+               The f(kp_A) = kp_U fact uses fundamental_group_induced_comp.\<close>
       qed
       \<comment> \<open>Combine steps 1-3.\<close>
       show ?thesis
@@ -11258,6 +11264,7 @@ end
  
   
  
+
 
 
 
