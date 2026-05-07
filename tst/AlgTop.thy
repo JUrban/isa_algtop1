@@ -6209,7 +6209,57 @@ proof -
                   (top1_fundamental_group_carrier ?U ?TU a)
                   (top1_fundamental_group_mul ?U ?TU a)
                   (top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1,0) ?U ?TU a (\<lambda>z. h z))"
-                sorry \<comment> \<open>h: S1 \<rightarrow> U continuous (h maps S1 into A \<subseteq> U), h(1,0) = a.\<close>
+              proof -
+                \<comment> \<open>h: S1 \<rightarrow> U continuous since h: B2 \<rightarrow> X maps S1 into A \<subseteq> U.\<close>
+                have hS1_B2: "top1_S1 \<subseteq> top1_B2"
+                  unfolding top1_S1_def top1_B2_def by (by100 auto)
+                have hh_S1_cont_X: "top1_continuous_map_on top1_S1 top1_S1_topology X TX (\<lambda>z. h z)"
+                proof -
+                  have "top1_continuous_map_on top1_S1
+                      (subspace_topology top1_B2 top1_B2_topology top1_S1) X TX h"
+                    by (rule top1_continuous_map_on_restrict_domain_simple[OF assms(5) hS1_B2])
+                  moreover have "subspace_topology top1_B2 top1_B2_topology top1_S1 = top1_S1_topology"
+                    unfolding top1_B2_topology_def top1_S1_topology_def
+                    using subspace_topology_trans[OF hS1_B2] by (by100 simp)
+                  ultimately show ?thesis by (by100 simp)
+                qed
+                have hh_S1_img_U: "(\<lambda>z. h z) ` top1_S1 \<subseteq> ?U"
+                proof
+                  fix y assume "y \<in> (\<lambda>z. h z) ` top1_S1"
+                  then obtain z where hz: "z \<in> top1_S1" "y = h z" by (by100 blast)
+                  have "h z \<in> A" using assms(8) hz(1) by (by100 blast)
+                  hence "h z \<in> X" using hA_sub_X by (by100 blast)
+                  moreover have "h z \<noteq> h (0, 0)"
+                  proof -
+                    have "z \<in> top1_B2" using hS1_B2 hz(1) by (by100 blast)
+                    have "(0::real, 0) \<in> top1_B2 - top1_S1"
+                      unfolding top1_B2_def top1_S1_def by (by100 auto)
+                    have "z \<notin> top1_B2 - top1_S1" using hz(1) by (by100 blast)
+                    hence "z \<noteq> (0, 0)" using \<open>(0,0) \<in> top1_B2 - top1_S1\<close> by (by100 blast)
+                    moreover have "inj_on h (top1_B2 - top1_S1)"
+                      using assms(7) unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+                    have "h z \<in> A" using assms(8) hz(1) by (by100 blast)
+                    moreover have "h (0, 0) \<notin> A"
+                    proof -
+                      have "h ` (top1_B2 - top1_S1) = X - A"
+                        using assms(7) unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+                      hence "h (0, 0) \<in> X - A"
+                        using \<open>(0,0) \<in> top1_B2 - top1_S1\<close> by (by100 blast)
+                      thus ?thesis by (by100 blast)
+                    qed
+                    ultimately show ?thesis by (by100 force)
+                  qed
+                  ultimately show "y \<in> ?U" using hz(2) by (by100 force)
+                qed
+                have hU_sub: "?U \<subseteq> X" by (by100 blast)
+                have hh_S1_cont_U: "top1_continuous_map_on top1_S1 top1_S1_topology ?U ?TU (\<lambda>z. h z)"
+                  using top1_continuous_map_on_codomain_shrink[OF hh_S1_cont_X hh_S1_img_U hU_sub]
+                  by (by100 simp)
+                have hha: "(\<lambda>z. h z) (1, 0) = a" using assms(9) by (by100 simp)
+                show ?thesis
+                  using top1_fundamental_group_induced_on_is_hom[OF hS1_top hTopU_outer h10_S1
+                      ha_U_outer hh_S1_cont_U] hha by (by100 simp)
+              qed
               \<comment> \<open>Compose: \<psi> = (h|_{S1})_* \<circ> \<phi>\<inverse>: Z \<rightarrow> \<pi>_1(U,a) is a hom.\<close>
               let ?\<psi> = "(top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1,0)
                   ?U ?TU a (\<lambda>z. h z)) \<circ>
