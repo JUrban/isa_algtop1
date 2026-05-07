@@ -3840,10 +3840,72 @@ proof -
        Since r fixes A: the homotopy H in U between f1 and f2 can be composed with r
        to get a homotopy in A. Specifically: r \<circ> H is a homotopy in A from f1 to f2
        (since r(f_i(s)) = f_i(s) for loops in A, and r is continuous).\<close>
+    \<comment> \<open>Extract loops.\<close>
+    obtain f1 where hf1: "top1_is_loop_on A ?TA a f1" "c1 = {g. top1_loop_equiv_on A ?TA a f1 g}"
+      using hc1 unfolding top1_fundamental_group_carrier_def by (by100 blast)
+    obtain f2 where hf2: "top1_is_loop_on A ?TA a f2" "c2 = {g. top1_loop_equiv_on A ?TA a f2 g}"
+      using hc2 unfolding top1_fundamental_group_carrier_def by (by100 blast)
+    \<comment> \<open>\<iota>*(ci) = [fi]_U.\<close>
+    have h\<iota>c1: "(top1_fundamental_group_induced_on A ?TA a ?U ?TU a (\<lambda>x. x)) c1
+        = {g. top1_loop_equiv_on ?U ?TU a f1 g}"
+      using inclusion_induced_class[OF hA_sub_U_outer hTopU_outer
+          subspace_topology_trans[OF hA_sub_U_outer] hf1(1)] hf1(2) by (by100 simp)
+    have h\<iota>c2: "(top1_fundamental_group_induced_on A ?TA a ?U ?TU a (\<lambda>x. x)) c2
+        = {g. top1_loop_equiv_on ?U ?TU a f2 g}"
+      using inclusion_induced_class[OF hA_sub_U_outer hTopU_outer
+          subspace_topology_trans[OF hA_sub_U_outer] hf2(1)] hf2(2) by (by100 simp)
+    \<comment> \<open>From heq: loop_equiv(U, f1, f2).\<close>
+    have "{g. top1_loop_equiv_on ?U ?TU a f1 g} = {g. top1_loop_equiv_on ?U ?TU a f2 g}"
+      using heq h\<iota>c1 h\<iota>c2 by (by100 simp)
+    hence hf1f2_U: "top1_loop_equiv_on ?U ?TU a f1 f2"
+    proof -
+      have "f2 \<in> {g. top1_loop_equiv_on ?U ?TU a f2 g}"
+        using top1_loop_equiv_on_refl[of ?U ?TU a f2]
+        sorry \<comment> \<open>f2 loop in U (from f2 loop in A \<subseteq> U) \<Longrightarrow> loop_equiv_refl.\<close>
+      hence "f2 \<in> {g. top1_loop_equiv_on ?U ?TU a f1 g}"
+        using \<open>{g. top1_loop_equiv_on ?U ?TU a f1 g} = {g. top1_loop_equiv_on ?U ?TU a f2 g}\<close>
+        by (by100 blast)
+      thus ?thesis by (by100 blast)
+    qed
+    \<comment> \<open>r: U \<rightarrow> A continuous.\<close>
+    let ?r = "\<lambda>x. H_dr (x, 1)"
+    have hr_cont: "top1_continuous_map_on ?U ?TU A ?TA ?r"
+      sorry \<comment> \<open>H_dr composition with (x,1), codomain shrink to A.\<close>
+    \<comment> \<open>Apply r to homotopy: loop_equiv(A, r\<circ>f1, r\<circ>f2).\<close>
+    have hra: "?r a = a" using hHdr_fix assms(6) unfolding top1_unit_interval_def by (by100 auto)
+    have hrf1f2_A: "top1_loop_equiv_on A ?TA a (?r \<circ> f1) (?r \<circ> f2)"
+      using top1_induced_preserves_loop_equiv[OF hTopU_outer hr_cont _ _ hf1f2_U] hra
+      sorry \<comment> \<open>induced_preserves_loop_equiv with r: U\<rightarrow>A and r(a)=a.\<close>
+    \<comment> \<open>r\<circ>fi agrees with fi on I (r fixes A, fi maps I to A). By loop_agree_on_I: r\<circ>fi \<simeq> fi.\<close>
+    have hf1_cont_A: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology A ?TA f1"
+      using hf1(1) unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+    have hf2_cont_A: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology A ?TA f2"
+      using hf2(1) unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+    have h1_in_I: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+    have hrf1_eq: "\<forall>s\<in>I_set. (?r \<circ> f1) s = f1 s"
+    proof (intro ballI)
+      fix s assume hs: "s \<in> I_set"
+      have "f1 s \<in> A" by (rule continuous_map_maps_to[OF hf1_cont_A hs])
+      thus "(?r \<circ> f1) s = f1 s" using hHdr_fix \<open>f1 s \<in> A\<close> h1_in_I
+        unfolding comp_def by (by100 blast)
+    qed
+    have hrf2_eq: "\<forall>s\<in>I_set. (?r \<circ> f2) s = f2 s"
+    proof (intro ballI)
+      fix s assume hs: "s \<in> I_set"
+      have "f2 s \<in> A" by (rule continuous_map_maps_to[OF hf2_cont_A hs])
+      thus "(?r \<circ> f2) s = f2 s" using hHdr_fix \<open>f2 s \<in> A\<close> h1_in_I
+        unfolding comp_def by (by100 blast)
+    qed
+    \<comment> \<open>By loop_agree_on_I: r\<circ>fi \<simeq> fi in A.\<close>
+    have hrf1_hom: "top1_path_homotopic_on A ?TA a a f1 (?r \<circ> f1)"
+      using loop_agree_on_I[OF hf1(1)] hrf1_eq by (by100 blast)
+    have hrf2_hom: "top1_path_homotopic_on A ?TA a a f2 (?r \<circ> f2)"
+      using loop_agree_on_I[OF hf2(1)] hrf2_eq by (by100 blast)
+    \<comment> \<open>Chain: f1 \<simeq> r\<circ>f1 \<simeq> r\<circ>f2 \<simeq> f2 in A.\<close>
+    \<comment> \<open>Hence loop_equiv(A, f1, f2), so c1 = c2.\<close>
     show "c1 = c2"
-      sorry \<comment> \<open>Injectivity of inclusion \<iota>*: \<pi>_1(A,a) \<rightarrow> \<pi>_1(U,a).
-           Uses: deformation retract r fixes A, r continuous U \<rightarrow> A,
-           induced_preserves_loop_equiv for r, r \<circ> f = f for loops f in A.\<close>
+      sorry \<comment> \<open>Chain homotopies: f1\<simeq>r\<circ>f1 (agree on I), r\<circ>f1\<simeq>r\<circ>f2 (induced),
+           r\<circ>f2\<simeq>f2 (agree on I). Then loop_equiv(A, f1, f2) \<Longrightarrow> c1=c2.\<close>
   qed
   \<comment> \<open>Step 1: j_* is a homomorphism.\<close>
   have hincl_AX_cont: "top1_continuous_map_on A ?TA X TX (\<lambda>x. x)"
@@ -11572,6 +11634,8 @@ end
  
   
  
+
+
 
 
 
