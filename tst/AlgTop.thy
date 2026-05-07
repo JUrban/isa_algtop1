@@ -3859,9 +3859,22 @@ proof -
       using heq h\<iota>c1 h\<iota>c2 by (by100 simp)
     hence hf1f2_U: "top1_loop_equiv_on ?U ?TU a f1 f2"
     proof -
+      have hf2_U: "top1_is_loop_on ?U ?TU a f2"
+      proof -
+        have hAU_cont_loc: "top1_continuous_map_on A ?TA ?U ?TU (\<lambda>x. x)"
+        proof -
+          from top1_continuous_map_on_restrict_domain_simple[OF
+              top1_continuous_map_on_id[OF hTopU_outer] hA_sub_U_outer]
+          show ?thesis using subspace_topology_trans[OF hA_sub_U_outer] unfolding id_def by (by100 simp)
+        qed
+        from top1_continuous_map_loop_early[OF hAU_cont_loc hf2(1)]
+        have "top1_is_loop_on ?U ?TU ((\<lambda>x. x) a) ((\<lambda>x. x) \<circ> f2)" .
+        moreover have "(\<lambda>x::'a. x) a = a" by (by100 simp)
+        moreover have "(\<lambda>x::'a. x) \<circ> f2 = f2" by (rule ext) (by100 simp)
+        ultimately show ?thesis by (by100 simp)
+      qed
       have "f2 \<in> {g. top1_loop_equiv_on ?U ?TU a f2 g}"
-        using top1_loop_equiv_on_refl[of ?U ?TU a f2]
-        sorry \<comment> \<open>f2 loop in U (from f2 loop in A \<subseteq> U) \<Longrightarrow> loop_equiv_refl.\<close>
+        using top1_loop_equiv_on_refl[OF hf2_U] by (by100 blast)
       hence "f2 \<in> {g. top1_loop_equiv_on ?U ?TU a f1 g}"
         using \<open>{g. top1_loop_equiv_on ?U ?TU a f1 g} = {g. top1_loop_equiv_on ?U ?TU a f2 g}\<close>
         by (by100 blast)
