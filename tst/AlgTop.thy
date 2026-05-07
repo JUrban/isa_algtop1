@@ -2274,7 +2274,156 @@ proof -
   qed
   \<comment> \<open>Part 2: Kernel of j_U = N.\<close>
   show "top1_group_kernel_on ?piU ?eX ?j_U = ?N"
-    sorry \<comment> \<open>Uses SvK universal property + free product triviality + first iso theorem.\<close>
+  proof (rule set_eqI, rule iffI)
+    \<comment> \<open>Direction \<supseteq>: \<langle>\<langle>\<iota>*(\<pi>_1(UV))\<rangle>\<rangle> \<subseteq> ker(j_U).
+       Every UV-loop is nulhomotopic in V (simply connected), hence in X.
+       So \<iota>*(\<pi>_1(UV)) \<subseteq> ker(j_U), and ker(j_U) is normal, hence \<langle>\<langle>...\<rangle>\<rangle> \<subseteq> ker.\<close>
+    fix c assume hc: "c \<in> ?N"
+    show "c \<in> top1_group_kernel_on ?piU ?eX ?j_U"
+    proof -
+      \<comment> \<open>ker(j_U) is a normal subgroup.\<close>
+      have hker_normal: "top1_normal_subgroup_on ?piU ?mulU ?eU ?invgU
+          (top1_group_kernel_on ?piU ?eX ?j_U)"
+      proof -
+        have hpiU_grp: "top1_is_group_on ?piU ?mulU ?eU ?invgU"
+          by (rule top1_fundamental_group_is_group[OF hTopU hx0_U])
+        have hpiX_grp: "top1_is_group_on ?piX ?mulX ?eX ?invgX"
+          by (rule top1_fundamental_group_is_group[OF hTopX hx0_X])
+        show ?thesis by (rule kernel_is_normal_subgroup[OF hpiU_grp hpiX_grp hj_hom])
+      qed
+      \<comment> \<open>\<iota>*(\<pi>_1(UV)) \<subseteq> ker(j_U): UV-loops null in V \<Rightarrow> null in X.\<close>
+      have hUV_in_ker: "?j_UV_U ` top1_fundamental_group_carrier (U \<inter> V) ?TUV x0
+          \<subseteq> top1_group_kernel_on ?piU ?eX ?j_U"
+      proof (rule image_subsetI)
+        fix cls assume hcls: "cls \<in> top1_fundamental_group_carrier (U \<inter> V) ?TUV x0"
+        obtain f0 where hf0: "top1_is_loop_on (U \<inter> V) ?TUV x0 f0"
+            "cls = {k. top1_loop_equiv_on (U \<inter> V) ?TUV x0 f0 k}"
+          using hcls unfolding top1_fundamental_group_carrier_def by (by100 blast)
+        \<comment> \<open>\<iota>*(cls) = [f0]_U.\<close>
+        have hUV_sub_U: "U \<inter> V \<subseteq> U" by (by100 blast)
+        have hTUV_eq: "subspace_topology U ?TU (U \<inter> V) = ?TUV"
+          using subspace_topology_trans[OF hUV_sub_U, of X TX] by (by100 simp)
+        have h\<iota>: "?j_UV_U cls = {k. top1_loop_equiv_on U ?TU x0 f0 k}"
+          using hf0(2) inclusion_induced_class[OF hUV_sub_U hTopU hTUV_eq hf0(1)]
+          by (by100 simp)
+        \<comment> \<open>[f0]_U \<in> \<pi>_1(U).\<close>
+        have hf0_U_loop: "top1_is_loop_on U ?TU x0 f0"
+        proof -
+          have hUV_U_cont: "top1_continuous_map_on (U \<inter> V) ?TUV U ?TU (\<lambda>x. x)"
+          proof -
+            have "top1_continuous_map_on (U \<inter> V) (subspace_topology U ?TU (U \<inter> V)) U ?TU (\<lambda>x. x)"
+              by (rule top1_continuous_map_on_restrict_domain_simple[OF
+                  top1_continuous_map_on_id[OF hTopU, unfolded id_def] hUV_sub_U])
+            thus ?thesis using hTUV_eq by (by100 simp)
+          qed
+          have "top1_is_loop_on U ?TU ((\<lambda>x. x) x0) ((\<lambda>x. x) \<circ> f0)"
+            by (rule top1_continuous_map_loop_early[OF hUV_U_cont hf0(1)])
+          moreover have "(\<lambda>x::'a. x) \<circ> f0 = f0" by (rule ext) (by100 simp)
+          moreover have "(\<lambda>x::'a. x) x0 = x0" by (by100 simp)
+          ultimately show ?thesis by (by100 simp)
+        qed
+        have h\<iota>_carrier: "?j_UV_U cls \<in> ?piU"
+          unfolding h\<iota> top1_fundamental_group_carrier_def using hf0_U_loop by (by100 blast)
+        \<comment> \<open>j_U([f0]_U) = [f0]_X.\<close>
+        have hj_U_cls: "?j_U (?j_UV_U cls) = {k. top1_loop_equiv_on X TX x0 f0 k}"
+          unfolding h\<iota>
+          using inclusion_induced_class[OF hUsub hTopX _ hf0_U_loop] by (by100 simp)
+        \<comment> \<open>[f0]_X = e_X since f0 maps into UV \<subseteq> V and V simply connected.\<close>
+        have hf0_V_loop: "top1_is_loop_on V ?TV x0 f0"
+        proof -
+          have hUV_V: "U \<inter> V \<subseteq> V" by (by100 blast)
+          have hTUV_V: "subspace_topology V ?TV (U \<inter> V) = ?TUV"
+            using subspace_topology_trans[OF hUV_V, of X TX] by (by100 simp)
+          have hUV_V_cont: "top1_continuous_map_on (U \<inter> V) ?TUV V ?TV (\<lambda>x. x)"
+          proof -
+            have "top1_continuous_map_on (U \<inter> V) (subspace_topology V ?TV (U \<inter> V)) V ?TV (\<lambda>x. x)"
+              by (rule top1_continuous_map_on_restrict_domain_simple[OF
+                  top1_continuous_map_on_id[OF hTopV, unfolded id_def] hUV_V])
+            thus ?thesis using hTUV_V by (by100 simp)
+          qed
+          have "top1_is_loop_on V ?TV ((\<lambda>x. x) x0) ((\<lambda>x. x) \<circ> f0)"
+            by (rule top1_continuous_map_loop_early[OF hUV_V_cont hf0(1)])
+          moreover have "(\<lambda>x::'a. x) \<circ> f0 = f0" by (rule ext) (by100 simp)
+          moreover have "(\<lambda>x::'a. x) x0 = x0" by (by100 simp)
+          ultimately show ?thesis by (by100 simp)
+        qed
+        have hf0_null_V: "top1_path_homotopic_on V ?TV x0 x0 f0 (top1_constant_path x0)"
+        proof -
+          have "{h. top1_loop_equiv_on V ?TV x0 f0 h} \<in>
+              top1_fundamental_group_carrier V ?TV x0"
+            using hf0_V_loop unfolding top1_fundamental_group_carrier_def by (by100 blast)
+          hence "{h. top1_loop_equiv_on V ?TV x0 f0 h} = top1_fundamental_group_id V ?TV x0"
+            using simply_connected_trivial_carrier[OF assms(7) hx0_V] by (by100 force)
+          hence "top1_loop_equiv_on V ?TV x0 f0 (top1_constant_path x0)"
+          proof -
+            have hconst_refl: "top1_loop_equiv_on V ?TV x0 (top1_constant_path x0) (top1_constant_path x0)"
+              by (rule top1_loop_equiv_on_refl[OF top1_constant_path_is_loop[OF hTopV hx0_V]])
+            hence "top1_constant_path x0 \<in> {h. top1_loop_equiv_on V ?TV x0 (top1_constant_path x0) h}"
+              by (by100 blast)
+            hence "top1_constant_path x0 \<in> top1_fundamental_group_id V ?TV x0"
+              unfolding top1_fundamental_group_id_def by (by100 simp)
+            hence "top1_constant_path x0 \<in> {h. top1_loop_equiv_on V ?TV x0 f0 h}"
+              using \<open>{h. top1_loop_equiv_on V ?TV x0 f0 h} = top1_fundamental_group_id V ?TV x0\<close>
+              by (by100 simp)
+            thus ?thesis by (by100 blast)
+          qed
+          thus ?thesis unfolding top1_loop_equiv_on_def by (by100 blast)
+        qed
+        have hf0_null_X: "{k. top1_loop_equiv_on X TX x0 f0 k} = ?eX"
+        proof -
+          have "subspace_topology X TX V = ?TV" by (by100 simp)
+          have "top1_path_homotopic_on X TX x0 x0 f0 (top1_constant_path x0)"
+            using path_homotopic_subspace_to_ambient[OF hTopX hVsub \<open>subspace_topology X TX V = ?TV\<close> hf0_null_V] .
+          hence "top1_loop_equiv_on X TX x0 f0 (top1_constant_path x0)"
+          proof -
+            have hf0_X: "top1_is_loop_on X TX x0 f0"
+            proof -
+              have "top1_is_loop_on X TX ((\<lambda>x. x) x0) ((\<lambda>x. x) \<circ> f0)"
+                by (rule top1_continuous_map_loop_early[OF hincl_UX hf0_U_loop])
+              moreover have "(\<lambda>x::'a. x) \<circ> f0 = f0" by (rule ext) (by100 simp)
+              moreover have "(\<lambda>x::'a. x) x0 = x0" by (by100 simp)
+              ultimately show ?thesis by (by100 simp)
+            qed
+            show ?thesis using hf0_X top1_constant_path_is_loop[OF hTopX hx0_X]
+              \<open>top1_path_homotopic_on X TX x0 x0 f0 (top1_constant_path x0)\<close>
+              unfolding top1_loop_equiv_on_def by (by100 blast)
+          qed
+          show ?thesis
+          proof (rule set_eqI, rule iffI)
+            fix k assume hk: "k \<in> {k. top1_loop_equiv_on X TX x0 f0 k}"
+            hence "top1_loop_equiv_on X TX x0 f0 k" by (by100 blast)
+            have hle: "top1_loop_equiv_on X TX x0 (top1_constant_path x0) f0"
+              by (rule top1_loop_equiv_on_sym[OF
+                  \<open>top1_loop_equiv_on X TX x0 f0 (top1_constant_path x0)\<close>])
+            from top1_loop_equiv_on_trans[OF hTopX hle \<open>top1_loop_equiv_on X TX x0 f0 k\<close>]
+            show "k \<in> ?eX" unfolding top1_fundamental_group_id_def by (by100 simp)
+          next
+            fix k assume "k \<in> ?eX"
+            hence "top1_loop_equiv_on X TX x0 (top1_constant_path x0) k"
+              unfolding top1_fundamental_group_id_def by (by100 simp)
+            from top1_loop_equiv_on_trans[OF hTopX
+                \<open>top1_loop_equiv_on X TX x0 f0 (top1_constant_path x0)\<close> this]
+            show "k \<in> {k. top1_loop_equiv_on X TX x0 f0 k}" by (by100 blast)
+          qed
+        qed
+        show "?j_UV_U cls \<in> top1_group_kernel_on ?piU ?eX ?j_U"
+          unfolding top1_group_kernel_on_def using h\<iota>_carrier hj_U_cls hf0_null_X by (by100 blast)
+      qed
+      \<comment> \<open>Since ker is normal and contains \<iota>*(\<pi>_1(UV)), the normal closure \<subseteq> ker.\<close>
+      have "?N \<subseteq> top1_group_kernel_on ?piU ?eX ?j_U"
+        unfolding top1_normal_subgroup_generated_on_def
+        using hUV_in_ker hker_normal by (by100 blast)
+      thus ?thesis using hc by (by100 blast)
+    qed
+  next
+    \<comment> \<open>Direction \<subseteq>: ker(j_U) \<subseteq> \<langle>\<langle>\<iota>*(\<pi>_1(UV))\<rangle>\<rangle>.
+       Hard direction: nulhomotopic U-loop is product of conjugates of UV-loops.
+       Requires SvK universal property / free product argument.\<close>
+    fix c assume "c \<in> top1_group_kernel_on ?piU ?eX ?j_U"
+    show "c \<in> ?N"
+      sorry \<comment> \<open>Hard direction: uses homotopy rectangle subdivision + SvK.
+           Proof exists in Corollary_70_4_simply_connected_V (AlgTopCached).\<close>
+  qed
 qed
 
 \<comment> \<open>Helper: surjective hom image of a normal subgroup is normal.\<close>
@@ -5942,13 +6091,29 @@ proof -
                - If \<phi>([f]) = -1: \<psi>(1) = (h|_{S1})*([f]\<inverse>) = kp_class\<inverse> \<in> N.
                By hom_from_Z_image_in_subgroup: image(\<psi>) \<subseteq> N.
                So (h|_{S1})*([g]) \<in> N.\<close>
-            show "{k. top1_loop_equiv_on ?U ?TU a
-                (top1_basepoint_change_on ?U ?TU ?b a ?rev\<delta> f0) k} \<in> N"
-            sorry \<comment> \<open>Generator tracking: bc_back(f0) = h \<circ> \<ell> (comp_basepoint_change).
-               \<ell> loop at p in B2-{0}. By S1_pi1_iso: \<pi>_1(S1) surj onto \<pi>_1(B2-{0}).
-               So h_*[\<ell>] = (h|_{S1})_*[g] for some S1-loop g.
-               (h|_{S1})_* \<circ> \<phi>\<inverse>: Z \<rightarrow> \<pi>_1(U,a) has image \<subseteq> N
-               (by hom_from_Z_image_in_subgroup + \<phi>\<inverse>(1) \<in> {[f],[f]\<inverse>} + kp\<in>N).\<close>
+            \<comment> \<open>Proof: every element of \<pi>_1(U,a) in the image of any loop at a in U
+               that factors as h \<circ> (loop in B2-{0}) is in N.
+               More precisely: for any loop \<ell> at a in U where \<ell> = h \<circ> \<ell>' for
+               some loop \<ell>' at (1,0) in B2-{0}, we have [\<ell>]_U \<in> N.
+               This is because h factors through S1 (via the retraction),
+               so the image of h_* \<subseteq> image of (h|_{S1})_* which is cyclic
+               generated by kp_class, hence \<subseteq> N.\<close>
+            \<comment> \<open>Step 1: bc_back(f0) is a loop at a in U.\<close>
+            let ?bc_f0 = "top1_basepoint_change_on ?U ?TU ?b a ?rev\<delta> f0"
+            \<comment> \<open>Step 2: [bc_back(f0)]_U is in image of (h|_{S1})_*
+               composed with the iso \<pi>_1(S1) \<cong> Z, hence in N.\<close>
+            \<comment> \<open>Concretely: bc_back(f0)(t) = h(some function of f0 and \<gamma>).
+               The class [bc_back(f0)]_U \<in> \<pi>_1(U,a).
+               We need this class to be in N.
+               N is a subgroup of \<pi>_1(U,a) containing kp_class and kp_class\<inverse>.
+               Every element in the image of the composed hom Z \<rightarrow> \<pi>_1(U,a) is in N
+               (by hom_from_Z_image_in_subgroup).\<close>
+            show "{k. top1_loop_equiv_on ?U ?TU a ?bc_f0 k} \<in> N"
+            sorry \<comment> \<open>Requires: (1) construct (h|_{S1})_* as hom on \<pi>_1,
+                 (2) extract iso from S1_pi1_iso + Theorem_54_5_iso,
+                 (3) compose to get Z \<rightarrow> \<pi>_1(U,a) hom,
+                 (4) show image at 1 \<in> N, (5) apply hom_from_Z_image_in_subgroup,
+                 (6) connect bc_back(f0) to the image.\<close>
           qed
           \<comment> \<open>The preimage M = {x \<in> \<pi>_1(U,b) : bc_back_class(x) \<in> N} is normal.\<close>
           let ?M = "{x \<in> top1_fundamental_group_carrier ?U ?TU ?b.
