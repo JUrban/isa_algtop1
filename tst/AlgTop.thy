@@ -1626,6 +1626,132 @@ proof -
   show ?thesis unfolding hT_eq
     by (rule compact_continuous_image[OF hf_cont hD_compact])
 qed
+\<comment> \<open>Helper: S1 is a deformation retract of B2 - {0} (radial projection).
+   This gives pi_1(S1, p) iso pi_1(B2-{0}, p) via inclusion.\<close>
+lemma S1_deformation_retract_B2_minus_zero:
+  "top1_deformation_retract_of_on (top1_B2 - {(0::real, 0::real)})
+     (subspace_topology top1_B2 top1_B2_topology (top1_B2 - {(0, 0)}))
+     top1_S1"
+  unfolding top1_deformation_retract_of_on_def
+proof (intro conjI)
+  let ?X = "top1_B2 - {(0::real, 0::real)}"
+  let ?TX = "subspace_topology top1_B2 top1_B2_topology ?X"
+  let ?nrm = "\<lambda>x::real\<times>real. sqrt (fst x ^ 2 + snd x ^ 2)"
+  define H :: "(real\<times>real) \<times> real \<Rightarrow> real\<times>real" where
+    "H = (\<lambda>(x, t). ((1 - t + t / ?nrm x) * fst x, (1 - t + t / ?nrm x) * snd x))"
+  \<comment> \<open>S1 \<subseteq> B2 - {0}.\<close>
+  show "top1_S1 \<subseteq> ?X"
+  proof
+    fix x assume hx: "x \<in> top1_S1"
+    hence "fst x ^ 2 + snd x ^ 2 = 1" unfolding top1_S1_def by (by100 blast)
+    hence "x \<in> top1_B2" unfolding top1_B2_def by (by100 auto)
+    moreover have "x \<noteq> (0, 0)"
+    proof -
+      from \<open>fst x ^ 2 + snd x ^ 2 = 1\<close> have "fst x ^ 2 + snd x ^ 2 \<noteq> 0" by (by100 simp)
+      thus ?thesis by (by100 auto)
+    qed
+    ultimately show "x \<in> ?X" by (by100 blast)
+  qed
+  \<comment> \<open>Existence of the homotopy H.\<close>
+  show "\<exists>Hh. top1_continuous_map_on (?X \<times> I_set) (product_topology_on ?TX I_top) ?X ?TX Hh \<and>
+      (\<forall>x\<in>?X. Hh (x, 0) = x) \<and> (\<forall>x\<in>?X. Hh (x, 1) \<in> top1_S1) \<and>
+      (\<forall>a\<in>top1_S1. \<forall>t\<in>I_set. Hh (a, t) = a)"
+  proof (rule exI[of _ H])
+    have h_nrm_pos: "\<And>x. x \<in> ?X \<Longrightarrow> ?nrm x > 0"
+    proof -
+      fix x assume "x \<in> ?X"
+      hence "x \<in> top1_B2" "x \<noteq> (0,0)" by (by100 blast)+
+      hence "fst x \<noteq> 0 \<or> snd x \<noteq> 0"
+        by (cases x) (by100 simp)
+      hence "fst x ^ 2 + snd x ^ 2 > 0"
+        using sum_power2_gt_zero_iff by (by100 fast)
+      thus "?nrm x > 0" by (by100 simp)
+    qed
+    have h_nrm_S1: "\<And>x. x \<in> top1_S1 \<Longrightarrow> ?nrm x = 1"
+    proof -
+      fix x assume "x \<in> top1_S1"
+      hence "fst x ^ 2 + snd x ^ 2 = 1" unfolding top1_S1_def by (by100 blast)
+      thus "?nrm x = 1" by (by100 simp)
+    qed
+    show "top1_continuous_map_on (?X \<times> I_set) (product_topology_on ?TX I_top) ?X ?TX H \<and>
+        (\<forall>x\<in>?X. H (x, 0) = x) \<and> (\<forall>x\<in>?X. H (x, 1) \<in> top1_S1) \<and>
+        (\<forall>a\<in>top1_S1. \<forall>t\<in>I_set. H (a, t) = a)"
+    proof (intro conjI)
+      show "top1_continuous_map_on (?X \<times> I_set) (product_topology_on ?TX I_top) ?X ?TX H"
+        sorry \<comment> \<open>Continuity of radial interpolation. H involves 1/|x| which is
+             continuous on B2-{0} since |x|>0. Combine with product topology.\<close>
+      show "\<forall>x\<in>?X. H (x, 0) = x"
+        unfolding H_def by (intro ballI) (by100 simp)
+      show "\<forall>x\<in>?X. H (x, 1) \<in> top1_S1"
+      proof (intro ballI)
+        fix x assume hx: "x \<in> ?X"
+        have hn: "?nrm x > 0" by (rule h_nrm_pos[OF hx])
+        have "H (x, 1) = (fst x / ?nrm x, snd x / ?nrm x)"
+          unfolding H_def using hn by (by100 simp)
+        moreover have "(fst x / ?nrm x) ^ 2 + (snd x / ?nrm x) ^ 2 = 1"
+        proof -
+          have hnn: "?nrm x \<noteq> 0" using hn by (by100 force)
+          have hge0: "(0::real) \<le> fst x ^ 2 + snd x ^ 2"
+            using sum_power2_ge_zero by (by100 fast)
+          have hsq: "?nrm x ^ 2 = fst x ^ 2 + snd x ^ 2"
+            using real_sqrt_pow2[OF hge0] power2_eq_square[of "?nrm x"] by (by100 force)
+          have hsum_ne: "fst x ^ 2 + snd x ^ 2 \<noteq> (0::real)" using hn by (by100 force)
+          have "(fst x ^ 2 + snd x ^ 2) / (fst x ^ 2 + snd x ^ 2) = (1::real)"
+            using hsum_ne by (by100 simp)
+          hence "fst x ^ 2 / (fst x ^ 2 + snd x ^ 2) + snd x ^ 2 / (fst x ^ 2 + snd x ^ 2) = 1"
+            using add_divide_distrib[of "fst x ^ 2" "snd x ^ 2" "fst x ^ 2 + snd x ^ 2"]
+            by (by100 simp)
+          thus "(fst x / ?nrm x) ^ 2 + (snd x / ?nrm x) ^ 2 = 1"
+            using hsq by (simp add: power_divide)
+        qed
+        ultimately show "H (x, 1) \<in> top1_S1" unfolding top1_S1_def by (by100 simp)
+      qed
+      show "\<forall>a\<in>top1_S1. \<forall>t\<in>I_set. H (a, t) = a"
+      proof (intro ballI)
+        fix a t assume ha: "a \<in> top1_S1" and ht: "t \<in> I_set"
+        have "?nrm a = 1" by (rule h_nrm_S1[OF ha])
+        hence "1 - t + t / ?nrm a = 1" by (by100 simp)
+        thus "H (a, t) = a" unfolding H_def by (by100 auto)
+      qed
+    qed
+  qed
+qed
+
+\<comment> \<open>Corollary: \<pi>_1(S^1, (1,0)) \<cong> \<pi>_1(B^2-{0}, (1,0)) via inclusion.\<close>
+corollary S1_pi1_iso_B2_minus_zero:
+  "top1_groups_isomorphic_on
+     (top1_fundamental_group_carrier top1_S1
+        (subspace_topology (top1_B2 - {(0::real, 0)})
+           (subspace_topology top1_B2 top1_B2_topology (top1_B2 - {(0, 0)})) top1_S1) (1, 0))
+     (top1_fundamental_group_mul top1_S1
+        (subspace_topology (top1_B2 - {(0, 0)})
+           (subspace_topology top1_B2 top1_B2_topology (top1_B2 - {(0, 0)})) top1_S1) (1, 0))
+     (top1_fundamental_group_carrier (top1_B2 - {(0, 0)})
+        (subspace_topology top1_B2 top1_B2_topology (top1_B2 - {(0, 0)})) (1, 0))
+     (top1_fundamental_group_mul (top1_B2 - {(0, 0)})
+        (subspace_topology top1_B2 top1_B2_topology (top1_B2 - {(0, 0)})) (1, 0))"
+proof -
+  have h10_S1: "(1::real, 0::real) \<in> top1_S1" unfolding top1_S1_def by (by100 simp)
+  have hTop: "is_topology_on (top1_B2 - {(0, 0)})
+      (subspace_topology top1_B2 top1_B2_topology (top1_B2 - {(0, 0)}))"
+  proof -
+    have hR2_top: "is_topology_on (UNIV::((real\<times>real) set))
+        (product_topology_on top1_open_sets top1_open_sets)"
+      using product_topology_on_is_topology_on[OF
+          top1_open_sets_is_topology_on_UNIV top1_open_sets_is_topology_on_UNIV]
+      by (by100 simp)
+    have hB2_top: "is_topology_on top1_B2 top1_B2_topology"
+      unfolding top1_B2_topology_def
+      using subspace_topology_is_topology_on[OF hR2_top] by (by100 simp)
+    thus ?thesis by (rule subspace_topology_is_topology_on) (by100 blast)
+  qed
+  show ?thesis by (rule Theorem_58_3[OF S1_deformation_retract_B2_minus_zero hTop h10_S1])
+qed
+
+\<comment> \<open>Key consequence: every loop in B^2-{0} at (1,0) is in the image of \<pi>_1(S^1)
+   under the inclusion-induced map. Combined with \<pi>_1(S^1) \<cong> Z,
+   every such loop is homotopic to f^n for some n (standard S^1 parametrization).\<close>
+
 \<comment> \<open>Helper: under SvK conditions with V simply connected, the inclusion U \<hookrightarrow> X
    induces a surjective homomorphism on \<pi>_1 with kernel = normal closure of
    inclusion-induced image of \<pi>_1(U\<inter>V). This is the content of Cor 70.4's proof
@@ -4955,10 +5081,662 @@ proof -
               (top1_fundamental_group_id ?U ?TU a) (top1_fundamental_group_invg ?U ?TU a)
               {top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1, 0) ?U ?TU a
                  (\<lambda>z. h z) {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) ?f g}}"
-        sorry \<comment> \<open>Generator tracking: ker(incl*_a) \<subseteq> \<langle>\<langle>{[k\<circ>p]_U}\<rangle>\<rangle>.
-             Requires: base change naturality to transfer hincl_ker_b from base b to base a,
-             then show the base-changed UV-generator = [k\<circ>p] via comp_basepoint_change
-             + winding number argument in B2-{0}.\<close>
+      proof (rule subsetI)
+        fix c assume hc: "c \<in> top1_group_kernel_on
+            (top1_fundamental_group_carrier ?U ?TU a) (top1_fundamental_group_id X TX a)
+            (top1_fundamental_group_induced_on ?U ?TU a X TX a (\<lambda>x. x))"
+        let ?kp_class = "top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1, 0) ?U ?TU a
+               (\<lambda>z. h z) {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) ?f g}"
+        \<comment> \<open>InterI approach: show c is in every normal subgroup of \<pi>_1(U,a) containing kp_class.\<close>
+        show "c \<in> top1_normal_subgroup_generated_on
+            (top1_fundamental_group_carrier ?U ?TU a) (top1_fundamental_group_mul ?U ?TU a)
+            (top1_fundamental_group_id ?U ?TU a) (top1_fundamental_group_invg ?U ?TU a)
+            {?kp_class}"
+          unfolding top1_normal_subgroup_generated_on_def
+        proof (rule InterI)
+          fix N assume hN: "N \<in> {N'. {?kp_class} \<subseteq> N' \<and>
+              top1_normal_subgroup_on (top1_fundamental_group_carrier ?U ?TU a)
+                (top1_fundamental_group_mul ?U ?TU a) (top1_fundamental_group_id ?U ?TU a)
+                (top1_fundamental_group_invg ?U ?TU a) N'}"
+          have hkp_in_N: "?kp_class \<in> N" using hN by (by100 blast)
+          have hN_normal: "top1_normal_subgroup_on (top1_fundamental_group_carrier ?U ?TU a)
+              (top1_fundamental_group_mul ?U ?TU a) (top1_fundamental_group_id ?U ?TU a)
+              (top1_fundamental_group_invg ?U ?TU a) N"
+            using hN by (by100 blast)
+          \<comment> \<open>N is a subgroup, so kp_class\<inverse> \<in> N.\<close>
+          have hN_grp: "top1_is_group_on N (top1_fundamental_group_mul ?U ?TU a)
+              (top1_fundamental_group_id ?U ?TU a) (top1_fundamental_group_invg ?U ?TU a)"
+            using hN_normal unfolding top1_normal_subgroup_on_def by (by100 blast)
+          have hkp_inv_N: "top1_fundamental_group_invg ?U ?TU a ?kp_class \<in> N"
+            using group_inv_closed[OF hN_grp hkp_in_N] .
+          have hN_sub: "N \<subseteq> top1_fundamental_group_carrier ?U ?TU a"
+            using hN_normal unfolding top1_normal_subgroup_on_def by (by100 blast)
+          \<comment> \<open>c \<in> carrier and maps to identity under incl*.\<close>
+          have hc_carrier: "c \<in> top1_fundamental_group_carrier ?U ?TU a"
+            using hc unfolding top1_group_kernel_on_def by (by100 blast)
+          have hc_id: "(top1_fundamental_group_induced_on ?U ?TU a X TX a (\<lambda>x. x)) c
+              = top1_fundamental_group_id X TX a"
+            using hc unfolding top1_group_kernel_on_def by (by100 blast)
+          \<comment> \<open>Extract loop representative.\<close>
+          obtain g where hg_loop: "top1_is_loop_on ?U ?TU a g"
+              and hc_eq: "c = {k. top1_loop_equiv_on ?U ?TU a g k}"
+            using hc_carrier unfolding top1_fundamental_group_carrier_def by (by100 blast)
+          \<comment> \<open>Base change g from a to b: g' = bc(U, a, b, \<delta>, g) = rev(\<delta>) * (g * \<delta>).\<close>
+          let ?g' = "top1_basepoint_change_on ?U ?TU a ?b ?\<delta> g"
+          \<comment> \<open>\<delta> is a path from a to b in U (not just X).\<close>
+          have h\<delta>_in_U: "\<And>t. t \<in> top1_unit_interval \<Longrightarrow> ?\<delta> t \<in> ?U"
+          proof -
+            fix t assume ht: "t \<in> top1_unit_interval"
+            have "?\<delta> t \<in> X" by (rule h\<delta>_in_X[OF ht])
+            moreover have "?\<delta> t \<noteq> ?x0"
+            proof -
+              have ht01: "0 \<le> t" "t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 simp)+
+              show ?thesis
+              proof (cases "t = 0")
+                case True
+                \<comment> \<open>t=0: \<delta>(0) = h(1,0) = a \<in> A, x0 = h(0,0) \<in> X-A.\<close>
+                have "?\<delta> 0 = a" using h\<delta>_0 .
+                moreover have "a \<in> A" using assms(6) .
+                moreover have "?x0 \<notin> A"
+                  using assms(7) h00_intB2 unfolding top1_homeomorphism_on_def bij_betw_def
+                  by (by100 blast)
+                ultimately show ?thesis using True by (by100 force)
+              next
+                case False
+                \<comment> \<open>t>0: (1-t/2,0) \<in> Int B2 and \<noteq> (0,0), use h-injectivity.\<close>
+                have h_ne: "(1 - t/2, 0::real) \<noteq> (0::real, 0)"
+                proof -
+                  have "1/2 \<le> 1 - t/2" using ht01 by (by100 simp)
+                  thus ?thesis by (by100 simp)
+                qed
+                have hinj_h: "inj_on h (top1_B2 - top1_S1)"
+                  using assms(7) unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+                have h_pt_intB2: "(1 - t/2, 0::real) \<in> top1_B2 - top1_S1"
+                proof -
+                  have "(1 - t/2, 0::real) \<in> top1_B2" by (rule h\<delta>_in_B2[OF ht])
+                  moreover have "t > 0" using False ht01 by (by100 simp)
+                  hence "1 - t/2 < 1" by (by100 simp)
+                  have "0 \<le> 1 - t/2" using ht01 by (by100 simp)
+                  have "(1 - t/2)^2 < 1"
+                  proof -
+                    have hx: "1 - t/2 < 1" using \<open>1 - t/2 < 1\<close> .
+                    have hx0: "0 \<le> 1 - t/2" using \<open>0 \<le> 1 - t/2\<close> .
+                    have "(1 - t/2) * (1 - t/2) \<le> 1 * (1 - t/2)"
+                      using mult_right_mono[OF less_imp_le[OF hx] hx0] .
+                    also have "... < 1 * 1" using hx by (by100 simp)
+                    finally show ?thesis using power2_eq_square[of "1 - t/2"] by (by100 simp)
+                  qed
+                  hence "(1 - t/2, 0::real) \<notin> top1_S1" unfolding top1_S1_def by (by100 auto)
+                  ultimately show ?thesis by (by100 blast)
+                qed
+                show ?thesis
+                  using inj_on_eq_iff[OF hinj_h h_pt_intB2 h00_intB2] h_ne by (by100 simp)
+              qed
+            qed
+            ultimately show "?\<delta> t \<in> ?U" by (by100 blast)
+          qed
+          have h\<delta>_path_U: "top1_is_path_on ?U ?TU a ?b ?\<delta>"
+          proof -
+            have h\<delta>_img_U: "?\<delta> ` top1_unit_interval \<subseteq> ?U"
+            proof (rule image_subsetI)
+              fix t assume "t \<in> top1_unit_interval"
+              thus "?\<delta> t \<in> ?U" by (rule h\<delta>_in_U)
+            qed
+            have hU_sub: "?U \<subseteq> X" by (by100 blast)
+            have h\<delta>_cont_U: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology ?U ?TU ?\<delta>"
+              using top1_continuous_map_on_codomain_shrink[OF h\<delta>_cont h\<delta>_img_U hU_sub] by (by100 simp)
+            show ?thesis unfolding top1_is_path_on_def using h\<delta>_cont_U h\<delta>_0 h\<delta>_1 by (by100 blast)
+          qed
+          have hg'_loop: "top1_is_loop_on ?U ?TU ?b ?g'"
+            by (rule top1_basepoint_change_is_loop[OF hTopU_outer h\<delta>_path_U hg_loop])
+          \<comment> \<open>Key: bc in U equals bc in X since inclusion is identity.\<close>
+          have hbc_eq: "?g' = top1_basepoint_change_on X TX a ?b ?\<delta> g"
+            unfolding top1_basepoint_change_on_def by (by100 simp)
+          \<comment> \<open>g nulhomotopic in X \<Longrightarrow> bc(g) nulhomotopic in X.\<close>
+          have hg'_ker_b: "{k. top1_loop_equiv_on ?U ?TU ?b ?g' k}
+              \<in> top1_group_kernel_on
+                (top1_fundamental_group_carrier ?U ?TU ?b) (top1_fundamental_group_id X TX ?b)
+                (top1_fundamental_group_induced_on ?U ?TU ?b X TX ?b (\<lambda>x. x))"
+          proof -
+            \<comment> \<open>Step A: incl*_a([g]_U) = [g]_X = e, so g nulhomotopic in X.\<close>
+            have hU_sub_X: "?U \<subseteq> X" by (by100 blast)
+            have hTU_eq: "subspace_topology X TX ?U = ?TU" by (by100 simp)
+            have hincl_a_g: "(top1_fundamental_group_induced_on ?U ?TU a X TX a (\<lambda>x. x))
+                {k. top1_loop_equiv_on ?U ?TU a g k}
+              = {k. top1_loop_equiv_on X TX a g k}"
+              by (rule inclusion_induced_class[OF hU_sub_X hTopX_ns hTU_eq hg_loop])
+            have hg_null_X: "{k. top1_loop_equiv_on X TX a g k}
+                = top1_fundamental_group_id X TX a"
+              using hc_id hc_eq hincl_a_g by (by100 simp)
+            \<comment> \<open>Step B: g is a loop in X (from U \<subseteq> X).\<close>
+            have hAU_cont_X: "top1_continuous_map_on ?U ?TU X TX (\<lambda>x. x)"
+            proof -
+              from top1_continuous_map_on_restrict_domain_simple[OF
+                  top1_continuous_map_on_id[OF hTopX_ns] hU_sub_X]
+              show ?thesis unfolding id_def by (by100 simp)
+            qed
+            have hg_X_loop: "top1_is_loop_on X TX a g"
+            proof -
+              have "top1_is_loop_on X TX ((\<lambda>x. x) a) ((\<lambda>x. x) \<circ> g)"
+                by (rule top1_continuous_map_loop_early[OF hAU_cont_X hg_loop])
+              moreover have "(\<lambda>x::'a. x) \<circ> g = g" by (rule ext) (by100 simp)
+              moreover have "(\<lambda>x::'a. x) a = a" by (by100 simp)
+              ultimately show ?thesis by (by100 simp)
+            qed
+            have hg'_X_loop: "top1_is_loop_on X TX ?b ?g'"
+              using hbc_eq top1_basepoint_change_is_loop[OF hTopX_ns h\<delta>_path hg_X_loop]
+              by (by100 simp)
+            \<comment> \<open>Step C: g nulhomotopic in X means g \<simeq> const_a in X.\<close>
+            have hg_equiv_const: "top1_loop_equiv_on X TX a g (top1_constant_path a)"
+            proof -
+              have "top1_constant_path a \<in> {k. top1_loop_equiv_on X TX a g k}"
+              proof -
+                have hca_loop: "top1_is_loop_on X TX a (top1_constant_path a)"
+                  by (rule top1_constant_path_is_loop[OF hTopX_ns ha_X])
+                have hca_refl: "top1_loop_equiv_on X TX a (top1_constant_path a) (top1_constant_path a)"
+                  by (rule top1_loop_equiv_on_refl[OF hca_loop])
+                have "top1_constant_path a \<in> {k. top1_loop_equiv_on X TX a (top1_constant_path a) k}"
+                  using hca_refl by (by100 blast)
+                moreover have "top1_fundamental_group_id X TX a
+                    = {k. top1_loop_equiv_on X TX a (top1_constant_path a) k}"
+                  unfolding top1_fundamental_group_id_def by (by100 simp)
+                ultimately show ?thesis using hg_null_X by (by100 simp)
+              qed
+              thus ?thesis by (by100 blast)
+            qed
+            \<comment> \<open>Step D: bc(X,a,b,\<delta>,g) \<simeq> bc(X,a,b,\<delta>,const_a) in X.\<close>
+            have hca_X_loop: "top1_is_loop_on X TX a (top1_constant_path a)"
+              by (rule top1_constant_path_is_loop[OF hTopX_ns ha_X])
+            have hbc_congr: "top1_loop_equiv_on X TX ?b
+                (top1_basepoint_change_on X TX a ?b ?\<delta> g)
+                (top1_basepoint_change_on X TX a ?b ?\<delta> (top1_constant_path a))"
+              by (rule top1_basepoint_change_loop_equiv[OF hTopX_ns h\<delta>_path hg_X_loop
+                  hca_X_loop hg_equiv_const])
+            \<comment> \<open>Step E: bc(X,a,b,\<delta>,const_a) \<simeq> const_b in X.\<close>
+            have hbc_const: "top1_loop_equiv_on X TX ?b
+                (top1_basepoint_change_on X TX a ?b ?\<delta> (top1_constant_path a))
+                (top1_constant_path ?b)"
+            proof -
+              have hrevd_path: "top1_is_path_on X TX ?b a (top1_path_reverse ?\<delta>)"
+                by (rule top1_path_reverse_is_path[OF h\<delta>_path])
+              have hd_path: "top1_is_path_on X TX a ?b ?\<delta>" by (rule h\<delta>_path)
+              \<comment> \<open>const_a * \<delta> \<simeq> \<delta> (left identity).\<close>
+              have h1: "top1_path_homotopic_on X TX a ?b
+                  (top1_path_product (top1_constant_path a) ?\<delta>) ?\<delta>"
+                by (rule Theorem_51_2_left_identity[OF hTopX_ns hd_path])
+              \<comment> \<open>rev(\<delta>) * (const_a * \<delta>) \<simeq> rev(\<delta>) * \<delta> (congruence).\<close>
+              have h2: "top1_path_homotopic_on X TX ?b ?b
+                  (top1_path_product (top1_path_reverse ?\<delta>) (top1_path_product (top1_constant_path a) ?\<delta>))
+                  (top1_path_product (top1_path_reverse ?\<delta>) ?\<delta>)"
+                by (rule path_homotopic_product_right[OF hTopX_ns h1 hrevd_path])
+              \<comment> \<open>rev(\<delta>) * \<delta> \<simeq> const_b.\<close>
+              have h3: "top1_path_homotopic_on X TX ?b ?b
+                  (top1_path_product (top1_path_reverse ?\<delta>) ?\<delta>)
+                  (top1_constant_path ?b)"
+                by (rule Theorem_51_2_invgerse_right[OF hTopX_ns hd_path])
+              \<comment> \<open>Chain: bc(const_a) = rev(\<delta>)*(const_a*\<delta>) \<simeq> rev(\<delta>)*\<delta> \<simeq> const_b.\<close>
+              have h4: "top1_path_homotopic_on X TX ?b ?b
+                  (top1_basepoint_change_on X TX a ?b ?\<delta> (top1_constant_path a))
+                  (top1_constant_path ?b)"
+                using Lemma_51_1_path_homotopic_trans[OF hTopX_ns h2 h3]
+                unfolding top1_basepoint_change_on_def .
+              \<comment> \<open>Convert path_homotopic to loop_equiv.\<close>
+              have hbc_ca_loop: "top1_is_loop_on X TX ?b
+                  (top1_basepoint_change_on X TX a ?b ?\<delta> (top1_constant_path a))"
+                by (rule top1_basepoint_change_is_loop[OF hTopX_ns hd_path hca_X_loop])
+              have hcb_loop: "top1_is_loop_on X TX ?b (top1_constant_path ?b)"
+              proof -
+                have "?b \<in> X" using hb_in_UV hA_sub_X by (by100 blast)
+                thus ?thesis by (rule top1_constant_path_is_loop[OF hTopX_ns])
+              qed
+              show ?thesis unfolding top1_loop_equiv_on_def
+                using hbc_ca_loop hcb_loop h4 by (by100 blast)
+            qed
+            \<comment> \<open>Step F: g' \<simeq> const_b in X, chain steps D+E.\<close>
+            have hg'_null_X: "top1_loop_equiv_on X TX ?b ?g' (top1_constant_path ?b)"
+            proof -
+              \<comment> \<open>g' = bc(U,...) = bc(X,...) by hbc_eq. Rewrite g' to bc(X,...).\<close>
+              have hg'_eq_bcX: "top1_loop_equiv_on X TX ?b ?g'
+                  (top1_basepoint_change_on X TX a ?b ?\<delta> g)"
+              proof -
+                have "?g' = top1_basepoint_change_on X TX a ?b ?\<delta> g" by (rule hbc_eq)
+                hence "top1_is_loop_on X TX ?b (top1_basepoint_change_on X TX a ?b ?\<delta> g)"
+                  using hg'_X_loop by (by100 simp)
+                thus ?thesis using hbc_eq top1_loop_equiv_on_refl[OF hg'_X_loop]
+                  by (by100 simp)
+              qed
+              from top1_loop_equiv_on_trans[OF hTopX_ns hg'_eq_bcX
+                  top1_loop_equiv_on_trans[OF hTopX_ns hbc_congr hbc_const]]
+              show ?thesis .
+            qed
+            \<comment> \<open>Step G: [g']_X = e_X_b, so incl*_b([g']_U) = e.\<close>
+            have hincl_b_g': "(top1_fundamental_group_induced_on ?U ?TU ?b X TX ?b (\<lambda>x. x))
+                {k. top1_loop_equiv_on ?U ?TU ?b ?g' k}
+              = {k. top1_loop_equiv_on X TX ?b ?g' k}"
+              by (rule inclusion_induced_class[OF hU_sub_X hTopX_ns hTU_eq hg'_loop])
+            have hg'_class_X_eq: "{k. top1_loop_equiv_on X TX ?b ?g' k}
+                = top1_fundamental_group_id X TX ?b"
+            proof -
+              have hcb_loop: "top1_is_loop_on X TX ?b (top1_constant_path ?b)"
+              proof -
+                have "?b \<in> X" using hb_in_UV hA_sub_X by (by100 blast)
+                thus ?thesis by (rule top1_constant_path_is_loop[OF hTopX_ns])
+              qed
+              have hcb_class: "top1_fundamental_group_id X TX ?b
+                  = {k. top1_loop_equiv_on X TX ?b (top1_constant_path ?b) k}"
+                unfolding top1_fundamental_group_id_def by (by100 simp)
+              \<comment> \<open>g' \<simeq> const_b, so [g']_X = [const_b]_X = e.\<close>
+              show ?thesis
+              proof (rule set_eqI, rule iffI)
+                fix k assume "k \<in> {k. top1_loop_equiv_on X TX ?b ?g' k}"
+                hence "top1_loop_equiv_on X TX ?b ?g' k" by (by100 blast)
+                hence "top1_loop_equiv_on X TX ?b (top1_constant_path ?b) k"
+                  using top1_loop_equiv_on_trans[OF hTopX_ns
+                      top1_loop_equiv_on_sym[OF hg'_null_X]] by (by100 blast)
+                thus "k \<in> top1_fundamental_group_id X TX ?b"
+                  unfolding hcb_class by (by100 blast)
+              next
+                fix k assume "k \<in> top1_fundamental_group_id X TX ?b"
+                hence "top1_loop_equiv_on X TX ?b (top1_constant_path ?b) k"
+                  unfolding hcb_class by (by100 blast)
+                hence "top1_loop_equiv_on X TX ?b ?g' k"
+                  using top1_loop_equiv_on_trans[OF hTopX_ns hg'_null_X] by (by100 blast)
+                thus "k \<in> {k. top1_loop_equiv_on X TX ?b ?g' k}" by (by100 blast)
+              qed
+            qed
+            show ?thesis unfolding top1_group_kernel_on_def
+              using hg'_loop hincl_b_g' hg'_class_X_eq
+              unfolding top1_fundamental_group_carrier_def by (by100 blast)
+          qed
+          \<comment> \<open>By hincl_ker_b: g' class \<in> \<langle>\<langle>\<iota>*(\<pi>_1(UV,b))\<rangle>\<rangle>.\<close>
+          have hg'_in_ncl: "{k. top1_loop_equiv_on ?U ?TU ?b ?g' k}
+              \<in> top1_normal_subgroup_generated_on
+                  (top1_fundamental_group_carrier ?U ?TU ?b) (top1_fundamental_group_mul ?U ?TU ?b)
+                  (top1_fundamental_group_id ?U ?TU ?b) (top1_fundamental_group_invg ?U ?TU ?b)
+                  (top1_fundamental_group_induced_on ?UV ?TUV ?b ?U ?TU ?b (\<lambda>x. x)
+                     ` top1_fundamental_group_carrier ?UV ?TUV ?b)"
+            using hg'_ker_b hincl_ker_b by (by100 blast)
+          \<comment> \<open>Strategy: Define N_b via base change of N.
+             Show N_b is normal, contains \<iota>*(\<pi>_1(UV,b)) (by generator tracking),
+             so [g']_U \<in> N_b. Invert bc to get c \<in> N.\<close>
+          \<comment> \<open>Since the normal closure \<langle>\<langle>\<iota>*(\<pi>_1(UV,b))\<rangle>\<rangle> \<subseteq> every normal subgroup
+             containing \<iota>*(\<pi>_1(UV,b)), it suffices to find a normal subgroup of
+             \<pi>_1(U,b) that contains \<iota>*(\<pi>_1(UV,b)) and relates back to N.\<close>
+          \<comment> \<open>Concretely: bc_\<delta>(N) is normal in \<pi>_1(U,b) and contains \<iota>*(\<pi>_1(UV,b))
+             by the generator tracking argument. Therefore
+             \<langle>\<langle>\<iota>*(\<pi>_1(UV,b))\<rangle>\<rangle> \<subseteq> bc_\<delta>(N), so [g'] \<in> bc_\<delta>(N).
+             Then bc_\<delta> injectivity gives c \<in> N.\<close>
+          \<comment> \<open>Strategy: show that bc_back maps [g']_U to c, and that [g']_U being
+             in the normal closure means c is in N.
+             Key: bc_back\<inverse>(N) is a normal subgroup of \<pi>_1(U,b) containing \<iota>*(\<pi>_1(UV,b)),
+             so \<langle>\<langle>\<iota>*(\<pi>_1(UV,b))\<rangle>\<rangle> \<subseteq> bc_back\<inverse>(N), hence [g'] \<in> bc_back\<inverse>(N),
+             hence bc_back([g']) = c \<in> N.\<close>
+          \<comment> \<open>rev(\<delta>) is a path from b to a in U.\<close>
+          let ?rev\<delta> = "top1_path_reverse ?\<delta>"
+          have hrev\<delta>_path_U: "top1_is_path_on ?U ?TU ?b a ?rev\<delta>"
+            by (rule top1_path_reverse_is_path[OF h\<delta>_path_U])
+          \<comment> \<open>Roundtrip: bc(U,b,a,rev(\<delta>), bc(U,a,b,\<delta>,g)) \<simeq> g in U.\<close>
+          have hroundtrip: "top1_path_homotopic_on ?U ?TU a a g
+              (top1_basepoint_change_on ?U ?TU ?b a ?rev\<delta> ?g')"
+            by (rule top1_basepoint_change_roundtrip[OF hTopU_outer h\<delta>_path_U hg_loop])
+          \<comment> \<open>So [bc_back(g')]_U = [g]_U = c.\<close>
+          have hbc_back_loop: "top1_is_loop_on ?U ?TU a (top1_basepoint_change_on ?U ?TU ?b a ?rev\<delta> ?g')"
+            by (rule top1_basepoint_change_is_loop[OF hTopU_outer hrev\<delta>_path_U hg'_loop])
+          have hbc_back_class: "{k. top1_loop_equiv_on ?U ?TU a
+              (top1_basepoint_change_on ?U ?TU ?b a ?rev\<delta> ?g') k} = c"
+          proof -
+            have hle: "top1_loop_equiv_on ?U ?TU a g (top1_basepoint_change_on ?U ?TU ?b a ?rev\<delta> ?g')"
+              unfolding top1_loop_equiv_on_def using hg_loop hbc_back_loop hroundtrip by (by100 blast)
+            have hle_sym: "top1_loop_equiv_on ?U ?TU a
+                (top1_basepoint_change_on ?U ?TU ?b a ?rev\<delta> ?g') g"
+              by (rule top1_loop_equiv_on_sym[OF hle])
+            show ?thesis
+            proof (rule set_eqI, rule iffI)
+              fix k assume hk1: "k \<in> {k. top1_loop_equiv_on ?U ?TU a
+                  (top1_basepoint_change_on ?U ?TU ?b a ?rev\<delta> ?g') k}"
+              have hbk: "top1_loop_equiv_on ?U ?TU a
+                  (top1_basepoint_change_on ?U ?TU ?b a ?rev\<delta> ?g') k"
+                using hk1 by (by100 blast)
+              have "top1_loop_equiv_on ?U ?TU a g k"
+                by (rule top1_loop_equiv_on_trans[OF hTopU_outer
+                    top1_loop_equiv_on_sym[OF hle_sym] hbk])
+              thus "k \<in> c" using hc_eq by (by100 blast)
+            next
+              fix k assume "k \<in> c"
+              hence hgk: "top1_loop_equiv_on ?U ?TU a g k" using hc_eq by (by100 blast)
+              show "k \<in> {k. top1_loop_equiv_on ?U ?TU a
+                  (top1_basepoint_change_on ?U ?TU ?b a ?rev\<delta> ?g') k}"
+                using top1_loop_equiv_on_trans[OF hTopU_outer hle_sym hgk] by (by100 blast)
+            qed
+          qed
+          \<comment> \<open>Now the key claim: \<iota>*(\<pi>_1(UV,b)) \<subseteq> {x \<in> \<pi>_1(U,b) : bc_back_class(x) \<in> N}.
+             This requires generator tracking: bc_back maps every element of \<iota>*(\<pi>_1(UV,b))
+             to a power of kp_class^(\<pm>1), which is in N (since N is a subgroup).\<close>
+          \<comment> \<open>For any loop f0 in UV at b: bc_back([f0]_U) = [bc(U,b,a,rev(\<delta>),f0)]_U.
+             We need this to be in N.
+             Key fact: bc(U,b,a,rev(\<delta>),f0) = h \<circ> bc(B2-{0},q,p,rev(\<gamma>),h\<inverse>(f0))
+             (by comp_basepoint_change), and bc(B2-{0},q,p,rev(\<gamma>),f0_disk) \<simeq> f^(\<pm>1)
+             in B2-{0} (winding number), so bc_back(\<iota>*[f0]) \<simeq> h\<circ>f^(\<pm>1) = kp^(\<pm>1) in U.
+             Since kp_class \<in> N and kp_class\<inverse> \<in> N and N is a subgroup, kp^(\<pm>n) \<in> N.\<close>
+          \<comment> \<open>Key claim: for every loop f0 in UV at b, bc_back([\<iota>(f0)]_U) \<in> N.
+             This means every element of \<iota>*(\<pi>_1(UV,b)) has its bc_back in N.\<close>
+          have hbc_back_UV_in_N: "\<And>f0. top1_is_loop_on ?UV ?TUV ?b f0 \<Longrightarrow>
+              {k. top1_loop_equiv_on ?U ?TU a
+                (top1_basepoint_change_on ?U ?TU ?b a ?rev\<delta> f0) k} \<in> N"
+            sorry \<comment> \<open>Generator tracking: bc_back(f0) \<simeq> kp^(\<pm>n) in U via
+                 comp_basepoint_change + winding number + UV \<cong> S1.\<close>
+          \<comment> \<open>The preimage M = {x \<in> \<pi>_1(U,b) : bc_back_class(x) \<in> N} is normal.\<close>
+          let ?M = "{x \<in> top1_fundamental_group_carrier ?U ?TU ?b.
+              \<exists>f. top1_is_loop_on ?U ?TU ?b f \<and> x = {k. top1_loop_equiv_on ?U ?TU ?b f k} \<and>
+                  {k. top1_loop_equiv_on ?U ?TU a
+                    (top1_basepoint_change_on ?U ?TU ?b a ?rev\<delta> f) k} \<in> N}"
+          have hM_normal: "top1_normal_subgroup_on
+              (top1_fundamental_group_carrier ?U ?TU ?b) (top1_fundamental_group_mul ?U ?TU ?b)
+              (top1_fundamental_group_id ?U ?TU ?b) (top1_fundamental_group_invg ?U ?TU ?b) ?M"
+          proof -
+            \<comment> \<open>bc_back is a group homomorphism at loop level (Theorem 52.1).
+               The preimage of N under bc_back_class is normal.\<close>
+            have hb_U: "?b \<in> ?U" using hb_in_UV by (by100 blast)
+            have hgrp_b: "top1_is_group_on (top1_fundamental_group_carrier ?U ?TU ?b)
+                (top1_fundamental_group_mul ?U ?TU ?b) (top1_fundamental_group_id ?U ?TU ?b)
+                (top1_fundamental_group_invg ?U ?TU ?b)"
+              by (rule top1_fundamental_group_is_group[OF hTopU_outer hb_U])
+            have hgrp_a: "top1_is_group_on (top1_fundamental_group_carrier ?U ?TU a)
+                (top1_fundamental_group_mul ?U ?TU a) (top1_fundamental_group_id ?U ?TU a)
+                (top1_fundamental_group_invg ?U ?TU a)"
+              by (rule top1_fundamental_group_is_group[OF hTopU_outer ha_U_outer])
+            \<comment> \<open>Define the class-level base change map.\<close>
+            let ?\<Phi> = "\<lambda>cls. {k. \<exists>f\<in>cls. top1_loop_equiv_on ?U ?TU a
+                (top1_basepoint_change_on ?U ?TU ?b a ?rev\<delta> f) k}"
+            \<comment> \<open>\<Phi> is a group homomorphism \<pi>_1(U,b) \<rightarrow> \<pi>_1(U,a).\<close>
+            have h\<Phi>_hom: "top1_group_hom_on (top1_fundamental_group_carrier ?U ?TU ?b)
+                (top1_fundamental_group_mul ?U ?TU ?b)
+                (top1_fundamental_group_carrier ?U ?TU a) (top1_fundamental_group_mul ?U ?TU a) ?\<Phi>"
+            proof -
+              let ?bc = "\<lambda>f. top1_basepoint_change_on ?U ?TU ?b a ?rev\<delta> f"
+              \<comment> \<open>Part 1: \<Phi> maps carrier to carrier.\<close>
+              have hP1: "\<forall>c \<in> top1_fundamental_group_carrier ?U ?TU ?b. ?\<Phi> c \<in>
+                  top1_fundamental_group_carrier ?U ?TU a"
+              proof (intro ballI)
+                fix c assume hc: "c \<in> top1_fundamental_group_carrier ?U ?TU ?b"
+                obtain f where hf: "top1_is_loop_on ?U ?TU ?b f"
+                    "c = {k. top1_loop_equiv_on ?U ?TU ?b f k}"
+                  using hc unfolding top1_fundamental_group_carrier_def by (by100 blast)
+                have hbc_f: "top1_is_loop_on ?U ?TU a (?bc f)"
+                  by (rule top1_basepoint_change_is_loop[OF hTopU_outer hrev\<delta>_path_U hf(1)])
+                \<comment> \<open>\<Phi>(c) = [bc(f)]_a.\<close>
+                have hPhi_c: "?\<Phi> c = {k. top1_loop_equiv_on ?U ?TU a (?bc f) k}"
+                proof (rule set_eqI, rule iffI)
+                  fix k assume "k \<in> ?\<Phi> c"
+                  then obtain g where hfg: "top1_loop_equiv_on ?U ?TU ?b f g"
+                      and hgk: "top1_loop_equiv_on ?U ?TU a (?bc g) k"
+                    using hf(2) by (by100 blast)
+                  have hg_loop: "top1_is_loop_on ?U ?TU ?b g"
+                    using hfg unfolding top1_loop_equiv_on_def by (by100 blast)
+                  from top1_basepoint_change_loop_equiv[OF hTopU_outer hrev\<delta>_path_U hf(1) hg_loop hfg]
+                  have "top1_loop_equiv_on ?U ?TU a (?bc f) (?bc g)" .
+                  from top1_loop_equiv_on_trans[OF hTopU_outer this hgk]
+                  show "k \<in> {k. top1_loop_equiv_on ?U ?TU a (?bc f) k}" by (by100 blast)
+                next
+                  fix k assume "k \<in> {k. top1_loop_equiv_on ?U ?TU a (?bc f) k}"
+                  moreover have "f \<in> c" using hf(2) top1_loop_equiv_on_refl[OF hf(1)] by (by100 blast)
+                  ultimately show "k \<in> ?\<Phi> c" by (by100 blast)
+                qed
+                show "?\<Phi> c \<in> top1_fundamental_group_carrier ?U ?TU a"
+                  unfolding hPhi_c top1_fundamental_group_carrier_def using hbc_f by (by100 blast)
+              qed
+              \<comment> \<open>Part 2: \<Phi> preserves multiplication.\<close>
+              have hP2: "\<forall>c1 \<in> top1_fundamental_group_carrier ?U ?TU ?b.
+                  \<forall>c2 \<in> top1_fundamental_group_carrier ?U ?TU ?b.
+                  ?\<Phi> (top1_fundamental_group_mul ?U ?TU ?b c1 c2)
+                = top1_fundamental_group_mul ?U ?TU a (?\<Phi> c1) (?\<Phi> c2)"
+              proof (intro ballI)
+                fix c1 c2 assume hc1: "c1 \<in> top1_fundamental_group_carrier ?U ?TU ?b"
+                    and hc2: "c2 \<in> top1_fundamental_group_carrier ?U ?TU ?b"
+                obtain f1 where hf1: "top1_is_loop_on ?U ?TU ?b f1"
+                    "c1 = {k. top1_loop_equiv_on ?U ?TU ?b f1 k}"
+                  using hc1 unfolding top1_fundamental_group_carrier_def by (by100 blast)
+                obtain f2 where hf2: "top1_is_loop_on ?U ?TU ?b f2"
+                    "c2 = {k. top1_loop_equiv_on ?U ?TU ?b f2 k}"
+                  using hc2 unfolding top1_fundamental_group_carrier_def by (by100 blast)
+                \<comment> \<open>Theorem_52_1: bc(f1*f2) \<simeq> bc(f1)*bc(f2) in U at a.\<close>
+                have hT52: "top1_path_homotopic_on ?U ?TU a a
+                    (?bc (top1_path_product f1 f2))
+                    (top1_path_product (?bc f1) (?bc f2))"
+                  by (rule Theorem_52_1[OF hTopU_outer hrev\<delta>_path_U hf1(1) hf2(1)])
+                \<comment> \<open>LHS: \<Phi>(mul(c1,c2)) = {k. le(U,a,bc(f1*f2),k)} (via bc congruence).\<close>
+                \<comment> \<open>RHS: mul(\<Phi>(c1),\<Phi>(c2)) = {k. le(U,a,bc(f1)*bc(f2),k)} (via set computation).\<close>
+                \<comment> \<open>These equal since bc(f1*f2) \<simeq> bc(f1)*bc(f2) (Theorem 52.1).\<close>
+                show "?\<Phi> (top1_fundamental_group_mul ?U ?TU ?b c1 c2)
+                    = top1_fundamental_group_mul ?U ?TU a (?\<Phi> c1) (?\<Phi> c2)"
+                  sorry \<comment> \<open>Set equality from Theorem_52_1 + bc congruence + mul def.\<close>
+              qed
+              show ?thesis unfolding top1_group_hom_on_def using hP1 hP2 by (by100 blast)
+            qed
+            \<comment> \<open>M = {x \<in> G_b : \<Phi>(x) \<in> N} (relate to our M definition).\<close>
+            have hM_eq: "?M = {x \<in> top1_fundamental_group_carrier ?U ?TU ?b. ?\<Phi> x \<in> N}"
+            proof (rule set_eqI, rule iffI)
+              fix x assume hx: "x \<in> ?M"
+              then obtain f where hf: "top1_is_loop_on ?U ?TU ?b f"
+                  "x = {k. top1_loop_equiv_on ?U ?TU ?b f k}"
+                  "{k. top1_loop_equiv_on ?U ?TU a
+                    (top1_basepoint_change_on ?U ?TU ?b a ?rev\<delta> f) k} \<in> N"
+                by (by100 blast)
+              have hx_carrier: "x \<in> top1_fundamental_group_carrier ?U ?TU ?b"
+                using hx by (by100 blast)
+              \<comment> \<open>\<Phi>(x) = \<Phi>([f]) = {k. \<exists>g\<in>[f]. le(U,a,bc(g),k)} = [bc(f)] (by bc congruence).\<close>
+              have h\<Phi>_eq: "?\<Phi> x = {k. top1_loop_equiv_on ?U ?TU a
+                  (top1_basepoint_change_on ?U ?TU ?b a ?rev\<delta> f) k}"
+              proof -
+                have "?\<Phi> x = {k. \<exists>g\<in>{k'. top1_loop_equiv_on ?U ?TU ?b f k'}.
+                    top1_loop_equiv_on ?U ?TU a
+                      (top1_basepoint_change_on ?U ?TU ?b a ?rev\<delta> g) k}"
+                  using hf(2) by (by100 simp)
+                also have "... = {k. top1_loop_equiv_on ?U ?TU a
+                    (top1_basepoint_change_on ?U ?TU ?b a ?rev\<delta> f) k}"
+                proof (rule set_eqI, rule iffI)
+                  fix k assume "k \<in> {k. \<exists>g\<in>{k'. top1_loop_equiv_on ?U ?TU ?b f k'}.
+                      top1_loop_equiv_on ?U ?TU a
+                        (top1_basepoint_change_on ?U ?TU ?b a ?rev\<delta> g) k}"
+                  then obtain g where hfg: "top1_loop_equiv_on ?U ?TU ?b f g"
+                      and hgk: "top1_loop_equiv_on ?U ?TU a
+                        (top1_basepoint_change_on ?U ?TU ?b a ?rev\<delta> g) k" by (by100 blast)
+                  have hg_loop: "top1_is_loop_on ?U ?TU ?b g"
+                    using hfg unfolding top1_loop_equiv_on_def by (by100 blast)
+                  have hbc_fg: "top1_loop_equiv_on ?U ?TU a
+                      (top1_basepoint_change_on ?U ?TU ?b a ?rev\<delta> f)
+                      (top1_basepoint_change_on ?U ?TU ?b a ?rev\<delta> g)"
+                    using top1_basepoint_change_loop_equiv[OF hTopU_outer hrev\<delta>_path_U hf(1) hg_loop hfg] .
+                  show "k \<in> {k. top1_loop_equiv_on ?U ?TU a
+                      (top1_basepoint_change_on ?U ?TU ?b a ?rev\<delta> f) k}"
+                    using top1_loop_equiv_on_trans[OF hTopU_outer hbc_fg hgk] by (by100 blast)
+                next
+                  fix k assume "k \<in> {k. top1_loop_equiv_on ?U ?TU a
+                      (top1_basepoint_change_on ?U ?TU ?b a ?rev\<delta> f) k}"
+                  hence hfk: "top1_loop_equiv_on ?U ?TU a
+                      (top1_basepoint_change_on ?U ?TU ?b a ?rev\<delta> f) k" by (by100 blast)
+                  have "top1_loop_equiv_on ?U ?TU ?b f f"
+                    by (rule top1_loop_equiv_on_refl[OF hf(1)])
+                  thus "k \<in> {k. \<exists>g\<in>{k'. top1_loop_equiv_on ?U ?TU ?b f k'}.
+                      top1_loop_equiv_on ?U ?TU a
+                        (top1_basepoint_change_on ?U ?TU ?b a ?rev\<delta> g) k}"
+                    using hfk by (by100 blast)
+                qed
+                finally show ?thesis .
+              qed
+              show "x \<in> {x \<in> top1_fundamental_group_carrier ?U ?TU ?b. ?\<Phi> x \<in> N}"
+                using hx_carrier hf(3) h\<Phi>_eq by (by100 simp)
+            next
+              fix x assume hx: "x \<in> {x \<in> top1_fundamental_group_carrier ?U ?TU ?b. ?\<Phi> x \<in> N}"
+              hence hx_carrier: "x \<in> top1_fundamental_group_carrier ?U ?TU ?b"
+                  and h\<Phi>_in_N: "?\<Phi> x \<in> N" by (by100 blast)+
+              obtain f where hf: "top1_is_loop_on ?U ?TU ?b f"
+                  "x = {k. top1_loop_equiv_on ?U ?TU ?b f k}"
+                using hx_carrier unfolding top1_fundamental_group_carrier_def by (by100 blast)
+              have h\<Phi>_eq: "?\<Phi> x = {k. top1_loop_equiv_on ?U ?TU a
+                  (top1_basepoint_change_on ?U ?TU ?b a ?rev\<delta> f) k}"
+              proof -
+                have "?\<Phi> x = {k. \<exists>g\<in>{k'. top1_loop_equiv_on ?U ?TU ?b f k'}.
+                    top1_loop_equiv_on ?U ?TU a
+                      (top1_basepoint_change_on ?U ?TU ?b a ?rev\<delta> g) k}"
+                  using hf(2) by (by100 simp)
+                also have "... = {k. top1_loop_equiv_on ?U ?TU a
+                    (top1_basepoint_change_on ?U ?TU ?b a ?rev\<delta> f) k}"
+                proof (rule set_eqI, rule iffI)
+                  fix k assume "k \<in> {k. \<exists>g\<in>{k'. top1_loop_equiv_on ?U ?TU ?b f k'}.
+                      top1_loop_equiv_on ?U ?TU a
+                        (top1_basepoint_change_on ?U ?TU ?b a ?rev\<delta> g) k}"
+                  then obtain g where hfg: "top1_loop_equiv_on ?U ?TU ?b f g"
+                      and hgk: "top1_loop_equiv_on ?U ?TU a
+                        (top1_basepoint_change_on ?U ?TU ?b a ?rev\<delta> g) k" by (by100 blast)
+                  have hg_loop: "top1_is_loop_on ?U ?TU ?b g"
+                    using hfg unfolding top1_loop_equiv_on_def by (by100 blast)
+                  have hbc_fg: "top1_loop_equiv_on ?U ?TU a
+                      (top1_basepoint_change_on ?U ?TU ?b a ?rev\<delta> f)
+                      (top1_basepoint_change_on ?U ?TU ?b a ?rev\<delta> g)"
+                    using top1_basepoint_change_loop_equiv[OF hTopU_outer hrev\<delta>_path_U hf(1) hg_loop hfg] .
+                  show "k \<in> {k. top1_loop_equiv_on ?U ?TU a
+                      (top1_basepoint_change_on ?U ?TU ?b a ?rev\<delta> f) k}"
+                    using top1_loop_equiv_on_trans[OF hTopU_outer hbc_fg hgk] by (by100 blast)
+                next
+                  fix k assume "k \<in> {k. top1_loop_equiv_on ?U ?TU a
+                      (top1_basepoint_change_on ?U ?TU ?b a ?rev\<delta> f) k}"
+                  hence hfk: "top1_loop_equiv_on ?U ?TU a
+                      (top1_basepoint_change_on ?U ?TU ?b a ?rev\<delta> f) k" by (by100 blast)
+                  have "top1_loop_equiv_on ?U ?TU ?b f f"
+                    by (rule top1_loop_equiv_on_refl[OF hf(1)])
+                  thus "k \<in> {k. \<exists>g\<in>{k'. top1_loop_equiv_on ?U ?TU ?b f k'}.
+                      top1_loop_equiv_on ?U ?TU a
+                        (top1_basepoint_change_on ?U ?TU ?b a ?rev\<delta> g) k}"
+                    using hfk by (by100 blast)
+                qed
+                finally show ?thesis .
+              qed
+              have "{k. top1_loop_equiv_on ?U ?TU a
+                  (top1_basepoint_change_on ?U ?TU ?b a ?rev\<delta> f) k} \<in> N"
+                using h\<Phi>_in_N h\<Phi>_eq by (by100 simp)
+              show "x \<in> ?M" using hf hx_carrier \<open>{k. top1_loop_equiv_on ?U ?TU a
+                  (top1_basepoint_change_on ?U ?TU ?b a ?rev\<delta> f) k} \<in> N\<close> by (by100 blast)
+            qed
+            \<comment> \<open>Apply preimage_normal_subgroup.\<close>
+            show ?thesis unfolding hM_eq
+              by (rule preimage_normal_subgroup[OF hgrp_b hgrp_a h\<Phi>_hom hN_normal])
+          qed
+          \<comment> \<open>\<iota>*(\<pi>_1(UV,b)) \<subseteq> M.\<close>
+          have hUV_sub_M: "top1_fundamental_group_induced_on ?UV ?TUV ?b ?U ?TU ?b (\<lambda>x. x)
+              ` top1_fundamental_group_carrier ?UV ?TUV ?b \<subseteq> ?M"
+          proof (rule image_subsetI)
+            fix cls assume hcls: "cls \<in> top1_fundamental_group_carrier ?UV ?TUV ?b"
+            obtain f0 where hf0: "top1_is_loop_on ?UV ?TUV ?b f0"
+                "cls = {k. top1_loop_equiv_on ?UV ?TUV ?b f0 k}"
+              using hcls unfolding top1_fundamental_group_carrier_def by (by100 blast)
+            \<comment> \<open>\<iota>*(cls) = [f0]_U (by inclusion_induced_class).\<close>
+            have hUV_sub_U: "?UV \<subseteq> ?U" by (by100 blast)
+            have hTUV_eq: "subspace_topology ?U ?TU ?UV = ?TUV"
+              using subspace_topology_trans[OF hUV_sub_U] by (by100 simp)
+            have h\<iota>_cls: "top1_fundamental_group_induced_on ?UV ?TUV ?b ?U ?TU ?b (\<lambda>x. x) cls
+                = {k. top1_loop_equiv_on ?U ?TU ?b f0 k}"
+              using hf0(2) inclusion_induced_class[OF hUV_sub_U hTopU_outer hTUV_eq hf0(1)]
+              by (by100 simp)
+            \<comment> \<open>f0 is a loop in U (from UV \<subseteq> U).\<close>
+            have hf0_U: "top1_is_loop_on ?U ?TU ?b f0"
+            proof -
+              have hAU_UV: "top1_continuous_map_on ?UV ?TUV ?U ?TU (\<lambda>x. x)"
+              proof -
+                from top1_continuous_map_on_restrict_domain_simple[OF
+                    top1_continuous_map_on_id[OF hTopU_outer] hUV_sub_U]
+                show ?thesis using hTUV_eq unfolding id_def by (by100 simp)
+              qed
+              have "top1_is_loop_on ?U ?TU ((\<lambda>x. x) ?b) ((\<lambda>x. x) \<circ> f0)"
+                by (rule top1_continuous_map_loop_early[OF hAU_UV hf0(1)])
+              moreover have "(\<lambda>x::'a. x) \<circ> f0 = f0" by (rule ext) (by100 simp)
+              moreover have "(\<lambda>x::'a. x) ?b = ?b" by (by100 simp)
+              ultimately show ?thesis by (by100 simp)
+            qed
+            \<comment> \<open>[bc_back(f0)]_U \<in> N (from hbc_back_UV_in_N).\<close>
+            have hbc_in_N: "{k. top1_loop_equiv_on ?U ?TU a
+                (top1_basepoint_change_on ?U ?TU ?b a ?rev\<delta> f0) k} \<in> N"
+              by (rule hbc_back_UV_in_N[OF hf0(1)])
+            \<comment> \<open>\<iota>*(cls) \<in> M.\<close>
+            show "top1_fundamental_group_induced_on ?UV ?TUV ?b ?U ?TU ?b (\<lambda>x. x) cls \<in> ?M"
+              unfolding h\<iota>_cls using hf0_U hbc_in_N
+              unfolding top1_fundamental_group_carrier_def by (by100 blast)
+          qed
+          \<comment> \<open>Normal closure \<subseteq> M.\<close>
+          have hncl_sub_M: "top1_normal_subgroup_generated_on
+              (top1_fundamental_group_carrier ?U ?TU ?b) (top1_fundamental_group_mul ?U ?TU ?b)
+              (top1_fundamental_group_id ?U ?TU ?b) (top1_fundamental_group_invg ?U ?TU ?b)
+              (top1_fundamental_group_induced_on ?UV ?TUV ?b ?U ?TU ?b (\<lambda>x. x)
+                 ` top1_fundamental_group_carrier ?UV ?TUV ?b) \<subseteq> ?M"
+          proof -
+            show ?thesis unfolding top1_normal_subgroup_generated_on_def
+              using hUV_sub_M hM_normal by (by100 blast)
+          qed
+          \<comment> \<open>[g'] \<in> M.\<close>
+          have hg'_in_M: "{k. top1_loop_equiv_on ?U ?TU ?b ?g' k} \<in> ?M"
+            using hg'_in_ncl hncl_sub_M by (by100 blast)
+          \<comment> \<open>Extract: bc_back_class([g']_U) \<in> N.\<close>
+          have hbc_back_in_N: "{k. top1_loop_equiv_on ?U ?TU a
+              (top1_basepoint_change_on ?U ?TU ?b a ?rev\<delta> ?g') k} \<in> N"
+          proof -
+            from hg'_in_M obtain f' where hf': "top1_is_loop_on ?U ?TU ?b f'"
+                "{k. top1_loop_equiv_on ?U ?TU ?b ?g' k} = {k. top1_loop_equiv_on ?U ?TU ?b f' k}"
+                "{k. top1_loop_equiv_on ?U ?TU a
+                    (top1_basepoint_change_on ?U ?TU ?b a ?rev\<delta> f') k} \<in> N"
+              by (by100 blast)
+            \<comment> \<open>g' \<simeq> f' in U, so bc_back(g') \<simeq> bc_back(f') in U.\<close>
+            have "top1_loop_equiv_on ?U ?TU ?b ?g' f'"
+            proof -
+              have "f' \<in> {k. top1_loop_equiv_on ?U ?TU ?b f' k}"
+                using top1_loop_equiv_on_refl[OF hf'(1)] by (by100 blast)
+              hence "f' \<in> {k. top1_loop_equiv_on ?U ?TU ?b ?g' k}" using hf'(2) by (by100 simp)
+              thus ?thesis by (by100 blast)
+            qed
+            hence "top1_loop_equiv_on ?U ?TU a
+                (top1_basepoint_change_on ?U ?TU ?b a ?rev\<delta> ?g')
+                (top1_basepoint_change_on ?U ?TU ?b a ?rev\<delta> f')"
+              using top1_basepoint_change_loop_equiv[OF hTopU_outer hrev\<delta>_path_U
+                  hg'_loop hf'(1)] by (by100 blast)
+            \<comment> \<open>So the classes are equal: [bc_back(g')]_U = [bc_back(f')]_U.\<close>
+            hence "{k. top1_loop_equiv_on ?U ?TU a
+                    (top1_basepoint_change_on ?U ?TU ?b a ?rev\<delta> ?g') k}
+                = {k. top1_loop_equiv_on ?U ?TU a
+                    (top1_basepoint_change_on ?U ?TU ?b a ?rev\<delta> f') k}"
+            proof -
+              have hbc_g'_loop: "top1_is_loop_on ?U ?TU a
+                  (top1_basepoint_change_on ?U ?TU ?b a ?rev\<delta> ?g')" using hbc_back_loop .
+              have hbc_f'_loop: "top1_is_loop_on ?U ?TU a
+                  (top1_basepoint_change_on ?U ?TU ?b a ?rev\<delta> f')"
+                by (rule top1_basepoint_change_is_loop[OF hTopU_outer hrev\<delta>_path_U hf'(1)])
+              assume hequiv: "top1_loop_equiv_on ?U ?TU a
+                  (top1_basepoint_change_on ?U ?TU ?b a ?rev\<delta> ?g')
+                  (top1_basepoint_change_on ?U ?TU ?b a ?rev\<delta> f')"
+              show ?thesis
+              proof (rule set_eqI, rule iffI)
+                fix k assume "k \<in> {k. top1_loop_equiv_on ?U ?TU a
+                    (top1_basepoint_change_on ?U ?TU ?b a ?rev\<delta> ?g') k}"
+                hence h1: "top1_loop_equiv_on ?U ?TU a
+                    (top1_basepoint_change_on ?U ?TU ?b a ?rev\<delta> ?g') k" by (by100 blast)
+                show "k \<in> {k. top1_loop_equiv_on ?U ?TU a
+                    (top1_basepoint_change_on ?U ?TU ?b a ?rev\<delta> f') k}"
+                  using top1_loop_equiv_on_trans[OF hTopU_outer
+                      top1_loop_equiv_on_sym[OF hequiv] h1] by (by100 blast)
+              next
+                fix k assume "k \<in> {k. top1_loop_equiv_on ?U ?TU a
+                    (top1_basepoint_change_on ?U ?TU ?b a ?rev\<delta> f') k}"
+                hence h1: "top1_loop_equiv_on ?U ?TU a
+                    (top1_basepoint_change_on ?U ?TU ?b a ?rev\<delta> f') k" by (by100 blast)
+                show "k \<in> {k. top1_loop_equiv_on ?U ?TU a
+                    (top1_basepoint_change_on ?U ?TU ?b a ?rev\<delta> ?g') k}"
+                  using top1_loop_equiv_on_trans[OF hTopU_outer hequiv h1] by (by100 blast)
+              qed
+            qed
+            thus ?thesis using hf'(3) by (by100 simp)
+          qed
+          \<comment> \<open>Finally: c = [bc_back(g')]_U \<in> N.\<close>
+          show "c \<in> N" using hbc_back_class hbc_back_in_N by (by100 simp)
+        qed
+      qed
       \<comment> \<open>Step 3: preimage under (A\<hookrightarrow>U)* of \<langle>\<langle>{[k\<circ>p]_U}\<rangle>\<rangle> \<subseteq> \<langle>\<langle>{[k\<circ>p]_A}\<rangle>\<rangle> = ?relator.\<close>
       have hstep3: "\<And>c. c \<in> top1_fundamental_group_carrier A ?TA a \<Longrightarrow>
           (top1_fundamental_group_induced_on A ?TA a ?U ?TU a (\<lambda>x. x)) c
@@ -11831,6 +12609,7 @@ end
  
   
  
+
 
 
 
