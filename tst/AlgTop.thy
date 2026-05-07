@@ -6997,10 +6997,6 @@ proof -
                           and hHr_fix: "\<forall>a'\<in>top1_S1. \<forall>t\<in>I_set. H_ret (a', t) = a'"
                         using S1_deformation_retract_B2_minus_zero
                         unfolding top1_deformation_retract_of_on_def by blast
-                      \<comment> \<open>ell_disk is a loop at (1,0) in B2-{0}.\<close>
-                      have hell_loop: "top1_is_loop_on ?B2_0 ?TB2_0 (1::real,0) ?ell_disk"
-                        sorry \<comment> \<open>bc(B2-{0},q,(1,0),revgam,hinv_f0): needs path + loop in B2-{0}.\<close>
-                      \<comment> \<open>By Lemma_58_1: ell_disk \<simeq> r\<circ>ell_disk in B2-{0}.\<close>
                       have hTopB20: "is_topology_on ?B2_0 ?TB2_0"
                       proof -
                         have hR2: "is_topology_on (UNIV::(real\<times>real) set) (product_topology_on top1_open_sets top1_open_sets)"
@@ -7008,6 +7004,241 @@ proof -
                         have hB2: "is_topology_on top1_B2 top1_B2_topology"
                           unfolding top1_B2_topology_def by (rule subspace_topology_is_topology_on[OF hR2]) (by100 simp)
                         show ?thesis by (rule subspace_topology_is_topology_on[OF hB2]) (by100 blast)
+                      qed
+                      \<comment> \<open>ell_disk is a loop at (1,0) in B2-{0}.\<close>
+                      have hell_loop: "top1_is_loop_on ?B2_0 ?TB2_0 (1::real,0) ?ell_disk"
+                      proof (rule top1_basepoint_change_is_loop[OF hTopB20])
+                        \<comment> \<open>Part 1: revgam is a path from q to (1,0) in B2-{0}.\<close>
+                        let ?\<gamma> = "\<lambda>t::real. (1 - t/2, 0::real)"
+                        have h\<gamma>_img_B20: "?\<gamma> ` top1_unit_interval \<subseteq> ?B2_0"
+                        proof
+                          fix y assume "y \<in> ?\<gamma> ` top1_unit_interval"
+                          then obtain t where ht: "t \<in> top1_unit_interval" "y = (1 - t/2, 0::real)"
+                            by (by100 blast)
+                          have hy_B2: "y \<in> top1_B2" using h\<delta>_in_B2[OF ht(1)] ht(2) by (by100 simp)
+                          have "fst y = 1 - t/2" using ht(2) by (by100 simp)
+                          moreover have "t \<le> 1" using ht(1) unfolding top1_unit_interval_def
+                            by (by100 simp)
+                          hence "1 - t/2 \<ge> 1/2" by (by100 simp)
+                          ultimately have "fst y \<ge> 1/2" by (by100 simp)
+                          hence "fst y \<noteq> 0" by (by100 simp)
+                          hence "y \<noteq> (0::real, 0)" by (by100 force)
+                          with hy_B2 show "y \<in> ?B2_0" by (by100 blast)
+                        qed
+                        \<comment> \<open>\<gamma> continuous I \<rightarrow> B2: reuse h\<delta>_cont logic.\<close>
+                        have h\<gamma>_cont_B2: "top1_continuous_map_on top1_unit_interval
+                            top1_unit_interval_topology top1_B2 top1_B2_topology ?\<gamma>"
+                        proof -
+                          have hTR: "is_topology_on (UNIV::real set) top1_open_sets"
+                            by (rule top1_open_sets_is_topology_on_UNIV)
+                          have hTI: "is_topology_on top1_unit_interval top1_unit_interval_topology"
+                            by (rule top1_unit_interval_topology_is_topology_on)
+                          have hc1: "continuous_on UNIV (\<lambda>t::real. 1 - t/2)"
+                            by (intro continuous_intros; simp)
+                          have hc2: "continuous_on UNIV (\<lambda>t::real. 0::real)"
+                            by (intro continuous_intros)
+                          have hI_eq: "top1_unit_interval_topology = subspace_topology (UNIV::real set) top1_open_sets top1_unit_interval"
+                            unfolding top1_unit_interval_topology_def by rule
+                          have hcm1: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+                              (UNIV::real set) top1_open_sets (\<lambda>t. 1 - t/2)"
+                            using top1_continuous_map_on_real_subspace_open_sets[of top1_unit_interval
+                                "\<lambda>t. 1 - t/2" "UNIV::real set", OF _ hc1]
+                            unfolding hI_eq subspace_topology_UNIV_self by (by100 auto)
+                          have hcm2: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+                              (UNIV::real set) top1_open_sets (\<lambda>t::real. 0::real)"
+                            using top1_continuous_map_on_real_subspace_open_sets[of top1_unit_interval
+                                "\<lambda>t. (0::real)" "UNIV::real set", OF _ hc2]
+                            unfolding hI_eq subspace_topology_UNIV_self by (by100 auto)
+                          have hpi1: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+                              (UNIV::real set) top1_open_sets (pi1 \<circ> ?\<gamma>)"
+                          proof -
+                            have "pi1 \<circ> ?\<gamma> = (\<lambda>t. 1 - t/2)" unfolding pi1_def comp_def
+                              by (rule ext) (by100 simp)
+                            thus ?thesis using hcm1 by (by100 simp)
+                          qed
+                          have hpi2: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+                              (UNIV::real set) top1_open_sets (pi2 \<circ> ?\<gamma>)"
+                          proof -
+                            have "pi2 \<circ> ?\<gamma> = (\<lambda>t::real. 0::real)" unfolding pi2_def comp_def
+                              by (rule ext) (by100 simp)
+                            thus ?thesis using hcm2 by (by100 simp)
+                          qed
+                          have hUU: "(UNIV::real set) \<times> (UNIV::real set) = (UNIV::(real\<times>real) set)"
+                            by (by100 simp)
+                          have h\<gamma>_cont_R2: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+                              (UNIV::(real\<times>real) set) (product_topology_on top1_open_sets top1_open_sets) ?\<gamma>"
+                            using iffD2[OF Theorem_18_4[OF hTI hTR hTR, of ?\<gamma>]]
+                              hpi1 hpi2 unfolding hUU by (by100 blast)
+                          have h\<gamma>_img_B2: "?\<gamma> ` top1_unit_interval \<subseteq> top1_B2"
+                            using h\<delta>_in_B2 by (by100 blast)
+                          show ?thesis
+                            using top1_continuous_map_on_codomain_shrink[OF h\<gamma>_cont_R2 h\<gamma>_img_B2]
+                            unfolding top1_B2_topology_def by (by100 simp)
+                        qed
+                        \<comment> \<open>Restrict codomain to B2-{0}.\<close>
+                        have hB20_sub_B2: "?B2_0 \<subseteq> top1_B2" by (by100 blast)
+                        have h\<gamma>_cont_B20: "top1_continuous_map_on top1_unit_interval
+                            top1_unit_interval_topology ?B2_0 ?TB2_0 ?\<gamma>"
+                        proof -
+                          from top1_continuous_map_on_codomain_shrink[OF h\<gamma>_cont_B2 h\<gamma>_img_B20 hB20_sub_B2]
+                          show ?thesis by (by100 simp)
+                        qed
+                        have h\<gamma>_path: "top1_is_path_on ?B2_0 ?TB2_0 (1::real,0) ?q ?\<gamma>"
+                          unfolding top1_is_path_on_def using h\<gamma>_cont_B20 by (by100 simp)
+                        show "top1_is_path_on ?B2_0 ?TB2_0 ?q (1::real,0) ?revgam"
+                          by (rule top1_path_reverse_is_path[OF h\<gamma>_path])
+                      next
+                        \<comment> \<open>Part 2: h\<inverse>\<circ>f0 is a loop at q in B2-{0}.\<close>
+                        \<comment> \<open>From homeomorphism h: (B2-S1) \<rightarrow> (X-A), inv_into maps (X-A) \<rightarrow> (B2-S1) continuously.\<close>
+                        have hD_eq: "top1_B2 - top1_S1 = {p. fst p ^ 2 + snd p ^ 2 < 1}"
+                          unfolding top1_B2_def top1_S1_def by (by100 auto)
+                        let ?D = "top1_B2 - top1_S1"
+                        let ?TD = "subspace_topology top1_B2 top1_B2_topology ?D"
+                        have hbij_D: "bij_betw h ?D (X - A)"
+                          using assms(7) unfolding top1_homeomorphism_on_def by (by100 blast)
+                        have hinj_D: "inj_on h ?D" using hbij_D unfolding bij_betw_def by (by100 blast)
+                        have hsurj_D: "h ` ?D = X - A" using hbij_D unfolding bij_betw_def by (by100 blast)
+                        have hhinv_cont_D: "top1_continuous_map_on (X - A) (subspace_topology X TX (X - A))
+                            ?D ?TD (inv_into ?D h)"
+                          using assms(7) unfolding top1_homeomorphism_on_def by (by100 blast)
+                        \<comment> \<open>f0 maps I into UV. UV \<subseteq> X - A.\<close>
+                        have hUV_sub_VA: "?UV \<subseteq> X - A" by (by100 blast)
+                        have hf0_cont: "top1_continuous_map_on top1_unit_interval
+                            top1_unit_interval_topology ?UV ?TUV f0"
+                          using hf0_loop unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+                        \<comment> \<open>f0 as map I \<rightarrow> X-A (enlarge codomain).\<close>
+                        have hV_sub_X: "X - A \<subseteq> X" by (by100 blast)
+                        have hTUV_sub: "?TUV = subspace_topology (X - A) (subspace_topology X TX (X - A)) ?UV"
+                          using subspace_topology_trans[OF hUV_sub_VA] by (by100 simp)
+                        have hTV_top: "is_topology_on (X - A) (subspace_topology X TX (X - A))"
+                          using subspace_topology_is_topology_on[OF hTopX_ns hV_sub_X] by (by100 simp)
+                        have hf0_cont_VA: "top1_continuous_map_on top1_unit_interval
+                            top1_unit_interval_topology (X - A) (subspace_topology X TX (X - A)) f0"
+                          by (rule top1_continuous_map_on_codomain_enlarge[OF hf0_cont hUV_sub_VA hV_sub_X])
+                        \<comment> \<open>Compose: inv_into \<circ> f0 continuous I \<rightarrow> D.\<close>
+                        have hinvf0_cont_D: "top1_continuous_map_on top1_unit_interval
+                            top1_unit_interval_topology ?D ?TD (inv_into ?D h \<circ> f0)"
+                          by (rule top1_continuous_map_on_comp[OF hf0_cont_VA hhinv_cont_D])
+                        \<comment> \<open>Image of inv \<circ> f0 avoids origin: f0 maps into UV, h\<inverse>(UV) \<subseteq> D - {0}.\<close>
+                        have hinvf0_img_B20: "(inv_into ?D h \<circ> f0) ` top1_unit_interval \<subseteq> ?B2_0"
+                        proof
+                          fix y assume "y \<in> (inv_into ?D h \<circ> f0) ` top1_unit_interval"
+                          then obtain t where ht: "t \<in> top1_unit_interval" "y = inv_into ?D h (f0 t)"
+                            by (by100 auto)
+                          have hf0t: "f0 t \<in> ?UV"
+                            using continuous_map_maps_to[OF hf0_cont ht(1)] by (by100 simp)
+                          hence hf0t_VA: "f0 t \<in> X - A" using hUV_sub_VA by (by100 blast)
+                          hence "f0 t \<in> h ` ?D" using hsurj_D by (by100 simp)
+                          have hy_D: "y \<in> ?D" using inv_into_into[OF \<open>f0 t \<in> h ` ?D\<close>] ht(2)
+                            by (by100 simp)
+                          hence hy_B2: "y \<in> top1_B2" by (by100 blast)
+                          have "y \<noteq> (0::real, 0)"
+                          proof
+                            assume hy0: "y = (0, 0)"
+                            have "h y = f0 t"
+                              using f_inv_into_f[OF \<open>f0 t \<in> h ` ?D\<close>] ht(2) by (by100 simp)
+                            hence "h (0,0) = f0 t" using hy0 by (by100 simp)
+                            hence "f0 t = ?x0" by (by100 simp)
+                            hence "f0 t \<notin> ?U" by (by100 blast)
+                            thus False using hf0t by (by100 blast)
+                          qed
+                          with hy_B2 show "y \<in> ?B2_0" by (by100 blast)
+                        qed
+                        \<comment> \<open>Enlarge codomain from D to B2, then shrink to B2-{0}.\<close>
+                        have hD_sub_B2: "?D \<subseteq> top1_B2" by (by100 blast)
+                        have hB2_sub_B2: "top1_B2 \<subseteq> top1_B2" by (by100 blast)
+                        have hB20_sub_B2_loc: "?B2_0 \<subseteq> top1_B2" by (by100 blast)
+                        have hB2_top: "is_topology_on top1_B2 top1_B2_topology"
+                        proof -
+                          have hR2: "is_topology_on (UNIV::(real\<times>real) set) (product_topology_on top1_open_sets top1_open_sets)"
+                            using product_topology_on_is_topology_on[OF top1_open_sets_is_topology_on_UNIV top1_open_sets_is_topology_on_UNIV] by (by100 simp)
+                          show ?thesis unfolding top1_B2_topology_def
+                            by (rule subspace_topology_is_topology_on[OF hR2]) (by100 simp)
+                        qed
+                        have hinvf0_cont_B2: "top1_continuous_map_on top1_unit_interval
+                            top1_unit_interval_topology top1_B2 top1_B2_topology (inv_into ?D h \<circ> f0)"
+                        proof -
+                          from top1_continuous_map_on_codomain_enlarge[OF hinvf0_cont_D hD_sub_B2 hB2_sub_B2]
+                          have "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+                              top1_B2 (subspace_topology top1_B2 top1_B2_topology top1_B2) (inv_into ?D h \<circ> f0)" .
+                          moreover have "subspace_topology top1_B2 top1_B2_topology top1_B2 = top1_B2_topology"
+                          proof (rule subspace_topology_self, intro ballI)
+                            fix U assume "U \<in> top1_B2_topology"
+                            thus "U \<subseteq> top1_B2" unfolding top1_B2_topology_def subspace_topology_def
+                              by (by100 blast)
+                          qed
+                          ultimately show ?thesis by (by100 simp)
+                        qed
+                        have hinvf0_cont_B20: "top1_continuous_map_on top1_unit_interval
+                            top1_unit_interval_topology ?B2_0 ?TB2_0 (inv_into ?D h \<circ> f0)"
+                          using top1_continuous_map_on_codomain_shrink[OF hinvf0_cont_B2 hinvf0_img_B20 hB20_sub_B2_loc]
+                          by (by100 simp)
+                        \<comment> \<open>Endpoint: inv_into(h(q)) = q.\<close>
+                        have hinvq: "inv_into ?D h (h ?q) = ?q"
+                          by (rule inv_into_f_f[OF hinj_D hq_intB2])
+                        have hf0_0: "f0 0 = ?b" "f0 1 = ?b"
+                          using hf0_loop unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)+
+                        have "(inv_into ?D h \<circ> f0) 0 = ?q"
+                          unfolding comp_def hf0_0(1) hinvq by (by100 simp)
+                        moreover have "(inv_into ?D h \<circ> f0) 1 = ?q"
+                          unfolding comp_def hf0_0(2) hinvq by (by100 simp)
+                        ultimately show "top1_is_loop_on ?B2_0 ?TB2_0 ?q ?hinv_f0"
+                          unfolding top1_is_loop_on_def top1_is_path_on_def comp_def
+                          using hinvf0_cont_B20 unfolding comp_def by (by100 simp)
+                      qed
+                      \<comment> \<open>By Lemma_58_1: ell_disk \<simeq> r\<circ>ell_disk in B2-{0}.\<close>
+                      have hS1_sub_B20: "top1_S1 \<subseteq> ?B2_0"
+                      proof
+                        fix x assume "x \<in> top1_S1"
+                        hence hx_eq: "fst x ^ 2 + snd x ^ 2 = 1"
+                          unfolding top1_S1_def by (by100 simp)
+                        have "x \<in> top1_B2" unfolding top1_B2_def
+                        proof -
+                          from hx_eq have "fst x ^ 2 + snd x ^ 2 \<le> 1" by (by100 simp)
+                          thus "x \<in> {p. fst p ^ 2 + snd p ^ 2 \<le> 1}" by (by100 simp)
+                        qed
+                        moreover have "x \<noteq> (0::real,0)"
+                        proof -
+                          have "fst (0::real,0::real) ^ 2 + snd (0::real,0::real) ^ 2 = (0::real)"
+                            by (by100 simp)
+                          with hx_eq show ?thesis by (by100 force)
+                        qed
+                        ultimately show "x \<in> ?B2_0" by (by100 blast)
+                      qed
+                      have hTopS1: "is_topology_on top1_S1 top1_S1_topology"
+                        using top1_S1_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
+                      have hS1_top_eq: "subspace_topology ?B2_0 ?TB2_0 top1_S1 = top1_S1_topology"
+                      proof -
+                        have hS1_B2: "top1_S1 \<subseteq> top1_B2"
+                          unfolding top1_S1_def top1_B2_def by (by100 auto)
+                        have h1: "top1_S1_topology = subspace_topology top1_B2 top1_B2_topology top1_S1"
+                        proof -
+                          have "top1_S1_topology = subspace_topology UNIV
+                              (product_topology_on top1_open_sets top1_open_sets) top1_S1"
+                            unfolding top1_S1_topology_def ..
+                          also have "\<dots> = subspace_topology top1_B2 top1_B2_topology top1_S1"
+                            unfolding top1_B2_topology_def
+                            using subspace_topology_trans[OF hS1_B2] by (by100 simp)
+                          finally show ?thesis .
+                        qed
+                        have h2: "subspace_topology top1_B2 top1_B2_topology top1_S1
+                            = subspace_topology ?B2_0 ?TB2_0 top1_S1"
+                        proof -
+                          have "subspace_topology top1_B2 top1_B2_topology top1_S1
+                              = subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) top1_S1"
+                            unfolding top1_B2_topology_def
+                            using subspace_topology_trans[OF hS1_B2] by (by100 simp)
+                          moreover have "subspace_topology ?B2_0 ?TB2_0 top1_S1
+                              = subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) top1_S1"
+                          proof -
+                            have hB20_B2: "?B2_0 \<subseteq> top1_B2" by (by100 blast)
+                            show ?thesis unfolding top1_B2_topology_def
+                              using subspace_topology_trans[OF hS1_sub_B20]
+                                subspace_topology_trans[OF hB20_B2] by (by100 simp)
+                          qed
+                          ultimately show ?thesis by (by100 simp)
+                        qed
+                        show ?thesis using h1 h2 by (by100 simp)
                       qed
                       have hid_cont: "top1_continuous_map_on ?B2_0 ?TB2_0 ?B2_0 ?TB2_0 (\<lambda>x. x)"
                         using top1_continuous_map_on_id[OF hTopB20] unfolding id_def by (by100 simp)
@@ -7078,7 +7309,30 @@ proof -
                       \<comment> \<open>r\<circ>ell_disk is an S1 loop.\<close>
                       let ?r_ell = "\<lambda>t. H_ret (?ell_disk t, 1)"
                       have hr_ell_S1: "top1_is_loop_on top1_S1 top1_S1_topology (1,0) ?r_ell"
-                        sorry \<comment> \<open>Continuous composition + H maps into S1 + H fixes (1,0).\<close>
+                      proof -
+                        \<comment> \<open>Shrink codomain of r from B2-{0} to S1.\<close>
+                        have hr_img_S1: "(\<lambda>x. H_ret (x, 1)) ` ?B2_0 \<subseteq> top1_S1"
+                        proof
+                          fix y assume "y \<in> (\<lambda>x. H_ret (x, 1)) ` ?B2_0"
+                          then obtain x where "x \<in> ?B2_0" "y = H_ret (x, 1)" by (by100 blast)
+                          thus "y \<in> top1_S1" using hHr1 by (by100 blast)
+                        qed
+                        have hr_cont_S1: "top1_continuous_map_on ?B2_0 ?TB2_0 top1_S1 top1_S1_topology
+                            (\<lambda>x. H_ret (x, 1))"
+                        proof -
+                          from top1_continuous_map_on_codomain_shrink[OF hr_cont hr_img_S1 hS1_sub_B20]
+                          show ?thesis using hS1_top_eq by (by100 simp)
+                        qed
+                        \<comment> \<open>r \<circ> ell_disk is a loop via continuous_map_loop_early.\<close>
+                        from top1_continuous_map_loop_early[OF hr_cont_S1 hell_loop]
+                        have "top1_is_loop_on top1_S1 top1_S1_topology ((\<lambda>x. H_ret (x, 1)) (1,0))
+                            ((\<lambda>x. H_ret (x, 1)) \<circ> ?ell_disk)" .
+                        moreover have "(\<lambda>x. H_ret (x, 1)) (1,0) = (1::real,0)"
+                          using hHr_fix unfolding top1_S1_def top1_unit_interval_def by (by100 auto)
+                        moreover have "(\<lambda>x. H_ret (x, 1)) \<circ> ?ell_disk = ?r_ell"
+                          by (rule ext) (by100 simp)
+                        ultimately show ?thesis by (by100 simp)
+                      qed
                       \<comment> \<open>h continuous B2-{0} \<rightarrow> U: preserves homotopy.\<close>
                       have hh_B20_U: "top1_continuous_map_on ?B2_0 ?TB2_0 ?U ?TU (\<lambda>z. h z)"
                       proof -
@@ -7132,6 +7386,13 @@ proof -
                         by (rule continuous_preserves_path_homotopic[OF hTopB20 hTopU_outer
                             hh_B20_U hell_simp])
                       have hh10: "h (1::real, 0) = a" using assms(9) by (by100 simp)
+                      have hh_S1_U: "top1_continuous_map_on top1_S1 top1_S1_topology ?U ?TU (\<lambda>z. h z)"
+                      proof -
+                        from top1_continuous_map_on_restrict_domain_simple[OF hh_B20_U hS1_sub_B20]
+                        have "top1_continuous_map_on top1_S1 (subspace_topology ?B2_0 ?TB2_0 top1_S1)
+                            ?U ?TU (\<lambda>z. h z)" .
+                        thus ?thesis using hS1_top_eq by (by100 simp)
+                      qed
                       \<comment> \<open>Class of h\<circ>ell_disk = class of h\<circ>(r\<circ>ell_disk) in U.\<close>
                       \<comment> \<open>h\<circ>(r\<circ>ell_disk) = (h|_{S1})\<circ>(r\<circ>ell_disk) since r\<circ>ell maps into S1.\<close>
                       \<comment> \<open>class [(h|_{S1})\<circ>(r\<circ>ell)] \<in> image((h|_{S1})_*).\<close>
@@ -7157,7 +7418,43 @@ proof -
                             ?U ?TU a (\<lambda>z. h z))
                           {k. top1_loop_equiv_on top1_S1 top1_S1_topology (1,0) ?r_ell k}
                           = {k. top1_loop_equiv_on ?U ?TU a ((\<lambda>z. h z) \<circ> ?r_ell) k}"
-                          sorry \<comment> \<open>(h|_{S1})_*([g]) = [h\<circ>g]_U: standard induced map on class.\<close>
+                        proof (rule set_eqI, rule iffI)
+                          fix k assume "k \<in> (top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1,0)
+                              ?U ?TU a (\<lambda>z. h z))
+                            {k'. top1_loop_equiv_on top1_S1 top1_S1_topology (1,0) ?r_ell k'}"
+                          then obtain g' where hg'eq: "top1_loop_equiv_on top1_S1 top1_S1_topology (1,0) ?r_ell g'"
+                              and hgk: "top1_loop_equiv_on ?U ?TU a ((\<lambda>z. h z) \<circ> g') k"
+                            unfolding top1_fundamental_group_induced_on_def by (by100 blast)
+                          have hg'_loop: "top1_is_loop_on top1_S1 top1_S1_topology (1,0) g'"
+                            using hg'eq unfolding top1_loop_equiv_on_def by (by100 blast)
+                          have "top1_loop_equiv_on ?U ?TU a ((\<lambda>z. h z) \<circ> ?r_ell) ((\<lambda>z. h z) \<circ> g')"
+                          proof -
+                            have hhom_S1: "top1_path_homotopic_on top1_S1 top1_S1_topology (1,0) (1,0) ?r_ell g'"
+                              using hg'eq unfolding top1_loop_equiv_on_def by (by100 blast)
+                            from continuous_preserves_path_homotopic[OF hTopS1 hTopU_outer hh_S1_U hhom_S1]
+                            have "top1_path_homotopic_on ?U ?TU ((\<lambda>z. h z) (1,0)) ((\<lambda>z. h z) (1,0))
+                                ((\<lambda>z. h z) \<circ> ?r_ell) ((\<lambda>z. h z) \<circ> g')" .
+                            hence hphom: "top1_path_homotopic_on ?U ?TU a a
+                                ((\<lambda>z. h z) \<circ> ?r_ell) ((\<lambda>z. h z) \<circ> g')"
+                              using hh10 by (by100 simp)
+                            have hl1: "top1_is_loop_on ?U ?TU a ((\<lambda>z. h z) \<circ> ?r_ell)"
+                              using top1_continuous_map_loop_early[OF hh_S1_U hr_ell_S1] hh10 by (by100 simp)
+                            have hl2: "top1_is_loop_on ?U ?TU a ((\<lambda>z. h z) \<circ> g')"
+                              using top1_continuous_map_loop_early[OF hh_S1_U hg'_loop] hh10 by (by100 simp)
+                            show ?thesis unfolding top1_loop_equiv_on_def
+                              using hl1 hl2 hphom by (by100 blast)
+                          qed
+                          from top1_loop_equiv_on_trans[OF hTopU_outer this hgk]
+                          show "k \<in> {k. top1_loop_equiv_on ?U ?TU a ((\<lambda>z. h z) \<circ> ?r_ell) k}" by (by100 blast)
+                        next
+                          fix k assume "k \<in> {k. top1_loop_equiv_on ?U ?TU a ((\<lambda>z. h z) \<circ> ?r_ell) k}"
+                          moreover have "?r_ell \<in> {k'. top1_loop_equiv_on top1_S1 top1_S1_topology (1,0) ?r_ell k'}"
+                            using top1_loop_equiv_on_refl[OF hr_ell_S1] by (by100 blast)
+                          ultimately show "k \<in> (top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1,0)
+                              ?U ?TU a (\<lambda>z. h z))
+                            {k'. top1_loop_equiv_on top1_S1 top1_S1_topology (1,0) ?r_ell k'}"
+                            unfolding top1_fundamental_group_induced_on_def by (by100 blast)
+                        qed
                         \<comment> \<open>Step 2: [h\<circ>ell_disk]_U = [h\<circ>(r\<circ>ell)]_U (from homotopy).\<close>
                         have h_class_hom: "top1_loop_equiv_on ?U ?TU a
                             ((\<lambda>z. h z) \<circ> ?ell_disk) ((\<lambda>z. h z) \<circ> ?r_ell)"
@@ -7166,9 +7463,9 @@ proof -
                               ((\<lambda>z. h z) \<circ> ?ell_disk) ((\<lambda>z. h z) \<circ> ?r_ell)"
                             using hh10 by (by100 simp)
                           moreover have "top1_is_loop_on ?U ?TU a ((\<lambda>z. h z) \<circ> ?ell_disk)"
-                            sorry \<comment> \<open>h continuous, ell_disk loop \<Rightarrow> composition loop.\<close>
+                            using top1_continuous_map_loop_early[OF hh_B20_U hell_loop] hh10 by (by100 simp)
                           moreover have "top1_is_loop_on ?U ?TU a ((\<lambda>z. h z) \<circ> ?r_ell)"
-                            sorry \<comment> \<open>h continuous, r\<circ>ell_disk loop \<Rightarrow> composition loop.\<close>
+                            using top1_continuous_map_loop_early[OF hh_S1_U hr_ell_S1] hh10 by (by100 simp)
                           ultimately show ?thesis
                             unfolding top1_loop_equiv_on_def by (by100 blast)
                         qed
