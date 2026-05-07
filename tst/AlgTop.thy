@@ -2193,7 +2193,7 @@ proof -
             (foldr top1_path_product gs (top1_constant_path x0))"
         proof -
           have hfoldr_loop: "top1_is_loop_on X TX x0 (foldr top1_path_product gs (top1_constant_path x0))"
-            sorry \<comment> \<open>foldr of loops is a loop.\<close>
+            using hf_eq unfolding top1_path_homotopic_on_def top1_is_loop_on_def by (by100 blast)
           show ?thesis unfolding top1_loop_equiv_on_def
             using hf(1) hfoldr_loop hf_eq by (by100 blast)
         qed
