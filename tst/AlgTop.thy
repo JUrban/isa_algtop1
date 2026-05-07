@@ -298,7 +298,34 @@ proof -
   proof -
     \<comment> \<open>Step 4a: h is continuous (pasting lemma on [0,1/2] and [1/2,1]).\<close>
     have hh_cont: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology (A1 \<union> A2) ?TD h"
-      sorry \<comment> \<open>pasting_lemma_two_closed on closed [0,1/2] and [1/2,1], agreeing at 1/2.\<close>
+    proof -
+      let ?IL = "{t \<in> top1_unit_interval. t \<le> 1/2}"
+      let ?IR = "{t \<in> top1_unit_interval. t \<ge> 1/2}"
+      have hTI: "is_topology_on top1_unit_interval top1_unit_interval_topology"
+        by (rule top1_unit_interval_topology_is_topology_on)
+      have hTopX: "is_topology_on X TX" using hT unfolding is_topology_on_strict_def by (by100 blast)
+      have hTD_loc: "is_topology_on (A1 \<union> A2) ?TD"
+        by (rule subspace_topology_is_topology_on[OF hTopX]) (use hA1X hA2X in \<open>by100 blast\<close>)
+      \<comment> \<open>?IL and ?IR are closed in [0,1].\<close>
+      have hIL_closed: "closedin_on top1_unit_interval top1_unit_interval_topology ?IL"
+        sorry \<comment> \<open>[0,1/2] is closed in [0,1].\<close>
+      have hIR_closed: "closedin_on top1_unit_interval top1_unit_interval_topology ?IR"
+        sorry \<comment> \<open>[1/2,1] is closed in [0,1].\<close>
+      have hILR_union: "?IL \<union> ?IR = top1_unit_interval" by (by100 force)
+      \<comment> \<open>h maps into A1 \<union> A2.\<close>
+      have hh_maps: "\<forall>x\<in>top1_unit_interval. h x \<in> A1 \<union> A2"
+        sorry \<comment> \<open>g1 maps to A1, g2 maps to A2.\<close>
+      \<comment> \<open>h is continuous on ?IL (= g1(2t)).\<close>
+      have hh_IL: "top1_continuous_map_on ?IL (subspace_topology top1_unit_interval top1_unit_interval_topology ?IL)
+          (A1 \<union> A2) ?TD h"
+        sorry \<comment> \<open>h|_{IL} = g1 \<circ> (2*t), composition of continuous maps.\<close>
+      \<comment> \<open>h is continuous on ?IR (= g2(2t-1)).\<close>
+      have hh_IR: "top1_continuous_map_on ?IR (subspace_topology top1_unit_interval top1_unit_interval_topology ?IR)
+          (A1 \<union> A2) ?TD h"
+        sorry \<comment> \<open>h|_{IR} = g2 \<circ> (2t-1), composition of continuous maps.\<close>
+      show ?thesis
+        by (rule pasting_lemma_two_closed[OF hTI hTD_loc hIL_closed hIR_closed hILR_union hh_maps hh_IL hh_IR])
+    qed
     \<comment> \<open>Step 4b: h is bijective.\<close>
     have hh_bij: "bij_betw h top1_unit_interval (A1 \<union> A2)"
       sorry \<comment> \<open>g1 bij [0,1]\<rightarrow>A1 gives h bij [0,1/2]\<rightarrow>A1. g2 bij [0,1]\<rightarrow>A2 gives h bij (1/2,1]\<rightarrow>A2-{c}.
