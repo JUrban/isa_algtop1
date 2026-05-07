@@ -1626,6 +1626,36 @@ proof -
   show ?thesis unfolding hT_eq
     by (rule compact_continuous_image[OF hf_cont hD_compact])
 qed
+\<comment> \<open>Helper: under SvK conditions with V simply connected, the inclusion U \<hookrightarrow> X
+   induces a surjective homomorphism on \<pi>_1 with kernel = normal closure of
+   inclusion-induced image of \<pi>_1(U\<inter>V). This is the content of Cor 70.4's proof
+   (surjectivity at line 27494 of AlgTopCached) but exported as a usable fact.\<close>
+lemma SvK_simply_connected_V_surj_kernel:
+  assumes "is_topology_on_strict X TX" and "openin_on X TX U" and "openin_on X TX V"
+      and "U \<union> V = X"
+      and "top1_path_connected_on (U \<inter> V) (subspace_topology X TX (U \<inter> V))"
+      and "top1_path_connected_on U (subspace_topology X TX U)"
+      and "top1_simply_connected_on V (subspace_topology X TX V)"
+      and "x0 \<in> U \<inter> V"
+  shows "(top1_fundamental_group_induced_on U (subspace_topology X TX U) x0 X TX x0 (\<lambda>x. x))
+      ` (top1_fundamental_group_carrier U (subspace_topology X TX U) x0)
+    = top1_fundamental_group_carrier X TX x0"
+    and "top1_group_kernel_on
+      (top1_fundamental_group_carrier U (subspace_topology X TX U) x0)
+      (top1_fundamental_group_id X TX x0)
+      (top1_fundamental_group_induced_on U (subspace_topology X TX U) x0 X TX x0 (\<lambda>x. x))
+    = top1_normal_subgroup_generated_on
+        (top1_fundamental_group_carrier U (subspace_topology X TX U) x0)
+        (top1_fundamental_group_mul U (subspace_topology X TX U) x0)
+        (top1_fundamental_group_id U (subspace_topology X TX U) x0)
+        (top1_fundamental_group_invg U (subspace_topology X TX U) x0)
+        (top1_fundamental_group_induced_on (U \<inter> V) (subspace_topology X TX (U \<inter> V)) x0
+           U (subspace_topology X TX U) x0 (\<lambda>x. x)
+         ` top1_fundamental_group_carrier (U \<inter> V) (subspace_topology X TX (U \<inter> V)) x0)"
+  sorry \<comment> \<open>Proved inside Corollary_70_4_simply_connected_V (line 27494 of AlgTopCached).
+     The proof uses: SvK universal property, free product triviality, first iso theorem.
+     Path subdivision (open_cover_subdivision_01) + simply-connected replacement.\<close>
+
 theorem Theorem_72_1_attaching_two_cell:
   fixes X :: "'a set" and TX :: "'a set set" and A :: "'a set"
     and h :: "real \<times> real \<Rightarrow> 'a" and a :: 'a
@@ -3616,7 +3646,19 @@ proof -
     have hU_X_surj: "(top1_fundamental_group_induced_on ?U ?TU a X TX a (\<lambda>x. x))
         ` (top1_fundamental_group_carrier ?U ?TU a)
       = top1_fundamental_group_carrier X TX a"
-      sorry \<comment> \<open>SvK (Cor 70.4): V simply connected \<Longrightarrow> U\<hookrightarrow>X induces surjection at base a.\<close>
+    proof -
+      \<comment> \<open>By SvK_simply_connected_V_surj_kernel at base b \<in> U\<inter>V:
+         incl*_b: \<pi>_1(U,b) \<twoheadrightarrow> \<pi>_1(X,b) is surjective.
+         By base change naturality (diagram commutes with base change from b to a via \<delta>):
+         incl*_a is also surjective.\<close>
+      have hincl_surj_b: "(top1_fundamental_group_induced_on ?U ?TU ?b X TX ?b (\<lambda>x. x))
+          ` (top1_fundamental_group_carrier ?U ?TU ?b) = top1_fundamental_group_carrier X TX ?b"
+        by (rule SvK_simply_connected_V_surj_kernel(1)[OF assms(1) hU_open hV_open hU_union_V
+                hUV_pc hU_pc hV_sc hb_in_UV])
+      \<comment> \<open>Transfer from base b to base a via naturality of base change with inclusion.\<close>
+      show ?thesis using hincl_surj_b
+        sorry \<comment> \<open>Base change naturality: surj at b + base change diagram \<Longrightarrow> surj at a.\<close>
+    qed
     \<comment> \<open>Step (c): j_* = (U\<hookrightarrow>X)_* \<circ> (A\<hookrightarrow>U)_* by functoriality.\<close>
     have hj_comp: "\<forall>c \<in> top1_fundamental_group_carrier A ?TA a.
         ?jAX c = (top1_fundamental_group_induced_on ?U ?TU a X TX a (\<lambda>x. x))
@@ -4054,11 +4096,25 @@ proof -
          Under base change from b to a + retraction, this becomes \<langle>\<langle>{[k\<circ>p]}\<rangle>\<rangle>.
          The core mathematical claim: \<delta>-hat([\<iota>_*(g_0)]) = [k\<circ>p] in \<pi>_1(U,a),
          where g_0 is the generator of \<pi>_1(UV,b) and \<delta> is the path from b to a.\<close>
-      \<comment> \<open>This sorry contains the deepest mathematical content of the theorem:
-         the winding number argument + base change naturality + retraction tracking.
-         Requires: \<gamma>_bar*(f_0*\<gamma>) \<simeq> f in B2-{0} (same winding number),
-         comp_basepoint_change for h, and the deformation retract iso.\<close>
-      show ?thesis sorry
+      \<comment> \<open>From the helper lemma: ker(U\<hookrightarrow>X at b) = \<langle>\<langle>\<iota>_*(\<pi>_1(UV,b))\<rangle>\<rangle>.\<close>
+      have hincl_ker_b: "top1_group_kernel_on
+          (top1_fundamental_group_carrier ?U ?TU ?b) (top1_fundamental_group_id X TX ?b)
+          (top1_fundamental_group_induced_on ?U ?TU ?b X TX ?b (\<lambda>x. x))
+        = top1_normal_subgroup_generated_on
+            (top1_fundamental_group_carrier ?U ?TU ?b) (top1_fundamental_group_mul ?U ?TU ?b)
+            (top1_fundamental_group_id ?U ?TU ?b) (top1_fundamental_group_invg ?U ?TU ?b)
+            (top1_fundamental_group_induced_on ?UV ?TUV ?b ?U ?TU ?b (\<lambda>x. x)
+               ` top1_fundamental_group_carrier ?UV ?TUV ?b)"
+        by (rule SvK_simply_connected_V_surj_kernel(2)[OF assms(1) hU_open hV_open hU_union_V
+                hUV_pc hU_pc hV_sc hb_in_UV])
+      \<comment> \<open>Transfer: ker(U\<hookrightarrow>X at b) via base change \<delta> + retraction iso
+         gives ker(A\<hookrightarrow>X at a) = \<langle>\<langle>{[k\<circ>p]}\<rangle>\<rangle>.
+         Core claim: \<delta>-hat maps the UV-inclusion image [g_0] to [k\<circ>p].
+         This follows from: \<gamma>_bar*(f_0*\<gamma>) \<simeq> f in B2-{0} (winding number),
+         comp_basepoint_change for h, and inclusion_induced_class.\<close>
+      show ?thesis using hincl_ker_b
+        sorry \<comment> \<open>Generator tracking: transfer SvK kernel from base b to base a,
+             through the retraction iso, showing it becomes \<langle>\<langle>{[k\<circ>p]}\<rangle>\<rangle>.\<close>
     qed
     \<comment> \<open>Step (c): \<langle>\<langle>{[k\<circ>p]}\<rangle>\<rangle> \<subseteq> ker(j_*). The normal closure of {[k\<circ>p]} is contained
        in ker(j_*) because [k\<circ>p] \<in> ker(j_*) and ker is a normal subgroup.\<close>
