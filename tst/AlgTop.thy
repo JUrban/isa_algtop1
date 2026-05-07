@@ -1678,8 +1678,9 @@ proof (intro conjI)
         (\<forall>a\<in>top1_S1. \<forall>t\<in>I_set. H (a, t) = a)"
     proof (intro conjI)
       show "top1_continuous_map_on (?X \<times> I_set) (product_topology_on ?TX I_top) ?X ?TX H"
-        sorry \<comment> \<open>Continuity of radial interpolation. H involves 1/|x| which is
-             continuous on B2-{0} since |x|>0. Combine with product topology.\<close>
+        sorry \<comment> \<open>Continuity of H(x,t) = ((1-t+t/|x|)*fst x, (1-t+t/|x|)*snd x).
+             H is continuous on (B2-{0})\<times>I since 1/|x| continuous on B2-{0} (|x|>0),
+             arithmetic of continuous functions, and image stays in B2-{0}.\<close>
       show "\<forall>x\<in>?X. H (x, 0) = x"
         unfolding H_def by (intro ballI) (by100 simp)
       show "\<forall>x\<in>?X. H (x, 1) \<in> top1_S1"
