@@ -374,11 +374,66 @@ proof -
       \<comment> \<open>h is continuous on ?IL (= g1(2t)).\<close>
       have hh_IL: "top1_continuous_map_on ?IL (subspace_topology top1_unit_interval top1_unit_interval_topology ?IL)
           (A1 \<union> A2) ?TD h"
-        sorry \<comment> \<open>h|_{IL} = g1 \<circ> (2*t), composition of continuous maps.\<close>
+      proof -
+        \<comment> \<open>h agrees with g1 \<circ> (\<lambda>t. 2*t) on ?IL.\<close>
+        have hagree: "\<forall>t\<in>?IL. h t = g1 (2*t)"
+        proof (intro ballI)
+          fix t :: real assume "t \<in> ?IL" hence "t \<le> 1/2" by (by100 blast)
+          thus "h t = g1 (2*t)" unfolding h_def by (by100 simp)
+        qed
+        \<comment> \<open>g1 \<circ> (\<lambda>t. 2*t) is continuous ?IL \<rightarrow> A1 \<union> A2.\<close>
+        have hg1_cont: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+            A1 (subspace_topology X TX A1) g1"
+          using hg1(1) unfolding top1_homeomorphism_on_def by (by100 blast)
+        \<comment> \<open>(\<lambda>t. 2*t) maps ?IL into top1_unit_interval.\<close>
+        have hdbl_maps: "\<forall>t\<in>?IL. 2*t \<in> top1_unit_interval"
+          unfolding top1_unit_interval_def by (by100 auto)
+        \<comment> \<open>g1 \<circ> (\<lambda>t. 2*t) maps ?IL into A1 \<subseteq> A1 \<union> A2.\<close>
+        have hcomp_cont: "top1_continuous_map_on ?IL
+            (subspace_topology top1_unit_interval top1_unit_interval_topology ?IL)
+            (A1 \<union> A2) ?TD (g1 \<circ> (\<lambda>t. 2*t))"
+          sorry \<comment> \<open>Composition: (\<lambda>t. 2*t) continuous ?IL\<rightarrow>I, g1 continuous I\<rightarrow>A1, enlarge to A1\<union>A2.\<close>
+        \<comment> \<open>h agrees with g1 \<circ> (\<lambda>t. 2*t) on ?IL, so h is continuous on ?IL.\<close>
+        show ?thesis
+          by (rule top1_continuous_map_on_agree[OF hcomp_cont]) (use hagree in \<open>by100 simp\<close>)
+      qed
       \<comment> \<open>h is continuous on ?IR (= g2(2t-1)).\<close>
       have hh_IR: "top1_continuous_map_on ?IR (subspace_topology top1_unit_interval top1_unit_interval_topology ?IR)
           (A1 \<union> A2) ?TD h"
-        sorry \<comment> \<open>h|_{IR} = g2 \<circ> (2t-1), composition of continuous maps.\<close>
+      proof -
+        have hagree: "\<forall>t\<in>?IR. h t = g2 (2*t - 1)"
+        proof (intro ballI)
+          fix t :: real assume ht: "t \<in> ?IR"
+          hence htge: "t \<ge> 1/2" by (by100 blast)
+          show "h t = g2 (2*t - 1)"
+          proof (cases "t > 1/2")
+            case True thus ?thesis unfolding h_def by (by100 simp)
+          next
+            case False hence heq: "t = 1/2" using htge by (by100 simp)
+            have "h t = g1 1"
+            proof -
+              have "h t = (if t \<le> 1/2 then g1 (2*t) else g2 (2*t-1))" unfolding h_def by (by100 blast)
+              also have "\<dots> = g1 (2*t)" using htge False by (by100 simp)
+              also have "2 * t = 1" using heq by (by100 simp)
+              finally show ?thesis by (by100 simp)
+            qed
+            also have "\<dots> = c" using hg1(2) .
+            also have "c = g2 0" using hg2(2)[symmetric] .
+            also have "g2 0 = g2 (2 * t - 1)"
+            proof -
+              have "2 * t - 1 = 0" using heq by (by100 simp)
+              thus ?thesis by (by100 simp)
+            qed
+            finally show ?thesis .
+          qed
+        qed
+        have hcomp_cont: "top1_continuous_map_on ?IR
+            (subspace_topology top1_unit_interval top1_unit_interval_topology ?IR)
+            (A1 \<union> A2) ?TD (g2 \<circ> (\<lambda>t. 2*t - 1))"
+          sorry \<comment> \<open>Composition: (\<lambda>t. 2*t-1) continuous ?IR\<rightarrow>I, g2 continuous I\<rightarrow>A2, enlarge to A1\<union>A2.\<close>
+        show ?thesis
+          by (rule top1_continuous_map_on_agree[OF hcomp_cont]) (use hagree in \<open>by100 simp\<close>)
+      qed
       show ?thesis
         by (rule pasting_lemma_two_closed[OF hTI hTD_loc hIL_closed hIR_closed hILR_union hh_maps hh_IL hh_IR])
     qed
