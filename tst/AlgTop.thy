@@ -1656,6 +1656,46 @@ lemma SvK_simply_connected_V_surj_kernel:
      The proof uses: SvK universal property, free product triviality, first iso theorem.
      Path subdivision (open_cover_subdivision_01) + simply-connected replacement.\<close>
 
+\<comment> \<open>Helper: surjective hom image of a normal subgroup is normal.\<close>
+lemma surj_hom_image_normal:
+  assumes "top1_is_group_on G mul e invg"
+      and "top1_is_group_on H mulH eH invgH"
+      and "top1_group_hom_on G mul H mulH f"
+      and "f ` G = H"
+      and "top1_normal_subgroup_on G mul e invg N"
+  shows "top1_normal_subgroup_on H mulH eH invgH (f ` N)"
+  sorry \<comment> \<open>Standard group theory: for h\<in>H, n'\<in>f(N): h=f(g), n'=f(n),
+     h*n'*h\<inverse>=f(g)*f(n)*f(g\<inverse>)=f(g*n*g\<inverse>)\<in>f(N). Subgroup: similar.\<close>
+
+\<comment> \<open>Helper: injective hom + image in target set implies preimage in source set.\<close>
+lemma inj_hom_preimage_normal_closure:
+  assumes hG: "top1_is_group_on G mulG eG invgG"
+      and hH: "top1_is_group_on H mulH eH invgH"
+      and hf: "top1_group_hom_on G mulG H mulH f"
+      and hf_surj: "f ` G = H"
+      and hf_inj: "inj_on f G"
+      and hN_normal: "top1_normal_subgroup_on G mulG eG invgG N"
+      and hs_in: "s \<in> N"
+      and hc_in_G: "c \<in> G"
+      and hfc_in_fN: "f c \<in> top1_normal_subgroup_generated_on H mulH eH invgH {f s}"
+  shows "c \<in> top1_normal_subgroup_generated_on G mulG eG invgG {s}"
+proof -
+  \<comment> \<open>f(N) is normal in H (surj_hom_image_normal) and contains f(s).
+     So \<langle>\<langle>{f(s)}\<rangle>\<rangle>_H \<subseteq> f(N).
+     f(c) \<in> \<langle>\<langle>{f(s)}\<rangle>\<rangle>_H \<subseteq> f(N), so f(c) = f(n) for some n \<in> N.
+     By injectivity: c = n \<in> N.
+     And N = \<langle>\<langle>{s}\<rangle>\<rangle>_G? No, N might be larger.
+     But we need c \<in> \<langle>\<langle>{s}\<rangle>\<rangle>_G, not c \<in> N.\<close>
+  \<comment> \<open>Better argument: for any normal M of G with s \<in> M:
+     f(M) is normal in H with f(s) \<in> f(M).
+     So \<langle>\<langle>{f(s)}\<rangle>\<rangle>_H \<subseteq> f(M).
+     f(c) \<in> f(M), so c \<in> M (injectivity + c \<in> G).
+     Since M arbitrary: c \<in> \<Inter>{M. s \<in> M \<and> normal M} = \<langle>\<langle>{s}\<rangle>\<rangle>_G.\<close>
+  show ?thesis
+    sorry \<comment> \<open>Preimage of normal closure under injective surjective hom.
+         Uses surj_hom_image_normal + InterI + inj_onD.\<close>
+qed
+
 theorem Theorem_72_1_attaching_two_cell:
   fixes X :: "'a set" and TX :: "'a set set" and A :: "'a set"
     and h :: "real \<times> real \<Rightarrow> 'a" and a :: 'a
@@ -11218,6 +11258,7 @@ end
  
   
  
+
 
 
 
