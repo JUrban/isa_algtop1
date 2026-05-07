@@ -4695,9 +4695,52 @@ proof -
             (top1_fundamental_group_id ?U ?TU a) (top1_fundamental_group_invg ?U ?TU a)
             {?AU ?kp_A}"
           using h_iota_c_in hf_kpA_eq_kpU by (by100 simp)
+        \<comment> \<open>Collect premises for inj_hom_preimage_normal_closure.\<close>
+        have hTopU_k: "is_topology_on ?U ?TU"
+          by (rule subspace_topology_is_topology_on[OF hTopX_ns]) (by100 blast)
+        have ha_U_k: "a \<in> ?U" using assms(6) hA_sub_X hx0_notin_A by (by100 blast)
+        have hA_sub_U_k: "A \<subseteq> ?U" using hA_sub_X hx0_notin_A by (by100 blast)
+        have hgrpA_k: "top1_is_group_on
+            (top1_fundamental_group_carrier A ?TA a) (top1_fundamental_group_mul A ?TA a)
+            (top1_fundamental_group_id A ?TA a) (top1_fundamental_group_invg A ?TA a)"
+          by (rule top1_fundamental_group_is_group[OF hTA_top assms(6)])
+        have hgrpU_k: "top1_is_group_on
+            (top1_fundamental_group_carrier ?U ?TU a) (top1_fundamental_group_mul ?U ?TU a)
+            (top1_fundamental_group_id ?U ?TU a) (top1_fundamental_group_invg ?U ?TU a)"
+          by (rule top1_fundamental_group_is_group[OF hTopU_k ha_U_k])
+        have hAU_hom_k: "top1_group_hom_on
+            (top1_fundamental_group_carrier A ?TA a) (top1_fundamental_group_mul A ?TA a)
+            (top1_fundamental_group_carrier ?U ?TU a) (top1_fundamental_group_mul ?U ?TU a) ?AU"
+        proof -
+          have hTA_eq: "subspace_topology ?U ?TU A = ?TA"
+            using subspace_topology_trans[OF hA_sub_U_k] by (by100 simp)
+          from subspace_inclusion_induced_hom[OF hTopU_k hA_sub_U_k assms(6)]
+          show ?thesis using hTA_eq by (by100 simp)
+        qed
+        have hAU_surj_k: "?AU ` top1_fundamental_group_carrier A ?TA a
+            = top1_fundamental_group_carrier ?U ?TU a"
+          sorry \<comment> \<open>(A\<hookrightarrow>U)* surjective — from deformation retract (proved in hAU_surj block).\<close>
+        have hAU_inj_k: "inj_on ?AU (top1_fundamental_group_carrier A ?TA a)"
+          sorry \<comment> \<open>(A\<hookrightarrow>U)* injective — from r*\<circ>\<iota>*=id (retraction left-inverse).\<close>
+        have hkpA_sub: "{?kp_A} \<subseteq> top1_fundamental_group_carrier A ?TA a"
+          sorry \<comment> \<open>[k\<circ>p]_A \<in> carrier(A): hom(S1\<rightarrow>A) maps carrier to carrier.\<close>
+        have hrelator_normal_k: "top1_normal_subgroup_on
+            (top1_fundamental_group_carrier A ?TA a) (top1_fundamental_group_mul A ?TA a)
+            (top1_fundamental_group_id A ?TA a) (top1_fundamental_group_invg A ?TA a) ?relator"
+          by (rule normal_subgroup_generated_is_normal[OF hgrpA_k hkpA_sub])
+        have hkpA_in_relator: "?kp_A \<in> ?relator"
+        proof -
+          have "?kp_A \<in> {?kp_A}" by (by100 blast)
+          hence "?kp_A \<in> top1_normal_subgroup_generated_on
+              (top1_fundamental_group_carrier A ?TA a) (top1_fundamental_group_mul A ?TA a)
+              (top1_fundamental_group_id A ?TA a) (top1_fundamental_group_invg A ?TA a)
+              {?kp_A}"
+            unfolding top1_normal_subgroup_generated_on_def by (by100 blast)
+          thus ?thesis .
+        qed
         show "c \<in> ?relator"
-          sorry \<comment> \<open>Apply inj_hom_preimage_normal_closure[OF grpA grpU AU_hom AU_surj AU_inj
-               relator_normal kpA_in_relator hc_A hfc_in].\<close>
+          by (rule inj_hom_preimage_normal_closure[OF hgrpA_k hgrpU_k hAU_hom_k hAU_surj_k
+              hAU_inj_k hrelator_normal_k hkpA_in_relator hc_A hfc_in])
       qed
       \<comment> \<open>Combine steps 1-3.\<close>
       show ?thesis
