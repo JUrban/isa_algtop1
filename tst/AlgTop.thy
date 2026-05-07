@@ -5,6 +5,41 @@ begin
 
 
 
+\<comment> \<open>Reusable: affine combination stays in interval.\<close>
+lemma affine_param_in_interval:
+  fixes a b t :: real
+  assumes "a \<le> b" "0 \<le> t" "t \<le> 1"
+  shows "a \<le> a + t * (b - a)" "a + t * (b - a) \<le> b"
+proof -
+  have "0 \<le> t * (b - a)" using assms by (by100 simp)
+  thus "a \<le> a + t * (b - a)" by (by100 linarith)
+  have "t * (b - a) \<le> 1 * (b - a)"
+    using mult_right_mono[of t 1 "b - a"] assms by (by100 linarith)
+  hence "t * (b - a) \<le> b - a" by (by100 simp)
+  thus "a + t * (b - a) \<le> b" by (by100 linarith)
+qed
+
+lemma affine_param_in_unit_interval:
+  fixes a b t :: real
+  assumes "a \<le> b" "0 \<le> t" "t \<le> 1" "0 \<le> a" "b \<le> 1"
+  shows "0 \<le> a + t * (b - a)" "a + t * (b - a) \<le> 1"
+  using affine_param_in_interval[OF assms(1-3)] assms(4,5) by (by100 linarith)+
+
+\<comment> \<open>Reusable: extract angle for a point on S1.\<close>
+lemma S1_point_to_angle:
+  assumes "p \<in> top1_S1"
+  shows "\<exists>\<theta>::real. top1_R_to_S1 \<theta> = p"
+proof -
+  have "fst p ^ 2 + snd p ^ 2 = 1" using assms unfolding top1_S1_def by (by100 simp)
+  then obtain \<theta>r where "fst p = cos \<theta>r" "snd p = sin \<theta>r"
+    using sincos_total_2pi by (by100 metis)
+  hence "fst (top1_R_to_S1 (\<theta>r / (2 * pi))) = fst p"
+      "snd (top1_R_to_S1 (\<theta>r / (2 * pi))) = snd p"
+    unfolding top1_R_to_S1_def by (by100 simp)+
+  hence "top1_R_to_S1 (\<theta>r / (2 * pi)) = p" by (rule prod_eqI)
+  thus ?thesis by (by100 blast)
+qed
+
 lemma card_three_le: "card {a, b, c::'a} \<le> 3"
   apply (rule card_insert_le_m1) apply simp
   apply (rule card_insert_le_m1) apply simp
