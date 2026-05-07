@@ -6562,10 +6562,39 @@ proof -
               have h\<psi>_img_N: "?\<psi> ` top1_Z_group \<subseteq> N"
                 by (rule hom_from_Z_image_in_subgroup[OF hpiU_a_grp h\<psi>_hom hN_grp hN_sub h\<psi>1_N])
               \<comment> \<open>Step 2: [bc_back(f0)]_U \<in> image(\<psi>) (via h factoring through S1).\<close>
+              \<comment> \<open>By comp_basepoint_change: ?bc_f0 = h \<circ> \<ell> where \<ell> is a B2-{0} loop at (1,0).
+                 Then [h\<circ>\<ell>]_U = (h|_{S1})_*([g]) for some S1-loop g (by S1_pi1_iso surj).
+                 (h|_{S1})_*([g]) = \<psi>(\<phi>([g])) \<in> image(\<psi>) \<subseteq> N.\<close>
+              \<comment> \<open>Key: ?bc_f0 is a specific function. Its class [?bc_f0]_U is what we need in N.
+                 Since image(\<psi>) = image((h|_{S1})_*) \<subseteq> N, it suffices to show
+                 [?bc_f0]_U \<in> image((h|_{S1})_*).\<close>
+              \<comment> \<open>image((h|_{S1})_*) = {[h\<circ>g]_U : g S1-loop at (1,0)}.
+                 We need: \<exists>g S1-loop. ?bc_f0 \<simeq> h\<circ>g in U.\<close>
               show ?thesis
-                sorry \<comment> \<open>bc_back(f0) = h \<circ> \<ell> (comp_bc_change). \<ell> at p in B2-{0}.
-                     By S1_pi1_iso surj: [\<ell>] = incl*([g]) for S1-loop g.
-                     [h\<circ>\<ell>] = (h|_{S1})_*([g]) = \<psi>(\<phi>([g])) \<in> image(\<psi>) \<subseteq> N.\<close>
+              proof -
+                \<comment> \<open>Step A: ?bc_f0 = h \<circ> \<ell> pointwise (comp_basepoint_change).\<close>
+                let ?hinv_f0 = "inv_into (top1_B2 - top1_S1) h \<circ> f0"
+                let ?revgam = "top1_path_reverse (\<lambda>t::real. (1 - t/2, 0::real))"
+                let ?ell_disk = "top1_basepoint_change_on (top1_B2 - {(0::real,0)})
+                    (subspace_topology top1_B2 top1_B2_topology (top1_B2 - {(0,0)}))
+                    ?q (1::real,0) ?revgam ?hinv_f0"
+                have hbc_eq_comp: "?bc_f0 = (\<lambda>z. h z) \<circ> ?ell_disk"
+                  sorry \<comment> \<open>Pointwise: bc(U,b,a,rev(\<delta>),f0) = h \<circ> bc(B2-{0},q,p,rev(\<gamma>),h\<inverse>\<circ>f0).
+                       By comp_basepoint_change + h\<circ>h\<inverse>=id on UV + h\<circ>rev(\<gamma>)=rev(\<delta>).\<close>
+                \<comment> \<open>Step B: [h\<circ>\<ell>]_U \<in> image(\<psi>).\<close>
+                \<comment> \<open>Since \<ell> is a loop at (1,0) in B2-{0} and (h|_{S1})_* is surjective
+                   from \<pi>_1(S1) onto its image, and \<psi> = (h|_{S1})_* \<circ> \<phi>\<inverse> with
+                   image(\<psi>) = image((h|_{S1})_*): [h\<circ>\<ell>]_U \<in> image(\<psi>).\<close>
+                have hbc_class_in_N: "{k. top1_loop_equiv_on ?U ?TU a ((\<lambda>z. h z) \<circ> ?ell_disk) k} \<in> N"
+                  sorry \<comment> \<open>\<ell> at (1,0) in B2-{0}. By S1_pi1_iso surj:
+                       [\<ell>] = incl*([g]) for some S1-loop g.
+                       [h\<circ>\<ell>] = (h|_{S1})_*([g]) \<in> image((h|_{S1})_*) = image(\<psi>) \<subseteq> N.\<close>
+                \<comment> \<open>Step C: [?bc_f0]_U = [h\<circ>\<ell>]_U (from the pointwise equality).\<close>
+                have "{k. top1_loop_equiv_on ?U ?TU a ?bc_f0 k}
+                    = {k. top1_loop_equiv_on ?U ?TU a ((\<lambda>z. h z) \<circ> ?ell_disk) k}"
+                  using hbc_eq_comp by (by100 simp)
+                thus ?thesis using hbc_class_in_N by (by100 simp)
+              qed
             qed
           qed
           \<comment> \<open>The preimage M = {x \<in> \<pi>_1(U,b) : bc_back_class(x) \<in> N} is normal.\<close>
