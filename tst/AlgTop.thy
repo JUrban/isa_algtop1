@@ -2010,9 +2010,59 @@ lemma SvK_simply_connected_V_surj_kernel:
         (top1_fundamental_group_induced_on (U \<inter> V) (subspace_topology X TX (U \<inter> V)) x0
            U (subspace_topology X TX U) x0 (\<lambda>x. x)
          ` top1_fundamental_group_carrier (U \<inter> V) (subspace_topology X TX (U \<inter> V)) x0)"
-  sorry \<comment> \<open>Proved inside Corollary_70_4_simply_connected_V (line 27494 of AlgTopCached).
-     The proof uses: SvK universal property, free product triviality, first iso theorem.
-     Path subdivision (open_cover_subdivision_01) + simply-connected replacement.\<close>
+proof -
+  let ?TU = "subspace_topology X TX U" and ?TV = "subspace_topology X TX V"
+  let ?TUV = "subspace_topology X TX (U \<inter> V)"
+  let ?piU = "top1_fundamental_group_carrier U ?TU x0"
+  let ?mulU = "top1_fundamental_group_mul U ?TU x0"
+  let ?eU = "top1_fundamental_group_id U ?TU x0"
+  let ?invgU = "top1_fundamental_group_invg U ?TU x0"
+  let ?piX = "top1_fundamental_group_carrier X TX x0"
+  let ?mulX = "top1_fundamental_group_mul X TX x0"
+  let ?eX = "top1_fundamental_group_id X TX x0"
+  let ?invgX = "top1_fundamental_group_invg X TX x0"
+  let ?j_U = "top1_fundamental_group_induced_on U ?TU x0 X TX x0 (\<lambda>x. x)"
+  let ?j_UV_U = "top1_fundamental_group_induced_on (U \<inter> V) ?TUV x0 U ?TU x0 (\<lambda>x. x)"
+  let ?N = "top1_normal_subgroup_generated_on ?piU ?mulU ?eU ?invgU
+      (?j_UV_U ` top1_fundamental_group_carrier (U \<inter> V) ?TUV x0)"
+  have hTopX: "is_topology_on X TX" using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
+  have hUsub: "U \<subseteq> X" using assms(2) unfolding openin_on_def by (by100 blast)
+  have hVsub: "V \<subseteq> X" using assms(3) unfolding openin_on_def by (by100 blast)
+  have hx0_U: "x0 \<in> U" and hx0_V: "x0 \<in> V" and hx0_X: "x0 \<in> X"
+    using assms(8) assms(4) by (by100 blast)+
+  have hTopU: "is_topology_on U ?TU" by (rule subspace_topology_is_topology_on[OF hTopX hUsub])
+  have hTopV: "is_topology_on V ?TV" by (rule subspace_topology_is_topology_on[OF hTopX hVsub])
+  have hV_pc: "top1_path_connected_on V ?TV"
+    using assms(7) unfolding top1_simply_connected_on_def by (by100 blast)
+  \<comment> \<open>Part 1: Surjectivity of j_U via loop decomposition + V simply connected.\<close>
+  show "?j_U ` ?piU = ?piX"
+  proof (rule set_eqI, rule iffI)
+    \<comment> \<open>Forward: image of hom \<subseteq> carrier.\<close>
+    fix c assume "c \<in> ?j_U ` ?piU"
+    then obtain u where "u \<in> ?piU" "c = ?j_U u" by (by100 blast)
+    have hj_hom: "top1_group_hom_on ?piU ?mulU ?piX ?mulX ?j_U"
+    proof -
+      have hincl: "top1_continuous_map_on U ?TU X TX (\<lambda>x. x)"
+        by (rule top1_continuous_map_on_restrict_domain_simple[OF
+              top1_continuous_map_on_id[OF hTopX, unfolded id_def] hUsub])
+      from top1_fundamental_group_induced_on_is_hom[OF hTopU hTopX hx0_U hx0_X hincl]
+      show ?thesis by (by100 simp)
+    qed
+    thus "c \<in> ?piX" using \<open>u \<in> ?piU\<close> \<open>c = ?j_U u\<close>
+      unfolding top1_group_hom_on_def by (by100 blast)
+  next
+    \<comment> \<open>Backward: every class in \<pi>_1(X) is in image of j_U.\<close>
+    fix c assume hc: "c \<in> ?piX"
+    \<comment> \<open>Use Theorem_59_1 + svk_pieces_in_subgroup with H = image(j_U).\<close>
+    show "c \<in> ?j_U ` ?piU"
+      sorry \<comment> \<open>Decompose representative loop into U/V pieces (Theorem_59_1).
+           V-pieces nulhomotopic (V simply connected), so class = e = j_U(e_U).
+           U-pieces have classes = j_U(class in U). Product is in image(j_U) (subgroup).\<close>
+  qed
+  \<comment> \<open>Part 2: Kernel of j_U = N.\<close>
+  show "top1_group_kernel_on ?piU ?eX ?j_U = ?N"
+    sorry \<comment> \<open>Uses SvK universal property + free product triviality + first iso theorem.\<close>
+qed
 
 \<comment> \<open>Helper: surjective hom image of a normal subgroup is normal.\<close>
 lemma surj_hom_image_normal:
