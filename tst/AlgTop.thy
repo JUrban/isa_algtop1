@@ -87,8 +87,113 @@ proof -
     proof (intro CollectI conjI)
       show "p \<in> A" using \<open>p \<in> {h 0, h 1}\<close> himg h0I h1I by (by100 blast)
       show "top1_connected_on (A - {p}) (subspace_topology A ?TA (A - {p}))"
-        sorry \<comment> \<open>p=h(0): A-{h(0)}=h((0,1]), connected. p=h(1): A-{h(1)}=h([0,1)), connected.
-             Continuous image of connected is connected (Theorem_23_5).\<close>
+      proof -
+        have hh_cont: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology A ?TA h"
+          using hh unfolding top1_homeomorphism_on_def by (by100 blast)
+        have hTA: "is_topology_on A ?TA" by (rule subspace_topology_is_topology_on[OF hTopX hAX])
+        \<comment> \<open>A - {p} = h(I - {inv p}).\<close>
+        have hAp: "A - {p} = h ` (top1_unit_interval - {inv_into top1_unit_interval h p})"
+        proof -
+          have "p \<in> h ` top1_unit_interval" using \<open>p \<in> A\<close> himg by (by100 blast)
+          have hip: "inv_into top1_unit_interval h p \<in> top1_unit_interval"
+            using inv_into_into[OF \<open>p \<in> h ` top1_unit_interval\<close>] .
+          have "h ` (top1_unit_interval - {inv_into top1_unit_interval h p})
+              = h ` top1_unit_interval - {h (inv_into top1_unit_interval h p)}"
+          proof -
+            have hAB: "top1_unit_interval - {inv_into top1_unit_interval h p} \<subseteq> top1_unit_interval"
+              by (by100 blast)
+            have hB: "{inv_into top1_unit_interval h p} \<subseteq> top1_unit_interval" using hip by (by100 blast)
+            from inj_on_image_set_diff[OF hinj hAB hB]
+            show ?thesis by (by100 simp)
+          qed
+          moreover have "h (inv_into top1_unit_interval h p) = p"
+            using f_inv_into_f[OF \<open>p \<in> h ` top1_unit_interval\<close>] .
+          ultimately show ?thesis using himg by (by100 simp)
+        qed
+        have hinvp: "inv_into top1_unit_interval h p \<in> {0, 1}"
+        proof -
+          have "p = h 0 \<or> p = h 1" using \<open>p \<in> {h 0, h 1}\<close> by (by100 blast)
+          thus ?thesis
+          proof
+            assume "p = h 0"
+            hence "inv_into top1_unit_interval h p = 0" using inv_into_f_f[OF hinj h0I] by (by100 simp)
+            thus ?thesis by (by100 blast)
+          next
+            assume "p = h 1"
+            hence "inv_into top1_unit_interval h p = 1" using inv_into_f_f[OF hinj h1I] by (by100 simp)
+            thus ?thesis by (by100 blast)
+          qed
+        qed
+        \<comment> \<open>I - {0} = (0,1] connected. I - {1} = [0,1) connected.\<close>
+        let ?S = "top1_unit_interval - {inv_into top1_unit_interval h p}"
+        have hS_conn: "connected ?S"
+        proof -
+          have "inv_into top1_unit_interval h p = 0 \<or> inv_into top1_unit_interval h p = 1"
+            using hinvp by (by100 blast)
+          thus ?thesis
+          proof
+            assume h0: "inv_into top1_unit_interval h p = 0"
+            have "?S = {0<..(1::real)}"
+            proof (rule set_eqI, rule iffI)
+              fix x assume hx: "x \<in> ?S"
+              hence "x \<in> top1_unit_interval" by (by100 blast)
+              have "x \<noteq> inv_into top1_unit_interval h p" using hx by (by100 blast)
+              hence "x \<noteq> 0" using h0 by (by100 simp)
+              with \<open>x \<in> top1_unit_interval\<close> show "x \<in> {0<..1}" unfolding top1_unit_interval_def by (by100 auto)
+            next
+              fix x assume "x \<in> {0<..(1::real)}"
+              hence "x \<in> top1_unit_interval" "x \<noteq> 0" unfolding top1_unit_interval_def by (by100 auto)+
+              thus "x \<in> ?S" using h0 by (by100 blast)
+            qed
+            moreover have "connected {0<..(1::real)}" by (rule connected_Ioc)
+            ultimately show ?thesis by (by100 simp)
+          next
+            assume h1: "inv_into top1_unit_interval h p = 1"
+            have "?S = {0..<(1::real)}"
+            proof (rule set_eqI, rule iffI)
+              fix x assume hx: "x \<in> ?S"
+              hence "x \<in> top1_unit_interval" by (by100 blast)
+              have "x \<noteq> inv_into top1_unit_interval h p" using hx by (by100 blast)
+              hence "x \<noteq> 1" using h1 by (by100 simp)
+              with \<open>x \<in> top1_unit_interval\<close> show "x \<in> {0..<1}" unfolding top1_unit_interval_def by (by100 auto)
+            next
+              fix x assume "x \<in> {0..<(1::real)}"
+              hence "x \<in> top1_unit_interval" "x \<noteq> 1" unfolding top1_unit_interval_def by (by100 auto)+
+              thus "x \<in> ?S" using h1 by (by100 blast)
+            qed
+            moreover have "connected {0..<(1::real)}" by (rule connected_Ico)
+            ultimately show ?thesis by (by100 simp)
+          qed
+        qed
+        \<comment> \<open>Convert HOL-Analysis connected to top1_connected_on.\<close>
+        have hS_sub: "?S \<subseteq> top1_unit_interval" by (by100 blast)
+        have hS_conn_on: "top1_connected_on ?S
+            (subspace_topology top1_unit_interval top1_unit_interval_topology ?S)"
+          sorry \<comment> \<open>Bridge: HOL-Analysis connected \<longleftrightarrow> top1_connected_on for subspace of R.\<close>
+        \<comment> \<open>Restrict h to S: continuous S \<rightarrow> A-{p}.\<close>
+        have hh_restr: "top1_continuous_map_on ?S
+            (subspace_topology top1_unit_interval top1_unit_interval_topology ?S)
+            (A - {p}) (subspace_topology A ?TA (A - {p})) h"
+          sorry \<comment> \<open>Restrict domain of hh_cont to S \<subseteq> I and codomain to A-{p} \<subseteq> A.\<close>
+        have hTI_S: "is_topology_on ?S
+            (subspace_topology top1_unit_interval top1_unit_interval_topology ?S)"
+          by (rule subspace_topology_is_topology_on[OF top1_unit_interval_topology_is_topology_on hS_sub])
+        have hTA_p: "is_topology_on (A - {p}) (subspace_topology A ?TA (A - {p}))"
+          by (rule subspace_topology_is_topology_on[OF hTA]) (by100 blast)
+        \<comment> \<open>Continuous image of connected is connected.\<close>
+        from Theorem_23_5[OF hTI_S hTA_p hS_conn_on hh_restr]
+        have "top1_connected_on (h ` ?S)
+            (subspace_topology (A - {p}) (subspace_topology A ?TA (A - {p})) (h ` ?S))" .
+        moreover have "h ` ?S = A - {p}" using hAp by (by100 simp)
+        moreover have "subspace_topology (A - {p}) (subspace_topology A ?TA (A - {p})) (A - {p})
+            = subspace_topology A ?TA (A - {p})"
+        proof -
+          have "A - {p} \<subseteq> A" by (by100 blast)
+          show ?thesis by (rule subspace_topology_self)
+            (use hTA_p in \<open>unfold is_topology_on_def subspace_topology_def; by100 blast\<close>)
+        qed
+        ultimately show ?thesis by (by100 simp)
+      qed
     qed
   qed
 qed
