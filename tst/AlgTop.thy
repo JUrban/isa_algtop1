@@ -3830,8 +3830,20 @@ proof -
        Key: for c = {g. loop_equiv(A, f, g)}, \<iota>*(c) = {g. loop_equiv(U, f, g)} (by inclusion_induced_class).
        Then r*(c') where c' = \<iota>*(c) gives {g. loop_equiv(A, r\<circ>f, g)}.
        Since f is in A and r fixes A: r\<circ>f = f. So r*(\<iota>*(c)) = {g. loop_equiv(A, f, g)} = c.\<close>
+    \<comment> \<open>Simpler approach: use the EXISTING iso hA_U_iso which gives groups_isomorphic_on.
+       Any hom between isomorphic groups that is also a hom is injective iff surjective.
+       We already have surjectivity (hAU_surj_outer). And for finite groups, surj \<Longrightarrow> inj.
+       But for infinite groups we need the left-inverse argument.\<close>
+    \<comment> \<open>Direct approach: \<iota>*(c1) = \<iota>*(c2) in \<pi>_1(U,a). Since \<iota> = identity on functions,
+       the induced map on classes is: \<iota>*({g. equiv(A,f,g)}) = {g. equiv(U,f,g)}.
+       So {g. equiv(U,f1,g)} = {g. equiv(U,f2,g)}, meaning loop_equiv(U,a,f1,f2).
+       Since r fixes A: the homotopy H in U between f1 and f2 can be composed with r
+       to get a homotopy in A. Specifically: r \<circ> H is a homotopy in A from f1 to f2
+       (since r(f_i(s)) = f_i(s) for loops in A, and r is continuous).\<close>
     show "c1 = c2"
-      sorry \<comment> \<open>r fixes A pointwise \<Longrightarrow> r*\<circ>\<iota>* = id on \<pi>_1(A) \<Longrightarrow> \<iota>* injective.\<close>
+      sorry \<comment> \<open>Injectivity of inclusion \<iota>*: \<pi>_1(A,a) \<rightarrow> \<pi>_1(U,a).
+           Uses: deformation retract r fixes A, r continuous U \<rightarrow> A,
+           induced_preserves_loop_equiv for r, r \<circ> f = f for loops f in A.\<close>
   qed
   \<comment> \<open>Step 1: j_* is a homomorphism.\<close>
   have hincl_AX_cont: "top1_continuous_map_on A ?TA X TX (\<lambda>x. x)"
@@ -11560,6 +11572,7 @@ end
  
   
  
+
 
 
 
