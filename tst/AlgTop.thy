@@ -1678,9 +1678,79 @@ proof (intro conjI)
         (\<forall>a\<in>top1_S1. \<forall>t\<in>I_set. H (a, t) = a)"
     proof (intro conjI)
       show "top1_continuous_map_on (?X \<times> I_set) (product_topology_on ?TX I_top) ?X ?TX H"
-        sorry \<comment> \<open>Continuity of H(x,t) = ((1-t+t/|x|)*fst x, (1-t+t/|x|)*snd x).
-             H is continuous on (B2-{0})\<times>I since 1/|x| continuous on B2-{0} (|x|>0),
-             arithmetic of continuous functions, and image stays in B2-{0}.\<close>
+      proof -
+        \<comment> \<open>H(x,t) = ((1-t)*fst x + t*fst x/|x|, (1-t)*snd x + t*snd x/|x|) pointwise.
+           Proof adapted from hinterp_cont_on inside Theorem_72_1 (line 2694).\<close>
+        let ?S = "?X \<times> I_set"
+        \<comment> \<open>Step 1: continuous_on for radial interpolation.\<close>
+        let ?interp = "\<lambda>(y::real\<times>real, t::real).
+            ((1 - t) * fst y + t * fst y / sqrt (fst y ^ 2 + snd y ^ 2),
+             (1 - t) * snd y + t * snd y / sqrt (fst y ^ 2 + snd y ^ 2))"
+        have hH_eq_interp: "\<And>x t. H (x, t) = ?interp (x, t)"
+          unfolding H_def by (by100 simp) (by100 algebra)
+        have hsqrt_ne0: "\<forall>p \<in> ?S. sqrt (fst (fst p) ^ 2 + snd (fst p) ^ 2) \<noteq> 0"
+        proof (intro ballI)
+          fix p assume "p \<in> ?S"
+          hence "fst p \<in> ?X" by (by100 force)
+          hence "?nrm (fst p) > 0" by (rule h_nrm_pos)
+          thus "sqrt (fst (fst p) ^ 2 + snd (fst p) ^ 2) \<noteq> 0" by (by100 linarith)
+        qed
+        have hsqrt_cont: "continuous_on ?S
+            (\<lambda>p::(real\<times>real)\<times>real. sqrt (fst (fst p) ^ 2 + snd (fst p) ^ 2))"
+        proof -
+          have "continuous_on UNIV (\<lambda>p::(real\<times>real)\<times>real. fst (fst p) ^ 2 + snd (fst p) ^ 2)"
+            by (intro continuous_intros)
+          hence "continuous_on ?S (\<lambda>p::(real\<times>real)\<times>real. fst (fst p) ^ 2 + snd (fst p) ^ 2)"
+            by (rule continuous_on_subset) (by100 blast)
+          thus ?thesis by (intro continuous_intros)
+        qed
+        have hA1: "continuous_on ?S (\<lambda>p::(real\<times>real)\<times>real. (1 - snd p) * fst (fst p))"
+          using continuous_on_subset by (intro continuous_intros; by100 blast)
+        have hA2: "continuous_on ?S (\<lambda>p::(real\<times>real)\<times>real. (1 - snd p) * snd (fst p))"
+          using continuous_on_subset by (intro continuous_intros; by100 blast)
+        have hN1: "continuous_on ?S (\<lambda>p::(real\<times>real)\<times>real. snd p * fst (fst p))"
+          using continuous_on_subset by (intro continuous_intros; by100 blast)
+        have hN2: "continuous_on ?S (\<lambda>p::(real\<times>real)\<times>real. snd p * snd (fst p))"
+          using continuous_on_subset by (intro continuous_intros; by100 blast)
+        have hD1: "continuous_on ?S
+            (\<lambda>p::(real\<times>real)\<times>real. snd p * fst (fst p) / sqrt (fst (fst p) ^ 2 + snd (fst p) ^ 2))"
+          apply (rule continuous_on_divide[OF hN1 hsqrt_cont])
+          using hsqrt_ne0 by (by100 blast)
+        have hD2: "continuous_on ?S
+            (\<lambda>p::(real\<times>real)\<times>real. snd p * snd (fst p) / sqrt (fst (fst p) ^ 2 + snd (fst p) ^ 2))"
+          apply (rule continuous_on_divide[OF hN2 hsqrt_cont])
+          using hsqrt_ne0 by (by100 blast)
+        have hcomp1: "continuous_on ?S (\<lambda>p::(real\<times>real)\<times>real. (1 - snd p) * fst (fst p) +
+            snd p * fst (fst p) / sqrt (fst (fst p) ^ 2 + snd (fst p) ^ 2))"
+          by (rule continuous_on_add[OF hA1 hD1])
+        have hcomp2: "continuous_on ?S (\<lambda>p::(real\<times>real)\<times>real. (1 - snd p) * snd (fst p) +
+            snd p * snd (fst p) / sqrt (fst (fst p) ^ 2 + snd (fst p) ^ 2))"
+          by (rule continuous_on_add[OF hA2 hD2])
+        have hinterp_cont: "continuous_on ?S ?interp"
+        proof -
+          have "?interp = (\<lambda>p. ((1 - snd p) * fst (fst p) +
+              snd p * fst (fst p) / sqrt (fst (fst p) ^ 2 + snd (fst p) ^ 2),
+              (1 - snd p) * snd (fst p) +
+              snd p * snd (fst p) / sqrt (fst (fst p) ^ 2 + snd (fst p) ^ 2)))"
+            by (rule ext) (by100 auto)
+          thus ?thesis using continuous_on_Pair[OF hcomp1 hcomp2] by (by100 simp)
+        qed
+        have hH_cont: "continuous_on ?S H"
+        proof -
+          have "H = (\<lambda>p. ?interp p)"
+          proof (rule ext)
+            fix p show "H p = ?interp p" using hH_eq_interp[of "fst p" "snd p"] by (by100 simp)
+          qed
+          thus ?thesis using hinterp_cont by (by100 simp)
+        qed
+        \<comment> \<open>Step 2: H maps ?S into ?X (image in B2-{0}).\<close>
+        have hH_img: "\<forall>p\<in>?S. H p \<in> ?X"
+          sorry \<comment> \<open>0 < |H(x,t)| \<le> 1 for x \<in> B2-{0}, t \<in> I.\<close>
+        \<comment> \<open>Step 3: Convert continuous_on to top1_continuous_map_on.\<close>
+        show ?thesis
+          sorry \<comment> \<open>Bridge: continuous_on + image \<subseteq> ?X \<rightarrow> top1_continuous_map_on via
+               subspace topology identification.\<close>
+      qed
       show "\<forall>x\<in>?X. H (x, 0) = x"
         unfolding H_def by (intro ballI) (by100 simp)
       show "\<forall>x\<in>?X. H (x, 1) \<in> top1_S1"
