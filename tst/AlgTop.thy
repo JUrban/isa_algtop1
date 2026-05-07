@@ -1842,30 +1842,6 @@ lemma standard_S1_loop_class_in_carrier:
    \<in> top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0)"
   unfolding top1_fundamental_group_carrier_def using standard_S1_loop_is_loop by (by100 blast)
 
-\<comment> \<open>Helper: the base-changed half-radius loop, applied by h, generates the same
-   normal closure as [k\<circ>p] in \<pi>_1(U,a). This is the "winding number" fact:
-   both loops wind once around the origin in B2-{0}, so after applying h
-   and viewing in U, they generate the same normal subgroup.\<close>
-lemma winding_number_generator_tracking:
-  fixes h :: "real \<times> real \<Rightarrow> 'a" and X :: "'a set" and TX :: "'a set set" and A :: "'a set" and a :: 'a
-  assumes "is_topology_on_strict X TX" "is_hausdorff_on X TX" "closedin_on X TX A"
-      and "top1_continuous_map_on top1_B2 top1_B2_topology X TX h"
-      and "top1_homeomorphism_on (top1_B2 - top1_S1)
-             (subspace_topology top1_B2 top1_B2_topology (top1_B2 - top1_S1))
-             (X - A) (subspace_topology X TX (X - A)) h"
-      and "h ` top1_S1 \<subseteq> A" and "h (1, 0) = a" and "a \<in> A"
-  shows "top1_normal_subgroup_generated_on
-      (top1_fundamental_group_carrier (X - {h (0,0)}) (subspace_topology X TX (X - {h (0,0)})) a)
-      (top1_fundamental_group_mul (X - {h (0,0)}) (subspace_topology X TX (X - {h (0,0)})) a)
-      (top1_fundamental_group_id (X - {h (0,0)}) (subspace_topology X TX (X - {h (0,0)})) a)
-      (top1_fundamental_group_invg (X - {h (0,0)}) (subspace_topology X TX (X - {h (0,0)})) a)
-      {top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1, 0)
-         (X - {h (0,0)}) (subspace_topology X TX (X - {h (0,0)})) a
-         (\<lambda>z. h z) {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0)
-           (\<lambda>s. (cos (2*pi*s), sin (2*pi*s))) g}}
-    = top1_fundamental_group_carrier (X - {h (0,0)}) (subspace_topology X TX (X - {h (0,0)})) a"
-  sorry \<comment> \<open>Winding number: [k\<circ>p] generates all of \<pi>_1(U,a) since \<pi>_1(U) \<cong> Z and [k\<circ>p] is a generator.\<close>
-
 theorem Theorem_72_1_attaching_two_cell:
   fixes X :: "'a set" and TX :: "'a set set" and A :: "'a set"
     and h :: "real \<times> real \<Rightarrow> 'a" and a :: 'a
@@ -4979,19 +4955,10 @@ proof -
               (top1_fundamental_group_id ?U ?TU a) (top1_fundamental_group_invg ?U ?TU a)
               {top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1, 0) ?U ?TU a
                  (\<lambda>z. h z) {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) ?f g}}"
-      proof -
-        \<comment> \<open>By winding_number_generator_tracking: \<langle>\<langle>{[k\<circ>p]_U}\<rangle>\<rangle> = \<pi>_1(U,a). So ker \<subseteq> whole group.\<close>
-        have hgen: "top1_normal_subgroup_generated_on
-            (top1_fundamental_group_carrier ?U ?TU a) (top1_fundamental_group_mul ?U ?TU a)
-            (top1_fundamental_group_id ?U ?TU a) (top1_fundamental_group_invg ?U ?TU a)
-            {top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1, 0) ?U ?TU a
-               (\<lambda>z. h z) {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) ?f g}}
-          = top1_fundamental_group_carrier ?U ?TU a"
-          by (rule winding_number_generator_tracking[OF assms(1) assms(2) assms(3) assms(5)
-              assms(7) assms(8) assms(9) assms(6)])
-        show ?thesis unfolding hgen
-          unfolding top1_group_kernel_on_def by (by100 blast)
-      qed
+        sorry \<comment> \<open>Generator tracking: ker(incl*_a) \<subseteq> \<langle>\<langle>{[k\<circ>p]_U}\<rangle>\<rangle>.
+             Requires: base change naturality to transfer hincl_ker_b from base b to base a,
+             then show the base-changed UV-generator = [k\<circ>p] via comp_basepoint_change
+             + winding number argument in B2-{0}.\<close>
       \<comment> \<open>Step 3: preimage under (A\<hookrightarrow>U)* of \<langle>\<langle>{[k\<circ>p]_U}\<rangle>\<rangle> \<subseteq> \<langle>\<langle>{[k\<circ>p]_A}\<rangle>\<rangle> = ?relator.\<close>
       have hstep3: "\<And>c. c \<in> top1_fundamental_group_carrier A ?TA a \<Longrightarrow>
           (top1_fundamental_group_induced_on A ?TA a ?U ?TU a (\<lambda>x. x)) c
@@ -11864,6 +11831,7 @@ end
  
   
  
+
 
 
 
