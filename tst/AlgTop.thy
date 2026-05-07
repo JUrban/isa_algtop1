@@ -3703,9 +3703,37 @@ proof -
         \<comment> \<open>r(a) = a since a \<in> A.\<close>
         have h1_in_I: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
         have hra: "?r a = a" using hHfix assms(6) h1_in_I by (by100 blast)
+        \<comment> \<open>\<iota>\<circ>r = (\<lambda>x. H_deform(x,1)) is continuous U \<rightarrow> U.\<close>
+        have h_ir_cont: "top1_continuous_map_on ?U ?TU ?U ?TU (\<lambda>x. H_deform (x, 1))"
+        proof -
+          have hcomp_eq: "(\<lambda>x. H_deform (x, 1)) = H_deform \<circ> (\<lambda>x. (x, 1::real))"
+            by (rule ext) (by100 simp)
+          have hpair_cont: "top1_continuous_map_on ?U ?TU (?U \<times> I_set)
+              (product_topology_on ?TU I_top) (\<lambda>x. (x, 1::real))"
+            sorry \<comment> \<open>(x, const) continuous: id \<times> const via Theorem 18.4.\<close>
+          show ?thesis unfolding hcomp_eq
+            by (rule top1_continuous_map_on_comp[OF hpair_cont hHcont])
+        qed
         \<comment> \<open>r\<circ>f is a loop in A at a.\<close>
         have hrf_loop_A: "top1_is_loop_on A ?TA a (?r \<circ> f)"
-          sorry \<comment> \<open>r continuous U\<rightarrow>A, f loop in U at a, r(a)=a \<Longrightarrow> r\<circ>f loop in A at a.\<close>
+        proof -
+          \<comment> \<open>r: U \<rightarrow> A continuous (shrink codomain of h_ir_cont).\<close>
+          have hr_img: "?r ` ?U \<subseteq> A"
+          proof
+            fix y assume "y \<in> ?r ` ?U"
+            then obtain x where "x \<in> ?U" "y = H_deform (x, 1)" by (by100 blast)
+            thus "y \<in> A" using hH1 by (by100 blast)
+          qed
+          have hA_sub_U: "A \<subseteq> ?U" using hA_sub_X hx0_notin_A by (by100 blast)
+          have hr_cont_sub: "top1_continuous_map_on ?U ?TU A (subspace_topology ?U ?TU A) ?r"
+            by (rule top1_continuous_map_on_codomain_shrink[OF h_ir_cont hr_img hA_sub_U])
+          have hTA_eq: "subspace_topology ?U ?TU A = ?TA"
+            using subspace_topology_trans[OF hA_sub_U] by (by100 simp)
+          have hr_cont_A: "top1_continuous_map_on ?U ?TU A ?TA ?r"
+            using hr_cont_sub hTA_eq by (by100 simp)
+          show ?thesis using top1_continuous_map_loop_early[OF hr_cont_A hf_loop] hra
+            by (by100 simp)
+        qed
         \<comment> \<open>The class of r\<circ>f in \<pi>_1(A,a).\<close>
         let ?rf_class = "{g. top1_loop_equiv_on A ?TA a (?r \<circ> f) g}"
         have hrf_in_carrier: "?rf_class \<in> top1_fundamental_group_carrier A ?TA a"
@@ -3724,8 +3752,7 @@ proof -
             have "(id::'a\<Rightarrow>'a) = (\<lambda>x. x)" unfolding id_def by (by100 blast)
             thus ?thesis using top1_continuous_map_on_id[OF hTopU_d] by (by100 simp)
           qed
-          have h_ir_cont: "top1_continuous_map_on ?U ?TU ?U ?TU (\<lambda>x. H_deform (x, 1))"
-            sorry \<comment> \<open>\<iota>\<circ>r = (\<lambda>x. H_deform(x,1)) continuous: composition of H with (\<lambda>x.(x,1)).\<close>
+          \<comment> \<open>h_ir_cont already proved above.\<close>
           have hH_fix_a: "\<forall>t\<in>I_set. H_deform (a, t) = a"
             using hHfix assms(6) by (by100 blast)
           have hH_hom: "\<exists>Hh. top1_continuous_map_on (?U \<times> I_set) (product_topology_on ?TU I_top)
@@ -3744,7 +3771,13 @@ proof -
           hence "top1_path_homotopic_on ?U ?TU a a (?r \<circ> f) f"
             by (rule Lemma_51_1_path_homotopic_sym)
           moreover have "top1_is_loop_on ?U ?TU a (?r \<circ> f)"
-            sorry \<comment> \<open>r\<circ>f is a loop in U: r\<circ>f maps to A \<subseteq> U, continuous, r(a)=a.\<close>
+          proof -
+            \<comment> \<open>Loop in A \<Longrightarrow> loop in U via inclusion.\<close>
+            have "top1_is_loop_on ?U ?TU a ((\<lambda>x. x) \<circ> (?r \<circ> f))"
+              using top1_continuous_map_loop_early[OF hAU_cont_d hrf_loop_A] by (by100 simp)
+            moreover have "(\<lambda>x::'a. x) \<circ> (?r \<circ> f) = ?r \<circ> f" by (rule ext) (by100 simp)
+            ultimately show ?thesis by (by100 simp)
+          qed
           ultimately show ?thesis unfolding top1_loop_equiv_on_def
             using hf_loop by (by100 blast)
         qed
@@ -10684,6 +10717,7 @@ end
  
   
  
+
 
 
 
