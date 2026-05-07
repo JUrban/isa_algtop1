@@ -1805,9 +1805,49 @@ proof (intro conjI)
           ultimately show "H p \<in> ?X" by (by100 auto)
         qed
         \<comment> \<open>Step 3: Convert continuous_on to top1_continuous_map_on.\<close>
-        show ?thesis
-          sorry \<comment> \<open>Bridge: continuous_on + image \<subseteq> ?X \<rightarrow> top1_continuous_map_on via
-               subspace topology identification.\<close>
+        \<comment> \<open>Step 3: Bridge continuous_on to top1_continuous_map_on.\<close>
+        \<comment> \<open>Intermediate: H is top1_continuous on ?S with open_sets subspace topologies.\<close>
+        have hH_top1_raw: "top1_continuous_map_on ?S
+            (subspace_topology UNIV top1_open_sets ?S)
+            ?X (subspace_topology UNIV top1_open_sets ?X) H"
+          using top1_continuous_map_on_subspace_open_sets_on[OF _ hH_cont] hH_img by (by100 blast)
+        \<comment> \<open>Topology equalities: domain and codomain match ?TX, product_topology.\<close>
+        have hTB2: "is_topology_on (UNIV::(real\<times>real) set) (top1_open_sets::(real\<times>real) set set)"
+          using top1_R2_is_hausdorff unfolding is_hausdorff_on_def
+          using product_topology_on_open_sets[where ?'a = real and ?'b = real] by (by100 simp)
+        have hTR: "is_topology_on (UNIV::real set) (top1_open_sets::real set set)"
+          using top1_R_is_hausdorff unfolding is_hausdorff_on_def by (by100 blast)
+        have hdom_eq: "subspace_topology UNIV top1_open_sets ?S
+            = product_topology_on ?TX I_top"
+        proof -
+          have "product_topology_on ?TX I_top
+              = product_topology_on (subspace_topology UNIV top1_open_sets ?X)
+                  (subspace_topology UNIV top1_open_sets I_set)"
+            unfolding top1_B2_topology_def top1_unit_interval_topology_def
+            using product_topology_on_open_sets[where ?'a = real and ?'b = real]
+            subspace_topology_trans[of ?X top1_B2]
+            by (by100 auto)
+          also have "\<dots> = subspace_topology (UNIV \<times> UNIV) (product_topology_on top1_open_sets top1_open_sets)
+              (?X \<times> I_set)"
+            by (rule Theorem_16_3[OF hTB2 hTR])
+          also have "\<dots> = subspace_topology UNIV top1_open_sets (?X \<times> I_set)"
+            using product_topology_on_open_sets[where ?'a = "real\<times>real" and ?'b = real]
+            by (by100 simp)
+          finally show ?thesis by (by100 simp)
+        qed
+        have hcod_eq: "subspace_topology UNIV top1_open_sets ?X = ?TX"
+        proof -
+          have "subspace_topology UNIV top1_open_sets ?X
+              = subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) ?X"
+            using product_topology_on_open_sets[where ?'a = real and ?'b = real] by (by100 simp)
+          also have "\<dots> = subspace_topology top1_B2
+              (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) top1_B2) ?X"
+            by (rule subspace_topology_trans[symmetric]) (by100 blast)
+          also have "\<dots> = subspace_topology top1_B2 top1_B2_topology ?X"
+            unfolding top1_B2_topology_def by (by100 simp)
+          finally show ?thesis by (by100 simp)
+        qed
+        show ?thesis using hH_top1_raw unfolding hdom_eq hcod_eq .
       qed
       show "\<forall>x\<in>?X. H (x, 0) = x"
         unfolding H_def by (intro ballI) (by100 simp)
