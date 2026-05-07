@@ -7151,8 +7151,48 @@ proof -
                           = (top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1,0)
                               ?U ?TU a (\<lambda>z. h z))
                             {k. top1_loop_equiv_on top1_S1 top1_S1_topology (1,0) ?r_ell k}"
-                        sorry \<comment> \<open>Needs: hh_hom (path_homotopic) + induced_map = [h\<circ>g] for S1-loop g.
-                             Both h\<circ>ell_disk and (h|_{S1})\<circ>(r\<circ>ell) give same class in U.\<close>
+                      proof -
+                        \<comment> \<open>Step 1: induced_on = [h\<circ>(r\<circ>ell)]_U (by bc congruence for induced map).\<close>
+                        have h_ind_eq: "(top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1,0)
+                            ?U ?TU a (\<lambda>z. h z))
+                          {k. top1_loop_equiv_on top1_S1 top1_S1_topology (1,0) ?r_ell k}
+                          = {k. top1_loop_equiv_on ?U ?TU a ((\<lambda>z. h z) \<circ> ?r_ell) k}"
+                          sorry \<comment> \<open>(h|_{S1})_*([g]) = [h\<circ>g]_U: standard induced map on class.\<close>
+                        \<comment> \<open>Step 2: [h\<circ>ell_disk]_U = [h\<circ>(r\<circ>ell)]_U (from homotopy).\<close>
+                        have h_class_hom: "top1_loop_equiv_on ?U ?TU a
+                            ((\<lambda>z. h z) \<circ> ?ell_disk) ((\<lambda>z. h z) \<circ> ?r_ell)"
+                        proof -
+                          from hh_hom have "top1_path_homotopic_on ?U ?TU a a
+                              ((\<lambda>z. h z) \<circ> ?ell_disk) ((\<lambda>z. h z) \<circ> ?r_ell)"
+                            using hh10 by (by100 simp)
+                          moreover have "top1_is_loop_on ?U ?TU a ((\<lambda>z. h z) \<circ> ?ell_disk)"
+                            sorry \<comment> \<open>h continuous, ell_disk loop \<Rightarrow> composition loop.\<close>
+                          moreover have "top1_is_loop_on ?U ?TU a ((\<lambda>z. h z) \<circ> ?r_ell)"
+                            sorry \<comment> \<open>h continuous, r\<circ>ell_disk loop \<Rightarrow> composition loop.\<close>
+                          ultimately show ?thesis
+                            unfolding top1_loop_equiv_on_def by (by100 blast)
+                        qed
+                        show ?thesis
+                        proof (rule set_eqI, rule iffI)
+                          fix k assume "k \<in> {k. top1_loop_equiv_on ?U ?TU a ((\<lambda>z. h z) \<circ> ?ell_disk) k}"
+                          hence "top1_loop_equiv_on ?U ?TU a ((\<lambda>z. h z) \<circ> ?ell_disk) k" by (by100 blast)
+                          from top1_loop_equiv_on_trans[OF hTopU_outer
+                              top1_loop_equiv_on_sym[OF h_class_hom] this]
+                          show "k \<in> (top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1,0)
+                              ?U ?TU a (\<lambda>z. h z))
+                            {k. top1_loop_equiv_on top1_S1 top1_S1_topology (1,0) ?r_ell k}"
+                            unfolding h_ind_eq by (by100 blast)
+                        next
+                          fix k assume "k \<in> (top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1,0)
+                              ?U ?TU a (\<lambda>z. h z))
+                            {k. top1_loop_equiv_on top1_S1 top1_S1_topology (1,0) ?r_ell k}"
+                          hence "top1_loop_equiv_on ?U ?TU a ((\<lambda>z. h z) \<circ> ?r_ell) k"
+                            unfolding h_ind_eq by (by100 blast)
+                          from top1_loop_equiv_on_trans[OF hTopU_outer h_class_hom this]
+                          show "k \<in> {k. top1_loop_equiv_on ?U ?TU a ((\<lambda>z. h z) \<circ> ?ell_disk) k}"
+                            by (by100 blast)
+                        qed
+                      qed
                       show ?thesis using h_class_eq h_induced_rloop by (by100 simp)
                     qed
                     thus ?thesis using himg_eq by (by100 simp)
