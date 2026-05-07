@@ -1730,11 +1730,25 @@ proof -
      So \<langle>\<langle>{f(s)}\<rangle>\<rangle>_H \<subseteq> f(M).
      f(c) \<in> f(M), so c \<in> M (injectivity + c \<in> G).
      Since M arbitrary: c \<in> \<Inter>{M. s \<in> M \<and> normal M} = \<langle>\<langle>{s}\<rangle>\<rangle>_G.\<close>
-  \<comment> \<open>c \<in> \<langle>\<langle>{s}\<rangle>\<rangle>_G = \<Inter>{M. {s}\<subseteq>M \<and> normal M}. Show c in every such M.\<close>
-  show ?thesis
-    using hfc_in_fN hf_inj hc_in_G hs_in hG hH hf hf_surj hN_normal
-      surj_hom_image_normal[OF hG hH hf hf_surj]
-    sorry \<comment> \<open>Needs structured InterI proof (full unfolding too large for blast).\<close>
+  \<comment> \<open>For any normal M of G with s \<in> M: show c \<in> M.\<close>
+  have hkey: "\<And>M. s \<in> M \<Longrightarrow> top1_normal_subgroup_on G mulG eG invgG M \<Longrightarrow> c \<in> M"
+  proof -
+    fix M assume hsM: "s \<in> M" and hM: "top1_normal_subgroup_on G mulG eG invgG M"
+    have hfM: "top1_normal_subgroup_on H mulH eH invgH (f ` M)"
+      by (rule surj_hom_image_normal[OF hG hH hf hf_surj hM])
+    have hfs_fM: "f s \<in> f ` M" using hsM by (by100 blast)
+    have hncl_sub: "top1_normal_subgroup_generated_on H mulH eH invgH {f s} \<subseteq> f ` M"
+      unfolding top1_normal_subgroup_generated_on_def using hfs_fM hfM by (by100 blast)
+    have "f c \<in> f ` M" using hfc_in_fN hncl_sub by (by100 blast)
+    then obtain m where hmM: "m \<in> M" and hfm: "f m = f c" by (by100 auto)
+    have hM_sub: "M \<subseteq> G" using hM unfolding top1_normal_subgroup_on_def by (by100 blast)
+    have hmG: "m \<in> G" using hmM hM_sub by (by100 blast)
+    have "f c = f m" using hfm by (by100 simp)
+    have "c = m" by (rule inj_onD[OF hf_inj \<open>f c = f m\<close> hc_in_G hmG])
+    show "c \<in> M" using \<open>c = m\<close> hmM by (by100 simp)
+  qed
+  show ?thesis unfolding top1_normal_subgroup_generated_on_def
+    using hkey by (by100 blast)
 qed
 
 theorem Theorem_72_1_attaching_two_cell:
@@ -11305,6 +11319,7 @@ end
  
   
  
+
 
 
 
