@@ -3973,9 +3973,40 @@ proof -
       using loop_agree_on_I[OF hf2(1)] hrf2_eq by (by100 blast)
     \<comment> \<open>Chain: f1 \<simeq> r\<circ>f1 \<simeq> r\<circ>f2 \<simeq> f2 in A.\<close>
     \<comment> \<open>Hence loop_equiv(A, f1, f2), so c1 = c2.\<close>
-    show "c1 = c2"
-      sorry \<comment> \<open>Chain homotopies: f1\<simeq>r\<circ>f1 (agree on I), r\<circ>f1\<simeq>r\<circ>f2 (induced),
-           r\<circ>f2\<simeq>f2 (agree on I). Then loop_equiv(A, f1, f2) \<Longrightarrow> c1=c2.\<close>
+    \<comment> \<open>Convert path_homotopic to loop_equiv.\<close>
+    have hrf1_loop_A: "top1_is_loop_on A ?TA a (?r \<circ> f1)"
+      using loop_agree_on_I[OF hf1(1)] hrf1_eq by (by100 blast)
+    have hrf2_loop_A: "top1_is_loop_on A ?TA a (?r \<circ> f2)"
+      using loop_agree_on_I[OF hf2(1)] hrf2_eq by (by100 blast)
+    have hle1: "top1_loop_equiv_on A ?TA a f1 (?r \<circ> f1)"
+      unfolding top1_loop_equiv_on_def using hf1(1) hrf1_loop_A hrf1_hom by (by100 blast)
+    have hle2_rev: "top1_loop_equiv_on A ?TA a f2 (?r \<circ> f2)"
+      unfolding top1_loop_equiv_on_def using hf2(1) hrf2_loop_A hrf2_hom by (by100 blast)
+    have hle2: "top1_loop_equiv_on A ?TA a (?r \<circ> f2) f2"
+      by (rule top1_loop_equiv_on_sym[OF hle2_rev])
+    \<comment> \<open>Chain: f1 ~ r\<circ>f1 ~ r\<circ>f2 ~ f2.\<close>
+    have hf1_rf2: "top1_loop_equiv_on A ?TA a f1 (?r \<circ> f2)"
+      by (rule top1_loop_equiv_on_trans[OF hTA_top hle1 hrf1f2_A])
+    have hf1f2_A: "top1_loop_equiv_on A ?TA a f1 f2"
+      by (rule top1_loop_equiv_on_trans[OF hTA_top hf1_rf2 hle2])
+    \<comment> \<open>c1 = c2 from loop_equiv(A, f1, f2).\<close>
+    have hdir1: "\<And>g'. top1_loop_equiv_on A ?TA a f1 g' \<Longrightarrow> top1_loop_equiv_on A ?TA a f2 g'"
+    proof -
+      fix g' assume "top1_loop_equiv_on A ?TA a f1 g'"
+      show "top1_loop_equiv_on A ?TA a f2 g'"
+        using top1_loop_equiv_on_trans[OF hTA_top top1_loop_equiv_on_sym[OF hf1f2_A]
+            \<open>top1_loop_equiv_on A ?TA a f1 g'\<close>] .
+    qed
+    have hdir2: "\<And>g'. top1_loop_equiv_on A ?TA a f2 g' \<Longrightarrow> top1_loop_equiv_on A ?TA a f1 g'"
+    proof -
+      fix g' assume "top1_loop_equiv_on A ?TA a f2 g'"
+      show "top1_loop_equiv_on A ?TA a f1 g'"
+        using top1_loop_equiv_on_trans[OF hTA_top hf1f2_A
+            \<open>top1_loop_equiv_on A ?TA a f2 g'\<close>] .
+    qed
+    have "{g. top1_loop_equiv_on A ?TA a f1 g} = {g. top1_loop_equiv_on A ?TA a f2 g}"
+      using hdir1 hdir2 by (by100 blast)
+    show "c1 = c2" using hf1(2) hf2(2) \<open>{g. top1_loop_equiv_on A ?TA a f1 g} = {g. top1_loop_equiv_on A ?TA a f2 g}\<close> by (by100 simp)
   qed
   \<comment> \<open>Step 1: j_* is a homomorphism.\<close>
   have hincl_AX_cont: "top1_continuous_map_on A ?TA X TX (\<lambda>x. x)"
@@ -11704,6 +11735,7 @@ end
  
   
  
+
 
 
 
