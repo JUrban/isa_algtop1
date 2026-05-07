@@ -1751,6 +1751,68 @@ proof -
     using hkey by (by100 blast)
 qed
 
+\<comment> \<open>Helper: inclusion of subspace induces a group homomorphism on \<pi>_1.\<close>
+lemma subspace_inclusion_induced_hom:
+  assumes "is_topology_on X TX" "A \<subseteq> X" "x0 \<in> A"
+  shows "top1_group_hom_on
+      (top1_fundamental_group_carrier A (subspace_topology X TX A) x0)
+      (top1_fundamental_group_mul A (subspace_topology X TX A) x0)
+      (top1_fundamental_group_carrier X TX x0) (top1_fundamental_group_mul X TX x0)
+      (top1_fundamental_group_induced_on A (subspace_topology X TX A) x0 X TX x0 (\<lambda>x. x))"
+proof -
+  have hTA: "is_topology_on A (subspace_topology X TX A)"
+    by (rule subspace_topology_is_topology_on[OF assms(1) assms(2)])
+  have hincl: "top1_continuous_map_on A (subspace_topology X TX A) X TX (\<lambda>x. x)"
+  proof -
+    from top1_continuous_map_on_restrict_domain_simple[OF top1_continuous_map_on_id[OF assms(1)] assms(2)]
+    show ?thesis unfolding id_def by (by100 simp)
+  qed
+  have ha_X: "x0 \<in> X" using assms(2) assms(3) by (by100 blast)
+  show ?thesis
+    by (rule top1_fundamental_group_induced_on_is_hom[OF hTA assms(1) assms(3) ha_X hincl]) (by100 simp)
+qed
+
+\<comment> \<open>Helper: for subspace inclusion A \<subseteq> X, the induced map on a loop class
+   gives the same class in the larger space.\<close>
+lemma subspace_inclusion_induced_class:
+  assumes "is_topology_on X TX" "A \<subseteq> X" "top1_is_loop_on A (subspace_topology X TX A) x0 g"
+  shows "top1_fundamental_group_induced_on A (subspace_topology X TX A) x0 X TX x0 (\<lambda>x. x)
+      {k. top1_loop_equiv_on A (subspace_topology X TX A) x0 g k}
+    = {k. top1_loop_equiv_on X TX x0 g k}"
+  using inclusion_induced_class[OF assms(2) assms(1) _ assms(3)] by (by100 simp)
+
+\<comment> \<open>Helper: composition of two inclusion-induced maps = single inclusion-induced map.\<close>
+lemma inclusion_induced_comp:
+  assumes "is_topology_on X TX" "A \<subseteq> B" "B \<subseteq> X" "x0 \<in> A"
+      "c \<in> top1_fundamental_group_carrier A (subspace_topology X TX A) x0"
+  shows "top1_fundamental_group_induced_on B (subspace_topology X TX B) x0 X TX x0 (\<lambda>x. x)
+      (top1_fundamental_group_induced_on A (subspace_topology X TX A) x0
+         B (subspace_topology X TX B) x0 (\<lambda>x. x) c)
+    = top1_fundamental_group_induced_on A (subspace_topology X TX A) x0 X TX x0 (\<lambda>x. x) c"
+proof -
+  have hTA: "is_topology_on A (subspace_topology X TX A)"
+    by (rule subspace_topology_is_topology_on[OF assms(1) subset_trans[OF assms(2) assms(3)]])
+  have hTB: "is_topology_on B (subspace_topology X TX B)"
+    by (rule subspace_topology_is_topology_on[OF assms(1) assms(3)])
+  have hAB: "top1_continuous_map_on A (subspace_topology X TX A)
+      B (subspace_topology X TX B) (\<lambda>x. x)"
+  proof -
+    from top1_continuous_map_on_restrict_domain_simple[OF top1_continuous_map_on_id[OF hTB] assms(2)]
+    show ?thesis using subspace_topology_trans[OF assms(2)] unfolding id_def by (by100 simp)
+  qed
+  have hBX: "top1_continuous_map_on B (subspace_topology X TX B) X TX (\<lambda>x. x)"
+  proof -
+    from top1_continuous_map_on_restrict_domain_simple[OF top1_continuous_map_on_id[OF assms(1)] assms(3)]
+    show ?thesis unfolding id_def by (by100 simp)
+  qed
+  have hcomp: "(\<lambda>x::'a. x) \<circ> (\<lambda>x. x) = (\<lambda>x. x)" by (rule ext) (by100 simp)
+  have hx0_B: "x0 \<in> B" using assms(2) assms(4) by (by100 blast)
+  have hx0_X: "x0 \<in> X" using assms(3) hx0_B by (by100 blast)
+  show ?thesis
+    using fundamental_group_induced_comp[OF hTA hTB assms(1) hAB hBX assms(4) _ _ assms(5)]
+      hcomp by (by100 simp)
+qed
+
 theorem Theorem_72_1_attaching_two_cell:
   fixes X :: "'a set" and TX :: "'a set set" and A :: "'a set"
     and h :: "real \<times> real \<Rightarrow> 'a" and a :: 'a
@@ -4587,7 +4649,46 @@ proof -
         let ?AU = "top1_fundamental_group_induced_on A ?TA a ?U ?TU a (\<lambda>x. x)"
         \<comment> \<open>f(kp_A) = kp_U by functoriality: (A\<hookrightarrow>U)* \<circ> (S1\<rightarrow>A)* = (S1\<rightarrow>U)*.\<close>
         have hf_kpA_eq_kpU: "?AU ?kp_A = ?kp_U"
-          sorry \<comment> \<open>fundamental_group_induced_comp: (A\<hookrightarrow>U)* \<circ> (S1\<rightarrow>A)* = (S1\<rightarrow>U)* on [f]-class.\<close>
+        proof -
+          have hS1_top: "is_topology_on top1_S1 top1_S1_topology"
+            using top1_S1_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
+          have hTopU_k: "is_topology_on ?U ?TU"
+            by (rule subspace_topology_is_topology_on[OF hTopX_ns]) (by100 blast)
+          have hAU_cont: "top1_continuous_map_on A ?TA ?U ?TU (\<lambda>x. x)"
+          proof -
+            have "A \<subseteq> ?U" using hA_sub_X hx0_notin_A by (by100 blast)
+            from top1_continuous_map_on_restrict_domain_simple[OF top1_continuous_map_on_id[OF hTopU_k] this]
+            show ?thesis using subspace_topology_trans[OF \<open>A \<subseteq> ?U\<close>] unfolding id_def by (by100 simp)
+          qed
+          have h10_S1: "(1::real, 0::real) \<in> top1_S1" unfolding top1_S1_def by (by100 simp)
+          have hiota_a: "?\<iota> (1, 0) = a" using assms(9) by (by100 simp)
+          have hcomp_eq: "(\<lambda>x. x) \<circ> ?\<iota> = (\<lambda>z. h z)" by (rule ext) (by100 simp)
+          have hf_loop_k: "top1_is_loop_on top1_S1 top1_S1_topology (1, 0) ?f"
+            unfolding top1_is_loop_on_def top1_is_path_on_def
+          proof (intro conjI)
+            have "top1_continuous_map_on (UNIV::real set) top1_open_sets top1_S1 top1_S1_topology top1_R_to_S1"
+              using Theorem_53_1 unfolding top1_covering_map_on_def by (by100 blast)
+            from top1_continuous_map_on_restrict_domain_simple[OF this subset_UNIV]
+            have "top1_continuous_map_on top1_unit_interval
+                (subspace_topology UNIV top1_open_sets top1_unit_interval)
+                top1_S1 top1_S1_topology top1_R_to_S1" .
+            moreover have "?f = top1_R_to_S1"
+            proof (rule ext)
+              fix s :: real show "?f s = top1_R_to_S1 s" unfolding top1_R_to_S1_def by (by100 simp)
+            qed
+            ultimately show "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+                top1_S1 top1_S1_topology ?f"
+              unfolding top1_unit_interval_topology_def using subspace_topology_UNIV_self by (by100 simp)
+          next show "?f 0 = (1::real, 0::real)" by (by100 simp)
+          next show "?f 1 = (1::real, 0::real)" by (by100 simp)
+          qed
+          have hkp_class: "{g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) ?f g}
+              \<in> top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0)"
+            unfolding top1_fundamental_group_carrier_def using hf_loop_k by (by100 blast)
+          show ?thesis
+            using fundamental_group_induced_comp[OF hS1_top hTA_top hTopU_k h\<iota>_cont hAU_cont
+                h10_S1 hiota_a _ hkp_class] hcomp_eq by (by100 simp)
+        qed
         \<comment> \<open>h_iota_c_in says ?AU(c) \<in> \<langle>\<langle>{?kp_U}\<rangle>\<rangle> = \<langle>\<langle>{?AU(?kp_A)}\<rangle>\<rangle>.\<close>
         have hfc_in: "?AU c \<in> top1_normal_subgroup_generated_on
             (top1_fundamental_group_carrier ?U ?TU a) (top1_fundamental_group_mul ?U ?TU a)
@@ -11326,6 +11427,7 @@ end
  
   
  
+
 
 
 
