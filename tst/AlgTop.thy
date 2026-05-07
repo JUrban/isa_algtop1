@@ -6934,9 +6934,61 @@ proof -
                      and h preserves homotopy (continuous map).\<close>
                   have "{k. top1_loop_equiv_on ?U ?TU a ((\<lambda>z. h z) \<circ> ?ell_disk) k}
                       \<in> ?\<psi> ` top1_Z_group"
-                    sorry \<comment> \<open>~80 lines: Lemma_58_1 (def retract) + continuous_preserves_homotopic.
-                       ell_disk \<simeq> r\<circ>ell_disk in B2-{0}, h preserves homotopy.
-                       [(h|_{S1})\<circ>(r\<circ>ell_disk)]_U \<in> image((h|_{S1})_*) = image(\<psi>).\<close>
+                  proof -
+                    \<comment> \<open>image(\<psi>) = image((h|_{S1})_*).\<close>
+                    have himg_eq: "?\<psi> ` top1_Z_group
+                        = (top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1,0)
+                            ?U ?TU a (\<lambda>z. h z)) `
+                          top1_fundamental_group_carrier top1_S1 top1_S1_topology (1,0)"
+                    proof (rule set_eqI, rule iffI)
+                      fix y assume "y \<in> ?\<psi> ` top1_Z_group"
+                      then obtain n where hn: "n \<in> top1_Z_group" "y = ?\<psi> n" by (by100 blast)
+                      have "inv_into (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1,0))
+                          \<phi>_S1 n \<in> top1_fundamental_group_carrier top1_S1 top1_S1_topology (1,0)"
+                      proof -
+                        have "\<phi>_S1 ` top1_fundamental_group_carrier top1_S1 top1_S1_topology (1,0)
+                            = top1_Z_group"
+                          using h\<phi>_bij unfolding bij_betw_def by (by100 blast)
+                        hence "n \<in> \<phi>_S1 ` top1_fundamental_group_carrier top1_S1 top1_S1_topology (1,0)"
+                          using hn(1) by (by100 blast)
+                        thus ?thesis by (rule inv_into_into)
+                      qed
+                      thus "y \<in> (top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1,0)
+                          ?U ?TU a (\<lambda>z. h z)) `
+                        top1_fundamental_group_carrier top1_S1 top1_S1_topology (1,0)"
+                        using hn(2) unfolding comp_def by (by100 blast)
+                    next
+                      fix y assume "y \<in> (top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1,0)
+                          ?U ?TU a (\<lambda>z. h z)) `
+                        top1_fundamental_group_carrier top1_S1 top1_S1_topology (1,0)"
+                      then obtain c where hc: "c \<in> top1_fundamental_group_carrier top1_S1 top1_S1_topology (1,0)"
+                          "y = (top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1,0)
+                              ?U ?TU a (\<lambda>z. h z)) c"
+                        by (by100 blast)
+                      have "\<phi>_S1 c \<in> top1_Z_group"
+                        using h\<phi>_hom hc(1) unfolding top1_group_hom_on_def by (by100 blast)
+                      moreover have "?\<psi> (\<phi>_S1 c) = y"
+                      proof -
+                        have hinj: "inj_on \<phi>_S1 (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1,0))"
+                          using h\<phi>_bij unfolding bij_betw_def by (by100 blast)
+                        have "inv_into (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1,0))
+                            \<phi>_S1 (\<phi>_S1 c) = c"
+                          by (rule inv_into_f_f[OF hinj hc(1)])
+                        thus ?thesis using hc(2) unfolding comp_def by (by100 simp)
+                      qed
+                      ultimately show "y \<in> ?\<psi> ` top1_Z_group" by (by100 blast)
+                    qed
+                    \<comment> \<open>Need: [h\<circ>ell_disk]_U \<in> image((h|_{S1})_*).\<close>
+                    \<comment> \<open>By def retract: ell_disk \<simeq> r\<circ>ell_disk in B2-{0}.
+                       r\<circ>ell_disk is S1 loop. h\<circ>ell_disk \<simeq> h\<circ>(r\<circ>ell_disk) in U.
+                       [h\<circ>(r\<circ>ell_disk)]_U = (h|_{S1})_*([r\<circ>ell_disk]) \<in> image.\<close>
+                    have "{k. top1_loop_equiv_on ?U ?TU a ((\<lambda>z. h z) \<circ> ?ell_disk) k}
+                        \<in> (top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1,0)
+                            ?U ?TU a (\<lambda>z. h z)) `
+                          top1_fundamental_group_carrier top1_S1 top1_S1_topology (1,0)"
+                      sorry \<comment> \<open>Lemma_58_1 + continuous_preserves_path_homotopic + image membership.\<close>
+                    thus ?thesis using himg_eq by (by100 simp)
+                  qed
                   thus ?thesis using h\<psi>_img_N by (by100 blast)
                 qed
                 \<comment> \<open>Step C: [?bc_f0]_U = [h\<circ>\<ell>]_U (from agreement on I_set + loop_agree_on_I).\<close>
