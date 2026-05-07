@@ -6860,7 +6860,26 @@ proof -
                     \<comment> \<open>Step 6: [h\<circ>ell_disk]_U = [h\<circ>(r\<circ>ell_disk)]_U (from homotopy).\<close>
                     have "{k. top1_loop_equiv_on ?U ?TU a ((\<lambda>z. h z) \<circ> ?ell_disk) k}
                         = {k. top1_loop_equiv_on ?U ?TU a ((\<lambda>z. h z) \<circ> (\<lambda>t. H_ret (?ell_disk t, 1))) k}"
-                      sorry \<comment> \<open>Homotopic loops have same class.\<close>
+                    proof -
+                      have hle: "top1_loop_equiv_on ?U ?TU a
+                          ((\<lambda>z. h z) \<circ> ?ell_disk) ((\<lambda>z. h z) \<circ> (\<lambda>t. H_ret (?ell_disk t, 1)))"
+                        sorry \<comment> \<open>From hh_hom (path_homotopic) + both loops at a.\<close>
+                      show ?thesis
+                      proof (rule set_eqI, rule iffI)
+                        fix k assume hk: "k \<in> {k. top1_loop_equiv_on ?U ?TU a ((\<lambda>z. h z) \<circ> ?ell_disk) k}"
+                        hence "top1_loop_equiv_on ?U ?TU a ((\<lambda>z. h z) \<circ> ?ell_disk) k" by (by100 blast)
+                        from top1_loop_equiv_on_trans[OF hTopU_outer
+                            top1_loop_equiv_on_sym[OF hle] this]
+                        show "k \<in> {k. top1_loop_equiv_on ?U ?TU a ((\<lambda>z. h z) \<circ> (\<lambda>t. H_ret (?ell_disk t, 1))) k}"
+                          by (by100 blast)
+                      next
+                        fix k assume "k \<in> {k. top1_loop_equiv_on ?U ?TU a ((\<lambda>z. h z) \<circ> (\<lambda>t. H_ret (?ell_disk t, 1))) k}"
+                        hence "top1_loop_equiv_on ?U ?TU a ((\<lambda>z. h z) \<circ> (\<lambda>t. H_ret (?ell_disk t, 1))) k" by (by100 blast)
+                        from top1_loop_equiv_on_trans[OF hTopU_outer hle this]
+                        show "k \<in> {k. top1_loop_equiv_on ?U ?TU a ((\<lambda>z. h z) \<circ> ?ell_disk) k}"
+                          by (by100 blast)
+                      qed
+                    qed
                     thus ?thesis using hr_class by (by100 simp)
                   qed
                   thus ?thesis using h\<psi>_img_N by (by100 blast)
