@@ -276,12 +276,52 @@ proof -
         have hS_sub: "?S \<subseteq> top1_unit_interval" by (by100 blast)
         have hS_conn_on: "top1_connected_on ?S
             (subspace_topology top1_unit_interval top1_unit_interval_topology ?S)"
-          sorry \<comment> \<open>Bridge: HOL-Analysis connected \<longleftrightarrow> top1_connected_on for subspace of R.\<close>
+        proof -
+          have "top1_connected_on ?S (subspace_topology UNIV top1_open_sets ?S)"
+            using top1_connected_on_subspace_open_iff_connected hS_conn by (by100 blast)
+          moreover have "subspace_topology UNIV top1_open_sets ?S
+              = subspace_topology top1_unit_interval top1_unit_interval_topology ?S"
+            unfolding top1_unit_interval_topology_def
+            using subspace_topology_trans[OF hS_sub] by (by100 simp)
+          ultimately show ?thesis by (by100 simp)
+        qed
         \<comment> \<open>Restrict h to S: continuous S \<rightarrow> A-{p}.\<close>
         have hh_restr: "top1_continuous_map_on ?S
             (subspace_topology top1_unit_interval top1_unit_interval_topology ?S)
             (A - {p}) (subspace_topology A ?TA (A - {p})) h"
-          sorry \<comment> \<open>Restrict domain of hh_cont to S \<subseteq> I and codomain to A-{p} \<subseteq> A.\<close>
+        proof -
+          \<comment> \<open>Restrict domain from I to S.\<close>
+          from top1_continuous_map_on_restrict_domain_simple[OF hh_cont hS_sub]
+          have h1: "top1_continuous_map_on ?S
+              (subspace_topology top1_unit_interval top1_unit_interval_topology ?S) A ?TA h"
+            using subspace_topology_trans[OF hS_sub] by (by100 simp)
+          \<comment> \<open>h maps S into A-{p}.\<close>
+          have himg_sub: "h ` ?S \<subseteq> A - {p}"
+          proof
+            fix y assume "y \<in> h ` ?S"
+            then obtain s where hs: "s \<in> ?S" "y = h s" by (by100 blast)
+            have "s \<in> top1_unit_interval" using hs(1) by (by100 blast)
+            hence "h s \<in> A" using hbij unfolding bij_betw_def by (by100 blast)
+            moreover have "h s \<noteq> p"
+            proof
+              assume heq: "h s = p"
+              have hip: "inv_into top1_unit_interval h p \<in> top1_unit_interval"
+                using inv_into_into[of p h top1_unit_interval] \<open>p \<in> A\<close> himg by (by100 force)
+              have "h (inv_into top1_unit_interval h p) = p"
+                using f_inv_into_f[of p h top1_unit_interval] \<open>p \<in> A\<close> himg by (by100 force)
+              hence "h s = h (inv_into top1_unit_interval h p)" using heq by (by100 simp)
+              hence "s = inv_into top1_unit_interval h p"
+                using inj_onD[OF hinj] \<open>s \<in> top1_unit_interval\<close> hip by (by100 blast)
+              thus False using hs(1) by (by100 blast)
+            qed
+            ultimately show "y \<in> A - {p}" using hs(2) by (by100 blast)
+          qed
+          have hAp_sub: "A - {p} \<subseteq> A" by (by100 blast)
+          \<comment> \<open>Shrink codomain from A to A-{p}.\<close>
+          show ?thesis
+            using top1_continuous_map_on_codomain_shrink[OF h1 himg_sub hAp_sub]
+              subspace_topology_trans[OF hAp_sub] by (by100 simp)
+        qed
         have hTI_S: "is_topology_on ?S
             (subspace_topology top1_unit_interval top1_unit_interval_topology ?S)"
           by (rule subspace_topology_is_topology_on[OF top1_unit_interval_topology_is_topology_on hS_sub])
