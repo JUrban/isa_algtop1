@@ -439,8 +439,24 @@ proof -
     qed
     \<comment> \<open>Step 4b: h is bijective.\<close>
     have hh_bij: "bij_betw h top1_unit_interval (A1 \<union> A2)"
-      sorry \<comment> \<open>g1 bij [0,1]\<rightarrow>A1 gives h bij [0,1/2]\<rightarrow>A1. g2 bij [0,1]\<rightarrow>A2 gives h bij (1/2,1]\<rightarrow>A2-{c}.
-           Images disjoint except c at boundary. Combined: h bij [0,1]\<rightarrow>A1\<union>A2.\<close>
+      unfolding bij_betw_def
+    proof (intro conjI)
+      show "inj_on h top1_unit_interval"
+        sorry \<comment> \<open>g1 inj on I mapped to [0,1/2], g2 inj on I mapped to (1/2,1].
+             A1 \<inter> A2 = {c}, c = h(1/2). Only collision at boundary.\<close>
+      show "h ` top1_unit_interval = A1 \<union> A2"
+      proof (rule set_eqI, rule iffI)
+        fix y assume "y \<in> h ` top1_unit_interval"
+        then obtain t where "t \<in> top1_unit_interval" "y = h t" by (by100 blast)
+        thus "y \<in> A1 \<union> A2"
+          using hh_cont unfolding top1_continuous_map_on_def by (by100 blast)
+      next
+        fix y assume "y \<in> A1 \<union> A2"
+        show "y \<in> h ` top1_unit_interval"
+          sorry \<comment> \<open>y \<in> A1: g1^{-1}(y) \<in> I, t = g1^{-1}(y)/2 gives h(t) = y.
+               y \<in> A2: g2^{-1}(y) \<in> I, t = (g2^{-1}(y)+1)/2 gives h(t) = y.\<close>
+      qed
+    qed
     \<comment> \<open>Step 4c: continuous bijection from compact to Hausdorff is homeomorphism.\<close>
     have hI_compact: "top1_compact_on top1_unit_interval top1_unit_interval_topology"
     proof -
