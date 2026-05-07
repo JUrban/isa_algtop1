@@ -5507,9 +5507,118 @@ proof -
                 \<comment> \<open>LHS: \<Phi>(mul(c1,c2)) = {k. le(U,a,bc(f1*f2),k)} (via bc congruence).\<close>
                 \<comment> \<open>RHS: mul(\<Phi>(c1),\<Phi>(c2)) = {k. le(U,a,bc(f1)*bc(f2),k)} (via set computation).\<close>
                 \<comment> \<open>These equal since bc(f1*f2) \<simeq> bc(f1)*bc(f2) (Theorem 52.1).\<close>
+                \<comment> \<open>bc(f1), bc(f2) are loops at a.\<close>
+                have hbc1: "top1_is_loop_on ?U ?TU a (?bc f1)"
+                  by (rule top1_basepoint_change_is_loop[OF hTopU_outer hrev\<delta>_path_U hf1(1)])
+                have hbc2: "top1_is_loop_on ?U ?TU a (?bc f2)"
+                  by (rule top1_basepoint_change_is_loop[OF hTopU_outer hrev\<delta>_path_U hf2(1)])
+                have hbc12_loop: "top1_is_loop_on ?U ?TU a (top1_path_product (?bc f1) (?bc f2))"
+                  using top1_path_product_is_loop[OF hTopU_outer hbc1 hbc2] .
+                \<comment> \<open>Convert Thm 52.1 to loop_equiv.\<close>
+                have hT52_le: "top1_loop_equiv_on ?U ?TU a
+                    (?bc (top1_path_product f1 f2)) (top1_path_product (?bc f1) (?bc f2))"
+                proof -
+                  have hbc12: "top1_is_loop_on ?U ?TU a (?bc (top1_path_product f1 f2))"
+                    using top1_basepoint_change_is_loop[OF hTopU_outer hrev\<delta>_path_U
+                        top1_path_product_is_loop[OF hTopU_outer hf1(1) hf2(1)]] .
+                  show ?thesis unfolding top1_loop_equiv_on_def
+                    using hbc12 hbc12_loop hT52 by (by100 blast)
+                qed
+                \<comment> \<open>Both sides equal {k. le(U,a,bc(f1)*bc(f2),k)}.\<close>
+                have hLHS: "?\<Phi> (top1_fundamental_group_mul ?U ?TU ?b c1 c2)
+                    = {k. top1_loop_equiv_on ?U ?TU a (top1_path_product (?bc f1) (?bc f2)) k}"
+                proof -
+                  \<comment> \<open>mul(c1,c2) = [f1*f2] by fundamental_group_mul_class.\<close>
+                  have hmul_eq: "top1_fundamental_group_mul ?U ?TU ?b c1 c2
+                      = {h. top1_loop_equiv_on ?U ?TU ?b (top1_path_product f1 f2) h}"
+                    unfolding hf1(2) hf2(2)
+                    by (rule top1_fundamental_group_mul_class[OF hTopU_outer hf1(1) hf2(1)])
+                  \<comment> \<open>\<Phi>([f1*f2]) = [bc(f1*f2)] (by bc congruence, same pattern as Part 1).\<close>
+                  have hf12: "top1_is_loop_on ?U ?TU ?b (top1_path_product f1 f2)"
+                    using top1_path_product_is_loop[OF hTopU_outer hf1(1) hf2(1)] .
+                  have hPhi_mul: "?\<Phi> (top1_fundamental_group_mul ?U ?TU ?b c1 c2)
+                      = {k. top1_loop_equiv_on ?U ?TU a (?bc (top1_path_product f1 f2)) k}"
+                  proof (rule set_eqI, rule iffI)
+                    fix k assume "k \<in> ?\<Phi> (top1_fundamental_group_mul ?U ?TU ?b c1 c2)"
+                    then obtain g where hg_in: "g \<in> top1_fundamental_group_mul ?U ?TU ?b c1 c2"
+                        and hgk: "top1_loop_equiv_on ?U ?TU a (?bc g) k" by (by100 blast)
+                    have "top1_loop_equiv_on ?U ?TU ?b (top1_path_product f1 f2) g"
+                      using hg_in hmul_eq by (by100 blast)
+                    hence "top1_loop_equiv_on ?U ?TU a (?bc (top1_path_product f1 f2)) (?bc g)"
+                      using top1_basepoint_change_loop_equiv[OF hTopU_outer hrev\<delta>_path_U hf12]
+                      unfolding top1_loop_equiv_on_def by (by100 blast)
+                    from top1_loop_equiv_on_trans[OF hTopU_outer this hgk]
+                    show "k \<in> {k. top1_loop_equiv_on ?U ?TU a (?bc (top1_path_product f1 f2)) k}"
+                      by (by100 blast)
+                  next
+                    fix k assume "k \<in> {k. top1_loop_equiv_on ?U ?TU a (?bc (top1_path_product f1 f2)) k}"
+                    moreover have "top1_path_product f1 f2 \<in> top1_fundamental_group_mul ?U ?TU ?b c1 c2"
+                      using hmul_eq top1_loop_equiv_on_refl[OF hf12] by (by100 blast)
+                    ultimately show "k \<in> ?\<Phi> (top1_fundamental_group_mul ?U ?TU ?b c1 c2)"
+                      by (by100 blast)
+                  qed
+                  \<comment> \<open>[bc(f1*f2)] = [bc(f1)*bc(f2)] by Theorem_52_1.\<close>
+                  show ?thesis
+                  proof (rule set_eqI, rule iffI)
+                    fix k assume "k \<in> ?\<Phi> (top1_fundamental_group_mul ?U ?TU ?b c1 c2)"
+                    hence "top1_loop_equiv_on ?U ?TU a (?bc (top1_path_product f1 f2)) k"
+                      using hPhi_mul by (by100 blast)
+                    from top1_loop_equiv_on_trans[OF hTopU_outer
+                        top1_loop_equiv_on_sym[OF hT52_le] this]
+                    show "k \<in> {k. top1_loop_equiv_on ?U ?TU a (top1_path_product (?bc f1) (?bc f2)) k}"
+                      by (by100 blast)
+                  next
+                    fix k assume "k \<in> {k. top1_loop_equiv_on ?U ?TU a (top1_path_product (?bc f1) (?bc f2)) k}"
+                    hence "top1_loop_equiv_on ?U ?TU a (top1_path_product (?bc f1) (?bc f2)) k"
+                      by (by100 blast)
+                    from top1_loop_equiv_on_trans[OF hTopU_outer hT52_le this]
+                    have "top1_loop_equiv_on ?U ?TU a (?bc (top1_path_product f1 f2)) k" .
+                    thus "k \<in> ?\<Phi> (top1_fundamental_group_mul ?U ?TU ?b c1 c2)"
+                      using hPhi_mul by (by100 blast)
+                  qed
+                qed
+                \<comment> \<open>\<Phi>(c1) = [bc(f1)], \<Phi>(c2) = [bc(f2)] (shown in Part 1).\<close>
+                have hPc1: "?\<Phi> c1 = {k. top1_loop_equiv_on ?U ?TU a (?bc f1) k}"
+                proof (rule set_eqI, rule iffI)
+                  fix k assume "k \<in> ?\<Phi> c1"
+                  then obtain g where hfg: "g \<in> c1" and hgk: "top1_loop_equiv_on ?U ?TU a (?bc g) k"
+                    by (by100 blast)
+                  have "top1_loop_equiv_on ?U ?TU ?b f1 g"
+                    using hfg hf1(2) by (by100 blast)
+                  hence "top1_loop_equiv_on ?U ?TU a (?bc f1) (?bc g)"
+                    using top1_basepoint_change_loop_equiv[OF hTopU_outer hrev\<delta>_path_U hf1(1)]
+                    unfolding top1_loop_equiv_on_def by (by100 blast)
+                  from top1_loop_equiv_on_trans[OF hTopU_outer this hgk]
+                  show "k \<in> {k. top1_loop_equiv_on ?U ?TU a (?bc f1) k}" by (by100 blast)
+                next
+                  fix k assume "k \<in> {k. top1_loop_equiv_on ?U ?TU a (?bc f1) k}"
+                  moreover have "f1 \<in> c1" using hf1(2) top1_loop_equiv_on_refl[OF hf1(1)] by (by100 blast)
+                  ultimately show "k \<in> ?\<Phi> c1" by (by100 blast)
+                qed
+                have hPc2: "?\<Phi> c2 = {k. top1_loop_equiv_on ?U ?TU a (?bc f2) k}"
+                proof (rule set_eqI, rule iffI)
+                  fix k assume "k \<in> ?\<Phi> c2"
+                  then obtain g where hfg: "g \<in> c2" and hgk: "top1_loop_equiv_on ?U ?TU a (?bc g) k"
+                    by (by100 blast)
+                  have "top1_loop_equiv_on ?U ?TU ?b f2 g"
+                    using hfg hf2(2) by (by100 blast)
+                  hence "top1_loop_equiv_on ?U ?TU a (?bc f2) (?bc g)"
+                    using top1_basepoint_change_loop_equiv[OF hTopU_outer hrev\<delta>_path_U hf2(1)]
+                    unfolding top1_loop_equiv_on_def by (by100 blast)
+                  from top1_loop_equiv_on_trans[OF hTopU_outer this hgk]
+                  show "k \<in> {k. top1_loop_equiv_on ?U ?TU a (?bc f2) k}" by (by100 blast)
+                next
+                  fix k assume "k \<in> {k. top1_loop_equiv_on ?U ?TU a (?bc f2) k}"
+                  moreover have "f2 \<in> c2" using hf2(2) top1_loop_equiv_on_refl[OF hf2(1)] by (by100 blast)
+                  ultimately show "k \<in> ?\<Phi> c2" by (by100 blast)
+                qed
+                have hRHS: "top1_fundamental_group_mul ?U ?TU a (?\<Phi> c1) (?\<Phi> c2)
+                    = {k. top1_loop_equiv_on ?U ?TU a (top1_path_product (?bc f1) (?bc f2)) k}"
+                  unfolding hPc1 hPc2
+                  by (rule top1_fundamental_group_mul_class[OF hTopU_outer hbc1 hbc2])
                 show "?\<Phi> (top1_fundamental_group_mul ?U ?TU ?b c1 c2)
                     = top1_fundamental_group_mul ?U ?TU a (?\<Phi> c1) (?\<Phi> c2)"
-                  sorry \<comment> \<open>Set equality from Theorem_52_1 + bc congruence + mul def.\<close>
+                  using hLHS hRHS by (by100 fast)
               qed
               show ?thesis unfolding top1_group_hom_on_def using hP1 hP2 by (by100 blast)
             qed
