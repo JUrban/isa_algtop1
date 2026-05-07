@@ -37,6 +37,15 @@ lemma Lemma_65_1_K4_subgraph:
       and "top1_arc_endpoints_on e41 (subspace_topology top1_S2 top1_S2_topology e41) = {a4,a1}"
       and "top1_arc_endpoints_on e13 (subspace_topology top1_S2 top1_S2_topology e13) = {a1,a3}"
       and "top1_arc_endpoints_on e24 (subspace_topology top1_S2 top1_S2_topology e24) = {a2,a4}"
+      \<comment> \<open>K_4 planarity: arcs only intersect at shared vertices.\<close>
+      and "e12 \<inter> e34 = {}" and "e23 \<inter> e41 = {}"
+      and "e12 \<inter> e23 = {a2}" and "e23 \<inter> e34 = {a3}"
+      and "e34 \<inter> e41 = {a4}" and "e41 \<inter> e12 = {a1}"
+      and "e13 \<inter> e12 = {a1}" and "e13 \<inter> e23 = {a3}"
+      and "e13 \<inter> e34 = {a3}" and "e13 \<inter> e41 = {a1}"
+      and "e13 \<inter> e24 \<subseteq> {a1,a2,a3,a4}"
+      and "e24 \<inter> e12 = {a2}" and "e24 \<inter> e23 = {a2}"
+      and "e24 \<inter> e34 = {a4}" and "e24 \<inter> e41 = {a4}"
       \<comment> \<open>p, q are interior points of the two 'diagonal' edges.\<close>
       and "p \<in> e13 - {a1, a3}" and "q \<in> e24 - {a2, a4}"
       \<comment> \<open>C is the 4-cycle a_1 a_2 a_3 a_4 a_1.\<close>
@@ -86,9 +95,125 @@ proof -
   \<comment> \<open>Step 4: Apply Theorem 63.1: \<alpha> is a path in U from a to b, \<beta> path in V from b to a.
      U\<inter>V = A \<union> B with A,B disjoint open, a \<in> A, b \<in> B.
      Therefore \<alpha>*\<beta> is not nulhomotopic in X.\<close>
+  \<comment> \<open>Step 1: Construct D_1 = sub-arc of e13 from p to a3, then e23, then sub-arc of e24 to q.
+     D_2 = sub-arc of e24 from q to a4, then e41, then sub-arc of e13 to p.
+     D = D_1 \<union> D_2 is a simple closed curve.\<close>
+  \<comment> \<open>Split e13 at p into two sub-arcs: e13_a1p (from a1 to p) and e13_pa3 (from p to a3).\<close>
+  obtain e13_a1p e13_pa3 where he13_split: "e13 = e13_a1p \<union> e13_pa3"
+      "e13_a1p \<inter> e13_pa3 = {p}"
+      "top1_is_arc_on e13_a1p (subspace_topology top1_S2 top1_S2_topology e13_a1p)"
+      "top1_is_arc_on e13_pa3 (subspace_topology top1_S2 top1_S2_topology e13_pa3)"
+      "a1 \<in> e13_a1p" "a3 \<in> e13_pa3" "p \<in> e13_a1p" "p \<in> e13_pa3"
+    sorry \<comment> \<open>Arc splitting at interior point p.\<close>
+  \<comment> \<open>Split e24 at q into two sub-arcs.\<close>
+  obtain e24_a2q e24_qa4 where he24_split: "e24 = e24_a2q \<union> e24_qa4"
+      "e24_a2q \<inter> e24_qa4 = {q}"
+      "top1_is_arc_on e24_a2q (subspace_topology top1_S2 top1_S2_topology e24_a2q)"
+      "top1_is_arc_on e24_qa4 (subspace_topology top1_S2 top1_S2_topology e24_qa4)"
+      "a2 \<in> e24_a2q" "a4 \<in> e24_qa4" "q \<in> e24_a2q" "q \<in> e24_qa4"
+    sorry \<comment> \<open>Arc splitting at interior point q.\<close>
+  \<comment> \<open>D_1 = e13_pa3 \<union> e23 \<union> e24_a2q (arc from p through a3, a2 to q).
+     D_2 = e24_qa4 \<union> e41 \<union> e13_a1p (arc from q through a4, a1 to p).\<close>
+  let ?D1 = "e13_pa3 \<union> e23 \<union> e24_a2q"
+  let ?D2 = "e24_qa4 \<union> e41 \<union> e13_a1p"
+  \<comment> \<open>D_1, D_2 are arcs.\<close>
+  have hD1_arc: "top1_is_arc_on ?D1 (subspace_topology top1_S2 top1_S2_topology ?D1)"
+    sorry \<comment> \<open>Concatenation of three arcs meeting at endpoints.\<close>
+  have hD2_arc: "top1_is_arc_on ?D2 (subspace_topology top1_S2 top1_S2_topology ?D2)"
+    sorry \<comment> \<open>Concatenation of three arcs meeting at endpoints.\<close>
+  have he13_sub: "e13 \<subseteq> top1_S2" by (rule assms(8))
+  have he24_sub: "e24 \<subseteq> top1_S2" by (rule assms(9))
+  have he23_sub: "e23 \<subseteq> top1_S2" by (rule assms(5))
+  have he41_sub: "e41 \<subseteq> top1_S2" by (rule assms(7))
+  have hD1_sub: "?D1 \<subseteq> top1_S2"
+    using he13_sub he23_sub he24_sub he13_split(1) he24_split(1) by (by100 blast)
+  have hD2_sub: "?D2 \<subseteq> top1_S2"
+    using he24_sub he41_sub he13_sub he24_split(1) he13_split(1) by (by100 blast)
+  \<comment> \<open>D_1 and D_2 meet only at {p,q}.\<close>
+  have hD12_inter: "?D1 \<inter> ?D2 = {p, q}" sorry
+  \<comment> \<open>D = D_1 \<union> D_2 is a simple closed curve.\<close>
+  let ?D = "?D1 \<union> ?D2"
+  have hD_scc: "top1_simple_closed_curve_on top1_S2 top1_S2_topology ?D"
+    sorry \<comment> \<open>Two arcs meeting at endpoints form a simple closed curve.\<close>
+  \<comment> \<open>Step 2: U = S2-D_1, V = S2-D_2 are open in X = S2-{p,q}.\<close>
+  let ?U_loc = "?X - ?D1 \<union> {p, q}" and ?V_loc = "?X - ?D2 \<union> {p, q}"
+  \<comment> \<open>Actually: use Munkres' U = S2-D_1, V = S2-D_2 restricted to X.\<close>
+  let ?U' = "top1_S2 - ?D1" and ?V' = "top1_S2 - ?D2"
+  have hU'_open: "openin_on top1_S2 top1_S2_topology ?U'"
+  proof -
+    have "closedin_on top1_S2 top1_S2_topology ?D1"
+      by (rule arc_in_S2_closed[OF hD1_sub hD1_arc])
+    thus ?thesis using hTopS2 unfolding closedin_on_def openin_on_def is_topology_on_def
+      by (by100 blast)
+  qed
+  have hV'_open: "openin_on top1_S2 top1_S2_topology ?V'"
+  proof -
+    have "closedin_on top1_S2 top1_S2_topology ?D2"
+      by (rule arc_in_S2_closed[OF hD2_sub hD2_arc])
+    thus ?thesis using hTopS2 unfolding closedin_on_def openin_on_def is_topology_on_def
+      by (by100 blast)
+  qed
+  have hU'V'_union: "?U' \<union> ?V' = ?X"
+  proof -
+    have h1: "?U' \<union> ?V' = top1_S2 - (?D1 \<inter> ?D2)" by (by100 blast)
+    have h2: "?D1 \<inter> ?D2 = {p, q}" by (rule hD12_inter)
+    show ?thesis using h1 h2 by (by100 force)
+  qed
+  \<comment> \<open>U', V' are open in X (subspace of S2).\<close>
+  have hU'_sub_X: "?U' \<subseteq> ?X"
+  proof -
+    have "p \<in> ?D1" using he13_split(8) by (by100 blast)
+    moreover have "q \<in> ?D1" using he24_split(7) by (by100 blast)
+    ultimately show ?thesis by (by100 blast)
+  qed
+  have hV'_sub_X: "?V' \<subseteq> ?X"
+  proof -
+    have "p \<in> ?D2" using he13_split(7) by (by100 blast)
+    moreover have "q \<in> ?D2" using he24_split(8) by (by100 blast)
+    ultimately show ?thesis by (by100 blast)
+  qed
+  have hU'_open_X: "openin_on ?X ?TX ?U'"
+    unfolding openin_on_def
+  proof (intro conjI)
+    show "?U' \<subseteq> ?X" by (rule hU'_sub_X)
+    have "?U' \<in> top1_S2_topology" using hU'_open unfolding openin_on_def by (by100 blast)
+    hence "?U' \<inter> ?X \<in> ?TX" unfolding subspace_topology_def by (by100 blast)
+    moreover have "?U' \<inter> ?X = ?U'" using hU'_sub_X by (by100 blast)
+    ultimately show "?U' \<in> ?TX" by (by100 simp)
+  qed
+  have hV'_open_X: "openin_on ?X ?TX ?V'"
+    unfolding openin_on_def
+  proof (intro conjI)
+    show "?V' \<subseteq> ?X" by (rule hV'_sub_X)
+    have "?V' \<in> top1_S2_topology" using hV'_open unfolding openin_on_def by (by100 blast)
+    hence "?V' \<inter> ?X \<in> ?TX" unfolding subspace_topology_def by (by100 blast)
+    moreover have "?V' \<inter> ?X = ?V'" using hV'_sub_X by (by100 blast)
+    ultimately show "?V' \<in> ?TX" by (by100 simp)
+  qed
+  \<comment> \<open>Step 3: U' \<inter> V' = S2 - D has two path-components (by JCT on D).\<close>
+  have hUV_eq: "?U' \<inter> ?V' = top1_S2 - ?D" by (by100 blast)
+  have hUV_sep: "top1_separates_on top1_S2 top1_S2_topology ?D"
+    by (rule Theorem_61_3_JordanSeparation_S2[OF assms(1) hD_scc])
+  \<comment> \<open>Get two components A, B of S2 - D.\<close>
+  obtain A B where hAB: "?U' \<inter> ?V' = A \<union> B" "A \<inter> B = {}"
+      "openin_on ?X ?TX A" "openin_on ?X ?TX B" "A \<noteq> {}" "B \<noteq> {}"
+    sorry \<comment> \<open>From separation + open-in-X transfer.\<close>
+  \<comment> \<open>Step 4: Choose points x \<in> e12 (in one component), y \<in> e34 (other component).\<close>
+  obtain x y where hx: "x \<in> A" "x \<in> e12 - {a1, a2}" and hy: "y \<in> B" "y \<in> e34 - {a3, a4}"
+    sorry \<comment> \<open>e12 and e34 are in different components of S2-D.\<close>
+  \<comment> \<open>Step 5: Construct \<alpha>: path in U' from x to y (via a1, a4 or similar).
+     \<beta>: path in V' from y to x (via a3, a2).\<close>
+  obtain \<alpha> where h\<alpha>: "top1_is_path_on ?U' (subspace_topology top1_S2 top1_S2_topology ?U') x y \<alpha>"
+    sorry \<comment> \<open>Path in S2-D_1 from x to y.\<close>
+  obtain \<beta> where h\<beta>: "top1_is_path_on ?V' (subspace_topology top1_S2 top1_S2_topology ?V') y x \<beta>"
+    sorry \<comment> \<open>Path in S2-D_2 from y to x.\<close>
+  \<comment> \<open>Step 6: Apply Theorem_63_1: \<alpha>*\<beta> is not nulhomotopic in X.\<close>
+  have h\<alpha>\<beta>_nontrivial: "\<not> top1_path_homotopic_on ?X ?TX x x
+      (top1_path_product \<alpha> \<beta>) (top1_constant_path x)"
+    sorry \<comment> \<open>Theorem_63_1_loop_nontrivial with U', V', A, B, x, y.\<close>
+  \<comment> \<open>Step 7: f is homotopic to \<alpha>*\<beta> (both traverse C), so f is nontrivial.\<close>
   show ?thesis
-    sorry \<comment> \<open>Requires: (1) open cover setup, (2) loop decomposition into \<alpha>*\<beta>,
-         (3) U\<inter>V two-component argument, (4) application of Theorem_63_1_loop_nontrivial.\<close>
+    sorry \<comment> \<open>Transfer: f ~ \<alpha>*\<beta> (since both are loops on C traversing in same direction).\<close>
 qed
 
 (** from \<S>65 Theorem 65.2: inclusion C \<rightarrow> S^2 - p - q induces fundamental group iso **)
