@@ -3691,7 +3691,83 @@ proof -
              Since inclusion is identity: [rev(\<delta>)-hat_U(g)]_X = [rev(\<delta>)-hat_X(g)]_X.
              And rev(\<delta>)-hat_X(\<delta>-hat_X(f)) = [f] (roundtrip).
              So incl*_a([rev(\<delta>)-hat_U(g)]) = [f].\<close>
-          sorry \<comment> \<open>Base change argument: surj at b \<Longrightarrow> surj at a via \<delta>-transfer.\<close>
+        proof
+          fix c assume hc: "c \<in> top1_fundamental_group_carrier X TX a"
+          obtain f where hf: "top1_is_loop_on X TX a f" "c = {g. top1_loop_equiv_on X TX a f g}"
+            using hc unfolding top1_fundamental_group_carrier_def by (by100 blast)
+          \<comment> \<open>Base-change f from a to b in X: f' = basepoint_change(X, a, b, \<delta>, f).\<close>
+          let ?f' = "top1_basepoint_change_on X TX a ?b ?\<delta> f"
+          have hf'_loop: "top1_is_loop_on X TX ?b ?f'"
+            by (rule top1_basepoint_change_is_loop[OF hTopX_ns h\<delta>_path hf(1)])
+          have hf'_class: "{g. top1_loop_equiv_on X TX ?b ?f' g}
+              \<in> top1_fundamental_group_carrier X TX ?b"
+            unfolding top1_fundamental_group_carrier_def using hf'_loop by (by100 blast)
+          \<comment> \<open>By surjectivity at b: \<exists>g loop in U at b with [g]_X = [f']_X.\<close>
+          have "\<exists>cu \<in> top1_fundamental_group_carrier ?U ?TU ?b.
+              top1_fundamental_group_induced_on ?U ?TU ?b X TX ?b (\<lambda>x. x) cu
+              = {g. top1_loop_equiv_on X TX ?b ?f' g}"
+          proof -
+            have "{g. top1_loop_equiv_on X TX ?b ?f' g} \<in>
+                (top1_fundamental_group_induced_on ?U ?TU ?b X TX ?b (\<lambda>x. x))
+                ` top1_fundamental_group_carrier ?U ?TU ?b"
+              using hincl_surj_b hf'_class by (by100 simp)
+            thus ?thesis by (by100 blast)
+          qed
+          then obtain cu where hcu: "cu \<in> top1_fundamental_group_carrier ?U ?TU ?b"
+              "top1_fundamental_group_induced_on ?U ?TU ?b X TX ?b (\<lambda>x. x) cu
+                = {g. top1_loop_equiv_on X TX ?b ?f' g}" by (by100 blast)
+          obtain g where hg: "top1_is_loop_on ?U ?TU ?b g" "cu = {k. top1_loop_equiv_on ?U ?TU ?b g k}"
+            using hcu(1) unfolding top1_fundamental_group_carrier_def by (by100 blast)
+          \<comment> \<open>Base-change g from b to a in U: g' = basepoint_change(U, b, a, rev(\<delta>), g).\<close>
+          let ?revd = "top1_path_reverse ?\<delta>"
+          let ?g' = "top1_basepoint_change_on ?U ?TU ?b a ?revd g"
+          \<comment> \<open>g' is a loop in U at a. incl_a*([g']_U) = [g']_X = [rev(\<delta>)^_X(g)]_X.\<close>
+          \<comment> \<open>Since g ~ f' in X, rev(\<delta>)^_X(g) ~ rev(\<delta>)^_X(f') in X.\<close>
+          \<comment> \<open>By roundtrip: rev(\<delta>)^_X(\<delta>^_X(f)) ~ f. So rev(\<delta>)^_X(f') ~ f.\<close>
+          \<comment> \<open>Chaining: rev(\<delta>)^_X(g) ~ rev(\<delta>)^_X(f') ~ f. So [g']_X = [f] = c.\<close>
+          \<comment> \<open>Step 1: g' is a loop in U at a.\<close>
+          have hTopU_loc: "is_topology_on ?U ?TU"
+            by (rule subspace_topology_is_topology_on[OF hTopX_ns]) (by100 blast)
+          have hrevd_path_U: "top1_is_path_on ?U ?TU ?b a ?revd"
+            sorry \<comment> \<open>rev(\<delta>) is a path in U from b to a (reverse of \<delta> which is in U).\<close>
+          have hg'_loop_U: "top1_is_loop_on ?U ?TU a ?g'"
+            by (rule top1_basepoint_change_is_loop[OF hTopU_loc hrevd_path_U hg(1)])
+          have hg'_class_U: "{k. top1_loop_equiv_on ?U ?TU a ?g' k}
+              \<in> top1_fundamental_group_carrier ?U ?TU a"
+            unfolding top1_fundamental_group_carrier_def using hg'_loop_U by (by100 blast)
+          \<comment> \<open>Step 2: incl_a*([g']_U) = [g']_X (by inclusion_induced_class).\<close>
+          have hA_sub_U_loc: "?U \<subseteq> X" by (by100 blast)
+          \<comment> \<open>Step 3: g' in U = g' in X (since \<iota> = identity on functions).
+             rev(\<delta>)^_X(g) ~ rev(\<delta>)^_X(f') in X (since g ~ f' in X).
+             rev(\<delta>)^_X(f') = rev(\<delta>)^_X(\<delta>^_X(f)) ~ f in X (by roundtrip).\<close>
+          \<comment> \<open>Key fact: incl_b*([g]_U) = [f']_X, i.e., g ~ f' in X.\<close>
+          have hg_equiv_f'_X: "top1_loop_equiv_on X TX ?b g ?f'"
+            sorry \<comment> \<open>From hcu(2): incl*_b([g]_U) = [f']_X, unfold induced class.\<close>
+          \<comment> \<open>Apply rev(\<delta>) base change in X to both sides.\<close>
+          have hrevd_path_X: "top1_is_path_on X TX ?b a ?revd"
+            sorry \<comment> \<open>rev(\<delta>) is a path in X from b to a.\<close>
+          have hg_loop_X: "top1_is_loop_on X TX ?b g"
+            sorry \<comment> \<open>g loop in U at b \<Longrightarrow> g loop in X at b (U \<subseteq> X).\<close>
+          have hrevg_equiv: "top1_loop_equiv_on X TX a
+              (top1_basepoint_change_on X TX ?b a ?revd g)
+              (top1_basepoint_change_on X TX ?b a ?revd ?f')"
+            by (rule top1_basepoint_change_loop_equiv[OF hTopX_ns hrevd_path_X
+                hg_loop_X hf'_loop hg_equiv_f'_X])
+          \<comment> \<open>Roundtrip: rev(\<delta>)^_X(\<delta>^_X(f)) ~ f.\<close>
+          have hroundtrip: "top1_path_homotopic_on X TX a a f
+              (top1_basepoint_change_on X TX ?b a ?revd ?f')"
+            by (rule top1_basepoint_change_roundtrip[OF hTopX_ns h\<delta>_path hf(1)])
+          \<comment> \<open>Chain: g' = rev(\<delta>)^_U(g) = rev(\<delta>)^_X(g) ~ rev(\<delta>)^_X(f') ~ f in X.\<close>
+          \<comment> \<open>Since \<iota> = identity: basepoint_change in U = basepoint_change in X on same path.\<close>
+          have hg'_eq_X: "top1_basepoint_change_on ?U ?TU ?b a ?revd g
+              = top1_basepoint_change_on X TX ?b a ?revd g"
+            unfolding top1_basepoint_change_on_def top1_path_product_def top1_path_reverse_def
+            by (by100 simp)
+          show "c \<in> (top1_fundamental_group_induced_on ?U ?TU a X TX a (\<lambda>x. x))
+              ` top1_fundamental_group_carrier ?U ?TU a"
+            sorry \<comment> \<open>Final assembly: combine g'_class_U, inclusion_induced_class,
+                 hg'_eq_X, hrevg_equiv, hroundtrip, hf(2) to get incl_a*([g']_U) = c.\<close>
+        qed
       qed
     qed
     \<comment> \<open>Step (c): j_* = (U\<hookrightarrow>X)_* \<circ> (A\<hookrightarrow>U)_* by functoriality.\<close>
@@ -10858,6 +10934,7 @@ end
  
   
  
+
 
 
 
