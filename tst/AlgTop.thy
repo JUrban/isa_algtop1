@@ -3750,8 +3750,30 @@ proof -
         qed
         \<comment> \<open>[r\<circ>f]_U = [f]_U (from hrf_equiv_f).\<close>
         have hclass_eq: "{g. top1_loop_equiv_on ?U ?TU a (?r \<circ> f) g} = c"
-          using hrf_equiv_f hc_eq hTopU_d
-          sorry \<comment> \<open>loop_equiv(r\<circ>f, f) \<Longrightarrow> {g. equiv(r\<circ>f,g)} = {g. equiv(f,g)} = c (trans+sym).\<close>
+        proof -
+          have hdir1: "\<And>g'. top1_loop_equiv_on ?U ?TU a (?r \<circ> f) g'
+              \<Longrightarrow> top1_loop_equiv_on ?U ?TU a f g'"
+          proof -
+            fix g'
+            assume "top1_loop_equiv_on ?U ?TU a (?r \<circ> f) g'"
+            show "top1_loop_equiv_on ?U ?TU a f g'"
+              using top1_loop_equiv_on_trans[OF hTopU_d
+                top1_loop_equiv_on_sym[OF hrf_equiv_f]
+                \<open>top1_loop_equiv_on ?U ?TU a (?r \<circ> f) g'\<close>] .
+          qed
+          moreover have hdir2: "\<And>g'. top1_loop_equiv_on ?U ?TU a f g'
+              \<Longrightarrow> top1_loop_equiv_on ?U ?TU a (?r \<circ> f) g'"
+          proof -
+            fix g'
+            assume "top1_loop_equiv_on ?U ?TU a f g'"
+            show "top1_loop_equiv_on ?U ?TU a (?r \<circ> f) g'"
+              using top1_loop_equiv_on_trans[OF hTopU_d hrf_equiv_f
+                \<open>top1_loop_equiv_on ?U ?TU a f g'\<close>] .
+          qed
+          ultimately have "{g. top1_loop_equiv_on ?U ?TU a (?r \<circ> f) g}
+              = {g. top1_loop_equiv_on ?U ?TU a f g}" by (by100 blast)
+          thus ?thesis using hc_eq by (by100 simp)
+        qed
         \<comment> \<open>Combine: \<iota>_*([r\<circ>f]_A) = [r\<circ>f]_U = c.\<close>
         have h\<iota>_rf_img: "top1_fundamental_group_induced_on A ?TA a ?U ?TU a (\<lambda>x. x) ?rf_class = c"
           using h\<iota>_rf hclass_eq by (by100 simp)
