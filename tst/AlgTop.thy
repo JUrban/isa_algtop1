@@ -2040,6 +2040,62 @@ proof -
   thus ?thesis using int_one_le_iff_zero_less zdvd_imp_le by (by100 fastforce)
 qed
 
+\<comment> \<open>Reusable: inverse of a bijective hom is a hom.\<close>
+lemma bij_hom_inv_is_hom:
+  assumes hG: "top1_is_group_on G mulG eG invgG"
+      and hH: "top1_is_group_on H mulH eH invgH"
+      and hbij: "bij_betw \<phi> G H"
+      and hhom: "top1_group_hom_on G mulG H mulH \<phi>"
+  shows "top1_group_hom_on H mulH G mulG (inv_into G \<phi>)"
+  unfolding top1_group_hom_on_def
+proof (intro conjI ballI)
+  fix y assume hy: "y \<in> H"
+  show "inv_into G \<phi> y \<in> G"
+  proof -
+    have "\<phi> ` G = H" using hbij unfolding bij_betw_def by (by100 blast)
+    hence "y \<in> \<phi> ` G" using hy by (by100 blast)
+    thus ?thesis by (rule inv_into_into)
+  qed
+next
+  fix y1 y2 assume hy1: "y1 \<in> H" and hy2: "y2 \<in> H"
+  have hinj: "inj_on \<phi> G" using hbij unfolding bij_betw_def by (by100 blast)
+  have hsurj: "\<phi> ` G = H" using hbij unfolding bij_betw_def by (by100 blast)
+  obtain x1 where hx1: "x1 \<in> G" "\<phi> x1 = y1" using hsurj hy1 by (by100 blast)
+  obtain x2 where hx2: "x2 \<in> G" "\<phi> x2 = y2" using hsurj hy2 by (by100 blast)
+  have "inv_into G \<phi> y1 = x1" using inv_into_f_eq[OF hinj hx1(1) hx1(2)] .
+  have "inv_into G \<phi> y2 = x2" using inv_into_f_eq[OF hinj hx2(1) hx2(2)] .
+  have hx12: "mulG x1 x2 \<in> G" using hG hx1(1) hx2(1) unfolding top1_is_group_on_def by (by100 blast)
+  have "\<phi> (mulG x1 x2) = mulH (\<phi> x1) (\<phi> x2)"
+    using hhom hx1(1) hx2(1) unfolding top1_group_hom_on_def by (by100 blast)
+  hence "\<phi> (mulG x1 x2) = mulH y1 y2" using hx1(2) hx2(2) by (by100 simp)
+  hence "inv_into G \<phi> (mulH y1 y2) = mulG x1 x2"
+    using inv_into_f_eq[OF hinj hx12] by (by100 simp)
+  thus "inv_into G \<phi> (mulH y1 y2) = mulG (inv_into G \<phi> y1) (inv_into G \<phi> y2)"
+    using \<open>inv_into G \<phi> y1 = x1\<close> \<open>inv_into G \<phi> y2 = x2\<close> by (by100 simp)
+qed
+
+\<comment> \<open>Reusable: composition of two group homs is a hom.\<close>
+lemma group_hom_comp:
+  assumes "top1_group_hom_on G mulG H mulH f"
+      and "top1_group_hom_on H mulH K mulK g"
+  shows "top1_group_hom_on G mulG K mulK (g \<circ> f)"
+  unfolding top1_group_hom_on_def comp_def
+proof (intro conjI ballI)
+  fix x assume "x \<in> G"
+  hence "f x \<in> H" using assms(1) unfolding top1_group_hom_on_def by (by100 blast)
+  thus "g (f x) \<in> K" using assms(2) unfolding top1_group_hom_on_def by (by100 blast)
+next
+  fix x y assume "x \<in> G" "y \<in> G"
+  have "f (mulG x y) = mulH (f x) (f y)"
+    using assms(1) \<open>x \<in> G\<close> \<open>y \<in> G\<close> unfolding top1_group_hom_on_def by (by100 blast)
+  moreover have "f x \<in> H" "f y \<in> H"
+    using assms(1) \<open>x \<in> G\<close> \<open>y \<in> G\<close> unfolding top1_group_hom_on_def by (by100 blast)+
+  hence "g (mulH (f x) (f y)) = mulK (g (f x)) (g (f y))"
+    using assms(2) \<open>f x \<in> H\<close> \<open>f y \<in> H\<close> unfolding top1_group_hom_on_def by (by100 blast)
+  thus "g (f (mulG x y)) = mulK (g (f x)) (g (f y))"
+    using \<open>f (mulG x y) = mulH (f x) (f y)\<close> by (by100 simp)
+qed
+
 \<comment> \<open>Reusable: under any iso \<pi>_1(S1) \<cong> Z, the standard loop maps to \<pm>1.
    This is because the lifting correspondence sends [f] to the endpoint 1 of its lift,
    and 1 generates Z. For any other iso, the image is still a generator of Z, hence \<pm>1.\<close>
@@ -2098,7 +2154,23 @@ proof -
          specific iso maps [f] to 1. Uses: lift of R_to_S1 is identity.\<close>
   \<comment> \<open>Step 2: \<phi> \<circ> \<phi>_0\<inverse>: Z \<rightarrow> Z is auto, sends 1 to \<pm>1.\<close>
   have hf_loop: "top1_is_loop_on top1_S1 top1_S1_topology (1,0) (\<lambda>s. (cos (2*pi*s), sin (2*pi*s)))"
-    sorry \<comment> \<open>Standard S1 loop is a loop. Proved as standard_S1_loop_is_loop (line 2643).\<close>
+    unfolding top1_is_loop_on_def top1_is_path_on_def
+  proof (intro conjI)
+    have hf_eq: "(\<lambda>s. (cos (2*pi*s), sin (2*pi*s))) = top1_R_to_S1"
+    proof (rule ext)
+      fix s :: real show "(cos (2*pi*s), sin (2*pi*s)) = top1_R_to_S1 s"
+        unfolding top1_R_to_S1_def by (by100 simp)
+    qed
+    have "top1_continuous_map_on (UNIV::real set) top1_open_sets top1_S1 top1_S1_topology top1_R_to_S1"
+      using Theorem_53_1 unfolding top1_covering_map_on_def by (by100 blast)
+    from top1_continuous_map_on_restrict_domain_simple[OF this subset_UNIV]
+    show "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+        top1_S1 top1_S1_topology (\<lambda>s. (cos (2*pi*s), sin (2*pi*s)))"
+      unfolding top1_unit_interval_topology_def hf_eq
+      using subspace_topology_UNIV_self by (by100 simp)
+  next show "(cos (2*pi*(0::real)), sin (2*pi*0)) = (1::real, 0::real)" by (by100 simp)
+  next show "(cos (2*pi*(1::real)), sin (2*pi*1)) = (1::real, 0::real)" by (by100 simp)
+  qed
   have hfclass_carrier: "?fclass \<in> top1_fundamental_group_carrier top1_S1 top1_S1_topology (1,0)"
     using hf_loop unfolding top1_fundamental_group_carrier_def by (by100 blast)
   have hZ_grp: "top1_is_group_on top1_Z_group top1_Z_mul top1_Z_id top1_Z_invg"
@@ -2122,11 +2194,11 @@ proof -
       (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1,0))
       (top1_fundamental_group_mul top1_S1 top1_S1_topology (1,0))
       (inv_into (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1,0)) \<phi>_0)"
-    sorry \<comment> \<open>bij_hom_inv_is_hom[OF hS1_grp hZ_grp h\<phi>0_bij h\<phi>0_hom] -- defined below.\<close>
+    by (rule bij_hom_inv_is_hom[OF hS1_grp hZ_grp h\<phi>0_bij h\<phi>0_hom])
   \<comment> \<open>\<phi> \<circ> \<phi>_0\<inverse> is an auto of Z.\<close>
   let ?\<alpha> = "\<phi> \<circ> (inv_into (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1,0)) \<phi>_0)"
   have h\<alpha>_hom: "top1_group_hom_on top1_Z_group top1_Z_mul top1_Z_group top1_Z_mul ?\<alpha>"
-    sorry \<comment> \<open>group_hom_comp[OF h\<phi>0_inv_hom h\<phi>_hom] -- defined below.\<close>
+    by (rule group_hom_comp[OF h\<phi>0_inv_hom h\<phi>_hom])
   have h\<alpha>_bij: "bij_betw ?\<alpha> top1_Z_group top1_Z_group"
   proof -
     have "bij_betw (inv_into (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1,0)) \<phi>_0)
@@ -2164,63 +2236,6 @@ proof -
     thus ?thesis using h\<alpha>_1 by (by100 auto)
   qed
 qed
-
-\<comment> \<open>Reusable: inverse of a bijective hom is a hom.\<close>
-lemma bij_hom_inv_is_hom:
-  assumes hG: "top1_is_group_on G mulG eG invgG"
-      and hH: "top1_is_group_on H mulH eH invgH"
-      and hbij: "bij_betw \<phi> G H"
-      and hhom: "top1_group_hom_on G mulG H mulH \<phi>"
-  shows "top1_group_hom_on H mulH G mulG (inv_into G \<phi>)"
-  unfolding top1_group_hom_on_def
-proof (intro conjI ballI)
-  fix y assume hy: "y \<in> H"
-  show "inv_into G \<phi> y \<in> G"
-  proof -
-    have "\<phi> ` G = H" using hbij unfolding bij_betw_def by (by100 blast)
-    hence "y \<in> \<phi> ` G" using hy by (by100 blast)
-    thus ?thesis by (rule inv_into_into)
-  qed
-next
-  fix y1 y2 assume hy1: "y1 \<in> H" and hy2: "y2 \<in> H"
-  have hinj: "inj_on \<phi> G" using hbij unfolding bij_betw_def by (by100 blast)
-  have hsurj: "\<phi> ` G = H" using hbij unfolding bij_betw_def by (by100 blast)
-  obtain x1 where hx1: "x1 \<in> G" "\<phi> x1 = y1" using hsurj hy1 by (by100 blast)
-  obtain x2 where hx2: "x2 \<in> G" "\<phi> x2 = y2" using hsurj hy2 by (by100 blast)
-  have "inv_into G \<phi> y1 = x1" using inv_into_f_eq[OF hinj hx1(1) hx1(2)] .
-  have "inv_into G \<phi> y2 = x2" using inv_into_f_eq[OF hinj hx2(1) hx2(2)] .
-  have hx12: "mulG x1 x2 \<in> G" using hG hx1(1) hx2(1) unfolding top1_is_group_on_def by (by100 blast)
-  have "\<phi> (mulG x1 x2) = mulH (\<phi> x1) (\<phi> x2)"
-    using hhom hx1(1) hx2(1) unfolding top1_group_hom_on_def by (by100 blast)
-  hence "\<phi> (mulG x1 x2) = mulH y1 y2" using hx1(2) hx2(2) by (by100 simp)
-  hence "inv_into G \<phi> (mulH y1 y2) = mulG x1 x2"
-    using inv_into_f_eq[OF hinj hx12] by (by100 simp)
-  thus "inv_into G \<phi> (mulH y1 y2) = mulG (inv_into G \<phi> y1) (inv_into G \<phi> y2)"
-    using \<open>inv_into G \<phi> y1 = x1\<close> \<open>inv_into G \<phi> y2 = x2\<close> by (by100 simp)
-qed
-
-\<comment> \<open>Reusable: composition of two group homs is a hom.\<close>
-lemma group_hom_comp:
-  assumes "top1_group_hom_on G mulG H mulH f"
-      and "top1_group_hom_on H mulH K mulK g"
-  shows "top1_group_hom_on G mulG K mulK (g \<circ> f)"
-  unfolding top1_group_hom_on_def comp_def
-proof (intro conjI ballI)
-  fix x assume "x \<in> G"
-  hence "f x \<in> H" using assms(1) unfolding top1_group_hom_on_def by (by100 blast)
-  thus "g (f x) \<in> K" using assms(2) unfolding top1_group_hom_on_def by (by100 blast)
-next
-  fix x y assume "x \<in> G" "y \<in> G"
-  have "f (mulG x y) = mulH (f x) (f y)"
-    using assms(1) \<open>x \<in> G\<close> \<open>y \<in> G\<close> unfolding top1_group_hom_on_def by (by100 blast)
-  moreover have "f x \<in> H" "f y \<in> H"
-    using assms(1) \<open>x \<in> G\<close> \<open>y \<in> G\<close> unfolding top1_group_hom_on_def by (by100 blast)+
-  hence "g (mulH (f x) (f y)) = mulK (g (f x)) (g (f y))"
-    using assms(2) \<open>f x \<in> H\<close> \<open>f y \<in> H\<close> unfolding top1_group_hom_on_def by (by100 blast)
-  thus "g (f (mulG x y)) = mulK (g (f x)) (g (f y))"
-    using \<open>f (mulG x y) = mulH (f x) (f y)\<close> by (by100 simp)
-qed
-
 \<comment> \<open>Helper: under SvK conditions with V simply connected, the inclusion U \<hookrightarrow> X
    induces a surjective homomorphism on \<pi>_1 with kernel = normal closure of
    inclusion-induced image of \<pi>_1(U\<inter>V). This is the content of Cor 70.4's proof
