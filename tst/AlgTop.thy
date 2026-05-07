@@ -2156,6 +2156,33 @@ qed
 \<comment> \<open>Reusable: under any iso \<pi>_1(S1) \<cong> Z, the standard loop maps to \<pm>1.
    This is because the lifting correspondence sends [f] to the endpoint 1 of its lift,
    and 1 generates Z. For any other iso, the image is still a generator of Z, hence \<pm>1.\<close>
+lemma standard_S1_loop_is_loop:
+  "top1_is_loop_on top1_S1 top1_S1_topology (1, 0)
+     (\<lambda>s. (cos (2 * pi * s), sin (2 * pi * s)))"
+  unfolding top1_is_loop_on_def top1_is_path_on_def
+proof (intro conjI)
+  have hf_eq: "(\<lambda>s. (cos (2*pi*s), sin (2*pi*s))) = top1_R_to_S1"
+  proof (rule ext)
+    fix s :: real show "(cos (2*pi*s), sin (2*pi*s)) = top1_R_to_S1 s"
+      unfolding top1_R_to_S1_def by (by100 simp)
+  qed
+  have "top1_continuous_map_on (UNIV::real set) top1_open_sets top1_S1 top1_S1_topology top1_R_to_S1"
+    using Theorem_53_1 unfolding top1_covering_map_on_def by (by100 blast)
+  from top1_continuous_map_on_restrict_domain_simple[OF this subset_UNIV]
+  show "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+      top1_S1 top1_S1_topology (\<lambda>s. (cos (2*pi*s), sin (2*pi*s)))"
+    unfolding top1_unit_interval_topology_def hf_eq
+    using subspace_topology_UNIV_self by (by100 simp)
+next show "(cos (2*pi*(0::real)), sin (2*pi*0)) = (1::real, 0::real)" by (by100 simp)
+next show "(cos (2*pi*(1::real)), sin (2*pi*1)) = (1::real, 0::real)" by (by100 simp)
+qed
+
+\<comment> \<open>The standard loop class is in \<pi>_1(S1, (1,0)).\<close>
+lemma standard_S1_loop_class_in_carrier:
+  "{g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0)
+       (\<lambda>s. (cos (2*pi*s), sin (2*pi*s))) g}
+   \<in> top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0)"
+  unfolding top1_fundamental_group_carrier_def using standard_S1_loop_is_loop by (by100 blast)
 lemma standard_S1_loop_generates_Z:
   assumes h\<phi>_bij: "bij_betw \<phi> (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1,0))
       top1_Z_group"
@@ -2227,8 +2254,52 @@ proof -
        The issue is the SAME for any iso: we need the lifting fact.\<close>
     \<comment> \<open>Direct approach: prove [f] is non-trivial (f not nulhomotopic) and
        the fiber has specific structure. For now, sorry.\<close>
-    show ?thesis sorry \<comment> \<open>Covering space: standard S1 loop lifts to [0,1] ending at 1.
-         Any iso π₁(S¹) → ℤ maps [f] to a generator of ℤ, i.e., ±1.\<close>
+    \<comment> \<open>Key: the lifting correspondence from Theorem_54_4 maps [f] to 1.
+       Proof: the lift of f(s) = R_to_S1(s) starting at 0 is id (the identity).
+       By covering_lift_unique_connected: id = lift. Endpoint = 1.\<close>
+    have hcov: "top1_covering_map_on UNIV top1_open_sets top1_S1 top1_S1_topology top1_R_to_S1"
+      by (rule Theorem_53_1)
+    have hp0: "top1_R_to_S1 0 = (1::real, 0)" unfolding top1_R_to_S1_def by (by100 simp)
+    have hTR: "is_topology_on (UNIV::real set) top1_open_sets"
+      by (rule top1_open_sets_is_topology_on_UNIV)
+    have hR_pc: "top1_path_connected_on (UNIV::real set) top1_open_sets"
+      using top1_R_simply_connected' top1_simply_connected_on_path_connected by (by100 blast)
+    have hS1_top_loc: "is_topology_on top1_S1 top1_S1_topology"
+      unfolding top1_S1_topology_def
+      by (rule subspace_topology_is_topology_on[OF
+            product_topology_on_is_topology_on[OF
+              top1_open_sets_is_topology_on_UNIV top1_open_sets_is_topology_on_UNIV, simplified]]) (by100 simp)
+    \<comment> \<open>Get the lifting correspondence.\<close>
+    have h0R: "(0::real) \<in> (UNIV::real set)" by (by100 simp)
+    obtain \<Phi> where h\<Phi>_lift: "\<forall>c\<in>top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0).
+        \<exists>f ft. f \<in> c \<and> top1_is_loop_on top1_S1 top1_S1_topology (1, 0) f
+          \<and> top1_is_path_on (UNIV::real set) top1_open_sets 0 (\<Phi> c) ft
+          \<and> (\<forall>s\<in>I_set. top1_R_to_S1 (ft s) = f s)"
+      using Theorem_54_4_lifting_correspondence[OF h0R hp0 hcov hR_pc hS1_top_loc] by blast
+    \<comment> \<open>For [f]: extract the lift ft.\<close>
+    obtain f_rep ft_rep where hf_in: "f_rep \<in> ?fclass"
+        and hf_rep_loop: "top1_is_loop_on top1_S1 top1_S1_topology (1, 0) f_rep"
+        and hft_path: "top1_is_path_on (UNIV::real set) top1_open_sets 0 (\<Phi> ?fclass) ft_rep"
+        and hft_lift: "\<forall>s\<in>I_set. top1_R_to_S1 (ft_rep s) = f_rep s"
+      using h\<Phi>_lift[rule_format, OF standard_S1_loop_class_in_carrier] by blast
+    \<comment> \<open>The identity s \<mapsto> s is ALSO a lift of f_rep starting at 0.\<close>
+    \<comment> \<open>f_rep \<in> [f], so f_rep \<simeq> f in S1. The lift of f (= R_to_S1) starting at 0
+       is the identity. By covering_lift_unique: ft_rep = id on I_set.
+       Therefore \<Phi>([f]) = ft_rep(1) = id(1) = 1.\<close>
+    \<comment> \<open>Actually: f_rep \<simeq> f, and the LIFT of f_rep ends at the SAME point as the lift of f
+       (by Theorem_54_3: homotopic loops have lifts with same endpoints).
+       The lift of f starting at 0 is s \<mapsto> s (identity), ending at 1.
+       So the lift of f_rep also ends at 1. Hence \<Phi>([f]) = 1.\<close>
+    have h\<Phi>_f_eq_1: "\<Phi> ?fclass = 1"
+      sorry \<comment> \<open>By Theorem_54_3 + covering_lift_unique: lift of f_rep ends at 1
+           since f_rep \<simeq> f and lift of f is identity (ending at 1).\<close>
+    \<comment> \<open>\<phi>_0 (from Theorem_54_5_iso) maps [f] to some m \<in> Z.
+       The auto \<alpha> = \<phi> \<circ> \<phi>_0\<inverse> satisfies \<alpha>(1) \<in> {1,-1} (Z_auto).
+       If we had \<phi>_0([f]) = 1: \<phi>([f]) = \<alpha>(1) \<in> {1,-1}.
+       If \<phi>_0([f]) \<noteq> 1: we need the lifting fact for \<phi>_0 too.
+       But from \<Phi>([f]) = 1 and the Z bijection: any other bijection maps [f] to \<pm>1.\<close>
+    show ?thesis
+      sorry \<comment> \<open>Combine \<Phi>([f]) = 1 with Z_auto for the given \<phi>.\<close>
   qed
   \<comment> \<open>Step 2: \<phi> \<circ> \<phi>_0\<inverse>: Z \<rightarrow> Z is auto, sends 1 to \<pm>1.\<close>
   have hf_loop: "top1_is_loop_on top1_S1 top1_S1_topology (1,0) (\<lambda>s. (cos (2*pi*s), sin (2*pi*s)))"
@@ -2914,33 +2985,6 @@ proof -
 qed
 
 \<comment> \<open>The standard circle loop (cos 2\<pi>s, sin 2\<pi>s) is a loop in S1 at (1,0).\<close>
-lemma standard_S1_loop_is_loop:
-  "top1_is_loop_on top1_S1 top1_S1_topology (1, 0)
-     (\<lambda>s. (cos (2 * pi * s), sin (2 * pi * s)))"
-  unfolding top1_is_loop_on_def top1_is_path_on_def
-proof (intro conjI)
-  have hf_eq: "(\<lambda>s. (cos (2*pi*s), sin (2*pi*s))) = top1_R_to_S1"
-  proof (rule ext)
-    fix s :: real show "(cos (2*pi*s), sin (2*pi*s)) = top1_R_to_S1 s"
-      unfolding top1_R_to_S1_def by (by100 simp)
-  qed
-  have "top1_continuous_map_on (UNIV::real set) top1_open_sets top1_S1 top1_S1_topology top1_R_to_S1"
-    using Theorem_53_1 unfolding top1_covering_map_on_def by (by100 blast)
-  from top1_continuous_map_on_restrict_domain_simple[OF this subset_UNIV]
-  show "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
-      top1_S1 top1_S1_topology (\<lambda>s. (cos (2*pi*s), sin (2*pi*s)))"
-    unfolding top1_unit_interval_topology_def hf_eq
-    using subspace_topology_UNIV_self by (by100 simp)
-next show "(cos (2*pi*(0::real)), sin (2*pi*0)) = (1::real, 0::real)" by (by100 simp)
-next show "(cos (2*pi*(1::real)), sin (2*pi*1)) = (1::real, 0::real)" by (by100 simp)
-qed
-
-\<comment> \<open>The standard loop class is in \<pi>_1(S1, (1,0)).\<close>
-lemma standard_S1_loop_class_in_carrier:
-  "{g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0)
-       (\<lambda>s. (cos (2*pi*s), sin (2*pi*s))) g}
-   \<in> top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0)"
-  unfolding top1_fundamental_group_carrier_def using standard_S1_loop_is_loop by (by100 blast)
 
 theorem Theorem_72_1_attaching_two_cell:
   fixes X :: "'a set" and TX :: "'a set set" and A :: "'a set"
