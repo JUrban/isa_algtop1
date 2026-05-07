@@ -6986,7 +6986,98 @@ proof -
                         \<in> (top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1,0)
                             ?U ?TU a (\<lambda>z. h z)) `
                           top1_fundamental_group_carrier top1_S1 top1_S1_topology (1,0)"
-                      sorry \<comment> \<open>Lemma_58_1 + continuous_preserves_path_homotopic + image membership.\<close>
+                    proof -
+                      let ?B2_0 = "top1_B2 - {(0::real,0)}"
+                      let ?TB2_0 = "subspace_topology top1_B2 top1_B2_topology ?B2_0"
+                      \<comment> \<open>Extract retraction from deformation retract.\<close>
+                      obtain H_ret where hHr_cont: "top1_continuous_map_on (?B2_0 \<times> I_set)
+                            (product_topology_on ?TB2_0 I_top) ?B2_0 ?TB2_0 H_ret"
+                          and hHr0: "\<forall>x\<in>?B2_0. H_ret (x, 0) = x"
+                          and hHr1: "\<forall>x\<in>?B2_0. H_ret (x, 1) \<in> top1_S1"
+                          and hHr_fix: "\<forall>a'\<in>top1_S1. \<forall>t\<in>I_set. H_ret (a', t) = a'"
+                        using S1_deformation_retract_B2_minus_zero
+                        unfolding top1_deformation_retract_of_on_def by blast
+                      \<comment> \<open>ell_disk is a loop at (1,0) in B2-{0}.\<close>
+                      have hell_loop: "top1_is_loop_on ?B2_0 ?TB2_0 (1::real,0) ?ell_disk"
+                        sorry \<comment> \<open>bc(B2-{0},q,(1,0),revgam,hinv_f0): needs path + loop in B2-{0}.\<close>
+                      \<comment> \<open>By Lemma_58_1: ell_disk \<simeq> r\<circ>ell_disk in B2-{0}.\<close>
+                      have hTopB20: "is_topology_on ?B2_0 ?TB2_0"
+                      proof -
+                        have hR2: "is_topology_on (UNIV::(real\<times>real) set) (product_topology_on top1_open_sets top1_open_sets)"
+                          using product_topology_on_is_topology_on[OF top1_open_sets_is_topology_on_UNIV top1_open_sets_is_topology_on_UNIV] by (by100 simp)
+                        have hB2: "is_topology_on top1_B2 top1_B2_topology"
+                          unfolding top1_B2_topology_def by (rule subspace_topology_is_topology_on[OF hR2]) (by100 simp)
+                        show ?thesis by (rule subspace_topology_is_topology_on[OF hB2]) (by100 blast)
+                      qed
+                      have hid_cont: "top1_continuous_map_on ?B2_0 ?TB2_0 ?B2_0 ?TB2_0 (\<lambda>x. x)"
+                        using top1_continuous_map_on_id[OF hTopB20] unfolding id_def by (by100 simp)
+                      have hr_cont: "top1_continuous_map_on ?B2_0 ?TB2_0 ?B2_0 ?TB2_0 (\<lambda>x. H_ret (x, 1))"
+                        sorry \<comment> \<open>r = H_ret(\<cdot>,1) continuous: composition of H_ret with pairing.\<close>
+                      have hid10: "(\<lambda>x::(real\<times>real). x) (1,0) = (1::real,0)" by (by100 simp)
+                      have hr10: "(\<lambda>x. H_ret (x, 1)) (1,0) = (1::real,0)"
+                        using hHr_fix unfolding top1_S1_def top1_unit_interval_def by (by100 auto)
+                      have hH_homotopy: "\<exists>Hh. top1_continuous_map_on (?B2_0 \<times> I_set)
+                          (product_topology_on ?TB2_0 I_top) ?B2_0 ?TB2_0 Hh
+                          \<and> (\<forall>x\<in>?B2_0. Hh (x, 0) = (\<lambda>x. x) x)
+                          \<and> (\<forall>x\<in>?B2_0. Hh (x, 1) = (\<lambda>x. H_ret (x, 1)) x)
+                          \<and> (\<forall>t\<in>I_set. Hh ((1,0), t) = (1::real,0))"
+                      proof (rule exI[of _ H_ret], intro conjI)
+                        show "top1_continuous_map_on (?B2_0 \<times> I_set) (product_topology_on ?TB2_0 I_top) ?B2_0 ?TB2_0 H_ret"
+                          using hHr_cont .
+                        show "\<forall>x\<in>?B2_0. H_ret (x, 0) = (\<lambda>x. x) x" using hHr0 by (by100 simp)
+                        show "\<forall>x\<in>?B2_0. H_ret (x, 1) = (\<lambda>x. H_ret (x, 1)) x" by (by100 simp)
+                        show "\<forall>t\<in>I_set. H_ret ((1,0), t) = (1::real,0)"
+                        proof (intro ballI)
+                          fix t assume "t \<in> I_set"
+                          have "(1::real,0::real) \<in> top1_S1" unfolding top1_S1_def by (by100 simp)
+                          thus "H_ret ((1,0), t) = (1,0)" using hHr_fix \<open>t \<in> I_set\<close> by (by100 blast)
+                        qed
+                      qed
+                      from Lemma_58_1_basepoint_fixed[OF hTopB20 hid_cont hr_cont hid10 hr10
+                          hH_homotopy hell_loop]
+                      have hell_hom: "top1_path_homotopic_on ?B2_0 ?TB2_0 (1,0) (1,0)
+                          (top1_induced_homomorphism_on ?B2_0 ?TB2_0 ?B2_0 ?TB2_0 (\<lambda>x. x) ?ell_disk)
+                          (top1_induced_homomorphism_on ?B2_0 ?TB2_0 ?B2_0 ?TB2_0 (\<lambda>x. H_ret (x, 1)) ?ell_disk)"
+                        using hr10 by (by100 auto)
+                      \<comment> \<open>Simplify: id\<circ>ell = ell, r\<circ>ell = (\<lambda>t. H_ret(ell(t),1)).\<close>
+                      have hell_simp: "top1_path_homotopic_on ?B2_0 ?TB2_0 (1,0) (1,0)
+                          ?ell_disk (\<lambda>t. H_ret (?ell_disk t, 1))"
+                        using hell_hom unfolding top1_induced_homomorphism_on_def comp_def by (by100 simp)
+                      \<comment> \<open>r\<circ>ell_disk is an S1 loop.\<close>
+                      let ?r_ell = "\<lambda>t. H_ret (?ell_disk t, 1)"
+                      have hr_ell_S1: "top1_is_loop_on top1_S1 top1_S1_topology (1,0) ?r_ell"
+                        sorry \<comment> \<open>Continuous composition + H maps into S1 + H fixes (1,0).\<close>
+                      \<comment> \<open>h continuous B2-{0} \<rightarrow> U: preserves homotopy.\<close>
+                      have hh_B20_U: "top1_continuous_map_on ?B2_0 ?TB2_0 ?U ?TU (\<lambda>z. h z)"
+                        sorry \<comment> \<open>h: B2\<rightarrow>X maps B2-{0} into U (S1\<rightarrow>A\<subseteq>U, IntB2-{0}\<rightarrow>UV\<subseteq>U).\<close>
+                      have hh_hom: "top1_path_homotopic_on ?U ?TU (h (1,0)) (h (1,0))
+                          ((\<lambda>z. h z) \<circ> ?ell_disk) ((\<lambda>z. h z) \<circ> ?r_ell)"
+                        by (rule continuous_preserves_path_homotopic[OF hTopB20 hTopU_outer
+                            hh_B20_U hell_simp])
+                      have hh10: "h (1::real, 0) = a" using assms(9) by (by100 simp)
+                      \<comment> \<open>Class of h\<circ>ell_disk = class of h\<circ>(r\<circ>ell_disk) in U.\<close>
+                      \<comment> \<open>h\<circ>(r\<circ>ell_disk) = (h|_{S1})\<circ>(r\<circ>ell_disk) since r\<circ>ell maps into S1.\<close>
+                      \<comment> \<open>class [(h|_{S1})\<circ>(r\<circ>ell)] \<in> image((h|_{S1})_*).\<close>
+                      have hrloop_carrier: "{k. top1_loop_equiv_on top1_S1 top1_S1_topology (1,0) ?r_ell k}
+                          \<in> top1_fundamental_group_carrier top1_S1 top1_S1_topology (1,0)"
+                        using hr_ell_S1 unfolding top1_fundamental_group_carrier_def by (by100 blast)
+                      have h_induced_rloop: "(top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1,0)
+                          ?U ?TU a (\<lambda>z. h z))
+                          {k. top1_loop_equiv_on top1_S1 top1_S1_topology (1,0) ?r_ell k}
+                        \<in> (top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1,0)
+                            ?U ?TU a (\<lambda>z. h z)) `
+                          top1_fundamental_group_carrier top1_S1 top1_S1_topology (1,0)"
+                        using hrloop_carrier by (by100 blast)
+                      \<comment> \<open>The induced map gives: (h|_{S1})_*([r\<circ>ell]) = [h\<circ>(r\<circ>ell)]_U.\<close>
+                      \<comment> \<open>And [h\<circ>ell_disk]_U = [h\<circ>(r\<circ>ell)]_U (from homotopy).\<close>
+                      have h_class_eq: "{k. top1_loop_equiv_on ?U ?TU a ((\<lambda>z. h z) \<circ> ?ell_disk) k}
+                          = (top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1,0)
+                              ?U ?TU a (\<lambda>z. h z))
+                            {k. top1_loop_equiv_on top1_S1 top1_S1_topology (1,0) ?r_ell k}"
+                        sorry \<comment> \<open>Needs: hh_hom (path_homotopic) + induced_map = [h\<circ>g] for S1-loop g.
+                             Both h\<circ>ell_disk and (h|_{S1})\<circ>(r\<circ>ell) give same class in U.\<close>
+                      show ?thesis using h_class_eq h_induced_rloop by (by100 simp)
+                    qed
                     thus ?thesis using himg_eq by (by100 simp)
                   qed
                   thus ?thesis using h\<psi>_img_N by (by100 blast)
