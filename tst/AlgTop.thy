@@ -3710,7 +3710,35 @@ proof -
             by (rule ext) (by100 simp)
           have hpair_cont: "top1_continuous_map_on ?U ?TU (?U \<times> I_set)
               (product_topology_on ?TU I_top) (\<lambda>x. (x, 1::real))"
-            sorry \<comment> \<open>(x, const 1) continuous via Theorem 18.4 (pi1=id, pi2=const).\<close>
+          proof -
+            have hI_top: "is_topology_on I_set I_top"
+              by (rule top1_unit_interval_topology_is_topology_on)
+            \<comment> \<open>Component 1: pi1 \<circ> (\<lambda>x. (x, 1)) = id, continuous.\<close>
+            have hc1: "top1_continuous_map_on ?U ?TU ?U ?TU (pi1 \<circ> (\<lambda>x. (x, 1::real)))"
+            proof -
+              have heq: "\<And>x::'a. pi1 (x, 1::real) = x" unfolding pi1_def by (by100 simp)
+              have "pi1 \<circ> (\<lambda>x::'a. (x, 1::real)) = (\<lambda>x. x)"
+                unfolding pi1_def by (rule ext) (by100 simp)
+              thus ?thesis
+                using top1_continuous_map_on_id[OF hTopU_d]
+                unfolding id_def by (by100 simp)
+            qed
+            \<comment> \<open>Component 2: pi2 \<circ> (\<lambda>x. (x, 1)) = const 1, continuous.\<close>
+            have hc2: "top1_continuous_map_on ?U ?TU I_set I_top (pi2 \<circ> (\<lambda>x::'a. (x, 1::real)))"
+            proof -
+              have "pi2 \<circ> (\<lambda>x::'a. (x, 1::real)) = (\<lambda>_::'a. 1::real)"
+                unfolding pi2_def by (rule ext) (by100 simp)
+              moreover have "top1_continuous_map_on ?U ?TU I_set I_top (\<lambda>_::'a. 1::real)"
+              proof -
+                have "\<forall>y0\<in>I_set. top1_continuous_map_on ?U ?TU I_set I_top (\<lambda>x. y0)"
+                  using Theorem_18_2[OF hTopU_d hI_top hI_top] by (by100 blast)
+                thus ?thesis using h1_in_I by (by100 blast)
+              qed
+              ultimately show ?thesis by (by100 simp)
+            qed
+            show ?thesis using iffD2[OF Theorem_18_4[OF hTopU_d hTopU_d hI_top]] hc1 hc2
+              by (by100 blast)
+          qed
           show ?thesis unfolding hcomp_eq
             by (rule top1_continuous_map_on_comp[OF hpair_cont hHcont])
         qed
@@ -10723,6 +10751,7 @@ end
  
   
  
+
 
 
 
