@@ -3741,13 +3741,17 @@ proof -
           \<comment> \<open>induced_hom(id, f) = f and induced_hom(\<iota>\<circ>r, f) = r\<circ>f.\<close>
           hence "top1_path_homotopic_on ?U ?TU a a f (?r \<circ> f)"
             unfolding top1_induced_homomorphism_on_def comp_def by (by100 simp)
-          thus ?thesis unfolding top1_loop_equiv_on_def top1_path_homotopic_on_def
-            using hf_loop
-            sorry \<comment> \<open>path_homotopic(f, r\<circ>f) \<Longrightarrow> loop_equiv(r\<circ>f, f) (reverse + definition).\<close>
+          hence "top1_path_homotopic_on ?U ?TU a a (?r \<circ> f) f"
+            by (rule Lemma_51_1_path_homotopic_sym)
+          moreover have "top1_is_loop_on ?U ?TU a (?r \<circ> f)"
+            sorry \<comment> \<open>r\<circ>f is a loop in U: r\<circ>f maps to A \<subseteq> U, continuous, r(a)=a.\<close>
+          ultimately show ?thesis unfolding top1_loop_equiv_on_def
+            using hf_loop by (by100 blast)
         qed
         \<comment> \<open>[r\<circ>f]_U = [f]_U (from hrf_equiv_f).\<close>
         have hclass_eq: "{g. top1_loop_equiv_on ?U ?TU a (?r \<circ> f) g} = c"
-          sorry \<comment> \<open>r\<circ>f loop-equiv to f \<Longrightarrow> {g. equiv(r\<circ>f, g)} = {g. equiv(f, g)} = c.\<close>
+          using hrf_equiv_f hc_eq hTopU_d
+          sorry \<comment> \<open>loop_equiv(r\<circ>f, f) \<Longrightarrow> {g. equiv(r\<circ>f,g)} = {g. equiv(f,g)} = c (trans+sym).\<close>
         \<comment> \<open>Combine: \<iota>_*([r\<circ>f]_A) = [r\<circ>f]_U = c.\<close>
         have h\<iota>_rf_img: "top1_fundamental_group_induced_on A ?TA a ?U ?TU a (\<lambda>x. x) ?rf_class = c"
           using h\<iota>_rf hclass_eq by (by100 simp)
