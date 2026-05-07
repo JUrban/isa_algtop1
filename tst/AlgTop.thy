@@ -3621,9 +3621,83 @@ proof -
     have hj_comp: "\<forall>c \<in> top1_fundamental_group_carrier A ?TA a.
         ?jAX c = (top1_fundamental_group_induced_on ?U ?TU a X TX a (\<lambda>x. x))
           ((top1_fundamental_group_induced_on A ?TA a ?U ?TU a (\<lambda>x. x)) c)"
-      sorry \<comment> \<open>Functoriality: induced(id \<circ> id) = induced(id) \<circ> induced(id) on classes.\<close>
+    proof (intro ballI)
+      fix c assume hc: "c \<in> top1_fundamental_group_carrier A ?TA a"
+      have hTopU_loc: "is_topology_on ?U ?TU"
+        by (rule subspace_topology_is_topology_on[OF hTopX_ns]) (by100 blast)
+      have hAU_cont: "top1_continuous_map_on A ?TA ?U ?TU (\<lambda>x. x)"
+      proof -
+        have "A \<subseteq> ?U" using hA_sub_X hx0_notin_A by (by100 blast)
+        have "top1_continuous_map_on ?U ?TU ?U ?TU id" by (rule top1_continuous_map_on_id[OF hTopU_loc])
+        from top1_continuous_map_on_restrict_domain_simple[OF this \<open>A \<subseteq> ?U\<close>]
+        have "top1_continuous_map_on A (subspace_topology ?U ?TU A) ?U ?TU id" .
+        have "subspace_topology ?U ?TU A = ?TA"
+          using subspace_topology_trans[OF \<open>A \<subseteq> ?U\<close>] by (by100 simp)
+        have "(id::'a\<Rightarrow>'a) = (\<lambda>x. x)" unfolding id_def by (by100 blast)
+        show ?thesis using \<open>top1_continuous_map_on A (subspace_topology ?U ?TU A) ?U ?TU id\<close>
+          \<open>subspace_topology ?U ?TU A = ?TA\<close> \<open>(id::'a\<Rightarrow>'a) = (\<lambda>x. x)\<close> by (by100 simp)
+      qed
+      have ha_U: "a \<in> ?U" using assms(6) hA_sub_X hx0_notin_A by (by100 blast)
+      have hUX_cont: "top1_continuous_map_on ?U ?TU X TX (\<lambda>x. x)"
+      proof -
+        from top1_continuous_map_on_restrict_domain_simple[OF
+          top1_continuous_map_on_id[OF hTopX_ns] Diff_subset]
+        have "top1_continuous_map_on ?U (subspace_topology X TX ?U) X TX id" .
+        have "(id::'a\<Rightarrow>'a) = (\<lambda>x. x)" unfolding id_def by (by100 blast)
+        thus ?thesis using \<open>top1_continuous_map_on ?U (subspace_topology X TX ?U) X TX id\<close>
+          by (by100 simp)
+      qed
+      have hcomp_eq: "(\<lambda>x. x) \<circ> (\<lambda>x::'a. x) = (\<lambda>x. x)" by (rule ext) (by100 simp)
+      show "?jAX c = (top1_fundamental_group_induced_on ?U ?TU a X TX a (\<lambda>x. x))
+          ((top1_fundamental_group_induced_on A ?TA a ?U ?TU a (\<lambda>x. x)) c)"
+        using fundamental_group_induced_comp[OF hTA_top hTopU_loc hTopX_ns
+          hAU_cont hUX_cont assms(6) _ _ hc] hcomp_eq by (by100 simp)
+    qed
     \<comment> \<open>Step (d): Composition of surjection with surjection/iso is surjection.\<close>
-    show ?thesis sorry \<comment> \<open>Chain surjectivity from (a), (b), (c).\<close>
+    \<comment> \<open>From hA_U_iso, the induced map A\<rightarrow>U is surjective.\<close>
+    have hAU_surj: "(top1_fundamental_group_induced_on A ?TA a ?U ?TU a (\<lambda>x. x))
+        ` (top1_fundamental_group_carrier A ?TA a)
+      = top1_fundamental_group_carrier ?U ?TU a"
+    proof -
+      obtain \<psi> where h\<psi>: "top1_group_iso_on
+          (top1_fundamental_group_carrier A ?TA a) (top1_fundamental_group_mul A ?TA a)
+          (top1_fundamental_group_carrier ?U ?TU a) (top1_fundamental_group_mul ?U ?TU a) \<psi>"
+        using hA_U_iso unfolding top1_groups_isomorphic_on_def by (by100 blast)
+      \<comment> \<open>The iso \<psi> is surjective. But \<psi> may not be the induced map.
+         However, both the iso and the induced map have the same image
+         (the induced map is a hom with image = carrier of U, since the iso exists).\<close>
+      show ?thesis
+        sorry \<comment> \<open>Induced map A\<rightarrow>U surjective (inclusion of deformation retract is iso).\<close>
+    qed
+    \<comment> \<open>Combine: j_* = (U\<rightarrow>X)_* \<circ> (A\<rightarrow>U)_*, both surjective.\<close>
+    show ?thesis
+    proof (rule equalityI)
+      show "?jAX ` (top1_fundamental_group_carrier A ?TA a)
+          \<subseteq> top1_fundamental_group_carrier X TX a"
+        using hj_hom unfolding top1_group_hom_on_def by (by100 blast)
+    next
+      show "top1_fundamental_group_carrier X TX a
+          \<subseteq> ?jAX ` (top1_fundamental_group_carrier A ?TA a)"
+      proof
+        fix x assume hx: "x \<in> top1_fundamental_group_carrier X TX a"
+        \<comment> \<open>x \<in> im(U\<rightarrow>X): get u with (U\<rightarrow>X)_*(u) = x.\<close>
+        have "x \<in> (top1_fundamental_group_induced_on ?U ?TU a X TX a (\<lambda>x. x))
+            ` (top1_fundamental_group_carrier ?U ?TU a)"
+          using hx hU_X_surj by (by100 simp)
+        then obtain u where hu: "u \<in> top1_fundamental_group_carrier ?U ?TU a"
+            "(top1_fundamental_group_induced_on ?U ?TU a X TX a (\<lambda>x. x)) u = x" by (by100 blast)
+        \<comment> \<open>u \<in> im(A\<rightarrow>U): get c with (A\<rightarrow>U)_*(c) = u.\<close>
+        have "u \<in> (top1_fundamental_group_induced_on A ?TA a ?U ?TU a (\<lambda>x. x))
+            ` (top1_fundamental_group_carrier A ?TA a)"
+          using hu(1) hAU_surj by (by100 simp)
+        then obtain c where hc: "c \<in> top1_fundamental_group_carrier A ?TA a"
+            "(top1_fundamental_group_induced_on A ?TA a ?U ?TU a (\<lambda>x. x)) c = u" by (by100 blast)
+        \<comment> \<open>j_*(c) = (U\<rightarrow>X)_*((A\<rightarrow>U)_*(c)) = (U\<rightarrow>X)_*(u) = x.\<close>
+        have "?jAX c = x" using hj_comp hc hu by (by100 simp)
+        thus "x \<in> ?jAX ` (top1_fundamental_group_carrier A ?TA a)"
+          using hc(1) by (by100 blast)
+      qed
+    qed
   qed
   \<comment> \<open>Step 3: ker(j_*) = \<langle>\<langle>{[k\<circ>p]}\<rangle>\<rangle>.
      By SvK (Cor 70.4) at base b: ker(U\<hookrightarrow>X at b) = \<langle>\<langle>\<iota>_*(\<pi>_1(UV,b))\<rangle>\<rangle> = \<langle>\<langle>{[g_0]}\<rangle>\<rangle>.
