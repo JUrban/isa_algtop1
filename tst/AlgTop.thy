@@ -3868,12 +3868,39 @@ proof -
           \<comment> \<open>Chain: incl_a*([g']_U) = [g']_X = [rev(\<delta>)^_X(g)]_X [by hg'_eq_X]
                  = [rev(\<delta>)^_X(f')]_X [by hrevg_equiv]
                  = [f]_X [by hroundtrip] = c [by hf(2)].\<close>
+          \<comment> \<open>Need: loop_equiv(X, a, g', f). Chain via rev(\<delta>)^(g) and rev(\<delta>)^(f').\<close>
+          have hbcf'_loop: "top1_is_loop_on X TX a
+              (top1_basepoint_change_on X TX ?b a ?revd ?f')"
+            by (rule top1_basepoint_change_is_loop[OF hTopX_ns hrevd_path_X hf'_loop])
+          \<comment> \<open>hroundtrip gives path_homotopic(f, rev(\<delta>)^(f')). Convert to loop_equiv.\<close>
+          have hf_equiv_bcf': "top1_loop_equiv_on X TX a f
+              (top1_basepoint_change_on X TX ?b a ?revd ?f')"
+            unfolding top1_loop_equiv_on_def using hf(1) hbcf'_loop hroundtrip by (by100 blast)
+          \<comment> \<open>sym: loop_equiv(rev(\<delta>)^(f'), f).\<close>
+          have hbcf'_equiv_f: "top1_loop_equiv_on X TX a
+              (top1_basepoint_change_on X TX ?b a ?revd ?f') f"
+            by (rule top1_loop_equiv_on_sym[OF hf_equiv_bcf'])
+          \<comment> \<open>trans: loop_equiv(rev(\<delta>)^(g), rev(\<delta>)^(f')) + loop_equiv(rev(\<delta>)^(f'), f)
+               = loop_equiv(rev(\<delta>)^(g), f).\<close>
+          have hbcg_equiv_f: "top1_loop_equiv_on X TX a
+              (top1_basepoint_change_on X TX ?b a ?revd g) f"
+            by (rule top1_loop_equiv_on_trans[OF hTopX_ns hrevg_equiv hbcf'_equiv_f])
+          \<comment> \<open>Since g' = rev(\<delta>)^_X(g) as functions: loop_equiv(g', f).\<close>
+          have hg'_equiv_f: "top1_loop_equiv_on X TX a ?g' f"
+            using hbcg_equiv_f hg'_eq_X by (by100 simp)
+          \<comment> \<open>Class equality: {k. equiv(g',k)} = {k. equiv(f,k)} = c.\<close>
+          have hclass_chain: "{k. top1_loop_equiv_on X TX a ?g' k} = c"
+          proof -
+            have hclass_eq_gf: "{k. top1_loop_equiv_on X TX a ?g' k}
+                = {k. top1_loop_equiv_on X TX a f k}"
+              using hg'_equiv_f hTopX_ns top1_loop_equiv_on_trans top1_loop_equiv_on_sym
+              sorry \<comment> \<open>loop_equiv(g', f) \<Longrightarrow> class(g') = class(f) via trans/sym.\<close>
+            thus ?thesis using hf(2) by (by100 simp)
+          qed
+          \<comment> \<open>incl_a*([g']_U) = [g']_X = c.\<close>
           show "c \<in> (top1_fundamental_group_induced_on ?U ?TU a X TX a (\<lambda>x. x))
               ` top1_fundamental_group_carrier ?U ?TU a"
-            using hg'_class_U hincl_g' hg'_eq_X hrevg_equiv hroundtrip hf hTopX_ns
-              top1_loop_equiv_on_trans top1_loop_equiv_on_sym top1_loop_equiv_on_refl
-              top1_basepoint_change_is_loop[OF hTopX_ns hrevd_path_X hf'_loop]
-            sorry \<comment> \<open>Chain of class equalities via loop_equiv trans/sym + roundtrip.\<close>
+            using hg'_class_U hincl_g' hclass_chain by (by100 blast)
         qed
       qed
     qed
@@ -11041,6 +11068,7 @@ end
  
   
  
+
 
 
 
