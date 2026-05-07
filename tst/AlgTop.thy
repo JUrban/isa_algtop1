@@ -2194,13 +2194,33 @@ lemma Theorem_54_5_iso_with_generator:
      top1_Z_group top1_Z_mul \<phi>
    \<and> \<phi> {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0)
        (\<lambda>s. (cos (2*pi*s), sin (2*pi*s))) g} = (1::int)"
-  sorry \<comment> \<open>Proof: follow Theorem_54_5_iso construction (floor \<circ> \<Phi>).
-     The hom property uses translated lift: for f1*f2, the lift is
-     ft1 * (n1 + ft2) from 0 to n1+n2 = \<Phi>([f1]) + \<Phi>([f2]).
-     Key tools: top1_R_to_S1_translate_lift, top1_R_to_S1_translated_lift_is_lift,
-     Theorem_54_3 for endpoint uniqueness.
-     And \<Phi>([f]) = 1 from Theorem_54_3 + identity lift.
-     Estimated: ~150-200 lines (same as Theorem_54_5_iso hom proof).\<close>
+proof -
+  \<comment> \<open>Step 1: Get the existing iso from Theorem_54_5_iso.\<close>
+  obtain \<phi>_base where h\<phi>b_iso: "top1_group_iso_on
+      (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
+      (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))
+      top1_Z_group top1_Z_mul \<phi>_base"
+    using Theorem_54_5_iso
+    unfolding top1_groups_isomorphic_on_def by (by100 blast)
+  \<comment> \<open>\<phi>_base([f]) is either 1 or -1 (by standard_S1_loop_generates_Z,
+     which uses THIS lemma). Circular!
+     Instead: case split. If \<phi>_base([f]) = 1: done. If not: negate.\<close>
+  \<comment> \<open>Actually: we know from the covering space that SOME iso maps [f] to 1.
+     The original Theorem_54_5_iso construction does this.
+     But from the existential, we can only get \<phi>_base([f]) = SOME integer m.
+     If m = 1: take \<phi> = \<phi>_base.
+     If m \<noteq> 1: since \<phi>_base is an iso and \<pi>_1(S1) \<cong> Z:
+     \<phi>_base maps [f] to some m. If we define \<phi> = (\<lambda>c. \<phi>_base c div m):
+     this won't be a hom in general.
+     The cleanest approach: prove the hom property of the lifting correspondence.\<close>
+  show ?thesis
+    sorry \<comment> \<open>Needs: hom property of lifting correspondence Φ.
+         Proof: for c1·c2: construct combined lift ft1*(n1+ft2) of f1*f2.
+         By Theorem_54_3: endpoint = n1+n2 = Φ(c1)+Φ(c2). Then floor∘Φ is iso.
+         And (floor∘Φ)([f]) = floor(1) = 1. Key tools available:
+         top1_R_to_S1_translate_lift, top1_R_to_S1_translated_lift_is_lift,
+         Theorem_54_3, Theorem_54_4_lifting_correspondence.\<close>
+qed
 
 lemma standard_S1_loop_generates_Z:
   assumes h\<phi>_bij: "bij_betw \<phi> (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1,0))
