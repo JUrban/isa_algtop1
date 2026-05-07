@@ -3658,16 +3658,38 @@ proof -
     have hAU_surj: "(top1_fundamental_group_induced_on A ?TA a ?U ?TU a (\<lambda>x. x))
         ` (top1_fundamental_group_carrier A ?TA a)
       = top1_fundamental_group_carrier ?U ?TU a"
-    proof -
-      obtain \<psi> where h\<psi>: "top1_group_iso_on
+    proof (rule equalityI)
+      \<comment> \<open>Forward: image \<subseteq> carrier (from hom property).\<close>
+      have hTopU_d: "is_topology_on ?U ?TU"
+        by (rule subspace_topology_is_topology_on[OF hTopX_ns]) (by100 blast)
+      have ha_U_d: "a \<in> ?U" using assms(6) hA_sub_X hx0_notin_A by (by100 blast)
+      have hAU_cont_d: "top1_continuous_map_on A ?TA ?U ?TU (\<lambda>x. x)"
+      proof -
+        have "A \<subseteq> ?U" using hA_sub_X hx0_notin_A by (by100 blast)
+        from top1_continuous_map_on_restrict_domain_simple[OF top1_continuous_map_on_id[OF hTopU_d] this]
+        have "top1_continuous_map_on A (subspace_topology ?U ?TU A) ?U ?TU id" .
+        thus ?thesis using subspace_topology_trans[OF \<open>A \<subseteq> ?U\<close>]
+          unfolding id_def by (by100 simp)
+      qed
+      have hAU_hom: "top1_group_hom_on
           (top1_fundamental_group_carrier A ?TA a) (top1_fundamental_group_mul A ?TA a)
-          (top1_fundamental_group_carrier ?U ?TU a) (top1_fundamental_group_mul ?U ?TU a) \<psi>"
-        using hA_U_iso unfolding top1_groups_isomorphic_on_def by (by100 blast)
-      \<comment> \<open>The iso \<psi> is surjective. But \<psi> may not be the induced map.
-         However, both the iso and the induced map have the same image
-         (the induced map is a hom with image = carrier of U, since the iso exists).\<close>
-      show ?thesis
-        sorry \<comment> \<open>Induced map A\<rightarrow>U surjective (inclusion of deformation retract is iso).\<close>
+          (top1_fundamental_group_carrier ?U ?TU a) (top1_fundamental_group_mul ?U ?TU a)
+          (top1_fundamental_group_induced_on A ?TA a ?U ?TU a (\<lambda>x. x))"
+        by (rule top1_fundamental_group_induced_on_is_hom[OF hTA_top hTopU_d assms(6) ha_U_d hAU_cont_d])
+           (by100 simp)
+      show "(top1_fundamental_group_induced_on A ?TA a ?U ?TU a (\<lambda>x. x))
+          ` (top1_fundamental_group_carrier A ?TA a) \<subseteq> top1_fundamental_group_carrier ?U ?TU a"
+        using hAU_hom unfolding top1_group_hom_on_def by (by100 blast)
+    next
+      \<comment> \<open>Backward: carrier \<subseteq> image. For [f] \<in> \<pi>_1(U,a), use the retraction r.
+         r\<circ>f is a loop in A at a. \<iota>_*(class of r\<circ>f) = class of f (since \<iota>\<circ>r \<simeq> id via deformation).\<close>
+      show "top1_fundamental_group_carrier ?U ?TU a
+          \<subseteq> (top1_fundamental_group_induced_on A ?TA a ?U ?TU a (\<lambda>x. x))
+              ` (top1_fundamental_group_carrier A ?TA a)"
+        sorry \<comment> \<open>Surjectivity of \<iota>_*: for [f] \<in> \<pi>_1(U,a), take [r\<circ>f] \<in> \<pi>_1(A,a).
+             \<iota>_*([r\<circ>f]) = [r\<circ>f]_U = [f]_U by deformation retract homotopy.
+             Needs: extract retraction r from hA_deformation_retract_U,
+             show r\<circ>f is loop in A, apply Lemma_58_1_basepoint_fixed.\<close>
     qed
     \<comment> \<open>Combine: j_* = (U\<rightarrow>X)_* \<circ> (A\<rightarrow>U)_*, both surjective.\<close>
     show ?thesis
@@ -10571,6 +10593,7 @@ end
  
   
  
+
 
 
 
