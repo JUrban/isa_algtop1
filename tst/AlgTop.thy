@@ -2183,6 +2183,25 @@ lemma standard_S1_loop_class_in_carrier:
        (\<lambda>s. (cos (2*pi*s), sin (2*pi*s))) g}
    \<in> top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0)"
   unfolding top1_fundamental_group_carrier_def using standard_S1_loop_is_loop by (by100 blast)
+\<comment> \<open>Strengthened Theorem_54_5_iso: there exists a group iso \<pi>_1(S1) \<rightarrow> Z mapping [f] to 1.
+   The original Theorem_54_5_iso gives \<exists>\<phi>. iso(\<phi>) but doesn't export \<phi>([f]) = 1.
+   This version does, by combining the Theorem_54_5_iso construction with
+   Theorem_54_3 (lift endpoint uniqueness).\<close>
+lemma Theorem_54_5_iso_with_generator:
+  "\<exists>\<phi>. top1_group_iso_on
+     (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
+     (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))
+     top1_Z_group top1_Z_mul \<phi>
+   \<and> \<phi> {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0)
+       (\<lambda>s. (cos (2*pi*s), sin (2*pi*s))) g} = (1::int)"
+  sorry \<comment> \<open>Proof: follow Theorem_54_5_iso construction (floor \<circ> \<Phi>).
+     The hom property uses translated lift: for f1*f2, the lift is
+     ft1 * (n1 + ft2) from 0 to n1+n2 = \<Phi>([f1]) + \<Phi>([f2]).
+     Key tools: top1_R_to_S1_translate_lift, top1_R_to_S1_translated_lift_is_lift,
+     Theorem_54_3 for endpoint uniqueness.
+     And \<Phi>([f]) = 1 from Theorem_54_3 + identity lift.
+     Estimated: ~150-200 lines (same as Theorem_54_5_iso hom proof).\<close>
+
 lemma standard_S1_loop_generates_Z:
   assumes h\<phi>_bij: "bij_betw \<phi> (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1,0))
       top1_Z_group"
@@ -2344,8 +2363,87 @@ proof -
        If we had \<phi>_0([f]) = 1: \<phi>([f]) = \<alpha>(1) \<in> {1,-1}.
        If \<phi>_0([f]) \<noteq> 1: we need the lifting fact for \<phi>_0 too.
        But from \<Phi>([f]) = 1 and the Z bijection: any other bijection maps [f] to \<pm>1.\<close>
+    \<comment> \<open>Use Theorem_54_5_iso_with_generator: \<exists>\<psi>_0. iso(\<psi>_0) \<and> \<psi>_0([f]) = 1.\<close>
+    obtain \<psi>_0 where h\<psi>0_iso: "top1_group_iso_on
+        (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1,0))
+        (top1_fundamental_group_mul top1_S1 top1_S1_topology (1,0))
+        top1_Z_group top1_Z_mul \<psi>_0"
+        and h\<psi>0_f: "\<psi>_0 ?fclass = (1::int)"
+      using Theorem_54_5_iso_with_generator by (by100 blast)
+    have h\<psi>0_bij: "bij_betw \<psi>_0 (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1,0))
+        top1_Z_group"
+      using h\<psi>0_iso unfolding top1_group_iso_on_def by (by100 blast)
+    have h\<psi>0_hom: "top1_group_hom_on
+        (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1,0))
+        (top1_fundamental_group_mul top1_S1 top1_S1_topology (1,0))
+        top1_Z_group top1_Z_mul \<psi>_0"
+      using h\<psi>0_iso unfolding top1_group_iso_on_def by (by100 blast)
+    \<comment> \<open>\<phi> \<circ> \<psi>_0\<inverse>: Z \<rightarrow> Z is auto.\<close>
+    have h\<psi>0_inv: "top1_group_hom_on top1_Z_group top1_Z_mul
+        (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1,0))
+        (top1_fundamental_group_mul top1_S1 top1_S1_topology (1,0))
+        (inv_into (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1,0)) \<psi>_0)"
+    proof -
+      have hS1_grp_loc: "top1_is_group_on
+          (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1,0))
+          (top1_fundamental_group_mul top1_S1 top1_S1_topology (1,0))
+          (top1_fundamental_group_id top1_S1 top1_S1_topology (1,0))
+          (top1_fundamental_group_invg top1_S1 top1_S1_topology (1,0))"
+      proof -
+        have "is_topology_on top1_S1 top1_S1_topology"
+          unfolding top1_S1_topology_def
+          by (rule subspace_topology_is_topology_on[OF
+                product_topology_on_is_topology_on[OF
+                  top1_open_sets_is_topology_on_UNIV top1_open_sets_is_topology_on_UNIV, simplified]]) (by100 simp)
+        moreover have "(1::real, 0) \<in> top1_S1" unfolding top1_S1_def by (by100 simp)
+        ultimately show ?thesis by (rule top1_fundamental_group_is_group)
+      qed
+      have hZ_grp_loc: "top1_is_group_on top1_Z_group top1_Z_mul top1_Z_id top1_Z_invg"
+        using top1_Z_is_abelian_group unfolding top1_is_abelian_group_on_def by (by100 blast)
+      show ?thesis by (rule bij_hom_inv_is_hom[OF hS1_grp_loc hZ_grp_loc h\<psi>0_bij h\<psi>0_hom])
+    qed
+    let ?\<beta> = "\<phi>_0 \<circ> (inv_into (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1,0)) \<psi>_0)"
+    have h\<beta>_hom: "top1_group_hom_on top1_Z_group top1_Z_mul top1_Z_group top1_Z_mul ?\<beta>"
+      by (rule group_hom_comp[OF h\<psi>0_inv h\<phi>0_hom])
+    have h\<beta>_bij: "bij_betw ?\<beta> top1_Z_group top1_Z_group"
+      using bij_betw_trans[OF bij_betw_inv_into[OF h\<psi>0_bij] h\<phi>0_bij] .
+    have h\<beta>_1: "?\<beta> 1 = 1 \<or> ?\<beta> 1 = -1"
+      by (rule Z_auto_sends_1_to_pm1[OF h\<beta>_bij h\<beta>_hom])
+    \<comment> \<open>\<phi>([f]) = \<beta>(\<psi>_0([f])) = \<beta>(1) \<in> {1,-1}.\<close>
+    have "\<phi>_0 ?fclass = ?\<beta> (\<psi>_0 ?fclass)"
+    proof -
+      have hinj: "inj_on \<psi>_0 (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1,0))"
+        using h\<psi>0_bij unfolding bij_betw_def by (by100 blast)
+      have "inv_into (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1,0)) \<psi>_0 (\<psi>_0 ?fclass)
+          = ?fclass"
+        by (rule inv_into_f_f[OF hinj standard_S1_loop_class_in_carrier])
+      thus ?thesis unfolding comp_def by (by100 simp)
+    qed
+    hence h\<phi>0_eq_\<beta>: "\<phi>_0 ?fclass = ?\<beta> 1" using h\<psi>0_f by (by100 simp)
     show ?thesis
-      sorry \<comment> \<open>Combine \<Phi>([f]) = 1 with Z_auto for the given \<phi>.\<close>
+    proof -
+      from h\<beta>_1 have "?\<beta> 1 = 1 \<or> ?\<beta> 1 = -1" .
+      thus ?thesis
+      proof
+        assume h: "?\<beta> 1 = 1"
+        have "\<phi>_0 ?fclass = 1"
+        proof -
+          have "\<phi>_0 ?fclass = ?\<beta> 1" using h\<phi>0_eq_\<beta> .
+          also have "?\<beta> 1 = 1" using h .
+          finally show ?thesis .
+        qed
+        thus ?thesis by (rule disjI1)
+      next
+        assume h: "?\<beta> 1 = -1"
+        have "\<phi>_0 ?fclass = - 1"
+        proof -
+          have "\<phi>_0 ?fclass = ?\<beta> 1" using h\<phi>0_eq_\<beta> .
+          also have "?\<beta> 1 = -1" using h .
+          finally show ?thesis .
+        qed
+        thus ?thesis by (rule disjI2)
+      qed
+    qed
   qed
   \<comment> \<open>Step 2: \<phi> \<circ> \<phi>_0\<inverse>: Z \<rightarrow> Z is auto, sends 1 to \<pm>1.\<close>
   have hf_loop: "top1_is_loop_on top1_S1 top1_S1_topology (1,0) (\<lambda>s. (cos (2*pi*s), sin (2*pi*s)))"
