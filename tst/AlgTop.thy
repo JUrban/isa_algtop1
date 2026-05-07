@@ -3891,10 +3891,28 @@ proof -
           \<comment> \<open>Class equality: {k. equiv(g',k)} = {k. equiv(f,k)} = c.\<close>
           have hclass_chain: "{k. top1_loop_equiv_on X TX a ?g' k} = c"
           proof -
+            have hdir1_X: "\<And>k'. top1_loop_equiv_on X TX a ?g' k'
+                \<Longrightarrow> top1_loop_equiv_on X TX a f k'"
+            proof -
+              fix k'
+              assume "top1_loop_equiv_on X TX a ?g' k'"
+              show "top1_loop_equiv_on X TX a f k'"
+                using top1_loop_equiv_on_trans[OF hTopX_ns
+                  top1_loop_equiv_on_sym[OF hg'_equiv_f]
+                  \<open>top1_loop_equiv_on X TX a ?g' k'\<close>] .
+            qed
+            have hdir2_X: "\<And>k'. top1_loop_equiv_on X TX a f k'
+                \<Longrightarrow> top1_loop_equiv_on X TX a ?g' k'"
+            proof -
+              fix k'
+              assume "top1_loop_equiv_on X TX a f k'"
+              show "top1_loop_equiv_on X TX a ?g' k'"
+                using top1_loop_equiv_on_trans[OF hTopX_ns hg'_equiv_f
+                  \<open>top1_loop_equiv_on X TX a f k'\<close>] .
+            qed
             have hclass_eq_gf: "{k. top1_loop_equiv_on X TX a ?g' k}
                 = {k. top1_loop_equiv_on X TX a f k}"
-              using hg'_equiv_f hTopX_ns top1_loop_equiv_on_trans top1_loop_equiv_on_sym
-              sorry \<comment> \<open>loop_equiv(g', f) \<Longrightarrow> class(g') = class(f) via trans/sym.\<close>
+              using hdir1_X hdir2_X by (by100 blast)
             thus ?thesis using hf(2) by (by100 simp)
           qed
           \<comment> \<open>incl_a*([g']_U) = [g']_X = c.\<close>
@@ -11068,6 +11086,7 @@ end
  
   
  
+
 
 
 
