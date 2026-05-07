@@ -3808,6 +3808,48 @@ proof -
       and hHdr_1: "\<forall>x\<in>?U. H_dr (x, 1) \<in> A"
       and hHdr_fix: "\<forall>a'\<in>A. \<forall>t\<in>I_set. H_dr (a', t) = a'"
     using hA_deformation_retract_U unfolding top1_deformation_retract_of_on_def by (by100 auto)
+  \<comment> \<open>Retraction r = (\<lambda>x. H_dr(x,1)) continuous U \<rightarrow> A.\<close>
+  have hr_cont_outer: "top1_continuous_map_on ?U ?TU A ?TA (\<lambda>x. H_dr (x, 1))"
+  proof -
+    have hcomp_eq: "(\<lambda>x. H_dr (x, 1)) = H_dr \<circ> (\<lambda>x. (x, 1::real))"
+      by (rule ext) (by100 simp)
+    have hI_top: "is_topology_on I_set I_top" by (rule top1_unit_interval_topology_is_topology_on)
+    have h1_in_I: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+    have hpair_cont: "top1_continuous_map_on ?U ?TU (?U \<times> I_set)
+        (product_topology_on ?TU I_top) (\<lambda>x. (x, 1::real))"
+      using iffD2[OF Theorem_18_4[OF hTopU_outer hTopU_outer hI_top]]
+    proof -
+      have hpi1: "top1_continuous_map_on ?U ?TU ?U ?TU (pi1 \<circ> (\<lambda>x. (x, 1::real)))"
+      proof -
+        have "pi1 \<circ> (\<lambda>x::'a. (x, 1::real)) = (\<lambda>x. x)"
+          unfolding pi1_def by (rule ext) (by100 simp)
+        thus ?thesis using top1_continuous_map_on_id[OF hTopU_outer] unfolding id_def by (by100 simp)
+      qed
+      have hpi2: "top1_continuous_map_on ?U ?TU I_set I_top (pi2 \<circ> (\<lambda>x::'a. (x, 1::real)))"
+      proof -
+        have "pi2 \<circ> (\<lambda>x::'a. (x, 1::real)) = (\<lambda>_::'a. 1::real)"
+          unfolding pi2_def by (rule ext) (by100 simp)
+        moreover have "\<forall>y0\<in>I_set. top1_continuous_map_on ?U ?TU I_set I_top (\<lambda>x. y0)"
+          using Theorem_18_2[OF hTopU_outer hI_top hI_top] by (by100 blast)
+        ultimately show ?thesis using h1_in_I by (by100 simp)
+      qed
+      show ?thesis using iffD2[OF Theorem_18_4[OF hTopU_outer hTopU_outer hI_top]] hpi1 hpi2
+        by (by100 blast)
+    qed
+    have h_ir_cont: "top1_continuous_map_on ?U ?TU ?U ?TU (\<lambda>x. H_dr (x, 1))"
+      unfolding hcomp_eq by (rule top1_continuous_map_on_comp[OF hpair_cont hHdr_cont])
+    have hr_img: "(\<lambda>x. H_dr (x, 1)) ` ?U \<subseteq> A"
+    proof
+      fix y assume "y \<in> (\<lambda>x. H_dr (x, 1)) ` ?U"
+      then obtain x where "x \<in> ?U" "y = H_dr (x, 1)" by (by100 blast)
+      thus "y \<in> A" using hHdr_1 by (by100 blast)
+    qed
+    show ?thesis
+      using top1_continuous_map_on_codomain_shrink[OF h_ir_cont hr_img hA_sub_U_outer]
+        subspace_topology_trans[OF hA_sub_U_outer] by (by100 simp)
+  qed
+  have hra_outer: "H_dr (a, 1) = a"
+    using hHdr_fix assms(6) unfolding top1_unit_interval_def by (by100 auto)
   \<comment> \<open>(A\<hookrightarrow>U)* surjective (deformation retract \<Longrightarrow> inclusion induces iso).\<close>
   have hAU_surj_outer: "(top1_fundamental_group_induced_on A ?TA a ?U ?TU a (\<lambda>x. x))
       ` (top1_fundamental_group_carrier A ?TA a)
@@ -3854,25 +3896,26 @@ proof -
         = {g. top1_loop_equiv_on ?U ?TU a f2 g}"
       using inclusion_induced_class[OF hA_sub_U_outer hTopU_outer
           subspace_topology_trans[OF hA_sub_U_outer] hf2(1)] hf2(2) by (by100 simp)
+    \<comment> \<open>f2 is a loop in U (from A \<subseteq> U).\<close>
+    have hf2_U: "top1_is_loop_on ?U ?TU a f2"
+    proof -
+      have hAU_cont_loc: "top1_continuous_map_on A ?TA ?U ?TU (\<lambda>x. x)"
+      proof -
+        from top1_continuous_map_on_restrict_domain_simple[OF
+            top1_continuous_map_on_id[OF hTopU_outer] hA_sub_U_outer]
+        show ?thesis using subspace_topology_trans[OF hA_sub_U_outer] unfolding id_def by (by100 simp)
+      qed
+      from top1_continuous_map_loop_early[OF hAU_cont_loc hf2(1)]
+      have "top1_is_loop_on ?U ?TU ((\<lambda>x. x) a) ((\<lambda>x. x) \<circ> f2)" .
+      moreover have "(\<lambda>x::'a. x) a = a" by (by100 simp)
+      moreover have "(\<lambda>x::'a. x) \<circ> f2 = f2" by (rule ext) (by100 simp)
+      ultimately show ?thesis by (by100 simp)
+    qed
     \<comment> \<open>From heq: loop_equiv(U, f1, f2).\<close>
     have "{g. top1_loop_equiv_on ?U ?TU a f1 g} = {g. top1_loop_equiv_on ?U ?TU a f2 g}"
       using heq h\<iota>c1 h\<iota>c2 by (by100 simp)
     hence hf1f2_U: "top1_loop_equiv_on ?U ?TU a f1 f2"
     proof -
-      have hf2_U: "top1_is_loop_on ?U ?TU a f2"
-      proof -
-        have hAU_cont_loc: "top1_continuous_map_on A ?TA ?U ?TU (\<lambda>x. x)"
-        proof -
-          from top1_continuous_map_on_restrict_domain_simple[OF
-              top1_continuous_map_on_id[OF hTopU_outer] hA_sub_U_outer]
-          show ?thesis using subspace_topology_trans[OF hA_sub_U_outer] unfolding id_def by (by100 simp)
-        qed
-        from top1_continuous_map_loop_early[OF hAU_cont_loc hf2(1)]
-        have "top1_is_loop_on ?U ?TU ((\<lambda>x. x) a) ((\<lambda>x. x) \<circ> f2)" .
-        moreover have "(\<lambda>x::'a. x) a = a" by (by100 simp)
-        moreover have "(\<lambda>x::'a. x) \<circ> f2 = f2" by (rule ext) (by100 simp)
-        ultimately show ?thesis by (by100 simp)
-      qed
       have "f2 \<in> {g. top1_loop_equiv_on ?U ?TU a f2 g}"
         using top1_loop_equiv_on_refl[OF hf2_U] by (by100 blast)
       hence "f2 \<in> {g. top1_loop_equiv_on ?U ?TU a f1 g}"
@@ -3883,12 +3926,26 @@ proof -
     \<comment> \<open>r: U \<rightarrow> A continuous.\<close>
     let ?r = "\<lambda>x. H_dr (x, 1)"
     have hr_cont: "top1_continuous_map_on ?U ?TU A ?TA ?r"
-      sorry \<comment> \<open>H_dr composition with (x,1), codomain shrink to A.\<close>
+      using hr_cont_outer .
     \<comment> \<open>Apply r to homotopy: loop_equiv(A, r\<circ>f1, r\<circ>f2).\<close>
     have hra: "?r a = a" using hHdr_fix assms(6) unfolding top1_unit_interval_def by (by100 auto)
+    have hf1_U: "top1_is_loop_on ?U ?TU a f1"
+    proof -
+      have hAU_cont_loc: "top1_continuous_map_on A ?TA ?U ?TU (\<lambda>x. x)"
+      proof -
+        from top1_continuous_map_on_restrict_domain_simple[OF
+            top1_continuous_map_on_id[OF hTopU_outer] hA_sub_U_outer]
+        show ?thesis using subspace_topology_trans[OF hA_sub_U_outer] unfolding id_def by (by100 simp)
+      qed
+      from top1_continuous_map_loop_early[OF hAU_cont_loc hf1(1)]
+      have "top1_is_loop_on ?U ?TU ((\<lambda>x. x) a) ((\<lambda>x. x) \<circ> f1)" .
+      moreover have "(\<lambda>x::'a. x) a = a" by (by100 simp)
+      moreover have "(\<lambda>x::'a. x) \<circ> f1 = f1" by (rule ext) (by100 simp)
+      ultimately show ?thesis by (by100 simp)
+    qed
     have hrf1f2_A: "top1_loop_equiv_on A ?TA a (?r \<circ> f1) (?r \<circ> f2)"
-      using top1_induced_preserves_loop_equiv[OF hTopU_outer hr_cont _ _ hf1f2_U] hra
-      sorry \<comment> \<open>induced_preserves_loop_equiv with r: U\<rightarrow>A and r(a)=a.\<close>
+      using top1_induced_preserves_loop_equiv[OF hTopU_outer hr_cont hf1_U hf2_U hf1f2_U] hra
+      by (by100 simp)
     \<comment> \<open>r\<circ>fi agrees with fi on I (r fixes A, fi maps I to A). By loop_agree_on_I: r\<circ>fi \<simeq> fi.\<close>
     have hf1_cont_A: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology A ?TA f1"
       using hf1(1) unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
