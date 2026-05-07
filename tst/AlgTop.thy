@@ -4383,17 +4383,57 @@ proof -
          Therefore rev(\<delta>)-hat([g0]) = [k \<circ> p] in \<pi>_1(U,a).
          Since ker(incl*_a) \<subseteq> rev(\<delta>)-hat(ker(incl*_b)) = rev(\<delta>)-hat(\<langle>\<langle>{[g0]}\<rangle>\<rangle>) = \<langle>\<langle>{[k\<circ>p]}\<rangle>\<rangle>,
          and ker(j*) \<subseteq> (A\<hookrightarrow>U)*\<inverse>(ker(incl*_a)), we get ker(j*) \<subseteq> \<langle>\<langle>{[k\<circ>p]}\<rangle>\<rangle>.\<close>
-      \<comment> \<open>Step 1: ker(j*) = (A\<hookrightarrow>U)*\<inverse>(ker((U\<hookrightarrow>X)*_a)) since j* = (U\<hookrightarrow>X)* \<circ> (A\<hookrightarrow>U)*.\<close>
-      \<comment> \<open>Step 2: ker((U\<hookrightarrow>X)*_a) \<subseteq> \<langle>\<langle>{[k\<circ>p]}\<rangle>\<rangle>_U.
-         From hincl_ker_b + base change naturality + generator tracking.\<close>
-      \<comment> \<open>Step 3: (A\<hookrightarrow>U)*\<inverse>(\<langle>\<langle>{[k\<circ>p]}\<rangle>\<rangle>_U) = \<langle>\<langle>{[k\<circ>p]}\<rangle>\<rangle>_A since (A\<hookrightarrow>U)* is iso mapping [k\<circ>p] to [k\<circ>p].\<close>
-      \<comment> \<open>All three steps combined give ker(j*) \<subseteq> \<langle>\<langle>{[k\<circ>p]}\<rangle>\<rangle>_A = ?relator.\<close>
-      \<comment> \<open>The core difficulty is Step 2, which needs the winding number argument.\<close>
+      \<comment> \<open>Step 1: ker(j*) \<subseteq> (A\<hookrightarrow>U)*\<inverse>(ker((U\<hookrightarrow>X)*_a)) since j* = (U\<hookrightarrow>X)* \<circ> (A\<hookrightarrow>U)*.\<close>
+      have hstep1: "\<And>c. c \<in> top1_group_kernel_on
+              (top1_fundamental_group_carrier A ?TA a) (top1_fundamental_group_id X TX a) ?jAX
+          \<Longrightarrow> (top1_fundamental_group_induced_on A ?TA a ?U ?TU a (\<lambda>x. x)) c
+              \<in> top1_group_kernel_on
+                (top1_fundamental_group_carrier ?U ?TU a) (top1_fundamental_group_id X TX a)
+                (top1_fundamental_group_induced_on ?U ?TU a X TX a (\<lambda>x. x))"
+        sorry \<comment> \<open>ker(j*) maps into ker(incl*_a) via (A\<hookrightarrow>U)_* (from j* = incl* \<circ> (A\<hookrightarrow>U)*).\<close>
+      \<comment> \<open>Step 2: ker((U\<hookrightarrow>X)*_a) \<subseteq> \<langle>\<langle>{[k\<circ>p]_U}\<rangle>\<rangle>.
+         From hincl_ker_b + base change naturality + comp_basepoint_change + winding number.\<close>
+      have hstep2: "top1_group_kernel_on
+            (top1_fundamental_group_carrier ?U ?TU a) (top1_fundamental_group_id X TX a)
+            (top1_fundamental_group_induced_on ?U ?TU a X TX a (\<lambda>x. x))
+          \<subseteq> top1_normal_subgroup_generated_on
+              (top1_fundamental_group_carrier ?U ?TU a) (top1_fundamental_group_mul ?U ?TU a)
+              (top1_fundamental_group_id ?U ?TU a) (top1_fundamental_group_invg ?U ?TU a)
+              {top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1, 0) ?U ?TU a
+                 (\<lambda>z. h z) {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) ?f g}}"
+        sorry \<comment> \<open>Core: base change naturality transfers hincl_ker_b from base b to base a.
+             The winding number argument shows the generator maps to [k\<circ>p]_U.\<close>
+      \<comment> \<open>Step 3: preimage under (A\<hookrightarrow>U)* of \<langle>\<langle>{[k\<circ>p]_U}\<rangle>\<rangle> \<subseteq> \<langle>\<langle>{[k\<circ>p]_A}\<rangle>\<rangle> = ?relator.\<close>
+      have hstep3: "\<And>c. c \<in> top1_fundamental_group_carrier A ?TA a \<Longrightarrow>
+          (top1_fundamental_group_induced_on A ?TA a ?U ?TU a (\<lambda>x. x)) c
+              \<in> top1_normal_subgroup_generated_on
+                  (top1_fundamental_group_carrier ?U ?TU a) (top1_fundamental_group_mul ?U ?TU a)
+                  (top1_fundamental_group_id ?U ?TU a) (top1_fundamental_group_invg ?U ?TU a)
+                  {top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1, 0) ?U ?TU a
+                     (\<lambda>z. h z) {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) ?f g}}
+          \<Longrightarrow> c \<in> ?relator"
+        sorry \<comment> \<open>(A\<hookrightarrow>U)* maps [k\<circ>p]_A to [k\<circ>p]_U (inclusion is identity on loops).
+             Preimage of normal closure under iso = normal closure of preimage.\<close>
+      \<comment> \<open>Combine steps 1-3.\<close>
       show ?thesis
-        sorry \<comment> \<open>Generator tracking. The sorry reduces to:
-             bc(B2-{0}, q, p, \<gamma>, f0) \<simeq> f^(\<plusminus>1) in B2-{0} (winding number \<plusminus>1).
-             This implies rev(\<delta>)-hat([\<iota>*(g0)]) \<in> \<langle>\<langle>{[k\<circ>p]}\<rangle>\<rangle> (via comp_basepoint_change + hg_eq_kp).
-             Then base change naturality + (A\<hookrightarrow>U)* iso gives the result.\<close>
+      proof
+        fix c assume hc: "c \<in> top1_group_kernel_on
+            (top1_fundamental_group_carrier A ?TA a) (top1_fundamental_group_id X TX a) ?jAX"
+        have hc_A: "c \<in> top1_fundamental_group_carrier A ?TA a"
+          using hc unfolding top1_group_kernel_on_def by (by100 blast)
+        from hstep1[OF hc] have "(top1_fundamental_group_induced_on A ?TA a ?U ?TU a (\<lambda>x. x)) c
+            \<in> top1_group_kernel_on
+              (top1_fundamental_group_carrier ?U ?TU a) (top1_fundamental_group_id X TX a)
+              (top1_fundamental_group_induced_on ?U ?TU a X TX a (\<lambda>x. x))" .
+        with hstep2 have "(top1_fundamental_group_induced_on A ?TA a ?U ?TU a (\<lambda>x. x)) c
+            \<in> top1_normal_subgroup_generated_on
+                (top1_fundamental_group_carrier ?U ?TU a) (top1_fundamental_group_mul ?U ?TU a)
+                (top1_fundamental_group_id ?U ?TU a) (top1_fundamental_group_invg ?U ?TU a)
+                {top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1, 0) ?U ?TU a
+                   (\<lambda>z. h z) {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) ?f g}}"
+          by (by100 blast)
+        from hstep3[OF hc_A this] show "c \<in> ?relator" .
+      qed
     qed
     \<comment> \<open>Step (c): \<langle>\<langle>{[k\<circ>p]}\<rangle>\<rangle> \<subseteq> ker(j_*). The normal closure of {[k\<circ>p]} is contained
        in ker(j_*) because [k\<circ>p] \<in> ker(j_*) and ker is a normal subgroup.\<close>
@@ -11102,6 +11142,7 @@ end
  
   
  
+
 
 
 
