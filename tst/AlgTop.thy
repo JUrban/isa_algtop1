@@ -3733,7 +3733,62 @@ proof -
     have hrelator_sub_ker: "?relator \<subseteq> top1_group_kernel_on
         (top1_fundamental_group_carrier A ?TA a)
         (top1_fundamental_group_id X TX a) ?jAX"
-      sorry \<comment> \<open>[k\<circ>p] \<in> ker(j_*) + ker is normal subgroup \<Longrightarrow> \<langle>\<langle>{[k\<circ>p]}\<rangle>\<rangle> \<subseteq> ker.\<close>
+    proof -
+      let ?ker = "top1_group_kernel_on
+          (top1_fundamental_group_carrier A ?TA a) (top1_fundamental_group_id X TX a) ?jAX"
+      \<comment> \<open>ker is a normal subgroup.\<close>
+      have hker_normal: "top1_normal_subgroup_on
+          (top1_fundamental_group_carrier A ?TA a) (top1_fundamental_group_mul A ?TA a)
+          (top1_fundamental_group_id A ?TA a) (top1_fundamental_group_invg A ?TA a) ?ker"
+        by (rule kernel_is_normal_subgroup[OF
+            top1_fundamental_group_is_group[OF hTA_top assms(6)]
+            top1_fundamental_group_is_group[OF hTopX_ns ha_X] hj_hom])
+      \<comment> \<open>{[k\<circ>p]} \<subseteq> ker. Need [k\<circ>p] \<in> carrier(A,a) and j_*([k\<circ>p]) = id.\<close>
+      have hkp_in_carrier: "top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1, 0) A ?TA a ?\<iota>
+          {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) ?f g}
+        \<in> top1_fundamental_group_carrier A ?TA a"
+      proof -
+        have hS1_top: "is_topology_on top1_S1 top1_S1_topology"
+          using top1_S1_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
+        have h10: "(1::real, 0::real) \<in> top1_S1" unfolding top1_S1_def by (by100 simp)
+        have hiota_a: "?\<iota> (1, 0) = a" using assms(9) by (by100 simp)
+        have h\<iota>_hom_loc: "top1_group_hom_on
+            (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
+            (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))
+            (top1_fundamental_group_carrier A ?TA a) (top1_fundamental_group_mul A ?TA a)
+            (top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1, 0) A ?TA a ?\<iota>)"
+          by (rule top1_fundamental_group_induced_on_is_hom[OF hS1_top hTA_top h10 assms(6)
+              h\<iota>_cont hiota_a])
+        have hf_loop_loc: "top1_is_loop_on top1_S1 top1_S1_topology (1, 0) ?f"
+          unfolding top1_is_loop_on_def top1_is_path_on_def
+        proof (intro conjI)
+          have hf_eq: "?f = top1_R_to_S1"
+          proof (rule ext)
+            fix s :: real show "?f s = top1_R_to_S1 s" unfolding top1_R_to_S1_def by (by100 simp)
+          qed
+          have hR_to_S1_cont: "top1_continuous_map_on (UNIV::real set) top1_open_sets
+              top1_S1 top1_S1_topology top1_R_to_S1"
+            using Theorem_53_1 unfolding top1_covering_map_on_def by (by100 blast)
+          from top1_continuous_map_on_restrict_domain_simple[OF hR_to_S1_cont UNIV_I[THEN subsetI]]
+          show "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+              top1_S1 top1_S1_topology ?f"
+            unfolding top1_unit_interval_topology_def hf_eq
+            using subspace_topology_UNIV_self by (by100 simp)
+        next show "?f 0 = (1::real, 0::real)" by (by100 simp)
+        next show "?f 1 = (1::real, 0::real)" by (by100 simp)
+        qed
+        have "{g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) ?f g}
+            \<in> top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0)"
+          unfolding top1_fundamental_group_carrier_def using hf_loop_loc by (by100 blast)
+        thus ?thesis using h\<iota>_hom_loc unfolding top1_group_hom_on_def by (by100 blast)
+      qed
+      have hkp_sub: "{top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1, 0) A ?TA a ?\<iota>
+          {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) ?f g}} \<subseteq> ?ker"
+        unfolding top1_group_kernel_on_def using hkp_in_ker hkp_in_carrier by (by100 blast)
+      \<comment> \<open>Normal closure of subset of normal subgroup \<subseteq> the normal subgroup.\<close>
+      show ?thesis unfolding top1_normal_subgroup_generated_on_def
+        using hkp_sub hker_normal by (by100 blast)
+    qed
     show ?thesis using hker_sub_relator hrelator_sub_ker by (by100 blast)
   qed
   \<comment> \<open>Step 4: Group and normal subgroup properties.\<close>
