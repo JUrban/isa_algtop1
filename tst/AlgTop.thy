@@ -5,6 +5,11 @@ begin
 
 
 
+lemma card_three_le: "card {a, b, c::'a} \<le> 3"
+  apply (rule card_insert_le_m1) apply simp
+  apply (rule card_insert_le_m1) apply simp
+  apply (rule card_insert_le_m1) apply simp apply simp done
+
 \<comment> \<open>===== Theorems with sorry, moved here for caching =====\<close>
 
 
@@ -139,25 +144,43 @@ proof -
      D_2 = sub-arc of e24 from q to a4, then e41, then sub-arc of e13 to p.
      D = D_1 \<union> D_2 is a simple closed curve.\<close>
   \<comment> \<open>Split e13 at p into two sub-arcs: e13_a1p (from a1 to p) and e13_pa3 (from p to a3).\<close>
-  have hp_e13: "p \<in> e13 - {a1, a3}" sorry \<comment> \<open>From assumptions.\<close>
-  have hq_e24: "q \<in> e24 - {a2, a4}" sorry \<comment> \<open>From assumptions.\<close>
+  have hp_e13: "p \<in> e13 - {a1, a3}" by (rule assms(37))
+  have hq_e24: "q \<in> e24 - {a2, a4}" by (rule assms(38))
   have he13_ep: "top1_arc_endpoints_on e13 (subspace_topology top1_S2 top1_S2_topology e13) = {a1,a3}"
-    sorry \<comment> \<open>From assumptions.\<close>
+    by (rule assms(20))
   have he24_ep: "top1_arc_endpoints_on e24 (subspace_topology top1_S2 top1_S2_topology e24) = {a2,a4}"
-    sorry \<comment> \<open>From assumptions.\<close>
+    by (rule assms(21))
   have he13_arc: "top1_is_arc_on e13 (subspace_topology top1_S2 top1_S2_topology e13)"
-    sorry \<comment> \<open>From assumptions.\<close>
+    by (rule assms(14))
   have he24_arc: "top1_is_arc_on e24 (subspace_topology top1_S2 top1_S2_topology e24)"
-    sorry \<comment> \<open>From assumptions.\<close>
+    by (rule assms(15))
   have hp_not_ep: "p \<notin> top1_arc_endpoints_on e13 (subspace_topology top1_S2 top1_S2_topology e13)"
     using he13_ep hp_e13 by (by100 blast)
   have hq_not_ep: "q \<notin> top1_arc_endpoints_on e24 (subspace_topology top1_S2 top1_S2_topology e24)"
     using he24_ep hq_e24 by (by100 blast)
-  have hS2_strict: "is_topology_on_strict top1_S2 top1_S2_topology" sorry
+  have hS2_strict: "is_topology_on_strict top1_S2 top1_S2_topology" by (rule assms(1))
   have hS2_haus: "is_hausdorff_on top1_S2 top1_S2_topology"
-    sorry \<comment> \<open>S2 is Hausdorff.\<close>
-  have ha1_ne_a3: "a1 \<noteq> a3" sorry
-  have ha2_ne_a4: "a2 \<noteq> a4" sorry
+    using top1_S2_is_hausdorff .
+  have ha1_ne_a3: "a1 \<noteq> a3"
+  proof
+    assume "a1 = a3"
+    hence "{a1, a2, a3, a4} = {a2, a3, a4}" by (by100 blast)
+    hence "card {a1, a2, a3, a4} \<le> card {a2, a3, a4}" by (by100 simp)
+    moreover have "card {a2, a3, a4} \<le> 3"
+    proof -
+      show ?thesis by (rule card_three_le)
+    qed
+    ultimately show False using assms(2) by (by100 simp)
+  qed
+  have ha2_ne_a4: "a2 \<noteq> a4"
+  proof
+    assume "a2 = a4"
+    hence "{a1, a2, a3, a4} = {a1, a3, a4}" by (by100 blast)
+    hence "card {a1, a2, a3, a4} \<le> card {a1, a3, a4}" by (by100 simp)
+    moreover have "card {a1, a3, a4} \<le> 3"
+      sorry \<comment> \<open>card {x,y,z} \<le> 3 for any x,y,z.\<close>
+    ultimately show False using assms(2) by (by100 simp)
+  qed
   obtain e13_a1p e13_pa3 where he13_split: "e13 = e13_a1p \<union> e13_pa3"
       "e13_a1p \<inter> e13_pa3 = {p}"
       "top1_is_arc_on e13_a1p (subspace_topology top1_S2 top1_S2_topology e13_a1p)"
