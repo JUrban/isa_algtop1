@@ -8,6 +8,26 @@ begin
 \<comment> \<open>===== Theorems with sorry, moved here for caching =====\<close>
 
 
+\<comment> \<open>Reusable: two arcs meeting only at their two endpoints form a simple closed curve.\<close>
+lemma arcs_form_simple_closed_curve:
+  assumes hT: "is_topology_on_strict X TX" and hH: "is_hausdorff_on X TX"
+      and hA1: "top1_is_arc_on A1 (subspace_topology X TX A1)" and hA1X: "A1 \<subseteq> X"
+      and hA2: "top1_is_arc_on A2 (subspace_topology X TX A2)" and hA2X: "A2 \<subseteq> X"
+      and hinter: "A1 \<inter> A2 = {a, b}" and hab: "a \<noteq> b"
+      and hep1: "top1_arc_endpoints_on A1 (subspace_topology X TX A1) = {a, b}"
+      and hep2: "top1_arc_endpoints_on A2 (subspace_topology X TX A2) = {a, b}"
+  shows "top1_simple_closed_curve_on X TX (A1 \<union> A2)"
+  sorry \<comment> \<open>Construct homeomorphism S1 -> A1 \<union> A2 by mapping upper/lower semicircles to A1/A2.\<close>
+
+\<comment> \<open>Reusable: concatenation of arcs meeting at a single common endpoint is an arc.\<close>
+lemma arcs_concatenation_is_arc:
+  assumes hT: "is_topology_on_strict X TX" and hH: "is_hausdorff_on X TX"
+      and hA1: "top1_is_arc_on A1 (subspace_topology X TX A1)" and hA1X: "A1 \<subseteq> X"
+      and hA2: "top1_is_arc_on A2 (subspace_topology X TX A2)" and hA2X: "A2 \<subseteq> X"
+      and hinter: "A1 \<inter> A2 = {c}"
+  shows "top1_is_arc_on (A1 \<union> A2) (subspace_topology X TX (A1 \<union> A2))"
+  sorry \<comment> \<open>Concatenation of homeomorphisms [0,1/2] -> A1 and [1/2,1] -> A2 gives [0,1] -> A1\<union>A2.\<close>
+
 \<comment> \<open>Reusable: splitting an arc at a given interior point produces two sub-arcs.
    Each endpoint of D goes to a different sub-arc.\<close>
 lemma arc_split_at_given_point:
