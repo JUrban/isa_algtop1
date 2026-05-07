@@ -3802,7 +3802,30 @@ proof -
              rev(\<delta>)^_X(f') = rev(\<delta>)^_X(\<delta>^_X(f)) ~ f in X (by roundtrip).\<close>
           \<comment> \<open>Key fact: incl_b*([g]_U) = [f']_X, i.e., g ~ f' in X.\<close>
           have hg_equiv_f'_X: "top1_loop_equiv_on X TX ?b g ?f'"
-            sorry \<comment> \<open>From hcu(2): incl*_b([g]_U) = [f']_X, unfold induced class.\<close>
+          proof -
+            have hU_sub_X: "?U \<subseteq> X" by (by100 blast)
+            have hTU_eq: "subspace_topology X TX ?U = ?TU" by (by100 simp)
+            \<comment> \<open>incl*_b([g]_U) = [g]_X by inclusion_induced_class.\<close>
+            have hincl_g: "top1_fundamental_group_induced_on ?U ?TU ?b X TX ?b (\<lambda>x. x)
+                {k. top1_loop_equiv_on ?U ?TU ?b g k}
+              = {k. top1_loop_equiv_on X TX ?b g k}"
+              by (rule inclusion_induced_class[OF hU_sub_X hTopX_ns hTU_eq hg(1)])
+            \<comment> \<open>From hcu(2): this equals [f']_X.\<close>
+            have "[g]_X = [f']_X": "{k. top1_loop_equiv_on X TX ?b g k}
+              = {k. top1_loop_equiv_on X TX ?b ?f' k}"
+              using hcu(2) hg(2) hincl_g by (by100 simp)
+            \<comment> \<open>Set equality of equiv classes implies equiv of representatives.\<close>
+            hence "top1_loop_equiv_on X TX ?b g ?f'"
+            proof -
+              have "?f' \<in> {k. top1_loop_equiv_on X TX ?b ?f' k}"
+                using top1_loop_equiv_on_refl[OF hf'_loop] by (by100 blast)
+              hence "?f' \<in> {k. top1_loop_equiv_on X TX ?b g k}"
+                using \<open>{k. top1_loop_equiv_on X TX ?b g k} = {k. top1_loop_equiv_on X TX ?b ?f' k}\<close>
+                by (by100 blast)
+              thus ?thesis by (by100 blast)
+            qed
+            thus ?thesis .
+          qed
           \<comment> \<open>Apply rev(\<delta>) base change in X to both sides.\<close>
           have hrevd_path_X: "top1_is_path_on X TX ?b a ?revd"
             by (rule top1_path_reverse_is_path[OF h\<delta>_path])
