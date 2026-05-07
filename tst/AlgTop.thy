@@ -3707,8 +3707,35 @@ proof -
   have hj_ker: "top1_group_kernel_on
       (top1_fundamental_group_carrier A ?TA a)
       (top1_fundamental_group_id X TX a) ?jAX = ?relator"
-    sorry \<comment> \<open>Kernel: SvK kernel at base b = \<langle>\<langle>{[g_0]}\<rangle>\<rangle>, base change gives [g_0]\<mapsto>[k\<circ>p],
-         retraction preserves [k\<circ>p], so ker(j_*) = \<langle>\<langle>{[k\<circ>p]}\<rangle>\<rangle> in \<pi>_1(A,a).\<close>
+  proof -
+    \<comment> \<open>Munkres Step 3 (kernel computation).
+       The key geometric fact: [k\<circ>p] is in ker(j_*), and it normally generates all of ker(j_*).
+       Step (a): [k\<circ>p] \<in> ker(j_*). The loop k\<circ>p = h\<circ>f maps S1 into A \<subseteq> X.
+         As a loop in X, k\<circ>p = h\<circ>f is nulhomotopic because h extends over B2
+         (h maps ALL of B2 into X, not just S1). So [k\<circ>p] = [h\<circ>f] = id in \<pi>_1(X,a).
+       Step (b): ker(j_*) \<subseteq> \<langle>\<langle>{[k\<circ>p]}\<rangle>\<rangle>. This uses the SvK kernel at base b:
+         ker(U\<hookrightarrow>X at b) = \<langle>\<langle>{[g_0]}\<rangle>\<rangle> where g_0 = h\<circ>f_0 (half-radius loop).
+         Base change \<delta>-hat: ker at base a = \<langle>\<langle>{\<delta>-hat([g_0])} = {[k\<circ>p]}\<rangle>\<rangle>.
+         Under the retraction iso A\<cong>U: ker(j_*) in \<pi>_1(A,a) = \<langle>\<langle>{[k\<circ>p]}\<rangle>\<rangle>.\<close>
+    \<comment> \<open>Step (a): [k\<circ>p] \<in> ker(j_*). The loop h\<circ>f extends over B2 \<Longrightarrow> nulhomotopic in X.\<close>
+    have hkp_in_ker: "?jAX (top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1, 0) A ?TA a ?\<iota>
+        {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) ?f g})
+      = top1_fundamental_group_id X TX a"
+      sorry \<comment> \<open>k\<circ>p = h\<circ>f is nulhomotopic in X (h extends over B2, Lemma 55.3 backward).\<close>
+    \<comment> \<open>Step (b): ker(j_*) \<subseteq> \<langle>\<langle>{[k\<circ>p]}\<rangle>\<rangle>. From SvK at base b + base change + retraction.\<close>
+    have hker_sub_relator: "top1_group_kernel_on
+        (top1_fundamental_group_carrier A ?TA a)
+        (top1_fundamental_group_id X TX a) ?jAX \<subseteq> ?relator"
+      sorry \<comment> \<open>SvK kernel at b = normal-closure-of {[g0]}, base change maps [g0] to [k*p],
+           under retraction: ker(j_*) at a = normal-closure-of {[k*p]} in pi_1(A,a).\<close>
+    \<comment> \<open>Step (c): \<langle>\<langle>{[k\<circ>p]}\<rangle>\<rangle> \<subseteq> ker(j_*). The normal closure of {[k\<circ>p]} is contained
+       in ker(j_*) because [k\<circ>p] \<in> ker(j_*) and ker is a normal subgroup.\<close>
+    have hrelator_sub_ker: "?relator \<subseteq> top1_group_kernel_on
+        (top1_fundamental_group_carrier A ?TA a)
+        (top1_fundamental_group_id X TX a) ?jAX"
+      sorry \<comment> \<open>[k\<circ>p] \<in> ker(j_*) + ker is normal subgroup \<Longrightarrow> \<langle>\<langle>{[k\<circ>p]}\<rangle>\<rangle> \<subseteq> ker.\<close>
+    show ?thesis using hker_sub_relator hrelator_sub_ker by (by100 blast)
+  qed
   \<comment> \<open>Step 4: Group and normal subgroup properties.\<close>
   have hgrpA: "top1_is_group_on
       (top1_fundamental_group_carrier A ?TA a) (top1_fundamental_group_mul A ?TA a)
