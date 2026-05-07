@@ -6627,9 +6627,22 @@ proof -
                    from \<pi>_1(S1) onto its image, and \<psi> = (h|_{S1})_* \<circ> \<phi>\<inverse> with
                    image(\<psi>) = image((h|_{S1})_*): [h\<circ>\<ell>]_U \<in> image(\<psi>).\<close>
                 have hbc_class_in_N: "{k. top1_loop_equiv_on ?U ?TU a ((\<lambda>z. h z) \<circ> ?ell_disk) k} \<in> N"
-                  sorry \<comment> \<open>\<ell> at (1,0) in B2-{0}. By S1_pi1_iso surj:
-                       [\<ell>] = incl*([g]) for some S1-loop g.
-                       [h\<circ>\<ell>] = (h|_{S1})_*([g]) \<in> image((h|_{S1})_*) = image(\<psi>) \<subseteq> N.\<close>
+                proof -
+                  \<comment> \<open>[h\<circ>ell_disk]_U \<in> image(\<psi>).
+                     image(\<psi>) = {(h|_{S1})_*(c) : c \<in> \<pi>_1(S1)} = {\<psi>(n) : n \<in> Z}.
+                     Since image(\<psi>) \<subseteq> N, it suffices to show [h\<circ>ell_disk]_U \<in> image(\<psi>).\<close>
+                  \<comment> \<open>image(\<psi>) = image((h|_{S1})_*): every class [h\<circ>g]_U for S1-loop g is in image.\<close>
+                  \<comment> \<open>Need: [h\<circ>ell_disk]_U = [h\<circ>g]_U for some S1-loop g.
+                     Follows from: ell_disk \<simeq> g in B2-{0} (S1_pi1_iso surjectivity)
+                     and h preserves homotopy (continuous map).\<close>
+                  have "{k. top1_loop_equiv_on ?U ?TU a ((\<lambda>z. h z) \<circ> ?ell_disk) k}
+                      \<in> ?\<psi> ` top1_Z_group"
+                    sorry \<comment> \<open>Needs: (1) ell_disk loop at (1,0) in B2-{0},
+                         (2) S1_pi1_iso surj: [\<ell>]=incl*([g]),
+                         (3) h continuous B2-{0}\<rightarrow>U preserves homotopy,
+                         (4) [h\<circ>g]_U = (h|_{S1})_*([g]) = \<psi>(\<phi>([g])).\<close>
+                  thus ?thesis using h\<psi>_img_N by (by100 blast)
+                qed
                 \<comment> \<open>Step C: [?bc_f0]_U = [h\<circ>\<ell>]_U (from the pointwise equality).\<close>
                 have "{k. top1_loop_equiv_on ?U ?TU a ?bc_f0 k}
                     = {k. top1_loop_equiv_on ?U ?TU a ((\<lambda>z. h z) \<circ> ?ell_disk) k}"
