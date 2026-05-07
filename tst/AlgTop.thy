@@ -2105,11 +2105,24 @@ proof -
           have "top1_path_homotopic_on V ?TV x0 x0 g (top1_constant_path x0)"
             using hg_null_V unfolding top1_loop_equiv_on_def by (by100 blast)
           hence "top1_path_homotopic_on X TX x0 x0 g (top1_constant_path x0)"
-            sorry \<comment> \<open>Homotopy in V transfers to X (subspace inclusion).\<close>
+          proof -
+            have "subspace_topology X TX V = ?TV" by (by100 simp)
+            from path_homotopic_subspace_to_ambient[OF hTopX hVsub this]
+            show ?thesis using \<open>top1_path_homotopic_on V ?TV x0 x0 g (top1_constant_path x0)\<close> .
+          qed
           thus ?thesis
           proof -
             have hg_X: "top1_is_loop_on X TX x0 g"
-              sorry \<comment> \<open>V-loop is X-loop.\<close>
+            proof -
+              have hVX_cont: "top1_continuous_map_on V ?TV X TX (\<lambda>x. x)"
+                by (rule top1_continuous_map_on_restrict_domain_simple[OF
+                    top1_continuous_map_on_id[OF hTopX, unfolded id_def] hVsub])
+              have "top1_is_loop_on X TX ((\<lambda>x. x) x0) ((\<lambda>x. x) \<circ> g)"
+                by (rule top1_continuous_map_loop_early[OF hVX_cont hg])
+              moreover have "(\<lambda>x::'a. x) \<circ> g = g" by (rule ext) (by100 simp)
+              moreover have "(\<lambda>x::'a. x) x0 = x0" by (by100 simp)
+              ultimately show ?thesis by (by100 simp)
+            qed
             have hconst_X: "top1_is_loop_on X TX x0 (top1_constant_path x0)"
               by (rule top1_constant_path_is_loop[OF hTopX hx0_X])
             show ?thesis using \<open>top1_path_homotopic_on X TX x0 x0 g (top1_constant_path x0)\<close>
