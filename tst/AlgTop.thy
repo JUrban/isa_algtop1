@@ -397,7 +397,31 @@ proof -
           have hdbl_cont: "top1_continuous_map_on ?IL
               (subspace_topology top1_unit_interval top1_unit_interval_topology ?IL)
               top1_unit_interval top1_unit_interval_topology (\<lambda>t. 2*t)"
-            sorry \<comment> \<open>Affine map on subinterval. Standard.\<close>
+          proof -
+            have hcont_R: "continuous_on UNIV (\<lambda>t::real. 2*t)" by (intro continuous_intros)
+            have hcont_R2: "top1_continuous_map_on (UNIV::real set) top1_open_sets
+                (UNIV::real set) top1_open_sets (\<lambda>t. 2*t)"
+              using top1_continuous_map_on_real_subspace_open_sets[of UNIV "\<lambda>t. 2*t" UNIV, OF _ hcont_R]
+              unfolding subspace_topology_UNIV_self by (by100 auto)
+            have hIL_sub: "?IL \<subseteq> (UNIV::real set)" by (by100 blast)
+            from top1_continuous_map_on_restrict_domain_simple[OF hcont_R2 hIL_sub]
+            have hcont_IL_R: "top1_continuous_map_on ?IL
+                (subspace_topology UNIV top1_open_sets ?IL) UNIV top1_open_sets (\<lambda>t. 2*t)" .
+            have hIL_sub_I: "?IL \<subseteq> top1_unit_interval" by (by100 blast)
+            have hTIL_eq: "subspace_topology UNIV top1_open_sets ?IL
+                = subspace_topology top1_unit_interval top1_unit_interval_topology ?IL"
+              unfolding top1_unit_interval_topology_def
+              using subspace_topology_trans[OF hIL_sub_I] by (by100 simp)
+            have hcont_IL_R': "top1_continuous_map_on ?IL
+                (subspace_topology top1_unit_interval top1_unit_interval_topology ?IL)
+                UNIV top1_open_sets (\<lambda>t. 2*t)"
+              using hcont_IL_R hTIL_eq by (by100 simp)
+            have himg: "(\<lambda>t::real. 2*t) ` ?IL \<subseteq> top1_unit_interval"
+              unfolding top1_unit_interval_def by (by100 auto)
+            have hI_sub: "top1_unit_interval \<subseteq> (UNIV::real set)" by (by100 blast)
+            from top1_continuous_map_on_codomain_shrink[OF hcont_IL_R' himg hI_sub]
+            show ?thesis unfolding top1_unit_interval_topology_def by (by100 simp)
+          qed
           \<comment> \<open>g1: I \<rightarrow> A1 continuous.\<close>
           have hg1_cont: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
               A1 (subspace_topology X TX A1) g1"
@@ -473,7 +497,31 @@ proof -
           have hdbl_cont: "top1_continuous_map_on ?IR
               (subspace_topology top1_unit_interval top1_unit_interval_topology ?IR)
               top1_unit_interval top1_unit_interval_topology (\<lambda>t. 2*t - 1)"
-            sorry \<comment> \<open>Affine map on subinterval. Standard.\<close>
+          proof -
+            have hcont_R: "continuous_on UNIV (\<lambda>t::real. 2*t - 1)" by (intro continuous_intros)
+            have hcont_R2: "top1_continuous_map_on (UNIV::real set) top1_open_sets
+                (UNIV::real set) top1_open_sets (\<lambda>t. 2*t - 1)"
+              using top1_continuous_map_on_real_subspace_open_sets[of UNIV "\<lambda>t. 2*t-1" UNIV, OF _ hcont_R]
+              unfolding subspace_topology_UNIV_self by (by100 auto)
+            have hIR_sub: "?IR \<subseteq> (UNIV::real set)" by (by100 blast)
+            from top1_continuous_map_on_restrict_domain_simple[OF hcont_R2 hIR_sub]
+            have hcont_IR_R: "top1_continuous_map_on ?IR
+                (subspace_topology UNIV top1_open_sets ?IR) UNIV top1_open_sets (\<lambda>t. 2*t - 1)" .
+            have hIR_sub_I: "?IR \<subseteq> top1_unit_interval" by (by100 blast)
+            have hTIR_eq: "subspace_topology UNIV top1_open_sets ?IR
+                = subspace_topology top1_unit_interval top1_unit_interval_topology ?IR"
+              unfolding top1_unit_interval_topology_def
+              using subspace_topology_trans[OF hIR_sub_I] by (by100 simp)
+            have hcont_IR_R': "top1_continuous_map_on ?IR
+                (subspace_topology top1_unit_interval top1_unit_interval_topology ?IR)
+                UNIV top1_open_sets (\<lambda>t. 2*t - 1)"
+              using hcont_IR_R hTIR_eq by (by100 simp)
+            have himg: "(\<lambda>t::real. 2*t - 1) ` ?IR \<subseteq> top1_unit_interval"
+              unfolding top1_unit_interval_def by (by100 auto)
+            have hI_sub: "top1_unit_interval \<subseteq> (UNIV::real set)" by (by100 blast)
+            from top1_continuous_map_on_codomain_shrink[OF hcont_IR_R' himg hI_sub]
+            show ?thesis unfolding top1_unit_interval_topology_def by (by100 simp)
+          qed
           have hg2_cont: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
               A2 (subspace_topology X TX A2) g2"
             using hg2(1) unfolding top1_homeomorphism_on_def by (by100 blast)
