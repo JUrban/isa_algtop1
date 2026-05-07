@@ -3592,7 +3592,39 @@ proof -
      Composition: j_* = (U\<hookrightarrow>X)_* \<circ> (A\<hookrightarrow>U)_* is surjective.\<close>
   have hj_surj: "?jAX ` (top1_fundamental_group_carrier A ?TA a) =
       top1_fundamental_group_carrier X TX a"
-    sorry \<comment> \<open>Surjectivity: deformation retract (Thm 58.3) + SvK surjection (Cor 70.4).\<close>
+  proof -
+    \<comment> \<open>Munkres: j_* = (U\<hookrightarrow>X)_* \<circ> (A\<hookrightarrow>U)_*. Each factor is surjective.\<close>
+    \<comment> \<open>Step (a): (A\<hookrightarrow>U)_* is an iso (hence surjective) by deformation retract (Thm 58.3).\<close>
+    have hA_U_iso: "top1_groups_isomorphic_on
+        (top1_fundamental_group_carrier A ?TA a) (top1_fundamental_group_mul A ?TA a)
+        (top1_fundamental_group_carrier ?U ?TU a) (top1_fundamental_group_mul ?U ?TU a)"
+    proof -
+      have hTopU_ns: "is_topology_on ?U ?TU"
+        by (rule subspace_topology_is_topology_on[OF hTopX_ns]) (by100 blast)
+      have ha_U: "a \<in> ?U" using assms(6) hA_sub_X hx0_notin_A by (by100 blast)
+      have hgrpU: "top1_is_group_on
+          (top1_fundamental_group_carrier ?U ?TU a) (top1_fundamental_group_mul ?U ?TU a)
+          (top1_fundamental_group_id ?U ?TU a) (top1_fundamental_group_invg ?U ?TU a)"
+        by (rule top1_fundamental_group_is_group[OF hTopU_ns ha_U])
+      have hgrpA_loc: "top1_is_group_on
+          (top1_fundamental_group_carrier A ?TA a) (top1_fundamental_group_mul A ?TA a)
+          (top1_fundamental_group_id A ?TA a) (top1_fundamental_group_invg A ?TA a)"
+        by (rule top1_fundamental_group_is_group[OF hTA_top assms(6)])
+      show ?thesis by (rule top1_groups_isomorphic_on_sym[OF hU_A_iso hgrpU hgrpA_loc])
+    qed
+    \<comment> \<open>Step (b): (U\<hookrightarrow>X)_* is surjective (from SvK: \<pi>_1(X) = \<pi>_1(U)/N).\<close>
+    have hU_X_surj: "(top1_fundamental_group_induced_on ?U ?TU a X TX a (\<lambda>x. x))
+        ` (top1_fundamental_group_carrier ?U ?TU a)
+      = top1_fundamental_group_carrier X TX a"
+      sorry \<comment> \<open>SvK (Cor 70.4): V simply connected \<Longrightarrow> U\<hookrightarrow>X induces surjection at base a.\<close>
+    \<comment> \<open>Step (c): j_* = (U\<hookrightarrow>X)_* \<circ> (A\<hookrightarrow>U)_* by functoriality.\<close>
+    have hj_comp: "\<forall>c \<in> top1_fundamental_group_carrier A ?TA a.
+        ?jAX c = (top1_fundamental_group_induced_on ?U ?TU a X TX a (\<lambda>x. x))
+          ((top1_fundamental_group_induced_on A ?TA a ?U ?TU a (\<lambda>x. x)) c)"
+      sorry \<comment> \<open>Functoriality: induced(id \<circ> id) = induced(id) \<circ> induced(id) on classes.\<close>
+    \<comment> \<open>Step (d): Composition of surjection with surjection/iso is surjection.\<close>
+    show ?thesis sorry \<comment> \<open>Chain surjectivity from (a), (b), (c).\<close>
+  qed
   \<comment> \<open>Step 3: ker(j_*) = \<langle>\<langle>{[k\<circ>p]}\<rangle>\<rangle>.
      By SvK (Cor 70.4) at base b: ker(U\<hookrightarrow>X at b) = \<langle>\<langle>\<iota>_*(\<pi>_1(UV,b))\<rangle>\<rangle> = \<langle>\<langle>{[g_0]}\<rangle>\<rangle>.
      Base change \<delta>-hat maps [g_0] to [\<delta>_bar * (g_0 * \<delta>)] = [h \<circ> f] = [k \<circ> p]
