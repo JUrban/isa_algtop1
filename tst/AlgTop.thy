@@ -3721,7 +3721,66 @@ proof -
     have hkp_in_ker: "?jAX (top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1, 0) A ?TA a ?\<iota>
         {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) ?f g})
       = top1_fundamental_group_id X TX a"
-      sorry \<comment> \<open>k\<circ>p = h\<circ>f is nulhomotopic in X (h extends over B2, Lemma 55.3 backward).\<close>
+    proof -
+      \<comment> \<open>Step 1: j \<circ> \<iota> = h|_{S1}: S1 \<rightarrow> X is continuous.\<close>
+      let ?h_S1 = "\<lambda>z. h z"  \<comment> \<open>= j \<circ> \<iota> = (\<lambda>x. x) \<circ> (\<lambda>z. h z) = h restricted to S1, into X.\<close>
+      have hS1_top: "is_topology_on top1_S1 top1_S1_topology"
+        using top1_S1_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
+      have hS1_B2: "top1_S1 \<subseteq> top1_B2"
+        unfolding top1_S1_def top1_B2_def by (by100 auto)
+      have hh_S1_cont: "top1_continuous_map_on top1_S1 top1_S1_topology X TX ?h_S1"
+      proof -
+        have hS1_B2: "top1_S1 \<subseteq> top1_B2"
+          unfolding top1_S1_def top1_B2_def by (by100 auto)
+        have h_cont_S1_sub: "top1_continuous_map_on top1_S1
+            (subspace_topology top1_B2 top1_B2_topology top1_S1) X TX h"
+          by (rule top1_continuous_map_on_restrict_domain_simple[OF assms(5) hS1_B2])
+        have hS1_top_eq: "subspace_topology top1_B2 top1_B2_topology top1_S1 = top1_S1_topology"
+        proof -
+          have "top1_S1_topology = subspace_topology UNIV
+              (product_topology_on top1_open_sets top1_open_sets) top1_S1"
+            unfolding top1_S1_topology_def ..
+          also have "\<dots> = subspace_topology top1_B2 top1_B2_topology top1_S1"
+            unfolding top1_B2_topology_def
+            using subspace_topology_trans[OF hS1_B2] by (by100 simp)
+          finally show ?thesis by (by100 simp)
+        qed
+        show ?thesis using h_cont_S1_sub hS1_top_eq by (by100 simp)
+      qed
+      \<comment> \<open>Step 2: h|_{S1} is nulhomotopic in X (Lemma 55.3 backward: h extends over B2).\<close>
+      have hh_S1_nulhom: "top1_nulhomotopic_on top1_S1 top1_S1_topology X TX ?h_S1"
+        by (rule Lemma_55_3_backward[OF hh_S1_cont hTopX_ns assms(5)]) (by100 simp)
+      \<comment> \<open>Step 3: By nulhomotopic_trivializes_loops_general, (h|_{S1}) \<circ> f is trivial in \<pi>_1(X,a).\<close>
+      have h10_S1: "(1::real, 0::real) \<in> top1_S1" unfolding top1_S1_def by (by100 simp)
+      have hh10: "?h_S1 (1, 0) = a" using assms(9) by (by100 simp)
+      have hf_loop: "top1_is_loop_on top1_S1 top1_S1_topology (1, 0) ?f"
+        unfolding top1_is_loop_on_def top1_is_path_on_def
+      proof (intro conjI)
+        have hf_eq: "?f = top1_R_to_S1"
+        proof (rule ext)
+          fix s :: real show "?f s = top1_R_to_S1 s" unfolding top1_R_to_S1_def by (by100 simp)
+        qed
+        have "top1_continuous_map_on (UNIV::real set) top1_open_sets top1_S1 top1_S1_topology top1_R_to_S1"
+          using Theorem_53_1 unfolding top1_covering_map_on_def by (by100 blast)
+        from top1_continuous_map_on_restrict_domain_simple[OF this subset_UNIV]
+        show "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+            top1_S1 top1_S1_topology ?f"
+          unfolding top1_unit_interval_topology_def hf_eq
+          using subspace_topology_UNIV_self by (by100 simp)
+      next show "?f 0 = (1::real, 0::real)" by (by100 simp)
+      next show "?f 1 = (1::real, 0::real)" by (by100 simp)
+      qed
+      have htriv: "top1_path_homotopic_on X TX a a (?h_S1 \<circ> ?f) (top1_constant_path a)"
+        by (rule nulhomotopic_trivializes_loops_general[OF hS1_top hTopX_ns
+            hh_S1_cont hh_S1_nulhom hh10 h10_S1 hf_loop])
+      \<comment> \<open>Step 4: h \<circ> f = \<iota> \<circ> f as functions (both = \<lambda>s. h(f s)).\<close>
+      have hcomp_eq: "?h_S1 \<circ> ?f = ?\<iota> \<circ> ?f" by (rule ext) (by100 simp)
+      \<comment> \<open>Step 5: By functoriality, j_*(\<iota>_*([f])) = (j \<circ> \<iota>)_*([f]) = [h \<circ> f] = id.\<close>
+      \<comment> \<open>Need: j_*(\<iota>_*([f])) = class of (j \<circ> \<iota>) \<circ> f = class of h \<circ> f.
+         Since h \<circ> f ~ constant in X, this class = id_X.\<close>
+      show ?thesis
+        sorry \<comment> \<open>Remaining: connect functoriality + path_homotopic to fundamental_group_id.\<close>
+    qed
     \<comment> \<open>Step (b): ker(j_*) \<subseteq> \<langle>\<langle>{[k\<circ>p]}\<rangle>\<rangle>. From SvK at base b + base change + retraction.\<close>
     have hker_sub_relator: "top1_group_kernel_on
         (top1_fundamental_group_carrier A ?TA a)
@@ -10435,6 +10494,7 @@ end
  
   
  
+
 
 
 
