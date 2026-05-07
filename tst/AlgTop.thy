@@ -3801,6 +3801,23 @@ proof -
     from subspace_inclusion_induced_hom[OF hTopU_outer hA_sub_U_outer assms(6)]
     show ?thesis using hTA_eq by (by100 simp)
   qed
+  \<comment> \<open>Extract deformation retract homotopy H and retraction r at the outer level.\<close>
+  obtain H_dr where hHdr_cont: "top1_continuous_map_on (?U \<times> I_set)
+      (product_topology_on ?TU I_top) ?U ?TU H_dr"
+      and hHdr_0: "\<forall>x\<in>?U. H_dr (x, 0) = x"
+      and hHdr_1: "\<forall>x\<in>?U. H_dr (x, 1) \<in> A"
+      and hHdr_fix: "\<forall>a'\<in>A. \<forall>t\<in>I_set. H_dr (a', t) = a'"
+    using hA_deformation_retract_U unfolding top1_deformation_retract_of_on_def by (by100 auto)
+  \<comment> \<open>(A\<hookrightarrow>U)* surjective (deformation retract \<Longrightarrow> inclusion induces iso).\<close>
+  have hAU_surj_outer: "(top1_fundamental_group_induced_on A ?TA a ?U ?TU a (\<lambda>x. x))
+      ` (top1_fundamental_group_carrier A ?TA a)
+    = top1_fundamental_group_carrier ?U ?TU a"
+    sorry \<comment> \<open>Deformation retract: for [f]\<in>\<pi>_1(U,a), r\<circ>f is in A and \<iota>*(r\<circ>f)=[f].
+         Uses H_dr, Lemma_58_1_basepoint_fixed, inclusion_induced_class.\<close>
+  \<comment> \<open>(A\<hookrightarrow>U)* injective (retraction left-inverse: r*\<circ>\<iota>*=id on \<pi>_1(A)).\<close>
+  have hAU_inj_outer: "inj_on (top1_fundamental_group_induced_on A ?TA a ?U ?TU a (\<lambda>x. x))
+      (top1_fundamental_group_carrier A ?TA a)"
+    sorry \<comment> \<open>r\<circ>\<iota>=id on A, so r*\<circ>\<iota>*=id on \<pi>_1(A). Hence \<iota>* injective.\<close>
   \<comment> \<open>Step 1: j_* is a homomorphism.\<close>
   have hincl_AX_cont: "top1_continuous_map_on A ?TA X TX (\<lambda>x. x)"
   proof -
@@ -4763,9 +4780,9 @@ proof -
         qed
         have hAU_surj_k: "?AU ` top1_fundamental_group_carrier A ?TA a
             = top1_fundamental_group_carrier ?U ?TU a"
-          sorry \<comment> \<open>(A\<hookrightarrow>U)* surjective — deformation retract + Lemma_58_1.\<close>
+          using hAU_surj_outer .
         have hAU_inj_k: "inj_on ?AU (top1_fundamental_group_carrier A ?TA a)"
-          sorry \<comment> \<open>(A\<hookrightarrow>U)* injective — from r*\<circ>\<iota>*=id (retraction left-inverse).\<close>
+          using hAU_inj_outer .
         have hkpA_sub: "{?kp_A} \<subseteq> top1_fundamental_group_carrier A ?TA a"
         proof -
           have hS1_top: "is_topology_on top1_S1 top1_S1_topology"
@@ -11528,6 +11545,7 @@ end
  
   
  
+
 
 
 
