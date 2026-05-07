@@ -2291,8 +2291,44 @@ proof -
        The lift of f starting at 0 is s \<mapsto> s (identity), ending at 1.
        So the lift of f_rep also ends at 1. Hence \<Phi>([f]) = 1.\<close>
     have h\<Phi>_f_eq_1: "\<Phi> ?fclass = 1"
-      sorry \<comment> \<open>By Theorem_54_3 + covering_lift_unique: lift of f_rep ends at 1
-           since f_rep \<simeq> f and lift of f is identity (ending at 1).\<close>
+    proof -
+      let ?f_std = "\<lambda>s::real. (cos (2*pi*s), sin (2*pi*s))"
+      let ?id_lift = "\<lambda>s::real. s"
+      \<comment> \<open>The identity is a lift of f starting at 0: R_to_S1(s) = f(s), id(0) = 0.\<close>
+      have hid_path: "top1_is_path_on (UNIV::real set) top1_open_sets 0 (1::real) ?id_lift"
+        unfolding top1_is_path_on_def
+      proof (intro conjI)
+        show "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+            (UNIV::real set) top1_open_sets (\<lambda>s. s)"
+          sorry \<comment> \<open>Identity is continuous I_set \<rightarrow> UNIV.\<close>
+      next show "(0::real) = 0" by (by100 simp)
+      next show "(1::real) = 1" by (by100 simp)
+      qed
+      have hid_lift_f: "\<forall>s\<in>I_set. top1_R_to_S1 (?id_lift s) = ?f_std s"
+        unfolding top1_R_to_S1_def by (by100 simp)
+      \<comment> \<open>f_rep \<in> [f] means f_rep \<simeq> f in S1.\<close>
+      have hf_rep_hom_f: "top1_path_homotopic_on top1_S1 top1_S1_topology (1,0) (1,0) f_rep ?f_std"
+      proof -
+        have "f_rep \<in> ?fclass" using hf_in .
+        hence "top1_loop_equiv_on top1_S1 top1_S1_topology (1,0) ?f_std f_rep" by (by100 blast)
+        hence "top1_path_homotopic_on top1_S1 top1_S1_topology (1,0) (1,0) ?f_std f_rep"
+          unfolding top1_loop_equiv_on_def by (by100 blast)
+        thus ?thesis by (rule Lemma_51_1_path_homotopic_sym)
+      qed
+      \<comment> \<open>By Theorem_54_3: homotopic loops f_rep \<simeq> f have lifts with same endpoints.
+         ft_rep lifts f_rep from 0 to \<Phi>([f]).
+         id lifts f from 0 to 1.
+         Since f_rep \<simeq> f: \<Phi>([f]) = 1.\<close>
+      \<comment> \<open>Extract path properties from loops.\<close>
+      have hf_rep_path: "top1_is_path_on top1_S1 top1_S1_topology (1,0) (1,0) f_rep"
+        using hf_rep_loop unfolding top1_is_loop_on_def by (by100 blast)
+      have hf_std_path: "top1_is_path_on top1_S1 top1_S1_topology (1,0) (1,0) ?f_std"
+        using standard_S1_loop_is_loop unfolding top1_is_loop_on_def by (by100 blast)
+      from Theorem_54_3[OF hcov hTR hS1_top_loc h0R hp0
+          hf_rep_path hf_std_path hf_rep_hom_f
+          hft_path hft_lift hid_path hid_lift_f]
+      show "\<Phi> ?fclass = 1" by (by100 blast)
+    qed
     \<comment> \<open>\<phi>_0 (from Theorem_54_5_iso) maps [f] to some m \<in> Z.
        The auto \<alpha> = \<phi> \<circ> \<phi>_0\<inverse> satisfies \<alpha>(1) \<in> {1,-1} (Z_auto).
        If we had \<phi>_0([f]) = 1: \<phi>([f]) = \<alpha>(1) \<in> {1,-1}.
