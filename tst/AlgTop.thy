@@ -3556,210 +3556,77 @@ proof -
      This follows from \<bar>\<gamma>*(f0*\<gamma>) \<simeq> f in B2-{0} (same winding number).
      Assembly chain: \<pi>_1(X,a) \<cong> \<pi>_1(X,b) [base change] \<cong> Q(\<pi>_1(U,b), N_b) [SvK]
      \<cong> Q(\<pi>_1(A,a), \<langle>\<langle>{[k\<circ>p]}\<rangle>\<rangle>) [quotient_group_iso_transfer + generator tracking].\<close>
-  have hiso: "top1_groups_isomorphic_on
-        (top1_fundamental_group_carrier X TX a)
-        (top1_fundamental_group_mul X TX a)
-        (top1_quotient_group_carrier_on
-           (top1_fundamental_group_carrier A (subspace_topology X TX A) a)
-           (top1_fundamental_group_mul A (subspace_topology X TX A) a)
-           (top1_normal_subgroup_generated_on
-              (top1_fundamental_group_carrier A (subspace_topology X TX A) a)
-              (top1_fundamental_group_mul A (subspace_topology X TX A) a)
-              (top1_fundamental_group_id A (subspace_topology X TX A) a)
-              (top1_fundamental_group_invg A (subspace_topology X TX A) a)
-              {top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1, 0)
-                 A (subspace_topology X TX A) a ?\<iota>
-                 {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0)
-                       (\<lambda>s. (cos (2 * pi * s), sin (2 * pi * s))) g}}))
-        (top1_quotient_group_mul_on
-           (top1_fundamental_group_mul A (subspace_topology X TX A) a))"
+  \<comment> \<open>--- New approach (Munkres direct): the inclusion j: A \<hookrightarrow> X induces a surjective
+     homomorphism j_*: \<pi>_1(A,a) \<rightarrow> \<pi>_1(X,a) with kernel \<langle>\<langle>{[k\<circ>p]}\<rangle>\<rangle>.
+     By the first isomorphism theorem: \<pi>_1(X,a) \<cong> \<pi>_1(A,a)/\<langle>\<langle>{[k\<circ>p]}\<rangle>\<rangle>. ---\<close>
+  let ?jAX = "top1_fundamental_group_induced_on A ?TA a X TX a (\<lambda>x. x)"
+  let ?relator = "top1_normal_subgroup_generated_on
+           (top1_fundamental_group_carrier A ?TA a) (top1_fundamental_group_mul A ?TA a)
+           (top1_fundamental_group_id A ?TA a) (top1_fundamental_group_invg A ?TA a)
+           {top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1, 0) A ?TA a ?\<iota>
+              {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) ?f g}}"
+  have hTopX_ns: "is_topology_on X TX"
+    using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
+  have hTA_top: "is_topology_on A ?TA"
+    by (rule subspace_topology_is_topology_on[OF hTopX_ns hA_sub_X])
+  have ha_X: "a \<in> X" using assms(6) hA_sub_X by (by100 blast)
+  \<comment> \<open>Step 1: j_* is a homomorphism.\<close>
+  have hincl_AX_cont: "top1_continuous_map_on A ?TA X TX (\<lambda>x. x)"
   proof -
-    \<comment> \<open>Step A: \<pi>_1(X,a) \<cong> Q(\<pi>_1(U,b), N_b) by chaining base change + SvK.\<close>
-    have hchain1: "top1_groups_isomorphic_on
+    have "top1_continuous_map_on X TX X TX id" by (rule top1_continuous_map_on_id[OF hTopX_ns])
+    from top1_continuous_map_on_restrict_domain_simple[OF this hA_sub_X]
+    have "top1_continuous_map_on A (subspace_topology X TX A) X TX id" .
+    have hid_eq: "(id :: 'a \<Rightarrow> 'a) = (\<lambda>x. x)" unfolding id_def by (by100 blast)
+    thus ?thesis using \<open>top1_continuous_map_on A (subspace_topology X TX A) X TX id\<close>
+      unfolding hid_eq by (by100 simp)
+  qed
+  have hj_hom: "top1_group_hom_on
+      (top1_fundamental_group_carrier A ?TA a) (top1_fundamental_group_mul A ?TA a)
+      (top1_fundamental_group_carrier X TX a) (top1_fundamental_group_mul X TX a) ?jAX"
+    by (rule top1_fundamental_group_induced_on_is_hom[OF hTA_top hTopX_ns assms(6) ha_X
+        hincl_AX_cont]) (by100 simp)
+  \<comment> \<open>Step 2: j_* is surjective.
+     A is deformation retract of U \<Longrightarrow> \<iota>_*: \<pi>_1(A,a) \<cong> \<pi>_1(U,a) (iso, hence surjective onto U).
+     SvK with V simply connected \<Longrightarrow> inclusion U \<hookrightarrow> X induces surjection \<pi>_1(U,b) \<twoheadrightarrow> \<pi>_1(X,b).
+     Base change b \<leftrightarrow> a preserves surjectivity.
+     Composition: j_* = (U\<hookrightarrow>X)_* \<circ> (A\<hookrightarrow>U)_* is surjective.\<close>
+  have hj_surj: "?jAX ` (top1_fundamental_group_carrier A ?TA a) =
+      top1_fundamental_group_carrier X TX a"
+    sorry \<comment> \<open>Surjectivity: deformation retract (Thm 58.3) + SvK surjection (Cor 70.4).\<close>
+  \<comment> \<open>Step 3: ker(j_*) = \<langle>\<langle>{[k\<circ>p]}\<rangle>\<rangle>.
+     By SvK (Cor 70.4) at base b: ker(U\<hookrightarrow>X at b) = \<langle>\<langle>\<iota>_*(\<pi>_1(UV,b))\<rangle>\<rangle> = \<langle>\<langle>{[g_0]}\<rangle>\<rangle>.
+     Base change \<delta>-hat maps [g_0] to [\<delta>_bar * (g_0 * \<delta>)] = [h \<circ> f] = [k \<circ> p]
+     (using the winding number homotopy \<gamma>_bar*(f_0*\<gamma>) \<simeq> f in B2-{0}).
+     Under the retraction iso A \<cong> U: ker becomes \<langle>\<langle>{[k\<circ>p]}\<rangle>\<rangle> in \<pi>_1(A,a).\<close>
+  have hj_ker: "top1_group_kernel_on
+      (top1_fundamental_group_carrier A ?TA a)
+      (top1_fundamental_group_id X TX a) ?jAX = ?relator"
+    sorry \<comment> \<open>Kernel: SvK kernel at base b = \<langle>\<langle>{[g_0]}\<rangle>\<rangle>, base change gives [g_0]\<mapsto>[k\<circ>p],
+         retraction preserves [k\<circ>p], so ker(j_*) = \<langle>\<langle>{[k\<circ>p]}\<rangle>\<rangle> in \<pi>_1(A,a).\<close>
+  \<comment> \<open>Step 4: Group and normal subgroup properties.\<close>
+  have hgrpA: "top1_is_group_on
+      (top1_fundamental_group_carrier A ?TA a) (top1_fundamental_group_mul A ?TA a)
+      (top1_fundamental_group_id A ?TA a) (top1_fundamental_group_invg A ?TA a)"
+    by (rule top1_fundamental_group_is_group[OF hTA_top assms(6)])
+  have hrelator_sub: "{top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1, 0) A ?TA a ?\<iota>
+      {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) ?f g}}
+    \<subseteq> top1_fundamental_group_carrier A ?TA a"
+    sorry \<comment> \<open>[k\<circ>p] is in \<pi>_1(A,a): k\<circ>p = \<iota>\<circ>f is a loop in A at a.\<close>
+  have hrelator_normal: "top1_normal_subgroup_on
+      (top1_fundamental_group_carrier A ?TA a) (top1_fundamental_group_mul A ?TA a)
+      (top1_fundamental_group_id A ?TA a) (top1_fundamental_group_invg A ?TA a) ?relator"
+    by (rule normal_subgroup_generated_is_normal[OF hgrpA hrelator_sub])
+  have hgrpX: "top1_is_group_on
+      (top1_fundamental_group_carrier X TX a) (top1_fundamental_group_mul X TX a)
+      (top1_fundamental_group_id X TX a) (top1_fundamental_group_invg X TX a)"
+    by (rule top1_fundamental_group_is_group[OF hTopX_ns ha_X])
+  \<comment> \<open>Step 5: First Isomorphism Theorem: \<pi>_1(X,a) \<cong> \<pi>_1(A,a)/\<langle>\<langle>{[k\<circ>p]}\<rangle>\<rangle>.\<close>
+  have hiso: "top1_groups_isomorphic_on
         (top1_fundamental_group_carrier X TX a) (top1_fundamental_group_mul X TX a)
         (top1_quotient_group_carrier_on
-           (top1_fundamental_group_carrier ?U ?TU ?b) (top1_fundamental_group_mul ?U ?TU ?b)
-           (top1_normal_subgroup_generated_on
-              (top1_fundamental_group_carrier ?U ?TU ?b) (top1_fundamental_group_mul ?U ?TU ?b)
-              (top1_fundamental_group_id ?U ?TU ?b) (top1_fundamental_group_invg ?U ?TU ?b)
-              (top1_fundamental_group_induced_on ?UV ?TUV ?b ?U ?TU ?b (\<lambda>x. x)
-                 ` (top1_fundamental_group_carrier ?UV ?TUV ?b))))
-        (top1_quotient_group_mul_on (top1_fundamental_group_mul ?U ?TU ?b))"
-      by (rule groups_isomorphic_trans_fwd[OF hbasepoint_change hsvk])
-    \<comment> \<open>Step B: Need isomorphism \<phi>: \<pi>_1(U,b) \<rightarrow> \<pi>_1(A,a) to transfer the quotient.
-       This comes from base change \<pi>_1(U,b) \<cong> \<pi>_1(U,a) + deformation retract \<pi>_1(U,a) \<cong> \<pi>_1(A,a).
-       Then \<phi>(N_b) = \<langle>\<langle>{[k\<circ>p]}\<rangle>\<rangle> (generator tracking).\<close>
-    \<comment> \<open>Base change in U: \<pi>_1(U,b) \<cong> \<pi>_1(U,a).\<close>
-    have hU_basechange: "top1_groups_isomorphic_on
-        (top1_fundamental_group_carrier ?U ?TU ?b) (top1_fundamental_group_mul ?U ?TU ?b)
-        (top1_fundamental_group_carrier ?U ?TU a) (top1_fundamental_group_mul ?U ?TU a)"
-    proof -
-      have hTopX: "is_topology_on X TX"
-        using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
-      have hTopU: "is_topology_on ?U ?TU"
-        by (rule subspace_topology_is_topology_on[OF hTopX]) (by100 blast)
-      have "a \<in> ?U" using assms(6) hA_sub_X hx0_notin_A by (by100 blast)
-      have "?b \<in> ?U" using hb_in_VA hb_ne_x0 hA_sub_X by (by100 blast)
-      \<comment> \<open>hU_pc already proved at line ~3012.\<close>
-      show ?thesis using Corollary_52_2_basepoint_independent[OF hU_pc \<open>?b \<in> ?U\<close> \<open>a \<in> ?U\<close>] .
-    qed
-    \<comment> \<open>Chain: \<pi>_1(U,b) \<cong> \<pi>_1(U,a) \<cong> \<pi>_1(A,a).\<close>
-    have hUb_Aa: "top1_groups_isomorphic_on
-        (top1_fundamental_group_carrier ?U ?TU ?b) (top1_fundamental_group_mul ?U ?TU ?b)
-        (top1_fundamental_group_carrier A ?TA a) (top1_fundamental_group_mul A ?TA a)"
-      by (rule groups_isomorphic_trans_fwd[OF hU_basechange hU_A_iso])
-    \<comment> \<open>Step C: Transfer the quotient Q(\<pi>_1(U,b), N_b) \<cong> Q(\<pi>_1(A,a), \<phi>(N_b)).\<close>
-    \<comment> \<open>Then show \<phi>(N_b) = \<langle>\<langle>{[k\<circ>p]}\<rangle>\<rangle> from generator tracking.\<close>
-    have hchain2: "top1_groups_isomorphic_on
-        (top1_quotient_group_carrier_on
-           (top1_fundamental_group_carrier ?U ?TU ?b) (top1_fundamental_group_mul ?U ?TU ?b)
-           (top1_normal_subgroup_generated_on
-              (top1_fundamental_group_carrier ?U ?TU ?b) (top1_fundamental_group_mul ?U ?TU ?b)
-              (top1_fundamental_group_id ?U ?TU ?b) (top1_fundamental_group_invg ?U ?TU ?b)
-              (top1_fundamental_group_induced_on ?UV ?TUV ?b ?U ?TU ?b (\<lambda>x. x)
-                 ` (top1_fundamental_group_carrier ?UV ?TUV ?b))))
-        (top1_quotient_group_mul_on (top1_fundamental_group_mul ?U ?TU ?b))
-        (top1_quotient_group_carrier_on
-           (top1_fundamental_group_carrier A ?TA a) (top1_fundamental_group_mul A ?TA a)
-           (top1_normal_subgroup_generated_on
-              (top1_fundamental_group_carrier A ?TA a) (top1_fundamental_group_mul A ?TA a)
-              (top1_fundamental_group_id A ?TA a) (top1_fundamental_group_invg A ?TA a)
-              {top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1, 0) A ?TA a ?\<iota>
-                 {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) ?f g}}))
+           (top1_fundamental_group_carrier A ?TA a) (top1_fundamental_group_mul A ?TA a) ?relator)
         (top1_quotient_group_mul_on (top1_fundamental_group_mul A ?TA a))"
-    proof -
-      \<comment> \<open>Step C.1: Extract explicit isomorphism \<phi> from hUb_Aa.\<close>
-      obtain \<phi> where hphi_iso: "top1_group_iso_on
-          (top1_fundamental_group_carrier ?U ?TU ?b) (top1_fundamental_group_mul ?U ?TU ?b)
-          (top1_fundamental_group_carrier A ?TA a) (top1_fundamental_group_mul A ?TA a) \<phi>"
-        using hUb_Aa unfolding top1_groups_isomorphic_on_def by (by100 blast)
-      \<comment> \<open>Step C.2: Group properties.\<close>
-      have hTopX_ns2: "is_topology_on X TX"
-        using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
-      have hTopU2: "is_topology_on ?U ?TU"
-        by (rule subspace_topology_is_topology_on[OF hTopX_ns2]) (by100 blast)
-      have hb_U2: "?b \<in> ?U"
-        using hb_in_VA hb_ne_x0 hA_sub_X by (by100 blast)
-      have hgrpUb: "top1_is_group_on
-          (top1_fundamental_group_carrier ?U ?TU ?b) (top1_fundamental_group_mul ?U ?TU ?b)
-          (top1_fundamental_group_id ?U ?TU ?b) (top1_fundamental_group_invg ?U ?TU ?b)"
-        by (rule top1_fundamental_group_is_group[OF hTopU2 hb_U2])
-      have hgrpAa: "top1_is_group_on
-          (top1_fundamental_group_carrier A ?TA a) (top1_fundamental_group_mul A ?TA a)
-          (top1_fundamental_group_id A ?TA a) (top1_fundamental_group_invg A ?TA a)"
-        by (rule top1_fundamental_group_is_group[OF subspace_topology_is_topology_on[OF hTopX_ns2 hA_sub_X] assms(6)])
-      \<comment> \<open>Step C.3: The generating set \<iota>_*(\<pi>_1(UV,b)) is a subset of \<pi>_1(U,b).\<close>
-      define Nb where "Nb = top1_normal_subgroup_generated_on
-          (top1_fundamental_group_carrier ?U ?TU ?b) (top1_fundamental_group_mul ?U ?TU ?b)
-          (top1_fundamental_group_id ?U ?TU ?b) (top1_fundamental_group_invg ?U ?TU ?b)
-          (top1_fundamental_group_induced_on ?UV ?TUV ?b ?U ?TU ?b (\<lambda>x. x)
-             ` (top1_fundamental_group_carrier ?UV ?TUV ?b))"
-      have himg_sub: "top1_fundamental_group_induced_on ?UV ?TUV ?b ?U ?TU ?b (\<lambda>x. x)
-             ` (top1_fundamental_group_carrier ?UV ?TUV ?b)
-           \<subseteq> top1_fundamental_group_carrier ?U ?TU ?b"
-      proof -
-        have hTopUV: "is_topology_on ?UV ?TUV"
-          by (rule subspace_topology_is_topology_on[OF hTopX_ns2]) (by100 blast)
-        have hb_UV: "?b \<in> ?UV" using hb_in_UV by (by100 simp)
-        have hUV_sub_U: "?UV \<subseteq> ?U" by (by100 blast)
-        have hincl_cont: "top1_continuous_map_on ?UV ?TUV ?U ?TU (\<lambda>x. x)"
-        proof -
-          have "top1_continuous_map_on ?U ?TU ?U ?TU id"
-            by (rule top1_continuous_map_on_id[OF hTopU2])
-          from top1_continuous_map_on_restrict_domain_simple[OF this hUV_sub_U]
-          have hid_cont: "top1_continuous_map_on ?UV (subspace_topology ?U ?TU ?UV) ?U ?TU id" .
-          have hTUV_eq: "subspace_topology ?U ?TU ?UV = ?TUV"
-            using subspace_topology_trans[OF hUV_sub_U] by (by100 simp)
-          have hid_eq: "(id :: 'a \<Rightarrow> 'a) = (\<lambda>x. x)" unfolding id_def by (by100 blast)
-          show ?thesis using hid_cont unfolding hTUV_eq hid_eq .
-        qed
-        have hincl_hom: "top1_group_hom_on
-            (top1_fundamental_group_carrier ?UV ?TUV ?b) (top1_fundamental_group_mul ?UV ?TUV ?b)
-            (top1_fundamental_group_carrier ?U ?TU ?b) (top1_fundamental_group_mul ?U ?TU ?b)
-            (top1_fundamental_group_induced_on ?UV ?TUV ?b ?U ?TU ?b (\<lambda>x. x))"
-          by (rule top1_fundamental_group_induced_on_is_hom[OF hTopUV hTopU2 hb_UV hb_U2 hincl_cont])
-             (by100 simp)
-        thus ?thesis unfolding top1_group_hom_on_def by (by100 blast)
-      qed
-      \<comment> \<open>Step C.4: N_b is a normal subgroup of \<pi>_1(U,b).\<close>
-      have hNb_normal: "top1_normal_subgroup_on
-          (top1_fundamental_group_carrier ?U ?TU ?b) (top1_fundamental_group_mul ?U ?TU ?b)
-          (top1_fundamental_group_id ?U ?TU ?b) (top1_fundamental_group_invg ?U ?TU ?b) Nb"
-        unfolding Nb_def by (rule normal_subgroup_generated_is_normal[OF hgrpUb himg_sub])
-      \<comment> \<open>Step C.5: Apply quotient_group_iso_transfer to get
-         Q(\<pi>_1(U,b), N_b) \<cong> Q(\<pi>_1(A,a), \<phi>(N_b)).\<close>
-      have htransfer: "top1_groups_isomorphic_on
-          (top1_quotient_group_carrier_on
-             (top1_fundamental_group_carrier ?U ?TU ?b) (top1_fundamental_group_mul ?U ?TU ?b) Nb)
-          (top1_quotient_group_mul_on (top1_fundamental_group_mul ?U ?TU ?b))
-          (top1_quotient_group_carrier_on
-             (top1_fundamental_group_carrier A ?TA a) (top1_fundamental_group_mul A ?TA a) (\<phi> ` Nb))
-          (top1_quotient_group_mul_on (top1_fundamental_group_mul A ?TA a))"
-        by (rule quotient_group_iso_transfer[OF hgrpUb hgrpAa hphi_iso hNb_normal])
-      \<comment> \<open>Step C.6: Generator tracking: \<phi>(N_b) = \<langle>\<langle>{[k\<circ>p]}\<rangle>\<rangle>.
-         The isomorphism \<phi>: \<pi>_1(U,b) \<rightarrow> \<pi>_1(A,a) maps the inclusion-induced image of
-         \<pi>_1(UV,b) to the subgroup generated by [k\<circ>p], because under the deformation
-         retract + base change, the winding loop in UV maps to the boundary loop k\<circ>p.\<close>
-      have hgen_eq: "\<phi> ` Nb = top1_normal_subgroup_generated_on
-          (top1_fundamental_group_carrier A ?TA a) (top1_fundamental_group_mul A ?TA a)
-          (top1_fundamental_group_id A ?TA a) (top1_fundamental_group_invg A ?TA a)
-          {top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1, 0) A ?TA a ?\<iota>
-             {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) ?f g}}"
-      proof -
-        \<comment> \<open>Munkres Step 3 (generator tracking). Key steps:
-           (a) f0 is a loop in Int B2-{0} at q generating \<pi>_1(Int B2-{0}, q).
-           (b) g0 = h \<circ> f0 generates \<iota>*(\<pi>_1(UV, b)) in \<pi>_1(U, b).
-           (c) \<gamma>_bar * (f0 * \<gamma>) ~ f in B2-{0} (same winding number).
-           (d) h \<circ> (\<gamma>_bar * (f0 * \<gamma>)) = \<delta>_bar * (g0 * \<delta>) by comp_basepoint_change.
-           (e) So \<delta>_hat([g0]) = [h \<circ> f] = [k \<circ> p].
-           (f) Under retraction to A: [k \<circ> p] stays [k \<circ> p].
-           (g) Therefore the specific iso maps [g0] to [k \<circ> p], giving \<phi>(Nb) = \<langle>\<langle>{[k \<circ> p]}\<rangle>\<rangle>.\<close>
-        \<comment> \<open>Step (a): Define f0 = circle of radius 1/2 at q.\<close>
-        let ?f0 = "\<lambda>s::real. (1/2 * cos (2*pi*s) + fst ?q, 1/2 * sin (2*pi*s) + snd ?q)"
-        \<comment> \<open>Step (b): g0 = h \<circ> f0 is a loop in UV at b generating \<iota>*(\<pi>_1(UV, b)).\<close>
-        let ?g0 = "\<lambda>s. h (?f0 s)"
-        \<comment> \<open>Step (c): Define \<gamma> = straight line from q to p = (1,0) in B2-{0}.\<close>
-        let ?\<gamma> = "\<lambda>t::real. ((1 - t) * fst ?q + t * 1, (1 - t) * snd ?q + t * 0)"
-        \<comment> \<open>Step (d): The base-change formula gives:
-           h \<circ> (rev(\<gamma>) * (f0 * \<gamma>)) = rev(\<delta>) * (g0 * \<delta>)
-           by comp_basepoint_change (functoriality of base change under h).\<close>
-        \<comment> \<open>Step (e): rev(\<gamma>) * (f0 * \<gamma>) is homotopic to f in B2-{0} (winding number = 1).
-           This is the key homotopy fact from the punctured disk.\<close>
-        have hkey_homotopy: "top1_path_homotopic_on (top1_B2 - {(0::real, 0::real)})
-            (subspace_topology top1_B2 top1_B2_topology (top1_B2 - {(0, 0)}))
-            (1::real, 0::real) (1, 0)
-            (top1_basepoint_change_on (top1_B2 - {(0, 0)})
-               (subspace_topology top1_B2 top1_B2_topology (top1_B2 - {(0, 0)}))
-               ?q (1, 0) ?\<gamma> ?f0)
-            ?f"
-          sorry \<comment> \<open>Winding number argument: both loops wind once around 0 in B2-{0}.\<close>
-        \<comment> \<open>Step (f): Applying h gives \<delta>_hat([g0]) = [h \<circ> f] = [k \<circ> p].\<close>
-        \<comment> \<open>Step (g): The specific iso (base change + retraction) maps [g0] to [k \<circ> p].
-           Since \<phi> was obtained from hUb_Aa which chains base change + retraction,
-           \<phi> maps the generator [g0] to [k \<circ> p]. Therefore \<phi>(Nb) = \<langle>\<langle>{[k \<circ> p]}\<rangle>\<rangle>.\<close>
-        show ?thesis
-          sorry \<comment> \<open>Assembly: apply h to homotopy, unfold base change, show \<phi>([g0]) = [k \<circ> p],
-               then iso_image_normal_closure gives \<phi>(Nb) = \<langle>\<langle>{[k \<circ> p]}\<rangle>\<rangle>.\<close>
-      qed
-      \<comment> \<open>Step C.7: Combine transfer + generator tracking.\<close>
-      from htransfer have htransfer': "top1_groups_isomorphic_on
-          (top1_quotient_group_carrier_on
-             (top1_fundamental_group_carrier ?U ?TU ?b) (top1_fundamental_group_mul ?U ?TU ?b) Nb)
-          (top1_quotient_group_mul_on (top1_fundamental_group_mul ?U ?TU ?b))
-          (top1_quotient_group_carrier_on
-             (top1_fundamental_group_carrier A ?TA a) (top1_fundamental_group_mul A ?TA a)
-             (top1_normal_subgroup_generated_on
-                (top1_fundamental_group_carrier A ?TA a) (top1_fundamental_group_mul A ?TA a)
-                (top1_fundamental_group_id A ?TA a) (top1_fundamental_group_invg A ?TA a)
-                {top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1, 0) A ?TA a ?\<iota>
-                   {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) ?f g}}))
-          (top1_quotient_group_mul_on (top1_fundamental_group_mul A ?TA a))"
-        unfolding hgen_eq .
-      show ?thesis using htransfer' unfolding Nb_def .
-    qed
-    \<comment> \<open>Step D: Chain A + C: \<pi>_1(X,a) \<cong> Q(\<pi>_1(U,b),N_b) \<cong> Q(\<pi>_1(A,a),\<langle>\<langle>{[k\<circ>p]}\<rangle>\<rangle>).\<close>
-    show ?thesis by (rule groups_isomorphic_trans_fwd[OF hchain1 hchain2])
-  qed
+    by (rule first_isomorphism_theorem_forward[OF hgrpA hrelator_normal hgrpX hj_hom hj_surj hj_ker])
   show ?thesis using h\<iota>_cont h\<iota>_eq hiso by (by100 blast)
 qed
 
