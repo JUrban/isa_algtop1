@@ -314,7 +314,31 @@ proof -
       have hILR_union: "?IL \<union> ?IR = top1_unit_interval" by (by100 force)
       \<comment> \<open>h maps into A1 \<union> A2.\<close>
       have hh_maps: "\<forall>x\<in>top1_unit_interval. h x \<in> A1 \<union> A2"
-        sorry \<comment> \<open>g1 maps to A1, g2 maps to A2.\<close>
+      proof (intro ballI)
+        fix t :: real assume ht: "t \<in> top1_unit_interval"
+        have hg1_bij: "bij_betw g1 top1_unit_interval A1"
+          using hg1(1) unfolding top1_homeomorphism_on_def by (by100 blast)
+        have hg2_bij: "bij_betw g2 top1_unit_interval A2"
+          using hg2(1) unfolding top1_homeomorphism_on_def by (by100 blast)
+        show "h t \<in> A1 \<union> A2"
+        proof (cases "t \<le> 1/2")
+          case True
+          have hht: "h t = g1 (2*t)" using True unfolding h_def by (by100 simp)
+          have "2*t \<in> top1_unit_interval" using ht True
+            unfolding top1_unit_interval_def by (by100 auto)
+          hence "g1 (2*t) \<in> A1" using hg1_bij unfolding bij_betw_def by (by100 blast)
+          hence "h t \<in> A1" using hht by (by100 simp)
+          thus ?thesis by (by100 blast)
+        next
+          case False
+          have hht: "h t = g2 (2*t - 1)" using False unfolding h_def by (by100 simp)
+          have "2*t - 1 \<in> top1_unit_interval" using ht False
+            unfolding top1_unit_interval_def by (by100 auto)
+          hence "g2 (2*t - 1) \<in> A2" using hg2_bij unfolding bij_betw_def by (by100 blast)
+          hence "h t \<in> A2" using hht by (by100 simp)
+          thus ?thesis by (by100 blast)
+        qed
+      qed
       \<comment> \<open>h is continuous on ?IL (= g1(2t)).\<close>
       have hh_IL: "top1_continuous_map_on ?IL (subspace_topology top1_unit_interval top1_unit_interval_topology ?IL)
           (A1 \<union> A2) ?TD h"
