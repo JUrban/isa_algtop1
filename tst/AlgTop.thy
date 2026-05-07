@@ -4390,7 +4390,59 @@ proof -
               \<in> top1_group_kernel_on
                 (top1_fundamental_group_carrier ?U ?TU a) (top1_fundamental_group_id X TX a)
                 (top1_fundamental_group_induced_on ?U ?TU a X TX a (\<lambda>x. x))"
-        sorry \<comment> \<open>ker(j*) maps into ker(incl*_a) via (A\<hookrightarrow>U)_* (from j* = incl* \<circ> (A\<hookrightarrow>U)*).\<close>
+      proof -
+        fix c assume hc: "c \<in> top1_group_kernel_on
+            (top1_fundamental_group_carrier A ?TA a) (top1_fundamental_group_id X TX a) ?jAX"
+        have hc_A: "c \<in> top1_fundamental_group_carrier A ?TA a"
+          using hc unfolding top1_group_kernel_on_def by (by100 blast)
+        have hjc_id: "?jAX c = top1_fundamental_group_id X TX a"
+          using hc unfolding top1_group_kernel_on_def by (by100 blast)
+        \<comment> \<open>Functoriality: j*(c) = incl*((A\<hookrightarrow>U)*(c)).\<close>
+        have hTopU_k: "is_topology_on ?U ?TU"
+          by (rule subspace_topology_is_topology_on[OF hTopX_ns]) (by100 blast)
+        have ha_U_k: "a \<in> ?U" using assms(6) hA_sub_X hx0_notin_A by (by100 blast)
+        have hA_sub_U_k: "A \<subseteq> ?U" using hA_sub_X hx0_notin_A by (by100 blast)
+        have hAU_cont_k: "top1_continuous_map_on A ?TA ?U ?TU (\<lambda>x. x)"
+        proof -
+          from top1_continuous_map_on_restrict_domain_simple[OF top1_continuous_map_on_id[OF hTopU_k] hA_sub_U_k]
+          show ?thesis using subspace_topology_trans[OF hA_sub_U_k] unfolding id_def by (by100 simp)
+        qed
+        have hUX_cont_k: "top1_continuous_map_on ?U ?TU X TX (\<lambda>x. x)"
+        proof -
+          from top1_continuous_map_on_restrict_domain_simple[OF top1_continuous_map_on_id[OF hTopX_ns] Diff_subset]
+          show ?thesis unfolding id_def by (by100 simp)
+        qed
+        have hfunct_c: "?jAX c = (top1_fundamental_group_induced_on ?U ?TU a X TX a (\<lambda>x. x))
+            ((top1_fundamental_group_induced_on A ?TA a ?U ?TU a (\<lambda>x. x)) c)"
+        proof -
+          have hcomp_eq: "(\<lambda>x::'a. x) \<circ> (\<lambda>x. x) = (\<lambda>x. x)" by (rule ext) (by100 simp)
+          show ?thesis using fundamental_group_induced_comp[OF hTA_top hTopU_k hTopX_ns
+              hAU_cont_k hUX_cont_k assms(6) _ _ hc_A] hcomp_eq by (by100 simp)
+        qed
+        \<comment> \<open>(A\<hookrightarrow>U)*(c) \<in> carrier(U).\<close>
+        have hAU_hom_k: "top1_group_hom_on
+            (top1_fundamental_group_carrier A ?TA a) (top1_fundamental_group_mul A ?TA a)
+            (top1_fundamental_group_carrier ?U ?TU a) (top1_fundamental_group_mul ?U ?TU a)
+            (top1_fundamental_group_induced_on A ?TA a ?U ?TU a (\<lambda>x. x))"
+          by (rule top1_fundamental_group_induced_on_is_hom[OF hTA_top hTopU_k assms(6) ha_U_k hAU_cont_k])
+             (by100 simp)
+        have hAU_c: "(top1_fundamental_group_induced_on A ?TA a ?U ?TU a (\<lambda>x. x)) c
+            \<in> top1_fundamental_group_carrier ?U ?TU a"
+          using hAU_hom_k hc_A unfolding top1_group_hom_on_def by (by100 blast)
+        \<comment> \<open>incl*((A\<hookrightarrow>U)*(c)) = j*(c) = id.\<close>
+        have "top1_fundamental_group_induced_on ?U ?TU a X TX a (\<lambda>x. x)
+            ((top1_fundamental_group_induced_on A ?TA a ?U ?TU a (\<lambda>x. x)) c)
+          = top1_fundamental_group_id X TX a"
+          using hfunct_c hjc_id by (by100 simp)
+        show "(top1_fundamental_group_induced_on A ?TA a ?U ?TU a (\<lambda>x. x)) c
+            \<in> top1_group_kernel_on
+              (top1_fundamental_group_carrier ?U ?TU a) (top1_fundamental_group_id X TX a)
+              (top1_fundamental_group_induced_on ?U ?TU a X TX a (\<lambda>x. x))"
+          unfolding top1_group_kernel_on_def
+          using hAU_c \<open>top1_fundamental_group_induced_on ?U ?TU a X TX a (\<lambda>x. x)
+              ((top1_fundamental_group_induced_on A ?TA a ?U ?TU a (\<lambda>x. x)) c)
+            = top1_fundamental_group_id X TX a\<close> by (by100 blast)
+      qed
       \<comment> \<open>Step 2: ker((U\<hookrightarrow>X)*_a) \<subseteq> \<langle>\<langle>{[k\<circ>p]_U}\<rangle>\<rangle>.
          From hincl_ker_b + base change naturality + comp_basepoint_change + winding number.\<close>
       have hstep2: "top1_group_kernel_on
@@ -11142,6 +11194,7 @@ end
  
   
  
+
 
 
 
