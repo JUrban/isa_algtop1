@@ -1745,7 +1745,37 @@ proof (intro conjI)
         qed
         \<comment> \<open>Step 2: H maps ?S into ?X (image in B2-{0}).\<close>
         have hH_img: "\<forall>p\<in>?S. H p \<in> ?X"
-          sorry \<comment> \<open>0 < |H(x,t)| \<le> 1 for x \<in> B2-{0}, t \<in> I.\<close>
+        proof (intro ballI)
+          fix p assume hp: "p \<in> ?S"
+          hence hx: "fst p \<in> ?X" and ht: "snd p \<in> I_set" by (by100 force)+
+          \<comment> \<open>H(p) = interp(p) \<in> B2 (convexity: convex combination of x and x/|x|, both in B2).\<close>
+          have "?interp p \<in> top1_B2"
+            sorry \<comment> \<open>Convexity of B2: (1-t)*x + t*(x/|x|) \<in> B2 when x \<in> B2 and x/|x| \<in> S1 \<subseteq> B2.\<close>
+          \<comment> \<open>H(p) \<noteq> (0,0) since \<alpha> = (1-t+t/|x|) > 0 and x \<noteq> 0.\<close>
+          moreover have "H p \<noteq> (0::real, 0)"
+          proof -
+            have hn: "?nrm (fst p) > 0" by (rule h_nrm_pos[OF hx])
+            have ht0: "snd p \<ge> 0" and ht1: "snd p \<le> 1"
+              using ht unfolding top1_unit_interval_def by (by100 simp)+
+            have h_alpha_pos: "1 - snd p + snd p / ?nrm (fst p) > 0"
+            proof -
+              have "snd p / ?nrm (fst p) \<ge> 0" using ht0 hn by (by100 simp)
+              moreover have "1 - snd p \<ge> 0" using ht1 by (by100 simp)
+              moreover have "snd p / ?nrm (fst p) > 0 \<or> 1 - snd p > 0"
+                using ht0 hn ht1 by (by100 force)
+              ultimately show ?thesis by (by100 linarith)
+            qed
+            have hx_ne: "fst p \<noteq> (0::real, 0)" using hx by (by100 blast)
+            hence "fst (fst p) \<noteq> 0 \<or> snd (fst p) \<noteq> 0" by (cases "fst p") (by100 simp)
+            moreover have "H p = ((1 - snd p + snd p / ?nrm (fst p)) * fst (fst p),
+                (1 - snd p + snd p / ?nrm (fst p)) * snd (fst p))"
+              unfolding H_def split_def by (by100 simp)
+            ultimately have "H p \<noteq> (0, 0)" using h_alpha_pos by (by100 force)
+            thus ?thesis .
+          qed
+          moreover have "H p = ?interp p" using hH_eq_interp[of "fst p" "snd p"] by (by100 simp)
+          ultimately show "H p \<in> ?X" by (by100 auto)
+        qed
         \<comment> \<open>Step 3: Convert continuous_on to top1_continuous_map_on.\<close>
         show ?thesis
           sorry \<comment> \<open>Bridge: continuous_on + image \<subseteq> ?X \<rightarrow> top1_continuous_map_on via
