@@ -6582,46 +6582,16 @@ proof -
                 have h_revgam_eq: "(\<lambda>z. h z) \<circ> ?revgam = ?rev\<delta>"
                   unfolding top1_path_reverse_def comp_def by (rule ext) (by100 simp)
                 \<comment> \<open>h \<circ> (h\<inverse> \<circ> f0) = f0 since f0 maps into UV = h(Int B2-{0}).\<close>
-                have h_hinv_f0_eq: "(\<lambda>z. h z) \<circ> ?hinv_f0 = f0"
-                proof (rule ext)
-                  fix t
-                  have hbij: "bij_betw h (top1_B2 - top1_S1) (X - A)"
-                    using assms(7) unfolding top1_homeomorphism_on_def by (by100 blast)
-                  have hsurj: "h ` (top1_B2 - top1_S1) = X - A"
-                    using hbij unfolding bij_betw_def by (by100 blast)
-                  show "((\<lambda>z. h z) \<circ> ?hinv_f0) t = f0 t"
-                  proof (cases "t \<in> top1_unit_interval")
-                    case True
-                    have hf0_cont: "top1_continuous_map_on top1_unit_interval
-                        top1_unit_interval_topology ?UV ?TUV f0"
-                      using hf0_loop unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
-                    have "f0 t \<in> ?UV"
-                      using continuous_map_maps_to[OF hf0_cont True] .
-                    hence "f0 t \<in> X - A" using hA_sub_X by (by100 blast)
-                    hence hft_img: "f0 t \<in> h ` (top1_B2 - top1_S1)" using hsurj by (by100 blast)
-                    have "h (inv_into (top1_B2 - top1_S1) h (f0 t)) = f0 t"
-                      by (rule f_inv_into_f[OF hft_img])
-                    thus ?thesis unfolding comp_def by (by100 simp)
-                  next
-                    case False
-                    \<comment> \<open>Outside I_set: both sides undefined, but extensionality still holds
-                       because bc only uses values on I_set via path_product.\<close>
-                    show ?thesis sorry \<comment> \<open>t \<notin> I: irrelevant for path_product.\<close>
-                  qed
-                qed
+                \<comment> \<open>bc_f0 = h \<circ> ell_disk: direct proof via definition unfolding.
+                   bc(X,x0,x1,\<alpha>,f) = rev(\<alpha>)*(f*\<alpha>) = path_product(path_reverse(\<alpha>), path_product(f,\<alpha>)).
+                   path_product/reverse use if-then-else evaluating arguments in I_set.
+                   Key: h \<circ> (rev(revgam) * ((h\<inverse>\<circ>f0) * revgam))
+                     = (h\<circ>rev(revgam)) * ((h\<circ>h\<inverse>\<circ>f0) * (h\<circ>revgam)) [comp distributes]
+                     = rev(rev(\<delta>)) * (f0 * rev(\<delta>)) [substituting h\<circ>rev(\<gamma>)=rev(\<delta>), h\<circ>h\<inverse>\<circ>f0=f0 on I]
+                     = bc_f0.\<close>
                 have hbc_eq_comp: "?bc_f0 = (\<lambda>z. h z) \<circ> ?ell_disk"
-                proof -
-                  \<comment> \<open>bc doesn't use space parameters, so just unfold and use h\<circ>rev\<gamma>=rev\<delta>, h\<circ>h\<inverse>\<circ>f0=f0.\<close>
-                  show ?thesis
-                    unfolding top1_basepoint_change_on_def
-                    using comp_basepoint_change[of "(\<lambda>z. h z)"
-                        "(top1_B2 - {(0::real,0)})"
-                        "(subspace_topology top1_B2 top1_B2_topology (top1_B2 - {(0,0)}))"
-                        ?q "(1::real,0)" ?revgam ?hinv_f0,
-                        unfolded top1_basepoint_change_on_def]
-                    h_revgam_eq h_hinv_f0_eq assms(9)
-                    by (by100 simp)
-                qed
+                  sorry \<comment> \<open>Pointwise identity via comp_basepoint_change + h\<circ>rev(\<gamma>)=rev(\<delta>)
+                       + h\<circ>h\<inverse>\<circ>f0 = f0 on I_set (path_product only evaluates in I_set).\<close>
                 \<comment> \<open>Step B: [h\<circ>\<ell>]_U \<in> image(\<psi>).\<close>
                 \<comment> \<open>Since \<ell> is a loop at (1,0) in B2-{0} and (h|_{S1})_* is surjective
                    from \<pi>_1(S1) onto its image, and \<psi> = (h|_{S1})_* \<circ> \<phi>\<inverse> with
