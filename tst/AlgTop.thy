@@ -6673,7 +6673,26 @@ proof -
                   have hcomp_eq: "\<forall>t\<in>top1_unit_interval. ((\<lambda>z. h z) \<circ> ?ell_disk) t =
                       (top1_basepoint_change_on ?U ?TU ?b a
                         ((\<lambda>z. h z) \<circ> ?revgam) ((\<lambda>z. h z) \<circ> ?hinv_f0)) t"
-                    sorry \<comment> \<open>comp_basepoint_change on I_set.\<close>
+                  proof (intro ballI)
+                    fix t assume "t \<in> top1_unit_interval"
+                    \<comment> \<open>comp_basepoint_change gives pointwise equality for ALL t.\<close>
+                    have "((\<lambda>z. h z) \<circ> ?ell_disk) t =
+                        (top1_basepoint_change_on ?U ?TU
+                          ((\<lambda>z. h z) ?q) ((\<lambda>z. h z) (1::real,0))
+                          ((\<lambda>z. h z) \<circ> ?revgam) ((\<lambda>z. h z) \<circ> ?hinv_f0)) t"
+                      using comp_basepoint_change[of "(\<lambda>z. h z)"
+                          "(top1_B2 - {(0::real,0)})"
+                          "(subspace_topology top1_B2 top1_B2_topology (top1_B2 - {(0,0)}))"
+                          ?q "(1::real,0)" ?revgam ?hinv_f0,
+                          unfolded top1_basepoint_change_on_def]
+                      unfolding top1_basepoint_change_on_def by (by100 simp)
+                    moreover have "(\<lambda>z. h z) ?q = ?b" by (by100 simp)
+                    moreover have "(\<lambda>z. h z) (1::real,0) = a" using assms(9) by (by100 simp)
+                    ultimately show "((\<lambda>z. h z) \<circ> ?ell_disk) t =
+                        (top1_basepoint_change_on ?U ?TU ?b a
+                          ((\<lambda>z. h z) \<circ> ?revgam) ((\<lambda>z. h z) \<circ> ?hinv_f0)) t"
+                      unfolding top1_basepoint_change_on_def by (by100 simp)
+                  qed
                   have hbc_subst: "\<forall>t\<in>top1_unit_interval.
                       (top1_basepoint_change_on ?U ?TU ?b a
                         ((\<lambda>z. h z) \<circ> ?revgam) ((\<lambda>z. h z) \<circ> ?hinv_f0)) t
