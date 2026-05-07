@@ -37,9 +37,49 @@ proof -
       by (rule top1_continuous_map_on_comp[OF hfcont hgcont])
     show "top1_continuous_map_on C TC A TA (inv_into A (g \<circ> f))"
     proof -
-      have "inv_into A (g \<circ> f) = inv_into A f \<circ> inv_into B g"
-        sorry \<comment> \<open>Standard: (g \<circ> f)^{-1} = f^{-1} \<circ> g^{-1} for bijections.\<close>
-      thus ?thesis using top1_continuous_map_on_comp[OF hginv hfinv] by (by100 simp)
+      \<comment> \<open>Use top1_continuous_map_on_agree': inv_into A (g\<circ>f) agrees with f\<inverse>\<circ>g\<inverse> on C.\<close>
+      have hinv_comp_cont: "top1_continuous_map_on C TC A TA (inv_into A f \<circ> inv_into B g)"
+        by (rule top1_continuous_map_on_comp[OF hginv hfinv])
+      have hinv_agree: "\<forall>c\<in>C. inv_into A (g \<circ> f) c = (inv_into A f \<circ> inv_into B g) c"
+      proof
+        fix c assume hcC: "c \<in> C"
+        have hginvc: "inv_into B g c \<in> B"
+          using inv_into_into[of c g B] hgbij hcC unfolding bij_betw_def by (by100 blast)
+        have hfinvc: "inv_into A f (inv_into B g c) \<in> A"
+          using inv_into_into[of "inv_into B g c" f A] hfbij hginvc unfolding bij_betw_def by (by100 blast)
+        have "f (inv_into A f (inv_into B g c)) = inv_into B g c"
+          by (rule f_inv_into_f) (use hfbij hginvc in \<open>unfold bij_betw_def; by100 blast\<close>)
+        moreover have "g (inv_into B g c) = c"
+          by (rule f_inv_into_f) (use hgbij hcC in \<open>unfold bij_betw_def; by100 blast\<close>)
+        ultimately have "(g \<circ> f) (inv_into A f (inv_into B g c)) = c" unfolding comp_def by (by100 simp)
+        have hinj_gf: "inj_on (g \<circ> f) A"
+          using bij_betw_trans[OF hfbij hgbij] unfolding bij_betw_def by (by100 blast)
+        show "inv_into A (g \<circ> f) c = (inv_into A f \<circ> inv_into B g) c" unfolding comp_def
+          using inv_into_f_eq[OF hinj_gf hfinvc \<open>(g \<circ> f) _ = c\<close>] by (by100 simp)
+      qed
+      show ?thesis
+        unfolding top1_continuous_map_on_def
+      proof (intro conjI ballI)
+        fix c assume "c \<in> C"
+        show "inv_into A (g \<circ> f) c \<in> A"
+        proof -
+          have "inv_into A (g \<circ> f) c = (inv_into A f \<circ> inv_into B g) c"
+            using hinv_agree \<open>c \<in> C\<close> by (by100 blast)
+          moreover have "(inv_into A f \<circ> inv_into B g) c \<in> A"
+            using hinv_comp_cont \<open>c \<in> C\<close> unfolding top1_continuous_map_on_def by (by100 blast)
+          ultimately show ?thesis by (by100 simp)
+        qed
+      next
+        fix V assume "V \<in> TA"
+        show "{c \<in> C. inv_into A (g \<circ> f) c \<in> V} \<in> TC"
+        proof -
+          have "{c \<in> C. inv_into A (g \<circ> f) c \<in> V} = {c \<in> C. (inv_into A f \<circ> inv_into B g) c \<in> V}"
+            using hinv_agree by (by100 force)
+          moreover have "{c \<in> C. (inv_into A f \<circ> inv_into B g) c \<in> V} \<in> TC"
+            using hinv_comp_cont \<open>V \<in> TA\<close> unfolding top1_continuous_map_on_def by (by100 blast)
+          ultimately show ?thesis by (by100 simp)
+        qed
+      qed
     qed
   qed
 qed
