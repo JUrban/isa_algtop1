@@ -563,8 +563,80 @@ proof -
       unfolding bij_betw_def
     proof (intro conjI)
       show "inj_on h top1_unit_interval"
-        sorry \<comment> \<open>g1 inj on I mapped to [0,1/2], g2 inj on I mapped to (1/2,1].
-             A1 \<inter> A2 = {c}, c = h(1/2). Only collision at boundary.\<close>
+      proof (rule inj_onI)
+        fix s t assume hs: "s \<in> top1_unit_interval" and ht: "t \<in> top1_unit_interval"
+            and heq: "h s = h t"
+        have hg1_inj: "inj_on g1 top1_unit_interval"
+          using hg1(1) unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+        have hg2_inj: "inj_on g2 top1_unit_interval"
+          using hg2(1) unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+        have hg1_bij: "bij_betw g1 top1_unit_interval A1"
+          using hg1(1) unfolding top1_homeomorphism_on_def by (by100 blast)
+        have hg2_bij: "bij_betw g2 top1_unit_interval A2"
+          using hg2(1) unfolding top1_homeomorphism_on_def by (by100 blast)
+        show "s = t"
+        proof (cases "s \<le> 1/2"; cases "t \<le> 1/2")
+          \<comment> \<open>Case 1: both in left half.\<close>
+          assume hs2: "s \<le> 1/2" and ht2: "t \<le> 1/2"
+          have "g1 (2*s) = g1 (2*t)" using heq hs2 ht2 unfolding h_def by (by100 simp)
+          moreover have "2*s \<in> top1_unit_interval" using hs hs2 unfolding top1_unit_interval_def by (by100 auto)
+          moreover have "2*t \<in> top1_unit_interval" using ht ht2 unfolding top1_unit_interval_def by (by100 auto)
+          ultimately have "2*s = 2*t" using inj_onD[OF hg1_inj] by (by100 blast)
+          thus "s = t" by (by100 simp)
+        next
+          \<comment> \<open>Case 2: both in right half.\<close>
+          assume hs2: "\<not> s \<le> 1/2" and ht2: "\<not> t \<le> 1/2"
+          have "g2 (2*s-1) = g2 (2*t-1)" using heq hs2 ht2 unfolding h_def by (by100 simp)
+          moreover have "2*s-1 \<in> top1_unit_interval" using hs hs2 unfolding top1_unit_interval_def by (by100 auto)
+          moreover have "2*t-1 \<in> top1_unit_interval" using ht ht2 unfolding top1_unit_interval_def by (by100 auto)
+          ultimately have "2*s-1 = 2*t-1" using inj_onD[OF hg2_inj] by (by100 blast)
+          thus "s = t" by (by100 simp)
+        next
+          \<comment> \<open>Case 3: s left, t right. h(s) \<in> A1, h(t) \<in> A2. Equal only if both = c.\<close>
+          assume hs2: "s \<le> 1/2" and ht2: "\<not> t \<le> 1/2"
+          have hhs_A1: "h s \<in> A1" using hs hs2 hg1_bij unfolding h_def bij_betw_def top1_unit_interval_def by (by100 auto)
+          have "h t \<in> A2" using ht ht2 hg2_bij unfolding h_def bij_betw_def top1_unit_interval_def by (by100 auto)
+          hence "h s \<in> A2" using heq by (by100 simp)
+          hence "h s \<in> A1 \<inter> A2" using hhs_A1 by (by100 blast)
+          hence "h s = c" using hinter by (by100 blast)
+          hence "g1 (2*s) = c" using hs2 unfolding h_def by (by100 simp)
+          hence "g1 (2*s) = g1 1" using hg1(2) by (by100 simp)
+          moreover have "2*s \<in> top1_unit_interval" using hs hs2 unfolding top1_unit_interval_def by (by100 auto)
+          moreover have "(1::real) \<in> top1_unit_interval" unfolding top1_unit_interval_def by (by100 simp)
+          ultimately have "2*s = 1" using inj_onD[OF hg1_inj] by (by100 blast)
+          hence hs_half: "s = 1/2" by (by100 simp)
+          have "h t = c" using heq \<open>h s = c\<close> by (by100 simp)
+          hence "g2 (2*t-1) = c" using ht2 unfolding h_def by (by100 simp)
+          hence "g2 (2*t-1) = g2 0" using hg2(2) by (by100 simp)
+          moreover have "2*t-1 \<in> top1_unit_interval" using ht ht2 unfolding top1_unit_interval_def by (by100 auto)
+          moreover have "(0::real) \<in> top1_unit_interval" unfolding top1_unit_interval_def by (by100 simp)
+          ultimately have "2*t-1 = 0" using inj_onD[OF hg2_inj] by (by100 blast)
+          hence "t = 1/2" by (by100 simp)
+          thus "s = t" using hs_half by (by100 simp)
+        next
+          \<comment> \<open>Case 4: s right, t left. Symmetric to case 3.\<close>
+          assume hs2: "\<not> s \<le> 1/2" and ht2: "t \<le> 1/2"
+          have "h t \<in> A1" using ht ht2 hg1_bij unfolding h_def bij_betw_def top1_unit_interval_def by (by100 auto)
+          have hhs_A2: "h s \<in> A2" using hs hs2 hg2_bij unfolding h_def bij_betw_def top1_unit_interval_def by (by100 auto)
+          have "h s \<in> A1" using \<open>h t \<in> A1\<close> heq by (by100 simp)
+          hence "h s \<in> A1 \<inter> A2" using hhs_A2 by (by100 blast)
+          hence "h s = c" using hinter by (by100 blast)
+          hence "g2 (2*s-1) = c" using hs2 unfolding h_def by (by100 simp)
+          hence "g2 (2*s-1) = g2 0" using hg2(2) by (by100 simp)
+          moreover have "2*s-1 \<in> top1_unit_interval" using hs hs2 unfolding top1_unit_interval_def by (by100 auto)
+          moreover have "(0::real) \<in> top1_unit_interval" unfolding top1_unit_interval_def by (by100 simp)
+          ultimately have "2*s-1 = 0" using inj_onD[OF hg2_inj] by (by100 blast)
+          hence hs_half: "s = 1/2" by (by100 simp)
+          have "h t = c" using heq \<open>h s = c\<close> by (by100 simp)
+          hence "g1 (2*t) = c" using ht2 unfolding h_def by (by100 simp)
+          hence "g1 (2*t) = g1 1" using hg1(2) by (by100 simp)
+          moreover have "2*t \<in> top1_unit_interval" using ht ht2 unfolding top1_unit_interval_def by (by100 auto)
+          moreover have "(1::real) \<in> top1_unit_interval" unfolding top1_unit_interval_def by (by100 simp)
+          ultimately have "2*t = 1" using inj_onD[OF hg1_inj] by (by100 blast)
+          hence "t = 1/2" by (by100 simp)
+          thus "s = t" using hs_half by (by100 simp)
+        qed
+      qed
       show "h ` top1_unit_interval = A1 \<union> A2"
       proof (rule set_eqI, rule iffI)
         fix y assume "y \<in> h ` top1_unit_interval"
