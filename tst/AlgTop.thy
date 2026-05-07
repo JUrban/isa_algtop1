@@ -59,8 +59,39 @@ lemma arc_endpoints_are_boundary:
       and hh: "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
           A (subspace_topology X TX A) h"
   shows "top1_arc_endpoints_on A (subspace_topology X TX A) = {h 0, h 1}"
-  sorry \<comment> \<open>Forward: p endpoint \<Rightarrow> A-{p} connected \<Rightarrow> h^{-1}(A-{p}) = [0,1]-{t} connected \<Rightarrow> t \<in> {0,1}.
-     Backward: h(0) endpoint because (0,1] connected; h(1) because [0,1) connected.\<close>
+proof -
+  let ?TA = "subspace_topology X TX A"
+  have hTopX: "is_topology_on X TX" using hT unfolding is_topology_on_strict_def by (by100 blast)
+  have hbij: "bij_betw h top1_unit_interval A" using hh unfolding top1_homeomorphism_on_def by (by100 blast)
+  have hinj: "inj_on h top1_unit_interval" using hbij unfolding bij_betw_def by (by100 blast)
+  have himg: "h ` top1_unit_interval = A" using hbij unfolding bij_betw_def by (by100 blast)
+  have h0I: "(0::real) \<in> top1_unit_interval" unfolding top1_unit_interval_def by (by100 simp)
+  have h1I: "(1::real) \<in> top1_unit_interval" unfolding top1_unit_interval_def by (by100 simp)
+  show ?thesis unfolding top1_arc_endpoints_on_def
+  proof (rule set_eqI, rule iffI)
+    fix p assume "p \<in> {p. p \<in> A \<and> top1_connected_on (A - {p}) (subspace_topology A ?TA (A - {p}))}"
+    hence hpA: "p \<in> A" and hconn: "top1_connected_on (A - {p}) (subspace_topology A ?TA (A - {p}))"
+      by (by100 blast)+
+    obtain t where ht: "t \<in> top1_unit_interval" "h t = p" using hpA himg by (by100 blast)
+    have "t = 0 \<or> t = 1"
+    proof (rule ccontr)
+      assume "\<not> (t = 0 \<or> t = 1)"
+      hence "0 < t" "t < 1" using ht(1) unfolding top1_unit_interval_def by (by100 auto)+
+      \<comment> \<open>[0,1]-{t} disconnected but A-{p} connected: contradiction via homeomorphism.\<close>
+      show False sorry \<comment> \<open>Key: h\<inverse> continuous + connected \<Rightarrow> [0,1]-{t} connected. But it's not.\<close>
+    qed
+    thus "p \<in> {h 0, h 1}" using ht(2) by (by100 blast)
+  next
+    fix p assume "p \<in> {h 0, h 1}"
+    show "p \<in> {p. p \<in> A \<and> top1_connected_on (A - {p}) (subspace_topology A ?TA (A - {p}))}"
+    proof (intro CollectI conjI)
+      show "p \<in> A" using \<open>p \<in> {h 0, h 1}\<close> himg h0I h1I by (by100 blast)
+      show "top1_connected_on (A - {p}) (subspace_topology A ?TA (A - {p}))"
+        sorry \<comment> \<open>p=h(0): A-{h(0)}=h((0,1]), connected. p=h(1): A-{h(1)}=h([0,1)), connected.
+             Continuous image of connected is connected (Theorem_23_5).\<close>
+    qed
+  qed
+qed
 
 \<comment> \<open>Reusable: if A1 \<inter> A2 = {c} for arcs, then c \<in> endpoints of A1.\<close>
 lemma arc_single_intersection_is_endpoint:
