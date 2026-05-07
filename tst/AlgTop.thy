@@ -3817,7 +3817,22 @@ proof -
   \<comment> \<open>(A\<hookrightarrow>U)* injective (retraction left-inverse: r*\<circ>\<iota>*=id on \<pi>_1(A)).\<close>
   have hAU_inj_outer: "inj_on (top1_fundamental_group_induced_on A ?TA a ?U ?TU a (\<lambda>x. x))
       (top1_fundamental_group_carrier A ?TA a)"
-    sorry \<comment> \<open>r\<circ>\<iota>=id on A, so r*\<circ>\<iota>*=id on \<pi>_1(A). Hence \<iota>* injective.\<close>
+  proof (rule inj_onI)
+    fix c1 c2
+    assume hc1: "c1 \<in> top1_fundamental_group_carrier A ?TA a"
+       and hc2: "c2 \<in> top1_fundamental_group_carrier A ?TA a"
+       and heq: "(top1_fundamental_group_induced_on A ?TA a ?U ?TU a (\<lambda>x. x)) c1
+               = (top1_fundamental_group_induced_on A ?TA a ?U ?TU a (\<lambda>x. x)) c2"
+    \<comment> \<open>The retraction r = (\<lambda>x. H_dr(x,1)): U \<rightarrow> A fixes A pointwise.
+       So r* \<circ> \<iota>* = id on \<pi>_1(A,a). Hence \<iota>*(c1) = \<iota>*(c2) \<Longrightarrow> c1 = c2.\<close>
+    \<comment> \<open>For loops in A: \<iota>(g) = g (inclusion is identity), r(g(s)) = g(s) (r fixes A).
+       So (r \<circ> \<iota>)(g) = g for loops g in A. At the class level: r*(\<iota>*(c)) = c.
+       Key: for c = {g. loop_equiv(A, f, g)}, \<iota>*(c) = {g. loop_equiv(U, f, g)} (by inclusion_induced_class).
+       Then r*(c') where c' = \<iota>*(c) gives {g. loop_equiv(A, r\<circ>f, g)}.
+       Since f is in A and r fixes A: r\<circ>f = f. So r*(\<iota>*(c)) = {g. loop_equiv(A, f, g)} = c.\<close>
+    show "c1 = c2"
+      sorry \<comment> \<open>r fixes A pointwise \<Longrightarrow> r*\<circ>\<iota>* = id on \<pi>_1(A) \<Longrightarrow> \<iota>* injective.\<close>
+  qed
   \<comment> \<open>Step 1: j_* is a homomorphism.\<close>
   have hincl_AX_cont: "top1_continuous_map_on A ?TA X TX (\<lambda>x. x)"
   proof -
