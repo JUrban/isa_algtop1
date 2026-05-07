@@ -1194,7 +1194,37 @@ proof -
   qed
   \<comment> \<open>Step 3: By Theorem 72.1, \<pi>_1(X) \<cong> Z/\<langle>\<langle>n\<rangle>\<rangle> = Z/nZ.
      The relator is aⁿ (the standard loop wrapped n times).\<close>
-  show ?thesis sorry \<comment> \<open>Theorem 72.1 + Z/\<langle>\<langle>n\<rangle>\<rangle> \<cong> Z/nZ.\<close>
+  \<comment> \<open>Step 3a: Apply Theorem 72.1 to get \<pi>_1(X) \<cong> \<pi>_1(A)/\<langle>\<langle>[k\<circ>p]\<rangle>\<rangle>.\<close>
+  \<comment> \<open>Need: is_topology_on_strict, Hausdorff, A closed, A path-connected,
+     h continuous B2\<rightarrow>X, a \<in> A, h|_{Int B2} homeomorphism, h(S1)\<subseteq>A, h(1,0)=a.\<close>
+  have hThm72: "\<exists>\<iota>.
+      top1_continuous_map_on top1_S1 top1_S1_topology A
+           (subspace_topology X TX A) \<iota>
+    \<and> (\<forall>z\<in>top1_S1. \<iota> z = h z)
+    \<and> top1_groups_isomorphic_on
+          (top1_fundamental_group_carrier X TX x0)
+          (top1_fundamental_group_mul X TX x0)
+          (top1_quotient_group_carrier_on
+             (top1_fundamental_group_carrier A (subspace_topology X TX A) x0)
+             (top1_fundamental_group_mul A (subspace_topology X TX A) x0)
+             (top1_normal_subgroup_generated_on
+                (top1_fundamental_group_carrier A (subspace_topology X TX A) x0)
+                (top1_fundamental_group_mul A (subspace_topology X TX A) x0)
+                (top1_fundamental_group_id A (subspace_topology X TX A) x0)
+                (top1_fundamental_group_invg A (subspace_topology X TX A) x0)
+                {top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1, 0)
+                    A (subspace_topology X TX A) x0
+                    (\<lambda>z. h z)
+                  {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0)
+                      (\<lambda>s. (cos (2*pi*s), sin (2*pi*s))) g}}))
+          (top1_quotient_group_mul_on
+             (top1_fundamental_group_mul A (subspace_topology X TX A) x0))"
+    sorry \<comment> \<open>Apply Theorem_72_1. Needs all hypotheses verified.\<close>
+  \<comment> \<open>Step 3b: The relator [k\<circ>p] in \<pi>_1(A) corresponds to n \<in> Z.
+     Since \<pi>_1(A) \<cong> Z, the normal closure of {n} is nZ.
+     Z/nZ \<cong> (top1_Zn_group n, top1_Zn_mul n) by Z_quotient_nZ_iso.\<close>
+  \<comment> \<open>Step 3c: Compose isomorphisms: \<pi>_1(X) \<cong> \<pi>_1(A)/\<langle>\<langle>[k\<circ>p]\<rangle>\<rangle> \<cong> Z/\<langle>\<langle>n\<rangle>\<rangle> \<cong> Z/nZ.\<close>
+  show ?thesis sorry \<comment> \<open>Compose the three isomorphisms.\<close>
 qed
 
 section \<open>Chapter 12: Classification of Surfaces\<close>
