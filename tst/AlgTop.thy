@@ -3745,9 +3745,21 @@ proof -
             sorry \<comment> \<open>From hcu(2): incl*_b([g]_U) = [f']_X, unfold induced class.\<close>
           \<comment> \<open>Apply rev(\<delta>) base change in X to both sides.\<close>
           have hrevd_path_X: "top1_is_path_on X TX ?b a ?revd"
-            sorry \<comment> \<open>rev(\<delta>) is a path in X from b to a.\<close>
+            by (rule top1_path_reverse_is_path[OF h\<delta>_path])
           have hg_loop_X: "top1_is_loop_on X TX ?b g"
-            sorry \<comment> \<open>g loop in U at b \<Longrightarrow> g loop in X at b (U \<subseteq> X).\<close>
+          proof -
+            have hincl_UX: "top1_continuous_map_on ?U ?TU X TX (\<lambda>x. x)"
+            proof -
+              from top1_continuous_map_on_restrict_domain_simple[OF top1_continuous_map_on_id[OF hTopX_ns] Diff_subset]
+              show ?thesis unfolding id_def by (by100 simp)
+            qed
+            have hb_U: "?b \<in> ?U" using hb_in_VA hb_ne_x0 hA_sub_X by (by100 blast)
+            have "top1_is_loop_on X TX ((\<lambda>x. x) ?b) ((\<lambda>x. x) \<circ> g)"
+              by (rule top1_continuous_map_loop_early[OF hincl_UX hg(1)])
+            moreover have "(\<lambda>x::'a. x) \<circ> g = g" by (rule ext) (by100 simp)
+            moreover have "(\<lambda>x::'a. x) ?b = ?b" by (by100 simp)
+            ultimately show ?thesis by (by100 simp)
+          qed
           have hrevg_equiv: "top1_loop_equiv_on X TX a
               (top1_basepoint_change_on X TX ?b a ?revd g)
               (top1_basepoint_change_on X TX ?b a ?revd ?f')"
