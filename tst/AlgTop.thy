@@ -3789,7 +3789,57 @@ proof -
       have hclass_id: "top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1, 0) X TX a ?h_S1
           {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) ?f g}
         = top1_fundamental_group_id X TX a"
-        sorry \<comment> \<open>Induced class of nulhomotopic map on loop = id (from htriv).\<close>
+      proof -
+        \<comment> \<open>Unfold: induced([f]) = {k. \<exists>l. loop_equiv(S1, f, l) \<and> loop_equiv(X, h\<circ>l, k)}.\<close>
+        \<comment> \<open>= {k. loop_equiv(X, h\<circ>f, k)} (congruence: f~l \<Longrightarrow> h\<circ>f ~ h\<circ>l in X).\<close>
+        \<comment> \<open>= {k. loop_equiv(X, constant(a), k)} (h\<circ>f ~ constant by htriv).\<close>
+        \<comment> \<open>= id_X (definition of fundamental_group_id).\<close>
+        have hh_S1_eq: "?h_S1 \<circ> ?f = ?\<iota> \<circ> ?f" by (rule ext) (by100 simp)
+        \<comment> \<open>The loop h\<circ>f = \<iota>\<circ>f is a loop in X at a.\<close>
+        have hhf_loop_X: "top1_is_loop_on X TX a (?h_S1 \<circ> ?f)"
+          using top1_continuous_map_loop[OF hh_S1_cont hf_loop] hh10 by (by100 simp)
+        have hconst_loop: "top1_is_loop_on X TX a (top1_constant_path a)"
+          by (rule top1_constant_path_is_loop[OF hTopX_ns ha_X])
+        \<comment> \<open>path_homotopic \<Longrightarrow> loop_equiv.\<close>
+        have hhf_equiv_const: "top1_loop_equiv_on X TX a (?h_S1 \<circ> ?f) (top1_constant_path a)"
+          using htriv unfolding top1_loop_equiv_on_def top1_path_homotopic_on_def
+          using hhf_loop_X hconst_loop by (by100 blast)
+        show ?thesis
+          unfolding top1_fundamental_group_induced_on_def top1_fundamental_group_id_def
+        proof (rule set_eqI, rule iffI)
+          fix k
+          assume "k \<in> {g'. \<exists>l\<in>{g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) ?f g}.
+              top1_loop_equiv_on X TX a (?h_S1 \<circ> l) g'}"
+          then obtain l where hl_eq: "top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) ?f l"
+              and hk_eq: "top1_loop_equiv_on X TX a (?h_S1 \<circ> l) k" by (by100 blast)
+          \<comment> \<open>f ~ l in S1 \<Longrightarrow> h\<circ>f ~ h\<circ>l in X.\<close>
+          have hl_loop: "top1_is_loop_on top1_S1 top1_S1_topology (1, 0) l"
+            using hl_eq unfolding top1_loop_equiv_on_def by (by100 blast)
+          have "top1_loop_equiv_on X TX (?h_S1 (1,0)) (?h_S1 \<circ> ?f) (?h_S1 \<circ> l)"
+            by (rule top1_induced_preserves_loop_equiv[OF hS1_top hh_S1_cont hf_loop hl_loop hl_eq])
+          hence "top1_loop_equiv_on X TX a (?h_S1 \<circ> ?f) (?h_S1 \<circ> l)"
+            using hh10 by (by100 simp)
+          \<comment> \<open>h\<circ>f ~ h\<circ>l and h\<circ>l ~ k \<Longrightarrow> h\<circ>f ~ k.\<close>
+          from top1_loop_equiv_on_trans[OF hTopX_ns this hk_eq]
+          have "top1_loop_equiv_on X TX a (?h_S1 \<circ> ?f) k" .
+          \<comment> \<open>h\<circ>f ~ constant and h\<circ>f ~ k \<Longrightarrow> constant ~ k.\<close>
+          from top1_loop_equiv_on_trans[OF hTopX_ns
+              top1_loop_equiv_on_sym[OF hhf_equiv_const] this]
+          show "k \<in> {g. top1_loop_equiv_on X TX a (top1_constant_path a) g}" by (by100 blast)
+        next
+          fix k
+          assume "k \<in> {g. top1_loop_equiv_on X TX a (top1_constant_path a) g}"
+          hence hk_const: "top1_loop_equiv_on X TX a (top1_constant_path a) k" by (by100 blast)
+          \<comment> \<open>constant ~ h\<circ>f (reverse of hhf_equiv_const) and constant ~ k.\<close>
+          have "top1_loop_equiv_on X TX a (?h_S1 \<circ> ?f) k"
+            using top1_loop_equiv_on_trans[OF hTopX_ns hhf_equiv_const hk_const] .
+          show "k \<in> {g'. \<exists>l\<in>{g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) ?f g}.
+              top1_loop_equiv_on X TX a (?h_S1 \<circ> l) g'}"
+            apply (rule CollectI, rule bexI[of _ ?f])
+            apply (rule \<open>top1_loop_equiv_on X TX a (?h_S1 \<circ> ?f) k\<close>)
+            using top1_loop_equiv_on_refl[OF hf_loop] by (by100 blast)
+        qed
+      qed
       show ?thesis using hfunct hclass_id by (by100 simp)
     qed
     \<comment> \<open>Step (b): ker(j_*) \<subseteq> \<langle>\<langle>{[k\<circ>p]}\<rangle>\<rangle>. From SvK at base b + base change + retraction.\<close>
