@@ -2621,7 +2621,10 @@ proof -
             have "?CU \<subseteq> ?U" by (by100 blast)
             thus ?thesis by (rule subspace_topology_trans[symmetric])
           qed
-          ultimately show ?thesis by (by100 simp)
+          ultimately have "subspace_topology (?C \<times> I_set) (product_topology_on ?TC I_top)
+              (?CU \<times> I_set) = product_topology_on (subspace_topology ?U ?TU ?CU) I_top"
+            by (by100 simp)
+          thus ?thesis .
         qed
         \<comment> \<open>Key functional equality: H_U \<circ> \<pi>' = G on B2\{0}\<times>I.\<close>
         have hHU_piI_eq_G: "\<forall>q\<in>?B2_0 \<times> I_set. H_U (?\<pi>I q) = ?G q"
@@ -9690,6 +9693,10 @@ end
 
 
 
+ 
+ 
+ 
+ 
  
  
  
