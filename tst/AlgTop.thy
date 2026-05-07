@@ -1984,6 +1984,24 @@ lemma hom_from_cyclic_Z_image_in_subgroup:
   shows "\<psi> ` G \<subseteq> N"
   using hgen by (by100 blast)
 
+\<comment> \<open>Reusable: under any iso \<pi>_1(S1) \<cong> Z, the standard loop maps to \<pm>1.
+   This is because the lifting correspondence sends [f] to the endpoint 1 of its lift,
+   and 1 generates Z. For any other iso, the image is still a generator of Z, hence \<pm>1.\<close>
+lemma standard_S1_loop_generates_Z:
+  assumes h\<phi>_bij: "bij_betw \<phi> (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1,0))
+      top1_Z_group"
+      and h\<phi>_hom: "top1_group_hom_on
+        (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1,0))
+        (top1_fundamental_group_mul top1_S1 top1_S1_topology (1,0)) top1_Z_group top1_Z_mul \<phi>"
+  shows "\<phi> {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0)
+      (\<lambda>s. (cos (2*pi*s), sin (2*pi*s))) g} = 1
+    \<or> \<phi> {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0)
+      (\<lambda>s. (cos (2*pi*s), sin (2*pi*s))) g} = -1"
+  sorry \<comment> \<open>Standard S1 loop generates \<pi>_1(S1). Under any iso to Z, generators map to \<pm>1.
+     Proof: the lifting correspondence (Theorem 54.4) sends [f] to endpoint 1 of its lift.
+     The lift of f(s) = (cos 2\<pi>s, sin 2\<pi>s) starting at 0 is s \<mapsto> s, ending at 1.
+     So any iso to Z maps [f] to \<pm>1 (only generators of Z).\<close>
+
 \<comment> \<open>Reusable: inverse of a bijective hom is a hom.\<close>
 lemma bij_hom_inv_is_hom:
   assumes hG: "top1_is_group_on G mulG eG invgG"
@@ -6269,7 +6287,74 @@ proof -
                 by (rule group_hom_comp[OF h\<phi>_inv_hom h_hS1_hom])
               \<comment> \<open>\<psi>(1) \<in> N.\<close>
               have h\<psi>1_N: "?\<psi> 1 \<in> N"
-                sorry \<comment> \<open>\<phi>\<inverse>(1) \<in> {[f],[f]\<inverse>}, so \<psi>(1) \<in> {kp, kp\<inverse>} \<subseteq> N.\<close>
+              proof -
+                let ?fclass = "{g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) ?f g}"
+                have h\<phi>_f: "\<phi>_S1 ?fclass = 1 \<or> \<phi>_S1 ?fclass = -1"
+                  by (rule standard_S1_loop_generates_Z[OF h\<phi>_bij h\<phi>_hom])
+                have hinj: "inj_on \<phi>_S1 (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1,0))"
+                  using h\<phi>_bij unfolding bij_betw_def by (by100 blast)
+                have hsurj: "\<phi>_S1 ` (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1,0))
+                    = top1_Z_group"
+                  using h\<phi>_bij unfolding bij_betw_def by (by100 blast)
+                have hf_carrier: "?fclass \<in> top1_fundamental_group_carrier top1_S1 top1_S1_topology (1,0)"
+                proof -
+                  have "top1_is_loop_on top1_S1 top1_S1_topology (1,0) ?f"
+                    by (rule standard_S1_loop_is_loop)
+                  thus ?thesis unfolding top1_fundamental_group_carrier_def by (by100 blast)
+                qed
+                show ?thesis
+                proof (cases "\<phi>_S1 ?fclass = 1")
+                  case True
+                  \<comment> \<open>\<phi>\<inverse>(1) = [f], so \<psi>(1) = (h|_{S1})_*([f]) = kp_class \<in> N.\<close>
+                  have "inv_into (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1,0))
+                      \<phi>_S1 1 = ?fclass"
+                    using inv_into_f_eq[OF hinj hf_carrier] True by (by100 simp)
+                  hence "?\<psi> 1 = (top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1,0)
+                      ?U ?TU a (\<lambda>z. h z)) ?fclass"
+                    unfolding comp_def by (by100 simp)
+                  moreover have "(top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1,0)
+                      ?U ?TU a (\<lambda>z. h z)) ?fclass = ?kp_class"
+                    by (by100 simp)
+                  ultimately show ?thesis using hkp_in_N by (by100 simp)
+                next
+                  case False
+                  hence h_m1: "\<phi>_S1 ?fclass = -1" using h\<phi>_f by (by100 blast)
+                  \<comment> \<open>\<phi>\<inverse>(1) = [f]\<inverse>, so \<psi>(1) = (h|_{S1})_*([f]\<inverse>) = kp_class\<inverse> \<in> N.\<close>
+                  have h\<phi>_inv: "\<phi>_S1 (top1_fundamental_group_invg top1_S1 top1_S1_topology (1,0) ?fclass) = 1"
+                  proof -
+                    have "\<phi>_S1 (top1_fundamental_group_invg top1_S1 top1_S1_topology (1,0) ?fclass)
+                        = top1_Z_invg (\<phi>_S1 ?fclass)"
+                      using hom_preserves_inv[OF hS1_grp hZ_grp h\<phi>_hom hf_carrier] .
+                    thus ?thesis using h_m1 unfolding top1_Z_invg_def by (by100 simp)
+                  qed
+                  have hfinv_carrier: "top1_fundamental_group_invg top1_S1 top1_S1_topology (1,0) ?fclass
+                      \<in> top1_fundamental_group_carrier top1_S1 top1_S1_topology (1,0)"
+                    using group_inv_closed[OF hS1_grp hf_carrier] .
+                  have "inv_into (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1,0))
+                      \<phi>_S1 1 = top1_fundamental_group_invg top1_S1 top1_S1_topology (1,0) ?fclass"
+                    using inv_into_f_eq[OF hinj hfinv_carrier] h\<phi>_inv by (by100 simp)
+                  hence "?\<psi> 1 = (top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1,0)
+                      ?U ?TU a (\<lambda>z. h z)) (top1_fundamental_group_invg top1_S1 top1_S1_topology (1,0) ?fclass)"
+                    unfolding comp_def by (by100 simp)
+                  moreover have "... \<in> N"
+                  proof -
+                    \<comment> \<open>(h|_{S1})_*([f]\<inverse>) = kp_class\<inverse> \<in> N.\<close>
+                    have "(top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1,0)
+                        ?U ?TU a (\<lambda>z. h z)) (top1_fundamental_group_invg top1_S1 top1_S1_topology (1,0) ?fclass)
+                        = top1_fundamental_group_invg ?U ?TU a ?kp_class"
+                    proof -
+                      have hUa_grp: "top1_is_group_on
+                          (top1_fundamental_group_carrier ?U ?TU a) (top1_fundamental_group_mul ?U ?TU a)
+                          (top1_fundamental_group_id ?U ?TU a) (top1_fundamental_group_invg ?U ?TU a)"
+                        by (rule top1_fundamental_group_is_group[OF hTopU_outer ha_U_outer])
+                      from hom_preserves_inv[OF hS1_grp hUa_grp h_hS1_hom hf_carrier]
+                      show ?thesis by (by100 simp)
+                    qed
+                    thus ?thesis using hkp_inv_N by (by100 simp)
+                  qed
+                  ultimately show ?thesis by (by100 simp)
+                qed
+              qed
               have hpiU_a_grp: "top1_is_group_on
                   (top1_fundamental_group_carrier ?U ?TU a) (top1_fundamental_group_mul ?U ?TU a)
                   (top1_fundamental_group_id ?U ?TU a) (top1_fundamental_group_invg ?U ?TU a)"
