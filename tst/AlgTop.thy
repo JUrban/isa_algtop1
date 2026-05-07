@@ -1984,6 +1984,62 @@ lemma hom_from_cyclic_Z_image_in_subgroup:
   shows "\<psi> ` G \<subseteq> N"
   using hgen by (by100 blast)
 
+\<comment> \<open>Reusable: automorphisms of Z send 1 to \<pm>1.\<close>
+lemma Z_auto_sends_1_to_pm1:
+  assumes "bij_betw \<alpha> top1_Z_group top1_Z_group"
+      and "top1_group_hom_on top1_Z_group top1_Z_mul top1_Z_group top1_Z_mul \<alpha>"
+  shows "\<alpha> 1 = 1 \<or> \<alpha> 1 = -1"
+proof -
+  \<comment> \<open>\<alpha> is a hom, so \<alpha>(n) = n * \<alpha>(1) for all n.\<close>
+  have h\<alpha>_mul: "\<And>a b. \<alpha> (a + b) = \<alpha> a + \<alpha> b"
+    using assms(2) unfolding top1_group_hom_on_def top1_Z_group_def top1_Z_mul_def by (by100 blast)
+  have h\<alpha>_n: "\<And>n::int. \<alpha> n = n * \<alpha> 1"
+  proof -
+    fix n :: int
+    show "\<alpha> n = n * \<alpha> 1"
+    proof (induct n rule: int_induct[of _ 0])
+      case base
+      have "\<alpha> 0 = 0" using hom_preserves_id[OF
+          top1_Z_is_abelian_group[unfolded top1_is_abelian_group_on_def, THEN conjunct1]
+          top1_Z_is_abelian_group[unfolded top1_is_abelian_group_on_def, THEN conjunct1]
+          assms(2)] unfolding top1_Z_id_def by (by100 simp)
+      thus ?case by (by100 simp)
+    next
+      case (step1 i)
+      have "\<alpha> (i + 1) = \<alpha> i + \<alpha> 1" using h\<alpha>_mul by (by100 blast)
+      thus ?case using step1 by (by100 simp) (simp add: algebra_simps)
+    next
+      case (step2 i)
+      have "\<alpha> (i - 1) = \<alpha> i + \<alpha> (-1)"
+        using h\<alpha>_mul[of i "-1"] by (by100 simp)
+      moreover have "\<alpha> (-1) = - \<alpha> 1"
+        using hom_preserves_inv[OF
+            top1_Z_is_abelian_group[unfolded top1_is_abelian_group_on_def, THEN conjunct1]
+            top1_Z_is_abelian_group[unfolded top1_is_abelian_group_on_def, THEN conjunct1]
+            assms(2)]
+        unfolding top1_Z_group_def top1_Z_invg_def by (by100 simp)
+      ultimately show ?case using step2 by (by100 simp) (simp add: algebra_simps)
+    qed
+  qed
+  \<comment> \<open>\<alpha> surjective \<Rightarrow> \<exists>k. k * \<alpha>(1) = 1 \<Rightarrow> \<alpha>(1) divides 1 \<Rightarrow> |\<alpha>(1)| = 1.\<close>
+  have "\<alpha> ` top1_Z_group = top1_Z_group" using assms(1) unfolding bij_betw_def by (by100 blast)
+  hence "\<exists>k::int. \<alpha> k = 1"
+  proof -
+    have "1 \<in> \<alpha> ` top1_Z_group" using \<open>\<alpha> ` top1_Z_group = top1_Z_group\<close>
+      unfolding top1_Z_group_def by (by100 blast)
+    thus ?thesis by (by100 auto)
+  qed
+  then obtain k :: int where "\<alpha> k = 1" by (by100 blast)
+  hence "k * \<alpha> 1 = 1" using h\<alpha>_n[of k] by (by100 simp)
+  hence "\<alpha> 1 dvd (1::int)"
+  proof -
+    have "1 = \<alpha> 1 * k" using \<open>k * \<alpha> 1 = 1\<close>
+      by (simp add: mult.commute)
+    thus ?thesis unfolding dvd_def by (by100 blast)
+  qed
+  thus ?thesis using int_one_le_iff_zero_less zdvd_imp_le by (by100 fastforce)
+qed
+
 \<comment> \<open>Reusable: under any iso \<pi>_1(S1) \<cong> Z, the standard loop maps to \<pm>1.
    This is because the lifting correspondence sends [f] to the endpoint 1 of its lift,
    and 1 generates Z. For any other iso, the image is still a generator of Z, hence \<pm>1.\<close>
@@ -1997,10 +2053,117 @@ lemma standard_S1_loop_generates_Z:
       (\<lambda>s. (cos (2*pi*s), sin (2*pi*s))) g} = 1
     \<or> \<phi> {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0)
       (\<lambda>s. (cos (2*pi*s), sin (2*pi*s))) g} = -1"
-  sorry \<comment> \<open>Standard S1 loop generates \<pi>_1(S1). Under any iso to Z, generators map to \<pm>1.
-     Proof: the lifting correspondence (Theorem 54.4) sends [f] to endpoint 1 of its lift.
-     The lift of f(s) = (cos 2\<pi>s, sin 2\<pi>s) starting at 0 is s \<mapsto> s, ending at 1.
-     So any iso to Z maps [f] to \<pm>1 (only generators of Z).\<close>
+proof -
+  let ?fclass = "{g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0)
+      (\<lambda>s. (cos (2*pi*s), sin (2*pi*s))) g}"
+  \<comment> \<open>Step 1: Construct a SPECIFIC iso \<phi>_0 with \<phi>_0([f]) = 1.
+     From Theorem_54_5_iso: \<exists>\<phi>_0. iso. Extract it.\<close>
+  obtain \<phi>_0 where h\<phi>0_bij: "bij_betw \<phi>_0
+        (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1,0)) top1_Z_group"
+      and h\<phi>0_hom: "top1_group_hom_on
+        (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1,0))
+        (top1_fundamental_group_mul top1_S1 top1_S1_topology (1,0)) top1_Z_group top1_Z_mul \<phi>_0"
+    using Theorem_54_5_iso
+    unfolding top1_groups_isomorphic_on_def top1_group_iso_on_def by (by100 blast)
+  \<comment> \<open>\<phi>_0([f]) is some integer m. We don't know m = 1 a priori.
+     But \<phi> \<circ> \<phi>_0\<inverse> is an auto of Z, and \<phi>([f]) = (\<phi> \<circ> \<phi>_0\<inverse>)(\<phi>_0([f])).
+     By Z_auto_sends_1_to_pm1: (\<phi> \<circ> \<phi>_0\<inverse>)(1) \<in> {1,-1}.
+     So \<phi>([f]) = (\<phi> \<circ> \<phi>_0\<inverse>)(m) = m * (\<phi> \<circ> \<phi>_0\<inverse>)(1) \<in> {m, -m}.
+     Hmm, this doesn't help unless m = \<pm>1.
+
+     Alternative: compose \<phi> \<circ> \<phi>_0\<inverse>: Z \<rightarrow> Z is auto. Apply to \<phi>_0([f]):
+     \<phi>([f]) = (\<phi> \<circ> \<phi>_0\<inverse>)(\<phi>_0([f])). And \<phi>_0([f]) = m.
+     (\<phi> \<circ> \<phi>_0\<inverse>)(m) = m * (\<phi> \<circ> \<phi>_0\<inverse>)(1) (auto of Z is multiplication).
+
+     We need: \<phi>([f]) \<in> {1,-1}. From Z_auto: the auto maps 1 to \<pm>1.
+     And \<phi>_0 is ALSO an iso, so by same argument \<phi>_0([f]) \<in> {1,-1}.
+     Wait, that's circular (the SAME lemma for \<phi>_0).
+
+     Non-circular argument: BOTH \<phi> and \<phi>_0 are isos. \<phi> \<circ> \<phi>_0\<inverse> is auto of Z.
+     \<phi>([f]) = (\<phi> \<circ> \<phi>_0\<inverse>)(\<phi>_0([f])).
+     Let \<alpha> = \<phi> \<circ> \<phi>_0\<inverse> and let m = \<phi>_0([f]).
+     \<phi>([f]) = \<alpha>(m). \<alpha> is auto. \<alpha>(m) = m * \<alpha>(1). \<alpha>(1) \<in> {1,-1}.
+     So \<phi>([f]) \<in> {m, -m}. For this to be in {1,-1}, need |m| = 1.
+
+     But |m| = 1 IFF m generates Z IFF [f] generates \<pi>_1(S1).
+     This IS the content of the lemma.
+
+     I need to establish \<phi>_0([f]) \<in> {1,-1} for at least ONE specific \<phi>_0.
+     This requires the covering space construction: lift of f ends at 1.\<close>
+  \<comment> \<open>Direct proof: from Theorem 54.5, the specific iso sends [f] to 1.
+     This follows from: the lift of f(s) = R_to_S1(s) starting at 0 is the identity s \<mapsto> s,
+     which ends at 1. The lifting correspondence maps [f] to 1.\<close>
+  have h\<phi>0_f: "\<phi>_0 ?fclass = 1 \<or> \<phi>_0 ?fclass = -1"
+    sorry \<comment> \<open>Requires extracting from Theorem_54_5 construction that the
+         specific iso maps [f] to 1. Uses: lift of R_to_S1 is identity.\<close>
+  \<comment> \<open>Step 2: \<phi> \<circ> \<phi>_0\<inverse>: Z \<rightarrow> Z is auto, sends 1 to \<pm>1.\<close>
+  have hf_loop: "top1_is_loop_on top1_S1 top1_S1_topology (1,0) (\<lambda>s. (cos (2*pi*s), sin (2*pi*s)))"
+    sorry \<comment> \<open>Standard S1 loop is a loop. Proved as standard_S1_loop_is_loop (line 2643).\<close>
+  have hfclass_carrier: "?fclass \<in> top1_fundamental_group_carrier top1_S1 top1_S1_topology (1,0)"
+    using hf_loop unfolding top1_fundamental_group_carrier_def by (by100 blast)
+  have hZ_grp: "top1_is_group_on top1_Z_group top1_Z_mul top1_Z_id top1_Z_invg"
+    using top1_Z_is_abelian_group unfolding top1_is_abelian_group_on_def by (by100 blast)
+  have hS1_grp: "top1_is_group_on
+      (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1,0))
+      (top1_fundamental_group_mul top1_S1 top1_S1_topology (1,0))
+      (top1_fundamental_group_id top1_S1 top1_S1_topology (1,0))
+      (top1_fundamental_group_invg top1_S1 top1_S1_topology (1,0))"
+  proof -
+    have "is_topology_on top1_S1 top1_S1_topology"
+      unfolding top1_S1_topology_def
+      by (rule subspace_topology_is_topology_on[OF
+            product_topology_on_is_topology_on[OF
+              top1_open_sets_is_topology_on_UNIV top1_open_sets_is_topology_on_UNIV, simplified]]) (by100 simp)
+    moreover have "(1::real, 0::real) \<in> top1_S1" unfolding top1_S1_def by (by100 simp)
+    ultimately show ?thesis by (rule top1_fundamental_group_is_group)
+  qed
+  \<comment> \<open>\<phi>_0\<inverse> is a hom.\<close>
+  have h\<phi>0_inv_hom: "top1_group_hom_on top1_Z_group top1_Z_mul
+      (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1,0))
+      (top1_fundamental_group_mul top1_S1 top1_S1_topology (1,0))
+      (inv_into (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1,0)) \<phi>_0)"
+    sorry \<comment> \<open>bij_hom_inv_is_hom[OF hS1_grp hZ_grp h\<phi>0_bij h\<phi>0_hom] -- defined below.\<close>
+  \<comment> \<open>\<phi> \<circ> \<phi>_0\<inverse> is an auto of Z.\<close>
+  let ?\<alpha> = "\<phi> \<circ> (inv_into (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1,0)) \<phi>_0)"
+  have h\<alpha>_hom: "top1_group_hom_on top1_Z_group top1_Z_mul top1_Z_group top1_Z_mul ?\<alpha>"
+    sorry \<comment> \<open>group_hom_comp[OF h\<phi>0_inv_hom h\<phi>_hom] -- defined below.\<close>
+  have h\<alpha>_bij: "bij_betw ?\<alpha> top1_Z_group top1_Z_group"
+  proof -
+    have "bij_betw (inv_into (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1,0)) \<phi>_0)
+        top1_Z_group (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1,0))"
+      using bij_betw_inv_into[OF h\<phi>0_bij] .
+    from bij_betw_trans[OF this h\<phi>_bij]
+    show ?thesis .
+  qed
+  have h\<alpha>_1: "?\<alpha> 1 = 1 \<or> ?\<alpha> 1 = -1"
+    by (rule Z_auto_sends_1_to_pm1[OF h\<alpha>_bij h\<alpha>_hom])
+  \<comment> \<open>\<phi>([f]) = \<alpha>(\<phi>_0([f])). Since \<phi>_0([f]) \<in> {1,-1} and \<alpha>(1) \<in> {1,-1}:\<close>
+  have hinj0: "inj_on \<phi>_0 (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1,0))"
+    using h\<phi>0_bij unfolding bij_betw_def by (by100 blast)
+  have h\<phi>_eq: "\<phi> ?fclass = ?\<alpha> (\<phi>_0 ?fclass)"
+  proof -
+    have "inv_into (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1,0)) \<phi>_0 (\<phi>_0 ?fclass)
+        = ?fclass"
+      by (rule inv_into_f_f[OF hinj0 hfclass_carrier])
+    thus ?thesis unfolding comp_def by (by100 simp)
+  qed
+  \<comment> \<open>\<alpha> is a hom Z \<rightarrow> Z: \<alpha>(n) = n * \<alpha>(1). So \<alpha>(1) = \<alpha>(1), \<alpha>(-1) = -\<alpha>(1).\<close>
+  show ?thesis
+  proof (cases "\<phi>_0 ?fclass = 1")
+    case True
+    hence "\<phi> ?fclass = ?\<alpha> 1" using h\<phi>_eq by (by100 simp)
+    thus ?thesis using h\<alpha>_1 by (by100 auto)
+  next
+    case False
+    hence hm1: "\<phi>_0 ?fclass = -1" using h\<phi>0_f by (by100 blast)
+    hence "\<phi> ?fclass = ?\<alpha> (-1)" using h\<phi>_eq by (by100 simp)
+    moreover have "?\<alpha> (-1) = - ?\<alpha> 1"
+      using hom_preserves_inv[OF hZ_grp hZ_grp h\<alpha>_hom]
+      unfolding top1_Z_group_def top1_Z_invg_def by (by100 simp)
+    ultimately have "\<phi> ?fclass = - ?\<alpha> 1" by (by100 simp)
+    thus ?thesis using h\<alpha>_1 by (by100 auto)
+  qed
+qed
 
 \<comment> \<open>Reusable: inverse of a bijective hom is a hom.\<close>
 lemma bij_hom_inv_is_hom:
