@@ -6165,11 +6165,20 @@ proof -
                Every element in the image of the composed hom Z \<rightarrow> \<pi>_1(U,a) is in N
                (by hom_from_Z_image_in_subgroup).\<close>
             show "{k. top1_loop_equiv_on ?U ?TU a ?bc_f0 k} \<in> N"
-            sorry \<comment> \<open>Requires: (1) construct (h|_{S1})_* as hom on \<pi>_1,
-                 (2) extract iso from S1_pi1_iso + Theorem_54_5_iso,
-                 (3) compose to get Z \<rightarrow> \<pi>_1(U,a) hom,
-                 (4) show image at 1 \<in> N, (5) apply hom_from_Z_image_in_subgroup,
-                 (6) connect bc_back(f0) to the image.\<close>
+            proof -
+              \<comment> \<open>Step 1: every class in the image of (h|_{S1})_* is in N.
+                 Proof: compose with iso\<inverse> \<pi>_1(S1) \<cong> Z, apply hom_from_Z_image_in_subgroup.\<close>
+              have h_all_S1_in_N: "\<And>g. top1_is_loop_on top1_S1 top1_S1_topology (1,0) g \<Longrightarrow>
+                  {k. top1_loop_equiv_on ?U ?TU a (h \<circ> g) k} \<in> N"
+                sorry \<comment> \<open>Key claim. Uses: Theorem_54_5_iso + bij_hom_inv_is_hom + group_hom_comp
+                     + hom_from_Z_image_in_subgroup. \<psi>(1) = \<pm>kp_class \<in> N.\<close>
+              \<comment> \<open>Step 2: bc_back(f0) = h \<circ> \<ell> where \<ell> is a loop at (1,0) in B2-{0}.
+                 Since \<pi>_1(S1) iso \<pi>_1(B2-{0}) (surjective): \<ell> \<simeq> some S1-loop g in B2-{0}.
+                 So h\<circ>\<ell> \<simeq> h\<circ>g in U. Hence [h\<circ>\<ell>]_U = [h\<circ>g]_U \<in> N.\<close>
+              show ?thesis
+                sorry \<comment> \<open>Connect bc_back(f0) to h \<circ> (S1-loop) via comp_basepoint_change
+                     + S1_pi1_iso surjectivity + h_all_S1_in_N.\<close>
+            qed
           qed
           \<comment> \<open>The preimage M = {x \<in> \<pi>_1(U,b) : bc_back_class(x) \<in> N} is normal.\<close>
           let ?M = "{x \<in> top1_fundamental_group_carrier ?U ?TU ?b.
