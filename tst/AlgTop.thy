@@ -2300,7 +2300,17 @@ proof -
       proof (intro conjI)
         show "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
             (UNIV::real set) top1_open_sets (\<lambda>s. s)"
-          sorry \<comment> \<open>Identity is continuous I_set \<rightarrow> UNIV.\<close>
+        proof -
+          have "top1_continuous_map_on top1_unit_interval
+              (subspace_topology (UNIV::real set) top1_open_sets top1_unit_interval)
+              (UNIV::real set) top1_open_sets id"
+            using Theorem_18_2[OF hTR hTR hTR] by (by100 blast)
+          moreover have "subspace_topology (UNIV::real set) top1_open_sets top1_unit_interval
+              = top1_unit_interval_topology"
+            unfolding top1_unit_interval_topology_def by (by100 simp)
+          moreover have "(\<lambda>s::real. s) = id" by (rule ext) (by100 simp)
+          ultimately show ?thesis by (by100 simp)
+        qed
       next show "(0::real) = 0" by (by100 simp)
       next show "(1::real) = 1" by (by100 simp)
       qed
