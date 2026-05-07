@@ -4375,9 +4375,19 @@ proof -
          Core claim: \<delta>-hat maps the UV-inclusion image [g_0] to [k\<circ>p].
          This follows from: \<gamma>_bar*(f_0*\<gamma>) \<simeq> f in B2-{0} (winding number),
          comp_basepoint_change for h, and inclusion_induced_class.\<close>
-      show ?thesis using hincl_ker_b
-        sorry \<comment> \<open>Generator tracking: transfer SvK kernel from base b to base a,
-             through the retraction iso, showing it becomes \<langle>\<langle>{[k\<circ>p]}\<rangle>\<rangle>.\<close>
+      \<comment> \<open>Munkres Step 3: transfer kernel from base b to base a.
+         Key identity: h \<circ> \<gamma> = rev(\<delta>) (since \<delta>(t) = h(1-t/2,0) and \<gamma>(t) = (1/2+t/2,0)).
+         By comp_basepoint_change: bc(U, b, a, rev(\<delta>), g0) = h \<circ> bc(B2-{0}, q, p, \<gamma>, f0).
+         By winding number: bc(B2-{0}, q, p, \<gamma>, f0) \<simeq> f in B2-{0}.
+         So bc(U, b, a, rev(\<delta>), g0) \<simeq> h \<circ> f = k \<circ> p in U.
+         Therefore rev(\<delta>)-hat([g0]) = [k \<circ> p] in \<pi>_1(U,a).
+         Since ker(incl*_a) \<subseteq> rev(\<delta>)-hat(ker(incl*_b)) = rev(\<delta>)-hat(\<langle>\<langle>{[g0]}\<rangle>\<rangle>) = \<langle>\<langle>{[k\<circ>p]}\<rangle>\<rangle>,
+         and ker(j*) \<subseteq> (A\<hookrightarrow>U)*\<inverse>(ker(incl*_a)), we get ker(j*) \<subseteq> \<langle>\<langle>{[k\<circ>p]}\<rangle>\<rangle>.\<close>
+      show ?thesis
+        sorry \<comment> \<open>Generator tracking. Proved modulo: winding number homotopy
+             bc(B2-{0}, q, p, \<gamma>, f0) \<simeq> f in B2-{0} (both wind once around origin).
+             All other steps use: comp_basepoint_change, hg_eq_kp, inclusion_induced_class,
+             base change roundtrip, hincl_ker_b.\<close>
     qed
     \<comment> \<open>Step (c): \<langle>\<langle>{[k\<circ>p]}\<rangle>\<rangle> \<subseteq> ker(j_*). The normal closure of {[k\<circ>p]} is contained
        in ker(j_*) because [k\<circ>p] \<in> ker(j_*) and ker is a normal subgroup.\<close>
@@ -11086,6 +11096,7 @@ end
  
   
  
+
 
 
 
