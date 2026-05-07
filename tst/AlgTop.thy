@@ -295,9 +295,28 @@ proof -
   define h where "h t = (if t \<le> 1/2 then g1 (2*t) else g2 (2*t - 1))" for t :: real
   \<comment> \<open>Step 4: h is a homeomorphism [0,1] \<rightarrow> A1 \<union> A2.\<close>
   have hh_homeo: "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology (A1 \<union> A2) ?TD h"
-    sorry \<comment> \<open>Continuity: pasting_lemma_two_closed on [0,1/2] and [1/2,1].
-         Bijectivity: g1 bij on [0,1/2]\<rightarrow>A1, g2 bij on [1/2,1]\<rightarrow>A2, images meet only at c.
-         Inverse continuous: compact-to-Hausdorff or direct argument.\<close>
+  proof -
+    \<comment> \<open>Step 4a: h is continuous (pasting lemma on [0,1/2] and [1/2,1]).\<close>
+    have hh_cont: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology (A1 \<union> A2) ?TD h"
+      sorry \<comment> \<open>pasting_lemma_two_closed on closed [0,1/2] and [1/2,1], agreeing at 1/2.\<close>
+    \<comment> \<open>Step 4b: h is bijective.\<close>
+    have hh_bij: "bij_betw h top1_unit_interval (A1 \<union> A2)"
+      sorry \<comment> \<open>g1 bij [0,1]\<rightarrow>A1 gives h bij [0,1/2]\<rightarrow>A1. g2 bij [0,1]\<rightarrow>A2 gives h bij (1/2,1]\<rightarrow>A2-{c}.
+           Images disjoint except c at boundary. Combined: h bij [0,1]\<rightarrow>A1\<union>A2.\<close>
+    \<comment> \<open>Step 4c: continuous bijection from compact to Hausdorff is homeomorphism.\<close>
+    have hI_compact: "top1_compact_on top1_unit_interval top1_unit_interval_topology"
+      sorry \<comment> \<open>[0,1] is compact (Heine-Borel).\<close>
+    have hD_hausdorff: "is_hausdorff_on (A1 \<union> A2) ?TD"
+      sorry \<comment> \<open>Subspace of Hausdorff is Hausdorff.\<close>
+    have hTD_top: "is_topology_on (A1 \<union> A2) ?TD"
+    proof -
+      have hTopX: "is_topology_on X TX" using hT unfolding is_topology_on_strict_def by (by100 blast)
+      show ?thesis by (rule subspace_topology_is_topology_on[OF hTopX])
+        (use hA1X hA2X in \<open>by100 blast\<close>)
+    qed
+    show ?thesis
+      sorry \<comment> \<open>Theorem_26_6: compact + Hausdorff + continuous + bijective = homeomorphism.\<close>
+  qed
   have hTD_strict: "is_topology_on_strict (A1 \<union> A2) ?TD"
   proof -
     have "A1 \<union> A2 \<subseteq> X" using hA1X hA2X by (by100 blast)
