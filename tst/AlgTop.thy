@@ -63,7 +63,32 @@ proof -
   \<comment> \<open>Step 3: f alternates between U and V (traversing edges alternately in each).
      By Theorem 63.1 (generalized SvK for non-trivial intersection),
      the path-class [f] is non-trivial in \<pi>_1(S²-{p,q}).\<close>
-  show ?thesis sorry \<comment> \<open>Theorem 63.1: alternating loop in U\<union>V is non-trivial when U\<inter>V disconnected.\<close>
+  \<comment> \<open>Step 1: Set up the SvK open cover.
+     U' = S²-e13, V' = S²-e24. Both are open in S² (arcs are closed).
+     X = S²-{p}-{q} = U' \<union> V' (since p \<in> e13, q \<in> e24).
+     U = X \<inter> U' = S²-e13-{q} (removing q from U', which is in e24 not e13).
+     V = X \<inter> V' = S²-e24-{p} (removing p from V', which is in e13 not e24).
+     U, V are open in X. U \<union> V = X.
+     U \<inter> V = S²-(e13 \<union> e24)-{p}-{q} = S²-(e13 \<union> e24) minus {p,q} (but p,q are in arcs).
+     U \<inter> V has exactly two path-components A, B separated by the 4-cycle C.\<close>
+  have hTopS2: "is_topology_on top1_S2 top1_S2_topology"
+    using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
+  have hTX: "is_topology_on ?X ?TX"
+    by (rule subspace_topology_is_topology_on[OF hTopS2]) (by100 blast)
+  \<comment> \<open>Step 2: The loop f traverses the 4-cycle a1-a2-a3-a4-a1.
+     Decompose f into two paths:
+     \<alpha>: portion of f in U (edges e12, e34, not touching e13)
+     \<beta>: portion of f in V (edges e23, e41, not touching e24)
+     Then f ~ \<alpha>*\<beta> (path product) in X.\<close>
+  \<comment> \<open>Step 3: U \<inter> V = S² - (e13 \<union> e24) - {p} - {q} has two path-components.
+     One contains a1, a3 and the other contains a2, a4 (separated by arcs e13, e24).
+     Choose a \<in> A (component of U\<inter>V containing x0) and b \<in> B (the other component).\<close>
+  \<comment> \<open>Step 4: Apply Theorem 63.1: \<alpha> is a path in U from a to b, \<beta> path in V from b to a.
+     U\<inter>V = A \<union> B with A,B disjoint open, a \<in> A, b \<in> B.
+     Therefore \<alpha>*\<beta> is not nulhomotopic in X.\<close>
+  show ?thesis
+    sorry \<comment> \<open>Requires: (1) open cover setup, (2) loop decomposition into \<alpha>*\<beta>,
+         (3) U\<inter>V two-component argument, (4) application of Theorem_63_1_loop_nontrivial.\<close>
 qed
 
 (** from \<S>65 Theorem 65.2: inclusion C \<rightarrow> S^2 - p - q induces fundamental group iso **)
@@ -164,6 +189,7 @@ theorem Theorem_67_8_rank_unique:
     and iota2 :: "'s2 \<Rightarrow> 'g" and S2 :: "'s2 set"
   assumes "top1_is_free_abelian_group_full_on G mul e invg iota1 S1"
       and "top1_is_free_abelian_group_full_on G mul e invg iota2 S2"
+      and "finite S1" and "finite S2"
   shows "\<exists>f. bij_betw f S1 S2"
 proof -
   \<comment> \<open>Munkres 67.8: Tensor with Z/2Z: G/2G is a vector space over Z/2Z of dimension
@@ -172,23 +198,25 @@ proof -
      Step 2: G/2G \<cong> (Z/2Z)^S1 \<cong> (Z/2Z)^S2.
      Step 3: Vector space dimension: |S1| = dim (Z/2Z)^S1 = dim (Z/2Z)^S2 = |S2|.
      Step 4: Hence |S1| = |S2|, i.e. there exists a bijection.\<close>
-  \<comment> \<open>Step 1: Form quotient G/2G. G/2G is a vector space over Z/2Z with dimension = rank.\<close>
+  \<comment> \<open>Munkres 67.8: G/2G has cardinality 2^|S| for any basis S.
+     So 2^|S1| = |G/2G| = 2^|S2|, hence |S1| = |S2|.\<close>
   let ?twoG = "{mul g g | g. g \<in> G}"
-  have h_dim_S1: "\<exists>f. bij_betw f S1 (top1_quotient_group_carrier_on G mul ?twoG)" sorry
-  have h_dim_S2: "\<exists>f. bij_betw f S2 (top1_quotient_group_carrier_on G mul ?twoG)" sorry
-  \<comment> \<open>Step 2: Bijections S1 \<cong> G/2G \<cong> S2 compose to S1 \<cong> S2.\<close>
-  show ?thesis
+  \<comment> \<open>Step 1: |G/2G| = 2^|S1| and |G/2G| = 2^|S2|.
+     Proof: G \<cong> Z^S_i, so G/2G \<cong> (Z/2Z)^S_i, hence |G/2G| = 2^|S_i|.\<close>
+  have hfinS1: "finite S1" by (rule assms(3))
+  have hfinS2: "finite S2" by (rule assms(4))
+  have hcard1: "card (top1_quotient_group_carrier_on G mul ?twoG) = 2 ^ card S1"
+    sorry \<comment> \<open>G \<cong> Z^{S1} implies G/2G \<cong> (Z/2Z)^{S1}, so |G/2G| = 2^|S1|.\<close>
+  have hcard2: "card (top1_quotient_group_carrier_on G mul ?twoG) = 2 ^ card S2"
+    sorry \<comment> \<open>G \<cong> Z^{S2} implies G/2G \<cong> (Z/2Z)^{S2}, so |G/2G| = 2^|S2|.\<close>
+  \<comment> \<open>Step 2: 2^|S1| = 2^|S2| implies |S1| = |S2|.\<close>
+  have "card S1 = card S2"
   proof -
-    obtain f1 where hf1: "bij_betw f1 S1 (top1_quotient_group_carrier_on G mul ?twoG)"
-      using h_dim_S1 by (by100 blast)
-    obtain f2 where hf2: "bij_betw f2 S2 (top1_quotient_group_carrier_on G mul ?twoG)"
-      using h_dim_S2 by (by100 blast)
-    have hf2_inv: "bij_betw (the_inv_into S2 f2) (top1_quotient_group_carrier_on G mul ?twoG) S2"
-      by (rule bij_betw_the_inv_into[OF hf2])
-    have "bij_betw (the_inv_into S2 f2 \<circ> f1) S1 S2"
-      by (rule bij_betw_trans[OF hf1 hf2_inv])
-    thus ?thesis by (by100 blast)
+    have "2 ^ card S1 = (2::nat) ^ card S2" using hcard1 hcard2 by (by100 simp)
+    thus ?thesis by (by100 simp)
   qed
+  \<comment> \<open>Step 3: Finite sets of equal cardinality have a bijection.\<close>
+  show ?thesis by (rule finite_same_card_bij[OF hfinS1 hfinS2 \<open>card S1 = card S2\<close>])
 qed
 
 
@@ -230,6 +258,54 @@ proof -
 qed
 
 
+
+\<comment> \<open>Helper: Z/nZ is the quotient of Z by the subgroup nZ.
+   More precisely: the quotient of (UNIV::int set, +) by the normal subgroup
+   generated by {int n} is isomorphic to (top1_Zn_group n, top1_Zn_mul n).\<close>
+lemma Z_quotient_nZ_iso:
+  assumes "n \<ge> 1"
+  shows "top1_groups_isomorphic_on
+      (top1_quotient_group_carrier_on (UNIV::int set) (+)
+         (top1_normal_subgroup_generated_on (UNIV::int set) (+) (0::int) uminus {int n}))
+      (top1_quotient_group_mul_on (+))
+      (top1_Zn_group n) (top1_Zn_mul n)"
+proof -
+  \<comment> \<open>Step 1: The normal subgroup generated by {n} in (Z,+) is nZ = {k*n | k}.\<close>
+  let ?nZ = "top1_normal_subgroup_generated_on (UNIV::int set) (+) (0::int) uminus {int n}"
+  have hnZ_eq: "?nZ = {k * int n | k. True}"
+    sorry \<comment> \<open>Normal closure of {n} in abelian Z = subgroup generated by n = nZ.\<close>
+  \<comment> \<open>Step 2: Define the quotient map \<phi>: Z \<rightarrow> Z/nZ by \<phi>(k) = k mod n.\<close>
+  let ?\<phi> = "\<lambda>k::int. k mod int n"
+  \<comment> \<open>Step 3: \<phi> is a surjective group homomorphism with kernel nZ.\<close>
+  have hphi_hom: "\<forall>a::int. \<forall>b::int. ?\<phi> (a + b) = top1_Zn_mul n (?\<phi> a) (?\<phi> b)"
+    unfolding top1_Zn_mul_def
+  proof (intro allI)
+    fix a b :: int
+    show "(a + b) mod int n = (a mod int n + b mod int n) mod int n"
+      using mod_add_eq[of a "int n" b] by (by100 simp)
+  qed
+  have hphi_surj: "?\<phi> ` (UNIV::int set) = top1_Zn_group n"
+    unfolding top1_Zn_group_def
+  proof (rule equalityI)
+    show "(\<lambda>k::int. k mod int n) ` UNIV \<subseteq> {0..<int n}"
+      using assms by (by100 auto)
+    show "{0..<int n} \<subseteq> (\<lambda>k::int. k mod int n) ` UNIV"
+    proof
+      fix x :: int assume hx: "x \<in> {0..<int n}"
+      hence hxmod: "x mod int n = x" using assms by (by100 auto)
+      show "x \<in> (\<lambda>k. k mod int n) ` UNIV"
+        apply (rule image_eqI[of _ _ x])
+        using hxmod apply (by100 simp)
+        apply (by100 simp)
+        done
+    qed
+  qed
+  have hphi_ker: "{k::int. ?\<phi> k = 0} = ?nZ"
+    sorry \<comment> \<open>ker(\<phi>) = nZ.\<close>
+  \<comment> \<open>Step 4: By first isomorphism theorem: Z/nZ \<cong> im(\<phi>) = Z_n.\<close>
+  show ?thesis
+    sorry \<comment> \<open>First isomorphism theorem applied to \<phi>.\<close>
+qed
 
 (** from \<S>71 Theorem 71.3: arbitrary (possibly infinite) wedge of circles. **)
 theorem Theorem_71_3_wedge_of_circles_general:
@@ -3551,8 +3627,136 @@ proof -
               {top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1, 0) A ?TA a ?\<iota>
                  {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) ?f g}}))
         (top1_quotient_group_mul_on (top1_fundamental_group_mul A ?TA a))"
-      sorry \<comment> \<open>quotient_group_iso_transfer + generator tracking:
-               extract \<phi> from hUb_Aa, show \<phi>(N_b) = \<langle>\<langle>{[k\<circ>p]}\<rangle>\<rangle>.\<close>
+    proof -
+      \<comment> \<open>Step C.1: Extract explicit isomorphism \<phi> from hUb_Aa.\<close>
+      obtain \<phi> where hphi_iso: "top1_group_iso_on
+          (top1_fundamental_group_carrier ?U ?TU ?b) (top1_fundamental_group_mul ?U ?TU ?b)
+          (top1_fundamental_group_carrier A ?TA a) (top1_fundamental_group_mul A ?TA a) \<phi>"
+        using hUb_Aa unfolding top1_groups_isomorphic_on_def by (by100 blast)
+      \<comment> \<open>Step C.2: Group properties.\<close>
+      have hTopX_ns2: "is_topology_on X TX"
+        using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
+      have hTopU2: "is_topology_on ?U ?TU"
+        by (rule subspace_topology_is_topology_on[OF hTopX_ns2]) (by100 blast)
+      have hb_U2: "?b \<in> ?U"
+        using hb_in_VA hb_ne_x0 hA_sub_X by (by100 blast)
+      have hgrpUb: "top1_is_group_on
+          (top1_fundamental_group_carrier ?U ?TU ?b) (top1_fundamental_group_mul ?U ?TU ?b)
+          (top1_fundamental_group_id ?U ?TU ?b) (top1_fundamental_group_invg ?U ?TU ?b)"
+        by (rule top1_fundamental_group_is_group[OF hTopU2 hb_U2])
+      have hgrpAa: "top1_is_group_on
+          (top1_fundamental_group_carrier A ?TA a) (top1_fundamental_group_mul A ?TA a)
+          (top1_fundamental_group_id A ?TA a) (top1_fundamental_group_invg A ?TA a)"
+        by (rule top1_fundamental_group_is_group[OF subspace_topology_is_topology_on[OF hTopX_ns2 hA_sub_X] assms(6)])
+      \<comment> \<open>Step C.3: The generating set \<iota>_*(\<pi>_1(UV,b)) is a subset of \<pi>_1(U,b).\<close>
+      define Nb where "Nb = top1_normal_subgroup_generated_on
+          (top1_fundamental_group_carrier ?U ?TU ?b) (top1_fundamental_group_mul ?U ?TU ?b)
+          (top1_fundamental_group_id ?U ?TU ?b) (top1_fundamental_group_invg ?U ?TU ?b)
+          (top1_fundamental_group_induced_on ?UV ?TUV ?b ?U ?TU ?b (\<lambda>x. x)
+             ` (top1_fundamental_group_carrier ?UV ?TUV ?b))"
+      have himg_sub: "top1_fundamental_group_induced_on ?UV ?TUV ?b ?U ?TU ?b (\<lambda>x. x)
+             ` (top1_fundamental_group_carrier ?UV ?TUV ?b)
+           \<subseteq> top1_fundamental_group_carrier ?U ?TU ?b"
+      proof -
+        have hTopUV: "is_topology_on ?UV ?TUV"
+          by (rule subspace_topology_is_topology_on[OF hTopX_ns2]) (by100 blast)
+        have hb_UV: "?b \<in> ?UV" using hb_in_UV by (by100 simp)
+        have hUV_sub_U: "?UV \<subseteq> ?U" by (by100 blast)
+        have hincl_cont: "top1_continuous_map_on ?UV ?TUV ?U ?TU (\<lambda>x. x)"
+        proof -
+          have "top1_continuous_map_on ?U ?TU ?U ?TU id"
+            by (rule top1_continuous_map_on_id[OF hTopU2])
+          from top1_continuous_map_on_restrict_domain_simple[OF this hUV_sub_U]
+          have hid_cont: "top1_continuous_map_on ?UV (subspace_topology ?U ?TU ?UV) ?U ?TU id" .
+          have hTUV_eq: "subspace_topology ?U ?TU ?UV = ?TUV"
+            using subspace_topology_trans[OF hUV_sub_U] by (by100 simp)
+          have hid_eq: "(id :: 'a \<Rightarrow> 'a) = (\<lambda>x. x)" unfolding id_def by (by100 blast)
+          show ?thesis using hid_cont unfolding hTUV_eq hid_eq .
+        qed
+        have hincl_hom: "top1_group_hom_on
+            (top1_fundamental_group_carrier ?UV ?TUV ?b) (top1_fundamental_group_mul ?UV ?TUV ?b)
+            (top1_fundamental_group_carrier ?U ?TU ?b) (top1_fundamental_group_mul ?U ?TU ?b)
+            (top1_fundamental_group_induced_on ?UV ?TUV ?b ?U ?TU ?b (\<lambda>x. x))"
+          by (rule top1_fundamental_group_induced_on_is_hom[OF hTopUV hTopU2 hb_UV hb_U2 hincl_cont])
+             (by100 simp)
+        thus ?thesis unfolding top1_group_hom_on_def by (by100 blast)
+      qed
+      \<comment> \<open>Step C.4: N_b is a normal subgroup of \<pi>_1(U,b).\<close>
+      have hNb_normal: "top1_normal_subgroup_on
+          (top1_fundamental_group_carrier ?U ?TU ?b) (top1_fundamental_group_mul ?U ?TU ?b)
+          (top1_fundamental_group_id ?U ?TU ?b) (top1_fundamental_group_invg ?U ?TU ?b) Nb"
+        unfolding Nb_def by (rule normal_subgroup_generated_is_normal[OF hgrpUb himg_sub])
+      \<comment> \<open>Step C.5: Apply quotient_group_iso_transfer to get
+         Q(\<pi>_1(U,b), N_b) \<cong> Q(\<pi>_1(A,a), \<phi>(N_b)).\<close>
+      have htransfer: "top1_groups_isomorphic_on
+          (top1_quotient_group_carrier_on
+             (top1_fundamental_group_carrier ?U ?TU ?b) (top1_fundamental_group_mul ?U ?TU ?b) Nb)
+          (top1_quotient_group_mul_on (top1_fundamental_group_mul ?U ?TU ?b))
+          (top1_quotient_group_carrier_on
+             (top1_fundamental_group_carrier A ?TA a) (top1_fundamental_group_mul A ?TA a) (\<phi> ` Nb))
+          (top1_quotient_group_mul_on (top1_fundamental_group_mul A ?TA a))"
+        by (rule quotient_group_iso_transfer[OF hgrpUb hgrpAa hphi_iso hNb_normal])
+      \<comment> \<open>Step C.6: Generator tracking: \<phi>(N_b) = \<langle>\<langle>{[k\<circ>p]}\<rangle>\<rangle>.
+         The isomorphism \<phi>: \<pi>_1(U,b) \<rightarrow> \<pi>_1(A,a) maps the inclusion-induced image of
+         \<pi>_1(UV,b) to the subgroup generated by [k\<circ>p], because under the deformation
+         retract + base change, the winding loop in UV maps to the boundary loop k\<circ>p.\<close>
+      have hgen_eq: "\<phi> ` Nb = top1_normal_subgroup_generated_on
+          (top1_fundamental_group_carrier A ?TA a) (top1_fundamental_group_mul A ?TA a)
+          (top1_fundamental_group_id A ?TA a) (top1_fundamental_group_invg A ?TA a)
+          {top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1, 0) A ?TA a ?\<iota>
+             {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) ?f g}}"
+      proof -
+        \<comment> \<open>Munkres Step 3 (generator tracking). Key steps:
+           (a) f0 is a loop in Int B2-{0} at q generating \<pi>_1(Int B2-{0}, q).
+           (b) g0 = h \<circ> f0 generates \<iota>*(\<pi>_1(UV, b)) in \<pi>_1(U, b).
+           (c) \<gamma>_bar * (f0 * \<gamma>) ~ f in B2-{0} (same winding number).
+           (d) h \<circ> (\<gamma>_bar * (f0 * \<gamma>)) = \<delta>_bar * (g0 * \<delta>) by comp_basepoint_change.
+           (e) So \<delta>_hat([g0]) = [h \<circ> f] = [k \<circ> p].
+           (f) Under retraction to A: [k \<circ> p] stays [k \<circ> p].
+           (g) Therefore the specific iso maps [g0] to [k \<circ> p], giving \<phi>(Nb) = \<langle>\<langle>{[k \<circ> p]}\<rangle>\<rangle>.\<close>
+        \<comment> \<open>Step (a): Define f0 = circle of radius 1/2 at q.\<close>
+        let ?f0 = "\<lambda>s::real. (1/2 * cos (2*pi*s) + fst ?q, 1/2 * sin (2*pi*s) + snd ?q)"
+        \<comment> \<open>Step (b): g0 = h \<circ> f0 is a loop in UV at b generating \<iota>*(\<pi>_1(UV, b)).\<close>
+        let ?g0 = "\<lambda>s. h (?f0 s)"
+        \<comment> \<open>Step (c): Define \<gamma> = straight line from q to p = (1,0) in B2-{0}.\<close>
+        let ?\<gamma> = "\<lambda>t::real. ((1 - t) * fst ?q + t * 1, (1 - t) * snd ?q + t * 0)"
+        \<comment> \<open>Step (d): The base-change formula gives:
+           h \<circ> (rev(\<gamma>) * (f0 * \<gamma>)) = rev(\<delta>) * (g0 * \<delta>)
+           by comp_basepoint_change (functoriality of base change under h).\<close>
+        \<comment> \<open>Step (e): rev(\<gamma>) * (f0 * \<gamma>) is homotopic to f in B2-{0} (winding number = 1).
+           This is the key homotopy fact from the punctured disk.\<close>
+        have hkey_homotopy: "top1_path_homotopic_on (top1_B2 - {(0::real, 0::real)})
+            (subspace_topology top1_B2 top1_B2_topology (top1_B2 - {(0, 0)}))
+            (1::real, 0::real) (1, 0)
+            (top1_basepoint_change_on (top1_B2 - {(0, 0)})
+               (subspace_topology top1_B2 top1_B2_topology (top1_B2 - {(0, 0)}))
+               ?q (1, 0) ?\<gamma> ?f0)
+            ?f"
+          sorry \<comment> \<open>Winding number argument: both loops wind once around 0 in B2-{0}.\<close>
+        \<comment> \<open>Step (f): Applying h gives \<delta>_hat([g0]) = [h \<circ> f] = [k \<circ> p].\<close>
+        \<comment> \<open>Step (g): The specific iso (base change + retraction) maps [g0] to [k \<circ> p].
+           Since \<phi> was obtained from hUb_Aa which chains base change + retraction,
+           \<phi> maps the generator [g0] to [k \<circ> p]. Therefore \<phi>(Nb) = \<langle>\<langle>{[k \<circ> p]}\<rangle>\<rangle>.\<close>
+        show ?thesis
+          sorry \<comment> \<open>Assembly: apply h to homotopy, unfold base change, show \<phi>([g0]) = [k \<circ> p],
+               then iso_image_normal_closure gives \<phi>(Nb) = \<langle>\<langle>{[k \<circ> p]}\<rangle>\<rangle>.\<close>
+      qed
+      \<comment> \<open>Step C.7: Combine transfer + generator tracking.\<close>
+      from htransfer have htransfer': "top1_groups_isomorphic_on
+          (top1_quotient_group_carrier_on
+             (top1_fundamental_group_carrier ?U ?TU ?b) (top1_fundamental_group_mul ?U ?TU ?b) Nb)
+          (top1_quotient_group_mul_on (top1_fundamental_group_mul ?U ?TU ?b))
+          (top1_quotient_group_carrier_on
+             (top1_fundamental_group_carrier A ?TA a) (top1_fundamental_group_mul A ?TA a)
+             (top1_normal_subgroup_generated_on
+                (top1_fundamental_group_carrier A ?TA a) (top1_fundamental_group_mul A ?TA a)
+                (top1_fundamental_group_id A ?TA a) (top1_fundamental_group_invg A ?TA a)
+                {top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1, 0) A ?TA a ?\<iota>
+                   {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) ?f g}}))
+          (top1_quotient_group_mul_on (top1_fundamental_group_mul A ?TA a))"
+        unfolding hgen_eq .
+      show ?thesis using htransfer' unfolding Nb_def .
+    qed
     \<comment> \<open>Step D: Chain A + C: \<pi>_1(X,a) \<cong> Q(\<pi>_1(U,b),N_b) \<cong> Q(\<pi>_1(A,a),\<langle>\<langle>{[k\<circ>p]}\<rangle>\<rangle>).\<close>
     show ?thesis by (rule groups_isomorphic_trans_fwd[OF hchain1 hchain2])
   qed
@@ -3640,13 +3844,98 @@ proof -
              A (subspace_topology X TX A) f"
       and hh_att: "top1_continuous_map_on top1_B2 top1_B2_topology X TX h"
       and hh_wrap: "\<forall>s\<in>I_set. h (cos (2*pi*s), sin (2*pi*s)) = h (cos (2*pi*n*s), sin (2*pi*n*s))"
+      and hx0_A: "x0 \<in> A" and hA_sub: "A \<subseteq> X"
     sorry \<comment> \<open>From dunce cap definition: quotient of B² by n-fold rotation on S¹.\<close>
   \<comment> \<open>Step 2: \<pi>_1(A) \<cong> Z (fundamental group of circle).\<close>
   have hA_Z: "\<exists>f. top1_group_iso_on
       (top1_fundamental_group_carrier A (subspace_topology X TX A) x0)
       (top1_fundamental_group_mul A (subspace_topology X TX A) x0)
       (UNIV::int set) (\<lambda>a b. a + b) f"
-    sorry \<comment> \<open>\<pi>_1(S¹) \<cong> Z (Theorem 54.5/55.1).\<close>
+  proof -
+    let ?TA = "subspace_topology X TX A"
+    \<comment> \<open>Extract homeomorphism h_circ: S1 \<rightarrow> A.\<close>
+    obtain h_circ where h_homeo: "top1_homeomorphism_on top1_S1 top1_S1_topology A ?TA h_circ"
+      using hA_circle by (by100 blast)
+    \<comment> \<open>\<pi>_1(S1, (1,0)) \<cong> (Z, +) by Theorem 54.5.\<close>
+    have hS1_Z: "top1_groups_isomorphic_on
+        (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
+        (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))
+        top1_Z_group top1_Z_mul"
+      by (rule Theorem_54_5_iso)
+    \<comment> \<open>By Corollary 52.5: homeomorphism S1 \<cong> A gives \<pi>_1(S1, (1,0)) \<cong> \<pi>_1(A, h_circ(1,0)).\<close>
+    have hS1_top: "is_topology_on top1_S1 top1_S1_topology"
+      using top1_S1_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
+    have hTA_top: "is_topology_on A ?TA"
+    proof -
+      have hTX: "is_topology_on X TX"
+        using assms(2) unfolding top1_is_dunce_cap_on_def is_topology_on_strict_def by (by100 blast)
+      show ?thesis by (rule subspace_topology_is_topology_on[OF hTX hA_sub])
+    qed
+    have h10_S1: "(1::real, 0::real) \<in> top1_S1"
+      unfolding top1_S1_def by (by100 simp)
+    have hS1_A_iso: "top1_groups_isomorphic_on
+        (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
+        (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))
+        (top1_fundamental_group_carrier A ?TA (h_circ (1, 0)))
+        (top1_fundamental_group_mul A ?TA (h_circ (1, 0)))"
+      by (rule Corollary_52_5_homeomorphism_iso[OF hS1_top hTA_top h_homeo h10_S1]) (by100 simp)
+    \<comment> \<open>Chain: \<pi>_1(A, h_circ(1,0)) \<cong> \<pi>_1(S1, (1,0)) \<cong> Z.\<close>
+    have hA_hc_Z: "top1_groups_isomorphic_on
+        (top1_fundamental_group_carrier A ?TA (h_circ (1, 0)))
+        (top1_fundamental_group_mul A ?TA (h_circ (1, 0)))
+        top1_Z_group top1_Z_mul"
+    proof -
+      have hA_S1: "top1_groups_isomorphic_on
+          (top1_fundamental_group_carrier A ?TA (h_circ (1, 0)))
+          (top1_fundamental_group_mul A ?TA (h_circ (1, 0)))
+          (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
+          (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))"
+      proof -
+        have hgrpS1: "top1_is_group_on
+            (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
+            (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))
+            (top1_fundamental_group_id top1_S1 top1_S1_topology (1, 0))
+            (top1_fundamental_group_invg top1_S1 top1_S1_topology (1, 0))"
+          by (rule top1_fundamental_group_is_group[OF hS1_top h10_S1])
+        have hhc_A: "h_circ (1, 0) \<in> A"
+          using h_homeo h10_S1 unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+        have hgrpA: "top1_is_group_on
+            (top1_fundamental_group_carrier A ?TA (h_circ (1, 0)))
+            (top1_fundamental_group_mul A ?TA (h_circ (1, 0)))
+            (top1_fundamental_group_id A ?TA (h_circ (1, 0)))
+            (top1_fundamental_group_invg A ?TA (h_circ (1, 0)))"
+          by (rule top1_fundamental_group_is_group[OF hTA_top hhc_A])
+        show ?thesis by (rule top1_groups_isomorphic_on_sym[OF hS1_A_iso hgrpS1 hgrpA])
+      qed
+      show ?thesis by (rule groups_isomorphic_trans_fwd[OF hA_S1 hS1_Z])
+    qed
+    \<comment> \<open>Base change: \<pi>_1(A, x0) \<cong> \<pi>_1(A, h_circ(1,0)) (since A is path-connected).\<close>
+    have hA_pc: "top1_path_connected_on A ?TA"
+    proof -
+      have "top1_path_connected_on top1_S1 top1_S1_topology"
+        by (rule S1_path_connected)
+      thus ?thesis
+        by (rule homeomorphism_preserves_path_connected[OF h_homeo])
+    qed
+    have hhc_A: "h_circ (1, 0) \<in> A"
+      using h_homeo h10_S1 unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+    have hA_bc: "top1_groups_isomorphic_on
+        (top1_fundamental_group_carrier A ?TA x0)
+        (top1_fundamental_group_mul A ?TA x0)
+        (top1_fundamental_group_carrier A ?TA (h_circ (1, 0)))
+        (top1_fundamental_group_mul A ?TA (h_circ (1, 0)))"
+      by (rule Corollary_52_2_basepoint_independent[OF hA_pc hx0_A hhc_A])
+    \<comment> \<open>Chain: \<pi>_1(A, x0) \<cong> \<pi>_1(A, h_circ(1,0)) \<cong> Z.\<close>
+    have hA_x0_Z: "top1_groups_isomorphic_on
+        (top1_fundamental_group_carrier A ?TA x0)
+        (top1_fundamental_group_mul A ?TA x0)
+        top1_Z_group top1_Z_mul"
+      by (rule groups_isomorphic_trans_fwd[OF hA_bc hA_hc_Z])
+    \<comment> \<open>Unfold Z definitions.\<close>
+    have "top1_Z_group = (UNIV :: int set)" unfolding top1_Z_group_def by (by100 simp)
+    moreover have "top1_Z_mul = (\<lambda>a b. a + b)" unfolding top1_Z_mul_def by (rule ext)+ (by100 simp)
+    ultimately show ?thesis using hA_x0_Z unfolding top1_groups_isomorphic_on_def by (by100 simp)
+  qed
   \<comment> \<open>Step 3: By Theorem 72.1, \<pi>_1(X) \<cong> Z/\<langle>\<langle>n\<rangle>\<rangle> = Z/nZ.
      The relator is aⁿ (the standard loop wrapped n times).\<close>
   show ?thesis sorry \<comment> \<open>Theorem 72.1 + Z/\<langle>\<langle>n\<rangle>\<rangle> \<cong> Z/nZ.\<close>
@@ -4038,7 +4327,13 @@ proof -
      [a_1,b_1]...[a_n,b_n].\<close>
   \<comment> \<open>Step 1: T_n is a polygonal quotient of a 4n-gon. Extract the scheme.\<close>
   have h_poly: "top1_is_polygonal_quotient_on X TX"
-    using assms(1) sorry \<comment> \<open>n-fold torus is a polygonal quotient.\<close>
+    unfolding top1_is_polygonal_quotient_on_def
+  proof (intro conjI)
+    show "is_topology_on_strict X TX"
+      using assms(1) unfolding top1_is_n_fold_torus_on_def top1_quotient_of_scheme_on_def by (by100 blast)
+    show "\<exists>scheme::(nat \<times> bool) list. top1_quotient_of_scheme_on X TX scheme"
+      using assms(1) unfolding top1_is_n_fold_torus_on_def by (by100 blast)
+  qed
   \<comment> \<open>Step 2: The 4n-gon's 1-skeleton after identifications is a wedge of 2n circles.\<close>
   have h_skel: "\<exists>A. closedin_on X TX A \<and>
       top1_is_wedge_of_circles_on A (subspace_topology X TX A) {..<2*n} x0"
@@ -4068,7 +4363,23 @@ proof -
      the single relator a_1^2 a_2^2 ... a_m^2.\<close>
   \<comment> \<open>Step 1: P_m is a polygonal quotient of a 2m-gon with projective scheme.\<close>
   have h_poly: "top1_is_polygonal_quotient_on X TX"
-    using assms(1) sorry \<comment> \<open>m-fold projective plane is a polygonal quotient.\<close>
+    using assms(1) unfolding top1_is_m_fold_projective_on_def
+  proof (elim disjE conjE)
+    \<comment> \<open>Case m = 1: dunce cap. Need to show dunce cap is polygonal quotient.\<close>
+    assume "m = 1" "top1_is_dunce_cap_on X TX (2::nat)"
+    thus ?thesis sorry \<comment> \<open>Dunce cap with n=2 is a polygonal quotient.\<close>
+  next
+    \<comment> \<open>Case m \<ge> 2: directly from the projective scheme.\<close>
+    assume "2 \<le> m" "top1_quotient_of_scheme_on X TX (top1_m_projective_scheme m)"
+    thus ?thesis unfolding top1_is_polygonal_quotient_on_def
+    proof (intro conjI)
+      show "is_topology_on_strict X TX"
+        using \<open>top1_quotient_of_scheme_on X TX (top1_m_projective_scheme m)\<close>
+        unfolding top1_quotient_of_scheme_on_def by (by100 blast)
+      show "\<exists>scheme::(nat \<times> bool) list. top1_quotient_of_scheme_on X TX scheme"
+        using \<open>top1_quotient_of_scheme_on X TX (top1_m_projective_scheme m)\<close> by (by100 blast)
+    qed
+  qed
   \<comment> \<open>Step 2: The 2m-gon's 1-skeleton after identifications is a wedge of m circles.\<close>
   have h_skel: "\<exists>A. closedin_on X TX A \<and>
       top1_is_wedge_of_circles_on A (subspace_topology X TX A) {..<m} x0"
@@ -8168,6 +8479,7 @@ theorem Theorem_80_3_universal:
       and "top1_simply_connected_on E TE"
       and "top1_covering_map_on Y TY B TB r"
       and "top1_locally_path_connected_on E TE"
+      and "top1_path_connected_on Y TY"
   shows "\<exists>q. top1_covering_map_on E TE Y TY q \<and> (\<forall>e\<in>E. r (q e) = p e)"
 proof (cases "E = {}")
   case True
@@ -8319,7 +8631,7 @@ next
         sorry \<comment> \<open>Complement is open: each r-slice meeting q(E) is fully in q(E).\<close>
       \<comment> \<open>Y is connected (path-connected covering space assumption or derived).\<close>
       have hY_conn: "top1_connected_on Y TY"
-        sorry \<comment> \<open>Covering space of path-connected base is connected (if non-empty).\<close>
+        by (rule top1_path_connected_imp_connected[OF assms(8)])
       \<comment> \<open>Connected + non-empty clopen subset = whole space.\<close>
       have "q ` E = {} \<or> q ` E = Y"
         using iffD1[OF connected_iff_clopen_openin_on[OF assms(3)] hY_conn]
@@ -8430,11 +8742,12 @@ corollary Theorem_80_3_universal_strict:
       and "top1_covering_map_on E TE B TB p"
       and "top1_covering_map_on Y TY B TB r"
       and "top1_locally_path_connected_on E TE"
+      and "top1_path_connected_on Y TY"
   shows "\<exists>q. top1_covering_map_on E TE Y TY q \<and> (\<forall>e\<in>E. r (q e) = p e)"
   using Theorem_80_3_universal[of E TE B TB Y TY p r]
     top1_simply_connected_strict_imp[OF assms(1)]
     top1_simply_connected_strict_is_topology_strict[OF assms(1)]
-    assms(2-6) by (by100 blast)
+    assms(2-7) by (by100 blast)
 
 section \<open>*\<S>81 Covering Transformations\<close>
 
@@ -8713,8 +9026,15 @@ proof -
   \<comment> \<open>Step 1: For each arc A \<in> \<A>B, the preimage p\<inverse>(A) splits into sheets.
      Each sheet is homeomorphic to A via p (local homeomorphism), hence an arc.\<close>
   have hAE: "\<exists>\<A>E. (\<forall>A'\<in>\<A>E. A' \<subseteq> E \<and> top1_is_arc_on A' (subspace_topology E TE A'))
-      \<and> (\<Union>\<A>E) = E"
-    sorry \<comment> \<open>Lift arcs: each evenly-covered neighborhood splits A into sheets.\<close>
+      \<and> (\<Union>\<A>E) = E
+      \<and> (\<forall>A'\<in>\<A>E. \<forall>B'\<in>\<A>E. A' \<noteq> B' \<longrightarrow>
+           A' \<inter> B' \<subseteq> top1_arc_endpoints_on A' (subspace_topology E TE A')
+         \<and> A' \<inter> B' \<subseteq> top1_arc_endpoints_on B' (subspace_topology E TE B')
+         \<and> finite (A' \<inter> B') \<and> card (A' \<inter> B') \<le> 2)
+      \<and> (\<forall>C. C \<subseteq> E \<longrightarrow>
+           (closedin_on E TE C \<longleftrightarrow>
+            (\<forall>A'\<in>\<A>E. closedin_on A' (subspace_topology E TE A') (A' \<inter> C))))"
+    sorry \<comment> \<open>Lift graph structure from B: arcs + intersection + weak topology.\<close>
   \<comment> \<open>Step 2: E is Hausdorff (covering space of Hausdorff is Hausdorff).\<close>
   have hE_hausdorff: "is_hausdorff_on E TE"
   proof -
@@ -8799,8 +9119,9 @@ proof -
       qed
     qed
   qed
-  \<comment> \<open>Step 3: Intersection and weak topology conditions lift from B to E.\<close>
-  show ?thesis sorry \<comment> \<open>Combine: lifted arcs + Hausdorff + intersection + weak topology.\<close>
+  \<comment> \<open>Step 3: Combine all conditions into top1_is_graph_on.\<close>
+  show ?thesis unfolding top1_is_graph_on_def
+    using assms(3) hE_hausdorff hAE by (by100 blast)
 qed
 
 section \<open>\<S>84 The Fundamental Group of a Graph\<close>
@@ -8820,7 +9141,7 @@ theorem Theorem_84_7_fund_group_graph_is_free:
   assumes "top1_is_graph_on X TX"
       and "top1_connected_on X TX"
       and "x0 \<in> X"
-  shows "\<exists>(G::'g set) mul e invg (\<iota>::'s \<Rightarrow> 'g) S.
+  shows "\<exists>(G::int set) mul e invg (\<iota>::nat \<Rightarrow> int) S.
            top1_is_free_group_full_on G mul e invg \<iota> S
          \<and> top1_groups_isomorphic_on G mul
              (top1_fundamental_group_carrier X TX x0)
@@ -8841,13 +9162,14 @@ proof -
   obtain T :: "'a set" where hT_tree: "top1_is_tree_on T (subspace_topology X TX T)"
       and hT_sub: "T \<subseteq> X"
       and hT_max: "\<forall>v\<in>X. \<exists>A\<in>\<A>. v \<in> A \<and> (\<exists>w\<in>T. w \<in> A)"
-    sorry \<comment> \<open>Existence of maximal tree (Munkres Lemma 84.3).\<close>
+      and hx0_T: "x0 \<in> T"
+    sorry \<comment> \<open>Existence of maximal tree containing x0 (Munkres Lemma 84.3).\<close>
   \<comment> \<open>Step 3: X/T is a wedge of circles (one per edge not in T).
      The edges not in T form loops when their endpoints are identified via T-collapse.\<close>
-  obtain n :: nat and W :: "'b set" and TW :: "'b set set" and q :: "'a \<Rightarrow> 'b" and p :: 'b
-    where hW_wedge: "top1_is_wedge_of_circles_on W TW {..<n} p"
+  obtain n :: nat and W :: "'b set" and TW :: "'b set set" and q :: "'a \<Rightarrow> 'b" and pw :: 'b
+    where hW_wedge: "top1_is_wedge_of_circles_on W TW {..<n} pw"
       and hq_quotient: "top1_quotient_map_on X TX W TW q"
-      and hq_T: "\<forall>x\<in>T. q x = p"
+      and hq_T: "\<forall>x\<in>T. q x = pw"
     sorry \<comment> \<open>Quotient X/T = wedge of circles (Munkres Lemma 84.5).\<close>
   \<comment> \<open>Step 4: The quotient map q: X \<rightarrow> X/T is a homotopy equivalence
      (since T is contractible in X).\<close>
@@ -8857,15 +9179,68 @@ proof -
       (top1_fundamental_group_carrier W TW (q x0))
       (top1_fundamental_group_mul W TW (q x0))"
     sorry \<comment> \<open>Homotopy equivalence of quotient: Theorem 58.7 or direct SvK argument.\<close>
-  \<comment> \<open>Step 5: \<pi>_1(X/T) = \<pi>_1(wedge of n circles) is free on n generators (Theorem 71.1).\<close>
-  have hW_free: "\<exists>(G::'g set) mul e invg (\<iota>::'s \<Rightarrow> 'g) S.
-      top1_is_free_group_full_on G mul e invg \<iota> S
-      \<and> top1_groups_isomorphic_on G mul
-          (top1_fundamental_group_carrier W TW (q x0))
-          (top1_fundamental_group_mul W TW (q x0))"
-    sorry \<comment> \<open>Theorem_71_1 applied to the wedge W. Type issue: G::'g but 71.1 gives int.\<close>
-  \<comment> \<open>Step 6: Combine: \<pi>_1(X) \<cong> \<pi>_1(W) \<cong> free group \<Rightarrow> \<pi>_1(X) is free.\<close>
-  show ?thesis sorry \<comment> \<open>Transitivity: groups_isomorphic_trans_fwd + sym.\<close>
+  \<comment> \<open>Step 5: \<pi>_1(X/T) = \<pi>_1(wedge of n circles) is free on n generators (Theorem 71.1).
+     Need q(x0) = pw for Theorem_71_1. Then apply Theorem_71_1 to the wedge W.\<close>
+  have hqx0: "q x0 = pw"
+    using hq_T hx0_T by (by100 blast)
+  from Theorem_71_1_wedge_of_circles_finite[OF hW_wedge]
+  obtain G0 :: "int set" and mul0 e0 invg0 and \<iota>0 :: "nat \<Rightarrow> int"
+    where hfree: "top1_is_free_group_full_on G0 mul0 e0 invg0 \<iota>0 {..<n}"
+      and hW_iso: "top1_groups_isomorphic_on G0 mul0
+          (top1_fundamental_group_carrier W TW pw)
+          (top1_fundamental_group_mul W TW pw)"
+    by (by100 blast)
+  \<comment> \<open>Rewrite using hqx0.\<close>
+  have hW_iso': "top1_groups_isomorphic_on G0 mul0
+      (top1_fundamental_group_carrier W TW (q x0))
+      (top1_fundamental_group_mul W TW (q x0))"
+    using hW_iso unfolding hqx0 .
+  \<comment> \<open>Step 6: Combine: \<pi>_1(X) \<cong> \<pi>_1(W) (hq_equiv) and \<pi>_1(W) \<cong> free (hW_iso').
+     By transitivity: \<pi>_1(X) \<cong> free group.\<close>
+  have hiso_sym: "top1_groups_isomorphic_on
+      (top1_fundamental_group_carrier W TW (q x0))
+      (top1_fundamental_group_mul W TW (q x0)) G0 mul0"
+  proof -
+    have hgrpW: "top1_is_group_on
+        (top1_fundamental_group_carrier W TW (q x0))
+        (top1_fundamental_group_mul W TW (q x0))
+        (top1_fundamental_group_id W TW (q x0))
+        (top1_fundamental_group_invg W TW (q x0))"
+    proof -
+      have hTW: "is_topology_on W TW"
+        using hW_wedge unfolding top1_is_wedge_of_circles_on_def is_topology_on_strict_def
+        by (by100 blast)
+      have hqx0_W: "q x0 \<in> W"
+        using hW_wedge hqx0 unfolding top1_is_wedge_of_circles_on_def by (by100 simp)
+      show ?thesis by (rule top1_fundamental_group_is_group[OF hTW hqx0_W])
+    qed
+    have hgrpG0: "top1_is_group_on G0 mul0 e0 invg0"
+      using hfree unfolding top1_is_free_group_full_on_def by (by100 blast)
+    show ?thesis by (rule top1_groups_isomorphic_on_sym[OF hW_iso' hgrpG0 hgrpW])
+  qed
+  have hchain: "top1_groups_isomorphic_on
+      (top1_fundamental_group_carrier X TX x0)
+      (top1_fundamental_group_mul X TX x0) G0 mul0"
+    by (rule groups_isomorphic_trans_fwd[OF hq_equiv hiso_sym])
+  have hchain_sym: "top1_groups_isomorphic_on G0 mul0
+      (top1_fundamental_group_carrier X TX x0)
+      (top1_fundamental_group_mul X TX x0)"
+  proof -
+    have hgrpX: "top1_is_group_on
+        (top1_fundamental_group_carrier X TX x0)
+        (top1_fundamental_group_mul X TX x0)
+        (top1_fundamental_group_id X TX x0)
+        (top1_fundamental_group_invg X TX x0)"
+    proof -
+      have hTX: "is_topology_on X TX"
+        using assms(1) unfolding top1_is_graph_on_def is_topology_on_strict_def by (by100 blast)
+      show ?thesis by (rule top1_fundamental_group_is_group[OF hTX assms(3)])
+    qed
+    have hgrpG0: "top1_is_group_on G0 mul0 e0 invg0"
+      using hfree unfolding top1_is_free_group_full_on_def by (by100 blast)
+    show ?thesis by (rule top1_groups_isomorphic_on_sym[OF hchain hgrpX hgrpG0])
+  qed
+  show ?thesis using hfree hchain_sym by (by100 blast)
 qed
 
 section \<open>\<S>85 Subgroups of Free Groups\<close>
@@ -9952,3 +10327,10 @@ end
  
  
  
+  
+ 
+
+
+
+
+
