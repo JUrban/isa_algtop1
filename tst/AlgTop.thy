@@ -3783,7 +3783,23 @@ proof -
           A ?TA a ?\<iota> {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) ?f g})
         = top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1, 0) X TX a ?h_S1
             {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) ?f g}"
-        sorry \<comment> \<open>Functoriality: j_*(\<iota>_*([f])) = (j\<circ>\<iota>)_*([f]) = h|_{S1 *}([f]).\<close>
+      proof -
+        let ?c = "{g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) ?f g}"
+        have hc_in: "?c \<in> top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0)"
+          unfolding top1_fundamental_group_carrier_def using hf_loop by (by100 blast)
+        have hiota_a: "?\<iota> (1, 0) = a" using assms(9) by (by100 simp)
+        have hAX_cont: "top1_continuous_map_on A ?TA X TX (\<lambda>x. x)"
+          using hincl_AX_cont .
+        have hcomp_id: "(\<lambda>x. x) \<circ> ?\<iota> = ?h_S1" by (rule ext) (by100 simp)
+        from fundamental_group_induced_comp[OF hS1_top hTA_top hTopX_ns
+            h\<iota>_cont hAX_cont h10_S1 hiota_a _ hc_in]
+        have "top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1, 0) X TX a
+            ((\<lambda>x. x) \<circ> ?\<iota>) ?c
+          = ?jAX (top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1, 0)
+              A ?TA a ?\<iota> ?c)"
+          by (by100 simp)
+        thus ?thesis unfolding hcomp_id by (by100 simp)
+      qed
       \<comment> \<open>h|_{S1 *}([f]) = class of h \<circ> f in \<pi>_1(X,a).\<close>
       \<comment> \<open>Since h \<circ> f is path-homotopic to constant, this class = id_X.\<close>
       have hclass_id: "top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1, 0) X TX a ?h_S1
