@@ -1730,9 +1730,11 @@ proof -
      So \<langle>\<langle>{f(s)}\<rangle>\<rangle>_H \<subseteq> f(M).
      f(c) \<in> f(M), so c \<in> M (injectivity + c \<in> G).
      Since M arbitrary: c \<in> \<Inter>{M. s \<in> M \<and> normal M} = \<langle>\<langle>{s}\<rangle>\<rangle>_G.\<close>
+  \<comment> \<open>c \<in> \<langle>\<langle>{s}\<rangle>\<rangle>_G = \<Inter>{M. {s}\<subseteq>M \<and> normal M}. Show c in every such M.\<close>
   show ?thesis
-    sorry \<comment> \<open>Preimage of normal closure under injective surjective hom.
-         Uses surj_hom_image_normal + InterI + inj_onD.\<close>
+    using hfc_in_fN hf_inj hc_in_G hs_in hG hH hf hf_surj hN_normal
+      surj_hom_image_normal[OF hG hH hf hf_surj]
+    sorry \<comment> \<open>Needs structured InterI proof (full unfolding too large for blast).\<close>
 qed
 
 theorem Theorem_72_1_attaching_two_cell:
