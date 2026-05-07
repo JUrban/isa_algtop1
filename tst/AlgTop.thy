@@ -4580,16 +4580,23 @@ proof -
            For any such N, (A\<hookrightarrow>U)*(N) is normal in \<pi>_1(U,a) containing [k\<circ>p]_U.
            So ?N_U \<subseteq> (A\<hookrightarrow>U)*(N). Since (A\<hookrightarrow>U)*(c) \<in> ?N_U \<subseteq> (A\<hookrightarrow>U)*(N),
            injectivity of (A\<hookrightarrow>U)* gives c \<in> N. Since N arbitrary, c \<in> ?relator.\<close>
-        \<comment> \<open>Use inj_hom_preimage_normal_closure with:
-           G = \<pi>_1(A,a), H = \<pi>_1(U,a), f = (A\<hookrightarrow>U)*, N = ?relator,
-           s = [k\<circ>p]_A. Need: f(s) = [k\<circ>p]_U (by functoriality: (A\<hookrightarrow>U)* \<circ> (S1\<hookrightarrow>A)* = (S1\<hookrightarrow>U)*).
-           Then f(c) \<in> \<langle>\<langle>{f(s)}\<rangle>\<rangle>_U = \<langle>\<langle>{[k\<circ>p]_U}\<rangle>\<rangle> (from h_iota_c_in).
-           Conclusion: c \<in> \<langle>\<langle>{s}\<rangle>\<rangle>_A = ?relator.\<close>
+        \<comment> \<open>Apply inj_hom_preimage_normal_closure with f = (A\<hookrightarrow>U)*, s = [k\<circ>p]_A.
+           Need f(s) = [k\<circ>p]_U by functoriality.\<close>
+        let ?kp_A = "top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1, 0) A ?TA a ?\<iota>
+                       {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) ?f g}"
+        let ?AU = "top1_fundamental_group_induced_on A ?TA a ?U ?TU a (\<lambda>x. x)"
+        \<comment> \<open>f(kp_A) = kp_U by functoriality: (A\<hookrightarrow>U)* \<circ> (S1\<rightarrow>A)* = (S1\<rightarrow>U)*.\<close>
+        have hf_kpA_eq_kpU: "?AU ?kp_A = ?kp_U"
+          sorry \<comment> \<open>fundamental_group_induced_comp: (A\<hookrightarrow>U)* \<circ> (S1\<rightarrow>A)* = (S1\<rightarrow>U)* on [f]-class.\<close>
+        \<comment> \<open>h_iota_c_in says ?AU(c) \<in> \<langle>\<langle>{?kp_U}\<rangle>\<rangle> = \<langle>\<langle>{?AU(?kp_A)}\<rangle>\<rangle>.\<close>
+        have hfc_in: "?AU c \<in> top1_normal_subgroup_generated_on
+            (top1_fundamental_group_carrier ?U ?TU a) (top1_fundamental_group_mul ?U ?TU a)
+            (top1_fundamental_group_id ?U ?TU a) (top1_fundamental_group_invg ?U ?TU a)
+            {?AU ?kp_A}"
+          using h_iota_c_in hf_kpA_eq_kpU by (by100 simp)
         show "c \<in> ?relator"
-          sorry \<comment> \<open>Apply inj_hom_preimage_normal_closure. Needs:
-               (A\<hookrightarrow>U)* hom + surj + inj + relator normal + [k\<circ>p]_A \<in> relator +
-               c \<in> carrier(A) + f(c) \<in> \<langle>\<langle>{f(kp_A)}\<rangle>\<rangle>_U.
-               The f(kp_A) = kp_U fact uses fundamental_group_induced_comp.\<close>
+          sorry \<comment> \<open>Apply inj_hom_preimage_normal_closure[OF grpA grpU AU_hom AU_surj AU_inj
+               relator_normal kpA_in_relator hc_A hfc_in].\<close>
       qed
       \<comment> \<open>Combine steps 1-3.\<close>
       show ?thesis
