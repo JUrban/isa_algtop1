@@ -2150,8 +2150,29 @@ proof -
      This follows from: the lift of f(s) = R_to_S1(s) starting at 0 is the identity s \<mapsto> s,
      which ends at 1. The lifting correspondence maps [f] to 1.\<close>
   have h\<phi>0_f: "\<phi>_0 ?fclass = 1 \<or> \<phi>_0 ?fclass = -1"
-    sorry \<comment> \<open>Requires extracting from Theorem_54_5 construction that the
-         specific iso maps [f] to 1. Uses: lift of R_to_S1 is identity.\<close>
+  proof -
+    \<comment> \<open>Obtain another iso \<psi>_0 from the lifting correspondence, with \<psi>_0([f]) = 1.\<close>
+    obtain \<psi>_0 where h\<psi>0_bij: "bij_betw \<psi>_0
+          (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1,0)) top1_Z_group"
+        and h\<psi>0_hom: "top1_group_hom_on
+          (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1,0))
+          (top1_fundamental_group_mul top1_S1 top1_S1_topology (1,0)) top1_Z_group top1_Z_mul \<psi>_0"
+      using Theorem_54_5_iso
+      unfolding top1_groups_isomorphic_on_def top1_group_iso_on_def by (by100 blast)
+    \<comment> \<open>Key: \<psi>_0([f]) \<in> {1,-1}. From the lifting correspondence: lift of f starting at 0
+       is the identity s \<mapsto> s (since R_to_S1(s) = f(s)). Endpoint = 1.
+       The composition with floor gives 1. For ANY iso, the value is \<pm>1.\<close>
+    \<comment> \<open>Since BOTH \<phi>_0 and \<psi>_0 are isos, \<phi>_0 \<circ> \<psi>_0\<inverse>: Z \<rightarrow> Z is an auto.
+       By Z_auto: (\<phi>_0 \<circ> \<psi>_0\<inverse>)(1) \<in> {1,-1}. And (\<phi>_0 \<circ> \<psi>_0\<inverse>)(-1) \<in> {1,-1}.
+       So \<phi>_0([f]) = (\<phi>_0 \<circ> \<psi>_0\<inverse>)(\<psi>_0([f])). Since \<psi>_0([f]) \<in> Z:
+       \<phi>_0([f]) = n * (\<phi>_0 \<circ> \<psi>_0\<inverse>)(1) where n = \<psi>_0([f]).
+       Hmm, this still needs \<psi>_0([f]) \<in> {1,-1}.
+       The issue is the SAME for any iso: we need the lifting fact.\<close>
+    \<comment> \<open>Direct approach: prove [f] is non-trivial (f not nulhomotopic) and
+       the fiber has specific structure. For now, sorry.\<close>
+    show ?thesis sorry \<comment> \<open>Covering space: standard S1 loop lifts to [0,1] ending at 1.
+         Any iso π₁(S¹) → ℤ maps [f] to a generator of ℤ, i.e., ±1.\<close>
+  qed
   \<comment> \<open>Step 2: \<phi> \<circ> \<phi>_0\<inverse>: Z \<rightarrow> Z is auto, sends 1 to \<pm>1.\<close>
   have hf_loop: "top1_is_loop_on top1_S1 top1_S1_topology (1,0) (\<lambda>s. (cos (2*pi*s), sin (2*pi*s)))"
     unfolding top1_is_loop_on_def top1_is_path_on_def
