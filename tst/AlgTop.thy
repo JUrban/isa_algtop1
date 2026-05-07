@@ -3746,9 +3746,32 @@ proof -
                 case False
                 hence "t > 0" using ht01(1) by (by100 linarith)
                 hence h_intB2: "(1 - t/2, 0::real) \<in> top1_B2 - top1_S1"
-                  using ht01 h\<delta>_in_B2[OF ht(1)]
-                  unfolding top1_B2_def top1_S1_def
-                  sorry \<comment> \<open>0 < t \<le> 1 \<Longrightarrow> (1-t/2, 0) \<in> IntB2 (norm < 1 since 1-t/2 < 1).\<close>
+                proof -
+                  have hle: "(1 - t/2) * (1 - t/2) + 0 * (0::real) \<le> 1"
+                  proof -
+                    have "(1 - t/2) * (1 - t/2) \<le> (1 - t/2) * 1"
+                      by (rule mult_left_mono) (use ht01 in \<open>by100 linarith\<close>)+
+                    also have "\<dots> \<le> 1" using ht01 by (by100 simp)
+                    finally show ?thesis by (by100 simp)
+                  qed
+                  have hlt: "(1 - t/2) * (1 - t/2) + 0 * (0::real) < 1"
+                  proof -
+                    have "0 \<le> 1 - t/2" using ht01 by (by100 linarith)
+                    have "1 - t/2 < 1" using \<open>t > 0\<close> by (by100 linarith)
+                    have "(1 - t/2) * (1 - t/2) \<le> (1 - t/2) * 1"
+                      by (rule mult_left_mono) (use \<open>0 \<le> 1 - t/2\<close> \<open>1 - t/2 < 1\<close> in \<open>by100 linarith\<close>)+
+                    also have "\<dots> < 1" using \<open>1 - t/2 < 1\<close> by (by100 simp)
+                    finally show ?thesis by (by100 simp)
+                  qed
+                  have hle2: "fst (1 - t/2, 0::real) ^ 2 + snd (1 - t/2, 0::real) ^ 2 \<le> 1"
+                    using hle power2_eq_square[of "1 - t/2"] power2_eq_square[of "0::real"]
+                    by (by100 simp)
+                  have hlt2: "fst (1 - t/2, 0::real) ^ 2 + snd (1 - t/2, 0::real) ^ 2 \<noteq> 1"
+                    using hlt power2_eq_square[of "1 - t/2"] power2_eq_square[of "0::real"]
+                    by (by100 simp)
+                  show ?thesis unfolding top1_B2_def top1_S1_def
+                    using hle2 hlt2 by (by100 auto)
+                qed
                 moreover have hinj: "inj_on h (top1_B2 - top1_S1)"
                   using assms(7) unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
                 ultimately have "h (1 - t/2, 0) \<noteq> h (0, 0)"
@@ -10983,6 +11006,7 @@ end
  
   
  
+
 
 
 
