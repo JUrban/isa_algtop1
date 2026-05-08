@@ -4451,8 +4451,25 @@ proof -
   \<comment> \<open>closure(A-{a,b}) \<subseteq> A (A is closed) and closure(A-{a,b}) \<supseteq> A-{a,b}.
      If a \<notin> closure(A-{a,b}), then A-{a,b} is clopen in A-{b} (connected).
      A-{b} is connected (removing one endpoint from arc), contradiction.\<close>
+  \<comment> \<open>Shared infrastructure for A-{b} and A-{a} connected.\<close>
+  obtain h_arc where hh_arc: "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
+      A (subspace_topology X TX A) h_arc"
+    using assms(4) unfolding top1_is_arc_on_def by (by100 blast)
+  have hep_arc: "{h_arc 0, h_arc 1} = {a, b}"
+    using arc_endpoints_are_boundary[OF assms(1,2,3,4) hh_arc] assms(5) by (by100 blast)
+  have hAh0_conn: "top1_connected_on (A - {h_arc 0})
+      (subspace_topology A (subspace_topology X TX A) (A - {h_arc 0}))"
+    sorry \<comment> \<open>Continuous image of (0,1] connected.\<close>
+  have hAh1_conn: "top1_connected_on (A - {h_arc 1})
+      (subspace_topology A (subspace_topology X TX A) (A - {h_arc 1}))"
+    sorry \<comment> \<open>Continuous image of [0,1) connected.\<close>
   have hA_minus_b_conn: "top1_connected_on (A - {b}) (subspace_topology X TX (A - {b}))"
-    sorry \<comment> \<open>Arc minus one endpoint = [0,1) minus pt, connected.\<close>
+  proof -
+    have "b = h_arc 0 \<or> b = h_arc 1" using hep_arc by (by100 blast)
+    hence "top1_connected_on (A - {b}) (subspace_topology A (subspace_topology X TX A) (A - {b}))"
+      using hAh0_conn hAh1_conn by (by100 blast)
+    thus ?thesis using subspace_topology_trans[of "A - {b}" A X TX] assms(3) by (by100 simp)
+  qed
   show "a \<in> closure_on X TX (A - {a, b})"
   proof (rule ccontr)
     assume "a \<notin> closure_on X TX (A - {a, b})"
@@ -4518,7 +4535,14 @@ proof -
     thus False using hA_minus_b_conn by (by100 blast)
   qed
   have hA_minus_a_conn: "top1_connected_on (A - {a}) (subspace_topology X TX (A - {a}))"
-    sorry \<comment> \<open>Arc minus one endpoint connected (symmetric to A-{b}).\<close>
+  proof -
+    \<comment> \<open>Same argument as A-{b}: reuse h, hep, hAh0\_conn, hAh1\_conn from above.\<close>
+    have "a = h_arc 0 \<or> a = h_arc 1" using hep_arc by (by100 blast)
+    hence "top1_connected_on (A - {a}) (subspace_topology A (subspace_topology X TX A) (A - {a}))"
+      using hAh0_conn hAh1_conn by (by100 blast)
+    thus ?thesis
+      using subspace_topology_trans[of "A - {a}" A X TX] assms(3) by (by100 simp)
+  qed
   show "b \<in> closure_on X TX (A - {a, b})"
   proof (rule ccontr)
     assume "b \<notin> closure_on X TX (A - {a, b})"
