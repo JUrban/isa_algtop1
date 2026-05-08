@@ -1015,7 +1015,70 @@ proof -
     show "\<forall>V. V \<subseteq> top1_S1 \<longrightarrow>
         ({x \<in> top1_unit_interval. top1_R_to_S1 x \<in> V} \<in> top1_unit_interval_topology
             \<longrightarrow> V \<in> top1_S1_topology)"
-      sorry \<comment> \<open>Quotient property: closed surjection from compact to Hausdorff.\<close>
+    proof (intro allI impI)
+      fix V assume hV_sub: "V \<subseteq> top1_S1"
+          and hpreimage_open: "{x \<in> top1_unit_interval. top1_R_to_S1 x \<in> V}
+              \<in> top1_unit_interval_topology"
+      \<comment> \<open>Preimage of complement is closed.\<close>
+      have hpreimage_compl: "{x \<in> top1_unit_interval. top1_R_to_S1 x \<notin> V}
+          = top1_unit_interval - {x \<in> top1_unit_interval. top1_R_to_S1 x \<in> V}"
+        by (by100 blast)
+      have hcompl_sub: "{x \<in> top1_unit_interval. top1_R_to_S1 x \<notin> V} \<subseteq> top1_unit_interval"
+        by (by100 blast)
+      have hcompl_eq: "top1_unit_interval - {x \<in> top1_unit_interval. top1_R_to_S1 x \<notin> V}
+          = {x \<in> top1_unit_interval. top1_R_to_S1 x \<in> V}" by (by100 blast)
+      have hcompl_closed: "closedin_on top1_unit_interval top1_unit_interval_topology
+          {x \<in> top1_unit_interval. top1_R_to_S1 x \<notin> V}"
+        unfolding closedin_on_def
+        using hcompl_sub hcompl_eq hpreimage_open by (by100 force)
+      \<comment> \<open>Closed map: image of closed set is closed.\<close>
+      have hI_compact: "top1_compact_on top1_unit_interval top1_unit_interval_topology"
+      proof -
+        have "compact (top1_unit_interval :: real set)" unfolding top1_unit_interval_def by (rule compact_Icc)
+        thus ?thesis using top1_compact_on_subspace_UNIV_iff_compact
+          unfolding top1_unit_interval_topology_def by (by100 blast)
+      qed
+      have hS1_haus: "is_hausdorff_on top1_S1 top1_S1_topology"
+      proof -
+        have "is_hausdorff_on (UNIV::(real\<times>real) set) (product_topology_on top1_open_sets top1_open_sets)"
+          by (rule top1_R2_is_hausdorff)
+        thus ?thesis unfolding top1_S1_topology_def
+          using conjunct2[OF conjunct2[OF Theorem_17_11]] by (by100 blast)
+      qed
+      have hR_cont_I: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+          top1_S1 top1_S1_topology top1_R_to_S1"
+      proof -
+        from top1_continuous_map_on_subspace_restrict[OF hR_cont_UNIV]
+        show ?thesis unfolding top1_unit_interval_topology_def by (by100 simp)
+      qed
+      from compact_hausdorff_continuous_closed_map[OF hI_compact hS1_haus hR_cont_I hcompl_closed]
+      have "closedin_on top1_S1 top1_S1_topology
+          (top1_R_to_S1 ` {x \<in> top1_unit_interval. top1_R_to_S1 x \<notin> V})" .
+      \<comment> \<open>Image of complement preimage = complement of V (by surjectivity).\<close>
+      moreover have "top1_R_to_S1 ` {x \<in> top1_unit_interval. top1_R_to_S1 x \<notin> V} = top1_S1 - V"
+      proof (rule set_eqI, rule iffI)
+        fix p assume "p \<in> top1_R_to_S1 ` {x \<in> top1_unit_interval. top1_R_to_S1 x \<notin> V}"
+        then obtain t where "t \<in> top1_unit_interval" "top1_R_to_S1 t \<notin> V" "p = top1_R_to_S1 t"
+          by (by100 blast)
+        thus "p \<in> top1_S1 - V"
+          using \<open>top1_R_to_S1 ` top1_unit_interval = top1_S1\<close> by (by100 blast)
+      next
+        fix p assume "p \<in> top1_S1 - V"
+        hence "p \<in> top1_S1" "p \<notin> V" by (by100 blast)+
+        hence "p \<in> top1_R_to_S1 ` top1_unit_interval"
+          using \<open>top1_R_to_S1 ` top1_unit_interval = top1_S1\<close> by (by100 blast)
+        then obtain t where "t \<in> top1_unit_interval" "top1_R_to_S1 t = p" by (by100 blast)
+        hence "t \<in> {x \<in> top1_unit_interval. top1_R_to_S1 x \<notin> V}" using \<open>p \<notin> V\<close> by (by100 blast)
+        thus "p \<in> top1_R_to_S1 ` {x \<in> top1_unit_interval. top1_R_to_S1 x \<notin> V}"
+          using \<open>top1_R_to_S1 t = p\<close> by (by100 blast)
+      qed
+      ultimately have "closedin_on top1_S1 top1_S1_topology (top1_S1 - V)" by (by100 simp)
+      \<comment> \<open>Complement closed \<Rightarrow> V open.\<close>
+      hence "top1_S1 - (top1_S1 - V) \<in> top1_S1_topology"
+        unfolding closedin_on_def by (by100 blast)
+      moreover have "top1_S1 - (top1_S1 - V) = V" using hV_sub by (by100 blast)
+      ultimately show "V \<in> top1_S1_topology" by (by100 simp)
+    qed
   qed
   \<comment> \<open>g respects the identification: R\_to\_S1(s) = R\_to\_S1(t) \<Rightarrow> g(s) = g(t).\<close>
   have hg_compat: "\<forall>s \<in> top1_unit_interval. \<forall>t \<in> top1_unit_interval.
