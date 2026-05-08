@@ -7688,9 +7688,9 @@ proof -
       by (by100 auto)
     \<comment> \<open>Inverse.\<close>
     have hinverse: "\<forall>h\<in>?Cov. ?mul (?invC h) h = ?eC \<and> ?mul h (?invC h) = ?eC"
-      sorry \<comment> \<open>Need: (\<lambda>e. inv_into E h (h e)) = id as total functions.
-           This requires injectivity of h on UNIV, not just E.
-           May need to adjust the group setup to use pointwise-on-E equality.\<close>
+      sorry \<comment> \<open>Extensional equality inv_into E h \<circ> h = id requires h injective on UNIV.
+           Covering transformations as total functions need special handling.
+           TODO: reformulate group using restrict or quotient by agreement on E.\<close>
     show ?thesis
       apply (rule exI[of _ ?eC], rule exI[of _ ?invC])
       unfolding top1_is_group_on_def
