@@ -2430,9 +2430,29 @@ proof -
     \<comment> \<open>Now A1\<setminus>{c} and A2\<setminus>{c} are open in D\<setminus>{c} (subspace).\<close>
     let ?TDc = "subspace_topology ?D (subspace_topology X TX ?D) (?D - {c})"
     have hA1c_open_Dc: "A1 - {c} \<in> ?TDc"
-      sorry \<comment> \<open>A1\<setminus>{c} \<in> subspace of D, and (D\<setminus>{c}) \<inter> (A1\<setminus>{c}) = A1\<setminus>{c}.\<close>
+    proof -
+      have heq: "A1 - {c} = (?D - {c}) \<inter> (A1 - {c})" by (by100 blast)
+      have "A1 - {c} \<in> subspace_topology X TX ?D" by (rule hA1c_open_D)
+      hence "A1 - {c} \<in> {?D \<inter> U | U. U \<in> TX}"
+        unfolding subspace_topology_def by (by100 simp)
+      show ?thesis unfolding subspace_topology_def
+        apply (rule CollectI)
+        apply (rule exI[of _ "A1 - {c}"])
+        using heq \<open>A1 - {c} \<in> {?D \<inter> U | U. U \<in> TX}\<close>
+        by (by100 simp)
+    qed
     have hA2c_open_Dc: "A2 - {c} \<in> ?TDc"
-      sorry \<comment> \<open>Similarly.\<close>
+    proof -
+      have heq: "A2 - {c} = (?D - {c}) \<inter> (A2 - {c})" by (by100 blast)
+      have "A2 - {c} \<in> subspace_topology X TX ?D" by (rule hA2c_open_D)
+      hence "A2 - {c} \<in> {?D \<inter> U | U. U \<in> TX}"
+        unfolding subspace_topology_def by (by100 simp)
+      show ?thesis unfolding subspace_topology_def
+        apply (rule CollectI)
+        apply (rule exI[of _ "A2 - {c}"])
+        using heq \<open>A2 - {c} \<in> {?D \<inter> U | U. U \<in> TX}\<close>
+        by (by100 simp)
+    qed
     have hU_Dc: "A1 - {c} \<in> ?TDc" by (rule hA1c_open_Dc)
     have hV_Dc: "A2 - {c} \<in> ?TDc" by (rule hA2c_open_Dc)
     have hsep: "top1_is_separation_on (?D - {c}) ?TDc (A1 - {c}) (A2 - {c})"
