@@ -5192,25 +5192,76 @@ proof -
   qed
   have hY_compl_open: "top1_S2 - ?Y \<in> top1_S2_topology"
     using hY_closed unfolding closedin_on_def by (by100 blast)
-  \<comment> \<open>Use helper lemma (sorry) for openness of connected components.\<close>
-  have hU_open: "U \<in> top1_S2_topology"
-    using S2_component_of_open_subset_is_open[OF hY_compl_open _ _ hUVW(1) hUVW(8)]
-        hUVW(7) sorry
-  have hV_open: "V \<in> top1_S2_topology"
-    using S2_component_of_open_subset_is_open[OF hY_compl_open _ _ hUVW(2) hUVW(9)]
-        hUVW(7) sorry
-  have hW_open: "W \<in> top1_S2_topology"
-    using S2_component_of_open_subset_is_open[OF hY_compl_open _ _ hUVW(3) hUVW(10)]
-        hUVW(7) sorry
-  \<comment> \<open>P1 is connected \<subseteq> U\<union>V\<union>W (disjoint open). It equals one of them.
-     Connected subset of disjoint union of open sets lies in one.\<close>
+  \<comment> \<open>NEW APPROACH: P1 is a connected component of S2-Y, hence equals one of U,V,W.
+     Key: S2-Y = P1 \<union> (P2 \<inter> (S2-Y)) where both pieces are open in S2-Y.\<close>
+  have hP2_cap_Y: "P2 \<inter> (top1_S2 - ?Y) = (top1_S2 - ?Y) - P1"
+    using hP1_sub_Y_compl hP(3,4) hUVW(7) by (by100 blast)
+  have hP1_open_in_Y: "P1 \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - ?Y)"
+  proof -
+    have "P1 = (top1_S2 - ?Y) \<inter> P1" using hP1_sub_Y_compl by (by100 blast)
+    thus ?thesis unfolding subspace_topology_def using hP1_open by (by100 blast)
+  qed
+  have hVW_open_in_Y: "(top1_S2 - ?Y) - P1 \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - ?Y)"
+  proof -
+    have "(top1_S2 - ?Y) - P1 = (top1_S2 - ?Y) \<inter> P2"
+      using hP1_sub_Y_compl hP(3,4) hUVW(7) by (by100 blast)
+    also have "\<dots> = (top1_S2 - ?Y) \<inter> (top1_S2 \<inter> P2)" using hP(4) by (by100 blast)
+    finally show ?thesis unfolding subspace_topology_def using hP2_open by (by100 blast)
+  qed
+  \<comment> \<open>P1 is a connected component of S2-Y (maximal connected: any connected superset
+     in S2-Y would cross the P1/(P2\<inter>S2-Y) separation).\<close>
   have hP1_is_comp: "P1 = U \<or> P1 = V \<or> P1 = W"
-    sorry \<comment> \<open>P1 connected, \<subseteq> U\<union>V\<union>W, each is open, P1 \<subseteq> one, and P1 is maximal (component of S2-(A\<union>B)).\<close>
+  proof -
+    \<comment> \<open>P1 connected \<subseteq> U\<union>V\<union>W. By partition, P1 \<subseteq> U or V or W.\<close>
+    \<comment> \<open>Conversely, if P1 \<subseteq> U and U \<noteq> P1, then \<exists>z \<in> U-P1. z \<in> P2\<inter>(S2-Y).
+       But U is connected and meets both P1 and P2\<inter>(S2-Y), which are open in S2-Y.
+       That contradicts U's connectivity.\<close>
+    have hP1_in_UVW: "P1 \<subseteq> U \<union> V \<union> W" using hP1_sub_Y_compl hUVW(7) by (by100 blast)
+    \<comment> \<open>P1 is connected, P1 \<subseteq> S2-Y which is separated as P1 \<union> (S2-Y-P1).
+       Any connected subset of S2-Y is in P1 or in S2-Y-P1.\<close>
+    have hTY: "is_topology_on (top1_S2 - ?Y)
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - ?Y))"
+      sorry
+    have hY_sep: "top1_is_separation_on (top1_S2 - ?Y)
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - ?Y))
+        P1 ((top1_S2 - ?Y) - P1)"
+      unfolding top1_is_separation_on_def
+      using hP1_open_in_Y hVW_open_in_Y hP(1) hP1_sub_Y_compl hP2_cap_Y sorry
+    \<comment> \<open>Each of U, V, W is connected \<subseteq> S2-Y. By Lemma\_23\_2, each \<subseteq> P1 or \<subseteq> (S2-Y)-P1.\<close>
+    have hU_side: "U \<subseteq> P1 \<or> U \<subseteq> (top1_S2 - ?Y) - P1" sorry
+    have hV_side: "V \<subseteq> P1 \<or> V \<subseteq> (top1_S2 - ?Y) - P1" sorry
+    have hW_side: "W \<subseteq> P1 \<or> W \<subseteq> (top1_S2 - ?Y) - P1" sorry
+    show ?thesis using hU_side hV_side hW_side hP1_sub_Y_compl hUVW(7) hP(1) hUVW(4,5,6) sorry
+  qed
+  \<comment> \<open>Same argument for R1: S2-Y = R1 \<union> (R2 \<inter> S2-Y), both open in S2-Y.\<close>
   have hR1_is_comp: "R1 = U \<or> R1 = V \<or> R1 = W"
-    sorry
-  \<comment> \<open>P1 \<noteq> R1: if P1 = R1 then closure(P1) \<subseteq> (A\<union>B) \<inter> (B\<union>C) = B, contradicting P1 nonempty open.\<close>
+    sorry \<comment> \<open>Same separation argument with B\<union>C.\<close>
+  \<comment> \<open>P1 \<noteq> R1: closure(P1) = P1\<union>(A\<union>B), closure(R1) = R1\<union>(B\<union>C).
+     If P1 = R1 then closure(P1) \<subseteq> (A\<union>B) \<inter> (B\<union>C) gives boundary \<subseteq> B, contradicting
+     that an open nonempty subset of S2 has boundary larger than an arc.\<close>
   have hP1_ne_R1: "P1 \<noteq> R1"
-    sorry
+  proof
+    assume "P1 = R1"
+    \<comment> \<open>closure(P1) = P1\<union>(A\<union>B), closure(R1) = R1\<union>(B\<union>C). If equal:
+       P1\<union>(A\<union>B) = P1\<union>(B\<union>C), so (A\<union>B) \<subseteq> P1\<union>(B\<union>C) and (B\<union>C) \<subseteq> P1\<union>(A\<union>B).
+       Hence A-B \<subseteq> P1\<union>C and C-B \<subseteq> P1\<union>A. But P1 \<subseteq> S2-Y, A,C \<subseteq> Y, P1 \<inter> Y = {}.
+       So A-B \<subseteq> C and C-B \<subseteq> A. Combined with A\<inter>C = {a1,a3} and B endpoints = {a1,a3}:
+       A-{a1,a3} \<subseteq> C, but A \<inter> C = {a1,a3}, so A-{a1,a3} \<subseteq> C \<inter> A = {a1,a3}.
+       Hence A \<subseteq> {a1,a3} \<union> B. But A is an arc with \<ge> 3 points. Contradiction.\<close>
+    have "closure_on top1_S2 top1_S2_topology P1 = closure_on top1_S2 top1_S2_topology R1"
+      using \<open>P1 = R1\<close> by (by100 simp)
+    hence "P1 \<union> (?A \<union> ?B) = P1 \<union> (?B \<union> ?C)" using hcl_P1 hcl_R1 \<open>P1 = R1\<close> by (by100 simp)
+    hence "?A \<subseteq> P1 \<union> ?B \<union> ?C" by (by100 blast)
+    moreover have "P1 \<inter> ?A = {}" using hP1_sub_Y_compl by (by100 blast)
+    ultimately have hA_sub_BC: "?A \<subseteq> ?B \<union> ?C" by (by100 blast)
+    \<comment> \<open>But A \<inter> (B\<union>C) = (A\<inter>B) \<union> (A\<inter>C) = {a1,a3} \<union> {a1,a3} = {a1,a3}.\<close>
+    have "?A \<inter> (?B \<union> ?C) \<subseteq> {a1, a3}" using hAB_int hAC_int by (by100 blast)
+    hence "?A \<subseteq> {a1, a3}" using hA_sub_BC by (by100 blast)
+    \<comment> \<open>But A = e12 \<union> e23 has \<ge> 3 points (it's an arc).\<close>
+    moreover have "a2 \<in> ?A" using assms(16) unfolding top1_arc_endpoints_on_def by (by100 blast)
+    moreover have "a2 \<notin> {a1, a3}" using hdist(1,4) by (by100 blast)
+    ultimately show False by (by100 blast)
+  qed
   \<comment> \<open>e24-{a2,a4} lies in the third component (not P1, not R1).\<close>
   have he24_conn: "top1_connected_on (e24 - {a2, a4})
       (subspace_topology top1_S2 top1_S2_topology (e24 - {a2, a4}))"
