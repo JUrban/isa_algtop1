@@ -4574,7 +4574,7 @@ proof -
               (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B))) y =
               top1_component_of_on (top1_S2 - (?A \<union> ?B))
               (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B))) x"
-            sorry \<comment> \<open>y \<in> comp(x) \<Rightarrow> comp(y) = comp(x).\<close>
+            by (rule top1_component_of_on_eq_of_mem[OF hTAB hy(1)])
           ultimately have "P2 \<subseteq> top1_component_of_on (top1_S2 - (?A \<union> ?B))
               (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B))) x" by (by100 simp)
           hence "P1 \<union> P2 \<subseteq> top1_component_of_on (top1_S2 - (?A \<union> ?B))
@@ -4588,12 +4588,37 @@ proof -
               (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B))) x"
             using hP(4) by (by100 blast)
           \<comment> \<open>But comp(x) is connected, and S2-(A\<union>B) = P1 \<union> P2 is not (P1, P2 disjoint nonempty).\<close>
+          \<comment> \<open>comp(x) = S2-(A\<union>B), so S2-(A\<union>B) is connected (as component is connected).\<close>
+          have hcomp_conn: "top1_connected_on
+              (top1_component_of_on (top1_S2 - (?A \<union> ?B))
+                  (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B))) x)
+              (subspace_topology (top1_S2 - (?A \<union> ?B))
+                  (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B)))
+                  (top1_component_of_on (top1_S2 - (?A \<union> ?B))
+                      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B))) x))"
+            by (rule top1_component_of_on_connected[OF hTAB hx_W])
           hence "top1_connected_on (top1_S2 - (?A \<union> ?B))
               (subspace_topology (top1_S2 - (?A \<union> ?B))
                   (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B)))
                   (top1_S2 - (?A \<union> ?B)))"
-            sorry \<comment> \<open>component connected\<close>
-          thus False sorry \<comment> \<open>P1\<union>P2 = S2-(A\<union>B) not connected (P1,P2 disjoint nonempty open).\<close>
+            using \<open>top1_S2 - (?A \<union> ?B) = top1_component_of_on _ _ x\<close> by (by100 simp)
+          \<comment> \<open>But P1 \<union> P2 = S2-(A\<union>B) is not connected (separates\_on says exactly this).\<close>
+          \<comment> \<open>S2-(A\<union>B) separates (A\<union>B is SCC on S2).\<close>
+          \<comment> \<open>Convert to standard subspace form.\<close>
+          moreover have "subspace_topology (top1_S2 - (?A \<union> ?B))
+              (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B)))
+              (top1_S2 - (?A \<union> ?B)) =
+              subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B))"
+            using subspace_topology_trans[of "top1_S2 - (?A \<union> ?B)" "top1_S2 - (?A \<union> ?B)"
+                top1_S2 top1_S2_topology] by (by100 simp)
+          ultimately have "top1_connected_on (top1_S2 - (?A \<union> ?B))
+              (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B)))"
+            by (by100 simp)
+          moreover have "\<not> top1_connected_on (top1_S2 - (?A \<union> ?B))
+              (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B)))"
+            using Theorem_61_3_JordanSeparation_S2[OF assms(1) hAB_scc]
+            unfolding top1_separates_on_def by (by100 blast)
+          ultimately show False by (by100 blast)
         qed
         from hP1_sub_comp hcomp_sub_P1 show ?thesis by (by100 blast)
       qed
