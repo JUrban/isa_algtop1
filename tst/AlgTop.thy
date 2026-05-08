@@ -2288,9 +2288,63 @@ proof -
     let ?g2 = "h \<circ> (\<lambda>s. t0 + s * (1 - t0))"
     have hg2_0: "?g2 0 = p" unfolding comp_def using ht0_p by (by100 simp)
     have hg2_1: "?g2 1 = b" unfolding comp_def using \<open>h 1 = b\<close> by (by100 simp)
-    have hg2_img: "?g2 ` top1_unit_interval = D2" sorry
+    have hg2_img: "?g2 ` top1_unit_interval = D2"
+    proof -
+      have "?g2 ` top1_unit_interval = h ` ((\<lambda>s. t0 + s * (1-t0)) ` top1_unit_interval)"
+        using image_comp[of h "\<lambda>s. t0 + s * (1-t0)" top1_unit_interval] by (by100 simp)
+      moreover have "(\<lambda>s::real. t0 + s * (1-t0)) ` top1_unit_interval = {t \<in> top1_unit_interval. t \<ge> t0}"
+      proof (rule set_eqI, rule iffI)
+        fix x assume "x \<in> (\<lambda>s. t0 + s * (1-t0)) ` top1_unit_interval"
+        then obtain s where hs: "s \<in> top1_unit_interval" "x = t0 + s * (1-t0)" by (by100 blast)
+        have "0 \<le> s" "s \<le> 1" using hs(1) unfolding top1_unit_interval_def by (by100 simp)+
+        have "t0 \<le> x" using hs(2) \<open>0 \<le> s\<close> ht0_open by (by100 simp)
+        moreover have "0 \<le> x" using \<open>t0 \<le> x\<close> ht0_open(1) by (by100 linarith)
+        moreover have "x \<le> 1"
+        proof -
+          have "s * (1-t0) \<le> 1 * (1-t0)" using mult_right_mono[OF \<open>s \<le> 1\<close>] ht0_open by (by100 simp)
+          thus ?thesis using hs(2) by (by100 simp)
+        qed
+        ultimately show "x \<in> {t \<in> top1_unit_interval. t \<ge> t0}"
+          unfolding top1_unit_interval_def by (by100 simp)
+      next
+        fix x assume "x \<in> {t \<in> top1_unit_interval. t \<ge> t0}"
+        hence hx: "0 \<le> x" "x \<le> 1" "t0 \<le> x" unfolding top1_unit_interval_def by (by100 simp)+
+        let ?s = "(x - t0) / (1 - t0)"
+        have "0 \<le> ?s" using hx ht0_open by (by100 simp)
+        moreover have "?s \<le> 1" using hx ht0_open by (by100 simp)
+        ultimately have "?s \<in> top1_unit_interval" unfolding top1_unit_interval_def by (by100 simp)
+        moreover have "t0 + ?s * (1-t0) = x" using ht0_open(2) by (by100 simp)
+        ultimately show "x \<in> (\<lambda>s. t0 + s * (1-t0)) ` top1_unit_interval" by (by100 force)
+      qed
+      ultimately show ?thesis using hD2_img by (by100 simp)
+    qed
+    have hg2_inj: "inj_on ?g2 top1_unit_interval"
+    proof (rule inj_onI)
+      fix x y assume hx: "x \<in> top1_unit_interval" and hy: "y \<in> top1_unit_interval"
+          and heq: "?g2 x = ?g2 y"
+      hence "h (t0 + x * (1-t0)) = h (t0 + y * (1-t0))" unfolding comp_def by (by100 simp)
+      moreover have "t0 + x * (1-t0) \<in> top1_unit_interval"
+      proof -
+        have "0 \<le> x" "x \<le> 1" using hx unfolding top1_unit_interval_def by (by100 simp)+
+        have "0 \<le> t0 + x * (1-t0)" using \<open>0 \<le> x\<close> ht0_open by (by100 simp)
+        moreover have "x*(1-t0) \<le> 1*(1-t0)" using mult_right_mono[OF \<open>x \<le> 1\<close>] ht0_open by (by100 simp)
+        hence "t0 + x*(1-t0) \<le> 1" by (by100 simp)
+        ultimately show ?thesis unfolding top1_unit_interval_def by (by100 simp)
+      qed
+      moreover have "t0 + y * (1-t0) \<in> top1_unit_interval"
+      proof -
+        have "0 \<le> y" "y \<le> 1" using hy unfolding top1_unit_interval_def by (by100 simp)+
+        have "0 \<le> t0 + y * (1-t0)" using \<open>0 \<le> y\<close> ht0_open by (by100 simp)
+        moreover have "y*(1-t0) \<le> 1*(1-t0)" using mult_right_mono[OF \<open>y \<le> 1\<close>] ht0_open by (by100 simp)
+        hence "t0 + y*(1-t0) \<le> 1" by (by100 simp)
+        ultimately show ?thesis unfolding top1_unit_interval_def by (by100 simp)
+      qed
+      ultimately have "t0 + x * (1-t0) = t0 + y * (1-t0)"
+        using hinj unfolding inj_on_def by (by100 blast)
+      thus "x = y" using ht0_open(2) by (by100 simp)
+    qed
     have hg2_bij: "bij_betw ?g2 top1_unit_interval D2"
-      unfolding bij_betw_def sorry \<comment> \<open>needs inj + img\<close>
+      unfolding bij_betw_def using hg2_inj hg2_img by (by100 blast)
     have hg2_cont_D2: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
         D2 (subspace_topology X TX D2) ?g2"
     proof -
