@@ -784,11 +784,121 @@ proof -
     \<comment> \<open>g continuous on A (= h1 \<circ> (2*) restricted).\<close>
     have hg_cont_A: "top1_continuous_map_on ?A
         (subspace_topology top1_unit_interval top1_unit_interval_topology ?A) X TX g"
-      sorry \<comment> \<open>On A: g(t) = h1(2t). Composition of affine + h1 continuous.\<close>
+    proof -
+      \<comment> \<open>h1 \<circ> (\<lambda>t. 2*t) is continuous on A. Then g agrees with it on A.\<close>
+      have hdbl_cont: "top1_continuous_map_on ?A
+          (subspace_topology top1_unit_interval top1_unit_interval_topology ?A)
+          top1_unit_interval top1_unit_interval_topology (\<lambda>t. 2*t)"
+      proof -
+        have "continuous_on UNIV (\<lambda>t::real. 2*t)" by (intro continuous_intros)
+        hence "top1_continuous_map_on (UNIV::real set) top1_open_sets
+            (UNIV::real set) top1_open_sets (\<lambda>t. 2*t)"
+          using top1_continuous_map_on_real_subspace_open_sets[of UNIV "\<lambda>t. 2*t" UNIV]
+          unfolding subspace_topology_UNIV_self by (by100 auto)
+        from top1_continuous_map_on_restrict_domain_simple[OF this]
+        have "top1_continuous_map_on ?A (subspace_topology UNIV top1_open_sets ?A)
+            UNIV top1_open_sets (\<lambda>t. 2*t)" by (by100 blast)
+        moreover have "subspace_topology UNIV top1_open_sets ?A
+            = subspace_topology top1_unit_interval top1_unit_interval_topology ?A"
+          unfolding top1_unit_interval_topology_def
+          using subspace_topology_trans[of ?A top1_unit_interval UNIV top1_open_sets] by (by100 simp)
+        ultimately have hcont_A_R: "top1_continuous_map_on ?A
+            (subspace_topology top1_unit_interval top1_unit_interval_topology ?A)
+            UNIV top1_open_sets (\<lambda>t. 2*t)" by (by100 simp)
+        have himg: "(\<lambda>t::real. 2*t) ` ?A \<subseteq> top1_unit_interval"
+          unfolding top1_unit_interval_def by (by100 auto)
+        from top1_continuous_map_on_codomain_shrink[OF hcont_A_R himg]
+        show ?thesis unfolding top1_unit_interval_topology_def by (by100 simp)
+      qed
+      have hh1_cont_X: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology X TX h1"
+      proof -
+        have "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+            A1 (subspace_topology X TX A1) h1"
+          using hh1(1) unfolding top1_homeomorphism_on_def by (by100 blast)
+        from top1_continuous_map_on_codomain_enlarge[OF this hA1X]
+        have "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+            X (subspace_topology X TX X) h1" by (by100 simp)
+        moreover have "subspace_topology X TX X = TX"
+          by (rule subspace_topology_self)
+            (use hT in \<open>unfold is_topology_on_strict_def Pow_def; by100 blast\<close>)
+        ultimately show ?thesis by (by100 simp)
+      qed
+      have hcomp: "top1_continuous_map_on ?A
+          (subspace_topology top1_unit_interval top1_unit_interval_topology ?A) X TX (h1 \<circ> (\<lambda>t. 2*t))"
+        by (rule top1_continuous_map_on_comp[OF hdbl_cont hh1_cont_X])
+      have "\<forall>t \<in> ?A. (h1 \<circ> (\<lambda>t. 2*t)) t = g t"
+      proof
+        fix t assume "t \<in> ?A" hence "t \<le> 1/2" by (by100 blast)
+        thus "(h1 \<circ> (\<lambda>t. 2*t)) t = g t" unfolding comp_def g_def by (by100 simp)
+      qed
+      from top1_continuous_map_on_agree[OF hcomp this] show ?thesis .
+    qed
     \<comment> \<open>g continuous on B (= h2 \<circ> (2*-1) restricted).\<close>
     have hg_cont_B: "top1_continuous_map_on ?B
         (subspace_topology top1_unit_interval top1_unit_interval_topology ?B) X TX g"
-      sorry \<comment> \<open>On B: g(t) = h2(2t-1). Composition of affine + h2 continuous.\<close>
+    proof -
+      have hdbl_cont: "top1_continuous_map_on ?B
+          (subspace_topology top1_unit_interval top1_unit_interval_topology ?B)
+          top1_unit_interval top1_unit_interval_topology (\<lambda>t. 2*t - 1)"
+      proof -
+        have "continuous_on UNIV (\<lambda>t::real. 2*t - 1)" by (intro continuous_intros)
+        hence "top1_continuous_map_on (UNIV::real set) top1_open_sets
+            (UNIV::real set) top1_open_sets (\<lambda>t. 2*t - 1)"
+          using top1_continuous_map_on_real_subspace_open_sets[of UNIV "\<lambda>t. 2*t-1" UNIV]
+          unfolding subspace_topology_UNIV_self by (by100 auto)
+        from top1_continuous_map_on_restrict_domain_simple[OF this]
+        have "top1_continuous_map_on ?B (subspace_topology UNIV top1_open_sets ?B)
+            UNIV top1_open_sets (\<lambda>t. 2*t - 1)" by (by100 blast)
+        moreover have "subspace_topology UNIV top1_open_sets ?B
+            = subspace_topology top1_unit_interval top1_unit_interval_topology ?B"
+          unfolding top1_unit_interval_topology_def
+          using subspace_topology_trans[of ?B top1_unit_interval UNIV top1_open_sets] by (by100 simp)
+        ultimately have hcont_B_R: "top1_continuous_map_on ?B
+            (subspace_topology top1_unit_interval top1_unit_interval_topology ?B)
+            UNIV top1_open_sets (\<lambda>t. 2*t - 1)" by (by100 simp)
+        have himg: "(\<lambda>t::real. 2*t - 1) ` ?B \<subseteq> top1_unit_interval"
+          unfolding top1_unit_interval_def by (by100 auto)
+        from top1_continuous_map_on_codomain_shrink[OF hcont_B_R himg]
+        show ?thesis unfolding top1_unit_interval_topology_def by (by100 simp)
+      qed
+      have hh2_cont_X: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology X TX h2"
+      proof -
+        have "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+            A2 (subspace_topology X TX A2) h2"
+          using hh2(1) unfolding top1_homeomorphism_on_def by (by100 blast)
+        from top1_continuous_map_on_codomain_enlarge[OF this hA2X]
+        have "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+            X (subspace_topology X TX X) h2" by (by100 simp)
+        moreover have "subspace_topology X TX X = TX"
+          by (rule subspace_topology_self)
+            (use hT in \<open>unfold is_topology_on_strict_def Pow_def; by100 blast\<close>)
+        ultimately show ?thesis by (by100 simp)
+      qed
+      have hcomp: "top1_continuous_map_on ?B
+          (subspace_topology top1_unit_interval top1_unit_interval_topology ?B) X TX (h2 \<circ> (\<lambda>t. 2*t - 1))"
+        by (rule top1_continuous_map_on_comp[OF hdbl_cont hh2_cont_X])
+      have "\<forall>t \<in> ?B. (h2 \<circ> (\<lambda>t. 2*t - 1)) t = g t"
+      proof
+        fix t assume "t \<in> ?B" hence "t \<ge> 1/2" by (by100 blast)
+        show "(h2 \<circ> (\<lambda>t. 2*t - 1)) t = g t"
+        proof (cases "t > 1/2")
+          case True thus ?thesis unfolding comp_def g_def by (by100 simp)
+        next
+          case False hence "t = 1/2" using \<open>t \<ge> 1/2\<close> by (by100 linarith)
+          have "g (1/2::real) = h1 1" unfolding g_def by (by100 simp)
+          hence "g t = h1 1" using \<open>t = 1/2\<close> by (by100 force)
+          also have "\<dots> = b" by (rule hh1(3))
+          also have "b = h2 0" using hh2(2) by (by100 simp)
+          finally have "g t = h2 0" .
+          have "(h2 \<circ> (\<lambda>t. 2*t - 1)) (1/2::real) = h2 0"
+            unfolding comp_def by (by100 simp)
+          hence "(h2 \<circ> (\<lambda>t. 2*t - 1)) t = h2 0"
+            using \<open>t = 1/2\<close> by (by100 force)
+          thus ?thesis using \<open>g t = h2 0\<close> by (by100 simp)
+        qed
+      qed
+      from top1_continuous_map_on_agree[OF hcomp this] show ?thesis .
+    qed
     \<comment> \<open>Apply pasting\_lemma\_two\_closed.\<close>
     from pasting_lemma_two_closed[OF hTI hTX hA_closed hB_closed hAB_union hg_in_X hg_cont_A hg_cont_B]
     show ?thesis .
