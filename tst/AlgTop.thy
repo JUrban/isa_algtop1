@@ -433,7 +433,32 @@ lemma arcs_form_simple_closed_curve:
       and hep1: "top1_arc_endpoints_on A1 (subspace_topology X TX A1) = {a, b}"
       and hep2: "top1_arc_endpoints_on A2 (subspace_topology X TX A2) = {a, b}"
   shows "top1_simple_closed_curve_on X TX (A1 \<union> A2)"
-  sorry \<comment> \<open>Construct homeomorphism S1 -> A1 \<union> A2 by mapping upper/lower semicircles to A1/A2.\<close>
+proof -
+  \<comment> \<open>Get homeomorphisms h1: [0,1] \<rightarrow> A1 with h1(0)=a, h1(1)=b.
+     h2: [0,1] \<rightarrow> A2 with h2(0)=b, h2(1)=a.\<close>
+  obtain h1 where hh1: "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
+      A1 (subspace_topology X TX A1) h1" "h1 0 = a" "h1 1 = b"
+    sorry \<comment> \<open>Orient h1 with endpoints a,b using arc_endpoints_are_boundary.\<close>
+  obtain h2 where hh2: "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
+      A2 (subspace_topology X TX A2) h2" "h2 0 = b" "h2 1 = a"
+    sorry \<comment> \<open>Orient h2 with endpoints b,a.\<close>
+  \<comment> \<open>Construct f: S1 \<rightarrow> A1 \<union> A2. Map upper semicircle to A1, lower to A2.\<close>
+  \<comment> \<open>Parameterize S1: (cos \<theta>, sin \<theta>) for \<theta> \<in> [0, 2\<pi>].
+     For \<theta> \<in> [0, \<pi>]: f(cos \<theta>, sin \<theta>) = h1(\<theta>/\<pi>).
+     For \<theta> \<in> [\<pi>, 2\<pi>]: f(cos \<theta>, sin \<theta>) = h2((\<theta>-\<pi>)/\<pi>).\<close>
+  \<comment> \<open>Equivalently: for p = (x,y) \<in> S1, angle \<theta> = atan2(y,x) \<in> [0, 2\<pi>).\<close>
+  \<comment> \<open>Simpler: use the angle from R_to_S1 and its inverse.\<close>
+  define f where "f p = (let \<theta> = (THE \<theta>. 0 \<le> \<theta> \<and> \<theta> < 1 \<and> top1_R_to_S1 \<theta> = p) in
+    if \<theta> \<le> 1/2 then h1 (2*\<theta>) else h2 (2*\<theta> - 1))" for p :: "real \<times> real"
+  have hf_cont: "top1_continuous_map_on top1_S1 top1_S1_topology X TX f"
+    sorry \<comment> \<open>Pasting upper/lower semicircles. Continuity at endpoints (1,0) and (-1,0).\<close>
+  have hf_inj: "inj_on f top1_S1"
+    sorry \<comment> \<open>h1 inj, h2 inj, images A1 \<inter> A2 = {a,b} at endpoints.\<close>
+  have hf_img: "f ` top1_S1 = A1 \<union> A2"
+    sorry \<comment> \<open>Upper semicircle maps to A1, lower to A2.\<close>
+  show ?thesis unfolding top1_simple_closed_curve_on_def
+    using hf_cont hf_inj hf_img by (by100 blast)
+qed
 
 \<comment> \<open>Reusable: concatenation of arcs meeting at a single common endpoint is an arc.\<close>
 lemma arcs_concatenation_is_arc:
