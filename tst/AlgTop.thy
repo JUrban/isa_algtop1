@@ -3517,6 +3517,7 @@ proof -
   qed
   \<comment> \<open>h restricted to (0,1) is continuous into D-{a,b} subspace of X.\<close>
   \<comment> \<open>By Theorem 23.5: continuous image of connected is connected.\<close>
+  \<comment> \<open>The full chain: h cont on [0,1] \<rightarrow> X, restrict to (0,1), codomain shrink to D-{a,b}.\<close>
   show ?thesis sorry
 qed
 
