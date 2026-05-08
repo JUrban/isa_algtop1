@@ -3483,22 +3483,68 @@ proof -
       using he13_sub he13_split(1) he23_sub by (by100 blast)
     have he24_a2q_sub: "e24_a2q \<subseteq> top1_S2" using he24_sub he24_split(1) by (by100 blast)
     \<comment> \<open>Intermediate arc: e13\_pa3 \<union> e23.\<close>
+    have he13_a1p_sub_loc: "e13_a1p \<subseteq> top1_S2" using he13_sub he13_split(1) by (by100 blast)
+    have hpa3_eps_loc: "top1_arc_endpoints_on e13_pa3
+        (subspace_topology top1_S2 top1_S2_topology e13_pa3) = {p, a3}"
+      using arc_split_endpoints(2)[OF hS2_strict hS2_haus he13_sub he13_arc
+          he13_split(1) he13_split(2) he13_split(3) he13_split(4)
+          he13_split(5) he13_split(6) he13_split(7) he13_split(8)
+          he13_a1p_sub_loc _ he13_ep hp_not_ep]
+        he13_sub he13_split(1) by (by100 blast)
     have ha3_ep_pa3: "a3 \<in> top1_arc_endpoints_on e13_pa3 (subspace_topology top1_S2 top1_S2_topology e13_pa3)"
-      sorry \<comment> \<open>From hpa3\_eps (already proved in D1\_ep\_step1).\<close>
+      using hpa3_eps_loc by (by100 blast)
     have ha3_ep_e23: "a3 \<in> top1_arc_endpoints_on e23 (subspace_topology top1_S2 top1_S2_topology e23)"
       using assms(17) by (by100 blast)
-    have hint1_loc: "e13_pa3 \<inter> e23 = {a3}" sorry \<comment> \<open>Same as D1\_ep\_step1.\<close>
+    have hint1_loc: "e13_pa3 \<inter> e23 = {a3}"
+    proof (rule set_eqI, rule iffI)
+      fix x assume "x \<in> e13_pa3 \<inter> e23"
+      hence "x \<in> e13" "x \<in> e23" using he13_split(1) by (by100 blast)+
+      thus "x \<in> {a3}" using assms(29) by (by100 blast)
+    next
+      fix x assume "x \<in> {a3}"
+      have "a3 \<in> e13_pa3" using he13_split(6) .
+      moreover have "a3 \<in> e23" using assms(17) unfolding top1_arc_endpoints_on_def by (by100 blast)
+      ultimately show "x \<in> e13_pa3 \<inter> e23" using \<open>x \<in> {a3}\<close> by (by100 blast)
+    qed
     have hconcat1: "top1_is_arc_on (e13_pa3 \<union> e23)
         (subspace_topology top1_S2 top1_S2_topology (e13_pa3 \<union> e23))"
       by (rule arcs_concatenation_is_arc[OF hS2_strict hS2_haus
           he13_split(4) _ assms(11) he23_sub hint1_loc ha3_ep_pa3 ha3_ep_e23])
         (use he13_sub he13_split(1) in \<open>by100 blast\<close>)
     \<comment> \<open>e24\_a2q endpoints = {a2, q}.\<close>
+    have he24_qa4_sub: "e24_qa4 \<subseteq> top1_S2" using he24_sub he24_split(1) by (by100 blast)
     have he24_a2q_eps: "top1_arc_endpoints_on e24_a2q
         (subspace_topology top1_S2 top1_S2_topology e24_a2q) = {a2, q}"
-      sorry
+      using arc_split_endpoints(1)[OF hS2_strict hS2_haus he24_sub he24_arc
+          he24_split(1) he24_split(2) he24_split(3) he24_split(4)
+          he24_split(5) he24_split(6) he24_split(7) he24_split(8)
+          he24_a2q_sub he24_qa4_sub he24_ep hq_not_ep] .
     \<comment> \<open>(e13\_pa3 \<union> e23) \<inter> e24\_a2q = {a2}.\<close>
-    have hint2_loc: "(e13_pa3 \<union> e23) \<inter> e24_a2q = {a2}" sorry
+    have hint2_loc: "(e13_pa3 \<union> e23) \<inter> e24_a2q = {a2}"
+    proof (rule set_eqI, rule iffI)
+      fix x assume "x \<in> (e13_pa3 \<union> e23) \<inter> e24_a2q"
+      hence hx1: "x \<in> e13_pa3 \<union> e23" and hx2: "x \<in> e24_a2q" by (by100 blast)+
+      hence "x \<in> e24" using he24_split(1) by (by100 blast)
+      show "x \<in> {a2}"
+      proof (cases "x \<in> e23")
+        case True hence "x \<in> e23 \<inter> e24" using \<open>x \<in> e24\<close> by (by100 blast)
+        thus ?thesis using assms(34) by (by100 blast)
+      next
+        case False hence "x \<in> e13_pa3" using hx1 by (by100 blast)
+        hence "x \<in> e13" using he13_split(1) by (by100 blast)
+        hence "x \<in> e13 \<inter> e24" using \<open>x \<in> e24\<close> by (by100 blast)
+        hence "x \<in> {a1,a2,a3,a4}" using assms(32) by (by100 blast)
+        moreover have "x \<noteq> a1" sorry \<comment> \<open>a1 \<notin> e13\_pa3 (from he13\_split).\<close>
+        moreover have "x \<noteq> a3" sorry \<comment> \<open>a3 \<notin> e24 (from ha3\_not\_e24).\<close>
+        moreover have "x \<noteq> a4" sorry \<comment> \<open>a4 \<notin> e13 (from ha4\_not\_e13).\<close>
+        ultimately show ?thesis by (by100 blast)
+      qed
+    next
+      fix x assume "x \<in> {a2}"
+      have "a2 \<in> e23" using assms(17) unfolding top1_arc_endpoints_on_def by (by100 blast)
+      moreover have "a2 \<in> e24_a2q" using he24_split(5) .
+      ultimately show "x \<in> (e13_pa3 \<union> e23) \<inter> e24_a2q" using \<open>x \<in> {a2}\<close> by (by100 blast)
+    qed
     have ha2_ep1: "a2 \<in> top1_arc_endpoints_on (e13_pa3 \<union> e23)
         (subspace_topology top1_S2 top1_S2_topology (e13_pa3 \<union> e23))"
       using hD1_ep_step1 by (by100 blast)
