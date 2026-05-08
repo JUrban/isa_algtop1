@@ -716,7 +716,62 @@ proof -
     using hh1(1) unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
   have hh2_img: "h2 ` top1_unit_interval = A2"
     using hh2(1) unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
-  have hg_img: "g ` top1_unit_interval = A1 \<union> A2" sorry
+  have hg_img: "g ` top1_unit_interval = A1 \<union> A2"
+  proof (rule set_eqI, rule iffI)
+    fix x assume "x \<in> g ` top1_unit_interval"
+    then obtain t where ht: "t \<in> top1_unit_interval" "x = g t" by (by100 blast)
+    show "x \<in> A1 \<union> A2"
+    proof (cases "t \<le> 1/2")
+      case True hence "g t = h1 (2*t)" unfolding g_def by (by100 simp)
+      moreover have "2*t \<in> top1_unit_interval"
+        using True ht(1) unfolding top1_unit_interval_def by (by100 simp)
+      ultimately show ?thesis using hh1_img ht(2) by (by100 blast)
+    next
+      case False hence "g t = h2 (2*t - 1)" unfolding g_def by (by100 simp)
+      moreover have "2*t - 1 \<in> top1_unit_interval"
+        using False ht(1) unfolding top1_unit_interval_def by (by100 simp)
+      ultimately show ?thesis using hh2_img ht(2) by (by100 blast)
+    qed
+  next
+    fix x assume "x \<in> A1 \<union> A2"
+    thus "x \<in> g ` top1_unit_interval"
+    proof
+      assume "x \<in> A1"
+      then obtain s where hs: "s \<in> top1_unit_interval" "h1 s = x"
+        using hh1_img by (by100 blast)
+      have "s/2 \<in> top1_unit_interval"
+        using hs(1) unfolding top1_unit_interval_def by (by100 simp)
+      moreover have "g (s/2) = x" unfolding g_def
+        using hs unfolding top1_unit_interval_def by (by100 simp)
+      ultimately show ?thesis by (by100 blast)
+    next
+      assume "x \<in> A2"
+      then obtain s where hs: "s \<in> top1_unit_interval" "h2 s = x"
+        using hh2_img by (by100 blast)
+      have hs_bds: "0 \<le> s" "s \<le> 1" using hs(1) unfolding top1_unit_interval_def by (by100 simp)+
+      show ?thesis
+      proof (cases "s = 0")
+        case True
+        \<comment> \<open>h2(0) = b = h1(1), so x = b \<in> A1. Use t = 1/2: g(1/2) = h1(1) = b.\<close>
+        have "g (1/2) = h1 1" unfolding g_def by (by100 simp)
+        hence "g (1/2) = b" using hh1(3) by (by100 simp)
+        moreover have "x = b" using hs(2) True hh2(2) by (by100 simp)
+        moreover have "(1/2::real) \<in> top1_unit_interval"
+          unfolding top1_unit_interval_def by (by100 simp)
+        ultimately show ?thesis by (by100 blast)
+      next
+        case False
+        have "(s+1)/2 \<in> top1_unit_interval"
+          using hs_bds unfolding top1_unit_interval_def by (by100 simp)
+        moreover have "\<not> ((s+1)/2 \<le> 1/2)" using hs_bds False by (by100 simp)
+        ultimately have "g ((s+1)/2) = h2 (2 * ((s+1)/2) - 1)" unfolding g_def by (by100 simp)
+        moreover have "(s + 1) / 2 * 2 = s + 1" by (by100 simp)
+        hence "(2::real) * ((s+1)/2) - 1 = s" by (by100 linarith)
+        ultimately have "g ((s+1)/2) = x" using hs(2) by (by100 simp)
+        thus ?thesis using \<open>(s+1)/2 \<in> top1_unit_interval\<close> by (by100 blast)
+      qed
+    qed
+  qed
   \<comment> \<open>R\_to\_S1: [0,1] \<rightarrow> S1 is a quotient map (continuous surjection, compact to Hausdorff).\<close>
   have hR_quot: "top1_quotient_map_on top1_unit_interval top1_unit_interval_topology
       top1_S1 top1_S1_topology top1_R_to_S1" sorry
