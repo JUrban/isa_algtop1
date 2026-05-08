@@ -3909,14 +3909,14 @@ proof -
           \<comment> \<open>Every neighborhood of x meets U0.\<close>
           show "\<forall>U. neighborhood_of x top1_S2 top1_S2_topology U \<longrightarrow> intersects U U0"
           proof (intro allI impI)
-            fix V assume "neighborhood_of x top1_S2 top1_S2_topology V"
-            then obtain W where hW: "W \<in> top1_S2_topology" "x \<in> W" "W \<subseteq> V"
-              unfolding neighborhood_of_def sorry
-            \<comment> \<open>W is open in S2, x \<in> A\<union>B \<inter> W. By boundary\_meets\_component, W \<inter> U0 \<noteq> {}.\<close>
-            from simple_closed_curve_boundary_meets_component[OF assms(1) hAB_scc hU0(5) hU0(6)
-                hU0(3) hU0(4)]
-            have "W \<inter> U0 \<noteq> {}" sorry
-            thus "intersects V U0" using hW(3) unfolding intersects_def sorry
+            fix V assume hV: "neighborhood_of x top1_S2 top1_S2_topology V"
+            hence hV_open: "V \<in> top1_S2_topology" and hxV: "x \<in> V"
+              unfolding neighborhood_of_def by (by100 blast)+
+            \<comment> \<open>V open, x \<in> A\<union>B \<inter> V. By boundary\_meets\_component, V \<inter> U0 \<noteq> {}.\<close>
+            have "V \<inter> U0 \<noteq> {}"
+              by (rule simple_closed_curve_boundary_meets_component[OF assms(1) hAB_scc hU0(5) hU0(6)
+                  hU0(3) hU0(4) hU0(1) hU0(2) hU0_open hU0'_open_pre \<open>x \<in> A \<union> B\<close> hV_open hxV])
+            thus "intersects V U0" unfolding intersects_def by (by100 blast)
           qed
         qed
       qed
