@@ -5316,14 +5316,38 @@ proof -
         qed
         moreover have "x_P \<in> top1_component_of_on (top1_S2 - ?Y)
             (subspace_topology top1_S2 top1_S2_topology (top1_S2 - ?Y)) x_P"
-          using subset_closure_on sorry \<comment> \<open>x \<in> component\_of(x).\<close>
+          by (rule top1_component_of_on_self_mem[OF hTY]) (use hx_P hP1_sub_Y in \<open>by100 blast\<close>)
         moreover have "top1_S2 - ?Y \<subseteq> top1_S2 - (?A \<union> ?B)" by (by100 blast)
-        ultimately have "top1_component_of_on (top1_S2 - ?Y)
-            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - ?Y)) x_P \<subseteq>
-            top1_component_of_on (top1_S2 - (?A \<union> ?B))
-            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B))) x_P"
-          using top1_connected_subspace_subset_component_of sorry
-        thus ?thesis using hP1_eq_comp by (by100 simp)
+        ultimately have hsub_AB: "top1_component_of_on (top1_S2 - ?Y)
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - ?Y)) x_P \<subseteq> top1_S2 - (?A \<union> ?B)"
+          and hconn_AB: "top1_connected_on (top1_component_of_on (top1_S2 - ?Y)
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - ?Y)) x_P)
+            (subspace_topology top1_S2 top1_S2_topology (top1_component_of_on (top1_S2 - ?Y)
+                (subspace_topology top1_S2 top1_S2_topology (top1_S2 - ?Y)) x_P))"
+          and hxP_in_comp: "x_P \<in> top1_component_of_on (top1_S2 - ?Y)
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - ?Y)) x_P"
+          by (by100 blast)+
+        have hconn_AB': "top1_connected_on (top1_component_of_on (top1_S2 - ?Y)
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - ?Y)) x_P)
+            (subspace_topology (top1_S2 - (?A \<union> ?B))
+                (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B)))
+                (top1_component_of_on (top1_S2 - ?Y)
+                    (subspace_topology top1_S2 top1_S2_topology (top1_S2 - ?Y)) x_P))"
+        proof -
+          have "subspace_topology top1_S2 top1_S2_topology (top1_component_of_on (top1_S2 - ?Y)
+              (subspace_topology top1_S2 top1_S2_topology (top1_S2 - ?Y)) x_P) =
+              subspace_topology (top1_S2 - (?A \<union> ?B))
+                  (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B)))
+                  (top1_component_of_on (top1_S2 - ?Y)
+                      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - ?Y)) x_P)"
+            using subspace_topology_trans[of "top1_component_of_on (top1_S2 - ?Y)
+                (subspace_topology top1_S2 top1_S2_topology (top1_S2 - ?Y)) x_P"
+                "top1_S2 - (?A \<union> ?B)" top1_S2 top1_S2_topology] hsub_AB by (by100 simp)
+          thus ?thesis using hconn_AB by (by100 simp)
+        qed
+        show ?thesis
+          using top1_connected_subspace_subset_component_of[OF hsub_AB hxP_in_comp hconn_AB']
+              hP1_eq_comp by (by100 simp)
       qed
       ultimately show ?thesis by (by100 blast)
     qed
