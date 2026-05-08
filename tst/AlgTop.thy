@@ -5,6 +5,15 @@ begin
 
 
 
+\<comment> \<open>Helper: two-element set deductions.\<close>
+lemma doubleton_eq_iff:
+  assumes "{x, y} = {a, b}" "x \<noteq> y"
+  shows "(x = a \<and> y = b) \<or> (x = b \<and> y = a)"
+proof -
+  have "x \<in> {a, b}" "y \<in> {a, b}" using assms(1) by (by100 blast)+
+  thus ?thesis using assms(2) by (by100 blast)
+qed
+
 \<comment> \<open>Reusable: affine combination stays in interval.\<close>
 lemma affine_param_in_interval:
   fixes a b t :: real
@@ -535,18 +544,17 @@ proof -
       ultimately have "h0 1 = b" by (by100 blast)
       thus ?thesis using that[OF hh0] True by (by100 simp)
     next
-      case False hence "h0 0 = b" using hab_h0 by (by100 force)
-      hence "h0 1 = a" using hab_h0 hab
-        proof -
-          have "h0 0 \<noteq> h0 1"
-          proof
-            assume "h0 0 = h0 1"
-            hence "{h0 0, h0 1} = {h0 0}" by (by100 simp)
-            hence "card {a, b} \<le> 1" using hab_h0 by (by100 simp)
-            thus False using hab by (by100 simp)
-          qed
-          show ?thesis sorry \<comment> \<open>Set arithmetic: {h0 0, h0 1}={a,b}, h0 0\<noteq>h0 1.\<close>
-        qed
+      case False hence hh0b: "h0 0 = b" using hab_h0 by (by100 force)
+      have "h0 0 \<noteq> h0 1"
+      proof
+        assume "h0 0 = h0 1"
+        hence "{h0 0, h0 1} = {h0 0}" by (by100 simp)
+        hence "card {a, b} \<le> 1" using hab_h0 by (by100 simp)
+        thus False using hab by (by100 simp)
+      qed
+      from doubleton_eq_iff[OF hab_h0 this]
+      have "(h0 0 = a \<and> h0 1 = b) \<or> (h0 0 = b \<and> h0 1 = a)" .
+      hence "h0 1 = a" using hh0b hab by (by100 fast)
       let ?rev = "\<lambda>t::real. 1 - t"
       have hrev: "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
           top1_unit_interval top1_unit_interval_topology ?rev"
@@ -572,31 +580,30 @@ proof -
     hence hab_h0: "{h0 0, h0 1} = {a, b}" using hep2 by (by100 simp)
     show ?thesis
     proof (cases "h0 0 = b")
-      case True hence "h0 1 = a" using hab_h0 hab
-        proof -
-          have "h0 0 \<noteq> h0 1"
-          proof
-            assume "h0 0 = h0 1"
-            hence "{h0 0, h0 1} = {h0 0}" by (by100 simp)
-            hence "card {a, b} \<le> 1" using hab_h0 by (by100 simp)
-            thus False using hab by (by100 simp)
-          qed
-          show ?thesis sorry \<comment> \<open>Set arithmetic: {h0 0, h0 1}={a,b}, h0 0\<noteq>h0 1.\<close>
-        qed
+      case True
+      have "h0 0 \<noteq> h0 1"
+      proof
+        assume "h0 0 = h0 1"
+        hence "{h0 0, h0 1} = {h0 0}" by (by100 simp)
+        hence "card {a, b} \<le> 1" using hab_h0 by (by100 simp)
+        thus False using hab by (by100 simp)
+      qed
+      from doubleton_eq_iff[OF hab_h0 this]
+      have "(h0 0 = a \<and> h0 1 = b) \<or> (h0 0 = b \<and> h0 1 = a)" .
+      hence "h0 1 = a" using True hab by (by100 fast)
       thus ?thesis using that[OF hh0] True by (by100 simp)
     next
-      case False hence "h0 0 = a" using hab_h0 by (by100 force)
-      hence "h0 1 = b" using hab_h0 hab
-        proof -
-          have "h0 0 \<noteq> h0 1"
-          proof
-            assume "h0 0 = h0 1"
-            hence "{h0 0, h0 1} = {h0 0}" by (by100 simp)
-            hence "card {a, b} \<le> 1" using hab_h0 by (by100 simp)
-            thus False using hab by (by100 simp)
-          qed
-          show ?thesis sorry \<comment> \<open>Set arithmetic: {h0 0, h0 1}={a,b}, h0 0\<noteq>h0 1.\<close>
-        qed
+      case False hence hh0a: "h0 0 = a" using hab_h0 by (by100 force)
+      have "h0 0 \<noteq> h0 1"
+      proof
+        assume "h0 0 = h0 1"
+        hence "{h0 0, h0 1} = {h0 0}" by (by100 simp)
+        hence "card {a, b} \<le> 1" using hab_h0 by (by100 simp)
+        thus False using hab by (by100 simp)
+      qed
+      from doubleton_eq_iff[OF hab_h0 this]
+      have "(h0 0 = a \<and> h0 1 = b) \<or> (h0 0 = b \<and> h0 1 = a)" .
+      hence "h0 1 = b" using hh0a hab by (by100 fast)
       let ?rev = "\<lambda>t::real. 1 - t"
       have hcomp: "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
           A2 (subspace_topology X TX A2) (h0 \<circ> ?rev)"
