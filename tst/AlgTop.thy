@@ -4529,10 +4529,37 @@ proof -
     by (rule top1_unit_interval_topology_is_topology_on)
   have hAh0_conn: "top1_connected_on (A - {h_arc 0})
       (subspace_topology A (subspace_topology X TX A) (A - {h_arc 0}))"
-    sorry \<comment> \<open>Theorem\_23\_5: restrict h\_arc to (0,1], continuous, image connected.\<close>
+  proof -
+    have hcont0: "top1_continuous_map_on (top1_unit_interval - {0})
+        (subspace_topology top1_unit_interval top1_unit_interval_topology (top1_unit_interval - {0}))
+        A (subspace_topology X TX A) h_arc"
+      by (rule top1_continuous_map_on_restrict_domain_simple[OF hcont_arc]) (by100 blast)
+    from Theorem_23_5[OF _ hTA hI0_conn' hcont0]
+    have "top1_connected_on (h_arc ` (top1_unit_interval - {0}))
+        (subspace_topology A (subspace_topology X TX A) (h_arc ` (top1_unit_interval - {0})))"
+    proof -
+      have "is_topology_on (top1_unit_interval - {0})
+          (subspace_topology top1_unit_interval top1_unit_interval_topology (top1_unit_interval - {0}))"
+        by (rule subspace_topology_is_topology_on[OF hTI]) (by100 blast)
+      from Theorem_23_5[OF this hTA hI0_conn' hcont0] show ?thesis .
+    qed
+    thus ?thesis using himg0 by (by100 simp)
+  qed
   have hAh1_conn: "top1_connected_on (A - {h_arc 1})
       (subspace_topology A (subspace_topology X TX A) (A - {h_arc 1}))"
-    sorry \<comment> \<open>Theorem\_23\_5: restrict h\_arc to [0,1), continuous, image connected.\<close>
+  proof -
+    have hcont1: "top1_continuous_map_on (top1_unit_interval - {1})
+        (subspace_topology top1_unit_interval top1_unit_interval_topology (top1_unit_interval - {1}))
+        A (subspace_topology X TX A) h_arc"
+      by (rule top1_continuous_map_on_restrict_domain_simple[OF hcont_arc]) (by100 blast)
+    have "is_topology_on (top1_unit_interval - {1})
+        (subspace_topology top1_unit_interval top1_unit_interval_topology (top1_unit_interval - {1}))"
+      by (rule subspace_topology_is_topology_on[OF hTI]) (by100 blast)
+    from Theorem_23_5[OF this hTA hI1_conn' hcont1]
+    have "top1_connected_on (h_arc ` (top1_unit_interval - {1}))
+        (subspace_topology A (subspace_topology X TX A) (h_arc ` (top1_unit_interval - {1})))" .
+    thus ?thesis using himg1 by (by100 simp)
+  qed
   have hA_minus_b_conn: "top1_connected_on (A - {b}) (subspace_topology X TX (A - {b}))"
   proof -
     have "b = h_arc 0 \<or> b = h_arc 1" using hep_arc by (by100 blast)
