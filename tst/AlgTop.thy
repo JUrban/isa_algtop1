@@ -4494,7 +4494,12 @@ proof -
     qed
     \<comment> \<open>{a} clopen: {a} closed in A-{b} (Hausdorff subspace, singletons closed).\<close>
     have ha_closed: "closedin_on (A - {b}) (subspace_topology X TX (A - {b})) {a}"
-      sorry \<comment> \<open>Hausdorff \<Rightarrow> singletons closed.\<close>
+    proof -
+      have "is_hausdorff_on (A - {b}) (subspace_topology X TX (A - {b}))"
+        using conjunct2[OF conjunct2[OF Theorem_17_11]] assms(2) hAb_sub_X by (by100 blast)
+      moreover have "a \<in> A - {b}" using ha_in_A assms(6) by (by100 blast)
+      ultimately show ?thesis by (rule singleton_closed_in_hausdorff)
+    qed
     \<comment> \<open>Separation: {a} clopen + (A-{b})-{a} = A-{a,b} nonempty.\<close>
     have "(A - {b}) - {a} \<in> subspace_topology X TX (A - {b})"
       using ha_closed unfolding closedin_on_def by (by100 blast)
@@ -4502,7 +4507,10 @@ proof -
       unfolding top1_is_separation_on_def
       using ha_open \<open>(A - {b}) - {a} \<in> _\<close> ha_in_A assms(6) hA_minus_ne by (by100 blast)
     hence "\<not> top1_connected_on (A - {b}) (subspace_topology X TX (A - {b}))"
-      unfolding top1_connected_on_def sorry
+    proof -
+      assume hsep: "top1_is_separation_on (A - {b}) (subspace_topology X TX (A - {b})) {a} ((A - {b}) - {a})"
+      show ?thesis sorry \<comment> \<open>separation \<Rightarrow> \<not>connected: definition unfolding too slow for by100.\<close>
+    qed
     thus False using hA_minus_b_conn by (by100 blast)
   qed
   show "b \<in> closure_on X TX (A - {a, b})"
