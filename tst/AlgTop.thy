@@ -1564,26 +1564,178 @@ proof -
        The other component (A or B, \<noteq> C) contains at least one Rj (non-empty).
        C \<union> other = A\<union>B. So C \<supsetneq> Ri, meaning some other Rj is also in C.
        This means ALL Ri's could be in C, making the other component empty --- contradiction.\<close>
+    \<comment> \<open>For each Ri: if e34 \<subseteq> Ri, then cl(e34) \<subseteq> cl(Ri). cl(Ri) \<subseteq> Ci\<union>Ji
+       where Ji is the bounding SCC containing Ri. Since a4\<notin>J12 and a3\<notin>J13,
+       Ri can only be the component between Arc2 and Arc3 (bounded by D).
+       But that component IS one component of S2-D. e12 is in the other. Contradiction.\<close>
+    \<comment> \<open>Prove: if e34-{a3,a4} \<subseteq> Ri (any of R1,R2,R3), then Ri is NOT in the same
+       S2-D component as e12-{a1,a2}.\<close>
+    \<comment> \<open>Step 1: J12 separates S2. Get its 2 components. R1\<union>R2\<union>R3 \<subseteq> S2-J12.
+       The other side of J12 from each Ri is open and disjoint from Ri,
+       so cl(Ri) \<subseteq> (same side)\<union>J12.\<close>
+    have hJ12_sep: "top1_separates_on top1_S2 top1_S2_topology (e12 \<union> ?Arc2)"
+      by (rule Theorem_61_3_JordanSeparation_S2[OF hS2_strict hJ12_scc])
+    have hJ13_sep: "top1_separates_on top1_S2 top1_S2_topology (e12 \<union> ?Arc3)"
+      by (rule Theorem_61_3_JordanSeparation_S2[OF hS2_strict hJ13_scc])
+    \<comment> \<open>Each Ri is in S2-theta \<subseteq> S2-J12 and S2-theta \<subseteq> S2-J13.
+       Ri \<subseteq> one component of S2-J12, call it C12i.
+       cl(Ri) \<subseteq> C12i \<union> J12.
+       a4 \<in> cl(e34) \<subseteq> cl(Ri), and a4 \<notin> J12, so a4 \<in> C12i.
+       But a4 \<in> Arc3 \<subseteq> S2-J12. Similarly a3 \<in> Arc2 \<subseteq> S2-J13.
+       From J13: cl(Ri) \<subseteq> C13i \<union> J13. a3 \<in> cl(Ri), a3 \<notin> J13, so a3 \<in> C13i.\<close>
+    \<comment> \<open>Key insight: for the component between Arc2 and Arc3 (call it R\_mid),
+       its closure IS contained in R\_mid \<union> Arc2 \<union> Arc3 = R\_mid \<union> D.
+       So R\_mid is in one component of S2-D. And e12-{a1,a2} is in the OTHER
+       component (since S2-D = R\_mid \<union> other\_Ri's \<union> e12-{a1,a2}, and
+       R\_mid is separated from the rest by D).\<close>
+    \<comment> \<open>Core: C' (other component) is connected \<subseteq> S2-theta \<Rightarrow> C' \<subseteq> some Rj.
+       e34 connected \<subseteq> S2-theta \<Rightarrow> e34 \<subseteq> some Ri. Ri \<inter> C \<noteq> {} \<Rightarrow> Ri \<subseteq> C.
+       If i=j: C' \<subseteq> Ri \<subseteq> C, but C'\<inter>C = {}, contradiction.
+       If i\<noteq>j: need boundary argument (Rj borders e12 but cl(Rj)=Rj\<union>D misses e12 interior).\<close>
     have h_both_cases: "(\<forall>C. C = A \<or> C = B \<longrightarrow> e12 - {a1, a2} \<subseteq> C \<longrightarrow> e34 - {a3, a4} \<subseteq> C \<longrightarrow> False)"
     proof (intro allI impI)
-      fix C assume hC: "C = A \<or> C = B" and he12C: "e12 - {a1, a2} \<subseteq> C" and he34C: "e34 - {a3, a4} \<subseteq> C"
-      \<comment> \<open>e34-{a3,a4} is in some Ri by Lemma\_23\_2.\<close>
-      obtain Ri where hRi: "Ri \<in> {R1, R2, R3}" "e34 - {a3, a4} \<subseteq> Ri"
-        sorry \<comment> \<open>Lemma\_23\_2 on separation \{Ri\} of S2-theta.\<close>
-      \<comment> \<open>Ri \<subseteq> C (since e34 \<subseteq> Ri \<inter> C, and Ri connected, Ri \<subseteq> A\<union>B, {A,B} separation).\<close>
-      have hRi_sub_C: "Ri \<subseteq> C"
-        sorry \<comment> \<open>Ri connected \<subseteq> A\<union>B, e34-{a3,a4} \<subseteq> Ri \<inter> C, Lemma\_23\_2.\<close>
-      \<comment> \<open>The other Rj's fill the rest of S2-theta. At least one must be outside C.\<close>
-      obtain Rj where hRj: "Rj \<in> {R1, R2, R3}" "Rj \<noteq> Ri" "Rj \<noteq> {}"
-        sorry \<comment> \<open>Three non-empty pairwise disjoint components; pick one \<noteq> Ri.\<close>
-      have hRj_sub_AB: "Rj \<subseteq> A \<union> B"
-        sorry \<comment> \<open>Rj \<subseteq> R1\<union>R2\<union>R3 = S2-theta \<subseteq> (A\<union>B)-(e12-{a1,a2}) \<subseteq> A\<union>B.\<close>
-      \<comment> \<open>Rj is connected and in A\<union>B. By Lemma\_23\_2, Rj \<subseteq> A or Rj \<subseteq> B.\<close>
-      \<comment> \<open>If Rj \<subseteq> C too, then eventually all 3 Ri's + e12 are in C, making other component empty.\<close>
-      \<comment> \<open>More directly: cl(e34) hits Arc2 and Arc3. If e34 \<subseteq> Ri and Ri adjacent to e12 only,
-         then cl(Ri) misses one of a3,a4. Contradiction.\<close>
+      fix C assume hC: "C = A \<or> C = B" and he12C: "e12 - {a1, a2} \<subseteq> C"
+          and he34C: "e34 - {a3, a4} \<subseteq> C"
+      define D' where "D' = (if C = A then B else A)"
+      have hD'_ne: "D' \<noteq> {}" sorry
+      have hCD'_disj: "C \<inter> D' = {}" sorry
+      have hCD'_union: "C \<union> D' = A \<union> B" sorry
+      \<comment> \<open>D' \<subseteq> S2-theta.\<close>
+      have hD'_sub_theta_compl: "D' \<subseteq> R1 \<union> R2 \<union> R3"
+      proof -
+        have "D' \<subseteq> A \<union> B" using hCD'_union by (by100 blast)
+        moreover have "D' \<inter> (e12 - {a1, a2}) = {}" using hCD'_disj he12C by (by100 blast)
+        ultimately show ?thesis using htheta_compl_eq hR(7) sorry
+      qed
+      \<comment> \<open>D' connected (it's a component of S2-D).\<close>
+      have hD'_conn: "top1_connected_on D' (subspace_topology top1_S2 top1_S2_topology D')"
+        sorry
+      \<comment> \<open>D' \<subseteq> some Rj (connected in disjoint open union R1\<union>R2\<union>R3).\<close>
+      have hD'_in_Ri: "\<exists>Ri. Ri \<in> {R1, R2, R3} \<and> D' \<subseteq> Ri"
+        sorry
+      \<comment> \<open>e34-{a3,a4} \<subseteq> some Ri.\<close>
+      have he34_in_Ri: "\<exists>Ri. Ri \<in> {R1, R2, R3} \<and> e34 - {a3, a4} \<subseteq> Ri"
+        sorry
+      \<comment> \<open>The Ri containing e34 is \<subseteq> C (since e34 \<subseteq> C and Ri connected in A\<union>B).\<close>
+      from he34_in_Ri obtain Ri_e where hRie: "Ri_e \<in> {R1, R2, R3}" "e34 - {a3, a4} \<subseteq> Ri_e"
+        by blast
+      have hRie_sub_C: "Ri_e \<subseteq> C"
+        sorry \<comment> \<open>Ri\_e connected \<subseteq> A\<union>B, Ri\_e \<inter> C \<supseteq> e34 \<noteq> {}, Lemma\_23\_2 \<Rightarrow> Ri\_e \<subseteq> C.\<close>
+      \<comment> \<open>The Rj containing D' cannot be \<subseteq> C (since D'\<inter>C = {}).\<close>
+      from hD'_in_Ri obtain Ri_D where hRiD: "Ri_D \<in> {R1, R2, R3}" "D' \<subseteq> Ri_D"
+        by blast
+      \<comment> \<open>If Ri\_D = Ri\_e: D' \<subseteq> Ri\_e \<subseteq> C. D'\<inter>C = {}. D' \<noteq> {}. Contradiction.\<close>
+      have hRi_ne: "Ri_D \<noteq> Ri_e"
+      proof
+        assume "Ri_D = Ri_e"
+        hence "D' \<subseteq> C" using hRiD(2) hRie_sub_C by (by100 blast)
+        thus False using hCD'_disj hD'_ne by (by100 blast)
+      qed
+      \<comment> \<open>Ri\_D \<noteq> Ri\_e. Ri\_D connected \<subseteq> A\<union>B. Ri\_D\<inter>D' \<supseteq> D' \<noteq> {}. Ri\_D \<subseteq> C or D'.
+         If Ri\_D \<subseteq> C: D' \<subseteq> Ri\_D \<subseteq> C. D'\<inter>C = {}. Contradiction.
+         So Ri\_D \<subseteq> D'. Combined with D' \<subseteq> Ri\_D: D' = Ri\_D.\<close>
+      have hRiD_eq_D': "Ri_D = D'"
+        sorry \<comment> \<open>Ri\_D connected \<subseteq> A\<union>B, D'\<subseteq>Ri\_D, by Lemma\_23\_2: Ri\_D\<subseteq>C or D'.\<close>
+      \<comment> \<open>Now: S2-D = C\<union>D'. D' = Ri\_D (a theta component). Ri\_e \<subseteq> C.
+         The third Rk is \<subseteq> C (since Rk\<subseteq>D'=Ri\_D would mean Rk\<subseteq>Ri\_D, but Rk\<inter>Ri\_D = {}).\<close>
+      obtain Rk where hRk: "Rk \<in> {R1, R2, R3}" "Rk \<noteq> Ri_e" "Rk \<noteq> Ri_D"
+        sorry \<comment> \<open>Three distinct components.\<close>
+      have hRk_sub_C: "Rk \<subseteq> C"
+      proof -
+        have "Rk \<inter> Ri_D = {}" using hRk hRiD(1) hR(4,5,6) sorry
+        hence "Rk \<inter> D' = {}" using hRiD_eq_D' by (by100 simp)
+        moreover have "Rk \<subseteq> A \<union> B" using hRk(1) hR(7) htheta_compl_eq sorry
+        ultimately show ?thesis using hCD'_union by (by100 blast)
+      qed
+      \<comment> \<open>Now C = Ri\_e \<union> Rk \<union> (e12-{a1,a2}). D' = Ri\_D. S2-D = C \<union> D'.
+         cl(D') = D' \<union> D (by SCC boundary meets component on D).
+         cl(D') \<inter> Arc1 = (D'\<union>D) \<inter> Arc1 = D\<inter>Arc1 = (Arc2\<union>Arc3)\<inter>e12 = {a1,a2}.
+         So e12-{a1,a2} \<inter> cl(D') = {}.
+         But D' = Ri\_D is a theta-component adjacent to Arc1=e12 (if Ri\_D \<in> {R12,R13}).
+         By SCCBMC on J12 or J13, every point of J12 resp J13 should be in cl(component).
+         But cl(D') = D'\<union>D doesn't include e12 interior.
+         This is only possible if Ri\_D = R23 (not adjacent to e12).\<close>
+      \<comment> \<open>Use SCCBMC on J12 = e12\<union>Arc2: every point of J12 is in cl(C12\_inner).
+         If Ri\_D \<subseteq> C12\_inner, then cl(Ri\_D) \<supseteq> J12 \<supseteq> e12-{a1,a2}... no, SCCBMC gives
+         cl(C12\_inner) \<supseteq> J12, not cl(Ri\_D) \<supseteq> J12.
+         But cl(D') = D'\<union>D, and if D'=Ri\_D were = C12\_inner, then cl(C12\_inner) = C12\_inner\<union>J12 = D'\<union>J12.
+         But we also have cl(D') = D'\<union>D. So D'\<union>J12 = D'\<union>D would mean J12 \<subseteq> D\<union>D' and D \<subseteq> J12\<union>D'.
+         J12 = Arc1\<union>Arc2 = e12\<union>e13\<union>e23. D = Arc2\<union>Arc3 = e13\<union>e23\<union>e24\<union>e41.
+         J12 \<subseteq> D\<union>D': e12 \<subseteq> D\<union>D'? e12 \<notin> D (since e12\<inter>D = {a1,a2}). So e12-{a1,a2} \<subseteq> D'.
+         But D' = Ri\_D \<subseteq> S2-theta, and e12 \<subseteq> theta. So e12\<inter>D' = {}. e12-{a1,a2} \<subseteq> D' = Ri\_D
+         but e12-{a1,a2} \<inter> Ri\_D = {} (e12 \<subseteq> theta, Ri\_D \<subseteq> S2-theta). Contradiction!
+
+         So D' cannot be a full component of S2-J12 (otherwise its closure would include e12).
+         This means the assumption Ri\_D \<in> {R12,R13} leads to contradiction.
+         Hence Ri\_D = R23.\<close>
+      \<comment> \<open>Formal: if Ri\_D is a component of S2-J12, then cl(Ri\_D) \<supseteq> J12 (SCCBMC).
+         But cl(Ri\_D) = cl(D') = D'\<union>D, and J12 = e12\<union>Arc2.
+         e12 \<subseteq> cl(Ri\_D) would mean e12 \<subseteq> D'\<union>D = Ri\_D\<union>D.
+         e12\<inter>Ri\_D = {} (e12\<subseteq>theta, Ri\_D\<subseteq>S2-theta). So e12 \<subseteq> D.
+         But e12\<inter>D = {a1,a2}. So e12 \<subseteq> {a1,a2}, meaning e12 = {a1,a2}.
+         But e12 is an arc, hence infinite (or at least has interior points).
+         e12 \<noteq> {a1,a2}. Contradiction!\<close>
+      \<comment> \<open>Similarly for J13. So Ri\_D must not be a component of S2-J12 or S2-J13.
+         The only theta-component that's NOT a component of S2-J12 or S2-J13 is R23.\<close>
+      \<comment> \<open>Wait: Ri\_D doesn't need to be a COMPONENT of S2-J12. It's just a subset.
+         But D' = Ri\_D IS a component of S2-D (we proved C' = D').
+         And cl(D') = D'\<union>D (from SCCBMC on D).
+         This is independent of J12.\<close>
+      \<comment> \<open>The contradiction: cl(D') = D'\<union>D. If D' = Ri\_D is a theta-component adjacent to e12,
+         then SCCBMC on J12 says e12 interior \<in> cl(C12\_inner) where C12\_inner is the J12
+         component containing Ri\_D. But cl(D') doesn't contain e12 interior.
+         So Ri\_D is NOT the full C12\_inner. Hence C12\_inner \<supsetneq> Ri\_D.
+
+         But this doesn't immediately contradict. The issue is Ri\_D \<subsetneq> C12\_inner.
+
+         Hmm. Let me use the contradiction differently:
+         D' is a COMPONENT of S2-D. D' = Ri\_D (theta component).
+         If Ri\_D = R12 (between Arc1, Arc2):
+           R12 \<subseteq> C12\_inner (one component of S2-J12 = S2-(e12\<union>Arc2)).
+           cl(C12\_inner) = C12\_inner \<union> J12 (SCCBMC).
+           So every point of J12 (including e12 interior) is in cl(C12\_inner).
+           In particular, for x \<in> e12-{a1,a2}: x \<in> cl(C12\_inner).
+           C12\_inner is open. So x is on the boundary of C12\_inner.
+           Now: D' = R12 \<subseteq> C12\_inner. cl(D') \<subseteq> cl(C12\_inner) = C12\_inner \<union> J12.
+           But cl(D') = D' \<union> D = R12 \<union> (Arc2\<union>Arc3).
+           R12 \<union> Arc2 \<union> Arc3 \<subseteq> C12\_inner \<union> J12 = C12\_inner \<union> e12 \<union> Arc2.
+           So Arc3 \<subseteq> C12\_inner \<union> e12 \<union> Arc2.
+           Arc3 \<inter> e12 = {a1,a2} (from hint13). Arc3 \<inter> Arc2 = {a1,a2} (from hint23).
+           So Arc3 - {a1,a2} \<subseteq> C12\_inner.
+           Then a4 \<in> Arc3 - {a1,a2} \<subseteq> C12\_inner.
+           Also: C12\_other (the other component of S2-J12) \<subseteq> S2 - (C12\_inner \<union> J12).
+           C12\_other \<noteq> {} (JCT). And C12\_other \<inter> cl(D') = {} (cl(D') \<subseteq> C12\_inner\<union>J12).
+           So D' \<inter> C12\_other = {} (D' \<subseteq> C12\_inner).
+
+           Now, C12\_other is connected, open, \<subseteq> S2-J12 \<subseteq> S2-D (since J12 \<supseteq> Arc2 and D = Arc2\<union>Arc3,
+           so S2-J12 = S2-(e12\<union>Arc2). But S2-D = S2-(Arc2\<union>Arc3). These are different!
+           S2-J12 \<not>\<subseteq> S2-D in general.)
+
+           Hmm, this approach is getting complicated too.
+
+         Let me just try the direct arc argument:
+         e12 is an arc. e12 has interior points (e12-{a1,a2} \<noteq> {}).
+         cl(D') = D'\<union>D. e12 \<inter> D = {a1,a2}. e12 \<inter> D' = {} (D'\<subseteq>S2-theta, e12\<subseteq>theta).
+         So e12 \<inter> cl(D') = e12 \<inter> (D'\<union>D) = {a1,a2}.
+         So e12-{a1,a2} \<inter> cl(D') = {}.
+
+         This means: for every x \<in> e12-{a1,a2}, x \<notin> cl(D').
+         There exists open V \<ni> x with V \<inter> D' = {}.
+
+         Now, by SCCBMC on J12: for every x \<in> J12 (including e12-{a1,a2}):
+         x \<in> cl(C12\_inner) \<inter> cl(C12\_outer).
+
+         If D' \<subseteq> C12\_inner: then x \<in> cl(C12\_inner). Every nbhd of x meets C12\_inner.
+         But x \<notin> cl(D') means some nbhd V doesn't meet D'.
+         V \<inter> C12\_inner \<noteq> {} and V \<inter> D' = {}. So V \<inter> (C12\_inner - D') \<noteq> {}.
+         C12\_inner \<supsetneq> D' (since C12\_inner - D' \<noteq> {}).
+
+         But I don't get a contradiction from this.
+
+         The issue is: D' being a proper subset of C12\_inner is allowed.
+         D' is a component of S2-D but NOT a component of S2-J12.\<close>
       show False
-        sorry \<comment> \<open>Final contradiction from boundary analysis.\<close>
+        sorry
     qed
     show ?thesis using h_both_cases by (by100 blast)
   qed
