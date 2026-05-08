@@ -4254,6 +4254,88 @@ proof -
     using hgoal hU0(1) hVW(1,2) hU0(5) hVW(5,6) by (by100 force)
 qed
 
+text \<open>Helper: connected components of open subsets of S2 are open in S2.\<close>
+
+lemma S2_component_of_open_subset_is_open:
+  assumes "W \<in> top1_S2_topology" "W \<subseteq> top1_S2"
+      and "P \<subseteq> W" "P \<noteq> {}"
+      and "top1_connected_on P (subspace_topology top1_S2 top1_S2_topology P)"
+      and "\<And>Q. \<lbrakk>Q \<subseteq> W; P \<subseteq> Q; top1_connected_on Q (subspace_topology top1_S2 top1_S2_topology Q)\<rbrakk>
+           \<Longrightarrow> Q = P"
+  shows "P \<in> top1_S2_topology"
+proof -
+  have hTopS2: "is_topology_on top1_S2 top1_S2_topology"
+    using top1_S2_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
+  \<comment> \<open>W is open lpc (S2 is lpc, open subset of lpc is lpc).\<close>
+  have hW_lpc: "top1_locally_path_connected_on W (subspace_topology top1_S2 top1_S2_topology W)"
+    by (rule open_subset_locally_path_connected[OF S2_locally_path_connected assms(1) assms(2)])
+  have hTW: "is_topology_on W (subspace_topology top1_S2 top1_S2_topology W)"
+    by (rule subspace_topology_is_topology_on[OF]) (use hTopS2 in \<open>by100 blast\<close>, rule assms(2))
+  \<comment> \<open>Pick x \<in> P. Show P = path\_component\_of\_on W TW x.\<close>
+  obtain x where hx: "x \<in> P" using assms(4) by (by100 blast)
+  hence hxW: "x \<in> W" using assms(3) by (by100 blast)
+  \<comment> \<open>In lpc space, path\_component = connected\_component (Theorem 25.5).\<close>
+  have hpc_eq_cc: "top1_path_component_of_on W (subspace_topology top1_S2 top1_S2_topology W) x =
+      top1_component_of_on W (subspace_topology top1_S2 top1_S2_topology W) x"
+    using conjunct2[OF Theorem_25_5[OF hTW]] hW_lpc hxW by (by100 blast)
+  \<comment> \<open>P = component\_of\_on(x): P is connected \<ni> x and maximal.\<close>
+  have hP_conn_W: "top1_connected_on P (subspace_topology W (subspace_topology top1_S2 top1_S2_topology W) P)"
+  proof -
+    have "subspace_topology top1_S2 top1_S2_topology P =
+        subspace_topology W (subspace_topology top1_S2 top1_S2_topology W) P"
+      using subspace_topology_trans[of P W top1_S2 top1_S2_topology] assms(3) by (by100 simp)
+    thus ?thesis using assms(5) by (by100 simp)
+  qed
+  have "P \<subseteq> top1_component_of_on W (subspace_topology top1_S2 top1_S2_topology W) x"
+    by (rule top1_connected_subspace_subset_component_of[OF assms(3) hx hP_conn_W])
+  moreover have "top1_component_of_on W (subspace_topology top1_S2 top1_S2_topology W) x \<subseteq> P"
+  proof (rule ccontr)
+    assume "\<not> ?thesis"
+    then obtain y where hy: "y \<in> top1_component_of_on W (subspace_topology top1_S2 top1_S2_topology W) x"
+        "y \<notin> P" by (by100 blast)
+    let ?C = "top1_component_of_on W (subspace_topology top1_S2 top1_S2_topology W) x"
+    have hC_sub: "?C \<subseteq> W"
+      by (rule top1_component_of_on_subset)
+    have hC_conn_S2: "top1_connected_on ?C (subspace_topology top1_S2 top1_S2_topology ?C)"
+    proof -
+      have hC_conn_W: "top1_connected_on ?C (subspace_topology W (subspace_topology top1_S2 top1_S2_topology W) ?C)"
+        by (rule top1_component_of_on_connected[OF hTW hxW])
+      have "subspace_topology top1_S2 top1_S2_topology ?C =
+          subspace_topology W (subspace_topology top1_S2 top1_S2_topology W) ?C"
+        using subspace_topology_trans[of ?C W top1_S2 top1_S2_topology] hC_sub by (by100 simp)
+      thus ?thesis using hC_conn_W by (by100 simp)
+    qed
+    from assms(6)[OF hC_sub _ hC_conn_S2] have "?C = P"
+      using \<open>P \<subseteq> ?C\<close> by (by100 blast)
+    thus False using hy by (by100 blast)
+  qed
+  ultimately have hP_eq: "P = top1_component_of_on W (subspace_topology top1_S2 top1_S2_topology W) x"
+    by (by100 blast)
+  hence hP_eq_pc: "P = top1_path_component_of_on W (subspace_topology top1_S2 top1_S2_topology W) x"
+    using hpc_eq_cc by (by100 simp)
+  \<comment> \<open>Path component is open in W's subspace topology.\<close>
+  have "top1_path_component_of_on W (subspace_topology top1_S2 top1_S2_topology W) x \<in>
+      subspace_topology top1_S2 top1_S2_topology W"
+    by (rule top1_path_component_of_on_open_if_locally_path_connected[OF hTW hW_lpc hxW])
+  hence "P \<in> subspace_topology top1_S2 top1_S2_topology W" using hP_eq_pc by (by100 simp)
+  \<comment> \<open>Open in subspace of open set \<Rightarrow> open in ambient.\<close>
+  then obtain V where hV: "V \<in> top1_S2_topology" "P = W \<inter> V"
+    unfolding subspace_topology_def by (by100 blast)
+  hence "P = V \<inter> W" by (by100 blast)
+  moreover have "V \<inter> W \<in> top1_S2_topology"
+  proof -
+    have hfin: "finite {V, W}" by (by100 simp)
+    have hne: "{V, W} \<noteq> {}" by (by100 simp)
+    have hsub: "{V, W} \<subseteq> top1_S2_topology" using hV(1) assms(1) by (by100 blast)
+    from hTopS2 have "\<And>F. finite F \<Longrightarrow> F \<noteq> {} \<Longrightarrow> F \<subseteq> top1_S2_topology \<Longrightarrow> \<Inter>F \<in> top1_S2_topology"
+      unfolding is_topology_on_def by (by100 blast)
+    from this[OF hfin hne hsub] have "\<Inter>{V, W} \<in> top1_S2_topology" .
+    moreover have "\<Inter>{V, W} = V \<inter> W" by (by100 blast)
+    ultimately show ?thesis by (by100 simp)
+  qed
+  ultimately show ?thesis by (by100 simp)
+qed
+
 text \<open>Lemma 64.3: K4 in S2 separates into four components.\<close>
 
 lemma Lemma_64_3_K4_four_components:
@@ -4295,18 +4377,522 @@ lemma Lemma_64_3_K4_four_components:
       \<and> top1_connected_on U3 (subspace_topology top1_S2 top1_S2_topology U3)
       \<and> top1_connected_on U4 (subspace_topology top1_S2 top1_S2_topology U4)"
 proof -
-  \<comment> \<open>Step 1: Y = all edges except e24. Y is a theta space with arcs
-     A = a1 a2 a3 (= e12 \<union> e23), B = e13, C = a1 a4 a3 (= e41 \<union> e34).
-     By Lemma 64.1, Y separates S2 into 3 components U, V, W.\<close>
-  \<comment> \<open>Step 2: e24 - {a2, a4} lies in W (boundary A \<union> C doesn't contain a2 or a4...
-     actually boundary of W is A \<union> C which contains a2 \<in> A and a4 \<in> C.
-     Check: boundary of U = A \<union> B (contains a2 not a4),
-            boundary of V = B \<union> C (contains a4 not a2),
-            boundary of W = A \<union> C (contains both a2 and a4).
-     So e24 - {a2,a4} must lie in W.\<close>
-  \<comment> \<open>Step 3: closure(U) \<union> closure(V) is connected (they share B), doesn't separate.
-     By Theorem 63.5 with closure(U)\<union>closure(V) and e24, get 2 components of W.\<close>
-  show ?thesis sorry
+  \<comment> \<open>Extract vertex distinctness.\<close>
+  have hdist: "a1 \<noteq> a2" "a1 \<noteq> a3" "a1 \<noteq> a4" "a2 \<noteq> a3" "a2 \<noteq> a4" "a3 \<noteq> a4"
+  proof -
+    from assms(2) have hc4: "card {a1, a2, a3, a4} = 4" .
+    { assume h: "a1 = a2"
+      have "{a1, a2, a3, a4} = {a1, a3, a4}" using h by (by100 blast)
+      hence "card {a1, a2, a3, a4} \<le> 3" using card_three_le by (by100 simp)
+      hence False using hc4 by (by100 simp) }
+    thus "a1 \<noteq> a2" by (by100 blast)
+    { assume h: "a1 = a3"
+      have "{a1, a2, a3, a4} = {a1, a2, a4}" using h by (by100 blast)
+      hence "card {a1, a2, a3, a4} \<le> 3" using card_three_le by (by100 simp)
+      hence False using hc4 by (by100 simp) }
+    thus "a1 \<noteq> a3" by (by100 blast)
+    { assume h: "a1 = a4"
+      have "{a1, a2, a3, a4} = {a1, a2, a3}" using h by (by100 blast)
+      hence "card {a1, a2, a3, a4} \<le> 3" using card_three_le by (by100 simp)
+      hence False using hc4 by (by100 simp) }
+    thus "a1 \<noteq> a4" by (by100 blast)
+    { assume h: "a2 = a3"
+      have "{a1, a2, a3, a4} = {a1, a2, a4}" using h by (by100 blast)
+      hence "card {a1, a2, a3, a4} \<le> 3" using card_three_le by (by100 simp)
+      hence False using hc4 by (by100 simp) }
+    thus "a2 \<noteq> a3" by (by100 blast)
+    { assume h: "a2 = a4"
+      have "{a1, a2, a3, a4} = {a1, a2, a3}" using h by (by100 blast)
+      hence "card {a1, a2, a3, a4} \<le> 3" using card_three_le by (by100 simp)
+      hence False using hc4 by (by100 simp) }
+    thus "a2 \<noteq> a4" by (by100 blast)
+    { assume h: "a3 = a4"
+      have "{a1, a2, a3, a4} = {a1, a2, a3}" using h by (by100 blast)
+      hence "card {a1, a2, a3, a4} \<le> 3" using card_three_le by (by100 simp)
+      hence False using hc4 by (by100 simp) }
+    thus "a3 \<noteq> a4" by (by100 blast)
+  qed
+  have hS2_haus: "is_hausdorff_on top1_S2 top1_S2_topology"
+    by (rule top1_S2_is_hausdorff)
+  have hS2_strict: "is_topology_on_strict top1_S2 top1_S2_topology"
+    by (rule assms(1))
+  have hTopS2: "is_topology_on top1_S2 top1_S2_topology"
+    using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
+  \<comment> \<open>Step 1: Form theta space. A = e12 \<union> e23, B = e13, C = e41 \<union> e34.\<close>
+  let ?A = "e12 \<union> e23" and ?B = "e13" and ?C = "e41 \<union> e34"
+  let ?Y = "?A \<union> ?B \<union> ?C"
+  \<comment> \<open>A is an arc from a1 to a3 (via concatenation at a2).\<close>
+  have ha2_ep12: "a2 \<in> top1_arc_endpoints_on e12 (subspace_topology top1_S2 top1_S2_topology e12)"
+    using assms(16) by (by100 blast)
+  have ha2_ep23: "a2 \<in> top1_arc_endpoints_on e23 (subspace_topology top1_S2 top1_S2_topology e23)"
+    using assms(17) by (by100 blast)
+  have hA_arc: "top1_is_arc_on ?A (subspace_topology top1_S2 top1_S2_topology ?A)"
+    by (rule arcs_concatenation_is_arc[OF hS2_strict hS2_haus assms(10) assms(4)
+        assms(11) assms(5) assms(24) ha2_ep12 ha2_ep23])
+  have hA_ep: "top1_arc_endpoints_on ?A (subspace_topology top1_S2 top1_S2_topology ?A) = {a1, a3}"
+    by (rule arc_concat_endpoints[OF hS2_strict hS2_haus assms(10) assms(4)
+        assms(11) assms(5) assms(24) ha2_ep12 ha2_ep23 assms(16) assms(17) hdist(1) hdist(4)])
+  have hA_sub: "?A \<subseteq> top1_S2" using assms(4,5) by (by100 blast)
+  \<comment> \<open>C is an arc from a1 to a3 (via concatenation at a4).\<close>
+  have he41_e34_int: "e41 \<inter> e34 = {a4}" using assms(26) by (by100 blast)
+  have ha4_ep41: "a4 \<in> top1_arc_endpoints_on e41 (subspace_topology top1_S2 top1_S2_topology e41)"
+    using assms(19) by (by100 blast)
+  have ha4_ep34: "a4 \<in> top1_arc_endpoints_on e34 (subspace_topology top1_S2 top1_S2_topology e34)"
+    using assms(18) by (by100 blast)
+  have hC_arc: "top1_is_arc_on ?C (subspace_topology top1_S2 top1_S2_topology ?C)"
+    by (rule arcs_concatenation_is_arc[OF hS2_strict hS2_haus assms(13) assms(7)
+        assms(12) assms(6) he41_e34_int ha4_ep41 ha4_ep34])
+  have ha4_ne_a3: "a4 \<noteq> a3" using hdist(6) by (by100 blast)
+  \<comment> \<open>Reorder endpoints for unification: {a4,a1} \<rightarrow> {a1,a4}, {a3,a4} \<rightarrow> {a4,a3}.\<close>
+  have hep_e41: "top1_arc_endpoints_on e41 (subspace_topology top1_S2 top1_S2_topology e41) = {a1, a4}"
+    using assms(19) by (by100 force)
+  have hep_e34: "top1_arc_endpoints_on e34 (subspace_topology top1_S2 top1_S2_topology e34) = {a4, a3}"
+    using assms(18) by (by100 force)
+  have hC_ep: "top1_arc_endpoints_on ?C (subspace_topology top1_S2 top1_S2_topology ?C) = {a1, a3}"
+    by (rule arc_concat_endpoints[OF hS2_strict hS2_haus assms(13) assms(7)
+        assms(12) assms(6) he41_e34_int ha4_ep41 ha4_ep34 hep_e41 hep_e34 hdist(3) ha4_ne_a3])
+  have hC_sub: "?C \<subseteq> top1_S2" using assms(6,7) by (by100 blast)
+  \<comment> \<open>Intersection conditions for theta space.\<close>
+  have hAB_int: "?A \<inter> ?B = {a1, a3}"
+    using assms(28) assms(29) by (by100 blast)
+  have hBC_int: "?B \<inter> ?C = {a1, a3}"
+    using assms(31) assms(30) by (by100 blast)
+  have hAC_int: "?A \<inter> ?C = {a1, a3}"
+    using assms(27) assms(22) assms(23) assms(25) by (by100 blast)
+  \<comment> \<open>Step 2: Apply Lemma 64.1 to get 3 components.\<close>
+  obtain U V W where hUVW:
+      "U \<noteq> {}" "V \<noteq> {}" "W \<noteq> {}"
+      "U \<inter> V = {}" "V \<inter> W = {}" "U \<inter> W = {}"
+      "U \<union> V \<union> W = top1_S2 - (?A \<union> ?B \<union> ?C)"
+      "top1_connected_on U (subspace_topology top1_S2 top1_S2_topology U)"
+      "top1_connected_on V (subspace_topology top1_S2 top1_S2_topology V)"
+      "top1_connected_on W (subspace_topology top1_S2 top1_S2_topology W)"
+    using Lemma_64_1_theta_space_three_components[OF assms(1) hA_sub assms(8) hC_sub
+        hA_arc assms(14) hC_arc hdist(2) hAB_int hBC_int hAC_int hA_ep assms(20) hC_ep]
+    by (by100 metis)
+  \<comment> \<open>Step 3: Identify which theta component contains e24-{a2,a4}.
+     Use JCT on A\<union>B and B\<union>C to get 2-component decompositions, then boundary arguments.\<close>
+  \<comment> \<open>A\<union>B is SCC.\<close>
+  have hAB_scc: "top1_simple_closed_curve_on top1_S2 top1_S2_topology (?A \<union> ?B)"
+    by (rule arcs_form_simple_closed_curve[OF hS2_strict hS2_haus hA_arc hA_sub
+        assms(14) assms(8) hAB_int hdist(2) hA_ep assms(20)])
+  \<comment> \<open>Apply Theorem_63_5 to A and B (as separate arcs) to get 2 components of S2-(A\<union>B).\<close>
+  have hA_closed: "closedin_on top1_S2 top1_S2_topology ?A"
+    by (rule arc_in_S2_closed[OF hA_sub hA_arc])
+  have hB_closed: "closedin_on top1_S2 top1_S2_topology ?B"
+    by (rule arc_in_S2_closed[OF assms(8) assms(14)])
+  have hA_conn: "top1_connected_on ?A (subspace_topology top1_S2 top1_S2_topology ?A)"
+    using arc_connected[OF hA_arc] .
+  have hB_conn: "top1_connected_on ?B (subspace_topology top1_S2 top1_S2_topology ?B)"
+    using arc_connected[OF assms(14)] .
+  have hA_no_sep: "\<not> top1_separates_on top1_S2 top1_S2_topology ?A"
+    by (rule Theorem_63_2_arc_no_separation[OF assms(1) hA_sub hA_arc])
+  have hB_no_sep: "\<not> top1_separates_on top1_S2 top1_S2_topology ?B"
+    by (rule Theorem_63_2_arc_no_separation[OF assms(1) assms(8) assms(14)])
+  have hAB_card: "card (?A \<inter> ?B) = 2"
+    using hAB_int hdist(2) by (by100 simp)
+  obtain P1 P2 where hP: "P1 \<noteq> {}" "P2 \<noteq> {}" "P1 \<inter> P2 = {}"
+      "P1 \<union> P2 = top1_S2 - (?A \<union> ?B)"
+      "top1_connected_on P1 (subspace_topology top1_S2 top1_S2_topology P1)"
+      "top1_connected_on P2 (subspace_topology top1_S2 top1_S2_topology P2)"
+    using Theorem_63_5_two_closed_connected[OF assms(1) hA_closed hB_closed
+        hA_conn hB_conn hAB_card hA_no_sep hB_no_sep]
+    by (by100 force)
+  \<comment> \<open>Both P1, P2 are open (components of open set S2-(A\<union>B)).\<close>
+  have hAB_closed_S2: "closedin_on top1_S2 top1_S2_topology (?A \<union> ?B)"
+    by (rule closedin_on_Un[OF hTopS2 hA_closed hB_closed])
+  have hAB_compl_open: "top1_S2 - (?A \<union> ?B) \<in> top1_S2_topology"
+    using hAB_closed_S2 unfolding closedin_on_def by (by100 blast)
+  \<comment> \<open>Components P1, P2 are open: they are path components of the open set S2-(A\<union>B),
+     which is lpc (S2 is lpc, open subsets of lpc are lpc).\<close>
+  \<comment> \<open>Key: S2-(A\<union>B) is open lpc, so connected components are open.\<close>
+  have hAB_open_lpc: "top1_locally_path_connected_on (top1_S2 - (?A \<union> ?B))
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B)))"
+    by (rule open_subset_locally_path_connected[OF S2_locally_path_connected hAB_compl_open])
+       (by100 blast)
+  have hTAB: "is_topology_on (top1_S2 - (?A \<union> ?B))
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B)))"
+    by (rule subspace_topology_is_topology_on[OF]) (use hTopS2 in \<open>by100 blast\<close>, by100 blast)
+  have hP1_open: "P1 \<in> top1_S2_topology"
+  proof -
+    obtain x where hx: "x \<in> P1" using hP(1) by (by100 blast)
+    hence hx_W: "x \<in> top1_S2 - (?A \<union> ?B)" using hP(4) by (by100 blast)
+    \<comment> \<open>P1 = path\_component(x) in S2-(A\<union>B) (via connected = path in lpc).\<close>
+    have hP1_sub: "P1 \<subseteq> top1_S2 - (?A \<union> ?B)" using hP(4) by (by100 blast)
+    have hP1_conn_sub: "top1_connected_on P1
+        (subspace_topology (top1_S2 - (?A \<union> ?B))
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B))) P1)"
+    proof -
+      have "subspace_topology top1_S2 top1_S2_topology P1 =
+          subspace_topology (top1_S2 - (?A \<union> ?B))
+              (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B))) P1"
+        using subspace_topology_trans[of P1 "top1_S2 - (?A \<union> ?B)" top1_S2 top1_S2_topology]
+            hP1_sub by (by100 simp)
+      thus ?thesis using hP(5) by (by100 simp)
+    qed
+    have hpc_eq: "top1_path_component_of_on (top1_S2 - (?A \<union> ?B))
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B))) x = P1"
+    proof -
+      have hThm255: "top1_path_component_of_on (top1_S2 - (?A \<union> ?B))
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B))) x =
+          top1_component_of_on (top1_S2 - (?A \<union> ?B))
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B))) x"
+        using conjunct2[OF Theorem_25_5[OF hTAB]] hAB_open_lpc hx_W by (by100 blast)
+      \<comment> \<open>P1 = component\_of(x): P1 connected \<ni> x, and any larger connected set meets P2.\<close>
+      have "P1 = top1_component_of_on (top1_S2 - (?A \<union> ?B))
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B))) x"
+        sorry \<comment> \<open>P1 \<subseteq> comp(x) \<subseteq> P1 argument, same as Lemma_64_1 proof.\<close>
+      thus ?thesis using hThm255 by (by100 simp)
+    qed
+    have "top1_path_component_of_on (top1_S2 - (?A \<union> ?B))
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B))) x \<in>
+        subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B))"
+      by (rule top1_path_component_of_on_open_if_locally_path_connected[OF hTAB hAB_open_lpc hx_W])
+    hence "P1 \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B))"
+      using hpc_eq by (by100 simp)
+    \<comment> \<open>P1 open in subspace \<Rightarrow> P1 open in S2 (since S2-(A\<union>B) is open).\<close>
+    thus ?thesis using hAB_compl_open hP1_sub sorry
+  qed
+  have hP2_open: "P2 \<in> top1_S2_topology"
+  proof -
+    \<comment> \<open>P2 = S2 - (A\<union>B) - P1. Complement of P1 \<union> (A\<union>B) in S2.\<close>
+    have "P2 = top1_S2 - (P1 \<union> (?A \<union> ?B))" using hP(3,4) by (by100 blast)
+    moreover have "closedin_on top1_S2 top1_S2_topology (P1 \<union> (?A \<union> ?B))" sorry
+    ultimately show ?thesis unfolding closedin_on_def by (by100 blast)
+  qed
+  \<comment> \<open>C-{a1,a3} lies in one component. WLOG in P2 (swap if needed).\<close>
+  have hCm_in_P2: "?C - {a1, a3} \<subseteq> P2"
+    sorry \<comment> \<open>Connected + separation + WLOG label swap.\<close>
+  \<comment> \<open>closure(P1) = P1 \<union> (A\<union>B), using simple_closed_curve_boundary_meets_component.\<close>
+  have hcl_P1: "closure_on top1_S2 top1_S2_topology P1 = P1 \<union> (?A \<union> ?B)"
+    sorry \<comment> \<open>cl(P1) \<subseteq> P1\<union>(A\<union>B) from Q open; cl(P1) \<supseteq> P1\<union>(A\<union>B) from boundary_meets_component.\<close>
+  \<comment> \<open>a4 \<notin> A\<union>B: from intersection assumptions and distinctness.\<close>
+  have ha4_not_AB: "a4 \<notin> ?A \<union> ?B"
+  proof -
+    \<comment> \<open>a4 \<in> e34, e12\<inter>e34 = {}, so a4 \<notin> e12.\<close>
+    have ha4_e34: "a4 \<in> e34" using assms(18) unfolding top1_arc_endpoints_on_def by (by100 blast)
+    have "a4 \<notin> e12" using assms(22) ha4_e34 by (by100 blast)
+    \<comment> \<open>a4 \<in> e23\<inter>e34 = {a3}, but a4 \<noteq> a3, so a4 \<notin> e23.\<close>
+    moreover have "a4 \<notin> e23"
+    proof assume "a4 \<in> e23"
+      hence "a4 \<in> e23 \<inter> e34" using ha4_e34 by (by100 blast)
+      hence "a4 = a3" using assms(25) by (by100 blast)
+      thus False using hdist(6) by (by100 blast)
+    qed
+    \<comment> \<open>a4 \<in> e41, e13\<inter>e41 = {a1}, a4 \<noteq> a1, so a4 \<notin> e13.\<close>
+    moreover have ha4_e41: "a4 \<in> e41" using assms(19) unfolding top1_arc_endpoints_on_def by (by100 blast)
+    moreover have "a4 \<notin> e13"
+    proof assume "a4 \<in> e13"
+      hence "a4 \<in> e13 \<inter> e41" using ha4_e41 by (by100 blast)
+      hence "a4 = a1" using assms(31) by (by100 blast)
+      thus False using hdist(3) by (by100 blast)
+    qed
+    ultimately show ?thesis by (by100 blast)
+  qed
+  \<comment> \<open>e24-{a2,a4} cannot lie in P1: a4 \<in> closure(e24-{a2,a4}) but a4 \<notin> P1\<union>(A\<union>B).\<close>
+  have he24_not_P1: "\<not>(e24 - {a2, a4} \<subseteq> P1)"
+    sorry
+  \<comment> \<open>Similarly for B\<union>C: get R1, R2 from Theorem_63_5.\<close>
+  have hBC_scc: "top1_simple_closed_curve_on top1_S2 top1_S2_topology (?B \<union> ?C)"
+    by (rule arcs_form_simple_closed_curve[OF hS2_strict hS2_haus assms(14) assms(8)
+        hC_arc hC_sub hBC_int hdist(2) assms(20) hC_ep])
+  have hC_closed: "closedin_on top1_S2 top1_S2_topology ?C"
+    by (rule arc_in_S2_closed[OF hC_sub hC_arc])
+  have hC_conn: "top1_connected_on ?C (subspace_topology top1_S2 top1_S2_topology ?C)"
+    using arc_connected[OF hC_arc] .
+  have hC_no_sep: "\<not> top1_separates_on top1_S2 top1_S2_topology ?C"
+    by (rule Theorem_63_2_arc_no_separation[OF assms(1) hC_sub hC_arc])
+  have hBC_card: "card (?B \<inter> ?C) = 2"
+    using hBC_int hdist(2) by (by100 simp)
+  obtain R1 R2 where hR: "R1 \<noteq> {}" "R2 \<noteq> {}" "R1 \<inter> R2 = {}"
+      "R1 \<union> R2 = top1_S2 - (?B \<union> ?C)"
+      "top1_connected_on R1 (subspace_topology top1_S2 top1_S2_topology R1)"
+      "top1_connected_on R2 (subspace_topology top1_S2 top1_S2_topology R2)"
+    using Theorem_63_5_two_closed_connected[OF assms(1) hB_closed hC_closed
+        hB_conn hC_conn hBC_card hB_no_sep hC_no_sep]
+    by (by100 metis)
+  have hBC_closed_S2: "closedin_on top1_S2 top1_S2_topology (?B \<union> ?C)"
+    by (rule closedin_on_Un[OF hTopS2 hB_closed hC_closed])
+  have hBC_compl_open: "top1_S2 - (?B \<union> ?C) \<in> top1_S2_topology"
+    using hBC_closed_S2 unfolding closedin_on_def by (by100 blast)
+  have hR1_open: "R1 \<in> top1_S2_topology" sorry \<comment> \<open>Same pattern as P1_open.\<close>
+  have hR2_open: "R2 \<in> top1_S2_topology" sorry
+  have hAm_in_R2: "?A - {a1, a3} \<subseteq> R2"
+    sorry \<comment> \<open>WLOG: A-{a1,a3} in R2.\<close>
+  have hcl_R1: "closure_on top1_S2 top1_S2_topology R1 = R1 \<union> (?B \<union> ?C)"
+    sorry
+  \<comment> \<open>a2 \<notin> B\<union>C.\<close>
+  have ha2_not_BC: "a2 \<notin> ?B \<union> ?C"
+  proof -
+    have ha2_e12: "a2 \<in> e12" using assms(16) unfolding top1_arc_endpoints_on_def by (by100 blast)
+    \<comment> \<open>a2 \<in> e12, e13\<inter>e12 = {a1}, a2 \<noteq> a1, so a2 \<notin> e13.\<close>
+    have "a2 \<notin> e13"
+    proof assume "a2 \<in> e13"
+      hence "a2 \<in> e13 \<inter> e12" using ha2_e12 by (by100 blast)
+      hence "a2 = a1" using assms(28) by (by100 blast)
+      thus False using hdist(1) by (by100 blast)
+    qed
+    moreover have "a2 \<notin> e41"
+    proof assume "a2 \<in> e41"
+      hence "a2 \<in> e41 \<inter> e12" using ha2_e12 by (by100 blast)
+      hence "a2 = a1" using assms(27) by (by100 blast)
+      thus False using hdist(1) by (by100 blast)
+    qed
+    \<comment> \<open>a2 \<in> e12, e12\<inter>e34 = {}, so a2 \<notin> e34.\<close>
+    moreover have "a2 \<notin> e34" using assms(22) ha2_e12 by (by100 blast)
+    ultimately show ?thesis by (by100 blast)
+  qed
+  have he24_not_R1: "\<not>(e24 - {a2, a4} \<subseteq> R1)"
+    sorry
+  \<comment> \<open>Step 4: P1 and R1 are each theta components, and they are distinct.\<close>
+  \<comment> \<open>P1 \<subseteq> S2-(A\<union>B) and P1 \<inter> (C-{a1,a3}) = {} (since C-{a1,a3} \<subseteq> P2), so P1 \<subseteq> S2-Y.\<close>
+  have hP1_sub_Y_compl: "P1 \<subseteq> top1_S2 - ?Y"
+  proof -
+    have "P1 \<subseteq> top1_S2 - (?A \<union> ?B)" using hP(4) by (by100 blast)
+    moreover have "P1 \<inter> (?C - {a1, a3}) = {}" using hCm_in_P2 hP(3) by (by100 blast)
+    moreover have "{a1, a3} \<subseteq> ?A \<union> ?B" using hAB_int by (by100 blast)
+    ultimately show ?thesis by (by100 blast)
+  qed
+  have hR1_sub_Y_compl: "R1 \<subseteq> top1_S2 - ?Y"
+  proof -
+    have "R1 \<subseteq> top1_S2 - (?B \<union> ?C)" using hR(4) by (by100 blast)
+    moreover have "R1 \<inter> (?A - {a1, a3}) = {}" using hAm_in_R2 hR(3) by (by100 blast)
+    moreover have "{a1, a3} \<subseteq> ?B \<union> ?C" using hBC_int by (by100 blast)
+    ultimately show ?thesis by (by100 blast)
+  qed
+  \<comment> \<open>P1 is connected \<subseteq> S2-Y = U\<union>V\<union>W (disjoint open), so P1 \<subseteq> one of U,V,W.\<close>
+  \<comment> \<open>Since P1 is a component of S2-(A\<union>B) \<supseteq> S2-Y, and U,V,W are components of S2-Y,
+     P1 is exactly one of U,V,W. Similarly R1.\<close>
+  \<comment> \<open>U, V, W are open in S2: Y is closed, S2-Y is open lpc, components are open.\<close>
+  have hY_closed: "closedin_on top1_S2 top1_S2_topology ?Y"
+  proof -
+    have hAC_closed: "closedin_on top1_S2 top1_S2_topology (?A \<union> ?C)"
+      by (rule closedin_on_Un[OF hTopS2 hA_closed hC_closed])
+    have hABC_closed: "closedin_on top1_S2 top1_S2_topology ((?A \<union> ?C) \<union> ?B)"
+      by (rule closedin_on_Un[OF hTopS2 hAC_closed hB_closed])
+    moreover have "?Y = (?A \<union> ?C) \<union> ?B" by (by100 blast)
+    ultimately show ?thesis by (by100 simp)
+  qed
+  have hY_compl_open: "top1_S2 - ?Y \<in> top1_S2_topology"
+    using hY_closed unfolding closedin_on_def by (by100 blast)
+  \<comment> \<open>Use helper lemma (sorry) for openness of connected components.\<close>
+  have hU_open: "U \<in> top1_S2_topology"
+    using S2_component_of_open_subset_is_open[OF hY_compl_open _ _ hUVW(1) hUVW(8)]
+        hUVW(7) sorry
+  have hV_open: "V \<in> top1_S2_topology"
+    using S2_component_of_open_subset_is_open[OF hY_compl_open _ _ hUVW(2) hUVW(9)]
+        hUVW(7) sorry
+  have hW_open: "W \<in> top1_S2_topology"
+    using S2_component_of_open_subset_is_open[OF hY_compl_open _ _ hUVW(3) hUVW(10)]
+        hUVW(7) sorry
+  \<comment> \<open>P1 is connected \<subseteq> U\<union>V\<union>W (disjoint open). It equals one of them.
+     Connected subset of disjoint union of open sets lies in one.\<close>
+  have hP1_is_comp: "P1 = U \<or> P1 = V \<or> P1 = W"
+    sorry \<comment> \<open>P1 connected, \<subseteq> U\<union>V\<union>W, each is open, P1 \<subseteq> one, and P1 is maximal (component of S2-(A\<union>B)).\<close>
+  have hR1_is_comp: "R1 = U \<or> R1 = V \<or> R1 = W"
+    sorry
+  \<comment> \<open>P1 \<noteq> R1: if P1 = R1 then closure(P1) \<subseteq> (A\<union>B) \<inter> (B\<union>C) = B, contradicting P1 nonempty open.\<close>
+  have hP1_ne_R1: "P1 \<noteq> R1"
+    sorry
+  \<comment> \<open>e24-{a2,a4} lies in the third component (not P1, not R1).\<close>
+  have he24_conn: "top1_connected_on (e24 - {a2, a4})
+      (subspace_topology top1_S2 top1_S2_topology (e24 - {a2, a4}))"
+    by (rule arc_minus_endpoints_connected[OF hS2_strict hS2_haus assms(9) assms(15) assms(21) hdist(5)])
+  \<comment> \<open>e24 \<inter> Y = {a2, a4}: from intersection assumptions.\<close>
+  have he24_Y_int: "e24 \<inter> ?Y = {a2, a4}"
+  proof -
+    \<comment> \<open>e24 \<inter> (e12\<union>e23\<union>e13\<union>e41\<union>e34)
+       = (e24\<inter>e12) \<union> (e24\<inter>e23) \<union> (e24\<inter>e13) \<union> (e24\<inter>e41) \<union> (e24\<inter>e34)\<close>
+    have "e24 \<inter> e13 = {}"
+    proof -
+      have ha2_e12: "a2 \<in> e12" using assms(16) unfolding top1_arc_endpoints_on_def by (by100 blast)
+      have ha1_e12: "a1 \<in> e12" using assms(16) unfolding top1_arc_endpoints_on_def by (by100 blast)
+      have ha1_not_e24: "a1 \<notin> e24"
+      proof assume "a1 \<in> e24"
+        hence "a1 \<in> e24 \<inter> e12" using ha1_e12 by (by100 blast)
+        hence "a1 = a2" using assms(33) by (by100 blast)
+        thus False using hdist(1) by (by100 blast)
+      qed
+      have ha3_e23: "a3 \<in> e23" using assms(17) unfolding top1_arc_endpoints_on_def by (by100 blast)
+      have ha3_not_e24: "a3 \<notin> e24"
+      proof assume "a3 \<in> e24"
+        hence "a3 \<in> e24 \<inter> e23" using ha3_e23 by (by100 blast)
+        hence "a3 = a2" using assms(34) by (by100 blast)
+        thus False using hdist(4) by (by100 blast)
+      qed
+      \<comment> \<open>a2 \<notin> e13: from ha2_not_BC. a4 \<notin> e13: from ha4_not_AB.\<close>
+      have "a2 \<notin> e13" using ha2_not_BC by (by100 blast)
+      moreover have "a4 \<notin> e13" using ha4_not_AB by (by100 blast)
+      ultimately have "\<forall>x \<in> {a1,a2,a3,a4}. x \<notin> e24 \<inter> e13"
+        using ha1_not_e24 ha3_not_e24 by (by100 blast)
+      thus ?thesis using assms(32) by (by100 blast)
+    qed
+    hence he24_e13: "e24 \<inter> e13 = {}" .
+    have "e24 \<inter> ?Y = (e24 \<inter> e12) \<union> (e24 \<inter> e23) \<union> (e24 \<inter> e13) \<union> (e24 \<inter> e41) \<union> (e24 \<inter> e34)"
+      by (by100 blast)
+    also have "\<dots> = {a2} \<union> {a2} \<union> {} \<union> {a4} \<union> {a4}"
+      using assms(33,34,35,36) he24_e13 by (by100 simp)
+    also have "\<dots> = {a2, a4}" by (by100 blast)
+    finally show ?thesis .
+  qed
+  have ha2_in_Y: "a2 \<in> ?Y"
+    using assms(16) unfolding top1_arc_endpoints_on_def by (by100 blast)
+  have ha4_in_Y: "a4 \<in> ?Y"
+    using assms(19) unfolding top1_arc_endpoints_on_def by (by100 blast)
+  have he24_in_Y_compl: "e24 - {a2, a4} \<subseteq> top1_S2 - ?Y"
+    using he24_Y_int assms(9) by (by100 blast)
+  \<comment> \<open>Let T be the theta component \<noteq> P1, \<noteq> R1.\<close>
+  obtain T where hT_is: "T \<in> {U, V, W}" "T \<noteq> P1" "T \<noteq> R1"
+      and hT_conn: "top1_connected_on T (subspace_topology top1_S2 top1_S2_topology T)"
+      and hT_ne: "T \<noteq> {}"
+      and hT_union: "P1 \<union> R1 \<union> T = top1_S2 - ?Y"
+      and hT_disj: "P1 \<inter> T = {}" "R1 \<inter> T = {}"
+    sorry
+  have he24_in_T: "e24 - {a2, a4} \<subseteq> T"
+    sorry \<comment> \<open>Connected subset of U\<union>V\<union>W, not in P1 or R1, hence in T.\<close>
+  \<comment> \<open>Step 5: Apply Theorem_63_5 to split T using cl(P1)\<union>cl(R1) and e24.\<close>
+  let ?C1 = "closure_on top1_S2 top1_S2_topology P1
+        \<union> closure_on top1_S2 top1_S2_topology R1"
+  have hC1_eq: "?C1 = P1 \<union> R1 \<union> ?Y"
+    using hcl_P1 hcl_R1 by (by100 blast)
+  have hC1_closed: "closedin_on top1_S2 top1_S2_topology ?C1"
+  proof -
+    have "closedin_on top1_S2 top1_S2_topology (closure_on top1_S2 top1_S2_topology P1)"
+    proof -
+      have "P1 \<subseteq> top1_S2" using hP(4) by (by100 blast)
+      thus ?thesis by (rule closure_on_closed[OF hTopS2])
+    qed
+    moreover have "closedin_on top1_S2 top1_S2_topology (closure_on top1_S2 top1_S2_topology R1)"
+    proof -
+      have "R1 \<subseteq> top1_S2" using hR(4) by (by100 blast)
+      thus ?thesis by (rule closure_on_closed[OF hTopS2])
+    qed
+    ultimately show ?thesis by (rule closedin_on_Un[OF hTopS2])
+  qed
+  have hC1_conn: "top1_connected_on ?C1 (subspace_topology top1_S2 top1_S2_topology ?C1)"
+    sorry \<comment> \<open>cl(P1), cl(R1) connected, share B \<subseteq> cl(P1)\<inter>cl(R1).\<close>
+  have hC1_compl: "top1_S2 - ?C1 = T"
+  proof -
+    have "top1_S2 - ?C1 = top1_S2 - (P1 \<union> R1 \<union> ?Y)" using hC1_eq by (by100 simp)
+    also have "\<dots> = (top1_S2 - ?Y) - P1 - R1" by (by100 blast)
+    also have "\<dots> = (P1 \<union> R1 \<union> T) - P1 - R1" using hT_union by (by100 simp)
+    also have "\<dots> = T" using hT_disj(1,2) by (by100 blast)
+    finally show ?thesis .
+  qed
+  have hC1_no_sep: "\<not> top1_separates_on top1_S2 top1_S2_topology ?C1"
+    unfolding top1_separates_on_def using hC1_compl hT_conn by (by100 simp)
+  have he24_closed: "closedin_on top1_S2 top1_S2_topology e24"
+    by (rule arc_in_S2_closed[OF assms(9) assms(15)])
+  have he24_conn_full: "top1_connected_on e24 (subspace_topology top1_S2 top1_S2_topology e24)"
+    using arc_connected[OF assms(15)] .
+  have he24_no_sep: "\<not> top1_separates_on top1_S2 top1_S2_topology e24"
+    by (rule Theorem_63_2_arc_no_separation[OF assms(1) assms(9) assms(15)])
+  have hC1_e24_int: "?C1 \<inter> e24 = {a2, a4}"
+  proof -
+    \<comment> \<open>(P1 \<union> R1 \<union> Y) \<inter> e24 = (P1 \<inter> e24) \<union> (R1 \<inter> e24) \<union> (Y \<inter> e24).
+       P1 \<inter> e24 = {} and R1 \<inter> e24 = {} (both \<subseteq> S2-Y, e24\<setminus>{a2,a4} \<subseteq> T).\<close>
+    have "P1 \<inter> e24 = {}"
+    proof -
+      have "P1 \<subseteq> top1_S2 - ?Y" by (rule hP1_sub_Y_compl)
+      moreover have "e24 - {a2, a4} \<subseteq> T" by (rule he24_in_T)
+      moreover have "P1 \<inter> T = {}" by (rule hT_disj(1))
+      moreover have "{a2, a4} \<subseteq> ?Y" using ha2_in_Y ha4_in_Y by (by100 blast)
+      ultimately show ?thesis by (by100 blast)
+    qed
+    moreover have "R1 \<inter> e24 = {}"
+    proof -
+      have "R1 \<subseteq> top1_S2 - ?Y" by (rule hR1_sub_Y_compl)
+      moreover have "e24 - {a2, a4} \<subseteq> T" by (rule he24_in_T)
+      moreover have "R1 \<inter> T = {}" by (rule hT_disj(2))
+      moreover have "{a2, a4} \<subseteq> ?Y" using ha2_in_Y ha4_in_Y by (by100 blast)
+      ultimately show ?thesis by (by100 blast)
+    qed
+    ultimately have h_e24_fact: "(P1 \<union> R1) \<inter> e24 = {}" by (by100 blast)
+    show ?thesis
+    proof (rule set_eqI, rule iffI)
+      fix x assume "x \<in> ?C1 \<inter> e24"
+      hence "x \<in> (P1 \<union> R1 \<union> ?Y) \<inter> e24" using hC1_eq by (by100 blast)
+      hence "x \<in> ?Y \<inter> e24" using h_e24_fact by (by100 blast)
+      hence "x \<in> e24 \<inter> ?Y" by (by100 blast)
+      thus "x \<in> {a2, a4}"
+      proof -
+        from he24_Y_int have "\<And>z. z \<in> e24 \<inter> ?Y \<Longrightarrow> z \<in> {a2, a4}" by (by100 blast)
+        thus ?thesis using \<open>x \<in> e24 \<inter> ?Y\<close> by (by100 blast)
+      qed
+    next
+      fix x assume "x \<in> {a2, a4}"
+      hence "x \<in> ?Y \<inter> e24" using he24_Y_int by (by100 blast)
+      hence "x \<in> (P1 \<union> R1 \<union> ?Y) \<inter> e24" by (by100 blast)
+      thus "x \<in> ?C1 \<inter> e24" using hC1_eq by (by100 blast)
+    qed
+  qed
+  have hC1_e24_card: "card (?C1 \<inter> e24) = 2"
+    using hC1_e24_int hdist(5) by (by100 simp)
+  obtain W1 W2 where hW: "W1 \<noteq> {}" "W2 \<noteq> {}" "W1 \<inter> W2 = {}"
+      "W1 \<union> W2 = top1_S2 - (?C1 \<union> e24)"
+      "top1_connected_on W1 (subspace_topology top1_S2 top1_S2_topology W1)"
+      "top1_connected_on W2 (subspace_topology top1_S2 top1_S2_topology W2)"
+    using Theorem_63_5_two_closed_connected[OF assms(1) hC1_closed he24_closed
+        hC1_conn he24_conn_full hC1_e24_card hC1_no_sep he24_no_sep]
+    by (by100 metis)
+  \<comment> \<open>Step 6: Package the 4 components P1, R1, W1, W2.\<close>
+  have hfour_union: "P1 \<union> R1 \<union> W1 \<union> W2 = top1_S2 - (e12 \<union> e23 \<union> e34 \<union> e41 \<union> e13 \<union> e24)"
+  proof -
+    have "W1 \<union> W2 = top1_S2 - (?C1 \<union> e24)" by (rule hW(4))
+    hence "W1 \<union> W2 = top1_S2 - ((P1 \<union> R1 \<union> ?Y) \<union> e24)" using hC1_eq by (by100 simp)
+    hence "P1 \<union> R1 \<union> W1 \<union> W2 = P1 \<union> R1 \<union> (top1_S2 - (P1 \<union> R1 \<union> ?Y \<union> e24))" by (by100 blast)
+    also have "\<dots> = top1_S2 - (?Y \<union> e24)"
+    proof -
+      have "P1 \<subseteq> top1_S2" using hP(4) by (by100 blast)
+      moreover have "R1 \<subseteq> top1_S2" using hR(4) by (by100 blast)
+      moreover have "P1 \<inter> ?Y = {}" using hP1_sub_Y_compl by (by100 blast)
+      moreover have "R1 \<inter> ?Y = {}" using hR1_sub_Y_compl by (by100 blast)
+      moreover have "P1 \<inter> e24 = {}"
+      proof -
+        have "P1 \<subseteq> top1_S2 - ?Y" by (rule hP1_sub_Y_compl)
+        moreover have "e24 - {a2, a4} \<subseteq> T" by (rule he24_in_T)
+        moreover have "P1 \<inter> T = {}" by (rule hT_disj(1))
+        moreover have "{a2, a4} \<subseteq> ?Y" using ha2_in_Y ha4_in_Y by (by100 blast)
+        ultimately show ?thesis by (by100 blast)
+      qed
+      moreover have "R1 \<inter> e24 = {}"
+      proof -
+        have "R1 \<subseteq> top1_S2 - ?Y" by (rule hR1_sub_Y_compl)
+        moreover have "e24 - {a2, a4} \<subseteq> T" by (rule he24_in_T)
+        moreover have "R1 \<inter> T = {}" by (rule hT_disj(2))
+        moreover have "{a2, a4} \<subseteq> ?Y" using ha2_in_Y ha4_in_Y by (by100 blast)
+        ultimately show ?thesis by (by100 blast)
+      qed
+      ultimately show ?thesis by (by100 blast)
+    qed
+    also have "\<dots> = top1_S2 - (e12 \<union> e23 \<union> e34 \<union> e41 \<union> e13 \<union> e24)" by (by100 blast)
+    finally show ?thesis .
+  qed
+  have hP1R1_disj: "P1 \<inter> R1 = {}"
+    sorry \<comment> \<open>P1,R1 are distinct elements of {U,V,W}, pairwise disjoint.\<close>
+  have hfour_disj: "P1 \<inter> R1 = {}" "P1 \<inter> W1 = {}" "P1 \<inter> W2 = {}"
+      "R1 \<inter> W1 = {}" "R1 \<inter> W2 = {}" "W1 \<inter> W2 = {}"
+  proof -
+    show "P1 \<inter> R1 = {}" by (rule hP1R1_disj)
+    \<comment> \<open>W1, W2 \<subseteq> S2-(C1\<union>e24) = T-e24_inner, which is disjoint from P1, R1.\<close>
+    have hW12_sub: "W1 \<union> W2 \<subseteq> top1_S2 - ?C1" using hW(4) by (by100 blast)
+    hence "W1 \<subseteq> top1_S2 - ?C1" by (by100 blast)
+    hence "P1 \<inter> W1 = {}" using hC1_eq by (by100 blast)
+    thus "P1 \<inter> W1 = {}" .
+    have "W2 \<subseteq> top1_S2 - ?C1" using hW12_sub by (by100 blast)
+    thus "P1 \<inter> W2 = {}" using hC1_eq by (by100 blast)
+    have "W1 \<subseteq> top1_S2 - ?C1" using hW12_sub by (by100 blast)
+    thus "R1 \<inter> W1 = {}" using hC1_eq by (by100 blast)
+    have "W2 \<subseteq> top1_S2 - ?C1" using hW12_sub by (by100 blast)
+    thus "R1 \<inter> W2 = {}" using hC1_eq by (by100 blast)
+    show "W1 \<inter> W2 = {}" by (rule hW(3))
+  qed
+  show ?thesis
+    apply (rule exI[of _ P1])
+    apply (rule exI[of _ R1])
+    apply (rule exI[of _ W1])
+    apply (rule exI[of _ W2])
+    using hP(1) hR(1) hW(1,2) hfour_disj hfour_union hP(5) hR(5) hW(5,6) by (by100 force)
 qed
 
 text \<open>Theorem 64.2: The utilities graph K33 cannot be imbedded in the plane.\<close>
