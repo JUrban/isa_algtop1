@@ -1394,7 +1394,37 @@ proof -
         sorry \<comment> \<open>Affine map continuous (continuous_intros + codomain_shrink).\<close>
       \<comment> \<open>Bijective.\<close>
       have hscale_bij: "bij_betw (\<lambda>s. s * t0) top1_unit_interval ?I0"
-        sorry \<comment> \<open>s\<mapsto>s*t0 is bijective [0,1]\<rightarrow>[0,t0] when t0>0.\<close>
+        unfolding bij_betw_def
+      proof (intro conjI)
+        show "inj_on (\<lambda>s. s * t0) top1_unit_interval"
+        proof (rule inj_onI)
+          fix x y :: real assume "x \<in> top1_unit_interval" "y \<in> top1_unit_interval" "x * t0 = y * t0"
+          thus "x = y" using ht0_int(1) by (by100 simp)
+        qed
+        show "(\<lambda>s. s * t0) ` top1_unit_interval = ?I0"
+        proof (rule set_eqI, rule iffI)
+          fix x assume "x \<in> (\<lambda>s. s * t0) ` top1_unit_interval"
+          then obtain s where hs: "s \<in> top1_unit_interval" "x = s * t0" by (by100 blast)
+          have hs_bounds: "0 \<le> s" "s \<le> 1" using hs(1) unfolding top1_unit_interval_def by (by100 auto)+
+          have "0 \<le> s * t0" using hs_bounds(1) ht0_int(1) by (by100 simp)
+          moreover have "s * t0 \<le> t0"
+          proof -
+            have "s * t0 \<le> 1 * t0" using hs_bounds ht0_int(1) by (by100 simp)
+            thus ?thesis by (by100 simp)
+          qed
+          moreover have "s * t0 \<le> 1" using \<open>s * t0 \<le> t0\<close> ht0_int(2) by (by100 linarith)
+          ultimately show "x \<in> ?I0" using hs(2)
+            unfolding top1_unit_interval_def by (by100 auto)
+        next
+          fix x assume "x \<in> ?I0"
+          hence hx: "x \<in> top1_unit_interval" "x \<le> t0" by (by100 blast)+
+          let ?s = "x / t0"
+          have "?s \<in> top1_unit_interval" using hx ht0_int
+            unfolding top1_unit_interval_def by (by100 auto)
+          moreover have "?s * t0 = x" using ht0_int(1) by (by100 simp)
+          ultimately show "x \<in> (\<lambda>s. s * t0) ` top1_unit_interval" by (by100 force)
+        qed
+      qed
       \<comment> \<open>Compact + Hausdorff.\<close>
       have hI_compact: "top1_compact_on top1_unit_interval top1_unit_interval_topology"
       proof -
