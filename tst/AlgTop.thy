@@ -5402,9 +5402,104 @@ proof -
        Then that one \<subseteq> P1 (from hU/V/W\_side). So P1 = that one.\<close>
     \<comment> \<open>P1 connected \<subseteq> U\<union>V\<union>W with U,V,W pairwise disjoint and open in S2.
        By connectivity, P1 must be \<subseteq> one of them. Then that one \<subseteq> P1 from side facts.\<close>
-    \<comment> \<open>P1 connected \<subseteq> U\<union>V\<union>W (disjoint open). By Lemma\_23\_2 applied twice:
-       {U, V\<union>W} separates S2-Y, P1 in one. Then {V, W} separates V\<union>W.\<close>
-    show ?thesis sorry
+    \<comment> \<open>P1 connected \<subseteq> U\<union>V\<union>W (disjoint open). By Lemma\_23\_2 applied twice.\<close>
+    \<comment> \<open>Form separation {U, V\<union>W} of S2-Y.\<close>
+    have hU_open_Y: "U \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - ?Y)"
+    proof -
+      have "U = (top1_S2 - ?Y) \<inter> U" using hU_sub_Y by (by100 blast)
+      thus ?thesis unfolding subspace_topology_def using hUVW(11) by (by100 blast)
+    qed
+    have hVW_open_Y: "V \<union> W \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - ?Y)"
+    proof -
+      have "V \<union> W = (top1_S2 - ?Y) \<inter> (V \<union> W)" using hV_sub_Y hW_sub_Y by (by100 blast)
+      moreover have "V \<union> W \<in> top1_S2_topology"
+      proof -
+        from hTopS2 have hunion: "\<And>U. U \<subseteq> top1_S2_topology \<Longrightarrow> \<Union>U \<in> top1_S2_topology"
+          unfolding is_topology_on_def by (by100 blast)
+        have "{V, W} \<subseteq> top1_S2_topology" using hUVW(12,13) by (by100 blast)
+        from hunion[OF this] have "\<Union>{V, W} \<in> top1_S2_topology" .
+        moreover have "\<Union>{V, W} = V \<union> W" by (by100 blast)
+        ultimately show ?thesis by (by100 simp)
+      qed
+      ultimately show ?thesis unfolding subspace_topology_def by (by100 blast)
+    qed
+    have hUVW_sep: "top1_is_separation_on (top1_S2 - ?Y)
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - ?Y)) U (V \<union> W)"
+    proof -
+      have "U \<inter> (V \<union> W) = {}" using hUVW(4,6) by (by100 blast)
+      moreover have "U \<union> (V \<union> W) = top1_S2 - ?Y" using hUVW(7) by (by100 blast)
+      moreover have "V \<union> W \<noteq> {}" using hUVW(2) by (by100 blast)
+      ultimately show ?thesis unfolding top1_is_separation_on_def
+        using hU_open_Y hVW_open_Y hUVW(1) by (by100 blast)
+    qed
+    \<comment> \<open>P1 connected in S2-Y, Lemma\_23\_2 gives P1 \<subseteq> U or P1 \<subseteq> V\<union>W.\<close>
+    have hP1_conn_Y_full: "top1_connected_on P1
+        (subspace_topology (top1_S2 - ?Y) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - ?Y)) P1)"
+    proof -
+      have "subspace_topology top1_S2 top1_S2_topology P1 =
+          subspace_topology (top1_S2 - ?Y) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - ?Y)) P1"
+        using subspace_topology_trans[of P1 "top1_S2 - ?Y" top1_S2 top1_S2_topology]
+            hP1_sub_Y_compl by (by100 simp)
+      thus ?thesis using hP(5) by (by100 simp)
+    qed
+    from Lemma_23_2[OF hTY hUVW_sep hP1_sub_Y_compl hP1_conn_Y_full]
+    have "P1 \<subseteq> U \<or> P1 \<subseteq> V \<union> W" by (by100 blast)
+    thus ?thesis
+    proof
+      assume hPU: "P1 \<subseteq> U"
+      \<comment> \<open>U \<subseteq> P1: from hU\_side, x\_P \<in> U (since P1 \<subseteq> U and x\_P \<in> P1).\<close>
+      have "x_P \<in> U" using hPU hx_P by (by100 blast)
+      hence "U \<inter> P1 \<noteq> {}" using hx_P by (by100 blast)
+      hence "U \<subseteq> P1" using hU_side by (by100 force)
+      thus ?thesis using hPU by (by100 blast)
+    next
+      assume "P1 \<subseteq> V \<union> W"
+      \<comment> \<open>Apply Lemma\_23\_2 again: separation {V, W} of V\<union>W.\<close>
+      have hV_open_VW: "V \<in> subspace_topology top1_S2 top1_S2_topology (V \<union> W)"
+      proof -
+        have "V = (V \<union> W) \<inter> V" by (by100 blast)
+        thus ?thesis unfolding subspace_topology_def using hUVW(12) by (by100 blast)
+      qed
+      have hW_open_VW: "W \<in> subspace_topology top1_S2 top1_S2_topology (V \<union> W)"
+      proof -
+        have "W = (V \<union> W) \<inter> W" by (by100 blast)
+        thus ?thesis unfolding subspace_topology_def using hUVW(13) by (by100 blast)
+      qed
+      have hTVW: "is_topology_on (V \<union> W)
+          (subspace_topology top1_S2 top1_S2_topology (V \<union> W))"
+        by (rule subspace_topology_is_topology_on[OF hTopS2])
+           (use hV_sub_Y hW_sub_Y in \<open>by100 blast\<close>)
+      have hVW_sep: "top1_is_separation_on (V \<union> W)
+          (subspace_topology top1_S2 top1_S2_topology (V \<union> W)) V W"
+        unfolding top1_is_separation_on_def
+        using hV_open_VW hW_open_VW hUVW(2,3,5) by (by100 blast)
+      have hP1_sub_VW: "P1 \<subseteq> V \<union> W" by (rule \<open>P1 \<subseteq> V \<union> W\<close>)
+      have hP1_conn_VW: "top1_connected_on P1
+          (subspace_topology (V \<union> W) (subspace_topology top1_S2 top1_S2_topology (V \<union> W)) P1)"
+      proof -
+        have "subspace_topology top1_S2 top1_S2_topology P1 =
+            subspace_topology (V \<union> W) (subspace_topology top1_S2 top1_S2_topology (V \<union> W)) P1"
+          using subspace_topology_trans[of P1 "V \<union> W" top1_S2 top1_S2_topology]
+              hP1_sub_VW by (by100 simp)
+        thus ?thesis using hP(5) by (by100 simp)
+      qed
+      from Lemma_23_2[OF hTVW hVW_sep hP1_sub_VW hP1_conn_VW]
+      have "P1 \<subseteq> V \<or> P1 \<subseteq> W" by (by100 blast)
+      thus ?thesis
+      proof
+        assume hPV: "P1 \<subseteq> V"
+        have "x_P \<in> V" using hPV hx_P by (by100 blast)
+        hence "V \<inter> P1 \<noteq> {}" using hx_P by (by100 blast)
+        hence "V \<subseteq> P1" using hV_side by (by100 force)
+        thus ?thesis using hPV by (by100 blast)
+      next
+        assume hPW: "P1 \<subseteq> W"
+        have "x_P \<in> W" using hPW hx_P by (by100 blast)
+        hence "W \<inter> P1 \<noteq> {}" using hx_P by (by100 blast)
+        hence "W \<subseteq> P1" using hW_side by (by100 force)
+        thus ?thesis using hPW by (by100 blast)
+      qed
+    qed
   qed
   \<comment> \<open>Same argument for R1.\<close>
   have hR1_is_comp: "R1 = U \<or> R1 = V \<or> R1 = W"
