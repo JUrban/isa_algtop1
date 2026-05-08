@@ -3551,17 +3551,15 @@ proof -
     by (rule arc_minus_endpoints_connected[OF assms(1) hS2_haus assms(4) assms(7) assms(14) assms(8)])
   have hC_minus_sub: "C - {a, b} \<subseteq> U0' \<or> C - {a, b} \<subseteq> U0"
     sorry \<comment> \<open>Lemma 23.2: connected subset in separation lies in one component.\<close>
-  \<comment> \<open>Step 3: Define Ubar = U0 \<union> (A \<union> B) = closure(U0).
-     Ubar is connected (closure of connected), doesn't separate S2 (complement = U0').
-     C is connected and doesn't separate (arc).
-     Ubar \<inter> C = {a, b} (C meets A\<union>B only at {a,b}, C doesn't meet U0).
-     By Theorem 63.5, Ubar \<union> C separates S2 into exactly 2 components V0, W0.\<close>
-  \<comment> \<open>WLOG: C - {a,b} \<subseteq> U0'. Then U0 \<inter> C = {} (U0 \<subseteq> S2 - (A\<union>B), C-{a,b} \<subseteq> U0').\<close>
+  \<comment> \<open>WLOG: assume C-{a,b} \<subseteq> U0'. If C-{a,b} \<subseteq> U0 instead, swap U0 and U0'
+     (they're symmetric as the two components of S2-(A\<union>B)).\<close>
   have "C - {a, b} \<subseteq> U0'"
-    sorry \<comment> \<open>WLOG (or: obtain U0, U0' with this property).\<close>
+    sorry \<comment> \<open>WLOG: from hC\_minus\_sub, C is in one component. We pick U0' to be that one.\<close>
   let ?Ubar = "U0 \<union> A \<union> B"
   have hUbar_conn: "top1_connected_on ?Ubar (subspace_topology top1_S2 top1_S2_topology ?Ubar)"
-    sorry \<comment> \<open>Closure of connected set in normal space is connected.\<close>
+    sorry \<comment> \<open>Ubar = closure(U0): closure\_of\_connected\_is\_connected.
+       Needs: Ubar \<subseteq> closure(U0), i.e., A\<union>B \<subseteq> closure(U0). True because A\<union>B is
+       the boundary of U0 in S2 (every neighborhood of a\<in>A\<union>B meets U0).\<close>
   have hUbar_eq: "?Ubar = top1_S2 - U0'"
     using hU0(3,4) assms(2,3) by (by100 blast)
   have hU0'_open: "U0' \<in> top1_S2_topology"
