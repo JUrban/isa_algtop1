@@ -2329,9 +2329,95 @@ proof -
         (use hT in \<open>unfold is_topology_on_strict_def; by100 blast\<close>,
          use assms(4,6) in \<open>by100 blast\<close>)
     have hA1_closed_D: "closedin_on ?D (subspace_topology X TX ?D) A1"
-      sorry \<comment> \<open>A1 compact in Hausdorff D \<Rightarrow> A1 closed.\<close>
+    proof -
+      have hD_haus: "is_hausdorff_on ?D (subspace_topology X TX ?D)"
+        using conjunct2[OF conjunct2[OF Theorem_17_11]] hH hDX by (by100 blast)
+      have hA1_sub_D: "A1 \<subseteq> ?D" by (by100 blast)
+      have hA1_compact: "top1_compact_on A1 (subspace_topology ?D (subspace_topology X TX ?D) A1)"
+      proof -
+        have "top1_compact_on A1 (subspace_topology X TX A1)"
+        proof -
+          obtain g where hg: "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
+              A1 (subspace_topology X TX A1) g"
+            using hA1 unfolding top1_is_arc_on_def by (by100 blast)
+          have hg_cont: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+              A1 (subspace_topology X TX A1) g"
+              and hg_img: "g ` top1_unit_interval = A1"
+            using hg unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)+
+          have hI_compact: "top1_compact_on top1_unit_interval top1_unit_interval_topology"
+          proof -
+            have "compact (top1_unit_interval :: real set)" unfolding top1_unit_interval_def
+              by (rule compact_Icc)
+            thus ?thesis using top1_compact_on_subspace_UNIV_iff_compact
+              unfolding top1_unit_interval_topology_def by (by100 blast)
+          qed
+          have hTA1: "is_topology_on A1 (subspace_topology X TX A1)"
+            by (rule subspace_topology_is_topology_on[OF])
+              (use hT in \<open>unfold is_topology_on_strict_def; by100 blast\<close>, use assms(4) in \<open>by100 blast\<close>)
+          from top1_compact_on_continuous_image[OF hI_compact hTA1 hg_cont]
+          have "top1_compact_on (g ` top1_unit_interval)
+              (subspace_topology A1 (subspace_topology X TX A1) (g ` top1_unit_interval))" .
+          hence "top1_compact_on A1
+              (subspace_topology A1 (subspace_topology X TX A1) A1)" using hg_img by (by100 simp)
+          moreover have "subspace_topology A1 (subspace_topology X TX A1) A1 = subspace_topology X TX A1"
+          proof (rule subspace_topology_self)
+            show "\<forall>U \<in> subspace_topology X TX A1. U \<subseteq> A1"
+              unfolding subspace_topology_def by (by100 blast)
+          qed
+          ultimately show ?thesis by (by100 simp)
+        qed
+        moreover have "subspace_topology X TX A1
+            = subspace_topology ?D (subspace_topology X TX ?D) A1"
+          using subspace_topology_trans[of A1 ?D X TX] hA1_sub_D hDX by (by100 simp)
+        ultimately show ?thesis by (by100 simp)
+      qed
+      show ?thesis by (rule Theorem_26_3[OF hD_haus hA1_sub_D hA1_compact])
+    qed
     have hA2_closed_D: "closedin_on ?D (subspace_topology X TX ?D) A2"
-      sorry \<comment> \<open>A2 compact in Hausdorff D \<Rightarrow> A2 closed.\<close>
+    proof -
+      have hD_haus: "is_hausdorff_on ?D (subspace_topology X TX ?D)"
+        using conjunct2[OF conjunct2[OF Theorem_17_11]] hH hDX by (by100 blast)
+      have hA2_sub_D: "A2 \<subseteq> ?D" by (by100 blast)
+      have hA2_compact: "top1_compact_on A2 (subspace_topology ?D (subspace_topology X TX ?D) A2)"
+      proof -
+        have "top1_compact_on A2 (subspace_topology X TX A2)"
+        proof -
+          obtain g where hg: "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
+              A2 (subspace_topology X TX A2) g"
+            using hA2 unfolding top1_is_arc_on_def by (by100 blast)
+          have hg_cont: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+              A2 (subspace_topology X TX A2) g"
+              and hg_img: "g ` top1_unit_interval = A2"
+            using hg unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)+
+          have hI_compact: "top1_compact_on top1_unit_interval top1_unit_interval_topology"
+          proof -
+            have "compact (top1_unit_interval :: real set)" unfolding top1_unit_interval_def
+              by (rule compact_Icc)
+            thus ?thesis using top1_compact_on_subspace_UNIV_iff_compact
+              unfolding top1_unit_interval_topology_def by (by100 blast)
+          qed
+          have hTA2: "is_topology_on A2 (subspace_topology X TX A2)"
+            by (rule subspace_topology_is_topology_on[OF])
+              (use hT in \<open>unfold is_topology_on_strict_def; by100 blast\<close>, use assms(6) in \<open>by100 blast\<close>)
+          from top1_compact_on_continuous_image[OF hI_compact hTA2 hg_cont]
+          have "top1_compact_on (g ` top1_unit_interval)
+              (subspace_topology A2 (subspace_topology X TX A2) (g ` top1_unit_interval))" .
+          hence "top1_compact_on A2
+              (subspace_topology A2 (subspace_topology X TX A2) A2)" using hg_img by (by100 simp)
+          moreover have "subspace_topology A2 (subspace_topology X TX A2) A2 = subspace_topology X TX A2"
+          proof (rule subspace_topology_self)
+            show "\<forall>U \<in> subspace_topology X TX A2. U \<subseteq> A2"
+              unfolding subspace_topology_def by (by100 blast)
+          qed
+          ultimately show ?thesis by (by100 simp)
+        qed
+        moreover have "subspace_topology X TX A2
+            = subspace_topology ?D (subspace_topology X TX ?D) A2"
+          using subspace_topology_trans[of A2 ?D X TX] hA2_sub_D hDX by (by100 simp)
+        ultimately show ?thesis by (by100 simp)
+      qed
+      show ?thesis by (rule Theorem_26_3[OF hD_haus hA2_sub_D hA2_compact])
+    qed
     \<comment> \<open>A2\<setminus>{c} = D \<setminus> A1 is open in D.\<close>
     have "?D - A1 = A2 - {c}" using assms(7) by (by100 blast)
     have hA2c_open_D: "A2 - {c} \<in> subspace_topology X TX ?D"
@@ -2352,8 +2438,13 @@ proof -
     have hsep: "top1_is_separation_on (?D - {c}) ?TDc (A1 - {c}) (A2 - {c})"
       unfolding top1_is_separation_on_def
       using hU_Dc hV_Dc hne1 hne2 hdisj hDc by (by100 blast)
-    from Lemma_23_1[of "?D - {c}" ?TDc]
-    have "\<not> top1_connected_on (?D - {c}) ?TDc" using hsep sorry
+    have "\<not> top1_connected_on (?D - {c}) ?TDc"
+    proof
+      assume "top1_connected_on (?D - {c}) ?TDc"
+      from iffD1[OF Lemma_23_1 this]
+      have "\<not> (\<exists>U V. top1_is_separation_on (?D - {c}) ?TDc U V)" by (by100 blast)
+      thus False using hsep by (by100 blast)
+    qed
     thus False using hconn by (by100 blast)
   qed
   \<comment> \<open>Get endpoints of ?D.\<close>
