@@ -5235,9 +5235,45 @@ proof -
       unfolding top1_is_separation_on_def
       using hP1_open_in_Y hVW_open_in_Y hP(1) hVW_ne hP1_sub_Y_compl by (by100 blast)
     \<comment> \<open>Each of U, V, W is connected \<subseteq> S2-Y. By Lemma\_23\_2, each \<subseteq> P1 or \<subseteq> (S2-Y)-P1.\<close>
-    have hU_side: "U \<subseteq> P1 \<or> U \<subseteq> (top1_S2 - ?Y) - P1" sorry
-    have hV_side: "V \<subseteq> P1 \<or> V \<subseteq> (top1_S2 - ?Y) - P1" sorry
-    have hW_side: "W \<subseteq> P1 \<or> W \<subseteq> (top1_S2 - ?Y) - P1" sorry
+    \<comment> \<open>Each of U,V,W connected \<subseteq> S2-Y. By Lemma\_23\_2, each \<subseteq> P1 or (S2-Y)-P1.\<close>
+    have hU_conn_Y: "top1_connected_on U
+        (subspace_topology (top1_S2 - ?Y) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - ?Y)) U)"
+    proof -
+      have "U \<subseteq> top1_S2 - ?Y" using hUVW(7) by (by100 blast)
+      hence "subspace_topology top1_S2 top1_S2_topology U =
+          subspace_topology (top1_S2 - ?Y) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - ?Y)) U"
+        using subspace_topology_trans[of U "top1_S2 - ?Y" top1_S2 top1_S2_topology] by (by100 simp)
+      thus ?thesis using hUVW(8) by (by100 simp)
+    qed
+    have hU_sub_Y: "U \<subseteq> top1_S2 - ?Y" using hUVW(7) by (by100 blast)
+    have hU_side: "U \<subseteq> P1 \<or> U \<subseteq> (top1_S2 - ?Y) - P1"
+      using Lemma_23_2[OF hTY hY_sep hU_sub_Y hU_conn_Y] by (by100 blast)
+    have hV_conn_Y: "top1_connected_on V
+        (subspace_topology (top1_S2 - ?Y) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - ?Y)) V)"
+    proof -
+      have "V \<subseteq> top1_S2 - ?Y" using hUVW(7) by (by100 blast)
+      hence "subspace_topology top1_S2 top1_S2_topology V =
+          subspace_topology (top1_S2 - ?Y) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - ?Y)) V"
+        using subspace_topology_trans[of V "top1_S2 - ?Y" top1_S2 top1_S2_topology] by (by100 simp)
+      thus ?thesis using hUVW(9) by (by100 simp)
+    qed
+    have hV_sub_Y: "V \<subseteq> top1_S2 - ?Y" using hUVW(7) by (by100 blast)
+    have hV_side: "V \<subseteq> P1 \<or> V \<subseteq> (top1_S2 - ?Y) - P1"
+      using Lemma_23_2[OF hTY hY_sep hV_sub_Y hV_conn_Y] by (by100 blast)
+    have hW_conn_Y: "top1_connected_on W
+        (subspace_topology (top1_S2 - ?Y) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - ?Y)) W)"
+    proof -
+      have "W \<subseteq> top1_S2 - ?Y" using hUVW(7) by (by100 blast)
+      hence "subspace_topology top1_S2 top1_S2_topology W =
+          subspace_topology (top1_S2 - ?Y) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - ?Y)) W"
+        using subspace_topology_trans[of W "top1_S2 - ?Y" top1_S2 top1_S2_topology] by (by100 simp)
+      thus ?thesis using hUVW(10) by (by100 simp)
+    qed
+    have hW_sub_Y: "W \<subseteq> top1_S2 - ?Y" using hUVW(7) by (by100 blast)
+    have hW_side: "W \<subseteq> P1 \<or> W \<subseteq> (top1_S2 - ?Y) - P1"
+      using Lemma_23_2[OF hTY hY_sep hW_sub_Y hW_conn_Y] by (by100 blast)
+    \<comment> \<open>P1 nonempty \<subseteq> U\<union>V\<union>W. At least one \<subseteq> P1. The others \<subseteq> (S2-Y)-P1.
+       If X \<subseteq> P1 and the others \<notin> P1, then P1 \<subseteq> X (since P1 \<inter> others = {}).\<close>
     show ?thesis using hU_side hV_side hW_side hP1_sub_Y_compl hUVW(7) hP(1) hUVW(4,5,6) sorry
   qed
   \<comment> \<open>Same argument for R1: S2-Y = R1 \<union> (R2 \<inter> S2-Y), both open in S2-Y.\<close>
