@@ -3400,9 +3400,9 @@ proof -
     \<comment> \<open>U open in W + W open in S2 \<Rightarrow> U open in S2 (intersection of opens is open).\<close>
     \<comment> \<open>U, V open in subspace W, W open in S2 \<Rightarrow> U, V open in S2.\<close>
     have hU_open_S2: "U \<in> top1_S2_topology"
-      sorry \<comment> \<open>U \<in> subspace of W, W \<in> S2\_top \<Rightarrow> U = U' \<inter> W for U' \<in> S2\_top \<Rightarrow> U \<in> S2\_top.\<close>
+      sorry \<comment> \<open>U open in subspace W, W open in S2 \<Rightarrow> U open in S2 (finite intersection of opens).\<close>
     have hV_open_S2: "V \<in> top1_S2_topology"
-      sorry \<comment> \<open>Same argument.\<close>
+      sorry \<comment> \<open>Same.\<close>
     \<comment> \<open>U, V \<subseteq> W \<subseteq> X, so they're open in X.\<close>
     have hW_sub_X: "?W \<subseteq> ?X" using hU'_sub_X hV'_sub_X hUV_eq by (by100 blast)
     have hU_sub_X: "U \<subseteq> ?X" using hUV(6) hW_sub_X by (by100 blast)
