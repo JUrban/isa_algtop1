@@ -2015,8 +2015,13 @@ proof -
     next
       fix x assume "x \<in> {a3}"
       hence "x = a3" by (by100 blast)
-      thus "x \<in> e13_pa3 \<inter> e23"
-        using he13_split(6) sorry \<comment> \<open>a3 \<in> e23: from endpoint.\<close>
+      have "a3 \<in> e23"
+      proof -
+        have "a3 \<in> top1_arc_endpoints_on e23 (subspace_topology top1_S2 top1_S2_topology e23)"
+          using assms(17) by (by100 blast)
+        thus ?thesis unfolding top1_arc_endpoints_on_def by (by100 blast)
+      qed
+      thus "x \<in> e13_pa3 \<inter> e23" using he13_split(6) \<open>x = a3\<close> by (by100 blast)
     qed
     \<comment> \<open>Step 2: Concatenate e13_pa3 and e23 at a3.\<close>
     have he13_pa3_sub: "e13_pa3 \<subseteq> top1_S2" using he13_sub he13_split(1) by (by100 blast)
@@ -2025,9 +2030,37 @@ proof -
       by (rule assms(11))
     \<comment> \<open>a3 is endpoint of e13_pa3 and e23.\<close>
     have ha3_ep1: "a3 \<in> top1_arc_endpoints_on e13_pa3 (subspace_topology top1_S2 top1_S2_topology e13_pa3)"
-      sorry \<comment> \<open>a3 is endpoint of sub-arc e13_pa3 (from split endpoints).\<close>
+    proof -
+      \<comment> \<open>e13_pa3 is an arc with endpoints {p, a3} (from the split: e13 split at p, a3 stays in e13_pa3).\<close>
+      obtain h13 where hh13: "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
+          e13_pa3 (subspace_topology top1_S2 top1_S2_topology e13_pa3) h13"
+        using he13_split(4) unfolding top1_is_arc_on_def by (by100 blast)
+      have heps: "top1_arc_endpoints_on e13_pa3 (subspace_topology top1_S2 top1_S2_topology e13_pa3)
+          = {h13 0, h13 1}"
+        by (rule arc_endpoints_are_boundary[OF hS2_strict hS2_haus he13_pa3_sub he13_split(4) hh13])
+      \<comment> \<open>h13 maps {0,1} to {p, a3} (the boundary points of the sub-arc).\<close>
+      \<comment> \<open>a3 \<in> e13_pa3 (from split). p \<in> e13_pa3 (from split). Both are endpoints.\<close>
+      have hbij13: "bij_betw h13 top1_unit_interval e13_pa3"
+        using hh13 unfolding top1_homeomorphism_on_def by (by100 blast)
+      have "h13 0 \<in> e13_pa3" "h13 1 \<in> e13_pa3"
+      proof -
+        have "0 \<in> top1_unit_interval" "1 \<in> top1_unit_interval"
+          unfolding top1_unit_interval_def by (by100 simp)+
+        thus "h13 0 \<in> e13_pa3" "h13 1 \<in> e13_pa3"
+          using hbij13 unfolding bij_betw_def by (by100 blast)+
+      qed
+      \<comment> \<open>a3 is one of h13(0) or h13(1).\<close>
+      have "a3 \<in> {h13 0, h13 1}"
+      proof -
+        \<comment> \<open>If a3 = h13(0) or a3 = h13(1), done. Otherwise a3 is interior,
+           but a3 is an endpoint of the ORIGINAL arc e13, and the split puts a3 in e13_pa3.
+           Since e13_pa3 is an arc from p to a3 (boundary), a3 must be an endpoint.\<close>
+        show ?thesis sorry \<comment> \<open>a3 must be h13(0) or h13(1). Follows from: a3 is boundary of e13_pa3 in e13.\<close>
+      qed
+      thus ?thesis using heps by (by100 blast)
+    qed
     have ha3_ep2: "a3 \<in> top1_arc_endpoints_on e23 (subspace_topology top1_S2 top1_S2_topology e23)"
-      sorry \<comment> \<open>a3 is endpoint of e23 (from arc_endpoints_are_boundary).\<close>
+      using assms(17) by (by100 blast)
     have hconcat1: "top1_is_arc_on (e13_pa3 \<union> e23)
         (subspace_topology top1_S2 top1_S2_topology (e13_pa3 \<union> e23))"
       by (rule arcs_concatenation_is_arc[OF hS2_strict hS2_haus
