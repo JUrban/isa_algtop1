@@ -5551,7 +5551,25 @@ proof -
     thus ?thesis
     proof
       assume hRU: "R1 \<subseteq> U"
-      have "U \<subseteq> R1" sorry \<comment> \<open>x\_R \<in> U \<inter> R1 + component\_of argument.\<close>
+      have "U \<subseteq> R1"
+      proof -
+        have "x_R \<in> U" using hRU hx_R by (by100 blast)
+        have hU_sub_BC: "U \<subseteq> top1_S2 - (?B \<union> ?C)"
+          using hR1_sub_Y_compl hUVW(7) by (by100 blast)
+        have hU_conn_BC: "top1_connected_on U
+            (subspace_topology (top1_S2 - (?B \<union> ?C))
+                (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?B \<union> ?C))) U)"
+        proof -
+          have "subspace_topology top1_S2 top1_S2_topology U =
+              subspace_topology (top1_S2 - (?B \<union> ?C))
+                  (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?B \<union> ?C))) U"
+            using subspace_topology_trans[of U "top1_S2 - (?B \<union> ?C)" top1_S2 top1_S2_topology]
+                hU_sub_BC by (by100 simp)
+          thus ?thesis using hUVW(8) by (by100 simp)
+        qed
+        from top1_connected_subspace_subset_component_of[OF hU_sub_BC \<open>x_R \<in> U\<close> hU_conn_BC]
+        show ?thesis using hR1_eq_comp by (by100 simp)
+      qed
       thus ?thesis using hRU by (by100 blast)
     next
       assume "R1 \<subseteq> V \<union> W"
@@ -5582,11 +5600,47 @@ proof -
       thus ?thesis
       proof
         assume "R1 \<subseteq> V"
-        have "V \<subseteq> R1" sorry
+        have "V \<subseteq> R1"
+        proof -
+          have "x_R \<in> V" using \<open>R1 \<subseteq> V\<close> hx_R by (by100 blast)
+          have hV_sub_BC: "V \<subseteq> top1_S2 - (?B \<union> ?C)"
+            using hR1_sub_Y_compl hUVW(7) by (by100 blast)
+          have hV_conn_BC: "top1_connected_on V
+              (subspace_topology (top1_S2 - (?B \<union> ?C))
+                  (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?B \<union> ?C))) V)"
+          proof -
+            have "subspace_topology top1_S2 top1_S2_topology V =
+                subspace_topology (top1_S2 - (?B \<union> ?C))
+                    (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?B \<union> ?C))) V"
+              using subspace_topology_trans[of V "top1_S2 - (?B \<union> ?C)" top1_S2 top1_S2_topology]
+                  hV_sub_BC by (by100 simp)
+            thus ?thesis using hUVW(9) by (by100 simp)
+          qed
+          from top1_connected_subspace_subset_component_of[OF hV_sub_BC \<open>x_R \<in> V\<close> hV_conn_BC]
+          show ?thesis using hR1_eq_comp by (by100 simp)
+        qed
         thus ?thesis using \<open>R1 \<subseteq> V\<close> by (by100 blast)
       next
         assume "R1 \<subseteq> W"
-        have "W \<subseteq> R1" sorry
+        have "W \<subseteq> R1"
+        proof -
+          have "x_R \<in> W" using \<open>R1 \<subseteq> W\<close> hx_R by (by100 blast)
+          have hW_sub_BC: "W \<subseteq> top1_S2 - (?B \<union> ?C)"
+            using hR1_sub_Y_compl hUVW(7) by (by100 blast)
+          have hW_conn_BC: "top1_connected_on W
+              (subspace_topology (top1_S2 - (?B \<union> ?C))
+                  (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?B \<union> ?C))) W)"
+          proof -
+            have "subspace_topology top1_S2 top1_S2_topology W =
+                subspace_topology (top1_S2 - (?B \<union> ?C))
+                    (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?B \<union> ?C))) W"
+              using subspace_topology_trans[of W "top1_S2 - (?B \<union> ?C)" top1_S2 top1_S2_topology]
+                  hW_sub_BC by (by100 simp)
+            thus ?thesis using hUVW(10) by (by100 simp)
+          qed
+          from top1_connected_subspace_subset_component_of[OF hW_sub_BC \<open>x_R \<in> W\<close> hW_conn_BC]
+          show ?thesis using hR1_eq_comp by (by100 simp)
+        qed
         thus ?thesis using \<open>R1 \<subseteq> W\<close> by (by100 blast)
       qed
     qed
