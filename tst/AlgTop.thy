@@ -3480,7 +3480,45 @@ lemma arc_minus_endpoints_connected:
       and hArc: "top1_is_arc_on D (subspace_topology X TX D)"
       and hep: "top1_arc_endpoints_on D (subspace_topology X TX D) = {a, b}" and hab: "a \<noteq> b"
   shows "top1_connected_on (D - {a, b}) (subspace_topology X TX (D - {a, b}))"
-  sorry
+proof -
+  obtain h where hh: "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
+      D (subspace_topology X TX D) h"
+    using hArc unfolding top1_is_arc_on_def by (by100 blast)
+  have hh_ep: "{h 0, h 1} = {a, b}"
+    using arc_endpoints_are_boundary[OF hT hH hDX hArc hh] hep by (by100 simp)
+  have hinj: "inj_on h top1_unit_interval"
+    using hh unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+  have himg: "h ` top1_unit_interval = D"
+    using hh unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+  \<comment> \<open>h maps (0,1) = {0<..<1} onto D - {a,b}.\<close>
+  have himg_open: "h ` {0<..<1::real} = D - {a, b}"
+  proof -
+    have hIoo_eq: "{0<..<1::real} = top1_unit_interval - {0, 1}"
+      unfolding top1_unit_interval_def by (by100 force)
+    have "h ` (top1_unit_interval - {0, 1}) = D - {h 0, h 1}"
+    proof -
+      have "(0::real) \<in> top1_unit_interval" "(1::real) \<in> top1_unit_interval"
+        unfolding top1_unit_interval_def by (by100 simp)+
+      have h01_sub: "{0::real, 1} \<subseteq> top1_unit_interval" sorry
+      have hI_minus_sub: "top1_unit_interval - {0::real, 1} \<subseteq> top1_unit_interval" by (by100 blast)
+      have "h ` (top1_unit_interval - {0, 1}) = h ` top1_unit_interval - h ` {0, 1}"
+        by (rule inj_on_image_set_diff[OF hinj hI_minus_sub h01_sub])
+      also have "h ` top1_unit_interval = D" by (rule himg)
+      also have "h ` {0::real, 1} = {h 0, h 1}" by (by100 simp)
+      finally show ?thesis .
+    qed
+    thus ?thesis using hIoo_eq hh_ep by (by100 force)
+  qed
+  \<comment> \<open>(0,1) is connected.\<close>
+  have hIoo_conn: "top1_connected_on {0<..<1::real} (subspace_topology UNIV top1_open_sets {0<..<1})"
+  proof (rule Theorem_24_1)
+    fix x y z :: real assume "x \<in> {0<..<1}" "y \<in> {0<..<1}" "x \<le> z" "z \<le> y"
+    thus "z \<in> {0<..<1}" by (by100 simp)
+  qed
+  \<comment> \<open>h restricted to (0,1) is continuous into D-{a,b} subspace of X.\<close>
+  \<comment> \<open>By Theorem 23.5: continuous image of connected is connected.\<close>
+  show ?thesis sorry
+qed
 
 text \<open>Lemma 64.1: A theta space X \<subseteq> S2 separates S2 into three components.\<close>
 
