@@ -4491,13 +4491,50 @@ proof -
     by (rule Theorem_63_2_arc_no_separation[OF assms(1) assms(8) assms(14)])
   have hAB_card: "card (?A \<inter> ?B) = 2"
     using hAB_int hdist(2) by (by100 simp)
+  \<comment> \<open>Get raw components, then choose labels so C-{a1,a3} \<subseteq> P2.\<close>
+  have hCm_conn: "top1_connected_on (?C - {a1, a3})
+      (subspace_topology top1_S2 top1_S2_topology (?C - {a1, a3}))"
+    sorry \<comment> \<open>arc\_minus\_endpoints\_connected for C = e41 \<union> e34.\<close>
+  have hCm_sub_AB: "?C - {a1, a3} \<subseteq> top1_S2 - (?A \<union> ?B)"
+  proof -
+    have "?C \<inter> (?A \<union> ?B) \<subseteq> {a1, a3}"
+    proof -
+      have "?C \<inter> ?A = {a1, a3}" using hAC_int by (by100 blast)
+      moreover have "?C \<inter> ?B = {a1, a3}" using hBC_int by (by100 blast)
+      ultimately show ?thesis by (by100 blast)
+    qed
+    thus ?thesis using hC_sub by (by100 blast)
+  qed
+  have hCm_ne: "?C - {a1, a3} \<noteq> {}"
+    sorry \<comment> \<open>Arc has more than 2 points.\<close>
+  obtain P1_raw P2_raw where hP_raw: "P1_raw \<noteq> {}" "P2_raw \<noteq> {}" "P1_raw \<inter> P2_raw = {}"
+      "P1_raw \<union> P2_raw = top1_S2 - (?A \<union> ?B)"
+      "top1_connected_on P1_raw (subspace_topology top1_S2 top1_S2_topology P1_raw)"
+      "top1_connected_on P2_raw (subspace_topology top1_S2 top1_S2_topology P2_raw)"
+    using Theorem_63_5_two_closed_connected[OF assms(1) hA_closed hB_closed
+        hA_conn hB_conn hAB_card hA_no_sep hB_no_sep]
+    by (by100 force)
+  have hCm_in_raw: "?C - {a1, a3} \<subseteq> P1_raw \<or> ?C - {a1, a3} \<subseteq> P2_raw"
+    sorry \<comment> \<open>Lemma\_23\_2: connected subset of separation.\<close>
   obtain P1 P2 where hP: "P1 \<noteq> {}" "P2 \<noteq> {}" "P1 \<inter> P2 = {}"
       "P1 \<union> P2 = top1_S2 - (?A \<union> ?B)"
       "top1_connected_on P1 (subspace_topology top1_S2 top1_S2_topology P1)"
       "top1_connected_on P2 (subspace_topology top1_S2 top1_S2_topology P2)"
-    using Theorem_63_5_two_closed_connected[OF assms(1) hA_closed hB_closed
-        hA_conn hB_conn hAB_card hA_no_sep hB_no_sep]
-    by (by100 force)
+      and hCm_in_P2: "?C - {a1, a3} \<subseteq> P2"
+  proof -
+    from hCm_in_raw show ?thesis
+    proof
+      assume "?C - {a1, a3} \<subseteq> P1_raw"
+      show ?thesis
+        by (rule that[of P2_raw P1_raw])
+          (use hP_raw \<open>?C - {a1, a3} \<subseteq> P1_raw\<close> in \<open>by100 blast\<close>)+
+    next
+      assume "?C - {a1, a3} \<subseteq> P2_raw"
+      show ?thesis
+        by (rule that[of P1_raw P2_raw])
+          (use hP_raw \<open>?C - {a1, a3} \<subseteq> P2_raw\<close> in \<open>by100 blast\<close>)+
+    qed
+  qed
   \<comment> \<open>Both P1, P2 are open (components of open set S2-(A\<union>B)).\<close>
   have hAB_closed_S2: "closedin_on top1_S2 top1_S2_topology (?A \<union> ?B)"
     by (rule closedin_on_Un[OF hTopS2 hA_closed hB_closed])
@@ -4662,9 +4699,7 @@ proof -
       using hP2_eq by (by100 simp)
     thus ?thesis by (rule open_in_sub_imp_open[OF hAB_compl_open])
   qed
-  \<comment> \<open>C-{a1,a3} lies in one component. WLOG in P2 (swap if needed).\<close>
-  have hCm_in_P2: "?C - {a1, a3} \<subseteq> P2"
-    sorry \<comment> \<open>Connected + separation + WLOG label swap.\<close>
+  \<comment> \<open>C-{a1,a3} \<subseteq> P2 was established in the obtain above.\<close>
   \<comment> \<open>closure(P1) = P1 \<union> (A\<union>B), using simple_closed_curve_boundary_meets_component.\<close>
   have hcl_P1: "closure_on top1_S2 top1_S2_topology P1 = P1 \<union> (?A \<union> ?B)"
   proof (rule set_eqI, rule iffI)
@@ -4788,13 +4823,43 @@ proof -
     by (rule Theorem_63_2_arc_no_separation[OF assms(1) hC_sub hC_arc])
   have hBC_card: "card (?B \<inter> ?C) = 2"
     using hBC_int hdist(2) by (by100 simp)
+  \<comment> \<open>Get raw components for S2-(B\<union>C), then choose labels so A-{a1,a3} \<subseteq> R2.\<close>
+  have hAm_sub_BC: "?A - {a1, a3} \<subseteq> top1_S2 - (?B \<union> ?C)"
+  proof -
+    have "?A \<inter> (?B \<union> ?C) \<subseteq> {a1, a3}" using hAB_int hAC_int by (by100 blast)
+    thus ?thesis using hA_sub by (by100 blast)
+  qed
+  have hAm_in_raw_pre: "\<exists>R1' R2'. R1' \<noteq> {} \<and> R2' \<noteq> {} \<and> R1' \<inter> R2' = {}
+      \<and> R1' \<union> R2' = top1_S2 - (?B \<union> ?C)
+      \<and> top1_connected_on R1' (subspace_topology top1_S2 top1_S2_topology R1')
+      \<and> top1_connected_on R2' (subspace_topology top1_S2 top1_S2_topology R2')"
+    using Theorem_63_5_two_closed_connected[OF assms(1) hB_closed hC_closed
+        hB_conn hC_conn hBC_card hB_no_sep hC_no_sep] by (by100 metis)
   obtain R1 R2 where hR: "R1 \<noteq> {}" "R2 \<noteq> {}" "R1 \<inter> R2 = {}"
       "R1 \<union> R2 = top1_S2 - (?B \<union> ?C)"
       "top1_connected_on R1 (subspace_topology top1_S2 top1_S2_topology R1)"
       "top1_connected_on R2 (subspace_topology top1_S2 top1_S2_topology R2)"
-    using Theorem_63_5_two_closed_connected[OF assms(1) hB_closed hC_closed
-        hB_conn hC_conn hBC_card hB_no_sep hC_no_sep]
-    by (by100 metis)
+      and hAm_in_R2: "?A - {a1, a3} \<subseteq> R2"
+  proof -
+    from hAm_in_raw_pre obtain R1' R2' where hR': "R1' \<noteq> {}" "R2' \<noteq> {}" "R1' \<inter> R2' = {}"
+        "R1' \<union> R2' = top1_S2 - (?B \<union> ?C)"
+        "top1_connected_on R1' (subspace_topology top1_S2 top1_S2_topology R1')"
+        "top1_connected_on R2' (subspace_topology top1_S2 top1_S2_topology R2')" by (by100 metis)
+    have hAm_raw: "?A - {a1, a3} \<subseteq> R1' \<or> ?A - {a1, a3} \<subseteq> R2'"
+      sorry \<comment> \<open>Lemma\_23\_2: connected subset of separation.\<close>
+    from hAm_raw show ?thesis
+    proof
+      assume "?A - {a1, a3} \<subseteq> R1'"
+      show ?thesis
+        by (rule that[of R2' R1'])
+          (use hR' \<open>?A - {a1, a3} \<subseteq> R1'\<close> in \<open>by100 blast\<close>)+
+    next
+      assume "?A - {a1, a3} \<subseteq> R2'"
+      show ?thesis
+        by (rule that[of R1' R2'])
+          (use hR' \<open>?A - {a1, a3} \<subseteq> R2'\<close> in \<open>by100 blast\<close>)+
+    qed
+  qed
   have hBC_closed_S2: "closedin_on top1_S2 top1_S2_topology (?B \<union> ?C)"
     by (rule closedin_on_Un[OF hTopS2 hB_closed hC_closed])
   have hBC_compl_open: "top1_S2 - (?B \<union> ?C) \<in> top1_S2_topology"
@@ -4921,8 +4986,7 @@ proof -
       by (by100 simp)
     thus ?thesis by (rule open_in_sub_imp_open[OF hBC_compl_open])
   qed
-  have hAm_in_R2: "?A - {a1, a3} \<subseteq> R2"
-    sorry \<comment> \<open>WLOG: A-{a1,a3} in R2.\<close>
+  \<comment> \<open>hAm\_in\_R2 was established in the obtain above.\<close>
   have hcl_R1: "closure_on top1_S2 top1_S2_topology R1 = R1 \<union> (?B \<union> ?C)"
   proof (rule set_eqI, rule iffI)
     fix z assume "z \<in> closure_on top1_S2 top1_S2_topology R1"
