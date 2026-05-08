@@ -2239,16 +2239,30 @@ proof -
       \<comment> \<open>Scaling t \<mapsto> t*t0: [0,1] \<rightarrow> [0,1] is continuous.\<close>
       have hscale_cont: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
           top1_unit_interval top1_unit_interval_topology (\<lambda>s::real. s * t0)"
-        sorry \<comment> \<open>Affine map on [0,1] is continuous. Standard fact.\<close>
+      proof -
+        have "continuous_on UNIV ((*) t0 :: real \<Rightarrow> real)" by (rule continuous_on_mult_const)
+        hence hcont: "continuous_on UNIV (\<lambda>s::real. s * t0)"
+          using mult.commute[of t0] by (by100 simp)
+        have himg: "\<And>s::real. s \<in> top1_unit_interval \<Longrightarrow> s * t0 \<in> top1_unit_interval"
+          unfolding top1_unit_interval_def using ht0_open
+          using mult_le_one[of _ t0] by (by100 simp)
+        from top1_continuous_map_on_real_subspace_open_sets[OF himg hcont]
+        show ?thesis unfolding top1_unit_interval_topology_def .
+      qed
       \<comment> \<open>Composition h \<circ> scale: [0,1] \<rightarrow> D is continuous.\<close>
-      have "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
-          D (subspace_topology X TX D) (h \<circ> (\<lambda>s::real. s * t0))"
-        sorry \<comment> \<open>top1\_continuous\_map\_on\_comp with scaling + h.\<close>
+      from top1_continuous_map_on_comp[OF hscale_cont hh_cont]
+      have hcomp_cont: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+          D (subspace_topology X TX D) (h \<circ> (\<lambda>s::real. s * t0))" .
       \<comment> \<open>Shrink codomain from D to D1.\<close>
-      from top1_continuous_map_on_codomain_shrink
-      show ?thesis using hg_img \<open>top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
-          D (subspace_topology X TX D) (h \<circ> (\<lambda>s::real. s * t0))\<close> assms(5) assms(13) hDX
-        sorry
+      have hg_img_sub: "?g ` top1_unit_interval \<subseteq> D1" using hg_img by (by100 blast)
+      have hD1_sub_D: "D1 \<subseteq> D" using assms(5) by (by100 blast)
+      from top1_continuous_map_on_codomain_shrink[OF hcomp_cont hg_img_sub hD1_sub_D]
+      have "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+          D1 (subspace_topology D (subspace_topology X TX D) D1) ?g" .
+      moreover have "subspace_topology D (subspace_topology X TX D) D1
+          = subspace_topology X TX D1"
+        using subspace_topology_trans[of D1 D X TX] hD1_sub_D hDX by (by100 simp)
+      ultimately show ?thesis by (by100 simp)
     qed
     \<comment> \<open>[0,1] compact, D1 Hausdorff \<Rightarrow> Theorem 26.6.\<close>
     have hI_compact: "top1_compact_on top1_unit_interval top1_unit_interval_topology"
