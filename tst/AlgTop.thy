@@ -5724,9 +5724,49 @@ proof -
       and hT_ne: "T \<noteq> {}"
       and hT_union: "P1 \<union> R1 \<union> T = top1_S2 - ?Y"
       and hT_disj: "P1 \<inter> T = {}" "R1 \<inter> T = {}"
-    sorry
+  proof -
+    \<comment> \<open>P1 \<in> {U,V,W}, R1 \<in> {U,V,W}, P1 \<noteq> R1. The third element is T.\<close>
+    from hP1_is_comp hR1_is_comp hP1_ne_R1
+    obtain T0 where hT0: "T0 \<in> {U, V, W}" "T0 \<noteq> P1" "T0 \<noteq> R1"
+        "{P1, R1, T0} = {U, V, W}" sorry
+    have "top1_connected_on T0 (subspace_topology top1_S2 top1_S2_topology T0)"
+      using hT0(1) hUVW(8,9,10) by (by100 blast)
+    moreover have "T0 \<noteq> {}" using hT0(1) hUVW(1,2,3) by (by100 blast)
+    moreover have "P1 \<union> R1 \<union> T0 = top1_S2 - ?Y"
+    proof -
+      have "\<Union>{P1, R1, T0} = \<Union>{U, V, W}" using hT0(4) by (by100 simp)
+      moreover have "\<Union>{P1, R1, T0} = P1 \<union> R1 \<union> T0" by (by100 blast)
+      moreover have "\<Union>{U, V, W} = U \<union> V \<union> W" by (by100 blast)
+      ultimately show ?thesis using hUVW(7) by (by100 simp)
+    qed
+    moreover have "P1 \<inter> T0 = {}"
+    proof -
+      from hP1_is_comp hT0(1,2) have "P1 \<noteq> T0" by (by100 blast)
+      thus ?thesis using hP1_is_comp hT0(1) hUVW(4,5,6) sorry
+    qed
+    moreover have "R1 \<inter> T0 = {}"
+    proof -
+      from hR1_is_comp hT0(1,3) have "R1 \<noteq> T0" by (by100 blast)
+      thus ?thesis using hR1_is_comp hT0(1) hUVW(4,5,6) sorry
+    qed
+    ultimately show ?thesis by (rule that[OF hT0(1,2,3)])
+  qed
   have he24_in_T: "e24 - {a2, a4} \<subseteq> T"
-    sorry \<comment> \<open>Connected subset of U\<union>V\<union>W, not in P1 or R1, hence in T.\<close>
+  proof -
+    \<comment> \<open>e24-{a2,a4} connected \<subseteq> P1\<union>R1\<union>T (disjoint open). By Lemma\_23\_2 approach: in one.\<close>
+    have "e24 - {a2, a4} \<subseteq> P1 \<union> R1 \<union> T" using he24_in_Y_compl hT_union by (by100 blast)
+    \<comment> \<open>Not \<subseteq> P1 (he24\_not\_P1). Not \<subseteq> R1 (he24\_not\_R1). Hence \<subseteq> T.\<close>
+    \<comment> \<open>P1, R1, T are pairwise disjoint open. Connected e24-{a2,a4} must be in one.\<close>
+    have hT_open: "T \<in> top1_S2_topology" using hT_is(1) hUVW(11,12,13) by (by100 blast)
+    \<comment> \<open>e24-{a2,a4} \<subseteq> P1 or \<subseteq> R1\<union>T (separation {P1, R1\<union>T}).\<close>
+    have "e24 - {a2, a4} \<subseteq> P1 \<or> e24 - {a2, a4} \<subseteq> R1 \<union> T"
+      sorry \<comment> \<open>Lemma\_23\_2 on separation {P1, R1\<union>T} of P1\<union>R1\<union>T.\<close>
+    hence "e24 - {a2, a4} \<subseteq> R1 \<union> T" using he24_not_P1 by (by100 blast)
+    \<comment> \<open>Then \<subseteq> R1 or \<subseteq> T.\<close>
+    moreover have "e24 - {a2, a4} \<subseteq> R1 \<or> e24 - {a2, a4} \<subseteq> T"
+      sorry \<comment> \<open>Lemma\_23\_2 on separation {R1, T} of R1\<union>T.\<close>
+    ultimately show ?thesis using he24_not_R1 by (by100 blast)
+  qed
   \<comment> \<open>Step 5: Apply Theorem_63_5 to split T using cl(P1)\<union>cl(R1) and e24.\<close>
   let ?C1 = "closure_on top1_S2 top1_S2_topology P1
         \<union> closure_on top1_S2 top1_S2_topology R1"
@@ -5896,7 +5936,31 @@ proof -
     finally show ?thesis .
   qed
   have hP1R1_disj: "P1 \<inter> R1 = {}"
-    sorry \<comment> \<open>P1,R1 are distinct elements of {U,V,W}, pairwise disjoint.\<close>
+  proof -
+    from hP1_is_comp show ?thesis
+    proof (elim disjE)
+      assume "P1 = U" from hR1_is_comp show ?thesis
+      proof (elim disjE)
+        assume "R1 = U" thus ?thesis using hP1_ne_R1 \<open>P1 = U\<close> by (by100 blast)
+      next assume "R1 = V" thus ?thesis using \<open>P1 = U\<close> hUVW(4) by (by100 blast)
+      next assume "R1 = W" thus ?thesis using \<open>P1 = U\<close> hUVW(6) by (by100 blast)
+      qed
+    next
+      assume "P1 = V" from hR1_is_comp show ?thesis
+      proof (elim disjE)
+        assume "R1 = U" thus ?thesis using \<open>P1 = V\<close> hUVW(4) by (by100 blast)
+      next assume "R1 = V" thus ?thesis using hP1_ne_R1 \<open>P1 = V\<close> by (by100 blast)
+      next assume "R1 = W" thus ?thesis using \<open>P1 = V\<close> hUVW(5) by (by100 blast)
+      qed
+    next
+      assume "P1 = W" from hR1_is_comp show ?thesis
+      proof (elim disjE)
+        assume "R1 = U" thus ?thesis using \<open>P1 = W\<close> hUVW(6) by (by100 blast)
+      next assume "R1 = V" thus ?thesis using \<open>P1 = W\<close> hUVW(5) by (by100 blast)
+      next assume "R1 = W" thus ?thesis using hP1_ne_R1 \<open>P1 = W\<close> by (by100 blast)
+      qed
+    qed
+  qed
   have hfour_disj: "P1 \<inter> R1 = {}" "P1 \<inter> W1 = {}" "P1 \<inter> W2 = {}"
       "R1 \<inter> W1 = {}" "R1 \<inter> W2 = {}" "W1 \<inter> W2 = {}"
   proof -
