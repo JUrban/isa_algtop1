@@ -2422,6 +2422,18 @@ proof -
   show "top1_arc_endpoints_on D2 (subspace_topology X TX D2) = {p, b}" by (rule ep2)
 qed
 
+\<comment> \<open>Helper: if an arc D = D1 \<union> D2 with D1 \<inter> D2 = {c} has both endpoints in D1,
+   then D2 = {c} (D1 covers all of D except the junction point).\<close>
+lemma arc_both_endpoints_in_one_part:
+  assumes hT: "is_topology_on_strict X TX" and hH: "is_hausdorff_on X TX"
+      and hDX: "D \<subseteq> X" and hArc: "top1_is_arc_on D (subspace_topology X TX D)"
+      and "D = D1 \<union> D2" "D1 \<inter> D2 = {c}"
+      and hD1_conn: "top1_connected_on D1 (subspace_topology X TX D1)" and "D1 \<subseteq> X"
+      and hep: "top1_arc_endpoints_on D (subspace_topology X TX D) = {a, b}" and "a \<noteq> b"
+      and "a \<in> D1" "b \<in> D1"
+  shows "D2 = {c}"
+  sorry
+
 \<comment> \<open>Reusable: endpoints of concatenated arc = the non-shared endpoints.\<close>
 lemma arc_concat_endpoints:
   assumes hT: "is_topology_on_strict X TX" and hH: "is_hausdorff_on X TX"
@@ -2650,7 +2662,16 @@ proof -
       case False hence "b \<in> A1" using hb_D by (by100 blast)
       \<comment> \<open>Both a,b \<in> A1. This contradicts A2 being an arc (more than one point):
          A2 \<subseteq> D, A2 is arc, but all of D's endpoints are in A1, forcing A2 = {c}.\<close>
-      thus ?thesis sorry
+      \<comment> \<open>Contradiction: both a,b \<in> A1 forces A2 = {c} (connected\_contains\_Icc),
+         but A2 is an arc with y \<in> A2, y \<noteq> c.\<close>
+      have "y \<in> A2" using hep2 unfolding top1_arc_endpoints_on_def by (by100 blast)
+      have hA1_conn: "top1_connected_on A1 (subspace_topology X TX A1)"
+        sorry \<comment> \<open>A1 is arc \<Rightarrow> connected (Thm 23.5 + [0,1] connected).\<close>
+      have "A2 = {c}"
+        by (rule arc_both_endpoints_in_one_part[OF hT hH hDX hD_arc hD_eq assms(7) hA1_conn
+            assms(4) hab_ep hab_ne True \<open>b \<in> A1\<close>])
+      hence "y = c" using \<open>y \<in> A2\<close> by (by100 blast)
+      thus ?thesis using hc_ne_y by (by100 blast)
     qed
     from arc_split_endpoints(1)[OF hT hH hDX hD_arc hD_eq assms(7) hA1 hA2
         True hb_A2 hc_A1 hc_A2 assms(4) assms(6) hab_ep hc_not_ep]
@@ -2668,7 +2689,19 @@ proof -
   next
     case False
     hence "a \<in> A2" using ha_D by (by100 blast)
-    have "b \<in> A1" sorry \<comment> \<open>If a \<in> A2 and b \<in> A2, both endpoints in A2 forces A1 = {c}, contradiction.\<close>
+    have "b \<in> A1"
+    proof (rule ccontr)
+      assume "b \<notin> A1" hence "b \<in> A2" using hb_D by (by100 blast)
+      have "x \<in> A1" using hep1 unfolding top1_arc_endpoints_on_def by (by100 blast)
+      have hA2_conn: "top1_connected_on A2 (subspace_topology X TX A2)"
+        sorry \<comment> \<open>A2 is an arc hence connected.\<close>
+      have "A1 = {c}"
+        by (rule arc_both_endpoints_in_one_part[OF hT hH hDX hD_arc _ _ hA2_conn assms(6)
+            hab_ep hab_ne \<open>a \<in> A2\<close> \<open>b \<in> A2\<close>])
+          (use assms(5,7) in \<open>by100 blast\<close>)+
+      hence "x = c" using \<open>x \<in> A1\<close> by (by100 blast)
+      thus False using hx_ne_c by (by100 blast)
+    qed
     \<comment> \<open>Swap roles: b \<in> A1 (= D1), a \<in> A2 (= D2).\<close>
     have hab_ep': "top1_arc_endpoints_on ?D (subspace_topology X TX ?D) = {b, a}"
       using hab_ep by (by100 blast)
