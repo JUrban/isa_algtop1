@@ -5329,7 +5329,12 @@ proof -
             closure_on top1_S2 top1_S2_topology R1\<close> by (by100 simp)
       moreover have "(\<Union>i \<in> ?I. ?A i) = closure_on top1_S2 top1_S2_topology P1 \<union>
           closure_on top1_S2 top1_S2_topology R1" by (by100 force)
-      ultimately show ?thesis sorry \<comment> \<open>Theorem\_23\_3 application: by100 too tight.\<close>
+      ultimately have hpremises: "?I \<noteq> {} \<and> (\<forall>i \<in> ?I. ?A i \<subseteq> top1_S2) \<and>
+          (\<forall>i \<in> ?I. top1_connected_on (?A i) (subspace_topology top1_S2 top1_S2_topology (?A i))) \<and>
+          p \<in> \<Inter>(?A ` ?I) \<and> (\<Union>i \<in> ?I. ?A i) = closure_on top1_S2 top1_S2_topology P1 \<union>
+          closure_on top1_S2 top1_S2_topology R1" by (by100 blast)
+      from Theorem_23_3[OF hTopS2, of ?I ?A p] hpremises
+      show ?thesis by (by100 metis)
     qed
     thus ?thesis .
   qed
