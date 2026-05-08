@@ -3649,8 +3649,44 @@ proof -
   have hC_minus_conn: "top1_connected_on (C - {a, b})
       (subspace_topology top1_S2 top1_S2_topology (C - {a, b}))"
     by (rule arc_minus_endpoints_connected[OF assms(1) hS2_haus assms(4) assms(7) assms(14) assms(8)])
+  \<comment> \<open>U0, U0' are open in S2 (components of open set in loc. path connected space).\<close>
+  have hU0_open: "U0 \<in> top1_S2_topology" sorry
+  have hU0'_open_pre: "U0' \<in> top1_S2_topology" sorry
+  \<comment> \<open>Hence U0, U0' form a separation of S2-(A\<union>B).\<close>
+  have hTopAB: "is_topology_on (top1_S2 - (A \<union> B))
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (A \<union> B)))"
+    sorry
+  have hU0_in_sub: "U0 \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - (A \<union> B))"
+  proof -
+    have "U0 = (top1_S2 - (A \<union> B)) \<inter> U0" using hU0(4) by (by100 blast)
+    thus ?thesis unfolding subspace_topology_def using hU0_open by (by100 blast)
+  qed
+  have hU0'_in_sub: "U0' \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - (A \<union> B))"
+  proof -
+    have "U0' = (top1_S2 - (A \<union> B)) \<inter> U0'" using hU0(4) by (by100 blast)
+    thus ?thesis unfolding subspace_topology_def using hU0'_open_pre by (by100 blast)
+  qed
+  have hAB_sep_proper: "top1_is_separation_on (top1_S2 - (A \<union> B))
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (A \<union> B))) U0 U0'"
+    unfolding top1_is_separation_on_def
+    using hU0_in_sub hU0'_in_sub hU0(1,2,3,4) by (by100 blast)
   have hC_minus_sub: "C - {a, b} \<subseteq> U0' \<or> C - {a, b} \<subseteq> U0"
-    sorry \<comment> \<open>Lemma 23.2: connected subset in separation lies in one component.\<close>
+  proof -
+    have hCm_sub_AB: "C - {a, b} \<subseteq> top1_S2 - (A \<union> B)" by (rule hC_minus)
+    have hCm_conn_sub: "top1_connected_on (C - {a, b})
+        (subspace_topology (top1_S2 - (A \<union> B))
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (A \<union> B))) (C - {a, b}))"
+    proof -
+      have "subspace_topology top1_S2 top1_S2_topology (C - {a, b})
+          = subspace_topology (top1_S2 - (A \<union> B))
+              (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (A \<union> B))) (C - {a, b})"
+        using subspace_topology_trans[of "C-{a,b}" "top1_S2-(A\<union>B)" top1_S2 top1_S2_topology]
+          hCm_sub_AB by (by100 simp)
+      thus ?thesis using hC_minus_conn by (by100 simp)
+    qed
+    from Lemma_23_2[OF hTopAB hAB_sep_proper hCm_sub_AB hCm_conn_sub]
+    show ?thesis by (by100 blast)
+  qed
   \<comment> \<open>WLOG: assume C-{a,b} \<subseteq> U0'. If C-{a,b} \<subseteq> U0 instead, swap U0 and U0'
      (they're symmetric as the two components of S2-(A\<union>B)).\<close>
   have "C - {a, b} \<subseteq> U0'"
@@ -3662,43 +3698,7 @@ proof -
        the boundary of U0 in S2 (every neighborhood of a\<in>A\<union>B meets U0).\<close>
   have hUbar_eq: "?Ubar = top1_S2 - U0'"
     using hU0(3,4) assms(2,3) by (by100 blast)
-  have hU0'_open: "U0' \<in> top1_S2_topology"
-  proof -
-    have hTopS2: "is_topology_on top1_S2 top1_S2_topology"
-      using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
-    \<comment> \<open>S2-(A\<union>B) is open in S2.\<close>
-    have hAB_open: "top1_S2 - (A \<union> B) \<in> top1_S2_topology"
-    proof -
-      have "closedin_on top1_S2 top1_S2_topology (A \<union> B)"
-        by (rule closedin_on_Un[OF hTopS2 hA_closed hB_closed])
-      thus ?thesis unfolding closedin_on_def by (by100 blast)
-    qed
-    \<comment> \<open>S2 locally path connected \<Rightarrow> path components of open S2-(A\<union>B) are open.\<close>
-    have hS2_lpc: "top1_locally_path_connected_on top1_S2 top1_S2_topology"
-      by (rule S2_locally_path_connected)
-    \<comment> \<open>U0' is connected and contained in S2-(A\<union>B). In a locally path connected space,
-       connected components of open sets are open (Theorem 25.4).\<close>
-    \<comment> \<open>U0' is a path component of S2-(A\<union>B) (connected in loc. path connected open = path connected).\<close>
-    \<comment> \<open>By Theorem 25.4: locally path connected \<Rightarrow> path components of opens are open.\<close>
-    have hThm254: "\<forall>U \<in> top1_S2_topology. U \<subseteq> top1_S2 \<longrightarrow>
-        (\<forall>P \<in> top1_path_components_on U (subspace_topology top1_S2 top1_S2_topology U). P \<in> top1_S2_topology)"
-      using iffD1[OF Theorem_25_4[OF hTopS2]] hS2_lpc by (by100 blast)
-    \<comment> \<open>U0' is a path component of S2-(A\<union>B). Need: U0' path connected in subspace,
-       which follows from connected + locally path connected.\<close>
-    have hAB_sub: "top1_S2 - (A \<union> B) \<subseteq> top1_S2" by (by100 blast)
-    \<comment> \<open>S2-(A\<union>B) is locally path connected (open subspace of loc. path connected).\<close>
-    have hAB_lpc: "top1_locally_path_connected_on (top1_S2 - (A \<union> B))
-        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (A \<union> B)))"
-      sorry \<comment> \<open>Open subspace of locally path connected is locally path connected.\<close>
-    \<comment> \<open>U0' connected + locally path connected \<Rightarrow> path connected.\<close>
-    have hU0'_pc: "top1_path_connected_on U0'
-        (subspace_topology top1_S2 top1_S2_topology U0')"
-      sorry \<comment> \<open>connected\_locally\_path\_connected\_imp\_path\_connected on U0' subspace.\<close>
-    have hU0'_path_comp: "U0' \<in> top1_path_components_on (top1_S2 - (A \<union> B))
-        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (A \<union> B)))"
-      sorry \<comment> \<open>U0' path connected + maximal (complement is U0 which is connected) \<Rightarrow> path component.\<close>
-    show ?thesis using hThm254 hAB_open hAB_sub hU0'_path_comp by (by100 blast)
-  qed
+  have hU0'_open: "U0' \<in> top1_S2_topology" by (rule hU0'_open_pre)
   have hU0'_sub: "U0' \<subseteq> top1_S2" using hU0(4) by (by100 blast)
   have hUbar_sub: "?Ubar \<subseteq> top1_S2" using assms(2,3) hU0(4) by (by100 force)
   have hUbar_compl: "top1_S2 - ?Ubar = U0'" using hUbar_eq hU0'_sub by (by100 force)
