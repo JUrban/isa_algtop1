@@ -2004,9 +2004,10 @@ proof -
   let ?D2 = "e24_qa4 \<union> e41 \<union> e13_a1p"
   \<comment> \<open>D_1, D_2 are arcs.\<close>
   have hD1_arc: "top1_is_arc_on ?D1 (subspace_topology top1_S2 top1_S2_topology ?D1)"
-    sorry \<comment> \<open>Concatenation of three arcs meeting at endpoints.\<close>
+    sorry \<comment> \<open>e13_pa3 \<inter> e23 = {a3}, then (e13_pa3\<union>e23) \<inter> e24_a2q = {a2}.
+         Two applications of arcs_concatenation_is_arc. Needs endpoint assumptions.\<close>
   have hD2_arc: "top1_is_arc_on ?D2 (subspace_topology top1_S2 top1_S2_topology ?D2)"
-    sorry \<comment> \<open>Concatenation of three arcs meeting at endpoints.\<close>
+    sorry \<comment> \<open>Similarly: e24_qa4 \<inter> e41 = {a4}, then \<union> e13_a1p at {a1}.\<close>
   have hD1_sub: "?D1 \<subseteq> top1_S2"
     using he13_sub he23_sub he24_sub he13_split(1) he24_split(1) by (by100 blast)
   have hD2_sub: "?D2 \<subseteq> top1_S2"
