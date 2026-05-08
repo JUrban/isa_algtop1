@@ -4478,12 +4478,29 @@ proof -
         himg_arc h1_in by (by100 force)
   qed
   \<comment> \<open>(0,1] and [0,1) are connected (convex, Theorem\_24\_1).\<close>
-  have hI0_conn: "top1_connected_on (top1_unit_interval - {0})
+  have hI0_conn: "top1_connected_on (top1_unit_interval - {0 :: real})
       (subspace_topology UNIV top1_open_sets (top1_unit_interval - {0}))"
-    sorry \<comment> \<open>(0,1] convex \<Rightarrow> Theorem\_24\_1.\<close>
-  have hI1_conn: "top1_connected_on (top1_unit_interval - {1})
+  proof (rule Theorem_24_1)
+    fix x y z :: real
+    assume "x \<in> top1_unit_interval - {0}" "y \<in> top1_unit_interval - {0}" "x \<le> z" "z \<le> y"
+    hence "0 < x" "x \<le> 1" "0 < y" "y \<le> 1" unfolding top1_unit_interval_def by (by100 simp)+
+    hence "0 < z" "z \<le> 1" using \<open>x \<le> z\<close> \<open>z \<le> y\<close> by (by100 simp)+
+    thus "z \<in> top1_unit_interval - {0}" unfolding top1_unit_interval_def by (by100 simp)
+  qed
+  have hI1_conn: "top1_connected_on (top1_unit_interval - {1 :: real})
       (subspace_topology UNIV top1_open_sets (top1_unit_interval - {1}))"
-    sorry \<comment> \<open>[0,1) convex \<Rightarrow> Theorem\_24\_1.\<close>
+  proof (rule Theorem_24_1)
+    fix x y z :: real
+    assume hx1: "x \<in> top1_unit_interval - {1}" and hy1: "y \<in> top1_unit_interval - {1}"
+        and hxz: "x \<le> z" and hzy: "z \<le> y"
+    have "0 \<le> x" "x \<le> 1" "x \<noteq> 1" using hx1 unfolding top1_unit_interval_def by (by100 simp)+
+    hence hx_lt: "x < 1" by (by100 simp)
+    have "0 \<le> y" "y \<le> 1" "y \<noteq> 1" using hy1 unfolding top1_unit_interval_def by (by100 simp)+
+    hence hy_lt: "y < 1" by (by100 simp)
+    have hz0: "0 \<le> z" using \<open>0 \<le> x\<close> hxz by (by100 simp)
+    have hz1: "z < 1" using hy_lt hzy by (by100 simp)
+    show "z \<in> top1_unit_interval - {1}" using hz0 hz1 unfolding top1_unit_interval_def by (by100 simp)
+  qed
   \<comment> \<open>Convert to unit\_interval subspace topology.\<close>
   have hI0_conn': "top1_connected_on (top1_unit_interval - {0})
       (subspace_topology top1_unit_interval top1_unit_interval_topology (top1_unit_interval - {0}))"
