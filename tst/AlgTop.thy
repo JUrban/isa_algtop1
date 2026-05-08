@@ -3376,7 +3376,15 @@ proof -
     \<comment> \<open>Extract separation U, V of W.\<close>
     obtain U V where hUV: "U \<in> ?TW" "V \<in> ?TW" "U \<noteq> {}" "V \<noteq> {}"
         "U \<inter> V = {}" "U \<union> V = ?W"
-      using hW_not_conn hTW unfolding top1_connected_on_def sorry
+    proof -
+      have "\<exists>U V. U \<in> ?TW \<and> V \<in> ?TW \<and> U \<noteq> {} \<and> V \<noteq> {} \<and> U \<inter> V = {} \<and> U \<union> V = ?W"
+      proof (rule ccontr)
+        assume "\<not> ?thesis"
+        hence "top1_connected_on ?W ?TW" unfolding top1_connected_on_def using hTW by (by100 simp)
+        thus False using hW_not_conn by (by100 blast)
+      qed
+      thus ?thesis using that sorry
+    qed
     \<comment> \<open>U, V are open in W, hence open in S2 (since W is open in S2).\<close>
     have hW_open_S2: "?W \<in> top1_S2_topology"
     proof -
@@ -3392,9 +3400,9 @@ proof -
     \<comment> \<open>U open in W + W open in S2 \<Rightarrow> U open in S2 (intersection of opens is open).\<close>
     \<comment> \<open>U, V open in subspace W, W open in S2 \<Rightarrow> U, V open in S2.\<close>
     have hU_open_S2: "U \<in> top1_S2_topology"
-      using hUV(1) hW_open_S2 hTopS2 sorry
+      sorry \<comment> \<open>U \<in> subspace of W, W \<in> S2\_top \<Rightarrow> U = U' \<inter> W for U' \<in> S2\_top \<Rightarrow> U \<in> S2\_top.\<close>
     have hV_open_S2: "V \<in> top1_S2_topology"
-      using hUV(2) hW_open_S2 hTopS2 sorry
+      sorry \<comment> \<open>Same argument.\<close>
     \<comment> \<open>U, V \<subseteq> W \<subseteq> X, so they're open in X.\<close>
     have hW_sub_X: "?W \<subseteq> ?X" using hU'_sub_X hV'_sub_X hUV_eq by (by100 blast)
     have hU_sub_X: "U \<subseteq> ?X" using hUV(6) hW_sub_X by (by100 blast)
