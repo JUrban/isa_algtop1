@@ -4509,7 +4509,11 @@ proof -
     hence "\<not> top1_connected_on (A - {b}) (subspace_topology X TX (A - {b}))"
     proof -
       assume hsep: "top1_is_separation_on (A - {b}) (subspace_topology X TX (A - {b})) {a} ((A - {b}) - {a})"
-      show ?thesis sorry \<comment> \<open>separation \<Rightarrow> \<not>connected: definition unfolding too slow for by100.\<close>
+      from Lemma_23_1[of "A - {b}" "subspace_topology X TX (A - {b})"]
+      have "top1_connected_on (A - {b}) (subspace_topology X TX (A - {b})) \<longrightarrow>
+          (\<nexists>U' V'. top1_is_separation_on (A - {b}) (subspace_topology X TX (A - {b})) U' V')"
+        by (by100 blast)
+      thus ?thesis using hsep by (by100 blast)
     qed
     thus False using hA_minus_b_conn by (by100 blast)
   qed
