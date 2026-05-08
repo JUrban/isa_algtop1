@@ -5803,6 +5803,32 @@ proof -
     moreover have "R1 \<inter> T0 = {}" using T0_def by (by100 blast)
     ultimately show ?thesis by (rule that[OF hT0_in hT0_ne_P1 hT0_ne_R1])
   qed
+  have hP1R1_disj: "P1 \<inter> R1 = {}"
+  proof -
+    from hP1_is_comp show ?thesis
+    proof (elim disjE)
+      assume "P1 = U" from hR1_is_comp show ?thesis
+      proof (elim disjE)
+        assume "R1 = U" thus ?thesis using hP1_ne_R1 \<open>P1 = U\<close> by (by100 blast)
+      next assume "R1 = V" thus ?thesis using \<open>P1 = U\<close> hUVW(4) by (by100 blast)
+      next assume "R1 = W" thus ?thesis using \<open>P1 = U\<close> hUVW(6) by (by100 blast)
+      qed
+    next
+      assume "P1 = V" from hR1_is_comp show ?thesis
+      proof (elim disjE)
+        assume "R1 = U" thus ?thesis using \<open>P1 = V\<close> hUVW(4) by (by100 blast)
+      next assume "R1 = V" thus ?thesis using hP1_ne_R1 \<open>P1 = V\<close> by (by100 blast)
+      next assume "R1 = W" thus ?thesis using \<open>P1 = V\<close> hUVW(5) by (by100 blast)
+      qed
+    next
+      assume "P1 = W" from hR1_is_comp show ?thesis
+      proof (elim disjE)
+        assume "R1 = U" thus ?thesis using \<open>P1 = W\<close> hUVW(6) by (by100 blast)
+      next assume "R1 = V" thus ?thesis using \<open>P1 = W\<close> hUVW(5) by (by100 blast)
+      next assume "R1 = W" thus ?thesis using hP1_ne_R1 \<open>P1 = W\<close> by (by100 blast)
+      qed
+    qed
+  qed
   have he24_in_T: "e24 - {a2, a4} \<subseteq> T"
   proof -
     \<comment> \<open>e24-{a2,a4} connected \<subseteq> P1\<union>R1\<union>T (disjoint open). By Lemma\_23\_2 approach: in one.\<close>
@@ -5841,7 +5867,7 @@ proof -
       proof -
         \<comment> \<open>P1 \<inter> T = {} (hT\_disj). P1 \<inter> R1 = {} needs case split.
            But P1, R1, T are pairwise disjoint (they're 3 distinct elements of {U,V,W}).\<close>
-        have "P1 \<inter> R1 = {}" sorry \<comment> \<open>Moved below as hP1R1\_disj.\<close>
+        have "P1 \<inter> R1 = {}" by (rule hP1R1_disj)
         thus ?thesis using hT_disj(1) by (by100 blast)
       qed
       moreover have "P1 \<union> (R1 \<union> T) = top1_S2 - ?Y" using hT_union by (by100 blast)
@@ -6069,32 +6095,6 @@ proof -
     qed
     also have "\<dots> = top1_S2 - (e12 \<union> e23 \<union> e34 \<union> e41 \<union> e13 \<union> e24)" by (by100 blast)
     finally show ?thesis .
-  qed
-  have hP1R1_disj: "P1 \<inter> R1 = {}"
-  proof -
-    from hP1_is_comp show ?thesis
-    proof (elim disjE)
-      assume "P1 = U" from hR1_is_comp show ?thesis
-      proof (elim disjE)
-        assume "R1 = U" thus ?thesis using hP1_ne_R1 \<open>P1 = U\<close> by (by100 blast)
-      next assume "R1 = V" thus ?thesis using \<open>P1 = U\<close> hUVW(4) by (by100 blast)
-      next assume "R1 = W" thus ?thesis using \<open>P1 = U\<close> hUVW(6) by (by100 blast)
-      qed
-    next
-      assume "P1 = V" from hR1_is_comp show ?thesis
-      proof (elim disjE)
-        assume "R1 = U" thus ?thesis using \<open>P1 = V\<close> hUVW(4) by (by100 blast)
-      next assume "R1 = V" thus ?thesis using hP1_ne_R1 \<open>P1 = V\<close> by (by100 blast)
-      next assume "R1 = W" thus ?thesis using \<open>P1 = V\<close> hUVW(5) by (by100 blast)
-      qed
-    next
-      assume "P1 = W" from hR1_is_comp show ?thesis
-      proof (elim disjE)
-        assume "R1 = U" thus ?thesis using \<open>P1 = W\<close> hUVW(6) by (by100 blast)
-      next assume "R1 = V" thus ?thesis using \<open>P1 = W\<close> hUVW(5) by (by100 blast)
-      next assume "R1 = W" thus ?thesis using hP1_ne_R1 \<open>P1 = W\<close> by (by100 blast)
-      qed
-    qed
   qed
   have hfour_disj: "P1 \<inter> R1 = {}" "P1 \<inter> W1 = {}" "P1 \<inter> W2 = {}"
       "R1 \<inter> W1 = {}" "R1 \<inter> W2 = {}" "W1 \<inter> W2 = {}"
