@@ -3608,18 +3608,24 @@ proof -
   have hUbar_C_card: "card (?Ubar \<inter> C) = 2"
     using hUbar_C_inter assms(8) by (by100 simp)
   \<comment> \<open>Theorem 63.5: Ubar \<union> C separates S2 into 2 components V0, W0.\<close>
+  have hC_conn: "top1_connected_on C (subspace_topology top1_S2 top1_S2_topology C)"
+    using arc_connected[OF assms(7)] .
   obtain V0 W0 where hVW: "V0 \<noteq> {}" "W0 \<noteq> {}" "V0 \<inter> W0 = {}"
       "V0 \<union> W0 = top1_S2 - (?Ubar \<union> C)"
       "top1_connected_on V0 (subspace_topology top1_S2 top1_S2_topology V0)"
       "top1_connected_on W0 (subspace_topology top1_S2 top1_S2_topology W0)"
-    sorry \<comment> \<open>Theorem\_63\_5\_two\_closed\_connected.\<close>
+    using Theorem_63_5_two_closed_connected[OF assms(1) hUbar_closed hC_closed
+        hUbar_conn hC_conn hUbar_C_card hUbar_no_sep hC_no_sep]
+    by (by100 force)
   \<comment> \<open>Step 4: S2 - (A \<union> B \<union> C) = U0 \<union> V0 \<union> W0.\<close>
+  \<comment> \<open>S2 - (A\<union>B\<union>C) = U0 \<union> V0 \<union> W0.\<close>
+  have hU0_sub_comp: "U0 \<subseteq> top1_S2 - (?Ubar \<union> C)"
+    sorry \<comment> \<open>U0 \<subseteq> S2-(A\<union>B\<union>C) \<subseteq> S2-(Ubar\<union>C) since A\<union>B \<subseteq> Ubar.\<close>
   have "top1_S2 - (A \<union> B \<union> C) = U0 \<union> V0 \<union> W0"
-    sorry \<comment> \<open>S2 - (Ubar \<union> C) = V0 \<union> W0, and Ubar = U0 \<union> A \<union> B, so
-       S2 - (A\<union>B\<union>C) = U0 \<union> (S2 - (Ubar \<union> C)) = U0 \<union> V0 \<union> W0.\<close>
+    sorry \<comment> \<open>Set arithmetic: S2-(A\<union>B\<union>C) = (S2-(A\<union>B))\<inter>(S2-C) and decompose.\<close>
   moreover have "U0 \<inter> V0 = {} \<and> U0 \<inter> W0 = {} \<and> V0 \<inter> W0 = {}"
-    sorry \<comment> \<open>U0, V0, W0 are pairwise disjoint (U0 \<subseteq> S2-(A\<union>B), V0\<union>W0 \<subseteq> S2-Ubar).\<close>
-  ultimately show ?thesis using hU0(1) hVW(1,2) hU0(5) hVW(5,6) sorry
+    sorry
+  ultimately show ?thesis sorry
 qed
 
 text \<open>Lemma 64.3: K4 in S2 separates into four components.\<close>
