@@ -1212,6 +1212,8 @@ proof -
       using hh1(1) unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
     have hh2_inj: "inj_on h2 top1_unit_interval"
       using hh2(1) unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+    have h0I: "(0::real) \<in> top1_unit_interval" unfolding top1_unit_interval_def by (by100 simp)
+    have h1I: "(1::real) \<in> top1_unit_interval" unfolding top1_unit_interval_def by (by100 simp)
     have "s = t \<or> (s = 0 \<and> t = 1) \<or> (s = 1 \<and> t = 0)"
     proof (cases "s \<le> 1/2"; cases "t \<le> 1/2")
       \<comment> \<open>Case 1: both in [0,1/2]. g(s) = h1(2s) = h1(2t) = g(t). h1 injective \<Rightarrow> 2s = 2t \<Rightarrow> s = t.\<close>
@@ -1252,11 +1254,77 @@ proof -
       have "h1 (2*s) \<in> A2" using hh2_A2 \<open>h1 (2*s) = h2 (2*t - 1)\<close> by (by100 simp)
       have "h1 (2*s) \<in> A1 \<inter> A2" using hh1_A1 \<open>h1 (2*s) \<in> A2\<close> by (by100 blast)
       hence "h1 (2*s) \<in> {a, b}" using hinter by (by100 blast)
-      \<comment> \<open>Cases 3+4 (cross-piece): g(s) \<in> A1\<inter>A2 = {a,b} forces s,t to endpoints.\<close>
-      thus ?thesis sorry
+      hence "h1 (2*s) = a \<or> h1 (2*s) = b" by (by100 blast)
+      thus ?thesis
+      proof
+        assume heq_a: "h1 (2*s) = a"
+        have "h1 (2*s) = h1 0" using heq_a hh1(2) by (by100 simp)
+        have h0I: "(0::real) \<in> top1_unit_interval" unfolding top1_unit_interval_def by (by100 simp)
+        hence "2*s = 0" using hh1_inj h2s_I \<open>h1 (2*s) = h1 0\<close>
+          unfolding inj_on_def by (by100 blast)
+        hence "s = 0" by (by100 simp)
+        have "h2 (2*t-1) = a" using \<open>h1 (2*s) = h2 (2*t-1)\<close> heq_a by (by100 simp)
+        hence "h2 (2*t-1) = h2 1" using hh2(3) by (by100 simp)
+        hence "2*t-1 = 1" using hh2_inj h2t1_I h1I
+          unfolding inj_on_def by (by100 blast)
+        hence "t = 1" by (by100 linarith)
+        show ?thesis using \<open>s = 0\<close> \<open>t = 1\<close> by (by100 blast)
+      next
+        assume heq_b: "h1 (2*s) = b"
+        have "h1 (2*s) = h1 1" using heq_b hh1(3) by (by100 simp)
+        hence "2*s = 1" using hh1_inj h2s_I h1I
+          unfolding inj_on_def by (by100 blast)
+        hence "s = 1/2" by (by100 linarith)
+        have "h2 (2*t-1) = b" using \<open>h1 (2*s) = h2 (2*t-1)\<close> heq_b by (by100 simp)
+        hence "h2 (2*t-1) = h2 0" using hh2(2) by (by100 simp)
+        hence "2*t-1 = 0" using hh2_inj h2t1_I h0I
+          unfolding inj_on_def by (by100 blast)
+        hence "t = 1/2" by (by100 linarith)
+        show ?thesis using \<open>s = 1/2\<close> \<open>t = 1/2\<close> by (by100 simp)
+      qed
     next
-      assume "\<not> s \<le> 1/2" "t \<le> 1/2"
-      thus ?thesis sorry
+      \<comment> \<open>Case 4: symmetric to case 3.\<close>
+      assume hcase4: "\<not> s \<le> 1/2" "t \<le> 1/2"
+      have "g s = h2 (2*s - 1)" unfolding g_def using hcase4(1) by (by100 simp)
+      have "g t = h1 (2*t)" unfolding g_def using hcase4(2) by (by100 simp)
+      have "h2 (2*s-1) = h1 (2*t)" using \<open>g s = g t\<close> \<open>g s = h2 (2*s-1)\<close> \<open>g t = h1 (2*t)\<close>
+        by (by100 simp)
+      have h2s1_I: "2*s-1 \<in> top1_unit_interval" using hcase4(1) hs_bds
+        unfolding top1_unit_interval_def by (by100 simp)
+      have h2t_I: "2*t \<in> top1_unit_interval" using hcase4(2) ht_bds
+        unfolding top1_unit_interval_def by (by100 simp)
+      have "h2 (2*s-1) \<in> A2" using hh2_img h2s1_I by (by100 blast)
+      have "h1 (2*t) \<in> A1" using hh1_img h2t_I by (by100 blast)
+      have "h2 (2*s-1) \<in> A1" using \<open>h1 (2*t) \<in> A1\<close> \<open>h2 (2*s-1) = h1 (2*t)\<close> by (by100 simp)
+      have "h2 (2*s-1) \<in> A1 \<inter> A2" using \<open>h2 (2*s-1) \<in> A1\<close> \<open>h2 (2*s-1) \<in> A2\<close> by (by100 blast)
+      hence "h2 (2*s-1) \<in> {a, b}" using hinter by (by100 blast)
+      hence "h2 (2*s-1) = a \<or> h2 (2*s-1) = b" by (by100 blast)
+      thus ?thesis
+      proof
+        assume "h2 (2*s-1) = a"
+        hence "h2 (2*s-1) = h2 1" using hh2(3) by (by100 simp)
+        hence "2*s-1 = 1" using hh2_inj h2s1_I h1I
+          unfolding inj_on_def by (by100 blast)
+        hence "s = 1" by (by100 linarith)
+        have "h1 (2*t) = a" using \<open>h2 (2*s-1) = h1 (2*t)\<close> \<open>h2 (2*s-1) = a\<close> by (by100 simp)
+        hence "h1 (2*t) = h1 0" using hh1(2) by (by100 simp)
+        hence "2*t = 0" using hh1_inj h2t_I h0I
+          unfolding inj_on_def by (by100 blast)
+        hence "t = 0" by (by100 simp)
+        show ?thesis using \<open>s = 1\<close> \<open>t = 0\<close> by (by100 blast)
+      next
+        assume "h2 (2*s-1) = b"
+        hence "h2 (2*s-1) = h2 0" using hh2(2) by (by100 simp)
+        hence "2*s-1 = 0" using hh2_inj h2s1_I h0I
+          unfolding inj_on_def by (by100 blast)
+        hence "s = 1/2" by (by100 linarith)
+        have "h1 (2*t) = b" using \<open>h2 (2*s-1) = h1 (2*t)\<close> \<open>h2 (2*s-1) = b\<close> by (by100 simp)
+        hence "h1 (2*t) = h1 1" using hh1(3) by (by100 simp)
+        hence "2*t = 1" using hh1_inj h2t_I h1I
+          unfolding inj_on_def by (by100 blast)
+        hence "t = 1/2" by (by100 linarith)
+        show ?thesis using \<open>s = 1/2\<close> \<open>t = 1/2\<close> by (by100 simp)
+      qed
     qed
     thus "p = q"
     proof (elim disjE conjE)
