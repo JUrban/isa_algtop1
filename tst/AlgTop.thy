@@ -4755,8 +4755,27 @@ proof -
     ultimately show ?thesis by (by100 blast)
   qed
   \<comment> \<open>e24-{a2,a4} cannot lie in P1: a4 \<in> closure(e24-{a2,a4}) but a4 \<notin> P1\<union>(A\<union>B).\<close>
+  have ha4_in_cl_e24: "a4 \<in> closure_on top1_S2 top1_S2_topology (e24 - {a2, a4})"
+    sorry \<comment> \<open>Arc endpoint is limit point of arc interior.\<close>
   have he24_not_P1: "\<not>(e24 - {a2, a4} \<subseteq> P1)"
-    sorry
+  proof
+    assume h: "e24 - {a2, a4} \<subseteq> P1"
+    have "closure_on top1_S2 top1_S2_topology (e24 - {a2, a4}) \<subseteq>
+        closure_on top1_S2 top1_S2_topology P1"
+      by (rule closure_on_mono[OF h])
+    hence "a4 \<in> closure_on top1_S2 top1_S2_topology P1"
+      using ha4_in_cl_e24 by (by100 blast)
+    hence "a4 \<in> P1 \<union> (?A \<union> ?B)" using hcl_P1 by (by100 blast)
+    moreover have "a4 \<notin> P1"
+    proof -
+      have ha4_e41: "a4 \<in> e41" using assms(19) unfolding top1_arc_endpoints_on_def by (by100 blast)
+      have "a4 \<in> ?C - {a1, a3}" using ha4_e41 hdist(3) hdist(6) by (by100 blast)
+      hence "a4 \<in> P2" using hCm_in_P2 by (by100 blast)
+      thus ?thesis using hP(3) by (by100 blast)
+    qed
+    ultimately have "a4 \<in> ?A \<union> ?B" by (by100 blast)
+    thus False using ha4_not_AB by (by100 blast)
+  qed
   \<comment> \<open>Similarly for B\<union>C: get R1, R2 from Theorem_63_5.\<close>
   have hBC_scc: "top1_simple_closed_curve_on top1_S2 top1_S2_topology (?B \<union> ?C)"
     by (rule arcs_form_simple_closed_curve[OF hS2_strict hS2_haus assms(14) assms(8)
@@ -4989,8 +5008,27 @@ proof -
     moreover have "a2 \<notin> e34" using assms(22) ha2_e12 by (by100 blast)
     ultimately show ?thesis by (by100 blast)
   qed
+  have ha2_in_cl_e24: "a2 \<in> closure_on top1_S2 top1_S2_topology (e24 - {a2, a4})"
+    sorry \<comment> \<open>Arc endpoint is limit point of arc interior.\<close>
   have he24_not_R1: "\<not>(e24 - {a2, a4} \<subseteq> R1)"
-    sorry
+  proof
+    assume h: "e24 - {a2, a4} \<subseteq> R1"
+    have "closure_on top1_S2 top1_S2_topology (e24 - {a2, a4}) \<subseteq>
+        closure_on top1_S2 top1_S2_topology R1"
+      by (rule closure_on_mono[OF h])
+    hence "a2 \<in> closure_on top1_S2 top1_S2_topology R1"
+      using ha2_in_cl_e24 by (by100 blast)
+    hence "a2 \<in> R1 \<union> (?B \<union> ?C)" using hcl_R1 by (by100 blast)
+    moreover have "a2 \<notin> R1"
+    proof -
+      have ha2_e12: "a2 \<in> e12" using assms(16) unfolding top1_arc_endpoints_on_def by (by100 blast)
+      have "a2 \<in> ?A - {a1, a3}" using ha2_e12 hdist(1) hdist(4) by (by100 blast)
+      hence "a2 \<in> R2" using hAm_in_R2 by (by100 blast)
+      thus ?thesis using hR(3) by (by100 blast)
+    qed
+    ultimately have "a2 \<in> ?B \<union> ?C" by (by100 blast)
+    thus False using ha2_not_BC by (by100 blast)
+  qed
   \<comment> \<open>Step 4: P1 and R1 are each theta components, and they are distinct.\<close>
   \<comment> \<open>P1 \<subseteq> S2-(A\<union>B) and P1 \<inter> (C-{a1,a3}) = {} (since C-{a1,a3} \<subseteq> P2), so P1 \<subseteq> S2-Y.\<close>
   have hP1_sub_Y_compl: "P1 \<subseteq> top1_S2 - ?Y"
