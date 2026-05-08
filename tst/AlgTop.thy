@@ -3534,9 +3534,9 @@ proof -
         hence "x \<in> e13" using he13_split(1) by (by100 blast)
         hence "x \<in> e13 \<inter> e24" using \<open>x \<in> e24\<close> by (by100 blast)
         hence "x \<in> {a1,a2,a3,a4}" using assms(32) by (by100 blast)
-        moreover have "x \<noteq> a1" sorry \<comment> \<open>a1 \<notin> e13\_pa3 (from he13\_split).\<close>
-        moreover have "x \<noteq> a3" sorry \<comment> \<open>a3 \<notin> e24 (from ha3\_not\_e24).\<close>
-        moreover have "x \<noteq> a4" sorry \<comment> \<open>a4 \<notin> e13 (from ha4\_not\_e13).\<close>
+        moreover have "x \<noteq> a1" using ha1_not_pa3 \<open>x \<in> e13_pa3\<close> by (by100 blast)
+        moreover have "x \<noteq> a3" using ha3_not_e24 \<open>x \<in> e24\<close> by (by100 blast)
+        moreover have "x \<noteq> a4" using ha4_not_e13 \<open>x \<in> e13\<close> by (by100 blast)
         ultimately show ?thesis by (by100 blast)
       qed
     next
