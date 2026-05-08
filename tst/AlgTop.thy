@@ -5400,7 +5400,11 @@ proof -
     qed
     \<comment> \<open>U,V,W open (hUVW(11,12,13)) + disjoint + P1 connected \<subseteq> U\<union>V\<union>W \<Rightarrow> P1 \<subseteq> one.
        Then that one \<subseteq> P1 (from hU/V/W\_side). So P1 = that one.\<close>
-    show ?thesis using hP1_in_UVW hU_side hV_side hW_side hP(1) hUVW(4,5,6) sorry
+    \<comment> \<open>P1 connected \<subseteq> U\<union>V\<union>W with U,V,W pairwise disjoint and open in S2.
+       By connectivity, P1 must be \<subseteq> one of them. Then that one \<subseteq> P1 from side facts.\<close>
+    \<comment> \<open>P1 connected \<subseteq> U\<union>V\<union>W (disjoint open). By Lemma\_23\_2 applied twice:
+       {U, V\<union>W} separates S2-Y, P1 in one. Then {V, W} separates V\<union>W.\<close>
+    show ?thesis sorry
   qed
   \<comment> \<open>Same argument for R1.\<close>
   have hR1_is_comp: "R1 = U \<or> R1 = V \<or> R1 = W"
