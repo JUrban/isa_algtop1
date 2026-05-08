@@ -3599,7 +3599,8 @@ lemma Lemma_64_1_theta_space_three_components:
       \<and> U \<union> V \<union> W = top1_S2 - (A \<union> B \<union> C)
       \<and> top1_connected_on U (subspace_topology top1_S2 top1_S2_topology U)
       \<and> top1_connected_on V (subspace_topology top1_S2 top1_S2_topology V)
-      \<and> top1_connected_on W (subspace_topology top1_S2 top1_S2_topology W)"
+      \<and> top1_connected_on W (subspace_topology top1_S2 top1_S2_topology W)
+      \<and> U \<in> top1_S2_topology \<and> V \<in> top1_S2_topology \<and> W \<in> top1_S2_topology"
 proof -
   \<comment> \<open>Step 1: A \<union> B is SCC, separates S2 into two components U0, U0'.\<close>
   have hS2_haus: "is_hausdorff_on top1_S2 top1_S2_topology"
@@ -4208,8 +4209,19 @@ proof -
     using Theorem_63_5_two_closed_connected[OF assms(1) hUbar_closed hC_closed
         hUbar_conn hC_conn hUbar_C_card hUbar_no_sep hC_no_sep]
     by (by100 force)
+  \<comment> \<open>V0, W0 are open in S2 (components of open S2-(?Ubar\<union>C), same lpc argument).\<close>
+  have hUbarC_compl_open: "top1_S2 - (?Ubar \<union> C) \<in> top1_S2_topology"
+  proof -
+    have hTopS2_loc: "is_topology_on top1_S2 top1_S2_topology"
+      using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
+    have "closedin_on top1_S2 top1_S2_topology (?Ubar \<union> C)"
+      by (rule closedin_on_Un[OF hTopS2_loc hUbar_closed hC_closed])
+    thus ?thesis unfolding closedin_on_def by (by100 blast)
+  qed
+  \<comment> \<open>V0, W0 open: same lpc argument as U0. Components of open S2-(?Ubar\<union>C).\<close>
+  have hV0_open: "V0 \<in> top1_S2_topology" sorry
+  have hW0_open: "W0 \<in> top1_S2_topology" sorry
   \<comment> \<open>Step 4: S2 - (A \<union> B \<union> C) = U0 \<union> V0 \<union> W0.\<close>
-  \<comment> \<open>S2 - (A\<union>B\<union>C) = U0 \<union> V0 \<union> W0.\<close>
   \<comment> \<open>U0 \<inter> C = {}: since U0 \<subseteq> S2-(A\<union>B) and C\<inter>(A\<union>B) \<subseteq> {a,b}, and C-{a,b} \<subseteq> U0'.\<close>
   have hU0_C_disj: "U0 \<inter> C = {}"
   proof -
@@ -4251,7 +4263,7 @@ proof -
     apply (rule exI[of _ U0])
     apply (rule exI[of _ V0])
     apply (rule exI[of _ W0])
-    using hgoal hU0(1) hVW(1,2) hU0(5) hVW(5,6) by (by100 force)
+    using hgoal hU0(1) hVW(1,2) hU0(5) hVW(5,6) hU0_open hV0_open hW0_open by (by100 force)
 qed
 
 text \<open>Helper: connected components of open subsets of S2 are open in S2.\<close>
@@ -4366,7 +4378,9 @@ proof -
       proof -
         have "compact (top1_unit_interval :: real set)" unfolding top1_unit_interval_def
           by (rule compact_Icc)
-        thus ?thesis using top1_compact_on_subspace_UNIV_iff_compact by (by100 blast)
+        hence "top1_compact_on top1_unit_interval (subspace_topology (UNIV :: real set) top1_open_sets top1_unit_interval)"
+          using top1_compact_on_subspace_UNIV_iff_compact by (by100 blast)
+        thus ?thesis unfolding top1_unit_interval_topology_def by (by100 blast)
       qed
       have hTA: "is_topology_on A (subspace_topology X TX A)"
         by (rule subspace_topology_is_topology_on[OF hTopX assms(3)])
@@ -4562,6 +4576,7 @@ proof -
       "top1_connected_on U (subspace_topology top1_S2 top1_S2_topology U)"
       "top1_connected_on V (subspace_topology top1_S2 top1_S2_topology V)"
       "top1_connected_on W (subspace_topology top1_S2 top1_S2_topology W)"
+      "U \<in> top1_S2_topology" "V \<in> top1_S2_topology" "W \<in> top1_S2_topology"
     using Lemma_64_1_theta_space_three_components[OF assms(1) hA_sub assms(8) hC_sub
         hA_arc assms(14) hC_arc hdist(2) hAB_int hBC_int hAC_int hA_ep assms(20) hC_ep]
     by (by100 metis)
@@ -5383,12 +5398,13 @@ proof -
       qed
       ultimately show ?thesis by (by100 blast)
     qed
-    \<comment> \<open>P1 is a connected component of S2-Y. Since U\<union>V\<union>W = S2-Y, P1 = one of them.\<close>
-    show ?thesis sorry
+    \<comment> \<open>U,V,W open (hUVW(11,12,13)) + disjoint + P1 connected \<subseteq> U\<union>V\<union>W \<Rightarrow> P1 \<subseteq> one.
+       Then that one \<subseteq> P1 (from hU/V/W\_side). So P1 = that one.\<close>
+    show ?thesis using hP1_in_UVW hU_side hV_side hW_side hP(1) hUVW(4,5,6) sorry
   qed
-  \<comment> \<open>Same argument for R1: S2-Y = R1 \<union> (R2 \<inter> S2-Y), both open in S2-Y.\<close>
+  \<comment> \<open>Same argument for R1.\<close>
   have hR1_is_comp: "R1 = U \<or> R1 = V \<or> R1 = W"
-    sorry \<comment> \<open>Same separation argument with B\<union>C.\<close>
+    sorry \<comment> \<open>Same argument with B\<union>C separation.\<close>
   \<comment> \<open>P1 \<noteq> R1: closure(P1) = P1\<union>(A\<union>B), closure(R1) = R1\<union>(B\<union>C).
      If P1 = R1 then closure(P1) \<subseteq> (A\<union>B) \<inter> (B\<union>C) gives boundary \<subseteq> B, contradicting
      that an open nonempty subset of S2 has boundary larger than an arc.\<close>
@@ -5538,7 +5554,7 @@ proof -
           p \<in> \<Inter>(?A ` ?I) \<and> (\<Union>i \<in> ?I. ?A i) = closure_on top1_S2 top1_S2_topology P1 \<union>
           closure_on top1_S2 top1_S2_topology R1" by (by100 blast)
       from Theorem_23_3[OF hTopS2, of ?I ?A p] hpremises
-      show ?thesis by (by100 metis)
+      show ?thesis by metis
     qed
     thus ?thesis .
   qed
