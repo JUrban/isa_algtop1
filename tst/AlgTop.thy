@@ -2067,7 +2067,79 @@ proof -
           he13_split(4) he13_pa3_sub he23_arc he23_sub_loc hint1 ha3_ep1 ha3_ep2])
     \<comment> \<open>Step 3: (e13_pa3 \<union> e23) \<inter> e24_a2q = {a2}.\<close>
     have hint2: "(e13_pa3 \<union> e23) \<inter> e24_a2q = {a2}"
-      sorry \<comment> \<open>e13_pa3 \<inter> e24_a2q = {} (a2\<notin>e13, a3\<notin>e24). e23 \<inter> e24_a2q = {a2}.\<close>
+    proof -
+      \<comment> \<open>e13_pa3 \<inter> e24_a2q = {}.\<close>
+      have "e13_pa3 \<inter> e24_a2q = {}"
+      proof (rule set_eqI, rule iffI)
+        fix x assume "x \<in> e13_pa3 \<inter> e24_a2q"
+        hence "x \<in> e13" "x \<in> e24" using he13_split(1) he24_split(1) by (by100 blast)+
+        hence "x \<in> {a1,a2,a3,a4}" using assms(32) by (by100 blast)
+        moreover have "a1 \<notin> e13_pa3"
+        proof
+          assume "a1 \<in> e13_pa3"
+          hence "a1 \<in> e13_a1p \<inter> e13_pa3" using he13_split(5) by (by100 blast)
+          hence "a1 = p" using he13_split(2) by (by100 blast)
+          thus False using hp_e13 by (by100 blast)
+        qed
+        moreover have "a2 \<notin> e13"
+        proof
+          assume "a2 \<in> e13"
+          hence "a2 \<in> e13 \<inter> e23" using assms(17)
+            unfolding top1_arc_endpoints_on_def by (by100 blast)
+          hence "a2 = a3" using assms(29) by (by100 blast)
+          moreover have "a2 \<noteq> a3"
+          proof
+            assume "a2 = a3"
+            hence "card {a1, a2, a3, a4} \<le> card {a1, a3, a4}" by (by100 simp)
+            moreover have "card {a1, a3, a4} \<le> 3" by (rule card_three_le)
+            ultimately have "card {a1, a2, a3, a4} \<le> 3" by (by100 linarith)
+            thus False using assms(2) by (by100 simp)
+          qed
+          ultimately show False by (by100 blast)
+        qed
+        hence "a2 \<notin> e13_pa3" using he13_split(1) by (by100 blast)
+        moreover have "a3 \<notin> e24"
+        proof
+          assume "a3 \<in> e24"
+          hence "a3 \<in> e24 \<inter> e23" using assms(17)
+            unfolding top1_arc_endpoints_on_def by (by100 blast)
+          hence "a3 = a2" using assms(34) by (by100 blast)
+          moreover have "a2 \<noteq> a3"
+          proof
+            assume "a2 = a3"
+            hence "card {a1, a2, a3, a4} \<le> card {a1, a3, a4}" by (by100 simp)
+            moreover have "card {a1, a3, a4} \<le> 3" by (rule card_three_le)
+            ultimately have "card {a1, a2, a3, a4} \<le> 3" by (by100 linarith)
+            thus False using assms(2) by (by100 simp)
+          qed
+          ultimately show False by (by100 blast)
+        qed
+        hence "a3 \<notin> e24_a2q" using he24_split(1) by (by100 blast)
+        moreover have "a4 \<notin> e24_a2q"
+        proof
+          assume "a4 \<in> e24_a2q"
+          hence "a4 \<in> e24_a2q \<inter> e24_qa4" using he24_split(6) by (by100 blast)
+          hence "a4 = q" using he24_split(2) by (by100 blast)
+          thus False using hq_e24 by (by100 blast)
+        qed
+        ultimately show "x \<in> {}" using \<open>x \<in> e13_pa3 \<inter> e24_a2q\<close> by (by100 blast)
+      qed (by100 blast)
+      \<comment> \<open>e23 \<inter> e24_a2q = {a2}.\<close>
+      moreover have "e23 \<inter> e24_a2q = {a2}"
+      proof (rule set_eqI, rule iffI)
+        fix x assume "x \<in> e23 \<inter> e24_a2q"
+        hence "x \<in> e23" "x \<in> e24" using he24_split(1) by (by100 blast)+
+        hence "x \<in> {a2}" using assms(34) by (by100 blast)
+        thus "x \<in> {a2}" .
+      next
+        fix x assume "x \<in> {a2}"
+        hence "x = a2" by (by100 blast)
+        have "a2 \<in> e23" using assms(17) unfolding top1_arc_endpoints_on_def by (by100 blast)
+        moreover have "a2 \<in> e24_a2q" using he24_split(5) .
+        ultimately show "x \<in> e23 \<inter> e24_a2q" using \<open>x = a2\<close> by (by100 blast)
+      qed
+      ultimately show ?thesis by (by100 blast)
+    qed
     \<comment> \<open>a2 is endpoint of (e13_pa3 \<union> e23) and e24_a2q.\<close>
     have ha2_ep1: "a2 \<in> top1_arc_endpoints_on (e13_pa3 \<union> e23)
         (subspace_topology top1_S2 top1_S2_topology (e13_pa3 \<union> e23))"
