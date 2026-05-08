@@ -3650,8 +3650,75 @@ proof -
       (subspace_topology top1_S2 top1_S2_topology (C - {a, b}))"
     by (rule arc_minus_endpoints_connected[OF assms(1) hS2_haus assms(4) assms(7) assms(14) assms(8)])
   \<comment> \<open>U0, U0' are open in S2 (components of open set in loc. path connected space).\<close>
-  have hU0_open: "U0 \<in> top1_S2_topology" sorry
-  have hU0'_open_pre: "U0' \<in> top1_S2_topology" sorry
+  \<comment> \<open>S2-(A\<union>B) is open, locally path connected. Components are open (Thm 25.4).\<close>
+  have hAB_closed_S2: "closedin_on top1_S2 top1_S2_topology (A \<union> B)"
+  proof -
+    have hTopS2_here: "is_topology_on top1_S2 top1_S2_topology"
+      using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
+    show ?thesis by (rule closedin_on_Un[OF hTopS2_here hA_closed hB_closed])
+  qed
+  have hAB_open_S2: "top1_S2 - (A \<union> B) \<in> top1_S2_topology"
+    using hAB_closed_S2 unfolding closedin_on_def by (by100 blast)
+  have hAB_sub_S2: "top1_S2 - (A \<union> B) \<subseteq> top1_S2" by (by100 blast)
+  have hAB_lpc: "top1_locally_path_connected_on (top1_S2 - (A \<union> B))
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (A \<union> B)))"
+    by (rule open_subset_locally_path_connected[OF S2_locally_path_connected hAB_open_S2 hAB_sub_S2])
+  \<comment> \<open>In lpc space, connected comp = path comp (Thm 25.5). U0 nonempty connected \<Rightarrow>
+     pick x \<in> U0, path\_component(x) = connected\_component(x) = U0.\<close>
+  have hTopAB_early: "is_topology_on (top1_S2 - (A \<union> B))
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (A \<union> B)))"
+  proof -
+    have "is_topology_on top1_S2 top1_S2_topology"
+      using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
+    thus ?thesis by (rule subspace_topology_is_topology_on) (by100 blast)
+  qed
+  obtain x0 where hx0: "x0 \<in> U0" using hU0(1) by (by100 blast)
+  have hx0_AB: "x0 \<in> top1_S2 - (A \<union> B)" using hx0 hU0(4) by (by100 blast)
+  have hU0_eq_comp: "U0 = top1_component_of_on (top1_S2 - (A \<union> B))
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (A \<union> B))) x0"
+    sorry
+  have hU0_eq_path_comp: "U0 = top1_path_component_of_on (top1_S2 - (A \<union> B))
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (A \<union> B))) x0"
+  proof -
+    from Theorem_25_5[OF hTopAB_early]
+    have "top1_path_component_of_on (top1_S2 - (A \<union> B))
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (A \<union> B))) x0
+        = top1_component_of_on (top1_S2 - (A \<union> B))
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (A \<union> B))) x0"
+      using hAB_lpc hx0_AB sorry
+    thus ?thesis using hU0_eq_comp by (by100 simp)
+  qed
+  have hU0_open: "U0 \<in> top1_S2_topology"
+  proof -
+    have "top1_path_component_of_on (top1_S2 - (A \<union> B))
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (A \<union> B))) x0
+        \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - (A \<union> B))"
+      by (rule top1_path_component_of_on_open_if_locally_path_connected[OF hTopAB_early hAB_lpc hx0_AB])
+    hence "U0 \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - (A \<union> B))"
+      using hU0_eq_path_comp by (by100 simp)
+    \<comment> \<open>Open in open subspace \<Rightarrow> open in S2.\<close>
+    then obtain V where "V \<in> top1_S2_topology" "U0 = (top1_S2 - (A \<union> B)) \<inter> V"
+      unfolding subspace_topology_def by (by100 force)
+    thus ?thesis sorry \<comment> \<open>U0 = (S2-(A\<union>B)) \<inter> V, both open \<Rightarrow> U0 open (finite intersection).\<close>
+  qed
+  have hU0'_open_pre: "U0' \<in> top1_S2_topology"
+  proof -
+    \<comment> \<open>Same argument with U0' and any x0' \<in> U0'.\<close>
+    obtain x0' where hx0': "x0' \<in> U0'" using hU0(2) by (by100 blast)
+    hence hx0'_AB: "x0' \<in> top1_S2 - (A \<union> B)" using hU0(4) by (by100 blast)
+    have "top1_path_component_of_on (top1_S2 - (A \<union> B))
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (A \<union> B))) x0'
+        \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - (A \<union> B))"
+      by (rule top1_path_component_of_on_open_if_locally_path_connected[OF hTopAB_early hAB_lpc hx0'_AB])
+    have "U0' = top1_path_component_of_on (top1_S2 - (A \<union> B))
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (A \<union> B))) x0'"
+      sorry \<comment> \<open>Same as U0 argument.\<close>
+    hence "U0' \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - (A \<union> B))"
+      using \<open>top1_path_component_of_on _ _ x0' \<in> _\<close> by (by100 simp)
+    then obtain V where "V \<in> top1_S2_topology" "U0' = (top1_S2 - (A \<union> B)) \<inter> V"
+      unfolding subspace_topology_def by (by100 force)
+    thus ?thesis sorry
+  qed
   \<comment> \<open>Hence U0, U0' form a separation of S2-(A\<union>B).\<close>
   have hTopS2_loc: "is_topology_on top1_S2 top1_S2_topology"
     using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
