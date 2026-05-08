@@ -712,15 +712,21 @@ proof -
   \<comment> \<open>g is continuous, injective on [0,1), surjective onto A1 \<union> A2.\<close>
   have hg_cont: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
       X TX g" sorry
+  have hh1_img: "h1 ` top1_unit_interval = A1"
+    using hh1(1) unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+  have hh2_img: "h2 ` top1_unit_interval = A2"
+    using hh2(1) unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
   have hg_img: "g ` top1_unit_interval = A1 \<union> A2" sorry
   \<comment> \<open>R\_to\_S1: [0,1] \<rightarrow> S1 is a quotient map (continuous surjection, compact to Hausdorff).\<close>
   have hR_quot: "top1_quotient_map_on top1_unit_interval top1_unit_interval_topology
       top1_S1 top1_S1_topology top1_R_to_S1" sorry
   \<comment> \<open>g respects the identification: R\_to\_S1(s) = R\_to\_S1(t) \<Rightarrow> g(s) = g(t).\<close>
   have hg_compat: "\<forall>s \<in> top1_unit_interval. \<forall>t \<in> top1_unit_interval.
-      top1_R_to_S1 s = top1_R_to_S1 t \<longrightarrow> g s = g t" sorry
+      top1_R_to_S1 s = top1_R_to_S1 t \<longrightarrow> g s = g t"
+    sorry \<comment> \<open>R\_to\_S1 identifies only 0\<sim>1 on [0,1]. g(0)=g(1)=a.\<close>
   \<comment> \<open>Theorem 22.2: get f: S1 \<rightarrow> A1\<union>A2 with g = f \<circ> R\_to\_S1, f continuous.\<close>
-  have hg_range: "\<forall>t \<in> top1_unit_interval. g t \<in> A1 \<union> A2" sorry
+  have hg_range: "\<forall>t \<in> top1_unit_interval. g t \<in> A1 \<union> A2"
+    using hg_img by (by100 blast)
   obtain f where hf_range: "\<forall>p \<in> top1_S1. f p \<in> A1 \<union> A2"
       and hf_factor: "\<forall>t \<in> top1_unit_interval. f (top1_R_to_S1 t) = g t"
       and hf_cont_iff: "top1_continuous_map_on top1_S1 top1_S1_topology X TX f
