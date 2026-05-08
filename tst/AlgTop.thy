@@ -5221,12 +5221,19 @@ proof -
        Any connected subset of S2-Y is in P1 or in S2-Y-P1.\<close>
     have hTY: "is_topology_on (top1_S2 - ?Y)
         (subspace_topology top1_S2 top1_S2_topology (top1_S2 - ?Y))"
-      sorry
+      by (rule subspace_topology_is_topology_on[OF]) (use hTopS2 in \<open>by100 blast\<close>, by100 blast)
+    have hVW_ne: "(top1_S2 - ?Y) - P1 \<noteq> {}"
+    proof -
+      have "V \<noteq> {}" by (rule hUVW(2))
+      moreover have "V \<subseteq> top1_S2 - ?Y" using hUVW(7) by (by100 blast)
+      moreover have "V \<inter> P1 = {}" sorry \<comment> \<open>V \<subseteq> P2 or V \<subseteq> (S2-Y)-P1\<close>
+      ultimately show ?thesis by (by100 blast)
+    qed
     have hY_sep: "top1_is_separation_on (top1_S2 - ?Y)
         (subspace_topology top1_S2 top1_S2_topology (top1_S2 - ?Y))
         P1 ((top1_S2 - ?Y) - P1)"
       unfolding top1_is_separation_on_def
-      using hP1_open_in_Y hVW_open_in_Y hP(1) hP1_sub_Y_compl hP2_cap_Y sorry
+      using hP1_open_in_Y hVW_open_in_Y hP(1) hVW_ne hP1_sub_Y_compl by (by100 blast)
     \<comment> \<open>Each of U, V, W is connected \<subseteq> S2-Y. By Lemma\_23\_2, each \<subseteq> P1 or \<subseteq> (S2-Y)-P1.\<close>
     have hU_side: "U \<subseteq> P1 \<or> U \<subseteq> (top1_S2 - ?Y) - P1" sorry
     have hV_side: "V \<subseteq> P1 \<or> V \<subseteq> (top1_S2 - ?Y) - P1" sorry
