@@ -1962,14 +1962,42 @@ proof -
       "top1_is_arc_on e13_a1p (subspace_topology top1_S2 top1_S2_topology e13_a1p)"
       "top1_is_arc_on e13_pa3 (subspace_topology top1_S2 top1_S2_topology e13_pa3)"
       "a1 \<in> e13_a1p" "a3 \<in> e13_pa3" "p \<in> e13_a1p" "p \<in> e13_pa3"
-    sorry \<comment> \<open>Uses arc_split_at_given_point on e13 at p.\<close>
+  proof -
+    have "p \<in> e13" using hp_e13 by (by100 blast)
+    from arc_split_at_given_point[OF hS2_strict hS2_haus he13_sub he13_arc this hp_not_ep he13_ep ha1_ne_a3]
+    obtain D1 D2 where h: "e13 = D1 \<union> D2 \<and> D1 \<inter> D2 = {p}
+        \<and> top1_is_arc_on D1 (subspace_topology top1_S2 top1_S2_topology D1)
+        \<and> top1_is_arc_on D2 (subspace_topology top1_S2 top1_S2_topology D2)
+        \<and> a1 \<in> D1 \<and> a3 \<in> D2 \<and> p \<in> D1 \<and> p \<in> D2 \<and> D1 \<subseteq> top1_S2 \<and> D2 \<subseteq> top1_S2"
+      by fast
+    have h1: "e13 = D1 \<union> D2" and h2: "D1 \<inter> D2 = {p}"
+        and h3: "top1_is_arc_on D1 (subspace_topology top1_S2 top1_S2_topology D1)"
+        and h4: "top1_is_arc_on D2 (subspace_topology top1_S2 top1_S2_topology D2)"
+        and h5: "a1 \<in> D1" and h6: "a3 \<in> D2" and h7: "p \<in> D1" and h8: "p \<in> D2"
+      using h by (by100 blast)+
+    show ?thesis using that[OF h1 h2 h3 h4 h5 h6 h7 h8] .
+  qed
   \<comment> \<open>Split e24 at q into two sub-arcs.\<close>
   obtain e24_a2q e24_qa4 where he24_split: "e24 = e24_a2q \<union> e24_qa4"
       "e24_a2q \<inter> e24_qa4 = {q}"
       "top1_is_arc_on e24_a2q (subspace_topology top1_S2 top1_S2_topology e24_a2q)"
       "top1_is_arc_on e24_qa4 (subspace_topology top1_S2 top1_S2_topology e24_qa4)"
       "a2 \<in> e24_a2q" "a4 \<in> e24_qa4" "q \<in> e24_a2q" "q \<in> e24_qa4"
-    sorry \<comment> \<open>Uses arc_split_at_given_point on e24 at q.\<close>
+  proof -
+    have "q \<in> e24" using hq_e24 by (by100 blast)
+    from arc_split_at_given_point[OF hS2_strict hS2_haus he24_sub he24_arc this hq_not_ep he24_ep ha2_ne_a4]
+    obtain D1 D2 where h: "e24 = D1 \<union> D2 \<and> D1 \<inter> D2 = {q}
+        \<and> top1_is_arc_on D1 (subspace_topology top1_S2 top1_S2_topology D1)
+        \<and> top1_is_arc_on D2 (subspace_topology top1_S2 top1_S2_topology D2)
+        \<and> a2 \<in> D1 \<and> a4 \<in> D2 \<and> q \<in> D1 \<and> q \<in> D2 \<and> D1 \<subseteq> top1_S2 \<and> D2 \<subseteq> top1_S2"
+      by fast
+    have h1: "e24 = D1 \<union> D2" and h2: "D1 \<inter> D2 = {q}"
+        and h3: "top1_is_arc_on D1 (subspace_topology top1_S2 top1_S2_topology D1)"
+        and h4: "top1_is_arc_on D2 (subspace_topology top1_S2 top1_S2_topology D2)"
+        and h5: "a2 \<in> D1" and h6: "a4 \<in> D2" and h7: "q \<in> D1" and h8: "q \<in> D2"
+      using h by (by100 blast)+
+    show ?thesis using that[OF h1 h2 h3 h4 h5 h6 h7 h8] .
+  qed
   \<comment> \<open>D_1 = e13_pa3 \<union> e23 \<union> e24_a2q (arc from p through a3, a2 to q).
      D_2 = e24_qa4 \<union> e41 \<union> e13_a1p (arc from q through a4, a1 to p).\<close>
   let ?D1 = "e13_pa3 \<union> e23 \<union> e24_a2q"
