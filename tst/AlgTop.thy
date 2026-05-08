@@ -4487,8 +4487,60 @@ proof -
         hUV(6) hW_eq by (by100 simp)
   qed
   \<comment> \<open>Step 4: Choose points x \<in> e12 (in one component), y \<in> e34 (other component).\<close>
+  \<comment> \<open>e12 - {a1,a2} \<subseteq> S2-D and e34 - {a3,a4} \<subseteq> S2-D.\<close>
+  have he12_in_comp: "e12 - {a1, a2} \<subseteq> top1_S2 - ?D"
+  proof -
+    \<comment> \<open>e12 \<inter> D \<subseteq> {a1,a2}: e12 \<inter> e13\_pa3 \<subseteq> e12\<inter>e13 = {a1},
+       e12 \<inter> e23 = {a2}, e12 \<inter> e24\_a2q \<subseteq> e12\<inter>e24 = {a2},
+       e12 \<inter> e24\_qa4 \<subseteq> e12\<inter>e24 = {a2}, e12 \<inter> e41 = {a1},
+       e12 \<inter> e13\_a1p \<subseteq> e12\<inter>e13 = {a1}.\<close>
+    have "e12 \<inter> ?D \<subseteq> {a1, a2}"
+    proof
+      fix x assume "x \<in> e12 \<inter> ?D"
+      hence hx12: "x \<in> e12" and hxD: "x \<in> ?D" by (by100 blast)+
+      from hxD have "x \<in> e13_pa3 \<or> x \<in> e23 \<or> x \<in> e24_a2q \<or> x \<in> e24_qa4 \<or> x \<in> e41 \<or> x \<in> e13_a1p"
+        by (by100 blast)
+      thus "x \<in> {a1, a2}"
+      proof (elim disjE)
+        assume "x \<in> e13_pa3" hence "x \<in> e12 \<inter> e13" using hx12 he13_split(1) by (by100 blast)
+        thus ?thesis using assms(28) by (by100 blast)
+      next
+        assume "x \<in> e23" hence "x \<in> e12 \<inter> e23" using hx12 by (by100 blast)
+        hence "x \<in> {a2}" using assms(24) by (by100 blast)
+        thus ?thesis by (by100 blast)
+      next
+        assume "x \<in> e24_a2q" hence "x \<in> e12 \<inter> e24" using hx12 he24_split(1) by (by100 blast)
+        hence "x \<in> {a2}" using assms(33) by (by100 blast)
+        thus ?thesis by (by100 blast)
+      next
+        assume "x \<in> e24_qa4" hence "x \<in> e12 \<inter> e24" using hx12 he24_split(1) by (by100 blast)
+        hence "x \<in> {a2}" using assms(33) by (by100 blast)
+        thus ?thesis by (by100 blast)
+      next
+        assume "x \<in> e41" hence "x \<in> e41 \<inter> e12" using hx12 by (by100 blast)
+        hence "x \<in> {a1}" using assms(27) by (by100 blast)
+        thus ?thesis by (by100 blast)
+      next
+        assume "x \<in> e13_a1p" hence "x \<in> e12 \<inter> e13" using hx12 he13_split(1) by (by100 blast)
+        thus ?thesis using assms(28) by (by100 blast)
+      qed
+    qed
+    thus ?thesis using assms(4) by (by100 blast)
+  qed
+  have he34_in_comp: "e34 - {a3, a4} \<subseteq> top1_S2 - ?D" sorry
+  \<comment> \<open>e12 - {a1,a2} is connected (arc minus endpoints) and non-empty.\<close>
+  have he12_conn: "top1_connected_on (e12 - {a1, a2})
+      (subspace_topology top1_S2 top1_S2_topology (e12 - {a1, a2}))" sorry
+  have he12_ne: "e12 - {a1, a2} \<noteq> {}" sorry
+  have he34_conn: "top1_connected_on (e34 - {a3, a4})
+      (subspace_topology top1_S2 top1_S2_topology (e34 - {a3, a4}))" sorry
+  have he34_ne: "e34 - {a3, a4} \<noteq> {}" sorry
+  \<comment> \<open>By Lemma 23.2, each lies in A or B.\<close>
+  have he12_AB: "e12 - {a1, a2} \<subseteq> A \<or> e12 - {a1, a2} \<subseteq> B" sorry
+  have he34_AB: "e34 - {a3, a4} \<subseteq> A \<or> e34 - {a3, a4} \<subseteq> B" sorry
+  \<comment> \<open>They are in different components. (WLOG swap A,B if needed.)\<close>
   obtain x y where hx: "x \<in> A" "x \<in> e12 - {a1, a2}" and hy: "y \<in> B" "y \<in> e34 - {a3, a4}"
-    sorry \<comment> \<open>e12 and e34 are in different components of S2-D.\<close>
+    sorry \<comment> \<open>From he12\_AB, he34\_AB + they must be in different components.\<close>
   \<comment> \<open>Step 5: Construct \<alpha>: path in U' from x to y (via a1, a4 or similar).
      \<beta>: path in V' from y to x (via a3, a2).\<close>
   obtain \<alpha> where h\<alpha>: "top1_is_path_on ?U' (subspace_topology top1_S2 top1_S2_topology ?U') x y \<alpha>"
