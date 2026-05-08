@@ -428,7 +428,73 @@ qed
 lemma unit_interval_reversal_homeomorphism:
   "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
       top1_unit_interval top1_unit_interval_topology (\<lambda>t::real. 1 - t)"
-  sorry \<comment> \<open>Proved inside arcs_concatenation_is_arc; TODO: extract or cache.\<close>
+  unfolding top1_homeomorphism_on_def
+proof (intro conjI)
+  show "is_topology_on top1_unit_interval top1_unit_interval_topology"
+    by (rule top1_unit_interval_topology_is_topology_on)
+  show "is_topology_on top1_unit_interval top1_unit_interval_topology"
+    by (rule top1_unit_interval_topology_is_topology_on)
+  show "bij_betw (\<lambda>t::real. 1 - t) top1_unit_interval top1_unit_interval"
+    unfolding bij_betw_def
+  proof (intro conjI)
+    show "inj_on (\<lambda>t::real. 1 - t) top1_unit_interval" by (rule inj_onI) (by100 simp)
+    show "(\<lambda>t::real. 1 - t) ` top1_unit_interval = top1_unit_interval"
+      unfolding top1_unit_interval_def by (by100 force)
+  qed
+  show "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+      top1_unit_interval top1_unit_interval_topology (\<lambda>t::real. 1 - t)"
+  proof -
+    have hcont: "continuous_on UNIV (\<lambda>t::real. 1 - t)" by (intro continuous_intros)
+    have "top1_continuous_map_on (UNIV::real set) top1_open_sets (UNIV::real set) top1_open_sets (\<lambda>t. 1 - t)"
+      using top1_continuous_map_on_real_subspace_open_sets[of UNIV "\<lambda>t. 1-t" UNIV, OF _ hcont]
+      unfolding subspace_topology_UNIV_self by (by100 auto)
+    from top1_continuous_map_on_restrict_domain_simple[OF this subset_UNIV]
+    have "top1_continuous_map_on top1_unit_interval
+        (subspace_topology UNIV top1_open_sets top1_unit_interval) UNIV top1_open_sets (\<lambda>t. 1 - t)" .
+    hence h1: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+        UNIV top1_open_sets (\<lambda>t. 1 - t)"
+      unfolding top1_unit_interval_topology_def subspace_topology_UNIV_self by (by100 simp)
+    have h_img: "(\<lambda>t::real. 1 - t) ` top1_unit_interval \<subseteq> top1_unit_interval"
+      unfolding top1_unit_interval_def by (by100 force)
+    show ?thesis using top1_continuous_map_on_codomain_shrink[OF h1 h_img]
+      unfolding top1_unit_interval_topology_def by (by100 simp)
+  qed
+  have hinv_eq: "\<forall>t\<in>top1_unit_interval. inv_into top1_unit_interval (\<lambda>t::real. 1 - t) t = 1 - t"
+  proof
+    fix t :: real assume ht: "t \<in> top1_unit_interval"
+    have "(\<lambda>s::real. 1 - s) (1 - t) = t" by (by100 simp)
+    moreover have "1 - t \<in> top1_unit_interval" using ht unfolding top1_unit_interval_def by (by100 force)
+    moreover have "inj_on (\<lambda>t::real. 1 - t) top1_unit_interval" by (rule inj_onI) (by100 simp)
+    ultimately show "inv_into top1_unit_interval (\<lambda>t::real. 1 - t) t = 1 - t"
+      using inv_into_f_eq by (by100 fast)
+  qed
+  show "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+      top1_unit_interval top1_unit_interval_topology
+      (inv_into top1_unit_interval (\<lambda>t::real. 1 - t))"
+    unfolding top1_continuous_map_on_def
+  proof (intro conjI ballI)
+    fix t :: real assume ht: "t \<in> top1_unit_interval"
+    show "inv_into top1_unit_interval (\<lambda>t::real. 1 - t) t \<in> top1_unit_interval"
+      using hinv_eq[rule_format, OF ht] ht unfolding top1_unit_interval_def by (by100 force)
+  next
+    fix V assume hV: "V \<in> top1_unit_interval_topology"
+    have h_eq: "{t \<in> top1_unit_interval. inv_into top1_unit_interval (\<lambda>t::real. 1 - t) t \<in> V}
+        = {t \<in> top1_unit_interval. 1 - t \<in> V}"
+    proof (rule set_eqI, rule iffI)
+      fix t assume "t \<in> {t \<in> top1_unit_interval. inv_into top1_unit_interval (\<lambda>t. 1 - t) t \<in> V}"
+      thus "t \<in> {t \<in> top1_unit_interval. 1 - t \<in> V}" using hinv_eq by (by100 simp)
+    next
+      fix t assume "t \<in> {t \<in> top1_unit_interval. (1::real) - t \<in> V}"
+      thus "t \<in> {t \<in> top1_unit_interval. inv_into top1_unit_interval (\<lambda>t. 1 - t) t \<in> V}"
+        using hinv_eq by (by100 simp)
+    qed
+    have "{t \<in> top1_unit_interval. (1::real) - t \<in> V} \<in> top1_unit_interval_topology"
+      using hV \<open>top1_continuous_map_on _ _ _ _ (\<lambda>t. 1 - t)\<close>
+      unfolding top1_continuous_map_on_def by (by100 blast)
+    thus "{t \<in> top1_unit_interval. inv_into top1_unit_interval (\<lambda>t::real. 1 - t) t \<in> V}
+        \<in> top1_unit_interval_topology" using h_eq by (by100 simp)
+  qed
+qed
 
 \<comment> \<open>Reusable: two arcs meeting only at their two endpoints form a simple closed curve.\<close>
 lemma arcs_form_simple_closed_curve:
