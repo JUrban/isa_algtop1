@@ -4877,8 +4877,47 @@ proof -
     using Theorem_63_5_two_closed_connected[OF assms(1) hA_closed hB_closed
         hA_conn hB_conn hAB_card hA_no_sep hB_no_sep]
     by (by100 force)
+  \<comment> \<open>P1\_raw, P2\_raw are open (via S2\_component helper + maximality from Jordan).\<close>
+  have hP1r_open: "P1_raw \<in> top1_S2_topology" sorry \<comment> \<open>Same lpc argument as P1\_open.\<close>
+  have hP2r_open: "P2_raw \<in> top1_S2_topology" sorry
+  \<comment> \<open>With P1\_raw, P2\_raw open, form separation and apply Lemma\_23\_2.\<close>
   have hCm_in_raw: "?C - {a1, a3} \<subseteq> P1_raw \<or> ?C - {a1, a3} \<subseteq> P2_raw"
-    sorry \<comment> \<open>Lemma\_23\_2: connected subset of separation.\<close>
+  proof -
+    have hTAB_loc: "is_topology_on (top1_S2 - (?A \<union> ?B))
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B)))"
+      by (rule subspace_topology_is_topology_on[OF]) (use hTopS2 in \<open>by100 blast\<close>, by100 blast)
+    have hP1r_oAB: "P1_raw \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B))"
+    proof -
+      have "P1_raw = (top1_S2 - (?A \<union> ?B)) \<inter> P1_raw" using hP_raw(4) by (by100 blast)
+      thus ?thesis unfolding subspace_topology_def using hP1r_open by (by100 blast)
+    qed
+    have hP2r_oAB: "P2_raw \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B))"
+    proof -
+      have "P2_raw = (top1_S2 - (?A \<union> ?B)) \<inter> P2_raw" using hP_raw(4) by (by100 blast)
+      thus ?thesis unfolding subspace_topology_def using hP2r_open by (by100 blast)
+    qed
+    have hAB_sep: "top1_is_separation_on (top1_S2 - (?A \<union> ?B))
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B))) P1_raw P2_raw"
+      unfolding top1_is_separation_on_def
+      using hP1r_oAB hP2r_oAB hP_raw(1,2,3,4) by (by100 blast)
+    have hCm_sub: "?C - {a1, a3} \<subseteq> top1_S2 - (?A \<union> ?B)"
+      using hCm_sub_AB .
+    have hCm_conn_AB: "top1_connected_on (?C - {a1, a3})
+        (subspace_topology (top1_S2 - (?A \<union> ?B))
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B)))
+            (?C - {a1, a3}))"
+    proof -
+      have "subspace_topology top1_S2 top1_S2_topology (?C - {a1, a3}) =
+          subspace_topology (top1_S2 - (?A \<union> ?B))
+              (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B)))
+              (?C - {a1, a3})"
+        using subspace_topology_trans[of "?C - {a1, a3}" "top1_S2 - (?A \<union> ?B)" top1_S2 top1_S2_topology]
+            hCm_sub by (by100 simp)
+      thus ?thesis using hCm_conn by (by100 simp)
+    qed
+    from Lemma_23_2[OF hTAB_loc hAB_sep hCm_sub hCm_conn_AB]
+    show ?thesis by (by100 blast)
+  qed
   obtain P1 P2 where hP: "P1 \<noteq> {}" "P2 \<noteq> {}" "P1 \<inter> P2 = {}"
       "P1 \<union> P2 = top1_S2 - (?A \<union> ?B)"
       "top1_connected_on P1 (subspace_topology top1_S2 top1_S2_topology P1)"
@@ -5208,8 +5247,41 @@ proof -
         "R1' \<union> R2' = top1_S2 - (?B \<union> ?C)"
         "top1_connected_on R1' (subspace_topology top1_S2 top1_S2_topology R1')"
         "top1_connected_on R2' (subspace_topology top1_S2 top1_S2_topology R2')" by (by100 metis)
+    have hR1'_open: "R1' \<in> top1_S2_topology" sorry \<comment> \<open>Same lpc argument.\<close>
+    have hR2'_open: "R2' \<in> top1_S2_topology" sorry
+    have hTBC_loc: "is_topology_on (top1_S2 - (?B \<union> ?C))
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?B \<union> ?C)))"
+      by (rule subspace_topology_is_topology_on[OF]) (use hTopS2 in \<open>by100 blast\<close>, by100 blast)
+    have hR1'_oBC: "R1' \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?B \<union> ?C))"
+    proof -
+      have "R1' = (top1_S2 - (?B \<union> ?C)) \<inter> R1'" using hR'(4) by (by100 blast)
+      thus ?thesis unfolding subspace_topology_def using hR1'_open by (by100 blast)
+    qed
+    have hR2'_oBC: "R2' \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?B \<union> ?C))"
+    proof -
+      have "R2' = (top1_S2 - (?B \<union> ?C)) \<inter> R2'" using hR'(4) by (by100 blast)
+      thus ?thesis unfolding subspace_topology_def using hR2'_open by (by100 blast)
+    qed
+    have hBC_sep: "top1_is_separation_on (top1_S2 - (?B \<union> ?C))
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?B \<union> ?C))) R1' R2'"
+      unfolding top1_is_separation_on_def
+      using hR1'_oBC hR2'_oBC hR'(1,2,3,4) by (by100 blast)
+    have hAm_conn_BC: "top1_connected_on (?A - {a1, a3})
+        (subspace_topology (top1_S2 - (?B \<union> ?C))
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?B \<union> ?C)))
+            (?A - {a1, a3}))"
+    proof -
+      have "subspace_topology top1_S2 top1_S2_topology (?A - {a1, a3}) =
+          subspace_topology (top1_S2 - (?B \<union> ?C))
+              (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?B \<union> ?C)))
+              (?A - {a1, a3})"
+        using subspace_topology_trans[of "?A - {a1, a3}" "top1_S2 - (?B \<union> ?C)" top1_S2 top1_S2_topology]
+            hAm_sub_BC by (by100 simp)
+      thus ?thesis using arc_minus_endpoints_connected[OF hS2_strict hS2_haus hA_sub hA_arc hA_ep hdist(2)]
+        by (by100 simp)
+    qed
     have hAm_raw: "?A - {a1, a3} \<subseteq> R1' \<or> ?A - {a1, a3} \<subseteq> R2'"
-      sorry \<comment> \<open>Lemma\_23\_2: connected subset of separation.\<close>
+      using Lemma_23_2[OF hTBC_loc hBC_sep hAm_sub_BC hAm_conn_BC] by (by100 blast)
     from hAm_raw show ?thesis
     proof
       assume "?A - {a1, a3} \<subseteq> R1'"
