@@ -1825,6 +1825,37 @@ proof -
     by (by100 blast)
 qed
 
+\<comment> \<open>Reusable: endpoints of sub-arcs from arc_split_at_given_point.
+   If D is split at interior point p into D1 (containing a) and D2 (containing b),
+   then endpoints of D1 = {a,p} and endpoints of D2 = {p,b}.\<close>
+lemma arc_split_endpoints:
+  assumes hT: "is_topology_on_strict X TX" and hH: "is_hausdorff_on X TX"
+      and hDX: "D \<subseteq> X" and hArc: "top1_is_arc_on D (subspace_topology X TX D)"
+      and "D = D1 \<union> D2" "D1 \<inter> D2 = {p}"
+      and hD1_arc: "top1_is_arc_on D1 (subspace_topology X TX D1)"
+      and hD2_arc: "top1_is_arc_on D2 (subspace_topology X TX D2)"
+      and "a \<in> D1" "b \<in> D2" "p \<in> D1" "p \<in> D2" "D1 \<subseteq> X" "D2 \<subseteq> X"
+      and hep: "top1_arc_endpoints_on D (subspace_topology X TX D) = {a, b}"
+      and hp_int: "p \<notin> top1_arc_endpoints_on D (subspace_topology X TX D)"
+  shows "top1_arc_endpoints_on D1 (subspace_topology X TX D1) = {a, p}"
+    and "top1_arc_endpoints_on D2 (subspace_topology X TX D2) = {p, b}"
+  sorry \<comment> \<open>From the split construction: D1 = h([0,t0]) with h(0)=a, boundary point = p.
+     Endpoints of sub-interval image = {a, p}. Similarly for D2.\<close>
+
+\<comment> \<open>Reusable: endpoints of concatenated arc = the non-shared endpoints.\<close>
+lemma arc_concat_endpoints:
+  assumes hT: "is_topology_on_strict X TX" and hH: "is_hausdorff_on X TX"
+      and hA1: "top1_is_arc_on A1 (subspace_topology X TX A1)" and "A1 \<subseteq> X"
+      and hA2: "top1_is_arc_on A2 (subspace_topology X TX A2)" and "A2 \<subseteq> X"
+      and "A1 \<inter> A2 = {c}"
+      and "c \<in> top1_arc_endpoints_on A1 (subspace_topology X TX A1)"
+      and "c \<in> top1_arc_endpoints_on A2 (subspace_topology X TX A2)"
+      and hep1: "top1_arc_endpoints_on A1 (subspace_topology X TX A1) = {x, c}"
+      and hep2: "top1_arc_endpoints_on A2 (subspace_topology X TX A2) = {c, y}"
+      and "x \<noteq> c" "c \<noteq> y"
+  shows "top1_arc_endpoints_on (A1 \<union> A2) (subspace_topology X TX (A1 \<union> A2)) = {x, y}"
+  sorry \<comment> \<open>From concatenation construction: h(0)=x, h(1)=y. Apply arc_endpoints_are_boundary.\<close>
+
 (** from \<S>65 Lemma 65.1: for K_4 subspace of S^2 with vertices a_1, ..., a_4 and
     closed-curve edge C = a_1 a_2 a_3 a_4 a_1, and interior points p, q of opposite
     edges a_1 a_3 and a_2 a_4, the loop traversing C is nontrivial in \<pi>_1(S^2-p-q, x_0). **)
