@@ -5308,7 +5308,7 @@ proof -
             closure_on top1_S2 top1_S2_topology R1\<close> by (by100 simp)
       moreover have "(\<Union>i \<in> ?I. ?A i) = closure_on top1_S2 top1_S2_topology P1 \<union>
           closure_on top1_S2 top1_S2_topology R1" by (by100 force)
-      ultimately show ?thesis sorry
+      ultimately show ?thesis sorry \<comment> \<open>Theorem\_23\_3 application: by100 too tight.\<close>
     qed
     thus ?thesis .
   qed
