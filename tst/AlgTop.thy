@@ -3639,7 +3639,203 @@ proof -
     by (by100 force)
   \<comment> \<open>C-{a,b} is in one of U0\_raw/U0'\_raw. Choose U0 to NOT contain C-{a,b}.\<close>
   have hC_raw: "C - {a, b} \<subseteq> U0_raw \<or> C - {a, b} \<subseteq> U0'_raw"
-    sorry \<comment> \<open>Lemma\_23\_2 on raw components (same argument as hC\_minus\_sub below).\<close>
+  proof -
+    \<comment> \<open>Need: raw components are open \<Rightarrow> form separation \<Rightarrow> Lemma\_23\_2.\<close>
+    let ?W = "top1_S2 - (A \<union> B)"
+    let ?TW = "subspace_topology top1_S2 top1_S2_topology ?W"
+    have hAB_closed_S2_raw: "closedin_on top1_S2 top1_S2_topology (A \<union> B)"
+    proof -
+      have "is_topology_on top1_S2 top1_S2_topology"
+        using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
+      thus ?thesis by (rule closedin_on_Un[OF _ hA_closed hB_closed])
+    qed
+    have hW_open: "?W \<in> top1_S2_topology" using hAB_closed_S2_raw unfolding closedin_on_def by (by100 blast)
+    have hW_sub: "?W \<subseteq> top1_S2" by (by100 blast)
+    have hW_lpc: "top1_locally_path_connected_on ?W ?TW"
+      by (rule open_subset_locally_path_connected[OF S2_locally_path_connected hW_open hW_sub])
+    have hTW: "is_topology_on ?W ?TW"
+    proof -
+      have "is_topology_on top1_S2 top1_S2_topology"
+        using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
+      thus ?thesis by (rule subspace_topology_is_topology_on) (by100 blast)
+    qed
+    \<comment> \<open>U0\_raw is path component of some x \<in> U0\_raw, hence open.\<close>
+    obtain x_raw where "x_raw \<in> U0_raw" using hU0_raw(1) by (by100 blast)
+    hence hxr_W: "x_raw \<in> ?W" using hU0_raw(4) by (by100 blast)
+    \<comment> \<open>path\_comp = connected\_comp in lpc (Theorem 25.5).\<close>
+    have hThm255_raw: "top1_path_component_of_on ?W ?TW x_raw = top1_component_of_on ?W ?TW x_raw"
+    proof -
+      from conjunct2[OF Theorem_25_5[OF hTW]]
+      have "top1_locally_path_connected_on ?W ?TW \<longrightarrow>
+          (\<forall>x \<in> ?W. top1_path_component_of_on ?W ?TW x = top1_component_of_on ?W ?TW x)" .
+      thus ?thesis using hW_lpc hxr_W by (by100 blast)
+    qed
+    \<comment> \<open>U0\_raw = comp(x\_raw) (same argument as hU0\_eq\_comp below).\<close>
+    have hU0r_sub_W: "U0_raw \<subseteq> ?W" using hU0_raw(4) by (by100 blast)
+    have hU0r_conn_W: "top1_connected_on U0_raw (subspace_topology ?W ?TW U0_raw)"
+    proof -
+      have "subspace_topology top1_S2 top1_S2_topology U0_raw = subspace_topology ?W ?TW U0_raw"
+        using subspace_topology_trans[of U0_raw ?W top1_S2 top1_S2_topology] hU0r_sub_W by (by100 simp)
+      thus ?thesis using hU0_raw(5) by (by100 simp)
+    qed
+    have "U0_raw \<subseteq> top1_component_of_on ?W ?TW x_raw"
+      by (rule top1_connected_subspace_subset_component_of[OF hU0r_sub_W \<open>x_raw \<in> U0_raw\<close> hU0r_conn_W])
+    moreover have "top1_component_of_on ?W ?TW x_raw \<subseteq> U0_raw"
+    proof (rule ccontr)
+      assume "\<not> ?thesis"
+      then obtain y where hy: "y \<in> top1_component_of_on ?W ?TW x_raw" "y \<notin> U0_raw" by (by100 blast)
+      have "top1_component_of_on ?W ?TW x_raw \<subseteq> ?W" by (rule top1_component_of_on_subset)
+      have "y \<in> ?W" using hy(1) \<open>top1_component_of_on ?W ?TW x_raw \<subseteq> ?W\<close> by (by100 blast)
+      hence "y \<in> U0'_raw" using hy(2) hU0_raw(4) by (by100 blast)
+      have hU0'r_sub_W: "U0'_raw \<subseteq> ?W" using hU0_raw(4) by (by100 blast)
+      have hU0'r_conn_W: "top1_connected_on U0'_raw (subspace_topology ?W ?TW U0'_raw)"
+      proof -
+        have "subspace_topology top1_S2 top1_S2_topology U0'_raw = subspace_topology ?W ?TW U0'_raw"
+          using subspace_topology_trans[of U0'_raw ?W top1_S2 top1_S2_topology] hU0'r_sub_W by (by100 simp)
+        thus ?thesis using hU0_raw(6) by (by100 simp)
+      qed
+      have "U0'_raw \<subseteq> top1_component_of_on ?W ?TW y"
+        by (rule top1_connected_subspace_subset_component_of[OF hU0'r_sub_W \<open>y \<in> U0'_raw\<close> hU0'r_conn_W])
+      have "top1_component_of_on ?W ?TW y = top1_component_of_on ?W ?TW x_raw"
+        by (rule top1_component_of_on_eq_of_mem[OF hTW hy(1)])
+      hence "U0'_raw \<subseteq> top1_component_of_on ?W ?TW x_raw"
+        using \<open>U0'_raw \<subseteq> top1_component_of_on ?W ?TW y\<close> by (by100 simp)
+      hence "?W \<subseteq> top1_component_of_on ?W ?TW x_raw"
+        using \<open>U0_raw \<subseteq> top1_component_of_on ?W ?TW x_raw\<close> hU0_raw(4) by (by100 blast)
+      have "top1_component_of_on ?W ?TW x_raw \<subseteq> ?W" by (rule top1_component_of_on_subset)
+      hence "top1_component_of_on ?W ?TW x_raw = ?W"
+        using \<open>?W \<subseteq> top1_component_of_on ?W ?TW x_raw\<close> by (by100 blast)
+      have "top1_connected_on (top1_component_of_on ?W ?TW x_raw) (subspace_topology ?W ?TW (top1_component_of_on ?W ?TW x_raw))"
+        by (rule top1_component_of_on_connected[OF hTW hxr_W])
+      hence "top1_connected_on ?W (subspace_topology ?W ?TW ?W)"
+        using \<open>top1_component_of_on ?W ?TW x_raw = ?W\<close> by (by100 force)
+      moreover have "subspace_topology ?W ?TW ?W = ?TW"
+      proof (rule subspace_topology_self)
+        show "\<forall>U \<in> ?TW. U \<subseteq> ?W" unfolding subspace_topology_def by (by100 blast)
+      qed
+      ultimately have "top1_connected_on ?W ?TW" by (by100 simp)
+      thus False using hAB_sep unfolding top1_separates_on_def by (by100 simp)
+    qed
+    ultimately have "U0_raw = top1_path_component_of_on ?W ?TW x_raw"
+      using hThm255_raw by (by100 blast)
+    hence hU0r_open: "U0_raw \<in> top1_S2_topology"
+    proof -
+      have "top1_path_component_of_on ?W ?TW x_raw \<in> ?TW"
+        by (rule top1_path_component_of_on_open_if_locally_path_connected[OF hTW hW_lpc hxr_W])
+      hence "U0_raw \<in> ?TW" using \<open>U0_raw = top1_path_component_of_on ?W ?TW x_raw\<close> by (by100 simp)
+      then obtain V where "V \<in> top1_S2_topology" "U0_raw = ?W \<inter> V"
+        unfolding subspace_topology_def by (by100 force)
+      have hax: "\<forall>F. finite F \<and> F \<noteq> {} \<and> F \<subseteq> top1_S2_topology \<longrightarrow> \<Inter>F \<in> top1_S2_topology"
+        using assms(1) unfolding is_topology_on_strict_def is_topology_on_def by (by100 blast)
+      have "{V, ?W} \<subseteq> top1_S2_topology" using \<open>V \<in> top1_S2_topology\<close> hW_open by (by100 blast)
+      have "finite {V, ?W} \<and> {V, ?W} \<noteq> {} \<and> {V, ?W} \<subseteq> top1_S2_topology"
+        using \<open>{V, ?W} \<subseteq> top1_S2_topology\<close> by (by100 force)
+      from hax[rule_format, OF this] have "\<Inter>{V, ?W} \<in> top1_S2_topology" .
+      moreover have "V \<inter> ?W = U0_raw" using \<open>U0_raw = ?W \<inter> V\<close> by (by100 blast)
+      hence "\<Inter>{V, ?W} = U0_raw" by (by100 force)
+      ultimately show ?thesis by (by100 simp)
+    qed
+    \<comment> \<open>Similarly U0'\_raw open.\<close>
+    have hU0'r_open: "U0'_raw \<in> top1_S2_topology"
+    proof -
+      obtain x_raw' where "x_raw' \<in> U0'_raw" using hU0_raw(2) by (by100 blast)
+      hence hxr'_W: "x_raw' \<in> ?W" using hU0_raw(4) by (by100 blast)
+      have "top1_path_component_of_on ?W ?TW x_raw' = top1_component_of_on ?W ?TW x_raw'"
+      proof -
+        from conjunct2[OF Theorem_25_5[OF hTW]]
+        have "top1_locally_path_connected_on ?W ?TW \<longrightarrow>
+            (\<forall>x \<in> ?W. top1_path_component_of_on ?W ?TW x = top1_component_of_on ?W ?TW x)" .
+        thus ?thesis using hW_lpc hxr'_W by (by100 blast)
+      qed
+      have hU0'r_sub_W: "U0'_raw \<subseteq> ?W" using hU0_raw(4) by (by100 blast)
+      have hU0'r_conn_W: "top1_connected_on U0'_raw (subspace_topology ?W ?TW U0'_raw)"
+      proof -
+        have "subspace_topology top1_S2 top1_S2_topology U0'_raw = subspace_topology ?W ?TW U0'_raw"
+          using subspace_topology_trans[of U0'_raw ?W top1_S2 top1_S2_topology] hU0'r_sub_W by (by100 simp)
+        thus ?thesis using hU0_raw(6) by (by100 simp)
+      qed
+      have "U0'_raw \<subseteq> top1_component_of_on ?W ?TW x_raw'"
+        by (rule top1_connected_subspace_subset_component_of[OF hU0'r_sub_W \<open>x_raw' \<in> U0'_raw\<close> hU0'r_conn_W])
+      moreover have "top1_component_of_on ?W ?TW x_raw' \<subseteq> U0'_raw"
+      proof (rule ccontr)
+        assume "\<not> ?thesis"
+        then obtain z where hz: "z \<in> top1_component_of_on ?W ?TW x_raw'" "z \<notin> U0'_raw" by (by100 blast)
+        have "top1_component_of_on ?W ?TW x_raw' \<subseteq> ?W" by (rule top1_component_of_on_subset)
+        hence "z \<in> U0_raw" using hz hU0_raw(4) \<open>top1_component_of_on ?W ?TW x_raw' \<subseteq> ?W\<close> by (by100 blast)
+        have "U0_raw \<subseteq> top1_component_of_on ?W ?TW z"
+          by (rule top1_connected_subspace_subset_component_of[OF hU0r_sub_W \<open>z \<in> U0_raw\<close> hU0r_conn_W])
+        have "top1_component_of_on ?W ?TW z = top1_component_of_on ?W ?TW x_raw'"
+          by (rule top1_component_of_on_eq_of_mem[OF hTW hz(1)])
+        hence "U0_raw \<subseteq> top1_component_of_on ?W ?TW x_raw'"
+          using \<open>U0_raw \<subseteq> top1_component_of_on ?W ?TW z\<close> by (by100 simp)
+        hence "?W \<subseteq> top1_component_of_on ?W ?TW x_raw'"
+          using \<open>U0'_raw \<subseteq> top1_component_of_on ?W ?TW x_raw'\<close> hU0_raw(4) by (by100 blast)
+        have "top1_component_of_on ?W ?TW x_raw' \<subseteq> ?W" by (rule top1_component_of_on_subset)
+        hence "top1_component_of_on ?W ?TW x_raw' = ?W"
+          using \<open>?W \<subseteq> top1_component_of_on ?W ?TW x_raw'\<close> by (by100 blast)
+        have "top1_connected_on (top1_component_of_on ?W ?TW x_raw')
+            (subspace_topology ?W ?TW (top1_component_of_on ?W ?TW x_raw'))"
+          by (rule top1_component_of_on_connected[OF hTW hxr'_W])
+        hence "top1_connected_on ?W (subspace_topology ?W ?TW ?W)"
+          using \<open>top1_component_of_on ?W ?TW x_raw' = ?W\<close> by (by100 force)
+        moreover have "subspace_topology ?W ?TW ?W = ?TW"
+        proof (rule subspace_topology_self)
+          show "\<forall>U \<in> ?TW. U \<subseteq> ?W" unfolding subspace_topology_def by (by100 blast)
+        qed
+        ultimately have "top1_connected_on ?W ?TW" by (by100 simp)
+        thus False using hAB_sep unfolding top1_separates_on_def by (by100 simp)
+      qed
+      ultimately have "U0'_raw = top1_path_component_of_on ?W ?TW x_raw'"
+        using \<open>top1_path_component_of_on ?W ?TW x_raw' = top1_component_of_on ?W ?TW x_raw'\<close>
+        by (by100 blast)
+      hence "U0'_raw \<in> ?TW"
+        using top1_path_component_of_on_open_if_locally_path_connected[OF hTW hW_lpc hxr'_W]
+        by (by100 simp)
+      then obtain V where "V \<in> top1_S2_topology" "U0'_raw = ?W \<inter> V"
+        unfolding subspace_topology_def by (by100 force)
+      have hax': "\<forall>F. finite F \<and> F \<noteq> {} \<and> F \<subseteq> top1_S2_topology \<longrightarrow> \<Inter>F \<in> top1_S2_topology"
+        using assms(1) unfolding is_topology_on_strict_def is_topology_on_def by (by100 blast)
+      have "{V, ?W} \<subseteq> top1_S2_topology" using \<open>V \<in> top1_S2_topology\<close> hW_open by (by100 blast)
+      have "finite {V, ?W} \<and> {V, ?W} \<noteq> {} \<and> {V, ?W} \<subseteq> top1_S2_topology"
+        using \<open>{V, ?W} \<subseteq> top1_S2_topology\<close> by (by100 force)
+      from hax'[rule_format, OF this] have "\<Inter>{V, ?W} \<in> top1_S2_topology" .
+      moreover have "V \<inter> ?W = U0'_raw" using \<open>U0'_raw = ?W \<inter> V\<close> by (by100 blast)
+      hence "\<Inter>{V, ?W} = U0'_raw" by (by100 force)
+      ultimately show ?thesis by (by100 simp)
+    qed
+    \<comment> \<open>Now form separation and apply Lemma\_23\_2.\<close>
+    have hU0r_in_sub: "U0_raw \<in> ?TW"
+    proof -
+      have "U0_raw = ?W \<inter> U0_raw" using hU0r_sub_W by (by100 blast)
+      thus ?thesis unfolding subspace_topology_def using hU0r_open by (by100 blast)
+    qed
+    have hU0'r_in_sub: "U0'_raw \<in> ?TW"
+    proof -
+      have "U0'_raw \<subseteq> ?W" using hU0_raw(4) by (by100 blast)
+      hence "U0'_raw = ?W \<inter> U0'_raw" by (by100 blast)
+      thus ?thesis unfolding subspace_topology_def using hU0'r_open by (by100 blast)
+    qed
+    have "top1_is_separation_on ?W ?TW U0_raw U0'_raw"
+      unfolding top1_is_separation_on_def
+      using hU0r_in_sub hU0'r_in_sub hU0_raw(1,2,3,4) by (by100 blast)
+    \<comment> \<open>C-{a,b} connected and in W.\<close>
+    have hCm_sub: "C - {a, b} \<subseteq> ?W"
+    proof -
+      have "C \<inter> A \<subseteq> {a, b}" using assms(11) by (by100 blast)
+      moreover have "C \<inter> B \<subseteq> {a, b}" using assms(10) by (by100 blast)
+      ultimately have "C \<inter> (A \<union> B) \<subseteq> {a, b}" by (by100 blast)
+      thus ?thesis using assms(4) by (by100 blast)
+    qed
+    have hCm_conn_sub: "top1_connected_on (C - {a, b}) (subspace_topology ?W ?TW (C - {a, b}))"
+    proof -
+      have "subspace_topology top1_S2 top1_S2_topology (C - {a, b}) = subspace_topology ?W ?TW (C - {a, b})"
+        using subspace_topology_trans[of "C-{a,b}" ?W top1_S2 top1_S2_topology] hCm_sub by (by100 simp)
+      thus ?thesis using arc_minus_endpoints_connected[OF assms(1) hS2_haus assms(4) assms(7) assms(14) assms(8)]
+        by (by100 simp)
+    qed
+    from Lemma_23_2[OF hTW \<open>top1_is_separation_on ?W ?TW U0_raw U0'_raw\<close> hCm_sub hCm_conn_sub]
+    show ?thesis by (by100 blast)
+  qed
   obtain U0 U0' where hU0: "U0 \<noteq> {}" "U0' \<noteq> {}" "U0 \<inter> U0' = {}"
       "U0 \<union> U0' = top1_S2 - (A \<union> B)"
       "top1_connected_on U0 (subspace_topology top1_S2 top1_S2_topology U0)"
