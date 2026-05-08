@@ -3898,7 +3898,28 @@ proof -
       \<comment> \<open>A\<union>B \<subseteq> closure(U0): by simple\_closed\_curve\_boundary\_meets\_component,
          every neighborhood of a point on A\<union>B meets U0.\<close>
       have "A \<union> B \<subseteq> closure_on top1_S2 top1_S2_topology U0"
-        sorry \<comment> \<open>Boundary of component \<subseteq> closure. Needs boundary\_meets\_component.\<close>
+      proof
+        fix x assume "x \<in> A \<union> B"
+        hence "x \<in> top1_S2" using assms(2,3) by (by100 blast)
+        have hU0_sub_S2: "U0 \<subseteq> top1_S2" using hU0(4) by (by100 blast)
+        have hTopS2_loc2: "is_topology_on top1_S2 top1_S2_topology"
+          using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
+        show "x \<in> closure_on top1_S2 top1_S2_topology U0"
+        proof (rule iffD2[OF Theorem_17_5a[OF hTopS2_loc2 \<open>x \<in> top1_S2\<close> hU0_sub_S2]])
+          \<comment> \<open>Every neighborhood of x meets U0.\<close>
+          show "\<forall>U. neighborhood_of x top1_S2 top1_S2_topology U \<longrightarrow> intersects U U0"
+          proof (intro allI impI)
+            fix V assume "neighborhood_of x top1_S2 top1_S2_topology V"
+            then obtain W where hW: "W \<in> top1_S2_topology" "x \<in> W" "W \<subseteq> V"
+              unfolding neighborhood_of_def sorry
+            \<comment> \<open>W is open in S2, x \<in> A\<union>B \<inter> W. By boundary\_meets\_component, W \<inter> U0 \<noteq> {}.\<close>
+            from simple_closed_curve_boundary_meets_component[OF assms(1) hAB_scc hU0(5) hU0(6)
+                hU0(3) hU0(4)]
+            have "W \<inter> U0 \<noteq> {}" sorry
+            thus "intersects V U0" using hW(3) unfolding intersects_def sorry
+          qed
+        qed
+      qed
       moreover have "U0 \<subseteq> closure_on top1_S2 top1_S2_topology U0"
         by (rule subset_closure_on)
       ultimately show ?thesis by (by100 blast)
