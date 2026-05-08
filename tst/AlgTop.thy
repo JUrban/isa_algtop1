@@ -788,7 +788,33 @@ proof -
     next
       case False
       \<comment> \<open>R\_to\_S1(s) = R\_to\_S1(t) with s \<noteq> t on [0,1] means {s,t} = {0,1}.\<close>
-      have "{s, t} = {(0::real), 1}" sorry \<comment> \<open>From R\_to\_S1 periodicity + s,t \<in> [0,1].\<close>
+      have "{s, t} = {(0::real), 1}"
+      proof -
+        \<comment> \<open>R\_to\_S1(s) = R\_to\_S1(t) \<Rightarrow> cos(2\<pi>s) = cos(2\<pi>t) \<and> sin(2\<pi>s) = sin(2\<pi>t).\<close>
+        have "cos (2*pi*s) = cos (2*pi*t)" and "sin (2*pi*s) = sin (2*pi*t)"
+          using heq unfolding top1_R_to_S1_def by (by100 simp)+
+        from cos_sin_eq_imp[OF this]
+        obtain k :: int where hk: "2*pi*s - 2*pi*t = real_of_int k * 2 * pi" by (by100 blast)
+        hence hst_k: "s - t = real_of_int k"
+          using pi_gt_zero sorry
+        have hs_bds: "0 \<le> s" "s \<le> 1" using hs unfolding top1_unit_interval_def by (by100 simp)+
+        have ht_bds: "0 \<le> t" "t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 simp)+
+        have hst_range: "- 1 \<le> s - t" "s - t \<le> 1" using hs_bds ht_bds by (by100 linarith)+
+        have "k \<noteq> 0" using hst_k False by (by100 simp)
+        moreover have "k \<ge> -1" using hst_range(1) hst_k by (by100 linarith)
+        moreover have "k \<le> 1" using hst_range(2) hst_k by (by100 linarith)
+        ultimately have "k = 1 \<or> k = -1" by (by100 linarith)
+        thus ?thesis
+        proof
+          assume "k = 1" hence "s = t + 1" using hst_k by (by100 simp)
+          hence "s = 1" "t = 0" using hs_bds ht_bds by (by100 linarith)+
+          thus ?thesis by (by100 blast)
+        next
+          assume "k = -1" hence "s = t - 1" using hst_k by (by100 simp)
+          hence "s = 0" "t = 1" using hs_bds ht_bds by (by100 linarith)+
+          thus ?thesis by (by100 blast)
+        qed
+      qed
       from doubleton_eq_iff[OF this False]
       have "(s = 0 \<and> t = 1) \<or> (s = 1 \<and> t = 0)" by (by100 blast)
       thus ?thesis
