@@ -3492,16 +3492,62 @@ lemma Lemma_64_1_theta_space_three_components:
       \<and> top1_connected_on V (subspace_topology top1_S2 top1_S2_topology V)
       \<and> top1_connected_on W (subspace_topology top1_S2 top1_S2_topology W)"
 proof -
-  \<comment> \<open>Step 1: A \<union> B is SCC, separates S2 into two components U, U'.\<close>
+  \<comment> \<open>Step 1: A \<union> B is SCC, separates S2 into two components U0, U0'.\<close>
   have hAB_scc: "top1_simple_closed_curve_on top1_S2 top1_S2_topology (A \<union> B)"
-    sorry
+    sorry \<comment> \<open>By arcs\_form\_simple\_closed\_curve: A, B arcs with A \<inter> B = {a,b}.\<close>
   have hAB_sep: "top1_separates_on top1_S2 top1_S2_topology (A \<union> B)"
-    sorry
-  \<comment> \<open>Step 2: C - {a,b} is connected and lies in one component, say U'.\<close>
-  \<comment> \<open>Step 3: closure(U) \<union> C gives two connected closed sets with 2-point intersection.
-     By Theorem 63.5, their union separates S2 into two more components V, W.\<close>
-  \<comment> \<open>Result: S2 - (A\<union>B\<union>C) = U \<union> V \<union> W, three disjoint open connected sets.\<close>
-  show ?thesis sorry
+    sorry \<comment> \<open>By Theorem 61.3 (JCT on S2).\<close>
+  \<comment> \<open>Get two components U0, U0' of S2 - (A \<union> B).\<close>
+  obtain U0 U0' where hU0: "U0 \<noteq> {}" "U0' \<noteq> {}" "U0 \<inter> U0' = {}"
+      "U0 \<union> U0' = top1_S2 - (A \<union> B)"
+      "top1_connected_on U0 (subspace_topology top1_S2 top1_S2_topology U0)"
+      "top1_connected_on U0' (subspace_topology top1_S2 top1_S2_topology U0')"
+    sorry \<comment> \<open>From hAB\_sep: S2 - (A\<union>B) not connected, extract 2 components.\<close>
+  \<comment> \<open>Step 2: C - {a,b} is connected (arc minus endpoints), lies in U0 or U0'.
+     WLOG assume C - {a,b} \<subseteq> U0'. (Swap if needed.)\<close>
+  have hC_minus: "C - {a, b} \<subseteq> top1_S2 - (A \<union> B)"
+    sorry \<comment> \<open>C \<inter> (A \<union> B) \<subseteq> A\<inter>C \<union> B\<inter>C = {a,b}.\<close>
+  have hC_minus_conn: "top1_connected_on (C - {a, b})
+      (subspace_topology top1_S2 top1_S2_topology (C - {a, b}))"
+    sorry \<comment> \<open>Arc minus endpoints is connected.\<close>
+  have hC_minus_sub: "C - {a, b} \<subseteq> U0' \<or> C - {a, b} \<subseteq> U0"
+    sorry \<comment> \<open>Lemma 23.2: connected subset in separation lies in one component.\<close>
+  \<comment> \<open>Step 3: Define Ubar = U0 \<union> (A \<union> B) = closure(U0).
+     Ubar is connected (closure of connected), doesn't separate S2 (complement = U0').
+     C is connected and doesn't separate (arc).
+     Ubar \<inter> C = {a, b} (C meets A\<union>B only at {a,b}, C doesn't meet U0).
+     By Theorem 63.5, Ubar \<union> C separates S2 into exactly 2 components V0, W0.\<close>
+  \<comment> \<open>WLOG: C - {a,b} \<subseteq> U0'. Then U0 \<inter> C = {} (U0 \<subseteq> S2 - (A\<union>B), C-{a,b} \<subseteq> U0').\<close>
+  have "C - {a, b} \<subseteq> U0'"
+    sorry \<comment> \<open>WLOG (or: obtain U0, U0' with this property).\<close>
+  let ?Ubar = "U0 \<union> A \<union> B"
+  have hUbar_conn: "top1_connected_on ?Ubar (subspace_topology top1_S2 top1_S2_topology ?Ubar)"
+    sorry \<comment> \<open>Closure of connected set in normal space is connected.\<close>
+  have hUbar_closed: "closedin_on top1_S2 top1_S2_topology ?Ubar"
+    sorry \<comment> \<open>U0 \<union> A \<union> B = closure(U0) = S2 - U0', and U0' is open.\<close>
+  have hC_closed: "closedin_on top1_S2 top1_S2_topology C"
+    sorry \<comment> \<open>Arc is compact in Hausdorff, hence closed.\<close>
+  have hUbar_no_sep: "\<not> top1_separates_on top1_S2 top1_S2_topology ?Ubar"
+    sorry \<comment> \<open>Complement is U0', which is connected.\<close>
+  have hC_no_sep: "\<not> top1_separates_on top1_S2 top1_S2_topology C"
+    sorry \<comment> \<open>Theorem 63.2: arc doesn't separate S2.\<close>
+  have hUbar_C_inter: "?Ubar \<inter> C = {a, b}"
+    sorry \<comment> \<open>C meets U0\<union>A\<union>B only at A\<inter>C \<union> B\<inter>C = {a,b} (since C-{a,b} \<subseteq> U0').\<close>
+  have hUbar_C_card: "card (?Ubar \<inter> C) = 2"
+    sorry \<comment> \<open>From hUbar\_C\_inter and a \<noteq> b.\<close>
+  \<comment> \<open>Theorem 63.5: Ubar \<union> C separates S2 into 2 components V0, W0.\<close>
+  obtain V0 W0 where hVW: "V0 \<noteq> {}" "W0 \<noteq> {}" "V0 \<inter> W0 = {}"
+      "V0 \<union> W0 = top1_S2 - (?Ubar \<union> C)"
+      "top1_connected_on V0 (subspace_topology top1_S2 top1_S2_topology V0)"
+      "top1_connected_on W0 (subspace_topology top1_S2 top1_S2_topology W0)"
+    sorry \<comment> \<open>Theorem\_63\_5\_two\_closed\_connected.\<close>
+  \<comment> \<open>Step 4: S2 - (A \<union> B \<union> C) = U0 \<union> V0 \<union> W0.\<close>
+  have "top1_S2 - (A \<union> B \<union> C) = U0 \<union> V0 \<union> W0"
+    sorry \<comment> \<open>S2 - (Ubar \<union> C) = V0 \<union> W0, and Ubar = U0 \<union> A \<union> B, so
+       S2 - (A\<union>B\<union>C) = U0 \<union> (S2 - (Ubar \<union> C)) = U0 \<union> V0 \<union> W0.\<close>
+  moreover have "U0 \<inter> V0 = {} \<and> U0 \<inter> W0 = {} \<and> V0 \<inter> W0 = {}"
+    sorry \<comment> \<open>U0, V0, W0 are pairwise disjoint (U0 \<subseteq> S2-(A\<union>B), V0\<union>W0 \<subseteq> S2-Ubar).\<close>
+  ultimately show ?thesis using hU0(1) hVW(1,2) hU0(5) hVW(5,6) sorry
 qed
 
 text \<open>Lemma 64.3: K4 in S2 separates into four components.\<close>
