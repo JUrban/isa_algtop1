@@ -1274,8 +1274,108 @@ lemma arc_split_at_given_point:
       \<and> top1_is_arc_on D2 (subspace_topology X TX D2)
       \<and> a \<in> D1 \<and> b \<in> D2 \<and> p \<in> D1 \<and> p \<in> D2
       \<and> D1 \<subseteq> X \<and> D2 \<subseteq> X"
-  sorry \<comment> \<open>Follows arc_split_at_midpoint: homeomorphism h: [0,1] -> D with h(0)=a, h(1)=b.
-     t0 = h^{-1}(p) in (0,1). D1 = h([0,t0]), D2 = h([t0,1]).\<close>
+proof -
+  \<comment> \<open>Get homeomorphism h: [0,1] \<rightarrow> D with h(0)=a, h(1)=b.\<close>
+  obtain h where hh: "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
+      D (subspace_topology X TX D) h" "h 0 = a" "h 1 = b"
+  proof -
+    obtain h0 where hh0: "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
+        D (subspace_topology X TX D) h0"
+      using hArc unfolding top1_is_arc_on_def by (by100 blast)
+    have heps0: "top1_arc_endpoints_on D (subspace_topology X TX D) = {h0 0, h0 1}"
+      by (rule arc_endpoints_are_boundary[OF hT hH hDX hArc hh0])
+    hence hab_h0: "{h0 0, h0 1} = {a, b}" using hep by (by100 simp)
+    have "h0 0 \<noteq> h0 1"
+    proof
+      assume "h0 0 = h0 1"
+      hence "{h0 0, h0 1} = {h0 0}" by (by100 simp)
+      hence "card {a, b} \<le> 1" using hab_h0 by (by100 simp)
+      thus False using hab by (by100 simp)
+    qed
+    from doubleton_eq_iff[OF hab_h0 this]
+    show ?thesis
+    proof
+      assume "h0 0 = a \<and> h0 1 = b"
+      thus ?thesis using that[OF hh0] by (by100 blast)
+    next
+      assume "h0 0 = b \<and> h0 1 = a"
+      hence "h0 0 = b" "h0 1 = a" by (by100 blast)+
+      have hcomp: "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
+          D (subspace_topology X TX D) (h0 \<circ> (\<lambda>t::real. 1-t))"
+        by (rule homeomorphism_on_comp[OF unit_interval_reversal_homeomorphism hh0])
+      have "(h0 \<circ> (\<lambda>t::real. 1-t)) 0 = a" unfolding comp_def using \<open>h0 1 = a\<close> by (by100 simp)
+      moreover have "(h0 \<circ> (\<lambda>t::real. 1-t)) 1 = b" unfolding comp_def using \<open>h0 0 = b\<close> by (by100 simp)
+      ultimately show ?thesis using that[OF hcomp] by (by100 blast)
+    qed
+  qed
+  \<comment> \<open>p = h(t0) for some t0 \<in> (0,1) (since p \<notin> endpoints = {h(0),h(1)} = {a,b}).\<close>
+  have hbij: "bij_betw h top1_unit_interval D" using hh(1) unfolding top1_homeomorphism_on_def by (by100 blast)
+  have hinj: "inj_on h top1_unit_interval" using hbij unfolding bij_betw_def by (by100 blast)
+  have himg: "h ` top1_unit_interval = D" using hbij unfolding bij_betw_def by (by100 blast)
+  obtain t0 where ht0: "t0 \<in> top1_unit_interval" "h t0 = p" using hp himg by (by100 blast)
+  have ht0_int: "0 < t0" "t0 < 1"
+  proof -
+    have "t0 \<noteq> 0"
+    proof
+      assume "t0 = 0" hence "p = a" using ht0(2) hh(2) by (by100 simp)
+      hence "p \<in> {a, b}" by (by100 blast)
+      hence "p \<in> top1_arc_endpoints_on D (subspace_topology X TX D)" using hep by (by100 simp)
+      thus False using hp_int by (by100 blast)
+    qed
+    have "t0 \<noteq> 1"
+    proof
+      assume "t0 = 1" hence "p = b" using ht0(2) hh(3) by (by100 simp)
+      hence "p \<in> {a, b}" by (by100 blast)
+      hence "p \<in> top1_arc_endpoints_on D (subspace_topology X TX D)" using hep by (by100 simp)
+      thus False using hp_int by (by100 blast)
+    qed
+    show "0 < t0" using ht0(1) \<open>t0 \<noteq> 0\<close> unfolding top1_unit_interval_def by (by100 auto)
+    show "t0 < 1" using ht0(1) \<open>t0 \<noteq> 1\<close> unfolding top1_unit_interval_def by (by100 auto)
+  qed
+  \<comment> \<open>D1 = h([0,t0]), D2 = h([t0,1]).\<close>
+  define D1 where "D1 = h ` {t \<in> top1_unit_interval. t \<le> t0}"
+  define D2 where "D2 = h ` {t \<in> top1_unit_interval. t \<ge> t0}"
+  have hD_eq: "D = D1 \<union> D2"
+    unfolding D1_def D2_def using himg by (by100 force)
+  have hD_inter: "D1 \<inter> D2 = {p}"
+  proof -
+    have "D1 \<inter> D2 = h ` ({t \<in> top1_unit_interval. t \<le> t0} \<inter> {t \<in> top1_unit_interval. t \<ge> t0})"
+    proof -
+      have hsub1: "{t \<in> top1_unit_interval. t \<le> t0} \<subseteq> top1_unit_interval" by (by100 blast)
+      have hsub2: "{t \<in> top1_unit_interval. t \<ge> t0} \<subseteq> top1_unit_interval" by (by100 blast)
+      show ?thesis unfolding D1_def D2_def
+        using inj_on_image_Int[OF hinj hsub1 hsub2] by (by100 simp)
+    qed
+    also have "{t \<in> top1_unit_interval. t \<le> t0} \<inter> {t \<in> top1_unit_interval. t \<ge> t0} = {t0}"
+      using ht0(1) by (by100 force)
+    finally show ?thesis using ht0(2) by (by100 simp)
+  qed
+  have ha_D1: "a \<in> D1"
+  proof -
+    have h0_le: "(0::real) \<in> {t \<in> top1_unit_interval. t \<le> t0}"
+      unfolding top1_unit_interval_def using ht0_int by (by100 auto)
+    hence "h 0 \<in> D1" unfolding D1_def by (by100 blast)
+    thus ?thesis using hh(2) by (by100 simp)
+  qed
+  have hb_D2: "b \<in> D2"
+  proof -
+    have h1_ge: "(1::real) \<in> {t \<in> top1_unit_interval. t \<ge> t0}"
+      unfolding top1_unit_interval_def using ht0_int by (by100 auto)
+    hence "h 1 \<in> D2" unfolding D2_def by (by100 blast)
+    thus ?thesis using hh(3) by (by100 simp)
+  qed
+  have hp_D1: "p \<in> D1" using hD_inter by (by100 blast)
+  have hp_D2: "p \<in> D2" using hD_inter by (by100 blast)
+  have hD1_sub: "D1 \<subseteq> X" unfolding D1_def using himg hDX by (by100 blast)
+  have hD2_sub: "D2 \<subseteq> X" unfolding D2_def using himg hDX by (by100 blast)
+  \<comment> \<open>D1 and D2 are arcs (h restricted to [0,t0] and [t0,1]).\<close>
+  have hD1_arc: "top1_is_arc_on D1 (subspace_topology X TX D1)"
+    sorry \<comment> \<open>h restricted to [0,t0] is homeomorphism [0,t0] \<cong> [0,1] \<rightarrow> D1.\<close>
+  have hD2_arc: "top1_is_arc_on D2 (subspace_topology X TX D2)"
+    sorry \<comment> \<open>h restricted to [t0,1] is homeomorphism [t0,1] \<cong> [0,1] \<rightarrow> D2.\<close>
+  show ?thesis using hD_eq hD_inter hD1_arc hD2_arc ha_D1 hb_D2 hp_D1 hp_D2 hD1_sub hD2_sub
+    by (by100 blast)
+qed
 
 (** from \<S>65 Lemma 65.1: for K_4 subspace of S^2 with vertices a_1, ..., a_4 and
     closed-curve edge C = a_1 a_2 a_3 a_4 a_1, and interior points p, q of opposite
