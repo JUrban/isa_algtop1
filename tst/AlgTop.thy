@@ -971,7 +971,14 @@ proof -
     show "is_topology_on top1_unit_interval top1_unit_interval_topology"
       by (rule top1_unit_interval_topology_is_topology_on)
     show hTS1: "is_topology_on top1_S1 top1_S1_topology"
-      sorry \<comment> \<open>S1\_topology is subspace of product topology.\<close>
+    proof -
+      have hTR: "is_topology_on (UNIV::real set) top1_open_sets"
+        by (rule top1_open_sets_is_topology_on_UNIV)
+      have hTR2: "is_topology_on (UNIV::(real\<times>real) set) (product_topology_on top1_open_sets top1_open_sets)"
+        using product_topology_on_is_topology_on[OF hTR hTR] by (by100 simp)
+      show ?thesis unfolding top1_S1_topology_def
+        by (rule subspace_topology_is_topology_on[OF hTR2]) (by100 simp)
+    qed
     \<comment> \<open>R\_to\_S1 is a covering map, hence continuous UNIV \<rightarrow> S1. Restrict to [0,1].\<close>
     have hR_cont_UNIV: "top1_continuous_map_on (UNIV::real set) top1_open_sets
         top1_S1 top1_S1_topology top1_R_to_S1"
