@@ -4667,7 +4667,70 @@ proof -
     sorry \<comment> \<open>Connected + separation + WLOG label swap.\<close>
   \<comment> \<open>closure(P1) = P1 \<union> (A\<union>B), using simple_closed_curve_boundary_meets_component.\<close>
   have hcl_P1: "closure_on top1_S2 top1_S2_topology P1 = P1 \<union> (?A \<union> ?B)"
-    sorry \<comment> \<open>cl(P1) \<subseteq> P1\<union>(A\<union>B) from Q open; cl(P1) \<supseteq> P1\<union>(A\<union>B) from boundary_meets_component.\<close>
+  proof (rule set_eqI, rule iffI)
+    fix z assume "z \<in> closure_on top1_S2 top1_S2_topology P1"
+    \<comment> \<open>cl(P1) \<subseteq> P1 \<union> (A\<union>B): P2 open \<Rightarrow> S2-P2 closed \<Rightarrow> cl(P1) \<subseteq> S2-P2 = P1\<union>(A\<union>B).\<close>
+    have hP1_AB_eq: "P1 \<union> (?A \<union> ?B) = top1_S2 - P2"
+    proof -
+      have hP1_sub_S2: "P1 \<subseteq> top1_S2" using hP(4) by (by100 blast)
+      have "top1_S2 - P2 = (top1_S2 - (P1 \<union> P2)) \<union> P1" using hP(3) hP1_sub_S2 by (by100 force)
+      also have "\<dots> = (?A \<union> ?B) \<union> P1"
+      proof -
+        have "top1_S2 - (P1 \<union> P2) = top1_S2 - (top1_S2 - (?A \<union> ?B))" using hP(4) by (by100 blast)
+        also have "\<dots> = ?A \<union> ?B"
+        proof -
+          have "?A \<union> ?B \<subseteq> top1_S2" using hA_sub assms(8) by (by100 blast)
+          thus ?thesis by (by100 blast)
+        qed
+        finally show ?thesis by (by100 simp)
+      qed
+      finally show ?thesis by (by100 blast)
+    qed
+    moreover have hcl_S2_P2: "closedin_on top1_S2 top1_S2_topology (top1_S2 - P2)"
+    proof -
+      have hP2_sub_S2: "P2 \<subseteq> top1_S2" using hP(4) by (by100 blast)
+      have hsub: "top1_S2 - P2 \<subseteq> top1_S2" by (by100 blast)
+      have hcompl: "top1_S2 - (top1_S2 - P2) = P2" using hP2_sub_S2 by (by100 blast)
+      show ?thesis unfolding closedin_on_def
+        apply (rule conjI[OF hsub])
+        using hcompl hP2_open by (by100 simp)
+    qed
+    moreover have "P1 \<subseteq> top1_S2 - P2"
+    proof -
+      have "P1 \<subseteq> top1_S2" using hP(4) by (by100 blast)
+      thus ?thesis using hP(3) by (by100 blast)
+    qed
+    ultimately have "closure_on top1_S2 top1_S2_topology P1 \<subseteq> top1_S2 - P2"
+      using closure_on_subset_of_closed[OF hcl_S2_P2] by (by100 blast)
+    hence "closure_on top1_S2 top1_S2_topology P1 \<subseteq> P1 \<union> (?A \<union> ?B)"
+      using hP1_AB_eq by (by100 blast)
+    thus "z \<in> P1 \<union> (?A \<union> ?B)" using \<open>z \<in> closure_on top1_S2 top1_S2_topology P1\<close> by (by100 blast)
+  next
+    fix z assume "z \<in> P1 \<union> (?A \<union> ?B)"
+    hence "z \<in> P1 \<or> z \<in> ?A \<union> ?B" by (by100 blast)
+    thus "z \<in> closure_on top1_S2 top1_S2_topology P1"
+    proof
+      assume "z \<in> P1"
+      thus ?thesis using subset_closure_on[of P1 top1_S2 top1_S2_topology] by (by100 blast)
+    next
+      assume "z \<in> ?A \<union> ?B"
+      hence "z \<in> top1_S2" using hA_sub assms(8) by (by100 blast)
+      have hP1_sub_S2: "P1 \<subseteq> top1_S2" using hP(4) by (by100 blast)
+      show "z \<in> closure_on top1_S2 top1_S2_topology P1"
+      proof (rule iffD2[OF Theorem_17_5a[OF hTopS2 \<open>z \<in> top1_S2\<close> hP1_sub_S2]])
+        show "\<forall>U. neighborhood_of z top1_S2 top1_S2_topology U \<longrightarrow> intersects U P1"
+        proof (intro allI impI)
+          fix V assume hV: "neighborhood_of z top1_S2 top1_S2_topology V"
+          hence hV_open: "V \<in> top1_S2_topology" and hzV: "z \<in> V"
+            unfolding neighborhood_of_def by (by100 blast)+
+          have "V \<inter> P1 \<noteq> {}"
+            by (rule simple_closed_curve_boundary_meets_component[OF assms(1) hAB_scc hP(5) hP(6)
+                hP(3) hP(4) hP(1) hP(2) hP1_open hP2_open \<open>z \<in> ?A \<union> ?B\<close> hV_open hzV])
+          thus "intersects V P1" unfolding intersects_def by (by100 blast)
+        qed
+      qed
+    qed
+  qed
   \<comment> \<open>a4 \<notin> A\<union>B: from intersection assumptions and distinctness.\<close>
   have ha4_not_AB: "a4 \<notin> ?A \<union> ?B"
   proof -
