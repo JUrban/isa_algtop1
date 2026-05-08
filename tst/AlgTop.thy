@@ -3566,7 +3566,110 @@ proof -
   qed
   \<comment> \<open>D2 endpoints: similarly {q, p}.\<close>
   have hD2_ep: "top1_arc_endpoints_on ?D2 (subspace_topology top1_S2 top1_S2_topology ?D2) = {p, q}"
-    sorry \<comment> \<open>arc\_concat\_endpoints with (e24\_qa4\<union>e41) endpoints {q,a1} and e13\_a1p endpoints {a1,p}.\<close>
+  proof -
+    \<comment> \<open>Step 1: endpoints(e24\_qa4 \<union> e41) = {q, a1}.\<close>
+    have he24_qa4_sub: "e24_qa4 \<subseteq> top1_S2" using he24_sub he24_split(1) by (by100 blast)
+    have he24_a2q_sub: "e24_a2q \<subseteq> top1_S2" using he24_sub he24_split(1) by (by100 blast)
+    have he24_qa4_eps: "top1_arc_endpoints_on e24_qa4
+        (subspace_topology top1_S2 top1_S2_topology e24_qa4) = {q, a4}"
+      using arc_split_endpoints(2)[OF hS2_strict hS2_haus he24_sub he24_arc
+          he24_split(1) he24_split(2) he24_split(3) he24_split(4)
+          he24_split(5) he24_split(6) he24_split(7) he24_split(8)
+          he24_a2q_sub he24_qa4_sub he24_ep hq_not_ep] .
+    have he41_eps: "top1_arc_endpoints_on e41
+        (subspace_topology top1_S2 top1_S2_topology e41) = {a4, a1}"
+      using assms(19) by (by100 blast)
+    have hint_qa4_41: "e24_qa4 \<inter> e41 = {a4}"
+    proof (rule set_eqI, rule iffI)
+      fix x assume "x \<in> e24_qa4 \<inter> e41"
+      hence "x \<in> e24" "x \<in> e41" using he24_split(1) by (by100 blast)+
+      thus "x \<in> {a4}" using assms(36) by (by100 blast)
+    next
+      fix x assume "x \<in> {a4}"
+      have "a4 \<in> e24_qa4" using he24_split(6) .
+      moreover have "a4 \<in> e41" using assms(19) unfolding top1_arc_endpoints_on_def by (by100 blast)
+      ultimately show "x \<in> e24_qa4 \<inter> e41" using \<open>x \<in> {a4}\<close> by (by100 blast)
+    qed
+    have ha4_ep_qa4: "a4 \<in> top1_arc_endpoints_on e24_qa4
+        (subspace_topology top1_S2 top1_S2_topology e24_qa4)"
+      using he24_qa4_eps by (by100 blast)
+    have ha4_ep_41: "a4 \<in> top1_arc_endpoints_on e41
+        (subspace_topology top1_S2 top1_S2_topology e41)"
+      using he41_eps by (by100 blast)
+    have hq_ne_a4: "q \<noteq> a4" using hq_e24 by (by100 blast)
+    have ha4_ne_a1: "a4 \<noteq> a1"
+    proof assume "a4 = a1"
+      hence "{a1,a2,a3,a4} = {a1,a2,a3}" by (by100 blast)
+      hence "card {a1,a2,a3,a4} \<le> card {a1,a2,a3}" by (by100 simp)
+      also have "\<dots> \<le> 3" by (rule card_three_le)
+      finally show False using assms(2) by (by100 simp) qed
+    have hD2_ep_step1: "top1_arc_endpoints_on (e24_qa4 \<union> e41)
+        (subspace_topology top1_S2 top1_S2_topology (e24_qa4 \<union> e41)) = {q, a1}"
+      by (rule arc_concat_endpoints[OF hS2_strict hS2_haus he24_split(4) he24_qa4_sub
+          assms(13) he41_sub hint_qa4_41 ha4_ep_qa4 ha4_ep_41 he24_qa4_eps he41_eps
+          hq_ne_a4 ha4_ne_a1])
+    \<comment> \<open>Step 2: endpoints(D2) = endpoints((e24\_qa4 \<union> e41) \<union> e13\_a1p) = {q, p} = {p, q}.\<close>
+    have he24_qa4_e41_sub: "e24_qa4 \<union> e41 \<subseteq> top1_S2"
+      using he24_qa4_sub he41_sub by (by100 blast)
+    have he13_a1p_sub: "e13_a1p \<subseteq> top1_S2" using he13_sub he13_split(1) by (by100 blast)
+    have hconcat_d2: "top1_is_arc_on (e24_qa4 \<union> e41)
+        (subspace_topology top1_S2 top1_S2_topology (e24_qa4 \<union> e41))"
+      by (rule arcs_concatenation_is_arc[OF hS2_strict hS2_haus he24_split(4) he24_qa4_sub
+          assms(13) he41_sub hint_qa4_41 ha4_ep_qa4 ha4_ep_41])
+    have he13_a1p_eps: "top1_arc_endpoints_on e13_a1p
+        (subspace_topology top1_S2 top1_S2_topology e13_a1p) = {a1, p}"
+      using arc_split_endpoints(1)[OF hS2_strict hS2_haus he13_sub he13_arc
+          he13_split(1) he13_split(2) he13_split(3) he13_split(4)
+          he13_split(5) he13_split(6) he13_split(7) he13_split(8)
+          he13_a1p_sub _ he13_ep hp_not_ep]
+        he13_sub he13_split(1) by (by100 blast)
+    have hint_qa4_41_a1p: "(e24_qa4 \<union> e41) \<inter> e13_a1p = {a1}"
+    proof (rule set_eqI, rule iffI)
+      fix x assume "x \<in> (e24_qa4 \<union> e41) \<inter> e13_a1p"
+      hence hx1: "x \<in> e24_qa4 \<union> e41" and hx2: "x \<in> e13_a1p" by (by100 blast)+
+      have "x \<in> e13" using hx2 he13_split(1) by (by100 blast)
+      show "x \<in> {a1}"
+      proof (cases "x \<in> e41")
+        case True hence "x \<in> e13 \<inter> e41" using \<open>x \<in> e13\<close> by (by100 blast)
+        thus ?thesis using assms(31) by (by100 blast)
+      next
+        case False hence "x \<in> e24_qa4" using hx1 by (by100 blast)
+        hence "x \<in> e24" using he24_split(1) by (by100 blast)
+        hence "x \<in> e13 \<inter> e24" using \<open>x \<in> e13\<close> by (by100 blast)
+        hence "x \<in> {a1,a2,a3,a4}" using assms(32) by (by100 blast)
+        moreover have "x \<noteq> a2" using ha2_not_e13 \<open>x \<in> e13\<close> by (by100 blast)
+        moreover have "x \<noteq> a3" using ha3_not_e24 \<open>x \<in> e24\<close> by (by100 blast)
+        moreover have "x \<noteq> a4" using ha4_not_e13 \<open>x \<in> e13\<close> by (by100 blast)
+        ultimately show ?thesis by (by100 blast)
+      qed
+    next
+      fix x assume "x \<in> {a1}"
+      have "a1 \<in> e41" using assms(19) unfolding top1_arc_endpoints_on_def by (by100 blast)
+      moreover have "a1 \<in> e13_a1p" using he13_split(5) .
+      ultimately show "x \<in> (e24_qa4 \<union> e41) \<inter> e13_a1p" using \<open>x \<in> {a1}\<close> by (by100 blast)
+    qed
+    have ha1_ep_qa4_41: "a1 \<in> top1_arc_endpoints_on (e24_qa4 \<union> e41)
+        (subspace_topology top1_S2 top1_S2_topology (e24_qa4 \<union> e41))"
+      using hD2_ep_step1 by (by100 blast)
+    have ha1_ep_a1p: "a1 \<in> top1_arc_endpoints_on e13_a1p
+        (subspace_topology top1_S2 top1_S2_topology e13_a1p)"
+      using he13_a1p_eps by (by100 blast)
+    have hq_ne_a1: "q \<noteq> a1"
+    proof assume "q = a1"
+      hence "a1 \<in> e24" using hq_e24 by (by100 blast)
+      hence "a1 \<in> e24 \<inter> e41" using assms(19) unfolding top1_arc_endpoints_on_def by (by100 blast)
+      hence "a1 = a4" using assms(36) by (by100 blast)
+      hence "{a1,a2,a3,a4} = {a1,a2,a3}" by (by100 blast)
+      hence "card {a1,a2,a3,a4} \<le> card {a1,a2,a3}" by (by100 simp)
+      also have "\<dots> \<le> 3" by (rule card_three_le)
+      finally show False using assms(2) by (by100 simp) qed
+    have ha1_ne_p: "a1 \<noteq> p" using hp_e13 by (by100 blast)
+    have "top1_arc_endpoints_on ?D2 (subspace_topology top1_S2 top1_S2_topology ?D2) = {q, p}"
+      by (rule arc_concat_endpoints[OF hS2_strict hS2_haus hconcat_d2 he24_qa4_e41_sub
+          he13_split(3) he13_a1p_sub hint_qa4_41_a1p ha1_ep_qa4_41 ha1_ep_a1p
+          hD2_ep_step1 he13_a1p_eps hq_ne_a1 ha1_ne_p])
+    thus ?thesis by (by100 blast)
+  qed
   have hpq_ne: "p \<noteq> q"
   proof
     assume "p = q"
