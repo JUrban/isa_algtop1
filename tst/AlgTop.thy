@@ -1186,7 +1186,89 @@ proof -
     by (rule hf0_3)
   have hf_cont: "top1_continuous_map_on top1_S1 top1_S1_topology X TX f"
     using hf_cont_iff hg_cont by (by100 blast)
-  have hf_inj: "inj_on f top1_S1" sorry
+  have hf_inj: "inj_on f top1_S1"
+  proof (rule inj_onI)
+    fix p q assume hp: "p \<in> top1_S1" and hq: "q \<in> top1_S1" and hfpq: "f p = f q"
+    \<comment> \<open>Get s,t with R\_to\_S1(s)=p, R\_to\_S1(t)=q, s,t \<in> [0,1].\<close>
+    obtain s where hs: "s \<in> top1_unit_interval" "top1_R_to_S1 s = p"
+      using hp hR_surj by (by100 force)
+    obtain t where ht: "t \<in> top1_unit_interval" "top1_R_to_S1 t = q"
+      using hq hR_surj by (by100 force)
+    have "g s = g t"
+    proof -
+      have "g s = f (top1_R_to_S1 s)" using hf0_2 hs(1) by (by100 force)
+      also have "\<dots> = f p" using hs(2) by (by100 simp)
+      also have "\<dots> = f q" by (rule hfpq)
+      also have "\<dots> = f (top1_R_to_S1 t)" using ht(2) by (by100 simp)
+      also have "\<dots> = g t" using hf0_2 ht(1) by (by100 force)
+      finally show ?thesis .
+    qed
+    \<comment> \<open>g injective on [0,1) \<Rightarrow> s = t or {s,t} = {0,1}.\<close>
+    \<comment> \<open>In either case R\_to\_S1(s) = R\_to\_S1(t), so p = q.\<close>
+    \<comment> \<open>g(s) = g(t) with s,t \<in> [0,1] \<Rightarrow> s = t or {s,t} = {0,1}.\<close>
+    have hs_bds: "0 \<le> s" "s \<le> 1" using hs(1) unfolding top1_unit_interval_def by (by100 simp)+
+    have ht_bds: "0 \<le> t" "t \<le> 1" using ht(1) unfolding top1_unit_interval_def by (by100 simp)+
+    have hh1_inj: "inj_on h1 top1_unit_interval"
+      using hh1(1) unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+    have hh2_inj: "inj_on h2 top1_unit_interval"
+      using hh2(1) unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+    have "s = t \<or> (s = 0 \<and> t = 1) \<or> (s = 1 \<and> t = 0)"
+    proof (cases "s \<le> 1/2"; cases "t \<le> 1/2")
+      \<comment> \<open>Case 1: both in [0,1/2]. g(s) = h1(2s) = h1(2t) = g(t). h1 injective \<Rightarrow> 2s = 2t \<Rightarrow> s = t.\<close>
+      assume "s \<le> 1/2" "t \<le> 1/2"
+      hence "h1 (2*s) = h1 (2*t)" using \<open>g s = g t\<close> unfolding g_def by (by100 simp)
+      moreover have "2*s \<in> top1_unit_interval" using \<open>s \<le> 1/2\<close> hs_bds
+        unfolding top1_unit_interval_def by (by100 simp)
+      moreover have "2*t \<in> top1_unit_interval" using \<open>t \<le> 1/2\<close> ht_bds
+        unfolding top1_unit_interval_def by (by100 simp)
+      ultimately have "2*s = 2*t" using hh1_inj unfolding inj_on_def by (by100 blast)
+      hence "s = t" by (by100 simp)
+      thus ?thesis by (by100 blast)
+    next
+      \<comment> \<open>Case 2: both in (1/2,1]. g(s) = h2(2s-1) = h2(2t-1). h2 inj \<Rightarrow> s = t.\<close>
+      assume "\<not> s \<le> 1/2" "\<not> t \<le> 1/2"
+      hence "h2 (2*s - 1) = h2 (2*t - 1)" using \<open>g s = g t\<close> unfolding g_def by (by100 simp)
+      moreover have "2*s - 1 \<in> top1_unit_interval" using \<open>\<not> s \<le> 1/2\<close> hs_bds
+        unfolding top1_unit_interval_def by (by100 simp)
+      moreover have "2*t - 1 \<in> top1_unit_interval" using \<open>\<not> t \<le> 1/2\<close> ht_bds
+        unfolding top1_unit_interval_def by (by100 simp)
+      ultimately have "2*s - 1 = 2*t - 1" using hh2_inj unfolding inj_on_def by (by100 blast)
+      hence "s = t" by (by100 simp)
+      thus ?thesis by (by100 blast)
+    next
+      \<comment> \<open>Case 3: s \<in> [0,1/2], t \<in> (1/2,1]. g(s) = h1(2s) \<in> A1, g(t) = h2(2t-1) \<in> A2.
+         h1(2s) = h2(2t-1) \<in> A1 \<inter> A2 = {a,b}.\<close>
+      assume "s \<le> 1/2" "\<not> t \<le> 1/2"
+      have "g s = h1 (2*s)" unfolding g_def using \<open>s \<le> 1/2\<close> by (by100 simp)
+      have "g t = h2 (2*t - 1)" unfolding g_def using \<open>\<not> t \<le> 1/2\<close> by (by100 simp)
+      have "h1 (2*s) = h2 (2*t - 1)" using \<open>g s = g t\<close> \<open>g s = h1 (2*s)\<close> \<open>g t = h2 (2*t-1)\<close>
+        by (by100 simp)
+      have h2s_I: "2*s \<in> top1_unit_interval" using \<open>s \<le> 1/2\<close> hs_bds
+        unfolding top1_unit_interval_def by (by100 simp)
+      have h2t1_I: "2*t - 1 \<in> top1_unit_interval" using \<open>\<not> t \<le> 1/2\<close> ht_bds
+        unfolding top1_unit_interval_def by (by100 simp)
+      have hh1_A1: "h1 (2*s) \<in> A1" using hh1_img h2s_I by (by100 blast)
+      have hh2_A2: "h2 (2*t-1) \<in> A2" using hh2_img h2t1_I by (by100 blast)
+      have "h1 (2*s) \<in> A2" using hh2_A2 \<open>h1 (2*s) = h2 (2*t - 1)\<close> by (by100 simp)
+      have "h1 (2*s) \<in> A1 \<inter> A2" using hh1_A1 \<open>h1 (2*s) \<in> A2\<close> by (by100 blast)
+      hence "h1 (2*s) \<in> {a, b}" using hinter by (by100 blast)
+      \<comment> \<open>Cases 3+4 (cross-piece): g(s) \<in> A1\<inter>A2 = {a,b} forces s,t to endpoints.\<close>
+      thus ?thesis sorry
+    next
+      assume "\<not> s \<le> 1/2" "t \<le> 1/2"
+      thus ?thesis sorry
+    qed
+    thus "p = q"
+    proof (elim disjE conjE)
+      assume "s = t" thus ?thesis using hs(2) ht(2) by (by100 simp)
+    next
+      assume "s = 0" "t = 1"
+      thus ?thesis using hs(2) ht(2) top1_R_to_S1_int_shift[of 0 1] by (by100 simp)
+    next
+      assume "s = 1" "t = 0"
+      thus ?thesis using hs(2) ht(2) top1_R_to_S1_int_shift[of 0 1] by (by100 simp)
+    qed
+  qed
   have hf_img: "f ` top1_S1 = A1 \<union> A2"
   proof -
     have hR_surj: "top1_R_to_S1 ` top1_unit_interval = top1_S1"
