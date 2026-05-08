@@ -3582,6 +3582,169 @@ proof -
   ultimately show ?thesis by (by100 simp)
 qed
 
+
+
+text \<open>Helper: connected components of open subsets of S2 are open in S2.\<close>
+
+lemma S2_component_of_open_subset_is_open:
+  assumes "W \<in> top1_S2_topology" "W \<subseteq> top1_S2"
+      and "P \<subseteq> W" "P \<noteq> {}"
+      and "top1_connected_on P (subspace_topology top1_S2 top1_S2_topology P)"
+      and "\<And>Q. \<lbrakk>Q \<subseteq> W; P \<subseteq> Q; top1_connected_on Q (subspace_topology top1_S2 top1_S2_topology Q)\<rbrakk>
+           \<Longrightarrow> Q = P"
+  shows "P \<in> top1_S2_topology"
+proof -
+  have hTopS2: "is_topology_on top1_S2 top1_S2_topology"
+    using top1_S2_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
+  \<comment> \<open>W is open lpc (S2 is lpc, open subset of lpc is lpc).\<close>
+  have hW_lpc: "top1_locally_path_connected_on W (subspace_topology top1_S2 top1_S2_topology W)"
+    by (rule open_subset_locally_path_connected[OF S2_locally_path_connected assms(1) assms(2)])
+  have hTW: "is_topology_on W (subspace_topology top1_S2 top1_S2_topology W)"
+    by (rule subspace_topology_is_topology_on[OF]) (use hTopS2 in \<open>by100 blast\<close>, rule assms(2))
+  \<comment> \<open>Pick x \<in> P. Show P = path\_component\_of\_on W TW x.\<close>
+  obtain x where hx: "x \<in> P" using assms(4) by (by100 blast)
+  hence hxW: "x \<in> W" using assms(3) by (by100 blast)
+  \<comment> \<open>In lpc space, path\_component = connected\_component (Theorem 25.5).\<close>
+  have hpc_eq_cc: "top1_path_component_of_on W (subspace_topology top1_S2 top1_S2_topology W) x =
+      top1_component_of_on W (subspace_topology top1_S2 top1_S2_topology W) x"
+    using conjunct2[OF Theorem_25_5[OF hTW]] hW_lpc hxW by (by100 blast)
+  \<comment> \<open>P = component\_of\_on(x): P is connected \<ni> x and maximal.\<close>
+  have hP_conn_W: "top1_connected_on P (subspace_topology W (subspace_topology top1_S2 top1_S2_topology W) P)"
+  proof -
+    have "subspace_topology top1_S2 top1_S2_topology P =
+        subspace_topology W (subspace_topology top1_S2 top1_S2_topology W) P"
+      using subspace_topology_trans[of P W top1_S2 top1_S2_topology] assms(3) by (by100 simp)
+    thus ?thesis using assms(5) by (by100 simp)
+  qed
+  have "P \<subseteq> top1_component_of_on W (subspace_topology top1_S2 top1_S2_topology W) x"
+    by (rule top1_connected_subspace_subset_component_of[OF assms(3) hx hP_conn_W])
+  moreover have "top1_component_of_on W (subspace_topology top1_S2 top1_S2_topology W) x \<subseteq> P"
+  proof (rule ccontr)
+    assume "\<not> ?thesis"
+    then obtain y where hy: "y \<in> top1_component_of_on W (subspace_topology top1_S2 top1_S2_topology W) x"
+        "y \<notin> P" by (by100 blast)
+    let ?C = "top1_component_of_on W (subspace_topology top1_S2 top1_S2_topology W) x"
+    have hC_sub: "?C \<subseteq> W"
+      by (rule top1_component_of_on_subset)
+    have hC_conn_S2: "top1_connected_on ?C (subspace_topology top1_S2 top1_S2_topology ?C)"
+    proof -
+      have hC_conn_W: "top1_connected_on ?C (subspace_topology W (subspace_topology top1_S2 top1_S2_topology W) ?C)"
+        by (rule top1_component_of_on_connected[OF hTW hxW])
+      have "subspace_topology top1_S2 top1_S2_topology ?C =
+          subspace_topology W (subspace_topology top1_S2 top1_S2_topology W) ?C"
+        using subspace_topology_trans[of ?C W top1_S2 top1_S2_topology] hC_sub by (by100 simp)
+      thus ?thesis using hC_conn_W by (by100 simp)
+    qed
+    from assms(6)[OF hC_sub _ hC_conn_S2] have "?C = P"
+      using \<open>P \<subseteq> ?C\<close> by (by100 blast)
+    thus False using hy by (by100 blast)
+  qed
+  ultimately have hP_eq: "P = top1_component_of_on W (subspace_topology top1_S2 top1_S2_topology W) x"
+    by (by100 blast)
+  hence hP_eq_pc: "P = top1_path_component_of_on W (subspace_topology top1_S2 top1_S2_topology W) x"
+    using hpc_eq_cc by (by100 simp)
+  \<comment> \<open>Path component is open in W's subspace topology.\<close>
+  have "top1_path_component_of_on W (subspace_topology top1_S2 top1_S2_topology W) x \<in>
+      subspace_topology top1_S2 top1_S2_topology W"
+    by (rule top1_path_component_of_on_open_if_locally_path_connected[OF hTW hW_lpc hxW])
+  hence "P \<in> subspace_topology top1_S2 top1_S2_topology W" using hP_eq_pc by (by100 simp)
+  \<comment> \<open>Open in subspace of open set \<Rightarrow> open in ambient.\<close>
+  then obtain V where hV: "V \<in> top1_S2_topology" "P = W \<inter> V"
+    unfolding subspace_topology_def by (by100 blast)
+  hence "P = V \<inter> W" by (by100 blast)
+  moreover have "V \<inter> W \<in> top1_S2_topology"
+  proof -
+    have hfin: "finite {V, W}" by (by100 simp)
+    have hne: "{V, W} \<noteq> {}" by (by100 simp)
+    have hsub: "{V, W} \<subseteq> top1_S2_topology" using hV(1) assms(1) by (by100 blast)
+    from hTopS2 have "\<And>F. finite F \<Longrightarrow> F \<noteq> {} \<Longrightarrow> F \<subseteq> top1_S2_topology \<Longrightarrow> \<Inter>F \<in> top1_S2_topology"
+      unfolding is_topology_on_def by (by100 blast)
+    from this[OF hfin hne hsub] have "\<Inter>{V, W} \<in> top1_S2_topology" .
+    moreover have "\<Inter>{V, W} = V \<inter> W" by (by100 blast)
+    ultimately show ?thesis by (by100 simp)
+  qed
+  ultimately show ?thesis by (by100 simp)
+qed
+
+text \<open>Helper: Two-component partition of open subset of S2 gives open components.\<close>
+
+lemma S2_two_component_open:
+  assumes "W \<in> top1_S2_topology" "W \<subseteq> top1_S2"
+      and "C1 \<noteq> {}" "C2 \<noteq> {}" "C1 \<inter> C2 = {}" "C1 \<union> C2 = W"
+      and "top1_connected_on C1 (subspace_topology top1_S2 top1_S2_topology C1)"
+      and "top1_connected_on C2 (subspace_topology top1_S2 top1_S2_topology C2)"
+      and "\<not> top1_connected_on W (subspace_topology top1_S2 top1_S2_topology W)"
+  shows "C1 \<in> top1_S2_topology" "C2 \<in> top1_S2_topology"
+proof -
+  have hC1_sub: "C1 \<subseteq> W" using assms(6) by (by100 blast)
+  have hC2_sub: "C2 \<subseteq> W" using assms(6) by (by100 blast)
+  \<comment> \<open>C1 is a connected component of W. Apply S2\_component\_of\_open\_subset\_is\_open.\<close>
+  show "C1 \<in> top1_S2_topology"
+  proof (rule S2_component_of_open_subset_is_open[OF assms(1,2) hC1_sub assms(3,7)])
+    \<comment> \<open>Maximality: any connected Q \<supseteq> C1 in W must equal C1.\<close>
+    fix Q assume hQ: "Q \<subseteq> W" "C1 \<subseteq> Q"
+        "top1_connected_on Q (subspace_topology top1_S2 top1_S2_topology Q)"
+    show "Q = C1"
+    proof (rule ccontr)
+      assume "Q \<noteq> C1"
+      then obtain y where "y \<in> Q" "y \<notin> C1" using hQ(2) by (by100 blast)
+      hence "y \<in> C2" using hQ(1) assms(6) by (by100 blast)
+      \<comment> \<open>Q connected, Q \<supseteq> C1, y \<in> Q \<inter> C2. So Q spans both C1 and C2.
+         Q \<supseteq> C1 and Q \<inter> C2 \<noteq> {}. Since Q connected and in W = C1\<union>C2,
+         and C2 connected: Q = C1\<union>C2 = W would be connected. Contradiction.\<close>
+      \<comment> \<open>C2\<union>Q = W. C2\<union>Q connected (both connected, share y). So W connected.\<close>
+      have hC2Q_eq: "C2 \<union> Q = W" using hQ(1,2) assms(5,6) \<open>y \<in> C2\<close> by (by100 blast)
+      have "top1_connected_on W (subspace_topology top1_S2 top1_S2_topology W)"
+      proof -
+        let ?I = "{True, False}" and ?A = "\<lambda>b. if b then C2 else Q"
+        have "?I \<noteq> {}" by (by100 simp)
+        moreover have "\<forall>i \<in> ?I. ?A i \<subseteq> top1_S2"
+        proof -
+          have "C2 \<subseteq> top1_S2" using hC2_sub assms(2) by (by100 blast)
+          moreover have "Q \<subseteq> top1_S2" using hQ(1) assms(2) by (by100 blast)
+          ultimately show ?thesis by (by100 simp)
+        qed
+        moreover have "\<forall>i \<in> ?I. top1_connected_on (?A i) (subspace_topology top1_S2 top1_S2_topology (?A i))"
+          using assms(8) hQ(3) by (by100 simp)
+        moreover have "y \<in> \<Inter>(?A ` ?I)" using \<open>y \<in> Q\<close> \<open>y \<in> C2\<close> by (by100 simp)
+        moreover have "(\<Union>i \<in> ?I. ?A i) = W" using hC2Q_eq by (by100 force)
+        ultimately have hprem: "?I \<noteq> {} \<and> (\<forall>i \<in> ?I. ?A i \<subseteq> top1_S2) \<and>
+            (\<forall>i \<in> ?I. top1_connected_on (?A i) (subspace_topology top1_S2 top1_S2_topology (?A i))) \<and>
+            y \<in> \<Inter>(?A ` ?I) \<and> (\<Union>i \<in> ?I. ?A i) = W" by (by100 blast)
+        have hTopS2: "is_topology_on top1_S2 top1_S2_topology"
+          using top1_S2_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
+        from Theorem_23_3[OF hTopS2, of ?I ?A y] hprem show ?thesis by metis
+      qed
+      thus False using assms(9) by (by100 blast)
+    qed
+  qed
+  \<comment> \<open>Symmetric for C2.\<close>
+  show "C2 \<in> top1_S2_topology"
+  proof (rule S2_component_of_open_subset_is_open[OF assms(1,2) hC2_sub assms(4,8)])
+    fix Q assume hQ: "Q \<subseteq> W" "C2 \<subseteq> Q"
+        "top1_connected_on Q (subspace_topology top1_S2 top1_S2_topology Q)"
+    show "Q = C2"
+    proof (rule ccontr)
+      assume "Q \<noteq> C2"
+      then obtain y where "y \<in> Q" "y \<notin> C2" using hQ(2) by (by100 blast)
+      hence "y \<in> C1" using hQ(1) assms(6) by (by100 blast)
+      have hC1Q_eq: "C1 \<union> Q = W" using hQ(1,2) assms(5,6) \<open>y \<in> C1\<close> by (by100 blast)
+      have "top1_connected_on W (subspace_topology top1_S2 top1_S2_topology W)"
+      proof -
+        let ?I = "{True, False}" and ?A = "\<lambda>b. if b then C1 else Q"
+        have hprem: "?I \<noteq> {} \<and> (\<forall>i \<in> ?I. ?A i \<subseteq> top1_S2) \<and>
+            (\<forall>i \<in> ?I. top1_connected_on (?A i) (subspace_topology top1_S2 top1_S2_topology (?A i))) \<and>
+            y \<in> \<Inter>(?A ` ?I) \<and> (\<Union>i \<in> ?I. ?A i) = W"
+          using hC1_sub hQ(1,3) assms(2,7) \<open>y \<in> Q\<close> \<open>y \<in> C1\<close> hC1Q_eq by (by100 force)
+        have hTopS2: "is_topology_on top1_S2 top1_S2_topology"
+          using top1_S2_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
+        from Theorem_23_3[OF hTopS2, of ?I ?A y] hprem show ?thesis by metis
+      qed
+      thus False using assms(9) by (by100 blast)
+    qed
+  qed
+qed
+
 text \<open>Lemma 64.1: A theta space X \<subseteq> S2 separates S2 into three components.\<close>
 
 lemma Lemma_64_1_theta_space_three_components:
@@ -4219,8 +4382,17 @@ proof -
     thus ?thesis unfolding closedin_on_def by (by100 blast)
   qed
   \<comment> \<open>V0, W0 open: same lpc argument as U0. Components of open S2-(?Ubar\<union>C).\<close>
-  have hV0_open: "V0 \<in> top1_S2_topology" sorry \<comment> \<open>S2\_two\_component\_open not in scope here.\<close>
-  have hW0_open: "W0 \<in> top1_S2_topology" sorry
+  have hUbarC_sep: "\<not> top1_connected_on (top1_S2 - (?Ubar \<union> C))
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?Ubar \<union> C)))"
+  proof -
+    have hUbar_sub: "?Ubar \<subseteq> top1_S2" using assms(2,3) hU0(4) by (by100 force)
+    from Theorem_61_4_general_separation[OF assms(1) hUbar_sub assms(4)
+        hUbar_closed hC_closed hUbar_conn hC_conn hUbar_C_card]
+    show ?thesis unfolding top1_separates_on_def by (by100 blast)
+  qed
+  have hV0_open: "V0 \<in> top1_S2_topology" and hW0_open: "W0 \<in> top1_S2_topology"
+    using S2_two_component_open[OF hUbarC_compl_open _ hVW(1,2,3,4,5,6) hUbarC_sep]
+    by (by100 blast)+
   \<comment> \<open>Step 4: S2 - (A \<union> B \<union> C) = U0 \<union> V0 \<union> W0.\<close>
   \<comment> \<open>U0 \<inter> C = {}: since U0 \<subseteq> S2-(A\<union>B) and C\<inter>(A\<union>B) \<subseteq> {a,b}, and C-{a,b} \<subseteq> U0'.\<close>
   have hU0_C_disj: "U0 \<inter> C = {}"
@@ -4264,167 +4436,6 @@ proof -
     apply (rule exI[of _ V0])
     apply (rule exI[of _ W0])
     using hgoal hU0(1) hVW(1,2) hU0(5) hVW(5,6) hU0_open hV0_open hW0_open by (by100 force)
-qed
-
-text \<open>Helper: connected components of open subsets of S2 are open in S2.\<close>
-
-lemma S2_component_of_open_subset_is_open:
-  assumes "W \<in> top1_S2_topology" "W \<subseteq> top1_S2"
-      and "P \<subseteq> W" "P \<noteq> {}"
-      and "top1_connected_on P (subspace_topology top1_S2 top1_S2_topology P)"
-      and "\<And>Q. \<lbrakk>Q \<subseteq> W; P \<subseteq> Q; top1_connected_on Q (subspace_topology top1_S2 top1_S2_topology Q)\<rbrakk>
-           \<Longrightarrow> Q = P"
-  shows "P \<in> top1_S2_topology"
-proof -
-  have hTopS2: "is_topology_on top1_S2 top1_S2_topology"
-    using top1_S2_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
-  \<comment> \<open>W is open lpc (S2 is lpc, open subset of lpc is lpc).\<close>
-  have hW_lpc: "top1_locally_path_connected_on W (subspace_topology top1_S2 top1_S2_topology W)"
-    by (rule open_subset_locally_path_connected[OF S2_locally_path_connected assms(1) assms(2)])
-  have hTW: "is_topology_on W (subspace_topology top1_S2 top1_S2_topology W)"
-    by (rule subspace_topology_is_topology_on[OF]) (use hTopS2 in \<open>by100 blast\<close>, rule assms(2))
-  \<comment> \<open>Pick x \<in> P. Show P = path\_component\_of\_on W TW x.\<close>
-  obtain x where hx: "x \<in> P" using assms(4) by (by100 blast)
-  hence hxW: "x \<in> W" using assms(3) by (by100 blast)
-  \<comment> \<open>In lpc space, path\_component = connected\_component (Theorem 25.5).\<close>
-  have hpc_eq_cc: "top1_path_component_of_on W (subspace_topology top1_S2 top1_S2_topology W) x =
-      top1_component_of_on W (subspace_topology top1_S2 top1_S2_topology W) x"
-    using conjunct2[OF Theorem_25_5[OF hTW]] hW_lpc hxW by (by100 blast)
-  \<comment> \<open>P = component\_of\_on(x): P is connected \<ni> x and maximal.\<close>
-  have hP_conn_W: "top1_connected_on P (subspace_topology W (subspace_topology top1_S2 top1_S2_topology W) P)"
-  proof -
-    have "subspace_topology top1_S2 top1_S2_topology P =
-        subspace_topology W (subspace_topology top1_S2 top1_S2_topology W) P"
-      using subspace_topology_trans[of P W top1_S2 top1_S2_topology] assms(3) by (by100 simp)
-    thus ?thesis using assms(5) by (by100 simp)
-  qed
-  have "P \<subseteq> top1_component_of_on W (subspace_topology top1_S2 top1_S2_topology W) x"
-    by (rule top1_connected_subspace_subset_component_of[OF assms(3) hx hP_conn_W])
-  moreover have "top1_component_of_on W (subspace_topology top1_S2 top1_S2_topology W) x \<subseteq> P"
-  proof (rule ccontr)
-    assume "\<not> ?thesis"
-    then obtain y where hy: "y \<in> top1_component_of_on W (subspace_topology top1_S2 top1_S2_topology W) x"
-        "y \<notin> P" by (by100 blast)
-    let ?C = "top1_component_of_on W (subspace_topology top1_S2 top1_S2_topology W) x"
-    have hC_sub: "?C \<subseteq> W"
-      by (rule top1_component_of_on_subset)
-    have hC_conn_S2: "top1_connected_on ?C (subspace_topology top1_S2 top1_S2_topology ?C)"
-    proof -
-      have hC_conn_W: "top1_connected_on ?C (subspace_topology W (subspace_topology top1_S2 top1_S2_topology W) ?C)"
-        by (rule top1_component_of_on_connected[OF hTW hxW])
-      have "subspace_topology top1_S2 top1_S2_topology ?C =
-          subspace_topology W (subspace_topology top1_S2 top1_S2_topology W) ?C"
-        using subspace_topology_trans[of ?C W top1_S2 top1_S2_topology] hC_sub by (by100 simp)
-      thus ?thesis using hC_conn_W by (by100 simp)
-    qed
-    from assms(6)[OF hC_sub _ hC_conn_S2] have "?C = P"
-      using \<open>P \<subseteq> ?C\<close> by (by100 blast)
-    thus False using hy by (by100 blast)
-  qed
-  ultimately have hP_eq: "P = top1_component_of_on W (subspace_topology top1_S2 top1_S2_topology W) x"
-    by (by100 blast)
-  hence hP_eq_pc: "P = top1_path_component_of_on W (subspace_topology top1_S2 top1_S2_topology W) x"
-    using hpc_eq_cc by (by100 simp)
-  \<comment> \<open>Path component is open in W's subspace topology.\<close>
-  have "top1_path_component_of_on W (subspace_topology top1_S2 top1_S2_topology W) x \<in>
-      subspace_topology top1_S2 top1_S2_topology W"
-    by (rule top1_path_component_of_on_open_if_locally_path_connected[OF hTW hW_lpc hxW])
-  hence "P \<in> subspace_topology top1_S2 top1_S2_topology W" using hP_eq_pc by (by100 simp)
-  \<comment> \<open>Open in subspace of open set \<Rightarrow> open in ambient.\<close>
-  then obtain V where hV: "V \<in> top1_S2_topology" "P = W \<inter> V"
-    unfolding subspace_topology_def by (by100 blast)
-  hence "P = V \<inter> W" by (by100 blast)
-  moreover have "V \<inter> W \<in> top1_S2_topology"
-  proof -
-    have hfin: "finite {V, W}" by (by100 simp)
-    have hne: "{V, W} \<noteq> {}" by (by100 simp)
-    have hsub: "{V, W} \<subseteq> top1_S2_topology" using hV(1) assms(1) by (by100 blast)
-    from hTopS2 have "\<And>F. finite F \<Longrightarrow> F \<noteq> {} \<Longrightarrow> F \<subseteq> top1_S2_topology \<Longrightarrow> \<Inter>F \<in> top1_S2_topology"
-      unfolding is_topology_on_def by (by100 blast)
-    from this[OF hfin hne hsub] have "\<Inter>{V, W} \<in> top1_S2_topology" .
-    moreover have "\<Inter>{V, W} = V \<inter> W" by (by100 blast)
-    ultimately show ?thesis by (by100 simp)
-  qed
-  ultimately show ?thesis by (by100 simp)
-qed
-
-text \<open>Helper: Two-component partition of open subset of S2 gives open components.\<close>
-
-lemma S2_two_component_open:
-  assumes "W \<in> top1_S2_topology" "W \<subseteq> top1_S2"
-      and "C1 \<noteq> {}" "C2 \<noteq> {}" "C1 \<inter> C2 = {}" "C1 \<union> C2 = W"
-      and "top1_connected_on C1 (subspace_topology top1_S2 top1_S2_topology C1)"
-      and "top1_connected_on C2 (subspace_topology top1_S2 top1_S2_topology C2)"
-      and "\<not> top1_connected_on W (subspace_topology top1_S2 top1_S2_topology W)"
-  shows "C1 \<in> top1_S2_topology" "C2 \<in> top1_S2_topology"
-proof -
-  have hC1_sub: "C1 \<subseteq> W" using assms(6) by (by100 blast)
-  have hC2_sub: "C2 \<subseteq> W" using assms(6) by (by100 blast)
-  \<comment> \<open>C1 is a connected component of W. Apply S2\_component\_of\_open\_subset\_is\_open.\<close>
-  show "C1 \<in> top1_S2_topology"
-  proof (rule S2_component_of_open_subset_is_open[OF assms(1,2) hC1_sub assms(3,7)])
-    \<comment> \<open>Maximality: any connected Q \<supseteq> C1 in W must equal C1.\<close>
-    fix Q assume hQ: "Q \<subseteq> W" "C1 \<subseteq> Q"
-        "top1_connected_on Q (subspace_topology top1_S2 top1_S2_topology Q)"
-    show "Q = C1"
-    proof (rule ccontr)
-      assume "Q \<noteq> C1"
-      then obtain y where "y \<in> Q" "y \<notin> C1" using hQ(2) by (by100 blast)
-      hence "y \<in> C2" using hQ(1) assms(6) by (by100 blast)
-      \<comment> \<open>Q connected, Q \<supseteq> C1, y \<in> Q \<inter> C2. So Q spans both C1 and C2.
-         Q \<supseteq> C1 and Q \<inter> C2 \<noteq> {}. Since Q connected and in W = C1\<union>C2,
-         and C2 connected: Q = C1\<union>C2 = W would be connected. Contradiction.\<close>
-      \<comment> \<open>C2\<union>Q = W. C2\<union>Q connected (both connected, share y). So W connected.\<close>
-      have hC2Q_eq: "C2 \<union> Q = W" using hQ(1,2) assms(5,6) \<open>y \<in> C2\<close> by (by100 blast)
-      have "top1_connected_on W (subspace_topology top1_S2 top1_S2_topology W)"
-      proof -
-        let ?I = "{True, False}" and ?A = "\<lambda>b. if b then C2 else Q"
-        have "?I \<noteq> {}" by (by100 simp)
-        moreover have "\<forall>i \<in> ?I. ?A i \<subseteq> top1_S2"
-        proof -
-          have "C2 \<subseteq> top1_S2" using hC2_sub assms(2) by (by100 blast)
-          moreover have "Q \<subseteq> top1_S2" using hQ(1) assms(2) by (by100 blast)
-          ultimately show ?thesis by (by100 simp)
-        qed
-        moreover have "\<forall>i \<in> ?I. top1_connected_on (?A i) (subspace_topology top1_S2 top1_S2_topology (?A i))"
-          using assms(8) hQ(3) by (by100 simp)
-        moreover have "y \<in> \<Inter>(?A ` ?I)" using \<open>y \<in> Q\<close> \<open>y \<in> C2\<close> by (by100 simp)
-        moreover have "(\<Union>i \<in> ?I. ?A i) = W" using hC2Q_eq by (by100 force)
-        ultimately have hprem: "?I \<noteq> {} \<and> (\<forall>i \<in> ?I. ?A i \<subseteq> top1_S2) \<and>
-            (\<forall>i \<in> ?I. top1_connected_on (?A i) (subspace_topology top1_S2 top1_S2_topology (?A i))) \<and>
-            y \<in> \<Inter>(?A ` ?I) \<and> (\<Union>i \<in> ?I. ?A i) = W" by (by100 blast)
-        have hTopS2: "is_topology_on top1_S2 top1_S2_topology"
-          using top1_S2_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
-        from Theorem_23_3[OF hTopS2, of ?I ?A y] hprem show ?thesis by metis
-      qed
-      thus False using assms(9) by (by100 blast)
-    qed
-  qed
-  \<comment> \<open>Symmetric for C2.\<close>
-  show "C2 \<in> top1_S2_topology"
-  proof (rule S2_component_of_open_subset_is_open[OF assms(1,2) hC2_sub assms(4,8)])
-    fix Q assume hQ: "Q \<subseteq> W" "C2 \<subseteq> Q"
-        "top1_connected_on Q (subspace_topology top1_S2 top1_S2_topology Q)"
-    show "Q = C2"
-    proof (rule ccontr)
-      assume "Q \<noteq> C2"
-      then obtain y where "y \<in> Q" "y \<notin> C2" using hQ(2) by (by100 blast)
-      hence "y \<in> C1" using hQ(1) assms(6) by (by100 blast)
-      have hC1Q_eq: "C1 \<union> Q = W" using hQ(1,2) assms(5,6) \<open>y \<in> C1\<close> by (by100 blast)
-      have "top1_connected_on W (subspace_topology top1_S2 top1_S2_topology W)"
-      proof -
-        let ?I = "{True, False}" and ?A = "\<lambda>b. if b then C1 else Q"
-        have hprem: "?I \<noteq> {} \<and> (\<forall>i \<in> ?I. ?A i \<subseteq> top1_S2) \<and>
-            (\<forall>i \<in> ?I. top1_connected_on (?A i) (subspace_topology top1_S2 top1_S2_topology (?A i))) \<and>
-            y \<in> \<Inter>(?A ` ?I) \<and> (\<Union>i \<in> ?I. ?A i) = W"
-          using hC1_sub hQ(1,3) assms(2,7) \<open>y \<in> Q\<close> \<open>y \<in> C1\<close> hC1Q_eq by (by100 force)
-        have hTopS2: "is_topology_on top1_S2 top1_S2_topology"
-          using top1_S2_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
-        from Theorem_23_3[OF hTopS2, of ?I ?A y] hprem show ?thesis by metis
-      qed
-      thus False using assms(9) by (by100 blast)
-    qed
-  qed
 qed
 
 text \<open>Helper: Arc endpoint is in closure of arc minus endpoints.\<close>
