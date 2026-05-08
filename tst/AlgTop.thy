@@ -4717,8 +4717,128 @@ proof -
     by (rule closedin_on_Un[OF hTopS2 hB_closed hC_closed])
   have hBC_compl_open: "top1_S2 - (?B \<union> ?C) \<in> top1_S2_topology"
     using hBC_closed_S2 unfolding closedin_on_def by (by100 blast)
-  have hR1_open: "R1 \<in> top1_S2_topology" sorry \<comment> \<open>Same pattern as P1_open.\<close>
-  have hR2_open: "R2 \<in> top1_S2_topology" sorry
+  have hBC_open_lpc: "top1_locally_path_connected_on (top1_S2 - (?B \<union> ?C))
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?B \<union> ?C)))"
+    by (rule open_subset_locally_path_connected[OF S2_locally_path_connected hBC_compl_open])
+       (by100 blast)
+  have hTBC: "is_topology_on (top1_S2 - (?B \<union> ?C))
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?B \<union> ?C)))"
+    by (rule subspace_topology_is_topology_on[OF]) (use hTopS2 in \<open>by100 blast\<close>, by100 blast)
+  obtain x_R where hx_R: "x_R \<in> R1" using hR(1) by (by100 blast)
+  have hx_R_W: "x_R \<in> top1_S2 - (?B \<union> ?C)" using hx_R hR(4) by (by100 blast)
+  \<comment> \<open>R1 = component\_of(x\_R) in S2-(B\<union>C). Same contradiction argument as for P1.\<close>
+  have hR1_eq_comp: "R1 = top1_component_of_on (top1_S2 - (?B \<union> ?C))
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?B \<union> ?C))) x_R"
+  proof -
+    have hR1_sub_BC: "R1 \<subseteq> top1_S2 - (?B \<union> ?C)" using hR(4) by (by100 blast)
+    have hR1_conn_BC: "top1_connected_on R1
+        (subspace_topology (top1_S2 - (?B \<union> ?C))
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?B \<union> ?C))) R1)"
+    proof -
+      have "subspace_topology top1_S2 top1_S2_topology R1 =
+          subspace_topology (top1_S2 - (?B \<union> ?C))
+              (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?B \<union> ?C))) R1"
+        using subspace_topology_trans[of R1 "top1_S2 - (?B \<union> ?C)" top1_S2 top1_S2_topology]
+            hR1_sub_BC by (by100 simp)
+      thus ?thesis using hR(5) by (by100 simp)
+    qed
+    have "R1 \<subseteq> top1_component_of_on (top1_S2 - (?B \<union> ?C))
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?B \<union> ?C))) x_R"
+      by (rule top1_connected_subspace_subset_component_of[OF hR1_sub_BC hx_R hR1_conn_BC])
+    moreover have "top1_component_of_on (top1_S2 - (?B \<union> ?C))
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?B \<union> ?C))) x_R \<subseteq> R1"
+    proof (rule ccontr)
+      assume "\<not> ?thesis"
+      then obtain y where hy: "y \<in> top1_component_of_on (top1_S2 - (?B \<union> ?C))
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?B \<union> ?C))) x_R" "y \<notin> R1"
+        by (by100 blast)
+      have "y \<in> top1_S2 - (?B \<union> ?C)"
+        using hy(1) top1_component_of_on_subset[of "top1_S2 - (?B \<union> ?C)"] by (by100 blast)
+      hence "y \<in> R2" using hR(4) hy(2) by (by100 blast)
+      have hR2_sub: "R2 \<subseteq> top1_S2 - (?B \<union> ?C)" using hR(4) by (by100 blast)
+      have hR2_conn_sub: "top1_connected_on R2
+          (subspace_topology (top1_S2 - (?B \<union> ?C))
+              (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?B \<union> ?C))) R2)"
+      proof -
+        have "subspace_topology top1_S2 top1_S2_topology R2 =
+            subspace_topology (top1_S2 - (?B \<union> ?C))
+                (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?B \<union> ?C))) R2"
+          using subspace_topology_trans[of R2 "top1_S2 - (?B \<union> ?C)" top1_S2 top1_S2_topology]
+              hR2_sub by (by100 simp)
+        thus ?thesis using hR(6) by (by100 simp)
+      qed
+      have "R2 \<subseteq> top1_component_of_on (top1_S2 - (?B \<union> ?C))
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?B \<union> ?C))) x_R"
+        using top1_connected_subspace_subset_component_of[OF hR2_sub \<open>y \<in> R2\<close> hR2_conn_sub]
+            top1_component_of_on_eq_of_mem[OF hTBC hy(1)] by (by100 simp)
+      hence "R1 \<union> R2 \<subseteq> top1_component_of_on (top1_S2 - (?B \<union> ?C))
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?B \<union> ?C))) x_R"
+        using \<open>R1 \<subseteq> top1_component_of_on _ _ x_R\<close> by (by100 blast)
+      hence "top1_S2 - (?B \<union> ?C) = top1_component_of_on (top1_S2 - (?B \<union> ?C))
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?B \<union> ?C))) x_R"
+        using hR(4) top1_component_of_on_subset[of "top1_S2 - (?B \<union> ?C)"] by (by100 blast)
+      hence "top1_connected_on (top1_S2 - (?B \<union> ?C))
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?B \<union> ?C)))"
+      proof -
+        have "top1_connected_on
+            (top1_component_of_on (top1_S2 - (?B \<union> ?C))
+                (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?B \<union> ?C))) x_R)
+            (subspace_topology (top1_S2 - (?B \<union> ?C))
+                (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?B \<union> ?C)))
+                (top1_component_of_on (top1_S2 - (?B \<union> ?C))
+                    (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?B \<union> ?C))) x_R))"
+          by (rule top1_component_of_on_connected[OF hTBC hx_R_W])
+        thus ?thesis
+          using \<open>top1_S2 - (?B \<union> ?C) = top1_component_of_on _ _ x_R\<close>
+              subspace_topology_trans[of "top1_S2 - (?B \<union> ?C)" "top1_S2 - (?B \<union> ?C)"
+                  top1_S2 top1_S2_topology] by (by100 simp)
+      qed
+      moreover have "\<not> top1_connected_on (top1_S2 - (?B \<union> ?C))
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?B \<union> ?C)))"
+        using Theorem_61_3_JordanSeparation_S2[OF assms(1) hBC_scc]
+        unfolding top1_separates_on_def by (by100 blast)
+      ultimately show False by (by100 blast)
+    qed
+    ultimately show ?thesis by (by100 blast)
+  qed
+  have hR1_eq_pc: "R1 = top1_path_component_of_on (top1_S2 - (?B \<union> ?C))
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?B \<union> ?C))) x_R"
+  proof -
+    from conjunct2[OF Theorem_25_5[OF hTBC]]
+    have "\<forall>z \<in> top1_S2 - (?B \<union> ?C).
+        top1_locally_path_connected_on (top1_S2 - (?B \<union> ?C))
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?B \<union> ?C))) \<longrightarrow>
+        top1_path_component_of_on (top1_S2 - (?B \<union> ?C))
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?B \<union> ?C))) z =
+        top1_component_of_on (top1_S2 - (?B \<union> ?C))
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?B \<union> ?C))) z" by (by100 blast)
+    thus ?thesis using hR1_eq_comp hBC_open_lpc hx_R_W by (by100 metis)
+  qed
+  have hR1_open: "R1 \<in> top1_S2_topology"
+  proof -
+    have "top1_path_component_of_on (top1_S2 - (?B \<union> ?C))
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?B \<union> ?C))) x_R \<in>
+        subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?B \<union> ?C))"
+      by (rule top1_path_component_of_on_open_if_locally_path_connected[OF hTBC hBC_open_lpc hx_R_W])
+    hence "R1 \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?B \<union> ?C))"
+      using hR1_eq_pc by (by100 simp)
+    thus ?thesis by (rule open_in_sub_imp_open[OF hBC_compl_open])
+  qed
+  have hR2_open: "R2 \<in> top1_S2_topology"
+  proof -
+    have "R2 = (top1_S2 - (?B \<union> ?C)) -
+        top1_path_component_of_on (top1_S2 - (?B \<union> ?C))
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?B \<union> ?C))) x_R"
+      using hR(3,4) hR1_eq_pc by (by100 blast)
+    moreover have "(top1_S2 - (?B \<union> ?C)) -
+        top1_path_component_of_on (top1_S2 - (?B \<union> ?C))
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?B \<union> ?C))) x_R \<in>
+        subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?B \<union> ?C))"
+      by (rule top1_path_component_of_on_complement_open_if_locally_path_connected[OF hTBC hBC_open_lpc hx_R_W])
+    ultimately have "R2 \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?B \<union> ?C))"
+      by (by100 simp)
+    thus ?thesis by (rule open_in_sub_imp_open[OF hBC_compl_open])
+  qed
   have hAm_in_R2: "?A - {a1, a3} \<subseteq> R2"
     sorry \<comment> \<open>WLOG: A-{a1,a3} in R2.\<close>
   have hcl_R1: "closure_on top1_S2 top1_S2_topology R1 = R1 \<union> (?B \<union> ?C)"
