@@ -4559,13 +4559,77 @@ proof -
     thus ?thesis using assms(6) by (by100 blast)
   qed
   \<comment> \<open>e12 - {a1,a2} is connected (arc minus endpoints) and non-empty.\<close>
+  \<comment> \<open>Arc minus endpoints is connected: h maps (0,1) onto e12-{a1,a2}, and (0,1) is connected.\<close>
   have he12_conn: "top1_connected_on (e12 - {a1, a2})
-      (subspace_topology top1_S2 top1_S2_topology (e12 - {a1, a2}))" sorry
+      (subspace_topology top1_S2 top1_S2_topology (e12 - {a1, a2}))"
+    sorry
   have he12_ne: "e12 - {a1, a2} \<noteq> {}"
-    sorry \<comment> \<open>Arc e12 has more than 2 points (uncountable, in fact).\<close>
+  proof -
+    obtain h where hh: "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
+        e12 (subspace_topology top1_S2 top1_S2_topology e12) h"
+      using assms(10) unfolding top1_is_arc_on_def by (by100 blast)
+    have himg: "h ` top1_unit_interval = e12"
+      using hh unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+    have "(1/2::real) \<in> top1_unit_interval" unfolding top1_unit_interval_def by (by100 simp)
+    hence "h (1/2) \<in> e12" using himg by (by100 blast)
+    moreover have "h (1/2) \<noteq> h 0 \<and> h (1/2) \<noteq> h 1"
+    proof -
+      have hinj: "inj_on h top1_unit_interval"
+        using hh unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+      have "(0::real) \<in> top1_unit_interval" "(1::real) \<in> top1_unit_interval"
+        unfolding top1_unit_interval_def by (by100 simp)+
+      have h12_ne_0: "(1/2::real) \<noteq> 0" by (by100 simp)
+      have h12_ne_1: "(1/2::real) \<noteq> 1" by (by100 simp)
+      have "h (1/2) \<noteq> h 0" proof
+        assume "h (1/2) = h 0"
+        from inj_onD[OF hinj this \<open>(1/2) \<in> top1_unit_interval\<close> \<open>(0::real) \<in> top1_unit_interval\<close>]
+        show False using h12_ne_0 by (by100 blast) qed
+      moreover have "h (1/2) \<noteq> h 1" proof
+        assume "h (1/2) = h 1"
+        from inj_onD[OF hinj this \<open>(1/2) \<in> top1_unit_interval\<close> \<open>(1::real) \<in> top1_unit_interval\<close>]
+        show False using h12_ne_1 by (by100 blast) qed
+      ultimately show ?thesis by (by100 blast)
+    qed
+    moreover have "{h 0, h 1} = {a1, a2}"
+      using arc_endpoints_are_boundary[OF hS2_strict hS2_haus assms(4) assms(10) hh] assms(16)
+      by (by100 simp)
+    ultimately show ?thesis by (by100 blast)
+  qed
   have he34_conn: "top1_connected_on (e34 - {a3, a4})
-      (subspace_topology top1_S2 top1_S2_topology (e34 - {a3, a4}))" sorry
-  have he34_ne: "e34 - {a3, a4} \<noteq> {}" sorry
+      (subspace_topology top1_S2 top1_S2_topology (e34 - {a3, a4}))"
+    sorry
+  have he34_ne: "e34 - {a3, a4} \<noteq> {}"
+  proof -
+    obtain h where hh: "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
+        e34 (subspace_topology top1_S2 top1_S2_topology e34) h"
+      using assms(12) unfolding top1_is_arc_on_def by (by100 blast)
+    have himg: "h ` top1_unit_interval = e34"
+      using hh unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+    have "(1/2::real) \<in> top1_unit_interval" unfolding top1_unit_interval_def by (by100 simp)
+    hence "h (1/2) \<in> e34" using himg by (by100 blast)
+    moreover have "h (1/2) \<noteq> h 0 \<and> h (1/2) \<noteq> h 1"
+    proof -
+      have hinj: "inj_on h top1_unit_interval"
+        using hh unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+      have "(0::real) \<in> top1_unit_interval" "(1::real) \<in> top1_unit_interval"
+        unfolding top1_unit_interval_def by (by100 simp)+
+      have h12_ne_0: "(1/2::real) \<noteq> 0" by (by100 simp)
+      have h12_ne_1: "(1/2::real) \<noteq> 1" by (by100 simp)
+      have "h (1/2) \<noteq> h 0" proof
+        assume "h (1/2) = h 0"
+        from inj_onD[OF hinj this \<open>(1/2) \<in> top1_unit_interval\<close> \<open>(0::real) \<in> top1_unit_interval\<close>]
+        show False using h12_ne_0 by (by100 blast) qed
+      moreover have "h (1/2) \<noteq> h 1" proof
+        assume "h (1/2) = h 1"
+        from inj_onD[OF hinj this \<open>(1/2) \<in> top1_unit_interval\<close> \<open>(1::real) \<in> top1_unit_interval\<close>]
+        show False using h12_ne_1 by (by100 blast) qed
+      ultimately show ?thesis by (by100 blast)
+    qed
+    moreover have "{h 0, h 1} = {a3, a4}"
+      using arc_endpoints_are_boundary[OF hS2_strict hS2_haus assms(6) assms(12) hh] assms(18)
+      by (by100 simp)
+    ultimately show ?thesis by (by100 blast)
+  qed
   \<comment> \<open>By Lemma 23.2, each lies in A or B.\<close>
   have he12_AB: "e12 - {a1, a2} \<subseteq> A \<or> e12 - {a1, a2} \<subseteq> B"
     sorry \<comment> \<open>Lemma\_23\_2: connected subset of separation lies in one component.\<close>
