@@ -2177,8 +2177,15 @@ proof -
       sorry \<comment> \<open>a2 is endpoint of concatenated arc. Needs: a2 endpoint of e23 (from assms(17)),
            endpoints of A1\<union>A2 when A1\<inter>A2={c} at endpoint c are the other endpoints of A1 and A2.\<close>
     have ha2_ep2: "a2 \<in> top1_arc_endpoints_on e24_a2q (subspace_topology top1_S2 top1_S2_topology e24_a2q)"
-      sorry \<comment> \<open>a2 is endpoint of e24_a2q. From arc_split: e24 split at q gives
-           e24_a2q with boundary points {a2, q}. But need to prove these are the arc endpoints.\<close>
+    proof -
+      have he24_a2q_sub_loc: "e24_a2q \<subseteq> top1_S2" using he24_sub he24_split(1) by (by100 blast)
+      have he24_qa4_sub_loc: "e24_qa4 \<subseteq> top1_S2" using he24_sub he24_split(1) by (by100 blast)
+      from arc_split_endpoints(1)[OF hS2_strict hS2_haus he24_sub he24_arc
+          he24_split(1) he24_split(2) he24_split(3) he24_split(4)
+          he24_split(5) he24_split(6) he24_split(7) he24_split(8)
+          he24_a2q_sub_loc he24_qa4_sub_loc he24_ep hq_not_ep]
+      show ?thesis by (by100 blast)
+    qed
     have he13pa3_e23_sub: "e13_pa3 \<union> e23 \<subseteq> top1_S2" using he13_pa3_sub he23_sub by (by100 blast)
     have he24_a2q_sub: "e24_a2q \<subseteq> top1_S2" using he24_sub he24_split(1) by (by100 blast)
     show ?thesis
@@ -2204,7 +2211,15 @@ proof -
     have he41_arc: "top1_is_arc_on e41 (subspace_topology top1_S2 top1_S2_topology e41)"
       by (rule assms(13))
     have ha4_ep1: "a4 \<in> top1_arc_endpoints_on e24_qa4 (subspace_topology top1_S2 top1_S2_topology e24_qa4)"
-      sorry \<comment> \<open>a4 endpoint of e24_qa4 (boundary of sub-arc).\<close>
+    proof -
+      have he24_a2q_sub_loc: "e24_a2q \<subseteq> top1_S2" using he24_sub he24_split(1) by (by100 blast)
+      have he24_qa4_sub_loc: "e24_qa4 \<subseteq> top1_S2" using he24_sub he24_split(1) by (by100 blast)
+      from arc_split_endpoints(2)[OF hS2_strict hS2_haus he24_sub he24_arc
+          he24_split(1) he24_split(2) he24_split(3) he24_split(4)
+          he24_split(5) he24_split(6) he24_split(7) he24_split(8)
+          he24_a2q_sub_loc he24_qa4_sub_loc he24_ep hq_not_ep]
+      show ?thesis by (by100 blast)
+    qed
     have ha4_ep2: "a4 \<in> top1_arc_endpoints_on e41 (subspace_topology top1_S2 top1_S2_topology e41)"
       using assms(19) by (by100 blast)
     have hconcat_d1: "top1_is_arc_on (e24_qa4 \<union> e41)
@@ -2269,7 +2284,15 @@ proof -
         (subspace_topology top1_S2 top1_S2_topology (e24_qa4 \<union> e41))"
       sorry \<comment> \<open>a1 endpoint of concat arc.\<close>
     have ha1_ep2: "a1 \<in> top1_arc_endpoints_on e13_a1p (subspace_topology top1_S2 top1_S2_topology e13_a1p)"
-      sorry \<comment> \<open>a1 endpoint of e13_a1p (boundary of sub-arc).\<close>
+    proof -
+      have he13_a1p_sub_loc: "e13_a1p \<subseteq> top1_S2" using he13_sub he13_split(1) by (by100 blast)
+      have he13_pa3_sub_loc: "e13_pa3 \<subseteq> top1_S2" using he13_sub he13_split(1) by (by100 blast)
+      from arc_split_endpoints(1)[OF hS2_strict hS2_haus he13_sub he13_arc
+          he13_split(1) he13_split(2) he13_split(3) he13_split(4)
+          he13_split(5) he13_split(6) he13_split(7) he13_split(8)
+          he13_a1p_sub_loc he13_pa3_sub_loc he13_ep hp_not_ep]
+      show ?thesis by (by100 blast)
+    qed
     have he24qa4_e41_sub: "e24_qa4 \<union> e41 \<subseteq> top1_S2" using he24_qa4_sub he41_sub by (by100 blast)
     have he13_a1p_sub: "e13_a1p \<subseteq> top1_S2" using he13_sub he13_split(1) by (by100 blast)
     show ?thesis
