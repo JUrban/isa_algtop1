@@ -5698,33 +5698,65 @@ proof -
         (subspace_topology top1_S2 top1_S2_topology (top1_S2 - ?Y))"
       by (rule subspace_topology_is_topology_on[OF]) (use hTopS2 in \<open>by100 blast\<close>, by100 blast)
     have hVW_ne: "(top1_S2 - ?Y) - P1 \<noteq> {}"
-    proof -
-      \<comment> \<open>(S2-Y)-P1 = P2-(C-{a1,a3}). P2 \<noteq> C (C closed not open, P2 open). So P2-C \<noteq> {}.\<close>
-      have "(top1_S2 - ?Y) - P1 \<supseteq> P2 - ?C"
+    proof (rule ccontr)
+      assume "\<not> ?thesis"
+      hence hP1_eq_Y: "top1_S2 - ?Y \<subseteq> P1" by (by100 blast)
+      \<comment> \<open>P1 connected \<subseteq> U\<union>V\<union>W (disjoint open). Lemma\_23\_2 on {U, V\<union>W}: P1 \<subseteq> U or V\<union>W.\<close>
+      have hVW_open_loc: "V \<union> W \<in> top1_S2_topology"
       proof -
-        have "P2 \<subseteq> top1_S2 - (?A \<union> ?B)" using hP(4) by (by100 blast)
-        hence "P2 \<inter> (?A \<union> ?B) = {}" by (by100 blast)
-        moreover have "P1 \<inter> P2 = {}" using hP(3) by (by100 blast)
-        ultimately show ?thesis using hP(4) by (by100 blast)
+        from hTopS2 have "\<And>S. S \<subseteq> top1_S2_topology \<Longrightarrow> \<Union>S \<in> top1_S2_topology"
+          unfolding is_topology_on_def by (by100 blast)
+        from this[of "{V, W}"] hUVW(12,13) have "\<Union>{V, W} \<in> top1_S2_topology" by (by100 blast)
+        moreover have "\<Union>{V, W} = V \<union> W" by (by100 blast)
+        ultimately show ?thesis by (by100 simp)
       qed
-      moreover have "P2 - ?C \<noteq> {}"
+      have hU_oY: "U \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - ?Y)"
       proof -
-        \<comment> \<open>If P2 \<subseteq> C: P2 open in S2, C closed. P2 open+closed in C. C connected \<Rightarrow> P2={} or P2=C.
-           P2 \<noteq> {} \<Rightarrow> P2 = C. But then C open in S2. C also closed (compact arc in Hausdorff).
-           S2 connected, C clopen, C \<noteq> S2 (since U \<noteq> {}) \<Rightarrow> C = {}. Contradiction with P2 \<noteq> {}.\<close>
-        have "\<not> (P2 \<subseteq> ?C)"
-        proof
-          assume hP2C: "P2 \<subseteq> ?C"
-          \<comment> \<open>P2 \<subseteq> C and P2 open \<Rightarrow> C open. C also closed (arc). C clopen in S2.
-             S2 connected \<Rightarrow> C = {} or C = S2. C \<noteq> {} (has a4). C \<noteq> S2 (U \<subseteq> S2-Y, Y \<supseteq> C).
-             Contradiction.\<close>
-          \<comment> \<open>P2 \<subseteq> C impossible: P2 open nonempty, C closed. If P2 = C then C clopen.
-             S2 connected \<Rightarrow> C = S2. But U \<subseteq> S2-Y, C \<subseteq> Y \<Rightarrow> C \<noteq> S2. Contradiction.\<close>
-          show False sorry
-        qed
-        thus ?thesis using hP(2) by (by100 blast)
+        have "U \<subseteq> top1_S2 - ?Y" using hUVW(7) by (by100 blast)
+        hence "U = (top1_S2 - ?Y) \<inter> U" by (by100 blast)
+        thus ?thesis unfolding subspace_topology_def using hUVW(11) by (by100 blast)
       qed
-      ultimately show ?thesis by (by100 blast)
+      have hVW_oY: "V \<union> W \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - ?Y)"
+      proof -
+        have "V \<union> W \<subseteq> top1_S2 - ?Y" using hUVW(7) by (by100 blast)
+        hence "V \<union> W = (top1_S2 - ?Y) \<inter> (V \<union> W)" by (by100 blast)
+        thus ?thesis unfolding subspace_topology_def using hVW_open_loc by (by100 blast)
+      qed
+      have hU_VW_sep: "top1_is_separation_on (top1_S2 - ?Y)
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - ?Y)) U (V \<union> W)"
+      proof -
+        have "U \<inter> (V \<union> W) = {}" using hUVW(4,6) by (by100 blast)
+        moreover have "U \<union> (V \<union> W) = top1_S2 - ?Y" using hUVW(7) by (by100 blast)
+        moreover have "V \<union> W \<noteq> {}" using hUVW(2) by (by100 blast)
+        ultimately show ?thesis unfolding top1_is_separation_on_def
+          using hU_oY hVW_oY hUVW(1) by (by100 blast)
+      qed
+      have hP1_conn_Y: "top1_connected_on P1
+          (subspace_topology (top1_S2 - ?Y) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - ?Y)) P1)"
+      proof -
+        have "subspace_topology top1_S2 top1_S2_topology P1 =
+            subspace_topology (top1_S2 - ?Y) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - ?Y)) P1"
+          using subspace_topology_trans[of P1 "top1_S2 - ?Y" top1_S2 top1_S2_topology]
+              hP1_sub_Y_compl by (by100 simp)
+        thus ?thesis using hP(5) by (by100 simp)
+      qed
+      from Lemma_23_2[OF hTY hU_VW_sep hP1_sub_Y_compl hP1_conn_Y]
+      have "P1 \<subseteq> U \<or> P1 \<subseteq> V \<union> W" by (by100 blast)
+      thus False
+      proof
+        assume "P1 \<subseteq> U"
+        hence "V \<subseteq> P1" using hP1_eq_Y hUVW(7) by (by100 blast)
+        hence "V \<subseteq> U" using \<open>P1 \<subseteq> U\<close> by (by100 blast)
+        hence "V \<inter> U \<noteq> {}" using hUVW(2) by (by100 blast)
+        thus False using hUVW(4) by (by100 blast)
+      next
+        assume "P1 \<subseteq> V \<union> W"
+        hence "U \<subseteq> P1" using hP1_eq_Y hUVW(7) by (by100 blast)
+        hence "U \<subseteq> V \<union> W" using \<open>P1 \<subseteq> V \<union> W\<close> by (by100 blast)
+        hence "U \<inter> (V \<union> W) \<noteq> {}" using hUVW(1) by (by100 blast)
+        moreover have "U \<inter> (V \<union> W) = {}" using hUVW(4,6) by (by100 blast)
+        ultimately show False by (by100 blast)
+      qed
     qed
     have hY_sep: "top1_is_separation_on (top1_S2 - ?Y)
         (subspace_topology top1_S2 top1_S2_topology (top1_S2 - ?Y))
