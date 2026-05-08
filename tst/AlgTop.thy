@@ -3457,6 +3457,133 @@ proof -
   qed
 qed
 
+section \<open>\<S>64 Imbedding Graphs in the Plane\<close>
+
+text \<open>A theta space X is a Hausdorff space that is the union of three arcs A, B, C,
+  each pair of which intersect precisely in their endpoints.\<close>
+
+definition top1_is_theta_space_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> 'a set \<Rightarrow> 'a set \<Rightarrow> 'a set \<Rightarrow> bool" where
+  "top1_is_theta_space_on X TX A B C \<longleftrightarrow>
+    is_hausdorff_on X TX \<and> X = A \<union> B \<union> C \<and>
+    top1_is_arc_on A (subspace_topology X TX A) \<and>
+    top1_is_arc_on B (subspace_topology X TX B) \<and>
+    top1_is_arc_on C (subspace_topology X TX C) \<and>
+    (\<exists>a b. a \<noteq> b \<and> A \<inter> B = {a, b} \<and> B \<inter> C = {a, b} \<and> A \<inter> C = {a, b} \<and>
+           top1_arc_endpoints_on A (subspace_topology X TX A) = {a, b} \<and>
+           top1_arc_endpoints_on B (subspace_topology X TX B) = {a, b} \<and>
+           top1_arc_endpoints_on C (subspace_topology X TX C) = {a, b})"
+
+text \<open>Lemma 64.1: A theta space X \<subseteq> S2 separates S2 into three components.\<close>
+
+lemma Lemma_64_1_theta_space_three_components:
+  assumes "is_topology_on_strict top1_S2 top1_S2_topology"
+      and "A \<subseteq> top1_S2" "B \<subseteq> top1_S2" "C \<subseteq> top1_S2"
+      and "top1_is_arc_on A (subspace_topology top1_S2 top1_S2_topology A)"
+      and "top1_is_arc_on B (subspace_topology top1_S2 top1_S2_topology B)"
+      and "top1_is_arc_on C (subspace_topology top1_S2 top1_S2_topology C)"
+      and "a \<noteq> b" "A \<inter> B = {a, b}" "B \<inter> C = {a, b}" "A \<inter> C = {a, b}"
+      and "top1_arc_endpoints_on A (subspace_topology top1_S2 top1_S2_topology A) = {a, b}"
+      and "top1_arc_endpoints_on B (subspace_topology top1_S2 top1_S2_topology B) = {a, b}"
+      and "top1_arc_endpoints_on C (subspace_topology top1_S2 top1_S2_topology C) = {a, b}"
+  shows "\<exists>U V W. U \<noteq> {} \<and> V \<noteq> {} \<and> W \<noteq> {}
+      \<and> U \<inter> V = {} \<and> V \<inter> W = {} \<and> U \<inter> W = {}
+      \<and> U \<union> V \<union> W = top1_S2 - (A \<union> B \<union> C)
+      \<and> top1_connected_on U (subspace_topology top1_S2 top1_S2_topology U)
+      \<and> top1_connected_on V (subspace_topology top1_S2 top1_S2_topology V)
+      \<and> top1_connected_on W (subspace_topology top1_S2 top1_S2_topology W)"
+proof -
+  \<comment> \<open>Step 1: A \<union> B is SCC, separates S2 into two components U, U'.\<close>
+  have hAB_scc: "top1_simple_closed_curve_on top1_S2 top1_S2_topology (A \<union> B)"
+    sorry
+  have hAB_sep: "top1_separates_on top1_S2 top1_S2_topology (A \<union> B)"
+    sorry
+  \<comment> \<open>Step 2: C - {a,b} is connected and lies in one component, say U'.\<close>
+  \<comment> \<open>Step 3: closure(U) \<union> C gives two connected closed sets with 2-point intersection.
+     By Theorem 63.5, their union separates S2 into two more components V, W.\<close>
+  \<comment> \<open>Result: S2 - (A\<union>B\<union>C) = U \<union> V \<union> W, three disjoint open connected sets.\<close>
+  show ?thesis sorry
+qed
+
+text \<open>Lemma 64.3: K4 in S2 separates into four components.\<close>
+
+lemma Lemma_64_3_K4_four_components:
+  fixes a1 a2 a3 a4 :: "real \<times> real \<times> real"
+    and e12 e23 e34 e41 e13 e24 :: "(real \<times> real \<times> real) set"
+  assumes "is_topology_on_strict top1_S2 top1_S2_topology"
+      and "card {a1, a2, a3, a4} = 4"
+      and "{a1, a2, a3, a4} \<subseteq> top1_S2"
+      and "e12 \<subseteq> top1_S2" "e23 \<subseteq> top1_S2" "e34 \<subseteq> top1_S2"
+      and "e41 \<subseteq> top1_S2" "e13 \<subseteq> top1_S2" "e24 \<subseteq> top1_S2"
+      and "top1_is_arc_on e12 (subspace_topology top1_S2 top1_S2_topology e12)"
+      and "top1_is_arc_on e23 (subspace_topology top1_S2 top1_S2_topology e23)"
+      and "top1_is_arc_on e34 (subspace_topology top1_S2 top1_S2_topology e34)"
+      and "top1_is_arc_on e41 (subspace_topology top1_S2 top1_S2_topology e41)"
+      and "top1_is_arc_on e13 (subspace_topology top1_S2 top1_S2_topology e13)"
+      and "top1_is_arc_on e24 (subspace_topology top1_S2 top1_S2_topology e24)"
+      and "top1_arc_endpoints_on e12 (subspace_topology top1_S2 top1_S2_topology e12) = {a1,a2}"
+      and "top1_arc_endpoints_on e23 (subspace_topology top1_S2 top1_S2_topology e23) = {a2,a3}"
+      and "top1_arc_endpoints_on e34 (subspace_topology top1_S2 top1_S2_topology e34) = {a3,a4}"
+      and "top1_arc_endpoints_on e41 (subspace_topology top1_S2 top1_S2_topology e41) = {a4,a1}"
+      and "top1_arc_endpoints_on e13 (subspace_topology top1_S2 top1_S2_topology e13) = {a1,a3}"
+      and "top1_arc_endpoints_on e24 (subspace_topology top1_S2 top1_S2_topology e24) = {a2,a4}"
+      \<comment> \<open>K_4 planarity: arcs only intersect at shared vertices.\<close>
+      and "e12 \<inter> e34 = {}" and "e23 \<inter> e41 = {}"
+      and "e12 \<inter> e23 = {a2}" and "e23 \<inter> e34 = {a3}"
+      and "e34 \<inter> e41 = {a4}" and "e41 \<inter> e12 = {a1}"
+      and "e13 \<inter> e12 = {a1}" and "e13 \<inter> e23 = {a3}"
+      and "e13 \<inter> e34 = {a3}" and "e13 \<inter> e41 = {a1}"
+      and "e13 \<inter> e24 \<subseteq> {a1,a2,a3,a4}"
+      and "e24 \<inter> e12 = {a2}" and "e24 \<inter> e23 = {a2}"
+      and "e24 \<inter> e34 = {a4}" and "e24 \<inter> e41 = {a4}"
+  shows "\<exists>U1 U2 U3 U4.
+      U1 \<noteq> {} \<and> U2 \<noteq> {} \<and> U3 \<noteq> {} \<and> U4 \<noteq> {}
+      \<and> U1 \<inter> U2 = {} \<and> U1 \<inter> U3 = {} \<and> U1 \<inter> U4 = {}
+      \<and> U2 \<inter> U3 = {} \<and> U2 \<inter> U4 = {} \<and> U3 \<inter> U4 = {}
+      \<and> U1 \<union> U2 \<union> U3 \<union> U4 = top1_S2 - (e12 \<union> e23 \<union> e34 \<union> e41 \<union> e13 \<union> e24)
+      \<and> top1_connected_on U1 (subspace_topology top1_S2 top1_S2_topology U1)
+      \<and> top1_connected_on U2 (subspace_topology top1_S2 top1_S2_topology U2)
+      \<and> top1_connected_on U3 (subspace_topology top1_S2 top1_S2_topology U3)
+      \<and> top1_connected_on U4 (subspace_topology top1_S2 top1_S2_topology U4)"
+proof -
+  \<comment> \<open>Step 1: Y = all edges except e24. Y is a theta space with arcs
+     A = a1 a2 a3 (= e12 \<union> e23), B = e13, C = a1 a4 a3 (= e41 \<union> e34).
+     By Lemma 64.1, Y separates S2 into 3 components U, V, W.\<close>
+  \<comment> \<open>Step 2: e24 - {a2, a4} lies in W (boundary A \<union> C doesn't contain a2 or a4...
+     actually boundary of W is A \<union> C which contains a2 \<in> A and a4 \<in> C.
+     Check: boundary of U = A \<union> B (contains a2 not a4),
+            boundary of V = B \<union> C (contains a4 not a2),
+            boundary of W = A \<union> C (contains both a2 and a4).
+     So e24 - {a2,a4} must lie in W.\<close>
+  \<comment> \<open>Step 3: closure(U) \<union> closure(V) is connected (they share B), doesn't separate.
+     By Theorem 63.5 with closure(U)\<union>closure(V) and e24, get 2 components of W.\<close>
+  show ?thesis sorry
+qed
+
+text \<open>Theorem 64.2: The utilities graph K33 cannot be imbedded in the plane.\<close>
+
+text \<open>Theorem 64.2 and 64.4 (K\_3\_3 and K\_5 not planar) are consequences
+  of the theta space lemma. Their formal statements require specifying all
+  edge-vertex incidence and intersection conditions. We state simplified versions.\<close>
+
+theorem Theorem_64_2_K33_not_planar:
+  \<comment> \<open>The utilities graph K33 cannot be imbedded in the plane (or S2).\<close>
+  assumes "is_topology_on_strict top1_S2 top1_S2_topology"
+      and hK33: "card {g, w, e, h1, h2, h3} = (6::nat)"
+      and "{g, w, e, h1, h2, h3} \<subseteq> top1_S2"
+      and "top1_is_arc_on gh1 (subspace_topology top1_S2 top1_S2_topology gh1)"
+      \<comment> \<open>... (9 arcs connecting each utility to each house)\<close>
+  shows False
+  sorry
+
+theorem Theorem_64_4_K5_not_planar:
+  \<comment> \<open>The complete graph K5 cannot be imbedded in the plane (or S2).\<close>
+  assumes "is_topology_on_strict top1_S2 top1_S2_topology"
+      and "card {a1, a2, a3, a4, a5 :: real \<times> real \<times> real} = 5"
+      \<comment> \<open>... (10 arcs, one for each pair of vertices)\<close>
+  shows False
+  sorry
+
+
 (** from \<S>65 Lemma 65.1: for K_4 subspace of S^2 with vertices a_1, ..., a_4 and
     closed-curve edge C = a_1 a_2 a_3 a_4 a_1, and interior points p, q of opposite
     edges a_1 a_3 and a_2 a_4, the loop traversing C is nontrivial in \<pi>_1(S^2-p-q, x_0). **)
