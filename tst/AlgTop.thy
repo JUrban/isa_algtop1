@@ -2432,7 +2432,104 @@ lemma arc_both_endpoints_in_one_part:
       and hep: "top1_arc_endpoints_on D (subspace_topology X TX D) = {a, b}" and "a \<noteq> b"
       and "a \<in> D1" "b \<in> D1"
   shows "D2 = {c}"
-  sorry
+proof -
+  obtain h where hh: "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
+      D (subspace_topology X TX D) h"
+    using hArc unfolding top1_is_arc_on_def by (by100 blast)
+  have hinj: "inj_on h top1_unit_interval"
+    using hh unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+  have himg: "h ` top1_unit_interval = D"
+    using hh unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+  \<comment> \<open>h\<inverse>(D1) is connected (continuous preimage of connected D1).\<close>
+  have hS1_conn: "connected {t \<in> top1_unit_interval. h t \<in> D1}"
+  proof -
+    have hTopX: "is_topology_on X TX" using hT unfolding is_topology_on_strict_def by (by100 blast)
+    have hinv_cont: "top1_continuous_map_on D (subspace_topology X TX D)
+        top1_unit_interval top1_unit_interval_topology (inv_into top1_unit_interval h)"
+      using hh unfolding top1_homeomorphism_on_def by (by100 blast)
+    have hD1_sub_D: "D1 \<subseteq> D" using assms(5) by (by100 blast)
+    have hinv_D1_cont: "top1_continuous_map_on D1 (subspace_topology X TX D1)
+        top1_unit_interval top1_unit_interval_topology (inv_into top1_unit_interval h)"
+    proof -
+      have "subspace_topology X TX D1 = subspace_topology D (subspace_topology X TX D) D1"
+        using subspace_topology_trans[of D1 D X TX] hD1_sub_D hDX by (by100 simp)
+      thus ?thesis using top1_continuous_map_on_restrict_domain_simple[OF hinv_cont hD1_sub_D]
+        by (by100 simp)
+    qed
+    have hTD1: "is_topology_on D1 (subspace_topology X TX D1)"
+      by (rule subspace_topology_is_topology_on[OF hTopX assms(8)])
+    have hTI: "is_topology_on top1_unit_interval top1_unit_interval_topology"
+      by (rule top1_unit_interval_topology_is_topology_on)
+    from Theorem_23_5[OF hTD1 hTI hD1_conn hinv_D1_cont]
+    have "top1_connected_on (inv_into top1_unit_interval h ` D1)
+        (subspace_topology top1_unit_interval top1_unit_interval_topology
+          (inv_into top1_unit_interval h ` D1))" .
+    moreover have "inv_into top1_unit_interval h ` D1 = {t \<in> top1_unit_interval. h t \<in> D1}"
+    proof (rule set_eqI, rule iffI)
+      fix t assume "t \<in> inv_into top1_unit_interval h ` D1"
+      then obtain x where hx: "x \<in> D1" "t = inv_into top1_unit_interval h x" by (by100 blast)
+      have "x \<in> h ` top1_unit_interval" using hx(1) hD1_sub_D himg by (by100 blast)
+      hence "t \<in> top1_unit_interval"
+        using inv_into_into[of x h top1_unit_interval] hx(2) by (by100 simp)
+      moreover have "h t = x" using f_inv_into_f[of x h top1_unit_interval]
+          \<open>x \<in> h ` top1_unit_interval\<close> hx(2) by (by100 simp)
+      ultimately show "t \<in> {t \<in> top1_unit_interval. h t \<in> D1}" using hx(1) by (by100 blast)
+    next
+      fix t assume "t \<in> {t \<in> top1_unit_interval. h t \<in> D1}"
+      hence ht: "t \<in> top1_unit_interval" "h t \<in> D1" by (by100 blast)+
+      have "inv_into top1_unit_interval h (h t) = t"
+        by (rule inv_into_f_f[OF hinj ht(1)])
+      thus "t \<in> inv_into top1_unit_interval h ` D1" using ht(2) by (by100 force)
+    qed
+    ultimately have "top1_connected_on {t \<in> top1_unit_interval. h t \<in> D1}
+        (subspace_topology top1_unit_interval top1_unit_interval_topology
+          {t \<in> top1_unit_interval. h t \<in> D1})" by (by100 simp)
+    hence "top1_connected_on {t \<in> top1_unit_interval. h t \<in> D1}
+        (subspace_topology UNIV top1_open_sets {t \<in> top1_unit_interval. h t \<in> D1})"
+    proof -
+      have "{t \<in> top1_unit_interval. h t \<in> D1} \<subseteq> top1_unit_interval" by (by100 blast)
+      have "subspace_topology top1_unit_interval top1_unit_interval_topology
+          {t \<in> top1_unit_interval. h t \<in> D1}
+          = subspace_topology UNIV top1_open_sets {t \<in> top1_unit_interval. h t \<in> D1}"
+        unfolding top1_unit_interval_topology_def
+        using subspace_topology_trans[of "{t \<in> top1_unit_interval. h t \<in> D1}"
+            top1_unit_interval "UNIV :: real set" top1_open_sets]
+          \<open>{t \<in> top1_unit_interval. h t \<in> D1} \<subseteq> top1_unit_interval\<close> by (by100 simp)
+      thus ?thesis using \<open>top1_connected_on {t \<in> top1_unit_interval. h t \<in> D1}
+          (subspace_topology top1_unit_interval top1_unit_interval_topology
+            {t \<in> top1_unit_interval. h t \<in> D1})\<close> by (by100 simp)
+    qed
+    thus ?thesis using top1_connected_on_subspace_open_iff_connected by (by100 blast)
+  qed
+  \<comment> \<open>endpoints(D) = {h 0, h 1}. Since {a,b} = {h 0, h 1} and a,b \<in> D1, h 0 \<in> D1 and h 1 \<in> D1.\<close>
+  have hep_h: "top1_arc_endpoints_on D (subspace_topology X TX D) = {h 0, h 1}"
+    by (rule arc_endpoints_are_boundary[OF hT hH hDX hArc hh])
+  hence hab_h01: "{a, b} = {h 0, h 1}" using hep by (by100 simp)
+  have "h 0 \<in> D1"
+  proof -
+    have "h 0 \<in> {a, b}" using hab_h01 by (by100 blast)
+    thus ?thesis using assms(11,12) by (by100 blast)
+  qed
+  have "h 1 \<in> D1"
+  proof -
+    have "h 1 \<in> {a, b}" using hab_h01 by (by100 blast)
+    thus ?thesis using assms(11,12) by (by100 blast)
+  qed
+  have "0 \<in> {t \<in> top1_unit_interval. h t \<in> D1}"
+    using \<open>h 0 \<in> D1\<close> unfolding top1_unit_interval_def by (by100 simp)
+  moreover have "1 \<in> {t \<in> top1_unit_interval. h t \<in> D1}"
+    using \<open>h 1 \<in> D1\<close> unfolding top1_unit_interval_def by (by100 simp)
+  \<comment> \<open>connected\_contains\_Icc: {0..1} \<subseteq> S1.\<close>
+  ultimately have "{0..1} \<subseteq> {t \<in> top1_unit_interval. h t \<in> D1}"
+    using connected_contains_Icc[OF hS1_conn] by (by100 blast)
+  hence "top1_unit_interval \<subseteq> {t \<in> top1_unit_interval. h t \<in> D1}"
+    unfolding top1_unit_interval_def by (by100 blast)
+  hence "\<forall>t \<in> top1_unit_interval. h t \<in> D1" by (by100 blast)
+  hence "D \<subseteq> D1" using himg by (by100 blast)
+  hence "D2 \<subseteq> D1" using assms(5) by (by100 blast)
+  hence "D2 \<subseteq> D1 \<inter> D2" by (by100 blast)
+  thus "D2 = {c}" using assms(6) by (by100 blast)
+qed
 
 \<comment> \<open>Reusable: endpoints of concatenated arc = the non-shared endpoints.\<close>
 lemma arc_concat_endpoints:
