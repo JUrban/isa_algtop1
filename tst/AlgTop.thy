@@ -3416,7 +3416,9 @@ proof -
         hence "top1_connected_on ?W ?TW" unfolding top1_connected_on_def using hTW by (by100 simp)
         thus False using hW_not_conn by (by100 blast)
       qed
-      thus ?thesis using that sorry
+      then obtain UU VV where hUU: "UU \<in> ?TW" "VV \<in> ?TW" "UU \<noteq> {}" "VV \<noteq> {}"
+          "UU \<inter> VV = {}" "UU \<union> VV = ?W" by (by100 force)
+      show ?thesis by (rule that[OF hUU])
     qed
     \<comment> \<open>U, V are open in W, hence open in S2 (since W is open in S2).\<close>
     have hW_open_S2: "?W \<in> top1_S2_topology"
