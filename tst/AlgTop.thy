@@ -790,7 +790,20 @@ proof -
   have hf_cont: "top1_continuous_map_on top1_S1 top1_S1_topology X TX f"
     using hf_cont_iff hg_cont by (by100 blast)
   have hf_inj: "inj_on f top1_S1" sorry
-  have hf_img: "f ` top1_S1 = A1 \<union> A2" sorry
+  have hf_img: "f ` top1_S1 = A1 \<union> A2"
+  proof -
+    have hR_surj: "top1_R_to_S1 ` top1_unit_interval = top1_S1"
+      using hR_quot unfolding top1_quotient_map_on_def by (by100 blast)
+    have "f ` top1_S1 = f ` (top1_R_to_S1 ` top1_unit_interval)" using hR_surj by (by100 simp)
+    also have "\<dots> = (f \<circ> top1_R_to_S1) ` top1_unit_interval"
+      using image_comp[of f top1_R_to_S1 top1_unit_interval] by (by100 simp)
+    also have "\<dots> = g ` top1_unit_interval"
+    proof (rule image_cong)
+      fix t assume "t \<in> top1_unit_interval"
+      thus "(f \<circ> top1_R_to_S1) t = g t" unfolding comp_def using hf_factor by (by100 blast)
+    qed (by100 simp)
+    finally show ?thesis using hg_img by (by100 simp)
+  qed
   show ?thesis unfolding top1_simple_closed_curve_on_def
     using hf_cont hf_inj hf_img by (by100 blast)
 qed
