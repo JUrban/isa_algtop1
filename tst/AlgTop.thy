@@ -3473,6 +3473,15 @@ definition top1_is_theta_space_on :: "'a set \<Rightarrow> 'a set set \<Rightarr
            top1_arc_endpoints_on B (subspace_topology X TX B) = {a, b} \<and>
            top1_arc_endpoints_on C (subspace_topology X TX C) = {a, b})"
 
+\<comment> \<open>Reusable: arc minus both endpoints is connected (image of (0,1) under homeomorphism).\<close>
+lemma arc_minus_endpoints_connected:
+  assumes hT: "is_topology_on_strict X TX" and hH: "is_hausdorff_on X TX"
+      and hDX: "D \<subseteq> X"
+      and hArc: "top1_is_arc_on D (subspace_topology X TX D)"
+      and hep: "top1_arc_endpoints_on D (subspace_topology X TX D) = {a, b}" and hab: "a \<noteq> b"
+  shows "top1_connected_on (D - {a, b}) (subspace_topology X TX (D - {a, b}))"
+  sorry
+
 text \<open>Lemma 64.1: A theta space X \<subseteq> S2 separates S2 into three components.\<close>
 
 lemma Lemma_64_1_theta_space_three_components:
@@ -3539,7 +3548,7 @@ proof -
   qed
   have hC_minus_conn: "top1_connected_on (C - {a, b})
       (subspace_topology top1_S2 top1_S2_topology (C - {a, b}))"
-    sorry \<comment> \<open>Arc minus endpoints is connected.\<close>
+    by (rule arc_minus_endpoints_connected[OF assms(1) hS2_haus assms(4) assms(7) assms(14) assms(8)])
   have hC_minus_sub: "C - {a, b} \<subseteq> U0' \<or> C - {a, b} \<subseteq> U0"
     sorry \<comment> \<open>Lemma 23.2: connected subset in separation lies in one component.\<close>
   \<comment> \<open>Step 3: Define Ubar = U0 \<union> (A \<union> B) = closure(U0).
@@ -4846,9 +4855,21 @@ proof -
   qed
   \<comment> \<open>e12 - {a1,a2} is connected (arc minus endpoints) and non-empty.\<close>
   \<comment> \<open>Arc minus endpoints is connected: h maps (0,1) onto e12-{a1,a2}, and (0,1) is connected.\<close>
+  have ha1_ne_a2: "a1 \<noteq> a2"
+  proof assume "a1 = a2"
+    hence "{a1,a2,a3,a4} = {a2,a3,a4}" by (by100 blast)
+    hence "card {a1,a2,a3,a4} \<le> 3" using card_three_le by (by100 simp)
+    thus False using assms(2) by (by100 simp)
+  qed
+  have ha3_ne_a4: "a3 \<noteq> a4"
+  proof assume "a3 = a4"
+    hence "{a1,a2,a3,a4} = {a1,a2,a4}" by (by100 blast)
+    hence "card {a1,a2,a3,a4} \<le> 3" using card_three_le by (by100 simp)
+    thus False using assms(2) by (by100 simp)
+  qed
   have he12_conn: "top1_connected_on (e12 - {a1, a2})
       (subspace_topology top1_S2 top1_S2_topology (e12 - {a1, a2}))"
-    sorry
+    by (rule arc_minus_endpoints_connected[OF hS2_strict hS2_haus assms(4) assms(10) assms(16) ha1_ne_a2])
   have he12_ne: "e12 - {a1, a2} \<noteq> {}"
   proof -
     obtain h where hh: "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
@@ -4883,7 +4904,7 @@ proof -
   qed
   have he34_conn: "top1_connected_on (e34 - {a3, a4})
       (subspace_topology top1_S2 top1_S2_topology (e34 - {a3, a4}))"
-    sorry
+    by (rule arc_minus_endpoints_connected[OF hS2_strict hS2_haus assms(6) assms(12) assms(18) ha3_ne_a4])
   have he34_ne: "e34 - {a3, a4} \<noteq> {}"
   proof -
     obtain h where hh: "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
