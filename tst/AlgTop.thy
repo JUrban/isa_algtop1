@@ -704,14 +704,32 @@ proof -
      For \<theta> \<in> [\<pi>, 2\<pi>]: f(cos \<theta>, sin \<theta>) = h2((\<theta>-\<pi>)/\<pi>).\<close>
   \<comment> \<open>Equivalently: for p = (x,y) \<in> S1, angle \<theta> = atan2(y,x) \<in> [0, 2\<pi>).\<close>
   \<comment> \<open>Simpler: use the angle from R_to_S1 and its inverse.\<close>
-  define f where "f p = (let \<theta> = (THE \<theta>. 0 \<le> \<theta> \<and> \<theta> < 1 \<and> top1_R_to_S1 \<theta> = p) in
-    if \<theta> \<le> 1/2 then h1 (2*\<theta>) else h2 (2*\<theta> - 1))" for p :: "real \<times> real"
+  \<comment> \<open>Define g: [0,1] \<rightarrow> A1 \<union> A2 by pasting h1 and h2.\<close>
+  define g where "g t = (if t \<le> 1/2 then h1 (2*t) else h2 (2*t - 1))" for t :: real
+  have hg0: "g 0 = a" unfolding g_def using hh1(2) by (by100 simp)
+  have hg1: "g 1 = a" unfolding g_def using hh2(3) by (by100 simp)
+  have hg_ident: "g 0 = g 1" using hg0 hg1 by (by100 simp)
+  \<comment> \<open>g is continuous, injective on [0,1), surjective onto A1 \<union> A2.\<close>
+  have hg_cont: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+      X TX g" sorry
+  have hg_img: "g ` top1_unit_interval = A1 \<union> A2" sorry
+  \<comment> \<open>R\_to\_S1: [0,1] \<rightarrow> S1 is a quotient map (continuous surjection, compact to Hausdorff).\<close>
+  have hR_quot: "top1_quotient_map_on top1_unit_interval top1_unit_interval_topology
+      top1_S1 top1_S1_topology top1_R_to_S1" sorry
+  \<comment> \<open>g respects the identification: R\_to\_S1(s) = R\_to\_S1(t) \<Rightarrow> g(s) = g(t).\<close>
+  have hg_compat: "\<forall>s \<in> top1_unit_interval. \<forall>t \<in> top1_unit_interval.
+      top1_R_to_S1 s = top1_R_to_S1 t \<longrightarrow> g s = g t" sorry
+  \<comment> \<open>Theorem 22.2: get f: S1 \<rightarrow> A1\<union>A2 with g = f \<circ> R\_to\_S1, f continuous.\<close>
+  have hg_range: "\<forall>t \<in> top1_unit_interval. g t \<in> A1 \<union> A2" sorry
+  obtain f where hf_range: "\<forall>p \<in> top1_S1. f p \<in> A1 \<union> A2"
+      and hf_factor: "\<forall>t \<in> top1_unit_interval. f (top1_R_to_S1 t) = g t"
+      and hf_cont_iff: "top1_continuous_map_on top1_S1 top1_S1_topology X TX f
+          \<longleftrightarrow> top1_continuous_map_on top1_unit_interval top1_unit_interval_topology X TX g"
+    sorry \<comment> \<open>From Theorem\_22\_2 applied to R\_to\_S1 and g.\<close>
   have hf_cont: "top1_continuous_map_on top1_S1 top1_S1_topology X TX f"
-    sorry \<comment> \<open>Pasting upper/lower semicircles. Continuity at endpoints (1,0) and (-1,0).\<close>
-  have hf_inj: "inj_on f top1_S1"
-    sorry \<comment> \<open>h1 inj, h2 inj, images A1 \<inter> A2 = {a,b} at endpoints.\<close>
-  have hf_img: "f ` top1_S1 = A1 \<union> A2"
-    sorry \<comment> \<open>Upper semicircle maps to A1, lower to A2.\<close>
+    using hf_cont_iff hg_cont by (by100 blast)
+  have hf_inj: "inj_on f top1_S1" sorry
+  have hf_img: "f ` top1_S1 = A1 \<union> A2" sorry
   show ?thesis unfolding top1_simple_closed_curve_on_def
     using hf_cont hf_inj hf_img by (by100 blast)
 qed
