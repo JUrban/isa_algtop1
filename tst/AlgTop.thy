@@ -5699,9 +5699,31 @@ proof -
       by (rule subspace_topology_is_topology_on[OF]) (use hTopS2 in \<open>by100 blast\<close>, by100 blast)
     have hVW_ne: "(top1_S2 - ?Y) - P1 \<noteq> {}"
     proof -
-      have "V \<noteq> {}" by (rule hUVW(2))
-      moreover have "V \<subseteq> top1_S2 - ?Y" using hUVW(7) by (by100 blast)
-      moreover have "V \<inter> P1 = {}" sorry \<comment> \<open>V \<subseteq> P2 or V \<subseteq> (S2-Y)-P1\<close>
+      \<comment> \<open>(S2-Y)-P1 = P2-(C-{a1,a3}). P2 \<noteq> C (C closed not open, P2 open). So P2-C \<noteq> {}.\<close>
+      have "(top1_S2 - ?Y) - P1 \<supseteq> P2 - ?C"
+      proof -
+        have "P2 \<subseteq> top1_S2 - (?A \<union> ?B)" using hP(4) by (by100 blast)
+        hence "P2 \<inter> (?A \<union> ?B) = {}" by (by100 blast)
+        moreover have "P1 \<inter> P2 = {}" using hP(3) by (by100 blast)
+        ultimately show ?thesis using hP(4) by (by100 blast)
+      qed
+      moreover have "P2 - ?C \<noteq> {}"
+      proof -
+        \<comment> \<open>If P2 \<subseteq> C: P2 open in S2, C closed. P2 open+closed in C. C connected \<Rightarrow> P2={} or P2=C.
+           P2 \<noteq> {} \<Rightarrow> P2 = C. But then C open in S2. C also closed (compact arc in Hausdorff).
+           S2 connected, C clopen, C \<noteq> S2 (since U \<noteq> {}) \<Rightarrow> C = {}. Contradiction with P2 \<noteq> {}.\<close>
+        have "\<not> (P2 \<subseteq> ?C)"
+        proof
+          assume hP2C: "P2 \<subseteq> ?C"
+          \<comment> \<open>P2 \<subseteq> C and P2 open \<Rightarrow> C open. C also closed (arc). C clopen in S2.
+             S2 connected \<Rightarrow> C = {} or C = S2. C \<noteq> {} (has a4). C \<noteq> S2 (U \<subseteq> S2-Y, Y \<supseteq> C).
+             Contradiction.\<close>
+          \<comment> \<open>P2 \<subseteq> C impossible: P2 open nonempty, C closed. If P2 = C then C clopen.
+             S2 connected \<Rightarrow> C = S2. But U \<subseteq> S2-Y, C \<subseteq> Y \<Rightarrow> C \<noteq> S2. Contradiction.\<close>
+          show False sorry
+        qed
+        thus ?thesis using hP(2) by (by100 blast)
+      qed
       ultimately show ?thesis by (by100 blast)
     qed
     have hY_sep: "top1_is_separation_on (top1_S2 - ?Y)
