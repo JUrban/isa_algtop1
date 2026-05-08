@@ -1463,7 +1463,65 @@ proof -
         D1 (subspace_topology X TX D1) h"
     proof -
       have hI0_sub: "?I0 \<subseteq> top1_unit_interval" by (by100 blast)
-      show ?thesis sorry \<comment> \<open>Uses homeomorphism_on_restrict + subspace_topology_trans. Type coercion issue.\<close>
+      have hD1_eq: "h ` ?I0 = D1" unfolding D1_def by (by100 simp)
+      have hD1_D: "D1 \<subseteq> D" unfolding D1_def using himg by (by100 blast)
+      \<comment> \<open>h restricted to I0 is continuous I0 \<rightarrow> X (via restrict of h: I \<rightarrow> D \<rightarrow> X).\<close>
+      have hTopX_loc: "is_topology_on X TX" using hT unfolding is_topology_on_strict_def by (by100 blast)
+      have hh_cont_loc: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+          D (subspace_topology X TX D) h"
+        using hh(1) unfolding top1_homeomorphism_on_def by (by100 blast)
+      \<comment> \<open>h: I \<rightarrow> D cont. Enlarge codomain to X.\<close>
+      have hh_cont_X: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology X TX h"
+      proof -
+        from top1_continuous_map_on_codomain_enlarge[OF hh_cont_loc hDX]
+        have "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+            X (subspace_topology X TX X) h" by (by100 simp)
+        moreover have "subspace_topology X TX X = TX"
+          by (rule subspace_topology_self)
+            (use hT in \<open>unfold is_topology_on_strict_def Pow_def; by100 blast\<close>)
+        ultimately show ?thesis by (by100 simp)
+      qed
+      \<comment> \<open>Restrict domain to I0, codomain to D1.\<close>
+      from top1_continuous_map_on_restrict_domain_simple[OF hh_cont_X hI0_sub]
+      have hh_I0_X: "top1_continuous_map_on ?I0
+          (subspace_topology top1_unit_interval top1_unit_interval_topology ?I0) X TX h"
+        using subspace_topology_trans[OF hI0_sub] by (by100 simp)
+      have hD1_eq: "h ` ?I0 = D1" unfolding D1_def by (by100 simp)
+      have hD1_D: "D1 \<subseteq> D" unfolding D1_def using himg by (by100 blast)
+      have himg_D1: "h ` ?I0 \<subseteq> D1" using hD1_eq by (by100 blast)
+      from top1_continuous_map_on_codomain_shrink[OF hh_I0_X himg_D1 hD1_sub]
+      have hh_I0_D1: "top1_continuous_map_on ?I0
+          (subspace_topology top1_unit_interval top1_unit_interval_topology ?I0)
+          D1 (subspace_topology X TX D1) h" by (by100 simp)
+      have hbij_I0: "bij_betw h ?I0 D1"
+      proof -
+        have "bij_betw h ?I0 (h ` ?I0)"
+          unfolding bij_betw_def using inj_on_subset[OF hinj hI0_sub] by (by100 blast)
+        thus ?thesis using hD1_eq by (by100 simp)
+      qed
+      \<comment> \<open>I0 compact, D1 Hausdorff \<Rightarrow> Theorem_26_6 gives homeomorphism.\<close>
+      have hI0_compact: "top1_compact_on ?I0
+          (subspace_topology top1_unit_interval top1_unit_interval_topology ?I0)"
+      proof -
+        have "compact {0..t0}" by (rule compact_Icc)
+        have "{0..t0} = ?I0" unfolding top1_unit_interval_def using ht0_int ht0(1) by (by100 force)
+        hence "compact ?I0" using \<open>compact {0..t0}\<close> by (by100 simp)
+        hence "top1_connected_on ?I0 (subspace_topology UNIV top1_open_sets ?I0) \<or>
+            top1_compact_on ?I0 (subspace_topology UNIV top1_open_sets ?I0)"
+          using top1_compact_on_subspace_UNIV_iff_compact by (by100 blast)
+        hence "top1_compact_on ?I0 (subspace_topology UNIV top1_open_sets ?I0)"
+          using top1_compact_on_subspace_UNIV_iff_compact \<open>compact ?I0\<close> by (by100 blast)
+        thus ?thesis unfolding top1_unit_interval_topology_def
+          using subspace_topology_trans[OF hI0_sub] by (by100 simp)
+      qed
+      have hD1_haus: "is_hausdorff_on D1 (subspace_topology X TX D1)"
+        using conjunct2[OF conjunct2[OF Theorem_17_11]] hH hD1_sub by (by100 blast)
+      have hTI0: "is_topology_on ?I0 (subspace_topology top1_unit_interval top1_unit_interval_topology ?I0)"
+        by (rule subspace_topology_is_topology_on[OF top1_unit_interval_topology_is_topology_on hI0_sub])
+      have hTD1: "is_topology_on D1 (subspace_topology X TX D1)"
+        by (rule subspace_topology_is_topology_on[OF hTopX_loc hD1_sub])
+      show ?thesis
+        by (rule Theorem_26_6[OF hTI0 hTD1 hI0_compact hD1_haus hh_I0_D1 hbij_I0])
     qed
     \<comment> \<open>Affine map s \<mapsto> s*t0: [0,1] \<rightarrow> [0,t0] is a homeomorphism.\<close>
     have hscale_homeo: "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
@@ -1594,17 +1652,161 @@ proof -
   have hD2_arc: "top1_is_arc_on D2 (subspace_topology X TX D2)"
   proof -
     let ?I1 = "{t \<in> top1_unit_interval. t \<ge> t0}"
+    have hI1_sub: "?I1 \<subseteq> top1_unit_interval" by (by100 blast)
     have hh_restr_homeo: "top1_homeomorphism_on ?I1
         (subspace_topology top1_unit_interval top1_unit_interval_topology ?I1)
         D2 (subspace_topology X TX D2) h"
     proof -
-      have hI1_sub: "?I1 \<subseteq> top1_unit_interval" by (by100 blast)
-      let ?TD = "subspace_topology X TX D"
-      show ?thesis sorry \<comment> \<open>Uses homeomorphism_on_restrict + subspace_topology_trans. Type coercion issue.\<close>
+      have hTopX_loc: "is_topology_on X TX" using hT unfolding is_topology_on_strict_def by (by100 blast)
+      have hh_cont_X: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology X TX h"
+      proof -
+        have hh_cont_D: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+            D (subspace_topology X TX D) h"
+          using hh(1) unfolding top1_homeomorphism_on_def by (by100 blast)
+        from top1_continuous_map_on_codomain_enlarge[OF hh_cont_D hDX]
+        have "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+            X (subspace_topology X TX X) h" by (by100 simp)
+        moreover have "subspace_topology X TX X = TX"
+          by (rule subspace_topology_self)
+            (use hT in \<open>unfold is_topology_on_strict_def Pow_def; by100 blast\<close>)
+        ultimately show ?thesis by (by100 simp)
+      qed
+      from top1_continuous_map_on_restrict_domain_simple[OF hh_cont_X hI1_sub]
+      have hh_I1_X: "top1_continuous_map_on ?I1
+          (subspace_topology top1_unit_interval top1_unit_interval_topology ?I1) X TX h"
+        using subspace_topology_trans[OF hI1_sub] by (by100 simp)
+      have hD2_eq: "h ` ?I1 = D2" unfolding D2_def by (by100 simp)
+      have hD2_D: "D2 \<subseteq> D" unfolding D2_def using himg by (by100 blast)
+      have himg_D2: "h ` ?I1 \<subseteq> D2" using hD2_eq by (by100 blast)
+      from top1_continuous_map_on_codomain_shrink[OF hh_I1_X himg_D2 hD2_sub]
+      have hh_I1_D2: "top1_continuous_map_on ?I1
+          (subspace_topology top1_unit_interval top1_unit_interval_topology ?I1)
+          D2 (subspace_topology X TX D2) h" by (by100 simp)
+      have hbij_I1: "bij_betw h ?I1 D2"
+      proof -
+        have "bij_betw h ?I1 (h ` ?I1)"
+          unfolding bij_betw_def using inj_on_subset[OF hinj hI1_sub] by (by100 blast)
+        thus ?thesis using hD2_eq by (by100 simp)
+      qed
+      have hI1_compact: "top1_compact_on ?I1
+          (subspace_topology top1_unit_interval top1_unit_interval_topology ?I1)"
+      proof -
+        have "compact ?I1"
+        proof -
+          have "compact {t0..(1::real)}" by (rule compact_Icc)
+          moreover have "?I1 = {t0..1}" unfolding top1_unit_interval_def using ht0_int ht0(1) by (by100 force)
+          ultimately show ?thesis by (by100 simp)
+        qed
+        hence "top1_compact_on ?I1 (subspace_topology (UNIV::real set) top1_open_sets ?I1)"
+          using top1_compact_on_subspace_UNIV_iff_compact by (by100 blast)
+        thus ?thesis unfolding top1_unit_interval_topology_def
+          using subspace_topology_trans[OF hI1_sub] by (by100 simp)
+      qed
+      have hD2_haus: "is_hausdorff_on D2 (subspace_topology X TX D2)"
+        using conjunct2[OF conjunct2[OF Theorem_17_11]] hH hD2_sub by (by100 blast)
+      have hTI1: "is_topology_on ?I1 (subspace_topology top1_unit_interval top1_unit_interval_topology ?I1)"
+        by (rule subspace_topology_is_topology_on[OF top1_unit_interval_topology_is_topology_on hI1_sub])
+      have hTD2: "is_topology_on D2 (subspace_topology X TX D2)"
+        by (rule subspace_topology_is_topology_on[OF hTopX_loc hD2_sub])
+      show ?thesis
+        by (rule Theorem_26_6[OF hTI1 hTD2 hI1_compact hD2_haus hh_I1_D2 hbij_I1])
     qed
     have hscale_homeo: "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
         ?I1 (subspace_topology top1_unit_interval top1_unit_interval_topology ?I1) (\<lambda>s. t0 + s * (1 - t0))"
-      sorry \<comment> \<open>Affine bijection [0,1] \<rightarrow> [t0,1].\<close>
+    proof -
+      have hTI: "is_topology_on top1_unit_interval top1_unit_interval_topology"
+        by (rule top1_unit_interval_topology_is_topology_on)
+      have hTI1: "is_topology_on ?I1 (subspace_topology top1_unit_interval top1_unit_interval_topology ?I1)"
+        by (rule subspace_topology_is_topology_on[OF hTI hI1_sub])
+      \<comment> \<open>Continuous.\<close>
+      have hscale_cont: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+          ?I1 (subspace_topology top1_unit_interval top1_unit_interval_topology ?I1) (\<lambda>s. t0 + s * (1 - t0))"
+      proof -
+        have hcont_R: "continuous_on UNIV (\<lambda>s::real. t0 + s * (1 - t0))" by (intro continuous_intros)
+        have hcont_R2: "top1_continuous_map_on (UNIV::real set) top1_open_sets
+            (UNIV::real set) top1_open_sets (\<lambda>s. t0 + s * (1 - t0))"
+          using top1_continuous_map_on_real_subspace_open_sets[of UNIV "\<lambda>s. t0 + s*(1-t0)" UNIV, OF _ hcont_R]
+          unfolding subspace_topology_UNIV_self by (by100 auto)
+        from top1_continuous_map_on_restrict_domain_simple[OF hcont_R2 subset_UNIV]
+        have h1: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+            UNIV top1_open_sets (\<lambda>s. t0 + s*(1-t0))"
+          unfolding top1_unit_interval_topology_def subspace_topology_UNIV_self by (by100 simp)
+        have himg_I: "(\<lambda>s. t0 + s * (1-t0)) ` top1_unit_interval \<subseteq> top1_unit_interval"
+          unfolding top1_unit_interval_def
+        proof (rule image_subsetI)
+          fix s :: real assume "s \<in> {0..1}"
+          hence "0 \<le> s" "s \<le> 1" by (by100 auto)+
+          have "s * (1-t0) \<le> 1 * (1-t0)" using \<open>s \<le> 1\<close> ht0_int by (by100 simp)
+          hence "s * (1-t0) \<le> 1 - t0" by (by100 simp)
+          hence "t0 + s * (1-t0) \<le> 1" by (by100 linarith)
+          moreover have "0 \<le> t0 + s * (1-t0)" using \<open>0 \<le> s\<close> ht0_int by (by100 simp)
+          ultimately show "t0 + s * (1-t0) \<in> {0..1}" by (by100 simp)
+        qed
+        have hI_UNIV: "top1_unit_interval \<subseteq> (UNIV::real set)" by (by100 blast)
+        from top1_continuous_map_on_codomain_shrink[OF h1 himg_I hI_UNIV]
+        have h2: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+            top1_unit_interval top1_unit_interval_topology (\<lambda>s. t0 + s*(1-t0))"
+          unfolding top1_unit_interval_topology_def by (by100 simp)
+        have himg_I1: "(\<lambda>s. t0 + s * (1-t0)) ` top1_unit_interval \<subseteq> ?I1"
+        proof
+          fix x assume "x \<in> (\<lambda>s. t0 + s * (1-t0)) ` top1_unit_interval"
+          then obtain s where "s \<in> top1_unit_interval" "x = t0 + s * (1-t0)" by (by100 blast)
+          have "x \<in> top1_unit_interval" using \<open>s \<in> top1_unit_interval\<close> himg_I \<open>x = _\<close> by (by100 blast)
+          moreover have "x \<ge> t0" using \<open>x = _\<close> \<open>s \<in> top1_unit_interval\<close> ht0_int
+            unfolding top1_unit_interval_def by (by100 auto)
+          ultimately show "x \<in> ?I1" by (by100 blast)
+        qed
+        show ?thesis using top1_continuous_map_on_codomain_shrink[OF h2 himg_I1 hI1_sub]
+          subspace_topology_trans[OF hI1_sub] by (by100 simp)
+      qed
+      \<comment> \<open>Bijective.\<close>
+      have hscale_bij: "bij_betw (\<lambda>s. t0 + s * (1-t0)) top1_unit_interval ?I1"
+        unfolding bij_betw_def
+      proof (intro conjI)
+        show "inj_on (\<lambda>s. t0 + s * (1-t0)) top1_unit_interval"
+          by (rule inj_onI) (use ht0_int in \<open>by100 simp\<close>)
+        show "(\<lambda>s. t0 + s * (1-t0)) ` top1_unit_interval = ?I1"
+        proof (rule set_eqI, rule iffI)
+          fix x assume "x \<in> (\<lambda>s. t0 + s * (1-t0)) ` top1_unit_interval"
+          then obtain s where hs: "s \<in> top1_unit_interval" "x = t0 + s * (1-t0)" by (by100 blast)
+          have hs_bounds: "0 \<le> s" "s \<le> 1" using hs(1) unfolding top1_unit_interval_def by (by100 auto)+
+          have h1t0: "0 \<le> 1 - t0" using ht0_int(2) by (by100 linarith)
+          have "0 \<le> s * (1-t0)" by (rule mult_nonneg_nonneg[OF hs_bounds(1) h1t0])
+          have "s * (1-t0) \<le> 1 * (1-t0)"
+            using mult_right_mono[OF hs_bounds(2) h1t0] .
+          hence "s * (1-t0) \<le> 1 - t0" by (by100 simp)
+          have "0 \<le> x" using hs(2) \<open>0 \<le> s * (1-t0)\<close> ht0_int(1) by (by100 linarith)
+          have "x \<le> 1" using hs(2) \<open>s * (1-t0) \<le> 1 - t0\<close> by (by100 linarith)
+          have "x \<in> top1_unit_interval"
+            unfolding top1_unit_interval_def using \<open>0 \<le> x\<close> \<open>x \<le> 1\<close> by (by100 simp)
+          moreover have "x \<ge> t0" using hs(2) \<open>0 \<le> s * (1-t0)\<close> by (by100 linarith)
+          ultimately show "x \<in> ?I1" by (by100 blast)
+        next
+          fix x assume "x \<in> ?I1"
+          hence hx: "x \<in> top1_unit_interval" "x \<ge> t0" by (by100 blast)+
+          let ?s = "(x - t0) / (1 - t0)"
+          have "?s \<in> top1_unit_interval" using hx ht0_int unfolding top1_unit_interval_def by (by100 auto)
+          moreover have "t0 + ?s * (1-t0) = x" using ht0_int(2) by (by100 simp)
+          ultimately show "x \<in> (\<lambda>s. t0 + s * (1-t0)) ` top1_unit_interval" by (by100 force)
+        qed
+      qed
+      \<comment> \<open>Compact + Hausdorff.\<close>
+      have hI_compact: "top1_compact_on top1_unit_interval top1_unit_interval_topology"
+      proof -
+        have "compact (top1_unit_interval :: real set)" unfolding top1_unit_interval_def by (rule compact_Icc)
+        thus ?thesis using top1_compact_on_subspace_UNIV_iff_compact
+          unfolding top1_unit_interval_topology_def by (by100 blast)
+      qed
+      have hI1_haus: "is_hausdorff_on ?I1 (subspace_topology top1_unit_interval top1_unit_interval_topology ?I1)"
+      proof -
+        have "is_hausdorff_on (UNIV::real set) top1_open_sets" by (rule top1_R_is_hausdorff)
+        hence "is_hausdorff_on top1_unit_interval top1_unit_interval_topology"
+          using conjunct2[OF conjunct2[OF Theorem_17_11]] unfolding top1_unit_interval_topology_def
+          by (by100 blast)
+        thus ?thesis using conjunct2[OF conjunct2[OF Theorem_17_11]] hI1_sub by (by100 blast)
+      qed
+      show ?thesis by (rule Theorem_26_6[OF hTI hTI1 hI_compact hI1_haus hscale_cont hscale_bij])
+    qed
     from homeomorphism_on_comp[OF hscale_homeo hh_restr_homeo]
     have "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
         D2 (subspace_topology X TX D2) (h \<circ> (\<lambda>s. t0 + s * (1 - t0)))" .
