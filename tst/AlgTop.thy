@@ -1391,7 +1391,52 @@ proof -
       \<comment> \<open>Continuous: s\<mapsto>s*t0 is affine.\<close>
       have hscale_cont: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
           ?I0 (subspace_topology top1_unit_interval top1_unit_interval_topology ?I0) (\<lambda>s. s * t0)"
-        sorry \<comment> \<open>Affine map continuous (continuous_intros + codomain_shrink).\<close>
+      proof -
+        have hcont_R: "continuous_on UNIV (\<lambda>s::real. s * t0)" by (intro continuous_intros)
+        have hcont_R2: "top1_continuous_map_on (UNIV::real set) top1_open_sets
+            (UNIV::real set) top1_open_sets (\<lambda>s. s * t0)"
+          using top1_continuous_map_on_real_subspace_open_sets[of UNIV "\<lambda>s. s*t0" UNIV, OF _ hcont_R]
+          unfolding subspace_topology_UNIV_self by (by100 auto)
+        from top1_continuous_map_on_restrict_domain_simple[OF hcont_R2 subset_UNIV]
+        have "top1_continuous_map_on top1_unit_interval
+            (subspace_topology UNIV top1_open_sets top1_unit_interval) UNIV top1_open_sets (\<lambda>s. s*t0)" .
+        hence h1: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+            UNIV top1_open_sets (\<lambda>s. s*t0)"
+          unfolding top1_unit_interval_topology_def subspace_topology_UNIV_self by (by100 simp)
+        have himg_I: "(\<lambda>s::real. s * t0) ` top1_unit_interval \<subseteq> top1_unit_interval"
+          unfolding top1_unit_interval_def
+        proof (rule image_subsetI)
+          fix s :: real assume "s \<in> {0..1}"
+          hence "0 \<le> s" "s \<le> 1" by (by100 auto)+
+          have "0 \<le> s * t0" using \<open>0 \<le> s\<close> ht0_int(1) by (by100 simp)
+          moreover have "s * t0 \<le> 1"
+          proof -
+            have "s * t0 \<le> 1 * 1"
+              using mult_mono[of s 1 t0 1] \<open>0 \<le> s\<close> \<open>s \<le> 1\<close> ht0_int by (by100 linarith)
+            thus ?thesis by (by100 simp)
+          qed
+          ultimately show "s * t0 \<in> {0..1}" by (by100 simp)
+        qed
+        have hI_UNIV: "top1_unit_interval \<subseteq> (UNIV::real set)" by (by100 blast)
+        from top1_continuous_map_on_codomain_shrink[OF h1 himg_I hI_UNIV]
+        have "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+            top1_unit_interval (subspace_topology UNIV top1_open_sets top1_unit_interval) (\<lambda>s. s*t0)" .
+        hence h2: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+            top1_unit_interval top1_unit_interval_topology (\<lambda>s. s*t0)"
+          unfolding top1_unit_interval_topology_def by (by100 simp)
+        have himg_I0: "(\<lambda>s::real. s * t0) ` top1_unit_interval \<subseteq> ?I0"
+        proof
+          fix x assume "x \<in> (\<lambda>s. s * t0) ` top1_unit_interval"
+          then obtain s where hs: "s \<in> top1_unit_interval" "x = s * t0" by (by100 blast)
+          have "x \<in> top1_unit_interval" using hs himg_I by (by100 blast)
+          moreover have "x \<le> t0" using hs unfolding top1_unit_interval_def
+            using ht0_int(1) by (by100 auto)
+          ultimately show "x \<in> ?I0" by (by100 blast)
+        qed
+        show ?thesis
+          using top1_continuous_map_on_codomain_shrink[OF h2 himg_I0 hI0_sub]
+            subspace_topology_trans[OF hI0_sub] by (by100 simp)
+      qed
       \<comment> \<open>Bijective.\<close>
       have hscale_bij: "bij_betw (\<lambda>s. s * t0) top1_unit_interval ?I0"
         unfolding bij_betw_def
