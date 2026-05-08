@@ -3885,13 +3885,31 @@ proof -
   qed
   \<comment> \<open>WLOG: assume C-{a,b} \<subseteq> U0'. If C-{a,b} \<subseteq> U0 instead, swap U0 and U0'
      (they're symmetric as the two components of S2-(A\<union>B)).\<close>
-  have "C - {a, b} \<subseteq> U0'"
-    sorry \<comment> \<open>WLOG: from hC\_minus\_sub, C is in one component. We pick U0' to be that one.\<close>
+  \<comment> \<open>C-{a,b} is in U0 or U0'. The proof below uses "C-{a,b} \<subseteq> U0'".
+     If C-{a,b} \<subseteq> U0, swap: the final conclusion is symmetric in U0/U0'.\<close>
+  have "C - {a, b} \<subseteq> U0'" using hC_minus_sub sorry
   let ?Ubar = "U0 \<union> A \<union> B"
   have hUbar_conn: "top1_connected_on ?Ubar (subspace_topology top1_S2 top1_S2_topology ?Ubar)"
-    sorry \<comment> \<open>Ubar = closure(U0): closure\_of\_connected\_is\_connected.
-       Needs: Ubar \<subseteq> closure(U0), i.e., A\<union>B \<subseteq> closure(U0). True because A\<union>B is
-       the boundary of U0 in S2 (every neighborhood of a\<in>A\<union>B meets U0).\<close>
+  proof -
+    \<comment> \<open>Ubar = closure(U0). Use Theorem 23.4: U0 \<subseteq> Ubar \<subseteq> closure(U0), U0 connected \<Rightarrow> Ubar connected.\<close>
+    have hU0_sub_Ubar: "U0 \<subseteq> ?Ubar" by (by100 blast)
+    have hUbar_sub_closure: "?Ubar \<subseteq> closure_on top1_S2 top1_S2_topology U0"
+    proof -
+      \<comment> \<open>A\<union>B \<subseteq> closure(U0): by simple\_closed\_curve\_boundary\_meets\_component,
+         every neighborhood of a point on A\<union>B meets U0.\<close>
+      have "A \<union> B \<subseteq> closure_on top1_S2 top1_S2_topology U0"
+        sorry \<comment> \<open>Boundary of component \<subseteq> closure. Needs boundary\_meets\_component.\<close>
+      moreover have "U0 \<subseteq> closure_on top1_S2 top1_S2_topology U0"
+        by (rule subset_closure_on)
+      ultimately show ?thesis by (by100 blast)
+    qed
+    have hTopS2_here: "is_topology_on top1_S2 top1_S2_topology"
+      using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
+    have hU0_sub_S2: "U0 \<subseteq> top1_S2" using hU0(4) by (by100 blast)
+    have hUbar_sub_S2: "?Ubar \<subseteq> top1_S2" using assms(2,3) hU0_sub_S2 by (by100 force)
+    from Theorem_23_4[OF hTopS2_here hU0_sub_S2 hUbar_sub_S2 hU0_sub_Ubar hUbar_sub_closure hU0(5)]
+    show ?thesis .
+  qed
   have hUbar_eq: "?Ubar = top1_S2 - U0'"
     using hU0(3,4) assms(2,3) by (by100 blast)
   have hU0'_open: "U0' \<in> top1_S2_topology" by (rule hU0'_open_pre)
