@@ -433,6 +433,89 @@ proof -
   qed
 qed
 
+\<comment> \<open>Reusable: restricting a homeomorphism to a subset gives a homeomorphism on the image.\<close>
+lemma homeomorphism_on_restrict:
+  assumes hh: "top1_homeomorphism_on A TA B TB h"
+      and hSA: "S \<subseteq> A"
+  shows "top1_homeomorphism_on S (subspace_topology A TA S)
+      (h ` S) (subspace_topology B TB (h ` S)) h"
+proof -
+  have hTA: "is_topology_on A TA" using hh unfolding top1_homeomorphism_on_def by (by100 blast)
+  have hTB: "is_topology_on B TB" using hh unfolding top1_homeomorphism_on_def by (by100 blast)
+  have hbij: "bij_betw h A B" using hh unfolding top1_homeomorphism_on_def by (by100 blast)
+  have hinj: "inj_on h A" using hbij unfolding bij_betw_def by (by100 blast)
+  have himg: "h ` A = B" using hbij unfolding bij_betw_def by (by100 blast)
+  have hh_cont: "top1_continuous_map_on A TA B TB h"
+    using hh unfolding top1_homeomorphism_on_def by (by100 blast)
+  have hhinv: "top1_continuous_map_on B TB A TA (inv_into A h)"
+    using hh unfolding top1_homeomorphism_on_def by (by100 blast)
+  have hTS: "is_topology_on S (subspace_topology A TA S)"
+    by (rule subspace_topology_is_topology_on[OF hTA hSA])
+  have hhS_sub: "h ` S \<subseteq> B" using hSA himg by (by100 blast)
+  have hThS: "is_topology_on (h ` S) (subspace_topology B TB (h ` S))"
+    by (rule subspace_topology_is_topology_on[OF hTB hhS_sub])
+  show ?thesis unfolding top1_homeomorphism_on_def
+  proof (intro conjI)
+    show "is_topology_on S (subspace_topology A TA S)" by (rule hTS)
+    show "is_topology_on (h ` S) (subspace_topology B TB (h ` S))" by (rule hThS)
+    show "bij_betw h S (h ` S)"
+      unfolding bij_betw_def using inj_on_subset[OF hinj hSA] by (by100 blast)
+    show "top1_continuous_map_on S (subspace_topology A TA S)
+        (h ` S) (subspace_topology B TB (h ` S)) h"
+    proof -
+      from top1_continuous_map_on_restrict_domain_simple[OF hh_cont hSA]
+      have h1: "top1_continuous_map_on S (subspace_topology A TA S) B TB h"
+        using subspace_topology_trans[OF hSA] by (by100 simp)
+      show ?thesis
+        using top1_continuous_map_on_codomain_shrink[OF h1 _ hhS_sub]
+          subspace_topology_trans[OF hhS_sub] by (by100 simp)
+    qed
+    show "top1_continuous_map_on (h ` S) (subspace_topology B TB (h ` S))
+        S (subspace_topology A TA S) (inv_into S h)"
+    proof -
+      \<comment> \<open>inv_into S h agrees with inv_into A h on h(S).\<close>
+      have hagree: "\<forall>y\<in>h ` S. inv_into S h y = inv_into A h y"
+      proof
+        fix y assume "y \<in> h ` S"
+        then obtain s where hs: "s \<in> S" "y = h s" by (by100 blast)
+        have "inv_into S h y = s"
+          using inv_into_f_f[OF inj_on_subset[OF hinj hSA] hs(1)] hs(2) by (by100 simp)
+        moreover have "inv_into A h y = s"
+          using inv_into_f_f[OF hinj] hSA hs by (by100 blast)
+        ultimately show "inv_into S h y = inv_into A h y" by (by100 simp)
+      qed
+      \<comment> \<open>inv_into A h: B \<rightarrow> A continuous. Restrict to h(S) \<rightarrow> S.\<close>
+      from top1_continuous_map_on_restrict_domain_simple[OF hhinv hhS_sub]
+      have h1: "top1_continuous_map_on (h ` S) (subspace_topology B TB (h ` S)) A TA (inv_into A h)"
+        using subspace_topology_trans[OF hhS_sub] by (by100 simp)
+      have hinv_img: "(inv_into A h) ` (h ` S) \<subseteq> S"
+      proof
+        fix x assume "x \<in> (inv_into A h) ` (h ` S)"
+        then obtain y s where "s \<in> S" "y = h s" "x = inv_into A h y" by (by100 blast)
+        hence "x = s" using inv_into_f_f[OF hinj] hSA by (by100 blast)
+        thus "x \<in> S" using \<open>s \<in> S\<close> by (by100 simp)
+      qed
+      from top1_continuous_map_on_codomain_shrink[OF h1 hinv_img hSA]
+      have h2: "top1_continuous_map_on (h ` S) (subspace_topology B TB (h ` S))
+          S (subspace_topology A TA S) (inv_into A h)"
+        using subspace_topology_trans[OF hSA] by (by100 simp)
+      \<comment> \<open>Transfer from inv_into A h to inv_into S h via agree.\<close>
+      show ?thesis unfolding top1_continuous_map_on_def
+      proof (intro conjI ballI)
+        fix y assume hy: "y \<in> h ` S"
+        show "inv_into S h y \<in> S" by (rule inv_into_into[OF hy])
+      next
+        fix V assume "V \<in> subspace_topology A TA S"
+        have "{y \<in> h ` S. inv_into S h y \<in> V} = {y \<in> h ` S. inv_into A h y \<in> V}"
+          using hagree by (by100 force)
+        also have "\<dots> \<in> subspace_topology B TB (h ` S)"
+          using h2 \<open>V \<in> _\<close> unfolding top1_continuous_map_on_def by (by100 blast)
+        finally show "{y \<in> h ` S. inv_into S h y \<in> V} \<in> subspace_topology B TB (h ` S)" .
+      qed
+    qed
+  qed
+qed
+
 \<comment> \<open>Reusable: t \<mapsto> 1-t is a self-homeomorphism of [0,1] (standalone version).\<close>
 lemma unit_interval_reversal_homeomorphism:
   "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
@@ -1378,7 +1461,10 @@ proof -
     have hh_restr_homeo: "top1_homeomorphism_on ?I0
         (subspace_topology top1_unit_interval top1_unit_interval_topology ?I0)
         D1 (subspace_topology X TX D1) h"
-      sorry \<comment> \<open>Restrict homeomorphism h to closed [0,t0] \<subseteq> [0,1].\<close>
+    proof -
+      have hI0_sub: "?I0 \<subseteq> top1_unit_interval" by (by100 blast)
+      show ?thesis sorry \<comment> \<open>Uses homeomorphism_on_restrict + subspace_topology_trans. Type coercion issue.\<close>
+    qed
     \<comment> \<open>Affine map s \<mapsto> s*t0: [0,1] \<rightarrow> [0,t0] is a homeomorphism.\<close>
     have hscale_homeo: "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
         ?I0 (subspace_topology top1_unit_interval top1_unit_interval_topology ?I0) (\<lambda>s. s * t0)"
@@ -1511,7 +1597,11 @@ proof -
     have hh_restr_homeo: "top1_homeomorphism_on ?I1
         (subspace_topology top1_unit_interval top1_unit_interval_topology ?I1)
         D2 (subspace_topology X TX D2) h"
-      sorry \<comment> \<open>Restrict homeomorphism h to closed [t0,1] \<subseteq> [0,1].\<close>
+    proof -
+      have hI1_sub: "?I1 \<subseteq> top1_unit_interval" by (by100 blast)
+      let ?TD = "subspace_topology X TX D"
+      show ?thesis sorry \<comment> \<open>Uses homeomorphism_on_restrict + subspace_topology_trans. Type coercion issue.\<close>
+    qed
     have hscale_homeo: "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
         ?I1 (subspace_topology top1_unit_interval top1_unit_interval_topology ?I1) (\<lambda>s. t0 + s * (1 - t0))"
       sorry \<comment> \<open>Affine bijection [0,1] \<rightarrow> [t0,1].\<close>
