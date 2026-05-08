@@ -3580,9 +3580,33 @@ proof -
   have hC_no_sep: "\<not> top1_separates_on top1_S2 top1_S2_topology C"
     by (rule Theorem_63_2_arc_no_separation[OF assms(1) assms(4) assms(7)])
   have hUbar_C_inter: "?Ubar \<inter> C = {a, b}"
-    sorry \<comment> \<open>C meets U0\<union>A\<union>B only at A\<inter>C \<union> B\<inter>C = {a,b} (since C-{a,b} \<subseteq> U0').\<close>
+  proof (rule set_eqI, rule iffI)
+    fix x assume "x \<in> ?Ubar \<inter> C"
+    hence hxU: "x \<in> U0 \<or> x \<in> A \<or> x \<in> B" and hxC: "x \<in> C" by (by100 blast)+
+    show "x \<in> {a, b}"
+    proof (cases "x \<in> A")
+      case True thus ?thesis using hxC assms(11) by (by100 blast)
+    next case False show ?thesis
+      proof (cases "x \<in> B")
+        case True thus ?thesis using hxC assms(10) by (by100 blast)
+      next
+        case False
+        hence "x \<in> U0" using hxU \<open>x \<notin> A\<close> by (by100 blast)
+        hence "x \<notin> U0'" using hU0(3) by (by100 blast)
+        moreover have "x \<in> C - {a, b} \<or> x \<in> {a, b}" using hxC by (by100 blast)
+        moreover { assume "x \<in> C - {a, b}"
+          hence "x \<in> U0'" using \<open>C - {a, b} \<subseteq> U0'\<close> by (by100 blast) }
+        ultimately show ?thesis by (by100 blast)
+      qed
+    qed
+  next
+    fix x assume "x \<in> {a, b}"
+    have "a \<in> A" "b \<in> A" using assms(12) unfolding top1_arc_endpoints_on_def by (by100 blast)+
+    have "a \<in> C" "b \<in> C" using assms(14) unfolding top1_arc_endpoints_on_def by (by100 blast)+
+    thus "x \<in> ?Ubar \<inter> C" using \<open>x \<in> {a, b}\<close> \<open>a \<in> A\<close> \<open>b \<in> A\<close> by (by100 blast)
+  qed
   have hUbar_C_card: "card (?Ubar \<inter> C) = 2"
-    sorry \<comment> \<open>From hUbar\_C\_inter and a \<noteq> b. Needs card {a,b} = 2.\<close>
+    using hUbar_C_inter assms(8) by (by100 simp)
   \<comment> \<open>Theorem 63.5: Ubar \<union> C separates S2 into 2 components V0, W0.\<close>
   obtain V0 W0 where hVW: "V0 \<noteq> {}" "W0 \<noteq> {}" "V0 \<inter> W0 = {}"
       "V0 \<union> W0 = top1_S2 - (?Ubar \<union> C)"
