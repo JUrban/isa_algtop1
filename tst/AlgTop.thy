@@ -3677,9 +3677,71 @@ proof -
   \<comment> \<open>U0 = path\_component(x0) in S2-(A\<union>B). Then U0 open by path\_component\_open\_if\_lpc.\<close>
   have hU0_eq_path_comp: "U0 = top1_path_component_of_on (top1_S2 - (A \<union> B))
       (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (A \<union> B))) x0"
-    sorry \<comment> \<open>U0 path connected (connected in lpc), x0 \<in> U0. path\_comp(x0) can't exceed U0
-       because if it met U0', then U0\<union>U0' = W would be path connected hence connected,
-       contradicting hAB\_sep.\<close>
+  proof -
+    let ?W = "top1_S2 - (A \<union> B)" and ?TW = "subspace_topology top1_S2 top1_S2_topology (top1_S2 - (A \<union> B))"
+    \<comment> \<open>U0 path connected: connected + locally path connected open subspace.\<close>
+    have hU0_sub_W: "U0 \<subseteq> ?W" using hU0(4) by (by100 blast)
+    have hU0_conn_W: "top1_connected_on U0 (subspace_topology ?W ?TW U0)"
+    proof -
+      have "subspace_topology top1_S2 top1_S2_topology U0 = subspace_topology ?W ?TW U0"
+        using subspace_topology_trans[of U0 ?W top1_S2 top1_S2_topology] hU0_sub_W by (by100 simp)
+      thus ?thesis using hU0(5) by (by100 simp)
+    qed
+    \<comment> \<open>By Theorem 25.5: in lpc space, path\_comp = connected\_comp.\<close>
+    have hThm255: "top1_path_component_of_on ?W ?TW x0 = top1_component_of_on ?W ?TW x0"
+    proof -
+      from conjunct2[OF Theorem_25_5[OF hTopAB_early]]
+      have "top1_locally_path_connected_on ?W ?TW \<longrightarrow>
+          (\<forall>x \<in> ?W. top1_path_component_of_on ?W ?TW x = top1_component_of_on ?W ?TW x)" .
+      thus ?thesis using hAB_lpc hx0_AB by (by100 blast)
+    qed
+    \<comment> \<open>U0 \<subseteq> comp(x0) (U0 connected, x0 \<in> U0).\<close>
+    have "U0 \<subseteq> top1_component_of_on ?W ?TW x0"
+      by (rule top1_connected_subspace_subset_component_of[OF hU0_sub_W hx0 hU0_conn_W])
+    \<comment> \<open>comp(x0) \<subseteq> U0: comp connected, comp \<subseteq> W = U0\<union>U0', comp \<inter> U0 \<ni> x0.
+       If comp met U0', comp \<supseteq> U0\<union>U0' = W (by maximality), W connected, contradiction.\<close>
+    moreover have "top1_component_of_on ?W ?TW x0 \<subseteq> U0"
+    proof (rule ccontr)
+      assume "\<not> top1_component_of_on ?W ?TW x0 \<subseteq> U0"
+      then obtain y where hy: "y \<in> top1_component_of_on ?W ?TW x0" "y \<notin> U0" by (by100 blast)
+      have "top1_component_of_on ?W ?TW x0 \<subseteq> ?W" by (rule top1_component_of_on_subset)
+      have "y \<in> ?W" using hy(1) \<open>top1_component_of_on ?W ?TW x0 \<subseteq> ?W\<close> by (by100 blast)
+      hence "y \<in> U0'" using hy(2) hU0(4) by (by100 blast)
+      \<comment> \<open>U0' connected, y \<in> U0'. So U0' \<subseteq> comp(y) = comp(x0).\<close>
+      have hU0'_sub_W: "U0' \<subseteq> ?W" using hU0(4) by (by100 blast)
+      have hU0'_conn_W: "top1_connected_on U0' (subspace_topology ?W ?TW U0')"
+      proof -
+        have "subspace_topology top1_S2 top1_S2_topology U0' = subspace_topology ?W ?TW U0'"
+          using subspace_topology_trans[of U0' ?W top1_S2 top1_S2_topology] hU0'_sub_W by (by100 simp)
+        thus ?thesis using hU0(6) by (by100 simp)
+      qed
+      have "U0' \<subseteq> top1_component_of_on ?W ?TW y"
+        by (rule top1_connected_subspace_subset_component_of[OF hU0'_sub_W \<open>y \<in> U0'\<close> hU0'_conn_W])
+      have "top1_component_of_on ?W ?TW y = top1_component_of_on ?W ?TW x0"
+        by (rule top1_component_of_on_eq_of_mem[OF hTopAB_early hy(1)])
+      hence "U0' \<subseteq> top1_component_of_on ?W ?TW x0"
+        using \<open>U0' \<subseteq> top1_component_of_on ?W ?TW y\<close> by (by100 simp)
+      \<comment> \<open>Now comp(x0) \<supseteq> U0 \<union> U0' = W. But comp(x0) \<subseteq> W. So comp(x0) = W.\<close>
+      hence "?W \<subseteq> top1_component_of_on ?W ?TW x0"
+        using \<open>U0 \<subseteq> top1_component_of_on ?W ?TW x0\<close> hU0(4) by (by100 blast)
+      have hcomp_sub_W: "top1_component_of_on ?W ?TW x0 \<subseteq> ?W"
+        by (rule top1_component_of_on_subset)
+      hence "top1_component_of_on ?W ?TW x0 = ?W"
+        using \<open>?W \<subseteq> top1_component_of_on ?W ?TW x0\<close> by (by100 blast)
+      \<comment> \<open>Then W = comp(x0) is connected. But hAB\_sep says W not connected.\<close>
+      have "top1_connected_on (top1_component_of_on ?W ?TW x0) (subspace_topology ?W ?TW (top1_component_of_on ?W ?TW x0))"
+        by (rule top1_component_of_on_connected[OF hTopAB_early hx0_AB])
+      hence "top1_connected_on ?W (subspace_topology ?W ?TW ?W)"
+        using \<open>top1_component_of_on ?W ?TW x0 = ?W\<close> by (by100 force)
+      moreover have "subspace_topology ?W ?TW ?W = ?TW"
+      proof (rule subspace_topology_self)
+        show "\<forall>U \<in> ?TW. U \<subseteq> ?W" unfolding subspace_topology_def by (by100 blast)
+      qed
+      ultimately have "top1_connected_on ?W ?TW" by (by100 simp)
+      thus False using hAB_sep unfolding top1_separates_on_def by (by100 simp)
+    qed
+    ultimately show ?thesis using hThm255 by (by100 blast)
+  qed
   \<comment> \<open>U0 open: U0 = path\_component(x0), which is open by path\_component\_open\_if\_lpc.\<close>
   have hU0_open: "U0 \<in> top1_S2_topology"
   proof -
