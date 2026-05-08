@@ -4517,8 +4517,59 @@ proof -
     qed
     thus False using hA_minus_b_conn by (by100 blast)
   qed
+  have hA_minus_a_conn: "top1_connected_on (A - {a}) (subspace_topology X TX (A - {a}))"
+    sorry \<comment> \<open>Arc minus one endpoint connected (symmetric to A-{b}).\<close>
   show "b \<in> closure_on X TX (A - {a, b})"
-    sorry \<comment> \<open>Symmetric argument with A-{a} connected.\<close>
+  proof (rule ccontr)
+    assume "b \<notin> closure_on X TX (A - {a, b})"
+    have hb_in_X: "b \<in> X" using hb_in_A assms(3) by (by100 blast)
+    hence "\<not> (\<forall>U. neighborhood_of b X TX U \<longrightarrow> intersects U (A - {a, b}))"
+      using iffD2[OF Theorem_17_5a[OF hTopX hb_in_X hA_minus_sub]]
+          \<open>b \<notin> closure_on X TX (A - {a, b})\<close> by (by100 blast)
+    hence "\<exists>U. neighborhood_of b X TX U \<and> \<not> intersects U (A - {a, b})" by (by100 blast)
+    then obtain Ub where hUb: "Ub \<in> TX" "b \<in> Ub" "Ub \<inter> (A - {a, b}) = {}"
+      unfolding neighborhood_of_def intersects_def by (by100 blast)
+    have hAa_Ub: "(A - {a}) \<inter> Ub \<subseteq> {b}"
+    proof
+      fix x assume "x \<in> (A - {a}) \<inter> Ub"
+      hence "x \<in> A" "x \<noteq> a" "x \<in> Ub" by (by100 blast)+
+      show "x \<in> {b}" proof (rule ccontr)
+        assume "x \<notin> {b}" hence "x \<noteq> b" by (by100 blast)
+        hence "x \<in> A - {a, b}" using \<open>x \<in> A\<close> \<open>x \<noteq> a\<close> by (by100 blast)
+        thus False using hUb(3) \<open>x \<in> Ub\<close> by (by100 blast)
+      qed
+    qed
+    moreover have "b \<in> (A - {a}) \<inter> Ub" using hb_in_A assms(6) hUb(2) by (by100 blast)
+    ultimately have hAa_Ub_eq: "(A - {a}) \<inter> Ub = {b}" by (by100 blast)
+    have hAa_sub_X: "A - {a} \<subseteq> X" using assms(3) by (by100 blast)
+    have hTAa: "is_topology_on (A - {a}) (subspace_topology X TX (A - {a}))"
+      by (rule subspace_topology_is_topology_on[OF hTopX hAa_sub_X])
+    have hb_open: "{b} \<in> subspace_topology X TX (A - {a})"
+    proof -
+      have "(A - {a}) \<inter> Ub = {b}" by (rule hAa_Ub_eq)
+      thus ?thesis unfolding subspace_topology_def using hUb(1) by (by100 blast)
+    qed
+    have hb_closed: "closedin_on (A - {a}) (subspace_topology X TX (A - {a})) {b}"
+    proof -
+      have "is_hausdorff_on (A - {a}) (subspace_topology X TX (A - {a}))"
+        using conjunct2[OF conjunct2[OF Theorem_17_11]] assms(2) hAa_sub_X by (by100 blast)
+      moreover have "b \<in> A - {a}" using hb_in_A assms(6) by (by100 blast)
+      ultimately show ?thesis by (rule singleton_closed_in_hausdorff)
+    qed
+    have "(A - {a}) - {b} \<in> subspace_topology X TX (A - {a})"
+      using hb_closed unfolding closedin_on_def by (by100 blast)
+    have "top1_is_separation_on (A - {a}) (subspace_topology X TX (A - {a})) {b} ((A - {a}) - {b})"
+      unfolding top1_is_separation_on_def
+      using hb_open \<open>(A - {a}) - {b} \<in> _\<close> hb_in_A assms(6) hA_minus_ne by (by100 blast)
+    hence hsep: "top1_is_separation_on (A - {a}) (subspace_topology X TX (A - {a})) {b} ((A - {a}) - {b})" .
+    from Lemma_23_1[of "A - {a}" "subspace_topology X TX (A - {a})"]
+    have "top1_connected_on (A - {a}) (subspace_topology X TX (A - {a})) \<longrightarrow>
+        (\<nexists>U' V'. top1_is_separation_on (A - {a}) (subspace_topology X TX (A - {a})) U' V')"
+      by (by100 blast)
+    hence "\<not> top1_connected_on (A - {a}) (subspace_topology X TX (A - {a}))"
+      using hsep by (by100 blast)
+    thus False using hA_minus_a_conn by (by100 blast)
+  qed
 qed
 
 text \<open>Lemma 64.3: K4 in S2 separates into four components.\<close>
