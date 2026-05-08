@@ -3553,12 +3553,30 @@ proof -
   let ?Ubar = "U0 \<union> A \<union> B"
   have hUbar_conn: "top1_connected_on ?Ubar (subspace_topology top1_S2 top1_S2_topology ?Ubar)"
     sorry \<comment> \<open>Closure of connected set in normal space is connected.\<close>
+  have hUbar_eq: "?Ubar = top1_S2 - U0'"
+    using hU0(3,4) assms(2,3) by (by100 blast)
+  have hU0'_open: "U0' \<in> top1_S2_topology"
+    sorry \<comment> \<open>U0' is open in S2 (component of open set S2-(A\<union>B) is open).\<close>
+  have hU0'_sub: "U0' \<subseteq> top1_S2" using hU0(4) by (by100 blast)
+  have hUbar_sub: "?Ubar \<subseteq> top1_S2" using assms(2,3) hU0(4) by (by100 force)
+  have hUbar_compl: "top1_S2 - ?Ubar = U0'" using hUbar_eq hU0'_sub by (by100 force)
   have hUbar_closed: "closedin_on top1_S2 top1_S2_topology ?Ubar"
-    sorry \<comment> \<open>U0 \<union> A \<union> B = closure(U0) = S2 - U0', and U0' is open.\<close>
+    unfolding closedin_on_def
+    using hUbar_sub hUbar_compl hU0'_open by (by100 force)
   have hC_closed: "closedin_on top1_S2 top1_S2_topology C"
     by (rule arc_in_S2_closed[OF assms(4) assms(7)])
   have hUbar_no_sep: "\<not> top1_separates_on top1_S2 top1_S2_topology ?Ubar"
-    sorry \<comment> \<open>Complement is U0', which is connected.\<close>
+    unfolding top1_separates_on_def
+  proof -
+    have "top1_S2 - ?Ubar = U0'"
+    proof -
+      have "U0' \<subseteq> top1_S2" using hU0(4) by (by100 blast)
+      thus ?thesis using hUbar_eq by (by100 force)
+    qed
+    thus "\<not> \<not> top1_connected_on (top1_S2 - ?Ubar)
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - ?Ubar))"
+      using hU0(6) by (by100 simp)
+  qed
   have hC_no_sep: "\<not> top1_separates_on top1_S2 top1_S2_topology C"
     by (rule Theorem_63_2_arc_no_separation[OF assms(1) assms(4) assms(7)])
   have hUbar_C_inter: "?Ubar \<inter> C = {a, b}"
