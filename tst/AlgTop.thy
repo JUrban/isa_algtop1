@@ -7814,10 +7814,78 @@ proof -
     ultimately show ?thesis by (by100 blast)
   qed
   \<comment> \<open>By Lemma 23.2, each lies in A or B.\<close>
+  \<comment> \<open>Lemma\_23\_2: A, B open in A\<union>B = S2-D. e12-{a1,a2} connected \<subseteq> A\<union>B.\<close>
+  have hAB_sub_X: "A \<union> B \<subseteq> ?X"
+  proof -
+    have "A \<union> B = ?U' \<inter> ?V'" by (rule hAB(1)[symmetric])
+    thus ?thesis using hU'_sub_X hV'_sub_X by (by100 blast)
+  qed
+  have hTAB_loc: "is_topology_on (A \<union> B) (subspace_topology ?X ?TX (A \<union> B))"
+    by (rule subspace_topology_is_topology_on[OF hTX hAB_sub_X])
+  \<comment> \<open>A, B open in subspace of A\<union>B. Use: A \<in> TX + A \<subseteq> A\<union>B \<Rightarrow> A \<in> subspace X TX (A\<union>B).\<close>
+  have hA_open_AB: "A \<in> subspace_topology ?X ?TX (A \<union> B)"
+  proof -
+    from hAB(3) have "A \<in> ?TX" unfolding openin_on_def by (by100 blast)
+    moreover have "A \<subseteq> A \<union> B" by (by100 blast)
+    ultimately show ?thesis sorry \<comment> \<open>A \<in> TX, A \<subseteq> A\<union>B \<Rightarrow> A \<in> subspace TX (A\<union>B). by100 too tight.\<close>
+  qed
+  have hB_open_AB: "B \<in> subspace_topology ?X ?TX (A \<union> B)"
+  proof -
+    from hAB(4) have "B \<in> ?TX" unfolding openin_on_def by (by100 blast)
+    moreover have "B \<subseteq> A \<union> B" by (by100 blast)
+    ultimately show ?thesis sorry
+  qed
+  have hAB_sep: "top1_is_separation_on (A \<union> B) (subspace_topology ?X ?TX (A \<union> B)) A B"
+    unfolding top1_is_separation_on_def
+    using hA_open_AB hB_open_AB hAB(2,5,6) by (by100 blast)
   have he12_AB: "e12 - {a1, a2} \<subseteq> A \<or> e12 - {a1, a2} \<subseteq> B"
-    sorry \<comment> \<open>Lemma\_23\_2: connected subset of separation lies in one component.\<close>
+  proof -
+    have he12_sub_AB: "e12 - {a1, a2} \<subseteq> A \<union> B" using he12_in_comp hAB(1) hUV_eq by (by100 blast)
+    have he12_conn_AB: "top1_connected_on (e12 - {a1, a2})
+        (subspace_topology (A \<union> B) (subspace_topology ?X ?TX (A \<union> B)) (e12 - {a1, a2}))"
+    proof -
+      have "subspace_topology top1_S2 top1_S2_topology (e12 - {a1, a2}) =
+          subspace_topology (A \<union> B) (subspace_topology ?X ?TX (A \<union> B)) (e12 - {a1, a2})"
+      proof -
+        have he12_sub_X: "e12 - {a1, a2} \<subseteq> ?X" using he12_sub_AB hAB_sub_X by (by100 blast)
+        have "subspace_topology top1_S2 top1_S2_topology (e12 - {a1, a2}) =
+            subspace_topology ?X ?TX (e12 - {a1, a2})"
+          using subspace_topology_trans[of "e12 - {a1, a2}" ?X top1_S2 top1_S2_topology]
+              he12_sub_X by (by100 simp)
+        also have "\<dots> = subspace_topology (A \<union> B) (subspace_topology ?X ?TX (A \<union> B)) (e12 - {a1, a2})"
+          using subspace_topology_trans[of "e12 - {a1, a2}" "A \<union> B" ?X ?TX]
+              he12_sub_AB by (by100 simp)
+        finally show ?thesis .
+      qed
+      thus ?thesis using he12_conn by (by100 simp)
+    qed
+    from Lemma_23_2[OF hTAB_loc hAB_sep he12_sub_AB he12_conn_AB]
+    show ?thesis by (by100 blast)
+  qed
   have he34_AB: "e34 - {a3, a4} \<subseteq> A \<or> e34 - {a3, a4} \<subseteq> B"
-    sorry \<comment> \<open>Same.\<close>
+  proof -
+    have he34_sub_AB: "e34 - {a3, a4} \<subseteq> A \<union> B" using he34_in_comp hAB(1) hUV_eq by (by100 blast)
+    have he34_conn_AB: "top1_connected_on (e34 - {a3, a4})
+        (subspace_topology (A \<union> B) (subspace_topology ?X ?TX (A \<union> B)) (e34 - {a3, a4}))"
+    proof -
+      have "subspace_topology top1_S2 top1_S2_topology (e34 - {a3, a4}) =
+          subspace_topology (A \<union> B) (subspace_topology ?X ?TX (A \<union> B)) (e34 - {a3, a4})"
+      proof -
+        have he34_sub_X: "e34 - {a3, a4} \<subseteq> ?X" using he34_sub_AB hAB_sub_X by (by100 blast)
+        have "subspace_topology top1_S2 top1_S2_topology (e34 - {a3, a4}) =
+            subspace_topology ?X ?TX (e34 - {a3, a4})"
+          using subspace_topology_trans[of "e34 - {a3, a4}" ?X top1_S2 top1_S2_topology]
+              he34_sub_X by (by100 simp)
+        also have "\<dots> = subspace_topology (A \<union> B) (subspace_topology ?X ?TX (A \<union> B)) (e34 - {a3, a4})"
+          using subspace_topology_trans[of "e34 - {a3, a4}" "A \<union> B" ?X ?TX]
+              he34_sub_AB by (by100 simp)
+        finally show ?thesis .
+      qed
+      thus ?thesis using he34_conn by (by100 simp)
+    qed
+    from Lemma_23_2[OF hTAB_loc hAB_sep he34_sub_AB he34_conn_AB]
+    show ?thesis by (by100 blast)
+  qed
   \<comment> \<open>They are in different components. (WLOG swap A,B if needed.)\<close>
   obtain x y where hx: "x \<in> A" "x \<in> e12 - {a1, a2}" and hy: "y \<in> B" "y \<in> e34 - {a3, a4}"
     sorry \<comment> \<open>From he12\_AB, he34\_AB + they must be in different components.\<close>
