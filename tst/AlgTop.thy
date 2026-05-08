@@ -3565,7 +3565,42 @@ proof -
   have hUbar_eq: "?Ubar = top1_S2 - U0'"
     using hU0(3,4) assms(2,3) by (by100 blast)
   have hU0'_open: "U0' \<in> top1_S2_topology"
-    sorry \<comment> \<open>U0' is open in S2 (component of open set S2-(A\<union>B) is open).\<close>
+  proof -
+    have hTopS2: "is_topology_on top1_S2 top1_S2_topology"
+      using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
+    \<comment> \<open>S2-(A\<union>B) is open in S2.\<close>
+    have hAB_open: "top1_S2 - (A \<union> B) \<in> top1_S2_topology"
+    proof -
+      have "closedin_on top1_S2 top1_S2_topology (A \<union> B)"
+        by (rule closedin_on_Un[OF hTopS2 hA_closed hB_closed])
+      thus ?thesis unfolding closedin_on_def by (by100 blast)
+    qed
+    \<comment> \<open>S2 locally path connected \<Rightarrow> path components of open S2-(A\<union>B) are open.\<close>
+    have hS2_lpc: "top1_locally_path_connected_on top1_S2 top1_S2_topology"
+      by (rule S2_locally_path_connected)
+    \<comment> \<open>U0' is connected and contained in S2-(A\<union>B). In a locally path connected space,
+       connected components of open sets are open (Theorem 25.4).\<close>
+    \<comment> \<open>U0' is a path component of S2-(A\<union>B) (connected in loc. path connected open = path connected).\<close>
+    \<comment> \<open>By Theorem 25.4: locally path connected \<Rightarrow> path components of opens are open.\<close>
+    have hThm254: "\<forall>U \<in> top1_S2_topology. U \<subseteq> top1_S2 \<longrightarrow>
+        (\<forall>P \<in> top1_path_components_on U (subspace_topology top1_S2 top1_S2_topology U). P \<in> top1_S2_topology)"
+      using iffD1[OF Theorem_25_4[OF hTopS2]] hS2_lpc by (by100 blast)
+    \<comment> \<open>U0' is a path component of S2-(A\<union>B). Need: U0' path connected in subspace,
+       which follows from connected + locally path connected.\<close>
+    have hAB_sub: "top1_S2 - (A \<union> B) \<subseteq> top1_S2" by (by100 blast)
+    \<comment> \<open>S2-(A\<union>B) is locally path connected (open subspace of loc. path connected).\<close>
+    have hAB_lpc: "top1_locally_path_connected_on (top1_S2 - (A \<union> B))
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (A \<union> B)))"
+      sorry \<comment> \<open>Open subspace of locally path connected is locally path connected.\<close>
+    \<comment> \<open>U0' connected + locally path connected \<Rightarrow> path connected.\<close>
+    have hU0'_pc: "top1_path_connected_on U0'
+        (subspace_topology top1_S2 top1_S2_topology U0')"
+      sorry \<comment> \<open>connected\_locally\_path\_connected\_imp\_path\_connected on U0' subspace.\<close>
+    have hU0'_path_comp: "U0' \<in> top1_path_components_on (top1_S2 - (A \<union> B))
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (A \<union> B)))"
+      sorry \<comment> \<open>U0' path connected + maximal (complement is U0 which is connected) \<Rightarrow> path component.\<close>
+    show ?thesis using hThm254 hAB_open hAB_sub hU0'_path_comp by (by100 blast)
+  qed
   have hU0'_sub: "U0' \<subseteq> top1_S2" using hU0(4) by (by100 blast)
   have hUbar_sub: "?Ubar \<subseteq> top1_S2" using assms(2,3) hU0(4) by (by100 force)
   have hUbar_compl: "top1_S2 - ?Ubar = U0'" using hUbar_eq hU0'_sub by (by100 force)
