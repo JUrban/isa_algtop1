@@ -711,7 +711,34 @@ proof -
   have hg_ident: "g 0 = g 1" using hg0 hg1 by (by100 simp)
   \<comment> \<open>g is continuous, injective on [0,1), surjective onto A1 \<union> A2.\<close>
   have hg_cont: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
-      X TX g" sorry
+      X TX g"
+  proof -
+    let ?A = "{t \<in> top1_unit_interval. t \<le> 1/2}" and ?B = "{t \<in> top1_unit_interval. t \<ge> 1/2}"
+    let ?f = "\<lambda>t. h1 (2*t)" and ?g2 = "\<lambda>t. h2 (2*t - 1)"
+    have hTI: "is_topology_on top1_unit_interval top1_unit_interval_topology"
+      by (rule top1_unit_interval_topology_is_topology_on)
+    have hTX: "is_topology_on X TX"
+      using hT unfolding is_topology_on_strict_def by (by100 blast)
+    \<comment> \<open>A, B are closed in [0,1] and [0,1] = A \<union> B.\<close>
+    have hA_closed: "closedin_on top1_unit_interval top1_unit_interval_topology ?A" sorry
+    have hB_closed: "closedin_on top1_unit_interval top1_unit_interval_topology ?B" sorry
+    have hAB_union: "?A \<union> ?B = top1_unit_interval"
+      unfolding top1_unit_interval_def by (by100 force)
+    \<comment> \<open>g range.\<close>
+    have hg_in_X: "\<forall>t \<in> top1_unit_interval. g t \<in> X"
+      sorry \<comment> \<open>g(t) \<in> A1\<union>A2 \<subseteq> X.\<close>
+    \<comment> \<open>g continuous on A (= h1 \<circ> (2*) restricted).\<close>
+    have hg_cont_A: "top1_continuous_map_on ?A
+        (subspace_topology top1_unit_interval top1_unit_interval_topology ?A) X TX g"
+      sorry \<comment> \<open>On A: g(t) = h1(2t). Composition of affine + h1 continuous.\<close>
+    \<comment> \<open>g continuous on B (= h2 \<circ> (2*-1) restricted).\<close>
+    have hg_cont_B: "top1_continuous_map_on ?B
+        (subspace_topology top1_unit_interval top1_unit_interval_topology ?B) X TX g"
+      sorry \<comment> \<open>On B: g(t) = h2(2t-1). Composition of affine + h2 continuous.\<close>
+    \<comment> \<open>Apply pasting\_lemma\_two\_closed.\<close>
+    from pasting_lemma_two_closed[OF hTI hTX hA_closed hB_closed hAB_union hg_in_X hg_cont_A hg_cont_B]
+    show ?thesis .
+  qed
   have hh1_img: "h1 ` top1_unit_interval = A1"
     using hh1(1) unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
   have hh2_img: "h2 ` top1_unit_interval = A2"
