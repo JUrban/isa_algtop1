@@ -3630,13 +3630,35 @@ proof -
     moreover have "card {a, b} = 2" using assms(8) by (by100 simp)
     ultimately show ?thesis by (by100 simp)
   qed
+  obtain U0_raw U0'_raw where hU0_raw: "U0_raw \<noteq> {}" "U0'_raw \<noteq> {}" "U0_raw \<inter> U0'_raw = {}"
+      "U0_raw \<union> U0'_raw = top1_S2 - (A \<union> B)"
+      "top1_connected_on U0_raw (subspace_topology top1_S2 top1_S2_topology U0_raw)"
+      "top1_connected_on U0'_raw (subspace_topology top1_S2 top1_S2_topology U0'_raw)"
+    using Theorem_63_5_two_closed_connected[OF assms(1) hA_closed hB_closed
+        hA_conn hB_conn hAB_card hA_no_sep hB_no_sep]
+    by (by100 force)
+  \<comment> \<open>C-{a,b} is in one of U0\_raw/U0'\_raw. Choose U0 to NOT contain C-{a,b}.\<close>
+  have hC_raw: "C - {a, b} \<subseteq> U0_raw \<or> C - {a, b} \<subseteq> U0'_raw"
+    sorry \<comment> \<open>Lemma\_23\_2 on raw components (same argument as hC\_minus\_sub below).\<close>
   obtain U0 U0' where hU0: "U0 \<noteq> {}" "U0' \<noteq> {}" "U0 \<inter> U0' = {}"
       "U0 \<union> U0' = top1_S2 - (A \<union> B)"
       "top1_connected_on U0 (subspace_topology top1_S2 top1_S2_topology U0)"
       "top1_connected_on U0' (subspace_topology top1_S2 top1_S2_topology U0')"
-    using Theorem_63_5_two_closed_connected[OF assms(1) hA_closed hB_closed
-        hA_conn hB_conn hAB_card hA_no_sep hB_no_sep]
-    by (by100 force)
+      and hC_in_U0': "C - {a, b} \<subseteq> U0'"
+  proof -
+    from hC_raw show ?thesis
+    proof
+      assume "C - {a, b} \<subseteq> U0_raw"
+      show ?thesis
+        by (rule that[of U0'_raw U0_raw])
+          (use hU0_raw \<open>C - {a, b} \<subseteq> U0_raw\<close> in \<open>by100 blast\<close>)+
+    next
+      assume "C - {a, b} \<subseteq> U0'_raw"
+      show ?thesis
+        by (rule that[of U0_raw U0'_raw])
+          (use hU0_raw \<open>C - {a, b} \<subseteq> U0'_raw\<close> in \<open>by100 blast\<close>)+
+    qed
+  qed
   \<comment> \<open>Step 2: C - {a,b} is connected (arc minus endpoints), lies in U0 or U0'.
      WLOG assume C - {a,b} \<subseteq> U0'. (Swap if needed.)\<close>
   have hC_minus: "C - {a, b} \<subseteq> top1_S2 - (A \<union> B)"
@@ -3866,7 +3888,7 @@ proof -
       (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (A \<union> B))) U0 U0'"
     unfolding top1_is_separation_on_def
     using hU0_in_sub hU0'_in_sub hU0(1,2,3,4) by (by100 blast)
-  have hC_minus_sub: "C - {a, b} \<subseteq> U0' \<or> C - {a, b} \<subseteq> U0"
+  have hC_minus_sub_unused: "C - {a, b} \<subseteq> U0' \<or> C - {a, b} \<subseteq> U0"
   proof -
     have hCm_sub_AB: "C - {a, b} \<subseteq> top1_S2 - (A \<union> B)" by (rule hC_minus)
     have hCm_conn_sub: "top1_connected_on (C - {a, b})
@@ -3883,11 +3905,7 @@ proof -
     from Lemma_23_2[OF hTopAB hAB_sep_proper hCm_sub_AB hCm_conn_sub]
     show ?thesis by (by100 blast)
   qed
-  \<comment> \<open>WLOG: assume C-{a,b} \<subseteq> U0'. If C-{a,b} \<subseteq> U0 instead, swap U0 and U0'
-     (they're symmetric as the two components of S2-(A\<union>B)).\<close>
-  \<comment> \<open>C-{a,b} is in U0 or U0'. The proof below uses "C-{a,b} \<subseteq> U0'".
-     If C-{a,b} \<subseteq> U0, swap: the final conclusion is symmetric in U0/U0'.\<close>
-  have "C - {a, b} \<subseteq> U0'" using hC_minus_sub sorry
+  have "C - {a, b} \<subseteq> U0'" by (rule hC_in_U0')
   let ?Ubar = "U0 \<union> A \<union> B"
   have hUbar_conn: "top1_connected_on ?Ubar (subspace_topology top1_S2 top1_S2_topology ?Ubar)"
   proof -
