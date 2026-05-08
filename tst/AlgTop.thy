@@ -4219,7 +4219,7 @@ proof -
     thus ?thesis unfolding closedin_on_def by (by100 blast)
   qed
   \<comment> \<open>V0, W0 open: same lpc argument as U0. Components of open S2-(?Ubar\<union>C).\<close>
-  have hV0_open: "V0 \<in> top1_S2_topology" sorry
+  have hV0_open: "V0 \<in> top1_S2_topology" sorry \<comment> \<open>S2\_two\_component\_open not in scope here.\<close>
   have hW0_open: "W0 \<in> top1_S2_topology" sorry
   \<comment> \<open>Step 4: S2 - (A \<union> B \<union> C) = U0 \<union> V0 \<union> W0.\<close>
   \<comment> \<open>U0 \<inter> C = {}: since U0 \<subseteq> S2-(A\<union>B) and C\<inter>(A\<union>B) \<subseteq> {a,b}, and C-{a,b} \<subseteq> U0'.\<close>
@@ -4346,6 +4346,58 @@ proof -
     ultimately show ?thesis by (by100 simp)
   qed
   ultimately show ?thesis by (by100 simp)
+qed
+
+text \<open>Helper: Two-component partition of open subset of S2 gives open components.\<close>
+
+lemma S2_two_component_open:
+  assumes "W \<in> top1_S2_topology" "W \<subseteq> top1_S2"
+      and "C1 \<noteq> {}" "C2 \<noteq> {}" "C1 \<inter> C2 = {}" "C1 \<union> C2 = W"
+      and "top1_connected_on C1 (subspace_topology top1_S2 top1_S2_topology C1)"
+      and "top1_connected_on C2 (subspace_topology top1_S2 top1_S2_topology C2)"
+      and "\<not> top1_connected_on W (subspace_topology top1_S2 top1_S2_topology W)"
+  shows "C1 \<in> top1_S2_topology" "C2 \<in> top1_S2_topology"
+proof -
+  have hC1_sub: "C1 \<subseteq> W" using assms(6) by (by100 blast)
+  have hC2_sub: "C2 \<subseteq> W" using assms(6) by (by100 blast)
+  \<comment> \<open>C1 is a connected component of W. Apply S2\_component\_of\_open\_subset\_is\_open.\<close>
+  show "C1 \<in> top1_S2_topology"
+  proof (rule S2_component_of_open_subset_is_open[OF assms(1,2) hC1_sub assms(3,7)])
+    \<comment> \<open>Maximality: any connected Q \<supseteq> C1 in W must equal C1.\<close>
+    fix Q assume hQ: "Q \<subseteq> W" "C1 \<subseteq> Q"
+        "top1_connected_on Q (subspace_topology top1_S2 top1_S2_topology Q)"
+    show "Q = C1"
+    proof (rule ccontr)
+      assume "Q \<noteq> C1"
+      then obtain y where "y \<in> Q" "y \<notin> C1" using hQ(2) by (by100 blast)
+      hence "y \<in> C2" using hQ(1) assms(6) by (by100 blast)
+      \<comment> \<open>Q connected, Q \<supseteq> C1, y \<in> Q \<inter> C2. So Q spans both C1 and C2.
+         Q \<supseteq> C1 and Q \<inter> C2 \<noteq> {}. Since Q connected and in W = C1\<union>C2,
+         and C2 connected: Q = C1\<union>C2 = W would be connected. Contradiction.\<close>
+      have "C2 \<subseteq> Q" sorry \<comment> \<open>C2 connected \<ni> y, Q connected, comp(y)=comp(x) in W.\<close>
+      hence "Q = W" using hQ(1,2) assms(5,6) by (by100 blast)
+      hence "top1_connected_on W (subspace_topology top1_S2 top1_S2_topology W)"
+        using hQ(3) sorry \<comment> \<open>Subspace topology self.\<close>
+      thus False using assms(9) by (by100 blast)
+    qed
+  qed
+  \<comment> \<open>Symmetric for C2.\<close>
+  show "C2 \<in> top1_S2_topology"
+  proof (rule S2_component_of_open_subset_is_open[OF assms(1,2) hC2_sub assms(4,8)])
+    fix Q assume hQ: "Q \<subseteq> W" "C2 \<subseteq> Q"
+        "top1_connected_on Q (subspace_topology top1_S2 top1_S2_topology Q)"
+    show "Q = C2"
+    proof (rule ccontr)
+      assume "Q \<noteq> C2"
+      then obtain y where "y \<in> Q" "y \<notin> C2" using hQ(2) by (by100 blast)
+      hence "y \<in> C1" using hQ(1) assms(6) by (by100 blast)
+      have "C1 \<subseteq> Q" sorry
+      hence "Q = W" using hQ(1,2) assms(5,6) by (by100 blast)
+      hence "top1_connected_on W (subspace_topology top1_S2 top1_S2_topology W)"
+        using hQ(3) sorry
+      thus False using assms(9) by (by100 blast)
+    qed
+  qed
 qed
 
 text \<open>Helper: Arc endpoint is in closure of arc minus endpoints.\<close>
@@ -4878,8 +4930,17 @@ proof -
         hA_conn hB_conn hAB_card hA_no_sep hB_no_sep]
     by (by100 force)
   \<comment> \<open>P1\_raw, P2\_raw are open (via S2\_component helper + maximality from Jordan).\<close>
-  have hP1r_open: "P1_raw \<in> top1_S2_topology" sorry \<comment> \<open>Same lpc argument as P1\_open.\<close>
-  have hP2r_open: "P2_raw \<in> top1_S2_topology" sorry
+  have hAB_closed_loc: "closedin_on top1_S2 top1_S2_topology (?A \<union> ?B)"
+    by (rule closedin_on_Un[OF hTopS2 hA_closed hB_closed])
+  have hAB_compl_open_loc: "top1_S2 - (?A \<union> ?B) \<in> top1_S2_topology"
+    using hAB_closed_loc unfolding closedin_on_def by (by100 blast)
+  have hAB_not_conn: "\<not> top1_connected_on (top1_S2 - (?A \<union> ?B))
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B)))"
+    using Theorem_61_3_JordanSeparation_S2[OF assms(1) hAB_scc]
+    unfolding top1_separates_on_def by (by100 blast)
+  have hP1r_open: "P1_raw \<in> top1_S2_topology" and hP2r_open: "P2_raw \<in> top1_S2_topology"
+    using S2_two_component_open[OF hAB_compl_open_loc _ hP_raw(1,2,3,4,5,6) hAB_not_conn]
+    by (by100 blast)+
   \<comment> \<open>With P1\_raw, P2\_raw open, form separation and apply Lemma\_23\_2.\<close>
   have hCm_in_raw: "?C - {a1, a3} \<subseteq> P1_raw \<or> ?C - {a1, a3} \<subseteq> P2_raw"
   proof -
@@ -5247,8 +5308,17 @@ proof -
         "R1' \<union> R2' = top1_S2 - (?B \<union> ?C)"
         "top1_connected_on R1' (subspace_topology top1_S2 top1_S2_topology R1')"
         "top1_connected_on R2' (subspace_topology top1_S2 top1_S2_topology R2')" by (by100 metis)
-    have hR1'_open: "R1' \<in> top1_S2_topology" sorry \<comment> \<open>Same lpc argument.\<close>
-    have hR2'_open: "R2' \<in> top1_S2_topology" sorry
+    have hBC_closed_loc: "closedin_on top1_S2 top1_S2_topology (?B \<union> ?C)"
+      by (rule closedin_on_Un[OF hTopS2 hB_closed hC_closed])
+    have hBC_compl_open_loc: "top1_S2 - (?B \<union> ?C) \<in> top1_S2_topology"
+      using hBC_closed_loc unfolding closedin_on_def by (by100 blast)
+    have hBC_not_conn: "\<not> top1_connected_on (top1_S2 - (?B \<union> ?C))
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?B \<union> ?C)))"
+      using Theorem_61_3_JordanSeparation_S2[OF assms(1) hBC_scc]
+      unfolding top1_separates_on_def by (by100 blast)
+    have hR1'_open: "R1' \<in> top1_S2_topology" and hR2'_open: "R2' \<in> top1_S2_topology"
+      using S2_two_component_open[OF hBC_compl_open_loc _ hR'(1,2,3,4,5,6) hBC_not_conn]
+      by (by100 blast)+
     have hTBC_loc: "is_topology_on (top1_S2 - (?B \<union> ?C))
         (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?B \<union> ?C)))"
       by (rule subspace_topology_is_topology_on[OF]) (use hTopS2 in \<open>by100 blast\<close>, by100 blast)
