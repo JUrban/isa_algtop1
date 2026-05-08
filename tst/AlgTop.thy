@@ -3529,7 +3529,7 @@ proof -
   have hUbar_closed: "closedin_on top1_S2 top1_S2_topology ?Ubar"
     sorry \<comment> \<open>U0 \<union> A \<union> B = closure(U0) = S2 - U0', and U0' is open.\<close>
   have hC_closed: "closedin_on top1_S2 top1_S2_topology C"
-    sorry \<comment> \<open>Arc is compact in Hausdorff, hence closed.\<close>
+    by (rule arc_in_S2_closed[OF assms(4) assms(7)])
   have hUbar_no_sep: "\<not> top1_separates_on top1_S2 top1_S2_topology ?Ubar"
     sorry \<comment> \<open>Complement is U0', which is connected.\<close>
   have hC_no_sep: "\<not> top1_separates_on top1_S2 top1_S2_topology C"
@@ -3537,7 +3537,7 @@ proof -
   have hUbar_C_inter: "?Ubar \<inter> C = {a, b}"
     sorry \<comment> \<open>C meets U0\<union>A\<union>B only at A\<inter>C \<union> B\<inter>C = {a,b} (since C-{a,b} \<subseteq> U0').\<close>
   have hUbar_C_card: "card (?Ubar \<inter> C) = 2"
-    sorry \<comment> \<open>From hUbar\_C\_inter and a \<noteq> b.\<close>
+    sorry \<comment> \<open>From hUbar\_C\_inter and a \<noteq> b. Needs card {a,b} = 2.\<close>
   \<comment> \<open>Theorem 63.5: Ubar \<union> C separates S2 into 2 components V0, W0.\<close>
   obtain V0 W0 where hVW: "V0 \<noteq> {}" "W0 \<noteq> {}" "V0 \<inter> W0 = {}"
       "V0 \<union> W0 = top1_S2 - (?Ubar \<union> C)"
