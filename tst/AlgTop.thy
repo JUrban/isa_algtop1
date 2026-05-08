@@ -3653,9 +3653,11 @@ proof -
   have hU0_open: "U0 \<in> top1_S2_topology" sorry
   have hU0'_open_pre: "U0' \<in> top1_S2_topology" sorry
   \<comment> \<open>Hence U0, U0' form a separation of S2-(A\<union>B).\<close>
+  have hTopS2_loc: "is_topology_on top1_S2 top1_S2_topology"
+    using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
   have hTopAB: "is_topology_on (top1_S2 - (A \<union> B))
       (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (A \<union> B)))"
-    sorry
+    by (rule subspace_topology_is_topology_on[OF hTopS2_loc]) (by100 blast)
   have hU0_in_sub: "U0 \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - (A \<union> B))"
   proof -
     have "U0 = (top1_S2 - (A \<union> B)) \<inter> U0" using hU0(4) by (by100 blast)
