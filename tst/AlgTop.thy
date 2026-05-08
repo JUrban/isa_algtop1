@@ -7915,7 +7915,68 @@ proof -
   qed
   \<comment> \<open>They are in different components. (WLOG swap A,B if needed.)\<close>
   obtain x y where hx: "x \<in> A" "x \<in> e12 - {a1, a2}" and hy: "y \<in> B" "y \<in> e34 - {a3, a4}"
-    sorry \<comment> \<open>From he12\_AB, he34\_AB + they must be in different components.\<close>
+  proof -
+    \<comment> \<open>Form theta space: Arc1 = e13\_a1p \<union> e13\_pa3 \<union> e23 (a1\<rightarrow>p\<rightarrow>a3\<rightarrow>a2),
+       Arc2 = e24\_a2q \<union> e24\_qa4 \<union> e41 (a2\<rightarrow>q\<rightarrow>a4\<rightarrow>a1), Third = e12 (a1\<rightarrow>a2).
+       All have endpoints {a1, a2}. Arc1 \<union> Arc2 = D. Lemma\_64\_1 \<Rightarrow> 3 components.
+       Component W (bounded by D) contains e34-{a3,a4}.
+       U0 \<union> (e12-{a1,a2}) \<union> V0 is connected in S2-D.
+       So e34 and e12 are in different D-components.\<close>
+    \<comment> \<open>WLOG e12-{a1,a2} \<subseteq> A (swap labels if needed).\<close>
+    from he12_AB obtain x0 where hx0: "x0 \<in> e12 - {a1, a2}" using he12_ne by (by100 blast)
+    from he34_AB obtain y0 where hy0: "y0 \<in> e34 - {a3, a4}" using he34_ne by (by100 blast)
+    \<comment> \<open>Key claim: e12-{a1,a2} and e34-{a3,a4} are in DIFFERENT components of S2-D.\<close>
+    have hdiff: "\<not> (e12 - {a1, a2} \<subseteq> A \<and> e34 - {a3, a4} \<subseteq> A)
+              \<and> \<not> (e12 - {a1, a2} \<subseteq> B \<and> e34 - {a3, a4} \<subseteq> B)"
+      sorry \<comment> \<open>Theta space D \<union> e12: Lemma\_64\_1. W contains e34. U0\<union>e12\<union>V0 connected \<Rightarrow> different sides.\<close>
+    \<comment> \<open>Case split on he12\_AB and he34\_AB with hdiff.\<close>
+    have "(e12 - {a1, a2} \<subseteq> A \<and> e34 - {a3, a4} \<subseteq> B)
+        \<or> (e12 - {a1, a2} \<subseteq> B \<and> e34 - {a3, a4} \<subseteq> A)"
+    proof -
+      from he12_AB show ?thesis
+      proof
+        assume h12A: "e12 - {a1, a2} \<subseteq> A"
+        from he34_AB show ?thesis
+        proof
+          assume "e34 - {a3, a4} \<subseteq> A"
+          thus ?thesis using h12A hdiff by (by100 blast)
+        next
+          assume "e34 - {a3, a4} \<subseteq> B"
+          thus ?thesis using h12A by (by100 blast)
+        qed
+      next
+        assume h12B: "e12 - {a1, a2} \<subseteq> B"
+        from he34_AB show ?thesis
+        proof
+          assume "e34 - {a3, a4} \<subseteq> A"
+          thus ?thesis using h12B by (by100 blast)
+        next
+          assume "e34 - {a3, a4} \<subseteq> B"
+          thus ?thesis using h12B hdiff by (by100 blast)
+        qed
+      qed
+    qed
+    moreover {
+      assume h: "e12 - {a1, a2} \<subseteq> A \<and> e34 - {a3, a4} \<subseteq> B"
+      have hx0A: "x0 \<in> A" using h hx0 by (by100 blast)
+      have hy0B: "y0 \<in> B" using h hy0 by (by100 blast)
+      have ?thesis by (rule that[OF hx0A hx0 hy0B hy0])
+    }
+    moreover {
+      assume h: "e12 - {a1, a2} \<subseteq> B \<and> e34 - {a3, a4} \<subseteq> A"
+      \<comment> \<open>In this case x \<in> e12 \<subseteq> B, y \<in> e34 \<subseteq> A. Need x \<in> A \<inter> e12 — impossible.
+         So actually need to swap the obtain labels: y0 is the "x" (y0 \<in> e34 \<inter> A)
+         and x0 is the "y" (x0 \<in> e12 \<inter> B). But the obtain requires x \<in> e12 and y \<in> e34.
+         Since y0 \<in> e34 \<inter> A and x0 \<in> e12 \<inter> B: use that[of y0 x0] with y0 \<in> A and x0 \<in> B.\<close>
+      have "y0 \<in> A" using h hy0 by (by100 blast)
+      moreover have "x0 \<in> B" using h hx0 by (by100 blast)
+      \<comment> \<open>But that requires x \<in> e12. y0 \<in> e34, not e12. CONTRADICTION with obtain spec.\<close>
+      \<comment> \<open>Actually: the obtain is SYMMETRIC in A/B — we can rename A\<leftrightarrow>B since
+         hAB properties are symmetric (open, nonempty, disjoint, union).\<close>
+      ultimately have ?thesis sorry \<comment> \<open>Needs A\<leftrightarrow>B relabeling.\<close>
+    }
+    ultimately show ?thesis by (by100 blast)
+  qed
   \<comment> \<open>Step 5: Construct \<alpha>: path in U' from x to y (via a1, a4 or similar).
      \<beta>: path in V' from y to x (via a3, a2).\<close>
   obtain \<alpha> where h\<alpha>: "top1_is_path_on ?U' (subspace_topology top1_S2 top1_S2_topology ?U') x y \<alpha>"
