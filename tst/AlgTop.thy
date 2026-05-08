@@ -4905,7 +4905,69 @@ proof -
   have hAm_in_R2: "?A - {a1, a3} \<subseteq> R2"
     sorry \<comment> \<open>WLOG: A-{a1,a3} in R2.\<close>
   have hcl_R1: "closure_on top1_S2 top1_S2_topology R1 = R1 \<union> (?B \<union> ?C)"
-    sorry
+  proof (rule set_eqI, rule iffI)
+    fix z assume "z \<in> closure_on top1_S2 top1_S2_topology R1"
+    have hR1_BC_eq: "R1 \<union> (?B \<union> ?C) = top1_S2 - R2"
+    proof -
+      have hR1_sub_S2: "R1 \<subseteq> top1_S2" using hR(4) by (by100 blast)
+      have "top1_S2 - R2 = (top1_S2 - (R1 \<union> R2)) \<union> R1" using hR(3) hR1_sub_S2 by (by100 force)
+      also have "\<dots> = (?B \<union> ?C) \<union> R1"
+      proof -
+        have "top1_S2 - (R1 \<union> R2) = top1_S2 - (top1_S2 - (?B \<union> ?C))" using hR(4) by (by100 blast)
+        also have "\<dots> = ?B \<union> ?C"
+        proof -
+          have "?B \<union> ?C \<subseteq> top1_S2" using assms(8) hC_sub by (by100 blast)
+          thus ?thesis by (by100 blast)
+        qed
+        finally show ?thesis by (by100 simp)
+      qed
+      finally show ?thesis by (by100 blast)
+    qed
+    have hcl_S2_R2: "closedin_on top1_S2 top1_S2_topology (top1_S2 - R2)"
+    proof -
+      have hR2_sub_S2: "R2 \<subseteq> top1_S2" using hR(4) by (by100 blast)
+      have hsub: "top1_S2 - R2 \<subseteq> top1_S2" by (by100 blast)
+      have hcompl: "top1_S2 - (top1_S2 - R2) = R2" using hR2_sub_S2 by (by100 blast)
+      show ?thesis unfolding closedin_on_def
+        apply (rule conjI[OF hsub])
+        using hcompl hR2_open by (by100 simp)
+    qed
+    have "R1 \<subseteq> top1_S2 - R2"
+    proof -
+      have "R1 \<subseteq> top1_S2" using hR(4) by (by100 blast)
+      thus ?thesis using hR(3) by (by100 blast)
+    qed
+    hence "closure_on top1_S2 top1_S2_topology R1 \<subseteq> top1_S2 - R2"
+      using closure_on_subset_of_closed[OF hcl_S2_R2] by (by100 blast)
+    hence "closure_on top1_S2 top1_S2_topology R1 \<subseteq> R1 \<union> (?B \<union> ?C)"
+      using hR1_BC_eq by (by100 blast)
+    thus "z \<in> R1 \<union> (?B \<union> ?C)" using \<open>z \<in> closure_on top1_S2 top1_S2_topology R1\<close> by (by100 blast)
+  next
+    fix z assume "z \<in> R1 \<union> (?B \<union> ?C)"
+    hence "z \<in> R1 \<or> z \<in> ?B \<union> ?C" by (by100 blast)
+    thus "z \<in> closure_on top1_S2 top1_S2_topology R1"
+    proof
+      assume "z \<in> R1"
+      thus ?thesis using subset_closure_on[of R1 top1_S2 top1_S2_topology] by (by100 blast)
+    next
+      assume "z \<in> ?B \<union> ?C"
+      hence "z \<in> top1_S2" using assms(8) hC_sub by (by100 blast)
+      have hR1_sub_S2: "R1 \<subseteq> top1_S2" using hR(4) by (by100 blast)
+      show "z \<in> closure_on top1_S2 top1_S2_topology R1"
+      proof (rule iffD2[OF Theorem_17_5a[OF hTopS2 \<open>z \<in> top1_S2\<close> hR1_sub_S2]])
+        show "\<forall>U. neighborhood_of z top1_S2 top1_S2_topology U \<longrightarrow> intersects U R1"
+        proof (intro allI impI)
+          fix V assume hV: "neighborhood_of z top1_S2 top1_S2_topology V"
+          hence hV_open: "V \<in> top1_S2_topology" and hzV: "z \<in> V"
+            unfolding neighborhood_of_def by (by100 blast)+
+          have "V \<inter> R1 \<noteq> {}"
+            by (rule simple_closed_curve_boundary_meets_component[OF assms(1) hBC_scc hR(5) hR(6)
+                hR(3) hR(4) hR(1) hR(2) hR1_open hR2_open \<open>z \<in> ?B \<union> ?C\<close> hV_open hzV])
+          thus "intersects V R1" unfolding intersects_def by (by100 blast)
+        qed
+      qed
+    qed
+  qed
   \<comment> \<open>a2 \<notin> B\<union>C.\<close>
   have ha2_not_BC: "a2 \<notin> ?B \<union> ?C"
   proof -
