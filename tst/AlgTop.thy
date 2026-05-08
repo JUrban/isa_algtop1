@@ -4370,8 +4370,24 @@ proof -
     moreover have "(1/2 :: real) \<in> top1_unit_interval"
       unfolding top1_unit_interval_def by (by100 simp)
     ultimately have "h (1/2) \<in> A" by (by100 blast)
-    moreover have "h (1/2) \<noteq> a \<or> h (1/2) \<noteq> b" using assms(6) by (by100 blast)
-    ultimately show ?thesis sorry
+    moreover have "h (1/2) \<notin> {a, b}"
+    proof -
+      \<comment> \<open>h is injective, h(0) and h(1) are the endpoints {a,b}. h(1/2) \<noteq> h(0) and h(1/2) \<noteq> h(1).\<close>
+      obtain hh where hh: "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
+          A (subspace_topology X TX A) hh"
+        using assms(4) unfolding top1_is_arc_on_def by (by100 blast)
+      have hinj: "inj_on hh top1_unit_interval"
+        using hh unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+      have hhh0: "hh 0 \<in> {a, b}" sorry
+      have hhh1: "hh 1 \<in> {a, b}" sorry
+      moreover have "(1/2::real) \<noteq> (0::real)" by (by100 simp)
+      moreover have "(1/2::real) \<noteq> (1::real)" by (by100 simp)
+      moreover have "(0::real) \<in> top1_unit_interval" unfolding top1_unit_interval_def by (by100 simp)
+      moreover have "(1::real) \<in> top1_unit_interval" unfolding top1_unit_interval_def by (by100 simp)
+      moreover have "(1/2::real) \<in> top1_unit_interval" unfolding top1_unit_interval_def by (by100 simp)
+      ultimately show ?thesis sorry
+    qed
+    ultimately show ?thesis by (by100 blast)
   qed
   have hA_minus_sub: "A - {a, b} \<subseteq> X" using assms(3) by (by100 blast)
   \<comment> \<open>closure(A-{a,b}) \<subseteq> A (A is closed) and closure(A-{a,b}) \<supseteq> A-{a,b}.
