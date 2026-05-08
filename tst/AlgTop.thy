@@ -3399,30 +3399,14 @@ proof -
     \<comment> \<open>U \<in> TW means U = U' \<inter> W for some U' \<in> top1_S2_topology.\<close>
     \<comment> \<open>U open in W + W open in S2 \<Rightarrow> U open in S2 (intersection of opens is open).\<close>
     \<comment> \<open>U, V open in subspace W, W open in S2 \<Rightarrow> U, V open in S2.\<close>
-    have hU_open_S2: "U \<in> top1_S2_topology"
-      sorry \<comment> \<open>U open in subspace W, W open in S2 \<Rightarrow> U open in S2 (finite intersection of opens).\<close>
-    have hV_open_S2: "V \<in> top1_S2_topology"
-      sorry \<comment> \<open>Same.\<close>
-    \<comment> \<open>U, V \<subseteq> W \<subseteq> X, so they're open in X.\<close>
+    \<comment> \<open>U, V open in X = S2 - {p,q}: from U,V \<in> subspace(S2, W) and W \<subseteq> X.\<close>
     have hW_sub_X: "?W \<subseteq> ?X" using hU'_sub_X hV'_sub_X hUV_eq by (by100 blast)
     have hU_sub_X: "U \<subseteq> ?X" using hUV(6) hW_sub_X by (by100 blast)
     have hV_sub_X: "V \<subseteq> ?X" using hUV(6) hW_sub_X by (by100 blast)
     have hU_open_X: "openin_on ?X ?TX U"
-      unfolding openin_on_def
-    proof (intro conjI)
-      show "U \<subseteq> ?X" by (rule hU_sub_X)
-      have "U \<inter> ?X \<in> ?TX" using hU_open_S2 unfolding subspace_topology_def by (by100 blast)
-      moreover have "U \<inter> ?X = U" using hU_sub_X by (by100 blast)
-      ultimately show "U \<in> ?TX" by (by100 simp)
-    qed
+      sorry \<comment> \<open>U \<in> subspace(S2, W), W \<subseteq> X \<Rightarrow> by transitivity U \<in> subspace(S2, X) = TX.\<close>
     have hV_open_X: "openin_on ?X ?TX V"
-      unfolding openin_on_def
-    proof (intro conjI)
-      show "V \<subseteq> ?X" by (rule hV_sub_X)
-      have "V \<inter> ?X \<in> ?TX" using hV_open_S2 unfolding subspace_topology_def by (by100 blast)
-      moreover have "V \<inter> ?X = V" using hV_sub_X by (by100 blast)
-      ultimately show "V \<in> ?TX" by (by100 simp)
-    qed
+      sorry \<comment> \<open>Same.\<close>
     show ?thesis using that[OF _ hUV(5) hU_open_X hV_open_X hUV(3,4)]
         hUV(6) hW_eq by (by100 simp)
   qed
