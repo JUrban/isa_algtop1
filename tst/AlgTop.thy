@@ -3676,16 +3676,61 @@ proof -
   have hx0_AB: "x0 \<in> top1_S2 - (A \<union> B)" using hx0 hU0(4) by (by100 blast)
   have hU0_eq_comp: "U0 = top1_component_of_on (top1_S2 - (A \<union> B))
       (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (A \<union> B))) x0"
-    sorry
+  proof -
+    let ?W = "top1_S2 - (A \<union> B)" and ?TW = "subspace_topology top1_S2 top1_S2_topology (top1_S2 - (A \<union> B))"
+    have hU0_sub_W: "U0 \<subseteq> ?W" using hU0(4) by (by100 blast)
+    \<comment> \<open>U0 connected in ?TW subspace.\<close>
+    have hU0_conn_W: "top1_connected_on U0 (subspace_topology ?W ?TW U0)"
+    proof -
+      have "subspace_topology top1_S2 top1_S2_topology U0
+          = subspace_topology ?W ?TW U0"
+        using subspace_topology_trans[of U0 ?W top1_S2 top1_S2_topology] hU0_sub_W by (by100 simp)
+      thus ?thesis using hU0(5) by (by100 simp)
+    qed
+    \<comment> \<open>U0 \<subseteq> component(x0).\<close>
+    have "U0 \<subseteq> top1_component_of_on ?W ?TW x0"
+      by (rule top1_connected_subspace_subset_component_of[OF hU0_sub_W hx0 hU0_conn_W])
+    \<comment> \<open>component(x0) \<subseteq> U0 (component is connected, in U0\<union>U0', meets U0).\<close>
+    moreover have "top1_component_of_on ?W ?TW x0 \<subseteq> U0"
+    proof -
+      have hcomp_sub: "top1_component_of_on ?W ?TW x0 \<subseteq> ?W"
+        by (rule top1_component_of_on_subset)
+      have hcomp_conn: "top1_connected_on (top1_component_of_on ?W ?TW x0)
+          (subspace_topology ?W ?TW (top1_component_of_on ?W ?TW x0))"
+        by (rule top1_component_of_on_connected[OF hTopAB_early hx0_AB])
+      \<comment> \<open>Transfer to S2 subspace.\<close>
+      have hcomp_conn_S2: "top1_connected_on (top1_component_of_on ?W ?TW x0)
+          (subspace_topology top1_S2 top1_S2_topology (top1_component_of_on ?W ?TW x0))"
+      proof -
+        have "subspace_topology ?W ?TW (top1_component_of_on ?W ?TW x0)
+            = subspace_topology top1_S2 top1_S2_topology (top1_component_of_on ?W ?TW x0)"
+          using subspace_topology_trans[of "top1_component_of_on ?W ?TW x0" ?W top1_S2 top1_S2_topology]
+            hcomp_sub by (by100 simp)
+        thus ?thesis using hcomp_conn by (by100 simp)
+      qed
+      \<comment> \<open>component(x0) \<subseteq> U0 \<union> U0' and connected. x0 \<in> component(x0) \<inter> U0.
+         By Lemma 23.2 on separation U0, U0': component(x0) \<subseteq> U0 or \<subseteq> U0'.\<close>
+      have hcomp_sub_union: "top1_component_of_on ?W ?TW x0 \<subseteq> U0 \<union> U0'"
+        using hcomp_sub hU0(4) by (by100 blast)
+      have "x0 \<in> top1_component_of_on ?W ?TW x0"
+        by (rule top1_component_of_on_self_mem[OF hTopAB_early hx0_AB])
+      hence "top1_component_of_on ?W ?TW x0 \<inter> U0 \<noteq> {}" using hx0 by (by100 blast)
+      \<comment> \<open>If comp \<subseteq> U0': then comp \<inter> U0 = {} (since U0\<inter>U0'={}), contradiction.\<close>
+      \<comment> \<open>By Lemma 23.2: connected comp in separation U0\<union>U0' goes to one side.
+         Intersects U0 \<Rightarrow> not in U0' \<Rightarrow> in U0.\<close>
+      show ?thesis using hcomp_sub_union \<open>top1_component_of_on ?W ?TW x0 \<inter> U0 \<noteq> {}\<close> hU0(3)
+        sorry
+    qed
+    ultimately show ?thesis by (by100 blast)
+  qed
   have hU0_eq_path_comp: "U0 = top1_path_component_of_on (top1_S2 - (A \<union> B))
       (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (A \<union> B))) x0"
   proof -
-    from Theorem_25_5[OF hTopAB_early]
     have "top1_path_component_of_on (top1_S2 - (A \<union> B))
         (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (A \<union> B))) x0
         = top1_component_of_on (top1_S2 - (A \<union> B))
           (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (A \<union> B))) x0"
-      using hAB_lpc hx0_AB sorry
+      using conjunct2[OF Theorem_25_5[OF hTopAB_early]] hAB_lpc hx0_AB sorry
     thus ?thesis using hU0_eq_comp by (by100 simp)
   qed
   have hU0_open: "U0 \<in> top1_S2_topology"
