@@ -3619,13 +3619,48 @@ proof -
     by (by100 force)
   \<comment> \<open>Step 4: S2 - (A \<union> B \<union> C) = U0 \<union> V0 \<union> W0.\<close>
   \<comment> \<open>S2 - (A\<union>B\<union>C) = U0 \<union> V0 \<union> W0.\<close>
-  have hU0_sub_comp: "U0 \<subseteq> top1_S2 - (?Ubar \<union> C)"
-    sorry \<comment> \<open>U0 \<subseteq> S2-(A\<union>B\<union>C) \<subseteq> S2-(Ubar\<union>C) since A\<union>B \<subseteq> Ubar.\<close>
+  \<comment> \<open>U0 \<inter> C = {}: since U0 \<subseteq> S2-(A\<union>B) and C\<inter>(A\<union>B) \<subseteq> {a,b}, and C-{a,b} \<subseteq> U0'.\<close>
+  have hU0_C_disj: "U0 \<inter> C = {}"
+  proof -
+    have "U0 \<subseteq> top1_S2 - (A \<union> B)" using hU0(4) by (by100 blast)
+    hence "U0 \<inter> (A \<union> B) = {}" by (by100 blast)
+    moreover have "C - {a, b} \<subseteq> U0'" using \<open>C - {a, b} \<subseteq> U0'\<close> .
+    hence "\<forall>x \<in> C. x \<notin> {a, b} \<longrightarrow> x \<in> U0'" by (by100 blast)
+    moreover have "U0 \<inter> U0' = {}" by (rule hU0(3))
+    moreover have "{a, b} \<subseteq> A \<union> B" using assms(12,13) unfolding top1_arc_endpoints_on_def
+      by (by100 blast)
+    ultimately show ?thesis by (by100 blast)
+  qed
   have "top1_S2 - (A \<union> B \<union> C) = U0 \<union> V0 \<union> W0"
-    sorry \<comment> \<open>Set arithmetic: S2-(A\<union>B\<union>C) = (S2-(A\<union>B))\<inter>(S2-C) and decompose.\<close>
+  proof -
+    have "top1_S2 - (A \<union> B \<union> C) = (top1_S2 - (A \<union> B)) - C" by (by100 blast)
+    also have "\<dots> = (U0 \<union> U0') - C" using hU0(4) by (by100 blast)
+    also have "\<dots> = U0 \<union> (U0' - C)" using hU0_C_disj by (by100 blast)
+    also have "U0' - C = top1_S2 - (?Ubar \<union> C)"
+    proof -
+      have "?Ubar \<union> C = (U0 \<union> A \<union> B) \<union> C" by (by100 blast)
+      have "top1_S2 - (?Ubar \<union> C) = (top1_S2 - (U0 \<union> A \<union> B)) - C" by (by100 blast)
+      also have "top1_S2 - (U0 \<union> A \<union> B) = U0'"
+        using hUbar_compl by (by100 simp)
+      finally show ?thesis by (by100 simp)
+    qed
+    also have "\<dots> = V0 \<union> W0" using hVW(4) by (by100 simp)
+    finally show ?thesis by (by100 blast)
+  qed
   moreover have "U0 \<inter> V0 = {} \<and> U0 \<inter> W0 = {} \<and> V0 \<inter> W0 = {}"
-    sorry
-  ultimately show ?thesis sorry
+  proof -
+    have "V0 \<union> W0 = top1_S2 - (?Ubar \<union> C)" by (rule hVW(4))
+    hence "V0 \<subseteq> top1_S2 - ?Ubar" "W0 \<subseteq> top1_S2 - ?Ubar" by (by100 blast)+
+    hence "V0 \<inter> U0 = {}" "W0 \<inter> U0 = {}" by (by100 blast)+
+    thus ?thesis using hVW(3) by (by100 blast)
+  qed
+  ultimately have hgoal: "top1_S2 - (A \<union> B \<union> C) = U0 \<union> V0 \<union> W0
+      \<and> U0 \<inter> V0 = {} \<and> U0 \<inter> W0 = {} \<and> V0 \<inter> W0 = {}" by (by100 blast)
+  show ?thesis
+    apply (rule exI[of _ U0])
+    apply (rule exI[of _ V0])
+    apply (rule exI[of _ W0])
+    using hgoal hU0(1) hVW(1,2) hU0(5) hVW(5,6) by (by100 force)
 qed
 
 text \<open>Lemma 64.3: K4 in S2 separates into four components.\<close>
