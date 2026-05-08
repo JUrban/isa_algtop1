@@ -761,7 +761,26 @@ proof -
       unfolding top1_unit_interval_def by (by100 force)
     \<comment> \<open>g range.\<close>
     have hg_in_X: "\<forall>t \<in> top1_unit_interval. g t \<in> X"
-      sorry \<comment> \<open>g(t) \<in> A1\<union>A2 \<subseteq> X.\<close>
+    proof
+      fix t assume ht: "t \<in> top1_unit_interval"
+      hence "0 \<le> t" "t \<le> 1" unfolding top1_unit_interval_def by (by100 simp)+
+      show "g t \<in> X"
+      proof (cases "t \<le> 1/2")
+        case True hence "g t = h1 (2*t)" unfolding g_def by (by100 simp)
+        moreover have "2*t \<in> top1_unit_interval"
+          using True \<open>0 \<le> t\<close> unfolding top1_unit_interval_def by (by100 simp)
+        ultimately have "g t \<in> A1"
+          using hh1(1) unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+        thus ?thesis using hA1X by (by100 blast)
+      next
+        case False hence "g t = h2 (2*t - 1)" unfolding g_def by (by100 simp)
+        moreover have "2*t - 1 \<in> top1_unit_interval"
+          using False \<open>t \<le> 1\<close> unfolding top1_unit_interval_def by (by100 simp)
+        ultimately have "g t \<in> A2"
+          using hh2(1) unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+        thus ?thesis using hA2X by (by100 blast)
+      qed
+    qed
     \<comment> \<open>g continuous on A (= h1 \<circ> (2*) restricted).\<close>
     have hg_cont_A: "top1_continuous_map_on ?A
         (subspace_topology top1_unit_interval top1_unit_interval_topology ?A) X TX g"
