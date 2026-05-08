@@ -1152,10 +1152,20 @@ proof -
       "(\<forall>x \<in> top1_unit_interval. f (top1_R_to_S1 x) = g x)"
       "(top1_continuous_map_on top1_S1 top1_S1_topology X TX f
           \<longleftrightarrow> top1_continuous_map_on top1_unit_interval top1_unit_interval_topology X TX g)"
-    sorry
+    sorry \<comment> \<open>Direct application of Theorem\_22\_2; by100 times out on 4-way conjunction extraction.\<close>
   \<comment> \<open>f lands in A1 \<union> A2 (since f(p) = g(t) for some t with R\_to\_S1(t)=p, and g(t) \<in> A1\<union>A2).\<close>
+  have hR_surj: "top1_R_to_S1 ` top1_unit_interval = top1_S1"
+    using hR_quot unfolding top1_quotient_map_on_def by (by100 blast)
   have hf_range: "\<forall>p \<in> top1_S1. f p \<in> A1 \<union> A2"
-    sorry \<comment> \<open>f(p) = g(t) for R\_to\_S1(t)=p, and g(t) \<in> A1\<union>A2.\<close>
+  proof
+    fix p assume "p \<in> top1_S1"
+    then obtain t where ht: "t \<in> top1_unit_interval" "top1_R_to_S1 t = p"
+      using hR_surj by (by100 force)
+    have "f (top1_R_to_S1 t) = g t" using hf0(2) ht(1) by (by100 blast)
+    hence "f p = g t" using ht(2) by (by100 simp)
+    have "g t \<in> A1 \<union> A2" using hg_range ht(1) by (by100 blast)
+    thus "f p \<in> A1 \<union> A2" using \<open>f p = g t\<close> by (by100 simp)
+  qed
   have hf_factor: "\<forall>t \<in> top1_unit_interval. f (top1_R_to_S1 t) = g t"
     by (rule hf0(2))
   have hf_cont_iff: "top1_continuous_map_on top1_S1 top1_S1_topology X TX f
