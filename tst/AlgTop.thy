@@ -2004,8 +2004,50 @@ proof -
   let ?D2 = "e24_qa4 \<union> e41 \<union> e13_a1p"
   \<comment> \<open>D_1, D_2 are arcs.\<close>
   have hD1_arc: "top1_is_arc_on ?D1 (subspace_topology top1_S2 top1_S2_topology ?D1)"
-    sorry \<comment> \<open>e13_pa3 \<inter> e23 = {a3}, then (e13_pa3\<union>e23) \<inter> e24_a2q = {a2}.
-         Two applications of arcs_concatenation_is_arc. Needs endpoint assumptions.\<close>
+  proof -
+    \<comment> \<open>Step 1: e13_pa3 \<inter> e23 = {a3}.\<close>
+    have hint1: "e13_pa3 \<inter> e23 = {a3}"
+    proof (rule set_eqI, rule iffI)
+      fix x assume "x \<in> e13_pa3 \<inter> e23"
+      hence "x \<in> e13" "x \<in> e23" using he13_split(1) by (by100 blast)+
+      hence "x \<in> {a3}" using assms(29) by (by100 blast)
+      thus "x \<in> {a3}" .
+    next
+      fix x assume "x \<in> {a3}"
+      hence "x = a3" by (by100 blast)
+      thus "x \<in> e13_pa3 \<inter> e23"
+        using he13_split(6) sorry \<comment> \<open>a3 \<in> e23: from endpoint.\<close>
+    qed
+    \<comment> \<open>Step 2: Concatenate e13_pa3 and e23 at a3.\<close>
+    have he13_pa3_sub: "e13_pa3 \<subseteq> top1_S2" using he13_sub he13_split(1) by (by100 blast)
+    have he23_sub_loc: "e23 \<subseteq> top1_S2" by (rule he23_sub)
+    have he23_arc: "top1_is_arc_on e23 (subspace_topology top1_S2 top1_S2_topology e23)"
+      by (rule assms(11))
+    \<comment> \<open>a3 is endpoint of e13_pa3 and e23.\<close>
+    have ha3_ep1: "a3 \<in> top1_arc_endpoints_on e13_pa3 (subspace_topology top1_S2 top1_S2_topology e13_pa3)"
+      sorry \<comment> \<open>a3 is endpoint of sub-arc e13_pa3 (from split endpoints).\<close>
+    have ha3_ep2: "a3 \<in> top1_arc_endpoints_on e23 (subspace_topology top1_S2 top1_S2_topology e23)"
+      sorry \<comment> \<open>a3 is endpoint of e23 (from arc_endpoints_are_boundary).\<close>
+    have hconcat1: "top1_is_arc_on (e13_pa3 \<union> e23)
+        (subspace_topology top1_S2 top1_S2_topology (e13_pa3 \<union> e23))"
+      by (rule arcs_concatenation_is_arc[OF hS2_strict hS2_haus
+          he13_split(4) he13_pa3_sub he23_arc he23_sub_loc hint1 ha3_ep1 ha3_ep2])
+    \<comment> \<open>Step 3: (e13_pa3 \<union> e23) \<inter> e24_a2q = {a2}.\<close>
+    have hint2: "(e13_pa3 \<union> e23) \<inter> e24_a2q = {a2}"
+      sorry \<comment> \<open>e13_pa3 \<inter> e24_a2q = {} (a2\<notin>e13, a3\<notin>e24). e23 \<inter> e24_a2q = {a2}.\<close>
+    \<comment> \<open>a2 is endpoint of (e13_pa3 \<union> e23) and e24_a2q.\<close>
+    have ha2_ep1: "a2 \<in> top1_arc_endpoints_on (e13_pa3 \<union> e23)
+        (subspace_topology top1_S2 top1_S2_topology (e13_pa3 \<union> e23))"
+      sorry \<comment> \<open>a2 is endpoint of e23, hence of e13_pa3 \<union> e23.\<close>
+    have ha2_ep2: "a2 \<in> top1_arc_endpoints_on e24_a2q (subspace_topology top1_S2 top1_S2_topology e24_a2q)"
+      sorry \<comment> \<open>a2 is endpoint of e24_a2q (from split endpoints).\<close>
+    have he13pa3_e23_sub: "e13_pa3 \<union> e23 \<subseteq> top1_S2" using he13_pa3_sub he23_sub by (by100 blast)
+    have he24_a2q_sub: "e24_a2q \<subseteq> top1_S2" using he24_sub he24_split(1) by (by100 blast)
+    show ?thesis
+      using arcs_concatenation_is_arc[OF hS2_strict hS2_haus
+          hconcat1 he13pa3_e23_sub he24_split(3) he24_a2q_sub hint2 ha2_ep1 ha2_ep2]
+      by (by100 simp)
+  qed
   have hD2_arc: "top1_is_arc_on ?D2 (subspace_topology top1_S2 top1_S2_topology ?D2)"
     sorry \<comment> \<open>Similarly: e24_qa4 \<inter> e41 = {a4}, then \<union> e13_a1p at {a1}.\<close>
   have hD1_sub: "?D1 \<subseteq> top1_S2"
