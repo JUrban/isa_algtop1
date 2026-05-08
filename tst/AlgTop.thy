@@ -4541,7 +4541,7 @@ proof -
   \<comment> \<open>Get raw components, then choose labels so C-{a1,a3} \<subseteq> P2.\<close>
   have hCm_conn: "top1_connected_on (?C - {a1, a3})
       (subspace_topology top1_S2 top1_S2_topology (?C - {a1, a3}))"
-    sorry \<comment> \<open>arc\_minus\_endpoints\_connected for C = e41 \<union> e34.\<close>
+    by (rule arc_minus_endpoints_connected[OF hS2_strict hS2_haus hC_sub hC_arc hC_ep hdist(2)])
   have hCm_sub_AB: "?C - {a1, a3} \<subseteq> top1_S2 - (?A \<union> ?B)"
   proof -
     have "?C \<inter> (?A \<union> ?B) \<subseteq> {a1, a3}"
@@ -4553,7 +4553,12 @@ proof -
     thus ?thesis using hC_sub by (by100 blast)
   qed
   have hCm_ne: "?C - {a1, a3} \<noteq> {}"
-    sorry \<comment> \<open>Arc has more than 2 points.\<close>
+  proof -
+    have "a4 \<in> e41" using assms(19) unfolding top1_arc_endpoints_on_def by (by100 blast)
+    hence "a4 \<in> ?C" by (by100 blast)
+    moreover have "a4 \<notin> {a1, a3}" using hdist(3) hdist(6) by (by100 blast)
+    ultimately show ?thesis by (by100 blast)
+  qed
   obtain P1_raw P2_raw where hP_raw: "P1_raw \<noteq> {}" "P2_raw \<noteq> {}" "P1_raw \<inter> P2_raw = {}"
       "P1_raw \<union> P2_raw = top1_S2 - (?A \<union> ?B)"
       "top1_connected_on P1_raw (subspace_topology top1_S2 top1_S2_topology P1_raw)"
