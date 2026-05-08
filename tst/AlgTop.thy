@@ -720,8 +720,43 @@ proof -
     have hTX: "is_topology_on X TX"
       using hT unfolding is_topology_on_strict_def by (by100 blast)
     \<comment> \<open>A, B are closed in [0,1] and [0,1] = A \<union> B.\<close>
-    have hA_closed: "closedin_on top1_unit_interval top1_unit_interval_topology ?A" sorry
-    have hB_closed: "closedin_on top1_unit_interval top1_unit_interval_topology ?B" sorry
+    have hA_closed: "closedin_on top1_unit_interval top1_unit_interval_topology ?A"
+      unfolding closedin_on_def
+    proof (intro conjI)
+      show "?A \<subseteq> top1_unit_interval" by (by100 blast)
+      show "top1_unit_interval - ?A \<in> top1_unit_interval_topology"
+      proof -
+        have "top1_unit_interval - ?A = top1_unit_interval \<inter> {t. t > 1/2}" by (by100 force)
+        moreover have "{t::real. t > 1/2} \<in> top1_open_sets"
+        proof -
+          have "open {(1/2::real)<..}" by (rule open_greaterThan)
+          hence "{t::real. 1/2 < t} \<in> top1_open_sets"
+            unfolding greaterThan_def top1_open_sets_def by (by100 simp)
+          moreover have "{t::real. t > 1/2} = {t. 1/2 < t}" by (by100 blast)
+          ultimately show ?thesis by (by100 simp)
+        qed
+        ultimately show ?thesis
+          unfolding top1_unit_interval_topology_def subspace_topology_def by (by100 blast)
+      qed
+    qed
+    have hB_closed: "closedin_on top1_unit_interval top1_unit_interval_topology ?B"
+      unfolding closedin_on_def
+    proof (intro conjI)
+      show "?B \<subseteq> top1_unit_interval" by (by100 blast)
+      show "top1_unit_interval - ?B \<in> top1_unit_interval_topology"
+      proof -
+        have "top1_unit_interval - ?B = top1_unit_interval \<inter> {t. t < 1/2}" by (by100 force)
+        moreover have "{t::real. t < 1/2} \<in> top1_open_sets"
+        proof -
+          have "open {..<(1/2::real)}" by (rule open_lessThan)
+          hence "{t::real. t < 1/2} \<in> top1_open_sets"
+            unfolding lessThan_def top1_open_sets_def by (by100 simp)
+          thus ?thesis .
+        qed
+        ultimately show ?thesis
+          unfolding top1_unit_interval_topology_def subspace_topology_def by (by100 blast)
+      qed
+    qed
     have hAB_union: "?A \<union> ?B = top1_unit_interval"
       unfolding top1_unit_interval_def by (by100 force)
     \<comment> \<open>g range.\<close>
