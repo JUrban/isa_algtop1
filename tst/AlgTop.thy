@@ -2666,7 +2666,7 @@ proof -
          but A2 is an arc with y \<in> A2, y \<noteq> c.\<close>
       have "y \<in> A2" using hep2 unfolding top1_arc_endpoints_on_def by (by100 blast)
       have hA1_conn: "top1_connected_on A1 (subspace_topology X TX A1)"
-        sorry \<comment> \<open>A1 is arc \<Rightarrow> connected (Thm 23.5 + [0,1] connected).\<close>
+        using arc_connected[OF hA1] by (by100 simp)
       have "A2 = {c}"
         by (rule arc_both_endpoints_in_one_part[OF hT hH hDX hD_arc hD_eq assms(7) hA1_conn
             assms(4) hab_ep hab_ne True \<open>b \<in> A1\<close>])
@@ -2694,7 +2694,7 @@ proof -
       assume "b \<notin> A1" hence "b \<in> A2" using hb_D by (by100 blast)
       have "x \<in> A1" using hep1 unfolding top1_arc_endpoints_on_def by (by100 blast)
       have hA2_conn: "top1_connected_on A2 (subspace_topology X TX A2)"
-        sorry \<comment> \<open>A2 is an arc hence connected.\<close>
+        using arc_connected[OF hA2] by (by100 simp)
       have "A1 = {c}"
         by (rule arc_both_endpoints_in_one_part[OF hT hH hDX hD_arc _ _ hA2_conn assms(6)
             hab_ep hab_ne \<open>a \<in> A2\<close> \<open>b \<in> A2\<close>])
