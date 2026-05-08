@@ -3493,10 +3493,13 @@ lemma Lemma_64_1_theta_space_three_components:
       \<and> top1_connected_on W (subspace_topology top1_S2 top1_S2_topology W)"
 proof -
   \<comment> \<open>Step 1: A \<union> B is SCC, separates S2 into two components U0, U0'.\<close>
+  have hS2_haus: "is_hausdorff_on top1_S2 top1_S2_topology"
+    by (rule top1_S2_is_hausdorff)
   have hAB_scc: "top1_simple_closed_curve_on top1_S2 top1_S2_topology (A \<union> B)"
-    sorry \<comment> \<open>By arcs\_form\_simple\_closed\_curve: A, B arcs with A \<inter> B = {a,b}.\<close>
+    by (rule arcs_form_simple_closed_curve[OF assms(1) hS2_haus assms(5) assms(2)
+        assms(6) assms(3) assms(9) assms(8) assms(12) assms(13)])
   have hAB_sep: "top1_separates_on top1_S2 top1_S2_topology (A \<union> B)"
-    sorry \<comment> \<open>By Theorem 61.3 (JCT on S2).\<close>
+    by (rule Theorem_61_3_JordanSeparation_S2[OF assms(1) hAB_scc])
   \<comment> \<open>Get two components U0, U0' of S2 - (A \<union> B).\<close>
   obtain U0 U0' where hU0: "U0 \<noteq> {}" "U0' \<noteq> {}" "U0 \<inter> U0' = {}"
       "U0 \<union> U0' = top1_S2 - (A \<union> B)"
@@ -3530,7 +3533,7 @@ proof -
   have hUbar_no_sep: "\<not> top1_separates_on top1_S2 top1_S2_topology ?Ubar"
     sorry \<comment> \<open>Complement is U0', which is connected.\<close>
   have hC_no_sep: "\<not> top1_separates_on top1_S2 top1_S2_topology C"
-    sorry \<comment> \<open>Theorem 63.2: arc doesn't separate S2.\<close>
+    by (rule Theorem_63_2_arc_no_separation[OF assms(1) assms(4) assms(7)])
   have hUbar_C_inter: "?Ubar \<inter> C = {a, b}"
     sorry \<comment> \<open>C meets U0\<union>A\<union>B only at A\<inter>C \<union> B\<inter>C = {a,b} (since C-{a,b} \<subseteq> U0').\<close>
   have hUbar_C_card: "card (?Ubar \<inter> C) = 2"
