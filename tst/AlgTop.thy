@@ -2635,30 +2635,57 @@ proof -
   have hb_A2: "b \<in> A1 \<or> b \<in> A2" using hab_ep unfolding top1_arc_endpoints_on_def by (by100 blast)
   \<comment> \<open>a \<in> A1 (since a is an endpoint of D, and a \<noteq> c, so a \<notin> A1\<inter>A2 = {c}).\<close>
   \<comment> \<open>arc\_split\_endpoints needs: a \<in> A1, b \<in> A2 (endpoints of D in respective sub-arcs).\<close>
-  have ha_A1': "a \<in> A1" sorry \<comment> \<open>a is endpoint of D, a \<noteq> c, so not in A2 only. Both endpoints can't be in same sub-arc.\<close>
-  have hb_A2': "b \<in> A2" sorry \<comment> \<open>Similarly.\<close>
-  have hD_eq: "?D = A1 \<union> A2" by (by100 blast)
-  have hep_A1: "top1_arc_endpoints_on A1 (subspace_topology X TX A1) = {a, c}"
-    using arc_split_endpoints(1)[OF hT hH hDX hD_arc hD_eq assms(7) hA1 hA2
-        ha_A1' hb_A2' hc_A1 hc_A2 assms(4) assms(6) hab_ep hc_not_ep] .
-  have hep_A2: "top1_arc_endpoints_on A2 (subspace_topology X TX A2) = {c, b}"
-    using arc_split_endpoints(2)[OF hT hH hDX hD_arc hD_eq assms(7) hA1 hA2
-        ha_A1' hb_A2' hc_A1 hc_A2 assms(4) assms(6) hab_ep hc_not_ep] .
-  \<comment> \<open>Match: {a,c} = {x,c} \<Rightarrow> a = x. {c,b} = {c,y} \<Rightarrow> b = y.\<close>
   have hab_ne2: "a \<noteq> c" using hab_ep hc_not_ep by (by100 blast)
   have hbc_ne: "b \<noteq> c" using hab_ep hc_not_ep by (by100 blast)
-  have "a = x"
-  proof -
-    have "{a, c} = {x, c}" using hep_A1 hep1 by (by100 simp)
-    from doubleton_eq_iff[OF this hab_ne2] show "a = x" using hx_ne_c by (by100 blast)
+  have hD_eq: "?D = A1 \<union> A2" by (by100 blast)
+  have ha_D: "a \<in> ?D" using hab_ep unfolding top1_arc_endpoints_on_def by (by100 blast)
+  have hb_D: "b \<in> ?D" using hab_ep unfolding top1_arc_endpoints_on_def by (by100 blast)
+  \<comment> \<open>Case split: either a \<in> A1 or a \<in> A2. In either case we can apply arc\_split\_endpoints
+     (with possibly swapped roles) and match to get endpoints(D) = {x,y}.\<close>
+  show ?thesis
+  proof (cases "a \<in> A1")
+    case True
+    hence hb_A2: "b \<in> A2"
+    proof (cases "b \<in> A2") case True thus ?thesis . next
+      case False hence "b \<in> A1" using hb_D by (by100 blast)
+      \<comment> \<open>Both a,b \<in> A1. This contradicts A2 being an arc (more than one point):
+         A2 \<subseteq> D, A2 is arc, but all of D's endpoints are in A1, forcing A2 = {c}.\<close>
+      thus ?thesis sorry
+    qed
+    from arc_split_endpoints(1)[OF hT hH hDX hD_arc hD_eq assms(7) hA1 hA2
+        True hb_A2 hc_A1 hc_A2 assms(4) assms(6) hab_ep hc_not_ep]
+    have hep_A1: "top1_arc_endpoints_on A1 (subspace_topology X TX A1) = {a, c}" .
+    from arc_split_endpoints(2)[OF hT hH hDX hD_arc hD_eq assms(7) hA1 hA2
+        True hb_A2 hc_A1 hc_A2 assms(4) assms(6) hab_ep hc_not_ep]
+    have hep_A2: "top1_arc_endpoints_on A2 (subspace_topology X TX A2) = {c, b}" .
+    have "a = x"
+    proof - have "{a, c} = {x, c}" using hep_A1 hep1 by (by100 simp)
+      from doubleton_eq_iff[OF this hab_ne2] show ?thesis using hx_ne_c by (by100 blast) qed
+    moreover have "b = y"
+    proof - have "{c, b} = {c, y}" using hep_A2 hep2 by (by100 simp)
+      from doubleton_eq_iff[OF this \<open>b \<noteq> c\<close>[THEN not_sym]] show ?thesis using hc_ne_y by (by100 blast) qed
+    ultimately show ?thesis using hab_ep by (by100 simp)
+  next
+    case False
+    hence "a \<in> A2" using ha_D by (by100 blast)
+    have "b \<in> A1" sorry \<comment> \<open>If a \<in> A2 and b \<in> A2, both endpoints in A2 forces A1 = {c}, contradiction.\<close>
+    \<comment> \<open>Swap roles: b \<in> A1 (= D1), a \<in> A2 (= D2).\<close>
+    have hab_ep': "top1_arc_endpoints_on ?D (subspace_topology X TX ?D) = {b, a}"
+      using hab_ep by (by100 blast)
+    from arc_split_endpoints(1)[OF hT hH hDX hD_arc hD_eq assms(7) hA1 hA2
+        \<open>b \<in> A1\<close> \<open>a \<in> A2\<close> hc_A1 hc_A2 assms(4) assms(6) hab_ep' hc_not_ep]
+    have hep_A1: "top1_arc_endpoints_on A1 (subspace_topology X TX A1) = {b, c}" .
+    from arc_split_endpoints(2)[OF hT hH hDX hD_arc hD_eq assms(7) hA1 hA2
+        \<open>b \<in> A1\<close> \<open>a \<in> A2\<close> hc_A1 hc_A2 assms(4) assms(6) hab_ep' hc_not_ep]
+    have hep_A2: "top1_arc_endpoints_on A2 (subspace_topology X TX A2) = {c, a}" .
+    have "b = x"
+    proof - have "{b, c} = {x, c}" using hep_A1 hep1 by (by100 simp)
+      from doubleton_eq_iff[OF this hbc_ne] show ?thesis using hx_ne_c by (by100 blast) qed
+    moreover have "a = y"
+    proof - have "{c, a} = {c, y}" using hep_A2 hep2 by (by100 simp)
+      from doubleton_eq_iff[OF this hab_ne2[THEN not_sym]] show ?thesis using hc_ne_y by (by100 blast) qed
+    ultimately show ?thesis using hab_ep by (by100 blast)
   qed
-  moreover have "b = y"
-  proof -
-    have "{c, b} = {c, y}" using hep_A2 hep2 by (by100 simp)
-    have "c \<noteq> b" using hbc_ne by (by100 blast)
-    from doubleton_eq_iff[OF \<open>{c, b} = {c, y}\<close> this] show "b = y" using hc_ne_y by (by100 blast)
-  qed
-  ultimately show ?thesis using hab_ep by (by100 simp)
 qed
 
 (** from \<S>65 Lemma 65.1: for K_4 subspace of S^2 with vertices a_1, ..., a_4 and
