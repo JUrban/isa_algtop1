@@ -4352,8 +4352,40 @@ proof -
   have hA_closed: "closedin_on X TX A"
   proof -
     \<comment> \<open>Arc is compact (image of [0,1]), compact in Hausdorff is closed.\<close>
-    have "top1_compact_on A (subspace_topology X TX A)" sorry
-    thus ?thesis sorry
+    have "top1_compact_on A (subspace_topology X TX A)"
+    proof -
+      obtain h where hh: "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
+          A (subspace_topology X TX A) h"
+        using assms(4) unfolding top1_is_arc_on_def by (by100 blast)
+      have hcont: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+          A (subspace_topology X TX A) h"
+        using hh unfolding top1_homeomorphism_on_def by (by100 blast)
+      have himg: "h ` top1_unit_interval = A"
+        using hh unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+      have hI_compact: "top1_compact_on top1_unit_interval top1_unit_interval_topology"
+      proof -
+        have "compact (top1_unit_interval :: real set)" unfolding top1_unit_interval_def
+          by (rule compact_Icc)
+        thus ?thesis using top1_compact_on_subspace_UNIV_iff_compact by (by100 blast)
+      qed
+      have hTA: "is_topology_on A (subspace_topology X TX A)"
+        by (rule subspace_topology_is_topology_on[OF hTopX assms(3)])
+      from top1_compact_on_continuous_image[OF hI_compact hTA hcont]
+      have "top1_compact_on (h ` top1_unit_interval) (subspace_topology A (subspace_topology X TX A) (h ` top1_unit_interval))" .
+      moreover have "h ` top1_unit_interval = A" by (rule himg)
+      moreover have "subspace_topology A (subspace_topology X TX A) A = subspace_topology X TX A"
+      proof -
+        have "\<forall>U\<in>subspace_topology X TX A. U \<subseteq> A" unfolding subspace_topology_def by (by100 blast)
+        thus ?thesis by (rule subspace_topology_self)
+      qed
+      ultimately show ?thesis by (by100 simp)
+    qed
+    thus ?thesis
+    proof -
+      \<comment> \<open>Compact in Hausdorff is closed.\<close>
+      assume hcomp: "top1_compact_on A (subspace_topology X TX A)"
+      show "closedin_on X TX A" sorry \<comment> \<open>Theorem\_26\_3: compact subspace of Hausdorff is closed.\<close>
+    qed
   qed
   have ha_in_A: "a \<in> A"
     using assms(5) unfolding top1_arc_endpoints_on_def by (by100 blast)
