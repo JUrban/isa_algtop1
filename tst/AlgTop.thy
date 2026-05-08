@@ -837,11 +837,25 @@ proof -
   \<comment> \<open>Theorem 22.2: get f: S1 \<rightarrow> A1\<union>A2 with g = f \<circ> R\_to\_S1, f continuous.\<close>
   have hg_range: "\<forall>t \<in> top1_unit_interval. g t \<in> A1 \<union> A2"
     using hg_img by (by100 blast)
-  obtain f where hf_range: "\<forall>p \<in> top1_S1. f p \<in> A1 \<union> A2"
-      and hf_factor: "\<forall>t \<in> top1_unit_interval. f (top1_R_to_S1 t) = g t"
-      and hf_cont_iff: "top1_continuous_map_on top1_S1 top1_S1_topology X TX f
-          \<longleftrightarrow> top1_continuous_map_on top1_unit_interval top1_unit_interval_topology X TX g"
-    sorry \<comment> \<open>From Theorem\_22\_2 applied to R\_to\_S1 and g.\<close>
+  have hg_range_X: "\<forall>t \<in> top1_unit_interval. g t \<in> X"
+    using hg_range hA1X hA2X by (by100 blast)
+  have hg_compat_X: "\<forall>s \<in> top1_unit_interval. \<forall>t \<in> top1_unit_interval.
+      top1_R_to_S1 s = top1_R_to_S1 t \<longrightarrow> g s = g t"
+    by (rule hg_compat)
+  from Theorem_22_2[OF hR_quot hg_range_X hg_compat_X]
+  obtain f where hf0: "(\<forall>y \<in> top1_S1. f y \<in> X)"
+      "(\<forall>x \<in> top1_unit_interval. f (top1_R_to_S1 x) = g x)"
+      "(top1_continuous_map_on top1_S1 top1_S1_topology X TX f
+          \<longleftrightarrow> top1_continuous_map_on top1_unit_interval top1_unit_interval_topology X TX g)"
+    sorry
+  \<comment> \<open>f lands in A1 \<union> A2 (since f(p) = g(t) for some t with R\_to\_S1(t)=p, and g(t) \<in> A1\<union>A2).\<close>
+  have hf_range: "\<forall>p \<in> top1_S1. f p \<in> A1 \<union> A2"
+    sorry \<comment> \<open>f(p) = g(t) for R\_to\_S1(t)=p, and g(t) \<in> A1\<union>A2.\<close>
+  have hf_factor: "\<forall>t \<in> top1_unit_interval. f (top1_R_to_S1 t) = g t"
+    by (rule hf0(2))
+  have hf_cont_iff: "top1_continuous_map_on top1_S1 top1_S1_topology X TX f
+      \<longleftrightarrow> top1_continuous_map_on top1_unit_interval top1_unit_interval_topology X TX g"
+    by (rule hf0(3))
   have hf_cont: "top1_continuous_map_on top1_S1 top1_S1_topology X TX f"
     using hf_cont_iff hg_cont by (by100 blast)
   have hf_inj: "inj_on f top1_S1" sorry
