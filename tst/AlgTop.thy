@@ -4336,6 +4336,53 @@ proof -
   ultimately show ?thesis by (by100 simp)
 qed
 
+text \<open>Helper: Arc endpoint is in closure of arc minus endpoints.\<close>
+
+lemma arc_endpoint_in_closure_of_interior:
+  assumes "is_topology_on_strict X TX" "is_hausdorff_on X TX"
+      and "A \<subseteq> X"
+      and "top1_is_arc_on A (subspace_topology X TX A)"
+      and "top1_arc_endpoints_on A (subspace_topology X TX A) = {a, b}"
+      and "a \<noteq> b"
+  shows "a \<in> closure_on X TX (A - {a, b})"
+    and "b \<in> closure_on X TX (A - {a, b})"
+proof -
+  have hTopX: "is_topology_on X TX"
+    using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
+  have hA_closed: "closedin_on X TX A"
+  proof -
+    \<comment> \<open>Arc is compact (image of [0,1]), compact in Hausdorff is closed.\<close>
+    have "top1_compact_on A (subspace_topology X TX A)" sorry
+    thus ?thesis sorry
+  qed
+  have ha_in_A: "a \<in> A"
+    using assms(5) unfolding top1_arc_endpoints_on_def by (by100 blast)
+  have hb_in_A: "b \<in> A"
+    using assms(5) unfolding top1_arc_endpoints_on_def by (by100 blast)
+  have hA_minus_ne: "A - {a, b} \<noteq> {}"
+  proof -
+    \<comment> \<open>Arc has \<ge> 3 points: homeomorphic to [0,1] which has uncountably many points.\<close>
+    obtain h where "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
+        A (subspace_topology X TX A) h"
+      using assms(4) unfolding top1_is_arc_on_def by (by100 blast)
+    hence "h ` top1_unit_interval = A"
+      unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+    moreover have "(1/2 :: real) \<in> top1_unit_interval"
+      unfolding top1_unit_interval_def by (by100 simp)
+    ultimately have "h (1/2) \<in> A" by (by100 blast)
+    moreover have "h (1/2) \<noteq> a \<or> h (1/2) \<noteq> b" using assms(6) by (by100 blast)
+    ultimately show ?thesis sorry
+  qed
+  have hA_minus_sub: "A - {a, b} \<subseteq> X" using assms(3) by (by100 blast)
+  \<comment> \<open>closure(A-{a,b}) \<subseteq> A (A is closed) and closure(A-{a,b}) \<supseteq> A-{a,b}.
+     If a \<notin> closure(A-{a,b}), then A-{a,b} is clopen in A-{b} (connected).
+     A-{b} is connected (removing one endpoint from arc), contradiction.\<close>
+  have hA_minus_b_conn: "top1_connected_on (A - {b}) (subspace_topology X TX (A - {b}))"
+    sorry \<comment> \<open>Arc minus one endpoint = [0,1) minus pt, connected.\<close>
+  show "a \<in> closure_on X TX (A - {a, b})" sorry
+  show "b \<in> closure_on X TX (A - {a, b})" sorry
+qed
+
 text \<open>Lemma 64.3: K4 in S2 separates into four components.\<close>
 
 lemma Lemma_64_3_K4_four_components:
@@ -4791,7 +4838,7 @@ proof -
   qed
   \<comment> \<open>e24-{a2,a4} cannot lie in P1: a4 \<in> closure(e24-{a2,a4}) but a4 \<notin> P1\<union>(A\<union>B).\<close>
   have ha4_in_cl_e24: "a4 \<in> closure_on top1_S2 top1_S2_topology (e24 - {a2, a4})"
-    sorry \<comment> \<open>Arc endpoint is limit point of arc interior.\<close>
+    by (rule arc_endpoint_in_closure_of_interior(2)[OF hS2_strict hS2_haus assms(9) assms(15) assms(21) hdist(5)])
   have he24_not_P1: "\<not>(e24 - {a2, a4} \<subseteq> P1)"
   proof
     assume h: "e24 - {a2, a4} \<subseteq> P1"
@@ -5073,7 +5120,7 @@ proof -
     ultimately show ?thesis by (by100 blast)
   qed
   have ha2_in_cl_e24: "a2 \<in> closure_on top1_S2 top1_S2_topology (e24 - {a2, a4})"
-    sorry \<comment> \<open>Arc endpoint is limit point of arc interior.\<close>
+    by (rule arc_endpoint_in_closure_of_interior(1)[OF hS2_strict hS2_haus assms(9) assms(15) assms(21) hdist(5)])
   have he24_not_R1: "\<not>(e24 - {a2, a4} \<subseteq> R1)"
   proof
     assume h: "e24 - {a2, a4} \<subseteq> R1"
