@@ -1370,9 +1370,58 @@ proof -
   have hD2_sub: "D2 \<subseteq> X" unfolding D2_def using himg hDX by (by100 blast)
   \<comment> \<open>D1 and D2 are arcs (h restricted to [0,t0] and [t0,1]).\<close>
   have hD1_arc: "top1_is_arc_on D1 (subspace_topology X TX D1)"
-    sorry \<comment> \<open>h restricted to [0,t0] is homeomorphism [0,t0] \<cong> [0,1] \<rightarrow> D1.\<close>
+  proof -
+    \<comment> \<open>D1 is the image of [0,t0] under h. Compose affine [0,1]\<rightarrow>[0,t0] with h|_{[0,t0]}\<rightarrow>D1.\<close>
+    let ?I0 = "{t \<in> top1_unit_interval. t \<le> t0}"
+    \<comment> \<open>?I0 = [0,t0] as a subset of [0,1].\<close>
+    \<comment> \<open>h restricted to [0,t0] is a homeomorphism [0,t0] \<rightarrow> D1.\<close>
+    have hh_restr_homeo: "top1_homeomorphism_on ?I0
+        (subspace_topology top1_unit_interval top1_unit_interval_topology ?I0)
+        D1 (subspace_topology X TX D1) h"
+      sorry \<comment> \<open>Restrict homeomorphism h to closed [0,t0] \<subseteq> [0,1].\<close>
+    \<comment> \<open>Affine map s \<mapsto> s*t0: [0,1] \<rightarrow> [0,t0] is a homeomorphism.\<close>
+    have hscale_homeo: "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
+        ?I0 (subspace_topology top1_unit_interval top1_unit_interval_topology ?I0) (\<lambda>s. s * t0)"
+      sorry \<comment> \<open>Affine bijection, compact to Hausdorff (Theorem_26_6).\<close>
+    \<comment> \<open>Compose: [0,1] \<rightarrow> [0,t0] \<rightarrow> D1.\<close>
+    from homeomorphism_on_comp[OF hscale_homeo hh_restr_homeo]
+    have "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
+        D1 (subspace_topology X TX D1) (h \<circ> (\<lambda>s. s * t0))" .
+    moreover have hTD1_strict: "is_topology_on_strict D1 (subspace_topology X TX D1)"
+    proof -
+      have hTopX: "is_topology_on X TX" using hT unfolding is_topology_on_strict_def by (by100 blast)
+      have hTop: "is_topology_on D1 (subspace_topology X TX D1)"
+        by (rule subspace_topology_is_topology_on[OF hTopX hD1_sub])
+      have "subspace_topology X TX D1 \<subseteq> Pow D1"
+        unfolding subspace_topology_def by (by100 blast)
+      thus ?thesis unfolding is_topology_on_strict_def using hTop by (by100 blast)
+    qed
+    ultimately show ?thesis unfolding top1_is_arc_on_def by (by100 blast)
+  qed
   have hD2_arc: "top1_is_arc_on D2 (subspace_topology X TX D2)"
-    sorry \<comment> \<open>h restricted to [t0,1] is homeomorphism [t0,1] \<cong> [0,1] \<rightarrow> D2.\<close>
+  proof -
+    let ?I1 = "{t \<in> top1_unit_interval. t \<ge> t0}"
+    have hh_restr_homeo: "top1_homeomorphism_on ?I1
+        (subspace_topology top1_unit_interval top1_unit_interval_topology ?I1)
+        D2 (subspace_topology X TX D2) h"
+      sorry \<comment> \<open>Restrict homeomorphism h to closed [t0,1] \<subseteq> [0,1].\<close>
+    have hscale_homeo: "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
+        ?I1 (subspace_topology top1_unit_interval top1_unit_interval_topology ?I1) (\<lambda>s. t0 + s * (1 - t0))"
+      sorry \<comment> \<open>Affine bijection [0,1] \<rightarrow> [t0,1].\<close>
+    from homeomorphism_on_comp[OF hscale_homeo hh_restr_homeo]
+    have "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
+        D2 (subspace_topology X TX D2) (h \<circ> (\<lambda>s. t0 + s * (1 - t0)))" .
+    moreover have "is_topology_on_strict D2 (subspace_topology X TX D2)"
+    proof -
+      have hTopX: "is_topology_on X TX" using hT unfolding is_topology_on_strict_def by (by100 blast)
+      have "is_topology_on D2 (subspace_topology X TX D2)"
+        by (rule subspace_topology_is_topology_on[OF hTopX hD2_sub])
+      moreover have "subspace_topology X TX D2 \<subseteq> Pow D2"
+        unfolding subspace_topology_def by (by100 blast)
+      ultimately show ?thesis unfolding is_topology_on_strict_def by (by100 blast)
+    qed
+    ultimately show ?thesis unfolding top1_is_arc_on_def by (by100 blast)
+  qed
   show ?thesis using hD_eq hD_inter hD1_arc hD2_arc ha_D1 hb_D2 hp_D1 hp_D2 hD1_sub hD2_sub
     by (by100 blast)
 qed
