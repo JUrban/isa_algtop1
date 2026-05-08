@@ -996,7 +996,20 @@ proof -
       moreover have "top1_R_to_S1 ` top1_unit_interval \<subseteq> top1_S1"
         using \<open>top1_R_to_S1 ` UNIV = top1_S1\<close> by (by100 blast)
       moreover have "top1_S1 \<subseteq> top1_R_to_S1 ` top1_unit_interval"
-        sorry \<comment> \<open>Every p \<in> S1 has angle in [0,1).\<close>
+      proof
+        fix p assume "p \<in> top1_S1"
+        from S1_point_to_angle[OF this] obtain \<theta> :: real where "top1_R_to_S1 \<theta> = p" by (by100 blast)
+        \<comment> \<open>Shift \<theta> into [0,1): \<theta> - floor(\<theta>) \<in> [0,1) and R\_to\_S1(\<theta> - floor(\<theta>)) = R\_to\_S1(\<theta>).\<close>
+        let ?\<theta>' = "\<theta> - of_int (floor \<theta>)"
+        have "?\<theta>' \<in> top1_unit_interval"
+          unfolding top1_unit_interval_def
+          using floor_le_iff[of \<theta> "floor \<theta>"] le_floor_iff[of "floor \<theta> + 1" \<theta>]
+          by (by100 simp)
+        moreover have "top1_R_to_S1 ?\<theta>' = p"
+          using \<open>top1_R_to_S1 \<theta> = p\<close> top1_R_to_S1_int_shift[of "?\<theta>'" "floor \<theta>"]
+          by (by100 simp)
+        ultimately show "p \<in> top1_R_to_S1 ` top1_unit_interval" by (by100 blast)
+      qed
       ultimately show ?thesis by (by100 blast)
     qed
     show "\<forall>V. V \<subseteq> top1_S1 \<longrightarrow>
