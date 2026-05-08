@@ -2340,8 +2340,8 @@ proof -
     hence hxD1: "x \<in> e13_pa3 \<union> e23 \<union> e24_a2q" and hxD2: "x \<in> e24_qa4 \<union> e41 \<union> e13_a1p"
       by (by100 blast)+
     show "x \<in> {p, q}"
-      sorry \<comment> \<open>9 pairwise intersection cases using K4 assumptions.
-           All reduce to x \<in> {p} or x \<in> {q} via vertex separation.\<close>
+      sorry \<comment> \<open>9-case K4 intersection: all vertex non-memberships proved above.
+           e13_pa3\<inter>e13_a1p={p}, e24_a2q\<inter>e24_qa4={q}, all other pairs empty.\<close>
   next
     fix x assume "x \<in> {p, q}"
     thus "x \<in> ?D1 \<inter> ?D2"
