@@ -4453,8 +4453,60 @@ proof -
      A-{b} is connected (removing one endpoint from arc), contradiction.\<close>
   have hA_minus_b_conn: "top1_connected_on (A - {b}) (subspace_topology X TX (A - {b}))"
     sorry \<comment> \<open>Arc minus one endpoint = [0,1) minus pt, connected.\<close>
-  show "a \<in> closure_on X TX (A - {a, b})" sorry
-  show "b \<in> closure_on X TX (A - {a, b})" sorry
+  show "a \<in> closure_on X TX (A - {a, b})"
+  proof (rule ccontr)
+    assume "a \<notin> closure_on X TX (A - {a, b})"
+    \<comment> \<open>a has open nbhd U with U \<inter> (A-{a,b}) = {}. Then A-{b} = (A-{b}\<inter>U) \<union> (A-{b}-U),
+       a separation (both open in A-{b}), contradicting A-{b} connected.\<close>
+    have ha_in_X: "a \<in> X" using ha_in_A assms(3) by (by100 blast)
+    have "a \<notin> closure_on X TX (A - {a, b})" by (rule \<open>a \<notin> closure_on X TX (A - {a, b})\<close>)
+    hence "\<not> (\<forall>U. neighborhood_of a X TX U \<longrightarrow> intersects U (A - {a, b}))"
+      using iffD2[OF Theorem_17_5a[OF hTopX ha_in_X hA_minus_sub]] by (by100 blast)
+    hence "\<exists>U. neighborhood_of a X TX U \<and> \<not> intersects U (A - {a, b})"
+      by (by100 blast)
+    then obtain U where hU: "U \<in> TX" "a \<in> U" "U \<inter> (A - {a, b}) = {}"
+      unfolding neighborhood_of_def intersects_def by (by100 blast)
+    \<comment> \<open>A-{b} \<inter> U = {a} (since U \<inter> (A-{a,b}) = {} and a \<in> A-{b} \<inter> U).\<close>
+    have hAb_U: "(A - {b}) \<inter> U \<subseteq> {a}"
+    proof
+      fix x assume "x \<in> (A - {b}) \<inter> U"
+      hence "x \<in> A" "x \<noteq> b" "x \<in> U" by (by100 blast)+
+      show "x \<in> {a}" proof (rule ccontr)
+        assume "x \<notin> {a}" hence "x \<noteq> a" by (by100 blast)
+        hence "x \<in> A - {a, b}" using \<open>x \<in> A\<close> \<open>x \<noteq> b\<close> by (by100 blast)
+        thus False using hU(3) \<open>x \<in> U\<close> by (by100 blast)
+      qed
+    qed
+    moreover have "a \<in> (A - {b}) \<inter> U" using ha_in_A assms(6) hU(2) by (by100 blast)
+    ultimately have hAb_U_eq: "(A - {b}) \<inter> U = {a}" by (by100 blast)
+    \<comment> \<open>{a} is open in A-{b} (since (A-{b})\<inter>U = {a} and U open).
+       {a} is also closed in A-{b} (A-{b} Hausdorff, singletons closed).
+       So {a} is clopen. A-{b} - {a} = A-{a,b} \<noteq> {}. Contradicts A-{b} connected.\<close>
+    have hAb_sub_X: "A - {b} \<subseteq> X" using assms(3) by (by100 blast)
+    have hTAb: "is_topology_on (A - {b}) (subspace_topology X TX (A - {b}))"
+      by (rule subspace_topology_is_topology_on[OF hTopX hAb_sub_X])
+    \<comment> \<open>{a} open in A-{b}.\<close>
+    have ha_open: "{a} \<in> subspace_topology X TX (A - {b})"
+    proof -
+      have "(A - {b}) \<inter> U = {a}" by (rule hAb_U_eq)
+      moreover have "U \<in> TX" by (rule hU(1))
+      ultimately show ?thesis unfolding subspace_topology_def by (by100 blast)
+    qed
+    \<comment> \<open>{a} clopen: {a} closed in A-{b} (Hausdorff subspace, singletons closed).\<close>
+    have ha_closed: "closedin_on (A - {b}) (subspace_topology X TX (A - {b})) {a}"
+      sorry \<comment> \<open>Hausdorff \<Rightarrow> singletons closed.\<close>
+    \<comment> \<open>Separation: {a} clopen + (A-{b})-{a} = A-{a,b} nonempty.\<close>
+    have "(A - {b}) - {a} \<in> subspace_topology X TX (A - {b})"
+      using ha_closed unfolding closedin_on_def by (by100 blast)
+    have "top1_is_separation_on (A - {b}) (subspace_topology X TX (A - {b})) {a} ((A - {b}) - {a})"
+      unfolding top1_is_separation_on_def
+      using ha_open \<open>(A - {b}) - {a} \<in> _\<close> ha_in_A assms(6) hA_minus_ne by (by100 blast)
+    hence "\<not> top1_connected_on (A - {b}) (subspace_topology X TX (A - {b}))"
+      unfolding top1_connected_on_def sorry
+    thus False using hA_minus_b_conn by (by100 blast)
+  qed
+  show "b \<in> closure_on X TX (A - {a, b})"
+    sorry \<comment> \<open>Symmetric argument with A-{a} connected.\<close>
 qed
 
 text \<open>Lemma 64.3: K4 in S2 separates into four components.\<close>
