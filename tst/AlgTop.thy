@@ -5155,7 +5155,52 @@ proof -
     ultimately show ?thesis by (rule closedin_on_Un[OF hTopS2])
   qed
   have hC1_conn: "top1_connected_on ?C1 (subspace_topology top1_S2 top1_S2_topology ?C1)"
-    sorry \<comment> \<open>cl(P1), cl(R1) connected, share B \<subseteq> cl(P1)\<inter>cl(R1).\<close>
+  proof -
+    \<comment> \<open>cl(P1) connected (closure of connected set, Theorem 23.4).\<close>
+    have hclP1_sub: "closure_on top1_S2 top1_S2_topology P1 \<subseteq> top1_S2"
+      using hcl_P1 hP1_sub_AB hA_sub assms(8) by (by100 blast)
+    have hP1_sub_S2: "P1 \<subseteq> top1_S2" using hP(4) by (by100 blast)
+    have hclP1_conn: "top1_connected_on (closure_on top1_S2 top1_S2_topology P1)
+        (subspace_topology top1_S2 top1_S2_topology (closure_on top1_S2 top1_S2_topology P1))"
+      by (rule Theorem_23_4[OF hTopS2 hP1_sub_S2 hclP1_sub subset_closure_on
+          closure_on_mono[OF order_refl] hP(5)])
+    \<comment> \<open>cl(R1) connected.\<close>
+    have hclR1_sub: "closure_on top1_S2 top1_S2_topology R1 \<subseteq> top1_S2"
+      using hcl_R1 hR(4) assms(8) hC_sub by (by100 blast)
+    have hR1_sub_S2: "R1 \<subseteq> top1_S2" using hR(4) by (by100 blast)
+    have hclR1_conn: "top1_connected_on (closure_on top1_S2 top1_S2_topology R1)
+        (subspace_topology top1_S2 top1_S2_topology (closure_on top1_S2 top1_S2_topology R1))"
+      by (rule Theorem_23_4[OF hTopS2 hR1_sub_S2 hclR1_sub subset_closure_on
+          closure_on_mono[OF order_refl] hR(5)])
+    \<comment> \<open>They share B = e13. B \<subseteq> cl(P1) \<inter> cl(R1).\<close>
+    have hB_in_both: "?B \<subseteq> closure_on top1_S2 top1_S2_topology P1 \<inter>
+        closure_on top1_S2 top1_S2_topology R1"
+      using hcl_P1 hcl_R1 by (by100 blast)
+    obtain p where hp: "p \<in> ?B" using assms(20) unfolding top1_arc_endpoints_on_def by (by100 blast)
+    hence "p \<in> closure_on top1_S2 top1_S2_topology P1 \<inter>
+        closure_on top1_S2 top1_S2_topology R1" using hB_in_both by (by100 blast)
+    \<comment> \<open>Apply Theorem 23.3: indexed family with common point.\<close>
+    have "top1_connected_on (closure_on top1_S2 top1_S2_topology P1 \<union>
+        closure_on top1_S2 top1_S2_topology R1)
+        (subspace_topology top1_S2 top1_S2_topology (closure_on top1_S2 top1_S2_topology P1 \<union>
+        closure_on top1_S2 top1_S2_topology R1))"
+    proof -
+      let ?I = "{True, False}" and ?A = "\<lambda>b. if b then closure_on top1_S2 top1_S2_topology P1
+          else closure_on top1_S2 top1_S2_topology R1"
+      have "?I \<noteq> {}" by (by100 simp)
+      moreover have "\<forall>i \<in> ?I. ?A i \<subseteq> top1_S2"
+        using hclP1_sub hclR1_sub by (by100 simp)
+      moreover have "\<forall>i \<in> ?I. top1_connected_on (?A i) (subspace_topology top1_S2 top1_S2_topology (?A i))"
+        using hclP1_conn hclR1_conn by (by100 simp)
+      moreover have "p \<in> \<Inter>(?A ` ?I)"
+        using \<open>p \<in> closure_on top1_S2 top1_S2_topology P1 \<inter>
+            closure_on top1_S2 top1_S2_topology R1\<close> by (by100 simp)
+      moreover have "(\<Union>i \<in> ?I. ?A i) = closure_on top1_S2 top1_S2_topology P1 \<union>
+          closure_on top1_S2 top1_S2_topology R1" by (by100 force)
+      ultimately show ?thesis sorry
+    qed
+    thus ?thesis .
+  qed
   have hC1_compl: "top1_S2 - ?C1 = T"
   proof -
     have "top1_S2 - ?C1 = top1_S2 - (P1 \<union> R1 \<union> ?Y)" using hC1_eq by (by100 simp)
