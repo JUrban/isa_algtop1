@@ -5503,7 +5503,94 @@ proof -
   qed
   \<comment> \<open>Same argument for R1.\<close>
   have hR1_is_comp: "R1 = U \<or> R1 = V \<or> R1 = W"
-    sorry \<comment> \<open>Same argument with B\<union>C separation.\<close>
+  proof -
+    have hR1_in_UVW: "R1 \<subseteq> U \<union> V \<union> W" using hR1_sub_Y_compl hUVW(7) by (by100 blast)
+    \<comment> \<open>Same 2\<times>Lemma\_23\_2 approach. Re-derive shared infrastructure.\<close>
+    have hTYr: "is_topology_on (top1_S2 - ?Y) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - ?Y))"
+      by (rule subspace_topology_is_topology_on[OF]) (use hTopS2 in \<open>by100 blast\<close>, by100 blast)
+    have hVW_open_r: "V \<union> W \<in> top1_S2_topology"
+    proof -
+      from hTopS2 have "\<And>S. S \<subseteq> top1_S2_topology \<Longrightarrow> \<Union>S \<in> top1_S2_topology"
+        unfolding is_topology_on_def by (by100 blast)
+      from this[of "{V, W}"] hUVW(12,13) have "\<Union>{V, W} \<in> top1_S2_topology" by (by100 blast)
+      moreover have "\<Union>{V, W} = V \<union> W" by (by100 blast)
+      ultimately show ?thesis by (by100 simp)
+    qed
+    have hU_oY: "U \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - ?Y)"
+    proof -
+      have "U \<subseteq> top1_S2 - ?Y" using hUVW(7) by (by100 blast)
+      hence "U = (top1_S2 - ?Y) \<inter> U" by (by100 blast)
+      thus ?thesis unfolding subspace_topology_def using hUVW(11) by (by100 blast)
+    qed
+    have hVW_oY: "V \<union> W \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - ?Y)"
+    proof -
+      have "V \<union> W \<subseteq> top1_S2 - ?Y" using hUVW(7) by (by100 blast)
+      hence "V \<union> W = (top1_S2 - ?Y) \<inter> (V \<union> W)" by (by100 blast)
+      thus ?thesis unfolding subspace_topology_def using hVW_open_r by (by100 blast)
+    qed
+    have hUVW_sr: "top1_is_separation_on (top1_S2 - ?Y)
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - ?Y)) U (V \<union> W)"
+    proof -
+      have "U \<inter> (V \<union> W) = {}" using hUVW(4,6) by (by100 blast)
+      moreover have "U \<union> (V \<union> W) = top1_S2 - ?Y" using hUVW(7) by (by100 blast)
+      moreover have "V \<union> W \<noteq> {}" using hUVW(2) by (by100 blast)
+      ultimately show ?thesis unfolding top1_is_separation_on_def
+        using hU_oY hVW_oY hUVW(1) by (by100 blast)
+    qed
+    have hR1_cY: "top1_connected_on R1
+        (subspace_topology (top1_S2 - ?Y) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - ?Y)) R1)"
+    proof -
+      have "subspace_topology top1_S2 top1_S2_topology R1 =
+          subspace_topology (top1_S2 - ?Y) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - ?Y)) R1"
+        using subspace_topology_trans[of R1 "top1_S2 - ?Y" top1_S2 top1_S2_topology]
+            hR1_sub_Y_compl by (by100 simp)
+      thus ?thesis using hR(5) by (by100 simp)
+    qed
+    from Lemma_23_2[OF hTYr hUVW_sr hR1_sub_Y_compl hR1_cY]
+    have "R1 \<subseteq> U \<or> R1 \<subseteq> V \<union> W" by (by100 blast)
+    thus ?thesis
+    proof
+      assume hRU: "R1 \<subseteq> U"
+      have "U \<subseteq> R1" sorry \<comment> \<open>x\_R \<in> U \<inter> R1 + component\_of argument.\<close>
+      thus ?thesis using hRU by (by100 blast)
+    next
+      assume "R1 \<subseteq> V \<union> W"
+      have hTVWr: "is_topology_on (V \<union> W) (subspace_topology top1_S2 top1_S2_topology (V \<union> W))"
+        by (rule subspace_topology_is_topology_on[OF hTopS2]) (use hUVW(7) in \<open>by100 blast\<close>)
+      have hVW_sr: "top1_is_separation_on (V \<union> W) (subspace_topology top1_S2 top1_S2_topology (V \<union> W)) V W"
+      proof -
+        have "V = (V \<union> W) \<inter> V" by (by100 blast)
+        hence hVo: "V \<in> subspace_topology top1_S2 top1_S2_topology (V \<union> W)"
+          unfolding subspace_topology_def using hUVW(12) by (by100 blast)
+        have "W = (V \<union> W) \<inter> W" by (by100 blast)
+        hence hWo: "W \<in> subspace_topology top1_S2 top1_S2_topology (V \<union> W)"
+          unfolding subspace_topology_def using hUVW(13) by (by100 blast)
+        show ?thesis unfolding top1_is_separation_on_def
+          using hVo hWo hUVW(2,3,5) by (by100 blast)
+      qed
+      have hR1_cVW: "top1_connected_on R1
+          (subspace_topology (V \<union> W) (subspace_topology top1_S2 top1_S2_topology (V \<union> W)) R1)"
+      proof -
+        have "subspace_topology top1_S2 top1_S2_topology R1 =
+            subspace_topology (V \<union> W) (subspace_topology top1_S2 top1_S2_topology (V \<union> W)) R1"
+          using subspace_topology_trans[of R1 "V \<union> W" top1_S2 top1_S2_topology]
+              \<open>R1 \<subseteq> V \<union> W\<close> by (by100 simp)
+        thus ?thesis using hR(5) by (by100 simp)
+      qed
+      from Lemma_23_2[OF hTVWr hVW_sr \<open>R1 \<subseteq> V \<union> W\<close> hR1_cVW]
+      have "R1 \<subseteq> V \<or> R1 \<subseteq> W" by (by100 blast)
+      thus ?thesis
+      proof
+        assume "R1 \<subseteq> V"
+        have "V \<subseteq> R1" sorry
+        thus ?thesis using \<open>R1 \<subseteq> V\<close> by (by100 blast)
+      next
+        assume "R1 \<subseteq> W"
+        have "W \<subseteq> R1" sorry
+        thus ?thesis using \<open>R1 \<subseteq> W\<close> by (by100 blast)
+      qed
+    qed
+  qed
   \<comment> \<open>P1 \<noteq> R1: closure(P1) = P1\<union>(A\<union>B), closure(R1) = R1\<union>(B\<union>C).
      If P1 = R1 then closure(P1) \<subseteq> (A\<union>B) \<inter> (B\<union>C) gives boundary \<subseteq> B, contradicting
      that an open nonempty subset of S2 has boundary larger than an arc.\<close>
