@@ -4377,7 +4377,26 @@ proof -
       \<comment> \<open>C2\<union>Q = W. C2\<union>Q connected (both connected, share y). So W connected.\<close>
       have hC2Q_eq: "C2 \<union> Q = W" using hQ(1,2) assms(5,6) \<open>y \<in> C2\<close> by (by100 blast)
       have "top1_connected_on W (subspace_topology top1_S2 top1_S2_topology W)"
-        sorry \<comment> \<open>C2\<union>Q connected via Theorem\_23\_3 (share y), = W.\<close>
+      proof -
+        let ?I = "{True, False}" and ?A = "\<lambda>b. if b then C2 else Q"
+        have "?I \<noteq> {}" by (by100 simp)
+        moreover have "\<forall>i \<in> ?I. ?A i \<subseteq> top1_S2"
+        proof -
+          have "C2 \<subseteq> top1_S2" using hC2_sub assms(2) by (by100 blast)
+          moreover have "Q \<subseteq> top1_S2" using hQ(1) assms(2) by (by100 blast)
+          ultimately show ?thesis by (by100 simp)
+        qed
+        moreover have "\<forall>i \<in> ?I. top1_connected_on (?A i) (subspace_topology top1_S2 top1_S2_topology (?A i))"
+          using assms(8) hQ(3) by (by100 simp)
+        moreover have "y \<in> \<Inter>(?A ` ?I)" using \<open>y \<in> Q\<close> \<open>y \<in> C2\<close> by (by100 simp)
+        moreover have "(\<Union>i \<in> ?I. ?A i) = W" using hC2Q_eq by (by100 force)
+        ultimately have hprem: "?I \<noteq> {} \<and> (\<forall>i \<in> ?I. ?A i \<subseteq> top1_S2) \<and>
+            (\<forall>i \<in> ?I. top1_connected_on (?A i) (subspace_topology top1_S2 top1_S2_topology (?A i))) \<and>
+            y \<in> \<Inter>(?A ` ?I) \<and> (\<Union>i \<in> ?I. ?A i) = W" by (by100 blast)
+        have hTopS2: "is_topology_on top1_S2 top1_S2_topology"
+          using top1_S2_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
+        from Theorem_23_3[OF hTopS2, of ?I ?A y] hprem show ?thesis by metis
+      qed
       thus False using assms(9) by (by100 blast)
     qed
   qed
@@ -4393,7 +4412,16 @@ proof -
       hence "y \<in> C1" using hQ(1) assms(6) by (by100 blast)
       have hC1Q_eq: "C1 \<union> Q = W" using hQ(1,2) assms(5,6) \<open>y \<in> C1\<close> by (by100 blast)
       have "top1_connected_on W (subspace_topology top1_S2 top1_S2_topology W)"
-        sorry \<comment> \<open>C1\<union>Q connected via Theorem\_23\_3 (share y), = W.\<close>
+      proof -
+        let ?I = "{True, False}" and ?A = "\<lambda>b. if b then C1 else Q"
+        have hprem: "?I \<noteq> {} \<and> (\<forall>i \<in> ?I. ?A i \<subseteq> top1_S2) \<and>
+            (\<forall>i \<in> ?I. top1_connected_on (?A i) (subspace_topology top1_S2 top1_S2_topology (?A i))) \<and>
+            y \<in> \<Inter>(?A ` ?I) \<and> (\<Union>i \<in> ?I. ?A i) = W"
+          using hC1_sub hQ(1,3) assms(2,7) \<open>y \<in> Q\<close> \<open>y \<in> C1\<close> hC1Q_eq by (by100 force)
+        have hTopS2: "is_topology_on top1_S2 top1_S2_topology"
+          using top1_S2_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
+        from Theorem_23_3[OF hTopS2, of ?I ?A y] hprem show ?thesis by metis
+      qed
       thus False using assms(9) by (by100 blast)
     qed
   qed
