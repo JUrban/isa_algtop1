@@ -5725,31 +5725,83 @@ proof -
       and hT_union: "P1 \<union> R1 \<union> T = top1_S2 - ?Y"
       and hT_disj: "P1 \<inter> T = {}" "R1 \<inter> T = {}"
   proof -
-    \<comment> \<open>P1 \<in> {U,V,W}, R1 \<in> {U,V,W}, P1 \<noteq> R1. The third element is T.\<close>
-    from hP1_is_comp hR1_is_comp hP1_ne_R1
-    obtain T0 where hT0: "T0 \<in> {U, V, W}" "T0 \<noteq> P1" "T0 \<noteq> R1"
-        "{P1, R1, T0} = {U, V, W}" sorry \<comment> \<open>3\<times>3 case analysis; too slow for by100.\<close>
+    \<comment> \<open>Define T as (S2-Y) - P1 - R1. Show it has all required properties.\<close>
+    define T0 where "T0 = (top1_S2 - ?Y) - P1 - R1"
+    have hT0_in: "T0 \<in> {U, V, W}"
+    proof -
+      have hUVW_union: "top1_S2 - ?Y = U \<union> V \<union> W" using hUVW(7) by (by100 blast)
+      have hT0_alt: "T0 = (U \<union> V \<union> W) - P1 - R1" unfolding T0_def using hUVW_union by (by100 blast)
+      \<comment> \<open>Case split: P1=U,V,W and R1=U,V,W; the remainder is T0.\<close>
+      from hP1_is_comp show ?thesis
+      proof (elim disjE)
+        assume "P1 = U" from hR1_is_comp show ?thesis
+        proof (elim disjE)
+          assume "R1 = U" thus ?thesis using \<open>P1 = U\<close> hP1_ne_R1 by (by100 blast)
+        next assume "R1 = V"
+          have "T0 = W" using hT0_alt \<open>P1 = U\<close> \<open>R1 = V\<close> hUVW(4,5,6) by (by100 force)
+          thus ?thesis by (by100 blast)
+        next assume "R1 = W"
+          have "T0 = V" using hT0_alt \<open>P1 = U\<close> \<open>R1 = W\<close> hUVW(4,5,6) by (by100 force)
+          thus ?thesis by (by100 blast)
+        qed
+      next
+        assume "P1 = V" from hR1_is_comp show ?thesis
+        proof (elim disjE)
+          assume "R1 = U"
+          have "T0 = W" using hT0_alt \<open>P1 = V\<close> \<open>R1 = U\<close> hUVW(4,5,6) by (by100 force)
+          thus ?thesis by (by100 blast)
+        next assume "R1 = V" thus ?thesis using \<open>P1 = V\<close> hP1_ne_R1 by (by100 blast)
+        next assume "R1 = W"
+          have "T0 = U" using hT0_alt \<open>P1 = V\<close> \<open>R1 = W\<close> hUVW(4,5,6) by (by100 force)
+          thus ?thesis by (by100 blast)
+        qed
+      next
+        assume "P1 = W" from hR1_is_comp show ?thesis
+        proof (elim disjE)
+          assume "R1 = U"
+          have "T0 = V" using hT0_alt \<open>P1 = W\<close> \<open>R1 = U\<close> hUVW(4,5,6) by (by100 force)
+          thus ?thesis by (by100 blast)
+        next assume "R1 = V"
+          have "T0 = U" using hT0_alt \<open>P1 = W\<close> \<open>R1 = V\<close> hUVW(4,5,6) by (by100 force)
+          thus ?thesis by (by100 blast)
+        next assume "R1 = W" thus ?thesis using \<open>P1 = W\<close> hP1_ne_R1 by (by100 blast)
+        qed
+      qed
+    qed
+    have hT0_ne_P1: "T0 \<noteq> P1"
+    proof -
+      have "P1 \<inter> T0 = {}" using T0_def by (by100 blast)
+      thus ?thesis using hP(1) by (by100 blast)
+    qed
+    have hT0_ne_R1: "T0 \<noteq> R1"
+    proof -
+      have "R1 \<inter> T0 = {}" using T0_def by (by100 blast)
+      thus ?thesis using hR(1) by (by100 blast)
+    qed
     have "top1_connected_on T0 (subspace_topology top1_S2 top1_S2_topology T0)"
-      using hT0(1) hUVW(8,9,10) by (by100 blast)
-    moreover have "T0 \<noteq> {}" using hT0(1) hUVW(1,2,3) by (by100 blast)
+      using hT0_in hUVW(8,9,10) by (by100 blast)
+    moreover have "T0 \<noteq> {}" using hT0_in hUVW(1,2,3) by (by100 blast)
     moreover have "P1 \<union> R1 \<union> T0 = top1_S2 - ?Y"
     proof -
-      have "\<Union>{P1, R1, T0} = \<Union>{U, V, W}" using hT0(4) by (by100 simp)
-      moreover have "\<Union>{P1, R1, T0} = P1 \<union> R1 \<union> T0" by (by100 blast)
-      moreover have "\<Union>{U, V, W} = U \<union> V \<union> W" by (by100 blast)
-      ultimately show ?thesis using hUVW(7) by (by100 simp)
+      have hT0e: "T0 = (top1_S2 - ?Y) - P1 - R1" by (rule T0_def)
+      show ?thesis
+      proof (rule set_eqI, rule iffI)
+        fix x assume "x \<in> P1 \<union> R1 \<union> T0"
+        hence "x \<in> P1 \<or> x \<in> R1 \<or> x \<in> T0" by (by100 blast)
+        thus "x \<in> top1_S2 - ?Y"
+        proof (elim disjE)
+          assume "x \<in> P1" thus ?thesis using hP1_sub_Y_compl by (by100 blast)
+        next assume "x \<in> R1" thus ?thesis using hR1_sub_Y_compl by (by100 blast)
+        next assume "x \<in> T0" thus ?thesis using hT0e by (by100 blast)
+        qed
+      next
+        fix x assume "x \<in> top1_S2 - ?Y"
+        thus "x \<in> P1 \<union> R1 \<union> T0" using hT0e by (by100 blast)
+      qed
     qed
-    moreover have "P1 \<inter> T0 = {}"
-    proof -
-      from hP1_is_comp hT0(1,2) have "P1 \<noteq> T0" by (by100 blast)
-      thus ?thesis using hP1_is_comp hT0(1) hUVW(4,5,6) sorry
-    qed
-    moreover have "R1 \<inter> T0 = {}"
-    proof -
-      from hR1_is_comp hT0(1,3) have "R1 \<noteq> T0" by (by100 blast)
-      thus ?thesis using hR1_is_comp hT0(1) hUVW(4,5,6) sorry
-    qed
-    ultimately show ?thesis by (rule that[OF hT0(1,2,3)])
+    moreover have "P1 \<inter> T0 = {}" using T0_def by (by100 blast)
+    moreover have "R1 \<inter> T0 = {}" using T0_def by (by100 blast)
+    ultimately show ?thesis by (rule that[OF hT0_in hT0_ne_P1 hT0_ne_R1])
   qed
   have he24_in_T: "e24 - {a2, a4} \<subseteq> T"
   proof -
