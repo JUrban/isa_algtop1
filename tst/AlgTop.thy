@@ -4398,7 +4398,7 @@ proof -
     proof -
       \<comment> \<open>Compact in Hausdorff is closed.\<close>
       assume hcomp: "top1_compact_on A (subspace_topology X TX A)"
-      show "closedin_on X TX A" sorry \<comment> \<open>Theorem\_26\_3: compact subspace of Hausdorff is closed.\<close>
+      show "closedin_on X TX A" by (rule Theorem_26_3[OF assms(2) assms(3) hcomp])
     qed
   qed
   have ha_in_A: "a \<in> A"
@@ -4418,20 +4418,32 @@ proof -
     ultimately have "h (1/2) \<in> A" by (by100 blast)
     moreover have "h (1/2) \<notin> {a, b}"
     proof -
-      \<comment> \<open>h is injective, h(0) and h(1) are the endpoints {a,b}. h(1/2) \<noteq> h(0) and h(1/2) \<noteq> h(1).\<close>
-      obtain hh where hh: "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
-          A (subspace_topology X TX A) hh"
-        using assms(4) unfolding top1_is_arc_on_def by (by100 blast)
-      have hinj: "inj_on hh top1_unit_interval"
-        using hh unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
-      have hhh0: "hh 0 \<in> {a, b}" sorry
-      have hhh1: "hh 1 \<in> {a, b}" sorry
-      moreover have "(1/2::real) \<noteq> (0::real)" by (by100 simp)
-      moreover have "(1/2::real) \<noteq> (1::real)" by (by100 simp)
-      moreover have "(0::real) \<in> top1_unit_interval" unfolding top1_unit_interval_def by (by100 simp)
-      moreover have "(1::real) \<in> top1_unit_interval" unfolding top1_unit_interval_def by (by100 simp)
-      moreover have "(1/2::real) \<in> top1_unit_interval" unfolding top1_unit_interval_def by (by100 simp)
-      ultimately show ?thesis sorry
+      have hh_home: "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
+          A (subspace_topology X TX A) h"
+        using \<open>top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
+            A (subspace_topology X TX A) h\<close> .
+      have hinj: "inj_on h top1_unit_interval"
+        using hh_home unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+      have hep_h: "{h 0, h 1} = {a, b}"
+        using arc_endpoints_are_boundary[OF assms(1,2,3,4) hh_home] assms(5) by (by100 blast)
+      have h0_ab: "h 0 \<in> {a, b}" using hep_h by (by100 blast)
+      have h1_ab: "h 1 \<in> {a, b}" using hep_h by (by100 blast)
+      have h12_ne_h0: "h (1/2) \<noteq> h 0"
+      proof -
+        have "(1/2::real) \<noteq> (0::real)" by (by100 simp)
+        moreover have "(0::real) \<in> top1_unit_interval" unfolding top1_unit_interval_def by (by100 simp)
+        moreover have "(1/2::real) \<in> top1_unit_interval" unfolding top1_unit_interval_def by (by100 simp)
+        ultimately show ?thesis using hinj unfolding inj_on_def by (by100 blast)
+      qed
+      have h12_ne_h1: "h (1/2) \<noteq> h 1"
+      proof -
+        have "(1/2::real) \<noteq> (1::real)" by (by100 simp)
+        moreover have "(1::real) \<in> top1_unit_interval" unfolding top1_unit_interval_def by (by100 simp)
+        moreover have "(1/2::real) \<in> top1_unit_interval" unfolding top1_unit_interval_def by (by100 simp)
+        ultimately show ?thesis using hinj unfolding inj_on_def by (by100 blast)
+      qed
+      have "h (1/2) \<notin> {h 0, h 1}" using h12_ne_h0 h12_ne_h1 by (by100 blast)
+      thus ?thesis using hep_h by (by100 blast)
     qed
     ultimately show ?thesis by (by100 blast)
   qed
