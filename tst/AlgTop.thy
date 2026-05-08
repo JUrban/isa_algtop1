@@ -965,7 +965,38 @@ proof -
   qed
   \<comment> \<open>R\_to\_S1: [0,1] \<rightarrow> S1 is a quotient map (continuous surjection, compact to Hausdorff).\<close>
   have hR_quot: "top1_quotient_map_on top1_unit_interval top1_unit_interval_topology
-      top1_S1 top1_S1_topology top1_R_to_S1" sorry
+      top1_S1 top1_S1_topology top1_R_to_S1"
+    unfolding top1_quotient_map_on_def
+  proof (intro conjI)
+    show "is_topology_on top1_unit_interval top1_unit_interval_topology"
+      by (rule top1_unit_interval_topology_is_topology_on)
+    show hTS1: "is_topology_on top1_S1 top1_S1_topology"
+      sorry \<comment> \<open>S1\_topology is subspace of product topology.\<close>
+    \<comment> \<open>R\_to\_S1 is a covering map, hence continuous UNIV \<rightarrow> S1. Restrict to [0,1].\<close>
+    have hR_cont_UNIV: "top1_continuous_map_on (UNIV::real set) top1_open_sets
+        top1_S1 top1_S1_topology top1_R_to_S1"
+      using Theorem_53_1 unfolding top1_covering_map_on_def by (by100 blast)
+    show "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+        top1_S1 top1_S1_topology top1_R_to_S1"
+    proof -
+      from top1_continuous_map_on_subspace_restrict[OF hR_cont_UNIV]
+      show ?thesis unfolding top1_unit_interval_topology_def by (by100 simp)
+    qed
+    show "top1_R_to_S1 ` top1_unit_interval = top1_S1"
+    proof -
+      have "top1_R_to_S1 ` (UNIV::real set) = top1_S1"
+        using Theorem_53_1 unfolding top1_covering_map_on_def by (by100 blast)
+      moreover have "top1_R_to_S1 ` top1_unit_interval \<subseteq> top1_S1"
+        using \<open>top1_R_to_S1 ` UNIV = top1_S1\<close> by (by100 blast)
+      moreover have "top1_S1 \<subseteq> top1_R_to_S1 ` top1_unit_interval"
+        sorry \<comment> \<open>Every p \<in> S1 has angle in [0,1).\<close>
+      ultimately show ?thesis by (by100 blast)
+    qed
+    show "\<forall>V. V \<subseteq> top1_S1 \<longrightarrow>
+        ({x \<in> top1_unit_interval. top1_R_to_S1 x \<in> V} \<in> top1_unit_interval_topology
+            \<longrightarrow> V \<in> top1_S1_topology)"
+      sorry \<comment> \<open>Quotient property: closed surjection from compact to Hausdorff.\<close>
+  qed
   \<comment> \<open>g respects the identification: R\_to\_S1(s) = R\_to\_S1(t) \<Rightarrow> g(s) = g(t).\<close>
   have hg_compat: "\<forall>s \<in> top1_unit_interval. \<forall>t \<in> top1_unit_interval.
       top1_R_to_S1 s = top1_R_to_S1 t \<longrightarrow> g s = g t"
