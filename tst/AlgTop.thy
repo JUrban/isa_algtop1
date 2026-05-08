@@ -1510,8 +1510,81 @@ proof -
     qed
     \<comment> \<open>e12-{a1,a2} \<subseteq> A\<union>B and connected \<Rightarrow> in A or B.\<close>
     \<comment> \<open>WLOG e12-{a1,a2} \<subseteq> A. Show e34-{a3,a4} \<subseteq> B. Same for B-case by symmetry.\<close>
+    \<comment> \<open>Key vertex exclusions for the boundary argument.\<close>
+    have ha4_not_e23: "a4 \<notin> e23"
+    proof assume "a4 \<in> e23"
+      hence "a4 \<in> e23 \<inter> e41" using assms(19) unfolding top1_arc_endpoints_on_def by (by100 blast)
+      hence "a4 \<in> {}" using assms(23) by (by100 blast)
+      thus False by (by100 blast)
+    qed
+    have ha3_not_e41: "a3 \<notin> e41"
+    proof assume "a3 \<in> e41"
+      hence "a3 \<in> e23 \<inter> e41" using assms(17) unfolding top1_arc_endpoints_on_def by (by100 blast)
+      hence "a3 \<in> {}" using assms(23) by (by100 blast)
+      thus False by (by100 blast)
+    qed
+    have ha4_not_J12: "a4 \<notin> e12 \<union> e13 \<union> e23"
+    proof -
+      have "a4 \<notin> e12"
+      proof assume "a4 \<in> e12"
+        hence "a4 \<in> e12 \<inter> e41" using assms(19) unfolding top1_arc_endpoints_on_def by (by100 blast)
+        hence "a4 = a1" using assms(27) by (by100 blast)
+        thus False using ha4_ne_a1 by (by100 blast)
+      qed
+      thus ?thesis using ha4_not_e13 ha4_not_e23 by (by100 blast)
+    qed
+    have ha3_not_J13: "a3 \<notin> e12 \<union> e24 \<union> e41"
+    proof -
+      have "a3 \<notin> e12"
+      proof assume "a3 \<in> e12"
+        hence "a3 \<in> e12 \<inter> e23" using assms(17) unfolding top1_arc_endpoints_on_def by (by100 blast)
+        hence "a3 = a2" using assms(24) by (by100 blast)
+        thus False using ha2_ne_a3 by (by100 blast)
+      qed
+      thus ?thesis using ha3_not_e24 ha3_not_e41 by (by100 blast)
+    qed
+    \<comment> \<open>The SCC J12 = e12\<union>e13\<union>e23 separates S2 into 2 components.
+       R12 is in one component. cl(R12) doesn't reach Arc3 interior.
+       Similarly J13 = e12\<union>e24\<union>e41, R13 in one component.\<close>
+    have hJ12_scc: "top1_simple_closed_curve_on top1_S2 top1_S2_topology (e12 \<union> ?Arc2)"
+      by (rule arcs_form_simple_closed_curve[OF hS2_strict hS2_haus assms(10) assms(4)
+          hArc2_arc hArc2_sub hint12 ha1_ne_a2 assms(16) hArc2_ep])
+    have hJ13_scc: "top1_simple_closed_curve_on top1_S2 top1_S2_topology (e12 \<union> ?Arc3)"
+      by (rule arcs_form_simple_closed_curve[OF hS2_strict hS2_haus assms(10) assms(4)
+          hArc3_arc hArc3_sub hint13 ha1_ne_a2 assms(16) hArc3_ep'])
+    \<comment> \<open>e34-{a3,a4} cannot be in any Ri adjacent to e12.
+       For each Ri: if e34 \<subseteq> Ri, then a3 or a4 \<in> cl(Ri).
+       But cl(Ri) \<subseteq> Ci \<union> Ji (where Ji is the bounding SCC, Ci its inner component).
+       a4 \<notin> J12 = e12\<union>e13\<union>e23. a3 \<notin> J13 = e12\<union>e24\<union>e41.
+       Each Ri is in exactly one component of S2-D. e34 in the component \<noteq> e12's.\<close>
+    \<comment> \<open>Step A: For each Ri, Ri is in A or B (connected, in A\<union>B via S2-theta \<subseteq> S2-D).\<close>
+    \<comment> \<open>Step B: e12-{a1,a2} \<subseteq> A or B. Suppose e12 \<subseteq> C and e34 \<subseteq> C.
+       Then C contains e12-{a1,a2} and some Ri containing e34-{a3,a4}.
+       By htheta\_compl\_eq, all Ri's plus (e12-{a1,a2}) fill A\<union>B.
+       The other component (A or B, \<noteq> C) contains at least one Rj (non-empty).
+       C \<union> other = A\<union>B. So C \<supsetneq> Ri, meaning some other Rj is also in C.
+       This means ALL Ri's could be in C, making the other component empty --- contradiction.\<close>
     have h_both_cases: "(\<forall>C. C = A \<or> C = B \<longrightarrow> e12 - {a1, a2} \<subseteq> C \<longrightarrow> e34 - {a3, a4} \<subseteq> C \<longrightarrow> False)"
-      sorry \<comment> \<open>Core argument: theta space + closure shows e34 in different component.\<close>
+    proof (intro allI impI)
+      fix C assume hC: "C = A \<or> C = B" and he12C: "e12 - {a1, a2} \<subseteq> C" and he34C: "e34 - {a3, a4} \<subseteq> C"
+      \<comment> \<open>e34-{a3,a4} is in some Ri by Lemma\_23\_2.\<close>
+      obtain Ri where hRi: "Ri \<in> {R1, R2, R3}" "e34 - {a3, a4} \<subseteq> Ri"
+        sorry \<comment> \<open>Lemma\_23\_2 on separation \{Ri\} of S2-theta.\<close>
+      \<comment> \<open>Ri \<subseteq> C (since e34 \<subseteq> Ri \<inter> C, and Ri connected, Ri \<subseteq> A\<union>B, {A,B} separation).\<close>
+      have hRi_sub_C: "Ri \<subseteq> C"
+        sorry \<comment> \<open>Ri connected \<subseteq> A\<union>B, e34-{a3,a4} \<subseteq> Ri \<inter> C, Lemma\_23\_2.\<close>
+      \<comment> \<open>The other Rj's fill the rest of S2-theta. At least one must be outside C.\<close>
+      obtain Rj where hRj: "Rj \<in> {R1, R2, R3}" "Rj \<noteq> Ri" "Rj \<noteq> {}"
+        sorry \<comment> \<open>Three non-empty pairwise disjoint components; pick one \<noteq> Ri.\<close>
+      have hRj_sub_AB: "Rj \<subseteq> A \<union> B"
+        sorry \<comment> \<open>Rj \<subseteq> R1\<union>R2\<union>R3 = S2-theta \<subseteq> (A\<union>B)-(e12-{a1,a2}) \<subseteq> A\<union>B.\<close>
+      \<comment> \<open>Rj is connected and in A\<union>B. By Lemma\_23\_2, Rj \<subseteq> A or Rj \<subseteq> B.\<close>
+      \<comment> \<open>If Rj \<subseteq> C too, then eventually all 3 Ri's + e12 are in C, making other component empty.\<close>
+      \<comment> \<open>More directly: cl(e34) hits Arc2 and Arc3. If e34 \<subseteq> Ri and Ri adjacent to e12 only,
+         then cl(Ri) misses one of a3,a4. Contradiction.\<close>
+      show False
+        sorry \<comment> \<open>Final contradiction from boundary analysis.\<close>
+    qed
     show ?thesis using h_both_cases by (by100 blast)
   qed
   \<comment> \<open>WLOG: obtain A',B' with e12 \<subseteq> A' and e34 \<subseteq> B' (possibly swap A,B).\<close>
