@@ -4513,146 +4513,155 @@ proof -
   have hTAB: "is_topology_on (top1_S2 - (?A \<union> ?B))
       (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B)))"
     by (rule subspace_topology_is_topology_on[OF]) (use hTopS2 in \<open>by100 blast\<close>, by100 blast)
+  obtain x_P where hx_P: "x_P \<in> P1" using hP(1) by (by100 blast)
+  have hx_P_W: "x_P \<in> top1_S2 - (?A \<union> ?B)" using hx_P hP(4) by (by100 blast)
+  \<comment> \<open>Establish P1 = path\_component(x\_P) at outer scope for reuse.\<close>
+  have hP1_sub_AB: "P1 \<subseteq> top1_S2 - (?A \<union> ?B)" using hP(4) by (by100 blast)
+  have hP1_conn_AB: "top1_connected_on P1
+      (subspace_topology (top1_S2 - (?A \<union> ?B))
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B))) P1)"
+  proof -
+    have "subspace_topology top1_S2 top1_S2_topology P1 =
+        subspace_topology (top1_S2 - (?A \<union> ?B))
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B))) P1"
+      using subspace_topology_trans[of P1 "top1_S2 - (?A \<union> ?B)" top1_S2 top1_S2_topology]
+          hP1_sub_AB by (by100 simp)
+    thus ?thesis using hP(5) by (by100 simp)
+  qed
+  have hP1_eq_comp: "P1 = top1_component_of_on (top1_S2 - (?A \<union> ?B))
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B))) x_P"
+  proof -
+    have hP1_sub_comp: "P1 \<subseteq> top1_component_of_on (top1_S2 - (?A \<union> ?B))
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B))) x_P"
+      by (rule top1_connected_subspace_subset_component_of[OF hP1_sub_AB hx_P hP1_conn_AB])
+    have hcomp_sub_P1: "top1_component_of_on (top1_S2 - (?A \<union> ?B))
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B))) x_P \<subseteq> P1"
+    proof (rule ccontr)
+      assume "\<not> ?thesis"
+      then obtain y where hy: "y \<in> top1_component_of_on (top1_S2 - (?A \<union> ?B))
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B))) x_P" "y \<notin> P1"
+        by (by100 blast)
+      have "y \<in> top1_S2 - (?A \<union> ?B)"
+        using hy(1) top1_component_of_on_subset[of "top1_S2 - (?A \<union> ?B)"] by (by100 blast)
+      hence "y \<in> P2" using hP(4) hy(2) by (by100 blast)
+      have hP2_sub: "P2 \<subseteq> top1_S2 - (?A \<union> ?B)" using hP(4) by (by100 blast)
+      have hP2_conn_sub: "top1_connected_on P2
+          (subspace_topology (top1_S2 - (?A \<union> ?B))
+              (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B))) P2)"
+      proof -
+        have "subspace_topology top1_S2 top1_S2_topology P2 =
+            subspace_topology (top1_S2 - (?A \<union> ?B))
+                (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B))) P2"
+          using subspace_topology_trans[of P2 "top1_S2 - (?A \<union> ?B)" top1_S2 top1_S2_topology]
+              hP2_sub by (by100 simp)
+        thus ?thesis using hP(6) by (by100 simp)
+      qed
+      have "P2 \<subseteq> top1_component_of_on (top1_S2 - (?A \<union> ?B))
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B))) y"
+        by (rule top1_connected_subspace_subset_component_of[OF hP2_sub \<open>y \<in> P2\<close> hP2_conn_sub])
+      moreover have "top1_component_of_on (top1_S2 - (?A \<union> ?B))
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B))) y =
+          top1_component_of_on (top1_S2 - (?A \<union> ?B))
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B))) x_P"
+        by (rule top1_component_of_on_eq_of_mem[OF hTAB hy(1)])
+      ultimately have "P1 \<union> P2 \<subseteq> top1_component_of_on (top1_S2 - (?A \<union> ?B))
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B))) x_P"
+        using hP1_sub_comp by (by100 blast)
+      moreover have "top1_component_of_on (top1_S2 - (?A \<union> ?B))
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B))) x_P \<subseteq>
+          top1_S2 - (?A \<union> ?B)"
+        by (rule top1_component_of_on_subset)
+      ultimately have "top1_S2 - (?A \<union> ?B) = top1_component_of_on (top1_S2 - (?A \<union> ?B))
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B))) x_P"
+        using hP(4) by (by100 blast)
+      have hcomp_conn: "top1_connected_on
+          (top1_component_of_on (top1_S2 - (?A \<union> ?B))
+              (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B))) x_P)
+          (subspace_topology (top1_S2 - (?A \<union> ?B))
+              (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B)))
+              (top1_component_of_on (top1_S2 - (?A \<union> ?B))
+                  (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B))) x_P))"
+        by (rule top1_component_of_on_connected[OF hTAB hx_P_W])
+      hence "top1_connected_on (top1_S2 - (?A \<union> ?B))
+          (subspace_topology (top1_S2 - (?A \<union> ?B))
+              (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B)))
+              (top1_S2 - (?A \<union> ?B)))"
+        using \<open>top1_S2 - (?A \<union> ?B) = top1_component_of_on _ _ x_P\<close> by (by100 simp)
+      moreover have "subspace_topology (top1_S2 - (?A \<union> ?B))
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B)))
+          (top1_S2 - (?A \<union> ?B)) =
+          subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B))"
+        using subspace_topology_trans[of "top1_S2 - (?A \<union> ?B)" "top1_S2 - (?A \<union> ?B)"
+            top1_S2 top1_S2_topology] by (by100 simp)
+      ultimately have "top1_connected_on (top1_S2 - (?A \<union> ?B))
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B)))" by (by100 simp)
+      moreover have "\<not> top1_connected_on (top1_S2 - (?A \<union> ?B))
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B)))"
+        using Theorem_61_3_JordanSeparation_S2[OF assms(1) hAB_scc]
+        unfolding top1_separates_on_def by (by100 blast)
+      ultimately show False by (by100 blast)
+    qed
+    from hP1_sub_comp hcomp_sub_P1 show ?thesis by (by100 blast)
+  qed
+  have hP1_eq_pc: "P1 = top1_path_component_of_on (top1_S2 - (?A \<union> ?B))
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B))) x_P"
+  proof -
+    from conjunct2[OF Theorem_25_5[OF hTAB]]
+    have "\<forall>z \<in> top1_S2 - (?A \<union> ?B).
+        top1_locally_path_connected_on (top1_S2 - (?A \<union> ?B))
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B))) \<longrightarrow>
+        top1_path_component_of_on (top1_S2 - (?A \<union> ?B))
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B))) z =
+        top1_component_of_on (top1_S2 - (?A \<union> ?B))
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B))) z" by (by100 blast)
+    hence "top1_path_component_of_on (top1_S2 - (?A \<union> ?B))
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B))) x_P =
+        top1_component_of_on (top1_S2 - (?A \<union> ?B))
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B))) x_P"
+      using hAB_open_lpc hx_P_W by (by100 metis)
+    thus ?thesis using hP1_eq_comp by (by100 simp)
+  qed
+  \<comment> \<open>Helper: open-in-subspace-of-open implies open-in-S2.\<close>
+  have open_in_sub_imp_open: "\<And>W P. W \<in> top1_S2_topology \<Longrightarrow>
+      P \<in> subspace_topology top1_S2 top1_S2_topology W \<Longrightarrow> P \<in> top1_S2_topology"
+  proof -
+    fix W P assume hW: "W \<in> top1_S2_topology" and hP_sub: "P \<in> subspace_topology top1_S2 top1_S2_topology W"
+    from hP_sub obtain V where hV: "V \<in> top1_S2_topology" "P = W \<inter> V"
+      unfolding subspace_topology_def by (by100 blast)
+    have "finite {W, V}" by (by100 simp)
+    moreover have "{W, V} \<noteq> {}" by (by100 simp)
+    moreover have "{W, V} \<subseteq> top1_S2_topology" using hW hV(1) by (by100 blast)
+    ultimately have "\<Inter>{W, V} \<in> top1_S2_topology"
+      using hTopS2 unfolding is_topology_on_def by (by100 blast)
+    moreover have "\<Inter>{W, V} = W \<inter> V" by (by100 blast)
+    ultimately show "P \<in> top1_S2_topology" using hV(2) by (by100 simp)
+  qed
   have hP1_open: "P1 \<in> top1_S2_topology"
   proof -
-    obtain x where hx: "x \<in> P1" using hP(1) by (by100 blast)
-    hence hx_W: "x \<in> top1_S2 - (?A \<union> ?B)" using hP(4) by (by100 blast)
-    \<comment> \<open>P1 = path\_component(x) in S2-(A\<union>B) (via connected = path in lpc).\<close>
-    have hP1_sub: "P1 \<subseteq> top1_S2 - (?A \<union> ?B)" using hP(4) by (by100 blast)
-    have hP1_conn_sub: "top1_connected_on P1
-        (subspace_topology (top1_S2 - (?A \<union> ?B))
-            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B))) P1)"
-    proof -
-      have "subspace_topology top1_S2 top1_S2_topology P1 =
-          subspace_topology (top1_S2 - (?A \<union> ?B))
-              (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B))) P1"
-        using subspace_topology_trans[of P1 "top1_S2 - (?A \<union> ?B)" top1_S2 top1_S2_topology]
-            hP1_sub by (by100 simp)
-      thus ?thesis using hP(5) by (by100 simp)
-    qed
-    have hpc_eq: "top1_path_component_of_on (top1_S2 - (?A \<union> ?B))
-        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B))) x = P1"
-    proof -
-      have hThm255: "top1_path_component_of_on (top1_S2 - (?A \<union> ?B))
-          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B))) x =
-          top1_component_of_on (top1_S2 - (?A \<union> ?B))
-          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B))) x"
-        using conjunct2[OF Theorem_25_5[OF hTAB]] hAB_open_lpc hx_W by (by100 blast)
-      \<comment> \<open>P1 = component\_of(x): P1 connected \<ni> x, and any larger connected set meets P2.\<close>
-      have "P1 = top1_component_of_on (top1_S2 - (?A \<union> ?B))
-          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B))) x"
-      proof -
-        have hP1_sub_comp: "P1 \<subseteq> top1_component_of_on (top1_S2 - (?A \<union> ?B))
-            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B))) x"
-          by (rule top1_connected_subspace_subset_component_of[OF hP1_sub hx hP1_conn_sub])
-        have hcomp_sub_P1: "top1_component_of_on (top1_S2 - (?A \<union> ?B))
-            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B))) x \<subseteq> P1"
-        proof (rule ccontr)
-          assume "\<not> ?thesis"
-          then obtain y where hy: "y \<in> top1_component_of_on (top1_S2 - (?A \<union> ?B))
-              (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B))) x" "y \<notin> P1"
-            by (by100 blast)
-          have "y \<in> top1_S2 - (?A \<union> ?B)"
-            using hy(1) top1_component_of_on_subset[of "top1_S2 - (?A \<union> ?B)"] by (by100 blast)
-          hence "y \<in> P2" using hP(4) hy(2) by (by100 blast)
-          have hP2_sub: "P2 \<subseteq> top1_S2 - (?A \<union> ?B)" using hP(4) by (by100 blast)
-          have hP2_conn_sub: "top1_connected_on P2
-              (subspace_topology (top1_S2 - (?A \<union> ?B))
-                  (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B))) P2)"
-          proof -
-            have "subspace_topology top1_S2 top1_S2_topology P2 =
-                subspace_topology (top1_S2 - (?A \<union> ?B))
-                    (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B))) P2"
-              using subspace_topology_trans[of P2 "top1_S2 - (?A \<union> ?B)" top1_S2 top1_S2_topology]
-                  hP2_sub by (by100 simp)
-            thus ?thesis using hP(6) by (by100 simp)
-          qed
-          have "P2 \<subseteq> top1_component_of_on (top1_S2 - (?A \<union> ?B))
-              (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B))) y"
-            by (rule top1_connected_subspace_subset_component_of[OF hP2_sub \<open>y \<in> P2\<close> hP2_conn_sub])
-          moreover have "top1_component_of_on (top1_S2 - (?A \<union> ?B))
-              (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B))) y =
-              top1_component_of_on (top1_S2 - (?A \<union> ?B))
-              (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B))) x"
-            by (rule top1_component_of_on_eq_of_mem[OF hTAB hy(1)])
-          ultimately have "P2 \<subseteq> top1_component_of_on (top1_S2 - (?A \<union> ?B))
-              (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B))) x" by (by100 simp)
-          hence "P1 \<union> P2 \<subseteq> top1_component_of_on (top1_S2 - (?A \<union> ?B))
-              (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B))) x"
-            using \<open>P1 \<subseteq> top1_component_of_on _ _ x\<close> by (by100 blast)
-          moreover have "top1_component_of_on (top1_S2 - (?A \<union> ?B))
-              (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B))) x \<subseteq>
-              top1_S2 - (?A \<union> ?B)"
-            by (rule top1_component_of_on_subset)
-          ultimately have "top1_S2 - (?A \<union> ?B) = top1_component_of_on (top1_S2 - (?A \<union> ?B))
-              (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B))) x"
-            using hP(4) by (by100 blast)
-          \<comment> \<open>But comp(x) is connected, and S2-(A\<union>B) = P1 \<union> P2 is not (P1, P2 disjoint nonempty).\<close>
-          \<comment> \<open>comp(x) = S2-(A\<union>B), so S2-(A\<union>B) is connected (as component is connected).\<close>
-          have hcomp_conn: "top1_connected_on
-              (top1_component_of_on (top1_S2 - (?A \<union> ?B))
-                  (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B))) x)
-              (subspace_topology (top1_S2 - (?A \<union> ?B))
-                  (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B)))
-                  (top1_component_of_on (top1_S2 - (?A \<union> ?B))
-                      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B))) x))"
-            by (rule top1_component_of_on_connected[OF hTAB hx_W])
-          hence "top1_connected_on (top1_S2 - (?A \<union> ?B))
-              (subspace_topology (top1_S2 - (?A \<union> ?B))
-                  (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B)))
-                  (top1_S2 - (?A \<union> ?B)))"
-            using \<open>top1_S2 - (?A \<union> ?B) = top1_component_of_on _ _ x\<close> by (by100 simp)
-          \<comment> \<open>But P1 \<union> P2 = S2-(A\<union>B) is not connected (separates\_on says exactly this).\<close>
-          \<comment> \<open>S2-(A\<union>B) separates (A\<union>B is SCC on S2).\<close>
-          \<comment> \<open>Convert to standard subspace form.\<close>
-          moreover have "subspace_topology (top1_S2 - (?A \<union> ?B))
-              (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B)))
-              (top1_S2 - (?A \<union> ?B)) =
-              subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B))"
-            using subspace_topology_trans[of "top1_S2 - (?A \<union> ?B)" "top1_S2 - (?A \<union> ?B)"
-                top1_S2 top1_S2_topology] by (by100 simp)
-          ultimately have "top1_connected_on (top1_S2 - (?A \<union> ?B))
-              (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B)))"
-            by (by100 simp)
-          moreover have "\<not> top1_connected_on (top1_S2 - (?A \<union> ?B))
-              (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B)))"
-            using Theorem_61_3_JordanSeparation_S2[OF assms(1) hAB_scc]
-            unfolding top1_separates_on_def by (by100 blast)
-          ultimately show False by (by100 blast)
-        qed
-        from hP1_sub_comp hcomp_sub_P1 show ?thesis by (by100 blast)
-      qed
-      thus ?thesis using hThm255 by (by100 simp)
-    qed
     have "top1_path_component_of_on (top1_S2 - (?A \<union> ?B))
-        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B))) x \<in>
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B))) x_P \<in>
         subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B))"
-      by (rule top1_path_component_of_on_open_if_locally_path_connected[OF hTAB hAB_open_lpc hx_W])
+      by (rule top1_path_component_of_on_open_if_locally_path_connected[OF hTAB hAB_open_lpc hx_P_W])
     hence "P1 \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B))"
-      using hpc_eq by (by100 simp)
-    \<comment> \<open>P1 open in subspace \<Rightarrow> P1 open in S2 (since S2-(A\<union>B) is open).\<close>
-    then obtain V_open where hVo: "V_open \<in> top1_S2_topology" "P1 = (top1_S2 - (?A \<union> ?B)) \<inter> V_open"
-      unfolding subspace_topology_def by (by100 blast)
-    have "P1 \<in> top1_S2_topology"
-    proof -
-      have "\<And>A B. A \<in> top1_S2_topology \<Longrightarrow> B \<in> top1_S2_topology \<Longrightarrow> A \<inter> B \<in> top1_S2_topology"
-      proof -
-        fix A B assume "A \<in> top1_S2_topology" "B \<in> top1_S2_topology"
-        hence "{A, B} \<subseteq> top1_S2_topology" by (by100 blast)
-        moreover have "finite {A, B}" by (by100 simp)
-        moreover have "{A, B} \<noteq> {}" by (by100 simp)
-        ultimately have "\<Inter>{A, B} \<in> top1_S2_topology"
-          using hTopS2 unfolding is_topology_on_def by (by100 blast)
-        moreover have "\<Inter>{A, B} = A \<inter> B" by (by100 blast)
-        ultimately show "A \<inter> B \<in> top1_S2_topology" by (by100 simp)
-      qed
-      from this[OF hAB_compl_open hVo(1)] have "(top1_S2 - (?A \<union> ?B)) \<inter> V_open \<in> top1_S2_topology" .
-      thus ?thesis using hVo(2) by (by100 simp)
-    qed
-    thus ?thesis .
+      using hP1_eq_pc by (by100 simp)
+    thus ?thesis by (rule open_in_sub_imp_open[OF hAB_compl_open])
   qed
+  \<comment> \<open>P2 = complement of P1 in S2-(A\<union>B). Since P1 is a path component and lpc, complement is open.\<close>
   have hP2_open: "P2 \<in> top1_S2_topology"
-    sorry \<comment> \<open>Same lpc argument as P1, or complement of path component in lpc.\<close>
+  proof -
+    have hP2_eq: "P2 = (top1_S2 - (?A \<union> ?B)) -
+        top1_path_component_of_on (top1_S2 - (?A \<union> ?B))
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B))) x_P"
+      using hP(3,4) hP1_eq_pc by (by100 blast)
+    have "(top1_S2 - (?A \<union> ?B)) -
+        top1_path_component_of_on (top1_S2 - (?A \<union> ?B))
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B))) x_P \<in>
+        subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B))"
+      by (rule top1_path_component_of_on_complement_open_if_locally_path_connected[OF hTAB hAB_open_lpc hx_P_W])
+    hence "P2 \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?A \<union> ?B))"
+      using hP2_eq by (by100 simp)
+    thus ?thesis by (rule open_in_sub_imp_open[OF hAB_compl_open])
+  qed
   \<comment> \<open>C-{a1,a3} lies in one component. WLOG in P2 (swap if needed).\<close>
   have hCm_in_P2: "?C - {a1, a3} \<subseteq> P2"
     sorry \<comment> \<open>Connected + separation + WLOG label swap.\<close>
