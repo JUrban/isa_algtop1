@@ -7919,9 +7919,66 @@ proof -
   \<comment> \<open>Step 5: Construct \<alpha>: path in U' from x to y (via a1, a4 or similar).
      \<beta>: path in V' from y to x (via a3, a2).\<close>
   obtain \<alpha> where h\<alpha>: "top1_is_path_on ?U' (subspace_topology top1_S2 top1_S2_topology ?U') x y \<alpha>"
-    sorry \<comment> \<open>Path in S2-D_1 from x to y.\<close>
+  proof -
+    \<comment> \<open>S2-D1 is path connected: open (D1 closed) + connected (arc no sep) + lpc.\<close>
+    have hU'_open: "?U' \<in> top1_S2_topology"
+    proof -
+      have "closedin_on top1_S2 top1_S2_topology ?D1" by (rule arc_in_S2_closed[OF hD1_sub hD1_arc])
+      thus ?thesis unfolding closedin_on_def by (by100 blast)
+    qed
+    have hU'_conn: "top1_connected_on ?U' (subspace_topology top1_S2 top1_S2_topology ?U')"
+    proof -
+      have "\<not> top1_separates_on top1_S2 top1_S2_topology ?D1"
+        by (rule Theorem_63_2_arc_no_separation[OF assms(1) hD1_sub hD1_arc])
+      thus ?thesis unfolding top1_separates_on_def by (by100 blast)
+    qed
+    have hU'_lpc: "top1_locally_path_connected_on ?U' (subspace_topology top1_S2 top1_S2_topology ?U')"
+      by (rule open_subset_locally_path_connected[OF S2_locally_path_connected hU'_open]) (by100 blast)
+    have hTU': "is_topology_on ?U' (subspace_topology top1_S2 top1_S2_topology ?U')"
+      by (rule subspace_topology_is_topology_on[OF hTopS2]) (by100 blast)
+    have hx_in_U': "x \<in> ?U'" using hx(1) hAB(1) hUV_eq by (by100 blast)
+    have hU'_ne: "?U' \<noteq> {}" using hx_in_U' by (by100 blast)
+    have hU'_pc: "top1_path_connected_on ?U' (subspace_topology top1_S2 top1_S2_topology ?U')"
+      by (rule connected_locally_path_connected_imp_path_connected[OF hTU' hU'_conn hU'_lpc hU'_ne])
+    have "y \<in> ?U'" using hy(1) hAB(1) hUV_eq by (by100 blast)
+    from hU'_pc have "\<forall>a \<in> ?U'. \<forall>b \<in> ?U'. \<exists>f. top1_is_path_on ?U'
+        (subspace_topology top1_S2 top1_S2_topology ?U') a b f"
+      unfolding top1_path_connected_on_def by (by100 blast)
+    from this[rule_format, OF hx_in_U' \<open>y \<in> ?U'\<close>]
+    obtain f where "top1_is_path_on ?U' (subspace_topology top1_S2 top1_S2_topology ?U') x y f"
+      by (by100 blast)
+    thus ?thesis by (rule that)
+  qed
   obtain \<beta> where h\<beta>: "top1_is_path_on ?V' (subspace_topology top1_S2 top1_S2_topology ?V') y x \<beta>"
-    sorry \<comment> \<open>Path in S2-D_2 from y to x.\<close>
+  proof -
+    have hV'_open: "?V' \<in> top1_S2_topology"
+    proof -
+      have "closedin_on top1_S2 top1_S2_topology ?D2" by (rule arc_in_S2_closed[OF hD2_sub hD2_arc])
+      thus ?thesis unfolding closedin_on_def by (by100 blast)
+    qed
+    have hV'_conn: "top1_connected_on ?V' (subspace_topology top1_S2 top1_S2_topology ?V')"
+    proof -
+      have "\<not> top1_separates_on top1_S2 top1_S2_topology ?D2"
+        by (rule Theorem_63_2_arc_no_separation[OF assms(1) hD2_sub hD2_arc])
+      thus ?thesis unfolding top1_separates_on_def by (by100 blast)
+    qed
+    have hV'_lpc: "top1_locally_path_connected_on ?V' (subspace_topology top1_S2 top1_S2_topology ?V')"
+      by (rule open_subset_locally_path_connected[OF S2_locally_path_connected hV'_open]) (by100 blast)
+    have hTV': "is_topology_on ?V' (subspace_topology top1_S2 top1_S2_topology ?V')"
+      by (rule subspace_topology_is_topology_on[OF hTopS2]) (by100 blast)
+    have hy_in_V': "y \<in> ?V'" using hy(1) hAB(1) hUV_eq by (by100 blast)
+    have hV'_ne: "?V' \<noteq> {}" using hy_in_V' by (by100 blast)
+    have hV'_pc: "top1_path_connected_on ?V' (subspace_topology top1_S2 top1_S2_topology ?V')"
+      by (rule connected_locally_path_connected_imp_path_connected[OF hTV' hV'_conn hV'_lpc hV'_ne])
+    have hx_in_V': "x \<in> ?V'" using hx(1) hAB(1) hUV_eq by (by100 blast)
+    from hV'_pc have "\<forall>a \<in> ?V'. \<forall>b \<in> ?V'. \<exists>f. top1_is_path_on ?V'
+        (subspace_topology top1_S2 top1_S2_topology ?V') a b f"
+      unfolding top1_path_connected_on_def by (by100 blast)
+    from this[rule_format, OF hy_in_V' hx_in_V']
+    obtain g where "top1_is_path_on ?V' (subspace_topology top1_S2 top1_S2_topology ?V') y x g"
+      by (by100 blast)
+    thus ?thesis by (rule that)
+  qed
   \<comment> \<open>Step 6: Apply Theorem_63_1: \<alpha>*\<beta> is not nulhomotopic in X.\<close>
   have hTX: "is_topology_on ?X ?TX"
     by (rule subspace_topology_is_topology_on[OF hTopS2]) (by100 blast)
