@@ -4496,9 +4496,27 @@ proof -
   obtain \<beta> where h\<beta>: "top1_is_path_on ?V' (subspace_topology top1_S2 top1_S2_topology ?V') y x \<beta>"
     sorry \<comment> \<open>Path in S2-D_2 from y to x.\<close>
   \<comment> \<open>Step 6: Apply Theorem_63_1: \<alpha>*\<beta> is not nulhomotopic in X.\<close>
+  have hTX: "is_topology_on ?X ?TX"
+    by (rule subspace_topology_is_topology_on[OF hTopS2]) (by100 blast)
+  \<comment> \<open>Transfer paths from subspace of S2 to subspace of X.\<close>
+  have h\<alpha>_X: "top1_is_path_on ?U' (subspace_topology ?X ?TX ?U') x y \<alpha>"
+  proof -
+    have "subspace_topology top1_S2 top1_S2_topology ?U'
+        = subspace_topology ?X ?TX ?U'"
+      using subspace_topology_trans[of ?U' ?X top1_S2 top1_S2_topology] hU'_sub_X by (by100 simp)
+    thus ?thesis using h\<alpha> by (by100 simp)
+  qed
+  have h\<beta>_X: "top1_is_path_on ?V' (subspace_topology ?X ?TX ?V') y x \<beta>"
+  proof -
+    have "subspace_topology top1_S2 top1_S2_topology ?V'
+        = subspace_topology ?X ?TX ?V'"
+      using subspace_topology_trans[of ?V' ?X top1_S2 top1_S2_topology] hV'_sub_X by (by100 simp)
+    thus ?thesis using h\<beta> by (by100 simp)
+  qed
   have h\<alpha>\<beta>_nontrivial: "\<not> top1_path_homotopic_on ?X ?TX x x
       (top1_path_product \<alpha> \<beta>) (top1_constant_path x)"
-    sorry \<comment> \<open>Theorem_63_1_loop_nontrivial with U', V', A, B, x, y.\<close>
+    by (rule Theorem_63_1_loop_nontrivial[OF hTX hU'_open_X hV'_open_X hU'V'_union
+        hAB(1,2) hAB(3,4) hx(1) hy(1) h\<alpha>_X h\<beta>_X])
   \<comment> \<open>Step 7: f is homotopic to \<alpha>*\<beta> (both traverse C), so f is nontrivial.\<close>
   show ?thesis
     sorry \<comment> \<open>Transfer: f ~ \<alpha>*\<beta> (since both are loops on C traversing in same direction).\<close>
