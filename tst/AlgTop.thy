@@ -1147,12 +1147,25 @@ proof -
   have hg_compat_X: "\<forall>s \<in> top1_unit_interval. \<forall>t \<in> top1_unit_interval.
       top1_R_to_S1 s = top1_R_to_S1 t \<longrightarrow> g s = g t"
     by (rule hg_compat)
-  from Theorem_22_2[OF hR_quot hg_range_X hg_compat_X]
-  obtain f where hf0: "(\<forall>y \<in> top1_S1. f y \<in> X)"
-      "(\<forall>x \<in> top1_unit_interval. f (top1_R_to_S1 x) = g x)"
-      "(top1_continuous_map_on top1_S1 top1_S1_topology X TX f
-          \<longleftrightarrow> top1_continuous_map_on top1_unit_interval top1_unit_interval_topology X TX g)"
-    sorry \<comment> \<open>Direct application of Theorem\_22\_2; by100 times out on 4-way conjunction extraction.\<close>
+  have hThm222: "\<exists>f. (\<forall>y \<in> top1_S1. f y \<in> X) \<and>
+      (\<forall>x \<in> top1_unit_interval. f (top1_R_to_S1 x) = g x) \<and>
+      (top1_continuous_map_on top1_S1 top1_S1_topology X TX f
+          \<longleftrightarrow> top1_continuous_map_on top1_unit_interval top1_unit_interval_topology X TX g) \<and>
+      (top1_quotient_map_on top1_S1 top1_S1_topology X TX f
+          \<longleftrightarrow> top1_quotient_map_on top1_unit_interval top1_unit_interval_topology X TX g)"
+    by (rule Theorem_22_2[OF hR_quot hg_range_X hg_compat_X])
+  then obtain f where hf0_all: "(\<forall>y \<in> top1_S1. f y \<in> X) \<and>
+      (\<forall>x \<in> top1_unit_interval. f (top1_R_to_S1 x) = g x) \<and>
+      (top1_continuous_map_on top1_S1 top1_S1_topology X TX f
+          \<longleftrightarrow> top1_continuous_map_on top1_unit_interval top1_unit_interval_topology X TX g) \<and>
+      (top1_quotient_map_on top1_S1 top1_S1_topology X TX f
+          \<longleftrightarrow> top1_quotient_map_on top1_unit_interval top1_unit_interval_topology X TX g)"
+    by (by100 blast)
+  have hf0_1: "\<forall>y \<in> top1_S1. f y \<in> X" using hf0_all by (by100 blast)
+  have hf0_2: "\<forall>x \<in> top1_unit_interval. f (top1_R_to_S1 x) = g x" using hf0_all by (by100 blast)
+  have hf0_3: "top1_continuous_map_on top1_S1 top1_S1_topology X TX f
+          \<longleftrightarrow> top1_continuous_map_on top1_unit_interval top1_unit_interval_topology X TX g"
+    using hf0_all by (by100 blast)
   \<comment> \<open>f lands in A1 \<union> A2 (since f(p) = g(t) for some t with R\_to\_S1(t)=p, and g(t) \<in> A1\<union>A2).\<close>
   have hR_surj: "top1_R_to_S1 ` top1_unit_interval = top1_S1"
     using hR_quot unfolding top1_quotient_map_on_def by (by100 blast)
@@ -1161,16 +1174,16 @@ proof -
     fix p assume "p \<in> top1_S1"
     then obtain t where ht: "t \<in> top1_unit_interval" "top1_R_to_S1 t = p"
       using hR_surj by (by100 force)
-    have "f (top1_R_to_S1 t) = g t" using hf0(2) ht(1) by (by100 blast)
+    have "f (top1_R_to_S1 t) = g t" using hf0_2 ht(1) by (by100 blast)
     hence "f p = g t" using ht(2) by (by100 simp)
     have "g t \<in> A1 \<union> A2" using hg_range ht(1) by (by100 blast)
     thus "f p \<in> A1 \<union> A2" using \<open>f p = g t\<close> by (by100 simp)
   qed
   have hf_factor: "\<forall>t \<in> top1_unit_interval. f (top1_R_to_S1 t) = g t"
-    by (rule hf0(2))
+    by (rule hf0_2)
   have hf_cont_iff: "top1_continuous_map_on top1_S1 top1_S1_topology X TX f
       \<longleftrightarrow> top1_continuous_map_on top1_unit_interval top1_unit_interval_topology X TX g"
-    by (rule hf0(3))
+    by (rule hf0_3)
   have hf_cont: "top1_continuous_map_on top1_S1 top1_S1_topology X TX f"
     using hf_cont_iff hg_cont by (by100 blast)
   have hf_inj: "inj_on f top1_S1" sorry
