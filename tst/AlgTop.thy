@@ -4652,12 +4652,7 @@ proof -
     thus ?thesis .
   qed
   have hP2_open: "P2 \<in> top1_S2_topology"
-  proof -
-    \<comment> \<open>P2 = S2 - (A\<union>B) - P1. Complement of P1 \<union> (A\<union>B) in S2.\<close>
-    have "P2 = top1_S2 - (P1 \<union> (?A \<union> ?B))" using hP(3,4) by (by100 blast)
-    moreover have "closedin_on top1_S2 top1_S2_topology (P1 \<union> (?A \<union> ?B))" sorry
-    ultimately show ?thesis unfolding closedin_on_def by (by100 blast)
-  qed
+    sorry \<comment> \<open>Same lpc argument as P1, or complement of path component in lpc.\<close>
   \<comment> \<open>C-{a1,a3} lies in one component. WLOG in P2 (swap if needed).\<close>
   have hCm_in_P2: "?C - {a1, a3} \<subseteq> P2"
     sorry \<comment> \<open>Connected + separation + WLOG label swap.\<close>
