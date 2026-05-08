@@ -3478,7 +3478,46 @@ proof -
   qed
   \<comment> \<open>D1 endpoints: step 2: endpoints(D1) = endpoints((e13\_pa3 \<union> e23) \<union> e24\_a2q) = {p, q}.\<close>
   have hD1_ep: "top1_arc_endpoints_on ?D1 (subspace_topology top1_S2 top1_S2_topology ?D1) = {p, q}"
-    sorry \<comment> \<open>arc\_concat\_endpoints with (e13\_pa3\<union>e23) endpoints {p,a2} and e24\_a2q endpoints {a2,q}.\<close>
+  proof -
+    have he13pa3_e23_sub: "e13_pa3 \<union> e23 \<subseteq> top1_S2"
+      using he13_sub he13_split(1) he23_sub by (by100 blast)
+    have he24_a2q_sub: "e24_a2q \<subseteq> top1_S2" using he24_sub he24_split(1) by (by100 blast)
+    \<comment> \<open>Intermediate arc: e13\_pa3 \<union> e23.\<close>
+    have ha3_ep_pa3: "a3 \<in> top1_arc_endpoints_on e13_pa3 (subspace_topology top1_S2 top1_S2_topology e13_pa3)"
+      sorry \<comment> \<open>From hpa3\_eps (already proved in D1\_ep\_step1).\<close>
+    have ha3_ep_e23: "a3 \<in> top1_arc_endpoints_on e23 (subspace_topology top1_S2 top1_S2_topology e23)"
+      using assms(17) by (by100 blast)
+    have hint1_loc: "e13_pa3 \<inter> e23 = {a3}" sorry \<comment> \<open>Same as D1\_ep\_step1.\<close>
+    have hconcat1: "top1_is_arc_on (e13_pa3 \<union> e23)
+        (subspace_topology top1_S2 top1_S2_topology (e13_pa3 \<union> e23))"
+      by (rule arcs_concatenation_is_arc[OF hS2_strict hS2_haus
+          he13_split(4) _ assms(11) he23_sub hint1_loc ha3_ep_pa3 ha3_ep_e23])
+        (use he13_sub he13_split(1) in \<open>by100 blast\<close>)
+    \<comment> \<open>e24\_a2q endpoints = {a2, q}.\<close>
+    have he24_a2q_eps: "top1_arc_endpoints_on e24_a2q
+        (subspace_topology top1_S2 top1_S2_topology e24_a2q) = {a2, q}"
+      sorry
+    \<comment> \<open>(e13\_pa3 \<union> e23) \<inter> e24\_a2q = {a2}.\<close>
+    have hint2_loc: "(e13_pa3 \<union> e23) \<inter> e24_a2q = {a2}" sorry
+    have ha2_ep1: "a2 \<in> top1_arc_endpoints_on (e13_pa3 \<union> e23)
+        (subspace_topology top1_S2 top1_S2_topology (e13_pa3 \<union> e23))"
+      using hD1_ep_step1 by (by100 blast)
+    have ha2_ep2: "a2 \<in> top1_arc_endpoints_on e24_a2q
+        (subspace_topology top1_S2 top1_S2_topology e24_a2q)"
+      using he24_a2q_eps by (by100 blast)
+    have hp_ne_a2: "p \<noteq> a2"
+    proof assume "p = a2" hence "a2 \<in> e13" using hp_e13 by (by100 blast)
+      hence "a2 \<in> e13 \<inter> e23" using assms(17) unfolding top1_arc_endpoints_on_def by (by100 blast)
+      hence "a2 = a3" using assms(29) by (by100 blast)
+      hence "card {a1,a2,a3,a4} \<le> card {a1,a3,a4}" by (by100 simp)
+      also have "\<dots> \<le> 3" by (rule card_three_le)
+      finally show False using assms(2) by (by100 simp) qed
+    have ha2_ne_q: "a2 \<noteq> q" using hq_e24 by (by100 blast)
+    show ?thesis
+      by (rule arc_concat_endpoints[OF hS2_strict hS2_haus hconcat1 he13pa3_e23_sub
+          he24_split(3) he24_a2q_sub hint2_loc ha2_ep1 ha2_ep2 hD1_ep_step1 he24_a2q_eps
+          hp_ne_a2 ha2_ne_q])
+  qed
   \<comment> \<open>D2 endpoints: similarly {q, p}.\<close>
   have hD2_ep: "top1_arc_endpoints_on ?D2 (subspace_topology top1_S2 top1_S2_topology ?D2) = {p, q}"
     sorry \<comment> \<open>arc\_concat\_endpoints with (e24\_qa4\<union>e41) endpoints {q,a1} and e13\_a1p endpoints {a1,p}.\<close>
