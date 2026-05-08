@@ -3699,26 +3699,25 @@ proof -
     \<comment> \<open>Open in open subspace \<Rightarrow> open in S2.\<close>
     then obtain V where "V \<in> top1_S2_topology" "U0 = (top1_S2 - (A \<union> B)) \<inter> V"
       unfolding subspace_topology_def by (by100 force)
-    thus ?thesis sorry \<comment> \<open>U0 = (S2-(A\<union>B)) \<inter> V, both open \<Rightarrow> U0 open (finite intersection).\<close>
+    \<comment> \<open>U0 = (S2-(A\<union>B)) \<inter> V, both open \<Rightarrow> finite intersection \<Rightarrow> U0 open.\<close>
+    have hax_U0: "\<forall>F. finite F \<and> F \<noteq> {} \<and> F \<subseteq> top1_S2_topology \<longrightarrow> \<Inter>F \<in> top1_S2_topology"
+      using assms(1) unfolding is_topology_on_strict_def is_topology_on_def by (by100 blast)
+    have hVW_fin: "finite {V, top1_S2 - (A \<union> B)}" by (by100 simp)
+    have hVW_ne: "{V, top1_S2 - (A \<union> B)} \<noteq> {}" by (by100 simp)
+    have hVW_sub: "{V, top1_S2 - (A \<union> B)} \<subseteq> top1_S2_topology"
+      using \<open>V \<in> top1_S2_topology\<close> hAB_open_S2 by (by100 blast)
+    have hVW_conj: "finite {V, top1_S2 - (A \<union> B)} \<and> {V, top1_S2 - (A \<union> B)} \<noteq> {} \<and>
+        {V, top1_S2 - (A \<union> B)} \<subseteq> top1_S2_topology"
+      using hVW_fin hVW_ne hVW_sub by (by100 blast)
+    from hax_U0[rule_format, OF hVW_conj]
+    have "\<Inter>{V, top1_S2 - (A \<union> B)} \<in> top1_S2_topology" .
+    moreover have "V \<inter> (top1_S2 - (A \<union> B)) = U0" using \<open>U0 = _ \<inter> V\<close> by (by100 blast)
+    hence "\<Inter>{V, top1_S2 - (A \<union> B)} = U0" by (by100 force)
+    ultimately show ?thesis by (by100 simp)
   qed
+  \<comment> \<open>U0' open: same argument by symmetry.\<close>
   have hU0'_open_pre: "U0' \<in> top1_S2_topology"
-  proof -
-    \<comment> \<open>Same argument with U0' and any x0' \<in> U0'.\<close>
-    obtain x0' where hx0': "x0' \<in> U0'" using hU0(2) by (by100 blast)
-    hence hx0'_AB: "x0' \<in> top1_S2 - (A \<union> B)" using hU0(4) by (by100 blast)
-    have "top1_path_component_of_on (top1_S2 - (A \<union> B))
-        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (A \<union> B))) x0'
-        \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - (A \<union> B))"
-      by (rule top1_path_component_of_on_open_if_locally_path_connected[OF hTopAB_early hAB_lpc hx0'_AB])
-    have "U0' = top1_path_component_of_on (top1_S2 - (A \<union> B))
-        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (A \<union> B))) x0'"
-      sorry \<comment> \<open>Same as U0 argument.\<close>
-    hence "U0' \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - (A \<union> B))"
-      using \<open>top1_path_component_of_on _ _ x0' \<in> _\<close> by (by100 simp)
-    then obtain V where "V \<in> top1_S2_topology" "U0' = (top1_S2 - (A \<union> B)) \<inter> V"
-      unfolding subspace_topology_def by (by100 force)
-    thus ?thesis sorry
-  qed
+    sorry \<comment> \<open>Symmetric to U0 open proof.\<close>
   \<comment> \<open>Hence U0, U0' form a separation of S2-(A\<union>B).\<close>
   have hTopS2_loc: "is_topology_on top1_S2 top1_S2_topology"
     using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
