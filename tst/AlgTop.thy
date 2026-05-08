@@ -3584,6 +3584,33 @@ qed
 
 
 
+text \<open>Helper: element of topology restricted to subset stays in subspace topology.\<close>
+
+lemma open_in_subspace_if_open_and_subset:
+  assumes "U \<in> T" "U \<subseteq> Y"
+  shows "U \<in> subspace_topology X T Y"
+proof -
+  have "U = Y \<inter> U" using assms(2) by (by100 blast)
+  thus ?thesis unfolding subspace_topology_def using assms(1) by (by100 blast)
+qed
+
+text \<open>Helper: open in subspace of open set implies open in ambient.\<close>
+
+lemma open_in_sub_imp_open_general:
+  assumes "is_topology_on X TX" "W \<in> TX" "P \<in> subspace_topology X TX W"
+  shows "P \<in> TX"
+proof -
+  from assms(3) obtain V where hV: "V \<in> TX" "P = W \<inter> V"
+    unfolding subspace_topology_def by (by100 blast)
+  have "finite {W, V}" by (by100 simp)
+  moreover have "{W, V} \<noteq> {}" by (by100 simp)
+  moreover have "{W, V} \<subseteq> TX" using assms(2) hV(1) by (by100 blast)
+  ultimately have "\<Inter>{W, V} \<in> TX"
+    using assms(1) unfolding is_topology_on_def by (by100 blast)
+  moreover have "\<Inter>{W, V} = W \<inter> V" by (by100 blast)
+  ultimately show ?thesis using hV(2) by (by100 simp)
+qed
+
 text \<open>Helper: connected components of open subsets of S2 are open in S2.\<close>
 
 lemma S2_component_of_open_subset_is_open:
@@ -7827,13 +7854,13 @@ proof -
   proof -
     from hAB(3) have "A \<in> ?TX" unfolding openin_on_def by (by100 blast)
     moreover have "A \<subseteq> A \<union> B" by (by100 blast)
-    ultimately show ?thesis sorry \<comment> \<open>A \<in> TX, A \<subseteq> A\<union>B \<Rightarrow> A \<in> subspace TX (A\<union>B). by100 too tight.\<close>
+    ultimately show ?thesis by (rule open_in_subspace_if_open_and_subset)
   qed
   have hB_open_AB: "B \<in> subspace_topology ?X ?TX (A \<union> B)"
   proof -
     from hAB(4) have "B \<in> ?TX" unfolding openin_on_def by (by100 blast)
     moreover have "B \<subseteq> A \<union> B" by (by100 blast)
-    ultimately show ?thesis sorry
+    ultimately show ?thesis by (rule open_in_subspace_if_open_and_subset)
   qed
   have hAB_sep: "top1_is_separation_on (A \<union> B) (subspace_topology ?X ?TX (A \<union> B)) A B"
     unfolding top1_is_separation_on_def
