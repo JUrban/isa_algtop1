@@ -1839,8 +1839,454 @@ lemma arc_split_endpoints:
       and hp_int: "p \<notin> top1_arc_endpoints_on D (subspace_topology X TX D)"
   shows "top1_arc_endpoints_on D1 (subspace_topology X TX D1) = {a, p}"
     and "top1_arc_endpoints_on D2 (subspace_topology X TX D2) = {p, b}"
-  sorry \<comment> \<open>From the split construction: D1 = h([0,t0]) with h(0)=a, boundary point = p.
-     Endpoints of sub-interval image = {a, p}. Similarly for D2.\<close>
+proof -
+  have hab: "a \<noteq> b" proof
+    assume "a = b" hence "a \<in> D1 \<inter> D2" using assms(9,10) by (by100 blast)
+    hence "a = p" using assms(6) by (by100 blast)
+    thus False using hp_int hep by (by100 blast) qed
+  \<comment> \<open>Step 1: Get oriented homeomorphism h: [0,1] \<rightarrow> D with h(0)=a, h(1)=b.\<close>
+  obtain h where hh: "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
+      D (subspace_topology X TX D) h" and hh0: "h 0 = a" and hh1: "h 1 = b"
+  proof -
+    obtain h0 where hh0: "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
+        D (subspace_topology X TX D) h0"
+      using hArc unfolding top1_is_arc_on_def by (by100 blast)
+    have heps0: "top1_arc_endpoints_on D (subspace_topology X TX D) = {h0 0, h0 1}"
+      by (rule arc_endpoints_are_boundary[OF hT hH hDX hArc hh0])
+    hence hab_h0: "{h0 0, h0 1} = {a, b}" using hep by (by100 simp)
+    show ?thesis
+    proof (cases "h0 0 = a")
+      case True
+      have "h0 0 \<noteq> h0 1" proof
+        assume "h0 0 = h0 1" hence "{h0 0, h0 1} = {h0 0}" by (by100 simp)
+        hence "card {a, b} \<le> 1" using hab_h0 by (by100 simp)
+        thus False using hab by (by100 simp) qed
+      from doubleton_eq_iff[OF hab_h0 this]
+      have "(h0 0 = a \<and> h0 1 = b) \<or> (h0 0 = b \<and> h0 1 = a)" .
+      hence "h0 1 = b" using True hab by (by100 fast)
+      thus ?thesis using that[OF hh0 True] by (by100 simp)
+    next
+      case False hence "h0 0 = b" using hab_h0 by (by100 force)
+      have "h0 0 \<noteq> h0 1" proof
+        assume "h0 0 = h0 1" hence "{h0 0, h0 1} = {h0 0}" by (by100 simp)
+        hence "card {a, b} \<le> 1" using hab_h0 by (by100 simp)
+        thus False using hab by (by100 simp) qed
+      from doubleton_eq_iff[OF hab_h0 this]
+      have "(h0 0 = a \<and> h0 1 = b) \<or> (h0 0 = b \<and> h0 1 = a)" .
+      hence "h0 1 = a" using \<open>h0 0 = b\<close> hab by (by100 fast)
+      have hcomp: "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
+          D (subspace_topology X TX D) (h0 \<circ> (\<lambda>t::real. 1 - t))"
+        by (rule homeomorphism_on_comp[OF unit_interval_reversal_homeomorphism hh0])
+      have "(h0 \<circ> (\<lambda>t::real. 1 - t)) 0 = h0 1" unfolding comp_def by (by100 simp)
+      hence "(h0 \<circ> (\<lambda>t::real. 1 - t)) 0 = a" using \<open>h0 1 = a\<close> by (by100 simp)
+      moreover have "(h0 \<circ> (\<lambda>t::real. 1 - t)) 1 = h0 0" unfolding comp_def by (by100 simp)
+      hence "(h0 \<circ> (\<lambda>t::real. 1 - t)) 1 = b" using \<open>h0 0 = b\<close> by (by100 simp)
+      ultimately show ?thesis using that[OF hcomp] by (by100 simp)
+    qed
+  qed
+  have hinj: "inj_on h top1_unit_interval"
+    using hh unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+  have himg: "h ` top1_unit_interval = D"
+    using hh unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+  have hTopX: "is_topology_on X TX" using hT unfolding is_topology_on_strict_def by (by100 blast)
+  \<comment> \<open>Step 2: p = h(t0) for unique t0 \<in> (0,1).\<close>
+  have hp_D: "p \<in> D" using assms(5) assms(11) by (by100 blast)
+  define t0 where "t0 = inv_into top1_unit_interval h p"
+  have ht0_I: "t0 \<in> top1_unit_interval" unfolding t0_def
+    using inv_into_into[of p h top1_unit_interval] hp_D himg by (by100 simp)
+  have ht0_p: "h t0 = p" unfolding t0_def
+    using f_inv_into_f[of p h top1_unit_interval] hp_D himg by (by100 simp)
+  have ht0_ne0: "t0 \<noteq> 0" proof assume "t0 = 0" hence "p = a" using ht0_p hh0 by (by100 simp)
+    thus False using hp_int hep by (by100 blast) qed
+  have ht0_ne1: "t0 \<noteq> 1" proof assume "t0 = 1" hence "p = b" using ht0_p hh1 by (by100 simp)
+    thus False using hp_int hep by (by100 blast) qed
+  have ht0_open: "0 < t0" "t0 < 1"
+    using ht0_I ht0_ne0 ht0_ne1 unfolding top1_unit_interval_def by (by100 auto)+
+  \<comment> \<open>Step 3: h\<inverse>(D1) = [0,t0], h\<inverse>(D2) = [t0,1].
+     Key: D1, D2 are connected, so their preimages under h are connected intervals.
+     connected\_contains\_Icc gives [0,t0] \<subseteq> h\<inverse>(D1) and [t0,1] \<subseteq> h\<inverse>(D2).
+     The intersection constraint forces equality.\<close>
+  let ?S1 = "{t \<in> top1_unit_interval. h t \<in> D1}"
+  let ?S2 = "{t \<in> top1_unit_interval. h t \<in> D2}"
+  have h0_S1: "0 \<in> ?S1" using hh0 assms(9) unfolding top1_unit_interval_def by (by100 auto)
+  have ht0_S1: "t0 \<in> ?S1" using ht0_p assms(11) ht0_I by (by100 blast)
+  have ht0_S2: "t0 \<in> ?S2" using ht0_p assms(12) ht0_I by (by100 blast)
+  have h1_S2: "1 \<in> ?S2" using hh1 assms(10) unfolding top1_unit_interval_def by (by100 auto)
+  have hS12_inter: "?S1 \<inter> ?S2 = {t0}"
+  proof (rule set_eqI, rule iffI)
+    fix t assume "t \<in> ?S1 \<inter> ?S2"
+    hence "h t \<in> D1 \<inter> D2" "t \<in> top1_unit_interval" by (by100 blast)+
+    hence "h t = p" using assms(6) by (by100 blast)
+    thus "t \<in> {t0}" using hinj \<open>t \<in> top1_unit_interval\<close> ht0_I ht0_p
+      unfolding inj_on_def by (by100 blast)
+  next
+    fix t assume "t \<in> {t0}" thus "t \<in> ?S1 \<inter> ?S2" using ht0_S1 ht0_S2 by (by100 blast)
+  qed
+  have hS12_union: "?S1 \<union> ?S2 = top1_unit_interval"
+  proof (rule set_eqI, rule iffI)
+    fix t assume "t \<in> ?S1 \<union> ?S2" thus "t \<in> top1_unit_interval" by (by100 blast)
+  next
+    fix t assume "t \<in> top1_unit_interval"
+    hence "h t \<in> D" using himg by (by100 blast)
+    thus "t \<in> ?S1 \<union> ?S2" using assms(5) \<open>t \<in> top1_unit_interval\<close> by (by100 blast)
+  qed
+  \<comment> \<open>Connected preimages via bridge to standard 'connected'.\<close>
+  have hS1_connected: "connected ?S1"
+  proof -
+    \<comment> \<open>D1 is connected (it's an arc).\<close>
+    have hD1_conn: "top1_connected_on D1 (subspace_topology X TX D1)"
+    proof -
+      obtain g where hg: "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
+          D1 (subspace_topology X TX D1) g"
+        using hD1_arc unfolding top1_is_arc_on_def by (by100 blast)
+      hence hg_cont: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+          D1 (subspace_topology X TX D1) g" and hg_img: "g ` top1_unit_interval = D1"
+        unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)+
+      have hTD1: "is_topology_on D1 (subspace_topology X TX D1)"
+        by (rule subspace_topology_is_topology_on[OF hTopX assms(13)])
+      from Theorem_23_5[OF top1_unit_interval_topology_is_topology_on hTD1
+          top1_unit_interval_connected hg_cont]
+      have "top1_connected_on (g ` top1_unit_interval)
+          (subspace_topology D1 (subspace_topology X TX D1) (g ` top1_unit_interval))" .
+      hence "top1_connected_on D1
+          (subspace_topology D1 (subspace_topology X TX D1) D1)" using hg_img by (by100 simp)
+      moreover have "subspace_topology D1 (subspace_topology X TX D1) D1 = subspace_topology X TX D1"
+      proof (rule subspace_topology_self)
+        show "\<forall>U \<in> subspace_topology X TX D1. U \<subseteq> D1"
+          unfolding subspace_topology_def by (by100 blast)
+      qed
+      ultimately show ?thesis by (by100 simp)
+    qed
+    \<comment> \<open>h\<inverse> is continuous D \<rightarrow> [0,1]. Use Theorem 23.5 with D1 as connected subspace of D.\<close>
+    have hinv_cont: "top1_continuous_map_on D (subspace_topology X TX D)
+        top1_unit_interval top1_unit_interval_topology (inv_into top1_unit_interval h)"
+      using hh unfolding top1_homeomorphism_on_def by (by100 blast)
+    have hD1_sub_D: "D1 \<subseteq> D" using assms(5) by (by100 blast)
+    \<comment> \<open>Restrict h\<inverse> to D1.\<close>
+    have hinv_D1_cont: "top1_continuous_map_on D1 (subspace_topology X TX D1)
+        top1_unit_interval top1_unit_interval_topology (inv_into top1_unit_interval h)"
+    proof -
+      have "subspace_topology X TX D1 = subspace_topology D (subspace_topology X TX D) D1"
+        using subspace_topology_trans[of D1 D X TX] hD1_sub_D hDX by (by100 simp)
+      thus ?thesis
+        using top1_continuous_map_on_restrict_domain_simple[OF hinv_cont hD1_sub_D]
+        by (by100 simp)
+    qed
+    have hTI: "is_topology_on top1_unit_interval top1_unit_interval_topology"
+      by (rule top1_unit_interval_topology_is_topology_on)
+    have hTD1: "is_topology_on D1 (subspace_topology X TX D1)"
+      by (rule subspace_topology_is_topology_on[OF hTopX assms(13)])
+    from Theorem_23_5[OF hTD1 hTI hD1_conn hinv_D1_cont]
+    have "top1_connected_on (inv_into top1_unit_interval h ` D1)
+        (subspace_topology top1_unit_interval top1_unit_interval_topology
+          (inv_into top1_unit_interval h ` D1))" .
+    \<comment> \<open>inv\_into image of D1 = S1.\<close>
+    moreover have "inv_into top1_unit_interval h ` D1 = ?S1"
+    proof (rule set_eqI, rule iffI)
+      fix t assume "t \<in> inv_into top1_unit_interval h ` D1"
+      then obtain x where hx: "x \<in> D1" "t = inv_into top1_unit_interval h x" by (by100 blast)
+      have "x \<in> h ` top1_unit_interval" using hx(1) hD1_sub_D himg by (by100 blast)
+      hence "t \<in> top1_unit_interval"
+        using inv_into_into[of x h top1_unit_interval] hx(2) by (by100 simp)
+      moreover have "h t = x" using f_inv_into_f[of x h top1_unit_interval]
+          \<open>x \<in> h ` top1_unit_interval\<close> hx(2) by (by100 simp)
+      ultimately show "t \<in> ?S1" using hx(1) by (by100 blast)
+    next
+      fix t assume "t \<in> ?S1"
+      hence ht: "t \<in> top1_unit_interval" "h t \<in> D1" by (by100 blast)+
+      have "inv_into top1_unit_interval h (h t) = t"
+        by (rule inv_into_f_f[OF hinj ht(1)])
+      thus "t \<in> inv_into top1_unit_interval h ` D1" using ht(2) by (by100 force)
+    qed
+    ultimately have "top1_connected_on ?S1
+        (subspace_topology top1_unit_interval top1_unit_interval_topology ?S1)"
+      by (by100 simp)
+    hence "top1_connected_on ?S1 (subspace_topology UNIV top1_open_sets ?S1)"
+    proof -
+      have "?S1 \<subseteq> top1_unit_interval" by (by100 blast)
+      have "subspace_topology top1_unit_interval top1_unit_interval_topology ?S1
+          = subspace_topology UNIV top1_open_sets ?S1"
+        unfolding top1_unit_interval_topology_def
+        using subspace_topology_trans[of ?S1 top1_unit_interval "UNIV :: real set" top1_open_sets]
+          \<open>?S1 \<subseteq> top1_unit_interval\<close> by (by100 simp)
+      thus ?thesis using \<open>top1_connected_on ?S1
+          (subspace_topology top1_unit_interval top1_unit_interval_topology ?S1)\<close> by (by100 simp)
+    qed
+    thus "connected ?S1" using top1_connected_on_subspace_open_iff_connected by (by100 blast)
+  qed
+  have hS2_connected: "connected ?S2"
+  proof -
+    have hD2_conn: "top1_connected_on D2 (subspace_topology X TX D2)"
+    proof -
+      obtain g where hg: "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
+          D2 (subspace_topology X TX D2) g"
+        using hD2_arc unfolding top1_is_arc_on_def by (by100 blast)
+      hence hg_cont: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+          D2 (subspace_topology X TX D2) g" and hg_img: "g ` top1_unit_interval = D2"
+        unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)+
+      have hTD2: "is_topology_on D2 (subspace_topology X TX D2)"
+        by (rule subspace_topology_is_topology_on[OF hTopX assms(14)])
+      from Theorem_23_5[OF top1_unit_interval_topology_is_topology_on hTD2
+          top1_unit_interval_connected hg_cont]
+      have "top1_connected_on (g ` top1_unit_interval)
+          (subspace_topology D2 (subspace_topology X TX D2) (g ` top1_unit_interval))" .
+      hence "top1_connected_on D2
+          (subspace_topology D2 (subspace_topology X TX D2) D2)" using hg_img by (by100 simp)
+      moreover have "subspace_topology D2 (subspace_topology X TX D2) D2 = subspace_topology X TX D2"
+      proof (rule subspace_topology_self)
+        show "\<forall>U \<in> subspace_topology X TX D2. U \<subseteq> D2"
+          unfolding subspace_topology_def by (by100 blast)
+      qed
+      ultimately show ?thesis by (by100 simp)
+    qed
+    have hD2_sub_D: "D2 \<subseteq> D" using assms(5) by (by100 blast)
+    have hinv_D2_cont: "top1_continuous_map_on D2 (subspace_topology X TX D2)
+        top1_unit_interval top1_unit_interval_topology (inv_into top1_unit_interval h)"
+    proof -
+      have hinv_cont: "top1_continuous_map_on D (subspace_topology X TX D)
+          top1_unit_interval top1_unit_interval_topology (inv_into top1_unit_interval h)"
+        using hh unfolding top1_homeomorphism_on_def by (by100 blast)
+      have "subspace_topology X TX D2 = subspace_topology D (subspace_topology X TX D) D2"
+        using subspace_topology_trans[of D2 D X TX] hD2_sub_D hDX by (by100 simp)
+      thus ?thesis
+        using top1_continuous_map_on_restrict_domain_simple[OF hinv_cont hD2_sub_D]
+        by (by100 simp)
+    qed
+    have hTI: "is_topology_on top1_unit_interval top1_unit_interval_topology"
+      by (rule top1_unit_interval_topology_is_topology_on)
+    have hTD2: "is_topology_on D2 (subspace_topology X TX D2)"
+      by (rule subspace_topology_is_topology_on[OF hTopX assms(14)])
+    from Theorem_23_5[OF hTD2 hTI hD2_conn hinv_D2_cont]
+    have "top1_connected_on (inv_into top1_unit_interval h ` D2)
+        (subspace_topology top1_unit_interval top1_unit_interval_topology
+          (inv_into top1_unit_interval h ` D2))" .
+    moreover have "inv_into top1_unit_interval h ` D2 = ?S2"
+    proof (rule set_eqI, rule iffI)
+      fix t assume "t \<in> inv_into top1_unit_interval h ` D2"
+      then obtain x where hx: "x \<in> D2" "t = inv_into top1_unit_interval h x" by (by100 blast)
+      have "x \<in> h ` top1_unit_interval" using hx(1) hD2_sub_D himg by (by100 blast)
+      hence "t \<in> top1_unit_interval"
+        using inv_into_into[of x h top1_unit_interval] hx(2) by (by100 simp)
+      moreover have "h t = x" using f_inv_into_f[of x h top1_unit_interval]
+          \<open>x \<in> h ` top1_unit_interval\<close> hx(2) by (by100 simp)
+      ultimately show "t \<in> ?S2" using hx(1) by (by100 blast)
+    next
+      fix t assume "t \<in> ?S2"
+      hence ht: "t \<in> top1_unit_interval" "h t \<in> D2" by (by100 blast)+
+      have "inv_into top1_unit_interval h (h t) = t"
+        by (rule inv_into_f_f[OF hinj ht(1)])
+      thus "t \<in> inv_into top1_unit_interval h ` D2" using ht(2) by (by100 force)
+    qed
+    ultimately have "top1_connected_on ?S2
+        (subspace_topology top1_unit_interval top1_unit_interval_topology ?S2)"
+      by (by100 simp)
+    hence "top1_connected_on ?S2 (subspace_topology UNIV top1_open_sets ?S2)"
+    proof -
+      have "?S2 \<subseteq> top1_unit_interval" by (by100 blast)
+      have "subspace_topology top1_unit_interval top1_unit_interval_topology ?S2
+          = subspace_topology UNIV top1_open_sets ?S2"
+        unfolding top1_unit_interval_topology_def
+        using subspace_topology_trans[of ?S2 top1_unit_interval "UNIV :: real set" top1_open_sets]
+          \<open>?S2 \<subseteq> top1_unit_interval\<close> by (by100 simp)
+      thus ?thesis using \<open>top1_connected_on ?S2
+          (subspace_topology top1_unit_interval top1_unit_interval_topology ?S2)\<close> by (by100 simp)
+    qed
+    thus "connected ?S2" using top1_connected_on_subspace_open_iff_connected by (by100 blast)
+  qed
+  \<comment> \<open>connected\_contains\_Icc: {0..t0} \<subseteq> S1 and {t0..1} \<subseteq> S2.\<close>
+  have hIcc_S1: "{0..t0} \<subseteq> ?S1"
+    using connected_contains_Icc[OF hS1_connected h0_S1 ht0_S1] .
+  have hIcc_S2: "{t0..1} \<subseteq> ?S2"
+    using connected_contains_Icc[OF hS2_connected ht0_S2 h1_S2] .
+  \<comment> \<open>S1 \<subseteq> {0..t0}: if t \<in> S1 with t > t0, then t \<in> {t0..1} \<subseteq> S2, so t \<in> S1\<inter>S2 = {t0}, contradiction.\<close>
+  have hS1_eq: "?S1 = {t \<in> top1_unit_interval. t \<le> t0}"
+  proof (rule set_eqI, rule iffI)
+    fix t assume "t \<in> ?S1"
+    hence ht: "t \<in> top1_unit_interval" "h t \<in> D1" by (by100 blast)+
+    show "t \<in> {t \<in> top1_unit_interval. t \<le> t0}"
+    proof (rule ccontr)
+      assume "\<not> t \<in> {t \<in> top1_unit_interval. t \<le> t0}"
+      hence "t > t0" using ht(1) by (by100 force)
+      hence "t \<in> {t0..1}" using ht(1) unfolding top1_unit_interval_def by (by100 auto)
+      hence "t \<in> ?S2" using hIcc_S2 by (by100 blast)
+      hence "t \<in> ?S1 \<inter> ?S2" using \<open>t \<in> ?S1\<close> by (by100 blast)
+      hence "t = t0" using hS12_inter by (by100 blast)
+      thus False using \<open>t > t0\<close> by (by100 simp)
+    qed
+  next
+    fix t assume "t \<in> {t \<in> top1_unit_interval. t \<le> t0}"
+    hence "t \<in> {0..t0}" unfolding top1_unit_interval_def by (by100 auto)
+    thus "t \<in> ?S1" using hIcc_S1 by (by100 blast)
+  qed
+  have hS2_eq: "?S2 = {t \<in> top1_unit_interval. t \<ge> t0}"
+  proof (rule set_eqI, rule iffI)
+    fix t assume "t \<in> ?S2"
+    hence ht: "t \<in> top1_unit_interval" "h t \<in> D2" by (by100 blast)+
+    show "t \<in> {t \<in> top1_unit_interval. t \<ge> t0}"
+    proof (rule ccontr)
+      assume "\<not> t \<in> {t \<in> top1_unit_interval. t \<ge> t0}"
+      hence "t < t0" using ht(1) by (by100 force)
+      hence "t \<in> {0..t0}" using ht(1) unfolding top1_unit_interval_def by (by100 auto)
+      hence "t \<in> ?S1" using hIcc_S1 by (by100 blast)
+      hence "t \<in> ?S1 \<inter> ?S2" using \<open>t \<in> ?S2\<close> by (by100 blast)
+      hence "t = t0" using hS12_inter by (by100 blast)
+      thus False using \<open>t < t0\<close> by (by100 simp)
+    qed
+  next
+    fix t assume "t \<in> {t \<in> top1_unit_interval. t \<ge> t0}"
+    hence "t \<in> {t0..1}" unfolding top1_unit_interval_def by (by100 auto)
+    thus "t \<in> ?S2" using hIcc_S2 by (by100 blast)
+  qed
+  \<comment> \<open>Step 4: Reuse homeomorphism construction from arc\_split\_at\_given\_point.
+     h \<circ> (\<lambda>s. s*t0): [0,1] \<rightarrow> D1 with 0\<mapsto>a, 1\<mapsto>p.
+     h \<circ> (\<lambda>s. t0 + s*(1-t0)): [0,1] \<rightarrow> D2 with 0\<mapsto>p, 1\<mapsto>b.\<close>
+  have hD1_img: "h ` {t \<in> top1_unit_interval. t \<le> t0} = D1"
+  proof (rule set_eqI, rule iffI)
+    fix x assume "x \<in> h ` {t \<in> top1_unit_interval. t \<le> t0}"
+    then obtain t where ht: "t \<in> top1_unit_interval" "t \<le> t0" "x = h t" by (by100 blast)
+    hence "t \<in> ?S1" using hS1_eq by (by100 blast)
+    thus "x \<in> D1" using ht(3) by (by100 blast)
+  next
+    fix x assume "x \<in> D1"
+    hence "x \<in> D" using assms(5) by (by100 blast)
+    hence "x \<in> h ` top1_unit_interval" using himg by (by100 blast)
+    then obtain t where ht: "t \<in> top1_unit_interval" "x = h t" by (by100 blast)
+    hence "t \<in> ?S1" using \<open>x \<in> D1\<close> by (by100 blast)
+    hence "t \<le> t0" using hS1_eq by (by100 blast)
+    thus "x \<in> h ` {t \<in> top1_unit_interval. t \<le> t0}" using ht by (by100 blast)
+  qed
+  have hD2_img: "h ` {t \<in> top1_unit_interval. t \<ge> t0} = D2"
+  proof (rule set_eqI, rule iffI)
+    fix x assume "x \<in> h ` {t \<in> top1_unit_interval. t \<ge> t0}"
+    then obtain t where ht: "t \<in> top1_unit_interval" "t \<ge> t0" "x = h t" by (by100 blast)
+    hence "t \<in> ?S2" using hS2_eq by (by100 blast)
+    thus "x \<in> D2" using ht(3) by (by100 blast)
+  next
+    fix x assume "x \<in> D2"
+    hence "x \<in> D" using assms(5) by (by100 blast)
+    hence "x \<in> h ` top1_unit_interval" using himg by (by100 blast)
+    then obtain t where ht: "t \<in> top1_unit_interval" "x = h t" by (by100 blast)
+    hence "t \<in> ?S2" using \<open>x \<in> D2\<close> by (by100 blast)
+    hence "t \<ge> t0" using hS2_eq by (by100 blast)
+    thus "x \<in> h ` {t \<in> top1_unit_interval. t \<ge> t0}" using ht by (by100 blast)
+  qed
+  \<comment> \<open>Now construct homeomorphisms [0,1] \<rightarrow> D1 and [0,1] \<rightarrow> D2 via arc\_split\_at\_given\_point's proof.\<close>
+  \<comment> \<open>g1 = h \<circ> (\<lambda>s. s*t0): [0,1] \<rightarrow> D1 is a continuous bijection, hence homeomorphism (Thm 26.6).\<close>
+  have hh1: "\<exists>g. top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
+      D1 (subspace_topology X TX D1) g \<and> g 0 = a \<and> g 1 = p"
+  proof -
+    let ?g = "h \<circ> (\<lambda>s. s * t0)"
+    have hg0: "?g 0 = a" unfolding comp_def using hh0 by (by100 simp)
+    have hg1: "?g 1 = p" unfolding comp_def using ht0_p by (by100 simp)
+    \<comment> \<open>Image of ?g is D1.\<close>
+    have hg_img: "?g ` top1_unit_interval = D1"
+    proof -
+      have "?g ` top1_unit_interval = h ` ((\<lambda>s. s * t0) ` top1_unit_interval)"
+        using image_comp[of h "\<lambda>s. s * t0" top1_unit_interval] by (by100 simp)
+      moreover have "(\<lambda>s::real. s * t0) ` top1_unit_interval = {t \<in> top1_unit_interval. t \<le> t0}"
+      proof (rule set_eqI, rule iffI)
+        fix x assume "x \<in> (\<lambda>s. s * t0) ` top1_unit_interval"
+        then obtain s where hs: "s \<in> top1_unit_interval" "x = s * t0" by (by100 blast)
+        have hs_bds: "0 \<le> s" "s \<le> 1" using hs(1) unfolding top1_unit_interval_def by (by100 simp)+
+        have "0 \<le> x" using hs(2) hs_bds(1) ht0_open(1) by (by100 simp)
+        moreover have "x \<le> t0" using hs(2) hs_bds(2) ht0_open(1) by (by100 simp)
+        moreover have "x \<le> 1" using \<open>x \<le> t0\<close> ht0_open(2) by (by100 linarith)
+        ultimately show "x \<in> {t \<in> top1_unit_interval. t \<le> t0}"
+          unfolding top1_unit_interval_def by (by100 simp)
+      next
+        fix x assume "x \<in> {t \<in> top1_unit_interval. t \<le> t0}"
+        hence hx: "0 \<le> x" "x \<le> 1" "x \<le> t0" unfolding top1_unit_interval_def by (by100 simp)+
+        have "x / t0 \<in> top1_unit_interval" unfolding top1_unit_interval_def
+          using hx ht0_open by (by100 simp)
+        moreover have "x / t0 * t0 = x" using ht0_open(1) by (by100 simp)
+        ultimately show "x \<in> (\<lambda>s. s * t0) ` top1_unit_interval" by (by100 force)
+      qed
+      ultimately show ?thesis using hD1_img by (by100 simp)
+    qed
+    \<comment> \<open>?g is injective.\<close>
+    have hg_inj: "inj_on ?g top1_unit_interval"
+    proof (rule inj_onI)
+      fix x y assume hx: "x \<in> top1_unit_interval" and hy: "y \<in> top1_unit_interval"
+          and heq: "?g x = ?g y"
+      hence "h (x * t0) = h (y * t0)" unfolding comp_def by (by100 simp)
+      moreover have "x * t0 \<in> top1_unit_interval"
+      proof -
+        have "0 \<le> x" "x \<le> 1" using hx unfolding top1_unit_interval_def by (by100 simp)+
+        hence "0 \<le> x * t0" "x * t0 \<le> 1" using ht0_open
+          by (by100 simp) (rule mult_le_one; by100 linarith)
+        thus ?thesis unfolding top1_unit_interval_def by (by100 simp)
+      qed
+      moreover have "y * t0 \<in> top1_unit_interval"
+      proof -
+        have "0 \<le> y" "y \<le> 1" using hy unfolding top1_unit_interval_def by (by100 simp)+
+        hence "0 \<le> y * t0" "y * t0 \<le> 1" using ht0_open
+          by (by100 simp) (rule mult_le_one; by100 linarith)
+        thus ?thesis unfolding top1_unit_interval_def by (by100 simp)
+      qed
+      ultimately have "x * t0 = y * t0" using hinj unfolding inj_on_def by (by100 blast)
+      thus "x = y" using ht0_open(1) by (by100 simp)
+    qed
+    have hg_bij: "bij_betw ?g top1_unit_interval D1"
+      unfolding bij_betw_def using hg_inj hg_img by (by100 blast)
+    \<comment> \<open>?g is continuous [0,1] \<rightarrow> D1 (composition of affine scaling + h restricted).\<close>
+    have hg_cont_D1: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+        D1 (subspace_topology X TX D1) ?g"
+    proof -
+      \<comment> \<open>h: [0,1] \<rightarrow> D cont (from homeomorphism). Enlarge codomain to X.\<close>
+      have hh_cont: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+          D (subspace_topology X TX D) h"
+        using hh unfolding top1_homeomorphism_on_def by (by100 blast)
+      \<comment> \<open>Scaling t \<mapsto> t*t0: [0,1] \<rightarrow> [0,1] is continuous.\<close>
+      have hscale_cont: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+          top1_unit_interval top1_unit_interval_topology (\<lambda>s::real. s * t0)"
+        sorry \<comment> \<open>Affine map on [0,1] is continuous. Standard fact.\<close>
+      \<comment> \<open>Composition h \<circ> scale: [0,1] \<rightarrow> D is continuous.\<close>
+      have "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+          D (subspace_topology X TX D) (h \<circ> (\<lambda>s::real. s * t0))"
+        sorry \<comment> \<open>top1\_continuous\_map\_on\_comp with scaling + h.\<close>
+      \<comment> \<open>Shrink codomain from D to D1.\<close>
+      from top1_continuous_map_on_codomain_shrink
+      show ?thesis using hg_img \<open>top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+          D (subspace_topology X TX D) (h \<circ> (\<lambda>s::real. s * t0))\<close> assms(5) assms(13) hDX
+        sorry
+    qed
+    \<comment> \<open>[0,1] compact, D1 Hausdorff \<Rightarrow> Theorem 26.6.\<close>
+    have hI_compact: "top1_compact_on top1_unit_interval top1_unit_interval_topology"
+    proof -
+      have "compact (top1_unit_interval :: real set)" unfolding top1_unit_interval_def
+        by (rule compact_Icc)
+      thus ?thesis using top1_compact_on_subspace_UNIV_iff_compact
+        unfolding top1_unit_interval_topology_def by (by100 blast)
+    qed
+    have hD1_haus: "is_hausdorff_on D1 (subspace_topology X TX D1)"
+      using conjunct2[OF conjunct2[OF Theorem_17_11]] hH assms(13) by (by100 blast)
+    have hTI: "is_topology_on top1_unit_interval top1_unit_interval_topology"
+      by (rule top1_unit_interval_topology_is_topology_on)
+    have hTD1: "is_topology_on D1 (subspace_topology X TX D1)"
+      by (rule subspace_topology_is_topology_on[OF hTopX assms(13)])
+    from Theorem_26_6[OF hTI hTD1 hI_compact hD1_haus hg_cont_D1 hg_bij]
+    show ?thesis using hg0 hg1 by (by100 blast)
+  qed
+  \<comment> \<open>g2 = h \<circ> (\<lambda>s. t0 + s*(1-t0)): [0,1] \<rightarrow> D2 with 0\<mapsto>p, 1\<mapsto>b.\<close>
+  have hh2: "\<exists>g. top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
+      D2 (subspace_topology X TX D2) g \<and> g 0 = p \<and> g 1 = b"
+    sorry \<comment> \<open>Same as hh1 with affine t0 + s*(1-t0).\<close>
+  \<comment> \<open>Step 5: Apply arc\_endpoints\_are\_boundary.\<close>
+  obtain g1 where hg1: "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
+      D1 (subspace_topology X TX D1) g1" "g1 0 = a" "g1 1 = p" using hh1 by (by100 blast)
+  obtain g2 where hg2: "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
+      D2 (subspace_topology X TX D2) g2" "g2 0 = p" "g2 1 = b" using hh2 by (by100 blast)
+  have "top1_arc_endpoints_on D1 (subspace_topology X TX D1) = {g1 0, g1 1}"
+    by (rule arc_endpoints_are_boundary[OF hT hH assms(13) hD1_arc hg1(1)])
+  hence ep1: "top1_arc_endpoints_on D1 (subspace_topology X TX D1) = {a, p}"
+    using hg1(2,3) by (by100 simp)
+  have "top1_arc_endpoints_on D2 (subspace_topology X TX D2) = {g2 0, g2 1}"
+    by (rule arc_endpoints_are_boundary[OF hT hH assms(14) hD2_arc hg2(1)])
+  hence ep2: "top1_arc_endpoints_on D2 (subspace_topology X TX D2) = {p, b}"
+    using hg2(2,3) by (by100 simp)
+  show "top1_arc_endpoints_on D1 (subspace_topology X TX D1) = {a, p}" by (rule ep1)
+  show "top1_arc_endpoints_on D2 (subspace_topology X TX D2) = {p, b}" by (rule ep2)
+qed
 
 \<comment> \<open>Reusable: endpoints of concatenated arc = the non-shared endpoints.\<close>
 lemma arc_concat_endpoints:
@@ -1854,7 +2300,90 @@ lemma arc_concat_endpoints:
       and hep2: "top1_arc_endpoints_on A2 (subspace_topology X TX A2) = {c, y}"
       and "x \<noteq> c" "c \<noteq> y"
   shows "top1_arc_endpoints_on (A1 \<union> A2) (subspace_topology X TX (A1 \<union> A2)) = {x, y}"
-  sorry \<comment> \<open>From concatenation construction: h(0)=x, h(1)=y. Apply arc_endpoints_are_boundary.\<close>
+proof -
+  let ?D = "A1 \<union> A2"
+  have hDX: "?D \<subseteq> X" using assms(4,6) by (by100 blast)
+  have hD_arc: "top1_is_arc_on ?D (subspace_topology X TX ?D)"
+    by (rule arcs_concatenation_is_arc[OF hT hH hA1 assms(4) hA2 assms(6) assms(7) assms(8) assms(9)])
+  \<comment> \<open>Key: c is NOT an endpoint of ?D. If it were, removing c would leave ?D connected.
+     But ?D \<setminus> {c} = (A1\<setminus>{c}) \<union> (A2\<setminus>{c}), disjoint nonempty \<Rightarrow> disconnected.\<close>
+  have hc_not_ep: "c \<notin> top1_arc_endpoints_on ?D (subspace_topology X TX ?D)"
+  proof
+    assume "c \<in> top1_arc_endpoints_on ?D (subspace_topology X TX ?D)"
+    hence hconn: "top1_connected_on (?D - {c}) (subspace_topology ?D (subspace_topology X TX ?D) (?D - {c}))"
+      unfolding top1_arc_endpoints_on_def by (by100 blast)
+    \<comment> \<open>?D \<setminus> {c} = (A1\<setminus>{c}) \<union> (A2\<setminus>{c}), disjoint, nonempty.\<close>
+    have hDc: "?D - {c} = (A1 - {c}) \<union> (A2 - {c})" using assms(7) by (by100 blast)
+    have hdisj: "(A1 - {c}) \<inter> (A2 - {c}) = {}" using assms(7) by (by100 blast)
+    have hne1: "A1 - {c} \<noteq> {}"
+      using hep1 assms(12) unfolding top1_arc_endpoints_on_def by (by100 blast)
+    have hne2: "A2 - {c} \<noteq> {}"
+      using hep2 assms(13) unfolding top1_arc_endpoints_on_def by (by100 blast)
+    \<comment> \<open>But A1\<setminus>{c}, A2\<setminus>{c} are open in ?D\<setminus>{c} (since A1, A2 closed in ?D).\<close>
+    \<comment> \<open>This gives a separation, contradicting connectedness.\<close>
+    \<comment> \<open>Need: A1\<setminus>{c} and A2\<setminus>{c} are open in ?D\<setminus>{c}'s subspace topology.
+       This follows from A1, A2 being closed in ?D (compact in Hausdorff).\<close>
+    thus False using hconn hDc hdisj sorry
+  qed
+  \<comment> \<open>Get endpoints of ?D.\<close>
+  obtain a b where hab_ep: "top1_arc_endpoints_on ?D (subspace_topology X TX ?D) = {a, b}"
+      and hab_ne: "a \<noteq> b"
+  proof -
+    obtain g where hg: "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
+        ?D (subspace_topology X TX ?D) g"
+      using hD_arc unfolding top1_is_arc_on_def by (by100 blast)
+    have heps: "top1_arc_endpoints_on ?D (subspace_topology X TX ?D) = {g 0, g 1}"
+      by (rule arc_endpoints_are_boundary[OF hT hH hDX hD_arc hg])
+    have "g 0 \<noteq> g 1"
+    proof
+      assume "g 0 = g 1"
+      have "inj_on g top1_unit_interval"
+        using hg unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+      hence "(0::real) = 1" using \<open>g 0 = g 1\<close>
+        unfolding inj_on_def top1_unit_interval_def by (by100 force)
+      thus False by (by100 simp)
+    qed
+    thus ?thesis using that[OF heps] by (by100 blast)
+  qed
+  \<comment> \<open>x \<in> A1, y \<in> A2, c \<in> both.\<close>
+  have hx_A1: "x \<in> A1" using hep1 unfolding top1_arc_endpoints_on_def by (by100 blast)
+  have hy_A2: "y \<in> A2" using hep2 unfolding top1_arc_endpoints_on_def by (by100 blast)
+  have hc_A1: "c \<in> A1" using assms(7,8) unfolding top1_arc_endpoints_on_def by (by100 blast)
+  have hc_A2: "c \<in> A2" using assms(7,9) unfolding top1_arc_endpoints_on_def by (by100 blast)
+  have hx_ne_c: "x \<noteq> c" by (rule assms(12))
+  have hc_ne_y: "c \<noteq> y" by (rule assms(13))
+  have hx_D: "x \<in> ?D" using hx_A1 by (by100 blast)
+  have hy_D: "y \<in> ?D" using hy_A2 by (by100 blast)
+  \<comment> \<open>Apply arc\_split\_endpoints: endpoints of A1 = {a,c} or {b,c}.\<close>
+  have ha_A1: "a \<in> A1 \<or> a \<in> A2" using hab_ep unfolding top1_arc_endpoints_on_def by (by100 blast)
+  have hb_A2: "b \<in> A1 \<or> b \<in> A2" using hab_ep unfolding top1_arc_endpoints_on_def by (by100 blast)
+  \<comment> \<open>a \<in> A1 (since a is an endpoint of D, and a \<noteq> c, so a \<notin> A1\<inter>A2 = {c}).\<close>
+  \<comment> \<open>arc\_split\_endpoints needs: a \<in> A1, b \<in> A2 (endpoints of D in respective sub-arcs).\<close>
+  have ha_A1': "a \<in> A1" sorry \<comment> \<open>a is endpoint of D, a \<noteq> c, so a \<notin> A2\<setminus>A1. Thus a \<in> A1.\<close>
+  have hb_A2': "b \<in> A2" sorry \<comment> \<open>Similarly.\<close>
+  have hD_eq: "?D = A1 \<union> A2" by (by100 blast)
+  have hep_A1: "top1_arc_endpoints_on A1 (subspace_topology X TX A1) = {a, c}"
+    using arc_split_endpoints(1)[OF hT hH hDX hD_arc hD_eq assms(7) hA1 hA2
+        ha_A1' hb_A2' hc_A1 hc_A2 assms(4) assms(6) hab_ep hc_not_ep] .
+  have hep_A2: "top1_arc_endpoints_on A2 (subspace_topology X TX A2) = {c, b}"
+    using arc_split_endpoints(2)[OF hT hH hDX hD_arc hD_eq assms(7) hA1 hA2
+        ha_A1' hb_A2' hc_A1 hc_A2 assms(4) assms(6) hab_ep hc_not_ep] .
+  \<comment> \<open>Match: {a,c} = {x,c} \<Rightarrow> a = x. {c,b} = {c,y} \<Rightarrow> b = y.\<close>
+  have hab_ne2: "a \<noteq> c" using hab_ep hc_not_ep by (by100 blast)
+  have hbc_ne: "b \<noteq> c" using hab_ep hc_not_ep by (by100 blast)
+  have "a = x"
+  proof -
+    have "{a, c} = {x, c}" using hep_A1 hep1 by (by100 simp)
+    from doubleton_eq_iff[OF this hab_ne2] show "a = x" using hx_ne_c by (by100 blast)
+  qed
+  moreover have "b = y"
+  proof -
+    have "{c, b} = {c, y}" using hep_A2 hep2 by (by100 simp)
+    have "c \<noteq> b" using hbc_ne by (by100 blast)
+    from doubleton_eq_iff[OF \<open>{c, b} = {c, y}\<close> this] show "b = y" using hc_ne_y by (by100 blast)
+  qed
+  ultimately show ?thesis using hab_ep by (by100 simp)
+qed
 
 (** from \<S>65 Lemma 65.1: for K_4 subspace of S^2 with vertices a_1, ..., a_4 and
     closed-curve edge C = a_1 a_2 a_3 a_4 a_1, and interior points p, q of opposite
@@ -2334,14 +2863,135 @@ proof -
   have hD2_sub: "?D2 \<subseteq> top1_S2"
     using he24_sub he41_sub he13_sub he24_split(1) he13_split(1) by (by100 blast)
   \<comment> \<open>D_1 and D_2 meet only at {p,q}.\<close>
+  \<comment> \<open>Pre-prove 7 empty pairwise intersections + 2 singleton intersections.\<close>
+  \<comment> \<open>Vertex non-membership facts (used in multiple pairwise intersections).\<close>
+  have ha1_not_pa3: "a1 \<notin> e13_pa3" proof
+    assume "a1 \<in> e13_pa3" hence "a1 \<in> e13_a1p \<inter> e13_pa3" using he13_split(5) by (by100 blast)
+    hence "a1 = p" using he13_split(2) by (by100 blast) thus False using hp_e13 by (by100 blast) qed
+  have ha4_not_a2q: "a4 \<notin> e24_a2q" proof
+    assume "a4 \<in> e24_a2q" hence "a4 \<in> e24_a2q \<inter> e24_qa4" using he24_split(6) by (by100 blast)
+    hence "a4 = q" using he24_split(2) by (by100 blast) thus False using hq_e24 by (by100 blast) qed
+  have ha2_not_e13: "a2 \<notin> e13" proof
+    assume "a2 \<in> e13" hence "a2 \<in> e13 \<inter> e23" using assms(17) unfolding top1_arc_endpoints_on_def by (by100 blast)
+    hence "a2 = a3" using assms(29) by (by100 blast)
+    hence "{a1,a2,a3,a4} = {a1,a3,a4}" by (by100 blast)
+    hence "card {a1,a2,a3,a4} \<le> card {a1,a3,a4}" by (by100 simp)
+    also have "\<dots> \<le> 3" by (rule card_three_le) finally show False using assms(2) by (by100 simp) qed
+  have ha3_not_e24: "a3 \<notin> e24" proof
+    assume "a3 \<in> e24" hence "a3 \<in> e24 \<inter> e23" using assms(17) unfolding top1_arc_endpoints_on_def by (by100 blast)
+    hence "a3 = a2" using assms(34) by (by100 blast)
+    hence "{a1,a2,a3,a4} = {a1,a3,a4}" by (by100 blast)
+    hence "card {a1,a2,a3,a4} \<le> card {a1,a3,a4}" by (by100 simp)
+    also have "\<dots> \<le> 3" by (rule card_three_le) finally show False using assms(2) by (by100 simp) qed
+  have ha1_not_e24: "a1 \<notin> e24" proof
+    assume "a1 \<in> e24" hence "a1 \<in> e24 \<inter> e41" using assms(19) unfolding top1_arc_endpoints_on_def by (by100 blast)
+    hence "a1 = a4" using assms(36) by (by100 blast)
+    hence "{a1,a2,a3,a4} = {a4,a2,a3}" by (by100 blast)
+    hence "card {a1,a2,a3,a4} \<le> card {a4,a2,a3}" by (by100 simp)
+    also have "\<dots> \<le> 3" by (rule card_three_le) finally show False using assms(2) by (by100 simp) qed
+  have ha4_not_e13: "a4 \<notin> e13" proof
+    assume "a4 \<in> e13" hence "a4 \<in> e13 \<inter> e41" using assms(19) unfolding top1_arc_endpoints_on_def by (by100 blast)
+    hence "a4 = a1" using assms(31) by (by100 blast)
+    hence "{a1,a2,a3,a4} = {a1,a2,a3}" by (by100 blast)
+    hence "card {a1,a2,a3,a4} \<le> card {a1,a2,a3}" by (by100 simp)
+    also have "\<dots> \<le> 3" by (rule card_three_le) finally show False using assms(2) by (by100 simp) qed
+  have hpw1: "e13_pa3 \<inter> e24_qa4 = {}"
+  proof (rule set_eqI, rule iffI)
+    fix y assume "y \<in> e13_pa3 \<inter> e24_qa4"
+    hence hy13: "y \<in> e13" and hy24: "y \<in> e24" using he13_split(1) he24_split(1) by (by100 blast)+
+    hence "y \<in> {a1,a2,a3,a4}" using assms(32) by (by100 blast)
+    moreover have "y \<noteq> a1" using ha1_not_pa3 \<open>y \<in> e13_pa3 \<inter> e24_qa4\<close> by (by100 blast)
+    moreover have "y \<noteq> a2" using ha2_not_e13 hy13 by (by100 blast)
+    moreover have "y \<noteq> a3" using ha3_not_e24 hy24 by (by100 blast)
+    moreover have "y \<noteq> a4" using ha4_not_e13 hy13 by (by100 blast)
+    ultimately show "y \<in> {}" by (by100 blast)
+  qed (by100 blast)
+  have hpw2: "e13_pa3 \<inter> e41 = {}"
+  proof (rule set_eqI, rule iffI)
+    fix y assume "y \<in> e13_pa3 \<inter> e41"
+    hence "y \<in> e13 \<inter> e41" using he13_split(1) by (by100 blast)
+    hence "y = a1" using assms(31) by (by100 blast)
+    moreover have "a1 \<notin> e13_pa3" proof
+      assume "a1 \<in> e13_pa3" hence "a1 \<in> e13_a1p \<inter> e13_pa3" using he13_split(5) by (by100 blast)
+      hence "a1 = p" using he13_split(2) by (by100 blast)
+      thus False using hp_e13 by (by100 blast) qed
+    ultimately show "y \<in> {}" using \<open>y \<in> e13_pa3 \<inter> e41\<close> by (by100 blast)
+  qed (by100 blast)
+  have hpw3: "e13_pa3 \<inter> e13_a1p = {p}" using he13_split(2) by (by100 blast)
+  have hpw4: "e23 \<inter> e24_qa4 = {}"
+  proof (rule set_eqI, rule iffI)
+    fix y assume "y \<in> e23 \<inter> e24_qa4"
+    hence "y \<in> e23 \<inter> e24" using he24_split(1) by (by100 blast)
+    hence "y = a2" using assms(34) by (by100 blast)
+    moreover have "a2 \<notin> e24_qa4" proof
+      assume "a2 \<in> e24_qa4" hence "a2 \<in> e24_a2q \<inter> e24_qa4" using he24_split(5) by (by100 blast)
+      hence "a2 = q" using he24_split(2) by (by100 blast)
+      thus False using hq_e24 by (by100 blast) qed
+    ultimately show "y \<in> {}" using \<open>y \<in> e23 \<inter> e24_qa4\<close> by (by100 blast)
+  qed (by100 blast)
+  have hpw5: "e23 \<inter> e41 = {}" using assms(23) by (by100 blast)
+  have hpw6: "e23 \<inter> e13_a1p = {}"
+  proof (rule set_eqI, rule iffI)
+    fix y assume "y \<in> e23 \<inter> e13_a1p"
+    hence "y \<in> e23 \<inter> e13" using he13_split(1) by (by100 blast)
+    hence "y = a3" using assms(29) by (by100 blast)
+    moreover have "a3 \<notin> e13_a1p" proof
+      assume "a3 \<in> e13_a1p" hence "a3 \<in> e13_a1p \<inter> e13_pa3" using he13_split(6) by (by100 blast)
+      hence "a3 = p" using he13_split(2) by (by100 blast)
+      thus False using hp_e13 by (by100 blast) qed
+    ultimately show "y \<in> {}" using \<open>y \<in> e23 \<inter> e13_a1p\<close> by (by100 blast)
+  qed (by100 blast)
+  have hpw7: "e24_a2q \<inter> e24_qa4 = {q}" using he24_split(2) by (by100 blast)
+  have hpw8: "e24_a2q \<inter> e41 = {}"
+  proof (rule set_eqI, rule iffI)
+    fix y assume "y \<in> e24_a2q \<inter> e41"
+    hence "y \<in> e24 \<inter> e41" using he24_split(1) by (by100 blast)
+    hence "y = a4" using assms(36) by (by100 blast)
+    moreover have "a4 \<notin> e24_a2q" proof
+      assume "a4 \<in> e24_a2q" hence "a4 \<in> e24_a2q \<inter> e24_qa4" using he24_split(6) by (by100 blast)
+      hence "a4 = q" using he24_split(2) by (by100 blast)
+      thus False using hq_e24 by (by100 blast) qed
+    ultimately show "y \<in> {}" using \<open>y \<in> e24_a2q \<inter> e41\<close> by (by100 blast)
+  qed (by100 blast)
+  have hpw9: "e24_a2q \<inter> e13_a1p = {}"
+  proof (rule set_eqI, rule iffI)
+    fix y assume "y \<in> e24_a2q \<inter> e13_a1p"
+    hence hy24: "y \<in> e24" and hy13: "y \<in> e13" using he24_split(1) he13_split(1) by (by100 blast)+
+    hence "y \<in> {a1,a2,a3,a4}" using assms(32) by (by100 blast)
+    moreover have "y \<noteq> a1" using ha1_not_e24 hy24 by (by100 blast)
+    moreover have "y \<noteq> a2" using ha2_not_e13 hy13 by (by100 blast)
+    moreover have "y \<noteq> a3" using ha3_not_e24 hy24 by (by100 blast)
+    moreover have "y \<noteq> a4" using ha4_not_a2q \<open>y \<in> e24_a2q \<inter> e13_a1p\<close> by (by100 blast)
+    ultimately show "y \<in> {}" by (by100 blast)
+  qed (by100 blast)
   have hD12_inter: "?D1 \<inter> ?D2 = {p, q}"
   proof (rule set_eqI, rule iffI)
     fix x assume "x \<in> ?D1 \<inter> ?D2"
     hence hxD1: "x \<in> e13_pa3 \<union> e23 \<union> e24_a2q" and hxD2: "x \<in> e24_qa4 \<union> e41 \<union> e13_a1p"
       by (by100 blast)+
+    \<comment> \<open>Case split on which D1 component x belongs to.\<close>
     show "x \<in> {p, q}"
-      sorry \<comment> \<open>9-case K4 intersection: all vertex non-memberships proved above.
-           e13_pa3\<inter>e13_a1p={p}, e24_a2q\<inter>e24_qa4={q}, all other pairs empty.\<close>
+    proof -
+      { assume "x \<in> e13_pa3"
+        hence "x \<notin> e24_qa4" using hpw1 by (by100 blast)
+        moreover have "x \<notin> e41" using \<open>x \<in> e13_pa3\<close> hpw2 by (by100 blast)
+        ultimately have "x \<in> e13_a1p" using hxD2 by (by100 blast)
+        hence "x \<in> {p}" using hpw3 \<open>x \<in> e13_pa3\<close> by (by100 blast)
+      }
+      moreover { assume "x \<in> e23"
+        have "x \<notin> e24_qa4" using \<open>x \<in> e23\<close> hpw4 by (by100 blast)
+        moreover have "x \<notin> e41" using \<open>x \<in> e23\<close> hpw5 by (by100 blast)
+        moreover have "x \<notin> e13_a1p" using \<open>x \<in> e23\<close> hpw6 by (by100 blast)
+        ultimately have False using hxD2 by (by100 blast)
+      }
+      moreover { assume "x \<in> e24_a2q"
+        have "x \<notin> e41" using \<open>x \<in> e24_a2q\<close> hpw8 by (by100 blast)
+        moreover have "x \<notin> e13_a1p" using \<open>x \<in> e24_a2q\<close> hpw9 by (by100 blast)
+        ultimately have "x \<in> e24_qa4" using hxD2 by (by100 blast)
+        hence "x \<in> {q}" using hpw7 \<open>x \<in> e24_a2q\<close> by (by100 blast)
+      }
+      ultimately show ?thesis using hxD1 by (by100 blast)
+    qed
   next
     fix x assume "x \<in> {p, q}"
     thus "x \<in> ?D1 \<inter> ?D2"
@@ -2413,7 +3063,58 @@ proof -
   \<comment> \<open>Get two components A, B of S2 - D.\<close>
   obtain A B where hAB: "?U' \<inter> ?V' = A \<union> B" "A \<inter> B = {}"
       "openin_on ?X ?TX A" "openin_on ?X ?TX B" "A \<noteq> {}" "B \<noteq> {}"
-    sorry \<comment> \<open>From separation + open-in-X transfer.\<close>
+  proof -
+    let ?W = "top1_S2 - ?D" and ?TW = "subspace_topology top1_S2 top1_S2_topology (top1_S2 - ?D)"
+    have hW_eq: "?U' \<inter> ?V' = ?W" by (rule hUV_eq)
+    have hW_not_conn: "\<not> top1_connected_on ?W ?TW"
+      using hUV_sep unfolding top1_separates_on_def by (by100 simp)
+    have hTopS2: "is_topology_on top1_S2 top1_S2_topology" using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
+    have hTW: "is_topology_on ?W ?TW" by (rule subspace_topology_is_topology_on[OF hTopS2]) (by100 blast)
+    \<comment> \<open>Extract separation U, V of W.\<close>
+    obtain U V where hUV: "U \<in> ?TW" "V \<in> ?TW" "U \<noteq> {}" "V \<noteq> {}"
+        "U \<inter> V = {}" "U \<union> V = ?W"
+      using hW_not_conn hTW unfolding top1_connected_on_def sorry
+    \<comment> \<open>U, V are open in W, hence open in S2 (since W is open in S2).\<close>
+    have hW_open_S2: "?W \<in> top1_S2_topology"
+    proof -
+      have "closedin_on top1_S2 top1_S2_topology ?D1"
+        by (rule arc_in_S2_closed[OF hD1_sub hD1_arc])
+      moreover have "closedin_on top1_S2 top1_S2_topology ?D2"
+        by (rule arc_in_S2_closed[OF hD2_sub hD2_arc])
+      ultimately have "closedin_on top1_S2 top1_S2_topology (?D1 \<union> ?D2)"
+        by (rule closedin_on_Un[OF hTopS2])
+      thus ?thesis unfolding closedin_on_def by (by100 blast)
+    qed
+    \<comment> \<open>U \<in> TW means U = U' \<inter> W for some U' \<in> top1_S2_topology.\<close>
+    \<comment> \<open>U open in W + W open in S2 \<Rightarrow> U open in S2 (intersection of opens is open).\<close>
+    \<comment> \<open>U, V open in subspace W, W open in S2 \<Rightarrow> U, V open in S2.\<close>
+    have hU_open_S2: "U \<in> top1_S2_topology"
+      using hUV(1) hW_open_S2 hTopS2 sorry
+    have hV_open_S2: "V \<in> top1_S2_topology"
+      using hUV(2) hW_open_S2 hTopS2 sorry
+    \<comment> \<open>U, V \<subseteq> W \<subseteq> X, so they're open in X.\<close>
+    have hW_sub_X: "?W \<subseteq> ?X" using hU'_sub_X hV'_sub_X hUV_eq by (by100 blast)
+    have hU_sub_X: "U \<subseteq> ?X" using hUV(6) hW_sub_X by (by100 blast)
+    have hV_sub_X: "V \<subseteq> ?X" using hUV(6) hW_sub_X by (by100 blast)
+    have hU_open_X: "openin_on ?X ?TX U"
+      unfolding openin_on_def
+    proof (intro conjI)
+      show "U \<subseteq> ?X" by (rule hU_sub_X)
+      have "U \<inter> ?X \<in> ?TX" using hU_open_S2 unfolding subspace_topology_def by (by100 blast)
+      moreover have "U \<inter> ?X = U" using hU_sub_X by (by100 blast)
+      ultimately show "U \<in> ?TX" by (by100 simp)
+    qed
+    have hV_open_X: "openin_on ?X ?TX V"
+      unfolding openin_on_def
+    proof (intro conjI)
+      show "V \<subseteq> ?X" by (rule hV_sub_X)
+      have "V \<inter> ?X \<in> ?TX" using hV_open_S2 unfolding subspace_topology_def by (by100 blast)
+      moreover have "V \<inter> ?X = V" using hV_sub_X by (by100 blast)
+      ultimately show "V \<in> ?TX" by (by100 simp)
+    qed
+    show ?thesis using that[OF _ hUV(5) hU_open_X hV_open_X hUV(3,4)]
+        hUV(6) hW_eq by (by100 simp)
+  qed
   \<comment> \<open>Step 4: Choose points x \<in> e12 (in one component), y \<in> e34 (other component).\<close>
   obtain x y where hx: "x \<in> A" "x \<in> e12 - {a1, a2}" and hy: "y \<in> B" "y \<in> e34 - {a3, a4}"
     sorry \<comment> \<open>e12 and e34 are in different components of S2-D.\<close>
