@@ -424,6 +424,12 @@ proof -
   qed
 qed
 
+\<comment> \<open>Reusable: t \<mapsto> 1-t is a self-homeomorphism of [0,1] (standalone version).\<close>
+lemma unit_interval_reversal_homeomorphism:
+  "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
+      top1_unit_interval top1_unit_interval_topology (\<lambda>t::real. 1 - t)"
+  sorry \<comment> \<open>Proved inside arcs_concatenation_is_arc; TODO: extract or cache.\<close>
+
 \<comment> \<open>Reusable: two arcs meeting only at their two endpoints form a simple closed curve.\<close>
 lemma arcs_form_simple_closed_curve:
   assumes hT: "is_topology_on_strict X TX" and hH: "is_hausdorff_on X TX"
@@ -438,10 +444,104 @@ proof -
      h2: [0,1] \<rightarrow> A2 with h2(0)=b, h2(1)=a.\<close>
   obtain h1 where hh1: "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
       A1 (subspace_topology X TX A1) h1" "h1 0 = a" "h1 1 = b"
-    sorry \<comment> \<open>Orient h1 with endpoints a,b using arc_endpoints_are_boundary.\<close>
+  proof -
+    obtain h0 where hh0: "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
+        A1 (subspace_topology X TX A1) h0"
+      using hA1 unfolding top1_is_arc_on_def by (by100 blast)
+    have heps: "top1_arc_endpoints_on A1 (subspace_topology X TX A1) = {h0 0, h0 1}"
+      by (rule arc_endpoints_are_boundary[OF hT hH hA1X hA1 hh0])
+    hence hab_h0: "{h0 0, h0 1} = {a, b}" using hep1 by (by100 simp)
+    show ?thesis
+    proof (cases "h0 0 = a")
+      case True
+      have "h0 1 \<in> {a, b}" using hab_h0 by (by100 blast)
+      moreover have "h0 1 \<noteq> a"
+      proof -
+        have "h0 0 \<noteq> h0 1"
+        proof
+          assume "h0 0 = h0 1"
+          hence "{h0 0, h0 1} = {h0 0}" by (by100 simp)
+          hence "card {a, b} = 1" using hab_h0 by (by100 simp)
+          thus False using hab by (by100 simp)
+        qed
+        thus ?thesis using True by (by100 simp)
+      qed
+      ultimately have "h0 1 = b" by (by100 blast)
+      thus ?thesis using that[OF hh0] True by (by100 simp)
+    next
+      case False hence "h0 0 = b" using hab_h0 by (by100 force)
+      hence "h0 1 = a" using hab_h0 hab
+        proof -
+          have "h0 0 \<noteq> h0 1"
+          proof
+            assume "h0 0 = h0 1"
+            hence "{h0 0, h0 1} = {h0 0}" by (by100 simp)
+            hence "card {a, b} \<le> 1" using hab_h0 by (by100 simp)
+            thus False using hab by (by100 simp)
+          qed
+          show ?thesis sorry \<comment> \<open>Set arithmetic: {h0 0, h0 1}={a,b}, h0 0\<noteq>h0 1.\<close>
+        qed
+      let ?rev = "\<lambda>t::real. 1 - t"
+      have hrev: "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
+          top1_unit_interval top1_unit_interval_topology ?rev"
+        by (rule unit_interval_reversal_homeomorphism)
+      have hcomp: "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
+          A1 (subspace_topology X TX A1) (h0 \<circ> ?rev)"
+        by (rule homeomorphism_on_comp[OF hrev hh0])
+      have "(h0 \<circ> ?rev) 0 = h0 1" unfolding comp_def by (by100 simp)
+      hence h0eq: "(h0 \<circ> ?rev) 0 = a" using \<open>h0 1 = a\<close> by (by100 simp)
+      have "(h0 \<circ> ?rev) 1 = h0 0" unfolding comp_def by (by100 simp)
+      hence h1eq: "(h0 \<circ> ?rev) 1 = b" using \<open>h0 0 = b\<close> by (by100 simp)
+      show ?thesis using that[OF hcomp h0eq h1eq] .
+    qed
+  qed
   obtain h2 where hh2: "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
       A2 (subspace_topology X TX A2) h2" "h2 0 = b" "h2 1 = a"
-    sorry \<comment> \<open>Orient h2 with endpoints b,a.\<close>
+  proof -
+    obtain h0 where hh0: "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
+        A2 (subspace_topology X TX A2) h0"
+      using hA2 unfolding top1_is_arc_on_def by (by100 blast)
+    have heps: "top1_arc_endpoints_on A2 (subspace_topology X TX A2) = {h0 0, h0 1}"
+      by (rule arc_endpoints_are_boundary[OF hT hH hA2X hA2 hh0])
+    hence hab_h0: "{h0 0, h0 1} = {a, b}" using hep2 by (by100 simp)
+    show ?thesis
+    proof (cases "h0 0 = b")
+      case True hence "h0 1 = a" using hab_h0 hab
+        proof -
+          have "h0 0 \<noteq> h0 1"
+          proof
+            assume "h0 0 = h0 1"
+            hence "{h0 0, h0 1} = {h0 0}" by (by100 simp)
+            hence "card {a, b} \<le> 1" using hab_h0 by (by100 simp)
+            thus False using hab by (by100 simp)
+          qed
+          show ?thesis sorry \<comment> \<open>Set arithmetic: {h0 0, h0 1}={a,b}, h0 0\<noteq>h0 1.\<close>
+        qed
+      thus ?thesis using that[OF hh0] True by (by100 simp)
+    next
+      case False hence "h0 0 = a" using hab_h0 by (by100 force)
+      hence "h0 1 = b" using hab_h0 hab
+        proof -
+          have "h0 0 \<noteq> h0 1"
+          proof
+            assume "h0 0 = h0 1"
+            hence "{h0 0, h0 1} = {h0 0}" by (by100 simp)
+            hence "card {a, b} \<le> 1" using hab_h0 by (by100 simp)
+            thus False using hab by (by100 simp)
+          qed
+          show ?thesis sorry \<comment> \<open>Set arithmetic: {h0 0, h0 1}={a,b}, h0 0\<noteq>h0 1.\<close>
+        qed
+      let ?rev = "\<lambda>t::real. 1 - t"
+      have hcomp: "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
+          A2 (subspace_topology X TX A2) (h0 \<circ> ?rev)"
+        by (rule homeomorphism_on_comp[OF unit_interval_reversal_homeomorphism hh0])
+      have "(h0 \<circ> ?rev) 0 = h0 1" unfolding comp_def by (by100 simp)
+      hence h0eq: "(h0 \<circ> ?rev) 0 = b" using \<open>h0 1 = b\<close> by (by100 simp)
+      have "(h0 \<circ> ?rev) 1 = h0 0" unfolding comp_def by (by100 simp)
+      hence h1eq: "(h0 \<circ> ?rev) 1 = a" using \<open>h0 0 = a\<close> by (by100 simp)
+      show ?thesis using that[OF hcomp h0eq h1eq] .
+    qed
+  qed
   \<comment> \<open>Construct f: S1 \<rightarrow> A1 \<union> A2. Map upper semicircle to A1, lower to A2.\<close>
   \<comment> \<open>Parameterize S1: (cos \<theta>, sin \<theta>) for \<theta> \<in> [0, 2\<pi>].
      For \<theta> \<in> [0, \<pi>]: f(cos \<theta>, sin \<theta>) = h1(\<theta>/\<pi>).
@@ -586,7 +686,7 @@ proof -
       let ?rev = "\<lambda>t::real. 1 - t"
       have hrev_homeo: "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
           top1_unit_interval top1_unit_interval_topology ?rev"
-        by (rule hrev_homeo)
+        by (rule unit_interval_reversal_homeomorphism)
       have hg1_homeo: "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
           A1 (subspace_topology X TX A1) (h1 \<circ> ?rev)"
         by (rule homeomorphism_on_comp[OF hrev_homeo hh1])
@@ -617,7 +717,7 @@ proof -
       \<comment> \<open>h2(1) must be c. Define g2 = h2 \<circ> (\<lambda>t. 1-t).\<close>
       have hrev_homeo: "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
           top1_unit_interval top1_unit_interval_topology (\<lambda>t::real. 1 - t)"
-        by (rule hrev_homeo)
+        by (rule unit_interval_reversal_homeomorphism)
       have hg2_homeo: "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
           A2 (subspace_topology X TX A2) (h2 \<circ> (\<lambda>t::real. 1 - t))"
         by (rule homeomorphism_on_comp[OF hrev_homeo hh2])
