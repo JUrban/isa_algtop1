@@ -4374,10 +4374,10 @@ proof -
       \<comment> \<open>Q connected, Q \<supseteq> C1, y \<in> Q \<inter> C2. So Q spans both C1 and C2.
          Q \<supseteq> C1 and Q \<inter> C2 \<noteq> {}. Since Q connected and in W = C1\<union>C2,
          and C2 connected: Q = C1\<union>C2 = W would be connected. Contradiction.\<close>
-      have "C2 \<subseteq> Q" sorry \<comment> \<open>C2 connected \<ni> y, Q connected, comp(y)=comp(x) in W.\<close>
-      hence "Q = W" using hQ(1,2) assms(5,6) by (by100 blast)
-      hence "top1_connected_on W (subspace_topology top1_S2 top1_S2_topology W)"
-        using hQ(3) sorry \<comment> \<open>Subspace topology self.\<close>
+      \<comment> \<open>C2\<union>Q = W. C2\<union>Q connected (both connected, share y). So W connected.\<close>
+      have hC2Q_eq: "C2 \<union> Q = W" using hQ(1,2) assms(5,6) \<open>y \<in> C2\<close> by (by100 blast)
+      have "top1_connected_on W (subspace_topology top1_S2 top1_S2_topology W)"
+        sorry \<comment> \<open>C2\<union>Q connected via Theorem\_23\_3 (share y), = W.\<close>
       thus False using assms(9) by (by100 blast)
     qed
   qed
@@ -4391,10 +4391,9 @@ proof -
       assume "Q \<noteq> C2"
       then obtain y where "y \<in> Q" "y \<notin> C2" using hQ(2) by (by100 blast)
       hence "y \<in> C1" using hQ(1) assms(6) by (by100 blast)
-      have "C1 \<subseteq> Q" sorry
-      hence "Q = W" using hQ(1,2) assms(5,6) by (by100 blast)
-      hence "top1_connected_on W (subspace_topology top1_S2 top1_S2_topology W)"
-        using hQ(3) sorry
+      have hC1Q_eq: "C1 \<union> Q = W" using hQ(1,2) assms(5,6) \<open>y \<in> C1\<close> by (by100 blast)
+      have "top1_connected_on W (subspace_topology top1_S2 top1_S2_topology W)"
+        sorry \<comment> \<open>C1\<union>Q connected via Theorem\_23\_3 (share y), = W.\<close>
       thus False using assms(9) by (by100 blast)
     qed
   qed
