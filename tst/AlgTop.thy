@@ -3499,7 +3499,15 @@ proof -
     proof -
       have "(0::real) \<in> top1_unit_interval" "(1::real) \<in> top1_unit_interval"
         unfolding top1_unit_interval_def by (by100 simp)+
-      have h01_sub: "{0::real, 1} \<subseteq> top1_unit_interval" sorry
+      have h01_sub: "{0::real, 1} \<subseteq> top1_unit_interval"
+        apply (rule insert_subset[THEN iffD2])
+        apply (rule conjI)
+        apply (rule \<open>(0::real) \<in> top1_unit_interval\<close>)
+        apply (rule insert_subset[THEN iffD2])
+        apply (rule conjI)
+        apply (rule \<open>(1::real) \<in> top1_unit_interval\<close>)
+        apply (rule empty_subsetI)
+        done
       have hI_minus_sub: "top1_unit_interval - {0::real, 1} \<subseteq> top1_unit_interval" by (by100 blast)
       have "h ` (top1_unit_interval - {0, 1}) = h ` top1_unit_interval - h ` {0, 1}"
         by (rule inj_on_image_set_diff[OF hinj hI_minus_sub h01_sub])
@@ -3515,10 +3523,63 @@ proof -
     fix x y z :: real assume "x \<in> {0<..<1}" "y \<in> {0<..<1}" "x \<le> z" "z \<le> y"
     thus "z \<in> {0<..<1}" by (by100 simp)
   qed
-  \<comment> \<open>h restricted to (0,1) is continuous into D-{a,b} subspace of X.\<close>
-  \<comment> \<open>By Theorem 23.5: continuous image of connected is connected.\<close>
-  \<comment> \<open>The full chain: h cont on [0,1] \<rightarrow> X, restrict to (0,1), codomain shrink to D-{a,b}.\<close>
-  show ?thesis sorry
+  \<comment> \<open>h continuous (0,1) \<rightarrow> D-{a,b}: restrict h from [0,1] to (0,1), shrink codomain.\<close>
+  have hh_cont: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+      D (subspace_topology X TX D) h"
+    using hh unfolding top1_homeomorphism_on_def by (by100 blast)
+  have hTopX: "is_topology_on X TX"
+    using hT unfolding is_topology_on_strict_def by (by100 blast)
+  have hh_cont_X: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology X TX h"
+  proof -
+    from top1_continuous_map_on_codomain_enlarge[OF hh_cont hDX]
+    have "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+        X (subspace_topology X TX X) h" by (by100 simp)
+    moreover have "subspace_topology X TX X = TX"
+    proof (rule subspace_topology_self)
+      show "\<forall>U \<in> TX. U \<subseteq> X" using hT unfolding is_topology_on_strict_def Pow_def by (by100 blast)
+    qed
+    ultimately show ?thesis by (by100 simp)
+  qed
+  have hIoo_sub: "{0<..<1::real} \<subseteq> top1_unit_interval"
+    unfolding top1_unit_interval_def by (by100 force)
+  have hh_cont_Ioo: "top1_continuous_map_on {0<..<1::real}
+      (subspace_topology UNIV top1_open_sets {0<..<1})
+      X TX h"
+  proof -
+    from top1_continuous_map_on_subspace_restrict[OF hh_cont_X hIoo_sub]
+    have "top1_continuous_map_on {0<..<1}
+        (subspace_topology top1_unit_interval top1_unit_interval_topology {0<..<1}) X TX h" .
+    moreover have "subspace_topology top1_unit_interval top1_unit_interval_topology {0<..<1}
+        = subspace_topology UNIV top1_open_sets {0<..<1}"
+      unfolding top1_unit_interval_topology_def
+      using subspace_topology_trans[of "{0<..<1}" top1_unit_interval UNIV top1_open_sets]
+        hIoo_sub by (by100 simp)
+    ultimately show ?thesis by (by100 simp)
+  qed
+  have hh_img_sub: "h ` {0<..<1::real} \<subseteq> D - {a, b}"
+    using himg_open by (by100 simp)
+  have hDab_sub: "D - {a, b} \<subseteq> X" using hDX by (by100 blast)
+  have hh_cont_Dab: "top1_continuous_map_on {0<..<1::real}
+      (subspace_topology UNIV top1_open_sets {0<..<1})
+      (D - {a, b}) (subspace_topology X TX (D - {a, b})) h"
+    using top1_continuous_map_on_codomain_shrink[OF hh_cont_Ioo hh_img_sub hDab_sub] by (by100 simp)
+  have hTDab: "is_topology_on (D - {a, b}) (subspace_topology X TX (D - {a, b}))"
+    by (rule subspace_topology_is_topology_on[OF hTopX]) (use hDab_sub in \<open>by100 blast\<close>)
+  have hT_Ioo: "is_topology_on {0<..<1::real} (subspace_topology UNIV top1_open_sets {0<..<1})"
+    by (rule subspace_topology_is_topology_on[OF top1_open_sets_is_topology_on_UNIV]) (by100 blast)
+  from Theorem_23_5[OF hT_Ioo hTDab hIoo_conn hh_cont_Dab]
+  have "top1_connected_on (h ` {0<..<1})
+      (subspace_topology (D-{a,b}) (subspace_topology X TX (D-{a,b})) (h ` {0<..<1}))" .
+  hence "top1_connected_on (D-{a,b})
+      (subspace_topology (D-{a,b}) (subspace_topology X TX (D-{a,b})) (D-{a,b}))"
+    using himg_open by (by100 force)
+  moreover have "subspace_topology (D-{a,b}) (subspace_topology X TX (D-{a,b})) (D-{a,b})
+      = subspace_topology X TX (D-{a,b})"
+  proof (rule subspace_topology_self)
+    show "\<forall>U \<in> subspace_topology X TX (D-{a,b}). U \<subseteq> D-{a,b}"
+      unfolding subspace_topology_def by (by100 blast)
+  qed
+  ultimately show ?thesis by (by100 simp)
 qed
 
 text \<open>Lemma 64.1: A theta space X \<subseteq> S2 separates S2 into three components.\<close>
