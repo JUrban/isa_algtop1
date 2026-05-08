@@ -3432,8 +3432,22 @@ proof -
   qed
   \<comment> \<open>D = D_1 \<union> D_2 is a simple closed curve.\<close>
   let ?D = "?D1 \<union> ?D2"
+  have hD1_ep: "top1_arc_endpoints_on ?D1 (subspace_topology top1_S2 top1_S2_topology ?D1) = {p, q}"
+    sorry \<comment> \<open>From arc\_concat\_endpoints applied to D1 = e13\_pa3 \<union> e23 \<union> e24\_a2q.\<close>
+  have hD2_ep: "top1_arc_endpoints_on ?D2 (subspace_topology top1_S2 top1_S2_topology ?D2) = {p, q}"
+    sorry \<comment> \<open>From arc\_concat\_endpoints applied to D2.\<close>
+  have hpq_ne: "p \<noteq> q"
+  proof
+    assume "p = q"
+    hence "p \<in> e13 \<inter> e24" using hp_e13 hq_e24 by (by100 blast)
+    hence "p \<in> {a1,a2,a3,a4}" using assms(32) by (by100 blast)
+    moreover have "p \<notin> {a1, a3}" using hp_e13 by (by100 blast)
+    moreover have "p \<notin> {a2, a4}" using hq_e24 \<open>p = q\<close> by (by100 blast)
+    ultimately show False by (by100 blast)
+  qed
   have hD_scc: "top1_simple_closed_curve_on top1_S2 top1_S2_topology ?D"
-    sorry \<comment> \<open>Two arcs meeting at endpoints form a simple closed curve.\<close>
+    by (rule arcs_form_simple_closed_curve[OF hS2_strict hS2_haus hD1_arc hD1_sub hD2_arc hD2_sub
+        hD12_inter hpq_ne hD1_ep hD2_ep])
   \<comment> \<open>Step 2: U = S2-D_1, V = S2-D_2 are open in X = S2-{p,q}.\<close>
   let ?U_loc = "?X - ?D1 \<union> {p, q}" and ?V_loc = "?X - ?D2 \<union> {p, q}"
   \<comment> \<open>Actually: use Munkres' U = S2-D_1, V = S2-D_2 restricted to X.\<close>
