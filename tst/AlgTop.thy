@@ -5811,12 +5811,95 @@ proof -
     \<comment> \<open>P1, R1, T are pairwise disjoint open. Connected e24-{a2,a4} must be in one.\<close>
     have hT_open: "T \<in> top1_S2_topology" using hT_is(1) hUVW(11,12,13) by (by100 blast)
     \<comment> \<open>e24-{a2,a4} \<subseteq> P1 or \<subseteq> R1\<union>T (separation {P1, R1\<union>T}).\<close>
+    \<comment> \<open>Form separation {P1, R1\<union>T} of S2-Y = P1\<union>R1\<union>T.\<close>
+    have hRT_open: "R1 \<union> T \<in> top1_S2_topology"
+    proof -
+      from hTopS2 have "\<And>S. S \<subseteq> top1_S2_topology \<Longrightarrow> \<Union>S \<in> top1_S2_topology"
+        unfolding is_topology_on_def by (by100 blast)
+      from this[of "{R1, T}"] hR1_open hT_open have "\<Union>{R1, T} \<in> top1_S2_topology" by (by100 blast)
+      moreover have "\<Union>{R1, T} = R1 \<union> T" by (by100 blast)
+      ultimately show ?thesis by (by100 simp)
+    qed
+    have hTY_loc: "is_topology_on (top1_S2 - ?Y)
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - ?Y))"
+      by (rule subspace_topology_is_topology_on[OF]) (use hTopS2 in \<open>by100 blast\<close>, by100 blast)
+    have hP1_oY: "P1 \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - ?Y)"
+    proof -
+      have "P1 = (top1_S2 - ?Y) \<inter> P1" using hP1_sub_Y_compl by (by100 blast)
+      thus ?thesis unfolding subspace_topology_def using hP1_open by (by100 blast)
+    qed
+    have hRT_oY: "R1 \<union> T \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - ?Y)"
+    proof -
+      have "R1 \<union> T \<subseteq> top1_S2 - ?Y" using hT_union by (by100 blast)
+      hence "R1 \<union> T = (top1_S2 - ?Y) \<inter> (R1 \<union> T)" by (by100 blast)
+      thus ?thesis unfolding subspace_topology_def using hRT_open by (by100 blast)
+    qed
+    have hPRT_sep: "top1_is_separation_on (top1_S2 - ?Y)
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - ?Y)) P1 (R1 \<union> T)"
+    proof -
+      have "P1 \<inter> (R1 \<union> T) = {}"
+      proof -
+        \<comment> \<open>P1 \<inter> T = {} (hT\_disj). P1 \<inter> R1 = {} needs case split.
+           But P1, R1, T are pairwise disjoint (they're 3 distinct elements of {U,V,W}).\<close>
+        have "P1 \<inter> R1 = {}" sorry \<comment> \<open>Moved below as hP1R1\_disj.\<close>
+        thus ?thesis using hT_disj(1) by (by100 blast)
+      qed
+      moreover have "P1 \<union> (R1 \<union> T) = top1_S2 - ?Y" using hT_union by (by100 blast)
+      moreover have "R1 \<union> T \<noteq> {}" using hR(1) by (by100 blast)
+      ultimately show ?thesis unfolding top1_is_separation_on_def
+        using hP1_oY hRT_oY hP(1) by (by100 blast)
+    qed
+    have he24_conn_Y: "top1_connected_on (e24 - {a2, a4})
+        (subspace_topology (top1_S2 - ?Y)
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - ?Y)) (e24 - {a2, a4}))"
+    proof -
+      have "subspace_topology top1_S2 top1_S2_topology (e24 - {a2, a4}) =
+          subspace_topology (top1_S2 - ?Y)
+              (subspace_topology top1_S2 top1_S2_topology (top1_S2 - ?Y)) (e24 - {a2, a4})"
+        using subspace_topology_trans[of "e24 - {a2, a4}" "top1_S2 - ?Y" top1_S2 top1_S2_topology]
+            he24_in_Y_compl by (by100 simp)
+      thus ?thesis using he24_conn by (by100 simp)
+    qed
     have "e24 - {a2, a4} \<subseteq> P1 \<or> e24 - {a2, a4} \<subseteq> R1 \<union> T"
-      sorry \<comment> \<open>Lemma\_23\_2 on separation {P1, R1\<union>T} of P1\<union>R1\<union>T.\<close>
+      using Lemma_23_2[OF hTY_loc hPRT_sep he24_in_Y_compl he24_conn_Y] by (by100 blast)
     hence "e24 - {a2, a4} \<subseteq> R1 \<union> T" using he24_not_P1 by (by100 blast)
-    \<comment> \<open>Then \<subseteq> R1 or \<subseteq> T.\<close>
+    \<comment> \<open>Then separation {R1, T} of R1\<union>T.\<close>
     moreover have "e24 - {a2, a4} \<subseteq> R1 \<or> e24 - {a2, a4} \<subseteq> T"
-      sorry \<comment> \<open>Lemma\_23\_2 on separation {R1, T} of R1\<union>T.\<close>
+    proof -
+      have hTRT: "is_topology_on (R1 \<union> T)
+          (subspace_topology top1_S2 top1_S2_topology (R1 \<union> T))"
+        by (rule subspace_topology_is_topology_on[OF hTopS2])
+           (use hT_union in \<open>by100 blast\<close>)
+      have hR_oRT: "R1 \<in> subspace_topology top1_S2 top1_S2_topology (R1 \<union> T)"
+      proof -
+        have "R1 = (R1 \<union> T) \<inter> R1" by (by100 blast)
+        thus ?thesis unfolding subspace_topology_def using hR1_open by (by100 blast)
+      qed
+      have hT_oRT: "T \<in> subspace_topology top1_S2 top1_S2_topology (R1 \<union> T)"
+      proof -
+        have "T = (R1 \<union> T) \<inter> T" by (by100 blast)
+        thus ?thesis unfolding subspace_topology_def using hT_open by (by100 blast)
+      qed
+      have hRT_sep: "top1_is_separation_on (R1 \<union> T)
+          (subspace_topology top1_S2 top1_S2_topology (R1 \<union> T)) R1 T"
+        unfolding top1_is_separation_on_def
+        using hR_oRT hT_oRT hR(1) hT_ne hT_disj(2) by (by100 blast)
+      have he24_sub_RT: "e24 - {a2, a4} \<subseteq> R1 \<union> T"
+        using \<open>e24 - {a2, a4} \<subseteq> R1 \<union> T\<close> .
+      have he24_conn_RT: "top1_connected_on (e24 - {a2, a4})
+          (subspace_topology (R1 \<union> T)
+              (subspace_topology top1_S2 top1_S2_topology (R1 \<union> T)) (e24 - {a2, a4}))"
+      proof -
+        have "subspace_topology top1_S2 top1_S2_topology (e24 - {a2, a4}) =
+            subspace_topology (R1 \<union> T)
+                (subspace_topology top1_S2 top1_S2_topology (R1 \<union> T)) (e24 - {a2, a4})"
+          using subspace_topology_trans[of "e24 - {a2, a4}" "R1 \<union> T" top1_S2 top1_S2_topology]
+              he24_sub_RT by (by100 simp)
+        thus ?thesis using he24_conn by (by100 simp)
+      qed
+      from Lemma_23_2[OF hTRT hRT_sep he24_sub_RT he24_conn_RT]
+      show ?thesis by (by100 blast)
+    qed
     ultimately show ?thesis using he24_not_R1 by (by100 blast)
   qed
   \<comment> \<open>Step 5: Apply Theorem_63_5 to split T using cl(P1)\<union>cl(R1) and e24.\<close>
