@@ -3439,9 +3439,66 @@ proof -
     have hU_sub_X: "U \<subseteq> ?X" using hUV(6) hW_sub_X by (by100 blast)
     have hV_sub_X: "V \<subseteq> ?X" using hUV(6) hW_sub_X by (by100 blast)
     have hU_open_X: "openin_on ?X ?TX U"
-      sorry \<comment> \<open>U \<in> subspace(S2, W), W \<subseteq> X \<Rightarrow> by transitivity U \<in> subspace(S2, X) = TX.\<close>
+    proof -
+      \<comment> \<open>U \<in> subspace(S2, W): extract U = W \<inter> U' with U' \<in> S2\_top.\<close>
+      from hUV(1) have "\<exists>U'. U = ?W \<inter> U' \<and> U' \<in> top1_S2_topology"
+        unfolding subspace_topology_def by (by100 force)
+      then obtain U' where hU'_eq: "U = ?W \<inter> U'" and hU'_open: "U' \<in> top1_S2_topology"
+        by (by100 blast)
+      \<comment> \<open>U = W \<inter> U'. Both W, U' \<in> S2\_top. W \<inter> U' \<in> S2\_top.\<close>
+      \<comment> \<open>Then U \<subseteq> X and U \<in> S2\_top, so U = U \<inter> X \<in> TX.\<close>
+      have "U \<in> top1_S2_topology"
+      proof -
+        have "finite {U', ?W}" by (by100 simp)
+        moreover have "{U', ?W} \<noteq> {}" by (by100 simp)
+        moreover have "{U', ?W} \<subseteq> top1_S2_topology" using hU'_open hW_open_S2 by (by100 blast)
+        ultimately have "\<Inter>{U', ?W} \<in> top1_S2_topology"
+        proof -
+          have hax: "\<forall>F. finite F \<and> F \<noteq> {} \<and> F \<subseteq> top1_S2_topology \<longrightarrow> \<Inter>F \<in> top1_S2_topology"
+            using hTopS2 unfolding is_topology_on_def by (by100 blast)
+          have "finite {U', ?W} \<and> {U', ?W} \<noteq> {} \<and> {U', ?W} \<subseteq> top1_S2_topology"
+            using \<open>finite {U', ?W}\<close> \<open>{U', ?W} \<noteq> {}\<close> \<open>{U', ?W} \<subseteq> top1_S2_topology\<close>
+            by (by100 blast)
+          from hax[rule_format, OF this] show ?thesis .
+        qed
+        moreover have "U' \<inter> ?W = U" using hU'_eq by (by100 blast)
+        hence "\<Inter>{U', ?W} = U" by (by100 force)
+        ultimately show ?thesis by (by100 simp)
+      qed
+      hence "U \<inter> ?X \<in> ?TX" unfolding subspace_topology_def by (by100 blast)
+      moreover have "U \<inter> ?X = U" using hU_sub_X by (by100 blast)
+      ultimately have "U \<in> ?TX" by (by100 simp)
+      thus ?thesis unfolding openin_on_def using hU_sub_X by (by100 blast)
+    qed
     have hV_open_X: "openin_on ?X ?TX V"
-      sorry \<comment> \<open>Same.\<close>
+    proof -
+      from hUV(2) have "\<exists>V'. V = ?W \<inter> V' \<and> V' \<in> top1_S2_topology"
+        unfolding subspace_topology_def by (by100 force)
+      then obtain V' where hV'_eq: "V = ?W \<inter> V'" and hV'_open: "V' \<in> top1_S2_topology"
+        by (by100 blast)
+      have "V \<in> top1_S2_topology"
+      proof -
+        have "finite {V', ?W}" by (by100 simp)
+        moreover have "{V', ?W} \<noteq> {}" by (by100 simp)
+        moreover have "{V', ?W} \<subseteq> top1_S2_topology" using hV'_open hW_open_S2 by (by100 blast)
+        ultimately have "\<Inter>{V', ?W} \<in> top1_S2_topology"
+        proof -
+          have hax: "\<forall>F. finite F \<and> F \<noteq> {} \<and> F \<subseteq> top1_S2_topology \<longrightarrow> \<Inter>F \<in> top1_S2_topology"
+            using hTopS2 unfolding is_topology_on_def by (by100 blast)
+          have "finite {V', ?W} \<and> {V', ?W} \<noteq> {} \<and> {V', ?W} \<subseteq> top1_S2_topology"
+            using \<open>finite {V', ?W}\<close> \<open>{V', ?W} \<noteq> {}\<close> \<open>{V', ?W} \<subseteq> top1_S2_topology\<close>
+            by (by100 blast)
+          from hax[rule_format, OF this] show ?thesis .
+        qed
+        moreover have "V' \<inter> ?W = V" using hV'_eq by (by100 blast)
+        hence "\<Inter>{V', ?W} = V" by (by100 force)
+        ultimately show ?thesis by (by100 simp)
+      qed
+      hence "V \<inter> ?X \<in> ?TX" unfolding subspace_topology_def by (by100 blast)
+      moreover have "V \<inter> ?X = V" using hV_sub_X by (by100 blast)
+      ultimately have "V \<in> ?TX" by (by100 simp)
+      thus ?thesis unfolding openin_on_def using hV_sub_X by (by100 blast)
+    qed
     show ?thesis using that[OF _ hUV(5) hU_open_X hV_open_X hUV(3,4)]
         hUV(6) hW_eq by (by100 simp)
   qed
