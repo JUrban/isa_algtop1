@@ -1382,7 +1382,39 @@ proof -
     \<comment> \<open>Affine map s \<mapsto> s*t0: [0,1] \<rightarrow> [0,t0] is a homeomorphism.\<close>
     have hscale_homeo: "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
         ?I0 (subspace_topology top1_unit_interval top1_unit_interval_topology ?I0) (\<lambda>s. s * t0)"
-      sorry \<comment> \<open>Affine bijection, compact to Hausdorff (Theorem_26_6).\<close>
+    proof -
+      have hTI: "is_topology_on top1_unit_interval top1_unit_interval_topology"
+        by (rule top1_unit_interval_topology_is_topology_on)
+      have hI0_sub: "?I0 \<subseteq> top1_unit_interval" by (by100 blast)
+      have hTI0: "is_topology_on ?I0 (subspace_topology top1_unit_interval top1_unit_interval_topology ?I0)"
+        by (rule subspace_topology_is_topology_on[OF hTI hI0_sub])
+      \<comment> \<open>Continuous: s\<mapsto>s*t0 is affine.\<close>
+      have hscale_cont: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+          ?I0 (subspace_topology top1_unit_interval top1_unit_interval_topology ?I0) (\<lambda>s. s * t0)"
+        sorry \<comment> \<open>Affine map continuous (continuous_intros + codomain_shrink).\<close>
+      \<comment> \<open>Bijective.\<close>
+      have hscale_bij: "bij_betw (\<lambda>s. s * t0) top1_unit_interval ?I0"
+        sorry \<comment> \<open>s\<mapsto>s*t0 is bijective [0,1]\<rightarrow>[0,t0] when t0>0.\<close>
+      \<comment> \<open>Compact + Hausdorff.\<close>
+      have hI_compact: "top1_compact_on top1_unit_interval top1_unit_interval_topology"
+      proof -
+        have "compact (top1_unit_interval :: real set)" unfolding top1_unit_interval_def by (rule compact_Icc)
+        thus ?thesis using top1_compact_on_subspace_UNIV_iff_compact
+          unfolding top1_unit_interval_topology_def by (by100 blast)
+      qed
+      have hI0_haus: "is_hausdorff_on ?I0 (subspace_topology top1_unit_interval top1_unit_interval_topology ?I0)"
+      proof -
+        have "is_hausdorff_on (UNIV::real set) top1_open_sets" by (rule top1_R_is_hausdorff)
+        hence "is_hausdorff_on top1_unit_interval (subspace_topology UNIV top1_open_sets top1_unit_interval)"
+          using conjunct2[OF conjunct2[OF Theorem_17_11]] by (by100 blast)
+        hence "is_hausdorff_on top1_unit_interval top1_unit_interval_topology"
+          unfolding top1_unit_interval_topology_def by (by100 simp)
+        hence "is_hausdorff_on ?I0 (subspace_topology top1_unit_interval top1_unit_interval_topology ?I0)"
+          using conjunct2[OF conjunct2[OF Theorem_17_11]] hI0_sub by (by100 blast)
+        thus ?thesis .
+      qed
+      show ?thesis by (rule Theorem_26_6[OF hTI hTI0 hI_compact hI0_haus hscale_cont hscale_bij])
+    qed
     \<comment> \<open>Compose: [0,1] \<rightarrow> [0,t0] \<rightarrow> D1.\<close>
     from homeomorphism_on_comp[OF hscale_homeo hh_restr_homeo]
     have "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
