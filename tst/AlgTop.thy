@@ -6938,10 +6938,9 @@ proof -
       by (by100 auto)
     \<comment> \<open>Inverse.\<close>
     have hinverse: "\<forall>h\<in>?Cov. ?mul (?invC h) h = ?eC \<and> ?mul h (?invC h) = ?eC"
-      sorry \<comment> \<open>inv_into E h \<circ> h = id and h \<circ> inv = id.
-             Subtlety: equality as total functions requires h to be globally injective,
-             not just on E. Covering transformations (as homeomorphisms E\<rightarrow>E) may need
-             the UNIV-injectivity from the homeomorphism_on definition.\<close>
+      sorry \<comment> \<open>Need: (\<lambda>e. inv_into E h (h e)) = id as total functions.
+           This requires injectivity of h on UNIV, not just E.
+           May need to adjust the group setup to use pointwise-on-E equality.\<close>
     show ?thesis
       apply (rule exI[of _ ?eC], rule exI[of _ ?invC])
       unfolding top1_is_group_on_def
