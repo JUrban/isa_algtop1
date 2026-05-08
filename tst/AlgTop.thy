@@ -2334,7 +2334,19 @@ proof -
   have hD2_sub: "?D2 \<subseteq> top1_S2"
     using he24_sub he41_sub he13_sub he24_split(1) he13_split(1) by (by100 blast)
   \<comment> \<open>D_1 and D_2 meet only at {p,q}.\<close>
-  have hD12_inter: "?D1 \<inter> ?D2 = {p, q}" sorry
+  have hD12_inter: "?D1 \<inter> ?D2 = {p, q}"
+  proof (rule set_eqI, rule iffI)
+    fix x assume "x \<in> ?D1 \<inter> ?D2"
+    hence hxD1: "x \<in> e13_pa3 \<union> e23 \<union> e24_a2q" and hxD2: "x \<in> e24_qa4 \<union> e41 \<union> e13_a1p"
+      by (by100 blast)+
+    show "x \<in> {p, q}"
+      sorry \<comment> \<open>9 pairwise intersection cases using K4 assumptions.
+           All reduce to x \<in> {p} or x \<in> {q} via vertex separation.\<close>
+  next
+    fix x assume "x \<in> {p, q}"
+    thus "x \<in> ?D1 \<inter> ?D2"
+      using he13_split(7-8) he24_split(7-8) by (by100 blast)
+  qed
   \<comment> \<open>D = D_1 \<union> D_2 is a simple closed curve.\<close>
   let ?D = "?D1 \<union> ?D2"
   have hD_scc: "top1_simple_closed_curve_on top1_S2 top1_S2_topology ?D"
