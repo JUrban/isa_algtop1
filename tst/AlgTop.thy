@@ -2323,7 +2323,38 @@ proof -
     \<comment> \<open>This gives a separation, contradicting connectedness.\<close>
     \<comment> \<open>Need: A1\<setminus>{c} and A2\<setminus>{c} are open in ?D\<setminus>{c}'s subspace topology.
        This follows from A1, A2 being closed in ?D (compact in Hausdorff).\<close>
-    thus False using hconn hDc hdisj sorry
+    \<comment> \<open>A1 is compact (arc), hence closed in Hausdorff D. So D \<setminus> A1 = A2\<setminus>{c} is open in D.\<close>
+    have hTD: "is_topology_on ?D (subspace_topology X TX ?D)"
+      by (rule subspace_topology_is_topology_on[OF])
+        (use hT in \<open>unfold is_topology_on_strict_def; by100 blast\<close>,
+         use assms(4,6) in \<open>by100 blast\<close>)
+    have hA1_closed_D: "closedin_on ?D (subspace_topology X TX ?D) A1"
+      sorry \<comment> \<open>A1 compact in Hausdorff D \<Rightarrow> A1 closed.\<close>
+    have hA2_closed_D: "closedin_on ?D (subspace_topology X TX ?D) A2"
+      sorry \<comment> \<open>A2 compact in Hausdorff D \<Rightarrow> A2 closed.\<close>
+    \<comment> \<open>A2\<setminus>{c} = D \<setminus> A1 is open in D.\<close>
+    have "?D - A1 = A2 - {c}" using assms(7) by (by100 blast)
+    have hA2c_open_D: "A2 - {c} \<in> subspace_topology X TX ?D"
+      using hA1_closed_D \<open>?D - A1 = A2 - {c}\<close> unfolding closedin_on_def openin_on_def
+      by (by100 simp)
+    have "?D - A2 = A1 - {c}" using assms(7) by (by100 blast)
+    have hA1c_open_D: "A1 - {c} \<in> subspace_topology X TX ?D"
+      using hA2_closed_D \<open>?D - A2 = A1 - {c}\<close> unfolding closedin_on_def openin_on_def
+      by (by100 simp)
+    \<comment> \<open>Now A1\<setminus>{c} and A2\<setminus>{c} are open in D\<setminus>{c} (subspace).\<close>
+    let ?TDc = "subspace_topology ?D (subspace_topology X TX ?D) (?D - {c})"
+    have hA1c_open_Dc: "A1 - {c} \<in> ?TDc"
+      sorry \<comment> \<open>A1\<setminus>{c} \<in> subspace of D, and (D\<setminus>{c}) \<inter> (A1\<setminus>{c}) = A1\<setminus>{c}.\<close>
+    have hA2c_open_Dc: "A2 - {c} \<in> ?TDc"
+      sorry \<comment> \<open>Similarly.\<close>
+    have hU_Dc: "A1 - {c} \<in> ?TDc" by (rule hA1c_open_Dc)
+    have hV_Dc: "A2 - {c} \<in> ?TDc" by (rule hA2c_open_Dc)
+    have hsep: "top1_is_separation_on (?D - {c}) ?TDc (A1 - {c}) (A2 - {c})"
+      unfolding top1_is_separation_on_def
+      using hU_Dc hV_Dc hne1 hne2 hdisj hDc by (by100 blast)
+    from Lemma_23_1[of "?D - {c}" ?TDc]
+    have "\<not> top1_connected_on (?D - {c}) ?TDc" using hsep sorry
+    thus False using hconn by (by100 blast)
   qed
   \<comment> \<open>Get endpoints of ?D.\<close>
   obtain a b where hab_ep: "top1_arc_endpoints_on ?D (subspace_topology X TX ?D) = {a, b}"
@@ -2359,7 +2390,7 @@ proof -
   have hb_A2: "b \<in> A1 \<or> b \<in> A2" using hab_ep unfolding top1_arc_endpoints_on_def by (by100 blast)
   \<comment> \<open>a \<in> A1 (since a is an endpoint of D, and a \<noteq> c, so a \<notin> A1\<inter>A2 = {c}).\<close>
   \<comment> \<open>arc\_split\_endpoints needs: a \<in> A1, b \<in> A2 (endpoints of D in respective sub-arcs).\<close>
-  have ha_A1': "a \<in> A1" sorry \<comment> \<open>a is endpoint of D, a \<noteq> c, so a \<notin> A2\<setminus>A1. Thus a \<in> A1.\<close>
+  have ha_A1': "a \<in> A1" sorry \<comment> \<open>a is endpoint of D, a \<noteq> c, so not in A2 only. Both endpoints can't be in same sub-arc.\<close>
   have hb_A2': "b \<in> A2" sorry \<comment> \<open>Similarly.\<close>
   have hD_eq: "?D = A1 \<union> A2" by (by100 blast)
   have hep_A1: "top1_arc_endpoints_on A1 (subspace_topology X TX A1) = {a, c}"
