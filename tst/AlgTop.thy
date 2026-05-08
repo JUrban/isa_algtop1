@@ -4457,12 +4457,65 @@ proof -
     using assms(4) unfolding top1_is_arc_on_def by (by100 blast)
   have hep_arc: "{h_arc 0, h_arc 1} = {a, b}"
     using arc_endpoints_are_boundary[OF assms(1,2,3,4) hh_arc] assms(5) by (by100 blast)
+  have hinj_arc: "inj_on h_arc top1_unit_interval"
+    using hh_arc unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+  have himg_arc: "h_arc ` top1_unit_interval = A"
+    using hh_arc unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+  have hcont_arc: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+      A (subspace_topology X TX A) h_arc"
+    using hh_arc unfolding top1_homeomorphism_on_def by (by100 blast)
+  \<comment> \<open>h\_arc([0,1]-{0}) = A-{h\_arc 0} (injective image of set minus).\<close>
+  have himg0: "h_arc ` (top1_unit_interval - {0}) = A - {h_arc 0}"
+  proof -
+    have h0_in: "(0::real) \<in> top1_unit_interval" unfolding top1_unit_interval_def by (by100 simp)
+    show ?thesis using inj_on_image_set_diff[OF hinj_arc, of top1_unit_interval "{0}"]
+        himg_arc h0_in by (by100 force)
+  qed
+  have himg1: "h_arc ` (top1_unit_interval - {1}) = A - {h_arc 1}"
+  proof -
+    have h1_in: "(1::real) \<in> top1_unit_interval" unfolding top1_unit_interval_def by (by100 simp)
+    show ?thesis using inj_on_image_set_diff[OF hinj_arc, of top1_unit_interval "{1}"]
+        himg_arc h1_in by (by100 force)
+  qed
+  \<comment> \<open>(0,1] and [0,1) are connected (convex, Theorem\_24\_1).\<close>
+  have hI0_conn: "top1_connected_on (top1_unit_interval - {0})
+      (subspace_topology UNIV top1_open_sets (top1_unit_interval - {0}))"
+    sorry \<comment> \<open>(0,1] convex \<Rightarrow> Theorem\_24\_1.\<close>
+  have hI1_conn: "top1_connected_on (top1_unit_interval - {1})
+      (subspace_topology UNIV top1_open_sets (top1_unit_interval - {1}))"
+    sorry \<comment> \<open>[0,1) convex \<Rightarrow> Theorem\_24\_1.\<close>
+  \<comment> \<open>Convert to unit\_interval subspace topology.\<close>
+  have hI0_conn': "top1_connected_on (top1_unit_interval - {0})
+      (subspace_topology top1_unit_interval top1_unit_interval_topology (top1_unit_interval - {0}))"
+  proof -
+    have "subspace_topology UNIV top1_open_sets (top1_unit_interval - {0}) =
+        subspace_topology top1_unit_interval top1_unit_interval_topology (top1_unit_interval - {0})"
+      unfolding top1_unit_interval_topology_def
+      using subspace_topology_trans[of "top1_unit_interval - {0}" top1_unit_interval "UNIV :: real set" top1_open_sets]
+      by (by100 simp)
+    thus ?thesis using hI0_conn by (by100 simp)
+  qed
+  have hI1_conn': "top1_connected_on (top1_unit_interval - {1})
+      (subspace_topology top1_unit_interval top1_unit_interval_topology (top1_unit_interval - {1}))"
+  proof -
+    have "subspace_topology UNIV top1_open_sets (top1_unit_interval - {1}) =
+        subspace_topology top1_unit_interval top1_unit_interval_topology (top1_unit_interval - {1})"
+      unfolding top1_unit_interval_topology_def
+      using subspace_topology_trans[of "top1_unit_interval - {1}" top1_unit_interval "UNIV :: real set" top1_open_sets]
+      by (by100 simp)
+    thus ?thesis using hI1_conn by (by100 simp)
+  qed
+  \<comment> \<open>Continuous image of connected is connected (Theorem\_23\_5).\<close>
+  have hTA: "is_topology_on A (subspace_topology X TX A)"
+    by (rule subspace_topology_is_topology_on[OF hTopX assms(3)])
+  have hTI: "is_topology_on top1_unit_interval top1_unit_interval_topology"
+    by (rule top1_unit_interval_topology_is_topology_on)
   have hAh0_conn: "top1_connected_on (A - {h_arc 0})
       (subspace_topology A (subspace_topology X TX A) (A - {h_arc 0}))"
-    sorry \<comment> \<open>Continuous image of (0,1] connected.\<close>
+    sorry \<comment> \<open>Theorem\_23\_5: restrict h\_arc to (0,1], continuous, image connected.\<close>
   have hAh1_conn: "top1_connected_on (A - {h_arc 1})
       (subspace_topology A (subspace_topology X TX A) (A - {h_arc 1}))"
-    sorry \<comment> \<open>Continuous image of [0,1) connected.\<close>
+    sorry \<comment> \<open>Theorem\_23\_5: restrict h\_arc to [0,1), continuous, image connected.\<close>
   have hA_minus_b_conn: "top1_connected_on (A - {b}) (subspace_topology X TX (A - {b}))"
   proof -
     have "b = h_arc 0 \<or> b = h_arc 1" using hep_arc by (by100 blast)
