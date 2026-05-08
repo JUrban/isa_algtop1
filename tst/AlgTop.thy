@@ -3501,15 +3501,42 @@ proof -
   have hAB_sep: "top1_separates_on top1_S2 top1_S2_topology (A \<union> B)"
     by (rule Theorem_61_3_JordanSeparation_S2[OF assms(1) hAB_scc])
   \<comment> \<open>Get two components U0, U0' of S2 - (A \<union> B).\<close>
+  \<comment> \<open>A, B are closed arcs with card(A\<inter>B) = 2. Neither separates S2.
+     By Theorem 63.5, A \<union> B separates S2 into exactly 2 connected components.\<close>
+  have hA_closed: "closedin_on top1_S2 top1_S2_topology A"
+    by (rule arc_in_S2_closed[OF assms(2) assms(5)])
+  have hB_closed: "closedin_on top1_S2 top1_S2_topology B"
+    by (rule arc_in_S2_closed[OF assms(3) assms(6)])
+  have hA_conn: "top1_connected_on A (subspace_topology top1_S2 top1_S2_topology A)"
+    using arc_connected[OF assms(5)] .
+  have hB_conn: "top1_connected_on B (subspace_topology top1_S2 top1_S2_topology B)"
+    using arc_connected[OF assms(6)] .
+  have hA_no_sep: "\<not> top1_separates_on top1_S2 top1_S2_topology A"
+    by (rule Theorem_63_2_arc_no_separation[OF assms(1) assms(2) assms(5)])
+  have hB_no_sep: "\<not> top1_separates_on top1_S2 top1_S2_topology B"
+    by (rule Theorem_63_2_arc_no_separation[OF assms(1) assms(3) assms(6)])
+  have hAB_card: "card (A \<inter> B) = 2"
+  proof -
+    have "A \<inter> B = {a, b}" by (rule assms(9))
+    moreover have "card {a, b} = 2" using assms(8) by (by100 simp)
+    ultimately show ?thesis by (by100 simp)
+  qed
   obtain U0 U0' where hU0: "U0 \<noteq> {}" "U0' \<noteq> {}" "U0 \<inter> U0' = {}"
       "U0 \<union> U0' = top1_S2 - (A \<union> B)"
       "top1_connected_on U0 (subspace_topology top1_S2 top1_S2_topology U0)"
       "top1_connected_on U0' (subspace_topology top1_S2 top1_S2_topology U0')"
-    sorry \<comment> \<open>From hAB\_sep: S2 - (A\<union>B) not connected, extract 2 components.\<close>
+    using Theorem_63_5_two_closed_connected[OF assms(1) hA_closed hB_closed
+        hA_conn hB_conn hAB_card hA_no_sep hB_no_sep]
+    by (by100 force)
   \<comment> \<open>Step 2: C - {a,b} is connected (arc minus endpoints), lies in U0 or U0'.
      WLOG assume C - {a,b} \<subseteq> U0'. (Swap if needed.)\<close>
   have hC_minus: "C - {a, b} \<subseteq> top1_S2 - (A \<union> B)"
-    sorry \<comment> \<open>C \<inter> (A \<union> B) \<subseteq> A\<inter>C \<union> B\<inter>C = {a,b}.\<close>
+  proof -
+    have "C \<inter> A \<subseteq> {a, b}" using assms(11) by (by100 blast)
+    moreover have "C \<inter> B \<subseteq> {a, b}" using assms(10) by (by100 blast)
+    ultimately have "C \<inter> (A \<union> B) \<subseteq> {a, b}" by (by100 blast)
+    thus ?thesis using assms(4) by (by100 blast)
+  qed
   have hC_minus_conn: "top1_connected_on (C - {a, b})
       (subspace_topology top1_S2 top1_S2_topology (C - {a, b}))"
     sorry \<comment> \<open>Arc minus endpoints is connected.\<close>
