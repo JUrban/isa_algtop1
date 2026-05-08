@@ -796,7 +796,16 @@ proof -
         from cos_sin_eq_imp[OF this]
         obtain k :: int where hk: "2*pi*s - 2*pi*t = real_of_int k * 2 * pi" by (by100 blast)
         hence hst_k: "s - t = real_of_int k"
-          using pi_gt_zero sorry
+        proof -
+          have "2 * pi \<noteq> (0::real)" using pi_gt_zero by (by100 linarith)
+          have "2 * pi * s - 2 * pi * t = 2 * pi * (s - t)"
+            using right_diff_distrib[of "2*pi" s t] by (by100 simp)
+          moreover have "real_of_int k * 2 * pi = 2 * pi * of_int k"
+            using mult.commute[of "of_int k * 2" pi] mult.commute[of "of_int k" "2::real"]
+            by (by100 linarith)
+          ultimately have "2 * pi * (s - t) = 2 * pi * of_int k" using hk by (by100 linarith)
+          thus ?thesis using \<open>2 * pi \<noteq> 0\<close> by (by100 simp)
+        qed
         have hs_bds: "0 \<le> s" "s \<le> 1" using hs unfolding top1_unit_interval_def by (by100 simp)+
         have ht_bds: "0 \<le> t" "t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 simp)+
         have hst_range: "- 1 \<le> s - t" "s - t \<le> 1" using hs_bds ht_bds by (by100 linarith)+
