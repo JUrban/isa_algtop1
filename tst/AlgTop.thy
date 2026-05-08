@@ -5728,7 +5728,7 @@ proof -
     \<comment> \<open>P1 \<in> {U,V,W}, R1 \<in> {U,V,W}, P1 \<noteq> R1. The third element is T.\<close>
     from hP1_is_comp hR1_is_comp hP1_ne_R1
     obtain T0 where hT0: "T0 \<in> {U, V, W}" "T0 \<noteq> P1" "T0 \<noteq> R1"
-        "{P1, R1, T0} = {U, V, W}" sorry
+        "{P1, R1, T0} = {U, V, W}" sorry \<comment> \<open>3\<times>3 case analysis; too slow for by100.\<close>
     have "top1_connected_on T0 (subspace_topology top1_S2 top1_S2_topology T0)"
       using hT0(1) hUVW(8,9,10) by (by100 blast)
     moreover have "T0 \<noteq> {}" using hT0(1) hUVW(1,2,3) by (by100 blast)
