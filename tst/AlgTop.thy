@@ -1044,10 +1044,31 @@ proof -
     qed
     ultimately show ?thesis by (by100 simp)
   qed
+  \<comment> \<open>Hausdorff: P is a subspace of R^2 (Hausdorff). The quotient identifies
+     finitely many boundary pairs. Prove via: P Hausdorff \<Rightarrow> closed map \<Rightarrow> Hausdorff quotient.\<close>
   have hhausdorff: "is_hausdorff_on X TX"
-    sorry \<comment> \<open>Polygonal quotient Hausdorff: P compact Hausdorff (subspace of R^2),
-           q quotient with finite fibers (edge identifications), closed map.
-           Compact + closed map + T1 fibers \<Rightarrow> Hausdorff quotient.\<close>
+  proof -
+    obtain P q where hP_loc: "top1_is_polygonal_region_on P (length scheme)"
+        and hq_loc: "top1_quotient_map_on P
+            (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) X TX q"
+      by (rule quotient_of_scheme_extract[OF hsch])
+    let ?TP = "subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P"
+    \<comment> \<open>Step 1: R^2 is Hausdorff.\<close>
+    have hR_haus: "is_hausdorff_on (UNIV::real set) top1_open_sets"
+      by (rule top1_R_is_hausdorff)
+    have hR2_prod_haus: "\<And>X1 T1 X2 T2. is_hausdorff_on X1 T1 \<Longrightarrow> is_hausdorff_on X2 T2 \<Longrightarrow>
+        is_hausdorff_on (X1 \<times> X2) (product_topology_on T1 T2)"
+      using Theorem_17_11 by (by100 blast)
+    have hR2_sub_haus: "\<And>X T Y. is_hausdorff_on X T \<Longrightarrow> Y \<subseteq> X \<Longrightarrow>
+        is_hausdorff_on Y (subspace_topology X T Y)"
+      using Theorem_17_11 by (by100 blast)
+    have hR2_haus: "is_hausdorff_on (UNIV::(real\<times>real) set) (product_topology_on top1_open_sets top1_open_sets)"
+      by (rule hR2_prod_haus[OF hR_haus hR_haus, simplified])
+    have hP_haus: "is_hausdorff_on P ?TP"
+      by (rule hR2_sub_haus[OF hR2_haus]) (by100 blast)
+    \<comment> \<open>Step 2: The full Hausdorff argument for the quotient.\<close>
+    show ?thesis sorry \<comment> \<open>P Hausdorff + compact + closed quotient \<Rightarrow> X Hausdorff.\<close>
+  qed
   show ?thesis using hcompact hhausdorff by (by100 blast)
 qed
 
