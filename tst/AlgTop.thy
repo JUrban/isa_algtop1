@@ -1511,7 +1511,10 @@ proof -
          sets, each compact (image of [0,1] under continuous map t \<mapsto> (edge\_i(t), edge\_j(f(t)))).\<close>
       have hR_bdy_compact: "top1_compact_on (?R \<inter> (?bdy \<times> ?bdy))
           (subspace_topology (P \<times> P) (product_topology_on ?TP ?TP) (?R \<inter> (?bdy \<times> ?bdy)))"
-        sorry
+        sorry \<comment> \<open>R\<inter>(bdy\<times>bdy) = diagonal\_on\_bdy \<union> \<Union>{edge\_pair\_curve(i,j) | same label}.
+               Diagonal compact (bdy compact, diag map continuous).
+               Each edge\_pair compact (continuous image of [0,1]).
+               Finite union of compact = compact. Bridge to top1\_compact\_on.\<close>
       \<comment> \<open>Compact in Hausdorff is closed.\<close>
       have hR_bdy_sub: "?R \<inter> (?bdy \<times> ?bdy) \<subseteq> P \<times> P" by (by100 blast)
       have hR_bdy_closed: "closedin_on (P \<times> P) (product_topology_on ?TP ?TP) (?R \<inter> (?bdy \<times> ?bdy))"
