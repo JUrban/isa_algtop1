@@ -1597,15 +1597,17 @@ proof -
       fix C assume hC: "C = A \<or> C = B" and he12C: "e12 - {a1, a2} \<subseteq> C"
           and he34C: "e34 - {a3, a4} \<subseteq> C"
       define D' where "D' = (if C = A then B else A)"
-      have hD'_ne: "D' \<noteq> {}" sorry
-      have hCD'_disj: "C \<inter> D' = {}" sorry
-      have hCD'_union: "C \<union> D' = A \<union> B" sorry
+      have hD'_ne: "D' \<noteq> {}" by (metis D'_def hAB(6) hAB(5))
+      have hCD'_disj: "C \<inter> D' = {}" by (metis D'_def inf_commute hC hAB(2))
+      have hCD'_union: "C \<union> D' = A \<union> B" by (metis hC D'_def Un_commute)
       \<comment> \<open>D' \<subseteq> S2-theta.\<close>
       have hD'_sub_theta_compl: "D' \<subseteq> R1 \<union> R2 \<union> R3"
       proof -
         have "D' \<subseteq> A \<union> B" using hCD'_union by (by100 blast)
         moreover have "D' \<inter> (e12 - {a1, a2}) = {}" using hCD'_disj he12C by (by100 blast)
-        ultimately show ?thesis using htheta_compl_eq hR(7) sorry
+        ultimately have "D' \<subseteq> (A \<union> B) - (e12 - {a1, a2})" by (by100 blast)
+        hence "D' \<subseteq> top1_S2 - ?theta" using htheta_compl_eq by (by100 simp)
+        thus ?thesis using hR(7) by (by100 blast)
       qed
       \<comment> \<open>D' connected (it's a component of S2-D).\<close>
       have hD'_conn: "top1_connected_on D' (subspace_topology top1_S2 top1_S2_topology D')"
