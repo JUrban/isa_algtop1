@@ -1657,11 +1657,74 @@ proof -
         show ?thesis by (by100 blast)
       qed
       have hV63_comp: "V63 \<subseteq> A \<or> V63 \<subseteq> B"
-        sorry \<comment> \<open>Same argument as hU63\_comp.\<close>
-      \<comment> \<open>{A,B} = {U63,V63}: from U63\<union>V63=A\<union>B, U63\<inter>V63={}, A\<inter>B={},
-         U63\<subseteq>A\<or>B, V63\<subseteq>A\<or>B.\<close>
+      proof -
+        have hV63_conn_AB: "top1_connected_on V63
+            (subspace_topology (A \<union> B) (subspace_topology ?X ?TX (A \<union> B)) V63)"
+        proof -
+          have hV63_sub_X: "V63 \<subseteq> ?X" using hV63_sub hAB_sub_X by (by100 blast)
+          have "subspace_topology top1_S2 top1_S2_topology V63 =
+              subspace_topology ?X ?TX V63"
+            using subspace_topology_trans[of V63 ?X top1_S2 top1_S2_topology]
+                hV63_sub_X by (by100 simp)
+          also have "\<dots> = subspace_topology (A \<union> B) (subspace_topology ?X ?TX (A \<union> B)) V63"
+            using subspace_topology_trans[of V63 "A \<union> B" ?X ?TX]
+                hV63_sub by (by100 simp)
+          finally show ?thesis using hUV63(6) by (by100 simp)
+        qed
+        from Lemma_23_2[OF hTAB_loc hAB_sep hV63_sub hV63_conn_AB]
+        show ?thesis by (by100 blast)
+      qed
       have hAB_eq_UV: "(A = U63 \<and> B = V63) \<or> (A = V63 \<and> B = U63)"
-        sorry \<comment> \<open>Combinatorial from U63\<union>V63=A\<union>B, disjoints, non-empties.\<close>
+      proof -
+        \<comment> \<open>U63\<union>V63 = A\<union>B, U63\<inter>V63={}, A\<inter>B={}, all non-empty,
+           U63\<subseteq>A\<or>B, V63\<subseteq>A\<or>B. Standard set argument.\<close>
+        have hAB_UV: "A \<union> B = U63 \<union> V63" using hUV63(4) hAB_eq_S2_D by (by100 blast)
+        from hU63_comp show ?thesis
+        proof
+          assume "U63 \<subseteq> A"
+          from hV63_comp show ?thesis
+          proof
+            assume "V63 \<subseteq> A"
+            hence "B \<subseteq> A" using hAB_UV \<open>U63 \<subseteq> A\<close> by (by100 blast)
+            hence "B = {}" using hAB(2) by (by100 blast)
+            thus ?thesis using hAB(6) by (by100 blast)
+          next
+            assume "V63 \<subseteq> B"
+            have "A \<subseteq> U63" using hAB_UV \<open>V63 \<subseteq> B\<close> hAB(2) by (by100 blast)
+            hence "A = U63" using \<open>U63 \<subseteq> A\<close> by (by100 blast)
+            moreover have "B \<subseteq> V63"
+            proof -
+              have "B \<subseteq> A \<union> B" by (by100 blast)
+              hence "B \<subseteq> U63 \<union> V63" using hAB_UV by (by100 blast)
+              moreover have "B \<inter> U63 = {}" using \<open>A = U63\<close> hAB(2) by (by100 blast)
+              ultimately show ?thesis by (by100 blast)
+            qed
+            hence "B = V63" using \<open>V63 \<subseteq> B\<close> by (by100 blast)
+            ultimately show ?thesis by (by100 blast)
+          qed
+        next
+          assume "U63 \<subseteq> B"
+          from hV63_comp show ?thesis
+          proof
+            assume "V63 \<subseteq> A"
+            have "B \<subseteq> U63" using hAB_UV \<open>V63 \<subseteq> A\<close> hAB(2) by (by100 blast)
+            hence "B = U63" using \<open>U63 \<subseteq> B\<close> by (by100 blast)
+            moreover have "A \<subseteq> V63"
+            proof -
+              have "A \<subseteq> U63 \<union> V63" using hAB_UV by (by100 blast)
+              moreover have "A \<inter> U63 = {}" using \<open>B = U63\<close> hAB(2) by (by100 blast)
+              ultimately show ?thesis by (by100 blast)
+            qed
+            hence "A = V63" using \<open>V63 \<subseteq> A\<close> by (by100 blast)
+            ultimately show ?thesis by (by100 blast)
+          next
+            assume "V63 \<subseteq> B"
+            hence "A \<subseteq> B" using hAB_UV \<open>U63 \<subseteq> B\<close> by (by100 blast)
+            hence "A = {}" using hAB(2) by (by100 blast)
+            thus ?thesis using hAB(5) by (by100 blast)
+          qed
+        qed
+      qed
       have hA_conn_S2: "top1_connected_on A (subspace_topology top1_S2 top1_S2_topology A)"
         using hAB_eq_UV hUV63(5,6) by (by100 metis)
       have hB_conn_S2: "top1_connected_on B (subspace_topology top1_S2 top1_S2_topology B)"
