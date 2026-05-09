@@ -1399,12 +1399,12 @@ proof -
               "(\<Sum>j<length scheme. c1 j) = 1"
               "fst (vx i, vy i) = (\<Sum>j<length scheme. c1 j * vx' j)"
               "snd (vx i, vy i) = (\<Sum>j<length scheme. c1 j * vy' j)"
-            unfolding hP_eq sorry
+            unfolding hP_eq by auto
           from hvi1 obtain c2 where hc2: "\<forall>j<length scheme. c2 j \<ge> 0"
               "(\<Sum>j<length scheme. c2 j) = 1"
               "fst (vx (Suc i mod length scheme), vy (Suc i mod length scheme)) = (\<Sum>j<length scheme. c2 j * vx' j)"
               "snd (vx (Suc i mod length scheme), vy (Suc i mod length scheme)) = (\<Sum>j<length scheme. c2 j * vy' j)"
-            unfolding hP_eq sorry
+            unfolding hP_eq by auto
           let ?c = "\<lambda>j. (1-t) * c1 j + t * c2 j"
           have hc_nn: "\<forall>j<length scheme. ?c j \<ge> 0"
           proof (intro allI impI)
@@ -1420,7 +1420,7 @@ proof -
           have hc_y: "snd (?edge i t) = (\<Sum>j<length scheme. ?c j * vy' j)"
             using hc1(4) hc2(4) sorry
           show ?thesis unfolding hP_eq hi(3)
-            using hc_nn hc_sum hc_x hc_y sorry
+            using hc_nn hc_sum hc_x hc_y by auto
         qed
       qed
       have hbdy_closed_P: "closedin_on P ?TP ?bdy"
