@@ -1559,7 +1559,74 @@ proof -
           \<comment> \<open>?D compact \<Rightarrow> closed (in Hausdorff R^4). Each edge pair compact \<Rightarrow> closed.\<close>
           \<comment> \<open>Finite union of closed = closed. Closed subset of compact = compact.\<close>
           have hR_bdy_closed_HA: "closed (?R \<inter> (?bdy \<times> ?bdy))"
-            sorry \<comment> \<open>closed = finite union of closed (compact) sets in Hausdorff R^4.\<close>
+          proof -
+            \<comment> \<open>R\<inter>bdy\<times>bdy = D \<union> \<Union>{C\_ij | same label}.\<close>
+            \<comment> \<open>D = diagonal on bdy (compact \<Rightarrow> closed). Each C\_ij compact \<Rightarrow> closed.\<close>
+            \<comment> \<open>Finite union of closed = closed.\<close>
+            \<comment> \<open>Define edge pair curves.\<close>
+            let ?n = "length scheme"
+            let ?curves = "(\<lambda>(i,j). if fst (scheme!i) = fst (scheme!j) \<and> i \<noteq> j
+                then (if snd (scheme!i) = snd (scheme!j)
+                      then (\<lambda>t. (?edge i t, ?edge j t)) ` I_set
+                      else (\<lambda>t. (?edge i t, ?edge j (1-t))) ` I_set)
+                else {}) ` ({..<?n} \<times> {..<?n})"
+            \<comment> \<open>R\<inter>bdy\<times>bdy \<subseteq> ?D \<union> \<Union>?curves.\<close>
+            have hR_bdy_sub_DC: "?R \<inter> (?bdy \<times> ?bdy) \<subseteq> ?D \<union> \<Union>?curves"
+              sorry
+            \<comment> \<open>?D \<union> \<Union>?curves \<subseteq> ?R \<inter> (?bdy\<times>?bdy).\<close>
+            have hDC_sub_R_bdy: "?D \<union> \<Union>?curves \<subseteq> ?R \<inter> (?bdy \<times> ?bdy)"
+              sorry
+            \<comment> \<open>So ?R \<inter> (?bdy \<times> ?bdy) = ?D \<union> \<Union>?curves.\<close>
+            have hR_bdy_eq: "?R \<inter> (?bdy \<times> ?bdy) = ?D \<union> \<Union>?curves"
+              using hR_bdy_sub_DC hDC_sub_R_bdy by (by100 blast)
+            \<comment> \<open>?D is closed (compact \<Rightarrow> closed in R^4).\<close>
+            have hD_closed: "closed ?D"
+              using hD_compact compact_imp_closed by (by100 blast)
+            \<comment> \<open>Each curve in ?curves is closed (compact \<Rightarrow> closed).\<close>
+            have hcurves_closed: "\<forall>C \<in> ?curves. closed C"
+            proof (intro ballI)
+              fix C assume "C \<in> ?curves"
+              then obtain i j where hij: "C = (if fst (scheme!i) = fst (scheme!j) \<and> i \<noteq> j
+                  then (if snd (scheme!i) = snd (scheme!j)
+                        then (\<lambda>t. (?edge i t, ?edge j t)) ` I_set
+                        else (\<lambda>t. (?edge i t, ?edge j (1-t))) ` I_set)
+                  else {})" "i < ?n" "j < ?n" by auto
+              show "closed C"
+              proof (cases "fst (scheme!i) = fst (scheme!j) \<and> i \<noteq> j")
+                case False thus ?thesis using hij(1) by auto
+              next
+                case True
+                have "compact C"
+                proof (cases "snd (scheme!i) = snd (scheme!j)")
+                  case True
+                  hence hC_eq: "C = (\<lambda>t. (?edge i t, ?edge j t)) ` I_set"
+                    using hij(1) \<open>fst (scheme!i) = fst (scheme!j) \<and> i \<noteq> j\<close> by (by100 auto)
+                  have "continuous_on UNIV (\<lambda>t::real. (?edge i t, ?edge j t))"
+                    by (intro continuous_intros)
+                  hence "continuous_on I_set (\<lambda>t. (?edge i t, ?edge j t))"
+                    using continuous_on_subset by (by100 blast)
+                  moreover have "compact I_set" unfolding top1_unit_interval_def by (by100 simp)
+                  ultimately show ?thesis unfolding hC_eq by (rule compact_continuous_image)
+                next
+                  case False
+                  hence hC_eq: "C = (\<lambda>t. (?edge i t, ?edge j (1-t))) ` I_set"
+                    using hij(1) \<open>fst (scheme!i) = fst (scheme!j) \<and> i \<noteq> j\<close> by (by100 auto)
+                  have "continuous_on UNIV (\<lambda>t::real. (?edge i t, ?edge j (1-t)))"
+                    by (intro continuous_intros)
+                  hence "continuous_on I_set (\<lambda>t. (?edge i t, ?edge j (1-t)))"
+                    using continuous_on_subset by (by100 blast)
+                  moreover have "compact I_set" unfolding top1_unit_interval_def by (by100 simp)
+                  ultimately show ?thesis unfolding hC_eq by (rule compact_continuous_image)
+                qed
+                thus ?thesis using compact_imp_closed by (by100 blast)
+              qed
+            qed
+            \<comment> \<open>Finite union of closed = closed.\<close>
+            have "finite ?curves" by (by100 simp)
+            have "closed (\<Union>?curves)"
+              by (rule closed_Union[OF \<open>finite ?curves\<close> hcurves_closed])
+            thus ?thesis using hR_bdy_eq hD_closed by auto
+          qed
           from compact_Int_closed[OF hbdybdy_compact_HA hR_bdy_closed_HA]
           have "compact ((?bdy \<times> ?bdy) \<inter> (?R \<inter> (?bdy \<times> ?bdy)))" .
           moreover have "(?bdy \<times> ?bdy) \<inter> (?R \<inter> (?bdy \<times> ?bdy)) = ?R \<inter> (?bdy \<times> ?bdy)" by auto
