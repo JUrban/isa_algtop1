@@ -5562,6 +5562,16 @@ proof -
   qed
 qed
 
+lemma covering_base_locally_path_connected:
+  assumes "top1_covering_map_on E TE B TB p"
+      and "top1_locally_path_connected_on E TE"
+      and "is_topology_on E TE" and "is_topology_on B TB"
+  shows "top1_locally_path_connected_on B TB"
+  sorry \<comment> \<open>Proof: for b \<in> B, open U \<ni> b: get evenly covered U', p-slice W,
+     path-component C of preimage in W (open by E lpc), p(C) is path-connected
+     open neighborhood of b in U. Uses open\_subset\_locally\_path\_connected
+     + top1\_path\_component\_of\_on\_open\_if\_locally\_path\_connected.\<close>
+
 (** from \<S>80 Theorem 80.3: universal covering factors through any covering **)
 theorem Theorem_80_3_universal:
   assumes "is_topology_on_strict E TE" and "is_topology_on_strict B TB"
