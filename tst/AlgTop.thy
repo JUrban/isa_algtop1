@@ -1621,7 +1621,82 @@ proof -
       have hR_in_one: "\<And>S. S \<subseteq> R1 \<union> R2 \<union> R3 \<Longrightarrow> S \<noteq> {} \<Longrightarrow>
           top1_connected_on S (subspace_topology top1_S2 top1_S2_topology S) \<Longrightarrow>
           \<exists>Ri. Ri \<in> {R1, R2, R3} \<and> S \<subseteq> Ri"
-        sorry \<comment> \<open>2\<times>Lemma\_23\_2 on separations of S2-theta.\<close>
+      proof -
+        fix S assume hS_sub: "S \<subseteq> R1 \<union> R2 \<union> R3" and hS_ne: "S \<noteq> {}"
+            and hS_conn: "top1_connected_on S (subspace_topology top1_S2 top1_S2_topology S)"
+        \<comment> \<open>The topology on R1\<union>R2\<union>R3 = S2-theta.\<close>
+        let ?T\<theta> = "subspace_topology top1_S2 top1_S2_topology (R1 \<union> R2 \<union> R3)"
+        have hT\<theta>: "is_topology_on (R1 \<union> R2 \<union> R3) ?T\<theta>"
+          by (rule subspace_topology_is_topology_on[OF hTopS2])
+             (use hR(7) in \<open>by100 blast\<close>)
+        \<comment> \<open>R1 and R2\<union>R3 are open in ?T\<theta>.\<close>
+        have hR1_open_\<theta>: "R1 \<in> ?T\<theta>"
+        proof -
+          have "R1 = (R1 \<union> R2 \<union> R3) \<inter> R1" using hR(7) by (by100 blast)
+          thus ?thesis unfolding subspace_topology_def using hR(11) by (by100 blast)
+        qed
+        have hR23_open_\<theta>: "R2 \<union> R3 \<in> ?T\<theta>"
+        proof -
+          have hR23_open: "R2 \<union> R3 \<in> top1_S2_topology"
+          proof -
+            have "{R2, R3} \<subseteq> top1_S2_topology" using hR(12,13) by (by100 blast)
+            hence "\<Union>{R2, R3} \<in> top1_S2_topology"
+              using hTopS2 unfolding is_topology_on_def by (by100 blast)
+            moreover have "\<Union>{R2, R3} = R2 \<union> R3" by (by100 blast)
+            ultimately show ?thesis by (by100 simp)
+          qed
+          have "R2 \<union> R3 = (R1 \<union> R2 \<union> R3) \<inter> (R2 \<union> R3)" by (by100 blast)
+          thus ?thesis unfolding subspace_topology_def using hR23_open by (by100 blast)
+        qed
+        \<comment> \<open>{R1, R2\<union>R3} is a separation of R1\<union>R2\<union>R3.\<close>
+        have hSep1: "top1_is_separation_on (R1 \<union> R2 \<union> R3) ?T\<theta> R1 (R2 \<union> R3)"
+          unfolding top1_is_separation_on_def
+          using hR1_open_\<theta> hR23_open_\<theta> hR(1,2,3,4,5,6) by (by100 blast)
+        \<comment> \<open>Transfer S connectivity to ?T\<theta> subspace.\<close>
+        have hS_conn_\<theta>: "top1_connected_on S (subspace_topology (R1 \<union> R2 \<union> R3) ?T\<theta> S)"
+        proof -
+          have "subspace_topology top1_S2 top1_S2_topology S =
+              subspace_topology (R1 \<union> R2 \<union> R3) ?T\<theta> S"
+            using subspace_topology_trans[of S "R1 \<union> R2 \<union> R3" top1_S2 top1_S2_topology]
+                hS_sub by (by100 simp)
+          thus ?thesis using hS_conn by (by100 simp)
+        qed
+        from Lemma_23_2[OF hT\<theta> hSep1 hS_sub hS_conn_\<theta>]
+        have "S \<subseteq> R1 \<or> S \<subseteq> R2 \<union> R3" by (by100 blast)
+        moreover {
+          assume "S \<subseteq> R2 \<union> R3"
+          \<comment> \<open>Apply Lemma\_23\_2 again on {R2, R3}.\<close>
+          let ?T23 = "subspace_topology top1_S2 top1_S2_topology (R2 \<union> R3)"
+          have hT23: "is_topology_on (R2 \<union> R3) ?T23"
+            by (rule subspace_topology_is_topology_on[OF hTopS2])
+               (use hR(7) in \<open>by100 blast\<close>)
+          have hR2_open_23: "R2 \<in> ?T23"
+          proof -
+            have "R2 = (R2 \<union> R3) \<inter> R2" by (by100 blast)
+            thus ?thesis unfolding subspace_topology_def using hR(12) by (by100 blast)
+          qed
+          have hR3_open_23: "R3 \<in> ?T23"
+          proof -
+            have "R3 = (R2 \<union> R3) \<inter> R3" by (by100 blast)
+            thus ?thesis unfolding subspace_topology_def using hR(13) by (by100 blast)
+          qed
+          have hSep2: "top1_is_separation_on (R2 \<union> R3) ?T23 R2 R3"
+            unfolding top1_is_separation_on_def
+            using hR2_open_23 hR3_open_23 hR(2,3,5) by (by100 blast)
+          have hS_conn_23: "top1_connected_on S (subspace_topology (R2 \<union> R3) ?T23 S)"
+          proof -
+            have "subspace_topology top1_S2 top1_S2_topology S =
+                subspace_topology (R2 \<union> R3) ?T23 S"
+              using subspace_topology_trans[of S "R2 \<union> R3" top1_S2 top1_S2_topology]
+                  \<open>S \<subseteq> R2 \<union> R3\<close> by (by100 simp)
+            thus ?thesis using hS_conn by (by100 simp)
+          qed
+          from Lemma_23_2[OF hT23 hSep2 \<open>S \<subseteq> R2 \<union> R3\<close> hS_conn_23]
+          have "S \<subseteq> R2 \<or> S \<subseteq> R3" by (by100 blast)
+        }
+        ultimately have "S \<subseteq> R1 \<or> S \<subseteq> R2 \<or> S \<subseteq> R3" by (by100 blast)
+        thus "\<exists>Ri. Ri \<in> {R1, R2, R3} \<and> S \<subseteq> Ri" by (by100 blast)
+      qed
       \<comment> \<open>D' \<subseteq> some Rj.\<close>
       have hD'_in_Ri: "\<exists>Ri. Ri \<in> {R1, R2, R3} \<and> D' \<subseteq> Ri"
         by (rule hR_in_one[OF hD'_sub_theta_compl hD'_ne hD'_conn])
