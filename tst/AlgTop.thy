@@ -5912,20 +5912,79 @@ next
         hence "q ` E \<in> TY" using hS(2) by (by100 simp)
         thus ?thesis using hqE_sub unfolding openin_on_def by (by100 blast)
       qed
-      \<comment> \<open>Y - q(E) is open in Y: for y \<in> Y - q(E), the r-slice containing y is
-         either entirely in q(E) or disjoint (by connectedness of the slice).
-         Since y \<notin> q(E), the slice is disjoint.\<close>
-      have hqE_closed: "closedin_on Y TY (q ` E)"
-        sorry \<comment> \<open>Complement is open: each r-slice meeting q(E) is fully in q(E).\<close>
-      \<comment> \<open>Y is connected (path-connected covering space assumption or derived).\<close>
-      have hY_conn: "top1_connected_on Y TY"
-        by (rule top1_path_connected_imp_connected[OF assms(8)])
-      \<comment> \<open>Connected + non-empty clopen subset = whole space.\<close>
-      have "q ` E = {} \<or> q ` E = Y"
-        using iffD1[OF connected_iff_clopen_openin_on[OF assms(3)] hY_conn]
-              hqE_open hqE_closed by (by100 blast)
-      moreover have "q ` E \<noteq> {}" using hy0_qE by (by100 blast)
-      ultimately show "Y \<subseteq> q ` E" by (by100 blast)
+      \<comment> \<open>Direct surjectivity via path-lifting: for y \<in> Y, take path \<gamma> from y0 to y,
+         lift r\<circ>\<gamma> to E via p, then q\<circ>lift = \<gamma> by uniqueness, so y = q(lift(1)).\<close>
+      show "Y \<subseteq> q ` E"
+      proof
+        fix y assume hy: "y \<in> Y"
+        \<comment> \<open>Y is path-connected, so there exists a path \<gamma> from y0 to y.\<close>
+        obtain \<gamma> where h\<gamma>: "top1_is_path_on Y TY y0 y \<gamma>"
+          using assms(8) hy hy0 unfolding top1_path_connected_on_def by (by100 blast)
+        \<comment> \<open>r \<circ> \<gamma> is a path in B from b0 to r(y).\<close>
+        have hr_cont: "top1_continuous_map_on Y TY B TB r"
+          by (rule top1_covering_map_on_continuous[OF assms(6)])
+        have h\<gamma>_cont: "top1_continuous_map_on I_set I_top Y TY \<gamma>"
+          using h\<gamma> unfolding top1_is_path_on_def by (by100 blast)
+        have hr\<gamma>_cont: "top1_continuous_map_on I_set I_top B TB (r \<circ> \<gamma>)"
+          by (rule top1_continuous_map_on_comp[OF h\<gamma>_cont hr_cont])
+        have h\<gamma>0: "\<gamma> 0 = y0" using h\<gamma> unfolding top1_is_path_on_def by (by100 blast)
+        have h\<gamma>1: "\<gamma> 1 = y" using h\<gamma> unfolding top1_is_path_on_def by (by100 blast)
+        have hr\<gamma>0: "(r \<circ> \<gamma>) 0 = p e0" using h\<gamma>0 hry0 by (by100 simp)
+        have hr\<gamma>1: "(r \<circ> \<gamma>) 1 = r y" using h\<gamma>1 by (by100 simp)
+        have h_r\<gamma>: "top1_is_path_on B TB (p e0) (r y) (r \<circ> \<gamma>)"
+          unfolding top1_is_path_on_def using hr\<gamma>_cont hr\<gamma>0 hr\<gamma>1 by (by100 blast)
+        \<comment> \<open>Lift r \<circ> \<gamma> to E via p, starting at e0.\<close>
+        have "\<exists>\<alpha>. top1_is_path_on E TE e0 (\<alpha> 1) \<alpha> \<and> (\<forall>s\<in>I_set. p (\<alpha> s) = (r \<circ> \<gamma>) s)"
+          using Lemma_54_1_path_lifting[OF assms(4) he0 _ h_r\<gamma> hTB hTE] by (by100 simp)
+        then obtain \<alpha> where h\<alpha>_path: "top1_is_path_on E TE e0 (\<alpha> 1) \<alpha>"
+            and h\<alpha>_lift: "\<forall>s\<in>I_set. p (\<alpha> s) = (r \<circ> \<gamma>) s" by (by100 blast)
+        \<comment> \<open>q \<circ> \<alpha> is a lift of r \<circ> \<gamma> via r, starting at y0.\<close>
+        have h\<alpha>0: "\<alpha> 0 = e0" using h\<alpha>_path unfolding top1_is_path_on_def by (by100 blast)
+        have hq\<alpha>_start: "(q \<circ> \<alpha>) 0 = y0" using h\<alpha>0 hq_e0 by (by100 simp)
+        have hq\<alpha>_lift: "\<forall>s\<in>I_set. r ((q \<circ> \<alpha>) s) = (r \<circ> \<gamma>) s"
+        proof (intro ballI)
+          fix s assume hs: "s \<in> I_set"
+          have h\<alpha>s_E: "\<alpha> s \<in> E"
+          proof -
+            have "top1_continuous_map_on I_set I_top E TE \<alpha>"
+              using h\<alpha>_path unfolding top1_is_path_on_def by (by100 blast)
+            thus ?thesis using hs unfolding top1_continuous_map_on_def by (by100 blast)
+          qed
+          have "r (q (\<alpha> s)) = p (\<alpha> s)" using hq_rp h\<alpha>s_E by (by100 blast)
+          also have "\<dots> = (r \<circ> \<gamma>) s" using h\<alpha>_lift hs by (by100 blast)
+          finally show "r ((q \<circ> \<alpha>) s) = (r \<circ> \<gamma>) s" by (by100 simp)
+        qed
+        \<comment> \<open>q \<circ> \<alpha> is a path in Y from y0 to q(\<alpha>(1)).\<close>
+        have h\<alpha>_cont: "top1_continuous_map_on I_set I_top E TE \<alpha>"
+          using h\<alpha>_path unfolding top1_is_path_on_def by (by100 blast)
+        have hq\<alpha>_cont: "top1_continuous_map_on I_set I_top Y TY (q \<circ> \<alpha>)"
+          by (rule top1_continuous_map_on_comp[OF h\<alpha>_cont hq_cont])
+        have hq\<alpha>1: "(q \<circ> \<alpha>) 1 = q (\<alpha> 1)" by (by100 simp)
+        have hq\<alpha>_path: "top1_is_path_on Y TY y0 (q (\<alpha> 1)) (q \<circ> \<alpha>)"
+          unfolding top1_is_path_on_def using hq\<alpha>_cont hq\<alpha>_start hq\<alpha>1 by (by100 blast)
+        \<comment> \<open>\<gamma> lifts r\<circ>\<gamma> via r trivially.\<close>
+        have h\<gamma>_lift: "\<forall>s\<in>I_set. r (\<gamma> s) = (r \<circ> \<gamma>) s" by (by100 simp)
+        \<comment> \<open>By uniqueness of path lifts for r: q \<circ> \<alpha> = \<gamma> on I_set.\<close>
+        have heq: "\<forall>s\<in>I_set. (q \<circ> \<alpha>) s = \<gamma> s"
+          using Lemma_54_1_uniqueness[OF assms(6) hy0 hry0 h_r\<gamma>
+              hq\<alpha>_path hq\<alpha>_lift h\<gamma> h\<gamma>_lift] by (by100 blast)
+        \<comment> \<open>At s=1: q(\<alpha>(1)) = \<gamma>(1) = y.\<close>
+        have "q (\<alpha> 1) = \<gamma> 1"
+        proof -
+          have "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+          hence "(q \<circ> \<alpha>) 1 = \<gamma> 1" using heq by (by100 blast)
+          thus ?thesis by (by100 simp)
+        qed
+        hence "q (\<alpha> 1) = y" using h\<gamma>1 by (by100 simp)
+        moreover have "\<alpha> 1 \<in> E"
+        proof -
+          have "top1_continuous_map_on I_set I_top E TE \<alpha>"
+            using h\<alpha>_path unfolding top1_is_path_on_def by (by100 blast)
+          have "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+          thus ?thesis using h\<alpha>_cont unfolding top1_continuous_map_on_def by (by100 blast)
+        qed
+        ultimately show "y \<in> q ` E" by (by100 blast)
+      qed
     qed
   qed
   have hq_cov: "\<forall>y\<in>Y. \<exists>V. y \<in> V \<and> top1_evenly_covered_on E TE Y TY q V"
