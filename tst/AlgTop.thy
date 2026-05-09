@@ -120,11 +120,27 @@ proof -
      From the nontrivial loop: j_* is nontrivial.
      Since \<pi>_1(C) \<cong> Z and \<pi>_1(X) \<cong> Z (infinite cyclic groups),
      a nontrivial homomorphism Z \<rightarrow> Z is injective.\<close>
+  have hTopS2: "is_topology_on top1_S2 top1_S2_topology"
+    using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
+  have hTX: "is_topology_on ?X ?TX"
+    by (rule subspace_topology_is_topology_on[OF hTopS2]) (by100 blast)
+  \<comment> \<open>subspace_topology ?X ?TX C = ?TC (by subspace\_topology\_trans).\<close>
+  have hTC_eq: "subspace_topology ?X ?TX C = ?TC"
+    using subspace_topology_trans[OF hC_sub_X] by (by100 simp)
   have hj_hom: "top1_group_hom_on
       (top1_fundamental_group_carrier C ?TC c0) (top1_fundamental_group_mul C ?TC c0)
       (top1_fundamental_group_carrier ?X ?TX c0) (top1_fundamental_group_mul ?X ?TX c0)
       (top1_fundamental_group_induced_on C ?TC c0 ?X ?TX c0 (\<lambda>x. x))"
-    sorry \<comment> \<open>Functoriality of \<pi>_1: inclusion is continuous, hence induces homomorphism.\<close>
+  proof -
+    have h: "top1_group_hom_on
+        (top1_fundamental_group_carrier C (subspace_topology ?X ?TX C) c0)
+        (top1_fundamental_group_mul C (subspace_topology ?X ?TX C) c0)
+        (top1_fundamental_group_carrier ?X ?TX c0)
+        (top1_fundamental_group_mul ?X ?TX c0)
+        (top1_fundamental_group_induced_on C (subspace_topology ?X ?TX C) c0 ?X ?TX c0 (\<lambda>x. x))"
+      by (rule subspace_inclusion_induced_hom[OF hTX hC_sub_X assms(40)])
+    show ?thesis using h hTC_eq sorry
+  qed
   have hj_inj: "inj_on (top1_fundamental_group_induced_on C ?TC c0 ?X ?TX c0 (\<lambda>x. x))
       (top1_fundamental_group_carrier C ?TC c0)"
     sorry \<comment> \<open>j_* nontrivial (from h\_nontrivial) + Z \<rightarrow> Z nontrivial \<Rightarrow> injective.\<close>
