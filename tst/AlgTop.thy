@@ -2042,79 +2042,100 @@ proof -
          The issue is: D' being a proper subset of C12\_inner is allowed.
          D' is a component of S2-D but NOT a component of S2-J12.\<close>
       \<comment> \<open>Contradiction: Rk is a component of S2-J12 AND S2-J13.
-         cl(Rk) = Rk\<union>J12 = Rk\<union>J13 \<Rightarrow> J12 = J13 \<Rightarrow> Arc2 = Arc3.
-         But a3 \<in> Arc2 = Arc3 = e24\<union>e41, contradicting ha3\_not\_e24, ha3\_not\_e41.\<close>
-      \<comment> \<open>Step 1: Get 2 connected components of S2-J12 via Theorem\_63\_5.\<close>
-      obtain C12a C12b where hC12: "C12a \<noteq> {}" "C12b \<noteq> {}" "C12a \<inter> C12b = {}"
-          "C12a \<union> C12b = top1_S2 - (e12 \<union> ?Arc2)"
-          "top1_connected_on C12a (subspace_topology top1_S2 top1_S2_topology C12a)"
-          "top1_connected_on C12b (subspace_topology top1_S2 top1_S2_topology C12b)"
-          "C12a \<in> top1_S2_topology" "C12b \<in> top1_S2_topology"
-        sorry \<comment> \<open>JCT + Theorem\_63\_5 on J12.\<close>
-      \<comment> \<open>Step 2: e34-{a3,a4} \<subseteq> S2-J12. a4 \<in> S2-J12. Determine side.\<close>
-      have he34_in_S2J12: "e34 - {a3, a4} \<subseteq> top1_S2 - (e12 \<union> ?Arc2)"
-        sorry \<comment> \<open>e34 \<inter> (e12\<union>Arc2) = {a3}.\<close>
-      \<comment> \<open>e34 \<subseteq> C12a or C12b. a4 determines which.\<close>
-      have "\<exists>C12x C12y. {C12x, C12y} = {C12a, C12b}
-          \<and> e34 - {a3, a4} \<subseteq> C12x \<and> D' \<subseteq> C12x \<and> Rk \<subseteq> C12y"
-        sorry \<comment> \<open>Lemma\_23\_2 + Arc3 closure argument.\<close>
-      then obtain C12x C12y where hC12xy: "{C12x, C12y} = {C12a, C12b}"
-          "e34 - {a3, a4} \<subseteq> C12x" "D' \<subseteq> C12x" "Rk \<subseteq> C12y"
-        sorry
-      \<comment> \<open>Step 3: Same for J13.\<close>
-      obtain C13a C13b where hC13: "C13a \<noteq> {}" "C13b \<noteq> {}" "C13a \<inter> C13b = {}"
-          "C13a \<union> C13b = top1_S2 - (e12 \<union> ?Arc3)"
-          "top1_connected_on C13a (subspace_topology top1_S2 top1_S2_topology C13a)"
-          "top1_connected_on C13b (subspace_topology top1_S2 top1_S2_topology C13b)"
-          "C13a \<in> top1_S2_topology" "C13b \<in> top1_S2_topology"
-        sorry \<comment> \<open>JCT + Theorem\_63\_5 on J13.\<close>
-      have "\<exists>C13x C13y. {C13x, C13y} = {C13a, C13b}
-          \<and> e34 - {a3, a4} \<subseteq> C13x \<and> D' \<subseteq> C13x \<and> Rk \<subseteq> C13y"
-        sorry
-      then obtain C13x C13y where hC13xy: "{C13x, C13y} = {C13a, C13b}"
-          "e34 - {a3, a4} \<subseteq> C13x" "D' \<subseteq> C13x" "Rk \<subseteq> C13y"
-        sorry
-      \<comment> \<open>Step 4: Rk = C12y (component of S2-J12) and Rk = C13y (component of S2-J13).\<close>
-      have hC12y_eq_Rk: "C12y = Rk"
-        sorry \<comment> \<open>S2-J12 = R1\<union>R2\<union>R3\<union>(Arc3-{a1,a2}). Ri\_e,Ri\_D,Arc3 \<subseteq> C12x. Rk \<subseteq> C12y. C12y = Rk.\<close>
-      have hC13y_eq_Rk: "C13y = Rk"
-        sorry \<comment> \<open>Same argument for J13.\<close>
-      \<comment> \<open>Step 5: cl(Rk) = Rk \<union> J12 = Rk \<union> J13. Hence J12 = J13.\<close>
-      have hC12y_disj: "C12y \<inter> C12x = {}" sorry
-      have hC12y_union: "C12y \<union> C12x = top1_S2 - (e12 \<union> ?Arc2)" sorry
-      have hC13y_disj: "C13y \<inter> C13x = {}" sorry
-      have hC13y_union: "C13y \<union> C13x = top1_S2 - (e12 \<union> ?Arc3)" sorry
-      \<comment> \<open>cl(Rk) from J12: use SCCBMC.\<close>
-      have hcl_Rk_J12: "closure_on top1_S2 top1_S2_topology Rk = Rk \<union> (e12 \<union> ?Arc2)"
+         cl(Rk) = Rk\<union>J12 = Rk\<union>J13 \<Rightarrow> J12 = J13 \<Rightarrow> Arc2 = Arc3 \<Rightarrow> a3\<in>e24\<union>e41 \<Rightarrow> False.\<close>
+      \<comment> \<open>Helper: closure of component W1 of S2-SCC equals W1\<union>SCC.
+         Upper: cl(W1)\<inter>W2 = {} (W2 open). Lower: SCCBMC.\<close>
+      have hcl_comp: "\<And>J W1 W2. top1_simple_closed_curve_on top1_S2 top1_S2_topology J \<Longrightarrow>
+          W1 \<noteq> {} \<Longrightarrow> W2 \<noteq> {} \<Longrightarrow> W1 \<inter> W2 = {} \<Longrightarrow> W1 \<union> W2 = top1_S2 - J \<Longrightarrow>
+          top1_connected_on W1 (subspace_topology top1_S2 top1_S2_topology W1) \<Longrightarrow>
+          top1_connected_on W2 (subspace_topology top1_S2 top1_S2_topology W2) \<Longrightarrow>
+          W1 \<in> top1_S2_topology \<Longrightarrow> W2 \<in> top1_S2_topology \<Longrightarrow>
+          closure_on top1_S2 top1_S2_topology W1 = W1 \<union> J"
+        sorry \<comment> \<open>Upper: cl(W1)\<inter>W2={} (open disjoint). S2=W1\<union>W2\<union>J. cl(W1)\<subseteq>W1\<union>J.
+               Lower: SCCBMC \<Rightarrow> J\<subseteq>cl(W1). Plus W1\<subseteq>cl(W1).\<close>
+      \<comment> \<open>Helper: 2 connected open components of S2-SCC from Theorem\_63\_5.\<close>
+      have hJCT_comps: "\<And>A1 A2. A1 \<subseteq> top1_S2 \<Longrightarrow> A2 \<subseteq> top1_S2 \<Longrightarrow>
+          top1_is_arc_on A1 (subspace_topology top1_S2 top1_S2_topology A1) \<Longrightarrow>
+          top1_is_arc_on A2 (subspace_topology top1_S2 top1_S2_topology A2) \<Longrightarrow>
+          A1 \<inter> A2 = {a1, a2} \<Longrightarrow>
+          top1_arc_endpoints_on A1 (subspace_topology top1_S2 top1_S2_topology A1) = {a1, a2} \<Longrightarrow>
+          top1_arc_endpoints_on A2 (subspace_topology top1_S2 top1_S2_topology A2) = {a1, a2} \<Longrightarrow>
+          \<exists>W1 W2. W1 \<noteq> {} \<and> W2 \<noteq> {} \<and> W1 \<inter> W2 = {} \<and> W1 \<union> W2 = top1_S2 - (A1 \<union> A2) \<and>
+              top1_connected_on W1 (subspace_topology top1_S2 top1_S2_topology W1) \<and>
+              top1_connected_on W2 (subspace_topology top1_S2 top1_S2_topology W2) \<and>
+              W1 \<in> top1_S2_topology \<and> W2 \<in> top1_S2_topology"
+        sorry \<comment> \<open>Theorem\_63\_5 + openness from S2\_component\_of\_open\_subset\_is\_open.\<close>
+      \<comment> \<open>Helper: side placement. For SCC J=A1\<union>A2, connected S \<subseteq> S2-J with
+         a \<in> cl(S), a \<notin> J, a \<in> W1 \<Rightarrow> S \<subseteq> W1.\<close>
+      \<comment> \<open>Step 1: Apply to J12 = e12 \<union> Arc2.\<close>
+      from hJCT_comps[OF assms(4) hArc2_sub assms(10) hArc2_arc hint12 assms(16) hArc2_ep]
+      obtain W12a W12b where hW12: "W12a \<noteq> {}" "W12b \<noteq> {}" "W12a \<inter> W12b = {}"
+          "W12a \<union> W12b = top1_S2 - (e12 \<union> ?Arc2)"
+          "top1_connected_on W12a (subspace_topology top1_S2 top1_S2_topology W12a)"
+          "top1_connected_on W12b (subspace_topology top1_S2 top1_S2_topology W12b)"
+          "W12a \<in> top1_S2_topology" "W12b \<in> top1_S2_topology"
+        by (metis (no_types))
+      \<comment> \<open>Step 2: Apply to J13 = e12 \<union> Arc3.\<close>
+      from hJCT_comps[OF assms(4) hArc3_sub assms(10) hArc3_arc hint13 assms(16) hArc3_ep']
+      obtain W13a W13b where hW13: "W13a \<noteq> {}" "W13b \<noteq> {}" "W13a \<inter> W13b = {}"
+          "W13a \<union> W13b = top1_S2 - (e12 \<union> ?Arc3)"
+          "top1_connected_on W13a (subspace_topology top1_S2 top1_S2_topology W13a)"
+          "top1_connected_on W13b (subspace_topology top1_S2 top1_S2_topology W13b)"
+          "W13a \<in> top1_S2_topology" "W13b \<in> top1_S2_topology"
+        by (metis (no_types))
+      \<comment> \<open>Step 3: Rk \<subseteq> S2-J12 and S2-J13. Rk connected \<Rightarrow> in one component of each.\<close>
+      have hRk_sub_J12: "Rk \<subseteq> top1_S2 - (e12 \<union> ?Arc2)"
       proof -
-        \<comment> \<open>Upper bound: cl(Rk) \<subseteq> Rk \<union> J12. C12x open, C12x \<inter> Rk = {}.\<close>
-        have hC12x_open: "C12x \<in> top1_S2_topology"
-          using hC12xy(1) hC12(7,8) sorry
-        have "closure_on top1_S2 top1_S2_topology Rk \<inter> C12x = {}"
-          sorry \<comment> \<open>C12x open, disjoint from Rk \<Rightarrow> disjoint from cl(Rk).\<close>
-        hence hcl_upper: "closure_on top1_S2 top1_S2_topology Rk \<subseteq> Rk \<union> (e12 \<union> ?Arc2)"
-          sorry \<comment> \<open>S2 = C12x \<union> C12y \<union> J12. cl(Rk) misses C12x \<Rightarrow> \<subseteq> C12y\<union>J12 = Rk\<union>J12.\<close>
-        \<comment> \<open>Lower bound: J12 \<subseteq> cl(Rk). By SCCBMC on J12.\<close>
-        have hcl_lower: "e12 \<union> ?Arc2 \<subseteq> closure_on top1_S2 top1_S2_topology Rk"
-        proof -
-          have hC12x_conn: "top1_connected_on C12x (subspace_topology top1_S2 top1_S2_topology C12x)"
-            using hC12xy(1) hC12(5,6) sorry
-          have hC12y_conn: "top1_connected_on C12y (subspace_topology top1_S2 top1_S2_topology C12y)"
-            using hC12xy(1) hC12(5,6) sorry
-          have hC12y_open: "C12y \<in> top1_S2_topology"
-            using hC12xy(1) hC12(7,8) sorry
-          have hC12y_ne: "C12y \<noteq> {}" using hC12xy(1) hC12(1,2) sorry
-          have hC12x_ne: "C12x \<noteq> {}" using hC12xy(1) hC12(1,2) sorry
-          \<comment> \<open>Apply SCCBMC: for each x \<in> J12, x \<in> cl(C12y) = cl(Rk).\<close>
-          show ?thesis sorry \<comment> \<open>SCCBMC on J12 with W1=C12y=Rk, W2=C12x.\<close>
-        qed
-        have "Rk \<subseteq> closure_on top1_S2 top1_S2_topology Rk" by (rule subset_closure_on)
-        hence "Rk \<union> (e12 \<union> ?Arc2) \<subseteq> closure_on top1_S2 top1_S2_topology Rk"
-          using hcl_lower by (by100 blast)
-        thus ?thesis using hcl_upper by (by100 blast)
+        have "Rk \<subseteq> R1 \<union> R2 \<union> R3" using hRk(1) by (by100 blast)
+        hence "Rk \<subseteq> top1_S2 - ?theta" using hR(7) by (by100 blast)
+        thus ?thesis by (by100 blast)
       qed
+      have hRk_sub_J13: "Rk \<subseteq> top1_S2 - (e12 \<union> ?Arc3)"
+      proof -
+        have "Rk \<subseteq> top1_S2 - ?theta" using hRk(1) hR(7) by (by100 blast)
+        thus ?thesis by (by100 blast)
+      qed
+      have hRk_conn: "top1_connected_on Rk (subspace_topology top1_S2 top1_S2_topology Rk)"
+        using hRk(1) hR(8,9,10) by (by100 blast)
+      \<comment> \<open>Rk \<subseteq> W12a or W12b. WLOG say Rk \<subseteq> W12b (we'll identify the side).\<close>
+      have hRk_in_W12: "Rk \<subseteq> W12a \<or> Rk \<subseteq> W12b"
+        sorry \<comment> \<open>Lemma\_23\_2 on {W12a,W12b} separation + subspace transfer.\<close>
+      have hRk_in_W13: "Rk \<subseteq> W13a \<or> Rk \<subseteq> W13b"
+        sorry \<comment> \<open>Same for J13.\<close>
+      \<comment> \<open>Step 4: Determine side. Rk on one side, everything else on the other.
+         S2-J12 = R1\<union>R2\<union>R3\<union>(Arc3-{a1,a2}). Ri\_e, Ri\_D in S2-J12.
+         Arc3-{a1,a2} \<subseteq> S2-J12. All connected. Each in W12a or W12b.
+         If all in one side: other side empty, contradiction. So Rk alone on one side.\<close>
+      obtain W12_Rk W12_other where hW12_split:
+          "(W12_Rk = W12a \<and> W12_other = W12b) \<or> (W12_Rk = W12b \<and> W12_other = W12a)"
+          "Rk \<subseteq> W12_Rk" "W12_Rk = Rk"
+        sorry \<comment> \<open>Rk in one W12 component. Other W12 gets Ri\_e, Ri\_D, Arc3. Hence W12\_Rk = Rk.\<close>
+      obtain W13_Rk W13_other where hW13_split:
+          "(W13_Rk = W13a \<and> W13_other = W13b) \<or> (W13_Rk = W13b \<and> W13_other = W13a)"
+          "Rk \<subseteq> W13_Rk" "W13_Rk = Rk"
+        sorry \<comment> \<open>Same for J13.\<close>
+      \<comment> \<open>Step 5: cl(Rk) = Rk \<union> J12 and cl(Rk) = Rk \<union> J13.\<close>
+      have hW12_Rk_conn: "top1_connected_on W12_Rk (subspace_topology top1_S2 top1_S2_topology W12_Rk)"
+        using hW12_split(1) hW12(5,6) by (by100 blast)
+      have hW12_other_conn: "top1_connected_on W12_other (subspace_topology top1_S2 top1_S2_topology W12_other)"
+        using hW12_split(1) hW12(5,6) by (by100 blast)
+      have hW12_Rk_open: "W12_Rk \<in> top1_S2_topology"
+        using hW12_split(1) hW12(7,8) by (by100 blast)
+      have hW12_other_open: "W12_other \<in> top1_S2_topology"
+        using hW12_split(1) hW12(7,8) by (by100 blast)
+      have hW12_disj: "W12_Rk \<inter> W12_other = {}"
+        using hW12_split(1) hW12(3) by (by100 blast)
+      have hW12_union: "W12_Rk \<union> W12_other = top1_S2 - (e12 \<union> ?Arc2)"
+        using hW12_split(1) hW12(4) by (by100 blast)
+      have hW12_Rk_ne: "W12_Rk \<noteq> {}" using hW12_split(3) hRk(1) hR(1,2,3) by (by100 blast)
+      have hW12_other_ne: "W12_other \<noteq> {}" using hW12_split(1) hW12(1,2) hW12_split(3)
+        sorry \<comment> \<open>W12\_other is the one \<noteq> W12\_Rk, both non-empty.\<close>
+      have hcl_Rk_J12: "closure_on top1_S2 top1_S2_topology Rk = Rk \<union> (e12 \<union> ?Arc2)"
+        using hcl_comp[OF hJ12_scc hW12_Rk_ne hW12_other_ne hW12_disj hW12_union
+            hW12_Rk_conn hW12_other_conn hW12_Rk_open hW12_other_open] hW12_split(3) by (by100 simp)
+      \<comment> \<open>Same for J13.\<close>
       have hcl_Rk_J13: "closure_on top1_S2 top1_S2_topology Rk = Rk \<union> (e12 \<union> ?Arc3)"
-        sorry \<comment> \<open>Same argument for J13.\<close>
+        sorry \<comment> \<open>Symmetric argument with W13.\<close>
       \<comment> \<open>Step 6: J12 = J13 \<Rightarrow> Arc2 = Arc3 \<Rightarrow> a3 \<in> Arc3 = e24\<union>e41. Contradiction.\<close>
       have hJ12_eq_J13: "e12 \<union> ?Arc2 = e12 \<union> ?Arc3"
       proof -
