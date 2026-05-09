@@ -2224,11 +2224,23 @@ proof -
          If all in one side: other side empty, contradiction. So Rk alone on one side.\<close>
       \<comment> \<open>Side placement for J12: Ri\_e, Ri\_D, Arc3-{a1,a2} on one side, Rk on other.\<close>
       have hRie_sub_J12: "Ri_e \<subseteq> top1_S2 - (e12 \<union> ?Arc2)"
-        sorry \<comment> \<open>Ri\_e \<subseteq> S2-theta \<subseteq> S2-J12.\<close>
+      proof -
+        have "Ri_e \<subseteq> top1_S2 - ?theta" using hRie(1) hR(7) by (by100 blast)
+        thus ?thesis by (by100 blast)
+      qed
       have hRiD_sub_J12: "Ri_D \<subseteq> top1_S2 - (e12 \<union> ?Arc2)"
-        sorry
+      proof -
+        have "Ri_D \<subseteq> top1_S2 - ?theta" using hRiD(1) hR(7) by (by100 blast)
+        thus ?thesis by (by100 blast)
+      qed
       have hArc3_sub_J12: "?Arc3 - {a1, a2} \<subseteq> top1_S2 - (e12 \<union> ?Arc2)"
-        sorry \<comment> \<open>Arc3 \<inter> J12 = {a1,a2}.\<close>
+      proof -
+        have "?Arc3 \<inter> e12 = {a1, a2}" using hint13 by (by100 blast)
+        moreover have "?Arc3 \<inter> ?Arc2 = {a1, a2}" using hint23 by (by100 blast)
+        ultimately have "?Arc3 \<inter> (e12 \<union> ?Arc2) = {a1, a2}" by (by100 blast)
+        moreover have "?Arc3 \<subseteq> top1_S2" using hArc3_sub by (by100 blast)
+        ultimately show ?thesis by (by100 blast)
+      qed
       \<comment> \<open>All 4 sets (Ri\_e, Ri\_D, Arc3-{a1,a2}, Rk) are connected \<subseteq> S2-J12.\<close>
       \<comment> \<open>Ri\_e and Ri\_D in same W12-side as e34 (Ri\_e \<supseteq> e34, Ri\_D = D' \<subseteq> same side via Arc3 closure).\<close>
       \<comment> \<open>Arc3-{a1,a2} in same side as e34 (via a4).\<close>
@@ -2293,21 +2305,9 @@ proof -
       have hW12o_open: "W12o \<in> top1_S2_topology"
         using hW12o(1) hW12(7,8) by (by100 blast)
       have hW12_disj': "Rk \<inter> W12o = {}"
-      proof -
-        have "Rk \<subseteq> W12a \<or> Rk \<subseteq> W12b" by (rule hRk_in_W12)
-        thus ?thesis using hW12o(1) hW12(3) hW12o(2)
-          sorry \<comment> \<open>Rk \<subseteq> opposite side from W12o.\<close>
-      qed
+        sorry \<comment> \<open>Rk on opposite W12 side from W12o. Uses side placement.\<close>
       have hW12_union': "Rk \<union> W12o = top1_S2 - (e12 \<union> ?Arc2)"
-      proof -
-        have "Rk \<subseteq> top1_S2 - (e12 \<union> ?Arc2)" by (rule hRk_sub_J12)
-        moreover have "W12o \<subseteq> top1_S2 - (e12 \<union> ?Arc2)"
-          using hW12o(1) hW12(4) by (by100 blast)
-        ultimately have "Rk \<union> W12o \<subseteq> top1_S2 - (e12 \<union> ?Arc2)" by (by100 blast)
-        moreover have "top1_S2 - (e12 \<union> ?Arc2) \<subseteq> Rk \<union> W12o"
-          using hW12_Rk_eq_Rk hW12(4) hW12o(1) sorry
-        ultimately show ?thesis by (by100 blast)
-      qed
+        sorry \<comment> \<open>Rk + W12o cover S2-J12. Uses hW12\_Rk\_eq\_Rk.\<close>
       have hRk_ne_loc: "Rk \<noteq> {}" using hRk(1) hR(1,2,3) by (by100 blast)
       have hW12o_ne: "W12o \<noteq> {}" using hW12o(3,4,5) hRie(1) hR(1,2,3) sorry
       have hcl_Rk_J12: "closure_on top1_S2 top1_S2_topology Rk = Rk \<union> (e12 \<union> ?Arc2)"
