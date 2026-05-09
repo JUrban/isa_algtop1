@@ -5623,12 +5623,138 @@ next
       have "W \<inter> U' \<in> TE" by (rule topology_inter2[OF assms(3) hW_open hU'_TE])
       thus ?thesis using hC_eq by (by100 simp)
     qed
-    \<comment> \<open>p(C) is path-connected, open in B, contains b, subset of U.\<close>
-    \<comment> \<open>Remaining properties of p(C): open, contains b, path-connected, subset of U.\<close>
-    have hpC_nhd: "neighborhood_of b B TB (p ` ?C)" sorry
-    have hpC_sub_U: "p ` ?C \<subseteq> U" sorry
-    have hpC_sub_B: "p ` ?C \<subseteq> B" sorry
-    have hpC_pc: "top1_path_connected_on (p ` ?C) (subspace_topology B TB (p ` ?C))" sorry
+    \<comment> \<open>Key facts about C and the homeomorphism.\<close>
+    have he_C: "e \<in> ?C"
+      by (rule top1_path_component_of_on_self_mem[OF hW_top hW(2)])
+    have hC_sub_W: "?C \<subseteq> W"
+      by (rule top1_path_component_of_on_subset[OF hW_top hW(2)])
+    have hp_homeo: "top1_homeomorphism_on W (subspace_topology E TE W)
+        ?V (subspace_topology B TB ?V) p"
+      using h\<V>_homeo hW(1) by (by100 blast)
+    have hp_bij: "bij_betw p W ?V"
+      using hp_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+    \<comment> \<open>p(C) is open in B: use homeomorphism inverse continuity.\<close>
+    have hpC_open_sub: "p ` ?C \<in> subspace_topology B TB ?V"
+    proof -
+      have hinv_cont: "top1_continuous_map_on ?V (subspace_topology B TB ?V) W
+          (subspace_topology E TE W) (inv_into W p)"
+        using hp_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+      have "p ` ?C = {u \<in> ?V. (inv_into W p) u \<in> ?C}"
+      proof (rule set_eqI, rule iffI)
+        fix u assume "u \<in> p ` ?C"
+        then obtain e' where he': "e' \<in> ?C" "u = p e'" by (by100 blast)
+        have "e' \<in> W" using he' hC_sub_W by (by100 blast)
+        have "u \<in> ?V" using \<open>e' \<in> W\<close> \<open>u = p e'\<close> hp_bij unfolding bij_betw_def by (by100 blast)
+        have "u \<in> p ` W" using \<open>e' \<in> W\<close> \<open>u = p e'\<close> by (by100 blast)
+        have "inj_on p W" using hp_bij unfolding bij_betw_def by (by100 blast)
+        have "inv_into W p (p e') = e'"
+          by (rule inv_into_f_f[OF \<open>inj_on p W\<close> \<open>e' \<in> W\<close>])
+        hence "inv_into W p u = e'" using \<open>u = p e'\<close> by (by100 simp)
+        thus "u \<in> {u \<in> ?V. (inv_into W p) u \<in> ?C}" using \<open>u \<in> ?V\<close> he'(1) by (by100 simp)
+      next
+        fix u assume hu: "u \<in> {u \<in> ?V. (inv_into W p) u \<in> ?C}"
+        hence "u \<in> ?V" "(inv_into W p) u \<in> ?C" by (by100 blast)+
+        have "u \<in> p ` W" using \<open>u \<in> ?V\<close> hp_bij unfolding bij_betw_def by (by100 blast)
+        have "p (inv_into W p u) = u" by (rule f_inv_into_f[OF \<open>u \<in> p ` W\<close>])
+        show "u \<in> p ` ?C"
+        proof (rule image_eqI)
+          show "u = p (inv_into W p u)" using \<open>p (inv_into W p u) = u\<close> by (by100 simp)
+          show "inv_into W p u \<in> ?C" using \<open>(inv_into W p) u \<in> ?C\<close> by (by100 simp)
+        qed
+      qed
+      have hpreimg: "{u \<in> ?V. (inv_into W p) u \<in> ?C} \<in> subspace_topology B TB ?V"
+        using hinv_cont hPC unfolding top1_continuous_map_on_def by (by100 blast)
+      thus ?thesis using \<open>p ` ?C = {u \<in> ?V. (inv_into W p) u \<in> ?C}\<close> by (by100 simp)
+    qed
+    have hpC_TB: "p ` ?C \<in> TB"
+    proof -
+      from hpC_open_sub obtain T' where hT': "T' \<in> TB" and hpC_eq: "p ` ?C = ?V \<inter> T'"
+        unfolding subspace_topology_def by (by100 blast)
+      have "?V \<inter> T' \<in> TB" by (rule topology_inter2[OF assms(4) hV_open hT'])
+      thus ?thesis using hpC_eq by (by100 simp)
+    qed
+    have hpC_nhd: "neighborhood_of b B TB (p ` ?C)"
+    proof -
+      have "b \<in> p ` ?C" using he_C he(2) by (by100 blast)
+      thus ?thesis using hpC_TB unfolding neighborhood_of_def by (by100 blast)
+    qed
+    have hpC_sub_U: "p ` ?C \<subseteq> U"
+    proof -
+      have "?C \<subseteq> W" by (rule hC_sub_W)
+      hence "p ` ?C \<subseteq> p ` W" by (by100 blast)
+      also have "p ` W = ?V" using hp_bij unfolding bij_betw_def by (by100 blast)
+      also have "?V \<subseteq> U0" by (by100 blast)
+      also have "U0 \<subseteq> U" by (rule hU0(3))
+      finally show ?thesis .
+    qed
+    have hpC_sub_B: "p ` ?C \<subseteq> B"
+    proof -
+      have "p ` ?C \<subseteq> p ` W" using hC_sub_W by (by100 blast)
+      also have "p ` W = ?V" using hp_bij unfolding bij_betw_def by (by100 blast)
+      also have "?V \<subseteq> B" by (rule hV_sub_B)
+      finally show ?thesis .
+    qed
+    have hC_pc: "top1_path_connected_on ?C (subspace_topology E TE ?C)"
+    proof -
+      have "top1_path_connected_on ?C (subspace_topology W (subspace_topology E TE W) ?C)"
+        by (rule top1_path_component_of_on_path_connected[OF hW_top hW(2)])
+      moreover have "subspace_topology W (subspace_topology E TE W) ?C = subspace_topology E TE ?C"
+        by (rule subspace_topology_trans[OF hC_sub_W])
+      ultimately show ?thesis by (by100 simp)
+    qed
+    have hpC_pc: "top1_path_connected_on (p ` ?C) (subspace_topology B TB (p ` ?C))"
+    proof -
+      \<comment> \<open>Restrict homeomorphism p|_W to C: p|_C: C \<cong> p(C).\<close>
+      have hC_openin_V: "openin_on ?V (subspace_topology B TB ?V) (p ` ?C)"
+        using hpC_open_sub unfolding openin_on_def
+      proof (intro conjI)
+        show "p ` ?C \<subseteq> ?V" using hC_sub_W hp_bij unfolding bij_betw_def by (by100 blast)
+        show "p ` ?C \<in> subspace_topology B TB ?V" by (rule hpC_open_sub)
+      qed
+      have hpC_homeo: "top1_homeomorphism_on ?C (subspace_topology E TE ?C)
+          (p ` ?C) (subspace_topology B TB (p ` ?C)) p"
+      proof -
+        have hC_openin_W: "openin_on W (subspace_topology E TE W) ?C"
+          using hPC hC_sub_W unfolding openin_on_def by (by100 blast)
+        have hpC_sub_V: "p ` ?C \<subseteq> ?V"
+          using hC_sub_W hp_bij unfolding bij_betw_def by (by100 blast)
+        have hTV: "is_topology_on ?V (subspace_topology B TB ?V)"
+          using hp_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+        have hrestr: "top1_homeomorphism_on {x \<in> W. p x \<in> p ` ?C}
+            (subspace_topology W (subspace_topology E TE W) {x \<in> W. p x \<in> p ` ?C})
+            (p ` ?C) (subspace_topology ?V (subspace_topology B TB ?V) (p ` ?C)) p"
+          by (rule homeomorphism_restrict_open[OF hp_homeo hC_openin_V hpC_sub_V hW_top hTV])
+        have hsub1: "subspace_topology W (subspace_topology E TE W) {x \<in> W. p x \<in> p ` ?C}
+            = subspace_topology E TE {x \<in> W. p x \<in> p ` ?C}"
+        proof -
+          have "{x \<in> W. p x \<in> p ` ?C} \<subseteq> W" by (by100 blast)
+          thus ?thesis by (rule subspace_topology_trans)
+        qed
+        have hsub2: "subspace_topology ?V (subspace_topology B TB ?V) (p ` ?C)
+            = subspace_topology B TB (p ` ?C)"
+          by (rule subspace_topology_trans[OF hpC_sub_V])
+        have "top1_homeomorphism_on {x \<in> W. p x \<in> p ` ?C}
+            (subspace_topology E TE {x \<in> W. p x \<in> p ` ?C})
+            (p ` ?C) (subspace_topology B TB (p ` ?C)) p"
+          using hrestr hsub1 hsub2 by (by100 simp)
+        moreover have "{x \<in> W. p x \<in> p ` ?C} = ?C"
+        proof (rule set_eqI, rule iffI)
+          fix x assume "x \<in> {x \<in> W. p x \<in> p ` ?C}"
+          hence "x \<in> W" "p x \<in> p ` ?C" by (by100 blast)+
+          then obtain c where "c \<in> ?C" "p x = p c" by (by100 blast)
+          have "c \<in> W" using \<open>c \<in> ?C\<close> hC_sub_W by (by100 blast)
+          have "inj_on p W" using hp_bij unfolding bij_betw_def by (by100 blast)
+          hence "x = c" using \<open>x \<in> W\<close> \<open>c \<in> W\<close> \<open>p x = p c\<close> unfolding inj_on_def by (by100 blast)
+          thus "x \<in> ?C" using \<open>c \<in> ?C\<close> by (by100 simp)
+        next
+          fix x assume "x \<in> ?C"
+          thus "x \<in> {x \<in> W. p x \<in> p ` ?C}" using hC_sub_W by (by100 blast)
+        qed
+        ultimately show ?thesis by (by100 simp)
+      qed
+      from homeomorphism_preserves_path_connected[OF hpC_homeo hC_pc]
+      show ?thesis .
+    qed
     show "\<exists>V. neighborhood_of b B TB V \<and> V \<subseteq> U \<and> V \<subseteq> B \<and>
         top1_path_connected_on V (subspace_topology B TB V)"
       using hpC_nhd hpC_sub_U hpC_sub_B hpC_pc by (by100 blast)
