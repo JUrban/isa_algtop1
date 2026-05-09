@@ -1448,8 +1448,8 @@ proof -
           by (rule Theorem_26_7[OF hbdy_compact_P hbdy_compact_P])
         moreover have "product_topology_on (subspace_topology P ?TP ?bdy) (subspace_topology P ?TP ?bdy)
             = subspace_topology (P \<times> P) (product_topology_on ?TP ?TP) (?bdy \<times> ?bdy)"
-          sorry \<comment> \<open>Product of subspace = subspace of product.\<close>
-        ultimately show ?thesis sorry
+          by (rule Theorem_16_3[OF hTP_top hTP_top])
+        ultimately show ?thesis by simp
       qed
       \<comment> \<open>?R \<inter> (?bdy \<times> ?bdy) is compact: it's a finite union of edge-pair identification
          sets, each compact (image of [0,1] under continuous map t \<mapsto> (edge\_i(t), edge\_j(f(t)))).\<close>
