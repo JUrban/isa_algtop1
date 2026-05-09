@@ -1262,12 +1262,9 @@ proof -
     have hR_closed: "closedin_on (P \<times> P)
         (product_topology_on ?TP ?TP)
         {(a, b). a \<in> P \<and> b \<in> P \<and> q a = q b}"
-      sorry \<comment> \<open>R = diagonal \<union> finite union of edge-pair compact sets.
-             Uses quotient\_of\_scheme\_extract\_full for edge structure.
-             Diagonal closed (P Hausdorff).
-             Each edge pair compact (continuous image of [0,1]).
-             Compact in Hausdorff closed (Theorem\_26\_3).
-             Finite union of closed is closed.\<close>
+      sorry \<comment> \<open>R = diagonal \<union> R\<inter>(\<partial>P\<times>\<partial>P). Diagonal closed (P Hausdorff).
+             \<partial>P compact (finite union of edges). R\<inter>(\<partial>P\<times>\<partial>P) compact hence closed.
+             Uses quotient\_of\_scheme\_extract\_full for interior singleton fibers.\<close>
     \<comment> \<open>Closed equivalence relation on compact Hausdorff \<Rightarrow> Hausdorff quotient.\<close>
     have hclosed_R_haus: "\<And>P' TP' X' TX' q'.
         is_hausdorff_on P' TP' \<Longrightarrow> top1_compact_on P' TP' \<Longrightarrow>
