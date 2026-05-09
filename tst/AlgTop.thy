@@ -1396,7 +1396,48 @@ proof -
           show ?thesis using hi(3) ht hvi hvi1 hP_eq sorry
         qed
       qed
-      have hbdy_closed_P: "closedin_on P ?TP ?bdy" sorry
+      have hbdy_closed_P: "closedin_on P ?TP ?bdy"
+      proof -
+        \<comment> \<open>Each edge is compact in R^2 (continuous image of [0,1]).\<close>
+        have "compact ?bdy"
+        proof -
+          have "\<forall>i \<in> {..<length scheme}. compact (?edge i ` I_set)"
+          proof (intro ballI)
+            fix i assume "i \<in> {..<length scheme}"
+            let ?f = "\<lambda>t::real. ((1-t) * vx i + t * vx (Suc i mod length scheme),
+                (1-t) * vy i + t * vy (Suc i mod length scheme))"
+            have "continuous_on UNIV ?f" by (intro continuous_intros)
+            hence "continuous_on I_set ?f"
+              using continuous_on_subset by (by100 blast)
+            moreover have "compact I_set"
+              unfolding top1_unit_interval_def by (by100 simp)
+            ultimately have "compact (?f ` I_set)" by (rule compact_continuous_image)
+            moreover have "?f ` I_set = ?edge i ` I_set" by (by100 simp)
+            ultimately show "compact (?edge i ` I_set)" by (by100 simp)
+          qed
+          moreover have "finite {..<length scheme}" by (by100 simp)
+          thus "compact ?bdy" sorry \<comment> \<open>finite union of compact = compact (compact\_Union).\<close>
+        qed
+        \<comment> \<open>compact in Hausdorff P \<Rightarrow> closed in P.\<close>
+        have "top1_compact_on ?bdy (subspace_topology P ?TP ?bdy)"
+        proof -
+          have hTP_eq: "?TP = subspace_topology (UNIV :: (real \<times> real) set) top1_open_sets P"
+            using product_topology_on_open_sets_real2 by (by100 simp)
+          have "top1_compact_on ?bdy (subspace_topology (UNIV::(real\<times>real) set) top1_open_sets ?bdy)"
+            using iffD2[OF top1_compact_on_subspace_UNIV_iff_compact] \<open>compact ?bdy\<close> by (by100 blast)
+          moreover have "subspace_topology (UNIV::(real\<times>real) set) top1_open_sets ?bdy
+              = subspace_topology P ?TP ?bdy"
+          proof -
+            have "subspace_topology P (subspace_topology (UNIV::(real\<times>real) set) top1_open_sets P) ?bdy
+                = subspace_topology (UNIV::(real\<times>real) set) top1_open_sets ?bdy"
+              by (rule subspace_topology_trans[OF hbdy_sub_P])
+            thus ?thesis using hTP_eq by (by100 simp)
+          qed
+          ultimately show ?thesis by simp
+        qed
+        thus ?thesis
+          by (rule Theorem_26_3[OF hP_haus hbdy_sub_P])
+      qed
       have hbdy_compact_P: "top1_compact_on ?bdy (subspace_topology P ?TP ?bdy)"
         by (rule Theorem_26_2[OF hP_compact_here hbdy_closed_P])
       have hbdy_compact: "top1_compact_on (?bdy \<times> ?bdy)
