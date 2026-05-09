@@ -2118,7 +2118,109 @@ proof -
               top1_connected_on W1 (subspace_topology top1_S2 top1_S2_topology W1) \<and>
               top1_connected_on W2 (subspace_topology top1_S2 top1_S2_topology W2) \<and>
               W1 \<in> top1_S2_topology \<and> W2 \<in> top1_S2_topology"
-        sorry \<comment> \<open>Theorem\_63\_5 + openness from S2\_component\_of\_open\_subset\_is\_open.\<close>
+      proof -
+        fix A1 A2
+        assume hA1s: "A1 \<subseteq> top1_S2" and hA2s: "A2 \<subseteq> top1_S2"
+          and hA1a: "top1_is_arc_on A1 (subspace_topology top1_S2 top1_S2_topology A1)"
+          and hA2a: "top1_is_arc_on A2 (subspace_topology top1_S2 top1_S2_topology A2)"
+          and hA12i: "A1 \<inter> A2 = {a1, a2}"
+          and hA1e: "top1_arc_endpoints_on A1 (subspace_topology top1_S2 top1_S2_topology A1) = {a1, a2}"
+          and hA2e: "top1_arc_endpoints_on A2 (subspace_topology top1_S2 top1_S2_topology A2) = {a1, a2}"
+        have hA1cl: "closedin_on top1_S2 top1_S2_topology A1" by (rule arc_in_S2_closed[OF hA1s hA1a])
+        have hA2cl: "closedin_on top1_S2 top1_S2_topology A2" by (rule arc_in_S2_closed[OF hA2s hA2a])
+        have hJcl: "closedin_on top1_S2 top1_S2_topology (A1 \<union> A2)" by (rule closedin_on_Un[OF hTopS2 hA1cl hA2cl])
+        have hJop: "top1_S2 - (A1 \<union> A2) \<in> top1_S2_topology" using hJcl unfolding closedin_on_def by (by100 blast)
+        from Theorem_63_5_two_closed_connected[OF hS2_strict hA1cl hA2cl
+            arc_connected[OF hA1a] arc_connected[OF hA2a] _
+            Theorem_63_2_arc_no_separation[OF assms(1) hA1s hA1a]
+            Theorem_63_2_arc_no_separation[OF assms(1) hA2s hA2a]]
+        have "\<exists>W1 W2. W1 \<noteq> {} \<and> W2 \<noteq> {} \<and> W1 \<inter> W2 = {} \<and> W1 \<union> W2 = top1_S2 - (A1 \<union> A2) \<and>
+            top1_connected_on W1 (subspace_topology top1_S2 top1_S2_topology W1) \<and>
+            top1_connected_on W2 (subspace_topology top1_S2 top1_S2_topology W2)"
+          using hA12i ha1_ne_a2 by (by100 simp)
+        then obtain W1 W2 where hW: "W1 \<noteq> {}" "W2 \<noteq> {}" "W1 \<inter> W2 = {}"
+            "W1 \<union> W2 = top1_S2 - (A1 \<union> A2)"
+            "top1_connected_on W1 (subspace_topology top1_S2 top1_S2_topology W1)"
+            "top1_connected_on W2 (subspace_topology top1_S2 top1_S2_topology W2)"
+          by (metis (no_types))
+        \<comment> \<open>Openness: W1, W2 are maximal connected in S2-(A1\<union>A2), hence open.\<close>
+        have hW1s: "W1 \<subseteq> top1_S2 - (A1 \<union> A2)" using hW(4) by (by100 blast)
+        have hW2s: "W2 \<subseteq> top1_S2 - (A1 \<union> A2)" using hW(4) by (by100 blast)
+        \<comment> \<open>Maximality of Wi: if Q connected with Wi\<subseteq>Q\<subseteq>S2-J, then Q=Wi.
+           Proof: Q connected, Q\<subseteq>W1\<union>W2. If Q meets both W1 and W2, Q spans both.
+           But W1 and W2 are disjoint and cover S2-J, and Q\<subseteq>S2-J.
+           Since Wi\<subseteq>Q, Q\<inter>Wi \<supseteq> Wi \<noteq> {}. If Q\<inter>Wj \<noteq> {} (j\<noteq>i):
+           Q = (Q\<inter>W1) \<union> (Q\<inter>W2), both non-empty, disjoint. If both open in Q: disconnected.
+           They ARE open in Q: Q\<inter>Wi = Q \<inter> (S2-J) \<inter> Ui for Ui open in S2. But we don't know Wi open yet.
+           Alternative: use cl(Wi)\<inter>Wj = {} in S2-J topology. cl(W1)\<inter>W2 = {}?
+           cl\_S2(W1) \<subseteq> W1\<union>(A1\<union>A2) (from other being open -- circular!).
+           Simpler: Q\<subseteq>W1\<union>W2. Q connected in S2. Theorem\_23\_4: if Q meets cl(W1)
+           and Q-cl(W1) \<noteq> {}, then Q not connected... no, Theorem 23.4 is about
+           closure of connected being connected.
+           Actually: use the fact that W1 and W2 are PATH components (since S2 is lpc).
+           S2-J open, lpc. Path components of open subset of lpc space are open.
+           W1, W2 connected. In S2-J (lpc, since S2 lpc), connected components = path components.
+           Actually we haven't proved that. Let me just use a direct argument.\<close>
+        \<comment> \<open>Actually, the simplest approach: use hcl\_comp backwards.
+           First prove openness via S2\_component\_of\_open\_subset\_is\_open with maximality.\<close>
+        have hW1_max: "\<And>Q. Q \<subseteq> top1_S2 - (A1 \<union> A2) \<Longrightarrow> W1 \<subseteq> Q \<Longrightarrow>
+            top1_connected_on Q (subspace_topology top1_S2 top1_S2_topology Q) \<Longrightarrow> Q = W1"
+        proof -
+          fix Q assume hQs: "Q \<subseteq> top1_S2 - (A1 \<union> A2)" and hW1Q: "W1 \<subseteq> Q"
+              and hQc: "top1_connected_on Q (subspace_topology top1_S2 top1_S2_topology Q)"
+          have "Q \<subseteq> W1"
+          proof (rule ccontr)
+            assume "\<not> Q \<subseteq> W1"
+            hence "Q \<inter> W2 \<noteq> {}" using hQs hW(4) by (by100 blast)
+            \<comment> \<open>Q = (Q\<inter>W1) \<union> (Q\<inter>W2). Both non-empty (W1\<subseteq>Q). Disjoint (W1\<inter>W2={}).
+               If both open in subspace of Q: Q disconnected. Contradiction.
+               W1 open in S2 (we'll prove this AFTER establishing maximality --- circular!)
+               Alternative: use Theorem\_23\_4. cl(W1) in S2 includes parts of J.
+               Q\<subseteq>S2-J, so Q\<inter>J = {}. cl(W1)\<inter>Q \<subseteq> Q\<inter>(W1\<union>J) = (Q\<inter>W1)\<union>(Q\<inter>J) = Q\<inter>W1 = W1 (since W1\<subseteq>Q).
+               Hmm, that's not helpful either.
+
+               KEY INSIGHT: since W2 = (S2-J)-W1 and Q\<subseteq>S2-J:
+               Q-W1 = Q\<inter>W2. Q = W1\<union>(Q\<inter>W2) (since W1\<subseteq>Q and Q\<subseteq>W1\<union>W2).
+               Both non-empty. W1 connected, Q\<inter>W2 \<subseteq> W2.
+               cl\_S2(W1) \<inter> W2: every point of W2 that's a limit of W1 is in J (boundary).
+               But J \<inter> (S2-J) = {}. So cl(W1) \<inter> (S2-J) \<inter> W2 = cl(W1) \<inter> W2 \<inter> (S2-J).
+               cl(W1) \<subseteq> S2. cl(W1) \<inter> W2 \<subseteq> S2 \<inter> W2 = W2. But also cl(W1) \<inter> W2:
+               if x \<in> cl(W1) \<inter> W2, every nbhd of x meets W1. x \<in> W2, so x \<notin> W1 (disjoint).
+               x \<in> S2-J (since W2 \<subseteq> S2-J). Also x \<in> cl(W1). If W1 is in a "nice" topology...
+               Actually: W1 \<union> W2 = S2-J. Both \<subseteq> S2. cl\_S2(W1) \<inter> W2:
+               Consider cl\_{S2-J}(W1) = cl\_S2(W1) \<inter> (S2-J). This \<subseteq> W1 \<union> W2.
+               If cl\_{S2-J}(W1) \<inter> W2 = {}: then cl\_{S2-J}(W1) \<subseteq> W1, W1 closed in S2-J,
+               hence open (complement W2 is complement of closed = open). Good.
+               But we haven't proved cl\_{S2-J}(W1) \<inter> W2 = {} either.
+
+               Let me just sorry this step and move on.\<close>
+            show False sorry
+          qed
+          thus "Q = W1" using hW1Q by (by100 blast)
+        qed
+        have hW2_max: "\<And>Q. Q \<subseteq> top1_S2 - (A1 \<union> A2) \<Longrightarrow> W2 \<subseteq> Q \<Longrightarrow>
+            top1_connected_on Q (subspace_topology top1_S2 top1_S2_topology Q) \<Longrightarrow> Q = W2"
+        proof -
+          fix Q assume hQs: "Q \<subseteq> top1_S2 - (A1 \<union> A2)" and hW2Q: "W2 \<subseteq> Q"
+              and hQc: "top1_connected_on Q (subspace_topology top1_S2 top1_S2_topology Q)"
+          have "Q \<subseteq> W2"
+          proof (rule ccontr)
+            assume "\<not> Q \<subseteq> W2"
+            hence "Q \<inter> W1 \<noteq> {}" using hQs hW(4) by (by100 blast)
+            show False sorry
+          qed
+          thus "Q = W2" using hW2Q by (by100 blast)
+        qed
+        have hW1_open: "W1 \<in> top1_S2_topology"
+          by (rule S2_component_of_open_subset_is_open[OF hJop _ hW1s hW(1) hW(5) hW1_max]) (by100 blast)
+        have hW2_open: "W2 \<in> top1_S2_topology"
+          by (rule S2_component_of_open_subset_is_open[OF hJop _ hW2s hW(2) hW(6) hW2_max]) (by100 blast)
+        show "\<exists>W1 W2. W1 \<noteq> {} \<and> W2 \<noteq> {} \<and> W1 \<inter> W2 = {} \<and> W1 \<union> W2 = top1_S2 - (A1 \<union> A2) \<and>
+            top1_connected_on W1 (subspace_topology top1_S2 top1_S2_topology W1) \<and>
+            top1_connected_on W2 (subspace_topology top1_S2 top1_S2_topology W2) \<and>
+            W1 \<in> top1_S2_topology \<and> W2 \<in> top1_S2_topology"
+          using hW hW1_open hW2_open by (by100 blast)
+      qed
       \<comment> \<open>Helper: side placement. For SCC J=A1\<union>A2, connected S \<subseteq> S2-J with
          a \<in> cl(S), a \<notin> J, a \<in> W1 \<Rightarrow> S \<subseteq> W1.\<close>
       \<comment> \<open>Step 1: Apply to J12 = e12 \<union> Arc2.\<close>
