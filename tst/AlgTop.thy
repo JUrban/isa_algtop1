@@ -1114,15 +1114,37 @@ proof -
           proof -
             \<comment> \<open>Fx = {p | (p, p0) \<in> R} for any p0 \<in> Fx. Slice of closed R is closed.\<close>
             obtain p0 where "p0 \<in> P'" "q' p0 = x" using hFx_ne by (by100 blast)
-            have "?Fx = {p \<in> P'. (p, p0) \<in> ?R}" using \<open>q' p0 = x\<close> \<open>p0 \<in> P'\<close> sorry
-            \<comment> \<open>The slice {p | (p, p0) \<in> C} of a closed set C in P'\<times>P' at p0 is closed in P'.\<close>
-            thus ?thesis sorry \<comment> \<open>Slice of closed R at p0 is closed. Standard topology.\<close>
+            have hFx_eq: "?Fx = {p \<in> P'. (p, p0) \<in> ?R}"
+            proof (rule set_eqI, rule iffI)
+              fix p assume "p \<in> ?Fx"
+              hence "p \<in> P'" "q' p = x" by (by100 blast)+
+              hence "(p, p0) \<in> ?R" using \<open>p0 \<in> P'\<close> \<open>q' p0 = x\<close> by (by100 simp)
+              thus "p \<in> {p \<in> P'. (p, p0) \<in> ?R}" using \<open>p \<in> P'\<close> by (by100 blast)
+            next
+              fix p assume "p \<in> {p \<in> P'. (p, p0) \<in> ?R}"
+              hence "p \<in> P'" "(p, p0) \<in> ?R" by (by100 blast)+
+              hence "q' p = q' p0" by (by100 simp)
+              thus "p \<in> ?Fx" using \<open>p \<in> P'\<close> \<open>q' p0 = x\<close> by (by100 simp)
+            qed
+            \<comment> \<open>Slice of closed R at p0 is closed. Preimage of {p0} under projection.\<close>
+            thus ?thesis sorry \<comment> \<open>Slice of closed set at a point is closed.\<close>
           qed
           have hFy_cl: "closedin_on P' TP' ?Fy"
           proof -
             obtain p0 where "p0 \<in> P'" "q' p0 = y" using hFy_ne by (by100 blast)
-            have "?Fy = {p \<in> P'. (p, p0) \<in> ?R}" using \<open>q' p0 = y\<close> \<open>p0 \<in> P'\<close> sorry
-            thus ?thesis sorry
+            have hFy_eq: "?Fy = {p \<in> P'. (p, p0) \<in> ?R}"
+            proof (rule set_eqI, rule iffI)
+              fix p assume "p \<in> ?Fy"
+              hence "p \<in> P'" "q' p = y" by (by100 blast)+
+              hence "(p, p0) \<in> ?R" using \<open>p0 \<in> P'\<close> \<open>q' p0 = y\<close> by (by100 simp)
+              thus "p \<in> {p \<in> P'. (p, p0) \<in> ?R}" using \<open>p \<in> P'\<close> by (by100 blast)
+            next
+              fix p assume "p \<in> {p \<in> P'. (p, p0) \<in> ?R}"
+              hence "p \<in> P'" "(p, p0) \<in> ?R" by (by100 blast)+
+              hence "q' p = q' p0" by (by100 simp)
+              thus "p \<in> ?Fy" using \<open>p \<in> P'\<close> \<open>q' p0 = y\<close> by (by100 simp)
+            qed
+            thus ?thesis sorry \<comment> \<open>Slice of closed set at a point is closed.\<close>
           qed
           \<comment> \<open>By normality: disjoint open U \<supseteq> Fx, V \<supseteq> Fy.\<close>
           from normal_separation[OF hP'N hFx_cl hFy_cl hFxy_disj]
