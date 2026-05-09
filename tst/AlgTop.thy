@@ -1137,9 +1137,33 @@ proof -
             sorry
           \<comment> \<open>P' - ?SU is open and saturated. q'(P' - ?SU) is open in X'.\<close>
           have hWx_open: "X' - q' ` (P' - U) \<in> TX'"
-            sorry \<comment> \<open>q' quotient: q'(P'-U) closed in X' iff q'\<inverse>(q'(P'-U)) = ?SU closed in P'. Check.\<close>
+          proof -
+            have "q' ` (P' - U) \<subseteq> X'" using hq'_surj by (by100 blast)
+            have "closedin_on X' TX' (q' ` (P' - U))"
+            proof -
+              have "{p \<in> P'. q' p \<in> q' ` (P' - U)} = ?SU" by (by100 blast)
+              hence "closedin_on P' TP' {p \<in> P'. q' p \<in> q' ` (P' - U)}"
+                using hSU_closed by (by100 simp)
+              thus ?thesis
+                using top1_quotient_map_closed_iff_preimage_closed[OF hq'Q \<open>q' ` (P' - U) \<subseteq> X'\<close>]
+                by (by100 blast)
+            qed
+            thus ?thesis using hTX' unfolding closedin_on_def by (by100 blast)
+          qed
           have hWy_open: "X' - q' ` (P' - V) \<in> TX'"
-            sorry
+          proof -
+            have "q' ` (P' - V) \<subseteq> X'" using hq'_surj by (by100 blast)
+            have "closedin_on X' TX' (q' ` (P' - V))"
+            proof -
+              have "{p \<in> P'. q' p \<in> q' ` (P' - V)} = ?SV" by (by100 blast)
+              hence "closedin_on P' TP' {p \<in> P'. q' p \<in> q' ` (P' - V)}"
+                using hSV_closed by (by100 simp)
+              thus ?thesis
+                using top1_quotient_map_closed_iff_preimage_closed[OF hq'Q \<open>q' ` (P' - V) \<subseteq> X'\<close>]
+                by (by100 blast)
+            qed
+            thus ?thesis using hTX' unfolding closedin_on_def by (by100 blast)
+          qed
           have hx_Wx: "x \<in> X' - q' ` (P' - U)"
           proof -
             have "x \<notin> q' ` (P' - U)"
