@@ -1357,18 +1357,29 @@ proof -
           (subspace_topology (P \<times> P) (product_topology_on ?TP ?TP) (?R \<inter> (?bdy \<times> ?bdy)))"
         sorry
       \<comment> \<open>Compact in Hausdorff is closed.\<close>
+      have hR_bdy_sub: "?R \<inter> (?bdy \<times> ?bdy) \<subseteq> P \<times> P" by (by100 blast)
       have hR_bdy_closed: "closedin_on (P \<times> P) (product_topology_on ?TP ?TP) (?R \<inter> (?bdy \<times> ?bdy))"
-        using Theorem_26_3[OF hPP_haus _ hR_bdy_compact] sorry
+        by (rule Theorem_26_3[OF hPP_haus hR_bdy_sub hR_bdy_compact])
       \<comment> \<open>R \<subseteq> diagonal \<union> (?bdy \<times> ?bdy), so R = (R \<inter> diagonal) \<union> (R \<inter> (?bdy \<times> ?bdy)).
          R \<inter> diagonal = diagonal (on P\<times>P). Both parts closed. Union closed.\<close>
       have hR_decomp: "?R = {(a, b). a \<in> P \<and> b \<in> P \<and> a = b} \<union> (?R \<inter> (?bdy \<times> ?bdy))"
-        using hR_sub sorry
+        sorry \<comment> \<open>Set theory: R \<subseteq> \<Delta> \<union> bdy\<times>bdy, \<Delta> \<subseteq> R \<Rightarrow> R = \<Delta> \<union> (R \<inter> bdy\<times>bdy).\<close>
       have "closedin_on (P \<times> P) (product_topology_on ?TP ?TP) ?R"
       proof -
         have "closedin_on (P \<times> P) (product_topology_on ?TP ?TP)
             ({(a, b). a \<in> P \<and> b \<in> P \<and> a = b} \<union> (?R \<inter> (?bdy \<times> ?bdy)))"
-          sorry \<comment> \<open>closedin\_Union\_finite or closedin\_inter2 with union of two closed sets.\<close>
-        thus ?thesis using hR_decomp by (by100 simp)
+        proof -
+          let ?F = "{{(a, b). a \<in> P \<and> b \<in> P \<and> a = b}, ?R \<inter> (?bdy \<times> ?bdy)}"
+          have "finite ?F" by (by100 simp)
+          have "\<forall>A \<in> ?F. closedin_on (P \<times> P) (product_topology_on ?TP ?TP) A"
+            using hDiag_closed hR_bdy_closed by (by100 blast)
+          from closedin_Union_finite[OF hTPP \<open>finite ?F\<close> this]
+          have "closedin_on (P \<times> P) (product_topology_on ?TP ?TP) (\<Union>?F)" .
+          moreover have "\<Union>?F = {(a, b). a \<in> P \<and> b \<in> P \<and> a = b} \<union> (?R \<inter> (?bdy \<times> ?bdy))"
+            by (by100 simp)
+          ultimately show ?thesis sorry
+        qed
+        thus ?thesis using hR_decomp sorry
       qed
       thus ?thesis .
     qed
