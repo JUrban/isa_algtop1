@@ -1897,7 +1897,7 @@ proof -
       \<comment> \<open>Now: S2-D = C\<union>D'. D' = Ri\_D (a theta component). Ri\_e \<subseteq> C.
          The third Rk is \<subseteq> C (since Rk\<subseteq>D'=Ri\_D would mean Rk\<subseteq>Ri\_D, but Rk\<inter>Ri\_D = {}).\<close>
       obtain Rk where hRk: "Rk \<in> {R1, R2, R3}" "Rk \<noteq> Ri_e" "Rk \<noteq> Ri_D"
-        sorry \<comment> \<open>Pick third element: Ri\_e, Ri\_D distinct \<in> {R1,R2,R3}, pick remaining.\<close>
+        sorry \<comment> \<open>Pick 3rd: blast hangs on 6-case; needs explicit case split.\<close>
       have hRk_sub_C: "Rk \<subseteq> C"
       proof -
         have hRk_disj_D': "Rk \<inter> D' = {}"
@@ -1905,7 +1905,6 @@ proof -
           have "Rk \<inter> Ri_D = {}"
           proof -
             from hRk(1,3) hRiD(1) show ?thesis using hR(4,5,6) sorry
-              \<comment> \<open>Rk \<noteq> Ri\_D, both in {R1,R2,R3}, pairwise disjoint \<Rightarrow> Rk\<inter>Ri\_D={}.\<close>
           qed
           thus ?thesis using hRiD_eq_D' by (by100 simp)
         qed
