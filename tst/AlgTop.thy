@@ -2099,9 +2099,71 @@ proof -
         using hRk(1) hR(8,9,10) by (by100 blast)
       \<comment> \<open>Rk \<subseteq> W12a or W12b. WLOG say Rk \<subseteq> W12b (we'll identify the side).\<close>
       have hRk_in_W12: "Rk \<subseteq> W12a \<or> Rk \<subseteq> W12b"
-        sorry \<comment> \<open>Lemma\_23\_2 on {W12a,W12b} separation + subspace transfer.\<close>
+      proof -
+        have hTJ12: "is_topology_on (top1_S2 - (e12\<union>?Arc2))
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (e12\<union>?Arc2)))"
+          by (rule subspace_topology_is_topology_on[OF hTopS2]) (by100 blast)
+        have hW12a_open_sub: "W12a \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - (e12\<union>?Arc2))"
+        proof -
+          have "W12a = (top1_S2 - (e12\<union>?Arc2)) \<inter> W12a" using hW12(4) by (by100 blast)
+          thus ?thesis unfolding subspace_topology_def using hW12(7) by (by100 blast)
+        qed
+        have hW12b_open_sub: "W12b \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - (e12\<union>?Arc2))"
+        proof -
+          have "W12b = (top1_S2 - (e12\<union>?Arc2)) \<inter> W12b" using hW12(4) by (by100 blast)
+          thus ?thesis unfolding subspace_topology_def using hW12(8) by (by100 blast)
+        qed
+        have hSep12: "top1_is_separation_on (top1_S2 - (e12\<union>?Arc2))
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (e12\<union>?Arc2))) W12a W12b"
+          unfolding top1_is_separation_on_def
+          using hW12a_open_sub hW12b_open_sub hW12(1,2,3,4) by (by100 blast)
+        have hRk_conn_sub: "top1_connected_on Rk
+            (subspace_topology (top1_S2 - (e12\<union>?Arc2))
+                (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (e12\<union>?Arc2))) Rk)"
+        proof -
+          have "subspace_topology top1_S2 top1_S2_topology Rk =
+              subspace_topology (top1_S2 - (e12\<union>?Arc2))
+                  (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (e12\<union>?Arc2))) Rk"
+            using subspace_topology_trans[of Rk "top1_S2 - (e12\<union>?Arc2)" top1_S2 top1_S2_topology]
+                hRk_sub_J12 by (by100 simp)
+          thus ?thesis using hRk_conn by (by100 simp)
+        qed
+        from Lemma_23_2[OF hTJ12 hSep12 hRk_sub_J12 hRk_conn_sub]
+        show ?thesis by (by100 blast)
+      qed
       have hRk_in_W13: "Rk \<subseteq> W13a \<or> Rk \<subseteq> W13b"
-        sorry \<comment> \<open>Same for J13.\<close>
+      proof -
+        have hTJ13: "is_topology_on (top1_S2 - (e12\<union>?Arc3))
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (e12\<union>?Arc3)))"
+          by (rule subspace_topology_is_topology_on[OF hTopS2]) (by100 blast)
+        have hW13a_open_sub: "W13a \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - (e12\<union>?Arc3))"
+        proof -
+          have "W13a = (top1_S2 - (e12\<union>?Arc3)) \<inter> W13a" using hW13(4) by (by100 blast)
+          thus ?thesis unfolding subspace_topology_def using hW13(7) by (by100 blast)
+        qed
+        have hW13b_open_sub: "W13b \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - (e12\<union>?Arc3))"
+        proof -
+          have "W13b = (top1_S2 - (e12\<union>?Arc3)) \<inter> W13b" using hW13(4) by (by100 blast)
+          thus ?thesis unfolding subspace_topology_def using hW13(8) by (by100 blast)
+        qed
+        have hSep13: "top1_is_separation_on (top1_S2 - (e12\<union>?Arc3))
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (e12\<union>?Arc3))) W13a W13b"
+          unfolding top1_is_separation_on_def
+          using hW13a_open_sub hW13b_open_sub hW13(1,2,3,4) by (by100 blast)
+        have hRk_conn_sub13: "top1_connected_on Rk
+            (subspace_topology (top1_S2 - (e12\<union>?Arc3))
+                (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (e12\<union>?Arc3))) Rk)"
+        proof -
+          have "subspace_topology top1_S2 top1_S2_topology Rk =
+              subspace_topology (top1_S2 - (e12\<union>?Arc3))
+                  (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (e12\<union>?Arc3))) Rk"
+            using subspace_topology_trans[of Rk "top1_S2 - (e12\<union>?Arc3)" top1_S2 top1_S2_topology]
+                hRk_sub_J13 by (by100 simp)
+          thus ?thesis using hRk_conn by (by100 simp)
+        qed
+        from Lemma_23_2[OF hTJ13 hSep13 hRk_sub_J13 hRk_conn_sub13]
+        show ?thesis by (by100 blast)
+      qed
       \<comment> \<open>Step 4: Determine side. Rk on one side, everything else on the other.
          S2-J12 = R1\<union>R2\<union>R3\<union>(Arc3-{a1,a2}). Ri\_e, Ri\_D in S2-J12.
          Arc3-{a1,a2} \<subseteq> S2-J12. All connected. Each in W12a or W12b.
