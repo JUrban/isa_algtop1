@@ -1610,10 +1610,62 @@ proof -
         thus ?thesis using hR(7) by (by100 blast)
       qed
       \<comment> \<open>D' connected. Use Theorem\_63\_5: D1, D2 closed connected, |D1\<inter>D2|=2 \<Rightarrow> 2 connected components.\<close>
+      \<comment> \<open>Use Theorem\_63\_5: D1, D2 closed connected, |D1\<inter>D2|=2 \<Rightarrow> S2-D has 2 connected components.\<close>
+      have hD1_closed: "closedin_on top1_S2 top1_S2_topology ?D1"
+        by (rule arc_in_S2_closed[OF hD1_sub hD1_arc])
+      have hD2_closed: "closedin_on top1_S2 top1_S2_topology ?D2"
+        by (rule arc_in_S2_closed[OF hD2_sub hD2_arc])
+      have hD1_conn: "top1_connected_on ?D1 (subspace_topology top1_S2 top1_S2_topology ?D1)"
+        using arc_connected[OF hD1_arc] .
+      have hD2_conn: "top1_connected_on ?D2 (subspace_topology top1_S2 top1_S2_topology ?D2)"
+        using arc_connected[OF hD2_arc] .
+      have hD12_card: "card (?D1 \<inter> ?D2) = 2" using hD12_inter hpq_ne by (by100 simp)
+      have hD1_no_sep: "\<not> top1_separates_on top1_S2 top1_S2_topology ?D1"
+        by (rule Theorem_63_2_arc_no_separation[OF assms(1) hD1_sub hD1_arc])
+      have hD2_no_sep: "\<not> top1_separates_on top1_S2 top1_S2_topology ?D2"
+        by (rule Theorem_63_2_arc_no_separation[OF assms(1) hD2_sub hD2_arc])
+      from Theorem_63_5_two_closed_connected[OF hS2_strict hD1_closed hD2_closed
+          hD1_conn hD2_conn hD12_card hD1_no_sep hD2_no_sep]
+      obtain U63 V63 where hUV63: "U63 \<noteq> {}" "V63 \<noteq> {}" "U63 \<inter> V63 = {}"
+          "U63 \<union> V63 = top1_S2 - ?D"
+          "top1_connected_on U63 (subspace_topology top1_S2 top1_S2_topology U63)"
+          "top1_connected_on V63 (subspace_topology top1_S2 top1_S2_topology V63)"
+        by (metis (no_types))
+      \<comment> \<open>A\<union>B = S2-D = U63\<union>V63. {A,B} and {U63,V63} are both separations of S2-D.
+         Since A,B,U63,V63 are all open in S2-D, and A\<inter>B={}, U63\<inter>V63={},
+         each of A,B is a union of components. With exactly 2 connected components,
+         A = U63 (or V63) and B = V63 (or U63).\<close>
+      \<comment> \<open>U63 connected \<subseteq> A\<union>B. By Lemma\_23\_2: U63 \<subseteq> A or U63 \<subseteq> B. Similarly V63.\<close>
+      have hU63_sub: "U63 \<subseteq> A \<union> B" using hUV63(4) hAB_eq_S2_D by (by100 blast)
+      have hV63_sub: "V63 \<subseteq> A \<union> B" using hUV63(4) hAB_eq_S2_D by (by100 blast)
+      have hU63_comp: "U63 \<subseteq> A \<or> U63 \<subseteq> B"
+      proof -
+        have hU63_conn_AB: "top1_connected_on U63
+            (subspace_topology (A \<union> B) (subspace_topology ?X ?TX (A \<union> B)) U63)"
+        proof -
+          have hU63_sub_X: "U63 \<subseteq> ?X" using hU63_sub hAB_sub_X by (by100 blast)
+          have "subspace_topology top1_S2 top1_S2_topology U63 =
+              subspace_topology ?X ?TX U63"
+            using subspace_topology_trans[of U63 ?X top1_S2 top1_S2_topology]
+                hU63_sub_X by (by100 simp)
+          also have "\<dots> = subspace_topology (A \<union> B) (subspace_topology ?X ?TX (A \<union> B)) U63"
+            using subspace_topology_trans[of U63 "A \<union> B" ?X ?TX]
+                hU63_sub by (by100 simp)
+          finally show ?thesis using hUV63(5) by (by100 simp)
+        qed
+        from Lemma_23_2[OF hTAB_loc hAB_sep hU63_sub hU63_conn_AB]
+        show ?thesis by (by100 blast)
+      qed
+      have hV63_comp: "V63 \<subseteq> A \<or> V63 \<subseteq> B"
+        sorry \<comment> \<open>Same argument as hU63\_comp.\<close>
+      \<comment> \<open>{A,B} = {U63,V63}: from U63\<union>V63=A\<union>B, U63\<inter>V63={}, A\<inter>B={},
+         U63\<subseteq>A\<or>B, V63\<subseteq>A\<or>B.\<close>
+      have hAB_eq_UV: "(A = U63 \<and> B = V63) \<or> (A = V63 \<and> B = U63)"
+        sorry \<comment> \<open>Combinatorial from U63\<union>V63=A\<union>B, disjoints, non-empties.\<close>
       have hA_conn_S2: "top1_connected_on A (subspace_topology top1_S2 top1_S2_topology A)"
-        sorry \<comment> \<open>From Theorem\_63\_5 on D1, D2.\<close>
+        using hAB_eq_UV hUV63(5,6) by (by100 metis)
       have hB_conn_S2: "top1_connected_on B (subspace_topology top1_S2 top1_S2_topology B)"
-        sorry \<comment> \<open>From Theorem\_63\_5 on D1, D2.\<close>
+        using hAB_eq_UV hUV63(5,6) by (by100 metis)
       have hD'_conn: "top1_connected_on D' (subspace_topology top1_S2 top1_S2_topology D')"
         using hA_conn_S2 hB_conn_S2 D'_def hC by (by100 metis)
       \<comment> \<open>Helper: connected subset of R1\<union>R2\<union>R3 is in one Ri.
