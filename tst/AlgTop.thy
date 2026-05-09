@@ -973,6 +973,32 @@ lemma convex_hull_compact:
       \<and> x = (\<Sum>i<n. coeffs i * vx i) \<and> y = (\<Sum>i<n. coeffs i * vy i)}"
   using convex_hull_compact_general[of n vx vy] assms by (by100 linarith)
 
+\<comment> \<open>Richer extraction from scheme: gives vertices, edge identification, interior singleton fibers.\<close>
+lemma quotient_of_scheme_extract_full:
+  assumes "top1_quotient_of_scheme_on X TX scheme"
+  obtains P q vx vy where
+    "top1_is_polygonal_region_on P (length scheme)"
+    "top1_quotient_map_on P
+        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) X TX q"
+    "length scheme \<ge> 3"
+    "\<forall>i<length scheme. (vx i, vy i) \<in> P"
+    "\<forall>i<length scheme. \<forall>j<length scheme.
+        fst (scheme!i) = fst (scheme!j) \<longrightarrow>
+        (\<forall>t\<in>I_set.
+           q ((1-t) * vx i + t * vx (Suc i mod length scheme),
+              (1-t) * vy i + t * vy (Suc i mod length scheme))
+         = (if snd (scheme!i) = snd (scheme!j)
+            then q ((1-t) * vx j + t * vx (Suc j mod length scheme),
+                    (1-t) * vy j + t * vy (Suc j mod length scheme))
+            else q (t * vx j + (1-t) * vx (Suc j mod length scheme),
+                    t * vy j + (1-t) * vy (Suc j mod length scheme))))"
+    "\<forall>p\<in>P. (\<forall>i<length scheme. \<forall>t\<in>I_set.
+              p \<noteq> ((1-t) * vx i + t * vx (Suc i mod length scheme),
+                    (1-t) * vy i + t * vy (Suc i mod length scheme)))
+         \<longrightarrow> (\<forall>p'\<in>P. q p = q p' \<longrightarrow> p = p')"
+  using assms unfolding top1_quotient_of_scheme_on_def top1_is_polygonal_region_on_def
+  sorry
+
 (** from \<S>74 Theorem 74.1: polygonal quotients are compact Hausdorff **)
 theorem Theorem_74_1_polygon_quotient_compact_hausdorff:
   fixes X :: "'a set" and TX :: "'a set set"
@@ -1074,8 +1100,12 @@ proof -
     have hR_closed: "closedin_on (P \<times> P)
         (product_topology_on ?TP ?TP)
         {(a, b). a \<in> P \<and> b \<in> P \<and> q a = q b}"
-      sorry \<comment> \<open>Finite union of compact subsets of P\<times>P. Each edge-pair identification
-             is a compact (continuous image of [0,1]) subset.\<close>
+      sorry \<comment> \<open>R = diagonal \<union> finite union of edge-pair compact sets.
+             Uses quotient\_of\_scheme\_extract\_full for edge structure.
+             Diagonal closed (P Hausdorff).
+             Each edge pair compact (continuous image of [0,1]).
+             Compact in Hausdorff closed (Theorem\_26\_3).
+             Finite union of closed is closed.\<close>
     \<comment> \<open>Closed equivalence relation on compact Hausdorff \<Rightarrow> Hausdorff quotient.\<close>
     have hclosed_R_haus: "\<And>P' TP' X' TX' q'.
         is_hausdorff_on P' TP' \<Longrightarrow> top1_compact_on P' TP' \<Longrightarrow>
