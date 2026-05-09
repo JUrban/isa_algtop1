@@ -1609,20 +1609,39 @@ proof -
         hence "D' \<subseteq> top1_S2 - ?theta" using htheta_compl_eq by (by100 simp)
         thus ?thesis using hR(7) by (by100 blast)
       qed
-      \<comment> \<open>D' connected (it's a component of S2-D).\<close>
+      \<comment> \<open>D' connected. Use Theorem\_63\_5: D1, D2 closed connected, |D1\<inter>D2|=2 \<Rightarrow> 2 connected components.\<close>
+      have hA_conn_S2: "top1_connected_on A (subspace_topology top1_S2 top1_S2_topology A)"
+        sorry \<comment> \<open>From Theorem\_63\_5 on D1, D2.\<close>
+      have hB_conn_S2: "top1_connected_on B (subspace_topology top1_S2 top1_S2_topology B)"
+        sorry \<comment> \<open>From Theorem\_63\_5 on D1, D2.\<close>
       have hD'_conn: "top1_connected_on D' (subspace_topology top1_S2 top1_S2_topology D')"
-        sorry
-      \<comment> \<open>D' \<subseteq> some Rj (connected in disjoint open union R1\<union>R2\<union>R3).\<close>
+        using hA_conn_S2 hB_conn_S2 D'_def hC by (by100 metis)
+      \<comment> \<open>Helper: connected subset of R1\<union>R2\<union>R3 is in one Ri.
+         Proof: 2\<times>Lemma\_23\_2 on {R1, R2\<union>R3} then {R2, R3}.\<close>
+      have hR_in_one: "\<And>S. S \<subseteq> R1 \<union> R2 \<union> R3 \<Longrightarrow> S \<noteq> {} \<Longrightarrow>
+          top1_connected_on S (subspace_topology top1_S2 top1_S2_topology S) \<Longrightarrow>
+          \<exists>Ri. Ri \<in> {R1, R2, R3} \<and> S \<subseteq> Ri"
+        sorry \<comment> \<open>2\<times>Lemma\_23\_2 on separations of S2-theta.\<close>
+      \<comment> \<open>D' \<subseteq> some Rj.\<close>
       have hD'_in_Ri: "\<exists>Ri. Ri \<in> {R1, R2, R3} \<and> D' \<subseteq> Ri"
-        sorry
+        by (rule hR_in_one[OF hD'_sub_theta_compl hD'_ne hD'_conn])
       \<comment> \<open>e34-{a3,a4} \<subseteq> some Ri.\<close>
       have he34_in_Ri: "\<exists>Ri. Ri \<in> {R1, R2, R3} \<and> e34 - {a3, a4} \<subseteq> Ri"
-        sorry
+        by (rule hR_in_one[OF he34_in_R he34_ne he34_conn])
       \<comment> \<open>The Ri containing e34 is \<subseteq> C (since e34 \<subseteq> C and Ri connected in A\<union>B).\<close>
       from he34_in_Ri obtain Ri_e where hRie: "Ri_e \<in> {R1, R2, R3}" "e34 - {a3, a4} \<subseteq> Ri_e"
         by blast
+      \<comment> \<open>Helper: each Ri is connected \<subseteq> A\<union>B, so Ri \<subseteq> A or Ri \<subseteq> B.\<close>
+      have hRi_sub_AB: "\<And>Ri. Ri \<in> {R1, R2, R3} \<Longrightarrow> Ri \<subseteq> A \<union> B"
+        sorry \<comment> \<open>Ri \<subseteq> R1\<union>R2\<union>R3 = S2-theta \<subseteq> A\<union>B.\<close>
+      have hRi_in_comp: "\<And>Ri. Ri \<in> {R1, R2, R3} \<Longrightarrow> Ri \<subseteq> A \<or> Ri \<subseteq> B"
+        sorry \<comment> \<open>Ri connected \<subseteq> A\<union>B, {A,B} separation, Lemma\_23\_2.\<close>
       have hRie_sub_C: "Ri_e \<subseteq> C"
-        sorry \<comment> \<open>Ri\_e connected \<subseteq> A\<union>B, Ri\_e \<inter> C \<supseteq> e34 \<noteq> {}, Lemma\_23\_2 \<Rightarrow> Ri\_e \<subseteq> C.\<close>
+      proof -
+        from hRi_in_comp[OF hRie(1)] have "Ri_e \<subseteq> A \<or> Ri_e \<subseteq> B" .
+        moreover have "Ri_e \<inter> C \<noteq> {}" using hRie(2) he34C he34_ne by (by100 blast)
+        ultimately show ?thesis using hC hAB(2) by (by100 blast)
+      qed
       \<comment> \<open>The Rj containing D' cannot be \<subseteq> C (since D'\<inter>C = {}).\<close>
       from hD'_in_Ri obtain Ri_D where hRiD: "Ri_D \<in> {R1, R2, R3}" "D' \<subseteq> Ri_D"
         by blast
@@ -1637,17 +1656,44 @@ proof -
          If Ri\_D \<subseteq> C: D' \<subseteq> Ri\_D \<subseteq> C. D'\<inter>C = {}. Contradiction.
          So Ri\_D \<subseteq> D'. Combined with D' \<subseteq> Ri\_D: D' = Ri\_D.\<close>
       have hRiD_eq_D': "Ri_D = D'"
-        sorry \<comment> \<open>Ri\_D connected \<subseteq> A\<union>B, D'\<subseteq>Ri\_D, by Lemma\_23\_2: Ri\_D\<subseteq>C or D'.\<close>
+      proof -
+        from hRi_in_comp[OF hRiD(1)] have "Ri_D \<subseteq> A \<or> Ri_D \<subseteq> B" .
+        moreover have "Ri_D \<inter> D' \<noteq> {}" using hRiD(2) hD'_ne by (by100 blast)
+        ultimately have "Ri_D \<subseteq> D'"
+        proof -
+          assume h1: "Ri_D \<subseteq> A \<or> Ri_D \<subseteq> B" and h2: "Ri_D \<inter> D' \<noteq> {}"
+          have "\<not>(Ri_D \<subseteq> C)"
+          proof assume "Ri_D \<subseteq> C"
+            hence "D' \<subseteq> C" using hRiD(2) by (by100 blast)
+            thus False using hCD'_disj hD'_ne by (by100 blast)
+          qed
+          from hC show "Ri_D \<subseteq> D'"
+          proof
+            assume "C = A" hence "D' = B" unfolding D'_def by (by100 simp)
+            with h1 \<open>\<not>(Ri_D \<subseteq> C)\<close> \<open>C = A\<close> show ?thesis by (by100 blast)
+          next
+            assume "C = B" hence "D' = A" unfolding D'_def by (by100 simp)
+            with h1 \<open>\<not>(Ri_D \<subseteq> C)\<close> \<open>C = B\<close> show ?thesis by (by100 blast)
+          qed
+        qed
+        thus ?thesis using hRiD(2) by (by100 blast)
+      qed
       \<comment> \<open>Now: S2-D = C\<union>D'. D' = Ri\_D (a theta component). Ri\_e \<subseteq> C.
          The third Rk is \<subseteq> C (since Rk\<subseteq>D'=Ri\_D would mean Rk\<subseteq>Ri\_D, but Rk\<inter>Ri\_D = {}).\<close>
       obtain Rk where hRk: "Rk \<in> {R1, R2, R3}" "Rk \<noteq> Ri_e" "Rk \<noteq> Ri_D"
-        sorry \<comment> \<open>Three distinct components.\<close>
+        sorry \<comment> \<open>Pick third element from {R1,R2,R3} \<setminus> {Ri\_e, Ri\_D}. 6-case split.\<close>
       have hRk_sub_C: "Rk \<subseteq> C"
       proof -
-        have "Rk \<inter> Ri_D = {}" using hRk hRiD(1) hR(4,5,6) sorry
-        hence "Rk \<inter> D' = {}" using hRiD_eq_D' by (by100 simp)
-        moreover have "Rk \<subseteq> A \<union> B" using hRk(1) hR(7) htheta_compl_eq sorry
-        ultimately show ?thesis using hCD'_union by (by100 blast)
+        have hRk_disj_D': "Rk \<inter> D' = {}"
+        proof -
+          have "Rk \<inter> Ri_D = {}"
+          proof -
+            from hRk(1,3) hRiD(1) show ?thesis using hR(4,5,6) sorry
+          qed
+          thus ?thesis using hRiD_eq_D' by (by100 simp)
+        qed
+        have "Rk \<subseteq> A \<union> B" by (rule hRi_sub_AB[OF hRk(1)])
+        thus ?thesis using hRk_disj_D' hCD'_union by (by100 blast)
       qed
       \<comment> \<open>Now C = Ri\_e \<union> Rk \<union> (e12-{a1,a2}). D' = Ri\_D. S2-D = C \<union> D'.
          cl(D') = D' \<union> D (by SCC boundary meets component on D).
