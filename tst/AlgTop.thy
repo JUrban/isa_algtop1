@@ -6290,10 +6290,71 @@ next
     proof (rule exI[of _ V1], intro conjI)
       show "y \<in> V1" by (rule hV1(2))
       show "top1_evenly_covered_on E TE Y TY q V1"
-        sorry \<comment> \<open>Each p-slice W over U'' is connected (U'' path-connected \<Rightarrow> W homeo to U'').
-           By covering\_lift\_unique\_connected, q maps W entirely to one r-slice.
-           Those mapping to V1: q|\_W = (r|_{V1})^{-1} \<circ> p|\_W, homeomorphism.
-           Family = {W \<in> \<V>p | q(W) \<subseteq> V1}, is disjoint, open, covers q^{-1}(V1).\<close>
+      proof -
+        \<comment> \<open>Get p-slices over U''.\<close>
+        obtain \<W>p where h\<W>p_open: "\<forall>W\<in>\<W>p. openin_on E TE W"
+            and h\<W>p_disj: "\<forall>W\<in>\<W>p. \<forall>W'\<in>\<W>p. W \<noteq> W' \<longrightarrow> W \<inter> W' = {}"
+            and h\<W>p_union: "{x\<in>E. p x \<in> U''} = \<Union>\<W>p"
+            and h\<W>p_homeo: "\<forall>W\<in>\<W>p. top1_homeomorphism_on W (subspace_topology E TE W)
+                U'' (subspace_topology B TB U'') p"
+          using hU''_cov_p unfolding top1_evenly_covered_on_def
+          by (elim conjE exE) (by100 blast)
+        \<comment> \<open>Each p-slice W is connected (homeomorphic to path-connected U'').\<close>
+        \<comment> \<open>By lift uniqueness, q maps each W entirely into one r-slice.\<close>
+        \<comment> \<open>Family: those W mapping into V1.\<close>
+        let ?\<V>q = "{W \<in> \<W>p. \<exists>e \<in> W. q e \<in> V1}"
+        show ?thesis unfolding top1_evenly_covered_on_def
+        proof (intro conjI exI[of _ ?\<V>q])
+          show "openin_on Y TY V1" by (rule hV1_open)
+          show "\<forall>W\<in>?\<V>q. openin_on E TE W"
+            using h\<W>p_open by (by100 blast)
+          show "\<forall>W\<in>?\<V>q. \<forall>W'\<in>?\<V>q. W \<noteq> W' \<longrightarrow> W \<inter> W' = {}"
+            using h\<W>p_disj by (by100 blast)
+          \<comment> \<open>Key: each p-slice W is connected, so q maps W entirely into one r-slice.\<close>
+          have hW_connected: "\<forall>W\<in>\<W>p. top1_connected_on W (subspace_topology E TE W)"
+          proof (intro ballI)
+            fix W assume "W \<in> \<W>p"
+            have "top1_homeomorphism_on W (subspace_topology E TE W) U'' (subspace_topology B TB U'') p"
+              using h\<W>p_homeo \<open>W \<in> \<W>p\<close> by (by100 blast)
+            from homeomorphism_preserves_path_connected[OF _ hU''_pc] this
+            have "top1_path_connected_on W (subspace_topology E TE W)" sorry
+            thus "top1_connected_on W (subspace_topology E TE W)"
+              by (rule top1_path_connected_imp_connected)
+          qed
+          \<comment> \<open>For W \<in> \<W>p with q(e) \<in> V1 for some e \<in> W: q maps ALL of W into V1.\<close>
+          have hW_all_V1: "\<forall>W\<in>?\<V>q. \<forall>e\<in>W. q e \<in> V1"
+            sorry \<comment> \<open>Uses covering\_lift\_unique\_connected on connected W:
+               q and (r|_{V1})^{-1}\<circ>p agree at witness e, both lift p through r,
+               so q = (r|_{V1})^{-1}\<circ>p on W, mapping all of W to V1.\<close>
+          show "{x \<in> E. q x \<in> V1} = \<Union>?\<V>q"
+          proof (rule set_eqI, rule iffI)
+            fix x assume "x \<in> {x \<in> E. q x \<in> V1}"
+            hence hx: "x \<in> E" "q x \<in> V1" by (by100 blast)+
+            have "r (q x) \<in> U''"
+            proof -
+              have "q x \<in> V1" by (rule hx(2))
+              hence "q x \<in> \<Union>\<W>r" using hV1(1) by (by100 blast)
+              hence "q x \<in> {x\<in>Y. r x \<in> U''}" using h\<W>r_union sorry
+              thus ?thesis by (by100 blast)
+            qed
+            hence "p x \<in> U''" using hq_rp hx(1) sorry
+            hence "x \<in> {x\<in>E. p x \<in> U''}" using hx(1) by (by100 blast)
+            hence "x \<in> \<Union>\<W>p" using h\<W>p_union by (by100 simp)
+            then obtain W where "W \<in> \<W>p" "x \<in> W" by (by100 blast)
+            moreover have "W \<in> ?\<V>q" using \<open>W \<in> \<W>p\<close> \<open>x \<in> W\<close> hx(2) by (by100 blast)
+            ultimately show "x \<in> \<Union>?\<V>q" by (by100 blast)
+          next
+            fix x assume "x \<in> \<Union>?\<V>q"
+            then obtain W where "W \<in> ?\<V>q" "x \<in> W" by (by100 blast)
+            hence "x \<in> E" using h\<W>p_open unfolding openin_on_def sorry
+            moreover have "q x \<in> V1" using hW_all_V1 \<open>W \<in> ?\<V>q\<close> \<open>x \<in> W\<close> by (by100 blast)
+            ultimately show "x \<in> {x \<in> E. q x \<in> V1}" by (by100 blast)
+          qed
+          show "\<forall>W\<in>?\<V>q. top1_homeomorphism_on W (subspace_topology E TE W)
+              V1 (subspace_topology Y TY V1) q"
+            sorry \<comment> \<open>q|\_W = (r|_{V1})^{-1} \<circ> p|\_W = composition of homeomorphisms.\<close>
+        qed
+      qed
     qed
   qed
   show ?thesis
