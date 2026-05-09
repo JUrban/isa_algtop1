@@ -2395,6 +2395,13 @@ proof -
             ultimately have "?Arc3 - {a1,a2} \<subseteq> W12a \<union> (e12 \<union> ?Arc2)" by (by100 blast)
             thus ?thesis using hArc3_sub_J12 by (by100 blast)
           qed
+          have ha34_ne: "a3 \<noteq> a4"
+          proof assume "a3 = a4"
+            hence "{a1,a2,a3,a4} = {a1,a2,a3}" by (by100 blast)
+            hence "card {a1,a2,a3,a4} \<le> card {a1,a2,a3}" by (by100 simp)
+            also have "\<dots> \<le> 3" by (rule card_three_le)
+            finally show False using assms(2) by (by100 simp)
+          qed
           \<comment> \<open>Rk \<subseteq> W12b: if Rk \<subseteq> W12a, all of S2-J12 \<subseteq> W12a, W12b = {}.\<close>
           have hRk_b: "Rk \<subseteq> W12b"
           proof (rule ccontr)
@@ -2420,8 +2427,11 @@ proof -
                    But a4 \<in> Arc3-{a1,a2} \<subseteq> W12a. a4 \<in> W12a \<inter> W12b = {}. Contradiction!\<close>
                 have "a4 \<in> W12b"
                 proof -
-                  have "a4 \<in> closure_on top1_S2 top1_S2_topology Ri_e"
-                    sorry \<comment> \<open>a4 \<in> cl(e34-{a3,a4}) \<subseteq> cl(Ri\_e).\<close>
+                  have "a4 \<in> closure_on top1_S2 top1_S2_topology (e34 - {a3,a4})"
+                    using arc_endpoint_in_closure_of_interior[OF hS2_strict hS2_haus assms(6)
+                        assms(12) assms(18) ha34_ne] by (by100 blast)
+                  hence "a4 \<in> closure_on top1_S2 top1_S2_topology Ri_e"
+                    using closure_on_mono[OF hRie(2)] by (by100 blast)
                   hence "a4 \<in> closure_on top1_S2 top1_S2_topology W12b"
                     using closure_on_mono[OF \<open>Ri_e \<subseteq> W12b\<close>] by (by100 blast)
                   moreover have "closure_on top1_S2 top1_S2_topology W12b = W12b \<union> (e12 \<union> ?Arc2)"
@@ -2434,8 +2444,12 @@ proof -
                   ultimately have "a4 \<in> W12b \<union> (e12 \<union> ?Arc2)" by (by100 blast)
                   thus ?thesis using ha4_not_J12 by (by100 blast)
                 qed
-                moreover have "a4 \<in> W12a" using hArc3_a assms(3) ha4_not_J12
-                  sorry \<comment> \<open>a4 \<in> Arc3-{a1,a2} \<subseteq> W12a.\<close>
+                moreover have "a4 \<in> W12a"
+                proof -
+                  have "a4 \<in> ?Arc3 - {a1, a2}"
+                    using assms(21) ha2_ne_a4 ha4_ne_a1 unfolding top1_arc_endpoints_on_def by (by100 blast)
+                  thus ?thesis using hArc3_a by (by100 blast)
+                qed
                 ultimately show False using hW12(3) by (by100 blast)
               qed
               ultimately show ?thesis by (by100 blast)
@@ -2443,11 +2457,27 @@ proof -
             \<comment> \<open>All in W12a: S2-J12 = R1\<union>R2\<union>R3\<union>(Arc3-{a1,a2}) \<subseteq> W12a. W12b = {}.\<close>
             have "W12b = {}"
             proof -
-              have "R1 \<union> R2 \<union> R3 \<subseteq> W12a"
-                using hcase \<open>Rk \<subseteq> W12a\<close> \<open>Ri_e \<subseteq> W12a\<close> hRie(1) hRiD(1) hRk(1)
-                sorry \<comment> \<open>{Ri\_e,Ri\_D,Rk}={R1,R2,R3}, all \<subseteq> W12a.\<close>
-              hence "top1_S2 - (e12 \<union> ?Arc2) \<subseteq> W12a"
-                using hArc3_a hR(7) hArc3_sub_J12 sorry
+              have "R1 \<subseteq> W12a \<and> R2 \<subseteq> W12a \<and> R3 \<subseteq> W12a"
+              proof -
+                { fix R assume "R \<in> {R1, R2, R3}"
+                  hence "R = Ri_e \<or> R = Ri_D \<or> R = Rk"
+                    using hRie(1) hRiD(1) hRk(1) hRk(2,3) hRi_ne sorry
+                  hence "R \<subseteq> W12a"
+                    using hcase \<open>Rk \<subseteq> W12a\<close> \<open>Ri_e \<subseteq> W12a\<close> by (by100 blast) }
+                thus ?thesis by (by100 blast)
+              qed
+              hence "R1 \<union> R2 \<union> R3 \<subseteq> W12a" by (by100 blast)
+              moreover have "top1_S2 - (e12 \<union> ?Arc2) = R1 \<union> R2 \<union> R3 \<union> (?Arc3 - {a1,a2})"
+              proof -
+                have hS2J12_eq: "top1_S2 - (e12 \<union> ?Arc2) = (top1_S2 - ?theta) \<union> (?Arc3 - {a1, a2})"
+                proof -
+                  show ?thesis sorry \<comment> \<open>S2-J12 = (S2-theta) \<union> (Arc3-{a1,a2}). Set arithmetic.\<close>
+                qed
+                have "top1_S2 - ?theta = R1 \<union> R2 \<union> R3" using hR(7) by (by100 blast)
+                thus ?thesis using hS2J12_eq by (by100 simp)
+              qed
+              ultimately have "top1_S2 - (e12 \<union> ?Arc2) \<subseteq> W12a"
+                using hArc3_a by (by100 blast)
               thus ?thesis using hW12(3,4) by (by100 blast)
             qed
             thus False using hW12(2) by (by100 blast)
@@ -2468,8 +2498,11 @@ proof -
                   assume "Ri_e \<subseteq> W12b"
                   have "a4 \<in> W12b"
                   proof -
-                    have "a4 \<in> closure_on top1_S2 top1_S2_topology Ri_e"
-                      sorry
+                    have "a4 \<in> closure_on top1_S2 top1_S2_topology (e34 - {a3,a4})"
+                      using arc_endpoint_in_closure_of_interior[OF hS2_strict hS2_haus assms(6)
+                          assms(12) assms(18) ha34_ne] by (by100 blast)
+                    hence "a4 \<in> closure_on top1_S2 top1_S2_topology Ri_e"
+                      using closure_on_mono[OF hRie(2)] by (by100 blast)
                     hence "a4 \<in> closure_on top1_S2 top1_S2_topology W12b"
                       using closure_on_mono[OF \<open>Ri_e \<subseteq> W12b\<close>] by (by100 blast)
                     moreover have "closure_on top1_S2 top1_S2_topology W12b = W12b \<union> (e12 \<union> ?Arc2)"
@@ -2482,7 +2515,12 @@ proof -
                     ultimately have "a4 \<in> W12b \<union> (e12 \<union> ?Arc2)" by (by100 blast)
                     thus ?thesis using ha4_not_J12 by (by100 blast)
                   qed
-                  moreover have "a4 \<in> W12a" using hArc3_a sorry
+                  moreover have "a4 \<in> W12a"
+                  proof -
+                    have "a4 \<in> ?Arc3 - {a1, a2}"
+                      using assms(21) ha2_ne_a4 ha4_ne_a1 unfolding top1_arc_endpoints_on_def by (by100 blast)
+                    thus ?thesis using hArc3_a by (by100 blast)
+                  qed
                   ultimately show False using hW12(3) by (by100 blast)
                 qed
                 ultimately show ?thesis by (by100 blast)
