@@ -1516,7 +1516,24 @@ proof -
         have "compact (?R \<inter> (?bdy \<times> ?bdy))"
         proof -
           have "closed ?R" sorry \<comment> \<open>R is closed in R^4: finite union of closed sets.\<close>
-          moreover have "compact (?bdy \<times> ?bdy)" sorry
+          moreover have "compact ?bdy"
+          proof -
+            have "\<forall>i \<in> {..<length scheme}. compact (?edge i ` I_set)"
+            proof (intro ballI)
+              fix i assume "i \<in> {..<length scheme}"
+              let ?f = "\<lambda>t::real. ((1-t) * vx i + t * vx (Suc i mod length scheme),
+                  (1-t) * vy i + t * vy (Suc i mod length scheme))"
+              have "continuous_on UNIV ?f" by (intro continuous_intros)
+              hence "continuous_on I_set ?f" using continuous_on_subset by (by100 blast)
+              moreover have "compact I_set" unfolding top1_unit_interval_def by (by100 simp)
+              ultimately have "compact (?f ` I_set)" by (rule compact_continuous_image)
+              moreover have "?f ` I_set = ?edge i ` I_set" by (by100 simp)
+              ultimately show "compact (?edge i ` I_set)" by (by100 simp)
+            qed
+            moreover have "finite {..<length scheme}" by (by100 simp)
+            ultimately show ?thesis sorry
+          qed
+          hence "compact (?bdy \<times> ?bdy)" sorry \<comment> \<open>compact\_Times or directly.\<close>
           ultimately show "compact (?R \<inter> (?bdy \<times> ?bdy))" sorry
         qed
         \<comment> \<open>Bridge: compact (R^4) \<Rightarrow> top1\_compact\_on with subspace topology.\<close>
