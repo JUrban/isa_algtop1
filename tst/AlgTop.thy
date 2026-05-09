@@ -1044,7 +1044,55 @@ proof -
     qed
     ultimately show ?thesis by (by100 simp)
   qed
-  have hhausdorff: "is_hausdorff_on X TX" sorry
+  have hhausdorff: "is_hausdorff_on X TX"
+  proof -
+    \<comment> \<open>Extract P, q from scheme (again, for this scope).\<close>
+    obtain P q where hP: "top1_is_polygonal_region_on P (length scheme)"
+        and hq: "top1_quotient_map_on P
+            (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) X TX q"
+      by (rule quotient_of_scheme_extract[OF hsch])
+    let ?TP = "subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P"
+    \<comment> \<open>P is compact Hausdorff (metric space in R^2).\<close>
+    have hP_haus: "is_hausdorff_on P ?TP" sorry
+    have hP_compact: "top1_compact_on P ?TP" sorry
+    \<comment> \<open>q is a closed map: compact domain, any quotient from compact Hausdorff
+       with finite equivalence classes is a closed map.\<close>
+    have hq_closed: "top1_closed_map_on P ?TP X TX q" sorry
+    \<comment> \<open>Fibers are finite (at most 2 points per class for edge identifications).\<close>
+    \<comment> \<open>For Hausdorff: given x \<noteq> y in X, q\<inverse>({x}) and q\<inverse>({y}) are disjoint compact sets in P.
+       By normality of P (metric space): disjoint open nbhds U, V.
+       Saturate: U' = P - q\<inverse>(q(P-U)), V' = P - q\<inverse>(q(P-V)).
+       Then q(U') and q(V') are disjoint open nbhds of x,y in X.\<close>
+    show ?thesis unfolding is_hausdorff_on_def
+    proof (intro conjI)
+      show "is_topology_on X TX" using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
+    next
+      show "\<forall>x\<in>X. \<forall>y\<in>X. x \<noteq> y \<longrightarrow>
+          (\<exists>U V. neighborhood_of x X TX U \<and> neighborhood_of y X TX V \<and> U \<inter> V = {})"
+      proof (intro ballI impI)
+      fix x y assume "x \<in> X" "y \<in> X" "x \<noteq> y"
+      \<comment> \<open>Preimages: q\<inverse>({x}) and q\<inverse>({y}) are disjoint closed compact subsets of P.\<close>
+      let ?Fx = "{p \<in> P. q p = x}" and ?Fy = "{p \<in> P. q p = y}"
+      have hq_surj_loc: "q ` P = X" using hq unfolding top1_quotient_map_on_def by (by100 blast)
+      have hFx_ne: "?Fx \<noteq> {}" using \<open>x \<in> X\<close> hq_surj_loc by (by100 blast)
+      have hFy_ne: "?Fy \<noteq> {}" using \<open>y \<in> X\<close> hq_surj_loc by (by100 blast)
+      have hFxy_disj: "?Fx \<inter> ?Fy = {}" using \<open>x \<noteq> y\<close> by (by100 blast)
+      have hFx_closed: "closedin_on P ?TP ?Fx" sorry \<comment> \<open>Preimage of point under continuous q.\<close>
+      have hFy_closed: "closedin_on P ?TP ?Fy" sorry
+      have hFx_compact: "compact ?Fx" sorry \<comment> \<open>Closed subset of compact P.\<close>
+      have hFy_compact: "compact ?Fy" sorry
+      \<comment> \<open>P is a metric space (subspace of R^2). Disjoint compact sets have positive distance.
+         Hence disjoint open neighborhoods.\<close>
+      have "\<exists>U V. U \<in> ?TP \<and> V \<in> ?TP \<and> ?Fx \<subseteq> U \<and> ?Fy \<subseteq> V \<and> U \<inter> V = {}"
+        sorry \<comment> \<open>Normality of metric space (compact Hausdorff \<Rightarrow> normal).\<close>
+      then obtain U V where hUV: "U \<in> ?TP" "V \<in> ?TP" "?Fx \<subseteq> U" "?Fy \<subseteq> V" "U \<inter> V = {}"
+        by (metis (no_types))
+      \<comment> \<open>Push to X: q(P-V) is closed (q closed map), so X-q(P-V) is open containing x.\<close>
+      show "\<exists>U V. neighborhood_of x X TX U \<and> neighborhood_of y X TX V \<and> U \<inter> V = {}"
+        sorry \<comment> \<open>Saturate U,V via q, get disjoint open nbhds in X.\<close>
+      qed
+    qed
+  qed
   show ?thesis using hcompact hhausdorff by (by100 blast)
 qed
 
