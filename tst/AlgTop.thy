@@ -1286,8 +1286,34 @@ proof -
       \<comment> \<open>Interior points have singleton q-fibers (from hinterior\_loc).\<close>
       \<comment> \<open>So R \<subseteq> diagonal \<union> (?bdy \<times> ?bdy).\<close>
       have hR_sub: "?R \<subseteq> {(a, b). a \<in> P \<and> b \<in> P \<and> a = b} \<union> (?bdy \<times> ?bdy)"
-        sorry \<comment> \<open>If a \<in> P, b \<in> P, q a = q b, a \<noteq> b, then both a, b \<in> ?bdy
-               (contrapositive of hinterior\_loc).\<close>
+      proof
+        fix x assume "x \<in> ?R"
+        then obtain a b where hx: "x = (a, b)" "a \<in> P" "b \<in> P" "q a = q b"
+          by (cases x) (by100 blast)
+        show "x \<in> {(a, b). a \<in> P \<and> b \<in> P \<and> a = b} \<union> (?bdy \<times> ?bdy)"
+        proof (cases "a = b")
+          case True thus ?thesis using hx by (by100 blast)
+        next
+          case False
+          have "a \<in> ?bdy"
+          proof (rule ccontr)
+            assume "a \<notin> ?bdy"
+            hence "\<forall>i<length scheme. \<forall>t\<in>I_set. a \<noteq> ?edge i t" by (by100 blast)
+            from hinterior_loc hx(2) this hx(3) hx(4)
+            have "a = b" by (by100 blast)
+            thus False using False by (by100 simp)
+          qed
+          have "b \<in> ?bdy"
+          proof (rule ccontr)
+            assume "b \<notin> ?bdy"
+            hence "\<forall>i<length scheme. \<forall>t\<in>I_set. b \<noteq> ?edge i t" by (by100 blast)
+            from hinterior_loc hx(3) this hx(2) hx(4)[symmetric]
+            have "b = a" by (by100 blast)
+            thus False using False by (by100 simp)
+          qed
+          from \<open>a \<in> ?bdy\<close> \<open>b \<in> ?bdy\<close> show ?thesis using hx(1) by (by100 blast)
+        qed
+      qed
       \<comment> \<open>The diagonal is closed (P\<times>P Hausdorff, equalizer of pi1, pi2).\<close>
       have hPP_haus: "is_hausdorff_on (P \<times> P) (product_topology_on ?TP ?TP)"
         using hR2_prod_haus[OF hP_haus hP_haus] .
