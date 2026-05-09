@@ -91,9 +91,27 @@ proof -
      and \<alpha>*\<beta> traverses C exactly once,
      j_*: \<pi>_1(C, c0) \<rightarrow> \<pi>_1(X, c0) is an isomorphism.\<close>
   \<comment> \<open>Step 1: C \<subseteq> X (since p \<notin> C and q \<notin> C).\<close>
-  have hC_sub_X: "C \<subseteq> ?X"
-    sorry
-  have hc0_X: "c0 \<in> ?X" using assms(40) hC_sub_X sorry
+  have hC_sub_S2: "C \<subseteq> top1_S2" using assms(4,5,6,7,39) by (by100 blast)
+  have hp_not_C: "p \<notin> C"
+  proof -
+    have "p \<in> e13" "p \<noteq> a1" "p \<noteq> a3" using assms(37) by (by100 blast)+
+    have h1: "p \<notin> e12" using \<open>p \<in> e13\<close> \<open>p \<noteq> a1\<close> assms(28) by (by100 blast)
+    have h2: "p \<notin> e23" using \<open>p \<in> e13\<close> \<open>p \<noteq> a3\<close> assms(29) by (by100 blast)
+    have h3: "p \<notin> e34" using \<open>p \<in> e13\<close> \<open>p \<noteq> a3\<close> assms(30) by (by100 blast)
+    have h4: "p \<notin> e41" using \<open>p \<in> e13\<close> \<open>p \<noteq> a1\<close> assms(31) by (by100 blast)
+    show ?thesis using h1 h2 h3 h4 assms(39) by (by100 blast)
+  qed
+  have hq_not_C: "q \<notin> C"
+  proof -
+    have "q \<in> e24" "q \<noteq> a2" "q \<noteq> a4" using assms(38) by (by100 blast)+
+    have h1: "q \<notin> e12" using \<open>q \<in> e24\<close> \<open>q \<noteq> a2\<close> assms(33) by (by100 blast)
+    have h2: "q \<notin> e23" using \<open>q \<in> e24\<close> \<open>q \<noteq> a2\<close> assms(34) by (by100 blast)
+    have h3: "q \<notin> e34" using \<open>q \<in> e24\<close> \<open>q \<noteq> a4\<close> assms(35) by (by100 blast)
+    have h4: "q \<notin> e41" using \<open>q \<in> e24\<close> \<open>q \<noteq> a4\<close> assms(36) by (by100 blast)
+    show ?thesis using h1 h2 h3 h4 assms(39) by (by100 blast)
+  qed
+  have hC_sub_X: "C \<subseteq> ?X" using hC_sub_S2 hp_not_C hq_not_C by (by100 blast)
+  have hc0_X: "c0 \<in> ?X" using assms(40) hC_sub_X by (by100 blast)
   \<comment> \<open>Step 2: The existing Lemma_65_1 gives a nontrivial loop \<alpha>*\<beta> at some x \<in> C.
      This establishes that j_* is nontrivial.\<close>
   \<comment> \<open>Step 3: Show j_* is surjective (the hard part).
