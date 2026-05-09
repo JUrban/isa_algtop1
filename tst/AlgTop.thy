@@ -2392,6 +2392,13 @@ proof -
         qed
         \<comment> \<open>In whichever W12-side Ri\_D is, Arc3-{a1,a2} goes there too (via closure).
            Then Rk is on the other side. Apply hcl\_comp.\<close>
+        have ha34_ne: "a3 \<noteq> a4"
+        proof assume "a3 = a4"
+          hence "{a1,a2,a3,a4} = {a1,a2,a3}" by (by100 blast)
+          hence "card {a1,a2,a3,a4} \<le> card {a1,a2,a3}" by (by100 simp)
+          also have "\<dots> \<le> 3" by (rule card_three_le)
+          finally show False using assms(2) by (by100 simp)
+        qed
         from hRiD_in_W12 show ?thesis
         proof
           assume hcase: "Ri_D \<subseteq> W12a"
@@ -2409,13 +2416,6 @@ proof -
             qed
             ultimately have "?Arc3 - {a1,a2} \<subseteq> W12a \<union> (e12 \<union> ?Arc2)" by (by100 blast)
             thus ?thesis using hArc3_sub_J12 by (by100 blast)
-          qed
-          have ha34_ne: "a3 \<noteq> a4"
-          proof assume "a3 = a4"
-            hence "{a1,a2,a3,a4} = {a1,a2,a3}" by (by100 blast)
-            hence "card {a1,a2,a3,a4} \<le> card {a1,a2,a3}" by (by100 simp)
-            also have "\<dots> \<le> 3" by (rule card_three_le)
-            finally show False using assms(2) by (by100 simp)
           qed
           \<comment> \<open>Rk \<subseteq> W12b: if Rk \<subseteq> W12a, all of S2-J12 \<subseteq> W12a, W12b = {}.\<close>
           have hRk_b: "Rk \<subseteq> W12b"
@@ -2618,9 +2618,177 @@ proof -
             by (rule hcl_comp[OF hJ12_scc hW12(2) hW12(1) _ _ hW12(6) hW12(5) hW12(8) hW12(7)])
           thus ?thesis using \<open>Rk = W12b\<close> by (by100 simp)
         next
-          assume "Ri_D \<subseteq> W12b"
-          \<comment> \<open>Symmetric: W12a = Rk.\<close>
-          show ?thesis sorry
+          assume hcase_b: "Ri_D \<subseteq> W12b"
+          \<comment> \<open>Symmetric of W12a case: Arc3 \<subseteq> W12b, Rk \<subseteq> W12a, W12a = Rk.\<close>
+          have hArc3_b: "?Arc3 - {a1,a2} \<subseteq> W12b"
+          proof -
+            have "closure_on top1_S2 top1_S2_topology W12b = W12b \<union> (e12 \<union> ?Arc2)"
+            proof -
+              have "W12b \<inter> W12a = {}" using hW12(3) by (by100 blast)
+              moreover have "W12b \<union> W12a = top1_S2 - (e12 \<union> ?Arc2)" using hW12(4) by (by100 blast)
+              ultimately show ?thesis
+                by (rule hcl_comp[OF hJ12_scc hW12(2) hW12(1) _ _ hW12(6) hW12(5) hW12(8) hW12(7)])
+            qed
+            moreover have "?Arc3 - {a1,a2} \<subseteq> closure_on top1_S2 top1_S2_topology W12b"
+              using closure_on_mono[OF hcase_b] hArc3_in_cl_RiD by (by100 blast)
+            ultimately have "?Arc3 - {a1,a2} \<subseteq> W12b \<union> (e12 \<union> ?Arc2)" by (by100 blast)
+            thus ?thesis using hArc3_sub_J12 by (by100 blast)
+          qed
+          have hRk_a: "Rk \<subseteq> W12a"
+          proof (rule ccontr)
+            assume "\<not> Rk \<subseteq> W12a"
+            with hRk_in_W12 have "Rk \<subseteq> W12b" by (by100 blast)
+            have "Ri_e \<subseteq> W12b"
+            proof -
+              have "Ri_e \<subseteq> W12a \<or> Ri_e \<subseteq> W12b"
+              proof -
+                have hRie_conn_loc3: "top1_connected_on Ri_e (subspace_topology top1_S2 top1_S2_topology Ri_e)"
+                  using hRie(1) hR(8,9,10) by (by100 blast)
+                have "subspace_topology top1_S2 top1_S2_topology Ri_e =
+                    subspace_topology (top1_S2-(e12\<union>?Arc2))
+                        (subspace_topology top1_S2 top1_S2_topology (top1_S2-(e12\<union>?Arc2))) Ri_e"
+                  using subspace_topology_trans[of Ri_e "top1_S2-(e12\<union>?Arc2)" top1_S2 top1_S2_topology]
+                      hRie_sub by (by100 simp)
+                hence hRie_cs3: "top1_connected_on Ri_e
+                    (subspace_topology (top1_S2-(e12\<union>?Arc2))
+                        (subspace_topology top1_S2 top1_S2_topology (top1_S2-(e12\<union>?Arc2))) Ri_e)"
+                  using hRie_conn_loc3 by (by100 simp)
+                from Lemma_23_2[OF hTJ12 hSep12 hRie_sub hRie_cs3] show ?thesis by (by100 blast)
+              qed
+              moreover have "\<not> (Ri_e \<subseteq> W12a)"
+              proof
+                assume "Ri_e \<subseteq> W12a"
+                have "a4 \<in> W12a"
+                proof -
+                  have "a4 \<in> closure_on top1_S2 top1_S2_topology (e34 - {a3,a4})"
+                    using arc_endpoint_in_closure_of_interior[OF hS2_strict hS2_haus assms(6)
+                        assms(12) assms(18) ha34_ne] by (by100 blast)
+                  hence "a4 \<in> closure_on top1_S2 top1_S2_topology Ri_e"
+                    using closure_on_mono[OF hRie(2)] by (by100 blast)
+                  hence "a4 \<in> closure_on top1_S2 top1_S2_topology W12a"
+                    using closure_on_mono[OF \<open>Ri_e \<subseteq> W12a\<close>] by (by100 blast)
+                  moreover have "closure_on top1_S2 top1_S2_topology W12a = W12a \<union> (e12 \<union> ?Arc2)"
+                    by (rule hcl_comp[OF hJ12_scc hW12(1) hW12(2) hW12(3) hW12(4)
+                        hW12(5) hW12(6) hW12(7) hW12(8)])
+                  ultimately have "a4 \<in> W12a \<union> (e12 \<union> ?Arc2)" by (by100 blast)
+                  thus ?thesis using ha4_not_J12 by (by100 blast)
+                qed
+                moreover have "a4 \<in> W12b"
+                proof -
+                  have "a4 \<in> ?Arc3 - {a1, a2}"
+                    using assms(21) ha2_ne_a4 ha4_ne_a1 unfolding top1_arc_endpoints_on_def by (by100 blast)
+                  thus ?thesis using hArc3_b by (by100 blast)
+                qed
+                ultimately show False using hW12(3) by (by100 blast)
+              qed
+              ultimately show ?thesis by (by100 blast)
+            qed
+            \<comment> \<open>All in W12b: W12a = {}.\<close>
+            { fix R assume "R \<in> {R1, R2, R3}"
+              have "R = Ri_e \<or> R = Ri_D \<or> R = Rk"
+                using \<open>R \<in> {R1, R2, R3}\<close> hRie(1) hRiD(1) hRk(1) hRk(2,3) hRi_ne
+                by (metis (no_types) insertE singletonD)
+              hence "R \<subseteq> W12b"
+                using hcase_b \<open>Rk \<subseteq> W12b\<close> \<open>Ri_e \<subseteq> W12b\<close> by (by100 blast) }
+            hence "R1 \<union> R2 \<union> R3 \<subseteq> W12b" by (by100 blast)
+            hence "top1_S2 - (e12 \<union> ?Arc2) \<subseteq> W12b"
+              using hArc3_b hS2J12_eq hR(7) by (by100 simp)
+            hence "W12a = {}" using hW12(3,4) by (by100 blast)
+            thus False using hW12(1) by (by100 blast)
+          qed
+          \<comment> \<open>W12a = Rk.\<close>
+          have "Rk = W12a"
+          proof -
+            have "W12a \<subseteq> Rk"
+            proof
+              fix x assume "x \<in> W12a"
+              hence "x \<in> top1_S2 - (e12 \<union> ?Arc2)" using hW12(4) by (by100 blast)
+              hence "x \<in> (top1_S2 - ?theta) \<union> (?Arc3 - {a1,a2})" using hS2J12_eq by (by100 blast)
+              hence "x \<in> R1\<union>R2\<union>R3\<union>(?Arc3-{a1,a2})" using hR(7) by (by100 blast)
+              moreover have "x \<notin> W12b" using \<open>x \<in> W12a\<close> hW12(3) by (by100 blast)
+              hence "x \<notin> Ri_e" "x \<notin> Ri_D" "x \<notin> ?Arc3 - {a1,a2}"
+              proof -
+                have "Ri_e \<subseteq> W12b"
+                proof -
+                  have "Ri_e \<subseteq> W12a \<or> Ri_e \<subseteq> W12b"
+                  proof -
+                    have hRie_conn_loc4: "top1_connected_on Ri_e (subspace_topology top1_S2 top1_S2_topology Ri_e)"
+                      using hRie(1) hR(8,9,10) by (by100 blast)
+                    have "subspace_topology top1_S2 top1_S2_topology Ri_e =
+                        subspace_topology (top1_S2-(e12\<union>?Arc2))
+                            (subspace_topology top1_S2 top1_S2_topology (top1_S2-(e12\<union>?Arc2))) Ri_e"
+                      using subspace_topology_trans[of Ri_e "top1_S2-(e12\<union>?Arc2)" top1_S2 top1_S2_topology]
+                          hRie_sub by (by100 simp)
+                    hence hRie_cs4: "top1_connected_on Ri_e
+                        (subspace_topology (top1_S2-(e12\<union>?Arc2))
+                            (subspace_topology top1_S2 top1_S2_topology (top1_S2-(e12\<union>?Arc2))) Ri_e)"
+                      using hRie_conn_loc4 by (by100 simp)
+                    from Lemma_23_2[OF hTJ12 hSep12 hRie_sub hRie_cs4] show ?thesis by (by100 blast)
+                  qed
+                  moreover have "\<not>(Ri_e \<subseteq> W12a)"
+                  proof
+                    assume "Ri_e \<subseteq> W12a"
+                    have "a4 \<in> W12a"
+                    proof -
+                      have "a4 \<in> closure_on top1_S2 top1_S2_topology (e34 - {a3,a4})"
+                        using arc_endpoint_in_closure_of_interior[OF hS2_strict hS2_haus assms(6)
+                            assms(12) assms(18) ha34_ne] by (by100 blast)
+                      hence "a4 \<in> closure_on top1_S2 top1_S2_topology Ri_e"
+                        using closure_on_mono[OF hRie(2)] by (by100 blast)
+                      hence "a4 \<in> closure_on top1_S2 top1_S2_topology W12a"
+                        using closure_on_mono[OF \<open>Ri_e \<subseteq> W12a\<close>] by (by100 blast)
+                      moreover have "closure_on top1_S2 top1_S2_topology W12a = W12a \<union> (e12 \<union> ?Arc2)"
+                        by (rule hcl_comp[OF hJ12_scc hW12(1) hW12(2) hW12(3) hW12(4)
+                            hW12(5) hW12(6) hW12(7) hW12(8)])
+                      ultimately have "a4 \<in> W12a \<union> (e12 \<union> ?Arc2)" by (by100 blast)
+                      thus ?thesis using ha4_not_J12 by (by100 blast)
+                    qed
+                    moreover have "a4 \<in> W12b"
+                    proof -
+                      have "a4 \<in> ?Arc3 - {a1, a2}"
+                        using assms(21) ha2_ne_a4 ha4_ne_a1 unfolding top1_arc_endpoints_on_def by (by100 blast)
+                      thus ?thesis using hArc3_b by (by100 blast)
+                    qed
+                    ultimately show False using hW12(3) by (by100 blast)
+                  qed
+                  ultimately show ?thesis by (by100 blast)
+                qed
+                thus "x \<notin> Ri_e" using \<open>x \<notin> W12b\<close> by (by100 blast)
+                show "x \<notin> Ri_D" using \<open>x \<notin> W12b\<close> hcase_b by (by100 blast)
+                show "x \<notin> ?Arc3 - {a1,a2}" using \<open>x \<notin> W12b\<close> hArc3_b by (by100 blast)
+              qed
+              ultimately have "x \<in> R1 \<union> R2 \<union> R3" by (by100 blast)
+              hence "x \<in> R1 \<or> x \<in> R2 \<or> x \<in> R3" by (by100 blast)
+              thus "x \<in> Rk"
+              proof (elim disjE)
+                assume "x \<in> R1"
+                have "R1 = Ri_e \<or> R1 = Ri_D \<or> R1 = Rk"
+                  using hRie(1) hRiD(1) hRk(1) hRk(2,3) hRi_ne
+                  by (metis (no_types) insertE singletonD)
+                hence "x \<in> Ri_e \<or> x \<in> Ri_D \<or> x \<in> Rk" using \<open>x \<in> R1\<close> by (by100 blast)
+                thus ?thesis using \<open>x \<notin> Ri_e\<close> \<open>x \<notin> Ri_D\<close> by (by100 blast)
+              next
+                assume "x \<in> R2"
+                have "R2 = Ri_e \<or> R2 = Ri_D \<or> R2 = Rk"
+                  using hRie(1) hRiD(1) hRk(1) hRk(2,3) hRi_ne
+                  by (metis (no_types) insertE singletonD)
+                hence "x \<in> Ri_e \<or> x \<in> Ri_D \<or> x \<in> Rk" using \<open>x \<in> R2\<close> by (by100 blast)
+                thus ?thesis using \<open>x \<notin> Ri_e\<close> \<open>x \<notin> Ri_D\<close> by (by100 blast)
+              next
+                assume "x \<in> R3"
+                have "R3 = Ri_e \<or> R3 = Ri_D \<or> R3 = Rk"
+                  using hRie(1) hRiD(1) hRk(1) hRk(2,3) hRi_ne
+                  by (metis (no_types) insertE singletonD)
+                hence "x \<in> Ri_e \<or> x \<in> Ri_D \<or> x \<in> Rk" using \<open>x \<in> R3\<close> by (by100 blast)
+                thus ?thesis using \<open>x \<notin> Ri_e\<close> \<open>x \<notin> Ri_D\<close> by (by100 blast)
+              qed
+            qed
+            thus ?thesis using hRk_a by (by100 blast)
+          qed
+          have "closure_on top1_S2 top1_S2_topology W12a = W12a \<union> (e12 \<union> ?Arc2)"
+            by (rule hcl_comp[OF hJ12_scc hW12(1) hW12(2) hW12(3) hW12(4)
+                hW12(5) hW12(6) hW12(7) hW12(8)])
+          thus ?thesis using \<open>Rk = W12a\<close> by (by100 simp)
         qed
       qed
       have hcl_Rk_J13: "closure_on top1_S2 top1_S2_topology Rk = Rk \<union> (e12 \<union> ?Arc3)"
