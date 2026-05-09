@@ -139,10 +139,19 @@ proof -
      Proof: G \<cong> Z^S_i, so G/2G \<cong> (Z/2Z)^S_i, hence |G/2G| = 2^|S_i|.\<close>
   have hfinS1: "finite S1" by (rule assms(3))
   have hfinS2: "finite S2" by (rule assms(4))
+  \<comment> \<open>Helper: for free abelian G on finite basis S, |G/2G| = 2^|S|.\<close>
+  have hcard_helper: "\<And>S iota. top1_is_free_abelian_group_full_on G mul e invg iota S \<Longrightarrow>
+      finite S \<Longrightarrow>
+      card (top1_quotient_group_carrier_on G mul ?twoG) = 2 ^ card S"
+    sorry \<comment> \<open>Free abelian mod 2: G/2G \<cong> (Z/2Z)^S, hence |G/2G| = 2^|S|.
+           Proof sketch: define \<phi>: G \<rightarrow> (S\<rightarrow>Z/2Z) by \<phi>(g)(s) = c_s mod 2
+           where g = \<Sigma> c_s \<cdot> \<iota>(s). Well-defined by independence.
+           Surjective: for any f:S\<rightarrow>{0,1}, take g = \<Sigma> f(s)\<cdot>\<iota>(s).
+           Kernel = 2G. So G/2G \<cong> (S\<rightarrow>Z/2Z). |S\<rightarrow>{0,1}| = 2^|S|.\<close>
   have hcard1: "card (top1_quotient_group_carrier_on G mul ?twoG) = 2 ^ card S1"
-    sorry \<comment> \<open>G \<cong> Z^{S1} implies G/2G \<cong> (Z/2Z)^{S1}, so |G/2G| = 2^|S1|.\<close>
+    by (rule hcard_helper[OF assms(1) hfinS1])
   have hcard2: "card (top1_quotient_group_carrier_on G mul ?twoG) = 2 ^ card S2"
-    sorry \<comment> \<open>G \<cong> Z^{S2} implies G/2G \<cong> (Z/2Z)^{S2}, so |G/2G| = 2^|S2|.\<close>
+    by (rule hcard_helper[OF assms(2) hfinS2])
   \<comment> \<open>Step 2: 2^|S1| = 2^|S2| implies |S1| = |S2|.\<close>
   have "card S1 = card S2"
   proof -
