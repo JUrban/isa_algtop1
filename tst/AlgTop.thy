@@ -1541,8 +1541,30 @@ proof -
            so R\<inter>bdy\<times>bdy is bounded. Need closedness to get compactness.\<close>
         \<comment> \<open>Alternative: show R\<inter>bdy\<times>bdy is ITSELF a finite union of compact sets.\<close>
         have "compact (?R \<inter> (?bdy \<times> ?bdy))"
-          sorry \<comment> \<open>R\<inter>bdy\<times>bdy = diagonal\_on\_bdy \<union> edge\_pair\_curves.
-                 Each compact. Finite union compact (compact\_Union).\<close>
+        proof -
+          \<comment> \<open>R\<inter>bdy\<times>bdy \<subseteq> diagonal\_on\_bdy \<union> edge\_pair\_curves.\<close>
+          \<comment> \<open>Each curve is compact (continuous image of compact [0,1]).\<close>
+          \<comment> \<open>Diagonal on bdy: image of bdy under x\<mapsto>(x,x). Compact.\<close>
+          let ?D = "(\<lambda>x. (x, x)) ` ?bdy"
+          have hD_compact: "compact ?D"
+          proof -
+            have "continuous_on ?bdy (\<lambda>x. (x, x))" by (intro continuous_intros)
+            thus ?thesis using compact_continuous_image hbdy_compact_HA by (by100 blast)
+          qed
+          \<comment> \<open>Edge pair curves: for each (i,j) with same label.\<close>
+          \<comment> \<open>?R \<inter> (?bdy \<times> ?bdy) \<subseteq> ?D \<union> (edge pair curves). Plus reverse.\<close>
+          \<comment> \<open>Since both directions need the scheme structure,\<close>
+          \<comment> \<open>we show R\<inter>bdy\<times>bdy is closed in the compact bdy\<times>bdy.\<close>
+          \<comment> \<open>R\<inter>bdy\<times>bdy closed: equal to ?D \<union> finite union of compact sets.\<close>
+          \<comment> \<open>?D compact \<Rightarrow> closed (in Hausdorff R^4). Each edge pair compact \<Rightarrow> closed.\<close>
+          \<comment> \<open>Finite union of closed = closed. Closed subset of compact = compact.\<close>
+          have hR_bdy_closed_HA: "closed (?R \<inter> (?bdy \<times> ?bdy))"
+            sorry \<comment> \<open>closed = finite union of closed (compact) sets in Hausdorff R^4.\<close>
+          from compact_Int_closed[OF hbdybdy_compact_HA hR_bdy_closed_HA]
+          have "compact ((?bdy \<times> ?bdy) \<inter> (?R \<inter> (?bdy \<times> ?bdy)))" .
+          moreover have "(?bdy \<times> ?bdy) \<inter> (?R \<inter> (?bdy \<times> ?bdy)) = ?R \<inter> (?bdy \<times> ?bdy)" by auto
+          ultimately show "compact (?R \<inter> (?bdy \<times> ?bdy))" by simp
+        qed
         \<comment> \<open>Step 4: Bridge compact to top1\_compact\_on.\<close>
         hence "top1_compact_on (?R \<inter> (?bdy \<times> ?bdy))
             (subspace_topology (UNIV :: ((real \<times> real) \<times> (real \<times> real)) set)
