@@ -139,7 +139,9 @@ proof -
         (top1_fundamental_group_mul ?X ?TX c0)
         (top1_fundamental_group_induced_on C (subspace_topology ?X ?TX C) c0 ?X ?TX c0 (\<lambda>x. x))"
       by (rule subspace_inclusion_induced_hom[OF hTX hC_sub_X assms(40)])
-    show ?thesis using h hTC_eq sorry
+    have hTC_eq2: "subspace_topology ?X ?TX C = ?TC"
+      by (rule hTC_eq)
+    show ?thesis using h unfolding hTC_eq2 .
   qed
   have hj_inj: "inj_on (top1_fundamental_group_induced_on C ?TC c0 ?X ?TX c0 (\<lambda>x. x))
       (top1_fundamental_group_carrier C ?TC c0)"
@@ -154,10 +156,13 @@ proof -
     sorry \<comment> \<open>Main content: SvK with U, V simply connected + U\<inter>V two components
            \<Rightarrow> \<alpha>*\<beta> generates \<pi>_1(X) \<Rightarrow> j_* surjective.\<close>
   \<comment> \<open>Step 5: Combine homomorphism + injective + surjective = isomorphism.\<close>
+  have hj_bij: "bij_betw (top1_fundamental_group_induced_on C ?TC c0 ?X ?TX c0 (\<lambda>x. x))
+      (top1_fundamental_group_carrier C ?TC c0)
+      (top1_fundamental_group_carrier ?X ?TX c0)"
+    unfolding bij_betw_def using hj_inj hj_surj by (by100 blast)
   show ?thesis
-    using hj_hom hj_inj hj_surj
     unfolding top1_groups_isomorphic_on_def top1_group_iso_on_def
-    sorry
+    using hj_hom hj_bij by (by100 blast)
 qed
 
 (** from \<S>65 Theorem 65.2: inclusion C \<rightarrow> S^2 - p - q induces fundamental group iso **)
