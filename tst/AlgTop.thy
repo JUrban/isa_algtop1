@@ -34,8 +34,6 @@ lemma Lemma_65_1_K4_subgraph:
     and e12 e23 e34 e41 e13 e24 :: "(real \<times> real \<times> real) set"
     and C :: "(real \<times> real \<times> real) set"
     and p q :: "real \<times> real \<times> real"
-    and f :: "real \<Rightarrow> real \<times> real \<times> real"
-    and x0 :: "real \<times> real \<times> real"
   assumes "is_topology_on_strict top1_S2 top1_S2_topology"
       \<comment> \<open>K_4 structure: 4 distinct vertices on S^2, plus 6 arcs between them.\<close>
       and "card {a1, a2, a3, a4} = 4"
@@ -68,13 +66,11 @@ lemma Lemma_65_1_K4_subgraph:
       and "p \<in> e13 - {a1, a3}" and "q \<in> e24 - {a2, a4}"
       \<comment> \<open>C is the 4-cycle a_1 a_2 a_3 a_4 a_1.\<close>
       and "C = e12 \<union> e23 \<union> e34 \<union> e41"
-      \<comment> \<open>f is a loop at x_0 in S^2-{p,q} whose image is C.\<close>
-      and "top1_is_loop_on (top1_S2 - {p} - {q})
-             (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p} - {q})) x0 f"
-      and "f ` I_set = C"
-  shows "\<not> top1_path_homotopic_on (top1_S2 - {p} - {q})
-           (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p} - {q}))
-           x0 x0 f (top1_constant_path x0)"
+  shows "\<exists>x \<in> C. \<exists>g. top1_is_loop_on (top1_S2 - {p} - {q})
+             (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p} - {q})) x g
+           \<and> \<not> top1_path_homotopic_on (top1_S2 - {p} - {q})
+               (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p} - {q}))
+               x x g (top1_constant_path x)"
 proof -
   \<comment> \<open>Munkres 65.1: The loop f traverses the 4-cycle a1-a2-a3-a4-a1 in S^2-{p,q}.
      p lies in the interior of e13 and q in e24.
@@ -3668,9 +3664,20 @@ proof -
       (top1_path_product \<alpha> \<beta>) (top1_constant_path x)"
     by (rule Theorem_63_1_loop_nontrivial[OF hTX hU'_open_X hV'_open_X hU'V'_union
         hAB'(1,2) hAB'(3,4) hx(1) hy(1) h\<alpha>_X h\<beta>_X])
-  \<comment> \<open>Step 7: f is homotopic to \<alpha>*\<beta> (both traverse C), so f is nontrivial.\<close>
+  \<comment> \<open>Step 7: \<alpha>*\<beta> is a non-trivial loop at x whose image lies in C.\<close>
+  have hx_in_C: "x \<in> C"
+    using hx(2) assms(39) by (by100 blast)
+  have h\<alpha>\<beta>_loop: "top1_is_loop_on ?X ?TX x (top1_path_product \<alpha> \<beta>)"
+  proof -
+    have h\<alpha>_in_X: "top1_is_path_on ?X ?TX x y \<alpha>"
+      by (rule path_in_subspace_is_path_in_ambient'[OF hTX hU'_sub_X h\<alpha>_X])
+    have h\<beta>_in_X: "top1_is_path_on ?X ?TX y x \<beta>"
+      by (rule path_in_subspace_is_path_in_ambient'[OF hTX hV'_sub_X h\<beta>_X])
+    show ?thesis unfolding top1_is_loop_on_def
+      by (rule top1_path_product_is_path[OF hTX h\<alpha>_in_X h\<beta>_in_X])
+  qed
   show ?thesis
-    sorry \<comment> \<open>Transfer: f ~ \<alpha>*\<beta> (since both are loops on C traversing in same direction).\<close>
+    using hx_in_C h\<alpha>\<beta>_loop h\<alpha>\<beta>_nontrivial by (by100 blast)
 qed
 
 (** from \<S>65 Theorem 65.2: inclusion C \<rightarrow> S^2 - p - q induces fundamental group iso **)
