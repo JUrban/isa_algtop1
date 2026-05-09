@@ -1633,9 +1633,35 @@ proof -
         by blast
       \<comment> \<open>Helper: each Ri is connected \<subseteq> A\<union>B, so Ri \<subseteq> A or Ri \<subseteq> B.\<close>
       have hRi_sub_AB: "\<And>Ri. Ri \<in> {R1, R2, R3} \<Longrightarrow> Ri \<subseteq> A \<union> B"
-        sorry \<comment> \<open>Ri \<subseteq> R1\<union>R2\<union>R3 = S2-theta \<subseteq> A\<union>B.\<close>
+      proof -
+        fix Ri assume "Ri \<in> {R1, R2, R3}"
+        hence "Ri \<subseteq> R1 \<union> R2 \<union> R3" by (by100 blast)
+        hence "Ri \<subseteq> top1_S2 - ?theta" using hR(7) by (by100 blast)
+        hence "Ri \<subseteq> (A \<union> B) - (e12 - {a1, a2})" using htheta_compl_eq by (by100 simp)
+        thus "Ri \<subseteq> A \<union> B" by (by100 blast)
+      qed
       have hRi_in_comp: "\<And>Ri. Ri \<in> {R1, R2, R3} \<Longrightarrow> Ri \<subseteq> A \<or> Ri \<subseteq> B"
-        sorry \<comment> \<open>Ri connected \<subseteq> A\<union>B, {A,B} separation, Lemma\_23\_2.\<close>
+      proof -
+        fix Ri assume hRi_mem: "Ri \<in> {R1, R2, R3}"
+        have hRi_sub: "Ri \<subseteq> A \<union> B" by (rule hRi_sub_AB[OF hRi_mem])
+        have hRi_conn_S2: "top1_connected_on Ri (subspace_topology top1_S2 top1_S2_topology Ri)"
+          using hRi_mem hR(8,9,10) by (by100 blast)
+        have hRi_sub_X: "Ri \<subseteq> ?X" using hRi_sub hAB_sub_X by (by100 blast)
+        have hRi_conn_AB: "top1_connected_on Ri
+            (subspace_topology (A \<union> B) (subspace_topology ?X ?TX (A \<union> B)) Ri)"
+        proof -
+          have "subspace_topology top1_S2 top1_S2_topology Ri =
+              subspace_topology ?X ?TX Ri"
+            using subspace_topology_trans[of Ri ?X top1_S2 top1_S2_topology]
+                hRi_sub_X by (by100 simp)
+          also have "\<dots> = subspace_topology (A \<union> B) (subspace_topology ?X ?TX (A \<union> B)) Ri"
+            using subspace_topology_trans[of Ri "A \<union> B" ?X ?TX]
+                hRi_sub by (by100 simp)
+          finally show ?thesis using hRi_conn_S2 by (by100 simp)
+        qed
+        from Lemma_23_2[OF hTAB_loc hAB_sep hRi_sub hRi_conn_AB]
+        show "Ri \<subseteq> A \<or> Ri \<subseteq> B" by (by100 blast)
+      qed
       have hRie_sub_C: "Ri_e \<subseteq> C"
       proof -
         from hRi_in_comp[OF hRie(1)] have "Ri_e \<subseteq> A \<or> Ri_e \<subseteq> B" .
