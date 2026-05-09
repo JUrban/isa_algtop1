@@ -996,8 +996,29 @@ lemma quotient_of_scheme_extract_full:
               p \<noteq> ((1-t) * vx i + t * vx (Suc i mod length scheme),
                     (1-t) * vy i + t * vy (Suc i mod length scheme)))
          \<longrightarrow> (\<forall>p'\<in>P. q p = q p' \<longrightarrow> p = p')"
-  using assms unfolding top1_quotient_of_scheme_on_def top1_is_polygonal_region_on_def
-  sorry
+proof -
+  from assms obtain P q vx vy where
+    h1: "top1_is_polygonal_region_on P (length scheme)" and
+    h2: "top1_quotient_map_on P (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) X TX q" and
+    h3: "\<forall>i<length scheme. (vx i, vy i) \<in> P" and
+    h4: "\<forall>i<length scheme. \<forall>j<length scheme.
+        fst (scheme!i) = fst (scheme!j) \<longrightarrow>
+        (\<forall>t\<in>I_set. q ((1-t) * vx i + t * vx (Suc i mod length scheme),
+            (1-t) * vy i + t * vy (Suc i mod length scheme))
+         = (if snd (scheme!i) = snd (scheme!j)
+            then q ((1-t) * vx j + t * vx (Suc j mod length scheme),
+                    (1-t) * vy j + t * vy (Suc j mod length scheme))
+            else q (t * vx j + (1-t) * vx (Suc j mod length scheme),
+                    t * vy j + (1-t) * vy (Suc j mod length scheme))))" and
+    h5: "\<forall>p\<in>P. (\<forall>i<length scheme. \<forall>t\<in>I_set.
+          p \<noteq> ((1-t) * vx i + t * vx (Suc i mod length scheme),
+                (1-t) * vy i + t * vy (Suc i mod length scheme)))
+       \<longrightarrow> (\<forall>p'\<in>P. q p = q p' \<longrightarrow> p = p')"
+    using assms unfolding top1_quotient_of_scheme_on_def sorry
+  have h6: "length scheme \<ge> 3"
+    using h1 unfolding top1_is_polygonal_region_on_def by (by100 blast)
+  show ?thesis by (rule that[OF h1 h2 h6 h3 h4 h5])
+qed
 
 (** from \<S>74 Theorem 74.1: polygonal quotients are compact Hausdorff **)
 theorem Theorem_74_1_polygon_quotient_compact_hausdorff:
