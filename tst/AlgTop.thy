@@ -5714,7 +5714,204 @@ next
          homeomorphically to U. So q = r^{-1} \<circ> p maps a neighborhood of e
          onto a neighborhood of y, giving y \<in> interior of q(E).\<close>
       have hqE_open: "openin_on Y TY (q ` E)"
-        sorry \<comment> \<open>Local homeomorphism argument: q is open map.\<close>
+      proof -
+        have hqE_sub: "q ` E \<subseteq> Y" using hq_Y by (by100 blast)
+        \<comment> \<open>For each e, build an open neighborhood of q(e) in q(E).\<close>
+        have "\<forall>e\<in>E. \<exists>Ve. Ve \<in> TY \<and> q e \<in> Ve \<and> Ve \<subseteq> q ` E"
+        proof
+          fix e assume he: "e \<in> E"
+          let ?b = "p e"
+          have hb: "?b \<in> B"
+            using he top1_covering_map_on_surj[OF assms(4)] by (by100 blast)
+          \<comment> \<open>Get U evenly covered by both p and r.\<close>
+          obtain Up where "?b \<in> Up" "top1_evenly_covered_on E TE B TB p Up"
+            using hb assms(4) unfolding top1_covering_map_on_def by (by100 blast)
+          obtain Ur where "?b \<in> Ur" "top1_evenly_covered_on Y TY B TB r Ur"
+            using hb assms(6) unfolding top1_covering_map_on_def by (by100 blast)
+          have hUp_open: "openin_on B TB Up"
+            using \<open>top1_evenly_covered_on E TE B TB p Up\<close>
+            unfolding top1_evenly_covered_on_def by (by100 blast)
+          have hUr_open: "openin_on B TB Ur"
+            using \<open>top1_evenly_covered_on Y TY B TB r Ur\<close>
+            unfolding top1_evenly_covered_on_def by (by100 blast)
+          let ?U = "Up \<inter> Ur"
+          have hU_open: "openin_on B TB ?U"
+          proof -
+            have "Up \<in> TB" using hUp_open unfolding openin_on_def by (by100 blast)
+            moreover have "Ur \<in> TB" using hUr_open unfolding openin_on_def by (by100 blast)
+            ultimately have "Up \<inter> Ur \<in> TB" by (rule topology_inter2[OF hTB])
+            moreover have "Up \<inter> Ur \<subseteq> B" using hUp_open unfolding openin_on_def by (by100 blast)
+            ultimately show ?thesis unfolding openin_on_def by (by100 blast)
+          qed
+          have hU_b: "?b \<in> ?U" using \<open>?b \<in> Up\<close> \<open>?b \<in> Ur\<close> by (by100 blast)
+          \<comment> \<open>Restrict both coverings to U.\<close>
+          have hU_cov_p: "top1_evenly_covered_on E TE B TB p ?U"
+            by (rule evenly_covered_open_subset[OF \<open>top1_evenly_covered_on E TE B TB p Up\<close>
+                hU_open _ hTE hTB]) (by100 blast)
+          have hU_cov_r: "top1_evenly_covered_on Y TY B TB r ?U"
+            by (rule evenly_covered_open_subset[OF \<open>top1_evenly_covered_on Y TY B TB r Ur\<close>
+                hU_open _ hTY hTB]) (by100 blast)
+          \<comment> \<open>Get p-slice W containing e.\<close>
+          obtain \<V>p where h\<V>p: "\<forall>V\<in>\<V>p. openin_on E TE V"
+              "\<forall>V\<in>\<V>p. \<forall>V'\<in>\<V>p. V \<noteq> V' \<longrightarrow> V \<inter> V' = {}"
+              "{x\<in>E. p x \<in> ?U} = \<Union>\<V>p"
+              "\<forall>V\<in>\<V>p. top1_homeomorphism_on V (subspace_topology E TE V) ?U
+                              (subspace_topology B TB ?U) p"
+            using hU_cov_p unfolding top1_evenly_covered_on_def
+            by (elim conjE exE) (by100 blast)
+          have he_pU: "e \<in> {x\<in>E. p x \<in> ?U}" using he hU_b by (by100 blast)
+          hence "e \<in> \<Union>\<V>p" using h\<V>p(3) by (by100 simp)
+          then obtain W where hW: "W \<in> \<V>p" "e \<in> W" by (by100 blast)
+          \<comment> \<open>Get r-slice V containing q(e) = y.\<close>
+          obtain \<V>r where h\<V>r: "\<forall>V\<in>\<V>r. openin_on Y TY V"
+              "\<forall>V\<in>\<V>r. \<forall>V'\<in>\<V>r. V \<noteq> V' \<longrightarrow> V \<inter> V' = {}"
+              "{x\<in>Y. r x \<in> ?U} = \<Union>\<V>r"
+              "\<forall>V\<in>\<V>r. top1_homeomorphism_on V (subspace_topology Y TY V) ?U
+                              (subspace_topology B TB ?U) r"
+            using hU_cov_r unfolding top1_evenly_covered_on_def
+            by (elim conjE exE) (by100 blast)
+          have hqe_Y: "q e \<in> Y" using he hq_Y by (by100 blast)
+          have hrqe: "r (q e) = p e" using he hq_rp by (by100 blast)
+          have "r (q e) \<in> ?U" using hrqe hU_b by (by100 simp)
+          have hqe_rU: "q e \<in> {x\<in>Y. r x \<in> ?U}" using hqe_Y \<open>r (q e) \<in> ?U\<close> by (by100 blast)
+          hence "q e \<in> \<Union>\<V>r" using h\<V>r(3) by (by100 simp)
+          then obtain V where hV: "V \<in> \<V>r" "q e \<in> V" by (by100 blast)
+          \<comment> \<open>V is open in Y.\<close>
+          have hV_TY: "V \<in> TY"
+            using h\<V>r(1) hV(1) unfolding openin_on_def by (by100 blast)
+          \<comment> \<open>W' = W \<inter> q\<inverse>(V) is open in E and contains e.\<close>
+          let ?W' = "W \<inter> {e' \<in> E. q e' \<in> V}"
+          have hW_TE: "W \<in> TE" using h\<V>p(1) hW(1) unfolding openin_on_def by (by100 blast)
+          have hqV_TE: "{e' \<in> E. q e' \<in> V} \<in> TE"
+            using hq_cont hV_TY unfolding top1_continuous_map_on_def by (by100 blast)
+          have hW'_TE: "?W' \<in> TE" by (rule topology_inter2[OF hTE hW_TE hqV_TE])
+          have he_W': "e \<in> ?W'" using hW(2) he hV(2) by (by100 blast)
+          \<comment> \<open>Key: q(W') = {v \<in> V | r v \<in> p ` W'}, which is open in V hence in Y.\<close>
+          \<comment> \<open>Key: q(W') = {v \<in> V | r v \<in> p ` W'}.\<close>
+          have hV_homeo: "top1_homeomorphism_on V (subspace_topology Y TY V) ?U
+                              (subspace_topology B TB ?U) r"
+            using h\<V>r(4) hV(1) by (by100 blast)
+          have hr_bij: "bij_betw r V ?U"
+            using hV_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+          have hr_inj: "inj_on r V" using hr_bij unfolding bij_betw_def by (by100 blast)
+          have hW_homeo: "top1_homeomorphism_on W (subspace_topology E TE W) ?U
+                              (subspace_topology B TB ?U) p"
+            using h\<V>p(4) hW(1) by (by100 blast)
+          have hqW'_eq: "q ` ?W' = {v \<in> V. r v \<in> p ` ?W'}"
+          proof (rule set_eqI, rule iffI)
+            fix v assume "v \<in> q ` ?W'"
+            then obtain e' where he': "e' \<in> ?W'" "v = q e'" by (by100 blast)
+            have "e' \<in> E" using he' by (by100 blast)
+            have "v \<in> V" using he' by (by100 blast)
+            have "r v = r (q e')" using he'(2) by (by100 simp)
+            also have "\<dots> = p e'" using \<open>e' \<in> E\<close> hq_rp by (by100 blast)
+            finally have "r v = p e'" .
+            hence "r v \<in> p ` ?W'" using he'(1) by (by100 blast)
+            thus "v \<in> {v \<in> V. r v \<in> p ` ?W'}" using \<open>v \<in> V\<close> by (by100 blast)
+          next
+            fix v assume hv: "v \<in> {v \<in> V. r v \<in> p ` ?W'}"
+            hence "v \<in> V" "r v \<in> p ` ?W'" by (by100 blast)+
+            then obtain e' where he': "e' \<in> ?W'" "r v = p e'" by (by100 blast)
+            have "e' \<in> E" using he' by (by100 blast)
+            have "q e' \<in> V" using he' by (by100 blast)
+            have "r (q e') = p e'" using \<open>e' \<in> E\<close> hq_rp by (by100 blast)
+            hence "r v = r (q e')" using he'(2) by (by100 simp)
+            hence "v = q e'" using hr_inj \<open>v \<in> V\<close> \<open>q e' \<in> V\<close>
+              unfolding inj_on_def by (by100 blast)
+            thus "v \<in> q ` ?W'" using he'(1) by (by100 blast)
+          qed
+          \<comment> \<open>p(W') is open in U-subspace: homeomorphism inverse is continuous,
+             so preimage of W' (open in W-subspace) under inv_into W p is open.\<close>
+          have hp_inv_cont: "top1_continuous_map_on ?U (subspace_topology B TB ?U)
+              W (subspace_topology E TE W) (inv_into W p)"
+            using hW_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+          have hW'_sub_W: "?W' \<subseteq> W" by (by100 blast)
+          have hW'_subspace: "?W' \<in> subspace_topology E TE W"
+            using hW'_TE hW'_sub_W unfolding subspace_topology_def by (by100 blast)
+          have hpW'_open: "p ` ?W' \<in> subspace_topology B TB ?U"
+          proof -
+            have "p ` ?W' = {u \<in> ?U. (inv_into W p) u \<in> ?W'}"
+            proof (rule set_eqI, rule iffI)
+              fix u assume "u \<in> p ` ?W'"
+              then obtain e' where he': "e' \<in> ?W'" "u = p e'" by (by100 blast)
+              have "e' \<in> W" using he' by (by100 blast)
+              have hp_bij: "bij_betw p W ?U"
+                using hW_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+              have "u \<in> ?U" using he' hp_bij unfolding bij_betw_def by (by100 blast)
+              have "inv_into W p u = e'"
+                using inv_into_f_f[of p W e'] hp_bij \<open>e' \<in> W\<close> he'(2)
+                unfolding bij_betw_def by (by100 blast)
+              thus "u \<in> {u \<in> ?U. (inv_into W p) u \<in> ?W'}" using \<open>u \<in> ?U\<close> he'(1) by (by100 simp)
+            next
+              fix u assume hu: "u \<in> {u \<in> ?U. (inv_into W p) u \<in> ?W'}"
+              hence "u \<in> ?U" "(inv_into W p) u \<in> ?W'" by (by100 blast)+
+              have "(inv_into W p) u \<in> W" using \<open>(inv_into W p) u \<in> ?W'\<close> by (by100 blast)
+              have hp_bij: "bij_betw p W ?U"
+                using hW_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+              have "u \<in> p ` W" using hp_bij \<open>u \<in> ?U\<close> unfolding bij_betw_def by (by100 blast)
+              have "p ((inv_into W p) u) = u" by (rule f_inv_into_f[OF \<open>u \<in> p ` W\<close>])
+              show "u \<in> p ` ?W'"
+              proof (rule image_eqI)
+                show "u = p (inv_into W p u)"
+                  using \<open>p ((inv_into W p) u) = u\<close> by (by100 simp)
+                show "inv_into W p u \<in> ?W'"
+                  using \<open>(inv_into W p) u \<in> ?W'\<close> by (by100 simp)
+              qed
+            qed
+            have hpreimg: "{u \<in> ?U. (inv_into W p) u \<in> ?W'} \<in> subspace_topology B TB ?U"
+              using hp_inv_cont hW'_subspace
+              unfolding top1_continuous_map_on_def by (by100 blast)
+            thus ?thesis using \<open>p ` ?W' = {u \<in> ?U. (inv_into W p) u \<in> ?W'}\<close> by (by100 simp)
+          qed
+          \<comment> \<open>Preimage of p(W') under r is open in V-subspace.\<close>
+          have hr_cont_on_V: "top1_continuous_map_on V (subspace_topology Y TY V) ?U
+              (subspace_topology B TB ?U) r"
+            using hV_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+          have hqW'_subV: "{v \<in> V. r v \<in> p ` ?W'} \<in> subspace_topology Y TY V"
+            using hr_cont_on_V hpW'_open
+            unfolding top1_continuous_map_on_def by (by100 blast)
+          \<comment> \<open>Open in V-subspace + V open in Y \<Rightarrow> open in Y.\<close>
+          have hqW'_in_sub: "q ` ?W' \<in> subspace_topology Y TY V"
+            using hqW'_subV hqW'_eq by (by100 simp)
+          have hqW'_TY: "q ` ?W' \<in> TY"
+          proof -
+            from hqW'_in_sub obtain T' where hT'_TY: "T' \<in> TY" and hqW'_VT': "q ` ?W' = V \<inter> T'"
+              unfolding subspace_topology_def by (by100 blast)
+            have "V \<inter> T' \<in> TY" by (rule topology_inter2[OF hTY hV_TY hT'_TY])
+            thus ?thesis using hqW'_VT' by (by100 simp)
+          qed
+          \<comment> \<open>q(e) \<in> q(W') \<subseteq> q(E).\<close>
+          have "q e \<in> q ` ?W'" using he_W' by (by100 blast)
+          moreover have "q ` ?W' \<subseteq> q ` E" by (by100 blast)
+          ultimately show "\<exists>Ve. Ve \<in> TY \<and> q e \<in> Ve \<and> Ve \<subseteq> q ` E"
+            using hqW'_TY by (by100 blast)
+        qed
+        \<comment> \<open>q(E) = \<Union>{Ve | e \<in> E}, union of open sets, hence open.\<close>
+        hence "\<exists>S. S \<subseteq> TY \<and> q ` E = \<Union>S"
+        proof -
+          let ?S = "{Ve. \<exists>e\<in>E. Ve \<in> TY \<and> q e \<in> Ve \<and> Ve \<subseteq> q ` E}"
+          have "?S \<subseteq> TY" by (by100 blast)
+          moreover have "q ` E = \<Union>?S"
+          proof (rule set_eqI, rule iffI)
+            fix y assume "y \<in> q ` E"
+            then obtain e where "e \<in> E" "y = q e" by (by100 blast)
+            then obtain Ve where "Ve \<in> TY" "q e \<in> Ve" "Ve \<subseteq> q ` E"
+              using \<open>\<forall>e\<in>E. \<exists>Ve. Ve \<in> TY \<and> q e \<in> Ve \<and> Ve \<subseteq> q ` E\<close> by (by100 blast)
+            thus "y \<in> \<Union>?S" using \<open>e \<in> E\<close> \<open>y = q e\<close> by (by100 blast)
+          next
+            fix y assume "y \<in> \<Union>?S"
+            then obtain Ve where "Ve \<subseteq> q ` E" "y \<in> Ve" by (by100 blast)
+            thus "y \<in> q ` E" by (by100 blast)
+          qed
+          ultimately show ?thesis by (by100 blast)
+        qed
+        then obtain S where hS: "S \<subseteq> TY" "q ` E = \<Union>S" by (elim exE conjE) (by100 blast)
+        have hunion: "\<forall>U. U \<subseteq> TY \<longrightarrow> \<Union>U \<in> TY"
+          using hTY unfolding is_topology_on_def by (by100 blast)
+        have "\<Union>S \<in> TY" using hunion hS(1) by (by100 blast)
+        hence "q ` E \<in> TY" using hS(2) by (by100 simp)
+        thus ?thesis using hqE_sub unfolding openin_on_def by (by100 blast)
+      qed
       \<comment> \<open>Y - q(E) is open in Y: for y \<in> Y - q(E), the r-slice containing y is
          either entirely in q(E) or disjoint (by connectedness of the slice).
          Since y \<notin> q(E), the slice is disjoint.\<close>
