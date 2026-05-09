@@ -1511,48 +1511,9 @@ proof -
          sets, each compact (image of [0,1] under continuous map t \<mapsto> (edge\_i(t), edge\_j(f(t)))).\<close>
       have hR_bdy_compact: "top1_compact_on (?R \<inter> (?bdy \<times> ?bdy))
           (subspace_topology (P \<times> P) (product_topology_on ?TP ?TP) (?R \<inter> (?bdy \<times> ?bdy)))"
-      proof -
-        \<comment> \<open>Show compact in HOL-Analysis, then bridge.\<close>
-        have "compact (?R \<inter> (?bdy \<times> ?bdy))"
-        proof -
-          have "closed ?R" sorry \<comment> \<open>R is closed in R^4: finite union of closed sets.\<close>
-          moreover have "compact ?bdy"
-          proof -
-            have "\<forall>i \<in> {..<length scheme}. compact (?edge i ` I_set)"
-            proof (intro ballI)
-              fix i assume "i \<in> {..<length scheme}"
-              let ?f = "\<lambda>t::real. ((1-t) * vx i + t * vx (Suc i mod length scheme),
-                  (1-t) * vy i + t * vy (Suc i mod length scheme))"
-              have "continuous_on UNIV ?f" by (intro continuous_intros)
-              hence "continuous_on I_set ?f" using continuous_on_subset by (by100 blast)
-              moreover have "compact I_set" unfolding top1_unit_interval_def by (by100 simp)
-              ultimately have "compact (?f ` I_set)" by (rule compact_continuous_image)
-              moreover have "?f ` I_set = ?edge i ` I_set" by (by100 simp)
-              ultimately show "compact (?edge i ` I_set)" by (by100 simp)
-            qed
-            moreover have "finite {..<length scheme}" by (by100 simp)
-            ultimately show ?thesis sorry
-          qed
-          hence "compact (?bdy \<times> ?bdy)" sorry \<comment> \<open>compact\_Times or directly.\<close>
-          ultimately show "compact (?R \<inter> (?bdy \<times> ?bdy))" sorry
-        qed
-        \<comment> \<open>Bridge: compact (R^4) \<Rightarrow> top1\_compact\_on with subspace topology.\<close>
-        hence "top1_compact_on (?R \<inter> (?bdy \<times> ?bdy))
-            (subspace_topology (UNIV :: ((real \<times> real) \<times> (real \<times> real)) set) top1_open_sets
-                (?R \<inter> (?bdy \<times> ?bdy)))"
-          using iffD2[OF top1_compact_on_subspace_UNIV_iff_compact] sorry
-        moreover have "subspace_topology (UNIV :: ((real \<times> real) \<times> (real \<times> real)) set) top1_open_sets
-            (?R \<inter> (?bdy \<times> ?bdy))
-            = subspace_topology (P \<times> P) (product_topology_on ?TP ?TP) (?R \<inter> (?bdy \<times> ?bdy))"
-        proof -
-          have "product_topology_on ?TP ?TP =
-              subspace_topology (UNIV :: ((real \<times> real) \<times> (real \<times> real)) set) top1_open_sets (P \<times> P)"
-            sorry
-          have hR_bdy_sub_loc: "?R \<inter> (?bdy \<times> ?bdy) \<subseteq> P \<times> P" by (by100 blast)
-          thus ?thesis using subspace_topology_trans[OF hR_bdy_sub_loc] sorry
-        qed
-        ultimately show ?thesis sorry
-      qed
+        sorry \<comment> \<open>R\<inter>(bdy\<times>bdy) compact: finite union of compact curves (each edge-pair
+               identification is a continuous image of [0,1], diagonal on boundary is
+               a continuous image of compact bdy). Need HOL-Analysis compact bridge.\<close>
       \<comment> \<open>Compact in Hausdorff is closed.\<close>
       have hR_bdy_sub: "?R \<inter> (?bdy \<times> ?bdy) \<subseteq> P \<times> P" by (by100 blast)
       have hR_bdy_closed: "closedin_on (P \<times> P) (product_topology_on ?TP ?TP) (?R \<inter> (?bdy \<times> ?bdy))"
