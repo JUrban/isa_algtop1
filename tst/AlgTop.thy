@@ -2222,151 +2222,17 @@ proof -
          S2-J12 = R1\<union>R2\<union>R3\<union>(Arc3-{a1,a2}). Ri\_e, Ri\_D in S2-J12.
          Arc3-{a1,a2} \<subseteq> S2-J12. All connected. Each in W12a or W12b.
          If all in one side: other side empty, contradiction. So Rk alone on one side.\<close>
-      \<comment> \<open>Side placement for J12: Ri\_e, Ri\_D, Arc3-{a1,a2} on one side, Rk on other.\<close>
-      have hRie_sub_J12: "Ri_e \<subseteq> top1_S2 - (e12 \<union> ?Arc2)"
-      proof -
-        have "Ri_e \<subseteq> top1_S2 - ?theta" using hRie(1) hR(7) by (by100 blast)
-        thus ?thesis by (by100 blast)
-      qed
-      have hRiD_sub_J12: "Ri_D \<subseteq> top1_S2 - (e12 \<union> ?Arc2)"
-      proof -
-        have "Ri_D \<subseteq> top1_S2 - ?theta" using hRiD(1) hR(7) by (by100 blast)
-        thus ?thesis by (by100 blast)
-      qed
-      have hArc3_sub_J12: "?Arc3 - {a1, a2} \<subseteq> top1_S2 - (e12 \<union> ?Arc2)"
-      proof -
-        have "?Arc3 \<inter> e12 = {a1, a2}" using hint13 by (by100 blast)
-        moreover have "?Arc3 \<inter> ?Arc2 = {a1, a2}" using hint23 by (by100 blast)
-        ultimately have h_int: "?Arc3 \<inter> (e12 \<union> ?Arc2) = {a1, a2}" by (by100 blast)
-        have "?Arc3 \<subseteq> top1_S2" using hArc3_sub by (by100 blast)
-        thus ?thesis using h_int by (by100 blast)
-      qed
-      \<comment> \<open>All 4 sets (Ri\_e, Ri\_D, Arc3-{a1,a2}, Rk) are connected \<subseteq> S2-J12.\<close>
-      \<comment> \<open>Ri\_e and Ri\_D in same W12-side as e34 (Ri\_e \<supseteq> e34, Ri\_D = D' \<subseteq> same side via Arc3 closure).\<close>
-      \<comment> \<open>Arc3-{a1,a2} in same side as e34 (via a4).\<close>
-      \<comment> \<open>Rk on the other side (if it were on same: all in one side, other side = {}, contradiction).\<close>
-      \<comment> \<open>Then W12\_Rk = Rk: Rk is the ONLY thing in its side (everything else on other side).\<close>
-      have hRk_is_W12_comp: "\<exists>W12o. (W12o = W12a \<or> W12o = W12b) \<and> W12o \<noteq> Rk \<and>
-          Ri_e \<subseteq> W12o \<and> Ri_D \<subseteq> W12o \<and> (?Arc3 - {a1,a2}) \<subseteq> W12o"
-      proof -
-        \<comment> \<open>e34-{a3,a4} \<subseteq> S2-J12 (from he34\_theta\_int and e34 \<inter> J12 = {a3}).\<close>
-        have he34_sub_J12: "e34 - {a3, a4} \<subseteq> top1_S2 - (e12 \<union> ?Arc2)"
-        proof -
-          have "e34 \<inter> (e12 \<union> ?Arc2) \<subseteq> {a3}"
-          proof -
-            have "e34 \<inter> e12 = {}" using assms(22) by (by100 blast)
-            moreover have "e34 \<inter> e13 = {a3}" using assms(30) by (by100 blast)
-            moreover have "e34 \<inter> e23 = {a3}" using assms(25) by (by100 blast)
-            ultimately show ?thesis by (by100 blast)
-          qed
-          thus ?thesis using assms(6) by (by100 blast)
-        qed
-        \<comment> \<open>e34 connected \<subseteq> W12a\<union>W12b. In one side.\<close>
-        have he34_in_W12: "e34 - {a3, a4} \<subseteq> W12a \<or> e34 - {a3, a4} \<subseteq> W12b"
-          sorry \<comment> \<open>Lemma\_23\_2 on {W12a,W12b} separation + subspace transfer.\<close>
-        \<comment> \<open>a4 in S2-J12. a4 \<in> cl(e34-{a3,a4}). a4 on same side.\<close>
-        \<comment> \<open>Arc3-{a1,a2} connected, a4 \<in> it, on same side.\<close>
-        \<comment> \<open>D' = Ri\_D: if on other side, Arc3 \<subseteq> cl(D') \<subseteq> cl(other)\<union>J12 but Arc3-{a1,a2} on first side. False.\<close>
-        \<comment> \<open>Ri\_e: contains e34, on same side.\<close>
-        \<comment> \<open>Rk on other side (only thing left).\<close>
-        \<comment> \<open>WLOG: let W12_e be the side containing e34.\<close>
-        from he34_in_W12
-        have "\<exists>W12_e W12_r. (W12_e = W12a \<and> W12_r = W12b) \<or> (W12_e = W12b \<and> W12_r = W12a)
-            \<and> e34 - {a3, a4} \<subseteq> W12_e"
-          sorry
-        then obtain W12_e W12_r where hW12_er:
-            "(W12_e = W12a \<and> W12_r = W12b) \<or> (W12_e = W12b \<and> W12_r = W12a)"
-            "e34 - {a3, a4} \<subseteq> W12_e" sorry
-        \<comment> \<open>Ri\_e \<supseteq> e34 and Ri\_e connected \<subseteq> S2-J12 \<Rightarrow> Ri\_e \<subseteq> W12\_e.\<close>
-        have hRie_in_W12e: "Ri_e \<subseteq> W12_e"
-          sorry \<comment> \<open>Ri\_e connected in {W12a,W12b} separation, meets W12\_e via e34.\<close>
-        \<comment> \<open>Arc3-{a1,a2} \<subseteq> W12\_e: a4 \<in> cl(e34) \<subseteq> cl(W12\_e) = W12\_e\<union>J12. a4 \<notin> J12 \<Rightarrow> a4 \<in> W12\_e.
-           Arc3-{a1,a2} connected, a4 \<in> it \<inter> W12\_e \<Rightarrow> Arc3-{a1,a2} \<subseteq> W12\_e.\<close>
-        have hArc3_in_W12e: "?Arc3 - {a1, a2} \<subseteq> W12_e"
-          sorry
-        \<comment> \<open>D' = Ri\_D \<subseteq> W12\_e: if D' \<subseteq> W12\_r, then Arc3-{a1,a2} \<subseteq> cl(D') \<subseteq> cl(W12\_r) = W12\_r\<union>J12.
-           But Arc3-{a1,a2} \<subseteq> W12\_e, and W12\_e \<inter> (W12\_r\<union>J12) = {}. So Arc3-{a1,a2} = {}. Contradiction.\<close>
-        have hRiD_in_W12e: "Ri_D \<subseteq> W12_e"
-          sorry
-        \<comment> \<open>Rk must be in W12\_r (since Rk connected \<subseteq> S2-J12, and if Rk \<subseteq> W12\_e then
-           all 3 R's + Arc3 in W12\_e \<Rightarrow> W12\_r = {} \<Rightarrow> contradiction).\<close>
-        have hRk_in_W12r: "Rk \<subseteq> W12_r"
-          sorry
-        \<comment> \<open>W12\_r = Rk: everything else is in W12\_e.\<close>
-        \<comment> \<open>So W12\_e is the one \<noteq> Rk.\<close>
-        have "W12_e \<noteq> Rk"
-          sorry \<comment> \<open>Ri\_e \<subseteq> W12\_e, Ri\_e \<inter> Rk = {} (hRk\_disj\_RiD or similar), Ri\_e \<noteq> {}.\<close>
-        show ?thesis
-          using hW12_er(1) \<open>W12_e \<noteq> Rk\<close> hRie_in_W12e hRiD_in_W12e hArc3_in_W12e
-          sorry
-      qed
-      then obtain W12o where hW12o: "(W12o = W12a \<or> W12o = W12b)" "W12o \<noteq> Rk"
-          "Ri_e \<subseteq> W12o" "Ri_D \<subseteq> W12o" "(?Arc3 - {a1,a2}) \<subseteq> W12o" by (metis (no_types))
-      \<comment> \<open>Now Rk is in the OTHER component.\<close>
-      define W12_Rk where "W12_Rk = (if W12o = W12a then W12b else W12a)"
-      have hW12_Rk_ne_W12o: "W12_Rk \<noteq> W12o" using W12_Rk_def hW12(3) sorry
-      have hRk_sub_W12_Rk: "Rk \<subseteq> W12_Rk"
-      proof -
-        from hRk_in_W12 show ?thesis
-        proof
-          assume "Rk \<subseteq> W12a"
-          from hW12o(1) show ?thesis
-          proof
-            assume "W12o = W12a" thus ?thesis using \<open>Rk \<subseteq> W12a\<close> hW12o(2)
-              sorry \<comment> \<open>Rk \<subseteq> W12a = W12o, Rk \<noteq> W12o? No, W12o \<noteq> Rk but Rk could be subset.\<close>
-          next
-            assume "W12o = W12b" thus ?thesis using \<open>Rk \<subseteq> W12a\<close> W12_Rk_def by (by100 simp)
-          qed
-        next
-          assume "Rk \<subseteq> W12b"
-          from hW12o(1) show ?thesis
-          proof
-            assume "W12o = W12a" thus ?thesis using \<open>Rk \<subseteq> W12b\<close> W12_Rk_def by (by100 simp)
-          next
-            assume "W12o = W12b" thus ?thesis using \<open>Rk \<subseteq> W12b\<close> hW12o(2)
-              sorry
-          qed
-        qed
-      qed
-      \<comment> \<open>W12\_Rk = Rk: everything else is in W12o, so W12\_Rk only contains Rk.\<close>
-      have hW12_Rk_eq_Rk: "W12_Rk = Rk"
-      proof -
-        \<comment> \<open>S2-J12 = R1\<union>R2\<union>R3\<union>(Arc3-{a1,a2}). W12o gets Ri\_e, Ri\_D, Arc3-{a1,a2}.
-           W12\_Rk gets only Rk (nothing else left).\<close>
-        have "top1_S2 - (e12 \<union> ?Arc2) = R1 \<union> R2 \<union> R3 \<union> (?Arc3 - {a1, a2})"
-          sorry \<comment> \<open>S2-J12 = S2-theta \<union> (Arc3-{a1,a2}). S2-theta = R1\<union>R2\<union>R3.\<close>
-        hence "W12_Rk \<subseteq> Rk"
-          sorry \<comment> \<open>W12\_Rk \<subseteq> S2-J12. Ri\_e, Ri\_D, Arc3-{a1,a2} \<subseteq> W12o. W12\_Rk \<inter> W12o = {}. So W12\_Rk \<subseteq> Rk.\<close>
-        thus ?thesis using hRk_sub_W12_Rk by (by100 blast)
-      qed
-      \<comment> \<open>Same for J13.\<close>
-      have hRk_is_W13_comp: "Rk = W13a \<or> Rk = W13b"
-        sorry \<comment> \<open>Symmetric argument for J13 with Arc2 closure.\<close>
-      define W13_Rk where "W13_Rk = Rk"
-      have hW13_Rk_eq_Rk: "W13_Rk = Rk" using W13_Rk_def by (by100 simp)
-      \<comment> \<open>Step 5: cl(Rk) = Rk \<union> J12 and cl(Rk) = Rk \<union> J13.
-         Rk = W12\_Rk is one component of S2-J12. W12o is the other.
-         Similarly Rk is one component of S2-J13.\<close>
-      \<comment> \<open>Derive W12 properties for the Rk side and W12o side.\<close>
-      have hW12_Rk_conn: "top1_connected_on Rk (subspace_topology top1_S2 top1_S2_topology Rk)"
-        by (rule hRk_conn)
-      have hRk_open: "Rk \<in> top1_S2_topology" using hRk(1) hR(11,12,13) by (by100 blast)
-      have hW12o_conn: "top1_connected_on W12o (subspace_topology top1_S2 top1_S2_topology W12o)"
-        using hW12o(1) hW12(5,6) by (by100 blast)
-      have hW12o_open: "W12o \<in> top1_S2_topology"
-        using hW12o(1) hW12(7,8) by (by100 blast)
-      have hW12_disj': "Rk \<inter> W12o = {}"
-        sorry \<comment> \<open>Rk on opposite W12 side from W12o. Uses side placement.\<close>
-      have hW12_union': "Rk \<union> W12o = top1_S2 - (e12 \<union> ?Arc2)"
-        sorry \<comment> \<open>Rk + W12o cover S2-J12. Uses hW12\_Rk\_eq\_Rk.\<close>
-      have hRk_ne_loc: "Rk \<noteq> {}" using hRk(1) hR(1,2,3) by (by100 blast)
-      have hW12o_ne: "W12o \<noteq> {}" using hW12o(3,4,5) hRie(1) hR(1,2,3) sorry
+      \<comment> \<open>KEY STEP: cl(Rk) = Rk \<union> J12 AND cl(Rk) = Rk \<union> J13.
+         Proof sketch: Rk is the only theta-component on its side of J12 (and J13).
+         The other side gets Ri\_e, Ri\_D, Arc3-{a1,a2} (for J12) or Arc2-{a1,a2} (for J13).
+         Arc closure argument forces D' to same side as e34, leaving Rk alone.
+         Then hcl\_comp gives the closure equality.\<close>
       have hcl_Rk_J12: "closure_on top1_S2 top1_S2_topology Rk = Rk \<union> (e12 \<union> ?Arc2)"
-        by (rule hcl_comp[OF hJ12_scc hRk_ne_loc hW12o_ne hW12_disj' hW12_union'
-            hW12_Rk_conn hW12o_conn hRk_open hW12o_open])
-      \<comment> \<open>Same for J13.\<close>
+        sorry \<comment> \<open>Rk = one component of S2-J12. Other component \<supseteq> Ri\_e, Ri\_D, Arc3-{a1,a2}.
+               Proved via: Lemma\_23\_2 for side placement, Arc3 closure argument for D' side,
+               exhaustion for Rk alone, then hcl\_comp.\<close>
       have hcl_Rk_J13: "closure_on top1_S2 top1_S2_topology Rk = Rk \<union> (e12 \<union> ?Arc3)"
-        sorry \<comment> \<open>Symmetric: Rk = component of S2-J13, W13o = other.\<close>
+        sorry \<comment> \<open>Symmetric argument with J13 = e12\<union>Arc3, using Arc2 closure.\<close>
       \<comment> \<open>Step 6: J12 = J13 \<Rightarrow> Arc2 = Arc3 \<Rightarrow> a3 \<in> Arc3 = e24\<union>e41. Contradiction.\<close>
       have hJ12_eq_J13: "e12 \<union> ?Arc2 = e12 \<union> ?Arc3"
       proof -
