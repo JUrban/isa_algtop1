@@ -2237,9 +2237,9 @@ proof -
       proof -
         have "?Arc3 \<inter> e12 = {a1, a2}" using hint13 by (by100 blast)
         moreover have "?Arc3 \<inter> ?Arc2 = {a1, a2}" using hint23 by (by100 blast)
-        ultimately have "?Arc3 \<inter> (e12 \<union> ?Arc2) = {a1, a2}" by (by100 blast)
-        moreover have "?Arc3 \<subseteq> top1_S2" using hArc3_sub by (by100 blast)
-        ultimately show ?thesis by (by100 blast)
+        ultimately have h_int: "?Arc3 \<inter> (e12 \<union> ?Arc2) = {a1, a2}" by (by100 blast)
+        have "?Arc3 \<subseteq> top1_S2" using hArc3_sub by (by100 blast)
+        thus ?thesis using h_int by (by100 blast)
       qed
       \<comment> \<open>All 4 sets (Ri\_e, Ri\_D, Arc3-{a1,a2}, Rk) are connected \<subseteq> S2-J12.\<close>
       \<comment> \<open>Ri\_e and Ri\_D in same W12-side as e34 (Ri\_e \<supseteq> e34, Ri\_D = D' \<subseteq> same side via Arc3 closure).\<close>
@@ -2248,7 +2248,58 @@ proof -
       \<comment> \<open>Then W12\_Rk = Rk: Rk is the ONLY thing in its side (everything else on other side).\<close>
       have hRk_is_W12_comp: "\<exists>W12o. (W12o = W12a \<or> W12o = W12b) \<and> W12o \<noteq> Rk \<and>
           Ri_e \<subseteq> W12o \<and> Ri_D \<subseteq> W12o \<and> (?Arc3 - {a1,a2}) \<subseteq> W12o"
-        sorry \<comment> \<open>Side placement via Lemma\_23\_2 + a4 closure + Arc3 closure argument.\<close>
+      proof -
+        \<comment> \<open>e34-{a3,a4} \<subseteq> S2-J12 (from he34\_theta\_int and e34 \<inter> J12 = {a3}).\<close>
+        have he34_sub_J12: "e34 - {a3, a4} \<subseteq> top1_S2 - (e12 \<union> ?Arc2)"
+        proof -
+          have "e34 \<inter> (e12 \<union> ?Arc2) \<subseteq> {a3}"
+          proof -
+            have "e34 \<inter> e12 = {}" using assms(22) by (by100 blast)
+            moreover have "e34 \<inter> e13 = {a3}" using assms(30) by (by100 blast)
+            moreover have "e34 \<inter> e23 = {a3}" using assms(25) by (by100 blast)
+            ultimately show ?thesis by (by100 blast)
+          qed
+          thus ?thesis using assms(6) by (by100 blast)
+        qed
+        \<comment> \<open>e34 connected \<subseteq> W12a\<union>W12b. In one side.\<close>
+        have he34_in_W12: "e34 - {a3, a4} \<subseteq> W12a \<or> e34 - {a3, a4} \<subseteq> W12b"
+          sorry \<comment> \<open>Lemma\_23\_2 on {W12a,W12b} separation + subspace transfer.\<close>
+        \<comment> \<open>a4 in S2-J12. a4 \<in> cl(e34-{a3,a4}). a4 on same side.\<close>
+        \<comment> \<open>Arc3-{a1,a2} connected, a4 \<in> it, on same side.\<close>
+        \<comment> \<open>D' = Ri\_D: if on other side, Arc3 \<subseteq> cl(D') \<subseteq> cl(other)\<union>J12 but Arc3-{a1,a2} on first side. False.\<close>
+        \<comment> \<open>Ri\_e: contains e34, on same side.\<close>
+        \<comment> \<open>Rk on other side (only thing left).\<close>
+        \<comment> \<open>WLOG: let W12_e be the side containing e34.\<close>
+        from he34_in_W12
+        have "\<exists>W12_e W12_r. (W12_e = W12a \<and> W12_r = W12b) \<or> (W12_e = W12b \<and> W12_r = W12a)
+            \<and> e34 - {a3, a4} \<subseteq> W12_e"
+          sorry
+        then obtain W12_e W12_r where hW12_er:
+            "(W12_e = W12a \<and> W12_r = W12b) \<or> (W12_e = W12b \<and> W12_r = W12a)"
+            "e34 - {a3, a4} \<subseteq> W12_e" sorry
+        \<comment> \<open>Ri\_e \<supseteq> e34 and Ri\_e connected \<subseteq> S2-J12 \<Rightarrow> Ri\_e \<subseteq> W12\_e.\<close>
+        have hRie_in_W12e: "Ri_e \<subseteq> W12_e"
+          sorry \<comment> \<open>Ri\_e connected in {W12a,W12b} separation, meets W12\_e via e34.\<close>
+        \<comment> \<open>Arc3-{a1,a2} \<subseteq> W12\_e: a4 \<in> cl(e34) \<subseteq> cl(W12\_e) = W12\_e\<union>J12. a4 \<notin> J12 \<Rightarrow> a4 \<in> W12\_e.
+           Arc3-{a1,a2} connected, a4 \<in> it \<inter> W12\_e \<Rightarrow> Arc3-{a1,a2} \<subseteq> W12\_e.\<close>
+        have hArc3_in_W12e: "?Arc3 - {a1, a2} \<subseteq> W12_e"
+          sorry
+        \<comment> \<open>D' = Ri\_D \<subseteq> W12\_e: if D' \<subseteq> W12\_r, then Arc3-{a1,a2} \<subseteq> cl(D') \<subseteq> cl(W12\_r) = W12\_r\<union>J12.
+           But Arc3-{a1,a2} \<subseteq> W12\_e, and W12\_e \<inter> (W12\_r\<union>J12) = {}. So Arc3-{a1,a2} = {}. Contradiction.\<close>
+        have hRiD_in_W12e: "Ri_D \<subseteq> W12_e"
+          sorry
+        \<comment> \<open>Rk must be in W12\_r (since Rk connected \<subseteq> S2-J12, and if Rk \<subseteq> W12\_e then
+           all 3 R's + Arc3 in W12\_e \<Rightarrow> W12\_r = {} \<Rightarrow> contradiction).\<close>
+        have hRk_in_W12r: "Rk \<subseteq> W12_r"
+          sorry
+        \<comment> \<open>W12\_r = Rk: everything else is in W12\_e.\<close>
+        \<comment> \<open>So W12\_e is the one \<noteq> Rk.\<close>
+        have "W12_e \<noteq> Rk"
+          sorry \<comment> \<open>Ri\_e \<subseteq> W12\_e, Ri\_e \<inter> Rk = {} (hRk\_disj\_RiD or similar), Ri\_e \<noteq> {}.\<close>
+        show ?thesis
+          using hW12_er(1) \<open>W12_e \<noteq> Rk\<close> hRie_in_W12e hRiD_in_W12e hArc3_in_W12e
+          sorry
+      qed
       then obtain W12o where hW12o: "(W12o = W12a \<or> W12o = W12b)" "W12o \<noteq> Rk"
           "Ri_e \<subseteq> W12o" "Ri_D \<subseteq> W12o" "(?Arc3 - {a1,a2}) \<subseteq> W12o" by (metis (no_types))
       \<comment> \<open>Now Rk is in the OTHER component.\<close>
