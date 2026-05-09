@@ -1416,7 +1416,16 @@ proof -
             ultimately show "compact (?edge i ` I_set)" by (by100 simp)
           qed
           moreover have "finite {..<length scheme}" by (by100 simp)
-          thus "compact ?bdy" sorry \<comment> \<open>finite union of compact = compact (compact\_Union).\<close>
+          ultimately show "compact ?bdy"
+          proof -
+            assume hcomp: "\<forall>i \<in> {..<length scheme}. compact (?edge i ` I_set)"
+            assume hfin: "finite {..<length scheme}"
+            show ?thesis
+              unfolding UN_simps
+              apply (rule compact_Union)
+              apply (rule finite_imageI[OF hfin])
+              using hcomp by (by100 blast)
+          qed
         qed
         \<comment> \<open>compact in Hausdorff P \<Rightarrow> closed in P.\<close>
         have "top1_compact_on ?bdy (subspace_topology P ?TP ?bdy)"
