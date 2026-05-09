@@ -6251,26 +6251,49 @@ next
                                       (subspace_topology B TB ?U) r"
       using hU_cov_r unfolding top1_evenly_covered_on_def
       by (elim conjE exE) (by100 blast)
-    \<comment> \<open>V0' = the r'-slice containing y (over U = Up\<inter>Ur).\<close>
-    have hy_in_rU': "y \<in> {x\<in>Y. r x \<in> ?U}" using hy hU_b by (by100 blast)
-    hence "y \<in> \<Union>\<V>r'" using h\<V>r'_union by (by100 simp)
-    then obtain V0' where hV0': "V0' \<in> \<V>r'" and hy_V0': "y \<in> V0'" by (by100 blast)
-    \<comment> \<open>V0' is evenly covered by q: each p-slice U_\<alpha> over U maps homeo to V0' via q.\<close>
-    \<comment> \<open>For each U_\<alpha> \<in> \<V>p: p|_{U_\<alpha>}: U_\<alpha> \<cong> U and r|_{V0'}: V0' \<cong> U.
-       So q|_{U_\<alpha>} = (r|_{V0'})\<inverse> \<circ> p|_{U_\<alpha>}: U_\<alpha> \<cong> V0'.
-       But only for those U_\<alpha> where q(U_\<alpha>) \<subseteq> V0'.\<close>
-    \<comment> \<open>For each p-slice W, q maps {e\<in>W | q e \<in> V0'} homeomorphically to V0'.
-       Proof: on this subset, q = inv_into V0' r \<circ> p (since r(q e) = p e and q e \<in> V0').
-       Both p|_W and r|_{V0'} are homeomorphisms to U, so q is their composition.
-       The family of non-empty {e\<in>W | q e \<in> V0'} covers q\<inverse>(V0'), is disjoint and open.\<close>
-    have hV0'_open: "openin_on Y TY V0'" using h\<V>r'_open hV0' by (by100 blast)
+    \<comment> \<open>Refine U to path-connected using B locally path-connected.\<close>
+    have hB_lpc: "top1_locally_path_connected_on B TB"
+      by (rule covering_base_locally_path_connected[OF assms(4) assms(7) hTE hTB])
+    have hU_TB: "?U \<in> TB" using hU_open unfolding openin_on_def by (by100 blast)
+    have hU_sub_B: "?U \<subseteq> B" using hU_open unfolding openin_on_def by (by100 blast)
+    have "\<exists>U''. U'' \<in> TB \<and> ?b \<in> U'' \<and> U'' \<subseteq> ?U \<and> U'' \<subseteq> B
+        \<and> top1_path_connected_on U'' (subspace_topology B TB U'')"
+      sorry \<comment> \<open>B lpc + ?U open \<ni> b \<Rightarrow> path-connected open U'' with b \<in> U'' \<subseteq> ?U.\<close>
+    then obtain U'' where hU''_TB: "U'' \<in> TB" and hU''_b: "?b \<in> U''" and hU''_sub: "U'' \<subseteq> ?U"
+        and hU''_sub_B: "U'' \<subseteq> B"
+        and hU''_pc: "top1_path_connected_on U'' (subspace_topology B TB U'')"
+      by (by100 blast)
+    have hU''_openin: "openin_on B TB U''"
+      using hU''_TB hU''_sub_B unfolding openin_on_def by (by100 blast)
+    \<comment> \<open>Restrict coverings to path-connected U''.\<close>
+    have hU''_sub_Up: "U'' \<subseteq> Up" using hU''_sub by (by100 blast)
+    have hU''_sub_Ur: "U'' \<subseteq> Ur" using hU''_sub by (by100 blast)
+    have hU''_cov_p: "top1_evenly_covered_on E TE B TB p U''"
+      by (rule evenly_covered_open_subset[OF hUp_cov_p hU''_openin hU''_sub_Up hTE hTB])
+    have hU''_cov_r: "top1_evenly_covered_on Y TY B TB r U''"
+      by (rule evenly_covered_open_subset[OF hUr_cov_r hU''_openin hU''_sub_Ur hTY hTB])
+    \<comment> \<open>Get r-slice V1 containing y over path-connected U''.\<close>
+    obtain \<W>r where h\<W>r_open: "\<forall>W\<in>\<W>r. openin_on Y TY W"
+        and h\<W>r_disj: "\<forall>W\<in>\<W>r. \<forall>W'\<in>\<W>r. W \<noteq> W' \<longrightarrow> W \<inter> W' = {}"
+        and h\<W>r_union: "{x\<in>Y. r x \<in> U''} = \<Union>\<W>r"
+        and h\<W>r_homeo: "\<forall>W\<in>\<W>r. top1_homeomorphism_on W (subspace_topology Y TY W)
+            U'' (subspace_topology B TB U'') r"
+      using hU''_cov_r unfolding top1_evenly_covered_on_def
+      by (elim conjE exE) (by100 blast)
+    have "r y \<in> U''" using hU''_b by (by100 simp)
+    hence "y \<in> {x\<in>Y. r x \<in> U''}" using hy by (by100 blast)
+    hence "y \<in> \<Union>\<W>r" using h\<W>r_union by (by100 simp)
+    then obtain V1 where hV1: "V1 \<in> \<W>r" "y \<in> V1" by (by100 blast)
+    have hV1_open: "openin_on Y TY V1" using h\<W>r_open hV1(1) by (by100 blast)
+    \<comment> \<open>V1 is evenly covered by q.\<close>
     show "\<exists>V. y \<in> V \<and> top1_evenly_covered_on E TE Y TY q V"
-    proof (rule exI[of _ V0'], intro conjI)
-      show "y \<in> V0'" by (rule hy_V0')
-      show "top1_evenly_covered_on E TE Y TY q V0'"
-        sorry \<comment> \<open>V0' evenly covered: family = {{e\<in>W|q e\<in>V0'} | W\<in>\<V>p, nonempty}.
-           Open: q continuous + V0' open. Disjoint: inherited from \<V>p.
-           Union = q\<inverse>(V0'). Homeo: q = inv(r|_{V0'}) \<circ> p on each piece.\<close>
+    proof (rule exI[of _ V1], intro conjI)
+      show "y \<in> V1" by (rule hV1(2))
+      show "top1_evenly_covered_on E TE Y TY q V1"
+        sorry \<comment> \<open>Each p-slice W over U'' is connected (U'' path-connected \<Rightarrow> W homeo to U'').
+           By covering\_lift\_unique\_connected, q maps W entirely to one r-slice.
+           Those mapping to V1: q|\_W = (r|_{V1})^{-1} \<circ> p|\_W, homeomorphism.
+           Family = {W \<in> \<V>p | q(W) \<subseteq> V1}, is disjoint, open, covers q^{-1}(V1).\<close>
     qed
   qed
   show ?thesis
