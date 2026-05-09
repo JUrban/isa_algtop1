@@ -6341,23 +6341,25 @@ next
             \<comment> \<open>Define h = (inv_into V1 r) \<circ> p: W \<rightarrow> V1. Both q and h lift p through r.\<close>
             let ?h = "\<lambda>e. inv_into V1 r (p e)"
             \<comment> \<open>h maps W into V1 and r \<circ> h = p on W.\<close>
+            have hW_sub_E: "W \<subseteq> E" using hW_mem h\<W>p_open unfolding openin_on_def by (by100 blast)
+            have hW_pU: "\<forall>e'\<in>W. p e' \<in> U''"
+            proof (intro ballI)
+              fix e' assume "e' \<in> W"
+              have "e' \<in> {x\<in>E. p x \<in> U''}" using \<open>e' \<in> W\<close> hW_mem h\<W>p_union by (by100 blast)
+              thus "p e' \<in> U''" by (by100 blast)
+            qed
             have hh_V1: "\<forall>e'\<in>W. ?h e' \<in> V1"
             proof (intro ballI)
               fix e' assume "e' \<in> W"
-              have "p e' \<in> U''"
-              proof -
-                have "e' \<in> {x\<in>E. p x \<in> U''}"
-                  using \<open>e' \<in> W\<close> hW_mem h\<W>p_union by (by100 blast)
-                thus ?thesis by (by100 blast)
-              qed
+              have "p e' \<in> U''" using hW_pU \<open>e' \<in> W\<close> by (by100 blast)
               have "p e' \<in> r ` V1" using hr_bij_V1 \<open>p e' \<in> U''\<close> unfolding bij_betw_def by (by100 blast)
               thus "?h e' \<in> V1" using inv_into_into[OF \<open>p e' \<in> r ` V1\<close>] by (by100 simp)
             qed
             have hrh: "\<forall>e'\<in>W. r (?h e') = p e'"
             proof (intro ballI)
               fix e' assume "e' \<in> W"
-              have "p e' \<in> U''" sorry
-              have "p e' \<in> r ` V1" using hr_bij_V1 \<open>p e' \<in> U''\<close> unfolding bij_betw_def sorry
+              have "p e' \<in> U''" using hW_pU \<open>e' \<in> W\<close> by (by100 blast)
+              have "p e' \<in> r ` V1" using hr_bij_V1 \<open>p e' \<in> U''\<close> unfolding bij_betw_def by (by100 blast)
               show "r (?h e') = p e'" by (rule f_inv_into_f[OF \<open>p e' \<in> r ` V1\<close>])
             qed
             \<comment> \<open>h(e0) = q(e0): both in V1, r(h(e0)) = p(e0) = r(q(e0)), r injective on V1.\<close>
@@ -6366,7 +6368,7 @@ next
               have "r (?h e0) = p e0" using hrh he0_W(1) by (by100 blast)
               have "r (q e0) = p e0"
               proof -
-                have "e0 \<in> E" using he0_W(1) hW_mem h\<W>p_open unfolding openin_on_def sorry
+                have "e0 \<in> E" using he0_W(1) hW_sub_E by (by100 blast)
                 thus ?thesis using hq_rp by (by100 blast)
               qed
               have "?h e0 \<in> V1" using hh_V1 he0_W(1) by (by100 blast)
@@ -6380,19 +6382,24 @@ next
             \<comment> \<open>Both q|_W and h|_W: W \<rightarrow> Y lift p through r, W connected, agree at e0.\<close>
             \<comment> \<open>Apply covering\_lift\_unique\_connected: r covering, W connected domain,
                q|_W and h|_W both lift p through r, agree at e0.\<close>
+            have hW_TE: "W \<in> TE" using hW_mem h\<W>p_open unfolding openin_on_def by (by100 blast)
             have hW_top: "is_topology_on W (subspace_topology E TE W)"
-              sorry
+            proof -
+              have "top1_locally_path_connected_on W (subspace_topology E TE W)"
+                by (rule open_subset_locally_path_connected[OF assms(7) hW_TE hW_sub_E])
+              thus ?thesis unfolding top1_locally_path_connected_on_def by (by100 blast)
+            qed
             have hq_cont_W: "top1_continuous_map_on W (subspace_topology E TE W) Y TY q"
-              sorry \<comment> \<open>Restriction of continuous q to open W.\<close>
+              using Theorem_18_2[OF hTE hTY hTY] hq_cont hW_sub_E by (by100 blast)
             have hh_cont_W: "top1_continuous_map_on W (subspace_topology E TE W) Y TY ?h"
               sorry \<comment> \<open>Composition: inv\_into V1 r continuous U''\<rightarrow>V1, p continuous W\<rightarrow>U''.\<close>
             have hrq_eq_rh: "\<forall>e'\<in>W. r (q e') = r (?h e')"
             proof (intro ballI)
               fix e' assume "e' \<in> W"
-              have "e' \<in> E" using \<open>e' \<in> W\<close> hW_mem h\<W>p_open unfolding openin_on_def sorry
-              have "r (q e') = p e'" using hq_rp \<open>e' \<in> E\<close> sorry
-              also have "\<dots> = r (?h e')" using hrh \<open>e' \<in> W\<close> sorry
-              finally show "r (q e') = r (?h e')" .
+              have "e' \<in> E" using \<open>e' \<in> W\<close> hW_sub_E by (by100 blast)
+              have "r (q e') = p e'" using hq_rp \<open>e' \<in> E\<close> by (by100 blast)
+              have "r (?h e') = p e'" using hrh \<open>e' \<in> W\<close> by (by100 blast)
+              show "r (q e') = r (?h e')" using \<open>r (q e') = p e'\<close> \<open>r (?h e') = p e'\<close> by (by100 simp)
             qed
             have hq_eq_h: "\<forall>e'\<in>W. q e' = ?h e'"
               using covering_lift_unique_connected[OF assms(6) hW_top hTB hTY hW_conn
@@ -6409,10 +6416,10 @@ next
             proof -
               have "q x \<in> V1" by (rule hx(2))
               hence "q x \<in> \<Union>\<W>r" using hV1(1) by (by100 blast)
-              hence "q x \<in> {x\<in>Y. r x \<in> U''}" using h\<W>r_union sorry
+              hence "q x \<in> {x\<in>Y. r x \<in> U''}" using h\<W>r_union by (by100 simp)
               thus ?thesis by (by100 blast)
             qed
-            hence "p x \<in> U''" using hq_rp hx(1) sorry
+            hence "p x \<in> U''" using hq_rp hx(1) by (by100 simp)
             hence "x \<in> {x\<in>E. p x \<in> U''}" using hx(1) by (by100 blast)
             hence "x \<in> \<Union>\<W>p" using h\<W>p_union by (by100 simp)
             then obtain W where "W \<in> \<W>p" "x \<in> W" by (by100 blast)
@@ -6421,7 +6428,7 @@ next
           next
             fix x assume "x \<in> \<Union>?\<V>q"
             then obtain W where "W \<in> ?\<V>q" "x \<in> W" by (by100 blast)
-            hence "x \<in> E" using h\<W>p_open unfolding openin_on_def sorry
+            hence "x \<in> E" using h\<W>p_open unfolding openin_on_def by (by100 blast)
             moreover have "q x \<in> V1" using hW_all_V1 \<open>W \<in> ?\<V>q\<close> \<open>x \<in> W\<close> by (by100 blast)
             ultimately show "x \<in> {x \<in> E. q x \<in> V1}" by (by100 blast)
           qed
