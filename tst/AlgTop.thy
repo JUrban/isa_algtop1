@@ -2051,8 +2051,62 @@ proof -
           top1_connected_on W2 (subspace_topology top1_S2 top1_S2_topology W2) \<Longrightarrow>
           W1 \<in> top1_S2_topology \<Longrightarrow> W2 \<in> top1_S2_topology \<Longrightarrow>
           closure_on top1_S2 top1_S2_topology W1 = W1 \<union> J"
-        sorry \<comment> \<open>Upper: cl(W1)\<inter>W2={} (open disjoint). S2=W1\<union>W2\<union>J. cl(W1)\<subseteq>W1\<union>J.
-               Lower: SCCBMC \<Rightarrow> J\<subseteq>cl(W1). Plus W1\<subseteq>cl(W1).\<close>
+      proof -
+        fix J W1 W2
+        assume hJ_scc: "top1_simple_closed_curve_on top1_S2 top1_S2_topology J"
+            and hW1_ne: "W1 \<noteq> {}" and hW2_ne: "W2 \<noteq> {}" and hW12_d: "W1 \<inter> W2 = {}"
+            and hW12_u: "W1 \<union> W2 = top1_S2 - J"
+            and hW1_c: "top1_connected_on W1 (subspace_topology top1_S2 top1_S2_topology W1)"
+            and hW2_c: "top1_connected_on W2 (subspace_topology top1_S2 top1_S2_topology W2)"
+            and hW1_o: "W1 \<in> top1_S2_topology" and hW2_o: "W2 \<in> top1_S2_topology"
+        \<comment> \<open>Upper: cl(W1) \<subseteq> W1 \<union> J.\<close>
+        have hW1_sub: "W1 \<subseteq> top1_S2" using hW12_u by (by100 blast)
+        have hcl_upper: "closure_on top1_S2 top1_S2_topology W1 \<subseteq> W1 \<union> J"
+        proof -
+          have "closure_on top1_S2 top1_S2_topology W1 \<inter> W2 = {}"
+          proof (rule ccontr)
+            assume "\<not> ?thesis"
+            hence "intersects (closure_on top1_S2 top1_S2_topology W1) W2"
+              unfolding intersects_def by (by100 blast)
+            from top1_intersects_closure_on_open_imp_intersects[OF hTopS2 hW1_sub hW2_o this]
+            have "intersects W1 W2" .
+            thus False using hW12_d unfolding intersects_def by (by100 blast)
+          qed
+          moreover have "closure_on top1_S2 top1_S2_topology W1 \<subseteq> top1_S2"
+            by (rule closure_on_subset_carrier[OF hTopS2 hW1_sub])
+          ultimately show ?thesis using hW12_u by (by100 blast)
+        qed
+        \<comment> \<open>Lower: W1 \<union> J \<subseteq> cl(W1).\<close>
+        have hcl_lower: "W1 \<union> J \<subseteq> closure_on top1_S2 top1_S2_topology W1"
+        proof -
+          have "W1 \<subseteq> closure_on top1_S2 top1_S2_topology W1" by (rule subset_closure_on)
+          moreover have "J \<subseteq> closure_on top1_S2 top1_S2_topology W1"
+          proof
+            fix x assume "x \<in> J"
+            hence "x \<in> top1_S2"
+              using hJ_scc unfolding top1_simple_closed_curve_on_def top1_continuous_map_on_def
+              by (by100 blast)
+            show "x \<in> closure_on top1_S2 top1_S2_topology W1"
+            proof (rule iffD2[OF Theorem_17_5a[OF hTopS2 \<open>x \<in> top1_S2\<close> hW1_sub]])
+              show "\<forall>U. neighborhood_of x top1_S2 top1_S2_topology U \<longrightarrow> intersects U W1"
+              proof (intro allI impI)
+                fix V assume "neighborhood_of x top1_S2 top1_S2_topology V"
+                hence hV: "V \<in> top1_S2_topology" "x \<in> V" unfolding neighborhood_of_def by (by100 blast)+
+                show "intersects V W1"
+                proof -
+                  have "V \<inter> W1 \<noteq> {}"
+                    by (rule simple_closed_curve_boundary_meets_component[OF hS2_strict hJ_scc
+                        hW1_c hW2_c hW12_d hW12_u hW1_ne hW2_ne hW1_o hW2_o \<open>x \<in> J\<close> hV(1) hV(2)])
+                  thus ?thesis unfolding intersects_def by (by100 blast)
+                qed
+              qed
+            qed
+          qed
+          ultimately show ?thesis by (by100 blast)
+        qed
+        show "closure_on top1_S2 top1_S2_topology W1 = W1 \<union> J"
+          using hcl_upper hcl_lower by (by100 blast)
+      qed
       \<comment> \<open>Helper: 2 connected open components of S2-SCC from Theorem\_63\_5.\<close>
       have hJCT_comps: "\<And>A1 A2. A1 \<subseteq> top1_S2 \<Longrightarrow> A2 \<subseteq> top1_S2 \<Longrightarrow>
           top1_is_arc_on A1 (subspace_topology top1_S2 top1_S2_topology A1) \<Longrightarrow>
