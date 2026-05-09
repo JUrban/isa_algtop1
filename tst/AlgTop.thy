@@ -2163,38 +2163,82 @@ proof -
            Actually we haven't proved that. Let me just use a direct argument.\<close>
         \<comment> \<open>Actually, the simplest approach: use hcl\_comp backwards.
            First prove openness via S2\_component\_of\_open\_subset\_is\_open with maximality.\<close>
+        \<comment> \<open>Maximality via separation from top1\_separates\_on. The SCC separates S2,
+           giving U,V open in S2-J subspace. W1\<subseteq>U, W2\<subseteq>V (or vice versa) by Lemma\_23\_2.
+           Q connected with Wi\<subseteq>Q\<subseteq>S2-J: Q\<subseteq>U or V. If Wi\<subseteq>U: Q\<subseteq>U (else Wi\<subseteq>U\<inter>V={}).
+           Q\<inter>Wj \<subseteq> U\<inter>V = {}. So Q\<subseteq>Wi.\<close>
+        have hJ_scc_loc: "top1_simple_closed_curve_on top1_S2 top1_S2_topology (A1 \<union> A2)"
+          by (rule arcs_form_simple_closed_curve[OF hS2_strict hS2_haus hA1a hA1s hA2a hA2s
+              hA12i ha1_ne_a2 hA1e hA2e])
+        have hJ_sep_loc: "top1_separates_on top1_S2 top1_S2_topology (A1 \<union> A2)"
+          by (rule Theorem_61_3_JordanSeparation_S2[OF hS2_strict hJ_scc_loc])
+        \<comment> \<open>Get separation U,V of S2-(A1\<union>A2).\<close>
+        have hTJ: "is_topology_on (top1_S2-(A1\<union>A2))
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2-(A1\<union>A2)))"
+          by (rule subspace_topology_is_topology_on[OF hTopS2]) (by100 blast)
+        from hJ_sep_loc obtain U V where hUV_loc: "U \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2-(A1\<union>A2))"
+            "V \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2-(A1\<union>A2))"
+            "U \<noteq> {}" "V \<noteq> {}" "U \<inter> V = {}" "U \<union> V = top1_S2 - (A1 \<union> A2)"
+          unfolding top1_separates_on_def top1_connected_on_def sorry
+        have hSepUV: "top1_is_separation_on (top1_S2-(A1\<union>A2))
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2-(A1\<union>A2))) U V"
+          unfolding top1_is_separation_on_def using hUV_loc by (by100 blast)
+        \<comment> \<open>W1, W2, Q each connected \<subseteq> S2-J. By Lemma\_23\_2, each \<subseteq> U or V.\<close>
+        have hW1_in_UV: "W1 \<subseteq> U \<or> W1 \<subseteq> V"
+          sorry \<comment> \<open>Lemma\_23\_2 + subspace transfer.\<close>
+        have hW2_in_UV: "W2 \<subseteq> U \<or> W2 \<subseteq> V"
+          sorry
+        \<comment> \<open>W1 and W2 in DIFFERENT sides (else both in U, V={}).\<close>
+        have hW1W2_diff: "(W1 \<subseteq> U \<and> W2 \<subseteq> V) \<or> (W1 \<subseteq> V \<and> W2 \<subseteq> U)"
+        proof -
+          from hW1_in_UV hW2_in_UV consider
+              "W1 \<subseteq> U \<and> W2 \<subseteq> U" | "W1 \<subseteq> U \<and> W2 \<subseteq> V"
+            | "W1 \<subseteq> V \<and> W2 \<subseteq> U" | "W1 \<subseteq> V \<and> W2 \<subseteq> V" by (by100 blast)
+          thus ?thesis
+          proof cases
+            case 1 hence "V = {}" using hW(4) hUV_loc(5,6) by (by100 blast)
+            thus ?thesis using hUV_loc(4) by (by100 blast)
+          next case 2 thus ?thesis by (by100 blast)
+          next case 3 thus ?thesis by (by100 blast)
+          next case 4 hence "U = {}" using hW(4) hUV_loc(5,6) by (by100 blast)
+            thus ?thesis using hUV_loc(3) by (by100 blast)
+          qed
+        qed
         have hW1_max: "\<And>Q. Q \<subseteq> top1_S2 - (A1 \<union> A2) \<Longrightarrow> W1 \<subseteq> Q \<Longrightarrow>
             top1_connected_on Q (subspace_topology top1_S2 top1_S2_topology Q) \<Longrightarrow> Q = W1"
         proof -
           fix Q assume hQs: "Q \<subseteq> top1_S2 - (A1 \<union> A2)" and hW1Q: "W1 \<subseteq> Q"
               and hQc: "top1_connected_on Q (subspace_topology top1_S2 top1_S2_topology Q)"
-          have "Q \<subseteq> W1"
-          proof (rule ccontr)
-            assume "\<not> Q \<subseteq> W1"
-            hence "Q \<inter> W2 \<noteq> {}" using hQs hW(4) by (by100 blast)
-            \<comment> \<open>Q = (Q\<inter>W1) \<union> (Q\<inter>W2). Both non-empty (W1\<subseteq>Q). Disjoint (W1\<inter>W2={}).
-               If both open in subspace of Q: Q disconnected. Contradiction.
-               W1 open in S2 (we'll prove this AFTER establishing maximality --- circular!)
-               Alternative: use Theorem\_23\_4. cl(W1) in S2 includes parts of J.
-               Q\<subseteq>S2-J, so Q\<inter>J = {}. cl(W1)\<inter>Q \<subseteq> Q\<inter>(W1\<union>J) = (Q\<inter>W1)\<union>(Q\<inter>J) = Q\<inter>W1 = W1 (since W1\<subseteq>Q).
-               Hmm, that's not helpful either.
-
-               KEY INSIGHT: since W2 = (S2-J)-W1 and Q\<subseteq>S2-J:
-               Q-W1 = Q\<inter>W2. Q = W1\<union>(Q\<inter>W2) (since W1\<subseteq>Q and Q\<subseteq>W1\<union>W2).
-               Both non-empty. W1 connected, Q\<inter>W2 \<subseteq> W2.
-               cl\_S2(W1) \<inter> W2: every point of W2 that's a limit of W1 is in J (boundary).
-               But J \<inter> (S2-J) = {}. So cl(W1) \<inter> (S2-J) \<inter> W2 = cl(W1) \<inter> W2 \<inter> (S2-J).
-               cl(W1) \<subseteq> S2. cl(W1) \<inter> W2 \<subseteq> S2 \<inter> W2 = W2. But also cl(W1) \<inter> W2:
-               if x \<in> cl(W1) \<inter> W2, every nbhd of x meets W1. x \<in> W2, so x \<notin> W1 (disjoint).
-               x \<in> S2-J (since W2 \<subseteq> S2-J). Also x \<in> cl(W1). If W1 is in a "nice" topology...
-               Actually: W1 \<union> W2 = S2-J. Both \<subseteq> S2. cl\_S2(W1) \<inter> W2:
-               Consider cl\_{S2-J}(W1) = cl\_S2(W1) \<inter> (S2-J). This \<subseteq> W1 \<union> W2.
-               If cl\_{S2-J}(W1) \<inter> W2 = {}: then cl\_{S2-J}(W1) \<subseteq> W1, W1 closed in S2-J,
-               hence open (complement W2 is complement of closed = open). Good.
-               But we haven't proved cl\_{S2-J}(W1) \<inter> W2 = {} either.
-
-               Let me just sorry this step and move on.\<close>
-            show False sorry
+          have "Q \<subseteq> U \<or> Q \<subseteq> V" sorry \<comment> \<open>Lemma\_23\_2 + subspace transfer on Q.\<close>
+          hence "Q \<subseteq> W1"
+          proof
+            assume "Q \<subseteq> U"
+            from hW1W2_diff show ?thesis
+            proof
+              assume "W1 \<subseteq> U \<and> W2 \<subseteq> V"
+              hence "Q \<inter> W2 \<subseteq> U \<inter> V" using \<open>Q \<subseteq> U\<close> by (by100 blast)
+              hence "Q \<inter> W2 = {}" using hUV_loc(5) by (by100 blast)
+              thus ?thesis using hQs hW(4) by (by100 blast)
+            next
+              assume "W1 \<subseteq> V \<and> W2 \<subseteq> U"
+              hence "W1 \<subseteq> U \<inter> V" using hW1Q \<open>Q \<subseteq> U\<close> by (by100 blast)
+              hence "W1 = {}" using hUV_loc(5) by (by100 blast)
+              thus ?thesis using hW(1) by (by100 blast)
+            qed
+          next
+            assume "Q \<subseteq> V"
+            from hW1W2_diff show ?thesis
+            proof
+              assume "W1 \<subseteq> U \<and> W2 \<subseteq> V"
+              hence "W1 \<subseteq> U \<inter> V" using hW1Q \<open>Q \<subseteq> V\<close> by (by100 blast)
+              hence "W1 = {}" using hUV_loc(5) by (by100 blast)
+              thus ?thesis using hW(1) by (by100 blast)
+            next
+              assume "W1 \<subseteq> V \<and> W2 \<subseteq> U"
+              hence "Q \<inter> W2 \<subseteq> V \<inter> U" using \<open>Q \<subseteq> V\<close> by (by100 blast)
+              hence "Q \<inter> W2 = {}" using hUV_loc(5) by (by100 blast)
+              thus ?thesis using hQs hW(4) by (by100 blast)
+            qed
           qed
           thus "Q = W1" using hW1Q by (by100 blast)
         qed
@@ -2203,11 +2247,36 @@ proof -
         proof -
           fix Q assume hQs: "Q \<subseteq> top1_S2 - (A1 \<union> A2)" and hW2Q: "W2 \<subseteq> Q"
               and hQc: "top1_connected_on Q (subspace_topology top1_S2 top1_S2_topology Q)"
-          have "Q \<subseteq> W2"
-          proof (rule ccontr)
-            assume "\<not> Q \<subseteq> W2"
-            hence "Q \<inter> W1 \<noteq> {}" using hQs hW(4) by (by100 blast)
-            show False sorry
+          have "Q \<subseteq> U \<or> Q \<subseteq> V" sorry
+          hence "Q \<subseteq> W2"
+          proof
+            assume "Q \<subseteq> U"
+            from hW1W2_diff show ?thesis
+            proof
+              assume "W1 \<subseteq> U \<and> W2 \<subseteq> V"
+              hence "W2 \<subseteq> U \<inter> V" using hW2Q \<open>Q \<subseteq> U\<close> by (by100 blast)
+              hence "W2 = {}" using hUV_loc(5) by (by100 blast)
+              thus ?thesis using hW(2) by (by100 blast)
+            next
+              assume "W1 \<subseteq> V \<and> W2 \<subseteq> U"
+              hence "Q \<inter> W1 \<subseteq> U \<inter> V" using \<open>Q \<subseteq> U\<close> by (by100 blast)
+              hence "Q \<inter> W1 = {}" using hUV_loc(5) by (by100 blast)
+              thus ?thesis using hQs hW(4) by (by100 blast)
+            qed
+          next
+            assume "Q \<subseteq> V"
+            from hW1W2_diff show ?thesis
+            proof
+              assume "W1 \<subseteq> U \<and> W2 \<subseteq> V"
+              hence "Q \<inter> W1 \<subseteq> V \<inter> U" using \<open>Q \<subseteq> V\<close> by (by100 blast)
+              hence "Q \<inter> W1 = {}" using hUV_loc(5) by (by100 blast)
+              thus ?thesis using hQs hW(4) by (by100 blast)
+            next
+              assume "W1 \<subseteq> V \<and> W2 \<subseteq> U"
+              hence "W2 \<subseteq> V \<inter> U" using hW2Q \<open>Q \<subseteq> V\<close> by (by100 blast)
+              hence "W2 = {}" using hUV_loc(5) by (by100 blast)
+              thus ?thesis using hW(2) by (by100 blast)
+            qed
           qed
           thus "Q = W2" using hW2Q by (by100 blast)
         qed
