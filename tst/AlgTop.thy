@@ -1393,7 +1393,34 @@ proof -
               \<and> y = (\<Sum>i<length scheme. coeffs i * vy' i)}"
             using hP_loc unfolding top1_is_polygonal_region_on_def by blast
           \<comment> \<open>From hvi and hvi1: vertices are in P, so the edge point is too.\<close>
-          show ?thesis using hi(3) ht hvi hvi1 hP_eq sorry
+          \<comment> \<open>v_i and v_{i+1} are in P (convex hull). P is convex, so
+             (1-t)*v_i + t*v_{i+1} \<in> P. Proof: combine coefficients.\<close>
+          from hvi obtain c1 where hc1: "\<forall>j<length scheme. c1 j \<ge> 0"
+              "(\<Sum>j<length scheme. c1 j) = 1"
+              "fst (vx i, vy i) = (\<Sum>j<length scheme. c1 j * vx' j)"
+              "snd (vx i, vy i) = (\<Sum>j<length scheme. c1 j * vy' j)"
+            unfolding hP_eq sorry
+          from hvi1 obtain c2 where hc2: "\<forall>j<length scheme. c2 j \<ge> 0"
+              "(\<Sum>j<length scheme. c2 j) = 1"
+              "fst (vx (Suc i mod length scheme), vy (Suc i mod length scheme)) = (\<Sum>j<length scheme. c2 j * vx' j)"
+              "snd (vx (Suc i mod length scheme), vy (Suc i mod length scheme)) = (\<Sum>j<length scheme. c2 j * vy' j)"
+            unfolding hP_eq sorry
+          let ?c = "\<lambda>j. (1-t) * c1 j + t * c2 j"
+          have hc_nn: "\<forall>j<length scheme. ?c j \<ge> 0"
+          proof (intro allI impI)
+            fix j assume "j < length scheme"
+            have "c1 j \<ge> 0" using hc1(1) \<open>j < length scheme\<close> by (by100 blast)
+            have "c2 j \<ge> 0" using hc2(1) \<open>j < length scheme\<close> by (by100 blast)
+            show "?c j \<ge> 0" using \<open>c1 j \<ge> 0\<close> \<open>c2 j \<ge> 0\<close> ht by (by100 simp)
+          qed
+          have hc_sum: "(\<Sum>j<length scheme. ?c j) = 1"
+            using hc1(2) hc2(2) ht sorry
+          have hc_x: "fst (?edge i t) = (\<Sum>j<length scheme. ?c j * vx' j)"
+            using hc1(3) hc2(3) sorry
+          have hc_y: "snd (?edge i t) = (\<Sum>j<length scheme. ?c j * vy' j)"
+            using hc1(4) hc2(4) sorry
+          show ?thesis unfolding hP_eq hi(3)
+            using hc_nn hc_sum hc_x hc_y sorry
         qed
       qed
       have hbdy_closed_P: "closedin_on P ?TP ?bdy"
