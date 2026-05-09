@@ -1414,11 +1414,31 @@ proof -
             show "?c j \<ge> 0" using \<open>c1 j \<ge> 0\<close> \<open>c2 j \<ge> 0\<close> ht by (by100 simp)
           qed
           have hc_sum: "(\<Sum>j<length scheme. ?c j) = 1"
-            using hc1(2) hc2(2) ht sorry
+          proof -
+            have "(\<Sum>j<length scheme. ?c j) = (\<Sum>j<length scheme. (1-t) * c1 j) + (\<Sum>j<length scheme. t * c2 j)"
+              by (simp add: sum.distrib)
+            also have "\<dots> = (1-t) * (\<Sum>j<length scheme. c1 j) + t * (\<Sum>j<length scheme. c2 j)"
+              by (simp add: sum_distrib_left)
+            finally show ?thesis using hc1(2) hc2(2) ht by (by100 simp)
+          qed
           have hc_x: "fst (?edge i t) = (\<Sum>j<length scheme. ?c j * vx' j)"
-            using hc1(3) hc2(3) sorry
+          proof -
+            have "(\<Sum>j<length scheme. ?c j * vx' j) =
+                (\<Sum>j<length scheme. (1-t) * c1 j * vx' j) + (\<Sum>j<length scheme. t * c2 j * vx' j)"
+              by (simp add: sum.distrib ring_distribs)
+            also have "\<dots> = (1-t) * (\<Sum>j<length scheme. c1 j * vx' j) + t * (\<Sum>j<length scheme. c2 j * vx' j)"
+              by (simp add: sum_distrib_left mult.assoc)
+            finally show ?thesis using hc1(3) hc2(3) by (by100 simp)
+          qed
           have hc_y: "snd (?edge i t) = (\<Sum>j<length scheme. ?c j * vy' j)"
-            using hc1(4) hc2(4) sorry
+          proof -
+            have "(\<Sum>j<length scheme. ?c j * vy' j) =
+                (\<Sum>j<length scheme. (1-t) * c1 j * vy' j) + (\<Sum>j<length scheme. t * c2 j * vy' j)"
+              by (simp add: sum.distrib ring_distribs)
+            also have "\<dots> = (1-t) * (\<Sum>j<length scheme. c1 j * vy' j) + t * (\<Sum>j<length scheme. c2 j * vy' j)"
+              by (simp add: sum_distrib_left mult.assoc)
+            finally show ?thesis using hc1(4) hc2(4) by (by100 simp)
+          qed
           show ?thesis unfolding hP_eq hi(3)
             using hc_nn hc_sum hc_x hc_y by auto
         qed
