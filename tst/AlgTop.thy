@@ -6378,8 +6378,26 @@ next
             qed
             \<comment> \<open>By covering\_lift\_unique\_connected: q = h on W.\<close>
             \<comment> \<open>Both q|_W and h|_W: W \<rightarrow> Y lift p through r, W connected, agree at e0.\<close>
+            \<comment> \<open>Apply covering\_lift\_unique\_connected: r covering, W connected domain,
+               q|_W and h|_W both lift p through r, agree at e0.\<close>
+            have hW_top: "is_topology_on W (subspace_topology E TE W)"
+              sorry
+            have hq_cont_W: "top1_continuous_map_on W (subspace_topology E TE W) Y TY q"
+              sorry \<comment> \<open>Restriction of continuous q to open W.\<close>
+            have hh_cont_W: "top1_continuous_map_on W (subspace_topology E TE W) Y TY ?h"
+              sorry \<comment> \<open>Composition: inv\_into V1 r continuous U''\<rightarrow>V1, p continuous W\<rightarrow>U''.\<close>
+            have hrq_eq_rh: "\<forall>e'\<in>W. r (q e') = r (?h e')"
+            proof (intro ballI)
+              fix e' assume "e' \<in> W"
+              have "e' \<in> E" using \<open>e' \<in> W\<close> hW_mem h\<W>p_open unfolding openin_on_def sorry
+              have "r (q e') = p e'" using hq_rp \<open>e' \<in> E\<close> sorry
+              also have "\<dots> = r (?h e')" using hrh \<open>e' \<in> W\<close> sorry
+              finally show "r (q e') = r (?h e')" .
+            qed
             have hq_eq_h: "\<forall>e'\<in>W. q e' = ?h e'"
-              sorry \<comment> \<open>covering\_lift\_unique\_connected[OF assms(6) ...]\<close>
+              using covering_lift_unique_connected[OF assms(6) hW_top hTB hTY hW_conn
+                  hq_cont_W hh_cont_W hrq_eq_rh he0_W(1) \<open>?h e0 = q e0\<close>[symmetric]]
+              by (by100 blast)
             have "q e = ?h e" using hq_eq_h he_W by (by100 blast)
             thus "q e \<in> V1" using hh_V1 he_W by (by100 simp)
           qed
