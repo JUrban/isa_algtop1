@@ -1126,9 +1126,33 @@ proof -
               hence "q' p = q' p0" by (by100 simp)
               thus "p \<in> ?Fx" using \<open>p \<in> P'\<close> \<open>q' p0 = x\<close> by (by100 simp)
             qed
-            \<comment> \<open>Slice of closed R at p0 is closed. Preimage of {p0} under projection.\<close>
-            \<comment> \<open>Slice of closed R at p0 is closed: preimage of R under p \<mapsto> (p,p0).\<close>
-            thus ?thesis sorry \<comment> \<open>i_{p0} continuous, R closed \<Rightarrow> i_{p0}\<inverse>(R) closed.\<close>
+            \<comment> \<open>Slice of closed R at p0: {p\<in>P'|(p,p0)\<in>R} = preimage of R under i_{p0}.\<close>
+            \<comment> \<open>i_{p0} continuous, R closed \<Rightarrow> preimage closed.\<close>
+            have hTP'_prod: "is_topology_on (P' \<times> P') (product_topology_on TP' TP')"
+              by (rule product_topology_on_is_topology_on[OF hTP' hTP'])
+            have "closedin_on P' TP' {p \<in> P'. (\<lambda>p. (p, p0)) p \<in> ?R}"
+            proof (rule continuous_preimage_closedin[OF hTP' hTP'_prod _ hR'cl])
+              show "top1_continuous_map_on P' TP' (P' \<times> P') (product_topology_on TP' TP') (\<lambda>p. (p, p0))"
+              proof -
+                have hpi1: "top1_continuous_map_on P' TP' P' TP' (pi1 \<circ> (\<lambda>p. (p, p0)))"
+                proof -
+                  have heq: "pi1 \<circ> (\<lambda>p. (p, p0)) = id" unfolding pi1_def comp_def id_def by (by100 simp)
+                  show ?thesis unfolding heq by (rule top1_continuous_map_on_id[OF hTP'])
+                qed
+                have hpi2: "top1_continuous_map_on P' TP' P' TP' (pi2 \<circ> (\<lambda>p. (p, p0)))"
+                proof -
+                  have heq2: "pi2 \<circ> (\<lambda>p. (p, p0)) = (\<lambda>_. p0)" unfolding pi2_def comp_def by (by100 simp)
+                  have "top1_continuous_map_on P' TP' P' TP' (\<lambda>_. p0)"
+                    using Theorem_18_2[OF hTP' hTP' hTP'] \<open>p0 \<in> P'\<close> by (by100 blast)
+                  thus ?thesis unfolding heq2 .
+                qed
+                from iffD2[OF Theorem_18_4[OF hTP' hTP' hTP']] hpi1 hpi2
+                show ?thesis by (by100 blast)
+              qed
+            qed
+            moreover have "{p \<in> P'. (\<lambda>p. (p, p0)) p \<in> ?R} = {p \<in> P'. (p, p0) \<in> ?R}" by (by100 simp)
+            ultimately have "closedin_on P' TP' {p \<in> P'. (p, p0) \<in> ?R}" by (by100 simp)
+            thus ?thesis using hFx_eq by (by100 simp)
           qed
           have hFy_cl: "closedin_on P' TP' ?Fy"
           proof -
@@ -1145,8 +1169,31 @@ proof -
               hence "q' p = q' p0" by (by100 simp)
               thus "p \<in> ?Fy" using \<open>p \<in> P'\<close> \<open>q' p0 = y\<close> by (by100 simp)
             qed
-            \<comment> \<open>Slice of closed R at p0 is closed: preimage of R under p \<mapsto> (p,p0).\<close>
-            thus ?thesis sorry \<comment> \<open>i_{p0} continuous, R closed \<Rightarrow> i_{p0}\<inverse>(R) closed.\<close>
+            have hTP'_prod: "is_topology_on (P' \<times> P') (product_topology_on TP' TP')"
+              by (rule product_topology_on_is_topology_on[OF hTP' hTP'])
+            have "closedin_on P' TP' {p \<in> P'. (\<lambda>p. (p, p0)) p \<in> ?R}"
+            proof (rule continuous_preimage_closedin[OF hTP' hTP'_prod _ hR'cl])
+              show "top1_continuous_map_on P' TP' (P' \<times> P') (product_topology_on TP' TP') (\<lambda>p. (p, p0))"
+              proof -
+                have hpi1: "top1_continuous_map_on P' TP' P' TP' (pi1 \<circ> (\<lambda>p. (p, p0)))"
+                proof -
+                  have heq: "pi1 \<circ> (\<lambda>p. (p, p0)) = id" unfolding pi1_def comp_def id_def by (by100 simp)
+                  show ?thesis unfolding heq by (rule top1_continuous_map_on_id[OF hTP'])
+                qed
+                have hpi2: "top1_continuous_map_on P' TP' P' TP' (pi2 \<circ> (\<lambda>p. (p, p0)))"
+                proof -
+                  have heq2: "pi2 \<circ> (\<lambda>p. (p, p0)) = (\<lambda>_. p0)" unfolding pi2_def comp_def by (by100 simp)
+                  have "top1_continuous_map_on P' TP' P' TP' (\<lambda>_. p0)"
+                    using Theorem_18_2[OF hTP' hTP' hTP'] \<open>p0 \<in> P'\<close> by (by100 blast)
+                  thus ?thesis unfolding heq2 .
+                qed
+                from iffD2[OF Theorem_18_4[OF hTP' hTP' hTP']] hpi1 hpi2
+                show ?thesis by (by100 blast)
+              qed
+            qed
+            moreover have "{p \<in> P'. (\<lambda>p. (p, p0)) p \<in> ?R} = {p \<in> P'. (p, p0) \<in> ?R}" by (by100 simp)
+            ultimately have "closedin_on P' TP' {p \<in> P'. (p, p0) \<in> ?R}" by (by100 simp)
+            thus ?thesis using hFy_eq by (by100 simp)
           qed
           \<comment> \<open>By normality: disjoint open U \<supseteq> Fx, V \<supseteq> Fy.\<close>
           from normal_separation[OF hP'N hFx_cl hFy_cl hFxy_disj]
