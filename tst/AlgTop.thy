@@ -6258,7 +6258,31 @@ next
     have hU_sub_B: "?U \<subseteq> B" using hU_open unfolding openin_on_def by (by100 blast)
     have "\<exists>U''. U'' \<in> TB \<and> ?b \<in> U'' \<and> U'' \<subseteq> ?U \<and> U'' \<subseteq> B
         \<and> top1_path_connected_on U'' (subspace_topology B TB U'')"
-      sorry \<comment> \<open>B lpc + ?U open \<ni> b \<Rightarrow> path-connected open U'' with b \<in> U'' \<subseteq> ?U.\<close>
+    proof -
+      \<comment> \<open>By Theorem 25.4: B lpc \<Rightarrow> path components of open sets are open.\<close>
+      have hpc_open: "\<forall>P \<in> top1_path_components_on ?U (subspace_topology B TB ?U). P \<in> TB"
+        using iffD1[OF Theorem_25_4[OF hTB]] hB_lpc hU_TB hU_sub_B by (by100 blast)
+      \<comment> \<open>Path component of b in U.\<close>
+      let ?P = "top1_path_component_of_on ?U (subspace_topology B TB ?U) ?b"
+      have hU_top: "is_topology_on ?U (subspace_topology B TB ?U)"
+      proof -
+        have "top1_locally_path_connected_on ?U (subspace_topology B TB ?U)"
+          by (rule open_subset_locally_path_connected[OF hB_lpc hU_TB hU_sub_B])
+        thus ?thesis unfolding top1_locally_path_connected_on_def by (by100 blast)
+      qed
+      have hP_comp: "?P \<in> top1_path_components_on ?U (subspace_topology B TB ?U)"
+        using hU_b unfolding top1_path_components_on_def by (by100 blast)
+      have hP_TB: "?P \<in> TB" using hpc_open hP_comp by (by100 blast)
+      have hP_b: "?b \<in> ?P" by (rule top1_path_component_of_on_self_mem[OF hU_top hU_b])
+      have hP_sub: "?P \<subseteq> ?U" by (rule top1_path_component_of_on_subset[OF hU_top hU_b])
+      have hP_sub_B: "?P \<subseteq> B" using hP_sub hU_sub_B by (by100 blast)
+      have hP_pc: "top1_path_connected_on ?P (subspace_topology ?U (subspace_topology B TB ?U) ?P)"
+        by (rule top1_path_component_of_on_path_connected[OF hU_top hU_b])
+      have "subspace_topology ?U (subspace_topology B TB ?U) ?P = subspace_topology B TB ?P"
+        by (rule subspace_topology_trans[OF hP_sub])
+      hence "top1_path_connected_on ?P (subspace_topology B TB ?P)" using hP_pc by (by100 simp)
+      thus ?thesis using hP_TB hP_b hP_sub hP_sub_B by (by100 blast)
+    qed
     then obtain U'' where hU''_TB: "U'' \<in> TB" and hU''_b: "?b \<in> U''" and hU''_sub: "U'' \<subseteq> ?U"
         and hU''_sub_B: "U'' \<subseteq> B"
         and hU''_pc: "top1_path_connected_on U'' (subspace_topology B TB U'')"
@@ -6324,13 +6348,104 @@ next
             thus "top1_connected_on W (subspace_topology E TE W)"
               by (rule top1_path_connected_imp_connected)
           qed
-          \<comment> \<open>For W \<in> \<W>p with q(e) \<in> V1 for some e \<in> W: q maps ALL of W into V1.\<close>
           have hV1_homeo: "top1_homeomorphism_on V1 (subspace_topology Y TY V1)
               U'' (subspace_topology B TB U'') r"
             using h\<W>r_homeo hV1(1) by (by100 blast)
           have hr_bij_V1: "bij_betw r V1 U''"
             using hV1_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
           have hr_inj_V1: "inj_on r V1" using hr_bij_V1 unfolding bij_betw_def by (by100 blast)
+          \<comment> \<open>Shared fact: for each W \<in> \<V>q, q = (inv_into V1 r) \<circ> p on W.\<close>
+          have hq_eq_h_all: "\<forall>W\<in>?\<V>q. \<forall>e'\<in>W. q e' = inv_into V1 r (p e')"
+          proof (intro ballI)
+            fix W e' assume hWq: "W \<in> ?\<V>q" and he': "e' \<in> W"
+            \<comment> \<open>This follows from the internal hq\_eq\_h established in hW\_all\_V1.\<close>
+            \<comment> \<open>We re-derive it via covering\_lift\_unique\_connected.\<close>
+            have hW_mem: "W \<in> \<W>p" using hWq by (by100 blast)
+            obtain e0 where he0_W: "e0 \<in> W" "q e0 \<in> V1" using hWq by (by100 blast)
+            have hW_sub_E: "W \<subseteq> E" using hW_mem h\<W>p_open unfolding openin_on_def by (by100 blast)
+            have hW_conn: "top1_connected_on W (subspace_topology E TE W)"
+              using hW_connected hW_mem by (by100 blast)
+            have hW_TE: "W \<in> TE" using hW_mem h\<W>p_open unfolding openin_on_def by (by100 blast)
+            have hW_top: "is_topology_on W (subspace_topology E TE W)"
+            proof -
+              have "top1_locally_path_connected_on W (subspace_topology E TE W)"
+                by (rule open_subset_locally_path_connected[OF assms(7) hW_TE hW_sub_E])
+              thus ?thesis unfolding top1_locally_path_connected_on_def by (by100 blast)
+            qed
+            let ?h = "\<lambda>e. inv_into V1 r (p e)"
+            have hW_pU: "\<forall>e1\<in>W. p e1 \<in> U''"
+            proof (intro ballI)
+              fix e1 assume "e1 \<in> W"
+              thus "p e1 \<in> U''" using hW_mem h\<W>p_union by (by100 blast)
+            qed
+            have hh_V1: "\<forall>e1\<in>W. ?h e1 \<in> V1"
+            proof (intro ballI)
+              fix e1 assume "e1 \<in> W"
+              have "p e1 \<in> r ` V1" using hr_bij_V1 hW_pU \<open>e1 \<in> W\<close> unfolding bij_betw_def by (by100 blast)
+              thus "?h e1 \<in> V1" using inv_into_into[OF \<open>p e1 \<in> r ` V1\<close>] by (by100 simp)
+            qed
+            \<comment> \<open>q(e0) = h(e0) by injectivity of r on V1.\<close>
+            have "?h e0 = q e0"
+            proof -
+              have "p e0 \<in> r ` V1" using hr_bij_V1 hW_pU he0_W(1) unfolding bij_betw_def by (by100 blast)
+              have "r (?h e0) = p e0" by (rule f_inv_into_f[OF \<open>p e0 \<in> r ` V1\<close>])
+              have "r (q e0) = p e0" using hq_rp he0_W(1) hW_sub_E by (by100 blast)
+              have "?h e0 \<in> V1" using hh_V1 he0_W(1) by (by100 blast)
+              have "r (?h e0) = r (q e0)" using \<open>r (?h e0) = p e0\<close> \<open>r (q e0) = p e0\<close> by (by100 simp)
+              thus ?thesis using hr_inj_V1 \<open>?h e0 \<in> V1\<close> he0_W(2)
+                unfolding inj_on_def by (by100 blast)
+            qed
+            \<comment> \<open>Both lifts of p through r, agree at e0, W connected \<Rightarrow> agree everywhere.\<close>
+            have hq_cont_W: "top1_continuous_map_on W (subspace_topology E TE W) Y TY q"
+            proof -
+              have "\<forall>A f. top1_continuous_map_on E TE Y TY f \<and> A \<subseteq> E \<longrightarrow>
+                  top1_continuous_map_on A (subspace_topology E TE A) Y TY f"
+                using Theorem_18_2[OF hTE hTY hTY] by (by100 blast)
+              thus ?thesis using hq_cont hW_sub_E by (by100 blast)
+            qed
+            have hh_cont_W: "top1_continuous_map_on W (subspace_topology E TE W) Y TY ?h"
+            proof -
+              have hp_W: "top1_continuous_map_on W (subspace_topology E TE W)
+                  U'' (subspace_topology B TB U'') p"
+                using h\<W>p_homeo hW_mem unfolding top1_homeomorphism_on_def by (by100 blast)
+              have hinv_r: "top1_continuous_map_on U'' (subspace_topology B TB U'')
+                  V1 (subspace_topology Y TY V1) (inv_into V1 r)"
+                using homeomorphism_inverse[OF hV1_homeo]
+                unfolding top1_homeomorphism_on_def by (by100 blast)
+              have "top1_continuous_map_on W (subspace_topology E TE W)
+                  V1 (subspace_topology Y TY V1) (inv_into V1 r \<circ> p)"
+                by (rule top1_continuous_map_on_comp[OF hp_W hinv_r])
+              hence hcomp: "top1_continuous_map_on W (subspace_topology E TE W)
+                  V1 (subspace_topology Y TY V1) ?h"
+                unfolding comp_def by (by100 simp)
+              have hV1_sub_Y: "V1 \<subseteq> Y" using hV1_open unfolding openin_on_def by (by100 blast)
+              show ?thesis unfolding top1_continuous_map_on_def
+              proof (intro conjI ballI)
+                fix e1 assume "e1 \<in> W"
+                thus "?h e1 \<in> Y" using hh_V1 \<open>e1 \<in> W\<close> hV1_sub_Y by (by100 blast)
+              next
+                fix V assume "V \<in> TY"
+                have "{e1 \<in> W. ?h e1 \<in> V} = {e1 \<in> W. ?h e1 \<in> V \<inter> V1}" using hh_V1 by (by100 blast)
+                moreover have "V \<inter> V1 \<in> subspace_topology Y TY V1"
+                  using \<open>V \<in> TY\<close> unfolding subspace_topology_def by (by100 blast)
+                hence "{e1 \<in> W. ?h e1 \<in> V \<inter> V1} \<in> subspace_topology E TE W"
+                  using hcomp unfolding top1_continuous_map_on_def by (by100 blast)
+                ultimately show "{e1 \<in> W. ?h e1 \<in> V} \<in> subspace_topology E TE W" by (by100 simp)
+              qed
+            qed
+            have hrq_eq_rh: "\<forall>e1\<in>W. r (q e1) = r (?h e1)"
+            proof (intro ballI)
+              fix e1 assume "e1 \<in> W"
+              have "r (q e1) = p e1" using hq_rp \<open>e1 \<in> W\<close> hW_sub_E by (by100 blast)
+              have "p e1 \<in> r ` V1" using hr_bij_V1 hW_pU \<open>e1 \<in> W\<close> unfolding bij_betw_def by (by100 blast)
+              have "r (?h e1) = p e1" by (rule f_inv_into_f[OF \<open>p e1 \<in> r ` V1\<close>])
+              show "r (q e1) = r (?h e1)" using \<open>r (q e1) = p e1\<close> \<open>r (?h e1) = p e1\<close> by (by100 simp)
+            qed
+            from covering_lift_unique_connected[OF assms(6) hW_top hTB hTY hW_conn
+                hq_cont_W hh_cont_W hrq_eq_rh he0_W(1) \<open>?h e0 = q e0\<close>[symmetric]]
+            show "q e' = inv_into V1 r (p e')" using he' by (by100 blast)
+          qed
+          \<comment> \<open>For W \<in> \<W>p with q(e) \<in> V1 for some e \<in> W: q maps ALL of W into V1.\<close>
           have hW_all_V1: "\<forall>W\<in>?\<V>q. \<forall>e\<in>W. q e \<in> V1"
           proof (intro ballI)
             fix W e assume hWq: "W \<in> ?\<V>q" and he_W: "e \<in> W"
@@ -6390,9 +6505,48 @@ next
               thus ?thesis unfolding top1_locally_path_connected_on_def by (by100 blast)
             qed
             have hq_cont_W: "top1_continuous_map_on W (subspace_topology E TE W) Y TY q"
-              using Theorem_18_2[OF hTE hTY hTY] hq_cont hW_sub_E by (by100 blast)
+            proof -
+              have "\<forall>A f. top1_continuous_map_on E TE Y TY f \<and> A \<subseteq> E \<longrightarrow>
+                  top1_continuous_map_on A (subspace_topology E TE A) Y TY f"
+                using Theorem_18_2[OF hTE hTY hTY] by (by100 blast)
+              thus ?thesis using hq_cont hW_sub_E by (by100 blast)
+            qed
             have hh_cont_W: "top1_continuous_map_on W (subspace_topology E TE W) Y TY ?h"
-              sorry \<comment> \<open>Composition: inv\_into V1 r continuous U''\<rightarrow>V1, p continuous W\<rightarrow>U''.\<close>
+            proof -
+              have hp_W_U: "top1_continuous_map_on W (subspace_topology E TE W)
+                  U'' (subspace_topology B TB U'') p"
+                using h\<W>p_homeo hW_mem unfolding top1_homeomorphism_on_def by (by100 blast)
+              have hinv_U_V1: "top1_continuous_map_on U'' (subspace_topology B TB U'')
+                  V1 (subspace_topology Y TY V1) (inv_into V1 r)"
+                using homeomorphism_inverse[OF hV1_homeo]
+                unfolding top1_homeomorphism_on_def by (by100 blast)
+              have hcomp0: "top1_continuous_map_on W (subspace_topology E TE W)
+                  V1 (subspace_topology Y TY V1) (inv_into V1 r \<circ> p)"
+                by (rule top1_continuous_map_on_comp[OF hp_W_U hinv_U_V1])
+              have hcomp_eq: "(inv_into V1 r \<circ> p) = (\<lambda>e. inv_into V1 r (p e))"
+                unfolding comp_def by (by100 simp)
+              have hcomp: "top1_continuous_map_on W (subspace_topology E TE W)
+                  V1 (subspace_topology Y TY V1) (\<lambda>e. inv_into V1 r (p e))"
+                using hcomp0 hcomp_eq by (by100 simp)
+              \<comment> \<open>Lift from V1-subspace to Y: direct proof.\<close>
+              have hV1_sub_Y: "V1 \<subseteq> Y" using hV1_open unfolding openin_on_def by (by100 blast)
+              show ?thesis unfolding top1_continuous_map_on_def
+              proof (intro conjI ballI)
+                fix e' assume "e' \<in> W"
+                thus "inv_into V1 r (p e') \<in> Y" using hh_V1 \<open>e' \<in> W\<close> hV1_sub_Y by (by100 blast)
+              next
+                fix V assume "V \<in> TY"
+                have "V \<inter> V1 \<in> subspace_topology Y TY V1"
+                  using \<open>V \<in> TY\<close> unfolding subspace_topology_def by (by100 blast)
+                hence "{e' \<in> W. inv_into V1 r (p e') \<in> V \<inter> V1} \<in> subspace_topology E TE W"
+                  using hcomp unfolding top1_continuous_map_on_def by (by100 blast)
+                moreover have "{e' \<in> W. inv_into V1 r (p e') \<in> V} =
+                    {e' \<in> W. inv_into V1 r (p e') \<in> V \<inter> V1}"
+                  using hh_V1 by (by100 blast)
+                ultimately show "{e' \<in> W. inv_into V1 r (p e') \<in> V} \<in> subspace_topology E TE W"
+                  by (by100 simp)
+              qed
+            qed
             have hrq_eq_rh: "\<forall>e'\<in>W. r (q e') = r (?h e')"
             proof (intro ballI)
               fix e' assume "e' \<in> W"
@@ -6434,7 +6588,101 @@ next
           qed
           show "\<forall>W\<in>?\<V>q. top1_homeomorphism_on W (subspace_topology E TE W)
               V1 (subspace_topology Y TY V1) q"
-            sorry \<comment> \<open>q|\_W = (r|_{V1})^{-1} \<circ> p|\_W = composition of homeomorphisms.\<close>
+          proof (intro ballI)
+            fix W assume hWq: "W \<in> ?\<V>q"
+            have hW_mem: "W \<in> \<W>p" using hWq by (by100 blast)
+            \<comment> \<open>Re-derive q = h on W.\<close>
+            have hW_sub_E: "W \<subseteq> E" using hW_mem h\<W>p_open unfolding openin_on_def by (by100 blast)
+            have hq_eq_h_W: "\<forall>e'\<in>W. q e' = inv_into V1 r (p e')"
+              using hq_eq_h_all hWq by (by100 blast)
+            \<comment> \<open>Composition of homeomorphisms: (inv_into V1 r) \<circ> p: W \<cong> V1.\<close>
+            have hp_homeo_W: "top1_homeomorphism_on W (subspace_topology E TE W)
+                U'' (subspace_topology B TB U'') p"
+              using h\<W>p_homeo hW_mem by (by100 blast)
+            have hinv_homeo: "top1_homeomorphism_on U'' (subspace_topology B TB U'')
+                V1 (subspace_topology Y TY V1) (inv_into V1 r)"
+              by (rule homeomorphism_inverse[OF hV1_homeo])
+            have hcomp_homeo: "top1_homeomorphism_on W (subspace_topology E TE W)
+                V1 (subspace_topology Y TY V1) (inv_into V1 r \<circ> p)"
+              by (rule homeomorphism_compose[OF hp_homeo_W hinv_homeo])
+            \<comment> \<open>q agrees with inv_into V1 r \<circ> p on W, so transfer homeomorphism.\<close>
+            have hq_eq_comp: "\<forall>x\<in>W. q x = (inv_into V1 r \<circ> p) x"
+              using hq_eq_h_W by (by100 simp)
+            \<comment> \<open>Transfer: same function on carrier \<Rightarrow> same homeomorphism.\<close>
+            show "top1_homeomorphism_on W (subspace_topology E TE W)
+                V1 (subspace_topology Y TY V1) q"
+            proof -
+              let ?g = "inv_into V1 r \<circ> p"
+              \<comment> \<open>bij_betw: q and g agree on W, g is bijective W \<rightarrow> V1.\<close>
+              have hg_bij: "bij_betw ?g W V1"
+                using hcomp_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+              have hq_bij: "bij_betw q W V1"
+              proof -
+                have "q ` W = ?g ` W"
+                proof (rule set_eqI, rule iffI)
+                  fix y assume "y \<in> q ` W"
+                  then obtain w where "w \<in> W" "y = q w" by (by100 blast)
+                  hence "y = ?g w" using hq_eq_comp by (by100 blast)
+                  thus "y \<in> ?g ` W" using \<open>w \<in> W\<close> by (by100 blast)
+                next
+                  fix y assume "y \<in> ?g ` W"
+                  then obtain w where "w \<in> W" "y = ?g w" by (by100 blast)
+                  have "q w = ?g w" using hq_eq_comp \<open>w \<in> W\<close> by (by100 blast)
+                  hence "y = q w" using \<open>y = ?g w\<close> by (by100 simp)
+                  thus "y \<in> q ` W" using \<open>w \<in> W\<close> by (by100 blast)
+                qed
+                have "inj_on q W"
+                proof (rule inj_onI)
+                  fix x y assume "x \<in> W" "y \<in> W" "q x = q y"
+                  have "?g x = ?g y"
+                    using hq_eq_comp \<open>x \<in> W\<close> \<open>y \<in> W\<close> \<open>q x = q y\<close> by (by100 simp)
+                  have "inj_on ?g W" using hg_bij unfolding bij_betw_def by (by100 blast)
+                  thus "x = y" using \<open>x \<in> W\<close> \<open>y \<in> W\<close> \<open>?g x = ?g y\<close>
+                    unfolding inj_on_def by (by100 blast)
+                qed
+                thus ?thesis using hg_bij \<open>q ` W = ?g ` W\<close>
+                  unfolding bij_betw_def by (by100 blast)
+              qed
+              \<comment> \<open>Continuity: q and g agree on W.\<close>
+              have hq_cont_WV1: "top1_continuous_map_on W (subspace_topology E TE W)
+                  V1 (subspace_topology Y TY V1) q"
+                using iffD2[OF top1_continuous_map_on_cong[of W q ?g]] hq_eq_comp
+                  hcomp_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+              \<comment> \<open>Inverse continuity: inv_into W q agrees with inv_into W g on V1.\<close>
+              have hinv_cont: "top1_continuous_map_on V1 (subspace_topology Y TY V1)
+                  W (subspace_topology E TE W) (inv_into W q)"
+              proof -
+                have hg_inv_cont: "top1_continuous_map_on V1 (subspace_topology Y TY V1)
+                    W (subspace_topology E TE W) (inv_into W ?g)"
+                  using hcomp_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+                have "\<forall>y\<in>V1. inv_into W q y = inv_into W ?g y"
+                proof (intro ballI)
+                  fix y assume "y \<in> V1"
+                  have "y \<in> q ` W" using hq_bij \<open>y \<in> V1\<close> unfolding bij_betw_def by (by100 blast)
+                  then obtain w where "w \<in> W" "q w = y" by (by100 blast)
+                  have hinj_q: "inj_on q W" using hq_bij unfolding bij_betw_def by (by100 blast)
+                  have "inv_into W q (q w) = w" by (rule inv_into_f_f[OF hinj_q \<open>w \<in> W\<close>])
+                  hence "inv_into W q y = w" using \<open>q w = y\<close> by (by100 simp)
+                  have "q w = ?g w" using hq_eq_comp \<open>w \<in> W\<close> by (by100 blast)
+                  hence "?g w = y" using \<open>q w = y\<close> by (by100 simp)
+                  have hinj_g: "inj_on ?g W" using hg_bij unfolding bij_betw_def by (by100 blast)
+                  have "inv_into W ?g (?g w) = w" by (rule inv_into_f_f[OF hinj_g \<open>w \<in> W\<close>])
+                  hence "inv_into W ?g y = w" using \<open>?g w = y\<close> by (by100 simp)
+                  thus "inv_into W q y = inv_into W ?g y"
+                    using \<open>inv_into W q y = w\<close> by (by100 simp)
+                qed
+                thus ?thesis
+                  using iffD2[OF top1_continuous_map_on_cong[of V1 "inv_into W q" "inv_into W ?g"]]
+                    hg_inv_cont by (by100 blast)
+              qed
+              have hW_top_loc: "is_topology_on W (subspace_topology E TE W)"
+                using hp_homeo_W unfolding top1_homeomorphism_on_def by (by100 blast)
+              have hV1_top: "is_topology_on V1 (subspace_topology Y TY V1)"
+                using hV1_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+              show ?thesis unfolding top1_homeomorphism_on_def
+                using hW_top_loc hV1_top hq_bij hq_cont_WV1 hinv_cont by (by100 blast)
+            qed
+          qed
         qed
       qed
     qed
