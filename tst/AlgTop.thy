@@ -2041,14 +2041,99 @@ proof -
 
          The issue is: D' being a proper subset of C12\_inner is allowed.
          D' is a component of S2-D but NOT a component of S2-J12.\<close>
-      \<comment> \<open>Contradiction via J12 component analysis.
-         Key: D'\<subseteq>C12y \<Rightarrow> Arc3-{a1,a2}\<subseteq>cl(D')\<subseteq>cl(C12y)=C12y\<union>J12,
-         but Arc3-{a1,a2}\<subseteq>C12x. So Arc3-{a1,a2}\<subseteq>C12x\<inter>(C12y\<union>J12) = {}.
-         Contradicts Arc3-{a1,a2}\<noteq>{}. Hence D'\<subseteq>C12x.
-         Similarly from J13: D'\<subseteq>C13x. Then both Ri\_e and D' in C12x\<inter>C13x.
-         But C12x\<inter>C13x can hold at most 1 theta-component \<Rightarrow> Ri\_e = D'. Contradiction.\<close>
-      show False
+      \<comment> \<open>Contradiction: Rk is a component of S2-J12 AND S2-J13.
+         cl(Rk) = Rk\<union>J12 = Rk\<union>J13 \<Rightarrow> J12 = J13 \<Rightarrow> Arc2 = Arc3.
+         But a3 \<in> Arc2 = Arc3 = e24\<union>e41, contradicting ha3\_not\_e24, ha3\_not\_e41.\<close>
+      \<comment> \<open>Step 1: Get 2 connected components of S2-J12 via Theorem\_63\_5.\<close>
+      obtain C12a C12b where hC12: "C12a \<noteq> {}" "C12b \<noteq> {}" "C12a \<inter> C12b = {}"
+          "C12a \<union> C12b = top1_S2 - (e12 \<union> ?Arc2)"
+          "top1_connected_on C12a (subspace_topology top1_S2 top1_S2_topology C12a)"
+          "top1_connected_on C12b (subspace_topology top1_S2 top1_S2_topology C12b)"
+          "C12a \<in> top1_S2_topology" "C12b \<in> top1_S2_topology"
+        sorry \<comment> \<open>JCT + Theorem\_63\_5 on J12.\<close>
+      \<comment> \<open>Step 2: e34-{a3,a4} \<subseteq> S2-J12. a4 \<in> S2-J12. Determine side.\<close>
+      have he34_in_S2J12: "e34 - {a3, a4} \<subseteq> top1_S2 - (e12 \<union> ?Arc2)"
+        sorry \<comment> \<open>e34 \<inter> (e12\<union>Arc2) = {a3}.\<close>
+      \<comment> \<open>e34 \<subseteq> C12a or C12b. a4 determines which.\<close>
+      have "\<exists>C12x C12y. {C12x, C12y} = {C12a, C12b}
+          \<and> e34 - {a3, a4} \<subseteq> C12x \<and> D' \<subseteq> C12x \<and> Rk \<subseteq> C12y"
+        sorry \<comment> \<open>Lemma\_23\_2 + Arc3 closure argument.\<close>
+      then obtain C12x C12y where hC12xy: "{C12x, C12y} = {C12a, C12b}"
+          "e34 - {a3, a4} \<subseteq> C12x" "D' \<subseteq> C12x" "Rk \<subseteq> C12y"
         sorry
+      \<comment> \<open>Step 3: Same for J13.\<close>
+      obtain C13a C13b where hC13: "C13a \<noteq> {}" "C13b \<noteq> {}" "C13a \<inter> C13b = {}"
+          "C13a \<union> C13b = top1_S2 - (e12 \<union> ?Arc3)"
+          "top1_connected_on C13a (subspace_topology top1_S2 top1_S2_topology C13a)"
+          "top1_connected_on C13b (subspace_topology top1_S2 top1_S2_topology C13b)"
+          "C13a \<in> top1_S2_topology" "C13b \<in> top1_S2_topology"
+        sorry \<comment> \<open>JCT + Theorem\_63\_5 on J13.\<close>
+      have "\<exists>C13x C13y. {C13x, C13y} = {C13a, C13b}
+          \<and> e34 - {a3, a4} \<subseteq> C13x \<and> D' \<subseteq> C13x \<and> Rk \<subseteq> C13y"
+        sorry
+      then obtain C13x C13y where hC13xy: "{C13x, C13y} = {C13a, C13b}"
+          "e34 - {a3, a4} \<subseteq> C13x" "D' \<subseteq> C13x" "Rk \<subseteq> C13y"
+        sorry
+      \<comment> \<open>Step 4: Rk = C12y (component of S2-J12) and Rk = C13y (component of S2-J13).\<close>
+      have hC12y_eq_Rk: "C12y = Rk"
+        sorry \<comment> \<open>S2-J12 = R1\<union>R2\<union>R3\<union>(Arc3-{a1,a2}). Ri\_e,Ri\_D,Arc3 \<subseteq> C12x. Rk \<subseteq> C12y. C12y = Rk.\<close>
+      have hC13y_eq_Rk: "C13y = Rk"
+        sorry \<comment> \<open>Same argument for J13.\<close>
+      \<comment> \<open>Step 5: cl(Rk) = Rk \<union> J12 = Rk \<union> J13. Hence J12 = J13.\<close>
+      have hC12y_props: "C12y \<inter> C12x = {}" "C12y \<union> C12x = top1_S2 - (e12 \<union> ?Arc2)"
+        sorry
+      have hC13y_props: "C13y \<inter> C13x = {}" "C13y \<union> C13x = top1_S2 - (e12 \<union> ?Arc3)"
+        sorry
+      \<comment> \<open>cl(Rk) from J12: use SCCBMC.\<close>
+      have hcl_Rk_J12: "closure_on top1_S2 top1_S2_topology Rk = Rk \<union> (e12 \<union> ?Arc2)"
+        sorry \<comment> \<open>Rk = C12y is component of S2-J12. SCCBMC \<Rightarrow> cl = comp \<union> SCC.\<close>
+      have hcl_Rk_J13: "closure_on top1_S2 top1_S2_topology Rk = Rk \<union> (e12 \<union> ?Arc3)"
+        sorry \<comment> \<open>Same for J13.\<close>
+      \<comment> \<open>Step 6: J12 = J13 \<Rightarrow> Arc2 = Arc3 \<Rightarrow> a3 \<in> Arc3 = e24\<union>e41. Contradiction.\<close>
+      have hJ12_eq_J13: "e12 \<union> ?Arc2 = e12 \<union> ?Arc3"
+      proof -
+        have "Rk \<union> (e12 \<union> ?Arc2) = Rk \<union> (e12 \<union> ?Arc3)"
+          using hcl_Rk_J12 hcl_Rk_J13 by (by100 simp)
+        moreover have "Rk \<inter> (e12 \<union> ?Arc2) = {}"
+        proof -
+          have "Rk \<subseteq> R1 \<union> R2 \<union> R3" using hRk(1) by (by100 blast)
+          hence "Rk \<subseteq> top1_S2 - ?theta" using hR(7) by (by100 blast)
+          thus ?thesis by (by100 blast)
+        qed
+        moreover have "Rk \<inter> (e12 \<union> ?Arc3) = {}"
+        proof -
+          have "Rk \<subseteq> top1_S2 - ?theta" using hRk(1) hR(7) by (by100 blast)
+          thus ?thesis by (by100 blast)
+        qed
+        ultimately show ?thesis by (by100 blast)
+      qed
+      hence hArc2_eq_Arc3: "?Arc2 = ?Arc3"
+      proof -
+        from hJ12_eq_J13 have h_sub: "?Arc2 \<subseteq> e12 \<union> ?Arc3" "?Arc3 \<subseteq> e12 \<union> ?Arc2"
+          by (by100 blast)+
+        have "?Arc2 \<subseteq> ?Arc3"
+        proof -
+          { fix x assume "x \<in> ?Arc2"
+            hence "x \<in> e12 \<union> ?Arc3" using h_sub(1) by (by100 blast)
+            moreover { assume "x \<in> e12" hence "x \<in> {a1, a2}" using hint12 \<open>x \<in> ?Arc2\<close> by (by100 blast)
+              hence "x \<in> ?Arc3" using hint13 by (by100 blast) }
+            ultimately have "x \<in> ?Arc3" by (by100 blast) }
+          thus ?thesis by (by100 blast)
+        qed
+        moreover have "?Arc3 \<subseteq> ?Arc2"
+        proof -
+          { fix x assume "x \<in> ?Arc3"
+            hence "x \<in> e12 \<union> ?Arc2" using h_sub(2) by (by100 blast)
+            moreover { assume "x \<in> e12" hence "x \<in> {a1, a2}" using hint13 \<open>x \<in> ?Arc3\<close> by (by100 blast)
+              hence "x \<in> ?Arc2" using hint12 by (by100 blast) }
+            ultimately have "x \<in> ?Arc2" by (by100 blast) }
+          thus ?thesis by (by100 blast)
+        qed
+        ultimately show ?thesis by (by100 blast)
+      qed
+      have "a3 \<in> ?Arc2" using assms(20) unfolding top1_arc_endpoints_on_def by (by100 blast)
+      hence "a3 \<in> e24 \<union> e41" using hArc2_eq_Arc3 by (by100 blast)
+      thus False using ha3_not_e24 ha3_not_e41 by (by100 blast)
     qed
     show ?thesis using h_both_cases by (by100 blast)
   qed
