@@ -1896,18 +1896,61 @@ proof -
       qed
       \<comment> \<open>Now: S2-D = C\<union>D'. D' = Ri\_D (a theta component). Ri\_e \<subseteq> C.
          The third Rk is \<subseteq> C (since Rk\<subseteq>D'=Ri\_D would mean Rk\<subseteq>Ri\_D, but Rk\<inter>Ri\_D = {}).\<close>
-      obtain Rk where hRk: "Rk \<in> {R1, R2, R3}" "Rk \<noteq> Ri_e" "Rk \<noteq> Ri_D"
-        sorry \<comment> \<open>Pick 3rd: blast hangs on 6-case; needs explicit case split.\<close>
+      \<comment> \<open>Pick 3rd element and prove disjointness via explicit case analysis.\<close>
+      have hRk_exists: "\<exists>Rk. Rk \<in> {R1, R2, R3} \<and> Rk \<noteq> Ri_e \<and> Rk \<noteq> Ri_D \<and> Rk \<inter> Ri_D = {}"
+      proof -
+        \<comment> \<open>Explicit 6 cases.\<close>
+        have hR_dist: "R1 \<noteq> R2" "R2 \<noteq> R3" "R1 \<noteq> R3"
+          using hR(1,2,3,4,5,6) by (by100 blast)+
+        { assume h: "Ri_e = R1" "Ri_D = R2"
+          have h1: "R3 \<in> {R1,R2,R3}" by (by100 simp)
+          have h2: "R3 \<noteq> Ri_e" using hR_dist h by (by100 blast)
+          have h3: "R3 \<noteq> Ri_D" using hR_dist h by (by100 blast)
+          have h4: "R3 \<inter> Ri_D = {}" using hR(5) h by (by100 blast)
+          have ?thesis by (rule exI[of _ R3], intro conjI, rule h1, rule h2, rule h3, rule h4) }
+        moreover
+        { assume h: "Ri_e = R1" "Ri_D = R3"
+          have h1: "R2 \<in> {R1,R2,R3}" by (by100 simp)
+          have h2: "R2 \<noteq> Ri_e" using hR_dist h by (by100 blast)
+          have h3: "R2 \<noteq> Ri_D" using hR_dist h by (by100 blast)
+          have h4: "R2 \<inter> Ri_D = {}" using hR(5) h by (by100 blast)
+          have ?thesis by (rule exI[of _ R2], intro conjI, rule h1, rule h2, rule h3, rule h4) }
+        moreover
+        { assume h: "Ri_e = R2" "Ri_D = R1"
+          have h1: "R3 \<in> {R1,R2,R3}" by (by100 simp)
+          have h2: "R3 \<noteq> Ri_e" using hR_dist h by (by100 blast)
+          have h3: "R3 \<noteq> Ri_D" using hR_dist h by (by100 blast)
+          have h4: "R3 \<inter> Ri_D = {}" using hR(6) h by (by100 blast)
+          have ?thesis by (rule exI[of _ R3], intro conjI, rule h1, rule h2, rule h3, rule h4) }
+        moreover
+        { assume h: "Ri_e = R2" "Ri_D = R3"
+          have h1: "R1 \<in> {R1,R2,R3}" by (by100 simp)
+          have h2: "R1 \<noteq> Ri_e" using hR_dist h by (by100 blast)
+          have h3: "R1 \<noteq> Ri_D" using hR_dist h by (by100 blast)
+          have h4: "R1 \<inter> Ri_D = {}" using hR(6) h by (by100 blast)
+          have ?thesis by (rule exI[of _ R1], intro conjI, rule h1, rule h2, rule h3, rule h4) }
+        moreover
+        { assume h: "Ri_e = R3" "Ri_D = R1"
+          have h1: "R2 \<in> {R1,R2,R3}" by (by100 simp)
+          have h2: "R2 \<noteq> Ri_e" using hR_dist h by (by100 blast)
+          have h3: "R2 \<noteq> Ri_D" using hR_dist h by (by100 blast)
+          have h4: "R2 \<inter> Ri_D = {}" using hR(4) h by (by100 blast)
+          have ?thesis by (rule exI[of _ R2], intro conjI, rule h1, rule h2, rule h3, rule h4) }
+        moreover
+        { assume h: "Ri_e = R3" "Ri_D = R2"
+          have h1: "R1 \<in> {R1,R2,R3}" by (by100 simp)
+          have h2: "R1 \<noteq> Ri_e" using hR_dist h by (by100 blast)
+          have h3: "R1 \<noteq> Ri_D" using hR_dist h by (by100 blast)
+          have h4: "R1 \<inter> Ri_D = {}" using hR(4) h by (by100 blast)
+          have ?thesis by (rule exI[of _ R1], intro conjI, rule h1, rule h2, rule h3, rule h4) }
+        ultimately show ?thesis using hRie(1) hRiD(1) hRi_ne by (metis (no_types) insertE singletonD)
+      qed
+      then obtain Rk where hRk: "Rk \<in> {R1, R2, R3}" "Rk \<noteq> Ri_e" "Rk \<noteq> Ri_D"
+          and hRk_disj_RiD: "Rk \<inter> Ri_D = {}" by (metis (no_types))
       have hRk_sub_C: "Rk \<subseteq> C"
       proof -
         have hRk_disj_D': "Rk \<inter> D' = {}"
-        proof -
-          have "Rk \<inter> Ri_D = {}"
-          proof -
-            from hRk(1,3) hRiD(1) show ?thesis using hR(4,5,6) sorry
-          qed
-          thus ?thesis using hRiD_eq_D' by (by100 simp)
-        qed
+          using hRk_disj_RiD hRiD_eq_D' by (by100 simp)
         have "Rk \<subseteq> A \<union> B" by (rule hRi_sub_AB[OF hRk(1)])
         thus ?thesis using hRk_disj_D' hCD'_union by (by100 blast)
       qed
