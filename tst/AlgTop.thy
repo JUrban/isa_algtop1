@@ -2041,6 +2041,12 @@ proof -
 
          The issue is: D' being a proper subset of C12\_inner is allowed.
          D' is a component of S2-D but NOT a component of S2-J12.\<close>
+      \<comment> \<open>Contradiction via J12 component analysis.
+         Key: D'\<subseteq>C12y \<Rightarrow> Arc3-{a1,a2}\<subseteq>cl(D')\<subseteq>cl(C12y)=C12y\<union>J12,
+         but Arc3-{a1,a2}\<subseteq>C12x. So Arc3-{a1,a2}\<subseteq>C12x\<inter>(C12y\<union>J12) = {}.
+         Contradicts Arc3-{a1,a2}\<noteq>{}. Hence D'\<subseteq>C12x.
+         Similarly from J13: D'\<subseteq>C13x. Then both Ri\_e and D' in C12x\<inter>C13x.
+         But C12x\<inter>C13x can hold at most 1 theta-component \<Rightarrow> Ri\_e = D'. Contradiction.\<close>
       show False
         sorry
     qed
