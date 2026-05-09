@@ -1348,9 +1348,25 @@ proof -
       qed
       \<comment> \<open>?bdy \<times> ?bdy is compact (each edge is compact image of [0,1],
          finite union of compact = compact, product of compact = compact).\<close>
+      \<comment> \<open>Boundary compact: each edge is compact image of [0,1], finite union compact.\<close>
+      \<comment> \<open>P is compact (polygonal region = convex hull).\<close>
+      have hP_compact_here: "top1_compact_on P ?TP"
+        sorry \<comment> \<open>Same argument as hP\_compact in compactness proof: convex\_hull\_compact.\<close>
+      have hbdy_sub_P: "?bdy \<subseteq> P" sorry
+      have hbdy_closed_P: "closedin_on P ?TP ?bdy" sorry
+      have hbdy_compact_P: "top1_compact_on ?bdy (subspace_topology P ?TP ?bdy)"
+        by (rule Theorem_26_2[OF hP_compact_here hbdy_closed_P])
       have hbdy_compact: "top1_compact_on (?bdy \<times> ?bdy)
           (subspace_topology (P \<times> P) (product_topology_on ?TP ?TP) (?bdy \<times> ?bdy))"
-        sorry
+      proof -
+        have "top1_compact_on (?bdy \<times> ?bdy)
+            (product_topology_on (subspace_topology P ?TP ?bdy) (subspace_topology P ?TP ?bdy))"
+          by (rule Theorem_26_7[OF hbdy_compact_P hbdy_compact_P])
+        moreover have "product_topology_on (subspace_topology P ?TP ?bdy) (subspace_topology P ?TP ?bdy)
+            = subspace_topology (P \<times> P) (product_topology_on ?TP ?TP) (?bdy \<times> ?bdy)"
+          sorry \<comment> \<open>Product of subspace = subspace of product.\<close>
+        ultimately show ?thesis sorry
+      qed
       \<comment> \<open>?R \<inter> (?bdy \<times> ?bdy) is compact: it's a finite union of edge-pair identification
          sets, each compact (image of [0,1] under continuous map t \<mapsto> (edge\_i(t), edge\_j(f(t)))).\<close>
       have hR_bdy_compact: "top1_compact_on (?R \<inter> (?bdy \<times> ?bdy))
