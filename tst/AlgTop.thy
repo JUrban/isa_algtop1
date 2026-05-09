@@ -1236,10 +1236,24 @@ proof -
      finitely many boundary pairs. Prove via: P Hausdorff \<Rightarrow> closed map \<Rightarrow> Hausdorff quotient.\<close>
   have hhausdorff: "is_hausdorff_on X TX"
   proof -
-    obtain P q where hP_loc: "top1_is_polygonal_region_on P (length scheme)"
+    obtain P q vx vy where hP_loc: "top1_is_polygonal_region_on P (length scheme)"
         and hq_loc: "top1_quotient_map_on P
             (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) X TX q"
-      by (rule quotient_of_scheme_extract[OF hsch])
+        and hlen_loc: "length scheme \<ge> 3"
+        and hvert_loc: "\<forall>i<length scheme. (vx i, vy i) \<in> P"
+        and hedge_loc: "\<forall>i<length scheme. \<forall>j<length scheme. fst (scheme!i) = fst (scheme!j) \<longrightarrow>
+            (\<forall>t\<in>I_set. q ((1-t) * vx i + t * vx (Suc i mod length scheme),
+                (1-t) * vy i + t * vy (Suc i mod length scheme))
+             = (if snd (scheme!i) = snd (scheme!j)
+                then q ((1-t) * vx j + t * vx (Suc j mod length scheme),
+                        (1-t) * vy j + t * vy (Suc j mod length scheme))
+                else q (t * vx j + (1-t) * vx (Suc j mod length scheme),
+                        t * vy j + (1-t) * vy (Suc j mod length scheme))))"
+        and hinterior_loc: "\<forall>p\<in>P. (\<forall>i<length scheme. \<forall>t\<in>I_set.
+              p \<noteq> ((1-t) * vx i + t * vx (Suc i mod length scheme),
+                    (1-t) * vy i + t * vy (Suc i mod length scheme)))
+           \<longrightarrow> (\<forall>p'\<in>P. q p = q p' \<longrightarrow> p = p')"
+      by (rule quotient_of_scheme_extract_full[OF hsch])
     let ?TP = "subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P"
     \<comment> \<open>Step 1: R^2 is Hausdorff.\<close>
     have hR_haus: "is_hausdorff_on (UNIV::real set) top1_open_sets"
@@ -1262,9 +1276,45 @@ proof -
     have hR_closed: "closedin_on (P \<times> P)
         (product_topology_on ?TP ?TP)
         {(a, b). a \<in> P \<and> b \<in> P \<and> q a = q b}"
-      sorry \<comment> \<open>R = diagonal \<union> R\<inter>(\<partial>P\<times>\<partial>P). Diagonal closed (P Hausdorff).
-             \<partial>P compact (finite union of edges). R\<inter>(\<partial>P\<times>\<partial>P) compact hence closed.
-             Uses quotient\_of\_scheme\_extract\_full for interior singleton fibers.\<close>
+    proof -
+      let ?n = "length scheme"
+      let ?R = "{(a, b). a \<in> P \<and> b \<in> P \<and> q a = q b}"
+      \<comment> \<open>Define boundary: the union of all edges.\<close>
+      let ?edge = "\<lambda>i t. ((1-t) * vx i + t * vx (Suc i mod ?n),
+                          (1-t) * vy i + t * vy (Suc i mod ?n))"
+      let ?bdy = "\<Union>i\<in>{..<length scheme}. ?edge i ` I_set"
+      \<comment> \<open>Interior points have singleton q-fibers (from hinterior\_loc).\<close>
+      \<comment> \<open>So R \<subseteq> diagonal \<union> (?bdy \<times> ?bdy).\<close>
+      have hR_sub: "?R \<subseteq> {(a, b). a \<in> P \<and> b \<in> P \<and> a = b} \<union> (?bdy \<times> ?bdy)"
+        sorry \<comment> \<open>If a \<in> P, b \<in> P, q a = q b, a \<noteq> b, then both a, b \<in> ?bdy
+               (contrapositive of hinterior\_loc).\<close>
+      \<comment> \<open>The diagonal is closed (P\<times>P Hausdorff, equalizer of pi1, pi2).\<close>
+      have hPP_haus: "is_hausdorff_on (P \<times> P) (product_topology_on ?TP ?TP)"
+        sorry
+      have hDiag_closed: "closedin_on (P \<times> P) (product_topology_on ?TP ?TP)
+          {(a, b). a \<in> P \<and> b \<in> P \<and> a = b}"
+        sorry
+      \<comment> \<open>?bdy \<times> ?bdy is compact (each edge is compact image of [0,1],
+         finite union of compact = compact, product of compact = compact).\<close>
+      have hbdy_compact: "top1_compact_on (?bdy \<times> ?bdy)
+          (subspace_topology (P \<times> P) (product_topology_on ?TP ?TP) (?bdy \<times> ?bdy))"
+        sorry
+      \<comment> \<open>?R \<inter> (?bdy \<times> ?bdy) is compact: it's a finite union of edge-pair identification
+         sets, each compact (image of [0,1] under continuous map t \<mapsto> (edge\_i(t), edge\_j(f(t)))).\<close>
+      have hR_bdy_compact: "top1_compact_on (?R \<inter> (?bdy \<times> ?bdy))
+          (subspace_topology (P \<times> P) (product_topology_on ?TP ?TP) (?R \<inter> (?bdy \<times> ?bdy)))"
+        sorry
+      \<comment> \<open>Compact in Hausdorff is closed.\<close>
+      have hR_bdy_closed: "closedin_on (P \<times> P) (product_topology_on ?TP ?TP) (?R \<inter> (?bdy \<times> ?bdy))"
+        sorry
+      \<comment> \<open>R \<subseteq> diagonal \<union> (?bdy \<times> ?bdy), so R = (R \<inter> diagonal) \<union> (R \<inter> (?bdy \<times> ?bdy)).
+         R \<inter> diagonal = diagonal (on P\<times>P). Both parts closed. Union closed.\<close>
+      have "?R = {(a, b). a \<in> P \<and> b \<in> P \<and> a = b} \<union> (?R \<inter> (?bdy \<times> ?bdy))"
+        using hR_sub sorry
+      hence "closedin_on (P \<times> P) (product_topology_on ?TP ?TP) ?R"
+        sorry
+      thus ?thesis sorry
+    qed
     \<comment> \<open>Closed equivalence relation on compact Hausdorff \<Rightarrow> Hausdorff quotient.\<close>
     have hclosed_R_haus: "\<And>P' TP' X' TX' q'.
         is_hausdorff_on P' TP' \<Longrightarrow> top1_compact_on P' TP' \<Longrightarrow>
