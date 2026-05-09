@@ -1154,7 +1154,8 @@ proof -
           p \<noteq> ((1-t) * vx i + t * vx (Suc i mod length scheme),
                 (1-t) * vy i + t * vy (Suc i mod length scheme)))
        \<longrightarrow> (\<forall>p'\<in>P. q p = q p' \<longrightarrow> p = p')"
-    using assms unfolding top1_quotient_of_scheme_on_def sorry
+    using assms unfolding top1_quotient_of_scheme_on_def
+    by (elim conjE exE) blast
   have h6: "length scheme \<ge> 3"
     using h1 unfolding top1_is_polygonal_region_on_def by (by100 blast)
   show ?thesis by (rule that[OF h1 h2 h6 h3 h4 h5])
