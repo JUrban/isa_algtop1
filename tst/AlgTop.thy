@@ -2328,28 +2328,29 @@ proof -
            So Rk in W12y (\<noteq> W12x). And W12y contains only Rk from S2-J12.
            Hence W12y \<subseteq> Rk (since S2-J12 = R1\<union>R2\<union>R3\<union>(Arc3-{a1,a2}) and rest in W12x).
            And Rk \<subseteq> W12y. So W12y = Rk.\<close>
+        \<comment> \<open>Shared topology facts for S2-J12.\<close>
+        have hTJ12: "is_topology_on (top1_S2 - (e12\<union>?Arc2))
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (e12\<union>?Arc2)))"
+          by (rule subspace_topology_is_topology_on[OF hTopS2]) (by100 blast)
+        have hW12a_os: "W12a \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2-(e12\<union>?Arc2))"
+        proof -
+          have "W12a = (top1_S2-(e12\<union>?Arc2)) \<inter> W12a" using hW12(4) by (by100 blast)
+          thus ?thesis unfolding subspace_topology_def using hW12(7) by (by100 blast)
+        qed
+        have hW12b_os: "W12b \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2-(e12\<union>?Arc2))"
+        proof -
+          have "W12b = (top1_S2-(e12\<union>?Arc2)) \<inter> W12b" using hW12(4) by (by100 blast)
+          thus ?thesis unfolding subspace_topology_def using hW12(8) by (by100 blast)
+        qed
+        have hSep12: "top1_is_separation_on (top1_S2-(e12\<union>?Arc2))
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2-(e12\<union>?Arc2))) W12a W12b"
+          unfolding top1_is_separation_on_def
+          using hW12a_os hW12b_os hW12(1,2,3,4) by (by100 blast)
         \<comment> \<open>Compute: Ri\_D in which side? Use Lemma\_23\_2.\<close>
         have hRiD_in_W12: "Ri_D \<subseteq> W12a \<or> Ri_D \<subseteq> W12b"
         proof -
           have hRiD_conn: "top1_connected_on Ri_D (subspace_topology top1_S2 top1_S2_topology Ri_D)"
             using hRiD(1) hR(8,9,10) by (by100 blast)
-          have hTJ12: "is_topology_on (top1_S2 - (e12\<union>?Arc2))
-              (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (e12\<union>?Arc2)))"
-            by (rule subspace_topology_is_topology_on[OF hTopS2]) (by100 blast)
-          have hW12a_os: "W12a \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2-(e12\<union>?Arc2))"
-          proof -
-            have "W12a = (top1_S2-(e12\<union>?Arc2)) \<inter> W12a" using hW12(4) by (by100 blast)
-            thus ?thesis unfolding subspace_topology_def using hW12(7) by (by100 blast)
-          qed
-          have hW12b_os: "W12b \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2-(e12\<union>?Arc2))"
-          proof -
-            have "W12b = (top1_S2-(e12\<union>?Arc2)) \<inter> W12b" using hW12(4) by (by100 blast)
-            thus ?thesis unfolding subspace_topology_def using hW12(8) by (by100 blast)
-          qed
-          have hSep12: "top1_is_separation_on (top1_S2-(e12\<union>?Arc2))
-              (subspace_topology top1_S2 top1_S2_topology (top1_S2-(e12\<union>?Arc2))) W12a W12b"
-            unfolding top1_is_separation_on_def
-            using hW12a_os hW12b_os hW12(1,2,3,4) by (by100 blast)
           have hRiD_conn_sub: "top1_connected_on Ri_D
               (subspace_topology (top1_S2-(e12\<union>?Arc2))
                   (subspace_topology top1_S2 top1_S2_topology (top1_S2-(e12\<union>?Arc2))) Ri_D)"
@@ -2411,7 +2412,23 @@ proof -
             have "Ri_e \<subseteq> W12a"
             proof -
               have "Ri_e \<subseteq> W12a \<or> Ri_e \<subseteq> W12b"
-                sorry \<comment> \<open>Lemma\_23\_2 on Ri\_e in S2-J12.\<close>
+              proof -
+                have hRie_conn_loc: "top1_connected_on Ri_e (subspace_topology top1_S2 top1_S2_topology Ri_e)"
+                  using hRie(1) hR(8,9,10) by (by100 blast)
+                have hRie_conn_sub: "top1_connected_on Ri_e
+                    (subspace_topology (top1_S2-(e12\<union>?Arc2))
+                        (subspace_topology top1_S2 top1_S2_topology (top1_S2-(e12\<union>?Arc2))) Ri_e)"
+                proof -
+                  have "subspace_topology top1_S2 top1_S2_topology Ri_e =
+                      subspace_topology (top1_S2-(e12\<union>?Arc2))
+                          (subspace_topology top1_S2 top1_S2_topology (top1_S2-(e12\<union>?Arc2))) Ri_e"
+                    using subspace_topology_trans[of Ri_e "top1_S2-(e12\<union>?Arc2)" top1_S2 top1_S2_topology]
+                        hRie_sub by (by100 simp)
+                  thus ?thesis using hRie_conn_loc by (by100 simp)
+                qed
+                from Lemma_23_2[OF hTJ12 hSep12 hRie_sub hRie_conn_sub]
+                show ?thesis by (by100 blast)
+              qed
               moreover have "\<not> (Ri_e \<subseteq> W12b)"
               proof
                 assume "Ri_e \<subseteq> W12b"
@@ -2492,7 +2509,23 @@ proof -
               moreover have "Ri_e \<subseteq> W12a"
               proof -
                 have "Ri_e \<subseteq> W12a \<or> Ri_e \<subseteq> W12b"
-                  sorry \<comment> \<open>Lemma\_23\_2.\<close>
+                proof -
+                  have hRie_conn_loc2: "top1_connected_on Ri_e (subspace_topology top1_S2 top1_S2_topology Ri_e)"
+                    using hRie(1) hR(8,9,10) by (by100 blast)
+                  have hRie_conn_sub2: "top1_connected_on Ri_e
+                      (subspace_topology (top1_S2-(e12\<union>?Arc2))
+                          (subspace_topology top1_S2 top1_S2_topology (top1_S2-(e12\<union>?Arc2))) Ri_e)"
+                  proof -
+                    have "subspace_topology top1_S2 top1_S2_topology Ri_e =
+                        subspace_topology (top1_S2-(e12\<union>?Arc2))
+                            (subspace_topology top1_S2 top1_S2_topology (top1_S2-(e12\<union>?Arc2))) Ri_e"
+                      using subspace_topology_trans[of Ri_e "top1_S2-(e12\<union>?Arc2)" top1_S2 top1_S2_topology]
+                          hRie_sub by (by100 simp)
+                    thus ?thesis using hRie_conn_loc2 by (by100 simp)
+                  qed
+                  from Lemma_23_2[OF hTJ12 hSep12 hRie_sub hRie_conn_sub2]
+                  show ?thesis by (by100 blast)
+                qed
                 moreover have "\<not>(Ri_e \<subseteq> W12b)"
                 proof
                   assume "Ri_e \<subseteq> W12b"
