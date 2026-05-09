@@ -2176,18 +2176,48 @@ proof -
         have hTJ: "is_topology_on (top1_S2-(A1\<union>A2))
             (subspace_topology top1_S2 top1_S2_topology (top1_S2-(A1\<union>A2)))"
           by (rule subspace_topology_is_topology_on[OF hTopS2]) (by100 blast)
-        from hJ_sep_loc obtain U V where hUV_loc: "U \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2-(A1\<union>A2))"
+        have "\<not> top1_connected_on (top1_S2-(A1\<union>A2)) (subspace_topology top1_S2 top1_S2_topology (top1_S2-(A1\<union>A2)))"
+          using hJ_sep_loc unfolding top1_separates_on_def by (by100 simp)
+        hence "\<exists>U V. U \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2-(A1\<union>A2))
+            \<and> V \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2-(A1\<union>A2))
+            \<and> U \<noteq> {} \<and> V \<noteq> {} \<and> U \<inter> V = {} \<and> U \<union> V = top1_S2 - (A1 \<union> A2)"
+          unfolding top1_connected_on_def using hTJ by (by100 blast)
+        then obtain U V where hUV_loc: "U \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2-(A1\<union>A2))"
             "V \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2-(A1\<union>A2))"
             "U \<noteq> {}" "V \<noteq> {}" "U \<inter> V = {}" "U \<union> V = top1_S2 - (A1 \<union> A2)"
-          unfolding top1_separates_on_def top1_connected_on_def sorry
+          by (metis (no_types))
         have hSepUV: "top1_is_separation_on (top1_S2-(A1\<union>A2))
             (subspace_topology top1_S2 top1_S2_topology (top1_S2-(A1\<union>A2))) U V"
           unfolding top1_is_separation_on_def using hUV_loc by (by100 blast)
         \<comment> \<open>W1, W2, Q each connected \<subseteq> S2-J. By Lemma\_23\_2, each \<subseteq> U or V.\<close>
         have hW1_in_UV: "W1 \<subseteq> U \<or> W1 \<subseteq> V"
-          sorry \<comment> \<open>Lemma\_23\_2 + subspace transfer.\<close>
+        proof -
+          have "top1_connected_on W1 (subspace_topology (top1_S2-(A1\<union>A2))
+              (subspace_topology top1_S2 top1_S2_topology (top1_S2-(A1\<union>A2))) W1)"
+          proof -
+            have "subspace_topology top1_S2 top1_S2_topology W1 =
+                subspace_topology (top1_S2-(A1\<union>A2))
+                    (subspace_topology top1_S2 top1_S2_topology (top1_S2-(A1\<union>A2))) W1"
+              using subspace_topology_trans[of W1 "top1_S2-(A1\<union>A2)" top1_S2 top1_S2_topology]
+                  hW1s by (by100 simp)
+            thus ?thesis using hW(5) by (by100 simp)
+          qed
+          from Lemma_23_2[OF hTJ hSepUV hW1s this] show ?thesis by (by100 blast)
+        qed
         have hW2_in_UV: "W2 \<subseteq> U \<or> W2 \<subseteq> V"
-          sorry
+        proof -
+          have "top1_connected_on W2 (subspace_topology (top1_S2-(A1\<union>A2))
+              (subspace_topology top1_S2 top1_S2_topology (top1_S2-(A1\<union>A2))) W2)"
+          proof -
+            have "subspace_topology top1_S2 top1_S2_topology W2 =
+                subspace_topology (top1_S2-(A1\<union>A2))
+                    (subspace_topology top1_S2 top1_S2_topology (top1_S2-(A1\<union>A2))) W2"
+              using subspace_topology_trans[of W2 "top1_S2-(A1\<union>A2)" top1_S2 top1_S2_topology]
+                  hW2s by (by100 simp)
+            thus ?thesis using hW(6) by (by100 simp)
+          qed
+          from Lemma_23_2[OF hTJ hSepUV hW2s this] show ?thesis by (by100 blast)
+        qed
         \<comment> \<open>W1 and W2 in DIFFERENT sides (else both in U, V={}).\<close>
         have hW1W2_diff: "(W1 \<subseteq> U \<and> W2 \<subseteq> V) \<or> (W1 \<subseteq> V \<and> W2 \<subseteq> U)"
         proof -
@@ -2209,7 +2239,20 @@ proof -
         proof -
           fix Q assume hQs: "Q \<subseteq> top1_S2 - (A1 \<union> A2)" and hW1Q: "W1 \<subseteq> Q"
               and hQc: "top1_connected_on Q (subspace_topology top1_S2 top1_S2_topology Q)"
-          have "Q \<subseteq> U \<or> Q \<subseteq> V" sorry \<comment> \<open>Lemma\_23\_2 + subspace transfer on Q.\<close>
+          have "Q \<subseteq> U \<or> Q \<subseteq> V"
+          proof -
+            have "top1_connected_on Q (subspace_topology (top1_S2-(A1\<union>A2))
+                (subspace_topology top1_S2 top1_S2_topology (top1_S2-(A1\<union>A2))) Q)"
+            proof -
+              have "subspace_topology top1_S2 top1_S2_topology Q =
+                  subspace_topology (top1_S2-(A1\<union>A2))
+                      (subspace_topology top1_S2 top1_S2_topology (top1_S2-(A1\<union>A2))) Q"
+                using subspace_topology_trans[of Q "top1_S2-(A1\<union>A2)" top1_S2 top1_S2_topology]
+                    hQs by (by100 simp)
+              thus ?thesis using hQc by (by100 simp)
+            qed
+            from Lemma_23_2[OF hTJ hSepUV hQs this] show ?thesis by (by100 blast)
+          qed
           hence "Q \<subseteq> W1"
           proof
             assume "Q \<subseteq> U"
@@ -2247,7 +2290,20 @@ proof -
         proof -
           fix Q assume hQs: "Q \<subseteq> top1_S2 - (A1 \<union> A2)" and hW2Q: "W2 \<subseteq> Q"
               and hQc: "top1_connected_on Q (subspace_topology top1_S2 top1_S2_topology Q)"
-          have "Q \<subseteq> U \<or> Q \<subseteq> V" sorry
+          have "Q \<subseteq> U \<or> Q \<subseteq> V"
+          proof -
+            have "top1_connected_on Q (subspace_topology (top1_S2-(A1\<union>A2))
+                (subspace_topology top1_S2 top1_S2_topology (top1_S2-(A1\<union>A2))) Q)"
+            proof -
+              have "subspace_topology top1_S2 top1_S2_topology Q =
+                  subspace_topology (top1_S2-(A1\<union>A2))
+                      (subspace_topology top1_S2 top1_S2_topology (top1_S2-(A1\<union>A2))) Q"
+                using subspace_topology_trans[of Q "top1_S2-(A1\<union>A2)" top1_S2 top1_S2_topology]
+                    hQs by (by100 simp)
+              thus ?thesis using hQc by (by100 simp)
+            qed
+            from Lemma_23_2[OF hTJ hSepUV hQs this] show ?thesis by (by100 blast)
+          qed
           hence "Q \<subseteq> W2"
           proof
             assume "Q \<subseteq> U"
