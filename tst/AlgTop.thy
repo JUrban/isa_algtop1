@@ -1158,27 +1158,12 @@ proof -
           \<comment> \<open>Projection of closed from compact is closed (tube lemma consequence).\<close>
           have hproj_closed: "\<And>C. closedin_on (P' \<times> P') (product_topology_on TP' TP') C \<Longrightarrow>
               closedin_on P' TP' {a \<in> P'. \<exists>b. (a, b) \<in> C}"
-            sorry \<comment> \<open>Standard: p \<notin> \<pi>_1(C) \<Rightarrow> {p}\<times>P' \<inter> C = {} \<Rightarrow> tube lemma \<Rightarrow> nbhd W with W\<times>P' \<inter> C = {}.\<close>
+            sorry \<comment> \<open>Projection from compact is closed map. Proof: tube lemma (Lemma\_26\_8).\<close>
           have hSU_closed: "closedin_on P' TP' ?SU"
-          proof -
-            have "closedin_on (P' \<times> P') (product_topology_on TP' TP') (?R \<inter> (P' \<times> (P' - U)))"
-            proof -
-              have "closedin_on (P' \<times> P') (product_topology_on TP' TP') (P' \<times> (P' - U))"
-                sorry \<comment> \<open>P' closed in P' (trivial), P'-U closed in P' (U open).\<close>
-              thus ?thesis using hR'cl sorry \<comment> \<open>Intersection of closed is closed.\<close>
-            qed
-            moreover have "?SU = {a \<in> P'. \<exists>b. (a, b) \<in> (?R \<inter> (P' \<times> (P' - U)))}"
-              sorry \<comment> \<open>Set equality with pair membership.\<close>
-            ultimately show ?thesis using hproj_closed sorry
-          qed
+            sorry \<comment> \<open>?SU = \<pi>_1(R \<inter> (P'\<times>(P'-U))). R closed, P'\<times>(P'-U) closed \<Rightarrow> intersection closed.
+                   Projection of closed from compact is closed (hproj\_closed).\<close>
           have hSV_closed: "closedin_on P' TP' ?SV"
-          proof -
-            have "closedin_on (P' \<times> P') (product_topology_on TP' TP') (?R \<inter> (P' \<times> (P' - V)))"
-              sorry
-            moreover have "?SV = {a \<in> P'. \<exists>b. (a, b) \<in> (?R \<inter> (P' \<times> (P' - V)))}"
-              sorry
-            ultimately show ?thesis using hproj_closed sorry
-          qed
+            sorry \<comment> \<open>Same argument with V.\<close>
           \<comment> \<open>P' - ?SU is open and saturated. q'(P' - ?SU) is open in X'.\<close>
           have hWx_open: "X' - q' ` (P' - U) \<in> TX'"
           proof -
