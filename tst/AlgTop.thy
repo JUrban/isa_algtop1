@@ -25,6 +25,90 @@ theorem Theorem_64_4_K5_not_planar:
   shows False
   sorry
 
+(** from \<S>65 Lemma 65.1(b): for K_4 subspace of S^2, the inclusion j: C \<rightarrow> S^2-p-q
+    induces an isomorphism of fundamental groups.
+    The old cached version (Lemma_65_1_K4_subgraph) only proves existence of a nontrivial
+    loop, which is too weak. This version states the full isomorphism, following algtop.tex. **)
+lemma Lemma_65_1b_K4_isomorphism:
+  fixes a1 a2 a3 a4 :: "real \<times> real \<times> real"
+    and e12 e23 e34 e41 e13 e24 :: "(real \<times> real \<times> real) set"
+    and C :: "(real \<times> real \<times> real) set"
+    and p q :: "real \<times> real \<times> real"
+    and c0 :: "real \<times> real \<times> real"
+  assumes "is_topology_on_strict top1_S2 top1_S2_topology"
+      and "card {a1, a2, a3, a4} = 4"
+      and "{a1, a2, a3, a4} \<subseteq> top1_S2"
+      and "e12 \<subseteq> top1_S2" and "e23 \<subseteq> top1_S2" and "e34 \<subseteq> top1_S2"
+      and "e41 \<subseteq> top1_S2" and "e13 \<subseteq> top1_S2" and "e24 \<subseteq> top1_S2"
+      and "top1_is_arc_on e12 (subspace_topology top1_S2 top1_S2_topology e12)"
+      and "top1_is_arc_on e23 (subspace_topology top1_S2 top1_S2_topology e23)"
+      and "top1_is_arc_on e34 (subspace_topology top1_S2 top1_S2_topology e34)"
+      and "top1_is_arc_on e41 (subspace_topology top1_S2 top1_S2_topology e41)"
+      and "top1_is_arc_on e13 (subspace_topology top1_S2 top1_S2_topology e13)"
+      and "top1_is_arc_on e24 (subspace_topology top1_S2 top1_S2_topology e24)"
+      and "top1_arc_endpoints_on e12 (subspace_topology top1_S2 top1_S2_topology e12) = {a1,a2}"
+      and "top1_arc_endpoints_on e23 (subspace_topology top1_S2 top1_S2_topology e23) = {a2,a3}"
+      and "top1_arc_endpoints_on e34 (subspace_topology top1_S2 top1_S2_topology e34) = {a3,a4}"
+      and "top1_arc_endpoints_on e41 (subspace_topology top1_S2 top1_S2_topology e41) = {a4,a1}"
+      and "top1_arc_endpoints_on e13 (subspace_topology top1_S2 top1_S2_topology e13) = {a1,a3}"
+      and "top1_arc_endpoints_on e24 (subspace_topology top1_S2 top1_S2_topology e24) = {a2,a4}"
+      \<comment> \<open>K_4 planarity: arcs only intersect at shared vertices.\<close>
+      and "e12 \<inter> e34 = {}" and "e23 \<inter> e41 = {}"
+      and "e12 \<inter> e23 = {a2}" and "e23 \<inter> e34 = {a3}"
+      and "e34 \<inter> e41 = {a4}" and "e41 \<inter> e12 = {a1}"
+      and "e13 \<inter> e12 = {a1}" and "e13 \<inter> e23 = {a3}"
+      and "e13 \<inter> e34 = {a3}" and "e13 \<inter> e41 = {a1}"
+      and "e13 \<inter> e24 \<subseteq> {a1,a2,a3,a4}"
+      and "e24 \<inter> e12 = {a2}" and "e24 \<inter> e23 = {a2}"
+      and "e24 \<inter> e34 = {a4}" and "e24 \<inter> e41 = {a4}"
+      \<comment> \<open>p, q are interior points of the two 'diagonal' edges.\<close>
+      and "p \<in> e13 - {a1, a3}" and "q \<in> e24 - {a2, a4}"
+      \<comment> \<open>C is the 4-cycle a_1 a_2 a_3 a_4 a_1.\<close>
+      and "C = e12 \<union> e23 \<union> e34 \<union> e41"
+      \<comment> \<open>Basepoint.\<close>
+      and "c0 \<in> C"
+  shows "top1_groups_isomorphic_on
+    (top1_fundamental_group_carrier C
+       (subspace_topology top1_S2 top1_S2_topology C) c0)
+    (top1_fundamental_group_mul C
+       (subspace_topology top1_S2 top1_S2_topology C) c0)
+    (top1_fundamental_group_carrier (top1_S2 - {p} - {q})
+       (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p} - {q})) c0)
+    (top1_fundamental_group_mul (top1_S2 - {p} - {q})
+       (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p} - {q})) c0)"
+proof -
+  let ?X = "top1_S2 - {p} - {q}"
+  let ?TX = "subspace_topology top1_S2 top1_S2_topology ?X"
+  let ?TC = "subspace_topology top1_S2 top1_S2_topology C"
+  \<comment> \<open>Munkres 65.1(b): Construct D_1 = arc pa_3a_2q, D_2 = arc qa_4a_1p.
+     Let U = S^2-D_1, V = S^2-D_2. Then X = U \<union> V.
+     U \<inter> V = S^2-D where D = D_1 \<union> D_2 is a simple closed curve.
+     D = a_1a_3a_2a_4a_1 (the other 4-cycle). By part (a), x \<in> int(e12)
+     and y \<in> int(e34) lie in different components of S^2-D.
+     Choose \<alpha> = path x\<rightarrow>a_1\<rightarrow>a_4\<rightarrow>y in U, \<beta> = y\<rightarrow>a_3\<rightarrow>a_2\<rightarrow>x in V.
+     By Theorem 63.1, \<alpha>*\<beta> is nontrivial.
+     Since both U, V are simply connected (S^2 minus an arc)
+     and \<alpha>*\<beta> traverses C exactly once,
+     j_*: \<pi>_1(C, c0) \<rightarrow> \<pi>_1(X, c0) is an isomorphism.\<close>
+  \<comment> \<open>Step 1: C \<subseteq> X (since p \<notin> C and q \<notin> C).\<close>
+  have hC_sub_X: "C \<subseteq> ?X"
+    sorry
+  have hc0_X: "c0 \<in> ?X" using assms(40) hC_sub_X sorry
+  \<comment> \<open>Step 2: The existing Lemma_65_1 gives a nontrivial loop \<alpha>*\<beta> at some x \<in> C.
+     This establishes that j_* is nontrivial.\<close>
+  \<comment> \<open>Step 3: Show j_* is surjective (the hard part).
+     Uses SvK with U = S^2-D_1, V = S^2-D_2:
+     - V simply connected (S^2 minus an arc)
+     - By SvK_simply_connected_V: i_U surjective on \<pi>_1
+     - U simply connected too \<Rightarrow> i_U is trivial \<Rightarrow> contradiction...
+     Actually: use the full SvK for non-path-connected U \<inter> V.
+     With both U, V simply connected and U\<inter>V having 2 components:
+     \<pi>_1(X) = free group on 1 generator = Z, generated by \<alpha>*\<beta>.
+     Since \<alpha>*\<beta> lies in C, j_* maps [gen_C] to [gen_X], hence surjective.\<close>
+  \<comment> \<open>Step 4: j_* injective (automatic for surjective Z \<rightarrow> Z).\<close>
+  show ?thesis sorry
+qed
+
 (** from \<S>65 Theorem 65.2: inclusion C \<rightarrow> S^2 - p - q induces fundamental group iso **)
 theorem Theorem_65_2:
   assumes "is_topology_on_strict top1_S2 top1_S2_topology"
