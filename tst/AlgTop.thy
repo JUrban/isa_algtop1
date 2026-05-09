@@ -2330,7 +2330,40 @@ proof -
            And Rk \<subseteq> W12y. So W12y = Rk.\<close>
         \<comment> \<open>Compute: Ri\_D in which side? Use Lemma\_23\_2.\<close>
         have hRiD_in_W12: "Ri_D \<subseteq> W12a \<or> Ri_D \<subseteq> W12b"
-          sorry \<comment> \<open>Lemma\_23\_2 + subspace transfer.\<close>
+        proof -
+          have hRiD_conn: "top1_connected_on Ri_D (subspace_topology top1_S2 top1_S2_topology Ri_D)"
+            using hRiD(1) hR(8,9,10) by (by100 blast)
+          have hTJ12: "is_topology_on (top1_S2 - (e12\<union>?Arc2))
+              (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (e12\<union>?Arc2)))"
+            by (rule subspace_topology_is_topology_on[OF hTopS2]) (by100 blast)
+          have hW12a_os: "W12a \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2-(e12\<union>?Arc2))"
+          proof -
+            have "W12a = (top1_S2-(e12\<union>?Arc2)) \<inter> W12a" using hW12(4) by (by100 blast)
+            thus ?thesis unfolding subspace_topology_def using hW12(7) by (by100 blast)
+          qed
+          have hW12b_os: "W12b \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2-(e12\<union>?Arc2))"
+          proof -
+            have "W12b = (top1_S2-(e12\<union>?Arc2)) \<inter> W12b" using hW12(4) by (by100 blast)
+            thus ?thesis unfolding subspace_topology_def using hW12(8) by (by100 blast)
+          qed
+          have hSep12: "top1_is_separation_on (top1_S2-(e12\<union>?Arc2))
+              (subspace_topology top1_S2 top1_S2_topology (top1_S2-(e12\<union>?Arc2))) W12a W12b"
+            unfolding top1_is_separation_on_def
+            using hW12a_os hW12b_os hW12(1,2,3,4) by (by100 blast)
+          have hRiD_conn_sub: "top1_connected_on Ri_D
+              (subspace_topology (top1_S2-(e12\<union>?Arc2))
+                  (subspace_topology top1_S2 top1_S2_topology (top1_S2-(e12\<union>?Arc2))) Ri_D)"
+          proof -
+            have "subspace_topology top1_S2 top1_S2_topology Ri_D =
+                subspace_topology (top1_S2-(e12\<union>?Arc2))
+                    (subspace_topology top1_S2 top1_S2_topology (top1_S2-(e12\<union>?Arc2))) Ri_D"
+              using subspace_topology_trans[of Ri_D "top1_S2-(e12\<union>?Arc2)" top1_S2 top1_S2_topology]
+                  hRiD_sub by (by100 simp)
+            thus ?thesis using hRiD_conn by (by100 simp)
+          qed
+          from Lemma_23_2[OF hTJ12 hSep12 hRiD_sub hRiD_conn_sub]
+          show ?thesis by (by100 blast)
+        qed
         \<comment> \<open>WLOG Ri\_D \<subseteq> W12a. Then Arc3-{a1,a2} \<subseteq> cl(Ri\_D) \<subseteq> cl(W12a) = W12a\<union>J12.
            Arc3-{a1,a2} \<inter> J12 = {} (from hArc3\_sub\_J12). So Arc3-{a1,a2} \<subseteq> W12a.\<close>
         \<comment> \<open>Then Rk \<subseteq> W12b (otherwise all in W12a, W12b={}). And W12b = Rk.\<close>
