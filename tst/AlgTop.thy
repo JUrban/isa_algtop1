@@ -6316,16 +6316,73 @@ next
             fix W assume "W \<in> \<W>p"
             have "top1_homeomorphism_on W (subspace_topology E TE W) U'' (subspace_topology B TB U'') p"
               using h\<W>p_homeo \<open>W \<in> \<W>p\<close> by (by100 blast)
-            from homeomorphism_preserves_path_connected[OF _ hU''_pc] this
-            have "top1_path_connected_on W (subspace_topology E TE W)" sorry
+            from homeomorphism_inverse[OF this]
+            have "top1_homeomorphism_on U'' (subspace_topology B TB U'') W (subspace_topology E TE W)
+                (inv_into W p)" .
+            from homeomorphism_preserves_path_connected[OF this hU''_pc]
+            have "top1_path_connected_on W (subspace_topology E TE W)" .
             thus "top1_connected_on W (subspace_topology E TE W)"
               by (rule top1_path_connected_imp_connected)
           qed
           \<comment> \<open>For W \<in> \<W>p with q(e) \<in> V1 for some e \<in> W: q maps ALL of W into V1.\<close>
+          have hV1_homeo: "top1_homeomorphism_on V1 (subspace_topology Y TY V1)
+              U'' (subspace_topology B TB U'') r"
+            using h\<W>r_homeo hV1(1) by (by100 blast)
+          have hr_bij_V1: "bij_betw r V1 U''"
+            using hV1_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+          have hr_inj_V1: "inj_on r V1" using hr_bij_V1 unfolding bij_betw_def by (by100 blast)
           have hW_all_V1: "\<forall>W\<in>?\<V>q. \<forall>e\<in>W. q e \<in> V1"
-            sorry \<comment> \<open>Uses covering\_lift\_unique\_connected on connected W:
-               q and (r|_{V1})^{-1}\<circ>p agree at witness e, both lift p through r,
-               so q = (r|_{V1})^{-1}\<circ>p on W, mapping all of W to V1.\<close>
+          proof (intro ballI)
+            fix W e assume hWq: "W \<in> ?\<V>q" and he_W: "e \<in> W"
+            have hW_mem: "W \<in> \<W>p" using hWq by (by100 blast)
+            obtain e0 where he0_W: "e0 \<in> W" "q e0 \<in> V1" using hWq by (by100 blast)
+            have hW_conn: "top1_connected_on W (subspace_topology E TE W)"
+              using hW_connected hW_mem by (by100 blast)
+            \<comment> \<open>Define h = (inv_into V1 r) \<circ> p: W \<rightarrow> V1. Both q and h lift p through r.\<close>
+            let ?h = "\<lambda>e. inv_into V1 r (p e)"
+            \<comment> \<open>h maps W into V1 and r \<circ> h = p on W.\<close>
+            have hh_V1: "\<forall>e'\<in>W. ?h e' \<in> V1"
+            proof (intro ballI)
+              fix e' assume "e' \<in> W"
+              have "p e' \<in> U''"
+              proof -
+                have "e' \<in> {x\<in>E. p x \<in> U''}"
+                  using \<open>e' \<in> W\<close> hW_mem h\<W>p_union by (by100 blast)
+                thus ?thesis by (by100 blast)
+              qed
+              have "p e' \<in> r ` V1" using hr_bij_V1 \<open>p e' \<in> U''\<close> unfolding bij_betw_def by (by100 blast)
+              thus "?h e' \<in> V1" using inv_into_into[OF \<open>p e' \<in> r ` V1\<close>] by (by100 simp)
+            qed
+            have hrh: "\<forall>e'\<in>W. r (?h e') = p e'"
+            proof (intro ballI)
+              fix e' assume "e' \<in> W"
+              have "p e' \<in> U''" sorry
+              have "p e' \<in> r ` V1" using hr_bij_V1 \<open>p e' \<in> U''\<close> unfolding bij_betw_def sorry
+              show "r (?h e') = p e'" by (rule f_inv_into_f[OF \<open>p e' \<in> r ` V1\<close>])
+            qed
+            \<comment> \<open>h(e0) = q(e0): both in V1, r(h(e0)) = p(e0) = r(q(e0)), r injective on V1.\<close>
+            have "?h e0 = q e0"
+            proof -
+              have "r (?h e0) = p e0" using hrh he0_W(1) by (by100 blast)
+              have "r (q e0) = p e0"
+              proof -
+                have "e0 \<in> E" using he0_W(1) hW_mem h\<W>p_open unfolding openin_on_def sorry
+                thus ?thesis using hq_rp by (by100 blast)
+              qed
+              have "?h e0 \<in> V1" using hh_V1 he0_W(1) by (by100 blast)
+              have "q e0 \<in> V1" by (rule he0_W(2))
+              from \<open>r (?h e0) = p e0\<close> \<open>r (q e0) = p e0\<close>
+              have "r (?h e0) = r (q e0)" by (by100 simp)
+              thus "?h e0 = q e0"
+                using hr_inj_V1 \<open>?h e0 \<in> V1\<close> \<open>q e0 \<in> V1\<close> unfolding inj_on_def by (by100 blast)
+            qed
+            \<comment> \<open>By covering\_lift\_unique\_connected: q = h on W.\<close>
+            \<comment> \<open>Both q|_W and h|_W: W \<rightarrow> Y lift p through r, W connected, agree at e0.\<close>
+            have hq_eq_h: "\<forall>e'\<in>W. q e' = ?h e'"
+              sorry \<comment> \<open>covering\_lift\_unique\_connected[OF assms(6) ...]\<close>
+            have "q e = ?h e" using hq_eq_h he_W by (by100 blast)
+            thus "q e \<in> V1" using hh_V1 he_W by (by100 simp)
+          qed
           show "{x \<in> E. q x \<in> V1} = \<Union>?\<V>q"
           proof (rule set_eqI, rule iffI)
             fix x assume "x \<in> {x \<in> E. q x \<in> V1}"
