@@ -3043,7 +3043,19 @@ proof -
               by (rule closure_on_mono[OF hRiD(2)])
             \<comment> \<open>Need D \<subseteq> cl(D'). From SCCBMC: cl(D') = D'\<union>D.\<close>
             moreover have "?D \<subseteq> closure_on top1_S2 top1_S2_topology D'"
-              sorry \<comment> \<open>From hcl\_comp on D with D'/C as components.\<close>
+            proof -
+              have hC_ne_loc: "C \<noteq> {}" using hC he12C he12_ne by (by100 blast)
+              have hD'_open_loc: "D' \<in> top1_S2_topology" sorry
+              have hC_open_loc: "C \<in> top1_S2_topology" sorry
+              have hC_conn_loc: "top1_connected_on C (subspace_topology top1_S2 top1_S2_topology C)"
+                using hA_conn_S2 hB_conn_S2 hC by (by100 blast)
+              have hCD_union_D: "D' \<union> C = top1_S2 - ?D" using hCD'_union hAB_eq_S2_D by (by100 blast)
+              have hDC_disj: "D' \<inter> C = {}" using hCD'_disj by (by100 blast)
+              have hcl_D'_loc: "closure_on top1_S2 top1_S2_topology D' = D' \<union> ?D"
+                by (rule hcl_comp[OF hD_scc hD'_ne hC_ne_loc hDC_disj hCD_union_D
+                    hD'_conn hC_conn_loc hD'_open_loc hC_open_loc])
+              thus ?thesis by (by100 blast)
+            qed
             ultimately show ?thesis by (by100 blast)
           qed
           ultimately show ?thesis by (by100 blast)
@@ -3094,7 +3106,22 @@ proof -
           unfolding top1_is_separation_on_def using hW13a_os hW13b_os hW13(1,2,3,4) by (by100 blast)
         \<comment> \<open>Ri\_D in W13a or W13b.\<close>
         have hRiD_in_W13: "Ri_D \<subseteq> W13a \<or> Ri_D \<subseteq> W13b"
-          sorry \<comment> \<open>Same Lemma\_23\_2 pattern.\<close>
+        proof -
+          have hRiD_conn_13: "top1_connected_on Ri_D (subspace_topology top1_S2 top1_S2_topology Ri_D)"
+            using hRiD(1) hR(8,9,10) by (by100 blast)
+          have "top1_connected_on Ri_D
+              (subspace_topology (top1_S2-(e12\<union>?Arc3))
+                  (subspace_topology top1_S2 top1_S2_topology (top1_S2-(e12\<union>?Arc3))) Ri_D)"
+          proof -
+            have "subspace_topology top1_S2 top1_S2_topology Ri_D =
+                subspace_topology (top1_S2-(e12\<union>?Arc3))
+                    (subspace_topology top1_S2 top1_S2_topology (top1_S2-(e12\<union>?Arc3))) Ri_D"
+              using subspace_topology_trans[of Ri_D "top1_S2-(e12\<union>?Arc3)" top1_S2 top1_S2_topology]
+                  hRiD_sub13 by (by100 simp)
+            thus ?thesis using hRiD_conn_13 by (by100 simp)
+          qed
+          from Lemma_23_2[OF hTJ13 hSep13 hRiD_sub13 this] show ?thesis by (by100 blast)
+        qed
         \<comment> \<open>Case split: in each case, Arc2 goes to same side, Rk to other, W13\_Rk = Rk.\<close>
         from hRiD_in_W13 show ?thesis
         proof
