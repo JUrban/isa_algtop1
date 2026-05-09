@@ -1363,7 +1363,7 @@ proof -
       \<comment> \<open>R \<subseteq> diagonal \<union> (?bdy \<times> ?bdy), so R = (R \<inter> diagonal) \<union> (R \<inter> (?bdy \<times> ?bdy)).
          R \<inter> diagonal = diagonal (on P\<times>P). Both parts closed. Union closed.\<close>
       have hR_decomp: "?R = {(a, b). a \<in> P \<and> b \<in> P \<and> a = b} \<union> (?R \<inter> (?bdy \<times> ?bdy))"
-        sorry \<comment> \<open>Set theory: R \<subseteq> \<Delta> \<union> bdy\<times>bdy, \<Delta> \<subseteq> R \<Rightarrow> R = \<Delta> \<union> (R \<inter> bdy\<times>bdy).\<close>
+        using hR_sub by auto
       have "closedin_on (P \<times> P) (product_topology_on ?TP ?TP) ?R"
       proof -
         have "closedin_on (P \<times> P) (product_topology_on ?TP ?TP)
@@ -1377,9 +1377,9 @@ proof -
           have "closedin_on (P \<times> P) (product_topology_on ?TP ?TP) (\<Union>?F)" .
           moreover have "\<Union>?F = {(a, b). a \<in> P \<and> b \<in> P \<and> a = b} \<union> (?R \<inter> (?bdy \<times> ?bdy))"
             by (by100 simp)
-          ultimately show ?thesis sorry
+          ultimately show ?thesis by auto
         qed
-        thus ?thesis using hR_decomp sorry
+        thus ?thesis using hR_decomp by auto
       qed
       thus ?thesis .
     qed
