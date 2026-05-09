@@ -2580,7 +2580,33 @@ proof -
                 hence "x \<notin> Ri_e" "x \<notin> Ri_D" "x \<notin> ?Arc3 - {a1,a2}"
                   using hW12b_facts(1) hcase hArc3_a by (by100 blast)+
                 hence "x \<notin> Ri_e \<and> x \<notin> Ri_D \<and> x \<notin> ?Arc3 - {a1,a2}" by (by100 blast)
-                ultimately show "x \<in> Rk" sorry
+                ultimately have hx_facts: "x \<in> R1\<union>R2\<union>R3\<union>(?Arc3-{a1,a2})"
+                    "x \<notin> Ri_e" "x \<notin> Ri_D" "x \<notin> ?Arc3 - {a1,a2}" by (by100 blast)+
+                hence "x \<in> R1 \<union> R2 \<union> R3" by (by100 blast)
+                hence "x \<in> R1 \<or> x \<in> R2 \<or> x \<in> R3" by (by100 blast)
+                thus "x \<in> Rk"
+                proof (elim disjE)
+                  assume "x \<in> R1"
+                  have "R1 = Ri_e \<or> R1 = Ri_D \<or> R1 = Rk"
+                    using hRie(1) hRiD(1) hRk(1) hRk(2,3) hRi_ne
+                    by (metis (no_types) insertE singletonD)
+                  hence "x \<in> Ri_e \<or> x \<in> Ri_D \<or> x \<in> Rk" using \<open>x \<in> R1\<close> by (by100 blast)
+                  thus ?thesis using hx_facts(2,3) by (by100 blast)
+                next
+                  assume "x \<in> R2"
+                  have "R2 = Ri_e \<or> R2 = Ri_D \<or> R2 = Rk"
+                    using hRie(1) hRiD(1) hRk(1) hRk(2,3) hRi_ne
+                    by (metis (no_types) insertE singletonD)
+                  hence "x \<in> Ri_e \<or> x \<in> Ri_D \<or> x \<in> Rk" using \<open>x \<in> R2\<close> by (by100 blast)
+                  thus ?thesis using hx_facts(2,3) by (by100 blast)
+                next
+                  assume "x \<in> R3"
+                  have "R3 = Ri_e \<or> R3 = Ri_D \<or> R3 = Rk"
+                    using hRie(1) hRiD(1) hRk(1) hRk(2,3) hRi_ne
+                    by (metis (no_types) insertE singletonD)
+                  hence "x \<in> Ri_e \<or> x \<in> Ri_D \<or> x \<in> Rk" using \<open>x \<in> R3\<close> by (by100 blast)
+                  thus ?thesis using hx_facts(2,3) by (by100 blast)
+                qed
               qed
             qed
             thus ?thesis using hRk_b by (by100 blast)
