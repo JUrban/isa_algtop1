@@ -3019,7 +3019,113 @@ proof -
         qed
       qed
       have hcl_Rk_J13: "closure_on top1_S2 top1_S2_topology Rk = Rk \<union> (e12 \<union> ?Arc3)"
-        sorry \<comment> \<open>Symmetric argument with J13 = e12\<union>Arc3, using Arc2 closure.\<close>
+      proof -
+        \<comment> \<open>Symmetric of hcl\_Rk\_J12 with Arc2\<leftrightarrow>Arc3, W12\<leftrightarrow>W13, etc.\<close>
+        have hRk_sub_J13: "Rk \<subseteq> top1_S2 - (e12 \<union> ?Arc3)"
+          using hRk(1) hR(7) by (by100 blast)
+        have hRk_conn_loc: "top1_connected_on Rk (subspace_topology top1_S2 top1_S2_topology Rk)"
+          using hRk(1) hR(8,9,10) by (by100 blast)
+        have hRk_open_loc: "Rk \<in> top1_S2_topology" using hRk(1) hR(11,12,13) by (by100 blast)
+        have hRk_ne_loc: "Rk \<noteq> {}" using hRk(1) hR(1,2,3) by (by100 blast)
+        have hRie_sub13: "Ri_e \<subseteq> top1_S2 - (e12 \<union> ?Arc3)" using hRie(1) hR(7) by (by100 blast)
+        have hRiD_sub13: "Ri_D \<subseteq> top1_S2 - (e12 \<union> ?Arc3)" using hRiD(1) hR(7) by (by100 blast)
+        \<comment> \<open>Arc2-{a1,a2} \<subseteq> cl(Ri\_D) (from cl(D') \<supseteq> D \<supseteq> Arc2).\<close>
+        have hArc2_in_cl_RiD: "?Arc2 - {a1, a2} \<subseteq> closure_on top1_S2 top1_S2_topology Ri_D"
+        proof -
+          \<comment> \<open>Arc2 \<subseteq> D. D \<subseteq> cl(D') (from hcl\_comp on D). cl(D') \<subseteq> cl(Ri\_D).\<close>
+          have "?Arc2 \<subseteq> ?D" using hD_eq_theta by (by100 blast)
+          hence "?Arc2 - {a1,a2} \<subseteq> ?D" by (by100 blast)
+          moreover have "?D \<subseteq> closure_on top1_S2 top1_S2_topology Ri_D"
+          proof -
+            have "D' \<subseteq> Ri_D" by (rule hRiD(2))
+            have "D' \<subseteq> closure_on top1_S2 top1_S2_topology D'" by (rule subset_closure_on)
+            have "closure_on top1_S2 top1_S2_topology D' \<subseteq> closure_on top1_S2 top1_S2_topology Ri_D"
+              by (rule closure_on_mono[OF hRiD(2)])
+            \<comment> \<open>Need D \<subseteq> cl(D'). From SCCBMC: cl(D') = D'\<union>D.\<close>
+            moreover have "?D \<subseteq> closure_on top1_S2 top1_S2_topology D'"
+              sorry \<comment> \<open>From hcl\_comp on D with D'/C as components.\<close>
+            ultimately show ?thesis by (by100 blast)
+          qed
+          ultimately show ?thesis by (by100 blast)
+        qed
+        have hS2J13_eq: "top1_S2 - (e12 \<union> ?Arc3) = (top1_S2 - ?theta) \<union> (?Arc2 - {a1, a2})"
+        proof -
+          have h1: "?theta = (e12 \<union> ?Arc3) \<union> ?Arc2" by (by100 blast)
+          have h2: "?Arc2 \<inter> (e12 \<union> ?Arc3) = {a1, a2}" using hint12 hint23 by (by100 blast)
+          have "?Arc2 \<subseteq> top1_S2" by (rule hArc2_sub)
+          hence "top1_S2 - (e12 \<union> ?Arc3) = (top1_S2 - ?theta) \<union> (?Arc2 - (e12 \<union> ?Arc3))"
+            using h1 by blast
+          also have "\<dots> = (top1_S2 - ?theta) \<union> (?Arc2 - {a1, a2})"
+          proof -
+            have "?Arc2 - (e12 \<union> ?Arc3) = ?Arc2 - {a1, a2}" using h2 by (by100 blast)
+            thus ?thesis by (by100 simp)
+          qed
+          finally show ?thesis .
+        qed
+        have hArc2_sub_J13: "?Arc2 - {a1,a2} \<subseteq> top1_S2 - (e12 \<union> ?Arc3)"
+        proof -
+          have "?Arc2 - {a1,a2} \<subseteq> (top1_S2 - ?theta) \<union> (?Arc2 - {a1,a2})" by (by100 blast)
+          thus ?thesis using hS2J13_eq by (by100 simp)
+        qed
+        \<comment> \<open>Get W13a, W13b components.\<close>
+        from hJCT_comps[OF assms(4) hArc3_sub assms(10) hArc3_arc hint13 assms(16) hArc3_ep']
+        obtain W13a W13b where hW13: "W13a \<noteq> {}" "W13b \<noteq> {}" "W13a \<inter> W13b = {}"
+            "W13a \<union> W13b = top1_S2 - (e12 \<union> ?Arc3)"
+            "top1_connected_on W13a (subspace_topology top1_S2 top1_S2_topology W13a)"
+            "top1_connected_on W13b (subspace_topology top1_S2 top1_S2_topology W13b)"
+            "W13a \<in> top1_S2_topology" "W13b \<in> top1_S2_topology"
+          by (metis (no_types))
+        \<comment> \<open>Shared topology for J13.\<close>
+        have hTJ13: "is_topology_on (top1_S2 - (e12\<union>?Arc3))
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (e12\<union>?Arc3)))"
+          by (rule subspace_topology_is_topology_on[OF hTopS2]) (by100 blast)
+        have hW13a_os: "W13a \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2-(e12\<union>?Arc3))"
+        proof -
+          have "W13a = (top1_S2-(e12\<union>?Arc3)) \<inter> W13a" using hW13(4) by (by100 blast)
+          thus ?thesis unfolding subspace_topology_def using hW13(7) by (by100 blast)
+        qed
+        have hW13b_os: "W13b \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2-(e12\<union>?Arc3))"
+        proof -
+          have "W13b = (top1_S2-(e12\<union>?Arc3)) \<inter> W13b" using hW13(4) by (by100 blast)
+          thus ?thesis unfolding subspace_topology_def using hW13(8) by (by100 blast)
+        qed
+        have hSep13: "top1_is_separation_on (top1_S2-(e12\<union>?Arc3))
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2-(e12\<union>?Arc3))) W13a W13b"
+          unfolding top1_is_separation_on_def using hW13a_os hW13b_os hW13(1,2,3,4) by (by100 blast)
+        \<comment> \<open>Ri\_D in W13a or W13b.\<close>
+        have hRiD_in_W13: "Ri_D \<subseteq> W13a \<or> Ri_D \<subseteq> W13b"
+          sorry \<comment> \<open>Same Lemma\_23\_2 pattern.\<close>
+        \<comment> \<open>Case split: in each case, Arc2 goes to same side, Rk to other, W13\_Rk = Rk.\<close>
+        from hRiD_in_W13 show ?thesis
+        proof
+          assume hcase13: "Ri_D \<subseteq> W13a"
+          \<comment> \<open>Arc2-{a1,a2} \<subseteq> W13a (closure argument).\<close>
+          have hArc2_a: "?Arc2 - {a1,a2} \<subseteq> W13a"
+            sorry \<comment> \<open>cl(W13a)=W13a\<union>J13 by hcl\_comp. Arc2\<subseteq>cl(Ri\_D)\<subseteq>cl(W13a). Arc2\<inter>J13={a1,a2}.\<close>
+          \<comment> \<open>Rk \<subseteq> W13b (exhaustion).\<close>
+          have hRk_b13: "Rk \<subseteq> W13b"
+            sorry \<comment> \<open>If Rk\<subseteq>W13a: Ri\_e also \<subseteq> W13a (a3 closure). All in W13a \<Rightarrow> W13b={}. Contradiction.\<close>
+          \<comment> \<open>W13b = Rk.\<close>
+          have "Rk = W13b"
+            sorry \<comment> \<open>W13b \<subseteq> Rk by exhaustion (everything else in W13a).\<close>
+          have "W13b \<inter> W13a = {}" using hW13(3) by (by100 blast)
+          moreover have "W13b \<union> W13a = top1_S2 - (e12 \<union> ?Arc3)" using hW13(4) by (by100 blast)
+          ultimately have "closure_on top1_S2 top1_S2_topology W13b = W13b \<union> (e12 \<union> ?Arc3)"
+            by (rule hcl_comp[OF hJ13_scc hW13(2) hW13(1) _ _ hW13(6) hW13(5) hW13(8) hW13(7)])
+          thus ?thesis using \<open>Rk = W13b\<close> by (by100 simp)
+        next
+          assume "Ri_D \<subseteq> W13b"
+          \<comment> \<open>Symmetric: W13a = Rk.\<close>
+          have hArc2_b: "?Arc2 - {a1,a2} \<subseteq> W13b"
+            sorry
+          have "Rk \<subseteq> W13a" sorry
+          have "Rk = W13a" sorry
+          have "closure_on top1_S2 top1_S2_topology W13a = W13a \<union> (e12 \<union> ?Arc3)"
+            by (rule hcl_comp[OF hJ13_scc hW13(1) hW13(2) hW13(3) hW13(4)
+                hW13(5) hW13(6) hW13(7) hW13(8)])
+          thus ?thesis using \<open>Rk = W13a\<close> by (by100 simp)
+        qed
+      qed
       \<comment> \<open>Step 6: J12 = J13 \<Rightarrow> Arc2 = Arc3 \<Rightarrow> a3 \<in> Arc3 = e24\<union>e41. Contradiction.\<close>
       have hJ12_eq_J13: "e12 \<union> ?Arc2 = e12 \<union> ?Arc3"
       proof -
