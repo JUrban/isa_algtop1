@@ -1127,7 +1127,8 @@ proof -
               thus "p \<in> ?Fx" using \<open>p \<in> P'\<close> \<open>q' p0 = x\<close> by (by100 simp)
             qed
             \<comment> \<open>Slice of closed R at p0 is closed. Preimage of {p0} under projection.\<close>
-            thus ?thesis sorry \<comment> \<open>Slice of closed set at a point is closed.\<close>
+            \<comment> \<open>Slice of closed R at p0 is closed: preimage of R under p \<mapsto> (p,p0).\<close>
+            thus ?thesis sorry \<comment> \<open>i_{p0} continuous, R closed \<Rightarrow> i_{p0}\<inverse>(R) closed.\<close>
           qed
           have hFy_cl: "closedin_on P' TP' ?Fy"
           proof -
@@ -1144,7 +1145,8 @@ proof -
               hence "q' p = q' p0" by (by100 simp)
               thus "p \<in> ?Fy" using \<open>p \<in> P'\<close> \<open>q' p0 = y\<close> by (by100 simp)
             qed
-            thus ?thesis sorry \<comment> \<open>Slice of closed set at a point is closed.\<close>
+            \<comment> \<open>Slice of closed R at p0 is closed: preimage of R under p \<mapsto> (p,p0).\<close>
+            thus ?thesis sorry \<comment> \<open>i_{p0} continuous, R closed \<Rightarrow> i_{p0}\<inverse>(R) closed.\<close>
           qed
           \<comment> \<open>By normality: disjoint open U \<supseteq> Fx, V \<supseteq> Fy.\<close>
           from normal_separation[OF hP'N hFx_cl hFy_cl hFxy_disj]
@@ -1153,10 +1155,30 @@ proof -
           \<comment> \<open>Saturated complements: q'\<inverse>(q'(P'-U)) is closed (projection of closed from compact).\<close>
           let ?SU = "{p \<in> P'. \<exists>p' \<in> P' - U. q' p = q' p'}"
           let ?SV = "{p \<in> P'. \<exists>p' \<in> P' - V. q' p = q' p'}"
+          \<comment> \<open>Projection of closed from compact is closed (tube lemma consequence).\<close>
+          have hproj_closed: "\<And>C. closedin_on (P' \<times> P') (product_topology_on TP' TP') C \<Longrightarrow>
+              closedin_on P' TP' {a \<in> P'. \<exists>b. (a, b) \<in> C}"
+            sorry \<comment> \<open>Standard: p \<notin> \<pi>_1(C) \<Rightarrow> {p}\<times>P' \<inter> C = {} \<Rightarrow> tube lemma \<Rightarrow> nbhd W with W\<times>P' \<inter> C = {}.\<close>
           have hSU_closed: "closedin_on P' TP' ?SU"
-            sorry \<comment> \<open>Projection of (?R \<inter> (P'\<times>(P'-U))) to 1st coord. R closed, P'-U closed, P' compact.\<close>
+          proof -
+            have "closedin_on (P' \<times> P') (product_topology_on TP' TP') (?R \<inter> (P' \<times> (P' - U)))"
+            proof -
+              have "closedin_on (P' \<times> P') (product_topology_on TP' TP') (P' \<times> (P' - U))"
+                sorry \<comment> \<open>P' closed in P' (trivial), P'-U closed in P' (U open).\<close>
+              thus ?thesis using hR'cl sorry \<comment> \<open>Intersection of closed is closed.\<close>
+            qed
+            moreover have "?SU = {a \<in> P'. \<exists>b. (a, b) \<in> (?R \<inter> (P' \<times> (P' - U)))}"
+              sorry \<comment> \<open>Set equality with pair membership.\<close>
+            ultimately show ?thesis using hproj_closed sorry
+          qed
           have hSV_closed: "closedin_on P' TP' ?SV"
-            sorry
+          proof -
+            have "closedin_on (P' \<times> P') (product_topology_on TP' TP') (?R \<inter> (P' \<times> (P' - V)))"
+              sorry
+            moreover have "?SV = {a \<in> P'. \<exists>b. (a, b) \<in> (?R \<inter> (P' \<times> (P' - V)))}"
+              sorry
+            ultimately show ?thesis using hproj_closed sorry
+          qed
           \<comment> \<open>P' - ?SU is open and saturated. q'(P' - ?SU) is open in X'.\<close>
           have hWx_open: "X' - q' ` (P' - U) \<in> TX'"
           proof -
