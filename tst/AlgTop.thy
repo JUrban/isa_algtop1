@@ -913,7 +913,7 @@ proof (rule subsetI)
     unfolding hq_eq
     apply simp
     apply (rule_tac x="?c" in exI)
-    using hc_nn hc_sum hc_x hc_y by (by100 force)
+    using hc_nn hc_sum hc_x hc_y by force
 qed
 
 text \<open>Cone subset: conv(Suc n) \<subseteq> cone(conv n, v_n).\<close>
@@ -1290,10 +1290,36 @@ proof -
                (contrapositive of hinterior\_loc).\<close>
       \<comment> \<open>The diagonal is closed (P\<times>P Hausdorff, equalizer of pi1, pi2).\<close>
       have hPP_haus: "is_hausdorff_on (P \<times> P) (product_topology_on ?TP ?TP)"
-        sorry
+        using hR2_prod_haus[OF hP_haus hP_haus] .
+      have hTP_top: "is_topology_on P ?TP"
+        using hP_haus unfolding is_hausdorff_on_def by (by100 blast)
+      have hTPP: "is_topology_on (P \<times> P) (product_topology_on ?TP ?TP)"
+        by (rule product_topology_on_is_topology_on[OF hTP_top hTP_top])
+      have hpi1_cont: "top1_continuous_map_on (P \<times> P) (product_topology_on ?TP ?TP) P ?TP pi1"
+        by (rule top1_continuous_pi1[OF hTP_top hTP_top])
+      have hpi2_cont: "top1_continuous_map_on (P \<times> P) (product_topology_on ?TP ?TP) P ?TP pi2"
+        by (rule top1_continuous_pi2[OF hTP_top hTP_top])
+      have hDiag_eq: "{(a, b). a \<in> P \<and> b \<in> P \<and> a = b}
+          = {x \<in> P \<times> P. pi1 x = pi2 x}"
+      proof (rule set_eqI, rule iffI)
+        fix x assume "x \<in> {(a, b). a \<in> P \<and> b \<in> P \<and> a = b}"
+        then obtain a b where "x = (a, b)" "a \<in> P" "b \<in> P" "a = b" by (by100 blast)
+        thus "x \<in> {x \<in> P \<times> P. pi1 x = pi2 x}" unfolding pi1_def pi2_def by (by100 simp)
+      next
+        fix x assume "x \<in> {x \<in> P \<times> P. pi1 x = pi2 x}"
+        hence "x \<in> P \<times> P" "pi1 x = pi2 x" by (by100 blast)+
+        then obtain a b where "x = (a, b)" "a \<in> P" "b \<in> P" by (by100 blast)
+        have "a = b" using \<open>pi1 x = pi2 x\<close> \<open>x = (a, b)\<close> unfolding pi1_def pi2_def by (by100 simp)
+        thus "x \<in> {(a, b). a \<in> P \<and> b \<in> P \<and> a = b}" using \<open>a \<in> P\<close> \<open>b \<in> P\<close> \<open>x = (a, b)\<close> by (by100 blast)
+      qed
       have hDiag_closed: "closedin_on (P \<times> P) (product_topology_on ?TP ?TP)
           {(a, b). a \<in> P \<and> b \<in> P \<and> a = b}"
-        sorry
+      proof -
+        have "closedin_on (P \<times> P) (product_topology_on ?TP ?TP)
+            {x \<in> P \<times> P. pi1 x = pi2 x}"
+          by (rule top1_closedin_equalizer_of_continuous_maps[OF hTPP hP_haus hpi1_cont hpi2_cont])
+        thus ?thesis using hDiag_eq by (by100 simp)
+      qed
       \<comment> \<open>?bdy \<times> ?bdy is compact (each edge is compact image of [0,1],
          finite union of compact = compact, product of compact = compact).\<close>
       have hbdy_compact: "top1_compact_on (?bdy \<times> ?bdy)
