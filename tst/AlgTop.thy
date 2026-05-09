@@ -1083,7 +1083,109 @@ proof -
         closedin_on (P' \<times> P') (product_topology_on TP' TP')
             {(a, b). a \<in> P' \<and> b \<in> P' \<and> q' a = q' b} \<Longrightarrow>
         is_hausdorff_on X' TX'"
-      sorry \<comment> \<open>Standard result: tube lemma + saturation argument.\<close>
+    proof -
+      fix P' TP' X' TX' q'
+      assume hP'H: "is_hausdorff_on P' TP'" and hP'C: "top1_compact_on P' TP'"
+          and hq'Q: "top1_quotient_map_on P' TP' X' TX' q'"
+          and hR'cl: "closedin_on (P' \<times> P') (product_topology_on TP' TP')
+              {(a, b). a \<in> P' \<and> b \<in> P' \<and> q' a = q' b}"
+      let ?R = "{(a, b). a \<in> P' \<and> b \<in> P' \<and> q' a = q' b}"
+      have hTP': "is_topology_on P' TP'" using hP'H unfolding is_hausdorff_on_def by (by100 blast)
+      have hTX': "is_topology_on X' TX'" using hq'Q unfolding top1_quotient_map_on_def by (by100 blast)
+      have hq'_cont: "top1_continuous_map_on P' TP' X' TX' q'"
+        using hq'Q unfolding top1_quotient_map_on_def by (by100 blast)
+      have hq'_surj: "q' ` P' = X'" using hq'Q unfolding top1_quotient_map_on_def by (by100 blast)
+      \<comment> \<open>P' compact Hausdorff \<Rightarrow> normal.\<close>
+      have hP'N: "top1_normal_on P' TP'" by (rule Theorem_32_3[OF hP'C hP'H])
+      show "is_hausdorff_on X' TX'" unfolding is_hausdorff_on_def
+      proof (intro conjI)
+        show "is_topology_on X' TX'" by (rule hTX')
+      next
+        show "\<forall>x\<in>X'. \<forall>y\<in>X'. x \<noteq> y \<longrightarrow>
+            (\<exists>U V. neighborhood_of x X' TX' U \<and> neighborhood_of y X' TX' V \<and> U \<inter> V = {})"
+        proof (intro ballI impI)
+          fix x y assume "x \<in> X'" "y \<in> X'" "x \<noteq> y"
+          let ?Fx = "{p \<in> P'. q' p = x}" and ?Fy = "{p \<in> P'. q' p = y}"
+          \<comment> \<open>Fibers non-empty, closed, disjoint.\<close>
+          have hFx_ne: "?Fx \<noteq> {}" using \<open>x \<in> X'\<close> hq'_surj by (by100 blast)
+          have hFy_ne: "?Fy \<noteq> {}" using \<open>y \<in> X'\<close> hq'_surj by (by100 blast)
+          have hFxy_disj: "?Fx \<inter> ?Fy = {}" using \<open>x \<noteq> y\<close> by (by100 blast)
+          have hFx_cl: "closedin_on P' TP' ?Fx"
+          proof -
+            \<comment> \<open>Fx = {p | (p, p0) \<in> R} for any p0 \<in> Fx. Slice of closed R is closed.\<close>
+            obtain p0 where "p0 \<in> P'" "q' p0 = x" using hFx_ne by (by100 blast)
+            have "?Fx = {p \<in> P'. (p, p0) \<in> ?R}" using \<open>q' p0 = x\<close> \<open>p0 \<in> P'\<close> sorry
+            \<comment> \<open>The slice {p | (p, p0) \<in> C} of a closed set C in P'\<times>P' at p0 is closed in P'.\<close>
+            thus ?thesis sorry \<comment> \<open>Slice of closed R at p0 is closed. Standard topology.\<close>
+          qed
+          have hFy_cl: "closedin_on P' TP' ?Fy"
+          proof -
+            obtain p0 where "p0 \<in> P'" "q' p0 = y" using hFy_ne by (by100 blast)
+            have "?Fy = {p \<in> P'. (p, p0) \<in> ?R}" using \<open>q' p0 = y\<close> \<open>p0 \<in> P'\<close> sorry
+            thus ?thesis sorry
+          qed
+          \<comment> \<open>By normality: disjoint open U \<supseteq> Fx, V \<supseteq> Fy.\<close>
+          from normal_separation[OF hP'N hFx_cl hFy_cl hFxy_disj]
+          obtain U V where hUV: "U \<in> TP'" "V \<in> TP'" "?Fx \<subseteq> U" "?Fy \<subseteq> V" "U \<inter> V = {}"
+            by (metis (no_types))
+          \<comment> \<open>Saturated complements: q'\<inverse>(q'(P'-U)) is closed (projection of closed from compact).\<close>
+          let ?SU = "{p \<in> P'. \<exists>p' \<in> P' - U. q' p = q' p'}"
+          let ?SV = "{p \<in> P'. \<exists>p' \<in> P' - V. q' p = q' p'}"
+          have hSU_closed: "closedin_on P' TP' ?SU"
+            sorry \<comment> \<open>Projection of (?R \<inter> (P'\<times>(P'-U))) to 1st coord. R closed, P'-U closed, P' compact.\<close>
+          have hSV_closed: "closedin_on P' TP' ?SV"
+            sorry
+          \<comment> \<open>P' - ?SU is open and saturated. q'(P' - ?SU) is open in X'.\<close>
+          have hWx_open: "X' - q' ` (P' - U) \<in> TX'"
+            sorry \<comment> \<open>q' quotient: q'(P'-U) closed in X' iff q'\<inverse>(q'(P'-U)) = ?SU closed in P'. Check.\<close>
+          have hWy_open: "X' - q' ` (P' - V) \<in> TX'"
+            sorry
+          have hx_Wx: "x \<in> X' - q' ` (P' - U)"
+          proof -
+            have "x \<notin> q' ` (P' - U)"
+            proof
+              assume "x \<in> q' ` (P' - U)"
+              then obtain p where "p \<in> P' - U" "q' p = x" by (by100 blast)
+              hence "p \<in> ?Fx" by (by100 blast)
+              hence "p \<in> U" using hUV(3) by (by100 blast)
+              thus False using \<open>p \<in> P' - U\<close> by (by100 blast)
+            qed
+            thus ?thesis using \<open>x \<in> X'\<close> by (by100 blast)
+          qed
+          have hy_Wy: "y \<in> X' - q' ` (P' - V)"
+          proof -
+            have "y \<notin> q' ` (P' - V)"
+            proof
+              assume "y \<in> q' ` (P' - V)"
+              then obtain p where "p \<in> P' - V" "q' p = y" by (by100 blast)
+              hence "p \<in> ?Fy" by (by100 blast)
+              hence "p \<in> V" using hUV(4) by (by100 blast)
+              thus False using \<open>p \<in> P' - V\<close> by (by100 blast)
+            qed
+            thus ?thesis using \<open>y \<in> X'\<close> by (by100 blast)
+          qed
+          have hWxy_disj: "(X' - q' ` (P' - U)) \<inter> (X' - q' ` (P' - V)) = {}"
+          proof (rule ccontr)
+            assume "\<not> ?thesis"
+            then obtain z where "z \<in> X'" "z \<notin> q' ` (P' - U)" "z \<notin> q' ` (P' - V)" by (by100 blast)
+            hence "\<forall>p\<in>P'. q' p = z \<longrightarrow> p \<in> U" "\<forall>p\<in>P'. q' p = z \<longrightarrow> p \<in> V" by (by100 blast)+
+            hence "\<forall>p\<in>P'. q' p = z \<longrightarrow> p \<in> U \<inter> V" by (by100 blast)
+            hence "\<forall>p\<in>P'. q' p \<noteq> z" using hUV(5) by (by100 blast)
+            hence "z \<notin> q' ` P'" by (by100 blast)
+            thus False using \<open>z \<in> X'\<close> hq'_surj by (by100 blast)
+          qed
+          show "\<exists>U V. neighborhood_of x X' TX' U \<and> neighborhood_of y X' TX' V \<and> U \<inter> V = {}"
+          proof (intro exI conjI)
+            show "neighborhood_of x X' TX' (X' - q' ` (P' - U))"
+              unfolding neighborhood_of_def using hWx_open hx_Wx by (by100 blast)
+            show "neighborhood_of y X' TX' (X' - q' ` (P' - V))"
+              unfolding neighborhood_of_def using hWy_open hy_Wy by (by100 blast)
+            show "(X' - q' ` (P' - U)) \<inter> (X' - q' ` (P' - V)) = {}"
+              by (rule hWxy_disj)
+          qed
+        qed
+      qed
+    qed
     have hP_compact_loc: "top1_compact_on P ?TP"
     proof -
       have hTP_eq: "?TP = subspace_topology (UNIV :: (real \<times> real) set) top1_open_sets P"
