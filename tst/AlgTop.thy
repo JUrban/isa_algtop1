@@ -1067,7 +1067,43 @@ proof -
     have hP_haus: "is_hausdorff_on P ?TP"
       by (rule hR2_sub_haus[OF hR2_haus]) (by100 blast)
     \<comment> \<open>Step 2: The full Hausdorff argument for the quotient.\<close>
-    show ?thesis sorry \<comment> \<open>P Hausdorff + compact + closed quotient \<Rightarrow> X Hausdorff.\<close>
+    \<comment> \<open>The equivalence relation R = {(a,b)\<in>P\<times>P | q a = q b} is closed in P\<times>P.
+       For polygonal quotients: R is a finite union of pairs of boundary segments,
+       each compact (continuous image of [0,1]), hence closed.
+       Closed R on compact Hausdorff P \<Rightarrow> P/R Hausdorff.\<close>
+    have hR_closed: "closedin_on (P \<times> P)
+        (product_topology_on ?TP ?TP)
+        {(a, b). a \<in> P \<and> b \<in> P \<and> q a = q b}"
+      sorry \<comment> \<open>Finite union of compact subsets of P\<times>P. Each edge-pair identification
+             is a compact (continuous image of [0,1]) subset.\<close>
+    \<comment> \<open>Closed equivalence relation on compact Hausdorff \<Rightarrow> Hausdorff quotient.\<close>
+    have hclosed_R_haus: "\<And>P' TP' X' TX' q'.
+        is_hausdorff_on P' TP' \<Longrightarrow> top1_compact_on P' TP' \<Longrightarrow>
+        top1_quotient_map_on P' TP' X' TX' q' \<Longrightarrow>
+        closedin_on (P' \<times> P') (product_topology_on TP' TP')
+            {(a, b). a \<in> P' \<and> b \<in> P' \<and> q' a = q' b} \<Longrightarrow>
+        is_hausdorff_on X' TX'"
+      sorry \<comment> \<open>Standard result: tube lemma + saturation argument.\<close>
+    have hP_compact_loc: "top1_compact_on P ?TP"
+    proof -
+      have hTP_eq: "?TP = subspace_topology (UNIV :: (real \<times> real) set) top1_open_sets P"
+        using product_topology_on_open_sets_real2 by (by100 simp)
+      have "compact P"
+      proof -
+        obtain vx vy :: "nat \<Rightarrow> real" where hn: "length scheme \<ge> 3"
+            and hP_eq: "P = {(x, y). \<exists>coeffs. (\<forall>i<length scheme. coeffs i \<ge> 0)
+                \<and> (\<Sum>i<length scheme. coeffs i) = 1
+                \<and> x = (\<Sum>i<length scheme. coeffs i * vx i)
+                \<and> y = (\<Sum>i<length scheme. coeffs i * vy i)}"
+          using hP_loc unfolding top1_is_polygonal_region_on_def by blast
+        show "compact P" unfolding hP_eq by (rule convex_hull_compact[OF hn])
+      qed
+      hence "top1_compact_on P (subspace_topology (UNIV::((real\<times>real) set)) top1_open_sets P)"
+        using top1_compact_on_subspace_UNIV_iff_compact by (by100 blast)
+      thus ?thesis using hTP_eq by (by100 simp)
+    qed
+    show ?thesis
+      by (rule hclosed_R_haus[OF hP_haus hP_compact_loc hq_loc hR_closed])
   qed
   show ?thesis using hcompact hhausdorff by (by100 blast)
 qed
