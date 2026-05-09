@@ -2080,15 +2080,41 @@ proof -
       have hC13y_eq_Rk: "C13y = Rk"
         sorry \<comment> \<open>Same argument for J13.\<close>
       \<comment> \<open>Step 5: cl(Rk) = Rk \<union> J12 = Rk \<union> J13. Hence J12 = J13.\<close>
-      have hC12y_props: "C12y \<inter> C12x = {}" "C12y \<union> C12x = top1_S2 - (e12 \<union> ?Arc2)"
-        sorry
-      have hC13y_props: "C13y \<inter> C13x = {}" "C13y \<union> C13x = top1_S2 - (e12 \<union> ?Arc3)"
-        sorry
+      have hC12y_disj: "C12y \<inter> C12x = {}" sorry
+      have hC12y_union: "C12y \<union> C12x = top1_S2 - (e12 \<union> ?Arc2)" sorry
+      have hC13y_disj: "C13y \<inter> C13x = {}" sorry
+      have hC13y_union: "C13y \<union> C13x = top1_S2 - (e12 \<union> ?Arc3)" sorry
       \<comment> \<open>cl(Rk) from J12: use SCCBMC.\<close>
       have hcl_Rk_J12: "closure_on top1_S2 top1_S2_topology Rk = Rk \<union> (e12 \<union> ?Arc2)"
-        sorry \<comment> \<open>Rk = C12y is component of S2-J12. SCCBMC \<Rightarrow> cl = comp \<union> SCC.\<close>
+      proof -
+        \<comment> \<open>Upper bound: cl(Rk) \<subseteq> Rk \<union> J12. C12x open, C12x \<inter> Rk = {}.\<close>
+        have hC12x_open: "C12x \<in> top1_S2_topology"
+          using hC12xy(1) hC12(7,8) sorry
+        have "closure_on top1_S2 top1_S2_topology Rk \<inter> C12x = {}"
+          sorry \<comment> \<open>C12x open, disjoint from Rk \<Rightarrow> disjoint from cl(Rk).\<close>
+        hence hcl_upper: "closure_on top1_S2 top1_S2_topology Rk \<subseteq> Rk \<union> (e12 \<union> ?Arc2)"
+          sorry \<comment> \<open>S2 = C12x \<union> C12y \<union> J12. cl(Rk) misses C12x \<Rightarrow> \<subseteq> C12y\<union>J12 = Rk\<union>J12.\<close>
+        \<comment> \<open>Lower bound: J12 \<subseteq> cl(Rk). By SCCBMC on J12.\<close>
+        have hcl_lower: "e12 \<union> ?Arc2 \<subseteq> closure_on top1_S2 top1_S2_topology Rk"
+        proof -
+          have hC12x_conn: "top1_connected_on C12x (subspace_topology top1_S2 top1_S2_topology C12x)"
+            using hC12xy(1) hC12(5,6) sorry
+          have hC12y_conn: "top1_connected_on C12y (subspace_topology top1_S2 top1_S2_topology C12y)"
+            using hC12xy(1) hC12(5,6) sorry
+          have hC12y_open: "C12y \<in> top1_S2_topology"
+            using hC12xy(1) hC12(7,8) sorry
+          have hC12y_ne: "C12y \<noteq> {}" using hC12xy(1) hC12(1,2) sorry
+          have hC12x_ne: "C12x \<noteq> {}" using hC12xy(1) hC12(1,2) sorry
+          \<comment> \<open>Apply SCCBMC: for each x \<in> J12, x \<in> cl(C12y) = cl(Rk).\<close>
+          show ?thesis sorry \<comment> \<open>SCCBMC on J12 with W1=C12y=Rk, W2=C12x.\<close>
+        qed
+        have "Rk \<subseteq> closure_on top1_S2 top1_S2_topology Rk" by (rule subset_closure_on)
+        hence "Rk \<union> (e12 \<union> ?Arc2) \<subseteq> closure_on top1_S2 top1_S2_topology Rk"
+          using hcl_lower by (by100 blast)
+        thus ?thesis using hcl_upper by (by100 blast)
+      qed
       have hcl_Rk_J13: "closure_on top1_S2 top1_S2_topology Rk = Rk \<union> (e12 \<union> ?Arc3)"
-        sorry \<comment> \<open>Same for J13.\<close>
+        sorry \<comment> \<open>Same argument for J13.\<close>
       \<comment> \<open>Step 6: J12 = J13 \<Rightarrow> Arc2 = Arc3 \<Rightarrow> a3 \<in> Arc3 = e24\<union>e41. Contradiction.\<close>
       have hJ12_eq_J13: "e12 \<union> ?Arc2 = e12 \<union> ?Arc3"
       proof -
