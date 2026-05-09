@@ -2328,6 +2328,20 @@ proof -
            So Rk in W12y (\<noteq> W12x). And W12y contains only Rk from S2-J12.
            Hence W12y \<subseteq> Rk (since S2-J12 = R1\<union>R2\<union>R3\<union>(Arc3-{a1,a2}) and rest in W12x).
            And Rk \<subseteq> W12y. So W12y = Rk.\<close>
+        have hS2J12_eq: "top1_S2 - (e12 \<union> ?Arc2) = (top1_S2 - ?theta) \<union> (?Arc3 - {a1, a2})"
+        proof -
+          have h1: "?theta = (e12 \<union> ?Arc2) \<union> ?Arc3" by (by100 blast)
+          have h2: "?Arc3 \<inter> (e12 \<union> ?Arc2) = {a1, a2}" using hint13 hint23 by (by100 blast)
+          have "?Arc3 \<subseteq> top1_S2" by (rule hArc3_sub)
+          hence "top1_S2 - (e12 \<union> ?Arc2) = (top1_S2 - ?theta) \<union> (?Arc3 - (e12 \<union> ?Arc2))"
+            using h1 by blast
+          also have "\<dots> = (top1_S2 - ?theta) \<union> (?Arc3 - {a1, a2})"
+          proof -
+            have "?Arc3 - (e12 \<union> ?Arc2) = ?Arc3 - {a1, a2}" using h2 by (by100 blast)
+            thus ?thesis by (by100 simp)
+          qed
+          finally show ?thesis .
+        qed
         \<comment> \<open>Shared topology facts for S2-J12.\<close>
         have hTJ12: "is_topology_on (top1_S2 - (e12\<union>?Arc2))
             (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (e12\<union>?Arc2)))"
@@ -2478,7 +2492,8 @@ proof -
               proof -
                 { fix R assume "R \<in> {R1, R2, R3}"
                   hence "R = Ri_e \<or> R = Ri_D \<or> R = Rk"
-                    using hRie(1) hRiD(1) hRk(1) hRk(2,3) hRi_ne sorry
+                    using hRie(1) hRiD(1) hRk(1) hRk(2,3) hRi_ne
+                    by (metis (no_types) insertE singletonD)
                   hence "R \<subseteq> W12a"
                     using hcase \<open>Rk \<subseteq> W12a\<close> \<open>Ri_e \<subseteq> W12a\<close> by (by100 blast) }
                 thus ?thesis by (by100 blast)
@@ -2486,10 +2501,6 @@ proof -
               hence "R1 \<union> R2 \<union> R3 \<subseteq> W12a" by (by100 blast)
               moreover have "top1_S2 - (e12 \<union> ?Arc2) = R1 \<union> R2 \<union> R3 \<union> (?Arc3 - {a1,a2})"
               proof -
-                have hS2J12_eq: "top1_S2 - (e12 \<union> ?Arc2) = (top1_S2 - ?theta) \<union> (?Arc3 - {a1, a2})"
-                proof -
-                  show ?thesis sorry \<comment> \<open>S2-J12 = (S2-theta) \<union> (Arc3-{a1,a2}). Set arithmetic.\<close>
-                qed
                 have "top1_S2 - ?theta = R1 \<union> R2 \<union> R3" using hR(7) by (by100 blast)
                 thus ?thesis using hS2J12_eq by (by100 simp)
               qed
@@ -2504,8 +2515,8 @@ proof -
           proof -
             have "W12b \<subseteq> Rk"
             proof -
-              have "R1 \<union> R2 \<union> R3 \<union> (?Arc3 - {a1,a2}) = top1_S2 - (e12 \<union> ?Arc2)"
-                using hR(7) hArc3_sub_J12 sorry
+              have hS2J12_eq2: "R1 \<union> R2 \<union> R3 \<union> (?Arc3 - {a1,a2}) = top1_S2 - (e12 \<union> ?Arc2)"
+                using hS2J12_eq hR(7) by (by100 simp)
               moreover have "Ri_e \<subseteq> W12a"
               proof -
                 have "Ri_e \<subseteq> W12a \<or> Ri_e \<subseteq> W12b"
@@ -2559,8 +2570,18 @@ proof -
                 ultimately show ?thesis by (by100 blast)
               qed
               moreover have "W12b \<inter> W12a = {}" using hW12(3) by (by100 blast)
-              ultimately show ?thesis
-                using hcase hArc3_a hRie(1) hRiD(1) hRk(1) hW12(4) sorry
+              ultimately have hW12b_facts: "Ri_e \<subseteq> W12a" "W12b \<inter> W12a = {}"
+                  "R1\<union>R2\<union>R3\<union>(?Arc3-{a1,a2}) = top1_S2 - (e12\<union>?Arc2)" by (by100 blast)+
+              show ?thesis
+              proof
+                fix x assume "x \<in> W12b"
+                hence "x \<in> R1\<union>R2\<union>R3\<union>(?Arc3-{a1,a2})" using hW12(4) hW12b_facts(3) by (by100 blast)
+                moreover have "x \<notin> W12a" using \<open>x \<in> W12b\<close> hW12b_facts(2) by (by100 blast)
+                hence "x \<notin> Ri_e" "x \<notin> Ri_D" "x \<notin> ?Arc3 - {a1,a2}"
+                  using hW12b_facts(1) hcase hArc3_a by (by100 blast)+
+                hence "x \<notin> Ri_e \<and> x \<notin> Ri_D \<and> x \<notin> ?Arc3 - {a1,a2}" by (by100 blast)
+                ultimately show "x \<in> Rk" sorry
+              qed
             qed
             thus ?thesis using hRk_b by (by100 blast)
           qed
