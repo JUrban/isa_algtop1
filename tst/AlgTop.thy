@@ -1351,8 +1351,51 @@ proof -
       \<comment> \<open>Boundary compact: each edge is compact image of [0,1], finite union compact.\<close>
       \<comment> \<open>P is compact (polygonal region = convex hull).\<close>
       have hP_compact_here: "top1_compact_on P ?TP"
-        sorry \<comment> \<open>Same argument as hP\_compact in compactness proof: convex\_hull\_compact.\<close>
-      have hbdy_sub_P: "?bdy \<subseteq> P" sorry
+      proof -
+        have hTP_eq: "?TP = subspace_topology (UNIV :: (real \<times> real) set) top1_open_sets P"
+          using product_topology_on_open_sets_real2 by (by100 simp)
+        have "compact P"
+        proof -
+          obtain vx' vy' :: "nat \<Rightarrow> real" where hn': "length scheme \<ge> 3"
+              and hP_eq: "P = {(x, y). \<exists>coeffs. (\<forall>i<length scheme. coeffs i \<ge> 0)
+                  \<and> (\<Sum>i<length scheme. coeffs i) = 1
+                  \<and> x = (\<Sum>i<length scheme. coeffs i * vx' i)
+                  \<and> y = (\<Sum>i<length scheme. coeffs i * vy' i)}"
+            using hP_loc unfolding top1_is_polygonal_region_on_def by blast
+          show "compact P" unfolding hP_eq by (rule convex_hull_compact[OF hn'])
+        qed
+        hence "top1_compact_on P (subspace_topology (UNIV::(real\<times>real) set) top1_open_sets P)"
+          using iffD2[OF top1_compact_on_subspace_UNIV_iff_compact] by (by100 blast)
+        thus ?thesis using hTP_eq by (by100 simp)
+      qed
+      have hbdy_sub_P: "?bdy \<subseteq> P"
+      proof
+        fix x assume "x \<in> ?bdy"
+        then obtain i t where hi: "i < length scheme" "t \<in> I_set" "x = ?edge i t"
+          by (by100 blast)
+        have ht: "t \<ge> 0" "t \<le> 1" using \<open>t \<in> I_set\<close> unfolding top1_unit_interval_def
+          by (by100 simp)+
+        have hvi: "(vx i, vy i) \<in> P" using hvert_loc hi(1) by (by100 blast)
+        have hj: "Suc i mod length scheme < length scheme"
+        proof -
+          have "length scheme > 0" using hlen_loc by (by100 linarith)
+          thus ?thesis by (by100 simp)
+        qed
+        have hvi1: "(vx (Suc i mod length scheme), vy (Suc i mod length scheme)) \<in> P"
+          using hvert_loc hj by (by100 blast)
+        \<comment> \<open>P is convex hull: (1-t)*v_i + t*v_{i+1} is in P for t \<in> [0,1].\<close>
+        show "x \<in> P"
+        proof -
+          \<comment> \<open>Define coefficients: all zero except i and (i+1 mod n).\<close>
+          obtain vx' vy' where hP_eq: "P = {(x, y). \<exists>coeffs. (\<forall>i<length scheme. coeffs i \<ge> 0)
+              \<and> (\<Sum>i<length scheme. coeffs i) = 1
+              \<and> x = (\<Sum>i<length scheme. coeffs i * vx' i)
+              \<and> y = (\<Sum>i<length scheme. coeffs i * vy' i)}"
+            using hP_loc unfolding top1_is_polygonal_region_on_def by blast
+          \<comment> \<open>From hvi and hvi1: vertices are in P, so the edge point is too.\<close>
+          show ?thesis using hi(3) ht hvi hvi1 hP_eq sorry
+        qed
+      qed
       have hbdy_closed_P: "closedin_on P ?TP ?bdy" sorry
       have hbdy_compact_P: "top1_compact_on ?bdy (subspace_topology P ?TP ?bdy)"
         by (rule Theorem_26_2[OF hP_compact_here hbdy_closed_P])
