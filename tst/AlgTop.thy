@@ -1205,12 +1205,97 @@ proof -
           \<comment> \<open>Projection of closed from compact is closed (tube lemma consequence).\<close>
           have hproj_closed: "\<And>C. closedin_on (P' \<times> P') (product_topology_on TP' TP') C \<Longrightarrow>
               closedin_on P' TP' {a \<in> P'. \<exists>b. (a, b) \<in> C}"
-            sorry \<comment> \<open>Projection from compact is closed map. Proof: tube lemma (Lemma\_26\_8).\<close>
+          proof -
+            fix C assume hCcl: "closedin_on (P' \<times> P') (product_topology_on TP' TP') C"
+            have hC_sub: "C \<subseteq> P' \<times> P'" using hCcl unfolding closedin_on_def by (by100 blast)
+            have hprod_compact: "top1_compact_on (P' \<times> P') (product_topology_on TP' TP')"
+              by (rule Theorem_26_7[OF hP'C hP'C])
+            have hpi1_cont: "top1_continuous_map_on (P' \<times> P') (product_topology_on TP' TP') P' TP' pi1"
+              by (rule top1_continuous_pi1[OF hTP' hTP'])
+            have hpi1C_cl: "closedin_on P' TP' (pi1 ` C)"
+              by (rule compact_hausdorff_continuous_closed_map[OF hprod_compact hP'H hpi1_cont hCcl])
+            have hset_eq: "pi1 ` C = {a \<in> P'. \<exists>b. (a, b) \<in> C}"
+            proof -
+              have "\<And>a. a \<in> pi1 ` C \<Longrightarrow> a \<in> {a \<in> P'. \<exists>b. (a, b) \<in> C}"
+              proof -
+                fix a assume "a \<in> pi1 ` C"
+                then obtain p where hp: "p \<in> C" "a = pi1 p" by (by100 blast)
+                have "a = fst p" using hp(2) unfolding pi1_def by (by100 simp)
+                have hp_mem: "p \<in> P' \<times> P'" using hp(1) hC_sub by (by100 blast)
+                hence "fst p \<in> P'" using mem_Times_iff by (by100 blast)
+                hence "a \<in> P'" using \<open>a = fst p\<close> by (by100 simp)
+                have "p = (fst p, snd p)" by (by100 simp)
+                hence "(a, snd p) \<in> C" using \<open>a = fst p\<close> hp(1) by (by100 simp)
+                thus "a \<in> {a \<in> P'. \<exists>b. (a, b) \<in> C}" using \<open>a \<in> P'\<close> by (by100 blast)
+              qed
+              moreover have "\<And>a. a \<in> {a \<in> P'. \<exists>b. (a, b) \<in> C} \<Longrightarrow> a \<in> pi1 ` C"
+              proof -
+                fix a assume "a \<in> {a \<in> P'. \<exists>b. (a, b) \<in> C}"
+                then obtain b where "a \<in> P'" "(a, b) \<in> C" by (by100 blast)
+                have "a = pi1 (a, b)" unfolding pi1_def by (by100 simp)
+                thus "a \<in> pi1 ` C" using \<open>(a, b) \<in> C\<close> by (by100 blast)
+              qed
+              ultimately show ?thesis by (by100 blast)
+            qed
+            show "closedin_on P' TP' {a \<in> P'. \<exists>b. (a, b) \<in> C}" using hpi1C_cl hset_eq by (by100 simp)
+          qed
+          have hTP'_prod2: "is_topology_on (P' \<times> P') (product_topology_on TP' TP')"
+            by (rule product_topology_on_is_topology_on[OF hTP' hTP'])
+          have hP'_in_TP': "P' \<in> TP'" using hTP' unfolding is_topology_on_def by (by100 blast)
           have hSU_closed: "closedin_on P' TP' ?SU"
-            sorry \<comment> \<open>?SU = \<pi>_1(R \<inter> (P'\<times>(P'-U))). R closed, P'\<times>(P'-U) closed \<Rightarrow> intersection closed.
-                   Projection of closed from compact is closed (hproj\_closed).\<close>
+          proof -
+            have hPU_cl: "closedin_on P' TP' (P' - U)"
+            proof (rule closedin_intro)
+              show "P' - U \<subseteq> P'" by (by100 blast)
+            next
+              have "P' - (P' - U) = P' \<inter> U" by (by100 blast)
+              moreover have "P' \<inter> U \<in> TP'" by (rule topology_inter2[OF hTP' hP'_in_TP' hUV(1)])
+              ultimately show "P' - (P' - U) \<in> TP'" by (by100 simp)
+            qed
+            have hPxPU_cl: "closedin_on (P' \<times> P') (product_topology_on TP' TP') (P' \<times> (P' - U))"
+            proof (rule closedin_intro)
+              show "P' \<times> (P' - U) \<subseteq> P' \<times> P'" by (by100 blast)
+            next
+              have "(P' \<times> P') - (P' \<times> (P' - U)) = P' \<times> (P' \<inter> U)" by (by100 blast)
+              moreover have "P' \<inter> U \<in> TP'" by (rule topology_inter2[OF hTP' hP'_in_TP' hUV(1)])
+              moreover have "P' \<times> (P' \<inter> U) \<in> product_topology_on TP' TP'"
+                by (rule product_rect_open[OF hP'_in_TP' \<open>P' \<inter> U \<in> TP'\<close>])
+              ultimately show "(P' \<times> P') - (P' \<times> (P' - U)) \<in> product_topology_on TP' TP'" by (by100 simp)
+            qed
+            have hRC: "closedin_on (P' \<times> P') (product_topology_on TP' TP')
+                (?R \<inter> (P' \<times> (P' - U)))"
+              by (rule closedin_inter2[OF hTP'_prod2 hR'cl hPxPU_cl])
+            have hSU_eq: "?SU = {a \<in> P'. \<exists>b. (a, b) \<in> ?R \<inter> (P' \<times> (P' - U))}"
+              by (by100 blast)
+            show ?thesis using hproj_closed[OF hRC] hSU_eq by (by100 simp)
+          qed
           have hSV_closed: "closedin_on P' TP' ?SV"
-            sorry \<comment> \<open>Same argument with V.\<close>
+          proof -
+            have hPV_cl: "closedin_on P' TP' (P' - V)"
+            proof (rule closedin_intro)
+              show "P' - V \<subseteq> P'" by (by100 blast)
+            next
+              have "P' - (P' - V) = P' \<inter> V" by (by100 blast)
+              moreover have "P' \<inter> V \<in> TP'" by (rule topology_inter2[OF hTP' hP'_in_TP' hUV(2)])
+              ultimately show "P' - (P' - V) \<in> TP'" by (by100 simp)
+            qed
+            have hPxPV_cl: "closedin_on (P' \<times> P') (product_topology_on TP' TP') (P' \<times> (P' - V))"
+            proof (rule closedin_intro)
+              show "P' \<times> (P' - V) \<subseteq> P' \<times> P'" by (by100 blast)
+            next
+              have "(P' \<times> P') - (P' \<times> (P' - V)) = P' \<times> (P' \<inter> V)" by (by100 blast)
+              moreover have "P' \<inter> V \<in> TP'" by (rule topology_inter2[OF hTP' hP'_in_TP' hUV(2)])
+              moreover have "P' \<times> (P' \<inter> V) \<in> product_topology_on TP' TP'"
+                by (rule product_rect_open[OF hP'_in_TP' \<open>P' \<inter> V \<in> TP'\<close>])
+              ultimately show "(P' \<times> P') - (P' \<times> (P' - V)) \<in> product_topology_on TP' TP'" by (by100 simp)
+            qed
+            have hRC: "closedin_on (P' \<times> P') (product_topology_on TP' TP')
+                (?R \<inter> (P' \<times> (P' - V)))"
+              by (rule closedin_inter2[OF hTP'_prod2 hR'cl hPxPV_cl])
+            have hSV_eq: "?SV = {a \<in> P'. \<exists>b. (a, b) \<in> ?R \<inter> (P' \<times> (P' - V))}"
+              by (by100 blast)
+            show ?thesis using hproj_closed[OF hRC] hSV_eq by (by100 simp)
+          qed
           \<comment> \<open>P' - ?SU is open and saturated. q'(P' - ?SU) is open in X'.\<close>
           have hWx_open: "X' - q' ` (P' - U) \<in> TX'"
           proof -
