@@ -5567,10 +5567,73 @@ lemma covering_base_locally_path_connected:
       and "top1_locally_path_connected_on E TE"
       and "is_topology_on E TE" and "is_topology_on B TB"
   shows "top1_locally_path_connected_on B TB"
-  sorry \<comment> \<open>Proof: for b \<in> B, open U \<ni> b: get evenly covered U', p-slice W,
-     path-component C of preimage in W (open by E lpc), p(C) is path-connected
-     open neighborhood of b in U. Uses open\_subset\_locally\_path\_connected
-     + top1\_path\_component\_of\_on\_open\_if\_locally\_path\_connected.\<close>
+  unfolding top1_locally_path_connected_on_def
+proof (intro conjI ballI)
+  show "is_topology_on B TB" by (rule assms(4))
+next
+  fix b assume hb: "b \<in> B"
+  show "top1_locally_path_connected_at B TB b"
+    unfolding top1_locally_path_connected_at_def
+  proof (intro allI impI)
+    fix U assume hU: "neighborhood_of b B TB U \<and> U \<subseteq> B"
+    \<comment> \<open>Get U0 open with b \<in> U0 \<subseteq> U, and Uc evenly covered by p.\<close>
+    obtain U0 where hU0: "U0 \<in> TB" "b \<in> U0" "U0 \<subseteq> U"
+      using hU unfolding neighborhood_of_def by (by100 blast)
+    obtain Uc where hUc_b: "b \<in> Uc" and hUc_cov: "top1_evenly_covered_on E TE B TB p Uc"
+      using hb assms(1) unfolding top1_covering_map_on_def by (by100 blast)
+    have hUc_open: "Uc \<in> TB"
+      using hUc_cov unfolding top1_evenly_covered_on_def openin_on_def by (by100 blast)
+    let ?V = "U0 \<inter> Uc"
+    have hV_open: "?V \<in> TB" by (rule topology_inter2[OF assms(4) hU0(1) hUc_open])
+    have hV_b: "b \<in> ?V" using hU0(2) hUc_b by (by100 blast)
+    have "openin_on B TB Uc" using hUc_cov unfolding top1_evenly_covered_on_def by (by100 blast)
+    hence "Uc \<subseteq> B" unfolding openin_on_def by (by100 blast)
+    have hV_sub_B: "?V \<subseteq> B" using \<open>Uc \<subseteq> B\<close> by (by100 blast)
+    have hV_openin: "openin_on B TB ?V"
+      using hV_open hV_sub_B unfolding openin_on_def by (by100 blast)
+    have hV_cov: "top1_evenly_covered_on E TE B TB p ?V"
+      by (rule evenly_covered_open_subset[OF hUc_cov hV_openin _ assms(3) assms(4)]) (by100 blast)
+    \<comment> \<open>Get p-slice W and preimage e of b.\<close>
+    obtain e where he: "e \<in> E" "p e = b"
+      using hb top1_covering_map_on_surj[OF assms(1)] by (by100 blast)
+    obtain \<V> where h\<V>_open: "\<forall>W\<in>\<V>. openin_on E TE W"
+        and h\<V>_union: "{x\<in>E. p x \<in> ?V} = \<Union>\<V>"
+        and h\<V>_homeo: "\<forall>W\<in>\<V>. top1_homeomorphism_on W (subspace_topology E TE W)
+            ?V (subspace_topology B TB ?V) p"
+      using hV_cov unfolding top1_evenly_covered_on_def
+      by (elim conjE exE) (by100 blast)
+    have he_pV: "e \<in> {x\<in>E. p x \<in> ?V}" using he hV_b by (by100 blast)
+    hence "e \<in> \<Union>\<V>" using h\<V>_union by (by100 simp)
+    then obtain W where hW: "W \<in> \<V>" "e \<in> W" by (by100 blast)
+    have hW_open: "W \<in> TE" using h\<V>_open hW(1) unfolding openin_on_def by (by100 blast)
+    have hW_sub_E: "W \<subseteq> E" using h\<V>_open hW(1) unfolding openin_on_def by (by100 blast)
+    \<comment> \<open>W is open and lpc. Path component C of e in W is open and path-connected.\<close>
+    have hW_lpc: "top1_locally_path_connected_on W (subspace_topology E TE W)"
+      by (rule open_subset_locally_path_connected[OF assms(2) hW_open hW_sub_E])
+    have hW_top: "is_topology_on W (subspace_topology E TE W)"
+      using hW_lpc unfolding top1_locally_path_connected_on_def by (by100 blast)
+    let ?C = "top1_path_component_of_on W (subspace_topology E TE W) e"
+    have hPC: "?C \<in> subspace_topology E TE W"
+      by (rule top1_path_component_of_on_open_if_locally_path_connected[OF hW_top hW_lpc hW(2)])
+    \<comment> \<open>C is open in E.\<close>
+    have hC_TE: "?C \<in> TE"
+    proof -
+      from hPC obtain U' where hU'_TE: "U' \<in> TE" and hC_eq: "?C = W \<inter> U'"
+        unfolding subspace_topology_def by (by100 blast)
+      have "W \<inter> U' \<in> TE" by (rule topology_inter2[OF assms(3) hW_open hU'_TE])
+      thus ?thesis using hC_eq by (by100 simp)
+    qed
+    \<comment> \<open>p(C) is path-connected, open in B, contains b, subset of U.\<close>
+    \<comment> \<open>Remaining properties of p(C): open, contains b, path-connected, subset of U.\<close>
+    have hpC_nhd: "neighborhood_of b B TB (p ` ?C)" sorry
+    have hpC_sub_U: "p ` ?C \<subseteq> U" sorry
+    have hpC_sub_B: "p ` ?C \<subseteq> B" sorry
+    have hpC_pc: "top1_path_connected_on (p ` ?C) (subspace_topology B TB (p ` ?C))" sorry
+    show "\<exists>V. neighborhood_of b B TB V \<and> V \<subseteq> U \<and> V \<subseteq> B \<and>
+        top1_path_connected_on V (subspace_topology B TB V)"
+      using hpC_nhd hpC_sub_U hpC_sub_B hpC_pc by (by100 blast)
+  qed
+qed
 
 (** from \<S>80 Theorem 80.3: universal covering factors through any covering **)
 theorem Theorem_80_3_universal:
