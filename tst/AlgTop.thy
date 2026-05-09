@@ -1564,9 +1564,19 @@ proof -
               by (rule top1_open_sets_is_topology_on_UNIV)
             show ?thesis using Theorem_16_3[OF hT_R2 hT_R2] hTP_eq_sub by simp
           qed
-          hence hPP_eq: "product_topology_on ?TP ?TP =
-              subspace_topology (UNIV :: ((real \<times> real) \<times> (real \<times> real)) set) top1_open_sets (P \<times> P)"
-            using product_topology_on_open_sets sorry
+          also have "subspace_topology ((UNIV::(real\<times>real) set) \<times> (UNIV::(real\<times>real) set))
+                  (product_topology_on top1_open_sets top1_open_sets) (P \<times> P)
+              = subspace_topology (UNIV :: ((real \<times> real) \<times> (real \<times> real)) set) top1_open_sets (P \<times> P)"
+          proof -
+            have h1: "(UNIV::(real\<times>real) set) \<times> (UNIV::(real\<times>real) set) = (UNIV :: ((real \<times> real) \<times> (real \<times> real)) set)"
+              by (by100 simp)
+            have h2: "product_topology_on (top1_open_sets::(real\<times>real) set set) (top1_open_sets::(real\<times>real) set set)
+                = (top1_open_sets :: ((real \<times> real) \<times> (real \<times> real)) set set)"
+              by (rule product_topology_on_open_sets)
+            show ?thesis using h1 h2 by (by100 simp)
+          qed
+          finally have hPP_eq: "product_topology_on ?TP ?TP =
+              subspace_topology (UNIV :: ((real \<times> real) \<times> (real \<times> real)) set) top1_open_sets (P \<times> P)" .
           have hR_bdy_sub_PP: "?R \<inter> (?bdy \<times> ?bdy) \<subseteq> P \<times> P" by (by100 blast)
           have "subspace_topology (P \<times> P) (product_topology_on ?TP ?TP) (?R \<inter> (?bdy \<times> ?bdy))
               = subspace_topology (P \<times> P)
