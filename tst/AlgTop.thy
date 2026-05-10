@@ -837,11 +837,64 @@ proof -
     using hUV0(4) by (by100 blast)
   \<comment> \<open>U0, V0 are open in X (since they're connected components of an open set in S2).\<close>
   \<comment> \<open>x, y are in different components (needs part (a) / Lemma\_64\_3 applied to "other" cycle).\<close>
+  \<comment> \<open>U0, V0 are open in S2 (connected components of an open set in S2).\<close>
+  have hW_open: "top1_S2 - (?D1 \<union> ?D2) \<in> top1_S2_topology"
+  proof -
+    have "?D1 \<subseteq> top1_S2 \<and> top1_S2 - ?D1 \<in> top1_S2_topology"
+      using hD1_closed unfolding closedin_on_def by (by100 blast)
+    have "?D2 \<subseteq> top1_S2 \<and> top1_S2 - ?D2 \<in> top1_S2_topology"
+      using hD2_closed unfolding closedin_on_def by (by100 blast)
+    hence "(top1_S2 - ?D1) \<inter> (top1_S2 - ?D2) \<in> top1_S2_topology"
+      sorry \<comment> \<open>Finite intersection of open sets is open.\<close>
+    moreover have "top1_S2 - (?D1 \<union> ?D2) = (top1_S2 - ?D1) \<inter> (top1_S2 - ?D2)" by (by100 blast)
+    ultimately show ?thesis by (by100 simp)
+  qed
+  have hW_sub: "top1_S2 - (?D1 \<union> ?D2) \<subseteq> top1_S2" by (by100 blast)
+  have hW_not_conn: "\<not> top1_connected_on (top1_S2 - (?D1 \<union> ?D2))
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?D1 \<union> ?D2)))"
+    using hUV0(1,2,3,4) sorry \<comment> \<open>Two nonempty disjoint parts \<Rightarrow> not connected.\<close>
+  have "U0 \<in> top1_S2_topology" "V0 \<in> top1_S2_topology"
+    using S2_two_component_open[OF hW_open hW_sub hUV0(1,2,3) hUV0(4) hUV0(5,6) hW_not_conn]
+    by (by100 blast)+
+  hence hU0_open: "U0 \<in> top1_S2_topology" and hV0_open: "V0 \<in> top1_S2_topology"
+    by (by100 blast)+
+  \<comment> \<open>U0, V0 are open in X (open in S2 and subset of X).\<close>
+  have hU0_sub_X: "U0 \<subseteq> ?X" using hUV0(4) hU_sub_X hV_sub_X by (by100 blast)
+  have hV0_sub_X: "V0 \<subseteq> ?X" using hUV0(4) hU_sub_X hV_sub_X by (by100 blast)
+  have hU0_open_X: "openin_on ?X ?TX U0"
+  proof -
+    have "U0 = U0 \<inter> ?X" using hU0_sub_X by (by100 blast)
+    hence "U0 \<in> ?TX" using hU0_open unfolding subspace_topology_def by (by100 blast)
+    thus ?thesis unfolding openin_on_def using hU0_sub_X by (by100 blast)
+  qed
+  have hV0_open_X: "openin_on ?X ?TX V0"
+  proof -
+    have "V0 = V0 \<inter> ?X" using hV0_sub_X by (by100 blast)
+    hence "V0 \<in> ?TX" using hV0_open unfolding subspace_topology_def by (by100 blast)
+    thus ?thesis unfolding openin_on_def using hV0_sub_X by (by100 blast)
+  qed
+  \<comment> \<open>x \<in> U0, y \<in> V0 (or swapped). Needs: x and y in different components.
+     This follows from Lemma 65.1(a) applied to the "other" K4 cycle D1\<union>D2.\<close>
+  have hx_in_UV: "x \<in> U0 \<union> V0"
+    using hUV0(4) hx_in_CmD1 hx_in_CmD2 hC_sub_S2 by (by100 blast)
+  have hy_in_UV: "y \<in> U0 \<union> V0"
+    using hUV0(4) hy_in_CmD1 hy_in_CmD2 hC_sub_S2 by (by100 blast)
+  have hx_y_diff_comp: "(x \<in> U0 \<and> y \<in> V0) \<or> (x \<in> V0 \<and> y \<in> U0)"
+    sorry \<comment> \<open>x and y are in different components of S2-(D1\<union>D2). This is Lemma 65.1(a)
+       applied to the cycle D1\<union>D2 = e13\<union>e23\<union>e24\<union>e41 (the "other" K4 cycle),
+       where x \<in> int(e12) and y \<in> int(e34) are in different components.\<close>
   obtain A B where hAB: "?U_loc \<inter> ?V_loc = A \<union> B" "A \<inter> B = {}"
       "openin_on ?X ?TX A" "openin_on ?X ?TX B" "x \<in> A" "y \<in> B"
-    sorry \<comment> \<open>From hUV0: U0, V0 give the partition. Need:
-       (1) U0, V0 open in X (components of open set in S2 are open)
-       (2) x \<in> U0, y \<in> V0 (or swapped) — uses Lemma 65.1(a) for the other K4 cycle.\<close>
+  proof -
+    from hx_y_diff_comp show ?thesis
+    proof
+      assume h: "x \<in> U0 \<and> y \<in> V0"
+      show ?thesis by (rule that[of U0 V0]) (use hUV0_eq hUV0(3) hU0_open_X hV0_open_X h in \<open>by100 blast\<close>)+
+    next
+      assume h: "x \<in> V0 \<and> y \<in> U0"
+      show ?thesis by (rule that[of V0 U0]) (use hUV0_eq hUV0(3) hU0_open_X hV0_open_X h in \<open>by100 blast\<close>)+
+    qed
+  qed
   have h\<alpha>\<beta>_nontrivial: "\<not> top1_path_homotopic_on ?X ?TX x x
       (top1_path_product \<alpha> \<beta>) (top1_constant_path x)"
     by (rule Theorem_63_1_loop_nontrivial[OF hTX hU_open_X hV_open_X hUV_union
