@@ -204,7 +204,11 @@ proof -
   have hj_nontrivial: "\<exists>c \<in> top1_fundamental_group_carrier C ?TC c0.
       top1_fundamental_group_induced_on C ?TC c0 ?X ?TX c0 (\<lambda>x. x) c
       \<noteq> top1_fundamental_group_id ?X ?TX c0"
-    sorry \<comment> \<open>From h\_nontrivial + inclusion\_induced\_class + basepoint change.\<close>
+    sorry \<comment> \<open>The cached Lemma\_65\_1\_K4\_subgraph internally constructs \<alpha>*\<beta> traversing C,
+       but its conclusion only exposes "loop in X, nontrivial" without "image in C."
+       Alternative: C is a SCC (proved above) separating p from q in S2 (Lemma 64.3),
+       so the inclusion C \<hookrightarrow> X = S2-{p,q} is \<pi>_1-nontrivial because C "wraps around"
+       both punctures (winding number argument). Needs basepoint change to c0.\<close>
   \<comment> \<open>Step 4b: \<pi>_1(C, c0) \<cong> Z (C is a simple closed curve \<cong> S1).\<close>
   have hC_scc: "top1_simple_closed_curve_on top1_S2 top1_S2_topology C"
   proof -
