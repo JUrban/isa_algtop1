@@ -973,13 +973,60 @@ proof -
     show ?thesis unfolding top1_is_loop_on_def
       by (rule top1_path_product_is_path[OF hTC_top h\<alpha>_C h\<beta>_C])
   qed
+  \<comment> \<open>Textbook conclusion (Munkres p.393):
+     "\<alpha>*\<beta> represents a generator of \<pi>_1(X)."
+     "j_* is surjective, so j_* must be an isomorphism."
+
+     We have: h\<alpha>\<beta>\_in\_C (\<alpha>*\<beta> loop in C at x), h\<alpha>\<beta>\_nontrivial (nontrivial in X),
+     hX\_inf\_cyc (\<pi>_1(X) infinite cyclic at c0), hC\_scc (C is SCC).
+
+     The surjectivity argument at basepoint x:
+     (1) [\<alpha>*\<beta>]_X generates \<pi>_1(X, x) [textbook asserts from 63.1 + inf cyclic]
+     (2) [\<alpha>*\<beta>]_C is an element of \<pi>_1(C, x)
+     (3) j_*([\<alpha>*\<beta>]_C) = [\<alpha>*\<beta>]_X [by inclusion\_induced\_class]
+     (4) j_* hits a generator \<Rightarrow> j_* surjective
+
+     Then basepoint change x \<rightarrow> c0.
+     Then injectivity from surjective hom Z \<rightarrow> Z.\<close>
+  \<comment> \<open>===== THE CORE ARGUMENT (following Munkres p.393) =====
+     "Because the fundamental group of X is infinite cyclic, the loop \<alpha>*\<beta>
+      represents a generator of this group."
+
+     Proof: U\_loc, V\_loc are simply connected (S2 minus arc, S2\_minus\_arc\_simply\_connected).
+     Any loop f in X subdivides into pieces in U\_loc or V\_loc (loop\_subdivision\_UV).
+     Each piece is nulhomotopic in its region (simply connected).
+     After contraction, only crossings A\<leftrightarrow>B remain.
+     By Theorem\_63\_1\_c\_subgroups\_trivial: all crossing loops through A are trivial
+     (relative to \<alpha>*\<beta>). So every loop is a power of [\<alpha>*\<beta>].
+     Hence [\<alpha>*\<beta>] generates \<pi>_1(X), i.e. [\<alpha>*\<beta>] = \<plusminus>gen.
+
+     Since \<alpha>*\<beta> \<in> C: j_*([\<alpha>*\<beta>]_C) = [\<alpha>*\<beta>]_X = generator.
+     Since [\<alpha>*\<beta>]_C generates \<pi>_1(C) \<cong> Z (traverses C once):
+     j_* maps generator to generator \<Rightarrow> surjective \<Rightarrow> isomorphism.\<close>
+  \<comment> \<open>Step 1: U\_loc, V\_loc simply connected.\<close>
+  have hU_sc: "top1_simply_connected_on ?U_loc (subspace_topology top1_S2 top1_S2_topology ?U_loc)"
+    by (rule S2_minus_arc_simply_connected[OF assms(1) hD1_sub_S2 hD1_arc])
+  have hV_sc: "top1_simply_connected_on ?V_loc (subspace_topology top1_S2 top1_S2_topology ?V_loc)"
+    by (rule S2_minus_arc_simply_connected[OF assms(1) hD2_sub_S2 hD2_arc])
+  \<comment> \<open>Step 2: Any loop in X at x subdivides into pieces in U\_loc or V\_loc.\<close>
+  \<comment> \<open>Available: loop\_subdivision\_UV from AlgTopCached.\<close>
+  \<comment> \<open>Step 3: Each piece nulhomotopic (hU\_sc, hV\_sc).
+     After contraction, only A\<leftrightarrow>B crossings remain.
+     By 63.1(c), all such crossings are powers of [\<alpha>*\<beta>].
+     So [\<alpha>*\<beta>] generates \<pi>_1(X). Combined with \<pi>_1(X) \<cong> Z: [\<alpha>*\<beta>] = \<plusminus>gen.\<close>
+  \<comment> \<open>Step 4: j_* surjective. \<alpha>*\<beta> \<in> C, [\<alpha>*\<beta>] generates \<pi>_1(X),
+     [\<alpha>*\<beta>]_C generates \<pi>_1(C). So j_* maps generator to generator.\<close>
   have hj_surj: "(top1_fundamental_group_induced_on C ?TC c0 ?X ?TX c0 (\<lambda>x. x))
       ` (top1_fundamental_group_carrier C ?TC c0)
       = top1_fundamental_group_carrier ?X ?TX c0"
-    sorry \<comment> \<open>From h\<alpha>\<beta>\_in\_C + h\<alpha>\<beta>\_nontrivial + generator argument + basepoint change.\<close>
+    sorry \<comment> \<open>From hU\_sc + hV\_sc + loop\_subdivision\_UV + Theorem\_63\_1\_c + h\<alpha>\<beta>\_in\_C.
+       All key ingredients now available. Remaining: connect the pieces formally.
+       Needs: loop subdivision for disconnected U\<inter>V, contraction in simply connected
+       regions, basepoint change x \<rightarrow> c0.\<close>
+  \<comment> \<open>Step 5: j_* injective. Surjective hom Z \<rightarrow> Z is injective.\<close>
   have hj_inj: "inj_on (top1_fundamental_group_induced_on C ?TC c0 ?X ?TX c0 (\<lambda>x. x))
       (top1_fundamental_group_carrier C ?TC c0)"
-    sorry \<comment> \<open>Step F: surjective hom Z \<rightarrow> Z is injective. Follows from hj\_surj.\<close>
+    sorry \<comment> \<open>From hj\_surj + \<pi>_1(C) \<cong> Z + \<pi>_1(X) \<cong> Z. Elementary algebra.\<close>
   \<comment> \<open>Step 5: Combine homomorphism + injective + surjective = isomorphism.\<close>
   have hj_bij: "bij_betw (top1_fundamental_group_induced_on C ?TC c0 ?X ?TX c0 (\<lambda>x. x))
       (top1_fundamental_group_carrier C ?TC c0)
