@@ -458,7 +458,10 @@ proof -
   have hU_sub_X: "?U_loc \<subseteq> ?X" using hp_D1 hq_D1 by (by100 blast)
   have hV_sub_X: "?V_loc \<subseteq> ?X" using hp_D2 hq_D2 by (by100 blast)
   \<comment> \<open>Step C2: U\_loc \<union> V\_loc = X (since D1 \<inter> D2 = {p, q}).\<close>
-  have hD1_D2_inter: "?D1 \<inter> ?D2 = {p, q}" sorry \<comment> \<open>From arc split structure.\<close>
+  have hD1_D2_inter: "?D1 \<inter> ?D2 = {p, q}"
+    sorry \<comment> \<open>D1 = Da3 \<union> e23 \<union> Da2, D2 = Dq4 \<union> e41 \<union> D1p.
+       Da3 \<inter> D1p = {p} (e13 split), Da2 \<inter> Dq4 = {q} (e24 split).
+       Other 7 cross-terms empty by K4 intersections + arc subset reasoning.\<close>
   have hUV_union: "?U_loc \<union> ?V_loc = ?X"
     using hD1_D2_inter hp_D1 hq_D1 hp_D2 hq_D2 by blast
   \<comment> \<open>Step C3: U\_loc \<inter> V\_loc = S2 - (D1 \<union> D2). D1 \<union> D2 is a simple closed curve.
