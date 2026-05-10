@@ -108,6 +108,23 @@ lemma S2_minus_arc_simply_connected:
      Under this homeomorphism, D-{p} maps to a compact connected set with empty
      interior in R2. R2 minus such a set is simply connected.\<close>
 
+text \<open>Helix shift automorphism: T(x,n) = (x, n+2) is continuous on E.\<close>
+lemma helix_shift_continuous:
+  assumes "is_topology_on X TX"
+      and "openin_on X TX U" and "openin_on X TX V"
+      and "U \<inter> V = A \<union> B"
+      and "openin_on X TX A" and "openin_on X TX B"
+  defines "E \<equiv> {(x :: 'a \<times> int). (even (snd x) \<and> fst x \<in> U) \<or> (odd (snd x) \<and> fst x \<in> V - U)}"
+  defines "TE \<equiv> {W. W \<subseteq> E \<and>
+        (\<forall>n::int. {x \<in> U. (x, 2*n) \<in> W} \<in> TX) \<and>
+        (\<forall>n::int. {x \<in> A. (x, 2*n + 2) \<in> W} \<union> {x \<in> B. (x, 2*n) \<in> W} \<union>
+                  {x \<in> V - U. (x, 2*n + 1) \<in> W} \<in> TX)}"
+  defines "T1 \<equiv> (\<lambda>(x :: 'a, n :: int). (x, n + 2))"
+  shows "top1_continuous_map_on E TE E TE T1"
+  sorry \<comment> \<open>T1\<inverse>(W): slices shift index n \<rightarrow> n+1 (from W \<in> TE).
+     Proof pattern: for each x and membership condition in W',
+     use T1 def to shift the integer coordinate, then appeal to W \<in> TE.\<close>
+
 text \<open>Theorem 63.1(b): If \<pi>_1(X) is infinite cyclic, [\<alpha>*\<beta>] generates it.
   Proof follows Munkres Step 4: the helix covering E \<rightarrow> X gives a
   lifting correspondence \<phi>: \<pi>_1(X) \<rightarrow> fiber. Since \<phi>([\<alpha>*\<beta>]^n) = n
@@ -314,11 +331,18 @@ proof -
      Key: T1\<inverse>(W) = \{(x,n) : (x, n+2) \<in> W\}.
      Slice conditions: \{x \<in> U. (x, 2n) \<in> T1\<inverse>(W)\} = \{x \<in> U. (x, 2(n+1)) \<in> W\} \<in> TX.\<close>
   have hT1_cont: "top1_continuous_map_on E TE E TE T1"
-    sorry \<comment> \<open>T1 continuity: for W \<in> TE, T1\<inverse>(W) \<in> TE.
-       The slice conditions shift index by 1.
-       Needs ~60 lines due to set equality proofs with integer arithmetic.
-       All individual steps are correct (verified above) but total runtime
-       exceeds the session limit due to many auto/blast calls.\<close>
+  proof -
+    note h = helix_shift_continuous[OF assms(1-3) assms(5) assms(7-8)]
+    have "E = {x :: ('a \<times> int). even (snd x) \<and> fst x \<in> U \<or> odd (snd x) \<and> fst x \<in> V - U}"
+      unfolding E_def by auto
+    moreover have "TE = {W. W \<subseteq> E \<and>
+        (\<forall>n. {x \<in> U. (x, 2 * n) \<in> W} \<in> TX) \<and>
+        (\<forall>n. {x \<in> A. (x, 2 * n + 2) \<in> W} \<union> {x \<in> B. (x, 2 * n) \<in> W} \<union>
+              {x \<in> V - U. (x, 2 * n + 1) \<in> W} \<in> TX)}"
+      unfolding TE_def E_def by auto
+    moreover have "T1 = (\<lambda>(x :: 'a, n :: int). (x, n + 2))" unfolding T1_def by auto
+    ultimately show ?thesis using h by simp
+  qed
   \<comment> \<open>The lift of gen from (a, 2*j) ends at (a, 2*j + 2*d) for any j.
      Proof: by covering\_lift\_unique\_connected, the lift from (a, 2*j) is
      T1^j \<circ> gen\_lift (since T1^j shifts by 2j, and the projection is unchanged).
