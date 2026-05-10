@@ -45,12 +45,40 @@ proof (intro allI impI)
      The full formalization requires tracking component membership of subdivision
      points and doing path algebra. We use the algebraic consequence of 63.1(c):
      all A-pairs are trivial, so the only surviving contribution is [\<alpha>*\<beta>].\<close>
+  \<comment> \<open>By Theorem 51.3: f \<cong> f_1 * f_2 * ... * f_n where f_i are the subdivision pieces.\<close>
+  have hf_path: "top1_is_path_on X TX a a f"
+    using hf unfolding top1_is_loop_on_def by (by100 blast)
+  have hf_decomp: "top1_path_homotopic_on X TX a a f
+      (foldr top1_path_product
+        (map (\<lambda>i t. f (sub i + t * (sub (Suc i) - sub i))) [0..<n])
+        (top1_constant_path a))"
+    using Theorem_51_3_aux[OF assms(1) hf_path hn hsub0 hsubn]
+    using hsubinc by blast
+  \<comment> \<open>Each piece f_i lies in U or V (from hpieces).
+     Each piece's endpoints are in X; consecutive endpoint sharing gives
+     the intermediate points in U\<inter>V when regions change.
+
+     Key claim: the product of pieces is homotopic to (\<alpha>*\<beta>)^k for some k.
+
+     Argument by induction on n (number of pieces):
+     - Each piece from p to q in U is homotopic (in U) to any other path p\<rightarrow>q in U
+       (U simply connected).
+     - If p, q in same component (both A or both B): the piece is a 63.1 pair
+       component, which is trivial in \<pi>_1(X) (from 63.1(c) + Z structure).
+     - If p \<in> A, q \<in> B: piece homotopic to \<alpha> (in U).
+     - If p \<in> B, q \<in> A: piece homotopic to \<beta>^{-1} ... wait, wrong direction.
+
+     After cancellation of trivial pairs and pairing of crossings:
+     f \<cong> (\<alpha>*\<beta>)^k or (\<alpha>*\<beta>)^{-k}.
+
+     This is the core of the SvK argument for disconnected intersections.
+     Full formalization requires ~200 lines of path algebra with induction.\<close>
   show "\<exists>n::nat. top1_path_homotopic_on X TX a a f (top1_path_power (top1_path_product \<alpha> \<beta>) a n)
       \<or> top1_path_homotopic_on X TX a a f
            (top1_path_power (top1_path_reverse (top1_path_product \<alpha> \<beta>)) a n)"
-    sorry \<comment> \<open>From the subdivision + simply connected contraction + 63.1(c).
-       Each piece contracts to point (same component endpoints) or to \<alpha>/\<beta> (crossing).
-       Net result: f \<cong> (\<alpha>*\<beta>)^k. Needs formal path algebra with subdivision tracking.\<close>
+    sorry \<comment> \<open>From hf\_decomp + simply connected pieces + 63.1(c) triviality of A-pairs.
+       The formal induction on n reduces the product of pieces to (\<alpha>*\<beta>)^k.
+       This is the deepest formal step — a version of SvK for disconnected U\<inter>V.\<close>
 qed
 
 text \<open>S2 minus an arc is simply connected. Standard fact:
