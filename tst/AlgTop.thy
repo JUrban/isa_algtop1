@@ -1226,8 +1226,7 @@ lemma quotient_strict_extract:
         \<longrightarrow> (i = j \<and> t = s)
           \<or> (fst (scheme!i) = fst (scheme!j) \<and>
              (if snd (scheme!i) = snd (scheme!j) then s = t else s = 1 - t))"
-  sorry \<comment> \<open>Extraction from nested ∃ in strict definition. Formula too large for
-         Isabelle's unification (>5min). Mathematically trivial: just unfold + obtain.\<close>
+  sorry \<comment> \<open>Extraction from strict def. Automation can't handle formula size.\<close>
 
 (** from \<S>74 Theorem 74.1: polygonal quotients are compact Hausdorff **)
 theorem Theorem_74_1_polygon_quotient_compact_hausdorff:
