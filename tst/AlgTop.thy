@@ -385,7 +385,8 @@ proof -
   qed
   have hCmD1_pc: "top1_path_connected_on (C - ?D1)
       (subspace_topology top1_S2 top1_S2_topology (C - ?D1))"
-    sorry \<comment> \<open>C-D1 = (e12-{a2}) \<union> e41 \<union> (e34-{a3}), chain connected at a1, a4.\<close>
+    sorry \<comment> \<open>C-D1 = (e12-{a2}) \<union> e41 \<union> (e34-{a3}). Chain of arcs sharing vertices a1, a4.
+       Each piece is path-connected. Union of overlapping path-connected sets is path-connected.\<close>
   \<comment> \<open>Similarly for C - D2.\<close>
   have hx_in_CmD2: "x \<in> C - ?D2"
   proof -
