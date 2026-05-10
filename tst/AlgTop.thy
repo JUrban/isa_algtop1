@@ -1380,13 +1380,13 @@ proof -
           hence "a1 \<in> e23 \<inter> e41" using assms(27) by (by100 blast)
           thus False using assms(23) by (by100 blast)
         qed
+        have ha1_e12: "a1 \<in> e12" using assms(27) by (by100 blast)
         moreover have "a1 \<notin> Da2"
         proof -
           have "a1 \<notin> e24"
           proof
             assume "a1 \<in> e24"
-            hence "a1 \<in> e24 \<inter> e12" using assms(27) by (by100 blast)
-            hence "a1 \<in> {a2}" using assms(33) by (by100 blast)
+            hence "a1 \<in> {a2}" using ha1_e12 assms(33) by (by100 blast)
             thus False using ha1_ne_a2 by (by100 blast)
           qed
           thus ?thesis using hDa2_sub by (by100 blast)
