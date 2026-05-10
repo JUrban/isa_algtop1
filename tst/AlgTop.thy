@@ -186,22 +186,32 @@ proof -
      \<alpha>*\<beta> is a loop in C that is nontrivial in X. Since \<pi>_1(X) \<cong> Z and
      Theorem\_63\_1\_c\_subgroups\_trivial gives that [\<alpha>*\<beta>] generates \<pi>_1(X),
      and \<alpha>*\<beta> lies in C, j_* is surjective.\<close>
+  \<comment> \<open>Step 4a (Munkres 65.1(b)): The loop \<alpha>*\<beta> from Lemma\_65\_1\_K4\_subgraph
+     lies in C and is nontrivial in X. Following the textbook:
+     - U = S2-D1, V = S2-D2 where D1, D2 are arcs
+     - Both U, V are simply connected (S2 minus arc, sorry'd)
+     - U \<inter> V = S2-D has two components (D = D1 \<union> D2 is simple closed curve, by JCT)
+     - \<alpha> path x\<rightarrow>y in U, \<beta> path y\<rightarrow>x in V, with x, y in different components
+     - By Theorem 63.1: [\<alpha>*\<beta>] nontrivial
+     - Since U, V simply connected and U \<inter> V has two components,
+       [\<alpha>*\<beta>] generates \<pi>_1(X) (Theorem 63.1(c) forces this in infinite cyclic group)
+     - Since \<alpha>*\<beta> \<in> C, j_* hits the generator, hence surjective.\<close>
   have hj_surj: "(top1_fundamental_group_induced_on C ?TC c0 ?X ?TX c0 (\<lambda>x. x))
       ` (top1_fundamental_group_carrier C ?TC c0)
       = top1_fundamental_group_carrier ?X ?TX c0"
-    sorry \<comment> \<open>From h\_nontrivial: \<exists>x\<in>C. \<exists>g. loop g at x in X, nontrivial.
-       From pi1\_S2\_minus\_two\_points\_infinite\_cyclic: \<pi>_1(X) infinite cyclic.
-       From Theorem\_63\_1\_c\_subgroups\_trivial: [g] is a generator of \<pi>_1(X).
-       Since g lies in C, j_* hits the generator, hence j_* surjective.
-       Basepoint change from x to c0 via Corollary\_52\_2.\<close>
-  \<comment> \<open>Step 5: Injectivity of j_*.
-     Both \<pi>_1(C) and \<pi>_1(X) are \<cong> Z. j_* surjective hom Z \<rightarrow> Z
-     maps generator to \<plusminus>generator, hence injective.
-     (A surjective hom Z \<rightarrow> Z must map 1 to \<plusminus>1, hence bijective.)\<close>
+    sorry \<comment> \<open>Textbook proof (Munkres p.393): Uses Theorem 63.1 structure.
+       Key facts: U, V simply connected (S2\_minus\_arc\_simply\_connected),
+       U \<inter> V two components (JCT), \<alpha>*\<beta> generator (63.1c + infinite cyclic).
+       Available: h\_nontrivial, Theorem\_63\_1\_c\_subgroups\_trivial,
+       pi1\_S2\_minus\_two\_points\_infinite\_cyclic, S2\_minus\_arc\_simply\_connected.\<close>
+  \<comment> \<open>Step 4b: Injectivity of j_*.
+     j_* is nontrivial (maps [\<alpha>*\<beta>] to a nontrivial element).
+     \<pi>_1(X) is torsion-free (infinite cyclic \<cong> Z).
+     Nontrivial hom from Z to torsion-free group is injective.\<close>
   have hj_inj: "inj_on (top1_fundamental_group_induced_on C ?TC c0 ?X ?TX c0 (\<lambda>x. x))
       (top1_fundamental_group_carrier C ?TC c0)"
-    sorry \<comment> \<open>Surjective group hom Z \<rightarrow> Z is injective. Proof: maps 1 to n with
-       nZ = Z, so n = \<plusminus>1. Then k \<mapsto> \<plusminus>k is bijective.\<close>
+    sorry \<comment> \<open>Follows from surjectivity: surjective hom Z \<rightarrow> Z is injective.
+       Alternatively: j_* nontrivial + \<pi>_1(C) \<cong> Z + \<pi>_1(X) torsion-free \<Rightarrow> injective.\<close>
   \<comment> \<open>Step 5: Combine homomorphism + injective + surjective = isomorphism.\<close>
   have hj_bij: "bij_betw (top1_fundamental_group_induced_on C ?TC c0 ?X ?TX c0 (\<lambda>x. x))
       (top1_fundamental_group_carrier C ?TC c0)
