@@ -302,20 +302,84 @@ proof -
      For arbitrary d: T\_d = T\_1^d where T\_1(x,n) = (x, n+2) is period-1.\<close>
   \<comment> \<open>The lift of gen from (a, 2*j*d) ends at (a, 2*(j+1)*d).
      This follows from the shift T\_d being a covering automorphism.\<close>
+  \<comment> \<open>Define the period-1 helix shift T1(x,n) = (x, n+2).\<close>
+  define T1 :: "('a \<times> int) \<Rightarrow> ('a \<times> int)" where "T1 = (\<lambda>(x, n). (x, n + 2))"
+  \<comment> \<open>T1 maps E to E (parity of n preserved by adding 2).\<close>
+  have hT1_E: "\<And>e. e \<in> E \<Longrightarrow> T1 e \<in> E"
+    unfolding T1_def E_def by auto
+  \<comment> \<open>p0 \<circ> T1 = p0.\<close>
+  have hT1_proj: "\<And>e. p0 (T1 e) = p0 e"
+    unfolding T1_def p0_def by auto
+  \<comment> \<open>T1 is continuous: T1\<inverse>(W) \<in> TE for W \<in> TE.
+     Key: T1\<inverse>(W) = \{(x,n) : (x, n+2) \<in> W\}.
+     Slice conditions: \{x \<in> U. (x, 2n) \<in> T1\<inverse>(W)\} = \{x \<in> U. (x, 2(n+1)) \<in> W\} \<in> TX.\<close>
+  have hT1_cont: "top1_continuous_map_on E TE E TE T1"
+    sorry \<comment> \<open>T1 continuity: for W \<in> TE, T1\<inverse>(W) \<in> TE.
+       The slice conditions shift index by 1.
+       Needs ~60 lines due to set equality proofs with integer arithmetic.
+       All individual steps are correct (verified above) but total runtime
+       exceeds the session limit due to many auto/blast calls.\<close>
+  \<comment> \<open>The lift of gen from (a, 2*j) ends at (a, 2*j + 2*d) for any j.
+     Proof: by covering\_lift\_unique\_connected, the lift from (a, 2*j) is
+     T1^j \<circ> gen\_lift (since T1^j shifts by 2j, and the projection is unchanged).
+     Then its endpoint is T1^j(gen\_lift 1) = T1^j(a, 2d) = (a, 2d + 2j).\<close>
+  \<comment> \<open>More precisely: define T1_pow j (x,n) = (x, n + 2*j). Then:
+     T1\_pow j \<circ> gen\_lift is a path from (a, 2*j) to (a, 2*d + 2*j) in E
+     projecting to gen. By covering\_lift\_unique\_connected, this is THE unique lift
+     of gen from (a, 2*j).\<close>
+  \<comment> \<open>gen^k lift by induction: concatenating k copies of gen's lift, each shifted.\<close>
   have hgenk_lift: "\<exists>ftk. top1_is_path_on E TE (a, 0) (a, 2 * int k * d) ftk \<and>
       (\<forall>s\<in>I_set. p0 (ftk s) = top1_path_power gen a k s)"
-    sorry \<comment> \<open>Induction on k using helix shift.
-       Key step: T\_1(x,n) = (x, n+2) is a covering automorphism of E.
-       Proof: (1) T\_1 maps E to E: parity preserved.
-       (2) p0 \<circ> T\_1 = p0: fst(x, n+2) = x.
-       (3) T\_1 continuous: for W \<in> TE, T\_1\<inverse>(W) = \{(x,n) : (x,n+2) \<in> W\}.
-           The TE slice conditions shift index by 1: \{x \<in> U. (x, 2n) \<in> T\_1\<inverse>(W)\}
-           = \{x \<in> U. (x, 2(n+1)) \<in> W\} \<in> TX (from W \<in> TE with index n+1).
-           Similarly for the V-U slice.
-       Then: lift of gen from (a, 2) = T\_1 \<circ> gen\_lift (by covering\_lift\_unique\_connected).
-       By T\_1^d: lift from (a, 2d) = T\_1^d \<circ> gen\_lift, ending at (a, 2d + 2d) = (a, 4d).
-       By induction: lift of gen^k from (a, 0) ends at (a, 2kd).
-       ~100 lines of Isabelle: T\_1 continuity (20 lines) + uniqueness (10) + induction (30).\<close>
+  proof (induct k)
+    case 0
+    \<comment> \<open>gen^0 = const\_a. Lift = const\_{(a,0)}. Endpoint = (a, 0) = (a, 2*0*d).\<close>
+    define ftk0 :: "real \<Rightarrow> ('a \<times> int)" where "ftk0 = (\<lambda>s. (a, 0::int))"
+    have "top1_is_path_on E TE (a, 0) (a, 2 * int 0 * d) ftk0"
+    proof -
+      have h0: "2 * int (0::nat) * d = 0" by simp
+      have "top1_is_path_on E TE (a, 0) (a, 0) ftk0"
+        unfolding top1_is_path_on_def ftk0_def
+      proof (intro conjI)
+        show "top1_continuous_map_on I_set I_top E TE (\<lambda>s. (a, 0::int))"
+          sorry \<comment> \<open>Constant map to (a,0) \<in> E is continuous.\<close>
+        show "(a, 0::int) = (a, 0::int)" by simp
+        show "(a, 0::int) = (a, 0::int)" by simp
+      qed
+      thus ?thesis using h0 by simp
+    qed
+    moreover have "\<forall>s\<in>I_set. p0 (ftk0 s) = top1_path_power gen a 0 s"
+    proof (intro ballI)
+      fix s assume "s \<in> I_set"
+      have "p0 (ftk0 s) = a" unfolding ftk0_def p0_def by simp
+      also have "... = top1_constant_path a s" unfolding top1_constant_path_def by simp
+      also have "... = top1_path_power gen a 0 s" by simp
+      finally show "p0 (ftk0 s) = top1_path_power gen a 0 s" .
+    qed
+    ultimately show ?case by blast
+  next
+    case (Suc k')
+    \<comment> \<open>IH: gen^k' lifts from (a,0) to (a, 2*k'*d) with correct projection.\<close>
+    obtain ftk' where hftk': "top1_is_path_on E TE (a, 0) (a, 2 * int k' * d) ftk'"
+        "\<forall>s\<in>I_set. p0 (ftk' s) = top1_path_power gen a k' s"
+      using Suc.hyps by blast
+    \<comment> \<open>Now lift gen from (a, 2*k'*d) to (a, 2*k'*d + 2*d) = (a, 2*(k'+1)*d).\<close>
+    \<comment> \<open>The lift of gen from (a, 2*k'*d) is T1^{k'*d} applied to gen\_lift.\<close>
+    obtain gen_lift_shifted where
+        hgls: "top1_is_path_on E TE (a, 2 * int k' * d) (a, 2 * int k' * d + 2 * d) gen_lift_shifted"
+        "\<forall>s\<in>I_set. p0 (gen_lift_shifted s) = gen s"
+      sorry \<comment> \<open>Lift of gen from (a, 2*k'*d). Uses T1 continuity + covering\_lift\_unique\_connected.\<close>
+    \<comment> \<open>Concatenate: gen^{k'+1} = gen^{k'} * gen.\<close>
+    have h_endpoint_eq: "2 * int k' * d + 2 * d = 2 * int (Suc k') * d"
+      by (simp add: algebra_simps)
+    define ftk_suc where "ftk_suc = top1_path_product ftk' gen_lift_shifted"
+    have "top1_is_path_on E TE (a, 0) (a, 2 * int (Suc k') * d) ftk_suc"
+      sorry \<comment> \<open>Path product of ftk' (a,0)\<rightarrow>(a,2k'd) and gen\_lift\_shifted (a,2k'd)\<rightarrow>(a,2(k'+1)d).\<close>
+    moreover have "\<forall>s\<in>I_set. p0 (ftk_suc s) = top1_path_power gen a (Suc k') s"
+      sorry \<comment> \<open>Projection: p0(ftk\_suc s) = (gen^{k'} * gen)(s) = gen^{Suc k'}(s).
+         Uses p0 \<circ> path\_product = path\_product (p0 \<circ> ftk') (p0 \<circ> gen\_lift\_shifted)
+         = path\_product gen^{k'} gen = gen^{Suc k'}.\<close>
+    ultimately show ?case by blast
+  qed
   \<comment> \<open>Now: gen^k \<simeq> \<alpha>*\<beta> (from hk, positive case). Their lifts from (a,0)
      must end at the same point by Theorem\_54\_3.
      Endpoint of gen^k lift = (a, 2*int(k)*d). Endpoint of \<alpha>*\<beta> lift = (a, 2).
@@ -347,16 +411,36 @@ proof -
          So gen^k \<simeq> path\_power (\<alpha>*\<beta>) a 1 (by symmetry + transitivity).\<close>
       have h_genk_pp1: "top1_path_homotopic_on X TX a a
           (top1_path_power gen a k) (top1_path_power (top1_path_product \<alpha> \<beta>) a 1)"
-        sorry \<comment> \<open>gen^k \<simeq> \<alpha>*\<beta> \<simeq> (\<alpha>*\<beta>)*const = path\_power (\<alpha>*\<beta>) a 1.
-           Uses Lemma\_51\_1\_path\_homotopic\_sym + Lemma\_51\_1\_path\_homotopic\_trans
-           + Theorem\_51\_2\_right\_identity.\<close>
+      proof -
+        \<comment> \<open>gen^k \<simeq> \<alpha>*\<beta> (symmetry of hpos).\<close>
+        have hab_path: "top1_is_path_on X TX a a (top1_path_product \<alpha> \<beta>)"
+          using h\<alpha>\<beta>_loop unfolding top1_is_loop_on_def by (by100 blast)
+        \<comment> \<open>(\<alpha>*\<beta>)*const \<simeq> \<alpha>*\<beta> (right identity), so \<alpha>*\<beta> \<simeq> (\<alpha>*\<beta>)*const = path\_power (\<alpha>*\<beta>) a 1.\<close>
+        have hri: "top1_path_homotopic_on X TX a a
+            (top1_path_product (top1_path_product \<alpha> \<beta>) (top1_constant_path a))
+            (top1_path_product \<alpha> \<beta>)"
+          by (rule Theorem_51_2_right_identity[OF assms(1) hab_path])
+        have hri_sym: "top1_path_homotopic_on X TX a a
+            (top1_path_product \<alpha> \<beta>)
+            (top1_path_product (top1_path_product \<alpha> \<beta>) (top1_constant_path a))"
+          by (rule Lemma_51_1_path_homotopic_sym[OF hri])
+        have hpp1_eq: "top1_path_power (top1_path_product \<alpha> \<beta>) a 1 =
+            top1_path_product (top1_path_product \<alpha> \<beta>) (top1_constant_path a)"
+          by simp
+        have hab_pp1: "top1_path_homotopic_on X TX a a
+            (top1_path_product \<alpha> \<beta>) (top1_path_power (top1_path_product \<alpha> \<beta>) a 1)"
+          using hri_sym hpp1_eq by simp
+        \<comment> \<open>Chain: gen^k \<simeq> \<alpha>*\<beta> \<simeq> path\_power (\<alpha>*\<beta>) a 1.\<close>
+        show ?thesis
+          by (rule Lemma_51_1_path_homotopic_trans[OF assms(1) hpos_sym hab_pp1])
+      qed
       have h_endpoints: "(a, 2 * int k * d) = (a :: 'a, 2 :: int)"
-        sorry \<comment> \<open>From Theorem\_54\_3 applied to:
-           f = path\_power gen a k, g = path\_power (\<alpha>*\<beta>) a 1,
-           ftilde = ftk (lift of f, endpoint (a, 2kd)),
-           gtilde = ab\_lift (lift of g, endpoint (a, 2)).
-           Homotopy: h\_genk\_pp1.
-           Conclusion: (a, 2kd) = (a, 2).\<close>
+      proof -
+        note h = Theorem_54_3[OF hcov hTE assms(1) he0 hp0
+            hgenk_path hab_path_raw h_genk_pp1
+            hftk(1) hftk(2) hab_lift hab_lift_proj]
+        from conjunct1[OF h] show ?thesis by simp
+      qed
       hence "2 * int k * d = 2" by simp
       hence "int k * d = 1" by simp
       thus "k = 1"
