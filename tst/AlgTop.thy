@@ -245,9 +245,76 @@ lemma helix_shift_general_continuous:
         (\<forall>n::int. {x \<in> A. (x, 2*n + 2) \<in> W} \<union> {x \<in> B. (x, 2*n) \<in> W} \<union>
                   {x \<in> V - U. (x, 2*n + 1) \<in> W} \<in> TX)}"
   shows "top1_continuous_map_on E TE E TE (\<lambda>(x :: 'a, n :: int). (x, n + 2 * j))"
-  sorry \<comment> \<open>Same proof pattern as helix\_shift\_continuous with shift 2 replaced by 2*j.
-     The TE slice conditions shift index by j instead of 1.
-     Alternatively: compose T1 with itself j times (or T1\<inverse> for j < 0).\<close>
+proof (cases "j \<ge> 0")
+  case True
+  \<comment> \<open>j \<ge> 0: compose T1 with itself j times.\<close>
+  define T1 where "T1 = (\<lambda>(x :: 'a, n :: int). (x, n + 2))"
+  have hT1: "top1_continuous_map_on E TE E TE T1"
+  proof -
+    note h = helix_shift_continuous[OF assms(1-6)]
+    have "E = {x :: ('a \<times> int). even (snd x) \<and> fst x \<in> U \<or> odd (snd x) \<and> fst x \<in> V - U}"
+      unfolding E_def by auto
+    moreover have "TE = {W. W \<subseteq> E \<and>
+        (\<forall>n. {x \<in> U. (x, 2 * n) \<in> W} \<in> TX) \<and>
+        (\<forall>n. {x \<in> A. (x, 2 * n + 2) \<in> W} \<union> {x \<in> B. (x, 2 * n) \<in> W} \<union>
+              {x \<in> V - U. (x, 2 * n + 1) \<in> W} \<in> TX)}"
+      unfolding TE_def E_def by auto
+    moreover have "T1 = (\<lambda>(x :: 'a, n :: int). (x, n + 2))" unfolding T1_def by auto
+    ultimately show ?thesis using h by simp
+  qed
+  from True obtain jn :: nat where hj: "j = int jn" using nonneg_int_cases by blast
+  \<comment> \<open>Prove shift by 2*m continuous for all m :: nat, by induction.
+     Avoids funpow which causes simp explosion.\<close>
+  have hiter_cont: "\<And>m :: nat. top1_continuous_map_on E TE E TE
+      (\<lambda>(x :: 'a, n :: int). (x, n + 2 * int m))"
+  proof -
+    fix m :: nat show "top1_continuous_map_on E TE E TE
+        (\<lambda>(x :: 'a, n :: int). (x, n + 2 * int m))"
+    proof (induct m)
+      case 0
+      show ?case unfolding top1_continuous_map_on_def
+      proof (intro conjI ballI)
+        fix e assume "e \<in> E"
+        thus "(case e of (x, n) \<Rightarrow> (x, n + 2 * int (0::nat))) \<in> E"
+          by (cases e) (by100 simp)
+      next
+        fix W assume hW: "W \<in> TE"
+        have "\<And>x n. (x :: 'a, (n :: int) + 2 * int (0::nat)) = (x, n)" by simp
+        hence "\<And>e. (case e of (x, n) \<Rightarrow> (x, n + 2 * int (0::nat))) = e"
+          by (auto split: prod.splits)
+        hence "{e \<in> E. (case e of (x, n) \<Rightarrow> (x, n + 2 * int (0::nat))) \<in> W} = {e \<in> E. e \<in> W}"
+          by simp
+        also have "... = W" using hW unfolding TE_def by (by100 blast)
+        finally have "{e \<in> E. (case e of (x, n) \<Rightarrow> (x, n + 2 * int (0::nat))) \<in> W} = W" .
+        thus "{e \<in> E. (case e of (x, n) \<Rightarrow> (x, n + 2 * int (0::nat))) \<in> W} \<in> TE"
+          using hW by simp
+      qed
+    next
+      case (Suc m')
+      have hcomp: "\<And>x :: 'a. \<And>n :: int.
+          (x, n + 2 * int (Suc m')) = T1 (x, n + 2 * int m')"
+      proof -
+        fix x :: 'a and n :: int
+        have "T1 (x, n + 2 * int m') = (x, n + 2 * int m' + 2)"
+          unfolding T1_def by (by100 simp)
+        moreover have "n + 2 * int (Suc m') = n + 2 * int m' + 2" by simp
+        ultimately show "(x, n + 2 * int (Suc m')) = T1 (x, n + 2 * int m')" by simp
+      qed
+      have "top1_continuous_map_on E TE E TE (T1 \<circ> (\<lambda>(x, n). (x, n + 2 * int m')))"
+        by (rule top1_continuous_map_on_comp[OF Suc.hyps hT1])
+      moreover have "(\<lambda>(x :: 'a, n :: int). (x, n + 2 * int (Suc m'))) =
+          T1 \<circ> (\<lambda>(x, n). (x, n + 2 * int m'))"
+        sorry \<comment> \<open>Extensional equality of lambda expressions with T1 composition.
+           Each side evaluates (x, n) to (x, n + 2 + 2*int m') = (x, n + 2*int(Suc m')).\<close>
+      ultimately show ?case by (by100 metis)
+    qed
+  qed
+  show ?thesis using hiter_cont[of jn] hj by simp
+next
+  case False
+  \<comment> \<open>j < 0: use T1\<inverse> composed |j| times. Same argument.\<close>
+  show ?thesis sorry \<comment> \<open>Symmetric case with T1\<inverse>(x,n) = (x, n-2).\<close>
+qed
 
 text \<open>Theorem 63.1(b): If \<pi>_1(X) is infinite cyclic, [\<alpha>*\<beta>] generates it.
   Proof follows Munkres Step 4: the helix covering E \<rightarrow> X gives a
