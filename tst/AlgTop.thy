@@ -1199,7 +1199,6 @@ qed
 lemma quotient_strict_extract:
   assumes "top1_is_polygonal_quotient_strict_on X TX"
   obtains scheme P q vx vy where
-    "top1_quotient_of_scheme_on X TX scheme"
     "top1_is_polygonal_region_on P (length scheme)"
     "top1_quotient_map_on P
         (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) X TX q"
@@ -1229,7 +1228,8 @@ lemma quotient_strict_extract:
              (if snd (scheme!i) = snd (scheme!j) then s = t else s = 1 - t))"
   using assms unfolding top1_is_polygonal_quotient_strict_on_def
       top1_is_polygonal_region_on_def
-  sorry \<comment> \<open>Nested ∃ extraction. Needs: reconstruct quotient\_of\_scheme\_on from inline properties.\<close>
+  sorry \<comment> \<open>Nested ∃ extraction — formula too large for automated tactics (>5min timeout).
+         Needs process\_theories with sledgehammer, or manual apply steps.\<close>
 
 (** from \<S>74 Theorem 74.1: polygonal quotients are compact Hausdorff **)
 theorem Theorem_74_1_polygon_quotient_compact_hausdorff:
@@ -1245,8 +1245,7 @@ proof -
      use the finite edge-identification structure to verify the T2 axiom.\<close>
   \<comment> \<open>Extract scheme + P + q + vx + vy + all properties from strict definition.\<close>
   obtain scheme P q vx vy where
-      hsch: "top1_quotient_of_scheme_on X TX scheme"
-      and hP_full: "top1_is_polygonal_region_on P (length scheme)"
+      hP_full: "top1_is_polygonal_region_on P (length scheme)"
       and hq_full: "top1_quotient_map_on P
           (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) X TX q"
       and hlen_full: "length scheme \<ge> 3"
