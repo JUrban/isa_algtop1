@@ -1679,7 +1679,11 @@ proof -
                           else {}) = (\<lambda>t. (?edge i t, ?edge j t)) ` I_set"
                         using \<open>fst (scheme!i) = fst (scheme!j)\<close> False True by (by100 simp)
                       ultimately show ?thesis
-                        sorry \<comment> \<open>image membership in ?curves (let binding makes automation fail)\<close>
+                        apply -
+                        apply (rule image_eqI[where x="(i,j)"])
+                        apply (by100 simp)
+                        apply (by100 blast)
+                        done
                     qed
                     hence "x \<in> \<Union>?curves" using \<open>x \<in> (\<lambda>t. (?edge i t, ?edge j t)) ` I_set\<close>
                       by blast
@@ -1700,7 +1704,12 @@ proof -
                                 else (\<lambda>t. (?edge i t, ?edge j (1-t))) ` I_set)
                           else {}) = (\<lambda>t. (?edge i t, ?edge j (1-t))) ` I_set"
                         using \<open>fst (scheme!i) = fst (scheme!j)\<close> False sndF by (by100 simp)
-                      ultimately show ?thesis sorry
+                      ultimately show ?thesis
+                        apply -
+                        apply (rule image_eqI[where x="(i,j)"])
+                        apply (by100 simp)
+                        apply (by100 blast)
+                        done
                     qed
                     hence "x \<in> \<Union>?curves" using hx_in by blast
                     thus ?thesis by blast
