@@ -555,9 +555,72 @@ proof -
   \<comment> \<open>Step C5: Apply Theorem 63.1.\<close>
   \<comment> \<open>Theorem 63.1 hypotheses: U\_loc, V\_loc open in X; U\<inter>V has two components; x, y separated.\<close>
   have hU_open_X: "openin_on ?X ?TX ?U_loc"
-    sorry \<comment> \<open>D1 closed in S2 (compact in Hausdorff). S2-D1 open in S2. Open \<inter> X = open in X.\<close>
+  proof -
+    have "?D1 \<subseteq> top1_S2" using hDa3_sub hDa2_sub assms(5,8,9) by (by100 blast)
+    have hD1_arc: "top1_is_arc_on ?D1 (subspace_topology top1_S2 top1_S2_topology ?D1)"
+    proof -
+      \<comment> \<open>Get endpoints of sub-arcs from arc\_split\_endpoints.\<close>
+      have hD1p_ep: "top1_arc_endpoints_on D1p (subspace_topology top1_S2 top1_S2_topology D1p) = {a1, p}"
+        and hDa3_ep: "top1_arc_endpoints_on Da3 (subspace_topology top1_S2 top1_S2_topology Da3) = {p, a3}"
+        using arc_split_endpoints[OF assms(1) hS2_haus assms(8) assms(14) he13_split he13_meet
+              hD1p_arc hDa3_arc \<open>a1 \<in> D1p\<close> \<open>a3 \<in> Da3\<close> \<open>p \<in> D1p\<close> \<open>p \<in> Da3\<close> \<open>D1p \<subseteq> top1_S2\<close>
+              \<open>Da3 \<subseteq> top1_S2\<close> assms(20) hp_not_ep13]
+        by blast+
+      have hDa2_ep: "top1_arc_endpoints_on Da2 (subspace_topology top1_S2 top1_S2_topology Da2) = {a2, q}"
+        and hDq4_ep: "top1_arc_endpoints_on Dq4 (subspace_topology top1_S2 top1_S2_topology Dq4) = {q, a4}"
+        using arc_split_endpoints[OF assms(1) hS2_haus assms(9) assms(15) he24_split he24_meet
+              hDa2_arc hDq4_arc \<open>a2 \<in> Da2\<close> \<open>a4 \<in> Dq4\<close> \<open>q \<in> Da2\<close> \<open>q \<in> Dq4\<close> \<open>Da2 \<subseteq> top1_S2\<close>
+              \<open>Dq4 \<subseteq> top1_S2\<close> assms(21) hq_not_ep24]
+        by blast+
+      \<comment> \<open>Da3 \<union> e23: shared endpoint a3. Result is arc from p to a2.\<close>
+      have ha3_Da3: "a3 \<in> top1_arc_endpoints_on Da3 (subspace_topology top1_S2 top1_S2_topology Da3)"
+        using hDa3_ep by (by100 blast)
+      have ha3_e23: "a3 \<in> top1_arc_endpoints_on e23 (subspace_topology top1_S2 top1_S2_topology e23)"
+        using assms(17) by (by100 blast)
+      have ha3_e23_mem: "a3 \<in> e23"
+        using assms(17,25) by (by100 blast)
+      have hDa3_e23_inter: "Da3 \<inter> e23 = {a3}"
+      proof -
+        have "Da3 \<inter> e23 \<subseteq> e13 \<inter> e23" using hDa3_sub by (by100 blast)
+        hence "Da3 \<inter> e23 \<subseteq> {a3}" using assms(29) by (by100 blast)
+        moreover have "a3 \<in> Da3 \<inter> e23" using \<open>a3 \<in> Da3\<close> ha3_e23_mem by (by100 blast)
+        ultimately show ?thesis by (by100 blast)
+      qed
+      have hDa3_e23_arc: "top1_is_arc_on (Da3 \<union> e23) (subspace_topology top1_S2 top1_S2_topology (Da3 \<union> e23))"
+        by (rule arcs_concatenation_is_arc[OF assms(1) hS2_haus hDa3_arc _ assms(11) assms(5)
+               hDa3_e23_inter ha3_Da3 ha3_e23]) (rule \<open>Da3 \<subseteq> top1_S2\<close>)
+      \<comment> \<open>(Da3 \<union> e23) \<union> Da2: shared endpoint a2. Result = D1 = arc from p to q.\<close>
+      have ha2_Da3e23: "a2 \<in> top1_arc_endpoints_on (Da3 \<union> e23) (subspace_topology top1_S2 top1_S2_topology (Da3 \<union> e23))"
+        sorry \<comment> \<open>arc\_concat\_endpoints gives endpoints {p, a2} for Da3 \<union> e23.\<close>
+      have ha2_Da2: "a2 \<in> top1_arc_endpoints_on Da2 (subspace_topology top1_S2 top1_S2_topology Da2)"
+        using hDa2_ep by (by100 blast)
+      have hDa3e23_Da2_inter: "(Da3 \<union> e23) \<inter> Da2 = {a2}"
+        sorry \<comment> \<open>Da3 \<inter> Da2 = {} (Da3 \<subseteq> e13, Da2 \<subseteq> e24, disjoint modulo vertices).
+           e23 \<inter> Da2 \<subseteq> e23 \<inter> e24 = {a2}. a2 \<in> Da2. So intersection = {a2}.\<close>
+      have hDa3e23_sub: "Da3 \<union> e23 \<subseteq> top1_S2" using \<open>Da3 \<subseteq> top1_S2\<close> assms(5) by (by100 blast)
+      show ?thesis unfolding Un_assoc[symmetric]
+        by (rule arcs_concatenation_is_arc[OF assms(1) hS2_haus hDa3_e23_arc hDa3e23_sub
+               hDa2_arc \<open>Da2 \<subseteq> top1_S2\<close> hDa3e23_Da2_inter ha2_Da3e23 ha2_Da2])
+    qed
+    have "closedin_on top1_S2 top1_S2_topology ?D1"
+      by (rule arc_in_S2_closed[OF \<open>?D1 \<subseteq> top1_S2\<close> hD1_arc])
+    hence hU_S2_open: "?U_loc \<in> top1_S2_topology" unfolding closedin_on_def by (by100 blast)
+    have "?U_loc = ?U_loc \<inter> ?X" using hU_sub_X by (by100 blast)
+    hence "?U_loc \<in> ?TX" using hU_S2_open unfolding subspace_topology_def by (by100 blast)
+    thus ?thesis unfolding openin_on_def using hU_sub_X by (by100 blast)
+  qed
   have hV_open_X: "openin_on ?X ?TX ?V_loc"
-    sorry \<comment> \<open>Same for D2.\<close>
+  proof -
+    have "?D2 \<subseteq> top1_S2" using hDq4_sub hD1p_sub assms(7,8,9) by (by100 blast)
+    have hD2_arc: "top1_is_arc_on ?D2 (subspace_topology top1_S2 top1_S2_topology ?D2)"
+      sorry \<comment> \<open>D2 = Dq4 \<union> e41 \<union> D1p is an arc (concatenation of three arcs).\<close>
+    have "closedin_on top1_S2 top1_S2_topology ?D2"
+      by (rule arc_in_S2_closed[OF \<open>?D2 \<subseteq> top1_S2\<close> hD2_arc])
+    hence hV_S2_open: "?V_loc \<in> top1_S2_topology" unfolding closedin_on_def by (by100 blast)
+    have "?V_loc = ?V_loc \<inter> ?X" using hV_sub_X by (by100 blast)
+    hence "?V_loc \<in> ?TX" using hV_S2_open unfolding subspace_topology_def by (by100 blast)
+    thus ?thesis unfolding openin_on_def using hV_sub_X by (by100 blast)
+  qed
   \<comment> \<open>U\<inter>V = S2-(D1\<union>D2). D1\<union>D2 is an SCC (cycle a1-a3-a2-a4-a1 through p,q).
      By JCT: S2-(D1\<union>D2) has two components A, B.
      x \<in> int(e12) and y \<in> int(e34) lie in different components (by Lemma 65.1(a)
