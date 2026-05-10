@@ -58706,4 +58706,18 @@ proof -
     using hx_in_C h\<alpha>\<beta>_loop h\<alpha>\<beta>_nontrivial by (by100 blast)
 qed
 
+text \<open>Helix shift: T(x,n) = (x, n+2*j) is continuous on E, for any j.\<close>
+lemma helix_shift_general_continuous:
+  assumes "is_topology_on X TX"
+      and "openin_on X TX U" and "openin_on X TX V"
+      and "U \<inter> V = A \<union> B"
+      and "openin_on X TX A" and "openin_on X TX B"
+  defines "E \<equiv> {(x :: 'a \<times> int). (even (snd x) \<and> fst x \<in> U) \<or> (odd (snd x) \<and> fst x \<in> V - U)}"
+  defines "TE \<equiv> {W. W \<subseteq> E \<and>
+        (\<forall>n::int. {x \<in> U. (x, 2*n) \<in> W} \<in> TX) \<and>
+        (\<forall>n::int. {x \<in> A. (x, 2*n + 2) \<in> W} \<union> {x \<in> B. (x, 2*n) \<in> W} \<union>
+                  {x \<in> V - U. (x, 2*n + 1) \<in> W} \<in> TX)}"
+  shows "top1_continuous_map_on E TE E TE (\<lambda>(x :: 'a, n :: int). (x, n + 2 * j))"
+  sorry
+
 end

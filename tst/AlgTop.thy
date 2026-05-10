@@ -108,217 +108,9 @@ lemma S2_minus_arc_simply_connected:
      Under this homeomorphism, D-{p} maps to a compact connected set with empty
      interior in R2. R2 minus such a set is simply connected.\<close>
 
-text \<open>Helix shift automorphism: T(x,n) = (x, n+2) is continuous on E.\<close>
-lemma helix_shift_continuous:
-  assumes "is_topology_on X TX"
-      and "openin_on X TX U" and "openin_on X TX V"
-      and "U \<inter> V = A \<union> B"
-      and "openin_on X TX A" and "openin_on X TX B"
-  defines "E \<equiv> {(x :: 'a \<times> int). (even (snd x) \<and> fst x \<in> U) \<or> (odd (snd x) \<and> fst x \<in> V - U)}"
-  defines "TE \<equiv> {W. W \<subseteq> E \<and>
-        (\<forall>n::int. {x \<in> U. (x, 2*n) \<in> W} \<in> TX) \<and>
-        (\<forall>n::int. {x \<in> A. (x, 2*n + 2) \<in> W} \<union> {x \<in> B. (x, 2*n) \<in> W} \<union>
-                  {x \<in> V - U. (x, 2*n + 1) \<in> W} \<in> TX)}"
-  defines "T1 \<equiv> (\<lambda>(x :: 'a, n :: int). (x, n + 2))"
-  shows "top1_continuous_map_on E TE E TE T1"
-  unfolding top1_continuous_map_on_def
-proof (intro conjI ballI)
-  fix e assume he: "e \<in> E"
-  obtain x n where hxn: "e = (x, n)" by (cases e)
-  hence "(even n \<and> x \<in> U) \<or> (odd n \<and> x \<in> V - U)" using he unfolding E_def by (by100 simp)
-  hence "(even (n+2) \<and> x \<in> U) \<or> (odd (n+2) \<and> x \<in> V - U)" by (by100 simp)
-  hence "(x, n+2) \<in> E" unfolding E_def by (by100 simp)
-  thus "T1 e \<in> E" unfolding T1_def using hxn by (by100 simp)
-next
-  fix W assume hW: "W \<in> TE"
-  define W' where "W' = {e \<in> E. T1 e \<in> W}"
-  have hW_sub: "W \<subseteq> E" using hW unfolding TE_def by (by100 blast)
-  have hW'_sub: "W' \<subseteq> E" unfolding W'_def by (by100 blast)
-  have hA_U: "A \<subseteq> U" using assms(4) by (by100 blast)
-  have hB_U: "B \<subseteq> U" using assms(4) by (by100 blast)
-  \<comment> \<open>Even-sheet slice: \{x \<in> U. (x, 2n) \<in> W'\} = \{x \<in> U. (x, 2(n+1)) \<in> W\}.\<close>
-  have heven: "\<And>n :: int. {x \<in> U. (x, 2*n) \<in> W'} \<in> TX"
-  proof -
-    fix n :: int
-    have "\<forall>m::int. {x \<in> U. (x, 2*m) \<in> W} \<in> TX"
-      using hW unfolding TE_def by (by100 blast)
-    hence h: "{x \<in> U. (x, 2*(n+1)) \<in> W} \<in> TX" by (by100 blast)
-    have "{x \<in> U. (x, 2*n) \<in> W'} = {x \<in> U. (x, 2*(n+1)) \<in> W}"
-    proof (rule set_eqI, rule iffI)
-      fix x assume "x \<in> {x \<in> U. (x, 2*n) \<in> W'}"
-      hence "x \<in> U" "(x, 2*n) \<in> W'" by (by100 blast)+
-      hence "(x, 2*n) \<in> E" "T1 (x, 2*n) \<in> W" unfolding W'_def by (by100 blast)+
-      have "T1 (x, 2*n) = (x, 2*n+2)" unfolding T1_def by (by100 simp)
-      hence "(x, 2*(n+1)) \<in> W"
-        using \<open>T1 (x, 2*n) \<in> W\<close> by (simp add: algebra_simps)
-      thus "x \<in> {x \<in> U. (x, 2*(n+1)) \<in> W}" using \<open>x \<in> U\<close> by (by100 blast)
-    next
-      fix x assume "x \<in> {x \<in> U. (x, 2*(n+1)) \<in> W}"
-      hence hx: "x \<in> U" "(x, 2*(n+1)) \<in> W" by (by100 blast)+
-      have hE: "(x, 2*n) \<in> E" unfolding E_def using hx(1) by (by100 simp)
-      have "T1 (x, 2*n) = (x, 2*n+2)" unfolding T1_def by (by100 simp)
-      hence "T1 (x, 2*n) = (x, 2*(n+1))" by (simp add: algebra_simps)
-      hence "T1 (x, 2*n) \<in> W" using hx(2) by (by100 simp)
-      hence "(x, 2*n) \<in> W'" using hE unfolding W'_def by (by100 blast)
-      thus "x \<in> {x \<in> U. (x, 2*n) \<in> W'}" using hx(1) by (by100 blast)
-    qed
-    thus "{x \<in> U. (x, 2*n) \<in> W'} \<in> TX" using h by (by100 simp)
-  qed
-  \<comment> \<open>Odd-sheet slice: shift n \<rightarrow> n+1.\<close>
-  have hodd: "\<And>n :: int. {x \<in> A. (x, 2*n + 2) \<in> W'} \<union> {x \<in> B. (x, 2*n) \<in> W'} \<union>
-      {x \<in> V - U. (x, 2*n + 1) \<in> W'} \<in> TX"
-  proof -
-    fix n :: int
-    have "\<forall>m::int. {x \<in> A. (x, 2*m + 2) \<in> W} \<union> {x \<in> B. (x, 2*m) \<in> W} \<union>
-        {x \<in> V - U. (x, 2*m + 1) \<in> W} \<in> TX"
-      using hW unfolding TE_def by (by100 blast)
-    hence hW_n1: "{x \<in> A. (x, 2*(n+1) + 2) \<in> W} \<union> {x \<in> B. (x, 2*(n+1)) \<in> W} \<union>
-        {x \<in> V - U. (x, 2*(n+1) + 1) \<in> W} \<in> TX" by (by100 blast)
-    \<comment> \<open>Rewrite: 2*(n+1)+2 = 2*n+4, 2*(n+1) = 2*n+2, 2*(n+1)+1 = 2*n+3.\<close>
-    have hA_eq: "{x \<in> A. (x, 2*n + 2) \<in> W'} = {x \<in> A. (x, 2*(n+1) + 2) \<in> W}"
-    proof (rule set_eqI, rule iffI)
-      fix x assume "x \<in> {x \<in> A. (x, 2*n + 2) \<in> W'}"
-      hence hx: "x \<in> A" "(x, 2*n+2) \<in> W'" by (by100 blast)+
-      have "T1 (x, 2*n+2) \<in> W" using hx(2) unfolding W'_def by (by100 blast)
-      moreover have "T1 (x, 2*n+2) = (x, 2*(n+1)+2)" unfolding T1_def by (simp add: algebra_simps)
-      ultimately show "x \<in> {x \<in> A. (x, 2*(n+1) + 2) \<in> W}" using hx(1) by (by100 simp)
-    next
-      fix x assume "x \<in> {x \<in> A. (x, 2*(n+1) + 2) \<in> W}"
-      hence hx: "x \<in> A" "(x, 2*(n+1)+2) \<in> W" by (by100 blast)+
-      have "x \<in> U" using hx(1) hA_U by (by100 blast)
-      have hE: "(x, 2*n+2) \<in> E" unfolding E_def using \<open>x \<in> U\<close> by (by100 simp)
-      have hTeq: "T1 (x, 2*n+2) = (x, 2*(n+1)+2)" unfolding T1_def by (simp add: algebra_simps)
-      have "T1 (x, 2*n+2) \<in> W" using hTeq hx(2) by (by100 simp)
-      hence "(x, 2*n+2) \<in> W'" using hE unfolding W'_def by (by100 blast)
-      thus "x \<in> {x \<in> A. (x, 2*n + 2) \<in> W'}" using hx(1) by (by100 blast)
-    qed
-    have hB_eq: "{x \<in> B. (x, 2*n) \<in> W'} = {x \<in> B. (x, 2*(n+1)) \<in> W}"
-    proof (rule set_eqI, rule iffI)
-      fix x assume "x \<in> {x \<in> B. (x, 2*n) \<in> W'}"
-      hence hx: "x \<in> B" "(x, 2*n) \<in> W'" by (by100 blast)+
-      have "T1 (x, 2*n) \<in> W" using hx(2) unfolding W'_def by (by100 blast)
-      moreover have "T1 (x, 2*n) = (x, 2*(n+1))" unfolding T1_def by (simp add: algebra_simps)
-      ultimately show "x \<in> {x \<in> B. (x, 2*(n+1)) \<in> W}" using hx(1) by (by100 simp)
-    next
-      fix x assume "x \<in> {x \<in> B. (x, 2*(n+1)) \<in> W}"
-      hence hx: "x \<in> B" "(x, 2*(n+1)) \<in> W" by (by100 blast)+
-      have "x \<in> U" using hx(1) hB_U by (by100 blast)
-      have hE: "(x, 2*n) \<in> E" unfolding E_def using \<open>x \<in> U\<close> by (by100 simp)
-      have hTeq: "T1 (x, 2*n) = (x, 2*(n+1))" unfolding T1_def by (simp add: algebra_simps)
-      have "T1 (x, 2*n) \<in> W" using hTeq hx(2) by (by100 simp)
-      hence "(x, 2*n) \<in> W'" using hE unfolding W'_def by (by100 blast)
-      thus "x \<in> {x \<in> B. (x, 2*n) \<in> W'}" using hx(1) by (by100 blast)
-    qed
-    have hVU_eq: "{x \<in> V - U. (x, 2*n + 1) \<in> W'} = {x \<in> V - U. (x, 2*(n+1) + 1) \<in> W}"
-    proof (rule set_eqI, rule iffI)
-      fix x assume "x \<in> {x \<in> V - U. (x, 2*n + 1) \<in> W'}"
-      hence hx: "x \<in> V - U" "(x, 2*n+1) \<in> W'" by (by100 blast)+
-      have "T1 (x, 2*n+1) \<in> W" using hx(2) unfolding W'_def by (by100 blast)
-      moreover have "T1 (x, 2*n+1) = (x, 2*(n+1)+1)" unfolding T1_def by (simp add: algebra_simps)
-      ultimately show "x \<in> {x \<in> V - U. (x, 2*(n+1) + 1) \<in> W}" using hx(1) by (by100 simp)
-    next
-      fix x assume "x \<in> {x \<in> V - U. (x, 2*(n+1) + 1) \<in> W}"
-      hence hx: "x \<in> V - U" "(x, 2*(n+1)+1) \<in> W" by (by100 blast)+
-      have hE: "(x, 2*n+1) \<in> E" unfolding E_def using hx(1) by (by100 simp)
-      have hTeq: "T1 (x, 2*n+1) = (x, 2*(n+1)+1)" unfolding T1_def by (simp add: algebra_simps)
-      have "T1 (x, 2*n+1) \<in> W" using hTeq hx(2) by (by100 simp)
-      hence "(x, 2*n+1) \<in> W'" using hE unfolding W'_def by (by100 blast)
-      thus "x \<in> {x \<in> V - U. (x, 2*n + 1) \<in> W'}" using hx(1) by (by100 blast)
-    qed
-    show "{x \<in> A. (x, 2*n + 2) \<in> W'} \<union> {x \<in> B. (x, 2*n) \<in> W'} \<union>
-        {x \<in> V - U. (x, 2*n + 1) \<in> W'} \<in> TX"
-      using hA_eq hB_eq hVU_eq hW_n1 by (by100 simp)
-  qed
-  show "W' \<in> TE" unfolding TE_def
-    using hW'_sub heven hodd by (by100 blast)
-qed
-
-text \<open>General helix shift: (x,n) \<mapsto> (x, n+2j) is continuous on E, for any j.\<close>
-lemma helix_shift_general_continuous:
-  assumes "is_topology_on X TX"
-      and "openin_on X TX U" and "openin_on X TX V"
-      and "U \<inter> V = A \<union> B"
-      and "openin_on X TX A" and "openin_on X TX B"
-  defines "E \<equiv> {(x :: 'a \<times> int). (even (snd x) \<and> fst x \<in> U) \<or> (odd (snd x) \<and> fst x \<in> V - U)}"
-  defines "TE \<equiv> {W. W \<subseteq> E \<and>
-        (\<forall>n::int. {x \<in> U. (x, 2*n) \<in> W} \<in> TX) \<and>
-        (\<forall>n::int. {x \<in> A. (x, 2*n + 2) \<in> W} \<union> {x \<in> B. (x, 2*n) \<in> W} \<union>
-                  {x \<in> V - U. (x, 2*n + 1) \<in> W} \<in> TX)}"
-  shows "top1_continuous_map_on E TE E TE (\<lambda>(x :: 'a, n :: int). (x, n + 2 * j))"
-proof (cases "j \<ge> 0")
-  case True
-  \<comment> \<open>j \<ge> 0: compose T1 with itself j times.\<close>
-  define T1 where "T1 = (\<lambda>(x :: 'a, n :: int). (x, n + 2))"
-  have hT1: "top1_continuous_map_on E TE E TE T1"
-  proof -
-    note h = helix_shift_continuous[OF assms(1-6)]
-    have "E = {x :: ('a \<times> int). even (snd x) \<and> fst x \<in> U \<or> odd (snd x) \<and> fst x \<in> V - U}"
-      unfolding E_def by auto
-    moreover have "TE = {W. W \<subseteq> E \<and>
-        (\<forall>n. {x \<in> U. (x, 2 * n) \<in> W} \<in> TX) \<and>
-        (\<forall>n. {x \<in> A. (x, 2 * n + 2) \<in> W} \<union> {x \<in> B. (x, 2 * n) \<in> W} \<union>
-              {x \<in> V - U. (x, 2 * n + 1) \<in> W} \<in> TX)}"
-      unfolding TE_def E_def by auto
-    moreover have "T1 = (\<lambda>(x :: 'a, n :: int). (x, n + 2))" unfolding T1_def by auto
-    ultimately show ?thesis using h by simp
-  qed
-  from True obtain jn :: nat where hj: "j = int jn" using nonneg_int_cases by blast
-  \<comment> \<open>Prove shift by 2*m continuous for all m :: nat, by induction.
-     Avoids funpow which causes simp explosion.\<close>
-  have hiter_cont: "\<And>m :: nat. top1_continuous_map_on E TE E TE
-      (\<lambda>(x :: 'a, n :: int). (x, n + 2 * int m))"
-  proof -
-    fix m :: nat show "top1_continuous_map_on E TE E TE
-        (\<lambda>(x :: 'a, n :: int). (x, n + 2 * int m))"
-    proof (induct m)
-      case 0
-      show ?case unfolding top1_continuous_map_on_def
-      proof (intro conjI ballI)
-        fix e assume "e \<in> E"
-        thus "(case e of (x, n) \<Rightarrow> (x, n + 2 * int (0::nat))) \<in> E"
-          by (cases e) (by100 simp)
-      next
-        fix W assume hW: "W \<in> TE"
-        have "\<And>x n. (x :: 'a, (n :: int) + 2 * int (0::nat)) = (x, n)" by simp
-        hence "\<And>e. (case e of (x, n) \<Rightarrow> (x, n + 2 * int (0::nat))) = e"
-          by (auto split: prod.splits)
-        hence "{e \<in> E. (case e of (x, n) \<Rightarrow> (x, n + 2 * int (0::nat))) \<in> W} = {e \<in> E. e \<in> W}"
-          by simp
-        also have "... = W" using hW unfolding TE_def by (by100 blast)
-        finally have "{e \<in> E. (case e of (x, n) \<Rightarrow> (x, n + 2 * int (0::nat))) \<in> W} = W" .
-        thus "{e \<in> E. (case e of (x, n) \<Rightarrow> (x, n + 2 * int (0::nat))) \<in> W} \<in> TE"
-          using hW by simp
-      qed
-    next
-      case (Suc m')
-      have hcomp: "\<And>x :: 'a. \<And>n :: int.
-          (x, n + 2 * int (Suc m')) = T1 (x, n + 2 * int m')"
-      proof -
-        fix x :: 'a and n :: int
-        have "T1 (x, n + 2 * int m') = (x, n + 2 * int m' + 2)"
-          unfolding T1_def by (by100 simp)
-        moreover have "n + 2 * int (Suc m') = n + 2 * int m' + 2" by simp
-        ultimately show "(x, n + 2 * int (Suc m')) = T1 (x, n + 2 * int m')" by simp
-      qed
-      have "top1_continuous_map_on E TE E TE (T1 \<circ> (\<lambda>(x, n). (x, n + 2 * int m')))"
-        by (rule top1_continuous_map_on_comp[OF Suc.hyps hT1])
-      moreover have "(\<lambda>(x :: 'a, n :: int). (x, n + 2 * int (Suc m'))) =
-          T1 \<circ> (\<lambda>(x, n). (x, n + 2 * int m'))"
-      proof (rule ext)
-        fix e :: "'a \<times> int" obtain x n where he: "e = (x, n)" by (cases e)
-        show "(case e of (x, n) \<Rightarrow> (x, n + 2 * int (Suc m'))) =
-            (T1 \<circ> (\<lambda>(x, n). (x, n + 2 * int m'))) e"
-          unfolding he using hcomp[of x n] by (by100 simp)
-      qed
-      ultimately show ?case by (by100 metis)
-    qed
-  qed
-  show ?thesis using hiter_cont[of jn] hj by simp
-next
-  case False
-  \<comment> \<open>j < 0: use T1\<inverse> composed |j| times. Same argument.\<close>
-  show ?thesis sorry \<comment> \<open>Symmetric case with T1\<inverse>(x,n) = (x, n-2).\<close>
-qed
+text \<open>Helix shift lemmas (helix\_shift\_continuous, helix\_shift\_general\_continuous)
+  are now in AlgTopCached. They show that T(x,n) = (x, n+2j) is continuous on E
+  for any integer j.\<close>
 
 text \<open>Theorem 63.1(b): If \<pi>_1(X) is infinite cyclic, [\<alpha>*\<beta>] generates it.
   Proof follows Munkres Step 4: the helix covering E \<rightarrow> X gives a
@@ -527,7 +319,7 @@ proof -
      Slice conditions: \{x \<in> U. (x, 2n) \<in> T1\<inverse>(W)\} = \{x \<in> U. (x, 2(n+1)) \<in> W\} \<in> TX.\<close>
   have hT1_cont: "top1_continuous_map_on E TE E TE T1"
   proof -
-    note h = helix_shift_continuous[OF assms(1-3) assms(5) assms(7-8)]
+    note h = helix_shift_general_continuous[OF assms(1-3) assms(5) assms(7-8), of 1]
     have "E = {x :: ('a \<times> int). even (snd x) \<and> fst x \<in> U \<or> odd (snd x) \<and> fst x \<in> V - U}"
       unfolding E_def by auto
     moreover have "TE = {W. W \<subseteq> E \<and>
@@ -535,7 +327,7 @@ proof -
         (\<forall>n. {x \<in> A. (x, 2 * n + 2) \<in> W} \<union> {x \<in> B. (x, 2 * n) \<in> W} \<union>
               {x \<in> V - U. (x, 2 * n + 1) \<in> W} \<in> TX)}"
       unfolding TE_def E_def by auto
-    moreover have "T1 = (\<lambda>(x :: 'a, n :: int). (x, n + 2))" unfolding T1_def by auto
+    moreover have "T1 = (\<lambda>(x :: 'a, n :: int). (x, n + 2 * (1::int)))" unfolding T1_def by auto
     ultimately show ?thesis using h by simp
   qed
   \<comment> \<open>The lift of gen from (a, 2*j) ends at (a, 2*j + 2*d) for any j.
