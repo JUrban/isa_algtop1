@@ -1612,9 +1612,8 @@ proof -
                           (if snd (scheme!i) = snd (scheme!j) then q (?edge j t) else q (?edge j (1-t)))"
                       proof (intro ballI)
                         fix t assume "t \<in> I_set"
-                        from hedge_loc hij(1) hij(2) hsamelabel this
                         show "q (?edge i t) = (if snd (scheme!i) = snd (scheme!j) then q (?edge j t) else q (?edge j (1-t)))"
-                          sorry
+                          using hedge_loc[rule_format, OF hij(1) hij(2) hsamelabel \<open>t \<in> I_set\<close>] by simp
                       qed
                       thus ?thesis using True ht(1) by (by100 simp)
                     qed
@@ -1634,9 +1633,8 @@ proof -
                           (if snd (scheme!i) = snd (scheme!j) then q (?edge j t) else q (?edge j (1-t)))"
                       proof (intro ballI)
                         fix t assume "t \<in> I_set"
-                        from hedge_loc hij(1) hij(2) hsamelabel this
                         show "q (?edge i t) = (if snd (scheme!i) = snd (scheme!j) then q (?edge j t) else q (?edge j (1-t)))"
-                          sorry
+                          using hedge_loc[rule_format, OF hij(1) hij(2) hsamelabel \<open>t \<in> I_set\<close>] by simp
                       qed
                       thus ?thesis using False ht(1) by (by100 simp)
                     qed
