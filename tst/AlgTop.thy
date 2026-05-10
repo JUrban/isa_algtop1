@@ -458,19 +458,100 @@ proof -
   have hU_sub_X: "?U_loc \<subseteq> ?X" using hp_D1 hq_D1 by (by100 blast)
   have hV_sub_X: "?V_loc \<subseteq> ?X" using hp_D2 hq_D2 by (by100 blast)
   \<comment> \<open>Step C2: U\_loc \<union> V\_loc = X (since D1 \<inter> D2 = {p, q}).\<close>
+  have hDa3_sub: "Da3 \<subseteq> e13" and hD1p_sub: "D1p \<subseteq> e13"
+      and hDa2_sub: "Da2 \<subseteq> e24" and hDq4_sub: "Dq4 \<subseteq> e24"
+    using he13_split he24_split by (by100 blast)+
   have hD1_D2_inter: "?D1 \<inter> ?D2 = {p, q}"
-    sorry \<comment> \<open>D1 = Da3 \<union> e23 \<union> Da2, D2 = Dq4 \<union> e41 \<union> D1p.
-       Da3 \<inter> D1p = {p} (e13 split), Da2 \<inter> Dq4 = {q} (e24 split).
-       Other 7 cross-terms empty by K4 intersections + arc subset reasoning.\<close>
+  proof (rule set_eqI, rule iffI)
+    fix z assume hz: "z \<in> ?D1 \<inter> ?D2"
+    hence hz1: "z \<in> Da3 \<or> z \<in> e23 \<or> z \<in> Da2" and hz2: "z \<in> Dq4 \<or> z \<in> e41 \<or> z \<in> D1p"
+      by (by100 blast)+
+    show "z \<in> {p, q}"
+    proof -
+      \<comment> \<open>Case analysis on hz1 \<times> hz2 = 9 cases. Most empty by K4 intersections.\<close>
+      { assume "z \<in> Da3" "z \<in> D1p"
+        hence "z \<in> Da3 \<inter> D1p" by (by100 blast)
+        hence "z = p" using he13_meet he13_split by (by100 blast)
+      } moreover
+      { assume "z \<in> Da2" "z \<in> Dq4"
+        hence "z \<in> Da2 \<inter> Dq4" by (by100 blast)
+        hence "z = q" using he24_meet he24_split by (by100 blast)
+      } moreover
+      { assume "z \<in> Da3" "z \<in> Dq4"
+        hence "z \<in> e13 \<inter> e24" using hDa3_sub hDq4_sub by (by100 blast)
+        hence "z \<in> {a1,a2,a3,a4}" using assms(32) by (by100 blast)
+      } moreover
+      { assume "z \<in> Da3" "z \<in> e41"
+        hence "z \<in> e13 \<inter> e41" using hDa3_sub by (by100 blast)
+        hence "z \<in> {a1}" using assms(31) by (by100 blast)
+      } moreover
+      { assume "z \<in> e23" "z \<in> Dq4"
+        hence "z \<in> e23 \<inter> e24" using hDq4_sub by (by100 blast)
+        hence "z \<in> {a2}" using assms(34) by (by100 blast)
+      } moreover
+      { assume "z \<in> e23" "z \<in> e41"
+        hence "z \<in> e23 \<inter> e41" by (by100 blast)
+        hence False using assms(23) by (by100 blast)
+      } moreover
+      { assume "z \<in> e23" "z \<in> D1p"
+        hence "z \<in> e23 \<inter> e13" using hD1p_sub by (by100 blast)
+        hence "z \<in> {a3}" using assms(29) by (by100 blast)
+      } moreover
+      { assume "z \<in> Da2" "z \<in> e41"
+        hence "z \<in> e24 \<inter> e41" using hDa2_sub by (by100 blast)
+        hence "z \<in> {a4}" using assms(36) by (by100 blast)
+      } moreover
+      { assume "z \<in> Da2" "z \<in> D1p"
+        hence "z \<in> e24 \<inter> e13" using hDa2_sub hD1p_sub by (by100 blast)
+        hence "z \<in> {a1,a2,a3,a4}" using assms(32) by (by100 blast)
+      }
+      \<comment> \<open>In all cases, z \<in> {a1,a2,a3,a4} or z = p or z = q.
+         But a1,a2,a3,a4 are not in the correct sub-arcs by endpoint analysis.\<close>
+      ultimately show ?thesis using hz1 hz2
+        sorry \<comment> \<open>9 cases fully analyzed above. The non-{p,q} cases give z \<in> {a1,..,a4}
+           but each vertex is excluded from one sub-arc by endpoint analysis.\<close>
+    qed
+  next
+    fix z assume "z \<in> {p, q}"
+    thus "z \<in> ?D1 \<inter> ?D2"
+      using hp_D1 hq_D1 hp_D2 hq_D2 by (by100 blast)
+  qed
   have hUV_union: "?U_loc \<union> ?V_loc = ?X"
     using hD1_D2_inter hp_D1 hq_D1 hp_D2 hq_D2 by blast
   \<comment> \<open>Step C3: U\_loc \<inter> V\_loc = S2 - (D1 \<union> D2). D1 \<union> D2 is a simple closed curve.
      By JCT: U\_loc \<inter> V\_loc has two components A, B with x \<in> A, y \<in> B.\<close>
   \<comment> \<open>Step C4: \<alpha> is a path in U\_loc from x to y, \<beta> is a path in V\_loc from y to x.\<close>
   have h\<alpha>_U: "top1_is_path_on ?U_loc (subspace_topology ?X ?TX ?U_loc) x y \<alpha>"
-    sorry \<comment> \<open>\<alpha> is a path in C-D1 \<subseteq> U\_loc. Lift to path in U\_loc.\<close>
+  proof -
+    \<comment> \<open>Lift \<alpha> from C-D1 to U\_loc (C-D1 \<subseteq> U\_loc).\<close>
+    have hTU: "is_topology_on ?U_loc (subspace_topology top1_S2 top1_S2_topology ?U_loc)"
+      by (rule subspace_topology_is_topology_on[OF hTopS2]) (by100 blast)
+    have hTC_D1_eq: "subspace_topology ?U_loc (subspace_topology top1_S2 top1_S2_topology ?U_loc) (C - ?D1)
+        = subspace_topology top1_S2 top1_S2_topology (C - ?D1)"
+      using subspace_topology_trans[of "C - ?D1" ?U_loc] hCmD1_sub by (by100 simp)
+    have h\<alpha>': "top1_is_path_on (C - ?D1) (subspace_topology ?U_loc (subspace_topology top1_S2 top1_S2_topology ?U_loc) (C - ?D1)) x y \<alpha>"
+      using h\<alpha> hTC_D1_eq by (by100 simp)
+    have "top1_is_path_on ?U_loc (subspace_topology top1_S2 top1_S2_topology ?U_loc) x y \<alpha>"
+      by (rule path_in_subspace_is_path_in_ambient'[OF hTU hCmD1_sub h\<alpha>'])
+    moreover have "subspace_topology ?X ?TX ?U_loc = subspace_topology top1_S2 top1_S2_topology ?U_loc"
+      using subspace_topology_trans[of ?U_loc ?X] hU_sub_X by (by100 simp)
+    ultimately show ?thesis by (by100 simp)
+  qed
   have h\<beta>_V: "top1_is_path_on ?V_loc (subspace_topology ?X ?TX ?V_loc) y x \<beta>"
-    sorry \<comment> \<open>\<beta> is a path in C-D2 \<subseteq> V\_loc. Lift to path in V\_loc.\<close>
+  proof -
+    have hTV: "is_topology_on ?V_loc (subspace_topology top1_S2 top1_S2_topology ?V_loc)"
+      by (rule subspace_topology_is_topology_on[OF hTopS2]) (by100 blast)
+    have hTC_D2_eq: "subspace_topology ?V_loc (subspace_topology top1_S2 top1_S2_topology ?V_loc) (C - ?D2)
+        = subspace_topology top1_S2 top1_S2_topology (C - ?D2)"
+      using subspace_topology_trans[of "C - ?D2" ?V_loc] hCmD2_sub by (by100 simp)
+    have h\<beta>': "top1_is_path_on (C - ?D2) (subspace_topology ?V_loc (subspace_topology top1_S2 top1_S2_topology ?V_loc) (C - ?D2)) y x \<beta>"
+      using h\<beta> hTC_D2_eq by (by100 simp)
+    have "top1_is_path_on ?V_loc (subspace_topology top1_S2 top1_S2_topology ?V_loc) y x \<beta>"
+      by (rule path_in_subspace_is_path_in_ambient'[OF hTV hCmD2_sub h\<beta>'])
+    moreover have "subspace_topology ?X ?TX ?V_loc = subspace_topology top1_S2 top1_S2_topology ?V_loc"
+      using subspace_topology_trans[of ?V_loc ?X] hV_sub_X by (by100 simp)
+    ultimately show ?thesis by (by100 simp)
+  qed
   \<comment> \<open>Step C5: Apply Theorem 63.1.\<close>
   have h\<alpha>\<beta>_nontrivial: "\<not> top1_path_homotopic_on ?X ?TX x x
       (top1_path_product \<alpha> \<beta>) (top1_constant_path x)"
