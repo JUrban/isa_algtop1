@@ -274,44 +274,59 @@ proof -
         (\<exists>n::nat. top1_path_homotopic_on ?X ?TX c0 c0 f (top1_path_power gen c0 n) \<or>
          top1_path_homotopic_on ?X ?TX c0 c0 f (top1_path_power (top1_path_reverse gen) c0 n)))"
     by (rule pi1_S2_minus_two_points_infinite_cyclic[OF assms(1) hp_S2 hq_S2 hp_ne_q hc0_X])
-  \<comment> \<open>Step 4d: Injectivity.
-     j_* nontrivial + \<pi>_1(C) \<cong> Z + \<pi>_1(X) torsion-free \<Rightarrow> ker = {0}.
-     Proof: ker(j_*) is a subgroup of \<pi>_1(C) \<cong> Z. Subgroups of Z are nZ.
-     If n > 0: image \<cong> Z/nZ is finite. But image \<subseteq> \<pi>_1(X) \<cong> Z which is torsion-free.
-     So image is trivial, contradicting j_* nontrivial. Hence n = 0, ker = {0}.\<close>
-  have hj_inj: "inj_on (top1_fundamental_group_induced_on C ?TC c0 ?X ?TX c0 (\<lambda>x. x))
-      (top1_fundamental_group_carrier C ?TC c0)"
-    sorry \<comment> \<open>Follows from hj\_surj: surjective hom Z \<rightarrow> Z is injective.
-       \<pi>_1(X) torsion-free (hX\_inf\_cyc). Pure algebra: nontrivial hom Z \<rightarrow> Z\_tf is injective.\<close>
-  \<comment> \<open>Step 4e: Surjectivity.
-     Following Munkres: [\<alpha>*\<beta>] generates \<pi>_1(X) (by Theorem 63.1 + infinite cyclic).
-     Since \<alpha>*\<beta> lies in C, j_* maps a generator of \<pi>_1(C) to a generator of \<pi>_1(X).
-     Hence j_* surjective.\<close>
-  \<comment> \<open>Step 5: Surjectivity and injectivity of j_* (combined).
-     Textbook proof (Munkres p.393): The loop \<alpha>*\<beta> (constructed in the cached
-     Lemma\_65\_1\_K4\_subgraph) traverses C and is nontrivial in X.
-     Since \<pi>_1(X) is infinite cyclic (hX\_inf\_cyc) and [\<alpha>*\<beta>] generates
-     \<pi>_1(X) (by Theorem\_63\_1\_c\_subgroups\_trivial + the decomposition
-     X = U \<union> V with U, V simply connected), and \<alpha>*\<beta> lies in C,
-     j_* maps a generator of \<pi>_1(C) to a generator of \<pi>_1(X).
-     Since both are \<cong> Z: surjective hom Z \<rightarrow> Z is isomorphism.
-
-     Available infrastructure:
-     - h\_nontrivial: \<exists>x\<in>C. \<exists>g nontrivial loop at x in X
-     - hC\_scc: C is SCC (PROVED)
-     - hX\_inf\_cyc: \<pi>_1(X) infinite cyclic (PROVED)
-     - Theorem\_63\_1\_c\_subgroups\_trivial: powers of 63.1-pairs are independent
-     - S2\_minus\_arc\_simply\_connected: S2 minus arc simply connected (sorry'd)
-     - Theorem\_54\_5\_iso: \<pi>_1(S1) \<cong> Z
-
-     Formal gaps:
-     (a) Cached proof shows g \<in> C internally but conclusion doesn't expose it
-     (b) Generator argument: nontrivial + 63.1(c) + infinite cyclic \<Rightarrow> generator
-     (c) Surjective hom Z \<rightarrow> Z is isomorphism (elementary algebra)\<close>
+  \<comment> \<open>===== Following Munkres 65.1(b) EXACTLY =====
+     Step A: Construct D1, D2 by splitting e13 at p and e24 at q.
+     Step B: Construct specific \<alpha>, \<beta> along C edges.
+     Step C: Apply Theorem 63.1 \<Rightarrow> \<alpha>*\<beta> nontrivial in X.
+     Step D: \<alpha>*\<beta> generates \<pi>_1(X) (since \<pi>_1(X) infinite cyclic).
+     Step E: \<alpha>*\<beta> \<in> C \<Rightarrow> j_* surjective.
+     Step F: Surjective hom Z \<rightarrow> Z \<Rightarrow> injective.\<close>
+  \<comment> \<open>Step A: Split e13 at p to get arcs a1-to-p and p-to-a3.
+     Split e24 at q to get arcs a2-to-q and q-to-a4.
+     D1 = (p-to-a3) \<union> e23 \<union> (a2-to-q): arc from p to q through a3, a2.
+     D2 = (q-to-a4) \<union> e41 \<union> (a1-to-p): arc from q to p through a4, a1.\<close>
+  have hS2_haus: "is_hausdorff_on top1_S2 top1_S2_topology" by (rule top1_S2_is_hausdorff)
+  have hp_e13: "p \<in> e13" using assms(37) by (by100 blast)
+  have hp_not_ep13: "p \<notin> top1_arc_endpoints_on e13 (subspace_topology top1_S2 top1_S2_topology e13)"
+    using assms(37) assms(20) by (by100 blast)
+  have ha1_ne_a3: "a1 \<noteq> a3" using assms(2) by (auto simp: card_insert_if split: if_splits)
+  obtain D1p Da3 where hD1p_arc: "top1_is_arc_on D1p (subspace_topology top1_S2 top1_S2_topology D1p)"
+      and hDa3_arc: "top1_is_arc_on Da3 (subspace_topology top1_S2 top1_S2_topology Da3)"
+      and he13_split: "e13 = D1p \<union> Da3" and he13_meet: "D1p \<inter> Da3 = {p}"
+      and "a1 \<in> D1p" "a3 \<in> Da3" "p \<in> D1p" "p \<in> Da3"
+      and "D1p \<subseteq> top1_S2" "Da3 \<subseteq> top1_S2"
+    using arc_split_at_given_point[OF assms(1) hS2_haus assms(8) assms(14)
+          hp_e13 hp_not_ep13 assms(20) ha1_ne_a3] by blast
+  have hq_e24: "q \<in> e24" using assms(38) by (by100 blast)
+  have hq_not_ep24: "q \<notin> top1_arc_endpoints_on e24 (subspace_topology top1_S2 top1_S2_topology e24)"
+    using assms(38) assms(21) by (by100 blast)
+  have ha2_ne_a4: "a2 \<noteq> a4" using assms(2) by (auto simp: card_insert_if split: if_splits)
+  obtain Da2 Dq4 where hDa2_arc: "top1_is_arc_on Da2 (subspace_topology top1_S2 top1_S2_topology Da2)"
+      and hDq4_arc: "top1_is_arc_on Dq4 (subspace_topology top1_S2 top1_S2_topology Dq4)"
+      and he24_split: "e24 = Da2 \<union> Dq4" and he24_meet: "Da2 \<inter> Dq4 = {q}"
+      and "a2 \<in> Da2" "a4 \<in> Dq4" "q \<in> Da2" "q \<in> Dq4"
+      and "Da2 \<subseteq> top1_S2" "Dq4 \<subseteq> top1_S2"
+    using arc_split_at_given_point[OF assms(1) hS2_haus assms(9) assms(15)
+          hq_e24 hq_not_ep24 assms(21) ha2_ne_a4] by blast
+  \<comment> \<open>D1 = Da3 \<union> e23 \<union> Da2 (arc from p through a3, a2 to q).
+     D2 = Dq4 \<union> e41 \<union> D1p (arc from q through a4, a1 to p).\<close>
+  let ?D1 = "Da3 \<union> e23 \<union> Da2"
+  let ?D2 = "Dq4 \<union> e41 \<union> D1p"
+  let ?U_loc = "top1_S2 - ?D1"
+  let ?V_loc = "top1_S2 - ?D2"
+  \<comment> \<open>Step B: Construct \<alpha> = path x\<rightarrow>a1\<rightarrow>a4\<rightarrow>y along C edges (in U).
+     \<beta> = path y\<rightarrow>a3\<rightarrow>a2\<rightarrow>x along C edges (in V).
+     x = interior point of e12, y = interior point of e34.\<close>
+  \<comment> \<open>Step C-F: Apply Theorem 63.1, conclude generator, derive surj + inj.\<close>
   have hj_surj: "(top1_fundamental_group_induced_on C ?TC c0 ?X ?TX c0 (\<lambda>x. x))
       ` (top1_fundamental_group_carrier C ?TC c0)
       = top1_fundamental_group_carrier ?X ?TX c0"
-    sorry
+    sorry \<comment> \<open>Steps B-E of the textbook proof. Needs: construct \<alpha>, \<beta> along C edges,
+       apply Theorem\_63\_1, show [\<alpha>*\<beta>] generates \<pi>_1(X), derive surjectivity
+       from \<alpha>*\<beta> \<in> C + generator. See PLAN\_Lemma\_65\_1\_updated.md.\<close>
+  have hj_inj: "inj_on (top1_fundamental_group_induced_on C ?TC c0 ?X ?TX c0 (\<lambda>x. x))
+      (top1_fundamental_group_carrier C ?TC c0)"
+    sorry \<comment> \<open>Step F: surjective hom Z \<rightarrow> Z is injective. Follows from hj\_surj.\<close>
   \<comment> \<open>Step 5: Combine homomorphism + injective + surjective = isomorphism.\<close>
   have hj_bij: "bij_betw (top1_fundamental_group_induced_on C ?TC c0 ?X ?TX c0 (\<lambda>x. x))
       (top1_fundamental_group_carrier C ?TC c0)
