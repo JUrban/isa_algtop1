@@ -1186,6 +1186,43 @@ proof -
   show ?thesis by (rule that[OF h1 h2 h6 h3 h4 h5])
 qed
 
+\<comment> \<open>Extract from strict polygonal quotient: all properties + no extra identifications.\<close>
+lemma quotient_strict_extract:
+  assumes "top1_is_polygonal_quotient_strict_on X TX"
+  obtains scheme P q vx vy where
+    "top1_quotient_of_scheme_on X TX scheme"
+    "top1_is_polygonal_region_on P (length scheme)"
+    "top1_quotient_map_on P
+        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) X TX q"
+    "length scheme \<ge> 3"
+    "\<forall>i<length scheme. (vx i, vy i) \<in> P"
+    "\<forall>i<length scheme. \<forall>j<length scheme.
+        fst (scheme!i) = fst (scheme!j) \<longrightarrow>
+        (\<forall>t\<in>I_set.
+           q ((1-t) * vx i + t * vx (Suc i mod length scheme),
+              (1-t) * vy i + t * vy (Suc i mod length scheme))
+         = (if snd (scheme!i) = snd (scheme!j)
+            then q ((1-t) * vx j + t * vx (Suc j mod length scheme),
+                    (1-t) * vy j + t * vy (Suc j mod length scheme))
+            else q (t * vx j + (1-t) * vx (Suc j mod length scheme),
+                    t * vy j + (1-t) * vy (Suc j mod length scheme))))"
+    "\<forall>p\<in>P. (\<forall>i<length scheme. \<forall>t\<in>I_set.
+              p \<noteq> ((1-t) * vx i + t * vx (Suc i mod length scheme),
+                    (1-t) * vy i + t * vy (Suc i mod length scheme)))
+         \<longrightarrow> (\<forall>p'\<in>P. q p = q p' \<longrightarrow> p = p')"
+    "\<forall>i<length scheme. \<forall>j<length scheme. \<forall>t\<in>I_set. \<forall>s\<in>I_set.
+          q ((1-t) * vx i + t * vx (Suc i mod length scheme),
+             (1-t) * vy i + t * vy (Suc i mod length scheme))
+        = q ((1-s) * vx j + s * vx (Suc j mod length scheme),
+             (1-s) * vy j + s * vy (Suc j mod length scheme))
+        \<longrightarrow> (i = j \<and> t = s)
+          \<or> (fst (scheme!i) = fst (scheme!j) \<and>
+             (if snd (scheme!i) = snd (scheme!j) then s = t else s = 1 - t))"
+  using assms unfolding top1_is_polygonal_quotient_strict_on_def
+      top1_is_polygonal_quotient_on_def
+  sorry \<comment> \<open>Extraction from nested existentials in strict definition.
+         Needs careful elim conjE exE with the complex formula.\<close>
+
 (** from \<S>74 Theorem 74.1: polygonal quotients are compact Hausdorff **)
 theorem Theorem_74_1_polygon_quotient_compact_hausdorff:
   fixes X :: "'a set" and TX :: "'a set set"
@@ -1263,7 +1300,9 @@ proof -
      finitely many boundary pairs. Prove via: P Hausdorff \<Rightarrow> closed map \<Rightarrow> Hausdorff quotient.\<close>
   have hhausdorff: "is_hausdorff_on X TX"
   proof -
-    obtain P q vx vy where hP_loc: "top1_is_polygonal_region_on P (length scheme)"
+    obtain scheme P q vx vy where
+        hsch': "top1_quotient_of_scheme_on X TX scheme"
+        and hP_loc: "top1_is_polygonal_region_on P (length scheme)"
         and hq_loc: "top1_quotient_map_on P
             (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) X TX q"
         and hlen_loc: "length scheme \<ge> 3"
@@ -1280,18 +1319,15 @@ proof -
               p \<noteq> ((1-t) * vx i + t * vx (Suc i mod length scheme),
                     (1-t) * vy i + t * vy (Suc i mod length scheme)))
            \<longrightarrow> (\<forall>p'\<in>P. q p = q p' \<longrightarrow> p = p')"
-      by (rule quotient_of_scheme_extract_full[OF hsch])
-    \<comment> \<open>Extract strict "no extra identifications" for this P, q, vx, vy.\<close>
-    have hno_extra: "\<forall>i<length scheme. \<forall>j<length scheme. \<forall>t\<in>I_set. \<forall>s\<in>I_set.
-          q ((1-t) * vx i + t * vx (Suc i mod length scheme),
-             (1-t) * vy i + t * vy (Suc i mod length scheme))
-        = q ((1-s) * vx j + s * vx (Suc j mod length scheme),
-             (1-s) * vy j + s * vy (Suc j mod length scheme))
-        \<longrightarrow> (i = j \<and> t = s)
-          \<or> (fst (scheme!i) = fst (scheme!j) \<and>
-             (if snd (scheme!i) = snd (scheme!j) then s = t else s = 1 - t))"
-      sorry \<comment> \<open>From hstrict: match P, q, vx, vy with those from strict definition.
-             This requires showing the extraction gives the same witnesses.\<close>
+        and hno_extra: "\<forall>i<length scheme. \<forall>j<length scheme. \<forall>t\<in>I_set. \<forall>s\<in>I_set.
+              q ((1-t) * vx i + t * vx (Suc i mod length scheme),
+                 (1-t) * vy i + t * vy (Suc i mod length scheme))
+            = q ((1-s) * vx j + s * vx (Suc j mod length scheme),
+                 (1-s) * vy j + s * vy (Suc j mod length scheme))
+            \<longrightarrow> (i = j \<and> t = s)
+              \<or> (fst (scheme!i) = fst (scheme!j) \<and>
+                 (if snd (scheme!i) = snd (scheme!j) then s = t else s = 1 - t))"
+      by (rule quotient_strict_extract[OF assms(2)])
     let ?TP = "subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P"
     \<comment> \<open>Step 1: R^2 is Hausdorff.\<close>
     have hR_haus: "is_hausdorff_on (UNIV::real set) top1_open_sets"
@@ -1677,7 +1713,7 @@ proof -
                   next
                     case sndF: False
                     hence "s = 1 - t" using hpair by (by100 auto)
-                    hence "x = (?edge i t, ?edge j (1-t))" using hx(1) hi(3) hj(3) by (by100 simp)
+                    hence "x = (?edge i t, ?edge j (1-t))" using hx(1) hi(3) hj(3) by simp
                     hence hx_in: "x \<in> (\<lambda>t. (?edge i t, ?edge j (1-t))) ` I_set" using hi(2) by auto
                     have "(\<lambda>t. (?edge i t, ?edge j (1-t))) ` I_set \<in> ?curves"
                     proof -
