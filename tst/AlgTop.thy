@@ -2037,13 +2037,31 @@ proof -
   qed
   \<comment> \<open>[\<alpha>*\<beta>] generates \<pi>_1(X, x). Since \<alpha>*\<beta> \<in> C: j_*(x) is surjective at basepoint x.
      Basepoint change to c0. Then surjective hom Z \<rightarrow> Z \<Rightarrow> injective.\<close>
+  \<comment> \<open>Surjectivity: every loop g at c0 in X is in image of j_*.
+     Proof: take \<gamma> from c0 to x in C (C path-connected). Then
+     \<gamma>*g*\<gamma>\<inverse> is a loop at x, hence \<simeq> (\<alpha>*\<beta>)^n (from h_\<alpha>\<beta>_generates).
+     So g \<simeq> \<gamma>\<inverse>*(\<alpha>*\<beta>)^n*\<gamma>, which is a loop in C. Hence g \<in> image(j_*).\<close>
   have hj_surj: "(top1_fundamental_group_induced_on C ?TC c0 ?X ?TX c0 (\<lambda>x. x))
       ` (top1_fundamental_group_carrier C ?TC c0)
       = top1_fundamental_group_carrier ?X ?TX c0"
-    sorry \<comment> \<open>From h\<alpha>\<beta>\_generates + h\<alpha>\<beta>\_in\_C + inclusion\_induced\_class + basepoint change x \<rightarrow> c0.\<close>
+    sorry \<comment> \<open>From h\<alpha>\<beta>\_generates + \<alpha>*\<beta> \<in> C + basepoint change c0 \<rightarrow> x via path in C.
+       Key steps: (1) C path-connected \<Rightarrow> \<exists>\<gamma>: c0 \<rightarrow> x in C.
+       (2) For any loop g at c0 in X: \<gamma>*g*\<gamma>\<inverse> loop at x \<Rightarrow> \<simeq> (\<alpha>*\<beta>)^n.
+       (3) g \<simeq> \<gamma>\<inverse>*(\<alpha>*\<beta>)^n*\<gamma>. All pieces in C \<Rightarrow> g \<in> image(j_*).
+       Uses: top1\_basepoint\_change\_on, h\<alpha>\<beta>\_generates, path\_in\_subspace.\<close>
+  \<comment> \<open>Injectivity: j_* nontrivial hom Z \<rightarrow> Z \<Rightarrow> injective.
+     Proof: kernel of j_* is a subgroup of \<pi>_1(C) \<cong> Z.
+     If kernel = nZ with n \<ge> 1: then j_* kills gen_C^n. But gen_C = [\<alpha>*\<beta>]_C,
+     and j_*([\<alpha>*\<beta>]_C) = [\<alpha>*\<beta>]_X generates \<pi>_1(X) \<cong> Z.
+     j_*(gen_C^n) = ([\<alpha>*\<beta>]_X)^n \<noteq> 0 for n \<ge> 1 (infinite order from helix).
+     Contradiction. So kernel = \{0\}.\<close>
   have hj_inj: "inj_on (top1_fundamental_group_induced_on C ?TC c0 ?X ?TX c0 (\<lambda>x. x))
       (top1_fundamental_group_carrier C ?TC c0)"
-    sorry \<comment> \<open>From hj\_surj: surjective hom Z \<rightarrow> Z is injective.\<close>
+    sorry \<comment> \<open>j_* nontrivial hom Z \<rightarrow> Z is injective.
+       Uses: h\<alpha>\<beta>\_nontrivial \<Rightarrow> j_*([\<alpha>*\<beta>]) \<noteq> 0 \<Rightarrow> j_* nontrivial.
+       Kernel = subgroup of Z = nZ. If n \<ge> 1: j_* kills (gen\_C)^n.
+       But (gen\_C)^n maps to (gen\_X)^n \<noteq> 0 (helix gives infinite order).
+       So n = 0, kernel trivial.\<close>
   \<comment> \<open>Step 5: Combine homomorphism + injective + surjective = isomorphism.\<close>
   have hj_bij: "bij_betw (top1_fundamental_group_induced_on C ?TC c0 ?X ?TX c0 (\<lambda>x. x))
       (top1_fundamental_group_carrier C ?TC c0)
