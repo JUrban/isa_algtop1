@@ -1361,9 +1361,82 @@ proof -
       }
       \<comment> \<open>In all cases, z \<in> {a1,a2,a3,a4} or z = p or z = q.
          But a1,a2,a3,a4 are not in the correct sub-arcs by endpoint analysis.\<close>
-      ultimately show ?thesis using hz1 hz2
-        sorry \<comment> \<open>9 cases fully analyzed above. The non-{p,q} cases give z \<in> {a1,..,a4}
-           but each vertex is excluded from one sub-arc by endpoint analysis.\<close>
+      \<comment> \<open>Vertex exclusion: each a\_i is not in both D1 and D2.\<close>
+      \<comment> \<open>a1: a1 \<in> D1p (endpoint) and a1 \<in> e41 (endpoint), so a1 \<in> D2.
+         But a1 \<notin> Da3 (Da3 endpoints = \{p, a3\}, a1 \<noteq> p, a1 \<noteq> a3), a1 \<notin> e23, a1 \<notin> Da2.
+         So a1 \<notin> D1.\<close>
+      moreover { assume "z = a1"
+        have "a1 \<notin> Da3" using he13_meet \<open>a1 \<in> D1p\<close> assms(37) by (by100 blast)
+        moreover have "a1 \<notin> e23" using assms(24,27) assms(2)
+          by (auto simp: card_insert_if split: if_splits)
+        moreover have "a1 \<notin> Da2"
+        proof -
+          have "a1 \<notin> e24" using assms(33,28) assms(2)
+            by (auto simp: card_insert_if split: if_splits)
+          thus ?thesis using hDa2_sub by (by100 blast)
+        qed
+        ultimately have "a1 \<notin> ?D1" by (by100 blast)
+        hence "z \<notin> ?D1 \<inter> ?D2" using \<open>z = a1\<close> by (by100 blast)
+        hence False using hz by (by100 blast)
+      }
+      moreover { assume "z = a2"
+        have "a2 \<notin> Dq4"
+        proof -
+          have "a2 \<notin> e24 - {a2, a4} - {q}" using assms(38) by (by100 blast)
+          have "a2 \<in> Da2" using \<open>a2 \<in> Da2\<close> .
+          show ?thesis using he24_meet \<open>a2 \<in> Da2\<close> assms(38) by (by100 blast)
+        qed
+        moreover have "a2 \<notin> e41" using assms(27,24) assms(2)
+          by (auto simp: card_insert_if split: if_splits)
+        moreover have "a2 \<notin> D1p"
+        proof -
+          have "a2 \<notin> e13" using assms(28) assms(2)
+            by (auto simp: card_insert_if split: if_splits)
+          thus ?thesis using hD1p_sub by (by100 blast)
+        qed
+        ultimately have "a2 \<notin> ?D2" by (by100 blast)
+        hence "z \<notin> ?D1 \<inter> ?D2" using \<open>z = a2\<close> by (by100 blast)
+        hence False using hz by (by100 blast)
+      }
+      moreover { assume "z = a3"
+        have "a3 \<notin> Dq4"
+        proof -
+          have "a3 \<notin> e24"
+          proof
+            assume "a3 \<in> e24"
+            hence "a3 \<in> e24 \<inter> e23" using assms(17,25) by (by100 blast)
+            hence "a3 \<in> {a2}" using assms(34) by (by100 blast)
+            thus False using assms(2) by (auto simp: card_insert_if split: if_splits)
+          qed
+          thus ?thesis using hDq4_sub by (by100 blast)
+        qed
+        moreover have "a3 \<notin> e41" using assms(26,25) assms(2)
+          by (auto simp: card_insert_if split: if_splits)
+        moreover have "a3 \<notin> D1p" using he13_meet \<open>a3 \<in> Da3\<close> assms(37) by (by100 blast)
+        ultimately have "a3 \<notin> ?D2" by (by100 blast)
+        hence "z \<notin> ?D1 \<inter> ?D2" using \<open>z = a3\<close> by (by100 blast)
+        hence False using hz by (by100 blast)
+      }
+      moreover { assume "z = a4"
+        have "a4 \<notin> Da3"
+        proof -
+          have "a4 \<notin> e13"
+          proof
+            assume "a4 \<in> e13"
+            hence "a4 \<in> e13 \<inter> e41" using assms(19,26) by (by100 blast)
+            hence "a4 \<in> {a1}" using assms(31) by (by100 blast)
+            thus False using assms(2) by (auto simp: card_insert_if split: if_splits)
+          qed
+          thus ?thesis using hDa3_sub by (by100 blast)
+        qed
+        moreover have "a4 \<notin> e23" using assms(25,26) assms(2)
+          by (auto simp: card_insert_if split: if_splits)
+        moreover have "a4 \<notin> Da2" using he24_meet \<open>a4 \<in> Dq4\<close> assms(38) by (by100 blast)
+        ultimately have "a4 \<notin> ?D1" by (by100 blast)
+        hence "z \<notin> ?D1 \<inter> ?D2" using \<open>z = a4\<close> by (by100 blast)
+        hence False using hz by (by100 blast)
+      }
+      ultimately show ?thesis using hz1 hz2 by (by100 blast)
     qed
   next
     fix z assume "z \<in> {p, q}"
