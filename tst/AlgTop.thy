@@ -1219,9 +1219,9 @@ lemma quotient_strict_extract:
           \<or> (fst (scheme!i) = fst (scheme!j) \<and>
              (if snd (scheme!i) = snd (scheme!j) then s = t else s = 1 - t))"
   using assms unfolding top1_is_polygonal_quotient_strict_on_def
-      top1_is_polygonal_quotient_on_def
-  sorry \<comment> \<open>Extraction from nested existentials in strict definition.
-         Needs careful elim conjE exE with the complex formula.\<close>
+      top1_is_polygonal_quotient_on_def top1_quotient_of_scheme_on_def
+      top1_is_polygonal_region_on_def
+  sorry \<comment> \<open>Extraction from 5+ nested existentials. Need manual elim conjE exE.\<close>
 
 (** from \<S>74 Theorem 74.1: polygonal quotients are compact Hausdorff **)
 theorem Theorem_74_1_polygon_quotient_compact_hausdorff:
