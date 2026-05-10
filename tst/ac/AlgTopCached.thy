@@ -58718,6 +58718,112 @@ lemma helix_shift_general_continuous:
         (\<forall>n::int. {x \<in> A. (x, 2*n + 2) \<in> W} \<union> {x \<in> B. (x, 2*n) \<in> W} \<union>
                   {x \<in> V - U. (x, 2*n + 1) \<in> W} \<in> TX)}"
   shows "top1_continuous_map_on E TE E TE (\<lambda>(x :: 'a, n :: int). (x, n + 2 * j))"
-  sorry
+  unfolding top1_continuous_map_on_def
+proof (intro conjI ballI)
+  fix e assume "e \<in> E" obtain x n where "e = (x, n)" by (cases e)
+  hence "(even n \<and> x \<in> U) \<or> (odd n \<and> x \<in> V - U)" using \<open>e \<in> E\<close> unfolding E_def by (by100 simp)
+  hence "(even (n + 2*j) \<and> x \<in> U) \<or> (odd (n + 2*j) \<and> x \<in> V - U)" by (by100 simp)
+  thus "(\<lambda>(x, n). (x, n + 2*j)) e \<in> E" unfolding E_def using \<open>e = (x, n)\<close> by (by100 simp)
+next
+  fix W assume hW: "W \<in> TE"
+  define W' where "W' = {e \<in> E. (\<lambda>(x, n). (x, n + 2*j)) e \<in> W}"
+  have hW'_sub: "W' \<subseteq> E" unfolding W'_def by (by100 blast)
+  have hA_U: "A \<subseteq> U" using assms(4) by (by100 blast)
+  have hB_U: "B \<subseteq> U" using assms(4) by (by100 blast)
+  have heven: "\<And>n :: int. {x \<in> U. (x, 2*n) \<in> W'} \<in> TX"
+  proof -
+    fix n :: int
+    have "\<forall>m::int. {x \<in> U. (x, 2*m) \<in> W} \<in> TX" using hW unfolding TE_def by (by100 blast)
+    hence h: "{x \<in> U. (x, 2*(n+j)) \<in> W} \<in> TX" by (by100 blast)
+    have "{x \<in> U. (x, 2*n) \<in> W'} = {x \<in> U. (x, 2*(n+j)) \<in> W}"
+    proof (rule set_eqI, rule iffI)
+      fix x assume "x \<in> {x \<in> U. (x, 2*n) \<in> W'}"
+      hence "x \<in> U" "(x, 2*n) \<in> W'" by (by100 blast)+
+      have "(\<lambda>(x, n). (x, n + 2*j)) (x, 2*n) \<in> W" using \<open>(x, 2*n) \<in> W'\<close> unfolding W'_def
+        by (by100 blast)
+      hence "(x, 2*n + 2*j) \<in> W" by (by100 simp)
+      thus "x \<in> {x \<in> U. (x, 2*(n+j)) \<in> W}" using \<open>x \<in> U\<close> by (simp add: algebra_simps)
+    next
+      fix x assume "x \<in> {x \<in> U. (x, 2*(n+j)) \<in> W}"
+      hence hx: "x \<in> U" "(x, 2*(n+j)) \<in> W" by (by100 blast)+
+      have hE: "(x, 2*n) \<in> E" unfolding E_def using hx(1) by (by100 simp)
+      have "(\<lambda>(xa, na). (xa, na + 2*j)) (x, 2*n) = (x, 2*(n+j))"
+        by (simp add: algebra_simps)
+      hence "(\<lambda>(xa, na). (xa, na + 2*j)) (x, 2*n) \<in> W" using hx(2) by simp
+      hence "(x, 2*n) \<in> W'" using hE unfolding W'_def by (by100 blast)
+      thus "x \<in> {x \<in> U. (x, 2*n) \<in> W'}" using hx(1) by (by100 blast)
+    qed
+    thus "{x \<in> U. (x, 2*n) \<in> W'} \<in> TX" using h by (by100 simp)
+  qed
+  have hodd: "\<And>n :: int. {x \<in> A. (x, 2*n + 2) \<in> W'} \<union> {x \<in> B. (x, 2*n) \<in> W'} \<union>
+      {x \<in> V - U. (x, 2*n + 1) \<in> W'} \<in> TX"
+  proof -
+    fix n :: int
+    have "\<forall>m::int. {x \<in> A. (x, 2*m + 2) \<in> W} \<union> {x \<in> B. (x, 2*m) \<in> W} \<union>
+        {x \<in> V - U. (x, 2*m + 1) \<in> W} \<in> TX" using hW unfolding TE_def by (by100 blast)
+    hence hW_nj: "{x \<in> A. (x, 2*(n+j) + 2) \<in> W} \<union> {x \<in> B. (x, 2*(n+j)) \<in> W} \<union>
+        {x \<in> V - U. (x, 2*(n+j) + 1) \<in> W} \<in> TX" by (by100 blast)
+    have hA_eq: "{x \<in> A. (x, 2*n + 2) \<in> W'} = {x \<in> A. (x, 2*(n+j) + 2) \<in> W}"
+    proof (rule set_eqI, rule iffI)
+      fix x assume "x \<in> {x \<in> A. (x, 2*n + 2) \<in> W'}"
+      hence "x \<in> A" "(x, 2*n+2) \<in> W'" by (by100 blast)+
+      have "(\<lambda>(x, n). (x, n + 2*j)) (x, 2*n+2) \<in> W" using \<open>(x, 2*n+2) \<in> W'\<close>
+        unfolding W'_def by (by100 blast)
+      hence "(x, 2*(n+j)+2) \<in> W" by (simp add: algebra_simps)
+      thus "x \<in> {x \<in> A. (x, 2*(n+j) + 2) \<in> W}" using \<open>x \<in> A\<close> by (by100 blast)
+    next
+      fix x assume "x \<in> {x \<in> A. (x, 2*(n+j) + 2) \<in> W}"
+      hence hx: "x \<in> A" "(x, 2*(n+j)+2) \<in> W" by (by100 blast)+
+      have "x \<in> U" using hx(1) hA_U by (by100 blast)
+      have hE: "(x, 2*n+2) \<in> E" unfolding E_def using \<open>x \<in> U\<close> by (by100 simp)
+      have "(\<lambda>(xa, na). (xa, na + 2*j)) (x, 2*n+2) = (x, 2*(n+j)+2)"
+        by (simp add: algebra_simps)
+      hence "(\<lambda>(xa, na). (xa, na + 2*j)) (x, 2*n+2) \<in> W" using hx(2) by simp
+      hence "(x, 2*n+2) \<in> W'" using hE unfolding W'_def by (by100 blast)
+      thus "x \<in> {x \<in> A. (x, 2*n + 2) \<in> W'}" using hx(1) by (by100 blast)
+    qed
+    have hB_eq: "{x \<in> B. (x, 2*n) \<in> W'} = {x \<in> B. (x, 2*(n+j)) \<in> W}"
+    proof (rule set_eqI, rule iffI)
+      fix x assume "x \<in> {x \<in> B. (x, 2*n) \<in> W'}"
+      hence "x \<in> B" "(x, 2*n) \<in> W'" by (by100 blast)+
+      have "(\<lambda>(x, n). (x, n + 2*j)) (x, 2*n) \<in> W" using \<open>(x, 2*n) \<in> W'\<close>
+        unfolding W'_def by (by100 blast)
+      hence "(x, 2*(n+j)) \<in> W" by (simp add: algebra_simps)
+      thus "x \<in> {x \<in> B. (x, 2*(n+j)) \<in> W}" using \<open>x \<in> B\<close> by (by100 blast)
+    next
+      fix x assume "x \<in> {x \<in> B. (x, 2*(n+j)) \<in> W}"
+      hence hx: "x \<in> B" "(x, 2*(n+j)) \<in> W" by (by100 blast)+
+      have "x \<in> U" using hx(1) hB_U by (by100 blast)
+      have hE: "(x, 2*n) \<in> E" unfolding E_def using \<open>x \<in> U\<close> by (by100 simp)
+      have "(\<lambda>(xa, na). (xa, na + 2*j)) (x, 2*n) = (x, 2*(n+j))"
+        by (simp add: algebra_simps)
+      hence "(\<lambda>(xa, na). (xa, na + 2*j)) (x, 2*n) \<in> W" using hx(2) by simp
+      hence "(x, 2*n) \<in> W'" using hE unfolding W'_def by (by100 blast)
+      thus "x \<in> {x \<in> B. (x, 2*n) \<in> W'}" using hx(1) by (by100 blast)
+    qed
+    have hVU_eq: "{x \<in> V - U. (x, 2*n + 1) \<in> W'} = {x \<in> V - U. (x, 2*(n+j) + 1) \<in> W}"
+    proof (rule set_eqI, rule iffI)
+      fix x assume "x \<in> {x \<in> V - U. (x, 2*n + 1) \<in> W'}"
+      hence "x \<in> V - U" "(x, 2*n+1) \<in> W'" by (by100 blast)+
+      have "(\<lambda>(x, n). (x, n + 2*j)) (x, 2*n+1) \<in> W" using \<open>(x, 2*n+1) \<in> W'\<close>
+        unfolding W'_def by (by100 blast)
+      hence "(x, 2*(n+j)+1) \<in> W" by (simp add: algebra_simps)
+      thus "x \<in> {x \<in> V - U. (x, 2*(n+j) + 1) \<in> W}" using \<open>x \<in> V - U\<close> by (by100 blast)
+    next
+      fix x assume "x \<in> {x \<in> V - U. (x, 2*(n+j) + 1) \<in> W}"
+      hence hx: "x \<in> V - U" "(x, 2*(n+j)+1) \<in> W" by (by100 blast)+
+      have hE: "(x, 2*n+1) \<in> E" unfolding E_def using hx(1) by (by100 simp)
+      have "(\<lambda>(xa, na). (xa, na + 2*j)) (x, 2*n+1) = (x, 2*(n+j)+1)"
+        by (simp add: algebra_simps)
+      hence "(\<lambda>(xa, na). (xa, na + 2*j)) (x, 2*n+1) \<in> W" using hx(2) by simp
+      hence "(x, 2*n+1) \<in> W'" using hE unfolding W'_def by (by100 blast)
+      thus "x \<in> {x \<in> V - U. (x, 2*n + 1) \<in> W'}" using hx(1) by (by100 blast)
+    qed
+    show "{x \<in> A. (x, 2*n + 2) \<in> W'} \<union> {x \<in> B. (x, 2*n) \<in> W'} \<union>
+        {x \<in> V - U. (x, 2*n + 1) \<in> W'} \<in> TX"
+      using hA_eq hB_eq hVU_eq hW_nj by (by100 simp)
+  qed
+  show "W' \<in> TE" unfolding TE_def using hW'_sub heven hodd by (by100 blast)
+qed
 
 end
