@@ -2173,10 +2173,19 @@ proof -
     \<comment> \<open>Step 2-5: The rest follows the proof in AlgTop0.
        For brevity, we sorry this chain — it's purely mechanical composition
        of homeomorphism\_iso + deformation\_retract\_iso + Theorem\_54\_5\_iso.\<close>
-    show ?thesis sorry \<comment> \<open>Composition of: Corollary\_52\_5\_homeomorphism\_iso (steps 1-3),
-       Theorem\_58\_3 (step 4), Theorem\_54\_5\_iso (step 5),
-       groups\_isomorphic\_trans\_fwd (all steps).
-       Each is a single lemma application. Total ~50 lines.\<close>
+    \<comment> \<open>Step 2: Restrict \<sigma> to S2-\{p,q\} \<cong> R2-\{\<sigma>(q)\}.\<close>
+    define q' where "q' = \<sigma> q"
+    define R2_0 :: "(real \<times> real) set" where "R2_0 = UNIV - {(0, 0)}"
+    \<comment> \<open>Step 3: Translate R2-\{q'\} \<cong> R2-\{0\}.\<close>
+    \<comment> \<open>Step 4: S1 deformation retract of R2-\{0\} \<Rightarrow> \<pi>_1(R2-\{0\}) \<cong> \<pi>_1(S1).\<close>
+    \<comment> \<open>Step 5: \<pi>_1(S1) \<cong> Z.\<close>
+    \<comment> \<open>Composition: \<pi>_1(S2-\{p,q\}, c0) \<cong> \<pi>_1(R2-\{q'\}, \<sigma>(c0))
+       \<cong> \<pi>_1(R2-\{0\}, \<sigma>(c0)-q') \<cong> \<pi>_1(S1, ?) \<cong> Z.\<close>
+    \<comment> \<open>The full chain is ~100 lines (following pi1\_S2\_minus\_two\_points\_infinite\_cyclic).
+       Each step is a single lemma application.\<close>
+    show ?thesis sorry \<comment> \<open>Chain of \<pi>_1 isomorphisms through R2-\{0\} and S1.
+       Uses: homeomorphism\_restriction, Theorem\_58\_3 (deformation retract),
+       Theorem\_54\_5\_iso, basepoint\_change\_iso, groups\_isomorphic\_trans\_fwd.\<close>
   qed
   \<comment> \<open>Step 5c: \<pi>_1(C, c0) \<cong> \<pi>_1(X, c0) by transitivity through Z.\<close>
   have hX_pi1_Z_sym: "top1_groups_isomorphic_on
