@@ -2050,38 +2050,39 @@ proof -
     obtain f where hf_cont: "top1_continuous_map_on top1_S1 top1_S1_topology top1_S2 top1_S2_topology f"
         and hf_inj: "inj_on f top1_S1" and hf_img: "f ` top1_S1 = C"
       using hC_scc unfolding top1_simple_closed_curve_on_def by (by100 blast)
+    have hS1_top_loc: "is_topology_on top1_S1 top1_S1_topology"
+      using top1_S1_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
+    have hTC_top_loc: "is_topology_on C ?TC"
+      by (rule subspace_topology_is_topology_on[OF hTopS2 hC_sub_S2])
     \<comment> \<open>f is a homeomorphism S1 \<rightarrow> C (compact \<rightarrow> Hausdorff, Theorem\_26\_6).\<close>
-    have hf_homeo: "top1_homeomorphism_on top1_S1 top1_S1_topology C ?TC f"
-    proof -
-      have hf_cont_C: "top1_continuous_map_on top1_S1 top1_S1_topology C ?TC f"
-      proof (rule continuous_map_restrict_codomain[OF hf_cont])
-        fix s assume "s \<in> top1_S1"
-        hence "f s \<in> f ` top1_S1" by (by100 blast)
-        thus "f s \<in> C" using hf_img by (by100 simp)
-        show "C \<subseteq> top1_S2" by (rule hC_sub_S2)
-      qed
-      have hf_bij: "bij_betw f top1_S1 C"
-        unfolding bij_betw_def using hf_inj hf_img by (by100 blast)
-      have hC_haus: "is_hausdorff_on C ?TC"
-        using conjunct2[OF conjunct2[OF Theorem_17_11]] hC_sub_S2 top1_S2_is_hausdorff
-        by (by100 blast)
-      show ?thesis
-        by (rule Theorem_26_6[OF hS1_top' hTC_top' S1_compact hC_haus hf_cont_C hf_bij])
+    have hf_cont_C: "top1_continuous_map_on top1_S1 top1_S1_topology C ?TC f"
+    proof (rule continuous_map_restrict_codomain[OF hf_cont])
+      fix s assume "s \<in> top1_S1"
+      hence "f s \<in> f ` top1_S1" by (rule imageI)
+      thus "f s \<in> C" unfolding hf_img by assumption
+      show "C \<subseteq> top1_S2" by (rule hC_sub_S2)
     qed
+    have hf_bij: "bij_betw f top1_S1 C"
+      unfolding bij_betw_def using hf_inj hf_img by (by100 blast)
+    have hC_haus: "is_hausdorff_on C ?TC"
+      using conjunct2[OF conjunct2[OF Theorem_17_11]] hC_sub_S2 top1_S2_is_hausdorff
+      by (by100 blast)
+    have hf_homeo: "top1_homeomorphism_on top1_S1 top1_S1_topology C ?TC f"
+      by (rule Theorem_26_6[OF hS1_top_loc hTC_top_loc S1_compact hC_haus hf_cont_C hf_bij])
     \<comment> \<open>\<pi>_1(S1, f\<inverse>(c0)) \<cong> \<pi>_1(C, c0).\<close>
     have hc0_S1: "\<exists>s0 \<in> top1_S1. f s0 = c0"
       using hf_img assms(40) by (by100 blast)
     obtain s0 where hs0: "s0 \<in> top1_S1" "f s0 = c0" using hc0_S1 by blast
-    have hS1_top': "is_topology_on top1_S1 top1_S1_topology"
+    have hS1_top_loc: "is_topology_on top1_S1 top1_S1_topology"
       using top1_S1_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
-    have hTC_top': "is_topology_on C ?TC"
+    have hTC_top_loc: "is_topology_on C ?TC"
       by (rule subspace_topology_is_topology_on[OF hTopS2 hC_sub_S2])
     have h_pi1_S1_C: "top1_groups_isomorphic_on
         (top1_fundamental_group_carrier top1_S1 top1_S1_topology s0)
         (top1_fundamental_group_mul top1_S1 top1_S1_topology s0)
         (top1_fundamental_group_carrier C ?TC c0)
         (top1_fundamental_group_mul C ?TC c0)"
-      by (rule Corollary_52_5_homeomorphism_iso[OF hS1_top' hTC_top' hf_homeo hs0(1) hs0(2)])
+      by (rule Corollary_52_5_homeomorphism_iso[OF hS1_top_loc hTC_top_loc hf_homeo hs0(1) hs0(2)])
     \<comment> \<open>\<pi>_1(S1, s0) \<cong> \<pi>_1(S1, (1,0)) by basepoint change.\<close>
     have h_pi1_S1_bp: "top1_groups_isomorphic_on
         (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1::real, 0::real))
@@ -2093,7 +2094,7 @@ proof -
       obtain \<gamma> where "top1_is_path_on top1_S1 top1_S1_topology (1, 0) s0 \<gamma>"
         using S1_path_connected h10_S1 hs0(1) unfolding top1_path_connected_on_def
         by (by100 blast)
-      thus ?thesis by (rule basepoint_change_iso_via_path[OF hS1_top'])
+      thus ?thesis by (rule basepoint_change_iso_via_path[OF hS1_top_loc])
     qed
     \<comment> \<open>\<pi>_1(S1, (1,0)) \<cong> Z.\<close>
     have h_pi1_S1_Z: "top1_groups_isomorphic_on
@@ -2183,9 +2184,8 @@ proof -
        \<cong> \<pi>_1(R2-\{0\}, \<sigma>(c0)-q') \<cong> \<pi>_1(S1, ?) \<cong> Z.\<close>
     \<comment> \<open>The full chain is ~100 lines (following pi1\_S2\_minus\_two\_points\_infinite\_cyclic).
        Each step is a single lemma application.\<close>
-    show ?thesis sorry \<comment> \<open>Chain of \<pi>_1 isomorphisms through R2-\{0\} and S1.
-       Uses: homeomorphism\_restriction, Theorem\_58\_3 (deformation retract),
-       Theorem\_54\_5\_iso, basepoint\_change\_iso, groups\_isomorphic\_trans\_fwd.\<close>
+    show ?thesis
+      by (rule pi1_S2_minus_two_points_iso_Z[OF assms(1) hp_S2 hq_S2 hp_ne_q hc0_X])
   qed
   \<comment> \<open>Step 5c: \<pi>_1(C, c0) \<cong> \<pi>_1(X, c0) by transitivity through Z.\<close>
   have hX_pi1_Z_sym: "top1_groups_isomorphic_on

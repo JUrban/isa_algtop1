@@ -4001,6 +4001,23 @@ proof -
   qed
 qed
 
+text \<open>Corollary: \<pi>_1(S2-\{p,q\}) is isomorphic to Z as a group.\<close>
+corollary pi1_S2_minus_two_points_iso_Z:
+  assumes "is_topology_on_strict top1_S2 top1_S2_topology"
+      and "p \<in> top1_S2" and "q \<in> top1_S2" and "p \<noteq> q"
+      and "a \<in> top1_S2 - {p} - {q}"
+  shows "top1_groups_isomorphic_on
+      (top1_fundamental_group_carrier (top1_S2 - {p} - {q})
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p} - {q})) a)
+      (top1_fundamental_group_mul (top1_S2 - {p} - {q})
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p} - {q})) a)
+      top1_Z_group top1_Z_mul"
+  sorry \<comment> \<open>Same proof as pi1\_S2\_minus\_two\_points\_infinite\_cyclic:
+     the Z-isomorphism \<psi> is constructed internally (lines 3520-3534)
+     from the chain S2-\{p\} \<cong> R2, R2-\{q'\} \<cong> R2-\{0\}, S1 deformation
+     retract of R2-\{0\}, and \<pi>_1(S1) \<cong> Z.
+     The proof exports \<exists>f. group\_iso\_on ... f which is groups\_isomorphic\_on.\<close>
+
 text \<open>If f \<simeq> g (loops at a), then f^n \<simeq> g^n.\<close>
 lemma path_homotopic_path_power:
   assumes "is_topology_on X TX"
