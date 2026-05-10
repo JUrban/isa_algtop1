@@ -2082,7 +2082,7 @@ proof -
     have hTC_top: "is_topology_on C ?TC"
       by (rule subspace_topology_is_topology_on[OF hTopS2 hC_sub_S2])
     have hS1_top: "is_topology_on top1_S1 top1_S1_topology"
-      sorry \<comment> \<open>S1 is a topological space.\<close>
+      using top1_S1_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
     have h_pi1_S1_C_sym: "top1_groups_isomorphic_on
         (top1_fundamental_group_carrier C ?TC c0)
         (top1_fundamental_group_mul C ?TC c0)
@@ -2109,11 +2109,12 @@ proof -
         (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
         (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))"
     proof (rule top1_groups_isomorphic_on_sym[OF h_pi1_S1_bp])
+      have h10_S1: "(1::real, 0::real) \<in> top1_S1" unfolding top1_S1_def by (by100 simp)
       show "top1_is_group_on (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1::real, 0::real))
           (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))
           (top1_fundamental_group_id top1_S1 top1_S1_topology (1, 0))
           (top1_fundamental_group_invg top1_S1 top1_S1_topology (1, 0))"
-        sorry \<comment> \<open>(1,0) \<in> S1 + S1 topology.\<close>
+        by (rule top1_fundamental_group_is_group[OF hS1_top h10_S1])
       show "top1_is_group_on (top1_fundamental_group_carrier top1_S1 top1_S1_topology s0)
           (top1_fundamental_group_mul top1_S1 top1_S1_topology s0)
           (top1_fundamental_group_id top1_S1 top1_S1_topology s0)
