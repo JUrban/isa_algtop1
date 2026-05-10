@@ -304,8 +304,12 @@ proof (cases "j \<ge> 0")
         by (rule top1_continuous_map_on_comp[OF Suc.hyps hT1])
       moreover have "(\<lambda>(x :: 'a, n :: int). (x, n + 2 * int (Suc m'))) =
           T1 \<circ> (\<lambda>(x, n). (x, n + 2 * int m'))"
-        sorry \<comment> \<open>Extensional equality of lambda expressions with T1 composition.
-           Each side evaluates (x, n) to (x, n + 2 + 2*int m') = (x, n + 2*int(Suc m')).\<close>
+      proof (rule ext)
+        fix e :: "'a \<times> int" obtain x n where he: "e = (x, n)" by (cases e)
+        show "(case e of (x, n) \<Rightarrow> (x, n + 2 * int (Suc m'))) =
+            (T1 \<circ> (\<lambda>(x, n). (x, n + 2 * int m'))) e"
+          unfolding he using hcomp[of x n] by (by100 simp)
+      qed
       ultimately show ?case by (by100 metis)
     qed
   qed
