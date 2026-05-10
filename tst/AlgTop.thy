@@ -327,8 +327,9 @@ proof -
     using arc_split_at_midpoint[OF assms(1) hS2_haus assms(6) assms(12)] by blast
   \<comment> \<open>Step B2: x \<notin> {a1, a2} and y \<notin> {a3, a4} (interior points of arcs).\<close>
   have hx_int: "x \<notin> top1_arc_endpoints_on e12 (subspace_topology top1_S2 top1_S2_topology e12)"
-    sorry \<comment> \<open>x splits e12 into two arcs e12a, e12b. Arcs have \<ge> 2 points,
-       so if x were an endpoint, one piece would be {x} = not an arc. Contradiction.\<close>
+    sorry \<comment> \<open>e12 = e12a \<union> e12b (arcs), e12a \<inter> e12b = {x}. Arcs have \<ge> 2 points (homeo to [0,1]).
+       So e12-{x} = (e12a-{x}) \<union> (e12b-{x}), both nonempty, disjoint \<Rightarrow> disconnected.
+       Endpoints = points where removal leaves connected. So x is not an endpoint.\<close>
   hence hx_not_endpts: "x \<noteq> a1 \<and> x \<noteq> a2" using assms(16) by (by100 blast)
   have hy_int: "y \<notin> top1_arc_endpoints_on e34 (subspace_topology top1_S2 top1_S2_topology e34)"
     sorry \<comment> \<open>Same argument for y in e34.\<close>
@@ -449,13 +450,39 @@ proof -
      Then apply Theorem\_63\_1 to get \<alpha>*\<beta> nontrivial.\<close>
   \<comment> \<open>Step D: [\<alpha>*\<beta>] generates \<pi>_1(X) (63.1(c) + infinite cyclic).
      Step E: j_* surjective (\<alpha>*\<beta> \<in> C + generator).\<close>
+  \<comment> \<open>Step C1: U\_loc \<subseteq> X and V\_loc \<subseteq> X (since p,q \<in> D1 \<inter> D2).\<close>
+  have hp_D1: "p \<in> ?D1" using \<open>p \<in> Da3\<close> by (by100 blast)
+  have hq_D1: "q \<in> ?D1" using \<open>q \<in> Da2\<close> by (by100 blast)
+  have hp_D2: "p \<in> ?D2" using \<open>p \<in> D1p\<close> by (by100 blast)
+  have hq_D2: "q \<in> ?D2" using \<open>q \<in> Dq4\<close> by (by100 blast)
+  have hU_sub_X: "?U_loc \<subseteq> ?X" using hp_D1 hq_D1 by (by100 blast)
+  have hV_sub_X: "?V_loc \<subseteq> ?X" using hp_D2 hq_D2 by (by100 blast)
+  \<comment> \<open>Step C2: U\_loc \<union> V\_loc = X (since D1 \<inter> D2 = {p, q}).\<close>
+  have hD1_D2_inter: "?D1 \<inter> ?D2 = {p, q}" sorry \<comment> \<open>From arc split structure.\<close>
+  have hUV_union: "?U_loc \<union> ?V_loc = ?X"
+    using hD1_D2_inter hp_D1 hq_D1 hp_D2 hq_D2 by blast
+  \<comment> \<open>Step C3: U\_loc \<inter> V\_loc = S2 - (D1 \<union> D2). D1 \<union> D2 is a simple closed curve.
+     By JCT: U\_loc \<inter> V\_loc has two components A, B with x \<in> A, y \<in> B.\<close>
+  \<comment> \<open>Step C4: \<alpha> is a path in U\_loc from x to y, \<beta> is a path in V\_loc from y to x.\<close>
+  have h\<alpha>_U: "top1_is_path_on ?U_loc (subspace_topology ?X ?TX ?U_loc) x y \<alpha>"
+    sorry \<comment> \<open>\<alpha> is a path in C-D1 \<subseteq> U\_loc. Lift to path in U\_loc.\<close>
+  have h\<beta>_V: "top1_is_path_on ?V_loc (subspace_topology ?X ?TX ?V_loc) y x \<beta>"
+    sorry \<comment> \<open>\<beta> is a path in C-D2 \<subseteq> V\_loc. Lift to path in V\_loc.\<close>
+  \<comment> \<open>Step C5: Apply Theorem 63.1.\<close>
+  have h\<alpha>\<beta>_nontrivial: "\<not> top1_path_homotopic_on ?X ?TX x x
+      (top1_path_product \<alpha> \<beta>) (top1_constant_path x)"
+    sorry \<comment> \<open>Theorem\_63\_1\_loop\_nontrivial[OF hTX ... hUV\_union ... h\<alpha>\_U h\<beta>\_V].\<close>
+  \<comment> \<open>Step D: \<alpha>*\<beta> lies in C. So [\<alpha>*\<beta>]_C is a well-defined element of \<pi>_1(C, x).
+     j_*([\<alpha>*\<beta>]_C) = [\<alpha>*\<beta>]_X \<noteq> id. Hence j_* is nontrivial.
+     Since \<pi>_1(C) \<cong> Z and \<pi>_1(X) \<cong> Z:
+     - j_* nontrivial hom Z \<rightarrow> Z torsion-free \<Rightarrow> j_* injective.
+     - [\<alpha>*\<beta>] generates \<pi>_1(X) (63.1(c) + infinite cyclic) \<Rightarrow> j_* surjective.\<close>
+  have h\<alpha>\<beta>_in_C: "top1_is_loop_on C ?TC x (top1_path_product \<alpha> \<beta>)"
+    sorry \<comment> \<open>\<alpha> in C-D1 \<subseteq> C, \<beta> in C-D2 \<subseteq> C. Concatenation lies in C.\<close>
   have hj_surj: "(top1_fundamental_group_induced_on C ?TC c0 ?X ?TX c0 (\<lambda>x. x))
       ` (top1_fundamental_group_carrier C ?TC c0)
       = top1_fundamental_group_carrier ?X ?TX c0"
-    sorry \<comment> \<open>Steps C-E. Now have \<alpha> in C\<inter>U, \<beta> in C\<inter>V.
-       Need: (1) U\<inter>V two components with x, y separated (JCT on D1\<union>D2)
-       (2) Theorem\_63\_1 \<Rightarrow> nontrivial (3) generator argument (4) surjectivity
-       (5) basepoint change x \<rightarrow> c0.\<close>
+    sorry \<comment> \<open>From h\<alpha>\<beta>\_in\_C + h\<alpha>\<beta>\_nontrivial + generator argument + basepoint change.\<close>
   have hj_inj: "inj_on (top1_fundamental_group_induced_on C ?TC c0 ?X ?TX c0 (\<lambda>x. x))
       (top1_fundamental_group_carrier C ?TC c0)"
     sorry \<comment> \<open>Step F: surjective hom Z \<rightarrow> Z is injective. Follows from hj\_surj.\<close>
