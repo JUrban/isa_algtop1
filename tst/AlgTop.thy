@@ -845,14 +845,61 @@ proof -
     have "?D2 \<subseteq> top1_S2 \<and> top1_S2 - ?D2 \<in> top1_S2_topology"
       using hD2_closed unfolding closedin_on_def by (by100 blast)
     hence "(top1_S2 - ?D1) \<inter> (top1_S2 - ?D2) \<in> top1_S2_topology"
-      sorry \<comment> \<open>Finite intersection of open sets is open.\<close>
+    proof -
+      have "top1_S2 - ?D1 \<in> top1_S2_topology" using \<open>?D1 \<subseteq> top1_S2 \<and> top1_S2 - ?D1 \<in> top1_S2_topology\<close> by (by100 blast)
+      moreover have "top1_S2 - ?D2 \<in> top1_S2_topology" using \<open>?D2 \<subseteq> top1_S2 \<and> top1_S2 - ?D2 \<in> top1_S2_topology\<close> by (by100 blast)
+      ultimately show ?thesis
+        using topology_inter2[OF hTopS2] by (by100 blast)
+    qed
     moreover have "top1_S2 - (?D1 \<union> ?D2) = (top1_S2 - ?D1) \<inter> (top1_S2 - ?D2)" by (by100 blast)
     ultimately show ?thesis by (by100 simp)
   qed
   have hW_sub: "top1_S2 - (?D1 \<union> ?D2) \<subseteq> top1_S2" by (by100 blast)
   have hW_not_conn: "\<not> top1_connected_on (top1_S2 - (?D1 \<union> ?D2))
       (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?D1 \<union> ?D2)))"
-    using hUV0(1,2,3,4) sorry \<comment> \<open>Two nonempty disjoint parts \<Rightarrow> not connected.\<close>
+  proof
+    assume hconn: "top1_connected_on (top1_S2 - (?D1 \<union> ?D2))
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?D1 \<union> ?D2)))"
+    \<comment> \<open>U0 and V0 are open in the subspace topology of W = S2-(D1\<union>D2).\<close>
+    let ?TW = "subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?D1 \<union> ?D2))"
+    have hU0_open_s: "U0 \<in> top1_S2_topology"
+    proof (rule S2_component_of_open_subset_is_open[OF hW_open hW_sub])
+      show "U0 \<subseteq> top1_S2 - (?D1 \<union> ?D2)" using hUV0(4) by (by100 blast)
+      show "U0 \<noteq> {}" by (rule hUV0(1))
+      show "top1_connected_on U0 (subspace_topology top1_S2 top1_S2_topology U0)" by (rule hUV0(5))
+      fix Q assume "Q \<subseteq> top1_S2 - (?D1 \<union> ?D2)" "U0 \<subseteq> Q"
+          "top1_connected_on Q (subspace_topology top1_S2 top1_S2_topology Q)"
+      hence "Q \<inter> V0 = {}" using hUV0(3,4,6) sorry \<comment> \<open>Q connected, U0 \<subseteq> Q, Q \<subseteq> U0\<union>V0, U0\<inter>V0={}.\<close>
+      thus "Q = U0" using \<open>Q \<subseteq> top1_S2 - (?D1 \<union> ?D2)\<close> \<open>U0 \<subseteq> Q\<close> hUV0(4) by (by100 blast)
+    qed
+    have hV0_open_s: "V0 \<in> top1_S2_topology"
+    proof (rule S2_component_of_open_subset_is_open[OF hW_open hW_sub])
+      show "V0 \<subseteq> top1_S2 - (?D1 \<union> ?D2)" using hUV0(4) by (by100 blast)
+      show "V0 \<noteq> {}" by (rule hUV0(2))
+      show "top1_connected_on V0 (subspace_topology top1_S2 top1_S2_topology V0)" by (rule hUV0(6))
+      fix Q assume "Q \<subseteq> top1_S2 - (?D1 \<union> ?D2)" "V0 \<subseteq> Q"
+          "top1_connected_on Q (subspace_topology top1_S2 top1_S2_topology Q)"
+      hence "Q \<inter> U0 = {}" using hUV0(3,4,5) sorry \<comment> \<open>Same argument.\<close>
+      thus "Q = V0" using \<open>Q \<subseteq> top1_S2 - (?D1 \<union> ?D2)\<close> \<open>V0 \<subseteq> Q\<close> hUV0(4) by (by100 blast)
+    qed
+    have "U0 \<in> ?TW"
+    proof -
+      have "U0 \<subseteq> top1_S2 - (?D1 \<union> ?D2)" using hUV0(4) by (by100 blast)
+      hence "U0 = U0 \<inter> (top1_S2 - (?D1 \<union> ?D2))" by (by100 blast)
+      thus ?thesis using hU0_open_s unfolding subspace_topology_def by (by100 blast)
+    qed
+    moreover have "V0 \<in> ?TW"
+    proof -
+      have "V0 \<subseteq> top1_S2 - (?D1 \<union> ?D2)" using hUV0(4) by (by100 blast)
+      hence "V0 = V0 \<inter> (top1_S2 - (?D1 \<union> ?D2))" by (by100 blast)
+      thus ?thesis using hV0_open_s unfolding subspace_topology_def by (by100 blast)
+    qed
+    moreover have "U0 \<noteq> {}" "V0 \<noteq> {}" "U0 \<inter> V0 = {}" "U0 \<union> V0 = top1_S2 - (?D1 \<union> ?D2)"
+      using hUV0(1,2,3,4) by (by100 blast)+
+    ultimately have "\<exists>U V. U \<in> ?TW \<and> V \<in> ?TW \<and> U \<noteq> {} \<and> V \<noteq> {} \<and> U \<inter> V = {}
+        \<and> U \<union> V = top1_S2 - (?D1 \<union> ?D2)" by (by100 blast)
+    thus False using hconn unfolding top1_connected_on_def by (by100 blast)
+  qed
   have "U0 \<in> top1_S2_topology" "V0 \<in> top1_S2_topology"
     using S2_two_component_open[OF hW_open hW_sub hUV0(1,2,3) hUV0(4) hUV0(5,6) hW_not_conn]
     by (by100 blast)+
