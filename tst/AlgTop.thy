@@ -590,13 +590,74 @@ proof -
         by (rule arcs_concatenation_is_arc[OF assms(1) hS2_haus hDa3_arc _ assms(11) assms(5)
                hDa3_e23_inter ha3_Da3 ha3_e23]) (rule \<open>Da3 \<subseteq> top1_S2\<close>)
       \<comment> \<open>(Da3 \<union> e23) \<union> Da2: shared endpoint a2. Result = D1 = arc from p to q.\<close>
+      have hDa3e23_ep: "top1_arc_endpoints_on (Da3 \<union> e23) (subspace_topology top1_S2 top1_S2_topology (Da3 \<union> e23)) = {p, a2}"
+      proof -
+        have hp_ne_a3: "p \<noteq> a3" using assms(37) by (by100 blast)
+        have ha3_ne_a2: "a3 \<noteq> a2" using assms(2) by (auto simp: card_insert_if split: if_splits)
+        have he23_ep': "top1_arc_endpoints_on e23 (subspace_topology top1_S2 top1_S2_topology e23) = {a3, a2}"
+          using assms(17) by (by100 blast)
+        show ?thesis
+          by (rule arc_concat_endpoints[OF assms(1) hS2_haus hDa3_arc \<open>Da3 \<subseteq> top1_S2\<close>
+                 assms(11) assms(5) hDa3_e23_inter ha3_Da3 ha3_e23 hDa3_ep he23_ep'
+                 hp_ne_a3 ha3_ne_a2])
+      qed
       have ha2_Da3e23: "a2 \<in> top1_arc_endpoints_on (Da3 \<union> e23) (subspace_topology top1_S2 top1_S2_topology (Da3 \<union> e23))"
-        sorry \<comment> \<open>arc\_concat\_endpoints gives endpoints {p, a2} for Da3 \<union> e23.\<close>
+        using hDa3e23_ep by (by100 blast)
       have ha2_Da2: "a2 \<in> top1_arc_endpoints_on Da2 (subspace_topology top1_S2 top1_S2_topology Da2)"
         using hDa2_ep by (by100 blast)
       have hDa3e23_Da2_inter: "(Da3 \<union> e23) \<inter> Da2 = {a2}"
-        sorry \<comment> \<open>Da3 \<inter> Da2 = {} (Da3 \<subseteq> e13, Da2 \<subseteq> e24, disjoint modulo vertices).
-           e23 \<inter> Da2 \<subseteq> e23 \<inter> e24 = {a2}. a2 \<in> Da2. So intersection = {a2}.\<close>
+      proof -
+        have "Da3 \<inter> Da2 = {}"
+        proof -
+          have "Da3 \<inter> Da2 \<subseteq> e13 \<inter> e24" using hDa3_sub hDa2_sub by (by100 blast)
+          hence "Da3 \<inter> Da2 \<subseteq> {a1,a2,a3,a4}" using assms(32) by (by100 blast)
+          have "a1 \<noteq> p" using assms(37) by (by100 blast)
+          moreover have "a1 \<notin> Da3" using \<open>a1 \<in> D1p\<close> he13_meet \<open>a1 \<noteq> p\<close> by (by100 blast)
+          moreover have "a3 \<notin> Da2"
+          proof -
+            have "a3 \<notin> e24"
+            proof
+              assume "a3 \<in> e24"
+              hence "a3 \<in> e24 \<inter> e23" using assms(17,25) by (by100 blast)
+              hence "a3 \<in> {a2}" using assms(34) by (by100 blast)
+              thus False using assms(2) by (auto simp: card_insert_if split: if_splits)
+            qed
+            thus ?thesis using hDa2_sub by (by100 blast)
+          qed
+          moreover have "a2 \<notin> Da3"
+          proof -
+            have "a2 \<notin> e13"
+            proof
+              assume "a2 \<in> e13"
+              hence "a2 \<in> e13 \<inter> e12" using assms(16,24) by (by100 blast)
+              hence "a2 \<in> {a1}" using assms(28) by (by100 blast)
+              thus False using assms(2) by (auto simp: card_insert_if split: if_splits)
+            qed
+            thus ?thesis using hDa3_sub by (by100 blast)
+          qed
+          moreover have "a4 \<notin> Da3"
+          proof -
+            have "a4 \<notin> e13"
+            proof
+              assume "a4 \<in> e13"
+              hence "a4 \<in> e13 \<inter> e41" using assms(19,26) by (by100 blast)
+              hence "a4 \<in> {a1}" using assms(31) by (by100 blast)
+              thus False using assms(2) by (auto simp: card_insert_if split: if_splits)
+            qed
+            thus ?thesis using hDa3_sub by (by100 blast)
+          qed
+          ultimately show ?thesis sorry \<comment> \<open>From Da3\<inter>Da2 \<subseteq> {a1,a2,a3,a4} + vertex exclusions.\<close>
+        qed
+        moreover have "e23 \<inter> Da2 = {a2}"
+        proof -
+          have "e23 \<inter> Da2 \<subseteq> e23 \<inter> e24" using hDa2_sub by (by100 blast)
+          hence "e23 \<inter> Da2 \<subseteq> {a2}" using assms(34) by (by100 blast)
+          moreover have "a2 \<in> e23 \<inter> Da2"
+            using \<open>a2 \<in> Da2\<close> assms(17,24) by (by100 blast)
+          ultimately show ?thesis by (by100 blast)
+        qed
+        ultimately show ?thesis by (by100 blast)
+      qed
       have hDa3e23_sub: "Da3 \<union> e23 \<subseteq> top1_S2" using \<open>Da3 \<subseteq> top1_S2\<close> assms(5) by (by100 blast)
       show ?thesis unfolding Un_assoc[symmetric]
         by (rule arcs_concatenation_is_arc[OF assms(1) hS2_haus hDa3_e23_arc hDa3e23_sub
