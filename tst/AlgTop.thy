@@ -314,16 +314,37 @@ proof -
   let ?D2 = "Dq4 \<union> e41 \<union> D1p"
   let ?U_loc = "top1_S2 - ?D1"
   let ?V_loc = "top1_S2 - ?D2"
-  \<comment> \<open>Step B: Construct \<alpha> = path x\<rightarrow>a1\<rightarrow>a4\<rightarrow>y along C edges (in U).
-     \<beta> = path y\<rightarrow>a3\<rightarrow>a2\<rightarrow>x along C edges (in V).
-     x = interior point of e12, y = interior point of e34.\<close>
-  \<comment> \<open>Step C-F: Apply Theorem 63.1, conclude generator, derive surj + inj.\<close>
+  \<comment> \<open>Step B: Get interior points x \<in> e12 and y \<in> e34.\<close>
+  obtain x e12a e12b where hx_e12: "x \<in> e12" and he12_eq: "e12 = e12a \<union> e12b"
+      and he12_meet: "e12a \<inter> e12b = {x}"
+      and he12a_arc: "top1_is_arc_on e12a (subspace_topology top1_S2 top1_S2_topology e12a)"
+      and he12b_arc: "top1_is_arc_on e12b (subspace_topology top1_S2 top1_S2_topology e12b)"
+    using arc_split_at_midpoint[OF assms(1) hS2_haus assms(4) assms(10)] by blast
+  obtain y e34a e34b where hy_e34: "y \<in> e34" and he34_eq: "e34 = e34a \<union> e34b"
+      and he34_meet: "e34a \<inter> e34b = {y}"
+      and he34a_arc: "top1_is_arc_on e34a (subspace_topology top1_S2 top1_S2_topology e34a)"
+      and he34b_arc: "top1_is_arc_on e34b (subspace_topology top1_S2 top1_S2_topology e34b)"
+    using arc_split_at_midpoint[OF assms(1) hS2_haus assms(6) assms(12)] by blast
+  \<comment> \<open>Step B2: Construct \<alpha> = path x\<rightarrow>a1\<rightarrow>a4\<rightarrow>y along C edges.
+     This is a path in U (avoids D1 = Da3 \<union> e23 \<union> Da2) because \<alpha> goes through
+     e12 (x to a1), e41 (a1 to a4), e34 (a4 to y) which don't intersect D1.
+     Construct \<beta> = path y\<rightarrow>a3\<rightarrow>a2\<rightarrow>x along C edges.
+     This is a path in V (avoids D2 = Dq4 \<union> e41 \<union> D1p) because \<beta> goes through
+     e34 (y to a3), e23 (a3 to a2), e12 (a2 to x) which don't intersect D2.\<close>
+  \<comment> \<open>Step C: Apply Theorem 63.1: \<alpha>*\<beta> nontrivial. \<alpha>*\<beta> \<in> C.
+     Step D: [\<alpha>*\<beta>] generates \<pi>_1(X) (infinite cyclic + 63.1(c)).
+     Step E: j_* surjective ([\<alpha>*\<beta>] \<in> C and generates \<pi>_1(X)).\<close>
   have hj_surj: "(top1_fundamental_group_induced_on C ?TC c0 ?X ?TX c0 (\<lambda>x. x))
       ` (top1_fundamental_group_carrier C ?TC c0)
       = top1_fundamental_group_carrier ?X ?TX c0"
-    sorry \<comment> \<open>Steps B-E of the textbook proof. Needs: construct \<alpha>, \<beta> along C edges,
-       apply Theorem\_63\_1, show [\<alpha>*\<beta>] generates \<pi>_1(X), derive surjectivity
-       from \<alpha>*\<beta> \<in> C + generator. See PLAN\_Lemma\_65\_1\_updated.md.\<close>
+    sorry \<comment> \<open>Steps B2-E. Needs:
+       (1) Construct \<alpha>, \<beta> as path concatenations along C edges
+       (2) Show \<alpha> \<in> U, \<beta> \<in> V (from K4 intersection conditions)
+       (3) Show U\<inter>V has two components with x, y separated (JCT on D1\<union>D2)
+       (4) Apply Theorem\_63\_1 \<Rightarrow> \<alpha>*\<beta> nontrivial
+       (5) [\<alpha>*\<beta>] generates \<pi>_1(X) (63.1(c) + infinite cyclic)
+       (6) \<alpha>*\<beta> \<in> C + generator \<Rightarrow> j_* surjective
+       (7) Basepoint change from x to c0\<close>
   have hj_inj: "inj_on (top1_fundamental_group_induced_on C ?TC c0 ?X ?TX c0 (\<lambda>x. x))
       (top1_fundamental_group_carrier C ?TC c0)"
     sorry \<comment> \<open>Step F: surjective hom Z \<rightarrow> Z is injective. Follows from hj\_surj.\<close>
