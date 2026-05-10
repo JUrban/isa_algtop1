@@ -2059,19 +2059,29 @@ proof -
     have hc0_S1: "\<exists>s0 \<in> top1_S1. f s0 = c0"
       using hf_img assms(40) by (by100 blast)
     obtain s0 where hs0: "s0 \<in> top1_S1" "f s0 = c0" using hc0_S1 by blast
+    have hS1_top': "is_topology_on top1_S1 top1_S1_topology"
+      using top1_S1_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
+    have hTC_top': "is_topology_on C ?TC"
+      by (rule subspace_topology_is_topology_on[OF hTopS2 hC_sub_S2])
     have h_pi1_S1_C: "top1_groups_isomorphic_on
         (top1_fundamental_group_carrier top1_S1 top1_S1_topology s0)
         (top1_fundamental_group_mul top1_S1 top1_S1_topology s0)
         (top1_fundamental_group_carrier C ?TC c0)
         (top1_fundamental_group_mul C ?TC c0)"
-      sorry \<comment> \<open>Corollary\_52\_5\_homeomorphism\_iso applied to hf\_homeo with s0 \<mapsto> c0.\<close>
+      by (rule Corollary_52_5_homeomorphism_iso[OF hS1_top' hTC_top' hf_homeo hs0(1) hs0(2)])
     \<comment> \<open>\<pi>_1(S1, s0) \<cong> \<pi>_1(S1, (1,0)) by basepoint change.\<close>
     have h_pi1_S1_bp: "top1_groups_isomorphic_on
         (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1::real, 0::real))
         (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))
         (top1_fundamental_group_carrier top1_S1 top1_S1_topology s0)
         (top1_fundamental_group_mul top1_S1 top1_S1_topology s0)"
-      sorry \<comment> \<open>basepoint\_change\_iso\_via\_path. S1 path-connected \<Rightarrow> \<exists>path (1,0) \<rightarrow> s0.\<close>
+    proof -
+      have h10_S1: "(1::real, 0::real) \<in> top1_S1" unfolding top1_S1_def by (by100 simp)
+      obtain \<gamma> where "top1_is_path_on top1_S1 top1_S1_topology (1, 0) s0 \<gamma>"
+        using S1_path_connected h10_S1 hs0(1) unfolding top1_path_connected_on_def
+        by (by100 blast)
+      thus ?thesis by (rule basepoint_change_iso_via_path[OF hS1_top'])
+    qed
     \<comment> \<open>\<pi>_1(S1, (1,0)) \<cong> Z.\<close>
     have h_pi1_S1_Z: "top1_groups_isomorphic_on
         (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
