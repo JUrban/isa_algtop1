@@ -1,6 +1,32 @@
 theory AlgTop
   imports "AlgTopC.AlgTopCached"
 begin
+text \<open>When X = U \<union> V with U, V simply connected and U \<inter> V having two components,
+  and \<alpha>*\<beta> is nontrivial (from 63.1), then [\<alpha>*\<beta>] generates \<pi>_1(X).
+  This combines loop\_subdivision\_UV, simply connected contraction,
+  and Theorem\_63\_1\_c\_subgroups\_trivial.\<close>
+lemma generator_from_63_1_simply_connected:
+  assumes "is_topology_on X TX"
+      and "openin_on X TX U" and "openin_on X TX V" and "U \<union> V = X"
+      and "U \<inter> V = A \<union> B" and "A \<inter> B = {}"
+      and "openin_on X TX A" and "openin_on X TX B"
+      and "a \<in> A" and "b \<in> B"
+      and "top1_is_path_on U (subspace_topology X TX U) a b \<alpha>"
+      and "top1_is_path_on V (subspace_topology X TX V) b a \<beta>"
+      and "\<not> top1_path_homotopic_on X TX a a (top1_path_product \<alpha> \<beta>) (top1_constant_path a)"
+      and "top1_simply_connected_on U (subspace_topology X TX U)"
+      and "top1_simply_connected_on V (subspace_topology X TX V)"
+  shows "\<forall>f. top1_is_loop_on X TX a f \<longrightarrow>
+    (\<exists>n::nat. top1_path_homotopic_on X TX a a f (top1_path_power (top1_path_product \<alpha> \<beta>) a n)
+      \<or> top1_path_homotopic_on X TX a a f
+           (top1_path_power (top1_path_reverse (top1_path_product \<alpha> \<beta>)) a n))"
+  sorry \<comment> \<open>Proof: By loop\_subdivision\_UV, any loop f decomposes into U/V pieces.
+     Each U-piece is nulhomotopic in U (simply connected), similarly for V.
+     After contraction, only A\<leftrightarrow>B crossings remain.
+     By Theorem\_63\_1\_c\_subgroups\_trivial: A\<rightarrow>A crossings are trivial.
+     So every loop reduces to a power of [\<alpha>*\<beta>].
+     This is a version of SvK for disconnected U\<inter>V with simply connected regions.\<close>
+
 text \<open>S2 minus an arc is simply connected. Standard fact:
   S2-{p} is homeomorphic to R2 via stereographic projection, and R2 minus
   a compact arc is simply connected.\<close>
@@ -1016,17 +1042,45 @@ proof -
      So [\<alpha>*\<beta>] generates \<pi>_1(X). Combined with \<pi>_1(X) \<cong> Z: [\<alpha>*\<beta>] = \<plusminus>gen.\<close>
   \<comment> \<open>Step 4: j_* surjective. \<alpha>*\<beta> \<in> C, [\<alpha>*\<beta>] generates \<pi>_1(X),
      [\<alpha>*\<beta>]_C generates \<pi>_1(C). So j_* maps generator to generator.\<close>
+  \<comment> \<open>Key algebraic consequence of 63.1(c) + \<pi>_1(X) \<cong> Z:
+     All 63.1 A-pairs (loops through same component A) are trivial in \<pi>_1(X).
+
+     Proof: [γ*δ] = gen^j. If j \<noteq> 0, take m=j, k=n in 63.1(c):
+     (α*β)^j ≃ (γ*δ)^n (since gen^{nj} = gen^{jn}). Then 63.1(c) gives j=0. ⊥.
+     So j = 0, i.e., [γ*δ] = 0.\<close>
+  \<comment> \<open>Combined with hU\_sc, hV\_sc, loop\_subdivision\_UV, and the analogous
+     argument for B-crossings: every loop in X at x is a power of [\<alpha>*\<beta>].
+     Hence [\<alpha>*\<beta>] generates \<pi>_1(X). Since \<pi>_1(X) \<cong> Z: [\<alpha>*\<beta>] = \<plusminus>gen.
+
+     Then: \<alpha>*\<beta> \<in> C, [\<alpha>*\<beta>]_C generates \<pi>_1(C) \<cong> Z (traverses C once),
+     j_*(generator of \<pi>_1(C)) = generator of \<pi>_1(X) \<Rightarrow> surjective.
+     Surjective hom Z \<rightarrow> Z \<Rightarrow> bijective \<Rightarrow> injective.
+
+     Formal proof requires: loop\_subdivision\_UV decomposition +
+     contraction of U/V-pieces in simply connected regions +
+     showing only A\<leftrightarrow>B crossings survive + basepoint change x \<rightarrow> c0.
+     These are purely topological manipulations using available infrastructure.\<close>
+  \<comment> \<open>Apply generator\_from\_63\_1\_simply\_connected: [\<alpha>*\<beta>] generates \<pi>_1(X, x).\<close>
+  have hU_sc_X: "top1_simply_connected_on ?U_loc (subspace_topology ?X ?TX ?U_loc)"
+    sorry \<comment> \<open>From hU\_sc + subspace topology transfer (U\_loc \<subseteq> X).\<close>
+  have hV_sc_X: "top1_simply_connected_on ?V_loc (subspace_topology ?X ?TX ?V_loc)"
+    sorry \<comment> \<open>Same for V\_loc.\<close>
+  have h\<alpha>\<beta>_generates: "\<forall>f. top1_is_loop_on ?X ?TX x f \<longrightarrow>
+    (\<exists>n::nat. top1_path_homotopic_on ?X ?TX x x f
+        (top1_path_power (top1_path_product \<alpha> \<beta>) x n)
+      \<or> top1_path_homotopic_on ?X ?TX x x f
+           (top1_path_power (top1_path_reverse (top1_path_product \<alpha> \<beta>)) x n))"
+    by (rule generator_from_63_1_simply_connected[OF hTX hU_open_X hV_open_X hUV_union
+           hAB(1,2,3,4,5,6) h\<alpha>_U h\<beta>_V h\<alpha>\<beta>_nontrivial hU_sc_X hV_sc_X])
+  \<comment> \<open>[\<alpha>*\<beta>] generates \<pi>_1(X, x). Since \<alpha>*\<beta> \<in> C: j_*(x) is surjective at basepoint x.
+     Basepoint change to c0. Then surjective hom Z \<rightarrow> Z \<Rightarrow> injective.\<close>
   have hj_surj: "(top1_fundamental_group_induced_on C ?TC c0 ?X ?TX c0 (\<lambda>x. x))
       ` (top1_fundamental_group_carrier C ?TC c0)
       = top1_fundamental_group_carrier ?X ?TX c0"
-    sorry \<comment> \<open>From hU\_sc + hV\_sc + loop\_subdivision\_UV + Theorem\_63\_1\_c + h\<alpha>\<beta>\_in\_C.
-       All key ingredients now available. Remaining: connect the pieces formally.
-       Needs: loop subdivision for disconnected U\<inter>V, contraction in simply connected
-       regions, basepoint change x \<rightarrow> c0.\<close>
-  \<comment> \<open>Step 5: j_* injective. Surjective hom Z \<rightarrow> Z is injective.\<close>
+    sorry \<comment> \<open>From h\<alpha>\<beta>\_generates + h\<alpha>\<beta>\_in\_C + inclusion\_induced\_class + basepoint change x \<rightarrow> c0.\<close>
   have hj_inj: "inj_on (top1_fundamental_group_induced_on C ?TC c0 ?X ?TX c0 (\<lambda>x. x))
       (top1_fundamental_group_carrier C ?TC c0)"
-    sorry \<comment> \<open>From hj\_surj + \<pi>_1(C) \<cong> Z + \<pi>_1(X) \<cong> Z. Elementary algebra.\<close>
+    sorry \<comment> \<open>From hj\_surj: surjective hom Z \<rightarrow> Z is injective.\<close>
   \<comment> \<open>Step 5: Combine homomorphism + injective + surjective = isomorphism.\<close>
   have hj_bij: "bij_betw (top1_fundamental_group_induced_on C ?TC c0 ?X ?TX c0 (\<lambda>x. x))
       (top1_fundamental_group_carrier C ?TC c0)
