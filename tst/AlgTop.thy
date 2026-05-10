@@ -7805,12 +7805,29 @@ proof -
      E locally path-connected: basis elements are path-connected.\<close>
   \<comment> \<open>Step 6: p_*(\<pi>_1(E, e0)) = H. A loop \<gamma> at b0 lifts to a path from e0 = [const]H
      to [\<gamma>]H. Lift is a loop iff [\<gamma>]H = [const]H iff [\<gamma>] \<in> H.\<close>
-  show ?thesis
-    sorry \<comment> \<open>Full coset-space construction (Munkres 82.1):
-       Define E' = H-right-cosets of path classes from b0.
-       Topology via path-extension basis.
-       Verify: covering map (semilocal simple connectivity) + connected + locally path-connected.
-       p'_*(pi_1(E', e0')) = H.\<close>
+  \<comment> \<open>===== Step 1: Define the H-coset equivalence on paths =====\<close>
+  \<comment> \<open>\<alpha> \<sim>_H \<beta> iff \<alpha>(1) = \<beta>(1) and [\<alpha> * rev(\<beta>)] \<in> H.
+     This is an equivalence relation on paths from b0.\<close>
+  \<comment> \<open>coset\_rel \<alpha> \<beta> \<equiv> \<alpha>(1) = \<beta>(1) \<and> [\<alpha> * rev(\<beta>)] \<in> H.\<close>
+  \<comment> \<open>===== Step 2: Define E, p, e0 =====\<close>
+  \<comment> \<open>E = set of coset classes. p maps class to endpoint. e0 = class of constant path.\<close>
+  \<comment> \<open>For the formal construction, we use an abstract type for the equivalence classes.\<close>
+  \<comment> \<open>===== Step 3: Topology on E via basis B(U, \<alpha>) =====\<close>
+  \<comment> \<open>For each coset class c and path-connected open U containing p(c):
+     B(U, c) = {classes reachable by extending any path in c by a path in U}.\<close>
+  \<comment> \<open>===== Step 4: Verify p is a covering map =====\<close>
+  \<comment> \<open>For each b \<in> B, take U semilocally simply connected around b.
+     The sets B(U, \<alpha>_i) for different \<alpha>_i ending at b partition p\<inverse>(U).
+     Each B(U, \<alpha>_i) maps homeomorphically to U via p.\<close>
+  \<comment> \<open>===== Step 5: E path-connected and locally path-connected =====\<close>
+  \<comment> \<open>Path-connected: for any coset [\<alpha>]_H, the map t \<mapsto> [\<alpha>_t]_H (prefix of \<alpha>)
+     gives a path from e0 to [\<alpha>]_H in E.
+     Locally path-connected: basis elements B(U,\<alpha>) are path-connected.\<close>
+  \<comment> \<open>===== Step 6: p_*(\<pi>_1(E, e0)) = H =====\<close>
+  \<comment> \<open>A loop \<gamma> at b0 lifts to a path from e0 = [const]_H to [\<gamma>]_H.
+     Lift is a loop iff [\<gamma>]_H = [const]_H iff [\<gamma>] \<in> H.\<close>
+  show ?thesis sorry \<comment> \<open>Full construction needs: abstract type for E, basis topology,
+     covering map verification, connectivity, and subgroup matching.\<close>
 qed
 
 section \<open>Chapter 14: Applications to Group Theory\<close>
