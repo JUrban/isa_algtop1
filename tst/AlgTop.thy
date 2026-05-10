@@ -1113,6 +1113,31 @@ lemma convex_hull_compact:
       \<and> x = (\<Sum>i<n. coeffs i * vx i) \<and> y = (\<Sum>i<n. coeffs i * vy i)}"
   using convex_hull_compact_general[of n vx vy] assms by (by100 linarith)
 
+\<comment> \<open>Strict polygonal quotient: includes "no extra identifications" on the boundary.
+   The original top1\_quotient\_of\_scheme\_on only specifies WHICH identifications happen
+   (same-label edges + interior singletons) but doesn't exclude additional ones.
+   This strict version adds: q is injective on each edge interior,
+   and cross-edge identifications only happen for same-label edges.\<close>
+definition top1_is_polygonal_quotient_strict_on :: "'a set \<Rightarrow> 'a set set \<Rightarrow> bool" where
+  "top1_is_polygonal_quotient_strict_on X TX \<longleftrightarrow>
+     top1_is_polygonal_quotient_on X TX \<and>
+     (\<exists>scheme :: (nat \<times> bool) list. top1_quotient_of_scheme_on X TX scheme \<and>
+      (\<exists>P q (vx::nat\<Rightarrow>real) (vy::nat\<Rightarrow>real).
+        top1_is_polygonal_region_on P (length scheme)
+      \<and> top1_quotient_map_on P
+          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) X TX q
+      \<and> (\<forall>i<length scheme. (vx i, vy i) \<in> P)
+      \<comment> \<open>No extra identifications: q(a) = q(b) for boundary points
+         iff they're on same-label edges at corresponding parameters (or equal).\<close>
+      \<and> (\<forall>i<length scheme. \<forall>j<length scheme. \<forall>t\<in>I_set. \<forall>s\<in>I_set.
+            q ((1-t) * vx i + t * vx (Suc i mod length scheme),
+               (1-t) * vy i + t * vy (Suc i mod length scheme))
+          = q ((1-s) * vx j + s * vx (Suc j mod length scheme),
+               (1-s) * vy j + s * vy (Suc j mod length scheme))
+          \<longrightarrow> (i = j \<and> t = s)
+            \<or> (fst (scheme!i) = fst (scheme!j) \<and>
+               (if snd (scheme!i) = snd (scheme!j) then s = t else s = 1 - t)))))"
+
 \<comment> \<open>Richer extraction from scheme: gives vertices, edge identification, interior singleton fibers.\<close>
 lemma quotient_of_scheme_extract_full:
   assumes "top1_quotient_of_scheme_on X TX scheme"
