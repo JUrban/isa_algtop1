@@ -707,14 +707,93 @@ proof -
       have he41_ep': "top1_arc_endpoints_on e41 (subspace_topology top1_S2 top1_S2_topology e41) = {a4, a1}"
         using assms(19) by (by100 blast)
       have hDq4e41_ep: "top1_arc_endpoints_on (Dq4 \<union> e41) (subspace_topology top1_S2 top1_S2_topology (Dq4 \<union> e41)) = {q, a1}"
-        sorry \<comment> \<open>arc\_concat\_endpoints for Dq4 \<union> e41. Type/order issue to debug.\<close>
+      proof (rule arc_concat_endpoints[where c=a4])
+        show "is_topology_on_strict top1_S2 top1_S2_topology" by (rule assms(1))
+        show "is_hausdorff_on top1_S2 top1_S2_topology" by (rule hS2_haus)
+        show "top1_is_arc_on Dq4 (subspace_topology top1_S2 top1_S2_topology Dq4)" by (rule hDq4_arc)
+        show "Dq4 \<subseteq> top1_S2" by (rule \<open>Dq4 \<subseteq> top1_S2\<close>)
+        show "top1_is_arc_on e41 (subspace_topology top1_S2 top1_S2_topology e41)" by (rule assms(13))
+        show "e41 \<subseteq> top1_S2" by (rule assms(7))
+        show "Dq4 \<inter> e41 = {a4}" by (rule hDq4_e41_inter)
+        show "a4 \<in> top1_arc_endpoints_on Dq4 (subspace_topology top1_S2 top1_S2_topology Dq4)"
+          by (rule ha4_Dq4)
+        show "a4 \<in> top1_arc_endpoints_on e41 (subspace_topology top1_S2 top1_S2_topology e41)"
+          by (rule ha4_e41)
+        show "top1_arc_endpoints_on Dq4 (subspace_topology top1_S2 top1_S2_topology Dq4) = {q, a4}"
+          by (rule hDq4_ep)
+        show "top1_arc_endpoints_on e41 (subspace_topology top1_S2 top1_S2_topology e41) = {a4, a1}"
+          by (rule he41_ep')
+        show "q \<noteq> a4" using ha4_ne_q by (by100 simp)
+        show "a4 \<noteq> a1" by (rule ha4_ne_a1)
+      qed
       \<comment> \<open>Step 3: (Dq4 \<union> e41) \<union> D1p is an arc (shared endpoint a1).\<close>
       have ha1_Dq4e41: "a1 \<in> top1_arc_endpoints_on (Dq4 \<union> e41) (subspace_topology top1_S2 top1_S2_topology (Dq4 \<union> e41))"
         using hDq4e41_ep by (by100 blast)
       have ha1_D1p: "a1 \<in> top1_arc_endpoints_on D1p (subspace_topology top1_S2 top1_S2_topology D1p)"
         using hD1p_ep by (by100 blast)
       have hDq4e41_D1p_inter: "(Dq4 \<union> e41) \<inter> D1p = {a1}"
-        sorry \<comment> \<open>Same style as Da3e23\_Da2\_inter: Dq4\<inter>D1p={}, e41\<inter>D1p={a1}.\<close>
+      proof -
+        have "Dq4 \<inter> D1p = {}"
+        proof (rule equals0I)
+          fix z assume "z \<in> Dq4 \<inter> D1p"
+          hence "z \<in> e24 \<inter> e13" using hDq4_sub hD1p_sub by (by100 blast)
+          hence "z \<in> {a1,a2,a3,a4}" using assms(32) by (by100 blast)
+          hence "z = a1 \<or> z = a2 \<or> z = a3 \<or> z = a4" by (by100 blast)
+          moreover have "a1 \<notin> Dq4"
+          proof -
+            have "a1 \<notin> e24"
+            proof
+              assume "a1 \<in> e24"
+              hence "a1 \<in> e24 \<inter> e41" using assms(19,27) by (by100 blast)
+              hence "a1 \<in> {a4}" using assms(36) by (by100 blast)
+              thus False using assms(2) by (auto simp: card_insert_if split: if_splits)
+            qed
+            thus ?thesis using hDq4_sub by (by100 blast)
+          qed
+          moreover have "a2 \<notin> D1p"
+          proof -
+            have "a2 \<notin> e13"
+            proof
+              assume "a2 \<in> e13"
+              hence "a2 \<in> e13 \<inter> e12" using assms(16,24) by (by100 blast)
+              hence "a2 \<in> {a1}" using assms(28) by (by100 blast)
+              thus False using assms(2) by (auto simp: card_insert_if split: if_splits)
+            qed
+            thus ?thesis using hD1p_sub by (by100 blast)
+          qed
+          moreover have "a3 \<notin> Dq4"
+          proof -
+            have "a3 \<notin> e24"
+            proof
+              assume "a3 \<in> e24"
+              hence "a3 \<in> e24 \<inter> e23" using assms(17,25) by (by100 blast)
+              hence "a3 \<in> {a2}" using assms(34) by (by100 blast)
+              thus False using assms(2) by (auto simp: card_insert_if split: if_splits)
+            qed
+            thus ?thesis using hDq4_sub by (by100 blast)
+          qed
+          moreover have "a4 \<notin> D1p"
+          proof -
+            have "a4 \<notin> e13"
+            proof
+              assume "a4 \<in> e13"
+              hence "a4 \<in> e13 \<inter> e41" using assms(19,26) by (by100 blast)
+              hence "a4 \<in> {a1}" using assms(31) by (by100 blast)
+              thus False using assms(2) by (auto simp: card_insert_if split: if_splits)
+            qed
+            thus ?thesis using hD1p_sub by (by100 blast)
+          qed
+          ultimately show False using \<open>z \<in> Dq4 \<inter> D1p\<close> by (by100 blast)
+        qed
+        moreover have "e41 \<inter> D1p = {a1}"
+        proof -
+          have "e41 \<inter> D1p \<subseteq> e41 \<inter> e13" using hD1p_sub by (by100 blast)
+          hence "e41 \<inter> D1p \<subseteq> {a1}" using assms(31) by (by100 blast)
+          moreover have "a1 \<in> e41 \<inter> D1p" using \<open>a1 \<in> D1p\<close> assms(19,27) by (by100 blast)
+          ultimately show ?thesis by (by100 blast)
+        qed
+        ultimately show ?thesis by (by100 blast)
+      qed
       have hDq4e41_sub: "Dq4 \<union> e41 \<subseteq> top1_S2" using \<open>Dq4 \<subseteq> top1_S2\<close> assms(7) by (by100 blast)
       show ?thesis unfolding Un_assoc[symmetric]
         by (rule arcs_concatenation_is_arc[OF assms(1) hS2_haus hDq4_e41_arc hDq4e41_sub
