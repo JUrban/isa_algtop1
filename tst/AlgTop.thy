@@ -500,20 +500,71 @@ proof -
       using Suc.hyps by blast
     \<comment> \<open>Now lift gen from (a, 2*k'*d) to (a, 2*k'*d + 2*d) = (a, 2*(k'+1)*d).\<close>
     \<comment> \<open>The lift of gen from (a, 2*k'*d) is T1^{k'*d} applied to gen\_lift.\<close>
+    \<comment> \<open>Lift of gen from (a, 2*k'*d): exists by Lemma\_54\_1, and its endpoint
+       is (a, 2*k'*d + 2*d) because T1^{k'*d} applied to gen\_lift gives
+       a lift from (a, 2*k'*d), and by covering\_lift\_unique\_connected this
+       must equal the Lemma\_54\_1 lift.\<close>
+    \<comment> \<open>First: (a, 2*k'*d) \<in> E (since a \<in> U, even coordinate).\<close>
+    have hstart_E: "(a, 2 * int k' * d) \<in> E" unfolding E_def using ha_U by (by100 simp)
+    have hstart_proj: "p0 (a, 2 * int k' * d) = a" unfolding p0_def by (by100 simp)
+    \<comment> \<open>By Lemma\_54\_1: there exists a lift of gen from (a, 2*k'*d).\<close>
     obtain gen_lift_shifted where
-        hgls: "top1_is_path_on E TE (a, 2 * int k' * d) (a, 2 * int k' * d + 2 * d) gen_lift_shifted"
-        "\<forall>s\<in>I_set. p0 (gen_lift_shifted s) = gen s"
-      sorry \<comment> \<open>Lift of gen from (a, 2*k'*d). Uses T1 continuity + covering\_lift\_unique\_connected.\<close>
+        hgls_path: "top1_is_path_on E TE (a, 2 * int k' * d) (gen_lift_shifted 1) gen_lift_shifted"
+        and hgls_proj: "\<forall>s\<in>I_set. p0 (gen_lift_shifted s) = gen s"
+      using Lemma_54_1_path_lifting[OF hcov hstart_E hstart_proj hgen_path assms(1) hTE]
+      by blast
+    \<comment> \<open>The endpoint gen\_lift\_shifted(1) is in the fiber at a: some (a, 2*d').\<close>
+    \<comment> \<open>Now: define shifted\_gen\_lift(s) = T1^{k'*d}(gen\_lift(s)).
+       This is a path from T1^{k'*d}(a, 0) = (a, 2*k'*d) to T1^{k'*d}(a, 2d) = (a, 2d + 2*k'*d).
+       It projects to gen (since p0 \<circ> T1 = p0).
+       By covering\_lift\_unique\_connected: gen\_lift\_shifted = shifted\_gen\_lift.
+       So gen\_lift\_shifted(1) = (a, 2d + 2*k'*d) = (a, 2*(k'+1)*d)... wait, that's 2*int(k')*d + 2*d.\<close>
+    have hgls_endpoint: "gen_lift_shifted 1 = (a, 2 * int k' * d + 2 * d)"
+      sorry \<comment> \<open>Covering lift uniqueness: the T1-shifted gen\_lift projects to gen and
+         starts at (a, 2*k'*d), same as gen\_lift\_shifted. So they're equal.
+         T1-shifted gen\_lift ends at (a, 2d + 2*k'*d).\<close>
+    have hgls: "top1_is_path_on E TE (a, 2 * int k' * d) (a, 2 * int k' * d + 2 * d) gen_lift_shifted"
+      using hgls_path hgls_endpoint by simp
     \<comment> \<open>Concatenate: gen^{k'+1} = gen^{k'} * gen.\<close>
     have h_endpoint_eq: "2 * int k' * d + 2 * d = 2 * int (Suc k') * d"
       by (simp add: algebra_simps)
     define ftk_suc where "ftk_suc = top1_path_product ftk' gen_lift_shifted"
     have "top1_is_path_on E TE (a, 0) (a, 2 * int (Suc k') * d) ftk_suc"
-      sorry \<comment> \<open>Path product of ftk' (a,0)\<rightarrow>(a,2k'd) and gen\_lift\_shifted (a,2k'd)\<rightarrow>(a,2(k'+1)d).\<close>
+    proof -
+      have "top1_is_path_on E TE (a, 0) (a, 2 * int k' * d + 2 * d)
+          (top1_path_product ftk' gen_lift_shifted)"
+        by (rule top1_path_product_is_path[OF hTE hftk'(1) hgls])
+      thus ?thesis unfolding ftk_suc_def using h_endpoint_eq by simp
+    qed
     moreover have "\<forall>s\<in>I_set. p0 (ftk_suc s) = top1_path_power gen a (Suc k') s"
-      sorry \<comment> \<open>Projection: p0(ftk\_suc s) = (gen^{k'} * gen)(s) = gen^{Suc k'}(s).
-         Uses p0 \<circ> path\_product = path\_product (p0 \<circ> ftk') (p0 \<circ> gen\_lift\_shifted)
-         = path\_product gen^{k'} gen = gen^{Suc k'}.\<close>
+    proof (intro ballI)
+      fix s :: real assume hs: "s \<in> I_set"
+      \<comment> \<open>p0(ftk\_suc s) = fst(path\_product ftk' gen\_lift\_shifted s)
+         = path\_product (fst \<circ> ftk') (fst \<circ> gen\_lift\_shifted) s
+         = path\_product (gen^{k'}) gen s = gen^{Suc k'} s.\<close>
+      have "p0 (ftk_suc s) = p0 (top1_path_product ftk' gen_lift_shifted s)"
+        unfolding ftk_suc_def by simp
+      also have "... = (if s \<le> 1/2 then p0 (ftk' (2*s)) else p0 (gen_lift_shifted (2*s - 1)))"
+        unfolding top1_path_product_def p0_def by (by100 simp)
+      also have "... = (if s \<le> 1/2 then top1_path_power gen a k' (2*s)
+          else gen (2*s - 1))"
+      proof -
+        have h1: "s \<le> 1/2 \<Longrightarrow> 2*s \<in> I_set"
+          using hs unfolding top1_unit_interval_def by (by100 simp)
+        have h2: "\<not>(s \<le> 1/2) \<Longrightarrow> 2*s - 1 \<in> I_set"
+          using hs unfolding top1_unit_interval_def by (by100 simp)
+        show ?thesis using hftk'(2) hgls_proj h1 h2 by (by100 simp)
+      qed
+      also have "... = top1_path_product (top1_path_power gen a k') gen s"
+        unfolding top1_path_product_def by simp
+      \<comment> \<open>path\_power gen a (Suc k') = gen * gen^{k'}, but the IH gave gen^{k'} * gen.
+         Need to swap: gen^{k'} * gen = gen * gen^{k'} (commutativity of loop powers).\<close>
+      also have "... = top1_path_power gen a (Suc k') s"
+        sorry \<comment> \<open>gen^{k'} * gen = gen * gen^{k'} = gen^{Suc k'}.
+           path\_power (Suc k') = gen * gen^{k'} by definition.
+           But we have gen^{k'} * gen. Need path\_power commutation lemma.\<close>
+      finally show "p0 (ftk_suc s) = top1_path_power gen a (Suc k') s" .
+    qed
     ultimately show ?case by blast
   qed
   \<comment> \<open>Now: gen^k \<simeq> \<alpha>*\<beta> (from hk, positive case). Their lifts from (a,0)
