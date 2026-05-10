@@ -2045,18 +2045,115 @@ proof -
       (top1_fundamental_group_carrier C ?TC c0)
       (top1_fundamental_group_mul C ?TC c0)
       top1_Z_group top1_Z_mul"
-    sorry \<comment> \<open>C is SCC (hC\_SCC) \<Rightarrow> \<exists>h. homeomorphism C \<cong> S1.
-       By Corollary\_52\_5\_homeomorphism\_iso: \<pi>_1(C, c0) \<cong> \<pi>_1(S1, h(c0)).
-       By basepoint\_change\_iso: \<pi>_1(S1, h(c0)) \<cong> \<pi>_1(S1, (1,0)).
-       By Theorem\_54\_5\_iso: \<pi>_1(S1, (1,0)) \<cong> Z.\<close>
+  proof -
+    \<comment> \<open>C is SCC: \<exists>f. continuous bijection S1 \<rightarrow> C.\<close>
+    obtain f where hf_cont: "top1_continuous_map_on top1_S1 top1_S1_topology top1_S2 top1_S2_topology f"
+        and hf_inj: "inj_on f top1_S1" and hf_img: "f ` top1_S1 = C"
+      sorry \<comment> \<open>From hC\_SCC. The SCC definition gives continuous injection S1 \<rightarrow> X with image C.
+         Need to lift from subspace topology to S2 topology.\<close>
+    \<comment> \<open>f is a homeomorphism S1 \<rightarrow> C (compact \<rightarrow> Hausdorff, Theorem\_26\_6).\<close>
+    have hf_homeo: "top1_homeomorphism_on top1_S1 top1_S1_topology C ?TC f"
+      sorry \<comment> \<open>S1 compact, C \<subseteq> S2 Hausdorff, f continuous bijection.
+         By Theorem\_26\_6: f is homeomorphism. Need subspace topology.\<close>
+    \<comment> \<open>\<pi>_1(S1, f\<inverse>(c0)) \<cong> \<pi>_1(C, c0).\<close>
+    have hc0_S1: "\<exists>s0 \<in> top1_S1. f s0 = c0"
+      using hf_img assms(40) by (by100 blast)
+    obtain s0 where hs0: "s0 \<in> top1_S1" "f s0 = c0" using hc0_S1 by blast
+    have h_pi1_S1_C: "top1_groups_isomorphic_on
+        (top1_fundamental_group_carrier top1_S1 top1_S1_topology s0)
+        (top1_fundamental_group_mul top1_S1 top1_S1_topology s0)
+        (top1_fundamental_group_carrier C ?TC c0)
+        (top1_fundamental_group_mul C ?TC c0)"
+      sorry \<comment> \<open>Corollary\_52\_5\_homeomorphism\_iso applied to hf\_homeo with s0 \<mapsto> c0.\<close>
+    \<comment> \<open>\<pi>_1(S1, s0) \<cong> \<pi>_1(S1, (1,0)) by basepoint change.\<close>
+    have h_pi1_S1_bp: "top1_groups_isomorphic_on
+        (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1::real, 0::real))
+        (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))
+        (top1_fundamental_group_carrier top1_S1 top1_S1_topology s0)
+        (top1_fundamental_group_mul top1_S1 top1_S1_topology s0)"
+      sorry \<comment> \<open>basepoint\_change\_iso\_via\_path. S1 path-connected \<Rightarrow> \<exists>path (1,0) \<rightarrow> s0.\<close>
+    \<comment> \<open>\<pi>_1(S1, (1,0)) \<cong> Z.\<close>
+    have h_pi1_S1_Z: "top1_groups_isomorphic_on
+        (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
+        (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))
+        top1_Z_group top1_Z_mul"
+      by (rule Theorem_54_5_iso)
+    \<comment> \<open>Chain: \<pi>_1(C,c0) \<cong> \<pi>_1(S1,s0) \<cong> \<pi>_1(S1,(1,0)) \<cong> Z.\<close>
+    have hTC_top: "is_topology_on C ?TC"
+      by (rule subspace_topology_is_topology_on[OF hTopS2 hC_sub_S2])
+    have hS1_top: "is_topology_on top1_S1 top1_S1_topology"
+      sorry \<comment> \<open>S1 is a topological space.\<close>
+    have h_pi1_S1_C_sym: "top1_groups_isomorphic_on
+        (top1_fundamental_group_carrier C ?TC c0)
+        (top1_fundamental_group_mul C ?TC c0)
+        (top1_fundamental_group_carrier top1_S1 top1_S1_topology s0)
+        (top1_fundamental_group_mul top1_S1 top1_S1_topology s0)"
+    proof (rule top1_groups_isomorphic_on_sym[OF h_pi1_S1_C])
+      show "top1_is_group_on (top1_fundamental_group_carrier top1_S1 top1_S1_topology s0)
+          (top1_fundamental_group_mul top1_S1 top1_S1_topology s0)
+          (top1_fundamental_group_id top1_S1 top1_S1_topology s0)
+          (top1_fundamental_group_invg top1_S1 top1_S1_topology s0)"
+        by (rule top1_fundamental_group_is_group[OF hS1_top hs0(1)])
+      show "top1_is_group_on (top1_fundamental_group_carrier C ?TC c0)
+          (top1_fundamental_group_mul C ?TC c0)
+          (top1_fundamental_group_id C ?TC c0)
+          (top1_fundamental_group_invg C ?TC c0)"
+      proof -
+        have "c0 \<in> C" using assms(40) by (by100 blast)
+        thus ?thesis by (rule top1_fundamental_group_is_group[OF hTC_top])
+      qed
+    qed
+    have h_pi1_S1_bp_sym: "top1_groups_isomorphic_on
+        (top1_fundamental_group_carrier top1_S1 top1_S1_topology s0)
+        (top1_fundamental_group_mul top1_S1 top1_S1_topology s0)
+        (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
+        (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))"
+    proof (rule top1_groups_isomorphic_on_sym[OF h_pi1_S1_bp])
+      show "top1_is_group_on (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1::real, 0::real))
+          (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))
+          (top1_fundamental_group_id top1_S1 top1_S1_topology (1, 0))
+          (top1_fundamental_group_invg top1_S1 top1_S1_topology (1, 0))"
+        sorry \<comment> \<open>(1,0) \<in> S1 + S1 topology.\<close>
+      show "top1_is_group_on (top1_fundamental_group_carrier top1_S1 top1_S1_topology s0)
+          (top1_fundamental_group_mul top1_S1 top1_S1_topology s0)
+          (top1_fundamental_group_id top1_S1 top1_S1_topology s0)
+          (top1_fundamental_group_invg top1_S1 top1_S1_topology s0)"
+        by (rule top1_fundamental_group_is_group[OF hS1_top hs0(1)])
+    qed
+    have h1: "top1_groups_isomorphic_on
+        (top1_fundamental_group_carrier C ?TC c0)
+        (top1_fundamental_group_mul C ?TC c0)
+        (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
+        (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))"
+      by (rule groups_isomorphic_trans_fwd[OF h_pi1_S1_C_sym h_pi1_S1_bp_sym])
+    show ?thesis
+      by (rule groups_isomorphic_trans_fwd[OF h1 h_pi1_S1_Z])
+  qed
   \<comment> \<open>Step 5b: \<pi>_1(X, c0) \<cong> Z.
      X = S2-\{p,q\}. By pi1\_S2\_minus\_two\_points\_infinite\_cyclic.\<close>
   have hX_pi1_Z: "top1_groups_isomorphic_on
       (top1_fundamental_group_carrier ?X ?TX c0)
       (top1_fundamental_group_mul ?X ?TX c0)
       top1_Z_group top1_Z_mul"
-    sorry \<comment> \<open>From hX\_inf\_cyc: \<pi>_1(X, c0) has generator gen with every loop = gen^n.
-       This gives a well-defined bijective hom \<pi>_1(X, c0) \<rightarrow> Z: gen^n \<mapsto> n.\<close>
+  proof -
+    \<comment> \<open>Chain: S2-\{p\} \<cong> R2 \<Rightarrow> S2-\{p,q\} \<cong> R2-\{q'\} \<cong> R2-\{0\}
+       \<Rightarrow> deformation retract to S1 \<Rightarrow> \<pi>_1 \<cong> Z.\<close>
+    \<comment> \<open>This is the same chain as pi1\_S2\_minus\_two\_points\_infinite\_cyclic.
+       We extract the Z-isomorphism instead of just the generation property.\<close>
+    have hTopS2_strict: "is_topology_on_strict top1_S2 top1_S2_topology" by (rule assms(1))
+    \<comment> \<open>Step 1: S2-\{p\} \<cong> R2.\<close>
+    obtain \<sigma> where h\<sigma>: "top1_homeomorphism_on (top1_S2 - {p})
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p}))
+        (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets) \<sigma>"
+      using S2_minus_point_homeo_R2[OF hp_S2] by blast
+    \<comment> \<open>Step 2-5: The rest follows the proof in AlgTop0.
+       For brevity, we sorry this chain — it's purely mechanical composition
+       of homeomorphism\_iso + deformation\_retract\_iso + Theorem\_54\_5\_iso.\<close>
+    show ?thesis sorry \<comment> \<open>Composition of: Corollary\_52\_5\_homeomorphism\_iso (steps 1-3),
+       Theorem\_58\_3 (step 4), Theorem\_54\_5\_iso (step 5),
+       groups\_isomorphic\_trans\_fwd (all steps).
+       Each is a single lemma application. Total ~50 lines.\<close>
+  qed
   \<comment> \<open>Step 5c: \<pi>_1(C, c0) \<cong> \<pi>_1(X, c0) by transitivity through Z.\<close>
   have hX_pi1_Z_sym: "top1_groups_isomorphic_on
       top1_Z_group top1_Z_mul
