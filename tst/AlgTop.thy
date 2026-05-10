@@ -529,7 +529,185 @@ proof -
          Lift of reverse(gen)^k from (a,0) ends at (a, -2kd).
          Equals (a, 2). So -2kd = 2, kd = -1. k \<ge> 1, d = -1/k.
          Only solution: k = 1, d = -1.\<close>
-      show "k = 1" sorry \<comment> \<open>Same argument with negative shift.\<close>
+      \<comment> \<open>Same argument as positive case: lift reverse(gen) from (a,0),
+         get endpoint (a, 2d') for some d'. Build reverse(gen)^k lift
+         by induction with shift T\_{d'}, compare with (\<alpha>*\<beta>)^1 lift at (a,2).\<close>
+      \<comment> \<open>Step 1: lift reverse(gen) from (a,0).\<close>
+      have hrgen_path: "top1_is_path_on X TX a a (top1_path_reverse gen)"
+        by (rule top1_path_reverse_is_path[OF hgen_path])
+      obtain rgen_lift where hrgen_lift: "top1_is_path_on E TE (a, 0) (rgen_lift 1) rgen_lift"
+          and hrgen_lift_proj: "\<forall>s\<in>I_set. p0 (rgen_lift s) = (top1_path_reverse gen) s"
+        using Lemma_54_1_path_lifting[OF hcov he0 hp0 hrgen_path assms(1) hTE] by blast
+      \<comment> \<open>Endpoint of rgen\_lift is in the fiber: (a, 2d') for some d'.\<close>
+      obtain d' :: int where hrgen_end: "rgen_lift 1 = (a, 2 * d')"
+      proof -
+        have h1_I: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+        have hend_E: "rgen_lift 1 \<in> E"
+          using hrgen_lift unfolding top1_is_path_on_def top1_continuous_map_on_def
+          using h1_I by (by100 blast)
+        have "p0 (rgen_lift 1) = (top1_path_reverse gen) 1"
+          using hrgen_lift_proj h1_I by (by100 blast)
+        hence "fst (rgen_lift 1) = a"
+          unfolding p0_def top1_path_reverse_def
+          using hgen_path unfolding top1_is_path_on_def by (by100 simp)
+        obtain x' n' where hpair: "rgen_lift 1 = (x', n')" by (cases "rgen_lift 1")
+        hence "x' = a" using \<open>fst (rgen_lift 1) = a\<close> by simp
+        have "(x', n') \<in> E" using hend_E hpair by simp
+        hence "(even n' \<and> x' \<in> U) \<or> (odd n' \<and> x' \<in> V - U)" unfolding E_def by auto
+        hence "even n'" using \<open>x' = a\<close> ha_U by (by100 blast)
+        then obtain d'' where "n' = 2 * d''" using evenE by blast
+        hence "rgen_lift 1 = (a, 2 * d'')" using hpair \<open>x' = a\<close> by simp
+        thus ?thesis using that by blast
+      qed
+      \<comment> \<open>Step 2: reverse(gen)^k lift by induction (same as positive case with d').\<close>
+      have hrgenk_lift: "\<exists>ftk. top1_is_path_on E TE (a, 0) (a, 2 * int k * d') ftk \<and>
+          (\<forall>s\<in>I_set. p0 (ftk s) = top1_path_power (top1_path_reverse gen) a k s)"
+      proof (induct k)
+        case 0
+        define ftk0 :: "real \<Rightarrow> ('a \<times> int)" where "ftk0 = (\<lambda>s. (a, 0::int))"
+        have "top1_is_path_on E TE (a, 0) (a, 2 * int 0 * d') ftk0"
+        proof -
+          have "top1_is_path_on E TE (a, 0) (a, 0) ftk0"
+            unfolding top1_is_path_on_def ftk0_def
+          proof (intro conjI)
+            have "top1_continuous_map_on I_set I_top E TE (top1_constant_path (a, 0::int))"
+              by (rule top1_constant_path_continuous[OF hTE he0])
+            thus "top1_continuous_map_on I_set I_top E TE (\<lambda>s. (a, 0::int))"
+              unfolding top1_constant_path_def by simp
+          qed simp+
+          thus ?thesis by simp
+        qed
+        moreover have "\<forall>s\<in>I_set. p0 (ftk0 s) = top1_path_power (top1_path_reverse gen) a 0 s"
+          unfolding ftk0_def p0_def by (simp add: top1_constant_path_def)
+        ultimately show ?case by blast
+      next
+        case (Suc k')
+        obtain ftk' where hftk'n: "top1_is_path_on E TE (a, 0) (a, 2 * int k' * d') ftk'"
+            "\<forall>s\<in>I_set. p0 (ftk' s) = top1_path_power (top1_path_reverse gen) a k' s"
+          using Suc.hyps by blast
+        define T_d' :: "('a \<times> int) \<Rightarrow> ('a \<times> int)" where "T_d' = (\<lambda>(x, n). (x, n + 2*d'))"
+        define ftk'n_shifted :: "real \<Rightarrow> ('a \<times> int)" where "ftk'n_shifted = T_d' \<circ> ftk'"
+        have hTd'_cont: "top1_continuous_map_on E TE E TE T_d'"
+        proof -
+          note h = helix_shift_general_continuous[OF assms(1-3) assms(5) assms(7-8)]
+          have "E = {x :: ('a \<times> int). even (snd x) \<and> fst x \<in> U \<or> odd (snd x) \<and> fst x \<in> V - U}"
+            unfolding E_def by auto
+          moreover have "TE = {W. W \<subseteq> E \<and>
+              (\<forall>n. {x \<in> U. (x, 2 * n) \<in> W} \<in> TX) \<and>
+              (\<forall>n. {x \<in> A. (x, 2 * n + 2) \<in> W} \<union> {x \<in> B. (x, 2 * n) \<in> W} \<union>
+                    {x \<in> V - U. (x, 2 * n + 1) \<in> W} \<in> TX)}"
+            unfolding TE_def E_def by auto
+          moreover have "T_d' = (\<lambda>(x :: 'a, n :: int). (x, n + 2 * d'))" unfolding T_d'_def by auto
+          ultimately show ?thesis using h by simp
+        qed
+        have hftk'n_shifted_path: "top1_is_path_on E TE (a, 2*d') (a, 2*d' + 2*int k'*d') ftk'n_shifted"
+        proof -
+          have hcomp_cont: "top1_continuous_map_on I_set I_top E TE ftk'n_shifted"
+            unfolding ftk'n_shifted_def
+            by (rule top1_continuous_map_on_comp[where Y=E and TY=TE])
+               (use hftk'n(1) hTd'_cont in \<open>unfold top1_is_path_on_def, by100 blast\<close>)+
+          show ?thesis unfolding top1_is_path_on_def
+            using hcomp_cont
+            unfolding ftk'n_shifted_def T_d'_def using hftk'n(1)
+            unfolding top1_is_path_on_def by (by100 simp)
+        qed
+        have hftk'n_shifted_proj: "\<forall>s\<in>I_set. p0 (ftk'n_shifted s) =
+            top1_path_power (top1_path_reverse gen) a k' s"
+        proof (intro ballI)
+          fix s assume "s \<in> I_set"
+          have "p0 (ftk'n_shifted s) = p0 (T_d' (ftk' s))" unfolding ftk'n_shifted_def by simp
+          also have "... = p0 (ftk' s)"
+          proof -
+            obtain x n where "T_d' (ftk' s) = (x, n)" by (cases "T_d' (ftk' s)")
+            have "fst (T_d' (ftk' s)) = fst (ftk' s)" unfolding T_d'_def
+              by (cases "ftk' s") (by100 simp)
+            thus ?thesis unfolding p0_def by simp
+          qed
+          also have "... = top1_path_power (top1_path_reverse gen) a k' s"
+            using hftk'n(2) \<open>s \<in> I_set\<close> by (by100 blast)
+          finally show "p0 (ftk'n_shifted s) = top1_path_power (top1_path_reverse gen) a k' s" .
+        qed
+        have h_ep_eq: "2*d' + 2*int k'*d' = 2*int (Suc k')*d'"
+          by (simp add: algebra_simps)
+        have hrgen_lift_typed: "top1_is_path_on E TE (a, 0) (a, 2*d') rgen_lift"
+          using hrgen_lift hrgen_end by simp
+        define ftk_suc_n where "ftk_suc_n = top1_path_product rgen_lift ftk'n_shifted"
+        have "top1_is_path_on E TE (a, 0) (a, 2*int (Suc k')*d') ftk_suc_n"
+        proof -
+          have "top1_is_path_on E TE (a, 0) (a, 2*d' + 2*int k'*d')
+              (top1_path_product rgen_lift ftk'n_shifted)"
+            by (rule top1_path_product_is_path[OF hTE hrgen_lift_typed hftk'n_shifted_path])
+          thus ?thesis unfolding ftk_suc_n_def using h_ep_eq by simp
+        qed
+        moreover have "\<forall>s\<in>I_set. p0 (ftk_suc_n s) =
+            top1_path_power (top1_path_reverse gen) a (Suc k') s"
+        proof (intro ballI)
+          fix s :: real assume hs: "s \<in> I_set"
+          have "p0 (ftk_suc_n s) = p0 (top1_path_product rgen_lift ftk'n_shifted s)"
+            unfolding ftk_suc_n_def by simp
+          also have "... = (if s \<le> 1/2 then p0 (rgen_lift (2*s)) else p0 (ftk'n_shifted (2*s-1)))"
+            unfolding top1_path_product_def p0_def by (by100 simp)
+          also have "... = (if s \<le> 1/2 then (top1_path_reverse gen) (2*s)
+              else top1_path_power (top1_path_reverse gen) a k' (2*s-1))"
+          proof -
+            have h1: "s \<le> 1/2 \<Longrightarrow> 2*s \<in> I_set"
+              using hs unfolding top1_unit_interval_def by (by100 simp)
+            have h2: "\<not>(s \<le> 1/2) \<Longrightarrow> 2*s-1 \<in> I_set"
+              using hs unfolding top1_unit_interval_def by (by100 simp)
+            show ?thesis using hrgen_lift_proj hftk'n_shifted_proj h1 h2 by (by100 simp)
+          qed
+          also have "... = top1_path_product (top1_path_reverse gen)
+              (top1_path_power (top1_path_reverse gen) a k') s"
+            unfolding top1_path_product_def by simp
+          also have "... = top1_path_power (top1_path_reverse gen) a (Suc k') s" by simp
+          finally show "p0 (ftk_suc_n s) = top1_path_power (top1_path_reverse gen) a (Suc k') s" .
+        qed
+        ultimately show ?case by blast
+      qed
+      \<comment> \<open>Step 3: reverse(gen)^k \<simeq> (\<alpha>*\<beta>)^1 \<Rightarrow> endpoints match \<Rightarrow> 2*k*d' = 2 \<Rightarrow> k*d' = 1 \<Rightarrow> k = 1.\<close>
+      have hneg_sym: "top1_path_homotopic_on X TX a a
+          (top1_path_power (top1_path_reverse gen) a k) (top1_path_product \<alpha> \<beta>)"
+        by (rule Lemma_51_1_path_homotopic_sym[OF hneg])
+      obtain ftk where hftk_neg: "top1_is_path_on E TE (a, 0) (a, 2 * int k * d') ftk"
+          "\<forall>s\<in>I_set. p0 (ftk s) = top1_path_power (top1_path_reverse gen) a k s"
+        using hrgenk_lift by blast
+      have hrgen_loop: "top1_is_loop_on X TX a (top1_path_reverse gen)"
+        by (rule top1_path_reverse_is_loop[OF hgen_loop])
+      have hrgenk_path: "top1_is_path_on X TX a a
+          (top1_path_power (top1_path_reverse gen) a k)"
+        by (rule top1_path_power_is_path[OF assms(1) hrgen_loop])
+      have hab_path_raw: "top1_is_path_on X TX a a
+          (top1_path_power (top1_path_product \<alpha> \<beta>) a 1)"
+        by (rule top1_path_power_is_path[OF assms(1) h\<alpha>\<beta>_loop])
+      have hab_path: "top1_is_path_on X TX a a (top1_path_product \<alpha> \<beta>)"
+        using h\<alpha>\<beta>_loop unfolding top1_is_loop_on_def by (by100 blast)
+      have hri: "top1_path_homotopic_on X TX a a
+          (top1_path_product (top1_path_product \<alpha> \<beta>) (top1_constant_path a))
+          (top1_path_product \<alpha> \<beta>)"
+        by (rule Theorem_51_2_right_identity[OF assms(1) hab_path])
+      have hab_pp1: "top1_path_homotopic_on X TX a a
+          (top1_path_product \<alpha> \<beta>) (top1_path_power (top1_path_product \<alpha> \<beta>) a 1)"
+        using Lemma_51_1_path_homotopic_sym[OF hri] by simp
+      have hproj_pp1: "top1_path_homotopic_on X TX a a
+          (top1_path_power (top1_path_reverse gen) a k)
+          (top1_path_power (top1_path_product \<alpha> \<beta>) a 1)"
+        by (rule Lemma_51_1_path_homotopic_trans[OF assms(1) hneg_sym hab_pp1])
+      have h_endpoints_neg: "(a, 2 * int k * d') = (a :: 'a, 2 :: int)"
+      proof -
+        note h = Theorem_54_3[OF hcov hTE assms(1) he0 hp0
+            hrgenk_path hab_path_raw hproj_pp1
+            hftk_neg(1) hftk_neg(2) hab_lift hab_lift_proj]
+        from conjunct1[OF h] show ?thesis by simp
+      qed
+      hence "2 * int k * d' = 2" by simp
+      hence "int k * d' = 1" by simp
+      thus "k = 1"
+      proof -
+        from \<open>int k * d' = 1\<close> have "int k = 1 \<or> int k = -1" using zmult_eq_1_iff by blast
+        moreover have "int k \<ge> 0" by simp
+        ultimately have "int k = 1" by auto
+        thus "k = 1" by simp
+      qed
     qed
   qed
   \<comment> \<open>Step 7: Conclude. k = 1 means [\<alpha>*\<beta>] = gen (or gen\<inverse>). So gen generates with [\<alpha>*\<beta>].\<close>
