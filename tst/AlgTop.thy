@@ -294,11 +294,28 @@ proof -
      This uses the helix shift automorphism T(x,n) = (x, n+2).
      By induction on k: the lift of gen^k concatenates k lifts of gen,
      each shifted by T, giving endpoint (a, 2*k*d).\<close>
+  \<comment> \<open>Define the helix shift T(x,n) = (x, n + 2*d). This maps a lift of gen
+     from (a, 0) to a lift from (a, 2*d), from (a, 2*d) to (a, 4*d), etc.\<close>
+  \<comment> \<open>Actually, we use the general shift T\_d(x,n) = (x, n + 2*d).
+     For d = 1: this is the standard period-1 shift.
+     The key property: T\_d is a covering automorphism.
+     For arbitrary d: T\_d = T\_1^d where T\_1(x,n) = (x, n+2) is period-1.\<close>
+  \<comment> \<open>The lift of gen from (a, 2*j*d) ends at (a, 2*(j+1)*d).
+     This follows from the shift T\_d being a covering automorphism.\<close>
   have hgenk_lift: "\<exists>ftk. top1_is_path_on E TE (a, 0) (a, 2 * int k * d) ftk \<and>
       (\<forall>s\<in>I_set. p0 (ftk s) = top1_path_power gen a k s)"
-    sorry \<comment> \<open>Induction on k using helix shift T(x,n)=(x,n+2) as covering automorphism.
-       Base k=0: trivial. Step k\<rightarrow>k+1: lift of gen from (a, 2*k*d) ends at
-       (a, 2*k*d + 2*d) = (a, 2*(k+1)*d) by covering\_lift\_unique\_connected + T.\<close>
+    sorry \<comment> \<open>Induction on k using helix shift.
+       Key step: T\_1(x,n) = (x, n+2) is a covering automorphism of E.
+       Proof: (1) T\_1 maps E to E: parity preserved.
+       (2) p0 \<circ> T\_1 = p0: fst(x, n+2) = x.
+       (3) T\_1 continuous: for W \<in> TE, T\_1\<inverse>(W) = \{(x,n) : (x,n+2) \<in> W\}.
+           The TE slice conditions shift index by 1: \{x \<in> U. (x, 2n) \<in> T\_1\<inverse>(W)\}
+           = \{x \<in> U. (x, 2(n+1)) \<in> W\} \<in> TX (from W \<in> TE with index n+1).
+           Similarly for the V-U slice.
+       Then: lift of gen from (a, 2) = T\_1 \<circ> gen\_lift (by covering\_lift\_unique\_connected).
+       By T\_1^d: lift from (a, 2d) = T\_1^d \<circ> gen\_lift, ending at (a, 2d + 2d) = (a, 4d).
+       By induction: lift of gen^k from (a, 0) ends at (a, 2kd).
+       ~100 lines of Isabelle: T\_1 continuity (20 lines) + uniqueness (10) + induction (30).\<close>
   \<comment> \<open>Now: gen^k \<simeq> \<alpha>*\<beta> (from hk, positive case). Their lifts from (a,0)
      must end at the same point by Theorem\_54\_3.
      Endpoint of gen^k lift = (a, 2*int(k)*d). Endpoint of \<alpha>*\<beta> lift = (a, 2).
@@ -314,8 +331,32 @@ proof -
       obtain ftk where hftk: "top1_is_path_on E TE (a, 0) (a, 2 * int k * d) ftk"
           "\<forall>s\<in>I_set. p0 (ftk s) = top1_path_power gen a k s"
         using hgenk_lift by blast
+      have hpos_sym: "top1_path_homotopic_on X TX a a
+          (top1_path_power gen a k) (top1_path_product \<alpha> \<beta>)"
+        by (rule Lemma_51_1_path_homotopic_sym[OF hpos])
+      have hgenk_path: "top1_is_path_on X TX a a (top1_path_power gen a k)"
+        by (rule top1_path_power_is_path[OF assms(1) hgen_loop])
+      have hab_path_raw: "top1_is_path_on X TX a a
+          (top1_path_power (top1_path_product \<alpha> \<beta>) a 1)"
+        by (rule top1_path_power_is_path[OF assms(1) h\<alpha>\<beta>_loop])
+      \<comment> \<open>Apply Theorem\_54\_3: gen^k \<simeq> path\_power (\<alpha>*\<beta>) a 1.
+         Both lift from (a,0): gen^k to (a, 2kd), path\_power (\<alpha>*\<beta>) a 1 to (a, 2).
+         Need: gen^k \<simeq> (path\_power (\<alpha>*\<beta>) a 1) as paths from a to a.
+         From hpos: \<alpha>*\<beta> \<simeq> gen^k. Since (\<alpha>*\<beta>)*const \<simeq> \<alpha>*\<beta>:
+         path\_power (\<alpha>*\<beta>) a 1 \<simeq> \<alpha>*\<beta> \<simeq> gen^k.
+         So gen^k \<simeq> path\_power (\<alpha>*\<beta>) a 1 (by symmetry + transitivity).\<close>
+      have h_genk_pp1: "top1_path_homotopic_on X TX a a
+          (top1_path_power gen a k) (top1_path_power (top1_path_product \<alpha> \<beta>) a 1)"
+        sorry \<comment> \<open>gen^k \<simeq> \<alpha>*\<beta> \<simeq> (\<alpha>*\<beta>)*const = path\_power (\<alpha>*\<beta>) a 1.
+           Uses Lemma\_51\_1\_path\_homotopic\_sym + Lemma\_51\_1\_path\_homotopic\_trans
+           + Theorem\_51\_2\_right\_identity.\<close>
       have h_endpoints: "(a, 2 * int k * d) = (a :: 'a, 2 :: int)"
-        using Theorem_54_3[OF hcov hTE assms(1) he0 hp0] sorry
+        sorry \<comment> \<open>From Theorem\_54\_3 applied to:
+           f = path\_power gen a k, g = path\_power (\<alpha>*\<beta>) a 1,
+           ftilde = ftk (lift of f, endpoint (a, 2kd)),
+           gtilde = ab\_lift (lift of g, endpoint (a, 2)).
+           Homotopy: h\_genk\_pp1.
+           Conclusion: (a, 2kd) = (a, 2).\<close>
       hence "2 * int k * d = 2" by simp
       hence "int k * d = 1" by simp
       thus "k = 1"
