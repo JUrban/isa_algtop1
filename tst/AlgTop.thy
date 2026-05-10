@@ -1190,7 +1190,7 @@ qed
 theorem Theorem_74_1_polygon_quotient_compact_hausdorff:
   fixes X :: "'a set" and TX :: "'a set set"
   assumes "is_topology_on_strict X TX"
-  and "top1_is_polygonal_quotient_on X TX"
+  and "top1_is_polygonal_quotient_strict_on X TX"
   shows "top1_compact_on X TX \<and> is_hausdorff_on X TX"
 proof -
   \<comment> \<open>Munkres 74.1: The polygonal region P is compact (closed bounded subset of R^2).
@@ -1198,10 +1198,26 @@ proof -
      Compact: q(P) = X is compact (continuous image of compact).
      Hausdorff: the quotient identifications are on the boundary only;
      use the finite edge-identification structure to verify the T2 axiom.\<close>
+  have hpoly: "top1_is_polygonal_quotient_on X TX"
+    using assms(2) unfolding top1_is_polygonal_quotient_strict_on_def by (by100 blast)
   have "\<exists>scheme :: (nat \<times> bool) list. top1_quotient_of_scheme_on X TX scheme"
-    using assms(2) unfolding top1_is_polygonal_quotient_on_def by (by100 blast)
+    using hpoly unfolding top1_is_polygonal_quotient_on_def by (by100 blast)
   then obtain scheme :: "(nat \<times> bool) list" where hsch: "top1_quotient_of_scheme_on X TX scheme"
     by (by100 auto)
+  \<comment> \<open>Extract the strict "no extra identifications" condition.\<close>
+  have hstrict: "\<exists>P q (vx::nat\<Rightarrow>real) (vy::nat\<Rightarrow>real).
+      top1_is_polygonal_region_on P (length scheme)
+    \<and> top1_quotient_map_on P (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) X TX q
+    \<and> (\<forall>i<length scheme. (vx i, vy i) \<in> P)
+    \<and> (\<forall>i<length scheme. \<forall>j<length scheme. \<forall>t\<in>I_set. \<forall>s\<in>I_set.
+          q ((1-t) * vx i + t * vx (Suc i mod length scheme),
+             (1-t) * vy i + t * vy (Suc i mod length scheme))
+        = q ((1-s) * vx j + s * vx (Suc j mod length scheme),
+             (1-s) * vy j + s * vy (Suc j mod length scheme))
+        \<longrightarrow> (i = j \<and> t = s)
+          \<or> (fst (scheme!i) = fst (scheme!j) \<and>
+             (if snd (scheme!i) = snd (scheme!j) then s = t else s = 1 - t)))"
+    using assms(2) unfolding top1_is_polygonal_quotient_strict_on_def sorry
   have hcompact: "top1_compact_on X TX"
   proof -
     \<comment> \<open>Extract P, q from the scheme.\<close>
@@ -1279,6 +1295,17 @@ proof -
                     (1-t) * vy i + t * vy (Suc i mod length scheme)))
            \<longrightarrow> (\<forall>p'\<in>P. q p = q p' \<longrightarrow> p = p')"
       by (rule quotient_of_scheme_extract_full[OF hsch])
+    \<comment> \<open>Extract strict "no extra identifications" for this P, q, vx, vy.\<close>
+    have hno_extra: "\<forall>i<length scheme. \<forall>j<length scheme. \<forall>t\<in>I_set. \<forall>s\<in>I_set.
+          q ((1-t) * vx i + t * vx (Suc i mod length scheme),
+             (1-t) * vy i + t * vy (Suc i mod length scheme))
+        = q ((1-s) * vx j + s * vx (Suc j mod length scheme),
+             (1-s) * vy j + s * vy (Suc j mod length scheme))
+        \<longrightarrow> (i = j \<and> t = s)
+          \<or> (fst (scheme!i) = fst (scheme!j) \<and>
+             (if snd (scheme!i) = snd (scheme!j) then s = t else s = 1 - t))"
+      sorry \<comment> \<open>From hstrict: match P, q, vx, vy with those from strict definition.
+             This requires showing the extraction gives the same witnesses.\<close>
     let ?TP = "subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P"
     \<comment> \<open>Step 1: R^2 is Hausdorff.\<close>
     have hR_haus: "is_hausdorff_on (UNIV::real set) top1_open_sets"
@@ -1597,7 +1624,86 @@ proof -
                 else {}) ` ({..<?n} \<times> {..<?n})"
             \<comment> \<open>R\<inter>bdy\<times>bdy \<subseteq> ?D \<union> \<Union>?curves.\<close>
             have hR_bdy_sub_DC: "?R \<inter> (?bdy \<times> ?bdy) \<subseteq> ?D \<union> \<Union>?curves"
-              sorry
+            proof
+              fix x assume "x \<in> ?R \<inter> (?bdy \<times> ?bdy)"
+              then obtain a b where hx: "x = (a, b)" "a \<in> P" "b \<in> P" "q a = q b"
+                  "a \<in> ?bdy" "b \<in> ?bdy"
+                by (cases x) (by100 blast)
+              \<comment> \<open>a on some edge i at parameter t, b on edge j at parameter s.\<close>
+              from hx(5) obtain i t where hi: "i < length scheme" "t \<in> I_set" "a = ?edge i t"
+                by (by100 blast)
+              from hx(6) obtain j s where hj: "j < length scheme" "s \<in> I_set" "b = ?edge j s"
+                by (by100 blast)
+              \<comment> \<open>Apply hno\_extra: q(edge\_i(t)) = q(edge\_j(s)) \<Rightarrow> diagonal or scheme pair.\<close>
+              from hno_extra[rule_format, OF hi(1) hj(1) hi(2) hj(2)]
+              have "q a = q b \<longrightarrow> (i = j \<and> t = s) \<or> (fst (scheme!i) = fst (scheme!j) \<and>
+                  (if snd (scheme!i) = snd (scheme!j) then s = t else s = 1 - t))"
+                using hi(3) hj(3) by (by100 simp)
+              hence "(i = j \<and> t = s) \<or> (fst (scheme!i) = fst (scheme!j) \<and>
+                  (if snd (scheme!i) = snd (scheme!j) then s = t else s = 1 - t))"
+                using hx(4) by (by100 blast)
+              thus "x \<in> ?D \<union> \<Union>?curves"
+              proof
+                assume "i = j \<and> t = s"
+                hence "a = b" using hi(3) hj(3) by (by100 simp)
+                thus ?thesis using hx(1,5) by (by100 blast)
+              next
+                assume hpair: "fst (scheme!i) = fst (scheme!j) \<and>
+                    (if snd (scheme!i) = snd (scheme!j) then s = t else s = 1 - t)"
+                show ?thesis
+                proof (cases "i = j")
+                  case True
+                  hence "t = s" using hpair by (by100 auto)
+                  hence "a = b" using hi(3) hj(3) True by (by100 simp)
+                  thus ?thesis using hx(1,5) by (by100 blast)
+                next
+                  case False
+                  \<comment> \<open>(a,b) is on an edge pair curve.\<close>
+                  \<comment> \<open>(a,b) = (edge\_i(t), edge\_j(s)) with same label and s = f(t).\<close>
+                  have "fst (scheme!i) = fst (scheme!j)" using hpair by (by100 blast)
+                  show ?thesis
+                  proof (cases "snd (scheme!i) = snd (scheme!j)")
+                    case True
+                    hence "s = t" using hpair by (by100 auto)
+                    hence "x = (?edge i t, ?edge j t)" using hx(1) hi(3) hj(3) by (by100 simp)
+                    hence "x \<in> (\<lambda>t. (?edge i t, ?edge j t)) ` I_set" using hi(2) by auto
+                    moreover have "(\<lambda>t. (?edge i t, ?edge j t)) ` I_set \<in> ?curves"
+                    proof -
+                      have "(i, j) \<in> {..<length scheme} \<times> {..<length scheme}"
+                        using hi(1) hj(1) by (by100 blast)
+                      moreover have "(case (i, j) of (i, j) \<Rightarrow>
+                          if fst (scheme ! i) = fst (scheme ! j) \<and> i \<noteq> j
+                          then (if snd (scheme ! i) = snd (scheme ! j)
+                                then (\<lambda>t. (?edge i t, ?edge j t)) ` I_set
+                                else (\<lambda>t. (?edge i t, ?edge j (1-t))) ` I_set)
+                          else {}) = (\<lambda>t. (?edge i t, ?edge j t)) ` I_set"
+                        using \<open>fst (scheme!i) = fst (scheme!j)\<close> False True by (by100 simp)
+                      ultimately show ?thesis sorry
+                    qed
+                    ultimately show ?thesis sorry
+                  next
+                    case sndF: False
+                    hence "s = 1 - t" using hpair by (by100 auto)
+                    hence "x = (?edge i t, ?edge j (1-t))" using hx(1) hi(3) hj(3) by (by100 simp)
+                    hence "x \<in> (\<lambda>t. (?edge i t, ?edge j (1-t))) ` I_set" using hi(2) by auto
+                    moreover have "(\<lambda>t. (?edge i t, ?edge j (1-t))) ` I_set \<in> ?curves"
+                    proof -
+                      have "(i, j) \<in> {..<length scheme} \<times> {..<length scheme}"
+                        using hi(1) hj(1) by (by100 blast)
+                      moreover have "(case (i, j) of (i, j) \<Rightarrow>
+                          if fst (scheme ! i) = fst (scheme ! j) \<and> i \<noteq> j
+                          then (if snd (scheme ! i) = snd (scheme ! j)
+                                then (\<lambda>t. (?edge i t, ?edge j t)) ` I_set
+                                else (\<lambda>t. (?edge i t, ?edge j (1-t))) ` I_set)
+                          else {}) = (\<lambda>t. (?edge i t, ?edge j (1-t))) ` I_set"
+                        using \<open>fst (scheme!i) = fst (scheme!j)\<close> False sndF by (by100 simp)
+                      ultimately show ?thesis sorry
+                    qed
+                    ultimately show ?thesis sorry
+                  qed
+                qed
+              qed
+            qed
             \<comment> \<open>?D \<union> \<Union>?curves \<subseteq> ?R \<inter> (?bdy\<times>?bdy).\<close>
             have hDC_sub_R_bdy: "?D \<union> \<Union>?curves \<subseteq> ?R \<inter> (?bdy \<times> ?bdy)"
             proof
