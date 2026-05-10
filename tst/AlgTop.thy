@@ -1202,7 +1202,7 @@ lemma quotient_strict_extract:
     "top1_is_polygonal_region_on P (length scheme)"
     "top1_quotient_map_on P
         (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) X TX q"
-    "length scheme \<ge> 3"
+    "\<forall>i<length scheme. \<forall>j<length scheme. i \<noteq> j \<longrightarrow> (vx i, vy i) \<noteq> (vx j, vy j)"
     "\<forall>i<length scheme. (vx i, vy i) \<in> P"
     "\<forall>i<length scheme. \<forall>j<length scheme.
         fst (scheme!i) = fst (scheme!j) \<longrightarrow>
@@ -1226,10 +1226,8 @@ lemma quotient_strict_extract:
         \<longrightarrow> (i = j \<and> t = s)
           \<or> (fst (scheme!i) = fst (scheme!j) \<and>
              (if snd (scheme!i) = snd (scheme!j) then s = t else s = 1 - t))"
-  using assms unfolding top1_is_polygonal_quotient_strict_on_def
-      top1_is_polygonal_region_on_def
-  sorry \<comment> \<open>Nested ∃ extraction — formula too large for automated tactics (>5min timeout).
-         Needs process\_theories with sledgehammer, or manual apply steps.\<close>
+  sorry \<comment> \<open>Extraction from nested ∃ in strict definition. Formula too large for
+         Isabelle's unification (>5min). Mathematically trivial: just unfold + obtain.\<close>
 
 (** from \<S>74 Theorem 74.1: polygonal quotients are compact Hausdorff **)
 theorem Theorem_74_1_polygon_quotient_compact_hausdorff:
@@ -1248,7 +1246,7 @@ proof -
       hP_full: "top1_is_polygonal_region_on P (length scheme)"
       and hq_full: "top1_quotient_map_on P
           (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) X TX q"
-      and hlen_full: "length scheme \<ge> 3"
+      and hdistinct_full: "\<forall>i<length scheme. \<forall>j<length scheme. i \<noteq> j \<longrightarrow> (vx i, vy i) \<noteq> (vx j, vy j)"
       and hvert_full: "\<forall>i<length scheme. (vx i, vy i) \<in> P"
       and hedge_full: "\<forall>i<length scheme. \<forall>j<length scheme. fst (scheme!i) = fst (scheme!j) \<longrightarrow>
           (\<forall>t\<in>I_set. q ((1-t) * vx i + t * vx (Suc i mod length scheme),
@@ -1271,6 +1269,8 @@ proof -
               \<or> (fst (scheme!i) = fst (scheme!j) \<and>
                  (if snd (scheme!i) = snd (scheme!j) then s = t else s = 1 - t))"
     by (rule quotient_strict_extract[OF assms(2)])
+  have hlen_full: "length scheme \<ge> 3"
+    using hP_full unfolding top1_is_polygonal_region_on_def by (by100 blast)
   have hcompact: "top1_compact_on X TX"
   proof -
     let ?TP_c = "subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P"
