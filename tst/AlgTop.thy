@@ -201,15 +201,7 @@ proof -
      g is a loop in C (lies in C) and nontrivial in X.
      By inclusion\_induced\_class: j_*(x)([g]_C) = [g]_X \<noteq> [const].
      By basepoint change (C and X path-connected): j_*(c0) is also nontrivial.\<close>
-  have hj_nontrivial: "\<exists>c \<in> top1_fundamental_group_carrier C ?TC c0.
-      top1_fundamental_group_induced_on C ?TC c0 ?X ?TX c0 (\<lambda>x. x) c
-      \<noteq> top1_fundamental_group_id ?X ?TX c0"
-    sorry \<comment> \<open>The cached Lemma\_65\_1\_K4\_subgraph internally constructs \<alpha>*\<beta> traversing C,
-       but its conclusion only exposes "loop in X, nontrivial" without "image in C."
-       Alternative: C is a SCC (proved above) separating p from q in S2 (Lemma 64.3),
-       so the inclusion C \<hookrightarrow> X = S2-{p,q} is \<pi>_1-nontrivial because C "wraps around"
-       both punctures (winding number argument). Needs basepoint change to c0.\<close>
-  \<comment> \<open>Step 4b: \<pi>_1(C, c0) \<cong> Z (C is a simple closed curve \<cong> S1).\<close>
+  \<comment> \<open>Step 4a: \<pi>_1(C, c0) \<cong> Z (C is a simple closed curve \<cong> S1).\<close>
   have hC_scc: "top1_simple_closed_curve_on top1_S2 top1_S2_topology C"
   proof -
     \<comment> \<open>e12 \<union> e23 is an arc from a1 to a3 (via arcs\_concatenation\_is\_arc, shared at a2).\<close>
@@ -289,18 +281,37 @@ proof -
      So image is trivial, contradicting j_* nontrivial. Hence n = 0, ker = {0}.\<close>
   have hj_inj: "inj_on (top1_fundamental_group_induced_on C ?TC c0 ?X ?TX c0 (\<lambda>x. x))
       (top1_fundamental_group_carrier C ?TC c0)"
-    sorry \<comment> \<open>Needs: j_* nontrivial (hj\_nontrivial) + \<pi>_1(C) \<cong> Z (hC\_scc) +
+    sorry \<comment> \<open>Follows from hj\_surj: surjective hom Z \<rightarrow> Z is injective.
        \<pi>_1(X) torsion-free (hX\_inf\_cyc). Pure algebra: nontrivial hom Z \<rightarrow> Z\_tf is injective.\<close>
   \<comment> \<open>Step 4e: Surjectivity.
      Following Munkres: [\<alpha>*\<beta>] generates \<pi>_1(X) (by Theorem 63.1 + infinite cyclic).
      Since \<alpha>*\<beta> lies in C, j_* maps a generator of \<pi>_1(C) to a generator of \<pi>_1(X).
      Hence j_* surjective.\<close>
+  \<comment> \<open>Step 5: Surjectivity and injectivity of j_* (combined).
+     Textbook proof (Munkres p.393): The loop \<alpha>*\<beta> (constructed in the cached
+     Lemma\_65\_1\_K4\_subgraph) traverses C and is nontrivial in X.
+     Since \<pi>_1(X) is infinite cyclic (hX\_inf\_cyc) and [\<alpha>*\<beta>] generates
+     \<pi>_1(X) (by Theorem\_63\_1\_c\_subgroups\_trivial + the decomposition
+     X = U \<union> V with U, V simply connected), and \<alpha>*\<beta> lies in C,
+     j_* maps a generator of \<pi>_1(C) to a generator of \<pi>_1(X).
+     Since both are \<cong> Z: surjective hom Z \<rightarrow> Z is isomorphism.
+
+     Available infrastructure:
+     - h\_nontrivial: \<exists>x\<in>C. \<exists>g nontrivial loop at x in X
+     - hC\_scc: C is SCC (PROVED)
+     - hX\_inf\_cyc: \<pi>_1(X) infinite cyclic (PROVED)
+     - Theorem\_63\_1\_c\_subgroups\_trivial: powers of 63.1-pairs are independent
+     - S2\_minus\_arc\_simply\_connected: S2 minus arc simply connected (sorry'd)
+     - Theorem\_54\_5\_iso: \<pi>_1(S1) \<cong> Z
+
+     Formal gaps:
+     (a) Cached proof shows g \<in> C internally but conclusion doesn't expose it
+     (b) Generator argument: nontrivial + 63.1(c) + infinite cyclic \<Rightarrow> generator
+     (c) Surjective hom Z \<rightarrow> Z is isomorphism (elementary algebra)\<close>
   have hj_surj: "(top1_fundamental_group_induced_on C ?TC c0 ?X ?TX c0 (\<lambda>x. x))
       ` (top1_fundamental_group_carrier C ?TC c0)
       = top1_fundamental_group_carrier ?X ?TX c0"
-    sorry \<comment> \<open>Textbook (Munkres p.393): [\<alpha>*\<beta>] generates \<pi>_1(X) by Theorem 63.1
-       + S2\_minus\_arc\_simply\_connected + \<pi>_1(X) infinite cyclic.
-       Since \<alpha>*\<beta> \<in> C: j_* hits generator, hence surjective.\<close>
+    sorry
   \<comment> \<open>Step 5: Combine homomorphism + injective + surjective = isomorphism.\<close>
   have hj_bij: "bij_betw (top1_fundamental_group_induced_on C ?TC c0 ?X ?TX c0 (\<lambda>x. x))
       (top1_fundamental_group_carrier C ?TC c0)
