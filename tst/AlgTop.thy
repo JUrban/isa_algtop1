@@ -2037,39 +2037,44 @@ proof -
   qed
   \<comment> \<open>[\<alpha>*\<beta>] generates \<pi>_1(X, x). Since \<alpha>*\<beta> \<in> C: j_*(x) is surjective at basepoint x.
      Basepoint change to c0. Then surjective hom Z \<rightarrow> Z \<Rightarrow> injective.\<close>
-  \<comment> \<open>Surjectivity: every loop g at c0 in X is in image of j_*.
-     Proof: take \<gamma> from c0 to x in C (C path-connected). Then
-     \<gamma>*g*\<gamma>\<inverse> is a loop at x, hence \<simeq> (\<alpha>*\<beta>)^n (from h_\<alpha>\<beta>_generates).
-     So g \<simeq> \<gamma>\<inverse>*(\<alpha>*\<beta>)^n*\<gamma>, which is a loop in C. Hence g \<in> image(j_*).\<close>
-  have hj_surj: "(top1_fundamental_group_induced_on C ?TC c0 ?X ?TX c0 (\<lambda>x. x))
-      ` (top1_fundamental_group_carrier C ?TC c0)
-      = top1_fundamental_group_carrier ?X ?TX c0"
-    sorry \<comment> \<open>From h\<alpha>\<beta>\_generates + \<alpha>*\<beta> \<in> C + basepoint change c0 \<rightarrow> x via path in C.
-       Key steps: (1) C path-connected \<Rightarrow> \<exists>\<gamma>: c0 \<rightarrow> x in C.
-       (2) For any loop g at c0 in X: \<gamma>*g*\<gamma>\<inverse> loop at x \<Rightarrow> \<simeq> (\<alpha>*\<beta>)^n.
-       (3) g \<simeq> \<gamma>\<inverse>*(\<alpha>*\<beta>)^n*\<gamma>. All pieces in C \<Rightarrow> g \<in> image(j_*).
-       Uses: top1\_basepoint\_change\_on, h\<alpha>\<beta>\_generates, path\_in\_subspace.\<close>
-  \<comment> \<open>Injectivity: j_* nontrivial hom Z \<rightarrow> Z \<Rightarrow> injective.
-     Proof: kernel of j_* is a subgroup of \<pi>_1(C) \<cong> Z.
-     If kernel = nZ with n \<ge> 1: then j_* kills gen_C^n. But gen_C = [\<alpha>*\<beta>]_C,
-     and j_*([\<alpha>*\<beta>]_C) = [\<alpha>*\<beta>]_X generates \<pi>_1(X) \<cong> Z.
-     j_*(gen_C^n) = ([\<alpha>*\<beta>]_X)^n \<noteq> 0 for n \<ge> 1 (infinite order from helix).
-     Contradiction. So kernel = \{0\}.\<close>
-  have hj_inj: "inj_on (top1_fundamental_group_induced_on C ?TC c0 ?X ?TX c0 (\<lambda>x. x))
-      (top1_fundamental_group_carrier C ?TC c0)"
-    sorry \<comment> \<open>j_* nontrivial hom Z \<rightarrow> Z is injective.
-       Uses: h\<alpha>\<beta>\_nontrivial \<Rightarrow> j_*([\<alpha>*\<beta>]) \<noteq> 0 \<Rightarrow> j_* nontrivial.
-       Kernel = subgroup of Z = nZ. If n \<ge> 1: j_* kills (gen\_C)^n.
-       But (gen\_C)^n maps to (gen\_X)^n \<noteq> 0 (helix gives infinite order).
-       So n = 0, kernel trivial.\<close>
-  \<comment> \<open>Step 5: Combine homomorphism + injective + surjective = isomorphism.\<close>
-  have hj_bij: "bij_betw (top1_fundamental_group_induced_on C ?TC c0 ?X ?TX c0 (\<lambda>x. x))
+  \<comment> \<open>Both \<pi>_1(C, c0) and \<pi>_1(X, c0) are infinite cyclic (\<cong> Z).
+     So they're isomorphic to each other (by transitivity through Z).\<close>
+  \<comment> \<open>Step 5a: \<pi>_1(C, c0) \<cong> Z.
+     C is a simple closed curve = homeomorphic to S1. \<pi>_1(S1) \<cong> Z.\<close>
+  have hC_pi1_Z: "top1_groups_isomorphic_on
       (top1_fundamental_group_carrier C ?TC c0)
-      (top1_fundamental_group_carrier ?X ?TX c0)"
-    unfolding bij_betw_def using hj_inj hj_surj by (by100 blast)
+      (top1_fundamental_group_mul C ?TC c0)
+      top1_Z_group top1_Z_mul"
+    sorry \<comment> \<open>C is SCC (hC\_SCC) \<Rightarrow> \<exists>h. homeomorphism C \<cong> S1.
+       By Corollary\_52\_5\_homeomorphism\_iso: \<pi>_1(C, c0) \<cong> \<pi>_1(S1, h(c0)).
+       By basepoint\_change\_iso: \<pi>_1(S1, h(c0)) \<cong> \<pi>_1(S1, (1,0)).
+       By Theorem\_54\_5\_iso: \<pi>_1(S1, (1,0)) \<cong> Z.\<close>
+  \<comment> \<open>Step 5b: \<pi>_1(X, c0) \<cong> Z.
+     X = S2-\{p,q\}. By pi1\_S2\_minus\_two\_points\_infinite\_cyclic.\<close>
+  have hX_pi1_Z: "top1_groups_isomorphic_on
+      (top1_fundamental_group_carrier ?X ?TX c0)
+      (top1_fundamental_group_mul ?X ?TX c0)
+      top1_Z_group top1_Z_mul"
+    sorry \<comment> \<open>From hX\_inf\_cyc: \<pi>_1(X, c0) has generator gen with every loop = gen^n.
+       This gives a well-defined bijective hom \<pi>_1(X, c0) \<rightarrow> Z: gen^n \<mapsto> n.\<close>
+  \<comment> \<open>Step 5c: \<pi>_1(C, c0) \<cong> \<pi>_1(X, c0) by transitivity through Z.\<close>
+  have hX_pi1_Z_sym: "top1_groups_isomorphic_on
+      top1_Z_group top1_Z_mul
+      (top1_fundamental_group_carrier ?X ?TX c0)
+      (top1_fundamental_group_mul ?X ?TX c0)"
+  proof (rule top1_groups_isomorphic_on_sym[OF hX_pi1_Z])
+    show "top1_is_group_on (top1_fundamental_group_carrier ?X ?TX c0)
+        (top1_fundamental_group_mul ?X ?TX c0)
+        (top1_fundamental_group_id ?X ?TX c0)
+        (top1_fundamental_group_invg ?X ?TX c0)"
+      by (rule top1_fundamental_group_is_group[OF hTX hc0_X])
+    have "top1_is_abelian_group_on top1_Z_group top1_Z_mul top1_Z_id top1_Z_invg"
+      by (rule top1_Z_is_abelian_group)
+    thus "top1_is_group_on top1_Z_group top1_Z_mul top1_Z_id top1_Z_invg"
+      unfolding top1_is_abelian_group_on_def by (by100 blast)
+  qed
   show ?thesis
-    unfolding top1_groups_isomorphic_on_def top1_group_iso_on_def
-    using hj_hom hj_bij by (by100 blast)
+    by (rule groups_isomorphic_trans_fwd[OF hC_pi1_Z hX_pi1_Z_sym])
 qed
 
 (** from \<S>65 Theorem 65.2: inclusion C \<rightarrow> S^2 - p - q induces fundamental group iso **)
