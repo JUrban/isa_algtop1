@@ -58753,9 +58753,10 @@ next
       fix x assume "x \<in> {x \<in> U. (x, 2*(n+j)) \<in> W}"
       hence hx: "x \<in> U" "(x, 2*(n+j)) \<in> W" by (by100 blast)+
       have hE: "(x, 2*n) \<in> E" unfolding E_def using hx(1) by (by100 simp)
-      have "(\<lambda>(xa, na). (xa, na + 2*j)) (x, 2*n) = (x, 2*(n+j))"
+      have hval_ev: "(\<lambda>(xa, na). (xa, na + 2*j)) (x, 2*n) = (x, 2*(n+j))"
         by (simp add: algebra_simps)
-      hence "(\<lambda>(xa, na). (xa, na + 2*j)) (x, 2*n) \<in> W" using hx(2) by simp
+      have "(\<lambda>(xa, na). (xa, na + 2*j)) (x, 2*n) \<in> W"
+        unfolding hval_ev using hx(2) by (by100 blast)
       hence "(x, 2*n) \<in> W'" using hE unfolding W'_def by (by100 blast)
       thus "x \<in> {x \<in> U. (x, 2*n) \<in> W'}" using hx(1) by (by100 blast)
     qed
@@ -58784,7 +58785,8 @@ next
       have hE: "(x, 2*n+2) \<in> E" unfolding E_def using \<open>x \<in> U\<close> by (by100 simp)
       have hval_A: "(\<lambda>(xa, na). (xa, na + 2*j)) (x, 2*n+2) = (x, 2*(n+j)+2)"
         by (simp add: algebra_simps)
-      have "(\<lambda>(xa, na). (xa, na + 2*j)) (x, 2*n+2) \<in> W" using hx(2) hval_A by simp
+      have "(\<lambda>(xa, na). (xa, na + 2*j)) (x, 2*n+2) \<in> W"
+        unfolding hval_A using hx(2) by (by100 blast)
       hence "(x, 2*n+2) \<in> W'" using hE unfolding W'_def by (by100 blast)
       thus "x \<in> {x \<in> A. (x, 2*n + 2) \<in> W'}" using hx(1) by (by100 blast)
     qed
@@ -58801,9 +58803,10 @@ next
       hence hx: "x \<in> B" "(x, 2*(n+j)) \<in> W" by (by100 blast)+
       have "x \<in> U" using hx(1) hB_U by (by100 blast)
       have hE: "(x, 2*n) \<in> E" unfolding E_def using \<open>x \<in> U\<close> by (by100 simp)
-      have "(\<lambda>(xa, na). (xa, na + 2*j)) (x, 2*n) = (x, 2*(n+j))"
+      have hval_ev: "(\<lambda>(xa, na). (xa, na + 2*j)) (x, 2*n) = (x, 2*(n+j))"
         by (simp add: algebra_simps)
-      hence "(\<lambda>(xa, na). (xa, na + 2*j)) (x, 2*n) \<in> W" using hx(2) by simp
+      have "(\<lambda>(xa, na). (xa, na + 2*j)) (x, 2*n) \<in> W"
+        unfolding hval_ev using hx(2) by (by100 blast)
       hence "(x, 2*n) \<in> W'" using hE unfolding W'_def by (by100 blast)
       thus "x \<in> {x \<in> B. (x, 2*n) \<in> W'}" using hx(1) by (by100 blast)
     qed
@@ -58819,9 +58822,10 @@ next
       fix x assume "x \<in> {x \<in> V - U. (x, 2*(n+j) + 1) \<in> W}"
       hence hx: "x \<in> V - U" "(x, 2*(n+j)+1) \<in> W" by (by100 blast)+
       have hE: "(x, 2*n+1) \<in> E" unfolding E_def using hx(1) by (by100 simp)
-      have "(\<lambda>(xa, na). (xa, na + 2*j)) (x, 2*n+1) = (x, 2*(n+j)+1)"
+      have hval_od: "(\<lambda>(xa, na). (xa, na + 2*j)) (x, 2*n+1) = (x, 2*(n+j)+1)"
         by (simp add: algebra_simps)
-      hence "(\<lambda>(xa, na). (xa, na + 2*j)) (x, 2*n+1) \<in> W" using hx(2) by simp
+      have "(\<lambda>(xa, na). (xa, na + 2*j)) (x, 2*n+1) \<in> W"
+        unfolding hval_od using hx(2) by (by100 blast)
       hence "(x, 2*n+1) \<in> W'" using hE unfolding W'_def by (by100 blast)
       thus "x \<in> {x \<in> V - U. (x, 2*n + 1) \<in> W'}" using hx(1) by (by100 blast)
     qed

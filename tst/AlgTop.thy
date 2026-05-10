@@ -1366,13 +1366,29 @@ proof -
          But a1 \<notin> Da3 (Da3 endpoints = \{p, a3\}, a1 \<noteq> p, a1 \<noteq> a3), a1 \<notin> e23, a1 \<notin> Da2.
          So a1 \<notin> D1.\<close>
       moreover { assume "z = a1"
-        have "a1 \<notin> Da3" using he13_meet \<open>a1 \<in> D1p\<close> assms(37) by (by100 blast)
-        moreover have "a1 \<notin> e23" using assms(24,27) assms(2)
-          by (auto simp: card_insert_if split: if_splits)
+        have "a1 \<noteq> p" using assms(37) by (by100 blast)
+        have "a1 \<notin> Da3"
+        proof
+          assume "a1 \<in> Da3"
+          hence "a1 \<in> Da3 \<inter> D1p" using \<open>a1 \<in> D1p\<close> by (by100 blast)
+          hence "a1 = p" using he13_meet by (by100 blast)
+          thus False using \<open>a1 \<noteq> p\<close> by (by100 blast)
+        qed
+        moreover have "a1 \<notin> e23"
+        proof
+          assume "a1 \<in> e23"
+          hence "a1 \<in> e23 \<inter> e41" using assms(27) by (by100 blast)
+          thus False using assms(23) by (by100 blast)
+        qed
         moreover have "a1 \<notin> Da2"
         proof -
-          have "a1 \<notin> e24" using assms(33,28) assms(2)
-            by (auto simp: card_insert_if split: if_splits)
+          have "a1 \<notin> e24"
+          proof
+            assume "a1 \<in> e24"
+            hence "a1 \<in> e24 \<inter> e12" using assms(27) by (by100 blast)
+            hence "a1 \<in> {a2}" using assms(33) by (by100 blast)
+            thus False using ha1_ne_a2 by (by100 blast)
+          qed
           thus ?thesis using hDa2_sub by (by100 blast)
         qed
         ultimately have "a1 \<notin> ?D1" by (by100 blast)
