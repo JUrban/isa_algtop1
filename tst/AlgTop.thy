@@ -1410,13 +1410,111 @@ proof -
     qed
     thus ?case .
   qed
+  \<comment> \<open>Helper: mapped word elements are in H.\<close>
+  have hmH_mapped: "\<And>ws. \<forall>i<length ws. fst(ws!i) \<in> S \<Longrightarrow>
+      \<forall>j<length (map (\<lambda>(s,b). (\<phi> s, b)) ws). fst (map (\<lambda>(s,b). (\<phi> s, b)) ws ! j) \<in> H"
+  proof (intro allI impI)
+    fix ws and j
+    assume h: "\<forall>i<length ws. fst(ws!i) \<in> S" and hj: "j < length (map (\<lambda>(s,b). (\<phi> s, b)) ws)"
+    hence hjw: "j < length ws" by (by100 simp)
+    obtain sj bj where hwj: "ws ! j = (sj, bj)" by (cases "ws!j") (by100 blast)
+    have "sj \<in> S" using h hjw hwj by (by100 force)
+    hence "\<phi> sj \<in> H" using assms(3) by (by100 blast)
+    thus "fst (map (\<lambda>(s,b). (\<phi> s, b)) ws ! j) \<in> H" using hjw hwj by simp
+  qed
+  \<comment> \<open>Helper: for g \<in> G, SOME picks a valid word, and \<psi>(g) = eval\_H of any valid word.\<close>
+  have hpsi_wd: "\<And>g ws. g \<in> G \<Longrightarrow> (\<forall>i<length ws. fst (ws ! i) \<in> S) \<Longrightarrow> ?eval_G ws = g \<Longrightarrow>
+      ?\<psi> g = ?eval_H ws"
+  proof -
+    fix g ws
+    assume hg: "g \<in> G" and hws: "\<forall>i<length ws. fst (ws ! i) \<in> S" and heval: "?eval_G ws = g"
+    \<comment> \<open>SOME picks some word ws' with eval\_G(ws') = g.\<close>
+    have "\<exists>ws'. (\<forall>i<length ws'. fst (ws' ! i) \<in> S) \<and> ?eval_G ws' = g"
+      using hws heval by (by100 blast)
+    hence hsome: "(\<forall>i<length (SOME ws'. (\<forall>i<length ws'. fst (ws' ! i) \<in> S) \<and> ?eval_G ws' = g).
+        fst ((SOME ws'. (\<forall>i<length ws'. fst (ws' ! i) \<in> S) \<and> ?eval_G ws' = g) ! i) \<in> S)
+      \<and> ?eval_G (SOME ws'. (\<forall>i<length ws'. fst (ws' ! i) \<in> S) \<and> ?eval_G ws' = g) = g"
+      by (rule someI_ex)
+    \<comment> \<open>By well-definedness, eval\_H of SOME word = eval\_H of ws.\<close>
+    let ?ws' = "SOME ws'. (\<forall>i<length ws'. fst (ws' ! i) \<in> S) \<and> ?eval_G ws' = g"
+    have hsome1: "\<forall>i<length ?ws'. fst (?ws' ! i) \<in> S" using hsome by (by100 blast)
+    have hsome2: "?eval_G ?ws' = g" using hsome by (by100 blast)
+    have "?eval_G ?ws' = ?eval_G ws" using hsome2 heval by (by100 simp)
+    thus "?\<psi> g = ?eval_H ws" by (rule hwd[OF hsome1 hws])
+  qed
   \<comment> \<open>Step 4: \<psi> is a homomorphism.\<close>
   have hhom: "top1_group_hom_on G mul H mulH ?\<psi>"
-    sorry \<comment> \<open>\<psi>(g1\<cdot>g2) = eval\_H(ws1 @ ws2) = mulH(eval\_H(ws1))(eval\_H(ws2)) = mulH(\<psi>(g1))(\<psi>(g2)).
-       Uses word\_product\_append.\<close>
+    unfolding top1_group_hom_on_def
+  proof (intro conjI ballI)
+    \<comment> \<open>\<psi>(g) \<in> H for g \<in> G.\<close>
+    fix g assume hg: "g \<in> G"
+    have "g \<in> ?W" using hg hW_eq_G by (by100 simp)
+    then obtain ws where hws: "\<forall>i<length ws. fst (ws ! i) \<in> S" "?eval_G ws = g"
+      by (by100 blast)
+    have "?\<psi> g = ?eval_H ws" by (rule hpsi_wd[OF hg hws(1) hws(2)])
+    also have "\<dots> \<in> H" by (rule word_product_in_group[OF assms(2) hmH_mapped[OF hws(1)]])
+    finally show "?\<psi> g \<in> H" .
+  next
+    \<comment> \<open>\<psi>(g1 \<cdot> g2) = mulH(\<psi> g1)(\<psi> g2).\<close>
+    fix g1 g2 assume hg1: "g1 \<in> G" and hg2: "g2 \<in> G"
+    \<comment> \<open>Get word representations.\<close>
+    have "g1 \<in> ?W" using hg1 hW_eq_G by (by100 simp)
+    then obtain ws1 where hws1: "\<forall>i<length ws1. fst (ws1 ! i) \<in> S" "?eval_G ws1 = g1"
+      by (by100 blast)
+    have "g2 \<in> ?W" using hg2 hW_eq_G by (by100 simp)
+    then obtain ws2 where hws2: "\<forall>i<length ws2. fst (ws2 ! i) \<in> S" "?eval_G ws2 = g2"
+      by (by100 blast)
+    \<comment> \<open>ws1 @ ws2 is a word for mul g1 g2.\<close>
+    have happ_S: "\<forall>i<length (ws1 @ ws2). fst ((ws1 @ ws2) ! i) \<in> S"
+      using hws1(1) hws2(1) by (simp add: nth_append)
+    have hmap_app: "map (\<lambda>(s,b). (\<iota> s, b)) (ws1 @ ws2) =
+        map (\<lambda>(s,b). (\<iota> s, b)) ws1 @ map (\<lambda>(s,b). (\<iota> s, b)) ws2" by (by100 simp)
+    have heval_app: "?eval_G (ws1 @ ws2) = mul g1 g2"
+      using word_product_append[OF hG_grp hmapped_G[OF hws1(1)] hmapped_G[OF hws2(1)]]
+            hmap_app hws1(2) hws2(2) by (by100 simp)
+    have hmul_G: "mul g1 g2 \<in> G"
+      using hG_grp hg1 hg2 unfolding top1_is_group_on_def by (by100 blast)
+    \<comment> \<open>\<psi>(mul g1 g2) = eval\_H(ws1 @ ws2) by well-definedness.\<close>
+    have "?\<psi> (mul g1 g2) = ?eval_H (ws1 @ ws2)"
+      by (rule hpsi_wd[OF hmul_G happ_S heval_app])
+    \<comment> \<open>eval\_H(ws1 @ ws2) = mulH(eval\_H ws1)(eval\_H ws2).\<close>
+    also have "\<dots> = mulH (?eval_H ws1) (?eval_H ws2)"
+    proof -
+      have "map (\<lambda>(s,b). (\<phi> s, b)) (ws1 @ ws2) =
+          map (\<lambda>(s,b). (\<phi> s, b)) ws1 @ map (\<lambda>(s,b). (\<phi> s, b)) ws2" by (by100 simp)
+      thus ?thesis
+        using word_product_append[OF assms(2) hmH_mapped[OF hws1(1)] hmH_mapped[OF hws2(1)]]
+        by (by100 simp)
+    qed
+    \<comment> \<open>eval\_H(wsi) = \<psi>(gi) by well-definedness.\<close>
+    also have "?eval_H ws1 = ?\<psi> g1" using hpsi_wd[OF hg1 hws1(1) hws1(2)] by (by100 simp)
+    also have "?eval_H ws2 = ?\<psi> g2" using hpsi_wd[OF hg2 hws2(1) hws2(2)] by (by100 simp)
+    finally show "?\<psi> (mul g1 g2) = mulH (?\<psi> g1) (?\<psi> g2)" by (by100 simp)
+  qed
   \<comment> \<open>Step 5: \<psi>(\<iota>(s)) = \<phi>(s).\<close>
   have hext: "\<forall>s\<in>S. ?\<psi> (\<iota> s) = \<phi> s"
-    sorry \<comment> \<open>\<iota>(s) = eval\_G([(s,True)]). SOME picks this word. eval\_H([(s,True)]) = \<phi>(s).\<close>
+  proof (intro ballI)
+    fix s assume hs: "s \<in> S"
+    \<comment> \<open>The word [(s, True)] evaluates to \<iota>(s) in G.\<close>
+    have hws_S: "\<forall>i<length [(s, True)]. fst ([(s, True)] ! i) \<in> S"
+      using hs by (by100 simp)
+    have heval_s: "?eval_G [(s, True)] = \<iota> s"
+    proof -
+      have "?eval_G [(s, True)] = mul (\<iota> s) e" by (by100 simp)
+      also have "\<dots> = \<iota> s"
+        using hG_grp hG_in hs unfolding top1_is_group_on_def by (by100 blast)
+      finally show ?thesis .
+    qed
+    have hiota_G: "\<iota> s \<in> G" using hG_in hs by (by100 blast)
+    \<comment> \<open>By well-definedness: \<psi>(\<iota> s) = eval\_H([(s, True)]).\<close>
+    have "?\<psi> (\<iota> s) = ?eval_H [(s, True)]"
+      by (rule hpsi_wd[OF hiota_G hws_S heval_s])
+    \<comment> \<open>eval\_H([(s, True)]) = \<phi>(s).\<close>
+    also have "\<dots> = mulH (\<phi> s) eH" by (by100 simp)
+    also have "\<dots> = \<phi> s"
+      using assms(2,3) hs unfolding top1_is_group_on_def by (by100 blast)
+    finally show "?\<psi> (\<iota> s) = \<phi> s" .
+  qed
   show ?thesis using hhom hext by (by100 blast)
 qed
 
