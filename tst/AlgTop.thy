@@ -609,11 +609,14 @@ proof -
       proof -
         have "Da3 \<inter> Da2 = {}"
         proof -
-          have "Da3 \<inter> Da2 \<subseteq> e13 \<inter> e24" using hDa3_sub hDa2_sub by (by100 blast)
-          hence "Da3 \<inter> Da2 \<subseteq> {a1,a2,a3,a4}" using assms(32) by (by100 blast)
+          have hsub4: "Da3 \<inter> Da2 \<subseteq> {a1,a2,a3,a4}"
+          proof -
+            have "Da3 \<inter> Da2 \<subseteq> e13 \<inter> e24" using hDa3_sub hDa2_sub by (by100 blast)
+            thus ?thesis using assms(32) by (by100 blast)
+          qed
           have "a1 \<noteq> p" using assms(37) by (by100 blast)
-          moreover have "a1 \<notin> Da3" using \<open>a1 \<in> D1p\<close> he13_meet \<open>a1 \<noteq> p\<close> by (by100 blast)
-          moreover have "a3 \<notin> Da2"
+          have ha1_not_Da3: "a1 \<notin> Da3" using \<open>a1 \<in> D1p\<close> he13_meet \<open>a1 \<noteq> p\<close> by (by100 blast)
+          have ha3_not_Da2: "a3 \<notin> Da2"
           proof -
             have "a3 \<notin> e24"
             proof
@@ -624,7 +627,7 @@ proof -
             qed
             thus ?thesis using hDa2_sub by (by100 blast)
           qed
-          moreover have "a2 \<notin> Da3"
+          have ha2_not_Da3: "a2 \<notin> Da3"
           proof -
             have "a2 \<notin> e13"
             proof
@@ -635,7 +638,7 @@ proof -
             qed
             thus ?thesis using hDa3_sub by (by100 blast)
           qed
-          moreover have "a4 \<notin> Da3"
+          have ha4_not_Da3: "a4 \<notin> Da3"
           proof -
             have "a4 \<notin> e13"
             proof
@@ -646,7 +649,15 @@ proof -
             qed
             thus ?thesis using hDa3_sub by (by100 blast)
           qed
-          ultimately show ?thesis sorry \<comment> \<open>From Da3\<inter>Da2 \<subseteq> {a1,a2,a3,a4} + vertex exclusions.\<close>
+          \<comment> \<open>Combine: Da3 \<inter> Da2 \<subseteq> {a1,a2,a3,a4}, but a1,a2,a4 \<notin> Da3 and a3 \<notin> Da2.\<close>
+          show ?thesis
+          proof (rule equals0I)
+            fix z assume "z \<in> Da3 \<inter> Da2"
+            hence "z \<in> {a1,a2,a3,a4}" using hsub4 by (by100 blast)
+            hence "z = a1 \<or> z = a2 \<or> z = a3 \<or> z = a4" by (by100 blast)
+            thus False using \<open>z \<in> Da3 \<inter> Da2\<close> ha1_not_Da3 ha2_not_Da3 ha3_not_Da2 ha4_not_Da3
+              by (by100 blast)
+          qed
         qed
         moreover have "e23 \<inter> Da2 = {a2}"
         proof -
