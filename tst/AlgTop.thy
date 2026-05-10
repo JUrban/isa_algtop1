@@ -529,8 +529,20 @@ proof -
     have hTd_proj: "\<And>e. p0 (T_d e) = p0 e" unfolding T_d_def p0_def by auto
     \<comment> \<open>ftk'\_shifted is a path from (a, 2d) to (a, 2d + 2k'd) in E.\<close>
     have hftk'_shifted_path: "top1_is_path_on E TE (a, 2 * d) (a, 2 * d + 2 * int k' * d) ftk'_shifted"
-      sorry \<comment> \<open>From T\_d continuous + ftk' is path + composition.
-         Start: T\_d(a, 0) = (a, 2d). End: T\_d(a, 2k'd) = (a, 2d + 2k'd).\<close>
+    proof -
+      have hcomp_cont: "top1_continuous_map_on I_set I_top E TE ftk'_shifted"
+        unfolding ftk'_shifted_def
+        by (rule top1_continuous_map_on_comp[where Y=E and TY=TE])
+           (use hftk'(1) hTd_cont in \<open>unfold top1_is_path_on_def, by100 blast\<close>)+
+      have hstart: "ftk'_shifted 0 = (a, 2 * d)"
+        unfolding ftk'_shifted_def T_d_def using hftk'(1)
+        unfolding top1_is_path_on_def by (by100 simp)
+      have hend: "ftk'_shifted 1 = (a, 2 * d + 2 * int k' * d)"
+        unfolding ftk'_shifted_def T_d_def using hftk'(1)
+        unfolding top1_is_path_on_def by (by100 simp)
+      show ?thesis unfolding top1_is_path_on_def
+        using hcomp_cont hstart hend by (by100 blast)
+    qed
     have hftk'_shifted_proj: "\<forall>s\<in>I_set. p0 (ftk'_shifted s) = top1_path_power gen a k' s"
     proof (intro ballI)
       fix s assume "s \<in> I_set"
