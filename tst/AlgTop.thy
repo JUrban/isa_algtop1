@@ -866,7 +866,7 @@ proof -
           by (rule path_homotopic_reverse[OF assms(1) h_eq_neg_sym hrgen_path hab_path])
         have h_gen_rab: "top1_path_homotopic_on X TX a a
             gen (top1_path_reverse (top1_path_product \<alpha> \<beta>))"
-          sorry \<comment> \<open>gen \<simeq> reverse(reverse(gen)) \<simeq> reverse(\<alpha>*\<beta>). Needs reverse-reverse identity.\<close>
+          using h_rr_gen top1_path_reverse_twice[of gen] by simp
         \<comment> \<open>gen^n \<simeq> reverse(\<alpha>*\<beta>)^n.\<close>
         have hpow: "top1_path_homotopic_on X TX a a
             (top1_path_power gen a n) (top1_path_power (top1_path_reverse (top1_path_product \<alpha> \<beta>)) a n)"
