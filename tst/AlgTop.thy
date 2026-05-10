@@ -822,9 +822,78 @@ proof -
         using hk by (by100 blast)
       have "k = 1" by (rule hk_one)
       \<comment> \<open>reverse(gen)^1 \<simeq> reverse(gen), so \<alpha>*\<beta> \<simeq> reverse(gen), i.e., gen \<simeq> reverse(\<alpha>*\<beta>).\<close>
+      \<comment> \<open>reverse(gen)^1 = reverse(gen)*const \<simeq> reverse(gen).\<close>
+      have hrgen1_eq: "top1_path_homotopic_on X TX a a
+          (top1_path_power (top1_path_reverse gen) a 1) (top1_path_reverse gen)"
+      proof -
+        have hrg_path: "top1_is_path_on X TX a a (top1_path_reverse gen)"
+          by (rule top1_path_reverse_is_path[OF hgen_path])
+        have "top1_path_power (top1_path_reverse gen) a 1 =
+            top1_path_product (top1_path_reverse gen) (top1_constant_path a)" by simp
+        moreover have "top1_path_homotopic_on X TX a a
+            (top1_path_product (top1_path_reverse gen) (top1_constant_path a)) (top1_path_reverse gen)"
+          by (rule Theorem_51_2_right_identity[OF assms(1) hrg_path])
+        ultimately show ?thesis by simp
+      qed
+      have h_eq_neg: "top1_path_homotopic_on X TX a a
+          (top1_path_product \<alpha> \<beta>) (top1_path_reverse gen)"
+      proof -
+        have "top1_path_homotopic_on X TX a a
+            (top1_path_product \<alpha> \<beta>) (top1_path_power (top1_path_reverse gen) a 1)"
+          using hneg \<open>k = 1\<close> by simp
+        thus ?thesis
+          by (rule Lemma_51_1_path_homotopic_trans[OF assms(1) _ hrgen1_eq])
+      qed
+      \<comment> \<open>reverse(gen) \<simeq> \<alpha>*\<beta>. So gen \<simeq> reverse(\<alpha>*\<beta>).
+         Then gen^n \<simeq> reverse(\<alpha>*\<beta>)^n and reverse(gen)^n \<simeq> (\<alpha>*\<beta>)^n.\<close>
       show ?thesis
-        sorry \<comment> \<open>Symmetric to the True case: gen = reverse(\<alpha>*\<beta>), then
-           gen^n = reverse(\<alpha>*\<beta>)^n and reverse(gen)^n = (\<alpha>*\<beta>)^n.\<close>
+      proof -
+        have hgen_path2: "top1_is_path_on X TX a a gen"
+          using hgen_loop unfolding top1_is_loop_on_def by (by100 blast)
+        have hab_path: "top1_is_path_on X TX a a (top1_path_product \<alpha> \<beta>)"
+          using h\<alpha>\<beta>_loop unfolding top1_is_loop_on_def by (by100 blast)
+        have hrgen_path: "top1_is_path_on X TX a a (top1_path_reverse gen)"
+          by (rule top1_path_reverse_is_path[OF hgen_path2])
+        have hrab_path: "top1_is_path_on X TX a a
+            (top1_path_reverse (top1_path_product \<alpha> \<beta>))"
+          by (rule top1_path_reverse_is_path[OF hab_path])
+        \<comment> \<open>\<alpha>*\<beta> \<simeq> reverse(gen). So reverse(\<alpha>*\<beta>) \<simeq> gen (reverse both sides).\<close>
+        have h_eq_neg_sym: "top1_path_homotopic_on X TX a a
+            (top1_path_reverse gen) (top1_path_product \<alpha> \<beta>)"
+          by (rule Lemma_51_1_path_homotopic_sym[OF h_eq_neg])
+        have h_rr_gen: "top1_path_homotopic_on X TX a a
+            (top1_path_reverse (top1_path_reverse gen)) (top1_path_reverse (top1_path_product \<alpha> \<beta>))"
+          by (rule path_homotopic_reverse[OF assms(1) h_eq_neg_sym hrgen_path hab_path])
+        have h_gen_rab: "top1_path_homotopic_on X TX a a
+            gen (top1_path_reverse (top1_path_product \<alpha> \<beta>))"
+          sorry \<comment> \<open>gen \<simeq> reverse(reverse(gen)) \<simeq> reverse(\<alpha>*\<beta>). Needs reverse-reverse identity.\<close>
+        \<comment> \<open>gen^n \<simeq> reverse(\<alpha>*\<beta>)^n.\<close>
+        have hpow: "top1_path_homotopic_on X TX a a
+            (top1_path_power gen a n) (top1_path_power (top1_path_reverse (top1_path_product \<alpha> \<beta>)) a n)"
+          by (rule path_homotopic_path_power[OF assms(1) h_gen_rab hgen_path2 hrab_path])
+        \<comment> \<open>reverse(gen) \<simeq> \<alpha>*\<beta>. So reverse(gen)^n \<simeq> (\<alpha>*\<beta>)^n.\<close>
+        have h_rgen_ab: "top1_path_homotopic_on X TX a a
+            (top1_path_reverse gen) (top1_path_product \<alpha> \<beta>)"
+          by (rule Lemma_51_1_path_homotopic_sym[OF h_eq_neg])
+        have hpow_rev: "top1_path_homotopic_on X TX a a
+            (top1_path_power (top1_path_reverse gen) a n)
+            (top1_path_power (top1_path_product \<alpha> \<beta>) a n)"
+          by (rule path_homotopic_path_power[OF assms(1) h_rgen_ab hrgen_path hab_path])
+        from hn show ?thesis
+        proof
+          assume hf_gen: "top1_path_homotopic_on X TX a a f (top1_path_power gen a n)"
+          have "top1_path_homotopic_on X TX a a f
+              (top1_path_power (top1_path_reverse (top1_path_product \<alpha> \<beta>)) a n)"
+            by (rule Lemma_51_1_path_homotopic_trans[OF assms(1) hf_gen hpow])
+          thus ?thesis by blast
+        next
+          assume hf_rgen: "top1_path_homotopic_on X TX a a f (top1_path_power (top1_path_reverse gen) a n)"
+          have "top1_path_homotopic_on X TX a a f
+              (top1_path_power (top1_path_product \<alpha> \<beta>) a n)"
+            by (rule Lemma_51_1_path_homotopic_trans[OF assms(1) hf_rgen hpow_rev])
+          thus ?thesis by blast
+        qed
+      qed
     qed
   qed
 qed
