@@ -1,6 +1,19 @@
 theory AlgTop
   imports "AlgTopC.AlgTopCached"
 begin
+text \<open>S2 minus an arc is simply connected. Standard fact:
+  S2-{p} is homeomorphic to R2 via stereographic projection, and R2 minus
+  a compact arc is simply connected.\<close>
+lemma S2_minus_arc_simply_connected:
+  assumes "is_topology_on_strict top1_S2 top1_S2_topology"
+      and "D \<subseteq> top1_S2"
+      and "top1_is_arc_on D (subspace_topology top1_S2 top1_S2_topology D)"
+  shows "top1_simply_connected_on (top1_S2 - D)
+           (subspace_topology top1_S2 top1_S2_topology (top1_S2 - D))"
+  sorry \<comment> \<open>Proof: pick p in int(D). S2-{p} homeomorphic to R2 (S2\_minus\_point\_homeo\_R2).
+     Under this homeomorphism, D-{p} maps to a compact connected set with empty
+     interior in R2. R2 minus such a set is simply connected.\<close>
+
 text \<open>Theorem 64.2: The utilities graph K33 cannot be imbedded in the plane.\<close>
 
 text \<open>Theorem 64.2 and 64.4 (K\_3\_3 and K\_5 not planar) are consequences
@@ -143,18 +156,49 @@ proof -
       by (rule hTC_eq)
     show ?thesis using h unfolding hTC_eq2 .
   qed
-  have hj_inj: "inj_on (top1_fundamental_group_induced_on C ?TC c0 ?X ?TX c0 (\<lambda>x. x))
-      (top1_fundamental_group_carrier C ?TC c0)"
-    sorry \<comment> \<open>j_* nontrivial (from h\_nontrivial) + Z \<rightarrow> Z nontrivial \<Rightarrow> injective.\<close>
-  \<comment> \<open>Step 4: j_* is surjective.
-     This is the hard part. Following Munkres: construct D_1, D_2, U, V.
-     Apply Theorem 63.1 to show \<alpha>*\<beta> generates \<pi>_1(X).
-     Since \<alpha>*\<beta> lies in C, j_* is surjective.\<close>
+  \<comment> \<open>Step 3b: Both \<pi>_1(C, c0) and \<pi>_1(X, c0) are infinite cyclic (\<cong> Z).
+     C is a simple closed curve (homeomorphic to S1), so \<pi>_1(C) \<cong> Z.
+     X = S2-{p}-{q} with p \<noteq> q, so \<pi>_1(X) \<cong> Z by pi1\_S2\_minus\_two\_points.\<close>
+  have hp_S2: "p \<in> top1_S2" using assms(37) assms(8) by (by100 blast)
+  have hq_S2: "q \<in> top1_S2" using assms(38) assms(9) by (by100 blast)
+  have hp_ne_q: "p \<noteq> q"
+  proof -
+    have "p \<in> e13" using assms(37) by (by100 blast)
+    have "q \<in> e24" using assms(38) by (by100 blast)
+    have "e13 \<inter> e24 \<subseteq> {a1,a2,a3,a4}" using assms(32) .
+    have "p \<notin> {a1,a3}" using assms(37) by (by100 blast)
+    have "q \<notin> {a2,a4}" using assms(38) by (by100 blast)
+    show ?thesis
+    proof
+      assume "p = q"
+      hence "p \<in> e13 \<inter> e24" using \<open>p \<in> e13\<close> \<open>q \<in> e24\<close> by (by100 blast)
+      hence "p \<in> {a1,a2,a3,a4}" using assms(32) by (by100 blast)
+      hence "p \<in> {a2,a4}" using \<open>p \<notin> {a1,a3}\<close> by (by100 blast)
+      hence "q \<in> {a2,a4}" using \<open>p = q\<close> by (by100 blast)
+      thus False using \<open>q \<notin> {a2,a4}\<close> by (by100 blast)
+    qed
+  qed
+  \<comment> \<open>Step 4: Surjectivity of j_*.
+     Following Munkres 65.1(b): the existing Lemma\_65\_1 constructs \<alpha>*\<beta> via Theorem 63.1.
+     \<alpha>*\<beta> is a loop in C that is nontrivial in X. Since \<pi>_1(X) \<cong> Z and
+     Theorem\_63\_1\_c\_subgroups\_trivial gives that [\<alpha>*\<beta>] generates \<pi>_1(X),
+     and \<alpha>*\<beta> lies in C, j_* is surjective.\<close>
   have hj_surj: "(top1_fundamental_group_induced_on C ?TC c0 ?X ?TX c0 (\<lambda>x. x))
       ` (top1_fundamental_group_carrier C ?TC c0)
       = top1_fundamental_group_carrier ?X ?TX c0"
-    sorry \<comment> \<open>Main content: SvK with U, V simply connected + U\<inter>V two components
-           \<Rightarrow> \<alpha>*\<beta> generates \<pi>_1(X) \<Rightarrow> j_* surjective.\<close>
+    sorry \<comment> \<open>From h\_nontrivial: \<exists>x\<in>C. \<exists>g. loop g at x in X, nontrivial.
+       From pi1\_S2\_minus\_two\_points\_infinite\_cyclic: \<pi>_1(X) infinite cyclic.
+       From Theorem\_63\_1\_c\_subgroups\_trivial: [g] is a generator of \<pi>_1(X).
+       Since g lies in C, j_* hits the generator, hence j_* surjective.
+       Basepoint change from x to c0 via Corollary\_52\_2.\<close>
+  \<comment> \<open>Step 5: Injectivity of j_*.
+     Both \<pi>_1(C) and \<pi>_1(X) are \<cong> Z. j_* surjective hom Z \<rightarrow> Z
+     maps generator to \<plusminus>generator, hence injective.
+     (A surjective hom Z \<rightarrow> Z must map 1 to \<plusminus>1, hence bijective.)\<close>
+  have hj_inj: "inj_on (top1_fundamental_group_induced_on C ?TC c0 ?X ?TX c0 (\<lambda>x. x))
+      (top1_fundamental_group_carrier C ?TC c0)"
+    sorry \<comment> \<open>Surjective group hom Z \<rightarrow> Z is injective. Proof: maps 1 to n with
+       nZ = Z, so n = \<plusminus>1. Then k \<mapsto> \<plusminus>k is bijective.\<close>
   \<comment> \<open>Step 5: Combine homomorphism + injective + surjective = isomorphism.\<close>
   have hj_bij: "bij_betw (top1_fundamental_group_induced_on C ?TC c0 ?X ?TX c0 (\<lambda>x. x))
       (top1_fundamental_group_carrier C ?TC c0)
