@@ -1204,20 +1204,6 @@ proof -
     using hpoly unfolding top1_is_polygonal_quotient_on_def by (by100 blast)
   then obtain scheme :: "(nat \<times> bool) list" where hsch: "top1_quotient_of_scheme_on X TX scheme"
     by (by100 auto)
-  \<comment> \<open>Extract the strict "no extra identifications" condition.\<close>
-  have hstrict: "\<exists>P q (vx::nat\<Rightarrow>real) (vy::nat\<Rightarrow>real).
-      top1_is_polygonal_region_on P (length scheme)
-    \<and> top1_quotient_map_on P (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) X TX q
-    \<and> (\<forall>i<length scheme. (vx i, vy i) \<in> P)
-    \<and> (\<forall>i<length scheme. \<forall>j<length scheme. \<forall>t\<in>I_set. \<forall>s\<in>I_set.
-          q ((1-t) * vx i + t * vx (Suc i mod length scheme),
-             (1-t) * vy i + t * vy (Suc i mod length scheme))
-        = q ((1-s) * vx j + s * vx (Suc j mod length scheme),
-             (1-s) * vy j + s * vy (Suc j mod length scheme))
-        \<longrightarrow> (i = j \<and> t = s)
-          \<or> (fst (scheme!i) = fst (scheme!j) \<and>
-             (if snd (scheme!i) = snd (scheme!j) then s = t else s = 1 - t)))"
-    using assms(2) unfolding top1_is_polygonal_quotient_strict_on_def sorry
   have hcompact: "top1_compact_on X TX"
   proof -
     \<comment> \<open>Extract P, q from the scheme.\<close>
