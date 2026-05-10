@@ -10322,7 +10322,7 @@ proof -
           have "(invg ws)!(?n - Suc i) = (rev (map (\<lambda>(\<alpha>, g). (\<alpha>, invgGG \<alpha> g)) ws))!(?n - Suc i)"
             unfolding invg_def by (by100 simp)
           also have "\<dots> = (map (\<lambda>(\<alpha>, g). (\<alpha>, invgGG \<alpha> g)) ws)!(?n - Suc (?n - Suc i))"
-            using rev_nth[of "?n - Suc i" "map (\<lambda>(\<alpha>, g). (\<alpha>, invgGG \<alpha> g)) ws"] hi by (by100 simp)
+            using rev_nth[of "?n - Suc i" "map (\<lambda>(\<alpha>, g). (\<alpha>, invgGG \<alpha> g)) ws"] hi by simp
           also have "?n - Suc (?n - Suc i) = i" using hi by (by100 linarith)
           also have "(map (\<lambda>(\<alpha>, g). (\<alpha>, invgGG \<alpha> g)) ws)!i = (\<lambda>(\<alpha>, g). (\<alpha>, invgGG \<alpha> g)) (ws!i)"
             using hi by (by100 simp)
@@ -10333,8 +10333,14 @@ proof -
           have "(invg (invg ws))!i = (rev (map (\<lambda>(\<alpha>, g). (\<alpha>, invgGG \<alpha> g)) (invg ws)))!i"
             unfolding invg_def by (by100 simp)
           also have "\<dots> = (map (\<lambda>(\<alpha>, g). (\<alpha>, invgGG \<alpha> g)) (invg ws))!(length (invg ws) - Suc i)"
-            using rev_nth[of i "map (\<lambda>(\<alpha>, g). (\<alpha>, invgGG \<alpha> g)) (invg ws)"] hi
-            unfolding invg_def by (by100 simp)
+          proof -
+            have "length (invg ws) = length ws" unfolding invg_def by (by100 simp)
+            moreover have "length (map (\<lambda>(\<alpha>, g). (\<alpha>, invgGG \<alpha> g)) (invg ws)) = length (invg ws)"
+              by (by100 simp)
+            ultimately show ?thesis
+              using rev_nth[of i "map (\<lambda>(\<alpha>, g). (\<alpha>, invgGG \<alpha> g)) (invg ws)"] hi
+              unfolding invg_def by simp
+          qed
           also have "length (invg ws) = ?n" unfolding invg_def by (by100 simp)
           also have "(map (\<lambda>(\<alpha>, g). (\<alpha>, invgGG \<alpha> g)) (invg ws))!(?n - Suc i)
               = (\<lambda>(\<alpha>, g). (\<alpha>, invgGG \<alpha> g)) ((invg ws)!(?n - Suc i))"
@@ -11631,7 +11637,7 @@ proof -
           have "a = fst (?ws0!i)" "b = snd (?ws0!i)" using hab by (by100 simp)+
           have hstep: "(map (\<lambda>(\<alpha>,x). \<iota>fam \<alpha> x) ?ws0)!i = \<iota>fam a b"
             using hmap_nth hab by (by100 simp)
-          have "\<iota>fam a b \<in> G" using h\<iota>G_i \<open>a = fst (?ws0!i)\<close> \<open>b = snd (?ws0!i)\<close> by (by100 simp)
+          have "\<iota>fam a b \<in> G" using h\<iota>G_i \<open>a = fst (?ws0!i)\<close> \<open>b = snd (?ws0!i)\<close> by simp
           thus "(map (\<lambda>(\<alpha>,x). \<iota>fam \<alpha> x) ?ws0)!i \<in> G" using hstep by (by100 simp)
         qed
         have hmap_inv_G: "\<forall>i<length [\<iota>fam \<alpha> (invgGG \<alpha> x)]. [\<iota>fam \<alpha> (invgGG \<alpha> x)]!i \<in> G"
@@ -11867,7 +11873,7 @@ proof -
           have "?j < length ?gs2" using hj by (by100 simp)
           have "?gs2!?j \<in> G" using hmapG2 \<open>?j < length ?gs2\<close> by (by100 blast)
           hence "invg (?gs2!?j) \<in> G" using hG unfolding top1_is_group_on_def by (by100 blast)
-          thus "(rev (map invg ?gs2))!i \<in> G" using hri_eq by (by100 simp)
+          thus "(rev (map invg ?gs2))!i \<in> G" using hri_eq by simp
         qed
         thus ?thesis using hgs_ri_eq by (by100 simp)
       qed
@@ -14726,9 +14732,9 @@ next
             case True thus ?thesis using c_def htl_i by auto
           next
             case False
-            hence "i = k' - 2" using hi' by (by100 linarith)
-            hence "k' \<ge> 2" using hi' by (by100 linarith)
-            hence "Suc i = k' - 1" using \<open>i = k' - 2\<close> \<open>k' \<ge> 2\<close> by (by100 linarith)
+            hence "i = k' - 2" using hi' by linarith
+            hence "k' \<ge> 2" using hi' by linarith
+            hence "Suc i = k' - 1" using \<open>i = k' - 2\<close> \<open>k' \<ge> 2\<close> by linarith
             have "c (k' - 1) = x0"
             proof -
               have "k' - 1 \<noteq> 0" using \<open>k' \<ge> 2\<close> by (by100 linarith)
@@ -14750,7 +14756,7 @@ next
               have "(ps!k') 1 = x0" using Suc.prems(5) Suc.hyps by (by100 simp)
               thus ?thesis using \<open>ps!k' = rest!(k'-1)\<close> by (by100 simp)
             qed
-            ultimately show ?thesis using \<open>Suc i = k' - 1\<close> by (by100 simp)
+            ultimately show ?thesis using \<open>Suc i = k' - 1\<close> by simp
           qed
           show "top1_is_path_on X TX (c i) (c (Suc i)) (?tl!i)"
             using htl_cont hstart_c hend_c unfolding top1_is_path_on_def by (by100 blast)
@@ -58776,9 +58782,9 @@ next
       hence hx: "x \<in> A" "(x, 2*(n+j)+2) \<in> W" by (by100 blast)+
       have "x \<in> U" using hx(1) hA_U by (by100 blast)
       have hE: "(x, 2*n+2) \<in> E" unfolding E_def using \<open>x \<in> U\<close> by (by100 simp)
-      have "(\<lambda>(xa, na). (xa, na + 2*j)) (x, 2*n+2) = (x, 2*(n+j)+2)"
+      have hval_A: "(\<lambda>(xa, na). (xa, na + 2*j)) (x, 2*n+2) = (x, 2*(n+j)+2)"
         by (simp add: algebra_simps)
-      hence "(\<lambda>(xa, na). (xa, na + 2*j)) (x, 2*n+2) \<in> W" using hx(2) by simp
+      have "(\<lambda>(xa, na). (xa, na + 2*j)) (x, 2*n+2) \<in> W" using hx(2) hval_A by simp
       hence "(x, 2*n+2) \<in> W'" using hE unfolding W'_def by (by100 blast)
       thus "x \<in> {x \<in> A. (x, 2*n + 2) \<in> W'}" using hx(1) by (by100 blast)
     qed
