@@ -2049,12 +2049,25 @@ proof -
     \<comment> \<open>C is SCC: \<exists>f. continuous bijection S1 \<rightarrow> C.\<close>
     obtain f where hf_cont: "top1_continuous_map_on top1_S1 top1_S1_topology top1_S2 top1_S2_topology f"
         and hf_inj: "inj_on f top1_S1" and hf_img: "f ` top1_S1 = C"
-      sorry \<comment> \<open>From hC\_SCC. The SCC definition gives continuous injection S1 \<rightarrow> X with image C.
-         Need to lift from subspace topology to S2 topology.\<close>
+      using hC_scc unfolding top1_simple_closed_curve_on_def by (by100 blast)
     \<comment> \<open>f is a homeomorphism S1 \<rightarrow> C (compact \<rightarrow> Hausdorff, Theorem\_26\_6).\<close>
     have hf_homeo: "top1_homeomorphism_on top1_S1 top1_S1_topology C ?TC f"
-      sorry \<comment> \<open>S1 compact, C \<subseteq> S2 Hausdorff, f continuous bijection.
-         By Theorem\_26\_6: f is homeomorphism. Need subspace topology.\<close>
+    proof -
+      have hf_cont_C: "top1_continuous_map_on top1_S1 top1_S1_topology C ?TC f"
+      proof (rule continuous_map_restrict_codomain[OF hf_cont])
+        fix s assume "s \<in> top1_S1"
+        hence "f s \<in> f ` top1_S1" by (by100 blast)
+        thus "f s \<in> C" using hf_img by (by100 simp)
+        show "C \<subseteq> top1_S2" by (rule hC_sub_S2)
+      qed
+      have hf_bij: "bij_betw f top1_S1 C"
+        unfolding bij_betw_def using hf_inj hf_img by (by100 blast)
+      have hC_haus: "is_hausdorff_on C ?TC"
+        using conjunct2[OF conjunct2[OF Theorem_17_11]] hC_sub_S2 top1_S2_is_hausdorff
+        by (by100 blast)
+      show ?thesis
+        by (rule Theorem_26_6[OF hS1_top' hTC_top' S1_compact hC_haus hf_cont_C hf_bij])
+    qed
     \<comment> \<open>\<pi>_1(S1, f\<inverse>(c0)) \<cong> \<pi>_1(C, c0).\<close>
     have hc0_S1: "\<exists>s0 \<in> top1_S1. f s0 = c0"
       using hf_img assms(40) by (by100 blast)
