@@ -73,12 +73,26 @@ proof (intro allI impI)
 
      This is the core of the SvK argument for disconnected intersections.
      Full formalization requires ~200 lines of path algebra with induction.\<close>
+  \<comment> \<open>Key sub-claim: in \<pi>_1(X) \<cong> Z, 63.1 A-pairs are trivial.
+     For any a' \<in> A, \<gamma>: a\<rightarrow>a' in U, \<delta>: a'\<rightarrow>a in V: [\<gamma>*\<delta>] = 0.
+     Proof: [\<gamma>*\<delta>] = gen^j. If j \<noteq> 0: take m=j, k=n in 63.1(c):
+     gen^{nj} = gen^{jn}, so (\<alpha>*\<beta>)^j \<cong> (\<gamma>*\<delta>)^n. By 63.1(c): j=0. Contradiction.
+     This step needs \<pi>_1(X) to be infinite cyclic, which is given by assms.\<close>
+  \<comment> \<open>Main conclusion: from the decomposition hf\_decomp + the sub-claim +
+     U, V simply connected, every loop f at a is a power of [\<alpha>*\<beta>].
+     This is a version of SvK for disconnected intersections.
+     Full formalization requires: (1) tracking component membership of
+     subdivision points, (2) replacing each piece by canonical path using
+     simple connectivity, (3) cancelling same-component pieces using the
+     sub-claim, (4) pairing crossings to get (\<alpha>*\<beta>) factors.
+     Each step uses path algebra infrastructure from Top1\_Ch9\_13 + AlgTopCached.\<close>
   show "\<exists>n::nat. top1_path_homotopic_on X TX a a f (top1_path_power (top1_path_product \<alpha> \<beta>) a n)
       \<or> top1_path_homotopic_on X TX a a f
            (top1_path_power (top1_path_reverse (top1_path_product \<alpha> \<beta>)) a n)"
-    sorry \<comment> \<open>From hf\_decomp + simply connected pieces + 63.1(c) triviality of A-pairs.
-       The formal induction on n reduces the product of pieces to (\<alpha>*\<beta>)^k.
-       This is the deepest formal step — a version of SvK for disconnected U\<inter>V.\<close>
+    sorry \<comment> \<open>SvK for disconnected U\<inter>V with simply connected regions.
+       All mathematical ingredients available: loop\_subdivision\_UV, Theorem\_51\_3\_aux,
+       simply\_connected\_paths\_homotopic, Theorem\_63\_1\_c\_subgroups\_trivial.
+       The formalization requires ~200 lines of path algebra with subdivision tracking.\<close>
 qed
 
 text \<open>S2 minus an arc is simply connected. Standard fact:
@@ -93,6 +107,323 @@ lemma S2_minus_arc_simply_connected:
   sorry \<comment> \<open>Proof: pick p in int(D). S2-{p} homeomorphic to R2 (S2\_minus\_point\_homeo\_R2).
      Under this homeomorphism, D-{p} maps to a compact connected set with empty
      interior in R2. R2 minus such a set is simply connected.\<close>
+
+text \<open>Theorem 63.1(b): If \<pi>_1(X) is infinite cyclic, [\<alpha>*\<beta>] generates it.
+  Proof follows Munkres Step 4: the helix covering E \<rightarrow> X gives a
+  lifting correspondence \<phi>: \<pi>_1(X) \<rightarrow> fiber. Since \<phi>([\<alpha>*\<beta>]^n) = n
+  (surjective onto Z-fiber), and \<pi>_1(X) \<cong> Z implies Z/H \<cong> Z \<Rightarrow> H=\{0\},
+  the map \<phi> is bijective. Then \<langle>[\<alpha>*\<beta>]\<rangle> = \<pi>_1(X).\<close>
+lemma Theorem_63_1_b_generation:
+  assumes "is_topology_on X TX"
+      and "openin_on X TX U" and "openin_on X TX V" and "U \<union> V = X"
+      and "U \<inter> V = A \<union> B" and "A \<inter> B = {}"
+      and "openin_on X TX A" and "openin_on X TX B"
+      and "a \<in> A" and "b \<in> B"
+      and "top1_is_path_on U (subspace_topology X TX U) a b \<alpha>"
+      and "top1_is_path_on V (subspace_topology X TX V) b a \<beta>"
+      \<comment> \<open>\<pi>_1(X, a) is infinite cyclic with some generator gen.\<close>
+      and "\<exists>gen. top1_is_loop_on X TX a gen \<and>
+        (\<forall>f. top1_is_loop_on X TX a f \<longrightarrow>
+          (\<exists>n::nat. top1_path_homotopic_on X TX a a f (top1_path_power gen a n)
+            \<or> top1_path_homotopic_on X TX a a f
+                 (top1_path_power (top1_path_reverse gen) a n)))"
+  shows "\<forall>f. top1_is_loop_on X TX a f \<longrightarrow>
+    (\<exists>n::nat. top1_path_homotopic_on X TX a a f (top1_path_power (top1_path_product \<alpha> \<beta>) a n)
+      \<or> top1_path_homotopic_on X TX a a f
+           (top1_path_power (top1_path_reverse (top1_path_product \<alpha> \<beta>)) a n))"
+proof -
+  \<comment> \<open>Step 1: Construct helix covering.\<close>
+  have ha_U: "a \<in> U" using assms(5,9) by (by100 blast)
+  define E :: "('a \<times> int) set" where
+    "E = {(x, m). (even m \<and> x \<in> U) \<or> (odd m \<and> x \<in> V - U)}"
+  define TE :: "('a \<times> int) set set" where
+    "TE = {W. W \<subseteq> E \<and>
+      (\<forall>n::int. {x \<in> U. (x, 2*n) \<in> W} \<in> TX) \<and>
+      (\<forall>n::int. {x \<in> A. (x, 2*n + 2) \<in> W} \<union> {x \<in> B. (x, 2*n) \<in> W} \<union>
+                {x \<in> V - U. (x, 2*n + 1) \<in> W} \<in> TX)}"
+  define p0 :: "'a \<times> int \<Rightarrow> 'a" where "p0 = fst"
+  have he0: "(a, 0::int) \<in> E" unfolding E_def using ha_U by simp
+  have hp0: "p0 (a, 0::int) = a" unfolding p0_def by simp
+  have hcov_TE: "top1_covering_map_on E TE X TX p0 \<and> is_topology_on E TE"
+  proof -
+    note h = helix_covering_construction[OF assms(1-8)]
+    have "E = {x. even (snd x) \<and> fst x \<in> U \<or> odd (snd x) \<and> fst x \<in> V - U}"
+      unfolding E_def by auto
+    moreover have "TE = {W. W \<subseteq> E \<and>
+        (\<forall>n. {x \<in> U. (x, 2 * n) \<in> W} \<in> TX) \<and>
+        (\<forall>n. {x \<in> A. (x, 2 * n + 2) \<in> W} \<union> {x \<in> B. (x, 2 * n) \<in> W} \<union>
+              {x \<in> V - U. (x, 2 * n + 1) \<in> W} \<in> TX)}"
+      unfolding TE_def E_def by auto
+    moreover have "p0 = fst" unfolding p0_def by simp
+    ultimately show ?thesis using h by simp
+  qed
+  hence hTE: "is_topology_on E TE" and hcov: "top1_covering_map_on E TE X TX p0" by auto
+  \<comment> \<open>Step 2: (\<alpha>*\<beta>)^m lifts from (a,0) to (a, 2m).\<close>
+  have hfm_lift: "\<And>m. \<exists>ftm. top1_is_path_on E TE (a, 0) (a, 2 * int m) ftm \<and>
+      (\<forall>s\<in>I_set. p0 (ftm s) = top1_path_power (top1_path_product \<alpha> \<beta>) a m s)"
+  proof -
+    fix m :: nat
+    show "\<exists>ftm. top1_is_path_on E TE (a, 0) (a, 2 * int m) ftm \<and>
+        (\<forall>s\<in>I_set. p0 (ftm s) = top1_path_power (top1_path_product \<alpha> \<beta>) a m s)"
+    proof (rule helix_f_power_lift[OF assms(1-12) hcov hTE he0 hp0])
+      show "\<And>W n. W \<in> TE \<Longrightarrow> {x \<in> U. (x, 2 * n) \<in> W} \<in> TX"
+        unfolding TE_def by (by100 blast)
+      show "\<And>W n. W \<in> TE \<Longrightarrow> {x \<in> A. (x, 2*n + 2) \<in> W} \<union> {x \<in> B. (x, 2*n) \<in> W} \<union>
+          {x \<in> V - U. (x, 2*n + 1) \<in> W} \<in> TX"
+        unfolding TE_def by (by100 blast)
+      show "\<And>x n. x \<in> U \<Longrightarrow> (x, 2*n) \<in> E" unfolding E_def by auto
+      show "\<And>x n. x \<in> V - U \<Longrightarrow> (x, 2*n + 1) \<in> E" unfolding E_def by auto
+      show "\<And>x n. x \<in> A \<Longrightarrow> (x, 2*n + 2) \<in> E"
+        using assms(5) unfolding E_def by auto
+      show "\<And>x n. x \<in> B \<Longrightarrow> (x, 2*n) \<in> E"
+        using assms(5) unfolding E_def by auto
+      show "p0 = fst" unfolding p0_def by simp
+      show "\<And>x m. (x, m) \<in> E \<Longrightarrow> (even m \<and> x \<in> U) \<or> (odd m \<and> x \<in> V - U)"
+        unfolding E_def by auto
+      show "\<And>W. \<lbrakk>W \<subseteq> E; \<forall>n::int. {x \<in> U. (x, 2*n) \<in> W} \<in> TX;
+          \<forall>n::int. {x \<in> A. (x, 2*n + 2) \<in> W} \<union> {x \<in> B. (x, 2*n) \<in> W} \<union>
+                    {x \<in> V - U. (x, 2*n + 1) \<in> W} \<in> TX\<rbrakk> \<Longrightarrow> W \<in> TE"
+        unfolding TE_def by (by100 blast)
+    qed
+  qed
+  \<comment> \<open>Step 3: From assms(13), \<pi>_1(X) is infinite cyclic with generator gen.\<close>
+  obtain gen where hgen_loop: "top1_is_loop_on X TX a gen"
+      and hgen_all: "\<forall>f. top1_is_loop_on X TX a f \<longrightarrow>
+        (\<exists>n::nat. top1_path_homotopic_on X TX a a f (top1_path_power gen a n)
+          \<or> top1_path_homotopic_on X TX a a f
+               (top1_path_power (top1_path_reverse gen) a n))"
+    using assms(13) by blast
+  \<comment> \<open>Step 4: [\<alpha>*\<beta>] is nontrivial (from Theorem\_63\_1\_loop\_nontrivial).\<close>
+  have h\<alpha>\<beta>_nontrivial: "\<not> top1_path_homotopic_on X TX a a
+      (top1_path_product \<alpha> \<beta>) (top1_constant_path a)"
+    by (rule Theorem_63_1_loop_nontrivial[OF assms(1-12)])
+  \<comment> \<open>Step 5: [\<alpha>*\<beta>] = gen^k for some k with k \<noteq> 0.\<close>
+  have h\<alpha>\<beta>_loop: "top1_is_loop_on X TX a (top1_path_product \<alpha> \<beta>)"
+  proof -
+    have hU_sub: "U \<subseteq> X" using assms(2) unfolding openin_on_def by (by100 blast)
+    have hV_sub: "V \<subseteq> X" using assms(3) unfolding openin_on_def by (by100 blast)
+    have hTU: "is_topology_on U (subspace_topology X TX U)"
+      by (rule subspace_topology_is_topology_on[OF assms(1) hU_sub])
+    have hTV: "is_topology_on V (subspace_topology X TX V)"
+      by (rule subspace_topology_is_topology_on[OF assms(1) hV_sub])
+    have h\<alpha>_X: "top1_is_path_on X TX a b \<alpha>"
+      by (rule path_in_subspace_is_path_in_ambient'[OF assms(1) hU_sub assms(11)])
+    have h\<beta>_X: "top1_is_path_on X TX b a \<beta>"
+      by (rule path_in_subspace_is_path_in_ambient'[OF assms(1) hV_sub assms(12)])
+    show ?thesis unfolding top1_is_loop_on_def
+      by (rule top1_path_product_is_path[OF assms(1) h\<alpha>_X h\<beta>_X])
+  qed
+  obtain k :: nat where hk: "top1_path_homotopic_on X TX a a
+      (top1_path_product \<alpha> \<beta>) (top1_path_power gen a k)
+    \<or> top1_path_homotopic_on X TX a a
+      (top1_path_product \<alpha> \<beta>) (top1_path_power (top1_path_reverse gen) a k)"
+    using hgen_all[THEN spec, of "top1_path_product \<alpha> \<beta>"] h\<alpha>\<beta>_loop by blast
+  have hk_ne: "k \<noteq> 0"
+  proof
+    assume "k = 0"
+    hence "top1_path_homotopic_on X TX a a
+        (top1_path_product \<alpha> \<beta>) (top1_constant_path a)"
+      using hk by simp
+    thus False using h\<alpha>\<beta>_nontrivial by contradiction
+  qed
+  \<comment> \<open>Step 6: The shift T(x,n) = (x, n+2) is a covering automorphism of E.
+     This gives: if gen lifts from (a,0) to (a,2d), then gen^k lifts to (a,2kd).
+     Since gen^k = [\<alpha>*\<beta>] lifts to (a,2): kd = 1, so k = \<plusminus>1.\<close>
+  \<comment> \<open>Step 6a: The lift of gen from (a,0) exists and ends at some (a, 2d).\<close>
+  have hgen_path: "top1_is_path_on X TX a a gen"
+    using hgen_loop unfolding top1_is_loop_on_def by (by100 blast)
+  obtain gen_lift where hgen_lift: "top1_is_path_on E TE (a, 0) (gen_lift 1) gen_lift"
+      and hgen_lift_proj: "\<forall>s\<in>I_set. p0 (gen_lift s) = gen s"
+    using Lemma_54_1_path_lifting[OF hcov he0 hp0 hgen_path assms(1) hTE] by blast
+  \<comment> \<open>gen\_lift ends at some point in the fiber at a = \{(a, 2n) : n \<in> Z\}.\<close>
+  have hgen_end_fiber: "\<exists>d :: int. gen_lift 1 = (a, 2 * d)"
+  proof -
+    have h1_I: "(1::real) \<in> I_set"
+      unfolding top1_unit_interval_def by (by100 simp)
+    have hend_E: "gen_lift 1 \<in> E"
+      using hgen_lift unfolding top1_is_path_on_def top1_continuous_map_on_def
+      using h1_I by (by100 blast)
+    have hp0_gen1: "p0 (gen_lift 1) = gen 1"
+      using hgen_lift_proj h1_I by (by100 blast)
+    have hgen1_a: "gen 1 = a"
+      using hgen_loop unfolding top1_is_loop_on_def top1_is_path_on_def
+      by (by100 blast)
+    have hend_proj: "p0 (gen_lift 1) = a"
+      using hp0_gen1 hgen1_a by simp
+    hence hfst: "fst (gen_lift 1) = a" unfolding p0_def by simp
+    obtain x' n' where hpair: "gen_lift 1 = (x', n')" by (cases "gen_lift 1")
+    hence "x' = a" using hfst by simp
+    have "(x', n') \<in> E" using hend_E hpair by simp
+    hence "(even n' \<and> x' \<in> U) \<or> (odd n' \<and> x' \<in> V - U)" unfolding E_def by auto
+    hence "even n'"
+    proof
+      assume "even n' \<and> x' \<in> U" thus "even n'" by simp
+    next
+      assume "odd n' \<and> x' \<in> V - U"
+      hence "x' \<in> V - U" by simp
+      hence "a \<in> V - U" using \<open>x' = a\<close> by simp
+      hence False using ha_U by (by100 blast)
+      thus "even n'" by simp
+    qed
+    then obtain d where "n' = 2 * d" using evenE by blast
+    hence "gen_lift 1 = (a, 2 * d)" using hpair \<open>x' = a\<close> by simp
+    thus ?thesis by blast
+  qed
+  obtain d :: int where hgen_end: "gen_lift 1 = (a, 2 * d)"
+    using hgen_end_fiber by blast
+  \<comment> \<open>Step 6b: The shift T is a covering automorphism.\<close>
+  \<comment> \<open>Step 6c: gen^k lifts from (a,0) to (a, 2kd) by applying T iteratively.\<close>
+  \<comment> \<open>Step 6d: gen^k \<simeq> \<alpha>*\<beta>, and \<alpha>*\<beta> lifts to (a, 2). By Theorem\_54\_3: 2kd = 2.
+     So kd = 1 with k \<in> N, d \<in> Z. If k = 0: already excluded. k \<ge> 1.
+     Integer solutions to kd = 1: (k,d) = (1,1). So k = 1.\<close>
+  \<comment> \<open>If [\<alpha>*\<beta>] = gen^k: k = 1 (positive case). If [\<alpha>*\<beta>] = gen^{-k}: k = 1 too.\<close>
+  \<comment> \<open>Lift of (\<alpha>*\<beta>) (= m=1 case) from (a,0) to (a, 2).\<close>
+  \<comment> \<open>(\<alpha>*\<beta>) lifts from (a,0) to (a, 2): from hfm\_lift with m = 1.\<close>
+  obtain ab_lift where hab_lift: "top1_is_path_on E TE (a, 0) (a, 2) ab_lift"
+      and hab_lift_proj: "\<forall>s\<in>I_set. p0 (ab_lift s) =
+          top1_path_power (top1_path_product \<alpha> \<beta>) a 1 s"
+  proof -
+    obtain ftm where hftm: "top1_is_path_on E TE (a, 0) (a, 2 * int (1::nat)) ftm"
+        "\<forall>s\<in>I_set. p0 (ftm s) = top1_path_power (top1_path_product \<alpha> \<beta>) a 1 s"
+      using hfm_lift[of 1] by blast
+    have "2 * int (1::nat) = (2::int)" by simp
+    hence "top1_is_path_on E TE (a, 0) (a, 2) ftm" using hftm(1) by simp
+    thus ?thesis using hftm(2) that by blast
+  qed
+  \<comment> \<open>gen^k lifts from (a,0) to (a, 2*int(k)*d).
+     This uses the helix shift automorphism T(x,n) = (x, n+2).
+     By induction on k: the lift of gen^k concatenates k lifts of gen,
+     each shifted by T, giving endpoint (a, 2*k*d).\<close>
+  have hgenk_lift: "\<exists>ftk. top1_is_path_on E TE (a, 0) (a, 2 * int k * d) ftk \<and>
+      (\<forall>s\<in>I_set. p0 (ftk s) = top1_path_power gen a k s)"
+    sorry \<comment> \<open>Induction on k using helix shift T(x,n)=(x,n+2) as covering automorphism.
+       Base k=0: trivial. Step k\<rightarrow>k+1: lift of gen from (a, 2*k*d) ends at
+       (a, 2*k*d + 2*d) = (a, 2*(k+1)*d) by covering\_lift\_unique\_connected + T.\<close>
+  \<comment> \<open>Now: gen^k \<simeq> \<alpha>*\<beta> (from hk, positive case). Their lifts from (a,0)
+     must end at the same point by Theorem\_54\_3.
+     Endpoint of gen^k lift = (a, 2*int(k)*d). Endpoint of \<alpha>*\<beta> lift = (a, 2).
+     So 2*int(k)*d = 2, giving int(k)*d = 1.\<close>
+  have hk_one: "k = 1"
+  proof -
+    from hk show "k = 1"
+    proof
+      assume hpos: "top1_path_homotopic_on X TX a a
+          (top1_path_product \<alpha> \<beta>) (top1_path_power gen a k)"
+      \<comment> \<open>gen^k \<simeq> \<alpha>*\<beta>. Both lift from (a,0): gen^k to (a, 2kd), \<alpha>*\<beta> to (a, 2).
+         By Theorem\_54\_3: endpoints match, so 2*int(k)*d = 2.\<close>
+      obtain ftk where hftk: "top1_is_path_on E TE (a, 0) (a, 2 * int k * d) ftk"
+          "\<forall>s\<in>I_set. p0 (ftk s) = top1_path_power gen a k s"
+        using hgenk_lift by blast
+      have h_endpoints: "(a, 2 * int k * d) = (a :: 'a, 2 :: int)"
+        using Theorem_54_3[OF hcov hTE assms(1) he0 hp0] sorry
+      hence "2 * int k * d = 2" by simp
+      hence "int k * d = 1" by simp
+      thus "k = 1"
+      proof -
+        from \<open>int k * d = 1\<close> have hunit: "int k * d = 1" .
+        hence "int k = 1 \<or> int k = -1" using zmult_eq_1_iff by blast
+        moreover have "int k \<ge> 0" by simp
+        ultimately have "int k = 1" by auto
+        thus "k = 1" by simp
+      qed
+    next
+      assume hneg: "top1_path_homotopic_on X TX a a
+          (top1_path_product \<alpha> \<beta>) (top1_path_power (top1_path_reverse gen) a k)"
+      \<comment> \<open>Similar but with reverse gen. gen^{-k} \<simeq> \<alpha>*\<beta>.
+         Lift of reverse(gen)^k from (a,0) ends at (a, -2kd).
+         Equals (a, 2). So -2kd = 2, kd = -1. k \<ge> 1, d = -1/k.
+         Only solution: k = 1, d = -1.\<close>
+      show "k = 1" sorry \<comment> \<open>Same argument with negative shift.\<close>
+    qed
+  qed
+  \<comment> \<open>Step 7: Conclude. k = 1 means [\<alpha>*\<beta>] = gen (or gen\<inverse>). So gen generates with [\<alpha>*\<beta>].\<close>
+  show ?thesis
+  proof (intro allI impI)
+    fix f assume hf: "top1_is_loop_on X TX a f"
+    obtain n :: nat where hn: "top1_path_homotopic_on X TX a a f (top1_path_power gen a n)
+        \<or> top1_path_homotopic_on X TX a a f (top1_path_power (top1_path_reverse gen) a n)"
+      using hgen_all[THEN spec, of f] hf by blast
+    show "\<exists>n::nat. top1_path_homotopic_on X TX a a f
+        (top1_path_power (top1_path_product \<alpha> \<beta>) a n)
+      \<or> top1_path_homotopic_on X TX a a f
+           (top1_path_power (top1_path_reverse (top1_path_product \<alpha> \<beta>)) a n)"
+    proof (cases "top1_path_homotopic_on X TX a a
+        (top1_path_product \<alpha> \<beta>) (top1_path_power gen a k)")
+      case True
+      \<comment> \<open>[\<alpha>*\<beta>] = gen^k = gen^1 = gen. So gen^n = (\<alpha>*\<beta>)^n.\<close>
+      have "k = 1" by (rule hk_one)
+      \<comment> \<open>gen^1 = gen * const \<simeq> gen, so \<alpha>*\<beta> \<simeq> gen.\<close>
+      have hgen1_eq: "top1_path_homotopic_on X TX a a
+          (top1_path_power gen a 1) gen"
+      proof -
+        have "top1_path_power gen a 1 = top1_path_product gen (top1_constant_path a)"
+          by simp
+        moreover have "top1_path_homotopic_on X TX a a
+            (top1_path_product gen (top1_constant_path a)) gen"
+          by (rule Theorem_51_2_right_identity[OF assms(1) hgen_path])
+        ultimately show ?thesis by simp
+      qed
+      have h_eq: "top1_path_homotopic_on X TX a a
+          (top1_path_product \<alpha> \<beta>) gen"
+      proof -
+        have hab_gen1: "top1_path_homotopic_on X TX a a
+            (top1_path_product \<alpha> \<beta>) (top1_path_power gen a 1)"
+          using True \<open>k = 1\<close> by simp
+        show ?thesis
+          by (rule Lemma_51_1_path_homotopic_trans[OF assms(1) hab_gen1 hgen1_eq])
+      qed
+      \<comment> \<open>gen \<simeq> \<alpha>*\<beta>. So gen^n \<simeq> (\<alpha>*\<beta>)^n and gen^{-n} \<simeq> (\<alpha>*\<beta>)^{-n}.\<close>
+      show ?thesis
+      proof -
+        have hgen_path2: "top1_is_path_on X TX a a gen"
+          using hgen_loop unfolding top1_is_loop_on_def by (by100 blast)
+        have hab_path: "top1_is_path_on X TX a a (top1_path_product \<alpha> \<beta>)"
+          using h\<alpha>\<beta>_loop unfolding top1_is_loop_on_def by (by100 blast)
+        have h_eq_sym: "top1_path_homotopic_on X TX a a gen (top1_path_product \<alpha> \<beta>)"
+          using h_eq by (rule Lemma_51_1_path_homotopic_sym)
+        have hpow: "top1_path_homotopic_on X TX a a
+            (top1_path_power gen a n) (top1_path_power (top1_path_product \<alpha> \<beta>) a n)"
+          by (rule path_homotopic_path_power[OF assms(1) h_eq_sym hgen_path2 hab_path])
+        have h_req: "top1_path_homotopic_on X TX a a
+            (top1_path_reverse gen) (top1_path_reverse (top1_path_product \<alpha> \<beta>))"
+          by (rule path_homotopic_reverse[OF assms(1) h_eq_sym hgen_path2 hab_path])
+        have hrgen_path: "top1_is_path_on X TX a a (top1_path_reverse gen)"
+          by (rule top1_path_reverse_is_path[OF hgen_path2])
+        have hrab_path: "top1_is_path_on X TX a a
+            (top1_path_reverse (top1_path_product \<alpha> \<beta>))"
+          by (rule top1_path_reverse_is_path[OF hab_path])
+        have hpow_rev: "top1_path_homotopic_on X TX a a
+            (top1_path_power (top1_path_reverse gen) a n)
+            (top1_path_power (top1_path_reverse (top1_path_product \<alpha> \<beta>)) a n)"
+          by (rule path_homotopic_path_power[OF assms(1) h_req hrgen_path hrab_path])
+        from hn show ?thesis
+        proof
+          assume hf_gen: "top1_path_homotopic_on X TX a a f (top1_path_power gen a n)"
+          have "top1_path_homotopic_on X TX a a f (top1_path_power (top1_path_product \<alpha> \<beta>) a n)"
+            by (rule Lemma_51_1_path_homotopic_trans[OF assms(1) hf_gen hpow])
+          thus ?thesis by blast
+        next
+          assume hf_rgen: "top1_path_homotopic_on X TX a a f (top1_path_power (top1_path_reverse gen) a n)"
+          have "top1_path_homotopic_on X TX a a f
+              (top1_path_power (top1_path_reverse (top1_path_product \<alpha> \<beta>)) a n)"
+            by (rule Lemma_51_1_path_homotopic_trans[OF assms(1) hf_rgen hpow_rev])
+          thus ?thesis by blast
+        qed
+      qed
+    next
+      case False
+      \<comment> \<open>[\<alpha>*\<beta>] = gen^{-k} = gen^{-1}. So gen = reverse(\<alpha>*\<beta>).\<close>
+      hence hneg: "top1_path_homotopic_on X TX a a
+          (top1_path_product \<alpha> \<beta>) (top1_path_power (top1_path_reverse gen) a k)"
+        using hk by (by100 blast)
+      have "k = 1" by (rule hk_one)
+      \<comment> \<open>reverse(gen)^1 \<simeq> reverse(gen), so \<alpha>*\<beta> \<simeq> reverse(gen), i.e., gen \<simeq> reverse(\<alpha>*\<beta>).\<close>
+      show ?thesis
+        sorry \<comment> \<open>Symmetric to the True case: gen = reverse(\<alpha>*\<beta>), then
+           gen^n = reverse(\<alpha>*\<beta>)^n and reverse(gen)^n = (\<alpha>*\<beta>)^n.\<close>
+    qed
+  qed
+qed
 
 text \<open>Theorem 64.2: The utilities graph K33 cannot be imbedded in the plane.\<close>
 
@@ -1083,49 +1414,56 @@ proof -
      Since \<alpha>*\<beta> \<in> C: j_*([\<alpha>*\<beta>]_C) = [\<alpha>*\<beta>]_X = generator.
      Since [\<alpha>*\<beta>]_C generates \<pi>_1(C) \<cong> Z (traverses C once):
      j_* maps generator to generator \<Rightarrow> surjective \<Rightarrow> isomorphism.\<close>
-  \<comment> \<open>Step 1: U\_loc, V\_loc simply connected.\<close>
-  have hU_sc: "top1_simply_connected_on ?U_loc (subspace_topology top1_S2 top1_S2_topology ?U_loc)"
-    by (rule S2_minus_arc_simply_connected[OF assms(1) hD1_sub_S2 hD1_arc])
-  have hV_sc: "top1_simply_connected_on ?V_loc (subspace_topology top1_S2 top1_S2_topology ?V_loc)"
-    by (rule S2_minus_arc_simply_connected[OF assms(1) hD2_sub_S2 hD2_arc])
-  \<comment> \<open>Step 2: Any loop in X at x subdivides into pieces in U\_loc or V\_loc.\<close>
-  \<comment> \<open>Available: loop\_subdivision\_UV from AlgTopCached.\<close>
-  \<comment> \<open>Step 3: Each piece nulhomotopic (hU\_sc, hV\_sc).
-     After contraction, only A\<leftrightarrow>B crossings remain.
-     By 63.1(c), all such crossings are powers of [\<alpha>*\<beta>].
-     So [\<alpha>*\<beta>] generates \<pi>_1(X). Combined with \<pi>_1(X) \<cong> Z: [\<alpha>*\<beta>] = \<plusminus>gen.\<close>
-  \<comment> \<open>Step 4: j_* surjective. \<alpha>*\<beta> \<in> C, [\<alpha>*\<beta>] generates \<pi>_1(X),
-     [\<alpha>*\<beta>]_C generates \<pi>_1(C). So j_* maps generator to generator.\<close>
-  \<comment> \<open>Key algebraic consequence of 63.1(c) + \<pi>_1(X) \<cong> Z:
-     All 63.1 A-pairs (loops through same component A) are trivial in \<pi>_1(X).
-
-     Proof: [γ*δ] = gen^j. If j \<noteq> 0, take m=j, k=n in 63.1(c):
-     (α*β)^j ≃ (γ*δ)^n (since gen^{nj} = gen^{jn}). Then 63.1(c) gives j=0. ⊥.
-     So j = 0, i.e., [γ*δ] = 0.\<close>
-  \<comment> \<open>Combined with hU\_sc, hV\_sc, loop\_subdivision\_UV, and the analogous
-     argument for B-crossings: every loop in X at x is a power of [\<alpha>*\<beta>].
-     Hence [\<alpha>*\<beta>] generates \<pi>_1(X). Since \<pi>_1(X) \<cong> Z: [\<alpha>*\<beta>] = \<plusminus>gen.
-
-     Then: \<alpha>*\<beta> \<in> C, [\<alpha>*\<beta>]_C generates \<pi>_1(C) \<cong> Z (traverses C once),
-     j_*(generator of \<pi>_1(C)) = generator of \<pi>_1(X) \<Rightarrow> surjective.
-     Surjective hom Z \<rightarrow> Z \<Rightarrow> bijective \<Rightarrow> injective.
-
-     Formal proof requires: loop\_subdivision\_UV decomposition +
-     contraction of U/V-pieces in simply connected regions +
-     showing only A\<leftrightarrow>B crossings survive + basepoint change x \<rightarrow> c0.
-     These are purely topological manipulations using available infrastructure.\<close>
-  \<comment> \<open>Apply generator\_from\_63\_1\_simply\_connected: [\<alpha>*\<beta>] generates \<pi>_1(X, x).\<close>
-  have hU_sc_X: "top1_simply_connected_on ?U_loc (subspace_topology ?X ?TX ?U_loc)"
-    sorry \<comment> \<open>From hU\_sc + subspace topology transfer (U\_loc \<subseteq> X).\<close>
-  have hV_sc_X: "top1_simply_connected_on ?V_loc (subspace_topology ?X ?TX ?V_loc)"
-    sorry \<comment> \<open>Same for V\_loc.\<close>
+  \<comment> \<open>===== GENERATION ARGUMENT: [\<alpha>*\<beta>] generates \<pi>_1(X, x) =====
+     Following Munkres Theorem 63.1(b): use helix covering + \<pi>_1(X) infinite cyclic.
+     Key idea: the helix lift gives a well-defined injection \<pi>_1(X) \<hookrightarrow> Z
+     with [\<alpha>*\<beta>] \<mapsto> 1. Since \<pi>_1(X) \<cong> Z, this forces [\<alpha>*\<beta>] = generator.\<close>
+  \<comment> \<open>Step G1: \<pi>_1(X, x) is infinite cyclic.\<close>
+  have hx_in_X: "x \<in> ?X" using hx_in_CmD1 hC_sub_X by (by100 blast)
+  obtain gen where hgen_loop: "top1_is_loop_on ?X ?TX x gen"
+      and hgen_generates: "\<forall>f. top1_is_loop_on ?X ?TX x f \<longrightarrow>
+        (\<exists>n::nat. top1_path_homotopic_on ?X ?TX x x f (top1_path_power gen x n)
+          \<or> top1_path_homotopic_on ?X ?TX x x f
+               (top1_path_power (top1_path_reverse gen) x n))"
+    using pi1_S2_minus_two_points_infinite_cyclic[OF assms(1) hp_S2 hq_S2 hp_ne_q hx_in_X]
+    by blast
+  \<comment> \<open>Step G2: Construct helix covering E \<rightarrow> X for the 63.1 setup.\<close>
+  have hx_A: "x \<in> A" using hAB(5) .
+  have hy_B: "y \<in> B" using hAB(6) .
+  have hx_U: "x \<in> ?U_loc" using hx_in_CmD1 hCmD1_sub by (by100 blast)
+  have hy_U: "y \<in> ?U_loc" using hy_in_CmD1 hCmD1_sub by (by100 blast)
+  have hx_V: "x \<in> ?V_loc" using hx_in_CmD2 hCmD2_sub by (by100 blast)
+  have hy_V: "y \<in> ?V_loc" using hy_in_CmD2 hCmD2_sub by (by100 blast)
+  \<comment> \<open>Step G3: The helix covering and its key property.
+     For any m, (\<alpha>*\<beta>)^m lifts from (x, 0) to (x, 2m).
+     This is helix\_f\_power\_lift applied to the U\_loc, V\_loc, A, B decomposition.\<close>
+  \<comment> \<open>Step G4: The lift endpoint function (winding number) is well-defined on
+     homotopy classes, by Theorem\_54\_3 (homotopic paths lift to same endpoint).
+     And it's injective: if wind(f) = wind(g), then lifts of f and g end at the
+     same sheet, and by Theorem\_54\_3 applied to f*g\<inverse>, wind(f*g\<inverse>) = 0,
+     which means f*g\<inverse> \<in> H = p_*(\<pi>_1(E, e0)).
+     Since wind is surjective (wind((\<alpha>*\<beta>)^n) = n for all n), and \<pi>_1(X) \<cong> Z,
+     we get Z/H \<cong> Z as sets, which forces H = \{0\} (Z/nZ is finite for n\<ge>1).
+     So wind is injective: distinct homotopy classes have distinct lift endpoints.\<close>
+  \<comment> \<open>Step G5: Since wind is injective with wind((\<alpha>*\<beta>)^n) = n hitting all of Z,
+     and \<langle>[\<alpha>*\<beta>]\<rangle> \<subseteq> \<pi>_1(X), the injection wind restricted to \<langle>[\<alpha>*\<beta>]\<rangle> is surjective.
+     By injectivity of wind on all of \<pi>_1(X), any element outside \<langle>[\<alpha>*\<beta>]\<rangle> would
+     map to some m = wind(g) = wind((\<alpha>*\<beta>)^m), contradicting injectivity.
+     So \<langle>[\<alpha>*\<beta>]\<rangle> = \<pi>_1(X).\<close>
   have h\<alpha>\<beta>_generates: "\<forall>f. top1_is_loop_on ?X ?TX x f \<longrightarrow>
     (\<exists>n::nat. top1_path_homotopic_on ?X ?TX x x f
         (top1_path_power (top1_path_product \<alpha> \<beta>) x n)
       \<or> top1_path_homotopic_on ?X ?TX x x f
            (top1_path_power (top1_path_reverse (top1_path_product \<alpha> \<beta>)) x n))"
-    by (rule generator_from_63_1_simply_connected[OF hTX hU_open_X hV_open_X hUV_union
-           hAB(1,2,3,4,5,6) h\<alpha>_U h\<beta>_V h\<alpha>\<beta>_nontrivial hU_sc_X hV_sc_X])
+  proof (rule Theorem_63_1_b_generation[OF hTX hU_open_X hV_open_X hUV_union
+         hAB(1,2,3,4,5,6) h\<alpha>_U h\<beta>_V])
+    show "\<exists>gen. top1_is_loop_on ?X ?TX x gen \<and>
+        (\<forall>f. top1_is_loop_on ?X ?TX x f \<longrightarrow>
+          (\<exists>n::nat. top1_path_homotopic_on ?X ?TX x x f (top1_path_power gen x n)
+            \<or> top1_path_homotopic_on ?X ?TX x x f
+                 (top1_path_power (top1_path_reverse gen) x n)))"
+      using hgen_loop hgen_generates by blast
+  qed
   \<comment> \<open>[\<alpha>*\<beta>] generates \<pi>_1(X, x). Since \<alpha>*\<beta> \<in> C: j_*(x) is surjective at basepoint x.
      Basepoint change to c0. Then surjective hom Z \<rightarrow> Z \<Rightarrow> injective.\<close>
   have hj_surj: "(top1_fundamental_group_induced_on C ?TC c0 ?X ?TX c0 (\<lambda>x. x))
