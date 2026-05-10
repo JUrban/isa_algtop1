@@ -196,22 +196,91 @@ proof -
      - Since U, V simply connected and U \<inter> V has two components,
        [\<alpha>*\<beta>] generates \<pi>_1(X) (Theorem 63.1(c) forces this in infinite cyclic group)
      - Since \<alpha>*\<beta> \<in> C, j_* hits the generator, hence surjective.\<close>
+  \<comment> \<open>Step 4a: j_* is nontrivial at basepoint c0.
+     h\_nontrivial gives a nontrivial loop g at some x \<in> C.
+     g is a loop in C (lies in C) and nontrivial in X.
+     By inclusion\_induced\_class: j_*(x)([g]_C) = [g]_X \<noteq> [const].
+     By basepoint change (C and X path-connected): j_*(c0) is also nontrivial.\<close>
+  have hj_nontrivial: "\<exists>c \<in> top1_fundamental_group_carrier C ?TC c0.
+      top1_fundamental_group_induced_on C ?TC c0 ?X ?TX c0 (\<lambda>x. x) c
+      \<noteq> top1_fundamental_group_id ?X ?TX c0"
+    sorry \<comment> \<open>From h\_nontrivial + inclusion\_induced\_class + basepoint change.\<close>
+  \<comment> \<open>Step 4b: \<pi>_1(C, c0) \<cong> Z (C is a simple closed curve \<cong> S1).\<close>
+  have hC_scc: "top1_simple_closed_curve_on top1_S2 top1_S2_topology C"
+  proof -
+    \<comment> \<open>e12 \<union> e23 is an arc from a1 to a3 (via arcs\_concatenation\_is\_arc, shared at a2).\<close>
+    have hS2_haus: "is_hausdorff_on top1_S2 top1_S2_topology" by (rule top1_S2_is_hausdorff)
+    have ha2_ep12: "a2 \<in> top1_arc_endpoints_on e12 (subspace_topology top1_S2 top1_S2_topology e12)"
+      using assms(16) by (by100 blast)
+    have ha2_ep23: "a2 \<in> top1_arc_endpoints_on e23 (subspace_topology top1_S2 top1_S2_topology e23)"
+      using assms(17) by (by100 blast)
+    have harc_12_23: "top1_is_arc_on (e12 \<union> e23) (subspace_topology top1_S2 top1_S2_topology (e12 \<union> e23))"
+      by (rule arcs_concatenation_is_arc[OF assms(1) hS2_haus assms(10) assms(4)
+             assms(11) assms(5) assms(24) ha2_ep12 ha2_ep23])
+    have ha4_ep34: "a4 \<in> top1_arc_endpoints_on e34 (subspace_topology top1_S2 top1_S2_topology e34)"
+      using assms(18) by (by100 blast)
+    have ha4_ep41: "a4 \<in> top1_arc_endpoints_on e41 (subspace_topology top1_S2 top1_S2_topology e41)"
+      using assms(19) by (by100 blast)
+    have harc_34_41: "top1_is_arc_on (e34 \<union> e41) (subspace_topology top1_S2 top1_S2_topology (e34 \<union> e41))"
+      by (rule arcs_concatenation_is_arc[OF assms(1) hS2_haus assms(12) assms(6)
+             assms(13) assms(7) assms(26) ha4_ep34 ha4_ep41])
+    \<comment> \<open>(e12 \<union> e23) \<inter> (e34 \<union> e41) = {a1, a3}.\<close>
+    have hinter: "(e12 \<union> e23) \<inter> (e34 \<union> e41) = {a1, a3}"
+      using assms(22,23,25,27) sorry \<comment> \<open>From K4 intersections: e12\<inter>e34={}, e12\<inter>e41={a1},
+         e23\<inter>e34={a3}, e23\<inter>e41={}. Need e23\<inter>e41={} which follows from
+         disjoint vertex sets {a2,a3} vs {a4,a1} (card {a1,a2,a3,a4}=4).\<close>
+    have ha1_ne_a3: "a1 \<noteq> a3"
+    proof
+      assume h: "a1 = a3"
+      have "{a1, a2, a3, a4} = {a1, a2, a4}" using h by (by100 blast)
+      hence "card {a1, a2, a3, a4} \<le> card {a1, a2, a4}" by (by100 simp)
+      also have "\<dots> \<le> 3" by (rule card_insert_le_m1, by100 simp)+ (by100 simp)
+      finally show False using assms(2) by (by100 simp)
+    qed
+    have ha1_ne_a2: "a1 \<noteq> a2" and ha2_ne_a3: "a2 \<noteq> a3"
+        and ha3_ne_a4: "a3 \<noteq> a4" and ha4_ne_a1: "a4 \<noteq> a1"
+      using assms(2) by (auto simp: card_insert_if split: if_splits)+
+    have hep1: "top1_arc_endpoints_on (e12 \<union> e23) (subspace_topology top1_S2 top1_S2_topology (e12 \<union> e23)) = {a1, a3}"
+      by (rule arc_concat_endpoints[OF assms(1) hS2_haus assms(10) assms(4) assms(11) assms(5)
+             assms(24) ha2_ep12 ha2_ep23 assms(16) assms(17) ha1_ne_a2 ha2_ne_a3])
+    have hep2: "top1_arc_endpoints_on (e34 \<union> e41) (subspace_topology top1_S2 top1_S2_topology (e34 \<union> e41)) = {a3, a1}"
+      by (rule arc_concat_endpoints[OF assms(1) hS2_haus assms(12) assms(6) assms(13) assms(7)
+             assms(26) ha4_ep34 ha4_ep41 assms(18) assms(19) ha3_ne_a4 ha4_ne_a1])
+    have hep2': "top1_arc_endpoints_on (e34 \<union> e41) (subspace_topology top1_S2 top1_S2_topology (e34 \<union> e41)) = {a1, a3}"
+      using hep2 by (by100 blast)
+    have hC_eq: "C = (e12 \<union> e23) \<union> (e34 \<union> e41)" using assms(39) by (by100 blast)
+    have hsub1: "(e12 \<union> e23) \<subseteq> top1_S2" using assms(4,5) by (by100 blast)
+    have hsub2: "(e34 \<union> e41) \<subseteq> top1_S2" using assms(6,7) by (by100 blast)
+    show ?thesis unfolding hC_eq
+      by (rule arcs_form_simple_closed_curve[OF assms(1) _ harc_12_23 hsub1 harc_34_41 hsub2
+             hinter ha1_ne_a3 hep1 hep2'])
+         (rule top1_S2_is_hausdorff)
+  qed
+  \<comment> \<open>Step 4c: \<pi>_1(X, c0) is infinite cyclic (from pi1\_S2\_minus\_two\_points).\<close>
+  have hX_inf_cyc: "\<exists>gen. top1_is_loop_on ?X ?TX c0 gen \<and>
+      (\<forall>f. top1_is_loop_on ?X ?TX c0 f \<longrightarrow>
+        (\<exists>n::nat. top1_path_homotopic_on ?X ?TX c0 c0 f (top1_path_power gen c0 n) \<or>
+         top1_path_homotopic_on ?X ?TX c0 c0 f (top1_path_power (top1_path_reverse gen) c0 n)))"
+    by (rule pi1_S2_minus_two_points_infinite_cyclic[OF assms(1) hp_S2 hq_S2 hp_ne_q hc0_X])
+  \<comment> \<open>Step 4d: Injectivity.
+     j_* nontrivial + \<pi>_1(C) \<cong> Z + \<pi>_1(X) torsion-free \<Rightarrow> ker = {0}.
+     Proof: ker(j_*) is a subgroup of \<pi>_1(C) \<cong> Z. Subgroups of Z are nZ.
+     If n > 0: image \<cong> Z/nZ is finite. But image \<subseteq> \<pi>_1(X) \<cong> Z which is torsion-free.
+     So image is trivial, contradicting j_* nontrivial. Hence n = 0, ker = {0}.\<close>
+  have hj_inj: "inj_on (top1_fundamental_group_induced_on C ?TC c0 ?X ?TX c0 (\<lambda>x. x))
+      (top1_fundamental_group_carrier C ?TC c0)"
+    sorry \<comment> \<open>Needs: j_* nontrivial (hj\_nontrivial) + \<pi>_1(C) \<cong> Z (hC\_scc) +
+       \<pi>_1(X) torsion-free (hX\_inf\_cyc). Pure algebra: nontrivial hom Z \<rightarrow> Z\_tf is injective.\<close>
+  \<comment> \<open>Step 4e: Surjectivity.
+     Following Munkres: [\<alpha>*\<beta>] generates \<pi>_1(X) (by Theorem 63.1 + infinite cyclic).
+     Since \<alpha>*\<beta> lies in C, j_* maps a generator of \<pi>_1(C) to a generator of \<pi>_1(X).
+     Hence j_* surjective.\<close>
   have hj_surj: "(top1_fundamental_group_induced_on C ?TC c0 ?X ?TX c0 (\<lambda>x. x))
       ` (top1_fundamental_group_carrier C ?TC c0)
       = top1_fundamental_group_carrier ?X ?TX c0"
-    sorry \<comment> \<open>Textbook proof (Munkres p.393): Uses Theorem 63.1 structure.
-       Key facts: U, V simply connected (S2\_minus\_arc\_simply\_connected),
-       U \<inter> V two components (JCT), \<alpha>*\<beta> generator (63.1c + infinite cyclic).
-       Available: h\_nontrivial, Theorem\_63\_1\_c\_subgroups\_trivial,
-       pi1\_S2\_minus\_two\_points\_infinite\_cyclic, S2\_minus\_arc\_simply\_connected.\<close>
-  \<comment> \<open>Step 4b: Injectivity of j_*.
-     j_* is nontrivial (maps [\<alpha>*\<beta>] to a nontrivial element).
-     \<pi>_1(X) is torsion-free (infinite cyclic \<cong> Z).
-     Nontrivial hom from Z to torsion-free group is injective.\<close>
-  have hj_inj: "inj_on (top1_fundamental_group_induced_on C ?TC c0 ?X ?TX c0 (\<lambda>x. x))
-      (top1_fundamental_group_carrier C ?TC c0)"
-    sorry \<comment> \<open>Follows from surjectivity: surjective hom Z \<rightarrow> Z is injective.
-       Alternatively: j_* nontrivial + \<pi>_1(C) \<cong> Z + \<pi>_1(X) torsion-free \<Rightarrow> injective.\<close>
+    sorry \<comment> \<open>Textbook (Munkres p.393): [\<alpha>*\<beta>] generates \<pi>_1(X) by Theorem 63.1
+       + S2\_minus\_arc\_simply\_connected + \<pi>_1(X) infinite cyclic.
+       Since \<alpha>*\<beta> \<in> C: j_* hits generator, hence surjective.\<close>
   \<comment> \<open>Step 5: Combine homomorphism + injective + surjective = isomorphism.\<close>
   have hj_bij: "bij_betw (top1_fundamental_group_induced_on C ?TC c0 ?X ?TX c0 (\<lambda>x. x))
       (top1_fundamental_group_carrier C ?TC c0)
