@@ -364,8 +364,12 @@ proof -
       have "top1_is_path_on E TE (a, 0) (a, 0) ftk0"
         unfolding top1_is_path_on_def ftk0_def
       proof (intro conjI)
-        show "top1_continuous_map_on I_set I_top E TE (\<lambda>s. (a, 0::int))"
-          sorry \<comment> \<open>Constant map to (a,0) \<in> E is continuous.\<close>
+        have "top1_continuous_map_on I_set I_top E TE (top1_constant_path (a, 0::int))"
+          by (rule top1_constant_path_continuous[OF hTE he0])
+        moreover have "top1_constant_path (a, 0::int) = (\<lambda>s. (a, 0::int))"
+          unfolding top1_constant_path_def by simp
+        ultimately show "top1_continuous_map_on I_set I_top E TE (\<lambda>s. (a, 0::int))"
+          by simp
         show "(a, 0::int) = (a, 0::int)" by simp
         show "(a, 0::int) = (a, 0::int)" by simp
       qed
