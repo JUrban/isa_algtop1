@@ -567,10 +567,9 @@ proof -
           hDa2_arc hDq4_arc \<open>a2 \<in> Da2\<close> \<open>a4 \<in> Dq4\<close> \<open>q \<in> Da2\<close> \<open>q \<in> Dq4\<close> \<open>Da2 \<subseteq> top1_S2\<close>
           \<open>Dq4 \<subseteq> top1_S2\<close> assms(21) hq_not_ep24]
     by blast+
-  have hU_open_X: "openin_on ?X ?TX ?U_loc"
-  proof -
-    have "?D1 \<subseteq> top1_S2" using hDa3_sub hDa2_sub assms(5,8,9) by (by100 blast)
-    have hD1_arc: "top1_is_arc_on ?D1 (subspace_topology top1_S2 top1_S2_topology ?D1)"
+  have hD1_sub_S2: "?D1 \<subseteq> top1_S2" using hDa3_sub hDa2_sub assms(5,8,9) by (by100 blast)
+  have hD2_sub_S2: "?D2 \<subseteq> top1_S2" using hDq4_sub hD1p_sub assms(7,8,9) by (by100 blast)
+  have hD1_arc: "top1_is_arc_on ?D1 (subspace_topology top1_S2 top1_S2_topology ?D1)"
     proof -
       \<comment> \<open>Da3 \<union> e23: shared endpoint a3. Result is arc from p to a2.\<close>
       have ha3_Da3: "a3 \<in> top1_arc_endpoints_on Da3 (subspace_topology top1_S2 top1_S2_topology Da3)"
@@ -674,17 +673,16 @@ proof -
         by (rule arcs_concatenation_is_arc[OF assms(1) hS2_haus hDa3_e23_arc hDa3e23_sub
                hDa2_arc \<open>Da2 \<subseteq> top1_S2\<close> hDa3e23_Da2_inter ha2_Da3e23 ha2_Da2])
     qed
+  have hU_open_X: "openin_on ?X ?TX ?U_loc"
+  proof -
     have "closedin_on top1_S2 top1_S2_topology ?D1"
-      by (rule arc_in_S2_closed[OF \<open>?D1 \<subseteq> top1_S2\<close> hD1_arc])
+      by (rule arc_in_S2_closed[OF hD1_sub_S2 hD1_arc])
     hence hU_S2_open: "?U_loc \<in> top1_S2_topology" unfolding closedin_on_def by (by100 blast)
     have "?U_loc = ?U_loc \<inter> ?X" using hU_sub_X by (by100 blast)
     hence "?U_loc \<in> ?TX" using hU_S2_open unfolding subspace_topology_def by (by100 blast)
     thus ?thesis unfolding openin_on_def using hU_sub_X by (by100 blast)
   qed
-  have hV_open_X: "openin_on ?X ?TX ?V_loc"
-  proof -
-    have "?D2 \<subseteq> top1_S2" using hDq4_sub hD1p_sub assms(7,8,9) by (by100 blast)
-    have hD2_arc: "top1_is_arc_on ?D2 (subspace_topology top1_S2 top1_S2_topology ?D2)"
+  have hD2_arc: "top1_is_arc_on ?D2 (subspace_topology top1_S2 top1_S2_topology ?D2)"
     proof -
       \<comment> \<open>Step 1: Dq4 \<union> e41 is an arc (shared endpoint a4).\<close>
       have ha4_Dq4: "a4 \<in> top1_arc_endpoints_on Dq4 (subspace_topology top1_S2 top1_S2_topology Dq4)"
@@ -799,8 +797,10 @@ proof -
         by (rule arcs_concatenation_is_arc[OF assms(1) hS2_haus hDq4_e41_arc hDq4e41_sub
                hD1p_arc \<open>D1p \<subseteq> top1_S2\<close> hDq4e41_D1p_inter ha1_Dq4e41 ha1_D1p])
     qed
+  have hV_open_X: "openin_on ?X ?TX ?V_loc"
+  proof -
     have "closedin_on top1_S2 top1_S2_topology ?D2"
-      by (rule arc_in_S2_closed[OF \<open>?D2 \<subseteq> top1_S2\<close> hD2_arc])
+      by (rule arc_in_S2_closed[OF hD2_sub_S2 hD2_arc])
     hence hV_S2_open: "?V_loc \<in> top1_S2_topology" unfolding closedin_on_def by (by100 blast)
     have "?V_loc = ?V_loc \<inter> ?X" using hV_sub_X by (by100 blast)
     hence "?V_loc \<in> ?TX" using hV_S2_open unfolding subspace_topology_def by (by100 blast)
@@ -810,9 +810,38 @@ proof -
      By JCT: S2-(D1\<union>D2) has two components A, B.
      x \<in> int(e12) and y \<in> int(e34) lie in different components (by Lemma 65.1(a)
      applied to the "other" K4 cycle D1\<union>D2).\<close>
+  \<comment> \<open>Apply Theorem 63.5: D1, D2 arcs meeting in {p,q} (\<Rightarrow> 2 components).\<close>
+  \<comment> \<open>D1, D2 closedness, connectedness, non-separation (using proved arc facts from hU/hV\_open\_X blocks).\<close>
+  have hD1_closed: "closedin_on top1_S2 top1_S2_topology ?D1"
+    by (rule arc_in_S2_closed[OF hD1_sub_S2 hD1_arc])
+  have hD2_closed: "closedin_on top1_S2 top1_S2_topology ?D2"
+    by (rule arc_in_S2_closed[OF hD2_sub_S2 hD2_arc])
+  have hD1_conn: "top1_connected_on ?D1 (subspace_topology top1_S2 top1_S2_topology ?D1)"
+    using arc_connected[OF hD1_arc] .
+  have hD2_conn: "top1_connected_on ?D2 (subspace_topology top1_S2 top1_S2_topology ?D2)"
+    using arc_connected[OF hD2_arc] .
+  have hD1_no_sep: "\<not> top1_separates_on top1_S2 top1_S2_topology ?D1"
+    by (rule Theorem_63_2_arc_no_separation[OF assms(1) hD1_sub_S2 hD1_arc])
+  have hD2_no_sep: "\<not> top1_separates_on top1_S2 top1_S2_topology ?D2"
+    by (rule Theorem_63_2_arc_no_separation[OF assms(1) hD2_sub_S2 hD2_arc])
+  have hD1D2_card: "card (?D1 \<inter> ?D2) = 2"
+    using hD1_D2_inter hp_ne_q by (by100 simp)
+  obtain U0 V0 where hUV0: "U0 \<noteq> {}" "V0 \<noteq> {}" "U0 \<inter> V0 = {}"
+      "U0 \<union> V0 = top1_S2 - (?D1 \<union> ?D2)"
+      "top1_connected_on U0 (subspace_topology top1_S2 top1_S2_topology U0)"
+      "top1_connected_on V0 (subspace_topology top1_S2 top1_S2_topology V0)"
+    using Theorem_63_5_two_closed_connected[OF assms(1) hD1_closed hD2_closed
+          hD1_conn hD2_conn hD1D2_card hD1_no_sep hD2_no_sep] by blast
+  \<comment> \<open>U0 \<union> V0 = S2-(D1\<union>D2) = (S2-D1) \<inter> (S2-D2) = U\_loc \<inter> V\_loc.\<close>
+  have hUV0_eq: "U0 \<union> V0 = ?U_loc \<inter> ?V_loc"
+    using hUV0(4) by (by100 blast)
+  \<comment> \<open>U0, V0 are open in X (since they're connected components of an open set in S2).\<close>
+  \<comment> \<open>x, y are in different components (needs part (a) / Lemma\_64\_3 applied to "other" cycle).\<close>
   obtain A B where hAB: "?U_loc \<inter> ?V_loc = A \<union> B" "A \<inter> B = {}"
       "openin_on ?X ?TX A" "openin_on ?X ?TX B" "x \<in> A" "y \<in> B"
-    sorry \<comment> \<open>JCT on D1\<union>D2 (SCC) + Lemma 65.1(a) for separation of x, y.\<close>
+    sorry \<comment> \<open>From hUV0: U0, V0 give the partition. Need:
+       (1) U0, V0 open in X (components of open set in S2 are open)
+       (2) x \<in> U0, y \<in> V0 (or swapped) — uses Lemma 65.1(a) for the other K4 cycle.\<close>
   have h\<alpha>\<beta>_nontrivial: "\<not> top1_path_homotopic_on ?X ?TX x x
       (top1_path_product \<alpha> \<beta>) (top1_constant_path x)"
     by (rule Theorem_63_1_loop_nontrivial[OF hTX hU_open_X hV_open_X hUV_union
