@@ -226,9 +226,25 @@ proof -
              assms(13) assms(7) assms(26) ha4_ep34 ha4_ep41])
     \<comment> \<open>(e12 \<union> e23) \<inter> (e34 \<union> e41) = {a1, a3}.\<close>
     have hinter: "(e12 \<union> e23) \<inter> (e34 \<union> e41) = {a1, a3}"
-      using assms(22,23,25,27) sorry \<comment> \<open>From K4 intersections: e12\<inter>e34={}, e12\<inter>e41={a1},
-         e23\<inter>e34={a3}, e23\<inter>e41={}. Need e23\<inter>e41={} which follows from
-         disjoint vertex sets {a2,a3} vs {a4,a1} (card {a1,a2,a3,a4}=4).\<close>
+    proof -
+      \<comment> \<open>(e12 \<union> e23) \<inter> (e34 \<union> e41) = (e12\<inter>e34) \<union> (e12\<inter>e41) \<union> (e23\<inter>e34) \<union> (e23\<inter>e41)
+         = {} \<union> {a1} \<union> {a3} \<union> {} = {a1, a3}.\<close>
+      have "(e12 \<union> e23) \<inter> (e34 \<union> e41)
+          = (e12 \<inter> e34) \<union> (e12 \<inter> e41) \<union> (e23 \<inter> e34) \<union> (e23 \<inter> e41)" by (by100 blast)
+      hence "(e12 \<union> e23) \<inter> (e34 \<union> e41)
+          = (e12 \<inter> e34) \<union> (e12 \<inter> e41) \<union> (e23 \<inter> e34) \<union> (e23 \<inter> e41)" .
+      hence "(e12 \<union> e23) \<inter> (e34 \<union> e41) = {} \<union> (e12 \<inter> e41) \<union> (e23 \<inter> e34) \<union> (e23 \<inter> e41)"
+        using assms(22) by (by100 simp)
+      hence h1: "(e12 \<union> e23) \<inter> (e34 \<union> e41) = (e12 \<inter> e41) \<union> (e23 \<inter> e34) \<union> (e23 \<inter> e41)"
+        by (by100 blast)
+      have h_eq: "(e12 \<union> e23) \<inter> (e34 \<union> e41) = (e12 \<inter> e41) \<union> (e23 \<inter> e34) \<union> (e23 \<inter> e41)"
+        by (rule h1)
+      have "(e12 \<inter> e41) \<union> (e23 \<inter> e34) \<union> (e23 \<inter> e41) = {a1} \<union> {a3} \<union> {}"
+        using assms(27) assms(25) assms(23) by (by100 blast)
+      hence h5: "(e12 \<union> e23) \<inter> (e34 \<union> e41) = {a1} \<union> {a3} \<union> {}"
+        using h_eq by (by100 simp)
+      show ?thesis using h5 by (by100 blast)
+    qed
     have ha1_ne_a3: "a1 \<noteq> a3"
     proof
       assume h: "a1 = a3"
