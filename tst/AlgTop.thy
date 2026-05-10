@@ -20,12 +20,38 @@ lemma generator_from_63_1_simply_connected:
     (\<exists>n::nat. top1_path_homotopic_on X TX a a f (top1_path_power (top1_path_product \<alpha> \<beta>) a n)
       \<or> top1_path_homotopic_on X TX a a f
            (top1_path_power (top1_path_reverse (top1_path_product \<alpha> \<beta>)) a n))"
-  sorry \<comment> \<open>Proof: By loop\_subdivision\_UV, any loop f decomposes into U/V pieces.
-     Each U-piece is nulhomotopic in U (simply connected), similarly for V.
-     After contraction, only A\<leftrightarrow>B crossings remain.
-     By Theorem\_63\_1\_c\_subgroups\_trivial: A\<rightarrow>A crossings are trivial.
-     So every loop reduces to a power of [\<alpha>*\<beta>].
-     This is a version of SvK for disconnected U\<inter>V with simply connected regions.\<close>
+proof (intro allI impI)
+  fix f assume hf: "top1_is_loop_on X TX a f"
+  have hTX_top: "is_topology_on X TX" by (rule assms(1))
+  \<comment> \<open>Step 1: Subdivide f into pieces in U or V.\<close>
+  obtain n sub where hn: "n \<ge> 1" and hsub0: "sub 0 = 0" and hsubn: "sub n = 1"
+      and hsubinc: "\<forall>i<n. sub i < sub (Suc i)"
+      and hpieces: "\<forall>i<n. (\<forall>t. 0\<le>t \<and> t\<le>1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> U)
+             \<or> (\<forall>t. 0\<le>t \<and> t\<le>1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> V)"
+    using loop_subdivision_UV[OF assms(1,2,3,4) hf] by blast
+  \<comment> \<open>Step 2: Each subdivision point f(sub i) is in U\<inter>V = A\<union>B (for 0 < i < n).
+     Actually f(sub 0) = f(0) = a \<in> A, f(sub n) = f(1) = a \<in> A.
+     For intermediate points: if piece i is in U and piece i+1 is in V (or vice versa),
+     then f(sub(i+1)) \<in> U \<inter> V = A \<union> B.\<close>
+  \<comment> \<open>Step 3: Key insight. Since U and V are simply connected, any two paths
+     between the same endpoints within U (or V) are homotopic.
+     So each piece can be replaced by a canonical path.
+     For pieces from a point in A to a point in A within U: the piece is a
+     63.1 A-pair, which is trivial (by 63.1(c) + \<pi>_1(X) \<cong> Z argument).
+     For pieces from A to B within U: homotopic (in U) to \<alpha>.
+     For pieces from B to A within V: homotopic (in V) to \<beta>.
+     After replacement: f \<cong> (\<alpha>*\<beta>)^k for some k.\<close>
+  \<comment> \<open>This is a version of SvK for disconnected U\<inter>V with simply connected regions.
+     The full formalization requires tracking component membership of subdivision
+     points and doing path algebra. We use the algebraic consequence of 63.1(c):
+     all A-pairs are trivial, so the only surviving contribution is [\<alpha>*\<beta>].\<close>
+  show "\<exists>n::nat. top1_path_homotopic_on X TX a a f (top1_path_power (top1_path_product \<alpha> \<beta>) a n)
+      \<or> top1_path_homotopic_on X TX a a f
+           (top1_path_power (top1_path_reverse (top1_path_product \<alpha> \<beta>)) a n)"
+    sorry \<comment> \<open>From the subdivision + simply connected contraction + 63.1(c).
+       Each piece contracts to point (same component endpoints) or to \<alpha>/\<beta> (crossing).
+       Net result: f \<cong> (\<alpha>*\<beta>)^k. Needs formal path algebra with subdivision tracking.\<close>
+qed
 
 text \<open>S2 minus an arc is simply connected. Standard fact:
   S2-{p} is homeomorphic to R2 via stereographic projection, and R2 minus
