@@ -40,9 +40,12 @@ theorem Theorem_64_4_K5_not_planar:
 
 (** from \<S>65 Lemma 65.1(b): for K_4 subspace of S^2, the inclusion j: C \<rightarrow> S^2-p-q
     induces an isomorphism of fundamental groups.
+    NOTE: The cached Lemma_65_1_K4_subgraph only proves "exists nontrivial loop" (TOO WEAK).
+    This lemma (Lemma_65_1_iso) states the CORRECT conclusion: inclusion induces isomorphism.
+    Status: 2 sorry (surjectivity, injectivity). See PLAN_Lemma_65_1_updated.md.
     The old cached version (Lemma_65_1_K4_subgraph) only proves existence of a nontrivial
     loop, which is too weak. This version states the full isomorphism, following algtop.tex. **)
-lemma Lemma_65_1b_K4_isomorphism:
+lemma Lemma_65_1_iso:
   fixes a1 a2 a3 a4 :: "real \<times> real \<times> real"
     and e12 e23 e34 e41 e13 e24 :: "(real \<times> real \<times> real) set"
     and C :: "(real \<times> real \<times> real) set"
