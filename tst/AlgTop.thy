@@ -1575,7 +1575,81 @@ proof -
               sorry
             \<comment> \<open>?D \<union> \<Union>?curves \<subseteq> ?R \<inter> (?bdy\<times>?bdy).\<close>
             have hDC_sub_R_bdy: "?D \<union> \<Union>?curves \<subseteq> ?R \<inter> (?bdy \<times> ?bdy)"
-              sorry
+            proof
+              fix x assume "x \<in> ?D \<union> \<Union>?curves"
+              thus "x \<in> ?R \<inter> (?bdy \<times> ?bdy)"
+              proof
+                \<comment> \<open>Case 1: x \<in> ?D (diagonal on boundary).\<close>
+                assume "x \<in> ?D"
+                then obtain a where ha: "a \<in> ?bdy" "x = (a, a)" by (by100 blast)
+                have "a \<in> P" using ha(1) hbdy_sub_P by (by100 blast)
+                thus "x \<in> ?R \<inter> (?bdy \<times> ?bdy)" using ha by (by100 blast)
+              next
+                \<comment> \<open>Case 2: x \<in> \<Union>?curves (edge pair curve).\<close>
+                assume "x \<in> \<Union>?curves"
+                then obtain C where "C \<in> ?curves" "x \<in> C" by (by100 blast)
+                then obtain i j where hij: "i < ?n" "j < ?n"
+                    "C = (if fst (scheme!i) = fst (scheme!j) \<and> i \<noteq> j
+                          then (if snd (scheme!i) = snd (scheme!j)
+                                then (\<lambda>t. (?edge i t, ?edge j t)) ` I_set
+                                else (\<lambda>t. (?edge i t, ?edge j (1-t))) ` I_set)
+                          else {})" by auto
+                show "x \<in> ?R \<inter> (?bdy \<times> ?bdy)"
+                proof (cases "fst (scheme!i) = fst (scheme!j) \<and> i \<noteq> j")
+                  case False thus ?thesis using \<open>x \<in> C\<close> hij(3) by auto
+                next
+                  case True
+                  hence hsamelabel: "fst (scheme!i) = fst (scheme!j)" by (by100 blast)
+                  show ?thesis
+                  proof (cases "snd (scheme!i) = snd (scheme!j)")
+                    case True
+                    \<comment> \<open>Same direction: x = (edge\_i(t), edge\_j(t)).\<close>
+                    then obtain t where ht: "t \<in> I_set" "x = (?edge i t, ?edge j t)"
+                      using \<open>x \<in> C\<close> hij(3) \<open>fst (scheme!i) = fst (scheme!j) \<and> i \<noteq> j\<close> by auto
+                    have "q (?edge i t) = q (?edge j t)"
+                    proof -
+                      have "\<forall>t\<in>I_set. q (?edge i t) =
+                          (if snd (scheme!i) = snd (scheme!j) then q (?edge j t) else q (?edge j (1-t)))"
+                      proof (intro ballI)
+                        fix t assume "t \<in> I_set"
+                        from hedge_loc hij(1) hij(2) hsamelabel this
+                        show "q (?edge i t) = (if snd (scheme!i) = snd (scheme!j) then q (?edge j t) else q (?edge j (1-t)))"
+                          sorry
+                      qed
+                      thus ?thesis using True ht(1) by (by100 simp)
+                    qed
+                    moreover have hei: "?edge i t \<in> ?bdy" using hij(1) ht(1) by (by100 blast)
+                    moreover have hej: "?edge j t \<in> ?bdy" using hij(2) ht(1) by (by100 blast)
+                    moreover have "?edge i t \<in> P" using subsetD[OF hbdy_sub_P hei] .
+                    moreover have "?edge j t \<in> P" using subsetD[OF hbdy_sub_P hej] .
+                    ultimately show ?thesis using ht(2) by auto
+                  next
+                    case False
+                    \<comment> \<open>Opposite direction: x = (edge\_i(t), edge\_j(1-t)).\<close>
+                    then obtain t where ht: "t \<in> I_set" "x = (?edge i t, ?edge j (1-t))"
+                      using \<open>x \<in> C\<close> hij(3) \<open>fst (scheme!i) = fst (scheme!j) \<and> i \<noteq> j\<close> by auto
+                    have "q (?edge i t) = q (?edge j (1-t))"
+                    proof -
+                      have "\<forall>t\<in>I_set. q (?edge i t) =
+                          (if snd (scheme!i) = snd (scheme!j) then q (?edge j t) else q (?edge j (1-t)))"
+                      proof (intro ballI)
+                        fix t assume "t \<in> I_set"
+                        from hedge_loc hij(1) hij(2) hsamelabel this
+                        show "q (?edge i t) = (if snd (scheme!i) = snd (scheme!j) then q (?edge j t) else q (?edge j (1-t)))"
+                          sorry
+                      qed
+                      thus ?thesis using False ht(1) by (by100 simp)
+                    qed
+                    moreover have hei2: "?edge i t \<in> ?bdy" using hij(1) ht(1) by (by100 blast)
+                    moreover have h1t_I: "1 - t \<in> I_set" using ht(1) unfolding top1_unit_interval_def by auto
+                    moreover have hej2: "?edge j (1-t) \<in> ?bdy" using hij(2) h1t_I by (by100 blast)
+                    moreover have "?edge i t \<in> P" using subsetD[OF hbdy_sub_P hei2] .
+                    moreover have "?edge j (1-t) \<in> P" using subsetD[OF hbdy_sub_P hej2] .
+                    ultimately show ?thesis using ht(2) by auto
+                  qed
+                qed
+              qed
+            qed
             \<comment> \<open>So ?R \<inter> (?bdy \<times> ?bdy) = ?D \<union> \<Union>?curves.\<close>
             have hR_bdy_eq: "?R \<inter> (?bdy \<times> ?bdy) = ?D \<union> \<Union>?curves"
               using hR_bdy_sub_DC hDC_sub_R_bdy by (by100 blast)
