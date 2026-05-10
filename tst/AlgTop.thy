@@ -553,16 +553,49 @@ proof -
     ultimately show ?thesis by (by100 simp)
   qed
   \<comment> \<open>Step C5: Apply Theorem 63.1.\<close>
+  \<comment> \<open>Theorem 63.1 hypotheses: U\_loc, V\_loc open in X; U\<inter>V has two components; x, y separated.\<close>
+  have hU_open_X: "openin_on ?X ?TX ?U_loc"
+    sorry \<comment> \<open>D1 closed in S2 (compact in Hausdorff). S2-D1 open in S2. Open \<inter> X = open in X.\<close>
+  have hV_open_X: "openin_on ?X ?TX ?V_loc"
+    sorry \<comment> \<open>Same for D2.\<close>
+  \<comment> \<open>U\<inter>V = S2-(D1\<union>D2). D1\<union>D2 is an SCC (cycle a1-a3-a2-a4-a1 through p,q).
+     By JCT: S2-(D1\<union>D2) has two components A, B.
+     x \<in> int(e12) and y \<in> int(e34) lie in different components (by Lemma 65.1(a)
+     applied to the "other" K4 cycle D1\<union>D2).\<close>
+  obtain A B where hAB: "?U_loc \<inter> ?V_loc = A \<union> B" "A \<inter> B = {}"
+      "openin_on ?X ?TX A" "openin_on ?X ?TX B" "x \<in> A" "y \<in> B"
+    sorry \<comment> \<open>JCT on D1\<union>D2 (SCC) + Lemma 65.1(a) for separation of x, y.\<close>
   have h\<alpha>\<beta>_nontrivial: "\<not> top1_path_homotopic_on ?X ?TX x x
       (top1_path_product \<alpha> \<beta>) (top1_constant_path x)"
-    sorry \<comment> \<open>Theorem\_63\_1\_loop\_nontrivial[OF hTX ... hUV\_union ... h\<alpha>\_U h\<beta>\_V].\<close>
+    by (rule Theorem_63_1_loop_nontrivial[OF hTX hU_open_X hV_open_X hUV_union
+           hAB(1,2,3,4,5,6) h\<alpha>_U h\<beta>_V])
   \<comment> \<open>Step D: \<alpha>*\<beta> lies in C. So [\<alpha>*\<beta>]_C is a well-defined element of \<pi>_1(C, x).
      j_*([\<alpha>*\<beta>]_C) = [\<alpha>*\<beta>]_X \<noteq> id. Hence j_* is nontrivial.
      Since \<pi>_1(C) \<cong> Z and \<pi>_1(X) \<cong> Z:
      - j_* nontrivial hom Z \<rightarrow> Z torsion-free \<Rightarrow> j_* injective.
      - [\<alpha>*\<beta>] generates \<pi>_1(X) (63.1(c) + infinite cyclic) \<Rightarrow> j_* surjective.\<close>
   have h\<alpha>\<beta>_in_C: "top1_is_loop_on C ?TC x (top1_path_product \<alpha> \<beta>)"
-    sorry \<comment> \<open>\<alpha> in C-D1 \<subseteq> C, \<beta> in C-D2 \<subseteq> C. Concatenation lies in C.\<close>
+  proof -
+    have hTC_top: "is_topology_on C ?TC"
+      by (rule subspace_topology_is_topology_on[OF hTopS2 hC_sub_S2])
+    \<comment> \<open>Lift \<alpha> from C-D1 to C.\<close>
+    have hCmD1_sub_C: "C - ?D1 \<subseteq> C" by (by100 blast)
+    have hTC_CD1: "subspace_topology C ?TC (C - ?D1) = subspace_topology top1_S2 top1_S2_topology (C - ?D1)"
+      using subspace_topology_trans[of "C - ?D1" C] hCmD1_sub_C by (by100 simp)
+    have h\<alpha>_C: "top1_is_path_on C ?TC x y \<alpha>"
+      by (rule path_in_subspace_is_path_in_ambient'[OF hTC_top hCmD1_sub_C])
+         (rule h\<alpha>[unfolded hTC_CD1[symmetric]])
+    \<comment> \<open>Lift \<beta> from C-D2 to C.\<close>
+    have hCmD2_sub_C: "C - ?D2 \<subseteq> C" by (by100 blast)
+    have hTC_CD2: "subspace_topology C ?TC (C - ?D2) = subspace_topology top1_S2 top1_S2_topology (C - ?D2)"
+      using subspace_topology_trans[of "C - ?D2" C] hCmD2_sub_C by (by100 simp)
+    have h\<beta>_C: "top1_is_path_on C ?TC y x \<beta>"
+      by (rule path_in_subspace_is_path_in_ambient'[OF hTC_top hCmD2_sub_C])
+         (rule h\<beta>[unfolded hTC_CD2[symmetric]])
+    \<comment> \<open>\<alpha>*\<beta> is a loop in C.\<close>
+    show ?thesis unfolding top1_is_loop_on_def
+      by (rule top1_path_product_is_path[OF hTC_top h\<alpha>_C h\<beta>_C])
+  qed
   have hj_surj: "(top1_fundamental_group_induced_on C ?TC c0 ?X ?TX c0 (\<lambda>x. x))
       ` (top1_fundamental_group_carrier C ?TC c0)
       = top1_fundamental_group_carrier ?X ?TX c0"
