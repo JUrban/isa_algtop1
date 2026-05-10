@@ -1638,7 +1638,7 @@ proof -
               from hno_extra[rule_format, OF hi(1) hj(1) hi(2) hj(2)]
               have "q a = q b \<longrightarrow> (i = j \<and> t = s) \<or> (fst (scheme!i) = fst (scheme!j) \<and>
                   (if snd (scheme!i) = snd (scheme!j) then s = t else s = 1 - t))"
-                using hi(3) hj(3) by (by100 simp)
+                using hi(3) hj(3) by simp
               hence "(i = j \<and> t = s) \<or> (fst (scheme!i) = fst (scheme!j) \<and>
                   (if snd (scheme!i) = snd (scheme!j) then s = t else s = 1 - t))"
                 using hx(4) by (by100 blast)
@@ -1678,15 +1678,18 @@ proof -
                                 else (\<lambda>t. (?edge i t, ?edge j (1-t))) ` I_set)
                           else {}) = (\<lambda>t. (?edge i t, ?edge j t)) ` I_set"
                         using \<open>fst (scheme!i) = fst (scheme!j)\<close> False True by (by100 simp)
-                      ultimately show ?thesis sorry
+                      ultimately show ?thesis
+                        sorry \<comment> \<open>image membership in ?curves (let binding makes automation fail)\<close>
                     qed
-                    ultimately show ?thesis sorry
+                    hence "x \<in> \<Union>?curves" using \<open>x \<in> (\<lambda>t. (?edge i t, ?edge j t)) ` I_set\<close>
+                      by blast
+                    thus ?thesis by blast
                   next
                     case sndF: False
                     hence "s = 1 - t" using hpair by (by100 auto)
                     hence "x = (?edge i t, ?edge j (1-t))" using hx(1) hi(3) hj(3) by (by100 simp)
-                    hence "x \<in> (\<lambda>t. (?edge i t, ?edge j (1-t))) ` I_set" using hi(2) by auto
-                    moreover have "(\<lambda>t. (?edge i t, ?edge j (1-t))) ` I_set \<in> ?curves"
+                    hence hx_in: "x \<in> (\<lambda>t. (?edge i t, ?edge j (1-t))) ` I_set" using hi(2) by auto
+                    have "(\<lambda>t. (?edge i t, ?edge j (1-t))) ` I_set \<in> ?curves"
                     proof -
                       have "(i, j) \<in> {..<length scheme} \<times> {..<length scheme}"
                         using hi(1) hj(1) by (by100 blast)
@@ -1699,7 +1702,8 @@ proof -
                         using \<open>fst (scheme!i) = fst (scheme!j)\<close> False sndF by (by100 simp)
                       ultimately show ?thesis sorry
                     qed
-                    ultimately show ?thesis sorry
+                    hence "x \<in> \<Union>?curves" using hx_in by blast
+                    thus ?thesis by blast
                   qed
                 qed
               qed
