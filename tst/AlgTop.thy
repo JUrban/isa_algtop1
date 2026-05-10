@@ -325,26 +325,52 @@ proof -
       and he34a_arc: "top1_is_arc_on e34a (subspace_topology top1_S2 top1_S2_topology e34a)"
       and he34b_arc: "top1_is_arc_on e34b (subspace_topology top1_S2 top1_S2_topology e34b)"
     using arc_split_at_midpoint[OF assms(1) hS2_haus assms(6) assms(12)] by blast
-  \<comment> \<open>Step B2: Construct \<alpha> = path x\<rightarrow>a1\<rightarrow>a4\<rightarrow>y along C edges.
-     This is a path in U (avoids D1 = Da3 \<union> e23 \<union> Da2) because \<alpha> goes through
-     e12 (x to a1), e41 (a1 to a4), e34 (a4 to y) which don't intersect D1.
-     Construct \<beta> = path y\<rightarrow>a3\<rightarrow>a2\<rightarrow>x along C edges.
-     This is a path in V (avoids D2 = Dq4 \<union> e41 \<union> D1p) because \<beta> goes through
-     e34 (y to a3), e23 (a3 to a2), e12 (a2 to x) which don't intersect D2.\<close>
-  \<comment> \<open>Step C: Apply Theorem 63.1: \<alpha>*\<beta> nontrivial. \<alpha>*\<beta> \<in> C.
-     Step D: [\<alpha>*\<beta>] generates \<pi>_1(X) (infinite cyclic + 63.1(c)).
-     Step E: j_* surjective ([\<alpha>*\<beta>] \<in> C and generates \<pi>_1(X)).\<close>
+  \<comment> \<open>Step B2: x \<notin> {a1, a2} and y \<notin> {a3, a4} (interior points of arcs).\<close>
+  have hx_int: "x \<notin> top1_arc_endpoints_on e12 (subspace_topology top1_S2 top1_S2_topology e12)"
+    sorry \<comment> \<open>x splits e12 into two arcs e12a, e12b. If x were an endpoint,
+       one piece would be {x} which is not an arc.\<close>
+  hence hx_not_endpts: "x \<noteq> a1 \<and> x \<noteq> a2" using assms(16) by (by100 blast)
+  have hy_int: "y \<notin> top1_arc_endpoints_on e34 (subspace_topology top1_S2 top1_S2_topology e34)"
+    sorry \<comment> \<open>Same argument for y in e34.\<close>
+  hence hy_not_endpts: "y \<noteq> a3 \<and> y \<noteq> a4" using assms(18) by (by100 blast)
+  \<comment> \<open>Step B3: C - D1 is path-connected and contains x, y.
+     C - D1 = (e12-{a2}) \<union> e41 \<union> (e34-{a3}). Connected chain via a1, a4.
+     x \<in> e12-{a2} (x interior), y \<in> e34-{a3} (y interior).
+     So \<exists>\<alpha>: path from x to y in C \<inter> U.\<close>
+  have hx_in_CmD1: "x \<in> C - ?D1" sorry \<comment> \<open>x \<in> e12, x \<noteq> a2, x \<noteq> a3. e12 \<inter> D1 \<subseteq> {a2}.\<close>
+  have hy_in_CmD1: "y \<in> C - ?D1" sorry \<comment> \<open>y \<in> e34, y \<noteq> a3, y \<noteq> a4... wait, need y \<noteq> a3.\<close>
+  have hCmD1_pc: "top1_path_connected_on (C - ?D1)
+      (subspace_topology top1_S2 top1_S2_topology (C - ?D1))"
+    sorry \<comment> \<open>C-D1 = (e12-{a2}) \<union> e41 \<union> (e34-{a3}), chain connected at a1, a4.\<close>
+  \<comment> \<open>Similarly for C - D2.\<close>
+  have hx_in_CmD2: "x \<in> C - ?D2" sorry
+  have hy_in_CmD2: "y \<in> C - ?D2" sorry
+  have hCmD2_pc: "top1_path_connected_on (C - ?D2)
+      (subspace_topology top1_S2 top1_S2_topology (C - ?D2))"
+    sorry \<comment> \<open>C-D2 = (e12-{a1}) \<union> e23 \<union> (e34-{a4}), chain connected at a2, a3.\<close>
+  \<comment> \<open>Step B4: Get paths \<alpha> in C \<inter> U from x to y, \<beta> in C \<inter> V from y to x.\<close>
+  have hCmD1_sub: "C - ?D1 \<subseteq> ?U_loc" using hC_sub_S2 by (by100 blast)
+  have hCmD2_sub: "C - ?D2 \<subseteq> ?V_loc" using hC_sub_S2 by (by100 blast)
+  obtain \<alpha> where h\<alpha>: "top1_is_path_on (C - ?D1)
+      (subspace_topology top1_S2 top1_S2_topology (C - ?D1)) x y \<alpha>"
+    using hCmD1_pc hx_in_CmD1 hy_in_CmD1
+    unfolding top1_path_connected_on_def by (by100 blast)
+  obtain \<beta> where h\<beta>: "top1_is_path_on (C - ?D2)
+      (subspace_topology top1_S2 top1_S2_topology (C - ?D2)) y x \<beta>"
+    using hCmD2_pc hy_in_CmD2 hx_in_CmD2
+    unfolding top1_path_connected_on_def by (by100 blast)
+  \<comment> \<open>\<alpha> lies in C \<inter> U, \<beta> lies in C \<inter> V. So \<alpha>*\<beta> lies in C.\<close>
+  \<comment> \<open>Step C: Show U\<inter>V has two components A, B with x \<in> A, y \<in> B.
+     Then apply Theorem\_63\_1 to get \<alpha>*\<beta> nontrivial.\<close>
+  \<comment> \<open>Step D: [\<alpha>*\<beta>] generates \<pi>_1(X) (63.1(c) + infinite cyclic).
+     Step E: j_* surjective (\<alpha>*\<beta> \<in> C + generator).\<close>
   have hj_surj: "(top1_fundamental_group_induced_on C ?TC c0 ?X ?TX c0 (\<lambda>x. x))
       ` (top1_fundamental_group_carrier C ?TC c0)
       = top1_fundamental_group_carrier ?X ?TX c0"
-    sorry \<comment> \<open>Steps B2-E. Needs:
-       (1) Construct \<alpha>, \<beta> as path concatenations along C edges
-       (2) Show \<alpha> \<in> U, \<beta> \<in> V (from K4 intersection conditions)
-       (3) Show U\<inter>V has two components with x, y separated (JCT on D1\<union>D2)
-       (4) Apply Theorem\_63\_1 \<Rightarrow> \<alpha>*\<beta> nontrivial
-       (5) [\<alpha>*\<beta>] generates \<pi>_1(X) (63.1(c) + infinite cyclic)
-       (6) \<alpha>*\<beta> \<in> C + generator \<Rightarrow> j_* surjective
-       (7) Basepoint change from x to c0\<close>
+    sorry \<comment> \<open>Steps C-E. Now have \<alpha> in C\<inter>U, \<beta> in C\<inter>V.
+       Need: (1) U\<inter>V two components with x, y separated (JCT on D1\<union>D2)
+       (2) Theorem\_63\_1 \<Rightarrow> nontrivial (3) generator argument (4) surjectivity
+       (5) basepoint change x \<rightarrow> c0.\<close>
   have hj_inj: "inj_on (top1_fundamental_group_induced_on C ?TC c0 ?X ?TX c0 (\<lambda>x. x))
       (top1_fundamental_group_carrier C ?TC c0)"
     sorry \<comment> \<open>Step F: surjective hom Z \<rightarrow> Z is injective. Follows from hj\_surj.\<close>
