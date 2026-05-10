@@ -327,8 +327,8 @@ proof -
     using arc_split_at_midpoint[OF assms(1) hS2_haus assms(6) assms(12)] by blast
   \<comment> \<open>Step B2: x \<notin> {a1, a2} and y \<notin> {a3, a4} (interior points of arcs).\<close>
   have hx_int: "x \<notin> top1_arc_endpoints_on e12 (subspace_topology top1_S2 top1_S2_topology e12)"
-    sorry \<comment> \<open>x splits e12 into two arcs e12a, e12b. If x were an endpoint,
-       one piece would be {x} which is not an arc.\<close>
+    sorry \<comment> \<open>x splits e12 into two arcs e12a, e12b. Arcs have \<ge> 2 points,
+       so if x were an endpoint, one piece would be {x} = not an arc. Contradiction.\<close>
   hence hx_not_endpts: "x \<noteq> a1 \<and> x \<noteq> a2" using assms(16) by (by100 blast)
   have hy_int: "y \<notin> top1_arc_endpoints_on e34 (subspace_topology top1_S2 top1_S2_topology e34)"
     sorry \<comment> \<open>Same argument for y in e34.\<close>
@@ -337,14 +337,98 @@ proof -
      C - D1 = (e12-{a2}) \<union> e41 \<union> (e34-{a3}). Connected chain via a1, a4.
      x \<in> e12-{a2} (x interior), y \<in> e34-{a3} (y interior).
      So \<exists>\<alpha>: path from x to y in C \<inter> U.\<close>
-  have hx_in_CmD1: "x \<in> C - ?D1" sorry \<comment> \<open>x \<in> e12, x \<noteq> a2, x \<noteq> a3. e12 \<inter> D1 \<subseteq> {a2}.\<close>
-  have hy_in_CmD1: "y \<in> C - ?D1" sorry \<comment> \<open>y \<in> e34, y \<noteq> a3, y \<noteq> a4... wait, need y \<noteq> a3.\<close>
+  have hx_in_CmD1: "x \<in> C - ?D1"
+  proof -
+    have "x \<in> C" using hx_e12 assms(39) by (by100 blast)
+    moreover have "x \<notin> Da3"
+    proof -
+      have "Da3 \<subseteq> e13" using he13_split by (by100 blast)
+      hence "e12 \<inter> Da3 \<subseteq> e12 \<inter> e13" by (by100 blast)
+      hence h_sub: "e12 \<inter> Da3 \<subseteq> {a1}" using assms(28) by (by100 blast)
+      have "a1 \<noteq> p" using assms(37) by (by100 blast)
+      have "a1 \<notin> Da3" using \<open>a1 \<in> D1p\<close> he13_meet \<open>a1 \<noteq> p\<close> by (by100 blast)
+      have "e12 \<inter> Da3 = {}" using h_sub \<open>a1 \<notin> Da3\<close> by (by100 blast)
+      thus ?thesis using hx_e12 by (by100 blast)
+    qed
+    moreover have "x \<notin> e23" using hx_e12 hx_not_endpts assms(24) by (by100 blast)
+    moreover have "x \<notin> Da2"
+    proof -
+      have "Da2 \<subseteq> e24" using he24_split by (by100 blast)
+      hence "e12 \<inter> Da2 \<subseteq> e12 \<inter> e24" by (by100 blast)
+      hence "e12 \<inter> Da2 \<subseteq> {a2}" using assms(33) by (by100 blast)
+      thus ?thesis using hx_e12 hx_not_endpts by (by100 blast)
+    qed
+    ultimately show ?thesis by (by100 blast)
+  qed
+  have hy_in_CmD1: "y \<in> C - ?D1"
+  proof -
+    have "y \<in> C" using hy_e34 assms(39) by (by100 blast)
+    moreover have "y \<notin> Da3"
+    proof -
+      have "Da3 \<subseteq> e13" using he13_split by (by100 blast)
+      hence "e34 \<inter> Da3 \<subseteq> e34 \<inter> e13" by (by100 blast)
+      hence "e34 \<inter> Da3 \<subseteq> {a3}" using assms(30) by (by100 blast)
+      thus ?thesis using hy_e34 hy_not_endpts by (by100 blast)
+    qed
+    moreover have "y \<notin> e23" using hy_e34 hy_not_endpts assms(25) by (by100 blast)
+    moreover have "y \<notin> Da2"
+    proof -
+      have "Da2 \<subseteq> e24" using he24_split by (by100 blast)
+      hence "e34 \<inter> Da2 \<subseteq> e34 \<inter> e24" by (by100 blast)
+      hence h_sub: "e34 \<inter> Da2 \<subseteq> {a4}" using assms(35) by (by100 blast)
+      have "a4 \<noteq> q" using assms(38) by (by100 blast)
+      have "a4 \<notin> Da2" using \<open>a4 \<in> Dq4\<close> he24_meet \<open>a4 \<noteq> q\<close> by (by100 blast)
+      have "e34 \<inter> Da2 = {}" using h_sub \<open>a4 \<notin> Da2\<close> by (by100 blast)
+      thus ?thesis using hy_e34 by (by100 blast)
+    qed
+    ultimately show ?thesis by (by100 blast)
+  qed
   have hCmD1_pc: "top1_path_connected_on (C - ?D1)
       (subspace_topology top1_S2 top1_S2_topology (C - ?D1))"
     sorry \<comment> \<open>C-D1 = (e12-{a2}) \<union> e41 \<union> (e34-{a3}), chain connected at a1, a4.\<close>
   \<comment> \<open>Similarly for C - D2.\<close>
-  have hx_in_CmD2: "x \<in> C - ?D2" sorry
-  have hy_in_CmD2: "y \<in> C - ?D2" sorry
+  have hx_in_CmD2: "x \<in> C - ?D2"
+  proof -
+    have "x \<in> C" using hx_e12 assms(39) by (by100 blast)
+    moreover have "x \<notin> Dq4"
+    proof -
+      have "Dq4 \<subseteq> e24" using he24_split by (by100 blast)
+      hence "e12 \<inter> Dq4 \<subseteq> e12 \<inter> e24" by (by100 blast)
+      hence "e12 \<inter> Dq4 \<subseteq> {a2}" using assms(33) by (by100 blast)
+      thus ?thesis using hx_e12 hx_not_endpts by (by100 blast)
+    qed
+    moreover have "x \<notin> e41" using hx_e12 hx_not_endpts assms(27) by (by100 blast)
+    moreover have "x \<notin> D1p"
+    proof -
+      have "D1p \<subseteq> e13" using he13_split by (by100 blast)
+      hence "e12 \<inter> D1p \<subseteq> e12 \<inter> e13" by (by100 blast)
+      hence "e12 \<inter> D1p \<subseteq> {a1}" using assms(28) by (by100 blast)
+      thus ?thesis using hx_e12 hx_not_endpts by (by100 blast)
+    qed
+    ultimately show ?thesis by (by100 blast)
+  qed
+  have hy_in_CmD2: "y \<in> C - ?D2"
+  proof -
+    have "y \<in> C" using hy_e34 assms(39) by (by100 blast)
+    moreover have "y \<notin> Dq4"
+    proof -
+      have "Dq4 \<subseteq> e24" using he24_split by (by100 blast)
+      hence "e34 \<inter> Dq4 \<subseteq> e34 \<inter> e24" by (by100 blast)
+      hence "e34 \<inter> Dq4 \<subseteq> {a4}" using assms(35) by (by100 blast)
+      thus ?thesis using hy_e34 hy_not_endpts by (by100 blast)
+    qed
+    moreover have "y \<notin> e41" using hy_e34 hy_not_endpts assms(26) by (by100 blast)
+    moreover have "y \<notin> D1p"
+    proof -
+      have "D1p \<subseteq> e13" using he13_split by (by100 blast)
+      hence "e34 \<inter> D1p \<subseteq> e34 \<inter> e13" by (by100 blast)
+      hence h_sub: "e34 \<inter> D1p \<subseteq> {a3}" using assms(30) by (by100 blast)
+      have "a3 \<noteq> p" using assms(37) by (by100 blast)
+      have "a3 \<notin> D1p" using \<open>a3 \<in> Da3\<close> he13_meet \<open>a3 \<noteq> p\<close> by (by100 blast)
+      thus ?thesis using hy_e34 h_sub \<open>a3 \<notin> D1p\<close> by (by100 blast)
+    qed
+    ultimately show ?thesis by (by100 blast)
+  qed
   have hCmD2_pc: "top1_path_connected_on (C - ?D2)
       (subspace_topology top1_S2 top1_S2_topology (C - ?D2))"
     sorry \<comment> \<open>C-D2 = (e12-{a1}) \<union> e23 \<union> (e34-{a4}), chain connected at a2, a3.\<close>
