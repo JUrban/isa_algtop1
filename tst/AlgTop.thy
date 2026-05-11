@@ -1956,9 +1956,46 @@ proof -
         proof -
           \<comment> \<open>Arc3-{a1,a2} in one of W12a/W12b (connected \<subseteq> S2-J12).\<close>
           have hArc3_ne_loc: "Arc3 - {a1,a2} \<noteq> {}"
-            sorry \<comment> \<open>arc has interior points\<close>
+          proof
+            assume "Arc3 - {a1,a2} = {}"
+            hence "Arc3 \<subseteq> {a1,a2}" by (by100 blast)
+            have "a1 \<in> closure_on top1_S2 top1_S2_topology (Arc3 - {a1,a2})"
+              using arc_endpoint_in_closure_of_interior[OF assms(1) hS2_haus hArc3_sub hArc3_arc hArc3_ep ha1_ne_a2]
+              by (by100 blast)
+            hence "a1 \<in> closure_on top1_S2 top1_S2_topology {}" using \<open>Arc3 - {a1,a2} = {}\<close> by (by100 simp)
+            thus False using top1_closure_on_empty[OF hTopS2] by (by100 simp)
+          qed
           have hArc3_in: "Arc3 - {a1,a2} \<subseteq> W12a \<or> Arc3 - {a1,a2} \<subseteq> W12b"
-            sorry \<comment> \<open>Lemma\_23\_2 on connected Arc3-{a1,a2} in W12a\<union>W12b\<close>
+          proof -
+            have hArc3_conn_loc: "top1_connected_on (Arc3 - {a1,a2})
+                (subspace_topology top1_S2 top1_S2_topology (Arc3 - {a1,a2}))"
+              by (rule arc_minus_endpoints_connected[OF assms(1) hS2_haus hArc3_sub hArc3_arc hArc3_ep ha1_ne_a2])
+            have hArc3_sub_loc: "Arc3 - {a1,a2} \<subseteq> top1_S2 - (e12 \<union> Arc2)"
+              using hArc3_sub_J12 .
+            have hArc3_conn_sub: "top1_connected_on (Arc3 - {a1,a2})
+                (subspace_topology (top1_S2-(e12\<union>Arc2))
+                    (subspace_topology top1_S2 top1_S2_topology (top1_S2-(e12\<union>Arc2))) (Arc3-{a1,a2}))"
+            proof -
+              have "subspace_topology top1_S2 top1_S2_topology (Arc3-{a1,a2}) =
+                  subspace_topology (top1_S2-(e12\<union>Arc2))
+                      (subspace_topology top1_S2 top1_S2_topology (top1_S2-(e12\<union>Arc2))) (Arc3-{a1,a2})"
+                using subspace_topology_trans[of "Arc3-{a1,a2}" "top1_S2-(e12\<union>Arc2)"]
+                    hArc3_sub_loc by (by100 simp)
+              thus ?thesis using hArc3_conn_loc by (by100 simp)
+            qed
+            have hTJ12_loc: "is_topology_on (top1_S2-(e12\<union>Arc2)) (subspace_topology top1_S2 top1_S2_topology (top1_S2-(e12\<union>Arc2)))"
+              by (rule subspace_topology_is_topology_on[OF hTopS2]) (by100 blast)
+            have hW12a_op: "W12a \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2-(e12\<union>Arc2))"
+              using hW12_open hW12(4) unfolding subspace_topology_def by (by100 blast)
+            have hW12b_op: "W12b \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2-(e12\<union>Arc2))"
+              using hW12_open hW12(4) unfolding subspace_topology_def by (by100 blast)
+            have hSep_W12_loc: "top1_is_separation_on (top1_S2-(e12\<union>Arc2))
+                (subspace_topology top1_S2 top1_S2_topology (top1_S2-(e12\<union>Arc2))) W12a W12b"
+              unfolding top1_is_separation_on_def
+              using hW12a_op hW12b_op hW12(1,2,3,4) by (by100 blast)
+            from Lemma_23_2[OF hTJ12_loc hSep_W12_loc hArc3_sub_loc hArc3_conn_sub]
+            show ?thesis by (by100 blast)
+          qed
           from hD'_in_W12 show ?thesis
           proof (elim disjE)
             assume hDa: "D' \<subseteq> W12a"
@@ -2013,9 +2050,49 @@ proof -
         have hQ13_sub_R: "\<exists>Q. Q \<in> {W13a, W13b} \<and> Q \<subseteq> R1 \<union> R2 \<union> R3 \<and> D' \<inter> Q = {} \<and> Q \<noteq> {}"
         proof -
           have hArc2_ne_loc: "Arc2 - {a1,a2} \<noteq> {}"
-            sorry \<comment> \<open>arc has interior points\<close>
+          proof
+            assume "Arc2 - {a1,a2} = {}"
+            have "a1 \<in> closure_on top1_S2 top1_S2_topology (Arc2 - {a1,a2})"
+              using arc_endpoint_in_closure_of_interior[OF assms(1) hS2_haus hArc2_sub hArc2_arc hArc2_ep ha1_ne_a2]
+              by (by100 blast)
+            hence "a1 \<in> closure_on top1_S2 top1_S2_topology {}" using \<open>Arc2 - {a1,a2} = {}\<close> by (by100 simp)
+            thus False using top1_closure_on_empty[OF hTopS2] by (by100 simp)
+          qed
           have hArc2_in: "Arc2 - {a1,a2} \<subseteq> W13a \<or> Arc2 - {a1,a2} \<subseteq> W13b"
-            sorry \<comment> \<open>Lemma\_23\_2\<close>
+          proof -
+            have hArc2_conn_loc: "top1_connected_on (Arc2 - {a1,a2})
+                (subspace_topology top1_S2 top1_S2_topology (Arc2 - {a1,a2}))"
+              by (rule arc_minus_endpoints_connected[OF assms(1) hS2_haus hArc2_sub hArc2_arc hArc2_ep ha1_ne_a2])
+            have hArc2_sub_J13: "Arc2 - {a1,a2} \<subseteq> top1_S2 - (e12 \<union> Arc3)"
+            proof -
+              have "Arc2 \<inter> e12 = {a1, a2}" using hint12 by (by100 blast)
+              moreover have "Arc2 \<inter> Arc3 = {a1, a2}" using hint23 by (by100 blast)
+              ultimately have "Arc2 \<inter> (e12 \<union> Arc3) = {a1, a2}" by (by100 blast)
+              thus ?thesis using hArc2_sub by (by100 blast)
+            qed
+            have hArc2_conn_sub: "top1_connected_on (Arc2 - {a1,a2})
+                (subspace_topology (top1_S2-(e12\<union>Arc3))
+                    (subspace_topology top1_S2 top1_S2_topology (top1_S2-(e12\<union>Arc3))) (Arc2-{a1,a2}))"
+            proof -
+              have "subspace_topology top1_S2 top1_S2_topology (Arc2-{a1,a2}) =
+                  subspace_topology (top1_S2-(e12\<union>Arc3))
+                      (subspace_topology top1_S2 top1_S2_topology (top1_S2-(e12\<union>Arc3))) (Arc2-{a1,a2})"
+                using subspace_topology_trans[of "Arc2-{a1,a2}" "top1_S2-(e12\<union>Arc3)"]
+                    hArc2_sub_J13 by (by100 simp)
+              thus ?thesis using hArc2_conn_loc by (by100 simp)
+            qed
+            have hTJ13_loc2: "is_topology_on (top1_S2-(e12\<union>Arc3)) (subspace_topology top1_S2 top1_S2_topology (top1_S2-(e12\<union>Arc3)))"
+              by (rule subspace_topology_is_topology_on[OF hTopS2]) (by100 blast)
+            have "W13a \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2-(e12\<union>Arc3))"
+              using hW13_open hW13(4) unfolding subspace_topology_def by (by100 blast)
+            moreover have "W13b \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2-(e12\<union>Arc3))"
+              using hW13_open hW13(4) unfolding subspace_topology_def by (by100 blast)
+            ultimately have hSep_W13_loc2: "top1_is_separation_on (top1_S2-(e12\<union>Arc3))
+                (subspace_topology top1_S2 top1_S2_topology (top1_S2-(e12\<union>Arc3))) W13a W13b"
+              unfolding top1_is_separation_on_def using hW13(1,2,3,4) by (by100 blast)
+            from Lemma_23_2[OF hTJ13_loc2 hSep_W13_loc2 hArc2_sub_J13 hArc2_conn_sub]
+            show ?thesis by (by100 blast)
+          qed
           from hD'_in_W13 show ?thesis
           proof (elim disjE)
             assume hDa: "D' \<subseteq> W13a"
