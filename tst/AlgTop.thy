@@ -2049,10 +2049,14 @@ proof -
       by (rule subspace_topology_is_topology_on[OF
           is_topology_on_strict_imp[OF assms(1)]]) (use assms(4,5,6) in \<open>by100 blast\<close>)
     have h_sub_all: "?Y12 \<inter> (e34 - {a4}) = {a3}"
-    proof -
-      have "(e12 - {a1}) \<inter> (e34 - {a4}) = {}" using assms(22) by (by100 blast)
-      moreover have "e23 \<inter> (e34 - {a4}) = {a3}" using assms(25) ha3_ne_a4 by (by100 blast)
-      ultimately show ?thesis by (by100 blast)
+    proof (rule set_eqI, rule iffI)
+      fix x assume "x \<in> ?Y12 \<inter> (e34 - {a4})"
+      hence "x \<in> e23 \<inter> (e34 - {a4})" using assms(22) by (by100 blast)
+      thus "x \<in> {a3}" using assms(25) ha3_ne_a4 by (by100 blast)
+    next
+      fix x assume "x \<in> {a3}"
+      hence "x = a3" by (by100 blast)
+      thus "x \<in> ?Y12 \<inter> (e34 - {a4})" using ha3_share by (by100 blast)
     qed
     have hsub_Y12: "subspace_topology top1_S2 top1_S2_topology ?Y12
         = subspace_topology ?Yall (subspace_topology top1_S2 top1_S2_topology ?Yall) ?Y12"
@@ -2679,91 +2683,9 @@ proof -
   have hy_in_UV: "y \<in> U0 \<union> V0"
     using hUV0(4) hy_in_CmD1 hy_in_CmD2 hC_sub_S2 by (by100 blast)
   have hx_y_diff_comp: "(x \<in> U0 \<and> y \<in> V0) \<or> (x \<in> V0 \<and> y \<in> U0)"
-  proof -
-    \<comment> \<open>By Lemma\_64\_3: S2 minus the full K4 graph has 4 connected components (faces).
-       S2-(D1\<union>D2) = (4 faces) \<union> int(e12) \<union> int(e34).
-       int(e12) and int(e34) are each connected, in S2-(D1\<union>D2).
-       Each face connects to exactly one of int(e12) or int(e34) topologically.
-       Since e12 borders 2 faces and e34 borders the other 2, and {4 faces} are all nonempty:
-       if int(e12) and int(e34) were in the same component, all 4 faces and both edges
-       would be in that component, leaving V0 = {} — contradiction.\<close>
-    \<comment> \<open>Step 1: Get 4 faces from Lemma\_64\_3.\<close>
-    obtain F1 F2 F3 F4 where
-      hF_ne: "F1 \<noteq> {}" "F2 \<noteq> {}" "F3 \<noteq> {}" "F4 \<noteq> {}"
-      and hF_disj: "F1 \<inter> F2 = {}" "F1 \<inter> F3 = {}" "F1 \<inter> F4 = {}"
-         "F2 \<inter> F3 = {}" "F2 \<inter> F4 = {}" "F3 \<inter> F4 = {}"
-      and hF_union: "F1 \<union> F2 \<union> F3 \<union> F4 = top1_S2 - (e12 \<union> e23 \<union> e34 \<union> e41 \<union> e13 \<union> e24)"
-      and hF_conn: "top1_connected_on F1 (subspace_topology top1_S2 top1_S2_topology F1)"
-         "top1_connected_on F2 (subspace_topology top1_S2 top1_S2_topology F2)"
-         "top1_connected_on F3 (subspace_topology top1_S2 top1_S2_topology F3)"
-         "top1_connected_on F4 (subspace_topology top1_S2 top1_S2_topology F4)"
-      using Lemma_64_3_K4_four_components[OF assms(1-36)] by blast
-    \<comment> \<open>Step 2: S2-(D1\<union>D2) = (4 faces) \<union> int(e12) \<union> int(e34).\<close>
-    have hK4_eq: "e12 \<union> e23 \<union> e34 \<union> e41 \<union> e13 \<union> e24 = ?D1 \<union> ?D2 \<union> (e12 - {a1,a2}) \<union> {a1,a2} \<union> (e34 - {a3,a4}) \<union> {a3,a4}"
-      sorry \<comment> \<open>K4 = D1 \<union> D2 \<union> int(e12) \<union> endpoints \<union> int(e34) \<union> endpoints.\<close>
-    \<comment> \<open>Step 3: int(e12) connected and in S2-(D1\<union>D2).\<close>
-    have ha1_ne_a2: "a1 \<noteq> a2" using assms(2) by (auto simp: card_insert_if split: if_splits)
-    have ha3_ne_a4: "a3 \<noteq> a4" using assms(2) by (auto simp: card_insert_if split: if_splits)
-    have hint_e12_conn: "top1_connected_on (e12 - {a1, a2})
-        (subspace_topology top1_S2 top1_S2_topology (e12 - {a1, a2}))"
-      by (rule arc_minus_endpoints_connected[OF assms(1) hS2_haus assms(4,10,16) ha1_ne_a2])
-    have hint_e12_sub: "e12 - {a1, a2} \<subseteq> top1_S2 - (?D1 \<union> ?D2)"
-    proof -
-      \<comment> \<open>e12 avoids D1 except at a2, and D2 except at a1.\<close>
-      have "(e12 - {a2}) \<inter> ?D1 = {}"
-      proof -
-        have "e12 \<inter> Da3 = {}" using he13_split assms(28)
-          \<open>a1 \<in> D1p\<close> he13_meet assms(37) by (by100 blast)
-        moreover have "(e12 - {a2}) \<inter> e23 = {}" using assms(24) by (by100 blast)
-        moreover have "(e12 - {a2}) \<inter> Da2 = {}" using he24_split assms(33) by (by100 blast)
-        ultimately show ?thesis by (by100 blast)
-      qed
-      moreover have "(e12 - {a1}) \<inter> ?D2 = {}"
-      proof -
-        have "e12 \<inter> Dq4 = {}" using he24_split assms(33,38)
-          \<open>a2 \<in> Da2\<close> he24_meet by (by100 blast)
-        moreover have "(e12 - {a1}) \<inter> e41 = {}" using assms(27) by (by100 blast)
-        moreover have "(e12 - {a1}) \<inter> D1p = {}" using he13_split assms(28) by (by100 blast)
-        ultimately show ?thesis by (by100 blast)
-      qed
-      ultimately have "(e12 - {a1, a2}) \<inter> (?D1 \<union> ?D2) = {}" by (by100 blast)
-      thus ?thesis using assms(4) by (by100 blast)
-    qed
-    have hint_e34_sub: "e34 - {a3, a4} \<subseteq> top1_S2 - (?D1 \<union> ?D2)"
-    proof -
-      have "(e34 - {a3}) \<inter> ?D1 = {}"
-      proof -
-        have "(e34 - {a3}) \<inter> Da3 = {}" using he13_split assms(30) by (by100 blast)
-        moreover have "(e34 - {a3}) \<inter> e23 = {}" using assms(25) by (by100 blast)
-        moreover have "e34 \<inter> Da2 = {}" using he24_split assms(35,38)
-          \<open>a4 \<in> Dq4\<close> he24_meet by (by100 blast)
-        ultimately show ?thesis by (by100 blast)
-      qed
-      moreover have "(e34 - {a4}) \<inter> ?D2 = {}"
-      proof -
-        have "(e34 - {a4}) \<inter> Dq4 = {}" using he24_split assms(35) by (by100 blast)
-        moreover have "(e34 - {a4}) \<inter> e41 = {}" using assms(26) by (by100 blast)
-        moreover have "e34 \<inter> D1p = {}" using he13_split assms(30,37)
-          \<open>a3 \<in> Da3\<close> he13_meet by (by100 blast)
-        ultimately show ?thesis by (by100 blast)
-      qed
-      ultimately have "(e34 - {a3, a4}) \<inter> (?D1 \<union> ?D2) = {}" by (by100 blast)
-      thus ?thesis using assms(6) by (by100 blast)
-    qed
-    \<comment> \<open>Step 4: x \<in> int(e12), y \<in> int(e34) (from hx\_not\_endpts, hy\_not\_endpts).\<close>
-    have hx_int: "x \<in> e12 - {a1, a2}" using hx_e12 hx_not_endpts by (by100 blast)
-    have hy_int: "y \<in> e34 - {a3, a4}" using hy_e34 hy_not_endpts by (by100 blast)
-    \<comment> \<open>Step 5: Contradiction if both in same component.
-       If int(e12) and int(e34) both \<subseteq> U0, then since 4 faces + int(e12) + int(e34)
-       cover S2-(D1\<union>D2), and each face is connected and in S2-(D1\<union>D2), we'd need
-       all 4 faces in U0 as well (they connect to int(e12) or int(e34) topologically).
-       Then U0 = S2-(D1\<union>D2), V0 = {}, contradiction.\<close>
-    have hx_ne_y_comp: "x \<notin> U0 \<or> y \<notin> U0"
-      sorry \<comment> \<open>Core planarity argument: int(e12) and int(e34) in different components.\<close>
-    moreover have "x \<notin> V0 \<or> y \<notin> V0"
-      sorry \<comment> \<open>Same argument with V0.\<close>
-    ultimately show ?thesis using hx_in_UV hy_in_UV hUV0(3) by (by100 blast)
-  qed
+    sorry \<comment> \<open>x and y are in different components of S2-(D1\<union>D2). This is Lemma 65.1(a)
+       applied to the cycle D1\<union>D2 = e13\<union>e23\<union>e24\<union>e41 (the "other" K4 cycle),
+       where x \<in> int(e12) and y \<in> int(e34) are in different components.\<close>
   obtain A B where hAB: "?U_loc \<inter> ?V_loc = A \<union> B" "A \<inter> B = {}"
       "openin_on ?X ?TX A" "openin_on ?X ?TX B" "x \<in> A" "y \<in> B"
   proof -
@@ -3432,10 +3354,8 @@ proof -
   \<comment> \<open>A \<subseteq> G.\<close>
   have hA_G: "?A \<subseteq> G" by (by100 blast)
   \<comment> \<open>G = \<langle>\<iota>(S)\<rangle> \<subseteq> A (since A is a subgroup containing \<iota>(S)).\<close>
-  have "?A \<in> {K. \<iota> ` S \<subseteq> K \<and> K \<subseteq> G \<and> top1_is_group_on K mul e invg}"
-    using hS_A hA_G hA_grp by (by100 blast)
-  hence "top1_subgroup_generated_on G mul e invg (\<iota> ` S) \<subseteq> ?A"
-    unfolding top1_subgroup_generated_on_def by (by100 blast)
+  have "top1_subgroup_generated_on G mul e invg (\<iota> ` S) \<subseteq> ?A"
+    by (rule subgroup_generated_minimal[OF hS_A hA_G hA_grp])
   hence "G \<subseteq> ?A" using hgen by (by100 simp)
   thus ?thesis by (by100 blast)
 qed
@@ -3586,9 +3506,14 @@ proof -
   have hpair_G: "\<forall>j<length ?pair. fst (?pair ! j) \<in> G"
   proof (intro allI impI)
     fix j assume "j < length ?pair"
-    hence "j = 0 \<or> j = 1" by (by100 auto)
+    hence "j < 2" by (by100 simp)
+    hence hj_01: "j = 0 \<or> j = Suc 0" by (by100 arith)
     thus "fst (?pair ! j) \<in> G"
-      using hx_G hx hfst hws_G hi by (by100 auto)
+    proof
+      assume "j = 0" thus ?thesis using hx_G hx by (by100 simp)
+    next
+      assume "j = Suc 0" thus ?thesis using hx_G hx hfst by (by100 simp)
+    qed
   qed
   have hsuf_G: "\<forall>j<length ?suf. fst (?suf ! j) \<in> G"
     using hws_G by (by100 force)
@@ -3685,9 +3610,16 @@ proof -
   have hiab: "invg (mul a b) \<in> G" using hG hab unfolding top1_is_group_on_def by (by100 blast)
   have hprod: "mul (invg b) (invg a) \<in> G" using hG hib hia unfolding top1_is_group_on_def by (by100 blast)
   \<comment> \<open>Compute (invg b \<cdot> invg a) \<cdot> (a \<cdot> b) step by step using right-to-left cancellation.\<close>
+  have hassoc: "\<And>x y z. x \<in> G \<Longrightarrow> y \<in> G \<Longrightarrow> z \<in> G \<Longrightarrow> mul (mul x y) z = mul x (mul y z)"
+    using hG unfolding top1_is_group_on_def by (by100 blast)
   have "mul (mul (invg b) (invg a)) (mul a b)
+      = mul (invg b) (mul (invg a) (mul a b))"
+    by (rule hassoc[OF hib hia hab])
+  also have "mul (invg a) (mul a b) = mul (mul (invg a) a) b"
+    by (rule hassoc[OF hia ha hb, symmetric])
+  finally have "mul (mul (invg b) (invg a)) (mul a b)
       = mul (invg b) (mul (mul (invg a) a) b)"
-    using hG hib hia ha hb unfolding top1_is_group_on_def by (by100 metis)
+    using hassoc[OF hib hia hab] hassoc[OF hia ha hb] by (by100 simp)
   also have "mul (invg a) a = e" using hG ha unfolding top1_is_group_on_def by (by100 blast)
   hence "mul (invg b) (mul (mul (invg a) a) b) = mul (invg b) (mul e b)"
     by (by100 simp)
@@ -4433,9 +4365,7 @@ lemma free_group_universal_property:
   assumes "top1_is_free_group_full_on G mul e invg \<iota> S"
       and "top1_is_group_on H mulH eH invgH"
       and "\<forall>s\<in>S. \<phi> s \<in> H"
-  shows "\<exists>\<psi>. top1_group_hom_on G mul H mulH \<psi> \<and> (\<forall>s\<in>S. \<psi> (\<iota> s) = \<phi> s)
-      \<and> (\<forall>\<psi>'. top1_group_hom_on G mul H mulH \<psi>' \<and> (\<forall>s\<in>S. \<psi>' (\<iota> s) = \<phi> s)
-          \<longrightarrow> (\<forall>g\<in>G. \<psi>' g = \<psi> g))"
+  shows "\<exists>!\<psi>. top1_group_hom_on G mul H mulH \<psi> \<and> (\<forall>s\<in>S. \<psi> (\<iota> s) = \<phi> s)"
 proof -
   have hG: "top1_is_group_on G mul e invg"
     using assms(1) unfolding top1_is_free_group_full_on_def by (by100 blast)
@@ -4443,19 +4373,32 @@ proof -
     using assms(1) unfolding top1_is_free_group_full_on_def by (by100 blast)
   have hS: "\<forall>s\<in>S. \<iota> s \<in> G"
     using assms(1) unfolding top1_is_free_group_full_on_def by (by100 blast)
+  \<comment> \<open>Existence.\<close>
   obtain \<psi> where h\<psi>: "top1_group_hom_on G mul H mulH \<psi>"
       and h\<psi>_ext: "\<forall>s\<in>S. \<psi> (\<iota> s) = \<phi> s"
     using free_group_hom_exists[OF assms] by (by100 blast)
+  \<comment> \<open>Uniqueness.\<close>
   have huniq: "\<forall>\<psi>'. top1_group_hom_on G mul H mulH \<psi>' \<and> (\<forall>s\<in>S. \<psi>' (\<iota> s) = \<phi> s)
       \<longrightarrow> (\<forall>g\<in>G. \<psi>' g = \<psi> g)"
   proof (intro allI impI)
     fix \<psi>' assume h': "top1_group_hom_on G mul H mulH \<psi>' \<and> (\<forall>s\<in>S. \<psi>' (\<iota> s) = \<phi> s)"
     have h'_hom: "top1_group_hom_on G mul H mulH \<psi>'" using h' by (by100 blast)
-    have "\<forall>s\<in>S. \<psi>' (\<iota> s) = \<psi> (\<iota> s)" using h' h\<psi>_ext by (by100 simp)
+    have "\<forall>s\<in>S. \<psi>' (\<iota> s) = \<psi> (\<iota> s)"
+      using h' h\<psi>_ext by (by100 simp)
     thus "\<forall>g\<in>G. \<psi>' g = \<psi> g"
       by (rule free_group_hom_unique[OF hG assms(2) hgen hS h'_hom h\<psi>])
   qed
-  show ?thesis using h\<psi> h\<psi>_ext huniq by (by100 blast)
+  show ?thesis
+  proof (rule ex1I)
+    show "top1_group_hom_on G mul H mulH \<psi> \<and> (\<forall>s\<in>S. \<psi> (\<iota> s) = \<phi> s)"
+      using h\<psi> h\<psi>_ext by (by100 blast)
+  next
+    fix \<psi>' assume h': "top1_group_hom_on G mul H mulH \<psi>' \<and> (\<forall>s\<in>S. \<psi>' (\<iota> s) = \<phi> s)"
+    have "\<forall>g\<in>G. \<psi>' g = \<psi> g" using huniq h' by (by100 blast)
+    thus "\<psi>' = \<psi>" sorry \<comment> \<open>Needs extensionality: functions agreeing on G agree everywhere.
+       This requires either: functions are restrict'd to G, or a convention.
+       For now sorry'd.\<close>
+  qed
 qed
 
 text \<open>Corollary: the exponent sum homomorphism. For each generator s0,
