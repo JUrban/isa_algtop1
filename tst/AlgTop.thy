@@ -2058,8 +2058,14 @@ proof -
     have hf_cont_C: "top1_continuous_map_on top1_S1 top1_S1_topology C ?TC f"
     proof (rule continuous_map_restrict_codomain[OF hf_cont])
       fix s assume "s \<in> top1_S1"
-      hence "f s \<in> f ` top1_S1" by (rule imageI)
-      thus "f s \<in> C" unfolding hf_img by assumption
+      hence hfs: "f s \<in> f ` top1_S1" by (rule imageI)
+      show "f s \<in> C"
+      proof -
+        from hfs have "f s \<in> f ` top1_S1" .
+        moreover have "f ` top1_S1 = C" by (rule hf_img)
+        ultimately show ?thesis by (by100 blast)
+      qed
+    next
       show "C \<subseteq> top1_S2" by (rule hC_sub_S2)
     qed
     have hf_bij: "bij_betw f top1_S1 C"
