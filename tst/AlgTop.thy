@@ -828,7 +828,153 @@ proof -
      If e's theta component is separated from C-{a,b} in S2-(A\<union>B): contradiction (E3 bridges).
      Similarly for E1 with B\<union>C and E2 with A\<union>C.
      By pigeonhole: one of the 3 SCCs separates e's component from the arc's vertex.\<close>
-  show False sorry \<comment> \<open>Pigeonhole + SCCBMC: one SCC separates e's component from opposite arc.\<close>
+  \<comment> \<open>For each SCC J: S2-J has 2 components. e's theta component X \<subseteq> one side.
+     The opposite arc interior (A/B/C - {a,b}) \<subseteq> one side.
+     If X and opposite arc on DIFFERENT sides: E\_i bridges \<Rightarrow> contradiction.
+     If X and opposite arc on SAME side for ALL 3 SCCs:
+     For each SCC, the "other side" contains at most 2 of {U,V,W}-{X}.
+     By pigeonhole among 3 SCCs over 2 elements: some Y is "alone" for 2 SCCs.
+     cl(Y) = Y\<union>J1 = Y\<union>J2 \<Rightarrow> J1=J2 \<Rightarrow> A=C or similar \<Rightarrow> A \<subseteq> {a,b} \<Rightarrow> contradiction (arc).\<close>
+  \<comment> \<open>Step 1: For SCC A\<union>B, get 2 components and place pieces.\<close>
+  have hAB_cl: "closedin_on top1_S2 top1_S2_topology (A \<union> B)"
+    by (rule closedin_on_Un[OF hTopS2 arc_in_S2_closed[OF hA_sub hA_arc] arc_in_S2_closed[OF hB_sub hB_arc]])
+  have hAB_card: "card (A \<inter> B) = 2" using hAB hab by (by100 simp)
+  obtain P1 Q1 where hPQ1: "P1 \<noteq> {}" "Q1 \<noteq> {}" "P1 \<inter> Q1 = {}"
+      "P1 \<union> Q1 = top1_S2 - (A \<union> B)"
+      "top1_connected_on P1 (subspace_topology top1_S2 top1_S2_topology P1)"
+      "top1_connected_on Q1 (subspace_topology top1_S2 top1_S2_topology Q1)"
+    using Theorem_63_5_two_closed_connected[OF hS2 arc_in_S2_closed[OF hA_sub hA_arc]
+        arc_in_S2_closed[OF hB_sub hB_arc]
+        arc_connected[OF hA_arc] arc_connected[OF hB_arc] hAB_card
+        Theorem_63_2_arc_no_separation[OF hS2 hA_sub hA_arc]
+        Theorem_63_2_arc_no_separation[OF hS2 hB_sub hB_arc]]
+    by (metis (no_types))
+  \<comment> \<open>Make open.\<close>
+  have hAB_open: "top1_S2 - (A \<union> B) \<in> top1_S2_topology"
+    using hAB_cl unfolding closedin_on_def by (by100 blast)
+  have hAB_not_conn: "\<not> top1_connected_on (top1_S2 - (A \<union> B))
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (A \<union> B)))"
+    using Theorem_61_3_JordanSeparation_S2[OF hS2 hAB_scc] unfolding top1_separates_on_def by (by100 simp)
+  have hPQ1_open: "P1 \<in> top1_S2_topology \<and> Q1 \<in> top1_S2_topology"
+    using S2_two_component_open[OF hAB_open _ hPQ1(1,2,3,4,5,6) hAB_not_conn] by (by100 blast)
+  \<comment> \<open>Each theta component + C-{a,b} in P1 or Q1.\<close>
+  \<comment> \<open>E3 connected \<subseteq> S2-(A\<union>B). If e's component X and C-{a,b} in different P1/Q1:
+     E3 \<inter> X \<noteq> {} and E3 \<inter> (C-{a,b}) \<noteq> {}. E3 connected \<subseteq> P1\<union>Q1.
+     X \<subseteq> Pi, C-{a,b} \<subseteq> Qj with i\<noteq>j. E3 meets Pi and Qj. By Lemma\_23\_2: impossible.\<close>
+  have hE3_sub_AB: "E3 \<subseteq> top1_S2 - (A \<union> B)"
+    using hE3_sub hE3_disj by (by100 blast)
+  \<comment> \<open>Determine e's component X.\<close>
+  from he obtain X where hX: "X \<in> {U, V, W}" "e \<in> X" by (by100 blast)
+  have hX_sub: "X \<subseteq> top1_S2 - (A \<union> B \<union> C)" using hX(1) hU(3) hV(3) hW(3) by (by100 blast)
+  have hX_conn: "top1_connected_on X (subspace_topology top1_S2 top1_S2_topology X)"
+    using hX(1) hU(4) hV(4) hW(4) by (by100 blast)
+  have hX_ne: "X \<noteq> {}" using hX(2) by (by100 blast)
+  have hX_open: "X \<in> top1_S2_topology" using hX(1) hU(2) hV(2) hW(2) by (by100 blast)
+  \<comment> \<open>X \<subseteq> P1 or Q1.\<close>
+  have hX_sub_AB: "X \<subseteq> top1_S2 - (A \<union> B)" using hX_sub by (by100 blast)
+  have hX_in_PQ1: "X \<subseteq> P1 \<or> X \<subseteq> Q1"
+  proof -
+    have hTAB: "is_topology_on (top1_S2-(A\<union>B)) (subspace_topology top1_S2 top1_S2_topology (top1_S2-(A\<union>B)))"
+      by (rule subspace_topology_is_topology_on[OF hTopS2]) (by100 blast)
+    have hP1_op: "P1 \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2-(A\<union>B))"
+      using hPQ1_open hPQ1(4) unfolding subspace_topology_def by (by100 blast)
+    have hQ1_op: "Q1 \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2-(A\<union>B))"
+      using hPQ1_open hPQ1(4) unfolding subspace_topology_def by (by100 blast)
+    have hSep1: "top1_is_separation_on (top1_S2-(A\<union>B))
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2-(A\<union>B))) P1 Q1"
+      unfolding top1_is_separation_on_def using hP1_op hQ1_op hPQ1(1,2,3,4) by (by100 blast)
+    have hX_conn_AB: "top1_connected_on X (subspace_topology (top1_S2-(A\<union>B))
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2-(A\<union>B))) X)"
+    proof -
+      have "subspace_topology top1_S2 top1_S2_topology X =
+          subspace_topology (top1_S2-(A\<union>B)) (subspace_topology top1_S2 top1_S2_topology (top1_S2-(A\<union>B))) X"
+        using subspace_topology_trans[of X "top1_S2-(A\<union>B)"] hX_sub_AB by (by100 simp)
+      thus ?thesis using hX_conn by (by100 simp)
+    qed
+    from Lemma_23_2[OF hTAB hSep1 hX_sub_AB hX_conn_AB] show ?thesis by (by100 blast)
+  qed
+  \<comment> \<open>C-{a,b} \<subseteq> P1 or Q1.\<close>
+  have hC_sub_AB: "C - {a, b} \<subseteq> top1_S2 - (A \<union> B)"
+    using hC_sub hAC hBC by (by100 blast)
+  have hC_conn_loc: "top1_connected_on (C - {a, b}) (subspace_topology top1_S2 top1_S2_topology (C - {a, b}))"
+    by (rule arc_minus_endpoints_connected[OF hS2 hS2_haus hC_sub hC_arc hC_ep hab])
+  have hC_ne_loc: "C - {a, b} \<noteq> {}"
+  proof
+    assume "C - {a, b} = {}"
+    have "a \<in> closure_on top1_S2 top1_S2_topology (C - {a,b})"
+      using arc_endpoint_in_closure_of_interior[OF hS2 hS2_haus hC_sub hC_arc hC_ep hab] by (by100 blast)
+    hence "a \<in> closure_on top1_S2 top1_S2_topology {}" using \<open>C - {a,b} = {}\<close> by (by100 simp)
+    thus False using top1_closure_on_empty[OF hTopS2] by (by100 simp)
+  qed
+  have hC_in_PQ1: "C - {a, b} \<subseteq> P1 \<or> C - {a, b} \<subseteq> Q1"
+  proof -
+    have hTAB: "is_topology_on (top1_S2-(A\<union>B)) (subspace_topology top1_S2 top1_S2_topology (top1_S2-(A\<union>B)))"
+      by (rule subspace_topology_is_topology_on[OF hTopS2]) (by100 blast)
+    have hP1_op: "P1 \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2-(A\<union>B))"
+      using hPQ1_open hPQ1(4) unfolding subspace_topology_def by (by100 blast)
+    have hQ1_op: "Q1 \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2-(A\<union>B))"
+      using hPQ1_open hPQ1(4) unfolding subspace_topology_def by (by100 blast)
+    have hSep1: "top1_is_separation_on (top1_S2-(A\<union>B))
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2-(A\<union>B))) P1 Q1"
+      unfolding top1_is_separation_on_def using hP1_op hQ1_op hPQ1(1,2,3,4) by (by100 blast)
+    have hC_conn_AB: "top1_connected_on (C-{a,b}) (subspace_topology (top1_S2-(A\<union>B))
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2-(A\<union>B))) (C-{a,b}))"
+    proof -
+      have "subspace_topology top1_S2 top1_S2_topology (C-{a,b}) =
+          subspace_topology (top1_S2-(A\<union>B)) (subspace_topology top1_S2 top1_S2_topology (top1_S2-(A\<union>B))) (C-{a,b})"
+        using subspace_topology_trans[of "C-{a,b}" "top1_S2-(A\<union>B)"] hC_sub_AB by (by100 simp)
+      thus ?thesis using hC_conn_loc by (by100 simp)
+    qed
+    from Lemma_23_2[OF hTAB hSep1 hC_sub_AB hC_conn_AB] show ?thesis by (by100 blast)
+  qed
+  \<comment> \<open>If X and C-{a,b} in DIFFERENT sides: E3 bridges \<Rightarrow> contradiction.\<close>
+  \<comment> \<open>If X and C-{a,b} in SAME side: need to check other 2 SCCs similarly.
+     By pigeonhole, one theta component is "lone" for 2 SCCs \<Rightarrow>
+     cl(Y)=Y\<union>J1=Y\<union>J2 \<Rightarrow> J1=J2 \<Rightarrow> two arcs equal \<Rightarrow> arc = {a,b} \<Rightarrow> False.\<close>
+  \<comment> \<open>Case 1: X and C-{a,b} on different sides of A\<union>B.\<close>
+  { assume hdiff: "(X \<subseteq> P1 \<and> C - {a,b} \<subseteq> Q1) \<or> (X \<subseteq> Q1 \<and> C - {a,b} \<subseteq> P1)"
+    \<comment> \<open>E3 connected \<subseteq> S2-(A\<union>B) = P1\<union>Q1. E3\<inter>X \<noteq> {} (e \<in> X \<inter> E3).
+       E3\<inter>(C-{a,b}) \<noteq> {} (hE3\_h). X in one side, C-{a,b} in other.
+       E3 must be in one side (Lemma\_23\_2). But meets both. Contradiction.\<close>
+    have "False"
+    proof -
+      \<comment> \<open>E3 \<subseteq> S2-(A\<union>B) = P1\<union>Q1. E3 connected. Apply Lemma\_23\_2.\<close>
+      have hTAB: "is_topology_on (top1_S2-(A\<union>B)) (subspace_topology top1_S2 top1_S2_topology (top1_S2-(A\<union>B)))"
+        by (rule subspace_topology_is_topology_on[OF hTopS2]) (by100 blast)
+      have hP1_op: "P1 \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2-(A\<union>B))"
+        using hPQ1_open hPQ1(4) unfolding subspace_topology_def by (by100 blast)
+      have hQ1_op: "Q1 \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2-(A\<union>B))"
+        using hPQ1_open hPQ1(4) unfolding subspace_topology_def by (by100 blast)
+      have hSep1: "top1_is_separation_on (top1_S2-(A\<union>B))
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2-(A\<union>B))) P1 Q1"
+        unfolding top1_is_separation_on_def using hP1_op hQ1_op hPQ1(1,2,3,4) by (by100 blast)
+      have hE3_conn_AB: "top1_connected_on E3 (subspace_topology (top1_S2-(A\<union>B))
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2-(A\<union>B))) E3)"
+      proof -
+        have "subspace_topology top1_S2 top1_S2_topology E3 =
+            subspace_topology (top1_S2-(A\<union>B)) (subspace_topology top1_S2 top1_S2_topology (top1_S2-(A\<union>B))) E3"
+          using subspace_topology_trans[of E3 "top1_S2-(A\<union>B)"] hE3_sub_AB by (by100 simp)
+        thus ?thesis using hE3_conn by (by100 simp)
+      qed
+      from Lemma_23_2_disjoint[OF hTAB hSep1 hE3_sub_AB hE3_conn_AB]
+      have hE3_disj_PQ: "E3 \<inter> Q1 = {} \<or> E3 \<inter> P1 = {}" .
+      from hdiff show False
+      proof (elim disjE conjE)
+        assume hXP: "X \<subseteq> P1" and hCQ: "C - {a,b} \<subseteq> Q1"
+        have "E3 \<inter> P1 \<noteq> {}" using hE3_e hX(2) hXP by (by100 blast)
+        have "E3 \<inter> Q1 \<noteq> {}" using hE3_h hCQ by (by100 blast)
+        thus False using hE3_disj_PQ \<open>E3 \<inter> P1 \<noteq> {}\<close> by (by100 blast)
+      next
+        assume hXQ: "X \<subseteq> Q1" and hCP: "C - {a,b} \<subseteq> P1"
+        have "E3 \<inter> Q1 \<noteq> {}" using hE3_e hX(2) hXQ by (by100 blast)
+        have "E3 \<inter> P1 \<noteq> {}" using hE3_h hCP by (by100 blast)
+        thus False using hE3_disj_PQ \<open>E3 \<inter> Q1 \<noteq> {}\<close> by (by100 blast)
+      qed
+    qed
+  }
+  \<comment> \<open>Case 2: X and C-{a,b} on same side of A\<union>B. Similarly check B\<union>C and A\<union>C.\<close>
+  \<comment> \<open>Full argument: sorry for now.\<close>
+  show False sorry \<comment> \<open>Case analysis on 3 SCCs + pigeonhole.\<close>
 qed
 
 text \<open>Theorem 64.2: The utilities graph K33 cannot be imbedded in the plane.\<close>
