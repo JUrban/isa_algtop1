@@ -2702,14 +2702,54 @@ proof -
     have hK4_eq: "e12 \<union> e23 \<union> e34 \<union> e41 \<union> e13 \<union> e24 = ?D1 \<union> ?D2 \<union> (e12 - {a1,a2}) \<union> {a1,a2} \<union> (e34 - {a3,a4}) \<union> {a3,a4}"
       sorry \<comment> \<open>K4 = D1 \<union> D2 \<union> int(e12) \<union> endpoints \<union> int(e34) \<union> endpoints.\<close>
     \<comment> \<open>Step 3: int(e12) connected and in S2-(D1\<union>D2).\<close>
+    have ha1_ne_a2: "a1 \<noteq> a2" using assms(2) by (auto simp: card_insert_if split: if_splits)
+    have ha3_ne_a4: "a3 \<noteq> a4" using assms(2) by (auto simp: card_insert_if split: if_splits)
     have hint_e12_conn: "top1_connected_on (e12 - {a1, a2})
         (subspace_topology top1_S2 top1_S2_topology (e12 - {a1, a2}))"
-      using arc_minus_endpoints_connected[OF assms(1) hS2_haus assms(4,10,16)]
-      sorry \<comment> \<open>Need a1 \<noteq> a2.\<close>
+      by (rule arc_minus_endpoints_connected[OF assms(1) hS2_haus assms(4,10,16) ha1_ne_a2])
     have hint_e12_sub: "e12 - {a1, a2} \<subseteq> top1_S2 - (?D1 \<union> ?D2)"
-      sorry \<comment> \<open>From K4 intersection facts: int(e12) avoids D1\<union>D2.\<close>
+    proof -
+      \<comment> \<open>e12 avoids D1 except at a2, and D2 except at a1.\<close>
+      have "(e12 - {a2}) \<inter> ?D1 = {}"
+      proof -
+        have "e12 \<inter> Da3 = {}" using he13_split assms(28)
+          \<open>a1 \<in> D1p\<close> he13_meet assms(37) by (by100 blast)
+        moreover have "(e12 - {a2}) \<inter> e23 = {}" using assms(24) by (by100 blast)
+        moreover have "(e12 - {a2}) \<inter> Da2 = {}" using he24_split assms(33) by (by100 blast)
+        ultimately show ?thesis by (by100 blast)
+      qed
+      moreover have "(e12 - {a1}) \<inter> ?D2 = {}"
+      proof -
+        have "e12 \<inter> Dq4 = {}" using he24_split assms(33,38)
+          \<open>a2 \<in> Da2\<close> he24_meet by (by100 blast)
+        moreover have "(e12 - {a1}) \<inter> e41 = {}" using assms(27) by (by100 blast)
+        moreover have "(e12 - {a1}) \<inter> D1p = {}" using he13_split assms(28) by (by100 blast)
+        ultimately show ?thesis by (by100 blast)
+      qed
+      ultimately have "(e12 - {a1, a2}) \<inter> (?D1 \<union> ?D2) = {}" by (by100 blast)
+      thus ?thesis using assms(4) by (by100 blast)
+    qed
     have hint_e34_sub: "e34 - {a3, a4} \<subseteq> top1_S2 - (?D1 \<union> ?D2)"
-      sorry
+    proof -
+      have "(e34 - {a3}) \<inter> ?D1 = {}"
+      proof -
+        have "(e34 - {a3}) \<inter> Da3 = {}" using he13_split assms(30) by (by100 blast)
+        moreover have "(e34 - {a3}) \<inter> e23 = {}" using assms(25) by (by100 blast)
+        moreover have "e34 \<inter> Da2 = {}" using he24_split assms(35,38)
+          \<open>a4 \<in> Dq4\<close> he24_meet by (by100 blast)
+        ultimately show ?thesis by (by100 blast)
+      qed
+      moreover have "(e34 - {a4}) \<inter> ?D2 = {}"
+      proof -
+        have "(e34 - {a4}) \<inter> Dq4 = {}" using he24_split assms(35) by (by100 blast)
+        moreover have "(e34 - {a4}) \<inter> e41 = {}" using assms(26) by (by100 blast)
+        moreover have "e34 \<inter> D1p = {}" using he13_split assms(30,37)
+          \<open>a3 \<in> Da3\<close> he13_meet by (by100 blast)
+        ultimately show ?thesis by (by100 blast)
+      qed
+      ultimately have "(e34 - {a3, a4}) \<inter> (?D1 \<union> ?D2) = {}" by (by100 blast)
+      thus ?thesis using assms(6) by (by100 blast)
+    qed
     \<comment> \<open>Step 4: x \<in> int(e12), y \<in> int(e34) (from hx\_not\_endpts, hy\_not\_endpts).\<close>
     have hx_int: "x \<in> e12 - {a1, a2}" using hx_e12 hx_not_endpts by (by100 blast)
     have hy_int: "y \<in> e34 - {a3, a4}" using hy_e34 hy_not_endpts by (by100 blast)
