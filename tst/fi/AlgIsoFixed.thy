@@ -4559,10 +4559,15 @@ proof -
   \<comment> \<open>f\_* is bijective: follows from the homotopy equivalence structure.
      Existing proof in Theorem\_58\_7 shows injectivity and surjectivity
      of \<lambda>c. {h. \<exists>l\<in>c. ...} which equals ?f\_star.\<close>
+  \<comment> \<open>The weak Theorem\_58\_7 gives abstract iso. Since both are infinite cyclic (\<cong> Z),
+     and f\_* is a group hom, and (g\<circ>f)\_* is identity-ish (from homotopy equivalence):
+     f\_* must be nontrivial, hence an iso between Z-groups.\<close>
   have hf_star_bij: "bij_betw ?f_star
       (top1_fundamental_group_carrier X TX x0)
       (top1_fundamental_group_carrier Y TY (f x0))"
-    sorry \<comment> \<open>From Theorem\_58\_7 proof: hfstar\_inj + hfstar\_surj.\<close>
+    sorry \<comment> \<open>From homotopy equivalence: (g\<circ>f)\_* = basepoint change iso, hence f\_* injective.
+           (f\<circ>g)\_* = basepoint change iso, hence f\_* surjective.
+           Proof is 451 lines in AlgTop\_JCT\_Base0.thy Theorem\_58\_7.\<close>
   show ?thesis
     unfolding top1_group_iso_on_def
     using hf_star_hom hf_star_bij by (by100 blast)
