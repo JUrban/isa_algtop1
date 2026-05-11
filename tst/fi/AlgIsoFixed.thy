@@ -877,6 +877,36 @@ text \<open>Munkres Theorem 58.7: If f: X \<rightarrow> Y is a homotopy equivale
   then f_*: \<pi>_1(X,x0) \<rightarrow> \<pi>_1(Y,y0) is an isomorphism.
   The induced map is top1_fundamental_group_induced_on X TX x0 Y TY (f x0) f.\<close>
 
+\<comment> \<open>Helper: induced map with id equals induced map with (\<lambda>x. x).\<close>
+lemma induced_id_eq_lam:
+  "top1_fundamental_group_induced_on A TA x0 X TX x0 id =
+   top1_fundamental_group_induced_on A TA x0 X TX x0 (\<lambda>x. x)"
+proof -
+  have "id = (\<lambda>x::'a. x)" by auto
+  thus ?thesis by (by100 simp)
+qed
+
+\<comment> \<open>Helper: if f \<simeq> g in X (path homotopic), then [f]\_X = [g]\_X.\<close>
+lemma path_homotopic_same_class:
+  assumes "top1_path_homotopic_on X TX a a f g"
+  shows "{h. top1_loop_equiv_on X TX a f h} = {h. top1_loop_equiv_on X TX a g h}"
+  sorry \<comment> \<open>From Lemma\_51\_1\_path\_homotopic\_sym + trans + loop\_equiv\_on\_def.\<close>
+
+\<comment> \<open>Helper: for a loop g in C \<subseteq> X, the inclusion-induced map sends [g]\_C to [g]\_X.\<close>
+lemma inclusion_sends_class:
+  assumes "is_topology_on X TX" "A \<subseteq> X" "x0 \<in> A"
+      and "top1_is_loop_on A (subspace_topology X TX A) x0 g"
+  shows "top1_fundamental_group_induced_on A (subspace_topology X TX A) x0 X TX x0 id
+      {h. top1_loop_equiv_on A (subspace_topology X TX A) x0 g h} =
+      {k. top1_loop_equiv_on X TX x0 g k}"
+proof -
+  from subspace_inclusion_induced_class[OF assms(1,2,4)]
+  have "top1_fundamental_group_induced_on A (subspace_topology X TX A) x0 X TX x0 (\<lambda>x. x)
+      {k. top1_loop_equiv_on A (subspace_topology X TX A) x0 g k} =
+      {k. top1_loop_equiv_on X TX x0 g k}" .
+  thus ?thesis unfolding induced_id_eq_lam .
+qed
+
 \<comment> \<open>Key lemma for 65.1(b): the K4 construction yields a loop in C that generates \<pi>_1(X).
    This is the textbook's \<alpha>*\<beta> loop. Proof: the full D1/D2/U/V construction from Lemma\_65\_1
    in AlgTop.thy (~2000 lines, sorry-free) establishes this. We state it as a separate
@@ -1292,11 +1322,55 @@ proof -
         assume hfgn: "top1_path_homotopic_on ?X ?TX x x f (top1_path_power g x n)"
         \<comment> \<open>g^n is a loop in C.\<close>
         \<comment> \<open>g^n loop in C. j\_*([g^n]\_C) = [g^n]\_X = [f]\_X = c. So c \<in> image(j\_*).\<close>
-        show ?thesis sorry \<comment> \<open>top1\_path\_power\_is\_loop + inclusion\_induced\_class + homotopy class eq.\<close>
+        \<comment> \<open>g^n is a loop in C.\<close>
+        have hgn_C: "top1_is_loop_on C ?TC x (top1_path_power g x n)"
+          by (rule top1_path_power_is_loop[OF hTC hg_loop_C])
+        \<comment> \<open>[g^n]\_C \<in> \<pi>_1(C, x).\<close>
+        have hgn_class_C: "{h. top1_loop_equiv_on C ?TC x (top1_path_power g x n) h}
+            \<in> top1_fundamental_group_carrier C ?TC x"
+          unfolding top1_fundamental_group_carrier_def using hgn_C by (by100 blast)
+        \<comment> \<open>j\_*([g^n]\_C) = [g^n]\_X.\<close>
+        have hTC_sub: "?TC = subspace_topology ?X ?TX C"
+          using subspace_topology_trans[of C ?X top1_S2 top1_S2_topology] hC_sub_X by (by100 simp)
+        have hj_class_gn: "?j_star_x {h. top1_loop_equiv_on C ?TC x (top1_path_power g x n) h} =
+            {k. top1_loop_equiv_on ?X ?TX x (top1_path_power g x n) k}"
+        proof -
+          have "top1_is_loop_on C (subspace_topology ?X ?TX C) x (top1_path_power g x n)"
+            using hgn_C hTC_sub by (by100 simp)
+          from inclusion_sends_class[OF hTX hC_sub_X _ this] hx_C
+          show ?thesis unfolding hTC_sub by (by100 blast)
+        qed
+        \<comment> \<open>[f]\_X = [g^n]\_X (from homotopy).\<close>
+        have hc_gn: "c = {h. top1_loop_equiv_on ?X ?TX x (top1_path_power g x n) h}"
+          using path_homotopic_same_class[OF hfgn] hc_eq by (by100 simp)
+        hence "c = ?j_star_x {h. top1_loop_equiv_on C ?TC x (top1_path_power g x n) h}"
+          using hj_class_gn by (by100 simp)
+        thus ?thesis using hgn_class_C by (by100 blast)
       next
         assume hfgrn: "top1_path_homotopic_on ?X ?TX x x f (top1_path_power (top1_path_reverse g) x n)"
-        \<comment> \<open>Same argument with g\_rev instead of g.\<close>
-        show ?thesis sorry
+        \<comment> \<open>Same argument with g\_rev.\<close>
+        have hgr_loop_C: "top1_is_loop_on C ?TC x (top1_path_reverse g)"
+          by (rule top1_path_reverse_is_loop[OF hg_loop_C])
+        have hgrn_C: "top1_is_loop_on C ?TC x (top1_path_power (top1_path_reverse g) x n)"
+          by (rule top1_path_power_is_loop[OF hTC hgr_loop_C])
+        have hgrn_class_C: "{h. top1_loop_equiv_on C ?TC x (top1_path_power (top1_path_reverse g) x n) h}
+            \<in> top1_fundamental_group_carrier C ?TC x"
+          unfolding top1_fundamental_group_carrier_def using hgrn_C by (by100 blast)
+        have hTC_sub: "?TC = subspace_topology ?X ?TX C"
+          using subspace_topology_trans[of C ?X top1_S2 top1_S2_topology] hC_sub_X by (by100 simp)
+        have "?j_star_x {h. top1_loop_equiv_on C ?TC x (top1_path_power (top1_path_reverse g) x n) h} =
+            {k. top1_loop_equiv_on ?X ?TX x (top1_path_power (top1_path_reverse g) x n) k}"
+        proof -
+          have "top1_is_loop_on C (subspace_topology ?X ?TX C) x (top1_path_power (top1_path_reverse g) x n)"
+            using hgrn_C hTC_sub by (by100 simp)
+          from inclusion_sends_class[OF hTX hC_sub_X _ this] hx_C
+          show ?thesis unfolding hTC_sub by (by100 blast)
+        qed
+        moreover have "c = {h. top1_loop_equiv_on ?X ?TX x (top1_path_power (top1_path_reverse g) x n) h}"
+          using path_homotopic_same_class[OF hfgrn] hc_eq by (by100 simp)
+        ultimately have "c = ?j_star_x {h. top1_loop_equiv_on C ?TC x (top1_path_power (top1_path_reverse g) x n) h}"
+          by (by100 simp)
+        thus ?thesis using hgrn_class_C by (by100 blast)
       qed
     qed
     \<comment> \<open>Transfer surjectivity from x to c0 via basepoint change (C path-connected).\<close>
