@@ -6,6 +6,871 @@ text \<open>Fixed versions of theorems that should state a SPECIFIC MAP is an is
   not just that the groups are abstractly isomorphic.
   See REPORT_wrong_iso_statements.md for details.\<close>
 
+section \<open>Copied infrastructure (sorry-free, from AlgTop.thy)\<close>
+
+text \<open>These lemmas are proved in AlgTop.thy but not accessible from this session.
+  Copied verbatim. Both are sorry-free (verified by thm\_oracles).\<close>
+
+lemma SCC_pi1_iso_Z:
+  assumes "is_topology_on_strict top1_S2 top1_S2_topology"
+      and "top1_simple_closed_curve_on top1_S2 top1_S2_topology C"
+      and "c0 \<in> C"
+  shows "top1_groups_isomorphic_on
+      (top1_fundamental_group_carrier C
+        (subspace_topology top1_S2 top1_S2_topology C) c0)
+      (top1_fundamental_group_mul C
+        (subspace_topology top1_S2 top1_S2_topology C) c0)
+      top1_Z_group top1_Z_mul"
+proof -
+  let ?TC = "subspace_topology top1_S2 top1_S2_topology C"
+  have hTopS2: "is_topology_on top1_S2 top1_S2_topology"
+    using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
+  have hC_sub_S2: "C \<subseteq> top1_S2" using simple_closed_curve_subset[OF assms(2)] .
+  obtain f where hf_cont: "top1_continuous_map_on top1_S1 top1_S1_topology top1_S2 top1_S2_topology f"
+      and hf_inj: "inj_on f top1_S1" and hf_img: "f ` top1_S1 = C"
+    using assms(2) unfolding top1_simple_closed_curve_on_def by (by100 blast)
+  have hS1_top: "is_topology_on top1_S1 top1_S1_topology"
+    using top1_S1_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
+  have hTC_top: "is_topology_on C ?TC"
+    by (rule subspace_topology_is_topology_on[OF hTopS2 hC_sub_S2])
+  have hf_all_C: "\<And>s. s \<in> top1_S1 \<Longrightarrow> f s \<in> C"
+  proof -
+    fix s assume "s \<in> top1_S1"
+    hence "f s \<in> f ` top1_S1" by (rule imageI)
+    thus "f s \<in> C" using hf_img by simp
+  qed
+  have hf_cont_C: "top1_continuous_map_on top1_S1 top1_S1_topology C ?TC f"
+    by (intro continuous_map_restrict_codomain[OF hf_cont _ hC_sub_S2] ballI)
+       (rule hf_all_C)
+  have hf_bij: "bij_betw f top1_S1 C"
+    unfolding bij_betw_def using hf_inj hf_img by (by100 blast)
+  have hC_haus: "is_hausdorff_on C ?TC"
+    using conjunct2[OF conjunct2[OF Theorem_17_11]] hC_sub_S2 top1_S2_is_hausdorff
+    by (by100 blast)
+  have hf_homeo: "top1_homeomorphism_on top1_S1 top1_S1_topology C ?TC f"
+    by (rule Theorem_26_6[OF hS1_top hTC_top S1_compact hC_haus hf_cont_C hf_bij])
+  obtain s0 where hs0: "s0 \<in> top1_S1" "f s0 = c0"
+    using hf_img assms(3) by (by100 blast)
+  have h_pi1_S1_C: "top1_groups_isomorphic_on
+      (top1_fundamental_group_carrier top1_S1 top1_S1_topology s0)
+      (top1_fundamental_group_mul top1_S1 top1_S1_topology s0)
+      (top1_fundamental_group_carrier C ?TC c0)
+      (top1_fundamental_group_mul C ?TC c0)"
+    by (rule Corollary_52_5_homeomorphism_iso[OF hS1_top hTC_top hf_homeo hs0(1) hs0(2)])
+  have h10_S1: "(1::real, 0::real) \<in> top1_S1" unfolding top1_S1_def by (by100 simp)
+  have h_pi1_S1_bp: "top1_groups_isomorphic_on
+      (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1::real, 0::real))
+      (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))
+      (top1_fundamental_group_carrier top1_S1 top1_S1_topology s0)
+      (top1_fundamental_group_mul top1_S1 top1_S1_topology s0)"
+  proof -
+    obtain \<gamma> where "top1_is_path_on top1_S1 top1_S1_topology (1, 0) s0 \<gamma>"
+      using S1_path_connected h10_S1 hs0(1) unfolding top1_path_connected_on_def
+      by (by100 blast)
+    thus ?thesis by (rule basepoint_change_iso_via_path[OF hS1_top])
+  qed
+  have h_pi1_S1_Z: "top1_groups_isomorphic_on
+      (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
+      (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))
+      top1_Z_group top1_Z_mul"
+    by (rule Theorem_54_5_iso)
+  \<comment> \<open>Chain: \<pi>_1(C,c0) \<cong> \<pi>_1(S1,s0) \<cong> \<pi>_1(S1,(1,0)) \<cong> Z.\<close>
+  have h_pi1_S1_C_sym: "top1_groups_isomorphic_on
+      (top1_fundamental_group_carrier C ?TC c0)
+      (top1_fundamental_group_mul C ?TC c0)
+      (top1_fundamental_group_carrier top1_S1 top1_S1_topology s0)
+      (top1_fundamental_group_mul top1_S1 top1_S1_topology s0)"
+  proof (rule top1_groups_isomorphic_on_sym[OF h_pi1_S1_C])
+    show "top1_is_group_on (top1_fundamental_group_carrier top1_S1 top1_S1_topology s0)
+        (top1_fundamental_group_mul top1_S1 top1_S1_topology s0)
+        (top1_fundamental_group_id top1_S1 top1_S1_topology s0)
+        (top1_fundamental_group_invg top1_S1 top1_S1_topology s0)"
+      by (rule top1_fundamental_group_is_group[OF hS1_top hs0(1)])
+    have "c0 \<in> C" by (rule assms(3))
+    show "top1_is_group_on (top1_fundamental_group_carrier C ?TC c0)
+        (top1_fundamental_group_mul C ?TC c0)
+        (top1_fundamental_group_id C ?TC c0)
+        (top1_fundamental_group_invg C ?TC c0)"
+      by (rule top1_fundamental_group_is_group[OF hTC_top \<open>c0 \<in> C\<close>])
+  qed
+  have h_pi1_S1_bp_sym: "top1_groups_isomorphic_on
+      (top1_fundamental_group_carrier top1_S1 top1_S1_topology s0)
+      (top1_fundamental_group_mul top1_S1 top1_S1_topology s0)
+      (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
+      (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))"
+  proof (rule top1_groups_isomorphic_on_sym[OF h_pi1_S1_bp])
+    show "top1_is_group_on (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1::real, 0::real))
+        (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))
+        (top1_fundamental_group_id top1_S1 top1_S1_topology (1, 0))
+        (top1_fundamental_group_invg top1_S1 top1_S1_topology (1, 0))"
+      by (rule top1_fundamental_group_is_group[OF hS1_top h10_S1])
+    show "top1_is_group_on (top1_fundamental_group_carrier top1_S1 top1_S1_topology s0)
+        (top1_fundamental_group_mul top1_S1 top1_S1_topology s0)
+        (top1_fundamental_group_id top1_S1 top1_S1_topology s0)
+        (top1_fundamental_group_invg top1_S1 top1_S1_topology s0)"
+      by (rule top1_fundamental_group_is_group[OF hS1_top hs0(1)])
+  qed
+  have h1: "top1_groups_isomorphic_on
+      (top1_fundamental_group_carrier C ?TC c0)
+      (top1_fundamental_group_mul C ?TC c0)
+      (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
+      (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))"
+    by (rule groups_isomorphic_trans_fwd[OF h_pi1_S1_C_sym h_pi1_S1_bp_sym])
+  show ?thesis
+    by (rule groups_isomorphic_trans_fwd[OF h1 h_pi1_S1_Z])
+qed
+
+lemma Theorem_63_1_b_generation:
+  assumes "is_topology_on X TX"
+      and "openin_on X TX U" and "openin_on X TX V" and "U \<union> V = X"
+      and "U \<inter> V = A \<union> B" and "A \<inter> B = {}"
+      and "openin_on X TX A" and "openin_on X TX B"
+      and "a \<in> A" and "b \<in> B"
+      and "top1_is_path_on U (subspace_topology X TX U) a b \<alpha>"
+      and "top1_is_path_on V (subspace_topology X TX V) b a \<beta>"
+      \<comment> \<open>\<pi>_1(X, a) is infinite cyclic with some generator gen.\<close>
+      and "\<exists>gen. top1_is_loop_on X TX a gen \<and>
+        (\<forall>f. top1_is_loop_on X TX a f \<longrightarrow>
+          (\<exists>n::nat. top1_path_homotopic_on X TX a a f (top1_path_power gen a n)
+            \<or> top1_path_homotopic_on X TX a a f
+                 (top1_path_power (top1_path_reverse gen) a n)))"
+  shows "\<forall>f. top1_is_loop_on X TX a f \<longrightarrow>
+    (\<exists>n::nat. top1_path_homotopic_on X TX a a f (top1_path_power (top1_path_product \<alpha> \<beta>) a n)
+      \<or> top1_path_homotopic_on X TX a a f
+           (top1_path_power (top1_path_reverse (top1_path_product \<alpha> \<beta>)) a n))"
+proof -
+  \<comment> \<open>Step 1: Construct helix covering.\<close>
+  have ha_U: "a \<in> U" using assms(5,9) by (by100 blast)
+  define E :: "('a \<times> int) set" where
+    "E = {(x, m). (even m \<and> x \<in> U) \<or> (odd m \<and> x \<in> V - U)}"
+  define TE :: "('a \<times> int) set set" where
+    "TE = {W. W \<subseteq> E \<and>
+      (\<forall>n::int. {x \<in> U. (x, 2*n) \<in> W} \<in> TX) \<and>
+      (\<forall>n::int. {x \<in> A. (x, 2*n + 2) \<in> W} \<union> {x \<in> B. (x, 2*n) \<in> W} \<union>
+                {x \<in> V - U. (x, 2*n + 1) \<in> W} \<in> TX)}"
+  define p0 :: "'a \<times> int \<Rightarrow> 'a" where "p0 = fst"
+  have he0: "(a, 0::int) \<in> E" unfolding E_def using ha_U by simp
+  have hp0: "p0 (a, 0::int) = a" unfolding p0_def by simp
+  have hcov_TE: "top1_covering_map_on E TE X TX p0 \<and> is_topology_on E TE"
+  proof -
+    note h = helix_covering_construction[OF assms(1-8)]
+    have "E = {x. even (snd x) \<and> fst x \<in> U \<or> odd (snd x) \<and> fst x \<in> V - U}"
+      unfolding E_def by auto
+    moreover have "TE = {W. W \<subseteq> E \<and>
+        (\<forall>n. {x \<in> U. (x, 2 * n) \<in> W} \<in> TX) \<and>
+        (\<forall>n. {x \<in> A. (x, 2 * n + 2) \<in> W} \<union> {x \<in> B. (x, 2 * n) \<in> W} \<union>
+              {x \<in> V - U. (x, 2 * n + 1) \<in> W} \<in> TX)}"
+      unfolding TE_def E_def by auto
+    moreover have "p0 = fst" unfolding p0_def by simp
+    ultimately show ?thesis using h by simp
+  qed
+  hence hTE: "is_topology_on E TE" and hcov: "top1_covering_map_on E TE X TX p0" by auto
+  \<comment> \<open>Step 2: (\<alpha>*\<beta>)^m lifts from (a,0) to (a, 2m).\<close>
+  have hfm_lift: "\<And>m. \<exists>ftm. top1_is_path_on E TE (a, 0) (a, 2 * int m) ftm \<and>
+      (\<forall>s\<in>I_set. p0 (ftm s) = top1_path_power (top1_path_product \<alpha> \<beta>) a m s)"
+  proof -
+    fix m :: nat
+    show "\<exists>ftm. top1_is_path_on E TE (a, 0) (a, 2 * int m) ftm \<and>
+        (\<forall>s\<in>I_set. p0 (ftm s) = top1_path_power (top1_path_product \<alpha> \<beta>) a m s)"
+    proof (rule helix_f_power_lift[OF assms(1-12) hcov hTE he0 hp0])
+      show "\<And>W n. W \<in> TE \<Longrightarrow> {x \<in> U. (x, 2 * n) \<in> W} \<in> TX"
+        unfolding TE_def by (by100 blast)
+      show "\<And>W n. W \<in> TE \<Longrightarrow> {x \<in> A. (x, 2*n + 2) \<in> W} \<union> {x \<in> B. (x, 2*n) \<in> W} \<union>
+          {x \<in> V - U. (x, 2*n + 1) \<in> W} \<in> TX"
+        unfolding TE_def by (by100 blast)
+      show "\<And>x n. x \<in> U \<Longrightarrow> (x, 2*n) \<in> E" unfolding E_def by auto
+      show "\<And>x n. x \<in> V - U \<Longrightarrow> (x, 2*n + 1) \<in> E" unfolding E_def by auto
+      show "\<And>x n. x \<in> A \<Longrightarrow> (x, 2*n + 2) \<in> E"
+        using assms(5) unfolding E_def by auto
+      show "\<And>x n. x \<in> B \<Longrightarrow> (x, 2*n) \<in> E"
+        using assms(5) unfolding E_def by auto
+      show "p0 = fst" unfolding p0_def by simp
+      show "\<And>x m. (x, m) \<in> E \<Longrightarrow> (even m \<and> x \<in> U) \<or> (odd m \<and> x \<in> V - U)"
+        unfolding E_def by auto
+      show "\<And>W. \<lbrakk>W \<subseteq> E; \<forall>n::int. {x \<in> U. (x, 2*n) \<in> W} \<in> TX;
+          \<forall>n::int. {x \<in> A. (x, 2*n + 2) \<in> W} \<union> {x \<in> B. (x, 2*n) \<in> W} \<union>
+                    {x \<in> V - U. (x, 2*n + 1) \<in> W} \<in> TX\<rbrakk> \<Longrightarrow> W \<in> TE"
+        unfolding TE_def by (by100 blast)
+    qed
+  qed
+  \<comment> \<open>Step 3: From assms(13), \<pi>_1(X) is infinite cyclic with generator gen.\<close>
+  obtain gen where hgen_loop: "top1_is_loop_on X TX a gen"
+      and hgen_all: "\<forall>f. top1_is_loop_on X TX a f \<longrightarrow>
+        (\<exists>n::nat. top1_path_homotopic_on X TX a a f (top1_path_power gen a n)
+          \<or> top1_path_homotopic_on X TX a a f
+               (top1_path_power (top1_path_reverse gen) a n))"
+    using assms(13) by blast
+  \<comment> \<open>Step 4: [\<alpha>*\<beta>] is nontrivial (from Theorem\_63\_1\_loop\_nontrivial).\<close>
+  have h\<alpha>\<beta>_nontrivial: "\<not> top1_path_homotopic_on X TX a a
+      (top1_path_product \<alpha> \<beta>) (top1_constant_path a)"
+    by (rule Theorem_63_1_loop_nontrivial[OF assms(1-12)])
+  \<comment> \<open>Step 5: [\<alpha>*\<beta>] = gen^k for some k with k \<noteq> 0.\<close>
+  have h\<alpha>\<beta>_loop: "top1_is_loop_on X TX a (top1_path_product \<alpha> \<beta>)"
+  proof -
+    have hU_sub: "U \<subseteq> X" using assms(2) unfolding openin_on_def by (by100 blast)
+    have hV_sub: "V \<subseteq> X" using assms(3) unfolding openin_on_def by (by100 blast)
+    have hTU: "is_topology_on U (subspace_topology X TX U)"
+      by (rule subspace_topology_is_topology_on[OF assms(1) hU_sub])
+    have hTV: "is_topology_on V (subspace_topology X TX V)"
+      by (rule subspace_topology_is_topology_on[OF assms(1) hV_sub])
+    have h\<alpha>_X: "top1_is_path_on X TX a b \<alpha>"
+      by (rule path_in_subspace_is_path_in_ambient'[OF assms(1) hU_sub assms(11)])
+    have h\<beta>_X: "top1_is_path_on X TX b a \<beta>"
+      by (rule path_in_subspace_is_path_in_ambient'[OF assms(1) hV_sub assms(12)])
+    show ?thesis unfolding top1_is_loop_on_def
+      by (rule top1_path_product_is_path[OF assms(1) h\<alpha>_X h\<beta>_X])
+  qed
+  obtain k :: nat where hk: "top1_path_homotopic_on X TX a a
+      (top1_path_product \<alpha> \<beta>) (top1_path_power gen a k)
+    \<or> top1_path_homotopic_on X TX a a
+      (top1_path_product \<alpha> \<beta>) (top1_path_power (top1_path_reverse gen) a k)"
+    using hgen_all[THEN spec, of "top1_path_product \<alpha> \<beta>"] h\<alpha>\<beta>_loop by blast
+  have hk_ne: "k \<noteq> 0"
+  proof
+    assume "k = 0"
+    hence "top1_path_homotopic_on X TX a a
+        (top1_path_product \<alpha> \<beta>) (top1_constant_path a)"
+      using hk by simp
+    thus False using h\<alpha>\<beta>_nontrivial by contradiction
+  qed
+  \<comment> \<open>Step 6: The shift T(x,n) = (x, n+2) is a covering automorphism of E.
+     This gives: if gen lifts from (a,0) to (a,2d), then gen^k lifts to (a,2kd).
+     Since gen^k = [\<alpha>*\<beta>] lifts to (a,2): kd = 1, so k = \<plusminus>1.\<close>
+  \<comment> \<open>Step 6a: The lift of gen from (a,0) exists and ends at some (a, 2d).\<close>
+  have hgen_path: "top1_is_path_on X TX a a gen"
+    using hgen_loop unfolding top1_is_loop_on_def by (by100 blast)
+  obtain gen_lift where hgen_lift: "top1_is_path_on E TE (a, 0) (gen_lift 1) gen_lift"
+      and hgen_lift_proj: "\<forall>s\<in>I_set. p0 (gen_lift s) = gen s"
+    using Lemma_54_1_path_lifting[OF hcov he0 hp0 hgen_path assms(1) hTE] by blast
+  \<comment> \<open>gen\_lift ends at some point in the fiber at a = \{(a, 2n) : n \<in> Z\}.\<close>
+  have hgen_end_fiber: "\<exists>d :: int. gen_lift 1 = (a, 2 * d)"
+  proof -
+    have h1_I: "(1::real) \<in> I_set"
+      unfolding top1_unit_interval_def by (by100 simp)
+    have hend_E: "gen_lift 1 \<in> E"
+      using hgen_lift unfolding top1_is_path_on_def top1_continuous_map_on_def
+      using h1_I by (by100 blast)
+    have hp0_gen1: "p0 (gen_lift 1) = gen 1"
+      using hgen_lift_proj h1_I by (by100 blast)
+    have hgen1_a: "gen 1 = a"
+      using hgen_loop unfolding top1_is_loop_on_def top1_is_path_on_def
+      by (by100 blast)
+    have hend_proj: "p0 (gen_lift 1) = a"
+      using hp0_gen1 hgen1_a by simp
+    hence hfst: "fst (gen_lift 1) = a" unfolding p0_def by simp
+    obtain x' n' where hpair: "gen_lift 1 = (x', n')" by (cases "gen_lift 1")
+    hence "x' = a" using hfst by simp
+    have "(x', n') \<in> E" using hend_E hpair by simp
+    hence "(even n' \<and> x' \<in> U) \<or> (odd n' \<and> x' \<in> V - U)" unfolding E_def by auto
+    hence "even n'"
+    proof
+      assume "even n' \<and> x' \<in> U" thus "even n'" by simp
+    next
+      assume "odd n' \<and> x' \<in> V - U"
+      hence "x' \<in> V - U" by simp
+      hence "a \<in> V - U" using \<open>x' = a\<close> by simp
+      hence False using ha_U by (by100 blast)
+      thus "even n'" by simp
+    qed
+    then obtain d where "n' = 2 * d" using evenE by blast
+    hence "gen_lift 1 = (a, 2 * d)" using hpair \<open>x' = a\<close> by simp
+    thus ?thesis by blast
+  qed
+  obtain d :: int where hgen_end: "gen_lift 1 = (a, 2 * d)"
+    using hgen_end_fiber by blast
+  \<comment> \<open>Step 6b: The shift T is a covering automorphism.\<close>
+  \<comment> \<open>Step 6c: gen^k lifts from (a,0) to (a, 2kd) by applying T iteratively.\<close>
+  \<comment> \<open>Step 6d: gen^k \<simeq> \<alpha>*\<beta>, and \<alpha>*\<beta> lifts to (a, 2). By Theorem\_54\_3: 2kd = 2.
+     So kd = 1 with k \<in> N, d \<in> Z. If k = 0: already excluded. k \<ge> 1.
+     Integer solutions to kd = 1: (k,d) = (1,1). So k = 1.\<close>
+  \<comment> \<open>If [\<alpha>*\<beta>] = gen^k: k = 1 (positive case). If [\<alpha>*\<beta>] = gen^{-k}: k = 1 too.\<close>
+  \<comment> \<open>Lift of (\<alpha>*\<beta>) (= m=1 case) from (a,0) to (a, 2).\<close>
+  \<comment> \<open>(\<alpha>*\<beta>) lifts from (a,0) to (a, 2): from hfm\_lift with m = 1.\<close>
+  obtain ab_lift where hab_lift: "top1_is_path_on E TE (a, 0) (a, 2) ab_lift"
+      and hab_lift_proj: "\<forall>s\<in>I_set. p0 (ab_lift s) =
+          top1_path_power (top1_path_product \<alpha> \<beta>) a 1 s"
+  proof -
+    obtain ftm where hftm: "top1_is_path_on E TE (a, 0) (a, 2 * int (1::nat)) ftm"
+        "\<forall>s\<in>I_set. p0 (ftm s) = top1_path_power (top1_path_product \<alpha> \<beta>) a 1 s"
+      using hfm_lift[of 1] by blast
+    have "2 * int (1::nat) = (2::int)" by simp
+    hence "top1_is_path_on E TE (a, 0) (a, 2) ftm" using hftm(1) by simp
+    thus ?thesis using hftm(2) that by blast
+  qed
+  \<comment> \<open>gen^k lifts from (a,0) to (a, 2*int(k)*d).
+     This uses the helix shift automorphism T(x,n) = (x, n+2).
+     By induction on k: the lift of gen^k concatenates k lifts of gen,
+     each shifted by T, giving endpoint (a, 2*k*d).\<close>
+  \<comment> \<open>Define the helix shift T(x,n) = (x, n + 2*d). This maps a lift of gen
+     from (a, 0) to a lift from (a, 2*d), from (a, 2*d) to (a, 4*d), etc.\<close>
+  \<comment> \<open>Actually, we use the general shift T\_d(x,n) = (x, n + 2*d).
+     For d = 1: this is the standard period-1 shift.
+     The key property: T\_d is a covering automorphism.
+     For arbitrary d: T\_d = T\_1^d where T\_1(x,n) = (x, n+2) is period-1.\<close>
+  \<comment> \<open>The lift of gen from (a, 2*j*d) ends at (a, 2*(j+1)*d).
+     This follows from the shift T\_d being a covering automorphism.\<close>
+  \<comment> \<open>Define the period-1 helix shift T1(x,n) = (x, n+2).\<close>
+  define T1 :: "('a \<times> int) \<Rightarrow> ('a \<times> int)" where "T1 = (\<lambda>(x, n). (x, n + 2))"
+  \<comment> \<open>T1 maps E to E (parity of n preserved by adding 2).\<close>
+  have hT1_E: "\<And>e. e \<in> E \<Longrightarrow> T1 e \<in> E"
+    unfolding T1_def E_def by auto
+  \<comment> \<open>p0 \<circ> T1 = p0.\<close>
+  have hT1_proj: "\<And>e. p0 (T1 e) = p0 e"
+    unfolding T1_def p0_def by auto
+  \<comment> \<open>T1 is continuous: T1\<inverse>(W) \<in> TE for W \<in> TE.
+     Key: T1\<inverse>(W) = \{(x,n) : (x, n+2) \<in> W\}.
+     Slice conditions: \{x \<in> U. (x, 2n) \<in> T1\<inverse>(W)\} = \{x \<in> U. (x, 2(n+1)) \<in> W\} \<in> TX.\<close>
+  have hT1_cont: "top1_continuous_map_on E TE E TE T1"
+  proof -
+    note h = helix_shift_general_continuous[OF assms(1-3) assms(5) assms(7-8), of 1]
+    have "E = {x :: ('a \<times> int). even (snd x) \<and> fst x \<in> U \<or> odd (snd x) \<and> fst x \<in> V - U}"
+      unfolding E_def by auto
+    moreover have "TE = {W. W \<subseteq> E \<and>
+        (\<forall>n. {x \<in> U. (x, 2 * n) \<in> W} \<in> TX) \<and>
+        (\<forall>n. {x \<in> A. (x, 2 * n + 2) \<in> W} \<union> {x \<in> B. (x, 2 * n) \<in> W} \<union>
+              {x \<in> V - U. (x, 2 * n + 1) \<in> W} \<in> TX)}"
+      unfolding TE_def E_def by auto
+    moreover have "T1 = (\<lambda>(x :: 'a, n :: int). (x, n + 2 * (1::int)))" unfolding T1_def by auto
+    ultimately show ?thesis using h by simp
+  qed
+  \<comment> \<open>The lift of gen from (a, 2*j) ends at (a, 2*j + 2*d) for any j.
+     Proof: by covering\_lift\_unique\_connected, the lift from (a, 2*j) is
+     T1^j \<circ> gen\_lift (since T1^j shifts by 2j, and the projection is unchanged).
+     Then its endpoint is T1^j(gen\_lift 1) = T1^j(a, 2d) = (a, 2d + 2j).\<close>
+  \<comment> \<open>More precisely: define T1_pow j (x,n) = (x, n + 2*j). Then:
+     T1\_pow j \<circ> gen\_lift is a path from (a, 2*j) to (a, 2*d + 2*j) in E
+     projecting to gen. By covering\_lift\_unique\_connected, this is THE unique lift
+     of gen from (a, 2*j).\<close>
+  \<comment> \<open>gen^k lift by induction: gen * shifted(gen^{k-1}), matching path\_power definition.
+     path\_power gen a (Suc k') = gen * gen^{k'}.
+     So: gen\_lift from (a,0) to (a,2d), then shifted gen^{k'} lift from (a,2d) to (a,2d+2k'd).\<close>
+  have hgenk_lift: "\<exists>ftk. top1_is_path_on E TE (a, 0) (a, 2 * int k * d) ftk \<and>
+      (\<forall>s\<in>I_set. p0 (ftk s) = top1_path_power gen a k s)"
+  proof (induct k)
+    case 0
+    define ftk0 :: "real \<Rightarrow> ('a \<times> int)" where "ftk0 = (\<lambda>s. (a, 0::int))"
+    have "top1_is_path_on E TE (a, 0) (a, 2 * int 0 * d) ftk0"
+    proof -
+      have "top1_is_path_on E TE (a, 0) (a, 0) ftk0"
+        unfolding top1_is_path_on_def ftk0_def
+      proof (intro conjI)
+        have "top1_continuous_map_on I_set I_top E TE (top1_constant_path (a, 0::int))"
+          by (rule top1_constant_path_continuous[OF hTE he0])
+        thus "top1_continuous_map_on I_set I_top E TE (\<lambda>s. (a, 0::int))"
+          unfolding top1_constant_path_def by simp
+      qed simp+
+      thus ?thesis by simp
+    qed
+    moreover have "\<forall>s\<in>I_set. p0 (ftk0 s) = top1_path_power gen a 0 s"
+    proof (intro ballI)
+      fix s assume "s \<in> I_set"
+      show "p0 (ftk0 s) = top1_path_power gen a 0 s"
+        unfolding ftk0_def p0_def by (simp add: top1_constant_path_def)
+    qed
+    ultimately show ?case by blast
+  next
+    case (Suc k')
+    obtain ftk' where hftk': "top1_is_path_on E TE (a, 0) (a, 2 * int k' * d) ftk'"
+        "\<forall>s\<in>I_set. p0 (ftk' s) = top1_path_power gen a k' s"
+      using Suc.hyps by blast
+    \<comment> \<open>Shift ftk' by d periods: T\_d(x,n) = (x, n+2d). Then T\_d \<circ> ftk' is a
+       path from (a, 2d) to (a, 2d + 2k'd) = (a, 2(k'+1)d) in E,
+       projecting to gen^{k'} (since p0 \<circ> T\_d = p0).\<close>
+    define T_d :: "('a \<times> int) \<Rightarrow> ('a \<times> int)" where "T_d = (\<lambda>(x, n). (x, n + 2*d))"
+    define ftk'_shifted :: "real \<Rightarrow> ('a \<times> int)"
+      where "ftk'_shifted = T_d \<circ> ftk'"
+    have hTd_cont: "top1_continuous_map_on E TE E TE T_d"
+    proof -
+      note h = helix_shift_general_continuous[OF assms(1-3) assms(5) assms(7-8)]
+      have "E = {x :: ('a \<times> int). even (snd x) \<and> fst x \<in> U \<or> odd (snd x) \<and> fst x \<in> V - U}"
+        unfolding E_def by auto
+      moreover have "TE = {W. W \<subseteq> E \<and>
+          (\<forall>n. {x \<in> U. (x, 2 * n) \<in> W} \<in> TX) \<and>
+          (\<forall>n. {x \<in> A. (x, 2 * n + 2) \<in> W} \<union> {x \<in> B. (x, 2 * n) \<in> W} \<union>
+                {x \<in> V - U. (x, 2 * n + 1) \<in> W} \<in> TX)}"
+        unfolding TE_def E_def by auto
+      moreover have "T_d = (\<lambda>(x :: 'a, n :: int). (x, n + 2 * d))" unfolding T_d_def by auto
+      ultimately show ?thesis using h by simp
+    qed
+    have hTd_proj: "\<And>e. p0 (T_d e) = p0 e" unfolding T_d_def p0_def by auto
+    \<comment> \<open>ftk'\_shifted is a path from (a, 2d) to (a, 2d + 2k'd) in E.\<close>
+    have hftk'_shifted_path: "top1_is_path_on E TE (a, 2 * d) (a, 2 * d + 2 * int k' * d) ftk'_shifted"
+    proof -
+      have hcomp_cont: "top1_continuous_map_on I_set I_top E TE ftk'_shifted"
+        unfolding ftk'_shifted_def
+        by (rule top1_continuous_map_on_comp[where Y=E and TY=TE])
+           (use hftk'(1) hTd_cont in \<open>unfold top1_is_path_on_def, by100 blast\<close>)+
+      have hstart: "ftk'_shifted 0 = (a, 2 * d)"
+        unfolding ftk'_shifted_def T_d_def using hftk'(1)
+        unfolding top1_is_path_on_def by (by100 simp)
+      have hend: "ftk'_shifted 1 = (a, 2 * d + 2 * int k' * d)"
+        unfolding ftk'_shifted_def T_d_def using hftk'(1)
+        unfolding top1_is_path_on_def by (by100 simp)
+      show ?thesis unfolding top1_is_path_on_def
+        using hcomp_cont hstart hend by (by100 blast)
+    qed
+    have hftk'_shifted_proj: "\<forall>s\<in>I_set. p0 (ftk'_shifted s) = top1_path_power gen a k' s"
+    proof (intro ballI)
+      fix s assume "s \<in> I_set"
+      have "p0 (ftk'_shifted s) = p0 (T_d (ftk' s))" unfolding ftk'_shifted_def by simp
+      also have "... = p0 (ftk' s)" by (rule hTd_proj)
+      also have "... = top1_path_power gen a k' s" using hftk'(2) \<open>s \<in> I_set\<close> by (by100 blast)
+      finally show "p0 (ftk'_shifted s) = top1_path_power gen a k' s" .
+    qed
+    \<comment> \<open>Concatenate: gen * shifted(gen^{k'}) = gen^{Suc k'}.\<close>
+    have h_endpoint_eq: "2 * d + 2 * int k' * d = 2 * int (Suc k') * d"
+      by (simp add: algebra_simps)
+    \<comment> \<open>gen\_lift goes (a,0)\<rightarrow>(a,2d), ftk'\_shifted goes (a,2d)\<rightarrow>(a,2d+2k'd).\<close>
+    have hgen_lift_typed: "top1_is_path_on E TE (a, 0) (a, 2 * d) gen_lift"
+      using hgen_lift hgen_end by simp
+    define ftk_suc where "ftk_suc = top1_path_product gen_lift ftk'_shifted"
+    have "top1_is_path_on E TE (a, 0) (a, 2 * int (Suc k') * d) ftk_suc"
+    proof -
+      have "top1_is_path_on E TE (a, 0) (a, 2 * d + 2 * int k' * d)
+          (top1_path_product gen_lift ftk'_shifted)"
+        by (rule top1_path_product_is_path[OF hTE hgen_lift_typed hftk'_shifted_path])
+      thus ?thesis unfolding ftk_suc_def using h_endpoint_eq by simp
+    qed
+    moreover have "\<forall>s\<in>I_set. p0 (ftk_suc s) = top1_path_power gen a (Suc k') s"
+    proof (intro ballI)
+      fix s :: real assume hs: "s \<in> I_set"
+      have "p0 (ftk_suc s) = p0 (top1_path_product gen_lift ftk'_shifted s)"
+        unfolding ftk_suc_def by simp
+      also have "... = (if s \<le> 1/2 then p0 (gen_lift (2*s)) else p0 (ftk'_shifted (2*s - 1)))"
+        unfolding top1_path_product_def p0_def by (by100 simp)
+      also have "... = (if s \<le> 1/2 then gen (2*s)
+          else top1_path_power gen a k' (2*s - 1))"
+      proof -
+        have h1: "s \<le> 1/2 \<Longrightarrow> 2*s \<in> I_set"
+          using hs unfolding top1_unit_interval_def by (by100 simp)
+        have h2: "\<not>(s \<le> 1/2) \<Longrightarrow> 2*s - 1 \<in> I_set"
+          using hs unfolding top1_unit_interval_def by (by100 simp)
+        show ?thesis using hgen_lift_proj hftk'_shifted_proj h1 h2 by (by100 simp)
+      qed
+      also have "... = top1_path_product gen (top1_path_power gen a k') s"
+        unfolding top1_path_product_def by simp
+      also have "... = top1_path_power gen a (Suc k') s" by simp
+      finally show "p0 (ftk_suc s) = top1_path_power gen a (Suc k') s" .
+    qed
+    ultimately show ?case by blast
+  qed
+  \<comment> \<open>Now: gen^k \<simeq> \<alpha>*\<beta> (from hk, positive case). Their lifts from (a,0)
+     must end at the same point by Theorem\_54\_3.
+     Endpoint of gen^k lift = (a, 2*int(k)*d). Endpoint of \<alpha>*\<beta> lift = (a, 2).
+     So 2*int(k)*d = 2, giving int(k)*d = 1.\<close>
+  have hk_one: "k = 1"
+  proof -
+    from hk show "k = 1"
+    proof
+      assume hpos: "top1_path_homotopic_on X TX a a
+          (top1_path_product \<alpha> \<beta>) (top1_path_power gen a k)"
+      \<comment> \<open>gen^k \<simeq> \<alpha>*\<beta>. Both lift from (a,0): gen^k to (a, 2kd), \<alpha>*\<beta> to (a, 2).
+         By Theorem\_54\_3: endpoints match, so 2*int(k)*d = 2.\<close>
+      obtain ftk where hftk: "top1_is_path_on E TE (a, 0) (a, 2 * int k * d) ftk"
+          "\<forall>s\<in>I_set. p0 (ftk s) = top1_path_power gen a k s"
+        using hgenk_lift by blast
+      have hpos_sym: "top1_path_homotopic_on X TX a a
+          (top1_path_power gen a k) (top1_path_product \<alpha> \<beta>)"
+        by (rule Lemma_51_1_path_homotopic_sym[OF hpos])
+      have hgenk_path: "top1_is_path_on X TX a a (top1_path_power gen a k)"
+        by (rule top1_path_power_is_path[OF assms(1) hgen_loop])
+      have hab_path_raw: "top1_is_path_on X TX a a
+          (top1_path_power (top1_path_product \<alpha> \<beta>) a 1)"
+        by (rule top1_path_power_is_path[OF assms(1) h\<alpha>\<beta>_loop])
+      \<comment> \<open>Apply Theorem\_54\_3: gen^k \<simeq> path\_power (\<alpha>*\<beta>) a 1.
+         Both lift from (a,0): gen^k to (a, 2kd), path\_power (\<alpha>*\<beta>) a 1 to (a, 2).
+         Need: gen^k \<simeq> (path\_power (\<alpha>*\<beta>) a 1) as paths from a to a.
+         From hpos: \<alpha>*\<beta> \<simeq> gen^k. Since (\<alpha>*\<beta>)*const \<simeq> \<alpha>*\<beta>:
+         path\_power (\<alpha>*\<beta>) a 1 \<simeq> \<alpha>*\<beta> \<simeq> gen^k.
+         So gen^k \<simeq> path\_power (\<alpha>*\<beta>) a 1 (by symmetry + transitivity).\<close>
+      have h_genk_pp1: "top1_path_homotopic_on X TX a a
+          (top1_path_power gen a k) (top1_path_power (top1_path_product \<alpha> \<beta>) a 1)"
+      proof -
+        \<comment> \<open>gen^k \<simeq> \<alpha>*\<beta> (symmetry of hpos).\<close>
+        have hab_path: "top1_is_path_on X TX a a (top1_path_product \<alpha> \<beta>)"
+          using h\<alpha>\<beta>_loop unfolding top1_is_loop_on_def by (by100 blast)
+        \<comment> \<open>(\<alpha>*\<beta>)*const \<simeq> \<alpha>*\<beta> (right identity), so \<alpha>*\<beta> \<simeq> (\<alpha>*\<beta>)*const = path\_power (\<alpha>*\<beta>) a 1.\<close>
+        have hri: "top1_path_homotopic_on X TX a a
+            (top1_path_product (top1_path_product \<alpha> \<beta>) (top1_constant_path a))
+            (top1_path_product \<alpha> \<beta>)"
+          by (rule Theorem_51_2_right_identity[OF assms(1) hab_path])
+        have hri_sym: "top1_path_homotopic_on X TX a a
+            (top1_path_product \<alpha> \<beta>)
+            (top1_path_product (top1_path_product \<alpha> \<beta>) (top1_constant_path a))"
+          by (rule Lemma_51_1_path_homotopic_sym[OF hri])
+        have hpp1_eq: "top1_path_power (top1_path_product \<alpha> \<beta>) a 1 =
+            top1_path_product (top1_path_product \<alpha> \<beta>) (top1_constant_path a)"
+          by simp
+        have hab_pp1: "top1_path_homotopic_on X TX a a
+            (top1_path_product \<alpha> \<beta>) (top1_path_power (top1_path_product \<alpha> \<beta>) a 1)"
+          using hri_sym hpp1_eq by simp
+        \<comment> \<open>Chain: gen^k \<simeq> \<alpha>*\<beta> \<simeq> path\_power (\<alpha>*\<beta>) a 1.\<close>
+        show ?thesis
+          by (rule Lemma_51_1_path_homotopic_trans[OF assms(1) hpos_sym hab_pp1])
+      qed
+      have h_endpoints: "(a, 2 * int k * d) = (a :: 'a, 2 :: int)"
+      proof -
+        note h = Theorem_54_3[OF hcov hTE assms(1) he0 hp0
+            hgenk_path hab_path_raw h_genk_pp1
+            hftk(1) hftk(2) hab_lift hab_lift_proj]
+        from conjunct1[OF h] show ?thesis by simp
+      qed
+      hence "2 * int k * d = 2" by simp
+      hence "int k * d = 1" by simp
+      thus "k = 1"
+      proof -
+        from \<open>int k * d = 1\<close> have hunit: "int k * d = 1" .
+        hence "int k = 1 \<or> int k = -1" using zmult_eq_1_iff by blast
+        moreover have "int k \<ge> 0" by simp
+        ultimately have "int k = 1" by auto
+        thus "k = 1" by simp
+      qed
+    next
+      assume hneg: "top1_path_homotopic_on X TX a a
+          (top1_path_product \<alpha> \<beta>) (top1_path_power (top1_path_reverse gen) a k)"
+      \<comment> \<open>Similar but with reverse gen. gen^{-k} \<simeq> \<alpha>*\<beta>.
+         Lift of reverse(gen)^k from (a,0) ends at (a, -2kd).
+         Equals (a, 2). So -2kd = 2, kd = -1. k \<ge> 1, d = -1/k.
+         Only solution: k = 1, d = -1.\<close>
+      \<comment> \<open>Same argument as positive case: lift reverse(gen) from (a,0),
+         get endpoint (a, 2d') for some d'. Build reverse(gen)^k lift
+         by induction with shift T\_{d'}, compare with (\<alpha>*\<beta>)^1 lift at (a,2).\<close>
+      \<comment> \<open>Step 1: lift reverse(gen) from (a,0).\<close>
+      have hrgen_path: "top1_is_path_on X TX a a (top1_path_reverse gen)"
+        by (rule top1_path_reverse_is_path[OF hgen_path])
+      obtain rgen_lift where hrgen_lift: "top1_is_path_on E TE (a, 0) (rgen_lift 1) rgen_lift"
+          and hrgen_lift_proj: "\<forall>s\<in>I_set. p0 (rgen_lift s) = (top1_path_reverse gen) s"
+        using Lemma_54_1_path_lifting[OF hcov he0 hp0 hrgen_path assms(1) hTE] by blast
+      \<comment> \<open>Endpoint of rgen\_lift is in the fiber: (a, 2d') for some d'.\<close>
+      obtain d' :: int where hrgen_end: "rgen_lift 1 = (a, 2 * d')"
+      proof -
+        have h1_I: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+        have hend_E: "rgen_lift 1 \<in> E"
+          using hrgen_lift unfolding top1_is_path_on_def top1_continuous_map_on_def
+          using h1_I by (by100 blast)
+        have "p0 (rgen_lift 1) = (top1_path_reverse gen) 1"
+          using hrgen_lift_proj h1_I by (by100 blast)
+        hence "fst (rgen_lift 1) = a"
+          unfolding p0_def top1_path_reverse_def
+          using hgen_path unfolding top1_is_path_on_def by (by100 simp)
+        obtain x' n' where hpair: "rgen_lift 1 = (x', n')" by (cases "rgen_lift 1")
+        hence "x' = a" using \<open>fst (rgen_lift 1) = a\<close> by simp
+        have "(x', n') \<in> E" using hend_E hpair by simp
+        hence "(even n' \<and> x' \<in> U) \<or> (odd n' \<and> x' \<in> V - U)" unfolding E_def by auto
+        hence "even n'" using \<open>x' = a\<close> ha_U by (by100 blast)
+        then obtain d'' where "n' = 2 * d''" using evenE by blast
+        hence "rgen_lift 1 = (a, 2 * d'')" using hpair \<open>x' = a\<close> by simp
+        thus ?thesis using that by blast
+      qed
+      \<comment> \<open>Step 2: reverse(gen)^k lift by induction (same as positive case with d').\<close>
+      have hrgenk_lift: "\<exists>ftk. top1_is_path_on E TE (a, 0) (a, 2 * int k * d') ftk \<and>
+          (\<forall>s\<in>I_set. p0 (ftk s) = top1_path_power (top1_path_reverse gen) a k s)"
+      proof (induct k)
+        case 0
+        define ftk0 :: "real \<Rightarrow> ('a \<times> int)" where "ftk0 = (\<lambda>s. (a, 0::int))"
+        have "top1_is_path_on E TE (a, 0) (a, 2 * int 0 * d') ftk0"
+        proof -
+          have "top1_is_path_on E TE (a, 0) (a, 0) ftk0"
+            unfolding top1_is_path_on_def ftk0_def
+          proof (intro conjI)
+            have "top1_continuous_map_on I_set I_top E TE (top1_constant_path (a, 0::int))"
+              by (rule top1_constant_path_continuous[OF hTE he0])
+            thus "top1_continuous_map_on I_set I_top E TE (\<lambda>s. (a, 0::int))"
+              unfolding top1_constant_path_def by simp
+          qed simp+
+          thus ?thesis by simp
+        qed
+        moreover have "\<forall>s\<in>I_set. p0 (ftk0 s) = top1_path_power (top1_path_reverse gen) a 0 s"
+          unfolding ftk0_def p0_def by (simp add: top1_constant_path_def)
+        ultimately show ?case by blast
+      next
+        case (Suc k')
+        obtain ftk' where hftk'n: "top1_is_path_on E TE (a, 0) (a, 2 * int k' * d') ftk'"
+            "\<forall>s\<in>I_set. p0 (ftk' s) = top1_path_power (top1_path_reverse gen) a k' s"
+          using Suc.hyps by blast
+        define T_d' :: "('a \<times> int) \<Rightarrow> ('a \<times> int)" where "T_d' = (\<lambda>(x, n). (x, n + 2*d'))"
+        define ftk'n_shifted :: "real \<Rightarrow> ('a \<times> int)" where "ftk'n_shifted = T_d' \<circ> ftk'"
+        have hTd'_cont: "top1_continuous_map_on E TE E TE T_d'"
+        proof -
+          note h = helix_shift_general_continuous[OF assms(1-3) assms(5) assms(7-8)]
+          have "E = {x :: ('a \<times> int). even (snd x) \<and> fst x \<in> U \<or> odd (snd x) \<and> fst x \<in> V - U}"
+            unfolding E_def by auto
+          moreover have "TE = {W. W \<subseteq> E \<and>
+              (\<forall>n. {x \<in> U. (x, 2 * n) \<in> W} \<in> TX) \<and>
+              (\<forall>n. {x \<in> A. (x, 2 * n + 2) \<in> W} \<union> {x \<in> B. (x, 2 * n) \<in> W} \<union>
+                    {x \<in> V - U. (x, 2 * n + 1) \<in> W} \<in> TX)}"
+            unfolding TE_def E_def by auto
+          moreover have "T_d' = (\<lambda>(x :: 'a, n :: int). (x, n + 2 * d'))" unfolding T_d'_def by auto
+          ultimately show ?thesis using h by simp
+        qed
+        have hftk'n_shifted_path: "top1_is_path_on E TE (a, 2*d') (a, 2*d' + 2*int k'*d') ftk'n_shifted"
+        proof -
+          have hcomp_cont: "top1_continuous_map_on I_set I_top E TE ftk'n_shifted"
+            unfolding ftk'n_shifted_def
+            by (rule top1_continuous_map_on_comp[where Y=E and TY=TE])
+               (use hftk'n(1) hTd'_cont in \<open>unfold top1_is_path_on_def, by100 blast\<close>)+
+          show ?thesis unfolding top1_is_path_on_def
+            using hcomp_cont
+            unfolding ftk'n_shifted_def T_d'_def using hftk'n(1)
+            unfolding top1_is_path_on_def by (by100 simp)
+        qed
+        have hftk'n_shifted_proj: "\<forall>s\<in>I_set. p0 (ftk'n_shifted s) =
+            top1_path_power (top1_path_reverse gen) a k' s"
+        proof (intro ballI)
+          fix s assume "s \<in> I_set"
+          have "p0 (ftk'n_shifted s) = p0 (T_d' (ftk' s))" unfolding ftk'n_shifted_def by simp
+          also have "... = p0 (ftk' s)"
+          proof -
+            obtain x n where "T_d' (ftk' s) = (x, n)" by (cases "T_d' (ftk' s)")
+            have "fst (T_d' (ftk' s)) = fst (ftk' s)" unfolding T_d'_def
+              by (cases "ftk' s") (by100 simp)
+            thus ?thesis unfolding p0_def by simp
+          qed
+          also have "... = top1_path_power (top1_path_reverse gen) a k' s"
+            using hftk'n(2) \<open>s \<in> I_set\<close> by (by100 blast)
+          finally show "p0 (ftk'n_shifted s) = top1_path_power (top1_path_reverse gen) a k' s" .
+        qed
+        have h_ep_eq: "2*d' + 2*int k'*d' = 2*int (Suc k')*d'"
+          by (simp add: algebra_simps)
+        have hrgen_lift_typed: "top1_is_path_on E TE (a, 0) (a, 2*d') rgen_lift"
+          using hrgen_lift hrgen_end by simp
+        define ftk_suc_n where "ftk_suc_n = top1_path_product rgen_lift ftk'n_shifted"
+        have "top1_is_path_on E TE (a, 0) (a, 2*int (Suc k')*d') ftk_suc_n"
+        proof -
+          have "top1_is_path_on E TE (a, 0) (a, 2*d' + 2*int k'*d')
+              (top1_path_product rgen_lift ftk'n_shifted)"
+            by (rule top1_path_product_is_path[OF hTE hrgen_lift_typed hftk'n_shifted_path])
+          thus ?thesis unfolding ftk_suc_n_def using h_ep_eq by simp
+        qed
+        moreover have "\<forall>s\<in>I_set. p0 (ftk_suc_n s) =
+            top1_path_power (top1_path_reverse gen) a (Suc k') s"
+        proof (intro ballI)
+          fix s :: real assume hs: "s \<in> I_set"
+          have "p0 (ftk_suc_n s) = p0 (top1_path_product rgen_lift ftk'n_shifted s)"
+            unfolding ftk_suc_n_def by simp
+          also have "... = (if s \<le> 1/2 then p0 (rgen_lift (2*s)) else p0 (ftk'n_shifted (2*s-1)))"
+            unfolding top1_path_product_def p0_def by (by100 simp)
+          also have "... = (if s \<le> 1/2 then (top1_path_reverse gen) (2*s)
+              else top1_path_power (top1_path_reverse gen) a k' (2*s-1))"
+          proof -
+            have h1: "s \<le> 1/2 \<Longrightarrow> 2*s \<in> I_set"
+              using hs unfolding top1_unit_interval_def by (by100 simp)
+            have h2: "\<not>(s \<le> 1/2) \<Longrightarrow> 2*s-1 \<in> I_set"
+              using hs unfolding top1_unit_interval_def by (by100 simp)
+            show ?thesis using hrgen_lift_proj hftk'n_shifted_proj h1 h2 by (by100 simp)
+          qed
+          also have "... = top1_path_product (top1_path_reverse gen)
+              (top1_path_power (top1_path_reverse gen) a k') s"
+            unfolding top1_path_product_def by simp
+          also have "... = top1_path_power (top1_path_reverse gen) a (Suc k') s" by simp
+          finally show "p0 (ftk_suc_n s) = top1_path_power (top1_path_reverse gen) a (Suc k') s" .
+        qed
+        ultimately show ?case by blast
+      qed
+      \<comment> \<open>Step 3: reverse(gen)^k \<simeq> (\<alpha>*\<beta>)^1 \<Rightarrow> endpoints match \<Rightarrow> 2*k*d' = 2 \<Rightarrow> k*d' = 1 \<Rightarrow> k = 1.\<close>
+      have hneg_sym: "top1_path_homotopic_on X TX a a
+          (top1_path_power (top1_path_reverse gen) a k) (top1_path_product \<alpha> \<beta>)"
+        by (rule Lemma_51_1_path_homotopic_sym[OF hneg])
+      obtain ftk where hftk_neg: "top1_is_path_on E TE (a, 0) (a, 2 * int k * d') ftk"
+          "\<forall>s\<in>I_set. p0 (ftk s) = top1_path_power (top1_path_reverse gen) a k s"
+        using hrgenk_lift by blast
+      have hrgen_loop: "top1_is_loop_on X TX a (top1_path_reverse gen)"
+        by (rule top1_path_reverse_is_loop[OF hgen_loop])
+      have hrgenk_path: "top1_is_path_on X TX a a
+          (top1_path_power (top1_path_reverse gen) a k)"
+        by (rule top1_path_power_is_path[OF assms(1) hrgen_loop])
+      have hab_path_raw: "top1_is_path_on X TX a a
+          (top1_path_power (top1_path_product \<alpha> \<beta>) a 1)"
+        by (rule top1_path_power_is_path[OF assms(1) h\<alpha>\<beta>_loop])
+      have hab_path: "top1_is_path_on X TX a a (top1_path_product \<alpha> \<beta>)"
+        using h\<alpha>\<beta>_loop unfolding top1_is_loop_on_def by (by100 blast)
+      have hri: "top1_path_homotopic_on X TX a a
+          (top1_path_product (top1_path_product \<alpha> \<beta>) (top1_constant_path a))
+          (top1_path_product \<alpha> \<beta>)"
+        by (rule Theorem_51_2_right_identity[OF assms(1) hab_path])
+      have hab_pp1: "top1_path_homotopic_on X TX a a
+          (top1_path_product \<alpha> \<beta>) (top1_path_power (top1_path_product \<alpha> \<beta>) a 1)"
+        using Lemma_51_1_path_homotopic_sym[OF hri] by simp
+      have hproj_pp1: "top1_path_homotopic_on X TX a a
+          (top1_path_power (top1_path_reverse gen) a k)
+          (top1_path_power (top1_path_product \<alpha> \<beta>) a 1)"
+        by (rule Lemma_51_1_path_homotopic_trans[OF assms(1) hneg_sym hab_pp1])
+      have h_endpoints_neg: "(a, 2 * int k * d') = (a :: 'a, 2 :: int)"
+      proof -
+        note h = Theorem_54_3[OF hcov hTE assms(1) he0 hp0
+            hrgenk_path hab_path_raw hproj_pp1
+            hftk_neg(1) hftk_neg(2) hab_lift hab_lift_proj]
+        from conjunct1[OF h] show ?thesis by simp
+      qed
+      hence "2 * int k * d' = 2" by simp
+      hence "int k * d' = 1" by simp
+      thus "k = 1"
+      proof -
+        from \<open>int k * d' = 1\<close> have "int k = 1 \<or> int k = -1" using zmult_eq_1_iff by blast
+        moreover have "int k \<ge> 0" by simp
+        ultimately have "int k = 1" by auto
+        thus "k = 1" by simp
+      qed
+    qed
+  qed
+  \<comment> \<open>Step 7: Conclude. k = 1 means [\<alpha>*\<beta>] = gen (or gen\<inverse>). So gen generates with [\<alpha>*\<beta>].\<close>
+  show ?thesis
+  proof (intro allI impI)
+    fix f assume hf: "top1_is_loop_on X TX a f"
+    obtain n :: nat where hn: "top1_path_homotopic_on X TX a a f (top1_path_power gen a n)
+        \<or> top1_path_homotopic_on X TX a a f (top1_path_power (top1_path_reverse gen) a n)"
+      using hgen_all[THEN spec, of f] hf by blast
+    show "\<exists>n::nat. top1_path_homotopic_on X TX a a f
+        (top1_path_power (top1_path_product \<alpha> \<beta>) a n)
+      \<or> top1_path_homotopic_on X TX a a f
+           (top1_path_power (top1_path_reverse (top1_path_product \<alpha> \<beta>)) a n)"
+    proof (cases "top1_path_homotopic_on X TX a a
+        (top1_path_product \<alpha> \<beta>) (top1_path_power gen a k)")
+      case True
+      \<comment> \<open>[\<alpha>*\<beta>] = gen^k = gen^1 = gen. So gen^n = (\<alpha>*\<beta>)^n.\<close>
+      have "k = 1" by (rule hk_one)
+      \<comment> \<open>gen^1 = gen * const \<simeq> gen, so \<alpha>*\<beta> \<simeq> gen.\<close>
+      have hgen1_eq: "top1_path_homotopic_on X TX a a
+          (top1_path_power gen a 1) gen"
+      proof -
+        have "top1_path_power gen a 1 = top1_path_product gen (top1_constant_path a)"
+          by simp
+        moreover have "top1_path_homotopic_on X TX a a
+            (top1_path_product gen (top1_constant_path a)) gen"
+          by (rule Theorem_51_2_right_identity[OF assms(1) hgen_path])
+        ultimately show ?thesis by simp
+      qed
+      have h_eq: "top1_path_homotopic_on X TX a a
+          (top1_path_product \<alpha> \<beta>) gen"
+      proof -
+        have hab_gen1: "top1_path_homotopic_on X TX a a
+            (top1_path_product \<alpha> \<beta>) (top1_path_power gen a 1)"
+          using True \<open>k = 1\<close> by simp
+        show ?thesis
+          by (rule Lemma_51_1_path_homotopic_trans[OF assms(1) hab_gen1 hgen1_eq])
+      qed
+      \<comment> \<open>gen \<simeq> \<alpha>*\<beta>. So gen^n \<simeq> (\<alpha>*\<beta>)^n and gen^{-n} \<simeq> (\<alpha>*\<beta>)^{-n}.\<close>
+      show ?thesis
+      proof -
+        have hgen_path2: "top1_is_path_on X TX a a gen"
+          using hgen_loop unfolding top1_is_loop_on_def by (by100 blast)
+        have hab_path: "top1_is_path_on X TX a a (top1_path_product \<alpha> \<beta>)"
+          using h\<alpha>\<beta>_loop unfolding top1_is_loop_on_def by (by100 blast)
+        have h_eq_sym: "top1_path_homotopic_on X TX a a gen (top1_path_product \<alpha> \<beta>)"
+          using h_eq by (rule Lemma_51_1_path_homotopic_sym)
+        have hpow: "top1_path_homotopic_on X TX a a
+            (top1_path_power gen a n) (top1_path_power (top1_path_product \<alpha> \<beta>) a n)"
+          by (rule path_homotopic_path_power[OF assms(1) h_eq_sym hgen_path2 hab_path])
+        have h_req: "top1_path_homotopic_on X TX a a
+            (top1_path_reverse gen) (top1_path_reverse (top1_path_product \<alpha> \<beta>))"
+          by (rule path_homotopic_reverse[OF assms(1) h_eq_sym hgen_path2 hab_path])
+        have hrgen_path: "top1_is_path_on X TX a a (top1_path_reverse gen)"
+          by (rule top1_path_reverse_is_path[OF hgen_path2])
+        have hrab_path: "top1_is_path_on X TX a a
+            (top1_path_reverse (top1_path_product \<alpha> \<beta>))"
+          by (rule top1_path_reverse_is_path[OF hab_path])
+        have hpow_rev: "top1_path_homotopic_on X TX a a
+            (top1_path_power (top1_path_reverse gen) a n)
+            (top1_path_power (top1_path_reverse (top1_path_product \<alpha> \<beta>)) a n)"
+          by (rule path_homotopic_path_power[OF assms(1) h_req hrgen_path hrab_path])
+        from hn show ?thesis
+        proof
+          assume hf_gen: "top1_path_homotopic_on X TX a a f (top1_path_power gen a n)"
+          have "top1_path_homotopic_on X TX a a f (top1_path_power (top1_path_product \<alpha> \<beta>) a n)"
+            by (rule Lemma_51_1_path_homotopic_trans[OF assms(1) hf_gen hpow])
+          thus ?thesis by blast
+        next
+          assume hf_rgen: "top1_path_homotopic_on X TX a a f (top1_path_power (top1_path_reverse gen) a n)"
+          have "top1_path_homotopic_on X TX a a f
+              (top1_path_power (top1_path_reverse (top1_path_product \<alpha> \<beta>)) a n)"
+            by (rule Lemma_51_1_path_homotopic_trans[OF assms(1) hf_rgen hpow_rev])
+          thus ?thesis by blast
+        qed
+      qed
+    next
+      case False
+      \<comment> \<open>[\<alpha>*\<beta>] = gen^{-k} = gen^{-1}. So gen = reverse(\<alpha>*\<beta>).\<close>
+      hence hneg: "top1_path_homotopic_on X TX a a
+          (top1_path_product \<alpha> \<beta>) (top1_path_power (top1_path_reverse gen) a k)"
+        using hk by (by100 blast)
+      have "k = 1" by (rule hk_one)
+      \<comment> \<open>reverse(gen)^1 \<simeq> reverse(gen), so \<alpha>*\<beta> \<simeq> reverse(gen), i.e., gen \<simeq> reverse(\<alpha>*\<beta>).\<close>
+      \<comment> \<open>reverse(gen)^1 = reverse(gen)*const \<simeq> reverse(gen).\<close>
+      have hrgen1_eq: "top1_path_homotopic_on X TX a a
+          (top1_path_power (top1_path_reverse gen) a 1) (top1_path_reverse gen)"
+      proof -
+        have hrg_path: "top1_is_path_on X TX a a (top1_path_reverse gen)"
+          by (rule top1_path_reverse_is_path[OF hgen_path])
+        have "top1_path_power (top1_path_reverse gen) a 1 =
+            top1_path_product (top1_path_reverse gen) (top1_constant_path a)" by simp
+        moreover have "top1_path_homotopic_on X TX a a
+            (top1_path_product (top1_path_reverse gen) (top1_constant_path a)) (top1_path_reverse gen)"
+          by (rule Theorem_51_2_right_identity[OF assms(1) hrg_path])
+        ultimately show ?thesis by simp
+      qed
+      have h_eq_neg: "top1_path_homotopic_on X TX a a
+          (top1_path_product \<alpha> \<beta>) (top1_path_reverse gen)"
+      proof -
+        have "top1_path_homotopic_on X TX a a
+            (top1_path_product \<alpha> \<beta>) (top1_path_power (top1_path_reverse gen) a 1)"
+          using hneg \<open>k = 1\<close> by simp
+        thus ?thesis
+          by (rule Lemma_51_1_path_homotopic_trans[OF assms(1) _ hrgen1_eq])
+      qed
+      \<comment> \<open>reverse(gen) \<simeq> \<alpha>*\<beta>. So gen \<simeq> reverse(\<alpha>*\<beta>).
+         Then gen^n \<simeq> reverse(\<alpha>*\<beta>)^n and reverse(gen)^n \<simeq> (\<alpha>*\<beta>)^n.\<close>
+      show ?thesis
+      proof -
+        have hgen_path2: "top1_is_path_on X TX a a gen"
+          using hgen_loop unfolding top1_is_loop_on_def by (by100 blast)
+        have hab_path: "top1_is_path_on X TX a a (top1_path_product \<alpha> \<beta>)"
+          using h\<alpha>\<beta>_loop unfolding top1_is_loop_on_def by (by100 blast)
+        have hrgen_path: "top1_is_path_on X TX a a (top1_path_reverse gen)"
+          by (rule top1_path_reverse_is_path[OF hgen_path2])
+        have hrab_path: "top1_is_path_on X TX a a
+            (top1_path_reverse (top1_path_product \<alpha> \<beta>))"
+          by (rule top1_path_reverse_is_path[OF hab_path])
+        \<comment> \<open>\<alpha>*\<beta> \<simeq> reverse(gen). So reverse(\<alpha>*\<beta>) \<simeq> gen (reverse both sides).\<close>
+        have h_eq_neg_sym: "top1_path_homotopic_on X TX a a
+            (top1_path_reverse gen) (top1_path_product \<alpha> \<beta>)"
+          by (rule Lemma_51_1_path_homotopic_sym[OF h_eq_neg])
+        have h_rr_gen: "top1_path_homotopic_on X TX a a
+            (top1_path_reverse (top1_path_reverse gen)) (top1_path_reverse (top1_path_product \<alpha> \<beta>))"
+          by (rule path_homotopic_reverse[OF assms(1) h_eq_neg_sym hrgen_path hab_path])
+        have h_gen_rab: "top1_path_homotopic_on X TX a a
+            gen (top1_path_reverse (top1_path_product \<alpha> \<beta>))"
+          using h_rr_gen top1_path_reverse_twice[of gen] by simp
+        \<comment> \<open>gen^n \<simeq> reverse(\<alpha>*\<beta>)^n.\<close>
+        have hpow: "top1_path_homotopic_on X TX a a
+            (top1_path_power gen a n) (top1_path_power (top1_path_reverse (top1_path_product \<alpha> \<beta>)) a n)"
+          by (rule path_homotopic_path_power[OF assms(1) h_gen_rab hgen_path2 hrab_path])
+        \<comment> \<open>reverse(gen) \<simeq> \<alpha>*\<beta>. So reverse(gen)^n \<simeq> (\<alpha>*\<beta>)^n.\<close>
+        have h_rgen_ab: "top1_path_homotopic_on X TX a a
+            (top1_path_reverse gen) (top1_path_product \<alpha> \<beta>)"
+          by (rule Lemma_51_1_path_homotopic_sym[OF h_eq_neg])
+        have hpow_rev: "top1_path_homotopic_on X TX a a
+            (top1_path_power (top1_path_reverse gen) a n)
+            (top1_path_power (top1_path_product \<alpha> \<beta>) a n)"
+          by (rule path_homotopic_path_power[OF assms(1) h_rgen_ab hrgen_path hab_path])
+        from hn show ?thesis
+        proof
+          assume hf_gen: "top1_path_homotopic_on X TX a a f (top1_path_power gen a n)"
+          have "top1_path_homotopic_on X TX a a f
+              (top1_path_power (top1_path_reverse (top1_path_product \<alpha> \<beta>)) a n)"
+            by (rule Lemma_51_1_path_homotopic_trans[OF assms(1) hf_gen hpow])
+          thus ?thesis by blast
+        next
+          assume hf_rgen: "top1_path_homotopic_on X TX a a f (top1_path_power (top1_path_reverse gen) a n)"
+          have "top1_path_homotopic_on X TX a a f
+              (top1_path_power (top1_path_product \<alpha> \<beta>) a n)"
+            by (rule Lemma_51_1_path_homotopic_trans[OF assms(1) hf_rgen hpow_rev])
+          thus ?thesis by blast
+        qed
+      qed
+    qed
+  qed
+qed
+
 section \<open>Theorem 58.7 (fixed): homotopy equivalence induces \<pi>_1 isomorphism\<close>
 
 text \<open>Munkres Theorem 58.7: If f: X \<rightarrow> Y is a homotopy equivalence with f(x0)=y0,
@@ -185,15 +1050,24 @@ proof -
   \<comment> \<open>Step 3: Both groups are infinite cyclic (\<cong> Z).
      From existing infrastructure: SCC\_pi1\_iso\_Z and pi1\_S2\_minus\_two\_points.\<close>
   have hC_scc: "top1_simple_closed_curve_on top1_S2 top1_S2_topology C"
-    sorry \<comment> \<open>C is SCC (proved in AlgTop.thy as part of Lemma\_65\_1).\<close>
+    sorry \<comment> \<open>C = e12\<union>e23\<union>e34\<union>e41 is SCC: 4 arcs forming a cycle. Proved in Lemma\_65\_1.\<close>
   have hp_ne_q: "p \<noteq> q"
-    sorry \<comment> \<open>From K4 structure.\<close>
+  proof
+    assume "p = q"
+    have "p \<in> e13" using assms(37) by (by100 blast)
+    have "p \<in> e24" using \<open>p = q\<close> assms(38) by (by100 blast)
+    hence "p \<in> e13 \<inter> e24" using \<open>p \<in> e13\<close> by (by100 blast)
+    hence "p \<in> {a1,a2,a3,a4}" using assms(32) by (by100 blast)
+    moreover have "p \<noteq> a1" "p \<noteq> a3" using assms(37) by (by100 blast)+
+    moreover have "p \<noteq> a2" "p \<noteq> a4" using \<open>p = q\<close> assms(38) by (by100 blast)+
+    ultimately show False by (by100 blast)
+  qed
   have hp_S2: "p \<in> top1_S2" using assms(8,37) by (by100 blast)
   have hq_S2: "q \<in> top1_S2" using assms(9,38) by (by100 blast)
   have hC_pi1_Z: "top1_groups_isomorphic_on
       (top1_fundamental_group_carrier C ?TC c0) (top1_fundamental_group_mul C ?TC c0)
       top1_Z_group top1_Z_mul"
-    sorry \<comment> \<open>SCC\_pi1\_iso\_Z (proved in AlgTop.thy, not available in this session).\<close>
+    by (rule SCC_pi1_iso_Z[OF assms(1) hC_scc assms(40)])
   have hX_pi1_Z: "top1_groups_isomorphic_on
       (top1_fundamental_group_carrier ?X ?TX c0) (top1_fundamental_group_mul ?X ?TX c0)
       top1_Z_group top1_Z_mul"
