@@ -768,6 +768,40 @@ proof -
 qed
 
 
+\<comment> \<open>Lemma 64.1 boundary structure: for theta space A\<union>B\<union>C on S2, each component
+   of S2-theta is separated from the opposite arc by its bounding SCC.
+   Specifically: if U is a theta component, A\<union>B is SCC, and E is a connected set
+   with E \<inter> (A\<union>B) = {} containing a point of U and a point of C-{a,b},
+   then False (U and C-{a,b} are in different S2-(A\<union>B) components).
+   This is the key fact for K33/K5 non-planarity.\<close>
+lemma theta_component_separated_from_opposite_arc:
+  assumes hS2: "is_topology_on_strict top1_S2 top1_S2_topology"
+      and "A \<subseteq> top1_S2" "B \<subseteq> top1_S2" "C \<subseteq> top1_S2"
+      and "top1_is_arc_on A (subspace_topology top1_S2 top1_S2_topology A)"
+      and "top1_is_arc_on B (subspace_topology top1_S2 top1_S2_topology B)"
+      and "top1_is_arc_on C (subspace_topology top1_S2 top1_S2_topology C)"
+      and "a \<noteq> b" "A \<inter> B = {a, b}" "B \<inter> C = {a, b}" "A \<inter> C = {a, b}"
+      and "top1_arc_endpoints_on A (subspace_topology top1_S2 top1_S2_topology A) = {a, b}"
+      and "top1_arc_endpoints_on B (subspace_topology top1_S2 top1_S2_topology B) = {a, b}"
+      and "top1_arc_endpoints_on C (subspace_topology top1_S2 top1_S2_topology C) = {a, b}"
+      \<comment> \<open>U is one of the 3 theta components, open and connected.\<close>
+      and "U \<noteq> {}" "U \<in> top1_S2_topology"
+      and "U \<subseteq> top1_S2 - (A \<union> B \<union> C)"
+      and "top1_connected_on U (subspace_topology top1_S2 top1_S2_topology U)"
+      \<comment> \<open>E is a connected set intersecting both U and C-{a,b}, disjoint from A\<union>B.\<close>
+      and "E \<subseteq> top1_S2" "E \<inter> (A \<union> B) = {}"
+      and "top1_connected_on E (subspace_topology top1_S2 top1_S2_topology E)"
+      and "E \<inter> U \<noteq> {}" and "E \<inter> (C - {a, b}) \<noteq> {}"
+      \<comment> \<open>The other two components V, W exist (from Lemma 64.1).\<close>
+      and "V \<noteq> {}" "W \<noteq> {}"
+      and "U \<inter> V = {}" "V \<inter> W = {}" "U \<inter> W = {}"
+      and "U \<union> V \<union> W = top1_S2 - (A \<union> B \<union> C)"
+      and "top1_connected_on V (subspace_topology top1_S2 top1_S2_topology V)"
+      and "top1_connected_on W (subspace_topology top1_S2 top1_S2_topology W)"
+      and "V \<in> top1_S2_topology" "W \<in> top1_S2_topology"
+  shows False
+  sorry
+
 text \<open>Theorem 64.2: The utilities graph K33 cannot be imbedded in the plane.\<close>
 
 text \<open>Theorem 64.2 and 64.4 (K\_3\_3 and K\_5 not planar) are consequences
@@ -1068,13 +1102,25 @@ proof -
   \<comment> \<open>e \<notin> U: boundary(U) = A\<union>B (Lemma 64.1). eh3-{h3} \<subseteq> U (Lemma\_23\_2),
      h3 \<in> cl(eh3-{h3}) \<subseteq> cl(U) = U\<union>A\<union>B. h3\<notin>A\<union>B (hh3\_not\_AB). h3\<notin>U. Contradiction.
      Boundary identification requires SCCBMC on SCC A\<union>B via K4-style argument.\<close>
+  \<comment> \<open>e \<notin> U: arc eh3 goes from e to h3. eh3 \<inter> (A\<union>B) = {}. eh3 connected.
+     If e \<in> U: apply theta\_component\_separated\_from\_opposite\_arc
+     with SCC = A\<union>B, opposite arc = CC, component = U, connecting arc = eh3.\<close>
   have "e \<notin> U"
-    sorry \<comment> \<open>Needs: boundary(U) = A\<union>B (Lemma 64.1 structure). Then eh3-{h3} \<subseteq> U,
-           h3 \<in> cl(U) = U\<union>A\<union>B, h3\<notin>A\<union>B. Same K4-style SCCBMC argument.\<close>
+  proof assume "e \<in> U"
+    have "e \<in> eh3" using assms(30) unfolding top1_arc_endpoints_on_def by (by100 blast)
+    have "h3 \<in> CC - {g, w}" using assms(24) hh_ne(5,6) unfolding top1_arc_endpoints_on_def CC_def by (by100 blast)
+    have "h3 \<in> eh3" using assms(30) unfolding top1_arc_endpoints_on_def by (by100 blast)
+    show False
+      by (rule theta_component_separated_from_opposite_arc[OF hS2 hA_sub hB_sub hCC_sub
+          hA_arc hB_arc hCC_arc hg_ne_w hAB hBCC hACC hA_ep hB_ep hCC_ep
+          hUVW(1,11) _ hUVW(8) assms(12) _ arc_connected[OF assms(21)] _ _
+          hUVW(2,3,4,5,6,7,9,10,12,13)])
+         (use \<open>e \<in> U\<close> \<open>e \<in> eh3\<close> \<open>h3 \<in> CC - _\<close> \<open>h3 \<in> eh3\<close> heh3_A heh3_B hUVW(7) in \<open>by100 blast\<close>)+
+  qed
   moreover have "e \<notin> V"
-    sorry \<comment> \<open>Symmetric with SCC B\<union>CC: cl(V)=V\<union>B\<union>CC, h1\<notin>B\<union>CC.\<close>
+    sorry \<comment> \<open>Same with SCC B\<union>CC, arc eh1, h1 \<in> A-{g,w}.\<close>
   moreover have "e \<notin> W"
-    sorry \<comment> \<open>Symmetric with SCC A\<union>CC: cl(W)=W\<union>A\<union>CC, h2\<notin>A\<union>CC.\<close>
+    sorry \<comment> \<open>Same with SCC A\<union>CC, arc eh2, h2 \<in> B-{g,w}.\<close>
   ultimately show False using \<open>e \<in> U \<union> V \<union> W\<close> by (by100 blast)
 qed
 
