@@ -901,6 +901,19 @@ proof -
     by (rule groups_isomorphic_trans_fwd[OF h1 h_pi1_S1_Z])
 qed
 
+lemma subset_disjoint_helper:
+  assumes "S \<subseteq> A" and "A \<inter> B = {}" shows "S \<inter> B = {}"
+  using assms by (by100 blast)
+
+lemma subset_of_complement_disjoint:
+  assumes "R = X - T" and "S \<subseteq> T"
+  shows "S \<inter> R = {}"
+  using assms by (by100 blast)
+
+lemma diff_inter_subset:
+  assumes "A \<inter> R = {}" shows "(A - S) \<inter> R = {}"
+  using assms by (by100 blast)
+
 (** from \<S>65 Lemma 65.1(a): non-adjacent edges of K_4 in S^2 have interiors in
     different components of S^2 minus the complementary 4-cycle.
     Duplicated from the internal hdiff fact in Lemma_65_1_K4_subgraph (AlgTopCached.thy). **)
@@ -1158,12 +1171,17 @@ proof -
   qed
   \<comment> \<open>Step 4: e12-{a1,a2} is on the theta space, hence NOT in any Ri.\<close>
   have he12_on_theta: "e12 - {a1, a2} \<subseteq> e12 \<union> Arc2 \<union> Arc3" unfolding defs by (by100 blast)
-  have he12_not_Ri: "e12 - {a1, a2} \<inter> (R1 \<union> R2 \<union> R3) = {}"
+  have he12_sub_theta: "e12 \<subseteq> e12 \<union> Arc2 \<union> Arc3" by (by100 blast)
+  have he12_R_disj: "e12 \<inter> (R1 \<union> R2 \<union> R3) = {}"
+    by (rule subset_of_complement_disjoint[OF hR(7) he12_sub_theta])
+  have he12_not_Ri: "(e12 - {a1, a2}) \<inter> (R1 \<union> R2 \<union> R3) = {}"
   proof -
-    have h1: "\<And>x. x \<in> e12 \<Longrightarrow> x \<notin> R1" using hR(7) unfolding defs by (by100 blast)
-    have h2: "\<And>x. x \<in> e12 \<Longrightarrow> x \<notin> R2" using hR(7) unfolding defs by (by100 blast)
-    have h3: "\<And>x. x \<in> e12 \<Longrightarrow> x \<notin> R3" using hR(7) unfolding defs by (by100 blast)
-    show ?thesis sorry \<comment> \<open>e12\<inter>Ri={}. Proved individually above but by100 can't combine in this context.\<close>
+    have "e12 - {a1, a2} \<subseteq> e12" by (by100 blast)
+    hence "(e12 - {a1, a2}) \<inter> (R1 \<union> R2 \<union> R3) \<subseteq> e12 \<inter> (R1 \<union> R2 \<union> R3)"
+      by (rule Int_mono) (rule subset_refl)
+    also have "\<dots> = {}" by (rule he12_R_disj)
+    finally have "(e12 - {a1, a2}) \<inter> (R1 \<union> R2 \<union> R3) \<subseteq> {}" .
+    thus ?thesis by (rule subset_antisym) (rule empty_subsetI)
   qed
   \<comment> \<open>Step 5: Each Ri \<subseteq> A\<union>B (since Ri \<subseteq> S2-theta \<subseteq> S2-D = A\<union>B).
      The Ri containing e34 \<subseteq> A or B. e12 NOT in that Ri.
