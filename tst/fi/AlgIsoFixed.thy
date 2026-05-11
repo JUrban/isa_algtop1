@@ -140,18 +140,48 @@ proof -
   let ?TC = "subspace_topology top1_S2 top1_S2_topology C"
   let ?j_star = "top1_fundamental_group_induced_on C ?TC c0 ?X ?TX c0 id"
   \<comment> \<open>Step 1: C \<subseteq> X (p \<notin> C, q \<notin> C).\<close>
-  have hC_sub_X: "C \<subseteq> ?X" sorry
-  have hc0_X: "c0 \<in> ?X" sorry
-  \<comment> \<open>Step 2: j\_* is a homomorphism.\<close>
   have hTopS2: "is_topology_on top1_S2 top1_S2_topology"
-    using assms(1) unfolding is_topology_on_strict_def sorry
-  have hTX: "is_topology_on ?X ?TX" sorry
-  have hTC: "is_topology_on C ?TC" sorry
-  have hj_cont: "top1_continuous_map_on C ?TC ?X ?TX id" sorry
+    using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
+  have hS2_haus: "is_hausdorff_on top1_S2 top1_S2_topology" by (rule top1_S2_is_hausdorff)
+  \<comment> \<open>C \<subseteq> S2.\<close>
+  have hC_sub_S2: "C \<subseteq> top1_S2" using assms(4,5,6,7,39) by (by100 blast)
+  \<comment> \<open>p \<notin> C, q \<notin> C (p interior to diagonal e13, q interior to e24, both disjoint from C).\<close>
+  have hp_not_C: "p \<notin> C"
+  proof -
+    have "p \<in> e13" "p \<noteq> a1" "p \<noteq> a3" using assms(37) by (by100 blast)+
+    have "p \<notin> e12" using \<open>p \<in> e13\<close> \<open>p \<noteq> a1\<close> assms(28) by (by100 blast)
+    moreover have "p \<notin> e23" using \<open>p \<in> e13\<close> \<open>p \<noteq> a3\<close> assms(29) by (by100 blast)
+    moreover have "p \<notin> e34" using \<open>p \<in> e13\<close> \<open>p \<noteq> a3\<close> assms(30) by (by100 blast)
+    moreover have "p \<notin> e41" using \<open>p \<in> e13\<close> \<open>p \<noteq> a1\<close> assms(31) by (by100 blast)
+    ultimately show ?thesis using assms(39) by (by100 blast)
+  qed
+  have hq_not_C: "q \<notin> C"
+  proof -
+    have "q \<in> e24" "q \<noteq> a2" "q \<noteq> a4" using assms(38) by (by100 blast)+
+    have "q \<notin> e12" using \<open>q \<in> e24\<close> \<open>q \<noteq> a2\<close> assms(33) by (by100 blast)
+    moreover have "q \<notin> e23" using \<open>q \<in> e24\<close> \<open>q \<noteq> a2\<close> assms(34) by (by100 blast)
+    moreover have "q \<notin> e34" using \<open>q \<in> e24\<close> \<open>q \<noteq> a4\<close> assms(35) by (by100 blast)
+    moreover have "q \<notin> e41" using \<open>q \<in> e24\<close> \<open>q \<noteq> a4\<close> assms(36) by (by100 blast)
+    ultimately show ?thesis using assms(39) by (by100 blast)
+  qed
+  have hC_sub_X: "C \<subseteq> ?X" using hC_sub_S2 hp_not_C hq_not_C by (by100 blast)
+  have hc0_X: "c0 \<in> ?X" using assms(40) hC_sub_X by (by100 blast)
+  \<comment> \<open>Step 2: j\_* is a homomorphism.\<close>
+  have hTX: "is_topology_on ?X ?TX"
+    by (rule subspace_topology_is_topology_on[OF hTopS2]) (by100 blast)
+  have hTC: "is_topology_on C ?TC"
+    by (rule subspace_topology_is_topology_on[OF hTopS2]) (use hC_sub_S2 in \<open>by100 blast\<close>)
+  have hj_cont: "top1_continuous_map_on C ?TC ?X ?TX id"
+  proof -
+    have "top1_continuous_map_on C (subspace_topology top1_S2 top1_S2_topology C) top1_S2 top1_S2_topology id"
+      using Theorem_18_2[OF hTopS2 hTopS2 hTopS2] hC_sub_S2 by (by100 blast)
+    thus ?thesis sorry \<comment> \<open>Restrict codomain from S2 to X using C \<subseteq> X.\<close>
+  qed
   have hj_star_hom: "top1_group_hom_on
       (top1_fundamental_group_carrier C ?TC c0) (top1_fundamental_group_mul C ?TC c0)
       (top1_fundamental_group_carrier ?X ?TX c0) (top1_fundamental_group_mul ?X ?TX c0) ?j_star"
-    sorry
+    by (rule top1_fundamental_group_induced_on_is_hom[OF hTC hTX assms(40) hc0_X hj_cont])
+       (by100 simp)
   \<comment> \<open>Step 3: Both groups are infinite cyclic (\<cong> Z).
      From existing infrastructure: SCC\_pi1\_iso\_Z and pi1\_S2\_minus\_two\_points.\<close>
   have hC_pi1_Z: "top1_groups_isomorphic_on
@@ -170,8 +200,8 @@ proof -
   \<comment> \<open>Combine.\<close>
   have hj_star_bij: "bij_betw ?j_star
       (top1_fundamental_group_carrier C ?TC c0) (top1_fundamental_group_carrier ?X ?TX c0)"
-    unfolding bij_betw_def using hj_star_inj hj_star_surj sorry
-  show ?thesis unfolding top1_group_iso_on_def using hj_star_hom hj_star_bij sorry
+    unfolding bij_betw_def using hj_star_inj hj_star_surj by (by100 blast)
+  show ?thesis unfolding top1_group_iso_on_def using hj_star_hom hj_star_bij by (by100 blast)
 qed
 
 section \<open>Theorem 65.2 (fixed): inclusion C \<hookrightarrow> S2-{p,q} induces iso (general SCC)\<close>
