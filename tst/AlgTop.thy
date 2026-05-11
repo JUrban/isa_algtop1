@@ -987,6 +987,37 @@ proof -
   thus ?thesis by (by100 simp)
 qed
 
+\<comment> \<open>Helper: if W \<subseteq> S2-(J\<union>Arc) = R1\<union>R2\<union>R3 and W is a connected J-component,
+   and D' \<subseteq> W, D' = Ri\_D (one of the Ri's), Ri\_D \<subseteq> D', then D' = W.\<close>
+lemma J_component_sub_theta_forces_eq:
+  assumes "W \<subseteq> R1 \<union> R2 \<union> R3" "W \<noteq> {}"
+      and "top1_connected_on W (subspace_topology X TX W)"
+      and "D' \<subseteq> W" "D' \<noteq> {}"
+      and "D' \<subseteq> Ri_D" "Ri_D \<subseteq> D'" "Ri_D \<in> {R1, R2, R3}"
+      and "\<And>S. S \<subseteq> R1\<union>R2\<union>R3 \<Longrightarrow> S \<noteq> {} \<Longrightarrow>
+          top1_connected_on S (subspace_topology X TX S) \<Longrightarrow> S \<subseteq> R1 \<or> S \<subseteq> R2 \<or> S \<subseteq> R3"
+      and "R1 \<inter> R2 = {}" "R2 \<inter> R3 = {}" "R1 \<inter> R3 = {}"
+  shows "D' = W"
+proof -
+  from assms(9)[OF assms(1,2,3)]
+  have "W \<subseteq> R1 \<or> W \<subseteq> R2 \<or> W \<subseteq> R3" .
+  then obtain Ri_W where "Ri_W \<in> {R1,R2,R3}" "W \<subseteq> Ri_W" by (by100 blast)
+  have "D' \<subseteq> Ri_W" using assms(4) \<open>W \<subseteq> Ri_W\<close> by (by100 blast)
+  have "Ri_D = D'" using assms(6,7) by (by100 blast)
+  have "Ri_D \<subseteq> Ri_W" using \<open>D' \<subseteq> Ri_W\<close> \<open>Ri_D = D'\<close> by (by100 blast)
+  have "Ri_W = Ri_D"
+  proof (rule ccontr)
+    assume "Ri_W \<noteq> Ri_D"
+    hence "Ri_W \<inter> Ri_D = {}" using \<open>Ri_W \<in> _\<close> assms(8,10,11,12) by auto
+    hence "Ri_D = {}" using \<open>Ri_D \<subseteq> Ri_W\<close> by (by100 blast)
+    hence "D' = {}" using assms(6) by (by100 blast)
+    thus False using assms(5) by (by100 blast)
+  qed
+  hence "W \<subseteq> Ri_D" using \<open>W \<subseteq> Ri_W\<close> by (by100 blast)
+  hence "W \<subseteq> D'" using assms(7) by (by100 blast)
+  thus "D' = W" using assms(4) by (by100 blast)
+qed
+
 (** from \<S>65 Lemma 65.1(a): non-adjacent edges of K_4 in S^2 have interiors in
     different components of S^2 minus the complementary 4-cycle.
     Duplicated from the internal hdiff fact in Lemma_65_1_K4_subgraph (AlgTopCached.thy). **)
@@ -1922,11 +1953,112 @@ proof -
            Hence both = Rk. closure(Rk) = Rk\<union>J12 = Rk\<union>J13 \<Rightarrow> J12=J13 \<Rightarrow> Arc2=Arc3.\<close>
         \<comment> \<open>Q12 (other J12-side from D') \<subseteq> S2-theta, Q12=some Ri, Q12 \<noteq> Ri\_D, Q12 \<noteq> Ri\_e.\<close>
         have hQ12_sub_R: "\<exists>Q. Q \<in> {W12a, W12b} \<and> Q \<subseteq> R1 \<union> R2 \<union> R3 \<and> D' \<inter> Q = {} \<and> Q \<noteq> {}"
-          sorry \<comment> \<open>Arc3 same side as D' \<Rightarrow> other side has no theta intersection.\<close>
+        proof -
+          \<comment> \<open>Arc3-{a1,a2} in one of W12a/W12b (connected \<subseteq> S2-J12).\<close>
+          have hArc3_ne_loc: "Arc3 - {a1,a2} \<noteq> {}"
+            sorry \<comment> \<open>arc has interior points\<close>
+          have hArc3_in: "Arc3 - {a1,a2} \<subseteq> W12a \<or> Arc3 - {a1,a2} \<subseteq> W12b"
+            sorry \<comment> \<open>Lemma\_23\_2 on connected Arc3-{a1,a2} in W12a\<union>W12b\<close>
+          from hD'_in_W12 show ?thesis
+          proof (elim disjE)
+            assume hDa: "D' \<subseteq> W12a"
+            \<comment> \<open>If Arc3 \<subseteq> W12b: W12a \<inter> Arc3 = {}, so W12a \<subseteq> S2-theta.
+               Then D' = W12a by J\_component\_sub\_theta\_forces\_eq. Contradicts D' \<noteq> W12a.\<close>
+            have hArc3_W12a: "Arc3 - {a1,a2} \<subseteq> W12a"
+            proof (rule ccontr)
+              assume "\<not> ?thesis"
+              hence "Arc3 - {a1,a2} \<subseteq> W12b" using hArc3_in by (by100 blast)
+              hence "W12a \<inter> (Arc3 - {a1,a2}) = {}" using hW12(3) by (by100 blast)
+              moreover have "W12a \<inter> {a1,a2} = {}" using hW12(4) hint12 hint13 by (by100 blast)
+              ultimately have "W12a \<inter> Arc3 = {}" by (by100 blast)
+              hence "W12a \<subseteq> R1 \<union> R2 \<union> R3" using hW12(4) hR(7) by (by100 blast)
+              from J_component_sub_theta_forces_eq[OF this hW12(1,5) hDa hD'_ne
+                  hD'_sub_RiD hRiD_sub_D' hRiD hR_in_one hR(4,5,6)]
+              have "D' = W12a" .
+              thus False using \<open>D' \<noteq> W12a\<close> by (by100 blast)
+            qed
+            \<comment> \<open>Arc3 and D' on same side (W12a). Q12 = W12b.\<close>
+            have "W12b \<inter> (Arc3 - {a1,a2}) = {}" using hArc3_W12a hW12(3) by (by100 blast)
+            moreover have "W12b \<inter> {a1,a2} = {}" using hW12(4) hint12 hint13 by (by100 blast)
+            ultimately have "W12b \<inter> Arc3 = {}" by (by100 blast)
+            hence "W12b \<subseteq> R1 \<union> R2 \<union> R3" using hW12(4) hR(7) by (by100 blast)
+            moreover have "D' \<inter> W12b = {}" using hDa hW12(3) by (by100 blast)
+            ultimately show ?thesis using hW12(2) by (by100 blast)
+          next
+            assume hDb: "D' \<subseteq> W12b"
+            \<comment> \<open>Symmetric case.\<close>
+            have hArc3_W12b: "Arc3 - {a1,a2} \<subseteq> W12b"
+            proof (rule ccontr)
+              assume "\<not> ?thesis"
+              hence "Arc3 - {a1,a2} \<subseteq> W12a" using hArc3_in by (by100 blast)
+              hence "W12b \<inter> (Arc3 - {a1,a2}) = {}" using hW12(3) by (by100 blast)
+              moreover have "W12b \<inter> {a1,a2} = {}" using hW12(4) hint12 hint13 by (by100 blast)
+              ultimately have "W12b \<inter> Arc3 = {}" by (by100 blast)
+              hence "W12b \<subseteq> R1 \<union> R2 \<union> R3" using hW12(4) hR(7) by (by100 blast)
+              from J_component_sub_theta_forces_eq[OF this hW12(2,6) hDb hD'_ne
+                  hD'_sub_RiD hRiD_sub_D' hRiD hR_in_one hR(4,5,6)]
+              have "D' = W12b" .
+              thus False using \<open>D' \<noteq> W12b\<close> by (by100 blast)
+            qed
+            have "W12a \<inter> (Arc3 - {a1,a2}) = {}" using hArc3_W12b hW12(3) by (by100 blast)
+            moreover have "W12a \<inter> {a1,a2} = {}" using hW12(4) hint12 hint13 by (by100 blast)
+            ultimately have "W12a \<inter> Arc3 = {}" by (by100 blast)
+            hence "W12a \<subseteq> R1 \<union> R2 \<union> R3" using hW12(4) hR(7) by (by100 blast)
+            moreover have "D' \<inter> W12a = {}" using hDb hW12(3) by (by100 blast)
+            ultimately show ?thesis using hW12(1) by (by100 blast)
+          qed
+        qed
         then obtain Q12 where hQ12: "Q12 \<in> {W12a, W12b}" "Q12 \<subseteq> R1 \<union> R2 \<union> R3"
             "D' \<inter> Q12 = {}" "Q12 \<noteq> {}" by blast
         have hQ13_sub_R: "\<exists>Q. Q \<in> {W13a, W13b} \<and> Q \<subseteq> R1 \<union> R2 \<union> R3 \<and> D' \<inter> Q = {} \<and> Q \<noteq> {}"
-          sorry \<comment> \<open>Same for J13: Arc2 same side as D'.\<close>
+        proof -
+          have hArc2_ne_loc: "Arc2 - {a1,a2} \<noteq> {}"
+            sorry \<comment> \<open>arc has interior points\<close>
+          have hArc2_in: "Arc2 - {a1,a2} \<subseteq> W13a \<or> Arc2 - {a1,a2} \<subseteq> W13b"
+            sorry \<comment> \<open>Lemma\_23\_2\<close>
+          from hD'_in_W13 show ?thesis
+          proof (elim disjE)
+            assume hDa: "D' \<subseteq> W13a"
+            have "Arc2 - {a1,a2} \<subseteq> W13a"
+            proof (rule ccontr)
+              assume "\<not> ?thesis"
+              hence "Arc2 - {a1,a2} \<subseteq> W13b" using hArc2_in by (by100 blast)
+              hence "W13a \<inter> (Arc2 - {a1,a2}) = {}" using hW13(3) by (by100 blast)
+              moreover have "W13a \<inter> {a1,a2} = {}" using hW13(4) hint13 hint23 by (by100 blast)
+              ultimately have "W13a \<inter> Arc2 = {}" by (by100 blast)
+              hence "W13a \<subseteq> R1 \<union> R2 \<union> R3" using hW13(4) hR(7) by (by100 blast)
+              from J_component_sub_theta_forces_eq[OF this hW13(1,5) hDa hD'_ne
+                  hD'_sub_RiD hRiD_sub_D' hRiD hR_in_one hR(4,5,6)]
+              show False using J13_False by (by100 blast)
+            qed
+            have "W13b \<inter> (Arc2 - {a1,a2}) = {}" using \<open>Arc2 - {a1,a2} \<subseteq> W13a\<close> hW13(3) by (by100 blast)
+            moreover have "W13b \<inter> {a1,a2} = {}" using hW13(4) hint13 hint23 by (by100 blast)
+            ultimately have "W13b \<inter> Arc2 = {}" by (by100 blast)
+            hence "W13b \<subseteq> R1 \<union> R2 \<union> R3" using hW13(4) hR(7) by (by100 blast)
+            moreover have "D' \<inter> W13b = {}" using hDa hW13(3) by (by100 blast)
+            ultimately show ?thesis using hW13(2) by (by100 blast)
+          next
+            assume hDb: "D' \<subseteq> W13b"
+            have "Arc2 - {a1,a2} \<subseteq> W13b"
+            proof (rule ccontr)
+              assume "\<not> ?thesis"
+              hence "Arc2 - {a1,a2} \<subseteq> W13a" using hArc2_in by (by100 blast)
+              hence "W13b \<inter> (Arc2 - {a1,a2}) = {}" using hW13(3) by (by100 blast)
+              moreover have "W13b \<inter> {a1,a2} = {}" using hW13(4) hint13 hint23 by (by100 blast)
+              ultimately have "W13b \<inter> Arc2 = {}" by (by100 blast)
+              hence "W13b \<subseteq> R1 \<union> R2 \<union> R3" using hW13(4) hR(7) by (by100 blast)
+              from J_component_sub_theta_forces_eq[OF this hW13(2,6) hDb hD'_ne
+                  hD'_sub_RiD hRiD_sub_D' hRiD hR_in_one hR(4,5,6)]
+              show False using J13_False by (by100 blast)
+            qed
+            have "W13a \<inter> (Arc2 - {a1,a2}) = {}" using \<open>Arc2 - {a1,a2} \<subseteq> W13b\<close> hW13(3) by (by100 blast)
+            moreover have "W13a \<inter> {a1,a2} = {}" using hW13(4) hint13 hint23 by (by100 blast)
+            ultimately have "W13a \<inter> Arc2 = {}" by (by100 blast)
+            hence "W13a \<subseteq> R1 \<union> R2 \<union> R3" using hW13(4) hR(7) by (by100 blast)
+            moreover have "D' \<inter> W13a = {}" using hDb hW13(3) by (by100 blast)
+            ultimately show ?thesis using hW13(1) by (by100 blast)
+          qed
+        qed
         then obtain Q13 where hQ13: "Q13 \<in> {W13a, W13b}" "Q13 \<subseteq> R1 \<union> R2 \<union> R3"
             "D' \<inter> Q13 = {}" "Q13 \<noteq> {}" by blast
         \<comment> \<open>Q12 = some Ri (connected J12-component \<subseteq> R1\<union>R2\<union>R3).\<close>
