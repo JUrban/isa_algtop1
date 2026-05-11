@@ -1231,7 +1231,17 @@ proof -
     let ?j_star_x_lam = "top1_fundamental_group_induced_on C ?TC x ?X ?TX x (\<lambda>x. x)"
     have hj_star_x_class: "?j_star_x_lam {h. top1_loop_equiv_on C ?TC x g h} =
         {k. top1_loop_equiv_on ?X ?TX x g k}"
-      sorry \<comment> \<open>subspace\_inclusion\_induced\_class or inclusion\_induced\_class.\<close>
+    proof -
+      have hTC_eq: "subspace_topology ?X ?TX C = ?TC"
+        using subspace_topology_trans[of C ?X top1_S2 top1_S2_topology] hC_sub_X by (by100 simp)
+      have hg_loop_C': "top1_is_loop_on C (subspace_topology ?X ?TX C) x g"
+        using hg_loop_C hTC_eq by (by100 simp)
+      from subspace_inclusion_induced_class[OF hTX hC_sub_X hg_loop_C']
+      have "top1_fundamental_group_induced_on C (subspace_topology ?X ?TX C) x ?X ?TX x (\<lambda>x. x)
+          {k. top1_loop_equiv_on C (subspace_topology ?X ?TX C) x g k} =
+          {k. top1_loop_equiv_on ?X ?TX x g k}" .
+      thus ?thesis using hTC_eq by (by100 simp)
+    qed
     \<comment> \<open>Note: ?j\_star and ?j\_star\_x\_lam agree extensionally (id = \<lambda>x. x).\<close>
     \<comment> \<open>Every element of \<pi>_1(X,x) is a power of [g]\_X. Since each power lifts
        from C (g^n is a loop in C): j\_*\_x is surjective.\<close>
