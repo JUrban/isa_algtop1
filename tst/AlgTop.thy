@@ -2087,34 +2087,18 @@ proof -
     \<comment> \<open>The full chain is ~100 lines (following pi1\_S2\_minus\_two\_points\_infinite\_cyclic).
        Each step is a single lemma application.\<close>
     \<comment> \<open>Direct proof: compose homeomorphism\_iso + deformation\_retract\_iso + Theorem\_54\_5.\<close>
-    \<comment> \<open>Restriction of \<sigma> to X gives homeomorphism X \<rightarrow> R2-\{q'\}.\<close>
-    have h\<sigma>_restrict: "top1_homeomorphism_on ?X ?TX (UNIV - {q'})
-        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {q'})) \<sigma>"
-      sorry \<comment> \<open>Restriction of homeomorphism S2-\{p\} \<rightarrow> R2 to S2-\{p,q\} \<rightarrow> R2-\{q'\}.\<close>
-    \<comment> \<open>Translation t(x) = x - q' gives R2-\{q'\} \<cong> R2-\{0\}.\<close>
-    define t where "t = (\<lambda>x :: real \<times> real. (fst x - fst q', snd x - snd q'))"
-    have ht_homeo: "top1_homeomorphism_on (UNIV - {q'})
-        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {q'}))
-        R2_0 (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) R2_0)
-        t"
-      sorry \<comment> \<open>Translation by -q' is a homeomorphism.\<close>
-    \<comment> \<open>Compose: h = t \<circ> \<sigma>| gives X \<cong> R2-\{0\}.\<close>
-    define h where "h = t \<circ> \<sigma>"
+    \<comment> \<open>Compose: stereographic restriction + translation gives h: X \<cong> R2-\{0\}.\<close>
     define TR2_0 where "TR2_0 = subspace_topology UNIV
         (product_topology_on top1_open_sets top1_open_sets) R2_0"
-    have hh_homeo: "top1_homeomorphism_on ?X ?TX R2_0 TR2_0 h"
-      sorry \<comment> \<open>Composition of two homeomorphisms.\<close>
-    \<comment> \<open>By Corollary\_52\_5: \<pi>_1(X,c0) \<cong> \<pi>_1(R2-\{0\},h(c0)).\<close>
+    obtain h where hh_homeo: "top1_homeomorphism_on ?X ?TX R2_0 TR2_0 h"
+      sorry \<comment> \<open>From h\<sigma> (stereographic): restrict to S2-\{p,q\} \<rightarrow> R2-\{\<sigma>(q)\},
+         then translate by -\<sigma>(q) to get R2-\{0\}. Same as lines 2975-3370 of
+         pi1\_S2\_minus\_two\_points\_infinite\_cyclic.\<close>
     have hTR2: "is_topology_on R2_0 TR2_0"
-    proof -
-      have "is_topology_on (UNIV :: (real \<times> real) set)
-          (product_topology_on top1_open_sets top1_open_sets)"
-        sorry \<comment> \<open>R2 product topology. UNIV = UNIV \<times> UNIV for pairs.\<close>
-      thus ?thesis unfolding TR2_0_def R2_0_def
-        by (rule subspace_topology_is_topology_on) (by100 blast)
-    qed
+      using hh_homeo unfolding top1_homeomorphism_on_def top1_continuous_map_on_def
+        is_topology_on_def TR2_0_def by (by100 blast)
     have hhc0: "h c0 \<in> R2_0"
-      sorry \<comment> \<open>h maps c0 to R2-\{0\}.\<close>
+      using hh_homeo hc0_X unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
     have hiso_XR2: "top1_groups_isomorphic_on
         (top1_fundamental_group_carrier ?X ?TX c0)
         (top1_fundamental_group_mul ?X ?TX c0)
