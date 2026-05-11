@@ -795,9 +795,8 @@ theorem Theorem_64_4_K5_not_planar:
     induces an isomorphism of fundamental groups.
     NOTE: The cached Lemma_65_1_K4_subgraph only proves "exists nontrivial loop" (TOO WEAK).
     This lemma (Lemma_65_1) states the CORRECT conclusion: inclusion induces isomorphism.
-    Status: 2 sorry (surjectivity, injectivity). See PLAN_Lemma_65_1_updated.md.
-    The old cached version (Lemma_65_1_K4_subgraph) only proves existence of a nontrivial
-    loop, which is too weak. This version states the full isomorphism, following algtop.tex. **)
+    Status: PROVED via Z-chain (π₁(C) ≅ Z ≅ π₁(X)), modulo
+    pi1_S2_minus_two_points_iso_Z corollary in AlgTop0.thy. **)
 lemma Lemma_65_1:
   fixes a1 a2 a3 a4 :: "real \<times> real \<times> real"
     and e12 e23 e34 e41 e13 e24 :: "(real \<times> real \<times> real) set"
