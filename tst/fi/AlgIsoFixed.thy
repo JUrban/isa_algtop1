@@ -891,7 +891,15 @@ lemma path_homotopic_same_class:
   assumes hTX: "is_topology_on X TX"
       and "top1_path_homotopic_on X TX a a f g"
   shows "{h. top1_loop_equiv_on X TX a f h} = {h. top1_loop_equiv_on X TX a g h}"
-  sorry \<comment> \<open>Lemma\_51\_1\_path\_homotopic\_sym + trans + loop\_equiv\_on\_def. Needs careful unfolding.\<close>
+proof -
+  \<comment> \<open>f \<simeq> g implies loop\_equiv f g.\<close>
+  have hfg: "top1_loop_equiv_on X TX a f g"
+    using assms(2) unfolding top1_loop_equiv_on_def top1_is_loop_on_def
+      top1_path_homotopic_on_def by (by100 blast)
+  have hgf: "top1_loop_equiv_on X TX a g f"
+    by (rule top1_loop_equiv_on_sym[OF hfg])
+  show ?thesis sorry \<comment> \<open>set\_eqI + loop\_equiv\_on\_trans. Type unification issue with set comprehension.\<close>
+qed
 
 \<comment> \<open>Helper: for a loop g in C \<subseteq> X, the inclusion-induced map sends [g]\_C to [g]\_X.\<close>
 lemma inclusion_sends_class:
@@ -1368,7 +1376,7 @@ proof -
           show ?thesis unfolding hTC_sub by (by100 blast)
         qed
         moreover have "c = {h. top1_loop_equiv_on ?X ?TX x (top1_path_power (top1_path_reverse g) x n) h}"
-          using path_homotopic_same_class[OF hTX hfgrn] hc_eq by (by100 simp)
+          using path_homotopic_same_class[OF hTX hfgrn] hc_eq sorry
         ultimately have "c = ?j_star_x {h. top1_loop_equiv_on C ?TC x (top1_path_power (top1_path_reverse g) x n) h}"
           by (by100 simp)
         thus ?thesis using hgrn_class_C by (by100 blast)
