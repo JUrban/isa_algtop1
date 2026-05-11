@@ -1087,6 +1087,18 @@ proof -
   have he34_conn: "top1_connected_on (e34 - {a3, a4})
       (subspace_topology top1_S2 top1_S2_topology (e34 - {a3, a4}))"
     unfolding defs by (rule arc_minus_endpoints_connected[OF assms(1) hS2_haus assms(6,12,18) ha3_ne_a4])
+  have hAB_sub_S2: "A \<union> B \<subseteq> top1_S2" using assms(40) unfolding defs by (by100 blast)
+  have hA_open_S2: "A \<in> top1_S2_topology" sorry
+  have hB_open_S2: "B \<in> top1_S2_topology" sorry
+  have hTAB_loc: "is_topology_on (A \<union> B) (subspace_topology top1_S2 top1_S2_topology (A \<union> B))"
+    unfolding defs by (rule subspace_topology_is_topology_on[OF hTopS2]) (use hAB_sub_S2 in \<open>by100 blast\<close>)
+  have hA_open_AB: "A \<in> subspace_topology top1_S2 top1_S2_topology (A \<union> B)"
+    using hA_open_S2 unfolding subspace_topology_def by (by100 blast)
+  have hB_open_AB: "B \<in> subspace_topology top1_S2 top1_S2_topology (A \<union> B)"
+    using hB_open_S2 unfolding subspace_topology_def by (by100 blast)
+  have hAB_sep: "top1_is_separation_on (A \<union> B) (subspace_topology top1_S2 top1_S2_topology (A \<union> B)) A B"
+    unfolding top1_is_separation_on_def
+    using hA_open_AB hB_open_AB assms(37,38,39) by (by100 blast)
   \<comment> \<open>e34-{a3,a4} connected \<subseteq> R1\<union>R2\<union>R3 \<Rightarrow> in some Ri.\<close>
   have he34_in_Ri: "e34 - {a3, a4} \<subseteq> R1 \<or> e34 - {a3, a4} \<subseteq> R2 \<or> e34 - {a3, a4} \<subseteq> R3"
   proof -
@@ -1220,10 +1232,43 @@ proof -
     ultimately show ?thesis using hAB_is by (by100 simp)
   qed
   \<comment> \<open>Each Ri \<subseteq> A or B.\<close>
+  have hRi_sub_AB: "R1 \<union> R2 \<union> R3 \<subseteq> A \<union> B" using hAB_decomp by (by100 blast)
   have hRi_in_AB: "\<And>Ri. Ri \<in> {R1, R2, R3} \<Longrightarrow> Ri \<subseteq> A \<or> Ri \<subseteq> B"
-    sorry \<comment> \<open>Connected subset of separated A\<union>B. Same Lemma\_23\_2 argument.\<close>
-  \<comment> \<open>If both e12 and e34 in A: B = remaining Ri's → B has ≥2 disjoint nonempty connected pieces → not connected → contradiction.\<close>
-  show ?thesis sorry
+  proof -
+    fix Ri assume hRi: "Ri \<in> {R1, R2, R3}"
+    have hRi_sub: "Ri \<subseteq> A \<union> B" using hRi hRi_sub_AB by (by100 blast)
+    have hRi_conn: "top1_connected_on Ri (subspace_topology top1_S2 top1_S2_topology Ri)"
+      using hRi hR(8,9,10) by (by100 blast)
+    have hRi_conn_AB: "top1_connected_on Ri
+        (subspace_topology (A \<union> B) (subspace_topology top1_S2 top1_S2_topology (A \<union> B)) Ri)"
+    proof -
+      have "subspace_topology top1_S2 top1_S2_topology Ri =
+          subspace_topology (A \<union> B) (subspace_topology top1_S2 top1_S2_topology (A \<union> B)) Ri"
+        using subspace_topology_trans[of Ri "A \<union> B" top1_S2 top1_S2_topology]
+            hRi_sub by (by100 simp)
+      thus ?thesis using hRi_conn by (by100 simp)
+    qed
+    have "Ri \<inter> B = {} \<or> Ri \<inter> A = {}"
+      by (rule Lemma_23_2_disjoint[OF hTAB_loc hAB_sep hRi_sub hRi_conn_AB])
+    thus "Ri \<subseteq> A \<or> Ri \<subseteq> B"
+    proof
+      assume "Ri \<inter> B = {}" thus ?thesis using hRi_sub by (by100 blast)
+    next
+      assume "Ri \<inter> A = {}" thus ?thesis using hRi_sub by (by100 blast)
+    qed
+  qed
+  \<comment> \<open>Final: if both e12-{a1,a2} and e34-{a3,a4} in same component, contradiction.\<close>
+  show ?thesis
+  proof (intro conjI notI)
+    assume h: "e12 - {a1, a2} \<subseteq> A \<and> e34 - {a3, a4} \<subseteq> A"
+    \<comment> \<open>The Ri containing e34 is also \<subseteq> A. e12 \<inter> Ri = {}.
+       A \<supseteq> Ri \<union> (e12-{a1,a2}). B = rest of A\<union>B = other Ri's.
+       Other Ri's: 2 nonempty disjoint connected sets. B connected \<Rightarrow> B \<subseteq> one \<Rightarrow> other empty. Contradiction.\<close>
+    show False sorry
+  next
+    assume h: "e12 - {a1, a2} \<subseteq> B \<and> e34 - {a3, a4} \<subseteq> B"
+    show False sorry
+  qed
 qed
 
 (** from \<S>65 Lemma 65.1(b): for K_4 subspace of S^2, the inclusion j: C \<rightarrow> S^2-p-q
