@@ -1193,6 +1193,32 @@ proof -
      Since Ri is a component of S2-theta, and S2-D = (R1\<union>R2\<union>R3) \<union> (e12-{a1,a2}),
      the other components + e12 form the rest. A = Ri, B = rest (or swap).
      Hence e12 in B and e34 in A: different.\<close>
+  \<comment> \<open>S2-D = (R1\<union>R2\<union>R3) \<union> (e12-{a1,a2}).\<close>
+  have hAB_decomp: "A \<union> B = (R1 \<union> R2 \<union> R3) \<union> (e12 - {a1, a2})"
+  proof -
+    have hD_eq_theta: "D_loc = Arc2 \<union> Arc3" unfolding defs by (by100 blast)
+    have htheta_eq: "e12 \<union> Arc2 \<union> Arc3 = D_loc \<union> e12" unfolding defs by (by100 blast)
+    have hAB_is: "A \<union> B = top1_S2 - D_loc" using assms(40) unfolding defs by (by100 simp)
+    have "top1_S2 - D_loc = (top1_S2 - (D_loc \<union> e12)) \<union> (e12 - D_loc)"
+      unfolding defs using assms(4) by (by100 blast)
+    also have "top1_S2 - (D_loc \<union> e12) = top1_S2 - (e12 \<union> Arc2 \<union> Arc3)"
+      using htheta_eq by (by100 simp)
+    also have "\<dots> = R1 \<union> R2 \<union> R3" using hR(7) by (by100 simp)
+    finally have "top1_S2 - D_loc = (R1 \<union> R2 \<union> R3) \<union> (e12 - D_loc)" .
+    moreover have "e12 - D_loc = e12 - {a1, a2}"
+    proof -
+      have "e12 \<inter> D_loc = {a1, a2}"
+      proof -
+        have "e12 \<inter> e13 = {a1}" using assms(28) by (by100 blast)
+        moreover have "e12 \<inter> e23 = {a2}" using assms(24) by (by100 blast)
+        moreover have "e12 \<inter> e24 = {a2}" using assms(33) by (by100 blast)
+        moreover have "e12 \<inter> e41 = {a1}" using assms(27) by (by100 blast)
+        ultimately show ?thesis unfolding defs by (by100 blast)
+      qed
+      thus ?thesis using assms(4) unfolding defs by (by100 blast)
+    qed
+    ultimately show ?thesis using hAB_is by (by100 simp)
+  qed
   show ?thesis sorry
 qed
 
