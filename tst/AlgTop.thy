@@ -3267,10 +3267,8 @@ proof -
     qed
     have hS_preK: "S \<subseteq> ?preK" using hS_sub hK_cond by (by100 blast)
     have hpreK_subG: "?preK \<subseteq> G" by (by100 blast)
-    have "?preK \<in> {H. S \<subseteq> H \<and> H \<subseteq> G \<and> top1_is_group_on H mulG eG invgG}"
-      using hS_preK hpreK_subG hpreK_grp by (by100 blast)
-    hence "top1_subgroup_generated_on G mulG eG invgG S \<subseteq> ?preK"
-      unfolding top1_subgroup_generated_on_def by (by100 blast)
+    have "top1_subgroup_generated_on G mulG eG invgG S \<subseteq> ?preK"
+      by (rule subgroup_generated_minimal[OF hS_preK hpreK_subG hpreK_grp])
     hence "g \<in> ?preK" using hg hG_gen by (by100 blast)
     thus "\<phi> g \<in> K" by (by100 blast)
   qed
@@ -3360,10 +3358,8 @@ proof -
   \<comment> \<open>A \<subseteq> G.\<close>
   have hA_G: "?A \<subseteq> G" by (by100 blast)
   \<comment> \<open>G = \<langle>\<iota>(S)\<rangle> \<subseteq> A (since A is a subgroup containing \<iota>(S)).\<close>
-  have "?A \<in> {K. \<iota> ` S \<subseteq> K \<and> K \<subseteq> G \<and> top1_is_group_on K mul e invg}"
-    using hS_A hA_G hA_grp by (by100 blast)
-  hence "top1_subgroup_generated_on G mul e invg (\<iota> ` S) \<subseteq> ?A"
-    unfolding top1_subgroup_generated_on_def by (by100 blast)
+  have "top1_subgroup_generated_on G mul e invg (\<iota> ` S) \<subseteq> ?A"
+    by (rule subgroup_generated_minimal[OF hS_A hA_G hA_grp])
   hence "G \<subseteq> ?A" using hgen by (by100 simp)
   thus ?thesis by (by100 blast)
 qed
@@ -3613,9 +3609,16 @@ proof -
   have hiab: "invg (mul a b) \<in> G" using hG hab unfolding top1_is_group_on_def by (by100 blast)
   have hprod: "mul (invg b) (invg a) \<in> G" using hG hib hia unfolding top1_is_group_on_def by (by100 blast)
   \<comment> \<open>Compute (invg b \<cdot> invg a) \<cdot> (a \<cdot> b) step by step using right-to-left cancellation.\<close>
+  have hassoc: "\<And>x y z. x \<in> G \<Longrightarrow> y \<in> G \<Longrightarrow> z \<in> G \<Longrightarrow> mul (mul x y) z = mul x (mul y z)"
+    using hG unfolding top1_is_group_on_def by (by100 blast)
   have "mul (mul (invg b) (invg a)) (mul a b)
+      = mul (invg b) (mul (invg a) (mul a b))"
+    by (rule hassoc[OF hib hia hab])
+  also have "mul (invg a) (mul a b) = mul (mul (invg a) a) b"
+    by (rule hassoc[OF hia ha hb, symmetric])
+  finally have "mul (mul (invg b) (invg a)) (mul a b)
       = mul (invg b) (mul (mul (invg a) a) b)"
-    using hG hib hia ha hb unfolding top1_is_group_on_def by (by100 metis)
+    using hassoc[OF hib hia hab] hassoc[OF hia ha hb] by (by100 simp)
   also have "mul (invg a) a = e" using hG ha unfolding top1_is_group_on_def by (by100 blast)
   hence "mul (invg b) (mul (mul (invg a) a) b) = mul (invg b) (mul e b)"
     by (by100 simp)
@@ -3637,14 +3640,14 @@ proof -
       using hG hab unfolding top1_is_group_on_def by (by100 blast)
     have hassoc1: "mul (mul (mul (invg b) (invg a)) (mul a b)) (invg (mul a b))
         = mul (mul (invg b) (invg a)) (mul (mul a b) (invg (mul a b)))"
-      using hG hprod hab hiab unfolding top1_is_group_on_def by (by100 metis)
+      by (rule hassoc[OF hprod hab hiab])
     have hLHS: "mul (mul (mul (invg b) (invg a)) (mul a b)) (invg (mul a b))
         = mul (invg b) (invg a)"
       using hassoc1 hcancel_ab hG hprod unfolding top1_is_group_on_def by (by100 simp)
     \<comment> \<open>RHS: similarly invg(a\<cdot>b).\<close>
     have hassoc2: "mul (mul (invg (mul a b)) (mul a b)) (invg (mul a b))
         = mul (invg (mul a b)) (mul (mul a b) (invg (mul a b)))"
-      using hG hiab hab unfolding top1_is_group_on_def by (by100 metis)
+      by (rule hassoc[OF hiab hab hiab])
     have hRHS: "mul (mul (invg (mul a b)) (mul a b)) (invg (mul a b))
         = invg (mul a b)"
       using hassoc2 hcancel_ab hG hiab unfolding top1_is_group_on_def by (by100 simp)
