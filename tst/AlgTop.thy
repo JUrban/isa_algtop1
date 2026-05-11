@@ -1030,7 +1030,30 @@ proof -
     using Lemma_64_1_theta_space_three_components[OF assms(1) assms(4) hArc2_sub hArc3_sub
         assms(10) hArc2_arc hArc3_arc ha1_ne_a2 hint12 hint23 hint13 assms(16) hArc2_ep hArc3_ep]
     by (metis (no_types))
-  \<comment> \<open>Step 3-5: e34 in one R-component, e12 NOT in it, that component = A or B.\<close>
+  \<comment> \<open>Step 3: e34-{a3,a4} \<subseteq> S2-theta, hence in some Ri.\<close>
+  have he34_theta: "e34 - {a3, a4} \<subseteq> top1_S2 - (e12 \<union> ?Arc2 \<union> ?Arc3)"
+    sorry \<comment> \<open>K4 intersection: e34 avoids e12, e13, e23, e24, e41 except at endpoints.\<close>
+  have he34_ne: "e34 - {a3, a4} \<noteq> {}" sorry
+  have he34_conn: "top1_connected_on (e34 - {a3, a4})
+      (subspace_topology top1_S2 top1_S2_topology (e34 - {a3, a4}))"
+    by (rule arc_minus_endpoints_connected[OF assms(1) hS2_haus assms(6,12,18) ha3_ne_a4])
+  \<comment> \<open>e34-{a3,a4} connected \<subseteq> R1\<union>R2\<union>R3 \<Rightarrow> in some Ri.\<close>
+  have he34_in_Ri: "e34 - {a3, a4} \<subseteq> R1 \<or> e34 - {a3, a4} \<subseteq> R2 \<or> e34 - {a3, a4} \<subseteq> R3"
+    sorry \<comment> \<open>Lemma\_23\_2 twice on the 3-component separation.\<close>
+  \<comment> \<open>Step 4: e12-{a1,a2} is on the theta space, hence NOT in any Ri.\<close>
+  have he12_on_theta: "e12 - {a1, a2} \<subseteq> e12 \<union> ?Arc2 \<union> ?Arc3" by (by100 blast)
+  have he12_not_Ri: "e12 - {a1, a2} \<inter> (R1 \<union> R2 \<union> R3) = {}"
+    sorry \<comment> \<open>e12 \<subseteq> theta, Ri = S2-theta, hence disjoint. by100 too tight.\<close>
+  \<comment> \<open>Step 5: Each Ri \<subseteq> A\<union>B (since Ri \<subseteq> S2-theta \<subseteq> S2-D = A\<union>B).
+     The Ri containing e34 \<subseteq> A or B. e12 NOT in that Ri.
+     e12-{a1,a2} \<subseteq> A\<union>B (from hint\_e12\_sub in Lemma\_65\_1 proof).
+     If e34 Ri \<subseteq> A, then e12 must avoid A? No — e12 could still be in A via another Ri.
+     The KEY: e12 is not in ANY Ri, so e12 is NOT in S2-theta.
+     But e12-{a1,a2} IS in A\<union>B = S2-D. And S2-D = (S2-theta) \<union> (e12-{a1,a2}).
+     So if e34 \<subseteq> Ri \<subseteq> A, then e12-{a1,a2} \<subseteq> S2-D - Ri.
+     Since Ri is a component of S2-theta, and S2-D = (R1\<union>R2\<union>R3) \<union> (e12-{a1,a2}),
+     the other components + e12 form the rest. A = Ri, B = rest (or swap).
+     Hence e12 in B and e34 in A: different.\<close>
   show ?thesis sorry
 qed
 
