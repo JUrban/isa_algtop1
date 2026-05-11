@@ -2086,8 +2086,87 @@ proof -
        \<cong> \<pi>_1(R2-\{0\}, \<sigma>(c0)-q') \<cong> \<pi>_1(S1, ?) \<cong> Z.\<close>
     \<comment> \<open>The full chain is ~100 lines (following pi1\_S2\_minus\_two\_points\_infinite\_cyclic).
        Each step is a single lemma application.\<close>
+    \<comment> \<open>Direct proof: compose homeomorphism\_iso + deformation\_retract\_iso + Theorem\_54\_5.\<close>
+    \<comment> \<open>Restriction of \<sigma> to X gives homeomorphism X \<rightarrow> R2-\{q'\}.\<close>
+    have h\<sigma>_restrict: "top1_homeomorphism_on ?X ?TX (UNIV - {q'})
+        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {q'})) \<sigma>"
+      sorry \<comment> \<open>Restriction of homeomorphism S2-\{p\} \<rightarrow> R2 to S2-\{p,q\} \<rightarrow> R2-\{q'\}.\<close>
+    \<comment> \<open>Translation t(x) = x - q' gives R2-\{q'\} \<cong> R2-\{0\}.\<close>
+    define t where "t = (\<lambda>x :: real \<times> real. (fst x - fst q', snd x - snd q'))"
+    have ht_homeo: "top1_homeomorphism_on (UNIV - {q'})
+        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {q'}))
+        R2_0 (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) R2_0)
+        t"
+      sorry \<comment> \<open>Translation by -q' is a homeomorphism.\<close>
+    \<comment> \<open>Compose: h = t \<circ> \<sigma>| gives X \<cong> R2-\{0\}.\<close>
+    define h where "h = t \<circ> \<sigma>"
+    define TR2_0 where "TR2_0 = subspace_topology UNIV
+        (product_topology_on top1_open_sets top1_open_sets) R2_0"
+    have hh_homeo: "top1_homeomorphism_on ?X ?TX R2_0 TR2_0 h"
+      sorry \<comment> \<open>Composition of two homeomorphisms.\<close>
+    \<comment> \<open>By Corollary\_52\_5: \<pi>_1(X,c0) \<cong> \<pi>_1(R2-\{0\},h(c0)).\<close>
+    have hTR2: "is_topology_on R2_0 TR2_0"
+      sorry \<comment> \<open>Subspace of R2.\<close>
+    have hhc0: "h c0 \<in> R2_0"
+      sorry \<comment> \<open>h maps c0 to R2-\{0\}.\<close>
+    have hiso_XR2: "top1_groups_isomorphic_on
+        (top1_fundamental_group_carrier ?X ?TX c0)
+        (top1_fundamental_group_mul ?X ?TX c0)
+        (top1_fundamental_group_carrier R2_0 TR2_0 (h c0))
+        (top1_fundamental_group_mul R2_0 TR2_0 (h c0))"
+      by (rule Corollary_52_5_homeomorphism_iso[OF hTX hTR2 hh_homeo hc0_X])
+         (by100 simp)
+    \<comment> \<open>Basepoint change in R2-\{0\}: h(c0) \<rightarrow> (1,0).\<close>
+    have h10_R2: "(1::real, 0::real) \<in> R2_0" unfolding R2_0_def by (by100 simp)
+    have hR2_pc: "top1_path_connected_on R2_0 TR2_0"
+      unfolding R2_0_def TR2_0_def using R2_minus_point_path_connected[of "(0,0)"] by (by100 simp)
+    obtain \<gamma>R where h\<gamma>R: "top1_is_path_on R2_0 TR2_0 (h c0) (1, 0) \<gamma>R"
+      using hR2_pc hhc0 h10_R2 unfolding top1_path_connected_on_def by (by100 blast)
+    have hiso_R2bp: "top1_groups_isomorphic_on
+        (top1_fundamental_group_carrier R2_0 TR2_0 (h c0))
+        (top1_fundamental_group_mul R2_0 TR2_0 (h c0))
+        (top1_fundamental_group_carrier R2_0 TR2_0 (1, 0))
+        (top1_fundamental_group_mul R2_0 TR2_0 (1, 0))"
+      by (rule basepoint_change_iso_via_path[OF hTR2 h\<gamma>R])
+    \<comment> \<open>Deformation retract: \<pi>_1(R2-\{0\},(1,0)) \<cong> \<pi>_1(S1,(1,0)).\<close>
+    have hiso_R2S1: "top1_groups_isomorphic_on
+        (top1_fundamental_group_carrier top1_S1
+          (subspace_topology R2_0 TR2_0 top1_S1) (1, 0))
+        (top1_fundamental_group_mul top1_S1
+          (subspace_topology R2_0 TR2_0 top1_S1) (1, 0))
+        (top1_fundamental_group_carrier R2_0 TR2_0 (1, 0))
+        (top1_fundamental_group_mul R2_0 TR2_0 (1, 0))"
+      sorry \<comment> \<open>Theorem\_58\_3 + S1\_deformation\_retract\_B2\_minus\_zero (topology matching).\<close>
+    \<comment> \<open>Subspace topology S1 in R2-\{0\} = S1\_topology.\<close>
+    have hS1_sub: "subspace_topology R2_0 TR2_0 top1_S1 = top1_S1_topology"
+      sorry \<comment> \<open>S1 \<subseteq> R2-\{0\}, subspace of subspace = subspace of ambient.\<close>
+    have hiso_S1Z: "top1_groups_isomorphic_on
+        (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
+        (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))
+        top1_Z_group top1_Z_mul"
+      by (rule Theorem_54_5_iso)
+    \<comment> \<open>Compose all steps.\<close>
+    have h_chain1: "top1_groups_isomorphic_on
+        (top1_fundamental_group_carrier ?X ?TX c0)
+        (top1_fundamental_group_mul ?X ?TX c0)
+        (top1_fundamental_group_carrier R2_0 TR2_0 (1, 0))
+        (top1_fundamental_group_mul R2_0 TR2_0 (1, 0))"
+      by (rule groups_isomorphic_trans_fwd[OF hiso_XR2 hiso_R2bp])
+    have hiso_R2S1': "top1_groups_isomorphic_on
+        (top1_fundamental_group_carrier R2_0 TR2_0 (1, 0))
+        (top1_fundamental_group_mul R2_0 TR2_0 (1, 0))
+        (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
+        (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))"
+      sorry \<comment> \<open>Symmetry of hiso\_R2S1 after hS1\_sub substitution.
+         Needs top1\_groups\_isomorphic\_on\_sym + group facts.\<close>
+    have h_chain2: "top1_groups_isomorphic_on
+        (top1_fundamental_group_carrier ?X ?TX c0)
+        (top1_fundamental_group_mul ?X ?TX c0)
+        (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
+        (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))"
+      by (rule groups_isomorphic_trans_fwd[OF h_chain1 hiso_R2S1'])
     show ?thesis
-      by (rule pi1_S2_minus_two_points_iso_Z[OF assms(1) hp_S2 hq_S2 hp_ne_q hc0_X])
+      by (rule groups_isomorphic_trans_fwd[OF h_chain2 hiso_S1Z])
   qed
   \<comment> \<open>Step 5c: \<pi>_1(C, c0) \<cong> \<pi>_1(X, c0) by transitivity through Z.\<close>
   have hX_pi1_Z_sym: "top1_groups_isomorphic_on
