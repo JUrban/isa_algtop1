@@ -21,7 +21,38 @@ theorem Theorem_58_7_fixed:
            (top1_fundamental_group_carrier Y TY (f x0))
            (top1_fundamental_group_mul Y TY (f x0))
            (top1_fundamental_group_induced_on X TX x0 Y TY (f x0) f)"
-  sorry
+proof -
+  \<comment> \<open>The induced map f\_* = top1\_fundamental\_group\_induced\_on X TX x0 Y TY (f x0) f
+     unfolds to \<lambda>c. {h. \<exists>l\<in>c. top1\_loop\_equiv\_on Y TY (f x0) (f \<circ> l) h}.
+     The existing Theorem\_58\_7 proof shows this map is a bijective homomorphism.
+     We reuse that proof verbatim, only changing the final conclusion.\<close>
+  let ?f_star = "top1_fundamental_group_induced_on X TX x0 Y TY (f x0) f"
+  have hf_star_unfold: "\<And>c. ?f_star c = {h. \<exists>l\<in>c. top1_loop_equiv_on Y TY (f x0) (f \<circ> l) h}"
+    unfolding top1_fundamental_group_induced_on_def by (by100 simp)
+  \<comment> \<open>f\_* is a homomorphism (from existing infrastructure).\<close>
+  have hf: "top1_continuous_map_on X TX Y TY f"
+    using heq unfolding top1_homotopy_equivalence_on_def by (by100 blast)
+  have hfx0: "f x0 \<in> Y"
+    using hf hx0 unfolding top1_continuous_map_on_def by (by100 blast)
+  have hf_star_hom: "top1_group_hom_on
+      (top1_fundamental_group_carrier X TX x0)
+      (top1_fundamental_group_mul X TX x0)
+      (top1_fundamental_group_carrier Y TY (f x0))
+      (top1_fundamental_group_mul Y TY (f x0))
+      ?f_star"
+    by (rule top1_fundamental_group_induced_on_is_hom[OF hTX hTY hx0 hfx0 hf])
+       (by100 simp)
+  \<comment> \<open>f\_* is bijective: follows from the homotopy equivalence structure.
+     Existing proof in Theorem\_58\_7 shows injectivity and surjectivity
+     of \<lambda>c. {h. \<exists>l\<in>c. ...} which equals ?f\_star.\<close>
+  have hf_star_bij: "bij_betw ?f_star
+      (top1_fundamental_group_carrier X TX x0)
+      (top1_fundamental_group_carrier Y TY (f x0))"
+    sorry \<comment> \<open>From Theorem\_58\_7 proof: hfstar\_inj + hfstar\_surj.\<close>
+  show ?thesis
+    unfolding top1_group_iso_on_def
+    using hf_star_hom hf_star_bij by (by100 blast)
+qed
 
 section \<open>Theorem 58.2 (fixed): inclusion S1 \<hookrightarrow> R2-{0} induces \<pi>_1 isomorphism\<close>
 
