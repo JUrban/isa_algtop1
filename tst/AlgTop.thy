@@ -1,112 +1,11 @@
 theory AlgTop
   imports "AlgTopC.AlgTopCached"
 begin
-text \<open>When X = U \<union> V with U, V simply connected and U \<inter> V having two components,
-  and \<alpha>*\<beta> is nontrivial (from 63.1), then [\<alpha>*\<beta>] generates \<pi>_1(X).
-  This combines loop\_subdivision\_UV, simply connected contraction,
-  and Theorem\_63\_1\_c\_subgroups\_trivial.\<close>
-lemma generator_from_63_1_simply_connected:
-  assumes "is_topology_on X TX"
-      and "openin_on X TX U" and "openin_on X TX V" and "U \<union> V = X"
-      and "U \<inter> V = A \<union> B" and "A \<inter> B = {}"
-      and "openin_on X TX A" and "openin_on X TX B"
-      and "a \<in> A" and "b \<in> B"
-      and "top1_is_path_on U (subspace_topology X TX U) a b \<alpha>"
-      and "top1_is_path_on V (subspace_topology X TX V) b a \<beta>"
-      and "\<not> top1_path_homotopic_on X TX a a (top1_path_product \<alpha> \<beta>) (top1_constant_path a)"
-      and "top1_simply_connected_on U (subspace_topology X TX U)"
-      and "top1_simply_connected_on V (subspace_topology X TX V)"
-  shows "\<forall>f. top1_is_loop_on X TX a f \<longrightarrow>
-    (\<exists>n::nat. top1_path_homotopic_on X TX a a f (top1_path_power (top1_path_product \<alpha> \<beta>) a n)
-      \<or> top1_path_homotopic_on X TX a a f
-           (top1_path_power (top1_path_reverse (top1_path_product \<alpha> \<beta>)) a n))"
-proof (intro allI impI)
-  fix f assume hf: "top1_is_loop_on X TX a f"
-  have hTX_top: "is_topology_on X TX" by (rule assms(1))
-  \<comment> \<open>Step 1: Subdivide f into pieces in U or V.\<close>
-  obtain n sub where hn: "n \<ge> 1" and hsub0: "sub 0 = 0" and hsubn: "sub n = 1"
-      and hsubinc: "\<forall>i<n. sub i < sub (Suc i)"
-      and hpieces: "\<forall>i<n. (\<forall>t. 0\<le>t \<and> t\<le>1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> U)
-             \<or> (\<forall>t. 0\<le>t \<and> t\<le>1 \<longrightarrow> f (sub i + t * (sub (Suc i) - sub i)) \<in> V)"
-    using loop_subdivision_UV[OF assms(1,2,3,4) hf] by blast
-  \<comment> \<open>Step 2: Each subdivision point f(sub i) is in U\<inter>V = A\<union>B (for 0 < i < n).
-     Actually f(sub 0) = f(0) = a \<in> A, f(sub n) = f(1) = a \<in> A.
-     For intermediate points: if piece i is in U and piece i+1 is in V (or vice versa),
-     then f(sub(i+1)) \<in> U \<inter> V = A \<union> B.\<close>
-  \<comment> \<open>Step 3: Key insight. Since U and V are simply connected, any two paths
-     between the same endpoints within U (or V) are homotopic.
-     So each piece can be replaced by a canonical path.
-     For pieces from a point in A to a point in A within U: the piece is a
-     63.1 A-pair, which is trivial (by 63.1(c) + \<pi>_1(X) \<cong> Z argument).
-     For pieces from A to B within U: homotopic (in U) to \<alpha>.
-     For pieces from B to A within V: homotopic (in V) to \<beta>.
-     After replacement: f \<cong> (\<alpha>*\<beta>)^k for some k.\<close>
-  \<comment> \<open>This is a version of SvK for disconnected U\<inter>V with simply connected regions.
-     The full formalization requires tracking component membership of subdivision
-     points and doing path algebra. We use the algebraic consequence of 63.1(c):
-     all A-pairs are trivial, so the only surviving contribution is [\<alpha>*\<beta>].\<close>
-  \<comment> \<open>By Theorem 51.3: f \<cong> f_1 * f_2 * ... * f_n where f_i are the subdivision pieces.\<close>
-  have hf_path: "top1_is_path_on X TX a a f"
-    using hf unfolding top1_is_loop_on_def by (by100 blast)
-  have hf_decomp: "top1_path_homotopic_on X TX a a f
-      (foldr top1_path_product
-        (map (\<lambda>i t. f (sub i + t * (sub (Suc i) - sub i))) [0..<n])
-        (top1_constant_path a))"
-    using Theorem_51_3_aux[OF assms(1) hf_path hn hsub0 hsubn]
-    using hsubinc by blast
-  \<comment> \<open>Each piece f_i lies in U or V (from hpieces).
-     Each piece's endpoints are in X; consecutive endpoint sharing gives
-     the intermediate points in U\<inter>V when regions change.
+text \<open>generator\_from\_63\_1\_simply\_connected was here but is now replaced by
+  Theorem\_63\_1\_b\_generation which uses helix covering + \<pi>_1(X) infinite cyclic.\<close>
 
-     Key claim: the product of pieces is homotopic to (\<alpha>*\<beta>)^k for some k.
-
-     Argument by induction on n (number of pieces):
-     - Each piece from p to q in U is homotopic (in U) to any other path p\<rightarrow>q in U
-       (U simply connected).
-     - If p, q in same component (both A or both B): the piece is a 63.1 pair
-       component, which is trivial in \<pi>_1(X) (from 63.1(c) + Z structure).
-     - If p \<in> A, q \<in> B: piece homotopic to \<alpha> (in U).
-     - If p \<in> B, q \<in> A: piece homotopic to \<beta>^{-1} ... wait, wrong direction.
-
-     After cancellation of trivial pairs and pairing of crossings:
-     f \<cong> (\<alpha>*\<beta>)^k or (\<alpha>*\<beta>)^{-k}.
-
-     This is the core of the SvK argument for disconnected intersections.
-     Full formalization requires ~200 lines of path algebra with induction.\<close>
-  \<comment> \<open>Key sub-claim: in \<pi>_1(X) \<cong> Z, 63.1 A-pairs are trivial.
-     For any a' \<in> A, \<gamma>: a\<rightarrow>a' in U, \<delta>: a'\<rightarrow>a in V: [\<gamma>*\<delta>] = 0.
-     Proof: [\<gamma>*\<delta>] = gen^j. If j \<noteq> 0: take m=j, k=n in 63.1(c):
-     gen^{nj} = gen^{jn}, so (\<alpha>*\<beta>)^j \<cong> (\<gamma>*\<delta>)^n. By 63.1(c): j=0. Contradiction.
-     This step needs \<pi>_1(X) to be infinite cyclic, which is given by assms.\<close>
-  \<comment> \<open>Main conclusion: from the decomposition hf\_decomp + the sub-claim +
-     U, V simply connected, every loop f at a is a power of [\<alpha>*\<beta>].
-     This is a version of SvK for disconnected intersections.
-     Full formalization requires: (1) tracking component membership of
-     subdivision points, (2) replacing each piece by canonical path using
-     simple connectivity, (3) cancelling same-component pieces using the
-     sub-claim, (4) pairing crossings to get (\<alpha>*\<beta>) factors.
-     Each step uses path algebra infrastructure from Top1\_Ch9\_13 + AlgTopCached.\<close>
-  show "\<exists>n::nat. top1_path_homotopic_on X TX a a f (top1_path_power (top1_path_product \<alpha> \<beta>) a n)
-      \<or> top1_path_homotopic_on X TX a a f
-           (top1_path_power (top1_path_reverse (top1_path_product \<alpha> \<beta>)) a n)"
-    sorry \<comment> \<open>SvK for disconnected U\<inter>V with simply connected regions.
-       All mathematical ingredients available: loop\_subdivision\_UV, Theorem\_51\_3\_aux,
-       simply\_connected\_paths\_homotopic, Theorem\_63\_1\_c\_subgroups\_trivial.
-       The formalization requires ~200 lines of path algebra with subdivision tracking.\<close>
-qed
-
-text \<open>S2 minus an arc is simply connected. Standard fact:
-  S2-{p} is homeomorphic to R2 via stereographic projection, and R2 minus
-  a compact arc is simply connected.\<close>
-lemma S2_minus_arc_simply_connected:
-  assumes "is_topology_on_strict top1_S2 top1_S2_topology"
-      and "D \<subseteq> top1_S2"
-      and "top1_is_arc_on D (subspace_topology top1_S2 top1_S2_topology D)"
-  shows "top1_simply_connected_on (top1_S2 - D)
-           (subspace_topology top1_S2 top1_S2_topology (top1_S2 - D))"
-  sorry \<comment> \<open>Proof: pick p in int(D). S2-{p} homeomorphic to R2 (S2\_minus\_point\_homeo\_R2).
-     Under this homeomorphism, D-{p} maps to a compact connected set with empty
-     interior in R2. R2 minus such a set is simply connected.\<close>
+text \<open>S2\_minus\_arc\_simply\_connected was here. It was used in the old generator
+  approach but is no longer needed (Theorem\_63\_1\_b\_generation uses helix instead).\<close>
 
 text \<open>Helix shift lemmas (helix\_shift\_continuous, helix\_shift\_general\_continuous)
   are now in AlgTopCached. They show that T(x,n) = (x, n+2j) is continuous on E
