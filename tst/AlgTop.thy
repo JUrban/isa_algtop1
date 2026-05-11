@@ -767,29 +767,6 @@ proof -
   qed
 qed
 
-\<comment> \<open>Helper for K33: closure of a theta component w.r.t. two bounding arcs.
-   If U is a connected component of S2-(A\<union>B\<union>CC), and A\<union>B is SCC,
-   and CC-{a,b} is in a DIFFERENT S2-(A\<union>B) component from U,
-   then closure(U) \<subseteq> U \<union> A \<union> B (closure doesn't reach CC interior).
-   This is equivalent to Munkres Lemma 64.1 boundary structure.\<close>
-lemma theta_component_closure_sub_two_arcs:
-  assumes hS2: "is_topology_on_strict top1_S2 top1_S2_topology"
-      and "A \<subseteq> top1_S2" "B \<subseteq> top1_S2" "CC \<subseteq> top1_S2"
-      and "top1_is_arc_on A (subspace_topology top1_S2 top1_S2_topology A)"
-      and "top1_is_arc_on B (subspace_topology top1_S2 top1_S2_topology B)"
-      and "top1_is_arc_on CC (subspace_topology top1_S2 top1_S2_topology CC)"
-      and "a \<noteq> b" "A \<inter> B = {a, b}" "B \<inter> CC = {a, b}" "A \<inter> CC = {a, b}"
-      and "top1_arc_endpoints_on A (subspace_topology top1_S2 top1_S2_topology A) = {a, b}"
-      and "top1_arc_endpoints_on B (subspace_topology top1_S2 top1_S2_topology B) = {a, b}"
-      and "top1_arc_endpoints_on CC (subspace_topology top1_S2 top1_S2_topology CC) = {a, b}"
-      \<comment> \<open>U is one of the 3 theta components.\<close>
-      and "U \<noteq> {}" "U \<in> top1_S2_topology"
-      and "U \<subseteq> top1_S2 - (A \<union> B \<union> CC)"
-      and "top1_connected_on U (subspace_topology top1_S2 top1_S2_topology U)"
-      \<comment> \<open>U is separated from CC by the SCC A\<union>B: U and CC-{a,b} in different components.\<close>
-      and "U \<inter> closure_on top1_S2 top1_S2_topology (CC - {a, b}) = {}"
-  shows "closure_on top1_S2 top1_S2_topology U \<subseteq> U \<union> A \<union> B"
-  sorry
 
 text \<open>Theorem 64.2: The utilities graph K33 cannot be imbedded in the plane.\<close>
 
@@ -1088,21 +1065,15 @@ proof -
     ultimately show ?thesis using hh_ne(3,4) by (by100 blast)
   qed
   \<comment> \<open>Separation of S2-theta into U\<union>V\<union>W.\<close>
-  have hTtheta: "is_topology_on (top1_S2 - (A\<union>B\<union>CC))
-      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (A\<union>B\<union>CC)))"
-    sorry \<comment> \<open>subspace topology on open set\<close>
-  have hSep_UV_W: "top1_is_separation_on (top1_S2 - (A\<union>B\<union>CC))
-      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (A\<union>B\<union>CC))) U (V \<union> W)"
-    sorry \<comment> \<open>U is separated from V\<union>W (both open in S2-theta)\<close>
-  \<comment> \<open>e \<notin> U: if e \<in> U then eh3-{h3} \<subseteq> U (connected subset of S2-theta meeting U),
-     and h3 \<in> closure(eh3-{h3}) \<subseteq> closure(U). By SCCBMC closure(U) \<subseteq> U\<union>A\<union>B.
-     But h3 \<notin> U\<union>A\<union>B. Contradiction.\<close>
+  \<comment> \<open>e \<notin> U: boundary(U) = A\<union>B (Lemma 64.1). eh3-{h3} \<subseteq> U (Lemma\_23\_2),
+     h3 \<in> cl(eh3-{h3}) \<subseteq> cl(U) = U\<union>A\<union>B. h3\<notin>A\<union>B (hh3\_not\_AB). h3\<notin>U. Contradiction.
+     Boundary identification requires SCCBMC on SCC A\<union>B via K4-style argument.\<close>
   have "e \<notin> U"
-    sorry \<comment> \<open>Boundary argument: closure(U) hits A\<union>B but not CC, h3 \<in> CC.\<close>
+    sorry \<comment> \<open>SCCBMC closure argument: U is S2-(A\<union>B) component, cl(U)=U\<union>A\<union>B, h3\<notin>A\<union>B.\<close>
   moreover have "e \<notin> V"
-    sorry \<comment> \<open>Symmetric: closure(V) \<subseteq> V\<union>B\<union>CC, h1 \<notin> B\<union>CC.\<close>
+    sorry \<comment> \<open>Symmetric with SCC B\<union>CC: cl(V)=V\<union>B\<union>CC, h1\<notin>B\<union>CC.\<close>
   moreover have "e \<notin> W"
-    sorry \<comment> \<open>Symmetric: closure(W) \<subseteq> W\<union>A\<union>CC, h2 \<notin> A\<union>CC.\<close>
+    sorry \<comment> \<open>Symmetric with SCC A\<union>CC: cl(W)=W\<union>A\<union>CC, h2\<notin>A\<union>CC.\<close>
   ultimately show False using \<open>e \<in> U \<union> V \<union> W\<close> by (by100 blast)
 qed
 
