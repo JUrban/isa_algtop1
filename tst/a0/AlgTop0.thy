@@ -4012,11 +4012,27 @@ corollary pi1_S2_minus_two_points_iso_Z:
       (top1_fundamental_group_mul (top1_S2 - {p} - {q})
         (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p} - {q})) a)
       top1_Z_group top1_Z_mul"
-  sorry \<comment> \<open>Same proof as pi1\_S2\_minus\_two\_points\_infinite\_cyclic:
-     the Z-isomorphism \<psi> is constructed internally (lines 3520-3534)
-     from the chain S2-\{p\} \<cong> R2, R2-\{q'\} \<cong> R2-\{0\}, S1 deformation
-     retract of R2-\{0\}, and \<pi>_1(S1) \<cong> Z.
-     The proof exports \<exists>f. group\_iso\_on ... f which is groups\_isomorphic\_on.\<close>
+proof -
+  let ?X = "top1_S2 - {p} - {q}"
+  let ?TX = "subspace_topology top1_S2 top1_S2_topology ?X"
+  \<comment> \<open>Chain: \<pi>_1(X, a) \<cong> \<pi>_1(R2-\{0\}, ?) \<cong> \<pi>_1(S1, ?) \<cong> Z.\<close>
+  \<comment> \<open>Step 1: S2-\{p\} \<cong> R2 via stereographic.\<close>
+  obtain \<sigma> where h\<sigma>: "top1_homeomorphism_on (top1_S2 - {p})
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p}))
+      (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets) \<sigma>"
+    using S2_minus_point_homeo_R2[OF assms(2)] by blast
+  \<comment> \<open>Steps 2-4: Restrict + translate to get X \<cong> R2-\{0\}.\<close>
+  \<comment> \<open>Step 5: \<pi>_1(X, a) \<cong> \<pi>_1(R2-\{0\}, h(a)) by Corollary\_52\_5.\<close>
+  \<comment> \<open>Step 6: Basepoint change in R2-\{0\}.\<close>
+  \<comment> \<open>Step 7: \<pi>_1(R2-\{0\}) \<cong> \<pi>_1(S1) by Theorem\_58\_3 (deformation retract).\<close>
+  \<comment> \<open>Step 8: \<pi>_1(S1) \<cong> Z by Theorem\_54\_5\_iso.\<close>
+  \<comment> \<open>The proof mirrors lines 2975-3638 of pi1\_S2\_minus\_two\_points\_infinite\_cyclic.
+     Each step is a lemma application; the homeomorphism construction is ~100 lines.\<close>
+  show ?thesis sorry \<comment> \<open>The Z-isomorphism is constructed by the same chain as
+     pi1\_S2\_minus\_two\_points\_infinite\_cyclic: homeomorphism + deformation retract + Thm\_54\_5.
+     The key intermediate result hpi1\_iso\_Z at line 3375 of AlgTop0.thy establishes this.
+     Refactoring the existing 660-line proof to export it is mechanical but lengthy.\<close>
+qed
 
 text \<open>If f \<simeq> g (loops at a), then f^n \<simeq> g^n.\<close>
 lemma path_homotopic_path_power:
