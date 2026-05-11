@@ -1032,14 +1032,49 @@ proof -
     by (metis (no_types))
   \<comment> \<open>Step 3: e34-{a3,a4} \<subseteq> S2-theta, hence in some Ri.\<close>
   have he34_theta: "e34 - {a3, a4} \<subseteq> top1_S2 - (e12 \<union> ?Arc2 \<union> ?Arc3)"
-    sorry \<comment> \<open>K4 intersection: e34 avoids e12, e13, e23, e24, e41 except at endpoints.\<close>
-  have he34_ne: "e34 - {a3, a4} \<noteq> {}" sorry
+  proof -
+    have h1: "e34 \<inter> e12 = {}" using assms(22) by (by100 blast)
+    have h2: "e34 \<inter> e13 \<subseteq> {a3}" using assms(30) by (by100 blast)
+    have h3: "e34 \<inter> e23 \<subseteq> {a3}" using assms(25) by (by100 blast)
+    have h4: "e34 \<inter> e24 \<subseteq> {a4}" using assms(35) by (by100 blast)
+    have h5: "e34 \<inter> e41 \<subseteq> {a4}" using assms(26) by (by100 blast)
+    have "e34 \<inter> ?Arc2 \<subseteq> {a3}" using h2 h3 by (by100 blast)
+    moreover have "e34 \<inter> ?Arc3 \<subseteq> {a4}" using h4 h5 by (by100 blast)
+    ultimately have "e34 \<inter> (e12 \<union> ?Arc2 \<union> ?Arc3) \<subseteq> {a3, a4}" using h1 by (by100 blast)
+    thus ?thesis using assms(6) by (by100 blast)
+  qed
+  have he34_ne: "e34 - {a3, a4} \<noteq> {}"
+  proof -
+    obtain h where hh: "top1_homeomorphism_on I_set I_top e34
+        (subspace_topology top1_S2 top1_S2_topology e34) h"
+      using assms(12) unfolding top1_is_arc_on_def by (by100 blast)
+    have hbij: "bij_betw h I_set e34" using hh unfolding top1_homeomorphism_on_def by (by100 blast)
+    have h0: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+    have h1: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+    have h12: "(1/2::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+    have "h (1/2) \<in> e34" using hbij h12 unfolding bij_betw_def by (by100 blast)
+    moreover have "h (1/2) \<noteq> h 0 \<and> h (1/2) \<noteq> h 1"
+    proof -
+      have hinj: "inj_on h I_set" using hbij unfolding bij_betw_def by (by100 blast)
+      have "h (1/2) \<noteq> h 0"
+      proof assume "h (1/2) = h 0"
+        from inj_onD[OF hinj this h12 h0] show False by (by100 simp) qed
+      moreover have "h (1/2) \<noteq> h 1"
+      proof assume "h (1/2) = h 1"
+        from inj_onD[OF hinj this h12 h1] show False by (by100 simp) qed
+      ultimately show ?thesis by (by100 blast)
+    qed
+    moreover have "{h 0, h 1} = {a3, a4}"
+      using arc_endpoints_are_boundary[OF assms(1) hS2_haus assms(6,12) hh] assms(18)
+      by (by100 simp)
+    ultimately show ?thesis by (by100 blast)
+  qed
   have he34_conn: "top1_connected_on (e34 - {a3, a4})
       (subspace_topology top1_S2 top1_S2_topology (e34 - {a3, a4}))"
     by (rule arc_minus_endpoints_connected[OF assms(1) hS2_haus assms(6,12,18) ha3_ne_a4])
   \<comment> \<open>e34-{a3,a4} connected \<subseteq> R1\<union>R2\<union>R3 \<Rightarrow> in some Ri.\<close>
   have he34_in_Ri: "e34 - {a3, a4} \<subseteq> R1 \<or> e34 - {a3, a4} \<subseteq> R2 \<or> e34 - {a3, a4} \<subseteq> R3"
-    sorry \<comment> \<open>Lemma\_23\_2 twice on the 3-component separation.\<close>
+    sorry \<comment> \<open>Connected subset of 3-way separated space. Needs 2x Lemma\_23\_2.\<close>
   \<comment> \<open>Step 4: e12-{a1,a2} is on the theta space, hence NOT in any Ri.\<close>
   have he12_on_theta: "e12 - {a1, a2} \<subseteq> e12 \<union> ?Arc2 \<union> ?Arc3" by (by100 blast)
   have he12_not_Ri: "e12 - {a1, a2} \<inter> (R1 \<union> R2 \<union> R3) = {}"
