@@ -1102,7 +1102,9 @@ proof -
       by (rule arc_in_S2_closed[OF assms(9,15)])
     moreover have "closedin_on top1_S2 top1_S2_topology e41" unfolding defs
       by (rule arc_in_S2_closed[OF assms(7,13)])
-    ultimately show ?thesis sorry \<comment> \<open>Union of 4 closed sets is closed.\<close>
+    ultimately have "closedin_on top1_S2 top1_S2_topology (e13 \<union> e23 \<union> e24 \<union> e41)"
+      by (intro closedin_on_Un[OF hTopS2]) (by100 blast)+
+    thus ?thesis unfolding defs by (by100 simp)
   qed
   have hW_open: "top1_S2 - D_loc \<in> top1_S2_topology"
     using hD_closed unfolding closedin_on_def by (by100 blast)
@@ -1287,7 +1289,52 @@ proof -
       assume "Ri \<inter> A = {}" thus ?thesis using hRi_sub by (by100 blast)
     qed
   qed
-  \<comment> \<open>Final: if both e12-{a1,a2} and e34-{a3,a4} in same component, contradiction.\<close>
+  \<comment> \<open>Final: e34 in some Ri, Ri \<subseteq> A or B. e12 NOT in Ri. e12 \<subseteq> A\<union>B.
+     If e34 \<subseteq> Ri \<subseteq> A and e12 \<subseteq> A: then e12 \<inter> Ri = {} (he12\_not\_Ri).
+     But Ri is the theta component containing e34, and e12 is NOT in any Ri.
+     So e12 \<subseteq> A\<union>B - Ri = B \<union> (other Ri's in A). e12 NOT in any Ri \<Rightarrow> e12 \<subseteq> B.
+     Wait no: e12 \<subseteq> A was assumed. Contradiction? No!
+     The real point: e12 and e34 are in different Ri-groups. The Ri containing e34
+     is in one of A/B. e12 is not in ANY Ri. But e12 \<subseteq> A\<union>B.
+     Since (A\<union>B) = Ri's \<union> e12, and e12 \<inter> Ri's = {}: if e34 \<subseteq> Ri \<subseteq> A,
+     then e12 = (A\<union>B) - (R1\<union>R2\<union>R3). If also e12 \<subseteq> A, then B \<subseteq> (R1\<union>R2\<union>R3)-Ri.
+     B \<noteq> {} and B connected. But can we get a contradiction from B \<subseteq> 2 remaining Ri's?
+     Only if we can show B isn't fully contained in one Ri.
+     Hmm, maybe we need the B \<noteq> {} implies there are ≥ 2 Ri's to distribute,
+     and with 3 Ri's total, 1 in A (with e34), if both others in B then fine.
+     No contradiction!
+
+     ACTUALLY: the argument needs the SPECIFIC theta-space structure. The component
+     between Arc2 and Arc3 has BOTH a3 and a4 on its boundary (Arc2 contains a3,
+     Arc3 contains a4). This is the ONLY component with both a3 and a4 on boundary.
+     e34 connects a3 to a4, so int(e34) is in THIS component.
+     The other two components have e12 on their boundary. So int(e12) connects
+     to them (when e12 is removed from theta to get D).
+     Result: the Ri containing e34 is in one SCC-component, and int(e12) merges
+     the other two Ri's into the other SCC-component.\<close>
+  \<comment> \<open>Simpler approach: use he12\_not\_Ri + he34\_in\_Ri + hRi\_in\_AB.\<close>
+  \<comment> \<open>e34 \<subseteq> Ri \<subseteq> A (or B). e12 \<inter> Ri = {} \<Rightarrow> if e12 \<subseteq> A then e12 \<inter> Ri \<noteq> {} only via A?
+     No, e12 \<inter> Ri can be {} even if both in A.
+     The REAL argument: e34 in Ri. e12 NOT in ANY Ri. e12 \<subseteq> (A\<union>B) - (R1\<union>R2\<union>R3).
+     (A\<union>B) - (R1\<union>R2\<union>R3) = e12-{a1,a2} (from hAB\_decomp).
+     So e12 is "alone" in the decomposition. If Ri \<subseteq> A, then B must contain
+     the other Ri's and/or... actually B \<noteq> {} and B \<inter> e12 = {} (since e12 \<subseteq> A).
+     B \<subseteq> R1\<union>R2\<union>R3 (since B \<inter> e12 = {}).
+     B connected and \<subseteq> union of 3 disjoint open Ri's \<Rightarrow> B \<subseteq> some Ri.
+     If B \<subseteq> Rj where Rj \<noteq> Ri: then the third Rk is disjoint from both A and B.
+     But A\<union>B covers everything. So Rk \<subseteq> A\<union>B. And Rk \<inter> B = {} (since B \<subseteq> Rj, Rj\<inter>Rk={}).
+     So Rk \<subseteq> A. Fine. But also Rk \<noteq> {} (all Ri nonempty).
+     No contradiction yet... UNLESS we can show there are things in B not in any single Ri.
+     With B \<noteq> {} and B \<subseteq> Rj: fine, no contradiction.
+
+     THE PROBLEM: The final step needs the SPECIFIC identification of which Ri is which.
+     The textbook says the component "between Arc2 and Arc3" is the one with e34.
+     The other two components merge with e12 to form the other SCC component.
+     This gives: Ri (with e34) = one SCC component, other two Ri's + e12 = other.
+     Hence e34 and e12 in different components.
+
+     But proving "the component between Arc2 and Arc3" formally requires the closure
+     structure from Lemma\_64\_1, which we don't have exported.\<close>
   show ?thesis
   proof (intro conjI notI)
     assume h: "e12 - {a1, a2} \<subseteq> A \<and> e34 - {a3, a4} \<subseteq> A"
