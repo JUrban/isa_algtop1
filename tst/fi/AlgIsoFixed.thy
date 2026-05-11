@@ -5054,9 +5054,23 @@ proof -
     using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
   have hC_sub_S2: "C \<subseteq> top1_S2" using assms(4,5,6,7,39) by (by100 blast)
   have hp_not_C: "p \<notin> C"
-    sorry \<comment> \<open>Same as in Lemma\_65\_1\_fixed.\<close>
+  proof -
+    have "p \<in> e13" "p \<noteq> a1" "p \<noteq> a3" using assms(37) by (by100 blast)+
+    have "p \<notin> e12" using \<open>p \<in> e13\<close> \<open>p \<noteq> a1\<close> assms(28) by (by100 blast)
+    moreover have "p \<notin> e23" using \<open>p \<in> e13\<close> \<open>p \<noteq> a3\<close> assms(29) by (by100 blast)
+    moreover have "p \<notin> e34" using \<open>p \<in> e13\<close> \<open>p \<noteq> a3\<close> assms(30) by (by100 blast)
+    moreover have "p \<notin> e41" using \<open>p \<in> e13\<close> \<open>p \<noteq> a1\<close> assms(31) by (by100 blast)
+    ultimately show ?thesis using assms(39) by (by100 blast)
+  qed
   have hq_not_C: "q \<notin> C"
-    sorry
+  proof -
+    have "q \<in> e24" "q \<noteq> a2" "q \<noteq> a4" using assms(38) by (by100 blast)+
+    have "q \<notin> e12" using \<open>q \<in> e24\<close> \<open>q \<noteq> a2\<close> assms(33) by (by100 blast)
+    moreover have "q \<notin> e23" using \<open>q \<in> e24\<close> \<open>q \<noteq> a2\<close> assms(34) by (by100 blast)
+    moreover have "q \<notin> e34" using \<open>q \<in> e24\<close> \<open>q \<noteq> a4\<close> assms(35) by (by100 blast)
+    moreover have "q \<notin> e41" using \<open>q \<in> e24\<close> \<open>q \<noteq> a4\<close> assms(36) by (by100 blast)
+    ultimately show ?thesis using assms(39) by (by100 blast)
+  qed
   have hC_sub_X: "C \<subseteq> ?X" using hC_sub_S2 hp_not_C hq_not_C by (by100 blast)
   have hx_X: "x \<in> ?X" using hx_C hC_sub_X by (by100 blast)
   have hTX: "is_topology_on ?X ?TX"
@@ -5066,11 +5080,15 @@ proof -
   \<comment> \<open>j\_* at x is a homomorphism.\<close>
   let ?j_star_x = "top1_fundamental_group_induced_on C ?TC x ?X ?TX x id"
   have hj_cont: "top1_continuous_map_on C ?TC ?X ?TX id"
-    sorry \<comment> \<open>Same inclusion continuity proof as above.\<close>
+    sorry \<comment> \<open>Inclusion continuity (proved in Lemma\_65\_1\_fixed above).\<close>
   have hj_hom_x: "top1_group_hom_on
       (top1_fundamental_group_carrier C ?TC x) (top1_fundamental_group_mul C ?TC x)
       (top1_fundamental_group_carrier ?X ?TX x) (top1_fundamental_group_mul ?X ?TX x) ?j_star_x"
-    sorry \<comment> \<open>induced\_on\_is\_hom at x.\<close>
+  proof -
+    have "id x = x" by (by100 simp)
+    from top1_fundamental_group_induced_on_is_hom[OF hTC hTX _ hx_X hj_cont this]
+    show ?thesis using hx_C by (by100 blast)
+  qed
   \<comment> \<open>j\_* surjective at x (from the Lemma\_65\_1\_fixed proof above).\<close>
   have hj_surj_x: "?j_star_x ` (top1_fundamental_group_carrier C ?TC x) =
       top1_fundamental_group_carrier ?X ?TX x"
