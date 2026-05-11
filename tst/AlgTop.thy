@@ -2175,9 +2175,30 @@ proof -
               \<open>Ri_Q13 \<noteq> Ri_e\<close> \<open>Ri_Q13 \<noteq> Ri_D\<close>])
         \<comment> \<open>closure(Rk) = Rk\<union>J12 = Rk\<union>J13 \<Rightarrow> J12=J13 \<Rightarrow> Arc2=Arc3 \<Rightarrow> False.\<close>
         have hcl_Q12_J12: "closure_on top1_S2 top1_S2_topology Q12 = Q12 \<union> (e12 \<union> Arc2)"
-          sorry \<comment> \<open>hcl\_scc\_comp on J12.\<close>
+        proof -
+          \<comment> \<open>Q12 \<in> {W12a, W12b}. Both closures were computed in the True case.\<close>
+          have hcl_W12a: "closure_on top1_S2 top1_S2_topology W12a = W12a \<union> (e12 \<union> Arc2)"
+            by (rule hcl_scc_comp[OF hJ12_scc hW12(1,2,3,4,5,6) hW12_open[THEN conjunct1] hW12_open[THEN conjunct2]])
+          have hcl_W12b: "closure_on top1_S2 top1_S2_topology W12b = W12b \<union> (e12 \<union> Arc2)"
+          proof -
+            have h1: "W12b \<inter> W12a = {}" using hW12(3) by (by100 blast)
+            have h2: "W12b \<union> W12a = top1_S2 - (e12 \<union> Arc2)" using hW12(4) by (by100 blast)
+            show ?thesis by (rule hcl_scc_comp[OF hJ12_scc hW12(2,1) h1 h2 hW12(6,5) hW12_open[THEN conjunct2] hW12_open[THEN conjunct1]])
+          qed
+          from hQ12(1) show ?thesis using hcl_W12a hcl_W12b by (by100 blast)
+        qed
         have hcl_Q13_J13: "closure_on top1_S2 top1_S2_topology Q13 = Q13 \<union> (e12 \<union> Arc3)"
-          sorry \<comment> \<open>hcl\_scc\_comp on J13.\<close>
+        proof -
+          have hcl_W13a: "closure_on top1_S2 top1_S2_topology W13a = W13a \<union> (e12 \<union> Arc3)"
+            by (rule hcl_scc_comp[OF hJ13_scc hW13(1,2,3,4,5,6) hW13_open[THEN conjunct1] hW13_open[THEN conjunct2]])
+          have hcl_W13b: "closure_on top1_S2 top1_S2_topology W13b = W13b \<union> (e12 \<union> Arc3)"
+          proof -
+            have h1: "W13b \<inter> W13a = {}" using hW13(3) by (by100 blast)
+            have h2: "W13b \<union> W13a = top1_S2 - (e12 \<union> Arc3)" using hW13(4) by (by100 blast)
+            show ?thesis by (rule hcl_scc_comp[OF hJ13_scc hW13(2,1) h1 h2 hW13(6,5) hW13_open[THEN conjunct2] hW13_open[THEN conjunct1]])
+          qed
+          from hQ13(1) show ?thesis using hcl_W13a hcl_W13b by (by100 blast)
+        qed
         have "e12 \<union> Arc2 = e12 \<union> Arc3"
         proof -
           have "Q12 = Q13" using \<open>Q12 \<subseteq> Ri_Q12\<close> \<open>Q13 \<subseteq> Ri_Q13\<close> \<open>Ri_Q12 = Ri_Q13\<close>
