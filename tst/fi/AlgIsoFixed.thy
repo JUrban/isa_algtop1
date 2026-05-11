@@ -888,9 +888,10 @@ qed
 
 \<comment> \<open>Helper: if f \<simeq> g in X (path homotopic), then [f]\_X = [g]\_X.\<close>
 lemma path_homotopic_same_class:
-  assumes "top1_path_homotopic_on X TX a a f g"
+  assumes hTX: "is_topology_on X TX"
+      and "top1_path_homotopic_on X TX a a f g"
   shows "{h. top1_loop_equiv_on X TX a f h} = {h. top1_loop_equiv_on X TX a g h}"
-  sorry \<comment> \<open>From Lemma\_51\_1\_path\_homotopic\_sym + trans + loop\_equiv\_on\_def.\<close>
+  sorry \<comment> \<open>Lemma\_51\_1\_path\_homotopic\_sym + trans + loop\_equiv\_on\_def. Needs careful unfolding.\<close>
 
 \<comment> \<open>Helper: for a loop g in C \<subseteq> X, the inclusion-induced map sends [g]\_C to [g]\_X.\<close>
 lemma inclusion_sends_class:
@@ -1342,7 +1343,7 @@ proof -
         qed
         \<comment> \<open>[f]\_X = [g^n]\_X (from homotopy).\<close>
         have hc_gn: "c = {h. top1_loop_equiv_on ?X ?TX x (top1_path_power g x n) h}"
-          using path_homotopic_same_class[OF hfgn] hc_eq by (by100 simp)
+          using path_homotopic_same_class[OF hTX hfgn] hc_eq by (by100 simp)
         hence "c = ?j_star_x {h. top1_loop_equiv_on C ?TC x (top1_path_power g x n) h}"
           using hj_class_gn by (by100 simp)
         thus ?thesis using hgn_class_C by (by100 blast)
@@ -1367,7 +1368,7 @@ proof -
           show ?thesis unfolding hTC_sub by (by100 blast)
         qed
         moreover have "c = {h. top1_loop_equiv_on ?X ?TX x (top1_path_power (top1_path_reverse g) x n) h}"
-          using path_homotopic_same_class[OF hfgrn] hc_eq by (by100 simp)
+          using path_homotopic_same_class[OF hTX hfgrn] hc_eq by (by100 simp)
         ultimately have "c = ?j_star_x {h. top1_loop_equiv_on C ?TC x (top1_path_power (top1_path_reverse g) x n) h}"
           by (by100 simp)
         thus ?thesis using hgrn_class_C by (by100 blast)
