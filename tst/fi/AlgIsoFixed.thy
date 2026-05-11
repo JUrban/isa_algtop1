@@ -899,7 +899,72 @@ lemma surj_hom_infinite_cyclic_inj:
       and hphi_surj: "\<phi> ` (top1_fundamental_group_carrier X TX a) =
           top1_fundamental_group_carrier Y TY b"
   shows "inj_on \<phi> (top1_fundamental_group_carrier X TX a)"
-  sorry
+proof -
+  \<comment> \<open>Both groups are isomorphic to Z. Via the isomorphisms, \<phi> becomes
+     a surjective group hom Z \<rightarrow> Z, which is multiplication by \<plusminus>1, hence injective.
+     We formalize this using the abstract group structure.\<close>
+  let ?GX = "top1_fundamental_group_carrier X TX a"
+  let ?mulX = "top1_fundamental_group_mul X TX a"
+  let ?GY = "top1_fundamental_group_carrier Y TY b"
+  let ?mulY = "top1_fundamental_group_mul Y TY b"
+  \<comment> \<open>Both groups isomorphic to Z.\<close>
+  have hGX_Z: "top1_groups_isomorphic_on ?GX ?mulX top1_Z_group top1_Z_mul"
+    sorry \<comment> \<open>From generator structure.\<close>
+  have hGY_Z: "top1_groups_isomorphic_on ?GY ?mulY top1_Z_group top1_Z_mul"
+    sorry \<comment> \<open>From generator structure.\<close>
+  \<comment> \<open>Get iso witnesses: \<psi>\_X: \<pi>_1(X) \<cong> Z and \<psi>\_Y: \<pi>_1(Y) \<cong> Z.\<close>
+  from hGX_Z obtain \<psi>X where h\<psi>X: "top1_group_iso_on ?GX ?mulX top1_Z_group top1_Z_mul \<psi>X"
+    unfolding top1_groups_isomorphic_on_def by blast
+  from hGY_Z obtain \<psi>Y where h\<psi>Y: "top1_group_iso_on ?GY ?mulY top1_Z_group top1_Z_mul \<psi>Y"
+    unfolding top1_groups_isomorphic_on_def by blast
+  \<comment> \<open>Compose: \<psi>\_Y \<circ> \<phi> \<circ> \<psi>\_X\<inverse>: Z \<rightarrow> Z is a surjective group hom.\<close>
+  \<comment> \<open>In Z, surjective hom = multiplication by \<plusminus>1 = bijection.\<close>
+  \<comment> \<open>Therefore \<phi> is injective (composition of injective maps).\<close>
+  \<comment> \<open>The Z-arithmetic: if h: Z \<rightarrow> Z is a group hom, h(n) = n * h(1).
+     Surjective means h(1) divides every integer, so |h(1)| = 1.
+     Hence h is bijective.\<close>
+  \<comment> \<open>Pure Z-arithmetic lemma: surjective hom Z \<rightarrow> Z is injective.\<close>
+  have hZ_surj_inj: "\<And>h :: int \<Rightarrow> int. \<lbrakk>\<forall>a b. h (a + b) = h a + h b; h ` UNIV = UNIV\<rbrakk> \<Longrightarrow> inj h"
+  proof -
+    fix h :: "int \<Rightarrow> int"
+    assume hhom: "\<forall>a b. h (a + b) = h a + h b" and hsurj: "h ` UNIV = UNIV"
+    \<comment> \<open>h(n) = n * h(1).\<close>
+    have h0: "h 0 = 0" using hhom[THEN spec, THEN spec, of 0 0] by (by100 simp)
+    have hn: "\<And>n::int. h n = n * h 1"
+      sorry \<comment> \<open>By induction on n (for n \<ge> 0 and n < 0).\<close>
+    \<comment> \<open>Surjective: 1 \<in> range(h), so \<exists>n. n * h(1) = 1. Hence |h(1)| = 1.\<close>
+    have "h 1 = 1 \<or> h 1 = -1"
+    proof -
+      have "\<exists>n::int. h n = 1"
+      proof -
+        have "(1::int) \<in> UNIV" by (by100 blast)
+        hence "(1::int) \<in> h ` UNIV" using hsurj by (by100 simp)
+        thus ?thesis by auto
+      qed
+      then obtain n :: int where hn1: "h n = 1" by blast
+      have "h n = n * h 1" by (rule hn)
+      hence "n * h 1 = (1::int)" using hn1 by (by100 simp)
+      hence "h 1 * n = (1::int)" by (simp add: mult.commute)
+      hence "\<bar>h 1\<bar> = 1" using zmult_eq_1_iff by auto
+      thus ?thesis by auto
+    qed
+    \<comment> \<open>h injective: h(a) = h(b) \<Rightarrow> a*h(1) = b*h(1) \<Rightarrow> a = b (since |h(1)| = 1).\<close>
+    thus "inj h"
+    proof (elim disjE)
+      assume h1: "h 1 = 1"
+      have "\<And>n. h n = n" using hn h1 by auto
+      thus "inj h" by (intro injI) auto
+    next
+      assume h1: "h 1 = -1"
+      have "\<And>n. h n = -n" using hn h1 by auto
+      thus "inj h" by (intro injI) auto
+    qed
+  qed
+  \<comment> \<open>Transfer from Z to \<pi>\_1 via the isomorphisms.\<close>
+  \<comment> \<open>\<psi>\_Y \<circ> \<phi> \<circ> inv(\<psi>\_X) is a surjective hom Z \<rightarrow> Z, hence injective.
+     Since \<psi>\_X and \<psi>\_Y are bijective, \<phi> is injective.\<close>
+  show ?thesis sorry \<comment> \<open>Transfer Z-injectivity to \<pi>\_1 via \<psi>\_X, \<psi>\_Y isomorphisms.\<close>
+qed
 
 \<comment> \<open>Helper: induced map with id equals induced map with (\<lambda>x. x).\<close>
 lemma induced_id_eq_lam:
