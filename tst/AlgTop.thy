@@ -774,33 +774,62 @@ qed
    with E \<inter> (A\<union>B) = {} containing a point of U and a point of C-{a,b},
    then False (U and C-{a,b} are in different S2-(A\<union>B) components).
    This is the key fact for K33/K5 non-planarity.\<close>
-lemma theta_component_separated_from_opposite_arc:
+\<comment> \<open>For a theta space with 3 components U,V,W and 3 SCCs (A\<union>B, B\<union>C, A\<union>C):
+   each SCC separates S2 into 2 parts. The 3 components + C-{a,b} go to 2 sides.
+   One theta component is alone on one side (its boundary = that SCC).
+   Result: for each vertex e in U\<union>V\<union>W, some arc from e reaches a vertex
+   on the "wrong side" of that SCC, giving a contradiction.
+
+   This helper: given that each of 3 arcs eh1,eh2,eh3 avoids one SCC
+   and reaches a vertex on the opposite theta arc, show e can't be in any component.\<close>
+lemma theta_space_vertex_exclusion:
   assumes hS2: "is_topology_on_strict top1_S2 top1_S2_topology"
-      and "A \<subseteq> top1_S2" "B \<subseteq> top1_S2" "C \<subseteq> top1_S2"
-      and "top1_is_arc_on A (subspace_topology top1_S2 top1_S2_topology A)"
-      and "top1_is_arc_on B (subspace_topology top1_S2 top1_S2_topology B)"
-      and "top1_is_arc_on C (subspace_topology top1_S2 top1_S2_topology C)"
-      and "a \<noteq> b" "A \<inter> B = {a, b}" "B \<inter> C = {a, b}" "A \<inter> C = {a, b}"
-      and "top1_arc_endpoints_on A (subspace_topology top1_S2 top1_S2_topology A) = {a, b}"
-      and "top1_arc_endpoints_on B (subspace_topology top1_S2 top1_S2_topology B) = {a, b}"
-      and "top1_arc_endpoints_on C (subspace_topology top1_S2 top1_S2_topology C) = {a, b}"
-      \<comment> \<open>U is one of the 3 theta components, open and connected.\<close>
-      and "U \<noteq> {}" "U \<in> top1_S2_topology"
-      and "U \<subseteq> top1_S2 - (A \<union> B \<union> C)"
-      and "top1_connected_on U (subspace_topology top1_S2 top1_S2_topology U)"
-      \<comment> \<open>E is a connected set intersecting both U and C-{a,b}, disjoint from A\<union>B.\<close>
-      and "E \<subseteq> top1_S2" "E \<inter> (A \<union> B) = {}"
-      and "top1_connected_on E (subspace_topology top1_S2 top1_S2_topology E)"
-      and "E \<inter> U \<noteq> {}" and "E \<inter> (C - {a, b}) \<noteq> {}"
-      \<comment> \<open>The other two components V, W exist (from Lemma 64.1).\<close>
-      and "V \<noteq> {}" "W \<noteq> {}"
-      and "U \<inter> V = {}" "V \<inter> W = {}" "U \<inter> W = {}"
-      and "U \<union> V \<union> W = top1_S2 - (A \<union> B \<union> C)"
-      and "top1_connected_on V (subspace_topology top1_S2 top1_S2_topology V)"
-      and "top1_connected_on W (subspace_topology top1_S2 top1_S2_topology W)"
-      and "V \<in> top1_S2_topology" "W \<in> top1_S2_topology"
+      and hA_sub: "A \<subseteq> top1_S2" and hB_sub: "B \<subseteq> top1_S2" and hC_sub: "C \<subseteq> top1_S2"
+      and hA_arc: "top1_is_arc_on A (subspace_topology top1_S2 top1_S2_topology A)"
+      and hB_arc: "top1_is_arc_on B (subspace_topology top1_S2 top1_S2_topology B)"
+      and hC_arc: "top1_is_arc_on C (subspace_topology top1_S2 top1_S2_topology C)"
+      and hab: "a \<noteq> b" and hAB: "A \<inter> B = {a, b}" and hBC: "B \<inter> C = {a, b}" and hAC: "A \<inter> C = {a, b}"
+      and hA_ep: "top1_arc_endpoints_on A (subspace_topology top1_S2 top1_S2_topology A) = {a, b}"
+      and hB_ep: "top1_arc_endpoints_on B (subspace_topology top1_S2 top1_S2_topology B) = {a, b}"
+      and hC_ep: "top1_arc_endpoints_on C (subspace_topology top1_S2 top1_S2_topology C) = {a, b}"
+      \<comment> \<open>3 theta components.\<close>
+      and hU: "U \<noteq> {}" "U \<in> top1_S2_topology" "U \<subseteq> top1_S2 - (A \<union> B \<union> C)"
+          "top1_connected_on U (subspace_topology top1_S2 top1_S2_topology U)"
+      and hV: "V \<noteq> {}" "V \<in> top1_S2_topology" "V \<subseteq> top1_S2 - (A \<union> B \<union> C)"
+          "top1_connected_on V (subspace_topology top1_S2 top1_S2_topology V)"
+      and hW: "W \<noteq> {}" "W \<in> top1_S2_topology" "W \<subseteq> top1_S2 - (A \<union> B \<union> C)"
+          "top1_connected_on W (subspace_topology top1_S2 top1_S2_topology W)"
+      and hUVW: "U \<inter> V = {}" "V \<inter> W = {}" "U \<inter> W = {}" "U \<union> V \<union> W = top1_S2 - (A \<union> B \<union> C)"
+      \<comment> \<open>Point e in some component, with 3 arcs to vertices on opposite arcs.\<close>
+      and he: "e \<in> U \<union> V \<union> W"
+      and hE1_sub: "E1 \<subseteq> top1_S2" and hE1_conn: "top1_connected_on E1 (subspace_topology top1_S2 top1_S2_topology E1)"
+      and hE1_disj: "E1 \<inter> (B \<union> C) = {}" and hE1_e: "e \<in> E1" and hE1_h: "E1 \<inter> (A - {a, b}) \<noteq> {}"
+      and hE2_sub: "E2 \<subseteq> top1_S2" and hE2_conn: "top1_connected_on E2 (subspace_topology top1_S2 top1_S2_topology E2)"
+      and hE2_disj: "E2 \<inter> (A \<union> C) = {}" and hE2_e: "e \<in> E2" and hE2_h: "E2 \<inter> (B - {a, b}) \<noteq> {}"
+      and hE3_sub: "E3 \<subseteq> top1_S2" and hE3_conn: "top1_connected_on E3 (subspace_topology top1_S2 top1_S2_topology E3)"
+      and hE3_disj: "E3 \<inter> (A \<union> B) = {}" and hE3_e: "e \<in> E3" and hE3_h: "E3 \<inter> (C - {a, b}) \<noteq> {}"
   shows False
-  sorry
+proof -
+  have hTopS2: "is_topology_on top1_S2 top1_S2_topology"
+    using hS2 unfolding is_topology_on_strict_def by (by100 blast)
+  have hS2_haus: "is_hausdorff_on top1_S2 top1_S2_topology" by (rule top1_S2_is_hausdorff)
+  \<comment> \<open>Each pair of arcs forms an SCC.\<close>
+  have hAB_scc: "top1_simple_closed_curve_on top1_S2 top1_S2_topology (A \<union> B)"
+    by (rule arcs_form_simple_closed_curve[OF hS2 hS2_haus hA_arc hA_sub hB_arc hB_sub hAB hab hA_ep hB_ep])
+  have hBC_scc: "top1_simple_closed_curve_on top1_S2 top1_S2_topology (B \<union> C)"
+    by (rule arcs_form_simple_closed_curve[OF hS2 hS2_haus hB_arc hB_sub hC_arc hC_sub hBC hab hB_ep hC_ep])
+  have hAC_scc: "top1_simple_closed_curve_on top1_S2 top1_S2_topology (A \<union> C)"
+    by (rule arcs_form_simple_closed_curve[OF hS2 hS2_haus hA_arc hA_sub hC_arc hC_sub hAC hab hA_ep hC_ep])
+  \<comment> \<open>Each SCC separates S2. So S2-SCC is disconnected.
+     For each SCC J, each theta component \<subseteq> one side (connected \<subseteq> S2-J \<subseteq> S2-theta \<subseteq> S2-J).
+     The "lone" component on one side is a full S2-J component.\<close>
+  \<comment> \<open>E3 \<subseteq> S2-(A\<union>B). e \<in> E3, e \<in> U\<union>V\<union>W. E3 connected.
+     C-{a,b} \<subseteq> S2-(A\<union>B). E3 \<inter> (C-{a,b}) \<noteq> {}.
+     If e's theta component is separated from C-{a,b} in S2-(A\<union>B): contradiction (E3 bridges).
+     Similarly for E1 with B\<union>C and E2 with A\<union>C.
+     By pigeonhole: one of the 3 SCCs separates e's component from the arc's vertex.\<close>
+  show False sorry \<comment> \<open>Pigeonhole + SCCBMC: one SCC separates e's component from opposite arc.\<close>
+qed
 
 text \<open>Theorem 64.2: The utilities graph K33 cannot be imbedded in the plane.\<close>
 
@@ -1098,30 +1127,20 @@ proof -
       using assms(23) unfolding top1_arc_endpoints_on_def B_def by (by100 blast)
     ultimately show ?thesis using hh_ne(3,4) by (by100 blast)
   qed
-  \<comment> \<open>Separation of S2-theta into U\<union>V\<union>W.\<close>
-  \<comment> \<open>e \<notin> U: boundary(U) = A\<union>B (Lemma 64.1). eh3-{h3} \<subseteq> U (Lemma\_23\_2),
-     h3 \<in> cl(eh3-{h3}) \<subseteq> cl(U) = U\<union>A\<union>B. h3\<notin>A\<union>B (hh3\_not\_AB). h3\<notin>U. Contradiction.
-     Boundary identification requires SCCBMC on SCC A\<union>B via K4-style argument.\<close>
-  \<comment> \<open>e \<notin> U: arc eh3 goes from e to h3. eh3 \<inter> (A\<union>B) = {}. eh3 connected.
-     If e \<in> U: apply theta\_component\_separated\_from\_opposite\_arc
-     with SCC = A\<union>B, opposite arc = CC, component = U, connecting arc = eh3.\<close>
-  have "e \<notin> U"
-  proof assume "e \<in> U"
-    have "e \<in> eh3" using assms(30) unfolding top1_arc_endpoints_on_def by (by100 blast)
-    have "h3 \<in> CC - {g, w}" using assms(24) hh_ne(5,6) unfolding top1_arc_endpoints_on_def CC_def by (by100 blast)
-    have "h3 \<in> eh3" using assms(30) unfolding top1_arc_endpoints_on_def by (by100 blast)
-    show False
-      by (rule theta_component_separated_from_opposite_arc[OF hS2 hA_sub hB_sub hCC_sub
-          hA_arc hB_arc hCC_arc hg_ne_w hAB hBCC hACC hA_ep hB_ep hCC_ep
-          hUVW(1,11) _ hUVW(8) assms(12) _ arc_connected[OF assms(21)] _ _
-          hUVW(2,3,4,5,6,7,9,10,12,13)])
-         (use \<open>e \<in> U\<close> \<open>e \<in> eh3\<close> \<open>h3 \<in> CC - _\<close> \<open>h3 \<in> eh3\<close> heh3_A heh3_B hUVW(7) in \<open>by100 blast\<close>)+
-  qed
-  moreover have "e \<notin> V"
-    sorry \<comment> \<open>Same pattern as e\<notin>U with SCC=B\<union>CC, arc=eh1, h1\<in>A-{g,w}.\<close>
-  moreover have "e \<notin> W"
-    sorry \<comment> \<open>Same pattern as e\<notin>U with SCC=A\<union>CC, arc=eh2, h2\<in>B-{g,w}.\<close>
-  ultimately show False using \<open>e \<in> U \<union> V \<union> W\<close> by (by100 blast)
+  \<comment> \<open>Apply theta\_space\_vertex\_exclusion: 3 arcs eh1,eh2,eh3 each avoids one SCC
+     and reaches a vertex on the opposite theta arc.\<close>
+  have he_in_eh1: "e \<in> eh1" using assms(28) unfolding top1_arc_endpoints_on_def by (by100 blast)
+  have he_in_eh2: "e \<in> eh2" using assms(29) unfolding top1_arc_endpoints_on_def by (by100 blast)
+  have he_in_eh3: "e \<in> eh3" using assms(30) unfolding top1_arc_endpoints_on_def by (by100 blast)
+  have hh1_in_A: "h1 \<in> A - {g, w}" using assms(22) hh_ne(1,2) unfolding top1_arc_endpoints_on_def A_def by (by100 blast)
+  have hh2_in_B: "h2 \<in> B - {g, w}" using assms(23) hh_ne(3,4) unfolding top1_arc_endpoints_on_def B_def by (by100 blast)
+  have hh3_in_CC: "h3 \<in> CC - {g, w}" using assms(24) hh_ne(5,6) unfolding top1_arc_endpoints_on_def CC_def by (by100 blast)
+  have "eh1 \<inter> (B \<union> CC) = {}" using heh1_B heh1_CC by (by100 blast)
+  have "eh2 \<inter> (A \<union> CC) = {}" using heh2_A heh2_CC by (by100 blast)
+  have "eh3 \<inter> (A \<union> B) = {}" using heh3_A heh3_B by (by100 blast)
+  \<comment> \<open>Apply theta\_space\_vertex\_exclusion with E1=eh1, E2=eh2, E3=eh3.\<close>
+  show False
+    sorry \<comment> \<open>Direct from theta\_space\_vertex\_exclusion[OF ...] once helper is proved.\<close>
 qed
 
 theorem Theorem_64_4_K5_not_planar:
