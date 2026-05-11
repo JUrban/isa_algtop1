@@ -1393,10 +1393,68 @@ proof -
     qed
     ultimately show ?thesis by (by100 blast)
   qed
+  \<comment> \<open>Helper: arcs in S2 are path-connected (from homeomorphism with [0,1]).\<close>
+  {
+    fix D :: "(real \<times> real \<times> real) set" and TD
+    assume harc_loc: "top1_is_arc_on D (subspace_topology top1_S2 top1_S2_topology D)"
+        and hD_sub: "D \<subseteq> top1_S2"
+    have "top1_path_connected_on D (subspace_topology top1_S2 top1_S2_topology D)"
+    proof -
+      obtain hf where hhf: "top1_homeomorphism_on I_set I_top D
+          (subspace_topology top1_S2 top1_S2_topology D) hf"
+        using harc_loc unfolding top1_is_arc_on_def by (by100 blast)
+      have "top1_path_connected_on I_set I_top"
+      proof (unfold top1_path_connected_on_def, intro conjI ballI)
+        show "is_topology_on I_set I_top"
+          unfolding top1_unit_interval_topology_def
+          by (rule subspace_topology_is_topology_on[OF top1_open_sets_is_topology_on_UNIV])
+             (by100 simp)
+        fix a b :: real assume ha: "a \<in> I_set" and hb: "b \<in> I_set"
+        let ?g = "\<lambda>t::real. (1-t)*a + t*b"
+        have hg_cont: "continuous_on UNIV ?g" by (intro continuous_intros)
+        have hg_map: "\<And>t. t \<in> I_set \<Longrightarrow> ?g t \<in> I_set"
+        proof -
+          fix t :: real assume ht: "t \<in> I_set"
+          have "0 \<le> t" "t \<le> 1" using ht unfolding top1_unit_interval_def by auto
+          have "0 \<le> a" "a \<le> 1" using ha unfolding top1_unit_interval_def by auto
+          have "0 \<le> b" "b \<le> 1" using hb unfolding top1_unit_interval_def by auto
+          have h0: "0 \<le> (1-t)*a" using \<open>0 \<le> t\<close> \<open>t \<le> 1\<close> \<open>0 \<le> a\<close>
+            using mult_nonneg_nonneg by (by100 fastforce)
+          have h1: "0 \<le> t*b" using \<open>0 \<le> t\<close> \<open>0 \<le> b\<close>
+            using mult_nonneg_nonneg by (by100 fastforce)
+          have "0 \<le> (1-t)*a + t*b" using h0 h1 by (by100 simp)
+          moreover have "(1-t)*a + t*b \<le> 1"
+          proof -
+            have "(1-t)*a \<le> (1-t)*1" using \<open>a \<le> 1\<close> \<open>0 \<le> t\<close> \<open>t \<le> 1\<close>
+              using mult_left_mono by (by100 fastforce)
+            moreover have "t*b \<le> t*1" using \<open>b \<le> 1\<close> \<open>0 \<le> t\<close>
+              using mult_left_mono by (by100 fastforce)
+            ultimately show ?thesis by (by100 simp)
+          qed
+          ultimately show "?g t \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+        qed
+        have hg_top: "top1_continuous_map_on I_set I_top I_set I_top ?g"
+        proof -
+          have "top1_continuous_map_on I_set
+              (subspace_topology UNIV top1_open_sets I_set)
+              I_set (subspace_topology UNIV top1_open_sets I_set) ?g"
+            by (rule top1_continuous_map_on_real_subspace_open_sets[OF hg_map hg_cont])
+          thus ?thesis unfolding top1_unit_interval_topology_def .
+        qed
+        have "?g 0 = a" by (by100 simp)
+        moreover have "?g 1 = b" by (by100 simp)
+        ultimately have "top1_is_path_on I_set I_top a b ?g"
+          unfolding top1_is_path_on_def using hg_top by (by100 blast)
+        thus "\<exists>f. top1_is_path_on I_set I_top a b f" by (by100 blast)
+      qed
+      thus ?thesis by (rule homeomorphism_preserves_path_connected[OF hhf])
+    qed
+  } note arc_path_connected = this
   have hCmD1_pc: "top1_path_connected_on (C - ?D1)
       (subspace_topology top1_S2 top1_S2_topology (C - ?D1))"
     sorry \<comment> \<open>C-D1 = (e12-{a2}) \<union> e41 \<union> (e34-{a3}). Chain of arcs sharing vertices a1, a4.
-       Each piece is path-connected. Union of overlapping path-connected sets is path-connected.\<close>
+       arc\_path\_connected gives arcs path-connected. Endpoint removal keeps path-connected
+       (affine paths in [0,1) avoid endpoint preimage). Chain via path\_connected\_union.\<close>
   \<comment> \<open>Similarly for C - D2.\<close>
   have hx_in_CmD2: "x \<in> C - ?D2"
   proof -
