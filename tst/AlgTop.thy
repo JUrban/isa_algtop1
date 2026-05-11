@@ -1118,9 +1118,9 @@ proof -
          (use \<open>e \<in> U\<close> \<open>e \<in> eh3\<close> \<open>h3 \<in> CC - _\<close> \<open>h3 \<in> eh3\<close> heh3_A heh3_B hUVW(7) in \<open>by100 blast\<close>)+
   qed
   moreover have "e \<notin> V"
-    sorry \<comment> \<open>Same with SCC B\<union>CC, arc eh1, h1 \<in> A-{g,w}.\<close>
+    sorry \<comment> \<open>Same pattern as e\<notin>U with SCC=B\<union>CC, arc=eh1, h1\<in>A-{g,w}.\<close>
   moreover have "e \<notin> W"
-    sorry \<comment> \<open>Same with SCC A\<union>CC, arc eh2, h2 \<in> B-{g,w}.\<close>
+    sorry \<comment> \<open>Same pattern as e\<notin>U with SCC=A\<union>CC, arc=eh2, h2\<in>B-{g,w}.\<close>
   ultimately show False using \<open>e \<in> U \<union> V \<union> W\<close> by (by100 blast)
 qed
 
