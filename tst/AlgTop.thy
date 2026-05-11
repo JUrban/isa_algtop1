@@ -1909,70 +1909,7 @@ proof -
            Both are connected subsets of S2-theta = R1\<union>R2\<union>R3, hence each = some Ri.
            Cannot be Ri\_D (disjoint from D' complement). Cannot be Ri\_e (by a4/a3).
            Hence both = Rk. closure(Rk) = Rk\<union>J12 = Rk\<union>J13 \<Rightarrow> J12=J13 \<Rightarrow> Arc2=Arc3.\<close>
-        \<comment> \<open>a3, a4 \<in> closure(Ri\_e) via arc\_endpoint\_in\_closure\_of\_interior.\<close>
-        have ha34_ne: "a3 \<noteq> a4" using ha3_ne_a4 .
-        have ha4_in_cl_e34: "a4 \<in> closure_on top1_S2 top1_S2_topology (e34 - {a3, a4})"
-          using arc_endpoint_in_closure_of_interior[OF assms(1) hS2_haus assms(6,12,18) ha34_ne]
-          by (by100 blast)
-        have ha3_in_cl_e34: "a3 \<in> closure_on top1_S2 top1_S2_topology (e34 - {a3, a4})"
-          using arc_endpoint_in_closure_of_interior[OF assms(1) hS2_haus assms(6,12,18) ha34_ne]
-          by (by100 blast)
-        have ha4_in_cl_Rie: "a4 \<in> closure_on top1_S2 top1_S2_topology Ri_e"
-          using ha4_in_cl_e34 closure_on_mono[OF hRie(2)] by (by100 blast)
-        have ha3_in_cl_Rie: "a3 \<in> closure_on top1_S2 top1_S2_topology Ri_e"
-          using ha3_in_cl_e34 closure_on_mono[OF hRie(2)] by (by100 blast)
-        \<comment> \<open>Ri\_e \<subseteq> P12 (not Q12): if Ri\_e \<subseteq> Q12, a4 \<in> cl(Ri\_e) \<subseteq> cl(Q12) = Q12\<union>J12,
-           but a4 \<notin> Q12 (a4\<in>theta) and a4 \<notin> J12 (ha4\_not\_e12, ha4\_not\_Arc2). Contradiction.\<close>
-        have hRie_not_Q12: "\<And>Q. \<lbrakk>Q \<in> {W12a, W12b}; Q \<inter> D' = {};
-            closure_on top1_S2 top1_S2_topology Q = Q \<union> (e12 \<union> Arc2)\<rbrakk> \<Longrightarrow> \<not>(Ri_e \<subseteq> Q)"
-        proof -
-          fix Q assume hQ: "Q \<in> {W12a, W12b}" and hQD': "Q \<inter> D' = {}"
-              and hcl_Q: "closure_on top1_S2 top1_S2_topology Q = Q \<union> (e12 \<union> Arc2)"
-          show "\<not>(Ri_e \<subseteq> Q)"
-          proof assume "Ri_e \<subseteq> Q"
-            have "a4 \<in> closure_on top1_S2 top1_S2_topology Q"
-              using ha4_in_cl_Rie closure_on_mono[OF \<open>Ri_e \<subseteq> Q\<close>] by (by100 blast)
-            hence "a4 \<in> Q \<union> (e12 \<union> Arc2)" using hcl_Q by (by100 blast)
-            moreover have "a4 \<notin> Q"
-            proof -
-              have "Q \<subseteq> top1_S2 - (e12 \<union> Arc2)" using hQ hW12(4) by (by100 blast)
-              hence "Q \<subseteq> top1_S2 - (e12 \<union> Arc2 \<union> Arc3)"
-                sorry \<comment> \<open>Q \<subseteq> S2-J12 and Q\<inter>Arc3 = {} (Q\<inter>theta = {}).\<close>
-              thus ?thesis using ha4_not_e12 ha4_not_Arc2
-                using assms(19) unfolding top1_arc_endpoints_on_def defs by (by100 blast)
-            qed
-            moreover have "a4 \<notin> e12" by (rule ha4_not_e12)
-            moreover have "a4 \<notin> Arc2" by (rule ha4_not_Arc2)
-            ultimately show False by (by100 blast)
-          qed
-        qed
-        have hRie_not_Q13: "\<And>Q. \<lbrakk>Q \<in> {W13a, W13b}; Q \<inter> D' = {};
-            closure_on top1_S2 top1_S2_topology Q = Q \<union> (e12 \<union> Arc3)\<rbrakk> \<Longrightarrow> \<not>(Ri_e \<subseteq> Q)"
-        proof -
-          fix Q assume hQ: "Q \<in> {W13a, W13b}" and hQD': "Q \<inter> D' = {}"
-              and hcl_Q: "closure_on top1_S2 top1_S2_topology Q = Q \<union> (e12 \<union> Arc3)"
-          show "\<not>(Ri_e \<subseteq> Q)"
-          proof assume "Ri_e \<subseteq> Q"
-            have "a3 \<in> closure_on top1_S2 top1_S2_topology Q"
-              using ha3_in_cl_Rie closure_on_mono[OF \<open>Ri_e \<subseteq> Q\<close>] by (by100 blast)
-            hence "a3 \<in> Q \<union> (e12 \<union> Arc3)" using hcl_Q by (by100 blast)
-            moreover have "a3 \<notin> Q"
-            proof -
-              have "Q \<subseteq> top1_S2 - (e12 \<union> Arc3)" using hQ hW13(4) by (by100 blast)
-              thus ?thesis using ha3_not_e12 ha3_not_Arc3
-                using assms(18) unfolding top1_arc_endpoints_on_def defs by (by100 blast)
-            qed
-            moreover have "a3 \<notin> e12" by (rule ha3_not_e12)
-            moreover have "a3 \<notin> Arc3" by (rule ha3_not_Arc3)
-            ultimately show False by (by100 blast)
-          qed
-        qed
-        \<comment> \<open>Final: since D' \<neq> any J12/J13 component, and Ri\_e not in Q12/Q13,
-           the Q components must equal Rk (the third theta component).
-           closure(Rk) = Rk\<union>J12 = Rk\<union>J13. Rk\<inter>J12 = Rk\<inter>J13 = {}.
-           So J12 = J13, i.e., e12\<union>Arc2 = e12\<union>Arc3. Hence Arc2 = Arc3.
-           But a3 \<in> Arc2 and a3 \<notin> Arc3. Contradiction.\<close>
-        show False sorry \<comment> \<open>J12=J13 from Rk being component of both.\<close>
+        show False sorry \<comment> \<open>Q12=Q13=Rk, J12=J13, Arc2=Arc3 contradiction.\<close>
       qed
     qed
   qed
