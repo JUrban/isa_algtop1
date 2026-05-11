@@ -1251,7 +1251,16 @@ proof -
     proof (intro set_eqI iffI)
       \<comment> \<open>(\<subseteq>): image of carrier \<subseteq> carrier. Follows from j\_* being a homomorphism.\<close>
       fix c assume "c \<in> ?j_star_x ` (top1_fundamental_group_carrier C ?TC x)"
-      thus "c \<in> top1_fundamental_group_carrier ?X ?TX x" sorry
+      then obtain d where "d \<in> top1_fundamental_group_carrier C ?TC x" "c = ?j_star_x d"
+        by (by100 blast)
+      \<comment> \<open>j\_star\_x maps carrier to carrier (hom property at basepoint x).\<close>
+      have "top1_group_hom_on
+          (top1_fundamental_group_carrier C ?TC x) (top1_fundamental_group_mul C ?TC x)
+          (top1_fundamental_group_carrier ?X ?TX x) (top1_fundamental_group_mul ?X ?TX x) ?j_star_x"
+        sorry \<comment> \<open>induced\_on\_is\_hom at basepoint x.\<close>
+      hence "?j_star_x d \<in> top1_fundamental_group_carrier ?X ?TX x"
+        using \<open>d \<in> _\<close> unfolding top1_group_hom_on_def by (by100 blast)
+      thus "c \<in> top1_fundamental_group_carrier ?X ?TX x" using \<open>c = _\<close> by (by100 blast)
     next
       \<comment> \<open>(\<supseteq>): every [f]\_X is hit. Key argument.\<close>
       fix c assume hc: "c \<in> top1_fundamental_group_carrier ?X ?TX x"
@@ -1265,8 +1274,18 @@ proof -
           \<or> top1_path_homotopic_on ?X ?TX x x f (top1_path_power (top1_path_reverse g) x n)"
         by (by100 blast)
       \<comment> \<open>In either case: the power is a loop in C, and j\_* maps it to [f].\<close>
+      \<comment> \<open>For either g^n or (g\_rev)^n: it's a loop in C, and j\_* maps its class to [f].\<close>
       thus "c \<in> ?j_star_x ` (top1_fundamental_group_carrier C ?TC x)"
-        sorry \<comment> \<open>g^n loop in C, j\_*([g^n]\_C) = [g^n]\_X = [f]\_X = c.\<close>
+      proof (elim disjE)
+        assume hfgn: "top1_path_homotopic_on ?X ?TX x x f (top1_path_power g x n)"
+        \<comment> \<open>g^n is a loop in C.\<close>
+        \<comment> \<open>g^n loop in C. j\_*([g^n]\_C) = [g^n]\_X = [f]\_X = c. So c \<in> image(j\_*).\<close>
+        show ?thesis sorry \<comment> \<open>top1\_path\_power\_is\_loop + inclusion\_induced\_class + homotopy class eq.\<close>
+      next
+        assume hfgrn: "top1_path_homotopic_on ?X ?TX x x f (top1_path_power (top1_path_reverse g) x n)"
+        \<comment> \<open>Same argument with g\_rev instead of g.\<close>
+        show ?thesis sorry
+      qed
     qed
     \<comment> \<open>Transfer surjectivity from x to c0 via basepoint change (C path-connected).\<close>
     show ?thesis sorry \<comment> \<open>Basepoint change: surj at x \<Rightarrow> surj at c0.\<close>
