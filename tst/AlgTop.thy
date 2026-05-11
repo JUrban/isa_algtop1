@@ -2746,13 +2746,97 @@ proof -
         (subspace_topology top1_S2 top1_S2_topology (e34 - {a3, a4}))"
       by (rule arc_minus_endpoints_connected[OF assms(1) hS2_haus assms(6,12,18) ha3_ne_a4_loc])
     have hint_e12_sub: "e12 - {a1, a2} \<subseteq> U0 \<union> V0"
-      sorry \<comment> \<open>int(e12) \<subseteq> S2-(D1\<union>D2) = U0\<union>V0.\<close>
+      sorry \<comment> \<open>int(e12) avoids D1\<union>D2: K4 intersection facts. Same as AlgTopCached proof.\<close>
     have hint_e34_sub: "e34 - {a3, a4} \<subseteq> U0 \<union> V0"
-      sorry \<comment> \<open>int(e34) \<subseteq> S2-(D1\<union>D2) = U0\<union>V0.\<close>
+      sorry \<comment> \<open>Same for int(e34).\<close>
     have he12_in_comp: "e12 - {a1, a2} \<subseteq> U0 \<or> e12 - {a1, a2} \<subseteq> V0"
-      sorry \<comment> \<open>Connected subset of U0\<union>V0 with separation \<Rightarrow> in one component.\<close>
+    proof -
+      have hW_top: "is_topology_on (U0 \<union> V0)
+          (subspace_topology top1_S2 top1_S2_topology (U0 \<union> V0))"
+        by (rule subspace_topology_is_topology_on[OF hTopS2])
+           (use hUV0(4) in \<open>by100 blast\<close>)
+      have hU0_open_W: "U0 \<in> subspace_topology top1_S2 top1_S2_topology (U0 \<union> V0)"
+      proof -
+        have "U0 = (U0 \<union> V0) \<inter> U0" by (by100 blast)
+        thus ?thesis using hU0_open unfolding subspace_topology_def by (by100 blast)
+      qed
+      have hV0_open_W: "V0 \<in> subspace_topology top1_S2 top1_S2_topology (U0 \<union> V0)"
+      proof -
+        have "V0 = (U0 \<union> V0) \<inter> V0" by (by100 blast)
+        thus ?thesis using hV0_open unfolding subspace_topology_def by (by100 blast)
+      qed
+      have hsep: "top1_is_separation_on (U0 \<union> V0)
+          (subspace_topology top1_S2 top1_S2_topology (U0 \<union> V0)) U0 V0"
+        unfolding top1_is_separation_on_def
+        using hU0_open_W hV0_open_W hUV0(1,2,3) by (by100 blast)
+      have he12_conn_W: "top1_connected_on (e12 - {a1, a2})
+          (subspace_topology (U0 \<union> V0)
+            (subspace_topology top1_S2 top1_S2_topology (U0 \<union> V0)) (e12 - {a1, a2}))"
+      proof -
+        have "subspace_topology top1_S2 top1_S2_topology (e12 - {a1, a2}) =
+            subspace_topology (U0 \<union> V0)
+              (subspace_topology top1_S2 top1_S2_topology (U0 \<union> V0)) (e12 - {a1, a2})"
+          using subspace_topology_trans[of "e12 - {a1, a2}" "U0 \<union> V0"]
+            hint_e12_sub by (by100 simp)
+        thus ?thesis using he12_conn by (by100 simp)
+      qed
+      from Lemma_23_2_disjoint[OF hW_top hsep hint_e12_sub he12_conn_W]
+      have "(e12 - {a1, a2}) \<inter> V0 = {} \<or> (e12 - {a1, a2}) \<inter> U0 = {}" .
+      thus ?thesis
+      proof
+        assume "(e12 - {a1, a2}) \<inter> V0 = {}"
+        hence "e12 - {a1, a2} \<subseteq> U0" using hint_e12_sub by (by100 blast)
+        thus ?thesis by (by100 blast)
+      next
+        assume "(e12 - {a1, a2}) \<inter> U0 = {}"
+        hence "e12 - {a1, a2} \<subseteq> V0" using hint_e12_sub by (by100 blast)
+        thus ?thesis by (by100 blast)
+      qed
+    qed
     have he34_in_comp: "e34 - {a3, a4} \<subseteq> U0 \<or> e34 - {a3, a4} \<subseteq> V0"
-      sorry
+    proof -
+      have hW_top: "is_topology_on (U0 \<union> V0)
+          (subspace_topology top1_S2 top1_S2_topology (U0 \<union> V0))"
+        by (rule subspace_topology_is_topology_on[OF hTopS2])
+           (use hUV0(4) in \<open>by100 blast\<close>)
+      have hU0_open_W: "U0 \<in> subspace_topology top1_S2 top1_S2_topology (U0 \<union> V0)"
+      proof -
+        have "U0 = (U0 \<union> V0) \<inter> U0" by (by100 blast)
+        thus ?thesis using hU0_open unfolding subspace_topology_def by (by100 blast)
+      qed
+      have hV0_open_W: "V0 \<in> subspace_topology top1_S2 top1_S2_topology (U0 \<union> V0)"
+      proof -
+        have "V0 = (U0 \<union> V0) \<inter> V0" by (by100 blast)
+        thus ?thesis using hV0_open unfolding subspace_topology_def by (by100 blast)
+      qed
+      have hsep: "top1_is_separation_on (U0 \<union> V0)
+          (subspace_topology top1_S2 top1_S2_topology (U0 \<union> V0)) U0 V0"
+        unfolding top1_is_separation_on_def
+        using hU0_open_W hV0_open_W hUV0(1,2,3) by (by100 blast)
+      have he34_conn_W: "top1_connected_on (e34 - {a3, a4})
+          (subspace_topology (U0 \<union> V0)
+            (subspace_topology top1_S2 top1_S2_topology (U0 \<union> V0)) (e34 - {a3, a4}))"
+      proof -
+        have "subspace_topology top1_S2 top1_S2_topology (e34 - {a3, a4}) =
+            subspace_topology (U0 \<union> V0)
+              (subspace_topology top1_S2 top1_S2_topology (U0 \<union> V0)) (e34 - {a3, a4})"
+          using subspace_topology_trans[of "e34 - {a3, a4}" "U0 \<union> V0"]
+            hint_e34_sub by (by100 simp)
+        thus ?thesis using he34_conn by (by100 simp)
+      qed
+      from Lemma_23_2_disjoint[OF hW_top hsep hint_e34_sub he34_conn_W]
+      have "(e34 - {a3, a4}) \<inter> V0 = {} \<or> (e34 - {a3, a4}) \<inter> U0 = {}" .
+      thus ?thesis
+      proof
+        assume "(e34 - {a3, a4}) \<inter> V0 = {}"
+        hence "e34 - {a3, a4} \<subseteq> U0" using hint_e34_sub by (by100 blast)
+        thus ?thesis by (by100 blast)
+      next
+        assume "(e34 - {a3, a4}) \<inter> U0 = {}"
+        hence "e34 - {a3, a4} \<subseteq> V0" using hint_e34_sub by (by100 blast)
+        thus ?thesis by (by100 blast)
+      qed
+    qed
     have hx_ne_y_comp: "\<not>(x \<in> U0 \<and> y \<in> U0) \<and> \<not>(x \<in> V0 \<and> y \<in> V0)"
     proof (intro conjI notI)
       assume hboth: "x \<in> U0 \<and> y \<in> U0"
