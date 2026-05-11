@@ -1192,14 +1192,16 @@ proof -
       and he34b_arc: "top1_is_arc_on e34b (subspace_topology top1_S2 top1_S2_topology e34b)"
     using arc_split_at_midpoint[OF assms(1) hS2_haus assms(6) assms(12)] by blast
   \<comment> \<open>Step B2: x \<notin> {a1, a2} and y \<notin> {a3, a4} (interior points of arcs).\<close>
-  have hx_int: "x \<notin> top1_arc_endpoints_on e12 (subspace_topology top1_S2 top1_S2_topology e12)"
-    sorry \<comment> \<open>e12 = e12a \<union> e12b (arcs), e12a \<inter> e12b = {x}. Arcs have \<ge> 2 points (homeo to [0,1]).
-       So e12-{x} = (e12a-{x}) \<union> (e12b-{x}), both nonempty, disjoint \<Rightarrow> disconnected.
-       Endpoints = points where removal leaves connected. So x is not an endpoint.\<close>
-  hence hx_not_endpts: "x \<noteq> a1 \<and> x \<noteq> a2" using assms(16) by (by100 blast)
-  have hy_int: "y \<notin> top1_arc_endpoints_on e34 (subspace_topology top1_S2 top1_S2_topology e34)"
+  \<comment> \<open>x is an interior point of e12 (not an endpoint). From arc\_split\_at\_midpoint:
+     e12 = e12a \<union> e12b, e12a \<inter> e12b = {x}. Removing x disconnects e12
+     (e12a-{x} and e12b-{x} are nonempty disjoint clopen pieces).
+     Since endpoints = {p | A-{p} connected}, x is not an endpoint.\<close>
+  have hx_not_endpts: "x \<noteq> a1 \<and> x \<noteq> a2"
+    sorry \<comment> \<open>x is interior point of e12. e12 = e12a \<union> e12b with e12a \<inter> e12b = {x}.
+       Each sub-arc has \<ge> 2 points (homeo to [0,1]). So e12-{x} is disconnected.
+       Endpoints = points whose removal leaves connected. So x \<notin> endpoints = {a1, a2}.\<close>
+  have hy_not_endpts: "y \<noteq> a3 \<and> y \<noteq> a4"
     sorry \<comment> \<open>Same argument for y in e34.\<close>
-  hence hy_not_endpts: "y \<noteq> a3 \<and> y \<noteq> a4" using assms(18) by (by100 blast)
   \<comment> \<open>Step B3: C - D1 is path-connected and contains x, y.
      C - D1 = (e12-{a2}) \<union> e41 \<union> (e34-{a3}). Connected chain via a1, a4.
      x \<in> e12-{a2} (x interior), y \<in> e34-{a3} (y interior).
