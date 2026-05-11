@@ -2152,12 +2152,142 @@ proof -
         proof assume "Ri_Q12 = Ri_D"
           hence "Q12 \<subseteq> D'" using \<open>Q12 \<subseteq> Ri_Q12\<close> hRiD_sub_D' by (by100 blast)
           thus False using hQ12(3,4) by (by100 blast) qed
-        have "Ri_Q12 \<noteq> Ri_e" sorry \<comment> \<open>a4 boundary argument.\<close>
+        have "Ri_Q12 \<noteq> Ri_e"
+        proof assume hRiQ12_eq: "Ri_Q12 = Ri_e"
+          hence "Q12 \<subseteq> Ri_e" using \<open>Q12 \<subseteq> Ri_Q12\<close> by (by100 blast)
+          hence "Ri_e \<inter> Q12 \<noteq> {}" using hQ12(4) by (by100 blast)
+          \<comment> \<open>Ri\_e connected \<subseteq> S2-J12. By Lemma\_23\_2: Ri\_e \<subseteq> Q12.\<close>
+          have hRie_conn_loc: "top1_connected_on Ri_e (subspace_topology top1_S2 top1_S2_topology Ri_e)"
+            using hRie(1) hR(8,9,10) by (by100 blast)
+          have hRie_sub_J12: "Ri_e \<subseteq> top1_S2 - (e12 \<union> Arc2)"
+            using hRie(1) element_of_three_subset hR(7) by (by100 blast)
+          have "Ri_e \<subseteq> Q12"
+          proof -
+            have hRie_conn_J12: "top1_connected_on Ri_e
+                (subspace_topology (top1_S2-(e12\<union>Arc2))
+                    (subspace_topology top1_S2 top1_S2_topology (top1_S2-(e12\<union>Arc2))) Ri_e)"
+            proof -
+              have hRie_conn_l: "top1_connected_on Ri_e (subspace_topology top1_S2 top1_S2_topology Ri_e)"
+                using hRie(1) hR(8,9,10) by (by100 blast)
+              have "subspace_topology top1_S2 top1_S2_topology Ri_e =
+                  subspace_topology (top1_S2-(e12\<union>Arc2))
+                      (subspace_topology top1_S2 top1_S2_topology (top1_S2-(e12\<union>Arc2))) Ri_e"
+                using subspace_topology_trans[of Ri_e "top1_S2-(e12\<union>Arc2)"] hRie_sub_J12 by (by100 simp)
+              thus ?thesis using hRie_conn_l by (by100 simp)
+            qed
+            have hTJ12_l: "is_topology_on (top1_S2-(e12\<union>Arc2)) (subspace_topology top1_S2 top1_S2_topology (top1_S2-(e12\<union>Arc2)))"
+              by (rule subspace_topology_is_topology_on[OF hTopS2]) (by100 blast)
+            have "W12a \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2-(e12\<union>Arc2))"
+              using hW12_open hW12(4) unfolding subspace_topology_def by (by100 blast)
+            moreover have "W12b \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2-(e12\<union>Arc2))"
+              using hW12_open hW12(4) unfolding subspace_topology_def by (by100 blast)
+            ultimately have hSep_l: "top1_is_separation_on (top1_S2-(e12\<union>Arc2))
+                (subspace_topology top1_S2 top1_S2_topology (top1_S2-(e12\<union>Arc2))) W12a W12b"
+              unfolding top1_is_separation_on_def using hW12(1,2,3,4) by (by100 blast)
+            from Lemma_23_2[OF hTJ12_l hSep_l hRie_sub_J12 hRie_conn_J12]
+            have "Ri_e \<subseteq> W12a \<or> Ri_e \<subseteq> W12b" by (by100 blast)
+            thus "Ri_e \<subseteq> Q12" using \<open>Ri_e \<inter> Q12 \<noteq> {}\<close> hQ12(1) hW12(3) by (by100 blast)
+          qed
+          \<comment> \<open>cl(Ri\_e) \<subseteq> cl(Q12) = Q12 \<union> J12.\<close>
+          have "a4 \<in> closure_on top1_S2 top1_S2_topology Q12"
+          proof -
+            have ha34_ne: "a3 \<noteq> a4" using ha3_ne_a4 .
+            have "a4 \<in> closure_on top1_S2 top1_S2_topology (e34 - {a3, a4})"
+              using arc_endpoint_in_closure_of_interior[OF assms(1) hS2_haus assms(6,12,18) ha34_ne]
+              by (by100 blast)
+            hence "a4 \<in> closure_on top1_S2 top1_S2_topology Ri_e"
+              using closure_on_mono[OF hRie(2)] by (by100 blast)
+            thus ?thesis using closure_on_mono[OF \<open>Ri_e \<subseteq> Q12\<close>] by (by100 blast)
+          qed
+          have "closure_on top1_S2 top1_S2_topology Q12 = Q12 \<union> (e12 \<union> Arc2)"
+          proof -
+            have hcl_W12a_l: "closure_on top1_S2 top1_S2_topology W12a = W12a \<union> (e12 \<union> Arc2)"
+              by (rule hcl_scc_comp[OF hJ12_scc hW12(1,2,3,4,5,6) hW12_open[THEN conjunct1] hW12_open[THEN conjunct2]])
+            have hcl_W12b_l: "closure_on top1_S2 top1_S2_topology W12b = W12b \<union> (e12 \<union> Arc2)"
+            proof -
+              have h1: "W12b \<inter> W12a = {}" using hW12(3) by (by100 blast)
+              have h2: "W12b \<union> W12a = top1_S2 - (e12 \<union> Arc2)" using hW12(4) by (by100 blast)
+              show ?thesis by (rule hcl_scc_comp[OF hJ12_scc hW12(2,1) h1 h2 hW12(6,5) hW12_open[THEN conjunct2] hW12_open[THEN conjunct1]])
+            qed
+            from hQ12(1) show ?thesis using hcl_W12a_l hcl_W12b_l by (by100 blast)
+          qed
+          hence "a4 \<in> Q12 \<union> (e12 \<union> Arc2)" using \<open>a4 \<in> closure_on _ _ Q12\<close> by (by100 blast)
+          moreover have "a4 \<notin> e12" by (rule ha4_not_e12)
+          moreover have "a4 \<notin> Arc2" by (rule ha4_not_Arc2)
+          ultimately have "a4 \<in> Q12" by (by100 blast)
+          hence "a4 \<in> R1 \<union> R2 \<union> R3" using hQ12(2) by (by100 blast)
+          hence "a4 \<in> top1_S2 - (e12 \<union> Arc2 \<union> Arc3)" using hR(7) by (by100 blast)
+          moreover have "a4 \<in> Arc3" using assms(19) unfolding top1_arc_endpoints_on_def defs by (by100 blast)
+          ultimately show False by (by100 blast)
+        qed
         have "Ri_Q13 \<noteq> Ri_D"
         proof assume "Ri_Q13 = Ri_D"
           hence "Q13 \<subseteq> D'" using \<open>Q13 \<subseteq> Ri_Q13\<close> hRiD_sub_D' by (by100 blast)
           thus False using hQ13(3,4) by (by100 blast) qed
-        have "Ri_Q13 \<noteq> Ri_e" sorry \<comment> \<open>a3 boundary argument.\<close>
+        have "Ri_Q13 \<noteq> Ri_e"
+        proof assume hRiQ13_eq: "Ri_Q13 = Ri_e"
+          hence "Q13 \<subseteq> Ri_e" using \<open>Q13 \<subseteq> Ri_Q13\<close> by (by100 blast)
+          hence "Ri_e \<inter> Q13 \<noteq> {}" using hQ13(4) by (by100 blast)
+          have hRie_sub_J13: "Ri_e \<subseteq> top1_S2 - (e12 \<union> Arc3)"
+            using hRie(1) element_of_three_subset hR(7) by (by100 blast)
+          have "Ri_e \<subseteq> Q13"
+          proof -
+            have hRie_conn_J13: "top1_connected_on Ri_e
+                (subspace_topology (top1_S2-(e12\<union>Arc3))
+                    (subspace_topology top1_S2 top1_S2_topology (top1_S2-(e12\<union>Arc3))) Ri_e)"
+            proof -
+              have hRie_conn_l: "top1_connected_on Ri_e (subspace_topology top1_S2 top1_S2_topology Ri_e)"
+                using hRie(1) hR(8,9,10) by (by100 blast)
+              have "subspace_topology top1_S2 top1_S2_topology Ri_e =
+                  subspace_topology (top1_S2-(e12\<union>Arc3))
+                      (subspace_topology top1_S2 top1_S2_topology (top1_S2-(e12\<union>Arc3))) Ri_e"
+                using subspace_topology_trans[of Ri_e "top1_S2-(e12\<union>Arc3)"] hRie_sub_J13 by (by100 simp)
+              thus ?thesis using hRie_conn_l by (by100 simp)
+            qed
+            have hTJ13_l: "is_topology_on (top1_S2-(e12\<union>Arc3)) (subspace_topology top1_S2 top1_S2_topology (top1_S2-(e12\<union>Arc3)))"
+              by (rule subspace_topology_is_topology_on[OF hTopS2]) (by100 blast)
+            have "W13a \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2-(e12\<union>Arc3))"
+              using hW13_open hW13(4) unfolding subspace_topology_def by (by100 blast)
+            moreover have "W13b \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2-(e12\<union>Arc3))"
+              using hW13_open hW13(4) unfolding subspace_topology_def by (by100 blast)
+            ultimately have hSep_l: "top1_is_separation_on (top1_S2-(e12\<union>Arc3))
+                (subspace_topology top1_S2 top1_S2_topology (top1_S2-(e12\<union>Arc3))) W13a W13b"
+              unfolding top1_is_separation_on_def using hW13(1,2,3,4) by (by100 blast)
+            from Lemma_23_2[OF hTJ13_l hSep_l hRie_sub_J13 hRie_conn_J13]
+            have "Ri_e \<subseteq> W13a \<or> Ri_e \<subseteq> W13b" by (by100 blast)
+            thus "Ri_e \<subseteq> Q13" using \<open>Ri_e \<inter> Q13 \<noteq> {}\<close> hQ13(1) hW13(3) by (by100 blast)
+          qed
+          have "a3 \<in> closure_on top1_S2 top1_S2_topology Q13"
+          proof -
+            have ha34_ne: "a3 \<noteq> a4" using ha3_ne_a4 .
+            have "a3 \<in> closure_on top1_S2 top1_S2_topology (e34 - {a3, a4})"
+              using arc_endpoint_in_closure_of_interior[OF assms(1) hS2_haus assms(6,12,18) ha34_ne]
+              by (by100 blast)
+            hence "a3 \<in> closure_on top1_S2 top1_S2_topology Ri_e"
+              using closure_on_mono[OF hRie(2)] by (by100 blast)
+            thus ?thesis using closure_on_mono[OF \<open>Ri_e \<subseteq> Q13\<close>] by (by100 blast)
+          qed
+          have "closure_on top1_S2 top1_S2_topology Q13 = Q13 \<union> (e12 \<union> Arc3)"
+          proof -
+            have hcl_W13a_l: "closure_on top1_S2 top1_S2_topology W13a = W13a \<union> (e12 \<union> Arc3)"
+              by (rule hcl_scc_comp[OF hJ13_scc hW13(1,2,3,4,5,6) hW13_open[THEN conjunct1] hW13_open[THEN conjunct2]])
+            have hcl_W13b_l: "closure_on top1_S2 top1_S2_topology W13b = W13b \<union> (e12 \<union> Arc3)"
+            proof -
+              have h1: "W13b \<inter> W13a = {}" using hW13(3) by (by100 blast)
+              have h2: "W13b \<union> W13a = top1_S2 - (e12 \<union> Arc3)" using hW13(4) by (by100 blast)
+              show ?thesis by (rule hcl_scc_comp[OF hJ13_scc hW13(2,1) h1 h2 hW13(6,5) hW13_open[THEN conjunct2] hW13_open[THEN conjunct1]])
+            qed
+            from hQ13(1) show ?thesis using hcl_W13a_l hcl_W13b_l by (by100 blast)
+          qed
+          hence "a3 \<in> Q13 \<union> (e12 \<union> Arc3)" using \<open>a3 \<in> closure_on _ _ Q13\<close> by (by100 blast)
+          moreover have "a3 \<notin> e12" by (rule ha3_not_e12)
+          moreover have "a3 \<notin> Arc3" by (rule ha3_not_Arc3)
+          ultimately have "a3 \<in> Q13" by (by100 blast)
+          hence "a3 \<in> R1 \<union> R2 \<union> R3" using hQ13(2) by (by100 blast)
+          hence "a3 \<in> top1_S2 - (e12 \<union> Arc2 \<union> Arc3)" using hR(7) by (by100 blast)
+          moreover have "a3 \<in> Arc2" using assms(20) unfolding top1_arc_endpoints_on_def defs by (by100 blast)
+          ultimately show False by (by100 blast)
+        qed
         \<comment> \<open>Ri\_Q12 = Ri\_Q13 (third\_element\_unique).\<close>
         have hR_dist: "R1 \<noteq> R2" "R2 \<noteq> R3" "R1 \<noteq> R3"
           using hR(1,2,3,4,5,6) by (by100 blast)+
