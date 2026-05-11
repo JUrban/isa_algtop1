@@ -1224,7 +1224,23 @@ proof -
     \<comment> \<open>Step B: j\_*([g]\_C) = [g]\_X (inclusion sends loop class to itself).
        Step C: [g] generates \<pi>_1(X), so j\_* is surjective.
        Step D: Basepoint change from x to c0.\<close>
-    show ?thesis sorry \<comment> \<open>Generator in C \<Rightarrow> j\_* surjective. Needs basepoint change + class computation.\<close>
+    \<comment> \<open>j\_*([g]\_C) = [g]\_X by inclusion\_induced\_class.\<close>
+    have hx_X: "x \<in> ?X" using hx_C hC_sub_X by (by100 blast)
+    let ?j_star_x = "top1_fundamental_group_induced_on C ?TC x ?X ?TX x id"
+    \<comment> \<open>Note: inclusion uses (\<lambda>x. x) not id in the library.\<close>
+    let ?j_star_x_lam = "top1_fundamental_group_induced_on C ?TC x ?X ?TX x (\<lambda>x. x)"
+    have hj_star_x_class: "?j_star_x_lam {h. top1_loop_equiv_on C ?TC x g h} =
+        {k. top1_loop_equiv_on ?X ?TX x g k}"
+      sorry \<comment> \<open>subspace\_inclusion\_induced\_class or inclusion\_induced\_class.\<close>
+    \<comment> \<open>Note: ?j\_star and ?j\_star\_x\_lam agree extensionally (id = \<lambda>x. x).\<close>
+    \<comment> \<open>Every element of \<pi>_1(X,x) is a power of [g]\_X. Since each power lifts
+       from C (g^n is a loop in C): j\_*\_x is surjective.\<close>
+    \<comment> \<open>Surjectivity at x, then basepoint change to c0.\<close>
+    have hj_star_x_surj: "?j_star_x ` (top1_fundamental_group_carrier C ?TC x) =
+        top1_fundamental_group_carrier ?X ?TX x"
+      sorry \<comment> \<open>Every [f]\_X = [g^n]\_X = j\_*([g^n]\_C). Uses hg\_generates + power\_loop\_in\_C.\<close>
+    \<comment> \<open>Transfer surjectivity from x to c0 via basepoint change (C path-connected).\<close>
+    show ?thesis sorry \<comment> \<open>Basepoint change: surj at x \<Rightarrow> surj at c0.\<close>
   qed
   \<comment> \<open>Step 5: Surjective hom Z \<rightarrow> Z is injective (hence bijective).\<close>
   have hj_star_inj: "inj_on ?j_star (top1_fundamental_group_carrier C ?TC c0)" sorry
