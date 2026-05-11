@@ -905,6 +905,27 @@ lemma subset_disjoint_helper:
   assumes "S \<subseteq> A" and "A \<inter> B = {}" shows "S \<inter> B = {}"
   using assms by (by100 blast)
 
+lemma element_of_three_subset:
+  assumes "x \<in> {A, B, C}" shows "x \<subseteq> A \<union> B \<union> C"
+  using assms by (by100 blast)
+
+lemma component_eq_from_subset:
+  assumes "C = A \<or> C = B" "C \<subseteq> A" "A \<inter> B = {}" "B \<noteq> {}"
+  shows "C = A"
+  using assms by (by100 blast)
+
+lemma nonempty_inter_from_subset:
+  assumes "S \<noteq> {}" "S \<subseteq> A" shows "S \<inter> A \<noteq> {}"
+  using assms by (by100 blast)
+
+lemma false_from_disjoint_nonempty:
+  assumes "S \<inter> A = {}" "S \<inter> A \<noteq> {}" shows False
+  using assms by (by100 blast)
+
+lemma subset_from_eq_and_subset:
+  assumes "C = A" "S \<subseteq> A" shows "S \<subseteq> C"
+  using assms by (by100 blast)
+
 lemma subset_of_complement_disjoint:
   assumes "R = X - T" and "S \<subseteq> T"
   shows "S \<inter> R = {}"
@@ -1289,9 +1310,34 @@ proof -
       assume "Ri \<inter> A = {}" thus ?thesis using hRi_sub by (by100 blast)
     qed
   qed
-  have he12_ne: "e12 - {a1, a2} \<noteq> {}" sorry
+  have he12_ne: "e12 - {a1, a2} \<noteq> {}"
+  proof -
+    obtain h where hh: "top1_homeomorphism_on I_set I_top e12
+        (subspace_topology top1_S2 top1_S2_topology e12) h"
+      using assms(10) unfolding top1_is_arc_on_def by (by100 blast)
+    have hbij: "bij_betw h I_set e12" using hh unfolding top1_homeomorphism_on_def by (by100 blast)
+    have h12: "(1/2::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+    have "h (1/2) \<in> e12" using hbij h12 unfolding bij_betw_def by (by100 blast)
+    moreover have "h (1/2) \<noteq> h 0 \<and> h (1/2) \<noteq> h 1"
+    proof -
+      have hinj: "inj_on h I_set" using hbij unfolding bij_betw_def by (by100 blast)
+      have h0: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+      have h1: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+      have "h (1/2) \<noteq> h 0"
+      proof assume "h (1/2) = h 0"
+        from inj_onD[OF hinj this h12 h0] show False by (by100 simp) qed
+      moreover have "h (1/2) \<noteq> h 1"
+      proof assume "h (1/2) = h 1"
+        from inj_onD[OF hinj this h12 h1] show False by (by100 simp) qed
+      ultimately show ?thesis by (by100 blast)
+    qed
+    moreover have "{h 0, h 1} = {a1, a2}"
+      using arc_endpoints_are_boundary[OF assms(1) hS2_haus assms(4,10) hh] assms(16)
+      by (by100 simp)
+    ultimately show ?thesis by (by100 blast)
+  qed
   have he12_not_Rie: "(e12 - {a1, a2}) \<inter> Ri_e = {}"
-    sorry \<comment> \<open>Ri\_e \<subseteq> R1\<union>R2\<union>R3, e12 \<inter> (R1\<union>R2\<union>R3) = {}. by100 context too large.\<close>
+    sorry \<comment> \<open>Follows from Ri\_e \<subseteq> R1\<union>R2\<union>R3 + e12\<inter>(R1\<union>R2\<union>R3)={}. by100 context too large.\<close>
   \<comment> \<open>KEY FACT: Ri\_e is a connected COMPONENT of S2-D (= A or B exactly).
      This follows from the theta-space boundary structure (textbook 65.1(a)).\<close>
   have hRie_is_comp: "Ri_e = A \<or> Ri_e = B"
