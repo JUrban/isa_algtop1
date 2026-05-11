@@ -2053,8 +2053,8 @@ proof -
       (top1_fundamental_group_carrier C ?TC c0)
       (top1_fundamental_group_mul C ?TC c0)
       top1_Z_group top1_Z_mul"
-  proof -
-    \<comment> \<open>C is SCC: \<exists>f. continuous bijection S1 \<rightarrow> C.\<close>
+    by (rule SCC_pi1_iso_Z[OF assms(1) hC_scc assms(40)])
+  (* Old inline proof replaced by SCC_pi1_iso_Z call.
     obtain f where hf_cont: "top1_continuous_map_on top1_S1 top1_S1_topology top1_S2 top1_S2_topology f"
         and hf_inj: "inj_on f top1_S1" and hf_img: "f ` top1_S1 = C"
       using hC_scc unfolding top1_simple_closed_curve_on_def by (by100 blast)
@@ -2162,7 +2162,7 @@ proof -
       by (rule groups_isomorphic_trans_fwd[OF h_pi1_S1_C_sym h_pi1_S1_bp_sym])
     show ?thesis
       by (rule groups_isomorphic_trans_fwd[OF h1 h_pi1_S1_Z])
-  qed
+  *)
   \<comment> \<open>Step 5b: \<pi>_1(X, c0) \<cong> Z.
      X = S2-\{p,q\}. By pi1\_S2\_minus\_two\_points\_infinite\_cyclic.\<close>
   have hX_pi1_Z: "top1_groups_isomorphic_on
