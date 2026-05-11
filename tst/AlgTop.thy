@@ -829,29 +829,80 @@ proof -
   define B where "B = gh2 \<union> wh2"
   define CC where "CC = gh3 \<union> wh3"
   \<comment> \<open>Step 1: A, B, CC are arcs with endpoints {g, w}.\<close>
+  have hh1_gh1: "h1 \<in> top1_arc_endpoints_on gh1 (subspace_topology top1_S2 top1_S2_topology gh1)"
+    using assms(22) by (by100 blast)
+  have hh1_wh1: "h1 \<in> top1_arc_endpoints_on wh1 (subspace_topology top1_S2 top1_S2_topology wh1)"
+    using assms(25) by (by100 blast)
+  have hh2_gh2: "h2 \<in> top1_arc_endpoints_on gh2 (subspace_topology top1_S2 top1_S2_topology gh2)"
+    using assms(23) by (by100 blast)
+  have hh2_wh2: "h2 \<in> top1_arc_endpoints_on wh2 (subspace_topology top1_S2 top1_S2_topology wh2)"
+    using assms(26) by (by100 blast)
+  have hh3_gh3: "h3 \<in> top1_arc_endpoints_on gh3 (subspace_topology top1_S2 top1_S2_topology gh3)"
+    using assms(24) by (by100 blast)
+  have hh3_wh3: "h3 \<in> top1_arc_endpoints_on wh3 (subspace_topology top1_S2 top1_S2_topology wh3)"
+    using assms(27) by (by100 blast)
   have hA_arc: "top1_is_arc_on A (subspace_topology top1_S2 top1_S2_topology A)"
-    sorry \<comment> \<open>arcs\_concatenation\_is\_arc[OF ...]\<close>
+    unfolding A_def
+    by (rule arcs_concatenation_is_arc[OF hS2 hS2_haus assms(13,4,16,7) assms(40) hh1_gh1 hh1_wh1])
   have hB_arc: "top1_is_arc_on B (subspace_topology top1_S2 top1_S2_topology B)"
-    sorry
+    unfolding B_def
+    by (rule arcs_concatenation_is_arc[OF hS2 hS2_haus assms(14,5,17,8) assms(41) hh2_gh2 hh2_wh2])
   have hCC_arc: "top1_is_arc_on CC (subspace_topology top1_S2 top1_S2_topology CC)"
-    sorry
+    unfolding CC_def
+    by (rule arcs_concatenation_is_arc[OF hS2 hS2_haus assms(15,6,18,9) assms(42) hh3_gh3 hh3_wh3])
   have hA_sub: "A \<subseteq> top1_S2" unfolding A_def using assms(4,7) by (by100 blast)
   have hB_sub: "B \<subseteq> top1_S2" unfolding B_def using assms(5,8) by (by100 blast)
   have hCC_sub: "CC \<subseteq> top1_S2" unfolding CC_def using assms(6,9) by (by100 blast)
+  have hg_ne_h1: "g \<noteq> h1" using hcard by (auto simp: card_insert_if split: if_splits)
+  have hh1_ne_w: "h1 \<noteq> w" using hcard by (auto simp: card_insert_if split: if_splits)
+  have hg_ne_h2: "g \<noteq> h2" using hcard by (auto simp: card_insert_if split: if_splits)
+  have hh2_ne_w: "h2 \<noteq> w" using hcard by (auto simp: card_insert_if split: if_splits)
+  have hg_ne_h3: "g \<noteq> h3" using hcard by (auto simp: card_insert_if split: if_splits)
+  have hh3_ne_w: "h3 \<noteq> w" using hcard by (auto simp: card_insert_if split: if_splits)
+  have hep_wh1_swap: "top1_arc_endpoints_on wh1 (subspace_topology top1_S2 top1_S2_topology wh1) = {h1, w}"
+    using assms(25) by (by100 blast)
+  have hep_wh2_swap: "top1_arc_endpoints_on wh2 (subspace_topology top1_S2 top1_S2_topology wh2) = {h2, w}"
+    using assms(26) by (by100 blast)
+  have hep_wh3_swap: "top1_arc_endpoints_on wh3 (subspace_topology top1_S2 top1_S2_topology wh3) = {h3, w}"
+    using assms(27) by (by100 blast)
   have hA_ep: "top1_arc_endpoints_on A (subspace_topology top1_S2 top1_S2_topology A) = {g, w}"
-    sorry
+    unfolding A_def
+    by (rule arc_concat_endpoints[OF hS2 hS2_haus assms(13,4,16,7) assms(40)
+        hh1_gh1 hh1_wh1 assms(22) hep_wh1_swap hg_ne_h1 hh1_ne_w])
   have hB_ep: "top1_arc_endpoints_on B (subspace_topology top1_S2 top1_S2_topology B) = {g, w}"
-    sorry
+    unfolding B_def
+    by (rule arc_concat_endpoints[OF hS2 hS2_haus assms(14,5,17,8) assms(41)
+        hh2_gh2 hh2_wh2 assms(23) hep_wh2_swap hg_ne_h2 hh2_ne_w])
   have hCC_ep: "top1_arc_endpoints_on CC (subspace_topology top1_S2 top1_S2_topology CC) = {g, w}"
-    sorry
+    unfolding CC_def
+    by (rule arc_concat_endpoints[OF hS2 hS2_haus assms(15,6,18,9) assms(42)
+        hh3_gh3 hh3_wh3 assms(24) hep_wh3_swap hg_ne_h3 hh3_ne_w])
   have hg_ne_w: "g \<noteq> w" using hcard by (auto simp: card_insert_if split: if_splits)
   \<comment> \<open>Intersections: A \<inter> B = {g,w}, B \<inter> CC = {g,w}, A \<inter> CC = {g,w}.\<close>
   have hAB: "A \<inter> B = {g, w}"
-    sorry \<comment> \<open>From individual arc intersections.\<close>
+  proof -
+    have "gh1 \<inter> gh2 = {g}" by (rule assms(31))
+    moreover have "gh1 \<inter> wh2 = {}" by (rule assms(43))
+    moreover have "wh1 \<inter> gh2 = {}" using assms(45) by (by100 blast)
+    moreover have "wh1 \<inter> wh2 = {w}" by (rule assms(34))
+    ultimately show ?thesis unfolding A_def B_def by (by100 blast)
+  qed
   have hBCC: "B \<inter> CC = {g, w}"
-    sorry
+  proof -
+    have "gh2 \<inter> gh3 = {g}" by (rule assms(33))
+    moreover have "gh2 \<inter> wh3 = {}" by (rule assms(46))
+    moreover have "wh2 \<inter> gh3 = {}" using assms(48) by (by100 blast)
+    moreover have "wh2 \<inter> wh3 = {w}" by (rule assms(36))
+    ultimately show ?thesis unfolding B_def CC_def by (by100 blast)
+  qed
   have hACC: "A \<inter> CC = {g, w}"
-    sorry
+  proof -
+    have "gh1 \<inter> gh3 = {g}" by (rule assms(32))
+    moreover have "gh1 \<inter> wh3 = {}" by (rule assms(44))
+    moreover have "wh1 \<inter> gh3 = {}" using assms(47) by (by100 blast)
+    moreover have "wh1 \<inter> wh3 = {w}" by (rule assms(35))
+    ultimately show ?thesis unfolding A_def CC_def by (by100 blast)
+  qed
   \<comment> \<open>Step 2: Apply Lemma\_64\_1 \<Rightarrow> 3 components U, V, W.\<close>
   obtain U V W where hUVW: "U \<noteq> {}" "V \<noteq> {}" "W \<noteq> {}"
       "U \<inter> V = {}" "V \<inter> W = {}" "U \<inter> W = {}"
@@ -860,10 +911,50 @@ proof -
       "top1_connected_on V (subspace_topology top1_S2 top1_S2_topology V)"
       "top1_connected_on W (subspace_topology top1_S2 top1_S2_topology W)"
       "U \<in> top1_S2_topology" "V \<in> top1_S2_topology" "W \<in> top1_S2_topology"
-    sorry \<comment> \<open>Lemma\_64\_1 on theta A\<union>B\<union>CC.\<close>
+    using Lemma_64_1_theta_space_three_components[OF hS2 hA_sub hB_sub hCC_sub
+        hA_arc hB_arc hCC_arc hg_ne_w hAB hBCC hACC hA_ep hB_ep hCC_ep]
+    by (metis (no_types))
   \<comment> \<open>Step 3: e \<notin> theta (= A\<union>B\<union>CC).\<close>
   have he_not_theta: "e \<notin> A \<union> B \<union> CC"
-    sorry \<comment> \<open>e \<notin> any of gh1,wh1,gh2,wh2,gh3,wh3 from card=6 and intersections.\<close>
+  proof -
+    have he_ne: "e \<noteq> g" "e \<noteq> w" "e \<noteq> h1" "e \<noteq> h2" "e \<noteq> h3"
+      using hcard by (auto simp: card_insert_if split: if_splits)
+    have he_in_eh1: "e \<in> eh1" using assms(28) unfolding top1_arc_endpoints_on_def by (by100 blast)
+    \<comment> \<open>e \<notin> gh1: if e \<in> gh1 then e \<in> gh1\<inter>eh1={h1}, so e=h1, contradiction.\<close>
+    have "e \<notin> gh1"
+    proof assume "e \<in> gh1" hence "e \<in> gh1 \<inter> eh1" using he_in_eh1 by (by100 blast)
+      hence "e = h1" using assms(49) by (by100 blast)
+      thus False using he_ne(3) by (by100 blast) qed
+    moreover have "e \<notin> wh1"
+    proof assume "e \<in> wh1" hence "e \<in> wh1 \<inter> eh1" using he_in_eh1 by (by100 blast)
+      hence "e = h1" using assms(58) by (by100 blast)
+      thus False using he_ne(3) by (by100 blast) qed
+    moreover have "e \<notin> gh2"
+    proof assume "e \<in> gh2"
+      have "e \<in> eh2" using assms(29) unfolding top1_arc_endpoints_on_def by (by100 blast)
+      hence "e \<in> gh2 \<inter> eh2" using \<open>e \<in> gh2\<close> by (by100 blast)
+      hence "e = h2" using assms(50) by (by100 blast)
+      thus False using he_ne(4) by (by100 blast) qed
+    moreover have "e \<notin> wh2"
+    proof assume "e \<in> wh2"
+      have "e \<in> eh2" using assms(29) unfolding top1_arc_endpoints_on_def by (by100 blast)
+      hence "e \<in> wh2 \<inter> eh2" using \<open>e \<in> wh2\<close> by (by100 blast)
+      hence "e = h2" using assms(59) by (by100 blast)
+      thus False using he_ne(4) by (by100 blast) qed
+    moreover have "e \<notin> gh3"
+    proof assume "e \<in> gh3"
+      have "e \<in> eh3" using assms(30) unfolding top1_arc_endpoints_on_def by (by100 blast)
+      hence "e \<in> gh3 \<inter> eh3" using \<open>e \<in> gh3\<close> by (by100 blast)
+      hence "e = h3" using assms(51) by (by100 blast)
+      thus False using he_ne(5) by (by100 blast) qed
+    moreover have "e \<notin> wh3"
+    proof assume "e \<in> wh3"
+      have "e \<in> eh3" using assms(30) unfolding top1_arc_endpoints_on_def by (by100 blast)
+      hence "e \<in> wh3 \<inter> eh3" using \<open>e \<in> wh3\<close> by (by100 blast)
+      hence "e = h3" using assms(60) by (by100 blast)
+      thus False using he_ne(5) by (by100 blast) qed
+    ultimately show ?thesis unfolding A_def B_def CC_def by (by100 blast)
+  qed
   hence "e \<in> U \<union> V \<union> W" using hUVW(7) hsub by (by100 blast)
   \<comment> \<open>Step 4: e can't be in any component (each closure misses some h\_i).\<close>
   \<comment> \<open>If e \<in> U: eh3 connected from e to h3. eh3 \<subseteq> closure(U) = U \<union> (boundary of U).
