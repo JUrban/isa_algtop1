@@ -767,6 +767,30 @@ proof -
   qed
 qed
 
+\<comment> \<open>Helper for K33: closure of a theta component w.r.t. two bounding arcs.
+   If U is a connected component of S2-(A\<union>B\<union>CC), and A\<union>B is SCC,
+   and CC-{a,b} is in a DIFFERENT S2-(A\<union>B) component from U,
+   then closure(U) \<subseteq> U \<union> A \<union> B (closure doesn't reach CC interior).
+   This is equivalent to Munkres Lemma 64.1 boundary structure.\<close>
+lemma theta_component_closure_sub_two_arcs:
+  assumes hS2: "is_topology_on_strict top1_S2 top1_S2_topology"
+      and "A \<subseteq> top1_S2" "B \<subseteq> top1_S2" "CC \<subseteq> top1_S2"
+      and "top1_is_arc_on A (subspace_topology top1_S2 top1_S2_topology A)"
+      and "top1_is_arc_on B (subspace_topology top1_S2 top1_S2_topology B)"
+      and "top1_is_arc_on CC (subspace_topology top1_S2 top1_S2_topology CC)"
+      and "a \<noteq> b" "A \<inter> B = {a, b}" "B \<inter> CC = {a, b}" "A \<inter> CC = {a, b}"
+      and "top1_arc_endpoints_on A (subspace_topology top1_S2 top1_S2_topology A) = {a, b}"
+      and "top1_arc_endpoints_on B (subspace_topology top1_S2 top1_S2_topology B) = {a, b}"
+      and "top1_arc_endpoints_on CC (subspace_topology top1_S2 top1_S2_topology CC) = {a, b}"
+      \<comment> \<open>U is one of the 3 theta components.\<close>
+      and "U \<noteq> {}" "U \<in> top1_S2_topology"
+      and "U \<subseteq> top1_S2 - (A \<union> B \<union> CC)"
+      and "top1_connected_on U (subspace_topology top1_S2 top1_S2_topology U)"
+      \<comment> \<open>U is separated from CC by the SCC A\<union>B: U and CC-{a,b} in different components.\<close>
+      and "U \<inter> closure_on top1_S2 top1_S2_topology (CC - {a, b}) = {}"
+  shows "closure_on top1_S2 top1_S2_topology U \<subseteq> U \<union> A \<union> B"
+  sorry
+
 text \<open>Theorem 64.2: The utilities graph K33 cannot be imbedded in the plane.\<close>
 
 text \<open>Theorem 64.2 and 64.4 (K\_3\_3 and K\_5 not planar) are consequences
@@ -959,9 +983,126 @@ proof -
   \<comment> \<open>Step 4: e can't be in any component (each closure misses some h\_i).\<close>
   \<comment> \<open>If e \<in> U: eh3 connected from e to h3. eh3 \<subseteq> closure(U) = U \<union> (boundary of U).
      Boundary of U \<subseteq> A\<union>B (from theta structure). h3 \<notin> A\<union>B. Contradiction.\<close>
-  have "e \<notin> U" sorry \<comment> \<open>SCCBMC: closure(U) \<subseteq> U\<union>A\<union>B, h3\<notin>A\<union>B, eh3 from e\<in>U to h3.\<close>
-  moreover have "e \<notin> V" sorry \<comment> \<open>Similar: closure(V) \<subseteq> V\<union>B\<union>CC, h1\<notin>B\<union>CC.\<close>
-  moreover have "e \<notin> W" sorry \<comment> \<open>Similar: closure(W) \<subseteq> W\<union>A\<union>CC, h2\<notin>A\<union>CC.\<close>
+  \<comment> \<open>Key: eh3 \<inter> (A\<union>B) = {}, eh3 \<inter> CC = {h3}. So eh3-{h3} \<subseteq> S2-theta.
+     If e \<in> U: eh3-{h3} connected in S2-theta with e \<in> U, so eh3-{h3} \<subseteq> U.
+     h3 \<in> closure(eh3-{h3}) \<subseteq> closure(U). But closure(U) \<subseteq> U\<union>A\<union>B (SCCBMC).
+     h3 \<notin> U (U\<inter>theta={}), h3 \<notin> A\<union>B. Contradiction.\<close>
+  \<comment> \<open>Planarity facts for vertex e.\<close>
+  have heh3_A: "eh3 \<inter> A = {}"
+  proof -
+    have "eh3 \<inter> gh1 = {}" using assms(53) by (by100 blast)
+    moreover have "eh3 \<inter> wh1 = {}" using assms(62) by (by100 blast)
+    ultimately show ?thesis unfolding A_def by (by100 blast)
+  qed
+  have heh3_B: "eh3 \<inter> B = {}"
+  proof -
+    have "eh3 \<inter> gh2 = {}" using assms(55) by (by100 blast)
+    moreover have "eh3 \<inter> wh2 = {}" using assms(64) by (by100 blast)
+    ultimately show ?thesis unfolding B_def by (by100 blast)
+  qed
+  have heh1_B: "eh1 \<inter> B = {}"
+  proof -
+    have "eh1 \<inter> gh2 = {}" using assms(54) by (by100 blast)
+    moreover have "eh1 \<inter> wh2 = {}" using assms(63) by (by100 blast)
+    ultimately show ?thesis unfolding B_def by (by100 blast)
+  qed
+  have heh1_CC: "eh1 \<inter> CC = {}"
+  proof -
+    have "eh1 \<inter> gh3 = {}" using assms(56) by (by100 blast)
+    moreover have "eh1 \<inter> wh3 = {}" using assms(65) by (by100 blast)
+    ultimately show ?thesis unfolding CC_def by (by100 blast)
+  qed
+  have heh2_A: "eh2 \<inter> A = {}"
+  proof -
+    have "eh2 \<inter> gh1 = {}" using assms(52) by (by100 blast)
+    moreover have "eh2 \<inter> wh1 = {}" using assms(61) by (by100 blast)
+    ultimately show ?thesis unfolding A_def by (by100 blast)
+  qed
+  have heh2_CC: "eh2 \<inter> CC = {}"
+  proof -
+    have "eh2 \<inter> gh3 = {}" using assms(57) by (by100 blast)
+    moreover have "eh2 \<inter> wh3 = {}" using assms(66) by (by100 blast)
+    ultimately show ?thesis unfolding CC_def by (by100 blast)
+  qed
+  \<comment> \<open>eh3 \<inter> theta = {h3}.\<close>
+  have heh3_CC: "eh3 \<inter> CC = {h3}"
+  proof -
+    have "eh3 \<inter> gh3 = {h3}" using assms(51) by (by100 blast)
+    moreover have "eh3 \<inter> wh3 = {h3}" using assms(60) by (by100 blast)
+    ultimately show ?thesis unfolding CC_def by (by100 blast)
+  qed
+  have heh3_theta: "eh3 \<inter> (A \<union> B \<union> CC) = {h3}"
+    using heh3_A heh3_B heh3_CC by (by100 blast)
+  \<comment> \<open>Similarly for eh1 and eh2.\<close>
+  have heh1_theta: "eh1 \<inter> (A \<union> B \<union> CC) = {h1}"
+  proof -
+    have "eh1 \<inter> A = {h1}"
+    proof -
+      have "eh1 \<inter> gh1 = {h1}" using assms(49) by (by100 blast)
+      moreover have "eh1 \<inter> wh1 = {h1}" using assms(58) by (by100 blast)
+      ultimately show ?thesis unfolding A_def by (by100 blast)
+    qed
+    thus ?thesis using heh1_B heh1_CC by (by100 blast)
+  qed
+  have heh2_theta: "eh2 \<inter> (A \<union> B \<union> CC) = {h2}"
+  proof -
+    have "eh2 \<inter> B = {h2}"
+    proof -
+      have "eh2 \<inter> gh2 = {h2}" using assms(50) by (by100 blast)
+      moreover have "eh2 \<inter> wh2 = {h2}" using assms(59) by (by100 blast)
+      ultimately show ?thesis unfolding B_def by (by100 blast)
+    qed
+    thus ?thesis using heh2_A heh2_CC by (by100 blast)
+  qed
+  \<comment> \<open>h\_i vertex distinctness.\<close>
+  have he_ne: "e \<noteq> g" "e \<noteq> w" "e \<noteq> h1" "e \<noteq> h2" "e \<noteq> h3"
+    using hcard by (auto simp: card_insert_if split: if_splits)
+  have hh_ne: "h1 \<noteq> g" "h1 \<noteq> w" "h2 \<noteq> g" "h2 \<noteq> w" "h3 \<noteq> g" "h3 \<noteq> w"
+    using hcard by (auto simp: card_insert_if split: if_splits)
+  have hh_ne2: "h1 \<noteq> h2" "h1 \<noteq> h3" "h2 \<noteq> h3"
+    using hcard by (auto simp: card_insert_if split: if_splits)
+  \<comment> \<open>h3 \<notin> A\<union>B: h3 \<in> CC but h3 \<noteq> g, h3 \<noteq> w, and CC \<inter> (A\<union>B) = {g,w}.\<close>
+  have hh3_not_AB: "h3 \<notin> A \<union> B"
+  proof -
+    have "A \<inter> CC = {g, w}" by (rule hACC)
+    moreover have "B \<inter> CC = {g, w}" by (rule hBCC)
+    ultimately have "(A \<union> B) \<inter> CC = {g, w}" by (by100 blast)
+    moreover have "h3 \<in> CC"
+      using assms(24) unfolding top1_arc_endpoints_on_def CC_def by (by100 blast)
+    ultimately show ?thesis using hh_ne(5,6) by (by100 blast)
+  qed
+  have hh1_not_BCC: "h1 \<notin> B \<union> CC"
+  proof -
+    have "(B \<union> CC) \<inter> A = {g, w}"
+      using hAB hACC by (by100 blast)
+    moreover have "h1 \<in> A"
+      using assms(22) unfolding top1_arc_endpoints_on_def A_def by (by100 blast)
+    ultimately show ?thesis using hh_ne(1,2) by (by100 blast)
+  qed
+  have hh2_not_ACC: "h2 \<notin> A \<union> CC"
+  proof -
+    have "(A \<union> CC) \<inter> B = {g, w}"
+      using hAB hBCC by (by100 blast)
+    moreover have "h2 \<in> B"
+      using assms(23) unfolding top1_arc_endpoints_on_def B_def by (by100 blast)
+    ultimately show ?thesis using hh_ne(3,4) by (by100 blast)
+  qed
+  \<comment> \<open>Separation of S2-theta into U\<union>V\<union>W.\<close>
+  have hTtheta: "is_topology_on (top1_S2 - (A\<union>B\<union>CC))
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (A\<union>B\<union>CC)))"
+    sorry \<comment> \<open>subspace topology on open set\<close>
+  have hSep_UV_W: "top1_is_separation_on (top1_S2 - (A\<union>B\<union>CC))
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (A\<union>B\<union>CC))) U (V \<union> W)"
+    sorry \<comment> \<open>U is separated from V\<union>W (both open in S2-theta)\<close>
+  \<comment> \<open>e \<notin> U: if e \<in> U then eh3-{h3} \<subseteq> U (connected subset of S2-theta meeting U),
+     and h3 \<in> closure(eh3-{h3}) \<subseteq> closure(U). By SCCBMC closure(U) \<subseteq> U\<union>A\<union>B.
+     But h3 \<notin> U\<union>A\<union>B. Contradiction.\<close>
+  have "e \<notin> U"
+    sorry \<comment> \<open>Boundary argument: closure(U) hits A\<union>B but not CC, h3 \<in> CC.\<close>
+  moreover have "e \<notin> V"
+    sorry \<comment> \<open>Symmetric: closure(V) \<subseteq> V\<union>B\<union>CC, h1 \<notin> B\<union>CC.\<close>
+  moreover have "e \<notin> W"
+    sorry \<comment> \<open>Symmetric: closure(W) \<subseteq> W\<union>A\<union>CC, h2 \<notin> A\<union>CC.\<close>
   ultimately show False using \<open>e \<in> U \<union> V \<union> W\<close> by (by100 blast)
 qed
 
