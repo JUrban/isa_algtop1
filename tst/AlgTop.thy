@@ -2050,13 +2050,11 @@ proof -
           is_topology_on_strict_imp[OF assms(1)]]) (use assms(4,5,6) in \<open>by100 blast\<close>)
     have h_sub_all: "?Y12 \<inter> (e34 - {a4}) = {a3}"
     proof (rule set_eqI, rule iffI)
-      fix x assume "x \<in> ?Y12 \<inter> (e34 - {a4})"
-      hence "x \<in> e23 \<inter> (e34 - {a4})" using assms(22) by (by100 blast)
-      thus "x \<in> {a3}" using assms(25) ha3_ne_a4 by (by100 blast)
+      fix z assume "z \<in> ?Y12 \<inter> (e34 - {a4})"
+      hence "z \<in> e23 \<inter> (e34 - {a4})" using assms(22) by (by100 blast)
+      thus "z \<in> {a3}" using assms(25) ha3_ne_a4 by (by100 blast)
     next
-      fix x assume "x \<in> {a3}"
-      hence "x = a3" by (by100 blast)
-      thus "x \<in> ?Y12 \<inter> (e34 - {a4})" using ha3_share by (by100 blast)
+      fix z assume "z \<in> {a3}" thus "z \<in> ?Y12 \<inter> (e34 - {a4})" using ha3_share by (by100 blast)
     qed
     have hsub_Y12: "subspace_topology top1_S2 top1_S2_topology ?Y12
         = subspace_topology ?Yall (subspace_topology top1_S2 top1_S2_topology ?Yall) ?Y12"
@@ -2683,9 +2681,17 @@ proof -
   have hy_in_UV: "y \<in> U0 \<union> V0"
     using hUV0(4) hy_in_CmD1 hy_in_CmD2 hC_sub_S2 by (by100 blast)
   have hx_y_diff_comp: "(x \<in> U0 \<and> y \<in> V0) \<or> (x \<in> V0 \<and> y \<in> U0)"
-    sorry \<comment> \<open>x and y are in different components of S2-(D1\<union>D2). This is Lemma 65.1(a)
-       applied to the cycle D1\<union>D2 = e13\<union>e23\<union>e24\<union>e41 (the "other" K4 cycle),
-       where x \<in> int(e12) and y \<in> int(e34) are in different components.\<close>
+  proof -
+    have hx_int: "x \<in> e12 - {a1, a2}" using hx_e12 hx_not_endpts by (by100 blast)
+    have hy_int: "y \<in> e34 - {a3, a4}" using hy_e34 hy_not_endpts by (by100 blast)
+    \<comment> \<open>x and y avoid D1\<union>D2, so they're in U0 \<union> V0. Need: different components.\<close>
+    \<comment> \<open>Proof by contradiction using Lemma\_64\_3: if both in same component,
+       all 4 K4 faces + int(e12) + int(e34) would be in that component,
+       leaving the other component empty.\<close>
+    have hx_ne_y_comp: "\<not>(x \<in> U0 \<and> y \<in> U0) \<and> \<not>(x \<in> V0 \<and> y \<in> V0)"
+      sorry \<comment> \<open>Core K4 planarity argument.\<close>
+    thus ?thesis using hx_in_UV hy_in_UV hUV0(3) by (by100 blast)
+  qed
   obtain A B where hAB: "?U_loc \<inter> ?V_loc = A \<union> B" "A \<inter> B = {}"
       "openin_on ?X ?TX A" "openin_on ?X ?TX B" "x \<in> A" "y \<in> B"
   proof -
@@ -3354,8 +3360,10 @@ proof -
   \<comment> \<open>A \<subseteq> G.\<close>
   have hA_G: "?A \<subseteq> G" by (by100 blast)
   \<comment> \<open>G = \<langle>\<iota>(S)\<rangle> \<subseteq> A (since A is a subgroup containing \<iota>(S)).\<close>
-  have "top1_subgroup_generated_on G mul e invg (\<iota> ` S) \<subseteq> ?A"
-    by (rule subgroup_generated_minimal[OF hS_A hA_G hA_grp])
+  have "?A \<in> {K. \<iota> ` S \<subseteq> K \<and> K \<subseteq> G \<and> top1_is_group_on K mul e invg}"
+    using hS_A hA_G hA_grp by (by100 blast)
+  hence "top1_subgroup_generated_on G mul e invg (\<iota> ` S) \<subseteq> ?A"
+    unfolding top1_subgroup_generated_on_def by (by100 blast)
   hence "G \<subseteq> ?A" using hgen by (by100 simp)
   thus ?thesis by (by100 blast)
 qed
@@ -3506,14 +3514,9 @@ proof -
   have hpair_G: "\<forall>j<length ?pair. fst (?pair ! j) \<in> G"
   proof (intro allI impI)
     fix j assume "j < length ?pair"
-    hence "j < 2" by (by100 simp)
-    hence hj_01: "j = 0 \<or> j = Suc 0" by (by100 arith)
+    hence "j = 0 \<or> j = 1" by (by100 auto)
     thus "fst (?pair ! j) \<in> G"
-    proof
-      assume "j = 0" thus ?thesis using hx_G hx by (by100 simp)
-    next
-      assume "j = Suc 0" thus ?thesis using hx_G hx hfst by (by100 simp)
-    qed
+      using hx_G hx hfst hws_G hi by (by100 auto)
   qed
   have hsuf_G: "\<forall>j<length ?suf. fst (?suf ! j) \<in> G"
     using hws_G by (by100 force)
@@ -3610,16 +3613,9 @@ proof -
   have hiab: "invg (mul a b) \<in> G" using hG hab unfolding top1_is_group_on_def by (by100 blast)
   have hprod: "mul (invg b) (invg a) \<in> G" using hG hib hia unfolding top1_is_group_on_def by (by100 blast)
   \<comment> \<open>Compute (invg b \<cdot> invg a) \<cdot> (a \<cdot> b) step by step using right-to-left cancellation.\<close>
-  have hassoc: "\<And>x y z. x \<in> G \<Longrightarrow> y \<in> G \<Longrightarrow> z \<in> G \<Longrightarrow> mul (mul x y) z = mul x (mul y z)"
-    using hG unfolding top1_is_group_on_def by (by100 blast)
   have "mul (mul (invg b) (invg a)) (mul a b)
-      = mul (invg b) (mul (invg a) (mul a b))"
-    by (rule hassoc[OF hib hia hab])
-  also have "mul (invg a) (mul a b) = mul (mul (invg a) a) b"
-    by (rule hassoc[OF hia ha hb, symmetric])
-  finally have "mul (mul (invg b) (invg a)) (mul a b)
       = mul (invg b) (mul (mul (invg a) a) b)"
-    using hassoc[OF hib hia hab] hassoc[OF hia ha hb] by (by100 simp)
+    using hG hib hia ha hb unfolding top1_is_group_on_def by (by100 metis)
   also have "mul (invg a) a = e" using hG ha unfolding top1_is_group_on_def by (by100 blast)
   hence "mul (invg b) (mul (mul (invg a) a) b) = mul (invg b) (mul e b)"
     by (by100 simp)
