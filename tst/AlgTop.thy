@@ -982,7 +982,87 @@ proof -
      By symmetry, if any SCC separates X from the opposite arc: same E-bridges proof.
      If ALL same side: pigeonhole \<Rightarrow> 2 SCCs have same "lone" component \<Rightarrow>
      J1 = J2 \<Rightarrow> arc \<subseteq> {a,b} \<Rightarrow> contradiction.\<close>
-  show False sorry \<comment> \<open>3-SCC case analysis + pigeonhole. Uses case 1 for different-side cases.\<close>
+  \<comment> \<open>Define a function: for each SCC, whether X is separated from opposite arc.\<close>
+  \<comment> \<open>For SCC A\<union>B: X vs C. For SCC B\<union>C: X vs A. For SCC A\<union>C: X vs B.\<close>
+  \<comment> \<open>If any SCC separates: use the E-bridges proof (case 1 pattern) with the right E.\<close>
+  \<comment> \<open>Setup for B\<union>C and A\<union>C follows the same pattern as A\<union>B above.\<close>
+  have hE1_sub_BC: "E1 \<subseteq> top1_S2 - (B \<union> C)" using hE1_sub hE1_disj by (by100 blast)
+  have hE2_sub_AC: "E2 \<subseteq> top1_S2 - (A \<union> C)" using hE2_sub hE2_disj by (by100 blast)
+  have hX_sub_BC: "X \<subseteq> top1_S2 - (B \<union> C)" using hX_sub by (by100 blast)
+  have hX_sub_AC: "X \<subseteq> top1_S2 - (A \<union> C)" using hX_sub by (by100 blast)
+  have hA_sub_BC: "A - {a, b} \<subseteq> top1_S2 - (B \<union> C)" using hA_sub hAB hAC by (by100 blast)
+  have hB_sub_AC: "B - {a, b} \<subseteq> top1_S2 - (A \<union> C)" using hB_sub hAB hBC by (by100 blast)
+  \<comment> \<open>Get 2-component decompositions for B\<union>C and A\<union>C.\<close>
+  have hBC_card: "card (B \<inter> C) = 2" using hBC hab by (by100 simp)
+  obtain P2 Q2 where hPQ2: "P2 \<noteq> {}" "Q2 \<noteq> {}" "P2 \<inter> Q2 = {}" "P2 \<union> Q2 = top1_S2 - (B \<union> C)"
+      "top1_connected_on P2 (subspace_topology top1_S2 top1_S2_topology P2)"
+      "top1_connected_on Q2 (subspace_topology top1_S2 top1_S2_topology Q2)"
+    using Theorem_63_5_two_closed_connected[OF hS2 arc_in_S2_closed[OF hB_sub hB_arc]
+        arc_in_S2_closed[OF hC_sub hC_arc] arc_connected[OF hB_arc] arc_connected[OF hC_arc]
+        hBC_card Theorem_63_2_arc_no_separation[OF hS2 hB_sub hB_arc]
+        Theorem_63_2_arc_no_separation[OF hS2 hC_sub hC_arc]]
+    by (metis (no_types))
+  have hAC_card: "card (A \<inter> C) = 2" using hAC hab by (by100 simp)
+  obtain P3 Q3 where hPQ3: "P3 \<noteq> {}" "Q3 \<noteq> {}" "P3 \<inter> Q3 = {}" "P3 \<union> Q3 = top1_S2 - (A \<union> C)"
+      "top1_connected_on P3 (subspace_topology top1_S2 top1_S2_topology P3)"
+      "top1_connected_on Q3 (subspace_topology top1_S2 top1_S2_topology Q3)"
+    using Theorem_63_5_two_closed_connected[OF hS2 arc_in_S2_closed[OF hA_sub hA_arc]
+        arc_in_S2_closed[OF hC_sub hC_arc] arc_connected[OF hA_arc] arc_connected[OF hC_arc]
+        hAC_card Theorem_63_2_arc_no_separation[OF hS2 hA_sub hA_arc]
+        Theorem_63_2_arc_no_separation[OF hS2 hC_sub hC_arc]]
+    by (metis (no_types))
+  \<comment> \<open>For each SCC: X and opposite arc on same or different side.
+     If different: E-bridges argument gives False.\<close>
+  \<comment> \<open>If ALL same: pigeonhole.\<close>
+  \<comment> \<open>X and A-{a,b} placement in {P2,Q2}.\<close>
+  have hX_in_PQ2: "X \<subseteq> P2 \<or> X \<subseteq> Q2"
+    sorry \<comment> \<open>Lemma\_23\_2\<close>
+  have hA_ne_loc: "A - {a, b} \<noteq> {}"
+    sorry \<comment> \<open>arc has interior points\<close>
+  have hA_conn_loc: "top1_connected_on (A - {a,b}) (subspace_topology top1_S2 top1_S2_topology (A - {a,b}))"
+    by (rule arc_minus_endpoints_connected[OF hS2 hS2_haus hA_sub hA_arc hA_ep hab])
+  have hA_in_PQ2: "A - {a, b} \<subseteq> P2 \<or> A - {a, b} \<subseteq> Q2"
+    sorry \<comment> \<open>Lemma\_23\_2\<close>
+  \<comment> \<open>X and B-{a,b} placement in {P3,Q3}.\<close>
+  have hX_in_PQ3: "X \<subseteq> P3 \<or> X \<subseteq> Q3"
+    sorry
+  have hB_ne_loc: "B - {a, b} \<noteq> {}"
+    sorry
+  have hB_conn_loc: "top1_connected_on (B - {a,b}) (subspace_topology top1_S2 top1_S2_topology (B - {a,b}))"
+    by (rule arc_minus_endpoints_connected[OF hS2 hS2_haus hB_sub hB_arc hB_ep hab])
+  have hB_in_PQ3: "B - {a, b} \<subseteq> P3 \<or> B - {a, b} \<subseteq> Q3"
+    sorry
+  \<comment> \<open>If ANY SCC separates X from opposite arc: E-bridges gives False.\<close>
+  \<comment> \<open>Check SCC B\<union>C with E1.\<close>
+  { assume hdiff2: "(X \<subseteq> P2 \<and> A - {a,b} \<subseteq> Q2) \<or> (X \<subseteq> Q2 \<and> A - {a,b} \<subseteq> P2)"
+    \<comment> \<open>E1 bridges X and A-{a,b} in S2-(B\<union>C). Same argument as case 1.\<close>
+    have ?thesis sorry \<comment> \<open>Same E-bridges pattern with E1 and {P2,Q2}.\<close>
+  } note case_BC = this
+  { assume hdiff3: "(X \<subseteq> P3 \<and> B - {a,b} \<subseteq> Q3) \<or> (X \<subseteq> Q3 \<and> B - {a,b} \<subseteq> P3)"
+    have ?thesis sorry \<comment> \<open>Same with E2 and {P3,Q3}.\<close>
+  } note case_AC = this
+  \<comment> \<open>If all same side: pigeonhole contradiction (not formalized).\<close>
+  show False
+  proof (cases "(X \<subseteq> P1 \<and> C-{a,b} \<subseteq> Q1) \<or> (X \<subseteq> Q1 \<and> C-{a,b} \<subseteq> P1)")
+    case True thus False sorry \<comment> \<open>E3 bridges (proved above).\<close>
+  next
+    case AB_same: False
+    show False
+    proof (cases "(X \<subseteq> P2 \<and> A-{a,b} \<subseteq> Q2) \<or> (X \<subseteq> Q2 \<and> A-{a,b} \<subseteq> P2)")
+      case True thus False by (rule case_BC)
+    next
+      case BC_same: False
+      show False
+      proof (cases "(X \<subseteq> P3 \<and> B-{a,b} \<subseteq> Q3) \<or> (X \<subseteq> Q3 \<and> B-{a,b} \<subseteq> P3)")
+        case True thus False by (rule case_AC)
+      next
+        case AC_same: False
+        \<comment> \<open>ALL 3 SCCs have X on same side as opposite arc.
+           Pigeonhole: 3 "lone" components from 2 elements \<Rightarrow> contradiction.\<close>
+        show False sorry \<comment> \<open>Pigeonhole + SCCBMC: J1=J2 \<Rightarrow> arc \<subseteq> {a,b} \<Rightarrow> False.\<close>
+      qed
+    qed
+  qed
 qed
 
 text \<open>Theorem 64.2: The utilities graph K33 cannot be imbedded in the plane.\<close>
