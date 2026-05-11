@@ -1450,11 +1450,413 @@ proof -
       thus ?thesis by (rule homeomorphism_preserves_path_connected[OF hhf])
     qed
   } note arc_path_connected = this
+  \<comment> \<open>Helper: arc minus one endpoint is path-connected.\<close>
+  {
+    fix D :: "(real \<times> real \<times> real) set" and ep
+    assume harc_loc: "top1_is_arc_on D (subspace_topology top1_S2 top1_S2_topology D)"
+        and hD_sub: "D \<subseteq> top1_S2"
+        and hep: "ep \<in> top1_arc_endpoints_on D (subspace_topology top1_S2 top1_S2_topology D)"
+    have "top1_path_connected_on (D - {ep}) (subspace_topology top1_S2 top1_S2_topology (D - {ep}))"
+    proof -
+      obtain hf where hhf: "top1_homeomorphism_on I_set I_top D
+          (subspace_topology top1_S2 top1_S2_topology D) hf"
+        using harc_loc unfolding top1_is_arc_on_def by (by100 blast)
+      have hbij: "bij_betw hf I_set D"
+        using hhf unfolding top1_homeomorphism_on_def by (by100 blast)
+      have hinj: "inj_on hf I_set" using hbij unfolding bij_betw_def by (by100 blast)
+      have hsurj: "hf ` I_set = D" using hbij unfolding bij_betw_def by (by100 blast)
+      have hcont: "top1_continuous_map_on I_set I_top D
+          (subspace_topology top1_S2 top1_S2_topology D) hf"
+        using hhf unfolding top1_homeomorphism_on_def by (by100 blast)
+      \<comment> \<open>ep = hf(0) or ep = hf(1) (endpoints are boundary of [0,1]).\<close>
+      have hep_bd: "top1_arc_endpoints_on D
+          (subspace_topology top1_S2 top1_S2_topology D) = {hf 0, hf 1}"
+        by (rule arc_endpoints_are_boundary[OF assms(1) hS2_haus hD_sub harc_loc hhf])
+      have hep_01: "ep = hf 0 \<or> ep = hf 1" using hep hep_bd by (by100 blast)
+      \<comment> \<open>Define tb = hf\<inverse>(ep) \<in> {0, 1}.\<close>
+      define tb where "tb = inv_into I_set hf ep"
+      have hep_D: "ep \<in> D" using hep unfolding top1_arc_endpoints_on_def by (by100 blast)
+      have hep_img: "ep \<in> hf ` I_set" using hep_D hsurj by (by100 blast)
+      have htb_I: "tb \<in> I_set" unfolding tb_def
+        using inv_into_into[OF hep_img] by (by100 blast)
+      have hftb: "hf tb = ep" unfolding tb_def
+        using f_inv_into_f[OF hep_img] by (by100 blast)
+      have htb_01: "tb = 0 \<or> tb = 1"
+      proof -
+        have h0_I: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+        have h1_I: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+        from hep_01 show ?thesis
+        proof
+          assume "ep = hf 0"
+          hence "hf tb = hf 0" using hftb by (by100 simp)
+          thus ?thesis using hinj htb_I h0_I unfolding inj_on_def by (by100 blast)
+        next
+          assume "ep = hf 1"
+          hence "hf tb = hf 1" using hftb by (by100 simp)
+          thus ?thesis using hinj htb_I h1_I unfolding inj_on_def by (by100 blast)
+        qed
+      qed
+      \<comment> \<open>Path-connected: for u, v \<in> D-{ep}, use affine path avoiding tb.\<close>
+      show ?thesis unfolding top1_path_connected_on_def
+      proof (intro conjI ballI)
+        show "is_topology_on (D - {ep}) (subspace_topology top1_S2 top1_S2_topology (D - {ep}))"
+          by (rule subspace_topology_is_topology_on[OF
+              is_topology_on_strict_imp[OF assms(1)]]) (use hD_sub in \<open>by100 blast\<close>)
+        fix u v assume hu: "u \<in> D - {ep}" and hv: "v \<in> D - {ep}"
+        define su where "su = inv_into I_set hf u"
+        define sv where "sv = inv_into I_set hf v"
+        have hu_img: "u \<in> hf ` I_set" using hu hsurj by (by100 blast)
+        have hv_img: "v \<in> hf ` I_set" using hv hsurj by (by100 blast)
+        have hsu_I: "su \<in> I_set" unfolding su_def
+          using inv_into_into[OF hu_img] by (by100 blast)
+        have hsv_I: "sv \<in> I_set" unfolding sv_def
+          using inv_into_into[OF hv_img] by (by100 blast)
+        have hfsu: "hf su = u" unfolding su_def
+          using f_inv_into_f[OF hu_img] by (by100 blast)
+        have hfsv: "hf sv = v" unfolding sv_def
+          using f_inv_into_f[OF hv_img] by (by100 blast)
+        have hsu_ne_tb: "su \<noteq> tb" using hu hfsu hftb hinj hsu_I htb_I
+          unfolding inj_on_def by (by100 blast)
+        have hsv_ne_tb: "sv \<noteq> tb" using hv hfsv hftb hinj hsv_I htb_I
+          unfolding inj_on_def by (by100 blast)
+        \<comment> \<open>Affine path stays in I\_set and avoids tb (convexity of [0,1)-or-(0,1]).\<close>
+        let ?g = "\<lambda>t::real. (1-t)*su + t*sv"
+        have hg_in_I: "\<And>t. t \<in> I_set \<Longrightarrow> ?g t \<in> I_set"
+        proof -
+          fix t :: real assume ht: "t \<in> I_set"
+          have "0 \<le> t" "t \<le> 1" using ht unfolding top1_unit_interval_def by auto
+          have "0 \<le> su" "su \<le> 1" using hsu_I unfolding top1_unit_interval_def by auto
+          have "0 \<le> sv" "sv \<le> 1" using hsv_I unfolding top1_unit_interval_def by auto
+          have h0: "0 \<le> (1-t)*su" using \<open>0 \<le> t\<close> \<open>t \<le> 1\<close> \<open>0 \<le> su\<close>
+            using mult_nonneg_nonneg by (by100 fastforce)
+          have h1: "0 \<le> t*sv" using \<open>0 \<le> t\<close> \<open>0 \<le> sv\<close>
+            using mult_nonneg_nonneg by (by100 fastforce)
+          have hge: "0 \<le> ?g t" using h0 h1 by (by100 simp)
+          have "(1-t)*su \<le> (1-t)*1" using \<open>su \<le> 1\<close> \<open>0 \<le> t\<close> \<open>t \<le> 1\<close>
+            using mult_left_mono by (by100 fastforce)
+          moreover have "t*sv \<le> t*1" using \<open>sv \<le> 1\<close> \<open>0 \<le> t\<close>
+            using mult_left_mono by (by100 fastforce)
+          ultimately have hle: "?g t \<le> 1" by (by100 simp)
+          show "?g t \<in> I_set" unfolding top1_unit_interval_def using hge hle by (by100 simp)
+        qed
+        have hg_ne_tb: "\<And>t. t \<in> I_set \<Longrightarrow> ?g t \<noteq> tb"
+        proof -
+          fix t :: real assume ht: "t \<in> I_set"
+          have "0 \<le> t" "t \<le> 1" using ht unfolding top1_unit_interval_def by auto
+          have "0 \<le> su" "su \<le> 1" using hsu_I unfolding top1_unit_interval_def by auto
+          have "0 \<le> sv" "sv \<le> 1" using hsv_I unfolding top1_unit_interval_def by auto
+          \<comment> \<open>tb \<in> {0, 1}. su \<noteq> tb, sv \<noteq> tb. Convex combo avoids tb.\<close>
+          from htb_01 show "?g t \<noteq> tb"
+          proof
+            assume "tb = 0"
+            \<comment> \<open>su > 0 and sv > 0 (since su \<noteq> 0, sv \<noteq> 0, both \<ge> 0).\<close>
+            have "su > 0" using hsu_ne_tb \<open>tb = 0\<close> \<open>0 \<le> su\<close> by (by100 simp)
+            have "sv > 0" using hsv_ne_tb \<open>tb = 0\<close> \<open>0 \<le> sv\<close> by (by100 simp)
+            have "(1-t)*su \<ge> 0" using \<open>0 \<le> t\<close> \<open>t \<le> 1\<close> \<open>su > 0\<close>
+              using mult_nonneg_nonneg by (by100 fastforce)
+            have "t*sv \<ge> 0" using \<open>0 \<le> t\<close> \<open>sv > 0\<close>
+              using mult_nonneg_nonneg by (by100 fastforce)
+            \<comment> \<open>At least one of (1-t)*su > 0 or t*sv > 0.\<close>
+            have "(1-t)*su > 0 \<or> t*sv > 0"
+            proof (cases "t = 1")
+              case True thus ?thesis using \<open>sv > 0\<close> by (by100 simp)
+            next
+              case False
+              hence "1 - t > 0" using \<open>0 \<le> t\<close> \<open>t \<le> 1\<close> by (by100 simp)
+              thus ?thesis using \<open>su > 0\<close> by (by100 simp)
+            qed
+            hence "(1-t)*su + t*sv > 0" using \<open>(1-t)*su \<ge> 0\<close> \<open>t*sv \<ge> 0\<close>
+              by (by100 linarith)
+            thus "?g t \<noteq> tb" using \<open>tb = 0\<close> by (by100 simp)
+          next
+            assume "tb = 1"
+            \<comment> \<open>su < 1 and sv < 1 (since su \<noteq> 1, sv \<noteq> 1, both \<le> 1).\<close>
+            have "su < 1" using hsu_ne_tb \<open>tb = 1\<close> \<open>su \<le> 1\<close> by (by100 simp)
+            have "sv < 1" using hsv_ne_tb \<open>tb = 1\<close> \<open>sv \<le> 1\<close> by (by100 simp)
+            have "?g t < 1"
+            proof (cases "t = 0")
+              case True thus ?thesis using \<open>su < 1\<close> by (by100 simp)
+            next
+              case False
+              hence "t > 0" using \<open>0 \<le> t\<close> by (by100 simp)
+              have "(1-t)*su \<le> (1-t)" using \<open>su \<le> 1\<close> \<open>0 \<le> t\<close> \<open>t \<le> 1\<close>
+                using mult_left_le by (by100 fastforce)
+              moreover have "t*sv < t" using \<open>sv < 1\<close> \<open>t > 0\<close>
+                by (by100 simp)
+              ultimately show ?thesis by (by100 linarith)
+            qed
+            thus "?g t \<noteq> tb" using \<open>tb = 1\<close> by (by100 simp)
+          qed
+        qed
+        \<comment> \<open>Construct path: hf \<circ> g.\<close>
+        let ?path = "hf \<circ> ?g"
+        have hpath_in: "\<forall>s\<in>I_set. ?path s \<in> D - {ep}"
+        proof (intro ballI)
+          fix t assume ht: "t \<in> I_set"
+          have "?g t \<in> I_set" by (rule hg_in_I[OF ht])
+          have "?g t \<noteq> tb" by (rule hg_ne_tb[OF ht])
+          have "hf (?g t) \<in> D" using \<open>?g t \<in> I_set\<close> hsurj by (by100 blast)
+          moreover have "hf (?g t) \<noteq> ep"
+            using \<open>?g t \<noteq> tb\<close> \<open>?g t \<in> I_set\<close> htb_I hftb hinj
+            unfolding inj_on_def by (by100 blast)
+          ultimately show "?path t \<in> D - {ep}" by (by100 simp)
+        qed
+        \<comment> \<open>Continuity: g continuous I \<rightarrow> I, hf continuous I \<rightarrow> D, compose + restrict codomain.\<close>
+        have hg_cont_UNIV: "continuous_on UNIV ?g" by (intro continuous_intros)
+        have hg_map: "\<And>t. t \<in> I_set \<Longrightarrow> ?g t \<in> I_set" by (rule hg_in_I)
+        have hg_cont: "top1_continuous_map_on I_set I_top I_set I_top ?g"
+        proof -
+          have "top1_continuous_map_on I_set
+              (subspace_topology UNIV top1_open_sets I_set)
+              I_set (subspace_topology UNIV top1_open_sets I_set) ?g"
+            by (rule top1_continuous_map_on_real_subspace_open_sets[OF hg_map hg_cont_UNIV])
+          thus ?thesis unfolding top1_unit_interval_topology_def .
+        qed
+        have hpath_cont_D: "top1_continuous_map_on I_set I_top D
+            (subspace_topology top1_S2 top1_S2_topology D) ?path"
+          unfolding comp_def
+          by (rule top1_continuous_map_on_comp[OF hg_cont hcont, simplified comp_def])
+        have hpath_cont_sub: "top1_continuous_map_on I_set I_top (D - {ep})
+            (subspace_topology D (subspace_topology top1_S2 top1_S2_topology D) (D - {ep})) ?path"
+          by (rule continuous_map_restrict_codomain[OF hpath_cont_D])
+             (use hpath_in in \<open>by100 blast\<close>)+
+        have hT_eq: "subspace_topology D (subspace_topology top1_S2 top1_S2_topology D) (D - {ep})
+            = subspace_topology top1_S2 top1_S2_topology (D - {ep})"
+          by (rule subspace_topology_trans) (by100 blast)
+        have hpath_cont: "top1_continuous_map_on I_set I_top (D - {ep})
+            (subspace_topology top1_S2 top1_S2_topology (D - {ep})) ?path"
+          using hpath_cont_sub hT_eq by (by100 simp)
+        have "?path 0 = u" using hfsu by (by100 simp)
+        moreover have "?path 1 = v" using hfsv by (by100 simp)
+        ultimately have "top1_is_path_on (D - {ep})
+            (subspace_topology top1_S2 top1_S2_topology (D - {ep})) u v ?path"
+          unfolding top1_is_path_on_def using hpath_cont by (by100 blast)
+        thus "\<exists>f. top1_is_path_on (D - {ep})
+            (subspace_topology top1_S2 top1_S2_topology (D - {ep})) u v f" by (by100 blast)
+      qed
+    qed
+  } note arc_minus_endpoint_pc = this
+  \<comment> \<open>C - D1 path-connected: chain (e12 - {a2}) \<union> e41 \<union> (e34 - {a3}) at vertices a1, a4.\<close>
   have hCmD1_pc: "top1_path_connected_on (C - ?D1)
       (subspace_topology top1_S2 top1_S2_topology (C - ?D1))"
-    sorry \<comment> \<open>C-D1 = (e12-{a2}) \<union> e41 \<union> (e34-{a3}). Chain of arcs sharing vertices a1, a4.
-       arc\_path\_connected gives arcs path-connected. Endpoint removal keeps path-connected
-       (affine paths in [0,1) avoid endpoint preimage). Chain via path\_connected\_union.\<close>
+  proof -
+    \<comment> \<open>Set equality.\<close>
+    have hset: "C - ?D1 = (e12 - {a2}) \<union> e41 \<union> (e34 - {a3})"
+    proof -
+      \<comment> \<open>C = e12 \<union> e23 \<union> e34 \<union> e41. D1 = Da3 \<union> e23 \<union> Da2.\<close>
+      have "e12 \<inter> Da3 = {}"
+      proof -
+        have "Da3 \<subseteq> e13" using he13_split by (by100 blast)
+        hence "e12 \<inter> Da3 \<subseteq> e12 \<inter> e13" by (by100 blast)
+        hence "e12 \<inter> Da3 \<subseteq> {a1}" using assms(28) by (by100 blast)
+        have "a1 \<noteq> p" using assms(37) by (by100 blast)
+        have "a1 \<notin> Da3" using \<open>a1 \<in> D1p\<close> he13_meet \<open>a1 \<noteq> p\<close> by (by100 blast)
+        thus ?thesis using \<open>e12 \<inter> Da3 \<subseteq> {a1}\<close> \<open>a1 \<notin> Da3\<close> by (by100 blast)
+      qed
+      have "e12 \<inter> Da2 \<subseteq> {a2}"
+      proof -
+        have "Da2 \<subseteq> e24" using he24_split by (by100 blast)
+        hence "e12 \<inter> Da2 \<subseteq> e12 \<inter> e24" by (by100 blast)
+        thus ?thesis using assms(33) by (by100 blast)
+      qed
+      have "e41 \<inter> Da3 = {}"
+      proof -
+        have "Da3 \<subseteq> e13" using he13_split by (by100 blast)
+        hence "e41 \<inter> Da3 \<subseteq> e41 \<inter> e13" by (by100 blast)
+        hence "e41 \<inter> Da3 \<subseteq> {a1}" using assms(31) by (by100 blast)
+        have "a1 \<noteq> p" using assms(37) by (by100 blast)
+        have "a1 \<notin> Da3" using \<open>a1 \<in> D1p\<close> he13_meet \<open>a1 \<noteq> p\<close> by (by100 blast)
+        thus ?thesis using \<open>e41 \<inter> Da3 \<subseteq> {a1}\<close> \<open>a1 \<notin> Da3\<close> by (by100 blast)
+      qed
+      have "e41 \<inter> Da2 = {}"
+      proof -
+        have "Da2 \<subseteq> e24" using he24_split by (by100 blast)
+        hence "e41 \<inter> Da2 \<subseteq> e41 \<inter> e24" by (by100 blast)
+        hence "e41 \<inter> Da2 \<subseteq> {a4}" using assms(36) by (by100 blast)
+        have "a4 \<noteq> q" using assms(38) by (by100 blast)
+        have "a4 \<notin> Da2" using \<open>a4 \<in> Dq4\<close> he24_meet \<open>a4 \<noteq> q\<close> by (by100 blast)
+        thus ?thesis using \<open>e41 \<inter> Da2 \<subseteq> {a4}\<close> \<open>a4 \<notin> Da2\<close> by (by100 blast)
+      qed
+      have "e34 \<inter> Da2 = {}"
+      proof -
+        have "Da2 \<subseteq> e24" using he24_split by (by100 blast)
+        hence "e34 \<inter> Da2 \<subseteq> e34 \<inter> e24" by (by100 blast)
+        hence "e34 \<inter> Da2 \<subseteq> {a4}" using assms(35) by (by100 blast)
+        have "a4 \<noteq> q" using assms(38) by (by100 blast)
+        have "a4 \<notin> Da2" using \<open>a4 \<in> Dq4\<close> he24_meet \<open>a4 \<noteq> q\<close> by (by100 blast)
+        thus ?thesis using \<open>e34 \<inter> Da2 \<subseteq> {a4}\<close> \<open>a4 \<notin> Da2\<close> by (by100 blast)
+      qed
+      have "e34 \<inter> Da3 \<subseteq> {a3}"
+      proof -
+        have "Da3 \<subseteq> e13" using he13_split by (by100 blast)
+        hence "e34 \<inter> Da3 \<subseteq> e34 \<inter> e13" by (by100 blast)
+        thus ?thesis using assms(30) by (by100 blast)
+      qed
+      have "e12 - ?D1 = e12 - {a2}"
+        using assms(24) \<open>e12 \<inter> Da3 = {}\<close> \<open>e12 \<inter> Da2 \<subseteq> {a2}\<close> by (by100 blast)
+      moreover have "e23 - ?D1 = {}" by (by100 blast)
+      moreover have "e41 - ?D1 = e41"
+        using assms(23) \<open>e41 \<inter> Da3 = {}\<close> \<open>e41 \<inter> Da2 = {}\<close> by (by100 blast)
+      moreover have "e34 - ?D1 = e34 - {a3}"
+        using assms(25) \<open>e34 \<inter> Da2 = {}\<close> \<open>e34 \<inter> Da3 \<subseteq> {a3}\<close> by (by100 blast)
+      ultimately have h_each: "e12 - ?D1 = e12 - {a2}" "e23 - ?D1 = {}"
+          "e41 - ?D1 = e41" "e34 - ?D1 = e34 - {a3}" by (by100 blast)+
+      have "C - ?D1 = (e12 - ?D1) \<union> (e23 - ?D1) \<union> (e34 - ?D1) \<union> (e41 - ?D1)"
+        using assms(39) by (by100 blast)
+      hence "C - ?D1 = (e12 - {a2}) \<union> {} \<union> (e34 - {a3}) \<union> e41"
+        using h_each by (by100 simp)
+      moreover have "(e12 - {a2}) \<union> (e34 - {a3}) \<union> e41 = (e12 - {a2}) \<union> e41 \<union> (e34 - {a3})"
+        by (by100 blast)
+      ultimately show ?thesis by (by100 simp)
+    qed
+    \<comment> \<open>Path-connected pieces.\<close>
+    have hpc_e41: "top1_path_connected_on e41
+        (subspace_topology top1_S2 top1_S2_topology e41)"
+      by (rule arc_path_connected[OF assms(13) assms(7)])
+    have ha2_ep: "a2 \<in> top1_arc_endpoints_on e12
+        (subspace_topology top1_S2 top1_S2_topology e12)"
+      using assms(16) by (by100 blast)
+    have hpc_e12: "top1_path_connected_on (e12 - {a2})
+        (subspace_topology top1_S2 top1_S2_topology (e12 - {a2}))"
+      by (rule arc_minus_endpoint_pc[OF assms(10) assms(4) ha2_ep])
+    have ha3_ep: "a3 \<in> top1_arc_endpoints_on e34
+        (subspace_topology top1_S2 top1_S2_topology e34)"
+      using assms(18) by (by100 blast)
+    have hpc_e34: "top1_path_connected_on (e34 - {a3})
+        (subspace_topology top1_S2 top1_S2_topology (e34 - {a3}))"
+      by (rule arc_minus_endpoint_pc[OF assms(12) assms(6) ha3_ep])
+    \<comment> \<open>Shared vertices.\<close>
+    have ha1_ne_a2: "a1 \<noteq> a2" using assms(2) by (auto simp: card_insert_if split: if_splits)
+    have ha3_ne_a4: "a3 \<noteq> a4" using assms(2) by (auto simp: card_insert_if split: if_splits)
+    have ha1_e12: "a1 \<in> e12" using assms(16) unfolding top1_arc_endpoints_on_def by (by100 blast)
+    have ha1_e41: "a1 \<in> e41" using assms(27) by (by100 blast)
+    have ha1_share: "a1 \<in> (e12 - {a2}) \<inter> e41" using ha1_e12 ha1_ne_a2 ha1_e41 by (by100 blast)
+    have ha4_e41: "a4 \<in> e41" using assms(19) unfolding top1_arc_endpoints_on_def by (by100 blast)
+    have ha4_e34: "a4 \<in> e34" using assms(18) unfolding top1_arc_endpoints_on_def by (by100 blast)
+    have ha4_share: "a4 \<in> e41 \<inter> (e34 - {a3})" using ha4_e41 ha4_e34 ha3_ne_a4 by (by100 blast)
+    \<comment> \<open>Chain: (e12-{a2}) \<union> e41 via shared a1.\<close>
+    have hTX12: "is_topology_on ((e12 - {a2}) \<union> e41)
+        (subspace_topology top1_S2 top1_S2_topology ((e12 - {a2}) \<union> e41))"
+      by (rule subspace_topology_is_topology_on[OF
+          is_topology_on_strict_imp[OF assms(1)]]) (use assms(4,7) in \<open>by100 blast\<close>)
+    have hpc_a1: "top1_path_connected_on ({a1})
+        (subspace_topology top1_S2 top1_S2_topology {a1})"
+    proof -
+      have hTS1: "is_topology_on {a1} (subspace_topology top1_S2 top1_S2_topology {a1})"
+        by (rule subspace_topology_is_topology_on[OF
+            is_topology_on_strict_imp[OF assms(1)]]) (use assms(3) in \<open>by100 blast\<close>)
+      show ?thesis unfolding top1_path_connected_on_def top1_is_path_on_def
+      proof (intro conjI ballI)
+        show "is_topology_on {a1} (subspace_topology top1_S2 top1_S2_topology {a1})" by (rule hTS1)
+        fix x y :: "real \<times> real \<times> real"
+        assume "x \<in> {a1}" "y \<in> {a1}"
+        hence "x = a1" "y = a1" by (by100 blast)+
+        have "top1_continuous_map_on I_set I_top {a1}
+            (subspace_topology top1_S2 top1_S2_topology {a1}) (top1_constant_path a1)"
+        proof -
+          have "a1 \<in> top1_S2" using assms(3) by (by100 blast)
+          hence "a1 \<in> {a1}" by (by100 blast)
+          show ?thesis using top1_constant_path_continuous[OF hTS1 \<open>a1 \<in> {a1}\<close>]
+            unfolding top1_constant_path_def by (by100 simp)
+        qed
+        moreover have "(top1_constant_path a1) 0 = x" using \<open>x = a1\<close>
+          unfolding top1_constant_path_def by (by100 simp)
+        moreover have "(top1_constant_path a1) 1 = y" using \<open>y = a1\<close>
+          unfolding top1_constant_path_def by (by100 simp)
+        ultimately show "\<exists>f. top1_continuous_map_on I_set I_top {a1}
+            (subspace_topology top1_S2 top1_S2_topology {a1}) f \<and> f 0 = x \<and> f 1 = y"
+          by (by100 blast)
+      qed
+    qed
+    have h_sub12: "(e12 - {a2}) \<inter> e41 = {a1}"
+      using assms(27) ha1_ne_a2 by (by100 blast)
+    \<comment> \<open>Topology matching: sub S2 (piece) = sub (union) (sub S2 (union)) (piece).\<close>
+    let ?X12 = "(e12 - {a2}) \<union> e41"
+    have hsub_e12: "subspace_topology top1_S2 top1_S2_topology (e12 - {a2})
+        = subspace_topology ?X12 (subspace_topology top1_S2 top1_S2_topology ?X12) (e12 - {a2})"
+      using subspace_topology_trans[of "e12 - {a2}" ?X12] by (by100 simp)
+    have hsub_e41: "subspace_topology top1_S2 top1_S2_topology e41
+        = subspace_topology ?X12 (subspace_topology top1_S2 top1_S2_topology ?X12) e41"
+      using subspace_topology_trans[of e41 ?X12] by (by100 simp)
+    have hsub_a1: "subspace_topology top1_S2 top1_S2_topology {a1}
+        = subspace_topology ?X12 (subspace_topology top1_S2 top1_S2_topology ?X12) {a1}"
+      using subspace_topology_trans[of "{a1}" ?X12] ha1_share by (by100 simp)
+    have hpc12: "top1_path_connected_on ?X12
+        (subspace_topology top1_S2 top1_S2_topology ?X12)"
+    proof (rule path_connected_union[OF hTX12])
+      show "top1_path_connected_on (e12 - {a2})
+          (subspace_topology ?X12 (subspace_topology top1_S2 top1_S2_topology ?X12) (e12 - {a2}))"
+        using hpc_e12 hsub_e12 by (by100 simp)
+      show "top1_path_connected_on e41
+          (subspace_topology ?X12 (subspace_topology top1_S2 top1_S2_topology ?X12) e41)"
+        using hpc_e41 hsub_e41 by (by100 simp)
+      show "top1_path_connected_on ((e12 - {a2}) \<inter> e41)
+          (subspace_topology ?X12 (subspace_topology top1_S2 top1_S2_topology ?X12) ((e12 - {a2}) \<inter> e41))"
+        using hpc_a1 hsub_a1 h_sub12 by (by100 simp)
+      show "(e12 - {a2}) \<union> e41 = ?X12" by (by100 blast)
+      show "e12 - {a2} \<subseteq> ?X12" by (by100 blast)
+      show "e41 \<subseteq> ?X12" by (by100 blast)
+      show "(e12 - {a2}) \<inter> e41 \<noteq> {}" using ha1_share by (by100 blast)
+    qed
+    \<comment> \<open>Chain: ((e12-{a2}) \<union> e41) \<union> (e34-{a3}) via shared a4.\<close>
+    let ?Xall = "(e12 - {a2}) \<union> e41 \<union> (e34 - {a3})"
+    have hTXall: "is_topology_on ?Xall
+        (subspace_topology top1_S2 top1_S2_topology ?Xall)"
+      by (rule subspace_topology_is_topology_on[OF
+          is_topology_on_strict_imp[OF assms(1)]]) (use assms(4,6,7) in \<open>by100 blast\<close>)
+    have h_sub_all: "?X12 \<inter> (e34 - {a3}) = {a4}"
+    proof -
+      have "(e12 - {a2}) \<inter> (e34 - {a3}) = {}" using assms(22) by (by100 blast)
+      moreover have "e41 \<inter> (e34 - {a3}) = {a4}" using assms(26) ha3_ne_a4 by (by100 blast)
+      ultimately show ?thesis by (by100 blast)
+    qed
+    have hsub_X12: "subspace_topology top1_S2 top1_S2_topology ?X12
+        = subspace_topology ?Xall (subspace_topology top1_S2 top1_S2_topology ?Xall) ?X12"
+      using subspace_topology_trans[of ?X12 ?Xall] by (by100 simp)
+    have hsub_e34: "subspace_topology top1_S2 top1_S2_topology (e34 - {a3})
+        = subspace_topology ?Xall (subspace_topology top1_S2 top1_S2_topology ?Xall) (e34 - {a3})"
+      using subspace_topology_trans[of "e34 - {a3}" ?Xall] by (by100 simp)
+    have hpc_a4: "top1_path_connected_on ({a4})
+        (subspace_topology top1_S2 top1_S2_topology {a4})"
+    proof -
+      have hTS4: "is_topology_on {a4} (subspace_topology top1_S2 top1_S2_topology {a4})"
+        by (rule subspace_topology_is_topology_on[OF
+            is_topology_on_strict_imp[OF assms(1)]]) (use assms(3) in \<open>by100 blast\<close>)
+      show ?thesis unfolding top1_path_connected_on_def top1_is_path_on_def
+      proof (intro conjI ballI)
+        show "is_topology_on {a4} (subspace_topology top1_S2 top1_S2_topology {a4})" by (rule hTS4)
+        fix x y :: "real \<times> real \<times> real"
+        assume "x \<in> {a4}" "y \<in> {a4}"
+        hence "x = a4" "y = a4" by (by100 blast)+
+        show "\<exists>f. top1_continuous_map_on I_set I_top {a4}
+            (subspace_topology top1_S2 top1_S2_topology {a4}) f \<and> f 0 = x \<and> f 1 = y"
+          using top1_constant_path_continuous[OF hTS4, of a4]
+            \<open>x = a4\<close> \<open>y = a4\<close> unfolding top1_constant_path_def
+          by (by100 fastforce)
+      qed
+    qed
+    have hsub_a4: "subspace_topology top1_S2 top1_S2_topology {a4}
+        = subspace_topology ?Xall (subspace_topology top1_S2 top1_S2_topology ?Xall) {a4}"
+      using subspace_topology_trans[of "{a4}" ?Xall] ha4_share by (by100 simp)
+    have hpc_all: "top1_path_connected_on ?Xall
+        (subspace_topology top1_S2 top1_S2_topology ?Xall)"
+    proof (rule path_connected_union[OF hTXall])
+      show "top1_path_connected_on ?X12
+          (subspace_topology ?Xall (subspace_topology top1_S2 top1_S2_topology ?Xall) ?X12)"
+        using hpc12 hsub_X12 by (by100 simp)
+      show "top1_path_connected_on (e34 - {a3})
+          (subspace_topology ?Xall (subspace_topology top1_S2 top1_S2_topology ?Xall) (e34 - {a3}))"
+        using hpc_e34 hsub_e34 by (by100 simp)
+      show "top1_path_connected_on (?X12 \<inter> (e34 - {a3}))
+          (subspace_topology ?Xall (subspace_topology top1_S2 top1_S2_topology ?Xall) (?X12 \<inter> (e34 - {a3})))"
+        using hpc_a4 hsub_a4 h_sub_all by (by100 simp)
+      show "?X12 \<union> (e34 - {a3}) = ?Xall" by (by100 blast)
+      show "?X12 \<subseteq> ?Xall" by (by100 blast)
+      show "e34 - {a3} \<subseteq> ?Xall" by (by100 blast)
+      show "?X12 \<inter> (e34 - {a3}) \<noteq> {}" using ha4_share by (by100 blast)
+    qed
+    show ?thesis using hpc_all hset by (by100 simp)
+  qed
   \<comment> \<open>Similarly for C - D2.\<close>
   have hx_in_CmD2: "x \<in> C - ?D2"
   proof -
