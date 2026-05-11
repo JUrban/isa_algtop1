@@ -1264,9 +1264,105 @@ proof -
     \<comment> \<open>The Ri containing e34 is also \<subseteq> A. e12 \<inter> Ri = {}.
        A \<supseteq> Ri \<union> (e12-{a1,a2}). B = rest of A\<union>B = other Ri's.
        Other Ri's: 2 nonempty disjoint connected sets. B connected \<Rightarrow> B \<subseteq> one \<Rightarrow> other empty. Contradiction.\<close>
+    \<comment> \<open>e34 in some Ri. That Ri \<subseteq> A (since e34 \<subseteq> A and Ri \<inter> A \<supseteq> e34 \<noteq> {}).\<close>
+    obtain Ri_e where hRie: "Ri_e \<in> {R1, R2, R3}" "e34 - {a3, a4} \<subseteq> Ri_e"
+    proof -
+      from he34_in_Ri show ?thesis
+      proof (elim disjE)
+        assume h: "e34 - {a3, a4} \<subseteq> R1"
+        show ?thesis
+          apply (rule that[of R1])
+          apply (by100 simp)
+          apply (rule h)
+          done
+      next
+        assume h: "e34 - {a3, a4} \<subseteq> R2"
+        show ?thesis
+          apply (rule that[of R2])
+          apply (by100 simp)
+          apply (rule h)
+          done
+      next
+        assume h: "e34 - {a3, a4} \<subseteq> R3"
+        show ?thesis
+          apply (rule that[of R3])
+          apply (by100 simp)
+          apply (rule h)
+          done
+      qed
+    qed
+    have "Ri_e \<subseteq> A"
+    proof -
+      from hRi_in_AB[OF hRie(1)] have "Ri_e \<subseteq> A \<or> Ri_e \<subseteq> B" .
+      moreover have "Ri_e \<inter> A \<noteq> {}"
+      proof -
+        have "e34 - {a3, a4} \<subseteq> A" using h by (by100 blast)
+        hence "e34 - {a3, a4} \<subseteq> Ri_e \<inter> A" using hRie(2) by (by100 blast)
+        thus ?thesis using he34_ne by (by100 blast)
+      qed
+      ultimately show ?thesis using assms(39) by (by100 blast)
+    qed
+    \<comment> \<open>B \<subseteq> remaining Ri's (since A\<union>B = Ri's \<union> e12, and e12 \<subseteq> A, Ri\_e \<subseteq> A).\<close>
+    have hB_sub_rest: "B \<subseteq> (R1 \<union> R2 \<union> R3) - Ri_e"
+    proof -
+      have "B \<subseteq> (R1 \<union> R2 \<union> R3) \<union> (e12 - {a1, a2}) - A"
+        using hAB_decomp assms(39) by (by100 blast)
+      moreover have "e12 - {a1, a2} \<subseteq> A" using h by (by100 blast)
+      moreover have "Ri_e \<subseteq> A" by (rule \<open>Ri_e \<subseteq> A\<close>)
+      ultimately show ?thesis using assms(39) by (by100 blast)
+    qed
+    \<comment> \<open>The remaining 2 Ri's are nonempty, disjoint, each open.\<close>
+    \<comment> \<open>B connected \<subseteq> (Rj\<union>Rk) with separation \<Rightarrow> B \<subseteq> Rj or B \<subseteq> Rk.\<close>
+    \<comment> \<open>Then the other is \<subseteq> A. But A\<inter>B={}. So the other \<subseteq> A but also nonempty.\<close>
+    \<comment> \<open>A\<union>B covers everything \<Rightarrow> remaining Ri ⊆ A. But then B = {} (all in A). Contradiction.\<close>
     show False sorry
   next
     assume h: "e12 - {a1, a2} \<subseteq> B \<and> e34 - {a3, a4} \<subseteq> B"
+    \<comment> \<open>Symmetric argument.\<close>
+    obtain Ri_e where hRie: "Ri_e \<in> {R1, R2, R3}" "e34 - {a3, a4} \<subseteq> Ri_e"
+    proof -
+      from he34_in_Ri show ?thesis
+      proof (elim disjE)
+        assume h: "e34 - {a3, a4} \<subseteq> R1"
+        show ?thesis
+          apply (rule that[of R1])
+          apply (by100 simp)
+          apply (rule h)
+          done
+      next
+        assume h: "e34 - {a3, a4} \<subseteq> R2"
+        show ?thesis
+          apply (rule that[of R2])
+          apply (by100 simp)
+          apply (rule h)
+          done
+      next
+        assume h: "e34 - {a3, a4} \<subseteq> R3"
+        show ?thesis
+          apply (rule that[of R3])
+          apply (by100 simp)
+          apply (rule h)
+          done
+      qed
+    qed
+    have "Ri_e \<subseteq> B"
+    proof -
+      from hRi_in_AB[OF hRie(1)] have "Ri_e \<subseteq> A \<or> Ri_e \<subseteq> B" .
+      moreover have "Ri_e \<inter> B \<noteq> {}"
+      proof -
+        have "e34 - {a3, a4} \<subseteq> B" using h by (by100 blast)
+        hence "e34 - {a3, a4} \<subseteq> Ri_e \<inter> B" using hRie(2) by (by100 blast)
+        thus ?thesis using he34_ne by (by100 blast)
+      qed
+      ultimately show ?thesis using assms(39) by (by100 blast)
+    qed
+    have hA_sub_rest: "A \<subseteq> (R1 \<union> R2 \<union> R3) - Ri_e"
+    proof -
+      have "A \<subseteq> (R1 \<union> R2 \<union> R3) \<union> (e12 - {a1, a2}) - B"
+        using hAB_decomp assms(39) by (by100 blast)
+      moreover have "e12 - {a1, a2} \<subseteq> B" using h by (by100 blast)
+      ultimately show ?thesis using \<open>Ri_e \<subseteq> B\<close> assms(39) by (by100 blast)
+    qed
     show False sorry
   qed
 qed
