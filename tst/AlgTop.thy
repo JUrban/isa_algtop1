@@ -2106,7 +2106,13 @@ proof -
       sorry \<comment> \<open>Composition of two homeomorphisms.\<close>
     \<comment> \<open>By Corollary\_52\_5: \<pi>_1(X,c0) \<cong> \<pi>_1(R2-\{0\},h(c0)).\<close>
     have hTR2: "is_topology_on R2_0 TR2_0"
-      sorry \<comment> \<open>Subspace of R2.\<close>
+    proof -
+      have "is_topology_on (UNIV :: (real \<times> real) set)
+          (product_topology_on top1_open_sets top1_open_sets)"
+        sorry \<comment> \<open>R2 product topology. UNIV = UNIV \<times> UNIV for pairs.\<close>
+      thus ?thesis unfolding TR2_0_def R2_0_def
+        by (rule subspace_topology_is_topology_on) (by100 blast)
+    qed
     have hhc0: "h c0 \<in> R2_0"
       sorry \<comment> \<open>h maps c0 to R2-\{0\}.\<close>
     have hiso_XR2: "top1_groups_isomorphic_on
