@@ -5095,12 +5095,13 @@ proof -
     sorry \<comment> \<open>Same surjectivity proof as Lemma\_65\_1\_fixed (already proved in structure above).\<close>
   \<comment> \<open>Both groups infinite cyclic.\<close>
   have hC_scc: "top1_simple_closed_curve_on top1_S2 top1_S2_topology C"
-    sorry
+    sorry \<comment> \<open>C is SCC (proved in Lemma\_65\_1\_fixed).\<close>
+  \<comment> \<open>\<pi>_1(C, x) infinite cyclic. C \<cong> S1, so \<pi>_1 \<cong> Z with generator.\<close>
   have hC_gen: "\<exists>gen_C. top1_is_loop_on C ?TC x gen_C \<and>
       (\<forall>f. top1_is_loop_on C ?TC x f \<longrightarrow>
         (\<exists>n::nat. top1_path_homotopic_on C ?TC x x f (top1_path_power gen_C x n)
           \<or> top1_path_homotopic_on C ?TC x x f (top1_path_power (top1_path_reverse gen_C) x n)))"
-    sorry \<comment> \<open>C is SCC \<cong> S1, \<pi>_1(C) infinite cyclic.\<close>
+    sorry \<comment> \<open>SCC \<cong> S1 has \<pi>_1 infinite cyclic with generator at any basepoint.\<close>
   then obtain gen_C where hgen_C: "top1_is_loop_on C ?TC x gen_C"
       and hgen_C_generates: "\<forall>f. top1_is_loop_on C ?TC x f \<longrightarrow>
         (\<exists>n::nat. top1_path_homotopic_on C ?TC x x f (top1_path_power gen_C x n)
