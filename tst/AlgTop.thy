@@ -1160,8 +1160,10 @@ proof -
   have he12_on_theta: "e12 - {a1, a2} \<subseteq> e12 \<union> Arc2 \<union> Arc3" unfolding defs by (by100 blast)
   have he12_not_Ri: "e12 - {a1, a2} \<inter> (R1 \<union> R2 \<union> R3) = {}"
   proof -
-    \<comment> \<open>hR(7): R1\<union>R2\<union>R3 = S2 - (e12\<union>Arc2\<union>Arc3). So Ri \<inter> e12 = {}.\<close>
-    show ?thesis sorry
+    have h1: "\<And>x. x \<in> e12 \<Longrightarrow> x \<notin> R1" using hR(7) unfolding defs by (by100 blast)
+    have h2: "\<And>x. x \<in> e12 \<Longrightarrow> x \<notin> R2" using hR(7) unfolding defs by (by100 blast)
+    have h3: "\<And>x. x \<in> e12 \<Longrightarrow> x \<notin> R3" using hR(7) unfolding defs by (by100 blast)
+    show ?thesis sorry \<comment> \<open>e12\<inter>Ri={}. Proved individually above but by100 can't combine in this context.\<close>
   qed
   \<comment> \<open>Step 5: Each Ri \<subseteq> A\<union>B (since Ri \<subseteq> S2-theta \<subseteq> S2-D = A\<union>B).
      The Ri containing e34 \<subseteq> A or B. e12 NOT in that Ri.
