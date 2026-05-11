@@ -134,7 +134,45 @@ lemma Lemma_65_1_fixed:
        (subspace_topology top1_S2 top1_S2_topology C) c0
        (top1_S2 - {p} - {q})
        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p} - {q})) c0 id)"
-  sorry
+proof -
+  let ?X = "top1_S2 - {p} - {q}"
+  let ?TX = "subspace_topology top1_S2 top1_S2_topology ?X"
+  let ?TC = "subspace_topology top1_S2 top1_S2_topology C"
+  let ?j_star = "top1_fundamental_group_induced_on C ?TC c0 ?X ?TX c0 id"
+  \<comment> \<open>Step 1: C \<subseteq> X (p \<notin> C, q \<notin> C).\<close>
+  have hC_sub_X: "C \<subseteq> ?X" sorry
+  have hc0_X: "c0 \<in> ?X" sorry
+  \<comment> \<open>Step 2: j\_* is a homomorphism.\<close>
+  have hTopS2: "is_topology_on top1_S2 top1_S2_topology"
+    using assms(1) unfolding is_topology_on_strict_def sorry
+  have hTX: "is_topology_on ?X ?TX" sorry
+  have hTC: "is_topology_on C ?TC" sorry
+  have hj_cont: "top1_continuous_map_on C ?TC ?X ?TX id" sorry
+  have hj_star_hom: "top1_group_hom_on
+      (top1_fundamental_group_carrier C ?TC c0) (top1_fundamental_group_mul C ?TC c0)
+      (top1_fundamental_group_carrier ?X ?TX c0) (top1_fundamental_group_mul ?X ?TX c0) ?j_star"
+    sorry
+  \<comment> \<open>Step 3: Both groups are infinite cyclic (\<cong> Z).
+     From existing infrastructure: SCC\_pi1\_iso\_Z and pi1\_S2\_minus\_two\_points.\<close>
+  have hC_pi1_Z: "top1_groups_isomorphic_on
+      (top1_fundamental_group_carrier C ?TC c0) (top1_fundamental_group_mul C ?TC c0)
+      top1_Z_group top1_Z_mul" sorry
+  have hX_pi1_Z: "top1_groups_isomorphic_on
+      (top1_fundamental_group_carrier ?X ?TX c0) (top1_fundamental_group_mul ?X ?TX c0)
+      top1_Z_group top1_Z_mul" sorry
+  \<comment> \<open>Step 4 (KEY - textbook 65.1(b)): j\_* is surjective.
+     Construct \<alpha>*\<beta> loop in C that generates \<pi>_1(X) via Theorem 63.1.
+     j\_*([a*b]\_C) = [a*b]\_X = generator. Generator hit \<Rightarrow> surjective.\<close>
+  have hj_star_surj: "?j_star ` (top1_fundamental_group_carrier C ?TC c0) =
+      top1_fundamental_group_carrier ?X ?TX c0" sorry
+  \<comment> \<open>Step 5: Surjective hom Z \<rightarrow> Z is injective (hence bijective).\<close>
+  have hj_star_inj: "inj_on ?j_star (top1_fundamental_group_carrier C ?TC c0)" sorry
+  \<comment> \<open>Combine.\<close>
+  have hj_star_bij: "bij_betw ?j_star
+      (top1_fundamental_group_carrier C ?TC c0) (top1_fundamental_group_carrier ?X ?TX c0)"
+    unfolding bij_betw_def using hj_star_inj hj_star_surj sorry
+  show ?thesis unfolding top1_group_iso_on_def using hj_star_hom hj_star_bij sorry
+qed
 
 section \<open>Theorem 65.2 (fixed): inclusion C \<hookrightarrow> S2-{p,q} induces iso (general SCC)\<close>
 
