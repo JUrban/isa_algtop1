@@ -4351,7 +4351,9 @@ lemma free_group_universal_property:
   assumes "top1_is_free_group_full_on G mul e invg \<iota> S"
       and "top1_is_group_on H mulH eH invgH"
       and "\<forall>s\<in>S. \<phi> s \<in> H"
-  shows "\<exists>!\<psi>. top1_group_hom_on G mul H mulH \<psi> \<and> (\<forall>s\<in>S. \<psi> (\<iota> s) = \<phi> s)"
+  shows "\<exists>\<psi>. top1_group_hom_on G mul H mulH \<psi> \<and> (\<forall>s\<in>S. \<psi> (\<iota> s) = \<phi> s)
+      \<and> (\<forall>\<psi>'. top1_group_hom_on G mul H mulH \<psi>' \<and> (\<forall>s\<in>S. \<psi>' (\<iota> s) = \<phi> s)
+          \<longrightarrow> (\<forall>g\<in>G. \<psi>' g = \<psi> g))"
 proof -
   have hG: "top1_is_group_on G mul e invg"
     using assms(1) unfolding top1_is_free_group_full_on_def by (by100 blast)
@@ -4359,32 +4361,19 @@ proof -
     using assms(1) unfolding top1_is_free_group_full_on_def by (by100 blast)
   have hS: "\<forall>s\<in>S. \<iota> s \<in> G"
     using assms(1) unfolding top1_is_free_group_full_on_def by (by100 blast)
-  \<comment> \<open>Existence.\<close>
   obtain \<psi> where h\<psi>: "top1_group_hom_on G mul H mulH \<psi>"
       and h\<psi>_ext: "\<forall>s\<in>S. \<psi> (\<iota> s) = \<phi> s"
     using free_group_hom_exists[OF assms] by (by100 blast)
-  \<comment> \<open>Uniqueness.\<close>
   have huniq: "\<forall>\<psi>'. top1_group_hom_on G mul H mulH \<psi>' \<and> (\<forall>s\<in>S. \<psi>' (\<iota> s) = \<phi> s)
       \<longrightarrow> (\<forall>g\<in>G. \<psi>' g = \<psi> g)"
   proof (intro allI impI)
     fix \<psi>' assume h': "top1_group_hom_on G mul H mulH \<psi>' \<and> (\<forall>s\<in>S. \<psi>' (\<iota> s) = \<phi> s)"
     have h'_hom: "top1_group_hom_on G mul H mulH \<psi>'" using h' by (by100 blast)
-    have "\<forall>s\<in>S. \<psi>' (\<iota> s) = \<psi> (\<iota> s)"
-      using h' h\<psi>_ext by (by100 simp)
+    have "\<forall>s\<in>S. \<psi>' (\<iota> s) = \<psi> (\<iota> s)" using h' h\<psi>_ext by (by100 simp)
     thus "\<forall>g\<in>G. \<psi>' g = \<psi> g"
       by (rule free_group_hom_unique[OF hG assms(2) hgen hS h'_hom h\<psi>])
   qed
-  show ?thesis
-  proof (rule ex1I)
-    show "top1_group_hom_on G mul H mulH \<psi> \<and> (\<forall>s\<in>S. \<psi> (\<iota> s) = \<phi> s)"
-      using h\<psi> h\<psi>_ext by (by100 blast)
-  next
-    fix \<psi>' assume h': "top1_group_hom_on G mul H mulH \<psi>' \<and> (\<forall>s\<in>S. \<psi>' (\<iota> s) = \<phi> s)"
-    have "\<forall>g\<in>G. \<psi>' g = \<psi> g" using huniq h' by (by100 blast)
-    thus "\<psi>' = \<psi>" sorry \<comment> \<open>Needs extensionality: functions agreeing on G agree everywhere.
-       This requires either: functions are restrict'd to G, or a convention.
-       For now sorry'd.\<close>
-  qed
+  show ?thesis using h\<psi> h\<psi>_ext huniq by (by100 blast)
 qed
 
 text \<open>Corollary: the exponent sum homomorphism. For each generator s0,
