@@ -774,14 +774,105 @@ text \<open>Theorem 64.2 and 64.4 (K\_3\_3 and K\_5 not planar) are consequences
   edge-vertex incidence and intersection conditions. We state simplified versions.\<close>
 
 theorem Theorem_64_2_K33_not_planar:
-  \<comment> \<open>The utilities graph K33 cannot be imbedded in the plane (or S2).\<close>
-  assumes "is_topology_on_strict top1_S2 top1_S2_topology"
-      and hK33: "card {g, w, e, h1, h2, h3} = (6::nat)"
-      and "{g, w, e, h1, h2, h3} \<subseteq> top1_S2"
+  \<comment> \<open>The utilities graph K33 cannot be imbedded in the plane (or S2).
+     Vertices: g, w, e (utilities) and h1, h2, h3 (houses).
+     9 arcs: each utility connected to each house.\<close>
+  fixes g w e h1 h2 h3 :: "real \<times> real \<times> real"
+    and gh1 gh2 gh3 wh1 wh2 wh3 eh1 eh2 eh3 :: "(real \<times> real \<times> real) set"
+  assumes hS2: "is_topology_on_strict top1_S2 top1_S2_topology"
+      and hcard: "card {g, w, e, h1, h2, h3} = (6::nat)"
+      and hsub: "{g, w, e, h1, h2, h3} \<subseteq> top1_S2"
+      \<comment> \<open>All 9 arcs are subsets of S2 and are arcs.\<close>
+      and "gh1 \<subseteq> top1_S2" "gh2 \<subseteq> top1_S2" "gh3 \<subseteq> top1_S2"
+      and "wh1 \<subseteq> top1_S2" "wh2 \<subseteq> top1_S2" "wh3 \<subseteq> top1_S2"
+      and "eh1 \<subseteq> top1_S2" "eh2 \<subseteq> top1_S2" "eh3 \<subseteq> top1_S2"
       and "top1_is_arc_on gh1 (subspace_topology top1_S2 top1_S2_topology gh1)"
-      \<comment> \<open>... (9 arcs connecting each utility to each house)\<close>
+      and "top1_is_arc_on gh2 (subspace_topology top1_S2 top1_S2_topology gh2)"
+      and "top1_is_arc_on gh3 (subspace_topology top1_S2 top1_S2_topology gh3)"
+      and "top1_is_arc_on wh1 (subspace_topology top1_S2 top1_S2_topology wh1)"
+      and "top1_is_arc_on wh2 (subspace_topology top1_S2 top1_S2_topology wh2)"
+      and "top1_is_arc_on wh3 (subspace_topology top1_S2 top1_S2_topology wh3)"
+      and "top1_is_arc_on eh1 (subspace_topology top1_S2 top1_S2_topology eh1)"
+      and "top1_is_arc_on eh2 (subspace_topology top1_S2 top1_S2_topology eh2)"
+      and "top1_is_arc_on eh3 (subspace_topology top1_S2 top1_S2_topology eh3)"
+      \<comment> \<open>Endpoints.\<close>
+      and "top1_arc_endpoints_on gh1 (subspace_topology top1_S2 top1_S2_topology gh1) = {g, h1}"
+      and "top1_arc_endpoints_on gh2 (subspace_topology top1_S2 top1_S2_topology gh2) = {g, h2}"
+      and "top1_arc_endpoints_on gh3 (subspace_topology top1_S2 top1_S2_topology gh3) = {g, h3}"
+      and "top1_arc_endpoints_on wh1 (subspace_topology top1_S2 top1_S2_topology wh1) = {w, h1}"
+      and "top1_arc_endpoints_on wh2 (subspace_topology top1_S2 top1_S2_topology wh2) = {w, h2}"
+      and "top1_arc_endpoints_on wh3 (subspace_topology top1_S2 top1_S2_topology wh3) = {w, h3}"
+      and "top1_arc_endpoints_on eh1 (subspace_topology top1_S2 top1_S2_topology eh1) = {e, h1}"
+      and "top1_arc_endpoints_on eh2 (subspace_topology top1_S2 top1_S2_topology eh2) = {e, h2}"
+      and "top1_arc_endpoints_on eh3 (subspace_topology top1_S2 top1_S2_topology eh3) = {e, h3}"
+      \<comment> \<open>Planarity: arcs only intersect at shared vertices.\<close>
+      and "gh1 \<inter> gh2 = {g}" "gh1 \<inter> gh3 = {g}" "gh2 \<inter> gh3 = {g}"
+      and "wh1 \<inter> wh2 = {w}" "wh1 \<inter> wh3 = {w}" "wh2 \<inter> wh3 = {w}"
+      and "eh1 \<inter> eh2 = {e}" "eh1 \<inter> eh3 = {e}" "eh2 \<inter> eh3 = {e}"
+      and "gh1 \<inter> wh1 = {h1}" "gh2 \<inter> wh2 = {h2}" "gh3 \<inter> wh3 = {h3}"
+      and "gh1 \<inter> wh2 = {}" "gh1 \<inter> wh3 = {}" "gh2 \<inter> wh1 = {}"
+      and "gh2 \<inter> wh3 = {}" "gh3 \<inter> wh1 = {}" "gh3 \<inter> wh2 = {}"
+      and "gh1 \<inter> eh1 = {h1}" "gh2 \<inter> eh2 = {h2}" "gh3 \<inter> eh3 = {h3}"
+      and "gh1 \<inter> eh2 = {}" "gh1 \<inter> eh3 = {}" "gh2 \<inter> eh1 = {}"
+      and "gh2 \<inter> eh3 = {}" "gh3 \<inter> eh1 = {}" "gh3 \<inter> eh2 = {}"
+      and "wh1 \<inter> eh1 = {h1}" "wh2 \<inter> eh2 = {h2}" "wh3 \<inter> eh3 = {h3}"
+      and "wh1 \<inter> eh2 = {}" "wh1 \<inter> eh3 = {}" "wh2 \<inter> eh1 = {}"
+      and "wh2 \<inter> eh3 = {}" "wh3 \<inter> eh1 = {}" "wh3 \<inter> eh2 = {}"
   shows False
-  sorry
+proof -
+  have hS2_haus: "is_hausdorff_on top1_S2 top1_S2_topology" by (rule top1_S2_is_hausdorff)
+  have hTopS2: "is_topology_on top1_S2 top1_S2_topology"
+    using hS2 unfolding is_topology_on_strict_def by (by100 blast)
+  \<comment> \<open>Form theta space: 3 arcs A = gh1\<union>wh1, B = gh2\<union>wh2, C = gh3\<union>wh3, all from g to w.\<close>
+  \<comment> \<open>Each is an arc via arcs\_concatenation\_is\_arc.\<close>
+  define A where "A = gh1 \<union> wh1"
+  define B where "B = gh2 \<union> wh2"
+  define CC where "CC = gh3 \<union> wh3"
+  \<comment> \<open>Step 1: A, B, CC are arcs with endpoints {g, w}.\<close>
+  have hA_arc: "top1_is_arc_on A (subspace_topology top1_S2 top1_S2_topology A)"
+    sorry \<comment> \<open>arcs\_concatenation\_is\_arc[OF ...]\<close>
+  have hB_arc: "top1_is_arc_on B (subspace_topology top1_S2 top1_S2_topology B)"
+    sorry
+  have hCC_arc: "top1_is_arc_on CC (subspace_topology top1_S2 top1_S2_topology CC)"
+    sorry
+  have hA_sub: "A \<subseteq> top1_S2" unfolding A_def using assms(4,7) by (by100 blast)
+  have hB_sub: "B \<subseteq> top1_S2" unfolding B_def using assms(5,8) by (by100 blast)
+  have hCC_sub: "CC \<subseteq> top1_S2" unfolding CC_def using assms(6,9) by (by100 blast)
+  have hA_ep: "top1_arc_endpoints_on A (subspace_topology top1_S2 top1_S2_topology A) = {g, w}"
+    sorry
+  have hB_ep: "top1_arc_endpoints_on B (subspace_topology top1_S2 top1_S2_topology B) = {g, w}"
+    sorry
+  have hCC_ep: "top1_arc_endpoints_on CC (subspace_topology top1_S2 top1_S2_topology CC) = {g, w}"
+    sorry
+  have hg_ne_w: "g \<noteq> w" using hcard by (auto simp: card_insert_if split: if_splits)
+  \<comment> \<open>Intersections: A \<inter> B = {g,w}, B \<inter> CC = {g,w}, A \<inter> CC = {g,w}.\<close>
+  have hAB: "A \<inter> B = {g, w}"
+    sorry \<comment> \<open>From individual arc intersections.\<close>
+  have hBCC: "B \<inter> CC = {g, w}"
+    sorry
+  have hACC: "A \<inter> CC = {g, w}"
+    sorry
+  \<comment> \<open>Step 2: Apply Lemma\_64\_1 \<Rightarrow> 3 components U, V, W.\<close>
+  obtain U V W where hUVW: "U \<noteq> {}" "V \<noteq> {}" "W \<noteq> {}"
+      "U \<inter> V = {}" "V \<inter> W = {}" "U \<inter> W = {}"
+      "U \<union> V \<union> W = top1_S2 - (A \<union> B \<union> CC)"
+      "top1_connected_on U (subspace_topology top1_S2 top1_S2_topology U)"
+      "top1_connected_on V (subspace_topology top1_S2 top1_S2_topology V)"
+      "top1_connected_on W (subspace_topology top1_S2 top1_S2_topology W)"
+      "U \<in> top1_S2_topology" "V \<in> top1_S2_topology" "W \<in> top1_S2_topology"
+    sorry \<comment> \<open>Lemma\_64\_1 on theta A\<union>B\<union>CC.\<close>
+  \<comment> \<open>Step 3: e \<notin> theta (= A\<union>B\<union>CC).\<close>
+  have he_not_theta: "e \<notin> A \<union> B \<union> CC"
+    sorry \<comment> \<open>e \<notin> any of gh1,wh1,gh2,wh2,gh3,wh3 from card=6 and intersections.\<close>
+  hence "e \<in> U \<union> V \<union> W" using hUVW(7) hsub by (by100 blast)
+  \<comment> \<open>Step 4: e can't be in any component (each closure misses some h\_i).\<close>
+  \<comment> \<open>If e \<in> U: eh3 connected from e to h3. eh3 \<subseteq> closure(U) = U \<union> (boundary of U).
+     Boundary of U \<subseteq> A\<union>B (from theta structure). h3 \<notin> A\<union>B. Contradiction.\<close>
+  have "e \<notin> U" sorry \<comment> \<open>SCCBMC: closure(U) \<subseteq> U\<union>A\<union>B, h3\<notin>A\<union>B, eh3 from e\<in>U to h3.\<close>
+  moreover have "e \<notin> V" sorry \<comment> \<open>Similar: closure(V) \<subseteq> V\<union>B\<union>CC, h1\<notin>B\<union>CC.\<close>
+  moreover have "e \<notin> W" sorry \<comment> \<open>Similar: closure(W) \<subseteq> W\<union>A\<union>CC, h2\<notin>A\<union>CC.\<close>
+  ultimately show False using \<open>e \<in> U \<union> V \<union> W\<close> by (by100 blast)
+qed
 
 theorem Theorem_64_4_K5_not_planar:
   \<comment> \<open>The complete graph K5 cannot be imbedded in the plane (or S2).\<close>
