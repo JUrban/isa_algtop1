@@ -898,7 +898,11 @@ proof -
       top1_path_homotopic_on_def by (by100 blast)
   have hgf: "top1_loop_equiv_on X TX a g f"
     by (rule top1_loop_equiv_on_sym[OF hfg])
-  show ?thesis sorry \<comment> \<open>set\_eqI + loop\_equiv\_on\_trans. Type unification issue with set comprehension.\<close>
+  have "\<And>k. top1_loop_equiv_on X TX a f k \<Longrightarrow> top1_loop_equiv_on X TX a g k"
+    using top1_loop_equiv_on_trans[OF hTX hgf] .
+  moreover have "\<And>k. top1_loop_equiv_on X TX a g k \<Longrightarrow> top1_loop_equiv_on X TX a f k"
+    using top1_loop_equiv_on_trans[OF hTX hfg] .
+  ultimately show ?thesis by (by100 blast)
 qed
 
 \<comment> \<open>Helper: for a loop g in C \<subseteq> X, the inclusion-induced map sends [g]\_C to [g]\_X.\<close>
@@ -1376,7 +1380,12 @@ proof -
           show ?thesis unfolding hTC_sub by (by100 blast)
         qed
         moreover have "c = {h. top1_loop_equiv_on ?X ?TX x (top1_path_power (top1_path_reverse g) x n) h}"
-          using path_homotopic_same_class[OF hTX hfgrn] hc_eq sorry
+        proof -
+          from path_homotopic_same_class[OF hTX hfgrn]
+          have "{h. top1_loop_equiv_on ?X ?TX x f h} =
+              {h. top1_loop_equiv_on ?X ?TX x (top1_path_power (top1_path_reverse g) x n) h}" .
+          thus ?thesis using hc_eq by (by100 blast)
+        qed
         ultimately have "c = ?j_star_x {h. top1_loop_equiv_on C ?TC x (top1_path_power (top1_path_reverse g) x n) h}"
           by (by100 simp)
         thus ?thesis using hgrn_class_C by (by100 blast)
