@@ -1939,15 +1939,27 @@ proof -
         from hR_in_one[OF hQ13(2) hQ13(4) hQ13_conn]
         obtain Ri_Q13 where "Ri_Q13 \<in> {R1,R2,R3}" "Q13 \<subseteq> Ri_Q13" by (by100 blast)
         \<comment> \<open>Q12 \<noteq> Ri\_D and Q12 \<noteq> Ri\_e (boundary arguments).\<close>
-        have "Ri_Q12 \<noteq> Ri_D" sorry \<comment> \<open>D' \<inter> Q12 = {} but D' = Ri\_D.\<close>
+        have "Ri_Q12 \<noteq> Ri_D"
+        proof assume "Ri_Q12 = Ri_D"
+          hence "Q12 \<subseteq> D'" using \<open>Q12 \<subseteq> Ri_Q12\<close> hRiD_sub_D' by (by100 blast)
+          thus False using hQ12(3,4) by (by100 blast) qed
         have "Ri_Q12 \<noteq> Ri_e" sorry \<comment> \<open>a4 boundary argument.\<close>
-        have "Ri_Q13 \<noteq> Ri_D" sorry
+        have "Ri_Q13 \<noteq> Ri_D"
+        proof assume "Ri_Q13 = Ri_D"
+          hence "Q13 \<subseteq> D'" using \<open>Q13 \<subseteq> Ri_Q13\<close> hRiD_sub_D' by (by100 blast)
+          thus False using hQ13(3,4) by (by100 blast) qed
         have "Ri_Q13 \<noteq> Ri_e" sorry \<comment> \<open>a3 boundary argument.\<close>
         \<comment> \<open>Ri\_Q12 = Ri\_Q13 (third\_element\_unique).\<close>
         have hR_dist: "R1 \<noteq> R2" "R2 \<noteq> R3" "R1 \<noteq> R3"
           using hR(1,2,3,4,5,6) by (by100 blast)+
         have hRie_ne_RiD: "Ri_e \<noteq> Ri_D"
-          sorry \<comment> \<open>Ri\_e \<subseteq> C, Ri\_D = D', C \<inter> D' = {}.\<close>
+        proof assume "Ri_e = Ri_D"
+          have "e34 - {a3,a4} \<subseteq> C" by (rule he34C)
+          moreover have "e34 - {a3,a4} \<subseteq> D'" using hRie(2) \<open>Ri_e = Ri_D\<close> hRiD_sub_D' by (by100 blast)
+          ultimately have "e34 - {a3,a4} \<subseteq> C \<inter> D'" by (by100 blast)
+          hence "e34 - {a3,a4} = {}" using hCD'_disj by (by100 blast)
+          thus False using he34_ne by (by100 blast)
+        qed
         have "Ri_Q12 = Ri_Q13"
           by (rule third_element_unique[OF hRie(1) hRiD \<open>Ri_Q12 \<in> _\<close> \<open>Ri_Q13 \<in> _\<close>
               hR_dist hRie_ne_RiD \<open>Ri_Q12 \<noteq> Ri_e\<close> \<open>Ri_Q12 \<noteq> Ri_D\<close>
