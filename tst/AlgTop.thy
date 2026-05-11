@@ -2158,7 +2158,24 @@ proof -
     sorry \<comment> \<open>Same SCC \<rightarrow> S1 \<rightarrow> Z chain as in Lemma\_65\_1.\<close>
   \<comment> \<open>\<pi>_1(S2-\{p,q\}, c0) \<cong> Z.\<close>
   have hp_ne_q: "p \<noteq> q"
-    sorry \<comment> \<open>p and q in different components of S2-C, so p \<noteq> q.\<close>
+  proof
+    assume "p = q"
+    have "top1_is_path_on (top1_S2 - C)
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) p q
+        (top1_constant_path p)"
+    proof -
+      have hp_mem: "p \<in> top1_S2 - C" by (rule assms(3))
+      have hTS2C: "is_topology_on (top1_S2 - C)
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C))"
+        by (rule subspace_topology_is_topology_on[OF hTopS2]) (by100 blast)
+      have "top1_continuous_map_on I_set I_top (top1_S2 - C)
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) (top1_constant_path p)"
+        by (rule top1_constant_path_continuous[OF hTS2C hp_mem])
+      thus ?thesis unfolding top1_is_path_on_def
+        using \<open>p = q\<close> by (simp add: top1_constant_path_def)
+    qed
+    thus False using assms(5) by (by100 blast)
+  qed
   have hX_pi1_Z: "top1_groups_isomorphic_on
       (top1_fundamental_group_carrier ?Xpq ?TXpq c0)
       (top1_fundamental_group_mul ?Xpq ?TXpq c0)
