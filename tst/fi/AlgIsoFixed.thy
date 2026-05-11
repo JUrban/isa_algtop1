@@ -1037,7 +1037,33 @@ proof -
   have hTC: "is_topology_on C ?TC"
     by (rule subspace_topology_is_topology_on[OF hTopS2]) (use hC_sub_S2 in \<open>by100 blast\<close>)
   have hj_cont: "top1_continuous_map_on C ?TC ?X ?TX id"
-    sorry \<comment> \<open>Inclusion C \<hookrightarrow> X continuous. Follows from C \<subseteq> X \<subseteq> S2 + Theorem\_18\_2 + restrict\_codomain.\<close>
+  proof -
+    have hid_S2: "top1_continuous_map_on C ?TC top1_S2 top1_S2_topology id"
+      using Theorem_18_2[OF hTopS2 hTopS2 hTopS2] hC_sub_S2 by (by100 blast)
+    have himg: "\<forall>s\<in>C. s \<in> ?X" using hC_sub_X by (by100 blast)
+    have "top1_continuous_map_on C ?TC ?X ?TX id"
+      unfolding top1_continuous_map_on_def
+    proof (intro conjI ballI)
+      fix x assume "x \<in> C"
+      hence "x \<in> ?X" using hC_sub_X by (by100 blast)
+      thus "id x \<in> ?X" by (by100 simp)
+    next
+      fix V assume "V \<in> ?TX"
+      hence "\<exists>U \<in> top1_S2_topology. V = ?X \<inter> U"
+        unfolding subspace_topology_def by (by100 blast)
+      then obtain U where "U \<in> top1_S2_topology" "V = ?X \<inter> U" by (by100 blast)
+      have "{x \<in> C. id x \<in> V} = {x \<in> C. x \<in> V}" by (by100 simp)
+      also have "\<dots> = C \<inter> V" by (by100 blast)
+      also have "\<dots> = C \<inter> (?X \<inter> U)" using \<open>V = ?X \<inter> U\<close> by (by100 simp)
+      also have "\<dots> = C \<inter> U" using hC_sub_X by (by100 blast)
+      also have "\<dots> = {x \<in> C. id x \<in> U}" by auto
+      finally have "{x \<in> C. id x \<in> V} = {x \<in> C. id x \<in> U}" .
+      moreover have "{x \<in> C. id x \<in> U} \<in> ?TC"
+        using hid_S2 \<open>U \<in> top1_S2_topology\<close> unfolding top1_continuous_map_on_def by (by100 blast)
+      ultimately show "{x \<in> C. id x \<in> V} \<in> ?TC" by (by100 simp)
+    qed
+    thus ?thesis .
+  qed
   have hj_star_hom: "top1_group_hom_on
       (top1_fundamental_group_carrier C ?TC c0) (top1_fundamental_group_mul C ?TC c0)
       (top1_fundamental_group_carrier ?X ?TX c0) (top1_fundamental_group_mul ?X ?TX c0) ?j_star"
