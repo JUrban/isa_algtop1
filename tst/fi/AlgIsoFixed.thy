@@ -184,12 +184,20 @@ proof -
        (by100 simp)
   \<comment> \<open>Step 3: Both groups are infinite cyclic (\<cong> Z).
      From existing infrastructure: SCC\_pi1\_iso\_Z and pi1\_S2\_minus\_two\_points.\<close>
+  have hC_scc: "top1_simple_closed_curve_on top1_S2 top1_S2_topology C"
+    sorry \<comment> \<open>C is SCC (proved in AlgTop.thy as part of Lemma\_65\_1).\<close>
+  have hp_ne_q: "p \<noteq> q"
+    sorry \<comment> \<open>From K4 structure.\<close>
+  have hp_S2: "p \<in> top1_S2" using assms(8,37) by (by100 blast)
+  have hq_S2: "q \<in> top1_S2" using assms(9,38) by (by100 blast)
   have hC_pi1_Z: "top1_groups_isomorphic_on
       (top1_fundamental_group_carrier C ?TC c0) (top1_fundamental_group_mul C ?TC c0)
-      top1_Z_group top1_Z_mul" sorry
+      top1_Z_group top1_Z_mul"
+    sorry \<comment> \<open>SCC\_pi1\_iso\_Z (proved in AlgTop.thy, not available in this session).\<close>
   have hX_pi1_Z: "top1_groups_isomorphic_on
       (top1_fundamental_group_carrier ?X ?TX c0) (top1_fundamental_group_mul ?X ?TX c0)
-      top1_Z_group top1_Z_mul" sorry
+      top1_Z_group top1_Z_mul"
+    by (rule pi1_S2_minus_two_points_iso_Z[OF assms(1) hp_S2 hq_S2 hp_ne_q hc0_X])
   \<comment> \<open>Step 4 (KEY - textbook 65.1(b)): j\_* is surjective.
      Construct \<alpha>*\<beta> loop in C that generates \<pi>_1(X) via Theorem 63.1.
      j\_*([a*b]\_C) = [a*b]\_X = generator. Generator hit \<Rightarrow> surjective.\<close>
