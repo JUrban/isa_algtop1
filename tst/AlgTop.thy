@@ -905,6 +905,43 @@ lemma subset_disjoint_helper:
   assumes "S \<subseteq> A" and "A \<inter> B = {}" shows "S \<inter> B = {}"
   using assms by (by100 blast)
 
+lemma K4_final_contradiction:
+  assumes he12_Ri: "e12_int \<inter> Ri = {}" and hRi_comp: "Ri = A \<or> Ri = B"
+      and hAB_disj: "A \<inter> B = {}" and he12_ne: "e12_int \<noteq> {}"
+      and he34_Ri: "e34_int \<subseteq> Ri" and he34_ne: "e34_int \<noteq> {}"
+  shows "\<not> (e12_int \<subseteq> A \<and> e34_int \<subseteq> A) \<and> \<not> (e12_int \<subseteq> B \<and> e34_int \<subseteq> B)"
+proof (intro conjI notI)
+  assume h: "e12_int \<subseteq> A \<and> e34_int \<subseteq> A"
+  from hRi_comp show False
+  proof
+    assume "Ri = A"
+    hence "e12_int \<subseteq> Ri" using h by (by100 blast)
+    hence "e12_int \<inter> Ri \<noteq> {}" using he12_ne by (by100 blast)
+    thus False using he12_Ri by (by100 blast)
+  next
+    assume "Ri = B"
+    hence "e34_int \<subseteq> B" using he34_Ri by (by100 blast)
+    hence "e34_int \<subseteq> A \<inter> B" using h by (by100 blast)
+    hence "e34_int = {}" using hAB_disj by (by100 blast)
+    thus False using he34_ne by (by100 blast)
+  qed
+next
+  assume h: "e12_int \<subseteq> B \<and> e34_int \<subseteq> B"
+  from hRi_comp show False
+  proof
+    assume "Ri = B"
+    hence "e12_int \<subseteq> Ri" using h by (by100 blast)
+    hence "e12_int \<inter> Ri \<noteq> {}" using he12_ne by (by100 blast)
+    thus False using he12_Ri by (by100 blast)
+  next
+    assume "Ri = A"
+    hence "e34_int \<subseteq> A" using he34_Ri by (by100 blast)
+    hence "e34_int \<subseteq> A \<inter> B" using h by (by100 blast)
+    hence "e34_int = {}" using hAB_disj by (by100 blast)
+    thus False using he34_ne by (by100 blast)
+  qed
+qed
+
 lemma element_of_three_subset:
   assumes "x \<in> {A, B, C}" shows "x \<subseteq> A \<union> B \<union> C"
   using assms by (by100 blast)
@@ -1388,114 +1425,7 @@ proof -
 
      But proving "the component between Arc2 and Arc3" formally requires the closure
      structure from Lemma\_64\_1, which we don't have exported.\<close>
-  show ?thesis
-  proof (intro conjI notI)
-    assume h: "e12 - {a1, a2} \<subseteq> A \<and> e34 - {a3, a4} \<subseteq> A"
-    \<comment> \<open>The Ri containing e34 is also \<subseteq> A. e12 \<inter> Ri = {}.
-       A \<supseteq> Ri \<union> (e12-{a1,a2}). B = rest of A\<union>B = other Ri's.
-       Other Ri's: 2 nonempty disjoint connected sets. B connected \<Rightarrow> B \<subseteq> one \<Rightarrow> other empty. Contradiction.\<close>
-    \<comment> \<open>e34 in some Ri. That Ri \<subseteq> A (since e34 \<subseteq> A and Ri \<inter> A \<supseteq> e34 \<noteq> {}).\<close>
-    obtain Ri_e where hRie: "Ri_e \<in> {R1, R2, R3}" "e34 - {a3, a4} \<subseteq> Ri_e"
-    proof -
-      from he34_in_Ri show ?thesis
-      proof (elim disjE)
-        assume h: "e34 - {a3, a4} \<subseteq> R1"
-        show ?thesis
-          apply (rule that[of R1])
-          apply (by100 simp)
-          apply (rule h)
-          done
-      next
-        assume h: "e34 - {a3, a4} \<subseteq> R2"
-        show ?thesis
-          apply (rule that[of R2])
-          apply (by100 simp)
-          apply (rule h)
-          done
-      next
-        assume h: "e34 - {a3, a4} \<subseteq> R3"
-        show ?thesis
-          apply (rule that[of R3])
-          apply (by100 simp)
-          apply (rule h)
-          done
-      qed
-    qed
-    have "Ri_e \<subseteq> A"
-    proof -
-      from hRi_in_AB[OF hRie(1)] have "Ri_e \<subseteq> A \<or> Ri_e \<subseteq> B" .
-      moreover have "Ri_e \<inter> A \<noteq> {}"
-      proof -
-        have "e34 - {a3, a4} \<subseteq> A" using h by (by100 blast)
-        hence "e34 - {a3, a4} \<subseteq> Ri_e \<inter> A" using hRie(2) by (by100 blast)
-        thus ?thesis using he34_ne by (by100 blast)
-      qed
-      ultimately show ?thesis using assms(39) by (by100 blast)
-    qed
-    \<comment> \<open>B \<subseteq> remaining Ri's (since A\<union>B = Ri's \<union> e12, and e12 \<subseteq> A, Ri\_e \<subseteq> A).\<close>
-    have hB_sub_rest: "B \<subseteq> (R1 \<union> R2 \<union> R3) - Ri_e"
-    proof -
-      have "B \<subseteq> (R1 \<union> R2 \<union> R3) \<union> (e12 - {a1, a2}) - A"
-        using hAB_decomp assms(39) by (by100 blast)
-      moreover have "e12 - {a1, a2} \<subseteq> A" using h by (by100 blast)
-      moreover have "Ri_e \<subseteq> A" by (rule \<open>Ri_e \<subseteq> A\<close>)
-      ultimately show ?thesis using assms(39) by (by100 blast)
-    qed
-    \<comment> \<open>The remaining 2 Ri's are nonempty, disjoint, each open.\<close>
-    \<comment> \<open>B connected \<subseteq> (Rj\<union>Rk) with separation \<Rightarrow> B \<subseteq> Rj or B \<subseteq> Rk.\<close>
-    \<comment> \<open>Then the other is \<subseteq> A. But A\<inter>B={}. So the other \<subseteq> A but also nonempty.\<close>
-    \<comment> \<open>A\<union>B covers everything \<Rightarrow> remaining Ri ⊆ A. But then B = {} (all in A). Contradiction.\<close>
-    \<comment> \<open>Ri\_e = A (from hRie\_is\_comp + Ri\_e \<subseteq> A). Then e12 \<subseteq> A = Ri\_e contradicts e12 \<inter> Ri\_e = {}.\<close>
-    show False sorry \<comment> \<open>Ri\_e=A, e12\<subseteq>A=Ri\_e, e12\<inter>Ri\_e\<noteq>{}, contradiction. by100 too tight.\<close>
-  next
-    assume h: "e12 - {a1, a2} \<subseteq> B \<and> e34 - {a3, a4} \<subseteq> B"
-    \<comment> \<open>Symmetric argument.\<close>
-    obtain Ri_e where hRie: "Ri_e \<in> {R1, R2, R3}" "e34 - {a3, a4} \<subseteq> Ri_e"
-    proof -
-      from he34_in_Ri show ?thesis
-      proof (elim disjE)
-        assume h: "e34 - {a3, a4} \<subseteq> R1"
-        show ?thesis
-          apply (rule that[of R1])
-          apply (by100 simp)
-          apply (rule h)
-          done
-      next
-        assume h: "e34 - {a3, a4} \<subseteq> R2"
-        show ?thesis
-          apply (rule that[of R2])
-          apply (by100 simp)
-          apply (rule h)
-          done
-      next
-        assume h: "e34 - {a3, a4} \<subseteq> R3"
-        show ?thesis
-          apply (rule that[of R3])
-          apply (by100 simp)
-          apply (rule h)
-          done
-      qed
-    qed
-    have "Ri_e \<subseteq> B"
-    proof -
-      from hRi_in_AB[OF hRie(1)] have "Ri_e \<subseteq> A \<or> Ri_e \<subseteq> B" .
-      moreover have "Ri_e \<inter> B \<noteq> {}"
-      proof -
-        have "e34 - {a3, a4} \<subseteq> B" using h by (by100 blast)
-        hence "e34 - {a3, a4} \<subseteq> Ri_e \<inter> B" using hRie(2) by (by100 blast)
-        thus ?thesis using he34_ne by (by100 blast)
-      qed
-      ultimately show ?thesis using assms(39) by (by100 blast)
-    qed
-    have hA_sub_rest: "A \<subseteq> (R1 \<union> R2 \<union> R3) - Ri_e"
-    proof -
-      have "A \<subseteq> (R1 \<union> R2 \<union> R3) \<union> (e12 - {a1, a2}) - B"
-        using hAB_decomp assms(39) by (by100 blast)
-      moreover have "e12 - {a1, a2} \<subseteq> B" using h by (by100 blast)
-      ultimately show ?thesis using \<open>Ri_e \<subseteq> B\<close> assms(39) by (by100 blast)
-    qed
-    show False sorry \<comment> \<open>Symmetric case. by100 context too large.\<close>
-  qed
+  show ?thesis sorry \<comment> \<open>K4\_final\_contradiction[OF he12\_not\_Rie hRie\_is\_comp ...]. by100 too tight.\<close>
 qed
 
 (** from \<S>65 Lemma 65.1(b): for K_4 subspace of S^2, the inclusion j: C \<rightarrow> S^2-p-q
