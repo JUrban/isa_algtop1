@@ -901,6 +901,47 @@ proof -
     by (rule groups_isomorphic_trans_fwd[OF h1 h_pi1_S1_Z])
 qed
 
+(** from \<S>65 Lemma 65.1(a): non-adjacent edges of K_4 in S^2 have interiors in
+    different components of S^2 minus the complementary 4-cycle.
+    Duplicated from the internal hdiff fact in Lemma_65_1_K4_subgraph (AlgTopCached.thy). **)
+lemma K4_nonadjacent_edges_different_components:
+  fixes a1 a2 a3 a4 :: "real \<times> real \<times> real"
+    and e12 e23 e34 e41 e13 e24 :: "(real \<times> real \<times> real) set"
+  assumes "is_topology_on_strict top1_S2 top1_S2_topology"
+      and "card {a1, a2, a3, a4} = 4"
+      and "{a1, a2, a3, a4} \<subseteq> top1_S2"
+      and "e12 \<subseteq> top1_S2" and "e23 \<subseteq> top1_S2" and "e34 \<subseteq> top1_S2"
+      and "e41 \<subseteq> top1_S2" and "e13 \<subseteq> top1_S2" and "e24 \<subseteq> top1_S2"
+      and "top1_is_arc_on e12 (subspace_topology top1_S2 top1_S2_topology e12)"
+      and "top1_is_arc_on e23 (subspace_topology top1_S2 top1_S2_topology e23)"
+      and "top1_is_arc_on e34 (subspace_topology top1_S2 top1_S2_topology e34)"
+      and "top1_is_arc_on e41 (subspace_topology top1_S2 top1_S2_topology e41)"
+      and "top1_is_arc_on e13 (subspace_topology top1_S2 top1_S2_topology e13)"
+      and "top1_is_arc_on e24 (subspace_topology top1_S2 top1_S2_topology e24)"
+      and "top1_arc_endpoints_on e12 (subspace_topology top1_S2 top1_S2_topology e12) = {a1,a2}"
+      and "top1_arc_endpoints_on e23 (subspace_topology top1_S2 top1_S2_topology e23) = {a2,a3}"
+      and "top1_arc_endpoints_on e34 (subspace_topology top1_S2 top1_S2_topology e34) = {a3,a4}"
+      and "top1_arc_endpoints_on e41 (subspace_topology top1_S2 top1_S2_topology e41) = {a4,a1}"
+      and "top1_arc_endpoints_on e13 (subspace_topology top1_S2 top1_S2_topology e13) = {a1,a3}"
+      and "top1_arc_endpoints_on e24 (subspace_topology top1_S2 top1_S2_topology e24) = {a2,a4}"
+      and "e12 \<inter> e34 = {}" and "e23 \<inter> e41 = {}"
+      and "e12 \<inter> e23 = {a2}" and "e23 \<inter> e34 = {a3}"
+      and "e34 \<inter> e41 = {a4}" and "e41 \<inter> e12 = {a1}"
+      and "e13 \<inter> e12 = {a1}" and "e13 \<inter> e23 = {a3}"
+      and "e13 \<inter> e34 = {a3}" and "e13 \<inter> e41 = {a1}"
+      and "e13 \<inter> e24 \<subseteq> {a1,a2,a3,a4}"
+      and "e24 \<inter> e12 = {a2}" and "e24 \<inter> e23 = {a2}"
+      and "e24 \<inter> e34 = {a4}" and "e24 \<inter> e41 = {a4}"
+      \<comment> \<open>D = e13 \<union> e23 \<union> e24 \<union> e41 (the complementary 4-cycle).
+         A, B are the two components of S2-D.\<close>
+      and "A \<noteq> {}" and "B \<noteq> {}" and "A \<inter> B = {}"
+      and "A \<union> B = top1_S2 - (e13 \<union> e23 \<union> e24 \<union> e41)"
+      and "top1_connected_on A (subspace_topology top1_S2 top1_S2_topology A)"
+      and "top1_connected_on B (subspace_topology top1_S2 top1_S2_topology B)"
+  shows "\<not> (e12 - {a1, a2} \<subseteq> A \<and> e34 - {a3, a4} \<subseteq> A)
+       \<and> \<not> (e12 - {a1, a2} \<subseteq> B \<and> e34 - {a3, a4} \<subseteq> B)"
+  sorry \<comment> \<open>TODO: duplicate proof from AlgTopCached.thy lines 56316-58575.\<close>
+
 (** from \<S>65 Lemma 65.1(b): for K_4 subspace of S^2, the inclusion j: C \<rightarrow> S^2-p-q
     induces an isomorphism of fundamental groups.
     NOTE: The cached Lemma_65_1_K4_subgraph only proves "exists nontrivial loop" (TOO WEAK).
@@ -2688,8 +2729,68 @@ proof -
     \<comment> \<open>Proof by contradiction using Lemma\_64\_3: if both in same component,
        all 4 K4 faces + int(e12) + int(e34) would be in that component,
        leaving the other component empty.\<close>
+    have hD_eq: "?D1 \<union> ?D2 = e13 \<union> e23 \<union> e24 \<union> e41"
+      using he13_split he24_split by (by100 blast)
+    have hdiff: "\<not> (e12 - {a1, a2} \<subseteq> U0 \<and> e34 - {a3, a4} \<subseteq> U0)
+              \<and> \<not> (e12 - {a1, a2} \<subseteq> V0 \<and> e34 - {a3, a4} \<subseteq> V0)"
+      by (rule K4_nonadjacent_edges_different_components[OF assms(1-36)
+            hUV0(1,2,3) _ hUV0(5,6)])
+         (use hUV0(4) hD_eq in \<open>by100 simp\<close>)
+    \<comment> \<open>int(e12) connected \<Rightarrow> entirely in U0 or V0. Same for int(e34).\<close>
+    have ha1_ne_a2_loc: "a1 \<noteq> a2" using assms(2) by (auto simp: card_insert_if split: if_splits)
+    have ha3_ne_a4_loc: "a3 \<noteq> a4" using assms(2) by (auto simp: card_insert_if split: if_splits)
+    have he12_conn: "top1_connected_on (e12 - {a1, a2})
+        (subspace_topology top1_S2 top1_S2_topology (e12 - {a1, a2}))"
+      by (rule arc_minus_endpoints_connected[OF assms(1) hS2_haus assms(4,10,16) ha1_ne_a2_loc])
+    have he34_conn: "top1_connected_on (e34 - {a3, a4})
+        (subspace_topology top1_S2 top1_S2_topology (e34 - {a3, a4}))"
+      by (rule arc_minus_endpoints_connected[OF assms(1) hS2_haus assms(6,12,18) ha3_ne_a4_loc])
+    have hint_e12_sub: "e12 - {a1, a2} \<subseteq> U0 \<union> V0"
+      sorry \<comment> \<open>int(e12) \<subseteq> S2-(D1\<union>D2) = U0\<union>V0.\<close>
+    have hint_e34_sub: "e34 - {a3, a4} \<subseteq> U0 \<union> V0"
+      sorry \<comment> \<open>int(e34) \<subseteq> S2-(D1\<union>D2) = U0\<union>V0.\<close>
+    have he12_in_comp: "e12 - {a1, a2} \<subseteq> U0 \<or> e12 - {a1, a2} \<subseteq> V0"
+      sorry \<comment> \<open>Connected subset of U0\<union>V0 with separation \<Rightarrow> in one component.\<close>
+    have he34_in_comp: "e34 - {a3, a4} \<subseteq> U0 \<or> e34 - {a3, a4} \<subseteq> V0"
+      sorry
     have hx_ne_y_comp: "\<not>(x \<in> U0 \<and> y \<in> U0) \<and> \<not>(x \<in> V0 \<and> y \<in> V0)"
-      sorry \<comment> \<open>Core K4 planarity argument.\<close>
+    proof (intro conjI notI)
+      assume hboth: "x \<in> U0 \<and> y \<in> U0"
+      have "e12 - {a1,a2} \<subseteq> U0"
+      proof -
+        from he12_in_comp have "e12 - {a1,a2} \<subseteq> U0 \<or> e12 - {a1,a2} \<subseteq> V0" .
+        moreover have "x \<in> U0" using hboth by (by100 blast)
+        moreover have "\<not> (e12 - {a1,a2} \<subseteq> V0)" using hx_int \<open>x \<in> U0\<close> hUV0(3) by (by100 blast)
+        ultimately show ?thesis by (by100 blast)
+      qed
+      moreover have "e34 - {a3,a4} \<subseteq> U0"
+      proof -
+        from he34_in_comp have "e34 - {a3,a4} \<subseteq> U0 \<or> e34 - {a3,a4} \<subseteq> V0" .
+        moreover have "y \<in> U0" using hboth by (by100 blast)
+        moreover have "\<not> (e34 - {a3,a4} \<subseteq> V0)" using hy_int \<open>y \<in> U0\<close> hUV0(3) by (by100 blast)
+        ultimately show ?thesis by (by100 blast)
+      qed
+      ultimately have "e12 - {a1,a2} \<subseteq> U0 \<and> e34 - {a3,a4} \<subseteq> U0" by (by100 blast)
+      thus False using hdiff by (by100 blast)
+    next
+      assume hboth: "x \<in> V0 \<and> y \<in> V0"
+      have "e12 - {a1,a2} \<subseteq> V0"
+      proof -
+        from he12_in_comp have "e12 - {a1,a2} \<subseteq> U0 \<or> e12 - {a1,a2} \<subseteq> V0" .
+        moreover have "x \<in> V0" using hboth by (by100 blast)
+        moreover have "\<not> (e12 - {a1,a2} \<subseteq> U0)" using hx_int \<open>x \<in> V0\<close> hUV0(3) by (by100 blast)
+        ultimately show ?thesis by (by100 blast)
+      qed
+      moreover have "e34 - {a3,a4} \<subseteq> V0"
+      proof -
+        from he34_in_comp have "e34 - {a3,a4} \<subseteq> U0 \<or> e34 - {a3,a4} \<subseteq> V0" .
+        moreover have "y \<in> V0" using hboth by (by100 blast)
+        moreover have "\<not> (e34 - {a3,a4} \<subseteq> U0)" using hy_int \<open>y \<in> V0\<close> hUV0(3) by (by100 blast)
+        ultimately show ?thesis by (by100 blast)
+      qed
+      ultimately have "e12 - {a1,a2} \<subseteq> V0 \<and> e34 - {a3,a4} \<subseteq> V0" by (by100 blast)
+      thus False using hdiff by (by100 blast)
+    qed
     thus ?thesis using hx_in_UV hy_in_UV hUV0(3) by (by100 blast)
   qed
   obtain A B where hAB: "?U_loc \<inter> ?V_loc = A \<union> B" "A \<inter> B = {}"
