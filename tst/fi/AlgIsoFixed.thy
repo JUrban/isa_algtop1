@@ -1248,7 +1248,26 @@ proof -
     \<comment> \<open>Surjectivity at x, then basepoint change to c0.\<close>
     have hj_star_x_surj: "?j_star_x ` (top1_fundamental_group_carrier C ?TC x) =
         top1_fundamental_group_carrier ?X ?TX x"
-      sorry \<comment> \<open>Every [f]\_X = [g^n]\_X = j\_*([g^n]\_C). Uses hg\_generates + power\_loop\_in\_C.\<close>
+    proof (intro set_eqI iffI)
+      \<comment> \<open>(\<subseteq>): image of carrier \<subseteq> carrier. Follows from j\_* being a homomorphism.\<close>
+      fix c assume "c \<in> ?j_star_x ` (top1_fundamental_group_carrier C ?TC x)"
+      thus "c \<in> top1_fundamental_group_carrier ?X ?TX x" sorry
+    next
+      \<comment> \<open>(\<supseteq>): every [f]\_X is hit. Key argument.\<close>
+      fix c assume hc: "c \<in> top1_fundamental_group_carrier ?X ?TX x"
+      \<comment> \<open>c = [f] for some loop f in X.\<close>
+      then obtain f where hf: "top1_is_loop_on ?X ?TX x f"
+          and hc_eq: "c = {h. top1_loop_equiv_on ?X ?TX x f h}"
+        unfolding top1_fundamental_group_carrier_def by (by100 blast)
+      \<comment> \<open>f \<simeq> g^n or g\_rev^n.\<close>
+      from hg_generates hf
+      obtain n where "top1_path_homotopic_on ?X ?TX x x f (top1_path_power g x n)
+          \<or> top1_path_homotopic_on ?X ?TX x x f (top1_path_power (top1_path_reverse g) x n)"
+        by (by100 blast)
+      \<comment> \<open>In either case: the power is a loop in C, and j\_* maps it to [f].\<close>
+      thus "c \<in> ?j_star_x ` (top1_fundamental_group_carrier C ?TC x)"
+        sorry \<comment> \<open>g^n loop in C, j\_*([g^n]\_C) = [g^n]\_X = [f]\_X = c.\<close>
+    qed
     \<comment> \<open>Transfer surjectivity from x to c0 via basepoint change (C path-connected).\<close>
     show ?thesis sorry \<comment> \<open>Basepoint change: surj at x \<Rightarrow> surj at c0.\<close>
   qed
