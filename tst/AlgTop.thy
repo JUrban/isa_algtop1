@@ -1069,7 +1069,8 @@ proof -
      h3 \<in> cl(eh3-{h3}) \<subseteq> cl(U) = U\<union>A\<union>B. h3\<notin>A\<union>B (hh3\_not\_AB). h3\<notin>U. Contradiction.
      Boundary identification requires SCCBMC on SCC A\<union>B via K4-style argument.\<close>
   have "e \<notin> U"
-    sorry \<comment> \<open>SCCBMC closure argument: U is S2-(A\<union>B) component, cl(U)=U\<union>A\<union>B, h3\<notin>A\<union>B.\<close>
+    sorry \<comment> \<open>Needs: boundary(U) = A\<union>B (Lemma 64.1 structure). Then eh3-{h3} \<subseteq> U,
+           h3 \<in> cl(U) = U\<union>A\<union>B, h3\<notin>A\<union>B. Same K4-style SCCBMC argument.\<close>
   moreover have "e \<notin> V"
     sorry \<comment> \<open>Symmetric with SCC B\<union>CC: cl(V)=V\<union>B\<union>CC, h1\<notin>B\<union>CC.\<close>
   moreover have "e \<notin> W"
