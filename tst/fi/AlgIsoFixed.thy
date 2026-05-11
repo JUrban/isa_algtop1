@@ -877,6 +877,30 @@ text \<open>Munkres Theorem 58.7: If f: X \<rightarrow> Y is a homotopy equivale
   then f_*: \<pi>_1(X,x0) \<rightarrow> \<pi>_1(Y,y0) is an isomorphism.
   The induced map is top1_fundamental_group_induced_on X TX x0 Y TY (f x0) f.\<close>
 
+\<comment> \<open>Helper: surjective group hom between infinite cyclic groups is injective.
+   If G \<cong> Z (with generator gen) and H \<cong> Z, and \<phi>: G \<rightarrow> H is a surjective hom,
+   then \<phi> is injective. Proof: \<phi>(gen) generates \<phi>(G) = H.
+   So \<phi>(gen) = \<plusminus>gen\_H. Since \<phi>(gen^n) = \<phi>(gen)^n = (\<plusminus>gen\_H)^n:
+   if \<phi>(gen^n) = e\_H then n = 0. So ker(\<phi>) = {e\_G}, i.e. \<phi> injective.\<close>
+lemma surj_hom_infinite_cyclic_inj:
+  assumes hTX: "is_topology_on X TX"
+      and hgen: "top1_is_loop_on X TX a gen"
+      and hgen_generates: "\<forall>f. top1_is_loop_on X TX a f \<longrightarrow>
+          (\<exists>n::nat. top1_path_homotopic_on X TX a a f (top1_path_power gen a n)
+            \<or> top1_path_homotopic_on X TX a a f (top1_path_power (top1_path_reverse gen) a n))"
+      and hTY: "is_topology_on Y TY"
+      and hgen2: "top1_is_loop_on Y TY b gen2"
+      and hgen2_generates: "\<forall>f. top1_is_loop_on Y TY b f \<longrightarrow>
+          (\<exists>n::nat. top1_path_homotopic_on Y TY b b f (top1_path_power gen2 b n)
+            \<or> top1_path_homotopic_on Y TY b b f (top1_path_power (top1_path_reverse gen2) b n))"
+      and hphi_hom: "top1_group_hom_on
+          (top1_fundamental_group_carrier X TX a) (top1_fundamental_group_mul X TX a)
+          (top1_fundamental_group_carrier Y TY b) (top1_fundamental_group_mul Y TY b) \<phi>"
+      and hphi_surj: "\<phi> ` (top1_fundamental_group_carrier X TX a) =
+          top1_fundamental_group_carrier Y TY b"
+  shows "inj_on \<phi> (top1_fundamental_group_carrier X TX a)"
+  sorry
+
 \<comment> \<open>Helper: induced map with id equals induced map with (\<lambda>x. x).\<close>
 lemma induced_id_eq_lam:
   "top1_fundamental_group_induced_on A TA x0 X TX x0 id =
@@ -5012,8 +5036,72 @@ lemma Lemma_65_1_fixed_exists_basepoint:
        (subspace_topology top1_S2 top1_S2_topology C) x
        (top1_S2 - {p} - {q})
        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p} - {q})) x id)"
-  sorry \<comment> \<open>Same proof as Lemma\_65\_1\_fixed but at basepoint x from K4\_generator.
-     No basepoint change needed. Surjectivity + injectivity at x proved.\<close>
+proof -
+  let ?X = "top1_S2 - {p} - {q}"
+  let ?TX = "subspace_topology top1_S2 top1_S2_topology ?X"
+  let ?TC = "subspace_topology top1_S2 top1_S2_topology C"
+  \<comment> \<open>Get generator loop at x from K4 construction.\<close>
+  from K4_generator_loop_in_C[OF assms]
+  obtain x g where hx_C: "x \<in> C"
+      and hg_loop_C: "top1_is_loop_on C ?TC x g"
+      and hg_loop_X: "top1_is_loop_on ?X ?TX x g"
+      and hg_generates: "\<forall>f. top1_is_loop_on ?X ?TX x f \<longrightarrow>
+          (\<exists>n::nat. top1_path_homotopic_on ?X ?TX x x f (top1_path_power g x n)
+            \<or> top1_path_homotopic_on ?X ?TX x x f (top1_path_power (top1_path_reverse g) x n))"
+    by (by100 blast)
+  \<comment> \<open>Setup.\<close>
+  have hTopS2: "is_topology_on top1_S2 top1_S2_topology"
+    using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
+  have hC_sub_S2: "C \<subseteq> top1_S2" using assms(4,5,6,7,39) by (by100 blast)
+  have hp_not_C: "p \<notin> C"
+    sorry \<comment> \<open>Same as in Lemma\_65\_1\_fixed.\<close>
+  have hq_not_C: "q \<notin> C"
+    sorry
+  have hC_sub_X: "C \<subseteq> ?X" using hC_sub_S2 hp_not_C hq_not_C by (by100 blast)
+  have hx_X: "x \<in> ?X" using hx_C hC_sub_X by (by100 blast)
+  have hTX: "is_topology_on ?X ?TX"
+    by (rule subspace_topology_is_topology_on[OF hTopS2]) (by100 blast)
+  have hTC: "is_topology_on C ?TC"
+    by (rule subspace_topology_is_topology_on[OF hTopS2]) (use hC_sub_S2 in \<open>by100 blast\<close>)
+  \<comment> \<open>j\_* at x is a homomorphism.\<close>
+  let ?j_star_x = "top1_fundamental_group_induced_on C ?TC x ?X ?TX x id"
+  have hj_cont: "top1_continuous_map_on C ?TC ?X ?TX id"
+    sorry \<comment> \<open>Same inclusion continuity proof as above.\<close>
+  have hj_hom_x: "top1_group_hom_on
+      (top1_fundamental_group_carrier C ?TC x) (top1_fundamental_group_mul C ?TC x)
+      (top1_fundamental_group_carrier ?X ?TX x) (top1_fundamental_group_mul ?X ?TX x) ?j_star_x"
+    sorry \<comment> \<open>induced\_on\_is\_hom at x.\<close>
+  \<comment> \<open>j\_* surjective at x (from the Lemma\_65\_1\_fixed proof above).\<close>
+  have hj_surj_x: "?j_star_x ` (top1_fundamental_group_carrier C ?TC x) =
+      top1_fundamental_group_carrier ?X ?TX x"
+    sorry \<comment> \<open>Same surjectivity proof as Lemma\_65\_1\_fixed (already proved in structure above).\<close>
+  \<comment> \<open>Both groups infinite cyclic.\<close>
+  have hC_scc: "top1_simple_closed_curve_on top1_S2 top1_S2_topology C"
+    sorry
+  have hC_gen: "\<exists>gen_C. top1_is_loop_on C ?TC x gen_C \<and>
+      (\<forall>f. top1_is_loop_on C ?TC x f \<longrightarrow>
+        (\<exists>n::nat. top1_path_homotopic_on C ?TC x x f (top1_path_power gen_C x n)
+          \<or> top1_path_homotopic_on C ?TC x x f (top1_path_power (top1_path_reverse gen_C) x n)))"
+    sorry \<comment> \<open>C is SCC \<cong> S1, \<pi>_1(C) infinite cyclic.\<close>
+  then obtain gen_C where hgen_C: "top1_is_loop_on C ?TC x gen_C"
+      and hgen_C_generates: "\<forall>f. top1_is_loop_on C ?TC x f \<longrightarrow>
+        (\<exists>n::nat. top1_path_homotopic_on C ?TC x x f (top1_path_power gen_C x n)
+          \<or> top1_path_homotopic_on C ?TC x x f (top1_path_power (top1_path_reverse gen_C) x n))"
+    by blast
+  \<comment> \<open>j\_* injective (surjective hom between infinite cyclic groups).\<close>
+  have hj_inj_x: "inj_on ?j_star_x (top1_fundamental_group_carrier C ?TC x)"
+    by (rule surj_hom_infinite_cyclic_inj[OF hTC hgen_C hgen_C_generates
+        hTX hg_loop_X hg_generates hj_hom_x hj_surj_x])
+  \<comment> \<open>Combine: hom + bij = iso.\<close>
+  have "bij_betw ?j_star_x (top1_fundamental_group_carrier C ?TC x)
+      (top1_fundamental_group_carrier ?X ?TX x)"
+    unfolding bij_betw_def using hj_inj_x hj_surj_x by (by100 blast)
+  hence "top1_group_iso_on
+      (top1_fundamental_group_carrier C ?TC x) (top1_fundamental_group_mul C ?TC x)
+      (top1_fundamental_group_carrier ?X ?TX x) (top1_fundamental_group_mul ?X ?TX x) ?j_star_x"
+    unfolding top1_group_iso_on_def using hj_hom_x by (by100 blast)
+  thus ?thesis using hx_C by (by100 blast)
+qed
 
 section \<open>Theorem 65.2 (fixed): inclusion C \<hookrightarrow> S2-{p,q} induces iso (general SCC)\<close>
 
