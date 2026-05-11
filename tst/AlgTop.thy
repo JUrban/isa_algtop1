@@ -1219,6 +1219,10 @@ proof -
     qed
     ultimately show ?thesis using hAB_is by (by100 simp)
   qed
+  \<comment> \<open>Each Ri \<subseteq> A or B.\<close>
+  have hRi_in_AB: "\<And>Ri. Ri \<in> {R1, R2, R3} \<Longrightarrow> Ri \<subseteq> A \<or> Ri \<subseteq> B"
+    sorry \<comment> \<open>Connected subset of separated A\<union>B. Same Lemma\_23\_2 argument.\<close>
+  \<comment> \<open>If both e12 and e34 in A: B = remaining Ri's → B has ≥2 disjoint nonempty connected pieces → not connected → contradiction.\<close>
   show ?thesis sorry
 qed
 
