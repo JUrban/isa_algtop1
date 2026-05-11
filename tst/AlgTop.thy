@@ -2055,19 +2055,14 @@ proof -
     have hTC_top_loc: "is_topology_on C ?TC"
       by (rule subspace_topology_is_topology_on[OF hTopS2 hC_sub_S2])
     \<comment> \<open>f is a homeomorphism S1 \<rightarrow> C (compact \<rightarrow> Hausdorff, Theorem\_26\_6).\<close>
-    have hf_cont_C: "top1_continuous_map_on top1_S1 top1_S1_topology C ?TC f"
-    proof (rule continuous_map_restrict_codomain[OF hf_cont])
+    have hf_all_C: "\<And>s. s \<in> top1_S1 \<Longrightarrow> f s \<in> C"
+    proof -
       fix s assume "s \<in> top1_S1"
-      hence hfs: "f s \<in> f ` top1_S1" by (rule imageI)
-      show "f s \<in> C"
-      proof -
-        from hfs have "f s \<in> f ` top1_S1" .
-        moreover have "f ` top1_S1 = C" by (rule hf_img)
-        ultimately show ?thesis by (by100 blast)
-      qed
-    next
-      show "C \<subseteq> top1_S2" by (rule hC_sub_S2)
+      hence "f s \<in> f ` top1_S1" by (rule imageI)
+      thus "f s \<in> C" using hf_img by simp
     qed
+    have hf_cont_C: "top1_continuous_map_on top1_S1 top1_S1_topology C ?TC f"
+      by (intro continuous_map_restrict_codomain[OF hf_cont _ hC_sub_S2] ballI) (rule hf_all_C)
     have hf_bij: "bij_betw f top1_S1 C"
       unfolding bij_betw_def using hf_inj hf_img by (by100 blast)
     have hC_haus: "is_hausdorff_on C ?TC"
