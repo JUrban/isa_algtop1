@@ -1074,11 +1074,90 @@ proof -
     by (rule arc_minus_endpoints_connected[OF assms(1) hS2_haus assms(6,12,18) ha3_ne_a4])
   \<comment> \<open>e34-{a3,a4} connected \<subseteq> R1\<union>R2\<union>R3 \<Rightarrow> in some Ri.\<close>
   have he34_in_Ri: "e34 - {a3, a4} \<subseteq> R1 \<or> e34 - {a3, a4} \<subseteq> R2 \<or> e34 - {a3, a4} \<subseteq> R3"
-    sorry \<comment> \<open>Connected subset of 3-way separated space. Needs 2x Lemma\_23\_2.\<close>
+  proof -
+    let ?W = "R1 \<union> R2 \<union> R3"
+    have hTW: "is_topology_on ?W (subspace_topology top1_S2 top1_S2_topology ?W)"
+      by (rule subspace_topology_is_topology_on[OF hTopS2]) (use hR(7) in \<open>by100 blast\<close>)
+    have hR1_open: "R1 \<in> subspace_topology top1_S2 top1_S2_topology ?W"
+      using hR(11) unfolding subspace_topology_def by (by100 blast)
+    have hR23_open: "R2 \<union> R3 \<in> subspace_topology top1_S2 top1_S2_topology ?W"
+    proof -
+      have "R2 \<union> R3 \<in> top1_S2_topology"
+      proof -
+        have "{R2, R3} \<subseteq> top1_S2_topology" using hR(12,13) by (by100 blast)
+        hence "\<Union>{R2, R3} \<in> top1_S2_topology"
+          using hTopS2 unfolding is_topology_on_def by (by100 blast)
+        moreover have "\<Union>{R2, R3} = R2 \<union> R3" by (by100 blast)
+        ultimately show ?thesis by (by100 simp)
+      qed
+      thus ?thesis unfolding subspace_topology_def by (by100 blast)
+    qed
+    have hSep1: "top1_is_separation_on ?W (subspace_topology top1_S2 top1_S2_topology ?W) R1 (R2 \<union> R3)"
+      unfolding top1_is_separation_on_def
+      using hR1_open hR23_open hR(1,2,3,4,5,6) by (by100 blast)
+    have he34_sub_W: "e34 - {a3, a4} \<subseteq> ?W" using he34_theta hR(7) by (by100 blast)
+    have he34_conn_W: "top1_connected_on (e34 - {a3, a4})
+        (subspace_topology ?W (subspace_topology top1_S2 top1_S2_topology ?W) (e34 - {a3, a4}))"
+    proof -
+      have "subspace_topology top1_S2 top1_S2_topology (e34 - {a3, a4}) =
+          subspace_topology ?W (subspace_topology top1_S2 top1_S2_topology ?W) (e34 - {a3, a4})"
+        using subspace_topology_trans[of "e34 - {a3, a4}" ?W] he34_sub_W by (by100 simp)
+      thus ?thesis using he34_conn by (by100 simp)
+    qed
+    have hLem1: "(e34 - {a3, a4}) \<inter> (R2 \<union> R3) = {} \<or> (e34 - {a3, a4}) \<inter> R1 = {}"
+      by (rule Lemma_23_2_disjoint[OF hTW hSep1 he34_sub_W he34_conn_W])
+    hence hLem1_result: "e34 - {a3, a4} \<subseteq> R1 \<or> e34 - {a3, a4} \<subseteq> R2 \<union> R3"
+    proof
+      assume "(e34 - {a3, a4}) \<inter> (R2 \<union> R3) = {}"
+      hence "e34 - {a3, a4} \<subseteq> R1" using he34_sub_W by (by100 blast)
+      thus ?thesis by (by100 blast)
+    next
+      assume "(e34 - {a3, a4}) \<inter> R1 = {}"
+      hence "e34 - {a3, a4} \<subseteq> R2 \<union> R3" using he34_sub_W by (by100 blast)
+      thus ?thesis by (by100 blast)
+    qed
+    show ?thesis
+    proof (cases "e34 - {a3, a4} \<subseteq> R1")
+      case True thus ?thesis by (by100 blast)
+    next
+      case False
+      hence "e34 - {a3, a4} \<subseteq> R2 \<union> R3" using hLem1_result by (by100 blast)
+      hence he34_R23: "e34 - {a3, a4} \<subseteq> R2 \<union> R3" .
+      have hR2_open: "R2 \<in> subspace_topology top1_S2 top1_S2_topology (R2 \<union> R3)"
+        using hR(12) unfolding subspace_topology_def by (by100 blast)
+      have hR3_open: "R3 \<in> subspace_topology top1_S2 top1_S2_topology (R2 \<union> R3)"
+        using hR(13) unfolding subspace_topology_def by (by100 blast)
+      have hTR23: "is_topology_on (R2 \<union> R3) (subspace_topology top1_S2 top1_S2_topology (R2 \<union> R3))"
+        by (rule subspace_topology_is_topology_on[OF hTopS2]) (use hR(7) in \<open>by100 blast\<close>)
+      have hSep23: "top1_is_separation_on (R2 \<union> R3) (subspace_topology top1_S2 top1_S2_topology (R2 \<union> R3)) R2 R3"
+        unfolding top1_is_separation_on_def
+        using hR2_open hR3_open hR(2,3,5) by (by100 blast)
+      have he34_conn_R23: "top1_connected_on (e34 - {a3, a4})
+          (subspace_topology (R2 \<union> R3) (subspace_topology top1_S2 top1_S2_topology (R2 \<union> R3)) (e34 - {a3, a4}))"
+      proof -
+        have "subspace_topology top1_S2 top1_S2_topology (e34 - {a3, a4}) =
+            subspace_topology (R2 \<union> R3) (subspace_topology top1_S2 top1_S2_topology (R2 \<union> R3)) (e34 - {a3, a4})"
+          using subspace_topology_trans[of "e34 - {a3, a4}" "R2 \<union> R3"]
+            \<open>e34 - {a3, a4} \<subseteq> R2 \<union> R3\<close> by (by100 simp)
+        thus ?thesis using he34_conn by (by100 simp)
+      qed
+      have hLem2: "(e34 - {a3, a4}) \<inter> R3 = {} \<or> (e34 - {a3, a4}) \<inter> R2 = {}"
+        by (rule Lemma_23_2_disjoint[OF hTR23 hSep23 \<open>e34 - {a3, a4} \<subseteq> R2 \<union> R3\<close> he34_conn_R23])
+      hence "e34 - {a3, a4} \<subseteq> R2 \<or> e34 - {a3, a4} \<subseteq> R3"
+      proof
+        assume "(e34 - {a3, a4}) \<inter> R3 = {}"
+        thus ?thesis using he34_R23 by (by100 blast)
+      next
+        assume "(e34 - {a3, a4}) \<inter> R2 = {}"
+        thus ?thesis using he34_R23 by (by100 blast)
+      qed
+      thus ?thesis by (by100 blast)
+    qed
+  qed
   \<comment> \<open>Step 4: e12-{a1,a2} is on the theta space, hence NOT in any Ri.\<close>
   have he12_on_theta: "e12 - {a1, a2} \<subseteq> e12 \<union> ?Arc2 \<union> ?Arc3" by (by100 blast)
   have he12_not_Ri: "e12 - {a1, a2} \<inter> (R1 \<union> R2 \<union> R3) = {}"
-    sorry \<comment> \<open>e12 \<subseteq> theta, Ri = S2-theta, hence disjoint. by100 too tight.\<close>
+    sorry \<comment> \<open>e12 on theta, Ri=S2-theta. Trivial but by100 too tight on let-expanded terms.\<close>
   \<comment> \<open>Step 5: Each Ri \<subseteq> A\<union>B (since Ri \<subseteq> S2-theta \<subseteq> S2-D = A\<union>B).
      The Ri containing e34 \<subseteq> A or B. e12 NOT in that Ri.
      e12-{a1,a2} \<subseteq> A\<union>B (from hint\_e12\_sub in Lemma\_65\_1 proof).
