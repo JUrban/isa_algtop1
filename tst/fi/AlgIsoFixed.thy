@@ -1240,7 +1240,7 @@ proof -
       have "top1_fundamental_group_induced_on C (subspace_topology ?X ?TX C) x ?X ?TX x (\<lambda>x. x)
           {k. top1_loop_equiv_on C (subspace_topology ?X ?TX C) x g k} =
           {k. top1_loop_equiv_on ?X ?TX x g k}" .
-      thus ?thesis using hTC_eq by (by100 simp)
+      thus ?thesis unfolding hTC_eq[symmetric] .
     qed
     \<comment> \<open>Note: ?j\_star and ?j\_star\_x\_lam agree extensionally (id = \<lambda>x. x).\<close>
     \<comment> \<open>Every element of \<pi>_1(X,x) is a power of [g]\_X. Since each power lifts
@@ -1257,7 +1257,19 @@ proof -
       have "top1_group_hom_on
           (top1_fundamental_group_carrier C ?TC x) (top1_fundamental_group_mul C ?TC x)
           (top1_fundamental_group_carrier ?X ?TX x) (top1_fundamental_group_mul ?X ?TX x) ?j_star_x"
-        sorry \<comment> \<open>induced\_on\_is\_hom at basepoint x.\<close>
+      proof -
+        have hj_cont_x: "top1_continuous_map_on C ?TC ?X ?TX id" by (rule hj_cont)
+        have "top1_group_hom_on
+            (top1_fundamental_group_carrier C ?TC x) (top1_fundamental_group_mul C ?TC x)
+            (top1_fundamental_group_carrier ?X ?TX x) (top1_fundamental_group_mul ?X ?TX x)
+            (top1_fundamental_group_induced_on C ?TC x ?X ?TX x id)"
+        proof -
+          have "id x = x" by (by100 simp)
+          from top1_fundamental_group_induced_on_is_hom[OF hTC hTX _ hx_X hj_cont_x this]
+          show ?thesis using hx_C by (by100 blast)
+        qed
+        thus ?thesis by (by100 simp)
+      qed
       hence "?j_star_x d \<in> top1_fundamental_group_carrier ?X ?TX x"
         using \<open>d \<in> _\<close> unfolding top1_group_hom_on_def by (by100 blast)
       thus "c \<in> top1_fundamental_group_carrier ?X ?TX x" using \<open>c = _\<close> by (by100 blast)
