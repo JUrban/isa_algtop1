@@ -2201,8 +2201,79 @@ proof -
         qed
         have "e12 \<union> Arc2 = e12 \<union> Arc3"
         proof -
-          have "Q12 = Q13" using \<open>Q12 \<subseteq> Ri_Q12\<close> \<open>Q13 \<subseteq> Ri_Q13\<close> \<open>Ri_Q12 = Ri_Q13\<close>
-            sorry \<comment> \<open>Q12 = Ri = Q13 (maximality of J-components).\<close>
+          have "Q12 = Q13"
+          proof -
+            define Rk where "Rk = Ri_Q12"
+            have "Q12 \<subseteq> Rk" using \<open>Q12 \<subseteq> Ri_Q12\<close> unfolding Rk_def by (by100 blast)
+            have "Q13 \<subseteq> Rk" using \<open>Q13 \<subseteq> Ri_Q13\<close> \<open>Ri_Q12 = Ri_Q13\<close> unfolding Rk_def by (by100 blast)
+            have "Rk \<in> {R1,R2,R3}" using \<open>Ri_Q12 \<in> _\<close> unfolding Rk_def by (by100 blast)
+            have hRk_conn: "top1_connected_on Rk (subspace_topology top1_S2 top1_S2_topology Rk)"
+              using \<open>Rk \<in> _\<close> hR(8,9,10) by (by100 blast)
+            have hRk_sub_theta_c: "Rk \<subseteq> top1_S2 - (e12 \<union> Arc2 \<union> Arc3)"
+              using \<open>Rk \<in> _\<close> element_of_three_subset hR(7) by (by100 blast)
+            \<comment> \<open>Rk \<subseteq> S2-J12. Rk \<inter> Q12 \<supseteq> Q12 \<noteq> {}. By Lemma\_23\_2: Rk \<subseteq> Q12.\<close>
+            have "Rk \<subseteq> Q12"
+            proof -
+              have hRk_sub_J12: "Rk \<subseteq> top1_S2 - (e12 \<union> Arc2)" using hRk_sub_theta_c by (by100 blast)
+              have hRk_conn_J12: "top1_connected_on Rk
+                  (subspace_topology (top1_S2-(e12\<union>Arc2))
+                      (subspace_topology top1_S2 top1_S2_topology (top1_S2-(e12\<union>Arc2))) Rk)"
+              proof -
+                have "subspace_topology top1_S2 top1_S2_topology Rk =
+                    subspace_topology (top1_S2-(e12\<union>Arc2))
+                        (subspace_topology top1_S2 top1_S2_topology (top1_S2-(e12\<union>Arc2))) Rk"
+                  using subspace_topology_trans[of Rk "top1_S2-(e12\<union>Arc2)"] hRk_sub_J12 by (by100 simp)
+                thus ?thesis using hRk_conn by (by100 simp)
+              qed
+              have hTJ12_l: "is_topology_on (top1_S2-(e12\<union>Arc2)) (subspace_topology top1_S2 top1_S2_topology (top1_S2-(e12\<union>Arc2)))"
+                by (rule subspace_topology_is_topology_on[OF hTopS2]) (by100 blast)
+              have "W12a \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2-(e12\<union>Arc2))"
+                using hW12_open hW12(4) unfolding subspace_topology_def by (by100 blast)
+              moreover have "W12b \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2-(e12\<union>Arc2))"
+                using hW12_open hW12(4) unfolding subspace_topology_def by (by100 blast)
+              ultimately have hSep_l: "top1_is_separation_on (top1_S2-(e12\<union>Arc2))
+                  (subspace_topology top1_S2 top1_S2_topology (top1_S2-(e12\<union>Arc2))) W12a W12b"
+                unfolding top1_is_separation_on_def using hW12(1,2,3,4) by (by100 blast)
+              from Lemma_23_2[OF hTJ12_l hSep_l hRk_sub_J12 hRk_conn_J12]
+              have "Rk \<subseteq> W12a \<or> Rk \<subseteq> W12b" by (by100 blast)
+              moreover have "Rk \<inter> Q12 \<noteq> {}" using \<open>Q12 \<subseteq> Rk\<close> hQ12(4) by (by100 blast)
+              ultimately show "Rk \<subseteq> Q12" using hQ12(1) hW12(3) by (by100 blast)
+            qed
+            moreover have "Rk \<subseteq> Q13"
+            proof -
+              have hRk_sub_J13: "Rk \<subseteq> top1_S2 - (e12 \<union> Arc3)" using hRk_sub_theta_c by (by100 blast)
+              have hRk_conn_J13: "top1_connected_on Rk
+                  (subspace_topology (top1_S2-(e12\<union>Arc3))
+                      (subspace_topology top1_S2 top1_S2_topology (top1_S2-(e12\<union>Arc3))) Rk)"
+              proof -
+                have "subspace_topology top1_S2 top1_S2_topology Rk =
+                    subspace_topology (top1_S2-(e12\<union>Arc3))
+                        (subspace_topology top1_S2 top1_S2_topology (top1_S2-(e12\<union>Arc3))) Rk"
+                  using subspace_topology_trans[of Rk "top1_S2-(e12\<union>Arc3)"] hRk_sub_J13 by (by100 simp)
+                thus ?thesis using hRk_conn by (by100 simp)
+              qed
+              have hTJ13_l: "is_topology_on (top1_S2-(e12\<union>Arc3)) (subspace_topology top1_S2 top1_S2_topology (top1_S2-(e12\<union>Arc3)))"
+                by (rule subspace_topology_is_topology_on[OF hTopS2]) (by100 blast)
+              have "W13a \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2-(e12\<union>Arc3))"
+                using hW13_open hW13(4) unfolding subspace_topology_def by (by100 blast)
+              moreover have "W13b \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2-(e12\<union>Arc3))"
+                using hW13_open hW13(4) unfolding subspace_topology_def by (by100 blast)
+              ultimately have hSep_l: "top1_is_separation_on (top1_S2-(e12\<union>Arc3))
+                  (subspace_topology top1_S2 top1_S2_topology (top1_S2-(e12\<union>Arc3))) W13a W13b"
+                unfolding top1_is_separation_on_def using hW13(1,2,3,4) by (by100 blast)
+              from Lemma_23_2[OF hTJ13_l hSep_l hRk_sub_J13 hRk_conn_J13]
+              have "Rk \<subseteq> W13a \<or> Rk \<subseteq> W13b" by (by100 blast)
+              moreover have "Rk \<inter> Q13 \<noteq> {}" using \<open>Q13 \<subseteq> Rk\<close> hQ13(4) by (by100 blast)
+              ultimately show "Rk \<subseteq> Q13" using hQ13(1) hW13(3) by (by100 blast)
+            qed
+            ultimately have "Rk \<subseteq> Q12 \<inter> Q13" by (by100 blast)
+            moreover have "Rk \<noteq> {}" using \<open>Rk \<in> _\<close> hR(1,2,3) by (by100 blast)
+            ultimately have "Q12 \<inter> Q13 \<noteq> {}" by (by100 blast)
+            \<comment> \<open>Q12 = Rk = Q13.\<close>
+            have "Q12 = Rk" using \<open>Q12 \<subseteq> Rk\<close> \<open>Rk \<subseteq> Q12\<close> by (by100 blast)
+            moreover have "Q13 = Rk" using \<open>Q13 \<subseteq> Rk\<close> \<open>Rk \<subseteq> Q13\<close> by (by100 blast)
+            ultimately show "Q12 = Q13" by (by100 blast)
+          qed
           hence "Q12 \<union> (e12 \<union> Arc2) = Q13 \<union> (e12 \<union> Arc3)"
             using hcl_Q12_J12 hcl_Q13_J13 by (by100 simp)
           moreover have "Q12 \<inter> (e12 \<union> Arc2) = {}"
