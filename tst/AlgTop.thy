@@ -940,7 +940,42 @@ lemma K4_nonadjacent_edges_different_components:
       and "top1_connected_on B (subspace_topology top1_S2 top1_S2_topology B)"
   shows "\<not> (e12 - {a1, a2} \<subseteq> A \<and> e34 - {a3, a4} \<subseteq> A)
        \<and> \<not> (e12 - {a1, a2} \<subseteq> B \<and> e34 - {a3, a4} \<subseteq> B)"
-  sorry \<comment> \<open>TODO: duplicate proof from AlgTopCached.thy lines 56316-58575.\<close>
+proof -
+  \<comment> \<open>Following algtop.tex 65.1(a): theta space D\<union>e12 \<Rightarrow> 3 components \<Rightarrow> separation.\<close>
+  let ?D_loc = "e13 \<union> e23 \<union> e24 \<union> e41"
+  let ?Arc2 = "e13 \<union> e23" and ?Arc3 = "e24 \<union> e41"
+  have hTopS2: "is_topology_on top1_S2 top1_S2_topology"
+    using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
+  have hS2_haus: "is_hausdorff_on top1_S2 top1_S2_topology" by (rule top1_S2_is_hausdorff)
+  \<comment> \<open>Step 1: Hypotheses for Lemma\_64\_1.\<close>
+  have hArc2_sub: "?Arc2 \<subseteq> top1_S2" using assms(8,5) by (by100 blast)
+  have hArc3_sub: "?Arc3 \<subseteq> top1_S2" using assms(9,7) by (by100 blast)
+  have hArc2_arc: "top1_is_arc_on ?Arc2 (subspace_topology top1_S2 top1_S2_topology ?Arc2)"
+    sorry \<comment> \<open>arcs\_concatenation\_is\_arc[e13, e23] at a3.\<close>
+  have hArc3_arc: "top1_is_arc_on ?Arc3 (subspace_topology top1_S2 top1_S2_topology ?Arc3)"
+    sorry \<comment> \<open>arcs\_concatenation\_is\_arc[e24, e41] at a4.\<close>
+  have ha1_ne_a2: "a1 \<noteq> a2" using assms(2) by (auto simp: card_insert_if split: if_splits)
+  have hint12: "e12 \<inter> ?Arc2 = {a1, a2}" sorry \<comment> \<open>K4 intersection computation.\<close>
+  have hint13: "e12 \<inter> ?Arc3 = {a1, a2}" sorry
+  have hint23: "?Arc2 \<inter> ?Arc3 = {a1, a2}" sorry
+  have hArc2_ep: "top1_arc_endpoints_on ?Arc2 (subspace_topology top1_S2 top1_S2_topology ?Arc2) = {a1, a2}"
+    sorry \<comment> \<open>arc\_concat\_endpoints.\<close>
+  have hArc3_ep: "top1_arc_endpoints_on ?Arc3 (subspace_topology top1_S2 top1_S2_topology ?Arc3) = {a1, a2}"
+    sorry
+  \<comment> \<open>Step 2: Apply Lemma\_64\_1.\<close>
+  obtain R1 R2 R3 where hR: "R1 \<noteq> {}" "R2 \<noteq> {}" "R3 \<noteq> {}"
+      "R1 \<inter> R2 = {}" "R2 \<inter> R3 = {}" "R1 \<inter> R3 = {}"
+      "R1 \<union> R2 \<union> R3 = top1_S2 - (e12 \<union> ?Arc2 \<union> ?Arc3)"
+      "top1_connected_on R1 (subspace_topology top1_S2 top1_S2_topology R1)"
+      "top1_connected_on R2 (subspace_topology top1_S2 top1_S2_topology R2)"
+      "top1_connected_on R3 (subspace_topology top1_S2 top1_S2_topology R3)"
+      "R1 \<in> top1_S2_topology" "R2 \<in> top1_S2_topology" "R3 \<in> top1_S2_topology"
+    using Lemma_64_1_theta_space_three_components[OF assms(1) assms(4) hArc2_sub hArc3_sub
+        assms(10) hArc2_arc hArc3_arc ha1_ne_a2 hint12 hint23 hint13 assms(16) hArc2_ep hArc3_ep]
+    by (metis (no_types))
+  \<comment> \<open>Step 3-5: e34 in one R-component, e12 NOT in it, that component = A or B.\<close>
+  show ?thesis sorry
+qed
 
 (** from \<S>65 Lemma 65.1(b): for K_4 subspace of S^2, the inclusion j: C \<rightarrow> S^2-p-q
     induces an isomorphism of fundamental groups.
