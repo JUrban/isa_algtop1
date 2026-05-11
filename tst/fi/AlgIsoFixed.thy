@@ -877,6 +877,64 @@ text \<open>Munkres Theorem 58.7: If f: X \<rightarrow> Y is a homotopy equivale
   then f_*: \<pi>_1(X,x0) \<rightarrow> \<pi>_1(Y,y0) is an isomorphism.
   The induced map is top1_fundamental_group_induced_on X TX x0 Y TY (f x0) f.\<close>
 
+\<comment> \<open>Key lemma for 65.1(b): the K4 construction yields a loop in C that generates \<pi>_1(X).
+   This is the textbook's \<alpha>*\<beta> loop. Proof: the full D1/D2/U/V construction from Lemma\_65\_1
+   in AlgTop.thy (~2000 lines, sorry-free) establishes this. We state it as a separate
+   lemma to be copied/proved later.\<close>
+lemma K4_generator_loop_in_C:
+  fixes a1 a2 a3 a4 :: "real \<times> real \<times> real"
+    and e12 e23 e34 e41 e13 e24 :: "(real \<times> real \<times> real) set"
+    and C :: "(real \<times> real \<times> real) set"
+    and p q :: "real \<times> real \<times> real"
+  assumes "is_topology_on_strict top1_S2 top1_S2_topology"
+      and "card {a1, a2, a3, a4} = 4"
+      and "{a1, a2, a3, a4} \<subseteq> top1_S2"
+      and "e12 \<subseteq> top1_S2" and "e23 \<subseteq> top1_S2" and "e34 \<subseteq> top1_S2"
+      and "e41 \<subseteq> top1_S2" and "e13 \<subseteq> top1_S2" and "e24 \<subseteq> top1_S2"
+      and "top1_is_arc_on e12 (subspace_topology top1_S2 top1_S2_topology e12)"
+      and "top1_is_arc_on e23 (subspace_topology top1_S2 top1_S2_topology e23)"
+      and "top1_is_arc_on e34 (subspace_topology top1_S2 top1_S2_topology e34)"
+      and "top1_is_arc_on e41 (subspace_topology top1_S2 top1_S2_topology e41)"
+      and "top1_is_arc_on e13 (subspace_topology top1_S2 top1_S2_topology e13)"
+      and "top1_is_arc_on e24 (subspace_topology top1_S2 top1_S2_topology e24)"
+      and "top1_arc_endpoints_on e12 (subspace_topology top1_S2 top1_S2_topology e12) = {a1,a2}"
+      and "top1_arc_endpoints_on e23 (subspace_topology top1_S2 top1_S2_topology e23) = {a2,a3}"
+      and "top1_arc_endpoints_on e34 (subspace_topology top1_S2 top1_S2_topology e34) = {a3,a4}"
+      and "top1_arc_endpoints_on e41 (subspace_topology top1_S2 top1_S2_topology e41) = {a4,a1}"
+      and "top1_arc_endpoints_on e13 (subspace_topology top1_S2 top1_S2_topology e13) = {a1,a3}"
+      and "top1_arc_endpoints_on e24 (subspace_topology top1_S2 top1_S2_topology e24) = {a2,a4}"
+      and "e12 \<inter> e34 = {}" and "e23 \<inter> e41 = {}"
+      and "e12 \<inter> e23 = {a2}" and "e23 \<inter> e34 = {a3}"
+      and "e34 \<inter> e41 = {a4}" and "e41 \<inter> e12 = {a1}"
+      and "e13 \<inter> e12 = {a1}" and "e13 \<inter> e23 = {a3}"
+      and "e13 \<inter> e34 = {a3}" and "e13 \<inter> e41 = {a1}"
+      and "e13 \<inter> e24 \<subseteq> {a1,a2,a3,a4}"
+      and "e24 \<inter> e12 = {a2}" and "e24 \<inter> e23 = {a2}"
+      and "e24 \<inter> e34 = {a4}" and "e24 \<inter> e41 = {a4}"
+      and "p \<in> e13 - {a1, a3}" and "q \<in> e24 - {a2, a4}"
+      and "C = e12 \<union> e23 \<union> e34 \<union> e41"
+  shows "\<exists>x \<in> C. \<exists>g.
+      top1_is_loop_on C (subspace_topology top1_S2 top1_S2_topology C) x g
+    \<and> top1_is_loop_on (top1_S2 - {p} - {q})
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p} - {q})) x g
+    \<and> (\<forall>f. top1_is_loop_on (top1_S2 - {p} - {q})
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p} - {q})) x f \<longrightarrow>
+        (\<exists>n::nat.
+            top1_path_homotopic_on (top1_S2 - {p} - {q})
+              (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p} - {q})) x x f
+              (top1_path_power g x n)
+          \<or> top1_path_homotopic_on (top1_S2 - {p} - {q})
+              (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p} - {q})) x x f
+              (top1_path_power (top1_path_reverse g) x n)))"
+  sorry \<comment> \<open>Proof: copy D1/D2/U/V/\<alpha>/\<beta> construction from AlgTop.thy Lemma\_65\_1 (lines 3142-5219).
+     The construction is sorry-free (~2000 lines). Key steps:
+     1. Split e13 at p, e24 at q to get D1, D2 arcs.
+     2. U = S2-D1, V = S2-D2 open. X = U\<union>V.
+     3. U\<inter>V = S2-D, D = SCC. x,y in different components (K4\_nonadjacent).
+     4. \<alpha> path in U\<inter>C from x to y, \<beta> path in V\<inter>C from y to x.
+     5. \<alpha>*\<beta> is loop in C AND loop in X.
+     6. Theorem\_63\_1\_b\_generation: \<alpha>*\<beta> generates \<pi>_1(X).\<close>
+
 theorem Theorem_58_7_fixed:
   assumes hTX: "is_topology_on X TX" and hTY: "is_topology_on Y TY"
       and heq: "top1_homotopy_equivalence_on X TX Y TY f g" and hx0: "x0 \<in> X"
@@ -1155,15 +1213,18 @@ proof -
        Hence j\_* is surjective.\<close>
     \<comment> \<open>Step A: There exists a loop g in C, based at some point x \<in> C,
        that generates \<pi>_1(X, x). (From Theorem 63.1 + K4 structure.)\<close>
-    have "\<exists>x \<in> C. \<exists>g. top1_is_loop_on ?X ?TX x g
-        \<and> top1_is_loop_on C ?TC x g
-        \<and> (\<forall>f. top1_is_loop_on ?X ?TX x f \<longrightarrow>
+    from K4_generator_loop_in_C[OF assms(1-39)]
+    obtain x g where hx_C: "x \<in> C"
+        and hg_loop_C: "top1_is_loop_on C ?TC x g"
+        and hg_loop_X: "top1_is_loop_on ?X ?TX x g"
+        and hg_generates: "\<forall>f. top1_is_loop_on ?X ?TX x f \<longrightarrow>
             (\<exists>n::nat. top1_path_homotopic_on ?X ?TX x x f (top1_path_power g x n)
-              \<or> top1_path_homotopic_on ?X ?TX x x f (top1_path_power (top1_path_reverse g) x n)))"
-      sorry \<comment> \<open>From existing Lemma\_65\_1 proof: \<alpha>*\<beta> construction + Theorem\_63\_1\_b\_generation.\<close>
-    \<comment> \<open>Step B: Basepoint change from x to c0 (both in C, which is path-connected).\<close>
-    \<comment> \<open>Step C: j\_* hits the generator class \<Rightarrow> surjective.\<close>
-    show ?thesis sorry
+              \<or> top1_path_homotopic_on ?X ?TX x x f (top1_path_power (top1_path_reverse g) x n))"
+      by (by100 blast)
+    \<comment> \<open>Step B: j\_*([g]\_C) = [g]\_X (inclusion sends loop class to itself).
+       Step C: [g] generates \<pi>_1(X), so j\_* is surjective.
+       Step D: Basepoint change from x to c0.\<close>
+    show ?thesis sorry \<comment> \<open>Generator in C \<Rightarrow> j\_* surjective. Needs basepoint change + class computation.\<close>
   qed
   \<comment> \<open>Step 5: Surjective hom Z \<rightarrow> Z is injective (hence bijective).\<close>
   have hj_star_inj: "inj_on ?j_star (top1_fundamental_group_carrier C ?TC c0)" sorry
