@@ -976,6 +976,17 @@ lemma disjoint_subset_right:
   assumes "A \<inter> B = {}" and "S \<subseteq> B" shows "A \<inter> S = {}"
   using assms by (by100 blast)
 
+lemma third_element_unique:
+  assumes "a \<in> {R1, R2, R3}" "b \<in> {R1, R2, R3}" "c \<in> {R1, R2, R3}" "d \<in> {R1, R2, R3}"
+      and "R1 \<noteq> R2" "R2 \<noteq> R3" "R1 \<noteq> R3" and "a \<noteq> b"
+      and "c \<noteq> a" "c \<noteq> b" "d \<noteq> a" "d \<noteq> b"
+  shows "c = d"
+proof -
+  have "{R1,R2,R3} - {a,b} = {c}" and "{R1,R2,R3} - {a,b} = {d}"
+    using assms by auto  \<comment> \<open>finite set computation, no by100 needed for top-level combinatorics\<close>
+  thus ?thesis by (by100 simp)
+qed
+
 (** from \<S>65 Lemma 65.1(a): non-adjacent edges of K_4 in S^2 have interiors in
     different components of S^2 minus the complementary 4-cycle.
     Duplicated from the internal hdiff fact in Lemma_65_1_K4_subgraph (AlgTopCached.thy). **)
@@ -1909,7 +1920,114 @@ proof -
            Both are connected subsets of S2-theta = R1\<union>R2\<union>R3, hence each = some Ri.
            Cannot be Ri\_D (disjoint from D' complement). Cannot be Ri\_e (by a4/a3).
            Hence both = Rk. closure(Rk) = Rk\<union>J12 = Rk\<union>J13 \<Rightarrow> J12=J13 \<Rightarrow> Arc2=Arc3.\<close>
-        show False sorry \<comment> \<open>Q12=Q13=Rk, J12=J13, Arc2=Arc3 contradiction.\<close>
+        \<comment> \<open>Q12 (other J12-side from D') \<subseteq> S2-theta, Q12=some Ri, Q12 \<noteq> Ri\_D, Q12 \<noteq> Ri\_e.\<close>
+        have hQ12_sub_R: "\<exists>Q. Q \<in> {W12a, W12b} \<and> Q \<subseteq> R1 \<union> R2 \<union> R3 \<and> D' \<inter> Q = {} \<and> Q \<noteq> {}"
+          sorry \<comment> \<open>Arc3 same side as D' \<Rightarrow> other side has no theta intersection.\<close>
+        then obtain Q12 where hQ12: "Q12 \<in> {W12a, W12b}" "Q12 \<subseteq> R1 \<union> R2 \<union> R3"
+            "D' \<inter> Q12 = {}" "Q12 \<noteq> {}" by blast
+        have hQ13_sub_R: "\<exists>Q. Q \<in> {W13a, W13b} \<and> Q \<subseteq> R1 \<union> R2 \<union> R3 \<and> D' \<inter> Q = {} \<and> Q \<noteq> {}"
+          sorry \<comment> \<open>Same for J13: Arc2 same side as D'.\<close>
+        then obtain Q13 where hQ13: "Q13 \<in> {W13a, W13b}" "Q13 \<subseteq> R1 \<union> R2 \<union> R3"
+            "D' \<inter> Q13 = {}" "Q13 \<noteq> {}" by blast
+        \<comment> \<open>Q12 = some Ri (connected J12-component \<subseteq> R1\<union>R2\<union>R3).\<close>
+        have hQ12_conn: "top1_connected_on Q12 (subspace_topology top1_S2 top1_S2_topology Q12)"
+          using hQ12(1) hW12(5,6) by (by100 blast)
+        from hR_in_one[OF hQ12(2) hQ12(4) hQ12_conn]
+        obtain Ri_Q12 where "Ri_Q12 \<in> {R1,R2,R3}" "Q12 \<subseteq> Ri_Q12" by (by100 blast)
+        have hQ13_conn: "top1_connected_on Q13 (subspace_topology top1_S2 top1_S2_topology Q13)"
+          using hQ13(1) hW13(5,6) by (by100 blast)
+        from hR_in_one[OF hQ13(2) hQ13(4) hQ13_conn]
+        obtain Ri_Q13 where "Ri_Q13 \<in> {R1,R2,R3}" "Q13 \<subseteq> Ri_Q13" by (by100 blast)
+        \<comment> \<open>Q12 \<noteq> Ri\_D and Q12 \<noteq> Ri\_e (boundary arguments).\<close>
+        have "Ri_Q12 \<noteq> Ri_D" sorry \<comment> \<open>D' \<inter> Q12 = {} but D' = Ri\_D.\<close>
+        have "Ri_Q12 \<noteq> Ri_e" sorry \<comment> \<open>a4 boundary argument.\<close>
+        have "Ri_Q13 \<noteq> Ri_D" sorry
+        have "Ri_Q13 \<noteq> Ri_e" sorry \<comment> \<open>a3 boundary argument.\<close>
+        \<comment> \<open>Ri\_Q12 = Ri\_Q13 (third\_element\_unique).\<close>
+        have hR_dist: "R1 \<noteq> R2" "R2 \<noteq> R3" "R1 \<noteq> R3"
+          using hR(1,2,3,4,5,6) by (by100 blast)+
+        have hRie_ne_RiD: "Ri_e \<noteq> Ri_D"
+          sorry \<comment> \<open>Ri\_e \<subseteq> C, Ri\_D = D', C \<inter> D' = {}.\<close>
+        have "Ri_Q12 = Ri_Q13"
+          by (rule third_element_unique[OF hRie(1) hRiD \<open>Ri_Q12 \<in> _\<close> \<open>Ri_Q13 \<in> _\<close>
+              hR_dist hRie_ne_RiD \<open>Ri_Q12 \<noteq> Ri_e\<close> \<open>Ri_Q12 \<noteq> Ri_D\<close>
+              \<open>Ri_Q13 \<noteq> Ri_e\<close> \<open>Ri_Q13 \<noteq> Ri_D\<close>])
+        \<comment> \<open>closure(Rk) = Rk\<union>J12 = Rk\<union>J13 \<Rightarrow> J12=J13 \<Rightarrow> Arc2=Arc3 \<Rightarrow> False.\<close>
+        have hcl_Q12_J12: "closure_on top1_S2 top1_S2_topology Q12 = Q12 \<union> (e12 \<union> Arc2)"
+          sorry \<comment> \<open>hcl\_scc\_comp on J12.\<close>
+        have hcl_Q13_J13: "closure_on top1_S2 top1_S2_topology Q13 = Q13 \<union> (e12 \<union> Arc3)"
+          sorry \<comment> \<open>hcl\_scc\_comp on J13.\<close>
+        have "e12 \<union> Arc2 = e12 \<union> Arc3"
+        proof -
+          have "Q12 = Q13" using \<open>Q12 \<subseteq> Ri_Q12\<close> \<open>Q13 \<subseteq> Ri_Q13\<close> \<open>Ri_Q12 = Ri_Q13\<close>
+            sorry \<comment> \<open>Q12 = Ri = Q13 (maximality of J-components).\<close>
+          hence "Q12 \<union> (e12 \<union> Arc2) = Q13 \<union> (e12 \<union> Arc3)"
+            using hcl_Q12_J12 hcl_Q13_J13 by (by100 simp)
+          moreover have "Q12 \<inter> (e12 \<union> Arc2) = {}"
+          proof -
+            have "Q12 \<subseteq> R1 \<union> R2 \<union> R3" by (rule hQ12(2))
+            hence "Q12 \<subseteq> top1_S2 - (e12 \<union> Arc2 \<union> Arc3)" using hR(7) by (by100 blast)
+            thus ?thesis by (by100 blast)
+          qed
+          moreover have "Q13 \<inter> (e12 \<union> Arc3) = {}"
+          proof -
+            have "Q13 \<subseteq> R1 \<union> R2 \<union> R3" by (rule hQ13(2))
+            hence "Q13 \<subseteq> top1_S2 - (e12 \<union> Arc2 \<union> Arc3)" using hR(7) by (by100 blast)
+            thus ?thesis by (by100 blast)
+          qed
+          have hQ12_sub_theta: "Q12 \<subseteq> top1_S2 - (e12 \<union> Arc2 \<union> Arc3)"
+            using hQ12(2) hR(7) by (by100 blast)
+          have hQ12_disj_J12: "Q12 \<inter> (e12 \<union> Arc2) = {}" using hQ12_sub_theta by (by100 blast)
+          have hQ12_disj_J13: "Q12 \<inter> (e12 \<union> Arc3) = {}" using hQ12_sub_theta by (by100 blast)
+          have hJ_sub1: "e12 \<union> Arc2 \<subseteq> Q12 \<union> (e12 \<union> Arc3)"
+            using hcl_Q12_J12 hcl_Q13_J13 \<open>Q12 = Q13\<close> by (by100 blast)
+          have hJ_sub2: "e12 \<union> Arc3 \<subseteq> Q12 \<union> (e12 \<union> Arc2)"
+            using hcl_Q12_J12 hcl_Q13_J13 \<open>Q12 = Q13\<close> by (by100 blast)
+          have "e12 \<union> Arc2 \<subseteq> e12 \<union> Arc3"
+          proof -
+            { fix x assume "x \<in> e12 \<union> Arc2"
+              hence "x \<in> Q12 \<union> (e12 \<union> Arc3)" using hJ_sub1 by (by100 blast)
+              moreover have "x \<notin> Q12" using \<open>x \<in> e12 \<union> Arc2\<close> hQ12_disj_J12 by (by100 blast)
+              ultimately have "x \<in> e12 \<union> Arc3" by (by100 blast) }
+            thus ?thesis by (by100 blast)
+          qed
+          moreover have "e12 \<union> Arc3 \<subseteq> e12 \<union> Arc2"
+          proof -
+            { fix x assume "x \<in> e12 \<union> Arc3"
+              hence "x \<in> Q12 \<union> (e12 \<union> Arc2)" using hJ_sub2 by (by100 blast)
+              moreover have "x \<notin> Q12" using \<open>x \<in> e12 \<union> Arc3\<close> hQ12_disj_J13 by (by100 blast)
+              ultimately have "x \<in> e12 \<union> Arc2" by (by100 blast) }
+            thus ?thesis by (by100 blast)
+          qed
+          ultimately show ?thesis by (by100 blast)
+        qed
+        hence "Arc2 = Arc3"
+        proof -
+          assume hJ_eq: "e12 \<union> Arc2 = e12 \<union> Arc3"
+          have "\<And>x. x \<in> Arc2 \<Longrightarrow> x \<in> Arc3"
+          proof -
+            fix x assume "x \<in> Arc2"
+            hence "x \<in> e12 \<union> Arc3" using hJ_eq by (by100 blast)
+            moreover { assume "x \<in> e12"
+              hence "x \<in> {a1,a2}" using hint12 \<open>x \<in> Arc2\<close> by (by100 blast)
+              hence "x \<in> Arc3" using hint13 by (by100 blast) }
+            ultimately show "x \<in> Arc3" by (by100 blast)
+          qed
+          moreover have "\<And>x. x \<in> Arc3 \<Longrightarrow> x \<in> Arc2"
+          proof -
+            fix x assume "x \<in> Arc3"
+            hence "x \<in> e12 \<union> Arc2" using hJ_eq by (by100 blast)
+            moreover { assume "x \<in> e12"
+              hence "x \<in> {a1,a2}" using hint13 \<open>x \<in> Arc3\<close> by (by100 blast)
+              hence "x \<in> Arc2" using hint12 by (by100 blast) }
+            ultimately show "x \<in> Arc2" by (by100 blast)
+          qed
+          ultimately show "Arc2 = Arc3" by (by100 blast)
+        qed
+        have "a3 \<in> Arc2"
+          using assms(20) unfolding top1_arc_endpoints_on_def defs by (by100 blast)
+        hence "a3 \<in> Arc3" using \<open>Arc2 = Arc3\<close> by (by100 blast)
+        thus False using ha3_not_Arc3 by (by100 blast)
       qed
     qed
   qed
