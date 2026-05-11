@@ -38,3 +38,4 @@ session AlgTop = AlgTopC +
   options [quick_and_dirty, timeout = 300]
   theories
     AlgTop
+    AlgIsoFixed
