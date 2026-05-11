@@ -2133,13 +2133,65 @@ proof -
   let ?TC = "subspace_topology top1_S2 top1_S2_topology C"
   let ?Xpq = "top1_S2 - {p} - {q}"
   let ?TXpq = "subspace_topology top1_S2 top1_S2_topology ?Xpq"
-  \<comment> \<open>Step 1 (Surjectivity): the inclusion j_* is surjective via K4-graph argument.\<close>
-  have hj_surj: "(top1_fundamental_group_induced_on C ?TC c0 ?Xpq ?TXpq c0 (\<lambda>x. x))
-      ` (top1_fundamental_group_carrier C ?TC c0)
-      = top1_fundamental_group_carrier ?Xpq ?TXpq c0" sorry
-  \<comment> \<open>Step 2 (Injectivity): j_* is injective via Lemma 65.1 nontriviality.\<close>
-  have hj_inj: "inj_on (top1_fundamental_group_induced_on C ?TC c0 ?Xpq ?TXpq c0 (\<lambda>x. x))
-      (top1_fundamental_group_carrier C ?TC c0)" sorry
+  \<comment> \<open>Both \<pi>_1(C, c0) and \<pi>_1(S2-\{p,q\}, c0) are infinite cyclic (\<cong> Z).
+     So they're isomorphic to each other (same approach as Lemma\_65\_1).\<close>
+  have hC_sub_S2: "C \<subseteq> top1_S2"
+    using assms(2) unfolding top1_simple_closed_curve_on_def top1_continuous_map_on_def
+    by (by100 blast)
+  have hTopS2: "is_topology_on top1_S2 top1_S2_topology"
+    using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
+  have hTXpq: "is_topology_on ?Xpq ?TXpq"
+    by (rule subspace_topology_is_topology_on[OF hTopS2]) (by100 blast)
+  have hc0_Xpq: "c0 \<in> ?Xpq"
+  proof -
+    have "c0 \<in> C" by (rule assms(6))
+    hence "c0 \<in> top1_S2" using hC_sub_S2 by (by100 blast)
+    moreover have "p \<notin> C" using assms(3) by (by100 blast)
+    moreover have "q \<notin> C" using assms(4) by (by100 blast)
+    ultimately show ?thesis using \<open>c0 \<in> C\<close> by (by100 blast)
+  qed
+  \<comment> \<open>\<pi>_1(C, c0) \<cong> Z (C is SCC).\<close>
+  have hC_pi1_Z: "top1_groups_isomorphic_on
+      (top1_fundamental_group_carrier C ?TC c0)
+      (top1_fundamental_group_mul C ?TC c0)
+      top1_Z_group top1_Z_mul"
+    sorry \<comment> \<open>Same SCC \<rightarrow> S1 \<rightarrow> Z chain as in Lemma\_65\_1.\<close>
+  \<comment> \<open>\<pi>_1(S2-\{p,q\}, c0) \<cong> Z.\<close>
+  have hp_ne_q: "p \<noteq> q"
+    sorry \<comment> \<open>p and q in different components of S2-C, so p \<noteq> q.\<close>
+  have hX_pi1_Z: "top1_groups_isomorphic_on
+      (top1_fundamental_group_carrier ?Xpq ?TXpq c0)
+      (top1_fundamental_group_mul ?Xpq ?TXpq c0)
+      top1_Z_group top1_Z_mul"
+  proof -
+    have hp_S2: "p \<in> top1_S2" using assms(3) by (by100 blast)
+    have hq_S2: "q \<in> top1_S2" using assms(4) by (by100 blast)
+    show ?thesis
+      by (rule pi1_S2_minus_two_points_iso_Z[OF assms(1) hp_S2 hq_S2 hp_ne_q hc0_Xpq])
+  qed
+  \<comment> \<open>Z \<cong> \<pi>_1(S2-\{p,q\}, c0) by symmetry.\<close>
+  have hX_pi1_Z_sym: "top1_groups_isomorphic_on
+      top1_Z_group top1_Z_mul
+      (top1_fundamental_group_carrier ?Xpq ?TXpq c0)
+      (top1_fundamental_group_mul ?Xpq ?TXpq c0)"
+  proof (rule top1_groups_isomorphic_on_sym[OF hX_pi1_Z])
+    show "top1_is_group_on (top1_fundamental_group_carrier ?Xpq ?TXpq c0)
+        (top1_fundamental_group_mul ?Xpq ?TXpq c0)
+        (top1_fundamental_group_id ?Xpq ?TXpq c0)
+        (top1_fundamental_group_invg ?Xpq ?TXpq c0)"
+      by (rule top1_fundamental_group_is_group[OF hTXpq hc0_Xpq])
+    have "top1_is_abelian_group_on top1_Z_group top1_Z_mul top1_Z_id top1_Z_invg"
+      by (rule top1_Z_is_abelian_group)
+    thus "top1_is_group_on top1_Z_group top1_Z_mul top1_Z_id top1_Z_invg"
+      unfolding top1_is_abelian_group_on_def by (by100 blast)
+  qed
+  show ?thesis
+    by (rule groups_isomorphic_trans_fwd[OF hC_pi1_Z hX_pi1_Z_sym])
+qed
+
+(* The old approach with surjectivity/injectivity is replaced by the Z-chain above.
+   The homomorphism proof below is no longer needed. *)
+(*
   \<comment> \<open>Step 3 (Homomorphism): j_* preserves products by functoriality.\<close>
   have hj_hom: "top1_group_hom_on
       (top1_fundamental_group_carrier C ?TC c0) (top1_fundamental_group_mul C ?TC c0)
@@ -2192,7 +2244,7 @@ proof -
   show ?thesis
     unfolding top1_groups_isomorphic_on_def top1_group_iso_on_def
     using hj_hom hj_inj hj_surj unfolding bij_betw_def by (by100 blast)
-qed
+*)
 
 
 (** from \<S>67 Theorem 67.8: rank of free abelian group is well-defined.
