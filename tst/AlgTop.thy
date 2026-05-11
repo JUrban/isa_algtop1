@@ -802,8 +802,104 @@ lemma SCC_pi1_iso_Z:
       (top1_fundamental_group_mul C
         (subspace_topology top1_S2 top1_S2_topology C) c0)
       top1_Z_group top1_Z_mul"
-  sorry \<comment> \<open>SCC = homeo to S1 (Theorem\_26\_6). \<pi>_1(S1) \<cong> Z (Theorem\_54\_5\_iso).
-     PROVED inline in Lemma\_65\_1 (hC\_pi1\_Z). Same proof applies.\<close>
+proof -
+  let ?TC = "subspace_topology top1_S2 top1_S2_topology C"
+  have hTopS2: "is_topology_on top1_S2 top1_S2_topology"
+    using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
+  have hC_sub_S2: "C \<subseteq> top1_S2" using simple_closed_curve_subset[OF assms(2)] .
+  obtain f where hf_cont: "top1_continuous_map_on top1_S1 top1_S1_topology top1_S2 top1_S2_topology f"
+      and hf_inj: "inj_on f top1_S1" and hf_img: "f ` top1_S1 = C"
+    using assms(2) unfolding top1_simple_closed_curve_on_def by (by100 blast)
+  have hS1_top: "is_topology_on top1_S1 top1_S1_topology"
+    using top1_S1_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
+  have hTC_top: "is_topology_on C ?TC"
+    by (rule subspace_topology_is_topology_on[OF hTopS2 hC_sub_S2])
+  have hf_all_C: "\<And>s. s \<in> top1_S1 \<Longrightarrow> f s \<in> C"
+  proof -
+    fix s assume "s \<in> top1_S1"
+    hence "f s \<in> f ` top1_S1" by (rule imageI)
+    thus "f s \<in> C" using hf_img by simp
+  qed
+  have hf_cont_C: "top1_continuous_map_on top1_S1 top1_S1_topology C ?TC f"
+    by (intro continuous_map_restrict_codomain[OF hf_cont _ hC_sub_S2] ballI)
+       (rule hf_all_C)
+  have hf_bij: "bij_betw f top1_S1 C"
+    unfolding bij_betw_def using hf_inj hf_img by (by100 blast)
+  have hC_haus: "is_hausdorff_on C ?TC"
+    using conjunct2[OF conjunct2[OF Theorem_17_11]] hC_sub_S2 top1_S2_is_hausdorff
+    by (by100 blast)
+  have hf_homeo: "top1_homeomorphism_on top1_S1 top1_S1_topology C ?TC f"
+    by (rule Theorem_26_6[OF hS1_top hTC_top S1_compact hC_haus hf_cont_C hf_bij])
+  obtain s0 where hs0: "s0 \<in> top1_S1" "f s0 = c0"
+    using hf_img assms(3) by (by100 blast)
+  have h_pi1_S1_C: "top1_groups_isomorphic_on
+      (top1_fundamental_group_carrier top1_S1 top1_S1_topology s0)
+      (top1_fundamental_group_mul top1_S1 top1_S1_topology s0)
+      (top1_fundamental_group_carrier C ?TC c0)
+      (top1_fundamental_group_mul C ?TC c0)"
+    by (rule Corollary_52_5_homeomorphism_iso[OF hS1_top hTC_top hf_homeo hs0(1) hs0(2)])
+  have h10_S1: "(1::real, 0::real) \<in> top1_S1" unfolding top1_S1_def by (by100 simp)
+  have h_pi1_S1_bp: "top1_groups_isomorphic_on
+      (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1::real, 0::real))
+      (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))
+      (top1_fundamental_group_carrier top1_S1 top1_S1_topology s0)
+      (top1_fundamental_group_mul top1_S1 top1_S1_topology s0)"
+  proof -
+    obtain \<gamma> where "top1_is_path_on top1_S1 top1_S1_topology (1, 0) s0 \<gamma>"
+      using S1_path_connected h10_S1 hs0(1) unfolding top1_path_connected_on_def
+      by (by100 blast)
+    thus ?thesis by (rule basepoint_change_iso_via_path[OF hS1_top])
+  qed
+  have h_pi1_S1_Z: "top1_groups_isomorphic_on
+      (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
+      (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))
+      top1_Z_group top1_Z_mul"
+    by (rule Theorem_54_5_iso)
+  \<comment> \<open>Chain: \<pi>_1(C,c0) \<cong> \<pi>_1(S1,s0) \<cong> \<pi>_1(S1,(1,0)) \<cong> Z.\<close>
+  have h_pi1_S1_C_sym: "top1_groups_isomorphic_on
+      (top1_fundamental_group_carrier C ?TC c0)
+      (top1_fundamental_group_mul C ?TC c0)
+      (top1_fundamental_group_carrier top1_S1 top1_S1_topology s0)
+      (top1_fundamental_group_mul top1_S1 top1_S1_topology s0)"
+  proof (rule top1_groups_isomorphic_on_sym[OF h_pi1_S1_C])
+    show "top1_is_group_on (top1_fundamental_group_carrier top1_S1 top1_S1_topology s0)
+        (top1_fundamental_group_mul top1_S1 top1_S1_topology s0)
+        (top1_fundamental_group_id top1_S1 top1_S1_topology s0)
+        (top1_fundamental_group_invg top1_S1 top1_S1_topology s0)"
+      by (rule top1_fundamental_group_is_group[OF hS1_top hs0(1)])
+    have "c0 \<in> C" by (rule assms(3))
+    show "top1_is_group_on (top1_fundamental_group_carrier C ?TC c0)
+        (top1_fundamental_group_mul C ?TC c0)
+        (top1_fundamental_group_id C ?TC c0)
+        (top1_fundamental_group_invg C ?TC c0)"
+      by (rule top1_fundamental_group_is_group[OF hTC_top \<open>c0 \<in> C\<close>])
+  qed
+  have h_pi1_S1_bp_sym: "top1_groups_isomorphic_on
+      (top1_fundamental_group_carrier top1_S1 top1_S1_topology s0)
+      (top1_fundamental_group_mul top1_S1 top1_S1_topology s0)
+      (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
+      (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))"
+  proof (rule top1_groups_isomorphic_on_sym[OF h_pi1_S1_bp])
+    show "top1_is_group_on (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1::real, 0::real))
+        (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))
+        (top1_fundamental_group_id top1_S1 top1_S1_topology (1, 0))
+        (top1_fundamental_group_invg top1_S1 top1_S1_topology (1, 0))"
+      by (rule top1_fundamental_group_is_group[OF hS1_top h10_S1])
+    show "top1_is_group_on (top1_fundamental_group_carrier top1_S1 top1_S1_topology s0)
+        (top1_fundamental_group_mul top1_S1 top1_S1_topology s0)
+        (top1_fundamental_group_id top1_S1 top1_S1_topology s0)
+        (top1_fundamental_group_invg top1_S1 top1_S1_topology s0)"
+      by (rule top1_fundamental_group_is_group[OF hS1_top hs0(1)])
+  qed
+  have h1: "top1_groups_isomorphic_on
+      (top1_fundamental_group_carrier C ?TC c0)
+      (top1_fundamental_group_mul C ?TC c0)
+      (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
+      (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))"
+    by (rule groups_isomorphic_trans_fwd[OF h_pi1_S1_C_sym h_pi1_S1_bp_sym])
+  show ?thesis
+    by (rule groups_isomorphic_trans_fwd[OF h1 h_pi1_S1_Z])
+qed
 
 (** from \<S>65 Lemma 65.1(b): for K_4 subspace of S^2, the inclusion j: C \<rightarrow> S^2-p-q
     induces an isomorphism of fundamental groups.
