@@ -4950,7 +4950,12 @@ proof -
       qed
     qed
     \<comment> \<open>Transfer surjectivity from x to c0 via basepoint change (C path-connected).\<close>
-    show ?thesis sorry \<comment> \<open>Basepoint change: surj at x \<Rightarrow> surj at c0.\<close>
+    \<comment> \<open>Basepoint change: surj at x \<Rightarrow> surj at c0.
+       C is path-connected (SCC). There's a path \<alpha> from x to c0 in C.
+       Basepoint change alpha_hat: \<pi>_1(C,x) \<cong> \<pi>_1(C,c0) and \<pi>_1(X,x) \<cong> \<pi>_1(X,c0).
+       For inclusion j = id: j\_*(c0)(alpha_hat(c)) = alpha_hat(j\_*(x)(c)).
+       Since alpha_hat is bijective and j\_*(x) surjective: j\_*(c0) surjective.\<close>
+    show ?thesis sorry
   qed
   \<comment> \<open>Step 5: Surjective hom Z \<rightarrow> Z is injective (hence bijective).\<close>
   have hj_star_inj: "inj_on ?j_star (top1_fundamental_group_carrier C ?TC c0)" sorry
@@ -4960,6 +4965,55 @@ proof -
     unfolding bij_betw_def using hj_star_inj hj_star_surj by (by100 blast)
   show ?thesis unfolding top1_group_iso_on_def using hj_star_hom hj_star_bij by (by100 blast)
 qed
+
+\<comment> \<open>Alternative: iso at an EXISTENTIAL basepoint (avoids basepoint change).\<close>
+lemma Lemma_65_1_fixed_exists_basepoint:
+  fixes a1 a2 a3 a4 :: "real \<times> real \<times> real"
+    and e12 e23 e34 e41 e13 e24 :: "(real \<times> real \<times> real) set"
+    and C :: "(real \<times> real \<times> real) set"
+    and p q :: "real \<times> real \<times> real"
+  assumes "is_topology_on_strict top1_S2 top1_S2_topology"
+      and "card {a1, a2, a3, a4} = 4"
+      and "{a1, a2, a3, a4} \<subseteq> top1_S2"
+      and "e12 \<subseteq> top1_S2" and "e23 \<subseteq> top1_S2" and "e34 \<subseteq> top1_S2"
+      and "e41 \<subseteq> top1_S2" and "e13 \<subseteq> top1_S2" and "e24 \<subseteq> top1_S2"
+      and "top1_is_arc_on e12 (subspace_topology top1_S2 top1_S2_topology e12)"
+      and "top1_is_arc_on e23 (subspace_topology top1_S2 top1_S2_topology e23)"
+      and "top1_is_arc_on e34 (subspace_topology top1_S2 top1_S2_topology e34)"
+      and "top1_is_arc_on e41 (subspace_topology top1_S2 top1_S2_topology e41)"
+      and "top1_is_arc_on e13 (subspace_topology top1_S2 top1_S2_topology e13)"
+      and "top1_is_arc_on e24 (subspace_topology top1_S2 top1_S2_topology e24)"
+      and "top1_arc_endpoints_on e12 (subspace_topology top1_S2 top1_S2_topology e12) = {a1,a2}"
+      and "top1_arc_endpoints_on e23 (subspace_topology top1_S2 top1_S2_topology e23) = {a2,a3}"
+      and "top1_arc_endpoints_on e34 (subspace_topology top1_S2 top1_S2_topology e34) = {a3,a4}"
+      and "top1_arc_endpoints_on e41 (subspace_topology top1_S2 top1_S2_topology e41) = {a4,a1}"
+      and "top1_arc_endpoints_on e13 (subspace_topology top1_S2 top1_S2_topology e13) = {a1,a3}"
+      and "top1_arc_endpoints_on e24 (subspace_topology top1_S2 top1_S2_topology e24) = {a2,a4}"
+      and "e12 \<inter> e34 = {}" and "e23 \<inter> e41 = {}"
+      and "e12 \<inter> e23 = {a2}" and "e23 \<inter> e34 = {a3}"
+      and "e34 \<inter> e41 = {a4}" and "e41 \<inter> e12 = {a1}"
+      and "e13 \<inter> e12 = {a1}" and "e13 \<inter> e23 = {a3}"
+      and "e13 \<inter> e34 = {a3}" and "e13 \<inter> e41 = {a1}"
+      and "e13 \<inter> e24 \<subseteq> {a1,a2,a3,a4}"
+      and "e24 \<inter> e12 = {a2}" and "e24 \<inter> e23 = {a2}"
+      and "e24 \<inter> e34 = {a4}" and "e24 \<inter> e41 = {a4}"
+      and "p \<in> e13 - {a1, a3}" and "q \<in> e24 - {a2, a4}"
+      and "C = e12 \<union> e23 \<union> e34 \<union> e41"
+  shows "\<exists>x \<in> C. top1_group_iso_on
+    (top1_fundamental_group_carrier C
+       (subspace_topology top1_S2 top1_S2_topology C) x)
+    (top1_fundamental_group_mul C
+       (subspace_topology top1_S2 top1_S2_topology C) x)
+    (top1_fundamental_group_carrier (top1_S2 - {p} - {q})
+       (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p} - {q})) x)
+    (top1_fundamental_group_mul (top1_S2 - {p} - {q})
+       (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p} - {q})) x)
+    (top1_fundamental_group_induced_on C
+       (subspace_topology top1_S2 top1_S2_topology C) x
+       (top1_S2 - {p} - {q})
+       (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p} - {q})) x id)"
+  sorry \<comment> \<open>Same proof as Lemma\_65\_1\_fixed but at basepoint x from K4\_generator.
+     No basepoint change needed. Surjectivity + injectivity at x proved.\<close>
 
 section \<open>Theorem 65.2 (fixed): inclusion C \<hookrightarrow> S2-{p,q} induces iso (general SCC)\<close>
 
