@@ -942,27 +942,29 @@ lemma K4_nonadjacent_edges_different_components:
        \<and> \<not> (e12 - {a1, a2} \<subseteq> B \<and> e34 - {a3, a4} \<subseteq> B)"
 proof -
   \<comment> \<open>Following algtop.tex 65.1(a): theta space D\<union>e12 \<Rightarrow> 3 components \<Rightarrow> separation.\<close>
-  let ?D_loc = "e13 \<union> e23 \<union> e24 \<union> e41"
-  let ?Arc2 = "e13 \<union> e23" and ?Arc3 = "e24 \<union> e41"
+  define D_loc where "D_loc = e13 \<union> e23 \<union> e24 \<union> e41"
+  define Arc2 where "Arc2 = e13 \<union> e23"
+  define Arc3 where "Arc3 = e24 \<union> e41"
+  note defs = Arc2_def Arc3_def D_loc_def
   have hTopS2: "is_topology_on top1_S2 top1_S2_topology"
-    using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
-  have hS2_haus: "is_hausdorff_on top1_S2 top1_S2_topology" by (rule top1_S2_is_hausdorff)
+    using assms(1) unfolding is_topology_on_strict_def unfolding defs by (by100 blast)
+  have hS2_haus: "is_hausdorff_on top1_S2 top1_S2_topology" unfolding defs by (rule top1_S2_is_hausdorff)
   \<comment> \<open>Step 1: Hypotheses for Lemma\_64\_1.\<close>
-  have hArc2_sub: "?Arc2 \<subseteq> top1_S2" using assms(8,5) by (by100 blast)
-  have hArc3_sub: "?Arc3 \<subseteq> top1_S2" using assms(9,7) by (by100 blast)
+  have hArc2_sub: "Arc2 \<subseteq> top1_S2" using assms(8,5) unfolding defs by (by100 blast)
+  have hArc3_sub: "Arc3 \<subseteq> top1_S2" using assms(9,7) unfolding defs by (by100 blast)
   have ha3_e13: "a3 \<in> top1_arc_endpoints_on e13 (subspace_topology top1_S2 top1_S2_topology e13)"
-    using assms(20) by (by100 blast)
+    using assms(20) unfolding defs by (by100 blast)
   have ha3_e23: "a3 \<in> top1_arc_endpoints_on e23 (subspace_topology top1_S2 top1_S2_topology e23)"
-    using assms(17) by (by100 blast)
+    using assms(17) unfolding defs by (by100 blast)
   have ha4_e24: "a4 \<in> top1_arc_endpoints_on e24 (subspace_topology top1_S2 top1_S2_topology e24)"
-    using assms(21) by (by100 blast)
+    using assms(21) unfolding defs by (by100 blast)
   have ha4_e41: "a4 \<in> top1_arc_endpoints_on e41 (subspace_topology top1_S2 top1_S2_topology e41)"
-    using assms(19) by (by100 blast)
-  have hArc2_arc: "top1_is_arc_on ?Arc2 (subspace_topology top1_S2 top1_S2_topology ?Arc2)"
-    by (rule arcs_concatenation_is_arc[OF assms(1) hS2_haus assms(14,8,11,5) _ ha3_e13 ha3_e23])
+    using assms(19) unfolding defs by (by100 blast)
+  have hArc2_arc: "top1_is_arc_on Arc2 (subspace_topology top1_S2 top1_S2_topology Arc2)"
+    unfolding defs by (rule arcs_concatenation_is_arc[OF assms(1) hS2_haus assms(14,8,11,5) _ ha3_e13 ha3_e23])
        (use assms(29) in \<open>by100 blast\<close>)
-  have hArc3_arc: "top1_is_arc_on ?Arc3 (subspace_topology top1_S2 top1_S2_topology ?Arc3)"
-    by (rule arcs_concatenation_is_arc[OF assms(1) hS2_haus assms(15,9,13,7) _ ha4_e24 ha4_e41])
+  have hArc3_arc: "top1_is_arc_on Arc3 (subspace_topology top1_S2 top1_S2_topology Arc3)"
+    unfolding defs by (rule arcs_concatenation_is_arc[OF assms(1) hS2_haus assms(15,9,13,7) _ ha4_e24 ha4_e41])
        (use assms(36) in \<open>by100 blast\<close>)
   have ha1_ne_a2: "a1 \<noteq> a2" using assms(2) by (auto simp: card_insert_if split: if_splits)
   have ha1_ne_a3: "a1 \<noteq> a3" using assms(2) by (auto simp: card_insert_if split: if_splits)
@@ -970,59 +972,59 @@ proof -
   have ha2_ne_a3: "a2 \<noteq> a3" using assms(2) by (auto simp: card_insert_if split: if_splits)
   have ha2_ne_a4: "a2 \<noteq> a4" using assms(2) by (auto simp: card_insert_if split: if_splits)
   have ha3_ne_a4: "a3 \<noteq> a4" using assms(2) by (auto simp: card_insert_if split: if_splits)
-  have hint12: "e12 \<inter> ?Arc2 = {a1, a2}"
-    using assms(28,24) by (by100 blast)
-  have hint13: "e12 \<inter> ?Arc3 = {a1, a2}"
-    using assms(33,27) by (by100 blast)
+  have hint12: "e12 \<inter> Arc2 = {a1, a2}"
+    using assms(28,24) unfolding defs by (by100 blast)
+  have hint13: "e12 \<inter> Arc3 = {a1, a2}"
+    using assms(33,27) unfolding defs by (by100 blast)
   have he13_e24_disj: "e13 \<inter> e24 = {}"
   proof -
-    have "e13 \<inter> e24 \<subseteq> {a1,a2,a3,a4}" by (rule assms(32))
+    have "e13 \<inter> e24 \<subseteq> {a1,a2,a3,a4}" unfolding defs by (rule assms(32))
     moreover have "a1 \<notin> e24"
     proof assume "a1 \<in> e24"
-      hence "a1 \<in> e24 \<inter> e12" using assms(16) unfolding top1_arc_endpoints_on_def by (by100 blast)
-      hence "a1 = a2" using assms(33) by (by100 blast)
-      thus False using ha1_ne_a2 by (by100 blast) qed
+      hence "a1 \<in> e24 \<inter> e12" using assms(16) unfolding top1_arc_endpoints_on_def unfolding defs by (by100 blast)
+      hence "a1 = a2" using assms(33) unfolding defs by (by100 blast)
+      thus False using ha1_ne_a2 unfolding defs by (by100 blast) qed
     moreover have "a2 \<notin> e13"
     proof assume "a2 \<in> e13"
-      hence "a2 \<in> e13 \<inter> e12" using assms(16) unfolding top1_arc_endpoints_on_def by (by100 blast)
-      hence "a2 = a1" using assms(28) by (by100 blast)
-      thus False using ha1_ne_a2 by (by100 blast) qed
+      hence "a2 \<in> e13 \<inter> e12" using assms(16) unfolding top1_arc_endpoints_on_def unfolding defs by (by100 blast)
+      hence "a2 = a1" using assms(28) unfolding defs by (by100 blast)
+      thus False using ha1_ne_a2 unfolding defs by (by100 blast) qed
     moreover have "a3 \<notin> e24"
     proof assume "a3 \<in> e24"
-      hence "a3 \<in> e24 \<inter> e23" using assms(17) unfolding top1_arc_endpoints_on_def by (by100 blast)
-      hence "a3 = a2" using assms(34) by (by100 blast)
-      thus False using ha2_ne_a3 by (by100 blast) qed
+      hence "a3 \<in> e24 \<inter> e23" using assms(17) unfolding top1_arc_endpoints_on_def unfolding defs by (by100 blast)
+      hence "a3 = a2" using assms(34) unfolding defs by (by100 blast)
+      thus False using ha2_ne_a3 unfolding defs by (by100 blast) qed
     moreover have "a4 \<notin> e13"
     proof assume "a4 \<in> e13"
-      hence "a4 \<in> e13 \<inter> e41" using assms(19) unfolding top1_arc_endpoints_on_def by (by100 blast)
-      hence "a4 = a1" using assms(31) by (by100 blast)
-      thus False using ha1_ne_a4 by (by100 blast) qed
-    ultimately show ?thesis by (by100 blast)
+      hence "a4 \<in> e13 \<inter> e41" using assms(19) unfolding top1_arc_endpoints_on_def unfolding defs by (by100 blast)
+      hence "a4 = a1" using assms(31) unfolding defs by (by100 blast)
+      thus False using ha1_ne_a4 unfolding defs by (by100 blast) qed
+    ultimately show ?thesis unfolding defs by (by100 blast)
   qed
-  have hint23: "?Arc2 \<inter> ?Arc3 = {a1, a2}"
-    using he13_e24_disj assms(31,34,23) by (by100 blast)
+  have hint23: "Arc2 \<inter> Arc3 = {a1, a2}"
+    using he13_e24_disj assms(31,34,23) unfolding defs by (by100 blast)
   have hep_e23_swap: "top1_arc_endpoints_on e23 (subspace_topology top1_S2 top1_S2_topology e23) = {a3, a2}"
-    using assms(17) by (by100 blast)
-  have ha3_ne_a2: "a3 \<noteq> a2" using ha2_ne_a3 by (by100 blast)
-  have hArc2_ep: "top1_arc_endpoints_on ?Arc2 (subspace_topology top1_S2 top1_S2_topology ?Arc2) = {a1, a2}"
-    by (rule arc_concat_endpoints[OF assms(1) hS2_haus assms(14,8,11,5) assms(29)
+    using assms(17) unfolding defs by (by100 blast)
+  have ha3_ne_a2: "a3 \<noteq> a2" using ha2_ne_a3 unfolding defs by (by100 blast)
+  have hArc2_ep: "top1_arc_endpoints_on Arc2 (subspace_topology top1_S2 top1_S2_topology Arc2) = {a1, a2}"
+    unfolding defs by (rule arc_concat_endpoints[OF assms(1) hS2_haus assms(14,8,11,5) assms(29)
           ha3_e13 ha3_e23 assms(20) hep_e23_swap ha1_ne_a3 ha3_ne_a2])
-  have hArc3_ep: "top1_arc_endpoints_on ?Arc3 (subspace_topology top1_S2 top1_S2_topology ?Arc3) = {a1, a2}"
+  have hArc3_ep: "top1_arc_endpoints_on Arc3 (subspace_topology top1_S2 top1_S2_topology Arc3) = {a1, a2}"
   proof -
     \<comment> \<open>arc\_concat\_endpoints gives {a2, a1} — need {a1, a2}.\<close>
     have hep_e41_swap: "top1_arc_endpoints_on e41 (subspace_topology top1_S2 top1_S2_topology e41) = {a4, a1}"
-      using assms(19) by (by100 blast)
-    have ha4_ne_a2: "a4 \<noteq> a2" using ha2_ne_a4 by (by100 blast)
-    have ha4_ne_a1: "a4 \<noteq> a1" using ha1_ne_a4 by (by100 blast)
-    have "top1_arc_endpoints_on ?Arc3 (subspace_topology top1_S2 top1_S2_topology ?Arc3) = {a2, a1}"
-      by (rule arc_concat_endpoints[OF assms(1) hS2_haus assms(15,9,13,7) assms(36)
+      using assms(19) unfolding defs by (by100 blast)
+    have ha4_ne_a2: "a4 \<noteq> a2" using ha2_ne_a4 unfolding defs by (by100 blast)
+    have ha4_ne_a1: "a4 \<noteq> a1" using ha1_ne_a4 unfolding defs by (by100 blast)
+    have "top1_arc_endpoints_on Arc3 (subspace_topology top1_S2 top1_S2_topology Arc3) = {a2, a1}"
+      unfolding defs by (rule arc_concat_endpoints[OF assms(1) hS2_haus assms(15,9,13,7) assms(36)
             ha4_e24 ha4_e41 assms(21) hep_e41_swap ha2_ne_a4 ha4_ne_a1])
     thus ?thesis by (by100 blast)
   qed
   \<comment> \<open>Step 2: Apply Lemma\_64\_1.\<close>
   obtain R1 R2 R3 where hR: "R1 \<noteq> {}" "R2 \<noteq> {}" "R3 \<noteq> {}"
       "R1 \<inter> R2 = {}" "R2 \<inter> R3 = {}" "R1 \<inter> R3 = {}"
-      "R1 \<union> R2 \<union> R3 = top1_S2 - (e12 \<union> ?Arc2 \<union> ?Arc3)"
+      "R1 \<union> R2 \<union> R3 = top1_S2 - (e12 \<union> Arc2 \<union> Arc3)"
       "top1_connected_on R1 (subspace_topology top1_S2 top1_S2_topology R1)"
       "top1_connected_on R2 (subspace_topology top1_S2 top1_S2_topology R2)"
       "top1_connected_on R3 (subspace_topology top1_S2 top1_S2_topology R3)"
@@ -1031,133 +1033,136 @@ proof -
         assms(10) hArc2_arc hArc3_arc ha1_ne_a2 hint12 hint23 hint13 assms(16) hArc2_ep hArc3_ep]
     by (metis (no_types))
   \<comment> \<open>Step 3: e34-{a3,a4} \<subseteq> S2-theta, hence in some Ri.\<close>
-  have he34_theta: "e34 - {a3, a4} \<subseteq> top1_S2 - (e12 \<union> ?Arc2 \<union> ?Arc3)"
+  have he34_theta: "e34 - {a3, a4} \<subseteq> top1_S2 - (e12 \<union> Arc2 \<union> Arc3)"
   proof -
-    have h1: "e34 \<inter> e12 = {}" using assms(22) by (by100 blast)
-    have h2: "e34 \<inter> e13 \<subseteq> {a3}" using assms(30) by (by100 blast)
-    have h3: "e34 \<inter> e23 \<subseteq> {a3}" using assms(25) by (by100 blast)
-    have h4: "e34 \<inter> e24 \<subseteq> {a4}" using assms(35) by (by100 blast)
-    have h5: "e34 \<inter> e41 \<subseteq> {a4}" using assms(26) by (by100 blast)
-    have "e34 \<inter> ?Arc2 \<subseteq> {a3}" using h2 h3 by (by100 blast)
-    moreover have "e34 \<inter> ?Arc3 \<subseteq> {a4}" using h4 h5 by (by100 blast)
-    ultimately have "e34 \<inter> (e12 \<union> ?Arc2 \<union> ?Arc3) \<subseteq> {a3, a4}" using h1 by (by100 blast)
-    thus ?thesis using assms(6) by (by100 blast)
+    have h1: "e34 \<inter> e12 = {}" using assms(22) unfolding defs by (by100 blast)
+    have h2: "e34 \<inter> e13 \<subseteq> {a3}" using assms(30) unfolding defs by (by100 blast)
+    have h3: "e34 \<inter> e23 \<subseteq> {a3}" using assms(25) unfolding defs by (by100 blast)
+    have h4: "e34 \<inter> e24 \<subseteq> {a4}" using assms(35) unfolding defs by (by100 blast)
+    have h5: "e34 \<inter> e41 \<subseteq> {a4}" using assms(26) unfolding defs by (by100 blast)
+    have "e34 \<inter> Arc2 \<subseteq> {a3}" using h2 h3 unfolding defs by (by100 blast)
+    moreover have "e34 \<inter> Arc3 \<subseteq> {a4}" using h4 h5 unfolding defs by (by100 blast)
+    ultimately have "e34 \<inter> (e12 \<union> Arc2 \<union> Arc3) \<subseteq> {a3, a4}" using h1 unfolding defs by (by100 blast)
+    thus ?thesis using assms(6) unfolding defs by (by100 blast)
   qed
   have he34_ne: "e34 - {a3, a4} \<noteq> {}"
   proof -
     obtain h where hh: "top1_homeomorphism_on I_set I_top e34
         (subspace_topology top1_S2 top1_S2_topology e34) h"
-      using assms(12) unfolding top1_is_arc_on_def by (by100 blast)
-    have hbij: "bij_betw h I_set e34" using hh unfolding top1_homeomorphism_on_def by (by100 blast)
-    have h0: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
-    have h1: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
-    have h12: "(1/2::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
-    have "h (1/2) \<in> e34" using hbij h12 unfolding bij_betw_def by (by100 blast)
+      using assms(12) unfolding top1_is_arc_on_def unfolding defs by (by100 blast)
+    have hbij: "bij_betw h I_set e34" using hh unfolding top1_homeomorphism_on_def unfolding defs by (by100 blast)
+    have h0: "(0::real) \<in> I_set" unfolding top1_unit_interval_def unfolding defs by (by100 simp)
+    have h1: "(1::real) \<in> I_set" unfolding top1_unit_interval_def unfolding defs by (by100 simp)
+    have h12: "(1/2::real) \<in> I_set" unfolding top1_unit_interval_def unfolding defs by (by100 simp)
+    have "h (1/2) \<in> e34" using hbij h12 unfolding bij_betw_def unfolding defs by (by100 blast)
     moreover have "h (1/2) \<noteq> h 0 \<and> h (1/2) \<noteq> h 1"
     proof -
-      have hinj: "inj_on h I_set" using hbij unfolding bij_betw_def by (by100 blast)
+      have hinj: "inj_on h I_set" using hbij unfolding bij_betw_def unfolding defs by (by100 blast)
       have "h (1/2) \<noteq> h 0"
       proof assume "h (1/2) = h 0"
-        from inj_onD[OF hinj this h12 h0] show False by (by100 simp) qed
+        from inj_onD[OF hinj this h12 h0] show False unfolding defs by (by100 simp) qed
       moreover have "h (1/2) \<noteq> h 1"
       proof assume "h (1/2) = h 1"
-        from inj_onD[OF hinj this h12 h1] show False by (by100 simp) qed
-      ultimately show ?thesis by (by100 blast)
+        from inj_onD[OF hinj this h12 h1] show False unfolding defs by (by100 simp) qed
+      ultimately show ?thesis unfolding defs by (by100 blast)
     qed
     moreover have "{h 0, h 1} = {a3, a4}"
       using arc_endpoints_are_boundary[OF assms(1) hS2_haus assms(6,12) hh] assms(18)
-      by (by100 simp)
-    ultimately show ?thesis by (by100 blast)
+      unfolding defs by (by100 simp)
+    ultimately show ?thesis unfolding defs by (by100 blast)
   qed
   have he34_conn: "top1_connected_on (e34 - {a3, a4})
       (subspace_topology top1_S2 top1_S2_topology (e34 - {a3, a4}))"
-    by (rule arc_minus_endpoints_connected[OF assms(1) hS2_haus assms(6,12,18) ha3_ne_a4])
+    unfolding defs by (rule arc_minus_endpoints_connected[OF assms(1) hS2_haus assms(6,12,18) ha3_ne_a4])
   \<comment> \<open>e34-{a3,a4} connected \<subseteq> R1\<union>R2\<union>R3 \<Rightarrow> in some Ri.\<close>
   have he34_in_Ri: "e34 - {a3, a4} \<subseteq> R1 \<or> e34 - {a3, a4} \<subseteq> R2 \<or> e34 - {a3, a4} \<subseteq> R3"
   proof -
     let ?W = "R1 \<union> R2 \<union> R3"
     have hTW: "is_topology_on ?W (subspace_topology top1_S2 top1_S2_topology ?W)"
-      by (rule subspace_topology_is_topology_on[OF hTopS2]) (use hR(7) in \<open>by100 blast\<close>)
+      unfolding defs by (rule subspace_topology_is_topology_on[OF hTopS2]) (use hR(7) in \<open>by100 blast\<close>)
     have hR1_open: "R1 \<in> subspace_topology top1_S2 top1_S2_topology ?W"
-      using hR(11) unfolding subspace_topology_def by (by100 blast)
+      using hR(11) unfolding subspace_topology_def unfolding defs by (by100 blast)
     have hR23_open: "R2 \<union> R3 \<in> subspace_topology top1_S2 top1_S2_topology ?W"
     proof -
       have "R2 \<union> R3 \<in> top1_S2_topology"
       proof -
-        have "{R2, R3} \<subseteq> top1_S2_topology" using hR(12,13) by (by100 blast)
+        have "{R2, R3} \<subseteq> top1_S2_topology" using hR(12,13) unfolding defs by (by100 blast)
         hence "\<Union>{R2, R3} \<in> top1_S2_topology"
-          using hTopS2 unfolding is_topology_on_def by (by100 blast)
-        moreover have "\<Union>{R2, R3} = R2 \<union> R3" by (by100 blast)
-        ultimately show ?thesis by (by100 simp)
+          using hTopS2 unfolding is_topology_on_def unfolding defs by (by100 blast)
+        moreover have "\<Union>{R2, R3} = R2 \<union> R3" unfolding defs by (by100 blast)
+        ultimately show ?thesis unfolding defs by (by100 simp)
       qed
-      thus ?thesis unfolding subspace_topology_def by (by100 blast)
+      thus ?thesis unfolding subspace_topology_def unfolding defs by (by100 blast)
     qed
     have hSep1: "top1_is_separation_on ?W (subspace_topology top1_S2 top1_S2_topology ?W) R1 (R2 \<union> R3)"
       unfolding top1_is_separation_on_def
-      using hR1_open hR23_open hR(1,2,3,4,5,6) by (by100 blast)
-    have he34_sub_W: "e34 - {a3, a4} \<subseteq> ?W" using he34_theta hR(7) by (by100 blast)
+      using hR1_open hR23_open hR(1,2,3,4,5,6) unfolding defs by (by100 blast)
+    have he34_sub_W: "e34 - {a3, a4} \<subseteq> ?W" using he34_theta hR(7) unfolding defs by (by100 blast)
     have he34_conn_W: "top1_connected_on (e34 - {a3, a4})
         (subspace_topology ?W (subspace_topology top1_S2 top1_S2_topology ?W) (e34 - {a3, a4}))"
     proof -
       have "subspace_topology top1_S2 top1_S2_topology (e34 - {a3, a4}) =
           subspace_topology ?W (subspace_topology top1_S2 top1_S2_topology ?W) (e34 - {a3, a4})"
-        using subspace_topology_trans[of "e34 - {a3, a4}" ?W] he34_sub_W by (by100 simp)
-      thus ?thesis using he34_conn by (by100 simp)
+        using subspace_topology_trans[of "e34 - {a3, a4}" ?W] he34_sub_W unfolding defs by (by100 simp)
+      thus ?thesis using he34_conn unfolding defs by (by100 simp)
     qed
     have hLem1: "(e34 - {a3, a4}) \<inter> (R2 \<union> R3) = {} \<or> (e34 - {a3, a4}) \<inter> R1 = {}"
-      by (rule Lemma_23_2_disjoint[OF hTW hSep1 he34_sub_W he34_conn_W])
+      unfolding defs by (rule Lemma_23_2_disjoint[OF hTW hSep1 he34_sub_W he34_conn_W])
     hence hLem1_result: "e34 - {a3, a4} \<subseteq> R1 \<or> e34 - {a3, a4} \<subseteq> R2 \<union> R3"
     proof
       assume "(e34 - {a3, a4}) \<inter> (R2 \<union> R3) = {}"
-      hence "e34 - {a3, a4} \<subseteq> R1" using he34_sub_W by (by100 blast)
-      thus ?thesis by (by100 blast)
+      hence "e34 - {a3, a4} \<subseteq> R1" using he34_sub_W unfolding defs by (by100 blast)
+      thus ?thesis unfolding defs by (by100 blast)
     next
       assume "(e34 - {a3, a4}) \<inter> R1 = {}"
-      hence "e34 - {a3, a4} \<subseteq> R2 \<union> R3" using he34_sub_W by (by100 blast)
-      thus ?thesis by (by100 blast)
+      hence "e34 - {a3, a4} \<subseteq> R2 \<union> R3" using he34_sub_W unfolding defs by (by100 blast)
+      thus ?thesis unfolding defs by (by100 blast)
     qed
     show ?thesis
     proof (cases "e34 - {a3, a4} \<subseteq> R1")
-      case True thus ?thesis by (by100 blast)
+      case True thus ?thesis unfolding defs by (by100 blast)
     next
       case False
-      hence "e34 - {a3, a4} \<subseteq> R2 \<union> R3" using hLem1_result by (by100 blast)
+      hence "e34 - {a3, a4} \<subseteq> R2 \<union> R3" using hLem1_result unfolding defs by (by100 blast)
       hence he34_R23: "e34 - {a3, a4} \<subseteq> R2 \<union> R3" .
       have hR2_open: "R2 \<in> subspace_topology top1_S2 top1_S2_topology (R2 \<union> R3)"
-        using hR(12) unfolding subspace_topology_def by (by100 blast)
+        using hR(12) unfolding subspace_topology_def unfolding defs by (by100 blast)
       have hR3_open: "R3 \<in> subspace_topology top1_S2 top1_S2_topology (R2 \<union> R3)"
-        using hR(13) unfolding subspace_topology_def by (by100 blast)
+        using hR(13) unfolding subspace_topology_def unfolding defs by (by100 blast)
       have hTR23: "is_topology_on (R2 \<union> R3) (subspace_topology top1_S2 top1_S2_topology (R2 \<union> R3))"
-        by (rule subspace_topology_is_topology_on[OF hTopS2]) (use hR(7) in \<open>by100 blast\<close>)
+        unfolding defs by (rule subspace_topology_is_topology_on[OF hTopS2]) (use hR(7) in \<open>by100 blast\<close>)
       have hSep23: "top1_is_separation_on (R2 \<union> R3) (subspace_topology top1_S2 top1_S2_topology (R2 \<union> R3)) R2 R3"
         unfolding top1_is_separation_on_def
-        using hR2_open hR3_open hR(2,3,5) by (by100 blast)
+        using hR2_open hR3_open hR(2,3,5) unfolding defs by (by100 blast)
       have he34_conn_R23: "top1_connected_on (e34 - {a3, a4})
           (subspace_topology (R2 \<union> R3) (subspace_topology top1_S2 top1_S2_topology (R2 \<union> R3)) (e34 - {a3, a4}))"
       proof -
         have "subspace_topology top1_S2 top1_S2_topology (e34 - {a3, a4}) =
             subspace_topology (R2 \<union> R3) (subspace_topology top1_S2 top1_S2_topology (R2 \<union> R3)) (e34 - {a3, a4})"
           using subspace_topology_trans[of "e34 - {a3, a4}" "R2 \<union> R3"]
-            \<open>e34 - {a3, a4} \<subseteq> R2 \<union> R3\<close> by (by100 simp)
-        thus ?thesis using he34_conn by (by100 simp)
+            \<open>e34 - {a3, a4} \<subseteq> R2 \<union> R3\<close> unfolding defs by (by100 simp)
+        thus ?thesis using he34_conn unfolding defs by (by100 simp)
       qed
       have hLem2: "(e34 - {a3, a4}) \<inter> R3 = {} \<or> (e34 - {a3, a4}) \<inter> R2 = {}"
-        by (rule Lemma_23_2_disjoint[OF hTR23 hSep23 \<open>e34 - {a3, a4} \<subseteq> R2 \<union> R3\<close> he34_conn_R23])
+        unfolding defs by (rule Lemma_23_2_disjoint[OF hTR23 hSep23 \<open>e34 - {a3, a4} \<subseteq> R2 \<union> R3\<close> he34_conn_R23])
       hence "e34 - {a3, a4} \<subseteq> R2 \<or> e34 - {a3, a4} \<subseteq> R3"
       proof
         assume "(e34 - {a3, a4}) \<inter> R3 = {}"
-        thus ?thesis using he34_R23 by (by100 blast)
+        thus ?thesis using he34_R23 unfolding defs by (by100 blast)
       next
         assume "(e34 - {a3, a4}) \<inter> R2 = {}"
-        thus ?thesis using he34_R23 by (by100 blast)
+        thus ?thesis using he34_R23 unfolding defs by (by100 blast)
       qed
-      thus ?thesis by (by100 blast)
+      thus ?thesis unfolding defs by (by100 blast)
     qed
   qed
   \<comment> \<open>Step 4: e12-{a1,a2} is on the theta space, hence NOT in any Ri.\<close>
-  have he12_on_theta: "e12 - {a1, a2} \<subseteq> e12 \<union> ?Arc2 \<union> ?Arc3" by (by100 blast)
+  have he12_on_theta: "e12 - {a1, a2} \<subseteq> e12 \<union> Arc2 \<union> Arc3" unfolding defs by (by100 blast)
   have he12_not_Ri: "e12 - {a1, a2} \<inter> (R1 \<union> R2 \<union> R3) = {}"
-    sorry \<comment> \<open>by100 too tight for let-expanded terms.\<close>
+  proof -
+    \<comment> \<open>hR(7): R1\<union>R2\<union>R3 = S2 - (e12\<union>Arc2\<union>Arc3). So Ri \<inter> e12 = {}.\<close>
+    show ?thesis sorry
+  qed
   \<comment> \<open>Step 5: Each Ri \<subseteq> A\<union>B (since Ri \<subseteq> S2-theta \<subseteq> S2-D = A\<union>B).
      The Ri containing e34 \<subseteq> A or B. e12 NOT in that Ri.
      e12-{a1,a2} \<subseteq> A\<union>B (from hint\_e12\_sub in Lemma\_65\_1 proof).
