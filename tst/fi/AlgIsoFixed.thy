@@ -1121,7 +1121,24 @@ proof -
      Construct \<alpha>*\<beta> loop in C that generates \<pi>_1(X) via Theorem 63.1.
      j\_*([a*b]\_C) = [a*b]\_X = generator. Generator hit \<Rightarrow> surjective.\<close>
   have hj_star_surj: "?j_star ` (top1_fundamental_group_carrier C ?TC c0) =
-      top1_fundamental_group_carrier ?X ?TX c0" sorry
+      top1_fundamental_group_carrier ?X ?TX c0"
+  proof -
+    \<comment> \<open>Textbook 65.1(b): Construct \<alpha>*\<beta> loop in C that generates \<pi>_1(X).
+       Since \<alpha>*\<beta> \<in> C: j\_*([a*b]\_C) = [a*b]\_X = generator.
+       Every element of \<pi>_1(X) is a power of the generator = j\_*(power in \<pi>_1(C)).
+       Hence j\_* is surjective.\<close>
+    \<comment> \<open>Step A: There exists a loop g in C, based at some point x \<in> C,
+       that generates \<pi>_1(X, x). (From Theorem 63.1 + K4 structure.)\<close>
+    have "\<exists>x \<in> C. \<exists>g. top1_is_loop_on ?X ?TX x g
+        \<and> top1_is_loop_on C ?TC x g
+        \<and> (\<forall>f. top1_is_loop_on ?X ?TX x f \<longrightarrow>
+            (\<exists>n::nat. top1_path_homotopic_on ?X ?TX x x f (top1_path_power g x n)
+              \<or> top1_path_homotopic_on ?X ?TX x x f (top1_path_power (top1_path_reverse g) x n)))"
+      sorry \<comment> \<open>From existing Lemma\_65\_1 proof: \<alpha>*\<beta> construction + Theorem\_63\_1\_b\_generation.\<close>
+    \<comment> \<open>Step B: Basepoint change from x to c0 (both in C, which is path-connected).\<close>
+    \<comment> \<open>Step C: j\_* hits the generator class \<Rightarrow> surjective.\<close>
+    show ?thesis sorry
+  qed
   \<comment> \<open>Step 5: Surjective hom Z \<rightarrow> Z is injective (hence bijective).\<close>
   have hj_star_inj: "inj_on ?j_star (top1_fundamental_group_carrier C ?TC c0)" sorry
   \<comment> \<open>Combine.\<close>
