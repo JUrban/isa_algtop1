@@ -1196,12 +1196,153 @@ proof -
      e12 = e12a \<union> e12b, e12a \<inter> e12b = {x}. Removing x disconnects e12
      (e12a-{x} and e12b-{x} are nonempty disjoint clopen pieces).
      Since endpoints = {p | A-{p} connected}, x is not an endpoint.\<close>
+  \<comment> \<open>Helper: arcs have \<ge> 2 points (bijective image of [0,1]).\<close>
+  {
+    fix A :: "(real \<times> real \<times> real) set" and TA and z
+    assume harc: "top1_is_arc_on A TA"
+    then obtain hf where hhf: "top1_homeomorphism_on I_set I_top A TA hf"
+      unfolding top1_is_arc_on_def by (by100 blast)
+    have hbij: "bij_betw hf I_set A"
+      using hhf unfolding top1_homeomorphism_on_def by (by100 blast)
+    have h0_I: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+    have h1_I: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+    have "hf 0 \<in> A" using hbij h0_I unfolding bij_betw_def by (by100 blast)
+    moreover have "hf 1 \<in> A" using hbij h1_I unfolding bij_betw_def by (by100 blast)
+    moreover have "hf 0 \<noteq> hf 1"
+    proof -
+      have "inj_on hf I_set" using hbij unfolding bij_betw_def by (by100 blast)
+      thus ?thesis using h0_I h1_I unfolding inj_on_def by (by100 fastforce)
+    qed
+    ultimately have "A \<noteq> {z}" by (by100 fastforce)
+  } note arc_not_singleton = this
   have hx_not_endpts: "x \<noteq> a1 \<and> x \<noteq> a2"
-    sorry \<comment> \<open>x is interior point of e12. e12 = e12a \<union> e12b with e12a \<inter> e12b = {x}.
-       Each sub-arc has \<ge> 2 points (homeo to [0,1]). So e12-{x} is disconnected.
-       Endpoints = points whose removal leaves connected. So x \<notin> endpoints = {a1, a2}.\<close>
+  proof (intro conjI notI)
+    \<comment> \<open>Key: if x were an endpoint, arc\_both\_endpoints\_in\_one\_part forces one sub-arc
+       to be a singleton, but arcs have \<ge> 2 points (homeomorphic to [0,1]).\<close>
+    have ha1_ne_a2: "a1 \<noteq> a2" using assms(2) by (auto simp: card_insert_if split: if_splits)
+    have ha2_e12: "a2 \<in> e12" using assms(16) unfolding top1_arc_endpoints_on_def by (by100 blast)
+    have ha1_e12: "a1 \<in> e12" using assms(16) unfolding top1_arc_endpoints_on_def by (by100 blast)
+    have he12a_sub: "e12a \<subseteq> top1_S2" using he12_eq assms(4) by (by100 blast)
+    have he12b_sub: "e12b \<subseteq> top1_S2" using he12_eq assms(4) by (by100 blast)
+    have he12a_conn: "top1_connected_on e12a (subspace_topology top1_S2 top1_S2_topology e12a)"
+      using arc_connected[OF he12a_arc] .
+    have he12b_conn: "top1_connected_on e12b (subspace_topology top1_S2 top1_S2_topology e12b)"
+      using arc_connected[OF he12b_arc] .
+    assume "x = a1"
+    hence ha1_e12a: "a1 \<in> e12a" and ha1_e12b: "a1 \<in> e12b"
+      using he12_meet by (by100 blast)+
+    have "a2 \<in> e12a \<or> a2 \<in> e12b" using ha2_e12 he12_eq by (by100 blast)
+    thus False
+    proof
+      assume "a2 \<in> e12a"
+      have "e12b = {x}"
+        by (rule arc_both_endpoints_in_one_part[OF assms(1) hS2_haus assms(4) assms(10)
+              he12_eq he12_meet he12a_conn he12a_sub assms(16) ha1_ne_a2 ha1_e12a \<open>a2 \<in> e12a\<close>])
+      thus False using arc_not_singleton[OF he12b_arc, of x] by (by100 simp)
+    next
+      assume "a2 \<in> e12b"
+      have he12_eq': "e12 = e12b \<union> e12a" using he12_eq by (by100 blast)
+      have he12_meet': "e12b \<inter> e12a = {x}" using he12_meet by (by100 blast)
+      have "e12a = {x}"
+        by (rule arc_both_endpoints_in_one_part[OF assms(1) hS2_haus assms(4) assms(10)
+              he12_eq' he12_meet' he12b_conn he12b_sub assms(16) ha1_ne_a2 ha1_e12b \<open>a2 \<in> e12b\<close>])
+      thus False using arc_not_singleton[OF he12a_arc, of x] by (by100 simp)
+    qed
+  next
+    assume "x = a2"
+    have ha1_ne_a2: "a1 \<noteq> a2" using assms(2) by (auto simp: card_insert_if split: if_splits)
+    have ha2_e12a: "a2 \<in> e12a" and ha2_e12b: "a2 \<in> e12b"
+      using \<open>x = a2\<close> he12_meet by (by100 blast)+
+    have ha1_e12: "a1 \<in> e12" using assms(16) unfolding top1_arc_endpoints_on_def by (by100 blast)
+    have he12a_sub: "e12a \<subseteq> top1_S2" using he12_eq assms(4) by (by100 blast)
+    have he12b_sub: "e12b \<subseteq> top1_S2" using he12_eq assms(4) by (by100 blast)
+    have he12a_conn: "top1_connected_on e12a (subspace_topology top1_S2 top1_S2_topology e12a)"
+      using arc_connected[OF he12a_arc] .
+    have he12b_conn: "top1_connected_on e12b (subspace_topology top1_S2 top1_S2_topology e12b)"
+      using arc_connected[OF he12b_arc] .
+    have "a1 \<in> e12a \<or> a1 \<in> e12b" using ha1_e12 he12_eq by (by100 blast)
+    thus False
+    proof
+      assume "a1 \<in> e12a"
+      have he12_eq': "e12 = e12a \<union> e12b" using he12_eq by (by100 blast)
+      have he12_meet': "e12a \<inter> e12b = {x}" using he12_meet by (by100 blast)
+      have "e12b = {x}"
+        by (rule arc_both_endpoints_in_one_part[OF assms(1) hS2_haus assms(4) assms(10)
+              he12_eq' he12_meet' he12a_conn he12a_sub assms(16) ha1_ne_a2 \<open>a1 \<in> e12a\<close> ha2_e12a])
+      thus False using arc_not_singleton[OF he12b_arc, of x] by (by100 simp)
+    next
+      assume "a1 \<in> e12b"
+      have he12_eq': "e12 = e12b \<union> e12a" using he12_eq by (by100 blast)
+      have he12_meet': "e12b \<inter> e12a = {x}" using he12_meet by (by100 blast)
+      have "e12a = {x}"
+        by (rule arc_both_endpoints_in_one_part[OF assms(1) hS2_haus assms(4) assms(10)
+              he12_eq' he12_meet' he12b_conn he12b_sub assms(16) ha1_ne_a2 \<open>a1 \<in> e12b\<close> ha2_e12b])
+      thus False using arc_not_singleton[OF he12a_arc, of x] by (by100 simp)
+    qed
+  qed
   have hy_not_endpts: "y \<noteq> a3 \<and> y \<noteq> a4"
-    sorry \<comment> \<open>Same argument for y in e34.\<close>
+  proof (intro conjI notI)
+    have ha3_ne_a4: "a3 \<noteq> a4" using assms(2) by (auto simp: card_insert_if split: if_splits)
+    have ha4_e34: "a4 \<in> e34" using assms(18) unfolding top1_arc_endpoints_on_def by (by100 blast)
+    have ha3_e34: "a3 \<in> e34" using assms(18) unfolding top1_arc_endpoints_on_def by (by100 blast)
+    have he34a_sub: "e34a \<subseteq> top1_S2" using he34_eq assms(6) by (by100 blast)
+    have he34b_sub: "e34b \<subseteq> top1_S2" using he34_eq assms(6) by (by100 blast)
+    have he34a_conn: "top1_connected_on e34a (subspace_topology top1_S2 top1_S2_topology e34a)"
+      using arc_connected[OF he34a_arc] .
+    have he34b_conn: "top1_connected_on e34b (subspace_topology top1_S2 top1_S2_topology e34b)"
+      using arc_connected[OF he34b_arc] .
+    assume "y = a3"
+    hence ha3_e34a: "a3 \<in> e34a" and ha3_e34b: "a3 \<in> e34b"
+      using he34_meet by (by100 blast)+
+    have "a4 \<in> e34a \<or> a4 \<in> e34b" using ha4_e34 he34_eq by (by100 blast)
+    thus False
+    proof
+      assume "a4 \<in> e34a"
+      have "e34b = {y}"
+        by (rule arc_both_endpoints_in_one_part[OF assms(1) hS2_haus assms(6) assms(12)
+              he34_eq he34_meet he34a_conn he34a_sub assms(18) ha3_ne_a4 ha3_e34a \<open>a4 \<in> e34a\<close>])
+      thus False using arc_not_singleton[OF he34b_arc, of y] by (by100 simp)
+    next
+      assume "a4 \<in> e34b"
+      have he34_eq': "e34 = e34b \<union> e34a" using he34_eq by (by100 blast)
+      have he34_meet': "e34b \<inter> e34a = {y}" using he34_meet by (by100 blast)
+      have "e34a = {y}"
+        by (rule arc_both_endpoints_in_one_part[OF assms(1) hS2_haus assms(6) assms(12)
+              he34_eq' he34_meet' he34b_conn he34b_sub assms(18) ha3_ne_a4 ha3_e34b \<open>a4 \<in> e34b\<close>])
+      thus False using arc_not_singleton[OF he34a_arc, of y] by (by100 simp)
+    qed
+  next
+    assume "y = a4"
+    have ha3_ne_a4: "a3 \<noteq> a4" using assms(2) by (auto simp: card_insert_if split: if_splits)
+    have ha4_e34a: "a4 \<in> e34a" and ha4_e34b: "a4 \<in> e34b"
+      using \<open>y = a4\<close> he34_meet by (by100 blast)+
+    have ha3_e34: "a3 \<in> e34" using assms(18) unfolding top1_arc_endpoints_on_def by (by100 blast)
+    have he34a_sub: "e34a \<subseteq> top1_S2" using he34_eq assms(6) by (by100 blast)
+    have he34b_sub: "e34b \<subseteq> top1_S2" using he34_eq assms(6) by (by100 blast)
+    have he34a_conn: "top1_connected_on e34a (subspace_topology top1_S2 top1_S2_topology e34a)"
+      using arc_connected[OF he34a_arc] .
+    have he34b_conn: "top1_connected_on e34b (subspace_topology top1_S2 top1_S2_topology e34b)"
+      using arc_connected[OF he34b_arc] .
+    have "a3 \<in> e34a \<or> a3 \<in> e34b" using ha3_e34 he34_eq by (by100 blast)
+    thus False
+    proof
+      assume "a3 \<in> e34a"
+      have he34_eq': "e34 = e34a \<union> e34b" using he34_eq by (by100 blast)
+      have he34_meet': "e34a \<inter> e34b = {y}" using he34_meet by (by100 blast)
+      have "e34b = {y}"
+        by (rule arc_both_endpoints_in_one_part[OF assms(1) hS2_haus assms(6) assms(12)
+              he34_eq' he34_meet' he34a_conn he34a_sub assms(18) ha3_ne_a4 \<open>a3 \<in> e34a\<close> ha4_e34a])
+      thus False using arc_not_singleton[OF he34b_arc, of y] by (by100 simp)
+    next
+      assume "a3 \<in> e34b"
+      have he34_eq': "e34 = e34b \<union> e34a" using he34_eq by (by100 blast)
+      have he34_meet': "e34b \<inter> e34a = {y}" using he34_meet by (by100 blast)
+      have "e34a = {y}"
+        by (rule arc_both_endpoints_in_one_part[OF assms(1) hS2_haus assms(6) assms(12)
+              he34_eq' he34_meet' he34b_conn he34b_sub assms(18) ha3_ne_a4 \<open>a3 \<in> e34b\<close> ha4_e34b])
+      thus False using arc_not_singleton[OF he34a_arc, of y] by (by100 simp)
+    qed
+  qed
   \<comment> \<open>Step B3: C - D1 is path-connected and contains x, y.
      C - D1 = (e12-{a2}) \<union> e41 \<union> (e34-{a3}). Connected chain via a1, a4.
      x \<in> e12-{a2} (x interior), y \<in> e34-{a3} (y interior).
@@ -1849,48 +1990,11 @@ proof -
   have hW_sub: "top1_S2 - (?D1 \<union> ?D2) \<subseteq> top1_S2" by (by100 blast)
   have hW_not_conn: "\<not> top1_connected_on (top1_S2 - (?D1 \<union> ?D2))
       (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?D1 \<union> ?D2)))"
-  proof
-    assume hconn: "top1_connected_on (top1_S2 - (?D1 \<union> ?D2))
-        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?D1 \<union> ?D2)))"
-    \<comment> \<open>U0 and V0 are open in the subspace topology of W = S2-(D1\<union>D2).\<close>
-    let ?TW = "subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?D1 \<union> ?D2))"
-    have hU0_open_s: "U0 \<in> top1_S2_topology"
-    proof (rule S2_component_of_open_subset_is_open[OF hW_open hW_sub])
-      show "U0 \<subseteq> top1_S2 - (?D1 \<union> ?D2)" using hUV0(4) by (by100 blast)
-      show "U0 \<noteq> {}" by (rule hUV0(1))
-      show "top1_connected_on U0 (subspace_topology top1_S2 top1_S2_topology U0)" by (rule hUV0(5))
-      fix Q assume "Q \<subseteq> top1_S2 - (?D1 \<union> ?D2)" "U0 \<subseteq> Q"
-          "top1_connected_on Q (subspace_topology top1_S2 top1_S2_topology Q)"
-      hence "Q \<inter> V0 = {}" using hUV0(3,4,6) sorry \<comment> \<open>Q connected, U0 \<subseteq> Q, Q \<subseteq> U0\<union>V0, U0\<inter>V0={}.\<close>
-      thus "Q = U0" using \<open>Q \<subseteq> top1_S2 - (?D1 \<union> ?D2)\<close> \<open>U0 \<subseteq> Q\<close> hUV0(4) by (by100 blast)
-    qed
-    have hV0_open_s: "V0 \<in> top1_S2_topology"
-    proof (rule S2_component_of_open_subset_is_open[OF hW_open hW_sub])
-      show "V0 \<subseteq> top1_S2 - (?D1 \<union> ?D2)" using hUV0(4) by (by100 blast)
-      show "V0 \<noteq> {}" by (rule hUV0(2))
-      show "top1_connected_on V0 (subspace_topology top1_S2 top1_S2_topology V0)" by (rule hUV0(6))
-      fix Q assume "Q \<subseteq> top1_S2 - (?D1 \<union> ?D2)" "V0 \<subseteq> Q"
-          "top1_connected_on Q (subspace_topology top1_S2 top1_S2_topology Q)"
-      hence "Q \<inter> U0 = {}" using hUV0(3,4,5) sorry \<comment> \<open>Same argument.\<close>
-      thus "Q = V0" using \<open>Q \<subseteq> top1_S2 - (?D1 \<union> ?D2)\<close> \<open>V0 \<subseteq> Q\<close> hUV0(4) by (by100 blast)
-    qed
-    have "U0 \<in> ?TW"
-    proof -
-      have "U0 \<subseteq> top1_S2 - (?D1 \<union> ?D2)" using hUV0(4) by (by100 blast)
-      hence "U0 = U0 \<inter> (top1_S2 - (?D1 \<union> ?D2))" by (by100 blast)
-      thus ?thesis using hU0_open_s unfolding subspace_topology_def by (by100 blast)
-    qed
-    moreover have "V0 \<in> ?TW"
-    proof -
-      have "V0 \<subseteq> top1_S2 - (?D1 \<union> ?D2)" using hUV0(4) by (by100 blast)
-      hence "V0 = V0 \<inter> (top1_S2 - (?D1 \<union> ?D2))" by (by100 blast)
-      thus ?thesis using hV0_open_s unfolding subspace_topology_def by (by100 blast)
-    qed
-    moreover have "U0 \<noteq> {}" "V0 \<noteq> {}" "U0 \<inter> V0 = {}" "U0 \<union> V0 = top1_S2 - (?D1 \<union> ?D2)"
-      using hUV0(1,2,3,4) by (by100 blast)+
-    ultimately have "\<exists>U V. U \<in> ?TW \<and> V \<in> ?TW \<and> U \<noteq> {} \<and> V \<noteq> {} \<and> U \<inter> V = {}
-        \<and> U \<union> V = top1_S2 - (?D1 \<union> ?D2)" by (by100 blast)
-    thus False using hconn unfolding top1_connected_on_def by (by100 blast)
+  proof -
+    have hsep: "top1_separates_on top1_S2 top1_S2_topology (?D1 \<union> ?D2)"
+      by (rule Theorem_61_4_general_separation[OF assms(1) hD1_sub_S2 hD2_sub_S2
+            hD1_closed hD2_closed hD1_conn hD2_conn hD1D2_card])
+    thus ?thesis unfolding top1_separates_on_def by (by100 simp)
   qed
   have "U0 \<in> top1_S2_topology" "V0 \<in> top1_S2_topology"
     using S2_two_component_open[OF hW_open hW_sub hUV0(1,2,3) hUV0(4) hUV0(5,6) hW_not_conn]
@@ -2091,9 +2195,54 @@ proof -
     define TR2_0 where "TR2_0 = subspace_topology UNIV
         (product_topology_on top1_open_sets top1_open_sets) R2_0"
     obtain h where hh_homeo: "top1_homeomorphism_on ?X ?TX R2_0 TR2_0 h"
-      sorry \<comment> \<open>From h\<sigma> (stereographic): restrict to S2-\{p,q\} \<rightarrow> R2-\{\<sigma>(q)\},
-         then translate by -\<sigma>(q) to get R2-\{0\}. Same as lines 2975-3370 of
-         pi1\_S2\_minus\_two\_points\_infinite\_cyclic.\<close>
+    proof -
+      \<comment> \<open>Restrict \<sigma> to S2-\{p,q\} \<rightarrow> R2-\{q'\}.\<close>
+      have hq_in: "q \<in> top1_S2 - {p}" using hq_S2 hp_ne_q by (by100 blast)
+      define R2_q' :: "(real \<times> real) set" where "R2_q' = UNIV - {q'}"
+      define TR2_q' where "TR2_q' = subspace_topology UNIV
+          (product_topology_on top1_open_sets top1_open_sets) R2_q'"
+      have h\<sigma>_restrict: "top1_homeomorphism_on ?X ?TX R2_q' TR2_q' \<sigma>"
+      proof -
+        have h_step: "top1_homeomorphism_on ((top1_S2 - {p}) - {q})
+            (subspace_topology (top1_S2 - {p}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p}))
+              ((top1_S2 - {p}) - {q}))
+            ((UNIV :: (real \<times> real) set) - {\<sigma> q})
+            (subspace_topology (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets)
+              (UNIV - {\<sigma> q})) \<sigma>"
+          by (rule homeomorphism_restrict_point[OF h\<sigma> hq_in])
+        have hX_eq: "(top1_S2 - {p}) - {q} = ?X" by (by100 blast)
+        have hTX_eq: "subspace_topology (top1_S2 - {p}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p}))
+            ((top1_S2 - {p}) - {q}) = ?TX"
+        proof -
+          have "?X \<subseteq> top1_S2 - {p}" by (by100 blast)
+          hence "subspace_topology (top1_S2 - {p}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p}))
+              ?X = subspace_topology top1_S2 top1_S2_topology ?X"
+            by (rule subspace_topology_trans)
+          moreover have "(top1_S2 - {p}) - {q} = ?X" by (by100 blast)
+          ultimately show ?thesis by simp
+        qed
+        have hY_eq: "(UNIV :: (real \<times> real) set) - {\<sigma> q} = R2_q'"
+          unfolding R2_q'_def q'_def by simp
+        have hTY_eq: "subspace_topology (UNIV :: (real \<times> real) set)
+            (product_topology_on top1_open_sets top1_open_sets) (UNIV - {\<sigma> q}) = TR2_q'"
+          unfolding TR2_q'_def R2_q'_def q'_def by simp
+        show ?thesis using h_step hX_eq hY_eq hTX_eq hTY_eq by simp
+      qed
+      \<comment> \<open>Translation t(x) = x - q' gives R2-\{q'\} \<cong> R2-\{0\}.\<close>
+      define t :: "real \<times> real \<Rightarrow> real \<times> real" where
+        "t = (\<lambda>(x, y). (x - fst q', y - snd q'))"
+      have ht_homeo: "top1_homeomorphism_on R2_q' TR2_q' R2_0 TR2_0 t"
+      proof -
+        have ht_eq: "t = (\<lambda>x. (fst x - fst q', snd x - snd q'))"
+          unfolding t_def by (rule ext) auto
+        show ?thesis unfolding R2_q'_def TR2_q'_def R2_0_def TR2_0_def ht_eq
+          by (rule translation_homeo_R2[of q'])
+      qed
+      \<comment> \<open>Compose: h = t \<circ> \<sigma>.\<close>
+      have "top1_homeomorphism_on ?X ?TX R2_0 TR2_0 (t \<circ> \<sigma>)"
+        by (rule homeomorphism_comp[OF h\<sigma>_restrict ht_homeo])
+      then show ?thesis by (rule that)
+    qed
     have hTR2: "is_topology_on R2_0 TR2_0"
       using hh_homeo unfolding top1_homeomorphism_on_def top1_continuous_map_on_def
         is_topology_on_def TR2_0_def by (by100 blast)
@@ -2126,10 +2275,24 @@ proof -
           (subspace_topology R2_0 TR2_0 top1_S1) (1, 0))
         (top1_fundamental_group_carrier R2_0 TR2_0 (1, 0))
         (top1_fundamental_group_mul R2_0 TR2_0 (1, 0))"
-      sorry \<comment> \<open>Theorem\_58\_3 + S1\_deformation\_retract\_B2\_minus\_zero (topology matching).\<close>
+      unfolding R2_0_def TR2_0_def by (rule Theorem_58_2_inclusion_iso)
     \<comment> \<open>Subspace topology S1 in R2-\{0\} = S1\_topology.\<close>
+    have hS1_sub_R2_0: "top1_S1 \<subseteq> R2_0"
+    proof -
+      have "(0::real, 0::real) \<notin> top1_S1" unfolding top1_S1_def by (by100 simp)
+      thus ?thesis unfolding R2_0_def by (by100 blast)
+    qed
     have hS1_sub: "subspace_topology R2_0 TR2_0 top1_S1 = top1_S1_topology"
-      sorry \<comment> \<open>S1 \<subseteq> R2-\{0\}, subspace of subspace = subspace of ambient.\<close>
+    proof -
+      have "subspace_topology R2_0 TR2_0 top1_S1 =
+          subspace_topology (UNIV :: (real \<times> real) set)
+            (product_topology_on top1_open_sets top1_open_sets) top1_S1"
+        unfolding TR2_0_def using subspace_topology_trans[of top1_S1 R2_0] hS1_sub_R2_0
+        by (by100 simp)
+      also have "... = top1_S1_topology"
+        unfolding top1_S1_topology_def by simp
+      finally show ?thesis .
+    qed
     have hiso_S1Z: "top1_groups_isomorphic_on
         (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
         (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))
@@ -2147,8 +2310,36 @@ proof -
         (top1_fundamental_group_mul R2_0 TR2_0 (1, 0))
         (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
         (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))"
-      sorry \<comment> \<open>Symmetry of hiso\_R2S1 after hS1\_sub substitution.
-         Needs top1\_groups\_isomorphic\_on\_sym + group facts.\<close>
+    proof -
+      have hiso_sub: "top1_groups_isomorphic_on
+          (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
+          (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))
+          (top1_fundamental_group_carrier R2_0 TR2_0 (1, 0))
+          (top1_fundamental_group_mul R2_0 TR2_0 (1, 0))"
+        using hiso_R2S1 hS1_sub by simp
+      show ?thesis
+      proof (rule top1_groups_isomorphic_on_sym[OF hiso_sub])
+        show "top1_is_group_on
+            (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
+            (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))
+            (top1_fundamental_group_id top1_S1 top1_S1_topology (1, 0))
+            (top1_fundamental_group_invg top1_S1 top1_S1_topology (1, 0))"
+        proof -
+          have hTS1: "is_topology_on top1_S1 top1_S1_topology"
+            using top1_S1_is_topology_on_strict unfolding is_topology_on_strict_def
+            by (by100 blast)
+          have h10_S1: "(1::real, 0::real) \<in> top1_S1"
+            unfolding top1_S1_def by (by100 simp)
+          show ?thesis by (rule top1_fundamental_group_is_group[OF hTS1 h10_S1])
+        qed
+        show "top1_is_group_on
+            (top1_fundamental_group_carrier R2_0 TR2_0 (1, 0))
+            (top1_fundamental_group_mul R2_0 TR2_0 (1, 0))
+            (top1_fundamental_group_id R2_0 TR2_0 (1, 0))
+            (top1_fundamental_group_invg R2_0 TR2_0 (1, 0))"
+          by (rule top1_fundamental_group_is_group[OF hTR2 h10_R2])
+      qed
+    qed
     have h_chain2: "top1_groups_isomorphic_on
         (top1_fundamental_group_carrier ?X ?TX c0)
         (top1_fundamental_group_mul ?X ?TX c0)
