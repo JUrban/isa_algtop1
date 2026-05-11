@@ -58712,6 +58712,45 @@ proof -
     using hx_in_C h\<alpha>\<beta>_loop h\<alpha>\<beta>_nontrivial by (by100 blast)
 qed
 
+(** Exported version of the internal hdiff fact from Lemma_65_1_K4_subgraph.
+    Non-adjacent edges e12, e34 of K4 have interiors in different components
+    of S2 minus the complementary 4-cycle e13∪e23∪e24∪e41. **)
+lemma K4_nonadjacent_edges_different_components:
+  fixes a1 a2 a3 a4 :: "real \<times> real \<times> real"
+    and e12 e23 e34 e41 e13 e24 :: "(real \<times> real \<times> real) set"
+  assumes "is_topology_on_strict top1_S2 top1_S2_topology"
+      and "card {a1, a2, a3, a4} = 4"
+      and "{a1, a2, a3, a4} \<subseteq> top1_S2"
+      and "e12 \<subseteq> top1_S2" and "e23 \<subseteq> top1_S2" and "e34 \<subseteq> top1_S2"
+      and "e41 \<subseteq> top1_S2" and "e13 \<subseteq> top1_S2" and "e24 \<subseteq> top1_S2"
+      and "top1_is_arc_on e12 (subspace_topology top1_S2 top1_S2_topology e12)"
+      and "top1_is_arc_on e23 (subspace_topology top1_S2 top1_S2_topology e23)"
+      and "top1_is_arc_on e34 (subspace_topology top1_S2 top1_S2_topology e34)"
+      and "top1_is_arc_on e41 (subspace_topology top1_S2 top1_S2_topology e41)"
+      and "top1_is_arc_on e13 (subspace_topology top1_S2 top1_S2_topology e13)"
+      and "top1_is_arc_on e24 (subspace_topology top1_S2 top1_S2_topology e24)"
+      and "top1_arc_endpoints_on e12 (subspace_topology top1_S2 top1_S2_topology e12) = {a1,a2}"
+      and "top1_arc_endpoints_on e23 (subspace_topology top1_S2 top1_S2_topology e23) = {a2,a3}"
+      and "top1_arc_endpoints_on e34 (subspace_topology top1_S2 top1_S2_topology e34) = {a3,a4}"
+      and "top1_arc_endpoints_on e41 (subspace_topology top1_S2 top1_S2_topology e41) = {a4,a1}"
+      and "top1_arc_endpoints_on e13 (subspace_topology top1_S2 top1_S2_topology e13) = {a1,a3}"
+      and "top1_arc_endpoints_on e24 (subspace_topology top1_S2 top1_S2_topology e24) = {a2,a4}"
+      and "e12 \<inter> e34 = {}" and "e23 \<inter> e41 = {}"
+      and "e12 \<inter> e23 = {a2}" and "e23 \<inter> e34 = {a3}"
+      and "e34 \<inter> e41 = {a4}" and "e41 \<inter> e12 = {a1}"
+      and "e13 \<inter> e12 = {a1}" and "e13 \<inter> e23 = {a3}"
+      and "e13 \<inter> e34 = {a3}" and "e13 \<inter> e41 = {a1}"
+      and "e13 \<inter> e24 \<subseteq> {a1,a2,a3,a4}"
+      and "e24 \<inter> e12 = {a2}" and "e24 \<inter> e23 = {a2}"
+      and "e24 \<inter> e34 = {a4}" and "e24 \<inter> e41 = {a4}"
+      and "A \<noteq> {}" and "B \<noteq> {}" and "A \<inter> B = {}"
+      and "A \<union> B = top1_S2 - (e13 \<union> e23 \<union> e24 \<union> e41)"
+      and "top1_connected_on A (subspace_topology top1_S2 top1_S2_topology A)"
+      and "top1_connected_on B (subspace_topology top1_S2 top1_S2_topology B)"
+  shows "\<not> (e12 - {a1, a2} \<subseteq> A \<and> e34 - {a3, a4} \<subseteq> A)
+       \<and> \<not> (e12 - {a1, a2} \<subseteq> B \<and> e34 - {a3, a4} \<subseteq> B)"
+  sorry
+
 text \<open>Helix shift: T(x,n) = (x, n+2*j) is continuous on E, for any j.\<close>
 lemma helix_shift_general_continuous:
   assumes "is_topology_on X TX"

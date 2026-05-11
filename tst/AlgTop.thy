@@ -901,46 +901,7 @@ proof -
     by (rule groups_isomorphic_trans_fwd[OF h1 h_pi1_S1_Z])
 qed
 
-(** from \<S>65 Lemma 65.1(a): non-adjacent edges of K_4 in S^2 have interiors in
-    different components of S^2 minus the complementary 4-cycle.
-    Duplicated from the internal hdiff fact in Lemma_65_1_K4_subgraph (AlgTopCached.thy). **)
-lemma K4_nonadjacent_edges_different_components:
-  fixes a1 a2 a3 a4 :: "real \<times> real \<times> real"
-    and e12 e23 e34 e41 e13 e24 :: "(real \<times> real \<times> real) set"
-  assumes "is_topology_on_strict top1_S2 top1_S2_topology"
-      and "card {a1, a2, a3, a4} = 4"
-      and "{a1, a2, a3, a4} \<subseteq> top1_S2"
-      and "e12 \<subseteq> top1_S2" and "e23 \<subseteq> top1_S2" and "e34 \<subseteq> top1_S2"
-      and "e41 \<subseteq> top1_S2" and "e13 \<subseteq> top1_S2" and "e24 \<subseteq> top1_S2"
-      and "top1_is_arc_on e12 (subspace_topology top1_S2 top1_S2_topology e12)"
-      and "top1_is_arc_on e23 (subspace_topology top1_S2 top1_S2_topology e23)"
-      and "top1_is_arc_on e34 (subspace_topology top1_S2 top1_S2_topology e34)"
-      and "top1_is_arc_on e41 (subspace_topology top1_S2 top1_S2_topology e41)"
-      and "top1_is_arc_on e13 (subspace_topology top1_S2 top1_S2_topology e13)"
-      and "top1_is_arc_on e24 (subspace_topology top1_S2 top1_S2_topology e24)"
-      and "top1_arc_endpoints_on e12 (subspace_topology top1_S2 top1_S2_topology e12) = {a1,a2}"
-      and "top1_arc_endpoints_on e23 (subspace_topology top1_S2 top1_S2_topology e23) = {a2,a3}"
-      and "top1_arc_endpoints_on e34 (subspace_topology top1_S2 top1_S2_topology e34) = {a3,a4}"
-      and "top1_arc_endpoints_on e41 (subspace_topology top1_S2 top1_S2_topology e41) = {a4,a1}"
-      and "top1_arc_endpoints_on e13 (subspace_topology top1_S2 top1_S2_topology e13) = {a1,a3}"
-      and "top1_arc_endpoints_on e24 (subspace_topology top1_S2 top1_S2_topology e24) = {a2,a4}"
-      and "e12 \<inter> e34 = {}" and "e23 \<inter> e41 = {}"
-      and "e12 \<inter> e23 = {a2}" and "e23 \<inter> e34 = {a3}"
-      and "e34 \<inter> e41 = {a4}" and "e41 \<inter> e12 = {a1}"
-      and "e13 \<inter> e12 = {a1}" and "e13 \<inter> e23 = {a3}"
-      and "e13 \<inter> e34 = {a3}" and "e13 \<inter> e41 = {a1}"
-      and "e13 \<inter> e24 \<subseteq> {a1,a2,a3,a4}"
-      and "e24 \<inter> e12 = {a2}" and "e24 \<inter> e23 = {a2}"
-      and "e24 \<inter> e34 = {a4}" and "e24 \<inter> e41 = {a4}"
-      \<comment> \<open>D = e13 \<union> e23 \<union> e24 \<union> e41 (the complementary 4-cycle).
-         A, B are the two components of S2-D.\<close>
-      and "A \<noteq> {}" and "B \<noteq> {}" and "A \<inter> B = {}"
-      and "A \<union> B = top1_S2 - (e13 \<union> e23 \<union> e24 \<union> e41)"
-      and "top1_connected_on A (subspace_topology top1_S2 top1_S2_topology A)"
-      and "top1_connected_on B (subspace_topology top1_S2 top1_S2_topology B)"
-  shows "\<not> (e12 - {a1, a2} \<subseteq> A \<and> e34 - {a3, a4} \<subseteq> A)
-       \<and> \<not> (e12 - {a1, a2} \<subseteq> B \<and> e34 - {a3, a4} \<subseteq> B)"
-  sorry \<comment> \<open>TODO: duplicate proof from AlgTopCached.thy lines 56316-58575.\<close>
+\<comment> \<open>K4\_nonadjacent\_edges\_different\_components is now in AlgTopCached.thy (imported via AlgTopC).\<close>
 
 (** from \<S>65 Lemma 65.1(b): for K_4 subspace of S^2, the inclusion j: C \<rightarrow> S^2-p-q
     induces an isomorphism of fundamental groups.
