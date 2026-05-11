@@ -1157,7 +1157,7 @@ proof -
   \<comment> \<open>Step 4: e12-{a1,a2} is on the theta space, hence NOT in any Ri.\<close>
   have he12_on_theta: "e12 - {a1, a2} \<subseteq> e12 \<union> ?Arc2 \<union> ?Arc3" by (by100 blast)
   have he12_not_Ri: "e12 - {a1, a2} \<inter> (R1 \<union> R2 \<union> R3) = {}"
-    sorry \<comment> \<open>e12 on theta, Ri=S2-theta. Trivial but by100 too tight on let-expanded terms.\<close>
+    sorry \<comment> \<open>by100 too tight for let-expanded terms.\<close>
   \<comment> \<open>Step 5: Each Ri \<subseteq> A\<union>B (since Ri \<subseteq> S2-theta \<subseteq> S2-D = A\<union>B).
      The Ri containing e34 \<subseteq> A or B. e12 NOT in that Ri.
      e12-{a1,a2} \<subseteq> A\<union>B (from hint\_e12\_sub in Lemma\_65\_1 proof).
