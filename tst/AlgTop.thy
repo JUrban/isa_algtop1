@@ -941,7 +941,7 @@ proof -
   \<comment> \<open>Step 4a (Munkres 65.1(b)): The loop \<alpha>*\<beta> from Lemma\_65\_1\_K4\_subgraph
      lies in C and is nontrivial in X. Following the textbook:
      - U = S2-D1, V = S2-D2 where D1, D2 are arcs
-     - Both U, V are simply connected (S2 minus arc, sorry'd)
+     - Both U, V are simply connected (not needed: Theorem\_63\_1\_b uses helix instead)
      - U \<inter> V = S2-D has two components (D = D1 \<union> D2 is simple closed curve, by JCT)
      - \<alpha> path x\<rightarrow>y in U, \<beta> path y\<rightarrow>x in V, with x, y in different components
      - By Theorem 63.1: [\<alpha>*\<beta>] nontrivial
