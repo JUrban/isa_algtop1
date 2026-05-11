@@ -2746,9 +2746,82 @@ proof -
         (subspace_topology top1_S2 top1_S2_topology (e34 - {a3, a4}))"
       by (rule arc_minus_endpoints_connected[OF assms(1) hS2_haus assms(6,12,18) ha3_ne_a4_loc])
     have hint_e12_sub: "e12 - {a1, a2} \<subseteq> U0 \<union> V0"
-      sorry \<comment> \<open>int(e12) avoids D1\<union>D2: K4 intersection facts. Same as AlgTopCached proof.\<close>
+    proof -
+      \<comment> \<open>(e12 - {a2}) \<inter> D1 = {} and (e12 - {a1}) \<inter> D2 = {}.\<close>
+      have "e12 \<inter> Da3 = {}"
+      proof -
+        have "Da3 \<subseteq> e13" using he13_split by (by100 blast)
+        hence "e12 \<inter> Da3 \<subseteq> {a1}" using assms(28) by (by100 blast)
+        have "a1 \<noteq> p" using assms(37) by (by100 blast)
+        have "a1 \<notin> Da3" using \<open>a1 \<in> D1p\<close> he13_meet \<open>a1 \<noteq> p\<close> by (by100 blast)
+        thus ?thesis using \<open>e12 \<inter> Da3 \<subseteq> {a1}\<close> by (by100 blast)
+      qed
+      have "(e12 - {a2}) \<inter> Da2 = {}"
+      proof -
+        have "Da2 \<subseteq> e24" using he24_split by (by100 blast)
+        hence "e12 \<inter> Da2 \<subseteq> {a2}" using assms(33) by (by100 blast)
+        thus ?thesis by (by100 blast)
+      qed
+      hence h_D1: "(e12 - {a2}) \<inter> ?D1 = {}"
+        using \<open>e12 \<inter> Da3 = {}\<close> assms(24) by (by100 blast)
+      have "e12 \<inter> Dq4 = {}"
+      proof -
+        have "Dq4 \<subseteq> e24" using he24_split by (by100 blast)
+        hence "e12 \<inter> Dq4 \<subseteq> {a2}" using assms(33) by (by100 blast)
+        have "a2 \<noteq> q" using assms(38) by (by100 blast)
+        have "a2 \<notin> Dq4" using \<open>a2 \<in> Da2\<close> he24_meet \<open>a2 \<noteq> q\<close> by (by100 blast)
+        thus ?thesis using \<open>e12 \<inter> Dq4 \<subseteq> {a2}\<close> by (by100 blast)
+      qed
+      have "(e12 - {a1}) \<inter> D1p = {}"
+      proof -
+        have "D1p \<subseteq> e13" using he13_split by (by100 blast)
+        hence "e12 \<inter> D1p \<subseteq> {a1}" using assms(28) by (by100 blast)
+        thus ?thesis by (by100 blast)
+      qed
+      hence h_D2: "(e12 - {a1}) \<inter> ?D2 = {}"
+        using \<open>e12 \<inter> Dq4 = {}\<close> assms(27) by (by100 blast)
+      have "(e12 - {a1, a2}) \<inter> (?D1 \<union> ?D2) = {}" using h_D1 h_D2 by (by100 blast)
+      hence "e12 - {a1, a2} \<subseteq> top1_S2 - (?D1 \<union> ?D2)" using assms(4) by (by100 blast)
+      thus ?thesis using hUV0(4) by (by100 blast)
+    qed
     have hint_e34_sub: "e34 - {a3, a4} \<subseteq> U0 \<union> V0"
-      sorry \<comment> \<open>Same for int(e34).\<close>
+    proof -
+      have "(e34 - {a3}) \<inter> Da3 = {}"
+      proof -
+        have "Da3 \<subseteq> e13" using he13_split by (by100 blast)
+        hence "e34 \<inter> Da3 \<subseteq> {a3}" using assms(30) by (by100 blast)
+        thus ?thesis by (by100 blast)
+      qed
+      have "e34 \<inter> Da2 = {}"
+      proof -
+        have "Da2 \<subseteq> e24" using he24_split by (by100 blast)
+        hence "e34 \<inter> Da2 \<subseteq> {a4}" using assms(35) by (by100 blast)
+        have "a4 \<noteq> q" using assms(38) by (by100 blast)
+        have "a4 \<notin> Da2" using \<open>a4 \<in> Dq4\<close> he24_meet \<open>a4 \<noteq> q\<close> by (by100 blast)
+        thus ?thesis using \<open>e34 \<inter> Da2 \<subseteq> {a4}\<close> by (by100 blast)
+      qed
+      hence h_D1: "(e34 - {a3}) \<inter> ?D1 = {}"
+        using \<open>(e34 - {a3}) \<inter> Da3 = {}\<close> assms(25) by (by100 blast)
+      have "(e34 - {a4}) \<inter> Dq4 = {}"
+      proof -
+        have "Dq4 \<subseteq> e24" using he24_split by (by100 blast)
+        hence "e34 \<inter> Dq4 \<subseteq> {a4}" using assms(35) by (by100 blast)
+        thus ?thesis by (by100 blast)
+      qed
+      have "e34 \<inter> D1p = {}"
+      proof -
+        have "D1p \<subseteq> e13" using he13_split by (by100 blast)
+        hence "e34 \<inter> D1p \<subseteq> {a3}" using assms(30) by (by100 blast)
+        have "a3 \<noteq> p" using assms(37) by (by100 blast)
+        have "a3 \<notin> D1p" using \<open>a3 \<in> Da3\<close> he13_meet \<open>a3 \<noteq> p\<close> by (by100 blast)
+        thus ?thesis using \<open>e34 \<inter> D1p \<subseteq> {a3}\<close> by (by100 blast)
+      qed
+      hence h_D2: "(e34 - {a4}) \<inter> ?D2 = {}"
+        using \<open>(e34 - {a4}) \<inter> Dq4 = {}\<close> assms(26) by (by100 blast)
+      have "(e34 - {a3, a4}) \<inter> (?D1 \<union> ?D2) = {}" using h_D1 h_D2 by (by100 blast)
+      hence "e34 - {a3, a4} \<subseteq> top1_S2 - (?D1 \<union> ?D2)" using assms(6) by (by100 blast)
+      thus ?thesis using hUV0(4) by (by100 blast)
+    qed
     have he12_in_comp: "e12 - {a1, a2} \<subseteq> U0 \<or> e12 - {a1, a2} \<subseteq> V0"
     proof -
       have hW_top: "is_topology_on (U0 \<union> V0)
