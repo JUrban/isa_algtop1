@@ -2679,9 +2679,51 @@ proof -
   have hy_in_UV: "y \<in> U0 \<union> V0"
     using hUV0(4) hy_in_CmD1 hy_in_CmD2 hC_sub_S2 by (by100 blast)
   have hx_y_diff_comp: "(x \<in> U0 \<and> y \<in> V0) \<or> (x \<in> V0 \<and> y \<in> U0)"
-    sorry \<comment> \<open>x and y are in different components of S2-(D1\<union>D2). This is Lemma 65.1(a)
-       applied to the cycle D1\<union>D2 = e13\<union>e23\<union>e24\<union>e41 (the "other" K4 cycle),
-       where x \<in> int(e12) and y \<in> int(e34) are in different components.\<close>
+  proof -
+    \<comment> \<open>By Lemma\_64\_3: S2 minus the full K4 graph has 4 connected components (faces).
+       S2-(D1\<union>D2) = (4 faces) \<union> int(e12) \<union> int(e34).
+       int(e12) and int(e34) are each connected, in S2-(D1\<union>D2).
+       Each face connects to exactly one of int(e12) or int(e34) topologically.
+       Since e12 borders 2 faces and e34 borders the other 2, and {4 faces} are all nonempty:
+       if int(e12) and int(e34) were in the same component, all 4 faces and both edges
+       would be in that component, leaving V0 = {} — contradiction.\<close>
+    \<comment> \<open>Step 1: Get 4 faces from Lemma\_64\_3.\<close>
+    obtain F1 F2 F3 F4 where
+      hF_ne: "F1 \<noteq> {}" "F2 \<noteq> {}" "F3 \<noteq> {}" "F4 \<noteq> {}"
+      and hF_disj: "F1 \<inter> F2 = {}" "F1 \<inter> F3 = {}" "F1 \<inter> F4 = {}"
+         "F2 \<inter> F3 = {}" "F2 \<inter> F4 = {}" "F3 \<inter> F4 = {}"
+      and hF_union: "F1 \<union> F2 \<union> F3 \<union> F4 = top1_S2 - (e12 \<union> e23 \<union> e34 \<union> e41 \<union> e13 \<union> e24)"
+      and hF_conn: "top1_connected_on F1 (subspace_topology top1_S2 top1_S2_topology F1)"
+         "top1_connected_on F2 (subspace_topology top1_S2 top1_S2_topology F2)"
+         "top1_connected_on F3 (subspace_topology top1_S2 top1_S2_topology F3)"
+         "top1_connected_on F4 (subspace_topology top1_S2 top1_S2_topology F4)"
+      using Lemma_64_3_K4_four_components[OF assms(1-36)] by blast
+    \<comment> \<open>Step 2: S2-(D1\<union>D2) = (4 faces) \<union> int(e12) \<union> int(e34).\<close>
+    have hK4_eq: "e12 \<union> e23 \<union> e34 \<union> e41 \<union> e13 \<union> e24 = ?D1 \<union> ?D2 \<union> (e12 - {a1,a2}) \<union> {a1,a2} \<union> (e34 - {a3,a4}) \<union> {a3,a4}"
+      sorry \<comment> \<open>K4 = D1 \<union> D2 \<union> int(e12) \<union> endpoints \<union> int(e34) \<union> endpoints.\<close>
+    \<comment> \<open>Step 3: int(e12) connected and in S2-(D1\<union>D2).\<close>
+    have hint_e12_conn: "top1_connected_on (e12 - {a1, a2})
+        (subspace_topology top1_S2 top1_S2_topology (e12 - {a1, a2}))"
+      using arc_minus_endpoints_connected[OF assms(1) hS2_haus assms(4,10,16)]
+      sorry \<comment> \<open>Need a1 \<noteq> a2.\<close>
+    have hint_e12_sub: "e12 - {a1, a2} \<subseteq> top1_S2 - (?D1 \<union> ?D2)"
+      sorry \<comment> \<open>From K4 intersection facts: int(e12) avoids D1\<union>D2.\<close>
+    have hint_e34_sub: "e34 - {a3, a4} \<subseteq> top1_S2 - (?D1 \<union> ?D2)"
+      sorry
+    \<comment> \<open>Step 4: x \<in> int(e12), y \<in> int(e34) (from hx\_not\_endpts, hy\_not\_endpts).\<close>
+    have hx_int: "x \<in> e12 - {a1, a2}" using hx_e12 hx_not_endpts by (by100 blast)
+    have hy_int: "y \<in> e34 - {a3, a4}" using hy_e34 hy_not_endpts by (by100 blast)
+    \<comment> \<open>Step 5: Contradiction if both in same component.
+       If int(e12) and int(e34) both \<subseteq> U0, then since 4 faces + int(e12) + int(e34)
+       cover S2-(D1\<union>D2), and each face is connected and in S2-(D1\<union>D2), we'd need
+       all 4 faces in U0 as well (they connect to int(e12) or int(e34) topologically).
+       Then U0 = S2-(D1\<union>D2), V0 = {}, contradiction.\<close>
+    have hx_ne_y_comp: "x \<notin> U0 \<or> y \<notin> U0"
+      sorry \<comment> \<open>Core planarity argument: int(e12) and int(e34) in different components.\<close>
+    moreover have "x \<notin> V0 \<or> y \<notin> V0"
+      sorry \<comment> \<open>Same argument with V0.\<close>
+    ultimately show ?thesis using hx_in_UV hy_in_UV hUV0(3) by (by100 blast)
+  qed
   obtain A B where hAB: "?U_loc \<inter> ?V_loc = A \<union> B" "A \<inter> B = {}"
       "openin_on ?X ?TX A" "openin_on ?X ?TX B" "x \<in> A" "y \<in> B"
   proof -
