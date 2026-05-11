@@ -34,8 +34,12 @@ session AlgTopC in ac = AlgTop0 +
   theories
     AlgTopCached
 
+session AlgIsoFixed in fi = AlgTopC +
+  options [quick_and_dirty, timeout = 300]
+  theories
+    AlgIsoFixed
+
 session AlgTop = AlgTopC +
   options [quick_and_dirty, timeout = 300]
   theories
     AlgTop
-    AlgIsoFixed
