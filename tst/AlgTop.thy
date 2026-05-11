@@ -1289,6 +1289,13 @@ proof -
       assume "Ri \<inter> A = {}" thus ?thesis using hRi_sub by (by100 blast)
     qed
   qed
+  have he12_ne: "e12 - {a1, a2} \<noteq> {}" sorry
+  have he12_not_Rie: "(e12 - {a1, a2}) \<inter> Ri_e = {}"
+    sorry \<comment> \<open>Ri\_e \<subseteq> R1\<union>R2\<union>R3, e12 \<inter> (R1\<union>R2\<union>R3) = {}. by100 context too large.\<close>
+  \<comment> \<open>KEY FACT: Ri\_e is a connected COMPONENT of S2-D (= A or B exactly).
+     This follows from the theta-space boundary structure (textbook 65.1(a)).\<close>
+  have hRie_is_comp: "Ri_e = A \<or> Ri_e = B"
+    sorry \<comment> \<open>Theta-space boundary identification.\<close>
   \<comment> \<open>Final: e34 in some Ri, Ri \<subseteq> A or B. e12 NOT in Ri. e12 \<subseteq> A\<union>B.
      If e34 \<subseteq> Ri \<subseteq> A and e12 \<subseteq> A: then e12 \<inter> Ri = {} (he12\_not\_Ri).
      But Ri is the theta component containing e34, and e12 is NOT in any Ri.
@@ -1392,7 +1399,8 @@ proof -
     \<comment> \<open>B connected \<subseteq> (Rj\<union>Rk) with separation \<Rightarrow> B \<subseteq> Rj or B \<subseteq> Rk.\<close>
     \<comment> \<open>Then the other is \<subseteq> A. But A\<inter>B={}. So the other \<subseteq> A but also nonempty.\<close>
     \<comment> \<open>A\<union>B covers everything \<Rightarrow> remaining Ri ⊆ A. But then B = {} (all in A). Contradiction.\<close>
-    show False sorry
+    \<comment> \<open>Ri\_e = A (from hRie\_is\_comp + Ri\_e \<subseteq> A). Then e12 \<subseteq> A = Ri\_e contradicts e12 \<inter> Ri\_e = {}.\<close>
+    show False sorry \<comment> \<open>Ri\_e=A, e12\<subseteq>A=Ri\_e, e12\<inter>Ri\_e\<noteq>{}, contradiction. by100 too tight.\<close>
   next
     assume h: "e12 - {a1, a2} \<subseteq> B \<and> e34 - {a3, a4} \<subseteq> B"
     \<comment> \<open>Symmetric argument.\<close>
@@ -1440,7 +1448,7 @@ proof -
       moreover have "e12 - {a1, a2} \<subseteq> B" using h by (by100 blast)
       ultimately show ?thesis using \<open>Ri_e \<subseteq> B\<close> assms(39) by (by100 blast)
     qed
-    show False sorry
+    show False sorry \<comment> \<open>Symmetric case. by100 context too large.\<close>
   qed
 qed
 
