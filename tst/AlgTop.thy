@@ -950,18 +950,33 @@ proof -
   \<comment> \<open>Step 1: Hypotheses for Lemma\_64\_1.\<close>
   have hArc2_sub: "?Arc2 \<subseteq> top1_S2" using assms(8,5) by (by100 blast)
   have hArc3_sub: "?Arc3 \<subseteq> top1_S2" using assms(9,7) by (by100 blast)
+  have ha3_e13: "a3 \<in> top1_arc_endpoints_on e13 (subspace_topology top1_S2 top1_S2_topology e13)"
+    using assms(20) by (by100 blast)
+  have ha3_e23: "a3 \<in> top1_arc_endpoints_on e23 (subspace_topology top1_S2 top1_S2_topology e23)"
+    using assms(17) by (by100 blast)
+  have ha4_e24: "a4 \<in> top1_arc_endpoints_on e24 (subspace_topology top1_S2 top1_S2_topology e24)"
+    using assms(21) by (by100 blast)
+  have ha4_e41: "a4 \<in> top1_arc_endpoints_on e41 (subspace_topology top1_S2 top1_S2_topology e41)"
+    using assms(19) by (by100 blast)
   have hArc2_arc: "top1_is_arc_on ?Arc2 (subspace_topology top1_S2 top1_S2_topology ?Arc2)"
-    sorry \<comment> \<open>arcs\_concatenation\_is\_arc[e13, e23] at a3.\<close>
+    by (rule arcs_concatenation_is_arc[OF assms(1) hS2_haus assms(14,8,11,5) _ ha3_e13 ha3_e23])
+       (use assms(29) in \<open>by100 blast\<close>)
   have hArc3_arc: "top1_is_arc_on ?Arc3 (subspace_topology top1_S2 top1_S2_topology ?Arc3)"
-    sorry \<comment> \<open>arcs\_concatenation\_is\_arc[e24, e41] at a4.\<close>
+    by (rule arcs_concatenation_is_arc[OF assms(1) hS2_haus assms(15,9,13,7) _ ha4_e24 ha4_e41])
+       (use assms(36) in \<open>by100 blast\<close>)
   have ha1_ne_a2: "a1 \<noteq> a2" using assms(2) by (auto simp: card_insert_if split: if_splits)
-  have hint12: "e12 \<inter> ?Arc2 = {a1, a2}" sorry \<comment> \<open>K4 intersection computation.\<close>
-  have hint13: "e12 \<inter> ?Arc3 = {a1, a2}" sorry
-  have hint23: "?Arc2 \<inter> ?Arc3 = {a1, a2}" sorry
+  have hint12: "e12 \<inter> ?Arc2 = {a1, a2}"
+    using assms(28,24) by (by100 blast)
+  have hint13: "e12 \<inter> ?Arc3 = {a1, a2}"
+    using assms(33,27) by (by100 blast)
+  have he13_e24_disj: "e13 \<inter> e24 = {}"
+    sorry \<comment> \<open>Diagonals don't cross: needs vertex exclusion proofs (see cached proof lines 56328-56367).\<close>
+  have hint23: "?Arc2 \<inter> ?Arc3 = {a1, a2}"
+    using he13_e24_disj assms(31,34,23) by (by100 blast)
   have hArc2_ep: "top1_arc_endpoints_on ?Arc2 (subspace_topology top1_S2 top1_S2_topology ?Arc2) = {a1, a2}"
-    sorry \<comment> \<open>arc\_concat\_endpoints.\<close>
+    sorry \<comment> \<open>arc\_concat\_endpoints on e13, e23 at a3.\<close>
   have hArc3_ep: "top1_arc_endpoints_on ?Arc3 (subspace_topology top1_S2 top1_S2_topology ?Arc3) = {a1, a2}"
-    sorry
+    sorry \<comment> \<open>arc\_concat\_endpoints on e24, e41 at a4.\<close>
   \<comment> \<open>Step 2: Apply Lemma\_64\_1.\<close>
   obtain R1 R2 R3 where hR: "R1 \<noteq> {}" "R2 \<noteq> {}" "R3 \<noteq> {}"
       "R1 \<inter> R2 = {}" "R2 \<inter> R3 = {}" "R1 \<inter> R3 = {}"
