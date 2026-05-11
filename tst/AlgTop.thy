@@ -972,6 +972,10 @@ lemma diff_inter_subset:
   assumes "A \<inter> R = {}" shows "(A - S) \<inter> R = {}"
   using assms by (by100 blast)
 
+lemma disjoint_subset_right:
+  assumes "A \<inter> B = {}" and "S \<subseteq> B" shows "A \<inter> S = {}"
+  using assms by (by100 blast)
+
 (** from \<S>65 Lemma 65.1(a): non-adjacent edges of K_4 in S^2 have interiors in
     different components of S^2 minus the complementary 4-cycle.
     Duplicated from the internal hdiff fact in Lemma_65_1_K4_subgraph (AlgTopCached.thy). **)
@@ -1271,6 +1275,20 @@ proof -
       thus ?thesis unfolding defs by (by100 blast)
     qed
   qed
+  obtain Ri_e where hRie: "Ri_e \<in> {R1, R2, R3}" "e34 - {a3, a4} \<subseteq> Ri_e"
+  proof -
+    from he34_in_Ri show ?thesis
+    proof (elim disjE)
+      assume h: "e34 - {a3, a4} \<subseteq> R1"
+      show ?thesis by (rule that[of R1]) (use h in \<open>by100 blast\<close>)+
+    next
+      assume h: "e34 - {a3, a4} \<subseteq> R2"
+      show ?thesis by (rule that[of R2]) (use h in \<open>by100 blast\<close>)+
+    next
+      assume h: "e34 - {a3, a4} \<subseteq> R3"
+      show ?thesis by (rule that[of R3]) (use h in \<open>by100 blast\<close>)+
+    qed
+  qed
   \<comment> \<open>Step 4: e12-{a1,a2} is on the theta space, hence NOT in any Ri.\<close>
   have he12_on_theta: "e12 - {a1, a2} \<subseteq> e12 \<union> Arc2 \<union> Arc3" unfolding defs by (by100 blast)
   have he12_sub_theta: "e12 \<subseteq> e12 \<union> Arc2 \<union> Arc3" by (by100 blast)
@@ -1374,58 +1392,606 @@ proof -
     ultimately show ?thesis by (by100 blast)
   qed
   have he12_not_Rie: "(e12 - {a1, a2}) \<inter> Ri_e = {}"
-    sorry \<comment> \<open>Follows from Ri\_e \<subseteq> R1\<union>R2\<union>R3 + e12\<inter>(R1\<union>R2\<union>R3)={}. by100 context too large.\<close>
-  \<comment> \<open>KEY FACT: Ri\_e is a connected COMPONENT of S2-D (= A or B exactly).
-     This follows from the theta-space boundary structure (textbook 65.1(a)).\<close>
-  have hRie_is_comp: "Ri_e = A \<or> Ri_e = B"
-    sorry \<comment> \<open>Theta-space boundary identification.\<close>
-  \<comment> \<open>Final: e34 in some Ri, Ri \<subseteq> A or B. e12 NOT in Ri. e12 \<subseteq> A\<union>B.
-     If e34 \<subseteq> Ri \<subseteq> A and e12 \<subseteq> A: then e12 \<inter> Ri = {} (he12\_not\_Ri).
-     But Ri is the theta component containing e34, and e12 is NOT in any Ri.
-     So e12 \<subseteq> A\<union>B - Ri = B \<union> (other Ri's in A). e12 NOT in any Ri \<Rightarrow> e12 \<subseteq> B.
-     Wait no: e12 \<subseteq> A was assumed. Contradiction? No!
-     The real point: e12 and e34 are in different Ri-groups. The Ri containing e34
-     is in one of A/B. e12 is not in ANY Ri. But e12 \<subseteq> A\<union>B.
-     Since (A\<union>B) = Ri's \<union> e12, and e12 \<inter> Ri's = {}: if e34 \<subseteq> Ri \<subseteq> A,
-     then e12 = (A\<union>B) - (R1\<union>R2\<union>R3). If also e12 \<subseteq> A, then B \<subseteq> (R1\<union>R2\<union>R3)-Ri.
-     B \<noteq> {} and B connected. But can we get a contradiction from B \<subseteq> 2 remaining Ri's?
-     Only if we can show B isn't fully contained in one Ri.
-     Hmm, maybe we need the B \<noteq> {} implies there are ≥ 2 Ri's to distribute,
-     and with 3 Ri's total, 1 in A (with e34), if both others in B then fine.
-     No contradiction!
-
-     ACTUALLY: the argument needs the SPECIFIC theta-space structure. The component
-     between Arc2 and Arc3 has BOTH a3 and a4 on its boundary (Arc2 contains a3,
-     Arc3 contains a4). This is the ONLY component with both a3 and a4 on boundary.
-     e34 connects a3 to a4, so int(e34) is in THIS component.
-     The other two components have e12 on their boundary. So int(e12) connects
-     to them (when e12 is removed from theta to get D).
-     Result: the Ri containing e34 is in one SCC-component, and int(e12) merges
-     the other two Ri's into the other SCC-component.\<close>
-  \<comment> \<open>Simpler approach: use he12\_not\_Ri + he34\_in\_Ri + hRi\_in\_AB.\<close>
-  \<comment> \<open>e34 \<subseteq> Ri \<subseteq> A (or B). e12 \<inter> Ri = {} \<Rightarrow> if e12 \<subseteq> A then e12 \<inter> Ri \<noteq> {} only via A?
-     No, e12 \<inter> Ri can be {} even if both in A.
-     The REAL argument: e34 in Ri. e12 NOT in ANY Ri. e12 \<subseteq> (A\<union>B) - (R1\<union>R2\<union>R3).
-     (A\<union>B) - (R1\<union>R2\<union>R3) = e12-{a1,a2} (from hAB\_decomp).
-     So e12 is "alone" in the decomposition. If Ri \<subseteq> A, then B must contain
-     the other Ri's and/or... actually B \<noteq> {} and B \<inter> e12 = {} (since e12 \<subseteq> A).
-     B \<subseteq> R1\<union>R2\<union>R3 (since B \<inter> e12 = {}).
-     B connected and \<subseteq> union of 3 disjoint open Ri's \<Rightarrow> B \<subseteq> some Ri.
-     If B \<subseteq> Rj where Rj \<noteq> Ri: then the third Rk is disjoint from both A and B.
-     But A\<union>B covers everything. So Rk \<subseteq> A\<union>B. And Rk \<inter> B = {} (since B \<subseteq> Rj, Rj\<inter>Rk={}).
-     So Rk \<subseteq> A. Fine. But also Rk \<noteq> {} (all Ri nonempty).
-     No contradiction yet... UNLESS we can show there are things in B not in any single Ri.
-     With B \<noteq> {} and B \<subseteq> Rj: fine, no contradiction.
-
-     THE PROBLEM: The final step needs the SPECIFIC identification of which Ri is which.
-     The textbook says the component "between Arc2 and Arc3" is the one with e34.
-     The other two components merge with e12 to form the other SCC component.
-     This gives: Ri (with e34) = one SCC component, other two Ri's + e12 = other.
-     Hence e34 and e12 in different components.
-
-     But proving "the component between Arc2 and Arc3" formally requires the closure
-     structure from Lemma\_64\_1, which we don't have exported.\<close>
-  show ?thesis sorry \<comment> \<open>K4\_final\_contradiction[OF he12\_not\_Rie hRie\_is\_comp ...]. by100 too tight.\<close>
+  proof -
+    have hRie_sub: "Ri_e \<subseteq> R1 \<union> R2 \<union> R3" by (rule element_of_three_subset[OF hRie(1)])
+    have "e12 \<inter> Ri_e = {}" by (rule disjoint_subset_right[OF he12_R_disj hRie_sub])
+    thus ?thesis by (rule diff_inter_subset)
+  qed
+  \<comment> \<open>Direct proof by contradiction following Munkres 65.1(a).
+     Assume both e12 and e34 interiors in same component C.
+     Then D' (other component) \<subseteq> R1\<union>R2\<union>R3, D' = some Ri\_D.
+     J12 = e12\<union>Arc2 is SCC. One J12-component Q12 = some Ri \<in> {Ri\_D, Rk}.
+     If Q12 = Ri\_D: closure(Ri\_D) = Ri\_D\<union>J12 (SCCBMC) and \<subseteq> Ri\_D\<union>D\_loc (SCC-component).
+     So J12 \<subseteq> D\_loc, hence e12 \<subseteq> D\_loc, but e12\<inter>D\_loc = {a1,a2}. Contradiction.
+     Similarly for J13. If neither Ri\_D is Q: J12 = J13, Arc2 = Arc3, contradiction.\<close>
+  \<comment> \<open>Connected subset of R1\<union>R2\<union>R3 \<Rightarrow> in one Ri (2\<times>Lemma\_23\_2).\<close>
+  have hR_in_one: "\<And>S. S \<subseteq> R1 \<union> R2 \<union> R3 \<Longrightarrow> S \<noteq> {} \<Longrightarrow>
+      top1_connected_on S (subspace_topology top1_S2 top1_S2_topology S) \<Longrightarrow>
+      S \<subseteq> R1 \<or> S \<subseteq> R2 \<or> S \<subseteq> R3"
+  proof -
+    fix S assume hS_sub: "S \<subseteq> R1 \<union> R2 \<union> R3" and hS_ne: "S \<noteq> {}"
+        and hS_conn: "top1_connected_on S (subspace_topology top1_S2 top1_S2_topology S)"
+    let ?T\<theta> = "subspace_topology top1_S2 top1_S2_topology (R1 \<union> R2 \<union> R3)"
+    have hT\<theta>: "is_topology_on (R1 \<union> R2 \<union> R3) ?T\<theta>"
+      by (rule subspace_topology_is_topology_on[OF hTopS2]) (use hR(7) in \<open>by100 blast\<close>)
+    have hR1_open: "R1 \<in> ?T\<theta>"
+      using hR(11) unfolding subspace_topology_def by (by100 blast)
+    have hR23_open: "R2 \<union> R3 \<in> ?T\<theta>"
+    proof -
+      have "{R2, R3} \<subseteq> top1_S2_topology" using hR(12,13) by (by100 blast)
+      hence "\<Union>{R2, R3} \<in> top1_S2_topology"
+        using hTopS2 unfolding is_topology_on_def by (by100 blast)
+      hence "R2 \<union> R3 \<in> top1_S2_topology" by (by100 simp)
+      thus ?thesis unfolding subspace_topology_def by (by100 blast)
+    qed
+    have hSep1: "top1_is_separation_on (R1 \<union> R2 \<union> R3) ?T\<theta> R1 (R2 \<union> R3)"
+      unfolding top1_is_separation_on_def
+      using hR1_open hR23_open hR(1,2,3,4,5,6) by (by100 blast)
+    have hS_conn_\<theta>: "top1_connected_on S (subspace_topology (R1 \<union> R2 \<union> R3) ?T\<theta> S)"
+    proof -
+      have "subspace_topology top1_S2 top1_S2_topology S =
+          subspace_topology (R1 \<union> R2 \<union> R3) ?T\<theta> S"
+        using subspace_topology_trans[of S "R1 \<union> R2 \<union> R3" top1_S2 top1_S2_topology]
+            hS_sub by (by100 simp)
+      thus ?thesis using hS_conn by (by100 simp)
+    qed
+    from Lemma_23_2[OF hT\<theta> hSep1 hS_sub hS_conn_\<theta>]
+    have "S \<subseteq> R1 \<or> S \<subseteq> R2 \<union> R3" by (by100 blast)
+    moreover {
+      assume "S \<subseteq> R2 \<union> R3"
+      let ?T23 = "subspace_topology top1_S2 top1_S2_topology (R2 \<union> R3)"
+      have hT23: "is_topology_on (R2 \<union> R3) ?T23"
+        by (rule subspace_topology_is_topology_on[OF hTopS2])
+           (use hR(7) in \<open>by100 blast\<close>)
+      have "R2 \<in> ?T23"
+        using hR(12) unfolding subspace_topology_def by (by100 blast)
+      moreover have "R3 \<in> ?T23"
+        using hR(13) unfolding subspace_topology_def by (by100 blast)
+      ultimately have hSep2: "top1_is_separation_on (R2 \<union> R3) ?T23 R2 R3"
+        unfolding top1_is_separation_on_def using hR(2,3,5) by (by100 blast)
+      have hS_conn_23: "top1_connected_on S (subspace_topology (R2 \<union> R3) ?T23 S)"
+      proof -
+        have "subspace_topology top1_S2 top1_S2_topology S =
+            subspace_topology (R2 \<union> R3) ?T23 S"
+          using subspace_topology_trans[of S "R2 \<union> R3" top1_S2 top1_S2_topology]
+              \<open>S \<subseteq> R2 \<union> R3\<close> by (by100 simp)
+        thus ?thesis using hS_conn by (by100 simp)
+      qed
+      from Lemma_23_2[OF hT23 hSep2 \<open>S \<subseteq> R2 \<union> R3\<close> hS_conn_23]
+      have "S \<subseteq> R2 \<or> S \<subseteq> R3" by (by100 blast)
+    }
+    ultimately show "S \<subseteq> R1 \<or> S \<subseteq> R2 \<or> S \<subseteq> R3" by (by100 blast)
+  qed
+  \<comment> \<open>J12 = e12\<union>Arc2, J13 = e12\<union>Arc3 are SCC.\<close>
+  have hJ12_scc: "top1_simple_closed_curve_on top1_S2 top1_S2_topology (e12 \<union> Arc2)"
+    by (rule arcs_form_simple_closed_curve[OF assms(1) hS2_haus
+        assms(10) assms(4) hArc2_arc hArc2_sub hint12 ha1_ne_a2 assms(16) hArc2_ep])
+  have hJ13_scc: "top1_simple_closed_curve_on top1_S2 top1_S2_topology (e12 \<union> Arc3)"
+    by (rule arcs_form_simple_closed_curve[OF assms(1) hS2_haus
+        assms(10) assms(4) hArc3_arc hArc3_sub hint13 ha1_ne_a2 assms(16) hArc3_ep])
+  \<comment> \<open>Key vertex exclusions.\<close>
+  have ha4_not_e12: "a4 \<notin> e12"
+  proof assume "a4 \<in> e12"
+    hence "a4 \<in> e34 \<inter> e12" using assms(18) unfolding top1_arc_endpoints_on_def by (by100 blast)
+    hence "a4 \<in> {}" using assms(22) by (by100 blast)
+    thus False by (by100 blast) qed
+  have ha4_not_Arc2: "a4 \<notin> Arc2"
+  proof assume "a4 \<in> Arc2"
+    hence "a4 \<in> e13 \<or> a4 \<in> e23" unfolding defs by (by100 blast)
+    thus False
+    proof
+      assume "a4 \<in> e13"
+      hence "a4 \<in> e13 \<inter> e41" using assms(19) unfolding top1_arc_endpoints_on_def by (by100 blast)
+      hence "a4 = a1" using assms(31) by (by100 blast)
+      thus False using ha1_ne_a4 by (by100 blast)
+    next
+      assume "a4 \<in> e23"
+      hence "a4 \<in> e23 \<inter> e41" using assms(19) unfolding top1_arc_endpoints_on_def by (by100 blast)
+      hence "a4 \<in> {}" using assms(23) by (by100 blast)
+      thus False by (by100 blast)
+    qed
+  qed
+  have ha3_not_e12: "a3 \<notin> e12"
+  proof assume "a3 \<in> e12"
+    hence "a3 \<in> e34 \<inter> e12" using assms(18) unfolding top1_arc_endpoints_on_def by (by100 blast)
+    hence "a3 \<in> {}" using assms(22) by (by100 blast)
+    thus False by (by100 blast) qed
+  have ha3_not_Arc3: "a3 \<notin> Arc3"
+  proof assume "a3 \<in> Arc3"
+    hence "a3 \<in> e24 \<or> a3 \<in> e41" unfolding defs by (by100 blast)
+    thus False
+    proof
+      assume "a3 \<in> e24"
+      hence "a3 \<in> e24 \<inter> e23" using assms(17) unfolding top1_arc_endpoints_on_def by (by100 blast)
+      hence "a3 = a2" using assms(34) by (by100 blast)
+      thus False using ha2_ne_a3 by (by100 blast)
+    next
+      assume "a3 \<in> e41"
+      hence "a3 \<in> e23 \<inter> e41" using assms(17) unfolding top1_arc_endpoints_on_def by (by100 blast)
+      hence "a3 \<in> {}" using assms(23) by (by100 blast)
+      thus False by (by100 blast)
+    qed
+  qed
+  \<comment> \<open>Main: both-in-same-component \<Rightarrow> False. Single proof covers A and B by symmetry.\<close>
+  have h_both_cases: "\<And>C D'. \<lbrakk>C \<noteq> {}; D' \<noteq> {}; C \<inter> D' = {}; C \<union> D' = A \<union> B;
+      top1_connected_on C (subspace_topology top1_S2 top1_S2_topology C);
+      top1_connected_on D' (subspace_topology top1_S2 top1_S2_topology D');
+      C \<in> top1_S2_topology; D' \<in> top1_S2_topology;
+      e12 - {a1, a2} \<subseteq> C; e34 - {a3, a4} \<subseteq> C\<rbrakk> \<Longrightarrow> False"
+  proof -
+    fix C D' assume hC_ne: "C \<noteq> {}" and hD'_ne: "D' \<noteq> {}" and hCD'_disj: "C \<inter> D' = {}"
+        and hCD'_union: "C \<union> D' = A \<union> B"
+        and hC_conn: "top1_connected_on C (subspace_topology top1_S2 top1_S2_topology C)"
+        and hD'_conn: "top1_connected_on D' (subspace_topology top1_S2 top1_S2_topology D')"
+        and hC_open: "C \<in> top1_S2_topology" and hD'_open: "D' \<in> top1_S2_topology"
+        and he12C: "e12 - {a1, a2} \<subseteq> C" and he34C: "e34 - {a3, a4} \<subseteq> C"
+    \<comment> \<open>Step 1: D' \<subseteq> R1\<union>R2\<union>R3.\<close>
+    have hD'_sub_R: "D' \<subseteq> R1 \<union> R2 \<union> R3"
+    proof -
+      have "D' \<inter> (e12 - {a1, a2}) = {}" using hCD'_disj he12C by (by100 blast)
+      thus ?thesis using hCD'_union hAB_decomp by (by100 blast)
+    qed
+    \<comment> \<open>Step 2: D' connected \<Rightarrow> D' \<subseteq> some Ri \<Rightarrow> D' = Ri\_D.\<close>
+    from hR_in_one[OF hD'_sub_R hD'_ne hD'_conn]
+    obtain Ri_D where hRiD: "Ri_D \<in> {R1, R2, R3}" and hD'_sub_RiD: "D' \<subseteq> Ri_D"
+      by (by100 blast)
+    have hRiD_sub_D': "Ri_D \<subseteq> D'"
+    proof -
+      have "Ri_D \<subseteq> R1 \<union> R2 \<union> R3" by (rule element_of_three_subset[OF hRiD])
+      hence "Ri_D \<subseteq> A \<union> B" using hRi_sub_AB by (by100 blast)
+      hence hRiD_sub_CD': "Ri_D \<subseteq> C \<union> D'" using hCD'_union by (by100 blast)
+      have hRiD_conn: "top1_connected_on Ri_D (subspace_topology top1_S2 top1_S2_topology Ri_D)"
+        using hRiD hR(8,9,10) by (by100 blast)
+      \<comment> \<open>Ri\_D connected in C\<union>D' (open separation): Ri\_D \<subseteq> C or D'.\<close>
+      have hTCD': "is_topology_on (C \<union> D') (subspace_topology top1_S2 top1_S2_topology (C \<union> D'))"
+        by (rule subspace_topology_is_topology_on[OF hTopS2])
+           (use hCD'_union hAB_sub_S2 in \<open>by100 blast\<close>)
+      have hC_open_CD': "C \<in> subspace_topology top1_S2 top1_S2_topology (C \<union> D')"
+        using hC_open unfolding subspace_topology_def by (by100 blast)
+      have hD'_open_CD': "D' \<in> subspace_topology top1_S2 top1_S2_topology (C \<union> D')"
+        using hD'_open unfolding subspace_topology_def by (by100 blast)
+      have hSep_CD': "top1_is_separation_on (C \<union> D') (subspace_topology top1_S2 top1_S2_topology (C \<union> D')) C D'"
+        unfolding top1_is_separation_on_def
+        using hC_open_CD' hD'_open_CD' hC_ne hD'_ne hCD'_disj by (by100 blast)
+      have hRiD_conn_CD': "top1_connected_on Ri_D
+          (subspace_topology (C \<union> D') (subspace_topology top1_S2 top1_S2_topology (C \<union> D')) Ri_D)"
+      proof -
+        have "subspace_topology top1_S2 top1_S2_topology Ri_D =
+            subspace_topology (C \<union> D') (subspace_topology top1_S2 top1_S2_topology (C \<union> D')) Ri_D"
+          using subspace_topology_trans[of Ri_D "C \<union> D'" top1_S2 top1_S2_topology]
+              hRiD_sub_CD' by (by100 simp)
+        thus ?thesis using hRiD_conn by (by100 simp)
+      qed
+      from Lemma_23_2[OF hTCD' hSep_CD' hRiD_sub_CD' hRiD_conn_CD']
+      have "Ri_D \<subseteq> C \<or> Ri_D \<subseteq> D'" by (by100 blast)
+      moreover have "\<not> (Ri_D \<subseteq> C)"
+      proof assume "Ri_D \<subseteq> C"
+        hence "D' \<subseteq> C" using hD'_sub_RiD by (by100 blast)
+        thus False using hCD'_disj hD'_ne by (by100 blast) qed
+      ultimately show ?thesis by (by100 blast)
+    qed
+    have hD'_eq: "D' = Ri_D" using hD'_sub_RiD hRiD_sub_D' by (by100 blast)
+    \<comment> \<open>Step 3: closure(D') \<subseteq> D' \<union> D\_loc.\<close>
+    have hD'_sub_S2: "D' \<subseteq> top1_S2" using hCD'_union hAB_sub_S2 by (by100 blast)
+    have hcl_D'_sub: "closure_on top1_S2 top1_S2_topology D' \<subseteq> D' \<union> D_loc"
+    proof -
+      have "closure_on top1_S2 top1_S2_topology D' \<inter> C = {}"
+      proof (rule ccontr)
+        assume "\<not> ?thesis"
+        hence "intersects (closure_on top1_S2 top1_S2_topology D') C"
+          unfolding intersects_def by (by100 blast)
+        from top1_intersects_closure_on_open_imp_intersects[OF hTopS2 hD'_sub_S2 hC_open this]
+        show False using hCD'_disj unfolding intersects_def by (by100 blast)
+      qed
+      moreover have "closure_on top1_S2 top1_S2_topology D' \<subseteq> top1_S2"
+        by (rule closure_on_subset_carrier[OF hTopS2 hD'_sub_S2])
+      ultimately show ?thesis
+      proof -
+        assume h1: "closure_on top1_S2 top1_S2_topology D' \<inter> C = {}"
+            and h2: "closure_on top1_S2 top1_S2_topology D' \<subseteq> top1_S2"
+        have "A \<union> B = top1_S2 - D_loc" using assms(40) unfolding defs by (by100 simp)
+        hence "top1_S2 \<subseteq> C \<union> D' \<union> D_loc" using hCD'_union by (by100 blast)
+        thus ?thesis using h1 h2 by (by100 blast)
+      qed
+    qed
+    \<comment> \<open>Step 4: Ri\_D \<inter> theta = {} (Ri\_D \<subseteq> S2-theta).\<close>
+    have hRiD_sub_theta_compl: "Ri_D \<subseteq> top1_S2 - (e12 \<union> Arc2 \<union> Arc3)"
+    proof -
+      have "Ri_D \<subseteq> R1 \<union> R2 \<union> R3" by (rule element_of_three_subset[OF hRiD])
+      thus ?thesis using hR(7) by (by100 blast)
+    qed
+    \<comment> \<open>Step 5: e12 \<inter> D\_loc = {a1,a2} and e12 has interior points.\<close>
+    have he12_D_loc_int: "e12 \<inter> D_loc = {a1, a2}"
+    proof -
+      have "e12 \<inter> e13 = {a1}" using assms(28) by (by100 blast)
+      moreover have "e12 \<inter> e23 = {a2}" using assms(24) by (by100 blast)
+      moreover have "e12 \<inter> e24 = {a2}" using assms(33) by (by100 blast)
+      moreover have "e12 \<inter> e41 = {a1}" using assms(27) by (by100 blast)
+      ultimately show ?thesis unfolding defs by (by100 blast)
+    qed
+    \<comment> \<open>Step 6: SCCBMC-based contradiction.
+       Key lemma: if J is SCC, W1\<union>W2 = S2-J (2 connected open components),
+       then closure(W1) = W1 \<union> J (via simple\_closed\_curve\_boundary\_meets\_component).
+       If D' is a J12-component: closure(D') = D'\<union>J12 \<subseteq> D'\<union>D\_loc \<Rightarrow> J12\<subseteq>D\_loc \<Rightarrow> e12\<subseteq>{a1,a2}.
+       If D' is NOT a J12-component (for BOTH J12 AND J13):
+       the J12-component Q12 = some Rk, and J13-component Q13 = same Rk
+       \<Rightarrow> closure(Rk) = Rk\<union>J12 = Rk\<union>J13 \<Rightarrow> J12=J13 \<Rightarrow> Arc2=Arc3 \<Rightarrow> False.\<close>
+    \<comment> \<open>Helper: closure of SCC component = component \<union> SCC.\<close>
+    have hcl_scc_comp: "\<And>J W1 W2. top1_simple_closed_curve_on top1_S2 top1_S2_topology J \<Longrightarrow>
+        W1 \<noteq> {} \<Longrightarrow> W2 \<noteq> {} \<Longrightarrow> W1 \<inter> W2 = {} \<Longrightarrow> W1 \<union> W2 = top1_S2 - J \<Longrightarrow>
+        top1_connected_on W1 (subspace_topology top1_S2 top1_S2_topology W1) \<Longrightarrow>
+        top1_connected_on W2 (subspace_topology top1_S2 top1_S2_topology W2) \<Longrightarrow>
+        W1 \<in> top1_S2_topology \<Longrightarrow> W2 \<in> top1_S2_topology \<Longrightarrow>
+        closure_on top1_S2 top1_S2_topology W1 = W1 \<union> J"
+    proof -
+      fix J W1 W2
+      assume hJ_scc: "top1_simple_closed_curve_on top1_S2 top1_S2_topology J"
+          and hW1_ne: "W1 \<noteq> {}" and hW2_ne: "W2 \<noteq> {}" and hW12_d: "W1 \<inter> W2 = {}"
+          and hW12_u: "W1 \<union> W2 = top1_S2 - J"
+          and hW1_c: "top1_connected_on W1 (subspace_topology top1_S2 top1_S2_topology W1)"
+          and hW2_c: "top1_connected_on W2 (subspace_topology top1_S2 top1_S2_topology W2)"
+          and hW1_o: "W1 \<in> top1_S2_topology" and hW2_o: "W2 \<in> top1_S2_topology"
+      have hW1_sub: "W1 \<subseteq> top1_S2" using hW12_u by (by100 blast)
+      \<comment> \<open>Upper: cl(W1) \<subseteq> W1 \<union> J (since cl(W1) \<inter> W2 = {}).\<close>
+      have hcl_upper: "closure_on top1_S2 top1_S2_topology W1 \<subseteq> W1 \<union> J"
+      proof -
+        have "closure_on top1_S2 top1_S2_topology W1 \<inter> W2 = {}"
+        proof (rule ccontr)
+          assume "\<not> ?thesis"
+          hence "intersects (closure_on top1_S2 top1_S2_topology W1) W2"
+            unfolding intersects_def by (by100 blast)
+          from top1_intersects_closure_on_open_imp_intersects[OF hTopS2 hW1_sub hW2_o this]
+          show False using hW12_d unfolding intersects_def by (by100 blast)
+        qed
+        moreover have "closure_on top1_S2 top1_S2_topology W1 \<subseteq> top1_S2"
+          by (rule closure_on_subset_carrier[OF hTopS2 hW1_sub])
+        ultimately show ?thesis using hW12_u by (by100 blast)
+      qed
+      \<comment> \<open>Lower: J \<subseteq> cl(W1) (every point of J is in cl(W1), by SCCBMC).\<close>
+      have hcl_lower: "W1 \<union> J \<subseteq> closure_on top1_S2 top1_S2_topology W1"
+      proof -
+        have "W1 \<subseteq> closure_on top1_S2 top1_S2_topology W1" by (rule subset_closure_on)
+        moreover have "J \<subseteq> closure_on top1_S2 top1_S2_topology W1"
+        proof
+          fix x assume "x \<in> J"
+          show "x \<in> closure_on top1_S2 top1_S2_topology W1"
+          proof (rule iffD2[OF Theorem_17_5a[OF hTopS2 _ hW1_sub]])
+            have "x \<in> top1_S2"
+              using hJ_scc \<open>x \<in> J\<close> unfolding top1_simple_closed_curve_on_def top1_continuous_map_on_def
+              by (by100 blast)
+            thus "x \<in> top1_S2" .
+            show "\<forall>U. neighborhood_of x top1_S2 top1_S2_topology U \<longrightarrow> intersects U W1"
+            proof (intro allI impI)
+              fix V assume "neighborhood_of x top1_S2 top1_S2_topology V"
+              hence hV: "V \<in> top1_S2_topology" "x \<in> V" unfolding neighborhood_of_def by (by100 blast)+
+              have "V \<inter> W1 \<noteq> {}"
+                by (rule simple_closed_curve_boundary_meets_component[OF assms(1) hJ_scc
+                    hW1_c hW2_c hW12_d hW12_u hW1_ne hW2_ne hW1_o hW2_o \<open>x \<in> J\<close> hV(1) hV(2)])
+              thus "intersects V W1" unfolding intersects_def by (by100 blast)
+            qed
+          qed
+        qed
+        ultimately show ?thesis by (by100 blast)
+      qed
+      show "closure_on top1_S2 top1_S2_topology W1 = W1 \<union> J"
+        using hcl_upper hcl_lower by (by100 blast)
+    qed
+    \<comment> \<open>Helper: contradiction when a SCC J \<subseteq> D\_loc (forces e12 \<subseteq> {a1,a2}).\<close>
+    have hJ_sub_D_loc_False: "\<And>J. J = e12 \<union> Arc2 \<or> J = e12 \<union> Arc3 \<Longrightarrow> J \<subseteq> D_loc \<Longrightarrow> False"
+    proof -
+      fix J assume hJ: "J = e12 \<union> Arc2 \<or> J = e12 \<union> Arc3" and hJD: "J \<subseteq> D_loc"
+      have "e12 \<subseteq> J" using hJ by (by100 blast)
+      hence "e12 \<subseteq> D_loc" using hJD by (by100 blast)
+      hence "e12 - {a1, a2} \<subseteq> D_loc - {a1, a2}" by (by100 blast)
+      moreover have "D_loc - {a1, a2} \<subseteq> D_loc" by (by100 blast)
+      moreover have "e12 - {a1, a2} \<subseteq> e12 \<inter> D_loc" using \<open>e12 \<subseteq> D_loc\<close> by (by100 blast)
+      moreover have "e12 \<inter> D_loc = {a1, a2}" by (rule he12_D_loc_int)
+      ultimately have "e12 - {a1, a2} \<subseteq> {a1, a2}" by (by100 blast)
+      hence "e12 - {a1, a2} = {}" by (by100 blast)
+      thus False using he12_ne by (by100 blast)
+    qed
+    \<comment> \<open>Get 2 components of S2-J12.\<close>
+    have hJ12_cl_e12: "closedin_on top1_S2 top1_S2_topology e12"
+      by (rule arc_in_S2_closed[OF assms(4,10)])
+    have hJ12_cl_Arc2: "closedin_on top1_S2 top1_S2_topology Arc2"
+      by (rule arc_in_S2_closed[OF hArc2_sub hArc2_arc])
+    have hJ12_card: "card (e12 \<inter> Arc2) = 2" using hint12 ha1_ne_a2 by (by100 simp)
+    obtain W12a W12b where hW12: "W12a \<noteq> {}" "W12b \<noteq> {}" "W12a \<inter> W12b = {}"
+        "W12a \<union> W12b = top1_S2 - (e12 \<union> Arc2)"
+        "top1_connected_on W12a (subspace_topology top1_S2 top1_S2_topology W12a)"
+        "top1_connected_on W12b (subspace_topology top1_S2 top1_S2_topology W12b)"
+      using Theorem_63_5_two_closed_connected[OF assms(1) hJ12_cl_e12 hJ12_cl_Arc2
+          arc_connected[OF assms(10)] arc_connected[OF hArc2_arc] hJ12_card
+          Theorem_63_2_arc_no_separation[OF assms(1,4,10)]
+          Theorem_63_2_arc_no_separation[OF assms(1) hArc2_sub hArc2_arc]]
+      by (metis (no_types))
+    \<comment> \<open>Make them open via S2\_two\_component\_open.\<close>
+    have hJ12_cl: "closedin_on top1_S2 top1_S2_topology (e12 \<union> Arc2)"
+      by (rule closedin_on_Un[OF hTopS2 hJ12_cl_e12 hJ12_cl_Arc2])
+    have hJ12_open: "top1_S2 - (e12 \<union> Arc2) \<in> top1_S2_topology"
+      using hJ12_cl unfolding closedin_on_def by (by100 blast)
+    have hJ12_not_conn: "\<not> top1_connected_on (top1_S2 - (e12 \<union> Arc2))
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (e12 \<union> Arc2)))"
+    proof -
+      have "top1_separates_on top1_S2 top1_S2_topology (e12 \<union> Arc2)"
+        by (rule Theorem_61_3_JordanSeparation_S2[OF assms(1) hJ12_scc])
+      thus ?thesis unfolding top1_separates_on_def by (by100 simp)
+    qed
+    have hW12_open: "W12a \<in> top1_S2_topology \<and> W12b \<in> top1_S2_topology"
+      using S2_two_component_open[OF hJ12_open _ hW12(1,2,3,4,5,6) hJ12_not_conn]
+      by (by100 blast)
+    \<comment> \<open>Arc3-{a1,a2} \<subseteq> S2-J12 and connected \<Rightarrow> in W12a or W12b. WLOG in W12b.\<close>
+    \<comment> \<open>Q12 = the other one. Q12 \<inter> theta = {} \<Rightarrow> Q12 \<subseteq> R1\<union>R2\<union>R3 \<Rightarrow> Q12 = some Ri.\<close>
+    \<comment> \<open>Ri\_e is NOT Q12 (a4 argument). So Q12 \<in> {Ri\_D, Rk}.\<close>
+    \<comment> \<open>If Q12 = Ri\_D: cl(D') = D'\<union>J12 \<subseteq> D'\<union>D\_loc \<Rightarrow> J12\<subseteq>D\_loc \<Rightarrow> False.\<close>
+    \<comment> \<open>If Q12 = Rk: similarly for J13. If Q13 = Rk too: J12=J13 \<Rightarrow> False.\<close>
+    \<comment> \<open>If Q13 = Ri\_D: cl(D') = D'\<union>J13 \<subseteq> D'\<union>D\_loc \<Rightarrow> J13\<subseteq>D\_loc \<Rightarrow> False.\<close>
+    \<comment> \<open>Identify which W12 component is Q12 (the one with \<inter> theta = {}).\<close>
+    \<comment> \<open>Arc3 \<inter> (e12\<union>Arc2) = {a1,a2}. So Arc3-{a1,a2} \<subseteq> S2-(e12\<union>Arc2).
+       Arc3-{a1,a2} connected \<Rightarrow> in W12a or W12b.\<close>
+    have hArc3_sub_J12: "Arc3 - {a1, a2} \<subseteq> top1_S2 - (e12 \<union> Arc2)"
+    proof -
+      have "Arc3 \<inter> e12 = {a1, a2}" using hint13 by (by100 blast)
+      moreover have "Arc3 \<inter> Arc2 = {a1, a2}" using hint23 by (by100 blast)
+      ultimately have "Arc3 \<inter> (e12 \<union> Arc2) = {a1, a2}" by (by100 blast)
+      thus ?thesis using hArc3_sub by (by100 blast)
+    qed
+    \<comment> \<open>Each Ri \<subseteq> S2-theta \<subseteq> S2-J12 = W12a \<union> W12b.\<close>
+    \<comment> \<open>Arc3-{a1,a2} in one side. Ri\_D in one side. If in same side, their union side
+       covers S2-J12 minus the other-side part. The other side = Q12 \<subseteq> S2-theta.\<close>
+    \<comment> \<open>Key: Ri\_D is D' = B (a connected component of S2-D\_loc).
+       closure(D') \<subseteq> D' \<union> D\_loc.
+       If D' = W12a (a J12 component): closure(D') = D' \<union> J12 (from hcl\_scc\_comp).
+       Then J12 \<subseteq> D' \<union> D\_loc. D' \<inter> J12 = {} (D' \<subseteq> S2-theta \<subseteq> S2-J12). So J12 \<subseteq> D\_loc.
+       Apply hJ\_sub\_D\_loc\_False.\<close>
+    \<comment> \<open>If D' \<noteq> W12a and D' \<noteq> W12b: impossible (D' connected \<subseteq> W12a\<union>W12b).\<close>
+    have hD'_in_W12: "D' \<subseteq> W12a \<or> D' \<subseteq> W12b"
+    proof -
+      have hD'_sub_J12c: "D' \<subseteq> top1_S2 - (e12 \<union> Arc2)"
+        using hD'_eq hRiD_sub_theta_compl by (by100 blast)
+      hence hD'_sub_W12: "D' \<subseteq> W12a \<union> W12b" using hW12(4) by (by100 blast)
+      have hTJ12: "is_topology_on (top1_S2 - (e12\<union>Arc2)) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (e12\<union>Arc2)))"
+        by (rule subspace_topology_is_topology_on[OF hTopS2]) (by100 blast)
+      have hW12a_open_sub: "W12a \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - (e12\<union>Arc2))"
+        using hW12_open unfolding subspace_topology_def using hW12(4) by (by100 blast)
+      have hW12b_open_sub: "W12b \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - (e12\<union>Arc2))"
+        using hW12_open unfolding subspace_topology_def using hW12(4) by (by100 blast)
+      have hSep_W12: "top1_is_separation_on (top1_S2 - (e12\<union>Arc2))
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (e12\<union>Arc2))) W12a W12b"
+        unfolding top1_is_separation_on_def
+        using hW12a_open_sub hW12b_open_sub hW12(1,2,3,4) by (by100 blast)
+      have hD'_conn_W12: "top1_connected_on D'
+          (subspace_topology (top1_S2 - (e12\<union>Arc2))
+              (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (e12\<union>Arc2))) D')"
+      proof -
+        have "subspace_topology top1_S2 top1_S2_topology D' =
+            subspace_topology (top1_S2-(e12\<union>Arc2))
+                (subspace_topology top1_S2 top1_S2_topology (top1_S2-(e12\<union>Arc2))) D'"
+          using subspace_topology_trans[of D' "top1_S2-(e12\<union>Arc2)" top1_S2 top1_S2_topology]
+              hD'_sub_J12c by (by100 simp)
+        thus ?thesis using hD'_conn by (by100 simp)
+      qed
+      from Lemma_23_2[OF hTJ12 hSep_W12 hD'_sub_J12c hD'_conn_W12]
+      show ?thesis by (by100 blast)
+    qed
+    show False
+    proof (cases "D' = W12a \<or> D' = W12b")
+      case True
+      \<comment> \<open>D' is a full J12-component. closure(D') = D'\<union>J12.\<close>
+      \<comment> \<open>Closure of W12a and W12b.\<close>
+      have hcl_W12a: "closure_on top1_S2 top1_S2_topology W12a = W12a \<union> (e12 \<union> Arc2)"
+        by (rule hcl_scc_comp[OF hJ12_scc hW12(1,2,3,4,5,6) hW12_open[THEN conjunct1] hW12_open[THEN conjunct2]])
+      have hcl_W12b: "closure_on top1_S2 top1_S2_topology W12b = W12b \<union> (e12 \<union> Arc2)"
+      proof -
+        have h1: "W12b \<inter> W12a = {}" using hW12(3) by (by100 blast)
+        have h2: "W12b \<union> W12a = top1_S2 - (e12 \<union> Arc2)" using hW12(4) by (by100 blast)
+        show ?thesis
+          by (rule hcl_scc_comp[OF hJ12_scc hW12(2,1) h1 h2 hW12(6,5) hW12_open[THEN conjunct2] hW12_open[THEN conjunct1]])
+      qed
+      have hcl_D'_J12: "closure_on top1_S2 top1_S2_topology D' = D' \<union> (e12 \<union> Arc2)"
+        using True hcl_W12a hcl_W12b by (by100 blast)
+      \<comment> \<open>Combined with hcl\_D'\_sub: J12 \<subseteq> D' \<union> D\_loc.\<close>
+      have "D' \<union> (e12 \<union> Arc2) \<subseteq> D' \<union> D_loc"
+        using hcl_D'_J12 hcl_D'_sub by (by100 blast)
+      hence "e12 \<union> Arc2 \<subseteq> D' \<union> D_loc" by (by100 blast)
+      moreover have "D' \<inter> (e12 \<union> Arc2) = {}"
+      proof -
+        have "D' \<subseteq> top1_S2 - (e12 \<union> Arc2 \<union> Arc3)"
+          using hD'_eq hRiD_sub_theta_compl by (by100 simp)
+        thus ?thesis by (by100 blast)
+      qed
+      ultimately have hJ12_sub_D: "e12 \<union> Arc2 \<subseteq> D_loc" by (by100 blast)
+      have hJ12_is_J: "e12 \<union> Arc2 = e12 \<union> Arc2 \<or> e12 \<union> Arc2 = e12 \<union> Arc3" by (by100 blast)
+      from hJ_sub_D_loc_False[OF hJ12_is_J hJ12_sub_D] show False .
+    next
+      case False
+      \<comment> \<open>D' is NOT a full J12-component. Then D' \<subsetneq> W12a or W12b.\<close>
+      \<comment> \<open>This case requires the J13 argument. D' not full J12 comp means
+         Q12 (the J12 comp = some Ri) is NOT Ri\_D, so Q12 = Rk.
+         Similarly for J13: Q13 = Rk. Then closure(Rk)=Rk\<union>J12=Rk\<union>J13, J12=J13.\<close>
+      \<comment> \<open>D' \<subsetneq> W12a or W12b. The OTHER component Q12 \<subseteq> S2-theta = R1\<union>R2\<union>R3.
+         Q12 connected, Q12 = some Ri. Since Q12 \<inter> D' = {}: Ri \<noteq> Ri\_D. And Ri \<noteq> Ri\_e (by a4).
+         Hence Q12 = Rk. Similarly for J13: Q13 = Rk.
+         closure(Rk) = Rk \<union> J12 = Rk \<union> J13. Rk \<inter> J12 = Rk \<inter> J13 = {} \<Rightarrow> J12 = J13 \<Rightarrow>
+         Arc2 = Arc3 \<Rightarrow> a3 \<in> Arc3 = e24\<union>e41 \<Rightarrow> False.\<close>
+      \<comment> \<open>Q12 argument: the J12-component NOT containing D'.\<close>
+      have "D' \<noteq> W12a" "D' \<noteq> W12b" using False by (by100 blast)+
+      \<comment> \<open>D' \<subseteq> W12a or W12b (hD'\_in\_W12). Pick the component containing D'.\<close>
+      \<comment> \<open>The OTHER component Q12 has Q12 \<inter> D' = {} and Q12 \<inter> theta = {}.\<close>
+      \<comment> \<open>For each case: Q12 \<subseteq> S2-theta \<Rightarrow> Q12 \<subseteq> R1\<union>R2\<union>R3 \<Rightarrow> Q12 = some Ri.\<close>
+      \<comment> \<open>Then similarly for J13. If same Ri for both: J12=J13.\<close>
+      \<comment> \<open>If different: one of them = Ri\_D, contradicting D' \<noteq> component.\<close>
+      \<comment> \<open>For now, use the closure(D') \<subseteq> D'\<union>D\_loc to get J13\<subseteq>D\_loc too.\<close>
+      \<comment> \<open>Actually: D' is NOT a FULL component of S2-J12, so we use J13 instead.\<close>
+      \<comment> \<open>Get J13 components similarly.\<close>
+      have hJ13_cl_Arc3: "closedin_on top1_S2 top1_S2_topology Arc3"
+        by (rule arc_in_S2_closed[OF hArc3_sub hArc3_arc])
+      have hJ13_card: "card (e12 \<inter> Arc3) = 2" using hint13 ha1_ne_a2 by (by100 simp)
+      obtain W13a W13b where hW13: "W13a \<noteq> {}" "W13b \<noteq> {}" "W13a \<inter> W13b = {}"
+          "W13a \<union> W13b = top1_S2 - (e12 \<union> Arc3)"
+          "top1_connected_on W13a (subspace_topology top1_S2 top1_S2_topology W13a)"
+          "top1_connected_on W13b (subspace_topology top1_S2 top1_S2_topology W13b)"
+        using Theorem_63_5_two_closed_connected[OF assms(1) hJ12_cl_e12 hJ13_cl_Arc3
+            arc_connected[OF assms(10)] arc_connected[OF hArc3_arc] hJ13_card
+            Theorem_63_2_arc_no_separation[OF assms(1,4,10)]
+            Theorem_63_2_arc_no_separation[OF assms(1) hArc3_sub hArc3_arc]]
+        by (metis (no_types))
+      have hJ13_cl: "closedin_on top1_S2 top1_S2_topology (e12 \<union> Arc3)"
+        by (rule closedin_on_Un[OF hTopS2 hJ12_cl_e12 hJ13_cl_Arc3])
+      have hJ13_open: "top1_S2 - (e12 \<union> Arc3) \<in> top1_S2_topology"
+        using hJ13_cl unfolding closedin_on_def by (by100 blast)
+      have hJ13_not_conn: "\<not> top1_connected_on (top1_S2 - (e12 \<union> Arc3))
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (e12 \<union> Arc3)))"
+      proof -
+        have "top1_separates_on top1_S2 top1_S2_topology (e12 \<union> Arc3)"
+          by (rule Theorem_61_3_JordanSeparation_S2[OF assms(1) hJ13_scc])
+        thus ?thesis unfolding top1_separates_on_def by (by100 simp)
+      qed
+      have hW13_open: "W13a \<in> top1_S2_topology \<and> W13b \<in> top1_S2_topology"
+        using S2_two_component_open[OF hJ13_open _ hW13(1,2,3,4,5,6) hJ13_not_conn]
+        by (by100 blast)
+      \<comment> \<open>D' in one of W13a, W13b (same Lemma\_23\_2 argument).\<close>
+      have hD'_in_W13: "D' \<subseteq> W13a \<or> D' \<subseteq> W13b"
+      proof -
+        have hD'_sub_J13c: "D' \<subseteq> top1_S2 - (e12 \<union> Arc3)"
+          using hD'_eq hRiD_sub_theta_compl by (by100 blast)
+        have hTJ13_loc: "is_topology_on (top1_S2 - (e12\<union>Arc3)) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (e12\<union>Arc3)))"
+          by (rule subspace_topology_is_topology_on[OF hTopS2]) (by100 blast)
+        have "W13a \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - (e12\<union>Arc3))"
+          using hW13_open unfolding subspace_topology_def using hW13(4) by (by100 blast)
+        moreover have "W13b \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - (e12\<union>Arc3))"
+          using hW13_open unfolding subspace_topology_def using hW13(4) by (by100 blast)
+        ultimately have hSep_W13: "top1_is_separation_on (top1_S2 - (e12\<union>Arc3))
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (e12\<union>Arc3))) W13a W13b"
+          unfolding top1_is_separation_on_def using hW13(1,2,3,4) by (by100 blast)
+        have "top1_connected_on D'
+            (subspace_topology (top1_S2 - (e12\<union>Arc3))
+                (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (e12\<union>Arc3))) D')"
+        proof -
+          have "subspace_topology top1_S2 top1_S2_topology D' =
+              subspace_topology (top1_S2-(e12\<union>Arc3))
+                  (subspace_topology top1_S2 top1_S2_topology (top1_S2-(e12\<union>Arc3))) D'"
+            using subspace_topology_trans[of D' "top1_S2-(e12\<union>Arc3)" top1_S2 top1_S2_topology]
+                hD'_sub_J13c by (by100 simp)
+          thus ?thesis using hD'_conn by (by100 simp)
+        qed
+        from Lemma_23_2[OF hTJ13_loc hSep_W13 hD'_sub_J13c this]
+        show ?thesis by (by100 blast)
+      qed
+      \<comment> \<open>Is D' a full J13 component?\<close>
+      show False
+      proof (cases "D' = W13a \<or> D' = W13b")
+        case True
+        \<comment> \<open>D' IS a J13 component. Same closure argument as J12 case.\<close>
+        have hcl_W13a: "closure_on top1_S2 top1_S2_topology W13a = W13a \<union> (e12 \<union> Arc3)"
+          by (rule hcl_scc_comp[OF hJ13_scc hW13(1,2,3,4,5,6) hW13_open[THEN conjunct1] hW13_open[THEN conjunct2]])
+        have hcl_W13b: "closure_on top1_S2 top1_S2_topology W13b = W13b \<union> (e12 \<union> Arc3)"
+        proof -
+          have h1: "W13b \<inter> W13a = {}" using hW13(3) by (by100 blast)
+          have h2: "W13b \<union> W13a = top1_S2 - (e12 \<union> Arc3)" using hW13(4) by (by100 blast)
+          show ?thesis by (rule hcl_scc_comp[OF hJ13_scc hW13(2,1) h1 h2 hW13(6,5) hW13_open[THEN conjunct2] hW13_open[THEN conjunct1]])
+        qed
+        have hcl_D'_J13: "closure_on top1_S2 top1_S2_topology D' = D' \<union> (e12 \<union> Arc3)"
+          using True hcl_W13a hcl_W13b by (by100 blast)
+        have "D' \<union> (e12 \<union> Arc3) \<subseteq> D' \<union> D_loc"
+          using hcl_D'_J13 hcl_D'_sub by (by100 blast)
+        hence "e12 \<union> Arc3 \<subseteq> D' \<union> D_loc" by (by100 blast)
+        moreover have "D' \<inter> (e12 \<union> Arc3) = {}"
+          using hD'_eq hRiD_sub_theta_compl by (by100 blast)
+        ultimately have "e12 \<union> Arc3 \<subseteq> D_loc" by (by100 blast)
+        have "e12 \<union> Arc3 = e12 \<union> Arc3 \<or> e12 \<union> Arc3 = e12 \<union> Arc3" by (by100 blast)
+        hence "e12 \<union> Arc3 = e12 \<union> Arc2 \<or> e12 \<union> Arc3 = e12 \<union> Arc3" by (by100 blast)
+        from hJ_sub_D_loc_False[OF this \<open>e12 \<union> Arc3 \<subseteq> D_loc\<close>] show False .
+      next
+        case J13_False: False
+        \<comment> \<open>D' is NOT a full component of EITHER J12 or J13.
+           Then the "other" J12-component Q12 and "other" J13-component Q13 are NOT D'.
+           Both are connected subsets of S2-theta = R1\<union>R2\<union>R3, hence each = some Ri.
+           Cannot be Ri\_D (disjoint from D' complement). Cannot be Ri\_e (by a4/a3).
+           Hence both = Rk. closure(Rk) = Rk\<union>J12 = Rk\<union>J13 \<Rightarrow> J12=J13 \<Rightarrow> Arc2=Arc3.\<close>
+        \<comment> \<open>a3, a4 \<in> closure(Ri\_e) via arc\_endpoint\_in\_closure\_of\_interior.\<close>
+        have ha34_ne: "a3 \<noteq> a4" using ha3_ne_a4 .
+        have ha4_in_cl_e34: "a4 \<in> closure_on top1_S2 top1_S2_topology (e34 - {a3, a4})"
+          using arc_endpoint_in_closure_of_interior[OF assms(1) hS2_haus assms(6,12,18) ha34_ne]
+          by (by100 blast)
+        have ha3_in_cl_e34: "a3 \<in> closure_on top1_S2 top1_S2_topology (e34 - {a3, a4})"
+          using arc_endpoint_in_closure_of_interior[OF assms(1) hS2_haus assms(6,12,18) ha34_ne]
+          by (by100 blast)
+        have ha4_in_cl_Rie: "a4 \<in> closure_on top1_S2 top1_S2_topology Ri_e"
+          using ha4_in_cl_e34 closure_on_mono[OF hRie(2)] by (by100 blast)
+        have ha3_in_cl_Rie: "a3 \<in> closure_on top1_S2 top1_S2_topology Ri_e"
+          using ha3_in_cl_e34 closure_on_mono[OF hRie(2)] by (by100 blast)
+        \<comment> \<open>Ri\_e \<subseteq> P12 (not Q12): if Ri\_e \<subseteq> Q12, a4 \<in> cl(Ri\_e) \<subseteq> cl(Q12) = Q12\<union>J12,
+           but a4 \<notin> Q12 (a4\<in>theta) and a4 \<notin> J12 (ha4\_not\_e12, ha4\_not\_Arc2). Contradiction.\<close>
+        have hRie_not_Q12: "\<And>Q. \<lbrakk>Q \<in> {W12a, W12b}; Q \<inter> D' = {};
+            closure_on top1_S2 top1_S2_topology Q = Q \<union> (e12 \<union> Arc2)\<rbrakk> \<Longrightarrow> \<not>(Ri_e \<subseteq> Q)"
+        proof -
+          fix Q assume hQ: "Q \<in> {W12a, W12b}" and hQD': "Q \<inter> D' = {}"
+              and hcl_Q: "closure_on top1_S2 top1_S2_topology Q = Q \<union> (e12 \<union> Arc2)"
+          show "\<not>(Ri_e \<subseteq> Q)"
+          proof assume "Ri_e \<subseteq> Q"
+            have "a4 \<in> closure_on top1_S2 top1_S2_topology Q"
+              using ha4_in_cl_Rie closure_on_mono[OF \<open>Ri_e \<subseteq> Q\<close>] by (by100 blast)
+            hence "a4 \<in> Q \<union> (e12 \<union> Arc2)" using hcl_Q by (by100 blast)
+            moreover have "a4 \<notin> Q"
+            proof -
+              have "Q \<subseteq> top1_S2 - (e12 \<union> Arc2)" using hQ hW12(4) by (by100 blast)
+              hence "Q \<subseteq> top1_S2 - (e12 \<union> Arc2 \<union> Arc3)"
+                sorry \<comment> \<open>Q \<subseteq> S2-J12 and Q\<inter>Arc3 = {} (Q\<inter>theta = {}).\<close>
+              thus ?thesis using ha4_not_e12 ha4_not_Arc2
+                using assms(19) unfolding top1_arc_endpoints_on_def defs by (by100 blast)
+            qed
+            moreover have "a4 \<notin> e12" by (rule ha4_not_e12)
+            moreover have "a4 \<notin> Arc2" by (rule ha4_not_Arc2)
+            ultimately show False by (by100 blast)
+          qed
+        qed
+        have hRie_not_Q13: "\<And>Q. \<lbrakk>Q \<in> {W13a, W13b}; Q \<inter> D' = {};
+            closure_on top1_S2 top1_S2_topology Q = Q \<union> (e12 \<union> Arc3)\<rbrakk> \<Longrightarrow> \<not>(Ri_e \<subseteq> Q)"
+        proof -
+          fix Q assume hQ: "Q \<in> {W13a, W13b}" and hQD': "Q \<inter> D' = {}"
+              and hcl_Q: "closure_on top1_S2 top1_S2_topology Q = Q \<union> (e12 \<union> Arc3)"
+          show "\<not>(Ri_e \<subseteq> Q)"
+          proof assume "Ri_e \<subseteq> Q"
+            have "a3 \<in> closure_on top1_S2 top1_S2_topology Q"
+              using ha3_in_cl_Rie closure_on_mono[OF \<open>Ri_e \<subseteq> Q\<close>] by (by100 blast)
+            hence "a3 \<in> Q \<union> (e12 \<union> Arc3)" using hcl_Q by (by100 blast)
+            moreover have "a3 \<notin> Q"
+            proof -
+              have "Q \<subseteq> top1_S2 - (e12 \<union> Arc3)" using hQ hW13(4) by (by100 blast)
+              thus ?thesis using ha3_not_e12 ha3_not_Arc3
+                using assms(18) unfolding top1_arc_endpoints_on_def defs by (by100 blast)
+            qed
+            moreover have "a3 \<notin> e12" by (rule ha3_not_e12)
+            moreover have "a3 \<notin> Arc3" by (rule ha3_not_Arc3)
+            ultimately show False by (by100 blast)
+          qed
+        qed
+        \<comment> \<open>Final: since D' \<neq> any J12/J13 component, and Ri\_e not in Q12/Q13,
+           the Q components must equal Rk (the third theta component).
+           closure(Rk) = Rk\<union>J12 = Rk\<union>J13. Rk\<inter>J12 = Rk\<inter>J13 = {}.
+           So J12 = J13, i.e., e12\<union>Arc2 = e12\<union>Arc3. Hence Arc2 = Arc3.
+           But a3 \<in> Arc2 and a3 \<notin> Arc3. Contradiction.\<close>
+        show False sorry \<comment> \<open>J12=J13 from Rk being component of both.\<close>
+      qed
+    qed
+  qed
+  show ?thesis
+  proof (intro conjI notI)
+    assume h: "e12 - {a1, a2} \<subseteq> A \<and> e34 - {a3, a4} \<subseteq> A"
+    show False by (rule h_both_cases[OF assms(37,38,39) _ assms(41,42) hA_open_S2 hB_open_S2])
+       (use h hAB_decomp in \<open>by100 blast\<close>)+
+  next
+    assume h: "e12 - {a1, a2} \<subseteq> B \<and> e34 - {a3, a4} \<subseteq> B"
+    show False
+    proof -
+      have "A \<inter> B = {}" using assms(39) by (by100 blast)
+      hence hBA: "B \<inter> A = {}" by (by100 blast)
+      have hBA_union: "B \<union> A = A \<union> B" by (by100 blast)
+      show ?thesis by (rule h_both_cases[OF assms(38,37) hBA hBA_union assms(42,41) hB_open_S2 hA_open_S2])
+         (use h in \<open>by100 blast\<close>)+
+    qed
+  qed
 qed
 
 (** from \<S>65 Lemma 65.1(b): for K_4 subspace of S^2, the inclusion j: C \<rightarrow> S^2-p-q
@@ -3654,8 +4220,7 @@ proof -
       then show ?thesis by (rule that)
     qed
     have hTR2: "is_topology_on R2_0 TR2_0"
-      using hh_homeo unfolding top1_homeomorphism_on_def top1_continuous_map_on_def
-        is_topology_on_def TR2_0_def by (by100 blast)
+      using hh_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
     have hhc0: "h c0 \<in> R2_0"
       using hh_homeo hc0_X unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
     have hiso_XR2: "top1_groups_isomorphic_on
