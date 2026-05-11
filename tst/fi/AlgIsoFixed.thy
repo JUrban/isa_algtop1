@@ -1037,11 +1037,7 @@ proof -
   have hTC: "is_topology_on C ?TC"
     by (rule subspace_topology_is_topology_on[OF hTopS2]) (use hC_sub_S2 in \<open>by100 blast\<close>)
   have hj_cont: "top1_continuous_map_on C ?TC ?X ?TX id"
-  proof -
-    have "top1_continuous_map_on C (subspace_topology top1_S2 top1_S2_topology C) top1_S2 top1_S2_topology id"
-      using Theorem_18_2[OF hTopS2 hTopS2 hTopS2] hC_sub_S2 by (by100 blast)
-    thus ?thesis sorry \<comment> \<open>Restrict codomain from S2 to X using C \<subseteq> X.\<close>
-  qed
+    sorry \<comment> \<open>Inclusion C \<hookrightarrow> X continuous. Follows from C \<subseteq> X \<subseteq> S2 + Theorem\_18\_2 + restrict\_codomain.\<close>
   have hj_star_hom: "top1_group_hom_on
       (top1_fundamental_group_carrier C ?TC c0) (top1_fundamental_group_mul C ?TC c0)
       (top1_fundamental_group_carrier ?X ?TX c0) (top1_fundamental_group_mul ?X ?TX c0) ?j_star"
@@ -1050,7 +1046,56 @@ proof -
   \<comment> \<open>Step 3: Both groups are infinite cyclic (\<cong> Z).
      From existing infrastructure: SCC\_pi1\_iso\_Z and pi1\_S2\_minus\_two\_points.\<close>
   have hC_scc: "top1_simple_closed_curve_on top1_S2 top1_S2_topology C"
-    sorry \<comment> \<open>C = e12\<union>e23\<union>e34\<union>e41 is SCC: 4 arcs forming a cycle. Proved in Lemma\_65\_1.\<close>
+  proof -
+    \<comment> \<open>C = (e12\<union>e23) \<union> (e34\<union>e41). Each half is an arc from a1 to a3 (resp a3 to a1).\<close>
+    have ha1_ne_a2: "a1 \<noteq> a2" using assms(2) by (auto simp: card_insert_if split: if_splits)
+    have ha1_ne_a3: "a1 \<noteq> a3" using assms(2) by (auto simp: card_insert_if split: if_splits)
+    have ha3_ne_a4: "a3 \<noteq> a4" using assms(2) by (auto simp: card_insert_if split: if_splits)
+    have ha1_ne_a4: "a1 \<noteq> a4" using assms(2) by (auto simp: card_insert_if split: if_splits)
+    have ha2_e12: "a2 \<in> top1_arc_endpoints_on e12 (subspace_topology top1_S2 top1_S2_topology e12)"
+      using assms(16) by (by100 blast)
+    have ha2_e23: "a2 \<in> top1_arc_endpoints_on e23 (subspace_topology top1_S2 top1_S2_topology e23)"
+      using assms(17) by (by100 blast)
+    have hArc1_arc: "top1_is_arc_on (e12 \<union> e23) (subspace_topology top1_S2 top1_S2_topology (e12 \<union> e23))"
+      by (rule arcs_concatenation_is_arc[OF assms(1) hS2_haus assms(10,4,11,5) assms(24) ha2_e12 ha2_e23])
+    have ha4_e34: "a4 \<in> top1_arc_endpoints_on e34 (subspace_topology top1_S2 top1_S2_topology e34)"
+      using assms(18) by (by100 blast)
+    have ha4_e41: "a4 \<in> top1_arc_endpoints_on e41 (subspace_topology top1_S2 top1_S2_topology e41)"
+      using assms(19) by (by100 blast)
+    have hArc2_arc: "top1_is_arc_on (e34 \<union> e41) (subspace_topology top1_S2 top1_S2_topology (e34 \<union> e41))"
+      by (rule arcs_concatenation_is_arc[OF assms(1) hS2_haus assms(12,6,13,7) assms(26) ha4_e34 ha4_e41])
+    have hArc1_sub: "e12 \<union> e23 \<subseteq> top1_S2" using assms(4,5) by (by100 blast)
+    have hArc2_sub: "e34 \<union> e41 \<subseteq> top1_S2" using assms(6,7) by (by100 blast)
+    have ha2_ne_a1: "a2 \<noteq> a1" using ha1_ne_a2 by (by100 blast)
+    have ha2_ne_a3: "a2 \<noteq> a3" using assms(2) by (auto simp: card_insert_if split: if_splits)
+    have hep_e23_swap: "top1_arc_endpoints_on e23 (subspace_topology top1_S2 top1_S2_topology e23) = {a3, a2}"
+      using assms(17) by (by100 blast)
+    have hArc1_ep: "top1_arc_endpoints_on (e12 \<union> e23) (subspace_topology top1_S2 top1_S2_topology (e12 \<union> e23)) = {a1, a3}"
+      by (rule arc_concat_endpoints[OF assms(1) hS2_haus assms(10,4,11,5) assms(24) ha2_e12 ha2_e23
+          assms(16) assms(17) ha1_ne_a2 ha2_ne_a3])
+    have ha4_ne_a3: "a4 \<noteq> a3" using ha3_ne_a4 by (by100 blast)
+    have ha4_ne_a1: "a4 \<noteq> a1" using ha1_ne_a4 by (by100 blast)
+    have hep_e41_swap: "top1_arc_endpoints_on e41 (subspace_topology top1_S2 top1_S2_topology e41) = {a1, a4}"
+      using assms(19) by (by100 blast)
+    have hArc2_ep: "top1_arc_endpoints_on (e34 \<union> e41) (subspace_topology top1_S2 top1_S2_topology (e34 \<union> e41)) = {a3, a1}"
+      by (rule arc_concat_endpoints[OF assms(1) hS2_haus assms(12,6,13,7) assms(26) ha4_e34 ha4_e41
+          assms(18) assms(19) ha3_ne_a4 ha4_ne_a1])
+    have hint: "(e12 \<union> e23) \<inter> (e34 \<union> e41) = {a1, a3}"
+    proof -
+      have "e12 \<inter> e34 = {}" by (rule assms(22))
+      moreover have "e12 \<inter> e41 = {a1}" using assms(27) by (by100 blast)
+      moreover have "e23 \<inter> e34 = {a3}" by (rule assms(25))
+      moreover have "e23 \<inter> e41 = {}" by (rule assms(23))
+      ultimately show ?thesis by (by100 blast)
+    qed
+    have hArc2_ep': "top1_arc_endpoints_on (e34 \<union> e41) (subspace_topology top1_S2 top1_S2_topology (e34 \<union> e41)) = {a1, a3}"
+      using hArc2_ep by (by100 blast)
+    have "top1_simple_closed_curve_on top1_S2 top1_S2_topology ((e12 \<union> e23) \<union> (e34 \<union> e41))"
+      by (rule arcs_form_simple_closed_curve[OF assms(1) hS2_haus hArc1_arc hArc1_sub
+          hArc2_arc hArc2_sub hint ha1_ne_a3 hArc1_ep hArc2_ep'])
+    moreover have "(e12 \<union> e23) \<union> (e34 \<union> e41) = C" using assms(39) by (by100 blast)
+    ultimately show ?thesis by (by100 simp)
+  qed
   have hp_ne_q: "p \<noteq> q"
   proof
     assume "p = q"
