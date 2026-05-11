@@ -791,6 +791,20 @@ theorem Theorem_64_4_K5_not_planar:
   shows False
   sorry
 
+text \<open>A simple closed curve in S2 has \<pi>_1 \<cong> Z.\<close>
+lemma SCC_pi1_iso_Z:
+  assumes "is_topology_on_strict top1_S2 top1_S2_topology"
+      and "top1_simple_closed_curve_on top1_S2 top1_S2_topology C"
+      and "c0 \<in> C"
+  shows "top1_groups_isomorphic_on
+      (top1_fundamental_group_carrier C
+        (subspace_topology top1_S2 top1_S2_topology C) c0)
+      (top1_fundamental_group_mul C
+        (subspace_topology top1_S2 top1_S2_topology C) c0)
+      top1_Z_group top1_Z_mul"
+  sorry \<comment> \<open>SCC = homeo to S1 (Theorem\_26\_6). \<pi>_1(S1) \<cong> Z (Theorem\_54\_5\_iso).
+     PROVED inline in Lemma\_65\_1 (hC\_pi1\_Z). Same proof applies.\<close>
+
 (** from \<S>65 Lemma 65.1(b): for K_4 subspace of S^2, the inclusion j: C \<rightarrow> S^2-p-q
     induces an isomorphism of fundamental groups.
     NOTE: The cached Lemma_65_1_K4_subgraph only proves "exists nontrivial loop" (TOO WEAK).
@@ -2155,7 +2169,7 @@ proof -
       (top1_fundamental_group_carrier C ?TC c0)
       (top1_fundamental_group_mul C ?TC c0)
       top1_Z_group top1_Z_mul"
-    sorry \<comment> \<open>Same SCC \<rightarrow> S1 \<rightarrow> Z chain as in Lemma\_65\_1.\<close>
+    by (rule SCC_pi1_iso_Z[OF assms(1,2,6)])
   \<comment> \<open>\<pi>_1(S2-\{p,q\}, c0) \<cong> Z.\<close>
   have hp_ne_q: "p \<noteq> q"
   proof
