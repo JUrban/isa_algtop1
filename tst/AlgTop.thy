@@ -972,9 +972,17 @@ proof -
       qed
     qed
   }
-  \<comment> \<open>Case 2: X and C-{a,b} on same side of A\<union>B. Similarly check B\<union>C and A\<union>C.\<close>
-  \<comment> \<open>Full argument: sorry for now.\<close>
-  show False sorry \<comment> \<open>Case analysis on 3 SCCs + pigeonhole.\<close>
+  \<comment> \<open>Now use the case 1 result: if X and C on different sides of A\<union>B, done.
+     Otherwise: X and C on same side. Do the same for B\<union>C (with E1) and A\<union>C (with E2).
+     If any SCC separates X from the opposite arc: done (same E-bridges argument).
+     If ALL 3 SCCs have X on same side as the opposite arc:
+     pigeonhole \<Rightarrow> one of {U,V,W}-{X} is alone for 2 SCCs \<Rightarrow> J1=J2 \<Rightarrow> False.\<close>
+  \<comment> \<open>If X and C on different sides of A\<union>B: E3 bridges, done (proved above).
+     If same side: repeat with B\<union>C (E1) and A\<union>C (E2).
+     By symmetry, if any SCC separates X from the opposite arc: same E-bridges proof.
+     If ALL same side: pigeonhole \<Rightarrow> 2 SCCs have same "lone" component \<Rightarrow>
+     J1 = J2 \<Rightarrow> arc \<subseteq> {a,b} \<Rightarrow> contradiction.\<close>
+  show False sorry \<comment> \<open>3-SCC case analysis + pigeonhole. Uses case 1 for different-side cases.\<close>
 qed
 
 text \<open>Theorem 64.2: The utilities graph K33 cannot be imbedded in the plane.\<close>
