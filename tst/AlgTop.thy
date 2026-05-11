@@ -1088,8 +1088,38 @@ proof -
       (subspace_topology top1_S2 top1_S2_topology (e34 - {a3, a4}))"
     unfolding defs by (rule arc_minus_endpoints_connected[OF assms(1) hS2_haus assms(6,12,18) ha3_ne_a4])
   have hAB_sub_S2: "A \<union> B \<subseteq> top1_S2" using assms(40) unfolding defs by (by100 blast)
-  have hA_open_S2: "A \<in> top1_S2_topology" sorry
-  have hB_open_S2: "B \<in> top1_S2_topology" sorry
+  have hD_is_Arc: "D_loc = Arc2 \<union> Arc3" unfolding defs by (by100 blast)
+  have hD_scc: "top1_simple_closed_curve_on top1_S2 top1_S2_topology D_loc"
+    unfolding hD_is_Arc by (rule arcs_form_simple_closed_curve[OF assms(1) hS2_haus
+        hArc2_arc hArc2_sub hArc3_arc hArc3_sub hint23 ha1_ne_a2 hArc2_ep hArc3_ep])
+  have hD_closed: "closedin_on top1_S2 top1_S2_topology D_loc"
+  proof -
+    have "closedin_on top1_S2 top1_S2_topology e13" unfolding defs
+      by (rule arc_in_S2_closed[OF assms(8,14)])
+    moreover have "closedin_on top1_S2 top1_S2_topology e23" unfolding defs
+      by (rule arc_in_S2_closed[OF assms(5,11)])
+    moreover have "closedin_on top1_S2 top1_S2_topology e24" unfolding defs
+      by (rule arc_in_S2_closed[OF assms(9,15)])
+    moreover have "closedin_on top1_S2 top1_S2_topology e41" unfolding defs
+      by (rule arc_in_S2_closed[OF assms(7,13)])
+    ultimately show ?thesis sorry \<comment> \<open>Union of 4 closed sets is closed.\<close>
+  qed
+  have hW_open: "top1_S2 - D_loc \<in> top1_S2_topology"
+    using hD_closed unfolding closedin_on_def by (by100 blast)
+  have hW_not_conn: "\<not> top1_connected_on (top1_S2 - D_loc)
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - D_loc))"
+  proof -
+    have "top1_separates_on top1_S2 top1_S2_topology D_loc"
+      by (rule Theorem_61_3_JordanSeparation_S2[OF assms(1) hD_scc])
+    thus ?thesis unfolding top1_separates_on_def unfolding defs by (by100 simp)
+  qed
+  have hAB_W: "A \<union> B = top1_S2 - D_loc" using assms(40) unfolding defs by (by100 simp)
+  have hW_sub_S2: "top1_S2 - D_loc \<subseteq> top1_S2" by (by100 blast)
+  have hA_open_S2: "A \<in> top1_S2_topology" and hB_open_S2: "B \<in> top1_S2_topology"
+    using S2_two_component_open[OF hW_open hW_sub_S2 assms(37,38,39) hAB_W assms(41,42) hW_not_conn]
+    by (by100 blast)+
+  hence hA_open_S2: "A \<in> top1_S2_topology" and hB_open_S2: "B \<in> top1_S2_topology"
+    by (by100 blast)+
   have hTAB_loc: "is_topology_on (A \<union> B) (subspace_topology top1_S2 top1_S2_topology (A \<union> B))"
     unfolding defs by (rule subspace_topology_is_topology_on[OF hTopS2]) (use hAB_sub_S2 in \<open>by100 blast\<close>)
   have hA_open_AB: "A \<in> subspace_topology top1_S2 top1_S2_topology (A \<union> B)"
