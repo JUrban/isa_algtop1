@@ -4499,9 +4499,18 @@ proof -
       using hgen_loop hgen_generates by blast
   qed
   \<comment> \<open>\<alpha>*\<beta> is also a loop in X (C \<subseteq> X).\<close>
-  have hx_C: "x \<in> C" using hx_in_CmD1 assms(39) sorry
+  have hx_C: "x \<in> C" using hx_in_CmD1 by (by100 blast)
   have "h\<alpha>\<beta>_loop_X": "top1_is_loop_on ?X ?TX x (top1_path_product \<alpha> \<beta>)"
-    sorry \<comment> \<open>From h\<alpha>\<beta>\_in\_C and C \<subseteq> X: loop in subspace is loop in ambient.\<close>
+  proof -
+    have "top1_is_path_on C ?TC x x (top1_path_product \<alpha> \<beta>)"
+      using h\<alpha>\<beta>_in_C unfolding top1_is_loop_on_def by (by100 blast)
+    have hTC_sub: "?TC = subspace_topology ?X ?TX C"
+      using subspace_topology_trans[of C ?X top1_S2 top1_S2_topology] hC_sub_X by (by100 simp)
+    have "top1_is_path_on C (subspace_topology ?X ?TX C) x x (top1_path_product \<alpha> \<beta>)"
+      using \<open>top1_is_path_on C ?TC x x _\<close> hTC_sub by (by100 simp)
+    from path_in_subspace_is_path_in_ambient'[OF hTX hC_sub_X this]
+    show ?thesis unfolding top1_is_loop_on_def by (by100 blast)
+  qed
   show ?thesis
   proof (intro bexI exI conjI)
     show "top1_is_loop_on C ?TC x (top1_path_product \<alpha> \<beta>)" by (rule h\<alpha>\<beta>_in_C)
@@ -4894,7 +4903,12 @@ proof -
         qed
         \<comment> \<open>[f]\_X = [g^n]\_X (from homotopy).\<close>
         have hc_gn: "c = {h. top1_loop_equiv_on ?X ?TX x (top1_path_power g x n) h}"
-          using path_homotopic_same_class[OF hTX hfgn] hc_eq by (by100 simp)
+        proof -
+          from path_homotopic_same_class[OF hTX hfgn]
+          have "{h. top1_loop_equiv_on ?X ?TX x f h} =
+              {h. top1_loop_equiv_on ?X ?TX x (top1_path_power g x n) h}" .
+          thus ?thesis using hc_eq by (by100 blast)
+        qed
         hence "c = ?j_star_x {h. top1_loop_equiv_on C ?TC x (top1_path_power g x n) h}"
           using hj_class_gn by (by100 simp)
         thus ?thesis using hgn_class_C by (by100 blast)
