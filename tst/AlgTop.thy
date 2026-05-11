@@ -965,18 +965,60 @@ proof -
     by (rule arcs_concatenation_is_arc[OF assms(1) hS2_haus assms(15,9,13,7) _ ha4_e24 ha4_e41])
        (use assms(36) in \<open>by100 blast\<close>)
   have ha1_ne_a2: "a1 \<noteq> a2" using assms(2) by (auto simp: card_insert_if split: if_splits)
+  have ha1_ne_a3: "a1 \<noteq> a3" using assms(2) by (auto simp: card_insert_if split: if_splits)
+  have ha1_ne_a4: "a1 \<noteq> a4" using assms(2) by (auto simp: card_insert_if split: if_splits)
+  have ha2_ne_a3: "a2 \<noteq> a3" using assms(2) by (auto simp: card_insert_if split: if_splits)
+  have ha2_ne_a4: "a2 \<noteq> a4" using assms(2) by (auto simp: card_insert_if split: if_splits)
+  have ha3_ne_a4: "a3 \<noteq> a4" using assms(2) by (auto simp: card_insert_if split: if_splits)
   have hint12: "e12 \<inter> ?Arc2 = {a1, a2}"
     using assms(28,24) by (by100 blast)
   have hint13: "e12 \<inter> ?Arc3 = {a1, a2}"
     using assms(33,27) by (by100 blast)
   have he13_e24_disj: "e13 \<inter> e24 = {}"
-    sorry \<comment> \<open>Diagonals don't cross: needs vertex exclusion proofs (see cached proof lines 56328-56367).\<close>
+  proof -
+    have "e13 \<inter> e24 \<subseteq> {a1,a2,a3,a4}" by (rule assms(32))
+    moreover have "a1 \<notin> e24"
+    proof assume "a1 \<in> e24"
+      hence "a1 \<in> e24 \<inter> e12" using assms(16) unfolding top1_arc_endpoints_on_def by (by100 blast)
+      hence "a1 = a2" using assms(33) by (by100 blast)
+      thus False using ha1_ne_a2 by (by100 blast) qed
+    moreover have "a2 \<notin> e13"
+    proof assume "a2 \<in> e13"
+      hence "a2 \<in> e13 \<inter> e12" using assms(16) unfolding top1_arc_endpoints_on_def by (by100 blast)
+      hence "a2 = a1" using assms(28) by (by100 blast)
+      thus False using ha1_ne_a2 by (by100 blast) qed
+    moreover have "a3 \<notin> e24"
+    proof assume "a3 \<in> e24"
+      hence "a3 \<in> e24 \<inter> e23" using assms(17) unfolding top1_arc_endpoints_on_def by (by100 blast)
+      hence "a3 = a2" using assms(34) by (by100 blast)
+      thus False using ha2_ne_a3 by (by100 blast) qed
+    moreover have "a4 \<notin> e13"
+    proof assume "a4 \<in> e13"
+      hence "a4 \<in> e13 \<inter> e41" using assms(19) unfolding top1_arc_endpoints_on_def by (by100 blast)
+      hence "a4 = a1" using assms(31) by (by100 blast)
+      thus False using ha1_ne_a4 by (by100 blast) qed
+    ultimately show ?thesis by (by100 blast)
+  qed
   have hint23: "?Arc2 \<inter> ?Arc3 = {a1, a2}"
     using he13_e24_disj assms(31,34,23) by (by100 blast)
+  have hep_e23_swap: "top1_arc_endpoints_on e23 (subspace_topology top1_S2 top1_S2_topology e23) = {a3, a2}"
+    using assms(17) by (by100 blast)
+  have ha3_ne_a2: "a3 \<noteq> a2" using ha2_ne_a3 by (by100 blast)
   have hArc2_ep: "top1_arc_endpoints_on ?Arc2 (subspace_topology top1_S2 top1_S2_topology ?Arc2) = {a1, a2}"
-    sorry \<comment> \<open>arc\_concat\_endpoints on e13, e23 at a3.\<close>
+    by (rule arc_concat_endpoints[OF assms(1) hS2_haus assms(14,8,11,5) assms(29)
+          ha3_e13 ha3_e23 assms(20) hep_e23_swap ha1_ne_a3 ha3_ne_a2])
   have hArc3_ep: "top1_arc_endpoints_on ?Arc3 (subspace_topology top1_S2 top1_S2_topology ?Arc3) = {a1, a2}"
-    sorry \<comment> \<open>arc\_concat\_endpoints on e24, e41 at a4.\<close>
+  proof -
+    \<comment> \<open>arc\_concat\_endpoints gives {a2, a1} — need {a1, a2}.\<close>
+    have hep_e41_swap: "top1_arc_endpoints_on e41 (subspace_topology top1_S2 top1_S2_topology e41) = {a4, a1}"
+      using assms(19) by (by100 blast)
+    have ha4_ne_a2: "a4 \<noteq> a2" using ha2_ne_a4 by (by100 blast)
+    have ha4_ne_a1: "a4 \<noteq> a1" using ha1_ne_a4 by (by100 blast)
+    have "top1_arc_endpoints_on ?Arc3 (subspace_topology top1_S2 top1_S2_topology ?Arc3) = {a2, a1}"
+      by (rule arc_concat_endpoints[OF assms(1) hS2_haus assms(15,9,13,7) assms(36)
+            ha4_e24 ha4_e41 assms(21) hep_e41_swap ha2_ne_a4 ha4_ne_a1])
+    thus ?thesis by (by100 blast)
+  qed
   \<comment> \<open>Step 2: Apply Lemma\_64\_1.\<close>
   obtain R1 R2 R3 where hR: "R1 \<noteq> {}" "R2 \<noteq> {}" "R3 \<noteq> {}"
       "R1 \<inter> R2 = {}" "R2 \<inter> R3 = {}" "R1 \<inter> R3 = {}"
