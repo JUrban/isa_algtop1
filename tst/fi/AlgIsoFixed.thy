@@ -2633,6 +2633,31 @@ text \<open>Helper: construct K4 subgraph data from a general SCC on S2.
   This requires constructing arcs in path-connected open subsets of S2 with
   prescribed endpoints and interior points.\<close>
 
+lemma scc_decomp_arc_endpoints:
+  assumes hT: "is_topology_on_strict X TX" and hH: "is_hausdorff_on X TX"
+  and hC: "top1_simple_closed_curve_on X TX C"
+  and hA1: "top1_is_arc_on A1 (subspace_topology X TX A1)"
+  and hA2: "top1_is_arc_on A2 (subspace_topology X TX A2)"
+  and hA1_sub: "A1 \<subseteq> X" and hA2_sub: "A2 \<subseteq> X"
+  and hdecomp: "C = A1 \<union> A2" and hint: "A1 \<inter> A2 = {a, b}" and hab: "a \<noteq> b"
+  shows "top1_arc_endpoints_on A1 (subspace_topology X TX A1) = {a, b}"
+    and "top1_arc_endpoints_on A2 (subspace_topology X TX A2) = {a, b}"
+proof -
+  \<comment> \<open>For an arc A with A \<inter> A' = {a,b}, A \<union> A' = SCC:
+     The arc interior A - {a,b} is connected (homeomorphic to (0,1)).
+     A - {a} is connected (homeomorphic to [0,1)).
+     A - {b} is connected.
+     But A - {p} for p \<in> A - {a,b} is disconnected (p splits the arc).
+     So the arc endpoints (points whose removal leaves A connected) are exactly {a,b}.\<close>
+  \<comment> \<open>endpoints(A1) \<subseteq> {a,b}: removing any p \<notin> {a,b} from A1 disconnects it.\<close>
+  \<comment> \<open>endpoints(A1) \<supseteq> {a,b}: removing a (or b) from A1 leaves it connected
+     because a,b are at the "boundary" of A1 within the SCC.\<close>
+  show "top1_arc_endpoints_on A1 (subspace_topology X TX A1) = {a, b}"
+    sorry
+  show "top1_arc_endpoints_on A2 (subspace_topology X TX A2) = {a, b}"
+    sorry
+qed
+
 lemma K4_from_SCC:
   assumes "is_topology_on_strict top1_S2 top1_S2_topology"
   and "top1_simple_closed_curve_on top1_S2 top1_S2_topology C"
@@ -2803,22 +2828,33 @@ proof -
     sorry \<comment> \<open>Same for arc\_g and C1.\<close>
   \<comment> \<open>a4 is interior to C2 (not an endpoint of C2). Split C2 at a4.\<close>
   have ha4_C2: "a4 \<in> C2" using ha4(1) by (by100 blast)
-  have ha4_not_ep_C2: "a4 \<notin> top1_arc_endpoints_on C2 (subspace_topology top1_S2 top1_S2_topology C2)"
-    sorry \<comment> \<open>Endpoints of C2 are {a1,a3}. a4 \<noteq> a1 and a4 \<noteq> a3.\<close>
   have hC2_ep: "top1_arc_endpoints_on C2 (subspace_topology top1_S2 top1_S2_topology C2) = {a1, a3}"
-    sorry \<comment> \<open>C2 shares endpoints with C1: {a1, a3}.\<close>
+    by (rule scc_decomp_arc_endpoints(2)[OF assms(1) hS2_haus assms(2) hC12(4,5) hC1_sub hC2_sub hC12(1,2,3)])
+  have ha4_not_ep_C2: "a4 \<notin> top1_arc_endpoints_on C2 (subspace_topology top1_S2 top1_S2_topology C2)"
+    using hC2_ep ha4(2,3) by (by100 simp)
   from arc_split_at_given_point[OF assms(1) hS2_haus hC2_sub hC12(5) ha4_C2 ha4_not_ep_C2 hC2_ep hC12(3)]
-  obtain e34 e41 where hC2_split:
-    "C2 = e34 \<union> e41" "e34 \<inter> e41 = {a4}"
+  obtain e34' e41' where hC2_split_raw:
+    "C2 = e34' \<union> e41'" "e34' \<inter> e41' = {a4}"
+    "top1_is_arc_on e34' (subspace_topology top1_S2 top1_S2_topology e34')"
+    "top1_is_arc_on e41' (subspace_topology top1_S2 top1_S2_topology e41')"
+    "a1 \<in> e34'" "a3 \<in> e41'" "a4 \<in> e34'" "a4 \<in> e41'"
+    "e34' \<subseteq> top1_S2" "e41' \<subseteq> top1_S2"
+    by auto
+  \<comment> \<open>Rename: e41 = e34' (contains a1 and a4), e34 = e41' (contains a3 and a4).
+     Convention: e34 connects a3 to a4, e41 connects a4 to a1.\<close>
+  define e34 where "e34 = e41'"
+  define e41 where "e41 = e34'"
+  have hC2_split: "C2 = e34 \<union> e41" "e34 \<inter> e41 = {a4}"
     "top1_is_arc_on e34 (subspace_topology top1_S2 top1_S2_topology e34)"
     "top1_is_arc_on e41 (subspace_topology top1_S2 top1_S2_topology e41)"
-    "a1 \<in> e34" "a3 \<in> e41" "a4 \<in> e34" "a4 \<in> e41"
+    "a3 \<in> e34" "a1 \<in> e41" "a4 \<in> e34" "a4 \<in> e41"
     "e34 \<subseteq> top1_S2" "e41 \<subseteq> top1_S2"
-    sorry \<comment> \<open>Need correct orientation: a1 in one half, a3 in other. May need to swap.\<close>
+    unfolding e34_def e41_def using hC2_split_raw
+    by (by100 blast)+
   \<comment> \<open>Split C1 at a2 similarly.\<close>
   have ha2_C1: "a2 \<in> C1" using ha2(1) by (by100 blast)
   have hC1_ep: "top1_arc_endpoints_on C1 (subspace_topology top1_S2 top1_S2_topology C1) = {a1, a3}"
-    sorry \<comment> \<open>C1 endpoints = {a1, a3}.\<close>
+    by (rule scc_decomp_arc_endpoints(1)[OF assms(1) hS2_haus assms(2) hC12(4,5) hC1_sub hC2_sub hC12(1,2,3)])
   have ha2_not_ep_C1: "a2 \<notin> top1_arc_endpoints_on C1 (subspace_topology top1_S2 top1_S2_topology C1)"
     using hC1_ep ha2(2,3) by (by100 simp)
   from arc_split_at_given_point[OF assms(1) hS2_haus hC1_sub hC12(4) ha2_C1 ha2_not_ep_C1 hC1_ep hC12(3)]
@@ -2828,16 +2864,28 @@ proof -
     "top1_is_arc_on e23 (subspace_topology top1_S2 top1_S2_topology e23)"
     "a1 \<in> e12" "a3 \<in> e23" "a2 \<in> e12" "a2 \<in> e23"
     "e12 \<subseteq> top1_S2" "e23 \<subseteq> top1_S2"
-    sorry \<comment> \<open>Same orientation issue.\<close>
+    by auto
   \<comment> \<open>Endpoints of cycle edges (from arc\_split\_endpoints).\<close>
   have he12_ep: "top1_arc_endpoints_on e12 (subspace_topology top1_S2 top1_S2_topology e12) = {a1, a2}"
-    sorry \<comment> \<open>By arc\_split\_endpoints.\<close>
+    by (rule arc_split_endpoints(1)[OF assms(1) hS2_haus hC1_sub hC12(4)
+        hC1_split(1,2,3,4,5,6,7,8,9,10) hC1_ep ha2_not_ep_C1])
   have he23_ep: "top1_arc_endpoints_on e23 (subspace_topology top1_S2 top1_S2_topology e23) = {a2, a3}"
-    sorry \<comment> \<open>By arc\_split\_endpoints.\<close>
-  have he34_ep: "top1_arc_endpoints_on e34 (subspace_topology top1_S2 top1_S2_topology e34) = {a1, a4}"
-    sorry \<comment> \<open>Note: this should be {a3, a4} or {a1, a4} depending on orientation.\<close>
-  have he41_ep: "top1_arc_endpoints_on e41 (subspace_topology top1_S2 top1_S2_topology e41) = {a4, a3}"
-    sorry
+    by (rule arc_split_endpoints(2)[OF assms(1) hS2_haus hC1_sub hC12(4)
+        hC1_split(1,2,3,4,5,6,7,8,9,10) hC1_ep ha2_not_ep_C1])
+  \<comment> \<open>Endpoints of e34, e41 from the original (raw) C2 split + swapping.\<close>
+  have he34'_ep: "top1_arc_endpoints_on e34' (subspace_topology top1_S2 top1_S2_topology e34') = {a1, a4}"
+    by (rule arc_split_endpoints(1)[OF assms(1) hS2_haus hC2_sub hC12(5)
+        hC2_split_raw(1,2,3,4,5,6,7,8,9,10) hC2_ep ha4_not_ep_C2])
+  have he41'_ep: "top1_arc_endpoints_on e41' (subspace_topology top1_S2 top1_S2_topology e41') = {a4, a3}"
+    by (rule arc_split_endpoints(2)[OF assms(1) hS2_haus hC2_sub hC12(5)
+        hC2_split_raw(1,2,3,4,5,6,7,8,9,10) hC2_ep ha4_not_ep_C2])
+  have he34_ep: "top1_arc_endpoints_on e34 (subspace_topology top1_S2 top1_S2_topology e34) = {a3, a4}"
+  proof -
+    have "{a4, a3} = {a3, a4}" by (by100 blast)
+    thus ?thesis unfolding e34_def using he41'_ep by (by100 simp)
+  qed
+  have he41_ep: "top1_arc_endpoints_on e41 (subspace_topology top1_S2 top1_S2_topology e41) = {a4, a1}"
+    unfolding e41_def using he34'_ep by (by100 blast)
   \<comment> \<open>Diagonal e13: arc from a1 to a3 through p. arc\_f goes p\<rightarrow>q avoiding C1.
      Splice sub-arc of arc\_f from p to a4 with sub-arc of C2 from a4 to a1 (or a3).
      This is intricate and depends on the orientation of arc\_f relative to C2.
