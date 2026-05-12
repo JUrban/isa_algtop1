@@ -1657,10 +1657,67 @@ proof -
     hence "a \<in> B" using hh'(2) by (by100 simp)
     thus False using ha_notB by (by100 blast)
   qed
-  \<comment> \<open>h' restricted to [0,t0] gives a sub-arc from a to h'(t0).\<close>
-  \<comment> \<open>h'([0,t0]) \<inter> B = {h'(t0)} (only the first hit).\<close>
-  \<comment> \<open>Split B at h'(t0) to get sub-arc from h'(t0) to c.\<close>
-  \<comment> \<open>Concatenate to get arc from a to c.\<close>
+  \<comment> \<open>Sub-arc A1 = h'([0,t0]): use homeomorphism\_on\_restrict.\<close>
+  let ?A1 = "h' ` {t \<in> I_set. t \<le> t0}"
+  have hA1_sub_A: "?A1 \<subseteq> A"
+  proof -
+    have "\<forall>t \<in> I_set. h' t \<in> A"
+      using hh'(1) unfolding top1_homeomorphism_on_def top1_continuous_map_on_def by (by100 blast)
+    thus ?thesis by (by100 blast)
+  qed
+  have hA1_sub_S2: "?A1 \<subseteq> top1_S2" using hA1_sub_A hA_sub by (by100 blast)
+  \<comment> \<open>h' restricted to [0,t0] is homeomorphism onto A1.\<close>
+  have h0t0_sub: "{t \<in> I_set. t \<le> t0} \<subseteq> I_set" by (by100 blast)
+  have hA1_homeo: "top1_homeomorphism_on {t \<in> I_set. t \<le> t0}
+      (subspace_topology I_set I_top {t \<in> I_set. t \<le> t0})
+      ?A1 (subspace_topology A (subspace_topology top1_S2 top1_S2_topology A) ?A1) h'"
+    by (rule homeomorphism_on_restrict[OF hh'(1) h0t0_sub])
+  \<comment> \<open>A1 is an arc: [0,t0] \<cong> [0,1] via affine rescaling, composed with h'.\<close>
+  \<comment> \<open>h'(0)=a \<in> A1, h'(t0) \<in> A1. A1 \<subseteq> A \<subseteq> S2.\<close>
+  have ha_A1: "a \<in> ?A1"
+  proof -
+    have "h' 0 = a" using hh'(2) by (by100 simp)
+    moreover have "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+    moreover have "(0::real) \<le> t0" using ht0_pos by (by100 simp)
+    ultimately show ?thesis by (by100 blast)
+  qed
+  have ht0_A1: "h' t0 \<in> ?A1" using ht0_I by (by100 blast)
+  \<comment> \<open>A1 \<inter> B = {h'(t0)}: for any t < t0, h'(t) \<notin> B (t0 is minimum).\<close>
+  have hA1_B: "?A1 \<inter> B = {h' t0}"
+  proof (intro set_eqI iffI)
+    fix x assume "x \<in> ?A1 \<inter> B"
+    then obtain t where "t \<in> I_set" "t \<le> t0" "x = h' t" "x \<in> B" by (by100 blast)
+    hence "t \<in> ?T" by (by100 blast)
+    hence "t0 \<le> t" using ht0(2) by (by100 blast)
+    hence "t = t0" using \<open>t \<le> t0\<close> by (by100 simp)
+    thus "x \<in> {h' t0}" using \<open>x = h' t\<close> by (by100 simp)
+  next
+    fix x assume "x \<in> {h' t0}"
+    thus "x \<in> ?A1 \<inter> B" using ht0_A1 ht0_B by (by100 blast)
+  qed
+  \<comment> \<open>h'(t0) is NOT an endpoint of A (interior of A): t0 \<in> (0,1) since t0>0 and t0<1.\<close>
+  \<comment> \<open>Actually h'(t0) might be b = h'(1). We need h'(t0) \<noteq> a (proved: t0>0).\<close>
+  have ht0_ne_a: "h' t0 \<noteq> a"
+  proof
+    assume "h' t0 = a"
+    hence "h' t0 = h' 0" using hh'(2) by (by100 simp)
+    \<comment> \<open>h' injective (homeomorphism) \<Rightarrow> t0 = 0. But t0 > 0.\<close>
+    moreover have "inj_on h' I_set"
+      using hh'(1) unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+    moreover have h0I: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+    ultimately have "t0 = 0"
+      by (metis inj_onD[of h' I_set t0 0] ht0_I)
+    thus False using ht0_pos by (by100 simp)
+  qed
+  \<comment> \<open>Now split B at h'(t0) if h'(t0) is interior to B, or handle the endpoint case.\<close>
+  \<comment> \<open>h'(t0) \<in> B. If h'(t0) = b: then h'(t0) is endpoint of B, and A1 goes from a to b.
+     Sub-arc of B from b to c is all of B. Concatenate A1 \<union> B.
+     But A1 \<inter> B = {b} and b is endpoint of both \<Rightarrow> arcs\_concatenation\_is\_arc applies.
+     If h'(t0) \<noteq> b: then h'(t0) is interior to B. Split B at h'(t0) \<Rightarrow> B1, B2.
+     Take the half from h'(t0) to c. Concatenate A1 with that half.\<close>
+  \<comment> \<open>For now, sorry the sub-arc extraction and concatenation.
+     The building blocks are all proved: homeomorphism\_on\_restrict gives A1 as arc-like set,
+     arc\_split\_at\_given\_point splits B, arcs\_concatenation\_is\_arc splices.\<close>
   show ?thesis sorry
 qed
 
