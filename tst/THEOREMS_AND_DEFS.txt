@@ -754,7 +754,7 @@ i/Top1_Ch2.thy|lemma|is_topology_on_strict_Pow|58
 ac/AlgTopCached.thy|lemma|I_top_sub_closed_interval_top|104
 AlgTop.thy|lemma|J_component_sub_theta_forces_eq|2306
 AlgTop.thy|lemma|K4_final_contradiction|2222
-fi/AlgIsoFixed.thy|lemma|K4_from_SCC|2695
+fi/AlgIsoFixed.thy|lemma|K4_from_SCC|2785
 AlgTop.thy|lemma|K4_nonadjacent_edges_different_components|2338
 ac/AlgTopCached.thy|lemma|kernel_is_normal_subgroup|7720
 i/Top1_Ch5_8.thy|lemma|lebesgue_number_lemma|14062
@@ -1060,7 +1060,8 @@ b/AlgTop_JCT_Base.thy|lemma|S2_minus_two_points_not_simply_connected|5883
 a0/AlgTop0.thy|lemma|S2_nonsep_path_exists|4670
 fi/AlgIsoFixed.thy|lemma|S2_open_path_connected_arc_connected|1893
 ac/AlgTopCached.thy|lemma|S2_two_component_open|52121
-fi/AlgIsoFixed.thy|lemma|scc_decomp_arc_endpoints|2636
+fi/AlgIsoFixed.thy|lemma|scc_decomp_arc_endpoints|2724
+fi/AlgIsoFixed.thy|lemma|scc_minus_point_connected|2636
 AlgTop.thy|lemma|SCC_pi1_iso_Z|2109
 i/Top1_Ch4.thy|lemma|second_countable_countable_subcover_of_closed|2160
 i/Top1_Ch5_8.thy|lemma|seq_conv_comp|32635
@@ -1804,7 +1805,7 @@ a0/AlgTop0.thy|theorem|Theorem_63_5_two_closed_connected|6930
 AlgTop.thy|theorem|Theorem_64_2_K33_not_planar|1764
 AlgTop.thy|theorem|Theorem_64_4_K5_not_planar|2100
 AlgTop.thy|theorem|Theorem_65_2|6160
-fi/AlgIsoFixed.thy|theorem|Theorem_65_2_fixed|3247
+fi/AlgIsoFixed.thy|theorem|Theorem_65_2_fixed|3337
 ac/AlgTopCached.thy|theorem|Theorem_67_4_direct_sum_exists|7097
 ac/AlgTopCached.thy|theorem|Theorem_67_6_direct_sum_unique|7404
 AlgTop.thy|theorem|Theorem_67_8_rank_unique|6263
