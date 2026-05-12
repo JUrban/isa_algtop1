@@ -2652,10 +2652,44 @@ proof -
   \<comment> \<open>endpoints(A1) \<subseteq> {a,b}: removing any p \<notin> {a,b} from A1 disconnects it.\<close>
   \<comment> \<open>endpoints(A1) \<supseteq> {a,b}: removing a (or b) from A1 leaves it connected
      because a,b are at the "boundary" of A1 within the SCC.\<close>
-  show "top1_arc_endpoints_on A1 (subspace_topology X TX A1) = {a, b}"
-    sorry
+  \<comment> \<open>Proof: if a were interior to A1, A1-{a} has 2 components P,Q.
+     b is in one (say P). Q \<subseteq> A1 - {a,b} \<subseteq> A1 - A2, so Q \<inter> A2 = {}.
+     Then C-{a} = P \<union> Q \<union> (A2-{a}) with Q disjoint from the rest, contradicting
+     C-{a} connected (SCC minus point).\<close>
+  obtain e1 e2 where heps: "top1_arc_endpoints_on A1 (subspace_topology X TX A1) = {e1, e2}"
+      "e1 \<noteq> e2" "e1 \<in> A1" "e2 \<in> A1"
+    sorry \<comment> \<open>Arcs have exactly 2 endpoints, both in the arc.\<close>
+  have ha_ep: "a \<in> {e1, e2}"
+  proof (rule ccontr)
+    assume ha_int: "a \<notin> {e1, e2}"
+    \<comment> \<open>a is interior to A1. A1-{a} is disconnected.\<close>
+    have "a \<in> A1" using hint by (by100 blast)
+    have "\<not> top1_connected_on (A1 - {a}) (subspace_topology A1 (subspace_topology X TX A1) (A1 - {a}))"
+      sorry \<comment> \<open>a \<notin> endpoints(A1) and a \<in> A1 \<Rightarrow> a is interior, so A1-{a} disconnected.\<close>
+    \<comment> \<open>But C-{a} must be connected (SCC minus point homeomorphic to (0,1)).\<close>
+    have hC_sub: "C \<subseteq> X" using hdecomp hA1_sub hA2_sub by (by100 blast)
+    have hCa_conn: "top1_connected_on (C - {a}) (subspace_topology X TX (C - {a}))"
+      sorry \<comment> \<open>SCC minus point is connected.\<close>
+    \<comment> \<open>Derive contradiction: A1-{a} disconnected with Q disjoint from A2.\<close>
+    show False sorry \<comment> \<open>Q component of A1-{a} has Q \<subseteq> A1-A2, Q \<inter> (A2-{a}) = {}, Q \<noteq> {}.
+       C-{a} = (A1-{a}) \<union> (A2-{a}). Q disconnected from rest \<Rightarrow> C-{a} disconnected. \<bottom>.\<close>
+  qed
+  have hb_ep: "b \<in> {e1, e2}"
+  proof (rule ccontr)
+    assume hb_int: "b \<notin> {e1, e2}"
+    have "b \<in> A1" using hint by (by100 blast)
+    have "\<not> top1_connected_on (A1 - {b}) (subspace_topology A1 (subspace_topology X TX A1) (A1 - {b}))"
+      sorry \<comment> \<open>Same: b interior to A1 \<Rightarrow> A1-{b} disconnected.\<close>
+    have hC_sub: "C \<subseteq> X" using hdecomp hA1_sub hA2_sub by (by100 blast)
+    have hCb_conn: "top1_connected_on (C - {b}) (subspace_topology X TX (C - {b}))"
+      sorry \<comment> \<open>SCC minus point is connected.\<close>
+    show False sorry
+  qed
+  from ha_ep hb_ep hab heps(2) show "top1_arc_endpoints_on A1 (subspace_topology X TX A1) = {a, b}"
+    using heps(1) by (by100 blast)
+  \<comment> \<open>Same argument for A2.\<close>
   show "top1_arc_endpoints_on A2 (subspace_topology X TX A2) = {a, b}"
-    sorry
+    sorry \<comment> \<open>Symmetric argument.\<close>
 qed
 
 lemma K4_from_SCC:
