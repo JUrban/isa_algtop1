@@ -2336,13 +2336,15 @@ proof -
   \<comment> \<open>E' is open in U: \<forall>y\<in>E', local\_arc gives V open, y\<in>V\<subseteq>U with arcs.
      For z\<in>V: arc y\<rightarrow>z in V. If y=a: z\<in>E'. If y\<noteq>a: splice arc a\<rightarrow>y + arc y\<rightarrow>z (Step 1) \<Rightarrow> z\<in>E'.
      So V\<subseteq>E'. Hence E' is open (union of open sets).\<close>
-  \<comment> \<open>E' open: each y \<in> E' has arc-connected nbhd V from local\_arc, V \<subseteq> E' by Step 1 splicing.
-     U-E' open: same by contradiction. Both need Munkres\_Step\_1\_arc\_splice.
-     For now: sorry these two standard equivalence-class openness arguments.\<close>
+  \<comment> \<open>E' open: each y \<in> E' has open V \<subseteq> E' (from local\_arc + Step 1 splice).
+     U-E' open: same by contradiction. Both are standard equivalence-class arguments.\<close>
+  \<comment> \<open>Key helper: the open cover property.\<close>
+  have hE'_cover: "\<forall>y. y \<in> ?E' \<longrightarrow> (\<exists>W \<in> top1_S2_topology. y \<in> W \<and> W \<subseteq> ?E')"
+    sorry \<comment> \<open>For y\<in>E': local\_arc gives V, for z\<in>V: arc y\<rightarrow>z + splice with arc a\<rightarrow>y (Step 1) \<Rightarrow> z\<in>E'.\<close>
   have hE'_open: "?E' \<in> subspace_topology top1_S2 top1_S2_topology U"
-    sorry \<comment> \<open>E' open: local\_arc + Step 1 arc splice gives open cover of E'.\<close>
+    sorry \<comment> \<open>E' open: each y\<in>E' has open V with V\<subseteq>E' (from local\_arc + Step 1 splice).\<close>
   have hUE'_open: "U - ?E' \<in> subspace_topology top1_S2 top1_S2_topology U"
-    sorry \<comment> \<open>U-E' open: same argument by contradiction. If z\<in>V\<inter>E' for some y\<in>U-E', splice \<Rightarrow> y\<in>E'. \<bottom>\<close>
+    sorry \<comment> \<open>U-E' open: same by contradiction. V\<inter>E'\<noteq>{} would give y\<in>E' via splice.\<close>
   \<comment> \<open>The path from a to b shows they're in the same path-component.
      That path-component is connected (path-connected \<Rightarrow> connected).
      E' and U-E' partition U. E' \<noteq> {}. If U-E' \<noteq> {}: E' and U-E' form a separation
