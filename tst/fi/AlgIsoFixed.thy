@@ -2986,7 +2986,8 @@ proof -
     hence "b \<in> U \<or> b \<in> V" using hUV(6) by (by100 blast)
     \<comment> \<open>Handle both cases symmetrically. WLOG assume V doesn't contain b.\<close>
     have "\<exists>W. W \<noteq> {} \<and> W \<subseteq> A1 - {a} \<and> W \<inter> (A2 - {a}) = {} \<and>
-        closedin_on (C - {a}) (subspace_topology X TX (C - {a})) W"
+        closedin_on (C - {a}) (subspace_topology X TX (C - {a})) W \<and>
+        closedin_on (C - {a}) (subspace_topology X TX (C - {a})) (C - {a} - W)"
     proof -
       \<comment> \<open>Pick W = part of separation not containing b.\<close>
       define W where "W = (if b \<in> U then V else U)"
@@ -3059,16 +3060,19 @@ proof -
         thus ?thesis unfolding closedin_on_def
           using \<open>W = (C - {a}) \<inter> ?F\<close> by (by100 blast)
       qed
-      show ?thesis using hW_ne hW_sub hW_disj_A2 hW_closed by (by100 blast)
+      \<comment> \<open>Also prove C-{a}-W closed. C-{a}-W = W' \<union> (A2-{a}).
+         W' = other separation part, also closed in A1-{a} (clopen), hence in C-{a}.
+         A2-{a} closed in C-{a} (A2 compact arc \<Rightarrow> closed in X).\<close>
+      have hCaW_closed: "closedin_on (C - {a}) (subspace_topology X TX (C - {a})) (C - {a} - W)"
+        sorry \<comment> \<open>W' closed via same argument as W. A2 closed (compact). Union of closed.\<close>
+      show ?thesis using hW_ne hW_sub hW_disj_A2 hW_closed hCaW_closed by (by100 blast)
     qed
     then obtain W where hW: "W \<noteq> {}" "W \<subseteq> A1 - {a}" "W \<inter> (A2 - {a}) = {}"
-        "closedin_on (C - {a}) (subspace_topology X TX (C - {a})) W" by (by100 blast)
-    \<comment> \<open>C-{a} - W is also closed (union of complement-in-A1-{a} and A2-{a}, both closed).\<close>
+        "closedin_on (C - {a}) (subspace_topology X TX (C - {a})) W"
+        "closedin_on (C - {a}) (subspace_topology X TX (C - {a})) (C - {a} - W)"
+      by (by100 blast)
     have hCaW_closed: "closedin_on (C - {a}) (subspace_topology X TX (C - {a})) (C - {a} - W)"
-      sorry \<comment> \<open>C-{a}-W = W' \<union> (A2-{a}) where W' is the b-containing separation part.
-         W' closed in A1-{a} (clopen in separation), hence closed in C-{a} (same as W proof).
-         A2 closed in X (compact arc in Hausdorff) \<Rightarrow> A2-{a} closed in C-{a}.
-         Union of two closed sets is closed.\<close>
+      by (rule hW(5))
     have "C - {a} - W \<noteq> {}"
     proof -
       have "b \<in> A2 - {a}" using hint hab by (by100 blast)
