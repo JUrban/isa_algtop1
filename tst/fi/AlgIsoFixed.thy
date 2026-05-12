@@ -1718,12 +1718,63 @@ proof -
   \<comment> \<open>A1 is an arc in S2: compose affine [0,1]\<rightarrow>[0,t0] with h'|[0,t0].
      Result: continuous injective from compact [0,1] to Hausdorff S2 = embedding = arc.\<close>
   let ?phi = "\<lambda>t. h' (t * t0)"
+  have ht0_I_le1: "t0 \<le> 1" using ht0_I unfolding top1_unit_interval_def by (by100 simp)
+  have haffine: "top1_continuous_map_on I_set I_top I_set I_top (\<lambda>t. t * t0)"
+  proof -
+    have "top1_continuous_map_on I_set I_top I_set I_top (\<lambda>t. 0 + t * (t0 - 0))"
+      by (rule affine_map_continuous_I_to_I[of 0 t0]) (use ht0_pos ht0_I_le1 in \<open>by100 simp\<close>)+
+    thus ?thesis by (by100 simp)
+  qed
   have hphi_cont: "top1_continuous_map_on I_set I_top top1_S2 top1_S2_topology ?phi"
-    sorry \<comment> \<open>Composition: affine t\<mapsto>t*t0 (I\<rightarrow>I) then h' (I\<rightarrow>S2).\<close>
+  proof -
+    have "top1_continuous_map_on I_set I_top top1_S2 top1_S2_topology (h' \<circ> (\<lambda>t. t * t0))"
+      by (rule top1_continuous_map_on_comp[OF haffine hh'_cont])
+    moreover have "(h' \<circ> (\<lambda>t. t * t0)) = ?phi" by (rule ext) (by100 simp)
+    ultimately show ?thesis by (by100 simp)
+  qed
+  have hh'_inj: "inj_on h' I_set"
+    using hh'(1) unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
   have hphi_inj: "inj_on ?phi I_set"
-    sorry \<comment> \<open>From inj\_on h' I\_set and inj\_on (\<lambda>t. t*t0) I\_set (t0>0).\<close>
+  proof (rule inj_onI)
+    fix s t assume hs: "s \<in> I_set" and ht: "t \<in> I_set" and heq: "h' (s * t0) = h' (t * t0)"
+    have hs01: "0 \<le> s" "s \<le> 1" using hs unfolding top1_unit_interval_def by (by100 simp)+
+    have ht01: "0 \<le> t" "t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 simp)+
+    have st0_I: "s * t0 \<in> I_set"
+    proof -
+      have "s * t0 \<le> 1 * 1" by (rule mult_mono) (use hs01 ht0_I_le1 ht0_pos in linarith)+
+      thus ?thesis unfolding top1_unit_interval_def using hs01(1) ht0_pos by (by100 simp)
+    qed
+    moreover have tt0_I: "t * t0 \<in> I_set"
+    proof -
+      have "t * t0 \<le> 1 * 1" by (rule mult_mono) (use ht01 ht0_I_le1 ht0_pos in linarith)+
+      thus ?thesis unfolding top1_unit_interval_def using ht01(1) ht0_pos by (by100 simp)
+    qed
+    ultimately have "s * t0 = t * t0"
+      by (metis inj_onD[OF hh'_inj] heq)
+    thus "s = t" using ht0_pos by (by100 simp)
+  qed
   have hphi_img: "?phi ` I_set = ?A1"
-    sorry \<comment> \<open>Image of [0,1] under t\<mapsto>h'(t*t0) = h'([0,t0]).\<close>
+  proof (intro set_eqI iffI)
+    fix x assume "x \<in> ?phi ` I_set"
+    then obtain t where "t \<in> I_set" "x = h' (t * t0)" by (by100 blast)
+    moreover have "t * t0 \<in> I_set"
+    proof -
+      have "0 \<le> t" "t \<le> 1" using \<open>t \<in> I_set\<close> unfolding top1_unit_interval_def by (by100 simp)+
+      have "t * t0 \<le> 1 * 1" by (rule mult_mono) (use \<open>t\<le>1\<close> ht0_I_le1 \<open>0\<le>t\<close> ht0_pos in linarith)+
+      thus ?thesis unfolding top1_unit_interval_def using \<open>0\<le>t\<close> ht0_pos by (by100 simp)
+    qed
+    moreover have "t * t0 \<le> 1 * t0"
+      by (rule mult_right_mono) (use \<open>t \<in> I_set\<close> ht0_pos in \<open>simp add: top1_unit_interval_def\<close>)+
+    hence "t * t0 \<le> t0" by (by100 simp)
+    ultimately show "x \<in> ?A1" by (by100 blast)
+  next
+    fix x assume "x \<in> ?A1"
+    then obtain t where ht: "t \<in> I_set" "t \<le> t0" "x = h' t" by (by100 blast)
+    have "t / t0 \<in> I_set" using ht(1,2) ht0_pos
+      unfolding top1_unit_interval_def by (by100 simp)
+    moreover have "h' ((t / t0) * t0) = h' t" using ht0_pos by (by100 simp)
+    ultimately show "x \<in> ?phi ` I_set" using ht(3) by (by100 force)
+  qed
   have hA1_arc: "top1_is_arc_on ?A1 (subspace_topology top1_S2 top1_S2_topology ?A1)"
   proof -
     have "top1_embedding_on I_set I_top top1_S2 top1_S2_topology ?phi"
