@@ -931,7 +931,61 @@ proof -
     \<comment> \<open>h(n) = n * h(1).\<close>
     have h0: "h 0 = 0" using hhom[THEN spec, THEN spec, of 0 0] by (by100 simp)
     have hn: "\<And>n::int. h n = n * h 1"
-      sorry \<comment> \<open>By induction on n (for n \<ge> 0 and n < 0).\<close>
+    proof -
+      fix n :: int
+      have hS: "\<And>m. h (m + 1) = h m + h 1" using hhom by auto
+      have hP: "\<And>m::int. h (m - 1) = h m - h 1"
+      proof -
+        fix m :: int
+        from hhom have "h ((m - 1) + 1) = h (m - 1) + h 1" by blast
+        thus "h (m - 1) = h m - h 1" by simp
+      qed
+      show "h n = n * h 1"
+      proof (cases "n \<ge> 0")
+        case True
+        then show ?thesis
+        proof (induct n rule: int_ge_induct)
+          case base show ?case using h0 by auto
+        next
+          case (step n)
+          have "h (n + 1) = h n + h 1" using hS by auto
+          also have "\<dots> = n * h 1 + h 1" using step.hyps(2) by auto
+          also have "\<dots> = (n + 1) * h 1" by (simp add: algebra_simps)
+          finally show ?case .
+        qed
+      next
+        case False hence "n < 0" by auto
+        hence "- n \<ge> 0" by auto
+        \<comment> \<open>h(-m) = -h(m) for all m (from h(a+b)=h(a)+h(b) and h(0)=0).\<close>
+        have hneg: "\<And>m::int. h (-m) = - h m"
+        proof -
+          fix m :: int
+          have "h (m + (-m)) = h m + h (-m)" using hhom by blast
+          hence "h 0 = h m + h (-m)" by auto
+          thus "h (-m) = - h m" using h0 by auto
+        qed
+        \<comment> \<open>h(-n) = -h(n). h(|n|) = |n|*h(1) by positive case. So h(n) = n*h(1).\<close>
+        have "h n = n * h 1"
+        proof -
+          obtain m where hm: "m = nat (-n)" by blast
+          have hm_pos: "-n = int m" using \<open>n < 0\<close> hm by auto
+          have "h (int m) = int m * h 1"
+          proof (induct m)
+            case 0 show ?case using h0 by auto
+          next
+            case (Suc k)
+            have "int (Suc k) = int k + 1" by simp
+            hence "h (int (Suc k)) = h (int k) + h 1" using hhom by auto
+            also have "\<dots> = int k * h 1 + h 1" using Suc by auto
+            also have "\<dots> = int (Suc k) * h 1" by (simp add: algebra_simps)
+            finally show ?case .
+          qed
+          hence "h (-n) = (-n) * h 1" using hm_pos by auto
+          thus ?thesis using hneg[of "-n"] by auto
+        qed
+        thus ?thesis .
+      qed
+    qed
     \<comment> \<open>Surjective: 1 \<in> range(h), so \<exists>n. n * h(1) = 1. Hence |h(1)| = 1.\<close>
     have "h 1 = 1 \<or> h 1 = -1"
     proof -
