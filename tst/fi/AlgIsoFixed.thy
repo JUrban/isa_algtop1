@@ -3394,54 +3394,95 @@ proof (rule ccontr)
       (subspace_topology (top1_S2 - {z})
       (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {z})) Fp) hf"
     using hhf hFp_sub_top by (by100 simp)
-  obtain g where hg: "top1_homeomorphism_on I_set I_top (h ` Fp)
+  \<comment> \<open>g = h \<circ> hf: homeomorphism [0,1] \<rightarrow> h(Fp). Make explicit to access g(0), g(1).\<close>
+  define g where "g = h \<circ> hf"
+  have hg: "top1_homeomorphism_on I_set I_top (h ` Fp)
       (subspace_topology (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets) (h ` Fp)) g"
+    unfolding g_def by (rule homeomorphism_compose[OF hhf' hh_Fp])
+  have hg_bij: "bij_betw g I_set (h ` Fp)"
+    using hg unfolding top1_homeomorphism_on_def by (by100 blast)
+  have hg_inj: "inj_on g I_set" using hg_bij unfolding bij_betw_def by (by100 blast)
+  have hg_img: "g ` I_set = h ` Fp" using hg_bij unfolding bij_betw_def by (by100 blast)
+  \<comment> \<open>g(0) = h(hf(0)), g(1) = h(hf(1)). {hf(0), hf(1)} = {p, d}. So h(p) \<in> {g(0), g(1)}.\<close>
+  have hS2_haus: "is_hausdorff_on top1_S2 top1_S2_topology" by (rule top1_S2_is_hausdorff)
+  have hhf_ep: "{hf 0, hf 1} = {p, d}"
+    using arc_endpoints_are_boundary[OF hS2 hS2_haus hFp_sub hFp hhf] hFp_ep by (by100 simp)
+  have hg0: "g 0 = h (hf 0)" unfolding g_def by (by100 simp)
+  have hg1: "g 1 = h (hf 1)" unfolding g_def by (by100 simp)
+  have hhp_in_g01: "h p \<in> {g 0, g 1}"
   proof -
-    have "top1_homeomorphism_on I_set I_top (h ` Fp)
-        (subspace_topology (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets) (h ` Fp)) (h \<circ> hf)"
-      by (rule homeomorphism_compose[OF hhf' hh_Fp])
-    thus ?thesis using that by (by100 blast)
+    have "p \<in> {hf 0, hf 1}" using hhf_ep by (by100 blast)
+    thus ?thesis unfolding hg0 hg1 by (by100 blast)
   qed
-  \<comment> \<open>g\<inverse>(h(V)) is open in [0,1], contains g\<inverse>(h(p)) \<in> {0,1}.\<close>
-  define hp' where "hp' = h p"
-  have hhp_in_hFp: "hp' \<in> h ` Fp" unfolding hp'_def using hp_V hV_sub_Fp' by (by100 blast)
-  define t_p where "t_p = inv_into I_set g hp'"
-  have ht_p_01: "t_p \<in> {0, 1}" sorry \<comment> \<open>p endpoint of Fp \<Rightarrow> h(p) endpoint of h(Fp) \<Rightarrow> g\<inverse>(h(p)) \<in> {0,1}.\<close>
-  \<comment> \<open>g\<inverse>(h(V)) open in [0,1], contains t\_p, hence contains [t\_p, t\_p+\<epsilon>) or (t\_p-\<epsilon>, t\_p].\<close>
-  \<comment> \<open>Pick t0 \<in> (0,1) in this open set.\<close>
-  obtain t0 where ht0: "t0 \<in> {0<..<1}" "g t0 \<in> h ` V" sorry
-  define w where "w = g t0"
-  \<comment> \<open>The connected component W of h(V) containing w is open and connected in R2.\<close>
-  \<comment> \<open>W - {w} is connected (connected\_open\_delete\_R2).\<close>
-  \<comment> \<open>g\<inverse>(W - {w}) = g\<inverse>(W) - {t0} is connected.\<close>
-  \<comment> \<open>But [0,1] - {t0} = [0,t0) \<union> (t0,1] is disconnected.\<close>
-  \<comment> \<open>g\<inverse>(W) is open in [0,1] and contains (t0-\<epsilon>,t0+\<epsilon>).\<close>
-  \<comment> \<open>So g\<inverse>(W) - {t0} hits both [0,t0) and (t0,1]. Contradiction.\<close>
-  \<comment> \<open>Core contradiction via connected\_open\_delete\_R2.\<close>
-  have hhhV_sub_hFp: "h ` V \<subseteq> h ` Fp" using hV_sub_Fp' by (by100 blast)
-  have hw_in_hV: "w \<in> h ` V" unfolding w_def using ht0(2) by (by100 blast)
-  \<comment> \<open>h(V) is open in R2. Use HOL open/connected predicates.\<close>
-  have hhV_HOL_open: "open (h ` V)"
-    using hhV_open product_topology_on_open_sets unfolding top1_open_sets_def by (by100 blast)
-  \<comment> \<open>W = connected component of h(V) containing w.\<close>
-  obtain W where hW: "W \<subseteq> h ` V" "w \<in> W" "connected W" "open W"
-    "\<forall>W'. W' \<subseteq> h ` V \<and> w \<in> W' \<and> connected W' \<and> open W' \<longrightarrow> W' \<subseteq> W"
-    sorry \<comment> \<open>Connected component of open set in R2 is open.\<close>
-  \<comment> \<open>W - {w} is connected (connected\_open\_delete\_R2).\<close>
-  have hW_del: "connected (W - {w})" by (rule connected_open_delete_R2[OF hW(4,3)])
-  \<comment> \<open>g\<inverse> is continuous on h(Fp) (from homeomorphism).\<close>
+  \<comment> \<open>Inverse: since h(p) \<in> {g(0), g(1)} and g bijective, inv\_into gives 0 or 1.\<close>
+  define t_p where "t_p = inv_into I_set g (h p)"
+  have ht_p_01: "t_p \<in> {0, 1}"
+  proof -
+    have h0: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+    have h1: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+    from hhp_in_g01 show ?thesis unfolding t_p_def
+      using inv_into_f_f[OF hg_inj h0] inv_into_f_f[OF hg_inj h1] by (by100 force)
+  qed
+  \<comment> \<open>g\<inverse>(h(V)) open in [0,1], contains t\_p \<in> {0,1}, hence extends into (0,1).\<close>
   have hg_inv_cont: "top1_continuous_map_on (h ` Fp)
       (subspace_topology (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets) (h ` Fp))
       I_set I_top (inv_into I_set g)"
     using hg unfolding top1_homeomorphism_on_def by (by100 blast)
-  \<comment> \<open>W \<subseteq> h(V) \<subseteq> h(Fp). g\<inverse>(W-{w}) = g\<inverse>(W)-{t0}. Connected preimage of connected set.\<close>
-  \<comment> \<open>Key: [0,1]-{t0} has two clopen halves [0,t0) and (t0,1] for t0 \<in> (0,1).
-     g\<inverse>(W)-{t0} is connected but intersects both halves. Contradiction.\<close>
+  have hhV_in_sub: "h ` V \<in> subspace_topology (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets) (h ` Fp)"
+  proof -
+    have "h ` V \<subseteq> h ` Fp" using hV_sub_Fp' by (by100 blast)
+    thus ?thesis using hhV_open unfolding subspace_topology_def by (by100 blast)
+  qed
+  \<comment> \<open>g is continuous from I\_set to h(Fp). Preimage of open is open.\<close>
+  have hg_cont: "top1_continuous_map_on I_set I_top (h ` Fp)
+      (subspace_topology (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets) (h ` Fp)) g"
+    using hg unfolding top1_homeomorphism_on_def by (by100 blast)
+  have hgV_open: "{t \<in> I_set. g t \<in> h ` V} \<in> I_top"
+    using hg_cont hhV_in_sub unfolding top1_continuous_map_on_def by (by100 blast)
+  have htp_in_gV: "t_p \<in> {t \<in> I_set. g t \<in> h ` V}"
+  proof -
+    have "t_p \<in> I_set" using ht_p_01 unfolding top1_unit_interval_def by (by100 force)
+    moreover have "g t_p = h p"
+    proof -
+      have "h p \<in> h ` Fp" using hp_V hV_sub_Fp' by (by100 blast)
+      hence "h p \<in> g ` I_set" using hg_img by (by100 simp)
+      thus ?thesis unfolding t_p_def by (rule f_inv_into_f)
+    qed
+    moreover have "h p \<in> h ` V" using hp_V by (by100 blast)
+    ultimately show ?thesis by (by100 force)
+  qed
+  \<comment> \<open>Pick t0 \<in> (0,1) with g(t0) \<in> h(V).\<close>
+  obtain t0 where ht0: "t0 \<in> {0<..<1}" "g t0 \<in> h ` V"
+  proof -
+    \<comment> \<open>{t \<in> I\_set. g t \<in> h(V)} is open in I\_top and contains t\_p \<in> {0,1}.
+       Open set in [0,1] containing 0 includes [0,\<epsilon>); containing 1 includes (1-\<epsilon>,1].
+       Either way, it contains points in (0,1).\<close>
+    have hgV_ne: "{t \<in> I_set. g t \<in> h ` V} \<noteq> {}" using htp_in_gV by (by100 blast)
+    show ?thesis sorry \<comment> \<open>Open in I\_top containing boundary point extends into interior.\<close>
+  qed
+  define w where "w = g t0"
+  have hw_in_hV: "w \<in> h ` V" unfolding w_def using ht0(2) by (by100 blast)
   have ht0_01: "0 < t0" "t0 < 1" using ht0(1) by auto
-  \<comment> \<open>g\<inverse>(W) \<subseteq> I\_set, open in I\_top, contains t0, hence contains interval around t0.\<close>
-  \<comment> \<open>g\<inverse>(W) - {t0} intersects both [0,t0) and (t0,1].\<close>
-  \<comment> \<open>But [0,1]-{t0} = [0,t0) \<union> (t0,1] is a separation: both clopen in [0,1]-{t0}.\<close>
-  \<comment> \<open>A connected set in a separated space can only be in one part. Contradiction.\<close>
+  have ht0_I: "t0 \<in> I_set" unfolding top1_unit_interval_def using ht0_01 by (by100 simp)
+  \<comment> \<open>h(V) is open in R2. Pick open ball B around w inside h(V).\<close>
+  have hhV_HOL_open: "open (h ` V)"
+    using hhV_open product_topology_on_open_sets unfolding top1_open_sets_def by (by100 blast)
+  \<comment> \<open>h(V) is open in R2, contains w. By connected\_open\_delete\_R2 applied to connected
+     component of h(V) containing w (or directly): some open connected W \<ni> w with W \<subseteq> h(V)
+     and W - {w} connected.\<close>
+  obtain W where hW: "W \<subseteq> h ` V" "w \<in> W" "open W" "connected W"
+    sorry \<comment> \<open>Connected component of h(V) containing w is open connected.\<close>
+  have hW_del: "connected (W - {w})" by (rule connected_open_delete_R2[OF hW(3,4)])
+  \<comment> \<open>g\<inverse>(ball w r \<inter> h(Fp)) is open in [0,1], contains t0, hence contains (t0-\<delta>,t0+\<delta>).\<close>
+  \<comment> \<open>g\<inverse>(ball w r \<inter> h(Fp)) - {t0} intersects both [0,t0) and (t0,1].\<close>
+  \<comment> \<open>But g maps this set to (ball w r \<inter> h(Fp)) - {w} \<subseteq> (ball w r) - {w} which is connected.\<close>
+  \<comment> \<open>If g maps disconnected [0,t0)\<union>(t0,\<delta>) to connected ball-{w}, then g identifies points
+     from both halves, contradicting injectivity. More precisely:
+     the image under g of the connected component of [0,t0) in g\<inverse>(ball) must be connected,
+     but together with (t0,\<delta>) component they cover g\<inverse>(ball)-{t0}, and g maps the whole thing
+     to connected ball-{w}. Since g is a homeomorphism, g\<inverse>(ball-{w}) = g\<inverse>(ball)-{t0} is connected.
+     But g\<inverse>(ball) is open in [0,1] containing t0 \<in> (0,1), so g\<inverse>(ball)-{t0} intersects both
+     [0,t0) and (t0,1], contradicting connectedness in [0,1]-{t0}.\<close>
   show False sorry
 qed
 
