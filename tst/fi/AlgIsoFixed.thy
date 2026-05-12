@@ -2731,7 +2731,57 @@ proof -
           thus ?thesis using that by (by100 blast)
         qed
         have "top1_S1 - {?p} = top1_R_to_S1 ` {x0 <..< x0 + 1}"
-          sorry \<comment> \<open>R\_to\_S1 injective on (x0, x0+1), periodic with period 1, surjective.\<close>
+        proof (rule set_eqI, rule iffI)
+          fix q assume hq: "q \<in> top1_S1 - {?p}"
+          hence hq_S1: "q \<in> top1_S1" and hq_ne: "q \<noteq> ?p" by auto
+          from S1_point_to_angle[OF hq_S1] obtain \<theta> where h\<theta>: "top1_R_to_S1 \<theta> = q" by auto
+          \<comment> \<open>Shift \<theta> into (x0, x0+1] by adding integer.\<close>
+          define k where "k = \<lfloor>x0 + 1 - \<theta>\<rfloor>"
+          define t where "t = \<theta> + of_int k"
+          have ht_range: "x0 < t \<and> t \<le> x0 + 1"
+            unfolding t_def k_def by linarith
+          have ht_img: "top1_R_to_S1 t = q"
+            unfolding t_def using top1_R_to_S1_int_shift[of \<theta> k] h\<theta> by (by100 simp)
+          \<comment> \<open>t \<noteq> x0+1: otherwise R\_to\_S1(t) = R\_to\_S1(x0) = p, but q \<noteq> p.\<close>
+          have "t \<noteq> x0 + 1"
+          proof
+            assume "t = x0 + 1"
+            hence "top1_R_to_S1 t = top1_R_to_S1 (x0 + 1)" by (by100 simp)
+            also have "\<dots> = top1_R_to_S1 x0" using top1_R_to_S1_int_shift[of x0 1] by (by100 simp)
+            also have "\<dots> = ?p" by (rule hx0)
+            finally show False using ht_img hq_ne by (by100 blast)
+          qed
+          hence "t \<in> {x0 <..< x0 + 1}" using ht_range by (by100 simp)
+          thus "q \<in> top1_R_to_S1 ` {x0 <..< x0 + 1}" using ht_img by (by100 blast)
+        next
+          fix q assume "q \<in> top1_R_to_S1 ` {x0 <..< x0 + 1}"
+          then obtain t where ht: "t \<in> {x0 <..< x0 + 1}" "q = top1_R_to_S1 t" by (by100 blast)
+          have "q \<in> top1_S1" using ht(2) unfolding top1_R_to_S1_def top1_S1_def by auto
+          moreover have "q \<noteq> ?p"
+          proof
+            assume "q = ?p"
+            hence "top1_R_to_S1 t = top1_R_to_S1 x0" using ht(2) hx0 by (by100 simp)
+            hence "cos (2 * pi * t) = cos (2 * pi * x0) \<and> sin (2 * pi * t) = sin (2 * pi * x0)"
+              unfolding top1_R_to_S1_def by auto
+            hence "\<exists>k::int. 2 * pi * t - 2 * pi * x0 = real_of_int k * 2 * pi"
+              using cos_sin_eq_imp by (by100 blast)
+            then obtain k :: int where "2 * pi * t - 2 * pi * x0 = real_of_int k * 2 * pi" by auto
+            hence "t - x0 = real_of_int k"
+            proof -
+              from \<open>2 * pi * t - 2 * pi * x0 = real_of_int k * 2 * pi\<close>
+              have "(t - x0) * (2 * pi) = real_of_int k * (2 * pi)" by (simp add: algebra_simps)
+              thus ?thesis using pi_gt_zero by (by100 simp)
+            qed
+            hence "t = x0 + real_of_int k" by (by100 linarith)
+            \<comment> \<open>t \<in> (x0, x0+1), so k = 0, giving t = x0. But t > x0. Contradiction.\<close>
+            moreover have "x0 < t" "t < x0 + 1" using ht(1) by auto
+            ultimately have "0 < real_of_int k" "real_of_int k < 1" by linarith+
+            hence "k = 0" by linarith
+            hence "t = x0" using \<open>t = x0 + real_of_int k\<close> by (by100 simp)
+            thus False using \<open>x0 < t\<close> by (by100 linarith)
+          qed
+          ultimately show "q \<in> top1_S1 - {?p}" by (by100 blast)
+        qed
         moreover have "connected ({x0 <..< x0 + 1} :: real set)" by (rule connected_Ioo)
         moreover have "continuous_on {x0 <..< x0 + 1} top1_R_to_S1"
           unfolding top1_R_to_S1_def by (intro continuous_intros)
