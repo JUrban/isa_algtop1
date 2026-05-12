@@ -3106,10 +3106,7 @@ proof -
         thus "(C - {a}) - (A2 - {a}) \<in> subspace_topology X TX (C - {a})"
           using heq by (by100 simp)
       qed
-      \<comment> \<open>W' (= A1-{a}-W) closed in C-{a}: same argument as W (clopen in A1-{a}).\<close>
-      have "closedin_on (C - {a}) (subspace_topology X TX (C - {a})) (A1 - {a} - W)"
-        sorry \<comment> \<open>W' = A1-{a}-W is the other separation part. Closed in A1-{a} (clopen).
-           Closed in C-{a} by same intersection-with-closed argument as for W.\<close>
+      \<comment> \<open>W' (= A1-{a}-W) closed in C-{a}: proved below in the hCaW\_closed block.\<close>
       \<comment> \<open>Union of two closed sets is closed.\<close>
       have "C - {a} - W = (A1 - {a} - W) \<union> (A2 - {a})"
         using hdecomp hW_sub hW_disj_A2 by (by100 blast)
@@ -3125,7 +3122,38 @@ proof -
            Complement of closed = open. But I need (C-{a})-W CLOSED, not open.
            Use: (C-{a})-W = (A1-{a}-W) \<union> (A2-{a}). Show each closed. Union of two closed is closed.\<close>
         have "closedin_on (C - {a}) ?TCa (A1 - {a} - W)"
-          sorry \<comment> \<open>Same pattern as W closedness: A1-{a}-W closed in A1-{a}, hence in C-{a}.\<close>
+        proof -
+          \<comment> \<open>W is open in A1-{a}: W = (A1-{a}) \<inter> H for some H \<in> TX.\<close>
+          have hW_open_A1: "W \<in> subspace_topology X TX (A1 - {a})"
+            unfolding W_def using hUV(1,2) by (by100 simp)
+          then obtain H where hH: "H \<in> TX" "W = (A1 - {a}) \<inter> H"
+            unfolding subspace_topology_def by (by100 blast)
+          \<comment> \<open>W' = A1-{a}-W = (A1-{a}) \<inter> (X-H). A1 \<inter> (X-H) closed in X.\<close>
+          have "A1 - {a} - W = (A1 - {a}) \<inter> (X - H)" using hH(2) hA1_sub by auto
+          hence "A1 - {a} - W = (C - {a}) \<inter> (A1 \<inter> (X - H))"
+            using hW_sub hdecomp by (by100 blast)
+          \<comment> \<open>A1 \<inter> (X-H) closed: same argument as before.\<close>
+          have hTX: "is_topology_on X TX" using hT unfolding is_topology_on_strict_def by (by100 blast)
+          have hH_sub: "H \<subseteq> X" using hH(1) hT unfolding is_topology_on_strict_def is_topology_on_def
+            by (by100 blast)
+          have "X - (A1 \<inter> (X - H)) = (X - A1) \<union> H" using hH_sub by (by100 blast)
+          have "(X - A1) \<in> TX" using hA1_closed unfolding closedin_on_def by (by100 blast)
+          have "{X - A1, H} \<subseteq> TX" using \<open>(X - A1) \<in> TX\<close> hH(1) by (by100 blast)
+          hence "\<Union>{X - A1, H} \<in> TX" using hTX unfolding is_topology_on_def by (by100 blast)
+          hence "X - (A1 \<inter> (X - H)) \<in> TX" using \<open>X - (A1 \<inter> (X - H)) = (X - A1) \<union> H\<close> by (by100 simp)
+          hence "closedin_on X TX (A1 \<inter> (X - H))" unfolding closedin_on_def using hA1_sub by (by100 blast)
+          \<comment> \<open>Transfer to C-{a} subspace.\<close>
+          hence "(X - (A1 \<inter> (X - H))) \<in> TX" unfolding closedin_on_def by (by100 blast)
+          hence "(C - {a}) \<inter> (X - (A1 \<inter> (X - H))) \<in> ?TCa"
+            unfolding subspace_topology_def by (by100 blast)
+          have hCa_sub_X: "C - {a} \<subseteq> X" using hC_sub by (by100 blast)
+          have "(C - {a}) - (A1 - {a} - W) = (C - {a}) \<inter> (X - (A1 \<inter> (X - H)))"
+            using \<open>A1 - {a} - W = (C - {a}) \<inter> (A1 \<inter> (X - H))\<close> hCa_sub_X by (by100 blast)
+          hence "(C - {a}) - (A1 - {a} - W) \<in> ?TCa"
+            using \<open>(C - {a}) \<inter> (X - (A1 \<inter> (X - H))) \<in> ?TCa\<close> by (by100 simp)
+          moreover have "A1 - {a} - W \<subseteq> C - {a}" using hdecomp by (by100 blast)
+          ultimately show ?thesis unfolding closedin_on_def by (by100 blast)
+        qed
         moreover have "closedin_on (C - {a}) ?TCa (A2 - {a})"
           by (rule \<open>closedin_on (C - {a}) ?TCa (A2 - {a})\<close>)
         moreover have "C - {a} - W = (A1 - {a} - W) \<union> (A2 - {a})"
