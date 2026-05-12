@@ -2165,7 +2165,11 @@ proof -
       proof -
         have "is_topology_on_strict ?D (subspace_topology top1_S2 top1_S2_topology ?D)"
         proof -
-          show ?thesis sorry \<comment> \<open>D\<subseteq>S2, D\<noteq>{}, S2 topology \<Rightarrow> strict subspace topology.\<close>
+          have hTopD: "is_topology_on ?D (subspace_topology top1_S2 top1_S2_topology ?D)"
+            using hg_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+          have "subspace_topology top1_S2 top1_S2_topology ?D \<subseteq> Pow ?D"
+            unfolding subspace_topology_def by (by100 blast)
+          thus ?thesis using hTopD hD_ne unfolding is_topology_on_strict_def by (by100 blast)
         qed
         moreover have "\<exists>hh. top1_homeomorphism_on I_set I_top ?D (subspace_topology top1_S2 top1_S2_topology ?D) hh"
           using hg_homeo by (by100 blast)
