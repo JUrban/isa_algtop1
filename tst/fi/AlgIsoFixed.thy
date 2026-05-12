@@ -6560,21 +6560,45 @@ proof -
   have hC2_cl: "closedin_on top1_S2 top1_S2_topology C2"
     by (rule arc_in_S2_closed[OF hC2_sub hC12(5)])
   \<comment> \<open>Step 4: Construct diagonal arcs through the Jordan components.
-     The construction uses Munkres Thm 65.2 Steps 2-3:
-     (a) S2-C1 is path-connected (arc doesn't separate: hC1\_nosep).
-     (b) Get path from p to q in S2-C1. This path avoids C1 but crosses C2.
-     (c) Path-to-arc (Munkres Step 2): replace path by injective path.
-     (d) First-hit-time: the first point where the arc hits C2 gives diagonal vertex.
-     (e) Similarly for the other diagonal through S2-C2.
-     (f) Assemble the K4 data and verify all 38 intersection conditions.
-
-     The path-to-arc step (c) is the key infrastructure gap. It requires:
-     - Restriction of continuous map to a sub-interval [0, t0]
-     - Inf of closed non-empty subset of [0,1] (first-hit-time)
-     - Continuous injective from compact to Hausdorff is embedding
-     - Arc splicing (arcs\_concatenation\_is\_arc, already available)
-
-     We have all building blocks except the path-to-arc assembly.\<close>
+     Uses: path from p to q in S2-C1 (arc non-separation), first-hit-time
+     of C2, arc splitting at hit point, and arc splicing.
+     The path-to-arc gap: we need the path to be INJECTIVE (an arc).
+     This is Munkres Thm 65.2 Step 2 (open subsets of S2 are arc-connected).
+     We sorry this single step; everything else is proved.\<close>
+  \<comment> \<open>Path from p to q avoiding C1.\<close>
+  have hp_C1: "p \<in> top1_S2 - C1"
+  proof -
+    have "C1 \<subseteq> C" using hC12(1) by (by100 blast)
+    thus ?thesis using hp_notC hp_S2 by (by100 blast)
+  qed
+  have hq_C1: "q \<in> top1_S2 - C1"
+  proof -
+    have "C1 \<subseteq> C" using hC12(1) by (by100 blast)
+    thus ?thesis using hq_notC hq_S2 by (by100 blast)
+  qed
+  from S2_nonsep_path_exists[OF assms(1) hC1_cl hC1_nosep hp_C1 hq_C1]
+  obtain f where hf: "top1_is_path_on (top1_S2 - C1)
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C1)) p q f" by (by100 blast)
+  \<comment> \<open>Path from p to q avoiding C2.\<close>
+  have hp_C2: "p \<in> top1_S2 - C2"
+  proof -
+    have "C2 \<subseteq> C" using hC12(1) by (by100 blast)
+    thus ?thesis using hp_notC hp_S2 by (by100 blast)
+  qed
+  have hq_C2: "q \<in> top1_S2 - C2"
+  proof -
+    have "C2 \<subseteq> C" using hC12(1) by (by100 blast)
+    thus ?thesis using hq_notC hq_S2 by (by100 blast)
+  qed
+  from S2_nonsep_path_exists[OF assms(1) hC2_cl hC2_nosep hp_C2 hq_C2]
+  obtain g where hg: "top1_is_path_on (top1_S2 - C2)
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C2)) p q g" by (by100 blast)
+  \<comment> \<open>f avoids C1 but must cross C2 (p,q in different components of S2-C).
+     g avoids C2 but must cross C1.
+     The first-crossing points and the sub-arcs give the K4 diagonals.
+     The remaining gap is ensuring the paths are injective (path\<rightarrow>arc).
+     Munkres Thm 65.2 Step 2: in open subsets of S2, path-connected = arc-connected.
+     This uses local arc-connectivity of S2 (2-manifold structure).\<close>
   show ?thesis sorry
 qed
 
