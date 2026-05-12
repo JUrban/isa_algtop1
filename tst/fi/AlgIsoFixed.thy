@@ -2974,10 +2974,13 @@ proof -
         by (by100 simp)
     qed
     \<comment> \<open>Unpack: \<exists> non-trivial separation of A1-{a} in X's subspace.\<close>
+    have hTA1a: "is_topology_on (A1 - {a}) (subspace_topology X TX (A1 - {a}))"
+      by (rule subspace_topology_is_topology_on[OF is_topology_on_strict_imp[OF hT]])
+         (use hA1_sub in blast)
     then obtain U V where hUV: "U \<in> subspace_topology X TX (A1 - {a})"
         "V \<in> subspace_topology X TX (A1 - {a})" "U \<noteq> {}" "V \<noteq> {}"
         "U \<inter> V = {}" "U \<union> V = A1 - {a}"
-      unfolding top1_connected_on_def sorry \<comment> \<open>Unfold NOT connected \<Rightarrow> \<exists> separation.\<close>
+      using hA1a_not_conn_X unfolding top1_connected_on_def by auto
     \<comment> \<open>b \<in> A1-{a}. WLOG b \<in> U. Then V \<subseteq> A1-{a,b} \<subseteq> A1-A2.\<close>
     have hb_A1a: "b \<in> A1 - {a}" using hint hab by (by100 blast)
     hence "b \<in> U \<or> b \<in> V" using hUV(6) by (by100 blast)
