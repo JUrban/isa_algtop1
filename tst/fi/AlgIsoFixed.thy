@@ -2633,6 +2633,37 @@ text \<open>Helper: construct K4 subgraph data from a general SCC on S2.
   This requires constructing arcs in path-connected open subsets of S2 with
   prescribed endpoints and interior points.\<close>
 
+lemma scc_minus_point_connected:
+  assumes hT: "is_topology_on_strict X TX" and hH: "is_hausdorff_on X TX"
+  and hC: "top1_simple_closed_curve_on X TX C" and "a \<in> C"
+  shows "top1_connected_on (C - {a}) (subspace_topology X TX (C - {a}))"
+proof -
+  \<comment> \<open>C has a continuous injective map from S1. By embedding (compact+inj+Hausdorff),
+     f: S1 \<rightarrow> C is a homeomorphism. C-{a} = f(S1-{f\<inverse>(a)}). S1-{point} is an arc,
+     hence connected. Homeomorphism preserves connectedness.\<close>
+  obtain f where hf: "top1_continuous_map_on top1_S1 top1_S1_topology X TX f"
+      "inj_on f top1_S1" "f ` top1_S1 = C"
+    using hC unfolding top1_simple_closed_curve_on_def by (by100 blast)
+  have hC_sub: "C \<subseteq> X" using hC by (rule simple_closed_curve_subset)
+  \<comment> \<open>f is a homeomorphism S1 \<rightarrow> C (compact inj continuous to Hausdorff).\<close>
+  have hf_embed: "top1_embedding_on top1_S1 top1_S1_topology X TX f"
+    sorry \<comment> \<open>top1\_embedding\_on\_compact\_inj with S1 compact, X Hausdorff.\<close>
+  have hf_homeo: "top1_homeomorphism_on top1_S1 top1_S1_topology C (subspace_topology X TX C) f"
+    using hf_embed hf(3) unfolding top1_embedding_on_def by (by100 simp)
+  \<comment> \<open>f\<inverse>(a) \<in> S1.\<close>
+  have ha_S1: "inv_into top1_S1 f a \<in> top1_S1"
+  proof -
+    have "a \<in> f ` top1_S1" using \<open>a \<in> C\<close> hf(3) by (by100 blast)
+    thus ?thesis by (rule inv_into_into)
+  qed
+  \<comment> \<open>S1 - {f\<inverse>(a)} is connected (S1 minus a point is an arc).\<close>
+  have "top1_connected_on (top1_S1 - {inv_into top1_S1 f a})
+      (subspace_topology top1_S1 top1_S1_topology (top1_S1 - {inv_into top1_S1 f a}))"
+    sorry \<comment> \<open>S1 minus one point is homeomorphic to R, hence connected.\<close>
+  \<comment> \<open>Transfer via homeomorphism: C-{a} connected.\<close>
+  thus ?thesis sorry \<comment> \<open>Homeomorphism preserves connectedness; f(S1-{p}) = C-{a}.\<close>
+qed
+
 lemma scc_decomp_arc_endpoints:
   assumes hT: "is_topology_on_strict X TX" and hH: "is_hausdorff_on X TX"
   and hC: "top1_simple_closed_curve_on X TX C"
@@ -2668,8 +2699,9 @@ proof -
       sorry \<comment> \<open>a \<notin> endpoints(A1) and a \<in> A1 \<Rightarrow> a is interior, so A1-{a} disconnected.\<close>
     \<comment> \<open>But C-{a} must be connected (SCC minus point homeomorphic to (0,1)).\<close>
     have hC_sub: "C \<subseteq> X" using hdecomp hA1_sub hA2_sub by (by100 blast)
+    have "a \<in> C" using \<open>a \<in> A1\<close> hdecomp by (by100 blast)
     have hCa_conn: "top1_connected_on (C - {a}) (subspace_topology X TX (C - {a}))"
-      sorry \<comment> \<open>SCC minus point is connected.\<close>
+      by (rule scc_minus_point_connected[OF hT hH hC \<open>a \<in> C\<close>])
     \<comment> \<open>Derive contradiction: A1-{a} disconnected with Q disjoint from A2.\<close>
     show False sorry \<comment> \<open>Q component of A1-{a} has Q \<subseteq> A1-A2, Q \<inter> (A2-{a}) = {}, Q \<noteq> {}.
        C-{a} = (A1-{a}) \<union> (A2-{a}). Q disconnected from rest \<Rightarrow> C-{a} disconnected. \<bottom>.\<close>
@@ -2681,8 +2713,9 @@ proof -
     have "\<not> top1_connected_on (A1 - {b}) (subspace_topology A1 (subspace_topology X TX A1) (A1 - {b}))"
       sorry \<comment> \<open>Same: b interior to A1 \<Rightarrow> A1-{b} disconnected.\<close>
     have hC_sub: "C \<subseteq> X" using hdecomp hA1_sub hA2_sub by (by100 blast)
+    have "b \<in> C" using hint hdecomp by (by100 blast)
     have hCb_conn: "top1_connected_on (C - {b}) (subspace_topology X TX (C - {b}))"
-      sorry \<comment> \<open>SCC minus point is connected.\<close>
+      by (rule scc_minus_point_connected[OF hT hH hC \<open>b \<in> C\<close>])
     show False sorry
   qed
   from ha_ep hb_ep hab heps(2) show "top1_arc_endpoints_on A1 (subspace_topology X TX A1) = {a, b}"
