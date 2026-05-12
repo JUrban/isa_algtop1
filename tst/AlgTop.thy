@@ -1585,7 +1585,7 @@ proof -
             next assume "Y \<subseteq> Q1"
               hence "P1 \<subseteq> Q1" using h hOP by (by100 blast)
               hence "P1 = {}" using hPQ1(3) by (by100 blast)
-              thus ?thesis using hOP h hY_ne by (by100 blast)
+              thus ?thesis using hPQ1(1) by (by100 blast)
             qed
           next
             assume hOQ: "Opp1 = Q1" from hY_PQ1 show ?thesis
@@ -1593,7 +1593,7 @@ proof -
             next assume "Y \<subseteq> P1"
               hence "Q1 \<subseteq> P1" using h hOQ by (by100 blast)
               hence "Q1 = {}" using hPQ1(3) by (by100 blast)
-              thus ?thesis using hOQ h hY_ne by (by100 blast)
+              thus ?thesis using hPQ1(2) by (by100 blast)
             qed
           qed
         qed
@@ -1604,12 +1604,17 @@ proof -
           thus "Opp1 = Z" proof cases
             assume "Opp1 = P1" from hZ_PQ1 show ?thesis
             proof assume "Z \<subseteq> P1" thus ?thesis using h \<open>Opp1=P1\<close> by (by100 blast)
-            next assume "Z \<subseteq> Q1" thus ?thesis using h hZ_ne hPQ1(3) \<open>Opp1=P1\<close> by (by100 blast)
+            next assume "Z \<subseteq> Q1"
+              hence "P1 \<subseteq> Q1" using h \<open>Opp1=P1\<close> by (by100 blast)
+              hence "P1 = {}" using hPQ1(3) by (by100 blast)
+              thus ?thesis using hPQ1(1) by (by100 blast)
             qed
           next
             assume "Opp1 = Q1" from hZ_PQ1 show ?thesis
             proof assume "Z \<subseteq> Q1" thus ?thesis using h \<open>Opp1=Q1\<close> by (by100 blast)
-            next assume "Z \<subseteq> P1" thus ?thesis using h hZ_ne hPQ1(3) \<open>Opp1=Q1\<close> by (by100 blast)
+            next assume "Z \<subseteq> P1" hence "Q1 \<subseteq> P1" using h \<open>Opp1=Q1\<close> by (by100 blast)
+              hence "Q1 = {}" using hPQ1(3) by (by100 blast)
+              thus ?thesis using hPQ1(2) by (by100 blast)
             qed
           qed
         qed
@@ -1620,11 +1625,17 @@ proof -
           thus ?thesis proof cases
             assume "Opp2=P2" from hY_PQ2 show ?thesis
             proof assume "Y\<subseteq>P2" thus ?thesis using h \<open>Opp2=P2\<close> by (by100 blast)
-            next assume "Y\<subseteq>Q2" thus ?thesis using h hY_ne hPQ2(3) \<open>Opp2=P2\<close> by (by100 blast) qed
+            next assume "Y\<subseteq>Q2"
+              hence "P2 \<subseteq> Q2" using h \<open>Opp2=P2\<close> by (by100 blast)
+              hence "P2 = {}" using hPQ2(3) by (by100 blast)
+              thus ?thesis using hPQ2(1) by (by100 blast) qed
           next
             assume "Opp2=Q2" from hY_PQ2 show ?thesis
             proof assume "Y\<subseteq>Q2" thus ?thesis using h \<open>Opp2=Q2\<close> by (by100 blast)
-            next assume "Y\<subseteq>P2" thus ?thesis using h hY_ne hPQ2(3) \<open>Opp2=Q2\<close> by (by100 blast) qed
+            next assume "Y\<subseteq>P2"
+              hence "Q2 \<subseteq> P2" using h \<open>Opp2=Q2\<close> by (by100 blast)
+              hence "Q2 = {}" using hPQ2(3) by (by100 blast)
+              thus ?thesis using hPQ2(2) by (by100 blast) qed
           qed
         qed
         have o2Z: "Opp2 \<subseteq> Z \<Longrightarrow> Opp2 = Z"
@@ -1634,11 +1645,17 @@ proof -
           thus ?thesis proof cases
             assume "Opp2=P2" from hZ_PQ2 show ?thesis
             proof assume "Z\<subseteq>P2" thus ?thesis using h \<open>Opp2=P2\<close> by (by100 blast)
-            next assume "Z\<subseteq>Q2" thus ?thesis using h hZ_ne hPQ2(3) \<open>Opp2=P2\<close> by (by100 blast) qed
+            next assume "Z\<subseteq>Q2"
+              hence "P2 \<subseteq> Q2" using h \<open>Opp2=P2\<close> by (by100 blast)
+              hence "P2 = {}" using hPQ2(3) by (by100 blast)
+              thus ?thesis using hPQ2(1) by (by100 blast) qed
           next
             assume "Opp2=Q2" from hZ_PQ2 show ?thesis
             proof assume "Z\<subseteq>Q2" thus ?thesis using h \<open>Opp2=Q2\<close> by (by100 blast)
-            next assume "Z\<subseteq>P2" thus ?thesis using h hZ_ne hPQ2(3) \<open>Opp2=Q2\<close> by (by100 blast) qed
+            next assume "Z\<subseteq>P2"
+              hence "Q2 \<subseteq> P2" using h \<open>Opp2=Q2\<close> by (by100 blast)
+              hence "Q2 = {}" using hPQ2(3) by (by100 blast)
+              thus ?thesis using hPQ2(2) by (by100 blast) qed
           qed
         qed
         have o3Y: "Opp3 \<subseteq> Y \<Longrightarrow> Opp3 = Y"
@@ -1648,11 +1665,17 @@ proof -
           thus ?thesis proof cases
             assume "Opp3=P3" from hY_PQ3 show ?thesis
             proof assume "Y\<subseteq>P3" thus ?thesis using h \<open>Opp3=P3\<close> by (by100 blast)
-            next assume "Y\<subseteq>Q3" thus ?thesis using h hY_ne hPQ3(3) \<open>Opp3=P3\<close> by (by100 blast) qed
+            next assume "Y\<subseteq>Q3"
+              hence "P3 \<subseteq> Q3" using h \<open>Opp3=P3\<close> by (by100 blast)
+              hence "P3 = {}" using hPQ3(3) by (by100 blast)
+              thus ?thesis using hPQ3(1) by (by100 blast) qed
           next
             assume "Opp3=Q3" from hY_PQ3 show ?thesis
             proof assume "Y\<subseteq>Q3" thus ?thesis using h \<open>Opp3=Q3\<close> by (by100 blast)
-            next assume "Y\<subseteq>P3" thus ?thesis using h hY_ne hPQ3(3) \<open>Opp3=Q3\<close> by (by100 blast) qed
+            next assume "Y\<subseteq>P3"
+              hence "Q3 \<subseteq> P3" using h \<open>Opp3=Q3\<close> by (by100 blast)
+              hence "Q3 = {}" using hPQ3(3) by (by100 blast)
+              thus ?thesis using hPQ3(2) by (by100 blast) qed
           qed
         qed
         have o3Z: "Opp3 \<subseteq> Z \<Longrightarrow> Opp3 = Z"
@@ -1662,11 +1685,17 @@ proof -
           thus ?thesis proof cases
             assume "Opp3=P3" from hZ_PQ3 show ?thesis
             proof assume "Z\<subseteq>P3" thus ?thesis using h \<open>Opp3=P3\<close> by (by100 blast)
-            next assume "Z\<subseteq>Q3" thus ?thesis using h hZ_ne hPQ3(3) \<open>Opp3=P3\<close> by (by100 blast) qed
+            next assume "Z\<subseteq>Q3"
+              hence "P3 \<subseteq> Q3" using h \<open>Opp3=P3\<close> by (by100 blast)
+              hence "P3 = {}" using hPQ3(3) by (by100 blast)
+              thus ?thesis using hPQ3(1) by (by100 blast) qed
           next
             assume "Opp3=Q3" from hZ_PQ3 show ?thesis
             proof assume "Z\<subseteq>Q3" thus ?thesis using h \<open>Opp3=Q3\<close> by (by100 blast)
-            next assume "Z\<subseteq>P3" thus ?thesis using h hZ_ne hPQ3(3) \<open>Opp3=Q3\<close> by (by100 blast) qed
+            next assume "Z\<subseteq>P3"
+              hence "Q3 \<subseteq> P3" using h \<open>Opp3=Q3\<close> by (by100 blast)
+              hence "Q3 = {}" using hPQ3(3) by (by100 blast)
+              thus ?thesis using hPQ3(2) by (by100 blast) qed
           qed
         qed
         \<comment> \<open>Closure of each Opp.\<close>
@@ -1677,7 +1706,7 @@ proof -
               "Oth \<in> top1_S2_topology" "Opp1 \<in> top1_S2_topology" "Oth \<noteq> {}"
               "top1_connected_on Opp1 (subspace_topology top1_S2 top1_S2_topology Opp1)"
               "top1_connected_on Oth (subspace_topology top1_S2 top1_S2_topology Oth)"
-            using hO1(1) hPQ1 hPQ1_open one by (by100 blast)
+            using hO1(1) hPQ1 hPQ1_open one by blast
           show ?thesis by (rule closure_eq[OF hAB_scc h(4,3) one h(5,1,2,6,7)])
         qed
         have two: "Opp2 \<noteq> {}" using hO2(2) o2Y o2Z hY_ne hZ_ne by (by100 blast)
@@ -1687,7 +1716,7 @@ proof -
               "Oth \<in> top1_S2_topology" "Opp2 \<in> top1_S2_topology" "Oth \<noteq> {}"
               "top1_connected_on Opp2 (subspace_topology top1_S2 top1_S2_topology Opp2)"
               "top1_connected_on Oth (subspace_topology top1_S2 top1_S2_topology Oth)"
-            using hO2(1) hPQ2 hPQ2_open two by (by100 blast)
+            using hO2(1) hPQ2 hPQ2_open two by blast
           show ?thesis by (rule closure_eq[OF hBC_scc h(4,3) two h(5,1,2,6,7)])
         qed
         have three: "Opp3 \<noteq> {}" using hO3(2) o3Y o3Z hY_ne hZ_ne by (by100 blast)
@@ -1697,7 +1726,7 @@ proof -
               "Oth \<in> top1_S2_topology" "Opp3 \<in> top1_S2_topology" "Oth \<noteq> {}"
               "top1_connected_on Opp3 (subspace_topology top1_S2 top1_S2_topology Opp3)"
               "top1_connected_on Oth (subspace_topology top1_S2 top1_S2_topology Oth)"
-            using hO3(1) hPQ3 hPQ3_open three by (by100 blast)
+            using hO3(1) hPQ3 hPQ3_open three by blast
           show ?thesis by (rule closure_eq[OF hAC_scc h(4,3) three h(5,1,2,6,7)])
         qed
         \<comment> \<open>Pigeonhole: Opp1,Opp2,Opp3 each = Y or Z. 3 from {Y,Z}: 2 match.\<close>
@@ -14017,7 +14046,7 @@ next
         have "top1_homeomorphism_on {x \<in> W. p x \<in> p ` ?C}
             (subspace_topology E TE {x \<in> W. p x \<in> p ` ?C})
             (p ` ?C) (subspace_topology B TB (p ` ?C)) p"
-          using hrestr hsub1 hsub2 by (by100 simp)
+          using hrestr hsub1 hsub2 by simp
         moreover have "{x \<in> W. p x \<in> p ` ?C} = ?C"
         proof (rule set_eqI, rule iffI)
           fix x assume "x \<in> {x \<in> W. p x \<in> p ` ?C}"
