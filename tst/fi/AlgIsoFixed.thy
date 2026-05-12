@@ -3065,7 +3065,32 @@ proof -
          A2-{a} closed in C-{a} (A2 compact arc \<Rightarrow> closed in X).\<close>
       \<comment> \<open>A2 closed in X (same compact argument as A1).\<close>
       have hA2_closed: "closedin_on X TX A2"
-        sorry \<comment> \<open>A2 compact arc in Hausdorff \<Rightarrow> closed. Same proof as hA1\_closed.\<close>
+      proof (rule compact_in_strict_hausdorff_closedin_on[OF hH hT hA2_sub])
+        obtain h2 where hh2: "top1_homeomorphism_on I_set I_top A2 (subspace_topology X TX A2) h2"
+          using hA2 unfolding top1_is_arc_on_def by (by100 blast)
+        have hTA2: "is_topology_on A2 (subspace_topology X TX A2)"
+          by (rule subspace_topology_is_topology_on[OF is_topology_on_strict_imp[OF hT] hA2_sub])
+        have hI_compact: "top1_compact_on I_set I_top"
+        proof -
+          have hIeq: "I_set = {0..1::real}" unfolding top1_unit_interval_def
+            by (auto simp: atLeastAtMost_def atLeast_def atMost_def)
+          have "compact I_set" unfolding hIeq by (rule compact_Icc)
+          hence "top1_compact_on I_set (subspace_topology UNIV top1_open_sets I_set)"
+            using top1_compact_on_subspace_UNIV_iff_compact[of I_set] by (by100 simp)
+          thus ?thesis unfolding top1_unit_interval_topology_def by (by100 simp)
+        qed
+        have hcont2: "top1_continuous_map_on I_set I_top A2 (subspace_topology X TX A2) h2"
+          using hh2 unfolding top1_homeomorphism_on_def by (by100 blast)
+        have himg2: "h2 ` I_set = A2"
+          using hh2 unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+        from Theorem_26_5[OF top1_unit_interval_topology_is_topology_on hTA2 hI_compact hcont2]
+        have "top1_compact_on (h2 ` I_set) (subspace_topology A2 (subspace_topology X TX A2) (h2 ` I_set))" .
+        hence "top1_compact_on A2 (subspace_topology A2 (subspace_topology X TX A2) A2)"
+          using himg2 by (by100 simp)
+        moreover have "subspace_topology A2 (subspace_topology X TX A2) A2 = subspace_topology X TX A2"
+          unfolding subspace_topology_def by (by100 blast)
+        ultimately show "top1_compact_on A2 (subspace_topology X TX A2)" by (by100 simp)
+      qed
       \<comment> \<open>A2-{a} closed in C-{a}: A2-{a} = (C-{a}) \<inter> A2, A2 closed in X.\<close>
       have "closedin_on (C - {a}) (subspace_topology X TX (C - {a})) (A2 - {a})"
         unfolding closedin_on_def
@@ -3089,7 +3114,34 @@ proof -
       have "C - {a} - W = (A1 - {a} - W) \<union> (A2 - {a})"
         using hdecomp hW_sub hW_disj_A2 by (by100 blast)
       have hCaW_closed: "closedin_on (C - {a}) (subspace_topology X TX (C - {a})) (C - {a} - W)"
-        sorry \<comment> \<open>= (A1-{a}-W) \<union> (A2-{a}), both closed. Union of closed in topology = closed.\<close>
+      proof -
+        let ?TCa = "subspace_topology X TX (C - {a})"
+        have hTCa: "is_topology_on (C - {a}) ?TCa"
+          by (rule subspace_topology_is_topology_on[OF is_topology_on_strict_imp[OF hT]])
+             (use hC_sub in blast)
+        \<comment> \<open>Complement: (C-{a}) - ((A1-{a}-W) \<union> (A2-{a})) = W (since C-{a} = (A1-{a}) \<union> (A2-{a}) and W \<subseteq> A1-{a}).\<close>
+        \<comment> \<open>But (C-{a}) - (A1-{a}-W) = W \<union> (A2-{a}). And (C-{a}) - (A2-{a}) = (A1-{a})-A2... complex.\<close>
+        \<comment> \<open>Simpler: (C-{a})-W = complement of W in C-{a}. W is closed (hW\_closed).
+           Complement of closed = open. But I need (C-{a})-W CLOSED, not open.
+           Use: (C-{a})-W = (A1-{a}-W) \<union> (A2-{a}). Show each closed. Union of two closed is closed.\<close>
+        have "closedin_on (C - {a}) ?TCa (A1 - {a} - W)"
+          sorry \<comment> \<open>Same pattern as W closedness: A1-{a}-W closed in A1-{a}, hence in C-{a}.\<close>
+        moreover have "closedin_on (C - {a}) ?TCa (A2 - {a})"
+          by (rule \<open>closedin_on (C - {a}) ?TCa (A2 - {a})\<close>)
+        moreover have "C - {a} - W = (A1 - {a} - W) \<union> (A2 - {a})"
+          by (rule \<open>C - {a} - W = (A1 - {a} - W) \<union> (A2 - {a})\<close>)
+        ultimately have "closedin_on (C - {a}) ?TCa ((A1 - {a} - W) \<union> (A2 - {a}))"
+        proof -
+          assume hcl1: "closedin_on (C - {a}) ?TCa (A1 - {a} - W)"
+          assume hcl2: "closedin_on (C - {a}) ?TCa (A2 - {a})"
+          assume "C - {a} - W = (A1 - {a} - W) \<union> (A2 - {a})"
+          have "\<forall>A \<in> {A1 - {a} - W, A2 - {a}}. closedin_on (C - {a}) ?TCa A"
+            using hcl1 hcl2 by (by100 blast)
+          from closedin_Union_finite[OF hTCa _ this]
+          show ?thesis by (by100 simp)
+        qed
+        thus ?thesis using \<open>C - {a} - W = (A1 - {a} - W) \<union> (A2 - {a})\<close> by (by100 simp)
+      qed
       show ?thesis using hW_ne hW_sub hW_disj_A2 hW_closed hCaW_closed by (by100 blast)
     qed
     then obtain W where hW: "W \<noteq> {}" "W \<subseteq> A1 - {a}" "W \<inter> (A2 - {a}) = {}"
