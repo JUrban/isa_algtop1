@@ -2662,8 +2662,63 @@ proof -
   have "top1_connected_on (top1_S1 - {inv_into top1_S1 f a})
       (subspace_topology top1_S1 top1_S1_topology (top1_S1 - {inv_into top1_S1 f a}))"
     sorry \<comment> \<open>S1 minus one point is homeomorphic to R, hence connected.\<close>
-  \<comment> \<open>Transfer via homeomorphism: C-{a} connected.\<close>
-  thus ?thesis sorry \<comment> \<open>Homeomorphism preserves connectedness; f(S1-{p}) = C-{a}.\<close>
+  \<comment> \<open>Transfer: f continuous S1 \<rightarrow> X, restrict to S1-{p}. Image = C-{a}. Connected.\<close>
+  let ?p = "inv_into top1_S1 f a"
+  have hf_img: "f ` (top1_S1 - {?p}) = C - {a}"
+  proof (rule set_eqI, rule iffI)
+    fix y assume "y \<in> f ` (top1_S1 - {?p})"
+    then obtain x where hx: "x \<in> top1_S1" "x \<noteq> ?p" "y = f x" by (by100 blast)
+    have "y \<in> C" using hx(1,3) hf(3) by (by100 blast)
+    moreover have "y \<noteq> a"
+    proof
+      assume "y = a" hence "f x = a" using hx(3) by (by100 simp)
+      hence "x = ?p" using hf(2) hx(1) ha_S1 \<open>a \<in> C\<close> hf(3) by (metis inv_into_f_eq)
+      thus False using hx(2) by (by100 blast)
+    qed
+    ultimately show "y \<in> C - {a}" by (by100 blast)
+  next
+    fix y assume "y \<in> C - {a}"
+    hence hy: "y \<in> C" "y \<noteq> a" by auto
+    have "y \<in> f ` top1_S1" using hy(1) hf(3) by (by100 blast)
+    then obtain x where hx: "x \<in> top1_S1" "y = f x" by (by100 blast)
+    have "x \<noteq> ?p"
+    proof
+      assume "x = ?p" hence "f x = f ?p" by (by100 simp)
+      also have "f ?p = a"
+      proof -
+        have "a \<in> f ` top1_S1" using \<open>a \<in> C\<close> hf(3) by (by100 blast)
+        thus ?thesis by (rule f_inv_into_f)
+      qed
+      finally show False using hy(2) hx(2) by (by100 blast)
+    qed
+    thus "y \<in> f ` (top1_S1 - {?p})" using hx by (by100 blast)
+  qed
+  have hf_cont_sub: "top1_continuous_map_on (top1_S1 - {?p})
+      (subspace_topology top1_S1 top1_S1_topology (top1_S1 - {?p})) X TX f"
+    unfolding top1_continuous_map_on_def
+  proof (intro conjI ballI)
+    fix x assume "x \<in> top1_S1 - {?p}" thus "f x \<in> X"
+      using hf(1) unfolding top1_continuous_map_on_def by (by100 blast)
+  next
+    fix V assume hV: "V \<in> TX"
+    have "{x \<in> top1_S1. f x \<in> V} \<in> top1_S1_topology"
+      using hf(1) hV unfolding top1_continuous_map_on_def by (by100 blast)
+    hence "(top1_S1 - {?p}) \<inter> {x \<in> top1_S1. f x \<in> V}
+        \<in> subspace_topology top1_S1 top1_S1_topology (top1_S1 - {?p})"
+      unfolding subspace_topology_def by (by100 blast)
+    moreover have "{x \<in> top1_S1 - {?p}. f x \<in> V} = (top1_S1 - {?p}) \<inter> {x \<in> top1_S1. f x \<in> V}"
+      by (by100 blast)
+    ultimately show "{x \<in> top1_S1 - {?p}. f x \<in> V}
+        \<in> subspace_topology top1_S1 top1_S1_topology (top1_S1 - {?p})" by (by100 simp)
+  qed
+  have hTS1p: "is_topology_on (top1_S1 - {?p})
+      (subspace_topology top1_S1 top1_S1_topology (top1_S1 - {?p}))"
+    by (rule subspace_topology_is_topology_on[OF
+        is_topology_on_strict_imp[OF top1_S1_is_topology_on_strict]]) (by100 blast)
+  have hTX: "is_topology_on X TX" using hT unfolding is_topology_on_strict_def by (by100 blast)
+  from Theorem_23_5[OF hTS1p hTX \<open>top1_connected_on (top1_S1 - {?p}) _\<close> hf_cont_sub]
+  have "top1_connected_on (f ` (top1_S1 - {?p})) (subspace_topology X TX (f ` (top1_S1 - {?p})))" .
+  thus ?thesis using hf_img by (by100 simp)
 qed
 
 lemma scc_decomp_arc_endpoints:
