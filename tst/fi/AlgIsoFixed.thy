@@ -2124,9 +2124,9 @@ proof -
           next
             case False
             hence "t > 0" using htr by (by100 linarith)
-            hence "t * \<bar>fst z' - fst (h x)\<bar> < t * \<epsilon>" using hz1 by (by100 simp)
+            hence hfst_strict: "t * \<bar>fst z' - fst (h x)\<bar> < t * \<epsilon>" using hz1 by (by100 simp)
             have "(1-t) * \<epsilon> + t * \<epsilon> = \<epsilon>" by (simp add: algebra_simps)
-            thus ?thesis using h_le1 \<open>t * \<bar>fst z' - fst (h x)\<bar> < t * \<epsilon>\<close> by (by100 linarith)
+            thus ?thesis using h_le1 hfst_strict by linarith
           qed
         qed
         finally have hfst: "\<bar>fst (\<gamma> t) - fst (h x)\<bar> < \<epsilon>" .
@@ -2149,9 +2149,9 @@ proof -
           next
             case False
             hence "t > 0" using htr by (by100 linarith)
-            hence "t * \<bar>snd z' - snd (h x)\<bar> < t * \<epsilon>" using hz2 by (by100 simp)
+            hence hsnd_strict: "t * \<bar>snd z' - snd (h x)\<bar> < t * \<epsilon>" using hz2 by (by100 simp)
             have "(1-t) * \<epsilon> + t * \<epsilon> = \<epsilon>" by (simp add: algebra_simps)
-            thus ?thesis using h_le1 \<open>t * \<bar>snd z' - snd (h x)\<bar> < t * \<epsilon>\<close> by (by100 linarith)
+            thus ?thesis using h_le1 hsnd_strict by linarith
           qed
         qed
         finally have hsnd: "\<bar>snd (\<gamma> t) - snd (h x)\<bar> < \<epsilon>" .
@@ -2449,7 +2449,104 @@ proof -
   qed
   \<comment> \<open>U-E' open: same cover argument. Each y \<in> U-E' has open V \<subseteq> U-E'.\<close>
   have hUE'_cover: "\<forall>y \<in> U - ?E'. \<exists>W \<in> top1_S2_topology. y \<in> W \<and> W \<subseteq> U - ?E'"
-    sorry \<comment> \<open>For y\<in>U-E': local\_arc gives V. If z\<in>V\<inter>E': splice arc a\<rightarrow>z + arc z\<rightarrow>y \<Rightarrow> y\<in>E'. \<bottom>.\<close>
+  proof
+    fix y assume hy_UE: "y \<in> U - ?E'"
+    hence hy_U: "y \<in> U" and hy_notE: "y \<notin> ?E'" by auto
+    from local_arc[OF hy_U] obtain Vy where
+      hVy_all: "Vy \<in> top1_S2_topology \<and> y \<in> Vy \<and> Vy \<subseteq> U \<and>
+        (\<forall>p \<in> Vy. \<forall>q \<in> Vy. p \<noteq> q \<longrightarrow>
+          (\<exists>D. top1_is_arc_on D (subspace_topology top1_S2 top1_S2_topology D) \<and>
+               D \<subseteq> Vy \<and> top1_arc_endpoints_on D (subspace_topology top1_S2 top1_S2_topology D) = {p, q}))"
+      by auto
+    have hVy_open: "Vy \<in> top1_S2_topology" using hVy_all by auto
+    have hVy_y: "y \<in> Vy" using hVy_all by auto
+    have hVy_U: "Vy \<subseteq> U" using hVy_all by auto
+    have hVy_arcs: "\<And>p q. p \<in> Vy \<Longrightarrow> q \<in> Vy \<Longrightarrow> p \<noteq> q \<Longrightarrow>
+        \<exists>D. top1_is_arc_on D (subspace_topology top1_S2 top1_S2_topology D) \<and>
+             D \<subseteq> Vy \<and> top1_arc_endpoints_on D (subspace_topology top1_S2 top1_S2_topology D) = {p, q}"
+      using hVy_all by auto
+    \<comment> \<open>Show Vy \<subseteq> U - E' by contradiction: if z \<in> Vy \<inter> E', splice gives y \<in> E'. \<bottom>.\<close>
+    have hVy_disj: "Vy \<inter> ?E' = {}"
+    proof (rule ccontr)
+      assume "Vy \<inter> ?E' \<noteq> {}"
+      then obtain z where hz_Vy: "z \<in> Vy" and hz_E: "z \<in> ?E'" by auto
+      have hz_U: "z \<in> U" using hz_Vy hVy_U by (by100 blast)
+      \<comment> \<open>z \<in> E' and z \<in> Vy. Arc z\<rightarrow>y in Vy (if z \<noteq> y). Combined with arc a\<rightarrow>z from E',
+         splice gives arc a\<rightarrow>y. But y \<notin> E'. Contradiction.\<close>
+      show False
+      proof (cases "z = y")
+        case True thus ?thesis using hz_E hy_notE by (by100 blast)
+      next
+        case hz_ne_y: False
+        \<comment> \<open>Arc z\<rightarrow>y in Vy.\<close>
+        from hVy_arcs[OF hz_Vy hVy_y hz_ne_y] obtain Dzy where
+          hDzy: "top1_is_arc_on Dzy (subspace_topology top1_S2 top1_S2_topology Dzy)"
+            "Dzy \<subseteq> Vy"
+            "top1_arc_endpoints_on Dzy (subspace_topology top1_S2 top1_S2_topology Dzy) = {z, y}"
+          by (by100 blast)
+        have hDzy_U: "Dzy \<subseteq> U" using hDzy(2) hVy_U by (by100 blast)
+        have hDzy_S2: "Dzy \<subseteq> top1_S2" using hDzy_U assms(3) by (by100 blast)
+        show False
+        proof (cases "z = a")
+          case True
+          \<comment> \<open>z = a: arc Dzy has endpoints {a, y}, Dzy \<subseteq> U. So y \<in> E'. Contradiction.\<close>
+          have "y \<in> ?E'" using hy_U hDzy(1,3) hDzy_U True
+          proof -
+            have hy_ne_a: "y \<noteq> a" using hy_notE hy_U by (by100 blast)
+            show ?thesis using hy_U hy_ne_a hDzy(1,3) hDzy_U True by (by100 blast)
+          qed
+          thus False using hy_notE by (by100 blast)
+        next
+          case hz_ne_a: False
+          \<comment> \<open>z \<noteq> a: arc a\<rightarrow>z (from z \<in> E') + arc z\<rightarrow>y. Splice.\<close>
+          from hz_E hz_ne_a obtain Daz where
+            hDaz: "top1_is_arc_on Daz (subspace_topology top1_S2 top1_S2_topology Daz)"
+              "Daz \<subseteq> U"
+              "top1_arc_endpoints_on Daz (subspace_topology top1_S2 top1_S2_topology Daz) = {a, z}"
+            by (by100 blast)
+          have hDaz_S2: "Daz \<subseteq> top1_S2" using hDaz(2) assms(3) by (by100 blast)
+          \<comment> \<open>Need to get arc a\<rightarrow>y. Use same case split as in hE'\_cover.\<close>
+          have hy_ne_a: "y \<noteq> a" using hy_notE hy_U by (by100 blast)
+          show False
+          proof (cases "a \<notin> Dzy")
+            case True
+            from Munkres_Step_1_arc_splice[OF assms(1) hDaz(1) hDzy(1) hDaz_S2 hDzy_S2
+                hDaz(3) hDzy(3) _ hz_ne_y True]
+            obtain Day where hDay:
+              "top1_is_arc_on Day (subspace_topology top1_S2 top1_S2_topology Day)"
+              "Day \<subseteq> Daz \<union> Dzy" "top1_arc_endpoints_on Day (subspace_topology top1_S2 top1_S2_topology Day) = {a, y}"
+              using hz_ne_a by (by100 blast)
+            have "Day \<subseteq> U" using hDay(2) hDaz(2) hDzy_U by (by100 blast)
+            hence "y \<in> ?E'" using hy_U hy_ne_a hDay(1,3) \<open>Day \<subseteq> U\<close> by (by100 blast)
+            thus False using hy_notE by (by100 blast)
+          next
+            case False
+            hence "a \<in> Dzy" by (by100 simp)
+            \<comment> \<open>a \<in> Dzy: split Dzy at a, get sub-arc a\<rightarrow>y directly.\<close>
+            have ha_not_ep_zy: "a \<notin> top1_arc_endpoints_on Dzy (subspace_topology top1_S2 top1_S2_topology Dzy)"
+              using hDzy(3) hz_ne_a hy_ne_a by (by100 simp)
+            from arc_split_at_given_point[OF assms(1) hS2_haus hDzy_S2 hDzy(1) \<open>a \<in> Dzy\<close>
+                ha_not_ep_zy hDzy(3) hz_ne_y]
+            obtain D1' D2' where hD12':
+              "Dzy = D1' \<union> D2'" "D1' \<inter> D2' = {a}"
+              "top1_is_arc_on D1' (subspace_topology top1_S2 top1_S2_topology D1')"
+              "top1_is_arc_on D2' (subspace_topology top1_S2 top1_S2_topology D2')"
+              "z \<in> D1'" "y \<in> D2'" "a \<in> D1'" "a \<in> D2'" "D1' \<subseteq> top1_S2" "D2' \<subseteq> top1_S2"
+              by auto
+            have hD2'_U: "D2' \<subseteq> U" using hD12'(1) hDzy_U by (by100 blast)
+            have hD2'_ep: "top1_arc_endpoints_on D2' (subspace_topology top1_S2 top1_S2_topology D2') = {a, y}"
+              by (rule arc_split_endpoints(2)[OF assms(1) hS2_haus hDzy_S2 hDzy(1)
+                  hD12'(1,2,3,4,5,6,7,8,9,10) hDzy(3) ha_not_ep_zy])
+            hence "y \<in> ?E'" using hy_U hy_ne_a hD12'(4) hD2'_U hD2'_ep by (by100 blast)
+            thus False using hy_notE by (by100 blast)
+          qed
+        qed
+      qed
+    qed
+    have hVy_sub: "Vy \<subseteq> U - ?E'" using hVy_disj hVy_U by (by100 blast)
+    show "\<exists>W \<in> top1_S2_topology. y \<in> W \<and> W \<subseteq> U - ?E'"
+      using hVy_sub hVy_open hVy_y by auto
+  qed
   have hUE'_sub_S2: "U - ?E' \<subseteq> top1_S2" using assms(3) by (by100 blast)
   have hUE'_open_S2: "U - ?E' \<in> top1_S2_topology"
     by (rule top1_open_of_local_subsets[OF hTopS2 hUE'_sub_S2 hUE'_cover])
