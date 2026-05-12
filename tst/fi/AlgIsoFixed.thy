@@ -3206,10 +3206,7 @@ proof -
   have "e24 \<inter> e41 = {a4}" sorry
   \<comment> \<open>Assembly.\<close>
   show ?thesis
-    apply (rule exI[of _ a1], rule exI[of _ a2], rule exI[of _ a3], rule exI[of _ a4])
-    apply (rule exI[of _ e12], rule exI[of _ e23], rule exI[of _ e34], rule exI[of _ e41])
-    apply (rule exI[of _ e13], rule exI[of _ e24])
-    sorry \<comment> \<open>38-condition conjunction: all facts proved above.\<close>
+    sorry \<comment> \<open>38-condition existential: witnesses a1-a4, e12-e41, e13, e24 with all conditions above.\<close>
 qed
 
 theorem Theorem_65_2_fixed:
