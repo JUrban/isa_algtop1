@@ -1,0 +1,13 @@
+bck1275: AlgIsoFixed.thy - 1 sorry (K4 diagonal), 3648 lines
+  - S2_open_path_connected_arc_connected: FULLY PROVED
+  - scc_minus_point_connected: FULLY PROVED
+  - scc_interior_contradiction: FULLY PROVED
+  - scc_decomp_arc_endpoints: FULLY PROVED
+  - K4 cycle structure: FULLY PROVED
+  - K4 crossing proofs: FULLY PROVED
+  - 1 sorry: K4_from_SCC diagonal (needs first-hit-time)
+
+bck1276: AlgTop.thy - 22 sorrys, 16769 lines
+  - Fixed ~12 chronically flaky by100 timeouts
+  - K33 pigeonhole section: decomposed contradiction steps
+  - Builds reliably in ~52s
