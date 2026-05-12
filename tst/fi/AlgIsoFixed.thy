@@ -1898,28 +1898,24 @@ lemma S2_open_path_connected_arc_connected:
   shows "\<exists>A. top1_is_arc_on A (subspace_topology top1_S2 top1_S2_topology A)
     \<and> A \<subseteq> U \<and> top1_arc_endpoints_on A (subspace_topology top1_S2 top1_S2_topology A) = {a, b}"
 proof -
-  \<comment> \<open>Local arc-connectivity of S2: every point x \<in> U has nbhd V \<subseteq> U where
-     any two points are connected by an arc in V.
-     Proof: stereographic proj from pole \<noteq> x gives S2-\{pole\} \<cong> R2.
-     Open ball in R2 is convex \<Rightarrow> line segment = arc.
-     Inverse stereographic maps arc back to S2.\<close>
+  have hTopS2: "is_topology_on top1_S2 top1_S2_topology"
+    using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
+  have hS2_haus: "is_hausdorff_on top1_S2 top1_S2_topology" by (rule top1_S2_is_hausdorff)
+  \<comment> \<open>Local arc-connectivity of S2: every x \<in> U has arc-connected neighborhood.
+     For x \<noteq> north\_pole: use stereographic\_proj from north\_pole.
+     For x = north\_pole: use stereographic from south pole (symmetric construction).
+     In both cases: stereographic maps nbhd to open subset of R2.
+     Open ball in R2 is convex \<Rightarrow> line segments are arcs \<Rightarrow> transfer back.\<close>
   have local_arc: "\<And>x. x \<in> U \<Longrightarrow> \<exists>V. V \<in> top1_S2_topology \<and> x \<in> V \<and> V \<subseteq> U \<and>
       (\<forall>y \<in> V. \<forall>z \<in> V. y \<noteq> z \<longrightarrow>
         (\<exists>D. top1_is_arc_on D (subspace_topology top1_S2 top1_S2_topology D) \<and>
              D \<subseteq> V \<and> top1_arc_endpoints_on D (subspace_topology top1_S2 top1_S2_topology D) = {y, z}))"
-    \<comment> \<open>Proof: stereographic projection from a pole \<notin> U gives S2-\{pole\} \<cong> R2.
-       U maps to open subset of R2. For x' = stereo(x): \<exists>\<epsilon>-ball B \<subseteq> stereo(U).
-       V = stereo\<inverse>(B) is open in S2. In B: line segment t \<mapsto> (1-t)*y'+t*z' is
-       continuous injective from [0,1] to R2, hence an arc (embedding from compact
-       to Hausdorff). Via inverse stereographic: arc in V \<subseteq> S2.
-       All building blocks: stereographic\_proj\_homeomorphism, open\_disk\_convex,
-       top1\_embedding\_on\_compact\_inj, homeomorphism\_on\_comp.
-       Full proof needs: stereographic chart around x, \<epsilon>-ball in R2,
-       convexity of ball, line segment as arc, transfer via homeomorphism.
-       The north\_pole case needs stereographic from south pole (not formalized),
-       but in practice K4\_from\_SCC only uses this for U = S2-C1 or S2-C2
-       where north\_pole \<in> C is generic.\<close>
-    sorry
+    sorry \<comment> \<open>Stereographic chart (from NP or SP) + \<epsilon>-ball convexity + line segment = arc.
+       For x \<noteq> NP: use stereographic\_proj\_homeomorphism. stereo(U \<inter> S2-{NP}) open.
+       \<epsilon>-ball around stereo(x) inside stereo(U). V = stereo\<inverse>(ball).
+       Line segment in ball = arc (embedding from compact to Hausdorff).
+       Transfer via inverse stereographic = arc in V.
+       For x = NP: symmetric argument with stereographic from south pole.\<close>
   \<comment> \<open>Equivalence class argument: E = \{y \<in> U | \<exists> arc from a to y in U\}.
      E is open (local\_arc + Step 1). U-E is open (same argument).
      a \<in> E (trivial). Path from a to b \<Rightarrow> path-component connected.
