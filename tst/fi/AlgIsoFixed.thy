@@ -2718,8 +2718,26 @@ proof -
           = top1_open_sets" by (rule product_topology_on_open_sets_real2)
       \<comment> \<open>Prove connected (S1-{p}) using continuous image of connected interval.\<close>
       have "connected (top1_S1 - {?p})"
-        sorry \<comment> \<open>S1-{p} = image of (0,2\<pi>) under (\<lambda>t. (cos(t+\<theta>), sin(t+\<theta>))).
-           (0,2\<pi>) connected (connected\_Ioo). Map continuous. Image connected.\<close>
+      proof -
+        \<comment> \<open>p \<in> S1 \<Rightarrow> \<exists>x0. top1\_R\_to\_S1(x0) = p. Then S1-{p} = R\_to\_S1 ` (x0,x0+1).\<close>
+        have hp: "?p \<in> top1_S1" by (rule ha_S1)
+        obtain x0 :: real where hx0: "top1_R_to_S1 x0 = ?p"
+        proof -
+          have "top1_R_to_S1 ` UNIV = top1_S1"
+            by (rule top1_covering_map_on_surj[OF Theorem_53_1])
+          hence "?p \<in> range top1_R_to_S1" using hp by (by100 blast)
+          hence "\<exists>x0. top1_R_to_S1 x0 = ?p" by auto
+          then obtain x0 where "top1_R_to_S1 x0 = ?p" by (by100 blast)
+          thus ?thesis using that by (by100 blast)
+        qed
+        have "top1_S1 - {?p} = top1_R_to_S1 ` {x0 <..< x0 + 1}"
+          sorry \<comment> \<open>R\_to\_S1 injective on (x0, x0+1), periodic with period 1, surjective.\<close>
+        moreover have "connected ({x0 <..< x0 + 1} :: real set)" by (rule connected_Ioo)
+        moreover have "continuous_on {x0 <..< x0 + 1} top1_R_to_S1"
+          unfolding top1_R_to_S1_def by (intro continuous_intros)
+        ultimately show ?thesis
+          by (metis connected_continuous_image)
+      qed
       thus ?thesis using hbridge hTR2_eq by (by100 simp)
     qed
     \<comment> \<open>Transfer from R2 subspace to S1 subspace topology.\<close>
