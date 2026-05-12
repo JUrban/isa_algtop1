@@ -2336,12 +2336,13 @@ proof -
   \<comment> \<open>E' is open in U: \<forall>y\<in>E', local\_arc gives V open, y\<in>V\<subseteq>U with arcs.
      For z\<in>V: arc y\<rightarrow>z in V. If y=a: z\<in>E'. If y\<noteq>a: splice arc a\<rightarrow>y + arc y\<rightarrow>z (Step 1) \<Rightarrow> z\<in>E'.
      So V\<subseteq>E'. Hence E' is open (union of open sets).\<close>
+  \<comment> \<open>E' open: each y \<in> E' has arc-connected nbhd V from local\_arc, V \<subseteq> E' by Step 1 splicing.
+     U-E' open: same by contradiction. Both need Munkres\_Step\_1\_arc\_splice.
+     For now: sorry these two standard equivalence-class openness arguments.\<close>
   have hE'_open: "?E' \<in> subspace_topology top1_S2 top1_S2_topology U"
-    sorry \<comment> \<open>E' open via local\_arc + Munkres\_Step\_1 arc splice: each y\<in>E' has open V\<subseteq>E'.\<close>
-  \<comment> \<open>U-E' is open: \<forall>y\<in>U-E', local\_arc gives V. If \<exists>z\<in>V\<inter>E': arc a\<rightarrow>z + arc z\<rightarrow>y (Step 1)
-     \<Rightarrow> y\<in>E'. Contradiction. So V\<inter>E'={}, V\<subseteq>U-E'. Hence U-E' open.\<close>
+    sorry \<comment> \<open>E' open: local\_arc + Step 1 arc splice gives open cover of E'.\<close>
   have hUE'_open: "U - ?E' \<in> subspace_topology top1_S2 top1_S2_topology U"
-    sorry \<comment> \<open>Same argument as E'\_open by contradiction. Needs Step 1 splice.\<close>
+    sorry \<comment> \<open>U-E' open: same argument by contradiction. If z\<in>V\<inter>E' for some y\<in>U-E', splice \<Rightarrow> y\<in>E'. \<bottom>\<close>
   \<comment> \<open>The path from a to b shows they're in the same path-component.
      That path-component is connected (path-connected \<Rightarrow> connected).
      E' and U-E' partition U. E' \<noteq> {}. If U-E' \<noteq> {}: E' and U-E' form a separation
