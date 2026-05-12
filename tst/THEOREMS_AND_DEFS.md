@@ -1,10 +1,10 @@
 # Theorem and Definition Index
-# Generated: 2026-05-11
+# Generated: 2026-05-12
 # Format: file | kind | name | line
 #
-# Files: i/Top1_Ch2.thy,i/Top1_Ch3.thy,i/Top1_Ch4.thy,i/Top1_Ch5_8.thy,i/Top1_Ch9_13.thy,h/AlgTopHelpers.thy,b0/AlgTop_JCT_Base0.thy,b/AlgTop_JCT_Base.thy,a0/AlgTop0.thy,ac/AlgTopCached.thy,AlgTop.thy
+# Files: i/Top1_Ch2.thy,i/Top1_Ch3.thy,i/Top1_Ch4.thy,i/Top1_Ch5_8.thy,i/Top1_Ch9_13.thy,h/AlgTopHelpers.thy,b0/AlgTop_JCT_Base0.thy,b/AlgTop_JCT_Base.thy,a0/AlgTop0.thy,ac/AlgTopCached.thy,AlgTop.thy,fi/AlgIsoFixed.thy
 #
-# Total entries: 1818
+# Total entries: 1841
 # Duplicate names: 13
 
 ## definitions (329)
@@ -63,7 +63,7 @@ pi2                                            i/Top1_Ch2.thy                   
 preimage                                       i/Top1_Ch2.thy                       line 3183
 product_basis                                  i/Top1_Ch2.thy                       line 3003
 product_topology_on                            i/Top1_Ch2.thy                       line 3007
-remains                                        AlgTop.thy                           line 4551
+remains                                        AlgTop.thy                           line 8606
 RN_grid_covering                               i/Top1_Ch5_8.thy                     line 31048
 RN_grid_covering_sc                            i/Top1_Ch5_8.thy                     line 31451
 RN_grid_family                                 i/Top1_Ch5_8.thy                     line 31045
@@ -122,7 +122,7 @@ top1_countable                                 i/Top1_Ch4.thy                   
 top1_countable_neighborhood_basis_at           i/Top1_Ch4.thy                       line 436
 top1_countably_compact_on                      i/Top1_Ch3.thy                       line 10373
 top1_covering_map_on                           i/Top1_Ch9_13.thy                    line 3918
-top1_covering_transformation_on                AlgTop.thy                           line 10943
+top1_covering_transformation_on                AlgTop.thy                           line 14998
 top1_cover_order_le_on                         i/Top1_Ch5_8.thy                     line 26322
 top1_deformation_retract_of_on                 b0/AlgTop_JCT_Base0.thy              line 4031
 top1_Delta49                                   i/Top1_Ch5_8.thy                     line 25038
@@ -141,7 +141,7 @@ top1_dyadic                                    i/Top1_Ch4.thy                   
 top1_embedding_on                              i/Top1_Ch2.thy                       line 7084
 top1_eq_on                                     i/Top1_Ch5_8.thy                     line 1467
 top1_equicontinuous_family_on                  i/Top1_Ch5_8.thy                     line 14316
-top1_equivalent_coverings_on                   AlgTop.thy                           line 7493
+top1_equivalent_coverings_on                   AlgTop.thy                           line 11548
 top1_equiv_compactification_via_on             i/Top1_Ch5_8.thy                     line 1470
 top1_euclidean_metric_real_on                  i/Top1_Ch2.thy                       line 12953
 top1_evenly_covered_on                         i/Top1_Ch9_13.thy                    line 3907
@@ -177,7 +177,7 @@ top1_induced_homomorphism_on                   i/Top1_Ch9_13.thy                
 top1_in_same_component_on                      i/Top1_Ch3.thy                       line 2466
 top1_in_same_path_component_on                 i/Top1_Ch3.thy                       line 3057
 top1_interval_encode                           i/Top1_Ch3.thy                       line 9643
-top1_is_2_manifold_on                          AlgTop.thy                           line 4183
+top1_is_2_manifold_on                          AlgTop.thy                           line 8238
 top1_is_abelian_group_on                       i/Top1_Ch9_13.thy                    line 3124
 top1_is_abelianization_of                      ac/AlgTopCached.thy                  line 7018
 top1_is_arc_on                                 b/AlgTop_JCT_Base.thy                line 10034
@@ -186,7 +186,7 @@ top1_is_dunce_cap_on                           ac/AlgTopCached.thy              
 top1_is_free_abelian_group_full_on             ac/AlgTopCached.thy                  line 6874
 top1_is_free_group_full_on                     ac/AlgTopCached.thy                  line 6844
 top1_is_free_product_on                        ac/AlgTopCached.thy                  line 6917
-top1_is_graph_on                               AlgTop.thy                           line 11325
+top1_is_graph_on                               AlgTop.thy                           line 15380
 top1_is_group_on                               i/Top1_Ch9_13.thy                    line 3114
 top1_is_lifting_on                             i/Top1_Ch9_13.thy                    line 3966
 top1_is_loop_on                                i/Top1_Ch9_13.thy                    line 2335
@@ -197,17 +197,17 @@ top1_isolated_point_on                         i/Top1_Ch3.thy                   
 top1_isometry_on                               i/Top1_Ch5_8.thy                     line 11705
 top1_is_path_on                                i/Top1_Ch3.thy                       line 3052
 top1_is_polygonal_quotient_on                  ac/AlgTopCached.thy                  line 31300
-top1_is_polygonal_quotient_strict_on           AlgTop.thy                           line 4468
+top1_is_polygonal_quotient_strict_on           AlgTop.thy                           line 8523
 top1_is_polygonal_region_on                    ac/AlgTopCached.thy                  line 31216
 top1_is_retraction_on                          i/Top1_Ch9_13.thy                    line 11432
 top1_is_separation_on                          i/Top1_Ch3.thy                       line 25
 top1_is_subnet                                 i/Top1_Ch5_8.thy                     line 33607
-top1_is_surface_on                             AlgTop.thy                           line 4197
+top1_is_surface_on                             AlgTop.thy                           line 8252
 top1_is_theta_space_on                         ac/AlgTopCached.thy                  line 51888
 top1_is_torus_on                               ac/AlgTopCached.thy                  line 31350
-top1_is_tree_on                                AlgTop.thy                           line 11456
+top1_is_tree_on                                AlgTop.thy                           line 15511
 top1_is_triangulable_on                        ac/AlgTopCached.thy                  line 31378
-top1_is_universal_covering_on                  AlgTop.thy                           line 9174
+top1_is_universal_covering_on                  AlgTop.thy                           line 13229
 top1_is_wedge_of_circles_on                    ac/AlgTopCached.thy                  line 31196
 top1_left_cosets_on                            ac/AlgTopCached.thy                  line 31428
 top1_limit_point_compact_on                    i/Top1_Ch3.thy                       line 10363
@@ -291,7 +291,7 @@ top1_SC_TZ                                     i/Top1_Ch5_8.thy                 
 top1_SC_Y                                      i/Top1_Ch5_8.thy                     line 20789
 top1_SC_Z                                      i/Top1_Ch5_8.thy                     line 20782
 top1_second_countable_on                       i/Top1_Ch4.thy                       line 447
-top1_semilocally_simply_connected_on           AlgTop.thy                           line 11227
+top1_semilocally_simply_connected_on           AlgTop.thy                           line 15282
 top1_separates_on                              b/AlgTop_JCT_Base.thy                line 3763
 top1_sequentially_compact_on                   i/Top1_Ch5_8.thy                     line 32828
 top1_sigma_locally_finite_family_on            i/Top1_Ch5_8.thy                     line 2835
@@ -356,7 +356,7 @@ top1_urysohn_U                                 i/Top1_Ch4.thy                   
 
 top1_I01                                       i/Top1_Ch5_8.thy                     line 25035
 
-## lemmas (1189)
+## lemmas (1209)
 
 abelianization_concrete                        ac/AlgTopCached.thy                  line 9518
 abs_diff_le_of_bounds                          i/Top1_Ch4.thy                       line 12764
@@ -371,19 +371,19 @@ affine_span_in_hyperplane                      i/Top1_Ch5_8.thy                 
 antipode_preserving_basepoint_nontrivial       b0/AlgTop_JCT_Base0.thy              line 2823
 arc_both_endpoints_in_one_part                 ac/AlgTopCached.thy                  line 51489
 arc_concat_endpoints                           ac/AlgTopCached.thy                  line 51597
-arc_connected                                  a0/AlgTop0.thy                       line 4934
+arc_connected                                  a0/AlgTop0.thy                       line 4935
 arc_endpoint_in_closure_of_interior            ac/AlgTopCached.thy                  line 52893
 arc_endpoints_are_boundary                     ac/AlgTopCached.thy                  line 48487
-arc_in_S2_closed                               a0/AlgTop0.thy                       line 4900
-arc_joining_lemma                              a0/AlgTop0.thy                       line 5632
+arc_in_S2_closed                               a0/AlgTop0.thy                       line 4901
+arc_joining_lemma                              a0/AlgTop0.thy                       line 5633
 arc_minus_endpoints_connected                  ac/AlgTopCached.thy                  line 51900
 arcs_concatenation_is_arc                      ac/AlgTopCached.thy                  line 49782
 arcs_form_simple_closed_curve                  ac/AlgTopCached.thy                  line 49015
 arc_split_at_given_point                       ac/AlgTopCached.thy                  line 50411
-arc_split_at_midpoint                          a0/AlgTop0.thy                       line 4971
+arc_split_at_midpoint                          a0/AlgTop0.thy                       line 4972
 arc_split_endpoints                            ac/AlgTopCached.thy                  line 50893
 basepoint_change_cong_on_I                     ac/AlgTopCached.thy                  line 41723
-basepoint_change_image_hom                     AlgTop.thy                           line 7811
+basepoint_change_image_hom                     AlgTop.thy                           line 11866
 basis_elem_in_generated_topology               i/Top1_Ch5_8.thy                     line 16011
 basis_elem_open_if_basis_for                   i/Top1_Ch2.thy                       line 1918
 basis_elem_open_in_generated_topology          i/Top1_Ch2.thy                       line 1882
@@ -455,7 +455,7 @@ closure_on_subset_of_closed                    i/Top1_Ch2.thy                   
 closure_pointwise_bounded                      i/Top1_Ch5_8.thy                     line 14941
 commutator_conjugate                           ac/AlgTopCached.thy                  line 8098
 commutator_subgroup_is_normal                  ac/AlgTopCached.thy                  line 8145
-commutator_zero_exponent                       AlgTop.thy                           line 3481
+commutator_zero_exponent                       AlgTop.thy                           line 7536
 compact_closed_FIP_inter_ne                    i/Top1_Ch5_8.thy                     line 781
 compact_embedding_dim_le                       i/Top1_Ch5_8.thy                     line 32033
 compact_finite                                 ac/AlgTopCached.thy                  line 41185
@@ -486,6 +486,7 @@ completely_regular_imp_regular_on              i/Top1_Ch4.thy                   
 complete_metric_baire_aux                      i/Top1_Ch5_8.thy                     line 23104
 complete_tb_convergent_subseq                  i/Top1_Ch5_8.thy                     line 13892
 complete_totally_bounded_imp_compact           i/Top1_Ch5_8.thy                     line 14151
+component_eq_from_subset                       AlgTop.thy                           line 2263
 comp_path_product                              ac/AlgTopCached.thy                  line 5561
 comp_path_reverse                              ac/AlgTopCached.thy                  line 5573
 connected_iff_clopen                           i/Top1_Ch3.thy                       line 128
@@ -514,27 +515,29 @@ continuous_preserves_path_homotopic            i/Top1_Ch9_13.thy                
 continuous_restrict_to_interval                i/Top1_Ch5_8.thy                     line 12486
 convergent_lim_ge                              i/Top1_Ch5_8.thy                     line 11940
 convergent_lim_le                              i/Top1_Ch5_8.thy                     line 11922
-convex_hull_compact                            AlgTop.thy                           line 4459
-convex_hull_compact_general                    AlgTop.thy                           line 4397
-convex_hull_cone_sub                           AlgTop.thy                           line 4270
-convex_hull_cone_sup                           AlgTop.thy                           line 4216
+convex_hull_compact                            AlgTop.thy                           line 8514
+convex_hull_compact_general                    AlgTop.thy                           line 8452
+convex_hull_cone_sub                           AlgTop.thy                           line 8325
+convex_hull_cone_sup                           AlgTop.thy                           line 8271
 convex_in_not_mem_imp_all_gt                   i/Top1_Ch2.thy                       line 4468
 convex_in_not_mem_imp_all_lt                   i/Top1_Ch2.thy                       line 4496
 convex_in_refine_basis_intersection            i/Top1_Ch2.thy                       line 4525
 coset_e_is_N                                   ac/AlgTopCached.thy                  line 8683
 coset_self_mem                                 ac/AlgTopCached.thy                  line 8672
-cos_sin_eq_imp                                 a0/AlgTop0.thy                       line 7492
-cos_sin_eq_small_diff                          a0/AlgTop0.thy                       line 7504
+cos_sin_eq_imp                                 a0/AlgTop0.thy                       line 7493
+cos_sin_eq_small_diff                          a0/AlgTop0.thy                       line 7505
 co_subbasis_in_cc_subspace                     i/Top1_Ch5_8.thy                     line 18552
 countable_union_sigma_lf                       i/Top1_Ch5_8.thy                     line 2963
-covering_base_locally_path_connected           AlgTop.thy                           line 9791
+covering_base_locally_path_connected           AlgTop.thy                           line 13846
 covering_lift_endpoint_contradiction           a0/AlgTop0.thy                       line 2577
-covering_lift_unique_connected                 AlgTop.thy                           line 6157
+covering_lift_unique_connected                 AlgTop.thy                           line 10212
 dense_in_compact_image                         i/Top1_Ch5_8.thy                     line 12068
 dense_in_own_closure                           i/Top1_Ch5_8.thy                     line 20742
 diff_Inter_eq                                  i/Top1_Ch2.thy                       line 4890
+diff_inter_subset                              AlgTop.thy                           line 2285
 dim_le_finite_closed_cover                     i/Top1_Ch5_8.thy                     line 32091
 dim_le_two_closed_cover                        i/Top1_Ch5_8.thy                     line 32081
+disjoint_subset_right                          AlgTop.thy                           line 2289
 dist_to_set_continuous                         i/Top1_Ch5_8.thy                     line 27795
 dist_to_set_lipschitz                          i/Top1_Ch5_8.thy                     line 27761
 dist_to_set_nonneg                             i/Top1_Ch2.thy                       line 16846
@@ -542,16 +545,18 @@ dist_to_set_zero_iff_closure                   i/Top1_Ch2.thy                   
 dist_to_set_zero_iff_eps                       i/Top1_Ch2.thy                       line 16862
 double_basepoint_change_equiv                  i/Top1_Ch9_13.thy                    line 14542
 doubleton_eq_iff                               ac/AlgTopCached.thy                  line 48432
+element_of_three_subset                        AlgTop.thy                           line 2259
 equicont_from_tb_cover                         i/Top1_Ch5_8.thy                     line 14422
 equicontinuous_covering_bound                  i/Top1_Ch5_8.thy                     line 21437
 equicontinuous_subset                          i/Top1_Ch5_8.thy                     line 14789
 eval_continuous_compact_convergence            i/Top1_Ch5_8.thy                     line 21706
-evenly_covered_open_subset                     AlgTop.thy                           line 9657
+evenly_covered_open_subset                     AlgTop.thy                           line 13712
 exists_pow2_inv_lt                             i/Top1_Ch4.thy                       line 6770
 exists_top1_dyadic_between_01                  i/Top1_Ch4.thy                       line 6793
 expansion_E_open                               i/Top1_Ch5_8.thy                     line 7915
 expansion_lf_from_auxiliary                    i/Top1_Ch5_8.thy                     line 7945
 exterior_ball_connected_R2                     h/AlgTopHelpers.thy                  line 39
+false_from_disjoint_nonempty                   AlgTop.thy                           line 2272
 finer_than_on_imp                              i/Top1_Ch2.thy                       line 1057
 finer_than_on_strict                           i/Top1_Ch2.thy                       line 1528
 fin_inter_open_on                              i/Top1_Ch5_8.thy                     line 14361
@@ -566,7 +571,7 @@ finite_union_locally_finite                    i/Top1_Ch5_8.thy                 
 first_countable_closure_imp_seq                i/Top1_Ch4.thy                       line 1580
 first_isomorphism_theorem                      ac/AlgTopCached.thy                  line 9307
 first_isomorphism_theorem_forward              ac/AlgTopCached.thy                  line 9572
-flexible_arc_decomposition                     a0/AlgTop0.thy                       line 7521
+flexible_arc_decomposition                     a0/AlgTop0.thy                       line 7522
 flip_t_continuous_product                      i/Top1_Ch9_13.thy                    line 407
 floor_nat_plus_frac                            i/Top1_Ch5_8.thy                     line 13240
 floor_nat_plus_frac_early                      i/Top1_Ch5_8.thy                     line 12140
@@ -578,11 +583,11 @@ foldr_path_product_base_homotopic              b0/AlgTop_JCT_Base0.thy          
 foldr_path_product_is_path                     b0/AlgTop_JCT_Base0.thy              line 5640
 foldr_path_product_nulhomotopic                b/AlgTop_JCT_Base.thy                line 278
 four_strips_connected                          h/AlgTopHelpers.thy                  line 19
-free_group_exponent_sum                        AlgTop.thy                           line 3460
-free_group_hom_exists                          AlgTop.thy                           line 3032
-free_group_hom_unique                          AlgTop.thy                           line 2350
-free_group_universal_property                  AlgTop.thy                           line 3418
-free_group_word_kernel                         AlgTop.thy                           line 2852
+free_group_exponent_sum                        AlgTop.thy                           line 7515
+free_group_hom_exists                          AlgTop.thy                           line 7098
+free_group_hom_unique                          AlgTop.thy                           line 6411
+free_group_universal_property                  AlgTop.thy                           line 7484
+free_group_word_kernel                         AlgTop.thy                           line 6918
 free_product_reduced_repr                      ac/AlgTopCached.thy                  line 10922
 free_product_trivial_factor_surj               ac/AlgTopCached.thy                  line 27143
 frontier_closed_sub                            ac/AlgTopCached.thy                  line 3582
@@ -591,7 +596,7 @@ fundamental_group_induced_agree                ac/AlgTopCached.thy              
 fundamental_group_induced_comp                 ac/AlgTopCached.thy                  line 5809
 fundamental_group_invg_class                   ac/AlgTopCached.thy                  line 13760
 fundamental_group_mul_eq_class                 i/Top1_Ch9_13.thy                    line 10888
-general_lifting_criterion                      AlgTop.thy                           line 6470
+general_lifting_criterion                      AlgTop.thy                           line 10525
 general_position_extend                        i/Top1_Ch5_8.thy                     line 28761
 generated_topology_contains_basis_elem         i/Top1_Ch5_8.thy                     line 16006
 geom_cauchy_bound                              i/Top1_Ch5_8.thy                     line 11839
@@ -616,7 +621,7 @@ group_inv_inv                                  ac/AlgTopCached.thy              
 group_inv_inv_early                            ac/AlgTopCached.thy                  line 6211
 group_inv_left                                 ac/AlgTopCached.thy                  line 7505
 group_inv_mul                                  ac/AlgTopCached.thy                  line 7541
-group_inv_product                              AlgTop.thy                           line 2664
+group_inv_product                              AlgTop.thy                           line 6723
 group_inv_right                                ac/AlgTopCached.thy                  line 7507
 group_left_cancel                              ac/AlgTopCached.thy                  line 7525
 group_mul_closed                               ac/AlgTopCached.thy                  line 7494
@@ -665,7 +670,7 @@ homeomorphism_preserves_simply_connected       ac/AlgTopCached.thy              
 homeomorphism_preserves_simply_connected       b/AlgTop_JCT_Base.thy                line 1205
 homeomorphism_preserves_simply_connected_forward  b/AlgTop_JCT_Base.thy                line 5751
 homeomorphism_reflects_simply_connected        b/AlgTop_JCT_Base.thy                line 5757
-homeomorphism_restrict_open                    AlgTop.thy                           line 9555
+homeomorphism_restrict_open                    AlgTop.thy                           line 13610
 homeomorphism_restrict_point                   b/AlgTop_JCT_Base.thy                line 5763
 hom_from_cyclic_Z_image_in_subgroup            ac/AlgTopCached.thy                  line 41618
 hom_from_Z_image_in_subgroup                   ac/AlgTopCached.thy                  line 41567
@@ -686,7 +691,7 @@ inclusion_retraction_iso                       b0/AlgTop_JCT_Base0.thy          
 increasing_interval_cover                      i/Top1_Ch9_13.thy                    line 7747
 indexed_shrinking                              i/Top1_Ch5_8.thy                     line 8645
 induced_hom_mul                                b0/AlgTop_JCT_Base0.thy              line 7896
-infinite_cyclic_common_power                   a0/AlgTop0.thy                       line 4403
+infinite_cyclic_common_power                   a0/AlgTop0.thy                       line 4404
 infinite_range_lpc_subseq                      i/Top1_Ch5_8.thy                     line 32649
 inj_hom_preimage_normal_closure                ac/AlgTopCached.thy                  line 43186
 intersection_of_subgroups_is_group             ac/AlgTopCached.thy                  line 7946
@@ -703,6 +708,10 @@ is_topology_on_strict_imp                      i/Top1_Ch2.thy                   
 is_topology_on_strict_opens_sub                i/Top1_Ch2.thy                       line 40
 is_topology_on_strict_Pow                      i/Top1_Ch2.thy                       line 58
 I_top_sub_closed_interval_top                  ac/AlgTopCached.thy                  line 104
+J_component_sub_theta_forces_eq                AlgTop.thy                           line 2306
+K4_final_contradiction                         AlgTop.thy                           line 2222
+K4_from_SCC                                    fi/AlgIsoFixed.thy                   line 2424
+K4_nonadjacent_edges_different_components      AlgTop.thy                           line 2338
 kernel_is_normal_subgroup                      ac/AlgTopCached.thy                  line 7720
 lebesgue_number_lemma                          i/Top1_Ch5_8.thy                     line 14062
 Lemma_16_4_aux                                 i/Top1_Ch2.thy                       line 4273
@@ -759,7 +768,9 @@ Lemma_62_1_homotopy_extension                  ac/AlgTopCached.thy              
 Lemma_62_2_BorsukLemma                         ac/AlgTopCached.thy                  line 1997
 Lemma_64_1_theta_space_three_components        ac/AlgTopCached.thy                  line 52200
 Lemma_64_3_K4_four_components                  ac/AlgTopCached.thy                  line 53238
-Lemma_65_1                                     AlgTop.thy                           line 800
+Lemma_65_1                                     AlgTop.thy                           line 3815
+Lemma_65_1_fixed                               fi/AlgIsoFixed.thy                   line 739
+Lemma_65_1_fixed_exists_basepoint              fi/AlgIsoFixed.thy                   line 1319
 Lemma_65_1_K4_subgraph                         ac/AlgTopCached.thy                  line 55064
 Lemma_68_3_extension_property                  ac/AlgTopCached.thy                  line 11297
 Lemma_68_9_normal_closure_conjugates           ac/AlgTopCached.thy                  line 8265
@@ -814,6 +825,7 @@ metrizable_imp_strict                          i/Top1_Ch5_8.thy                 
 metrizable_openin_on                           i/Top1_Ch5_8.thy                     line 5245
 metrizable_open_sub_carrier                    i/Top1_Ch5_8.thy                     line 5240
 munkres_basis_property                         i/Top1_Ch5_8.thy                     line 9379
+Munkres_Step_1_arc_splice                      fi/AlgIsoFixed.thy                   line 1515
 nat_directed_set                               i/Top1_Ch5_8.thy                     line 33424
 neighborhood_of_strict_carrier                 i/Top1_Ch2.thy                       line 5463
 neighborhood_of_strict_imp                     i/Top1_Ch2.thy                       line 5459
@@ -821,6 +833,7 @@ neighborhood_of_to_strict                      i/Top1_Ch2.thy                   
 net_convergence_iff_seq_convergence            i/Top1_Ch5_8.thy                     line 33430
 net_converges_eventually_strict                i/Top1_Ch5_8.thy                     line 33478
 net_limit_in_closure                           i/Top1_Ch5_8.thy                     line 33461
+nonempty_inter_from_subset                     AlgTop.thy                           line 2268
 normal_coset_eq                                ac/AlgTopCached.thy                  line 8706
 normal_coset_mul_eq                            ac/AlgTopCached.thy                  line 8860
 normal_finite_cover_bump_family                i/Top1_Ch4.thy                       line 16997
@@ -836,8 +849,8 @@ normal_subgroup_generated_is_normal            ac/AlgTopCached.thy              
 normal_urysohn_bump_support                    i/Top1_Ch4.thy                       line 16917
 normal_urysohn_initial_step                    i/Top1_Ch4.thy                       line 6212
 north_pole_in_S2                               b/AlgTop_JCT_Base.thy                line 3789
-not_connected_imp_no_path                      a0/AlgTop0.thy                       line 4835
-not_reduced_has_cancel                         AlgTop.thy                           line 2624
+not_connected_imp_no_path                      a0/AlgTop0.thy                       line 4836
+not_reduced_has_cancel                         AlgTop.thy                           line 6683
 nulhomotopic_homotopic_trans                   i/Top1_Ch9_13.thy                    line 13164
 nulhomotopic_transfer                          b/AlgTop_JCT_Base.thy                line 6113
 nulhomotopic_trivializes_loops                 i/Top1_Ch9_13.thy                    line 16045
@@ -887,13 +900,13 @@ paracompact_closure_union_avoidance            i/Top1_Ch5_8.thy                 
 paracompact_hausdorff_imp_regular              i/Top1_Ch5_8.thy                     line 6923
 paracompact_regular_imp_normal                 i/Top1_Ch5_8.thy                     line 7193
 pasting_lemma_two_closed                       i/Top1_Ch5_8.thy                     line 12415
-path_connected_imp_connected                   AlgTop.thy                           line 6389
+path_connected_imp_connected                   AlgTop.thy                           line 10444
 path_connected_imp_connected                   b/AlgTop_JCT_Base.thy                line 6977
 path_connected_union                           b/AlgTop_JCT_Base.thy                line 81
-path_homotopic_path_power                      a0/AlgTop0.thy                       line 4022
+path_homotopic_path_power                      a0/AlgTop0.thy                       line 4023
 path_homotopic_product_left                    i/Top1_Ch9_13.thy                    line 2486
 path_homotopic_product_right                   i/Top1_Ch9_13.thy                    line 2691
-path_homotopic_reverse                         a0/AlgTop0.thy                       line 4301
+path_homotopic_reverse                         a0/AlgTop0.thy                       line 4302
 path_homotopic_reverse_congruence              ac/AlgTopCached.thy                  line 13689
 path_homotopic_subspace_superspace             ac/AlgTopCached.thy                  line 13602
 path_homotopic_subspace_to_ambient             b0/AlgTop_JCT_Base0.thy              line 7805
@@ -904,9 +917,9 @@ path_in_subspace_imp_path_in_ambient           b/AlgTop_JCT_Base.thy            
 path_in_subspace_is_path_in_ambient            b0/AlgTop_JCT_Base0.thy              line 5576
 path_in_subspace_is_path_in_ambient            b/AlgTop_JCT_Base.thy                line 19
 path_in_subspace_is_path_in_space              a0/AlgTop0.thy                       line 1415
-path_power_mult                                a0/AlgTop0.thy                       line 4107
-path_power_product_add                         a0/AlgTop0.thy                       line 4061
-path_power_reverse                             a0/AlgTop0.thy                       line 4147
+path_power_mult                                a0/AlgTop0.thy                       line 4108
+path_power_product_add                         a0/AlgTop0.thy                       line 4062
+path_power_reverse                             a0/AlgTop0.thy                       line 4148
 path_product_split                             b0/AlgTop_JCT_Base0.thy              line 6055
 path_reverse_involution                        ac/AlgTopCached.thy                  line 5569
 paths_agree_on_I_path_homotopic                b/AlgTop_JCT_Base.thy                line 10995
@@ -939,7 +952,7 @@ quotient_group_is_group                        ac/AlgTopCached.thy              
 quotient_group_iso_transfer                    ac/AlgTopCached.thy                  line 39976
 quotient_induced_hom                           ac/AlgTopCached.thy                  line 12713
 quotient_of_scheme_extract                     ac/AlgTopCached.thy                  line 31288
-quotient_of_scheme_extract_full                AlgTop.thy                           line 4501
+quotient_of_scheme_extract_full                AlgTop.thy                           line 8556
 quotient_projection_properties                 ac/AlgTopCached.thy                  line 8950
 R2_locally_path_connected                      b/AlgTop_JCT_Base.thy                line 6672
 R2_minus_origin_not_simply_connected           b/AlgTop_JCT_Base.thy                line 4796
@@ -1000,8 +1013,10 @@ S2_minus_north_pole_simply_connected           b/AlgTop_JCT_Base.thy            
 S2_minus_point_homeo_R2                        b/AlgTop_JCT_Base.thy                line 5677
 S2_minus_point_simply_connected                b/AlgTop_JCT_Base.thy                line 4769
 S2_minus_two_points_not_simply_connected       b/AlgTop_JCT_Base.thy                line 5883
-S2_nonsep_path_exists                          a0/AlgTop0.thy                       line 4669
+S2_nonsep_path_exists                          a0/AlgTop0.thy                       line 4670
+S2_open_path_connected_arc_connected           fi/AlgIsoFixed.thy                   line 1893
 S2_two_component_open                          ac/AlgTopCached.thy                  line 52121
+SCC_pi1_iso_Z                                  AlgTop.thy                           line 2109
 second_countable_countable_subcover_of_closed  i/Top1_Ch4.thy                       line 2160
 seq_conv_comp                                  i/Top1_Ch5_8.thy                     line 32635
 seq_converges_eventually                       i/Top1_Ch2.thy                       line 6128
@@ -1021,12 +1036,12 @@ sfa_rec_range                                  i/Top1_Ch5_8.thy                 
 sigma_lf_to_lf_covering                        i/Top1_Ch5_8.thy                     line 7598
 sigma_lf_to_lf_open_covering                   i/Top1_Ch5_8.thy                     line 8007
 simple_closed_curve_arc_decomposition          b/AlgTop_JCT_Base.thy                line 10118
-simple_closed_curve_boundary_meets_component   a0/AlgTop0.thy                       line 8296
+simple_closed_curve_boundary_meets_component   a0/AlgTop0.thy                       line 8297
 simple_closed_curve_proper_subset              b/AlgTop_JCT_Base.thy                line 10712
 simple_closed_curve_subset                     b/AlgTop_JCT_Base.thy                line 4790
 simply_connected_paths_homotopic               i/Top1_Ch9_13.thy                    line 10166
 simply_connected_trivial_carrier               ac/AlgTopCached.thy                  line 27371
-simply_connected_trivial_image                 AlgTop.thy                           line 9181
+simply_connected_trivial_image                 AlgTop.thy                           line 13236
 singleton_closed_in_hausdorff                  i/Top1_Ch2.thy                       line 5909
 singleton_not_open_in_S2                       b/AlgTop_JCT_Base.thy                line 7226
 Sn_interpolation_at_1                          b/AlgTop_JCT_Base.thy                line 853
@@ -1040,7 +1055,7 @@ squaring_map_factorization                     b0/AlgTop_JCT_Base0.thy          
 standard_S1_loop_class_in_carrier              ac/AlgTopCached.thy                  line 41803
 standard_S1_loop_generates_Z                   ac/AlgTopCached.thy                  line 42262
 standard_S1_loop_is_loop                       ac/AlgTopCached.thy                  line 41781
-standard_simplex_is_polygonal_region           AlgTop.thy                           line 5910
+standard_simplex_is_polygonal_region           AlgTop.thy                           line 9965
 stereo_denom_ne                                b/AlgTop_JCT_Base.thy                line 3799
 stereo_denom_pos                               b/AlgTop_JCT_Base.thy                line 3796
 stereographic_inv_in_S2                        b/AlgTop_JCT_Base.thy                line 3802
@@ -1058,6 +1073,9 @@ subgroup_generated_word_repr                   ac/AlgTopCached.thy              
 subnet_converges_to_same_limit                 i/Top1_Ch5_8.thy                     line 33615
 subseq_converges_to                            i/Top1_Ch5_8.thy                     line 29442
 subset_closure_on                              i/Top1_Ch2.thy                       line 5224
+subset_disjoint_helper                         AlgTop.thy                           line 2218
+subset_from_eq_and_subset                      AlgTop.thy                           line 2276
+subset_of_complement_disjoint                  AlgTop.thy                           line 2280
 subspace_inclusion_induced_class               ac/AlgTopCached.thy                  line 43253
 subspace_inclusion_induced_hom                 ac/AlgTopCached.thy                  line 43231
 subspace_metric_topology_eq_metric_topology    i/Top1_Ch4.thy                       line 11391
@@ -1072,7 +1090,7 @@ subspace_topology_UNIV_self                    i/Top1_Ch9_13.thy                
 sup_metric_ge_pointwise                        i/Top1_Ch5_8.thy                     line 14751
 sup_uniform_ball_eq                            i/Top1_Ch5_8.thy                     line 15425
 sup_uniform_topology_eq_on_continuous          i/Top1_Ch5_8.thy                     line 18068
-surj_hom_generated                             AlgTop.thy                           line 2251
+surj_hom_generated                             AlgTop.thy                           line 6314
 surj_hom_image_normal                          ac/AlgTopCached.thy                  line 43136
 svk_pieces_in_subgroup                         ac/AlgTopCached.thy                  line 14212
 SvK_simply_connected_V_surj_kernel             ac/AlgTopCached.thy                  line 42593
@@ -1101,7 +1119,9 @@ Theorem_63_1_c_subgroups_trivial               a0/AlgTop0.thy                   
 Theorem_63_1_c_subgroups_trivial_reverse       a0/AlgTop0.thy                       line 2600
 Theorem_70_1_uniqueness                        ac/AlgTopCached.thy                  line 28116
 Theorem_70_1_universal_property                ac/AlgTopCached.thy                  line 15862
-three_components_contradiction                 a0/AlgTop0.thy                       line 6649
+theta_space_vertex_exclusion                   AlgTop.thy                           line 785
+third_element_unique                           AlgTop.thy                           line 2293
+three_components_contradiction                 a0/AlgTop0.thy                       line 6650
 top1_27_7_shrink_open_avoid_closure            i/Top1_Ch3.thy                       line 9701
 top1_abs_metric_on_UNIV_real                   i/Top1_Ch4.thy                       line 11065
 top1_ascoli_step1_compact_closure_pointwise    i/Top1_Ch5_8.thy                     line 21197
@@ -1540,15 +1560,15 @@ wellorder_Least_le_all                         i/Top1_Ch4.thy                   
 wellorder_min_lt_if_ne                         i/Top1_Ch4.thy                       line 5053
 wellorder_min_singleton_open                   i/Top1_Ch4.thy                       line 5291
 wellorder_open_refine_Ioc                      i/Top1_Ch4.thy                       line 5266
-word_cancel_preserves_eval                     AlgTop.thy                           line 2519
-word_product_append                            AlgTop.thy                           line 2463
-word_product_in_group                          AlgTop.thy                           line 2430
-word_product_rev_inv                           AlgTop.thy                           line 2720
+word_cancel_preserves_eval                     AlgTop.thy                           line 6578
+word_product_append                            AlgTop.thy                           line 6522
+word_product_in_group                          AlgTop.thy                           line 6489
+word_product_rev_inv                           AlgTop.thy                           line 6786
 Z_auto_sends_1_to_pm1                          ac/AlgTopCached.thy                  line 41630
 Z_is_free_on_one_generator                     ac/AlgTopCached.thy                  line 31443
-Z_quotient_nZ_iso                              AlgTop.thy                           line 3698
+Z_quotient_nZ_iso                              AlgTop.thy                           line 7753
 
-## theorems (225)
+## theorems (228)
 
 Corollary_17_7                                 i/Top1_Ch2.thy                       line 5793
 Lemma_13_1                                     i/Top1_Ch2.thy                       line 1215
@@ -1724,8 +1744,10 @@ Theorem_57_1                                   b0/AlgTop_JCT_Base0.thy          
 Theorem_57_2_no_antipode_S2_to_S1              ac/AlgTopCached.thy                  line 804
 Theorem_57_3_BorsukUlam                        b0/AlgTop_JCT_Base0.thy              line 3656
 Theorem_58_2_inclusion_iso                     b0/AlgTop_JCT_Base0.thy              line 5319
+Theorem_58_2_inclusion_iso_fixed               fi/AlgIsoFixed.thy                   line 430
 Theorem_58_3                                   b0/AlgTop_JCT_Base0.thy              line 5083
 Theorem_58_7                                   b0/AlgTop_JCT_Base0.thy              line 4316
+Theorem_58_7_fixed                             fi/AlgIsoFixed.thy                   line 5
 Theorem_59_1                                   b0/AlgTop_JCT_Base0.thy              line 6691
 Theorem_59_3                                   b/AlgTop_JCT_Base.thy                line 1315
 Theorem_60_1_product                           b/AlgTop_JCT_Base.thy                line 3261
@@ -1733,48 +1755,49 @@ Theorem_61_3_JordanSeparation_S2               b/AlgTop_JCT_Base.thy            
 Theorem_61_4_general_separation                b/AlgTop_JCT_Base.thy                line 12245
 Theorem_62_3_invariance_of_domain              ac/AlgTopCached.thy                  line 4337
 Theorem_63_1_loop_nontrivial                   a0/AlgTop0.thy                       line 736
-Theorem_63_2_arc_no_separation                 a0/AlgTop0.thy                       line 5870
-Theorem_63_3_general_nonseparation             a0/AlgTop0.thy                       line 5316
-Theorem_63_4_JordanCurve                       a0/AlgTop0.thy                       line 8566
-Theorem_63_5_two_closed_connected              a0/AlgTop0.thy                       line 6929
-Theorem_64_2_K33_not_planar                    AlgTop.thy                           line 776
-Theorem_64_4_K5_not_planar                     AlgTop.thy                           line 786
-Theorem_65_2                                   AlgTop.thy                           line 2110
+Theorem_63_2_arc_no_separation                 a0/AlgTop0.thy                       line 5871
+Theorem_63_3_general_nonseparation             a0/AlgTop0.thy                       line 5317
+Theorem_63_4_JordanCurve                       a0/AlgTop0.thy                       line 8567
+Theorem_63_5_two_closed_connected              a0/AlgTop0.thy                       line 6930
+Theorem_64_2_K33_not_planar                    AlgTop.thy                           line 1764
+Theorem_64_4_K5_not_planar                     AlgTop.thy                           line 2100
+Theorem_65_2                                   AlgTop.thy                           line 6160
+Theorem_65_2_fixed                             fi/AlgIsoFixed.thy                   line 2583
 Theorem_67_4_direct_sum_exists                 ac/AlgTopCached.thy                  line 7097
 Theorem_67_6_direct_sum_unique                 ac/AlgTopCached.thy                  line 7404
-Theorem_67_8_rank_unique                       AlgTop.thy                           line 2200
+Theorem_67_8_rank_unique                       AlgTop.thy                           line 6263
 Theorem_68_2_free_product_exists               ac/AlgTopCached.thy                  line 9602
 Theorem_68_4_free_product_unique               ac/AlgTopCached.thy                  line 12552
 Theorem_68_7_quotient_free_product             ac/AlgTopCached.thy                  line 12803
 Theorem_69_2                                   ac/AlgTopCached.thy                  line 28741
-Theorem_69_4                                   AlgTop.thy                           line 3498
+Theorem_69_4                                   AlgTop.thy                           line 7553
 Theorem_70_2_SvK                               ac/AlgTopCached.thy                  line 14111
 Theorem_70_2_SvK_parameterized                 ac/AlgTopCached.thy                  line 25809
 Theorem_71_1_wedge_of_circles_finite           ac/AlgTopCached.thy                  line 31739
-Theorem_71_3_wedge_of_circles_general          AlgTop.thy                           line 3929
+Theorem_71_3_wedge_of_circles_general          AlgTop.thy                           line 7984
 Theorem_72_1_attaching_two_cell                ac/AlgTopCached.thy                  line 43294
-Theorem_73_1_torus_presentation                AlgTop.thy                           line 3956
-Theorem_73_4_dunce_cap                         AlgTop.thy                           line 4011
-Theorem_74_1_polygon_quotient_compact_hausdorff  AlgTop.thy                           line 4554
-Theorem_74_3_fund_group_n_torus                AlgTop.thy                           line 5628
-Theorem_74_4_fund_group_m_projective           AlgTop.thy                           line 5666
-Theorem_75_1_H1_abelianization                 AlgTop.thy                           line 5741
-Theorem_75_3_H1_n_torus                        AlgTop.thy                           line 5839
-Theorem_75_4_H1_m_projective                   AlgTop.thy                           line 5875
-Theorem_76_elementary_operations               AlgTop.thy                           line 5713
-Theorem_77_5_classification                    AlgTop.thy                           line 6107
-Theorem_78_1_triangulable_surface              AlgTop.thy                           line 6021
-Theorem_78_2_connected_polygonal_quotient      AlgTop.thy                           line 6073
-Theorem_79_2                                   AlgTop.thy                           line 7502
-Theorem_79_4                                   AlgTop.thy                           line 8311
-Theorem_80_1_universal_unique                  AlgTop.thy                           line 9323
-Theorem_80_3_universal                         AlgTop.thy                           line 9991
-Theorem_81_2_covering_group_iso                AlgTop.thy                           line 10952
-Theorem_82_1_covering_existence                AlgTop.thy                           line 11237
-Theorem_83_4_covering_of_graph_is_graph        AlgTop.thy                           line 11340
-Theorem_84_7_fund_group_graph_is_free          AlgTop.thy                           line 11465
-Theorem_85_1_Nielsen_Schreier                  AlgTop.thy                           line 11576
-Theorem_85_3_Schreier_index                    AlgTop.thy                           line 11616
+Theorem_73_1_torus_presentation                AlgTop.thy                           line 8011
+Theorem_73_4_dunce_cap                         AlgTop.thy                           line 8066
+Theorem_74_1_polygon_quotient_compact_hausdorff  AlgTop.thy                           line 8609
+Theorem_74_3_fund_group_n_torus                AlgTop.thy                           line 9683
+Theorem_74_4_fund_group_m_projective           AlgTop.thy                           line 9721
+Theorem_75_1_H1_abelianization                 AlgTop.thy                           line 9796
+Theorem_75_3_H1_n_torus                        AlgTop.thy                           line 9894
+Theorem_75_4_H1_m_projective                   AlgTop.thy                           line 9930
+Theorem_76_elementary_operations               AlgTop.thy                           line 9768
+Theorem_77_5_classification                    AlgTop.thy                           line 10162
+Theorem_78_1_triangulable_surface              AlgTop.thy                           line 10076
+Theorem_78_2_connected_polygonal_quotient      AlgTop.thy                           line 10128
+Theorem_79_2                                   AlgTop.thy                           line 11557
+Theorem_79_4                                   AlgTop.thy                           line 12366
+Theorem_80_1_universal_unique                  AlgTop.thy                           line 13378
+Theorem_80_3_universal                         AlgTop.thy                           line 14046
+Theorem_81_2_covering_group_iso                AlgTop.thy                           line 15007
+Theorem_82_1_covering_existence                AlgTop.thy                           line 15292
+Theorem_83_4_covering_of_graph_is_graph        AlgTop.thy                           line 15395
+Theorem_84_7_fund_group_graph_is_free          AlgTop.thy                           line 15520
+Theorem_85_1_Nielsen_Schreier                  AlgTop.thy                           line 15631
+Theorem_85_3_Schreier_index                    AlgTop.thy                           line 15671
 
 ## corollarys (64)
 
@@ -1817,7 +1840,7 @@ Lemma_13_3_on                                  i/Top1_Ch2.thy                   
 Lemma_23_2_disjoint                            i/Top1_Ch3.thy                       line 330
 lp_compact_iff_seq_compact_metric              i/Top1_Ch5_8.thy                     line 33369
 lp_compact_T1_infinite_intersection            i/Top1_Ch3.thy                       line 10657
-pi1_S2_minus_two_points_iso_Z                  a0/AlgTop0.thy                       line 4005
+pi1_S2_minus_two_points_iso_Z                  a0/AlgTop0.thy                       line 4009
 S1_pi1_iso_B2_minus_zero                       ac/AlgTopCached.thy                  line 41532
 Theorem_17_1_strict                            i/Top1_Ch2.thy                       line 5046
 Theorem_17_5a_strict                           i/Top1_Ch2.thy                       line 5547
@@ -1840,7 +1863,7 @@ Theorem_50_2_finite_dim                        i/Top1_Ch5_8.thy                 
 Theorem_56_1_FTA_leading                       i/Top1_Ch9_13.thy                    line 16020
 Theorem_58_7_strict                            b0/AlgTop_JCT_Base0.thy              line 5548
 Theorem_59_3_path_connected                    b/AlgTop_JCT_Base.thy                line 3249
-Theorem_80_3_universal_strict                  AlgTop.thy                           line 10924
+Theorem_80_3_universal_strict                  AlgTop.thy                           line 14979
 top1_same_homotopy_type_strict                 b0/AlgTop_JCT_Base0.thy              line 5560
 
 ## DUPLICATES (13 names appear in multiple locations)
@@ -1864,7 +1887,7 @@ top1_same_homotopy_type_strict                 b0/AlgTop_JCT_Base0.thy          
     i/Top1_Ch2.thy                       lemma  line 11786
     i/Top1_Ch5_8.thy                     lemma  line 5230
   path_connected_imp_connected:
-    AlgTop.thy                           lemma  line 6389
+    AlgTop.thy                           lemma  line 10444
     b/AlgTop_JCT_Base.thy                lemma  line 6977
   path_in_subspace_is_path_in_ambient:
     b0/AlgTop_JCT_Base0.thy              lemma  line 5576
