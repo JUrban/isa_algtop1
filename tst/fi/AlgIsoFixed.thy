@@ -2337,11 +2337,11 @@ proof -
      For z\<in>V: arc y\<rightarrow>z in V. If y=a: z\<in>E'. If y\<noteq>a: splice arc a\<rightarrow>y + arc y\<rightarrow>z (Step 1) \<Rightarrow> z\<in>E'.
      So V\<subseteq>E'. Hence E' is open (union of open sets).\<close>
   have hE'_open: "?E' \<in> subspace_topology top1_S2 top1_S2_topology U"
-    sorry \<comment> \<open>From local\_arc: \<forall>y\<in>E', \<exists>V open with V\<subseteq>E'. Needs Step 1 for splicing.\<close>
+    sorry \<comment> \<open>E' open via local\_arc + Munkres\_Step\_1 arc splice: each y\<in>E' has open V\<subseteq>E'.\<close>
   \<comment> \<open>U-E' is open: \<forall>y\<in>U-E', local\_arc gives V. If \<exists>z\<in>V\<inter>E': arc a\<rightarrow>z + arc z\<rightarrow>y (Step 1)
      \<Rightarrow> y\<in>E'. Contradiction. So V\<inter>E'={}, V\<subseteq>U-E'. Hence U-E' open.\<close>
   have hUE'_open: "U - ?E' \<in> subspace_topology top1_S2 top1_S2_topology U"
-    sorry \<comment> \<open>From local\_arc + Step 1 by contradiction. Same pattern as E'\_open.\<close>
+    sorry \<comment> \<open>Same argument as E'\_open by contradiction. Needs Step 1 splice.\<close>
   \<comment> \<open>The path from a to b shows they're in the same path-component.
      That path-component is connected (path-connected \<Rightarrow> connected).
      E' and U-E' partition U. E' \<noteq> {}. If U-E' \<noteq> {}: E' and U-E' form a separation
