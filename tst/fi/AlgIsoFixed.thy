@@ -4770,6 +4770,26 @@ proof -
 qed
 
 
+\<comment> \<open>Standalone: K4 4-cycle is SCC. Used by both Lemma\_65\_1\_fixed and exists\_basepoint.\<close>
+lemma K4_cycle_is_SCC:
+  assumes "is_topology_on_strict top1_S2 top1_S2_topology"
+      and "card {a1, a2, a3, a4} = 4"
+      and "e12 \<subseteq> top1_S2" and "e23 \<subseteq> top1_S2" and "e34 \<subseteq> top1_S2" and "e41 \<subseteq> top1_S2"
+      and "top1_is_arc_on e12 (subspace_topology top1_S2 top1_S2_topology e12)"
+      and "top1_is_arc_on e23 (subspace_topology top1_S2 top1_S2_topology e23)"
+      and "top1_is_arc_on e34 (subspace_topology top1_S2 top1_S2_topology e34)"
+      and "top1_is_arc_on e41 (subspace_topology top1_S2 top1_S2_topology e41)"
+      and "top1_arc_endpoints_on e12 (subspace_topology top1_S2 top1_S2_topology e12) = {a1,a2}"
+      and "top1_arc_endpoints_on e23 (subspace_topology top1_S2 top1_S2_topology e23) = {a2,a3}"
+      and "top1_arc_endpoints_on e34 (subspace_topology top1_S2 top1_S2_topology e34) = {a3,a4}"
+      and "top1_arc_endpoints_on e41 (subspace_topology top1_S2 top1_S2_topology e41) = {a4,a1}"
+      and "e12 \<inter> e34 = {}" and "e23 \<inter> e41 = {}"
+      and "e12 \<inter> e23 = {a2}" and "e23 \<inter> e34 = {a3}"
+      and "e41 \<inter> e12 = {a1}"
+      and "C = e12 \<union> e23 \<union> e34 \<union> e41"
+  shows "top1_simple_closed_curve_on top1_S2 top1_S2_topology C"
+  sorry \<comment> \<open>Arc concatenation proof (50 lines, already proved inline in Lemma\_65\_1\_fixed).\<close>
+
 theorem Theorem_58_7_fixed:
   assumes hTX: "is_topology_on X TX" and hTY: "is_topology_on Y TY"
       and heq: "top1_homotopy_equivalence_on X TX Y TY f g" and hx0: "x0 \<in> X"
@@ -5315,7 +5335,7 @@ proof -
     sorry \<comment> \<open>Same surjectivity proof as Lemma\_65\_1\_fixed (already proved in structure above).\<close>
   \<comment> \<open>Both groups infinite cyclic.\<close>
   have hC_scc: "top1_simple_closed_curve_on top1_S2 top1_S2_topology C"
-    sorry \<comment> \<open>C is SCC (proved in Lemma\_65\_1\_fixed).\<close>
+    by (rule K4_cycle_is_SCC[OF assms(1,2,4,5,6,7,10,11,12,13,16,17,18,19,22,23,24,25,27,39)])
   \<comment> \<open>\<pi>_1(C, x) infinite cyclic. C \<cong> S1, so \<pi>_1 \<cong> Z with generator.\<close>
   have hC_gen: "\<exists>gen_C. top1_is_loop_on C ?TC x gen_C \<and>
       (\<forall>f. top1_is_loop_on C ?TC x f \<longrightarrow>
@@ -5333,7 +5353,11 @@ proof -
     have hC_pi1_Z_x: "top1_groups_isomorphic_on
         (top1_fundamental_group_carrier C ?TC x) (top1_fundamental_group_mul C ?TC x)
         top1_Z_group top1_Z_mul"
-      sorry \<comment> \<open>SCC\_pi1\_iso\_Z at basepoint x.\<close>
+    proof -
+      have hC_scc_loc: "top1_simple_closed_curve_on top1_S2 top1_S2_topology C"
+        by (rule K4_cycle_is_SCC[OF assms(1,2,4,5,6,7,10,11,12,13,16,17,18,19,22,23,24,25,27,39)])
+      show ?thesis by (rule SCC_pi1_iso_Z[OF assms(1) hC_scc_loc hx_C])
+    qed
     have hX_pi1_Z_x: "top1_groups_isomorphic_on
         (top1_fundamental_group_carrier ?X ?TX x) (top1_fundamental_group_mul ?X ?TX x)
         top1_Z_group top1_Z_mul"
@@ -5355,7 +5379,17 @@ proof -
     have hGX_closed_x: "\<And>a b. a \<in> top1_fundamental_group_carrier C ?TC x \<Longrightarrow>
         b \<in> top1_fundamental_group_carrier C ?TC x \<Longrightarrow>
         top1_fundamental_group_mul C ?TC x a b \<in> top1_fundamental_group_carrier C ?TC x"
-      sorry \<comment> \<open>Group closure of \<pi>_1. From top1\_fundamental\_group\_is\_group.\<close>
+    proof -
+      fix a b assume "a \<in> top1_fundamental_group_carrier C ?TC x"
+          "b \<in> top1_fundamental_group_carrier C ?TC x"
+      have hgrp: "top1_is_group_on (top1_fundamental_group_carrier C ?TC x)
+          (top1_fundamental_group_mul C ?TC x) (top1_fundamental_group_id C ?TC x)
+          (top1_fundamental_group_invg C ?TC x)"
+        by (rule top1_fundamental_group_is_group[OF hTC]) (use hx_C in \<open>by100 blast\<close>)
+      thus "top1_fundamental_group_mul C ?TC x a b \<in> top1_fundamental_group_carrier C ?TC x"
+        using \<open>a \<in> _\<close> \<open>b \<in> _\<close>
+        sorry \<comment> \<open>Group closure from top1\_is\_group\_on.\<close>
+    qed
     show ?thesis by (rule surj_hom_infinite_cyclic_inj[OF hC_pi1_Z_x hX_pi1_Z_x hj_hom_x hj_surj_x hGX_closed_x])
   qed
   \<comment> \<open>Combine: hom + bij = iso.\<close>
