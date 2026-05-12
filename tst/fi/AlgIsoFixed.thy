@@ -2647,7 +2647,9 @@ proof -
   have hC_sub: "C \<subseteq> X" using hC by (rule simple_closed_curve_subset)
   \<comment> \<open>f is a homeomorphism S1 \<rightarrow> C (compact inj continuous to Hausdorff).\<close>
   have hf_embed: "top1_embedding_on top1_S1 top1_S1_topology X TX f"
-    sorry \<comment> \<open>top1\_embedding\_on\_compact\_inj with S1 compact, X Hausdorff.\<close>
+    by (rule top1_embedding_on_compact_inj[OF
+        is_topology_on_strict_imp[OF top1_S1_is_topology_on_strict]
+        is_topology_on_strict_imp[OF hT] S1_compact hH hf(1,2)])
   have hf_homeo: "top1_homeomorphism_on top1_S1 top1_S1_topology C (subspace_topology X TX C) f"
     using hf_embed hf(3) unfolding top1_embedding_on_def by (by100 simp)
   \<comment> \<open>f\<inverse>(a) \<in> S1.\<close>
