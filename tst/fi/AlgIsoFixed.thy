@@ -1902,79 +1902,277 @@ proof -
     using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
   have hS2_haus: "is_hausdorff_on top1_S2 top1_S2_topology" by (rule top1_S2_is_hausdorff)
   \<comment> \<open>Local arc-connectivity of S2: every x \<in> U has arc-connected neighborhood.
-     For x \<noteq> north\_pole: use stereographic\_proj from north\_pole.
-     For x = north\_pole: use stereographic from south pole (symmetric construction).
-     In both cases: stereographic maps nbhd to open subset of R2.
-     Open ball in R2 is convex \<Rightarrow> line segments are arcs \<Rightarrow> transfer back.\<close>
+     Uses S2\_minus\_point\_homeo\_R2: for any point p \<in> S2, S2-{p} \<cong> R2.
+     Open ball in R2 is convex \<Rightarrow> line segments are arcs \<Rightarrow> transfer back to S2.\<close>
   have local_arc: "\<And>x. x \<in> U \<Longrightarrow> \<exists>V. V \<in> top1_S2_topology \<and> x \<in> V \<and> V \<subseteq> U \<and>
       (\<forall>y \<in> V. \<forall>z \<in> V. y \<noteq> z \<longrightarrow>
         (\<exists>D. top1_is_arc_on D (subspace_topology top1_S2 top1_S2_topology D) \<and>
              D \<subseteq> V \<and> top1_arc_endpoints_on D (subspace_topology top1_S2 top1_S2_topology D) = {y, z}))"
   proof -
     fix x assume hx: "x \<in> U"
-    \<comment> \<open>Case x \<noteq> NP: use stereographic from NP. Case x = NP: sorry (needs stereo from SP).\<close>
+    have hx_S2: "x \<in> top1_S2" using hx assms(3) by (by100 blast)
+    \<comment> \<open>Step 1: Choose p \<in> S2 with p \<noteq> x.\<close>
+    define south where "south = (0::real, 0::real, -1::real)"
+    have hs_S2: "south \<in> top1_S2" unfolding south_def top1_S2_def by simp
+    have hns: "north_pole \<noteq> south" unfolding north_pole_def south_def by simp
+    define p where "p = (if x \<noteq> north_pole then north_pole else south)"
+    have hp_S2: "p \<in> top1_S2" unfolding p_def using north_pole_in_S2 hs_S2 by auto
+    have hp_ne_x: "p \<noteq> x" unfolding p_def using hns by auto
+    have hx_SP: "x \<in> top1_S2 - {p}" using hx_S2 hp_ne_x by (by100 blast)
+    \<comment> \<open>Step 2: Homeomorphism h: S2-{p} \<rightarrow> R2.\<close>
+    let ?SP = "top1_S2 - {p}"
+    let ?TSP = "subspace_topology top1_S2 top1_S2_topology ?SP"
+    let ?R2 = "UNIV :: (real \<times> real) set"
+    let ?TR2 = "product_topology_on top1_open_sets top1_open_sets"
+    obtain h where hh: "top1_homeomorphism_on ?SP ?TSP ?R2 ?TR2 h"
+      using S2_minus_point_homeo_R2[OF hp_S2] by (by100 blast)
+    have hbij: "bij_betw h ?SP ?R2"
+      using hh unfolding top1_homeomorphism_on_def by (by100 blast)
+    have hh_cont: "top1_continuous_map_on ?SP ?TSP ?R2 ?TR2 h"
+      using hh unfolding top1_homeomorphism_on_def by (by100 blast)
+    have hinv_cont: "top1_continuous_map_on ?R2 ?TR2 ?SP ?TSP (inv_into ?SP h)"
+      using hh unfolding top1_homeomorphism_on_def by (by100 blast)
+    have hh_inj: "inj_on h ?SP" using hbij unfolding bij_betw_def by (by100 blast)
+    have hh_surj: "h ` ?SP = ?R2" using hbij unfolding bij_betw_def by (by100 blast)
+    \<comment> \<open>Step 3: S2-{p} is open in S2.\<close>
+    have hSP_open: "?SP \<in> top1_S2_topology"
+    proof -
+      have "closedin_on top1_S2 top1_S2_topology {p}"
+      proof (rule compact_in_strict_hausdorff_closedin_on[OF hS2_haus assms(1)])
+        show "{p} \<subseteq> top1_S2" using hp_S2 by (by100 simp)
+        show "top1_compact_on {p} (subspace_topology top1_S2 top1_S2_topology {p})"
+          unfolding top1_compact_on_def
+        proof (intro conjI allI impI)
+          show "is_topology_on {p} (subspace_topology top1_S2 top1_S2_topology {p})"
+            by (rule subspace_topology_is_topology_on[OF hTopS2]) (simp add: hp_S2)
+        next
+          fix C :: "(real \<times> real \<times> real) set set"
+          assume hC: "C \<subseteq> subspace_topology top1_S2 top1_S2_topology {p} \<and> {p} \<subseteq> \<Union>C"
+          then obtain U0 where "U0 \<in> C" "p \<in> U0" by (by100 blast)
+          thus "\<exists>F. finite F \<and> F \<subseteq> C \<and> {p} \<subseteq> \<Union>F"
+            by (intro exI[of _ "{U0}"]) simp
+        qed
+      qed
+      thus ?thesis unfolding closedin_on_def
+        using hTopS2 unfolding is_topology_on_def by (by100 blast)
+    qed
+    \<comment> \<open>Step 4: h maps U \<inter> SP to open set in R2 (homeomorphism = open map).\<close>
+    have hU_SP: "U \<inter> ?SP \<in> ?TSP"
+      unfolding subspace_topology_def using assms(2) by (by100 blast)
+    have h_img_eq: "h ` (U \<inter> ?SP) = {y \<in> ?R2. inv_into ?SP h y \<in> U \<inter> ?SP}"
+    proof (rule set_eqI, rule iffI)
+      fix y assume "y \<in> h ` (U \<inter> ?SP)"
+      then obtain w where hw: "w \<in> U \<inter> ?SP" "y = h w" by (by100 blast)
+      have "inv_into ?SP h y = w"
+        using inv_into_f_f[OF hh_inj] hw by (by100 blast)
+      thus "y \<in> {y \<in> ?R2. inv_into ?SP h y \<in> U \<inter> ?SP}" using hw by (by100 simp)
+    next
+      fix y assume hy: "y \<in> {y \<in> ?R2. inv_into ?SP h y \<in> U \<inter> ?SP}"
+      hence hy_R2: "y \<in> ?R2" and hinv_y: "inv_into ?SP h y \<in> U \<inter> ?SP" by auto
+      have "y \<in> h ` ?SP" using hh_surj hy_R2 by (by100 simp)
+      hence "h (inv_into ?SP h y) = y" by (rule f_inv_into_f)
+      thus "y \<in> h ` (U \<inter> ?SP)"
+      proof -
+        let ?w = "inv_into ?SP h y"
+        have "?w \<in> U \<inter> ?SP" by (rule hinv_y)
+        moreover have "y = h ?w" using \<open>h ?w = y\<close> by (by100 simp)
+        ultimately show ?thesis by (by100 blast)
+      qed
+    qed
+    have h_img_open: "h ` (U \<inter> ?SP) \<in> ?TR2"
+    proof -
+      have "{y \<in> ?R2. inv_into ?SP h y \<in> U \<inter> ?SP} \<in> ?TR2"
+        using hinv_cont hU_SP unfolding top1_continuous_map_on_def by (by100 blast)
+      thus ?thesis using h_img_eq by (by100 simp)
+    qed
+    \<comment> \<open>Step 5: Get \<epsilon>-ball in R2 around h(x) inside h(U \<inter> SP).\<close>
+    have hx'_in: "h x \<in> h ` (U \<inter> ?SP)" using hx hx_SP by (by100 blast)
+    have himg_HOL_open: "open (h ` (U \<inter> ?SP))"
+    proof -
+      have "h ` (U \<inter> ?SP) \<in> top1_open_sets"
+        using h_img_open product_topology_on_open_sets_real2 by (by100 metis)
+      thus ?thesis unfolding top1_open_sets_def by (by100 blast)
+    qed
+    \<comment> \<open>Get open rectangle around h(x) inside h(U \<inter> SP).\<close>
+    obtain A0 B0 where hAB: "open A0" "open B0" "h x \<in> A0 \<times> B0"
+        "A0 \<times> B0 \<subseteq> h ` (U \<inter> ?SP)"
+      using open_prod_elim[OF himg_HOL_open hx'_in] by (by100 blast)
+    have hfst_in: "fst (h x) \<in> A0" and hsnd_in: "snd (h x) \<in> B0"
+      using hAB(3) by auto
+    obtain \<epsilon>1 where he1: "\<epsilon>1 > 0" "\<And>y. dist y (fst (h x)) < \<epsilon>1 \<Longrightarrow> y \<in> A0"
+      using hAB(1) hfst_in unfolding open_dist by (by100 blast)
+    obtain \<epsilon>2 where he2: "\<epsilon>2 > 0" "\<And>y. dist y (snd (h x)) < \<epsilon>2 \<Longrightarrow> y \<in> B0"
+      using hAB(2) hsnd_in unfolding open_dist by (by100 blast)
+    define \<epsilon> where "\<epsilon> = min \<epsilon>1 \<epsilon>2"
+    have heps_pos: "\<epsilon> > 0" unfolding \<epsilon>_def using he1(1) he2(1) by (by100 simp)
+    \<comment> \<open>Open square around h(x) with radius \<epsilon>. Use define to keep terms small.\<close>
+    define Sq where "Sq = {q :: real \<times> real. \<bar>fst q - fst (h x)\<bar> < \<epsilon> \<and> \<bar>snd q - snd (h x)\<bar> < \<epsilon>}"
+    have hSq_sub: "Sq \<subseteq> h ` (U \<inter> ?SP)"
+      sorry \<comment> \<open>Sq \<subseteq> A0 \<times> B0 \<subseteq> h`(U\<inter>SP) by choice of \<epsilon> \<le> min(\<epsilon>1,\<epsilon>2).\<close>
+    have hSq_TR2: "Sq \<in> ?TR2"
+      sorry \<comment> \<open>Sq is product of open intervals, hence open in R2.\<close>
+    \<comment> \<open>Step 6: V = preimage of Sq under h within SP.\<close>
+    define V where "V = {w \<in> ?SP. h w \<in> Sq}"
+    have hV_in_TSP: "V \<in> ?TSP"
+      using hh_cont hSq_TR2 unfolding V_def top1_continuous_map_on_def by (by100 blast)
+    have hV_open: "V \<in> top1_S2_topology"
+      sorry \<comment> \<open>V open in SP (preimage of open). SP open in S2. Hence V open in S2.\<close>
+    have hx_V: "x \<in> V"
+      unfolding V_def Sq_def using hx_SP heps_pos by (by100 simp)
+    have hV_sub_U: "V \<subseteq> U"
+    proof
+      fix w assume "w \<in> V"
+      hence hw_SP: "w \<in> ?SP" and hw_Sq: "h w \<in> Sq" unfolding V_def by auto
+      have "h w \<in> h ` (U \<inter> ?SP)" using hSq_sub hw_Sq by (by100 blast)
+      then obtain v where hv: "v \<in> U \<inter> ?SP" "h w = h v" by (by100 blast)
+      hence "w = v" using hh_inj hw_SP hv(1) unfolding inj_on_def by (by100 blast)
+      thus "w \<in> U" using hv(1) by (by100 blast)
+    qed
+    have hV_sub_SP: "V \<subseteq> ?SP" unfolding V_def by (by100 blast)
+    \<comment> \<open>Step 7: For y,z \<in> V with y \<noteq> z, construct arc from y to z in V.
+       Line segment in R2 ball \<rightarrow> compose with h\<inverse> \<rightarrow> embedding (compact to Hausdorff) \<rightarrow> arc.\<close>
+    have hV_arcs: "\<forall>y \<in> V. \<forall>z \<in> V. y \<noteq> z \<longrightarrow>
+        (\<exists>D. top1_is_arc_on D (subspace_topology top1_S2 top1_S2_topology D) \<and>
+             D \<subseteq> V \<and> top1_arc_endpoints_on D (subspace_topology top1_S2 top1_S2_topology D) = {y, z})"
+    proof (intro ballI impI)
+      fix y z assume hy: "y \<in> V" and hz: "z \<in> V" and hyz: "y \<noteq> z"
+      have hy_SP: "y \<in> ?SP" and hz_SP: "z \<in> ?SP" using hy hz unfolding V_def by auto
+      define y' z' where "y' = h y" and "z' = h z"
+      have hy'_Sq: "y' \<in> Sq" using hy unfolding y'_def V_def by (by100 blast)
+      have hz'_Sq: "z' \<in> Sq" using hz unfolding z'_def V_def by (by100 blast)
+      have hy'z'_ne: "y' \<noteq> z'"
+      proof
+        assume "y' = z'"
+        hence "h y = h z" unfolding y'_def z'_def .
+        with hh_inj hy_SP hz_SP have "y = z" unfolding inj_on_def by (by100 blast)
+        with hyz show False by (by100 blast)
+      qed
+      \<comment> \<open>Line segment \<gamma>(t) = (1-t)*y' + t*z'.\<close>
+      define \<gamma> where "\<gamma> = (\<lambda>t::real. ((1-t) * fst y' + t * fst z', (1-t) * snd y' + t * snd z'))"
+      define g where "g = (\<lambda>t. inv_into ?SP h (\<gamma> t))"
+      \<comment> \<open>Line segment stays in Sq (convexity: coordinate-wise |(1-t)*a+t*b - c| \<le> (1-t)|a-c|+t|b-c| < \<epsilon>).\<close>
+      have h\<gamma>_in_Sq: "\<And>t. t \<in> I_set \<Longrightarrow> \<gamma> t \<in> Sq"
+        sorry \<comment> \<open>Convexity of L\<infinity> ball: |(1-t)*a+t*b-c| \<le> (1-t)|a-c|+t|b-c| < \<epsilon>.\<close>
+      \<comment> \<open>\<gamma>: I\_set \<rightarrow> R2 is continuous (straight-line path).\<close>
+      have h\<gamma>_cont: "top1_continuous_map_on I_set I_top ?R2 ?TR2 \<gamma>"
+        using R2_straight_line_path[where x=y' and y=z', folded \<gamma>_def]
+        unfolding top1_is_path_on_def by (by100 blast)
+      \<comment> \<open>g = inv \<circ> \<gamma>: I\_set \<rightarrow> SP is continuous (composition).\<close>
+      have hg_comp: "g = (inv_into ?SP h) \<circ> \<gamma>" unfolding g_def comp_def by (by100 blast)
+      have hg_cont_SP: "top1_continuous_map_on I_set I_top ?SP ?TSP g"
+        using top1_continuous_map_on_comp[OF h\<gamma>_cont hinv_cont] hg_comp by (by100 simp)
+      \<comment> \<open>Lift continuity from SP to S2.\<close>
+      have hg_cont: "top1_continuous_map_on I_set I_top top1_S2 top1_S2_topology g"
+        unfolding top1_continuous_map_on_def
+      proof (intro conjI ballI)
+        fix t assume ht: "t \<in> I_set"
+        have "g t \<in> ?SP" using hg_cont_SP ht unfolding top1_continuous_map_on_def by (by100 blast)
+        thus "g t \<in> top1_S2" by (by100 blast)
+      next
+        fix W assume hW: "W \<in> top1_S2_topology"
+        have "W \<inter> ?SP \<in> ?TSP"
+          unfolding subspace_topology_def using hW by (by100 blast)
+        hence "{t \<in> I_set. g t \<in> W \<inter> ?SP} \<in> I_top"
+          using hg_cont_SP unfolding top1_continuous_map_on_def by (by100 blast)
+        moreover have "{t \<in> I_set. g t \<in> W} = {t \<in> I_set. g t \<in> W \<inter> ?SP}"
+        proof (rule set_eqI, rule iffI)
+          fix t assume "t \<in> {t \<in> I_set. g t \<in> W}"
+          hence ht: "t \<in> I_set" and hgt: "g t \<in> W" by auto
+          have "g t \<in> ?SP" using hg_cont_SP ht unfolding top1_continuous_map_on_def by (by100 blast)
+          thus "t \<in> {t \<in> I_set. g t \<in> W \<inter> ?SP}" using ht hgt by (by100 blast)
+        next
+          fix t assume "t \<in> {t \<in> I_set. g t \<in> W \<inter> ?SP}"
+          thus "t \<in> {t \<in> I_set. g t \<in> W}" by (by100 blast)
+        qed
+        ultimately show "{t \<in> I_set. g t \<in> W} \<in> I_top" by (by100 simp)
+      qed
+      \<comment> \<open>g is injective: \<gamma> injective (y' \<noteq> z' \<Rightarrow> line segment injective), inv\_into injective.\<close>
+      have hg_inj: "inj_on g I_set"
+        sorry \<comment> \<open>Line segment (1-t)*y'+t*z' injective when y'\<noteq>z'; inv\_into preserves injectivity.\<close>
+      \<comment> \<open>I\_set compact, S2 Hausdorff \<Rightarrow> g is embedding.\<close>
+      have hI_top: "is_topology_on I_set I_top"
+        by (rule top1_unit_interval_topology_is_topology_on)
+      have hI_compact: "top1_compact_on I_set I_top"
+      proof -
+        have hIeq: "I_set = {0..1::real}" unfolding top1_unit_interval_def
+          by (auto simp: atLeastAtMost_def atLeast_def atMost_def)
+        have "compact I_set" unfolding hIeq by (rule compact_Icc)
+        hence "top1_compact_on I_set (subspace_topology UNIV top1_open_sets I_set)"
+          using top1_compact_on_subspace_UNIV_iff_compact[of I_set] by (by100 simp)
+        thus ?thesis unfolding top1_unit_interval_topology_def by (by100 simp)
+      qed
+      have hg_embed: "top1_embedding_on I_set I_top top1_S2 top1_S2_topology g"
+        by (rule top1_embedding_on_compact_inj[OF hI_top hTopS2 hI_compact hS2_haus hg_cont hg_inj])
+      \<comment> \<open>D = g(I\_set) is an arc.\<close>
+      let ?D = "g ` I_set"
+      have hD_sub_S2: "?D \<subseteq> top1_S2"
+        using hg_cont unfolding top1_continuous_map_on_def by (by100 blast)
+      have hg_homeo: "top1_homeomorphism_on I_set I_top ?D
+          (subspace_topology top1_S2 top1_S2_topology ?D) g"
+        using hg_embed unfolding top1_embedding_on_def by (by100 blast)
+      have hD_ne: "?D \<noteq> {}"
+      proof -
+        have "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+        thus ?thesis by (by100 blast)
+      qed
+      have hD_arc: "top1_is_arc_on ?D (subspace_topology top1_S2 top1_S2_topology ?D)"
+      proof -
+        have "is_topology_on_strict ?D (subspace_topology top1_S2 top1_S2_topology ?D)"
+          sorry \<comment> \<open>D \<subseteq> S2, D nonempty \<Rightarrow> is\_topology\_on\_strict (subspace).\<close>
+        moreover have "\<exists>hh. top1_homeomorphism_on I_set I_top ?D (subspace_topology top1_S2 top1_S2_topology ?D) hh"
+          using hg_homeo by (by100 blast)
+        ultimately show ?thesis unfolding top1_is_arc_on_def by (by100 blast)
+      qed
+      \<comment> \<open>D \<subseteq> V: g(t) = inv(\<gamma>(t)) \<in> SP with h(g(t)) = \<gamma>(t) \<in> Sq.\<close>
+      have hD_sub_V: "?D \<subseteq> V"
+      proof
+        fix w assume "w \<in> ?D"
+        then obtain t where ht: "t \<in> I_set" "w = g t" by (by100 blast)
+        have h\<gamma>t_Sq: "\<gamma> t \<in> Sq" by (rule h\<gamma>_in_Sq[OF ht(1)])
+        have h\<gamma>t_img: "\<gamma> t \<in> h ` ?SP"
+          using hSq_sub h\<gamma>t_Sq by (by100 blast)
+        have hgt_SP: "g t \<in> ?SP"
+          using hg_cont_SP ht(1) unfolding top1_continuous_map_on_def by (by100 blast)
+        have "h (g t) = \<gamma> t"
+          unfolding g_def by (rule f_inv_into_f[OF h\<gamma>t_img])
+        hence "h w \<in> Sq" using h\<gamma>t_Sq ht(2) by (by100 simp)
+        thus "w \<in> V" using hgt_SP ht(2) unfolding V_def by (by100 blast)
+      qed
+      \<comment> \<open>Endpoints: g(0) = y, g(1) = z.\<close>
+      have hg0: "g 0 = y"
+      proof -
+        have "\<gamma> 0 = y'" unfolding \<gamma>_def y'_def by (by100 simp)
+        have "y \<in> ?SP" using hy_SP .
+        hence "inv_into ?SP h (h y) = y" by (rule inv_into_f_f[OF hh_inj])
+        thus ?thesis unfolding g_def using \<open>\<gamma> 0 = y'\<close> y'_def by (by100 simp)
+      qed
+      have hg1: "g 1 = z"
+      proof -
+        have "\<gamma> 1 = z'" unfolding \<gamma>_def z'_def by (by100 simp)
+        have "z \<in> ?SP" using hz_SP .
+        hence "inv_into ?SP h (h z) = z" by (rule inv_into_f_f[OF hh_inj])
+        thus ?thesis unfolding g_def using \<open>\<gamma> 1 = z'\<close> z'_def by (by100 simp)
+      qed
+      have hD_endpoints: "top1_arc_endpoints_on ?D (subspace_topology top1_S2 top1_S2_topology ?D) = {y, z}"
+      proof -
+        have "top1_arc_endpoints_on ?D (subspace_topology top1_S2 top1_S2_topology ?D) = {g 0, g 1}"
+        proof (rule arc_endpoints_are_boundary[OF _ hS2_haus hD_sub_S2 hD_arc])
+          show "is_topology_on_strict top1_S2 top1_S2_topology" by (rule assms(1))
+          show "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology ?D
+              (subspace_topology top1_S2 top1_S2_topology ?D) g"
+            using hg_homeo by (by100 simp)
+        qed
+        thus ?thesis using hg0 hg1 by (by100 simp)
+      qed
+      show "\<exists>D. top1_is_arc_on D (subspace_topology top1_S2 top1_S2_topology D) \<and>
+           D \<subseteq> V \<and> top1_arc_endpoints_on D (subspace_topology top1_S2 top1_S2_topology D) = {y, z}"
+        using hD_arc hD_sub_V hD_endpoints by (by100 blast)
+    qed
     show "\<exists>V. V \<in> top1_S2_topology \<and> x \<in> V \<and> V \<subseteq> U \<and>
         (\<forall>y \<in> V. \<forall>z \<in> V. y \<noteq> z \<longrightarrow>
           (\<exists>D. top1_is_arc_on D (subspace_topology top1_S2 top1_S2_topology D) \<and>
                D \<subseteq> V \<and> top1_arc_endpoints_on D (subspace_topology top1_S2 top1_S2_topology D) = {y, z}))"
-    proof (cases "x = north_pole")
-      case True
-      \<comment> \<open>x = NP case: needs stereographic from south pole (not formalized).
-         In practice, K4\_from\_SCC can avoid this by choosing decomposition
-         with north\_pole on C.\<close>
-      show ?thesis sorry
-    next
-      case hx_ne_NP: False
-      \<comment> \<open>x \<noteq> NP: use stereographic\_proj from NP.\<close>
-      let ?SP = "top1_S2 - {north_pole}"
-      let ?TSP = "subspace_topology top1_S2 top1_S2_topology ?SP"
-      let ?R2 = "UNIV :: (real \<times> real) set"
-      let ?TR2 = "product_topology_on top1_open_sets top1_open_sets"
-      have hx_SP: "x \<in> ?SP" using hx assms(3) hx_ne_NP by (by100 blast)
-      have hstereo: "top1_homeomorphism_on ?SP ?TSP ?R2 ?TR2 stereographic_proj"
-        by (rule stereographic_proj_homeomorphism)
-      \<comment> \<open>stereographic\_proj(U \<inter> SP) is open in R2.\<close>
-      have hU_SP: "U \<inter> ?SP \<in> ?TSP"
-        unfolding subspace_topology_def using assms(2) by (by100 blast)
-      have hstereo_U_open: "stereographic_proj ` (U \<inter> ?SP) \<in> ?TR2"
-      proof -
-        \<comment> \<open>Homeomorphism inverse is continuous: preimage of open under inv = open in codomain.\<close>
-        have hinv_cont: "top1_continuous_map_on ?R2 ?TR2 ?SP ?TSP (inv_into ?SP stereographic_proj)"
-          using hstereo unfolding top1_homeomorphism_on_def by (by100 blast)
-        \<comment> \<open>stereographic\_proj ` W = inv\<inverse>(W) for W \<subseteq> SP (since bij).\<close>
-        have hbij: "bij_betw stereographic_proj ?SP ?R2"
-          using hstereo unfolding top1_homeomorphism_on_def by (by100 blast)
-        \<comment> \<open>stereo maps open in SP to open in R2 (homeomorphism is open map).\<close>
-        show ?thesis using hinv_cont hU_SP hbij
-          unfolding top1_continuous_map_on_def bij_betw_def sorry
-      qed
-      \<comment> \<open>stereographic\_proj(x) has \<epsilon>-ball inside stereographic\_proj(U \<inter> SP).\<close>
-      have hx'_in: "stereographic_proj x \<in> stereographic_proj ` (U \<inter> ?SP)"
-        using hx hx_SP by (by100 blast)
-      obtain \<epsilon> where heps: "\<epsilon> > 0"
-          "{\<xi>. (\<xi> \<in> ?R2) \<and> (fst \<xi> - fst (stereographic_proj x))^2 + (snd \<xi> - snd (stereographic_proj x))^2 < \<epsilon>^2} \<subseteq> stereographic_proj ` (U \<inter> ?SP)"
-        sorry
-      \<comment> \<open>V = stereo\<inverse>(ball) is open in S2, V \<subseteq> U, x \<in> V.\<close>
-      let ?ball = "{\<xi> :: real \<times> real. (fst \<xi> - fst (stereographic_proj x))^2 + (snd \<xi> - snd (stereographic_proj x))^2 < \<epsilon>^2}"
-      let ?V = "stereographic_inv ` ?ball"
-      have hV_open: "?V \<in> top1_S2_topology" sorry
-      have hx_V: "x \<in> ?V" sorry
-      have hV_sub_U: "?V \<subseteq> U" sorry
-      \<comment> \<open>For y,z \<in> V with y \<noteq> z: line segment in ball gives arc in V.\<close>
-      have hV_arcs: "\<forall>y \<in> ?V. \<forall>z \<in> ?V. y \<noteq> z \<longrightarrow>
-          (\<exists>D. top1_is_arc_on D (subspace_topology top1_S2 top1_S2_topology D) \<and>
-               D \<subseteq> ?V \<and> top1_arc_endpoints_on D (subspace_topology top1_S2 top1_S2_topology D) = {y, z})"
-      proof (intro ballI impI)
-        fix y z assume hy: "y \<in> ?V" and hz: "z \<in> ?V" and hyz: "y \<noteq> z"
-        \<comment> \<open>y = stereo\_inv(y'), z = stereo\_inv(z') for y',z' in ball.
-           Line segment t \<mapsto> (1-t)*y' + t*z' stays in ball (convexity).
-           stereo\_inv \<circ> line\_seg: [0,1] \<rightarrow> V is continuous + injective = arc.\<close>
-        show "\<exists>D. top1_is_arc_on D (subspace_topology top1_S2 top1_S2_topology D) \<and>
-             D \<subseteq> ?V \<and> top1_arc_endpoints_on D (subspace_topology top1_S2 top1_S2_topology D) = {y, z}"
-          sorry
-      qed
-      show ?thesis using hV_open hx_V hV_sub_U hV_arcs sorry
-    qed
+      using hV_open hx_V hV_sub_U hV_arcs by (by100 blast)
   qed
   \<comment> \<open>Equivalence class argument: E = \{y \<in> U | \<exists> arc from a to y in U\}.
      E is open (local\_arc + Step 1). U-E is open (same argument).
