@@ -4829,6 +4829,148 @@ proof -
   ultimately show ?thesis by (by100 simp)
 qed
 
+\<comment> \<open>Standalone: inclusion j: C \<hookrightarrow> X is surjective at the K4-generator basepoint x.
+   Uses K4\_generator\_loop\_in\_C + inclusion\_sends\_class.\<close>
+lemma K4_inclusion_surjective_at_x:
+  fixes a1 a2 a3 a4 :: "real \<times> real \<times> real"
+    and e12 e23 e34 e41 e13 e24 :: "(real \<times> real \<times> real) set"
+    and C :: "(real \<times> real \<times> real) set"
+    and p q :: "real \<times> real \<times> real"
+  assumes "is_topology_on_strict top1_S2 top1_S2_topology"
+      and "card {a1, a2, a3, a4} = 4"
+      and "{a1, a2, a3, a4} \<subseteq> top1_S2"
+      and "e12 \<subseteq> top1_S2" and "e23 \<subseteq> top1_S2" and "e34 \<subseteq> top1_S2"
+      and "e41 \<subseteq> top1_S2" and "e13 \<subseteq> top1_S2" and "e24 \<subseteq> top1_S2"
+      and "top1_is_arc_on e12 (subspace_topology top1_S2 top1_S2_topology e12)"
+      and "top1_is_arc_on e23 (subspace_topology top1_S2 top1_S2_topology e23)"
+      and "top1_is_arc_on e34 (subspace_topology top1_S2 top1_S2_topology e34)"
+      and "top1_is_arc_on e41 (subspace_topology top1_S2 top1_S2_topology e41)"
+      and "top1_is_arc_on e13 (subspace_topology top1_S2 top1_S2_topology e13)"
+      and "top1_is_arc_on e24 (subspace_topology top1_S2 top1_S2_topology e24)"
+      and "top1_arc_endpoints_on e12 (subspace_topology top1_S2 top1_S2_topology e12) = {a1,a2}"
+      and "top1_arc_endpoints_on e23 (subspace_topology top1_S2 top1_S2_topology e23) = {a2,a3}"
+      and "top1_arc_endpoints_on e34 (subspace_topology top1_S2 top1_S2_topology e34) = {a3,a4}"
+      and "top1_arc_endpoints_on e41 (subspace_topology top1_S2 top1_S2_topology e41) = {a4,a1}"
+      and "top1_arc_endpoints_on e13 (subspace_topology top1_S2 top1_S2_topology e13) = {a1,a3}"
+      and "top1_arc_endpoints_on e24 (subspace_topology top1_S2 top1_S2_topology e24) = {a2,a4}"
+      and "e12 \<inter> e34 = {}" and "e23 \<inter> e41 = {}"
+      and "e12 \<inter> e23 = {a2}" and "e23 \<inter> e34 = {a3}"
+      and "e34 \<inter> e41 = {a4}" and "e41 \<inter> e12 = {a1}"
+      and "e13 \<inter> e12 = {a1}" and "e13 \<inter> e23 = {a3}"
+      and "e13 \<inter> e34 = {a3}" and "e13 \<inter> e41 = {a1}"
+      and "e13 \<inter> e24 \<subseteq> {a1,a2,a3,a4}"
+      and "e24 \<inter> e12 = {a2}" and "e24 \<inter> e23 = {a2}"
+      and "e24 \<inter> e34 = {a4}" and "e24 \<inter> e41 = {a4}"
+      and "p \<in> e13 - {a1, a3}" and "q \<in> e24 - {a2, a4}"
+      and "C = e12 \<union> e23 \<union> e34 \<union> e41"
+      \<comment> \<open>x is the basepoint from K4\_generator, j\_cont and j\_hom\_x are provided.\<close>
+      and hx_C: "x \<in> C"
+      and hg_loop_C: "top1_is_loop_on C (subspace_topology top1_S2 top1_S2_topology C) x g"
+      and hg_loop_X: "top1_is_loop_on (top1_S2 - {p} - {q})
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p} - {q})) x g"
+      and hg_generates: "\<forall>f. top1_is_loop_on (top1_S2 - {p} - {q})
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p} - {q})) x f \<longrightarrow>
+          (\<exists>n::nat. top1_path_homotopic_on (top1_S2 - {p} - {q})
+              (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p} - {q})) x x f
+              (top1_path_power g x n)
+            \<or> top1_path_homotopic_on (top1_S2 - {p} - {q})
+              (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p} - {q})) x x f
+              (top1_path_power (top1_path_reverse g) x n))"
+      and hC_sub_X: "C \<subseteq> top1_S2 - {p} - {q}"
+      and hTX: "is_topology_on (top1_S2 - {p} - {q})
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p} - {q}))"
+      and hTC: "is_topology_on C (subspace_topology top1_S2 top1_S2_topology C)"
+      and hj_cont: "top1_continuous_map_on C
+          (subspace_topology top1_S2 top1_S2_topology C)
+          (top1_S2 - {p} - {q})
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p} - {q})) id"
+  shows "(top1_fundamental_group_induced_on C
+      (subspace_topology top1_S2 top1_S2_topology C) x
+      (top1_S2 - {p} - {q})
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p} - {q})) x id) `
+    (top1_fundamental_group_carrier C (subspace_topology top1_S2 top1_S2_topology C) x) =
+    top1_fundamental_group_carrier (top1_S2 - {p} - {q})
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p} - {q})) x"
+proof -
+  let ?TC = "subspace_topology top1_S2 top1_S2_topology C"
+  let ?X = "top1_S2 - {p} - {q}"
+  let ?TX = "subspace_topology top1_S2 top1_S2_topology ?X"
+  let ?j = "top1_fundamental_group_induced_on C ?TC x ?X ?TX x id"
+  have hx_X: "x \<in> ?X" using hx_C hC_sub_X by (by100 blast)
+  \<comment> \<open>j\_*([g]\_C) = [g]\_X.\<close>
+  have hTC_eq: "subspace_topology ?X ?TX C = ?TC"
+    using subspace_topology_trans[of C ?X top1_S2 top1_S2_topology] hC_sub_X by (by100 simp)
+  \<comment> \<open>Surjectivity: every [f]\_X is in image of j\_*.\<close>
+  show ?thesis
+  proof (intro set_eqI iffI)
+    fix c assume "c \<in> ?j ` (top1_fundamental_group_carrier C ?TC x)"
+    then obtain d where "d \<in> top1_fundamental_group_carrier C ?TC x" "c = ?j d" by (by100 blast)
+    have "id x = x" by (by100 simp)
+    from top1_fundamental_group_induced_on_is_hom[OF hTC hTX _ hx_X hj_cont this]
+    have hhom: "top1_group_hom_on
+        (top1_fundamental_group_carrier C ?TC x) (top1_fundamental_group_mul C ?TC x)
+        (top1_fundamental_group_carrier ?X ?TX x) (top1_fundamental_group_mul ?X ?TX x) ?j"
+      using hx_C by (by100 blast)
+    thus "c \<in> top1_fundamental_group_carrier ?X ?TX x"
+      using \<open>d \<in> _\<close> \<open>c = _\<close> unfolding top1_group_hom_on_def by (by100 blast)
+  next
+    fix c assume hc: "c \<in> top1_fundamental_group_carrier ?X ?TX x"
+    then obtain f where hf: "top1_is_loop_on ?X ?TX x f"
+        and hc_eq: "c = {h. top1_loop_equiv_on ?X ?TX x f h}"
+      unfolding top1_fundamental_group_carrier_def by (by100 blast)
+    from hg_generates hf
+    obtain n where "top1_path_homotopic_on ?X ?TX x x f (top1_path_power g x n)
+        \<or> top1_path_homotopic_on ?X ?TX x x f (top1_path_power (top1_path_reverse g) x n)"
+      by (by100 blast)
+    thus "c \<in> ?j ` (top1_fundamental_group_carrier C ?TC x)"
+    proof (elim disjE)
+      assume hfgn: "top1_path_homotopic_on ?X ?TX x x f (top1_path_power g x n)"
+      have hgn_C: "top1_is_loop_on C ?TC x (top1_path_power g x n)"
+        by (rule top1_path_power_is_loop[OF hTC hg_loop_C])
+      have hgn_class_C: "{h. top1_loop_equiv_on C ?TC x (top1_path_power g x n) h}
+          \<in> top1_fundamental_group_carrier C ?TC x"
+        unfolding top1_fundamental_group_carrier_def using hgn_C by (by100 blast)
+      have hgn_C': "top1_is_loop_on C (subspace_topology ?X ?TX C) x (top1_path_power g x n)"
+        using hgn_C hTC_eq by (by100 simp)
+      from subspace_inclusion_induced_class[OF hTX hC_sub_X hgn_C']
+      have hj_gn: "?j {h. top1_loop_equiv_on C ?TC x (top1_path_power g x n) h} =
+          {k. top1_loop_equiv_on ?X ?TX x (top1_path_power g x n) k}"
+        unfolding hTC_eq[symmetric] induced_id_eq_lam .
+      from path_homotopic_same_class[OF hTX hfgn]
+      have "{h. top1_loop_equiv_on ?X ?TX x f h} =
+          {h. top1_loop_equiv_on ?X ?TX x (top1_path_power g x n) h}" .
+      hence "c = {h. top1_loop_equiv_on ?X ?TX x (top1_path_power g x n) h}"
+        using hc_eq by (by100 blast)
+      hence "c = ?j {h. top1_loop_equiv_on C ?TC x (top1_path_power g x n) h}"
+        using hj_gn by (by100 simp)
+      thus ?thesis using hgn_class_C by (by100 blast)
+    next
+      assume hfgrn: "top1_path_homotopic_on ?X ?TX x x f (top1_path_power (top1_path_reverse g) x n)"
+      have hgr_loop_C: "top1_is_loop_on C ?TC x (top1_path_reverse g)"
+        by (rule top1_path_reverse_is_loop[OF hg_loop_C])
+      have hgrn_C: "top1_is_loop_on C ?TC x (top1_path_power (top1_path_reverse g) x n)"
+        by (rule top1_path_power_is_loop[OF hTC hgr_loop_C])
+      have hgrn_class_C: "{h. top1_loop_equiv_on C ?TC x (top1_path_power (top1_path_reverse g) x n) h}
+          \<in> top1_fundamental_group_carrier C ?TC x"
+        unfolding top1_fundamental_group_carrier_def using hgrn_C by (by100 blast)
+      have hgrn_C': "top1_is_loop_on C (subspace_topology ?X ?TX C) x (top1_path_power (top1_path_reverse g) x n)"
+        using hgrn_C hTC_eq by (by100 simp)
+      from subspace_inclusion_induced_class[OF hTX hC_sub_X hgrn_C']
+      have hj_grn: "?j {h. top1_loop_equiv_on C ?TC x (top1_path_power (top1_path_reverse g) x n) h} =
+          {k. top1_loop_equiv_on ?X ?TX x (top1_path_power (top1_path_reverse g) x n) k}"
+        unfolding hTC_eq[symmetric] induced_id_eq_lam .
+      from path_homotopic_same_class[OF hTX hfgrn]
+      have "{h. top1_loop_equiv_on ?X ?TX x f h} =
+          {h. top1_loop_equiv_on ?X ?TX x (top1_path_power (top1_path_reverse g) x n) h}" .
+      hence "c = {h. top1_loop_equiv_on ?X ?TX x (top1_path_power (top1_path_reverse g) x n) h}"
+        using hc_eq by (by100 blast)
+      hence "c = ?j {h. top1_loop_equiv_on C ?TC x (top1_path_power (top1_path_reverse g) x n) h}"
+        using hj_grn by (by100 simp)
+      thus ?thesis using hgrn_class_C by (by100 blast)
+    qed
+  qed
+qed
+
 theorem Theorem_58_7_fixed:
   assumes hTX: "is_topology_on X TX" and hTY: "is_topology_on Y TY"
       and heq: "top1_homotopy_equivalence_on X TX Y TY f g" and hx0: "x0 \<in> X"
@@ -5392,21 +5534,12 @@ proof -
   \<comment> \<open>j\_* surjective at x (from the Lemma\_65\_1\_fixed proof above).\<close>
   have hj_surj_x: "?j_star_x ` (top1_fundamental_group_carrier C ?TC x) =
       top1_fundamental_group_carrier ?X ?TX x"
-    sorry \<comment> \<open>Same surjectivity proof as Lemma\_65\_1\_fixed (already proved in structure above).\<close>
+    by (rule K4_inclusion_surjective_at_x[OF assms(1-39)
+        hx_C hg_loop_C hg_loop_X hg_generates hC_sub_X hTX hTC hj_cont])
   \<comment> \<open>Both groups infinite cyclic.\<close>
   have hC_scc: "top1_simple_closed_curve_on top1_S2 top1_S2_topology C"
     by (rule K4_cycle_is_SCC[OF assms(1,2,4,5,6,7,10,11,12,13,16,17,18,19,22,23,24,25,26,27,39)])
-  \<comment> \<open>\<pi>_1(C, x) infinite cyclic. C \<cong> S1, so \<pi>_1 \<cong> Z with generator.\<close>
-  have hC_gen: "\<exists>gen_C. top1_is_loop_on C ?TC x gen_C \<and>
-      (\<forall>f. top1_is_loop_on C ?TC x f \<longrightarrow>
-        (\<exists>n::nat. top1_path_homotopic_on C ?TC x x f (top1_path_power gen_C x n)
-          \<or> top1_path_homotopic_on C ?TC x x f (top1_path_power (top1_path_reverse gen_C) x n)))"
-    sorry \<comment> \<open>From \<pi>_1(C) \<cong> Z: ∃ generator. Needs extraction from Z-iso.\<close>
-  then obtain gen_C where hgen_C: "top1_is_loop_on C ?TC x gen_C"
-      and hgen_C_generates: "\<forall>f. top1_is_loop_on C ?TC x f \<longrightarrow>
-        (\<exists>n::nat. top1_path_homotopic_on C ?TC x x f (top1_path_power gen_C x n)
-          \<or> top1_path_homotopic_on C ?TC x x f (top1_path_power (top1_path_reverse gen_C) x n))"
-    by blast
+  \<comment> \<open>gen\_C not needed: surj\_hom\_infinite\_cyclic\_inj takes \<cong>Z directly.\<close>
   \<comment> \<open>j\_* injective (surjective hom between infinite cyclic groups).\<close>
   have hj_inj_x: "inj_on ?j_star_x (top1_fundamental_group_carrier C ?TC x)"
   proof -
