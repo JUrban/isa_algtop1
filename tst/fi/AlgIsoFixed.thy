@@ -3005,9 +3005,60 @@ proof -
          A1-{a} = (C-{a}) \<inter> A1, and A1 is closed in X \<Rightarrow> A1-{a} closed in C-{a}.
          Closed subset of closed subset is closed in the ambient space.\<close>
       have hW_closed: "closedin_on (C - {a}) (subspace_topology X TX (C - {a})) W"
-        sorry \<comment> \<open>W closed in A1-{a} + A1-{a} closed in C-{a} \<Rightarrow> W closed in C-{a}.
-           Formally: W = (A1-{a}) \<inter> F for F closed in X (complement of the open part).
-           Then W = (C-{a}) \<inter> (A1 \<inter> F). A1 closed, F closed \<Rightarrow> A1\<inter>F closed. Done.\<close>
+      proof -
+        \<comment> \<open>The other part of the separation (U or V) is open in A1-{a} subspace.\<close>
+        define W' where "W' = (if b \<in> U then U else V)"
+        have "W' \<in> subspace_topology X TX (A1 - {a})"
+          unfolding W'_def using hUV(1,2) by (by100 simp)
+        then obtain G where hG: "G \<in> TX" "W' = (A1 - {a}) \<inter> G"
+          unfolding subspace_topology_def by (by100 blast)
+        have hW_eq: "W = (A1 - {a}) - W'" unfolding W_def W'_def
+          using hUV(5,6) by auto
+        hence "W = (A1 - {a}) \<inter> (X - G)" using hG(2) hA1_sub by auto
+        \<comment> \<open>X - G is closed in X. A1 is closed in X. Their intersection is closed.\<close>
+        have "closedin_on X TX (A1 \<inter> (X - G))"
+        proof -
+          have hTX: "is_topology_on X TX" using hT unfolding is_topology_on_strict_def by (by100 blast)
+          have "closedin_on X TX (X - G)"
+            unfolding closedin_on_def
+          proof (intro conjI)
+            show "X - G \<subseteq> X" by (by100 blast)
+            have "X - (X - G) = X \<inter> G" by (by100 blast)
+            also have "X \<inter> G \<in> TX"
+              by (rule topology_inter_open[OF hTX]) (use hTX hG(1) in \<open>auto simp: is_topology_on_def\<close>)
+            finally show "X - (X - G) \<in> TX" .
+          qed
+          \<comment> \<open>Intersection of two closed sets is closed (finite intersection of complements).\<close>
+          have hG_sub: "G \<subseteq> X" using hG(1) hT unfolding is_topology_on_strict_def is_topology_on_def
+            by (by100 blast)
+          have hcompl: "X - (A1 \<inter> (X - G)) = (X - A1) \<union> G" using hG_sub by (by100 blast)
+          hence "(X - (A1 \<inter> (X - G))) \<in> TX"
+          proof -
+            have hXA1: "(X - A1) \<in> TX" using hA1_closed unfolding closedin_on_def by (by100 blast)
+            have "{X - A1, G} \<subseteq> TX" using hXA1 hG(1) by (by100 blast)
+            hence "\<Union>{X - A1, G} \<in> TX" using hTX unfolding is_topology_on_def by (by100 blast)
+            hence "(X - A1) \<union> G \<in> TX" by (by100 simp)
+            thus ?thesis using hcompl by (by100 simp)
+          qed
+          thus ?thesis unfolding closedin_on_def using hA1_sub by (by100 blast)
+        qed
+        \<comment> \<open>W = (C-{a}) \<inter> (A1 \<inter> (X-G)). closedin \<Rightarrow> W closed in C-{a} subspace.\<close>
+        have "W = (C - {a}) \<inter> (A1 \<inter> (X - G))"
+          using \<open>W = (A1 - {a}) \<inter> (X - G)\<close> hW_sub hdecomp by (by100 blast)
+        \<comment> \<open>closedin: W \<subseteq> C-{a} and (C-{a})-W \<in> TCa.\<close>
+        let ?F = "A1 \<inter> (X - G)"
+        have hF_closed: "closedin_on X TX ?F" by (rule \<open>closedin_on X TX ?F\<close>)
+        have "(X - ?F) \<in> TX" using hF_closed unfolding closedin_on_def by (by100 blast)
+        have "(C - {a}) \<inter> (X - ?F) \<in> subspace_topology X TX (C - {a})"
+          unfolding subspace_topology_def using \<open>(X - ?F) \<in> TX\<close> by (by100 blast)
+        have hCa_sub_X: "C - {a} \<subseteq> X" using hC_sub by (by100 blast)
+        have "(C - {a}) - W = (C - {a}) \<inter> (X - ?F)"
+          using \<open>W = (C - {a}) \<inter> ?F\<close> hCa_sub_X by (by100 blast)
+        hence "(C - {a}) - W \<in> subspace_topology X TX (C - {a})"
+          using \<open>(C - {a}) \<inter> (X - ?F) \<in> subspace_topology X TX (C - {a})\<close> by (by100 simp)
+        thus ?thesis unfolding closedin_on_def
+          using \<open>W = (C - {a}) \<inter> ?F\<close> by (by100 blast)
+      qed
       show ?thesis using hW_ne hW_sub hW_disj_A2 hW_closed by (by100 blast)
     qed
     then obtain W where hW: "W \<noteq> {}" "W \<subseteq> A1 - {a}" "W \<inter> (A2 - {a}) = {}"
