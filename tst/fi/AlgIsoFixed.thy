@@ -1917,11 +1917,18 @@ proof -
         (\<forall>y \<in> V. \<forall>z \<in> V. y \<noteq> z \<longrightarrow>
           (\<exists>D. top1_is_arc_on D (subspace_topology top1_S2 top1_S2_topology D) \<and>
                D \<subseteq> V \<and> top1_arc_endpoints_on D (subspace_topology top1_S2 top1_S2_topology D) = {y, z}))"
-      sorry \<comment> \<open>Proof uses stereographic chart around x + \<epsilon>-ball convexity + line segment = arc.
-         For x \<noteq> NP: stereographic\_proj gives S2-{NP} \<cong> R2. stereo(x) has \<epsilon>-ball in stereo(U).
-         V = stereo\<inverse>(ball). Line segment in ball = arc (continuous injective compact\<rightarrow>Hausdorff).
-         Transfer via stereo\<inverse> (homeomorphism preserves arcs).
-         For x = NP: symmetric with stereographic from south pole.\<close>
+      sorry \<comment> \<open>Needs: stereographic chart + \<epsilon>-ball + line segment = arc + transfer.
+         All building blocks available. Proof chain:
+         (1) x \<in> S2-{NP} (or handle NP separately)
+         (2) stereo: S2-{NP} \<cong> R2. stereo(U\<inter>S2-{NP}) open in R2
+         (3) \<exists>\<epsilon>-ball B around stereo(x) with B \<subseteq> stereo(U\<inter>S2-{NP})
+         (4) V = stereo\<inverse>(B) open in S2, V \<subseteq> U
+         (5) For y,z\<in>V: line seg t\<mapsto>(1-t)*stereo(y)+t*stereo(z) in B (ball convex)
+         (6) Line seg continuous + injective \<Rightarrow> embedding \<Rightarrow> arc in R2
+         (7) stereo\<inverse> maps arc to arc in V (homeomorphism preserves arcs)
+         Available: stereographic\_proj\_homeomorphism, open\_disk\_convex,
+         top1\_embedding\_on\_compact\_inj, homeomorphism\_on\_comp,
+         arc\_endpoints\_are\_boundary.\<close>
   qed
   \<comment> \<open>Equivalence class argument: E = \{y \<in> U | \<exists> arc from a to y in U\}.
      E is open (local\_arc + Step 1). U-E is open (same argument).
