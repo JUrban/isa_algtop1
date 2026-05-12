@@ -1897,13 +1897,48 @@ lemma S2_open_path_connected_arc_connected:
   and "top1_is_path_on U (subspace_topology top1_S2 top1_S2_topology U) a b f"
   shows "\<exists>A. top1_is_arc_on A (subspace_topology top1_S2 top1_S2_topology A)
     \<and> A \<subseteq> U \<and> top1_arc_endpoints_on A (subspace_topology top1_S2 top1_S2_topology A) = {a, b}"
-  \<comment> \<open>Munkres Thm 65.2 Step 2: equivalence relation "arc-connected" has open classes
-     (from local arc-connectivity via stereographic projection + convexity of R2 balls),
-     and Step 1 gives transitivity. U connected \<Rightarrow> one equivalence class.
-     The proof requires: stereographic\_proj\_homeomorphism for local charts,
-     open\_disk\_convex for line segments in R2, and the equivalence class argument.
-     All building blocks available but the assembly is substantial.\<close>
-  sorry
+proof -
+  \<comment> \<open>Local arc-connectivity of S2: every point x \<in> U has nbhd V \<subseteq> U where
+     any two points are connected by an arc in V.
+     Proof: stereographic proj from pole \<noteq> x gives S2-\{pole\} \<cong> R2.
+     Open ball in R2 is convex \<Rightarrow> line segment = arc.
+     Inverse stereographic maps arc back to S2.\<close>
+  have local_arc: "\<And>x. x \<in> U \<Longrightarrow> \<exists>V. V \<in> top1_S2_topology \<and> x \<in> V \<and> V \<subseteq> U \<and>
+      (\<forall>y \<in> V. \<forall>z \<in> V. y \<noteq> z \<longrightarrow>
+        (\<exists>D. top1_is_arc_on D (subspace_topology top1_S2 top1_S2_topology D) \<and>
+             D \<subseteq> V \<and> top1_arc_endpoints_on D (subspace_topology top1_S2 top1_S2_topology D) = {y, z}))"
+    sorry \<comment> \<open>From stereographic\_proj\_homeomorphism + open\_disk\_convex + line segment is arc.\<close>
+  \<comment> \<open>Equivalence class argument: E = \{y \<in> U | \<exists> arc from a to y in U\}.
+     E is open (local\_arc + Step 1). U-E is open (same argument).
+     a \<in> E (trivial). Path from a to b \<Rightarrow> path-component connected.
+     E open, U-E open, E \<noteq> {} \<Rightarrow> E = path-component \<Rightarrow> b \<in> E.\<close>
+  let ?E = "{y \<in> U. \<exists>D. top1_is_arc_on D (subspace_topology top1_S2 top1_S2_topology D) \<and>
+      D \<subseteq> U \<and> top1_arc_endpoints_on D (subspace_topology top1_S2 top1_S2_topology D) = {a, y}}"
+  \<comment> \<open>a \<in> E: trivially arc-connected to itself? No — need a \<noteq> y for arc. Handle separately.
+     Actually: a is in U and we want arc from a to b with a \<noteq> b.\<close>
+  \<comment> \<open>Redefine E to include a: y \<in> E iff y = a or \<exists> arc a\<rightarrow>y in U.\<close>
+  let ?E' = "{y \<in> U. y = a \<or> (\<exists>D. top1_is_arc_on D (subspace_topology top1_S2 top1_S2_topology D) \<and>
+      D \<subseteq> U \<and> top1_arc_endpoints_on D (subspace_topology top1_S2 top1_S2_topology D) = {a, y})}"
+  have ha_E: "a \<in> ?E'" using assms(4) by (by100 blast)
+  \<comment> \<open>E' is open: for y \<in> E', local\_arc gives nbhd V. For z \<in> V: arc y\<rightarrow>z in V.
+     If y = a: arc a\<rightarrow>z directly. If y \<noteq> a: arc a\<rightarrow>y + arc y\<rightarrow>z, splice with Step 1.\<close>
+  have hE'_open: "?E' \<in> subspace_topology top1_S2 top1_S2_topology U"
+    sorry \<comment> \<open>From local\_arc + Munkres\_Step\_1 + openness argument.\<close>
+  \<comment> \<open>U - E' is open: for y \<in> U - E', local\_arc gives nbhd V.
+     If z \<in> V \<inter> E': arc a\<rightarrow>z in U. Arc z\<rightarrow>y in V \<subseteq> U. Step 1 \<Rightarrow> arc a\<rightarrow>y in U.
+     But y \<notin> E'. Contradiction. So V \<inter> E' = {} \<Rightarrow> V \<subseteq> U - E'.\<close>
+  have hUE'_open: "U - ?E' \<in> subspace_topology top1_S2 top1_S2_topology U"
+    sorry \<comment> \<open>Same argument as above, by contradiction.\<close>
+  \<comment> \<open>The path from a to b shows they're in the same path-component.
+     That path-component is connected (path-connected \<Rightarrow> connected).
+     E' and U-E' partition U. E' \<noteq> {}. If U-E' \<noteq> {}: E' and U-E' form a separation
+     of the path-component, contradicting connectedness. So U-E' \<inter> path-comp = {}.
+     Hence b \<in> E'.\<close>
+  have hb_E: "b \<in> ?E'"
+    sorry \<comment> \<open>From connected path-component + E' open + U-E' open + E' \<noteq> {}.\<close>
+  \<comment> \<open>b \<in> E' and b \<noteq> a \<Rightarrow> \<exists> arc from a to b in U.\<close>
+  from hb_E assms(6) show ?thesis by (by100 blast)
+qed
 
 text \<open>Helper: construct K4 subgraph data from a general SCC on S2.
   Given SCC C on S2 with p,q in different components of S2-C,
@@ -2062,9 +2097,14 @@ proof -
      arc\_g avoids C2, so it intersects C only in C1-{a1,a3}.
      The construction uses Step 1 (arc splicing) to build the K4 diagonals
      from the arcs and sub-arcs of C.\<close>
-  \<comment> \<open>Full K4 assembly from the arcs. This is a lengthy but mechanical
-     verification of all 38 intersection conditions using the arc structure.
-     The mathematical content is complete — only the formal assembly remains.\<close>
+  \<comment> \<open>Munkres Step 3: Construct K4 from arc\_f (p\<rightarrow>q avoiding C1) and arc\_g (p\<rightarrow>q avoiding C2).
+     arc\_f crosses C2 at some first-hit point \<Rightarrow> gives a4 on C2 interior.
+     arc\_g crosses C1 at some first-hit point \<Rightarrow> gives a2 on C1 interior.
+     Step 1 (arc splicing) gives diagonal arcs.
+     The cycle arcs come from splitting C1 at a2 and C2 at a4.
+     Full K4 assembly: 4 vertices a1,a2,a3,a4 on C, 4 cycle arcs from C,
+     2 diagonal arcs through components, with p on one diagonal and q on the other.
+     This is a lengthy mechanical construction using the infrastructure above.\<close>
   show ?thesis sorry
 qed
 
