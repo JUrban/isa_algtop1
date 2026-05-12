@@ -3219,6 +3219,23 @@ proof -
   qed
 qed
 
+\<comment> \<open>First-hit sub-arc: given arc A from p to q with A \<inter> D \<noteq> {} and p \<notin> D, D closed,
+   get sub-arc Fp from p to a point d \<in> D with Fp \<inter> D = {d}.\<close>
+lemma first_hit_sub_arc:
+  assumes hS2: "is_topology_on_strict top1_S2 top1_S2_topology"
+  and hA: "top1_is_arc_on A (subspace_topology top1_S2 top1_S2_topology A)"
+  and hA_sub: "A \<subseteq> top1_S2"
+  and hA_ep: "top1_arc_endpoints_on A (subspace_topology top1_S2 top1_S2_topology A) = {p, q}"
+  and hpq: "p \<noteq> q"
+  and hD_closed: "closedin_on top1_S2 top1_S2_topology D"
+  and hAD: "A \<inter> D \<noteq> {}"
+  and hp_not_D: "p \<notin> D"
+  shows "\<exists>Fp d. d \<in> A \<inter> D \<and> p \<in> Fp \<and> d \<in> Fp \<and>
+    top1_is_arc_on Fp (subspace_topology top1_S2 top1_S2_topology Fp) \<and>
+    top1_arc_endpoints_on Fp (subspace_topology top1_S2 top1_S2_topology Fp) = {p, d} \<and>
+    Fp \<subseteq> A \<and> Fp \<inter> D = {d}"
+  sorry
+
 lemma K4_from_SCC:
   assumes "is_topology_on_strict top1_S2 top1_S2_topology"
   and "top1_simple_closed_curve_on top1_S2 top1_S2_topology C"
@@ -3579,6 +3596,32 @@ proof -
      ensures the sub-arc from p to the first crossing only touches C at one point.
      All other K4 infrastructure (cycle edges, endpoints, intersections, cardinality)
      is fully proved above.\<close>
+  \<comment> \<open>Diagonal e13 via first-hit sub-arcs.\<close>
+  \<comment> \<open>Fp: sub-arc of arc\_f from p to first hit with C2. Fp \<inter> C2 = {a4'}.\<close>
+  from first_hit_sub_arc[OF assms(1) harc_f(1) harc_f_sub_S2 harc_f(3) hp_ne_q hC2_cl hf_meets_C2 _]
+  obtain Fp a4' where hFp: "a4' \<in> arc_f \<inter> C2" "p \<in> Fp" "a4' \<in> Fp"
+      "top1_is_arc_on Fp (subspace_topology top1_S2 top1_S2_topology Fp)"
+      "top1_arc_endpoints_on Fp (subspace_topology top1_S2 top1_S2_topology Fp) = {p, a4'}"
+      "Fp \<subseteq> arc_f" "Fp \<inter> C2 = {a4'}"
+    sorry \<comment> \<open>Need p \<notin> C2: p \<notin> C \<supseteq> C2.\<close>
+  \<comment> \<open>Gp: sub-arc of arc\_g from p to first hit with C1. Gp \<inter> C1 = {a2'}.\<close>
+  from first_hit_sub_arc[OF assms(1) harc_g(1) harc_g_sub_S2 harc_g(3) hp_ne_q hC1_cl hg_meets_C1 _]
+  obtain Gp a2' where hGp: "a2' \<in> arc_g \<inter> C1" "p \<in> Gp" "a2' \<in> Gp"
+      "top1_is_arc_on Gp (subspace_topology top1_S2 top1_S2_topology Gp)"
+      "top1_arc_endpoints_on Gp (subspace_topology top1_S2 top1_S2_topology Gp) = {p, a2'}"
+      "Gp \<subseteq> arc_g" "Gp \<inter> C1 = {a2'}"
+    sorry \<comment> \<open>Need p \<notin> C1.\<close>
+  \<comment> \<open>Key: Fp \<inter> Gp = {p}. Fp \<subseteq> arc\_f \<subseteq> S2-C1, Gp \<subseteq> arc\_g \<subseteq> S2-C2.
+     Fp \<inter> C1 = {} (Fp \<subseteq> S2-C1). a2' \<in> C1, a2' \<in> Gp but a2' \<notin> Fp.
+     Gp \<inter> C2 = {} (Gp \<subseteq> S2-C2). a4' \<in> C2, a4' \<in> Fp but a4' \<notin> Gp.
+     Fp \<inter> Gp \<subseteq> (S2-C1) \<inter> (S2-C2) = S2-C. p \<in> Fp \<inter> Gp.
+     Still need: no other shared points. This requires arc separation.\<close>
+  have hFpGp: "Fp \<inter> Gp = {p}" sorry
+  \<comment> \<open>Split C2 at a4' and C1 at a2'. Build cycle edges and diagonals.\<close>
+  \<comment> \<open>e13 = e41' \<union> Fp \<union> Gp \<union> e23' where e41' from a1 to a4' (C2), e23' from a2' to a3 (C1).
+     By arcs\_concatenation: e41' \<union> Fp (share a4') = arc a1\<rightarrow>p.
+     Similarly Gp \<union> e23' (share a2') = arc p\<rightarrow>a3.
+     Then (a1\<rightarrow>p) \<union> (p\<rightarrow>a3) (share p only since Fp\<inter>Gp={p}) = arc a1\<rightarrow>a3 through p.\<close>
   show ?thesis sorry
 qed
 
