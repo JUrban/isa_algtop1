@@ -3340,14 +3340,68 @@ proof (rule ccontr)
   have hz_notin_V: "z \<notin> V" using hV_sub_Fp' hz by (by100 blast)
   have hV_sub_Sz: "V \<subseteq> top1_S2 - {z}" using hV_sub_S2 hz_notin_V by (by100 blast)
   have hFp_sub_Sz: "Fp \<subseteq> top1_S2 - {z}" using hFp_sub hz by (by100 blast)
-  \<comment> \<open>h(V) is open in R2.\<close>
-  have hhV_open: "h ` V \<in> product_topology_on top1_open_sets top1_open_sets" sorry
+  \<comment> \<open>h(V) is open in R2 (homeomorphism maps open to open via continuous inverse).\<close>
+  have hV_in_sub: "V \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - {z})"
+    unfolding subspace_topology_def using hV hV_sub_Sz by (by100 blast)
+  have hinv_cont: "top1_continuous_map_on (UNIV :: (real \<times> real) set)
+      (product_topology_on top1_open_sets top1_open_sets)
+      (top1_S2 - {z}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {z}))
+      (inv_into (top1_S2 - {z}) h)"
+    using hh unfolding top1_homeomorphism_on_def by (by100 blast)
+  have hh_bij: "bij_betw h (top1_S2 - {z}) (UNIV :: (real \<times> real) set)"
+    using hh unfolding top1_homeomorphism_on_def by (by100 blast)
+  have hhV_open: "h ` V \<in> product_topology_on top1_open_sets top1_open_sets"
+  proof -
+    \<comment> \<open>h ` V = preimage of V under inv\_into (by bijectivity).\<close>
+    have hpre: "h ` V = {y \<in> (UNIV :: (real \<times> real) set). inv_into (top1_S2 - {z}) h y \<in> V}"
+    proof (intro set_eqI iffI)
+      fix y assume "y \<in> h ` V"
+      then obtain x where hx: "x \<in> V" "y = h x" by (by100 blast)
+      have "x \<in> top1_S2 - {z}" using hx(1) hV_sub_Sz by (by100 blast)
+      hence "inv_into (top1_S2 - {z}) h y = x"
+        using hx(2) hh_bij unfolding bij_betw_def by (by100 force)
+      thus "y \<in> {y \<in> UNIV. inv_into (top1_S2 - {z}) h y \<in> V}" using hx(1) by (by100 blast)
+    next
+      fix y assume "y \<in> {y \<in> UNIV. inv_into (top1_S2 - {z}) h y \<in> V}"
+      hence hinv_V: "inv_into (top1_S2 - {z}) h y \<in> V" by (by100 blast)
+      have hinv_Sz: "inv_into (top1_S2 - {z}) h y \<in> top1_S2 - {z}"
+        using hinv_V hV_sub_Sz by (by100 blast)
+      have "y \<in> h ` (top1_S2 - {z})" using hh_bij unfolding bij_betw_def by (by100 blast)
+      hence "h (inv_into (top1_S2 - {z}) h y) = y" by (rule f_inv_into_f)
+      thus "y \<in> h ` V" using hinv_V by (by100 force)
+    qed
+    \<comment> \<open>Preimage of open set under continuous map is open.\<close>
+    show ?thesis unfolding hpre
+      using hinv_cont hV_in_sub unfolding top1_continuous_map_on_def by (by100 blast)
+  qed
   \<comment> \<open>h(V) is nonempty (p \<in> V).\<close>
   have hhV_ne: "h ` V \<noteq> {}" using hp_V by (by100 blast)
   \<comment> \<open>h(Fp) is an arc in R2, homeomorphic to [0,1].\<close>
+  have hh_Fp: "top1_homeomorphism_on Fp (subspace_topology (top1_S2 - {z})
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {z})) Fp)
+      (h ` Fp) (subspace_topology (UNIV :: (real \<times> real) set)
+      (product_topology_on top1_open_sets top1_open_sets) (h ` Fp)) h"
+    by (rule homeomorphism_on_restrict[OF hh hFp_sub_Sz])
+  \<comment> \<open>Subspace of subspace = subspace of ambient.\<close>
+  have hFp_sub_top: "subspace_topology (top1_S2 - {z})
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {z})) Fp
+      = subspace_topology top1_S2 top1_S2_topology Fp"
+    using subspace_topology_trans[of Fp "top1_S2 - {z}"] hFp_sub_Sz by (by100 simp)
+  obtain hf where hhf: "top1_homeomorphism_on I_set I_top Fp
+      (subspace_topology top1_S2 top1_S2_topology Fp) hf"
+    using hFp unfolding top1_is_arc_on_def by (by100 blast)
+  have hhf': "top1_homeomorphism_on I_set I_top Fp
+      (subspace_topology (top1_S2 - {z})
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {z})) Fp) hf"
+    using hhf hFp_sub_top by (by100 simp)
   obtain g where hg: "top1_homeomorphism_on I_set I_top (h ` Fp)
       (subspace_topology (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets) (h ` Fp)) g"
-    sorry
+  proof -
+    have "top1_homeomorphism_on I_set I_top (h ` Fp)
+        (subspace_topology (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets) (h ` Fp)) (h \<circ> hf)"
+      by (rule homeomorphism_compose[OF hhf' hh_Fp])
+    thus ?thesis using that by (by100 blast)
+  qed
   \<comment> \<open>g\<inverse>(h(V)) is open in [0,1], contains g\<inverse>(h(p)) \<in> {0,1}.\<close>
   define hp' where "hp' = h p"
   have hhp_in_hFp: "hp' \<in> h ` Fp" unfolding hp'_def using hp_V hV_sub_Fp' by (by100 blast)
