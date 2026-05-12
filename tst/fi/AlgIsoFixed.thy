@@ -1956,7 +1956,13 @@ proof -
     have hdisj: "?E' \<inter> (U - ?E') = {}" by (by100 blast)
     \<comment> \<open>f(I) is connected (continuous image of connected I).\<close>
     have hfI_conn: "top1_connected_on (f ` I_set) (subspace_topology U (subspace_topology top1_S2 top1_S2_topology U) (f ` I_set))"
-      sorry \<comment> \<open>Continuous image of connected set is connected.\<close>
+    proof -
+      have hTI: "is_topology_on I_set I_top" by (rule top1_unit_interval_topology_is_topology_on)
+      have hf_cont: "top1_continuous_map_on I_set I_top U (subspace_topology top1_S2 top1_S2_topology U) f"
+        using assms(7) unfolding top1_is_path_on_def by (by100 blast)
+      from Theorem_23_5[OF hTI hU_top top1_unit_interval_connected hf_cont]
+      show ?thesis .
+    qed
     have hfI_sub: "f ` I_set \<subseteq> U"
       using assms(7) unfolding top1_is_path_on_def top1_continuous_map_on_def by (by100 blast)
     have "f 0 \<in> ?E'" using ha_E assms(7) unfolding top1_is_path_on_def by (by100 blast)
