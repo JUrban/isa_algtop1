@@ -3065,7 +3065,10 @@ proof -
         "closedin_on (C - {a}) (subspace_topology X TX (C - {a})) W" by (by100 blast)
     \<comment> \<open>C-{a} - W is also closed (union of complement-in-A1-{a} and A2-{a}, both closed).\<close>
     have hCaW_closed: "closedin_on (C - {a}) (subspace_topology X TX (C - {a})) (C - {a} - W)"
-      sorry \<comment> \<open>C-{a}-W = (A1-{a}-W) \<union> (A2-{a}). Both closed in C-{a}. Union closed.\<close>
+      sorry \<comment> \<open>C-{a}-W = W' \<union> (A2-{a}) where W' is the b-containing separation part.
+         W' closed in A1-{a} (clopen in separation), hence closed in C-{a} (same as W proof).
+         A2 closed in X (compact arc in Hausdorff) \<Rightarrow> A2-{a} closed in C-{a}.
+         Union of two closed sets is closed.\<close>
     have "C - {a} - W \<noteq> {}"
     proof -
       have "b \<in> A2 - {a}" using hint hab by (by100 blast)
