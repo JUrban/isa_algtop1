@@ -2964,10 +2964,46 @@ proof -
         unfolding subspace_topology_def by (by100 blast)
       ultimately show "top1_compact_on A1 (subspace_topology X TX A1)" by (by100 simp)
     qed
-    \<comment> \<open>Step 2: A1-{a} not connected in C-{a}'s subspace (transfer from A1 subspace).\<close>
-    \<comment> \<open>Step 3: Get separation of A1-{a}, identify W \<subseteq> A1-A2.\<close>
-    \<comment> \<open>Step 4: W clopen in C-{a} \<Rightarrow> C-{a} not connected. Contradiction.\<close>
-    show False sorry \<comment> \<open>Detailed separation argument: W clopen in C-{a}.\<close>
+    \<comment> \<open>A1-{a} not connected: transfer via subspace\_topology\_trans.\<close>
+    have hA1a_not_conn_X: "\<not> top1_connected_on (A1 - {a}) (subspace_topology X TX (A1 - {a}))"
+    proof -
+      have "subspace_topology A1 (subspace_topology X TX A1) (A1 - {a})
+          = subspace_topology X TX (A1 - {a})"
+        by (rule subspace_topology_trans[OF Diff_subset])
+      thus ?thesis using \<open>\<not> top1_connected_on (A1 - {a}) (subspace_topology A1 (subspace_topology X TX A1) (A1 - {a}))\<close>
+        by (by100 simp)
+    qed
+    \<comment> \<open>Unpack: \<exists> non-trivial separation of A1-{a} in X's subspace.\<close>
+    then obtain U V where hUV: "U \<in> subspace_topology X TX (A1 - {a})"
+        "V \<in> subspace_topology X TX (A1 - {a})" "U \<noteq> {}" "V \<noteq> {}"
+        "U \<inter> V = {}" "U \<union> V = A1 - {a}"
+      unfolding top1_connected_on_def sorry \<comment> \<open>Unfold NOT connected \<Rightarrow> \<exists> separation.\<close>
+    \<comment> \<open>b \<in> A1-{a}. WLOG b \<in> U. Then V \<subseteq> A1-{a,b} \<subseteq> A1-A2.\<close>
+    have hb_A1a: "b \<in> A1 - {a}" using hint hab by (by100 blast)
+    hence "b \<in> U \<or> b \<in> V" using hUV(6) by (by100 blast)
+    \<comment> \<open>Handle both cases symmetrically. WLOG assume V doesn't contain b.\<close>
+    have "\<exists>W. W \<noteq> {} \<and> W \<subseteq> A1 - {a} \<and> W \<inter> (A2 - {a}) = {} \<and>
+        closedin_on (C - {a}) (subspace_topology X TX (C - {a})) W"
+      sorry \<comment> \<open>W = the part of the separation not containing b.
+         W \<subseteq> A1-{a,b} \<subseteq> A1-A2. W closed in A1-{a} (complement of open in A1-{a}).
+         A1-{a} closed in C-{a} (A1 closed in X). W closed in C-{a}.\<close>
+    then obtain W where hW: "W \<noteq> {}" "W \<subseteq> A1 - {a}" "W \<inter> (A2 - {a}) = {}"
+        "closedin_on (C - {a}) (subspace_topology X TX (C - {a})) W" by (by100 blast)
+    \<comment> \<open>C-{a} - W is also closed (union of complement-in-A1-{a} and A2-{a}, both closed).\<close>
+    have hCaW_closed: "closedin_on (C - {a}) (subspace_topology X TX (C - {a})) (C - {a} - W)"
+      sorry \<comment> \<open>C-{a}-W = (A1-{a}-W) \<union> (A2-{a}). Both closed in C-{a}. Union closed.\<close>
+    have "C - {a} - W \<noteq> {}"
+    proof -
+      have "b \<in> A2 - {a}" using hint hab by (by100 blast)
+      hence "b \<notin> W" using hW(3) by (by100 blast)
+      moreover have "b \<in> C - {a}" using \<open>b \<in> A2 - {a}\<close> hdecomp by (by100 blast)
+      ultimately show ?thesis by (by100 blast)
+    qed
+    \<comment> \<open>W and C-{a}-W form a separation of C-{a} \<Rightarrow> not connected. Contradiction.\<close>
+    have "\<not> top1_connected_on (C - {a}) (subspace_topology X TX (C - {a}))"
+      unfolding top1_connected_on_def
+      sorry \<comment> \<open>W clopen, non-empty, proper subset \<Rightarrow> not connected.\<close>
+    thus False using hCa_conn by (by100 blast)
   qed
   have hb_ep: "b \<in> {e1, e2}"
   proof (rule ccontr)
