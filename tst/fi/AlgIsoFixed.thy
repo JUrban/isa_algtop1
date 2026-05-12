@@ -2427,7 +2427,8 @@ proof -
               have hD2_U: "D2 \<subseteq> U" using hD12(1) hDyz_U by (by100 blast)
               \<comment> \<open>The endpoints of D2 are {a, z} (a and z are the boundary points).\<close>
               have hD2_ep: "top1_arc_endpoints_on D2 (subspace_topology top1_S2 top1_S2_topology D2) = {a, z}"
-                sorry \<comment> \<open>From the arc split: D2 endpoints = {a, z} (a = split point, z = original endpoint).\<close>
+                by (rule arc_split_endpoints(2)[OF assms(1) hS2_haus hDyz_S2 hDyz(1)
+                    hD12(1,2,3,4,5,6,7,8,9,10) hDyz(3) ha_not_ep])
               thus ?thesis using hz_U hz_ne_a hD12(4) hD2_U hD2_ep by (by100 blast)
             qed
           qed
