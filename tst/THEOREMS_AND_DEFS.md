@@ -1763,7 +1763,7 @@ Theorem_63_5_two_closed_connected              a0/AlgTop0.thy                   
 Theorem_64_2_K33_not_planar                    AlgTop.thy                           line 1764
 Theorem_64_4_K5_not_planar                     AlgTop.thy                           line 2100
 Theorem_65_2                                   AlgTop.thy                           line 6160
-Theorem_65_2_fixed                             fi/AlgIsoFixed.thy                   line 2936
+Theorem_65_2_fixed                             fi/AlgIsoFixed.thy                   line 3019
 Theorem_67_4_direct_sum_exists                 ac/AlgTopCached.thy                  line 7097
 Theorem_67_6_direct_sum_unique                 ac/AlgTopCached.thy                  line 7404
 Theorem_67_8_rank_unique                       AlgTop.thy                           line 6263

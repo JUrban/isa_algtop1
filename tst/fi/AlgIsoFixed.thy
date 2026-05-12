@@ -2805,20 +2805,35 @@ proof -
     hence "arc_f \<subseteq> top1_S2 - C"
       using harc_f(2) hC12(1) by (by100 blast)
     \<comment> \<open>arc\_f is an arc from p to q in S2-C, giving a path from p to q in S2-C.\<close>
-    hence "\<exists>f. top1_is_path_on (top1_S2 - C)
+    hence harc_f_SC: "arc_f \<subseteq> top1_S2 - C" .
+    \<comment> \<open>Arc arc\_f is path-connected (homeomorphic to [0,1]). Get path from p to q.\<close>
+    obtain hf where hhf: "top1_homeomorphism_on I_set I_top arc_f
+        (subspace_topology top1_S2 top1_S2_topology arc_f) hf"
+      using harc_f(1) unfolding top1_is_arc_on_def by (by100 blast)
+    have hhf_ep: "{hf 0, hf 1} = {p, q}"
+      using arc_endpoints_are_boundary[OF assms(1) hS2_haus harc_f_sub_S2 harc_f(1) hhf]
+        harc_f(3) by (by100 simp)
+    \<comment> \<open>hf (possibly reversed) gives a path from p to q in arc\_f \<subseteq> S2-C.\<close>
+    have "\<exists>f. top1_is_path_on (top1_S2 - C)
         (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) p q f"
-      sorry \<comment> \<open>Arc \<subseteq> S2-C with endpoints {p,q} gives path in S2-C.\<close>
+      sorry \<comment> \<open>hf or hf\<circ>(\<lambda>t.1-t) is path p\<rightarrow>q in arc\_f; transfer to S2-C subspace.\<close>
     thus False using assms(5) by (by100 blast)
   qed
   have hg_meets_C1: "arc_g \<inter> C1 \<noteq> {}"
   proof (rule ccontr)
     assume "\<not> arc_g \<inter> C1 \<noteq> {}"
     hence "arc_g \<inter> C1 = {}" by (by100 simp)
-    hence "arc_g \<subseteq> top1_S2 - C"
+    hence harc_g_SC: "arc_g \<subseteq> top1_S2 - C"
       using harc_g(2) hC12(1) by (by100 blast)
-    hence "\<exists>f. top1_is_path_on (top1_S2 - C)
+    obtain hg where hhg: "top1_homeomorphism_on I_set I_top arc_g
+        (subspace_topology top1_S2 top1_S2_topology arc_g) hg"
+      using harc_g(1) unfolding top1_is_arc_on_def by (by100 blast)
+    have hhg_ep: "{hg 0, hg 1} = {p, q}"
+      using arc_endpoints_are_boundary[OF assms(1) hS2_haus harc_g_sub_S2 harc_g(1) hhg]
+        harc_g(3) by (by100 simp)
+    have "\<exists>f. top1_is_path_on (top1_S2 - C)
         (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) p q f"
-      sorry \<comment> \<open>Arc \<subseteq> S2-C with endpoints {p,q} gives path in S2-C.\<close>
+      sorry \<comment> \<open>Same argument: hg gives path p\<rightarrow>q in arc\_g \<subseteq> S2-C.\<close>
     thus False using assms(5) by (by100 blast)
   qed
   \<comment> \<open>Get crossing points: a4 \<in> arc\_f \<inter> (C2 - {a1,a3}), a2 \<in> arc\_g \<inter> (C1 - {a1,a3}).\<close>
