@@ -5359,7 +5359,28 @@ proof -
   \<comment> \<open>j\_* at x is a homomorphism.\<close>
   let ?j_star_x = "top1_fundamental_group_induced_on C ?TC x ?X ?TX x id"
   have hj_cont: "top1_continuous_map_on C ?TC ?X ?TX id"
-    sorry \<comment> \<open>Inclusion continuity (proved in Lemma\_65\_1\_fixed above).\<close>
+  proof -
+    have hid_S2: "top1_continuous_map_on C ?TC top1_S2 top1_S2_topology id"
+      using Theorem_18_2[OF hTopS2 hTopS2 hTopS2] hC_sub_S2 by (by100 blast)
+    show ?thesis unfolding top1_continuous_map_on_def
+    proof (intro conjI ballI)
+      fix s assume "s \<in> C"
+      hence "s \<in> ?X" using hC_sub_X by (by100 blast)
+      thus "id s \<in> ?X" by (by100 simp)
+    next
+      fix V assume "V \<in> ?TX"
+      hence "\<exists>U \<in> top1_S2_topology. V = ?X \<inter> U" unfolding subspace_topology_def by (by100 blast)
+      then obtain U where "U \<in> top1_S2_topology" "V = ?X \<inter> U" by (by100 blast)
+      have "{s \<in> C. id s \<in> V} = C \<inter> V" by auto
+      also have "\<dots> = C \<inter> (?X \<inter> U)" using \<open>V = ?X \<inter> U\<close> by (by100 simp)
+      also have "\<dots> = C \<inter> U" using hC_sub_X by (by100 blast)
+      also have "\<dots> = {s \<in> C. id s \<in> U}" by auto
+      finally have "{s \<in> C. id s \<in> V} = {s \<in> C. id s \<in> U}" .
+      moreover have "{s \<in> C. id s \<in> U} \<in> ?TC"
+        using hid_S2 \<open>U \<in> top1_S2_topology\<close> unfolding top1_continuous_map_on_def by (by100 blast)
+      ultimately show "{s \<in> C. id s \<in> V} \<in> ?TC" by (by100 simp)
+    qed
+  qed
   have hj_hom_x: "top1_group_hom_on
       (top1_fundamental_group_carrier C ?TC x) (top1_fundamental_group_mul C ?TC x)
       (top1_fundamental_group_carrier ?X ?TX x) (top1_fundamental_group_mul ?X ?TX x) ?j_star_x"
@@ -5425,9 +5446,9 @@ proof -
           (top1_fundamental_group_mul C ?TC x) (top1_fundamental_group_id C ?TC x)
           (top1_fundamental_group_invg C ?TC x)"
         by (rule top1_fundamental_group_is_group[OF hTC]) (use hx_C in \<open>by100 blast\<close>)
-      thus "top1_fundamental_group_mul C ?TC x a b \<in> top1_fundamental_group_carrier C ?TC x"
-        using \<open>a \<in> _\<close> \<open>b \<in> _\<close>
-        sorry \<comment> \<open>Group closure from top1\_is\_group\_on.\<close>
+      show "top1_fundamental_group_mul C ?TC x a b \<in> top1_fundamental_group_carrier C ?TC x"
+        using \<open>a \<in> _\<close> \<open>b \<in> _\<close> \<open>top1_is_group_on _ _ _ _\<close>
+        unfolding top1_is_group_on_def by auto
     qed
     show ?thesis by (rule surj_hom_infinite_cyclic_inj[OF hC_pi1_Z_x hX_pi1_Z_x hj_hom_x hj_surj_x hGX_closed_x])
   qed
