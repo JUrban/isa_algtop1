@@ -4,7 +4,7 @@
 #
 # Files: i/Top1_Ch2.thy,i/Top1_Ch3.thy,i/Top1_Ch4.thy,i/Top1_Ch5_8.thy,i/Top1_Ch9_13.thy,h/AlgTopHelpers.thy,b0/AlgTop_JCT_Base0.thy,b/AlgTop_JCT_Base.thy,a0/AlgTop0.thy,ac/AlgTopCached.thy,AlgTop.thy,fi/AlgIsoFixed.thy
 #
-# Total entries: 1844
+# Total entries: 1845
 # Duplicate names: 13
 
 ## definitions (329)
@@ -356,7 +356,7 @@ top1_urysohn_U                                 i/Top1_Ch4.thy                   
 
 top1_I01                                       i/Top1_Ch5_8.thy                     line 25035
 
-## lemmas (1212)
+## lemmas (1213)
 
 abelianization_concrete                        ac/AlgTopCached.thy                  line 9518
 abs_diff_le_of_bounds                          i/Top1_Ch4.thy                       line 12764
@@ -569,6 +569,7 @@ finite_union_empty_interior                    i/Top1_Ch5_8.thy                 
 finite_union_finite_dim                        i/Top1_Ch5_8.thy                     line 27408
 finite_union_locally_finite                    i/Top1_Ch5_8.thy                     line 2890
 first_countable_closure_imp_seq                i/Top1_Ch4.thy                       line 1580
+first_hit_sub_arc                              fi/AlgIsoFixed.thy                   line 3224
 first_isomorphism_theorem                      ac/AlgTopCached.thy                  line 9307
 first_isomorphism_theorem_forward              ac/AlgTopCached.thy                  line 9572
 flexible_arc_decomposition                     a0/AlgTop0.thy                       line 7522
@@ -710,7 +711,7 @@ is_topology_on_strict_Pow                      i/Top1_Ch2.thy                   
 I_top_sub_closed_interval_top                  ac/AlgTopCached.thy                  line 104
 J_component_sub_theta_forces_eq                AlgTop.thy                           line 2335
 K4_final_contradiction                         AlgTop.thy                           line 2251
-K4_from_SCC                                    fi/AlgIsoFixed.thy                   line 3222
+K4_from_SCC                                    fi/AlgIsoFixed.thy                   line 3239
 K4_nonadjacent_edges_different_components      AlgTop.thy                           line 2367
 kernel_is_normal_subgroup                      ac/AlgTopCached.thy                  line 7720
 lebesgue_number_lemma                          i/Top1_Ch5_8.thy                     line 14062
@@ -1765,7 +1766,7 @@ Theorem_63_5_two_closed_connected              a0/AlgTop0.thy                   
 Theorem_64_2_K33_not_planar                    AlgTop.thy                           line 1793
 Theorem_64_4_K5_not_planar                     AlgTop.thy                           line 2129
 Theorem_65_2                                   AlgTop.thy                           line 6189
-Theorem_65_2_fixed                             fi/AlgIsoFixed.thy                   line 3585
+Theorem_65_2_fixed                             fi/AlgIsoFixed.thy                   line 3629
 Theorem_67_4_direct_sum_exists                 ac/AlgTopCached.thy                  line 7097
 Theorem_67_6_direct_sum_unique                 ac/AlgTopCached.thy                  line 7404
 Theorem_67_8_rank_unique                       AlgTop.thy                           line 6292
