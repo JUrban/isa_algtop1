@@ -2936,9 +2936,20 @@ proof -
   qed
   \<comment> \<open>Get crossing points: a4 \<in> arc\_f \<inter> (C2 - {a1,a3}), a2 \<in> arc\_g \<inter> (C1 - {a1,a3}).\<close>
   obtain a4 where ha4: "a4 \<in> arc_f \<inter> C2" "a4 \<noteq> a1" "a4 \<noteq> a3"
-    sorry \<comment> \<open>arc\_f \<inter> C2 \<noteq> {}, and p,q are endpoints of arc\_f not in C \<supseteq> C2, so crossing is interior.\<close>
+  proof -
+    from hf_meets_C2 obtain x where hx: "x \<in> arc_f \<inter> C2" by (by100 blast)
+    \<comment> \<open>x \<in> arc\_f \<subseteq> S2-C1. So x \<notin> C1. Since a1,a3 \<in> C1\<inter>C2 \<subseteq> C1: x \<noteq> a1 and x \<noteq> a3.\<close>
+    have "x \<notin> C1" using hx harc_f(2) by (by100 blast)
+    hence "x \<noteq> a1" "x \<noteq> a3" using hC12(2) by (by100 blast)+
+    thus ?thesis using hx that by (by100 blast)
+  qed
   obtain a2 where ha2: "a2 \<in> arc_g \<inter> C1" "a2 \<noteq> a1" "a2 \<noteq> a3"
-    sorry \<comment> \<open>Same for arc\_g and C1.\<close>
+  proof -
+    from hg_meets_C1 obtain x where hx: "x \<in> arc_g \<inter> C1" by (by100 blast)
+    have "x \<notin> C2" using hx harc_g(2) by (by100 blast)
+    hence "x \<noteq> a1" "x \<noteq> a3" using hC12(2) by (by100 blast)+
+    thus ?thesis using hx that by (by100 blast)
+  qed
   \<comment> \<open>a4 is interior to C2 (not an endpoint of C2). Split C2 at a4.\<close>
   have ha4_C2: "a4 \<in> C2" using ha4(1) by (by100 blast)
   have hC2_ep: "top1_arc_endpoints_on C2 (subspace_topology top1_S2 top1_S2_topology C2) = {a1, a3}"
