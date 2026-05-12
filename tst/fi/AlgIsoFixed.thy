@@ -1859,7 +1859,7 @@ proof -
       have ht0_ep_A1: "h' t0 \<in> top1_arc_endpoints_on ?A1 (subspace_topology top1_S2 top1_S2_topology ?A1)"
         using hA1_ep by (by100 blast)
       have hB2_ep: "top1_arc_endpoints_on B2 (subspace_topology top1_S2 top1_S2_topology B2) = {h' t0, c}"
-        sorry \<comment> \<open>From arc\_split\_endpoints.\<close>
+        sorry \<comment> \<open>arc\_split\_endpoints[OF hS2 hS2\_haus hB\_sub hB\_arc hBs(1-9)] — needs OF debugging.\<close>
       have ht0_ep_B2: "h' t0 \<in> top1_arc_endpoints_on B2 (subspace_topology top1_S2 top1_S2_topology B2)"
         using hB2_ep by (by100 blast)
       have hD: "top1_is_arc_on (?A1 \<union> B2) (subspace_topology top1_S2 top1_S2_topology (?A1 \<union> B2))"
