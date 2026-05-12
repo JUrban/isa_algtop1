@@ -3400,7 +3400,7 @@ proof -
     qed
     \<comment> \<open>Handle endpoint orientation: either hf(0)=p or hf(0)=q.\<close>
     from hhf_ep hp_ne_q have "(hf 0 = p \<and> hf 1 = q) \<or> (hf 0 = q \<and> hf 1 = p)"
-      by (by100 fast)
+      by auto
     hence "\<exists>f. top1_is_path_on (top1_S2 - C)
         (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) p q f"
     proof
@@ -3465,7 +3465,7 @@ proof -
       ultimately show "{t \<in> I_set. hg t \<in> V} \<in> I_top" by (by100 simp)
     qed
     from hhg_ep hp_ne_q have "(hg 0 = p \<and> hg 1 = q) \<or> (hg 0 = q \<and> hg 1 = p)"
-      by (by100 fast)
+      by auto
     hence "\<exists>f. top1_is_path_on (top1_S2 - C)
         (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) p q f"
     proof
