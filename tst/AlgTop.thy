@@ -1489,7 +1489,267 @@ proof -
            The Q-side IS either Y or Z (not Y\<union>Z, since it's connected and Y\<inter>Z={}).
            By pigeonhole: 2 of 3 SCCs have Q-side = same theta component.
            Then closure gives SCC1 = SCC2. Contradiction.\<close>
-        show False sorry
+        \<comment> \<open>Helper: connected \<subseteq> Y\<union>Z \<Rightarrow> \<subseteq> Y or \<subseteq> Z.\<close>
+        have hYop: "Y \<in> top1_S2_topology" using hYZ(5) hU(2) hV(2) hW(2) by (by100 blast)
+        have hZop: "Z \<in> top1_S2_topology" using hYZ(6) hU(2) hV(2) hW(2) by (by100 blast)
+        have csYZ: "\<And>S. S \<subseteq> Y\<union>Z \<Longrightarrow> S \<noteq> {} \<Longrightarrow>
+            top1_connected_on S (subspace_topology top1_S2 top1_S2_topology S) \<Longrightarrow> S \<subseteq> Y \<or> S \<subseteq> Z"
+          by (rule conn_sub[OF hYop hZop hYZ_disj])
+        \<comment> \<open>For each SCC, get Q-side \<subseteq> Y or Z. Approach: case-split on same-side,
+           show other side \<subseteq> Y\<union>Z (everything except X and arc\_int is in Y\<union>Z),
+           then apply csYZ.\<close>
+        \<comment> \<open>Decomp: S2-(A\<union>B) \<subseteq> X\<union>Y\<union>Z\<union>(C-{a,b}).\<close>
+        have dAB: "top1_S2-(A\<union>B) \<subseteq> X\<union>Y\<union>Z\<union>(C-{a,b})"
+        proof
+          fix x assume "x \<in> top1_S2-(A\<union>B)"
+          hence "x \<in> top1_S2" "x \<notin> A" "x \<notin> B" by (by100 blast)+
+          thus "x \<in> X\<union>Y\<union>Z\<union>(C-{a,b})"
+            using hUVW(4) hXYZ_eq hAC hBC by (cases "x \<in> C") (by100 blast)+
+        qed
+        have dBC: "top1_S2-(B\<union>C) \<subseteq> X\<union>Y\<union>Z\<union>(A-{a,b})"
+        proof
+          fix x assume "x \<in> top1_S2-(B\<union>C)"
+          hence "x \<in> top1_S2" "x \<notin> B" "x \<notin> C" by (by100 blast)+
+          thus "x \<in> X\<union>Y\<union>Z\<union>(A-{a,b})"
+            using hUVW(4) hXYZ_eq hAB hAC by (cases "x \<in> A") (by100 blast)+
+        qed
+        have dAC: "top1_S2-(A\<union>C) \<subseteq> X\<union>Y\<union>Z\<union>(B-{a,b})"
+        proof
+          fix x assume "x \<in> top1_S2-(A\<union>C)"
+          hence "x \<in> top1_S2" "x \<notin> A" "x \<notin> C" by (by100 blast)+
+          thus "x \<in> X\<union>Y\<union>Z\<union>(B-{a,b})"
+            using hUVW(4) hXYZ_eq hAB hBC by (cases "x \<in> B") (by100 blast)+
+        qed
+        \<comment> \<open>For SCC A\<union>B: get Opp1 \<in> {P1,Q1} with Opp1 \<subseteq> Y or Z.\<close>
+        obtain Opp1 where hO1: "Opp1 \<in> {P1,Q1}" "Opp1 \<subseteq> Y \<or> Opp1 \<subseteq> Z"
+        proof -
+          from hXC_sameP1 consider
+            (a) "X \<subseteq> P1" "C-{a,b} \<subseteq> P1" | (b) "X \<subseteq> Q1" "C-{a,b} \<subseteq> Q1" by (by100 blast)
+          thus ?thesis
+          proof cases
+            case a
+            have "Q1 \<subseteq> Y\<union>Z" using hPQ1(4) dAB a hPQ1(3) by (by100 blast)
+            hence "Q1 \<subseteq> Y \<or> Q1 \<subseteq> Z" by (rule csYZ[OF _ hPQ1(2) hPQ1(6)])
+            thus ?thesis using that by (by100 blast)
+          next
+            case b
+            have "P1 \<subseteq> Y\<union>Z" using hPQ1(4) dAB b hPQ1(3) by (by100 blast)
+            hence "P1 \<subseteq> Y \<or> P1 \<subseteq> Z" by (rule csYZ[OF _ hPQ1(1) hPQ1(5)])
+            thus ?thesis using that by (by100 blast)
+          qed
+        qed
+        obtain Opp2 where hO2: "Opp2 \<in> {P2,Q2}" "Opp2 \<subseteq> Y \<or> Opp2 \<subseteq> Z"
+        proof -
+          from hXA_sameP2 consider
+            (a) "X \<subseteq> P2" "A-{a,b} \<subseteq> P2" | (b) "X \<subseteq> Q2" "A-{a,b} \<subseteq> Q2" by (by100 blast)
+          thus ?thesis
+          proof cases
+            case a
+            have "Q2 \<subseteq> Y\<union>Z" using hPQ2(4) dBC a hPQ2(3) by (by100 blast)
+            hence "Q2 \<subseteq> Y \<or> Q2 \<subseteq> Z" by (rule csYZ[OF _ hPQ2(2) hPQ2(6)])
+            thus ?thesis using that by (by100 blast)
+          next
+            case b
+            have "P2 \<subseteq> Y\<union>Z" using hPQ2(4) dBC b hPQ2(3) by (by100 blast)
+            hence "P2 \<subseteq> Y \<or> P2 \<subseteq> Z" by (rule csYZ[OF _ hPQ2(1) hPQ2(5)])
+            thus ?thesis using that by (by100 blast)
+          qed
+        qed
+        obtain Opp3 where hO3: "Opp3 \<in> {P3,Q3}" "Opp3 \<subseteq> Y \<or> Opp3 \<subseteq> Z"
+        proof -
+          from hXB_sameP3 consider
+            (a) "X \<subseteq> P3" "B-{a,b} \<subseteq> P3" | (b) "X \<subseteq> Q3" "B-{a,b} \<subseteq> Q3" by (by100 blast)
+          thus ?thesis
+          proof cases
+            case a
+            have "Q3 \<subseteq> Y\<union>Z" using hPQ3(4) dAC a hPQ3(3) by (by100 blast)
+            hence "Q3 \<subseteq> Y \<or> Q3 \<subseteq> Z" by (rule csYZ[OF _ hPQ3(2) hPQ3(6)])
+            thus ?thesis using that by (by100 blast)
+          next
+            case b
+            have "P3 \<subseteq> Y\<union>Z" using hPQ3(4) dAC b hPQ3(3) by (by100 blast)
+            hence "P3 \<subseteq> Y \<or> P3 \<subseteq> Z" by (rule csYZ[OF _ hPQ3(1) hPQ3(5)])
+            thus ?thesis using that by (by100 blast)
+          qed
+        qed
+        \<comment> \<open>Opp \<in> {P,Q}, Opp \<subseteq> Y, Y \<subseteq> P or Q, P\<inter>Q={} \<Rightarrow> Opp = Y.\<close>
+        \<comment> \<open>Helper: O \<in> {P,Q}, O \<subseteq> T, T \<subseteq> P or Q, P\<inter>Q={}, T\<noteq>{} \<Rightarrow> O = T.\<close>
+        \<comment> \<open>Opp \<in> {P,Q}, Opp \<subseteq> T, T \<subseteq> P or Q, P\<inter>Q={}, T\<noteq>{} \<Rightarrow> T \<subseteq> Opp (hence Opp = T).\<close>
+        have o1Y: "Opp1 \<subseteq> Y \<Longrightarrow> Opp1 = Y"
+        proof -
+          assume h: "Opp1 \<subseteq> Y"
+          from hO1(1) consider "Opp1 = P1" | "Opp1 = Q1" by (by100 blast)
+          thus "Opp1 = Y" proof cases
+            assume hOP: "Opp1 = P1" from hY_PQ1 show ?thesis
+            proof assume "Y \<subseteq> P1" thus ?thesis using h hOP by (by100 blast)
+            next assume "Y \<subseteq> Q1"
+              hence "P1 \<subseteq> Q1" using h hOP by (by100 blast)
+              hence "P1 = {}" using hPQ1(3) by (by100 blast)
+              thus ?thesis using hOP h hY_ne by (by100 blast)
+            qed
+          next
+            assume hOQ: "Opp1 = Q1" from hY_PQ1 show ?thesis
+            proof assume "Y \<subseteq> Q1" thus ?thesis using h hOQ by (by100 blast)
+            next assume "Y \<subseteq> P1"
+              hence "Q1 \<subseteq> P1" using h hOQ by (by100 blast)
+              hence "Q1 = {}" using hPQ1(3) by (by100 blast)
+              thus ?thesis using hOQ h hY_ne by (by100 blast)
+            qed
+          qed
+        qed
+        have o1Z: "Opp1 \<subseteq> Z \<Longrightarrow> Opp1 = Z"
+        proof -
+          assume h: "Opp1 \<subseteq> Z"
+          from hO1(1) consider "Opp1 = P1" | "Opp1 = Q1" by (by100 blast)
+          thus "Opp1 = Z" proof cases
+            assume "Opp1 = P1" from hZ_PQ1 show ?thesis
+            proof assume "Z \<subseteq> P1" thus ?thesis using h \<open>Opp1=P1\<close> by (by100 blast)
+            next assume "Z \<subseteq> Q1" thus ?thesis using h hZ_ne hPQ1(3) \<open>Opp1=P1\<close> by (by100 blast)
+            qed
+          next
+            assume "Opp1 = Q1" from hZ_PQ1 show ?thesis
+            proof assume "Z \<subseteq> Q1" thus ?thesis using h \<open>Opp1=Q1\<close> by (by100 blast)
+            next assume "Z \<subseteq> P1" thus ?thesis using h hZ_ne hPQ1(3) \<open>Opp1=Q1\<close> by (by100 blast)
+            qed
+          qed
+        qed
+        have o2Y: "Opp2 \<subseteq> Y \<Longrightarrow> Opp2 = Y"
+        proof -
+          assume h: "Opp2 \<subseteq> Y"
+          from hO2(1) consider "Opp2=P2"|"Opp2=Q2" by (by100 blast)
+          thus ?thesis proof cases
+            assume "Opp2=P2" from hY_PQ2 show ?thesis
+            proof assume "Y\<subseteq>P2" thus ?thesis using h \<open>Opp2=P2\<close> by (by100 blast)
+            next assume "Y\<subseteq>Q2" thus ?thesis using h hY_ne hPQ2(3) \<open>Opp2=P2\<close> by (by100 blast) qed
+          next
+            assume "Opp2=Q2" from hY_PQ2 show ?thesis
+            proof assume "Y\<subseteq>Q2" thus ?thesis using h \<open>Opp2=Q2\<close> by (by100 blast)
+            next assume "Y\<subseteq>P2" thus ?thesis using h hY_ne hPQ2(3) \<open>Opp2=Q2\<close> by (by100 blast) qed
+          qed
+        qed
+        have o2Z: "Opp2 \<subseteq> Z \<Longrightarrow> Opp2 = Z"
+        proof -
+          assume h: "Opp2 \<subseteq> Z"
+          from hO2(1) consider "Opp2=P2"|"Opp2=Q2" by (by100 blast)
+          thus ?thesis proof cases
+            assume "Opp2=P2" from hZ_PQ2 show ?thesis
+            proof assume "Z\<subseteq>P2" thus ?thesis using h \<open>Opp2=P2\<close> by (by100 blast)
+            next assume "Z\<subseteq>Q2" thus ?thesis using h hZ_ne hPQ2(3) \<open>Opp2=P2\<close> by (by100 blast) qed
+          next
+            assume "Opp2=Q2" from hZ_PQ2 show ?thesis
+            proof assume "Z\<subseteq>Q2" thus ?thesis using h \<open>Opp2=Q2\<close> by (by100 blast)
+            next assume "Z\<subseteq>P2" thus ?thesis using h hZ_ne hPQ2(3) \<open>Opp2=Q2\<close> by (by100 blast) qed
+          qed
+        qed
+        have o3Y: "Opp3 \<subseteq> Y \<Longrightarrow> Opp3 = Y"
+        proof -
+          assume h: "Opp3 \<subseteq> Y"
+          from hO3(1) consider "Opp3=P3"|"Opp3=Q3" by (by100 blast)
+          thus ?thesis proof cases
+            assume "Opp3=P3" from hY_PQ3 show ?thesis
+            proof assume "Y\<subseteq>P3" thus ?thesis using h \<open>Opp3=P3\<close> by (by100 blast)
+            next assume "Y\<subseteq>Q3" thus ?thesis using h hY_ne hPQ3(3) \<open>Opp3=P3\<close> by (by100 blast) qed
+          next
+            assume "Opp3=Q3" from hY_PQ3 show ?thesis
+            proof assume "Y\<subseteq>Q3" thus ?thesis using h \<open>Opp3=Q3\<close> by (by100 blast)
+            next assume "Y\<subseteq>P3" thus ?thesis using h hY_ne hPQ3(3) \<open>Opp3=Q3\<close> by (by100 blast) qed
+          qed
+        qed
+        have o3Z: "Opp3 \<subseteq> Z \<Longrightarrow> Opp3 = Z"
+        proof -
+          assume h: "Opp3 \<subseteq> Z"
+          from hO3(1) consider "Opp3=P3"|"Opp3=Q3" by (by100 blast)
+          thus ?thesis proof cases
+            assume "Opp3=P3" from hZ_PQ3 show ?thesis
+            proof assume "Z\<subseteq>P3" thus ?thesis using h \<open>Opp3=P3\<close> by (by100 blast)
+            next assume "Z\<subseteq>Q3" thus ?thesis using h hZ_ne hPQ3(3) \<open>Opp3=P3\<close> by (by100 blast) qed
+          next
+            assume "Opp3=Q3" from hZ_PQ3 show ?thesis
+            proof assume "Z\<subseteq>Q3" thus ?thesis using h \<open>Opp3=Q3\<close> by (by100 blast)
+            next assume "Z\<subseteq>P3" thus ?thesis using h hZ_ne hPQ3(3) \<open>Opp3=Q3\<close> by (by100 blast) qed
+          qed
+        qed
+        \<comment> \<open>Closure of each Opp.\<close>
+        have one: "Opp1 \<noteq> {}" using hO1(2) o1Y o1Z hY_ne hZ_ne by (by100 blast)
+        have cl1: "closure_on top1_S2 top1_S2_topology Opp1 = Opp1 \<union> (A\<union>B)"
+        proof -
+          obtain Oth where h: "Opp1 \<inter> Oth = {}" "Opp1 \<union> Oth = top1_S2-(A\<union>B)"
+              "Oth \<in> top1_S2_topology" "Opp1 \<in> top1_S2_topology" "Oth \<noteq> {}"
+              "top1_connected_on Opp1 (subspace_topology top1_S2 top1_S2_topology Opp1)"
+              "top1_connected_on Oth (subspace_topology top1_S2 top1_S2_topology Oth)"
+            using hO1(1) hPQ1 hPQ1_open one by (by100 blast)
+          show ?thesis by (rule closure_eq[OF hAB_scc h(4,3) one h(5,1,2,6,7)])
+        qed
+        have two: "Opp2 \<noteq> {}" using hO2(2) o2Y o2Z hY_ne hZ_ne by (by100 blast)
+        have cl2: "closure_on top1_S2 top1_S2_topology Opp2 = Opp2 \<union> (B\<union>C)"
+        proof -
+          obtain Oth where h: "Opp2 \<inter> Oth = {}" "Opp2 \<union> Oth = top1_S2-(B\<union>C)"
+              "Oth \<in> top1_S2_topology" "Opp2 \<in> top1_S2_topology" "Oth \<noteq> {}"
+              "top1_connected_on Opp2 (subspace_topology top1_S2 top1_S2_topology Opp2)"
+              "top1_connected_on Oth (subspace_topology top1_S2 top1_S2_topology Oth)"
+            using hO2(1) hPQ2 hPQ2_open two by (by100 blast)
+          show ?thesis by (rule closure_eq[OF hBC_scc h(4,3) two h(5,1,2,6,7)])
+        qed
+        have three: "Opp3 \<noteq> {}" using hO3(2) o3Y o3Z hY_ne hZ_ne by (by100 blast)
+        have cl3: "closure_on top1_S2 top1_S2_topology Opp3 = Opp3 \<union> (A\<union>C)"
+        proof -
+          obtain Oth where h: "Opp3 \<inter> Oth = {}" "Opp3 \<union> Oth = top1_S2-(A\<union>C)"
+              "Oth \<in> top1_S2_topology" "Opp3 \<in> top1_S2_topology" "Oth \<noteq> {}"
+              "top1_connected_on Opp3 (subspace_topology top1_S2 top1_S2_topology Opp3)"
+              "top1_connected_on Oth (subspace_topology top1_S2 top1_S2_topology Oth)"
+            using hO3(1) hPQ3 hPQ3_open three by (by100 blast)
+          show ?thesis by (rule closure_eq[OF hAC_scc h(4,3) three h(5,1,2,6,7)])
+        qed
+        \<comment> \<open>Pigeonhole: Opp1,Opp2,Opp3 each = Y or Z. 3 from {Y,Z}: 2 match.\<close>
+        have darcs: "(Y\<union>Z) \<inter> (A\<union>B\<union>C) = {}" using hY_sub hZ_sub by (by100 blast)
+        from hO1(2) show False
+        proof (elim disjE)
+          assume "Opp1 \<subseteq> Y" hence e1: "Opp1 = Y" by (rule o1Y)
+          from hO2(2) show False
+          proof (elim disjE)
+            assume "Opp2 \<subseteq> Y" hence "Opp2 = Y" by (rule o2Y)
+            hence "Y\<union>(A\<union>B) = Y\<union>(B\<union>C)" using cl1 cl2 e1 by (by100 simp)
+            hence "A\<union>B = B\<union>C" using darcs by (by100 blast)
+            thus False using hSCCs_ne(1) by (by100 blast)
+          next
+            assume "Opp2 \<subseteq> Z" hence e2: "Opp2 = Z" by (rule o2Z)
+            from hO3(2) show False
+            proof (elim disjE)
+              assume "Opp3 \<subseteq> Y" hence "Opp3 = Y" by (rule o3Y)
+              hence "Y\<union>(A\<union>B) = Y\<union>(A\<union>C)" using cl1 cl3 e1 by (by100 simp)
+              hence "A\<union>B = A\<union>C" using darcs by (by100 blast)
+              thus False using hSCCs_ne(3) by (by100 blast)
+            next
+              assume "Opp3 \<subseteq> Z" hence "Opp3 = Z" by (rule o3Z)
+              hence "Z\<union>(B\<union>C) = Z\<union>(A\<union>C)" using cl2 cl3 e2 by (by100 simp)
+              hence "B\<union>C = A\<union>C" using darcs by (by100 blast)
+              thus False using hSCCs_ne(2) by (by100 blast)
+            qed
+          qed
+        next
+          assume "Opp1 \<subseteq> Z" hence e1: "Opp1 = Z" by (rule o1Z)
+          from hO2(2) show False
+          proof (elim disjE)
+            assume "Opp2 \<subseteq> Z" hence "Opp2 = Z" by (rule o2Z)
+            hence "Z\<union>(A\<union>B) = Z\<union>(B\<union>C)" using cl1 cl2 e1 by (by100 simp)
+            hence "A\<union>B = B\<union>C" using darcs by (by100 blast)
+            thus False using hSCCs_ne(1) by (by100 blast)
+          next
+            assume "Opp2 \<subseteq> Y" hence e2: "Opp2 = Y" by (rule o2Y)
+            from hO3(2) show False
+            proof (elim disjE)
+              assume "Opp3 \<subseteq> Z" hence "Opp3 = Z" by (rule o3Z)
+              hence "Z\<union>(A\<union>B) = Z\<union>(A\<union>C)" using cl1 cl3 e1 by (by100 simp)
+              hence "A\<union>B = A\<union>C" using darcs by (by100 blast)
+              thus False using hSCCs_ne(3) by (by100 blast)
+            next
+              assume "Opp3 \<subseteq> Y" hence "Opp3 = Y" by (rule o3Y)
+              hence "Y\<union>(B\<union>C) = Y\<union>(A\<union>C)" using cl2 cl3 e2 by (by100 simp)
+              hence "B\<union>C = A\<union>C" using darcs by (by100 blast)
+              thus False using hSCCs_ne(2) by (by100 blast)
+            qed
+          qed
+        qed
       qed
     qed
   qed
