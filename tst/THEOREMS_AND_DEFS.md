@@ -710,7 +710,7 @@ is_topology_on_strict_Pow                      i/Top1_Ch2.thy                   
 I_top_sub_closed_interval_top                  ac/AlgTopCached.thy                  line 104
 J_component_sub_theta_forces_eq                AlgTop.thy                           line 2306
 K4_final_contradiction                         AlgTop.thy                           line 2222
-K4_from_SCC                                    fi/AlgIsoFixed.thy                   line 2785
+K4_from_SCC                                    fi/AlgIsoFixed.thy                   line 2842
 K4_nonadjacent_edges_different_components      AlgTop.thy                           line 2338
 kernel_is_normal_subgroup                      ac/AlgTopCached.thy                  line 7720
 lebesgue_number_lemma                          i/Top1_Ch5_8.thy                     line 14062
@@ -1016,7 +1016,7 @@ S2_minus_two_points_not_simply_connected       b/AlgTop_JCT_Base.thy            
 S2_nonsep_path_exists                          a0/AlgTop0.thy                       line 4670
 S2_open_path_connected_arc_connected           fi/AlgIsoFixed.thy                   line 1893
 S2_two_component_open                          ac/AlgTopCached.thy                  line 52121
-scc_decomp_arc_endpoints                       fi/AlgIsoFixed.thy                   line 2724
+scc_decomp_arc_endpoints                       fi/AlgIsoFixed.thy                   line 2781
 scc_minus_point_connected                      fi/AlgIsoFixed.thy                   line 2636
 SCC_pi1_iso_Z                                  AlgTop.thy                           line 2109
 second_countable_countable_subcover_of_closed  i/Top1_Ch4.thy                       line 2160
@@ -1764,7 +1764,7 @@ Theorem_63_5_two_closed_connected              a0/AlgTop0.thy                   
 Theorem_64_2_K33_not_planar                    AlgTop.thy                           line 1764
 Theorem_64_4_K5_not_planar                     AlgTop.thy                           line 2100
 Theorem_65_2                                   AlgTop.thy                           line 6160
-Theorem_65_2_fixed                             fi/AlgIsoFixed.thy                   line 3337
+Theorem_65_2_fixed                             fi/AlgIsoFixed.thy                   line 3394
 Theorem_67_4_direct_sum_exists                 ac/AlgTopCached.thy                  line 7097
 Theorem_67_6_direct_sum_unique                 ac/AlgTopCached.thy                  line 7404
 Theorem_67_8_rank_unique                       AlgTop.thy                           line 6263
