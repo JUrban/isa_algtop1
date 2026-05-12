@@ -2048,7 +2048,12 @@ proof -
     have hV_in_TSP: "V \<in> ?TSP"
       using hh_cont hSq_TR2 unfolding V_def top1_continuous_map_on_def by (by100 blast)
     have hV_open: "V \<in> top1_S2_topology"
-      sorry \<comment> \<open>V open in SP (preimage of open). SP open in S2. Hence V open in S2.\<close>
+    proof -
+      \<comment> \<open>V \<in> TSP, so V = SP \<inter> W for some W \<in> S2\_topology. Since SP is open, V = SP \<inter> W \<in> S2\_topology.\<close>
+      from hV_in_TSP obtain W0 where hW0: "W0 \<in> top1_S2_topology" and hV_eq: "V = ?SP \<inter> W0"
+        unfolding subspace_topology_def V_def by (by100 blast)
+      show ?thesis using topology_inter_open[OF hTopS2 hSP_open hW0] hV_eq by (by100 simp)
+    qed
     have hx_V: "x \<in> V"
       unfolding V_def Sq_def using hx_SP heps_pos by (by100 simp)
     have hV_sub_U: "V \<subseteq> U"
