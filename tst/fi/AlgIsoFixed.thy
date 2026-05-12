@@ -4784,11 +4784,50 @@ lemma K4_cycle_is_SCC:
       and "top1_arc_endpoints_on e34 (subspace_topology top1_S2 top1_S2_topology e34) = {a3,a4}"
       and "top1_arc_endpoints_on e41 (subspace_topology top1_S2 top1_S2_topology e41) = {a4,a1}"
       and "e12 \<inter> e34 = {}" and "e23 \<inter> e41 = {}"
-      and "e12 \<inter> e23 = {a2}" and "e23 \<inter> e34 = {a3}"
+      and "e12 \<inter> e23 = {a2}" and "e23 \<inter> e34 = {a3}" and "e34 \<inter> e41 = {a4}"
       and "e41 \<inter> e12 = {a1}"
       and "C = e12 \<union> e23 \<union> e34 \<union> e41"
   shows "top1_simple_closed_curve_on top1_S2 top1_S2_topology C"
-  sorry \<comment> \<open>Arc concatenation proof (50 lines, already proved inline in Lemma\_65\_1\_fixed).\<close>
+proof -
+  have hS2_haus: "is_hausdorff_on top1_S2 top1_S2_topology" by (rule top1_S2_is_hausdorff)
+  have ha1_ne_a3: "a1 \<noteq> a3" using assms(2) by (auto simp: card_insert_if split: if_splits)
+  have ha2_e12: "a2 \<in> top1_arc_endpoints_on e12 (subspace_topology top1_S2 top1_S2_topology e12)"
+    using assms(11) by (by100 blast)
+  have ha2_e23: "a2 \<in> top1_arc_endpoints_on e23 (subspace_topology top1_S2 top1_S2_topology e23)"
+    using assms(12) by (by100 blast)
+  have hArc1: "top1_is_arc_on (e12 \<union> e23) (subspace_topology top1_S2 top1_S2_topology (e12 \<union> e23))"
+    by (rule arcs_concatenation_is_arc[OF assms(1) hS2_haus assms(7,3,8,4) assms(17) ha2_e12 ha2_e23])
+  have ha4_e34: "a4 \<in> top1_arc_endpoints_on e34 (subspace_topology top1_S2 top1_S2_topology e34)"
+    using assms(13) by (by100 blast)
+  have ha4_e41: "a4 \<in> top1_arc_endpoints_on e41 (subspace_topology top1_S2 top1_S2_topology e41)"
+    using assms(14) by (by100 blast)
+  have hArc2: "top1_is_arc_on (e34 \<union> e41) (subspace_topology top1_S2 top1_S2_topology (e34 \<union> e41))"
+    by (rule arcs_concatenation_is_arc[OF assms(1) hS2_haus assms(9,5,10,6) assms(19) ha4_e34 ha4_e41])
+  have ha1_ne_a2: "a1 \<noteq> a2" using assms(2) by (auto simp: card_insert_if split: if_splits)
+  have ha2_ne_a3: "a2 \<noteq> a3" using assms(2) by (auto simp: card_insert_if split: if_splits)
+  have ha3_ne_a4: "a3 \<noteq> a4" using assms(2) by (auto simp: card_insert_if split: if_splits)
+  have ha1_ne_a4: "a1 \<noteq> a4" using assms(2) by (auto simp: card_insert_if split: if_splits)
+  have hArc1_ep: "top1_arc_endpoints_on (e12 \<union> e23) (subspace_topology top1_S2 top1_S2_topology (e12 \<union> e23)) = {a1, a3}"
+    by (rule arc_concat_endpoints[OF assms(1) hS2_haus assms(7,3,8,4) assms(17) ha2_e12 ha2_e23
+        assms(11) assms(12) ha1_ne_a2 ha2_ne_a3])
+  have hArc2_ep: "top1_arc_endpoints_on (e34 \<union> e41) (subspace_topology top1_S2 top1_S2_topology (e34 \<union> e41)) = {a3, a1}"
+    by (rule arc_concat_endpoints[OF assms(1) hS2_haus assms(9,5,10,6) assms(19) ha4_e34 ha4_e41
+        assms(13) assms(14) ha3_ne_a4])
+       (use ha1_ne_a4 in \<open>by100 blast\<close>)
+  have hint: "(e12 \<union> e23) \<inter> (e34 \<union> e41) = {a1, a3}"
+  proof -
+    have "e12 \<inter> e34 = {}" by (rule assms(15))
+    moreover have "e12 \<inter> e41 = {a1}" using assms(20) by (by100 blast)
+    moreover have "e23 \<inter> e34 = {a3}" by (rule assms(18))
+    moreover have "e23 \<inter> e41 = {}" by (rule assms(16))
+    ultimately show ?thesis by (by100 blast)
+  qed
+  have "top1_simple_closed_curve_on top1_S2 top1_S2_topology ((e12 \<union> e23) \<union> (e34 \<union> e41))"
+    by (rule arcs_form_simple_closed_curve[OF assms(1) hS2_haus hArc1 _ hArc2 _ hint ha1_ne_a3 hArc1_ep])
+       (use assms(3,4,5,6) hArc2_ep in \<open>by100 blast\<close>)+
+  moreover have "(e12 \<union> e23) \<union> (e34 \<union> e41) = C" using assms(21) by (by100 blast)
+  ultimately show ?thesis by (by100 simp)
+qed
 
 theorem Theorem_58_7_fixed:
   assumes hTX: "is_topology_on X TX" and hTY: "is_topology_on Y TY"
@@ -5335,7 +5374,7 @@ proof -
     sorry \<comment> \<open>Same surjectivity proof as Lemma\_65\_1\_fixed (already proved in structure above).\<close>
   \<comment> \<open>Both groups infinite cyclic.\<close>
   have hC_scc: "top1_simple_closed_curve_on top1_S2 top1_S2_topology C"
-    by (rule K4_cycle_is_SCC[OF assms(1,2,4,5,6,7,10,11,12,13,16,17,18,19,22,23,24,25,27,39)])
+    by (rule K4_cycle_is_SCC[OF assms(1,2,4,5,6,7,10,11,12,13,16,17,18,19,22,23,24,25,26,27,39)])
   \<comment> \<open>\<pi>_1(C, x) infinite cyclic. C \<cong> S1, so \<pi>_1 \<cong> Z with generator.\<close>
   have hC_gen: "\<exists>gen_C. top1_is_loop_on C ?TC x gen_C \<and>
       (\<forall>f. top1_is_loop_on C ?TC x f \<longrightarrow>
@@ -5355,7 +5394,7 @@ proof -
         top1_Z_group top1_Z_mul"
     proof -
       have hC_scc_loc: "top1_simple_closed_curve_on top1_S2 top1_S2_topology C"
-        by (rule K4_cycle_is_SCC[OF assms(1,2,4,5,6,7,10,11,12,13,16,17,18,19,22,23,24,25,27,39)])
+        by (rule K4_cycle_is_SCC[OF assms(1,2,4,5,6,7,10,11,12,13,16,17,18,19,22,23,24,25,26,27,39)])
       show ?thesis by (rule SCC_pi1_iso_Z[OF assms(1) hC_scc_loc hx_C])
     qed
     have hX_pi1_Z_x: "top1_groups_isomorphic_on
