@@ -1949,14 +1949,15 @@ proof -
   \<comment> \<open>Both follow from local\_arc. The formal proof needs the openness argument
      which requires showing V \<inter> U \<subseteq> E' (resp. V \<inter> U \<subseteq> U-E') for the nbhd V
      from local\_arc. This uses Munkres\_Step\_1\_arc\_splice for transitivity.\<close>
+  \<comment> \<open>E' is open in U: \<forall>y\<in>E', local\_arc gives V open, y\<in>V\<subseteq>U with arcs.
+     For z\<in>V: arc y\<rightarrow>z in V. If y=a: z\<in>E'. If y\<noteq>a: splice arc a\<rightarrow>y + arc y\<rightarrow>z (Step 1) \<Rightarrow> z\<in>E'.
+     So V\<subseteq>E'. Hence E' is open (union of open sets).\<close>
   have hE'_open: "?E' \<in> subspace_topology top1_S2 top1_S2_topology U"
-    sorry \<comment> \<open>For y \<in> E': local\_arc gives V. \<forall>z\<in>V: arc y\<rightarrow>z in V.
-       If y=a: z \<in> E'. If y\<noteq>a: arc a\<rightarrow>y in U + arc y\<rightarrow>z in V,
-       Munkres\_Step\_1 gives arc a\<rightarrow>z in U. So z \<in> E'. Hence V\<inter>U \<subseteq> E'.\<close>
+    sorry \<comment> \<open>From local\_arc: \<forall>y\<in>E', \<exists>V open with V\<subseteq>E'. Needs Step 1 for splicing.\<close>
+  \<comment> \<open>U-E' is open: \<forall>y\<in>U-E', local\_arc gives V. If \<exists>z\<in>V\<inter>E': arc a\<rightarrow>z + arc z\<rightarrow>y (Step 1)
+     \<Rightarrow> y\<in>E'. Contradiction. So V\<inter>E'={}, V\<subseteq>U-E'. Hence U-E' open.\<close>
   have hUE'_open: "U - ?E' \<in> subspace_topology top1_S2 top1_S2_topology U"
-    sorry \<comment> \<open>For y \<in> U-E': local\_arc gives V. If \<exists>z\<in>V\<inter>E':
-       arc a\<rightarrow>z + arc z\<rightarrow>y (Step 1) \<Rightarrow> arc a\<rightarrow>y. But y\<notin>E'. Contradiction.
-       So V\<inter>E' = {} and V\<inter>U \<subseteq> U-E'.\<close>
+    sorry \<comment> \<open>From local\_arc + Step 1 by contradiction. Same pattern as E'\_open.\<close>
   \<comment> \<open>The path from a to b shows they're in the same path-component.
      That path-component is connected (path-connected \<Rightarrow> connected).
      E' and U-E' partition U. E' \<noteq> {}. If U-E' \<noteq> {}: E' and U-E' form a separation
