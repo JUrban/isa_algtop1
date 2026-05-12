@@ -3276,7 +3276,7 @@ proof -
     have hrev: "top1_homeomorphism_on I_set I_top I_set I_top (\<lambda>t. 1 - t)"
       by (rule unit_interval_reversal_homeomorphism)
     have "top1_homeomorphism_on I_set I_top A (subspace_topology top1_S2 top1_S2_topology A) (h \<circ> (\<lambda>t. 1 - t))"
-      sorry \<comment> \<open>Composition of homeomorphisms.\<close>
+      by (rule homeomorphism_compose[OF hrev hh])
     thus ?thesis unfolding h'_def using False by (by100 simp)
   qed
   have hh'_bij: "bij_betw h' I_set A"
@@ -3285,10 +3285,61 @@ proof -
   have hh'_img: "h' ` I_set = A" using hh'_bij unfolding bij_betw_def by (by100 blast)
   \<comment> \<open>Step 2: T = {t \<in> [0,1] | h'(t) \<in> D}. Closed, non-empty, compact.\<close>
   define T where "T = {t \<in> I_set. h' t \<in> D}"
-  have hT_ne: "T \<noteq> {}" sorry \<comment> \<open>A \<inter> D \<noteq> {}, h' surjective onto A.\<close>
+  have hT_ne: "T \<noteq> {}"
+  proof -
+    obtain x where "x \<in> A" "x \<in> D" using hAD by (by100 blast)
+    then obtain t where "t \<in> I_set" "h' t = x"
+      using hh'_img by (by100 auto)
+    hence "t \<in> T" using \<open>x \<in> D\<close> unfolding T_def by (by100 blast)
+    thus ?thesis by (by100 blast)
+  qed
   have hT_sub: "T \<subseteq> I_set" unfolding T_def by (by100 blast)
+  have hTopS2': "is_topology_on top1_S2 top1_S2_topology"
+    using hS2 unfolding is_topology_on_strict_def by (by100 blast)
+  have hTI: "is_topology_on I_set I_top" by (rule top1_unit_interval_topology_is_topology_on)
+  have hh'_cont_A: "top1_continuous_map_on I_set I_top A
+      (subspace_topology top1_S2 top1_S2_topology A) h'"
+    using hh'_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+  have hid_incl: "top1_continuous_map_on A (subspace_topology top1_S2 top1_S2_topology A)
+      top1_S2 top1_S2_topology id"
+    using Theorem_18_2[OF hTopS2' hTopS2' hTopS2'] hA_sub by (by100 blast)
+  have hh'_cont: "top1_continuous_map_on I_set I_top top1_S2 top1_S2_topology h'"
+  proof -
+    have "top1_continuous_map_on I_set I_top top1_S2 top1_S2_topology (id \<circ> h')"
+      by (rule top1_continuous_map_on_comp[OF hh'_cont_A hid_incl])
+    thus ?thesis by (by100 simp)
+  qed
+  have hopen_eq: "(top1_open_sets :: real set set) = order_topology_on_UNIV"
+  proof (rule set_eqI)
+    fix U :: "real set"
+    show "U \<in> top1_open_sets \<longleftrightarrow> U \<in> order_topology_on_UNIV"
+      unfolding top1_open_sets_def using order_topology_on_UNIV_eq_HOL_open by (by100 simp)
+  qed
+  have hI_compact: "top1_compact_on I_set I_top"
+  proof -
+    have hIeq: "I_set = top1_closed_interval 0 1"
+      unfolding top1_unit_interval_def top1_closed_interval_def by (by100 auto)
+    have hITeq: "I_top = top1_closed_interval_topology 0 1"
+      unfolding top1_unit_interval_topology_def top1_closed_interval_topology_def
+      using hopen_eq hIeq unfolding top1_unit_interval_def by (by100 simp)
+    show ?thesis using top1_closed_interval_compact[of "0::real" 1] hIeq hITeq by (by100 simp)
+  qed
   have hT_compact: "top1_compact_on T (subspace_topology UNIV (order_topology_on_UNIV :: real set set) T)"
-    sorry \<comment> \<open>T closed in [0,1] (preimage of closed D under continuous h'). [0,1] compact. Closed in compact = compact.\<close>
+  proof -
+    have hT_cl: "closedin_on I_set I_top T"
+      unfolding T_def
+      by (rule continuous_preimage_closedin[OF hTI hTopS2' hh'_cont hD_closed])
+    have hT_compact_I: "top1_compact_on T (subspace_topology I_set I_top T)"
+      by (rule Theorem_26_2[OF hI_compact hT_cl])
+    have hTsub: "T \<subseteq> I_set" unfolding T_def by (by100 blast)
+    have "subspace_topology I_set I_top T =
+        subspace_topology (UNIV::real set) top1_open_sets T"
+      using subspace_topology_trans[of T I_set] hTsub
+      unfolding top1_unit_interval_topology_def by (by100 simp)
+    also have "\<dots> = subspace_topology (UNIV::real set) order_topology_on_UNIV T"
+      using hopen_eq by (by100 simp)
+    finally show ?thesis using hT_compact_I by (by100 simp)
+  qed
   \<comment> \<open>Step 3: t0 = min T.\<close>
   obtain t0 where ht0: "t0 \<in> T" "\<forall>t \<in> T. t0 \<le> t"
     using top1_compact_on_order_topology_has_least[OF hT_ne hT_compact] by (by100 blast)
@@ -3310,10 +3361,90 @@ proof -
   have hp_Fp: "p \<in> Fp" unfolding Fp_def using hh'0 ht0_pos by auto
   have hd_Fp: "h' t0 \<in> Fp" unfolding Fp_def using ht0_pos by auto
   have hd_AD: "h' t0 \<in> A \<inter> D" using hFp_sub_A hd_Fp ht0_D by (by100 blast)
+  \<comment> \<open>Arc proof via affine rescaling: \<phi>(t) = h'(t \<cdot> t0).\<close>
+  have ht0_le1: "t0 \<le> 1" using ht0_I unfolding top1_unit_interval_def by (by100 simp)
+  have hS2_haus': "is_hausdorff_on top1_S2 top1_S2_topology" by (rule top1_S2_is_hausdorff)
+  define phi where "phi = (\<lambda>t. h' (t * t0))"
+  have hFp_sub_S2: "Fp \<subseteq> top1_S2" using hFp_sub_A hA_sub by (by100 blast)
+  have haffine: "top1_continuous_map_on I_set I_top I_set I_top (\<lambda>t. t * t0)"
+  proof -
+    have "top1_continuous_map_on I_set I_top I_set I_top (\<lambda>t. 0 + t * (t0 - 0))"
+      by (rule affine_map_continuous_I_to_I[of 0 t0]) (use ht0_pos ht0_le1 in \<open>by100 simp\<close>)+
+    thus ?thesis by (by100 simp)
+  qed
+  have hphi_cont: "top1_continuous_map_on I_set I_top top1_S2 top1_S2_topology phi"
+  proof -
+    have "top1_continuous_map_on I_set I_top top1_S2 top1_S2_topology (h' \<circ> (\<lambda>t. t * t0))"
+      by (rule top1_continuous_map_on_comp[OF haffine hh'_cont])
+    moreover have "(h' \<circ> (\<lambda>t. t * t0)) = phi" unfolding phi_def by (rule ext) (by100 simp)
+    ultimately show ?thesis by (by100 simp)
+  qed
+  have hphi_inj: "inj_on phi I_set"
+  proof (rule inj_onI)
+    fix s t assume hs: "s \<in> I_set" and ht: "t \<in> I_set" and heq: "phi s = phi t"
+    have hs01: "0 \<le> s" "s \<le> 1" using hs unfolding top1_unit_interval_def by (by100 simp)+
+    have ht01: "0 \<le> t" "t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 simp)+
+    have st0_I: "s * t0 \<in> I_set"
+    proof -
+      have "s * t0 \<le> 1 * 1" by (rule mult_mono) (use hs01 ht0_le1 ht0_pos in linarith)+
+      thus ?thesis unfolding top1_unit_interval_def using hs01(1) ht0_pos by (by100 simp)
+    qed
+    have tt0_I: "t * t0 \<in> I_set"
+    proof -
+      have "t * t0 \<le> 1 * 1" by (rule mult_mono) (use ht01 ht0_le1 ht0_pos in linarith)+
+      thus ?thesis unfolding top1_unit_interval_def using ht01(1) ht0_pos by (by100 simp)
+    qed
+    have "h' (s * t0) = h' (t * t0)" using heq unfolding phi_def by (by100 simp)
+    hence "s * t0 = t * t0"
+      by (metis inj_onD[OF hh'_inj] st0_I tt0_I)
+    thus "s = t" using ht0_pos by (by100 simp)
+  qed
+  have hphi_img: "phi ` I_set = Fp"
+  proof (intro set_eqI iffI)
+    fix x assume "x \<in> phi ` I_set"
+    then obtain t where "t \<in> I_set" "x = phi t" by (by100 blast)
+    have "0 \<le> t" "t \<le> 1" using \<open>t \<in> I_set\<close> unfolding top1_unit_interval_def by (by100 simp)+
+    have "t * t0 \<le> 1 * t0"
+      by (rule mult_right_mono) (use \<open>t\<le>1\<close> ht0_pos in \<open>by100 simp\<close>)+
+    hence "t * t0 \<le> t0" by (by100 simp)
+    moreover have "0 \<le> t * t0" using \<open>0\<le>t\<close> ht0_pos by (by100 simp)
+    ultimately show "x \<in> Fp" using \<open>x = phi t\<close> unfolding Fp_def phi_def by (by100 force)
+  next
+    fix x assume "x \<in> Fp"
+    then obtain s where hs: "0 \<le> s" "s \<le> t0" "x = h' s" unfolding Fp_def by auto
+    have "s / t0 \<in> I_set" using hs(1,2) ht0_pos
+      unfolding top1_unit_interval_def by (by100 simp)
+    moreover have "phi (s / t0) = h' s" using ht0_pos unfolding phi_def by (by100 simp)
+    ultimately show "x \<in> phi ` I_set" using hs(3) by (by100 force)
+  qed
   have hFp_arc: "top1_is_arc_on Fp (subspace_topology top1_S2 top1_S2_topology Fp)"
-    sorry \<comment> \<open>Fp = h'([0,t0]). h' restricted to [0,t0] is homeomorphism onto Fp.\<close>
+  proof -
+    have "top1_embedding_on I_set I_top top1_S2 top1_S2_topology phi"
+      by (rule top1_embedding_on_compact_inj[OF hTI hTopS2' hI_compact hS2_haus' hphi_cont hphi_inj])
+    hence "top1_homeomorphism_on I_set I_top (phi ` I_set) (subspace_topology top1_S2 top1_S2_topology (phi ` I_set)) phi"
+      unfolding top1_embedding_on_def by (by100 blast)
+    hence "top1_homeomorphism_on I_set I_top Fp (subspace_topology top1_S2 top1_S2_topology Fp) phi"
+      using hphi_img by (by100 simp)
+    moreover have "is_topology_on_strict Fp (subspace_topology top1_S2 top1_S2_topology Fp)"
+      by (rule subspace_topology_is_strict[OF hS2 hFp_sub_S2])
+    ultimately show ?thesis unfolding top1_is_arc_on_def by (by100 blast)
+  qed
   have hFp_ep: "top1_arc_endpoints_on Fp (subspace_topology top1_S2 top1_S2_topology Fp) = {p, h' t0}"
-    sorry \<comment> \<open>Endpoints of restricted arc = {h'(0), h'(t0)} = {p, h'(t0)}.\<close>
+  proof -
+    have hphi_homeo: "top1_homeomorphism_on I_set I_top Fp (subspace_topology top1_S2 top1_S2_topology Fp) phi"
+    proof -
+      have "top1_embedding_on I_set I_top top1_S2 top1_S2_topology phi"
+        by (rule top1_embedding_on_compact_inj[OF hTI hTopS2' hI_compact hS2_haus' hphi_cont hphi_inj])
+      hence "top1_homeomorphism_on I_set I_top (phi ` I_set) (subspace_topology top1_S2 top1_S2_topology (phi ` I_set)) phi"
+        unfolding top1_embedding_on_def by (by100 blast)
+      thus ?thesis using hphi_img by (by100 simp)
+    qed
+    have "top1_arc_endpoints_on Fp (subspace_topology top1_S2 top1_S2_topology Fp) = {phi 0, phi 1}"
+      by (rule arc_endpoints_are_boundary[OF hS2 hS2_haus' hFp_sub_S2 hFp_arc hphi_homeo])
+    moreover have "phi 0 = p" unfolding phi_def using hh'0 by (by100 simp)
+    moreover have "phi 1 = h' t0" unfolding phi_def by (by100 simp)
+    ultimately show ?thesis by (by100 simp)
+  qed
   \<comment> \<open>Step 6: Fp \<inter> D = {h'(t0)} (minimality of t0).\<close>
   have hFp_D: "Fp \<inter> D = {h' t0}"
   proof (rule set_eqI, rule iffI)
