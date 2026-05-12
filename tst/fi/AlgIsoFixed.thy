@@ -2340,7 +2340,96 @@ proof -
      U-E' open: same by contradiction. Both are standard equivalence-class arguments.\<close>
   \<comment> \<open>Key helper: the open cover property.\<close>
   have hE'_cover: "\<forall>y \<in> ?E'. \<exists>W \<in> top1_S2_topology. y \<in> W \<and> W \<subseteq> ?E'"
-    sorry \<comment> \<open>For y\<in>E': local\_arc gives V, for z\<in>V: arc y\<rightarrow>z + splice with arc a\<rightarrow>y (Step 1) \<Rightarrow> z\<in>E'.\<close>
+  proof
+    fix y assume hy_E: "y \<in> ?E'"
+    hence hy_U: "y \<in> U" by (by100 blast)
+    from local_arc[OF hy_U] obtain Vy where
+      hVy_all: "Vy \<in> top1_S2_topology \<and> y \<in> Vy \<and> Vy \<subseteq> U \<and>
+        (\<forall>p \<in> Vy. \<forall>q \<in> Vy. p \<noteq> q \<longrightarrow>
+          (\<exists>D. top1_is_arc_on D (subspace_topology top1_S2 top1_S2_topology D) \<and>
+               D \<subseteq> Vy \<and> top1_arc_endpoints_on D (subspace_topology top1_S2 top1_S2_topology D) = {p, q}))"
+      by auto
+    have hVy_open: "Vy \<in> top1_S2_topology" using hVy_all by auto
+    have hVy_y: "y \<in> Vy" using hVy_all by auto
+    have hVy_U: "Vy \<subseteq> U" using hVy_all by auto
+    have hVy_arcs: "\<And>p q. p \<in> Vy \<Longrightarrow> q \<in> Vy \<Longrightarrow> p \<noteq> q \<Longrightarrow>
+        \<exists>D. top1_is_arc_on D (subspace_topology top1_S2 top1_S2_topology D) \<and>
+             D \<subseteq> Vy \<and> top1_arc_endpoints_on D (subspace_topology top1_S2 top1_S2_topology D) = {p, q}"
+      using hVy_all by auto
+    have "Vy \<subseteq> ?E'"
+    proof
+      fix z assume hz_Vy: "z \<in> Vy"
+      have hz_U: "z \<in> U" using hz_Vy hVy_U by (by100 blast)
+      show "z \<in> ?E'"
+      proof (cases "z = a")
+        case True thus ?thesis using hz_U by (by100 blast)
+      next
+        case hz_ne_a: False
+        show ?thesis
+        proof (cases "y = z")
+          case True thus ?thesis using hy_E by (by100 simp)
+        next
+          case hy_ne_z: False
+          \<comment> \<open>Get arc D\_yz from y to z in Vy.\<close>
+          from hVy_arcs[OF hVy_y hz_Vy hy_ne_z] obtain Dyz where
+            hDyz: "top1_is_arc_on Dyz (subspace_topology top1_S2 top1_S2_topology Dyz)"
+              "Dyz \<subseteq> Vy"
+              "top1_arc_endpoints_on Dyz (subspace_topology top1_S2 top1_S2_topology Dyz) = {y, z}"
+            by (by100 blast)
+          have hDyz_U: "Dyz \<subseteq> U" using hDyz(2) hVy_U by (by100 blast)
+          have hDyz_S2: "Dyz \<subseteq> top1_S2" using hDyz_U assms(3) by (by100 blast)
+          show ?thesis
+          proof (cases "y = a")
+            case True
+            \<comment> \<open>y = a: arc Dyz has endpoints {a,z}, Dyz \<subseteq> U. So z \<in> E'.\<close>
+            thus ?thesis using hz_U hz_ne_a hDyz(1,3) hDyz_U True by (by100 blast)
+          next
+            case hy_ne_a: False
+            \<comment> \<open>y \<noteq> a: have arc a\<rightarrow>y in U (from y \<in> E') and arc y\<rightarrow>z in Vy \<subseteq> U.
+               Need to splice to get arc a\<rightarrow>z in U.\<close>
+            from hy_E hy_ne_a obtain Day where
+              hDay: "top1_is_arc_on Day (subspace_topology top1_S2 top1_S2_topology Day)"
+                "Day \<subseteq> U"
+                "top1_arc_endpoints_on Day (subspace_topology top1_S2 top1_S2_topology Day) = {a, y}"
+              by (by100 blast)
+            have hDay_S2: "Day \<subseteq> top1_S2" using hDay(2) assms(3) by (by100 blast)
+            \<comment> \<open>Splice arc a\<rightarrow>y (Day) with arc y\<rightarrow>z (Dyz) to get arc a\<rightarrow>z.
+               Munkres\_Step\_1 requires a \<notin> Dyz. If a \<in> Dyz: split Dyz at a, get sub-arc a\<rightarrow>z.\<close>
+            show ?thesis
+            proof (cases "a \<notin> Dyz")
+              case True
+              \<comment> \<open>a \<notin> Dyz: directly apply Munkres\_Step\_1\_arc\_splice.\<close>
+              have hab: "a \<noteq> y" using hy_ne_a by (by100 blast)
+              have hyz: "y \<noteq> z" using hy_ne_z by (by100 blast)
+              from Munkres_Step_1_arc_splice[OF assms(1) hDay(1) hDyz(1) hDay_S2 hDyz_S2
+                  hDay(3) hDyz(3) hab hyz True]
+              obtain Daz where
+                hDaz: "top1_is_arc_on Daz (subspace_topology top1_S2 top1_S2_topology Daz)"
+                  "Daz \<subseteq> Day \<union> Dyz" "a \<in> Daz" "z \<in> Daz"
+                  "top1_arc_endpoints_on Daz (subspace_topology top1_S2 top1_S2_topology Daz) = {a, z}"
+                by (by100 blast)
+              have "Daz \<subseteq> U" using hDaz(2) hDay(2) hDyz_U by (by100 blast)
+              thus ?thesis using hz_U hz_ne_a hDaz(1,5) \<open>Daz \<subseteq> U\<close> by (by100 blast)
+            next
+              case False
+              hence ha_Dyz: "a \<in> Dyz" by (by100 simp)
+              \<comment> \<open>a \<in> Dyz: a is an interior point. Split Dyz at a to get sub-arc containing z.\<close>
+              from arc_split_at_given_point[OF assms(1) hS2_haus hDyz_S2 hDyz(1)] ha_Dyz
+              obtain D1 D2 where hD12:
+                "Dyz = D1 \<union> D2"
+                "top1_is_arc_on D1 (subspace_topology top1_S2 top1_S2_topology D1)"
+                "top1_is_arc_on D2 (subspace_topology top1_S2 top1_S2_topology D2)"
+                "a \<in> D1" "a \<in> D2"
+                sorry \<comment> \<open>Need right form of arc\_split\_at\_given\_point output.\<close>
+              \<comment> \<open>One of D1, D2 has z as endpoint. That sub-arc goes a\<rightarrow>z in U.\<close>
+              show ?thesis sorry \<comment> \<open>Sub-arc of Dyz from a to z, endpoints {a,z}, D \<subseteq> U.\<close>
+            qed
+          qed
+        qed
+      qed
+    qed
+    thus "\<exists>W \<in> top1_S2_topology. y \<in> W \<and> W \<subseteq> ?E'" using hVy_open hVy_y by (by100 blast)
+  qed
   have hE'_sub_S2: "?E' \<subseteq> top1_S2" using assms(3) by (by100 blast)
   have hE'_open_S2: "?E' \<in> top1_S2_topology"
     by (rule top1_open_of_local_subsets[OF hTopS2 hE'_sub_S2 hE'_cover])
