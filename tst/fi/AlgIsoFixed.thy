@@ -2905,13 +2905,126 @@ proof -
   hence hW_disj: "W \<inter> (A2 - {p}) = {}" using hint by (by100 blast)
   \<comment> \<open>A1 closed in X (compact arc in Hausdorff).\<close>
   have hA1_closed: "closedin_on X TX A1"
-    sorry \<comment> \<open>Same compact\_in\_strict\_hausdorff proof as before.\<close>
-  \<comment> \<open>W closed in C-{p} (W closed in A1-{p}, A1 closed in X, transfer to subspace).\<close>
+  proof (rule compact_in_strict_hausdorff_closedin_on[OF hH hT hA1_sub])
+    obtain hh where hhh: "top1_homeomorphism_on I_set I_top A1 (subspace_topology X TX A1) hh"
+      using hA1 unfolding top1_is_arc_on_def by (by100 blast)
+    have hTA1: "is_topology_on A1 (subspace_topology X TX A1)"
+      by (rule subspace_topology_is_topology_on[OF is_topology_on_strict_imp[OF hT] hA1_sub])
+    have hIeq: "I_set = {0..1::real}" unfolding top1_unit_interval_def
+      by (auto simp: atLeastAtMost_def atLeast_def atMost_def)
+    have "compact I_set" unfolding hIeq by (rule compact_Icc)
+    hence "top1_compact_on I_set (subspace_topology UNIV top1_open_sets I_set)"
+      using top1_compact_on_subspace_UNIV_iff_compact[of I_set] by (by100 simp)
+    hence hI_compact: "top1_compact_on I_set I_top" unfolding top1_unit_interval_topology_def by (by100 simp)
+    have hcont: "top1_continuous_map_on I_set I_top A1 (subspace_topology X TX A1) hh"
+      using hhh unfolding top1_homeomorphism_on_def by (by100 blast)
+    have himg: "hh ` I_set = A1"
+      using hhh unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+    from Theorem_26_5[OF top1_unit_interval_topology_is_topology_on hTA1 hI_compact hcont]
+    have "top1_compact_on (hh ` I_set) (subspace_topology A1 (subspace_topology X TX A1) (hh ` I_set))" .
+    hence "top1_compact_on A1 (subspace_topology A1 (subspace_topology X TX A1) A1)" using himg by (by100 simp)
+    moreover have "subspace_topology A1 (subspace_topology X TX A1) A1 = subspace_topology X TX A1"
+      unfolding subspace_topology_def by (by100 blast)
+    ultimately show "top1_compact_on A1 (subspace_topology X TX A1)" by (by100 simp)
+  qed
+  \<comment> \<open>W closed in C-{p}: W = (A1-{p}) \<inter> (X-G) = (C-{p}) \<inter> (A1 \<inter> (X-G)), closed via intersection.\<close>
   have hW_closed: "closedin_on (C - {p}) (subspace_topology X TX (C - {p})) W"
-    sorry \<comment> \<open>Same closedness chain as 'a' case.\<close>
-  \<comment> \<open>C-{p}-W closed (W' \<union> (A2-{p}), both closed).\<close>
+  proof -
+    define W' where "W' = (if q \<in> U then U else V)"
+    have "W' \<in> subspace_topology X TX (A1 - {p})" unfolding W'_def using hUV(1,2) by (by100 simp)
+    then obtain G where hG: "G \<in> TX" "W' = (A1 - {p}) \<inter> G" unfolding subspace_topology_def by (by100 blast)
+    have "W = (A1 - {p}) - W'" unfolding W_def W'_def using hUV(5,6) by auto
+    hence hWeq: "W = (A1 - {p}) \<inter> (X - G)" using hG(2) hA1_sub by auto
+    let ?F = "A1 \<inter> (X - G)"
+    have hTX: "is_topology_on X TX" using hT unfolding is_topology_on_strict_def by (by100 blast)
+    have hG_sub: "G \<subseteq> X" using hG(1) hT unfolding is_topology_on_strict_def is_topology_on_def by (by100 blast)
+    have "X - (A1 \<inter> (X - G)) = (X - A1) \<union> G" using hG_sub by (by100 blast)
+    have "(X - A1) \<in> TX" using hA1_closed unfolding closedin_on_def by (by100 blast)
+    have "{X - A1, G} \<subseteq> TX" using \<open>(X - A1) \<in> TX\<close> hG(1) by (by100 blast)
+    hence "\<Union>{X - A1, G} \<in> TX" using hTX unfolding is_topology_on_def by (by100 blast)
+    hence "(X - ?F) \<in> TX" using \<open>X - (A1 \<inter> (X - G)) = (X - A1) \<union> G\<close> by (by100 simp)
+    hence "(C - {p}) \<inter> (X - ?F) \<in> subspace_topology X TX (C - {p})"
+      unfolding subspace_topology_def by (by100 blast)
+    have hCp_sub: "C - {p} \<subseteq> X" using hC_sub by (by100 blast)
+    have "W = (C - {p}) \<inter> ?F" using hWeq hW_sub hdecomp by (by100 blast)
+    have "(C - {p}) - W = (C - {p}) \<inter> (X - ?F)" using \<open>W = (C - {p}) \<inter> ?F\<close> hCp_sub by (by100 blast)
+    hence "(C - {p}) - W \<in> subspace_topology X TX (C - {p})"
+      using \<open>(C - {p}) \<inter> (X - ?F) \<in> subspace_topology X TX (C - {p})\<close> by (by100 simp)
+    thus ?thesis unfolding closedin_on_def using \<open>W = (C - {p}) \<inter> ?F\<close> by (by100 blast)
+  qed
+  \<comment> \<open>C-{p}-W closed: W' closed (same pattern) + A2-{p} closed + union.\<close>
   have hCpW_closed: "closedin_on (C - {p}) (subspace_topology X TX (C - {p})) (C - {p} - W)"
-    sorry \<comment> \<open>Same as 'a' case: W' closed + A2 closed + union.\<close>
+  proof -
+    let ?TCp = "subspace_topology X TX (C - {p})"
+    have hTCp: "is_topology_on (C - {p}) ?TCp"
+      by (rule subspace_topology_is_topology_on[OF is_topology_on_strict_imp[OF hT]]) (use hC_sub in blast)
+    \<comment> \<open>A1-{p}-W closed in C-{p} (same proof as W, with roles of open sets swapped).\<close>
+    have "closedin_on (C - {p}) ?TCp (A1 - {p} - W)"
+    proof -
+      have hW_open_A1: "W \<in> subspace_topology X TX (A1 - {p})" unfolding W_def using hUV(1,2) by (by100 simp)
+      then obtain H where hH: "H \<in> TX" "W = (A1 - {p}) \<inter> H" unfolding subspace_topology_def by (by100 blast)
+      have "A1 - {p} - W = (A1 - {p}) \<inter> (X - H)" using hH(2) hA1_sub by auto
+      hence "A1 - {p} - W = (C - {p}) \<inter> (A1 \<inter> (X - H))" using hW_sub hdecomp by (by100 blast)
+      have hTX: "is_topology_on X TX" using hT unfolding is_topology_on_strict_def by (by100 blast)
+      have hH_sub: "H \<subseteq> X" using hH(1) hT unfolding is_topology_on_strict_def is_topology_on_def by (by100 blast)
+      have "X - (A1 \<inter> (X - H)) = (X - A1) \<union> H" using hH_sub by (by100 blast)
+      have "(X - A1) \<in> TX" using hA1_closed unfolding closedin_on_def by (by100 blast)
+      have "{X - A1, H} \<subseteq> TX" using \<open>(X - A1) \<in> TX\<close> hH(1) by (by100 blast)
+      hence "\<Union>{X - A1, H} \<in> TX" using hTX unfolding is_topology_on_def by (by100 blast)
+      hence "(X - (A1 \<inter> (X - H))) \<in> TX" using \<open>X - (A1 \<inter> (X - H)) = (X - A1) \<union> H\<close> by (by100 simp)
+      hence "(C - {p}) \<inter> (X - (A1 \<inter> (X - H))) \<in> ?TCp" unfolding subspace_topology_def by (by100 blast)
+      have hCp_sub: "C - {p} \<subseteq> X" using hC_sub by (by100 blast)
+      have "(C - {p}) - (A1 - {p} - W) = (C - {p}) \<inter> (X - (A1 \<inter> (X - H)))"
+        using \<open>A1 - {p} - W = (C - {p}) \<inter> (A1 \<inter> (X - H))\<close> hCp_sub by (by100 blast)
+      hence "(C - {p}) - (A1 - {p} - W) \<in> ?TCp"
+        using \<open>(C - {p}) \<inter> (X - (A1 \<inter> (X - H))) \<in> ?TCp\<close> by (by100 simp)
+      moreover have "A1 - {p} - W \<subseteq> C - {p}" using hdecomp by (by100 blast)
+      ultimately show ?thesis unfolding closedin_on_def by (by100 blast)
+    qed
+    \<comment> \<open>A2 closed, A2-{p} closed in C-{p}.\<close>
+    have hA2_closed: "closedin_on X TX A2"
+    proof (rule compact_in_strict_hausdorff_closedin_on[OF hH hT hA2_sub])
+      obtain hh2 where hhh2: "top1_homeomorphism_on I_set I_top A2 (subspace_topology X TX A2) hh2"
+        using hA2 unfolding top1_is_arc_on_def by (by100 blast)
+      have hTA2: "is_topology_on A2 (subspace_topology X TX A2)"
+        by (rule subspace_topology_is_topology_on[OF is_topology_on_strict_imp[OF hT] hA2_sub])
+      have hIeq: "I_set = {0..1::real}" unfolding top1_unit_interval_def
+        by (auto simp: atLeastAtMost_def atLeast_def atMost_def)
+      have "compact I_set" unfolding hIeq by (rule compact_Icc)
+      hence hI_compact: "top1_compact_on I_set I_top"
+        unfolding top1_unit_interval_topology_def
+        using top1_compact_on_subspace_UNIV_iff_compact[of I_set] by (by100 simp)
+      have hcont2: "top1_continuous_map_on I_set I_top A2 (subspace_topology X TX A2) hh2"
+        using hhh2 unfolding top1_homeomorphism_on_def by (by100 blast)
+      have himg2: "hh2 ` I_set = A2"
+        using hhh2 unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+      from Theorem_26_5[OF top1_unit_interval_topology_is_topology_on hTA2 hI_compact hcont2]
+      have "top1_compact_on (hh2 ` I_set) (subspace_topology A2 (subspace_topology X TX A2) (hh2 ` I_set))" .
+      hence "top1_compact_on A2 (subspace_topology A2 (subspace_topology X TX A2) A2)" using himg2 by (by100 simp)
+      moreover have "subspace_topology A2 (subspace_topology X TX A2) A2 = subspace_topology X TX A2"
+        unfolding subspace_topology_def by (by100 blast)
+      ultimately show "top1_compact_on A2 (subspace_topology X TX A2)" by (by100 simp)
+    qed
+    have "closedin_on (C - {p}) ?TCp (A2 - {p})"
+      unfolding closedin_on_def
+    proof (intro conjI)
+      show "A2 - {p} \<subseteq> C - {p}" using hdecomp by (by100 blast)
+      have "(X - A2) \<in> TX" using hA2_closed unfolding closedin_on_def by (by100 blast)
+      hence "(C - {p}) \<inter> (X - A2) \<in> ?TCp" unfolding subspace_topology_def by (by100 blast)
+      moreover have "(C - {p}) - (A2 - {p}) = (C - {p}) \<inter> (X - A2)"
+        using hdecomp hA2_sub hA1_sub by (by100 blast)
+      ultimately show "(C - {p}) - (A2 - {p}) \<in> ?TCp" by (by100 simp)
+    qed
+    \<comment> \<open>C-{p}-W = (A1-{p}-W) \<union> (A2-{p}). Both closed. Union closed.\<close>
+    have "C - {p} - W = (A1 - {p} - W) \<union> (A2 - {p})"
+      using hdecomp hW_sub hW_disj by (by100 blast)
+    have "\<forall>A \<in> {A1 - {p} - W, A2 - {p}}. closedin_on (C - {p}) ?TCp A"
+      using \<open>closedin_on (C - {p}) ?TCp (A1 - {p} - W)\<close> \<open>closedin_on (C - {p}) ?TCp (A2 - {p})\<close>
+      by (by100 blast)
+    from closedin_Union_finite[OF hTCp _ this]
+    have "closedin_on (C - {p}) ?TCp ((A1 - {p} - W) \<union> (A2 - {p}))" by (by100 simp)
+    thus ?thesis using \<open>C - {p} - W = (A1 - {p} - W) \<union> (A2 - {p})\<close> by (by100 simp)
+  qed
   \<comment> \<open>C-{p}-W \<noteq> {} (q \<in> A2-{p}, q \<notin> W).\<close>
   have "C - {p} - W \<noteq> {}"
   proof -
