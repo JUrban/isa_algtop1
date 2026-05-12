@@ -17,6 +17,7 @@ THEORIES=(
   a0/AlgTop0.thy
   ac/AlgTopCached.thy
   AlgTop.thy
+  fi/AlgIsoFixed.thy
 )
 
 TXT=THEOREMS_AND_DEFS.txt
