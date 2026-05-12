@@ -3230,10 +3230,11 @@ lemma first_hit_sub_arc:
   and hD_closed: "closedin_on top1_S2 top1_S2_topology D"
   and hAD: "A \<inter> D \<noteq> {}"
   and hp_not_D: "p \<notin> D"
+  and hq_not_D: "q \<notin> D"
   shows "\<exists>Fp d. d \<in> A \<inter> D \<and> p \<in> Fp \<and> d \<in> Fp \<and>
     top1_is_arc_on Fp (subspace_topology top1_S2 top1_S2_topology Fp) \<and>
     top1_arc_endpoints_on Fp (subspace_topology top1_S2 top1_S2_topology Fp) = {p, d} \<and>
-    Fp \<subseteq> A \<and> Fp \<inter> D = {d}"
+    Fp \<subseteq> A \<and> Fp \<inter> D = {d} \<and> q \<notin> Fp"
 proof -
   have hS2_haus: "is_hausdorff_on top1_S2 top1_S2_topology" by (rule top1_S2_is_hausdorff)
   \<comment> \<open>Step 1: Get homeomorphism h: [0,1] \<rightarrow> A oriented with h(0)=p.\<close>
@@ -3460,7 +3461,35 @@ proof -
   next
     fix x assume "x \<in> {h' t0}" thus "x \<in> Fp \<inter> D" using hd_Fp ht0_D by (by100 blast)
   qed
-  show ?thesis using hd_AD hp_Fp hd_Fp hFp_arc hFp_ep hFp_sub_A hFp_D by (by100 blast)
+  \<comment> \<open>q \<notin> Fp: d = h'(t0) \<in> D, q \<notin> D \<Rightarrow> d \<noteq> q \<Rightarrow> t0 \<noteq> 1 \<Rightarrow> t0 < 1. Then q=h'(1) \<notin> h'([0,t0]).\<close>
+  have hd_ne_q: "h' t0 \<noteq> q"
+  proof
+    assume "h' t0 = q" thus False using ht0_D hq_not_D by (by100 blast)
+  qed
+  have ht0_lt1: "t0 < 1"
+  proof -
+    have "t0 \<le> 1" using ht0_I unfolding top1_unit_interval_def by (by100 simp)
+    moreover have "t0 \<noteq> 1"
+    proof
+      assume "t0 = 1"
+      hence "h' t0 = h' 1" by (by100 simp)
+      hence "h' t0 = q" using hh'1 by (by100 simp)
+      thus False using hd_ne_q by (by100 blast)
+    qed
+    ultimately show ?thesis by (by100 linarith)
+  qed
+  have hq_notin_Fp: "q \<notin> Fp"
+  proof
+    assume "q \<in> Fp"
+    then obtain t where ht: "t \<in> {0..t0}" "q = h' t" unfolding Fp_def by auto
+    have "t \<in> I_set" using ht(1) ht0_I unfolding top1_unit_interval_def by auto
+    have "1 \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+    have "h' t = h' 1" using ht(2) hh'1 by (by100 simp)
+    hence "t = 1" by (metis inj_onD[OF hh'_inj] \<open>t \<in> I_set\<close> \<open>1 \<in> I_set\<close>)
+    hence "t0 \<ge> 1" using ht(1) by auto
+    thus False using ht0_lt1 by (by100 linarith)
+  qed
+  show ?thesis using hd_AD hp_Fp hd_Fp hFp_arc hFp_ep hFp_sub_A hFp_D hq_notin_Fp by (by100 blast)
 qed
 
 lemma K4_from_SCC:
@@ -3745,17 +3774,17 @@ proof -
   have hp_not_C1: "p \<notin> C1" using hp_notC hC12(1) by (by100 blast)
   have hq_not_C2: "q \<notin> C2" using hq_notC hC12(1) by (by100 blast)
   have hq_not_C1: "q \<notin> C1" using hq_notC hC12(1) by (by100 blast)
-  from first_hit_sub_arc[OF assms(1) harc_f(1) harc_f_sub_S2 harc_f(3) hp_ne_q hC2_cl hf_meets_C2 hp_not_C2]
+  from first_hit_sub_arc[OF assms(1) harc_f(1) harc_f_sub_S2 harc_f(3) hp_ne_q hC2_cl hf_meets_C2 hp_not_C2 hq_not_C2]
   obtain Fp a4' where hFp: "a4' \<in> arc_f \<inter> C2" "p \<in> Fp" "a4' \<in> Fp"
       "top1_is_arc_on Fp (subspace_topology top1_S2 top1_S2_topology Fp)"
       "top1_arc_endpoints_on Fp (subspace_topology top1_S2 top1_S2_topology Fp) = {p, a4'}"
-      "Fp \<subseteq> arc_f" "Fp \<inter> C2 = {a4'}"
+      "Fp \<subseteq> arc_f" "Fp \<inter> C2 = {a4'}" "q \<notin> Fp"
     by auto
-  from first_hit_sub_arc[OF assms(1) harc_g(1) harc_g_sub_S2 harc_g(3) hp_ne_q hC1_cl hg_meets_C1 hp_not_C1]
+  from first_hit_sub_arc[OF assms(1) harc_g(1) harc_g_sub_S2 harc_g(3) hp_ne_q hC1_cl hg_meets_C1 hp_not_C1 hq_not_C1]
   obtain Gp a2' where hGp: "a2' \<in> arc_g \<inter> C1" "p \<in> Gp" "a2' \<in> Gp"
       "top1_is_arc_on Gp (subspace_topology top1_S2 top1_S2_topology Gp)"
       "top1_arc_endpoints_on Gp (subspace_topology top1_S2 top1_S2_topology Gp) = {p, a2'}"
-      "Gp \<subseteq> arc_g" "Gp \<inter> C1 = {a2'}"
+      "Gp \<subseteq> arc_g" "Gp \<inter> C1 = {a2'}" "q \<notin> Gp"
     by auto
   \<comment> \<open>First-hit sub-arcs from q (symmetric, using reversed arcs).\<close>
   have hq_ne_p: "q \<noteq> p" using hp_ne_q by (by100 blast)
@@ -3763,17 +3792,17 @@ proof -
     using harc_f(3) by (by100 blast)
   have harc_g_ep_qp: "top1_arc_endpoints_on arc_g (subspace_topology top1_S2 top1_S2_topology arc_g) = {q, p}"
     using harc_g(3) by (by100 blast)
-  from first_hit_sub_arc[OF assms(1) harc_f(1) harc_f_sub_S2 harc_f_ep_qp hq_ne_p hC2_cl hf_meets_C2 hq_not_C2]
+  from first_hit_sub_arc[OF assms(1) harc_f(1) harc_f_sub_S2 harc_f_ep_qp hq_ne_p hC2_cl hf_meets_C2 hq_not_C2 hp_not_C2]
   obtain Fq b4 where hFq: "b4 \<in> arc_f \<inter> C2" "q \<in> Fq" "b4 \<in> Fq"
       "top1_is_arc_on Fq (subspace_topology top1_S2 top1_S2_topology Fq)"
       "top1_arc_endpoints_on Fq (subspace_topology top1_S2 top1_S2_topology Fq) = {q, b4}"
-      "Fq \<subseteq> arc_f" "Fq \<inter> C2 = {b4}"
+      "Fq \<subseteq> arc_f" "Fq \<inter> C2 = {b4}" "p \<notin> Fq"
     by auto
-  from first_hit_sub_arc[OF assms(1) harc_g(1) harc_g_sub_S2 harc_g_ep_qp hq_ne_p hC1_cl hg_meets_C1 hq_not_C1]
+  from first_hit_sub_arc[OF assms(1) harc_g(1) harc_g_sub_S2 harc_g_ep_qp hq_ne_p hC1_cl hg_meets_C1 hq_not_C1 hp_not_C1]
   obtain Gq b2 where hGq: "b2 \<in> arc_g \<inter> C1" "q \<in> Gq" "b2 \<in> Gq"
       "top1_is_arc_on Gq (subspace_topology top1_S2 top1_S2_topology Gq)"
       "top1_arc_endpoints_on Gq (subspace_topology top1_S2 top1_S2_topology Gq) = {q, b2}"
-      "Gq \<subseteq> arc_g" "Gq \<inter> C1 = {b2}"
+      "Gq \<subseteq> arc_g" "Gq \<inter> C1 = {b2}" "p \<notin> Gq"
     by auto
   \<comment> \<open>Arc separation: first-hit sub-arcs from each endpoint share only that endpoint.\<close>
   have hFpGp: "Fp \<inter> Gp = {p}" sorry \<comment> \<open>Fp \<subseteq> S2-C1, Gp \<subseteq> S2-C2, both contain p.\<close>
