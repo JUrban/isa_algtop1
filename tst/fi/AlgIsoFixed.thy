@@ -2901,8 +2901,23 @@ proof -
     "e24 \<subseteq> top1_S2" "q \<in> e24 - {a2, a4}"
     sorry \<comment> \<open>Diagonal via arc\_g + sub-arcs of C1. Needs Step 1 arc splice.\<close>
   \<comment> \<open>Verify K4 conditions.\<close>
+  have ha2_ne_a4: "a2 \<noteq> a4"
+  proof
+    assume "a2 = a4"
+    hence "a2 \<in> C1 \<inter> C2" using ha2_C1 ha4_C2 by (by100 blast)
+    hence "a2 \<in> {a1, a3}" using hC12(2) by (by100 blast)
+    thus False using ha2(2,3) by (by100 blast)
+  qed
   have hcard4: "card {a1, a2, a3, a4} = 4"
-    sorry \<comment> \<open>a1\<noteq>a2\<noteq>a3\<noteq>a4 pairwise distinct.\<close>
+  proof -
+    have "a1 \<noteq> a2" using ha2(2) by (by100 blast)
+    moreover have "a1 \<noteq> a3" by (rule hC12(3))
+    moreover have "a1 \<noteq> a4" using ha4(2) by (by100 blast)
+    moreover have "a2 \<noteq> a3" using ha2(3) by (by100 blast)
+    moreover have "a2 \<noteq> a4" by (rule ha2_ne_a4)
+    moreover have "a3 \<noteq> a4" using ha4(3) by (by100 blast)
+    ultimately show ?thesis by (by100 simp)
+  qed
   have hC_eq: "C = e12 \<union> e23 \<union> e34 \<union> e41"
     using hC12(1) hC1_split(1) hC2_split(1) by (by100 blast)
   \<comment> \<open>Intersection conditions for cycle edges.\<close>
@@ -2912,12 +2927,65 @@ proof -
   have he34_C2: "e34 \<subseteq> C2" using hC2_split(1) by (by100 blast)
   have he41_C2: "e41 \<subseteq> C2" using hC2_split(1) by (by100 blast)
   \<comment> \<open>Cross-half intersections: e12,e23 \<subseteq> C1 while e34,e41 \<subseteq> C2, and C1\<inter>C2={a1,a3}.\<close>
-  have "e12 \<inter> e34 = {}" sorry \<comment> \<open>e12 \<subseteq> C1, e34 \<subseteq> C2. e12\<inter>e34 \<subseteq> C1\<inter>C2 = {a1,a3}. But a1\<in>e12\<inter>e34? No: a1 endpoints.\<close>
-  have "e23 \<inter> e41 = {}" sorry
+  \<comment> \<open>Key: a1 \<notin> e34 (since a1\<in>e41, a1\<in>e34 \<Rightarrow> a1\<in>e34\<inter>e41={a4} \<Rightarrow> a1=a4, contradicting ha4(2)).\<close>
+  have ha1_not_e34: "a1 \<notin> e34"
+  proof
+    assume "a1 \<in> e34"
+    hence "a1 \<in> e34 \<inter> e41" using hC2_split(6) by (by100 blast)
+    hence "a1 = a4" using hC2_split(2) by (by100 blast)
+    thus False using ha4(2) by (by100 blast)
+  qed
+  have ha3_not_e12: "a3 \<notin> e12"
+  proof
+    assume "a3 \<in> e12"
+    hence "a3 \<in> e12 \<inter> e23" using hC1_split(6) by (by100 blast)
+    hence "a3 = a2" using hC1_split(2) by (by100 blast)
+    thus False using ha2(3) by (by100 blast)
+  qed
+  have ha3_not_e41: "a3 \<notin> e41"
+  proof
+    assume "a3 \<in> e41"
+    hence "a3 \<in> e34 \<inter> e41" using hC2_split(5) by (by100 blast)
+    hence "a3 = a4" using hC2_split(2) by (by100 blast)
+    thus False using ha4(3) by (by100 blast)
+  qed
+  have ha1_not_e23: "a1 \<notin> e23"
+  proof
+    assume "a1 \<in> e23"
+    hence "a1 \<in> e12 \<inter> e23" using hC1_split(5) by (by100 blast)
+    hence "a1 = a2" using hC1_split(2) by (by100 blast)
+    thus False using ha2(2) by (by100 blast)
+  qed
+  have "e12 \<inter> e34 = {}"
+  proof -
+    have "e12 \<inter> e34 \<subseteq> C1 \<inter> C2" using he12_C1 he34_C2 by (by100 blast)
+    hence "e12 \<inter> e34 \<subseteq> {a1, a3}" using hC12(2) by (by100 blast)
+    thus ?thesis using ha1_not_e34 ha3_not_e12 by (by100 blast)
+  qed
+  have "e23 \<inter> e41 = {}"
+  proof -
+    have "e23 \<inter> e41 \<subseteq> C1 \<inter> C2" using he23_C1 he41_C2 by (by100 blast)
+    hence "e23 \<inter> e41 \<subseteq> {a1, a3}" using hC12(2) by (by100 blast)
+    thus ?thesis using ha3_not_e41 ha1_not_e23 by (by100 blast)
+  qed
   have "e12 \<inter> e23 = {a2}" using hC1_split(2) by (by100 blast)
-  have "e23 \<inter> e34 = {a3}" sorry \<comment> \<open>a3 \<in> e23 \<inter> C2, and e23\<inter>e34 \<subseteq> C1\<inter>C2 = {a1,a3}. a3\<in>both.\<close>
+  have "e23 \<inter> e34 = {a3}"
+  proof -
+    have "e23 \<inter> e34 \<subseteq> C1 \<inter> C2" using he23_C1 he34_C2 by (by100 blast)
+    hence "e23 \<inter> e34 \<subseteq> {a1, a3}" using hC12(2) by (by100 blast)
+    moreover have "a3 \<in> e23 \<inter> e34" using hC1_split(6) hC2_split(5) by (by100 blast)
+    moreover have "a1 \<notin> e23" by (rule ha1_not_e23)
+    ultimately show ?thesis by (by100 blast)
+  qed
   have "e34 \<inter> e41 = {a4}" using hC2_split(2) by (by100 blast)
-  have "e41 \<inter> e12 = {a1}" sorry
+  have "e41 \<inter> e12 = {a1}"
+  proof -
+    have "e41 \<inter> e12 \<subseteq> C2 \<inter> C1" using he41_C2 he12_C1 by (by100 blast)
+    hence "e41 \<inter> e12 \<subseteq> {a1, a3}" using hC12(2) by (by100 blast)
+    moreover have "a1 \<in> e41 \<inter> e12" using hC2_split(6) hC1_split(5) by (by100 blast)
+    moreover have "a3 \<notin> e12" by (rule ha3_not_e12)
+    ultimately show ?thesis by (by100 blast)
+  qed
   \<comment> \<open>Intersection conditions for diagonals.\<close>
   have "e13 \<inter> e12 = {a1}" sorry
   have "e13 \<inter> e23 = {a3}" sorry
