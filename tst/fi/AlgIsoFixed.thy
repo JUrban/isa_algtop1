@@ -3304,7 +3304,30 @@ proof (rule ccontr)
     moreover have "Fp - {x} = top1_S2 - {x}" using hFpS2 by (by100 simp)
     moreover have "subspace_topology Fp (subspace_topology top1_S2 top1_S2_topology Fp) (Fp - {x})
         = subspace_topology top1_S2 top1_S2_topology (top1_S2 - {x})"
-      using hFpS2 sorry
+    proof -
+      have hss: "subspace_topology top1_S2 top1_S2_topology top1_S2 = top1_S2_topology"
+      proof (rule set_eqI)
+        fix U
+        show "U \<in> subspace_topology top1_S2 top1_S2_topology top1_S2 \<longleftrightarrow> U \<in> top1_S2_topology"
+        proof
+          assume "U \<in> subspace_topology top1_S2 top1_S2_topology top1_S2"
+          then obtain W where "W \<in> top1_S2_topology" "U = top1_S2 \<inter> W"
+            unfolding subspace_topology_def by (by100 blast)
+          moreover have "W \<subseteq> top1_S2" using \<open>W \<in> top1_S2_topology\<close> hS2
+            unfolding is_topology_on_strict_def openin_on_def by (by100 blast)
+          hence "U = W" using \<open>U = top1_S2 \<inter> W\<close> by (by100 blast)
+          thus "U \<in> top1_S2_topology" using \<open>W \<in> top1_S2_topology\<close> by (by100 simp)
+        next
+          assume "U \<in> top1_S2_topology"
+          moreover have "U \<subseteq> top1_S2" using \<open>U \<in> top1_S2_topology\<close> hS2
+            unfolding is_topology_on_strict_def openin_on_def by (by100 blast)
+          ultimately show "U \<in> subspace_topology top1_S2 top1_S2_topology top1_S2"
+            unfolding subspace_topology_def by (by100 force)
+        qed
+      qed
+      show ?thesis using hFpS2 hss
+        by (simp add: subspace_topology_def)
+    qed
     ultimately show False by (by100 metis)
   qed
   then obtain z where hz: "z \<in> top1_S2 - Fp" using hFp_sub by auto
