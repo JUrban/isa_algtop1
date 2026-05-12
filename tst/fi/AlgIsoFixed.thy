@@ -3001,10 +3001,13 @@ proof -
         thus ?thesis by (by100 blast)
       qed
       \<comment> \<open>W closed in C-{a}: W closed in A1-{a} (complement of open), A1-{a} closed in C-{a}.\<close>
+      \<comment> \<open>Step: W closed in C-{a}. W = complement of open in A1-{a} = closed in A1-{a}.
+         A1-{a} = (C-{a}) \<inter> A1, and A1 is closed in X \<Rightarrow> A1-{a} closed in C-{a}.
+         Closed subset of closed subset is closed in the ambient space.\<close>
       have hW_closed: "closedin_on (C - {a}) (subspace_topology X TX (C - {a})) W"
-        sorry \<comment> \<open>W closed in A1-{a} subspace (complement of U or V). A1 closed in X.
-           A1-{a} closed in C-{a} (intersection of closed A1 with C-{a} carrier).
-           Closed in closed = closed.\<close>
+        sorry \<comment> \<open>W closed in A1-{a} + A1-{a} closed in C-{a} \<Rightarrow> W closed in C-{a}.
+           Formally: W = (A1-{a}) \<inter> F for F closed in X (complement of the open part).
+           Then W = (C-{a}) \<inter> (A1 \<inter> F). A1 closed, F closed \<Rightarrow> A1\<inter>F closed. Done.\<close>
       show ?thesis using hW_ne hW_sub hW_disj_A2 hW_closed by (by100 blast)
     qed
     then obtain W where hW: "W \<noteq> {}" "W \<subseteq> A1 - {a}" "W \<inter> (A2 - {a}) = {}"
