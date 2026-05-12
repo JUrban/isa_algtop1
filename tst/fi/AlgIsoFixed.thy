@@ -1040,12 +1040,11 @@ proof -
     ultimately show ?thesis unfolding comp_h_def by auto
   qed
   \<comment> \<open>comp\_h is a group hom Z \<rightarrow> Z, i.e. additive.\<close>
-  have hcomp_hom: "\<forall>a b. a \<in> top1_Z_group \<longrightarrow> b \<in> top1_Z_group \<longrightarrow>
-      comp_h (top1_Z_mul a b) = top1_Z_mul (comp_h a) (comp_h b)"
-    sorry \<comment> \<open>Composition of homs.\<close>
-  \<comment> \<open>top1\_Z\_group = UNIV, top1\_Z\_mul = (+). So comp\_h additive on all of Z.\<close>
+  \<comment> \<open>comp\_h additive: ψ\_Y(φ(invPsiX(a+b))) = ψ\_Y(φ(invPsiX(a))) + ψ\_Y(φ(invPsiX(b))).
+     Each step preserves the group operation.\<close>
   have hcomp_add: "\<forall>a b. comp_h (a + b) = comp_h a + comp_h b"
-    sorry \<comment> \<open>From hcomp\_hom + Z definitions.\<close>
+    sorry \<comment> \<open>Composition of group isos and hom preserves operation. Needs ~30 lines
+           unfolding iso hom properties through the chain.\<close>
   have hZ_UNIV: "top1_Z_group = (UNIV :: int set)" unfolding top1_Z_group_def by (by100 simp)
   have hcomp_surj_UNIV: "comp_h ` UNIV = (UNIV :: int set)"
     using hcomp_surj hZ_UNIV by (by100 simp)
