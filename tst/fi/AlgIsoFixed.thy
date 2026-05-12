@@ -2849,10 +2849,22 @@ proof -
         unfolding top1_is_path_on_def using hhf_cont_SC by (by100 blast)
       thus ?thesis by (by100 blast)
     next
-      assume "hf 0 = q \<and> hf 1 = p"
-      hence "top1_is_path_on (top1_S2 - C)
-          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) p q (\<lambda>t. hf (1 - t))"
-        sorry \<comment> \<open>Reverse path: compose with (\<lambda>t. 1-t). Needs continuous\_on reversal.\<close>
+      assume hrev: "hf 0 = q \<and> hf 1 = p"
+      define hf_rev where "hf_rev = (\<lambda>t. hf (1 - t))"
+      have hrev_cont: "top1_continuous_map_on I_set I_top I_set I_top (\<lambda>t. 1 - t)"
+        using unit_interval_reversal_homeomorphism unfolding top1_homeomorphism_on_def
+        by (by100 blast)
+      have "top1_continuous_map_on I_set I_top (top1_S2 - C)
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) (hf \<circ> (\<lambda>t. 1 - t))"
+        by (rule top1_continuous_map_on_comp[OF hrev_cont hhf_cont_SC])
+      hence "top1_continuous_map_on I_set I_top (top1_S2 - C)
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) hf_rev"
+        unfolding hf_rev_def comp_def by (by100 simp)
+      moreover have "hf_rev 0 = p" unfolding hf_rev_def using hrev by (by100 simp)
+      moreover have "hf_rev 1 = q" unfolding hf_rev_def using hrev by (by100 simp)
+      ultimately have "top1_is_path_on (top1_S2 - C)
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) p q hf_rev"
+        unfolding top1_is_path_on_def by (by100 blast)
       thus ?thesis by (by100 blast)
     qed
     thus False using assms(5) by (by100 blast)
@@ -2902,10 +2914,22 @@ proof -
         unfolding top1_is_path_on_def using hhg_cont_SC by (by100 blast)
       thus ?thesis by (by100 blast)
     next
-      assume "hg 0 = q \<and> hg 1 = p"
-      hence "top1_is_path_on (top1_S2 - C)
-          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) p q (\<lambda>t. hg (1 - t))"
-        sorry \<comment> \<open>Reverse path.\<close>
+      assume hrev: "hg 0 = q \<and> hg 1 = p"
+      define hg_rev where "hg_rev = (\<lambda>t. hg (1 - t))"
+      have hrev_cont: "top1_continuous_map_on I_set I_top I_set I_top (\<lambda>t. 1 - t)"
+        using unit_interval_reversal_homeomorphism unfolding top1_homeomorphism_on_def
+        by (by100 blast)
+      have "top1_continuous_map_on I_set I_top (top1_S2 - C)
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) (hg \<circ> (\<lambda>t. 1 - t))"
+        by (rule top1_continuous_map_on_comp[OF hrev_cont hhg_cont_SC])
+      hence "top1_continuous_map_on I_set I_top (top1_S2 - C)
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) hg_rev"
+        unfolding hg_rev_def comp_def by (by100 simp)
+      moreover have "hg_rev 0 = p" unfolding hg_rev_def using hrev by (by100 simp)
+      moreover have "hg_rev 1 = q" unfolding hg_rev_def using hrev by (by100 simp)
+      ultimately have "top1_is_path_on (top1_S2 - C)
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) p q hg_rev"
+        unfolding top1_is_path_on_def by (by100 blast)
       thus ?thesis by (by100 blast)
     qed
     thus False using assms(5) by (by100 blast)
