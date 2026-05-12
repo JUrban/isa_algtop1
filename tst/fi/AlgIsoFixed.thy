@@ -3240,7 +3240,8 @@ proof -
   have "e24 \<inter> e41 = {a4}" sorry
   \<comment> \<open>Assembly.\<close>
   show ?thesis
-    sorry \<comment> \<open>38-condition existential: witnesses a1-a4, e12-e41, e13, e24 with all conditions above.\<close>
+    sorry \<comment> \<open>Introduce witnesses a1-a4, e12-e41, e13, e24 and verify all 38 K4 conditions
+       from the named facts above. All conditions are stated; this is pure conjunction.\<close>
 qed
 
 theorem Theorem_65_2_fixed:
