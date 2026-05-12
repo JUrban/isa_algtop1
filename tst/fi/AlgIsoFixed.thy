@@ -2098,7 +2098,65 @@ proof -
       define g where "g = (\<lambda>t. inv_into ?SP h (\<gamma> t))"
       \<comment> \<open>Line segment stays in Sq (convexity: coordinate-wise |(1-t)*a+t*b - c| \<le> (1-t)|a-c|+t|b-c| < \<epsilon>).\<close>
       have h\<gamma>_in_Sq: "\<And>t. t \<in> I_set \<Longrightarrow> \<gamma> t \<in> Sq"
-        sorry \<comment> \<open>Convexity of L\<infinity> ball: |(1-t)*a+t*b-c| \<le> (1-t)|a-c|+t|b-c| < \<epsilon>.\<close>
+      proof -
+        fix t assume ht: "t \<in> I_set"
+        have htr: "0 \<le> t" "t \<le> 1" using ht unfolding top1_unit_interval_def by auto
+        have hy1: "\<bar>fst y' - fst (h x)\<bar> < \<epsilon>" using hy'_Sq unfolding Sq_def by (by100 blast)
+        have hy2: "\<bar>snd y' - snd (h x)\<bar> < \<epsilon>" using hy'_Sq unfolding Sq_def by (by100 blast)
+        have hz1: "\<bar>fst z' - fst (h x)\<bar> < \<epsilon>" using hz'_Sq unfolding Sq_def by (by100 blast)
+        have hz2: "\<bar>snd z' - snd (h x)\<bar> < \<epsilon>" using hz'_Sq unfolding Sq_def by (by100 blast)
+        \<comment> \<open>fst coordinate: |(1-t)*a+t*b-c| \<le> |(1-t)*(a-c)| + |t*(b-c)| = (1-t)|a-c| + t|b-c| < \<epsilon>.\<close>
+        have hf1: "fst (\<gamma> t) - fst (h x) = (1-t) * (fst y' - fst (h x)) + t * (fst z' - fst (h x))"
+          unfolding \<gamma>_def by (simp add: algebra_simps)
+        have "\<bar>fst (\<gamma> t) - fst (h x)\<bar> \<le> \<bar>(1-t) * (fst y' - fst (h x))\<bar> + \<bar>t * (fst z' - fst (h x))\<bar>"
+          unfolding hf1 by (rule abs_triangle_ineq)
+        also have "\<dots> = (1-t) * \<bar>fst y' - fst (h x)\<bar> + t * \<bar>fst z' - fst (h x)\<bar>"
+          using htr by (simp add: abs_mult)
+        also have "\<dots> < \<epsilon>"
+        proof -
+          have h_le1: "(1-t) * \<bar>fst y' - fst (h x)\<bar> \<le> (1-t) * \<epsilon>"
+            by (rule mult_left_mono[OF less_imp_le[OF hy1]]) (use htr in linarith)
+          have h_le2: "t * \<bar>fst z' - fst (h x)\<bar> \<le> t * \<epsilon>"
+            by (rule mult_left_mono[OF less_imp_le[OF hz1]]) (use htr in linarith)
+          show ?thesis
+          proof (cases "t = 0")
+            case True thus ?thesis using hy1 h_le2 by (simp add: algebra_simps)
+          next
+            case False
+            hence "t > 0" using htr by (by100 linarith)
+            hence "t * \<bar>fst z' - fst (h x)\<bar> < t * \<epsilon>" using hz1 by (by100 simp)
+            have "(1-t) * \<epsilon> + t * \<epsilon> = \<epsilon>" by (simp add: algebra_simps)
+            thus ?thesis using h_le1 \<open>t * \<bar>fst z' - fst (h x)\<bar> < t * \<epsilon>\<close> by (by100 linarith)
+          qed
+        qed
+        finally have hfst: "\<bar>fst (\<gamma> t) - fst (h x)\<bar> < \<epsilon>" .
+        \<comment> \<open>snd coordinate: same argument.\<close>
+        have hs1: "snd (\<gamma> t) - snd (h x) = (1-t) * (snd y' - snd (h x)) + t * (snd z' - snd (h x))"
+          unfolding \<gamma>_def by (simp add: algebra_simps)
+        have "\<bar>snd (\<gamma> t) - snd (h x)\<bar> \<le> \<bar>(1-t) * (snd y' - snd (h x))\<bar> + \<bar>t * (snd z' - snd (h x))\<bar>"
+          unfolding hs1 by (rule abs_triangle_ineq)
+        also have "\<dots> = (1-t) * \<bar>snd y' - snd (h x)\<bar> + t * \<bar>snd z' - snd (h x)\<bar>"
+          using htr by (simp add: abs_mult)
+        also have "\<dots> < \<epsilon>"
+        proof -
+          have h_le1: "(1-t) * \<bar>snd y' - snd (h x)\<bar> \<le> (1-t) * \<epsilon>"
+            by (rule mult_left_mono[OF less_imp_le[OF hy2]]) (use htr in linarith)
+          have h_le2: "t * \<bar>snd z' - snd (h x)\<bar> \<le> t * \<epsilon>"
+            by (rule mult_left_mono[OF less_imp_le[OF hz2]]) (use htr in linarith)
+          show ?thesis
+          proof (cases "t = 0")
+            case True thus ?thesis using hy2 h_le2 by (simp add: algebra_simps)
+          next
+            case False
+            hence "t > 0" using htr by (by100 linarith)
+            hence "t * \<bar>snd z' - snd (h x)\<bar> < t * \<epsilon>" using hz2 by (by100 simp)
+            have "(1-t) * \<epsilon> + t * \<epsilon> = \<epsilon>" by (simp add: algebra_simps)
+            thus ?thesis using h_le1 \<open>t * \<bar>snd z' - snd (h x)\<bar> < t * \<epsilon>\<close> by (by100 linarith)
+          qed
+        qed
+        finally have hsnd: "\<bar>snd (\<gamma> t) - snd (h x)\<bar> < \<epsilon>" .
+        show "\<gamma> t \<in> Sq" using hfst hsnd unfolding Sq_def by (by100 blast)
+      qed
       \<comment> \<open>\<gamma>: I\_set \<rightarrow> R2 is continuous (straight-line path).\<close>
       have h\<gamma>_cont: "top1_continuous_map_on I_set I_top ?R2 ?TR2 \<gamma>"
         using R2_straight_line_path[where x=y' and y=z', folded \<gamma>_def]
