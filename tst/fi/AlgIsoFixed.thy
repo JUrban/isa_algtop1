@@ -2858,6 +2858,86 @@ proof -
   thus ?thesis using hf_img by (by100 simp)
 qed
 
+\<comment> \<open>Helper: if p \<in> A1 is not an endpoint of A1, and A1 \<inter> A2 = {p, q}, SCC C = A1 \<union> A2,
+   then C-{p} is not connected. But scc\_minus\_point\_connected says it IS. Contradiction.\<close>
+lemma scc_interior_contradiction:
+  assumes hT: "is_topology_on_strict X TX" and hH: "is_hausdorff_on X TX"
+  and hC: "top1_simple_closed_curve_on X TX C"
+  and hA1: "top1_is_arc_on A1 (subspace_topology X TX A1)"
+  and hA2: "top1_is_arc_on A2 (subspace_topology X TX A2)"
+  and hA1_sub: "A1 \<subseteq> X" and hA2_sub: "A2 \<subseteq> X"
+  and hdecomp: "C = A1 \<union> A2" and hint: "A1 \<inter> A2 = {p, q}" and hpq: "p \<noteq> q"
+  and hp_A1: "p \<in> A1" and hp_not_ep: "p \<notin> top1_arc_endpoints_on A1 (subspace_topology X TX A1)"
+  shows False
+proof -
+  \<comment> \<open>A1-{p} not connected (p is interior to arc A1).\<close>
+  have "\<not> top1_connected_on (A1 - {p}) (subspace_topology A1 (subspace_topology X TX A1) (A1 - {p}))"
+    using hp_not_ep hp_A1 unfolding top1_arc_endpoints_on_def by (by100 blast)
+  hence hA1p_not_conn: "\<not> top1_connected_on (A1 - {p}) (subspace_topology X TX (A1 - {p}))"
+  proof -
+    have "subspace_topology A1 (subspace_topology X TX A1) (A1 - {p})
+        = subspace_topology X TX (A1 - {p})"
+      by (rule subspace_topology_trans[OF Diff_subset])
+    thus ?thesis using \<open>\<not> top1_connected_on (A1 - {p}) (subspace_topology A1 (subspace_topology X TX A1) (A1 - {p}))\<close>
+      by (by100 simp)
+  qed
+  \<comment> \<open>C-{p} connected.\<close>
+  have hC_sub: "C \<subseteq> X" using hdecomp hA1_sub hA2_sub by (by100 blast)
+  have "p \<in> C" using hp_A1 hdecomp by (by100 blast)
+  have hCp_conn: "top1_connected_on (C - {p}) (subspace_topology X TX (C - {p}))"
+    by (rule scc_minus_point_connected[OF hT hH hC \<open>p \<in> C\<close>])
+  \<comment> \<open>Get separation of A1-{p}.\<close>
+  have hTA1p: "is_topology_on (A1 - {p}) (subspace_topology X TX (A1 - {p}))"
+    by (rule subspace_topology_is_topology_on[OF is_topology_on_strict_imp[OF hT]])
+       (use hA1_sub in blast)
+  obtain U V where hUV: "U \<in> subspace_topology X TX (A1 - {p})"
+      "V \<in> subspace_topology X TX (A1 - {p})" "U \<noteq> {}" "V \<noteq> {}"
+      "U \<inter> V = {}" "U \<union> V = A1 - {p}"
+    using hA1p_not_conn hTA1p unfolding top1_connected_on_def by auto
+  \<comment> \<open>q \<in> A1-{p}. Pick W = part not containing q. W \<subseteq> A1-{p,q} \<subseteq> A1-A2.\<close>
+  have hq_A1p: "q \<in> A1 - {p}" using hint hpq by (by100 blast)
+  define W where "W = (if q \<in> U then V else U)"
+  have hW_ne: "W \<noteq> {}" unfolding W_def using hUV(3,4) by (by100 simp)
+  have hW_sub: "W \<subseteq> A1 - {p}" unfolding W_def using hUV(1,2,6)
+    unfolding subspace_topology_def by auto
+  have "q \<notin> W" unfolding W_def using hUV(5) hq_A1p hUV(6) by auto
+  hence "W \<subseteq> A1 - {p, q}" using hW_sub by (by100 blast)
+  hence hW_disj: "W \<inter> (A2 - {p}) = {}" using hint by (by100 blast)
+  \<comment> \<open>A1 closed in X (compact arc in Hausdorff).\<close>
+  have hA1_closed: "closedin_on X TX A1"
+    sorry \<comment> \<open>Same compact\_in\_strict\_hausdorff proof as before.\<close>
+  \<comment> \<open>W closed in C-{p} (W closed in A1-{p}, A1 closed in X, transfer to subspace).\<close>
+  have hW_closed: "closedin_on (C - {p}) (subspace_topology X TX (C - {p})) W"
+    sorry \<comment> \<open>Same closedness chain as 'a' case.\<close>
+  \<comment> \<open>C-{p}-W closed (W' \<union> (A2-{p}), both closed).\<close>
+  have hCpW_closed: "closedin_on (C - {p}) (subspace_topology X TX (C - {p})) (C - {p} - W)"
+    sorry \<comment> \<open>Same as 'a' case: W' closed + A2 closed + union.\<close>
+  \<comment> \<open>C-{p}-W \<noteq> {} (q \<in> A2-{p}, q \<notin> W).\<close>
+  have "C - {p} - W \<noteq> {}"
+  proof -
+    have "q \<in> A2 - {p}" using hint hpq by (by100 blast)
+    hence "q \<notin> W" using hW_disj by (by100 blast)
+    moreover have "q \<in> C - {p}" using \<open>q \<in> A2 - {p}\<close> hdecomp by (by100 blast)
+    ultimately show ?thesis by (by100 blast)
+  qed
+  \<comment> \<open>W and C-{p}-W form separation \<Rightarrow> C-{p} not connected.\<close>
+  have hW_sub_Cp: "W \<subseteq> C - {p}" using hW_sub hdecomp by (by100 blast)
+  have hW_open: "W \<in> subspace_topology X TX (C - {p})"
+  proof -
+    from hCpW_closed have "(C - {p}) - (C - {p} - W) \<in> subspace_topology X TX (C - {p})"
+      unfolding closedin_on_def by (by100 blast)
+    moreover have "(C - {p}) - (C - {p} - W) = W" using hW_sub_Cp by (by100 blast)
+    ultimately show ?thesis by (by100 simp)
+  qed
+  have hCpW_open: "(C - {p} - W) \<in> subspace_topology X TX (C - {p})"
+    using hW_closed unfolding closedin_on_def by (by100 blast)
+  have "\<not> top1_connected_on (C - {p}) (subspace_topology X TX (C - {p}))"
+    unfolding top1_connected_on_def
+    using hW_open hCpW_open hW_ne \<open>C - {p} - W \<noteq> {}\<close>
+    by auto (use hW_sub_Cp in blast)
+  thus False using hCp_conn by (by100 blast)
+qed
+
 lemma scc_decomp_arc_endpoints:
   assumes hT: "is_topology_on_strict X TX" and hH: "is_hausdorff_on X TX"
   and hC: "top1_simple_closed_curve_on X TX C"
@@ -3255,14 +3335,68 @@ proof -
     hence "Wb \<inter> (A2 - {b}) = {}" using hint by (by100 blast)
     \<comment> \<open>Wb closed in C-{b}: same argument as W in 'a' case.\<close>
     \<comment> \<open>C-{b}-Wb closed. Both non-empty. Separation. C-{b} not connected. \<bottom>.\<close>
-    show False sorry \<comment> \<open>Identical closedness + separation argument as 'a' case.\<close>
+    have "b \<notin> top1_arc_endpoints_on A1 (subspace_topology X TX A1)"
+      using hb_int heps(1) by (by100 simp)
+    have hint_ba: "A1 \<inter> A2 = {b, a}" using hint by (by100 blast)
+    show False by (rule scc_interior_contradiction[OF hT hH hC hA1 hA2 hA1_sub hA2_sub hdecomp
+        hint_ba _ \<open>b \<in> A1\<close> \<open>b \<notin> top1_arc_endpoints_on A1 (subspace_topology X TX A1)\<close>])
+        (use hab in blast)
   qed
   from ha_ep hb_ep hab heps(2) show "top1_arc_endpoints_on A1 (subspace_topology X TX A1) = {a, b}"
     using heps(1) by (by100 blast)
-  \<comment> \<open>Same argument for A2.\<close>
-  \<comment> \<open>A2: same argument with A1 and A2 swapped. C = A2 \<union> A1, A2 \<inter> A1 = {a,b}.\<close>
+  \<comment> \<open>A2: same argument with A1 and A2 swapped.\<close>
   show "top1_arc_endpoints_on A2 (subspace_topology X TX A2) = {a, b}"
-    sorry \<comment> \<open>Same proof as A1 with A1\<leftrightarrow>A2 swapped. Cannot self-reference.\<close>
+  proof -
+    \<comment> \<open>For each p \<in> {a,b}: if p \<notin> endpoints(A2), use scc\_interior\_contradiction with A2,A1 swapped.\<close>
+    obtain f1 f2 where hf: "top1_arc_endpoints_on A2 (subspace_topology X TX A2) = {f1, f2}"
+        "f1 \<noteq> f2" "f1 \<in> A2" "f2 \<in> A2"
+    proof -
+      obtain h2 where hh2: "top1_homeomorphism_on I_set I_top A2 (subspace_topology X TX A2) h2"
+        using hA2 unfolding top1_is_arc_on_def by (by100 blast)
+      have hh2_bij: "h2 ` I_set = A2"
+        using hh2 unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+      have hh2_inj: "inj_on h2 I_set"
+        using hh2 unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+      have heps2_eq: "top1_arc_endpoints_on A2 (subspace_topology X TX A2) = {h2 0, h2 1}"
+        by (rule arc_endpoints_are_boundary[OF hT hH hA2_sub hA2 hh2])
+      have "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+      have "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+      have "h2 0 \<noteq> h2 1"
+      proof
+        assume "h2 0 = h2 1"
+        hence "(0::real) = 1" using hh2_inj \<open>(0::real) \<in> I_set\<close> \<open>(1::real) \<in> I_set\<close>
+          unfolding inj_on_def by (by100 blast)
+        thus False by (by100 simp)
+      qed
+      show ?thesis using that[of "h2 0" "h2 1"] heps2_eq \<open>h2 0 \<noteq> h2 1\<close> hh2_bij
+        \<open>(0::real) \<in> I_set\<close> \<open>(1::real) \<in> I_set\<close> by (by100 blast)
+    qed
+    have "a \<in> {f1, f2}"
+    proof (rule ccontr)
+      assume "a \<notin> {f1, f2}"
+      hence "a \<notin> top1_arc_endpoints_on A2 (subspace_topology X TX A2)" using hf(1) by (by100 simp)
+      have "a \<in> A2" using hint by (by100 blast)
+      have "C = A2 \<union> A1" using hdecomp by (by100 blast)
+      have "A2 \<inter> A1 = {a, b}" using hint by (by100 blast)
+      show False by (rule scc_interior_contradiction[OF hT hH hC hA2 hA1 hA2_sub hA1_sub
+          \<open>C = A2 \<union> A1\<close> \<open>A2 \<inter> A1 = {a, b}\<close> hab \<open>a \<in> A2\<close>
+          \<open>a \<notin> top1_arc_endpoints_on A2 (subspace_topology X TX A2)\<close>])
+    qed
+    have "b \<in> {f1, f2}"
+    proof (rule ccontr)
+      assume "b \<notin> {f1, f2}"
+      hence "b \<notin> top1_arc_endpoints_on A2 (subspace_topology X TX A2)" using hf(1) by (by100 simp)
+      have "b \<in> A2" using hint by (by100 blast)
+      have "C = A2 \<union> A1" using hdecomp by (by100 blast)
+      have hint_ba': "A2 \<inter> A1 = {b, a}" using hint by (by100 blast)
+      show False by (rule scc_interior_contradiction[OF hT hH hC hA2 hA1 hA2_sub hA1_sub
+          \<open>C = A2 \<union> A1\<close> hint_ba' _ \<open>b \<in> A2\<close>
+          \<open>b \<notin> top1_arc_endpoints_on A2 (subspace_topology X TX A2)\<close>])
+          (use hab in blast)
+    qed
+    from \<open>a \<in> {f1, f2}\<close> \<open>b \<in> {f1, f2}\<close> hab hf(2) show ?thesis
+      using hf(1) by (by100 blast)
+  qed
 qed
 
 lemma K4_from_SCC:
