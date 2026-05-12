@@ -3598,19 +3598,20 @@ proof -
      is fully proved above.\<close>
   \<comment> \<open>Diagonal e13 via first-hit sub-arcs.\<close>
   \<comment> \<open>Fp: sub-arc of arc\_f from p to first hit with C2. Fp \<inter> C2 = {a4'}.\<close>
-  from first_hit_sub_arc[OF assms(1) harc_f(1) harc_f_sub_S2 harc_f(3) hp_ne_q hC2_cl hf_meets_C2 _]
+  have hp_not_C2: "p \<notin> C2" using hp_notC hC12(1) by (by100 blast)
+  have hp_not_C1: "p \<notin> C1" using hp_notC hC12(1) by (by100 blast)
+  from first_hit_sub_arc[OF assms(1) harc_f(1) harc_f_sub_S2 harc_f(3) hp_ne_q hC2_cl hf_meets_C2 hp_not_C2]
   obtain Fp a4' where hFp: "a4' \<in> arc_f \<inter> C2" "p \<in> Fp" "a4' \<in> Fp"
       "top1_is_arc_on Fp (subspace_topology top1_S2 top1_S2_topology Fp)"
       "top1_arc_endpoints_on Fp (subspace_topology top1_S2 top1_S2_topology Fp) = {p, a4'}"
       "Fp \<subseteq> arc_f" "Fp \<inter> C2 = {a4'}"
-    sorry \<comment> \<open>Need p \<notin> C2: p \<notin> C \<supseteq> C2.\<close>
-  \<comment> \<open>Gp: sub-arc of arc\_g from p to first hit with C1. Gp \<inter> C1 = {a2'}.\<close>
-  from first_hit_sub_arc[OF assms(1) harc_g(1) harc_g_sub_S2 harc_g(3) hp_ne_q hC1_cl hg_meets_C1 _]
+    by auto
+  from first_hit_sub_arc[OF assms(1) harc_g(1) harc_g_sub_S2 harc_g(3) hp_ne_q hC1_cl hg_meets_C1 hp_not_C1]
   obtain Gp a2' where hGp: "a2' \<in> arc_g \<inter> C1" "p \<in> Gp" "a2' \<in> Gp"
       "top1_is_arc_on Gp (subspace_topology top1_S2 top1_S2_topology Gp)"
       "top1_arc_endpoints_on Gp (subspace_topology top1_S2 top1_S2_topology Gp) = {p, a2'}"
       "Gp \<subseteq> arc_g" "Gp \<inter> C1 = {a2'}"
-    sorry \<comment> \<open>Need p \<notin> C1.\<close>
+    by auto
   \<comment> \<open>Key: Fp \<inter> Gp = {p}. Fp \<subseteq> arc\_f \<subseteq> S2-C1, Gp \<subseteq> arc\_g \<subseteq> S2-C2.
      Fp \<inter> C1 = {} (Fp \<subseteq> S2-C1). a2' \<in> C1, a2' \<in> Gp but a2' \<notin> Fp.
      Gp \<inter> C2 = {} (Gp \<subseteq> S2-C2). a4' \<in> C2, a4' \<in> Fp but a4' \<notin> Gp.
