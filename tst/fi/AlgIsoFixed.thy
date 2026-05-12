@@ -2008,9 +2008,41 @@ proof -
     \<comment> \<open>Open square around h(x) with radius \<epsilon>. Use define to keep terms small.\<close>
     define Sq where "Sq = {q :: real \<times> real. \<bar>fst q - fst (h x)\<bar> < \<epsilon> \<and> \<bar>snd q - snd (h x)\<bar> < \<epsilon>}"
     have hSq_sub: "Sq \<subseteq> h ` (U \<inter> ?SP)"
-      sorry \<comment> \<open>Sq \<subseteq> A0 \<times> B0 \<subseteq> h`(U\<inter>SP) by choice of \<epsilon> \<le> min(\<epsilon>1,\<epsilon>2).\<close>
+    proof
+      fix q assume hq: "q \<in> Sq"
+      hence hq1: "\<bar>fst q - fst (h x)\<bar> < \<epsilon>" and hq2: "\<bar>snd q - snd (h x)\<bar> < \<epsilon>"
+        unfolding Sq_def by (by100 blast)+
+      have "dist (fst q) (fst (h x)) < \<epsilon>1"
+        unfolding dist_real_def using hq1 \<epsilon>_def by (by100 linarith)
+      hence "fst q \<in> A0" by (rule he1(2))
+      moreover have "dist (snd q) (snd (h x)) < \<epsilon>2"
+        unfolding dist_real_def using hq2 \<epsilon>_def by (by100 linarith)
+      hence "snd q \<in> B0" by (rule he2(2))
+      ultimately have "q \<in> A0 \<times> B0"
+        by (subst surjective_pairing[of q], rule SigmaI)
+      thus "q \<in> h ` (U \<inter> ?SP)" using hAB(4) by (by100 blast)
+    qed
     have hSq_TR2: "Sq \<in> ?TR2"
-      sorry \<comment> \<open>Sq is product of open intervals, hence open in R2.\<close>
+    proof -
+      have "open Sq"
+      proof -
+        define I1 where "I1 = {fst (h x) - \<epsilon> <..< fst (h x) + \<epsilon> :: real}"
+        define I2 where "I2 = {snd (h x) - \<epsilon> <..< snd (h x) + \<epsilon> :: real}"
+        have "Sq = I1 \<times> I2"
+          unfolding Sq_def I1_def I2_def greaterThanLessThan_def greaterThan_def lessThan_def
+          sorry \<comment> \<open>|a-c|<\<epsilon> \<leftrightarrow> c-\<epsilon><a \<and> a<c+\<epsilon>, plus product decomposition.\<close>
+        moreover have "open I1" unfolding I1_def by (by100 simp)
+        moreover have "open I2" unfolding I2_def by (by100 simp)
+        ultimately show ?thesis
+        proof -
+          assume hSqI: "Sq = I1 \<times> I2" and hI1: "open I1" and hI2: "open I2"
+          have "open (I1 \<times> I2)" by (rule open_Times[OF hI1 hI2])
+          thus ?thesis using hSqI by (by100 simp)
+        qed
+      qed
+      hence "Sq \<in> top1_open_sets" unfolding top1_open_sets_def by (by100 blast)
+      thus ?thesis using product_topology_on_open_sets_real2 by (by100 metis)
+    qed
     \<comment> \<open>Step 6: V = preimage of Sq under h within SP.\<close>
     define V where "V = {w \<in> ?SP. h w \<in> Sq}"
     have hV_in_TSP: "V \<in> ?TSP"
