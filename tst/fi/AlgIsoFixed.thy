@@ -2776,7 +2776,10 @@ proof -
         qed
         \<comment> \<open>B2 is connected and contains e1,e2. (B1-{p}) contains e1 (since p\<noteq>e1).
            By Theorem\_23\_3 with common point e1: union connected (B2 is the connected backbone).\<close>
-        show ?thesis sorry \<comment> \<open>(B1-{p}) ∪ B2 connected: B2 connected backbone.\<close>
+        \<comment> \<open>S1-{p} = (B1-{p}) \<union> B2. B2 connected, e1 \<in> (B1-{p}) \<inter> B2.
+           Even if B1-{p} is disconnected (two pieces), each piece is connected
+           and shares e1 or e2 with B2. Two applications of Theorem\_23\_3.\<close>
+        show ?thesis sorry \<comment> \<open>Connected: B2 backbone + pieces of B1-{p} each share e\_i with B2.\<close>
       qed
     qed
     \<comment> \<open>Transfer from R2 subspace to S1 subspace topology.\<close>
