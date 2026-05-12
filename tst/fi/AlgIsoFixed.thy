@@ -2679,17 +2679,7 @@ proof -
   have hC_sub_S2: "C \<subseteq> top1_S2" using assms(2) by (rule simple_closed_curve_subset)
   have hC1_sub: "C1 \<subseteq> top1_S2" using hC12(1) hC_sub_S2 by (by100 blast)
   have hC2_sub: "C2 \<subseteq> top1_S2" using hC12(1) hC_sub_S2 by (by100 blast)
-  \<comment> \<open>Step 2: Split C1 at midpoint to get e12, e23. Split C2 at midpoint to get e34, e41.\<close>
-  from arc_split_at_midpoint[OF assms(1) hS2_haus hC1_sub hC12(4)]
-  obtain a2 D1 D2 where hD: "a2 \<in> C1" "C1 = D1 \<union> D2" "D1 \<inter> D2 = {a2}"
-      "top1_is_arc_on D1 (subspace_topology top1_S2 top1_S2_topology D1)"
-      "top1_is_arc_on D2 (subspace_topology top1_S2 top1_S2_topology D2)"
-    by (by100 blast)
-  from arc_split_at_midpoint[OF assms(1) hS2_haus hC2_sub hC12(5)]
-  obtain a4 D3 D4 where hD2: "a4 \<in> C2" "C2 = D3 \<union> D4" "D3 \<inter> D4 = {a4}"
-      "top1_is_arc_on D3 (subspace_topology top1_S2 top1_S2_topology D3)"
-      "top1_is_arc_on D4 (subspace_topology top1_S2 top1_S2_topology D4)"
-    by (by100 blast)
+  \<comment> \<open>Step 2 deferred: Split C1/C2 at crossing points (not midpoints). See below.\<close>
   \<comment> \<open>Step 3: Jordan separation gives 2 components.\<close>
   have hC_sep: "top1_separates_on top1_S2 top1_S2_topology C"
     by (rule Theorem_61_3_JordanSeparation_S2[OF assms(1,2)])
@@ -2777,19 +2767,98 @@ proof -
       "arc_g \<subseteq> top1_S2 - C2"
       "top1_arc_endpoints_on arc_g (subspace_topology top1_S2 top1_S2_topology arc_g) = {p, q}"
     by (by100 blast)
-  \<comment> \<open>arc\_f avoids C1, so it intersects C only in C2-{a1,a3}.
-     arc\_g avoids C2, so it intersects C only in C1-{a1,a3}.
-     The construction uses Step 1 (arc splicing) to build the K4 diagonals
-     from the arcs and sub-arcs of C.\<close>
-  \<comment> \<open>Munkres Step 3: Construct K4 from arc\_f (p\<rightarrow>q avoiding C1) and arc\_g (p\<rightarrow>q avoiding C2).
-     arc\_f crosses C2 at some first-hit point \<Rightarrow> gives a4 on C2 interior.
-     arc\_g crosses C1 at some first-hit point \<Rightarrow> gives a2 on C1 interior.
-     Step 1 (arc splicing) gives diagonal arcs.
-     The cycle arcs come from splitting C1 at a2 and C2 at a4.
-     Full K4 assembly: 4 vertices a1,a2,a3,a4 on C, 4 cycle arcs from C,
-     2 diagonal arcs through components, with p on one diagonal and q on the other.
-     This is a lengthy mechanical construction using the infrastructure above.\<close>
-  show ?thesis sorry
+  \<comment> \<open>arc\_f avoids C1 \<Rightarrow> arc\_f \<inter> C \<subseteq> C2 - {a1,a3}. arc\_f must cross C2 (otherwise
+     arc\_f gives a path from p to q avoiding all of C, contradicting separation).
+     Similarly arc\_g \<inter> C \<subseteq> C1 - {a1,a3} and arc\_g must cross C1.\<close>
+  have harc_f_sub_S2: "arc_f \<subseteq> top1_S2" using harc_f(2) by (by100 blast)
+  have harc_g_sub_S2: "arc_g \<subseteq> top1_S2" using harc_g(2) by (by100 blast)
+  \<comment> \<open>arc\_f must intersect C2 (otherwise it avoids all of C).\<close>
+  have hf_meets_C2: "arc_f \<inter> C2 \<noteq> {}"
+    sorry \<comment> \<open>arc\_f avoids C1, connects p,q separated by C = C1\<union>C2. Must cross C2.\<close>
+  \<comment> \<open>arc\_g must intersect C1.\<close>
+  have hg_meets_C1: "arc_g \<inter> C1 \<noteq> {}"
+    sorry \<comment> \<open>Same argument: arc\_g avoids C2, must cross C1.\<close>
+  \<comment> \<open>Get crossing points: a4 \<in> arc\_f \<inter> (C2 - {a1,a3}), a2 \<in> arc\_g \<inter> (C1 - {a1,a3}).\<close>
+  obtain a4 where ha4: "a4 \<in> arc_f \<inter> C2" "a4 \<noteq> a1" "a4 \<noteq> a3"
+    sorry \<comment> \<open>arc\_f \<inter> C2 \<noteq> {}, and p,q are endpoints of arc\_f not in C \<supseteq> C2, so crossing is interior.\<close>
+  obtain a2 where ha2: "a2 \<in> arc_g \<inter> C1" "a2 \<noteq> a1" "a2 \<noteq> a3"
+    sorry \<comment> \<open>Same for arc\_g and C1.\<close>
+  \<comment> \<open>a4 is interior to C2 (not an endpoint of C2). Split C2 at a4.\<close>
+  have ha4_C2: "a4 \<in> C2" using ha4(1) by (by100 blast)
+  have ha4_not_ep_C2: "a4 \<notin> top1_arc_endpoints_on C2 (subspace_topology top1_S2 top1_S2_topology C2)"
+    sorry \<comment> \<open>Endpoints of C2 are {a1,a3}. a4 \<noteq> a1 and a4 \<noteq> a3.\<close>
+  have hC2_ep: "top1_arc_endpoints_on C2 (subspace_topology top1_S2 top1_S2_topology C2) = {a1, a3}"
+    sorry \<comment> \<open>C2 shares endpoints with C1: {a1, a3}.\<close>
+  from arc_split_at_given_point[OF assms(1) hS2_haus hC2_sub hC12(5) ha4_C2 ha4_not_ep_C2 hC2_ep hC12(3)]
+  obtain e34 e41 where hC2_split:
+    "C2 = e34 \<union> e41" "e34 \<inter> e41 = {a4}"
+    "top1_is_arc_on e34 (subspace_topology top1_S2 top1_S2_topology e34)"
+    "top1_is_arc_on e41 (subspace_topology top1_S2 top1_S2_topology e41)"
+    "a1 \<in> e34" "a3 \<in> e41" "a4 \<in> e34" "a4 \<in> e41"
+    "e34 \<subseteq> top1_S2" "e41 \<subseteq> top1_S2"
+    sorry \<comment> \<open>Need correct orientation: a1 in one half, a3 in other. May need to swap.\<close>
+  \<comment> \<open>Split C1 at a2 similarly.\<close>
+  have ha2_C1: "a2 \<in> C1" using ha2(1) by (by100 blast)
+  have hC1_ep: "top1_arc_endpoints_on C1 (subspace_topology top1_S2 top1_S2_topology C1) = {a1, a3}"
+    sorry \<comment> \<open>C1 endpoints = {a1, a3}.\<close>
+  have ha2_not_ep_C1: "a2 \<notin> top1_arc_endpoints_on C1 (subspace_topology top1_S2 top1_S2_topology C1)"
+    using hC1_ep ha2(2,3) by (by100 simp)
+  from arc_split_at_given_point[OF assms(1) hS2_haus hC1_sub hC12(4) ha2_C1 ha2_not_ep_C1 hC1_ep hC12(3)]
+  obtain e12 e23 where hC1_split:
+    "C1 = e12 \<union> e23" "e12 \<inter> e23 = {a2}"
+    "top1_is_arc_on e12 (subspace_topology top1_S2 top1_S2_topology e12)"
+    "top1_is_arc_on e23 (subspace_topology top1_S2 top1_S2_topology e23)"
+    "a1 \<in> e12" "a3 \<in> e23" "a2 \<in> e12" "a2 \<in> e23"
+    "e12 \<subseteq> top1_S2" "e23 \<subseteq> top1_S2"
+    sorry \<comment> \<open>Same orientation issue.\<close>
+  \<comment> \<open>Endpoints of cycle edges (from arc\_split\_endpoints).\<close>
+  have he12_ep: "top1_arc_endpoints_on e12 (subspace_topology top1_S2 top1_S2_topology e12) = {a1, a2}"
+    sorry \<comment> \<open>By arc\_split\_endpoints.\<close>
+  have he23_ep: "top1_arc_endpoints_on e23 (subspace_topology top1_S2 top1_S2_topology e23) = {a2, a3}"
+    sorry \<comment> \<open>By arc\_split\_endpoints.\<close>
+  have he34_ep: "top1_arc_endpoints_on e34 (subspace_topology top1_S2 top1_S2_topology e34) = {a1, a4}"
+    sorry \<comment> \<open>Note: this should be {a3, a4} or {a1, a4} depending on orientation.\<close>
+  have he41_ep: "top1_arc_endpoints_on e41 (subspace_topology top1_S2 top1_S2_topology e41) = {a4, a3}"
+    sorry
+  \<comment> \<open>Diagonal e13: arc from a1 to a3 through p. arc\_f goes p\<rightarrow>q avoiding C1.
+     Splice sub-arc of arc\_f from p to a4 with sub-arc of C2 from a4 to a1 (or a3).
+     This is intricate and depends on the orientation of arc\_f relative to C2.
+     For now we sorry the diagonal construction.\<close>
+  obtain e13 where he13:
+    "top1_is_arc_on e13 (subspace_topology top1_S2 top1_S2_topology e13)"
+    "top1_arc_endpoints_on e13 (subspace_topology top1_S2 top1_S2_topology e13) = {a1, a3}"
+    "e13 \<subseteq> top1_S2" "p \<in> e13 - {a1, a3}"
+    sorry \<comment> \<open>Diagonal via arc\_f + sub-arcs of C2. Needs Step 1 arc splice.\<close>
+  obtain e24 where he24:
+    "top1_is_arc_on e24 (subspace_topology top1_S2 top1_S2_topology e24)"
+    "top1_arc_endpoints_on e24 (subspace_topology top1_S2 top1_S2_topology e24) = {a2, a4}"
+    "e24 \<subseteq> top1_S2" "q \<in> e24 - {a2, a4}"
+    sorry \<comment> \<open>Diagonal via arc\_g + sub-arcs of C1. Needs Step 1 arc splice.\<close>
+  \<comment> \<open>Verify K4 conditions.\<close>
+  have hcard4: "card {a1, a2, a3, a4} = 4"
+    sorry \<comment> \<open>a1\<noteq>a2\<noteq>a3\<noteq>a4 pairwise distinct.\<close>
+  have hC_eq: "C = e12 \<union> e23 \<union> e34 \<union> e41"
+    using hC12(1) hC1_split(1) hC2_split(1) by (by100 blast)
+  \<comment> \<open>Intersection conditions for cycle edges.\<close>
+  have "e12 \<inter> e34 = {}" sorry \<comment> \<open>e12 \<subseteq> C1, e34 \<subseteq> C2, C1\<inter>C2={a1,a3}, a1\<notin>e34\<inter>e12 etc.\<close>
+  have "e23 \<inter> e41 = {}" sorry
+  have "e12 \<inter> e23 = {a2}" using hC1_split(2) sorry
+  have "e23 \<inter> e34 = {a3}" sorry
+  have "e34 \<inter> e41 = {a4}" using hC2_split(2) sorry
+  have "e41 \<inter> e12 = {a1}" sorry
+  \<comment> \<open>Intersection conditions for diagonals.\<close>
+  have "e13 \<inter> e12 = {a1}" sorry
+  have "e13 \<inter> e23 = {a3}" sorry
+  have "e13 \<inter> e34 = {a3}" sorry
+  have "e13 \<inter> e41 = {a1}" sorry
+  have "e13 \<inter> e24 \<subseteq> {a1, a2, a3, a4}" sorry
+  have "e24 \<inter> e12 = {a2}" sorry
+  have "e24 \<inter> e23 = {a2}" sorry
+  have "e24 \<inter> e34 = {a4}" sorry
+  have "e24 \<inter> e41 = {a4}" sorry
+  \<comment> \<open>Assembly.\<close>
+  show ?thesis
+    sorry \<comment> \<open>Combine all facts above to satisfy the 38-condition existential.\<close>
 qed
 
 theorem Theorem_65_2_fixed:
