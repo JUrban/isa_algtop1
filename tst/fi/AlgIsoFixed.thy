@@ -1979,10 +1979,18 @@ proof -
       thus ?thesis using \<open>f 1 \<in> U - ?E'\<close> by (by100 blast)
     qed
     \<comment> \<open>f(I) connected, meets both E' and U-E' (open partition of U) \<Rightarrow> contradiction.\<close>
-    ultimately have "\<not> top1_connected_on (f ` I_set) (subspace_topology U (subspace_topology top1_S2 top1_S2_topology U) (f ` I_set))"
-      using Lemma_23_2_disjoint[OF hU_top _ hfI_sub hfI_conn]
-      sorry \<comment> \<open>Lemma\_23\_2 applied to the separation E', U-E'.\<close>
-    thus False using hfI_conn by (by100 blast)
+    moreover have hSep: "top1_is_separation_on U (subspace_topology top1_S2 top1_S2_topology U) ?E' (U - ?E')"
+    proof -
+      have "?E' \<noteq> {}" using ha_E by (by100 blast)
+      moreover have "U - ?E' \<noteq> {}" using \<open>b \<notin> ?E'\<close> assms(5) by (by100 blast)
+      moreover have "?E' \<inter> (U - ?E') = {}" by (by100 blast)
+      moreover have "?E' \<union> (U - ?E') = U" by (by100 blast)
+      ultimately show ?thesis unfolding top1_is_separation_on_def
+        using hE'_open hUE'_open by (by100 blast)
+    qed
+    ultimately have "f ` I_set \<inter> (U - ?E') = {} \<or> f ` I_set \<inter> ?E' = {}"
+      using Lemma_23_2_disjoint[OF hU_top hSep hfI_sub hfI_conn] by (by100 blast)
+    thus False using \<open>f ` I_set \<inter> ?E' \<noteq> {}\<close> \<open>f ` I_set \<inter> (U - ?E') \<noteq> {}\<close> by (by100 blast)
   qed
   \<comment> \<open>b \<in> E' and b \<noteq> a \<Rightarrow> \<exists> arc from a to b in U.\<close>
   from hb_E assms(6) show ?thesis by (by100 blast)
