@@ -3250,10 +3250,35 @@ proof -
   have h0_p_or_q: "h 0 = p \<or> h 0 = q" using hh_ep by auto
   \<comment> \<open>Define oriented homeomorphism.\<close>
   define h' where "h' = (if h 0 = p then h else h \<circ> (\<lambda>t. 1 - t))"
-  have hh'0: "h' 0 = p" sorry \<comment> \<open>Case split on h(0)=p vs h(0)=q.\<close>
-  have hh'1: "h' 1 = q" sorry
+  have hh'0: "h' 0 = p"
+    unfolding h'_def using hh_ep hpq by auto
+  have hh'1: "h' 1 = q"
+  proof (cases "h 0 = p")
+    case True
+    have "q \<in> {h 0, h 1}" using hh_ep by (by100 blast)
+    hence "h 1 = q" using True hpq by (by100 blast)
+    thus ?thesis unfolding h'_def using True by (by100 simp)
+  next
+    case False
+    have "p \<in> {h 0, h 1}" using hh_ep by (by100 blast)
+    hence "h 0 = q" using False hh_ep by (by100 blast)
+    have "h 1 = p" using hh_ep \<open>h 0 = q\<close> hpq by (by100 blast)
+    have "h' 1 = h (1 - 1)" unfolding h'_def using False by (by100 simp)
+    thus ?thesis using \<open>h 0 = q\<close> by (by100 simp)
+  qed
   have hh'_homeo: "top1_homeomorphism_on I_set I_top A (subspace_topology top1_S2 top1_S2_topology A) h'"
-    sorry \<comment> \<open>h' = h or h \<circ> reversal, both homeomorphisms.\<close>
+  proof (cases "h 0 = p")
+    case True thus ?thesis unfolding h'_def using hh by (by100 simp)
+  next
+    case False
+    hence "h 0 = q" using hh_ep by auto
+    \<comment> \<open>h' = h \<circ> (\<lambda>t. 1-t). Both h and reversal are homeomorphisms. Composition is homeomorphism.\<close>
+    have hrev: "top1_homeomorphism_on I_set I_top I_set I_top (\<lambda>t. 1 - t)"
+      by (rule unit_interval_reversal_homeomorphism)
+    have "top1_homeomorphism_on I_set I_top A (subspace_topology top1_S2 top1_S2_topology A) (h \<circ> (\<lambda>t. 1 - t))"
+      sorry \<comment> \<open>Composition of homeomorphisms.\<close>
+    thus ?thesis unfolding h'_def using False by (by100 simp)
+  qed
   have hh'_bij: "bij_betw h' I_set A"
     using hh'_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
   have hh'_inj: "inj_on h' I_set" using hh'_bij unfolding bij_betw_def by (by100 blast)
