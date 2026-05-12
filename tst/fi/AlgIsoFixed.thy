@@ -2661,7 +2661,48 @@ proof -
   \<comment> \<open>S1 - {f\<inverse>(a)} is connected (S1 minus a point is an arc).\<close>
   have "top1_connected_on (top1_S1 - {inv_into top1_S1 f a})
       (subspace_topology top1_S1 top1_S1_topology (top1_S1 - {inv_into top1_S1 f a}))"
-    sorry \<comment> \<open>S1 minus one point is homeomorphic to R, hence connected.\<close>
+  proof -
+    let ?p = "inv_into top1_S1 f a"
+    \<comment> \<open>Decompose S1 into two arcs.\<close>
+    have hS1_scc: "top1_simple_closed_curve_on UNIV (product_topology_on top1_open_sets top1_open_sets) top1_S1"
+    proof -
+      have "top1_continuous_map_on top1_S1 top1_S1_topology UNIV
+          (product_topology_on top1_open_sets top1_open_sets) id"
+        sorry \<comment> \<open>Inclusion S1 \<hookrightarrow> R2 is continuous (subspace inclusion).\<close>
+      moreover have "inj_on id top1_S1" by (by100 simp)
+      moreover have "id ` top1_S1 = top1_S1" by (by100 simp)
+      ultimately show ?thesis unfolding top1_simple_closed_curve_on_def by (by100 blast)
+    qed
+    have hS1_strict: "is_topology_on_strict UNIV (product_topology_on top1_open_sets top1_open_sets :: (real \<times> real) set set)"
+    proof -
+      have "is_topology_on (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets)"
+      proof -
+        have "is_topology_on (UNIV :: real set) top1_open_sets" by (rule top1_open_sets_is_topology_on_UNIV)
+        from product_topology_on_is_topology_on[OF this this]
+        show ?thesis by (by100 simp)
+      qed
+      moreover have "(UNIV :: (real \<times> real) set) \<noteq> {}" by (by100 blast)
+      moreover have "product_topology_on top1_open_sets top1_open_sets \<subseteq> Pow (UNIV :: (real \<times> real) set)"
+        by (by100 blast)
+      ultimately show ?thesis unfolding is_topology_on_strict_def by (by100 blast)
+    qed
+    have hR2_haus: "is_hausdorff_on (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets)"
+      by (rule top1_R2_is_hausdorff)
+    from simple_closed_curve_arc_decomposition[OF hS1_scc hS1_strict hR2_haus]
+    obtain B1 B2 e1 e2 where hB: "top1_S1 = B1 \<union> B2" "B1 \<inter> B2 = {e1, e2}" "e1 \<noteq> e2"
+        "top1_is_arc_on B1 (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) B1)"
+        "top1_is_arc_on B2 (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) B2)"
+      by (by100 blast)
+    \<comment> \<open>S1 - {p}: p is in B1 or B2 (or both = {e1,e2}).
+       In each case, S1-{p} = connected pieces sharing e1 or e2.\<close>
+    have "top1_connected_on (top1_S1 - {?p})
+        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (top1_S1 - {?p}))"
+      sorry \<comment> \<open>Case analysis on p: in B1 interior, B2 interior, or endpoint.
+         Each case: union of connected sets sharing a point.\<close>
+    \<comment> \<open>Transfer from R2 subspace to S1 subspace topology.\<close>
+    thus ?thesis
+      sorry \<comment> \<open>subspace\_topology\_trans: S1-{p} \<subseteq> S1 \<subseteq> UNIV.\<close>
+  qed
   \<comment> \<open>Transfer: f continuous S1 \<rightarrow> X, restrict to S1-{p}. Image = C-{a}. Connected.\<close>
   let ?p = "inv_into top1_S1 f a"
   have hf_img: "f ` (top1_S1 - {?p}) = C - {a}"
