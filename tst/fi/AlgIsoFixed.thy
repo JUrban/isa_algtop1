@@ -2881,16 +2881,50 @@ proof -
      b is in one (say P). Q \<subseteq> A1 - {a,b} \<subseteq> A1 - A2, so Q \<inter> A2 = {}.
      Then C-{a} = P \<union> Q \<union> (A2-{a}) with Q disjoint from the rest, contradicting
      C-{a} connected (SCC minus point).\<close>
-  obtain e1 e2 where heps: "top1_arc_endpoints_on A1 (subspace_topology X TX A1) = {e1, e2}"
+  obtain h1 where hh1: "top1_homeomorphism_on I_set I_top A1 (subspace_topology X TX A1) h1"
+    using hA1 unfolding top1_is_arc_on_def by (by100 blast)
+  define e1 where "e1 = h1 0"
+  define e2 where "e2 = h1 1"
+  have heps_eq: "top1_arc_endpoints_on A1 (subspace_topology X TX A1) = {e1, e2}"
+    unfolding e1_def e2_def
+    by (rule arc_endpoints_are_boundary[OF hT hH hA1_sub hA1 hh1])
+  have heps_ne: "e1 \<noteq> e2"
+  proof -
+    have "h1 ` I_set = A1"
+      using hh1 unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+    have h_inj: "inj_on h1 I_set"
+      using hh1 unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+    have h0I: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+    have h1I: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+    have "(0::real) \<noteq> 1" by (by100 simp)
+    thus ?thesis unfolding e1_def e2_def using h_inj h0I h1I
+      unfolding inj_on_def by (by100 blast)
+  qed
+  have he1_A1: "e1 \<in> A1" and he2_A1: "e2 \<in> A1"
+  proof -
+    have "h1 ` I_set = A1"
+      using hh1 unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+    have "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+    thus "e1 \<in> A1" unfolding e1_def using \<open>h1 ` I_set = A1\<close> by (by100 blast)
+    have "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+    thus "e2 \<in> A1" unfolding e2_def using \<open>h1 ` I_set = A1\<close> by (by100 blast)
+  qed
+  have heps: "top1_arc_endpoints_on A1 (subspace_topology X TX A1) = {e1, e2}"
       "e1 \<noteq> e2" "e1 \<in> A1" "e2 \<in> A1"
-    sorry \<comment> \<open>Arcs have exactly 2 endpoints, both in the arc.\<close>
+    using heps_eq heps_ne he1_A1 he2_A1 by auto
   have ha_ep: "a \<in> {e1, e2}"
   proof (rule ccontr)
     assume ha_int: "a \<notin> {e1, e2}"
     \<comment> \<open>a is interior to A1. A1-{a} is disconnected.\<close>
     have "a \<in> A1" using hint by (by100 blast)
     have "\<not> top1_connected_on (A1 - {a}) (subspace_topology A1 (subspace_topology X TX A1) (A1 - {a}))"
-      sorry \<comment> \<open>a \<notin> endpoints(A1) and a \<in> A1 \<Rightarrow> a is interior, so A1-{a} disconnected.\<close>
+    proof -
+      have "a \<notin> top1_arc_endpoints_on A1 (subspace_topology X TX A1)"
+        using ha_int heps(1) by (by100 simp)
+      hence "a \<notin> {p \<in> A1. top1_connected_on (A1 - {p}) (subspace_topology A1 (subspace_topology X TX A1) (A1 - {p}))}"
+        unfolding top1_arc_endpoints_on_def by (by100 simp)
+      thus ?thesis using \<open>a \<in> A1\<close> by (by100 blast)
+    qed
     \<comment> \<open>But C-{a} must be connected (SCC minus point homeomorphic to (0,1)).\<close>
     have hC_sub: "C \<subseteq> X" using hdecomp hA1_sub hA2_sub by (by100 blast)
     have "a \<in> C" using \<open>a \<in> A1\<close> hdecomp by (by100 blast)
@@ -2905,7 +2939,13 @@ proof -
     assume hb_int: "b \<notin> {e1, e2}"
     have "b \<in> A1" using hint by (by100 blast)
     have "\<not> top1_connected_on (A1 - {b}) (subspace_topology A1 (subspace_topology X TX A1) (A1 - {b}))"
-      sorry \<comment> \<open>Same: b interior to A1 \<Rightarrow> A1-{b} disconnected.\<close>
+    proof -
+      have "b \<notin> top1_arc_endpoints_on A1 (subspace_topology X TX A1)"
+        using hb_int heps(1) by (by100 simp)
+      hence "b \<notin> {p \<in> A1. top1_connected_on (A1 - {p}) (subspace_topology A1 (subspace_topology X TX A1) (A1 - {p}))}"
+        unfolding top1_arc_endpoints_on_def by (by100 simp)
+      thus ?thesis using \<open>b \<in> A1\<close> by (by100 blast)
+    qed
     have hC_sub: "C \<subseteq> X" using hdecomp hA1_sub hA2_sub by (by100 blast)
     have "b \<in> C" using hint hdecomp by (by100 blast)
     have hCb_conn: "top1_connected_on (C - {b}) (subspace_topology X TX (C - {b}))"
@@ -2915,8 +2955,9 @@ proof -
   from ha_ep hb_ep hab heps(2) show "top1_arc_endpoints_on A1 (subspace_topology X TX A1) = {a, b}"
     using heps(1) by (by100 blast)
   \<comment> \<open>Same argument for A2.\<close>
+  \<comment> \<open>A2: same argument with A1 and A2 swapped. C = A2 \<union> A1, A2 \<inter> A1 = {a,b}.\<close>
   show "top1_arc_endpoints_on A2 (subspace_topology X TX A2) = {a, b}"
-    sorry \<comment> \<open>Symmetric argument.\<close>
+    sorry \<comment> \<open>Same proof as A1 with A1\<leftrightarrow>A2 swapped. Cannot self-reference.\<close>
 qed
 
 lemma K4_from_SCC:
