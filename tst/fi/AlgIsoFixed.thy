@@ -1913,7 +1913,12 @@ proof -
        continuous injective from [0,1] to R2, hence an arc (embedding from compact
        to Hausdorff). Via inverse stereographic: arc in V \<subseteq> S2.
        All building blocks: stereographic\_proj\_homeomorphism, open\_disk\_convex,
-       top1\_embedding\_on\_compact\_inj, homeomorphism\_on\_comp.\<close>
+       top1\_embedding\_on\_compact\_inj, homeomorphism\_on\_comp.
+       Full proof needs: stereographic chart around x, \<epsilon>-ball in R2,
+       convexity of ball, line segment as arc, transfer via homeomorphism.
+       The north\_pole case needs stereographic from south pole (not formalized),
+       but in practice K4\_from\_SCC only uses this for U = S2-C1 or S2-C2
+       where north\_pole \<in> C is generic.\<close>
     sorry
   \<comment> \<open>Equivalence class argument: E = \{y \<in> U | \<exists> arc from a to y in U\}.
      E is open (local\_arc + Step 1). U-E is open (same argument).
