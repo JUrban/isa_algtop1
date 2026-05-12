@@ -2858,11 +2858,17 @@ proof -
   have hC_eq: "C = e12 \<union> e23 \<union> e34 \<union> e41"
     using hC12(1) hC1_split(1) hC2_split(1) by (by100 blast)
   \<comment> \<open>Intersection conditions for cycle edges.\<close>
-  have "e12 \<inter> e34 = {}" sorry \<comment> \<open>e12 \<subseteq> C1, e34 \<subseteq> C2, C1\<inter>C2={a1,a3}, a1\<notin>e34\<inter>e12 etc.\<close>
+  \<comment> \<open>Subset facts for cycle edges.\<close>
+  have he12_C1: "e12 \<subseteq> C1" using hC1_split(1) by (by100 blast)
+  have he23_C1: "e23 \<subseteq> C1" using hC1_split(1) by (by100 blast)
+  have he34_C2: "e34 \<subseteq> C2" using hC2_split(1) by (by100 blast)
+  have he41_C2: "e41 \<subseteq> C2" using hC2_split(1) by (by100 blast)
+  \<comment> \<open>Cross-half intersections: e12,e23 \<subseteq> C1 while e34,e41 \<subseteq> C2, and C1\<inter>C2={a1,a3}.\<close>
+  have "e12 \<inter> e34 = {}" sorry \<comment> \<open>e12 \<subseteq> C1, e34 \<subseteq> C2. e12\<inter>e34 \<subseteq> C1\<inter>C2 = {a1,a3}. But a1\<in>e12\<inter>e34? No: a1 endpoints.\<close>
   have "e23 \<inter> e41 = {}" sorry
-  have "e12 \<inter> e23 = {a2}" using hC1_split(2) sorry
-  have "e23 \<inter> e34 = {a3}" sorry
-  have "e34 \<inter> e41 = {a4}" using hC2_split(2) sorry
+  have "e12 \<inter> e23 = {a2}" using hC1_split(2) by (by100 blast)
+  have "e23 \<inter> e34 = {a3}" sorry \<comment> \<open>a3 \<in> e23 \<inter> C2, and e23\<inter>e34 \<subseteq> C1\<inter>C2 = {a1,a3}. a3\<in>both.\<close>
+  have "e34 \<inter> e41 = {a4}" using hC2_split(2) by (by100 blast)
   have "e41 \<inter> e12 = {a1}" sorry
   \<comment> \<open>Intersection conditions for diagonals.\<close>
   have "e13 \<inter> e12 = {a1}" sorry
