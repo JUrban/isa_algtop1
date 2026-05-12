@@ -3014,16 +3014,84 @@ proof -
      Splice sub-arc of arc\_f from p to a4 with sub-arc of C2 from a4 to a1 (or a3).
      This is intricate and depends on the orientation of arc\_f relative to C2.
      For now we sorry the diagonal construction.\<close>
+  \<comment> \<open>Diagonal e13: Split arc\_f at a4 to get Fp (p-side). Splice:
+     (1) e41 + Fp at a4 \<Rightarrow> arc a1\<rightarrow>p  (Step 1, a1\<notin>Fp since a1\<notin>arc\_f)
+     (2) Fp + e34 at a4 \<Rightarrow> arc p\<rightarrow>a3  (Step 1, a3\<notin>Fp)
+     (3) arc(a1\<rightarrow>p) + arc(p\<rightarrow>a3) at p \<Rightarrow> arc a1\<rightarrow>a3 through p  (Step 1, a1\<notin>(Fp\<union>e34))\<close>
+  \<comment> \<open>Step D1: Split arc\_f at a4.\<close>
+  have ha4_arc_f: "a4 \<in> arc_f" using ha4(1) by (by100 blast)
+  have ha4_not_ep_f: "a4 \<notin> top1_arc_endpoints_on arc_f (subspace_topology top1_S2 top1_S2_topology arc_f)"
+  proof -
+    have "a4 \<in> C" using ha4_C2 hC12(1) by (by100 blast)
+    hence "a4 \<noteq> p" "a4 \<noteq> q" using hp_notC hq_notC by (by100 blast)+
+    thus ?thesis using harc_f(3) by (by100 simp)
+  qed
+  from arc_split_at_given_point[OF assms(1) hS2_haus harc_f_sub_S2 harc_f(1) ha4_arc_f
+      ha4_not_ep_f harc_f(3) hp_ne_q]
+  obtain Fp Fq where hFpq:
+    "arc_f = Fp \<union> Fq" "Fp \<inter> Fq = {a4}"
+    "top1_is_arc_on Fp (subspace_topology top1_S2 top1_S2_topology Fp)"
+    "top1_is_arc_on Fq (subspace_topology top1_S2 top1_S2_topology Fq)"
+    "p \<in> Fp" "q \<in> Fq" "a4 \<in> Fp" "a4 \<in> Fq"
+    "Fp \<subseteq> top1_S2" "Fq \<subseteq> top1_S2"
+    by auto
+  have hFp_ep: "top1_arc_endpoints_on Fp (subspace_topology top1_S2 top1_S2_topology Fp) = {p, a4}"
+    by (rule arc_split_endpoints(1)[OF assms(1) hS2_haus harc_f_sub_S2 harc_f(1)
+        hFpq(1,2,3,4,5,6,7,8,9,10) harc_f(3) ha4_not_ep_f])
+  \<comment> \<open>Key: a1 \<notin> Fp and a3 \<notin> Fp (since Fp \<subseteq> arc\_f \<subseteq> S2-C1, and a1,a3 \<in> C1).\<close>
+  have ha1_not_Fp: "a1 \<notin> Fp" using hFpq(1) harc_f(2) hC12(2) by (by100 blast)
+  have ha3_not_Fp: "a3 \<notin> Fp" using hFpq(1) harc_f(2) hC12(2) by (by100 blast)
+  \<comment> \<open>Step D2: Splice e41 + Fp at a4 to get arc a1\<rightarrow>p.\<close>
+  \<comment> \<open>Step D2: Splice e41(a1\<leftrightarrow>a4) + Fp(a4\<leftrightarrow>p) at a4 \<Rightarrow> arc a1\<rightarrow>p.\<close>
+  have ha4_ne_a1: "a4 \<noteq> a1" using ha4(2) by (by100 blast)
+  have ha4_ne_p: "a4 \<noteq> p" using hp_notC ha4_C2 hC12(1) by (by100 blast)
+  from Munkres_Step_1_arc_splice[OF assms(1) hC2_split(4) hFpq(3) hC2_split(10) hFpq(9)
+      he41_ep hFp_ep ha4_ne_a1 ha4_ne_p ha1_not_Fp]
+  obtain arc_a1p where harc_a1p:
+    "top1_is_arc_on arc_a1p (subspace_topology top1_S2 top1_S2_topology arc_a1p)"
+    "arc_a1p \<subseteq> e41 \<union> Fp" "a1 \<in> arc_a1p" "p \<in> arc_a1p"
+    "top1_arc_endpoints_on arc_a1p (subspace_topology top1_S2 top1_S2_topology arc_a1p) = {a1, p}"
+    by (by100 blast)
+  \<comment> \<open>Step D3: Splice Fp(p\<leftrightarrow>a4) + e34(a4\<leftrightarrow>a3) at a4 \<Rightarrow> arc p\<rightarrow>a3.
+     Note: shared point is a4, so need hFp\_ep = {p, a4} and he34\_ep = {a4, a3} to match.
+     But he34\_ep = {a3, a4}. Since {a3, a4} = {a4, a3}, the swap is fine for set equality.\<close>
+  have ha4_ne_a3: "a4 \<noteq> a3" using ha4(3) by (by100 blast)
+  have hp_ne_a4: "p \<noteq> a4" using ha4_ne_p by (by100 blast)
+  from Munkres_Step_1_arc_splice[OF assms(1) hFpq(3) hC2_split(3) hFpq(9) hC2_split(9)
+      hFp_ep he34_ep hp_ne_a4 ha4_ne_a3 ha3_not_Fp]
+  obtain arc_pa3 where harc_pa3:
+    "top1_is_arc_on arc_pa3 (subspace_topology top1_S2 top1_S2_topology arc_pa3)"
+    "arc_pa3 \<subseteq> Fp \<union> e34" "p \<in> arc_pa3" "a3 \<in> arc_pa3"
+    "top1_arc_endpoints_on arc_pa3 (subspace_topology top1_S2 top1_S2_topology arc_pa3) = {p, a3}"
+    by (by100 blast)
+  \<comment> \<open>Step D4: Splice arc(a1\<rightarrow>p) + arc(p\<rightarrow>a3) at p to get arc a1\<rightarrow>a3.\<close>
+  have ha1_not_pa3: "a1 \<notin> arc_pa3"
+  proof -
+    have "arc_pa3 \<subseteq> Fp \<union> e34" by (rule harc_pa3(2))
+    moreover have "a1 \<notin> Fp" by (rule ha1_not_Fp)
+    moreover have "a1 \<notin> e34" by (rule ha1_not_e34)
+    ultimately show ?thesis by (by100 blast)
+  qed
+  have harc_a1p_sub: "arc_a1p \<subseteq> top1_S2" using harc_a1p(2) hC2_split(10) hFpq(9) by (by100 blast)
+  have harc_pa3_sub: "arc_pa3 \<subseteq> top1_S2" using harc_pa3(2) hFpq(9) hC2_split(9) by (by100 blast)
+  have ha1_ne_p: "a1 \<noteq> p" using hp_notC hC12(2) hC12(1) by (by100 blast)
+  have hp_ne_a3: "p \<noteq> a3" using hp_notC hC12(2) hC12(1) by (by100 blast)
+  from Munkres_Step_1_arc_splice[OF assms(1) harc_a1p(1) harc_pa3(1) harc_a1p_sub harc_pa3_sub
+      harc_a1p(5) harc_pa3(5) ha1_ne_p hp_ne_a3 ha1_not_pa3]
   obtain e13 where he13:
     "top1_is_arc_on e13 (subspace_topology top1_S2 top1_S2_topology e13)"
+    "e13 \<subseteq> arc_a1p \<union> arc_pa3" "a1 \<in> e13" "a3 \<in> e13"
     "top1_arc_endpoints_on e13 (subspace_topology top1_S2 top1_S2_topology e13) = {a1, a3}"
-    "e13 \<subseteq> top1_S2" "p \<in> e13 - {a1, a3}"
-    sorry \<comment> \<open>Diagonal via arc\_f + sub-arcs of C2. Needs Step 1 arc splice.\<close>
+    by (by100 blast)
+  have he13_sub: "e13 \<subseteq> top1_S2" using he13(2) harc_a1p_sub harc_pa3_sub by (by100 blast)
+  have hp_in_e13: "p \<in> e13 - {a1, a3}"
+    sorry \<comment> \<open>p \<in> arc\_a1p (interior), arc\_a1p \<subseteq> e13 (from Step 1 output). p \<noteq> a1, p \<noteq> a3.\<close>
+  \<comment> \<open>Diagonal e24: same construction with arc\_g and C1 sub-arcs.\<close>
   obtain e24 where he24:
     "top1_is_arc_on e24 (subspace_topology top1_S2 top1_S2_topology e24)"
     "top1_arc_endpoints_on e24 (subspace_topology top1_S2 top1_S2_topology e24) = {a2, a4}"
     "e24 \<subseteq> top1_S2" "q \<in> e24 - {a2, a4}"
-    sorry \<comment> \<open>Diagonal via arc\_g + sub-arcs of C1. Needs Step 1 arc splice.\<close>
+    sorry \<comment> \<open>Symmetric construction with arc\_g, e12, e23. Same 3-step splice.\<close>
   \<comment> \<open>Verify K4 conditions.\<close>
   have ha2_ne_a4: "a2 \<noteq> a4"
   proof
