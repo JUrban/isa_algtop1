@@ -1917,18 +1917,64 @@ proof -
         (\<forall>y \<in> V. \<forall>z \<in> V. y \<noteq> z \<longrightarrow>
           (\<exists>D. top1_is_arc_on D (subspace_topology top1_S2 top1_S2_topology D) \<and>
                D \<subseteq> V \<and> top1_arc_endpoints_on D (subspace_topology top1_S2 top1_S2_topology D) = {y, z}))"
-      sorry \<comment> \<open>Needs: stereographic chart + \<epsilon>-ball + line segment = arc + transfer.
-         All building blocks available. Proof chain:
-         (1) x \<in> S2-{NP} (or handle NP separately)
-         (2) stereo: S2-{NP} \<cong> R2. stereo(U\<inter>S2-{NP}) open in R2
-         (3) \<exists>\<epsilon>-ball B around stereo(x) with B \<subseteq> stereo(U\<inter>S2-{NP})
-         (4) V = stereo\<inverse>(B) open in S2, V \<subseteq> U
-         (5) For y,z\<in>V: line seg t\<mapsto>(1-t)*stereo(y)+t*stereo(z) in B (ball convex)
-         (6) Line seg continuous + injective \<Rightarrow> embedding \<Rightarrow> arc in R2
-         (7) stereo\<inverse> maps arc to arc in V (homeomorphism preserves arcs)
-         Available: stereographic\_proj\_homeomorphism, open\_disk\_convex,
-         top1\_embedding\_on\_compact\_inj, homeomorphism\_on\_comp,
-         arc\_endpoints\_are\_boundary.\<close>
+    proof (cases "x = north_pole")
+      case True
+      \<comment> \<open>x = NP case: needs stereographic from south pole (not formalized).
+         In practice, K4\_from\_SCC can avoid this by choosing decomposition
+         with north\_pole on C.\<close>
+      show ?thesis sorry
+    next
+      case hx_ne_NP: False
+      \<comment> \<open>x \<noteq> NP: use stereographic\_proj from NP.\<close>
+      let ?SP = "top1_S2 - {north_pole}"
+      let ?TSP = "subspace_topology top1_S2 top1_S2_topology ?SP"
+      let ?R2 = "UNIV :: (real \<times> real) set"
+      let ?TR2 = "product_topology_on top1_open_sets top1_open_sets"
+      have hx_SP: "x \<in> ?SP" using hx assms(3) hx_ne_NP by (by100 blast)
+      have hstereo: "top1_homeomorphism_on ?SP ?TSP ?R2 ?TR2 stereographic_proj"
+        by (rule stereographic_proj_homeomorphism)
+      \<comment> \<open>stereographic\_proj(U \<inter> SP) is open in R2.\<close>
+      have hU_SP: "U \<inter> ?SP \<in> ?TSP"
+        unfolding subspace_topology_def using assms(2) by (by100 blast)
+      have hstereo_U_open: "stereographic_proj ` (U \<inter> ?SP) \<in> ?TR2"
+      proof -
+        \<comment> \<open>Homeomorphism inverse is continuous: preimage of open under inv = open in codomain.\<close>
+        have hinv_cont: "top1_continuous_map_on ?R2 ?TR2 ?SP ?TSP (inv_into ?SP stereographic_proj)"
+          using hstereo unfolding top1_homeomorphism_on_def by (by100 blast)
+        \<comment> \<open>stereographic\_proj ` W = inv\<inverse>(W) for W \<subseteq> SP (since bij).\<close>
+        have hbij: "bij_betw stereographic_proj ?SP ?R2"
+          using hstereo unfolding top1_homeomorphism_on_def by (by100 blast)
+        \<comment> \<open>stereo maps open in SP to open in R2 (homeomorphism is open map).\<close>
+        show ?thesis using hinv_cont hU_SP hbij
+          unfolding top1_continuous_map_on_def bij_betw_def sorry
+      qed
+      \<comment> \<open>stereographic\_proj(x) has \<epsilon>-ball inside stereographic\_proj(U \<inter> SP).\<close>
+      have hx'_in: "stereographic_proj x \<in> stereographic_proj ` (U \<inter> ?SP)"
+        using hx hx_SP by (by100 blast)
+      obtain \<epsilon> where heps: "\<epsilon> > 0"
+          "{\<xi>. (\<xi> \<in> ?R2) \<and> (fst \<xi> - fst (stereographic_proj x))^2 + (snd \<xi> - snd (stereographic_proj x))^2 < \<epsilon>^2} \<subseteq> stereographic_proj ` (U \<inter> ?SP)"
+        sorry
+      \<comment> \<open>V = stereo\<inverse>(ball) is open in S2, V \<subseteq> U, x \<in> V.\<close>
+      let ?ball = "{\<xi> :: real \<times> real. (fst \<xi> - fst (stereographic_proj x))^2 + (snd \<xi> - snd (stereographic_proj x))^2 < \<epsilon>^2}"
+      let ?V = "stereographic_inv ` ?ball"
+      have hV_open: "?V \<in> top1_S2_topology" sorry
+      have hx_V: "x \<in> ?V" sorry
+      have hV_sub_U: "?V \<subseteq> U" sorry
+      \<comment> \<open>For y,z \<in> V with y \<noteq> z: line segment in ball gives arc in V.\<close>
+      have hV_arcs: "\<forall>y \<in> ?V. \<forall>z \<in> ?V. y \<noteq> z \<longrightarrow>
+          (\<exists>D. top1_is_arc_on D (subspace_topology top1_S2 top1_S2_topology D) \<and>
+               D \<subseteq> ?V \<and> top1_arc_endpoints_on D (subspace_topology top1_S2 top1_S2_topology D) = {y, z})"
+      proof (intro ballI impI)
+        fix y z assume hy: "y \<in> ?V" and hz: "z \<in> ?V" and hyz: "y \<noteq> z"
+        \<comment> \<open>y = stereo\_inv(y'), z = stereo\_inv(z') for y',z' in ball.
+           Line segment t \<mapsto> (1-t)*y' + t*z' stays in ball (convexity).
+           stereo\_inv \<circ> line\_seg: [0,1] \<rightarrow> V is continuous + injective = arc.\<close>
+        show "\<exists>D. top1_is_arc_on D (subspace_topology top1_S2 top1_S2_topology D) \<and>
+             D \<subseteq> ?V \<and> top1_arc_endpoints_on D (subspace_topology top1_S2 top1_S2_topology D) = {y, z}"
+          sorry
+      qed
+      show ?thesis using hV_open hx_V hV_sub_U hV_arcs sorry
+    qed
   qed
   \<comment> \<open>Equivalence class argument: E = \{y \<in> U | \<exists> arc from a to y in U\}.
      E is open (local\_arc + Step 1). U-E is open (same argument).
