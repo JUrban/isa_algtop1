@@ -2701,7 +2701,12 @@ proof -
          Each case: union of connected sets sharing a point.\<close>
     \<comment> \<open>Transfer from R2 subspace to S1 subspace topology.\<close>
     thus ?thesis
-      sorry \<comment> \<open>subspace\_topology\_trans: S1-{p} \<subseteq> S1 \<subseteq> UNIV.\<close>
+    proof -
+      have "subspace_topology top1_S1 top1_S1_topology (top1_S1 - {?p})
+          = subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (top1_S1 - {?p})"
+        unfolding top1_S1_topology_def by (rule subspace_topology_trans[OF Diff_subset])
+      thus ?thesis using \<open>top1_connected_on (top1_S1 - {?p}) _\<close> by (by100 simp)
+    qed
   qed
   \<comment> \<open>Transfer: f continuous S1 \<rightarrow> X, restrict to S1-{p}. Image = C-{a}. Connected.\<close>
   let ?p = "inv_into top1_S1 f a"
