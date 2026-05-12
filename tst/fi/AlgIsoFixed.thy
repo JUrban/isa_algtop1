@@ -3063,8 +3063,33 @@ proof -
       \<comment> \<open>Also prove C-{a}-W closed. C-{a}-W = W' \<union> (A2-{a}).
          W' = other separation part, also closed in A1-{a} (clopen), hence in C-{a}.
          A2-{a} closed in C-{a} (A2 compact arc \<Rightarrow> closed in X).\<close>
+      \<comment> \<open>A2 closed in X (same compact argument as A1).\<close>
+      have hA2_closed: "closedin_on X TX A2"
+        sorry \<comment> \<open>A2 compact arc in Hausdorff \<Rightarrow> closed. Same proof as hA1\_closed.\<close>
+      \<comment> \<open>A2-{a} closed in C-{a}: A2-{a} = (C-{a}) \<inter> A2, A2 closed in X.\<close>
+      have "closedin_on (C - {a}) (subspace_topology X TX (C - {a})) (A2 - {a})"
+        unfolding closedin_on_def
+      proof (intro conjI)
+        show "A2 - {a} \<subseteq> C - {a}" using hdecomp by (by100 blast)
+        have "(C - {a}) - (A2 - {a}) = (A1 - {a}) - A2" using hdecomp by (by100 blast)
+        also have "\<dots> = (C - {a}) \<inter> (X - A2)"
+          using hdecomp hA2_sub hA1_sub by (by100 blast)
+        finally have heq: "(C - {a}) - (A2 - {a}) = (C - {a}) \<inter> (X - A2)" .
+        have "(X - A2) \<in> TX" using hA2_closed unfolding closedin_on_def by (by100 blast)
+        hence "(C - {a}) \<inter> (X - A2) \<in> subspace_topology X TX (C - {a})"
+          unfolding subspace_topology_def by (by100 blast)
+        thus "(C - {a}) - (A2 - {a}) \<in> subspace_topology X TX (C - {a})"
+          using heq by (by100 simp)
+      qed
+      \<comment> \<open>W' (= A1-{a}-W) closed in C-{a}: same argument as W (clopen in A1-{a}).\<close>
+      have "closedin_on (C - {a}) (subspace_topology X TX (C - {a})) (A1 - {a} - W)"
+        sorry \<comment> \<open>W' = A1-{a}-W is the other separation part. Closed in A1-{a} (clopen).
+           Closed in C-{a} by same intersection-with-closed argument as for W.\<close>
+      \<comment> \<open>Union of two closed sets is closed.\<close>
+      have "C - {a} - W = (A1 - {a} - W) \<union> (A2 - {a})"
+        using hdecomp hW_sub hW_disj_A2 by (by100 blast)
       have hCaW_closed: "closedin_on (C - {a}) (subspace_topology X TX (C - {a})) (C - {a} - W)"
-        sorry \<comment> \<open>W' closed via same argument as W. A2 closed (compact). Union of closed.\<close>
+        sorry \<comment> \<open>= (A1-{a}-W) \<union> (A2-{a}), both closed. Union of closed in topology = closed.\<close>
       show ?thesis using hW_ne hW_sub hW_disj_A2 hW_closed hCaW_closed by (by100 blast)
     qed
     then obtain W where hW: "W \<noteq> {}" "W \<subseteq> A1 - {a}" "W \<inter> (A2 - {a}) = {}"
