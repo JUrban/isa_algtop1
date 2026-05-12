@@ -6517,10 +6517,40 @@ lemma K4_from_SCC:
     \<and> e24 \<inter> e34 = {a4} \<and> e24 \<inter> e41 = {a4}
     \<and> p \<in> e13 - {a1, a3} \<and> q \<in> e24 - {a2, a4}
     \<and> C = e12 \<union> e23 \<union> e34 \<union> e41"
-  sorry \<comment> \<open>Munkres Theorem 65.2 Steps 1-4: decompose SCC into 4 arcs,
-    construct diagonal arcs through the two components of S2-C.
-    Requires: arc splitting, Jordan separation on S2, path-connected
-    components, arc construction in open path-connected subsets of S2.\<close>
+proof -
+  have hTopS2: "is_topology_on top1_S2 top1_S2_topology"
+    using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
+  have hS2_haus: "is_hausdorff_on top1_S2 top1_S2_topology" by (rule top1_S2_is_hausdorff)
+  \<comment> \<open>Step 1: Decompose C into two arcs C1, C2 sharing endpoints a1, a3.\<close>
+  from simple_closed_curve_arc_decomposition[OF assms(2,1) hS2_haus]
+  obtain C1 C2 a1 a3 where hC12: "C = C1 \<union> C2" "C1 \<inter> C2 = {a1, a3}" "a1 \<noteq> a3"
+      "top1_is_arc_on C1 (subspace_topology top1_S2 top1_S2_topology C1)"
+      "top1_is_arc_on C2 (subspace_topology top1_S2 top1_S2_topology C2)"
+    by (by100 blast)
+  have hC_sub_S2: "C \<subseteq> top1_S2" using assms(2) by (rule simple_closed_curve_subset)
+  have hC1_sub: "C1 \<subseteq> top1_S2" using hC12(1) hC_sub_S2 by (by100 blast)
+  have hC2_sub: "C2 \<subseteq> top1_S2" using hC12(1) hC_sub_S2 by (by100 blast)
+  \<comment> \<open>Step 2: Split C1 at midpoint to get e12, e23. Split C2 at midpoint to get e34, e41.\<close>
+  from arc_split_at_midpoint[OF assms(1) hS2_haus hC1_sub hC12(4)]
+  obtain a2 D1 D2 where hD: "a2 \<in> C1" "C1 = D1 \<union> D2" "D1 \<inter> D2 = {a2}"
+      "top1_is_arc_on D1 (subspace_topology top1_S2 top1_S2_topology D1)"
+      "top1_is_arc_on D2 (subspace_topology top1_S2 top1_S2_topology D2)"
+    by (by100 blast)
+  from arc_split_at_midpoint[OF assms(1) hS2_haus hC2_sub hC12(5)]
+  obtain a4 D3 D4 where hD2: "a4 \<in> C2" "C2 = D3 \<union> D4" "D3 \<inter> D4 = {a4}"
+      "top1_is_arc_on D3 (subspace_topology top1_S2 top1_S2_topology D3)"
+      "top1_is_arc_on D4 (subspace_topology top1_S2 top1_S2_topology D4)"
+    by (by100 blast)
+  \<comment> \<open>Step 3: Jordan separation gives 2 components. p in one, q in other.\<close>
+  \<comment> \<open>Step 4: Construct diagonal arcs through components.
+     This requires the path-to-arc result (Munkres Thm 65.2 Step 2):
+     in an open subset of S2, path-connected implies arc-connected.
+     The proof uses: first-hit-time (Inf of preimage), arc splicing,
+     and local arc-connectivity of S2 (manifold structure).\<close>
+  \<comment> \<open>For now, sorry the full construction. All cycle structure (Steps 1-2) is proved.
+     The gap is the diagonal arc construction (Steps 3-4).\<close>
+  show ?thesis sorry
+qed
 
 theorem Theorem_65_2_fixed:
   assumes "is_topology_on_strict top1_S2 top1_S2_topology"
