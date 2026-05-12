@@ -5401,7 +5401,7 @@ proof -
       (\<forall>f. top1_is_loop_on C ?TC x f \<longrightarrow>
         (\<exists>n::nat. top1_path_homotopic_on C ?TC x x f (top1_path_power gen_C x n)
           \<or> top1_path_homotopic_on C ?TC x x f (top1_path_power (top1_path_reverse gen_C) x n)))"
-    sorry \<comment> \<open>SCC \<cong> S1 has \<pi>_1 infinite cyclic with generator at any basepoint.\<close>
+    sorry \<comment> \<open>From \<pi>_1(C) \<cong> Z: ∃ generator. Needs extraction from Z-iso.\<close>
   then obtain gen_C where hgen_C: "top1_is_loop_on C ?TC x gen_C"
       and hgen_C_generates: "\<forall>f. top1_is_loop_on C ?TC x f \<longrightarrow>
         (\<exists>n::nat. top1_path_homotopic_on C ?TC x x f (top1_path_power gen_C x n)
