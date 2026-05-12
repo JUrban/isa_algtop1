@@ -1806,7 +1806,7 @@ a0/AlgTop0.thy|theorem|Theorem_63_5_two_closed_connected|6930
 AlgTop.thy|theorem|Theorem_64_2_K33_not_planar|1764
 AlgTop.thy|theorem|Theorem_64_4_K5_not_planar|2100
 AlgTop.thy|theorem|Theorem_65_2|6160
-fi/AlgIsoFixed.thy|theorem|Theorem_65_2_fixed|3774
+fi/AlgIsoFixed.thy|theorem|Theorem_65_2_fixed|3585
 ac/AlgTopCached.thy|theorem|Theorem_67_4_direct_sum_exists|7097
 ac/AlgTopCached.thy|theorem|Theorem_67_6_direct_sum_unique|7404
 AlgTop.thy|theorem|Theorem_67_8_rank_unique|6263
