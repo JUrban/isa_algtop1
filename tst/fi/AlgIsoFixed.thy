@@ -2931,8 +2931,43 @@ proof -
     have hCa_conn: "top1_connected_on (C - {a}) (subspace_topology X TX (C - {a}))"
       by (rule scc_minus_point_connected[OF hT hH hC \<open>a \<in> C\<close>])
     \<comment> \<open>Derive contradiction: A1-{a} disconnected with Q disjoint from A2.\<close>
-    show False sorry \<comment> \<open>Q component of A1-{a} has Q \<subseteq> A1-A2, Q \<inter> (A2-{a}) = {}, Q \<noteq> {}.
-       C-{a} = (A1-{a}) \<union> (A2-{a}). Q disconnected from rest \<Rightarrow> C-{a} disconnected. \<bottom>.\<close>
+    \<comment> \<open>A1-{a} not connected in its subspace. A1 compact (arc) \<Rightarrow> A1 closed in X.
+       A1-{a} and A2-{a} both closed in C-{a}. Any separation of A1-{a} gives
+       a closed non-empty part W \<subseteq> A1-{a,b} \<subseteq> A1-A2, with C-{a}-W closed too.
+       So W is clopen in C-{a}, contradicting C-{a} connected.\<close>
+    \<comment> \<open>Step 1: A1 is closed in X (compact in Hausdorff).\<close>
+    have hA1_closed: "closedin_on X TX A1"
+    proof (rule compact_in_strict_hausdorff_closedin_on[OF hH hT hA1_sub])
+      \<comment> \<open>A1 compact: arc = homeomorphic image of [0,1], [0,1] compact.\<close>
+      obtain h where hh: "top1_homeomorphism_on I_set I_top A1 (subspace_topology X TX A1) h"
+        using hA1 unfolding top1_is_arc_on_def by (by100 blast)
+      have hI_compact: "top1_compact_on I_set I_top"
+      proof -
+        have hIeq: "I_set = {0..1::real}" unfolding top1_unit_interval_def
+          by (auto simp: atLeastAtMost_def atLeast_def atMost_def)
+        have "compact I_set" unfolding hIeq by (rule compact_Icc)
+        hence "top1_compact_on I_set (subspace_topology UNIV top1_open_sets I_set)"
+          using top1_compact_on_subspace_UNIV_iff_compact[of I_set] by (by100 simp)
+        thus ?thesis unfolding top1_unit_interval_topology_def by (by100 simp)
+      qed
+      have hcont: "top1_continuous_map_on I_set I_top A1 (subspace_topology X TX A1) h"
+        using hh unfolding top1_homeomorphism_on_def by (by100 blast)
+      have himg: "h ` I_set = A1"
+        using hh unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+      have hTA1: "is_topology_on A1 (subspace_topology X TX A1)"
+        by (rule subspace_topology_is_topology_on[OF is_topology_on_strict_imp[OF hT] hA1_sub])
+      from Theorem_26_5[OF top1_unit_interval_topology_is_topology_on hTA1 hI_compact hcont]
+      have "top1_compact_on (h ` I_set) (subspace_topology A1 (subspace_topology X TX A1) (h ` I_set))" .
+      hence "top1_compact_on A1 (subspace_topology A1 (subspace_topology X TX A1) A1)"
+        using himg by (by100 simp)
+      moreover have "subspace_topology A1 (subspace_topology X TX A1) A1 = subspace_topology X TX A1"
+        unfolding subspace_topology_def by (by100 blast)
+      ultimately show "top1_compact_on A1 (subspace_topology X TX A1)" by (by100 simp)
+    qed
+    \<comment> \<open>Step 2: A1-{a} not connected in C-{a}'s subspace (transfer from A1 subspace).\<close>
+    \<comment> \<open>Step 3: Get separation of A1-{a}, identify W \<subseteq> A1-A2.\<close>
+    \<comment> \<open>Step 4: W clopen in C-{a} \<Rightarrow> C-{a} not connected. Contradiction.\<close>
+    show False sorry \<comment> \<open>Detailed separation argument: W clopen in C-{a}.\<close>
   qed
   have hb_ep: "b \<in> {e1, e2}"
   proof (rule ccontr)
@@ -2950,7 +2985,7 @@ proof -
     have "b \<in> C" using hint hdecomp by (by100 blast)
     have hCb_conn: "top1_connected_on (C - {b}) (subspace_topology X TX (C - {b}))"
       by (rule scc_minus_point_connected[OF hT hH hC \<open>b \<in> C\<close>])
-    show False sorry
+    show False sorry \<comment> \<open>Same separation argument as for a.\<close>
   qed
   from ha_ep hb_ep hab heps(2) show "top1_arc_endpoints_on A1 (subspace_topology X TX A1) = {a, b}"
     using heps(1) by (by100 blast)
