@@ -2134,7 +2134,37 @@ proof -
       qed
       \<comment> \<open>g is injective: \<gamma> injective (y' \<noteq> z' \<Rightarrow> line segment injective), inv\_into injective.\<close>
       have hg_inj: "inj_on g I_set"
-        sorry \<comment> \<open>Line segment (1-t)*y'+t*z' injective when y'\<noteq>z'; inv\_into preserves injectivity.\<close>
+      proof (rule inj_onI)
+        fix s t assume hs: "s \<in> I_set" and ht: "t \<in> I_set" and hgeq: "g s = g t"
+        \<comment> \<open>\<gamma> maps I\_set into h`SP (via Sq \<subseteq> h`(U\<inter>SP) \<subseteq> h`SP).\<close>
+        have hgs_img: "\<gamma> s \<in> h ` ?SP" using h\<gamma>_in_Sq[OF hs] hSq_sub by (by100 blast)
+        have hgt_img: "\<gamma> t \<in> h ` ?SP" using h\<gamma>_in_Sq[OF ht] hSq_sub by (by100 blast)
+        \<comment> \<open>g(s) = g(t) \<Rightarrow> inv(h, \<gamma>(s)) = inv(h, \<gamma>(t)) \<Rightarrow> \<gamma>(s) = \<gamma>(t) (since h \<circ> inv = id on image).\<close>
+        from hgeq have "inv_into ?SP h (\<gamma> s) = inv_into ?SP h (\<gamma> t)" unfolding g_def .
+        hence h\<gamma>_eq: "\<gamma> s = \<gamma> t"
+          using f_inv_into_f[OF hgs_img] f_inv_into_f[OF hgt_img] by (by100 metis)
+        \<comment> \<open>\<gamma> injective when y' \<noteq> z': from pair equality extract (s-t)*(z'-y') = 0.\<close>
+        from h\<gamma>_eq have hfst_eq: "(1-s) * fst y' + s * fst z' = (1-t) * fst y' + t * fst z'"
+          unfolding \<gamma>_def by (by100 simp)
+        hence "(s - t) * (fst z' - fst y') = 0"
+          by (simp add: algebra_simps)
+        moreover from h\<gamma>_eq have hsnd_eq: "(1-s) * snd y' + s * snd z' = (1-t) * snd y' + t * snd z'"
+          unfolding \<gamma>_def by (by100 simp)
+        hence "(s - t) * (snd z' - snd y') = 0"
+          by (simp add: algebra_simps)
+        ultimately show "s = t"
+        proof (cases "s = t")
+          case True thus ?thesis .
+        next
+          case False
+          hence "fst z' - fst y' = 0" and "snd z' - snd y' = 0"
+            using \<open>(s - t) * (fst z' - fst y') = 0\<close> \<open>(s - t) * (snd z' - snd y') = 0\<close>
+            by (by100 simp)+
+          hence "fst z' = fst y'" "snd z' = snd y'" by (by100 simp)+
+          hence "y' = z'" by (cases y', cases z') (by100 simp)
+          with hy'z'_ne show ?thesis by (by100 blast)
+        qed
+      qed
       \<comment> \<open>I\_set compact, S2 Hausdorff \<Rightarrow> g is embedding.\<close>
       have hI_top: "is_topology_on I_set I_top"
         by (rule top1_unit_interval_topology_is_topology_on)
