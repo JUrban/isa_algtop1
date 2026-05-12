@@ -2774,10 +2774,28 @@ proof -
   have harc_g_sub_S2: "arc_g \<subseteq> top1_S2" using harc_g(2) by (by100 blast)
   \<comment> \<open>arc\_f must intersect C2 (otherwise it avoids all of C).\<close>
   have hf_meets_C2: "arc_f \<inter> C2 \<noteq> {}"
-    sorry \<comment> \<open>arc\_f avoids C1, connects p,q separated by C = C1\<union>C2. Must cross C2.\<close>
-  \<comment> \<open>arc\_g must intersect C1.\<close>
+  proof (rule ccontr)
+    assume "\<not> arc_f \<inter> C2 \<noteq> {}"
+    hence "arc_f \<inter> C2 = {}" by (by100 simp)
+    hence "arc_f \<subseteq> top1_S2 - C"
+      using harc_f(2) hC12(1) by (by100 blast)
+    \<comment> \<open>arc\_f is an arc from p to q in S2-C, giving a path from p to q in S2-C.\<close>
+    hence "\<exists>f. top1_is_path_on (top1_S2 - C)
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) p q f"
+      sorry \<comment> \<open>Arc \<subseteq> S2-C with endpoints {p,q} gives path in S2-C.\<close>
+    thus False using assms(5) by (by100 blast)
+  qed
   have hg_meets_C1: "arc_g \<inter> C1 \<noteq> {}"
-    sorry \<comment> \<open>Same argument: arc\_g avoids C2, must cross C1.\<close>
+  proof (rule ccontr)
+    assume "\<not> arc_g \<inter> C1 \<noteq> {}"
+    hence "arc_g \<inter> C1 = {}" by (by100 simp)
+    hence "arc_g \<subseteq> top1_S2 - C"
+      using harc_g(2) hC12(1) by (by100 blast)
+    hence "\<exists>f. top1_is_path_on (top1_S2 - C)
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) p q f"
+      sorry \<comment> \<open>Arc \<subseteq> S2-C with endpoints {p,q} gives path in S2-C.\<close>
+    thus False using assms(5) by (by100 blast)
+  qed
   \<comment> \<open>Get crossing points: a4 \<in> arc\_f \<inter> (C2 - {a1,a3}), a2 \<in> arc\_g \<inter> (C1 - {a1,a3}).\<close>
   obtain a4 where ha4: "a4 \<in> arc_f \<inter> C2" "a4 \<noteq> a1" "a4 \<noteq> a3"
     sorry \<comment> \<open>arc\_f \<inter> C2 \<noteq> {}, and p,q are endpoints of arc\_f not in C \<supseteq> C2, so crossing is interior.\<close>
