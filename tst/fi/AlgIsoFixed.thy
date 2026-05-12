@@ -3230,7 +3230,32 @@ proof -
     have "b \<in> C" using hint hdecomp by (by100 blast)
     have hCb_conn: "top1_connected_on (C - {b}) (subspace_topology X TX (C - {b}))"
       by (rule scc_minus_point_connected[OF hT hH hC \<open>b \<in> C\<close>])
-    show False sorry \<comment> \<open>Same separation argument as for a.\<close>
+    \<comment> \<open>Same contradiction as 'a' case with a\<leftrightarrow>b swapped.\<close>
+    have hA1b_not_conn_X: "\<not> top1_connected_on (A1 - {b}) (subspace_topology X TX (A1 - {b}))"
+    proof -
+      have "subspace_topology A1 (subspace_topology X TX A1) (A1 - {b})
+          = subspace_topology X TX (A1 - {b})"
+        by (rule subspace_topology_trans[OF Diff_subset])
+      thus ?thesis using \<open>\<not> top1_connected_on (A1 - {b}) (subspace_topology A1 (subspace_topology X TX A1) (A1 - {b}))\<close>
+        by (by100 simp)
+    qed
+    have hTA1b: "is_topology_on (A1 - {b}) (subspace_topology X TX (A1 - {b}))"
+      by (rule subspace_topology_is_topology_on[OF is_topology_on_strict_imp[OF hT]])
+         (use hA1_sub in blast)
+    then obtain Ub Vb where hUVb: "Ub \<in> subspace_topology X TX (A1 - {b})"
+        "Vb \<in> subspace_topology X TX (A1 - {b})" "Ub \<noteq> {}" "Vb \<noteq> {}"
+        "Ub \<inter> Vb = {}" "Ub \<union> Vb = A1 - {b}"
+      using hA1b_not_conn_X unfolding top1_connected_on_def by auto
+    have ha_A1b: "a \<in> A1 - {b}" using hint hab by (by100 blast)
+    define Wb where "Wb = (if a \<in> Ub then Vb else Ub)"
+    have "Wb \<noteq> {}" unfolding Wb_def using hUVb(3,4) by (by100 simp)
+    have "Wb \<subseteq> A1 - {b}" unfolding Wb_def using hUVb(1,2,6) unfolding subspace_topology_def by auto
+    have "a \<notin> Wb" unfolding Wb_def using hUVb(5) ha_A1b hUVb(6) by auto
+    hence "Wb \<subseteq> A1 - {a, b}" using \<open>Wb \<subseteq> A1 - {b}\<close> by (by100 blast)
+    hence "Wb \<inter> (A2 - {b}) = {}" using hint by (by100 blast)
+    \<comment> \<open>Wb closed in C-{b}: same argument as W in 'a' case.\<close>
+    \<comment> \<open>C-{b}-Wb closed. Both non-empty. Separation. C-{b} not connected. \<bottom>.\<close>
+    show False sorry \<comment> \<open>Identical closedness + separation argument as 'a' case.\<close>
   qed
   from ha_ep hb_ep hab heps(2) show "top1_arc_endpoints_on A1 (subspace_topology X TX A1) = {a, b}"
     using heps(1) by (by100 blast)
