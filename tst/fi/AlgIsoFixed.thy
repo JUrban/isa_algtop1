@@ -3374,7 +3374,22 @@ lemma arc_endpoint_in_closure_of_complement_S2:
   and "top1_arc_endpoints_on Fp (subspace_topology top1_S2 top1_S2_topology Fp) = {p, d}"
   and "p \<noteq> d"
   shows "p \<in> closure_on top1_S2 top1_S2_topology (top1_S2 - Fp)"
-  sorry
+proof -
+  have hp_S2: "p \<in> top1_S2" using assms(3,4)
+    unfolding top1_arc_endpoints_on_def by (by100 blast)
+  have hA_sub: "top1_S2 - Fp \<subseteq> top1_S2" by (by100 blast)
+  show ?thesis
+    unfolding Theorem_17_5a_strict[OF assms(1) hp_S2 hA_sub]
+  proof (intro allI impI)
+    fix V assume hV: "neighborhood_of_strict p top1_S2 top1_S2_topology V"
+    then obtain U where hU: "U \<in> top1_S2_topology" "p \<in> U" "U \<subseteq> V"
+      unfolding neighborhood_of_strict_def by (by100 blast)
+    from arc_endpoint_not_interior_S2[OF assms(1-5) hU(1,2)]
+    obtain x where "x \<in> U" "x \<notin> Fp" "x \<in> top1_S2" by (by100 blast)
+    hence "x \<in> V \<inter> (top1_S2 - Fp)" using hU(3) by (by100 blast)
+    thus "intersects V (top1_S2 - Fp)" unfolding intersects_def by (by100 blast)
+  qed
+qed
 
 \<comment> \<open>Key consequence: given D closed with p \<notin> D and Fp \<union> D non-separating,
    there exists a path from p to any q \<in> S2-(Fp\<union>D) in S2-D avoiding Fp except at p.\<close>
