@@ -3406,7 +3406,7 @@ proof (rule ccontr)
   define hp' where "hp' = h p"
   have hhp_in_hFp: "hp' \<in> h ` Fp" unfolding hp'_def using hp_V hV_sub_Fp' by (by100 blast)
   define t_p where "t_p = inv_into I_set g hp'"
-  have ht_p_01: "t_p \<in> {0, 1}" sorry \<comment> \<open>g\<inverse>(h(p)) is 0 or 1 since p is endpoint of Fp.\<close>
+  have ht_p_01: "t_p \<in> {0, 1}" sorry \<comment> \<open>p endpoint of Fp \<Rightarrow> h(p) endpoint of h(Fp) \<Rightarrow> g\<inverse>(h(p)) \<in> {0,1}.\<close>
   \<comment> \<open>g\<inverse>(h(V)) open in [0,1], contains t\_p, hence contains [t\_p, t\_p+\<epsilon>) or (t\_p-\<epsilon>, t\_p].\<close>
   \<comment> \<open>Pick t0 \<in> (0,1) in this open set.\<close>
   obtain t0 where ht0: "t0 \<in> {0<..<1}" "g t0 \<in> h ` V" sorry
@@ -3417,6 +3417,31 @@ proof (rule ccontr)
   \<comment> \<open>But [0,1] - {t0} = [0,t0) \<union> (t0,1] is disconnected.\<close>
   \<comment> \<open>g\<inverse>(W) is open in [0,1] and contains (t0-\<epsilon>,t0+\<epsilon>).\<close>
   \<comment> \<open>So g\<inverse>(W) - {t0} hits both [0,t0) and (t0,1]. Contradiction.\<close>
+  \<comment> \<open>Core contradiction via connected\_open\_delete\_R2.\<close>
+  have hhhV_sub_hFp: "h ` V \<subseteq> h ` Fp" using hV_sub_Fp' by (by100 blast)
+  have hw_in_hV: "w \<in> h ` V" unfolding w_def using ht0(2) by (by100 blast)
+  \<comment> \<open>h(V) is open in R2. Use HOL open/connected predicates.\<close>
+  have hhV_HOL_open: "open (h ` V)"
+    using hhV_open product_topology_on_open_sets unfolding top1_open_sets_def by (by100 blast)
+  \<comment> \<open>W = connected component of h(V) containing w.\<close>
+  obtain W where hW: "W \<subseteq> h ` V" "w \<in> W" "connected W" "open W"
+    "\<forall>W'. W' \<subseteq> h ` V \<and> w \<in> W' \<and> connected W' \<and> open W' \<longrightarrow> W' \<subseteq> W"
+    sorry \<comment> \<open>Connected component of open set in R2 is open.\<close>
+  \<comment> \<open>W - {w} is connected (connected\_open\_delete\_R2).\<close>
+  have hW_del: "connected (W - {w})" by (rule connected_open_delete_R2[OF hW(4,3)])
+  \<comment> \<open>g\<inverse> is continuous on h(Fp) (from homeomorphism).\<close>
+  have hg_inv_cont: "top1_continuous_map_on (h ` Fp)
+      (subspace_topology (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets) (h ` Fp))
+      I_set I_top (inv_into I_set g)"
+    using hg unfolding top1_homeomorphism_on_def by (by100 blast)
+  \<comment> \<open>W \<subseteq> h(V) \<subseteq> h(Fp). g\<inverse>(W-{w}) = g\<inverse>(W)-{t0}. Connected preimage of connected set.\<close>
+  \<comment> \<open>Key: [0,1]-{t0} has two clopen halves [0,t0) and (t0,1] for t0 \<in> (0,1).
+     g\<inverse>(W)-{t0} is connected but intersects both halves. Contradiction.\<close>
+  have ht0_01: "0 < t0" "t0 < 1" using ht0(1) by auto
+  \<comment> \<open>g\<inverse>(W) \<subseteq> I\_set, open in I\_top, contains t0, hence contains interval around t0.\<close>
+  \<comment> \<open>g\<inverse>(W) - {t0} intersects both [0,t0) and (t0,1].\<close>
+  \<comment> \<open>But [0,1]-{t0} = [0,t0) \<union> (t0,1] is a separation: both clopen in [0,1]-{t0}.\<close>
+  \<comment> \<open>A connected set in a separated space can only be in one part. Contradiction.\<close>
   show False sorry
 qed
 
