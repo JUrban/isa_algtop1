@@ -3623,6 +3623,22 @@ proof -
      By arcs\_concatenation: e41' \<union> Fp (share a4') = arc a1\<rightarrow>p.
      Similarly Gp \<union> e23' (share a2') = arc p\<rightarrow>a3.
      Then (a1\<rightarrow>p) \<union> (p\<rightarrow>a3) (share p only since Fp\<inter>Gp={p}) = arc a1\<rightarrow>a3 through p.\<close>
+  \<comment> \<open>a4' \<noteq> a1, a4' \<noteq> a3 (same argument as before: a4' \<in> arc\_f \<inter> C2, arc\_f \<subseteq> S2-C1, a1,a3 \<in> C1).\<close>
+  have ha4'_ne: "a4' \<noteq> a1" "a4' \<noteq> a3"
+    using hFp(1) harc_f(2) hC12(2) by (by100 blast)+
+  have ha2'_ne: "a2' \<noteq> a1" "a2' \<noteq> a3"
+    using hGp(1) harc_g(2) hC12(2) by (by100 blast)+
+  \<comment> \<open>Split C2 at a4' and C1 at a2'.\<close>
+  have ha4'_C2: "a4' \<in> C2" using hFp(1) by (by100 blast)
+  have ha2'_C1: "a2' \<in> C1" using hGp(1) by (by100 blast)
+  \<comment> \<open>Build e41' (a1\<rightarrow>a4' in C2) and e34' (a4'\<rightarrow>a3 in C2) by splitting C2 at a4'.\<close>
+  \<comment> \<open>Build e12' (a1\<rightarrow>a2' in C1) and e23' (a2'\<rightarrow>a3 in C1) by splitting C1 at a2'.\<close>
+  \<comment> \<open>Concatenate e41' \<union> Fp = arc a1\<rightarrow>p (e41'\<inter>Fp = {a4'}).\<close>
+  \<comment> \<open>Concatenate Gp \<union> e23' = arc p\<rightarrow>a3 (Gp\<inter>e23' = {a2'}).\<close>
+  \<comment> \<open>Concatenate (a1\<rightarrow>p) \<union> (p\<rightarrow>a3) = arc a1\<rightarrow>a3 through p (share {p} by hFpGp).\<close>
+  \<comment> \<open>Similarly for e24: Fq \<union> e12' = arc q\<rightarrow>a1; Gq \<union> e34' = arc q\<rightarrow>a3.
+     (where Fq, Gq are first-hit sub-arcs from q side).\<close>
+  \<comment> \<open>Actually e24 goes a2'\<rightarrow>a4' not a1\<rightarrow>a3. Use symmetric first-hit from q.\<close>
   show ?thesis sorry
 qed
 
