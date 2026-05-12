@@ -1803,7 +1803,7 @@ proof -
   have hA1_ep: "top1_arc_endpoints_on ?A1 (subspace_topology top1_S2 top1_S2_topology ?A1) = {a, h' t0}"
   proof -
     have "top1_arc_endpoints_on ?A1 (subspace_topology top1_S2 top1_S2_topology ?A1) = {?phi 0, ?phi 1}"
-      sorry \<comment> \<open>arc\_endpoints\_are\_boundary needs topology matching; will fix.\<close>
+      by (rule arc_endpoints_are_boundary[OF hS2 hS2_haus hA1_sub_S2 hA1_arc hphi_homeo])
     moreover have "?phi 0 = a" using hh'(2) by (by100 simp)
     moreover have "?phi 1 = h' t0" by (by100 simp)
     ultimately show ?thesis by (by100 simp)
