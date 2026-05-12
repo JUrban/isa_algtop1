@@ -6559,13 +6559,22 @@ proof -
     by (rule arc_in_S2_closed[OF hC1_sub hC12(4)])
   have hC2_cl: "closedin_on top1_S2 top1_S2_topology C2"
     by (rule arc_in_S2_closed[OF hC2_sub hC12(5)])
-  \<comment> \<open>Step 4: Construct diagonal arcs.
-     Munkres Thm 65.2 Steps 2-3: path-to-arc in open subsets of S2,
-     then first-hit-time construction for diagonal endpoints.
-     This requires: (a) path\<rightarrow>arc for open subsets of a 2-manifold,
-     or (b) a direct arc construction through the Jordan components.
-     Both approaches need substantial infrastructure beyond what's available.
-     We sorry this construction, which is the ONLY remaining gap.\<close>
+  \<comment> \<open>Step 4: Construct diagonal arcs through the Jordan components.
+     The construction uses Munkres Thm 65.2 Steps 2-3:
+     (a) S2-C1 is path-connected (arc doesn't separate: hC1\_nosep).
+     (b) Get path from p to q in S2-C1. This path avoids C1 but crosses C2.
+     (c) Path-to-arc (Munkres Step 2): replace path by injective path.
+     (d) First-hit-time: the first point where the arc hits C2 gives diagonal vertex.
+     (e) Similarly for the other diagonal through S2-C2.
+     (f) Assemble the K4 data and verify all 38 intersection conditions.
+
+     The path-to-arc step (c) is the key infrastructure gap. It requires:
+     - Restriction of continuous map to a sub-interval [0, t0]
+     - Inf of closed non-empty subset of [0,1] (first-hit-time)
+     - Continuous injective from compact to Hausdorff is embedding
+     - Arc splicing (arcs\_concatenation\_is\_arc, already available)
+
+     We have all building blocks except the path-to-arc assembly.\<close>
   show ?thesis sorry
 qed
 
