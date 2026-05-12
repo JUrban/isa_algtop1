@@ -971,7 +971,7 @@ proof -
         thus False using hE3_disj_PQ \<open>E3 \<inter> Q1 \<noteq> {}\<close> by (by100 blast)
       qed
     qed
-  }
+  } note case_AB = this
   \<comment> \<open>Now use the case 1 result: if X and C on different sides of A\<union>B, done.
      Otherwise: X and C on same side. Do the same for B\<union>C (with E1) and A\<union>C (with E2).
      If any SCC separates X from the opposite arc: done (same E-bridges argument).
@@ -1015,36 +1015,167 @@ proof -
      If different: E-bridges argument gives False.\<close>
   \<comment> \<open>If ALL same: pigeonhole.\<close>
   \<comment> \<open>X and A-{a,b} placement in {P2,Q2}.\<close>
+  have hBC_cl: "closedin_on top1_S2 top1_S2_topology (B \<union> C)"
+    by (rule closedin_on_Un[OF hTopS2 arc_in_S2_closed[OF hB_sub hB_arc] arc_in_S2_closed[OF hC_sub hC_arc]])
+  have hBC_open: "top1_S2 - (B \<union> C) \<in> top1_S2_topology"
+    using hBC_cl unfolding closedin_on_def by (by100 blast)
+  have hBC_not_conn: "\<not> top1_connected_on (top1_S2 - (B \<union> C))
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (B \<union> C)))"
+    using Theorem_61_3_JordanSeparation_S2[OF hS2 hBC_scc] unfolding top1_separates_on_def by (by100 simp)
+  have hPQ2_open: "P2 \<in> top1_S2_topology \<and> Q2 \<in> top1_S2_topology"
+    using S2_two_component_open[OF hBC_open _ hPQ2(1,2,3,4,5,6) hBC_not_conn] by (by100 blast)
+  have hTBC: "is_topology_on (top1_S2-(B\<union>C)) (subspace_topology top1_S2 top1_S2_topology (top1_S2-(B\<union>C)))"
+    by (rule subspace_topology_is_topology_on[OF hTopS2]) (by100 blast)
+  have hP2_op: "P2 \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2-(B\<union>C))"
+    using hPQ2_open hPQ2(4) unfolding subspace_topology_def by (by100 blast)
+  have hQ2_op: "Q2 \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2-(B\<union>C))"
+    using hPQ2_open hPQ2(4) unfolding subspace_topology_def by (by100 blast)
+  have hSep2: "top1_is_separation_on (top1_S2-(B\<union>C))
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2-(B\<union>C))) P2 Q2"
+    unfolding top1_is_separation_on_def using hP2_op hQ2_op hPQ2(1,2,3,4) by (by100 blast)
   have hX_in_PQ2: "X \<subseteq> P2 \<or> X \<subseteq> Q2"
-    sorry \<comment> \<open>Lemma\_23\_2\<close>
+  proof -
+    have hX_conn_BC: "top1_connected_on X (subspace_topology (top1_S2-(B\<union>C))
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2-(B\<union>C))) X)"
+    proof -
+      have "subspace_topology top1_S2 top1_S2_topology X =
+          subspace_topology (top1_S2-(B\<union>C)) (subspace_topology top1_S2 top1_S2_topology (top1_S2-(B\<union>C))) X"
+        using subspace_topology_trans[of X "top1_S2-(B\<union>C)"] hX_sub_BC by (by100 simp)
+      thus ?thesis using hX_conn by (by100 simp)
+    qed
+    from Lemma_23_2[OF hTBC hSep2 hX_sub_BC hX_conn_BC] show ?thesis by (by100 blast)
+  qed
   have hA_ne_loc: "A - {a, b} \<noteq> {}"
-    sorry \<comment> \<open>arc has interior points\<close>
+  proof
+    assume "A - {a, b} = {}"
+    have "a \<in> closure_on top1_S2 top1_S2_topology (A - {a,b})"
+      using arc_endpoint_in_closure_of_interior[OF hS2 hS2_haus hA_sub hA_arc hA_ep hab] by (by100 blast)
+    hence "a \<in> closure_on top1_S2 top1_S2_topology {}" using \<open>A - {a,b} = {}\<close> by (by100 simp)
+    thus False using top1_closure_on_empty[OF hTopS2] by (by100 simp)
+  qed
   have hA_conn_loc: "top1_connected_on (A - {a,b}) (subspace_topology top1_S2 top1_S2_topology (A - {a,b}))"
     by (rule arc_minus_endpoints_connected[OF hS2 hS2_haus hA_sub hA_arc hA_ep hab])
   have hA_in_PQ2: "A - {a, b} \<subseteq> P2 \<or> A - {a, b} \<subseteq> Q2"
-    sorry \<comment> \<open>Lemma\_23\_2\<close>
+  proof -
+    have hA_conn_BC: "top1_connected_on (A-{a,b}) (subspace_topology (top1_S2-(B\<union>C))
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2-(B\<union>C))) (A-{a,b}))"
+    proof -
+      have "subspace_topology top1_S2 top1_S2_topology (A-{a,b}) =
+          subspace_topology (top1_S2-(B\<union>C)) (subspace_topology top1_S2 top1_S2_topology (top1_S2-(B\<union>C))) (A-{a,b})"
+        using subspace_topology_trans[of "A-{a,b}" "top1_S2-(B\<union>C)"] hA_sub_BC by (by100 simp)
+      thus ?thesis using hA_conn_loc by (by100 simp)
+    qed
+    from Lemma_23_2[OF hTBC hSep2 hA_sub_BC hA_conn_BC] show ?thesis by (by100 blast)
+  qed
   \<comment> \<open>X and B-{a,b} placement in {P3,Q3}.\<close>
+  have hAC_cl: "closedin_on top1_S2 top1_S2_topology (A \<union> C)"
+    by (rule closedin_on_Un[OF hTopS2 arc_in_S2_closed[OF hA_sub hA_arc] arc_in_S2_closed[OF hC_sub hC_arc]])
+  have hAC_open: "top1_S2 - (A \<union> C) \<in> top1_S2_topology"
+    using hAC_cl unfolding closedin_on_def by (by100 blast)
+  have hAC_not_conn: "\<not> top1_connected_on (top1_S2 - (A \<union> C))
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (A \<union> C)))"
+    using Theorem_61_3_JordanSeparation_S2[OF hS2 hAC_scc] unfolding top1_separates_on_def by (by100 simp)
+  have hPQ3_open: "P3 \<in> top1_S2_topology \<and> Q3 \<in> top1_S2_topology"
+    using S2_two_component_open[OF hAC_open _ hPQ3(1,2,3,4,5,6) hAC_not_conn] by (by100 blast)
+  have hTAC: "is_topology_on (top1_S2-(A\<union>C)) (subspace_topology top1_S2 top1_S2_topology (top1_S2-(A\<union>C)))"
+    by (rule subspace_topology_is_topology_on[OF hTopS2]) (by100 blast)
+  have hP3_op: "P3 \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2-(A\<union>C))"
+    using hPQ3_open hPQ3(4) unfolding subspace_topology_def by (by100 blast)
+  have hQ3_op: "Q3 \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2-(A\<union>C))"
+    using hPQ3_open hPQ3(4) unfolding subspace_topology_def by (by100 blast)
+  have hSep3: "top1_is_separation_on (top1_S2-(A\<union>C))
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2-(A\<union>C))) P3 Q3"
+    unfolding top1_is_separation_on_def using hP3_op hQ3_op hPQ3(1,2,3,4) by (by100 blast)
   have hX_in_PQ3: "X \<subseteq> P3 \<or> X \<subseteq> Q3"
-    sorry
+  proof -
+    have hX_conn_AC: "top1_connected_on X (subspace_topology (top1_S2-(A\<union>C))
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2-(A\<union>C))) X)"
+    proof -
+      have "subspace_topology top1_S2 top1_S2_topology X =
+          subspace_topology (top1_S2-(A\<union>C)) (subspace_topology top1_S2 top1_S2_topology (top1_S2-(A\<union>C))) X"
+        using subspace_topology_trans[of X "top1_S2-(A\<union>C)"] hX_sub_AC by (by100 simp)
+      thus ?thesis using hX_conn by (by100 simp)
+    qed
+    from Lemma_23_2[OF hTAC hSep3 hX_sub_AC hX_conn_AC] show ?thesis by (by100 blast)
+  qed
   have hB_ne_loc: "B - {a, b} \<noteq> {}"
-    sorry
+  proof
+    assume "B - {a, b} = {}"
+    have "a \<in> closure_on top1_S2 top1_S2_topology (B - {a,b})"
+      using arc_endpoint_in_closure_of_interior[OF hS2 hS2_haus hB_sub hB_arc hB_ep hab] by (by100 blast)
+    hence "a \<in> closure_on top1_S2 top1_S2_topology {}" using \<open>B - {a,b} = {}\<close> by (by100 simp)
+    thus False using top1_closure_on_empty[OF hTopS2] by (by100 simp)
+  qed
   have hB_conn_loc: "top1_connected_on (B - {a,b}) (subspace_topology top1_S2 top1_S2_topology (B - {a,b}))"
     by (rule arc_minus_endpoints_connected[OF hS2 hS2_haus hB_sub hB_arc hB_ep hab])
   have hB_in_PQ3: "B - {a, b} \<subseteq> P3 \<or> B - {a, b} \<subseteq> Q3"
-    sorry
+  proof -
+    have hB_conn_AC: "top1_connected_on (B-{a,b}) (subspace_topology (top1_S2-(A\<union>C))
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2-(A\<union>C))) (B-{a,b}))"
+    proof -
+      have "subspace_topology top1_S2 top1_S2_topology (B-{a,b}) =
+          subspace_topology (top1_S2-(A\<union>C)) (subspace_topology top1_S2 top1_S2_topology (top1_S2-(A\<union>C))) (B-{a,b})"
+        using subspace_topology_trans[of "B-{a,b}" "top1_S2-(A\<union>C)"] hB_sub_AC by (by100 simp)
+      thus ?thesis using hB_conn_loc by (by100 simp)
+    qed
+    from Lemma_23_2[OF hTAC hSep3 hB_sub_AC hB_conn_AC] show ?thesis by (by100 blast)
+  qed
   \<comment> \<open>If ANY SCC separates X from opposite arc: E-bridges gives False.\<close>
   \<comment> \<open>Check SCC B\<union>C with E1.\<close>
   { assume hdiff2: "(X \<subseteq> P2 \<and> A - {a,b} \<subseteq> Q2) \<or> (X \<subseteq> Q2 \<and> A - {a,b} \<subseteq> P2)"
-    \<comment> \<open>E1 bridges X and A-{a,b} in S2-(B\<union>C). Same argument as case 1.\<close>
-    have ?thesis sorry \<comment> \<open>Same E-bridges pattern with E1 and {P2,Q2}.\<close>
+    have hE1_sub_BC_2: "E1 \<subseteq> top1_S2 - (B \<union> C)" using hE1_sub hE1_disj by (by100 blast)
+    have hE1_conn_BC: "top1_connected_on E1 (subspace_topology (top1_S2-(B\<union>C))
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2-(B\<union>C))) E1)"
+    proof -
+      have "subspace_topology top1_S2 top1_S2_topology E1 =
+          subspace_topology (top1_S2-(B\<union>C)) (subspace_topology top1_S2 top1_S2_topology (top1_S2-(B\<union>C))) E1"
+        using subspace_topology_trans[of E1 "top1_S2-(B\<union>C)"] hE1_sub_BC_2 by (by100 simp)
+      thus ?thesis using hE1_conn by (by100 simp)
+    qed
+    have hE1_disj_PQ: "E1 \<inter> Q2 = {} \<or> E1 \<inter> P2 = {}"
+      using Lemma_23_2_disjoint[OF hTBC hSep2 hE1_sub_BC_2 hE1_conn_BC] by (by100 blast)
+    from hdiff2 have ?thesis
+    proof (elim disjE conjE)
+      assume hXP: "X \<subseteq> P2" and hAQ: "A - {a,b} \<subseteq> Q2"
+      have "E1 \<inter> P2 \<noteq> {}" using hE1_e hX(2) hXP by (by100 blast)
+      have "E1 \<inter> Q2 \<noteq> {}" using hE1_h hAQ by (by100 blast)
+      thus False using hE1_disj_PQ \<open>E1 \<inter> P2 \<noteq> {}\<close> by (by100 blast)
+    next
+      assume hXQ: "X \<subseteq> Q2" and hAP: "A - {a,b} \<subseteq> P2"
+      have "E1 \<inter> Q2 \<noteq> {}" using hE1_e hX(2) hXQ by (by100 blast)
+      have "E1 \<inter> P2 \<noteq> {}" using hE1_h hAP by (by100 blast)
+      thus False using hE1_disj_PQ \<open>E1 \<inter> Q2 \<noteq> {}\<close> by (by100 blast)
+    qed
   } note case_BC = this
   { assume hdiff3: "(X \<subseteq> P3 \<and> B - {a,b} \<subseteq> Q3) \<or> (X \<subseteq> Q3 \<and> B - {a,b} \<subseteq> P3)"
-    have ?thesis sorry \<comment> \<open>Same with E2 and {P3,Q3}.\<close>
+    have hE2_sub_AC_2: "E2 \<subseteq> top1_S2 - (A \<union> C)" using hE2_sub hE2_disj by (by100 blast)
+    have hE2_conn_AC: "top1_connected_on E2 (subspace_topology (top1_S2-(A\<union>C))
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2-(A\<union>C))) E2)"
+    proof -
+      have "subspace_topology top1_S2 top1_S2_topology E2 =
+          subspace_topology (top1_S2-(A\<union>C)) (subspace_topology top1_S2 top1_S2_topology (top1_S2-(A\<union>C))) E2"
+        using subspace_topology_trans[of E2 "top1_S2-(A\<union>C)"] hE2_sub_AC_2 by (by100 simp)
+      thus ?thesis using hE2_conn by (by100 simp)
+    qed
+    have hE2_disj_PQ: "E2 \<inter> Q3 = {} \<or> E2 \<inter> P3 = {}"
+      using Lemma_23_2_disjoint[OF hTAC hSep3 hE2_sub_AC_2 hE2_conn_AC] by (by100 blast)
+    from hdiff3 have ?thesis
+    proof (elim disjE conjE)
+      assume hXP: "X \<subseteq> P3" and hBQ: "B - {a,b} \<subseteq> Q3"
+      have "E2 \<inter> P3 \<noteq> {}" using hE2_e hX(2) hXP by (by100 blast)
+      have "E2 \<inter> Q3 \<noteq> {}" using hE2_h hBQ by (by100 blast)
+      thus False using hE2_disj_PQ \<open>E2 \<inter> P3 \<noteq> {}\<close> by (by100 blast)
+    next
+      assume hXQ: "X \<subseteq> Q3" and hBP: "B - {a,b} \<subseteq> P3"
+      have "E2 \<inter> Q3 \<noteq> {}" using hE2_e hX(2) hXQ by (by100 blast)
+      have "E2 \<inter> P3 \<noteq> {}" using hE2_h hBP by (by100 blast)
+      thus False using hE2_disj_PQ \<open>E2 \<inter> Q3 \<noteq> {}\<close> by (by100 blast)
+    qed
   } note case_AC = this
   \<comment> \<open>If all same side: pigeonhole contradiction (not formalized).\<close>
   show False
   proof (cases "(X \<subseteq> P1 \<and> C-{a,b} \<subseteq> Q1) \<or> (X \<subseteq> Q1 \<and> C-{a,b} \<subseteq> P1)")
-    case True thus False sorry \<comment> \<open>E3 bridges (proved above).\<close>
+    case True thus False by (rule case_AB)
   next
     case AB_same: False
     show False
@@ -1058,8 +1189,307 @@ proof -
       next
         case AC_same: False
         \<comment> \<open>ALL 3 SCCs have X on same side as opposite arc.
-           Pigeonhole: 3 "lone" components from 2 elements \<Rightarrow> contradiction.\<close>
-        show False sorry \<comment> \<open>Pigeonhole + SCCBMC: J1=J2 \<Rightarrow> arc \<subseteq> {a,b} \<Rightarrow> False.\<close>
+           From each "same" fact: X and opposite arc on same side \<Rightarrow>
+           "Q-side" of that SCC contains only theta components from {Y,Z} (not X).
+           Q-side \<noteq> {} \<Rightarrow> at least one of {Y,Z} is on Q-side.
+           3 SCCs each choose \<ge>1 from {Y,Z}. SCCBMC + closure gives J\_k1 = J\_k2.\<close>
+        \<comment> \<open>Step 1: Determine which side X is on for each SCC.\<close>
+        \<comment> \<open>For AB: from AB\_same + hX\_in\_PQ1 + hC\_in\_PQ1, X and C on same side.\<close>
+        have hXC_sameP1: "(X \<subseteq> P1 \<and> C-{a,b} \<subseteq> P1) \<or> (X \<subseteq> Q1 \<and> C-{a,b} \<subseteq> Q1)"
+          using hX_in_PQ1 hC_in_PQ1 AB_same by blast
+        have hXA_sameP2: "(X \<subseteq> P2 \<and> A-{a,b} \<subseteq> P2) \<or> (X \<subseteq> Q2 \<and> A-{a,b} \<subseteq> Q2)"
+          using hX_in_PQ2 hA_in_PQ2 BC_same by blast
+        have hXB_sameP3: "(X \<subseteq> P3 \<and> B-{a,b} \<subseteq> P3) \<or> (X \<subseteq> Q3 \<and> B-{a,b} \<subseteq> Q3)"
+          using hX_in_PQ3 hB_in_PQ3 AC_same by blast
+        \<comment> \<open>Step 2: The Q-side (opposite from X) for each SCC contains \<subseteq> {Y,Z}.\<close>
+        obtain Y Z where hYZ: "{X, Y, Z} = {U, V, W}" "Y \<noteq> X" "Z \<noteq> X" "Y \<noteq> Z"
+            "Y \<in> {U, V, W}" "Z \<in> {U, V, W}"
+        proof -
+          have hUV_ne: "U \<noteq> V" using hUVW(1) hU(1) by blast
+          have hVW_ne: "V \<noteq> W" using hUVW(2) hV(1) by blast
+          have hUW_ne: "U \<noteq> W" using hUVW(3) hU(1) by blast
+          from hX(1) consider "X = U" | "X = V" | "X = W" by blast
+          thus ?thesis
+          proof cases
+            assume "X = U"
+            thus ?thesis using that hUV_ne hUW_ne hVW_ne by blast
+          next
+            assume "X = V"
+            thus ?thesis using that hUV_ne hVW_ne hUW_ne by blast
+          next
+            assume "X = W"
+            thus ?thesis using that hUW_ne hVW_ne hUV_ne by blast
+          qed
+        qed
+        have hY_sub: "Y \<subseteq> top1_S2 - (A \<union> B \<union> C)" using hYZ(5) hU(3) hV(3) hW(3) by (by100 blast)
+        have hZ_sub: "Z \<subseteq> top1_S2 - (A \<union> B \<union> C)" using hYZ(6) hU(3) hV(3) hW(3) by (by100 blast)
+        have hY_conn: "top1_connected_on Y (subspace_topology top1_S2 top1_S2_topology Y)"
+          using hYZ(5) hU(4) hV(4) hW(4) by (by100 blast)
+        have hZ_conn: "top1_connected_on Z (subspace_topology top1_S2 top1_S2_topology Z)"
+          using hYZ(6) hU(4) hV(4) hW(4) by (by100 blast)
+        have hY_ne: "Y \<noteq> {}" using hYZ(5) hU(1) hV(1) hW(1) by (by100 blast)
+        have hZ_ne: "Z \<noteq> {}" using hYZ(6) hU(1) hV(1) hW(1) by (by100 blast)
+        \<comment> \<open>Y and Z are in the same membership sets as some U/V/W.
+           For each SCC, the Q-side = union of theta components in Q.
+           Since X is on P-side, Q-side \<subseteq> Y \<union> Z.\<close>
+        \<comment> \<open>Step 3: For each SCC, the Q-side has closure including the SCC.
+           By SCCBMC: closure(Q\_k) = Q\_k \<union> SCC\_k.
+           Two SCCs with same Q-side \<Rightarrow> same closure \<Rightarrow> SCCs equal \<Rightarrow> contradiction.\<close>
+        \<comment> \<open>Key: for each SCC, the Q-side \<subseteq> Y \<union> Z (no X, no opposite arc interior).
+           Q-side \<noteq> {} since SCC separates S2. So Q-side contains \<ge>1 theta component.
+           3 Q-sides, each a non-empty subset of \{Y,Z\}. By pigeonhole: 2 equal.
+           Their closures give SCC\_k1 = SCC\_k2 \<Rightarrow> two arcs equal \<Rightarrow> contradiction.\<close>
+        \<comment> \<open>For each SCC, the Q-side (opposite from X) = some non-empty subset of \{Y,Z\}.
+           closure(Q-side) = Q-side \<union> SCC (from SCCBMC + Q open in S2).
+           If 2 SCCs have equal Q-sides: their closures give SCC1 = SCC2 \<Rightarrow> False.
+           If all 3 different (\{Y\},\{Z\},\{Y,Z\}): containment gives SCC1 \<subseteq> SCC3 \<Rightarrow> False.\<close>
+        \<comment> \<open>Key helper: for an open component Q of S2-SCC, closure(Q) = Q \<union> SCC.\<close>
+        have closure_eq: "\<And>SCC Q R.
+          top1_simple_closed_curve_on top1_S2 top1_S2_topology SCC \<Longrightarrow>
+          Q \<in> top1_S2_topology \<Longrightarrow> R \<in> top1_S2_topology \<Longrightarrow>
+          Q \<noteq> {} \<Longrightarrow> R \<noteq> {} \<Longrightarrow> Q \<inter> R = {} \<Longrightarrow> Q \<union> R = top1_S2 - SCC \<Longrightarrow>
+          top1_connected_on Q (subspace_topology top1_S2 top1_S2_topology Q) \<Longrightarrow>
+          top1_connected_on R (subspace_topology top1_S2 top1_S2_topology R) \<Longrightarrow>
+          closure_on top1_S2 top1_S2_topology Q = Q \<union> SCC"
+        proof -
+          fix SCC Q R
+          assume hSCC: "top1_simple_closed_curve_on top1_S2 top1_S2_topology SCC"
+            and hQop: "Q \<in> top1_S2_topology" and hRop: "R \<in> top1_S2_topology"
+            and hQne: "Q \<noteq> {}" and hRne: "R \<noteq> {}" and hQR: "Q \<inter> R = {}"
+            and hQR_un: "Q \<union> R = top1_S2 - SCC"
+            and hQc: "top1_connected_on Q (subspace_topology top1_S2 top1_S2_topology Q)"
+            and hRc: "top1_connected_on R (subspace_topology top1_S2 top1_S2_topology R)"
+          \<comment> \<open>(\<supseteq>): Q \<subseteq> closure(Q) and SCC \<subseteq> closure(Q).\<close>
+          have hQ_sub_cl: "Q \<subseteq> closure_on top1_S2 top1_S2_topology Q"
+            by (rule subset_closure_on)
+          have hSCC_sub_cl: "SCC \<subseteq> closure_on top1_S2 top1_S2_topology Q"
+          proof
+            fix x assume hx: "x \<in> SCC"
+            show "x \<in> closure_on top1_S2 top1_S2_topology Q"
+              unfolding closure_on_def
+            proof (rule InterI, clarsimp)
+              fix C assume hCcl: "closedin_on top1_S2 top1_S2_topology C" and hQC: "Q \<subseteq> C"
+              \<comment> \<open>S2 - C is open and \<subseteq> S2 - Q = R \<union> SCC. If x \<notin> C: x \<in> S2-C, open.\<close>
+              show "x \<in> C"
+              proof (rule ccontr)
+                assume "x \<notin> C"
+                have hV: "top1_S2 - C \<in> top1_S2_topology"
+                  using hCcl unfolding closedin_on_def by (by100 blast)
+                have hxV: "x \<in> top1_S2 - C"
+                  using \<open>x \<notin> C\<close> hx hSCC
+                  unfolding top1_simple_closed_curve_on_def top1_continuous_map_on_def
+                  by (by100 blast)
+                from simple_closed_curve_boundary_meets_component[OF hS2 hSCC hQc hRc hQR hQR_un
+                    hQne hRne hQop hRop hx hV hxV]
+                have "(top1_S2 - C) \<inter> Q \<noteq> {}" .
+                thus False using hQC by (by100 blast)
+              qed
+            qed
+          qed
+          \<comment> \<open>(\<subseteq>): closure(Q) \<subseteq> Q \<union> SCC. Because Q \<union> SCC = S2 - R is closed.\<close>
+          have hQSCC_closed: "closedin_on top1_S2 top1_S2_topology (Q \<union> SCC)"
+          proof -
+            have "top1_S2 - (Q \<union> SCC) = R"
+            proof -
+              have "Q \<union> SCC \<union> R = top1_S2"
+                using hQR_un hSCC
+                unfolding top1_simple_closed_curve_on_def top1_continuous_map_on_def
+                by (by100 blast)
+              thus ?thesis using hQR hQR_un by (by100 blast)
+            qed
+            moreover have "Q \<union> SCC \<subseteq> top1_S2"
+            proof -
+              have "Q \<subseteq> top1_S2"
+                by (rule is_topology_on_strict_opens_sub[OF hS2 hQop])
+              moreover have "SCC \<subseteq> top1_S2"
+                using hSCC unfolding top1_simple_closed_curve_on_def top1_continuous_map_on_def
+                by (by100 blast)
+              ultimately show ?thesis by (by100 blast)
+            qed
+            ultimately show ?thesis unfolding closedin_on_def using hRop by (by100 blast)
+          qed
+          have hQ_sub_QSCC: "Q \<subseteq> Q \<union> SCC" by (by100 blast)
+          have hcl_sub: "closure_on top1_S2 top1_S2_topology Q \<subseteq> Q \<union> SCC"
+            unfolding closure_on_def using hQSCC_closed hQ_sub_QSCC by (by100 blast)
+          show "closure_on top1_S2 top1_S2_topology Q = Q \<union> SCC"
+            using hQ_sub_cl hSCC_sub_cl hcl_sub by (by100 blast)
+        qed
+        \<comment> \<open>Distinct SCCs.\<close>
+        have hA_ne_int: "A - {a, b} \<noteq> {}"
+        proof
+          assume "A - {a, b} = {}"
+          from arc_endpoint_in_closure_of_interior[OF hS2 hS2_haus hA_sub hA_arc hA_ep hab]
+          have "a \<in> closure_on top1_S2 top1_S2_topology (A - {a,b})" by (by100 blast)
+          thus False using \<open>A - {a, b} = {}\<close> top1_closure_on_empty[OF hTopS2] by (by100 simp)
+        qed
+        have hB_ne_int: "B - {a, b} \<noteq> {}"
+        proof
+          assume "B - {a, b} = {}"
+          from arc_endpoint_in_closure_of_interior[OF hS2 hS2_haus hB_sub hB_arc hB_ep hab]
+          have "a \<in> closure_on top1_S2 top1_S2_topology (B - {a,b})" by (by100 blast)
+          thus False using \<open>B - {a, b} = {}\<close> top1_closure_on_empty[OF hTopS2] by (by100 simp)
+        qed
+        have hC_ne_int: "C - {a, b} \<noteq> {}"
+        proof
+          assume "C - {a, b} = {}"
+          from arc_endpoint_in_closure_of_interior[OF hS2 hS2_haus hC_sub hC_arc hC_ep hab]
+          have "a \<in> closure_on top1_S2 top1_S2_topology (C - {a,b})" by (by100 blast)
+          thus False using \<open>C - {a, b} = {}\<close> top1_closure_on_empty[OF hTopS2] by (by100 simp)
+        qed
+        have hSCCs_ne: "A \<union> B \<noteq> B \<union> C" "B \<union> C \<noteq> A \<union> C" "A \<union> B \<noteq> A \<union> C"
+        proof -
+          { assume h: "A \<union> B = B \<union> C"
+            hence "A - B = C - B" by (by100 blast)
+            hence "A - {a, b} = C - {a, b}" using hAB hBC by (by100 blast)
+            hence "A - {a, b} \<subseteq> C" by (by100 blast)
+            hence "(A - {a, b}) \<inter> C \<noteq> {}" using hA_ne_int by (by100 blast)
+            hence False using hAC by (by100 blast) }
+          thus "A \<union> B \<noteq> B \<union> C" by blast
+          { assume h: "B \<union> C = A \<union> C"
+            hence "B - C = A - C" by (by100 blast)
+            hence "B - {a, b} = A - {a, b}" using hBC hAC by (by100 blast)
+            hence "B - {a, b} \<subseteq> A" by (by100 blast)
+            hence "(B - {a, b}) \<inter> A \<noteq> {}" using hB_ne_int by (by100 blast)
+            hence False using hAB by (by100 blast) }
+          thus "B \<union> C \<noteq> A \<union> C" by blast
+          { assume h: "A \<union> B = A \<union> C"
+            hence "B - A = C - A" by (by100 blast)
+            hence "B - {a, b} = C - {a, b}" using hAB hAC by (by100 blast)
+            hence "B - {a, b} \<subseteq> C" by (by100 blast)
+            hence "(B - {a, b}) \<inter> C \<noteq> {}" using hB_ne_int by (by100 blast)
+            hence False using hBC by (by100 blast) }
+          thus "A \<union> B \<noteq> A \<union> C" by blast
+        qed
+        \<comment> \<open>Y \<inter> Z = {} (theta components pairwise disjoint).\<close>
+        have hYZ_disj: "Y \<inter> Z = {}"
+        proof -
+          from hYZ(5) consider "Y = U" | "Y = V" | "Y = W" by (by100 blast)
+          thus ?thesis proof cases
+            assume "Y = U"
+            from hYZ(6) hYZ(4)[unfolded this] consider "Z = V" | "Z = W" by (by100 blast)
+            thus ?thesis proof cases
+              assume "Z = V" thus ?thesis using hUVW(1) \<open>Y = U\<close> by (by100 blast)
+            next assume "Z = W" thus ?thesis using hUVW(3) \<open>Y = U\<close> by (by100 blast)
+            qed
+          next
+            assume "Y = V"
+            from hYZ(6) hYZ(4)[unfolded this] consider "Z = U" | "Z = W" by (by100 blast)
+            thus ?thesis proof cases
+              assume "Z = U" thus ?thesis using hUVW(1) \<open>Y = V\<close> by (by100 blast)
+            next assume "Z = W" thus ?thesis using hUVW(2) \<open>Y = V\<close> by (by100 blast)
+            qed
+          next
+            assume "Y = W"
+            from hYZ(6) hYZ(4)[unfolded this] consider "Z = U" | "Z = V" by (by100 blast)
+            thus ?thesis proof cases
+              assume "Z = U" thus ?thesis using hUVW(3) \<open>Y = W\<close> by (by100 blast)
+            next assume "Z = V" thus ?thesis using hUVW(2) \<open>Y = W\<close> by (by100 blast)
+            qed
+          qed
+        qed
+        have hYZ_disj_arcs: "(Y \<union> Z) \<inter> (A \<union> B \<union> C) = {}"
+          using hY_sub hZ_sub by (by100 blast)
+        have hXYZ_eq: "X \<union> Y \<union> Z = U \<union> V \<union> W"
+        proof -
+          have "\<Union>{X, Y, Z} = \<Union>{U, V, W}" using hYZ(1) by (by100 simp)
+          thus ?thesis by (simp add: Un_assoc)
+        qed
+        \<comment> \<open>Helper: SCC subset impossible.\<close>
+        have no_sub: "\<not>(A\<union>B \<subseteq> B\<union>C)" "\<not>(B\<union>C \<subseteq> A\<union>B)" "\<not>(A\<union>B \<subseteq> A\<union>C)"
+            "\<not>(A\<union>C \<subseteq> A\<union>B)" "\<not>(B\<union>C \<subseteq> A\<union>C)" "\<not>(A\<union>C \<subseteq> B\<union>C)"
+        proof -
+          { assume "A\<union>B \<subseteq> B\<union>C"
+            hence "A-{a,b} \<subseteq> C" using hAB hBC by (by100 blast)
+            hence "(A-{a,b})\<inter>C \<noteq> {}" using hA_ne_int by (by100 blast)
+            hence False using hAC by (by100 blast) }
+          thus "\<not>(A\<union>B \<subseteq> B\<union>C)" by blast
+          { assume "B\<union>C \<subseteq> A\<union>B"
+            hence "C-{a,b} \<subseteq> A" using hBC hAB by (by100 blast)
+            hence "(C-{a,b})\<inter>A \<noteq> {}" using hC_ne_int by (by100 blast)
+            hence False using hAC by (by100 blast) }
+          thus "\<not>(B\<union>C \<subseteq> A\<union>B)" by blast
+          { assume "A\<union>B \<subseteq> A\<union>C"
+            hence "B-{a,b} \<subseteq> C" using hAB hAC by (by100 blast)
+            hence "(B-{a,b})\<inter>C \<noteq> {}" using hB_ne_int by (by100 blast)
+            hence False using hBC by (by100 blast) }
+          thus "\<not>(A\<union>B \<subseteq> A\<union>C)" by blast
+          { assume "A\<union>C \<subseteq> A\<union>B"
+            hence "C-{a,b} \<subseteq> B" using hAC hAB by (by100 blast)
+            hence "(C-{a,b})\<inter>B \<noteq> {}" using hC_ne_int by (by100 blast)
+            hence False using hBC by (by100 blast) }
+          thus "\<not>(A\<union>C \<subseteq> A\<union>B)" by blast
+          { assume "B\<union>C \<subseteq> A\<union>C"
+            hence "B-{a,b} \<subseteq> A" using hBC hAC by (by100 blast)
+            hence "(B-{a,b})\<inter>A \<noteq> {}" using hB_ne_int by (by100 blast)
+            hence False using hAB by (by100 blast) }
+          thus "\<not>(B\<union>C \<subseteq> A\<union>C)" by blast
+          { assume "A\<union>C \<subseteq> B\<union>C"
+            hence "A-{a,b} \<subseteq> B" using hAC hBC by (by100 blast)
+            hence "(A-{a,b})\<inter>B \<noteq> {}" using hA_ne_int by (by100 blast)
+            hence False using hAB by (by100 blast) }
+          thus "\<not>(A\<union>C \<subseteq> B\<union>C)" by blast
+        qed
+        \<comment> \<open>For each SCC, the Q-side contains Y or Z. Use case analysis.
+           Key: from hXC\_sameP1, either both in P1 or both in Q1. The OTHER component
+           (not containing X) is the Q-side. It lies in Y\<union>Z and contains at least one of Y,Z.
+           For ANY pair of SCCs: closure containment gives SCC\_i \<subseteq> SCC\_j. Contradiction.\<close>
+        \<comment> \<open>Approach: case-split on which side Y is on for A\<union>B and B\<union>C. In all cases: contradiction.\<close>
+        \<comment> \<open>Proof: for ANY 2 SCCs, the Q-sides (opposite from X) give SCC containment.
+           Q-side of A\<union>B: the component not containing X. Q-side \<subseteq> Y\<union>Z.
+           closure(Q-side) = Q-side \<union> SCC. So SCC \<subseteq> closure(Q-side).
+           If Q-side\_1 \<subseteq> Q-side\_2: SCC\_1 \<subseteq> closure(Q-side\_1) \<subseteq> closure(Q-side\_2)
+           = Q-side\_2 \<union> SCC\_2 \<subseteq> (Y\<union>Z) \<union> SCC\_2. Since SCC\_1 \<inter> (Y\<union>Z) = {}:
+           SCC\_1 \<subseteq> SCC\_2. Contradiction (no\_sub).\<close>
+        \<comment> \<open>The 3 Q-sides are connected non-empty subsets of Y\<union>Z with Y\<inter>Z=\{\}.
+           So each Q-side \<subseteq> Y or \<subseteq> Z (connected + Y\<inter>Z=\{\}).
+           3 choices from \{Y,Z\}: pigeonhole gives 2 on same side.
+           Then their Q-sides are equal (both = Y or both = Z).
+           Equal Q-sides + closure\_eq \<Rightarrow> SCC\_1 = SCC\_2. Contradiction.\<close>
+        \<comment> \<open>To avoid by100 timeouts: use a compact combined argument.\<close>
+        \<comment> \<open>Core claim: \<exists>i\<noteq>j. SCC\_i \<subseteq> SCC\_j. This contradicts no\_sub.\<close>
+        \<comment> \<open>Helpers for connected subsets of disjoint open unions.\<close>
+        have conn_sub: "\<And>P Q S. P \<in> top1_S2_topology \<Longrightarrow> Q \<in> top1_S2_topology \<Longrightarrow>
+            P \<inter> Q = {} \<Longrightarrow> S \<subseteq> P \<union> Q \<Longrightarrow> S \<noteq> {} \<Longrightarrow>
+            top1_connected_on S (subspace_topology top1_S2 top1_S2_topology S) \<Longrightarrow> S \<subseteq> P \<or> S \<subseteq> Q"
+        proof -
+          fix P Q S assume hPop: "P \<in> top1_S2_topology" and hQop: "Q \<in> top1_S2_topology"
+            and hPQ: "P \<inter> Q = {}" and hS: "S \<subseteq> P \<union> Q" and hSne: "S \<noteq> {}"
+            and hSc: "top1_connected_on S (subspace_topology top1_S2 top1_S2_topology S)"
+          show "S \<subseteq> P \<or> S \<subseteq> Q"
+          proof (rule ccontr)
+            assume "\<not> (S \<subseteq> P \<or> S \<subseteq> Q)"
+            hence "S\<inter>P \<noteq> {}" "S\<inter>Q \<noteq> {}" using hS hSne by (by100 blast)+
+            moreover have "(S\<inter>P) \<inter> (S\<inter>Q) = {}" using hPQ by (by100 blast)
+            moreover have "(S\<inter>P) \<union> (S\<inter>Q) = S" using hS by (by100 blast)
+            moreover have "S\<inter>P \<in> subspace_topology top1_S2 top1_S2_topology S"
+              using hPop unfolding subspace_topology_def by (by100 blast)
+            moreover have "S\<inter>Q \<in> subspace_topology top1_S2 top1_S2_topology S"
+              using hQop unfolding subspace_topology_def by (by100 blast)
+            ultimately have "\<not> top1_connected_on S (subspace_topology top1_S2 top1_S2_topology S)"
+              unfolding top1_connected_on_def by (by100 blast)
+            thus False using hSc by (by100 blast)
+          qed
+        qed
+        \<comment> \<open>Y and Z placement in each P/Q decomposition.\<close>
+        have hYop: "Y \<in> top1_S2_topology" using hYZ(5) hU(2) hV(2) hW(2) by (by100 blast)
+        have hZop: "Z \<in> top1_S2_topology" using hYZ(6) hU(2) hV(2) hW(2) by (by100 blast)
+        have hY_PQ1: "Y \<subseteq> P1 \<or> Y \<subseteq> Q1"
+          using conn_sub[OF _ _ hPQ1(3) _ hY_ne hY_conn] hPQ1_open hY_sub hPQ1(4) by (by100 blast)
+        have hZ_PQ1: "Z \<subseteq> P1 \<or> Z \<subseteq> Q1"
+          using conn_sub[OF _ _ hPQ1(3) _ hZ_ne hZ_conn] hPQ1_open hZ_sub hPQ1(4) by (by100 blast)
+        have hY_PQ2: "Y \<subseteq> P2 \<or> Y \<subseteq> Q2"
+          using conn_sub[OF _ _ hPQ2(3) _ hY_ne hY_conn] hPQ2_open hY_sub hPQ2(4) by (by100 blast)
+        have hZ_PQ2: "Z \<subseteq> P2 \<or> Z \<subseteq> Q2"
+          using conn_sub[OF _ _ hPQ2(3) _ hZ_ne hZ_conn] hPQ2_open hZ_sub hPQ2(4) by (by100 blast)
+        have hY_PQ3: "Y \<subseteq> P3 \<or> Y \<subseteq> Q3"
+          using conn_sub[OF _ _ hPQ3(3) _ hY_ne hY_conn] hPQ3_open hY_sub hPQ3(4) by (by100 blast)
+        have hZ_PQ3: "Z \<subseteq> P3 \<or> Z \<subseteq> Q3"
+          using conn_sub[OF _ _ hPQ3(3) _ hZ_ne hZ_conn] hPQ3_open hZ_sub hPQ3(4) by (by100 blast)
+        \<comment> \<open>For each SCC, X and opposite arc on same side \<Rightarrow> Q-side is a connected component \<subseteq> Y\<union>Z.
+           The Q-side IS either Y or Z (not Y\<union>Z, since it's connected and Y\<inter>Z={}).
+           By pigeonhole: 2 of 3 SCCs have Q-side = same theta component.
+           Then closure gives SCC1 = SCC2. Contradiction.\<close>
+        show False sorry
       qed
     qed
   qed
@@ -1373,8 +1803,38 @@ proof -
   have "eh2 \<inter> (A \<union> CC) = {}" using heh2_A heh2_CC by (by100 blast)
   have "eh3 \<inter> (A \<union> B) = {}" using heh3_A heh3_B by (by100 blast)
   \<comment> \<open>Apply theta\_space\_vertex\_exclusion with E1=eh1, E2=eh2, E3=eh3.\<close>
+  have hh1_in_eh1: "h1 \<in> eh1" using assms(28) unfolding top1_arc_endpoints_on_def by (by100 blast)
+  have hh2_in_eh2: "h2 \<in> eh2" using assms(29) unfolding top1_arc_endpoints_on_def by (by100 blast)
+  have hh3_in_eh3: "h3 \<in> eh3" using assms(30) unfolding top1_arc_endpoints_on_def by (by100 blast)
+  have heh1_meets_A: "eh1 \<inter> (A - {g, w}) \<noteq> {}"
+    using hh1_in_eh1 hh1_in_A by (by100 blast)
+  have heh2_meets_B: "eh2 \<inter> (B - {g, w}) \<noteq> {}"
+    using hh2_in_eh2 hh2_in_B by (by100 blast)
+  have heh3_meets_CC: "eh3 \<inter> (CC - {g, w}) \<noteq> {}"
+    using hh3_in_eh3 hh3_in_CC by (by100 blast)
+  have heh1_conn: "top1_connected_on eh1 (subspace_topology top1_S2 top1_S2_topology eh1)"
+    by (rule arc_connected[OF assms(19)])
+  have heh2_conn: "top1_connected_on eh2 (subspace_topology top1_S2 top1_S2_topology eh2)"
+    by (rule arc_connected[OF assms(20)])
+  have heh3_conn: "top1_connected_on eh3 (subspace_topology top1_S2 top1_S2_topology eh3)"
+    by (rule arc_connected[OF assms(21)])
+  have hU_sub: "U \<subseteq> top1_S2 - (A \<union> B \<union> CC)"
+    using hUVW(7) hUVW(4,6) by (by100 blast)
+  have hV_sub: "V \<subseteq> top1_S2 - (A \<union> B \<union> CC)"
+    using hUVW(7) hUVW(4,5) by (by100 blast)
+  have hW_sub: "W \<subseteq> top1_S2 - (A \<union> B \<union> CC)"
+    using hUVW(7) hUVW(5,6) by (by100 blast)
   show False
-    sorry \<comment> \<open>Direct from theta\_space\_vertex\_exclusion[OF ...] once helper is proved.\<close>
+    by (rule theta_space_vertex_exclusion[OF hS2 hA_sub hB_sub hCC_sub
+        hA_arc hB_arc hCC_arc hg_ne_w hAB hBCC hACC hA_ep hB_ep hCC_ep
+        hUVW(1) hUVW(11) hU_sub hUVW(8)
+        hUVW(2) hUVW(12) hV_sub hUVW(9)
+        hUVW(3) hUVW(13) hW_sub hUVW(10)
+        hUVW(4,5,6,7)
+        \<open>e \<in> U \<union> V \<union> W\<close>
+        assms(10) heh1_conn \<open>eh1 \<inter> (B \<union> CC) = {}\<close> he_in_eh1 heh1_meets_A
+        assms(11) heh2_conn \<open>eh2 \<inter> (A \<union> CC) = {}\<close> he_in_eh2 heh2_meets_B
+        assms(12) heh3_conn \<open>eh3 \<inter> (A \<union> B) = {}\<close> he_in_eh3 heh3_meets_CC])
 qed
 
 theorem Theorem_64_4_K5_not_planar:
