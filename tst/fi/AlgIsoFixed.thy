@@ -1779,14 +1779,35 @@ proof -
   proof -
     have "top1_embedding_on I_set I_top top1_S2 top1_S2_topology ?phi"
       by (rule top1_embedding_on_compact_inj[OF hTI hTopS2 hI_compact hS2_haus hphi_cont hphi_inj])
+    hence "top1_homeomorphism_on I_set I_top (?phi ` I_set) (subspace_topology top1_S2 top1_S2_topology (?phi ` I_set)) ?phi"
+      unfolding top1_embedding_on_def by (by100 blast)
     hence "top1_homeomorphism_on I_set I_top ?A1 (subspace_topology top1_S2 top1_S2_topology ?A1) ?phi"
-      sorry \<comment> \<open>Embedding with specified image = homeomorphism onto image.\<close>
-    thus ?thesis unfolding top1_is_arc_on_def
-      using hS2 hS2_haus hA1_sub_S2 sorry
+      using hphi_img by (by100 simp)
+    moreover have "is_topology_on_strict ?A1 (subspace_topology top1_S2 top1_S2_topology ?A1)"
+      by (rule subspace_topology_is_strict[OF hS2]) (use hA1_sub_S2 in \<open>by100 blast\<close>)
+    ultimately show ?thesis unfolding top1_is_arc_on_def by (by100 blast)
   qed
   \<comment> \<open>A1 endpoints are {a, h'(t0)}.\<close>
+  have hphi_homeo: "top1_homeomorphism_on I_set I_top ?A1 (subspace_topology top1_S2 top1_S2_topology ?A1) ?phi"
+  proof -
+    have "top1_embedding_on I_set I_top top1_S2 top1_S2_topology ?phi"
+      by (rule top1_embedding_on_compact_inj[OF hTI hTopS2 hI_compact hS2_haus hphi_cont hphi_inj])
+    hence "top1_homeomorphism_on I_set I_top (?phi ` I_set) (subspace_topology top1_S2 top1_S2_topology (?phi ` I_set)) ?phi"
+      unfolding top1_embedding_on_def by (by100 blast)
+    thus ?thesis using hphi_img by (by100 simp)
+  qed
+  have hA1_strict: "is_topology_on_strict ?A1 (subspace_topology top1_S2 top1_S2_topology ?A1)"
+    by (rule subspace_topology_is_strict[OF hS2 hA1_sub_S2])
+  have hA1_haus: "is_hausdorff_on ?A1 (subspace_topology top1_S2 top1_S2_topology ?A1)"
+    using Theorem_17_11 hS2_haus hA1_sub_S2 by (by100 blast)
   have hA1_ep: "top1_arc_endpoints_on ?A1 (subspace_topology top1_S2 top1_S2_topology ?A1) = {a, h' t0}"
-    sorry \<comment> \<open>From arc\_endpoints\_are\_boundary + hphi(0)=a, hphi(1)=h'(t0).\<close>
+  proof -
+    have "top1_arc_endpoints_on ?A1 (subspace_topology top1_S2 top1_S2_topology ?A1) = {?phi 0, ?phi 1}"
+      sorry \<comment> \<open>arc\_endpoints\_are\_boundary needs topology matching; will fix.\<close>
+    moreover have "?phi 0 = a" using hh'(2) by (by100 simp)
+    moreover have "?phi 1 = h' t0" by (by100 simp)
+    ultimately show ?thesis by (by100 simp)
+  qed
   \<comment> \<open>Split B at h'(t0) to get sub-arc B2 from h'(t0) to c.\<close>
   \<comment> \<open>Case: h'(t0) is interior to B (not an endpoint).\<close>
   \<comment> \<open>h'(t0) \<noteq> c: if h'(t0)=c then c \<in> A1 \<subseteq> A, but c \<notin> A (c is endpoint of B, and
