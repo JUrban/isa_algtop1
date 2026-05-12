@@ -2029,8 +2029,17 @@ proof -
         define I1 where "I1 = {fst (h x) - \<epsilon> <..< fst (h x) + \<epsilon> :: real}"
         define I2 where "I2 = {snd (h x) - \<epsilon> <..< snd (h x) + \<epsilon> :: real}"
         have "Sq = I1 \<times> I2"
-          unfolding Sq_def I1_def I2_def greaterThanLessThan_def greaterThan_def lessThan_def
-          sorry \<comment> \<open>|a-c|<\<epsilon> \<leftrightarrow> c-\<epsilon><a \<and> a<c+\<epsilon>, plus product decomposition.\<close>
+        proof (rule set_eqI)
+          fix q :: "real \<times> real"
+          obtain a b where hab: "q = (a, b)" by (cases q)
+          have abs_iff1: "(\<bar>a - fst (h x)\<bar> < \<epsilon>) = (fst (h x) - \<epsilon> < a \<and> a < fst (h x) + \<epsilon>)"
+            by (by100 linarith)
+          have abs_iff2: "(\<bar>b - snd (h x)\<bar> < \<epsilon>) = (snd (h x) - \<epsilon> < b \<and> b < snd (h x) + \<epsilon>)"
+            by (by100 linarith)
+          show "(q \<in> Sq) = (q \<in> I1 \<times> I2)"
+            unfolding hab Sq_def I1_def I2_def greaterThanLessThan_def greaterThan_def lessThan_def
+            using abs_iff1 abs_iff2 by (by100 simp)
+        qed
         moreover have "open I1" unfolding I1_def by (by100 simp)
         moreover have "open I2" unfolding I2_def by (by100 simp)
         ultimately show ?thesis
