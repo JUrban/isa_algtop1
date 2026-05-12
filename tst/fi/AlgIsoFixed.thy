@@ -2987,9 +2987,26 @@ proof -
     \<comment> \<open>Handle both cases symmetrically. WLOG assume V doesn't contain b.\<close>
     have "\<exists>W. W \<noteq> {} \<and> W \<subseteq> A1 - {a} \<and> W \<inter> (A2 - {a}) = {} \<and>
         closedin_on (C - {a}) (subspace_topology X TX (C - {a})) W"
-      sorry \<comment> \<open>W = the part of the separation not containing b.
-         W \<subseteq> A1-{a,b} \<subseteq> A1-A2. W closed in A1-{a} (complement of open in A1-{a}).
-         A1-{a} closed in C-{a} (A1 closed in X). W closed in C-{a}.\<close>
+    proof -
+      \<comment> \<open>Pick W = part of separation not containing b.\<close>
+      define W where "W = (if b \<in> U then V else U)"
+      have hW_ne: "W \<noteq> {}" unfolding W_def using hUV(3,4) by (by100 simp)
+      have hW_sub: "W \<subseteq> A1 - {a}" unfolding W_def using hUV(1,2,6)
+        unfolding subspace_topology_def by auto
+      have hW_no_b: "b \<notin> W" unfolding W_def using hUV(5) hb_A1a hUV(6) by auto
+      have hW_disj_A2: "W \<inter> (A2 - {a}) = {}"
+      proof -
+        have "W \<subseteq> A1 - {a, b}" using hW_sub hW_no_b by (by100 blast)
+        hence "W \<subseteq> A1 - A2" using hint by (by100 blast)
+        thus ?thesis by (by100 blast)
+      qed
+      \<comment> \<open>W closed in C-{a}: W closed in A1-{a} (complement of open), A1-{a} closed in C-{a}.\<close>
+      have hW_closed: "closedin_on (C - {a}) (subspace_topology X TX (C - {a})) W"
+        sorry \<comment> \<open>W closed in A1-{a} subspace (complement of U or V). A1 closed in X.
+           A1-{a} closed in C-{a} (intersection of closed A1 with C-{a} carrier).
+           Closed in closed = closed.\<close>
+      show ?thesis using hW_ne hW_sub hW_disj_A2 hW_closed by (by100 blast)
+    qed
     then obtain W where hW: "W \<noteq> {}" "W \<subseteq> A1 - {a}" "W \<inter> (A2 - {a}) = {}"
         "closedin_on (C - {a}) (subspace_topology X TX (C - {a})) W" by (by100 blast)
     \<comment> \<open>C-{a} - W is also closed (union of complement-in-A1-{a} and A2-{a}, both closed).\<close>
@@ -3004,8 +3021,31 @@ proof -
     qed
     \<comment> \<open>W and C-{a}-W form a separation of C-{a} \<Rightarrow> not connected. Contradiction.\<close>
     have "\<not> top1_connected_on (C - {a}) (subspace_topology X TX (C - {a}))"
-      unfolding top1_connected_on_def
-      sorry \<comment> \<open>W clopen, non-empty, proper subset \<Rightarrow> not connected.\<close>
+    proof -
+      let ?TCa = "subspace_topology X TX (C - {a})"
+      \<comment> \<open>W closed \<Rightarrow> C-{a}-W open. C-{a}-W closed \<Rightarrow> W open.\<close>
+      have hW_sub_Ca: "W \<subseteq> C - {a}" using hW(2) hdecomp by (by100 blast)
+      have hW_open: "W \<in> ?TCa"
+      proof -
+        from hCaW_closed have "(C - {a}) - (C - {a} - W) \<in> ?TCa"
+          unfolding closedin_on_def by (by100 blast)
+        moreover have "(C - {a}) - (C - {a} - W) = W" using hW_sub_Ca by (by100 blast)
+        ultimately show ?thesis by (by100 simp)
+      qed
+      have hCaW_open: "(C - {a} - W) \<in> ?TCa"
+      proof -
+        from hW(4) have "(C - {a}) - W \<in> ?TCa"
+          unfolding closedin_on_def by (by100 blast)
+        thus ?thesis by (by100 simp)
+      qed
+      \<comment> \<open>W and C-{a}-W are open, non-empty, disjoint, covering C-{a}.\<close>
+      have "W \<inter> (C - {a} - W) = {}" by (by100 blast)
+      have hW_sub_Ca: "W \<subseteq> C - {a}" using hW(2) hdecomp by (by100 blast)
+      have "W \<union> (C - {a} - W) = C - {a}" using hW_sub_Ca by (by100 blast)
+      thus ?thesis unfolding top1_connected_on_def
+        using hW_open hCaW_open hW(1) \<open>C - {a} - W \<noteq> {}\<close>
+          \<open>W \<inter> (C - {a} - W) = {}\<close> \<open>W \<union> (C - {a} - W) = C - {a}\<close> by (by100 blast)
+    qed
     thus False using hCa_conn by (by100 blast)
   qed
   have hb_ep: "b \<in> {e1, e2}"
