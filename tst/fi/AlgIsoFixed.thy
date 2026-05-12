@@ -2034,10 +2034,19 @@ proof -
     using hC2_cl unfolding closedin_on_def by (by100 blast)
   have hp_ne_q: "p \<noteq> q"
   proof
-    assume "p = q"
-    \<comment> \<open>If p=q: both in same point \<Rightarrow> path from p to q exists in S2-C (constant path).
-       But assms(5) says no such path. Contradiction.\<close>
-    thus False using assms(5) sorry
+    assume heq: "p = q"
+    have "top1_is_path_on (top1_S2 - C) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) p q
+        (top1_constant_path p)"
+      unfolding top1_is_path_on_def top1_constant_path_def
+    proof (intro conjI)
+      show "top1_continuous_map_on I_set I_top (top1_S2 - C)
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) (\<lambda>_. p)"
+        by (rule top1_continuous_map_on_const[OF
+            top1_unit_interval_topology_is_topology_on
+            subspace_topology_is_topology_on[OF hTopS2, of "top1_S2 - C"]])
+           (use assms(3) in \<open>by100 blast\<close>)+
+    qed (use heq in \<open>by100 simp\<close>)+
+    thus False using assms(5) by (by100 blast)
   qed
   from S2_open_path_connected_arc_connected[OF assms(1) hC1_open _ hp_C1 hq_C1 hp_ne_q hf]
   obtain arc_f where harc_f: "top1_is_arc_on arc_f (subspace_topology top1_S2 top1_S2_topology arc_f)"
