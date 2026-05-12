@@ -3219,6 +3219,107 @@ proof -
   qed
 qed
 
+\<comment> \<open>An arc endpoint in S2 is NOT an interior point of the arc.
+   Hence any open neighborhood of p in S2 contains points outside Fp.
+   Proof: via stereographic projection to R2, use connected\_open\_delete\_R2.\<close>
+lemma arc_endpoint_not_interior_S2:
+  assumes hS2: "is_topology_on_strict top1_S2 top1_S2_topology"
+  and hFp: "top1_is_arc_on Fp (subspace_topology top1_S2 top1_S2_topology Fp)"
+  and hFp_sub: "Fp \<subseteq> top1_S2"
+  and hFp_ep: "top1_arc_endpoints_on Fp (subspace_topology top1_S2 top1_S2_topology Fp) = {p, d}"
+  and hpd: "p \<noteq> d"
+  and hV: "V \<in> top1_S2_topology" and hp_V: "p \<in> V"
+  shows "\<exists>x \<in> V. x \<notin> Fp \<and> x \<in> top1_S2"
+proof (rule ccontr)
+  assume hneg: "\<not> ?thesis"
+  have hTopS2: "is_topology_on top1_S2 top1_S2_topology"
+    using hS2 unfolding is_topology_on_strict_def by (by100 blast)
+  have hV_sub_S2: "V \<subseteq> top1_S2"
+    using hV hS2 unfolding is_topology_on_strict_def openin_on_def by (by100 blast)
+  have hV_sub_Fp': "V \<subseteq> Fp"
+  proof (rule subsetI)
+    fix x assume "x \<in> V"
+    hence "x \<in> top1_S2" using hV_sub_S2 by (by100 blast)
+    with hneg \<open>x \<in> V\<close> show "x \<in> Fp" by (by100 blast)
+  qed
+  have hp_S2: "p \<in> top1_S2" using hFp_sub hFp_ep
+    unfolding top1_arc_endpoints_on_def by (by100 blast)
+  \<comment> \<open>Pick z \<in> S2 - Fp (Fp \<subsetneq> S2). Use z as stereographic pole.\<close>
+  have hFp_ne_S2: "Fp \<noteq> top1_S2"
+  proof
+    assume "Fp = top1_S2"
+    \<comment> \<open>Fp is arc (hom to [0,1]). Removing endpoint p disconnects Fp.
+       But S2 - {p} is connected. Contradiction.\<close>
+    have "top1_connected_on (top1_S2 - {p}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p}))"
+      sorry \<comment> \<open>S2 minus a point is connected (from S2\_minus\_point\_simply\_connected).\<close>
+    moreover have "\<not> top1_connected_on (Fp - {p}) (subspace_topology top1_S2 top1_S2_topology (Fp - {p}))"
+      sorry \<comment> \<open>Removing endpoint from arc: Fp-{p} has 2 components [from arc structure].\<close>
+    ultimately show False using \<open>Fp = top1_S2\<close> by (by100 simp)
+  qed
+  then obtain z where hz: "z \<in> top1_S2 - Fp" using hFp_sub by auto
+  \<comment> \<open>Stereographic projection from z.\<close>
+  obtain h where hh: "top1_homeomorphism_on (top1_S2 - {z})
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {z}))
+      (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets) h"
+    using S2_minus_point_homeo_R2[OF] hz by (by100 blast)
+  \<comment> \<open>V, Fp \<subseteq> S2-{z} (since z \<notin> Fp \<supseteq> V).\<close>
+  have hz_notin_V: "z \<notin> V" using hV_sub_Fp' hz by (by100 blast)
+  have hV_sub_Sz: "V \<subseteq> top1_S2 - {z}" using hV_sub_S2 hz_notin_V by (by100 blast)
+  have hFp_sub_Sz: "Fp \<subseteq> top1_S2 - {z}" using hFp_sub hz by (by100 blast)
+  \<comment> \<open>h(V) is open in R2.\<close>
+  have hhV_open: "h ` V \<in> product_topology_on top1_open_sets top1_open_sets" sorry
+  \<comment> \<open>h(V) is nonempty (p \<in> V).\<close>
+  have hhV_ne: "h ` V \<noteq> {}" using hp_V by (by100 blast)
+  \<comment> \<open>h(Fp) is an arc in R2, homeomorphic to [0,1].\<close>
+  obtain g where hg: "top1_homeomorphism_on I_set I_top (h ` Fp)
+      (subspace_topology (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets) (h ` Fp)) g"
+    sorry
+  \<comment> \<open>g\<inverse>(h(V)) is open in [0,1], contains g\<inverse>(h(p)) \<in> {0,1}.\<close>
+  define hp' where "hp' = h p"
+  have hhp_in_hFp: "hp' \<in> h ` Fp" unfolding hp'_def using hp_V hV_sub_Fp' by (by100 blast)
+  define t_p where "t_p = inv_into I_set g hp'"
+  have ht_p_01: "t_p \<in> {0, 1}" sorry \<comment> \<open>g\<inverse>(h(p)) is 0 or 1 since p is endpoint of Fp.\<close>
+  \<comment> \<open>g\<inverse>(h(V)) open in [0,1], contains t\_p, hence contains [t\_p, t\_p+\<epsilon>) or (t\_p-\<epsilon>, t\_p].\<close>
+  \<comment> \<open>Pick t0 \<in> (0,1) in this open set.\<close>
+  obtain t0 where ht0: "t0 \<in> {0<..<1}" "g t0 \<in> h ` V" sorry
+  define w where "w = g t0"
+  \<comment> \<open>The connected component W of h(V) containing w is open and connected in R2.\<close>
+  \<comment> \<open>W - {w} is connected (connected\_open\_delete\_R2).\<close>
+  \<comment> \<open>g\<inverse>(W - {w}) = g\<inverse>(W) - {t0} is connected.\<close>
+  \<comment> \<open>But [0,1] - {t0} = [0,t0) \<union> (t0,1] is disconnected.\<close>
+  \<comment> \<open>g\<inverse>(W) is open in [0,1] and contains (t0-\<epsilon>,t0+\<epsilon>).\<close>
+  \<comment> \<open>So g\<inverse>(W) - {t0} hits both [0,t0) and (t0,1]. Contradiction.\<close>
+  show False sorry
+qed
+
+\<comment> \<open>Corollary: p is in the closure of S2 - Fp.\<close>
+lemma arc_endpoint_in_closure_of_complement_S2:
+  assumes "is_topology_on_strict top1_S2 top1_S2_topology"
+  and "top1_is_arc_on Fp (subspace_topology top1_S2 top1_S2_topology Fp)"
+  and "Fp \<subseteq> top1_S2"
+  and "top1_arc_endpoints_on Fp (subspace_topology top1_S2 top1_S2_topology Fp) = {p, d}"
+  and "p \<noteq> d"
+  shows "p \<in> closure_on top1_S2 top1_S2_topology (top1_S2 - Fp)"
+  sorry
+
+\<comment> \<open>Key consequence: given D closed with p \<notin> D and Fp \<union> D non-separating,
+   there exists a path from p to any q \<in> S2-(Fp\<union>D) in S2-D avoiding Fp except at p.\<close>
+lemma arc_endpoint_accessibility:
+  assumes "is_topology_on_strict top1_S2 top1_S2_topology"
+  and "top1_is_arc_on Fp (subspace_topology top1_S2 top1_S2_topology Fp)"
+  and "Fp \<subseteq> top1_S2"
+  and "top1_arc_endpoints_on Fp (subspace_topology top1_S2 top1_S2_topology Fp) = {p, d}"
+  and "p \<noteq> d"
+  and "closedin_on top1_S2 top1_S2_topology D"
+  and "p \<notin> D"
+  and "\<not> top1_separates_on top1_S2 top1_S2_topology (Fp \<union> D)"
+  and "closedin_on top1_S2 top1_S2_topology (Fp \<union> D)"
+  and "q \<in> top1_S2 - (Fp \<union> D)"
+  shows "\<exists>f. top1_is_path_on (top1_S2 - D)
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - D)) p q f
+      \<and> (\<forall>t \<in> top1_unit_interval. t > 0 \<longrightarrow> f t \<notin> Fp)"
+  sorry
+
 \<comment> \<open>First-hit sub-arc: given arc A from p to q with A \<inter> D \<noteq> {} and p \<notin> D, D closed,
    get sub-arc Fp from p to a point d \<in> D with Fp \<inter> D = {d}.\<close>
 lemma first_hit_sub_arc:
