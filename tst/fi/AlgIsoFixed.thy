@@ -1017,7 +1017,64 @@ proof -
   \<comment> \<open>Transfer from Z to \<pi>\_1 via the isomorphisms.\<close>
   \<comment> \<open>\<psi>\_Y \<circ> \<phi> \<circ> inv(\<psi>\_X) is a surjective hom Z \<rightarrow> Z, hence injective.
      Since \<psi>\_X and \<psi>\_Y are bijective, \<phi> is injective.\<close>
-  show ?thesis sorry \<comment> \<open>Transfer Z-injectivity to \<pi>\_1 via \<psi>\_X, \<psi>\_Y isomorphisms.\<close>
+  \<comment> \<open>Define composed map h = \<psi>\_Y \<circ> \<phi> \<circ> inv(\<psi>\_X) : Z \<rightarrow> Z.\<close>
+  define invPsiX where "invPsiX = inv_into ?GX \<psi>X"
+  have hPsiX_bij: "bij_betw \<psi>X ?GX top1_Z_group"
+    using h\<psi>X unfolding top1_group_iso_on_def by (by100 blast)
+  have hPsiY_bij: "bij_betw \<psi>Y ?GY top1_Z_group"
+    using h\<psi>Y unfolding top1_group_iso_on_def by (by100 blast)
+  have hinvPsiX_bij: "bij_betw invPsiX top1_Z_group ?GX"
+    unfolding invPsiX_def by (rule bij_betw_inv_into[OF hPsiX_bij])
+  define comp_h where "comp_h = \<psi>Y \<circ> \<phi> \<circ> invPsiX"
+  \<comment> \<open>comp\_h is a surjective map Z \<rightarrow> Z.\<close>
+  have hcomp_surj: "comp_h ` top1_Z_group = top1_Z_group"
+  proof -
+    have "invPsiX ` top1_Z_group = ?GX" using hinvPsiX_bij unfolding bij_betw_def by (by100 blast)
+    hence "\<phi> ` (invPsiX ` top1_Z_group) = \<phi> ` ?GX" by (by100 simp)
+    hence "\<phi> ` (invPsiX ` top1_Z_group) = ?GY" using hphi_surj by (by100 simp)
+    hence "\<psi>Y ` (\<phi> ` (invPsiX ` top1_Z_group)) = \<psi>Y ` ?GY" by (by100 simp)
+    moreover have "\<psi>Y ` ?GY = top1_Z_group" using hPsiY_bij unfolding bij_betw_def by (by100 blast)
+    ultimately have "\<psi>Y ` (\<phi> ` (invPsiX ` top1_Z_group)) = top1_Z_group" by (by100 simp)
+    moreover have "(\<psi>Y \<circ> \<phi> \<circ> invPsiX) ` top1_Z_group = \<psi>Y ` (\<phi> ` (invPsiX ` top1_Z_group))"
+      by (simp add: image_comp)
+    ultimately show ?thesis unfolding comp_h_def by auto
+  qed
+  \<comment> \<open>comp\_h is a group hom Z \<rightarrow> Z, i.e. additive.\<close>
+  have hcomp_hom: "\<forall>a b. a \<in> top1_Z_group \<longrightarrow> b \<in> top1_Z_group \<longrightarrow>
+      comp_h (top1_Z_mul a b) = top1_Z_mul (comp_h a) (comp_h b)"
+    sorry \<comment> \<open>Composition of homs.\<close>
+  \<comment> \<open>top1\_Z\_group = UNIV, top1\_Z\_mul = (+). So comp\_h additive on all of Z.\<close>
+  have hcomp_add: "\<forall>a b. comp_h (a + b) = comp_h a + comp_h b"
+    sorry \<comment> \<open>From hcomp\_hom + Z definitions.\<close>
+  have hZ_UNIV: "top1_Z_group = (UNIV :: int set)" unfolding top1_Z_group_def by (by100 simp)
+  have hcomp_surj_UNIV: "comp_h ` UNIV = (UNIV :: int set)"
+    using hcomp_surj hZ_UNIV by (by100 simp)
+  \<comment> \<open>By hZ\_surj\_inj: comp\_h is injective.\<close>
+  have hcomp_inj: "inj comp_h"
+    by (rule hZ_surj_inj[OF hcomp_add hcomp_surj_UNIV])
+  \<comment> \<open>\<phi> = inv(\<psi>\_Y) \<circ> comp\_h \<circ> \<psi>\_X. All three are injective, so \<phi> is injective.\<close>
+  \<comment> \<open>\<phi>(x) = \<phi>(y) \<Rightarrow> \<psi>\_Y(\<phi>(x)) = \<psi>\_Y(\<phi>(y)) \<Rightarrow> comp\_h(\<psi>\_X(x)) = comp\_h(\<psi>\_X(y))
+     \<Rightarrow> \<psi>\_X(x) = \<psi>\_X(y) (comp\_h inj) \<Rightarrow> x = y (\<psi>\_X inj).\<close>
+  show "inj_on \<phi> ?GX"
+  proof (rule inj_onI)
+    fix x y assume hx: "x \<in> ?GX" and hy: "y \<in> ?GX" and hphi_eq: "\<phi> x = \<phi> y"
+    have "\<psi>Y (\<phi> x) = \<psi>Y (\<phi> y)" using hphi_eq by (by100 simp)
+    have hPsiX_x: "\<psi>X x \<in> top1_Z_group" using hPsiX_bij hx unfolding bij_betw_def by (by100 blast)
+    have hPsiX_y: "\<psi>X y \<in> top1_Z_group" using hPsiX_bij hy unfolding bij_betw_def by (by100 blast)
+    have hinvX: "invPsiX (\<psi>X x) = x"
+      unfolding invPsiX_def by (rule bij_betw_inv_into_left[OF hPsiX_bij hx])
+    have hinvY: "invPsiX (\<psi>X y) = y"
+      unfolding invPsiX_def by (rule bij_betw_inv_into_left[OF hPsiX_bij hy])
+    have "comp_h (\<psi>X x) = \<psi>Y (\<phi> (invPsiX (\<psi>X x)))"
+      unfolding comp_h_def by (by100 simp)
+    hence "comp_h (\<psi>X x) = \<psi>Y (\<phi> x)" using hinvX by (by100 simp)
+    moreover have "comp_h (\<psi>X y) = \<psi>Y (\<phi> y)"
+      unfolding comp_h_def using hinvY by (by100 simp)
+    ultimately have "comp_h (\<psi>X x) = comp_h (\<psi>X y)"
+      using \<open>\<psi>Y (\<phi> x) = \<psi>Y (\<phi> y)\<close> by (by100 simp)
+    hence "\<psi>X x = \<psi>X y" using hcomp_inj unfolding inj_def by (by100 blast)
+    thus "x = y" using hPsiX_bij hx hy unfolding bij_betw_def inj_on_def by (by100 blast)
+  qed
 qed
 
 \<comment> \<open>Helper: induced map with id equals induced map with (\<lambda>x. x).\<close>
