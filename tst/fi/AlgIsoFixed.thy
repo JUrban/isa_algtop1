@@ -1021,8 +1021,70 @@ proof -
   \<comment> \<open>comp\_h additive: ψ\_Y(φ(invPsiX(a+b))) = ψ\_Y(φ(invPsiX(a))) + ψ\_Y(φ(invPsiX(b))).
      Each step preserves the group operation.\<close>
   have hcomp_add: "\<forall>a b. comp_h (a + b) = comp_h a + comp_h b"
-    sorry \<comment> \<open>Composition of group isos and hom preserves operation. Needs ~30 lines
-           unfolding iso hom properties through the chain.\<close>
+  proof (intro allI)
+    fix a b :: int
+    \<comment> \<open>invPsiX hom: invPsiX(a+b) = mulX(invPsiX a, invPsiX b).\<close>
+    have hinvPsiX_hom: "\<forall>x\<in>top1_Z_group. \<forall>y\<in>top1_Z_group.
+        invPsiX (top1_Z_mul x y) = ?mulX (invPsiX x) (invPsiX y)"
+    proof (intro ballI)
+      fix x y assume hx: "x \<in> top1_Z_group" and hy: "y \<in> top1_Z_group"
+      \<comment> \<open>\<psi>\_X is iso: hom + bij. So \<psi>\_X(mulX(a,b)) = mulZ(\<psi>\_X a, \<psi>\_X b).
+         inv(\<psi>\_X)(mulZ(x,y)) = mulX(inv(\<psi>\_X)(x), inv(\<psi>\_X)(y)).\<close>
+      have hPsiX_hom: "\<forall>a\<in>?GX. \<forall>b\<in>?GX. \<psi>X (?mulX a b) = top1_Z_mul (\<psi>X a) (\<psi>X b)"
+        using h\<psi>X unfolding top1_group_iso_on_def top1_group_hom_on_def by (by100 blast)
+      have hinvX: "invPsiX x \<in> ?GX" using hinvPsiX_bij hx unfolding bij_betw_def by (by100 blast)
+      have hinvY: "invPsiX y \<in> ?GX" using hinvPsiX_bij hy unfolding bij_betw_def by (by100 blast)
+      have "\<psi>X (?mulX (invPsiX x) (invPsiX y)) = top1_Z_mul (\<psi>X (invPsiX x)) (\<psi>X (invPsiX y))"
+        using hPsiX_hom hinvX hinvY by (by100 blast)
+      also have "\<psi>X (invPsiX x) = x"
+        unfolding invPsiX_def by (rule f_inv_into_f[OF])
+           (use hx hPsiX_bij in \<open>unfold bij_betw_def, by100 blast\<close>)
+      also have "\<psi>X (invPsiX y) = y"
+        unfolding invPsiX_def by (rule f_inv_into_f[OF])
+           (use hy hPsiX_bij in \<open>unfold bij_betw_def, by100 blast\<close>)
+      finally have "\<psi>X (?mulX (invPsiX x) (invPsiX y)) = top1_Z_mul x y" .
+      \<comment> \<open>Apply inv(\<psi>\_X) to both sides.\<close>
+      hence "invPsiX (\<psi>X (?mulX (invPsiX x) (invPsiX y))) = invPsiX (top1_Z_mul x y)"
+        by (by100 simp)
+      moreover have "invPsiX (\<psi>X (?mulX (invPsiX x) (invPsiX y))) = ?mulX (invPsiX x) (invPsiX y)"
+        unfolding invPsiX_def
+        sorry \<comment> \<open>inv\_into \<circ> \<psi>\_X = id on GX. Needs mulX(a,b) \<in> GX (group closure).\<close>
+      ultimately show "invPsiX (top1_Z_mul x y) = ?mulX (invPsiX x) (invPsiX y)" by (by100 simp)
+    qed
+    have ha: "a \<in> top1_Z_group" unfolding top1_Z_group_def by (by100 simp)
+    have hb: "b \<in> top1_Z_group" unfolding top1_Z_group_def by (by100 simp)
+    have "top1_Z_mul a b = a + b" unfolding top1_Z_mul_def by (by100 simp)
+    have hinvAB: "invPsiX (a + b) = ?mulX (invPsiX a) (invPsiX b)"
+      using hinvPsiX_hom[THEN bspec, OF ha, THEN bspec, OF hb]
+      unfolding \<open>top1_Z_mul a b = a + b\<close>[symmetric] by (by100 simp)
+    \<comment> \<open>\<phi> hom: \<phi>(mulX(x,y)) = mulY(\<phi> x, \<phi> y).\<close>
+    have hinvA_GX: "invPsiX a \<in> ?GX" using hinvPsiX_bij ha unfolding bij_betw_def by (by100 blast)
+    have hinvB_GX: "invPsiX b \<in> ?GX" using hinvPsiX_bij hb unfolding bij_betw_def by (by100 blast)
+    have hphiAB: "\<phi> (?mulX (invPsiX a) (invPsiX b)) = ?mulY (\<phi> (invPsiX a)) (\<phi> (invPsiX b))"
+      using hphi_hom hinvA_GX hinvB_GX unfolding top1_group_hom_on_def by (by100 blast)
+    \<comment> \<open>\<psi>\_Y hom: \<psi>\_Y(mulY(x,y)) = mulZ(\<psi>\_Y x, \<psi>\_Y y) = \<psi>\_Y x + \<psi>\_Y y.\<close>
+    have hphiA_GY: "\<phi> (invPsiX a) \<in> ?GY"
+      using hphi_hom hinvA_GX unfolding top1_group_hom_on_def by (by100 blast)
+    have hphiB_GY: "\<phi> (invPsiX b) \<in> ?GY"
+      using hphi_hom hinvB_GX unfolding top1_group_hom_on_def by (by100 blast)
+    have hpsiYAB: "\<psi>Y (?mulY (\<phi> (invPsiX a)) (\<phi> (invPsiX b))) =
+        top1_Z_mul (\<psi>Y (\<phi> (invPsiX a))) (\<psi>Y (\<phi> (invPsiX b)))"
+      using h\<psi>Y hphiA_GY hphiB_GY unfolding top1_group_iso_on_def top1_group_hom_on_def by (by100 blast)
+    \<comment> \<open>Chain: comp\_h(a+b) = \<psi>\_Y(\<phi>(invPsiX(a+b)))
+         = \<psi>\_Y(\<phi>(mulX(invPsiX a, invPsiX b)))
+         = \<psi>\_Y(mulY(\<phi>(invPsiX a), \<phi>(invPsiX b)))
+         = \<psi>\_Y(\<phi>(invPsiX a)) + \<psi>\_Y(\<phi>(invPsiX b))
+         = comp\_h a + comp\_h b.\<close>
+    have "comp_h (a + b) = \<psi>Y (\<phi> (invPsiX (a + b)))"
+      unfolding comp_h_def by (by100 simp)
+    also have "\<dots> = \<psi>Y (\<phi> (?mulX (invPsiX a) (invPsiX b)))" using hinvAB by (by100 simp)
+    also have "\<dots> = \<psi>Y (?mulY (\<phi> (invPsiX a)) (\<phi> (invPsiX b)))" using hphiAB by (by100 simp)
+    also have "\<dots> = top1_Z_mul (\<psi>Y (\<phi> (invPsiX a))) (\<psi>Y (\<phi> (invPsiX b)))" using hpsiYAB .
+    also have "\<dots> = \<psi>Y (\<phi> (invPsiX a)) + \<psi>Y (\<phi> (invPsiX b))"
+      unfolding top1_Z_mul_def by (by100 simp)
+    also have "\<dots> = comp_h a + comp_h b" unfolding comp_h_def by (by100 simp)
+    finally show "comp_h (a + b) = comp_h a + comp_h b" .
+  qed
   have hZ_UNIV: "top1_Z_group = (UNIV :: int set)" unfolding top1_Z_group_def by (by100 simp)
   have hcomp_surj_UNIV: "comp_h ` UNIV = (UNIV :: int set)"
     using hcomp_surj hZ_UNIV by (by100 simp)
