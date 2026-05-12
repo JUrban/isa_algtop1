@@ -3804,9 +3804,40 @@ proof -
       "top1_arc_endpoints_on Gq (subspace_topology top1_S2 top1_S2_topology Gq) = {q, b2}"
       "Gq \<subseteq> arc_g" "Gq \<inter> C1 = {b2}" "p \<notin> Gq"
     by auto
-  \<comment> \<open>Arc separation: first-hit sub-arcs from each endpoint share only that endpoint.\<close>
-  have hFpGp: "Fp \<inter> Gp = {p}" sorry \<comment> \<open>Fp \<subseteq> S2-C1, Gp \<subseteq> S2-C2, both contain p.\<close>
-  have hFqGq: "Fq \<inter> Gq = {q}" sorry \<comment> \<open>Symmetric to hFpGp.\<close>
+  \<comment> \<open>Fp \<union> C2 does not separate S2 (Theorem 63.3: D1=Fp, D2=C2, D1\<inter>D2={a4'}, S2-{a4'} simply connected).\<close>
+  have hFp_sub_S2_early: "Fp \<subseteq> top1_S2" using hFp(6) harc_f_sub_S2 by (by100 blast)
+  have hFp_closed: "closedin_on top1_S2 top1_S2_topology Fp"
+    by (rule arc_in_S2_closed[OF hFp_sub_S2_early hFp(4)])
+  have hFp_nosep: "\<not> top1_separates_on top1_S2 top1_S2_topology Fp"
+    by (rule Theorem_63_2_arc_no_separation[OF assms(1) hFp_sub_S2_early hFp(4)])
+  have hFpC2_inter: "Fp \<inter> C2 = {a4'}" using hFp(7) by (by100 blast)
+  have ha4'_in_C2: "a4' \<in> C2" using hFp(1) by (by100 blast)
+  have ha4'_S2: "a4' \<in> top1_S2" using ha4'_in_C2 hC2_sub by (by100 blast)
+  have hS2_minus_a4'_sc: "top1_simply_connected_on (top1_S2 - {a4'})
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {a4'}))"
+    by (rule S2_minus_point_simply_connected[OF ha4'_S2])
+  have hS2_minus_FpC2_sc: "top1_simply_connected_on (top1_S2 - (Fp \<inter> C2))
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (Fp \<inter> C2)))"
+    using hS2_minus_a4'_sc hFpC2_inter by (by100 simp)
+  have hFpC2_nosep: "\<not> top1_separates_on top1_S2 top1_S2_topology (Fp \<union> C2)"
+    by (rule Theorem_63_3_general_nonseparation[OF assms(1) hFp_closed hC2_cl hS2_minus_FpC2_sc
+        hFp_nosep hC2_nosep])
+  have hFpC2_closed: "closedin_on top1_S2 top1_S2_topology (Fp \<union> C2)"
+  proof -
+    have "closedin_on top1_S2 top1_S2_topology (\<Union>{Fp, C2})"
+      by (rule closedin_on_finite_Union[OF hTopS2]) (use hFp_closed hC2_cl in auto)
+    thus ?thesis by (by100 simp)
+  qed
+  \<comment> \<open>q \<in> S2 - (Fp \<union> C2) (q \<notin> Fp proved, q \<notin> C2 by assumption).\<close>
+  have hq_outside: "q \<in> top1_S2 - (Fp \<union> C2)"
+    using hq_S2 hFp(8) hq_not_C2 by (by100 blast)
+  \<comment> \<open>Arc separation: first-hit sub-arcs from each endpoint share only that endpoint.
+     Strategy: Fp \<union> C2 doesn't separate S2, so S2-(Fp\<union>C2) is path-connected.
+     Gp \<subseteq> arc\_g \<subseteq> S2-C2. Gp - {p, a2'} \<subseteq> S2 - C. If Gp hit Fp at x \<noteq> p:
+     x \<in> Fp \<inter> Gp \<subseteq> (S2-C1) \<inter> (S2-C2) = S2-C. But x \<in> Fp means x \<in> Fp \<union> C2.
+     So x would be a point of Gp in Fp \<union> C2 (other than at endpoints p, a2'). \<close>
+  have hFpGp: "Fp \<inter> Gp = {p}" sorry \<comment> \<open>Needs boundary accessibility of p from S2-(Fp\<union>C2).\<close>
+  have hFqGq: "Fq \<inter> Gq = {q}" sorry \<comment> \<open>Symmetric.\<close>
   \<comment> \<open>Vertex properties: a4', b4 \<in> C2 - {a1,a3} and a2', b2 \<in> C1 - {a1,a3}.\<close>
   have ha4'_ne: "a4' \<noteq> a1" "a4' \<noteq> a3"
     using hFp(1) harc_f(2) hC12(2) by (by100 blast)+
