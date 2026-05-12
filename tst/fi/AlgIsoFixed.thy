@@ -2668,7 +2668,18 @@ proof -
     proof -
       have "top1_continuous_map_on top1_S1 top1_S1_topology UNIV
           (product_topology_on top1_open_sets top1_open_sets) id"
-        sorry \<comment> \<open>Inclusion S1 \<hookrightarrow> R2 is continuous (subspace inclusion).\<close>
+        unfolding top1_continuous_map_on_def top1_S1_topology_def
+      proof (intro conjI ballI)
+        fix x assume "x \<in> top1_S1" thus "id x \<in> UNIV" by (by100 simp)
+      next
+        fix V :: "(real \<times> real) set"
+        assume hV: "V \<in> product_topology_on top1_open_sets top1_open_sets"
+        have "top1_S1 \<inter> V \<in> subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) top1_S1"
+          by (rule subspace_topology_memI) (rule hV)
+        moreover have "{x \<in> top1_S1. id x \<in> V} = top1_S1 \<inter> V" by auto
+        ultimately show "{x \<in> top1_S1. id x \<in> V} \<in> subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) top1_S1"
+          by (by100 simp)
+      qed
       moreover have "inj_on id top1_S1" by (by100 simp)
       moreover have "id ` top1_S1 = top1_S1" by (by100 simp)
       ultimately show ?thesis unfolding top1_simple_closed_curve_on_def by (by100 blast)
