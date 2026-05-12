@@ -883,35 +883,13 @@ text \<open>Munkres Theorem 58.7: If f: X \<rightarrow> Y is a homotopy equivale
    So \<phi>(gen) = \<plusminus>gen\_H. Since \<phi>(gen^n) = \<phi>(gen)^n = (\<plusminus>gen\_H)^n:
    if \<phi>(gen^n) = e\_H then n = 0. So ker(\<phi>) = {e\_G}, i.e. \<phi> injective.\<close>
 lemma surj_hom_infinite_cyclic_inj:
-  assumes hTX: "is_topology_on X TX"
-      and hgen: "top1_is_loop_on X TX a gen"
-      and hgen_generates: "\<forall>f. top1_is_loop_on X TX a f \<longrightarrow>
-          (\<exists>n::nat. top1_path_homotopic_on X TX a a f (top1_path_power gen a n)
-            \<or> top1_path_homotopic_on X TX a a f (top1_path_power (top1_path_reverse gen) a n))"
-      and hTY: "is_topology_on Y TY"
-      and hgen2: "top1_is_loop_on Y TY b gen2"
-      and hgen2_generates: "\<forall>f. top1_is_loop_on Y TY b f \<longrightarrow>
-          (\<exists>n::nat. top1_path_homotopic_on Y TY b b f (top1_path_power gen2 b n)
-            \<or> top1_path_homotopic_on Y TY b b f (top1_path_power (top1_path_reverse gen2) b n))"
-      and hphi_hom: "top1_group_hom_on
-          (top1_fundamental_group_carrier X TX a) (top1_fundamental_group_mul X TX a)
-          (top1_fundamental_group_carrier Y TY b) (top1_fundamental_group_mul Y TY b) \<phi>"
-      and hphi_surj: "\<phi> ` (top1_fundamental_group_carrier X TX a) =
-          top1_fundamental_group_carrier Y TY b"
-  shows "inj_on \<phi> (top1_fundamental_group_carrier X TX a)"
+  assumes hGX_Z: "top1_groups_isomorphic_on GX mulX top1_Z_group top1_Z_mul"
+      and hGY_Z: "top1_groups_isomorphic_on GY mulY top1_Z_group top1_Z_mul"
+      and hphi_hom: "top1_group_hom_on GX mulX GY mulY \<phi>"
+      and hphi_surj: "\<phi> ` GX = GY"
+  shows "inj_on \<phi> GX"
 proof -
-  \<comment> \<open>Both groups are isomorphic to Z. Via the isomorphisms, \<phi> becomes
-     a surjective group hom Z \<rightarrow> Z, which is multiplication by \<plusminus>1, hence injective.
-     We formalize this using the abstract group structure.\<close>
-  let ?GX = "top1_fundamental_group_carrier X TX a"
-  let ?mulX = "top1_fundamental_group_mul X TX a"
-  let ?GY = "top1_fundamental_group_carrier Y TY b"
-  let ?mulY = "top1_fundamental_group_mul Y TY b"
-  \<comment> \<open>Both groups isomorphic to Z.\<close>
-  have hGX_Z: "top1_groups_isomorphic_on ?GX ?mulX top1_Z_group top1_Z_mul"
-    sorry \<comment> \<open>From generator structure.\<close>
-  have hGY_Z: "top1_groups_isomorphic_on ?GY ?mulY top1_Z_group top1_Z_mul"
-    sorry \<comment> \<open>From generator structure.\<close>
+  let ?GX = GX let ?mulX = mulX let ?GY = GY let ?mulY = mulY
   \<comment> \<open>Get iso witnesses: \<psi>\_X: \<pi>_1(X) \<cong> Z and \<psi>\_Y: \<pi>_1(Y) \<cong> Z.\<close>
   from hGX_Z obtain \<psi>X where h\<psi>X: "top1_group_iso_on ?GX ?mulX top1_Z_group top1_Z_mul \<psi>X"
     unfolding top1_groups_isomorphic_on_def by blast
@@ -5284,8 +5262,31 @@ proof -
     by blast
   \<comment> \<open>j\_* injective (surjective hom between infinite cyclic groups).\<close>
   have hj_inj_x: "inj_on ?j_star_x (top1_fundamental_group_carrier C ?TC x)"
-    by (rule surj_hom_infinite_cyclic_inj[OF hTC hgen_C hgen_C_generates
-        hTX hg_loop_X hg_generates hj_hom_x hj_surj_x])
+  proof -
+    have hC_pi1_Z_x: "top1_groups_isomorphic_on
+        (top1_fundamental_group_carrier C ?TC x) (top1_fundamental_group_mul C ?TC x)
+        top1_Z_group top1_Z_mul"
+      sorry \<comment> \<open>SCC\_pi1\_iso\_Z at basepoint x.\<close>
+    have hX_pi1_Z_x: "top1_groups_isomorphic_on
+        (top1_fundamental_group_carrier ?X ?TX x) (top1_fundamental_group_mul ?X ?TX x)
+        top1_Z_group top1_Z_mul"
+    proof -
+      have hp_S2: "p \<in> top1_S2" using assms(8,37) by (by100 blast)
+      have hq_S2: "q \<in> top1_S2" using assms(9,38) by (by100 blast)
+      have hp_ne_q: "p \<noteq> q"
+      proof assume "p = q"
+        have "p \<in> e13" using assms(37) by (by100 blast)
+        have "p \<in> e24" using \<open>p = q\<close> assms(38) by (by100 blast)
+        hence "p \<in> e13 \<inter> e24" using \<open>p \<in> e13\<close> by (by100 blast)
+        hence "p \<in> {a1,a2,a3,a4}" using assms(32) by (by100 blast)
+        moreover have "p \<noteq> a1" "p \<noteq> a3" using assms(37) by (by100 blast)+
+        moreover have "p \<noteq> a2" "p \<noteq> a4" using \<open>p = q\<close> assms(38) by (by100 blast)+
+        ultimately show False by (by100 blast)
+      qed
+      show ?thesis by (rule pi1_S2_minus_two_points_iso_Z[OF assms(1) hp_S2 hq_S2 hp_ne_q hx_X])
+    qed
+    show ?thesis by (rule surj_hom_infinite_cyclic_inj[OF hC_pi1_Z_x hX_pi1_Z_x hj_hom_x hj_surj_x])
+  qed
   \<comment> \<open>Combine: hom + bij = iso.\<close>
   have "bij_betw ?j_star_x (top1_fundamental_group_carrier C ?TC x)
       (top1_fundamental_group_carrier ?X ?TX x)"
