@@ -1563,11 +1563,14 @@ proof -
       assume "h 0 = b" "h 1 = a"
       \<comment> \<open>Use reversal: h' = h \<circ> (1-t).\<close>
       let ?rev = "\<lambda>t. h (1 - t)"
-      have "top1_homeomorphism_on I_set I_top I_set I_top (\<lambda>t. 1 - t)"
+      have hrev_homeo: "top1_homeomorphism_on I_set I_top I_set I_top (\<lambda>t. 1 - t)"
         by (rule unit_interval_reversal_homeomorphism)
-      hence "top1_homeomorphism_on I_set I_top A
-          (subspace_topology top1_S2 top1_S2_topology A) ?rev"
-        sorry \<comment> \<open>Composition of homeomorphisms.\<close>
+      have "top1_homeomorphism_on I_set I_top A
+          (subspace_topology top1_S2 top1_S2_topology A) (h \<circ> (\<lambda>t. 1 - t))"
+        by (rule homeomorphism_on_comp[OF hrev_homeo hh])
+      moreover have "(h \<circ> (\<lambda>t. 1 - t)) = ?rev" by (rule ext) (by100 simp)
+      ultimately have "top1_homeomorphism_on I_set I_top A
+          (subspace_topology top1_S2 top1_S2_topology A) ?rev" by (by100 simp)
       moreover have "?rev 0 = a" using \<open>h 1 = a\<close> by (by100 simp)
       moreover have "?rev 1 = b" using \<open>h 0 = b\<close> by (by100 simp)
       ultimately show ?thesis using that by (by100 blast)
@@ -1584,9 +1587,80 @@ proof -
     assume "a = c" thus False using ha_notB hB_ep hbc
       unfolding top1_arc_endpoints_on_def by (by100 blast)
   qed
-  \<comment> \<open>The rest of the proof: first-hit-time t0, sub-arc extraction, splicing.
-     t0 = Min{t | h'(t) \<in> B}. h'([0,t0]) is arc from a to h'(t0).
-     Sub-arc of B from h'(t0) to c. Concatenate.\<close>
+  \<comment> \<open>First-hit-time: T = {t \<in> I | h'(t) \<in> B}. T closed, non-empty, compact \<Rightarrow> has minimum t0.\<close>
+  let ?T = "{t \<in> I_set. h' t \<in> B}"
+  have hT_ne: "?T \<noteq> {}" using hh'(3) hb_in_B
+    unfolding top1_unit_interval_def by (by100 force)
+  \<comment> \<open>h' continuous from I to S2 (from homeomorphism).\<close>
+  \<comment> \<open>h' continuous I \<rightarrow> A (from homeomorphism), then A \<subseteq> S2 gives I \<rightarrow> S2.\<close>
+  have hTopS2: "is_topology_on top1_S2 top1_S2_topology"
+    using hS2 unfolding is_topology_on_strict_def by (by100 blast)
+  have hh'_cont_A: "top1_continuous_map_on I_set I_top A
+      (subspace_topology top1_S2 top1_S2_topology A) h'"
+    using hh'(1) unfolding top1_homeomorphism_on_def by (by100 blast)
+  have hh'_cont: "top1_continuous_map_on I_set I_top top1_S2 top1_S2_topology h'"
+  proof -
+    have hid: "top1_continuous_map_on A (subspace_topology top1_S2 top1_S2_topology A)
+        top1_S2 top1_S2_topology id"
+      using Theorem_18_2[OF hTopS2 hTopS2 hTopS2] hA_sub by (by100 blast)
+    have "top1_continuous_map_on I_set I_top top1_S2 top1_S2_topology (id \<circ> h')"
+      by (rule top1_continuous_map_on_comp[OF hh'_cont_A hid])
+    thus ?thesis by (by100 simp)
+  qed
+  \<comment> \<open>T = {t \<in> I | h'(t) \<in> B} is closed in I.\<close>
+  have hTI: "is_topology_on I_set I_top" by (rule top1_unit_interval_topology_is_topology_on)
+  have hT_cl: "closedin_on I_set I_top ?T"
+    by (rule continuous_preimage_closedin[OF hTI hTopS2 hh'_cont hB_cl])
+  \<comment> \<open>I is compact.\<close>
+  have hopen_eq: "(top1_open_sets :: real set set) = order_topology_on_UNIV"
+  proof (rule set_eqI)
+    fix U :: "real set"
+    show "U \<in> top1_open_sets \<longleftrightarrow> U \<in> order_topology_on_UNIV"
+      unfolding top1_open_sets_def using order_topology_on_UNIV_eq_HOL_open by (by100 simp)
+  qed
+  have hI_compact: "top1_compact_on I_set I_top"
+  proof -
+    have hIeq: "I_set = top1_closed_interval 0 1"
+      unfolding top1_unit_interval_def top1_closed_interval_def by (by100 auto)
+    have hITeq: "I_top = top1_closed_interval_topology 0 1"
+      unfolding top1_unit_interval_topology_def top1_closed_interval_topology_def
+      using hopen_eq hIeq unfolding top1_unit_interval_def by (by100 simp)
+    show ?thesis using top1_closed_interval_compact[of "0::real" 1] hIeq hITeq by (by100 simp)
+  qed
+  \<comment> \<open>T compact (closed subset of compact).\<close>
+  have hT_compact: "top1_compact_on ?T (subspace_topology I_set I_top ?T)"
+    by (rule Theorem_26_2[OF hI_compact hT_cl])
+  \<comment> \<open>T has minimum t0. Need: I\_top = subspace of order\_topology.\<close>
+  have hT_compact_order: "top1_compact_on ?T
+      (subspace_topology (UNIV::real set) order_topology_on_UNIV ?T)"
+  proof -
+    have hTsub: "?T \<subseteq> I_set" by (by100 blast)
+    have "subspace_topology I_set I_top ?T =
+        subspace_topology (UNIV::real set) top1_open_sets ?T"
+      using subspace_topology_trans[of ?T I_set] hTsub
+      unfolding top1_unit_interval_topology_def by (by100 simp)
+    also have "\<dots> = subspace_topology (UNIV::real set) order_topology_on_UNIV ?T"
+      using hopen_eq by (by100 simp)
+    finally show ?thesis using hT_compact by (by100 simp)
+  qed
+  obtain t0 where ht0: "t0 \<in> ?T" "\<forall>t \<in> ?T. t0 \<le> t"
+    using top1_compact_on_order_topology_has_least[OF hT_ne hT_compact_order] by (by100 blast)
+  have ht0_I: "t0 \<in> I_set" using ht0(1) by (by100 blast)
+  have ht0_B: "h' t0 \<in> B" using ht0(1) by (by100 blast)
+  \<comment> \<open>h'(t0) is NOT a or b endpoint of A. Since h'(0)=a and t0>0 (a \<notin> B): h'(t0) \<noteq> a.
+     h'(t0) \<in> B, and h'(t0) could be b or an interior point of B.\<close>
+  have ht0_pos: "t0 > 0"
+  proof (rule ccontr)
+    assume "\<not> t0 > 0"
+    hence "t0 = 0" using ht0_I unfolding top1_unit_interval_def by (by100 simp)
+    hence "h' 0 \<in> B" using ht0_B by (by100 simp)
+    hence "a \<in> B" using hh'(2) by (by100 simp)
+    thus False using ha_notB by (by100 blast)
+  qed
+  \<comment> \<open>h' restricted to [0,t0] gives a sub-arc from a to h'(t0).\<close>
+  \<comment> \<open>h'([0,t0]) \<inter> B = {h'(t0)} (only the first hit).\<close>
+  \<comment> \<open>Split B at h'(t0) to get sub-arc from h'(t0) to c.\<close>
+  \<comment> \<open>Concatenate to get arc from a to c.\<close>
   show ?thesis sorry
 qed
 
