@@ -2150,7 +2150,9 @@ proof -
       have hD_arc: "top1_is_arc_on ?D (subspace_topology top1_S2 top1_S2_topology ?D)"
       proof -
         have "is_topology_on_strict ?D (subspace_topology top1_S2 top1_S2_topology ?D)"
-          sorry \<comment> \<open>D \<subseteq> S2, D nonempty \<Rightarrow> is\_topology\_on\_strict (subspace).\<close>
+        proof -
+          show ?thesis sorry \<comment> \<open>D\<subseteq>S2, D\<noteq>{}, S2 topology \<Rightarrow> strict subspace topology.\<close>
+        qed
         moreover have "\<exists>hh. top1_homeomorphism_on I_set I_top ?D (subspace_topology top1_S2 top1_S2_topology ?D) hh"
           using hg_homeo by (by100 blast)
         ultimately show ?thesis unfolding top1_is_arc_on_def by (by100 blast)
