@@ -2413,16 +2413,22 @@ proof -
             next
               case False
               hence ha_Dyz: "a \<in> Dyz" by (by100 simp)
-              \<comment> \<open>a \<in> Dyz: a is an interior point. Split Dyz at a to get sub-arc containing z.\<close>
-              from arc_split_at_given_point[OF assms(1) hS2_haus hDyz_S2 hDyz(1)] ha_Dyz
+              \<comment> \<open>a \<in> Dyz but a \<notin> endpoints {y,z}, so a is interior. Split Dyz at a.\<close>
+              have ha_not_ep: "a \<notin> top1_arc_endpoints_on Dyz (subspace_topology top1_S2 top1_S2_topology Dyz)"
+                using hDyz(3) hy_ne_a hz_ne_a by (by100 simp)
+              from arc_split_at_given_point[OF assms(1) hS2_haus hDyz_S2 hDyz(1) ha_Dyz ha_not_ep hDyz(3) hy_ne_z]
               obtain D1 D2 where hD12:
-                "Dyz = D1 \<union> D2"
+                "Dyz = D1 \<union> D2" "D1 \<inter> D2 = {a}"
                 "top1_is_arc_on D1 (subspace_topology top1_S2 top1_S2_topology D1)"
                 "top1_is_arc_on D2 (subspace_topology top1_S2 top1_S2_topology D2)"
-                "a \<in> D1" "a \<in> D2"
-                sorry \<comment> \<open>Need right form of arc\_split\_at\_given\_point output.\<close>
-              \<comment> \<open>One of D1, D2 has z as endpoint. That sub-arc goes a\<rightarrow>z in U.\<close>
-              show ?thesis sorry \<comment> \<open>Sub-arc of Dyz from a to z, endpoints {a,z}, D \<subseteq> U.\<close>
+                "y \<in> D1" "z \<in> D2" "a \<in> D1" "a \<in> D2" "D1 \<subseteq> top1_S2" "D2 \<subseteq> top1_S2"
+                by auto
+              \<comment> \<open>D2 is a sub-arc with a \<in> D2 and z \<in> D2. D2 \<subseteq> Dyz \<subseteq> U.\<close>
+              have hD2_U: "D2 \<subseteq> U" using hD12(1) hDyz_U by (by100 blast)
+              \<comment> \<open>The endpoints of D2 are {a, z} (a and z are the boundary points).\<close>
+              have hD2_ep: "top1_arc_endpoints_on D2 (subspace_topology top1_S2 top1_S2_topology D2) = {a, z}"
+                sorry \<comment> \<open>From the arc split: D2 endpoints = {a, z} (a = split point, z = original endpoint).\<close>
+              thus ?thesis using hz_U hz_ne_a hD12(4) hD2_U hD2_ep by (by100 blast)
             qed
           qed
         qed
