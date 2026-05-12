@@ -3247,14 +3247,65 @@ proof (rule ccontr)
   \<comment> \<open>Pick z \<in> S2 - Fp (Fp \<subsetneq> S2). Use z as stereographic pole.\<close>
   have hFp_ne_S2: "Fp \<noteq> top1_S2"
   proof
-    assume "Fp = top1_S2"
-    \<comment> \<open>Fp is arc (hom to [0,1]). Removing endpoint p disconnects Fp.
-       But S2 - {p} is connected. Contradiction.\<close>
-    have "top1_connected_on (top1_S2 - {p}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p}))"
-      sorry \<comment> \<open>S2 minus a point is connected (from S2\_minus\_point\_simply\_connected).\<close>
-    moreover have "\<not> top1_connected_on (Fp - {p}) (subspace_topology top1_S2 top1_S2_topology (Fp - {p}))"
-      sorry \<comment> \<open>Removing endpoint from arc: Fp-{p} has 2 components [from arc structure].\<close>
-    ultimately show False using \<open>Fp = top1_S2\<close> by (by100 simp)
+    assume hFpS2: "Fp = top1_S2"
+    \<comment> \<open>Pick interior point x of Fp (not an endpoint). Removing x disconnects Fp but not S2.\<close>
+    obtain hf where hhf: "top1_homeomorphism_on I_set I_top Fp
+        (subspace_topology top1_S2 top1_S2_topology Fp) hf"
+      using hFp unfolding top1_is_arc_on_def by (by100 blast)
+    define x where "x = hf (1/2 :: real)"
+    have hx_Fp: "x \<in> Fp"
+    proof -
+      have "(1/2::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+      thus ?thesis unfolding x_def using hhf unfolding top1_homeomorphism_on_def
+        top1_continuous_map_on_def by (by100 blast)
+    qed
+    have hx_S2: "x \<in> top1_S2" using hx_Fp hFp_sub by (by100 blast)
+    have hx_not_ep: "x \<notin> top1_arc_endpoints_on Fp (subspace_topology top1_S2 top1_S2_topology Fp)"
+    proof -
+      have hS2_haus: "is_hausdorff_on top1_S2 top1_S2_topology" by (rule top1_S2_is_hausdorff)
+      have "top1_arc_endpoints_on Fp (subspace_topology top1_S2 top1_S2_topology Fp) = {hf 0, hf 1}"
+        by (rule arc_endpoints_are_boundary[OF hS2 hS2_haus hFp_sub hFp hhf])
+      moreover have "x \<noteq> hf 0" "x \<noteq> hf 1"
+      proof -
+        have hinj: "inj_on hf I_set" using hhf unfolding top1_homeomorphism_on_def bij_betw_def
+          by (by100 blast)
+        have h0: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+        have h1: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+        have h12: "(1/2::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+        show "x \<noteq> hf 0" unfolding x_def
+        proof
+          assume "hf (1/2) = hf 0"
+          hence "(1/2::real) = 0" by (metis inj_onD[OF hinj] h12 h0)
+          thus False by (by100 simp)
+        qed
+        show "x \<noteq> hf 1" unfolding x_def
+        proof
+          assume "hf (1/2) = hf 1"
+          hence "(1/2::real) = 1" by (metis inj_onD[OF hinj] h12 h1)
+          thus False by (by100 simp)
+        qed
+      qed
+      ultimately show ?thesis by (by100 blast)
+    qed
+    hence hx_ne_pd: "x \<notin> {p, d}" using hFp_ep by (by100 simp)
+    \<comment> \<open>Removing non-endpoint disconnects arc (definition of endpoints).\<close>
+    have "\<not> top1_connected_on (Fp - {x}) (subspace_topology Fp
+        (subspace_topology top1_S2 top1_S2_topology Fp) (Fp - {x}))"
+      using hx_not_ep hx_Fp unfolding top1_arc_endpoints_on_def by (by100 blast)
+    \<comment> \<open>But S2-{x} is connected (simply connected implies connected).\<close>
+    moreover have "top1_connected_on (top1_S2 - {x}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {x}))"
+    proof -
+      have "top1_simply_connected_on (top1_S2 - {x}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {x}))"
+        by (rule S2_minus_point_simply_connected[OF hx_S2])
+      hence "top1_path_connected_on (top1_S2 - {x}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {x}))"
+        unfolding top1_simply_connected_on_def by (by100 blast)
+      thus ?thesis by (rule top1_path_connected_imp_connected)
+    qed
+    moreover have "Fp - {x} = top1_S2 - {x}" using hFpS2 by (by100 simp)
+    moreover have "subspace_topology Fp (subspace_topology top1_S2 top1_S2_topology Fp) (Fp - {x})
+        = subspace_topology top1_S2 top1_S2_topology (top1_S2 - {x})"
+      using hFpS2 sorry
+    ultimately show False by (by100 metis)
   qed
   then obtain z where hz: "z \<in> top1_S2 - Fp" using hFp_sub by auto
   \<comment> \<open>Stereographic projection from z.\<close>
