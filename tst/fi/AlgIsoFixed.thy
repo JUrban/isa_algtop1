@@ -887,6 +887,7 @@ lemma surj_hom_infinite_cyclic_inj:
       and hGY_Z: "top1_groups_isomorphic_on GY mulY top1_Z_group top1_Z_mul"
       and hphi_hom: "top1_group_hom_on GX mulX GY mulY \<phi>"
       and hphi_surj: "\<phi> ` GX = GY"
+      and hGX_closed: "\<And>a b. a \<in> GX \<Longrightarrow> b \<in> GX \<Longrightarrow> mulX a b \<in> GX"
   shows "inj_on \<phi> GX"
 proof -
   let ?GX = GX let ?mulX = mulX let ?GY = GY let ?mulY = mulY
@@ -1047,8 +1048,12 @@ proof -
       hence "invPsiX (\<psi>X (?mulX (invPsiX x) (invPsiX y))) = invPsiX (top1_Z_mul x y)"
         by (by100 simp)
       moreover have "invPsiX (\<psi>X (?mulX (invPsiX x) (invPsiX y))) = ?mulX (invPsiX x) (invPsiX y)"
-        unfolding invPsiX_def
-        sorry \<comment> \<open>inv\_into \<circ> \<psi>\_X = id on GX. Needs mulX(a,b) \<in> GX (group closure).\<close>
+      proof -
+        have "?mulX (invPsiX x) (invPsiX y) \<in> ?GX"
+          by (rule hGX_closed[OF hinvX hinvY])
+        thus ?thesis unfolding invPsiX_def
+          by (rule bij_betw_inv_into_left[OF hPsiX_bij])
+      qed
       ultimately show "invPsiX (top1_Z_mul x y) = ?mulX (invPsiX x) (invPsiX y)" by (by100 simp)
     qed
     have ha: "a \<in> top1_Z_group" unfolding top1_Z_group_def by (by100 simp)
@@ -5347,7 +5352,11 @@ proof -
       qed
       show ?thesis by (rule pi1_S2_minus_two_points_iso_Z[OF assms(1) hp_S2 hq_S2 hp_ne_q hx_X])
     qed
-    show ?thesis by (rule surj_hom_infinite_cyclic_inj[OF hC_pi1_Z_x hX_pi1_Z_x hj_hom_x hj_surj_x])
+    have hGX_closed_x: "\<And>a b. a \<in> top1_fundamental_group_carrier C ?TC x \<Longrightarrow>
+        b \<in> top1_fundamental_group_carrier C ?TC x \<Longrightarrow>
+        top1_fundamental_group_mul C ?TC x a b \<in> top1_fundamental_group_carrier C ?TC x"
+      sorry \<comment> \<open>Group closure of \<pi>_1. From top1\_fundamental\_group\_is\_group.\<close>
+    show ?thesis by (rule surj_hom_infinite_cyclic_inj[OF hC_pi1_Z_x hX_pi1_Z_x hj_hom_x hj_surj_x hGX_closed_x])
   qed
   \<comment> \<open>Combine: hom + bij = iso.\<close>
   have "bij_betw ?j_star_x (top1_fundamental_group_carrier C ?TC x)
