@@ -3045,8 +3045,13 @@ proof -
   \<comment> \<open>Step D2: Splice e41(a1\<leftrightarrow>a4) + Fp(a4\<leftrightarrow>p) at a4 \<Rightarrow> arc a1\<rightarrow>p.\<close>
   have ha4_ne_a1: "a4 \<noteq> a1" using ha4(2) by (by100 blast)
   have ha4_ne_p: "a4 \<noteq> p" using hp_notC ha4_C2 hC12(1) by (by100 blast)
+  have he41_ep': "top1_arc_endpoints_on e41 (subspace_topology top1_S2 top1_S2_topology e41) = {a1, a4}"
+    using he41_ep by (by100 blast)
+  have ha1_ne_a4: "a1 \<noteq> a4" using ha4(2) by (by100 blast)
+  have hFp_ep': "top1_arc_endpoints_on Fp (subspace_topology top1_S2 top1_S2_topology Fp) = {a4, p}"
+    using hFp_ep by (by100 blast)
   from Munkres_Step_1_arc_splice[OF assms(1) hC2_split(4) hFpq(3) hC2_split(10) hFpq(9)
-      he41_ep hFp_ep ha4_ne_a1 ha4_ne_p ha1_not_Fp]
+      he41_ep' hFp_ep' ha1_ne_a4 ha4_ne_p ha1_not_Fp]
   obtain arc_a1p where harc_a1p:
     "top1_is_arc_on arc_a1p (subspace_topology top1_S2 top1_S2_topology arc_a1p)"
     "arc_a1p \<subseteq> e41 \<union> Fp" "a1 \<in> arc_a1p" "p \<in> arc_a1p"
@@ -3057,19 +3062,30 @@ proof -
      But he34\_ep = {a3, a4}. Since {a3, a4} = {a4, a3}, the swap is fine for set equality.\<close>
   have ha4_ne_a3: "a4 \<noteq> a3" using ha4(3) by (by100 blast)
   have hp_ne_a4: "p \<noteq> a4" using ha4_ne_p by (by100 blast)
+  have he34_ep': "top1_arc_endpoints_on e34 (subspace_topology top1_S2 top1_S2_topology e34) = {a4, a3}"
+    using he34_ep by (by100 blast)
+  have hp_not_e34: "p \<notin> e34"
+    using hC2_split(1) hp_notC hC12(1) by (by100 blast)
   from Munkres_Step_1_arc_splice[OF assms(1) hFpq(3) hC2_split(3) hFpq(9) hC2_split(9)
-      hFp_ep he34_ep hp_ne_a4 ha4_ne_a3 ha3_not_Fp]
+      hFp_ep he34_ep' hp_ne_a4 ha4_ne_a3 hp_not_e34]
   obtain arc_pa3 where harc_pa3:
     "top1_is_arc_on arc_pa3 (subspace_topology top1_S2 top1_S2_topology arc_pa3)"
     "arc_pa3 \<subseteq> Fp \<union> e34" "p \<in> arc_pa3" "a3 \<in> arc_pa3"
     "top1_arc_endpoints_on arc_pa3 (subspace_topology top1_S2 top1_S2_topology arc_pa3) = {p, a3}"
     by (by100 blast)
   \<comment> \<open>Step D4: Splice arc(a1\<rightarrow>p) + arc(p\<rightarrow>a3) at p to get arc a1\<rightarrow>a3.\<close>
+  have ha1_not_e34_early: "a1 \<notin> e34"
+  proof
+    assume "a1 \<in> e34"
+    hence "a1 \<in> e34 \<inter> e41" using hC2_split(6) by (by100 blast)
+    hence "a1 = a4" using hC2_split(2) by (by100 blast)
+    thus False using ha4(2) by (by100 blast)
+  qed
   have ha1_not_pa3: "a1 \<notin> arc_pa3"
   proof -
     have "arc_pa3 \<subseteq> Fp \<union> e34" by (rule harc_pa3(2))
     moreover have "a1 \<notin> Fp" by (rule ha1_not_Fp)
-    moreover have "a1 \<notin> e34" by (rule ha1_not_e34)
+    moreover have "a1 \<notin> e34" by (rule ha1_not_e34_early)
     ultimately show ?thesis by (by100 blast)
   qed
   have harc_a1p_sub: "arc_a1p \<subseteq> top1_S2" using harc_a1p(2) hC2_split(10) hFpq(9) by (by100 blast)
