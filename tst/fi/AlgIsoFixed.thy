@@ -1935,7 +1935,49 @@ proof -
      of the path-component, contradicting connectedness. So U-E' \<inter> path-comp = {}.
      Hence b \<in> E'.\<close>
   have hb_E: "b \<in> ?E'"
-    sorry \<comment> \<open>From connected path-component + E' open + U-E' open + E' \<noteq> {}.\<close>
+  proof (rule ccontr)
+    assume "b \<notin> ?E'"
+    hence "b \<in> U - ?E'" using assms(5) by (by100 blast)
+    \<comment> \<open>E' and U-E' are both open in U's subspace topology. E' \<noteq> {} (a \<in> E').
+       If U-E' \<noteq> {}: they form a separation of U's subspace.
+       But there's a path from a to b in U, so U's subspace is path-connected
+       (well, the path-component of a is). This contradicts the separation.\<close>
+    \<comment> \<open>More precisely: f is a path from a \<in> E' to b \<in> U-E' in U.
+       f(I) is connected. f(I) \<subseteq> U = E' \<union> (U-E'). f(0)=a \<in> E', f(1)=b \<in> U-E'.
+       E' and U-E' open in U. f(I) \<inter> E' \<noteq> {} and f(I) \<inter> (U-E') \<noteq> {}.
+       This contradicts connectedness of f(I).\<close>
+    have hTopS2: "is_topology_on top1_S2 top1_S2_topology"
+      using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
+    have hU_top: "is_topology_on U (subspace_topology top1_S2 top1_S2_topology U)"
+      by (rule subspace_topology_is_topology_on[OF hTopS2 assms(3)])
+    have hE'_sub: "?E' \<subseteq> U" by (by100 blast)
+    have hUE'_sub: "U - ?E' \<subseteq> U" by (by100 blast)
+    have hpart: "?E' \<union> (U - ?E') = U" by (by100 blast)
+    have hdisj: "?E' \<inter> (U - ?E') = {}" by (by100 blast)
+    \<comment> \<open>f(I) is connected (continuous image of connected I).\<close>
+    have hfI_conn: "top1_connected_on (f ` I_set) (subspace_topology U (subspace_topology top1_S2 top1_S2_topology U) (f ` I_set))"
+      sorry \<comment> \<open>Continuous image of connected set is connected.\<close>
+    have hfI_sub: "f ` I_set \<subseteq> U"
+      using assms(7) unfolding top1_is_path_on_def top1_continuous_map_on_def by (by100 blast)
+    have "f 0 \<in> ?E'" using ha_E assms(7) unfolding top1_is_path_on_def by (by100 blast)
+    hence "f ` I_set \<inter> ?E' \<noteq> {}"
+    proof -
+      have "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+      thus ?thesis using \<open>f 0 \<in> ?E'\<close> by (by100 blast)
+    qed
+    moreover have "f 1 \<in> U - ?E'"
+      using \<open>b \<notin> ?E'\<close> assms(5,7) unfolding top1_is_path_on_def by (by100 blast)
+    hence "f ` I_set \<inter> (U - ?E') \<noteq> {}"
+    proof -
+      have "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+      thus ?thesis using \<open>f 1 \<in> U - ?E'\<close> by (by100 blast)
+    qed
+    \<comment> \<open>f(I) connected, meets both E' and U-E' (open partition of U) \<Rightarrow> contradiction.\<close>
+    ultimately have "\<not> top1_connected_on (f ` I_set) (subspace_topology U (subspace_topology top1_S2 top1_S2_topology U) (f ` I_set))"
+      using Lemma_23_2_disjoint[OF hU_top _ hfI_sub hfI_conn]
+      sorry \<comment> \<open>Lemma\_23\_2 applied to the separation E', U-E'.\<close>
+    thus False using hfI_conn by (by100 blast)
+  qed
   \<comment> \<open>b \<in> E' and b \<noteq> a \<Rightarrow> \<exists> arc from a to b in U.\<close>
   from hb_E assms(6) show ?thesis by (by100 blast)
 qed
