@@ -1897,6 +1897,12 @@ lemma S2_open_path_connected_arc_connected:
   and "top1_is_path_on U (subspace_topology top1_S2 top1_S2_topology U) a b f"
   shows "\<exists>A. top1_is_arc_on A (subspace_topology top1_S2 top1_S2_topology A)
     \<and> A \<subseteq> U \<and> top1_arc_endpoints_on A (subspace_topology top1_S2 top1_S2_topology A) = {a, b}"
+  \<comment> \<open>Munkres Thm 65.2 Step 2: equivalence relation "arc-connected" has open classes
+     (from local arc-connectivity via stereographic projection + convexity of R2 balls),
+     and Step 1 gives transitivity. U connected \<Rightarrow> one equivalence class.
+     The proof requires: stereographic\_proj\_homeomorphism for local charts,
+     open\_disk\_convex for line segments in R2, and the equivalence class argument.
+     All building blocks available but the assembly is substantial.\<close>
   sorry
 
 text \<open>Helper: construct K4 subgraph data from a general SCC on S2.
