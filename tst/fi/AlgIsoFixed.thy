@@ -2814,9 +2814,47 @@ proof -
       using arc_endpoints_are_boundary[OF assms(1) hS2_haus harc_f_sub_S2 harc_f(1) hhf]
         harc_f(3) by (by100 simp)
     \<comment> \<open>hf (possibly reversed) gives a path from p to q in arc\_f \<subseteq> S2-C.\<close>
-    have "\<exists>f. top1_is_path_on (top1_S2 - C)
+    \<comment> \<open>hf is continuous I \<rightarrow> arc\_f (subspace). arc\_f \<subseteq> S2-C. Transfer to S2-C subspace.\<close>
+    have hhf_cont: "top1_continuous_map_on I_set I_top arc_f
+        (subspace_topology top1_S2 top1_S2_topology arc_f) hf"
+      using hhf unfolding top1_homeomorphism_on_def by (by100 blast)
+    have hhf_cont_SC: "top1_continuous_map_on I_set I_top (top1_S2 - C)
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) hf"
+      unfolding top1_continuous_map_on_def
+    proof (intro conjI ballI)
+      fix t assume "t \<in> I_set"
+      thus "hf t \<in> top1_S2 - C"
+        using hhf_cont harc_f_SC unfolding top1_continuous_map_on_def by (by100 blast)
+    next
+      fix V assume hV: "V \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)"
+      then obtain W where hW: "W \<in> top1_S2_topology" "V = (top1_S2 - C) \<inter> W"
+        unfolding subspace_topology_def by (by100 blast)
+      have "arc_f \<inter> W \<in> subspace_topology top1_S2 top1_S2_topology arc_f"
+        unfolding subspace_topology_def using hW(1) by (by100 blast)
+      hence "{t \<in> I_set. hf t \<in> arc_f \<inter> W} \<in> I_top"
+        using hhf_cont unfolding top1_continuous_map_on_def by (by100 blast)
+      moreover have "{t \<in> I_set. hf t \<in> V} = {t \<in> I_set. hf t \<in> arc_f \<inter> W}"
+        using hhf_cont harc_f_SC hW(2) unfolding top1_continuous_map_on_def by (by100 blast)
+      ultimately show "{t \<in> I_set. hf t \<in> V} \<in> I_top" by (by100 simp)
+    qed
+    \<comment> \<open>Handle endpoint orientation: either hf(0)=p or hf(0)=q.\<close>
+    from hhf_ep hp_ne_q have "(hf 0 = p \<and> hf 1 = q) \<or> (hf 0 = q \<and> hf 1 = p)"
+      by (by100 fast)
+    hence "\<exists>f. top1_is_path_on (top1_S2 - C)
         (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) p q f"
-      sorry \<comment> \<open>hf or hf\<circ>(\<lambda>t.1-t) is path p\<rightarrow>q in arc\_f; transfer to S2-C subspace.\<close>
+    proof
+      assume "hf 0 = p \<and> hf 1 = q"
+      hence "top1_is_path_on (top1_S2 - C)
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) p q hf"
+        unfolding top1_is_path_on_def using hhf_cont_SC by (by100 blast)
+      thus ?thesis by (by100 blast)
+    next
+      assume "hf 0 = q \<and> hf 1 = p"
+      hence "top1_is_path_on (top1_S2 - C)
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) p q (\<lambda>t. hf (1 - t))"
+        sorry \<comment> \<open>Reverse path: compose with (\<lambda>t. 1-t). Needs continuous\_on reversal.\<close>
+      thus ?thesis by (by100 blast)
+    qed
     thus False using assms(5) by (by100 blast)
   qed
   have hg_meets_C1: "arc_g \<inter> C1 \<noteq> {}"
@@ -2831,9 +2869,45 @@ proof -
     have hhg_ep: "{hg 0, hg 1} = {p, q}"
       using arc_endpoints_are_boundary[OF assms(1) hS2_haus harc_g_sub_S2 harc_g(1) hhg]
         harc_g(3) by (by100 simp)
-    have "\<exists>f. top1_is_path_on (top1_S2 - C)
+    have hhg_cont: "top1_continuous_map_on I_set I_top arc_g
+        (subspace_topology top1_S2 top1_S2_topology arc_g) hg"
+      using hhg unfolding top1_homeomorphism_on_def by (by100 blast)
+    have hhg_cont_SC: "top1_continuous_map_on I_set I_top (top1_S2 - C)
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) hg"
+      unfolding top1_continuous_map_on_def
+    proof (intro conjI ballI)
+      fix t assume "t \<in> I_set"
+      thus "hg t \<in> top1_S2 - C"
+        using hhg_cont harc_g_SC unfolding top1_continuous_map_on_def by (by100 blast)
+    next
+      fix V assume hV: "V \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)"
+      then obtain W where hW: "W \<in> top1_S2_topology" "V = (top1_S2 - C) \<inter> W"
+        unfolding subspace_topology_def by (by100 blast)
+      have "arc_g \<inter> W \<in> subspace_topology top1_S2 top1_S2_topology arc_g"
+        unfolding subspace_topology_def using hW(1) by (by100 blast)
+      hence "{t \<in> I_set. hg t \<in> arc_g \<inter> W} \<in> I_top"
+        using hhg_cont unfolding top1_continuous_map_on_def by (by100 blast)
+      moreover have "{t \<in> I_set. hg t \<in> V} = {t \<in> I_set. hg t \<in> arc_g \<inter> W}"
+        using hhg_cont harc_g_SC hW(2) unfolding top1_continuous_map_on_def by (by100 blast)
+      ultimately show "{t \<in> I_set. hg t \<in> V} \<in> I_top" by (by100 simp)
+    qed
+    from hhg_ep hp_ne_q have "(hg 0 = p \<and> hg 1 = q) \<or> (hg 0 = q \<and> hg 1 = p)"
+      by (by100 fast)
+    hence "\<exists>f. top1_is_path_on (top1_S2 - C)
         (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) p q f"
-      sorry \<comment> \<open>Same argument: hg gives path p\<rightarrow>q in arc\_g \<subseteq> S2-C.\<close>
+    proof
+      assume "hg 0 = p \<and> hg 1 = q"
+      hence "top1_is_path_on (top1_S2 - C)
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) p q hg"
+        unfolding top1_is_path_on_def using hhg_cont_SC by (by100 blast)
+      thus ?thesis by (by100 blast)
+    next
+      assume "hg 0 = q \<and> hg 1 = p"
+      hence "top1_is_path_on (top1_S2 - C)
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) p q (\<lambda>t. hg (1 - t))"
+        sorry \<comment> \<open>Reverse path.\<close>
+      thus ?thesis by (by100 blast)
+    qed
     thus False using assms(5) by (by100 blast)
   qed
   \<comment> \<open>Get crossing points: a4 \<in> arc\_f \<inter> (C2 - {a1,a3}), a2 \<in> arc\_g \<inter> (C1 - {a1,a3}).\<close>
