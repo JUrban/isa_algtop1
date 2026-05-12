@@ -1838,8 +1838,11 @@ proof -
       have hD: "top1_is_arc_on (?A1 \<union> B) (subspace_topology top1_S2 top1_S2_topology (?A1 \<union> B))"
         by (rule arcs_concatenation_is_arc[OF hS2 hS2_haus hA1_arc hA1_sub_S2 hB_arc hB_sub
             hA1B_int hb_ep_A1 hb_ep_B])
+      have hA1_ep_b: "top1_arc_endpoints_on ?A1 (subspace_topology top1_S2 top1_S2_topology ?A1) = {a, b}"
+        using hA1_ep True by (by100 simp)
       have hD_ep: "top1_arc_endpoints_on (?A1 \<union> B) (subspace_topology top1_S2 top1_S2_topology (?A1 \<union> B)) = {a, c}"
-        sorry \<comment> \<open>arc\_concat\_endpoints\<close>
+        by (rule arc_concat_endpoints[OF hS2 hS2_haus hA1_arc hA1_sub_S2 hB_arc hB_sub
+            hA1B_int hb_ep_A1 hb_ep_B hA1_ep_b hB_ep hab hbc])
       have "?A1 \<union> B \<subseteq> A \<union> B" using hA1_sub_A by (by100 blast)
       moreover have "c \<in> B" using hB_ep unfolding top1_arc_endpoints_on_def by (by100 blast)
       ultimately show ?thesis using hD ha_A1 hD_ep by (by100 blast)
@@ -1859,14 +1862,19 @@ proof -
       have ht0_ep_A1: "h' t0 \<in> top1_arc_endpoints_on ?A1 (subspace_topology top1_S2 top1_S2_topology ?A1)"
         using hA1_ep by (by100 blast)
       have hB2_ep: "top1_arc_endpoints_on B2 (subspace_topology top1_S2 top1_S2_topology B2) = {h' t0, c}"
-        sorry \<comment> \<open>arc\_split\_endpoints[OF hS2 hS2\_haus hB\_sub hB\_arc hBs(1-9)] — needs OF debugging.\<close>
+        by (rule arc_split_endpoints(2)[OF hS2 hS2_haus hB_sub hB_arc hBs(1) hBs(2) hBs(3) hBs(4)
+            hBs(5) hBs(6) hBs(7) hBs(8) hBs(9) hBs(10) hB_ep
+            \<open>h' t0 \<notin> top1_arc_endpoints_on B (subspace_topology top1_S2 top1_S2_topology B)\<close>])
       have ht0_ep_B2: "h' t0 \<in> top1_arc_endpoints_on B2 (subspace_topology top1_S2 top1_S2_topology B2)"
         using hB2_ep by (by100 blast)
       have hD: "top1_is_arc_on (?A1 \<union> B2) (subspace_topology top1_S2 top1_S2_topology (?A1 \<union> B2))"
         by (rule arcs_concatenation_is_arc[OF hS2 hS2_haus hA1_arc hA1_sub_S2 hBs(4) hBs(10)
             hA1B2_int ht0_ep_A1 ht0_ep_B2])
+      have ht0_ne_c: "h' t0 \<noteq> c" using hne_c by (by100 blast)
       have hD_ep: "top1_arc_endpoints_on (?A1 \<union> B2) (subspace_topology top1_S2 top1_S2_topology (?A1 \<union> B2)) = {a, c}"
-        sorry \<comment> \<open>From arc\_concat\_endpoints.\<close>
+        by (rule arc_concat_endpoints[OF hS2 hS2_haus hA1_arc hA1_sub_S2 hBs(4) hBs(10)
+            hA1B2_int ht0_ep_A1 ht0_ep_B2 hA1_ep hB2_ep])
+         (use ht0_ne_a ht0_ne_c in \<open>by100 blast\<close>)+
       have "?A1 \<union> B2 \<subseteq> A \<union> B" using hA1_sub_A hBs(1) by (by100 blast)
       thus ?thesis using hD ha_A1 hBs(6) hD_ep by (by100 blast)
     qed
