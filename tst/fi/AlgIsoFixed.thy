@@ -2709,78 +2709,18 @@ proof -
     have "top1_connected_on (top1_S1 - {?p})
         (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (top1_S1 - {?p}))"
     proof -
-      let ?TR2 = "product_topology_on top1_open_sets top1_open_sets :: (real \<times> real) set set"
-      have hp_S1: "?p \<in> top1_S1" by (rule ha_S1)
-      have hB1_conn: "top1_connected_on B1 (subspace_topology UNIV ?TR2 B1)"
-        using arc_connected[OF hB(4)] by (by100 simp)
-      have hB2_conn: "top1_connected_on B2 (subspace_topology UNIV ?TR2 B2)"
-        using arc_connected[OF hB(5)] by (by100 simp)
-      have hTR2: "is_topology_on (UNIV :: (real \<times> real) set) ?TR2"
-      proof -
-        have "is_topology_on (UNIV :: real set) top1_open_sets" by (rule top1_open_sets_is_topology_on_UNIV)
-        from product_topology_on_is_topology_on[OF this this] show ?thesis by (by100 simp)
-      qed
-      have hB1_sub: "B1 \<subseteq> (UNIV :: (real \<times> real) set)" by (by100 blast)
-      have hB2_sub: "B2 \<subseteq> (UNIV :: (real \<times> real) set)" by (by100 blast)
-      \<comment> \<open>Cases 1/2: p \<notin> {e1,e2}, so p in one arc only. The OTHER arc B_j is fully in S1-{p},
-         and B_j is connected. (B_i-{p}) and B_j share e1 \<in> B1\<inter>B2-{p}.
-         By Theorem\_23\_3: {B\_j, B\_i-{p}} share e1, union = S1-{p} is connected
-         (even if B\_i-{p} is not connected, B\_j connects everything through e1 and e2).\<close>
-      show ?thesis
-      proof (cases "?p \<in> B2")
-        case hp_B2: True
-        hence hp_not_B1: "?p \<notin> B1 \<or> ?p \<in> {e1, e2}"
-          using hB(2) by (by100 blast)
-        show ?thesis
-        proof (cases "?p \<notin> B1")
-          case True
-          \<comment> \<open>p \<in> B2 - B1. S1-{p} = B1 \<union> (B2-{p}). B1 is connected, shares e1 with B2-{p}.\<close>
-          have hS1p_eq: "top1_S1 - {?p} = B1 \<union> (B2 - {?p})" using hB(1) True by (by100 blast)
-          have hS1p_sub: "top1_S1 - {?p} \<subseteq> UNIV" by (by100 blast)
-          have he1_shared: "e1 \<in> B1" "e1 \<in> B2 - {?p}"
-          proof -
-            show "e1 \<in> B1" using hB(2) by (by100 blast)
-            have "?p \<noteq> e1" using True hB(2) by (by100 blast)
-            thus "e1 \<in> B2 - {?p}" using hB(2) by (by100 blast)
-          qed
-          have "e1 \<in> B1 \<inter> (B2 - {?p})" using he1_shared by (by100 blast)
-          hence "e1 \<in> \<Inter>{B1, B2 - {?p}}" by (by100 blast)
-          have hB2p_conn: "top1_connected_on (B2 - {?p}) (subspace_topology UNIV ?TR2 (B2 - {?p}))"
-            sorry \<comment> \<open>B2 is an arc, p \<in> B2. If p is endpoint of B2: B2-{p} connected.
-               If p is interior: B2-{p} has 2 parts. BUT this case can't happen since
-               p \<notin> B1, p \<in> B2, and B1\<inter>B2={e1,e2}, so p \<noteq> e1, p \<noteq> e2 (p not shared).
-               Actually wait, we DO have p \<notin> B1 here, so p \<notin> {e1,e2} (since e1,e2 \<in> B1).
-               So p is NOT an endpoint of B2 IF endpoints(B2) = {e1,e2}. Circular!
-               BUT: even if B2-{p} is disconnected, B1 is connected and contains both
-               e1 and e2, so B1 \<union> (B2-{p}) is connected.\<close>
-          \<comment> \<open>Even without B2-{p} connected: B1 connected + B1 contains e1,e2 +
-             each component of B2-{p} contains e1 or e2 \<Rightarrow> union connected.\<close>
-          show ?thesis sorry \<comment> \<open>B1 ∪ (B2-{p}) connected: B1 is connected backbone containing e1,e2.\<close>
-        next
-          case False
-          hence "?p \<in> {e1, e2}" using hp_not_B1 by (by100 blast)
-          \<comment> \<open>p is a shared point. WLOG p = e1. S1-{e1} = (B1-{e1}) ∪ (B2-{e1}).
-             Both contain e2. Both are arc-minus-point, at least one connected.\<close>
-          show ?thesis sorry \<comment> \<open>Shared endpoint case: B1-{p} + B2-{p} share e2.\<close>
-        qed
-      next
-        case False
-        hence "?p \<in> B1" using hp_S1 hB(1) by (by100 blast)
-        hence "?p \<notin> B2" using False by (by100 blast)
-        have hS1p_eq: "top1_S1 - {?p} = (B1 - {?p}) \<union> B2" using hB(1) \<open>?p \<notin> B2\<close> by (by100 blast)
-        have he1_shared: "e1 \<in> (B1 - {?p})" "e1 \<in> B2"
-        proof -
-          have "?p \<noteq> e1" using \<open>?p \<notin> B2\<close> hB(2) by (by100 blast)
-          thus "e1 \<in> (B1 - {?p})" using hB(2) by (by100 blast)
-          show "e1 \<in> B2" using hB(2) by (by100 blast)
-        qed
-        \<comment> \<open>B2 is connected and contains e1,e2. (B1-{p}) contains e1 (since p\<noteq>e1).
-           By Theorem\_23\_3 with common point e1: union connected (B2 is the connected backbone).\<close>
-        \<comment> \<open>S1-{p} = (B1-{p}) \<union> B2. B2 connected, e1 \<in> (B1-{p}) \<inter> B2.
-           Even if B1-{p} is disconnected (two pieces), each piece is connected
-           and shares e1 or e2 with B2. Two applications of Theorem\_23\_3.\<close>
-        show ?thesis sorry \<comment> \<open>Connected: B2 backbone + pieces of B1-{p} each share e\_i with B2.\<close>
-      qed
+      \<comment> \<open>Use HOL's connected via bridge lemma, then prove connected (S1-{p}) directly.\<close>
+      have hbridge: "top1_connected_on (top1_S1 - {?p})
+          (subspace_topology UNIV (top1_open_sets :: (real \<times> real) set set) (top1_S1 - {?p}))
+        \<longleftrightarrow> connected (top1_S1 - {?p})"
+        by (rule top1_connected_on_subspace_open_iff_connected)
+      have hTR2_eq: "(product_topology_on top1_open_sets top1_open_sets :: (real \<times> real) set set)
+          = top1_open_sets" by (rule product_topology_on_open_sets_real2)
+      \<comment> \<open>Prove connected (S1-{p}) using continuous image of connected interval.\<close>
+      have "connected (top1_S1 - {?p})"
+        sorry \<comment> \<open>S1-{p} = image of (0,2\<pi>) under (\<lambda>t. (cos(t+\<theta>), sin(t+\<theta>))).
+           (0,2\<pi>) connected (connected\_Ioo). Map continuous. Image connected.\<close>
+      thus ?thesis using hbridge hTR2_eq by (by100 simp)
     qed
     \<comment> \<open>Transfer from R2 subspace to S1 subspace topology.\<close>
     thus ?thesis
