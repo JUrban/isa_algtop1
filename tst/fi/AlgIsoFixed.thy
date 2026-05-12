@@ -1907,7 +1907,14 @@ proof -
       (\<forall>y \<in> V. \<forall>z \<in> V. y \<noteq> z \<longrightarrow>
         (\<exists>D. top1_is_arc_on D (subspace_topology top1_S2 top1_S2_topology D) \<and>
              D \<subseteq> V \<and> top1_arc_endpoints_on D (subspace_topology top1_S2 top1_S2_topology D) = {y, z}))"
-    sorry \<comment> \<open>From stereographic\_proj\_homeomorphism + open\_disk\_convex + line segment is arc.\<close>
+    \<comment> \<open>Proof: stereographic projection from a pole \<notin> U gives S2-\{pole\} \<cong> R2.
+       U maps to open subset of R2. For x' = stereo(x): \<exists>\<epsilon>-ball B \<subseteq> stereo(U).
+       V = stereo\<inverse>(B) is open in S2. In B: line segment t \<mapsto> (1-t)*y'+t*z' is
+       continuous injective from [0,1] to R2, hence an arc (embedding from compact
+       to Hausdorff). Via inverse stereographic: arc in V \<subseteq> S2.
+       All building blocks: stereographic\_proj\_homeomorphism, open\_disk\_convex,
+       top1\_embedding\_on\_compact\_inj, homeomorphism\_on\_comp.\<close>
+    sorry
   \<comment> \<open>Equivalence class argument: E = \{y \<in> U | \<exists> arc from a to y in U\}.
      E is open (local\_arc + Step 1). U-E is open (same argument).
      a \<in> E (trivial). Path from a to b \<Rightarrow> path-component connected.
