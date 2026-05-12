@@ -1910,12 +1910,19 @@ proof -
       (\<forall>y \<in> V. \<forall>z \<in> V. y \<noteq> z \<longrightarrow>
         (\<exists>D. top1_is_arc_on D (subspace_topology top1_S2 top1_S2_topology D) \<and>
              D \<subseteq> V \<and> top1_arc_endpoints_on D (subspace_topology top1_S2 top1_S2_topology D) = {y, z}))"
-    sorry \<comment> \<open>Stereographic chart (from NP or SP) + \<epsilon>-ball convexity + line segment = arc.
-       For x \<noteq> NP: use stereographic\_proj\_homeomorphism. stereo(U \<inter> S2-{NP}) open.
-       \<epsilon>-ball around stereo(x) inside stereo(U). V = stereo\<inverse>(ball).
-       Line segment in ball = arc (embedding from compact to Hausdorff).
-       Transfer via inverse stereographic = arc in V.
-       For x = NP: symmetric argument with stereographic from south pole.\<close>
+  proof -
+    fix x assume hx: "x \<in> U"
+    \<comment> \<open>Case x \<noteq> NP: use stereographic from NP. Case x = NP: sorry (needs stereo from SP).\<close>
+    show "\<exists>V. V \<in> top1_S2_topology \<and> x \<in> V \<and> V \<subseteq> U \<and>
+        (\<forall>y \<in> V. \<forall>z \<in> V. y \<noteq> z \<longrightarrow>
+          (\<exists>D. top1_is_arc_on D (subspace_topology top1_S2 top1_S2_topology D) \<and>
+               D \<subseteq> V \<and> top1_arc_endpoints_on D (subspace_topology top1_S2 top1_S2_topology D) = {y, z}))"
+      sorry \<comment> \<open>Proof uses stereographic chart around x + \<epsilon>-ball convexity + line segment = arc.
+         For x \<noteq> NP: stereographic\_proj gives S2-{NP} \<cong> R2. stereo(x) has \<epsilon>-ball in stereo(U).
+         V = stereo\<inverse>(ball). Line segment in ball = arc (continuous injective compact\<rightarrow>Hausdorff).
+         Transfer via stereo\<inverse> (homeomorphism preserves arcs).
+         For x = NP: symmetric with stereographic from south pole.\<close>
+  qed
   \<comment> \<open>Equivalence class argument: E = \{y \<in> U | \<exists> arc from a to y in U\}.
      E is open (local\_arc + Step 1). U-E is open (same argument).
      a \<in> E (trivial). Path from a to b \<Rightarrow> path-component connected.
