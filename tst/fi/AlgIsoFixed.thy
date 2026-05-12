@@ -1715,9 +1715,36 @@ proof -
      But A1 \<inter> B = {b} and b is endpoint of both \<Rightarrow> arcs\_concatenation\_is\_arc applies.
      If h'(t0) \<noteq> b: then h'(t0) is interior to B. Split B at h'(t0) \<Rightarrow> B1, B2.
      Take the half from h'(t0) to c. Concatenate A1 with that half.\<close>
-  \<comment> \<open>For now, sorry the sub-arc extraction and concatenation.
-     The building blocks are all proved: homeomorphism\_on\_restrict gives A1 as arc-like set,
-     arc\_split\_at\_given\_point splits B, arcs\_concatenation\_is\_arc splices.\<close>
+  \<comment> \<open>A1 is an arc in S2: compose affine [0,1]\<rightarrow>[0,t0] with h'|[0,t0].
+     Result: continuous injective from compact [0,1] to Hausdorff S2 = embedding = arc.\<close>
+  let ?phi = "\<lambda>t. h' (t * t0)"
+  have hphi_cont: "top1_continuous_map_on I_set I_top top1_S2 top1_S2_topology ?phi"
+    sorry \<comment> \<open>Composition: affine t\<mapsto>t*t0 (I\<rightarrow>I) then h' (I\<rightarrow>S2).\<close>
+  have hphi_inj: "inj_on ?phi I_set"
+    sorry \<comment> \<open>From inj\_on h' I\_set and inj\_on (\<lambda>t. t*t0) I\_set (t0>0).\<close>
+  have hphi_img: "?phi ` I_set = ?A1"
+    sorry \<comment> \<open>Image of [0,1] under t\<mapsto>h'(t*t0) = h'([0,t0]).\<close>
+  have hA1_arc: "top1_is_arc_on ?A1 (subspace_topology top1_S2 top1_S2_topology ?A1)"
+  proof -
+    have "top1_embedding_on I_set I_top top1_S2 top1_S2_topology ?phi"
+      by (rule top1_embedding_on_compact_inj[OF hTI hTopS2 hI_compact hS2_haus hphi_cont hphi_inj])
+    hence "top1_homeomorphism_on I_set I_top ?A1 (subspace_topology top1_S2 top1_S2_topology ?A1) ?phi"
+      sorry \<comment> \<open>Embedding with specified image = homeomorphism onto image.\<close>
+    thus ?thesis unfolding top1_is_arc_on_def
+      using hS2 hS2_haus hA1_sub_S2 sorry
+  qed
+  \<comment> \<open>A1 endpoints are {a, h'(t0)}.\<close>
+  have hA1_ep: "top1_arc_endpoints_on ?A1 (subspace_topology top1_S2 top1_S2_topology ?A1) = {a, h' t0}"
+    sorry \<comment> \<open>From arc\_endpoints\_are\_boundary + hphi(0)=a, hphi(1)=h'(t0).\<close>
+  \<comment> \<open>Split B at h'(t0) to get sub-arc B2 from h'(t0) to c.\<close>
+  \<comment> \<open>Case: h'(t0) is interior to B (not an endpoint).\<close>
+  \<comment> \<open>h'(t0) \<noteq> c: if h'(t0)=c then c \<in> A1 \<subseteq> A, but c \<notin> A (c is endpoint of B, and
+     a\<noteq>c means c is not endpoint of A if A\<inter>B only shares b)... actually c could be in A.
+     Skip this and handle in the case split.\<close>
+  \<comment> \<open>Sub-arc extraction + B splitting + arc concatenation.
+     All infrastructure proved above. Assembly uses arc\_split\_at\_given\_point,
+     arc\_split\_endpoints, arcs\_concatenation\_is\_arc, arc\_concat\_endpoints.
+     The A1 arc facts + first-hit-time facts feed directly into these.\<close>
   show ?thesis sorry
 qed
 
