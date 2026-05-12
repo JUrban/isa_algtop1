@@ -6541,14 +6541,31 @@ proof -
       "top1_is_arc_on D3 (subspace_topology top1_S2 top1_S2_topology D3)"
       "top1_is_arc_on D4 (subspace_topology top1_S2 top1_S2_topology D4)"
     by (by100 blast)
-  \<comment> \<open>Step 3: Jordan separation gives 2 components. p in one, q in other.\<close>
-  \<comment> \<open>Step 4: Construct diagonal arcs through components.
-     This requires the path-to-arc result (Munkres Thm 65.2 Step 2):
-     in an open subset of S2, path-connected implies arc-connected.
-     The proof uses: first-hit-time (Inf of preimage), arc splicing,
-     and local arc-connectivity of S2 (manifold structure).\<close>
-  \<comment> \<open>For now, sorry the full construction. All cycle structure (Steps 1-2) is proved.
-     The gap is the diagonal arc construction (Steps 3-4).\<close>
+  \<comment> \<open>Step 3: Jordan separation gives 2 components.\<close>
+  have hC_sep: "top1_separates_on top1_S2 top1_S2_topology C"
+    by (rule Theorem_61_3_JordanSeparation_S2[OF assms(1,2)])
+  \<comment> \<open>p and q in different components (from assms(5): no path from p to q in S2-C).\<close>
+  have hp_S2: "p \<in> top1_S2" using assms(3) by (by100 blast)
+  have hq_S2: "q \<in> top1_S2" using assms(4) by (by100 blast)
+  have hp_notC: "p \<notin> C" using assms(3) by (by100 blast)
+  have hq_notC: "q \<notin> C" using assms(4) by (by100 blast)
+  \<comment> \<open>Arc C1 doesn't separate S2 (Theorem 63.2).\<close>
+  have hC1_nosep: "\<not> top1_separates_on top1_S2 top1_S2_topology C1"
+    by (rule Theorem_63_2_arc_no_separation[OF assms(1) hC1_sub hC12(4)])
+  have hC2_nosep: "\<not> top1_separates_on top1_S2 top1_S2_topology C2"
+    by (rule Theorem_63_2_arc_no_separation[OF assms(1) hC2_sub hC12(5)])
+  \<comment> \<open>C1 and C2 are closed in S2.\<close>
+  have hC1_cl: "closedin_on top1_S2 top1_S2_topology C1"
+    by (rule arc_in_S2_closed[OF hC1_sub hC12(4)])
+  have hC2_cl: "closedin_on top1_S2 top1_S2_topology C2"
+    by (rule arc_in_S2_closed[OF hC2_sub hC12(5)])
+  \<comment> \<open>Step 4: Construct diagonal arcs.
+     Munkres Thm 65.2 Steps 2-3: path-to-arc in open subsets of S2,
+     then first-hit-time construction for diagonal endpoints.
+     This requires: (a) path\<rightarrow>arc for open subsets of a 2-manifold,
+     or (b) a direct arc construction through the Jordan components.
+     Both approaches need substantial infrastructure beyond what's available.
+     We sorry this construction, which is the ONLY remaining gap.\<close>
   show ?thesis sorry
 qed
 
