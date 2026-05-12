@@ -3234,7 +3234,78 @@ lemma first_hit_sub_arc:
     top1_is_arc_on Fp (subspace_topology top1_S2 top1_S2_topology Fp) \<and>
     top1_arc_endpoints_on Fp (subspace_topology top1_S2 top1_S2_topology Fp) = {p, d} \<and>
     Fp \<subseteq> A \<and> Fp \<inter> D = {d}"
-  sorry
+proof -
+  have hS2_haus: "is_hausdorff_on top1_S2 top1_S2_topology" by (rule top1_S2_is_hausdorff)
+  \<comment> \<open>Step 1: Get homeomorphism h: [0,1] \<rightarrow> A oriented with h(0)=p.\<close>
+  obtain h where hh: "top1_homeomorphism_on I_set I_top A (subspace_topology top1_S2 top1_S2_topology A) h"
+    using hA unfolding top1_is_arc_on_def by (by100 blast)
+  have hh_bij: "bij_betw h I_set A" using hh unfolding top1_homeomorphism_on_def by (by100 blast)
+  have hh_inj: "inj_on h I_set" using hh_bij unfolding bij_betw_def by (by100 blast)
+  have hh_img: "h ` I_set = A" using hh_bij unfolding bij_betw_def by (by100 blast)
+  have hh_cont: "top1_continuous_map_on I_set I_top A (subspace_topology top1_S2 top1_S2_topology A) h"
+    using hh unfolding top1_homeomorphism_on_def by (by100 blast)
+  have hh_ep: "{h 0, h 1} = {p, q}"
+    using arc_endpoints_are_boundary[OF hS2 hS2_haus hA_sub hA hh] hA_ep by (by100 simp)
+  \<comment> \<open>Orient: WLOG h(0) = p. If h(0) = q, compose with reversal.\<close>
+  have h0_p_or_q: "h 0 = p \<or> h 0 = q" using hh_ep by auto
+  \<comment> \<open>Define oriented homeomorphism.\<close>
+  define h' where "h' = (if h 0 = p then h else h \<circ> (\<lambda>t. 1 - t))"
+  have hh'0: "h' 0 = p" sorry \<comment> \<open>Case split on h(0)=p vs h(0)=q.\<close>
+  have hh'1: "h' 1 = q" sorry
+  have hh'_homeo: "top1_homeomorphism_on I_set I_top A (subspace_topology top1_S2 top1_S2_topology A) h'"
+    sorry \<comment> \<open>h' = h or h \<circ> reversal, both homeomorphisms.\<close>
+  have hh'_bij: "bij_betw h' I_set A"
+    using hh'_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+  have hh'_inj: "inj_on h' I_set" using hh'_bij unfolding bij_betw_def by (by100 blast)
+  have hh'_img: "h' ` I_set = A" using hh'_bij unfolding bij_betw_def by (by100 blast)
+  \<comment> \<open>Step 2: T = {t \<in> [0,1] | h'(t) \<in> D}. Closed, non-empty, compact.\<close>
+  define T where "T = {t \<in> I_set. h' t \<in> D}"
+  have hT_ne: "T \<noteq> {}" sorry \<comment> \<open>A \<inter> D \<noteq> {}, h' surjective onto A.\<close>
+  have hT_sub: "T \<subseteq> I_set" unfolding T_def by (by100 blast)
+  have hT_compact: "top1_compact_on T (subspace_topology UNIV (order_topology_on_UNIV :: real set set) T)"
+    sorry \<comment> \<open>T closed in [0,1] (preimage of closed D under continuous h'). [0,1] compact. Closed in compact = compact.\<close>
+  \<comment> \<open>Step 3: t0 = min T.\<close>
+  obtain t0 where ht0: "t0 \<in> T" "\<forall>t \<in> T. t0 \<le> t"
+    using top1_compact_on_order_topology_has_least[OF hT_ne hT_compact] by (by100 blast)
+  have ht0_I: "t0 \<in> I_set" using ht0(1) hT_sub by (by100 blast)
+  have ht0_D: "h' t0 \<in> D" using ht0(1) unfolding T_def by (by100 blast)
+  \<comment> \<open>Step 4: t0 > 0 (since h'(0) = p \<notin> D).\<close>
+  have ht0_pos: "t0 > 0"
+  proof (rule ccontr)
+    assume "\<not> t0 > 0"
+    have "0 \<le> t0" "t0 \<le> 1" using ht0_I unfolding top1_unit_interval_def by auto
+    hence "t0 = 0" using \<open>\<not> t0 > 0\<close> by (by100 linarith)
+    hence "h' 0 \<in> D" using ht0_D by (by100 simp)
+    thus False using hh'0 hp_not_D by (by100 blast)
+  qed
+  \<comment> \<open>Step 5: Fp = h'([0, t0]) is an arc.\<close>
+  define Fp where "Fp = h' ` {0..t0}"
+  have hFp_sub_A: "Fp \<subseteq> A"
+    unfolding Fp_def using hh'_img ht0_I unfolding top1_unit_interval_def by auto
+  have hp_Fp: "p \<in> Fp" unfolding Fp_def using hh'0 ht0_pos by auto
+  have hd_Fp: "h' t0 \<in> Fp" unfolding Fp_def using ht0_pos by auto
+  have hd_AD: "h' t0 \<in> A \<inter> D" using hFp_sub_A hd_Fp ht0_D by (by100 blast)
+  have hFp_arc: "top1_is_arc_on Fp (subspace_topology top1_S2 top1_S2_topology Fp)"
+    sorry \<comment> \<open>Fp = h'([0,t0]). h' restricted to [0,t0] is homeomorphism onto Fp.\<close>
+  have hFp_ep: "top1_arc_endpoints_on Fp (subspace_topology top1_S2 top1_S2_topology Fp) = {p, h' t0}"
+    sorry \<comment> \<open>Endpoints of restricted arc = {h'(0), h'(t0)} = {p, h'(t0)}.\<close>
+  \<comment> \<open>Step 6: Fp \<inter> D = {h'(t0)} (minimality of t0).\<close>
+  have hFp_D: "Fp \<inter> D = {h' t0}"
+  proof (rule set_eqI, rule iffI)
+    fix x assume "x \<in> Fp \<inter> D"
+    hence hx_Fp: "x \<in> Fp" and hx_D: "x \<in> D" by auto
+    from hx_Fp obtain t where ht: "t \<in> {0..t0}" "x = h' t" unfolding Fp_def by auto
+    have "t \<in> I_set" using ht(1) ht0_I unfolding top1_unit_interval_def by auto
+    hence "t \<in> T" using hx_D ht(2) unfolding T_def by (by100 blast)
+    hence "t0 \<le> t" using ht0(2) by (by100 blast)
+    have "t \<le> t0" using ht(1) by auto
+    hence "t = t0" using \<open>t0 \<le> t\<close> by (by100 linarith)
+    thus "x \<in> {h' t0}" using ht(2) by (by100 blast)
+  next
+    fix x assume "x \<in> {h' t0}" thus "x \<in> Fp \<inter> D" using hd_Fp ht0_D by (by100 blast)
+  qed
+  show ?thesis using hd_AD hp_Fp hd_Fp hFp_arc hFp_ep hFp_sub_A hFp_D by (by100 blast)
+qed
 
 lemma K4_from_SCC:
   assumes "is_topology_on_strict top1_S2 top1_S2_topology"
