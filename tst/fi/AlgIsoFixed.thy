@@ -1929,13 +1929,19 @@ proof -
   have ha_E: "a \<in> ?E'" using assms(4) by (by100 blast)
   \<comment> \<open>E' is open: for y \<in> E', local\_arc gives nbhd V. For z \<in> V: arc y\<rightarrow>z in V.
      If y = a: arc a\<rightarrow>z directly. If y \<noteq> a: arc a\<rightarrow>y + arc y\<rightarrow>z, splice with Step 1.\<close>
+  \<comment> \<open>E' is open in U: for y \<in> E', local\_arc gives V with arcs. Step 1 extends.\<close>
+  \<comment> \<open>U - E' is open in U: same argument by contradiction.\<close>
+  \<comment> \<open>Both follow from local\_arc. The formal proof needs the openness argument
+     which requires showing V \<inter> U \<subseteq> E' (resp. V \<inter> U \<subseteq> U-E') for the nbhd V
+     from local\_arc. This uses Munkres\_Step\_1\_arc\_splice for transitivity.\<close>
   have hE'_open: "?E' \<in> subspace_topology top1_S2 top1_S2_topology U"
-    sorry \<comment> \<open>From local\_arc + Munkres\_Step\_1 + openness argument.\<close>
-  \<comment> \<open>U - E' is open: for y \<in> U - E', local\_arc gives nbhd V.
-     If z \<in> V \<inter> E': arc a\<rightarrow>z in U. Arc z\<rightarrow>y in V \<subseteq> U. Step 1 \<Rightarrow> arc a\<rightarrow>y in U.
-     But y \<notin> E'. Contradiction. So V \<inter> E' = {} \<Rightarrow> V \<subseteq> U - E'.\<close>
+    sorry \<comment> \<open>For y \<in> E': local\_arc gives V. \<forall>z\<in>V: arc y\<rightarrow>z in V.
+       If y=a: z \<in> E'. If y\<noteq>a: arc a\<rightarrow>y in U + arc y\<rightarrow>z in V,
+       Munkres\_Step\_1 gives arc a\<rightarrow>z in U. So z \<in> E'. Hence V\<inter>U \<subseteq> E'.\<close>
   have hUE'_open: "U - ?E' \<in> subspace_topology top1_S2 top1_S2_topology U"
-    sorry \<comment> \<open>Same argument as above, by contradiction.\<close>
+    sorry \<comment> \<open>For y \<in> U-E': local\_arc gives V. If \<exists>z\<in>V\<inter>E':
+       arc a\<rightarrow>z + arc z\<rightarrow>y (Step 1) \<Rightarrow> arc a\<rightarrow>y. But y\<notin>E'. Contradiction.
+       So V\<inter>E' = {} and V\<inter>U \<subseteq> U-E'.\<close>
   \<comment> \<open>The path from a to b shows they're in the same path-component.
      That path-component is connected (path-connected \<Rightarrow> connected).
      E' and U-E' partition U. E' \<noteq> {}. If U-E' \<noteq> {}: E' and U-E' form a separation
