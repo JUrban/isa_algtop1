@@ -2339,12 +2339,31 @@ proof -
   \<comment> \<open>E' open: each y \<in> E' has open V \<subseteq> E' (from local\_arc + Step 1 splice).
      U-E' open: same by contradiction. Both are standard equivalence-class arguments.\<close>
   \<comment> \<open>Key helper: the open cover property.\<close>
-  have hE'_cover: "\<forall>y. y \<in> ?E' \<longrightarrow> (\<exists>W \<in> top1_S2_topology. y \<in> W \<and> W \<subseteq> ?E')"
+  have hE'_cover: "\<forall>y \<in> ?E'. \<exists>W \<in> top1_S2_topology. y \<in> W \<and> W \<subseteq> ?E'"
     sorry \<comment> \<open>For y\<in>E': local\_arc gives V, for z\<in>V: arc y\<rightarrow>z + splice with arc a\<rightarrow>y (Step 1) \<Rightarrow> z\<in>E'.\<close>
+  have hE'_sub_S2: "?E' \<subseteq> top1_S2" using assms(3) by (by100 blast)
+  have hE'_open_S2: "?E' \<in> top1_S2_topology"
+    by (rule top1_open_of_local_subsets[OF hTopS2 hE'_sub_S2 hE'_cover])
   have hE'_open: "?E' \<in> subspace_topology top1_S2 top1_S2_topology U"
-    sorry \<comment> \<open>E' open: each y\<in>E' has open V with V\<subseteq>E' (from local\_arc + Step 1 splice).\<close>
+  proof -
+    have "U \<inter> ?E' \<in> subspace_topology top1_S2 top1_S2_topology U"
+      by (rule subspace_topology_memI[OF hE'_open_S2])
+    moreover have "U \<inter> ?E' = ?E'" by (by100 blast)
+    ultimately show ?thesis by (by100 simp)
+  qed
+  \<comment> \<open>U-E' open: same cover argument. Each y \<in> U-E' has open V \<subseteq> U-E'.\<close>
+  have hUE'_cover: "\<forall>y \<in> U - ?E'. \<exists>W \<in> top1_S2_topology. y \<in> W \<and> W \<subseteq> U - ?E'"
+    sorry \<comment> \<open>For y\<in>U-E': local\_arc gives V. If z\<in>V\<inter>E': splice arc a\<rightarrow>z + arc z\<rightarrow>y \<Rightarrow> y\<in>E'. \<bottom>.\<close>
+  have hUE'_sub_S2: "U - ?E' \<subseteq> top1_S2" using assms(3) by (by100 blast)
+  have hUE'_open_S2: "U - ?E' \<in> top1_S2_topology"
+    by (rule top1_open_of_local_subsets[OF hTopS2 hUE'_sub_S2 hUE'_cover])
   have hUE'_open: "U - ?E' \<in> subspace_topology top1_S2 top1_S2_topology U"
-    sorry \<comment> \<open>U-E' open: same by contradiction. V\<inter>E'\<noteq>{} would give y\<in>E' via splice.\<close>
+  proof -
+    have "U \<inter> (U - ?E') \<in> subspace_topology top1_S2 top1_S2_topology U"
+      by (rule subspace_topology_memI[OF hUE'_open_S2])
+    moreover have "U \<inter> (U - ?E') = U - ?E'" by (by100 blast)
+    ultimately show ?thesis by (by100 simp)
+  qed
   \<comment> \<open>The path from a to b shows they're in the same path-component.
      That path-component is connected (path-connected \<Rightarrow> connected).
      E' and U-E' partition U. E' \<noteq> {}. If U-E' \<noteq> {}: E' and U-E' form a separation
