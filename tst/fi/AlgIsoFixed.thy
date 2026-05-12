@@ -1813,11 +1813,64 @@ proof -
   \<comment> \<open>h'(t0) \<noteq> c: if h'(t0)=c then c \<in> A1 \<subseteq> A, but c \<notin> A (c is endpoint of B, and
      a\<noteq>c means c is not endpoint of A if A\<inter>B only shares b)... actually c could be in A.
      Skip this and handle in the case split.\<close>
-  \<comment> \<open>Sub-arc extraction + B splitting + arc concatenation.
-     All infrastructure proved above. Assembly uses arc\_split\_at\_given\_point,
-     arc\_split\_endpoints, arcs\_concatenation\_is\_arc, arc\_concat\_endpoints.
-     The A1 arc facts + first-hit-time facts feed directly into these.\<close>
-  show ?thesis sorry
+  \<comment> \<open>Case split: h'(t0) = b (endpoint of B) or h'(t0) = c or h'(t0) interior to B.\<close>
+  show ?thesis
+  proof (cases "h' t0 = c")
+    case True
+    \<comment> \<open>A1 goes from a to c directly.\<close>
+    have "c \<in> ?A1" using ht0_A1 True by (by100 simp)
+    moreover have "?A1 \<subseteq> A \<union> B" using hA1_sub_A by (by100 blast)
+    moreover have "top1_arc_endpoints_on ?A1 (subspace_topology top1_S2 top1_S2_topology ?A1) = {a, c}"
+      using hA1_ep True by (by100 simp)
+    ultimately show ?thesis using hA1_arc ha_A1 by (by100 blast)
+  next
+    case hne_c: False
+    \<comment> \<open>Get sub-arc of B from h'(t0) to c.\<close>
+    show ?thesis
+    proof (cases "h' t0 = b")
+      case True
+      \<comment> \<open>A1\<inter>B = {b}, b is endpoint of A1 and of B. Concatenate directly.\<close>
+      have hA1B_int: "?A1 \<inter> B = {b}" using hA1_B True by (by100 simp)
+      have hb_ep_A1: "b \<in> top1_arc_endpoints_on ?A1 (subspace_topology top1_S2 top1_S2_topology ?A1)"
+        using hA1_ep True by (by100 blast)
+      have hb_ep_B: "b \<in> top1_arc_endpoints_on B (subspace_topology top1_S2 top1_S2_topology B)"
+        using hB_ep by (by100 blast)
+      have hD: "top1_is_arc_on (?A1 \<union> B) (subspace_topology top1_S2 top1_S2_topology (?A1 \<union> B))"
+        by (rule arcs_concatenation_is_arc[OF hS2 hS2_haus hA1_arc hA1_sub_S2 hB_arc hB_sub
+            hA1B_int hb_ep_A1 hb_ep_B])
+      have hD_ep: "top1_arc_endpoints_on (?A1 \<union> B) (subspace_topology top1_S2 top1_S2_topology (?A1 \<union> B)) = {a, c}"
+        sorry \<comment> \<open>arc\_concat\_endpoints\<close>
+      have "?A1 \<union> B \<subseteq> A \<union> B" using hA1_sub_A by (by100 blast)
+      moreover have "c \<in> B" using hB_ep unfolding top1_arc_endpoints_on_def by (by100 blast)
+      ultimately show ?thesis using hD ha_A1 hD_ep by (by100 blast)
+    next
+      case hne_b: False
+      \<comment> \<open>h'(t0) interior to B. Split B.\<close>
+      have "h' t0 \<notin> top1_arc_endpoints_on B (subspace_topology top1_S2 top1_S2_topology B)"
+        using hB_ep hne_b hne_c by (by100 blast)
+      from arc_split_at_given_point[OF hS2 hS2_haus hB_sub hB_arc ht0_B this hB_ep hbc]
+      obtain B1 B2 where hBs: "B = B1 \<union> B2" "B1 \<inter> B2 = {h' t0}"
+          "top1_is_arc_on B1 (subspace_topology top1_S2 top1_S2_topology B1)"
+          "top1_is_arc_on B2 (subspace_topology top1_S2 top1_S2_topology B2)"
+          "b \<in> B1" "c \<in> B2" "h' t0 \<in> B1" "h' t0 \<in> B2" "B1 \<subseteq> top1_S2" "B2 \<subseteq> top1_S2"
+        by blast
+      have hA1B2_int: "?A1 \<inter> B2 = {h' t0}"
+        using hA1_B hBs(1) hBs(8) by (by100 blast)
+      have ht0_ep_A1: "h' t0 \<in> top1_arc_endpoints_on ?A1 (subspace_topology top1_S2 top1_S2_topology ?A1)"
+        using hA1_ep by (by100 blast)
+      have hB2_ep: "top1_arc_endpoints_on B2 (subspace_topology top1_S2 top1_S2_topology B2) = {h' t0, c}"
+        sorry \<comment> \<open>From arc\_split\_endpoints.\<close>
+      have ht0_ep_B2: "h' t0 \<in> top1_arc_endpoints_on B2 (subspace_topology top1_S2 top1_S2_topology B2)"
+        using hB2_ep by (by100 blast)
+      have hD: "top1_is_arc_on (?A1 \<union> B2) (subspace_topology top1_S2 top1_S2_topology (?A1 \<union> B2))"
+        by (rule arcs_concatenation_is_arc[OF hS2 hS2_haus hA1_arc hA1_sub_S2 hBs(4) hBs(10)
+            hA1B2_int ht0_ep_A1 ht0_ep_B2])
+      have hD_ep: "top1_arc_endpoints_on (?A1 \<union> B2) (subspace_topology top1_S2 top1_S2_topology (?A1 \<union> B2)) = {a, c}"
+        sorry \<comment> \<open>From arc\_concat\_endpoints.\<close>
+      have "?A1 \<union> B2 \<subseteq> A \<union> B" using hA1_sub_A hBs(1) by (by100 blast)
+      thus ?thesis using hD ha_A1 hBs(6) hD_ep by (by100 blast)
+    qed
+  qed
 qed
 
 text \<open>Munkres Thm 65.2 Step 2: open path-connected subsets of S2 are arc-connected.
