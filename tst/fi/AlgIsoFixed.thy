@@ -4663,10 +4663,27 @@ proof -
       using hFq_C1 hFq(7) hGq'(7) hGq'_C2 by (by100 simp)
     finally show ?thesis by (by100 blast)
   qed
-  \<comment> \<open>K4 vertices: a4', b4, a2'', b2''. Diagonals: Fp\<union>Gp' and Fq\<union>Gq'.
-     Both diagonals touch C only at their endpoints.
-     The K4 assembly (cycle splits, endpoint proofs, intersection conditions)
-     is bookkeeping given the proved diagonal properties.\<close>
+  \<comment> \<open>K4 assembly. Vertices: a1=a2'', a2=b2'', a3=a4', a4=b4.
+     Diagonals: e13 = Fp\<union>Gp' (a4'\<rightarrow>p\<rightarrow>a2''), e24 = Fq\<union>Gq' (b4\<rightarrow>q\<rightarrow>b2'').
+     Cycle edges from splitting C1 at {a2'',b2''} and C2 at {a4',b4}.\<close>
+  \<comment> \<open>card 4: a2'' \<in> C1-C2, b2'' \<in> C1-C2, a4' \<in> C2-C1, b4 \<in> C2-C1.
+     Cross-half pairs automatically distinct. Same-half: need a4'\<noteq>b4 and a2''\<noteq>b2''.\<close>
+  have hcard4: "card {a2'', b2'', a4', b4} = 4" sorry
+  \<comment> \<open>Split C2 at a4': get sub-arcs C2\_left (a1\<rightarrow>a4') and C2\_right (a4'\<rightarrow>a3).\<close>
+  have hC2_ep: "top1_arc_endpoints_on C2 (subspace_topology top1_S2 top1_S2_topology C2) = {a1, a3}"
+    by (rule scc_decomp_arc_endpoints(2)[OF assms(1) hS2_haus assms(2) hC12(4,5) hC1_sub hC2_sub hC12(1,2,3)])
+  have ha4'_not_ep_C2: "a4' \<notin> top1_arc_endpoints_on C2 (subspace_topology top1_S2 top1_S2_topology C2)"
+    using hC2_ep ha4'_ne by (by100 simp)
+  \<comment> \<open>Split C1 at a2'': get sub-arcs C1\_left (a1\<rightarrow>a2'') and C1\_right (a2''\<rightarrow>a3).\<close>
+  have hC1_ep: "top1_arc_endpoints_on C1 (subspace_topology top1_S2 top1_S2_topology C1) = {a1, a3}"
+    by (rule scc_decomp_arc_endpoints(1)[OF assms(1) hS2_haus assms(2) hC12(4,5) hC1_sub hC2_sub hC12(1,2,3)])
+  have ha2''_not_ep_C1: "a2'' \<notin> top1_arc_endpoints_on C1 (subspace_topology top1_S2 top1_S2_topology C1)"
+    using hC1_ep ha2''_ne by (by100 simp)
+  \<comment> \<open>The full K4 assembly with cycle edge definitions, endpoint proofs,
+     and ~30 intersection conditions requires splitting C1 at both a2'' and b2'',
+     C2 at both a4' and b4, determining the cyclic ordering, and verifying
+     each condition. This is purely mechanical given the proved diagonal properties
+     (he13\_C, he24\_C) and the arc split infrastructure.\<close>
   show ?thesis sorry
 qed
 
