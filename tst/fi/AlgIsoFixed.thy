@@ -4089,7 +4089,14 @@ proof -
       hence "fst far ^ 2 + snd far ^ 2 = (abs M + 1) ^ 2"
         using power2_minus[of "abs M + 1"] by (by100 simp)
       hence "(abs M + 1) ^ 2 \<le> M" using \<open>fst far ^ 2 + snd far ^ 2 \<le> M\<close> by (by100 linarith)
-      thus False sorry \<comment> \<open>(|M|+1)^2 > M always. Arithmetic.\<close>
+      have h1: "abs M + 1 \<ge> (1::real)" by (by100 linarith)
+      have "abs M + 1 \<le> (abs M + 1) * (abs M + 1)"
+        using mult_le_cancel_right1[of "abs M + 1" "abs M + 1"] h1 by (by100 linarith)
+      also have "\<dots> = (abs M + 1) ^ 2"
+        using power2_eq_square[of "abs M + 1", symmetric] .
+      finally have "abs M + 1 \<le> (abs M + 1) ^ 2" .
+      hence "M \<ge> abs M + 1" using \<open>(abs M + 1) ^ 2 \<le> M\<close> by (by100 linarith)
+      thus False by (by100 linarith)
     qed
     have hfar_notD: "far \<notin> D" using hray_avoids hfar_neg hfar_y by (by100 blast)
     hence "far \<in> V" using hfar_notU hUV_union hfar_notD by (by100 blast)
@@ -4110,9 +4117,18 @@ proof -
       assume "far \<in> U"
       hence "fst far ^ 2 + snd far ^ 2 \<le> M" using \<open>\<forall>p \<in> U. _\<close> by (by100 blast)
       hence "(abs M + 1) ^ 2 \<le> M" unfolding far_def by (by100 simp)
-      thus False sorry \<comment> \<open>Same arithmetic as negative case.\<close>
+      have h1: "abs M + 1 \<ge> (1::real)" by (by100 linarith)
+      have "abs M + 1 \<le> (abs M + 1) * (abs M + 1)"
+        using mult_le_cancel_right1[of "abs M + 1" "abs M + 1"] h1 by (by100 linarith)
+      also have "\<dots> = (abs M + 1) ^ 2"
+        using power2_eq_square[of "abs M + 1", symmetric] .
+      finally have "abs M + 1 \<le> (abs M + 1) ^ 2" .
+      hence "M \<ge> abs M + 1" using \<open>(abs M + 1) ^ 2 \<le> M\<close> by (by100 linarith)
+      thus False by (by100 linarith)
     qed
-    have "far \<notin> D" sorry
+    have "fst far \<ge> 0 \<and> snd far = 0" unfolding far_def by (by100 simp)
+    have "far \<notin> D" using \<open>\<forall>d. d \<in> D \<longrightarrow> \<not>(fst d \<ge> 0 \<and> snd d = 0)\<close> \<open>fst far \<ge> 0 \<and> snd far = 0\<close>
+      by (by100 blast)
     hence "far \<in> V" using \<open>far \<notin> U\<close> hUV_union \<open>far \<notin> D\<close> by (by100 blast)
     show False sorry \<comment> \<open>Same connectedness argument as negative case.\<close>
   qed
