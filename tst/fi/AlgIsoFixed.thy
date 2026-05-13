@@ -4518,7 +4518,17 @@ proof -
       have "h q \<in> UNIV - h ` C"
       proof -
         have "q \<notin> C" using hq_notC by (by100 blast)
-        have "h q \<notin> h ` C" sorry \<comment> \<open>Injectivity of h on S2-{p}: q \<notin> C implies h(q) \<notin> h(C).\<close>
+        have hinj: "inj_on h (top1_S2 - {p})" using hh unfolding top1_homeomorphism_on_def bij_betw_def
+          by (by100 blast)
+        have "h q \<notin> h ` C"
+        proof
+          assume "h q \<in> h ` C"
+          then obtain c where hc: "c \<in> C" "h q = h c" using imageE by (by100 blast)
+          have "c \<in> top1_S2 - {p}" using hc(1) hC_sub_S2p by (by100 blast)
+          have "h c = h q" using hc(2) by (by100 simp)
+          have "c = q" by (rule inj_onD[OF hinj \<open>h c = h q\<close> \<open>c \<in> top1_S2 - {p}\<close> hq_S2p])
+          thus False using hc(1) hq_notC by (by100 blast)
+        qed
         thus ?thesis by (by100 blast)
       qed
       thus ?thesis using hUV(4) by (by100 blast)
