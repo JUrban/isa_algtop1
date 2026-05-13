@@ -4027,7 +4027,7 @@ lemma K4_from_SCC:
   and "p \<in> top1_S2 - C" and "q \<in> top1_S2 - C"
   and "\<not> (\<exists>f. top1_is_path_on (top1_S2 - C)
                 (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) p q f)"
-  shows "\<exists>a1 a2 a3 a4 e12 e23 e34 e41 e13 e24.
+  shows "\<exists>a1 a2 a3 a4 e12 e23 e34 e41 e13 e24 p0 q0.
     card {a1, a2, a3, a4} = 4
     \<and> {a1, a2, a3, a4} \<subseteq> top1_S2
     \<and> e12 \<subseteq> top1_S2 \<and> e23 \<subseteq> top1_S2 \<and> e34 \<subseteq> top1_S2
@@ -4052,7 +4052,11 @@ lemma K4_from_SCC:
     \<and> e13 \<inter> e24 \<subseteq> {a1,a2,a3,a4}
     \<and> e24 \<inter> e12 = {a2} \<and> e24 \<inter> e23 = {a2}
     \<and> e24 \<inter> e34 = {a4} \<and> e24 \<inter> e41 = {a4}
-    \<and> p \<in> e13 - {a1, a3} \<and> q \<in> e24 - {a2, a4}
+    \<and> q0 \<in> e13 - {a1, a3} \<and> p0 \<in> e24 - {a2, a4}
+    \<and> top1_in_same_path_component_on (top1_S2 - C)
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) p p0
+    \<and> top1_in_same_path_component_on (top1_S2 - C)
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) q q0
     \<and> C = e12 \<union> e23 \<union> e34 \<union> e41"
 proof -
   have hTopS2: "is_topology_on top1_S2 top1_S2_topology"
@@ -4356,7 +4360,6 @@ proof -
       "D13 \<subseteq> Fp \<union> Gp" "a4' \<in> D13" "a2' \<in> D13"
       "top1_arc_endpoints_on D13 (subspace_topology top1_S2 top1_S2_topology D13) = {a4', a2'}"
     by (by100 blast)
-  have hp_D13: "p \<in> D13" sorry \<comment> \<open>Splice goes through shared endpoint p.\<close>
   have hFp_C1: "Fp \<inter> C1 = {}" using hFp(6) harc_f(2) by (by100 blast)
   have hGp_C2: "Gp \<inter> C2 = {}" using hGp(6) harc_g(2) by (by100 blast)
   have hD13_C: "D13 \<inter> C \<subseteq> {a4', a2'}"
@@ -4366,37 +4369,458 @@ proof -
     also have "\<dots> = {} \<union> {a4'} \<union> {a2'} \<union> {}" using hFp_C1 hFp(7) hGp(7) hGp_C2 by (by100 simp)
     finally show ?thesis by (by100 blast)
   qed
-  \<comment> \<open>Splice Fq + Gq into diagonal D24.\<close>
-  have hFq_ep_swap: "top1_arc_endpoints_on Fq (subspace_topology top1_S2 top1_S2_topology Fq) = {b4, q}"
-    using hFq(5) by (by100 blast)
-  from Munkres_Step_1_arc_splice[OF assms(1) hFq(4) hGq(4) hFq_sub_S2 hGq_sub_S2
-      hFq_ep_swap hGq(5) hb4_ne_q hq_ne_b2 hb4_notin_Gq]
-  obtain D24 where hD24: "top1_is_arc_on D24 (subspace_topology top1_S2 top1_S2_topology D24)"
-      "D24 \<subseteq> Fq \<union> Gq" "b4 \<in> D24" "b2 \<in> D24"
-      "top1_arc_endpoints_on D24 (subspace_topology top1_S2 top1_S2_topology D24) = {b4, b2}"
-    by (by100 blast)
-  have hq_D24: "q \<in> D24" sorry \<comment> \<open>Splice goes through shared endpoint q.\<close>
-  have hFq_C1: "Fq \<inter> C1 = {}" using hFq(6) harc_f(2) by (by100 blast)
-  have hGq_C2: "Gq \<inter> C2 = {}" using hGq(6) harc_g(2) by (by100 blast)
-  have hD24_C: "D24 \<inter> C \<subseteq> {b4, b2}"
-  proof -
-    have "D24 \<inter> C \<subseteq> (Fq \<union> Gq) \<inter> (C1 \<union> C2)" using hD24(2) hC12(1) by (by100 blast)
-    also have "\<dots> = (Fq \<inter> C1) \<union> (Fq \<inter> C2) \<union> (Gq \<inter> C1) \<union> (Gq \<inter> C2)" by (by100 blast)
-    also have "\<dots> = {} \<union> {b4} \<union> {b2} \<union> {}" using hFq_C1 hFq(7) hGq(7) hGq_C2 by (by100 simp)
-    finally show ?thesis by (by100 blast)
-  qed
-  \<comment> \<open>K4 vertices: a2', b2, a4', b4. Diagonals: D13 and D24.
-     card=4 + cycle edges + conditions = K4 assembly.\<close>
+  \<comment> \<open>NEW APPROACH: Use vertices {a1, a2', a3, a4'} instead of {a2', b2, a4', b4}.
+     Diagonal e24 = D13 (from a2' to a4', interior in component(p)).
+     Diagonal e13 from a1 to a3 (interior in component(q)) — sorry for now.
+     Choose p0 from D13 interior, q0 from e13 interior.\<close>
   have ha4'_ne: "a4' \<noteq> a1" "a4' \<noteq> a3" using hFp(1) harc_f(2) hC12(2) by (by100 blast)+
   have ha2'_ne: "a2' \<noteq> a1" "a2' \<noteq> a3" using hGp(1) harc_g(2) hC12(2) by (by100 blast)+
-  have hb4_ne: "b4 \<noteq> a1" "b4 \<noteq> a3" using hFq(1) harc_f(2) hC12(2) by (by100 blast)+
-  have hb2_ne: "b2 \<noteq> a1" "b2 \<noteq> a3" using hGq(1) harc_g(2) hC12(2) by (by100 blast)+
   have ha4'_C2: "a4' \<in> C2" using hFp(1) by (by100 blast)
   have ha2'_C1: "a2' \<in> C1" using hGp(1) by (by100 blast)
-  have hb4_C2: "b4 \<in> C2" using hFq(1) by (by100 blast)
-  have hb2_C1: "b2 \<in> C1" using hGq(1) by (by100 blast)
-  have hcard4: "card {a2', b2, a4', b4} = 4" sorry
-  show ?thesis sorry
+  \<comment> \<open>a4' \<notin> C1 and a2' \<notin> C2 (since they are in interior of C2, C1 respectively, not at shared endpoints).\<close>
+  have ha4'_notC1: "a4' \<notin> C1"
+  proof
+    assume "a4' \<in> C1"
+    hence "a4' \<in> C1 \<inter> C2" using ha4'_C2 by (by100 blast)
+    hence "a4' \<in> {a1, a3}" using hC12(2) by (by100 blast)
+    thus False using ha4'_ne by (by100 blast)
+  qed
+  have ha2'_notC2: "a2' \<notin> C2"
+  proof
+    assume "a2' \<in> C2"
+    hence "a2' \<in> C1 \<inter> C2" using ha2'_C1 by (by100 blast)
+    hence "a2' \<in> {a1, a3}" using hC12(2) by (by100 blast)
+    thus False using ha2'_ne by (by100 blast)
+  qed
+  have ha2'_ne_a4': "a2' \<noteq> a4'"
+    using ha2'_C1 ha2'_notC2 ha4'_C2 by (by100 blast)
+  \<comment> \<open>Get endpoints of C1 and C2.\<close>
+  have hC1_ep: "top1_arc_endpoints_on C1 (subspace_topology top1_S2 top1_S2_topology C1) = {a1, a3}"
+    by (rule scc_decomp_arc_endpoints(1)[OF assms(1) hS2_haus assms(2) hC12(4) hC12(5)
+        hC1_sub hC2_sub hC12(1) hC12(2) hC12(3)])
+  have hC2_ep: "top1_arc_endpoints_on C2 (subspace_topology top1_S2 top1_S2_topology C2) = {a1, a3}"
+    by (rule scc_decomp_arc_endpoints(2)[OF assms(1) hS2_haus assms(2) hC12(4) hC12(5)
+        hC1_sub hC2_sub hC12(1) hC12(2) hC12(3)])
+  \<comment> \<open>a2' is an interior point of C1 (not an endpoint), a4' is interior to C2.\<close>
+  have ha2'_not_ep: "a2' \<notin> top1_arc_endpoints_on C1 (subspace_topology top1_S2 top1_S2_topology C1)"
+    using hC1_ep ha2'_ne by (by100 blast)
+  have ha4'_not_ep: "a4' \<notin> top1_arc_endpoints_on C2 (subspace_topology top1_S2 top1_S2_topology C2)"
+    using hC2_ep ha4'_ne by (by100 blast)
+  \<comment> \<open>Split C1 at a2' into two sub-arcs: e12 (containing a1) and e23 (containing a3).\<close>
+  from arc_split_at_given_point[OF assms(1) hS2_haus hC1_sub hC12(4) ha2'_C1 ha2'_not_ep hC1_ep hC12(3)]
+  obtain e12 e23 where hC1_split: "C1 = e12 \<union> e23" "e12 \<inter> e23 = {a2'}"
+      "top1_is_arc_on e12 (subspace_topology top1_S2 top1_S2_topology e12)"
+      "top1_is_arc_on e23 (subspace_topology top1_S2 top1_S2_topology e23)"
+      "a1 \<in> e12" "a3 \<in> e23" "a2' \<in> e12" "a2' \<in> e23" "e12 \<subseteq> top1_S2" "e23 \<subseteq> top1_S2"
+    by blast
+  \<comment> \<open>Split C2 at a4' into two sub-arcs: e34 (containing a3) and e41 (containing a1).\<close>
+  from arc_split_at_given_point[OF assms(1) hS2_haus hC2_sub hC12(5) ha4'_C2 ha4'_not_ep hC2_ep hC12(3)]
+  obtain e34_raw e41_raw where hC2_split_raw: "C2 = e34_raw \<union> e41_raw"
+      "e34_raw \<inter> e41_raw = {a4'}"
+      "top1_is_arc_on e34_raw (subspace_topology top1_S2 top1_S2_topology e34_raw)"
+      "top1_is_arc_on e41_raw (subspace_topology top1_S2 top1_S2_topology e41_raw)"
+      "a1 \<in> e34_raw" "a3 \<in> e41_raw" "a4' \<in> e34_raw" "a4' \<in> e41_raw"
+      "e34_raw \<subseteq> top1_S2" "e41_raw \<subseteq> top1_S2"
+    by blast
+  \<comment> \<open>Rename: e41 = e34\_raw (contains a1), e34 = e41\_raw (contains a3).\<close>
+  define e41 where "e41 = e34_raw"
+  define e34 where "e34 = e41_raw"
+  have hC2_split: "C2 = e34 \<union> e41" "e34 \<inter> e41 = {a4'}"
+      "top1_is_arc_on e41 (subspace_topology top1_S2 top1_S2_topology e41)"
+      "top1_is_arc_on e34 (subspace_topology top1_S2 top1_S2_topology e34)"
+      "a1 \<in> e41" "a3 \<in> e34" "a4' \<in> e41" "a4' \<in> e34"
+      "e41 \<subseteq> top1_S2" "e34 \<subseteq> top1_S2"
+    unfolding e41_def e34_def
+    using hC2_split_raw by (by100 blast)+
+  \<comment> \<open>Get endpoints of the split arcs.\<close>
+  have he12_ep: "top1_arc_endpoints_on e12 (subspace_topology top1_S2 top1_S2_topology e12) = {a1, a2'}"
+    by (rule arc_split_endpoints(1)[OF assms(1) hS2_haus hC1_sub hC12(4) hC1_split(1,2,3,4)
+        hC1_split(5,6,7,8,9,10) hC1_ep ha2'_not_ep])
+  have he23_ep: "top1_arc_endpoints_on e23 (subspace_topology top1_S2 top1_S2_topology e23) = {a2', a3}"
+    by (rule arc_split_endpoints(2)[OF assms(1) hS2_haus hC1_sub hC12(4) hC1_split(1,2,3,4)
+        hC1_split(5,6,7,8,9,10) hC1_ep ha2'_not_ep])
+  have he41_ep_raw: "top1_arc_endpoints_on e34_raw (subspace_topology top1_S2 top1_S2_topology e34_raw) = {a1, a4'}"
+    by (rule arc_split_endpoints(1)[OF assms(1) hS2_haus hC2_sub hC12(5)
+        hC2_split_raw(1,2,3,4,5,6,7,8,9,10) hC2_ep ha4'_not_ep])
+  have he34_ep_raw: "top1_arc_endpoints_on e41_raw (subspace_topology top1_S2 top1_S2_topology e41_raw) = {a4', a3}"
+    by (rule arc_split_endpoints(2)[OF assms(1) hS2_haus hC2_sub hC12(5)
+        hC2_split_raw(1,2,3,4,5,6,7,8,9,10) hC2_ep ha4'_not_ep])
+  have he41_ep: "top1_arc_endpoints_on e41 (subspace_topology top1_S2 top1_S2_topology e41) = {a1, a4'}"
+    unfolding e41_def using he41_ep_raw by (by100 blast)
+  have he34_ep: "top1_arc_endpoints_on e34 (subspace_topology top1_S2 top1_S2_topology e34) = {a4', a3}"
+    unfolding e34_def using he34_ep_raw by (by100 blast)
+  \<comment> \<open>e24 = D13 (diagonal from a2' to a4').\<close>
+  define e24 where "e24 = D13"
+  have he24_arc: "top1_is_arc_on e24 (subspace_topology top1_S2 top1_S2_topology e24)"
+    unfolding e24_def using hD13(1) by (by100 blast)
+  have he24_sub: "e24 \<subseteq> top1_S2"
+    unfolding e24_def using hD13(2) hFp_sub_S2 hGp_sub_S2 by (by100 blast)
+  have he24_ep: "top1_arc_endpoints_on e24 (subspace_topology top1_S2 top1_S2_topology e24) = {a2', a4'}"
+    unfolding e24_def using hD13(5) by (by100 blast)
+  have he24_C: "e24 \<inter> C \<subseteq> {a4', a2'}" unfolding e24_def using hD13_C by (by100 blast)
+  have ha2'_e24: "a2' \<in> e24" unfolding e24_def using hD13(4) by (by100 blast)
+  have ha4'_e24: "a4' \<in> e24" unfolding e24_def using hD13(3) by (by100 blast)
+  \<comment> \<open>D13 interior is in the path-component of p in S2-C.\<close>
+  have hD13_interior_comp_p: "\<forall>x \<in> D13 - {a4', a2'}. x \<in> top1_S2 - C"
+  proof (intro ballI)
+    fix x assume "x \<in> D13 - {a4', a2'}"
+    hence "x \<in> D13" "x \<noteq> a4'" "x \<noteq> a2'" by (by100 blast)+
+    hence "x \<notin> C" using hD13_C by (by100 blast)
+    moreover have "x \<in> top1_S2" using \<open>x \<in> D13\<close> hD13(2) hFp_sub_S2 hGp_sub_S2 by (by100 blast)
+    ultimately show "x \<in> top1_S2 - C" by (by100 blast)
+  qed
+  \<comment> \<open>SORRY: Construct diagonal e13 from a1 to a3 with interior in component(q).
+     This follows from Munkres Step 3 (line segment in R2 via stereographic projection)
+     or from the fact that the boundary of each component of S2-C is C itself.\<close>
+  obtain e13 where he13: "top1_is_arc_on e13 (subspace_topology top1_S2 top1_S2_topology e13)"
+      "e13 \<subseteq> top1_S2"
+      "top1_arc_endpoints_on e13 (subspace_topology top1_S2 top1_S2_topology e13) = {a1, a3}"
+      "e13 \<inter> C \<subseteq> {a1, a3}"
+      "\<forall>x \<in> e13 - {a1, a3}. top1_in_same_path_component_on (top1_S2 - C)
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) q x"
+    sorry \<comment> \<open>Munkres Step 3: arc from a1 to a3 through component of q.\<close>
+  \<comment> \<open>Endpoints are elements of the arc.\<close>
+  have ha1_e13: "a1 \<in> e13" using he13(3) unfolding top1_arc_endpoints_on_def by (by100 blast)
+  have ha3_e13: "a3 \<in> e13" using he13(3) unfolding top1_arc_endpoints_on_def by (by100 blast)
+  \<comment> \<open>Choose p0 from D13 interior (in component of p) and q0 from e13 interior (in component of q).\<close>
+  have hD13_interior_ne: "D13 - {a4', a2'} \<noteq> {}"
+  proof -
+    obtain h where hh: "top1_homeomorphism_on I_set I_top D13
+        (subspace_topology top1_S2 top1_S2_topology D13) h"
+      using hD13(1) unfolding top1_is_arc_on_def by (by100 blast)
+    have hinj: "inj_on h I_set" using hh unfolding top1_homeomorphism_on_def bij_betw_def
+      by (by100 blast)
+    have himg: "\<forall>t \<in> I_set. h t \<in> D13" using hh
+      unfolding top1_homeomorphism_on_def top1_continuous_map_on_def by (by100 blast)
+    have h12_I: "(1/2::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+    have "h (1/2) \<in> D13" using himg h12_I by (by100 blast)
+    have hep: "{h 0, h 1} = {a4', a2'}"
+      using arc_endpoints_are_boundary[OF assms(1) hS2_haus _ hD13(1) hh] hD13(5) he24_sub
+      unfolding e24_def by (by100 simp)
+    have h0_I: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+    have h1_I: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+    have "h (1/2) \<noteq> h 0"
+    proof
+      assume "h (1/2) = h 0"
+      from inj_onD[OF hinj this h12_I h0_I] show False by (by100 simp)
+    qed
+    moreover have "h (1/2) \<noteq> h 1"
+    proof
+      assume "h (1/2) = h 1"
+      from inj_onD[OF hinj this h12_I h1_I] show False by (by100 simp)
+    qed
+    ultimately have "h (1/2) \<notin> {h 0, h 1}" by (by100 blast)
+    hence "h (1/2) \<notin> {a4', a2'}" using hep by (by100 simp)
+    thus ?thesis using \<open>h (1/2) \<in> D13\<close> by (by100 blast)
+  qed
+  have he13_interior_ne: "e13 - {a1, a3} \<noteq> {}"
+  proof -
+    obtain h where hh: "top1_homeomorphism_on I_set I_top e13
+        (subspace_topology top1_S2 top1_S2_topology e13) h"
+      using he13(1) unfolding top1_is_arc_on_def by (by100 blast)
+    have hinj: "inj_on h I_set" using hh unfolding top1_homeomorphism_on_def bij_betw_def
+      by (by100 blast)
+    have himg: "\<forall>t \<in> I_set. h t \<in> e13" using hh
+      unfolding top1_homeomorphism_on_def top1_continuous_map_on_def by (by100 blast)
+    have h12_I: "(1/2::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+    have "h (1/2) \<in> e13" using himg h12_I by (by100 blast)
+    have hep: "{h 0, h 1} = {a1, a3}"
+      using arc_endpoints_are_boundary[OF assms(1) hS2_haus he13(2) he13(1) hh] he13(3)
+      by (by100 simp)
+    have h0_I: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+    have h1_I: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+    have "h (1/2) \<noteq> h 0"
+    proof
+      assume "h (1/2) = h 0"
+      from inj_onD[OF hinj this h12_I h0_I] show False by (by100 simp)
+    qed
+    moreover have "h (1/2) \<noteq> h 1"
+    proof
+      assume "h (1/2) = h 1"
+      from inj_onD[OF hinj this h12_I h1_I] show False by (by100 simp)
+    qed
+    ultimately have "h (1/2) \<notin> {h 0, h 1}" by (by100 blast)
+    hence "h (1/2) \<notin> {a1, a3}" using hep by (by100 simp)
+    thus ?thesis using \<open>h (1/2) \<in> e13\<close> by (by100 blast)
+  qed
+  from hD13_interior_ne obtain p0 where hp0: "p0 \<in> D13 - {a4', a2'}" by (by100 blast)
+  from he13_interior_ne obtain q0 where hq0: "q0 \<in> e13 - {a1, a3}" by (by100 blast)
+  \<comment> \<open>p0 is in the path-component of p in S2-C.\<close>
+  have hp0_SC: "p0 \<in> top1_S2 - C" using hp0 hD13_interior_comp_p by (by100 blast)
+  have hp0_comp_p: "top1_in_same_path_component_on (top1_S2 - C)
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) p p0"
+  proof -
+    \<comment> \<open>p0 \<in> D13 - {a4',a2'} \<subseteq> (Fp \<union> Gp) - {a4',a2'}.
+       Both Fp-{a4'} and Gp-{a2'} contain p and lie in S2-C.
+       D13 - {a4',a2'} \<subseteq> (Fp-{a4'}) \<union> (Gp-{a2'}), which is path-connected
+       (union of connected sets sharing p). p0 is in same component as p.\<close>
+    have "Fp - {a4'} \<subseteq> top1_S2 - C"
+      using hFp(6) harc_f(2) hFp(7) hC12(1) by (by100 blast)
+    have "Gp - {a2'} \<subseteq> top1_S2 - C"
+      using hGp(6) harc_g(2) hGp(7) hC12(1) by (by100 blast)
+    have hp_Fp_minus: "p \<in> Fp - {a4'}" using hFp(2) ha4'_ne_p by (by100 blast)
+    have hp_Gp_minus: "p \<in> Gp - {a2'}" using hGp(2) hp_ne_a2' by (by100 blast)
+    \<comment> \<open>Fp is an arc (path-connected). So Fp-{a4'} is connected and contains p.\<close>
+    \<comment> \<open>Path from p to p0 exists in (Fp \<union> Gp) - {a4', a2'} \<subseteq> S2-C.\<close>
+    show ?thesis sorry \<comment> \<open>Path-component of p0 = path-component of p via Fp,Gp arcs.\<close>
+  qed
+  have hq0_comp_q: "top1_in_same_path_component_on (top1_S2 - C)
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) q q0"
+    using he13(5) hq0 by (by100 blast)
+  \<comment> \<open>card {a1, a2', a3, a4'} = 4.\<close>
+  have hcard4: "card {a1, a2', a3, a4'} = 4"
+  proof -
+    have "a1 \<noteq> a2'" using ha2'_ne(1) by (by100 blast)
+    moreover have "a1 \<noteq> a3" using hC12(3) by (by100 blast)
+    moreover have "a1 \<noteq> a4'" using ha4'_ne(1) by (by100 blast)
+    moreover have "a2' \<noteq> a3" using ha2'_ne(2) by (by100 blast)
+    moreover have "a2' \<noteq> a4'" using ha2'_ne_a4' by (by100 blast)
+    moreover have "a3 \<noteq> a4'" using ha4'_ne(2) by (by100 blast)
+    ultimately show ?thesis by (by100 simp)
+  qed
+  \<comment> \<open>Prove all K4 intersection conditions.\<close>
+  have hC_eq: "C = e12 \<union> e23 \<union> e34 \<union> e41"
+    using hC12(1) hC1_split(1) hC2_split(1) by (by100 blast)
+  \<comment> \<open>a1 \<notin> e23, a1 \<notin> e34, a3 \<notin> e12, a3 \<notin> e41 (from split structure).\<close>
+  have ha1_notin_e23: "a1 \<notin> e23"
+  proof
+    assume "a1 \<in> e23"
+    hence "a1 \<in> e12 \<inter> e23" using hC1_split(5) by (by100 blast)
+    hence "a1 = a2'" using hC1_split(2) by (by100 blast)
+    thus False using ha2'_ne(1) by (by100 blast)
+  qed
+  have ha1_notin_e34: "a1 \<notin> e34"
+  proof
+    assume "a1 \<in> e34"
+    hence "a1 \<in> e34 \<inter> e41" using hC2_split(5) by (by100 blast)
+    hence "a1 = a4'" using hC2_split(2) by (by100 blast)
+    thus False using ha4'_ne(1) by (by100 blast)
+  qed
+  have ha3_notin_e12: "a3 \<notin> e12"
+  proof
+    assume "a3 \<in> e12"
+    hence "a3 \<in> e12 \<inter> e23" using hC1_split(6) by (by100 blast)
+    hence "a3 = a2'" using hC1_split(2) by (by100 blast)
+    thus False using ha2'_ne(2) by (by100 blast)
+  qed
+  have ha3_notin_e41: "a3 \<notin> e41"
+  proof
+    assume "a3 \<in> e41"
+    hence "a3 \<in> e34 \<inter> e41" using hC2_split(6) by (by100 blast)
+    hence "a3 = a4'" using hC2_split(2) by (by100 blast)
+    thus False using ha4'_ne(2) by (by100 blast)
+  qed
+  \<comment> \<open>Opposite cycle edges are disjoint.\<close>
+  have he12_e34: "e12 \<inter> e34 = {}"
+  proof -
+    have "e12 \<subseteq> C1" using hC1_split(1) by (by100 blast)
+    moreover have "e34 \<subseteq> C2" using hC2_split(1) by (by100 blast)
+    ultimately have "e12 \<inter> e34 \<subseteq> C1 \<inter> C2" by (by100 blast)
+    also have "\<dots> = {a1, a3}" using hC12(2) by (by100 blast)
+    finally have "e12 \<inter> e34 \<subseteq> {a1, a3}" .
+    moreover have "a1 \<notin> e12 \<inter> e34" using ha1_notin_e34 by (by100 blast)
+    moreover have "a3 \<notin> e12 \<inter> e34" using ha3_notin_e12 by (by100 blast)
+    ultimately show ?thesis by (by100 blast)
+  qed
+  have he23_e41: "e23 \<inter> e41 = {}"
+  proof -
+    have "e23 \<subseteq> C1" using hC1_split(1) by (by100 blast)
+    moreover have "e41 \<subseteq> C2" using hC2_split(1) by (by100 blast)
+    ultimately have "e23 \<inter> e41 \<subseteq> C1 \<inter> C2" by (by100 blast)
+    also have "\<dots> = {a1, a3}" using hC12(2) by (by100 blast)
+    finally have "e23 \<inter> e41 \<subseteq> {a1, a3}" .
+    moreover have "a1 \<notin> e23 \<inter> e41" using ha1_notin_e23 by (by100 blast)
+    moreover have "a3 \<notin> e23 \<inter> e41" using ha3_notin_e41 by (by100 blast)
+    ultimately show ?thesis by (by100 blast)
+  qed
+  \<comment> \<open>Adjacent cycle edges share exactly one vertex.\<close>
+  have he12_e23: "e12 \<inter> e23 = {a2'}" using hC1_split(2) by (by100 blast)
+  have he23_e34: "e23 \<inter> e34 = {a3}"
+  proof -
+    have "e23 \<subseteq> C1" using hC1_split(1) by (by100 blast)
+    have "e34 \<subseteq> C2" using hC2_split(1) by (by100 blast)
+    have "e23 \<inter> e34 \<subseteq> C1 \<inter> C2" using \<open>e23 \<subseteq> C1\<close> \<open>e34 \<subseteq> C2\<close> by (by100 blast)
+    also have "\<dots> = {a1, a3}" using hC12(2) by (by100 blast)
+    finally have hsub: "e23 \<inter> e34 \<subseteq> {a1, a3}" .
+    have "a3 \<in> e23 \<inter> e34" using hC1_split(6) hC2_split(6) by (by100 blast)
+    moreover have "a1 \<notin> e23" using ha1_notin_e23 by (by100 blast)
+    ultimately show ?thesis using hsub by (by100 blast)
+  qed
+  have he34_e41: "e34 \<inter> e41 = {a4'}" using hC2_split(2) by (by100 blast)
+  have he41_e12: "e41 \<inter> e12 = {a1}"
+  proof -
+    have "e12 \<subseteq> C1" using hC1_split(1) by (by100 blast)
+    have "e41 \<subseteq> C2" using hC2_split(1) by (by100 blast)
+    have "e41 \<inter> e12 \<subseteq> C1 \<inter> C2" using \<open>e41 \<subseteq> C2\<close> \<open>e12 \<subseteq> C1\<close> by (by100 blast)
+    also have "\<dots> = {a1, a3}" using hC12(2) by (by100 blast)
+    finally have hsub: "e41 \<inter> e12 \<subseteq> {a1, a3}" .
+    have "a1 \<in> e41 \<inter> e12" using hC2_split(5) hC1_split(5) by (by100 blast)
+    moreover have "a3 \<notin> e41" using ha3_notin_e41 by (by100 blast)
+    ultimately show ?thesis using hsub by (by100 blast)
+  qed
+  \<comment> \<open>Diagonal e13 intersection with cycle edges.\<close>
+  have he13_e12: "e13 \<inter> e12 = {a1}"
+  proof -
+    have "e12 \<subseteq> C" using hC1_split(1) hC12(1) by (by100 blast)
+    hence "e13 \<inter> e12 \<subseteq> e13 \<inter> C" by (by100 blast)
+    also have "\<dots> \<subseteq> {a1, a3}" using he13(4) by (by100 blast)
+    finally have hsub: "e13 \<inter> e12 \<subseteq> {a1, a3}" .
+    have "a1 \<in> e13" using ha1_e13 by (by100 blast)
+    hence "a1 \<in> e13 \<inter> e12" using hC1_split(5) by (by100 blast)
+    moreover have "a3 \<notin> e12" using ha3_notin_e12 by (by100 blast)
+    ultimately show ?thesis using hsub by (by100 blast)
+  qed
+  have he13_e23: "e13 \<inter> e23 = {a3}"
+  proof -
+    have "e23 \<subseteq> C" using hC1_split(1) hC12(1) by (by100 blast)
+    hence "e13 \<inter> e23 \<subseteq> e13 \<inter> C" by (by100 blast)
+    also have "\<dots> \<subseteq> {a1, a3}" using he13(4) by (by100 blast)
+    finally have hsub: "e13 \<inter> e23 \<subseteq> {a1, a3}" .
+    have "a3 \<in> e13" using ha3_e13 by (by100 blast)
+    hence "a3 \<in> e13 \<inter> e23" using hC1_split(6) by (by100 blast)
+    moreover have "a1 \<notin> e23" using ha1_notin_e23 by (by100 blast)
+    ultimately show ?thesis using hsub by (by100 blast)
+  qed
+  have he13_e34: "e13 \<inter> e34 = {a3}"
+  proof -
+    have "e34 \<subseteq> C" using hC2_split(1) hC12(1) by (by100 blast)
+    hence "e13 \<inter> e34 \<subseteq> e13 \<inter> C" by (by100 blast)
+    also have "\<dots> \<subseteq> {a1, a3}" using he13(4) by (by100 blast)
+    finally have hsub: "e13 \<inter> e34 \<subseteq> {a1, a3}" .
+    have "a3 \<in> e13 \<inter> e34" using ha3_e13 hC2_split(6) by (by100 blast)
+    moreover have "a1 \<notin> e34" using ha1_notin_e34 by (by100 blast)
+    ultimately show ?thesis using hsub by (by100 blast)
+  qed
+  have he13_e41: "e13 \<inter> e41 = {a1}"
+  proof -
+    have "e41 \<subseteq> C" using hC2_split(1) hC12(1) by (by100 blast)
+    hence "e13 \<inter> e41 \<subseteq> e13 \<inter> C" by (by100 blast)
+    also have "\<dots> \<subseteq> {a1, a3}" using he13(4) by (by100 blast)
+    finally have hsub: "e13 \<inter> e41 \<subseteq> {a1, a3}" .
+    have "a1 \<in> e13 \<inter> e41" using ha1_e13 hC2_split(5) by (by100 blast)
+    moreover have "a3 \<notin> e41" using ha3_notin_e41 by (by100 blast)
+    ultimately show ?thesis using hsub by (by100 blast)
+  qed
+  \<comment> \<open>Diagonal e24 intersection with cycle edges.\<close>
+  have he24_e12: "e24 \<inter> e12 = {a2'}"
+  proof -
+    have "e12 \<subseteq> C" using hC1_split(1) hC12(1) by (by100 blast)
+    hence "e24 \<inter> e12 \<subseteq> e24 \<inter> C" by (by100 blast)
+    also have "\<dots> \<subseteq> {a4', a2'}" using he24_C by (by100 blast)
+    finally have hsub: "e24 \<inter> e12 \<subseteq> {a4', a2'}" .
+    have "a2' \<in> e24 \<inter> e12" using hD13(4) hC1_split(7) unfolding e24_def by (by100 blast)
+    moreover have "a4' \<notin> e12"
+    proof
+      assume "a4' \<in> e12"
+      hence "a4' \<in> C1" using hC1_split(1) by (by100 blast)
+      thus False using ha4'_notC1 by (by100 blast)
+    qed
+    ultimately show ?thesis using hsub by (by100 blast)
+  qed
+  have he24_e23: "e24 \<inter> e23 = {a2'}"
+  proof -
+    have "e23 \<subseteq> C" using hC1_split(1) hC12(1) by (by100 blast)
+    hence "e24 \<inter> e23 \<subseteq> e24 \<inter> C" by (by100 blast)
+    also have "\<dots> \<subseteq> {a4', a2'}" using he24_C by (by100 blast)
+    finally have hsub: "e24 \<inter> e23 \<subseteq> {a4', a2'}" .
+    have "a2' \<in> e24 \<inter> e23" using hD13(4) hC1_split(8) unfolding e24_def by (by100 blast)
+    moreover have "a4' \<notin> e23"
+    proof
+      assume "a4' \<in> e23"
+      hence "a4' \<in> C1" using hC1_split(1) by (by100 blast)
+      thus False using ha4'_notC1 by (by100 blast)
+    qed
+    ultimately show ?thesis using hsub by (by100 blast)
+  qed
+  have he24_e34: "e24 \<inter> e34 = {a4'}"
+  proof -
+    have "e34 \<subseteq> C" using hC2_split(1) hC12(1) by (by100 blast)
+    hence "e24 \<inter> e34 \<subseteq> e24 \<inter> C" by (by100 blast)
+    also have "\<dots> \<subseteq> {a4', a2'}" using he24_C by (by100 blast)
+    finally have hsub: "e24 \<inter> e34 \<subseteq> {a4', a2'}" .
+    have "a4' \<in> e24 \<inter> e34" using hD13(3) hC2_split(8) unfolding e24_def by (by100 blast)
+    moreover have "a2' \<notin> e34"
+    proof
+      assume "a2' \<in> e34"
+      hence "a2' \<in> C2" using hC2_split(1) by (by100 blast)
+      thus False using ha2'_notC2 by (by100 blast)
+    qed
+    ultimately show ?thesis using hsub by (by100 blast)
+  qed
+  have he24_e41: "e24 \<inter> e41 = {a4'}"
+  proof -
+    have "e41 \<subseteq> C" using hC2_split(1) hC12(1) by (by100 blast)
+    hence "e24 \<inter> e41 \<subseteq> e24 \<inter> C" by (by100 blast)
+    also have "\<dots> \<subseteq> {a4', a2'}" using he24_C by (by100 blast)
+    finally have hsub: "e24 \<inter> e41 \<subseteq> {a4', a2'}" .
+    have "a4' \<in> e24 \<inter> e41" using hD13(3) hC2_split(7) unfolding e24_def by (by100 blast)
+    moreover have "a2' \<notin> e41"
+    proof
+      assume "a2' \<in> e41"
+      hence "a2' \<in> C2" using hC2_split(1) by (by100 blast)
+      thus False using ha2'_notC2 by (by100 blast)
+    qed
+    ultimately show ?thesis using hsub by (by100 blast)
+  qed
+  \<comment> \<open>Diagonal intersection.\<close>
+  have he13_e24: "e13 \<inter> e24 \<subseteq> {a1, a2', a3, a4'}"
+  proof -
+    have hcomp_disj: "(e13 - {a1, a3}) \<inter> (e24 - {a2', a4'}) = {}"
+    proof (rule ccontr)
+      assume "\<not> ?thesis"
+      then obtain x where "x \<in> e13 - {a1, a3}" "x \<in> e24 - {a2', a4'}" by (by100 blast)
+      have "x \<in> top1_S2 - C"
+        using \<open>x \<in> e13 - {a1, a3}\<close> he13(2,4) by (by100 blast)
+      have "x \<in> top1_S2 - C"
+        using \<open>x \<in> e24 - {a2', a4'}\<close> he24_C he24_sub by (by100 blast)
+      have "top1_in_same_path_component_on (top1_S2 - C)
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) q x"
+        using he13(5) \<open>x \<in> e13 - {a1, a3}\<close> by (by100 blast)
+      moreover have "top1_in_same_path_component_on (top1_S2 - C)
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) p x"
+        sorry \<comment> \<open>x \<in> D13 interior implies x in component of p.\<close>
+      ultimately have "top1_in_same_path_component_on (top1_S2 - C)
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) p q"
+        sorry \<comment> \<open>Transitivity + symmetry of path-components.\<close>
+      hence "\<exists>f. top1_is_path_on (top1_S2 - C)
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) p q f"
+        unfolding top1_in_same_path_component_on_def by (by100 blast)
+      thus False using assms(5) by (by100 blast)
+    qed
+    show ?thesis using hcomp_disj by (by100 blast)
+  qed
+  \<comment> \<open>Vertices subset.\<close>
+  have hverts_sub: "{a1, a2', a3, a4'} \<subseteq> top1_S2"
+  proof -
+    have "a1 \<in> top1_S2" using hC1_split(9,5) by (by100 blast)
+    moreover have "a2' \<in> top1_S2" using hC1_split(9,7) by (by100 blast)
+    moreover have "a3 \<in> top1_S2" using hC1_split(10,6) by (by100 blast)
+    moreover have "a4' \<in> top1_S2" using hC2_split(10,8) by (by100 blast)
+    ultimately show ?thesis by (by100 blast)
+  qed
+  \<comment> \<open>Assemble the existential K4 conclusion.\<close>
+  have hp0_e24: "p0 \<in> e24 - {a2', a4'}" using hp0 unfolding e24_def by (by100 blast)
+  have hq0_e13: "q0 \<in> e13 - {a1, a3}" using hq0 by (by100 blast)
+  \<comment> \<open>Adjust endpoint set orderings for the conclusion.\<close>
+  have he34_ep': "top1_arc_endpoints_on e34 (subspace_topology top1_S2 top1_S2_topology e34) = {a3, a4'}"
+  proof -
+    have "{a4', a3} = {a3, a4'}" by (by100 blast)
+    thus ?thesis using he34_ep by (by100 simp)
+  qed
+  have he41_ep': "top1_arc_endpoints_on e41 (subspace_topology top1_S2 top1_S2_topology e41) = {a4', a1}"
+    using he41_ep by (by100 blast)
+  show ?thesis
+    by (rule exI[of _ a1], rule exI[of _ a2'], rule exI[of _ a3], rule exI[of _ a4'],
+        rule exI[of _ e12], rule exI[of _ e23], rule exI[of _ e34], rule exI[of _ e41],
+        rule exI[of _ e13], rule exI[of _ e24], rule exI[of _ p0], rule exI[of _ q0])
+       (use hcard4 hverts_sub hC1_split(9,10) hC2_split(9,10) he13(2) he24_sub
+            hC1_split(3,4) hC2_split(3,4) he13(1) he24_arc
+            he12_ep he23_ep he34_ep' he41_ep' he13(3) he24_ep
+            he12_e34 he23_e41 he12_e23 he23_e34 he34_e41 he41_e12
+            he13_e12 he13_e23 he13_e34 he13_e41 he13_e24
+            he24_e12 he24_e23 he24_e34 he24_e41
+            hq0_e13 hp0_e24 hp0_comp_p hq0_comp_q hC_eq
+        in blast)
 qed
 
 theorem Theorem_65_2_fixed:
@@ -4421,7 +4845,7 @@ theorem Theorem_65_2_fixed:
 proof -
   \<comment> \<open>Construct K4 subgraph from the general SCC.\<close>
   from K4_from_SCC[OF assms(1-5)]
-  obtain a1 a2 a3 a4 e12 e23 e34 e41 e13 e24
+  obtain a1 a2 a3 a4 e12 e23 e34 e41 e13 e24 p0 q0
     where hK4: "card {a1, a2, a3, a4} = 4"
       "C = e12 \<union> e23 \<union> e34 \<union> e41"
       "{a1, a2, a3, a4} \<subseteq> top1_S2"
@@ -4447,10 +4871,25 @@ proof -
       "e13 \<inter> e24 \<subseteq> {a1,a2,a3,a4}"
       "e24 \<inter> e12 = {a2}" "e24 \<inter> e23 = {a2}"
       "e24 \<inter> e34 = {a4}" "e24 \<inter> e41 = {a4}"
-      "p \<in> e13 - {a1, a3}" "q \<in> e24 - {a2, a4}"
+      "q0 \<in> e13 - {a1, a3}" "p0 \<in> e24 - {a2, a4}"
+      "top1_in_same_path_component_on (top1_S2 - C)
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) p p0"
+      "top1_in_same_path_component_on (top1_S2 - C)
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) q q0"
     by blast
-  \<comment> \<open>Apply Lemma\_65\_1\_fixed with the K4 data.\<close>
-  show ?thesis
+  \<comment> \<open>Apply Lemma\_65\_1\_fixed with p=q0 on diagonal e13, q=p0 on diagonal e24.
+     This gives iso for inclusion C \<rightarrow> S2-{q0}-{p0}.\<close>
+  have hiso_p0q0: "top1_group_iso_on
+    (top1_fundamental_group_carrier C (subspace_topology top1_S2 top1_S2_topology C) c0)
+    (top1_fundamental_group_mul C (subspace_topology top1_S2 top1_S2_topology C) c0)
+    (top1_fundamental_group_carrier (top1_S2 - {q0} - {p0})
+       (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {q0} - {p0})) c0)
+    (top1_fundamental_group_mul (top1_S2 - {q0} - {p0})
+       (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {q0} - {p0})) c0)
+    (top1_fundamental_group_induced_on C
+       (subspace_topology top1_S2 top1_S2_topology C) c0
+       (top1_S2 - {q0} - {p0})
+       (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {q0} - {p0})) c0 id)"
     by (rule Lemma_65_1_fixed[OF assms(1)
         hK4(1) hK4(3) hK4(4) hK4(5) hK4(6) hK4(7) hK4(8) hK4(9)
         hK4(10) hK4(11) hK4(12) hK4(13) hK4(14) hK4(15)
@@ -4459,6 +4898,10 @@ proof -
         hK4(28) hK4(29) hK4(30) hK4(31) hK4(32)
         hK4(33) hK4(34) hK4(35) hK4(36)
         hK4(37) hK4(38) hK4(2) assms(6)])
+  \<comment> \<open>Step 4 (Munkres): Move punctures from (q0,p0) to (q,p) within their path-components.
+     Since p0 is in the same component as p, and q0 same as q, the inclusion
+     C \<rightarrow> S2-{p}-{q} also induces an isomorphism (by homotopy/translation argument).\<close>
+  show ?thesis sorry \<comment> \<open>Munkres Step 4: extend iso from specific (p0,q0) to arbitrary (p,q).\<close>
 qed
 
 
