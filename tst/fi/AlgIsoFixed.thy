@@ -4112,7 +4112,15 @@ proof -
        with connectedness (ray can't be split into two nonempty disjoint open parts).\<close>
     \<comment> \<open>The negative x-axis {(x,0)|x\<le>0} is connected.\<close>
     define ray where "ray = {p :: real \<times> real. fst p \<le> 0 \<and> snd p = 0}"
-    have hray_conn: "connected ray" sorry \<comment> \<open>Ray homeomorphic to (-\<infinity>,0], connected.\<close>
+    have hray_conn: "connected ray"
+    proof -
+      have "ray = (\<lambda>x. (x, 0::real)) ` {..0}"
+        unfolding ray_def by (by100 force)
+      moreover have "connected ({..0} :: real set)" by (rule connected_Iic)
+      moreover have "continuous_on {..0} (\<lambda>x::real. (x, 0::real))"
+        by (intro continuous_intros)
+      ultimately show ?thesis using connected_continuous_image by (by100 blast)
+    qed
     have hray_sub: "ray \<subseteq> U \<union> V"
     proof (intro subsetI)
       fix x assume "x \<in> ray"
@@ -4131,9 +4139,8 @@ proof -
       have "ray \<inter> U \<noteq> {}" "ray \<inter> V \<noteq> {}" using \<open>ray \<inter> U \<noteq> {}\<close> \<open>ray \<inter> V \<noteq> {}\<close> .
       have "ray \<subseteq> U \<union> V" using hray_sub .
       have "U \<inter> V = {}" using hUV_disj .
-      thus ?thesis unfolding connected_def using \<open>open U\<close> \<open>open V\<close>
-          \<open>ray \<subseteq> U \<union> V\<close> \<open>ray \<inter> U \<noteq> {}\<close> \<open>ray \<inter> V \<noteq> {}\<close> \<open>U \<inter> V = {}\<close>
-        sorry \<comment> \<open>Standard connected_def + disjoint open cover.\<close>
+      show ?thesis using \<open>open U\<close> \<open>open V\<close> \<open>ray \<subseteq> U \<union> V\<close> \<open>U \<inter> V = {}\<close>
+          \<open>ray \<inter> U \<noteq> {}\<close> \<open>ray \<inter> V \<noteq> {}\<close> sorry
     qed
     thus False using hray_conn by (by100 blast)
   qed
@@ -4162,14 +4169,23 @@ proof -
       by (by100 blast)
     hence "far \<in> V" using \<open>far \<notin> U\<close> hUV_union \<open>far \<notin> D\<close> by (by100 blast)
     define ray where "ray = {p :: real \<times> real. fst p \<ge> 0 \<and> snd p = 0}"
-    have hray_conn: "connected ray" sorry
+    have hray_conn: "connected ray"
+    proof -
+      have "ray = (\<lambda>x. (x, 0::real)) ` {0..}"
+        unfolding ray_def by (by100 force)
+      moreover have "connected ({0..} :: real set)" by (rule connected_Ici)
+      moreover have "continuous_on {0..} (\<lambda>x::real. (x, 0::real))"
+        by (intro continuous_intros)
+      ultimately show ?thesis using connected_continuous_image by (by100 blast)
+    qed
     have hray_sub: "ray \<subseteq> U \<union> V"
       using \<open>\<forall>d. d \<in> D \<longrightarrow> \<not>(fst d \<ge> 0 \<and> snd d = 0)\<close> hUV_union unfolding ray_def by (by100 blast)
     have "((0::real),(0::real)) \<in> ray" unfolding ray_def by (by100 simp)
     hence "ray \<inter> U \<noteq> {}" using h0_U by (by100 blast)
     have "far \<in> ray" unfolding ray_def far_def by (by100 simp)
     hence "ray \<inter> V \<noteq> {}" using \<open>far \<in> V\<close> by (by100 blast)
-    have "\<not> connected ray" sorry \<comment> \<open>Same connected\_def argument.\<close>
+    have "\<not> connected ray"
+      using hU_open hV_open hray_sub hUV_disj \<open>ray \<inter> U \<noteq> {}\<close> \<open>ray \<inter> V \<noteq> {}\<close> sorry
     thus False using hray_conn by (by100 blast)
   qed
   \<comment> \<open>D \<inter> negative x-axis is compact and nonempty \<Rightarrow> has maximum x-coordinate.\<close>
