@@ -6042,7 +6042,34 @@ proof -
   have hC_sub_S2p: "C \<subseteq> top1_S2 - {p}" using hC_sub_S2 hp_notC by (by100 blast)
   have hhC_scc: "top1_simple_closed_curve_on (UNIV :: (real \<times> real) set)
       (product_topology_on top1_open_sets top1_open_sets) (h ` C)"
-    sorry \<comment> \<open>Same proof as in old K4\_from\_SCC (composition of SCC parametrization with h).\<close>
+  proof -
+    from assms(2) obtain g where hg: "top1_continuous_map_on top1_S1 top1_S1_topology
+        top1_S2 top1_S2_topology g" "inj_on g top1_S1" "g ` top1_S1 = C"
+      unfolding top1_simple_closed_curve_on_def by (by100 blast)
+    have hh_cont: "top1_continuous_map_on (top1_S2 - {p})
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p}))
+        UNIV (product_topology_on top1_open_sets top1_open_sets) h"
+      using hh unfolding top1_homeomorphism_on_def by (by100 blast)
+    have hg_into: "\<forall>x \<in> top1_S1. g x \<in> top1_S2 - {p}"
+      using hg(1,3) hC_sub_S2p unfolding top1_continuous_map_on_def by (by100 blast)
+    have hg_S2p: "top1_continuous_map_on top1_S1 top1_S1_topology
+        (top1_S2 - {p}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p})) g"
+      by (rule continuous_map_restrict_codomain[OF hg(1) hg_into]) (use hp_S2 in \<open>by100 blast\<close>)
+    have hhg_cont: "top1_continuous_map_on top1_S1 top1_S1_topology
+        UNIV (product_topology_on top1_open_sets top1_open_sets) (h \<circ> g)"
+      by (rule top1_continuous_map_on_comp[OF hg_S2p hh_cont])
+    have hhg_inj: "inj_on (h \<circ> g) top1_S1"
+    proof (rule inj_onI)
+      fix x y assume hx: "x \<in> top1_S1" and hy: "y \<in> top1_S1" and heq: "(h \<circ> g) x = (h \<circ> g) y"
+      have hinj: "inj_on h (top1_S2 - {p})" using hh unfolding top1_homeomorphism_on_def bij_betw_def
+        by (by100 blast)
+      have "g x = g y" using inj_onD[OF hinj _ _ _] heq hg_into hx hy by (by100 simp)
+      thus "x = y" using inj_onD[OF hg(2) \<open>g x = g y\<close> hx hy] by (by100 blast)
+    qed
+    have "(h \<circ> g) ` top1_S1 = h ` C" using hg(3) by (by100 force)
+    thus ?thesis using hhg_cont hhg_inj
+      unfolding top1_simple_closed_curve_on_def by (by100 blast)
+  qed
   define TR2 where "TR2 = (product_topology_on top1_open_sets top1_open_sets :: (real \<times> real) set set)"
   from Theorem_63_4_JordanCurve[OF hhC_scc]
   obtain U_R2 V_R2 where hUV_full:
@@ -6054,40 +6081,36 @@ proof -
     unfolding TR2_def by (metis (no_types))
   note hUV = hUV_full[unfolded TR2_def]
   \<comment> \<open>Identify bounded component (contains h(q)) and unbounded.\<close>
-  have hp_ne_q: "p \<noteq> q" sorry \<comment> \<open>p, q in different components.\<close>
+  have hp_ne_q: "p \<noteq> q" sorry \<comment> \<open>p, q in different components of S2-C.\<close>
   have hq_S2p: "q \<in> top1_S2 - {p}" using hq_S2 hp_ne_q by (by100 blast)
+  have hinj: "inj_on h (top1_S2 - {p})" using hh unfolding top1_homeomorphism_on_def bij_betw_def
+    by (by100 blast)
   have hq_comp: "h q \<in> U_R2 \<or> h q \<in> V_R2"
   proof -
-    have hinj: "inj_on h (top1_S2 - {p})" using hh unfolding top1_homeomorphism_on_def bij_betw_def
-      by (by100 blast)
     have "h q \<notin> h ` C"
     proof
       assume "h q \<in> h ` C"
       then obtain c where hc: "c \<in> C" "h q = h c" using imageE by (by100 blast)
       have "c \<in> top1_S2 - {p}" using hc(1) hC_sub_S2p by (by100 blast)
       have "h c = h q" using hc(2) by (by100 simp)
-      have "c = q" by (rule inj_onD[OF hinj \<open>h c = h q\<close> \<open>c \<in> top1_S2 - {p}\<close> hq_S2p])
+      hence "c = q" by (rule inj_onD[OF hinj _ \<open>c \<in> top1_S2 - {p}\<close> hq_S2p])
       thus False using hc(1) hq_notC by (by100 blast)
     qed
     thus ?thesis using hUV(4) by (by100 blast)
   qed
-  \<comment> \<open>Step 3a: Translate so (0,0) \<in> bounded component.
-     Munkres assumes 0 \<in> bounded. We achieve this by translation.\<close>
-  \<comment> \<open>Identify which component is bounded (contains h(q)).\<close>
-  \<comment> \<open>h(q) is in a component. Call the bounded one U_bd.\<close>
-  define U_bd where "U_bd = (if h q \<in> U_R2 then U_R2 else V_R2)"
-  have hq_bd: "h q \<in> U_bd" unfolding U_bd_def using hq_comp sorry
-  \<comment> \<open>Translate: D' = h(C) - h(q), U' = U_bd - h(q). Then (0,0) \<in> U'.\<close>
-  \<comment> \<open>Apply Munkres\_xaxis\_segment to the translated curve.\<close>
-  \<comment> \<open>Step 3b-3c: x-axis extremal points and line segment.\<close>
-  \<comment> \<open>Step 3d: Decompose translated h(C) at x-axis points.\<close>
-  \<comment> \<open>Step 3e-3f: Paths from unbounded to 0, first-hit gives a2, a4.\<close>
-  \<comment> \<open>Step 3g: Arc splice for a2-a4 diagonal.\<close>
-  \<comment> \<open>Step 3h: Choose p0 from segment interior (bounded = component(q)),
-             q0 from splice interior (unbounded = component(p)).\<close>
+  \<comment> \<open>Let U_bd = bounded component containing h(q), V_ub = unbounded.\<close>
+  \<comment> \<open>Step 3a: Translate so (0,0) \<in> bounded component.\<close>
+  \<comment> \<open>Pick u0 \<in> bounded component, define translated curve D = h(C) - u0.\<close>
+  \<comment> \<open>Step 3b: x-axis extremal points on D.\<close>
+  \<comment> \<open>Step 3c: Line segment a1 a3 on x-axis = one diagonal.\<close>
+  \<comment> \<open>Step 3d: Decompose D at a1, a3 into D1, D2.\<close>
+  \<comment> \<open>Step 3e: Paths from unbounded to (0,0) avoiding D1 (resp D2).\<close>
+  \<comment> \<open>Step 3f: First-hit gives a2 on D2, a4 on D1.\<close>
+  \<comment> \<open>Step 3g: Arc splice gives diagonal from a2 to a4.\<close>
+  \<comment> \<open>Step 3h: Choose p0 from segment interior, q0 from splice interior.\<close>
   \<comment> \<open>Step 4: Un-translate, transfer K4 back to S2 via h\<inverse>.\<close>
-  \<comment> \<open>Step 5: Prove all 40 K4 conditions + path-component conditions.\<close>
-  show ?thesis sorry \<comment> \<open>Munkres Step 3 construction: to be filled in step by step.\<close>
+  \<comment> \<open>Step 5: Verify all K4 conditions.\<close>
+  show ?thesis sorry
 qed
 
 theorem Theorem_65_2_fixed:
