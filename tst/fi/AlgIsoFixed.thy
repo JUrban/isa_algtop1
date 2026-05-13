@@ -3744,31 +3744,9 @@ proof -
   qed
 qed
 
-\<comment> \<open>Key consequence: given D closed with p \<notin> D and Fp \<union> D non-separating,
-   there exists an ARC from p to q in S2-D that intersects Fp only at p.
-   Proof outline: S2-(Fp\<union>D) is path-connected (non-separation) and open.
-   p \<in> closure(S2-(Fp\<union>D)) (from arc\_endpoint\_in\_closure).
-   Pick x near p in S2-(Fp\<union>D). Connect x to q in S2-(Fp\<union>D) (path-connected).
-   The path x\<rightarrow>q avoids Fp\<union>D entirely. Need to extend from p to x avoiding Fp.
-   This is the boundary accessibility of arc endpoints in a 2-manifold:
-   near p (endpoint of Fp), the complement of Fp in a small ball is connected,
-   allowing a short arc from p to x avoiding Fp.\<close>
-lemma arc_endpoint_accessibility:
-  assumes "is_topology_on_strict top1_S2 top1_S2_topology"
-  and "top1_is_arc_on Fp (subspace_topology top1_S2 top1_S2_topology Fp)"
-  and "Fp \<subseteq> top1_S2"
-  and "top1_arc_endpoints_on Fp (subspace_topology top1_S2 top1_S2_topology Fp) = {p, d}"
-  and "p \<noteq> d"
-  and "closedin_on top1_S2 top1_S2_topology D"
-  and "p \<notin> D"
-  and "\<not> top1_separates_on top1_S2 top1_S2_topology (Fp \<union> D)"
-  and "closedin_on top1_S2 top1_S2_topology (Fp \<union> D)"
-  and "q \<in> top1_S2 - (Fp \<union> D)"
-  shows "\<exists>A. top1_is_arc_on A (subspace_topology top1_S2 top1_S2_topology A)
-      \<and> A \<subseteq> top1_S2 - D
-      \<and> top1_arc_endpoints_on A (subspace_topology top1_S2 top1_S2_topology A) = {p, q}
-      \<and> A \<inter> Fp = {p}"
-  sorry
+\<comment> \<open>arc\_endpoint\_accessibility removed: no longer needed.
+   The K4 diagonal construction now uses Munkres\_Step\_1\_arc\_splice directly,
+   bypassing boundary accessibility entirely.\<close>
 
 \<comment> \<open>First-hit sub-arc: given arc A from p to q with A \<inter> D \<noteq> {} and p \<notin> D, D closed,
    get sub-arc Fp from p to a point d \<in> D with Fp \<inter> D = {d}.\<close>
