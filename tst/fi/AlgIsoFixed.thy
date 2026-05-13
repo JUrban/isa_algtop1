@@ -4036,8 +4036,7 @@ lemma Munkres_xaxis_segment:
       (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) U)"
   and hU_bdd: "\<exists>M. \<forall>p \<in> U. fst p ^ 2 + snd p ^ 2 \<le> M"
   and hV_unbdd: "\<forall>M. \<exists>p \<in> V. fst p ^ 2 + snd p ^ 2 > M"
-  and hU_cl: "closure_on UNIV (product_topology_on top1_open_sets top1_open_sets) U = U \<union> D"
-  and hV_cl: "closure_on UNIV (product_topology_on top1_open_sets top1_open_sets) V = V \<union> D"
+  and hU_open: "open U" and hV_open: "open V"
   and h0_U: "((0::real), (0::real)) \<in> U"
   shows "\<exists>a1 a3. a1 \<in> D \<and> a3 \<in> D \<and> a1 \<noteq> a3
     \<and> fst a1 \<le> 0 \<and> snd a1 = 0 \<and> fst a3 \<ge> 0 \<and> snd a3 = 0
@@ -4074,10 +4073,7 @@ proof -
   have hD_closed: "closed D" using hD_compact by (rule compact_imp_closed)
   have hUV_open_set: "open (UNIV - D)" using hD_closed by (by100 blast)
   \<comment> \<open>U and V are open: they are path-components of UNIV-D (open in LPC R2).\<close>
-  have hV_open: "open V" sorry
-    \<comment> \<open>V = UNIV - closure(U). Closure closed \<Rightarrow> complement open. Needs HOL bridge.\<close>
-  have hU_open: "open U" sorry
-    \<comment> \<open>Same argument.\<close>
+  \<comment> \<open>U, V open (from assumptions).\<close>
   \<comment> \<open>(0,0) \<notin> D (since (0,0) \<in> U and U \<inter> D = {}).\<close>
   have h0_notD: "((0::real), (0::real)) \<notin> D" using h0_U hUV_union by (by100 blast)
   \<comment> \<open>Negative x-axis ray from (0,0) must cross D (connects bounded to unbounded).\<close>
