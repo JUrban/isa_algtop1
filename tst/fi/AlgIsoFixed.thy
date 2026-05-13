@@ -4047,6 +4047,44 @@ isomorphism. If the inclusion C \<rightarrow> S2-{p0}-{q0} induces an isomorphis
 same path-component of S2-C as p0, and q same as q0, then C \<rightarrow> S2-{p}-{q} also induces
 an isomorphism. Uses translation homotopy F(x,t) = x - alpha(t) in R2.\<close>
 
+text \<open>Helper: move one puncture within a path-component. This is the core of
+Munkres Step 4. In R2 (via stereographic from b): translation homotopy
+F(x,t) = x - alpha(t) connects inclusion j: D -> R2-{r0} with
+(translation) o (inclusion k: D -> R2-{r}). The homotopy moves the basepoint,
+handled by homotopy_induced_basepoint_change.\<close>
+
+lemma move_one_puncture:
+  assumes "is_topology_on_strict top1_S2 top1_S2_topology"
+  and "top1_simple_closed_curve_on top1_S2 top1_S2_topology C"
+  and "a \<in> top1_S2 - C" and "a' \<in> top1_S2 - C" and "b \<in> top1_S2 - C"
+  and "top1_in_same_path_component_on (top1_S2 - C)
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) a a'"
+  and "a \<noteq> b" and "a' \<noteq> b"
+  and "c0 \<in> C"
+  and "top1_group_iso_on
+    (top1_fundamental_group_carrier C (subspace_topology top1_S2 top1_S2_topology C) c0)
+    (top1_fundamental_group_mul C (subspace_topology top1_S2 top1_S2_topology C) c0)
+    (top1_fundamental_group_carrier (top1_S2 - {a} - {b})
+       (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {a} - {b})) c0)
+    (top1_fundamental_group_mul (top1_S2 - {a} - {b})
+       (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {a} - {b})) c0)
+    (top1_fundamental_group_induced_on C
+       (subspace_topology top1_S2 top1_S2_topology C) c0
+       (top1_S2 - {a} - {b})
+       (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {a} - {b})) c0 id)"
+  shows "top1_group_iso_on
+    (top1_fundamental_group_carrier C (subspace_topology top1_S2 top1_S2_topology C) c0)
+    (top1_fundamental_group_mul C (subspace_topology top1_S2 top1_S2_topology C) c0)
+    (top1_fundamental_group_carrier (top1_S2 - {a'} - {b})
+       (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {a'} - {b})) c0)
+    (top1_fundamental_group_mul (top1_S2 - {a'} - {b})
+       (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {a'} - {b})) c0)
+    (top1_fundamental_group_induced_on C
+       (subspace_topology top1_S2 top1_S2_topology C) c0
+       (top1_S2 - {a'} - {b})
+       (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {a'} - {b})) c0 id)"
+  sorry
+
 lemma Munkres_Step_4_move_punctures:
   assumes "is_topology_on_strict top1_S2 top1_S2_topology"
   and "top1_simple_closed_curve_on top1_S2 top1_S2_topology C"
@@ -4084,7 +4122,21 @@ proof -
      Step A: Move p0 \<rightarrow> p (keeping q0): show iso for C \<rightarrow> S2-{p}-{q0}.
      Step B: Move q0 \<rightarrow> q (keeping p): show iso for C \<rightarrow> S2-{p}-{q}.\<close>
 
-  \<comment> \<open>Step A: iso for C \<rightarrow> S2-{p0}-{q0} implies iso for C \<rightarrow> S2-{p}-{q0}.\<close>
+  \<comment> \<open>Step A: Move p0 \<rightarrow> p (keeping q0): apply move\_one\_puncture.\<close>
+  have hTopS2: "is_topology_on top1_S2 top1_S2_topology"
+    using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
+  have hT_SC: "is_topology_on (top1_S2 - C) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C))"
+    by (rule subspace_topology_is_topology_on[OF hTopS2]) (by100 blast)
+  have hp0_p: "top1_in_same_path_component_on (top1_S2 - C)
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) p0 p"
+    by (rule top1_in_same_path_component_on_sym[OF hT_SC assms(7)])
+  have hq0_q: "top1_in_same_path_component_on (top1_S2 - C)
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) q0 q"
+    by (rule top1_in_same_path_component_on_sym[OF hT_SC assms(8)])
+  \<comment> \<open>p0 \<noteq> q0, p \<noteq> q0, q \<noteq> p follow from p,q in different path-components.
+     The iso for (p0,q0) implies p0 \<noteq> q0 (otherwise the target space has trivial \<pi>1).\<close>
+  have hp0_ne_q0: "p0 \<noteq> q0" sorry
+  have hp_ne_q0: "p \<noteq> q0" sorry
   have hstepA: "top1_group_iso_on
     (top1_fundamental_group_carrier C (subspace_topology top1_S2 top1_S2_topology C) c0)
     (top1_fundamental_group_mul C (subspace_topology top1_S2 top1_S2_topology C) c0)
@@ -4096,38 +4148,42 @@ proof -
        (subspace_topology top1_S2 top1_S2_topology C) c0
        (top1_S2 - {p} - {q0})
        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p} - {q0})) c0 id)"
-  proof -
-    \<comment> \<open>Munkres Step 4 argument: work in R2 via stereographic from q0.
-       In R2: D = h(C), r0 = h(p0), r = h(p).
-       Translation homotopy F(x,t) = x - \<alpha>(t) + r0 connects
-       inclusion j: D \<rightarrow> R2-{r0} with (translation) \<circ> (inclusion k: D \<rightarrow> R2-{r}).
-       Homotopic maps + homeomorphism composition = both induce iso.\<close>
-    \<comment> \<open>Stereographic projection from q0.\<close>
-    have hq0_S2: "q0 \<in> top1_S2" using assms(4) by (by100 blast)
-    from S2_minus_point_homeo_R2[OF hq0_S2]
-    obtain h where hh: "top1_homeomorphism_on (top1_S2 - {q0})
-        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {q0}))
-        (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets) h"
-      by (by100 blast)
-    \<comment> \<open>Transfer the iso hypothesis to R2.\<close>
-    \<comment> \<open>S2-{p0}-{q0} ⊆ S2-{q0} → R2-{h(p0)}.
-       The inclusion C → S2-{p0}-{q0} induces iso, and
-       h transfers this to: inclusion h(C) → R2-{h(p0)} induces iso.\<close>
-    \<comment> \<open>Path from p0 to p in S2-C → path from h(p0) to h(p) in R2-h(C).\<close>
-    \<comment> \<open>Translation homotopy in R2.\<close>
-    \<comment> \<open>Transfer back to S2.\<close>
-    show ?thesis sorry
-      \<comment> \<open>The translation homotopy argument requires composing:
-         stereographic transfer + R2 translation homotopy +
-         homotopy_induced_basepoint_change + homeomorphism iso.\<close>
-  qed
+    by (rule move_one_puncture[OF assms(1,2,3,5,4) hp0_p hp0_ne_q0 hp_ne_q0 assms(9,10)])
 
-  \<comment> \<open>Step B: iso for C \<rightarrow> S2-{p}-{q0} implies iso for C \<rightarrow> S2-{p}-{q}.
-     Same argument as Step A but moving q0 to q.\<close>
-  have hstepB_rearrange: "top1_S2 - {p} - {q0} = top1_S2 - {q0} - {p}" by (by100 blast)
-  have hstepB_rearrange2: "top1_S2 - {p} - {q} = top1_S2 - {q} - {p}" by (by100 blast)
-  \<comment> \<open>Use Step A result with rearranged set differences for the q0 \<rightarrow> q move.\<close>
-  show ?thesis sorry \<comment> \<open>Move q0 to q: symmetric to Step A.\<close>
+  \<comment> \<open>Step B: Move q0 \<rightarrow> q (keeping p): apply move\_one\_puncture with swapped roles.\<close>
+  have hq0_ne_p: "q0 \<noteq> p" using hp_ne_q0 by (by100 blast)
+  have hq_ne_p: "q \<noteq> p" sorry \<comment> \<open>q and p in different components.\<close>
+  \<comment> \<open>Rearrange: S2-{p}-{q0} = S2-{q0}-{p} for move\_one\_puncture.\<close>
+  have hstepA_rearranged: "top1_group_iso_on
+    (top1_fundamental_group_carrier C (subspace_topology top1_S2 top1_S2_topology C) c0)
+    (top1_fundamental_group_mul C (subspace_topology top1_S2 top1_S2_topology C) c0)
+    (top1_fundamental_group_carrier (top1_S2 - {q0} - {p})
+       (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {q0} - {p})) c0)
+    (top1_fundamental_group_mul (top1_S2 - {q0} - {p})
+       (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {q0} - {p})) c0)
+    (top1_fundamental_group_induced_on C
+       (subspace_topology top1_S2 top1_S2_topology C) c0
+       (top1_S2 - {q0} - {p})
+       (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {q0} - {p})) c0 id)"
+  proof -
+    have hrr: "top1_S2 - {p} - {q0} = top1_S2 - {q0} - {p}" by (by100 blast)
+    show ?thesis using hstepA unfolding hrr .
+  qed
+  have hstepB: "top1_group_iso_on
+    (top1_fundamental_group_carrier C (subspace_topology top1_S2 top1_S2_topology C) c0)
+    (top1_fundamental_group_mul C (subspace_topology top1_S2 top1_S2_topology C) c0)
+    (top1_fundamental_group_carrier (top1_S2 - {q} - {p})
+       (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {q} - {p})) c0)
+    (top1_fundamental_group_mul (top1_S2 - {q} - {p})
+       (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {q} - {p})) c0)
+    (top1_fundamental_group_induced_on C
+       (subspace_topology top1_S2 top1_S2_topology C) c0
+       (top1_S2 - {q} - {p})
+       (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {q} - {p})) c0 id)"
+    by (rule move_one_puncture[OF assms(1,2,4,6,5) hq0_q hq0_ne_p hq_ne_p assms(9) hstepA_rearranged])
+  \<comment> \<open>Rearrange back: S2-{q}-{p} = S2-{p}-{q}.\<close>
+  have hset_rearr: "top1_S2 - {q} - {p} = top1_S2 - {p} - {q}" by (by100 blast)
+  show ?thesis using hstepB unfolding hset_rearr .
 qed
 
 lemma K4_from_SCC:
