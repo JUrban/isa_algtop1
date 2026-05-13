@@ -4679,11 +4679,41 @@ proof -
     by (rule scc_decomp_arc_endpoints(1)[OF assms(1) hS2_haus assms(2) hC12(4,5) hC1_sub hC2_sub hC12(1,2,3)])
   have ha2''_not_ep_C1: "a2'' \<notin> top1_arc_endpoints_on C1 (subspace_topology top1_S2 top1_S2_topology C1)"
     using hC1_ep ha2''_ne by (by100 simp)
-  \<comment> \<open>The full K4 assembly with cycle edge definitions, endpoint proofs,
-     and ~30 intersection conditions requires splitting C1 at both a2'' and b2'',
-     C2 at both a4' and b4, determining the cyclic ordering, and verifying
-     each condition. This is purely mechanical given the proved diagonal properties
-     (he13\_C, he24\_C) and the arc split infrastructure.\<close>
+  \<comment> \<open>Split C2 at a4'.\<close>
+  from arc_split_at_given_point[OF assms(1) hS2_haus hC2_sub hC12(5) ha4'_C2 ha4'_not_ep_C2 hC2_ep hC12(3)]
+  obtain C2L C2R where hC2_split:
+    "C2 = C2L \<union> C2R" "C2L \<inter> C2R = {a4'}"
+    "top1_is_arc_on C2L (subspace_topology top1_S2 top1_S2_topology C2L)"
+    "top1_is_arc_on C2R (subspace_topology top1_S2 top1_S2_topology C2R)"
+    "a1 \<in> C2L" "a3 \<in> C2R" "a4' \<in> C2L" "a4' \<in> C2R"
+    "C2L \<subseteq> top1_S2" "C2R \<subseteq> top1_S2"
+    by auto
+  \<comment> \<open>Split C1 at a2''.\<close>
+  from arc_split_at_given_point[OF assms(1) hS2_haus hC1_sub hC12(4) ha2''_C1 ha2''_not_ep_C1 hC1_ep hC12(3)]
+  obtain C1L C1R where hC1_split:
+    "C1 = C1L \<union> C1R" "C1L \<inter> C1R = {a2''}"
+    "top1_is_arc_on C1L (subspace_topology top1_S2 top1_S2_topology C1L)"
+    "top1_is_arc_on C1R (subspace_topology top1_S2 top1_S2_topology C1R)"
+    "a1 \<in> C1L" "a3 \<in> C1R" "a2'' \<in> C1L" "a2'' \<in> C1R"
+    "C1L \<subseteq> top1_S2" "C1R \<subseteq> top1_S2"
+    by auto
+  \<comment> \<open>Endpoints from the splits.\<close>
+  have hC2L_ep: "top1_arc_endpoints_on C2L (subspace_topology top1_S2 top1_S2_topology C2L) = {a1, a4'}"
+    by (rule arc_split_endpoints(1)[OF assms(1) hS2_haus hC2_sub hC12(5)
+        hC2_split(1,2,3,4,5,6,7,8,9,10) hC2_ep ha4'_not_ep_C2])
+  have hC2R_ep: "top1_arc_endpoints_on C2R (subspace_topology top1_S2 top1_S2_topology C2R) = {a4', a3}"
+    by (rule arc_split_endpoints(2)[OF assms(1) hS2_haus hC2_sub hC12(5)
+        hC2_split(1,2,3,4,5,6,7,8,9,10) hC2_ep ha4'_not_ep_C2])
+  have hC1L_ep: "top1_arc_endpoints_on C1L (subspace_topology top1_S2 top1_S2_topology C1L) = {a1, a2''}"
+    by (rule arc_split_endpoints(1)[OF assms(1) hS2_haus hC1_sub hC12(4)
+        hC1_split(1,2,3,4,5,6,7,8,9,10) hC1_ep ha2''_not_ep_C1])
+  have hC1R_ep: "top1_arc_endpoints_on C1R (subspace_topology top1_S2 top1_S2_topology C1R) = {a2'', a3}"
+    by (rule arc_split_endpoints(2)[OF assms(1) hS2_haus hC1_sub hC12(4)
+        hC1_split(1,2,3,4,5,6,7,8,9,10) hC1_ep ha2''_not_ep_C1])
+  \<comment> \<open>Now need to further split at b4 (on C2) and b2'' (on C1).
+     b4 is in C2L or C2R. b2'' is in C1L or C1R.
+     The exact placement determines the cycle edge assignment.
+     Further splits + cycle edge definition + ~30 K4 conditions remain.\<close>
   show ?thesis sorry
 qed
 
