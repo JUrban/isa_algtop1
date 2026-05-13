@@ -4654,7 +4654,74 @@ proof -
   obtain A1_s A2_s where hAs: "top1_S1 = A1_s \<union> A2_s" "A1_s \<inter> A2_s = {pa, pb}"
       "top1_is_arc_on A1_s (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) A1_s)"
       "top1_is_arc_on A2_s (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) A2_s)"
-    sorry \<comment> \<open>S1 decomposition at {pa, pb}: uses arc\_split + arcs\_concatenation.\<close>
+  proof -
+    let ?TR2 = "product_topology_on (top1_open_sets :: real set set) (top1_open_sets :: real set set)"
+    \<comment> \<open>Strategy: WLOG pa \<in> B1, split arcs at pa and pb, recombine.\<close>
+    \<comment> \<open>By symmetry, can assume pa \<in> B1 (swap B1/B2 if needed).\<close>
+    \<comment> \<open>Case 1: pa \<in> B1 - {e1,e2}, pb \<in> B2 - {e1,e2} (main case).\<close>
+    \<comment> \<open>Case 2: {pa,pb} = {e1,e2} (trivial).\<close>
+    \<comment> \<open>Case 3+: pa or pb is an endpoint, or both in same arc.\<close>
+    \<comment> \<open>For now, handle all via covering map argument.\<close>
+    \<comment> \<open>Use covering map: pa = R\_to\_S1(t1), pb = R\_to\_S1(t2), WLOG t1 < t2 in [0,1).
+       Then A1 = R\_to\_S1 ` {t1..t2}, A2 = R\_to\_S1 ` {t2..t1+1}.\<close>
+    have hR_surj: "top1_R_to_S1 ` UNIV = top1_S1"
+    proof (rule set_eqI, rule iffI)
+      fix p assume "p \<in> top1_R_to_S1 ` UNIV"
+      then obtain x where "p = top1_R_to_S1 x" by (by100 blast)
+      thus "p \<in> top1_S1" unfolding top1_R_to_S1_def top1_S1_def
+        using sin_squared_eq by (by100 auto)
+    next
+      fix p assume "p \<in> top1_S1"
+      hence "fst p ^ 2 + snd p ^ 2 = 1" unfolding top1_S1_def by (by100 simp)
+      then obtain t where "0 \<le> t" "t < 2 * pi" "fst p = cos t" "snd p = sin t"
+        using sincos_total_2pi[of "fst p" "snd p"] by (by100 auto)
+      hence "p = (cos t, sin t)" by (cases p) (by100 simp)
+      hence "p = top1_R_to_S1 (t / (2 * pi))" unfolding top1_R_to_S1_def by (by100 simp)
+      thus "p \<in> top1_R_to_S1 ` UNIV" by (by100 blast)
+    qed
+    have "\<exists>t1. top1_R_to_S1 t1 = pa"
+    proof -
+      have "pa \<in> top1_R_to_S1 ` UNIV" using hR_surj hpa(1) by (by100 blast)
+      thus ?thesis by (by100 blast)
+    qed
+    then obtain t1 where ht1: "top1_R_to_S1 t1 = pa" by (by100 blast)
+    have "\<exists>t2. top1_R_to_S1 t2 = pb"
+    proof -
+      have "pb \<in> top1_R_to_S1 ` UNIV" using hR_surj hpb(1) by (by100 blast)
+      thus ?thesis by (by100 blast)
+    qed
+    then obtain t2 where ht2: "top1_R_to_S1 t2 = pb" by (by100 blast)
+    \<comment> \<open>R\_to\_S1 is injective on any interval of length < 1.\<close>
+    have hR_inj_small: "\<And>s t. s \<noteq> t \<Longrightarrow> \<bar>s - t\<bar> < 1 \<Longrightarrow> top1_R_to_S1 s \<noteq> top1_R_to_S1 t"
+    proof -
+      fix s t :: real assume "s \<noteq> t" "\<bar>s - t\<bar> < 1"
+      show "top1_R_to_S1 s \<noteq> top1_R_to_S1 t"
+      proof
+        assume heq: "top1_R_to_S1 s = top1_R_to_S1 t"
+        hence "cos (2 * pi * s) = cos (2 * pi * t)" "sin (2 * pi * s) = sin (2 * pi * t)"
+          unfolding top1_R_to_S1_def by (by100 simp)+
+        from cos_sin_eq_imp[OF this]
+        obtain k :: int where hk: "2 * pi * s - 2 * pi * t = real_of_int k * 2 * pi" by (by100 blast)
+        have "s - t = real_of_int k"
+        proof -
+          from hk have "2 * pi * s - 2 * pi * t = real_of_int k * 2 * pi" .
+          hence "(s - t) * (2 * pi) = real_of_int k * (2 * pi)"
+            by (simp add: algebra_simps)
+          thus "s - t = real_of_int k" using pi_gt_zero by (by100 force)
+        qed
+        hence "\<bar>real_of_int k\<bar> < 1" using \<open>\<bar>s - t\<bar> < 1\<close> by (by100 simp)
+        hence "k = 0" by (by100 linarith)
+        hence "s = t" using \<open>s - t = real_of_int k\<close> by (by100 simp)
+        thus False using \<open>s \<noteq> t\<close> by (by100 blast)
+      qed
+    qed
+    \<comment> \<open>Normalize: WLOG 0 \<le> t1 < 1. Use integer shift to move into [0,1).\<close>
+    \<comment> \<open>For now, obtain specific lifts in [0,1) and continue.\<close>
+    \<comment> \<open>The key lemma: \<exists>s1 s2. 0 \<le> s1 \<and> s1 < s2 \<and> s2 < s1 + 1
+       \<and> R\_to\_S1(s1) = pa \<and> R\_to\_S1(s2) = pb.\<close>
+    \<comment> \<open>Then A1 = R\_to\_S1 ` {s1..s2}, A2 = R\_to\_S1 ` {s2..s1+1}.\<close>
+    show ?thesis sorry
+  qed
   \<comment> \<open>Transfer to C via f. Since f: S1 \<rightarrow> C is a homeomorphism (compact-to-Hausdorff bijection),
      f(A1\_s) and f(A2\_s) are arcs, and C = f(A1\_s) \<union> f(A2\_s), f(A1\_s) \<inter> f(A2\_s) = {a, b}.\<close>
   \<comment> \<open>f is homeomorphism S1 \<rightarrow> C (subspace of X).\<close>
