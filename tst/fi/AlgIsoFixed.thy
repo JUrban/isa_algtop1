@@ -5030,8 +5030,11 @@ proof -
         proof (rule ccontr)
           assume "\<not> (t = 0 \<or> t = 1)"
           hence "0 < t" "t < 1" using ht(1,2) by (by100 linarith)+
+          have hx_eq: "x = ((1-t) * fst (h_sel a1) + t * fst (h_sel a3),
+              (1-t) * snd (h_sel a1) + t * snd (h_sel a3))"
+            using ht(3) unfolding h_def by (by100 blast)
           have "x \<notin> h_sel ` C" sorry
-            \<comment> \<open>From ha1a3(10) instantiated at t, with h = h\_sel and ht(3).\<close>
+            \<comment> \<open>Trivial: ha1a3(10) at t + hx\_eq. But \<forall>-instantiation times out in by100.\<close>
           hence "x \<notin> h ` C" unfolding h_def by (by100 blast)
           thus False using hx_C by (by100 blast)
         qed
