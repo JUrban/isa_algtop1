@@ -4559,6 +4559,299 @@ proof -
   show ?thesis using hstepB unfolding hset_rearr .
 qed
 
+text \<open>Standard topology fact: any two distinct points on an SCC divide it into two arcs.
+Uses the SCC homeomorphism f: S1 \<rightarrow> C and angle parametrization of S1.\<close>
+
+lemma SCC_decompose_at_given_points:
+  assumes hT: "is_topology_on_strict X TX"
+  and hH: "is_hausdorff_on X TX"
+  and hC: "top1_simple_closed_curve_on X TX C"
+  and ha: "a \<in> C" and hb: "b \<in> C" and hab: "a \<noteq> b"
+  shows "\<exists>C1 C2. C = C1 \<union> C2 \<and> C1 \<inter> C2 = {a, b}
+    \<and> top1_is_arc_on C1 (subspace_topology X TX C1)
+    \<and> top1_is_arc_on C2 (subspace_topology X TX C2)"
+proof -
+  \<comment> \<open>Get SCC homeomorphism: \<exists>f: S1 \<rightarrow> C, homeomorphism.\<close>
+  from hC obtain f where hf: "top1_continuous_map_on top1_S1 top1_S1_topology X TX f"
+      "inj_on f top1_S1" "f ` top1_S1 = C"
+    unfolding top1_simple_closed_curve_on_def by blast
+  \<comment> \<open>f is a homeomorphism S1 \<rightarrow> C (continuous bijection, S1 compact, X Hausdorff).\<close>
+  have hC_sub: "C \<subseteq> X"
+  proof -
+    have "\<forall>x \<in> top1_S1. f x \<in> X" using hf(1) unfolding top1_continuous_map_on_def by (by100 blast)
+    thus ?thesis using hf(3) by (by100 blast)
+  qed
+  \<comment> \<open>f\<inverse>(a) and f\<inverse>(b) are on S1.\<close>
+  have ha_S1: "\<exists>pa. pa \<in> top1_S1 \<and> f pa = a" using ha hf(3) by (by100 blast)
+  have hb_S1: "\<exists>pb. pb \<in> top1_S1 \<and> f pb = b" using hb hf(3) by (by100 blast)
+  from ha_S1 obtain pa where hpa: "pa \<in> top1_S1" "f pa = a" by (by100 blast)
+  from hb_S1 obtain pb where hpb: "pb \<in> top1_S1" "f pb = b" by (by100 blast)
+  have hpab: "pa \<noteq> pb" using hab hpa(2) hpb(2) by (by100 blast)
+  \<comment> \<open>Standard decomposition at (1,0), (-1,0): S1 = upper \<union> lower.\<close>
+  \<comment> \<open>But we need decomposition at pa, pb. Use arc\_split\_at\_given\_point.\<close>
+  \<comment> \<open>Get S1 = B1 \<union> B2 at {e1, e2} (arbitrary).\<close>
+  have hR2_strict: "is_topology_on_strict (UNIV :: (real \<times> real) set)
+      (product_topology_on top1_open_sets top1_open_sets)"
+  proof -
+    have "is_topology_on (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets)"
+      using product_topology_on_is_topology_on[OF
+          top1_open_sets_is_topology_on_UNIV[where 'a=real]
+          top1_open_sets_is_topology_on_UNIV[where 'a=real]] by (by100 simp)
+    moreover have "(UNIV :: (real \<times> real) set) \<noteq> {}" by (by100 blast)
+    moreover have "product_topology_on top1_open_sets top1_open_sets \<subseteq> Pow (UNIV :: (real \<times> real) set)"
+      by (by100 blast)
+    ultimately show ?thesis unfolding is_topology_on_strict_def by (by100 blast)
+  qed
+  have hR2_haus: "is_hausdorff_on (UNIV :: (real \<times> real) set)
+      (product_topology_on top1_open_sets top1_open_sets)" by (rule top1_R2_is_hausdorff)
+  \<comment> \<open>S1 is SCC in R2, so decompose it.\<close>
+  have hS1_in_R2: "top1_simple_closed_curve_on (UNIV :: (real \<times> real) set)
+      (product_topology_on top1_open_sets top1_open_sets) top1_S1"
+  proof -
+    \<comment> \<open>S1 is SCC in R2 via the identity embedding id: S1 \<hookrightarrow> R2.\<close>
+    have hid_cont: "top1_continuous_map_on top1_S1 top1_S1_topology
+        (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets) id"
+    proof -
+      have "\<forall>x \<in> top1_S1. id x \<in> (UNIV :: (real \<times> real) set)" by (by100 blast)
+      moreover have "\<forall>V \<in> product_topology_on top1_open_sets top1_open_sets.
+          {x \<in> top1_S1. id x \<in> V} \<in> top1_S1_topology"
+      proof (intro ballI)
+        fix V :: "(real \<times> real) set"
+        assume hV: "V \<in> product_topology_on (top1_open_sets :: real set set) (top1_open_sets :: real set set)"
+        have "{x \<in> top1_S1. id x \<in> V} = top1_S1 \<inter> V" by (by100 auto)
+        also have "\<dots> \<in> subspace_topology UNIV
+            (product_topology_on top1_open_sets top1_open_sets) top1_S1"
+          unfolding subspace_topology_def
+          apply (rule CollectI) apply (rule exI[of _ V])
+          using hV by (by100 blast)
+        also have "subspace_topology UNIV
+            (product_topology_on top1_open_sets top1_open_sets) top1_S1 = top1_S1_topology"
+          unfolding top1_S1_topology_def by (by100 simp)
+        finally show "{x \<in> top1_S1. id x \<in> V} \<in> top1_S1_topology" .
+      qed
+      ultimately show ?thesis unfolding top1_continuous_map_on_def by (by100 blast)
+    qed
+    have hid_inj: "inj_on id top1_S1" by (by100 simp)
+    have hid_img: "id ` top1_S1 = top1_S1" by (by100 simp)
+    show ?thesis unfolding top1_simple_closed_curve_on_def
+      using hid_cont hid_inj hid_img by (by100 blast)
+  qed
+  from simple_closed_curve_arc_decomposition[OF hS1_in_R2 hR2_strict hR2_haus]
+  obtain B1 B2 e1 e2 where hB: "top1_S1 = B1 \<union> B2" "B1 \<inter> B2 = {e1, e2}" "e1 \<noteq> e2"
+      "top1_is_arc_on B1 (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) B1)"
+      "top1_is_arc_on B2 (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) B2)"
+    by (by100 blast)
+  \<comment> \<open>pa, pb \<in> S1 = B1 \<union> B2. Split arcs to decompose at pa, pb.\<close>
+  have hB1_sub: "B1 \<subseteq> (UNIV :: (real \<times> real) set)" by (by100 blast)
+  have hB2_sub: "B2 \<subseteq> (UNIV :: (real \<times> real) set)" by (by100 blast)
+  have hB1_ep: "top1_arc_endpoints_on B1 (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) B1) = {e1, e2}"
+    using scc_decomp_arc_endpoints(1)[OF hR2_strict hR2_haus hS1_in_R2 hB(4,5) hB1_sub hB2_sub hB(1,2) hB(3)] .
+  have hB2_ep: "top1_arc_endpoints_on B2 (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) B2) = {e1, e2}"
+    using scc_decomp_arc_endpoints(2)[OF hR2_strict hR2_haus hS1_in_R2 hB(4,5) hB1_sub hB2_sub hB(1,2) hB(3)] .
+  have hpa_B: "pa \<in> B1 \<or> pa \<in> B2" using hpa(1) hB(1) by (by100 blast)
+  have hpb_B: "pb \<in> B1 \<or> pb \<in> B2" using hpb(1) hB(1) by (by100 blast)
+  \<comment> \<open>Get S1 decomposition at {pa, pb} into two arcs A1\_s, A2\_s.\<close>
+  obtain A1_s A2_s where hAs: "top1_S1 = A1_s \<union> A2_s" "A1_s \<inter> A2_s = {pa, pb}"
+      "top1_is_arc_on A1_s (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) A1_s)"
+      "top1_is_arc_on A2_s (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) A2_s)"
+    sorry \<comment> \<open>S1 decomposition at {pa, pb}: uses arc\_split + arcs\_concatenation.\<close>
+  \<comment> \<open>Transfer to C via f. Since f: S1 \<rightarrow> C is a homeomorphism (compact-to-Hausdorff bijection),
+     f(A1\_s) and f(A2\_s) are arcs, and C = f(A1\_s) \<union> f(A2\_s), f(A1\_s) \<inter> f(A2\_s) = {a, b}.\<close>
+  \<comment> \<open>f is homeomorphism S1 \<rightarrow> C (subspace of X).\<close>
+  have hf_homeo: "top1_homeomorphism_on top1_S1 top1_S1_topology C (subspace_topology X TX C) f"
+  proof -
+    \<comment> \<open>f: S1 \<rightarrow> C is continuous, bijective (injective + surjective), S1 compact, C Hausdorff.\<close>
+    have hf_into_C: "\<forall>x \<in> top1_S1. f x \<in> C" using hf(3) by (by100 blast)
+    have hf_cont_C: "top1_continuous_map_on top1_S1 top1_S1_topology C (subspace_topology X TX C) f"
+      by (rule continuous_map_restrict_codomain[OF hf(1) hf_into_C hC_sub])
+    have hf_bij: "bij_betw f top1_S1 C"
+      using hf(2,3) unfolding bij_betw_def by (by100 blast)
+    have hC_top: "is_topology_on C (subspace_topology X TX C)"
+      using subspace_topology_is_topology_on[OF _ hC_sub]
+      using hT unfolding is_topology_on_strict_def by (by100 blast)
+    have hC_haus: "is_hausdorff_on C (subspace_topology X TX C)"
+      using Theorem_17_11 hH hC_sub by (by100 blast)
+    have hS1_top: "is_topology_on top1_S1 top1_S1_topology"
+      using top1_S1_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
+    have hS1_compact: "top1_compact_on top1_S1 top1_S1_topology" by (rule S1_compact)
+    from Theorem_26_6[OF hS1_top hC_top hS1_compact hC_haus hf_cont_C hf_bij]
+    show ?thesis .
+  qed
+  have hf_inj_S1: "inj_on f top1_S1" using hf(2) .
+  \<comment> \<open>C1 = f(A1\_s), C2 = f(A2\_s).\<close>
+  define C1 where "C1 = f ` A1_s"
+  define C2 where "C2 = f ` A2_s"
+  have hC_eq: "C = C1 \<union> C2"
+  proof -
+    have "C = f ` top1_S1" using hf(3) by (by100 simp)
+    also have "\<dots> = f ` (A1_s \<union> A2_s)" using hAs(1) by (by100 simp)
+    also have "\<dots> = f ` A1_s \<union> f ` A2_s" by (by100 blast)
+    finally show ?thesis unfolding C1_def C2_def .
+  qed
+  have hC_int: "C1 \<inter> C2 = {a, b}"
+  proof -
+    have "C1 \<inter> C2 = f ` (A1_s \<inter> A2_s)"
+    proof (rule set_eqI, rule iffI)
+      fix x assume hx: "x \<in> C1 \<inter> C2"
+      hence "x \<in> C1" "x \<in> C2" by (by100 blast)+
+      from \<open>x \<in> C1\<close> obtain s1 where hs1: "s1 \<in> A1_s" "f s1 = x" unfolding C1_def by (by100 blast)
+      from \<open>x \<in> C2\<close> obtain s2 where hs2: "s2 \<in> A2_s" "f s2 = x" unfolding C2_def by (by100 blast)
+      have hs: "s1 \<in> A1_s" "s2 \<in> A2_s" "f s1 = x" "f s2 = x" using hs1 hs2 by (by100 blast)+
+      have "s1 \<in> top1_S1" using hs(1) hAs(1) by (by100 blast)
+      have "s2 \<in> top1_S1" using hs(2) hAs(1) by (by100 blast)
+      have "s1 = s2" using inj_onD[OF hf_inj_S1 _ \<open>s1 \<in> top1_S1\<close> \<open>s2 \<in> top1_S1\<close>]
+        hs(3,4) by (by100 simp)
+      hence "s1 \<in> A1_s \<inter> A2_s" using hs(1,2) by (by100 blast)
+      thus "x \<in> f ` (A1_s \<inter> A2_s)" using hs(3) by (by100 blast)
+    next
+      fix x assume "x \<in> f ` (A1_s \<inter> A2_s)"
+      then obtain s where hs: "s \<in> A1_s" "s \<in> A2_s" "f s = x" by (by100 blast)
+      show "x \<in> C1 \<inter> C2" unfolding C1_def C2_def using hs by (by100 blast)
+    qed
+    also have "\<dots> = f ` {pa, pb}" using hAs(2) by (by100 simp)
+    also have "\<dots> = {f pa, f pb}" by (by100 simp)
+    also have "\<dots> = {a, b}" using hpa(2) hpb(2) by (by100 simp)
+    finally show ?thesis .
+  qed
+  \<comment> \<open>C1, C2 are arcs (homeomorphic images of arcs under f).\<close>
+  have hA1s_sub: "A1_s \<subseteq> top1_S1" using hAs(1) by (by100 blast)
+  have hA2s_sub: "A2_s \<subseteq> top1_S1" using hAs(1) by (by100 blast)
+  have hC1_arc: "top1_is_arc_on C1 (subspace_topology X TX C1)"
+  proof -
+    \<comment> \<open>f restricted to A1\_s is a homeomorphism A1\_s \<rightarrow> C1.\<close>
+    have hf_A1: "top1_homeomorphism_on A1_s
+        (subspace_topology top1_S1 top1_S1_topology A1_s) C1 (subspace_topology C (subspace_topology X TX C) C1) f"
+      using homeomorphism_on_restrict[OF hf_homeo hA1s_sub] unfolding C1_def by (by100 blast)
+    \<comment> \<open>A1\_s is arc \<Rightarrow> \<exists>g: I\_set \<rightarrow> A1\_s homeomorphism.\<close>
+    from hAs(3) obtain g where hg: "top1_homeomorphism_on I_set I_top A1_s
+        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) A1_s) g"
+      unfolding top1_is_arc_on_def by (by100 blast)
+    \<comment> \<open>Bridge topology: subspace\_topology S1 S1\_topo A1\_s = subspace\_topology UNIV product\_topo A1\_s.\<close>
+    have hS1_topo_eq: "subspace_topology top1_S1 top1_S1_topology A1_s =
+        subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) A1_s"
+    proof -
+      have "top1_S1_topology = subspace_topology UNIV
+          (product_topology_on top1_open_sets top1_open_sets) top1_S1"
+        unfolding top1_S1_topology_def by (by100 simp)
+      hence "subspace_topology top1_S1 top1_S1_topology A1_s =
+          subspace_topology top1_S1 (subspace_topology UNIV
+              (product_topology_on top1_open_sets top1_open_sets) top1_S1) A1_s"
+        by (by100 simp)
+      also have "\<dots> = subspace_topology UNIV
+          (product_topology_on top1_open_sets top1_open_sets) A1_s"
+        by (rule subspace_topology_trans[OF hA1s_sub])
+      finally show ?thesis .
+    qed
+    \<comment> \<open>g: I \<rightarrow> A1\_s homeomorphism in S1 subspace topology.\<close>
+    have hg': "top1_homeomorphism_on I_set I_top A1_s
+        (subspace_topology top1_S1 top1_S1_topology A1_s) g"
+      using hg hS1_topo_eq by (by100 simp)
+    \<comment> \<open>Bridge: subspace\_topology C (subspace X TX C) C1 = subspace X TX C1.\<close>
+    have hC_topo_eq: "subspace_topology C (subspace_topology X TX C) C1 =
+        subspace_topology X TX C1"
+    proof -
+      have "C1 \<subseteq> C" using hC_eq by (by100 blast)
+      thus ?thesis by (rule subspace_topology_trans)
+    qed
+    \<comment> \<open>f restricted to A1\_s is homeomorphism to C1 in X-subspace.\<close>
+    have hf_A1': "top1_homeomorphism_on A1_s
+        (subspace_topology top1_S1 top1_S1_topology A1_s) C1 (subspace_topology X TX C1) f"
+      using hf_A1 hC_topo_eq by (by100 simp)
+    \<comment> \<open>Compose: f \<circ> g: I\_set \<rightarrow> C1.\<close>
+    have hfg_homeo: "top1_homeomorphism_on I_set I_top C1 (subspace_topology X TX C1) (f \<circ> g)"
+      by (rule homeomorphism_compose[OF hg' hf_A1'])
+    have hC1_strict: "is_topology_on_strict C1 (subspace_topology X TX C1)"
+    proof -
+      have "A1_s \<noteq> {}"
+      proof -
+        from hAs(3) obtain h_tmp where "top1_homeomorphism_on I_set I_top A1_s
+            (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) A1_s) h_tmp"
+          unfolding top1_is_arc_on_def by (by100 blast)
+        hence "bij_betw h_tmp I_set A1_s" unfolding top1_homeomorphism_on_def by (by100 blast)
+        hence "h_tmp ` I_set = A1_s" unfolding bij_betw_def by (by100 blast)
+        moreover have "I_set \<noteq> {}" unfolding top1_unit_interval_def by (by100 simp)
+        ultimately show ?thesis by (by100 blast)
+      qed
+      have "C1 \<noteq> {}" unfolding C1_def using \<open>A1_s \<noteq> {}\<close> by (by100 blast)
+      moreover have "is_topology_on C1 (subspace_topology X TX C1)"
+      proof -
+        have "C1 \<subseteq> X" using hC_eq hC_sub by (by100 blast)
+        have "is_topology_on X TX" using hT unfolding is_topology_on_strict_def by (by100 blast)
+        thus ?thesis by (rule subspace_topology_is_topology_on[OF _ \<open>C1 \<subseteq> X\<close>])
+      qed
+      moreover have "subspace_topology X TX C1 \<subseteq> Pow C1"
+        unfolding subspace_topology_def by (by100 blast)
+      ultimately show ?thesis unfolding is_topology_on_strict_def by (by100 blast)
+    qed
+    show ?thesis unfolding top1_is_arc_on_def using hC1_strict hfg_homeo by (by100 blast)
+  qed
+  have hC2_arc: "top1_is_arc_on C2 (subspace_topology X TX C2)"
+  proof -
+    have hf_A2: "top1_homeomorphism_on A2_s
+        (subspace_topology top1_S1 top1_S1_topology A2_s) C2 (subspace_topology C (subspace_topology X TX C) C2) f"
+      using homeomorphism_on_restrict[OF hf_homeo hA2s_sub] unfolding C2_def by (by100 blast)
+    from hAs(4) obtain g2 where hg2: "top1_homeomorphism_on I_set I_top A2_s
+        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) A2_s) g2"
+      unfolding top1_is_arc_on_def by (by100 blast)
+    have hS1_topo_eq2: "subspace_topology top1_S1 top1_S1_topology A2_s =
+        subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) A2_s"
+    proof -
+      have "top1_S1_topology = subspace_topology UNIV
+          (product_topology_on top1_open_sets top1_open_sets) top1_S1"
+        unfolding top1_S1_topology_def by (by100 simp)
+      hence "subspace_topology top1_S1 top1_S1_topology A2_s =
+          subspace_topology top1_S1 (subspace_topology UNIV
+              (product_topology_on top1_open_sets top1_open_sets) top1_S1) A2_s"
+        by (by100 simp)
+      also have "\<dots> = subspace_topology UNIV
+          (product_topology_on top1_open_sets top1_open_sets) A2_s"
+        by (rule subspace_topology_trans[OF hA2s_sub])
+      finally show ?thesis .
+    qed
+    have hg2': "top1_homeomorphism_on I_set I_top A2_s
+        (subspace_topology top1_S1 top1_S1_topology A2_s) g2"
+      using hg2 hS1_topo_eq2 by (by100 simp)
+    have hC_topo_eq2: "subspace_topology C (subspace_topology X TX C) C2 =
+        subspace_topology X TX C2"
+    proof -
+      have "C2 \<subseteq> C" using hC_eq by (by100 blast)
+      thus ?thesis by (rule subspace_topology_trans)
+    qed
+    have hf_A2': "top1_homeomorphism_on A2_s
+        (subspace_topology top1_S1 top1_S1_topology A2_s) C2 (subspace_topology X TX C2) f"
+      using hf_A2 hC_topo_eq2 by (by100 simp)
+    have hfg2_homeo: "top1_homeomorphism_on I_set I_top C2 (subspace_topology X TX C2) (f \<circ> g2)"
+      by (rule homeomorphism_compose[OF hg2' hf_A2'])
+    have hC2_strict: "is_topology_on_strict C2 (subspace_topology X TX C2)"
+    proof -
+      have "A2_s \<noteq> {}"
+      proof -
+        from hAs(4) obtain h_tmp where "top1_homeomorphism_on I_set I_top A2_s
+            (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) A2_s) h_tmp"
+          unfolding top1_is_arc_on_def by (by100 blast)
+        hence "bij_betw h_tmp I_set A2_s" unfolding top1_homeomorphism_on_def by (by100 blast)
+        hence "h_tmp ` I_set = A2_s" unfolding bij_betw_def by (by100 blast)
+        moreover have "I_set \<noteq> {}" unfolding top1_unit_interval_def by (by100 simp)
+        ultimately show ?thesis by (by100 blast)
+      qed
+      have "C2 \<noteq> {}" unfolding C2_def using \<open>A2_s \<noteq> {}\<close> by (by100 blast)
+      moreover have "is_topology_on C2 (subspace_topology X TX C2)"
+      proof -
+        have "C2 \<subseteq> X" using hC_eq hC_sub by (by100 blast)
+        have "is_topology_on X TX" using hT unfolding is_topology_on_strict_def by (by100 blast)
+        thus ?thesis by (rule subspace_topology_is_topology_on[OF _ \<open>C2 \<subseteq> X\<close>])
+      qed
+      moreover have "subspace_topology X TX C2 \<subseteq> Pow C2"
+        unfolding subspace_topology_def by (by100 blast)
+      ultimately show ?thesis unfolding is_topology_on_strict_def by (by100 blast)
+    qed
+    show ?thesis unfolding top1_is_arc_on_def using hC2_strict hfg2_homeo by (by100 blast)
+  qed
+  show ?thesis
+    apply (rule exI[of _ C1], rule exI[of _ C2])
+    using hC_eq hC_int hC1_arc hC2_arc by (by100 blast)
+qed
+
 lemma K4_from_SCC:
   assumes "is_topology_on_strict top1_S2 top1_S2_topology"
   and "top1_simple_closed_curve_on top1_S2 top1_S2_topology C"
@@ -4628,12 +4921,14 @@ proof -
       "(\<forall>t. 0 < t \<and> t < 1 \<longrightarrow>
           ((1-t) * fst (h_sel a1) + t * fst (h_sel a3),
            (1-t) * snd (h_sel a1) + t * snd (h_sel a3)) \<in> W_seg)"
+      "h_sel q \<in> W_seg"
     sorry \<comment> \<open>From Munkres\_xaxis\_segment applied to translated h\_sel(C).\<close>
   \<comment> \<open>Step 1: Decompose C into two arcs C1, C2 at the x-axis-derived a1, a3.\<close>
   obtain C1 C2 where hC12: "C = C1 \<union> C2" "C1 \<inter> C2 = {a1, a3}"
       "top1_is_arc_on C1 (subspace_topology top1_S2 top1_S2_topology C1)"
       "top1_is_arc_on C2 (subspace_topology top1_S2 top1_S2_topology C2)"
-    sorry \<comment> \<open>SCC decomposition at given points (any two distinct points on SCC split it into two arcs).\<close>
+    using SCC_decompose_at_given_points[OF assms(1) hS2_haus assms(2) ha1a3(1,2,3)]
+    by (by100 blast)
   have hC_sub_S2: "C \<subseteq> top1_S2" using assms(2) by (rule simple_closed_curve_subset)
   have hC1_sub: "C1 \<subseteq> top1_S2" using hC12(1) hC_sub_S2 by (by100 blast)
   have hC2_sub: "C2 \<subseteq> top1_S2" using hC12(1) hC_sub_S2 by (by100 blast)
@@ -5188,12 +5483,140 @@ proof -
          Need to show W\_seg = W\_R2 (same bounded component).\<close>
       define seg where "seg = {((1-t) * fst (h a1) + t * fst (h a3),
           (1-t) * snd (h a1) + t * snd (h a3)) | t :: real. 0 \<le> t \<and> t \<le> 1}"
+      \<comment> \<open>Define the parametrization \<gamma>: [0,1] \<rightarrow> seg.\<close>
+      define \<gamma> where "\<gamma> \<equiv> (\<lambda>t. ((1-t) * fst (h a1) + t * fst (h a3),
+          (1-t) * snd (h a1) + t * snd (h a3)))"
+      have h\<gamma>_img: "\<gamma> ` I_set = seg"
+      proof (rule set_eqI, rule iffI)
+        fix x assume "x \<in> \<gamma> ` I_set"
+        then obtain t where ht: "t \<in> I_set" "x = \<gamma> t" by (by100 blast)
+        have "0 \<le> t" "t \<le> 1" using ht(1) unfolding top1_unit_interval_def by (by100 simp)+
+        show "x \<in> seg" unfolding seg_def
+          apply (rule CollectI)
+          apply (rule exI[of _ t])
+          using \<open>0 \<le> t\<close> \<open>t \<le> 1\<close> ht(2) unfolding \<gamma>_def by (by100 simp)
+      next
+        fix x assume "x \<in> seg"
+        then obtain t where ht: "0 \<le> t" "t \<le> 1" "x = ((1-t) * fst (h a1) + t * fst (h a3),
+            (1-t) * snd (h a1) + t * snd (h a3))" unfolding seg_def by (by100 blast)
+        have "t \<in> I_set" using ht(1,2) unfolding top1_unit_interval_def by (by100 simp)
+        have "x = \<gamma> t" using ht(3) unfolding \<gamma>_def by (by100 simp)
+        thus "x \<in> \<gamma> ` I_set" using \<open>t \<in> I_set\<close> by (by100 blast)
+      qed
+      have h\<gamma>_cont: "top1_continuous_map_on I_set I_top
+          UNIV (product_topology_on top1_open_sets top1_open_sets) \<gamma>"
+      proof -
+        have "top1_is_path_on UNIV (product_topology_on top1_open_sets top1_open_sets)
+            (h a1) (h a3) \<gamma>"
+          unfolding \<gamma>_def by (rule R2_straight_line_path)
+        thus ?thesis unfolding top1_is_path_on_def by (by100 blast)
+      qed
+      have h\<gamma>_inj: "inj_on \<gamma> I_set"
+      proof (rule inj_onI)
+        fix s t assume hs: "s \<in> I_set" and ht: "t \<in> I_set" and heq: "\<gamma> s = \<gamma> t"
+        have "((1-s) * fst (h a1) + s * fst (h a3), (1-s) * snd (h a1) + s * snd (h a3))
+            = ((1-t) * fst (h a1) + t * fst (h a3), (1-t) * snd (h a1) + t * snd (h a3))"
+          using heq unfolding \<gamma>_def by (by100 blast)
+        hence "(s - t) * fst (h a3) = (s - t) * fst (h a1)"
+          and "(s - t) * snd (h a3) = (s - t) * snd (h a1)"
+          by (auto simp: algebra_simps Pair_inject)
+        hence "s = t \<or> (fst (h a3) = fst (h a1) \<and> snd (h a3) = snd (h a1))"
+          by (by100 force)
+        moreover have "fst (h a3) = fst (h a1) \<and> snd (h a3) = snd (h a1) \<Longrightarrow> h a1 = h a3"
+          by (cases "h a1", cases "h a3") (by100 simp)
+        ultimately show "s = t" using hha1_ne_ha3 by (by100 blast)
+      qed
+      have h\<gamma>_bij: "bij_betw \<gamma> I_set seg"
+        using h\<gamma>_inj h\<gamma>_img unfolding bij_betw_def by (by100 blast)
+      have hI_compact: "top1_compact_on I_set I_top"
+      proof -
+        have "compact I_set" unfolding top1_unit_interval_def by (by100 simp)
+        hence "top1_compact_on I_set (subspace_topology UNIV top1_open_sets I_set)"
+          using top1_compact_on_subspace_UNIV_iff_compact[of I_set] by (by100 simp)
+        thus ?thesis unfolding top1_unit_interval_topology_def by (by100 simp)
+      qed
+      have hR2_strict: "is_topology_on_strict (UNIV :: (real \<times> real) set)
+          (product_topology_on top1_open_sets top1_open_sets)"
+      proof -
+        have "is_topology_on (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets)"
+          using product_topology_on_is_topology_on[OF
+              top1_open_sets_is_topology_on_UNIV[where 'a=real]
+              top1_open_sets_is_topology_on_UNIV[where 'a=real]] by (by100 simp)
+        moreover have "(UNIV :: (real \<times> real) set) \<noteq> {}" by (by100 blast)
+        moreover have "product_topology_on top1_open_sets top1_open_sets \<subseteq> Pow (UNIV :: (real \<times> real) set)"
+          by (by100 blast)
+        ultimately show ?thesis unfolding is_topology_on_strict_def by (by100 blast)
+      qed
+      have hR2_haus: "is_hausdorff_on (UNIV :: (real \<times> real) set)
+          (product_topology_on top1_open_sets top1_open_sets)"
+        by (rule top1_R2_is_hausdorff)
+      have hR2_top: "is_topology_on (UNIV :: (real \<times> real) set)
+          (product_topology_on top1_open_sets top1_open_sets)"
+        using hR2_strict unfolding is_topology_on_strict_def by (by100 blast)
+      have hseg_sub: "seg \<subseteq> (UNIV :: (real \<times> real) set)" by (by100 blast)
+      have hT_seg: "is_topology_on_strict seg
+          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) seg)"
+      proof -
+        have "h a1 \<in> seg" unfolding seg_def
+          apply (rule CollectI) apply (rule exI[of _ 0]) by (by100 simp)
+        hence "seg \<noteq> {}" by (by100 blast)
+        moreover have "subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) seg
+            \<subseteq> Pow seg" unfolding subspace_topology_def by (by100 blast)
+        moreover have "is_topology_on seg
+            (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) seg)"
+          by (rule subspace_topology_is_topology_on[OF hR2_top hseg_sub])
+        ultimately show ?thesis unfolding is_topology_on_strict_def by (by100 blast)
+      qed
+      have h\<gamma>_homeo: "top1_homeomorphism_on I_set I_top seg
+          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) seg) \<gamma>"
+      proof -
+        have h\<gamma>_cont_seg: "top1_continuous_map_on I_set I_top seg
+            (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) seg) \<gamma>"
+        proof -
+          have "\<forall>x \<in> I_set. \<gamma> x \<in> seg" using h\<gamma>_img by (by100 blast)
+          moreover have "\<forall>V. V \<in> subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) seg
+              \<longrightarrow> {t \<in> I_set. \<gamma> t \<in> V} \<in> I_top"
+          proof (intro allI impI)
+            fix V assume "V \<in> subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) seg"
+            then obtain W where hW: "W \<in> product_topology_on top1_open_sets top1_open_sets"
+                "V = seg \<inter> W" unfolding subspace_topology_def by (by100 blast)
+            have "{t \<in> I_set. \<gamma> t \<in> V} = {t \<in> I_set. \<gamma> t \<in> W}"
+            proof (rule set_eqI, rule iffI)
+              fix t assume "t \<in> {t \<in> I_set. \<gamma> t \<in> V}"
+              thus "t \<in> {t \<in> I_set. \<gamma> t \<in> W}" using hW(2) by (by100 blast)
+            next
+              fix t assume "t \<in> {t \<in> I_set. \<gamma> t \<in> W}"
+              hence "t \<in> I_set" "\<gamma> t \<in> W" by (by100 blast)+
+              moreover have "\<gamma> t \<in> seg" using h\<gamma>_img \<open>t \<in> I_set\<close> by (by100 blast)
+              ultimately show "t \<in> {t \<in> I_set. \<gamma> t \<in> V}" using hW(2) by (by100 blast)
+            qed
+            also have "\<dots> \<in> I_top"
+              using h\<gamma>_cont hW(1) unfolding top1_continuous_map_on_def by (by100 blast)
+            finally show "{t \<in> I_set. \<gamma> t \<in> V} \<in> I_top" .
+          qed
+          ultimately show ?thesis unfolding top1_continuous_map_on_def by (by100 blast)
+        qed
+        have hH_seg: "is_hausdorff_on seg
+            (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) seg)"
+          using Theorem_17_11 hR2_haus hseg_sub by (by100 blast)
+        have hT_seg_top: "is_topology_on seg
+            (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) seg)"
+          using hT_seg unfolding is_topology_on_strict_def by (by100 blast)
+        from Theorem_26_6[OF top1_unit_interval_topology_is_topology_on
+            hT_seg_top hI_compact hH_seg h\<gamma>_cont_seg h\<gamma>_bij]
+        show ?thesis .
+      qed
       have hseg_arc: "top1_is_arc_on seg
-          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) seg)" sorry
-        \<comment> \<open>Line segment is an arc (R2\_straight\_line\_path + h(a1) \<noteq> h(a3)).\<close>
+          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) seg)"
+        unfolding top1_is_arc_on_def using hT_seg h\<gamma>_homeo by (by100 blast)
       have hseg_ep: "top1_arc_endpoints_on seg
-          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) seg) = {h a1, h a3}" sorry
-        \<comment> \<open>Endpoints of the line segment.\<close>
+          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) seg) = {h a1, h a3}"
+      proof -
+        have h\<gamma>0: "\<gamma> 0 = h a1" unfolding \<gamma>_def by (by100 simp)
+        have h\<gamma>1: "\<gamma> 1 = h a3" unfolding \<gamma>_def by (by100 simp)
+        from arc_endpoints_are_boundary[OF hR2_strict hR2_haus hseg_sub hseg_arc h\<gamma>_homeo]
+        show ?thesis using h\<gamma>0 h\<gamma>1 by (by100 simp)
+      qed
       have hseg_avoids: "seg \<inter> h ` C \<subseteq> {h a1, h a3}"
       proof (intro subsetI)
         fix x assume "x \<in> seg \<inter> h ` C"
@@ -5237,8 +5660,154 @@ proof -
           assume "t = 1" thus ?thesis using ht(3) by (by100 simp)
         qed
       qed
+      have hWseg_sub: "W_seg \<subseteq> U_R2 \<union> V_R2"
+      proof (intro subsetI)
+        fix y assume "y \<in> W_seg"
+        hence "y \<notin> h_sel ` C" using ha1a3(7) by (by100 blast)
+        hence "y \<notin> h ` C" unfolding h_def by (by100 simp)
+        thus "y \<in> U_R2 \<union> V_R2" using hUV(4) by (by100 blast)
+      qed
+      have hq_Wseg: "h q \<in> W_seg" using ha1a3(11) unfolding h_def by (by100 simp)
+      \<comment> \<open>U\_R2 and V\_R2 are open (from closure = self \<union> h(C), so complement is open).\<close>
+      have hD_closed: "closed (h ` C)"
+      proof -
+        \<comment> \<open>h(C) is SCC in R2, SCC = continuous image of compact S1, hence compact, hence closed.\<close>
+        from hhC_scc obtain f where hf_cont: "top1_continuous_map_on top1_S1 top1_S1_topology
+            (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets) f"
+          and hf_inj: "inj_on f top1_S1" and hf_img: "f ` top1_S1 = h ` C"
+          unfolding top1_simple_closed_curve_on_def by blast
+        have hS1_compact: "top1_compact_on top1_S1 top1_S1_topology" by (rule S1_compact)
+        have hS1_top: "is_topology_on top1_S1 top1_S1_topology"
+          using top1_S1_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
+        from Theorem_26_5[OF hS1_top hR2_top hS1_compact hf_cont]
+        have "top1_compact_on (f ` top1_S1) (subspace_topology
+            (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets) (f ` top1_S1))" .
+        hence "top1_compact_on (h ` C) (subspace_topology
+            (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets) (h ` C))"
+          using hf_img by (by100 simp)
+        hence "top1_compact_on (h ` C) (subspace_topology UNIV top1_open_sets (h ` C))"
+          using product_topology_on_open_sets[where ?'a = real and ?'b = real] by (by100 simp)
+        hence "compact (h ` C)"
+          using top1_compact_on_subspace_UNIV_iff_compact[of "h ` C"] by (by100 simp)
+        thus ?thesis by (rule compact_imp_closed)
+      qed
+      have hUR2_open: "open U_R2"
+      proof -
+        have hcl_V: "closure_on UNIV (product_topology_on top1_open_sets top1_open_sets) V_R2
+            = V_R2 \<union> h ` C" using hUV(8) by (by100 blast)
+        have "closedin_on UNIV (product_topology_on top1_open_sets top1_open_sets)
+            (V_R2 \<union> h ` C)"
+        proof -
+          have hT: "is_topology_on (UNIV :: (real \<times> real) set)
+              (product_topology_on top1_open_sets top1_open_sets)" using hR2_top by (by100 blast)
+          have "V_R2 \<subseteq> UNIV" by (by100 blast)
+          from closure_on_closed[OF hT this]
+          show ?thesis using hcl_V by (by100 simp)
+        qed
+        hence "UNIV - (V_R2 \<union> h ` C) \<in> product_topology_on top1_open_sets top1_open_sets"
+          unfolding closedin_on_def by (by100 blast)
+        hence "open (UNIV - (V_R2 \<union> h ` C))"
+          using product_topology_on_open_sets[where ?'a = real and ?'b = real]
+          unfolding top1_open_sets_def by (by100 blast)
+        moreover have "U_R2 = UNIV - (V_R2 \<union> h ` C)"
+          using hUV(3,4) by (by100 blast)
+        ultimately show ?thesis by (by100 simp)
+      qed
+      have hVR2_open: "open V_R2"
+      proof -
+        have hcl_U: "closure_on UNIV (product_topology_on top1_open_sets top1_open_sets) U_R2
+            = U_R2 \<union> h ` C" using hUV(7) by (by100 blast)
+        have "closedin_on UNIV (product_topology_on top1_open_sets top1_open_sets)
+            (U_R2 \<union> h ` C)"
+        proof -
+          have hT: "is_topology_on (UNIV :: (real \<times> real) set)
+              (product_topology_on top1_open_sets top1_open_sets)" using hR2_top by (by100 blast)
+          have "U_R2 \<subseteq> UNIV" by (by100 blast)
+          from closure_on_closed[OF hT this]
+          show ?thesis using hcl_U by (by100 simp)
+        qed
+        hence "UNIV - (U_R2 \<union> h ` C) \<in> product_topology_on top1_open_sets top1_open_sets"
+          unfolding closedin_on_def by (by100 blast)
+        hence "open (UNIV - (U_R2 \<union> h ` C))"
+          using product_topology_on_open_sets[where ?'a = real and ?'b = real]
+          unfolding top1_open_sets_def by (by100 blast)
+        moreover have "V_R2 = UNIV - (U_R2 \<union> h ` C)"
+          using hUV(3,4) by (by100 blast)
+        ultimately show ?thesis by (by100 simp)
+      qed
+      \<comment> \<open>W\_seg is connected (path-connected implies connected in HOL).\<close>
+      have hWseg_conn: "connected W_seg"
+      proof -
+        have "top1_connected_on W_seg
+            (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) W_seg)"
+          using ha1a3(8) by (rule path_connected_imp_connected)
+        hence "top1_connected_on W_seg (subspace_topology UNIV top1_open_sets W_seg)"
+          using product_topology_on_open_sets[where ?'a = real and ?'b = real] by (by100 simp)
+        thus "connected W_seg"
+          using top1_connected_on_subspace_open_iff_connected[of W_seg] by (by100 simp)
+      qed
+      \<comment> \<open>W\_seg \<subseteq> W\_R2: connected W\_seg meets W\_R2 at h(q), disjoint open U\_R2/V\_R2.\<close>
+      have "W_seg \<subseteq> W_R2"
+      proof (cases "h q \<in> U_R2")
+        case True
+        hence hW_eq: "W_R2 = U_R2" unfolding W_R2_def by (by100 simp)
+        have "W_seg \<inter> U_R2 \<noteq> {}" using hq_Wseg True by (by100 blast)
+        have "W_seg \<inter> V_R2 = {}"
+        proof (rule ccontr)
+          assume "\<not> W_seg \<inter> V_R2 = {}"
+          from connectedD[OF hWseg_conn hUR2_open hVR2_open _ hWseg_sub]
+          show False using \<open>W_seg \<inter> U_R2 \<noteq> {}\<close> \<open>\<not> W_seg \<inter> V_R2 = {}\<close> hUV(3) by (by100 blast)
+        qed
+        show "W_seg \<subseteq> W_R2" using hWseg_sub \<open>W_seg \<inter> V_R2 = {}\<close> hW_eq by (by100 blast)
+      next
+        case False
+        hence "h q \<in> V_R2" using hq_R2 by (by100 blast)
+        hence hW_eq: "W_R2 = V_R2" unfolding W_R2_def using False by (by100 simp)
+        have "W_seg \<inter> V_R2 \<noteq> {}" using hq_Wseg \<open>h q \<in> V_R2\<close> by (by100 blast)
+        have "W_seg \<inter> U_R2 = {}"
+        proof (rule ccontr)
+          assume "\<not> W_seg \<inter> U_R2 = {}"
+          from connectedD[OF hWseg_conn hUR2_open hVR2_open _ hWseg_sub]
+          show False using \<open>\<not> W_seg \<inter> U_R2 = {}\<close> \<open>W_seg \<inter> V_R2 \<noteq> {}\<close> hUV(3) by (by100 blast)
+        qed
+        show "W_seg \<subseteq> W_R2" using hWseg_sub \<open>W_seg \<inter> U_R2 = {}\<close> hW_eq by (by100 blast)
+      qed
       have hseg_interior: "\<forall>x \<in> seg - {h a1, h a3}. x \<in> W_R2"
-        sorry \<comment> \<open>From ha1a3(11): interior \<in> W\_seg. Need W\_seg = W\_R2.\<close>
+      proof (intro ballI)
+        fix x assume hx: "x \<in> seg - {h a1, h a3}"
+        from hx obtain t where ht: "0 \<le> t" "t \<le> 1"
+            "x = ((1-t) * fst (h a1) + t * fst (h a3),
+                  (1-t) * snd (h a1) + t * snd (h a3))"
+            "x \<noteq> h a1" "x \<noteq> h a3"
+          unfolding seg_def by (by100 blast)
+        have "t \<noteq> 0"
+        proof
+          assume "t = 0"
+          hence "x = ((1-0) * fst (h a1) + 0 * fst (h a3),
+              (1-0) * snd (h a1) + 0 * snd (h a3))" using ht(3) by (by100 simp)
+          hence "x = (fst (h a1), snd (h a1))" by (by100 simp)
+          hence "x = h a1" by (by100 simp)
+          thus False using ht(4) by (by100 blast)
+        qed
+        have "t \<noteq> 1"
+        proof
+          assume "t = 1"
+          hence "x = ((1-1) * fst (h a1) + 1 * fst (h a3),
+              (1-1) * snd (h a1) + 1 * snd (h a3))" using ht(3) by (by100 simp)
+          hence "x = (fst (h a3), snd (h a3))" by (by100 simp)
+          hence "x = h a3" by (by100 simp)
+          thus False using ht(5) by (by100 blast)
+        qed
+        hence "0 < t" "t < 1" using ht(1,2) \<open>t \<noteq> 0\<close> by (by100 linarith)+
+        have "x \<in> W_seg"
+        proof -
+          have "((1-t) * fst (h_sel a1) + t * fst (h_sel a3),
+                 (1-t) * snd (h_sel a1) + t * snd (h_sel a3)) \<in> W_seg"
+            using ha1a3(10) \<open>0 < t\<close> \<open>t < 1\<close> by (by100 blast)
+          thus ?thesis using ht(3) unfolding h_def by (by100 simp)
+        qed
+        thus "x \<in> W_R2" using \<open>W_seg \<subseteq> W_R2\<close> by (by100 blast)
+      qed
       show ?thesis
         apply (rule exI[of _ seg])
         using hseg_arc hseg_ep hseg_avoids hseg_interior by (by100 blast)
