@@ -4781,7 +4781,22 @@ proof -
         sorry \<comment> \<open>x \<in> D13 interior implies x in component of p.\<close>
       ultimately have "top1_in_same_path_component_on (top1_S2 - C)
           (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) p q"
-        sorry \<comment> \<open>Transitivity + symmetry of path-components.\<close>
+      proof -
+        assume hqx: "top1_in_same_path_component_on (top1_S2 - C)
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) q x"
+        assume hpx: "top1_in_same_path_component_on (top1_S2 - C)
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) p x"
+        have hT_SC: "is_topology_on (top1_S2 - C) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C))"
+          by (rule subspace_topology_is_topology_on[OF hTopS2]) (by100 blast)
+        have hxp: "top1_in_same_path_component_on (top1_S2 - C)
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) x p"
+          by (rule top1_in_same_path_component_on_sym[OF hT_SC hpx])
+        have hqp: "top1_in_same_path_component_on (top1_S2 - C)
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) q p"
+          by (rule top1_in_same_path_component_on_trans[OF hT_SC hqx hxp])
+        show ?thesis
+          by (rule top1_in_same_path_component_on_sym[OF hT_SC hqp])
+      qed
       hence "\<exists>f. top1_is_path_on (top1_S2 - C)
           (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) p q f"
         unfolding top1_in_same_path_component_on_def by (by100 blast)
