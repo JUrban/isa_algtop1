@@ -4597,12 +4597,102 @@ proof -
       \<comment> \<open>p0 \<noteq> a4', so t0 \<noteq> the endpoint mapping to a4'.\<close>
       \<comment> \<open>Construct path: f(s) = h(s * t0 + (1-s) * 0) = h(s * t0) from p to p0.\<close>
       \<comment> \<open>This path stays in Fp - {a4'} \<subseteq> S2-C.\<close>
-      show ?thesis sorry \<comment> \<open>Path from p to p0 in Fp-{a4'} via arc parametrization.\<close>
+      \<comment> \<open>Fp - {a4'} is connected (arc minus one endpoint).\<close>
+      have hFp_minus_conn: "top1_connected_on (Fp - {a4'})
+          (subspace_topology top1_S2 top1_S2_topology (Fp - {a4'}))"
+      proof -
+        have hpne: "p \<noteq> a4'" using ha4'_ne_p by (by100 blast)
+        have hFp_int_conn: "top1_connected_on (Fp - {p, a4'})
+            (subspace_topology top1_S2 top1_S2_topology (Fp - {p, a4'}))"
+          by (rule arc_minus_endpoints_connected[OF assms(1) hS2_haus hFp_sub_S2 hFp(4) hFp(5)
+              hpne])
+        have hp_cl: "p \<in> closure_on top1_S2 top1_S2_topology (Fp - {p, a4'})"
+          using arc_endpoint_in_closure_of_interior(1)[OF assms(1) hS2_haus hFp_sub_S2 hFp(4)
+              hFp(5) hpne] by (by100 blast)
+        have hFp_minus_sub_cl: "Fp - {a4'} \<subseteq> closure_on top1_S2 top1_S2_topology (Fp - {p, a4'})"
+        proof (intro subsetI)
+          fix x assume "x \<in> Fp - {a4'}"
+          show "x \<in> closure_on top1_S2 top1_S2_topology (Fp - {p, a4'})"
+          proof (cases "x = p")
+            case True thus ?thesis using hp_cl by (by100 blast)
+          next
+            case False
+            hence "x \<in> Fp - {p, a4'}" using \<open>x \<in> Fp - {a4'}\<close> by (by100 blast)
+            thus ?thesis using subset_closure_on[of "Fp - {p, a4'}" top1_S2 top1_S2_topology]
+              by (by100 blast)
+          qed
+        qed
+        have "Fp - {p, a4'} \<subseteq> top1_S2" using hFp_sub_S2 by (by100 blast)
+        have "Fp - {a4'} \<subseteq> top1_S2" using hFp_sub_S2 by (by100 blast)
+        have "Fp - {p, a4'} \<subseteq> Fp - {a4'}" by (by100 blast)
+        show ?thesis
+          by (rule Theorem_23_4[OF hTopS2
+              \<open>Fp - {p, a4'} \<subseteq> top1_S2\<close> \<open>Fp - {a4'} \<subseteq> top1_S2\<close>
+              \<open>Fp - {p, a4'} \<subseteq> Fp - {a4'}\<close> hFp_minus_sub_cl hFp_int_conn])
+      qed
+      \<comment> \<open>S2-C is locally path-connected.\<close>
+      have hSC_open: "top1_S2 - C \<in> top1_S2_topology"
+      proof -
+        have "closedin_on top1_S2 top1_S2_topology C"
+        proof -
+          have "C = C1 \<union> C2" using hC12(1) .
+          moreover have "closedin_on top1_S2 top1_S2_topology (C1 \<union> C2)"
+          proof -
+            have hC1_open: "top1_S2 - C1 \<in> top1_S2_topology" using hC1_cl unfolding closedin_on_def by (by100 blast)
+            have hC2_open: "top1_S2 - C2 \<in> top1_S2_topology" using hC2_cl unfolding closedin_on_def by (by100 blast)
+            have "top1_S2 - (C1 \<union> C2) = (top1_S2 - C1) \<inter> (top1_S2 - C2)" by (by100 blast)
+            moreover have "(top1_S2 - C1) \<inter> (top1_S2 - C2) \<in> top1_S2_topology"
+              by (rule topology_inter2[OF hTopS2 hC1_open hC2_open])
+            ultimately have "top1_S2 - (C1 \<union> C2) \<in> top1_S2_topology" by (by100 simp)
+            moreover have "C1 \<union> C2 \<subseteq> top1_S2" using hC1_sub hC2_sub by (by100 blast)
+            ultimately show ?thesis unfolding closedin_on_def by (by100 blast)
+          qed
+          ultimately show ?thesis by (by100 simp)
+        qed
+        thus ?thesis unfolding closedin_on_def by (by100 blast)
+      qed
+      have hSC_lpc: "top1_locally_path_connected_on (top1_S2 - C)
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C))"
+        by (rule open_subset_locally_path_connected[OF S2_locally_path_connected hSC_open])
+           (by100 blast)
+      \<comment> \<open>Connected subset in LPC space: all points in same path-component.\<close>
+      have hFp_minus_sub_SC: "Fp - {a4'} \<subseteq> top1_S2 - C"
+        using \<open>Fp - {a4'} \<subseteq> top1_S2 - C\<close> .
+      have hT_SC: "is_topology_on (top1_S2 - C) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C))"
+        by (rule subspace_topology_is_topology_on[OF hTopS2]) (by100 blast)
+      \<comment> \<open>Fp-{a4'} is connected as subspace of S2-C.\<close>
+      have hFp_minus_conn_SC: "top1_connected_on (Fp - {a4'})
+          (subspace_topology (top1_S2 - C) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) (Fp - {a4'}))"
+      proof -
+        have "subspace_topology (top1_S2 - C) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) (Fp - {a4'})
+            = subspace_topology top1_S2 top1_S2_topology (Fp - {a4'})"
+          by (rule subspace_topology_trans[OF hFp_minus_sub_SC])
+        thus ?thesis using hFp_minus_conn by (by100 simp)
+      qed
+      have hp_in_FP: "p \<in> Fp - {a4'}" using hp_Fp_minus .
+      have "Fp - {a4'} \<subseteq> top1_component_of_on (top1_S2 - C)
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) p"
+        by (rule top1_connected_subspace_subset_component_of[OF hFp_minus_sub_SC hp_in_FP
+            hFp_minus_conn_SC])
+      moreover have "top1_component_of_on (top1_S2 - C)
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) p
+          \<subseteq> top1_path_component_of_on (top1_S2 - C)
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) p"
+        by (rule top1_component_of_on_subset_path_component_if_locally_path_connected[OF
+            hT_SC hSC_lpc])
+           (use assms(3) in \<open>by100 blast\<close>)
+      ultimately have "p0 \<in> top1_path_component_of_on (top1_S2 - C)
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) p"
+        using hp0_Fp by (by100 blast)
+      thus ?thesis
+        unfolding top1_in_same_path_component_on_def top1_path_component_of_on_def
+        by (by100 blast)
     next
       case False
       hence "p0 \<in> Gp" using hp0_FG by (by100 blast)
-      hence "p0 \<in> Gp - {a2'}" using hp0 by (by100 blast)
-      show ?thesis sorry \<comment> \<open>Symmetric: path from p to p0 in Gp-{a2'} via arc parametrization.\<close>
+      hence hp0_Gp: "p0 \<in> Gp - {a2'}" using hp0 by (by100 blast)
+      \<comment> \<open>Symmetric argument using Gp.\<close>
+      show ?thesis sorry \<comment> \<open>Same argument with Gp-{a2'} connected in S2-C.\<close>
     qed
   qed
   have hq0_comp_q: "top1_in_same_path_component_on (top1_S2 - C)
