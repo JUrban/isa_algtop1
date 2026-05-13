@@ -6155,10 +6155,46 @@ proof -
   next
     case False thus ?thesis unfolding V_ub_def using hUV(1) by (by100 simp)
   qed
-  have hUV_disj': "U_bd \<inter> V_ub = {}" sorry
-    \<comment> \<open>tr injective, U\_R2 \<inter> V\_R2 = {} \<Rightarrow> tr(U) \<inter> tr(V) = {}.\<close>
-  have hUV_union': "U_bd \<union> V_ub = UNIV - D" sorry
-    \<comment> \<open>tr bijective, U \<union> V = UNIV - h(C) \<Rightarrow> tr(U) \<union> tr(V) = UNIV - tr(h(C)) = UNIV - D.\<close>
+  have hUV_disj': "U_bd \<inter> V_ub = {}"
+  proof (intro equalityI subsetI)
+    fix x assume "x \<in> U_bd \<inter> V_ub"
+    then obtain u v where hu: "u \<in> (if h q \<in> U_R2 then U_R2 else V_R2)" "x = tr u"
+        and hv: "v \<in> (if h q \<in> U_R2 then V_R2 else U_R2)" "x = tr v"
+      unfolding U_bd_def V_ub_def by (by100 blast)
+    have "u = v" using hu(2) hv(2) htr_inj unfolding inj_def by (by100 blast)
+    hence "u \<in> U_R2 \<inter> V_R2"
+    proof (cases "h q \<in> U_R2")
+      case True thus ?thesis using hu(1) hv(1) \<open>u = v\<close> by (by100 simp)
+    next
+      case False thus ?thesis using hu(1) hv(1) \<open>u = v\<close> by (by100 simp)
+    qed
+    thus "x \<in> {}" using hUV(3) by (by100 blast)
+  qed (by100 blast)
+  have hUV_union': "U_bd \<union> V_ub = UNIV - D"
+  proof (intro equalityI subsetI)
+    fix x assume "x \<in> U_bd \<union> V_ub"
+    then obtain u where "u \<in> U_R2 \<union> V_R2" "x = tr u"
+      unfolding U_bd_def V_ub_def using hq_comp sorry
+    hence "u \<notin> h ` C" using hUV(4) by (by100 blast)
+    hence "x \<notin> D"
+    proof -
+      assume "u \<notin> h ` C"
+      have "tr u \<notin> tr ` (h ` C)"
+      proof
+        assume "tr u \<in> tr ` (h ` C)"
+        then obtain c where "c \<in> h ` C" "tr u = tr c" by (by100 blast)
+        hence "u = c" using htr_inj unfolding inj_def by (by100 blast)
+        thus False using \<open>u \<notin> h ` C\<close> \<open>c \<in> h ` C\<close> by (by100 blast)
+      qed
+      thus ?thesis unfolding D_def using \<open>x = tr u\<close> by (by100 simp)
+    qed
+    thus "x \<in> UNIV - D" by (by100 blast)
+  next
+    fix x assume "x \<in> UNIV - D"
+    hence "x \<notin> D" by (by100 blast)
+    \<comment> \<open>x \<notin> tr(h(C)), so tr\<inverse>(x) \<notin> h(C), so tr\<inverse>(x) \<in> U \<union> V, so x \<in> tr(U) \<union> tr(V).\<close>
+    show "x \<in> U_bd \<union> V_ub" sorry
+  qed
   \<comment> \<open>D is SCC, U\_bd path-connected, boundedness — all transfer via tr.\<close>
   have hD_scc: "top1_simple_closed_curve_on (UNIV :: (real \<times> real) set)
       (product_topology_on top1_open_sets top1_open_sets) D" sorry
