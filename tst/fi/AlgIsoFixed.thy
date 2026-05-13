@@ -4293,6 +4293,8 @@ lemma Munkres_Step_4_move_punctures:
   and "top1_in_same_path_component_on (top1_S2 - C)
       (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) q q0"
   and "c0 \<in> C"
+  and "\<not> (\<exists>f. top1_is_path_on (top1_S2 - C)
+                (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) p q f)"
   and "top1_group_iso_on
     (top1_fundamental_group_carrier C (subspace_topology top1_S2 top1_S2_topology C) c0)
     (top1_fundamental_group_mul C (subspace_topology top1_S2 top1_S2_topology C) c0)
@@ -4333,8 +4335,34 @@ proof -
     by (rule top1_in_same_path_component_on_sym[OF hT_SC assms(8)])
   \<comment> \<open>p0 \<noteq> q0, p \<noteq> q0, q \<noteq> p follow from p,q in different path-components.
      The iso for (p0,q0) implies p0 \<noteq> q0 (otherwise the target space has trivial \<pi>1).\<close>
-  have hp0_ne_q0: "p0 \<noteq> q0" sorry
-  have hp_ne_q0: "p \<noteq> q0" sorry
+  have hp0_ne_q0: "p0 \<noteq> q0"
+  proof
+    assume heq: "p0 = q0"
+    \<comment> \<open>p ~ p0 = q0 ~ q, so p ~ q by transitivity.\<close>
+    have "top1_in_same_path_component_on (top1_S2 - C)
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) p0 q"
+      using heq hq0_q by (by100 simp)
+    hence "top1_in_same_path_component_on (top1_S2 - C)
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) p q"
+      by (rule top1_in_same_path_component_on_trans[OF hT_SC assms(7)])
+    hence "\<exists>f. top1_is_path_on (top1_S2 - C)
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) p q f"
+      unfolding top1_in_same_path_component_on_def by (by100 blast)
+    thus False using assms(10) by (by100 blast)
+  qed
+  have hp_ne_q0: "p \<noteq> q0"
+  proof
+    assume "p = q0"
+    have "top1_in_same_path_component_on (top1_S2 - C)
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) q0 q" using hq0_q .
+    hence "top1_in_same_path_component_on (top1_S2 - C)
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) p q"
+      using \<open>p = q0\<close> by (by100 simp)
+    hence "\<exists>f. top1_is_path_on (top1_S2 - C)
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) p q f"
+      unfolding top1_in_same_path_component_on_def by (by100 blast)
+    thus False using assms(10) by (by100 blast)
+  qed
   have hstepA: "top1_group_iso_on
     (top1_fundamental_group_carrier C (subspace_topology top1_S2 top1_S2_topology C) c0)
     (top1_fundamental_group_mul C (subspace_topology top1_S2 top1_S2_topology C) c0)
@@ -4346,11 +4374,21 @@ proof -
        (subspace_topology top1_S2 top1_S2_topology C) c0
        (top1_S2 - {p} - {q0})
        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p} - {q0})) c0 id)"
-    by (rule move_one_puncture[OF assms(1,2,3,5,4) hp0_p hp0_ne_q0 hp_ne_q0 assms(9,10)])
+    by (rule move_one_puncture[OF assms(1,2,3,5,4) hp0_p hp0_ne_q0 hp_ne_q0 assms(9,11)])
 
   \<comment> \<open>Step B: Move q0 \<rightarrow> q (keeping p): apply move\_one\_puncture with swapped roles.\<close>
   have hq0_ne_p: "q0 \<noteq> p" using hp_ne_q0 by (by100 blast)
-  have hq_ne_p: "q \<noteq> p" sorry \<comment> \<open>q and p in different components.\<close>
+  have hq_ne_p: "q \<noteq> p"
+  proof
+    assume "q = p"
+    have "top1_in_same_path_component_on (top1_S2 - C)
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) p q"
+      using \<open>q = p\<close> top1_in_same_path_component_on_refl[OF hT_SC] assms(5) by (by100 simp)
+    hence "\<exists>f. top1_is_path_on (top1_S2 - C)
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) p q f"
+      unfolding top1_in_same_path_component_on_def by (by100 blast)
+    thus False using assms(10) by (by100 blast)
+  qed
   \<comment> \<open>Rearrange: S2-{p}-{q0} = S2-{q0}-{p} for move\_one\_puncture.\<close>
   have hstepA_rearranged: "top1_group_iso_on
     (top1_fundamental_group_carrier C (subspace_topology top1_S2 top1_S2_topology C) c0)
@@ -6220,7 +6258,7 @@ proof -
   qed
   show ?thesis
     by (rule Munkres_Step_4_move_punctures[OF assms(1,2) hp0_SC hq0_SC assms(3,4)
-        hK4(39) hK4(40) assms(6) hiso_rearranged])
+        hK4(39) hK4(40) assms(6) assms(5) hiso_rearranged])
 qed
 
 
