@@ -6081,7 +6081,26 @@ proof -
     unfolding TR2_def by (metis (no_types))
   note hUV = hUV_full[unfolded TR2_def]
   \<comment> \<open>Identify bounded component (contains h(q)) and unbounded.\<close>
-  have hp_ne_q: "p \<noteq> q" sorry \<comment> \<open>p, q in different components of S2-C.\<close>
+  have hp_ne_q: "p \<noteq> q"
+  proof
+    assume "p = q"
+    have "top1_is_path_on (top1_S2 - C)
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) p q (top1_constant_path p)"
+      unfolding top1_is_path_on_def top1_constant_path_def
+    proof (intro conjI)
+      show "top1_continuous_map_on I_set I_top (top1_S2 - C)
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) (\<lambda>_. p)"
+      proof -
+        have "is_topology_on top1_S2 top1_S2_topology"
+          using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
+        thus ?thesis
+          by (rule top1_continuous_map_on_const[OF top1_unit_interval_topology_is_topology_on
+              subspace_topology_is_topology_on])
+             (use assms(3) in \<open>by100 blast\<close>)+
+      qed
+    qed (use \<open>p = q\<close> in \<open>by100 simp\<close>)+
+    thus False using assms(5) by (by100 blast)
+  qed
   have hq_S2p: "q \<in> top1_S2 - {p}" using hq_S2 hp_ne_q by (by100 blast)
   have hinj: "inj_on h (top1_S2 - {p})" using hh unfolding top1_homeomorphism_on_def bij_betw_def
     by (by100 blast)
