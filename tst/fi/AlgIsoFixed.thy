@@ -4547,20 +4547,15 @@ proof -
     \<comment> \<open>Step 3: Apply JCT in R2 to get bounded/unbounded components.\<close>
     define TR2 where "TR2 = (product_topology_on top1_open_sets top1_open_sets :: (real \<times> real) set set)"
     from Theorem_63_4_JordanCurve[OF hhC_scc]
-    obtain U_R2 V_R2 where hUV_raw:
-        "U_R2 \<noteq> {}" "V_R2 \<noteq> {}" "U_R2 \<inter> V_R2 = {}"
-        "U_R2 \<union> V_R2 = UNIV - h ` C"
+    obtain U_R2 V_R2 where hUV_full:
+        "U_R2 \<noteq> {}" "V_R2 \<noteq> {}" "U_R2 \<inter> V_R2 = {}" "U_R2 \<union> V_R2 = UNIV - h ` C"
         "top1_path_connected_on U_R2 (subspace_topology UNIV TR2 U_R2)"
         "top1_path_connected_on V_R2 (subspace_topology UNIV TR2 V_R2)"
         "closure_on UNIV TR2 U_R2 = U_R2 \<union> h ` C"
         "closure_on UNIV TR2 V_R2 = V_R2 \<union> h ` C"
-      unfolding TR2_def sorry \<comment> \<open>Extract from JCT (need to handle bounded/unbounded existentials).\<close>
-    have hUV: "U_R2 \<noteq> {}" "V_R2 \<noteq> {}" "U_R2 \<inter> V_R2 = {}" "U_R2 \<union> V_R2 = UNIV - h ` C"
-        "top1_path_connected_on U_R2 (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) U_R2)"
-        "top1_path_connected_on V_R2 (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) V_R2)"
-        "closure_on UNIV (product_topology_on top1_open_sets top1_open_sets) U_R2 = U_R2 \<union> h ` C"
-        "closure_on UNIV (product_topology_on top1_open_sets top1_open_sets) V_R2 = V_R2 \<union> h ` C"
-      using hUV_raw unfolding TR2_def by (by100 blast)+
+      unfolding TR2_def by (metis (no_types))
+    \<comment> \<open>Unfold TR2 for downstream use.\<close>
+    note hUV = hUV_full[unfolded TR2_def]
     \<comment> \<open>Step 4: h(q) is in one component (say W_R2). h(a1), h(a3) \<in> h(C) = boundary of W_R2.\<close>
     have hq_R2: "h q \<in> U_R2 \<or> h q \<in> V_R2"
     proof -
