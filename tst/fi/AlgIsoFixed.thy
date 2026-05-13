@@ -4643,7 +4643,36 @@ proof -
       thus "h (inv_into (top1_S2 - {p}) h y) = y" by (rule f_inv_into_f)
     qed
     \<comment> \<open>e13 is an arc: h\<inverse> restricted to A_R2 gives homeomorphism A_R2 \<rightarrow> e13.\<close>
-    have "top1_is_arc_on e13 (subspace_topology top1_S2 top1_S2_topology e13)" sorry
+    have hA_sub_UNIV: "A_R2 \<subseteq> (UNIV :: (real \<times> real) set)" by (by100 blast)
+    \<comment> \<open>h\<inverse> restricted to A_R2 gives homeomorphism A_R2 \<rightarrow> e13.\<close>
+    have hh_inv_restr: "top1_homeomorphism_on A_R2
+        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) A_R2)
+        e13 (subspace_topology (top1_S2 - {p})
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p})) e13)
+        (inv_into (top1_S2 - {p}) h)"
+      using homeomorphism_on_restrict[OF hh_inv hA_sub_UNIV] unfolding e13_def by (by100 simp)
+    have hsubsp_eq: "subspace_topology (top1_S2 - {p})
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p})) e13
+        = subspace_topology top1_S2 top1_S2_topology e13"
+      by (rule subspace_topology_trans[OF he13_sub_S2p])
+    have hh_inv_e13: "top1_homeomorphism_on A_R2
+        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) A_R2)
+        e13 (subspace_topology top1_S2 top1_S2_topology e13)
+        (inv_into (top1_S2 - {p}) h)"
+      using hh_inv_restr hsubsp_eq by (by100 simp)
+    have "top1_is_arc_on e13 (subspace_topology top1_S2 top1_S2_topology e13)"
+    proof -
+      obtain g where hg: "top1_homeomorphism_on I_set I_top A_R2
+          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) A_R2) g"
+        using hA(1) unfolding top1_is_arc_on_def by (by100 blast)
+      have "top1_homeomorphism_on I_set I_top e13 (subspace_topology top1_S2 top1_S2_topology e13)
+          ((inv_into (top1_S2 - {p}) h) \<circ> g)"
+        by (rule homeomorphism_comp[OF hg hh_inv_e13])
+      moreover have "is_topology_on_strict e13 (subspace_topology top1_S2 top1_S2_topology e13)"
+        by (rule subspace_topology_is_strict[OF assms(1)])
+           (use he13_sub_S2p in \<open>by100 blast\<close>)
+      ultimately show ?thesis unfolding top1_is_arc_on_def by (by100 blast)
+    qed
     moreover have "e13 \<subseteq> top1_S2" using he13_sub_S2p by (by100 blast)
     moreover have "top1_arc_endpoints_on e13 (subspace_topology top1_S2 top1_S2_topology e13) = {a1, a3}" sorry
     moreover have "e13 \<inter> C \<subseteq> {a1, a3}"
