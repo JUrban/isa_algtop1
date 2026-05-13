@@ -4560,9 +4560,50 @@ proof -
       using hGp(6) harc_g(2) hGp(7) hC12(1) by (by100 blast)
     have hp_Fp_minus: "p \<in> Fp - {a4'}" using hFp(2) ha4'_ne_p by (by100 blast)
     have hp_Gp_minus: "p \<in> Gp - {a2'}" using hGp(2) hp_ne_a2' by (by100 blast)
-    \<comment> \<open>Fp is an arc (path-connected). So Fp-{a4'} is connected and contains p.\<close>
-    \<comment> \<open>Path from p to p0 exists in (Fp \<union> Gp) - {a4', a2'} \<subseteq> S2-C.\<close>
-    show ?thesis sorry \<comment> \<open>Path-component of p0 = path-component of p via Fp,Gp arcs.\<close>
+    \<comment> \<open>p0 \<in> Fp \<union> Gp. In each case, construct path from p to p0 avoiding C.\<close>
+    have hp0_FG: "p0 \<in> Fp \<or> p0 \<in> Gp" using hp0 hD13(2) by (by100 blast)
+    have ha4'_notin_Gp': "a4' \<notin> Gp" using ha4'_notin_Gp by (by100 blast)
+    have ha2'_notin_Fp: "a2' \<notin> Fp"
+    proof
+      assume "a2' \<in> Fp"
+      hence "a2' \<in> Fp \<inter> C1" using ha2'_C1 by (by100 blast)
+      thus False using hFp_C1 by (by100 blast)
+    qed
+    \<comment> \<open>Key fact: each arc (Fp or Gp) minus its C-endpoint is path-connected.
+       We use: the arc is homeomorphic to [0,1], and [0,1) is path-connected.
+       Then p and p0 are both in this set, giving a path in S2-C.\<close>
+    show ?thesis
+    proof (cases "p0 \<in> Fp")
+      case True
+      \<comment> \<open>p0 \<in> Fp - {a4'} (since p0 \<noteq> a4').\<close>
+      have hp0_Fp: "p0 \<in> Fp - {a4'}" using True hp0 by (by100 blast)
+      \<comment> \<open>Get parametrization h: [0,1] \<rightarrow> Fp.\<close>
+      obtain h where hh: "top1_homeomorphism_on I_set I_top Fp
+          (subspace_topology top1_S2 top1_S2_topology Fp) h"
+        using hFp(4) unfolding top1_is_arc_on_def by (by100 blast)
+      have hh_bij: "bij_betw h I_set Fp" using hh unfolding top1_homeomorphism_on_def by (by100 blast)
+      have hh_cont: "top1_continuous_map_on I_set I_top Fp
+          (subspace_topology top1_S2 top1_S2_topology Fp) h"
+        using hh unfolding top1_homeomorphism_on_def by (by100 blast)
+      have hinj: "inj_on h I_set" using hh_bij unfolding bij_betw_def by (by100 blast)
+      have hsurj: "h ` I_set = Fp" using hh_bij unfolding bij_betw_def by (by100 blast)
+      \<comment> \<open>Find t0 such that h(t0) = p0.\<close>
+      have "p0 \<in> h ` I_set" using hsurj hp0_Fp by (by100 blast)
+      then obtain t0 where ht0: "t0 \<in> I_set" "h t0 = p0" by (by100 blast)
+      \<comment> \<open>h(0), h(1) are the endpoints {p, a4'}.\<close>
+      have heps: "{h 0, h 1} = {p, a4'}"
+        using arc_endpoints_are_boundary[OF assms(1) hS2_haus hFp_sub_S2 hFp(4) hh] hFp(5)
+        by (by100 simp)
+      \<comment> \<open>p0 \<noteq> a4', so t0 \<noteq> the endpoint mapping to a4'.\<close>
+      \<comment> \<open>Construct path: f(s) = h(s * t0 + (1-s) * 0) = h(s * t0) from p to p0.\<close>
+      \<comment> \<open>This path stays in Fp - {a4'} \<subseteq> S2-C.\<close>
+      show ?thesis sorry \<comment> \<open>Path from p to p0 in Fp-{a4'} via arc parametrization.\<close>
+    next
+      case False
+      hence "p0 \<in> Gp" using hp0_FG by (by100 blast)
+      hence "p0 \<in> Gp - {a2'}" using hp0 by (by100 blast)
+      show ?thesis sorry \<comment> \<open>Symmetric: path from p to p0 in Gp-{a2'} via arc parametrization.\<close>
+    qed
   qed
   have hq0_comp_q: "top1_in_same_path_component_on (top1_S2 - C)
       (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) q q0"
