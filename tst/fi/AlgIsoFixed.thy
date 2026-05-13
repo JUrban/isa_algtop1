@@ -4036,6 +4036,8 @@ lemma Munkres_xaxis_segment:
       (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) U)"
   and hU_bdd: "\<exists>M. \<forall>p \<in> U. fst p ^ 2 + snd p ^ 2 \<le> M"
   and hV_unbdd: "\<forall>M. \<exists>p \<in> V. fst p ^ 2 + snd p ^ 2 > M"
+  and hU_cl: "closure U = U \<union> D"
+  and hV_cl: "closure V = V \<union> D"
   and h0_U: "((0::real), (0::real)) \<in> U"
   shows "\<exists>a1 a3. a1 \<in> D \<and> a3 \<in> D \<and> a1 \<noteq> a3
     \<and> fst a1 \<le> 0 \<and> snd a1 = 0 \<and> fst a3 \<ge> 0 \<and> snd a3 = 0
@@ -4072,10 +4074,18 @@ proof -
   have hD_closed: "closed D" using hD_compact by (rule compact_imp_closed)
   have hUV_open_set: "open (UNIV - D)" using hD_closed by (by100 blast)
   \<comment> \<open>U and V are open: they are path-components of UNIV-D (open in LPC R2).\<close>
-  have hU_open: "open U" sorry
-    \<comment> \<open>U is a path-component of UNIV-D. R2 is LPC, open subsets of LPC are LPC,
-       path-components of LPC are open.\<close>
-  have hV_open: "open V" sorry \<comment> \<open>Same argument.\<close>
+  have hV_open: "open V"
+  proof -
+    have "UNIV - (U \<union> D) = V" using hUV_union hUV_disj by (by100 blast)
+    hence "V = UNIV - closure U" using hU_cl by (by100 blast)
+    thus "open V" sorry \<comment> \<open>closure is closed \<Rightarrow> complement is open.\<close>
+  qed
+  have hU_open: "open U"
+  proof -
+    have "UNIV - (V \<union> D) = U" using hUV_union hUV_disj by (by100 blast)
+    hence "U = UNIV - closure V" using hV_cl by (by100 blast)
+    thus "open U" sorry \<comment> \<open>closure is closed \<Rightarrow> complement is open.\<close>
+  qed
   \<comment> \<open>(0,0) \<notin> D (since (0,0) \<in> U and U \<inter> D = {}).\<close>
   have h0_notD: "((0::real), (0::real)) \<notin> D" using h0_U hUV_union by (by100 blast)
   \<comment> \<open>Negative x-axis ray from (0,0) must cross D (connects bounded to unbounded).\<close>
@@ -4333,7 +4343,34 @@ proof -
   qed
   \<comment> \<open>Segment interior \<subseteq> U: connected set containing (0,0) \<in> U, avoids D,
      so lies in UNIV-D = U \<union> V. Connected + meets U \<Rightarrow> \<subseteq> U (since U, V are open disjoint).\<close>
-  have hseg_in_U: "\<forall>x. fst a1 < fst x \<and> fst x < fst a3 \<and> snd x = 0 \<longrightarrow> x \<in> U" sorry
+  have hseg_in_U: "\<forall>x. fst a1 < fst x \<and> fst x < fst a3 \<and> snd x = 0 \<longrightarrow> x \<in> U"
+  proof (intro allI impI)
+    fix x :: "real \<times> real"
+    assume hx: "fst a1 < fst x \<and> fst x < fst a3 \<and> snd x = 0"
+    \<comment> \<open>x is on the open segment, which avoids D. So x \<in> U \<union> V.\<close>
+    have "x \<notin> D" using hseg_avoids_D hx by (by100 blast)
+    hence "x \<in> U \<union> V" using hUV_union by (by100 blast)
+    \<comment> \<open>The open segment {(t,0)|a1x<t<a3x} is connected (interval image).\<close>
+    define seg where "seg = {p :: real \<times> real. fst a1 < fst p \<and> fst p < fst a3 \<and> snd p = 0}"
+    have "x \<in> seg" unfolding seg_def using hx by (by100 blast)
+    have "(0::real, 0::real) \<in> seg" unfolding seg_def a1_def a3_def using ha1x_lt0 ha3x_gt0
+      by (by100 simp)
+    hence "seg \<inter> U \<noteq> {}" using h0_U by (by100 blast)
+    have hseg_conn: "connected seg" sorry \<comment> \<open>Open interval image under continuous map.\<close>
+    have hseg_sub: "seg \<subseteq> U \<union> V"
+    proof (intro subsetI)
+      fix y assume "y \<in> seg"
+      hence "y \<notin> D" using hseg_avoids_D unfolding seg_def by (by100 blast)
+      thus "y \<in> U \<union> V" using hUV_union by (by100 blast)
+    qed
+    \<comment> \<open>Connected seg \<subseteq> U \<union> V, meets U, U \<inter> V = {} \<Rightarrow> seg \<subseteq> U.\<close>
+    have "U \<inter> V \<inter> seg = {}" using hUV_disj by (by100 blast)
+    from connectedD[OF hseg_conn hU_open hV_open this hseg_sub]
+    have "U \<inter> seg = {} \<or> V \<inter> seg = {}" .
+    hence "V \<inter> seg = {}" using \<open>seg \<inter> U \<noteq> {}\<close> by (by100 blast)
+    hence "seg \<subseteq> U" using hseg_sub by (by100 blast)
+    thus "x \<in> U" using \<open>x \<in> seg\<close> by (by100 blast)
+  qed
     \<comment> \<open>The open segment is connected, avoids D, contains (0,0)\<in>U.
        Since U and V are disjoint open sets with U\<union>V = UNIV-D, the
        connected segment (avoiding D) that meets U must lie entirely in U.\<close>
