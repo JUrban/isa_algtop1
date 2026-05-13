@@ -3587,10 +3587,8 @@ proof (rule ccontr)
   \<comment> \<open>Key contradiction: g is a homeomorphism, so g\<inverse> maps connected W-{w} to connected S-{t0}.
      But S-{t0} \<subseteq> [0,1]-{t0} = [0,t0) \<union> (t0,1] which is disconnected, and S-{t0} spans both halves.
      A connected set spanning both halves of a clopen partition is impossible.\<close>
-  have hS_minus_connected: "connected (S - {t0})"
-    sorry \<comment> \<open>g\<inverse> (homeomorphism inverse) maps connected W-{w} to S-{t0}. Bridges: top1\_ connected = HOL connected.\<close>
-  \<comment> \<open>But S-{t0} is NOT connected: s1 < t0 < s2, both in S.\<close>
-  moreover have "\<not> connected (S - {t0})"
+  \<comment> \<open>S-{t0} is NOT connected: s1 < t0 < s2, both in S, separated by {..<t0} and {t0<..}.\<close>
+  have hS_minus_not_connected: "\<not> connected (S - {t0})"
   proof -
     have "s1 \<in> S - {t0}" using hs1 by auto
     moreover have "s2 \<in> S - {t0}" using hs2 by auto
@@ -3602,7 +3600,112 @@ proof (rule ccontr)
     moreover have "{..<t0} \<inter> {t0<..} = ({} :: real set)" by auto
     ultimately show ?thesis unfolding connected_def by (by100 blast)
   qed
-  ultimately show False by (by100 blast)
+  \<comment> \<open>S-{t0} IS connected (homeomorphism preserves connected W-{w}).
+     Proof: inv\_into I\_set g maps W-{w} (HOL connected) to S-{t0}.
+     HOL connected \<leftrightarrow> top1\_connected via top1\_connected\_on\_subspace\_open\_iff\_connected.
+     Theorem\_23\_5: continuous image of connected = connected.
+     Bridges via subspace\_topology\_trans + product\_topology\_on\_open\_sets.\<close>
+  have hS_minus_connected: "connected (S - {t0})"
+    sorry \<comment> \<open>inv\_into I\_set g maps connected W-{w} to S-{t0}. Use Theorem\_23\_5 + bridges.\<close>
+  \<comment> \<open>Proof sketch saved in git history (commit af51822d).\<close>
+  \<comment> \<open>== DEAD CODE START (remove when sorry filled in) ==\<close>
+  \<comment> \<open>
+    have hWw_top1_conn: "top1_connected_on (W - {w})
+        (subspace_topology (UNIV :: (real \<times> real) set)
+        (product_topology_on top1_open_sets top1_open_sets) (W - {w}))"
+    proof -
+      have "top1_connected_on (W - {w}) (subspace_topology UNIV top1_open_sets (W - {w}))"
+        using hW_del top1_connected_on_subspace_open_iff_connected by (by100 blast)
+      thus ?thesis by (simp add: product_topology_on_open_sets)
+    qed
+    \<comment> \<open>W - {w} \<subseteq> h(Fp). inv\_into maps it to S-{t0}.\<close>
+    have hWw_sub: "W - {w} \<subseteq> h ` Fp" using hW_sub_hFp by (by100 blast)
+    have hinv_img: "inv_into I_set g ` (W - {w}) = S - {t0}"
+    proof (intro set_eqI iffI)
+      fix t assume "t \<in> inv_into I_set g ` (W - {w})"
+      then obtain y where hy: "y \<in> W - {w}" "t = inv_into I_set g y" by (by100 blast)
+      have "y \<in> h ` Fp" using hy(1) hWw_sub by (by100 blast)
+      hence "y \<in> g ` I_set" using hg_img by (by100 simp)
+      hence ht_I: "t \<in> I_set" using hy(2)
+        by (metis inv_into_into)
+      have "g t = y" using hy(2) f_inv_into_f[OF \<open>y \<in> g ` I_set\<close>] by (by100 simp)
+      hence "g t \<in> W" using hy(1) by (by100 blast)
+      hence "t \<in> S" unfolding S_def using ht_I by (by100 blast)
+      moreover have "t \<noteq> t0"
+      proof
+        assume "t = t0"
+        hence "g t = w" unfolding w_def by (by100 simp)
+        hence "y = w" using \<open>g t = y\<close> by (by100 simp)
+        thus False using hy(1) by (by100 blast)
+      qed
+      ultimately show "t \<in> S - {t0}" by (by100 blast)
+    next
+      fix t assume "t \<in> S - {t0}"
+      hence ht: "t \<in> I_set" "g t \<in> W" "t \<noteq> t0" unfolding S_def by auto
+      have "g t \<noteq> w"
+      proof
+        assume "g t = w"
+        hence "g t = g t0" unfolding w_def by (by100 simp)
+        hence "t = t0" by (metis inj_onD[OF hg_inj] ht(1) ht0_I)
+        thus False using ht(3) by (by100 simp)
+      qed
+      hence "g t \<in> W - {w}" using ht(2) by (by100 blast)
+      moreover have "inv_into I_set g (g t) = t"
+        using inv_into_f_f[OF hg_inj ht(1)] by (by100 simp)
+      ultimately show "t \<in> inv_into I_set g ` (W - {w})" by (by100 force)
+    qed
+    \<comment> \<open>inv\_into continuous + connected source \<Rightarrow> connected image.\<close>
+    have hWw_sub_sub: "W - {w} \<subseteq> h ` Fp" using hWw_sub by (by100 blast)
+    have hinv_cont_on: "top1_continuous_map_on (W - {w})
+        (subspace_topology (h ` Fp)
+        (subspace_topology (UNIV :: (real \<times> real) set)
+        (product_topology_on top1_open_sets top1_open_sets) (h ` Fp)) (W - {w}))
+        I_set I_top (inv_into I_set g)"
+    proof -
+      have "top1_continuous_map_on (h ` Fp)
+          (subspace_topology (UNIV :: (real \<times> real) set)
+          (product_topology_on top1_open_sets top1_open_sets) (h ` Fp))
+          I_set I_top (inv_into I_set g)"
+        using hg unfolding top1_homeomorphism_on_def by (by100 blast)
+      moreover have "W - {w} \<subseteq> h ` Fp" using hWw_sub by (by100 blast)
+      moreover have "is_topology_on (h ` Fp)
+          (subspace_topology (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets) (h ` Fp))"
+        using hg unfolding top1_homeomorphism_on_def by (by100 blast)
+      ultimately show ?thesis
+        using Theorem_18_2 by (by100 blast)
+    qed
+    have "top1_connected_on (S - {t0}) (subspace_topology I_set I_top (S - {t0}))"
+    proof -
+      have hWw_conn_sub: "top1_connected_on (W - {w})
+          (subspace_topology (h ` Fp)
+          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (h ` Fp)) (W - {w}))"
+      proof -
+        have "subspace_topology (h ` Fp)
+            (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (h ` Fp)) (W - {w})
+            = subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (W - {w})"
+          using subspace_topology_trans[of "W - {w}" "h ` Fp"] hWw_sub by (by100 simp)
+        thus ?thesis using hWw_top1_conn by (by100 simp)
+      qed
+      have "top1_connected_on (inv_into I_set g ` (W - {w})) (subspace_topology I_set I_top (inv_into I_set g ` (W - {w})))"
+        by (rule Theorem_23_5[OF _ _ hWw_conn_sub hinv_cont_on])
+           (use hg hinv_cont_on unfolding top1_homeomorphism_on_def top1_continuous_map_on_def by (by100 blast))+
+      thus ?thesis using hinv_img by (by100 simp)
+    qed
+    \<comment> \<open>Bridge: top1\_connected\_on \<rightarrow> HOL connected for subsets of R.\<close>
+    hence "top1_connected_on (S - {t0}) (subspace_topology (UNIV :: real set) top1_open_sets (S - {t0}))"
+    proof -
+      have "subspace_topology I_set I_top (S - {t0}) = subspace_topology UNIV top1_open_sets (S - {t0})"
+      proof -
+        have "S - {t0} \<subseteq> I_set" unfolding S_def by (by100 blast)
+        thus ?thesis using subspace_topology_trans[of "S - {t0}" I_set]
+          unfolding top1_unit_interval_topology_def by (by100 simp)
+      qed
+      thus ?thesis using \<open>top1_connected_on (S - {t0}) (subspace_topology I_set I_top (S - {t0}))\<close>
+        by (by100 simp)
+    qed
+  \<close>
+  \<comment> \<open>== DEAD CODE END ==\<close>
+  show False using hS_minus_connected hS_minus_not_connected by (by100 blast)
 qed
 
 \<comment> \<open>Corollary: p is in the closure of S2 - Fp.\<close>
