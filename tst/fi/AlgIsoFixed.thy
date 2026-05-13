@@ -4502,16 +4502,65 @@ proof -
       thus ?thesis using hC_sub_S2 hp_notC by (by100 blast)
     qed
     have hhC_scc: "top1_simple_closed_curve_on (UNIV :: (real \<times> real) set)
-        (product_topology_on top1_open_sets top1_open_sets) (h ` C)" sorry
+        (product_topology_on top1_open_sets top1_open_sets) (h ` C)"
+    proof -
+      \<comment> \<open>C is SCC in S2: get parametrization g: S1 \<rightarrow> C.\<close>
+      from assms(2) obtain g where hg: "top1_continuous_map_on top1_S1 top1_S1_topology
+          top1_S2 top1_S2_topology g" "inj_on g top1_S1" "g ` top1_S1 = C"
+        unfolding top1_simple_closed_curve_on_def by (by100 blast)
+      \<comment> \<open>h restricted to C is continuous S2-subspace \<rightarrow> R2.\<close>
+      have hh_cont: "top1_continuous_map_on (top1_S2 - {p})
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p}))
+          UNIV (product_topology_on top1_open_sets top1_open_sets) h"
+        using hh unfolding top1_homeomorphism_on_def by (by100 blast)
+      \<comment> \<open>g maps into S2-{p} (since g maps into C \<subseteq> S2-{p}).\<close>
+      have hg_into_S2p: "\<forall>x \<in> top1_S1. g x \<in> top1_S2 - {p}"
+        using hg(1,3) hC_sub_S2p unfolding top1_continuous_map_on_def by (by100 blast)
+      \<comment> \<open>g as map to S2-{p} subspace is continuous.\<close>
+      have hg_S2p: "top1_continuous_map_on top1_S1 top1_S1_topology
+          (top1_S2 - {p}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p})) g"
+        by (rule continuous_map_restrict_codomain[OF hg(1) hg_into_S2p])
+           (use hp_S2 in \<open>by100 blast\<close>)
+      \<comment> \<open>h \<circ> g: S1 \<rightarrow> R2 is continuous.\<close>
+      have hhg_cont: "top1_continuous_map_on top1_S1 top1_S1_topology
+          UNIV (product_topology_on top1_open_sets top1_open_sets) (h \<circ> g)"
+        by (rule top1_continuous_map_on_comp[OF hg_S2p hh_cont])
+      \<comment> \<open>h \<circ> g is injective (h injective on S2-{p}, g injective on S1).\<close>
+      have hhg_inj: "inj_on (h \<circ> g) top1_S1"
+      proof (rule inj_onI)
+        fix x y assume hx: "x \<in> top1_S1" and hy: "y \<in> top1_S1" and heq: "(h \<circ> g) x = (h \<circ> g) y"
+        have "h (g x) = h (g y)" using heq by (by100 simp)
+        have "g x \<in> top1_S2 - {p}" using hg_into_S2p hx by (by100 blast)
+        have "g y \<in> top1_S2 - {p}" using hg_into_S2p hy by (by100 blast)
+        have hinj: "inj_on h (top1_S2 - {p})" using hh unfolding top1_homeomorphism_on_def bij_betw_def
+          by (by100 blast)
+        have "g x = g y" by (rule inj_onD[OF hinj \<open>h (g x) = h (g y)\<close>
+            \<open>g x \<in> top1_S2 - {p}\<close> \<open>g y \<in> top1_S2 - {p}\<close>])
+        thus "x = y" using inj_onD[OF hg(2) \<open>g x = g y\<close> hx hy] by (by100 blast)
+      qed
+      \<comment> \<open>(h \<circ> g) ` S1 = h ` C.\<close>
+      have hhg_img: "(h \<circ> g) ` top1_S1 = h ` C"
+        using hg(3) by (by100 force)
+      show ?thesis unfolding top1_simple_closed_curve_on_def
+        using hhg_cont hhg_inj hhg_img by (by100 blast)
+    qed
     \<comment> \<open>Step 3: Apply JCT in R2 to get bounded/unbounded components.\<close>
+    define TR2 where "TR2 = (product_topology_on top1_open_sets top1_open_sets :: (real \<times> real) set set)"
     from Theorem_63_4_JordanCurve[OF hhC_scc]
-    obtain U_R2 V_R2 where hUV: "U_R2 \<noteq> {}" "V_R2 \<noteq> {}" "U_R2 \<inter> V_R2 = {}"
+    obtain U_R2 V_R2 where hUV_raw:
+        "U_R2 \<noteq> {}" "V_R2 \<noteq> {}" "U_R2 \<inter> V_R2 = {}"
         "U_R2 \<union> V_R2 = UNIV - h ` C"
+        "top1_path_connected_on U_R2 (subspace_topology UNIV TR2 U_R2)"
+        "top1_path_connected_on V_R2 (subspace_topology UNIV TR2 V_R2)"
+        "closure_on UNIV TR2 U_R2 = U_R2 \<union> h ` C"
+        "closure_on UNIV TR2 V_R2 = V_R2 \<union> h ` C"
+      unfolding TR2_def sorry \<comment> \<open>Extract from JCT (need to handle bounded/unbounded existentials).\<close>
+    have hUV: "U_R2 \<noteq> {}" "V_R2 \<noteq> {}" "U_R2 \<inter> V_R2 = {}" "U_R2 \<union> V_R2 = UNIV - h ` C"
         "top1_path_connected_on U_R2 (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) U_R2)"
         "top1_path_connected_on V_R2 (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) V_R2)"
         "closure_on UNIV (product_topology_on top1_open_sets top1_open_sets) U_R2 = U_R2 \<union> h ` C"
         "closure_on UNIV (product_topology_on top1_open_sets top1_open_sets) V_R2 = V_R2 \<union> h ` C"
-      sorry \<comment> \<open>Extract from Theorem_63_4_JordanCurve.\<close>
+      using hUV_raw unfolding TR2_def by (by100 blast)+
     \<comment> \<open>Step 4: h(q) is in one component (say W_R2). h(a1), h(a3) \<in> h(C) = boundary of W_R2.\<close>
     have hq_R2: "h q \<in> U_R2 \<or> h q \<in> V_R2"
     proof -
