@@ -4021,25 +4021,26 @@ proof -
   show ?thesis using hd_AD hp_Fp hd_Fp hFp_arc hFp_ep hFp_sub_A hFp_D hq_notin_Fp by (by100 blast)
 qed
 
-text \<open>Boundary arc existence: given a Jordan curve in R2, two boundary points can be
-connected by an arc through any component. This is a consequence of the local
-Jordan arc property (every point on a Jordan curve is locally accessible from both sides).\<close>
+text \<open>Munkres Step 3 x-axis construction: Given a Jordan curve D in R2 with 0 in the
+bounded component, find x-axis extremal points a1, a3 on D such that the line segment
+a1a3 lies in the closure of the bounded component and avoids D in its interior.
+This follows Munkres Theorem 65.2 Step 3 EXACTLY.\<close>
 
-lemma R2_JCT_boundary_arc:
+lemma Munkres_xaxis_segment:
   fixes D :: "(real \<times> real) set"
-  assumes "top1_simple_closed_curve_on (UNIV :: (real \<times> real) set)
+  assumes hD: "top1_simple_closed_curve_on (UNIV :: (real \<times> real) set)
       (product_topology_on top1_open_sets top1_open_sets) D"
-  and "W \<noteq> {}" "W \<inter> D = {}"
-  and "top1_path_connected_on W
-      (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) W)"
-  and "closure_on UNIV (product_topology_on top1_open_sets top1_open_sets) W = W \<union> D"
-  and "a \<in> D" and "b \<in> D" and "a \<noteq> b"
-  shows "\<exists>A. top1_is_arc_on A
-      (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) A)
-    \<and> top1_arc_endpoints_on A
-      (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) A) = {a, b}
-    \<and> A \<inter> D \<subseteq> {a, b}
-    \<and> (\<forall>x \<in> A - {a, b}. x \<in> W)"
+  and hU: "U \<noteq> {}" and hV: "V \<noteq> {}"
+  and hUV_disj: "U \<inter> V = {}" and hUV_union: "U \<union> V = UNIV - D"
+  and hU_pc: "top1_path_connected_on U
+      (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) U)"
+  and hU_bdd: "\<exists>M. \<forall>p \<in> U. fst p ^ 2 + snd p ^ 2 \<le> M"
+  and hV_unbdd: "\<forall>M. \<exists>p \<in> V. fst p ^ 2 + snd p ^ 2 > M"
+  and h0_U: "((0::real), (0::real)) \<in> U"
+  shows "\<exists>a1 a3. a1 \<in> D \<and> a3 \<in> D \<and> a1 \<noteq> a3
+    \<and> fst a1 \<le> 0 \<and> snd a1 = 0 \<and> fst a3 \<ge> 0 \<and> snd a3 = 0
+    \<and> (\<forall>x. fst a1 < fst x \<and> fst x < fst a3 \<and> snd x = 0 \<longrightarrow> x \<notin> D)
+    \<and> (\<forall>x. fst a1 < fst x \<and> fst x < fst a3 \<and> snd x = 0 \<longrightarrow> x \<in> U)"
   sorry
 
 text \<open>Munkres Step 4: moving punctures within path-components preserves the inclusion
@@ -4781,8 +4782,7 @@ proof -
         \<and> top1_arc_endpoints_on A (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) A) = {h a1, h a3}
         \<and> A \<inter> h ` C \<subseteq> {h a1, h a3}
         \<and> (\<forall>x \<in> A - {h a1, h a3}. x \<in> W_R2)"
-      using R2_JCT_boundary_arc[OF hhC_scc _ hW_sub hW_pc hW_cl hha1_D hha3_D hha1_ne_ha3]
-      hq_W by (by100 blast)
+      sorry \<comment> \<open>OLD: used R2_JCT_boundary_arc. TO BE REPLACED by K4_from_SCC_v2.\<close>
     then obtain A_R2 where hA: "top1_is_arc_on A_R2 (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) A_R2)"
         "top1_arc_endpoints_on A_R2 (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) A_R2) = {h a1, h a3}"
         "A_R2 \<inter> h ` C \<subseteq> {h a1, h a3}"
@@ -5783,6 +5783,94 @@ proof -
             he24_e12 he24_e23 he24_e34 he24_e41
             hq0_e13 hp0_e24 hp0_comp_p hq0_comp_q hC_eq
         in blast)
+qed
+
+text \<open>Munkres-faithful K4 construction (Step 3 done entirely in R2).
+Following the book EXACTLY: transfer to R2 first, then choose x-axis
+points, decompose, build arcs, and transfer K4 back to S2.\<close>
+
+lemma K4_from_SCC_v2:
+  assumes "is_topology_on_strict top1_S2 top1_S2_topology"
+  and "top1_simple_closed_curve_on top1_S2 top1_S2_topology C"
+  and "p \<in> top1_S2 - C" and "q \<in> top1_S2 - C"
+  and "\<not> (\<exists>f. top1_is_path_on (top1_S2 - C)
+                (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) p q f)"
+  shows "\<exists>a1 a2 a3 a4 e12 e23 e34 e41 e13 e24 p0 q0.
+    card {a1, a2, a3, a4} = 4
+    \<and> {a1, a2, a3, a4} \<subseteq> top1_S2
+    \<and> e12 \<subseteq> top1_S2 \<and> e23 \<subseteq> top1_S2 \<and> e34 \<subseteq> top1_S2
+    \<and> e41 \<subseteq> top1_S2 \<and> e13 \<subseteq> top1_S2 \<and> e24 \<subseteq> top1_S2
+    \<and> top1_is_arc_on e12 (subspace_topology top1_S2 top1_S2_topology e12)
+    \<and> top1_is_arc_on e23 (subspace_topology top1_S2 top1_S2_topology e23)
+    \<and> top1_is_arc_on e34 (subspace_topology top1_S2 top1_S2_topology e34)
+    \<and> top1_is_arc_on e41 (subspace_topology top1_S2 top1_S2_topology e41)
+    \<and> top1_is_arc_on e13 (subspace_topology top1_S2 top1_S2_topology e13)
+    \<and> top1_is_arc_on e24 (subspace_topology top1_S2 top1_S2_topology e24)
+    \<and> top1_arc_endpoints_on e12 (subspace_topology top1_S2 top1_S2_topology e12) = {a1,a2}
+    \<and> top1_arc_endpoints_on e23 (subspace_topology top1_S2 top1_S2_topology e23) = {a2,a3}
+    \<and> top1_arc_endpoints_on e34 (subspace_topology top1_S2 top1_S2_topology e34) = {a3,a4}
+    \<and> top1_arc_endpoints_on e41 (subspace_topology top1_S2 top1_S2_topology e41) = {a4,a1}
+    \<and> top1_arc_endpoints_on e13 (subspace_topology top1_S2 top1_S2_topology e13) = {a1,a3}
+    \<and> top1_arc_endpoints_on e24 (subspace_topology top1_S2 top1_S2_topology e24) = {a2,a4}
+    \<and> e12 \<inter> e34 = {} \<and> e23 \<inter> e41 = {}
+    \<and> e12 \<inter> e23 = {a2} \<and> e23 \<inter> e34 = {a3}
+    \<and> e34 \<inter> e41 = {a4} \<and> e41 \<inter> e12 = {a1}
+    \<and> e13 \<inter> e12 = {a1} \<and> e13 \<inter> e23 = {a3}
+    \<and> e13 \<inter> e34 = {a3} \<and> e13 \<inter> e41 = {a1}
+    \<and> e13 \<inter> e24 \<subseteq> {a1,a2,a3,a4}
+    \<and> e24 \<inter> e12 = {a2} \<and> e24 \<inter> e23 = {a2}
+    \<and> e24 \<inter> e34 = {a4} \<and> e24 \<inter> e41 = {a4}
+    \<and> q0 \<in> e13 - {a1, a3} \<and> p0 \<in> e24 - {a2, a4}
+    \<and> top1_in_same_path_component_on (top1_S2 - C)
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) p p0
+    \<and> top1_in_same_path_component_on (top1_S2 - C)
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) q q0
+    \<and> C = e12 \<union> e23 \<union> e34 \<union> e41"
+proof -
+  \<comment> \<open>Following Munkres Theorem 65.2 Step 3 EXACTLY.\<close>
+  have hp_S2: "p \<in> top1_S2" using assms(3) by (by100 blast)
+  have hq_S2: "q \<in> top1_S2" using assms(4) by (by100 blast)
+  have hp_notC: "p \<notin> C" using assms(3) by (by100 blast)
+  have hq_notC: "q \<notin> C" using assms(4) by (by100 blast)
+  have hC_sub_S2: "C \<subseteq> top1_S2" using assms(2) by (rule simple_closed_curve_subset)
+  \<comment> \<open>Step 1: Transfer to R2 via stereographic projection from p.
+     p maps to infinity, so component(p) becomes unbounded,
+     component(q) becomes bounded.\<close>
+  from S2_minus_point_homeo_R2[OF hp_S2]
+  obtain h where hh: "top1_homeomorphism_on (top1_S2 - {p})
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p}))
+      (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets) h"
+    by (by100 blast)
+  \<comment> \<open>Step 2: h(C) is SCC in R2. Apply JCT.\<close>
+  have hC_sub_S2p: "C \<subseteq> top1_S2 - {p}" using hC_sub_S2 hp_notC by (by100 blast)
+  have hhC_scc: "top1_simple_closed_curve_on (UNIV :: (real \<times> real) set)
+      (product_topology_on top1_open_sets top1_open_sets) (h ` C)" sorry
+  define TR2 where "TR2 = (product_topology_on top1_open_sets top1_open_sets :: (real \<times> real) set set)"
+  from Theorem_63_4_JordanCurve[OF hhC_scc]
+  obtain U_R2 V_R2 where hUV_full:
+      "U_R2 \<noteq> {}" "V_R2 \<noteq> {}" "U_R2 \<inter> V_R2 = {}" "U_R2 \<union> V_R2 = UNIV - h ` C"
+      "top1_path_connected_on U_R2 (subspace_topology UNIV TR2 U_R2)"
+      "top1_path_connected_on V_R2 (subspace_topology UNIV TR2 V_R2)"
+      "closure_on UNIV TR2 U_R2 = U_R2 \<union> h ` C"
+      "closure_on UNIV TR2 V_R2 = V_R2 \<union> h ` C"
+    unfolding TR2_def by (metis (no_types))
+  note hUV = hUV_full[unfolded TR2_def]
+  \<comment> \<open>Identify bounded component (contains h(q)) and unbounded.\<close>
+  have hq_S2p: "q \<in> top1_S2 - {p}" sorry
+  have hq_comp: "h q \<in> U_R2 \<or> h q \<in> V_R2" sorry
+  \<comment> \<open>Let U_bd = bounded component containing h(q), V_ub = unbounded.\<close>
+  \<comment> \<open>Step 3a: Translate so (0,0) \<in> bounded component.\<close>
+  \<comment> \<open>Pick u0 \<in> bounded component, define translated curve D = h(C) - u0.\<close>
+  \<comment> \<open>Step 3b: x-axis extremal points on D.\<close>
+  \<comment> \<open>Step 3c: Line segment a1 a3 on x-axis = one diagonal.\<close>
+  \<comment> \<open>Step 3d: Decompose D at a1, a3 into D1, D2.\<close>
+  \<comment> \<open>Step 3e: Paths from unbounded to (0,0) avoiding D1 (resp D2).\<close>
+  \<comment> \<open>Step 3f: First-hit gives a2 on D2, a4 on D1.\<close>
+  \<comment> \<open>Step 3g: Arc splice gives diagonal from a2 to a4.\<close>
+  \<comment> \<open>Step 3h: Choose p0 from segment interior, q0 from splice interior.\<close>
+  \<comment> \<open>Step 4: Un-translate, transfer K4 back to S2 via h\<inverse>.\<close>
+  \<comment> \<open>Step 5: Verify all K4 conditions.\<close>
+  show ?thesis sorry
 qed
 
 theorem Theorem_65_2_fixed:
