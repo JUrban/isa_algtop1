@@ -3219,6 +3219,101 @@ proof -
   qed
 qed
 
+\<comment> \<open>Helper: homeomorphism inverse maps connected set to connected set (bridges HOL connected and top1\_).\<close>
+lemma homeomorphism_inv_connected_bridge:
+  fixes Y :: "(real \<times> real) set" and W :: "(real \<times> real) set"
+  assumes hg: "top1_homeomorphism_on I_set I_top Y TY g"
+  and hTY: "TY = subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) Y"
+  and hW_conn: "connected (W - {w})"
+  and hW_sub: "W \<subseteq> Y"
+  and hw_W: "w \<in> W"
+  and ht0: "t0 \<in> I_set" "g t0 = w"
+  and hS_eq: "S = {t \<in> I_set. g t \<in> W}"
+  shows "connected (S - {t0})"
+proof -
+  have hg_bij: "bij_betw g I_set Y" using hg unfolding top1_homeomorphism_on_def by (by100 blast)
+  have hg_inj: "inj_on g I_set" using hg_bij unfolding bij_betw_def by (by100 blast)
+  have hg_img: "g ` I_set = Y" using hg_bij unfolding bij_betw_def by (by100 blast)
+  \<comment> \<open>Step 1: HOL connected \<rightarrow> top1\_connected (for R2 subspace).\<close>
+  have hWw_top1: "top1_connected_on (W - {w}) (subspace_topology (UNIV :: (real \<times> real) set)
+      (product_topology_on top1_open_sets top1_open_sets) (W - {w}))"
+  proof -
+    have "top1_connected_on (W - {w}) (subspace_topology (UNIV :: (real \<times> real) set) top1_open_sets (W - {w}))"
+      using hW_conn top1_connected_on_subspace_open_iff_connected by (by100 blast)
+    moreover have "(product_topology_on top1_open_sets top1_open_sets :: (real \<times> real) set set) = top1_open_sets"
+      using product_topology_on_open_sets by (by100 simp)
+    ultimately show ?thesis by (by100 simp)
+  qed
+  \<comment> \<open>Step 2: Subspace of subspace = subspace of ambient.\<close>
+  have hWw_sub_Y: "W - {w} \<subseteq> Y" using hW_sub by (by100 blast)
+  have hTY_eq: "TY = subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) Y"
+    using hTY by (by100 simp)
+  have hWw_top1_Y: "top1_connected_on (W - {w})
+      (subspace_topology Y TY (W - {w}))"
+  proof -
+    have "subspace_topology Y TY (W - {w})
+        = subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (W - {w})"
+      using subspace_topology_trans[of "W - {w}" Y] hWw_sub_Y hTY_eq by (by100 simp)
+    thus ?thesis using hWw_top1 by (by100 simp)
+  qed
+  \<comment> \<open>Step 3: inv\_into continuous (restriction to W-{w}).\<close>
+  have hg_inv: "top1_continuous_map_on Y TY I_set I_top (inv_into I_set g)"
+    using hg unfolding top1_homeomorphism_on_def by (by100 blast)
+  have hY_top: "is_topology_on Y TY"
+    using hg unfolding top1_homeomorphism_on_def by (by100 blast)
+  have hI_top: "is_topology_on I_set I_top"
+    using hg unfolding top1_homeomorphism_on_def by (by100 blast)
+  have hinv_on_Ww: "top1_continuous_map_on (W - {w})
+      (subspace_topology Y TY (W - {w})) I_set I_top (inv_into I_set g)"
+  proof -
+    show ?thesis by (rule top1_continuous_map_on_restrict_domain_simple[OF hg_inv hWw_sub_Y])
+  qed
+  \<comment> \<open>Step 4: inv\_into maps W-{w} to S-{t0}.\<close>
+  have hinv_img: "inv_into I_set g ` (W - {w}) = S - {t0}"
+  proof (intro set_eqI iffI)
+    fix t assume "t \<in> inv_into I_set g ` (W - {w})"
+    then obtain y where hy: "y \<in> W - {w}" "t = inv_into I_set g y" by (by100 blast)
+    have "y \<in> g ` I_set" using hy(1) hWw_sub_Y hg_img by (by100 blast)
+    hence ht_I: "t \<in> I_set" using hy(2) by (metis inv_into_into)
+    have hgt: "g t = y" using hy(2) f_inv_into_f[OF \<open>y \<in> g ` I_set\<close>] by (by100 simp)
+    hence "g t \<in> W" using hy(1) by (by100 blast)
+    hence "t \<in> S" unfolding hS_eq using ht_I by (by100 blast)
+    moreover have "t \<noteq> t0" using hgt hy(1) ht0(2) by auto
+    ultimately show "t \<in> S - {t0}" by (by100 blast)
+  next
+    fix t assume "t \<in> S - {t0}"
+    hence ht: "t \<in> I_set" "g t \<in> W" "t \<noteq> t0" unfolding hS_eq by auto
+    have "g t \<noteq> w" using ht(1,3) ht0 inj_onD[OF hg_inj] by (by100 metis)
+    hence "g t \<in> W - {w}" using ht(2) by (by100 blast)
+    moreover have "inv_into I_set g (g t) = t"
+      using inv_into_f_f[OF hg_inj ht(1)] by (by100 simp)
+    ultimately show "t \<in> inv_into I_set g ` (W - {w})" by (by100 force)
+  qed
+  \<comment> \<open>Step 5: Theorem\_23\_5: connected image under continuous.\<close>
+  have hI_top: "is_topology_on I_set I_top"
+    using hg unfolding top1_homeomorphism_on_def by (by100 blast)
+  have hWw_top: "is_topology_on (W - {w}) (subspace_topology Y TY (W - {w}))"
+    by (rule subspace_topology_is_topology_on[OF hY_top hWw_sub_Y])
+  have "top1_connected_on (inv_into I_set g ` (W - {w}))
+      (subspace_topology I_set I_top (inv_into I_set g ` (W - {w})))"
+    by (rule Theorem_23_5[OF hWw_top hI_top hWw_top1_Y hinv_on_Ww])
+  have "top1_connected_on (S - {t0}) (subspace_topology I_set I_top (S - {t0}))"
+    using \<open>top1_connected_on (inv_into I_set g ` (W - {w})) _\<close> hinv_img by (by100 simp)
+  \<comment> \<open>Step 6: Bridge back top1\_connected \<rightarrow> HOL connected.\<close>
+  hence "top1_connected_on (S - {t0}) (subspace_topology UNIV top1_open_sets (S - {t0}))"
+  proof -
+    have "subspace_topology I_set I_top (S - {t0}) = subspace_topology UNIV top1_open_sets (S - {t0})"
+    proof -
+      have "S - {t0} \<subseteq> I_set" unfolding hS_eq by (by100 blast)
+      thus ?thesis using subspace_topology_trans[of "S - {t0}" I_set]
+        unfolding top1_unit_interval_topology_def by (by100 simp)
+    qed
+    thus ?thesis using \<open>top1_connected_on (S - {t0}) (subspace_topology I_set I_top (S - {t0}))\<close>
+      by (by100 simp)
+  qed
+  thus ?thesis using top1_connected_on_subspace_open_iff_connected by (by100 blast)
+qed
+
 \<comment> \<open>An arc endpoint in S2 is NOT an interior point of the arc.
    Hence any open neighborhood of p in S2 contains points outside Fp.
    Proof: via stereographic projection to R2, use connected\_open\_delete\_R2.\<close>
@@ -3606,8 +3701,14 @@ proof (rule ccontr)
      Theorem\_23\_5: continuous image of connected = connected.
      Bridges via subspace\_topology\_trans + product\_topology\_on\_open\_sets.\<close>
   have hS_minus_connected: "connected (S - {t0})"
-    sorry \<comment> \<open>inv\_into I\_set g maps connected W-{w} to S-{t0}. Use Theorem\_23\_5 + bridges.\<close>
-  \<comment> \<open>Proof sketch saved in git history (commit af51822d).\<close>
+  proof -
+    have hTY_match: "(subspace_topology (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets) (h ` Fp))
+        = subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (h ` Fp)"
+      by (by100 simp)
+    show ?thesis
+      by (rule homeomorphism_inv_connected_bridge[OF hg hTY_match hW_del hW_sub_hFp hW(2) ht0_I])
+         (use w_def S_def in auto)
+  qed
   \<comment> \<open>== DEAD CODE START (remove when sorry filled in) ==\<close>
   \<comment> \<open>
     have hWw_top1_conn: "top1_connected_on (W - {w})
