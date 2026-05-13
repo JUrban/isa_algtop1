@@ -4608,10 +4608,36 @@ proof -
       by blast
     \<comment> \<open>Step 6: Transfer arc back to S2 via h\<inverse>.\<close>
     define e13 where "e13 = inv_into (top1_S2 - {p}) h ` A_R2"
+    \<comment> \<open>Helper: h\<inverse> is a homeomorphism R2 \<rightarrow> S2-{p}.\<close>
+    have hh_inv: "top1_homeomorphism_on (UNIV :: (real \<times> real) set)
+        (product_topology_on top1_open_sets top1_open_sets) (top1_S2 - {p})
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p})) (inv_into (top1_S2 - {p}) h)"
+      by (rule homeomorphism_inverse[OF hh])
+    have hh_bij: "bij_betw h (top1_S2 - {p}) UNIV" using hh unfolding top1_homeomorphism_on_def
+      by (by100 blast)
+    have hh_inj: "inj_on h (top1_S2 - {p})" using hh_bij unfolding bij_betw_def by (by100 blast)
+    \<comment> \<open>e13 \<subseteq> S2-{p} \<subseteq> S2.\<close>
+    have hinv_range: "\<forall>y. inv_into (top1_S2 - {p}) h y \<in> top1_S2 - {p}"
+      using hh_inv unfolding top1_homeomorphism_on_def top1_continuous_map_on_def by (by100 blast)
+    have he13_sub_S2p: "e13 \<subseteq> top1_S2 - {p}"
+    proof (intro subsetI)
+      fix x assume "x \<in> e13"
+      then obtain y where "y \<in> A_R2" "x = inv_into (top1_S2 - {p}) h y"
+        unfolding e13_def by (by100 blast)
+      have "inv_into (top1_S2 - {p}) h y \<in> top1_S2 - {p}" using hinv_range
+        by (rule spec)
+      thus "x \<in> top1_S2 - {p}" using \<open>x = inv_into (top1_S2 - {p}) h y\<close> by (by100 simp)
+    qed
+    \<comment> \<open>inv\_into sends h(a1) to a1, h(a3) to a3.\<close>
+    have hinv_a1: "inv_into (top1_S2 - {p}) h (h a1) = a1"
+      by (rule inv_into_f_f[OF hh_inj ha1_S2p])
+    have hinv_a3: "inv_into (top1_S2 - {p}) h (h a3) = a3"
+      by (rule inv_into_f_f[OF hh_inj ha3_S2p])
     have "top1_is_arc_on e13 (subspace_topology top1_S2 top1_S2_topology e13)" sorry
-    moreover have "e13 \<subseteq> top1_S2" sorry
+    moreover have "e13 \<subseteq> top1_S2" using he13_sub_S2p by (by100 blast)
     moreover have "top1_arc_endpoints_on e13 (subspace_topology top1_S2 top1_S2_topology e13) = {a1, a3}" sorry
     moreover have "e13 \<inter> C \<subseteq> {a1, a3}" sorry
+      \<comment> \<open>Follows from A_R2 \<inter> h(C) \<subseteq> {h(a1),h(a3)} and bijectivity of h.\<close>
     moreover have "\<forall>x \<in> e13 - {a1, a3}. top1_in_same_path_component_on (top1_S2 - C)
         (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) q x" sorry
     ultimately show ?thesis using that[of e13] by (by100 blast)
