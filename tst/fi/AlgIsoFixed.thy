@@ -4149,13 +4149,26 @@ proof -
       show False
       proof (cases "fst x \<le> 0")
         case True
-        have "fst x \<in> S_neg" sorry \<comment> \<open>x \<in> D, fst x \<le> 0, snd x = 0 \<Rightarrow> fst x \<in> S\_neg.\<close>
+        have "fst x \<in> S_neg"
+        proof -
+          have "snd x = 0" using hx by (by100 blast)
+          have "x = (fst x, snd x)" by (by100 simp)
+          hence "x = (fst x, 0)" using \<open>snd x = 0\<close> by (by100 simp)
+          hence "(fst x, (0::real)) \<in> D" using \<open>x \<in> D\<close> by (by100 simp)
+          thus ?thesis unfolding S_neg_def using True \<open>snd x = 0\<close> \<open>x \<in> D\<close>
+            by (by100 blast)
+        qed
         hence "fst x \<le> a1x" unfolding a1x_def using hS_neg_bdd by (rule cSup_upper)
         thus False using hx unfolding a1_def by (by100 simp)
       next
         case False
         hence "fst x \<ge> 0" by (by100 simp)
-        have "fst x \<in> S_pos" sorry \<comment> \<open>x \<in> D, fst x \<ge> 0, snd x = 0 \<Rightarrow> fst x \<in> S\_pos.\<close>
+        have "fst x \<in> S_pos"
+        proof -
+          have "snd x = 0" using hx by (by100 blast)
+          thus ?thesis unfolding S_pos_def using \<open>fst x \<ge> 0\<close> \<open>x \<in> D\<close>
+            by (by100 blast)
+        qed
         hence "fst x \<ge> a3x" unfolding a3x_def using hS_pos_bdd by (rule cInf_lower)
         thus False using hx unfolding a3_def by (by100 simp)
       qed
