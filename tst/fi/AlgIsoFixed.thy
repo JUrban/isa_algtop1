@@ -6126,17 +6126,47 @@ proof -
   define U_bd where "U_bd = tr ` (if h q \<in> U_R2 then U_R2 else V_R2)"
   define V_ub where "V_ub = tr ` (if h q \<in> U_R2 then V_R2 else U_R2)"
   \<comment> \<open>D is SCC in R2, U\_bd bounded with (0,0) \<in> U\_bd, V\_ub unbounded.\<close>
+  \<comment> \<open>tr is a bijection R2 \<rightarrow> R2 with tr(h(q)) = (0,0).\<close>
+  have htr_hq: "tr (h q) = ((0::real),(0::real))" unfolding tr_def by (by100 simp)
+  have htr_inj: "inj tr" unfolding tr_def inj_def by (by100 simp)
+  have htr_surj: "surj tr" unfolding tr_def surj_def
+  proof (intro allI)
+    fix y :: "real \<times> real"
+    show "\<exists>x. y = (fst x - fst (h q), snd x - snd (h q))"
+      by (rule exI[of _ "(fst y + fst (h q), snd y + snd (h q))"]) (by100 simp)
+  qed
+  have htr_img_UNIV: "tr ` UNIV = (UNIV :: (real \<times> real) set)" using htr_surj by (by100 blast)
+  \<comment> \<open>Translation properties: disjointness, union, membership all transfer.\<close>
+  have h0_Ubd: "((0::real),(0::real)) \<in> U_bd"
+  proof (cases "h q \<in> U_R2")
+    case True
+    have "tr (h q) \<in> tr ` U_R2" using True by (by100 blast)
+    thus ?thesis using htr_hq unfolding U_bd_def using True by (by100 simp)
+  next
+    case False
+    hence "h q \<in> V_R2" using hq_comp by (by100 blast)
+    have "tr (h q) \<in> tr ` V_R2" using \<open>h q \<in> V_R2\<close> by (by100 blast)
+    thus ?thesis using htr_hq unfolding U_bd_def using False by (by100 simp)
+  qed
+  have hUbd_ne: "U_bd \<noteq> {}" using h0_Ubd by (by100 blast)
+  have hVub_ne: "V_ub \<noteq> {}"
+  proof (cases "h q \<in> U_R2")
+    case True thus ?thesis unfolding V_ub_def using hUV(2) by (by100 simp)
+  next
+    case False thus ?thesis unfolding V_ub_def using hUV(1) by (by100 simp)
+  qed
+  have hUV_disj': "U_bd \<inter> V_ub = {}" sorry
+    \<comment> \<open>tr injective, U\_R2 \<inter> V\_R2 = {} \<Rightarrow> tr(U) \<inter> tr(V) = {}.\<close>
+  have hUV_union': "U_bd \<union> V_ub = UNIV - D" sorry
+    \<comment> \<open>tr bijective, U \<union> V = UNIV - h(C) \<Rightarrow> tr(U) \<union> tr(V) = UNIV - tr(h(C)) = UNIV - D.\<close>
+  \<comment> \<open>D is SCC, U\_bd path-connected, boundedness — all transfer via tr.\<close>
   have hD_scc: "top1_simple_closed_curve_on (UNIV :: (real \<times> real) set)
       (product_topology_on top1_open_sets top1_open_sets) D" sorry
-  have h0_Ubd: "((0::real),(0::real)) \<in> U_bd" sorry
-  have hUbd_ne: "U_bd \<noteq> {}" sorry
-  have hVub_ne: "V_ub \<noteq> {}" sorry
-  have hUV_disj': "U_bd \<inter> V_ub = {}" sorry
-  have hUV_union': "U_bd \<union> V_ub = UNIV - D" sorry
   have hUbd_pc: "top1_path_connected_on U_bd
       (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) U_bd)" sorry
   have hUbd_bdd: "\<exists>M. \<forall>p \<in> U_bd. fst p ^ 2 + snd p ^ 2 \<le> M" sorry
   have hVub_unbdd: "\<forall>M. \<exists>p \<in> V_ub. fst p ^ 2 + snd p ^ 2 > M" sorry
+  have hUbd_cl: "closure_on UNIV (product_topology_on top1_open_sets top1_open_sets) U_bd = U_bd \<union> D" sorry
   \<comment> \<open>Step 3b: Apply Munkres\_xaxis\_segment to get x-axis extremal points.\<close>
   from Munkres_xaxis_segment[OF hD_scc hUbd_ne hVub_ne hUV_disj' hUV_union'
       hUbd_pc hUbd_bdd hVub_unbdd h0_Ubd]
