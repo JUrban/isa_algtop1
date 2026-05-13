@@ -4633,13 +4633,83 @@ proof -
       by (rule inv_into_f_f[OF hh_inj ha1_S2p])
     have hinv_a3: "inv_into (top1_S2 - {p}) h (h a3) = a3"
       by (rule inv_into_f_f[OF hh_inj ha3_S2p])
+    \<comment> \<open>Key: h(inv\_into y) = y for all y (h is surjective onto UNIV).\<close>
+    have hh_surj: "h ` (top1_S2 - {p}) = (UNIV :: (real \<times> real) set)"
+      using hh_bij unfolding bij_betw_def by (by100 blast)
+    have h_inv_cancel: "\<And>y. h (inv_into (top1_S2 - {p}) h y) = y"
+    proof -
+      fix y :: "real \<times> real"
+      have "y \<in> h ` (top1_S2 - {p})" using hh_surj by (by100 blast)
+      thus "h (inv_into (top1_S2 - {p}) h y) = y" by (rule f_inv_into_f)
+    qed
+    \<comment> \<open>e13 is an arc: h\<inverse> restricted to A_R2 gives homeomorphism A_R2 \<rightarrow> e13.\<close>
     have "top1_is_arc_on e13 (subspace_topology top1_S2 top1_S2_topology e13)" sorry
     moreover have "e13 \<subseteq> top1_S2" using he13_sub_S2p by (by100 blast)
     moreover have "top1_arc_endpoints_on e13 (subspace_topology top1_S2 top1_S2_topology e13) = {a1, a3}" sorry
-    moreover have "e13 \<inter> C \<subseteq> {a1, a3}" sorry
-      \<comment> \<open>Follows from A_R2 \<inter> h(C) \<subseteq> {h(a1),h(a3)} and bijectivity of h.\<close>
+    moreover have "e13 \<inter> C \<subseteq> {a1, a3}"
+    proof (intro subsetI)
+      fix x assume "x \<in> e13 \<inter> C"
+      hence hxe: "x \<in> e13" and hxC: "x \<in> C" by (by100 blast)+
+      have hx_S2p: "x \<in> top1_S2 - {p}" using hxe he13_sub_S2p by (by100 blast)
+      \<comment> \<open>x \<in> e13 means x = inv\_into h y for some y \<in> A\_R2, so h(x) = y \<in> A\_R2.\<close>
+      have "h x \<in> A_R2"
+      proof -
+        from hxe obtain y where hy: "y \<in> A_R2" "x = inv_into (top1_S2 - {p}) h y"
+          unfolding e13_def by (by100 blast)
+        have "h x = h (inv_into (top1_S2 - {p}) h y)" using hy(2) by (by100 simp)
+        also have "\<dots> = y" by (rule h_inv_cancel)
+        finally show ?thesis using hy(1) by (by100 simp)
+      qed
+      moreover have "h x \<in> h ` C" using hxC by (by100 blast)
+      ultimately have "h x \<in> A_R2 \<inter> h ` C" by (by100 blast)
+      hence "h x \<in> {h a1, h a3}" using hA(3) by (by100 blast)
+      hence "h x = h a1 \<or> h x = h a3" by (by100 blast)
+      thus "x \<in> {a1, a3}"
+      proof
+        assume "h x = h a1"
+        hence "x = a1" by (rule inj_onD[OF hh_inj _ hx_S2p ha1_S2p])
+        thus ?thesis by (by100 blast)
+      next
+        assume "h x = h a3"
+        hence "x = a3" by (rule inj_onD[OF hh_inj _ hx_S2p ha3_S2p])
+        thus ?thesis by (by100 blast)
+      qed
+    qed
     moreover have "\<forall>x \<in> e13 - {a1, a3}. top1_in_same_path_component_on (top1_S2 - C)
-        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) q x" sorry
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) q x"
+    proof (intro ballI)
+      fix x assume hx: "x \<in> e13 - {a1, a3}"
+      \<comment> \<open>h(x) \<in> A\_R2 - {h(a1),h(a3)} \<subseteq> W\_R2, so h(x) and h(q) are in W\_R2 (path-connected).\<close>
+      have hx_S2p: "x \<in> top1_S2 - {p}" using hx he13_sub_S2p by (by100 blast)
+      have hx_SC: "x \<in> top1_S2 - C"
+        using hx \<open>e13 \<inter> C \<subseteq> {a1, a3}\<close> he13_sub_S2p by (by100 blast)
+      have "h x \<in> A_R2"
+      proof -
+        from hx obtain y where hy: "y \<in> A_R2" "x = inv_into (top1_S2 - {p}) h y"
+          unfolding e13_def by (by100 blast)
+        have "h x = y" using hy(2) h_inv_cancel by (by100 simp)
+        thus ?thesis using hy(1) by (by100 simp)
+      qed
+      have "h x \<noteq> h a1"
+      proof
+        assume "h x = h a1"
+        hence "x = a1" by (rule inj_onD[OF hh_inj _ hx_S2p ha1_S2p])
+        thus False using hx by (by100 blast)
+      qed
+      moreover have "h x \<noteq> h a3"
+      proof
+        assume "h x = h a3"
+        hence "x = a3" by (rule inj_onD[OF hh_inj _ hx_S2p ha3_S2p])
+        thus False using hx by (by100 blast)
+      qed
+      ultimately have "h x \<in> A_R2 - {h a1, h a3}" using \<open>h x \<in> A_R2\<close> by (by100 blast)
+      hence "h x \<in> W_R2" using hA(4) by (by100 blast)
+      \<comment> \<open>h(q) \<in> W\_R2 and W\_R2 is path-connected, so h(x) and h(q) path-connected in W\_R2.
+         W\_R2 \<subseteq> UNIV - h(C), and h bijects S2-{p} to R2, so the path-component transfers.\<close>
+      show "top1_in_same_path_component_on (top1_S2 - C)
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) q x" sorry
+        \<comment> \<open>Needs: path in W_R2 from h(q) to h(x), transferred via h\<inverse> to S2-C.\<close>
+    qed
     ultimately show ?thesis using that[of e13] by (by100 blast)
   qed
   \<comment> \<open>Endpoints are elements of the arc.\<close>
