@@ -4133,16 +4133,9 @@ proof -
     have "far \<in> ray" unfolding ray_def far_def by (by100 simp)
     hence "ray \<inter> V \<noteq> {}" using \<open>far \<in> V\<close> by (by100 blast)
     \<comment> \<open>Connected ray \<subseteq> U \<union> V (disjoint open sets), meets both \<Rightarrow> disconnected.\<close>
-    have "\<not> connected ray"
-    proof -
-      have "open U" "open V" using hU_open hV_open .
-      have "ray \<inter> U \<noteq> {}" "ray \<inter> V \<noteq> {}" using \<open>ray \<inter> U \<noteq> {}\<close> \<open>ray \<inter> V \<noteq> {}\<close> .
-      have "ray \<subseteq> U \<union> V" using hray_sub .
-      have "U \<inter> V = {}" using hUV_disj .
-      show ?thesis using \<open>open U\<close> \<open>open V\<close> \<open>ray \<subseteq> U \<union> V\<close> \<open>U \<inter> V = {}\<close>
-          \<open>ray \<inter> U \<noteq> {}\<close> \<open>ray \<inter> V \<noteq> {}\<close> sorry
-    qed
-    thus False using hray_conn by (by100 blast)
+    have "U \<inter> V \<inter> ray = {}" using hUV_disj by (by100 blast)
+    from connectedD[OF hray_conn hU_open hV_open this hray_sub]
+    show False using \<open>ray \<inter> U \<noteq> {}\<close> \<open>ray \<inter> V \<noteq> {}\<close> by (by100 blast)
   qed
   have hD_pos_xaxis: "\<exists>d \<in> D. fst d \<ge> 0 \<and> snd d = 0"
   proof (rule ccontr)
@@ -4184,9 +4177,9 @@ proof -
     hence "ray \<inter> U \<noteq> {}" using h0_U by (by100 blast)
     have "far \<in> ray" unfolding ray_def far_def by (by100 simp)
     hence "ray \<inter> V \<noteq> {}" using \<open>far \<in> V\<close> by (by100 blast)
-    have "\<not> connected ray"
-      using hU_open hV_open hray_sub hUV_disj \<open>ray \<inter> U \<noteq> {}\<close> \<open>ray \<inter> V \<noteq> {}\<close> sorry
-    thus False using hray_conn by (by100 blast)
+    have "U \<inter> V \<inter> ray = {}" using hUV_disj by (by100 blast)
+    from connectedD[OF hray_conn hU_open hV_open this hray_sub]
+    show False using \<open>ray \<inter> U \<noteq> {}\<close> \<open>ray \<inter> V \<noteq> {}\<close> by (by100 blast)
   qed
   \<comment> \<open>D \<inter> negative x-axis is compact and nonempty \<Rightarrow> has maximum x-coordinate.\<close>
   define S_neg where "S_neg = {fst d | d. d \<in> D \<and> fst d \<le> 0 \<and> snd d = 0}"
