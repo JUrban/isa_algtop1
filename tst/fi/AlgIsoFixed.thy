@@ -4083,14 +4083,39 @@ proof -
   have hS_neg_ne: "S_neg \<noteq> {}" using hD_neg_xaxis unfolding S_neg_def by (by100 blast)
   have hS_neg_bdd: "bdd_above S_neg"
     unfolding S_neg_def bdd_above_def by (rule exI[of _ 0]) (by100 force)
-  have hS_neg_closed: "closed S_neg" sorry
-    \<comment> \<open>S\_neg = fst ` (D \<inter> \{d. fst d \<le> 0 \<and> snd d = 0\}). D compact, intersection compact,
-       fst continuous, so image is compact, hence closed.\<close>
+  have "closed {d :: real \<times> real. fst d \<le> 0 \<and> snd d = 0}"
+  proof -
+    have h1: "closed {d :: real \<times> real. fst d \<le> 0}"
+      by (rule closed_Collect_le[OF continuous_on_fst[OF continuous_on_id] continuous_on_const])
+    have h2: "closed {d :: real \<times> real. snd d = 0}"
+      by (rule closed_Collect_eq[OF continuous_on_snd[OF continuous_on_id] continuous_on_const])
+    have "{d :: real \<times> real. fst d \<le> 0 \<and> snd d = 0} = {d. fst d \<le> 0} \<inter> {d. snd d = 0}"
+      by (by100 blast)
+    thus ?thesis using closed_Int[OF h1 h2] by (by100 simp)
+  qed
+  have hS_neg_compact: "compact S_neg"
+  proof -
+    define T where "T = D \<inter> {d :: real \<times> real. fst d \<le> 0 \<and> snd d = 0}"
+    have hT_compact: "compact T" unfolding T_def
+      by (rule compact_Int_closed[OF hD_compact \<open>closed {d. fst d \<le> 0 \<and> snd d = 0}\<close>])
+    have hS_eq: "S_neg = fst ` T" unfolding S_neg_def T_def by (by100 blast)
+    have "continuous_on T fst" using continuous_on_fst[OF continuous_on_id] by (by100 blast)
+    from compact_continuous_image[OF this hT_compact]
+    show ?thesis using hS_eq by (by100 simp)
+  qed
+  have hS_neg_closed: "closed S_neg" using hS_neg_compact by (rule compact_imp_closed)
   define a1x where "a1x = Sup S_neg"
   have ha1x_le0: "a1x \<le> 0"
     unfolding a1x_def by (rule cSup_least[OF hS_neg_ne])
        (use hS_neg_bdd in \<open>unfold S_neg_def, by100 force\<close>)
-  have ha1x_mem: "a1x \<in> S_neg" sorry \<comment> \<open>Closed + bdd_above + nonempty \<Rightarrow> Sup achieved.\<close>
+  have ha1x_mem: "a1x \<in> S_neg"
+  proof -
+    from compact_attains_sup[OF hS_neg_compact hS_neg_ne]
+    obtain s where hs: "s \<in> S_neg" "\<forall>t \<in> S_neg. t \<le> s" by (by100 blast)
+    have "Sup S_neg = s"
+      by (rule cSup_eq_non_empty[OF hS_neg_ne]) (use hs in \<open>by100 auto\<close>)
+    thus ?thesis unfolding a1x_def using hs(1) by (by100 simp)
+  qed
   define a1 :: "real \<times> real" where "a1 = (a1x, 0)"
   have ha1_D: "a1 \<in> D"
   proof -
@@ -4107,12 +4132,39 @@ proof -
   have hS_pos_ne: "S_pos \<noteq> {}" using hD_pos_xaxis unfolding S_pos_def by (by100 blast)
   have hS_pos_bdd: "bdd_below S_pos"
     unfolding S_pos_def bdd_below_def by (rule exI[of _ 0]) (by100 force)
-  have hS_pos_closed: "closed S_pos" sorry
+  have "closed {d :: real \<times> real. fst d \<ge> 0 \<and> snd d = 0}"
+  proof -
+    have h1: "closed {d :: real \<times> real. fst d \<ge> 0}"
+      by (rule closed_Collect_le[OF continuous_on_const continuous_on_fst[OF continuous_on_id]])
+    have h2: "closed {d :: real \<times> real. snd d = 0}"
+      by (rule closed_Collect_eq[OF continuous_on_snd[OF continuous_on_id] continuous_on_const])
+    have "{d :: real \<times> real. fst d \<ge> 0 \<and> snd d = 0} = {d. fst d \<ge> 0} \<inter> {d. snd d = 0}"
+      by (by100 blast)
+    thus ?thesis using closed_Int[OF h1 h2] by (by100 simp)
+  qed
+  have hS_pos_compact: "compact S_pos"
+  proof -
+    define T where "T = D \<inter> {d :: real \<times> real. fst d \<ge> 0 \<and> snd d = 0}"
+    have hT_compact: "compact T" unfolding T_def
+      by (rule compact_Int_closed[OF hD_compact \<open>closed {d. fst d \<ge> 0 \<and> snd d = 0}\<close>])
+    have hS_eq: "S_pos = fst ` T" unfolding S_pos_def T_def by (by100 blast)
+    have "continuous_on T fst" using continuous_on_fst[OF continuous_on_id] by (by100 blast)
+    from compact_continuous_image[OF this hT_compact]
+    show ?thesis using hS_eq by (by100 simp)
+  qed
+  have hS_pos_closed: "closed S_pos" using hS_pos_compact by (rule compact_imp_closed)
   define a3x where "a3x = Inf S_pos"
   have ha3x_ge0: "a3x \<ge> 0"
     unfolding a3x_def by (rule cInf_greatest[OF hS_pos_ne])
        (use hS_pos_bdd in \<open>unfold S_pos_def, by100 force\<close>)
-  have ha3x_mem: "a3x \<in> S_pos" sorry
+  have ha3x_mem: "a3x \<in> S_pos"
+  proof -
+    from compact_attains_inf[OF hS_pos_compact hS_pos_ne]
+    obtain s where hs: "s \<in> S_pos" "\<forall>t \<in> S_pos. s \<le> t" by (by100 blast)
+    have "Inf S_pos = s"
+      by (rule cInf_eq_non_empty[OF hS_pos_ne]) (use hs in \<open>by100 auto\<close>)
+    thus ?thesis unfolding a3x_def using hs(1) by (by100 simp)
+  qed
   define a3 :: "real \<times> real" where "a3 = (a3x, 0)"
   have ha3_D: "a3 \<in> D"
   proof -
