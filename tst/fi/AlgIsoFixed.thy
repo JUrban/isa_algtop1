@@ -5033,8 +5033,25 @@ proof -
           have hx_eq: "x = ((1-t) * fst (h_sel a1) + t * fst (h_sel a3),
               (1-t) * snd (h_sel a1) + t * snd (h_sel a3))"
             using ht(3) unfolding h_def by (by100 blast)
-          have "x \<notin> h_sel ` C" sorry
-            \<comment> \<open>Trivial: ha1a3(10) at t + hx\_eq. But \<forall>-instantiation times out in by100.\<close>
+          have "x \<notin> h_sel ` C"
+          proof -
+            define pt where "pt = ((1-t) * fst (h_sel a1) + t * fst (h_sel a3),
+                (1-t) * snd (h_sel a1) + t * snd (h_sel a3))"
+            have "x = pt" using hx_eq unfolding pt_def by (by100 blast)
+            have "pt \<notin> h_sel ` C"
+            proof -
+              have "\<forall>t. 0 < t \<and> t < 1 \<longrightarrow>
+                  ((1-t) * fst (h_sel a1) + t * fst (h_sel a3),
+                   (1-t) * snd (h_sel a1) + t * snd (h_sel a3)) \<notin> h_sel ` C"
+                by (rule ha1a3(9))
+              hence "0 < t \<and> t < 1 \<longrightarrow>
+                  ((1-t) * fst (h_sel a1) + t * fst (h_sel a3),
+                   (1-t) * snd (h_sel a1) + t * snd (h_sel a3)) \<notin> h_sel ` C"
+                by (rule spec)
+              thus ?thesis using \<open>0 < t\<close> \<open>t < 1\<close> unfolding pt_def by (by100 blast)
+            qed
+            thus ?thesis using \<open>x = pt\<close> by (by100 blast)
+          qed
           hence "x \<notin> h ` C" unfolding h_def by (by100 blast)
           thus False using hx_C by (by100 blast)
         qed
