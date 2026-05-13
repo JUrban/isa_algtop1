@@ -4071,12 +4071,51 @@ proof -
   \<comment> \<open>(0,0) \<notin> D (since (0,0) \<in> U and U \<inter> D = {}).\<close>
   have h0_notD: "((0::real), (0::real)) \<notin> D" using h0_U hUV_union by (by100 blast)
   \<comment> \<open>Negative x-axis ray from (0,0) must cross D (connects bounded to unbounded).\<close>
-  have hD_neg_xaxis: "\<exists>d \<in> D. fst d \<le> 0 \<and> snd d = 0" sorry
-    \<comment> \<open>Ray {(x,0)|x\<le>0} is connected, starts at (0,0)\<in>U, goes to unbounded.
-       If it avoids D, it stays in U\<union>V. Being connected with one end in U and going
-       to infinity, it would need to stay in V eventually, but it starts in U.
-       Contradiction with connectedness + U\<inter>V={}.\<close>
-  have hD_pos_xaxis: "\<exists>d \<in> D. fst d \<ge> 0 \<and> snd d = 0" sorry
+  have hD_neg_xaxis: "\<exists>d \<in> D. fst d \<le> 0 \<and> snd d = 0"
+  proof (rule ccontr)
+    assume "\<not> (\<exists>d \<in> D. fst d \<le> 0 \<and> snd d = 0)"
+    hence hray_avoids: "\<forall>d. d \<in> D \<longrightarrow> \<not>(fst d \<le> 0 \<and> snd d = 0)" by (by100 blast)
+    \<comment> \<open>The negative x-axis ray avoids D, so lies in U \<union> V.\<close>
+    \<comment> \<open>(0,0) \<in> U. Some far point (-(|M|+1), 0) \<notin> U (since U bounded).\<close>
+    from hU_bdd obtain M where hM: "\<forall>p \<in> U. fst p ^ 2 + snd p ^ 2 \<le> M" by (by100 blast)
+    define far where "far = (-(abs M + 1), (0::real))"
+    have hfar_neg: "fst far \<le> 0" unfolding far_def by (by100 simp)
+    have hfar_y: "snd far = 0" unfolding far_def by (by100 simp)
+    have hfar_notU: "far \<notin> U"
+    proof
+      assume "far \<in> U"
+      hence "fst far ^ 2 + snd far ^ 2 \<le> M" using hM by (by100 blast)
+      have "fst far = -(abs M + 1)" "snd far = (0::real)" unfolding far_def by (by100 simp)+
+      hence "fst far ^ 2 + snd far ^ 2 = (abs M + 1) ^ 2"
+        using power2_minus[of "abs M + 1"] by (by100 simp)
+      hence "(abs M + 1) ^ 2 \<le> M" using \<open>fst far ^ 2 + snd far ^ 2 \<le> M\<close> by (by100 linarith)
+      thus False sorry \<comment> \<open>(|M|+1)^2 > M always. Arithmetic.\<close>
+    qed
+    have hfar_notD: "far \<notin> D" using hray_avoids hfar_neg hfar_y by (by100 blast)
+    hence "far \<in> V" using hfar_notU hUV_union hfar_notD by (by100 blast)
+    \<comment> \<open>Ray connected, meets U at (0,0) and V at far. U \<inter> V = {}. Contradiction
+       with connectedness (ray can't be split into two nonempty disjoint open parts).\<close>
+    show False sorry
+      \<comment> \<open>Needs: U, V open in R2 (from JCT + LPC); ray connected; connected set
+         can't be partitioned by disjoint nonempty open sets.\<close>
+  qed
+  have hD_pos_xaxis: "\<exists>d \<in> D. fst d \<ge> 0 \<and> snd d = 0"
+  proof (rule ccontr)
+    assume "\<not> (\<exists>d \<in> D. fst d \<ge> 0 \<and> snd d = 0)"
+    hence "\<forall>d. d \<in> D \<longrightarrow> \<not>(fst d \<ge> 0 \<and> snd d = 0)" by (by100 blast)
+    from hU_bdd obtain M where "\<forall>p \<in> U. fst p ^ 2 + snd p ^ 2 \<le> M" by (by100 blast)
+    define far where "far = (abs M + 1, (0::real))"
+    have "far \<notin> U"
+    proof
+      assume "far \<in> U"
+      hence "fst far ^ 2 + snd far ^ 2 \<le> M" using \<open>\<forall>p \<in> U. _\<close> by (by100 blast)
+      hence "(abs M + 1) ^ 2 \<le> M" unfolding far_def by (by100 simp)
+      thus False sorry \<comment> \<open>Same arithmetic as negative case.\<close>
+    qed
+    have "far \<notin> D" sorry
+    hence "far \<in> V" using \<open>far \<notin> U\<close> hUV_union \<open>far \<notin> D\<close> by (by100 blast)
+    show False sorry \<comment> \<open>Same connectedness argument as negative case.\<close>
+  qed
     \<comment> \<open>Same argument for positive x-axis ray.\<close>
   \<comment> \<open>D \<inter> negative x-axis is compact and nonempty \<Rightarrow> has maximum x-coordinate.\<close>
   define S_neg where "S_neg = {fst d | d. d \<in> D \<and> fst d \<le> 0 \<and> snd d = 0}"
