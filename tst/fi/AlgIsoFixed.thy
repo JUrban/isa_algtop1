@@ -4469,16 +4469,71 @@ proof -
     moreover have "x \<in> top1_S2" using \<open>x \<in> D13\<close> hD13(2) hFp_sub_S2 hGp_sub_S2 by (by100 blast)
     ultimately show "x \<in> top1_S2 - C" by (by100 blast)
   qed
-  \<comment> \<open>SORRY: Construct diagonal e13 from a1 to a3 with interior in component(q).
-     This follows from Munkres Step 3 (line segment in R2 via stereographic projection)
-     or from the fact that the boundary of each component of S2-C is C itself.\<close>
+  \<comment> \<open>Munkres Step 3: Construct diagonal e13 from a1 to a3 through component(q).
+     Transfer to R2 via stereographic projection from p, apply JCT, construct arc
+     between boundary points through the component, transfer back.\<close>
   obtain e13 where he13: "top1_is_arc_on e13 (subspace_topology top1_S2 top1_S2_topology e13)"
       "e13 \<subseteq> top1_S2"
       "top1_arc_endpoints_on e13 (subspace_topology top1_S2 top1_S2_topology e13) = {a1, a3}"
       "e13 \<inter> C \<subseteq> {a1, a3}"
       "\<forall>x \<in> e13 - {a1, a3}. top1_in_same_path_component_on (top1_S2 - C)
           (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) q x"
-    sorry \<comment> \<open>Munkres Step 3: arc from a1 to a3 through component of q.\<close>
+  proof -
+    \<comment> \<open>Step 1: Transfer to R2 via stereographic projection from p.\<close>
+    from S2_minus_point_homeo_R2[OF hp_S2]
+    obtain h where hh: "top1_homeomorphism_on (top1_S2 - {p})
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p}))
+        (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets) h"
+      by (by100 blast)
+    \<comment> \<open>Step 2: h(C) is a simple closed curve in R2.
+       a1, a3 \<in> C \<subseteq> S2-{p} (since p \<notin> C), so h(a1), h(a3) are well-defined.\<close>
+    have hC_sub_S2p: "C \<subseteq> top1_S2 - {p}" using hC_sub_S2 hp_notC by (by100 blast)
+    have hq_S2p: "q \<in> top1_S2 - {p}" using hq_S2 hp_ne_q by (by100 blast)
+    have ha1_S2p: "a1 \<in> top1_S2 - {p}" using hC1_sub hC1_split(5) hp_notC hC12(1) sorry
+    have ha3_S2p: "a3 \<in> top1_S2 - {p}" using hC1_sub hC1_split(6) hp_notC hC12(1) sorry
+    have hhC_scc: "top1_simple_closed_curve_on (UNIV :: (real \<times> real) set)
+        (product_topology_on top1_open_sets top1_open_sets) (h ` C)" sorry
+    \<comment> \<open>Step 3: Apply JCT in R2 to get bounded/unbounded components.\<close>
+    from Theorem_63_4_JordanCurve[OF hhC_scc]
+    obtain U_R2 V_R2 where hUV: "U_R2 \<noteq> {}" "V_R2 \<noteq> {}" "U_R2 \<inter> V_R2 = {}"
+        "U_R2 \<union> V_R2 = UNIV - h ` C"
+        "top1_path_connected_on U_R2 (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) U_R2)"
+        "top1_path_connected_on V_R2 (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) V_R2)"
+        "closure_on UNIV (product_topology_on top1_open_sets top1_open_sets) U_R2 = U_R2 \<union> h ` C"
+        "closure_on UNIV (product_topology_on top1_open_sets top1_open_sets) V_R2 = V_R2 \<union> h ` C"
+      sorry \<comment> \<open>Extract from Theorem_63_4_JordanCurve.\<close>
+    \<comment> \<open>Step 4: h(q) is in one component (say W_R2). h(a1), h(a3) \<in> h(C) = boundary of W_R2.\<close>
+    have hq_R2: "h q \<in> U_R2 \<or> h q \<in> V_R2" sorry
+    define W_R2 where "W_R2 = (if h q \<in> U_R2 then U_R2 else V_R2)"
+    have hW_pc: "top1_path_connected_on W_R2
+        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) W_R2)" sorry
+    have hW_cl: "closure_on UNIV (product_topology_on top1_open_sets top1_open_sets) W_R2 = W_R2 \<union> h ` C" sorry
+    have hq_W: "h q \<in> W_R2" sorry
+    \<comment> \<open>Step 5: Construct arc from h(a1) to h(a3) with interior in W_R2.
+       This uses: h(a1), h(a3) \<in> closure(W_R2), W_R2 is open and path-connected in R2.
+       For any two boundary points of a path-connected open set in R2 whose boundary
+       is a Jordan curve, there exists an arc between them through the interior.\<close>
+    have "\<exists>A. top1_is_arc_on A (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) A)
+        \<and> top1_arc_endpoints_on A (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) A) = {h a1, h a3}
+        \<and> A \<inter> h ` C \<subseteq> {h a1, h a3}
+        \<and> (\<forall>x \<in> A - {h a1, h a3}. x \<in> W_R2)" sorry
+      \<comment> \<open>KEY R2 SORRY: arc between boundary points through component.
+         Provable via Munkres's x-axis construction or Schoenflies theorem.\<close>
+    then obtain A_R2 where hA: "top1_is_arc_on A_R2 (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) A_R2)"
+        "top1_arc_endpoints_on A_R2 (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) A_R2) = {h a1, h a3}"
+        "A_R2 \<inter> h ` C \<subseteq> {h a1, h a3}"
+        "\<forall>x \<in> A_R2 - {h a1, h a3}. x \<in> W_R2"
+      by blast
+    \<comment> \<open>Step 6: Transfer arc back to S2 via h\<inverse>.\<close>
+    define e13 where "e13 = inv_into (top1_S2 - {p}) h ` A_R2"
+    have "top1_is_arc_on e13 (subspace_topology top1_S2 top1_S2_topology e13)" sorry
+    moreover have "e13 \<subseteq> top1_S2" sorry
+    moreover have "top1_arc_endpoints_on e13 (subspace_topology top1_S2 top1_S2_topology e13) = {a1, a3}" sorry
+    moreover have "e13 \<inter> C \<subseteq> {a1, a3}" sorry
+    moreover have "\<forall>x \<in> e13 - {a1, a3}. top1_in_same_path_component_on (top1_S2 - C)
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) q x" sorry
+    ultimately show ?thesis using that[of e13] by (by100 blast)
+  qed
   \<comment> \<open>Endpoints are elements of the arc.\<close>
   have ha1_e13: "a1 \<in> e13" using he13(3) unfolding top1_arc_endpoints_on_def by (by100 blast)
   have ha3_e13: "a3 \<in> e13" using he13(3) unfolding top1_arc_endpoints_on_def by (by100 blast)
