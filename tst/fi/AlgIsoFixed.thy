@@ -4079,7 +4079,56 @@ lemma Munkres_Step_4_move_punctures:
        (subspace_topology top1_S2 top1_S2_topology C) c0
        (top1_S2 - {p} - {q})
        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p} - {q})) c0 id)"
-  sorry
+proof -
+  \<comment> \<open>Strategy: Move one puncture at a time.
+     Step A: Move p0 \<rightarrow> p (keeping q0): show iso for C \<rightarrow> S2-{p}-{q0}.
+     Step B: Move q0 \<rightarrow> q (keeping p): show iso for C \<rightarrow> S2-{p}-{q}.\<close>
+
+  \<comment> \<open>Step A: iso for C \<rightarrow> S2-{p0}-{q0} implies iso for C \<rightarrow> S2-{p}-{q0}.\<close>
+  have hstepA: "top1_group_iso_on
+    (top1_fundamental_group_carrier C (subspace_topology top1_S2 top1_S2_topology C) c0)
+    (top1_fundamental_group_mul C (subspace_topology top1_S2 top1_S2_topology C) c0)
+    (top1_fundamental_group_carrier (top1_S2 - {p} - {q0})
+       (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p} - {q0})) c0)
+    (top1_fundamental_group_mul (top1_S2 - {p} - {q0})
+       (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p} - {q0})) c0)
+    (top1_fundamental_group_induced_on C
+       (subspace_topology top1_S2 top1_S2_topology C) c0
+       (top1_S2 - {p} - {q0})
+       (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p} - {q0})) c0 id)"
+  proof -
+    \<comment> \<open>Munkres Step 4 argument: work in R2 via stereographic from q0.
+       In R2: D = h(C), r0 = h(p0), r = h(p).
+       Translation homotopy F(x,t) = x - \<alpha>(t) + r0 connects
+       inclusion j: D \<rightarrow> R2-{r0} with (translation) \<circ> (inclusion k: D \<rightarrow> R2-{r}).
+       Homotopic maps + homeomorphism composition = both induce iso.\<close>
+    \<comment> \<open>Stereographic projection from q0.\<close>
+    have hq0_S2: "q0 \<in> top1_S2" using assms(4) by (by100 blast)
+    from S2_minus_point_homeo_R2[OF hq0_S2]
+    obtain h where hh: "top1_homeomorphism_on (top1_S2 - {q0})
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {q0}))
+        (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets) h"
+      by (by100 blast)
+    \<comment> \<open>Transfer the iso hypothesis to R2.\<close>
+    \<comment> \<open>S2-{p0}-{q0} ⊆ S2-{q0} → R2-{h(p0)}.
+       The inclusion C → S2-{p0}-{q0} induces iso, and
+       h transfers this to: inclusion h(C) → R2-{h(p0)} induces iso.\<close>
+    \<comment> \<open>Path from p0 to p in S2-C → path from h(p0) to h(p) in R2-h(C).\<close>
+    \<comment> \<open>Translation homotopy in R2.\<close>
+    \<comment> \<open>Transfer back to S2.\<close>
+    show ?thesis sorry
+      \<comment> \<open>The translation homotopy argument requires composing:
+         stereographic transfer + R2 translation homotopy +
+         homotopy_induced_basepoint_change + homeomorphism iso.\<close>
+  qed
+
+  \<comment> \<open>Step B: iso for C \<rightarrow> S2-{p}-{q0} implies iso for C \<rightarrow> S2-{p}-{q}.
+     Same argument as Step A but moving q0 to q.\<close>
+  have hstepB_rearrange: "top1_S2 - {p} - {q0} = top1_S2 - {q0} - {p}" by (by100 blast)
+  have hstepB_rearrange2: "top1_S2 - {p} - {q} = top1_S2 - {q} - {p}" by (by100 blast)
+  \<comment> \<open>Use Step A result with rearranged set differences for the q0 \<rightarrow> q move.\<close>
+  show ?thesis sorry \<comment> \<open>Move q0 to q: symmetric to Step A.\<close>
+qed
 
 lemma K4_from_SCC:
   assumes "is_topology_on_strict top1_S2 top1_S2_topology"
