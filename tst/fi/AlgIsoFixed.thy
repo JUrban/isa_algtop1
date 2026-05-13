@@ -6117,19 +6117,43 @@ proof -
     qed
     thus ?thesis using hUV(4) by (by100 blast)
   qed
-  \<comment> \<open>Let U_bd = bounded component containing h(q), V_ub = unbounded.\<close>
-  \<comment> \<open>Step 3a: Translate so (0,0) \<in> bounded component.\<close>
-  \<comment> \<open>Pick u0 \<in> bounded component, define translated curve D = h(C) - u0.\<close>
-  \<comment> \<open>Step 3b: x-axis extremal points on D.\<close>
-  \<comment> \<open>Step 3c: Line segment a1 a3 on x-axis = one diagonal.\<close>
-  \<comment> \<open>Step 3d: Decompose D at a1, a3 into D1, D2.\<close>
-  \<comment> \<open>Step 3e: Paths from unbounded to (0,0) avoiding D1 (resp D2).\<close>
-  \<comment> \<open>Step 3f: First-hit gives a2 on D2, a4 on D1.\<close>
-  \<comment> \<open>Step 3g: Arc splice gives diagonal from a2 to a4.\<close>
-  \<comment> \<open>Step 3h: Choose p0 from segment interior, q0 from splice interior.\<close>
-  \<comment> \<open>Step 4: Un-translate, transfer K4 back to S2 via h\<inverse>.\<close>
-  \<comment> \<open>Step 5: Verify all K4 conditions.\<close>
-  show ?thesis sorry
+  \<comment> \<open>Following Munkres Step 3 line by line.\<close>
+  \<comment> \<open>Step 3a: Identify bounded/unbounded. Translate so (0,0) \<in> bounded.\<close>
+  \<comment> \<open>h(q) \<in> one component. That component is bounded (since p maps to \<infinity>
+     and q is in the other component from p). We translate by -h(q) so (0,0) \<in> bounded.\<close>
+  define tr :: "(real \<times> real) \<Rightarrow> (real \<times> real)" where "tr = (\<lambda>x. (fst x - fst (h q), snd x - snd (h q)))"
+  define D where "D = tr ` (h ` C)"
+  define U_bd where "U_bd = tr ` (if h q \<in> U_R2 then U_R2 else V_R2)"
+  define V_ub where "V_ub = tr ` (if h q \<in> U_R2 then V_R2 else U_R2)"
+  \<comment> \<open>D is SCC in R2, U\_bd bounded with (0,0) \<in> U\_bd, V\_ub unbounded.\<close>
+  have hD_scc: "top1_simple_closed_curve_on (UNIV :: (real \<times> real) set)
+      (product_topology_on top1_open_sets top1_open_sets) D" sorry
+  have h0_Ubd: "((0::real),(0::real)) \<in> U_bd" sorry
+  have hUbd_ne: "U_bd \<noteq> {}" sorry
+  have hVub_ne: "V_ub \<noteq> {}" sorry
+  have hUV_disj': "U_bd \<inter> V_ub = {}" sorry
+  have hUV_union': "U_bd \<union> V_ub = UNIV - D" sorry
+  have hUbd_pc: "top1_path_connected_on U_bd
+      (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) U_bd)" sorry
+  have hUbd_bdd: "\<exists>M. \<forall>p \<in> U_bd. fst p ^ 2 + snd p ^ 2 \<le> M" sorry
+  have hVub_unbdd: "\<forall>M. \<exists>p \<in> V_ub. fst p ^ 2 + snd p ^ 2 > M" sorry
+  \<comment> \<open>Step 3b: Apply Munkres\_xaxis\_segment to get x-axis extremal points.\<close>
+  from Munkres_xaxis_segment[OF hD_scc hUbd_ne hVub_ne hUV_disj' hUV_union'
+      hUbd_pc hUbd_bdd hVub_unbdd h0_Ubd]
+  obtain a1_R a3_R where hxaxis: "a1_R \<in> D" "a3_R \<in> D" "a1_R \<noteq> a3_R"
+      "fst a1_R \<le> 0" "snd a1_R = 0" "fst a3_R \<ge> 0" "snd a3_R = 0"
+      "(\<forall>x. fst a1_R < fst x \<and> fst x < fst a3_R \<and> snd x = 0 \<longrightarrow> x \<notin> D)"
+      "(\<forall>x. fst a1_R < fst x \<and> fst x < fst a3_R \<and> snd x = 0 \<longrightarrow> x \<in> U_bd)"
+    sorry \<comment> \<open>Extract from Munkres\_xaxis\_segment.\<close>
+  \<comment> \<open>Step 3c: Line segment a1\_R to a3\_R = one diagonal (in R2, on x-axis).\<close>
+  \<comment> \<open>Step 3d: Decompose D at a1\_R, a3\_R into D1, D2.\<close>
+  \<comment> \<open>Step 3e: D1, D2 don't separate R2 (arcs). Paths from unbounded to 0.\<close>
+  \<comment> \<open>Step 3f: First-hit \<rightarrow> a2\_R on D2, a4\_R on D1.\<close>
+  \<comment> \<open>Step 3g: Arc splice \<rightarrow> diagonal from a2\_R to a4\_R.\<close>
+  \<comment> \<open>Step 3h: p0\_R from segment interior, q0\_R from splice interior.\<close>
+  \<comment> \<open>Step 4: Un-translate (\<lambda>x. x + h q) and transfer back to S2 via h\<inverse>.\<close>
+  \<comment> \<open>Step 5: Prove all K4 conditions on S2.\<close>
+  show ?thesis sorry \<comment> \<open>Steps 3c-5: full Munkres construction + transfer. TO DO.\<close>
 qed
 
 theorem Theorem_65_2_fixed:
