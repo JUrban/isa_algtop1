@@ -3499,7 +3499,35 @@ proof (rule ccontr)
      component of h(V) containing w (or directly): some open connected W \<ni> w with W \<subseteq> h(V)
      and W - {w} connected.\<close>
   obtain W where hW: "W \<subseteq> h ` V" "w \<in> W" "open W" "connected W"
-    sorry \<comment> \<open>Connected component of h(V) containing w is open connected.\<close>
+  proof -
+    \<comment> \<open>h(V) open, w \<in> h(V). Get open rectangle around w inside h(V).\<close>
+    obtain A0 B0 where hAB: "open A0" "open B0" "w \<in> A0 \<times> B0" "A0 \<times> B0 \<subseteq> h ` V"
+      using open_prod_elim[OF hhV_HOL_open hw_in_hV] by (by100 blast)
+    \<comment> \<open>Open rectangle in R2 is connected (product of connected sets).\<close>
+    obtain a1 a2 where ha: "a1 \<in> A0" "a2 \<in> B0" "w = (a1, a2)"
+      using hAB(3) by (by100 force)
+    obtain e1 where he1: "e1 > 0" "\<forall>y. dist y a1 < e1 \<longrightarrow> y \<in> A0"
+      using \<open>open A0\<close> \<open>a1 \<in> A0\<close> unfolding open_dist by (by100 force)
+    obtain e2 where he2: "e2 > 0" "\<forall>y. dist y a2 < e2 \<longrightarrow> y \<in> B0"
+      using \<open>open B0\<close> \<open>a2 \<in> B0\<close> unfolding open_dist by (by100 force)
+    \<comment> \<open>Use the open interval product as the connected neighborhood.\<close>
+    define W where "W = {a1 - e1 <..< a1 + e1} \<times> {a2 - e2 <..< a2 + e2}"
+    have "W \<subseteq> A0 \<times> B0"
+    proof (rule subsetI)
+      fix p assume "p \<in> W"
+      then obtain x y where "p = (x,y)" "x \<in> {a1-e1<..<a1+e1}" "y \<in> {a2-e2<..<a2+e2}"
+        unfolding W_def by (by100 force)
+      hence "dist x a1 < e1" "dist y a2 < e2" unfolding dist_real_def by auto
+      hence "x \<in> A0" "y \<in> B0" using he1(2) he2(2) by auto
+      thus "p \<in> A0 \<times> B0" using \<open>p = (x,y)\<close> by (by100 blast)
+    qed
+    hence "W \<subseteq> h ` V" using hAB(4) by (by100 blast)
+    moreover have "w \<in> W" unfolding W_def ha(3) using he1(1) he2(1) by (by100 force)
+    moreover have "open W" unfolding W_def by (rule open_Times; rule open_greaterThanLessThan)
+    moreover have "connected W" unfolding W_def
+      by (rule connected_Times; rule connected_Ioo)
+    ultimately show ?thesis using that by (by100 blast)
+  qed
   have hW_del: "connected (W - {w})" by (rule connected_open_delete_R2[OF hW(3,4)])
   \<comment> \<open>g\<inverse>(ball w r \<inter> h(Fp)) is open in [0,1], contains t0, hence contains (t0-\<delta>,t0+\<delta>).\<close>
   \<comment> \<open>g\<inverse>(ball w r \<inter> h(Fp)) - {t0} intersects both [0,t0) and (t0,1].\<close>
