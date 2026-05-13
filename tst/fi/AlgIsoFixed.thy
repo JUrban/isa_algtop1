@@ -4043,7 +4043,31 @@ lemma Munkres_xaxis_segment:
     \<and> (\<forall>x. fst a1 < fst x \<and> fst x < fst a3 \<and> snd x = 0 \<longrightarrow> x \<in> U)"
 proof -
   \<comment> \<open>D is compact (SCC = continuous image of compact S1).\<close>
-  have hD_compact: "compact D" sorry
+  have hD_compact: "compact D"
+  proof -
+    \<comment> \<open>SCC = continuous injective image of S1, and S1 is compact.\<close>
+    obtain f where hf_cont: "top1_continuous_map_on top1_S1 top1_S1_topology
+        (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets) f"
+      and hf_inj: "inj_on f top1_S1" and hf_img: "f ` top1_S1 = D"
+      using hD unfolding top1_simple_closed_curve_on_def by (by100 blast)
+    have hS1_compact: "top1_compact_on top1_S1 top1_S1_topology" by (rule S1_compact)
+    have hT_R2: "is_topology_on (UNIV :: (real \<times> real) set)
+        (product_topology_on top1_open_sets top1_open_sets)"
+      using product_topology_on_is_topology_on[OF
+          top1_open_sets_is_topology_on_UNIV[where 'a=real]
+          top1_open_sets_is_topology_on_UNIV[where 'a=real]] by (by100 simp)
+    from Theorem_26_5[OF _ hT_R2 hS1_compact hf_cont]
+    have "top1_compact_on (f ` top1_S1) (subspace_topology
+        (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets) (f ` top1_S1))"
+      using S1_compact unfolding top1_compact_on_def by (by100 blast)
+    hence "top1_compact_on D (subspace_topology
+        (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets) D)"
+      using hf_img by (by100 simp)
+    hence "top1_compact_on D (subspace_topology (UNIV :: (real \<times> real) set) top1_open_sets D)"
+      using product_topology_on_open_sets[where ?'a = real and ?'b = real] by (by100 simp)
+    thus "compact D"
+      using top1_compact_on_subspace_UNIV_iff_compact[of D] by (by100 simp)
+  qed
   \<comment> \<open>(0,0) \<notin> D (since (0,0) \<in> U and U \<inter> D = {}).\<close>
   have h0_notD: "((0::real), (0::real)) \<notin> D" using h0_U hUV_union by (by100 blast)
   \<comment> \<open>Negative x-axis ray from (0,0) must cross D (connects bounded to unbounded).\<close>
@@ -4057,30 +4081,62 @@ proof -
   \<comment> \<open>D \<inter> negative x-axis is compact and nonempty \<Rightarrow> has maximum x-coordinate.\<close>
   define S_neg where "S_neg = {fst d | d. d \<in> D \<and> fst d \<le> 0 \<and> snd d = 0}"
   have hS_neg_ne: "S_neg \<noteq> {}" using hD_neg_xaxis unfolding S_neg_def by (by100 blast)
-  have hS_neg_bdd: "bdd_above S_neg" sorry \<comment> \<open>All \<le> 0.\<close>
+  have hS_neg_bdd: "bdd_above S_neg"
+    unfolding S_neg_def bdd_above_def by (rule exI[of _ 0]) (by100 force)
   have hS_neg_closed: "closed S_neg" sorry \<comment> \<open>Compact D projected.\<close>
   define a1x where "a1x = Sup S_neg"
-  have ha1x_le0: "a1x \<le> 0" sorry \<comment> \<open>Sup of \<le>0 set is \<le>0.\<close>
+  have ha1x_le0: "a1x \<le> 0"
+    unfolding a1x_def by (rule cSup_least[OF hS_neg_ne])
+       (use hS_neg_bdd in \<open>unfold S_neg_def, by100 force\<close>)
   have ha1x_mem: "a1x \<in> S_neg" sorry \<comment> \<open>Closed + bdd_above + nonempty \<Rightarrow> Sup achieved.\<close>
   define a1 :: "real \<times> real" where "a1 = (a1x, 0)"
-  have ha1_D: "a1 \<in> D" using ha1x_mem unfolding S_neg_def a1_def sorry
+  have ha1_D: "a1 \<in> D"
+  proof -
+    from ha1x_mem obtain d where "d \<in> D" "fst d = a1x" "fst d \<le> 0" "snd d = 0"
+      unfolding S_neg_def by (by100 blast)
+    have "d = (fst d, snd d)" by (by100 simp)
+    hence "d = a1" unfolding a1_def using \<open>fst d = a1x\<close> \<open>snd d = 0\<close> by (by100 simp)
+    thus ?thesis using \<open>d \<in> D\<close> by (by100 blast)
+  qed
   have ha1_neg: "fst a1 \<le> 0" unfolding a1_def using ha1x_le0 by (by100 simp)
   have ha1_y: "snd a1 = 0" unfolding a1_def by (by100 simp)
   \<comment> \<open>Similarly for positive x-axis.\<close>
   define S_pos where "S_pos = {fst d | d. d \<in> D \<and> fst d \<ge> 0 \<and> snd d = 0}"
   have hS_pos_ne: "S_pos \<noteq> {}" using hD_pos_xaxis unfolding S_pos_def by (by100 blast)
-  have hS_pos_bdd: "bdd_below S_pos" sorry
+  have hS_pos_bdd: "bdd_below S_pos"
+    unfolding S_pos_def bdd_below_def by (rule exI[of _ 0]) (by100 force)
   have hS_pos_closed: "closed S_pos" sorry
   define a3x where "a3x = Inf S_pos"
-  have ha3x_ge0: "a3x \<ge> 0" sorry
+  have ha3x_ge0: "a3x \<ge> 0"
+    unfolding a3x_def by (rule cInf_greatest[OF hS_pos_ne])
+       (use hS_pos_bdd in \<open>unfold S_pos_def, by100 force\<close>)
   have ha3x_mem: "a3x \<in> S_pos" sorry
   define a3 :: "real \<times> real" where "a3 = (a3x, 0)"
-  have ha3_D: "a3 \<in> D" using ha3x_mem unfolding S_pos_def a3_def sorry
+  have ha3_D: "a3 \<in> D"
+  proof -
+    from ha3x_mem obtain d where "d \<in> D" "fst d = a3x" "fst d \<ge> 0" "snd d = 0"
+      unfolding S_pos_def by (by100 blast)
+    have "d = (fst d, snd d)" by (by100 simp)
+    hence "d = a3" unfolding a3_def using \<open>fst d = a3x\<close> \<open>snd d = 0\<close> by (by100 simp)
+    thus ?thesis using \<open>d \<in> D\<close> by (by100 blast)
+  qed
   have ha3_pos: "fst a3 \<ge> 0" unfolding a3_def using ha3x_ge0 by (by100 simp)
   have ha3_y: "snd a3 = 0" unfolding a3_def by (by100 simp)
   \<comment> \<open>a1 \<noteq> a3: a1x < 0 and a3x > 0 (since (0,0) \<notin> D).\<close>
-  have ha1x_lt0: "a1x < 0" sorry \<comment> \<open>If a1x = 0 then a1 = (0,0) \<in> D, contradicting (0,0) \<notin> D.\<close>
-  have ha3x_gt0: "a3x > 0" sorry \<comment> \<open>Same argument.\<close>
+  have ha1x_lt0: "a1x < 0"
+  proof (rule ccontr)
+    assume "\<not> a1x < 0"
+    hence "a1x = 0" using ha1x_le0 by (by100 linarith)
+    hence "a1 = ((0::real), (0::real))" unfolding a1_def by (by100 simp)
+    thus False using ha1_D h0_notD by (by100 blast)
+  qed
+  have ha3x_gt0: "a3x > 0"
+  proof (rule ccontr)
+    assume "\<not> a3x > 0"
+    hence "a3x = 0" using ha3x_ge0 by (by100 linarith)
+    hence "a3 = ((0::real), (0::real))" unfolding a3_def by (by100 simp)
+    thus False using ha3_D h0_notD by (by100 blast)
+  qed
   have ha1_ne_a3: "a1 \<noteq> a3" using ha1x_lt0 ha3x_gt0 unfolding a1_def a3_def by (by100 simp)
   \<comment> \<open>Segment interior avoids D (by extremality of a1x and a3x).\<close>
   have hseg_avoids_D: "\<forall>x. fst a1 < fst x \<and> fst x < fst a3 \<and> snd x = 0 \<longrightarrow> x \<notin> D"
@@ -4093,13 +4149,13 @@ proof -
       show False
       proof (cases "fst x \<le> 0")
         case True
-        have "fst x \<in> S_neg" using \<open>x \<in> D\<close> True hx unfolding S_neg_def sorry
+        have "fst x \<in> S_neg" sorry \<comment> \<open>x \<in> D, fst x \<le> 0, snd x = 0 \<Rightarrow> fst x \<in> S\_neg.\<close>
         hence "fst x \<le> a1x" unfolding a1x_def using hS_neg_bdd by (rule cSup_upper)
         thus False using hx unfolding a1_def by (by100 simp)
       next
         case False
         hence "fst x \<ge> 0" by (by100 simp)
-        have "fst x \<in> S_pos" using \<open>x \<in> D\<close> \<open>fst x \<ge> 0\<close> hx unfolding S_pos_def sorry
+        have "fst x \<in> S_pos" sorry \<comment> \<open>x \<in> D, fst x \<ge> 0, snd x = 0 \<Rightarrow> fst x \<in> S\_pos.\<close>
         hence "fst x \<ge> a3x" unfolding a3x_def using hS_pos_bdd by (rule cInf_lower)
         thus False using hx unfolding a3_def by (by100 simp)
       qed
