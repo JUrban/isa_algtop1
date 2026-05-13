@@ -4021,6 +4021,66 @@ proof -
   show ?thesis using hd_AD hp_Fp hd_Fp hFp_arc hFp_ep hFp_sub_A hFp_D hq_notin_Fp by (by100 blast)
 qed
 
+text \<open>Boundary arc existence: given a Jordan curve in R2, two boundary points can be
+connected by an arc through any component. This is a consequence of the local
+Jordan arc property (every point on a Jordan curve is locally accessible from both sides).\<close>
+
+lemma R2_JCT_boundary_arc:
+  fixes D :: "(real \<times> real) set"
+  assumes "top1_simple_closed_curve_on (UNIV :: (real \<times> real) set)
+      (product_topology_on top1_open_sets top1_open_sets) D"
+  and "W \<noteq> {}" "W \<inter> D = {}"
+  and "top1_path_connected_on W
+      (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) W)"
+  and "closure_on UNIV (product_topology_on top1_open_sets top1_open_sets) W = W \<union> D"
+  and "a \<in> D" and "b \<in> D" and "a \<noteq> b"
+  shows "\<exists>A. top1_is_arc_on A
+      (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) A)
+    \<and> top1_arc_endpoints_on A
+      (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) A) = {a, b}
+    \<and> A \<inter> D \<subseteq> {a, b}
+    \<and> (\<forall>x \<in> A - {a, b}. x \<in> W)"
+  sorry
+
+text \<open>Munkres Step 4: moving punctures within path-components preserves the inclusion
+isomorphism. If the inclusion C \<rightarrow> S2-{p0}-{q0} induces an isomorphism, and p is in the
+same path-component of S2-C as p0, and q same as q0, then C \<rightarrow> S2-{p}-{q} also induces
+an isomorphism. Uses translation homotopy F(x,t) = x - alpha(t) in R2.\<close>
+
+lemma Munkres_Step_4_move_punctures:
+  assumes "is_topology_on_strict top1_S2 top1_S2_topology"
+  and "top1_simple_closed_curve_on top1_S2 top1_S2_topology C"
+  and "p0 \<in> top1_S2 - C" and "q0 \<in> top1_S2 - C"
+  and "p \<in> top1_S2 - C" and "q \<in> top1_S2 - C"
+  and "top1_in_same_path_component_on (top1_S2 - C)
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) p p0"
+  and "top1_in_same_path_component_on (top1_S2 - C)
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) q q0"
+  and "c0 \<in> C"
+  and "top1_group_iso_on
+    (top1_fundamental_group_carrier C (subspace_topology top1_S2 top1_S2_topology C) c0)
+    (top1_fundamental_group_mul C (subspace_topology top1_S2 top1_S2_topology C) c0)
+    (top1_fundamental_group_carrier (top1_S2 - {p0} - {q0})
+       (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p0} - {q0})) c0)
+    (top1_fundamental_group_mul (top1_S2 - {p0} - {q0})
+       (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p0} - {q0})) c0)
+    (top1_fundamental_group_induced_on C
+       (subspace_topology top1_S2 top1_S2_topology C) c0
+       (top1_S2 - {p0} - {q0})
+       (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p0} - {q0})) c0 id)"
+  shows "top1_group_iso_on
+    (top1_fundamental_group_carrier C (subspace_topology top1_S2 top1_S2_topology C) c0)
+    (top1_fundamental_group_mul C (subspace_topology top1_S2 top1_S2_topology C) c0)
+    (top1_fundamental_group_carrier (top1_S2 - {p} - {q})
+       (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p} - {q})) c0)
+    (top1_fundamental_group_mul (top1_S2 - {p} - {q})
+       (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p} - {q})) c0)
+    (top1_fundamental_group_induced_on C
+       (subspace_topology top1_S2 top1_S2_topology C) c0
+       (top1_S2 - {p} - {q})
+       (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p} - {q})) c0 id)"
+  sorry
+
 lemma K4_from_SCC:
   assumes "is_topology_on_strict top1_S2 top1_S2_topology"
   and "top1_simple_closed_curve_on top1_S2 top1_S2_topology C"
@@ -4595,12 +4655,29 @@ proof -
        This uses: h(a1), h(a3) \<in> closure(W_R2), W_R2 is open and path-connected in R2.
        For any two boundary points of a path-connected open set in R2 whose boundary
        is a Jordan curve, there exists an arc between them through the interior.\<close>
+    have hW_sub: "W_R2 \<inter> h ` C = {}"
+    proof -
+      have "W_R2 \<subseteq> U_R2 \<union> V_R2" unfolding W_R2_def by (by100 simp)
+      thus ?thesis using hUV(3,4) by (by100 blast)
+    qed
+    have ha1_C: "a1 \<in> C" using hC12(1) hC1_split(1,5) by (by100 blast)
+    have ha3_C: "a3 \<in> C" using hC12(1) hC1_split(1,6) by (by100 blast)
+    have hha1_D: "h a1 \<in> h ` C" using ha1_C by (by100 blast)
+    have hha3_D: "h a3 \<in> h ` C" using ha3_C by (by100 blast)
+    have hha1_ne_ha3: "h a1 \<noteq> h a3"
+    proof
+      assume "h a1 = h a3"
+      have "inj_on h (top1_S2 - {p})" using hh unfolding top1_homeomorphism_on_def bij_betw_def
+        by (by100 blast)
+      hence "a1 = a3" by (rule inj_onD[OF _ \<open>h a1 = h a3\<close> ha1_S2p ha3_S2p])
+      thus False using hC12(3) by (by100 blast)
+    qed
     have "\<exists>A. top1_is_arc_on A (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) A)
         \<and> top1_arc_endpoints_on A (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) A) = {h a1, h a3}
         \<and> A \<inter> h ` C \<subseteq> {h a1, h a3}
-        \<and> (\<forall>x \<in> A - {h a1, h a3}. x \<in> W_R2)" sorry
-      \<comment> \<open>KEY R2 SORRY: arc between boundary points through component.
-         Provable via Munkres's x-axis construction or Schoenflies theorem.\<close>
+        \<and> (\<forall>x \<in> A - {h a1, h a3}. x \<in> W_R2)"
+      using R2_JCT_boundary_arc[OF hhC_scc _ hW_sub hW_pc hW_cl hha1_D hha3_D hha1_ne_ha3]
+      hq_W by (by100 blast)
     then obtain A_R2 where hA: "top1_is_arc_on A_R2 (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) A_R2)"
         "top1_arc_endpoints_on A_R2 (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) A_R2) = {h a1, h a3}"
         "A_R2 \<inter> h ` C \<subseteq> {h a1, h a3}"
@@ -5681,7 +5758,79 @@ proof -
   \<comment> \<open>Step 4 (Munkres): Move punctures from (q0,p0) to (q,p) within their path-components.
      Since p0 is in the same component as p, and q0 same as q, the inclusion
      C \<rightarrow> S2-{p}-{q} also induces an isomorphism (by homotopy/translation argument).\<close>
-  show ?thesis sorry \<comment> \<open>Munkres Step 4: extend iso from specific (p0,q0) to arbitrary (p,q).\<close>
+  \<comment> \<open>S2-{q0}-{p0} = S2-{p0}-{q0} by commutativity of set difference.\<close>
+  have hset_eq: "top1_S2 - {q0} - {p0} = top1_S2 - {p0} - {q0}" by (by100 blast)
+  have hiso_rearranged: "top1_group_iso_on
+    (top1_fundamental_group_carrier C (subspace_topology top1_S2 top1_S2_topology C) c0)
+    (top1_fundamental_group_mul C (subspace_topology top1_S2 top1_S2_topology C) c0)
+    (top1_fundamental_group_carrier (top1_S2 - {p0} - {q0})
+       (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p0} - {q0})) c0)
+    (top1_fundamental_group_mul (top1_S2 - {p0} - {q0})
+       (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p0} - {q0})) c0)
+    (top1_fundamental_group_induced_on C
+       (subspace_topology top1_S2 top1_S2_topology C) c0
+       (top1_S2 - {p0} - {q0})
+       (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p0} - {q0})) c0 id)"
+    using hiso_p0q0 unfolding hset_eq by (by100 blast)
+  \<comment> \<open>Apply Munkres Step 4 to move (p0,q0) to (p,q).\<close>
+  have hp0_SC: "p0 \<in> top1_S2 - C"
+  proof -
+    have "p0 \<in> e24" using hK4(38) by (by100 blast)
+    have "p0 \<notin> C"
+    proof
+      assume "p0 \<in> C"
+      hence "p0 \<in> e24 \<inter> C" using \<open>p0 \<in> e24\<close> by (by100 blast)
+      hence "p0 \<in> e12 \<or> p0 \<in> e23 \<or> p0 \<in> e34 \<or> p0 \<in> e41" using hK4(2) by (by100 blast)
+      hence "p0 \<in> {a2, a4}"
+      proof (elim disjE)
+        assume "p0 \<in> e12"
+        hence "p0 \<in> e24 \<inter> e12" using \<open>p0 \<in> e24\<close> by (by100 blast)
+        thus ?thesis using hK4(33) by (by100 blast)
+      next
+        assume "p0 \<in> e23"
+        hence "p0 \<in> e24 \<inter> e23" using \<open>p0 \<in> e24\<close> by (by100 blast)
+        thus ?thesis using hK4(34) by (by100 blast)
+      next
+        assume "p0 \<in> e34"
+        hence "p0 \<in> e24 \<inter> e34" using \<open>p0 \<in> e24\<close> by (by100 blast)
+        thus ?thesis using hK4(35) by (by100 blast)
+      next
+        assume "p0 \<in> e41"
+        hence "p0 \<in> e24 \<inter> e41" using \<open>p0 \<in> e24\<close> by (by100 blast)
+        thus ?thesis using hK4(36) by (by100 blast)
+      qed
+      thus False using hK4(38) by (by100 blast)
+    qed
+    moreover have "p0 \<in> top1_S2" using \<open>p0 \<in> e24\<close> hK4(9) by (by100 blast)
+    ultimately show ?thesis by (by100 blast)
+  qed
+  have hq0_SC: "q0 \<in> top1_S2 - C"
+  proof -
+    have "q0 \<in> e13" using hK4(37) by (by100 blast)
+    have "q0 \<notin> C"
+    proof
+      assume "q0 \<in> C"
+      hence "q0 \<in> e13 \<inter> C" using \<open>q0 \<in> e13\<close> by (by100 blast)
+      hence "q0 \<in> e12 \<or> q0 \<in> e23 \<or> q0 \<in> e34 \<or> q0 \<in> e41" using hK4(2) by (by100 blast)
+      hence "q0 \<in> {a1, a3}"
+      proof (elim disjE)
+        assume "q0 \<in> e12" thus ?thesis using \<open>q0 \<in> e13\<close> hK4(28) by (by100 blast)
+      next
+        assume "q0 \<in> e23" thus ?thesis using \<open>q0 \<in> e13\<close> hK4(29) by (by100 blast)
+      next
+        assume "q0 \<in> e34" thus ?thesis using \<open>q0 \<in> e13\<close> hK4(30) by (by100 blast)
+      next
+        assume "q0 \<in> e41" thus ?thesis using \<open>q0 \<in> e13\<close> hK4(31) by (by100 blast)
+      qed
+      hence "q0 = a1 \<or> q0 = a3" by (by100 blast)
+      thus False using hK4(37) by (by100 blast)
+    qed
+    moreover have "q0 \<in> top1_S2" using \<open>q0 \<in> e13\<close> hK4(8) by (by100 blast)
+    ultimately show ?thesis by (by100 blast)
+  qed
+  show ?thesis
+    by (rule Munkres_Step_4_move_punctures[OF assms(1,2) hp0_SC hq0_SC assms(3,4)
+        hK4(39) hK4(40) assms(6) hiso_rearranged])
 qed
 
 
