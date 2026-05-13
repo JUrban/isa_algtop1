@@ -3458,7 +3458,35 @@ proof (rule ccontr)
        Open set in [0,1] containing 0 includes [0,\<epsilon>); containing 1 includes (1-\<epsilon>,1].
        Either way, it contains points in (0,1).\<close>
     have hgV_ne: "{t \<in> I_set. g t \<in> h ` V} \<noteq> {}" using htp_in_gV by (by100 blast)
-    show ?thesis sorry \<comment> \<open>Open in I\_top containing boundary point extends into interior.\<close>
+    \<comment> \<open>U = {t \<in> I\_set. g t \<in> h(V)} is open in I\_top, contains t\_p \<in> {0,1}.\<close>
+    let ?U = "{t \<in> I_set. g t \<in> h ` V}"
+    \<comment> \<open>?U \<in> I\_top = subspace of R restricted to [0,1]. So ?U = I\_set \<inter> W for open W in R.\<close>
+    obtain W where hW: "W \<in> top1_open_sets" "?U = I_set \<inter> W"
+      using hgV_open unfolding top1_unit_interval_topology_def subspace_topology_def by (by100 blast)
+    have "t_p \<in> W" using htp_in_gV hW(2) by (by100 blast)
+    \<comment> \<open>W is open in R, t\_p \<in> W. So \<exists>\<epsilon>>0 with open interval around t\_p \<subseteq> W.\<close>
+    have "open W" using hW(1) unfolding top1_open_sets_def by (by100 blast)
+    then obtain e where he: "e > 0" "\<forall>y. dist y t_p < e \<longrightarrow> y \<in> W"
+      using \<open>t_p \<in> W\<close> unfolding open_dist by (by100 blast)
+    \<comment> \<open>Pick t0 in (0,1) near t\_p. If t\_p=0: take t0 = min(e,1)/2. If t\_p=1: take t0 = 1-min(e,1)/2.\<close>
+    define t0 where "t0 = (if t_p = 0 then min e 1 / 2 else 1 - min e 1 / 2)"
+    have ht0_open: "t0 \<in> {0<..<1}"
+    proof -
+      have "e > 0" using he(1) .
+      show ?thesis unfolding t0_def using ht_p_01 \<open>e > 0\<close> by auto
+    qed
+    moreover have "t0 \<in> W"
+    proof -
+      have "dist t0 t_p < e" unfolding t0_def dist_real_def using ht_p_01 he(1) by auto
+      thus ?thesis using he(2) by (by100 blast)
+    qed
+    hence "t0 \<in> ?U"
+    proof -
+      have "t0 \<in> I_set" using ht0_open unfolding top1_unit_interval_def by (by100 force)
+      thus ?thesis using hW(2) \<open>t0 \<in> W\<close> by (by100 blast)
+    qed
+    hence "g t0 \<in> h ` V" by (by100 blast)
+    ultimately show ?thesis using that by (by100 blast)
   qed
   define w where "w = g t0"
   have hw_in_hV: "w \<in> h ` V" unfolding w_def using ht0(2) by (by100 blast)
