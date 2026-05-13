@@ -4036,8 +4036,8 @@ lemma Munkres_xaxis_segment:
       (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) U)"
   and hU_bdd: "\<exists>M. \<forall>p \<in> U. fst p ^ 2 + snd p ^ 2 \<le> M"
   and hV_unbdd: "\<forall>M. \<exists>p \<in> V. fst p ^ 2 + snd p ^ 2 > M"
-  and hU_cl: "closure U = U \<union> D"
-  and hV_cl: "closure V = V \<union> D"
+  and hU_cl: "closure_on UNIV (product_topology_on top1_open_sets top1_open_sets) U = U \<union> D"
+  and hV_cl: "closure_on UNIV (product_topology_on top1_open_sets top1_open_sets) V = V \<union> D"
   and h0_U: "((0::real), (0::real)) \<in> U"
   shows "\<exists>a1 a3. a1 \<in> D \<and> a3 \<in> D \<and> a1 \<noteq> a3
     \<and> fst a1 \<le> 0 \<and> snd a1 = 0 \<and> fst a3 \<ge> 0 \<and> snd a3 = 0
@@ -4074,18 +4074,10 @@ proof -
   have hD_closed: "closed D" using hD_compact by (rule compact_imp_closed)
   have hUV_open_set: "open (UNIV - D)" using hD_closed by (by100 blast)
   \<comment> \<open>U and V are open: they are path-components of UNIV-D (open in LPC R2).\<close>
-  have hV_open: "open V"
-  proof -
-    have "UNIV - (U \<union> D) = V" using hUV_union hUV_disj by (by100 blast)
-    hence "V = UNIV - closure U" using hU_cl by (by100 blast)
-    thus "open V" sorry \<comment> \<open>closure is closed \<Rightarrow> complement is open.\<close>
-  qed
-  have hU_open: "open U"
-  proof -
-    have "UNIV - (V \<union> D) = U" using hUV_union hUV_disj by (by100 blast)
-    hence "U = UNIV - closure V" using hV_cl by (by100 blast)
-    thus "open U" sorry \<comment> \<open>closure is closed \<Rightarrow> complement is open.\<close>
-  qed
+  have hV_open: "open V" sorry
+    \<comment> \<open>V = UNIV - closure(U). Closure closed \<Rightarrow> complement open. Needs HOL bridge.\<close>
+  have hU_open: "open U" sorry
+    \<comment> \<open>Same argument.\<close>
   \<comment> \<open>(0,0) \<notin> D (since (0,0) \<in> U and U \<inter> D = {}).\<close>
   have h0_notD: "((0::real), (0::real)) \<notin> D" using h0_U hUV_union by (by100 blast)
   \<comment> \<open>Negative x-axis ray from (0,0) must cross D (connects bounded to unbounded).\<close>
@@ -4356,7 +4348,16 @@ proof -
     have "(0::real, 0::real) \<in> seg" unfolding seg_def a1_def a3_def using ha1x_lt0 ha3x_gt0
       by (by100 simp)
     hence "seg \<inter> U \<noteq> {}" using h0_U by (by100 blast)
-    have hseg_conn: "connected seg" sorry \<comment> \<open>Open interval image under continuous map.\<close>
+    have hseg_conn: "connected seg"
+    proof -
+      have "seg = (\<lambda>x. (x, 0::real)) ` {fst a1<..<fst a3}"
+        unfolding seg_def a1_def a3_def by (by100 force)
+      moreover have "connected ({fst a1<..<fst a3} :: real set)"
+        by (rule connected_Ioo)
+      moreover have "continuous_on {fst a1<..<fst a3} (\<lambda>x::real. (x, 0::real))"
+        by (intro continuous_intros)
+      ultimately show ?thesis using connected_continuous_image by (by100 blast)
+    qed
     have hseg_sub: "seg \<subseteq> U \<union> V"
     proof (intro subsetI)
       fix y assume "y \<in> seg"
