@@ -4041,7 +4041,81 @@ lemma Munkres_xaxis_segment:
     \<and> fst a1 \<le> 0 \<and> snd a1 = 0 \<and> fst a3 \<ge> 0 \<and> snd a3 = 0
     \<and> (\<forall>x. fst a1 < fst x \<and> fst x < fst a3 \<and> snd x = 0 \<longrightarrow> x \<notin> D)
     \<and> (\<forall>x. fst a1 < fst x \<and> fst x < fst a3 \<and> snd x = 0 \<longrightarrow> x \<in> U)"
-  sorry
+proof -
+  \<comment> \<open>D is compact (SCC = continuous image of compact S1).\<close>
+  have hD_compact: "compact D" sorry
+  \<comment> \<open>(0,0) \<notin> D (since (0,0) \<in> U and U \<inter> D = {}).\<close>
+  have h0_notD: "((0::real), (0::real)) \<notin> D" using h0_U hUV_union by (by100 blast)
+  \<comment> \<open>Negative x-axis ray from (0,0) must cross D (connects bounded to unbounded).\<close>
+  have hD_neg_xaxis: "\<exists>d \<in> D. fst d \<le> 0 \<and> snd d = 0" sorry
+    \<comment> \<open>Ray {(x,0)|x\<le>0} is connected, starts at (0,0)\<in>U, goes to unbounded.
+       If it avoids D, it stays in U\<union>V. Being connected with one end in U and going
+       to infinity, it would need to stay in V eventually, but it starts in U.
+       Contradiction with connectedness + U\<inter>V={}.\<close>
+  have hD_pos_xaxis: "\<exists>d \<in> D. fst d \<ge> 0 \<and> snd d = 0" sorry
+    \<comment> \<open>Same argument for positive x-axis ray.\<close>
+  \<comment> \<open>D \<inter> negative x-axis is compact and nonempty \<Rightarrow> has maximum x-coordinate.\<close>
+  define S_neg where "S_neg = {fst d | d. d \<in> D \<and> fst d \<le> 0 \<and> snd d = 0}"
+  have hS_neg_ne: "S_neg \<noteq> {}" using hD_neg_xaxis unfolding S_neg_def by (by100 blast)
+  have hS_neg_bdd: "bdd_above S_neg" sorry \<comment> \<open>All \<le> 0.\<close>
+  have hS_neg_closed: "closed S_neg" sorry \<comment> \<open>Compact D projected.\<close>
+  define a1x where "a1x = Sup S_neg"
+  have ha1x_le0: "a1x \<le> 0" sorry \<comment> \<open>Sup of \<le>0 set is \<le>0.\<close>
+  have ha1x_mem: "a1x \<in> S_neg" sorry \<comment> \<open>Closed + bdd_above + nonempty \<Rightarrow> Sup achieved.\<close>
+  define a1 :: "real \<times> real" where "a1 = (a1x, 0)"
+  have ha1_D: "a1 \<in> D" using ha1x_mem unfolding S_neg_def a1_def sorry
+  have ha1_neg: "fst a1 \<le> 0" unfolding a1_def using ha1x_le0 by (by100 simp)
+  have ha1_y: "snd a1 = 0" unfolding a1_def by (by100 simp)
+  \<comment> \<open>Similarly for positive x-axis.\<close>
+  define S_pos where "S_pos = {fst d | d. d \<in> D \<and> fst d \<ge> 0 \<and> snd d = 0}"
+  have hS_pos_ne: "S_pos \<noteq> {}" using hD_pos_xaxis unfolding S_pos_def by (by100 blast)
+  have hS_pos_bdd: "bdd_below S_pos" sorry
+  have hS_pos_closed: "closed S_pos" sorry
+  define a3x where "a3x = Inf S_pos"
+  have ha3x_ge0: "a3x \<ge> 0" sorry
+  have ha3x_mem: "a3x \<in> S_pos" sorry
+  define a3 :: "real \<times> real" where "a3 = (a3x, 0)"
+  have ha3_D: "a3 \<in> D" using ha3x_mem unfolding S_pos_def a3_def sorry
+  have ha3_pos: "fst a3 \<ge> 0" unfolding a3_def using ha3x_ge0 by (by100 simp)
+  have ha3_y: "snd a3 = 0" unfolding a3_def by (by100 simp)
+  \<comment> \<open>a1 \<noteq> a3: a1x < 0 and a3x > 0 (since (0,0) \<notin> D).\<close>
+  have ha1x_lt0: "a1x < 0" sorry \<comment> \<open>If a1x = 0 then a1 = (0,0) \<in> D, contradicting (0,0) \<notin> D.\<close>
+  have ha3x_gt0: "a3x > 0" sorry \<comment> \<open>Same argument.\<close>
+  have ha1_ne_a3: "a1 \<noteq> a3" using ha1x_lt0 ha3x_gt0 unfolding a1_def a3_def by (by100 simp)
+  \<comment> \<open>Segment interior avoids D (by extremality of a1x and a3x).\<close>
+  have hseg_avoids_D: "\<forall>x. fst a1 < fst x \<and> fst x < fst a3 \<and> snd x = 0 \<longrightarrow> x \<notin> D"
+  proof (intro allI impI)
+    fix x :: "real \<times> real"
+    assume hx: "fst a1 < fst x \<and> fst x < fst a3 \<and> snd x = 0"
+    show "x \<notin> D"
+    proof
+      assume "x \<in> D"
+      show False
+      proof (cases "fst x \<le> 0")
+        case True
+        have "fst x \<in> S_neg" using \<open>x \<in> D\<close> True hx unfolding S_neg_def sorry
+        hence "fst x \<le> a1x" unfolding a1x_def using hS_neg_bdd by (rule cSup_upper)
+        thus False using hx unfolding a1_def by (by100 simp)
+      next
+        case False
+        hence "fst x \<ge> 0" by (by100 simp)
+        have "fst x \<in> S_pos" using \<open>x \<in> D\<close> \<open>fst x \<ge> 0\<close> hx unfolding S_pos_def sorry
+        hence "fst x \<ge> a3x" unfolding a3x_def using hS_pos_bdd by (rule cInf_lower)
+        thus False using hx unfolding a3_def by (by100 simp)
+      qed
+    qed
+  qed
+  \<comment> \<open>Segment interior \<subseteq> U: connected set containing (0,0) \<in> U, avoids D,
+     so lies in UNIV-D = U \<union> V. Connected + meets U \<Rightarrow> \<subseteq> U (since U, V are open disjoint).\<close>
+  have hseg_in_U: "\<forall>x. fst a1 < fst x \<and> fst x < fst a3 \<and> snd x = 0 \<longrightarrow> x \<in> U" sorry
+    \<comment> \<open>The open segment is connected, avoids D, contains (0,0)\<in>U.
+       Since U and V are disjoint open sets with U\<union>V = UNIV-D, the
+       connected segment (avoiding D) that meets U must lie entirely in U.\<close>
+  show ?thesis
+    apply (rule exI[of _ a1], rule exI[of _ a3])
+    using ha1_D ha3_D ha1_ne_a3 ha1_neg ha1_y ha3_pos ha3_y hseg_avoids_D hseg_in_U
+    by (by100 blast)
+qed
 
 text \<open>Munkres Step 4: moving punctures within path-components preserves the inclusion
 isomorphism. If the inclusion C \<rightarrow> S2-{p0}-{q0} induces an isomorphism, and p is in the
