@@ -3539,7 +3539,70 @@ proof (rule ccontr)
      to connected ball-{w}. Since g is a homeomorphism, g\<inverse>(ball-{w}) = g\<inverse>(ball)-{t0} is connected.
      But g\<inverse>(ball) is open in [0,1] containing t0 \<in> (0,1), so g\<inverse>(ball)-{t0} intersects both
      [0,t0) and (t0,1], contradicting connectedness in [0,1]-{t0}.\<close>
-  show False sorry
+  \<comment> \<open>S = {t \<in> [0,1]. g t \<in> W} is open in [0,1], contains t0 \<in> (0,1).\<close>
+  have hW_sub_hFp: "W \<subseteq> h ` Fp" using hW(1) hV_sub_Fp' by (by100 blast)
+  have hW_in_sub: "W \<in> subspace_topology (UNIV :: (real \<times> real) set)
+      (product_topology_on top1_open_sets top1_open_sets) (h ` Fp)"
+    unfolding subspace_topology_def using hW(3) hW_sub_hFp
+    using product_topology_on_open_sets unfolding top1_open_sets_def by (by100 blast)
+  define S where "S = {t \<in> I_set. g t \<in> W}"
+  have hS_open: "S \<in> I_top"
+    unfolding S_def using hg_cont hW_in_sub unfolding top1_continuous_map_on_def by (by100 blast)
+  have ht0_S: "t0 \<in> S"
+  proof -
+    have "g t0 = w" unfolding w_def by (by100 simp)
+    hence "g t0 \<in> W" using hW(2) by (by100 simp)
+    thus ?thesis unfolding S_def using ht0_I by (by100 blast)
+  qed
+  \<comment> \<open>S open in [0,1] containing t0 \<in> (0,1) \<Rightarrow> \<exists>\<delta>>0 with (t0-\<delta>,t0+\<delta>) \<inter> [0,1] \<subseteq> S.\<close>
+  obtain \<delta> where hd: "\<delta> > 0" "\<forall>t. t \<in> I_set \<longrightarrow> dist t t0 < \<delta> \<longrightarrow> t \<in> S"
+  proof -
+    obtain WR where "WR \<in> top1_open_sets" "S = I_set \<inter> WR"
+      using hS_open unfolding top1_unit_interval_topology_def subspace_topology_def by (by100 blast)
+    hence "open WR" "t0 \<in> WR" unfolding top1_open_sets_def using ht0_S by (by100 blast)+
+    then obtain e where "e > 0" "\<forall>y. dist y t0 < e \<longrightarrow> y \<in> WR"
+      unfolding open_dist by (by100 force)
+    thus ?thesis using that \<open>S = I_set \<inter> WR\<close> by (by100 blast)
+  qed
+  \<comment> \<open>S - {t0} intersects both [0,t0) and (t0,1].\<close>
+  obtain s1 where hs1: "s1 \<in> S" "s1 < t0"
+  proof -
+    define s1 where "s1 = t0 - min \<delta> t0 / 2"
+    have "s1 \<in> I_set" unfolding s1_def top1_unit_interval_def using ht0_01 hd(1) by auto
+    moreover have "dist s1 t0 < \<delta>" unfolding s1_def dist_real_def using hd(1) ht0_01(1) by auto
+    ultimately have "s1 \<in> S" using hd(2) by (by100 blast)
+    moreover have "s1 < t0" unfolding s1_def using hd(1) ht0_01(1) by auto
+    ultimately show ?thesis using that by (by100 blast)
+  qed
+  obtain s2 where hs2: "s2 \<in> S" "s2 > t0"
+  proof -
+    define s2 where "s2 = t0 + min \<delta> (1 - t0) / 2"
+    have "s2 \<in> I_set" unfolding s2_def top1_unit_interval_def using ht0_01 hd(1)
+      by (auto simp: min_def field_simps)
+    moreover have "dist s2 t0 < \<delta>" unfolding s2_def dist_real_def using hd(1) ht0_01(2) by auto
+    ultimately have "s2 \<in> S" using hd(2) by (by100 blast)
+    moreover have "s2 > t0" unfolding s2_def using hd(1) ht0_01(2) by auto
+    ultimately show ?thesis using that by (by100 blast)
+  qed
+  \<comment> \<open>Key contradiction: g is a homeomorphism, so g\<inverse> maps connected W-{w} to connected S-{t0}.
+     But S-{t0} \<subseteq> [0,1]-{t0} = [0,t0) \<union> (t0,1] which is disconnected, and S-{t0} spans both halves.
+     A connected set spanning both halves of a clopen partition is impossible.\<close>
+  have hS_minus_connected: "connected (S - {t0})"
+    sorry \<comment> \<open>g\<inverse> (homeomorphism inverse) maps connected W-{w} to S-{t0}. Bridges: top1\_ connected = HOL connected.\<close>
+  \<comment> \<open>But S-{t0} is NOT connected: s1 < t0 < s2, both in S.\<close>
+  moreover have "\<not> connected (S - {t0})"
+  proof -
+    have "s1 \<in> S - {t0}" using hs1 by auto
+    moreover have "s2 \<in> S - {t0}" using hs2 by auto
+    moreover have "s1 \<in> {..<t0}" using hs1(2) by (by100 simp)
+    moreover have "s2 \<in> {t0<..}" using hs2(2) by (by100 simp)
+    moreover have "S - {t0} \<subseteq> {..<t0} \<union> {t0<..}" by auto
+    moreover have "open ({..<t0} :: real set)" by (rule open_lessThan)
+    moreover have "open ({t0<..} :: real set)" by (rule open_greaterThan)
+    moreover have "{..<t0} \<inter> {t0<..} = ({} :: real set)" by auto
+    ultimately show ?thesis unfolding connected_def by (by100 blast)
+  qed
+  ultimately show False by (by100 blast)
 qed
 
 \<comment> \<open>Corollary: p is in the closure of S2 - Fp.\<close>
