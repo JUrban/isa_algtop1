@@ -2947,7 +2947,13 @@ proof -
       unfolding subspace_topology_def by (by100 blast)
     have hCp_sub: "C - {p} \<subseteq> X" using hC_sub by (by100 blast)
     have "W = (C - {p}) \<inter> ?F" using hWeq hW_sub hdecomp by (by100 blast)
-    have "(C - {p}) - W = (C - {p}) \<inter> (X - ?F)" using \<open>W = (C - {p}) \<inter> ?F\<close> hCp_sub by (by100 blast)
+    have "(C - {p}) - W = (C - {p}) \<inter> (X - ?F)"
+    proof -
+      have "(C - {p}) - W = (C - {p}) - ((C - {p}) \<inter> ?F)" using \<open>W = (C - {p}) \<inter> ?F\<close> by (by100 simp)
+      also have "\<dots> = (C - {p}) \<inter> (- ?F)" by (by100 blast)
+      also have "\<dots> = (C - {p}) \<inter> (X - ?F)" using hCp_sub by (by100 blast)
+      finally show ?thesis .
+    qed
     hence "(C - {p}) - W \<in> subspace_topology X TX (C - {p})"
       using \<open>(C - {p}) \<inter> (X - ?F) \<in> subspace_topology X TX (C - {p})\<close> by (by100 simp)
     thus ?thesis unfolding closedin_on_def using \<open>W = (C - {p}) \<inter> ?F\<close> by (by100 blast)
