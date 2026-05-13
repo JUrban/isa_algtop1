@@ -5020,7 +5020,28 @@ proof -
           (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) seg) = {h a1, h a3}" sorry
         \<comment> \<open>Endpoints of the line segment.\<close>
       have hseg_avoids: "seg \<inter> h ` C \<subseteq> {h a1, h a3}"
-        sorry \<comment> \<open>From ha1a3(10): interior avoids h(C). Endpoints are h(a1), h(a3) \<in> h(C).\<close>
+      proof (intro subsetI)
+        fix x assume "x \<in> seg \<inter> h ` C"
+        hence hx_seg: "x \<in> seg" and hx_C: "x \<in> h ` C" by (by100 blast)+
+        from hx_seg obtain t where ht: "0 \<le> t" "t \<le> 1"
+            "x = ((1-t) * fst (h a1) + t * fst (h a3), (1-t) * snd (h a1) + t * snd (h a3))"
+          unfolding seg_def by (by100 blast)
+        have "t = 0 \<or> t = 1"
+        proof (rule ccontr)
+          assume "\<not> (t = 0 \<or> t = 1)"
+          hence "0 < t" "t < 1" using ht(1,2) by (by100 linarith)+
+          have "x \<notin> h_sel ` C" sorry
+            \<comment> \<open>From ha1a3(10) instantiated at t, with h = h\_sel and ht(3).\<close>
+          hence "x \<notin> h ` C" unfolding h_def by (by100 blast)
+          thus False using hx_C by (by100 blast)
+        qed
+        thus "x \<in> {h a1, h a3}"
+        proof (elim disjE)
+          assume "t = 0" thus ?thesis using ht(3) by (by100 simp)
+        next
+          assume "t = 1" thus ?thesis using ht(3) by (by100 simp)
+        qed
+      qed
       have hseg_interior: "\<forall>x \<in> seg - {h a1, h a3}. x \<in> W_R2"
         sorry \<comment> \<open>From ha1a3(11): interior \<in> W\_seg. Need W\_seg = W\_R2.\<close>
       show ?thesis
