@@ -4696,8 +4696,8 @@ proof -
             by (by100 blast)
         qed
         have hR2_haus: "is_hausdorff_on (UNIV :: (real \<times> real) set)
-            (product_topology_on top1_open_sets top1_open_sets)" sorry
-          \<comment> \<open>R2 is Hausdorff.\<close>
+            (product_topology_on top1_open_sets top1_open_sets)"
+          by (rule top1_R2_is_hausdorff)
         show ?thesis by (rule arc_endpoints_are_boundary[OF hR2_strict hR2_haus _ hA(1) hg]) (by100 blast)
       qed
       hence "{g 0, g 1} = {h a1, h a3}" using hA(2) by (by100 simp)
