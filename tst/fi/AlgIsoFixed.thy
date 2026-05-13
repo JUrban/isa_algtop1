@@ -4710,11 +4710,52 @@ proof -
   have hC1R_ep: "top1_arc_endpoints_on C1R (subspace_topology top1_S2 top1_S2_topology C1R) = {a2'', a3}"
     by (rule arc_split_endpoints(2)[OF assms(1) hS2_haus hC1_sub hC12(4)
         hC1_split(1,2,3,4,5,6,7,8,9,10) hC1_ep ha2''_not_ep_C1])
-  \<comment> \<open>Now need to further split at b4 (on C2) and b2'' (on C1).
-     b4 is in C2L or C2R. b2'' is in C1L or C1R.
-     The exact placement determines the cycle edge assignment.
-     Further splits + cycle edge definition + ~30 K4 conditions remain.\<close>
-  show ?thesis sorry
+  \<comment> \<open>b4 \<in> C2L or C2R; b2'' \<in> C1L or C1R. The cycle edges depend on placement.
+     For the existential: provide specific witnesses and verify conditions.
+     Using a1=a2'', a2=b2'', a3=a4', a4=b4.
+     Cycle edges defined by splitting C at these 4 points.\<close>
+  \<comment> \<open>b4 not endpoint of C2L or C2R (since b4 \<noteq> a1, a3, a4').\<close>
+  have ha4'_ne_b4: "a4' \<noteq> b4"
+    using hcard4 by (auto simp: card_insert_if split: if_splits)
+  have ha2''_ne_b2'': "a2'' \<noteq> b2''"
+    using hcard4 by (auto simp: card_insert_if split: if_splits)
+  \<comment> \<open>Define cycle edges. The exact definition depends on whether b4 \<in> C2L or C2R.
+     Split whichever sub-arc of C2 contains b4; similarly for C1 and b2''.\<close>
+  \<comment> \<open>For concreteness: assume b4 \<in> C2L (the sub-arc containing a1).
+     Then split C2L at b4: C2L = C2LL(a1\<rightarrow>b4) \<union> C2LR(b4\<rightarrow>a4').
+     Cycle: a2'' \<rightarrow> b2'' \<rightarrow> a4' \<rightarrow> b4 \<rightarrow> a2''.
+     e12 = sub(C1, a2''\<rightarrow>b2''), e23 = sub(C, b2''\<rightarrow>a4'), e34 = C2R(a4'\<rightarrow>a3)\<union>...\<close>
+  \<comment> \<open>The cycle edge construction and all K4 conditions require a case split
+     on the ordering. For the existential, we provide the witnesses
+     and sorry all conditions that depend on the specific ordering.\<close>
+  show "\<exists>a1 a2 a3 a4 e12 e23 e34 e41 e13 e24.
+    card {a1, a2, a3, a4} = 4
+    \<and> {a1, a2, a3, a4} \<subseteq> top1_S2
+    \<and> e12 \<subseteq> top1_S2 \<and> e23 \<subseteq> top1_S2 \<and> e34 \<subseteq> top1_S2
+    \<and> e41 \<subseteq> top1_S2 \<and> e13 \<subseteq> top1_S2 \<and> e24 \<subseteq> top1_S2
+    \<and> top1_is_arc_on e12 (subspace_topology top1_S2 top1_S2_topology e12)
+    \<and> top1_is_arc_on e23 (subspace_topology top1_S2 top1_S2_topology e23)
+    \<and> top1_is_arc_on e34 (subspace_topology top1_S2 top1_S2_topology e34)
+    \<and> top1_is_arc_on e41 (subspace_topology top1_S2 top1_S2_topology e41)
+    \<and> top1_is_arc_on e13 (subspace_topology top1_S2 top1_S2_topology e13)
+    \<and> top1_is_arc_on e24 (subspace_topology top1_S2 top1_S2_topology e24)
+    \<and> top1_arc_endpoints_on e12 (subspace_topology top1_S2 top1_S2_topology e12) = {a1,a2}
+    \<and> top1_arc_endpoints_on e23 (subspace_topology top1_S2 top1_S2_topology e23) = {a2,a3}
+    \<and> top1_arc_endpoints_on e34 (subspace_topology top1_S2 top1_S2_topology e34) = {a3,a4}
+    \<and> top1_arc_endpoints_on e41 (subspace_topology top1_S2 top1_S2_topology e41) = {a4,a1}
+    \<and> top1_arc_endpoints_on e13 (subspace_topology top1_S2 top1_S2_topology e13) = {a1,a3}
+    \<and> top1_arc_endpoints_on e24 (subspace_topology top1_S2 top1_S2_topology e24) = {a2,a4}
+    \<and> e12 \<inter> e34 = {} \<and> e23 \<inter> e41 = {}
+    \<and> e12 \<inter> e23 = {a2} \<and> e23 \<inter> e34 = {a3}
+    \<and> e34 \<inter> e41 = {a4} \<and> e41 \<inter> e12 = {a1}
+    \<and> e13 \<inter> e12 = {a1} \<and> e13 \<inter> e23 = {a3}
+    \<and> e13 \<inter> e34 = {a3} \<and> e13 \<inter> e41 = {a1}
+    \<and> e13 \<inter> e24 \<subseteq> {a1,a2,a3,a4}
+    \<and> e24 \<inter> e12 = {a2} \<and> e24 \<inter> e23 = {a2}
+    \<and> e24 \<inter> e34 = {a4} \<and> e24 \<inter> e41 = {a4}
+    \<and> p \<in> e13 - {a1, a3} \<and> q \<in> e24 - {a2, a4}
+    \<and> C = e12 \<union> e23 \<union> e34 \<union> e41"
+    sorry
 qed
 
 theorem Theorem_65_2_fixed:
