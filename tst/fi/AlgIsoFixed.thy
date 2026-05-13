@@ -4822,9 +4822,101 @@ proof -
       hence "h x \<in> W_R2" using hA(4) by (by100 blast)
       \<comment> \<open>h(q) \<in> W\_R2 and W\_R2 is path-connected, so h(x) and h(q) path-connected in W\_R2.
          W\_R2 \<subseteq> UNIV - h(C), and h bijects S2-{p} to R2, so the path-component transfers.\<close>
+      \<comment> \<open>h\<inverse>(W_R2) is path-connected (image of path-connected set under homeomorphism).
+         q, x \<in> h\<inverse>(W_R2) \<subseteq> S2-C. So q and x are in the same path-component of S2-C.\<close>
+      define W_S2 where "W_S2 = inv_into (top1_S2 - {p}) h ` W_R2"
+      have hW_R2_sub: "W_R2 \<subseteq> (UNIV :: (real \<times> real) set)" by (by100 blast)
+      have hW_S2_homeo: "top1_homeomorphism_on W_R2
+          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) W_R2)
+          W_S2 (subspace_topology (top1_S2 - {p})
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p})) W_S2)
+          (inv_into (top1_S2 - {p}) h)"
+        unfolding W_S2_def
+        by (rule homeomorphism_on_restrict[OF hh_inv hW_R2_sub])
+      have hW_S2_pc_raw: "top1_path_connected_on W_S2
+          (subspace_topology (top1_S2 - {p})
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p})) W_S2)"
+        by (rule homeomorphism_preserves_path_connected[OF hW_S2_homeo hW_pc])
+      \<comment> \<open>Transfer subspace topology: subspace of S2-{p} = subspace of S2 (for subsets of S2-{p}).\<close>
+      have hW_S2_sub_S2p: "W_S2 \<subseteq> top1_S2 - {p}"
+      proof (intro subsetI)
+        fix y assume "y \<in> W_S2"
+        then obtain z where "z \<in> W_R2" "y = inv_into (top1_S2 - {p}) h z"
+          unfolding W_S2_def by (by100 blast)
+        have "inv_into (top1_S2 - {p}) h z \<in> top1_S2 - {p}" using hinv_range by (rule spec)
+        thus "y \<in> top1_S2 - {p}" using \<open>y = inv_into (top1_S2 - {p}) h z\<close> by (by100 simp)
+      qed
+      have hW_S2_sub_SC: "W_S2 \<subseteq> top1_S2 - C"
+      proof (intro subsetI)
+        fix y assume "y \<in> W_S2"
+        then obtain z where hz: "z \<in> W_R2" "y = inv_into (top1_S2 - {p}) h z"
+          unfolding W_S2_def by (by100 blast)
+        have "y \<in> top1_S2 - {p}" using \<open>y \<in> W_S2\<close> hW_S2_sub_S2p by (by100 blast)
+        have "h y = z" using hz(2) h_inv_cancel by (by100 simp)
+        have "z \<notin> h ` C"
+        proof -
+          have "W_R2 \<subseteq> UNIV - h ` C"
+        proof -
+          have "W_R2 \<subseteq> U_R2 \<union> V_R2" unfolding W_R2_def by (by100 simp)
+          also have "\<dots> = UNIV - h ` C" using hUV(4) by (by100 blast)
+          finally show ?thesis by (by100 blast)
+        qed
+          thus ?thesis using hz(1) by (by100 blast)
+        qed
+        have "y \<notin> C"
+        proof
+          assume "y \<in> C"
+          hence "h y \<in> h ` C" by (by100 blast)
+          hence "z \<in> h ` C" using \<open>h y = z\<close> by (by100 simp)
+          thus False using \<open>z \<notin> h ` C\<close> by (by100 blast)
+        qed
+        thus "y \<in> top1_S2 - C" using \<open>y \<in> top1_S2 - {p}\<close> by (by100 blast)
+      qed
+      have hq_W_S2: "q \<in> W_S2"
+      proof -
+        have "inv_into (top1_S2 - {p}) h (h q) = q" by (rule inv_into_f_f[OF hh_inj hq_S2p])
+        hence "q = inv_into (top1_S2 - {p}) h (h q)" by (by100 simp)
+        thus ?thesis unfolding W_S2_def using hq_W by (by100 blast)
+      qed
+      have hx_W_S2: "x \<in> W_S2"
+      proof -
+        have "inv_into (top1_S2 - {p}) h (h x) = x" by (rule inv_into_f_f[OF hh_inj hx_S2p])
+        hence "x = inv_into (top1_S2 - {p}) h (h x)" by (by100 simp)
+        thus ?thesis unfolding W_S2_def using \<open>h x \<in> W_R2\<close> by (by100 blast)
+      qed
+      \<comment> \<open>W_S2 is path-connected as subspace of S2-C (using subspace_topology_trans).\<close>
+      have "subspace_topology (top1_S2 - {p})
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p})) W_S2
+          = subspace_topology top1_S2 top1_S2_topology W_S2"
+        by (rule subspace_topology_trans[OF hW_S2_sub_S2p])
+      hence hW_S2_pc: "top1_path_connected_on W_S2
+          (subspace_topology top1_S2 top1_S2_topology W_S2)"
+        using hW_S2_pc_raw by (by100 simp)
+      \<comment> \<open>Transfer to S2-C subspace.\<close>
+      have "subspace_topology (top1_S2 - C)
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) W_S2
+          = subspace_topology top1_S2 top1_S2_topology W_S2"
+        by (rule subspace_topology_trans[OF hW_S2_sub_SC])
+      hence hW_S2_pc_SC: "top1_path_connected_on W_S2
+          (subspace_topology (top1_S2 - C)
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) W_S2)"
+        using hW_S2_pc by (by100 simp)
+      have hT_SC2: "is_topology_on (top1_S2 - C)
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C))"
+        by (rule subspace_topology_is_topology_on[OF hTopS2]) (by100 blast)
+      have "W_S2 \<subseteq> top1_path_component_of_on (top1_S2 - C)
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) q"
+        by (rule top1_path_connected_subspace_subset_path_component_of[OF hT_SC2
+            hW_S2_sub_SC hq_W_S2 hW_S2_pc_SC])
+      hence "x \<in> top1_path_component_of_on (top1_S2 - C)
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) q"
+        using hx_W_S2 by (by100 blast)
       show "top1_in_same_path_component_on (top1_S2 - C)
-          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) q x" sorry
-        \<comment> \<open>Needs: path in W_R2 from h(q) to h(x), transferred via h\<inverse> to S2-C.\<close>
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) q x"
+        using \<open>x \<in> top1_path_component_of_on (top1_S2 - C)
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) q\<close>
+        unfolding top1_in_same_path_component_on_def top1_path_component_of_on_def
+        by (by100 blast)
     qed
     ultimately show ?thesis using that[of e13] by (by100 blast)
   qed
