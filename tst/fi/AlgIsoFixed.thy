@@ -4083,7 +4083,9 @@ proof -
   have hS_neg_ne: "S_neg \<noteq> {}" using hD_neg_xaxis unfolding S_neg_def by (by100 blast)
   have hS_neg_bdd: "bdd_above S_neg"
     unfolding S_neg_def bdd_above_def by (rule exI[of _ 0]) (by100 force)
-  have hS_neg_closed: "closed S_neg" sorry \<comment> \<open>Compact D projected.\<close>
+  have hS_neg_closed: "closed S_neg" sorry
+    \<comment> \<open>S\_neg = fst ` (D \<inter> \{d. fst d \<le> 0 \<and> snd d = 0\}). D compact, intersection compact,
+       fst continuous, so image is compact, hence closed.\<close>
   define a1x where "a1x = Sup S_neg"
   have ha1x_le0: "a1x \<le> 0"
     unfolding a1x_def by (rule cSup_least[OF hS_neg_ne])
