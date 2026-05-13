@@ -4068,6 +4068,14 @@ proof -
     thus "compact D"
       using top1_compact_on_subspace_UNIV_iff_compact[of D] by (by100 simp)
   qed
+  \<comment> \<open>D closed (compact in Hausdorff), UNIV-D open.\<close>
+  have hD_closed: "closed D" using hD_compact by (rule compact_imp_closed)
+  have hUV_open_set: "open (UNIV - D)" using hD_closed by (by100 blast)
+  \<comment> \<open>U and V are open: they are path-components of UNIV-D (open in LPC R2).\<close>
+  have hU_open: "open U" sorry
+    \<comment> \<open>U is a path-component of UNIV-D. R2 is LPC, open subsets of LPC are LPC,
+       path-components of LPC are open.\<close>
+  have hV_open: "open V" sorry \<comment> \<open>Same argument.\<close>
   \<comment> \<open>(0,0) \<notin> D (since (0,0) \<in> U and U \<inter> D = {}).\<close>
   have h0_notD: "((0::real), (0::real)) \<notin> D" using h0_U hUV_union by (by100 blast)
   \<comment> \<open>Negative x-axis ray from (0,0) must cross D (connects bounded to unbounded).\<close>
@@ -4102,9 +4110,32 @@ proof -
     hence "far \<in> V" using hfar_notU hUV_union hfar_notD by (by100 blast)
     \<comment> \<open>Ray connected, meets U at (0,0) and V at far. U \<inter> V = {}. Contradiction
        with connectedness (ray can't be split into two nonempty disjoint open parts).\<close>
-    show False sorry
-      \<comment> \<open>Needs: U, V open in R2 (from JCT + LPC); ray connected; connected set
-         can't be partitioned by disjoint nonempty open sets.\<close>
+    \<comment> \<open>The negative x-axis {(x,0)|x\<le>0} is connected.\<close>
+    define ray where "ray = {p :: real \<times> real. fst p \<le> 0 \<and> snd p = 0}"
+    have hray_conn: "connected ray" sorry \<comment> \<open>Ray homeomorphic to (-\<infinity>,0], connected.\<close>
+    have hray_sub: "ray \<subseteq> U \<union> V"
+    proof (intro subsetI)
+      fix x assume "x \<in> ray"
+      hence "fst x \<le> 0 \<and> snd x = 0" unfolding ray_def by (by100 blast)
+      hence "x \<notin> D" using hray_avoids by (by100 blast)
+      thus "x \<in> U \<union> V" using hUV_union by (by100 blast)
+    qed
+    have "((0::real),(0::real)) \<in> ray" unfolding ray_def by (by100 simp)
+    hence "ray \<inter> U \<noteq> {}" using h0_U by (by100 blast)
+    have "far \<in> ray" unfolding ray_def far_def by (by100 simp)
+    hence "ray \<inter> V \<noteq> {}" using \<open>far \<in> V\<close> by (by100 blast)
+    \<comment> \<open>Connected ray \<subseteq> U \<union> V (disjoint open sets), meets both \<Rightarrow> disconnected.\<close>
+    have "\<not> connected ray"
+    proof -
+      have "open U" "open V" using hU_open hV_open .
+      have "ray \<inter> U \<noteq> {}" "ray \<inter> V \<noteq> {}" using \<open>ray \<inter> U \<noteq> {}\<close> \<open>ray \<inter> V \<noteq> {}\<close> .
+      have "ray \<subseteq> U \<union> V" using hray_sub .
+      have "U \<inter> V = {}" using hUV_disj .
+      thus ?thesis unfolding connected_def using \<open>open U\<close> \<open>open V\<close>
+          \<open>ray \<subseteq> U \<union> V\<close> \<open>ray \<inter> U \<noteq> {}\<close> \<open>ray \<inter> V \<noteq> {}\<close> \<open>U \<inter> V = {}\<close>
+        sorry \<comment> \<open>Standard connected_def + disjoint open cover.\<close>
+    qed
+    thus False using hray_conn by (by100 blast)
   qed
   have hD_pos_xaxis: "\<exists>d \<in> D. fst d \<ge> 0 \<and> snd d = 0"
   proof (rule ccontr)
@@ -4130,9 +4161,17 @@ proof -
     have "far \<notin> D" using \<open>\<forall>d. d \<in> D \<longrightarrow> \<not>(fst d \<ge> 0 \<and> snd d = 0)\<close> \<open>fst far \<ge> 0 \<and> snd far = 0\<close>
       by (by100 blast)
     hence "far \<in> V" using \<open>far \<notin> U\<close> hUV_union \<open>far \<notin> D\<close> by (by100 blast)
-    show False sorry \<comment> \<open>Same connectedness argument as negative case.\<close>
+    define ray where "ray = {p :: real \<times> real. fst p \<ge> 0 \<and> snd p = 0}"
+    have hray_conn: "connected ray" sorry
+    have hray_sub: "ray \<subseteq> U \<union> V"
+      using \<open>\<forall>d. d \<in> D \<longrightarrow> \<not>(fst d \<ge> 0 \<and> snd d = 0)\<close> hUV_union unfolding ray_def by (by100 blast)
+    have "((0::real),(0::real)) \<in> ray" unfolding ray_def by (by100 simp)
+    hence "ray \<inter> U \<noteq> {}" using h0_U by (by100 blast)
+    have "far \<in> ray" unfolding ray_def far_def by (by100 simp)
+    hence "ray \<inter> V \<noteq> {}" using \<open>far \<in> V\<close> by (by100 blast)
+    have "\<not> connected ray" sorry \<comment> \<open>Same connected\_def argument.\<close>
+    thus False using hray_conn by (by100 blast)
   qed
-    \<comment> \<open>Same argument for positive x-axis ray.\<close>
   \<comment> \<open>D \<inter> negative x-axis is compact and nonempty \<Rightarrow> has maximum x-coordinate.\<close>
   define S_neg where "S_neg = {fst d | d. d \<in> D \<and> fst d \<le> 0 \<and> snd d = 0}"
   have hS_neg_ne: "S_neg \<noteq> {}" using hD_neg_xaxis unfolding S_neg_def by (by100 blast)
