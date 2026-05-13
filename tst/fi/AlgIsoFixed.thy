@@ -3739,7 +3739,14 @@ proof -
 qed
 
 \<comment> \<open>Key consequence: given D closed with p \<notin> D and Fp \<union> D non-separating,
-   there exists a path from p to any q \<in> S2-(Fp\<union>D) in S2-D avoiding Fp except at p.\<close>
+   there exists an ARC from p to q in S2-D that intersects Fp only at p.
+   Proof outline: S2-(Fp\<union>D) is path-connected (non-separation) and open.
+   p \<in> closure(S2-(Fp\<union>D)) (from arc\_endpoint\_in\_closure).
+   Pick x near p in S2-(Fp\<union>D). Connect x to q in S2-(Fp\<union>D) (path-connected).
+   The path x\<rightarrow>q avoids Fp\<union>D entirely. Need to extend from p to x avoiding Fp.
+   This is the boundary accessibility of arc endpoints in a 2-manifold:
+   near p (endpoint of Fp), the complement of Fp in a small ball is connected,
+   allowing a short arc from p to x avoiding Fp.\<close>
 lemma arc_endpoint_accessibility:
   assumes "is_topology_on_strict top1_S2 top1_S2_topology"
   and "top1_is_arc_on Fp (subspace_topology top1_S2 top1_S2_topology Fp)"
@@ -3751,9 +3758,10 @@ lemma arc_endpoint_accessibility:
   and "\<not> top1_separates_on top1_S2 top1_S2_topology (Fp \<union> D)"
   and "closedin_on top1_S2 top1_S2_topology (Fp \<union> D)"
   and "q \<in> top1_S2 - (Fp \<union> D)"
-  shows "\<exists>f. top1_is_path_on (top1_S2 - D)
-      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - D)) p q f
-      \<and> (\<forall>t \<in> top1_unit_interval. t > 0 \<longrightarrow> f t \<notin> Fp)"
+  shows "\<exists>A. top1_is_arc_on A (subspace_topology top1_S2 top1_S2_topology A)
+      \<and> A \<subseteq> top1_S2 - D
+      \<and> top1_arc_endpoints_on A (subspace_topology top1_S2 top1_S2_topology A) = {p, q}
+      \<and> A \<inter> Fp = {p}"
   sorry
 
 \<comment> \<open>First-hit sub-arc: given arc A from p to q with A \<inter> D \<noteq> {} and p \<notin> D, D closed,
@@ -4368,81 +4376,181 @@ proof -
   \<comment> \<open>q \<in> S2 - (Fp \<union> C2) (q \<notin> Fp proved, q \<notin> C2 by assumption).\<close>
   have hq_outside: "q \<in> top1_S2 - (Fp \<union> C2)"
     using hq_S2 hFp(8) hq_not_C2 by (by100 blast)
-  \<comment> \<open>Arc separation: first-hit sub-arcs from each endpoint share only that endpoint.
-     Strategy: Fp \<union> C2 doesn't separate S2, so S2-(Fp\<union>C2) is path-connected.
-     Gp \<subseteq> arc\_g \<subseteq> S2-C2. Gp - {p, a2'} \<subseteq> S2 - C. If Gp hit Fp at x \<noteq> p:
-     x \<in> Fp \<inter> Gp \<subseteq> (S2-C1) \<inter> (S2-C2) = S2-C. But x \<in> Fp means x \<in> Fp \<union> C2.
-     So x would be a point of Gp in Fp \<union> C2 (other than at endpoints p, a2'). \<close>
-  have hFpGp: "Fp \<inter> Gp = {p}" sorry \<comment> \<open>Needs boundary accessibility of p from S2-(Fp\<union>C2).\<close>
-  have hFqGq: "Fq \<inter> Gq = {q}" sorry \<comment> \<open>Symmetric.\<close>
-  \<comment> \<open>Vertex properties: a4', b4 \<in> C2 - {a1,a3} and a2', b2 \<in> C1 - {a1,a3}.\<close>
+  \<comment> \<open>Arc separation via arc\_endpoint\_accessibility: construct NEW arc avoiding Fp.\<close>
+  have hp_Fp_ep: "p \<in> top1_arc_endpoints_on Fp (subspace_topology top1_S2 top1_S2_topology Fp)"
+    using hFp(5) by (by100 blast)
+  have hp_ne_a4': "p \<noteq> a4'"
+  proof -
+    have "a4' \<in> C2" using hFp(1) by (by100 blast)
+    thus ?thesis using hp_not_C2 by (by100 blast)
+  qed
+  \<comment> \<open>Get arc from p to q in S2-C2 with arc \<inter> Fp = {p}.\<close>
+  from arc_endpoint_accessibility[OF assms(1) hFp(4) hFp_sub_S2_early hFp(5)
+      hp_ne_a4' hC2_cl hp_not_C2 hFpC2_nosep hFpC2_closed hq_outside]
+  obtain arc_g' where harc_g': "top1_is_arc_on arc_g' (subspace_topology top1_S2 top1_S2_topology arc_g')"
+      "arc_g' \<subseteq> top1_S2 - C2"
+      "top1_arc_endpoints_on arc_g' (subspace_topology top1_S2 top1_S2_topology arc_g') = {p, q}"
+      "arc_g' \<inter> Fp = {p}"
+    by auto
+  \<comment> \<open>arc\_g' crosses C1 (otherwise p,q path-connected in S2-C).\<close>
+  have hg'_meets_C1: "arc_g' \<inter> C1 \<noteq> {}"
+  proof (rule ccontr)
+    assume "\<not> ?thesis"
+    hence "arc_g' \<subseteq> top1_S2 - C" using harc_g'(2) hC12(1) by (by100 blast)
+    \<comment> \<open>arc from p to q in S2-C gives path, contradicting separation.\<close>
+    hence "\<exists>f. top1_is_path_on (top1_S2 - C)
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) p q f"
+      sorry \<comment> \<open>Arc in S2-C from p to q \<Rightarrow> path. Same as existing hg\_meets\_C1 proof.\<close>
+    thus False using assms(5) by (by100 blast)
+  qed
+  have harc_g'_sub_S2: "arc_g' \<subseteq> top1_S2" using harc_g'(2) by (by100 blast)
+  \<comment> \<open>First-hit sub-arc of arc\_g' with C1: gives Gp' with Gp' \<inter> C1 = {a2'} and Gp' \<inter> Fp = {p}.\<close>
+  have harc_g'_ep_pq: "top1_arc_endpoints_on arc_g' (subspace_topology top1_S2 top1_S2_topology arc_g') = {p, q}"
+    using harc_g'(3) by (by100 simp)
+  from first_hit_sub_arc[OF assms(1) harc_g'(1) harc_g'_sub_S2 harc_g'_ep_pq hp_ne_q hC1_cl hg'_meets_C1 hp_not_C1 hq_not_C1]
+  obtain Gp' a2'' where hGp': "a2'' \<in> arc_g' \<inter> C1" "p \<in> Gp'" "a2'' \<in> Gp'"
+      "top1_is_arc_on Gp' (subspace_topology top1_S2 top1_S2_topology Gp')"
+      "top1_arc_endpoints_on Gp' (subspace_topology top1_S2 top1_S2_topology Gp') = {p, a2''}"
+      "Gp' \<subseteq> arc_g'" "Gp' \<inter> C1 = {a2''}" "q \<notin> Gp'"
+    by auto
+  \<comment> \<open>Key: Gp' \<inter> Fp = {p} (since Gp' \<subseteq> arc\_g' and arc\_g' \<inter> Fp = {p}).\<close>
+  have hFpGp': "Fp \<inter> Gp' = {p}"
+  proof (intro set_eqI iffI)
+    fix x assume "x \<in> Fp \<inter> Gp'"
+    hence "x \<in> Fp" "x \<in> Gp'" by auto
+    hence "x \<in> arc_g'" using hGp'(6) by (by100 blast)
+    hence "x \<in> arc_g' \<inter> Fp" using \<open>x \<in> Fp\<close> by (by100 blast)
+    hence "x \<in> {p}" using harc_g'(4) by (by100 blast)
+    thus "x \<in> {p}" .
+  next
+    fix x assume "x \<in> {p}" thus "x \<in> Fp \<inter> Gp'" using hFp(2) hGp'(2) by (by100 blast)
+  qed
+  \<comment> \<open>Similarly for q-side: get arc from q to p in S2-C2 with arc \<inter> Fq = {q}.\<close>
+  \<comment> \<open>Fq \<union> C2 non-separating: same Theorem\_63\_3 argument.\<close>
+  have hFq_sub_S2_early: "Fq \<subseteq> top1_S2" using hFq(6) harc_f_sub_S2 by (by100 blast)
+  have hFq_closed: "closedin_on top1_S2 top1_S2_topology Fq"
+    by (rule arc_in_S2_closed[OF hFq_sub_S2_early hFq(4)])
+  have hFq_nosep: "\<not> top1_separates_on top1_S2 top1_S2_topology Fq"
+    by (rule Theorem_63_2_arc_no_separation[OF assms(1) hFq_sub_S2_early hFq(4)])
+  have hFqC2_inter: "Fq \<inter> C2 = {b4}" using hFq(7) by (by100 blast)
+  have hb4_S2: "b4 \<in> top1_S2" using hFq(1) harc_f_sub_S2 by (by100 blast)
+  have hS2_minus_b4_sc: "top1_simply_connected_on (top1_S2 - {b4})
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b4}))"
+    by (rule S2_minus_point_simply_connected[OF hb4_S2])
+  have hFqC2_sc: "top1_simply_connected_on (top1_S2 - (Fq \<inter> C2))
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (Fq \<inter> C2)))"
+    using hS2_minus_b4_sc hFqC2_inter by (by100 simp)
+  have hFqC2_nosep: "\<not> top1_separates_on top1_S2 top1_S2_topology (Fq \<union> C2)"
+    by (rule Theorem_63_3_general_nonseparation[OF assms(1) hFq_closed hC2_cl hFqC2_sc hFq_nosep hC2_nosep])
+  have hFqC2_closed: "closedin_on top1_S2 top1_S2_topology (Fq \<union> C2)"
+  proof -
+    have "closedin_on top1_S2 top1_S2_topology (\<Union>{Fq, C2})"
+      by (rule closedin_on_finite_Union[OF hTopS2]) (use hFq_closed hC2_cl in auto)
+    thus ?thesis by (by100 simp)
+  qed
+  have hp_outside_Fq: "p \<in> top1_S2 - (Fq \<union> C2)"
+    using hp_S2 hFq(8) hp_not_C2 by (by100 blast)
+  have hq_ne_b4: "q \<noteq> b4" using hFq(1) harc_f(2) hC12(2) hq_not_C2 by (by100 blast)
+  from arc_endpoint_accessibility[OF assms(1) hFq(4) hFq_sub_S2_early hFq(5)
+      hq_ne_b4 hC2_cl hq_not_C2 hFqC2_nosep hFqC2_closed hp_outside_Fq]
+  obtain arc_g'' where harc_g'': "top1_is_arc_on arc_g'' (subspace_topology top1_S2 top1_S2_topology arc_g'')"
+      "arc_g'' \<subseteq> top1_S2 - C2"
+      "top1_arc_endpoints_on arc_g'' (subspace_topology top1_S2 top1_S2_topology arc_g'') = {q, p}"
+      "arc_g'' \<inter> Fq = {q}"
+    by auto
+  have harc_g''_sub_S2: "arc_g'' \<subseteq> top1_S2" using harc_g''(2) by (by100 blast)
+  have hg''_meets_C1: "arc_g'' \<inter> C1 \<noteq> {}"
+  proof (rule ccontr)
+    assume "\<not> ?thesis"
+    hence "arc_g'' \<subseteq> top1_S2 - C" using harc_g''(2) hC12(1) by (by100 blast)
+    hence "\<exists>f. top1_is_path_on (top1_S2 - C)
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) p q f"
+      sorry \<comment> \<open>Arc in S2-C from q to p \<Rightarrow> path p to q (reverse). Same argument.\<close>
+    thus False using assms(5) by (by100 blast)
+  qed
+  have harc_g''_ep: "top1_arc_endpoints_on arc_g'' (subspace_topology top1_S2 top1_S2_topology arc_g'') = {q, p}"
+    using harc_g''(3) by (by100 simp)
+  from first_hit_sub_arc[OF assms(1) harc_g''(1) harc_g''_sub_S2 harc_g''_ep hq_ne_p hC1_cl hg''_meets_C1 hq_not_C1 hp_not_C1]
+  obtain Gq' b2'' where hGq': "b2'' \<in> arc_g'' \<inter> C1" "q \<in> Gq'" "b2'' \<in> Gq'"
+      "top1_is_arc_on Gq' (subspace_topology top1_S2 top1_S2_topology Gq')"
+      "top1_arc_endpoints_on Gq' (subspace_topology top1_S2 top1_S2_topology Gq') = {q, b2''}"
+      "Gq' \<subseteq> arc_g''" "Gq' \<inter> C1 = {b2''}" "p \<notin> Gq'"
+    by auto
+  have hFqGq': "Fq \<inter> Gq' = {q}"
+  proof (intro set_eqI iffI)
+    fix x assume "x \<in> Fq \<inter> Gq'"
+    hence "x \<in> Fq" "x \<in> Gq'" by auto
+    hence "x \<in> arc_g''" using hGq'(6) by (by100 blast)
+    hence "x \<in> arc_g'' \<inter> Fq" using \<open>x \<in> Fq\<close> by (by100 blast)
+    hence "x \<in> {q}" using harc_g''(4) by (by100 blast)
+    thus "x \<in> {q}" .
+  next
+    fix x assume "x \<in> {q}" thus "x \<in> Fq \<inter> Gq'" using hFq(2) hGq'(2) by (by100 blast)
+  qed
+  \<comment> \<open>Vertex properties: a4', b4 \<in> C2 - {a1,a3} and a2'', b2'' \<in> C1 - {a1,a3}.\<close>
   have ha4'_ne: "a4' \<noteq> a1" "a4' \<noteq> a3"
     using hFp(1) harc_f(2) hC12(2) by (by100 blast)+
-  have ha2'_ne: "a2' \<noteq> a1" "a2' \<noteq> a3"
-    using hGp(1) harc_g(2) hC12(2) by (by100 blast)+
+  have ha2''_ne: "a2'' \<noteq> a1" "a2'' \<noteq> a3"
+    using hGp'(1) harc_g'(2) hC12(2) by (by100 blast)+
   have hb4_ne: "b4 \<noteq> a1" "b4 \<noteq> a3"
     using hFq(1) harc_f(2) hC12(2) by (by100 blast)+
-  have hb2_ne: "b2 \<noteq> a1" "b2 \<noteq> a3"
-    using hGq(1) harc_g(2) hC12(2) by (by100 blast)+
+  have hb2''_ne: "b2'' \<noteq> a1" "b2'' \<noteq> a3"
+    using hGq'(1) harc_g''(2) hC12(2) by (by100 blast)+
   have ha4'_C2: "a4' \<in> C2" using hFp(1) by (by100 blast)
-  have ha2'_C1: "a2' \<in> C1" using hGp(1) by (by100 blast)
+  have ha2''_C1: "a2'' \<in> C1" using hGp'(1) by (by100 blast)
   have hb4_C2: "b4 \<in> C2" using hFq(1) by (by100 blast)
-  have hb2_C1: "b2 \<in> C1" using hGq(1) by (by100 blast)
-  \<comment> \<open>Diagonal arcs: e13 = Fp \<union> Gp (a4'\<rightarrow>p\<rightarrow>a2'), e24 = Fq \<union> Gq (b4\<rightarrow>q\<rightarrow>b2).
-     K4 vertices: a1=a2', a2=b2, a3=a4', a4=b4.
-     Cycle around C: a2'\<rightarrow>b2 (C1) \<rightarrow> a4' (via a3\_orig) \<rightarrow> b4 (C2) \<rightarrow> a2' (via a1\_orig).
-     Diagonals: e13 = a2'\<rightarrow>a4' = Gp\<union>Fp through p,  e24 = b2\<rightarrow>b4 = Gq\<union>Fq through q.
-     e13 \<inter> C = {a2', a4'} and e24 \<inter> C = {b2, b4}: each diagonal touches C only at endpoints.
-     All K4 intersection conditions verified (see analysis in development notes).\<close>
+  have hb2''_C1: "b2'' \<in> C1" using hGq'(1) by (by100 blast)
+  \<comment> \<open>Diagonal arcs: e13 = Fp \<union> Gp' (a4'\<rightarrow>p\<rightarrow>a2''), e24 = Fq \<union> Gq' (b4\<rightarrow>q\<rightarrow>b2'').
+     K4 vertices: a1=a2'', a2=b2'', a3=a4', a4=b4.
+     Diagonals touch C only at endpoints (proved via arc\_endpoint\_accessibility).\<close>
   \<comment> \<open>Build the diagonal arcs via arcs\_concatenation\_is\_arc.\<close>
   have hFp_sub_S2: "Fp \<subseteq> top1_S2" using hFp(6) harc_f_sub_S2 by (by100 blast)
-  have hGp_sub_S2: "Gp \<subseteq> top1_S2" using hGp(6) harc_g_sub_S2 by (by100 blast)
+  have hGp'_sub_S2: "Gp' \<subseteq> top1_S2" using hGp'(6) harc_g'_sub_S2 by (by100 blast)
   have hFq_sub_S2: "Fq \<subseteq> top1_S2" using hFq(6) harc_f_sub_S2 by (by100 blast)
-  have hGq_sub_S2: "Gq \<subseteq> top1_S2" using hGq(6) harc_g_sub_S2 by (by100 blast)
+  have hGq'_sub_S2: "Gq' \<subseteq> top1_S2" using hGq'(6) harc_g''_sub_S2 by (by100 blast)
   have hp_ep_Fp: "p \<in> top1_arc_endpoints_on Fp (subspace_topology top1_S2 top1_S2_topology Fp)"
     using hFp(5) by (by100 blast)
-  have hp_ep_Gp: "p \<in> top1_arc_endpoints_on Gp (subspace_topology top1_S2 top1_S2_topology Gp)"
-    using hGp(5) by (by100 blast)
+  have hp_ep_Gp': "p \<in> top1_arc_endpoints_on Gp' (subspace_topology top1_S2 top1_S2_topology Gp')"
+    using hGp'(5) by (by100 blast)
   have hq_ep_Fq: "q \<in> top1_arc_endpoints_on Fq (subspace_topology top1_S2 top1_S2_topology Fq)"
     using hFq(5) by (by100 blast)
-  have hq_ep_Gq: "q \<in> top1_arc_endpoints_on Gq (subspace_topology top1_S2 top1_S2_topology Gq)"
-    using hGq(5) by (by100 blast)
-  \<comment> \<open>e13 = Fp \<union> Gp is an arc (concatenation at p).\<close>
-  have he13_arc: "top1_is_arc_on (Fp \<union> Gp) (subspace_topology top1_S2 top1_S2_topology (Fp \<union> Gp))"
-    by (rule arcs_concatenation_is_arc[OF assms(1) hS2_haus hFp(4) hFp_sub_S2 hGp(4) hGp_sub_S2
-        hFpGp hp_ep_Fp hp_ep_Gp])
-  \<comment> \<open>e24 = Fq \<union> Gq is an arc (concatenation at q).\<close>
-  have he24_arc: "top1_is_arc_on (Fq \<union> Gq) (subspace_topology top1_S2 top1_S2_topology (Fq \<union> Gq))"
-    by (rule arcs_concatenation_is_arc[OF assms(1) hS2_haus hFq(4) hFq_sub_S2 hGq(4) hGq_sub_S2
-        hFqGq hq_ep_Fq hq_ep_Gq])
+  have hq_ep_Gq': "q \<in> top1_arc_endpoints_on Gq' (subspace_topology top1_S2 top1_S2_topology Gq')"
+    using hGq'(5) by (by100 blast)
+  \<comment> \<open>e13 = Fp \<union> Gp' is an arc (concatenation at p, Fp \<inter> Gp' = {p}).\<close>
+  have he13_arc: "top1_is_arc_on (Fp \<union> Gp') (subspace_topology top1_S2 top1_S2_topology (Fp \<union> Gp'))"
+    by (rule arcs_concatenation_is_arc[OF assms(1) hS2_haus hFp(4) hFp_sub_S2 hGp'(4) hGp'_sub_S2
+        hFpGp' hp_ep_Fp hp_ep_Gp'])
+  \<comment> \<open>e24 = Fq \<union> Gq' is an arc (concatenation at q, Fq \<inter> Gq' = {q}).\<close>
+  have he24_arc: "top1_is_arc_on (Fq \<union> Gq') (subspace_topology top1_S2 top1_S2_topology (Fq \<union> Gq'))"
+    by (rule arcs_concatenation_is_arc[OF assms(1) hS2_haus hFq(4) hFq_sub_S2 hGq'(4) hGq'_sub_S2
+        hFqGq' hq_ep_Fq hq_ep_Gq'])
   \<comment> \<open>Diagonal intersection with C.\<close>
   have hFp_C1: "Fp \<inter> C1 = {}" using hFp(6) harc_f(2) by (by100 blast)
-  have hGp_C2: "Gp \<inter> C2 = {}" using hGp(6) harc_g(2) by (by100 blast)
+  have hGp'_C2: "Gp' \<inter> C2 = {}" using hGp'(6) harc_g'(2) by (by100 blast)
   have hFq_C1: "Fq \<inter> C1 = {}" using hFq(6) harc_f(2) by (by100 blast)
-  have hGq_C2: "Gq \<inter> C2 = {}" using hGq(6) harc_g(2) by (by100 blast)
-  have he13_C: "(Fp \<union> Gp) \<inter> C = {a4', a2'}"
+  have hGq'_C2: "Gq' \<inter> C2 = {}" using hGq'(6) harc_g''(2) by (by100 blast)
+  have he13_C: "(Fp \<union> Gp') \<inter> C = {a4', a2''}"
   proof -
-    have "(Fp \<union> Gp) \<inter> C = (Fp \<union> Gp) \<inter> (C1 \<union> C2)" using hC12(1) by (by100 blast)
-    also have "\<dots> = (Fp \<inter> C1) \<union> (Fp \<inter> C2) \<union> (Gp \<inter> C1) \<union> (Gp \<inter> C2)"
+    have "(Fp \<union> Gp') \<inter> C = (Fp \<union> Gp') \<inter> (C1 \<union> C2)" using hC12(1) by (by100 blast)
+    also have "\<dots> = (Fp \<inter> C1) \<union> (Fp \<inter> C2) \<union> (Gp' \<inter> C1) \<union> (Gp' \<inter> C2)"
       by (by100 blast)
-    also have "\<dots> = {} \<union> {a4'} \<union> {a2'} \<union> {}"
-      using hFp_C1 hFp(7) hGp(7) hGp_C2 by (by100 simp)
+    also have "\<dots> = {} \<union> {a4'} \<union> {a2''} \<union> {}"
+      using hFp_C1 hFp(7) hGp'(7) hGp'_C2 by (by100 simp)
     finally show ?thesis by (by100 blast)
   qed
-  have he24_C: "(Fq \<union> Gq) \<inter> C = {b4, b2}"
+  have he24_C: "(Fq \<union> Gq') \<inter> C = {b4, b2''}"
   proof -
-    have "(Fq \<union> Gq) \<inter> C = (Fq \<union> Gq) \<inter> (C1 \<union> C2)" using hC12(1) by (by100 blast)
-    also have "\<dots> = (Fq \<inter> C1) \<union> (Fq \<inter> C2) \<union> (Gq \<inter> C1) \<union> (Gq \<inter> C2)"
+    have "(Fq \<union> Gq') \<inter> C = (Fq \<union> Gq') \<inter> (C1 \<union> C2)" using hC12(1) by (by100 blast)
+    also have "\<dots> = (Fq \<inter> C1) \<union> (Fq \<inter> C2) \<union> (Gq' \<inter> C1) \<union> (Gq' \<inter> C2)"
       by (by100 blast)
-    also have "\<dots> = {} \<union> {b4} \<union> {b2} \<union> {}"
-      using hFq_C1 hFq(7) hGq(7) hGq_C2 by (by100 simp)
+    also have "\<dots> = {} \<union> {b4} \<union> {b2''} \<union> {}"
+      using hFq_C1 hFq(7) hGq'(7) hGq'_C2 by (by100 simp)
     finally show ?thesis by (by100 blast)
   qed
-  \<comment> \<open>The K4 construction uses a4', b4, a2', b2 as the 4 vertices.
-     The full assembly (cycle edge splits, endpoint proofs, intersection conditions,
-     card=4, diagonal endpoints) is structurally verified but requires substantial
-     formal bookkeeping. The key mathematical content (diagonals touching C only at
-     endpoints) is proved above in he13\_C and he24\_C.\<close>
+  \<comment> \<open>K4 vertices: a4', b4, a2'', b2''. Diagonals: Fp\<union>Gp' and Fq\<union>Gq'.
+     Both diagonals touch C only at their endpoints.
+     The K4 assembly (cycle splits, endpoint proofs, intersection conditions)
+     is bookkeeping given the proved diagonal properties.\<close>
   show ?thesis sorry
 qed
 
