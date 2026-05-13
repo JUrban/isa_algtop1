@@ -4439,11 +4439,20 @@ proof -
   \<comment> \<open>Step 0b: Find x-axis points on h\_sel(C) via Munkres\_xaxis\_segment.
      (Details sorry'd — requires JCT + translation + xaxis construction.
      This gives us two specific S2 points to decompose C at.)\<close>
-  obtain a1 a3 where ha1a3: "a1 \<in> C" "a3 \<in> C" "a1 \<noteq> a3"
+  \<comment> \<open>The x-axis segment property: for the DIAGONAL of the K4.\<close>
+  obtain a1 a3 W_seg where ha1a3: "a1 \<in> C" "a3 \<in> C" "a1 \<noteq> a3"
       "a1 \<in> top1_S2 - {p}" "a3 \<in> top1_S2 - {p}"
-      \<comment> \<open>Key property: the line segment from h\_sel(a1) to h\_sel(a3) in R2
-         avoids h\_sel(C) in its interior and has interior in the bounded component.
-         This will be used later for the diagonal construction.\<close>
+      \<comment> \<open>W\_seg is the component of h\_sel(C) in R2 that contains the segment interior.\<close>
+      "W_seg \<noteq> {}" "W_seg \<inter> h_sel ` C = {}"
+      "top1_path_connected_on W_seg
+          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) W_seg)"
+      \<comment> \<open>The line segment from h\_sel(a1) to h\_sel(a3) avoids h\_sel(C) and lies in W\_seg.\<close>
+      "(\<forall>t. 0 < t \<and> t < 1 \<longrightarrow>
+          ((1-t) * fst (h_sel a1) + t * fst (h_sel a3),
+           (1-t) * snd (h_sel a1) + t * snd (h_sel a3)) \<notin> h_sel ` C)"
+      "(\<forall>t. 0 < t \<and> t < 1 \<longrightarrow>
+          ((1-t) * fst (h_sel a1) + t * fst (h_sel a3),
+           (1-t) * snd (h_sel a1) + t * snd (h_sel a3)) \<in> W_seg)"
     sorry \<comment> \<open>From Munkres\_xaxis\_segment applied to translated h\_sel(C).\<close>
   \<comment> \<open>Step 1: Decompose C into two arcs C1, C2 at the x-axis-derived a1, a3.\<close>
   obtain C1 C2 where hC12: "C = C1 \<union> C2" "C1 \<inter> C2 = {a1, a3}"
@@ -4861,12 +4870,12 @@ proof -
       "\<forall>x \<in> e13 - {a1, a3}. top1_in_same_path_component_on (top1_S2 - C)
           (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) q x"
   proof -
-    \<comment> \<open>Step 1: Transfer to R2 via stereographic projection from p.\<close>
-    from S2_minus_point_homeo_R2[OF hp_S2]
-    obtain h where hh: "top1_homeomorphism_on (top1_S2 - {p})
+    \<comment> \<open>Step 1: Use the SAME stereographic projection h\_sel from Step 0.\<close>
+    define h where "h = h_sel"
+    have hh: "top1_homeomorphism_on (top1_S2 - {p})
         (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p}))
         (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets) h"
-      by (by100 blast)
+      unfolding h_def using hh_sel by (by100 blast)
     \<comment> \<open>Step 2: h(C) is a simple closed curve in R2.
        a1, a3 \<in> C \<subseteq> S2-{p} (since p \<notin> C), so h(a1), h(a3) are well-defined.\<close>
     have hC_sub_S2p: "C \<subseteq> top1_S2 - {p}" using hC_sub_S2 hp_notC by (by100 blast)
@@ -4998,7 +5007,26 @@ proof -
         \<and> top1_arc_endpoints_on A (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) A) = {h a1, h a3}
         \<and> A \<inter> h ` C \<subseteq> {h a1, h a3}
         \<and> (\<forall>x \<in> A - {h a1, h a3}. x \<in> W_R2)"
-      sorry \<comment> \<open>OLD: used R2_JCT_boundary_arc. TO BE REPLACED by K4_from_SCC_v2.\<close>
+    proof -
+      \<comment> \<open>Use the x-axis line segment from ha1a3. Since h = h\_sel (by definition),
+         the segment from h(a1) to h(a3) avoids h(C) and has interior in W\_seg.
+         Need to show W\_seg = W\_R2 (same bounded component).\<close>
+      define seg where "seg = {((1-t) * fst (h a1) + t * fst (h a3),
+          (1-t) * snd (h a1) + t * snd (h a3)) | t :: real. 0 \<le> t \<and> t \<le> 1}"
+      have hseg_arc: "top1_is_arc_on seg
+          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) seg)" sorry
+        \<comment> \<open>Line segment is an arc (R2\_straight\_line\_path + h(a1) \<noteq> h(a3)).\<close>
+      have hseg_ep: "top1_arc_endpoints_on seg
+          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) seg) = {h a1, h a3}" sorry
+        \<comment> \<open>Endpoints of the line segment.\<close>
+      have hseg_avoids: "seg \<inter> h ` C \<subseteq> {h a1, h a3}"
+        sorry \<comment> \<open>From ha1a3(10): interior avoids h(C). Endpoints are h(a1), h(a3) \<in> h(C).\<close>
+      have hseg_interior: "\<forall>x \<in> seg - {h a1, h a3}. x \<in> W_R2"
+        sorry \<comment> \<open>From ha1a3(11): interior \<in> W\_seg. Need W\_seg = W\_R2.\<close>
+      show ?thesis
+        apply (rule exI[of _ seg])
+        using hseg_arc hseg_ep hseg_avoids hseg_interior by (by100 blast)
+    qed
     then obtain A_R2 where hA: "top1_is_arc_on A_R2 (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) A_R2)"
         "top1_arc_endpoints_on A_R2 (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) A_R2) = {h a1, h a3}"
         "A_R2 \<inter> h ` C \<subseteq> {h a1, h a3}"
