@@ -4425,12 +4425,31 @@ proof -
   have hTopS2: "is_topology_on top1_S2 top1_S2_topology"
     using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
   have hS2_haus: "is_hausdorff_on top1_S2 top1_S2_topology" by (rule top1_S2_is_hausdorff)
-  \<comment> \<open>Step 1: Decompose C into two arcs C1, C2 sharing endpoints a1, a3.\<close>
-  from simple_closed_curve_arc_decomposition[OF assms(2,1) hS2_haus]
-  obtain C1 C2 a1 a3 where hC12: "C = C1 \<union> C2" "C1 \<inter> C2 = {a1, a3}" "a1 \<noteq> a3"
+  have hp_S2: "p \<in> top1_S2" using assms(3) by (by100 blast)
+  have hC_sub_S2: "C \<subseteq> top1_S2" using assms(2) by (rule simple_closed_curve_subset)
+  have hp_notC: "p \<notin> C" using assms(3) by (by100 blast)
+  \<comment> \<open>Following Munkres Step 3 EXACTLY: first transfer to R2, find x-axis points,
+     then decompose C at those points, then continue with the S2 construction.\<close>
+  \<comment> \<open>Step 0a: Stereographic projection from p to find x-axis decomposition points.\<close>
+  from S2_minus_point_homeo_R2[OF hp_S2]
+  obtain h_sel where hh_sel: "top1_homeomorphism_on (top1_S2 - {p})
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p}))
+      (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets) h_sel"
+    by (by100 blast)
+  \<comment> \<open>Step 0b: Find x-axis points on h\_sel(C) via Munkres\_xaxis\_segment.
+     (Details sorry'd — requires JCT + translation + xaxis construction.
+     This gives us two specific S2 points to decompose C at.)\<close>
+  obtain a1 a3 where ha1a3: "a1 \<in> C" "a3 \<in> C" "a1 \<noteq> a3"
+      "a1 \<in> top1_S2 - {p}" "a3 \<in> top1_S2 - {p}"
+      \<comment> \<open>Key property: the line segment from h\_sel(a1) to h\_sel(a3) in R2
+         avoids h\_sel(C) in its interior and has interior in the bounded component.
+         This will be used later for the diagonal construction.\<close>
+    sorry \<comment> \<open>From Munkres\_xaxis\_segment applied to translated h\_sel(C).\<close>
+  \<comment> \<open>Step 1: Decompose C into two arcs C1, C2 at the x-axis-derived a1, a3.\<close>
+  obtain C1 C2 where hC12: "C = C1 \<union> C2" "C1 \<inter> C2 = {a1, a3}"
       "top1_is_arc_on C1 (subspace_topology top1_S2 top1_S2_topology C1)"
       "top1_is_arc_on C2 (subspace_topology top1_S2 top1_S2_topology C2)"
-    by (by100 blast)
+    sorry \<comment> \<open>SCC decomposition at given points (any two distinct points on SCC split it into two arcs).\<close>
   have hC_sub_S2: "C \<subseteq> top1_S2" using assms(2) by (rule simple_closed_curve_subset)
   have hC1_sub: "C1 \<subseteq> top1_S2" using hC12(1) hC_sub_S2 by (by100 blast)
   have hC2_sub: "C2 \<subseteq> top1_S2" using hC12(1) hC_sub_S2 by (by100 blast)
@@ -4445,14 +4464,14 @@ proof -
   have hq_notC: "q \<notin> C" using assms(4) by (by100 blast)
   \<comment> \<open>Arc C1 doesn't separate S2 (Theorem 63.2).\<close>
   have hC1_nosep: "\<not> top1_separates_on top1_S2 top1_S2_topology C1"
-    by (rule Theorem_63_2_arc_no_separation[OF assms(1) hC1_sub hC12(4)])
+    by (rule Theorem_63_2_arc_no_separation[OF assms(1) hC1_sub hC12(3)])
   have hC2_nosep: "\<not> top1_separates_on top1_S2 top1_S2_topology C2"
-    by (rule Theorem_63_2_arc_no_separation[OF assms(1) hC2_sub hC12(5)])
+    by (rule Theorem_63_2_arc_no_separation[OF assms(1) hC2_sub hC12(4)])
   \<comment> \<open>C1 and C2 are closed in S2.\<close>
   have hC1_cl: "closedin_on top1_S2 top1_S2_topology C1"
-    by (rule arc_in_S2_closed[OF hC1_sub hC12(4)])
+    by (rule arc_in_S2_closed[OF hC1_sub hC12(3)])
   have hC2_cl: "closedin_on top1_S2 top1_S2_topology C2"
-    by (rule arc_in_S2_closed[OF hC2_sub hC12(5)])
+    by (rule arc_in_S2_closed[OF hC2_sub hC12(4)])
   \<comment> \<open>Step 4: Construct diagonal arcs through the Jordan components.
      Key fact: open path-connected subsets of S2 are arc-connected
      (Munkres Thm 65.2 Step 2). Proof uses: stereographic projection
@@ -4759,25 +4778,25 @@ proof -
     using ha2'_C1 ha2'_notC2 ha4'_C2 by (by100 blast)
   \<comment> \<open>Get endpoints of C1 and C2.\<close>
   have hC1_ep: "top1_arc_endpoints_on C1 (subspace_topology top1_S2 top1_S2_topology C1) = {a1, a3}"
-    by (rule scc_decomp_arc_endpoints(1)[OF assms(1) hS2_haus assms(2) hC12(4) hC12(5)
-        hC1_sub hC2_sub hC12(1) hC12(2) hC12(3)])
+    by (rule scc_decomp_arc_endpoints(1)[OF assms(1) hS2_haus assms(2) hC12(3) hC12(4)
+        hC1_sub hC2_sub hC12(1) hC12(2) ha1a3(3)])
   have hC2_ep: "top1_arc_endpoints_on C2 (subspace_topology top1_S2 top1_S2_topology C2) = {a1, a3}"
-    by (rule scc_decomp_arc_endpoints(2)[OF assms(1) hS2_haus assms(2) hC12(4) hC12(5)
-        hC1_sub hC2_sub hC12(1) hC12(2) hC12(3)])
+    by (rule scc_decomp_arc_endpoints(2)[OF assms(1) hS2_haus assms(2) hC12(3) hC12(4)
+        hC1_sub hC2_sub hC12(1) hC12(2) ha1a3(3)])
   \<comment> \<open>a2' is an interior point of C1 (not an endpoint), a4' is interior to C2.\<close>
   have ha2'_not_ep: "a2' \<notin> top1_arc_endpoints_on C1 (subspace_topology top1_S2 top1_S2_topology C1)"
     using hC1_ep ha2'_ne by (by100 blast)
   have ha4'_not_ep: "a4' \<notin> top1_arc_endpoints_on C2 (subspace_topology top1_S2 top1_S2_topology C2)"
     using hC2_ep ha4'_ne by (by100 blast)
   \<comment> \<open>Split C1 at a2' into two sub-arcs: e12 (containing a1) and e23 (containing a3).\<close>
-  from arc_split_at_given_point[OF assms(1) hS2_haus hC1_sub hC12(4) ha2'_C1 ha2'_not_ep hC1_ep hC12(3)]
+  from arc_split_at_given_point[OF assms(1) hS2_haus hC1_sub hC12(3) ha2'_C1 ha2'_not_ep hC1_ep ha1a3(3)]
   obtain e12 e23 where hC1_split: "C1 = e12 \<union> e23" "e12 \<inter> e23 = {a2'}"
       "top1_is_arc_on e12 (subspace_topology top1_S2 top1_S2_topology e12)"
       "top1_is_arc_on e23 (subspace_topology top1_S2 top1_S2_topology e23)"
       "a1 \<in> e12" "a3 \<in> e23" "a2' \<in> e12" "a2' \<in> e23" "e12 \<subseteq> top1_S2" "e23 \<subseteq> top1_S2"
     by blast
   \<comment> \<open>Split C2 at a4' into two sub-arcs: e34 (containing a3) and e41 (containing a1).\<close>
-  from arc_split_at_given_point[OF assms(1) hS2_haus hC2_sub hC12(5) ha4'_C2 ha4'_not_ep hC2_ep hC12(3)]
+  from arc_split_at_given_point[OF assms(1) hS2_haus hC2_sub hC12(4) ha4'_C2 ha4'_not_ep hC2_ep ha1a3(3)]
   obtain e34_raw e41_raw where hC2_split_raw: "C2 = e34_raw \<union> e41_raw"
       "e34_raw \<inter> e41_raw = {a4'}"
       "top1_is_arc_on e34_raw (subspace_topology top1_S2 top1_S2_topology e34_raw)"
@@ -4797,16 +4816,16 @@ proof -
     using hC2_split_raw by (by100 blast)+
   \<comment> \<open>Get endpoints of the split arcs.\<close>
   have he12_ep: "top1_arc_endpoints_on e12 (subspace_topology top1_S2 top1_S2_topology e12) = {a1, a2'}"
-    by (rule arc_split_endpoints(1)[OF assms(1) hS2_haus hC1_sub hC12(4) hC1_split(1,2,3,4)
+    by (rule arc_split_endpoints(1)[OF assms(1) hS2_haus hC1_sub hC12(3) hC1_split(1,2,3,4)
         hC1_split(5,6,7,8,9,10) hC1_ep ha2'_not_ep])
   have he23_ep: "top1_arc_endpoints_on e23 (subspace_topology top1_S2 top1_S2_topology e23) = {a2', a3}"
-    by (rule arc_split_endpoints(2)[OF assms(1) hS2_haus hC1_sub hC12(4) hC1_split(1,2,3,4)
+    by (rule arc_split_endpoints(2)[OF assms(1) hS2_haus hC1_sub hC12(3) hC1_split(1,2,3,4)
         hC1_split(5,6,7,8,9,10) hC1_ep ha2'_not_ep])
   have he41_ep_raw: "top1_arc_endpoints_on e34_raw (subspace_topology top1_S2 top1_S2_topology e34_raw) = {a1, a4'}"
-    by (rule arc_split_endpoints(1)[OF assms(1) hS2_haus hC2_sub hC12(5)
+    by (rule arc_split_endpoints(1)[OF assms(1) hS2_haus hC2_sub hC12(4)
         hC2_split_raw(1,2,3,4,5,6,7,8,9,10) hC2_ep ha4'_not_ep])
   have he34_ep_raw: "top1_arc_endpoints_on e41_raw (subspace_topology top1_S2 top1_S2_topology e41_raw) = {a4', a3}"
-    by (rule arc_split_endpoints(2)[OF assms(1) hS2_haus hC2_sub hC12(5)
+    by (rule arc_split_endpoints(2)[OF assms(1) hS2_haus hC2_sub hC12(4)
         hC2_split_raw(1,2,3,4,5,6,7,8,9,10) hC2_ep ha4'_not_ep])
   have he41_ep: "top1_arc_endpoints_on e41 (subspace_topology top1_S2 top1_S2_topology e41) = {a1, a4'}"
     unfolding e41_def using he41_ep_raw by (by100 blast)
@@ -4973,7 +4992,7 @@ proof -
       have "inj_on h (top1_S2 - {p})" using hh unfolding top1_homeomorphism_on_def bij_betw_def
         by (by100 blast)
       hence "a1 = a3" by (rule inj_onD[OF _ \<open>h a1 = h a3\<close> ha1_S2p ha3_S2p])
-      thus False using hC12(3) by (by100 blast)
+      thus False using ha1a3(3) by (by100 blast)
     qed
     have "\<exists>A. top1_is_arc_on A (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) A)
         \<and> top1_arc_endpoints_on A (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) A) = {h a1, h a3}
@@ -5095,7 +5114,7 @@ proof -
       proof
         assume "h a1 = h a3"
         hence "a1 = a3" by (rule inj_onD[OF hh_inj _ ha1_S2p ha3_S2p])
-        thus False using hC12(3) by (by100 blast)
+        thus False using ha1a3(3) by (by100 blast)
       qed
       have "{f 0, f 1} = {a1, a3}"
       proof -
@@ -5577,7 +5596,7 @@ proof -
   have hcard4: "card {a1, a2', a3, a4'} = 4"
   proof -
     have "a1 \<noteq> a2'" using ha2'_ne(1) by (by100 blast)
-    moreover have "a1 \<noteq> a3" using hC12(3) by (by100 blast)
+    moreover have "a1 \<noteq> a3" using ha1a3(3) by (by100 blast)
     moreover have "a1 \<noteq> a4'" using ha4'_ne(1) by (by100 blast)
     moreover have "a2' \<noteq> a3" using ha2'_ne(2) by (by100 blast)
     moreover have "a2' \<noteq> a4'" using ha2'_ne_a4' by (by100 blast)
