@@ -4674,7 +4674,94 @@ proof -
       ultimately show ?thesis unfolding top1_is_arc_on_def by (by100 blast)
     qed
     moreover have "e13 \<subseteq> top1_S2" using he13_sub_S2p by (by100 blast)
-    moreover have "top1_arc_endpoints_on e13 (subspace_topology top1_S2 top1_S2_topology e13) = {a1, a3}" sorry
+    moreover have "top1_arc_endpoints_on e13 (subspace_topology top1_S2 top1_S2_topology e13) = {a1, a3}"
+    proof -
+      \<comment> \<open>Get parametrization g of A_R2 with endpoints.\<close>
+      obtain g where hg: "top1_homeomorphism_on I_set I_top A_R2
+          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) A_R2) g"
+        using hA(1) unfolding top1_is_arc_on_def by (by100 blast)
+      have hg_ep: "top1_arc_endpoints_on A_R2
+          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) A_R2) = {g 0, g 1}"
+      proof -
+        have hR2_strict: "is_topology_on_strict (UNIV :: (real \<times> real) set)
+            (product_topology_on top1_open_sets top1_open_sets)"
+          unfolding is_topology_on_strict_def
+        proof (intro conjI)
+          show "is_topology_on (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets)"
+            using product_topology_on_is_topology_on[OF
+              top1_open_sets_is_topology_on_UNIV[where 'a = real]
+              top1_open_sets_is_topology_on_UNIV[where 'a = real]]
+            by (by100 simp)
+          show "(product_topology_on top1_open_sets top1_open_sets :: (real \<times> real) set set) \<subseteq> Pow UNIV"
+            by (by100 blast)
+        qed
+        have hR2_haus: "is_hausdorff_on (UNIV :: (real \<times> real) set)
+            (product_topology_on top1_open_sets top1_open_sets)" sorry
+          \<comment> \<open>R2 is Hausdorff.\<close>
+        show ?thesis by (rule arc_endpoints_are_boundary[OF hR2_strict hR2_haus _ hA(1) hg]) (by100 blast)
+      qed
+      hence "{g 0, g 1} = {h a1, h a3}" using hA(2) by (by100 simp)
+      \<comment> \<open>Composed homeomorphism (inv_into h) \<circ> g: [0,1] \<rightarrow> e13.\<close>
+      define f where "f = (inv_into (top1_S2 - {p}) h) \<circ> g"
+      have hf: "top1_homeomorphism_on I_set I_top e13
+          (subspace_topology top1_S2 top1_S2_topology e13) f"
+        unfolding f_def by (rule homeomorphism_comp[OF hg hh_inv_e13])
+      have he13_ep: "top1_arc_endpoints_on e13 (subspace_topology top1_S2 top1_S2_topology e13) = {f 0, f 1}"
+        by (rule arc_endpoints_are_boundary[OF assms(1) hS2_haus _ \<open>top1_is_arc_on e13 _\<close> hf])
+           (use he13_sub_S2p in \<open>by100 blast\<close>)
+      have "f 0 = inv_into (top1_S2 - {p}) h (g 0)" unfolding f_def by (by100 simp)
+      have "f 1 = inv_into (top1_S2 - {p}) h (g 1)" unfolding f_def by (by100 simp)
+      \<comment> \<open>{f 0, f 1} = {a1, a3}: from inv\_into applied to each endpoint.\<close>
+      have hha1_ne: "h a1 \<noteq> h a3"
+      proof
+        assume "h a1 = h a3"
+        hence "a1 = a3" by (rule inj_onD[OF hh_inj _ ha1_S2p ha3_S2p])
+        thus False using hC12(3) by (by100 blast)
+      qed
+      have "{f 0, f 1} = {a1, a3}"
+      proof -
+        \<comment> \<open>Case analysis: either g(0)=h(a1),g(1)=h(a3) or reversed.\<close>
+        from \<open>{g 0, g 1} = {h a1, h a3}\<close>
+        have "g 0 \<in> {h a1, h a3}" "g 1 \<in> {h a1, h a3}" by (by100 blast)+
+        from \<open>g 0 \<in> {h a1, h a3}\<close> have "g 0 = h a1 \<or> g 0 = h a3" by (by100 blast)
+        from this hha1_ne \<open>g 1 \<in> {h a1, h a3}\<close> \<open>{g 0, g 1} = {h a1, h a3}\<close>
+        consider "g 0 = h a1" "g 1 = h a3" | "g 0 = h a3" "g 1 = h a1"
+        proof (elim disjE)
+          assume "g 0 = h a1"
+          have "h a3 \<in> {g 0, g 1}" using \<open>{g 0, g 1} = {h a1, h a3}\<close> by (by100 blast)
+          hence "h a3 = g 0 \<or> h a3 = g 1" by (by100 blast)
+          moreover have "h a3 \<noteq> g 0"
+          proof -
+            have "h a3 \<noteq> h a1" using hha1_ne by (by100 simp)
+            thus ?thesis using \<open>g 0 = h a1\<close> by (by100 simp)
+          qed
+          ultimately have "h a3 = g 1" by (by100 blast)
+          hence "g 1 = h a3" by (by100 simp)
+          thus ?thesis using that(1) \<open>g 0 = h a1\<close> by (by100 blast)
+        next
+          assume "g 0 = h a3"
+          have "h a1 \<in> {g 0, g 1}" using \<open>{g 0, g 1} = {h a1, h a3}\<close> by (by100 blast)
+          hence "h a1 = g 0 \<or> h a1 = g 1" by (by100 blast)
+          moreover have "h a1 \<noteq> g 0" using \<open>g 0 = h a3\<close> hha1_ne by (by100 simp)
+          ultimately have "h a1 = g 1" by (by100 blast)
+          hence "g 1 = h a1" by (by100 simp)
+          thus ?thesis using that(2) \<open>g 0 = h a3\<close> by (by100 blast)
+        qed
+        thus ?thesis
+        proof cases
+          case 1
+          have "f 0 = a1" using 1(1) \<open>f 0 = inv_into (top1_S2 - {p}) h (g 0)\<close> hinv_a1 by (by100 simp)
+          moreover have "f 1 = a3" using 1(2) \<open>f 1 = inv_into (top1_S2 - {p}) h (g 1)\<close> hinv_a3 by (by100 simp)
+          ultimately show ?thesis by (by100 blast)
+        next
+          case 2
+          have "f 0 = a3" using 2(1) \<open>f 0 = inv_into (top1_S2 - {p}) h (g 0)\<close> hinv_a3 by (by100 simp)
+          moreover have "f 1 = a1" using 2(2) \<open>f 1 = inv_into (top1_S2 - {p}) h (g 1)\<close> hinv_a1 by (by100 simp)
+          ultimately show ?thesis by (by100 blast)
+        qed
+      qed
+      thus ?thesis using he13_ep by (by100 simp)
+    qed
     moreover have "e13 \<inter> C \<subseteq> {a1, a3}"
     proof (intro subsetI)
       fix x assume "x \<in> e13 \<inter> C"
