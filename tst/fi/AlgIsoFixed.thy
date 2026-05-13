@@ -4489,8 +4489,18 @@ proof -
        a1, a3 \<in> C \<subseteq> S2-{p} (since p \<notin> C), so h(a1), h(a3) are well-defined.\<close>
     have hC_sub_S2p: "C \<subseteq> top1_S2 - {p}" using hC_sub_S2 hp_notC by (by100 blast)
     have hq_S2p: "q \<in> top1_S2 - {p}" using hq_S2 hp_ne_q by (by100 blast)
-    have ha1_S2p: "a1 \<in> top1_S2 - {p}" using hC1_sub hC1_split(5) hp_notC hC12(1) sorry
-    have ha3_S2p: "a3 \<in> top1_S2 - {p}" using hC1_sub hC1_split(6) hp_notC hC12(1) sorry
+    have ha1_S2p: "a1 \<in> top1_S2 - {p}"
+    proof -
+      have "a1 \<in> C1" using hC1_split(1,5) by (by100 blast)
+      hence "a1 \<in> C" using hC12(1) by (by100 blast)
+      thus ?thesis using hC_sub_S2 hp_notC by (by100 blast)
+    qed
+    have ha3_S2p: "a3 \<in> top1_S2 - {p}"
+    proof -
+      have "a3 \<in> C1" using hC1_split(1,6) by (by100 blast)
+      hence "a3 \<in> C" using hC12(1) by (by100 blast)
+      thus ?thesis using hC_sub_S2 hp_notC by (by100 blast)
+    qed
     have hhC_scc: "top1_simple_closed_curve_on (UNIV :: (real \<times> real) set)
         (product_topology_on top1_open_sets top1_open_sets) (h ` C)" sorry
     \<comment> \<open>Step 3: Apply JCT in R2 to get bounded/unbounded components.\<close>
@@ -4503,12 +4513,30 @@ proof -
         "closure_on UNIV (product_topology_on top1_open_sets top1_open_sets) V_R2 = V_R2 \<union> h ` C"
       sorry \<comment> \<open>Extract from Theorem_63_4_JordanCurve.\<close>
     \<comment> \<open>Step 4: h(q) is in one component (say W_R2). h(a1), h(a3) \<in> h(C) = boundary of W_R2.\<close>
-    have hq_R2: "h q \<in> U_R2 \<or> h q \<in> V_R2" sorry
+    have hq_R2: "h q \<in> U_R2 \<or> h q \<in> V_R2"
+    proof -
+      have "h q \<in> UNIV - h ` C"
+      proof -
+        have "q \<notin> C" using hq_notC by (by100 blast)
+        have "h q \<notin> h ` C" sorry \<comment> \<open>Injectivity of h on S2-{p}: q \<notin> C implies h(q) \<notin> h(C).\<close>
+        thus ?thesis by (by100 blast)
+      qed
+      thus ?thesis using hUV(4) by (by100 blast)
+    qed
     define W_R2 where "W_R2 = (if h q \<in> U_R2 then U_R2 else V_R2)"
     have hW_pc: "top1_path_connected_on W_R2
-        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) W_R2)" sorry
-    have hW_cl: "closure_on UNIV (product_topology_on top1_open_sets top1_open_sets) W_R2 = W_R2 \<union> h ` C" sorry
-    have hq_W: "h q \<in> W_R2" sorry
+        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) W_R2)"
+      using hq_R2 hUV(5,6) unfolding W_R2_def by (by100 simp)
+    have hW_cl: "closure_on UNIV (product_topology_on top1_open_sets top1_open_sets) W_R2 = W_R2 \<union> h ` C"
+      using hq_R2 hUV(7,8) unfolding W_R2_def by (by100 simp)
+    have hq_W: "h q \<in> W_R2"
+    proof (cases "h q \<in> U_R2")
+      case True thus ?thesis unfolding W_R2_def by (by100 simp)
+    next
+      case False
+      hence "h q \<in> V_R2" using hq_R2 by (by100 blast)
+      thus ?thesis unfolding W_R2_def using False by (by100 simp)
+    qed
     \<comment> \<open>Step 5: Construct arc from h(a1) to h(a3) with interior in W_R2.
        This uses: h(a1), h(a3) \<in> closure(W_R2), W_R2 is open and path-connected in R2.
        For any two boundary points of a path-connected open set in R2 whose boundary
