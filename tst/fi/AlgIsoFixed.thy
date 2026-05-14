@@ -4927,8 +4927,25 @@ proof -
       qed
     qed
     \<comment> \<open>F is continuous on D\<times>I (HOL continuous\_on, since arithmetic).\<close>
-    \<comment> \<open>Then bridge to custom topology.\<close>
-    show ?thesis sorry
+    have hF_cont_on: "continuous_on (D \<times> I_set) F"
+    proof -
+      \<comment> \<open>F(x,t) = (fst x - fst(\<alpha> t) + fst r, snd x - snd(\<alpha> t) + snd r).
+         \<alpha> is continuous I \<rightarrow> R2 (HOL). Projections, subtraction, addition continuous.\<close>
+      have h\<alpha>_cont_on: "continuous_on I_set \<alpha>"
+      proof -
+        have "top1_continuous_map_on I_set I_top (UNIV - D)
+            (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - D)) \<alpha>"
+          using h\<alpha> unfolding top1_is_path_on_def by (by100 blast)
+        \<comment> \<open>custom continuous \<rightarrow> HOL continuous\_on: the inverse bridge.\<close>
+        show ?thesis sorry \<comment> \<open>Custom topology continuous \<rightarrow> HOL continuous\_on bridge.\<close>
+      qed
+      show ?thesis unfolding F_def sorry \<comment> \<open>continuous\_on arithmetic from h\<alpha>\_cont\_on.\<close>
+    qed
+    have hF_into: "\<And>p. p \<in> D \<times> I_set \<Longrightarrow> F p \<in> UNIV - {r}"
+      using hF_avoids_r by (by100 blast)
+    \<comment> \<open>Bridge: R2\_subspace\_I\_continuous\_on\_transfer.\<close>
+    from R2_subspace_I_continuous_on_transfer[OF hF_cont_on hF_into]
+    show ?thesis .
   qed
   \<comment> \<open>Step F: F(x,0) = x, F(x,1) = x - r' + r.\<close>
   have h\<alpha>0: "\<alpha> 0 = r" using h\<alpha> unfolding top1_is_path_on_def by (by100 blast)
