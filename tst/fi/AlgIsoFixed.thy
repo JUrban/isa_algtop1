@@ -5837,7 +5837,12 @@ proof -
         have htr_Us: "top1_continuous_map_on U_s
             (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) U_s) U'
             (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) U') tr"
-          sorry \<comment> \<open>From tr: UNIV \<rightarrow> UNIV continuous + restrict domain/codomain.\<close>
+        proof -
+          have "\<And>p. p \<in> U_s \<Longrightarrow> tr p \<in> U'" unfolding U'_def by (by100 blast)
+          have "continuous_on U_s tr" using continuous_on_subset[OF htr_cont] by (by100 blast)
+          from top1_continuous_map_on_real2_subspace_general[OF \<open>\<And>p. p \<in> U_s \<Longrightarrow> tr p \<in> U'\<close> this]
+          show ?thesis .
+        qed
         have hcomp: "top1_continuous_map_on I_set I_top U'
             (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) U') (tr \<circ> f)"
         proof -
