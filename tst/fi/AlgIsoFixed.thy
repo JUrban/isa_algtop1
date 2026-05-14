@@ -4715,12 +4715,431 @@ proof -
         thus False using \<open>s \<noteq> t\<close> by (by100 blast)
       qed
     qed
-    \<comment> \<open>Normalize: WLOG 0 \<le> t1 < 1. Use integer shift to move into [0,1).\<close>
-    \<comment> \<open>For now, obtain specific lifts in [0,1) and continue.\<close>
-    \<comment> \<open>The key lemma: \<exists>s1 s2. 0 \<le> s1 \<and> s1 < s2 \<and> s2 < s1 + 1
-       \<and> R\_to\_S1(s1) = pa \<and> R\_to\_S1(s2) = pb.\<close>
-    \<comment> \<open>Then A1 = R\_to\_S1 ` {s1..s2}, A2 = R\_to\_S1 ` {s2..s1+1}.\<close>
-    show ?thesis sorry
+    \<comment> \<open>Normalize: shift t1 into [0,1), then arrange t2 so s1 < s2 < s1+1.\<close>
+    define s1 where "s1 = t1 - of_int (floor t1)"
+    have hs1_range: "0 \<le> s1" "s1 < 1" unfolding s1_def by linarith+
+    have hs1_pa: "top1_R_to_S1 s1 = pa"
+      unfolding s1_def using top1_R_to_S1_int_shift[of t1 "- floor t1"] ht1 by (by100 simp)
+    define t2' where "t2' = t2 - of_int (floor t2)"
+    have ht2'_range: "0 \<le> t2'" "t2' < 1" unfolding t2'_def by linarith+
+    have ht2'_pb: "top1_R_to_S1 t2' = pb"
+      unfolding t2'_def using top1_R_to_S1_int_shift[of t2 "- floor t2"] ht2 by (by100 simp)
+    have hs1_ne_t2': "s1 \<noteq> t2'"
+    proof
+      assume "s1 = t2'"
+      hence "pa = pb" using hs1_pa ht2'_pb by (by100 simp)
+      thus False using hpab by (by100 blast)
+    qed
+    define s2 where "s2 = (if t2' > s1 then t2' else t2' + 1)"
+    have hs2_pb: "top1_R_to_S1 s2 = pb"
+    proof (cases "t2' > s1")
+      case True thus ?thesis unfolding s2_def using ht2'_pb by (by100 simp)
+    next
+      case False
+      hence "s2 = t2' + 1" unfolding s2_def by (by100 simp)
+      thus ?thesis using top1_R_to_S1_int_shift[of t2' 1] ht2'_pb by (by100 simp)
+    qed
+    have hs_order: "s1 < s2" "s2 < s1 + 1"
+    proof -
+      show "s1 < s2"
+      proof (cases "t2' > s1")
+        case True
+        hence "s2 = t2'" unfolding s2_def by (by100 simp)
+        have "s1 < t2'" using True by (by100 linarith)
+        thus ?thesis using \<open>s2 = t2'\<close> by (by100 linarith)
+      next
+        case False
+        hence "t2' \<le> s1" by (by100 linarith)
+        hence "t2' < s1" using hs1_ne_t2' by (by100 linarith)
+        hence "s2 = t2' + 1" unfolding s2_def by (by100 simp)
+        show ?thesis using \<open>s2 = t2' + 1\<close> ht2'_range hs1_range by (by100 linarith)
+      qed
+      show "s2 < s1 + 1"
+      proof (cases "t2' > s1")
+        case True
+        hence "s2 = t2'" unfolding s2_def by (by100 simp)
+        thus ?thesis using ht2'_range hs1_range by (by100 linarith)
+      next
+        case False
+        hence "t2' < s1" using hs1_ne_t2' by (by100 linarith)
+        hence "s2 = t2' + 1" unfolding s2_def by (by100 simp)
+        thus ?thesis using \<open>t2' < s1\<close> by (by100 linarith)
+      qed
+    qed
+    \<comment> \<open>A1 = R\_to\_S1 ` [s1,s2], A2 = R\_to\_S1 ` [s2,s1+1]. Both arcs, union=S1, inter={pa,pb}.\<close>
+    define A1_s where "A1_s = top1_R_to_S1 ` {s1..s2}"
+    define A2_s where "A2_s = top1_R_to_S1 ` {s2..s1+1}"
+    have hA_union: "top1_S1 = A1_s \<union> A2_s"
+    proof (rule set_eqI, rule iffI)
+      fix x assume "x \<in> top1_S1"
+      hence "x \<in> top1_R_to_S1 ` UNIV" using hR_surj by (by100 blast)
+      then obtain t where ht: "top1_R_to_S1 t = x" by (by100 blast)
+      \<comment> \<open>Shift t into [s1, s1+1): t' = t - floor((t-s1)) \<cdot> 1 gives t' \<in> [s1, s1+1).\<close>
+      define t' where "t' = t - of_int (floor (t - s1)) + s1 - s1"
+      have "t' = t - of_int (floor (t - s1))" unfolding t'_def by (by100 simp)
+      have ht'_range: "s1 \<le> t'" "t' < s1 + 1"
+      proof -
+        have "t - s1 - of_int (floor (t - s1)) \<ge> 0" by linarith
+        thus "s1 \<le> t'" using \<open>t' = t - of_int (floor (t - s1))\<close> by (by100 linarith)
+        have "t - s1 - of_int (floor (t - s1)) < 1" by linarith
+        thus "t' < s1 + 1" using \<open>t' = t - of_int (floor (t - s1))\<close> by (by100 linarith)
+      qed
+      have ht'_x: "top1_R_to_S1 t' = x"
+        using \<open>t' = t - of_int (floor (t - s1))\<close>
+          top1_R_to_S1_int_shift[of t "- floor (t - s1)"] ht by (by100 simp)
+      show "x \<in> A1_s \<union> A2_s"
+      proof (cases "t' \<le> s2")
+        case True
+        hence "t' \<in> {s1..s2}" using ht'_range by (by100 simp)
+        hence "x \<in> A1_s" unfolding A1_s_def using ht'_x by (by100 blast)
+        thus ?thesis by (by100 blast)
+      next
+        case False
+        hence "t' \<in> {s2..s1+1}" using ht'_range by (by100 simp)
+        hence "x \<in> A2_s" unfolding A2_s_def using ht'_x by (by100 blast)
+        thus ?thesis by (by100 blast)
+      qed
+    next
+      fix x assume "x \<in> A1_s \<union> A2_s"
+      hence "x \<in> top1_R_to_S1 ` {s1..s2} \<or> x \<in> top1_R_to_S1 ` {s2..s1+1}"
+        unfolding A1_s_def A2_s_def by (by100 blast)
+      hence "\<exists>t. top1_R_to_S1 t = x" by (by100 blast)
+      hence "x \<in> top1_R_to_S1 ` UNIV" by (by100 blast)
+      thus "x \<in> top1_S1" using hR_surj by (by100 blast)
+    qed
+    have hA_inter: "A1_s \<inter> A2_s = {pa, pb}"
+    proof (rule set_eqI, rule iffI)
+      fix x assume "x \<in> A1_s \<inter> A2_s"
+      hence "x \<in> A1_s" "x \<in> A2_s" by (by100 blast)+
+      from \<open>x \<in> A1_s\<close> obtain u1 where hu1: "u1 \<in> {s1..s2}" "top1_R_to_S1 u1 = x"
+        unfolding A1_s_def by (by100 blast)
+      from \<open>x \<in> A2_s\<close> obtain u2 where hu2: "u2 \<in> {s2..s1+1}" "top1_R_to_S1 u2 = x"
+        unfolding A2_s_def by (by100 blast)
+      have "top1_R_to_S1 u1 = top1_R_to_S1 u2" using hu1(2) hu2(2) by (by100 simp)
+      \<comment> \<open>u1 \<in> [s1,s2], u2 \<in> [s2,s1+1]. |u1-u2| < 1 unless at boundary.\<close>
+      have "u1 = u2 \<or> \<bar>u1 - u2\<bar> \<ge> 1"
+      proof (rule ccontr)
+        assume "\<not>(u1 = u2 \<or> \<bar>u1 - u2\<bar> \<ge> 1)"
+        hence "u1 \<noteq> u2" "\<bar>u1 - u2\<bar> < 1" by (by100 linarith)+
+        from hR_inj_small[OF this] \<open>top1_R_to_S1 u1 = top1_R_to_S1 u2\<close>
+        show False by (by100 blast)
+      qed
+      hence "u1 = u2 \<or> u2 - u1 = 1"
+      proof (elim disjE)
+        assume "u1 = u2" thus ?thesis by (by100 blast)
+      next
+        assume "\<bar>u1 - u2\<bar> \<ge> 1"
+        have "u1 \<le> s2" using hu1(1) by (by100 simp)
+        have "u2 \<ge> s2" using hu2(1) by (by100 simp)
+        hence "u2 \<ge> u1" using \<open>u1 \<le> s2\<close> by (by100 linarith)
+        hence "u2 - u1 \<ge> 1" using \<open>\<bar>u1 - u2\<bar> \<ge> 1\<close> by (by100 linarith)
+        have "u1 \<ge> s1" using hu1(1) by (by100 simp)
+        have "u2 \<le> s1 + 1" using hu2(1) by (by100 simp)
+        hence "u2 - u1 \<le> 1" using \<open>u1 \<ge> s1\<close> by (by100 linarith)
+        thus ?thesis using \<open>u2 - u1 \<ge> 1\<close> by (by100 linarith)
+      qed
+      thus "x \<in> {pa, pb}"
+      proof (elim disjE)
+        assume "u1 = u2"
+        hence "u1 = s2" using hu1(1) hu2(1) by (by100 simp)
+        hence "x = top1_R_to_S1 s2" using hu1(2) by (by100 simp)
+        hence "x = pb" using hs2_pb by (by100 simp)
+        thus ?thesis by (by100 blast)
+      next
+        assume "u2 - u1 = 1"
+        have "u1 = s1"
+        proof -
+          have "u1 \<ge> s1" using hu1(1) by (by100 simp)
+          have "u2 \<le> s1 + 1" using hu2(1) by (by100 simp)
+          hence "u1 + 1 \<le> s1 + 1" using \<open>u2 - u1 = 1\<close> by (by100 linarith)
+          hence "u1 \<le> s1" by (by100 linarith)
+          thus ?thesis using \<open>u1 \<ge> s1\<close> by (by100 linarith)
+        qed
+        have "u2 = s1 + 1" using \<open>u1 = s1\<close> \<open>u2 - u1 = 1\<close> by (by100 linarith)
+        have "x = top1_R_to_S1 s1" using hu1(2) \<open>u1 = s1\<close> by (by100 simp)
+        hence "x = pa" using hs1_pa by (by100 simp)
+        thus ?thesis by (by100 blast)
+      qed
+    next
+      fix x assume "x \<in> {pa, pb}"
+      hence "x = pa \<or> x = pb" by (by100 blast)
+      thus "x \<in> A1_s \<inter> A2_s"
+      proof (elim disjE)
+        assume "x = pa"
+        have "pa \<in> A1_s"
+        proof -
+          have "s1 \<in> {s1..s2}" using hs_order by (by100 simp)
+          thus ?thesis unfolding A1_s_def using hs1_pa by (by100 blast)
+        qed
+        have "pa \<in> A2_s"
+        proof -
+          have "top1_R_to_S1 (s1 + 1) = pa"
+            using top1_R_to_S1_int_shift[of s1 1] hs1_pa by (by100 simp)
+          moreover have "s1 + 1 \<in> {s2..s1+1}" using hs_order by (by100 simp)
+          ultimately show ?thesis unfolding A2_s_def by (by100 blast)
+        qed
+        thus ?thesis using \<open>pa \<in> A1_s\<close> \<open>x = pa\<close> by (by100 blast)
+      next
+        assume "x = pb"
+        have "pb \<in> A1_s"
+        proof -
+          have "s2 \<in> {s1..s2}" using hs_order by (by100 simp)
+          thus ?thesis unfolding A1_s_def using hs2_pb by (by100 blast)
+        qed
+        have "pb \<in> A2_s"
+        proof -
+          have "s2 \<in> {s2..s1+1}" using hs_order by (by100 simp)
+          thus ?thesis unfolding A2_s_def using hs2_pb by (by100 blast)
+        qed
+        thus ?thesis using \<open>pb \<in> A1_s\<close> \<open>x = pb\<close> by (by100 blast)
+      qed
+    qed
+    have hR_cont: "continuous_on UNIV top1_R_to_S1"
+      unfolding top1_R_to_S1_def by (intro continuous_intros)
+    have hA1_sub_UNIV: "A1_s \<subseteq> (UNIV :: (real \<times> real) set)" by (by100 blast)
+    have hA2_sub_UNIV: "A2_s \<subseteq> (UNIV :: (real \<times> real) set)" by (by100 blast)
+    have hA1_arc: "top1_is_arc_on A1_s
+        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) A1_s)"
+    proof -
+      \<comment> \<open>Parametrize: \<phi>(t) = R\_to\_S1((1-t)*s1 + t*s2) maps [0,1] \<rightarrow> A1\_s.\<close>
+      define \<phi> where "\<phi> \<equiv> (\<lambda>t::real. top1_R_to_S1 ((1-t) * s1 + t * s2))"
+      have h\<phi>_img: "\<phi> ` I_set = A1_s"
+      proof (rule set_eqI, rule iffI)
+        fix x assume "x \<in> \<phi> ` I_set"
+        then obtain t where ht: "t \<in> I_set" "x = \<phi> t" by (by100 blast)
+        have "0 \<le> t" "t \<le> 1" using ht(1) unfolding top1_unit_interval_def by (by100 simp)+
+        define u where "u = (1-t)*s1 + t*s2"
+        have "s1 \<le> u"
+        proof -
+          have "u - s1 = t*(s2-s1)" unfolding u_def by (simp add: algebra_simps)
+          moreover have "t*(s2-s1) \<ge> 0"
+            using \<open>0 \<le> t\<close> hs_order(1) by (by100 simp)
+          ultimately show ?thesis by (by100 linarith)
+        qed
+        have "u \<le> s2"
+        proof -
+          have "s2 - u = (1-t)*(s2-s1)" unfolding u_def by (simp add: algebra_simps)
+          moreover have "(1-t)*(s2-s1) \<ge> 0"
+            using \<open>t \<le> 1\<close> hs_order(1) by (by100 simp)
+          ultimately show ?thesis by (by100 linarith)
+        qed
+        have "u \<in> {s1..s2}" using \<open>s1 \<le> u\<close> \<open>u \<le> s2\<close> by (by100 simp)
+        have "x = top1_R_to_S1 u" using ht(2) unfolding \<phi>_def u_def by (by100 simp)
+        show "x \<in> A1_s" unfolding A1_s_def using \<open>u \<in> {s1..s2}\<close> \<open>x = top1_R_to_S1 u\<close>
+          by (by100 blast)
+      next
+        fix x assume "x \<in> A1_s"
+        hence "x \<in> top1_R_to_S1 ` {s1..s2}" unfolding A1_s_def by (by100 simp)
+        then obtain u where hu: "u \<in> {s1..s2}" "x = top1_R_to_S1 u" by (by100 blast)
+        define t where "t = (u - s1) / (s2 - s1)"
+        have hd: "s2 - s1 > 0" using hs_order(1) by (by100 linarith)
+        have "0 \<le> t" unfolding t_def using hu(1) hd by (by100 simp)
+        have "t \<le> 1" unfolding t_def using hu(1) hd by (by100 simp)
+        have ht_I: "t \<in> I_set" unfolding top1_unit_interval_def using \<open>0 \<le> t\<close> \<open>t \<le> 1\<close> by (by100 simp)
+        have "t * (s2 - s1) = u - s1" unfolding t_def using hd by (by100 simp)
+        hence "(1-t)*s1 + t*s2 = u" by (simp add: algebra_simps)
+        hence "x = \<phi> t" unfolding \<phi>_def using hu(2) by (by100 simp)
+        thus "x \<in> \<phi> ` I_set" using ht_I by (by100 blast)
+      qed
+      have h\<phi>_inj: "inj_on \<phi> I_set"
+      proof (rule inj_onI)
+        fix s t assume hs_I: "s \<in> I_set" and ht_I: "t \<in> I_set" and heq: "\<phi> s = \<phi> t"
+        have hs01: "0 \<le> s" "s \<le> 1" using hs_I unfolding top1_unit_interval_def by (by100 simp)+
+        have ht01: "0 \<le> t" "t \<le> 1" using ht_I unfolding top1_unit_interval_def by (by100 simp)+
+        define u1 where "u1 = (1-s)*s1 + s*s2"
+        define u2 where "u2 = (1-t)*s1 + t*s2"
+        have "top1_R_to_S1 u1 = top1_R_to_S1 u2"
+          using heq unfolding \<phi>_def u1_def u2_def by (by100 simp)
+        have hu1_range: "s1 \<le> u1" "u1 \<le> s2"
+        proof -
+          have "u1 - s1 = s*(s2-s1)" unfolding u1_def by (simp add: algebra_simps)
+          moreover have "s*(s2-s1) \<ge> 0" using hs01 hs_order(1) by (by100 simp)
+          ultimately show "s1 \<le> u1" by (by100 linarith)
+          have "s2 - u1 = (1-s)*(s2-s1)" unfolding u1_def by (simp add: algebra_simps)
+          moreover have "(1-s)*(s2-s1) \<ge> 0" using hs01 hs_order(1) by (by100 simp)
+          ultimately show "u1 \<le> s2" by (by100 linarith)
+        qed
+        have hu2_range: "s1 \<le> u2" "u2 \<le> s2"
+        proof -
+          have "u2 - s1 = t*(s2-s1)" unfolding u2_def by (simp add: algebra_simps)
+          moreover have "t*(s2-s1) \<ge> 0" using ht01 hs_order(1) by (by100 simp)
+          ultimately show "s1 \<le> u2" by (by100 linarith)
+          have "s2 - u2 = (1-t)*(s2-s1)" unfolding u2_def by (simp add: algebra_simps)
+          moreover have "(1-t)*(s2-s1) \<ge> 0" using ht01 hs_order(1) by (by100 simp)
+          ultimately show "u2 \<le> s2" by (by100 linarith)
+        qed
+        have "\<bar>u1 - u2\<bar> \<le> s2 - s1" using hu1_range hu2_range by (by100 linarith)
+        hence "\<bar>u1 - u2\<bar> < 1" using hs_order by (by100 linarith)
+        hence "u1 = u2" using hR_inj_small[of u1 u2] \<open>top1_R_to_S1 u1 = top1_R_to_S1 u2\<close>
+          by (by100 blast)
+        hence "(s - t) * (s2 - s1) = 0" unfolding u1_def u2_def by (simp add: algebra_simps)
+        thus "s = t" using hs_order(1) by (by100 force)
+      qed
+      have h\<phi>_cont_on: "continuous_on I_set \<phi>"
+        unfolding \<phi>_def top1_R_to_S1_def by (intro continuous_intros)
+      \<comment> \<open>continuous\_on I\_set \<rightarrow> top1\_continuous\_map\_on (bridge).\<close>
+      have h\<phi>_cont: "top1_continuous_map_on I_set I_top A1_s
+          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) A1_s) \<phi>"
+        sorry \<comment> \<open>Bridge: continuous\_on UNIV \<phi> + restrict domain/codomain.\<close>
+      have h\<phi>_bij: "bij_betw \<phi> I_set A1_s"
+        using h\<phi>_inj h\<phi>_img unfolding bij_betw_def by (by100 blast)
+      have hI_compact: "top1_compact_on I_set I_top"
+      proof -
+        have "compact I_set" unfolding top1_unit_interval_def by (by100 simp)
+        hence "top1_compact_on I_set (subspace_topology UNIV top1_open_sets I_set)"
+          using top1_compact_on_subspace_UNIV_iff_compact[of I_set] by (by100 simp)
+        thus ?thesis unfolding top1_unit_interval_topology_def by (by100 simp)
+      qed
+      have hR2_top: "is_topology_on (UNIV :: (real \<times> real) set)
+          (product_topology_on top1_open_sets top1_open_sets)"
+        using hR2_strict unfolding is_topology_on_strict_def by (by100 blast)
+      have hA1_top: "is_topology_on A1_s
+          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) A1_s)"
+        by (rule subspace_topology_is_topology_on[OF hR2_top hA1_sub_UNIV])
+      have hA1_sub_UNIV: "A1_s \<subseteq> (UNIV :: (real \<times> real) set)" by (by100 blast)
+      have hA1_haus: "is_hausdorff_on A1_s
+          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) A1_s)"
+        using Theorem_17_11 hR2_haus hA1_sub_UNIV by (by100 blast)
+      from Theorem_26_6[OF top1_unit_interval_topology_is_topology_on hA1_top
+          hI_compact hA1_haus h\<phi>_cont h\<phi>_bij]
+      have hh: "top1_homeomorphism_on I_set I_top A1_s
+          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) A1_s) \<phi>" .
+      have hA1_strict: "is_topology_on_strict A1_s
+          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) A1_s)"
+      proof -
+        have "A1_s \<noteq> {}" using h\<phi>_img[symmetric]
+        proof -
+          have "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+          hence "\<phi> 0 \<in> \<phi> ` I_set" by (by100 blast)
+          thus ?thesis using h\<phi>_img by (by100 blast)
+        qed
+        moreover have "subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) A1_s
+            \<subseteq> Pow A1_s" unfolding subspace_topology_def by (by100 blast)
+        ultimately show ?thesis unfolding is_topology_on_strict_def
+          using hA1_top by (by100 blast)
+      qed
+      show ?thesis unfolding top1_is_arc_on_def using hA1_strict hh by (by100 blast)
+    qed
+    have hA2_arc: "top1_is_arc_on A2_s
+        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) A2_s)"
+    proof -
+      define \<psi> where "\<psi> \<equiv> (\<lambda>t::real. top1_R_to_S1 ((1-t) * s2 + t * (s1+1)))"
+      have h\<psi>_img: "\<psi> ` I_set = A2_s"
+      proof (rule set_eqI, rule iffI)
+        fix x assume "x \<in> \<psi> ` I_set"
+        then obtain t where ht: "t \<in> I_set" "x = \<psi> t" by (by100 blast)
+        have "0 \<le> t" "t \<le> 1" using ht(1) unfolding top1_unit_interval_def by (by100 simp)+
+        define u where "u = (1-t)*s2 + t*(s1+1)"
+        have "s2 \<le> u"
+        proof -
+          have "u - s2 = t*((s1+1)-s2)" unfolding u_def by (simp add: algebra_simps)
+          moreover have "t*((s1+1)-s2) \<ge> 0" using \<open>0 \<le> t\<close> hs_order(2) by (by100 simp)
+          ultimately show ?thesis by (by100 linarith)
+        qed
+        have "u \<le> s1+1"
+        proof -
+          have "(s1+1) - u = (1-t)*((s1+1)-s2)" unfolding u_def by (simp add: algebra_simps)
+          moreover have "(1-t)*((s1+1)-s2) \<ge> 0" using \<open>t \<le> 1\<close> hs_order(2) by (by100 simp)
+          ultimately show ?thesis by (by100 linarith)
+        qed
+        have "u \<in> {s2..s1+1}" using \<open>s2 \<le> u\<close> \<open>u \<le> s1+1\<close> by (by100 simp)
+        have "x = top1_R_to_S1 u" using ht(2) unfolding \<psi>_def u_def by (by100 simp)
+        show "x \<in> A2_s" unfolding A2_s_def using \<open>u \<in> {s2..s1+1}\<close> \<open>x = top1_R_to_S1 u\<close>
+          by (by100 blast)
+      next
+        fix x assume "x \<in> A2_s"
+        hence "x \<in> top1_R_to_S1 ` {s2..s1+1}" unfolding A2_s_def by (by100 simp)
+        then obtain u where hu: "u \<in> {s2..s1+1}" "x = top1_R_to_S1 u" by (by100 blast)
+        define t where "t = (u - s2) / ((s1+1) - s2)"
+        have hd: "(s1+1) - s2 > 0" using hs_order(2) by (by100 linarith)
+        have "0 \<le> t" unfolding t_def using hu(1) hd by (by100 simp)
+        have "t \<le> 1" unfolding t_def using hu(1) hd by (by100 simp)
+        have ht_I: "t \<in> I_set" unfolding top1_unit_interval_def using \<open>0 \<le> t\<close> \<open>t \<le> 1\<close> by (by100 simp)
+        have "t * ((s1+1) - s2) = u - s2" unfolding t_def using hd by (by100 simp)
+        hence "(1-t)*s2 + t*(s1+1) = u" by (simp add: algebra_simps)
+        hence "x = \<psi> t" unfolding \<psi>_def using hu(2) by (by100 simp)
+        thus "x \<in> \<psi> ` I_set" using ht_I by (by100 blast)
+      qed
+      have h\<psi>_inj: "inj_on \<psi> I_set"
+      proof (rule inj_onI)
+        fix s t assume hs_I: "s \<in> I_set" and ht_I: "t \<in> I_set" and heq: "\<psi> s = \<psi> t"
+        have hs01: "0 \<le> s" "s \<le> 1" using hs_I unfolding top1_unit_interval_def by (by100 simp)+
+        have ht01: "0 \<le> t" "t \<le> 1" using ht_I unfolding top1_unit_interval_def by (by100 simp)+
+        define u1 where "u1 = (1-s)*s2 + s*(s1+1)"
+        define u2 where "u2 = (1-t)*s2 + t*(s1+1)"
+        have "top1_R_to_S1 u1 = top1_R_to_S1 u2"
+          using heq unfolding \<psi>_def u1_def u2_def by (by100 simp)
+        have hu1_r: "s2 \<le> u1" "u1 \<le> s1+1"
+        proof -
+          have "u1 - s2 = s*((s1+1)-s2)" unfolding u1_def by (simp add: algebra_simps)
+          moreover have "s*((s1+1)-s2) \<ge> 0" using hs01 hs_order(2) by (by100 simp)
+          ultimately show "s2 \<le> u1" by (by100 linarith)
+          have "(s1+1) - u1 = (1-s)*((s1+1)-s2)" unfolding u1_def by (simp add: algebra_simps)
+          moreover have "(1-s)*((s1+1)-s2) \<ge> 0" using hs01 hs_order(2) by (by100 simp)
+          ultimately show "u1 \<le> s1+1" by (by100 linarith)
+        qed
+        have hu2_r: "s2 \<le> u2" "u2 \<le> s1+1"
+        proof -
+          have "u2 - s2 = t*((s1+1)-s2)" unfolding u2_def by (simp add: algebra_simps)
+          moreover have "t*((s1+1)-s2) \<ge> 0" using ht01 hs_order(2) by (by100 simp)
+          ultimately show "s2 \<le> u2" by (by100 linarith)
+          have "(s1+1) - u2 = (1-t)*((s1+1)-s2)" unfolding u2_def by (simp add: algebra_simps)
+          moreover have "(1-t)*((s1+1)-s2) \<ge> 0" using ht01 hs_order(2) by (by100 simp)
+          ultimately show "u2 \<le> s1+1" by (by100 linarith)
+        qed
+        have "\<bar>u1 - u2\<bar> \<le> (s1+1) - s2" using hu1_r hu2_r by (by100 linarith)
+        hence "\<bar>u1 - u2\<bar> < 1" using hs_order by (by100 linarith)
+        hence "u1 = u2" using hR_inj_small[of u1 u2] \<open>top1_R_to_S1 u1 = top1_R_to_S1 u2\<close>
+          by (by100 blast)
+        hence "(s - t) * ((s1+1) - s2) = 0" unfolding u1_def u2_def by (simp add: algebra_simps)
+        thus "s = t" using hs_order(2) by (by100 force)
+      qed
+      have h\<psi>_cont_on: "continuous_on I_set \<psi>"
+        unfolding \<psi>_def top1_R_to_S1_def by (intro continuous_intros)
+      have h\<psi>_cont: "top1_continuous_map_on I_set I_top A2_s
+          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) A2_s) \<psi>"
+        sorry \<comment> \<open>Bridge: continuous\_on UNIV \<psi> + restrict domain/codomain.\<close>
+      have h\<psi>_bij: "bij_betw \<psi> I_set A2_s"
+        using h\<psi>_inj h\<psi>_img unfolding bij_betw_def by (by100 blast)
+      have hI_compact: "top1_compact_on I_set I_top"
+      proof -
+        have "compact I_set" unfolding top1_unit_interval_def by (by100 simp)
+        hence "top1_compact_on I_set (subspace_topology UNIV top1_open_sets I_set)"
+          using top1_compact_on_subspace_UNIV_iff_compact[of I_set] by (by100 simp)
+        thus ?thesis unfolding top1_unit_interval_topology_def by (by100 simp)
+      qed
+      have hR2_top: "is_topology_on (UNIV :: (real \<times> real) set)
+          (product_topology_on top1_open_sets top1_open_sets)"
+        using hR2_strict unfolding is_topology_on_strict_def by (by100 blast)
+      have hA2_top: "is_topology_on A2_s
+          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) A2_s)"
+        by (rule subspace_topology_is_topology_on[OF hR2_top hA2_sub_UNIV])
+      have hA2_sub_UNIV: "A2_s \<subseteq> (UNIV :: (real \<times> real) set)" by (by100 blast)
+      have hA2_haus: "is_hausdorff_on A2_s
+          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) A2_s)"
+        using Theorem_17_11 hR2_haus hA2_sub_UNIV by (by100 blast)
+      from Theorem_26_6[OF top1_unit_interval_topology_is_topology_on hA2_top
+          hI_compact hA2_haus h\<psi>_cont h\<psi>_bij]
+      have hh: "top1_homeomorphism_on I_set I_top A2_s
+          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) A2_s) \<psi>" .
+      have hA2_strict: "is_topology_on_strict A2_s
+          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) A2_s)"
+      proof -
+        have "A2_s \<noteq> {}" using h\<psi>_img[symmetric]
+        proof -
+          have "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+          hence "\<psi> 0 \<in> \<psi> ` I_set" by (by100 blast)
+          thus ?thesis using h\<psi>_img by (by100 blast)
+        qed
+        moreover have "subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) A2_s
+            \<subseteq> Pow A2_s" unfolding subspace_topology_def by (by100 blast)
+        ultimately show ?thesis unfolding is_topology_on_strict_def
+          using hA2_top by (by100 blast)
+      qed
+      show ?thesis unfolding top1_is_arc_on_def using hA2_strict hh by (by100 blast)
+    qed
+    show ?thesis
+      by (rule that[of A1_s A2_s, OF hA_union hA_inter hA1_arc hA2_arc])
   qed
   \<comment> \<open>Transfer to C via f. Since f: S1 \<rightarrow> C is a homeomorphism (compact-to-Hausdorff bijection),
      f(A1\_s) and f(A2\_s) are arcs, and C = f(A1\_s) \<union> f(A2\_s), f(A1\_s) \<inter> f(A2\_s) = {a, b}.\<close>
