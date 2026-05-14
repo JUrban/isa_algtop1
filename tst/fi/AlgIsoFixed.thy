@@ -4418,6 +4418,8 @@ lemma move_one_puncture:
        (subspace_topology top1_S2 top1_S2_topology C) c0
        (top1_S2 - {a'} - {b})
        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {a'} - {b})) c0 id)"
+  \<comment> \<open>Following book Step 4: stereographic from b to R2, translation homotopy F(x,t)=x-alpha(t),
+     Corollary 58.5 (homotopy\_induced\_basepoint\_change).\<close>
   sorry
 
 lemma Munkres_Step_4_move_punctures:
