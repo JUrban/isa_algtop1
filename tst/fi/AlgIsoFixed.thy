@@ -5758,12 +5758,7 @@ proof -
     have hV'_open: "open V'" by (rule htr_open_map[OF hVs_open, folded V'_def])
     \<comment> \<open>U' bounded: translate bounded set by constant.\<close>
     have hU'_bdd: "\<exists>M. \<forall>p \<in> U'. fst p ^ 2 + snd p ^ 2 \<le> M"
-    proof -
-      from hUVs(7) obtain M where hM: "\<forall>p \<in> U_s. fst p ^ 2 + snd p ^ 2 \<le> M" by (by100 blast)
-      define qf where "qf = fst (h_sel q)" define qs where "qs = snd (h_sel q)"
-      define M' where "M' = (sqrt M + sqrt (qf^2 + qs^2))^2"
-      show ?thesis sorry \<comment> \<open>Triangle inequality: |tr(p)| \<le> |p| + |q| \<le> sqrt(M) + |q|.\<close>
-    qed
+      sorry \<comment> \<open>Translation of bounded set by constant vector is bounded.\<close>
     have hV'_unbdd: "\<forall>M. \<exists>p \<in> V'. fst p ^ 2 + snd p ^ 2 > M"
     proof (intro allI)
       fix M :: real
