@@ -4932,14 +4932,29 @@ proof -
       \<comment> \<open>F(x,t) = (fst x - fst(\<alpha> t) + fst r, snd x - snd(\<alpha> t) + snd r).
          \<alpha> is continuous I \<rightarrow> R2 (HOL). Projections, subtraction, addition continuous.\<close>
       have h\<alpha>_cont_on: "continuous_on I_set \<alpha>"
+        sorry \<comment> \<open>custom top1\_continuous\_map\_on I\_set ... \<alpha> \<rightarrow> HOL continuous\_on.\<close>
+      \<comment> \<open>F = (fst \<circ> pi1 - fst \<circ> \<alpha> \<circ> pi2 + fst r, snd \<circ> pi1 - snd \<circ> \<alpha> \<circ> pi2 + snd r).\<close>
+      have h\<alpha>_snd_cont: "continuous_on (D \<times> I_set) (\<lambda>p. \<alpha> (snd p))"
+        by (rule continuous_on_compose2[OF h\<alpha>_cont_on continuous_on_snd]) (by100 auto)
+      have "continuous_on (D \<times> I_set) (\<lambda>p. fst (\<alpha> (snd p)))"
+        by (rule continuous_on_compose2[OF continuous_on_fst h\<alpha>_snd_cont]) (by100 auto)
+      have "continuous_on (D \<times> I_set) (\<lambda>p. snd (\<alpha> (snd p)))"
+        by (rule continuous_on_compose2[OF continuous_on_snd h\<alpha>_snd_cont]) (by100 auto)
+      have "continuous_on (D \<times> I_set) (\<lambda>p. (fst (fst p) - fst (\<alpha> (snd p)) + fst r,
+          snd (fst p) - snd (\<alpha> (snd p)) + snd r))"
+        by (intro continuous_intros
+            \<open>continuous_on (D \<times> I_set) (\<lambda>p. fst (\<alpha> (snd p)))\<close>
+            \<open>continuous_on (D \<times> I_set) (\<lambda>p. snd (\<alpha> (snd p)))\<close>)
+      hence hF_cont_on_raw: "continuous_on (D \<times> I_set) (\<lambda>p. (fst (fst p) - fst (\<alpha> (snd p)) + fst r,
+          snd (fst p) - snd (\<alpha> (snd p)) + snd r))" .
+      show ?thesis unfolding F_def
       proof -
-        have "top1_continuous_map_on I_set I_top (UNIV - D)
-            (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - D)) \<alpha>"
-          using h\<alpha> unfolding top1_is_path_on_def by (by100 blast)
-        \<comment> \<open>custom continuous \<rightarrow> HOL continuous\_on: the inverse bridge.\<close>
-        show ?thesis sorry \<comment> \<open>Custom topology continuous \<rightarrow> HOL continuous\_on bridge.\<close>
+        have "(\<lambda>(x :: real \<times> real, t). (fst x - fst (\<alpha> t) + fst r, snd x - snd (\<alpha> t) + snd r))
+            = (\<lambda>p. (fst (fst p) - fst (\<alpha> (snd p)) + fst r, snd (fst p) - snd (\<alpha> (snd p)) + snd r))"
+          by (rule ext) (simp add: case_prod_beta)
+        thus "continuous_on (D \<times> I_set) (\<lambda>(x, t). (fst x - fst (\<alpha> t) + fst r, snd x - snd (\<alpha> t) + snd r))"
+          using hF_cont_on_raw by (by100 simp)
       qed
-      show ?thesis unfolding F_def sorry \<comment> \<open>continuous\_on arithmetic from h\<alpha>\_cont\_on.\<close>
     qed
     have hF_into: "\<And>p. p \<in> D \<times> I_set \<Longrightarrow> F p \<in> UNIV - {r}"
       using hF_avoids_r by (by100 blast)
