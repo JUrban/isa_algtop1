@@ -5758,7 +5758,44 @@ proof -
     have hV'_open: "open V'" by (rule htr_open_map[OF hVs_open, folded V'_def])
     \<comment> \<open>U' bounded: translate bounded set by constant.\<close>
     have hU'_bdd: "\<exists>M. \<forall>p \<in> U'. fst p ^ 2 + snd p ^ 2 \<le> M"
-      sorry \<comment> \<open>Translation of bounded set by constant vector is bounded.\<close>
+    proof -
+      from hUVs(7) obtain M where hM: "\<forall>p \<in> U_s. fst p ^ 2 + snd p ^ 2 \<le> M" by (by100 blast)
+      define qf where "qf = fst (h_sel q)" define qs where "qs = snd (h_sel q)"
+      have "\<forall>p \<in> U'. fst p ^ 2 + snd p ^ 2 \<le> 2 * M + 2 * (qf^2 + qs^2)"
+      proof (intro ballI)
+        fix p assume "p \<in> U'"
+        then obtain u where hu: "u \<in> U_s" "p = tr u" unfolding U'_def by (by100 blast)
+        have hfst: "fst p = fst u - qf" using hu(2) unfolding tr_def qf_def by (by100 simp)
+        have hsnd: "snd p = snd u - qs" using hu(2) unfolding tr_def qs_def by (by100 simp)
+        \<comment> \<open>(a-b)^2 le 2a^2 + 2b^2 follows from 0 le (a+b)^2 = a^2 + 2ab + b^2.\<close>
+        have "fst p ^ 2 = (fst u - qf)^2" using hfst by (by100 simp)
+        have "(fst u - qf)^2 + (fst u + qf)^2 = 2 * fst u ^ 2 + 2 * qf ^ 2"
+          by (simp add: power2_eq_square algebra_simps)
+        have "(fst u + qf)^2 \<ge> 0" by (by100 simp)
+        hence "fst p ^ 2 \<le> 2 * fst u ^ 2 + 2 * qf ^ 2"
+          using \<open>fst p ^ 2 = (fst u - qf)^2\<close>
+                \<open>(fst u - qf)^2 + (fst u + qf)^2 = 2 * fst u ^ 2 + 2 * qf ^ 2\<close>
+          by (by100 linarith)
+        have "snd p ^ 2 = (snd u - qs)^2" using hsnd by (by100 simp)
+        have "(snd u - qs)^2 + (snd u + qs)^2 = 2 * snd u ^ 2 + 2 * qs ^ 2"
+          by (simp add: power2_eq_square algebra_simps)
+        have "(snd u + qs)^2 \<ge> 0" by (by100 simp)
+        hence "snd p ^ 2 \<le> 2 * snd u ^ 2 + 2 * qs ^ 2"
+          using \<open>snd p ^ 2 = (snd u - qs)^2\<close>
+                \<open>(snd u - qs)^2 + (snd u + qs)^2 = 2 * snd u ^ 2 + 2 * qs ^ 2\<close>
+          by (by100 linarith)
+        have "fst u ^ 2 + snd u ^ 2 \<le> M" using hM hu(1) by (by100 blast)
+        have "2 * fst u ^ 2 + 2 * snd u ^ 2 \<le> 2 * M"
+          using \<open>fst u ^ 2 + snd u ^ 2 \<le> M\<close> by (by100 linarith)
+        have "fst p ^ 2 + snd p ^ 2 \<le> 2 * M + 2 * qf^2 + 2 * qs^2"
+          using \<open>fst p ^ 2 \<le> 2 * fst u ^ 2 + 2 * qf ^ 2\<close>
+                \<open>snd p ^ 2 \<le> 2 * snd u ^ 2 + 2 * qs ^ 2\<close>
+                \<open>2 * fst u ^ 2 + 2 * snd u ^ 2 \<le> 2 * M\<close> by (by100 linarith)
+        thus "fst p ^ 2 + snd p ^ 2 \<le> 2 * M + 2 * (qf^2 + qs^2)"
+          by (simp add: distrib_left)
+      qed
+      thus ?thesis by (by100 blast)
+    qed
     have hV'_unbdd: "\<forall>M. \<exists>p \<in> V'. fst p ^ 2 + snd p ^ 2 > M"
     proof (intro allI)
       fix M :: real
