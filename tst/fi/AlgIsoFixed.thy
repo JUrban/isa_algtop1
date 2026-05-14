@@ -4550,7 +4550,76 @@ proof -
     have "top1_is_path_on (UNIV - D)
         (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - D))
         r r' (h \<circ> g_path)"
-      sorry \<comment> \<open>Compose continuous h with path g\_path. h maps (S2-{b})-C to R2-D.\<close>
+    proof -
+      \<comment> \<open>S2-C-{b} = (S2-{b}) - C. h maps S2-{b} \<rightarrow> R2 homeomorphically.
+         So h maps (S2-{b})-C \<rightarrow> R2-D = UNIV-D.\<close>
+      have hSCb_eq: "top1_S2 - C - {b} = (top1_S2 - {b}) - C" by (by100 blast)
+      have hSCb_sub: "top1_S2 - C - {b} \<subseteq> top1_S2 - {b}" by (by100 blast)
+      \<comment> \<open>g\_path is continuous I \<rightarrow> S2-C-{b}. h is continuous S2-{b} \<rightarrow> R2.
+         h restricted to S2-C-{b} maps to R2-D = UNIV-D.\<close>
+      have hgp_cont: "top1_continuous_map_on I_set I_top (top1_S2 - C - {b})
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C - {b})) g_path"
+        using hgp unfolding top1_is_path_on_def by (by100 blast)
+      have hh_cont: "top1_continuous_map_on (top1_S2 - {b})
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b}))
+          UNIV (product_topology_on top1_open_sets top1_open_sets) h"
+        using hh unfolding top1_homeomorphism_on_def by (by100 blast)
+      \<comment> \<open>Restrict h to (S2-{b})-C \<rightarrow> UNIV-D.\<close>
+      have hh_into_R2D: "\<forall>x \<in> (top1_S2 - {b}) - C. h x \<in> UNIV - D"
+      proof (intro ballI)
+        fix x assume "x \<in> (top1_S2 - {b}) - C"
+        hence "x \<in> top1_S2 - {b}" "x \<notin> C" by (by100 blast)+
+        have "h x \<notin> D"
+        proof
+          assume "h x \<in> D"
+          from this[unfolded D_def image_def]
+          obtain c where "c \<in> C" "h c = h x" by (by100 auto)
+          have "c \<in> top1_S2 - {b}" using \<open>c \<in> C\<close> hC_sub_S2b by (by100 blast)
+          have "c = x" by (rule inj_onD[OF hh_inj \<open>h c = h x\<close>
+              \<open>c \<in> top1_S2 - {b}\<close> \<open>x \<in> top1_S2 - {b}\<close>])
+          thus False using \<open>c \<in> C\<close> \<open>x \<notin> C\<close> by (by100 blast)
+        qed
+        thus "h x \<in> UNIV - D" by (by100 blast)
+      qed
+      \<comment> \<open>h restricted to (S2-{b})-C continuous to UNIV-D.\<close>
+      have hh_SCb_cont: "top1_continuous_map_on ((top1_S2 - {b}) - C)
+          (subspace_topology (top1_S2 - {b}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b})) ((top1_S2 - {b}) - C))
+          (UNIV - D) (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - D)) h"
+      proof -
+        \<comment> \<open>Restrict domain: h cont on S2-{b}, (S2-{b})-C \<subseteq> S2-{b}.\<close>
+        have hh_restr: "top1_continuous_map_on ((top1_S2 - {b}) - C)
+            (subspace_topology (top1_S2 - {b}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b})) ((top1_S2 - {b}) - C))
+            UNIV (product_topology_on top1_open_sets top1_open_sets) h"
+          by (rule top1_continuous_map_on_restrict_domain_simple[OF hh_cont])
+             (by100 blast)
+        \<comment> \<open>Restrict codomain: h maps (S2-{b})-C into UNIV-D.\<close>
+        have hh_into: "\<forall>x \<in> (top1_S2 - {b}) - C. h x \<in> UNIV - D"
+          using hh_into_R2D by (by100 blast)
+        have hR2_D_sub: "UNIV - D \<subseteq> (UNIV :: (real \<times> real) set)" by (by100 blast)
+        from continuous_map_restrict_codomain[OF hh_restr hh_into hR2_D_sub]
+        show ?thesis .
+      qed
+      \<comment> \<open>Bridge subspace topology: subspace of S2-{b} from S2 = subspace of S2 directly.\<close>
+      have hSCb_sub2: "(top1_S2 - {b}) - C \<subseteq> top1_S2 - {b}" by (by100 blast)
+      have hSCb_topo_eq: "subspace_topology (top1_S2 - {b})
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b})) ((top1_S2 - {b}) - C)
+          = subspace_topology top1_S2 top1_S2_topology ((top1_S2 - {b}) - C)"
+        by (rule subspace_topology_trans[OF hSCb_sub2])
+      have hSCb_set_eq: "(top1_S2 - {b}) - C = top1_S2 - C - {b}" by (by100 blast)
+      have hh_SCb_cont': "top1_continuous_map_on (top1_S2 - C - {b})
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C - {b}))
+          (UNIV - D) (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - D)) h"
+        using hh_SCb_cont hSCb_topo_eq hSCb_set_eq by (by100 simp)
+      \<comment> \<open>Compose: h \<circ> g\_path: I \<rightarrow> UNIV-D.\<close>
+      have hcomp_cont: "top1_continuous_map_on I_set I_top (UNIV - D)
+          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - D)) (h \<circ> g_path)"
+        by (rule top1_continuous_map_on_comp[OF hgp_cont hh_SCb_cont'])
+      \<comment> \<open>Endpoints.\<close>
+      have "(h \<circ> g_path) 0 = r" using hgp unfolding top1_is_path_on_def r_def by (by100 simp)
+      have "(h \<circ> g_path) 1 = r'" using hgp unfolding top1_is_path_on_def r'_def by (by100 simp)
+      show ?thesis unfolding top1_is_path_on_def
+        using hcomp_cont \<open>(h \<circ> g_path) 0 = r\<close> \<open>(h \<circ> g_path) 1 = r'\<close> by (by100 blast)
+    qed
     thus ?thesis by (by100 blast)
   qed
   then obtain \<alpha> where h\<alpha>: "top1_is_path_on (UNIV - D) (subspace_topology UNIV
