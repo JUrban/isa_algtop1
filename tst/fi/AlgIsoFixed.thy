@@ -5654,6 +5654,11 @@ proof -
           \<comment> \<open>p is in an open set disjoint from W\_q, so p \<notin> cl(W\_q).\<close>
           have hWq_sub: "W_q \<subseteq> top1_S2" using hC_sub_S2 W_q_def
             top1_path_component_of_on_subset[OF hT_SC hq_SC] by (by100 blast)
+          \<comment> \<open>p is in an open set disjoint from W\_q.\<close>
+          have "p \<in> (top1_S2 - C) - W_q" using assms(3) hp_not_Wq by (by100 blast)
+          have "(top1_S2 - C) - W_q \<in> top1_S2_topology" using hSC_Wq_compl_open_S2 .
+          have "((top1_S2 - C) - W_q) \<inter> W_q = {}" by (by100 blast)
+          \<comment> \<open>Point in open set disjoint from W\_q \<Rightarrow> not in cl(W\_q).\<close>
           show ?thesis sorry
         qed
         \<comment> \<open>Step 7: cl\_S2(W\_q) \<subseteq> S2-{p}. Compact (closed in compact S2). h\_sel continuous
@@ -5664,7 +5669,95 @@ proof -
            and \<subseteq> S2-C, h\_sel\<inverse>(V\_s) \<subseteq> W\_q or some path-component. But then
            V\_s \<subseteq> h\_sel(W\_q) which is bounded \<Rightarrow> V\_s bounded, contradiction.
            So h\_sel(W\_q) \<subseteq> U\_s. Hence h\_sel(q) \<in> U\_s.\<close>
-        show "h_sel q \<in> U_s" sorry
+        \<comment> \<open>h\_sel(W\_q) path-connected (continuous image of pc set).\<close>
+        \<comment> \<open>h\_sel(W\_q) \<subseteq> U\_s \<union> V\_s. U\_s, V\_s open, disjoint. By connectedD, in one of them.\<close>
+        \<comment> \<open>Suppose h\_sel(W\_q) \<subseteq> V\_s. Then h\_sel\<inverse>(V\_s) pc \<subseteq> S2-C, so \<subseteq> W\_q or W\_p.
+           h\_sel\<inverse>(V\_s) \<inter> W\_q \<supseteq> {q} (since h\_sel(q) \<in> V\_s by assumption). So h\_sel\<inverse>(V\_s) \<subseteq> W\_q.
+           Hence V\_s = h\_sel(h\_sel\<inverse>(V\_s)) \<subseteq> h\_sel(W\_q), which is bounded. V\_s bounded \<Rightarrow> contradiction.\<close>
+        show "h_sel q \<in> U_s"
+        proof (rule ccontr)
+          assume hcontr: "\<not> h_sel q \<in> U_s"
+          hence "h_sel q \<in> V_s" using \<open>h_sel q \<in> U_s \<or> h_sel q \<in> V_s\<close> by (by100 blast)
+          \<comment> \<open>h\_sel\<inverse>(V\_s) is path-connected (homeomorphic to V\_s).\<close>
+          define Vinv where "Vinv = inv_into (top1_S2 - {p}) h_sel ` V_s"
+          \<comment> \<open>Vinv \<subseteq> S2-{p}-C (preimage of complement of h\_sel(C)).\<close>
+          have hVinv_sub: "Vinv \<subseteq> top1_S2 - C"
+          proof (intro subsetI)
+            fix x assume "x \<in> Vinv"
+            then obtain v where hv: "v \<in> V_s" "x = inv_into (top1_S2 - {p}) h_sel v"
+              unfolding Vinv_def by (by100 blast)
+            have "v \<in> UNIV - h_sel ` C" using hv(1) hUVs(4) by (by100 blast)
+            have hh_bij: "bij_betw h_sel (top1_S2 - {p}) UNIV"
+              using hh_sel unfolding top1_homeomorphism_on_def by (by100 blast)
+            have hv_range: "v \<in> h_sel ` (top1_S2 - {p})"
+              using hv(1) hh_bij unfolding bij_betw_def by (by100 blast)
+            have "x \<in> top1_S2 - {p}" unfolding hv(2)
+              by (rule inv_into_into[OF hv_range])
+            have "h_sel x = v" unfolding hv(2)
+              by (rule f_inv_into_f[OF hv_range])
+            hence "h_sel x \<notin> h_sel ` C" using \<open>v \<in> UNIV - h_sel ` C\<close> by (by100 simp)
+            hence "x \<notin> C"
+            proof -
+              show ?thesis sorry \<comment> \<open>h\_sel injective: if x \<in> C then h\_sel x \<in> h\_sel(C).\<close>
+            qed
+            thus "x \<in> top1_S2 - C" using \<open>x \<in> top1_S2 - {p}\<close> by (by100 blast)
+          qed
+          \<comment> \<open>Vinv is path-connected.\<close>
+          have hVinv_pc: "top1_path_connected_on Vinv
+              (subspace_topology (top1_S2 - C) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) Vinv)"
+            sorry \<comment> \<open>Homeomorphic image of path-connected V\_s.\<close>
+          \<comment> \<open>q \<in> Vinv (since h\_sel(q) \<in> V\_s).\<close>
+          have hq_Vinv: "q \<in> Vinv"
+          proof -
+            have "h_sel q \<in> V_s" using \<open>h_sel q \<in> V_s\<close> .
+            have hh_bij: "bij_betw h_sel (top1_S2 - {p}) UNIV"
+              using hh_sel unfolding top1_homeomorphism_on_def by (by100 blast)
+            have hh_inj: "inj_on h_sel (top1_S2 - {p})"
+              using hh_bij unfolding bij_betw_def by (by100 blast)
+            have "inv_into (top1_S2 - {p}) h_sel (h_sel q) = q"
+              by (rule inv_into_f_f[OF hh_inj hq_S2p])
+            have "inv_into (top1_S2 - {p}) h_sel (h_sel q) \<in> Vinv"
+              unfolding Vinv_def using \<open>h_sel q \<in> V_s\<close> by (by100 blast)
+            thus ?thesis using \<open>inv_into (top1_S2 - {p}) h_sel (h_sel q) = q\<close> by (by100 simp)
+          qed
+          \<comment> \<open>Vinv pc, q \<in> Vinv, Vinv \<subseteq> S2-C \<Rightarrow> Vinv \<subseteq> W\_q.\<close>
+          have "Vinv \<subseteq> W_q"
+            using top1_path_connected_subspace_subset_path_component_of[OF hT_SC
+                hVinv_sub hq_Vinv hVinv_pc] unfolding W_q_def
+            sorry \<comment> \<open>Subspace topology chain.\<close>
+          \<comment> \<open>Hence V\_s \<subseteq> h\_sel(W\_q), so V\_s bounded.\<close>
+          have "V_s \<subseteq> h_sel ` W_q"
+          proof (intro subsetI)
+            fix v assume "v \<in> V_s"
+            have "inv_into (top1_S2 - {p}) h_sel v \<in> Vinv"
+              unfolding Vinv_def using \<open>v \<in> V_s\<close> by (by100 blast)
+            hence hw_mem: "inv_into (top1_S2 - {p}) h_sel v \<in> W_q"
+              using \<open>Vinv \<subseteq> W_q\<close> by (by100 blast)
+            have hv_range: "v \<in> h_sel ` (top1_S2 - {p})"
+            proof -
+              have "bij_betw h_sel (top1_S2 - {p}) UNIV"
+                using hh_sel unfolding top1_homeomorphism_on_def by (by100 blast)
+              thus ?thesis using \<open>v \<in> V_s\<close> unfolding bij_betw_def by (by100 blast)
+            qed
+            have "h_sel (inv_into (top1_S2 - {p}) h_sel v) = v"
+              by (rule f_inv_into_f[OF hv_range])
+            hence "v = h_sel (inv_into (top1_S2 - {p}) h_sel v)" by (by100 simp)
+            show "v \<in> h_sel ` W_q"
+              using hw_mem \<open>v = h_sel (inv_into (top1_S2 - {p}) h_sel v)\<close>
+              by (by100 force)
+          qed
+          \<comment> \<open>V\_s bounded (since \<subseteq> h\_sel(W\_q) which is bounded).\<close>
+          from hWq_bdd obtain M where "\<forall>x \<in> h_sel ` W_q. fst x ^ 2 + snd x ^ 2 \<le> M"
+            by (by100 blast)
+          hence "\<forall>v \<in> V_s. fst v ^ 2 + snd v ^ 2 \<le> M" using \<open>V_s \<subseteq> h_sel ` W_q\<close>
+            by (by100 blast)
+          \<comment> \<open>Contradiction: V\_s unbounded.\<close>
+          from hUVs(8) obtain p_v where "p_v \<in> V_s" "fst p_v ^ 2 + snd p_v ^ 2 > M"
+            by (by100 blast)
+          hence "fst p_v ^ 2 + snd p_v ^ 2 \<le> M"
+            using \<open>\<forall>v \<in> V_s. fst v ^ 2 + snd v ^ 2 \<le> M\<close> by (by100 blast)
+          thus False using \<open>fst p_v ^ 2 + snd p_v ^ 2 > M\<close> by (by100 linarith)
+        qed
       qed
     qed
     \<comment> \<open>Step 0b.4: Translate by -h\_sel(q): put (0,0) in bounded component.\<close>
