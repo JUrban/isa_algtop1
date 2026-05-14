@@ -2127,12 +2127,93 @@ proof -
 qed
 
 theorem Theorem_64_4_K5_not_planar:
-  \<comment> \<open>The complete graph K5 cannot be imbedded in the plane (or S2).\<close>
-  assumes "is_topology_on_strict top1_S2 top1_S2_topology"
-      and "card {a1, a2, a3, a4, a5 :: real \<times> real \<times> real} = 5"
-      \<comment> \<open>... (10 arcs, one for each pair of vertices)\<close>
+  \<comment> \<open>The complete graph K5 cannot be imbedded in the plane (or S2).
+     Following the book proof exactly: K4 on {a1,a2,a3,a4} separates S2 into 4 components.
+     a5 lies in one component. All edges from a5 lie in the closure of that component.
+     So all 4 vertices lie in the boundary. But no boundary Xi contains all 4 vertices.\<close>
+  assumes hS2: "is_topology_on_strict top1_S2 top1_S2_topology"
+      and hcard: "card {a1, a2, a3, a4, a5 :: real \<times> real \<times> real} = 5"
+      \<comment> \<open>All 5 vertices in S2.\<close>
+      and "{a1, a2, a3, a4, a5} \<subseteq> top1_S2"
+      \<comment> \<open>10 arcs: one for each pair of distinct vertices.\<close>
+      and "top1_is_arc_on e12 (subspace_topology top1_S2 top1_S2_topology e12)"
+      and "top1_is_arc_on e13 (subspace_topology top1_S2 top1_S2_topology e13)"
+      and "top1_is_arc_on e14 (subspace_topology top1_S2 top1_S2_topology e14)"
+      and "top1_is_arc_on e15 (subspace_topology top1_S2 top1_S2_topology e15)"
+      and "top1_is_arc_on e23 (subspace_topology top1_S2 top1_S2_topology e23)"
+      and "top1_is_arc_on e24 (subspace_topology top1_S2 top1_S2_topology e24)"
+      and "top1_is_arc_on e25 (subspace_topology top1_S2 top1_S2_topology e25)"
+      and "top1_is_arc_on e34 (subspace_topology top1_S2 top1_S2_topology e34)"
+      and "top1_is_arc_on e35 (subspace_topology top1_S2 top1_S2_topology e35)"
+      and "top1_is_arc_on e45 (subspace_topology top1_S2 top1_S2_topology e45)"
+      \<comment> \<open>All arcs in S2.\<close>
+      and "e12 \<subseteq> top1_S2" and "e13 \<subseteq> top1_S2" and "e14 \<subseteq> top1_S2" and "e15 \<subseteq> top1_S2"
+      and "e23 \<subseteq> top1_S2" and "e24 \<subseteq> top1_S2" and "e25 \<subseteq> top1_S2"
+      and "e34 \<subseteq> top1_S2" and "e35 \<subseteq> top1_S2" and "e45 \<subseteq> top1_S2"
+      \<comment> \<open>Endpoints of arcs.\<close>
+      and "top1_arc_endpoints_on e12 (subspace_topology top1_S2 top1_S2_topology e12) = {a1, a2}"
+      and "top1_arc_endpoints_on e13 (subspace_topology top1_S2 top1_S2_topology e13) = {a1, a3}"
+      and "top1_arc_endpoints_on e14 (subspace_topology top1_S2 top1_S2_topology e14) = {a1, a4}"
+      and "top1_arc_endpoints_on e15 (subspace_topology top1_S2 top1_S2_topology e15) = {a1, a5}"
+      and "top1_arc_endpoints_on e23 (subspace_topology top1_S2 top1_S2_topology e23) = {a2, a3}"
+      and "top1_arc_endpoints_on e24 (subspace_topology top1_S2 top1_S2_topology e24) = {a2, a4}"
+      and "top1_arc_endpoints_on e25 (subspace_topology top1_S2 top1_S2_topology e25) = {a2, a5}"
+      and "top1_arc_endpoints_on e34 (subspace_topology top1_S2 top1_S2_topology e34) = {a3, a4}"
+      and "top1_arc_endpoints_on e35 (subspace_topology top1_S2 top1_S2_topology e35) = {a3, a5}"
+      and "top1_arc_endpoints_on e45 (subspace_topology top1_S2 top1_S2_topology e45) = {a4, a5}"
+      \<comment> \<open>Arcs pairwise intersect only at common endpoints.\<close>
+      and "e12 \<inter> e13 = {a1}" and "e12 \<inter> e14 = {a1}" and "e12 \<inter> e15 = {a1}"
+      and "e12 \<inter> e23 = {a2}" and "e12 \<inter> e24 = {a2}" and "e12 \<inter> e25 = {a2}"
+      and "e12 \<inter> e34 = {}" and "e12 \<inter> e35 = {}" and "e12 \<inter> e45 = {}"
+      and "e13 \<inter> e14 = {a1}" and "e13 \<inter> e15 = {a1}"
+      and "e13 \<inter> e23 = {a3}" and "e13 \<inter> e24 = {}" and "e13 \<inter> e25 = {}"
+      and "e13 \<inter> e34 = {a3}" and "e13 \<inter> e35 = {a3}" and "e13 \<inter> e45 = {}"
+      and "e14 \<inter> e15 = {a1}"
+      and "e14 \<inter> e23 = {}" and "e14 \<inter> e24 = {a4}" and "e14 \<inter> e25 = {}"
+      and "e14 \<inter> e34 = {a4}" and "e14 \<inter> e35 = {}" and "e14 \<inter> e45 = {a4}"
+      and "e15 \<inter> e23 = {}" and "e15 \<inter> e24 = {}" and "e15 \<inter> e25 = {a5}"
+      and "e15 \<inter> e34 = {}" and "e15 \<inter> e35 = {a5}" and "e15 \<inter> e45 = {a5}"
+      and "e23 \<inter> e24 = {a2}" and "e23 \<inter> e25 = {a2}"
+      and "e23 \<inter> e34 = {a3}" and "e23 \<inter> e35 = {a3}" and "e23 \<inter> e45 = {}"
+      and "e24 \<inter> e25 = {a2}"
+      and "e24 \<inter> e34 = {a4}" and "e24 \<inter> e35 = {}" and "e24 \<inter> e45 = {a4}"
+      and "e25 \<inter> e34 = {}" and "e25 \<inter> e35 = {a5}" and "e25 \<inter> e45 = {a5}"
+      and "e34 \<inter> e35 = {a3}" and "e34 \<inter> e45 = {a4}"
+      and "e35 \<inter> e45 = {a5}"
   shows False
-  sorry
+proof -
+  \<comment> \<open>Step 1: Extract K4 on {a1,a2,a3,a4} from K5. The K4 uses edges e12,e13,e14,e23,e24,e34.\<close>
+  have hcard4: "card {a1, a2, a3, a4} = 4" using hcard by (auto simp: card_insert_if split: if_splits)
+  have hvert_S2: "{a1, a2, a3, a4} \<subseteq> top1_S2" using assms(3) by (by100 blast)
+  \<comment> \<open>Step 2: Apply Lemma\_64\_3: K4 separates S2 into 4 components.\<close>
+  \<comment> \<open>Need: the K4 subgraph = e12 \<union> e13 \<union> e14 \<union> e23 \<union> e24 \<union> e34.\<close>
+  define X where "X = e12 \<union> e13 \<union> e14 \<union> e23 \<union> e24 \<union> e34"
+  \<comment> \<open>X\_i = edges of K4 not containing a\_i:
+     X1 = e23 \<union> e24 \<union> e34
+     X2 = e13 \<union> e14 \<union> e34
+     X3 = e12 \<union> e14 \<union> e24
+     X4 = e12 \<union> e13 \<union> e23\<close>
+  define X1 where "X1 = e23 \<union> e24 \<union> e34"
+  define X2 where "X2 = e13 \<union> e14 \<union> e34"
+  define X3 where "X3 = e12 \<union> e14 \<union> e24"
+  define X4 where "X4 = e12 \<union> e13 \<union> e23"
+  \<comment> \<open>From Lemma\_64\_3: S2-X has exactly 4 components with boundaries X1,...,X4.\<close>
+  \<comment> \<open>Step 3: a5 \<in> top1\_S2 - X (since a5 is not a vertex of K4 and the arcs only contain
+     vertices of K4 as their endpoints, and a5 \<noteq> a1,...,a4).\<close>
+  have ha5_not_in_X: "a5 \<notin> X"
+    sorry
+  have ha5_S2: "a5 \<in> top1_S2" using assms(3) by (by100 blast)
+  have ha5_comp: "a5 \<in> top1_S2 - X" using ha5_S2 ha5_not_in_X by (by100 blast)
+  \<comment> \<open>Step 4: a5 lies in some component. The 4 edges from a5 (e15,e25,e35,e45) each contain a5
+     and are connected arcs. Since a5 is in a component and each arc e\_i5 contains a5,
+     the interior of each arc (which is connected and contains a5) lies in that component.
+     Hence each vertex a\_i lies in the CLOSURE of the component (as the endpoint of an arc
+     whose interior is in the component).
+     Step 5: So all 4 vertices a1,...,a4 lie in the boundary Xi of the component containing a5.
+     Step 6: But each Xi has only 3 vertices. Contradiction.\<close>
+  show False
+    sorry
+qed
 
 text \<open>A simple closed curve in S2 has \<pi>_1 \<cong> Z.\<close>
 lemma SCC_pi1_iso_Z:
