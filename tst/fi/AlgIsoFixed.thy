@@ -4980,7 +4980,39 @@ proof -
       \<comment> \<open>continuous\_on I\_set \<rightarrow> top1\_continuous\_map\_on (bridge).\<close>
       have h\<phi>_cont: "top1_continuous_map_on I_set I_top A1_s
           (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) A1_s) \<phi>"
-        sorry \<comment> \<open>Bridge: continuous\_on UNIV \<phi> + restrict domain/codomain.\<close>
+      proof -
+        have h1: "continuous_on UNIV \<phi>"
+          unfolding \<phi>_def top1_R_to_S1_def by (intro continuous_intros)
+        have "\<And>x::real. \<phi> x \<in> (UNIV :: (real \<times> real) set)" by (by100 blast)
+        from top1_continuous_map_on_R_to_R2_subspace[OF this h1]
+        have h_univ: "top1_continuous_map_on (UNIV :: real set) top1_open_sets
+            (UNIV :: (real \<times> real) set)
+            (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) UNIV) \<phi>" .
+        have hsub_UNIV: "subspace_topology (UNIV :: (real \<times> real) set)
+            (product_topology_on top1_open_sets top1_open_sets) UNIV =
+            product_topology_on top1_open_sets top1_open_sets"
+        proof -
+          have "\<And>A :: (real \<times> real) set. A \<in> product_topology_on top1_open_sets top1_open_sets
+              \<Longrightarrow> UNIV \<inter> A \<in> product_topology_on top1_open_sets top1_open_sets"
+            by (by100 simp)
+          show ?thesis unfolding subspace_topology_def by (by100 force)
+        qed
+        have "top1_continuous_map_on (UNIV :: real set) top1_open_sets
+            (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets) \<phi>"
+          using h_univ hsub_UNIV by (by100 simp)
+        have hI_sub: "I_set \<subseteq> (UNIV :: real set)" by (by100 blast)
+        from top1_continuous_map_on_restrict_domain_simple[OF
+            \<open>top1_continuous_map_on UNIV top1_open_sets UNIV
+              (product_topology_on top1_open_sets top1_open_sets) \<phi>\<close> hI_sub]
+        have "top1_continuous_map_on I_set (subspace_topology UNIV top1_open_sets I_set)
+            (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets) \<phi>" .
+        hence h2: "top1_continuous_map_on I_set I_top
+            (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets) \<phi>"
+          unfolding top1_unit_interval_topology_def by (by100 simp)
+        have h\<phi>_into: "\<forall>x \<in> I_set. \<phi> x \<in> A1_s" using h\<phi>_img by (by100 blast)
+        from continuous_map_restrict_codomain[OF h2 h\<phi>_into hA1_sub_UNIV]
+        show ?thesis .
+      qed
       have h\<phi>_bij: "bij_betw \<phi> I_set A1_s"
         using h\<phi>_inj h\<phi>_img unfolding bij_betw_def by (by100 blast)
       have hI_compact: "top1_compact_on I_set I_top"
@@ -5098,7 +5130,39 @@ proof -
         unfolding \<psi>_def top1_R_to_S1_def by (intro continuous_intros)
       have h\<psi>_cont: "top1_continuous_map_on I_set I_top A2_s
           (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) A2_s) \<psi>"
-        sorry \<comment> \<open>Bridge: continuous\_on UNIV \<psi> + restrict domain/codomain.\<close>
+      proof -
+        have h1: "continuous_on UNIV \<psi>"
+          unfolding \<psi>_def top1_R_to_S1_def by (intro continuous_intros)
+        have "\<And>x::real. \<psi> x \<in> (UNIV :: (real \<times> real) set)" by (by100 blast)
+        from top1_continuous_map_on_R_to_R2_subspace[OF this h1]
+        have h_univ: "top1_continuous_map_on (UNIV :: real set) top1_open_sets
+            (UNIV :: (real \<times> real) set)
+            (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) UNIV) \<psi>" .
+        have hsub_UNIV: "subspace_topology (UNIV :: (real \<times> real) set)
+            (product_topology_on top1_open_sets top1_open_sets) UNIV =
+            product_topology_on top1_open_sets top1_open_sets"
+        proof -
+          have "\<And>A :: (real \<times> real) set. A \<in> product_topology_on top1_open_sets top1_open_sets
+              \<Longrightarrow> UNIV \<inter> A \<in> product_topology_on top1_open_sets top1_open_sets"
+            by (by100 simp)
+          show ?thesis unfolding subspace_topology_def by (by100 force)
+        qed
+        have "top1_continuous_map_on (UNIV :: real set) top1_open_sets
+            (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets) \<psi>"
+          using h_univ hsub_UNIV by (by100 simp)
+        have hI_sub: "I_set \<subseteq> (UNIV :: real set)" by (by100 blast)
+        from top1_continuous_map_on_restrict_domain_simple[OF
+            \<open>top1_continuous_map_on UNIV top1_open_sets UNIV
+              (product_topology_on top1_open_sets top1_open_sets) \<psi>\<close> hI_sub]
+        have "top1_continuous_map_on I_set (subspace_topology UNIV top1_open_sets I_set)
+            (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets) \<psi>" .
+        hence h2: "top1_continuous_map_on I_set I_top
+            (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets) \<psi>"
+          unfolding top1_unit_interval_topology_def by (by100 simp)
+        have h\<psi>_into: "\<forall>x \<in> I_set. \<psi> x \<in> A2_s" using h\<psi>_img by (by100 blast)
+        from continuous_map_restrict_codomain[OF h2 h\<psi>_into hA2_sub_UNIV]
+        show ?thesis .
+      qed
       have h\<psi>_bij: "bij_betw \<psi> I_set A2_s"
         using h\<psi>_inj h\<psi>_img unfolding bij_betw_def by (by100 blast)
       have hI_compact: "top1_compact_on I_set I_top"
