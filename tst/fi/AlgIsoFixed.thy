@@ -5587,6 +5587,50 @@ proof -
     \<comment> \<open>Need: D' SCC, U'/V' decomposition with right properties, open U'/V', (0,0)\<in>U'.\<close>
     \<comment> \<open>Translation is a homeomorphism, preserving all these properties.\<close>
     \<comment> \<open>Detailed application deferred.\<close>
+    \<comment> \<open>D' is SCC (translation preserves SCC).\<close>
+    have hD'_scc: "top1_simple_closed_curve_on (UNIV :: (real \<times> real) set)
+        (product_topology_on top1_open_sets top1_open_sets) D'" sorry
+    \<comment> \<open>U', V' satisfy Munkres\_xaxis\_segment preconditions.\<close>
+    have hU'_ne: "U' \<noteq> {}" using hUVs(1) unfolding U'_def by (by100 blast)
+    have hV'_ne: "V' \<noteq> {}" using hUVs(2) unfolding V'_def by (by100 blast)
+    have hUV'_disj: "U' \<inter> V' = {}" sorry
+    have hUV'_union: "U' \<union> V' = UNIV - D'" sorry
+    have hU'_pc: "top1_path_connected_on U'
+        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) U')" sorry
+    have hU'_bdd: "\<exists>M. \<forall>p \<in> U'. fst p ^ 2 + snd p ^ 2 \<le> M" sorry
+    have hV'_unbdd: "\<forall>M. \<exists>p \<in> V'. fst p ^ 2 + snd p ^ 2 > M" sorry
+    have hU'_open: "open U'" sorry
+    have hV'_open: "open V'" sorry
+    \<comment> \<open>Apply Munkres\_xaxis\_segment.\<close>
+    from Munkres_xaxis_segment[OF hD'_scc hU'_ne hV'_ne hUV'_disj hUV'_union
+        hU'_pc hU'_bdd hV'_unbdd hU'_open hV'_open h0_U']
+    obtain a1' a3' where ha': "a1' \<in> D'" "a3' \<in> D'" "a1' \<noteq> a3'"
+        "fst a1' \<le> 0" "snd a1' = 0" "fst a3' \<ge> 0" "snd a3' = 0"
+        "(\<forall>x. fst a1' < fst x \<and> fst x < fst a3' \<and> snd x = 0 \<longrightarrow> x \<notin> D')"
+        "(\<forall>x. fst a1' < fst x \<and> fst x < fst a3' \<and> snd x = 0 \<longrightarrow> x \<in> U')"
+      by blast
+    \<comment> \<open>Transfer back: un-translate to get points on h\_sel(C).\<close>
+    define inv_tr where "inv_tr = (\<lambda>x :: real \<times> real. (fst x + fst (h_sel q), snd x + snd (h_sel q)))"
+    have ha1_hC: "inv_tr a1' \<in> h_sel ` C" sorry
+    have ha3_hC: "inv_tr a3' \<in> h_sel ` C" sorry
+    \<comment> \<open>Get preimages on C via h\_sel\<inverse>.\<close>
+    define a1_pre where "a1_pre = inv_into (top1_S2 - {p}) h_sel (inv_tr a1')"
+    define a3_pre where "a3_pre = inv_into (top1_S2 - {p}) h_sel (inv_tr a3')"
+    have ha1_C: "a1_pre \<in> C" sorry
+    have ha3_C: "a3_pre \<in> C" sorry
+    have ha1_ne_a3: "a1_pre \<noteq> a3_pre" sorry
+    have ha1_S2p: "a1_pre \<in> top1_S2 - {p}" sorry
+    have ha3_S2p: "a3_pre \<in> top1_S2 - {p}" sorry
+    \<comment> \<open>Segment from h\_sel(a1\_pre) to h\_sel(a3\_pre) avoids h\_sel(C) and has interior in U\_s.\<close>
+    have hseg_avoids: "\<forall>t. 0 < t \<and> t < 1 \<longrightarrow>
+        ((1-t) * fst (h_sel a1_pre) + t * fst (h_sel a3_pre),
+         (1-t) * snd (h_sel a1_pre) + t * snd (h_sel a3_pre)) \<notin> h_sel ` C" sorry
+    have hseg_in_Us: "\<forall>t. 0 < t \<and> t < 1 \<longrightarrow>
+        ((1-t) * fst (h_sel a1_pre) + t * fst (h_sel a3_pre),
+         (1-t) * snd (h_sel a1_pre) + t * snd (h_sel a3_pre)) \<in> U_s" sorry
+    have hq_in_Us_final: "h_sel q \<in> U_s" using hq_in_Us .
+    \<comment> \<open>Combine into the obtain conclusion.\<close>
+    have "W_seg \<inter> h_sel ` C = {}" sorry
     show ?thesis sorry
   qed
   \<comment> \<open>Step 1: Decompose C into two arcs C1, C2 at the x-axis-derived a1, a3.\<close>
