@@ -5730,12 +5730,114 @@ proof -
       thus False using ha'(3) by (by100 blast)
     qed
     \<comment> \<open>Segment from h\_sel(a1\_pre) to h\_sel(a3\_pre) avoids h\_sel(C) and has interior in U\_s.\<close>
+    have hfst_strict: "fst a1' < fst a3'"
+    proof -
+      have "fst a1' \<le> fst a3'" using ha'(4,6) by (by100 linarith)
+      moreover have "fst a1' \<noteq> fst a3'"
+      proof
+        assume "fst a1' = fst a3'"
+        hence "a1' = a3'" using ha'(5,7) by (cases a1', cases a3') (by100 simp)
+        thus False using ha'(3) by (by100 blast)
+      qed
+      ultimately show ?thesis by (by100 linarith)
+    qed
     have hseg_avoids: "\<forall>t. 0 < t \<and> t < 1 \<longrightarrow>
         ((1-t) * fst (h_sel a1_pre) + t * fst (h_sel a3_pre),
-         (1-t) * snd (h_sel a1_pre) + t * snd (h_sel a3_pre)) \<notin> h_sel ` C" sorry
+         (1-t) * snd (h_sel a1_pre) + t * snd (h_sel a3_pre)) \<notin> h_sel ` C"
+    proof (intro allI impI)
+      fix t :: real assume ht: "0 < t \<and> t < 1"
+      \<comment> \<open>The un-translated segment point = inv\_tr of translated x-axis point.\<close>
+      define pt where "pt = ((1-t) * fst a1' + t * fst a3', (1-t) * snd a1' + t * snd a3')"
+      have "snd pt = 0" unfolding pt_def using ha'(5,7) by (by100 simp)
+      have "fst a1' < fst pt"
+      proof -
+        have "fst pt - fst a1' = t * (fst a3' - fst a1')" unfolding pt_def by (simp add: algebra_simps)
+        moreover have "fst a3' - fst a1' > 0" using hfst_strict by (by100 linarith)
+        moreover have "t > 0" using ht by (by100 blast)
+        ultimately have "fst pt - fst a1' > 0" by (by100 simp)
+        thus ?thesis by (by100 linarith)
+      qed
+      have "fst pt < fst a3'"
+      proof -
+        have "fst a3' - fst pt = (1-t) * (fst a3' - fst a1')" unfolding pt_def by (simp add: algebra_simps)
+        moreover have "fst a3' - fst a1' > 0" using hfst_strict by (by100 linarith)
+        moreover have "1 - t > 0" using ht by (by100 linarith)
+        ultimately have "fst a3' - fst pt > 0" by (by100 simp)
+        thus ?thesis by (by100 linarith)
+      qed
+      have "pt \<notin> D'"
+      proof -
+        have "\<forall>x. fst a1' < fst x \<and> fst x < fst a3' \<and> snd x = 0 \<longrightarrow> x \<notin> D'" using ha'(8) .
+        thus ?thesis using \<open>fst a1' < fst pt\<close> \<open>fst pt < fst a3'\<close> \<open>snd pt = 0\<close> by (by100 blast)
+      qed
+      have hpt_eq: "inv_tr pt = ((1-t) * fst (h_sel a1_pre) + t * fst (h_sel a3_pre),
+         (1-t) * snd (h_sel a1_pre) + t * snd (h_sel a3_pre))"
+      proof -
+        have "fst (inv_tr pt) = (1-t) * fst (h_sel a1_pre) + t * fst (h_sel a3_pre)"
+          unfolding inv_tr_def pt_def using hh_a1 hh_a3 unfolding inv_tr_def
+          by (simp add: algebra_simps)
+        moreover have "snd (inv_tr pt) = (1-t) * snd (h_sel a1_pre) + t * snd (h_sel a3_pre)"
+          unfolding inv_tr_def pt_def using hh_a1 hh_a3 unfolding inv_tr_def
+          by (simp add: algebra_simps)
+        ultimately show ?thesis by (cases "inv_tr pt") (by100 simp)
+      qed
+      have "inv_tr pt \<notin> h_sel ` C"
+      proof
+        assume "inv_tr pt \<in> h_sel ` C"
+        hence "tr (inv_tr pt) \<in> D'" unfolding D'_def by (by100 blast)
+        have "tr (inv_tr pt) = pt" unfolding tr_def inv_tr_def by (by100 simp)
+        hence "pt \<in> D'" using \<open>tr (inv_tr pt) \<in> D'\<close> by (by100 simp)
+        thus False using \<open>pt \<notin> D'\<close> by (by100 blast)
+      qed
+      thus "((1-t) * fst (h_sel a1_pre) + t * fst (h_sel a3_pre),
+         (1-t) * snd (h_sel a1_pre) + t * snd (h_sel a3_pre)) \<notin> h_sel ` C"
+        using hpt_eq by (by100 simp)
+    qed
     have hseg_in_Us: "\<forall>t. 0 < t \<and> t < 1 \<longrightarrow>
         ((1-t) * fst (h_sel a1_pre) + t * fst (h_sel a3_pre),
-         (1-t) * snd (h_sel a1_pre) + t * snd (h_sel a3_pre)) \<in> U_s" sorry
+         (1-t) * snd (h_sel a1_pre) + t * snd (h_sel a3_pre)) \<in> U_s"
+    proof (intro allI impI)
+      fix t :: real assume ht: "0 < t \<and> t < 1"
+      define pt where "pt = ((1-t) * fst a1' + t * fst a3', (1-t) * snd a1' + t * snd a3')"
+      have "snd pt = 0" unfolding pt_def using ha'(5,7) by (by100 simp)
+      have "fst a1' < fst pt"
+      proof -
+        have "fst pt - fst a1' = t * (fst a3' - fst a1')" unfolding pt_def by (simp add: algebra_simps)
+        moreover have "fst a3' - fst a1' > 0" using hfst_strict by (by100 linarith)
+        moreover have "t > 0" using ht by (by100 blast)
+        ultimately have "fst pt - fst a1' > 0" by (by100 simp)
+        thus ?thesis by (by100 linarith)
+      qed
+      have "fst pt < fst a3'"
+      proof -
+        have "fst a3' - fst pt = (1-t) * (fst a3' - fst a1')" unfolding pt_def by (simp add: algebra_simps)
+        moreover have "fst a3' - fst a1' > 0" using hfst_strict by (by100 linarith)
+        moreover have "1 - t > 0" using ht by (by100 linarith)
+        ultimately have "fst a3' - fst pt > 0" by (by100 simp)
+        thus ?thesis by (by100 linarith)
+      qed
+      have "pt \<in> U'" using ha'(9) \<open>fst a1' < fst pt\<close> \<open>fst pt < fst a3'\<close> \<open>snd pt = 0\<close>
+        by (by100 blast)
+      hence "\<exists>u \<in> U_s. tr u = pt" unfolding U'_def by (by100 blast)
+      then obtain u where "u \<in> U_s" "tr u = pt" by (by100 blast)
+      have "inv_tr pt = inv_tr (tr u)" using \<open>tr u = pt\<close> by (by100 simp)
+      also have "\<dots> = u" by (rule hinv_tr_tr)
+      finally have "inv_tr pt = u" .
+      have hpt_eq: "inv_tr pt = ((1-t) * fst (h_sel a1_pre) + t * fst (h_sel a3_pre),
+         (1-t) * snd (h_sel a1_pre) + t * snd (h_sel a3_pre))"
+      proof -
+        have "fst (inv_tr pt) = (1-t) * fst (h_sel a1_pre) + t * fst (h_sel a3_pre)"
+          unfolding inv_tr_def pt_def using hh_a1 hh_a3 unfolding inv_tr_def
+          by (simp add: algebra_simps)
+        moreover have "snd (inv_tr pt) = (1-t) * snd (h_sel a1_pre) + t * snd (h_sel a3_pre)"
+          unfolding inv_tr_def pt_def using hh_a1 hh_a3 unfolding inv_tr_def
+          by (simp add: algebra_simps)
+        ultimately show ?thesis by (cases "inv_tr pt") (by100 simp)
+      qed
+      show "((1-t) * fst (h_sel a1_pre) + t * fst (h_sel a3_pre),
+         (1-t) * snd (h_sel a1_pre) + t * snd (h_sel a3_pre)) \<in> U_s"
+        using \<open>inv_tr pt = u\<close> \<open>u \<in> U_s\<close> hpt_eq by (by100 simp)
+    qed
     have hq_in_Us_final: "h_sel q \<in> U_s" using hq_in_Us .
     \<comment> \<open>Combine into the obtain conclusion.\<close>
     have "W_seg \<inter> h_sel ` C = {}" sorry
