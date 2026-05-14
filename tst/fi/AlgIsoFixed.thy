@@ -5799,12 +5799,91 @@ proof -
     have hV'_unbdd: "\<forall>M. \<exists>p \<in> V'. fst p ^ 2 + snd p ^ 2 > M"
     proof (intro allI)
       fix M :: real
-      define M2 where "M2 = M + 2 * (abs (fst (h_sel q)) + abs (snd (h_sel q))) + 2"
-      from hUVs(8) obtain p_v where "p_v \<in> V_s" "fst p_v ^ 2 + snd p_v ^ 2 > M2"
+      define qf where "qf = fst (h_sel q)" define qs where "qs = snd (h_sel q)"
+      \<comment> \<open>Pick M2 large enough: from (a-b)^2+(a+b)^2=2a^2+2b^2, (a-b)^2=2a^2+2b^2-(a+b)^2.
+         So (a-b)^2 \<ge> 2a^2+2b^2 - 2a^2-2b^2 = 0. Need better: use U' bounded trick in reverse.
+         (a+b)^2 \<le> 2a^2+2b^2, so (a-b)^2 = 2a^2+2b^2-(a+b)^2 \<ge> 0. Not enough.
+         Instead: directly, (a-b)^2 \<ge> a^2 - 2|a||b| \<ge> a^2 - a^2 - b^2 = -b^2. Also not enough.
+         KEY: for EXISTENCE, pick p\_v with ONLY fst p\_v large (and snd p\_v = 0 or small).
+         But V\_s only guarantees norm^2 > M2, can't control coordinates separately.
+         ALTERNATIVE: use that fst(tr p\_v)^2+snd(tr p\_v)^2 = (fst p\_v-qf)^2+(snd p\_v-qs)^2.
+         From bounded proof trick: (a+b)^2 \<le> 2a^2+2b^2.
+         So (a-b)^2 = 2a^2+2b^2 - (a+b)^2 \<ge> 2a^2+2b^2 - 2a^2-2b^2 = 0. Circular.
+         FACT: (a-b)^2 + (c-d)^2 \<ge> (a^2+c^2) + (b^2+d^2) - 2*(a^2+c^2)^{1/2}*(b^2+d^2)^{1/2}.
+         But we need to avoid sqrt. Let me use: 2*((a-b)^2+(c-d)^2) \<ge> (a^2+c^2) - 2*(b^2+d^2).
+         This follows: 2(a-b)^2 \<ge> a^2-2b^2 (from (a-b)^2 = a^2-2ab+b^2 \<ge> a^2-a^2/2-2b^2+b^2
+         = a^2/2 - b^2, so 2(a-b)^2 \<ge> a^2-2b^2). Similarly for c,d.
+         So 2*((a-b)^2+(c-d)^2) \<ge> a^2+c^2 - 2b^2-2d^2. Hence if a^2+c^2 > 2M+2b^2+2d^2+2,
+         then (a-b)^2+(c-d)^2 > M.\<close>
+      define M2 where "M2 = 2 * M + 2 * qf^2 + 2 * qs^2 + 2"
+      from hUVs(8) obtain p_v where hp_v: "p_v \<in> V_s" "fst p_v ^ 2 + snd p_v ^ 2 > M2"
         by (by100 blast)
-      have "tr p_v \<in> V'" unfolding V'_def using \<open>p_v \<in> V_s\<close> by (by100 blast)
+      have "tr p_v \<in> V'" unfolding V'_def using hp_v(1) by (by100 blast)
       moreover have "fst (tr p_v) ^ 2 + snd (tr p_v) ^ 2 > M"
-        sorry \<comment> \<open>|tr(p\_v)| \<ge> |p\_v| - |q| and |p\_v| is large enough.\<close>
+      proof -
+        have hfst: "fst (tr p_v) = fst p_v - qf" unfolding tr_def qf_def by (by100 simp)
+        have hsnd: "snd (tr p_v) = snd p_v - qs" unfolding tr_def qs_def by (by100 simp)
+        \<comment> \<open>From U' bounded proof: (a-b)^2 + (a+b)^2 = 2a^2+2b^2, so (a-b)^2 = 2a^2+2b^2-(a+b)^2.\<close>
+        \<comment> \<open>And (a+b)^2 \<le> 2a^2+2b^2. So (a-b)^2 \<ge> 0. Not useful directly.\<close>
+        \<comment> \<open>Instead: 2*(a-b)^2 = 2a^2-4ab+2b^2 and 4ab \<le> 2a^2+2b^2 (from 0\<le>(a-b)^2 = a^2-2ab+b^2).\<close>
+        \<comment> \<open>Wait: need |4ab| \<le> 2a^2+2b^2. From 0\<le>(|a|-|b|)^2: 2|ab| \<le> a^2+b^2, so |4ab| \<le> 2a^2+2b^2.\<close>
+        \<comment> \<open>Hence 2(a-b)^2 \<ge> 2a^2-2a^2-2b^2+2b^2 = 0. Still 0.\<close>
+        \<comment> \<open>Better: 2*(a-b)^2 + 2*(c-d)^2 = 2(a^2-2ab+b^2) + 2(c^2-2cd+d^2)
+           = 2(a^2+c^2) + 2(b^2+d^2) - 4ab - 4cd.
+           And |4ab+4cd| \<le> 2(a^2+b^2) + 2(c^2+d^2) = 2(a^2+c^2) + 2(b^2+d^2).
+           So 2*((a-b)^2+(c-d)^2) \<ge> 2(a^2+c^2)+2(b^2+d^2) - 2(a^2+c^2)-2(b^2+d^2) = 0. STILL 0.\<close>
+        \<comment> \<open>THE TRICK: use |4ab| \<le> a^2 + 4b^2 (from 0\<le>(a-2b)^2=a^2-4ab+4b^2).
+           Then 2(a-b)^2 = 2a^2-4ab+2b^2 \<ge> 2a^2-(a^2+4b^2)+2b^2 = a^2-2b^2.
+           Similarly 2(c-d)^2 \<ge> c^2-2d^2.
+           So 2*((a-b)^2+(c-d)^2) \<ge> (a^2+c^2) - 2(b^2+d^2).\<close>
+        have h_2_fst: "2 * (fst p_v - qf)^2 \<ge> fst p_v ^ 2 - 2 * qf ^ 2"
+        proof -
+          have "0 \<le> (fst p_v - 2*qf)^2" by (by100 simp)
+          hence "4 * fst p_v * qf \<le> fst p_v ^ 2 + 4 * qf ^ 2"
+            by (simp add: power2_eq_square algebra_simps)
+          have "2 * (fst p_v - qf)^2 = 2 * fst p_v ^ 2 - 4 * fst p_v * qf + 2 * qf ^ 2"
+            by (simp add: power2_eq_square algebra_simps)
+          thus ?thesis using \<open>4 * fst p_v * qf \<le> fst p_v ^ 2 + 4 * qf ^ 2\<close> by (by100 linarith)
+        qed
+        have h_2_snd: "2 * (snd p_v - qs)^2 \<ge> snd p_v ^ 2 - 2 * qs ^ 2"
+        proof -
+          have "0 \<le> (snd p_v - 2*qs)^2" by (by100 simp)
+          hence "4 * snd p_v * qs \<le> snd p_v ^ 2 + 4 * qs ^ 2"
+            by (simp add: power2_eq_square algebra_simps)
+          have "2 * (snd p_v - qs)^2 = 2 * snd p_v ^ 2 - 4 * snd p_v * qs + 2 * qs ^ 2"
+            by (simp add: power2_eq_square algebra_simps)
+          thus ?thesis using \<open>4 * snd p_v * qs \<le> snd p_v ^ 2 + 4 * qs ^ 2\<close> by (by100 linarith)
+        qed
+        have "fst (tr p_v) ^ 2 = (fst p_v - qf)^2" using hfst by (by100 simp)
+        have "snd (tr p_v) ^ 2 = (snd p_v - qs)^2" using hsnd by (by100 simp)
+        have "2 * fst (tr p_v) ^ 2 \<ge> fst p_v ^ 2 - 2 * qf ^ 2"
+          using h_2_fst \<open>fst (tr p_v) ^ 2 = (fst p_v - qf)^2\<close> by (by100 linarith)
+        have "2 * snd (tr p_v) ^ 2 \<ge> snd p_v ^ 2 - 2 * qs ^ 2"
+          using h_2_snd \<open>snd (tr p_v) ^ 2 = (snd p_v - qs)^2\<close> by (by100 linarith)
+        have h_sum_lb: "2 * fst (tr p_v) ^ 2 + 2 * snd (tr p_v) ^ 2 \<ge>
+            fst p_v ^ 2 + snd p_v ^ 2 - 2 * qf ^ 2 - 2 * qs ^ 2"
+          using \<open>2 * fst (tr p_v) ^ 2 \<ge> fst p_v ^ 2 - 2 * qf ^ 2\<close>
+                \<open>2 * snd (tr p_v) ^ 2 \<ge> snd p_v ^ 2 - 2 * qs ^ 2\<close> by (by100 linarith)
+        have "fst p_v ^ 2 + snd p_v ^ 2 - 2 * qf ^ 2 - 2 * qs ^ 2 > 2 * M + 2"
+          using hp_v(2) unfolding M2_def by (by100 linarith)
+        have h2M2: "2 * fst (tr p_v) ^ 2 + 2 * snd (tr p_v) ^ 2 > 2 * M + 2"
+          using h_sum_lb \<open>fst p_v ^ 2 + snd p_v ^ 2 - 2 * qf ^ 2 - 2 * qs ^ 2 > 2 * M + 2\<close>
+          by (by100 linarith)
+        \<comment> \<open>From 2A > 2M+2 and A \<ge> 0: A > M+1 > M. But need A = fst^2+snd^2.\<close>
+        \<comment> \<open>Issue: 2*A > 2*M+2 does NOT give A > M in linear arithmetic.\<close>
+        \<comment> \<open>But 2*(A-M) > 2, and A-M = A-M, so... still nonlinear.\<close>
+        \<comment> \<open>WORKAROUND: use that both fst^2 and snd^2 are \<ge> 0.\<close>
+        have "fst (tr p_v) ^ 2 \<ge> 0" by (by100 simp)
+        have "snd (tr p_v) ^ 2 \<ge> 0" by (by100 simp)
+        \<comment> \<open>From 2A+2B > 2M+2 and A,B \<ge> 0: if A+B \<le> M then 2A+2B \<le> 2M < 2M+2. Contradiction.\<close>
+        show ?thesis
+        proof (rule ccontr)
+          assume "\<not> fst (tr p_v) ^ 2 + snd (tr p_v) ^ 2 > M"
+          hence "fst (tr p_v) ^ 2 + snd (tr p_v) ^ 2 \<le> M" by (by100 linarith)
+          hence "2 * fst (tr p_v) ^ 2 + 2 * snd (tr p_v) ^ 2 \<le> 2 * M" by (by100 linarith)
+          thus False using h2M2 by (by100 linarith)
+        qed
+      qed
       ultimately show "\<exists>p \<in> V'. fst p ^ 2 + snd p ^ 2 > M" by (by100 blast)
     qed
     \<comment> \<open>U' path-connected: continuous image of path-connected U\_s.\<close>
