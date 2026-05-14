@@ -4445,6 +4445,30 @@ proof -
      Similarly for k\_S2: C \<hookrightarrow> S2-{a'}-{b}.\<close>
   \<comment> \<open>This transfer approach is very technical. Alternative: use the abstract formulation
      that homotopic inclusions induce the same homomorphism.\<close>
+  \<comment> \<open>Formalization: we work on S2 directly using the homotopy argument.
+     The key: construct a homotopy between the two inclusions that moves the
+     puncture from a to a' while keeping C fixed.
+
+     Following the book's argument in R2 (via stereographic from b):
+     D = h(C), r = h(a), r' = h(a'). Path alpha in R2-D from r to r'.
+     F(x,t) = x - alpha(t) + alpha(0) is homotopy D x I -> R2-{r} between j and f o k.
+
+     Transfer: h maps S2-{a}-{b} homeo R2-{h(a)}, S2-{a'}-{b} homeo R2-{h(a')}.
+     C maps to D = h(C). The inclusion id: C -> S2-{x}-{b} becomes id: D -> R2-{h(x)} after h.
+     So the induced iso hypothesis transfers to R2, and the conclusion transfers back.\<close>
+  \<comment> \<open>Abstract approach: the iso hypothesis means \<pi>\_1(C,c0) \<cong> \<pi>\_1(S2-{a}-{b},c0) via inclusion.
+     We need to show the same for a'. This follows from showing the inclusion-induced map
+     is surjective and injective for S2-{a'}-{b}.
+
+     Key facts from the hypothesis and structure:
+     - \<pi>\_1(C) \<cong> Z (SCC fundamental group)
+     - \<pi>\_1(S2-{a}-{b}) \<cong> Z (punctured sphere)
+     - The inclusion C \<hookrightarrow> S2-{a}-{b} induces an iso (hypothesis)
+     - S2-{a'}-{b} is homeomorphic to S2-{a}-{b} (both are S2 minus 2 points)
+     - But we need the iso via the SPECIFIC inclusion map.
+
+     The homotopy argument gives this: j and f\<circ>k are homotopic \<Rightarrow> same induced map
+     (up to basepoint change) \<Rightarrow> both or neither are iso.\<close>
   show ?thesis sorry
 qed
 
