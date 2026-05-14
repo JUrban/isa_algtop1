@@ -5525,7 +5525,46 @@ proof -
     \<comment> \<open>Step 0b.3: h\_sel(q) \<in> U\_s (bounded component). Proof: the closure of
        q's path-component in S2 misses p, hence is compact in S2-{p},
        hence its image under h\_sel is bounded in R2. Connected + bounded \<Rightarrow> in U\_s.\<close>
-    have hq_in_Us: "h_sel q \<in> U_s" sorry
+    have hq_in_Us: "h_sel q \<in> U_s"
+    proof -
+      \<comment> \<open>h\_sel(q) \<notin> h\_sel(C) (since q \<notin> C and h\_sel injective on S2-{p}).\<close>
+      have hq_S2p: "q \<in> top1_S2 - {p}"
+      proof -
+        have "q \<in> top1_S2" using assms(4) by (by100 blast)
+        have hp_ne_q: "p \<noteq> q"
+        proof
+          assume "p = q"
+          have "p \<in> top1_S2 - C" using assms(3) by (by100 blast)
+          have hT_SC: "is_topology_on (top1_S2 - C)
+              (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C))"
+            by (rule subspace_topology_is_topology_on[OF hTopS2])
+               (use hC_sub_S2 in \<open>by100 blast\<close>)
+          from top1_constant_path_is_path[OF hT_SC \<open>p \<in> top1_S2 - C\<close>]
+          have "\<exists>f. top1_is_path_on (top1_S2 - C)
+              (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) p q f"
+            using \<open>p = q\<close> by (by100 blast)
+          thus False using assms(5) by (by100 blast)
+        qed
+        thus ?thesis using \<open>q \<in> top1_S2\<close> by (by100 blast)
+      qed
+      have hq_notC_img: "h_sel q \<notin> h_sel ` C"
+      proof
+        assume "h_sel q \<in> h_sel ` C"
+        then obtain c where hc: "c \<in> C" "h_sel q = h_sel c" by (by100 blast)
+        have "c \<in> top1_S2 - {p}" using hc(1) hC_sub_S2p by (by100 blast)
+        have hinj: "inj_on h_sel (top1_S2 - {p})"
+          using hh_sel unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+        have "c = q" by (rule inj_onD[OF hinj hc(2)[symmetric] \<open>c \<in> top1_S2 - {p}\<close> hq_S2p])
+        hence "q \<in> C" using hc(1) by (by100 blast)
+        thus False using assms(4) by (by100 blast)
+      qed
+      hence "h_sel q \<in> U_s \<or> h_sel q \<in> V_s" using hUVs(4) by (by100 blast)
+      \<comment> \<open>Show h\_sel(q) is in bounded component by showing q's component maps to bounded.\<close>
+      \<comment> \<open>The closure of q's component in S2-C lies in S2-{p} (since p is in a different component).\<close>
+      \<comment> \<open>This closure is compact (closed subset of compact S2), so its image under h\_sel is bounded.\<close>
+      \<comment> \<open>Hence h\_sel(q) lies in a bounded connected subset of R2-h\_sel(C), so in U\_s.\<close>
+      show "h_sel q \<in> U_s" sorry
+    qed
     \<comment> \<open>Step 0b.4: Translate by -h\_sel(q): put (0,0) in bounded component.\<close>
     \<comment> \<open>Translated curve D' = (\<lambda>x. x - h\_sel q) ` (h\_sel ` C).\<close>
     \<comment> \<open>D' is SCC, translated U\_s is bounded with (0,0) in it.\<close>
