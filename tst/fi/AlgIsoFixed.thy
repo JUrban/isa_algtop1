@@ -5583,7 +5583,89 @@ proof -
          But U\_s is bounded, so h\_sel(W\_p-{p}) \<subseteq> U\_s is bounded. Since h\_sel bijection,
          W\_p-{p} is bounded in S2-{p}, which maps to bounded R2. But neighborhoods of p
          map to unbounded regions — contradiction. Hence h\_sel(W\_q) \<subseteq> U\_s.\<close>
-      show "h_sel q \<in> U_s" sorry
+      show "h_sel q \<in> U_s"
+      proof -
+        \<comment> \<open>Step 1: S2-C is locally path-connected (open in LPC S2).\<close>
+        have hSC_open: "top1_S2 - C \<in> top1_S2_topology"
+        proof -
+          have "closedin_on top1_S2 top1_S2_topology C"
+            sorry \<comment> \<open>SCC compact in Hausdorff \<Rightarrow> closed.\<close>
+          thus ?thesis using assms(1) unfolding is_topology_on_strict_def closedin_on_def
+            by (by100 blast)
+        qed
+        have hSC_lpc: "top1_locally_path_connected_on (top1_S2 - C)
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C))"
+          by (rule open_subset_locally_path_connected[OF S2_locally_path_connected
+              hSC_open]) (use hC_sub_S2 in \<open>by100 blast\<close>)
+        \<comment> \<open>Step 2: Path-components of S2-C are open in S2-C.\<close>
+        have hT_SC: "is_topology_on (top1_S2 - C)
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C))"
+          by (rule subspace_topology_is_topology_on[OF hTopS2])
+             (use hC_sub_S2 in \<open>by100 blast\<close>)
+        define W_q where "W_q = top1_path_component_of_on (top1_S2 - C)
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) q"
+        have hq_SC: "q \<in> top1_S2 - C" using assms(4) by (by100 blast)
+        have hq_Wq: "q \<in> W_q" unfolding W_q_def
+          using top1_path_component_of_on_self_mem[OF hT_SC hq_SC] .
+        \<comment> \<open>Step 3: W\_q complement is open in S2-C (hence closed in S2-C).\<close>
+        have hWq_compl_open: "(top1_S2 - C) - W_q \<in>
+            subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)"
+          unfolding W_q_def
+          by (rule top1_path_component_of_on_complement_open_if_locally_path_connected[OF
+              hT_SC hSC_lpc hq_SC])
+        \<comment> \<open>Step 4: p \<in> (S2-C)-W\_q (different path-component from q).\<close>
+        have hp_not_Wq: "p \<notin> W_q"
+        proof
+          assume "p \<in> W_q"
+          hence "top1_in_same_path_component_on (top1_S2 - C)
+              (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) q p"
+            unfolding W_q_def top1_path_component_of_on_def by (by100 blast)
+          hence "top1_in_same_path_component_on (top1_S2 - C)
+              (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) p q"
+            by (rule top1_in_same_path_component_on_sym[OF hT_SC])
+          hence "\<exists>f. top1_is_path_on (top1_S2 - C)
+              (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) p q f"
+            unfolding top1_in_same_path_component_on_def by (by100 blast)
+          thus False using assms(5) by (by100 blast)
+        qed
+        \<comment> \<open>Step 5: cl\_S2(W\_q) \<subseteq> S2 - {p}. Because (S2-C)-W\_q is open in S2-C,
+           and S2-C is open in S2, so (S2-C)-W\_q is open in S2. And S2-(S2-C)-W\_q contains
+           p (since p \<notin> W\_q and p \<in> S2-C). Actually: W\_q \<subseteq> S2-C, and p \<in> (S2-C)-W\_q.
+           cl\_S2(W\_q) \<subseteq> S2 - ((S2-C)-W\_q) \<cup> C = W\_q \<union> C (since S2-C-W\_q is open in S2).
+           Wait, need S2-C-W\_q open in S2 (not just in S2-C).
+           S2-C is open in S2 (SCC closed). S2-C-W\_q is open in S2-C. Open in open = open in S2.\<close>
+        have hSC_Wq_compl_open_S2: "(top1_S2 - C) - W_q \<in> top1_S2_topology"
+        proof -
+          \<comment> \<open>Open in S2-C + S2-C open in S2 = open in S2.\<close>
+          from hWq_compl_open obtain U where hU: "U \<in> top1_S2_topology"
+              "(top1_S2 - C) - W_q = (top1_S2 - C) \<inter> U"
+            unfolding subspace_topology_def by (by100 blast)
+          have "(top1_S2 - C) - W_q = (top1_S2 - C) \<inter> U" using hU(2) .
+          have "(top1_S2 - C) \<inter> U \<in> top1_S2_topology"
+            sorry \<comment> \<open>Intersection of two open sets in a topology is open.\<close>
+          thus ?thesis using hU(2) by (by100 simp)
+        qed
+        \<comment> \<open>Step 6: cl\_S2(W\_q) misses p. Because p \<in> (S2-C)-W\_q which is open in S2.\<close>
+        have hp_not_cl: "p \<notin> closure_on top1_S2 top1_S2_topology W_q"
+        proof -
+          have "p \<in> (top1_S2 - C) - W_q"
+            using assms(3) hp_not_Wq by (by100 blast)
+          have "((top1_S2 - C) - W_q) \<inter> W_q = {}" by (by100 blast)
+          \<comment> \<open>p is in an open set disjoint from W\_q, so p \<notin> cl(W\_q).\<close>
+          have hWq_sub: "W_q \<subseteq> top1_S2" using hC_sub_S2 W_q_def
+            top1_path_component_of_on_subset[OF hT_SC hq_SC] by (by100 blast)
+          show ?thesis sorry
+        qed
+        \<comment> \<open>Step 7: cl\_S2(W\_q) \<subseteq> S2-{p}. Compact (closed in compact S2). h\_sel continuous
+           on S2-{p}. Image compact hence bounded.\<close>
+        have hWq_bdd: "\<exists>M. \<forall>x \<in> h_sel ` W_q. fst x ^ 2 + snd x ^ 2 \<le> M" sorry
+        \<comment> \<open>Step 8: h\_sel(W\_q) \<subseteq> U\_s or V\_s (path-connected + connectedD with open U\_s, V\_s).
+           h\_sel(W\_q) bounded. If h\_sel(W\_q) \<subseteq> V\_s, since h\_sel\<inverse>(V\_s) is path-connected
+           and \<subseteq> S2-C, h\_sel\<inverse>(V\_s) \<subseteq> W\_q or some path-component. But then
+           V\_s \<subseteq> h\_sel(W\_q) which is bounded \<Rightarrow> V\_s bounded, contradiction.
+           So h\_sel(W\_q) \<subseteq> U\_s. Hence h\_sel(q) \<in> U\_s.\<close>
+        show "h_sel q \<in> U_s" sorry
+      qed
     qed
     \<comment> \<open>Step 0b.4: Translate by -h\_sel(q): put (0,0) in bounded component.\<close>
     \<comment> \<open>Translated curve D' = (\<lambda>x. x - h\_sel q) ` (h\_sel ` C).\<close>
