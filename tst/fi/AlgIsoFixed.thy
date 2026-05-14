@@ -5649,13 +5649,98 @@ proof -
       also have "\<dots> = UNIV - D'" unfolding D'_def image_comp by (by100 simp)
       finally show ?thesis .
     qed
+    \<comment> \<open>Translation tr is continuous, with continuous inverse inv\_tr.\<close>
+    define inv_tr_fn where "inv_tr_fn = (\<lambda>x :: real \<times> real. (fst x + fst (h_sel q), snd x + snd (h_sel q)))"
+    have htr_cont: "continuous_on UNIV tr" unfolding tr_def by (intro continuous_intros)
+    have hinv_cont: "continuous_on UNIV inv_tr_fn" unfolding inv_tr_fn_def by (intro continuous_intros)
+    have htr_inv: "\<And>x. inv_tr_fn (tr x) = x" unfolding tr_def inv_tr_fn_def by (by100 simp)
+    have hinv_tr: "\<And>x. tr (inv_tr_fn x) = x" unfolding tr_def inv_tr_fn_def by (by100 simp)
+    \<comment> \<open>tr is open map: open S \<Longrightarrow> open (tr ` S).\<close>
+    have htr_open_map: "\<And>S. open S \<Longrightarrow> open (tr ` S)"
+    proof -
+      fix S :: "(real \<times> real) set" assume "open S"
+      have "tr ` S = inv_tr_fn -` S"
+      proof (rule set_eqI, rule iffI)
+        fix x assume "x \<in> tr ` S"
+        then obtain y where "y \<in> S" "tr y = x" by (by100 blast)
+        have "inv_tr_fn x = inv_tr_fn (tr y)" using \<open>tr y = x\<close> by (by100 simp)
+        also have "\<dots> = y" by (rule htr_inv)
+        finally have "inv_tr_fn x = y" .
+        thus "x \<in> inv_tr_fn -` S" using \<open>y \<in> S\<close> by (by100 blast)
+      next
+        fix x assume "x \<in> inv_tr_fn -` S"
+        hence "inv_tr_fn x \<in> S" by (by100 blast)
+        show "x \<in> tr ` S"
+        proof
+          show "inv_tr_fn x \<in> S" by (rule \<open>inv_tr_fn x \<in> S\<close>)
+          show "x = tr (inv_tr_fn x)" using hinv_tr by (by100 simp)
+        qed
+      qed
+      thus "open (tr ` S)" using open_vimage[OF \<open>open S\<close> hinv_cont] by (by100 simp)
+    qed
+    \<comment> \<open>U\_s and V\_s are open (from closure properties, same argument as for W\_R2 earlier).\<close>
+    have hR2_top: "is_topology_on (UNIV :: (real \<times> real) set)
+        (product_topology_on top1_open_sets top1_open_sets)"
+      using product_topology_on_is_topology_on[OF
+          top1_open_sets_is_topology_on_UNIV[where 'a=real]
+          top1_open_sets_is_topology_on_UNIV[where 'a=real]] by (by100 simp)
+    have hUs_open: "open U_s"
+    proof -
+      have hcl_V: "closure_on UNIV (product_topology_on top1_open_sets top1_open_sets) V_s
+          = V_s \<union> h_sel ` C" using hUVs(10) .
+      have "V_s \<subseteq> (UNIV :: (real \<times> real) set)" by (by100 blast)
+      from closure_on_closed[OF hR2_top this]
+      have "closedin_on UNIV (product_topology_on top1_open_sets top1_open_sets)
+          (V_s \<union> h_sel ` C)" using hcl_V by (by100 simp)
+      hence "UNIV - (V_s \<union> h_sel ` C) \<in> product_topology_on top1_open_sets top1_open_sets"
+        unfolding closedin_on_def by (by100 blast)
+      hence "open (UNIV - (V_s \<union> h_sel ` C))"
+        using product_topology_on_open_sets[where ?'a = real and ?'b = real]
+        unfolding top1_open_sets_def by (by100 blast)
+      moreover have "U_s = UNIV - (V_s \<union> h_sel ` C)" using hUVs(3,4) by (by100 blast)
+      ultimately show ?thesis by (by100 simp)
+    qed
+    have hVs_open: "open V_s"
+    proof -
+      have hcl_U: "closure_on UNIV (product_topology_on top1_open_sets top1_open_sets) U_s
+          = U_s \<union> h_sel ` C" using hUVs(9) .
+      have "U_s \<subseteq> (UNIV :: (real \<times> real) set)" by (by100 blast)
+      from closure_on_closed[OF hR2_top this]
+      have "closedin_on UNIV (product_topology_on top1_open_sets top1_open_sets)
+          (U_s \<union> h_sel ` C)" using hcl_U by (by100 simp)
+      hence "UNIV - (U_s \<union> h_sel ` C) \<in> product_topology_on top1_open_sets top1_open_sets"
+        unfolding closedin_on_def by (by100 blast)
+      hence "open (UNIV - (U_s \<union> h_sel ` C))"
+        using product_topology_on_open_sets[where ?'a = real and ?'b = real]
+        unfolding top1_open_sets_def by (by100 blast)
+      moreover have "V_s = UNIV - (U_s \<union> h_sel ` C)" using hUVs(3,4) by (by100 blast)
+      ultimately show ?thesis by (by100 simp)
+    qed
+    have hU'_open: "open U'" by (rule htr_open_map[OF hUs_open, folded U'_def])
+    have hV'_open: "open V'" by (rule htr_open_map[OF hVs_open, folded V'_def])
+    \<comment> \<open>U' bounded: translate bounded set by constant.\<close>
+    have hU'_bdd: "\<exists>M. \<forall>p \<in> U'. fst p ^ 2 + snd p ^ 2 \<le> M"
+    proof -
+      from hUVs(7) obtain M where hM: "\<forall>p \<in> U_s. fst p ^ 2 + snd p ^ 2 \<le> M" by (by100 blast)
+      define qf where "qf = fst (h_sel q)" define qs where "qs = snd (h_sel q)"
+      define M' where "M' = (sqrt M + sqrt (qf^2 + qs^2))^2"
+      show ?thesis sorry \<comment> \<open>Triangle inequality: |tr(p)| \<le> |p| + |q| \<le> sqrt(M) + |q|.\<close>
+    qed
+    have hV'_unbdd: "\<forall>M. \<exists>p \<in> V'. fst p ^ 2 + snd p ^ 2 > M"
+    proof (intro allI)
+      fix M :: real
+      define M2 where "M2 = M + 2 * (abs (fst (h_sel q)) + abs (snd (h_sel q))) + 2"
+      from hUVs(8) obtain p_v where "p_v \<in> V_s" "fst p_v ^ 2 + snd p_v ^ 2 > M2"
+        by (by100 blast)
+      have "tr p_v \<in> V'" unfolding V'_def using \<open>p_v \<in> V_s\<close> by (by100 blast)
+      moreover have "fst (tr p_v) ^ 2 + snd (tr p_v) ^ 2 > M"
+        sorry \<comment> \<open>|tr(p\_v)| \<ge> |p\_v| - |q| and |p\_v| is large enough.\<close>
+      ultimately show "\<exists>p \<in> V'. fst p ^ 2 + snd p ^ 2 > M" by (by100 blast)
+    qed
+    \<comment> \<open>U' path-connected: continuous image of path-connected U\_s.\<close>
     have hU'_pc: "top1_path_connected_on U'
-        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) U')" sorry
-    have hU'_bdd: "\<exists>M. \<forall>p \<in> U'. fst p ^ 2 + snd p ^ 2 \<le> M" sorry
-    have hV'_unbdd: "\<forall>M. \<exists>p \<in> V'. fst p ^ 2 + snd p ^ 2 > M" sorry
-    \<comment> \<open>Translation is a homeomorphism, preserving all topological properties.\<close>
-    have hU'_open: "open U'" sorry \<comment> \<open>tr homeomorphism + U\_s open (from closure argument).\<close>
-    have hV'_open: "open V'" sorry \<comment> \<open>Symmetric.\<close>
+        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) U')"
+      sorry \<comment> \<open>tr continuous homeomorphism, preserves path-connectivity.\<close>
     \<comment> \<open>Apply Munkres\_xaxis\_segment.\<close>
     from Munkres_xaxis_segment[OF hD'_scc hU'_ne hV'_ne hUV'_disj hUV'_union
         hU'_pc hU'_bdd hV'_unbdd hU'_open hV'_open h0_U']
