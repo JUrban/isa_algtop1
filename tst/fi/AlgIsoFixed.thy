@@ -4702,12 +4702,106 @@ proof -
       \<comment> \<open>W-{b} is open, connected, LPC \<Rightarrow> path-connected
          (connected\_locally\_path\_connected\_imp\_path\_connected).
          Then a, a' \<in> W-{b} \<subseteq> S2-C-{b}, path restricts to S2-C-{b}.\<close>
+      have hW_sub_S2: "W \<subseteq> top1_S2"
+      proof -
+        have "top1_S2_topology \<subseteq> Pow top1_S2"
+          using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
+        thus ?thesis using hW_open_S2 by (by100 blast)
+      qed
+      \<comment> \<open>Bridge: HOL connected \<rightarrow> top1\_connected\_on for S2 subsets.\<close>
+      have hWb_conn_top1: "top1_connected_on (W - {b})
+          (subspace_topology top1_S2 top1_S2_topology (W - {b}))"
+      proof -
+        \<comment> \<open>S2\_topo = subspace UNIV open\_sets\_R3 S2. By subspace\_trans with W-{b} \<subseteq> S2:\<close>
+        have hWb_sub_S2: "W - {b} \<subseteq> top1_S2" using hW_sub_S2 by (by100 blast)
+        have "subspace_topology top1_S2 top1_S2_topology (W - {b}) =
+            subspace_topology (UNIV :: (real \<times> real \<times> real) set)
+                (product_topology_on top1_open_sets (product_topology_on top1_open_sets top1_open_sets))
+                (W - {b})"
+          unfolding top1_S2_topology_def by (rule subspace_topology_trans[OF hWb_sub_S2])
+        also have "\<dots> = subspace_topology (UNIV :: (real \<times> real \<times> real) set) top1_open_sets (W - {b})"
+        proof -
+          have "product_topology_on (top1_open_sets :: real set set)
+              (product_topology_on (top1_open_sets :: real set set) (top1_open_sets :: real set set))
+              = product_topology_on (top1_open_sets :: real set set) (top1_open_sets :: (real \<times> real) set set)"
+            using product_topology_on_open_sets[where ?'a = real and ?'b = real] by (by100 simp)
+          also have "\<dots> = (top1_open_sets :: (real \<times> (real \<times> real)) set set)"
+            using product_topology_on_open_sets[where ?'a = real and ?'b = "real \<times> real"] .
+          finally show ?thesis by (by100 simp)
+        qed
+        finally have htopo_eq: "subspace_topology top1_S2 top1_S2_topology (W - {b}) =
+            subspace_topology UNIV top1_open_sets (W - {b})" .
+        from top1_connected_on_subspace_openI[OF \<open>connected (W - {b})\<close>]
+        show ?thesis using htopo_eq by (by100 simp)
+      qed
+      \<comment> \<open>W-{b} open in S2.\<close>
+      have hWb_open_S2: "W - {b} \<in> top1_S2_topology"
+      proof -
+        \<comment> \<open>W open in S2. S2-{b} open in S2 (Hausdorff, singleton closed).\<close>
+        \<comment> \<open>W - {b} = W \<inter> (S2-{b}), both open \<Rightarrow> open.\<close>
+        have "top1_S2 - {b} \<in> top1_S2_topology"
+        proof -
+          have "closedin_on top1_S2 top1_S2_topology {b}"
+            by (rule singleton_closed_in_hausdorff[OF top1_S2_is_hausdorff hb_S2])
+          thus ?thesis using assms(1) unfolding is_topology_on_strict_def closedin_on_def
+            by (by100 blast)
+        qed
+        have "W \<inter> (top1_S2 - {b}) \<in> top1_S2_topology"
+          by (rule topology_inter2[OF hTopS2 hW_open_S2 \<open>top1_S2 - {b} \<in> top1_S2_topology\<close>])
+        moreover have "W - {b} = W \<inter> (top1_S2 - {b})" using hW_sub_S2 by (by100 blast)
+        ultimately show ?thesis by (by100 simp)
+      qed
+      have hWb_sub_S2: "W - {b} \<subseteq> top1_S2" using hW_sub_S2 by (by100 blast)
+      \<comment> \<open>W-{b} LPC (open subset of LPC S2).\<close>
+      have hWb_lpc: "top1_locally_path_connected_on (W - {b})
+          (subspace_topology top1_S2 top1_S2_topology (W - {b}))"
+        by (rule open_subset_locally_path_connected[OF S2_locally_path_connected
+            hWb_open_S2 hWb_sub_S2])
+      have hWb_ne: "W - {b} \<noteq> {}" using ha_W assms(7) by (by100 blast)
+      have hT_Wb: "is_topology_on (W - {b})
+          (subspace_topology top1_S2 top1_S2_topology (W - {b}))"
+        by (rule subspace_topology_is_topology_on[OF hTopS2 hWb_sub_S2])
+      \<comment> \<open>connected + LPC + nonempty \<Rightarrow> path-connected.\<close>
+      have hWb_pc: "top1_path_connected_on (W - {b})
+          (subspace_topology top1_S2 top1_S2_topology (W - {b}))"
+        by (rule connected_locally_path_connected_imp_path_connected[OF hT_Wb
+            hWb_conn_top1 hWb_lpc hWb_ne])
+      \<comment> \<open>a, a' \<in> W-{b}. Get path in W-{b}.\<close>
+      have "a \<in> W - {b}" using ha_W assms(7) by (by100 blast)
+      have "a' \<in> W - {b}" using ha'_W assms(8) by (by100 blast)
+      from hWb_pc obtain g_wb where "top1_is_path_on (W - {b})
+          (subspace_topology top1_S2 top1_S2_topology (W - {b})) a a' g_wb"
+        unfolding top1_path_connected_on_def using \<open>a \<in> W - {b}\<close> \<open>a' \<in> W - {b}\<close>
+        by (by100 blast)
+      \<comment> \<open>W-{b} \<subseteq> S2-C-{b}. Restrict codomain.\<close>
+      have hWb_sub_SCb: "W - {b} \<subseteq> top1_S2 - C - {b}"
+      proof -
+        have "W \<subseteq> top1_S2 - C" unfolding W_def
+          using top1_path_component_of_on_subset[OF hT_SC ha_SC] .
+        thus ?thesis by (by100 blast)
+      qed
+      have "\<forall>t \<in> I_set. g_wb t \<in> top1_S2 - C - {b}"
+        using \<open>top1_is_path_on (W - {b}) _ a a' g_wb\<close> hWb_sub_SCb
+        unfolding top1_is_path_on_def top1_continuous_map_on_def by (by100 blast)
+      have hg_cont_Wb: "top1_continuous_map_on I_set I_top (W - {b})
+          (subspace_topology top1_S2 top1_S2_topology (W - {b})) g_wb"
+        using \<open>top1_is_path_on (W - {b}) _ a a' g_wb\<close>
+        unfolding top1_is_path_on_def by (by100 blast)
+      \<comment> \<open>Enlarge codomain: g\_wb continuous I \<rightarrow> W-{b} \<subseteq> S2-C-{b} \<subseteq> S2.
+         Use top1\_continuous\_map\_on\_codomain\_enlarge.\<close>
+      have hSCb_sub_S2: "top1_S2 - C - {b} \<subseteq> top1_S2" by (by100 blast)
+      have hg_cont_SCb: "top1_continuous_map_on I_set I_top (top1_S2 - C - {b})
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C - {b})) g_wb"
+        by (rule top1_continuous_map_on_codomain_enlarge[OF hg_cont_Wb hWb_sub_SCb hSCb_sub_S2])
       have "\<exists>g. top1_is_path_on (top1_S2 - C - {b})
           (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C - {b})) a a' g"
-        sorry \<comment> \<open>W-{b} open+connected+LPC \<Rightarrow> pc.
-           Needs: HOL connected \<leftrightarrow> top1\_connected\_on bridge for S2 subsets,
-           open\_subset\_locally\_path\_connected, connected\_locally\_path\_connected\_imp\_path\_connected,
-           continuous\_map\_restrict\_codomain.\<close>
+      proof -
+        have "g_wb 0 = a" "g_wb 1 = a'"
+          using \<open>top1_is_path_on (W - {b}) _ a a' g_wb\<close>
+          unfolding top1_is_path_on_def by (by100 blast)+
+        show ?thesis unfolding top1_is_path_on_def using hg_cont_SCb \<open>g_wb 0 = a\<close> \<open>g_wb 1 = a'\<close>
+          by (by100 blast)
+      qed
       thus ?thesis .
     qed
     then obtain g_path where hgp:
