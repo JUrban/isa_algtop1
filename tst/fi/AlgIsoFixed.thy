@@ -5593,8 +5593,62 @@ proof -
     \<comment> \<open>U', V' satisfy Munkres\_xaxis\_segment preconditions.\<close>
     have hU'_ne: "U' \<noteq> {}" using hUVs(1) unfolding U'_def by (by100 blast)
     have hV'_ne: "V' \<noteq> {}" using hUVs(2) unfolding V'_def by (by100 blast)
-    have hUV'_disj: "U' \<inter> V' = {}" sorry
-    have hUV'_union: "U' \<union> V' = UNIV - D'" sorry
+    have htr_inj: "inj tr" unfolding tr_def inj_def by (by100 auto)
+    have htr_surj: "surj tr"
+    proof (rule surjI)
+      fix y :: "real \<times> real"
+      show "tr (fst y + fst (h_sel q), snd y + snd (h_sel q)) = y"
+        unfolding tr_def by (by100 simp)
+    qed
+    have htr_bij: "bij tr" using htr_inj htr_surj unfolding bij_def by (by100 blast)
+    have hUV'_disj: "U' \<inter> V' = {}"
+    proof (rule ccontr)
+      assume "U' \<inter> V' \<noteq> {}"
+      then obtain x where "x \<in> U'" "x \<in> V'" by (by100 blast)
+      from \<open>x \<in> U'\<close> obtain u where hu: "u \<in> U_s" "tr u = x" unfolding U'_def by (by100 blast)
+      from \<open>x \<in> V'\<close> obtain v where hv: "v \<in> V_s" "tr v = x" unfolding V'_def by (by100 blast)
+      have "u = v" using hu(2) hv(2) htr_inj unfolding inj_def by (by100 blast)
+      hence "u \<in> U_s \<inter> V_s" using hu(1) hv(1) by (by100 blast)
+      thus False using hUVs(3) by (by100 blast)
+    qed
+    have hUV'_union: "U' \<union> V' = UNIV - D'"
+    proof -
+      have "U' \<union> V' = tr ` (U_s \<union> V_s)" unfolding U'_def V'_def by (by100 blast)
+      also have "\<dots> = tr ` (UNIV - h_sel ` C)" using hUVs(4) by (by100 simp)
+      also have "\<dots> = UNIV - tr ` (h_sel ` C)"
+      proof (rule set_eqI, rule iffI)
+        fix x assume "x \<in> tr ` (UNIV - h_sel ` C)"
+        then obtain y where hy: "y \<notin> h_sel ` C" "tr y = x" by (by100 blast)
+        have "x \<notin> tr ` (h_sel ` C)"
+        proof
+          assume "x \<in> tr ` (h_sel ` C)"
+          then obtain z where hz: "z \<in> h_sel ` C" "tr z = x" by (by100 blast)
+          have "y = z" using hy(2) hz(2) htr_inj unfolding inj_def by (by100 blast)
+          hence "y \<in> h_sel ` C" using hz(1) by (by100 blast)
+          thus False using hy(1) by (by100 blast)
+        qed
+        show "x \<in> UNIV - tr ` (h_sel ` C)" using \<open>x \<notin> tr ` (h_sel ` C)\<close> by (by100 blast)
+      next
+        fix x assume "x \<in> UNIV - tr ` (h_sel ` C)"
+        hence "x \<notin> tr ` (h_sel ` C)" by (by100 blast)
+        have "\<exists>y. tr y = x"
+        proof -
+          define y where "y = (fst x + fst (h_sel q), snd x + snd (h_sel q))"
+          have "tr y = x" unfolding tr_def y_def by (by100 simp)
+          thus ?thesis by (by100 blast)
+        qed
+        then obtain y where hy: "tr y = x" by (by100 blast)
+        have "y \<notin> h_sel ` C"
+        proof
+          assume "y \<in> h_sel ` C"
+          hence "tr y \<in> tr ` (h_sel ` C)" by (by100 blast)
+          thus False using \<open>x \<notin> tr ` (h_sel ` C)\<close> hy by (by100 blast)
+        qed
+        thus "x \<in> tr ` (UNIV - h_sel ` C)" using hy by (by100 blast)
+      qed
+      also have "\<dots> = UNIV - D'" unfolding D'_def image_comp by (by100 simp)
+      finally show ?thesis .
+    qed
     have hU'_pc: "top1_path_connected_on U'
         (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) U')" sorry
     have hU'_bdd: "\<exists>M. \<forall>p \<in> U'. fst p ^ 2 + snd p ^ 2 \<le> M" sorry
