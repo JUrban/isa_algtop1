@@ -5171,13 +5171,62 @@ proof -
     let ?TX' = "subspace_topology top1_S2 top1_S2_topology (top1_S2 - {a'} - {b})"
     let ?k_star = "top1_fundamental_group_induced_on C ?TC c0 (top1_S2 - {a'} - {b}) ?TX' c0 id"
     \<comment> \<open>(1) k* is a group homomorphism.\<close>
+    have hTC: "is_topology_on C ?TC"
+      by (rule subspace_topology_is_topology_on[OF hTopS2 hC_sub_S2])
+    have hTX': "is_topology_on (top1_S2 - {a'} - {b}) ?TX'"
+      by (rule subspace_topology_is_topology_on[OF hTopS2]) (by100 blast)
+    have hC_sub_X': "C \<subseteq> top1_S2 - {a'} - {b}" using hC_sub_S2 assms(4,5) by (by100 blast)
+    have hid_cont: "top1_continuous_map_on C ?TC (top1_S2 - {a'} - {b}) ?TX' id"
+    proof -
+      have hid_S2: "top1_continuous_map_on C (subspace_topology top1_S2 top1_S2_topology C)
+          top1_S2 top1_S2_topology id"
+      proof -
+        have "top1_continuous_map_on top1_S2 top1_S2_topology top1_S2 top1_S2_topology id"
+          unfolding top1_continuous_map_on_def
+        proof (intro conjI ballI)
+          fix x assume "x \<in> top1_S2" thus "id x \<in> top1_S2" by (by100 simp)
+        next
+          fix V assume "V \<in> top1_S2_topology"
+          have "{x \<in> top1_S2. id x \<in> V} = V"
+          proof -
+            have "V \<subseteq> top1_S2" using \<open>V \<in> top1_S2_topology\<close> assms(1)
+              unfolding is_topology_on_strict_def by (by100 blast)
+            have "{x \<in> top1_S2. id x \<in> V} = {x \<in> top1_S2. x \<in> V}" by (by100 simp)
+            also have "\<dots> = V" using \<open>V \<subseteq> top1_S2\<close> by (by100 blast)
+            finally show ?thesis .
+          qed
+          thus "{x \<in> top1_S2. id x \<in> V} \<in> top1_S2_topology"
+            using \<open>V \<in> top1_S2_topology\<close> by (by100 simp)
+        qed
+        from top1_continuous_map_on_restrict_domain_simple[OF this hC_sub_S2]
+        show ?thesis .
+      qed
+      have hid_into: "\<forall>x \<in> C. id x \<in> (top1_S2 - {a'} - {b})"
+      proof (intro ballI)
+        fix x assume "x \<in> C"
+        have "x \<in> top1_S2" using \<open>x \<in> C\<close> hC_sub_S2 by (by100 blast)
+        have "x \<noteq> a'" using \<open>x \<in> C\<close> assms(4) by (by100 blast)
+        have "x \<noteq> b" using \<open>x \<in> C\<close> assms(5) by (by100 blast)
+        show "id x \<in> (top1_S2 - {a'} - {b})" using \<open>x \<in> top1_S2\<close> \<open>x \<noteq> a'\<close> \<open>x \<noteq> b\<close>
+          by (by100 simp)
+      qed
+      have hX'_sub_S2: "top1_S2 - {a'} - {b} \<subseteq> top1_S2" by (by100 blast)
+      from continuous_map_restrict_codomain[OF hid_S2 hid_into hX'_sub_S2]
+      show ?thesis .
+    qed
     have hk_hom: "top1_group_hom_on
         (top1_fundamental_group_carrier C ?TC c0)
         (top1_fundamental_group_mul C ?TC c0)
         (top1_fundamental_group_carrier (top1_S2 - {a'} - {b}) ?TX' c0)
         (top1_fundamental_group_mul (top1_S2 - {a'} - {b}) ?TX' c0)
         ?k_star"
-      sorry
+    proof -
+      have "c0 \<in> C" using assms(9) .
+      have "c0 \<in> top1_S2 - {a'} - {b}" using assms(9) hC_sub_X' by (by100 blast)
+      have "id c0 = c0" by (by100 simp)
+      show ?thesis by (rule top1_fundamental_group_induced_on_is_hom[OF hTC hTX'
+          \<open>c0 \<in> C\<close> \<open>c0 \<in> top1_S2 - {a'} - {b}\<close> hid_cont \<open>id c0 = c0\<close>])
+    qed
     \<comment> \<open>(2) k* is bijective.\<close>
     have hk_bij: "bij_betw ?k_star
         (top1_fundamental_group_carrier C ?TC c0)
