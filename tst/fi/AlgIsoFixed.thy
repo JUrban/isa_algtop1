@@ -5228,6 +5228,34 @@ proof -
           \<open>c0 \<in> C\<close> \<open>c0 \<in> top1_S2 - {a'} - {b}\<close> hid_cont \<open>id c0 = c0\<close>])
     qed
     \<comment> \<open>(2) k* is bijective.\<close>
+    \<comment> \<open>Extract bij from hypothesis.\<close>
+    let ?TX = "subspace_topology top1_S2 top1_S2_topology (top1_S2 - {a} - {b})"
+    let ?j_star = "top1_fundamental_group_induced_on C ?TC c0 (top1_S2 - {a} - {b}) ?TX c0 id"
+    have hj_bij: "bij_betw ?j_star
+        (top1_fundamental_group_carrier C ?TC c0)
+        (top1_fundamental_group_carrier (top1_S2 - {a} - {b}) ?TX c0)"
+      using assms(10) unfolding top1_group_iso_on_def by (by100 blast)
+    have hj_inj: "inj_on ?j_star (top1_fundamental_group_carrier C ?TC c0)"
+      using hj_bij unfolding bij_betw_def by (by100 blast)
+    have hj_surj: "?j_star ` (top1_fundamental_group_carrier C ?TC c0)
+        = top1_fundamental_group_carrier (top1_S2 - {a} - {b}) ?TX c0"
+      using hj_bij unfolding bij_betw_def by (by100 blast)
+    \<comment> \<open>The key insight: both j\_star and k\_star send [l]\_C to [l] in the target space.
+       j\_star is bijective. k\_star has the same action on loops.
+       The difference: the target space changes from S2-{a}-{b} to S2-{a'}-{b}.
+
+       From inclusion\_induced\_class: j\_star {g. loop\_equiv C c0 f g} = {k. loop\_equiv (S2-{a}-{b}) c0 f k}.
+       Similarly: k\_star {g. loop\_equiv C c0 f g} = {k. loop\_equiv (S2-{a'}-{b}) c0 f k}.
+
+       For INJECTIVITY of k\_star: if [l1] = [l2] in S2-{a'}-{b}, need [l1] = [l2] in C.
+         Since S2-{a'}-{b} \<supseteq> S2-{a,a'}-{b} \<subseteq> S2-{a}-{b}, a homotopy in S2-{a'}-{b}
+         does NOT imply homotopy in S2-{a}-{b}. So we can't use j\_star injectivity directly.
+
+       For SURJECTIVITY of k\_star: need every loop in S2-{a'}-{b} homotopic to one in C.
+         Since j\_star surjective, every loop in S2-{a}-{b} is homotopic to one in C.
+         But S2-{a'}-{b} is a DIFFERENT space.
+
+       Both require the homotopy argument (F connects the two spaces).\<close>
     have hk_bij: "bij_betw ?k_star
         (top1_fundamental_group_carrier C ?TC c0)
         (top1_fundamental_group_carrier (top1_S2 - {a'} - {b}) ?TX' c0)"
