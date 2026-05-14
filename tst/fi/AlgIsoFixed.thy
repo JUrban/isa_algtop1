@@ -5061,6 +5061,22 @@ proof -
        And \<pi>\_1(C) \<cong> Z (SCC). The induced map is a Z \<rightarrow> Z homomorphism.
        Since the hypothesis says the map C \<rightarrow> S2-{a}-{b} is iso (Z \<rightarrow> Z bijection),
        the map C \<rightarrow> S2-{a'}-{b} is also iso (same generator, same winding number).\<close>
+    \<comment> \<open>Step 1: Apply homotopy\_induced\_basepoint\_change to F.
+       This gives: for any loop l at d0 in D,
+       [j \<circ> l] at d0 in R2-{r} = [\<beta>\<inverse> * ((f\<circ>k) \<circ> l) * \<beta>] at d0 in R2-{r}
+       where j = id, (f\<circ>k)(x) = x-r'+r, \<beta>(t) = F(d0, t) = d0 - \<alpha>(t) + r.\<close>
+    \<comment> \<open>Since j = id: [l] = [\<beta>\<inverse> * ((f\<circ>k) \<circ> l) * \<beta>].
+       This means j* = conjugation(\<beta>) \<circ> (f\<circ>k)*.
+       j* iso \<Rightarrow> (f\<circ>k)* iso (conjugation is iso).\<close>
+    \<comment> \<open>Step 2: (f\<circ>k)* = f* \<circ> k* where f(x) = x - r' + r is homeomorphism R2-{r'} \<rightarrow> R2-{r}.
+       f* is iso (homeomorphism induces iso). So k* = (f*)\<inverse> \<circ> (f\<circ>k)* is iso.\<close>
+    \<comment> \<open>Step 3: k* iso means inclusion D \<hookrightarrow> R2-{r'} induces \<pi>\_1 iso at basepoint d0.\<close>
+    \<comment> \<open>Step 4: Transfer back to S2 via h\<inverse>: inclusion C \<hookrightarrow> S2-{a'}-{b} induces iso at c0.\<close>
+    \<comment> \<open>The transfer uses: h is homeomorphism S2-{b} \<rightarrow> R2, and C \<subseteq> S2-{a'}-{b} \<subseteq> S2-{b}.
+       Under h: C \<mapsto> D, S2-{a'}-{b} \<mapsto> R2-{r'}. The inclusion id: C \<rightarrow> S2-{a'}-{b}
+       corresponds to inclusion id: D \<rightarrow> R2-{r'} (both are identity maps).
+       h induces iso on \<pi>\_1, so the S2 inclusion is iso iff the R2 inclusion is iso.\<close>
+    \<comment> \<open>Formal proof:\<close>
     show ?thesis sorry
   qed
 qed
