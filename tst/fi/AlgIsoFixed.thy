@@ -5663,8 +5663,7 @@ proof -
           proof -
             have "top1_S2 - C \<in> top1_S2_topology" using hSC_open .
             have "U \<in> top1_S2_topology" using hU(1) .
-            show ?thesis using hTopS2 \<open>top1_S2 - C \<in> top1_S2_topology\<close> \<open>U \<in> top1_S2_topology\<close>
-              unfolding is_topology_on_def sorry
+            show ?thesis by (rule topology_inter2[OF hTopS2 hSC_open hU(1)])
           qed
           thus ?thesis using hU(2) by (by100 simp)
         qed
@@ -5738,8 +5737,8 @@ proof -
               by (rule f_inv_into_f[OF hv_range])
             hence "h_sel x \<notin> h_sel ` C" using \<open>v \<in> UNIV - h_sel ` C\<close> by (by100 simp)
             hence "x \<notin> C"
-            proof -
-              show ?thesis sorry \<comment> \<open>h\_sel injective: if x \<in> C then h\_sel x \<in> h\_sel(C).\<close>
+            proof (rule contrapos_nn)
+              assume "x \<in> C" thus "h_sel x \<in> h_sel ` C" by (by100 blast)
             qed
             thus "x \<in> top1_S2 - C" using \<open>x \<in> top1_S2 - {p}\<close> by (by100 blast)
           qed
