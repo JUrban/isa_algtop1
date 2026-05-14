@@ -5166,7 +5166,24 @@ proof -
        \<psi> = j* (iso by hypothesis), \<iota> = k* (goal), \<phi> = (\<phi>|...)* (iso by homeomorphism).\<close>
     \<comment> \<open>However, the basepoint changes make this more complex.
        The actual proof follows the book's Corollary 58.5 argument.\<close>
-    show ?thesis sorry
+    \<comment> \<open>Unfolding the goal: need (1) homomorphism and (2) bijection.\<close>
+    let ?TC = "subspace_topology top1_S2 top1_S2_topology C"
+    let ?TX' = "subspace_topology top1_S2 top1_S2_topology (top1_S2 - {a'} - {b})"
+    let ?k_star = "top1_fundamental_group_induced_on C ?TC c0 (top1_S2 - {a'} - {b}) ?TX' c0 id"
+    \<comment> \<open>(1) k* is a group homomorphism.\<close>
+    have hk_hom: "top1_group_hom_on
+        (top1_fundamental_group_carrier C ?TC c0)
+        (top1_fundamental_group_mul C ?TC c0)
+        (top1_fundamental_group_carrier (top1_S2 - {a'} - {b}) ?TX' c0)
+        (top1_fundamental_group_mul (top1_S2 - {a'} - {b}) ?TX' c0)
+        ?k_star"
+      sorry
+    \<comment> \<open>(2) k* is bijective.\<close>
+    have hk_bij: "bij_betw ?k_star
+        (top1_fundamental_group_carrier C ?TC c0)
+        (top1_fundamental_group_carrier (top1_S2 - {a'} - {b}) ?TX' c0)"
+      sorry
+    show ?thesis unfolding top1_group_iso_on_def using hk_hom hk_bij by (by100 blast)
   qed
 qed
 
