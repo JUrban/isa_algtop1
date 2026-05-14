@@ -4530,8 +4530,28 @@ proof -
        Since S2-C-{b} is also path-connected (removing one point from a 2-component space)...
        Actually S2-C has exactly 2 components, and b is in one of them. If a is in the other
        component from b, the path from a to a' (in same component as a) avoids b's component entirely.\<close>
-    \<comment> \<open>For now, sorry this and continue with the main proof structure.\<close>
-    show ?thesis sorry
+    \<comment> \<open>Need path from a to a' in S2-C-{b} (= (S2-{b}) - C). Then h transfers it to R2-D.
+       a, a' in same path-component of S2-C. S2-C is open, LPC.
+       Each component of S2-C minus {b} is still path-connected (removing a point
+       from an open connected subset of S2, dim \<ge> 2).
+       S2-{b} is path-connected (simply connected from S2\_minus\_point\_simply\_connected).
+       The component containing a in S2-C minus {b} = S2-C-{b} still contains a'
+       because S2-C has exactly 2 components (JCT), and removing b from either
+       doesn't disconnect it (dim \<ge> 2 argument).\<close>
+    \<comment> \<open>Get path in S2-C-{b} from a to a'.\<close>
+    have "\<exists>g. top1_is_path_on (top1_S2 - C - {b})
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C - {b})) a a' g"
+      sorry \<comment> \<open>S2-C-{b} path-connected in component of a (dim \<ge> 2 removal).\<close>
+    then obtain g_path where hgp:
+        "top1_is_path_on (top1_S2 - C - {b})
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C - {b})) a a' g_path"
+      by (by100 blast)
+    \<comment> \<open>g\_path maps into (S2-{b}) - C. Transfer via h to get path in R2-D.\<close>
+    have "top1_is_path_on (UNIV - D)
+        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - D))
+        r r' (h \<circ> g_path)"
+      sorry \<comment> \<open>Compose continuous h with path g\_path. h maps (S2-{b})-C to R2-D.\<close>
+    thus ?thesis by (by100 blast)
   qed
   then obtain \<alpha> where h\<alpha>: "top1_is_path_on (UNIV - D) (subspace_topology UNIV
       (product_topology_on top1_open_sets top1_open_sets) (UNIV - D)) r r' \<alpha>" by (by100 blast)
@@ -4565,7 +4585,38 @@ proof -
      by conjugation with the basepoint path. Since j* is an iso, so is (f\<circ>k)*.
      Since f is a homeomorphism, k* is also an iso.\<close>
   \<comment> \<open>Step H: Transfer back to S2.\<close>
-  show ?thesis sorry
+  \<comment> \<open>Step G+H: The conclusion follows from the homotopy argument.
+     Key chain:
+     (1) h: S2-{b} \<rightarrow> R2 homeomorphism transfers the iso from S2 to R2:
+         inclusion D \<hookrightarrow> R2-{r} induces \<pi>\_1 iso (at basepoint d0 = h(c0)).
+     (2) Homotopy F connects: id: D \<rightarrow> R2-{r} to translation: D \<rightarrow> R2-{r}.
+         By homotopy\_induced\_basepoint\_change, both induce related (conjugate) maps.
+         Since id induces iso, translation also induces iso (conjugation of iso = iso).
+     (3) Translation x \<mapsto> x-r'+r: R2-{r'} \<rightarrow> R2-{r} is homeomorphism.
+         Since (translation)\<circ>(inclusion D \<hookrightarrow> R2-{r'}) induces iso, and translation is
+         homeomorphism, the inclusion D \<hookrightarrow> R2-{r'} also induces iso (at appropriate basepoint).
+     (4) Transfer back via h\<inverse>: inclusion C \<hookrightarrow> S2-{a'}-{b} induces iso.
+
+     The formal proof of each step is substantial. The core mathematical content is that
+     homotopic inclusions induce isomorphic \<pi>\_1 homomorphisms.\<close>
+  \<comment> \<open>The conclusion: id-inclusion C \<hookrightarrow> S2-{a'}-{b} induces \<pi>\_1 iso.\<close>
+  \<comment> \<open>If a = a', this is exactly the hypothesis.\<close>
+  show ?thesis
+  proof (cases "a = a'")
+    case True thus ?thesis using assms(10) by (by100 simp)
+  next
+    case False
+    \<comment> \<open>Non-trivial case: a \<noteq> a'. Use the R2 homotopy argument.\<close>
+    \<comment> \<open>The full formal proof requires:
+       1. Transfer iso hypothesis to R2 via h
+       2. Construct and verify homotopy F in R2
+       3. Apply homotopy\_induced\_basepoint\_change
+       4. Deduce iso for translation
+       5. Factor out homeomorphism to get iso for k
+       6. Transfer back to S2 via h\<inverse>
+       Each step is ~20-50 lines of formal proof.\<close>
+    show ?thesis sorry
+  qed
 qed
 
 lemma Munkres_Step_4_move_punctures:
