@@ -5976,7 +5976,10 @@ proof -
     have hq_in_Us_final: "h_sel q \<in> U_s" using hq_in_Us .
     \<comment> \<open>Combine into the obtain conclusion.\<close>
     have hUs_disj_C: "U_s \<inter> h_sel ` C = {}" using hUVs(4) by (by100 blast)
-    show ?thesis sorry
+    show ?thesis
+      apply (rule that[of a1_pre a3_pre U_s])
+      using ha1_C ha3_C ha1_ne_a3 ha1_S2p ha3_S2p hUVs(1) hUs_disj_C hUVs(5)
+        hseg_avoids hseg_in_Us hq_in_Us_final by blast+
   qed
   \<comment> \<open>Step 1: Decompose C into two arcs C1, C2 at the x-axis-derived a1, a3.\<close>
   obtain C1 C2 where hC12: "C = C1 \<union> C2" "C1 \<inter> C2 = {a1, a3}"
