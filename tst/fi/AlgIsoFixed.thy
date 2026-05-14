@@ -5761,10 +5761,9 @@ proof -
             thus ?thesis using \<open>inv_into (top1_S2 - {p}) h_sel (h_sel q) = q\<close> by (by100 simp)
           qed
           \<comment> \<open>Vinv pc, q \<in> Vinv, Vinv \<subseteq> S2-C \<Rightarrow> Vinv \<subseteq> W\_q.\<close>
-          have "Vinv \<subseteq> W_q"
-            using top1_path_connected_subspace_subset_path_component_of[OF hT_SC
-                hVinv_sub hq_Vinv hVinv_pc] unfolding W_q_def
-            sorry \<comment> \<open>Subspace topology chain.\<close>
+          have "Vinv \<subseteq> W_q" unfolding W_q_def
+            by (rule top1_path_connected_subspace_subset_path_component_of[OF hT_SC
+                hVinv_sub hq_Vinv hVinv_pc])
           \<comment> \<open>Hence V\_s \<subseteq> h\_sel(W\_q), so V\_s bounded.\<close>
           have "V_s \<subseteq> h_sel ` W_q"
           proof (intro subsetI)
