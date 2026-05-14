@@ -4802,7 +4802,40 @@ proof -
   have hF_cont: "top1_continuous_map_on (D \<times> I_set)
       (product_topology_on (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) D) I_top)
       (UNIV - {r}) (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {r})) F"
-    sorry \<comment> \<open>F continuous (subtract continuous path from identity).\<close>
+  proof -
+    \<comment> \<open>F(x,t) = x - \<alpha>(t) + r. Need: continuous on D\<times>I, maps into R2-{r}.\<close>
+    \<comment> \<open>F maps into R2-{r}: need F(x,t) \<noteq> r for all x \<in> D, t \<in> I.
+       F(x,t) = r \<Leftrightarrow> x = \<alpha>(t). But x \<in> D and \<alpha>(t) \<in> UNIV-D (path avoids D).
+       So x \<noteq> \<alpha>(t), hence F(x,t) \<noteq> r.\<close>
+    have hF_avoids_r: "\<forall>x \<in> D. \<forall>t \<in> I_set. F (x, t) \<noteq> r"
+    proof (intro ballI)
+      fix x t assume "x \<in> D" "t \<in> I_set"
+      have "\<alpha> t \<in> UNIV - D"
+        using h\<alpha> \<open>t \<in> I_set\<close> unfolding top1_is_path_on_def top1_continuous_map_on_def
+        by (by100 blast)
+      hence "\<alpha> t \<notin> D" by (by100 blast)
+      hence "x \<noteq> \<alpha> t" using \<open>x \<in> D\<close> by (by100 blast)
+      show "F (x, t) \<noteq> r"
+      proof
+        assume "F (x, t) = r"
+        have hF_eq: "F (x, t) = (fst x - fst (\<alpha> t) + fst r, snd x - snd (\<alpha> t) + snd r)"
+          unfolding F_def by (cases x) (by100 simp)
+        have "fst (F (x, t)) = fst r" using \<open>F (x, t) = r\<close> by (by100 simp)
+        have "snd (F (x, t)) = snd r" using \<open>F (x, t) = r\<close> by (by100 simp)
+        have "fst x - fst (\<alpha> t) + fst r = fst r" using \<open>fst (F (x, t)) = fst r\<close> hF_eq
+          by (by100 simp)
+        have "snd x - snd (\<alpha> t) + snd r = snd r" using \<open>snd (F (x, t)) = snd r\<close> hF_eq
+          by (by100 simp)
+        hence "fst x = fst (\<alpha> t)" "snd x = snd (\<alpha> t)"
+          using \<open>fst x - fst (\<alpha> t) + fst r = fst r\<close> by (by100 linarith)+
+        hence "x = \<alpha> t" by (cases x, cases "\<alpha> t") (by100 simp)
+        thus False using \<open>x \<noteq> \<alpha> t\<close> by (by100 blast)
+      qed
+    qed
+    \<comment> \<open>F is continuous on D\<times>I (HOL continuous\_on, since arithmetic).\<close>
+    \<comment> \<open>Then bridge to custom topology.\<close>
+    show ?thesis sorry
+  qed
   \<comment> \<open>Step F: F(x,0) = x, F(x,1) = x - r' + r.\<close>
   have h\<alpha>0: "\<alpha> 0 = r" using h\<alpha> unfolding top1_is_path_on_def by (by100 blast)
   have h\<alpha>1: "\<alpha> 1 = r'" using h\<alpha> unfolding top1_is_path_on_def by (by100 blast)
