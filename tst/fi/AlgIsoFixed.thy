@@ -5653,8 +5653,9 @@ proof -
         (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) U')" sorry
     have hU'_bdd: "\<exists>M. \<forall>p \<in> U'. fst p ^ 2 + snd p ^ 2 \<le> M" sorry
     have hV'_unbdd: "\<forall>M. \<exists>p \<in> V'. fst p ^ 2 + snd p ^ 2 > M" sorry
-    have hU'_open: "open U'" sorry
-    have hV'_open: "open V'" sorry
+    \<comment> \<open>Translation is a homeomorphism, preserving all topological properties.\<close>
+    have hU'_open: "open U'" sorry \<comment> \<open>tr homeomorphism + U\_s open (from closure argument).\<close>
+    have hV'_open: "open V'" sorry \<comment> \<open>Symmetric.\<close>
     \<comment> \<open>Apply Munkres\_xaxis\_segment.\<close>
     from Munkres_xaxis_segment[OF hD'_scc hU'_ne hV'_ne hUV'_disj hUV'_union
         hU'_pc hU'_bdd hV'_unbdd hU'_open hV'_open h0_U']
