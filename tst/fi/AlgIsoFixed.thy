@@ -5707,12 +5707,34 @@ proof -
         proof -
           \<comment> \<open>Use Lemma\_61\_1\_components\_correspond: p \<notin> W\_q \<Rightarrow> h\_sel(W\_q) bounded.\<close>
           \<comment> \<open>Need: W\_q is a connected component of S2-C.\<close>
+          \<comment> \<open>Theorem 25.5: in LPC space, path-components = connected components.\<close>
+          have hWq_eq_comp: "W_q = top1_component_of_on (top1_S2 - C)
+              (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) q"
+            unfolding W_q_def
+            using Theorem_25_5[OF hT_SC] hSC_lpc hq_SC by (by100 blast)
           have hWq_component: "W_q \<in> top1_components_on (top1_S2 - C)
               (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C))"
-            sorry \<comment> \<open>Path-component = connected component in LPC space.\<close>
+            unfolding top1_components_on_def
+            apply (rule CollectI) apply (rule exI[of _ q])
+            using hWq_eq_comp hq_SC by (by100 blast)
           have hWq_connected: "top1_connected_on W_q
               (subspace_topology top1_S2 top1_S2_topology W_q)"
-            sorry \<comment> \<open>Component is connected.\<close>
+          proof -
+            have "top1_connected_on (top1_component_of_on (top1_S2 - C)
+                (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) q)
+                (subspace_topology (top1_S2 - C)
+                    (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C))
+                    (top1_component_of_on (top1_S2 - C)
+                        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) q))"
+              by (rule top1_component_of_on_connected[OF hT_SC hq_SC])
+            hence "top1_connected_on W_q
+                (subspace_topology (top1_S2 - C)
+                    (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) W_q)"
+              using hWq_eq_comp by (by100 simp)
+            thus ?thesis using subspace_topology_trans[of W_q "top1_S2 - C"]
+              top1_path_component_of_on_subset[OF hT_SC hq_SC] unfolding W_q_def
+              by (by100 simp)
+          qed
           have hWq_sub_SC: "W_q \<subseteq> top1_S2 - C"
             unfolding W_q_def using top1_path_component_of_on_subset[OF hT_SC hq_SC] .
           have hC_compact_loc: "top1_compact_on C (subspace_topology top1_S2 top1_S2_topology C)"
