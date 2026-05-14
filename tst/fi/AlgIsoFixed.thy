@@ -4508,7 +4508,31 @@ proof -
      transferred via h).\<close>
   have "\<exists>\<alpha>. top1_is_path_on (UNIV - D) (subspace_topology UNIV
       (product_topology_on top1_open_sets top1_open_sets) (UNIV - D)) r r' \<alpha>"
-    sorry \<comment> \<open>Transfer path in S2-C via h.\<close>
+  proof -
+    \<comment> \<open>a, a' in same path-component of S2-C. Get path f in S2-C.\<close>
+    from assms(6) obtain f_path where hfp:
+        "top1_is_path_on (top1_S2 - C) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) a a' f_path"
+      unfolding top1_in_same_path_component_on_def by (by100 blast)
+    \<comment> \<open>f\_path maps into S2-C \<subseteq> S2-{b} (since b \<notin> C, but f\_path could hit b).
+       Wait: f\_path is in S2-C. b \<in> S2-C. So f\_path(t) could equal b.
+       But we need the image under h, and h is only defined on S2-{b}.
+       Issue: the path might pass through b!\<close>
+    \<comment> \<open>Actually: a \<noteq> b and a' \<noteq> b (assms 7,8). But intermediate points could hit b.
+       S2-C has 2 path-components. If b is in the SAME component as a and a',
+       the path might use b. If b is in a DIFFERENT component, no issue.
+       From the problem setup: p and q are in different components of S2-C.
+       a is in same component as p (or q), b is in same component as q (or p).
+       Since a \<noteq> b and they're in different components (one is p's, one is q's),
+       b is NOT in the same path-component as a. So f\_path avoids b.\<close>
+    \<comment> \<open>Actually: the lemma assms don't guarantee a and b are in different components!
+       assms only say a \<noteq> b and a' \<noteq> b. The path from a to a' in S2-C could go through b.
+       But for the proof to work, we need the path in S2-C to avoid b (so it can be transferred via h).
+       Since S2-C-{b} is also path-connected (removing one point from a 2-component space)...
+       Actually S2-C has exactly 2 components, and b is in one of them. If a is in the other
+       component from b, the path from a to a' (in same component as a) avoids b's component entirely.\<close>
+    \<comment> \<open>For now, sorry this and continue with the main proof structure.\<close>
+    show ?thesis sorry
+  qed
   then obtain \<alpha> where h\<alpha>: "top1_is_path_on (UNIV - D) (subspace_topology UNIV
       (product_topology_on top1_open_sets top1_open_sets) (UNIV - D)) r r' \<alpha>" by (by100 blast)
   \<comment> \<open>Step D: Homotopy F(x,t) = x - \<alpha>(t) + r: D \<times> I \<rightarrow> R2-{r}.
