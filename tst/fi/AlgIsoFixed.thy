@@ -4504,6 +4504,26 @@ proof -
     have "c = a'" by (rule inj_onD[OF hh_inj \<open>h c = h a'\<close> \<open>c \<in> top1_S2 - {b}\<close> ha'_S2b])
     thus False using \<open>c \<in> C\<close> assms(4) by (by100 blast)
   qed
+  \<comment> \<open>S2-C is open in S2 (C closed since SCC compact in Hausdorff S2).\<close>
+  have hSC_open: "top1_S2 - C \<in> top1_S2_topology"
+  proof -
+    have hC_compact: "top1_compact_on C (subspace_topology top1_S2 top1_S2_topology C)"
+    proof -
+      from assms(2) obtain g where "top1_continuous_map_on top1_S1 top1_S1_topology top1_S2 top1_S2_topology g"
+          "g ` top1_S1 = C" unfolding top1_simple_closed_curve_on_def by (by100 blast)
+      have "is_topology_on top1_S1 top1_S1_topology"
+        using top1_S1_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
+      from Theorem_26_5[OF this hTopS2 S1_compact \<open>top1_continuous_map_on _ _ _ _ g\<close>]
+      show ?thesis using \<open>g ` top1_S1 = C\<close> by (by100 simp)
+    qed
+    have "closedin_on top1_S2 top1_S2_topology C"
+      by (rule Theorem_26_3[OF top1_S2_is_hausdorff hC_sub_S2 hC_compact])
+    thus ?thesis using assms(1) unfolding is_topology_on_strict_def closedin_on_def by (by100 blast)
+  qed
+  have hSC_lpc: "top1_locally_path_connected_on (top1_S2 - C)
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C))"
+    by (rule open_subset_locally_path_connected[OF S2_locally_path_connected hSC_open])
+       (use hC_sub_S2 in \<open>by100 blast\<close>)
   \<comment> \<open>Step C: Path from r to r' in R2-D (from a, a' in same path-component of S2-C,
      transferred via h).\<close>
   have "\<exists>\<alpha>. top1_is_path_on (UNIV - D) (subspace_topology UNIV
@@ -4608,9 +4628,7 @@ proof -
       have hT_SC: "is_topology_on (top1_S2 - C)
           (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C))"
         by (rule subspace_topology_is_topology_on[OF hTopS2]) (use hC_sub_S2 in \<open>by100 blast\<close>)
-      have hSC_lpc: "top1_locally_path_connected_on (top1_S2 - C)
-          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C))"
-        sorry \<comment> \<open>S2-C open in LPC S2.\<close>
+      \<comment> \<open>hSC\_lpc available from outer scope.\<close>
       \<comment> \<open>W is open in S2-C.\<close>
       have hW_open_SC: "W \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)"
         unfolding W_def
@@ -4623,7 +4641,7 @@ proof -
         have "W \<subseteq> top1_S2 - C" unfolding W_def
           using top1_path_component_of_on_subset[OF hT_SC ha_SC] .
         hence "W = W" by (by100 blast)
-        have "top1_S2 - C \<in> top1_S2_topology" sorry \<comment> \<open>S2-C open (C compact \<Rightarrow> closed).\<close>
+        have "top1_S2 - C \<in> top1_S2_topology" using hSC_open .
         show ?thesis using topology_inter2[OF hTopS2 \<open>top1_S2 - C \<in> top1_S2_topology\<close> \<open>U \<in> top1_S2_topology\<close>]
           \<open>W = (top1_S2 - C) \<inter> U\<close> by (by100 simp)
       qed
