@@ -5472,7 +5472,67 @@ proof -
           ((1-t) * fst (h_sel a1) + t * fst (h_sel a3),
            (1-t) * snd (h_sel a1) + t * snd (h_sel a3)) \<in> W_seg)"
       "h_sel q \<in> W_seg"
-    sorry \<comment> \<open>From Munkres\_xaxis\_segment applied to translated h\_sel(C).\<close>
+  proof -
+    \<comment> \<open>Step 0b.1: h\_sel(C) is SCC in R2.\<close>
+    have hC_sub_S2p: "C \<subseteq> top1_S2 - {p}" using hC_sub_S2 hp_notC by (by100 blast)
+    have hhC_scc_early: "top1_simple_closed_curve_on (UNIV :: (real \<times> real) set)
+        (product_topology_on top1_open_sets top1_open_sets) (h_sel ` C)"
+    proof -
+      from assms(2) obtain g where hg: "top1_continuous_map_on top1_S1 top1_S1_topology
+          top1_S2 top1_S2_topology g" "inj_on g top1_S1" "g ` top1_S1 = C"
+        unfolding top1_simple_closed_curve_on_def by (by100 blast)
+      have hh_cont: "top1_continuous_map_on (top1_S2 - {p})
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p}))
+          UNIV (product_topology_on top1_open_sets top1_open_sets) h_sel"
+        using hh_sel unfolding top1_homeomorphism_on_def by (by100 blast)
+      have hg_into_S2p: "\<forall>x \<in> top1_S1. g x \<in> top1_S2 - {p}"
+        using hg(1,3) hC_sub_S2p unfolding top1_continuous_map_on_def by (by100 blast)
+      have hS2p_sub: "top1_S2 - {p} \<subseteq> top1_S2" by (by100 blast)
+      have hg_S2p: "top1_continuous_map_on top1_S1 top1_S1_topology
+          (top1_S2 - {p}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p})) g"
+        by (rule continuous_map_restrict_codomain[OF hg(1) hg_into_S2p hS2p_sub])
+      have hhg_cont: "top1_continuous_map_on top1_S1 top1_S1_topology
+          UNIV (product_topology_on top1_open_sets top1_open_sets) (h_sel \<circ> g)"
+        by (rule top1_continuous_map_on_comp[OF hg_S2p hh_cont])
+      have hhg_inj: "inj_on (h_sel \<circ> g) top1_S1"
+      proof (rule inj_onI)
+        fix x y assume hx: "x \<in> top1_S1" and hy: "y \<in> top1_S1" and heq: "(h_sel \<circ> g) x = (h_sel \<circ> g) y"
+        have "h_sel (g x) = h_sel (g y)" using heq by (by100 simp)
+        have hinj: "inj_on h_sel (top1_S2 - {p})"
+          using hh_sel unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+        have "g x = g y" by (rule inj_onD[OF hinj \<open>h_sel (g x) = h_sel (g y)\<close>
+            hg_into_S2p[THEN bspec, OF hx] hg_into_S2p[THEN bspec, OF hy]])
+        thus "x = y" using inj_onD[OF hg(2) \<open>g x = g y\<close> hx hy] by (by100 blast)
+      qed
+      have hhg_img: "(h_sel \<circ> g) ` top1_S1 = h_sel ` C"
+        using hg(3) by (by100 force)
+      show ?thesis unfolding top1_simple_closed_curve_on_def
+        using hhg_cont hhg_inj hhg_img by (by100 blast)
+    qed
+    \<comment> \<open>Step 0b.2: JCT for h\_sel(C): get bounded U\_s, unbounded V\_s.\<close>
+    from Theorem_63_4_JordanCurve[OF hhC_scc_early]
+    obtain U_s V_s where hUVs:
+        "U_s \<noteq> {}" "V_s \<noteq> {}" "U_s \<inter> V_s = {}" "U_s \<union> V_s = UNIV - h_sel ` C"
+        "top1_path_connected_on U_s (subspace_topology UNIV
+            (product_topology_on top1_open_sets top1_open_sets) U_s)"
+        "top1_path_connected_on V_s (subspace_topology UNIV
+            (product_topology_on top1_open_sets top1_open_sets) V_s)"
+        "\<exists>M. \<forall>p \<in> U_s. fst p ^ 2 + snd p ^ 2 \<le> M"
+        "\<forall>M. \<exists>p \<in> V_s. fst p ^ 2 + snd p ^ 2 > M"
+        "closure_on UNIV (product_topology_on top1_open_sets top1_open_sets) U_s = U_s \<union> h_sel ` C"
+        "closure_on UNIV (product_topology_on top1_open_sets top1_open_sets) V_s = V_s \<union> h_sel ` C"
+      by (metis (no_types))
+    \<comment> \<open>Step 0b.3: h\_sel(q) \<in> U\_s (bounded component). Proof: the closure of
+       q's path-component in S2 misses p, hence is compact in S2-{p},
+       hence its image under h\_sel is bounded in R2. Connected + bounded \<Rightarrow> in U\_s.\<close>
+    have hq_in_Us: "h_sel q \<in> U_s" sorry
+    \<comment> \<open>Step 0b.4: Translate by -h\_sel(q): put (0,0) in bounded component.\<close>
+    \<comment> \<open>Translated curve D' = (\<lambda>x. x - h\_sel q) ` (h\_sel ` C).\<close>
+    \<comment> \<open>D' is SCC, translated U\_s is bounded with (0,0) in it.\<close>
+    \<comment> \<open>Step 0b.5: Apply Munkres\_xaxis\_segment to D'.\<close>
+    \<comment> \<open>Step 0b.6: Transfer x-axis points back.\<close>
+    show ?thesis sorry
+  qed
   \<comment> \<open>Step 1: Decompose C into two arcs C1, C2 at the x-axis-derived a1, a3.\<close>
   obtain C1 C2 where hC12: "C = C1 \<union> C2" "C1 \<inter> C2 = {a1, a3}"
       "top1_is_arc_on C1 (subspace_topology top1_S2 top1_S2_topology C1)"
