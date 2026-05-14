@@ -5048,6 +5048,19 @@ proof -
        5. Factor out homeomorphism to get iso for k
        6. Transfer back to S2 via h\<inverse>
        Each step is ~20-50 lines of formal proof.\<close>
+    \<comment> \<open>Following book: both \<pi>\_1(C) and \<pi>\_1(S2-{a'}-{b}) are \<cong> Z.
+       The inclusion-induced map k*: Z \<rightarrow> Z is a group homomorphism.
+       It is iso iff it sends 1 to \<pm>1.
+       From the hypothesis, j*: Z \<rightarrow> Z is iso (sends 1 to \<pm>1).
+       The homotopy F connects j to f\<circ>k. By Corollary 58.5, they induce
+       the same map (up to basepoint change). Since j* is iso, (f\<circ>k)* is iso.
+       Since f is homeomorphism, f* is iso. Hence k* = (f*)\<inverse> \<circ> (f\<circ>k)* is iso.\<close>
+    \<comment> \<open>For the formal proof, we use top1\_groups\_isomorphic\_on (existence of iso)
+       combined with the specific structure of the induced map.\<close>
+    \<comment> \<open>Key fact: \<pi>\_1(S2-{a'}-{b}) \<cong> Z (from pi1\_S2\_minus\_two\_points\_iso\_Z).
+       And \<pi>\_1(C) \<cong> Z (SCC). The induced map is a Z \<rightarrow> Z homomorphism.
+       Since the hypothesis says the map C \<rightarrow> S2-{a}-{b} is iso (Z \<rightarrow> Z bijection),
+       the map C \<rightarrow> S2-{a'}-{b} is also iso (same generator, same winding number).\<close>
     show ?thesis sorry
   qed
 qed
