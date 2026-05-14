@@ -5263,22 +5263,34 @@ proof -
         (top1_fundamental_group_carrier (top1_S2 - {a'} - {b}) ?TX' c0)"
     proof -
       \<comment> \<open>Show C \<subseteq> S2-{a'}-{b} is a homotopy equivalence (id, r).\<close>
-      obtain r_retract where hheq: "top1_homotopy_equivalence_on C ?TC (top1_S2 - {a'} - {b}) ?TX' id r_retract"
-        sorry \<comment> \<open>C is deformation retract of S2-{a'}-{b}. Transfers from S1 \<subseteq> R2-{0} via h.\<close>
-      from Theorem_58_7_fixed[OF hTC hTX' hheq assms(9)]
-      have "top1_group_iso_on
-          (top1_fundamental_group_carrier C ?TC c0)
-          (top1_fundamental_group_mul C ?TC c0)
-          (top1_fundamental_group_carrier (top1_S2 - {a'} - {b}) ?TX' (id c0))
-          (top1_fundamental_group_mul (top1_S2 - {a'} - {b}) ?TX' (id c0))
-          (top1_fundamental_group_induced_on C ?TC c0 (top1_S2 - {a'} - {b}) ?TX' (id c0) id)" .
-      hence "top1_group_iso_on
-          (top1_fundamental_group_carrier C ?TC c0)
-          (top1_fundamental_group_mul C ?TC c0)
-          (top1_fundamental_group_carrier (top1_S2 - {a'} - {b}) ?TX' c0)
-          (top1_fundamental_group_mul (top1_S2 - {a'} - {b}) ?TX' c0)
-          ?k_star" by (by100 simp)
-      thus ?thesis unfolding top1_group_iso_on_def by (by100 blast)
+      \<comment> \<open>Following book Corollary 58.5 EXACTLY.
+         j* = \<beta>\<circumflex> \<circ> (f\<circ>k\<tilde>)*  from homotopy\_induced\_basepoint\_change.
+         j* bij (hypothesis via h). \<beta>\<circumflex> bij (basepoint change). f* bij (homeomorphism).
+         k\<tilde>* = (f*)\<inverse> \<circ> (\<beta>\<circumflex>)\<inverse> \<circ> j* = composition of bijections = bij.\<close>
+      \<comment> \<open>All three groups (\<pi>\_1(C), \<pi>\_1(S2-{a}-{b}), \<pi>\_1(S2-{a'}-{b})) are \<cong> Z.
+         A group homomorphism Z \<rightarrow> Z is bijective iff it sends 1 to \<pm>1.
+         j\_star is bij (sends generator to \<pm>1). k\_star is a hom Z \<rightarrow> Z.
+         The homotopy shows j\_star and (f\<circ>k\_star) are conjugate.
+         Since f* is bij, k\_star is also bij (sends generator to \<pm>1).
+
+         For the formal proof: we use that both source and target are Z,
+         k\_star is a hom, and its image generates the target (from the
+         homotopy + hypothesis iso + homeomorphism factoring).
+
+         Alternatively: use that S2-{a'}-{b} has \<pi>\_1 \<cong> Z and C has \<pi>\_1 \<cong> Z,
+         and k\_star is a non-zero homomorphism (since j\_star is iso and they're
+         related by the homotopy + homeomorphism).
+         A non-zero hom Z \<rightarrow> Z that's also a hom from a group isomorphic to Z
+         to a group isomorphic to Z, where the composed map j* = \<beta>\<circ>f*\<circ>k* is
+         bij, implies k* is bij (injective follows from f*\<circ>k* injective, surjective
+         follows from \<beta>\<circ>f*\<circ>k* surjective + \<beta>,f* bij).\<close>
+      \<comment> \<open>Formal proof: k\_star injective + surjective.\<close>
+      have hk_inj: "inj_on ?k_star (top1_fundamental_group_carrier C ?TC c0)"
+        sorry \<comment> \<open>Follows from: f*\<circ>k* injective (since \<beta>\<inverse>\<circ>j* = f*\<circ>k* and j* injective).\<close>
+      have hk_surj: "?k_star ` (top1_fundamental_group_carrier C ?TC c0)
+          = top1_fundamental_group_carrier (top1_S2 - {a'} - {b}) ?TX' c0"
+        sorry \<comment> \<open>Follows from: both groups \<cong> Z, k* hom Z\<rightarrow>Z, k* injective \<Rightarrow> surjective.\<close>
+      thus ?thesis unfolding bij_betw_def using hk_inj hk_surj by (by100 blast)
     qed
     show ?thesis unfolding top1_group_iso_on_def using hk_hom hk_bij by (by100 blast)
   qed
