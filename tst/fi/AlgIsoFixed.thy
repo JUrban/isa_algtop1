@@ -4541,7 +4541,39 @@ proof -
     \<comment> \<open>Get path in S2-C-{b} from a to a'.\<close>
     have "\<exists>g. top1_is_path_on (top1_S2 - C - {b})
         (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C - {b})) a a' g"
-      sorry \<comment> \<open>S2-C-{b} path-connected in component of a (dim \<ge> 2 removal).\<close>
+    proof (cases "b \<in> top1_path_component_of_on (top1_S2 - C)
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) a")
+      case False
+      \<comment> \<open>b in different component: the path from a to a' in W never meets b.\<close>
+      have hT_SC: "is_topology_on (top1_S2 - C)
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C))"
+        by (rule subspace_topology_is_topology_on[OF hTopS2]) (use hC_sub_S2 in \<open>by100 blast\<close>)
+      have ha_SC: "a \<in> top1_S2 - C" using assms(3) by (by100 blast)
+      from assms(6) obtain f_p where "top1_is_path_on (top1_S2 - C)
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) a a' f_p"
+        unfolding top1_in_same_path_component_on_def by (by100 blast)
+      \<comment> \<open>f\_p maps into path-component of a. b \<notin> that component. So f\_p avoids b.\<close>
+      have "\<forall>t \<in> I_set. f_p t \<in> top1_S2 - C"
+        using \<open>top1_is_path_on _ _ a a' f_p\<close> unfolding top1_is_path_on_def
+          top1_continuous_map_on_def by (by100 blast)
+      have "\<forall>t \<in> I_set. f_p t \<in> top1_path_component_of_on (top1_S2 - C)
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) a"
+        using top1_is_path_on_point_in_path_component[OF hT_SC
+            \<open>top1_is_path_on _ _ a a' f_p\<close>] sorry
+      hence "\<forall>t \<in> I_set. f_p t \<noteq> b" using False by (by100 blast)
+      hence "\<forall>t \<in> I_set. f_p t \<in> top1_S2 - C - {b}"
+        using \<open>\<forall>t \<in> I_set. f_p t \<in> top1_S2 - C\<close> by (by100 blast)
+      \<comment> \<open>f\_p is a path in S2-C-{b}.\<close>
+      have "top1_is_path_on (top1_S2 - C - {b})
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C - {b})) a a' f_p"
+        sorry \<comment> \<open>Restrict codomain of path from S2-C to S2-C-{b}.\<close>
+      thus ?thesis by (by100 blast)
+    next
+      case True
+      \<comment> \<open>b in same component as a. Use connected\_open\_delete\_S2: component minus b still connected.
+         Then open + connected in S2 (LPC) \<Rightarrow> path-connected.\<close>
+      show ?thesis sorry \<comment> \<open>connected\_open\_delete\_S2 + LPC.\<close>
+    qed
     then obtain g_path where hgp:
         "top1_is_path_on (top1_S2 - C - {b})
             (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C - {b})) a a' g_path"
