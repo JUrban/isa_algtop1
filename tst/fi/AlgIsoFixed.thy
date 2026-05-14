@@ -5818,7 +5818,28 @@ proof -
         by (rule subspace_topology_is_topology_on[OF hR2_top hU'_sub])
       have "\<forall>x \<in> U'. \<forall>y \<in> U'. \<exists>f. top1_is_path_on U'
           (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) U') x y f"
-        sorry \<comment> \<open>tr \<circ> (path in U\_s from inv\_tr(x) to inv\_tr(y)) is path in U'.\<close>
+      proof (intro ballI)
+        fix x y assume "x \<in> U'" "y \<in> U'"
+        from \<open>x \<in> U'\<close> obtain ux where hux: "ux \<in> U_s" "tr ux = x" unfolding U'_def by (by100 blast)
+        from \<open>y \<in> U'\<close> obtain uy where huy: "uy \<in> U_s" "tr uy = y" unfolding U'_def by (by100 blast)
+        \<comment> \<open>U\_s path-connected: get path f from ux to uy in U\_s.\<close>
+        have hUs_sub: "U_s \<subseteq> (UNIV :: (real \<times> real) set)" by (by100 blast)
+        have hT_Us: "is_topology_on U_s
+            (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) U_s)"
+          by (rule subspace_topology_is_topology_on[OF hR2_top hUs_sub])
+        from hUVs(5) hux(1) huy(1) obtain f where hf:
+            "top1_is_path_on U_s
+                (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) U_s)
+                ux uy f"
+          unfolding top1_path_connected_on_def by (by100 blast)
+        \<comment> \<open>tr \<circ> f: [0,1] \<rightarrow> U' is the desired path.\<close>
+        have "top1_is_path_on U'
+            (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) U') x y (tr \<circ> f)"
+          sorry \<comment> \<open>Composition of continuous maps, tr(f(0))=tr(ux)=x, tr(f(1))=tr(uy)=y.\<close>
+        thus "\<exists>f. top1_is_path_on U'
+            (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) U') x y f"
+          by (by100 blast)
+      qed
       thus ?thesis unfolding top1_path_connected_on_def using hT_U' by (by100 blast)
     qed
     \<comment> \<open>Apply Munkres\_xaxis\_segment.\<close>
