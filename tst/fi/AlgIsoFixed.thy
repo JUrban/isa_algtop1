@@ -4418,9 +4418,35 @@ lemma move_one_puncture:
        (subspace_topology top1_S2 top1_S2_topology C) c0
        (top1_S2 - {a'} - {b})
        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {a'} - {b})) c0 id)"
-  \<comment> \<open>Following book Step 4: stereographic from b to R2, translation homotopy F(x,t)=x-alpha(t),
-     Corollary 58.5 (homotopy\_induced\_basepoint\_change).\<close>
-  sorry
+proof -
+  \<comment> \<open>Following book Step 4 EXACTLY. Work in R2 via stereographic from b.\<close>
+  \<comment> \<open>Step 1: Stereographic from b gives homeomorphism h: S2-{b} \<rightarrow> R2.\<close>
+  have hb_S2: "b \<in> top1_S2" using assms(5) by (by100 blast)
+  from S2_minus_point_homeo_R2[OF hb_S2]
+  obtain h where hh: "top1_homeomorphism_on (top1_S2 - {b})
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b}))
+      (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets) h"
+    by (by100 blast)
+  \<comment> \<open>Step 2: In R2, let D = h(C), r = h(a), r' = h(a'). D is SCC.
+     r, r' are in same path-component of R2-D.
+     j: D \<hookrightarrow> R2-{r} and k: D \<hookrightarrow> R2-{r'} are inclusions.
+     Hypothesis: j induces \<pi>\_1 iso. Goal: k induces \<pi>\_1 iso.\<close>
+  \<comment> \<open>Step 3: f(x) = x - r' + r is homeomorphism R2-{r'} \<rightarrow> R2-{r}.
+     \<alpha> is path in R2-D from r to r'. F(x,t) = x - \<alpha>(t) + r is homotopy D\<times>I \<rightarrow> R2-{r}.
+     F(x,0) = x (= j(x)), F(x,1) = x - r' + r = f(k(x)).
+     F well-defined: for x \<in> D, \<alpha>(t) \<notin> D, so x \<noteq> \<alpha>(t), hence x - \<alpha>(t) + r \<noteq> r iff x \<noteq> \<alpha>(t).\<close>
+  \<comment> \<open>Step 4: By homotopy\_induced\_basepoint\_change, j and f\<circ>k induce same \<pi>\_1 homomorphism
+     (up to basepoint change). Since j induces iso, f\<circ>k induces iso.
+     Since f is homeomorphism, k also induces iso.\<close>
+  \<comment> \<open>Step 5: Transfer back to S2 via h\<inverse>.\<close>
+  \<comment> \<open>The actual formal proof uses the group-theoretic transfer:
+     h*: \<pi>\_1(S2-{a}-{b}, c0) \<cong> \<pi>\_1(R2-{h(a)}, h(c0)) (homeomorphism iso).
+     The inclusion j\_S2: C \<hookrightarrow> S2-{a}-{b} (iso) composes with h* to give inclusion iso in R2.
+     Similarly for k\_S2: C \<hookrightarrow> S2-{a'}-{b}.\<close>
+  \<comment> \<open>This transfer approach is very technical. Alternative: use the abstract formulation
+     that homotopic inclusions induce the same homomorphism.\<close>
+  show ?thesis sorry
+qed
 
 lemma Munkres_Step_4_move_punctures:
   assumes "is_topology_on_strict top1_S2 top1_S2_topology"
