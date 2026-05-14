@@ -5285,11 +5285,27 @@ proof -
          bij, implies k* is bij (injective follows from f*\<circ>k* injective, surjective
          follows from \<beta>\<circ>f*\<circ>k* surjective + \<beta>,f* bij).\<close>
       \<comment> \<open>Formal proof: k\_star injective + surjective.\<close>
+      \<comment> \<open>Key equation from homotopy\_induced\_basepoint\_change:
+         For all loops l at c0 in C:
+           j*([l]) = \<beta>\<circumflex>((f\<circ>k)*([l]))
+         where \<beta>\<circumflex> is basepoint change (conjugation), a bijection.
+         Hence: j* = \<beta>\<circumflex> \<circ> (f\<circ>k)*. j* bij, \<beta>\<circumflex> bij \<Rightarrow> (f\<circ>k)* bij.
+         (f\<circ>k)* = f* \<circ> k* (functoriality). f* bij (homeomorphism).
+         \<Rightarrow> k* bij.\<close>
+      \<comment> \<open>This entire chain works in R2 (via h). Transfer back via h\<inverse>.\<close>
+      \<comment> \<open>For the formal proof: each step is a separate sorry.\<close>
+      have hfk_bij: "bij_betw (\<lambda>c. top1_fundamental_group_induced_on C ?TC c0
+          (top1_S2 - {a} - {b}) ?TX c0 (\<lambda>y. inv_into (top1_S2 - {b}) h
+              (fst (h y) - fst r' + fst r, snd (h y) - snd r' + snd r)) c)
+          (top1_fundamental_group_carrier C ?TC c0)
+          (top1_fundamental_group_carrier (top1_S2 - {a} - {b}) ?TX
+              (inv_into (top1_S2 - {b}) h (fst (h c0) - fst r' + fst r, snd (h c0) - snd r' + snd r)))"
+        sorry \<comment> \<open>(\<phi>\<circ>k)* bij from: j* = \<beta>\<circumflex> \<circ> (\<phi>\<circ>k)*, j* bij, \<beta>\<circumflex> bij.\<close>
       have hk_inj: "inj_on ?k_star (top1_fundamental_group_carrier C ?TC c0)"
-        sorry \<comment> \<open>Follows from: f*\<circ>k* injective (since \<beta>\<inverse>\<circ>j* = f*\<circ>k* and j* injective).\<close>
+        sorry \<comment> \<open>k* = (\<phi>*)\<inverse> \<circ> (\<phi>\<circ>k)* = composition of injective maps.\<close>
       have hk_surj: "?k_star ` (top1_fundamental_group_carrier C ?TC c0)
           = top1_fundamental_group_carrier (top1_S2 - {a'} - {b}) ?TX' c0"
-        sorry \<comment> \<open>Follows from: both groups \<cong> Z, k* hom Z\<rightarrow>Z, k* injective \<Rightarrow> surjective.\<close>
+        sorry \<comment> \<open>k* = (\<phi>*)\<inverse> \<circ> (\<phi>\<circ>k)* = composition of surjective maps.\<close>
       thus ?thesis unfolding bij_betw_def using hk_inj hk_surj by (by100 blast)
     qed
     show ?thesis unfolding top1_group_iso_on_def using hk_hom hk_bij by (by100 blast)
