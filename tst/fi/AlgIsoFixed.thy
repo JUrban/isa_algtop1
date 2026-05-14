@@ -4699,9 +4699,15 @@ proof -
          So W-{b} is open in W, and connected \<Rightarrow> each connected component of W-{b} is open in W.
          Since W-{b} is connected, it has one component, hence is path-connected.\<close>
       \<comment> \<open>For the path-connected conclusion: use connected + locally path-connected.\<close>
+      \<comment> \<open>W-{b} is open, connected, LPC \<Rightarrow> path-connected
+         (connected\_locally\_path\_connected\_imp\_path\_connected).
+         Then a, a' \<in> W-{b} \<subseteq> S2-C-{b}, path restricts to S2-C-{b}.\<close>
       have "\<exists>g. top1_is_path_on (top1_S2 - C - {b})
           (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C - {b})) a a' g"
-        sorry \<comment> \<open>W-{b} connected, LPC \<Rightarrow> path-connected. a, a' \<in> W-{b} \<subseteq> S2-C-{b}.\<close>
+        sorry \<comment> \<open>W-{b} open+connected+LPC \<Rightarrow> pc.
+           Needs: HOL connected \<leftrightarrow> top1\_connected\_on bridge for S2 subsets,
+           open\_subset\_locally\_path\_connected, connected\_locally\_path\_connected\_imp\_path\_connected,
+           continuous\_map\_restrict\_codomain.\<close>
       thus ?thesis .
     qed
     then obtain g_path where hgp:
