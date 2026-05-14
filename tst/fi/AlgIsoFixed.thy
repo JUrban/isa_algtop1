@@ -5666,16 +5666,69 @@ proof -
       by blast
     \<comment> \<open>Transfer back: un-translate to get points on h\_sel(C).\<close>
     define inv_tr where "inv_tr = (\<lambda>x :: real \<times> real. (fst x + fst (h_sel q), snd x + snd (h_sel q)))"
-    have ha1_hC: "inv_tr a1' \<in> h_sel ` C" sorry
-    have ha3_hC: "inv_tr a3' \<in> h_sel ` C" sorry
+    have hinv_tr_tr: "\<And>x. inv_tr (tr x) = x"
+      unfolding inv_tr_def tr_def by (by100 simp)
+    have ha1_hC: "inv_tr a1' \<in> h_sel ` C"
+    proof -
+      from ha'(1) obtain x where hx: "x \<in> h_sel ` C" "tr x = a1'"
+        unfolding D'_def by (by100 blast)
+      have "inv_tr a1' = inv_tr (tr x)" using hx(2) by (by100 simp)
+      also have "\<dots> = x" by (rule hinv_tr_tr)
+      finally have "inv_tr a1' = x" .
+      thus ?thesis using \<open>x \<in> h_sel ` C\<close> by (by100 simp)
+    qed
+    have ha3_hC: "inv_tr a3' \<in> h_sel ` C"
+    proof -
+      from ha'(2) obtain x where hx: "x \<in> h_sel ` C" "tr x = a3'"
+        unfolding D'_def by (by100 blast)
+      have "inv_tr a3' = inv_tr (tr x)" using hx(2) by (by100 simp)
+      also have "\<dots> = x" by (rule hinv_tr_tr)
+      finally have "inv_tr a3' = x" .
+      thus ?thesis using \<open>x \<in> h_sel ` C\<close> by (by100 simp)
+    qed
     \<comment> \<open>Get preimages on C via h\_sel\<inverse>.\<close>
     define a1_pre where "a1_pre = inv_into (top1_S2 - {p}) h_sel (inv_tr a1')"
     define a3_pre where "a3_pre = inv_into (top1_S2 - {p}) h_sel (inv_tr a3')"
-    have ha1_C: "a1_pre \<in> C" sorry
-    have ha3_C: "a3_pre \<in> C" sorry
-    have ha1_ne_a3: "a1_pre \<noteq> a3_pre" sorry
-    have ha1_S2p: "a1_pre \<in> top1_S2 - {p}" sorry
-    have ha3_S2p: "a3_pre \<in> top1_S2 - {p}" sorry
+    have hh_inj: "inj_on h_sel (top1_S2 - {p})"
+      using hh_sel unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+    have hh_img: "h_sel ` (top1_S2 - {p}) = UNIV"
+      using hh_sel unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+    have ha1_img: "inv_tr a1' \<in> h_sel ` (top1_S2 - {p})"
+      using ha1_hC hC_sub_S2p by (by100 blast)
+    have ha3_img: "inv_tr a3' \<in> h_sel ` (top1_S2 - {p})"
+      using ha3_hC hC_sub_S2p by (by100 blast)
+    have ha1_C: "a1_pre \<in> C"
+    proof -
+      have "a1_pre \<in> top1_S2 - {p}" unfolding a1_pre_def
+        by (rule inv_into_into) (use ha1_img in \<open>by100 blast\<close>)
+      have "h_sel a1_pre = inv_tr a1'"
+        unfolding a1_pre_def by (rule f_inv_into_f) (use ha1_img hh_img in \<open>by100 blast\<close>)
+      hence "h_sel a1_pre \<in> h_sel ` C" using ha1_hC by (by100 simp)
+      thus ?thesis using inj_onD[OF hh_inj] \<open>a1_pre \<in> top1_S2 - {p}\<close> hC_sub_S2p sorry
+    qed
+    have ha3_C: "a3_pre \<in> C"
+    proof -
+      have "a3_pre \<in> top1_S2 - {p}" unfolding a3_pre_def
+        by (rule inv_into_into) (use ha3_img in \<open>by100 blast\<close>)
+      have "h_sel a3_pre = inv_tr a3'"
+        unfolding a3_pre_def by (rule f_inv_into_f) (use ha3_img hh_img in \<open>by100 blast\<close>)
+      hence "h_sel a3_pre \<in> h_sel ` C" using ha3_hC by (by100 simp)
+      thus ?thesis using inj_onD[OF hh_inj] \<open>a3_pre \<in> top1_S2 - {p}\<close> hC_sub_S2p sorry
+    qed
+    have ha1_S2p: "a1_pre \<in> top1_S2 - {p}" using ha1_C hC_sub_S2p by (by100 blast)
+    have ha3_S2p: "a3_pre \<in> top1_S2 - {p}" using ha3_C hC_sub_S2p by (by100 blast)
+    have hh_a1: "h_sel a1_pre = inv_tr a1'"
+      unfolding a1_pre_def by (rule f_inv_into_f) (use ha1_hC hC_sub_S2p hh_img in \<open>by100 blast\<close>)
+    have hh_a3: "h_sel a3_pre = inv_tr a3'"
+      unfolding a3_pre_def by (rule f_inv_into_f) (use ha3_hC hC_sub_S2p hh_img in \<open>by100 blast\<close>)
+    have ha1_ne_a3: "a1_pre \<noteq> a3_pre"
+    proof
+      assume "a1_pre = a3_pre"
+      hence "inv_tr a1' = inv_tr a3'" using hh_a1 hh_a3 by (by100 simp)
+      hence "fst a1' = fst a3'" "snd a1' = snd a3'" unfolding inv_tr_def by (by100 simp)+
+      hence "a1' = a3'" by (cases a1', cases a3') (by100 simp)
+      thus False using ha'(3) by (by100 blast)
+    qed
     \<comment> \<open>Segment from h\_sel(a1\_pre) to h\_sel(a3\_pre) avoids h\_sel(C) and has interior in U\_s.\<close>
     have hseg_avoids: "\<forall>t. 0 < t \<and> t < 1 \<longrightarrow>
         ((1-t) * fst (h_sel a1_pre) + t * fst (h_sel a3_pre),
