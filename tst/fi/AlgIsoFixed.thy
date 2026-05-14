@@ -5575,22 +5575,13 @@ proof -
          Since U\_s and V\_s are the two path-components of R2-h\_sel(C), h\_sel(W\_q) is
          one of them. If h\_sel(W\_q) = V\_s, then V\_s is bounded (since h\_sel(W\_q) is),
          contradicting hUVs(8). So h\_sel(W\_q) = U\_s.\<close>
-      show "h_sel q \<in> U_s"
-      proof -
-        \<comment> \<open>Step 1: h\_sel(W\_q) is bounded.\<close>
-        \<comment> \<open>W\_q = path-component of q in S2-C. cl(W\_q) \<subseteq> S2-{p} (since p in different component).\<close>
-        \<comment> \<open>cl(W\_q) compact (closed in S2), h\_sel continuous, so h\_sel(cl(W\_q)) compact hence bounded.\<close>
-        \<comment> \<open>h\_sel(W\_q) \<subseteq> h\_sel(cl(W\_q)), so bounded.\<close>
-        have hq_bdd: "\<exists>M. \<forall>x \<in> h_sel ` (top1_path_component_of_on (top1_S2 - C)
-            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) q).
-            fst x ^ 2 + snd x ^ 2 \<le> M"
-          sorry \<comment> \<open>Compactness argument for cl(W\_q).\<close>
-        \<comment> \<open>Step 2: h\_sel(W\_q) is path-connected and lies in U\_s \<union> V\_s.\<close>
-        \<comment> \<open>Step 3: h\_sel(W\_q) is one of {U\_s, V\_s} (path-component of R2-h\_sel(C)).\<close>
-        \<comment> \<open>Step 4: If h\_sel(W\_q) = V\_s, then V\_s is bounded, contradicting hUVs(8).\<close>
-        \<comment> \<open>Therefore h\_sel(W\_q) = U\_s, and h\_sel(q) \<in> U\_s.\<close>
-        show ?thesis sorry
-      qed
+      \<comment> \<open>h\_sel(q) \<in> U\_s or V\_s. h\_sel(W\_q) is connected and in one component.
+         h\_sel(W\_q) is bounded (cl(W\_q) compact). If in V\_s, since h\_sel is bijective
+         from S2-C-{p} to R2-h\_sel(C), the rest h\_sel(W\_p-{p}) covers U\_s entirely.
+         But U\_s is bounded, so h\_sel(W\_p-{p}) \<subseteq> U\_s is bounded. Since h\_sel bijection,
+         W\_p-{p} is bounded in S2-{p}, which maps to bounded R2. But neighborhoods of p
+         map to unbounded regions — contradiction. Hence h\_sel(W\_q) \<subseteq> U\_s.\<close>
+      show "h_sel q \<in> U_s" sorry
     qed
     \<comment> \<open>Step 0b.4: Translate by -h\_sel(q): put (0,0) in bounded component.\<close>
     \<comment> \<open>Translated curve D' = (\<lambda>x. x - h\_sel q) ` (h\_sel ` C).\<close>
