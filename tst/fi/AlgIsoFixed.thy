@@ -5077,7 +5077,41 @@ proof -
        corresponds to inclusion id: D \<rightarrow> R2-{r'} (both are identity maps).
        h induces iso on \<pi>\_1, so the S2 inclusion is iso iff the R2 inclusion is iso.\<close>
     \<comment> \<open>Formal proof:\<close>
-    show ?thesis sorry
+    \<comment> \<open>Step 1: h transfers the hypothesis iso from S2 to R2.\<close>
+    have h_iso_R2: "top1_group_iso_on
+        (top1_fundamental_group_carrier D
+            (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) D) d0)
+        (top1_fundamental_group_mul D
+            (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) D) d0)
+        (top1_fundamental_group_carrier (UNIV - {r})
+            (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {r})) d0)
+        (top1_fundamental_group_mul (UNIV - {r})
+            (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {r})) d0)
+        (top1_fundamental_group_induced_on D
+            (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) D) d0
+            (UNIV - {r})
+            (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {r})) d0 id)"
+      sorry \<comment> \<open>Transfer assms(10) via homeomorphism h: the inclusion D \<hookrightarrow> R2-{r} induces iso.\<close>
+    \<comment> \<open>Step 2: The homotopy F shows j and f\<circ>k induce the same map up to basepoint change.
+       Since j* iso, (f\<circ>k)* is also iso (at shifted basepoint).
+       Since f is homeomorphism, k* is iso.
+       This gives: inclusion D \<hookrightarrow> R2-{r'} induces \<pi>\_1 iso.\<close>
+    have h_iso_R2': "top1_group_iso_on
+        (top1_fundamental_group_carrier D
+            (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) D) d0)
+        (top1_fundamental_group_mul D
+            (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) D) d0)
+        (top1_fundamental_group_carrier (UNIV - {r'})
+            (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {r'})) d0)
+        (top1_fundamental_group_mul (UNIV - {r'})
+            (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {r'})) d0)
+        (top1_fundamental_group_induced_on D
+            (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) D) d0
+            (UNIV - {r'})
+            (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {r'})) d0 id)"
+      sorry \<comment> \<open>Homotopy argument: F connects j to f\<circ>k, conjugation + homeomorphism factoring.\<close>
+    \<comment> \<open>Step 3: Transfer back from R2 to S2 via h\<inverse>.\<close>
+    show ?thesis sorry \<comment> \<open>Transfer h\_iso\_R2' back via h\<inverse>.\<close>
   qed
 qed
 
