@@ -5570,6 +5570,23 @@ proof -
     \<comment> \<open>D' is SCC, translated U\_s is bounded with (0,0) in it.\<close>
     \<comment> \<open>Step 0b.5: Apply Munkres\_xaxis\_segment to D'.\<close>
     \<comment> \<open>Step 0b.6: Transfer x-axis points back.\<close>
+    \<comment> \<open>Step 0b.4: Translate h\_sel(C) by -h\_sel(q) to put (0,0) in bounded component.\<close>
+    define tr where "tr = (\<lambda>x :: real \<times> real. (fst x - fst (h_sel q), snd x - snd (h_sel q)))"
+    define D' where "D' = tr ` (h_sel ` C)"
+    define U' where "U' = tr ` U_s"
+    define V' where "V' = tr ` V_s"
+    \<comment> \<open>(0,0) \<in> U' since h\_sel(q) \<in> U\_s and tr(h\_sel(q)) = (0,0).\<close>
+    have h0_U': "((0::real),(0::real)) \<in> U'"
+    proof -
+      have "tr (h_sel q) = ((0::real), (0::real))" unfolding tr_def by (by100 simp)
+      hence "((0::real),(0::real)) = tr (h_sel q)" by (by100 simp)
+      moreover have "h_sel q \<in> U_s" using hq_in_Us .
+      ultimately show ?thesis unfolding U'_def by (by100 force)
+    qed
+    \<comment> \<open>Apply Munkres\_xaxis\_segment to D' with translated components.\<close>
+    \<comment> \<open>Need: D' SCC, U'/V' decomposition with right properties, open U'/V', (0,0)\<in>U'.\<close>
+    \<comment> \<open>Translation is a homeomorphism, preserving all these properties.\<close>
+    \<comment> \<open>Detailed application deferred.\<close>
     show ?thesis sorry
   qed
   \<comment> \<open>Step 1: Decompose C into two arcs C1, C2 at the x-axis-derived a1, a3.\<close>
