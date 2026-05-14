@@ -5588,8 +5588,26 @@ proof -
         \<comment> \<open>Step 1: S2-C is locally path-connected (open in LPC S2).\<close>
         have hSC_open: "top1_S2 - C \<in> top1_S2_topology"
         proof -
+          have hC_compact: "top1_compact_on C (subspace_topology top1_S2 top1_S2_topology C)"
+          proof -
+            from assms(2) obtain g where hg:
+                "top1_continuous_map_on top1_S1 top1_S1_topology top1_S2 top1_S2_topology g"
+                "inj_on g top1_S1" "g ` top1_S1 = C"
+              unfolding top1_simple_closed_curve_on_def by (by100 blast)
+            have hS1_compact: "top1_compact_on top1_S1 top1_S1_topology" by (rule S1_compact)
+            from Theorem_26_5[OF _ hTopS2 hS1_compact hg(1)]
+            have "top1_compact_on (g ` top1_S1) (subspace_topology top1_S2 top1_S2_topology (g ` top1_S1))"
+            proof -
+              have "is_topology_on top1_S1 top1_S1_topology"
+                using top1_S1_is_topology_on_strict unfolding is_topology_on_strict_def
+                by (by100 blast)
+              from Theorem_26_5[OF this hTopS2 hS1_compact hg(1)]
+              show ?thesis .
+            qed
+            thus ?thesis using hg(3) by (by100 simp)
+          qed
           have "closedin_on top1_S2 top1_S2_topology C"
-            sorry \<comment> \<open>SCC compact in Hausdorff \<Rightarrow> closed.\<close>
+            by (rule Theorem_26_3[OF hS2_haus hC_sub_S2 hC_compact])
           thus ?thesis using assms(1) unfolding is_topology_on_strict_def closedin_on_def
             by (by100 blast)
         qed
@@ -5642,7 +5660,12 @@ proof -
             unfolding subspace_topology_def by (by100 blast)
           have "(top1_S2 - C) - W_q = (top1_S2 - C) \<inter> U" using hU(2) .
           have "(top1_S2 - C) \<inter> U \<in> top1_S2_topology"
-            sorry \<comment> \<open>Intersection of two open sets in a topology is open.\<close>
+          proof -
+            have "top1_S2 - C \<in> top1_S2_topology" using hSC_open .
+            have "U \<in> top1_S2_topology" using hU(1) .
+            show ?thesis using hTopS2 \<open>top1_S2 - C \<in> top1_S2_topology\<close> \<open>U \<in> top1_S2_topology\<close>
+              unfolding is_topology_on_def sorry
+          qed
           thus ?thesis using hU(2) by (by100 simp)
         qed
         \<comment> \<open>Step 6: cl\_S2(W\_q) misses p. Because p \<in> (S2-C)-W\_q which is open in S2.\<close>
@@ -5657,9 +5680,27 @@ proof -
           \<comment> \<open>p is in an open set disjoint from W\_q.\<close>
           have "p \<in> (top1_S2 - C) - W_q" using assms(3) hp_not_Wq by (by100 blast)
           have "(top1_S2 - C) - W_q \<in> top1_S2_topology" using hSC_Wq_compl_open_S2 .
-          have "((top1_S2 - C) - W_q) \<inter> W_q = {}" by (by100 blast)
-          \<comment> \<open>Point in open set disjoint from W\_q \<Rightarrow> not in cl(W\_q).\<close>
-          show ?thesis sorry
+          have "W_q \<subseteq> top1_S2 - ((top1_S2 - C) - W_q)"
+          proof (intro subsetI)
+            fix x assume "x \<in> W_q"
+            hence "x \<in> top1_S2" using hWq_sub by (by100 blast)
+            show "x \<in> top1_S2 - ((top1_S2 - C) - W_q)" using \<open>x \<in> W_q\<close> \<open>x \<in> top1_S2\<close>
+              by (by100 blast)
+          qed
+          have "closedin_on top1_S2 top1_S2_topology (top1_S2 - ((top1_S2 - C) - W_q))"
+          proof -
+            have "top1_S2 - (top1_S2 - ((top1_S2 - C) - W_q)) = (top1_S2 - C) - W_q"
+              using hWq_sub hC_sub_S2 by (by100 blast)
+            thus ?thesis using \<open>(top1_S2 - C) - W_q \<in> top1_S2_topology\<close>
+              unfolding closedin_on_def by (by100 simp)
+          qed
+          have "p \<notin> top1_S2 - ((top1_S2 - C) - W_q)"
+            using \<open>p \<in> (top1_S2 - C) - W_q\<close> by (by100 blast)
+          show ?thesis unfolding closure_on_def
+            using \<open>closedin_on top1_S2 top1_S2_topology (top1_S2 - ((top1_S2 - C) - W_q))\<close>
+                  \<open>W_q \<subseteq> top1_S2 - ((top1_S2 - C) - W_q)\<close>
+                  \<open>p \<notin> top1_S2 - ((top1_S2 - C) - W_q)\<close>
+            by (by100 blast)
         qed
         \<comment> \<open>Step 7: cl\_S2(W\_q) \<subseteq> S2-{p}. Compact (closed in compact S2). h\_sel continuous
            on S2-{p}. Image compact hence bounded.\<close>
