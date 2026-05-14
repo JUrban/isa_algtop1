@@ -4598,7 +4598,93 @@ proof -
       case True
       \<comment> \<open>b in same component as a. Use connected\_open\_delete\_S2: component minus b still connected.
          Then open + connected in S2 (LPC) \<Rightarrow> path-connected.\<close>
-      show ?thesis sorry \<comment> \<open>connected\_open\_delete\_S2 + LPC.\<close>
+      \<comment> \<open>b in same component as a. Path-component W is open in S2, connected.
+         W-{b} connected (connected\_open\_delete\_S2). W-{b} open in S2.
+         Open+connected in LPC \<Rightarrow> path-connected.\<close>
+      define W where "W = top1_path_component_of_on (top1_S2 - C)
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) a"
+      have ha_SC: "a \<in> top1_S2 - C" using assms(3) by (by100 blast)
+      have ha'_SC: "a' \<in> top1_S2 - C" using assms(4) by (by100 blast)
+      have hT_SC: "is_topology_on (top1_S2 - C)
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C))"
+        by (rule subspace_topology_is_topology_on[OF hTopS2]) (use hC_sub_S2 in \<open>by100 blast\<close>)
+      have hSC_lpc: "top1_locally_path_connected_on (top1_S2 - C)
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C))"
+        sorry \<comment> \<open>S2-C open in LPC S2.\<close>
+      \<comment> \<open>W is open in S2-C.\<close>
+      have hW_open_SC: "W \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)"
+        unfolding W_def
+        by (rule top1_path_component_of_on_open_if_locally_path_connected[OF hT_SC hSC_lpc ha_SC])
+      \<comment> \<open>W is open in S2 (open in open = open).\<close>
+      have hW_open_S2: "W \<in> top1_S2_topology"
+      proof -
+        from hW_open_SC obtain U where "U \<in> top1_S2_topology" "W = (top1_S2 - C) \<inter> U"
+          unfolding subspace_topology_def by (by100 blast)
+        have "W \<subseteq> top1_S2 - C" unfolding W_def
+          using top1_path_component_of_on_subset[OF hT_SC ha_SC] .
+        hence "W = W" by (by100 blast)
+        have "top1_S2 - C \<in> top1_S2_topology" sorry \<comment> \<open>S2-C open (C compact \<Rightarrow> closed).\<close>
+        show ?thesis using topology_inter2[OF hTopS2 \<open>top1_S2 - C \<in> top1_S2_topology\<close> \<open>U \<in> top1_S2_topology\<close>]
+          \<open>W = (top1_S2 - C) \<inter> U\<close> by (by100 simp)
+      qed
+      have hb_W: "b \<in> W" using True W_def by (by100 simp)
+      have ha_W: "a \<in> W" unfolding W_def
+        using top1_path_component_of_on_self_mem[OF hT_SC ha_SC] .
+      have ha'_W: "a' \<in> W"
+      proof -
+        from assms(6) have "top1_in_same_path_component_on (top1_S2 - C)
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) a a'" .
+        thus ?thesis unfolding W_def top1_path_component_of_on_def by (by100 blast)
+      qed
+      \<comment> \<open>W connected (path-connected implies connected).\<close>
+      have hW_pc: "top1_path_connected_on W (subspace_topology (top1_S2 - C)
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) W)"
+        unfolding W_def by (rule top1_path_component_of_on_path_connected[OF hT_SC ha_SC])
+      have hW_conn: "top1_connected_on W (subspace_topology top1_S2 top1_S2_topology W)"
+      proof -
+        have "top1_connected_on W (subspace_topology (top1_S2 - C)
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) W)"
+          using hW_pc by (rule path_connected_imp_connected)
+        moreover have "subspace_topology (top1_S2 - C)
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) W =
+            subspace_topology top1_S2 top1_S2_topology W"
+          by (rule subspace_topology_trans) (use W_def top1_path_component_of_on_subset[OF hT_SC ha_SC]
+              in \<open>by100 blast\<close>)
+        ultimately show ?thesis by (by100 simp)
+      qed
+      \<comment> \<open>\<exists>c \<in> S2. c \<notin> W (C is nonempty and C \<inter> W = {}).\<close>
+      have "\<exists>c. c \<in> top1_S2 \<and> c \<notin> W"
+      proof -
+        have "c0 \<in> top1_S2" using assms(9) hC_sub_S2 by (by100 blast)
+        have "c0 \<notin> W" unfolding W_def
+        proof
+          assume "c0 \<in> top1_path_component_of_on (top1_S2 - C)
+              (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) a"
+          hence "c0 \<in> top1_S2 - C" using top1_path_component_of_on_subset[OF hT_SC ha_SC]
+            by (by100 blast)
+          thus False using assms(9) by (by100 blast)
+        qed
+        thus ?thesis using \<open>c0 \<in> top1_S2\<close> by (by100 blast)
+      qed
+      \<comment> \<open>W - {b} connected (connected\_open\_delete\_S2).\<close>
+      have "connected (W - {b})"
+      proof -
+        from \<open>\<exists>c. c \<in> top1_S2 \<and> c \<notin> W\<close> obtain c where "c \<in> top1_S2" "c \<notin> W" by (by100 blast)
+        show ?thesis
+          by (rule connected_open_delete_S2[OF hW_open_S2 hW_conn hb_W])
+             (use \<open>c \<in> top1_S2\<close> \<open>c \<notin> W\<close> in \<open>by100 blast\<close>)
+      qed
+      \<comment> \<open>W-{b} is open in S2 (open minus point in Hausdorff is... actually W-{b} might not be open).
+         But W-{b} IS path-connected because W is LPC and W-{b} is connected.\<close>
+      \<comment> \<open>Actually: connected + LPC \<Rightarrow> path-connected. W-{b} \<subseteq> W which is open in S2 (LPC).
+         W-{b} is open in W (since {b} is closed in W). W is LPC (open in LPC space).
+         So W-{b} is open in W, and connected \<Rightarrow> each connected component of W-{b} is open in W.
+         Since W-{b} is connected, it has one component, hence is path-connected.\<close>
+      \<comment> \<open>For the path-connected conclusion: use connected + locally path-connected.\<close>
+      have "\<exists>g. top1_is_path_on (top1_S2 - C - {b})
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C - {b})) a a' g"
+        sorry \<comment> \<open>W-{b} connected, LPC \<Rightarrow> path-connected. a, a' \<in> W-{b} \<subseteq> S2-C-{b}.\<close>
+      thus ?thesis .
     qed
     then obtain g_path where hgp:
         "top1_is_path_on (top1_S2 - C - {b})
