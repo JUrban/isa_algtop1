@@ -5773,7 +5773,17 @@ proof -
     \<comment> \<open>U' path-connected: continuous image of path-connected U\_s.\<close>
     have hU'_pc: "top1_path_connected_on U'
         (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) U')"
-      sorry \<comment> \<open>tr continuous homeomorphism, preserves path-connectivity.\<close>
+    proof -
+      \<comment> \<open>For any x, y \<in> U', find path via preimage in U\_s.\<close>
+      have hU'_sub: "U' \<subseteq> (UNIV :: (real \<times> real) set)" by (by100 blast)
+      have hT_U': "is_topology_on U'
+          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) U')"
+        by (rule subspace_topology_is_topology_on[OF hR2_top hU'_sub])
+      have "\<forall>x \<in> U'. \<forall>y \<in> U'. \<exists>f. top1_is_path_on U'
+          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) U') x y f"
+        sorry \<comment> \<open>tr \<circ> (path in U\_s from inv\_tr(x) to inv\_tr(y)) is path in U'.\<close>
+      thus ?thesis unfolding top1_path_connected_on_def using hT_U' by (by100 blast)
+    qed
     \<comment> \<open>Apply Munkres\_xaxis\_segment.\<close>
     from Munkres_xaxis_segment[OF hD'_scc hU'_ne hV'_ne hUV'_disj hUV'_union
         hU'_pc hU'_bdd hV'_unbdd hU'_open hV'_open h0_U']
