@@ -5703,8 +5703,14 @@ proof -
         by (rule inv_into_into) (use ha1_img in \<open>by100 blast\<close>)
       have "h_sel a1_pre = inv_tr a1'"
         unfolding a1_pre_def by (rule f_inv_into_f) (use ha1_img hh_img in \<open>by100 blast\<close>)
-      hence "h_sel a1_pre \<in> h_sel ` C" using ha1_hC by (by100 simp)
-      thus ?thesis using inj_onD[OF hh_inj] \<open>a1_pre \<in> top1_S2 - {p}\<close> hC_sub_S2p sorry
+      hence hh_a1_C: "h_sel a1_pre \<in> h_sel ` C" using ha1_hC by (by100 simp)
+      from ha1_hC[unfolded image_def] obtain c where hc: "c \<in> C" "h_sel c = inv_tr a1'"
+        by (by100 auto)
+      have "h_sel c = h_sel a1_pre" using hc(2) \<open>h_sel a1_pre = inv_tr a1'\<close> by (by100 simp)
+      have "c \<in> top1_S2 - {p}" using \<open>c \<in> C\<close> hC_sub_S2p by (by100 blast)
+      have "c = a1_pre" by (rule inj_onD[OF hh_inj \<open>h_sel c = h_sel a1_pre\<close>
+          \<open>c \<in> top1_S2 - {p}\<close> \<open>a1_pre \<in> top1_S2 - {p}\<close>])
+      thus ?thesis using \<open>c \<in> C\<close> by (by100 simp)
     qed
     have ha3_C: "a3_pre \<in> C"
     proof -
@@ -5712,8 +5718,14 @@ proof -
         by (rule inv_into_into) (use ha3_img in \<open>by100 blast\<close>)
       have "h_sel a3_pre = inv_tr a3'"
         unfolding a3_pre_def by (rule f_inv_into_f) (use ha3_img hh_img in \<open>by100 blast\<close>)
-      hence "h_sel a3_pre \<in> h_sel ` C" using ha3_hC by (by100 simp)
-      thus ?thesis using inj_onD[OF hh_inj] \<open>a3_pre \<in> top1_S2 - {p}\<close> hC_sub_S2p sorry
+      hence hh_a3_C: "h_sel a3_pre \<in> h_sel ` C" using ha3_hC by (by100 simp)
+      from ha3_hC[unfolded image_def] obtain c where hc: "c \<in> C" "h_sel c = inv_tr a3'"
+        by (by100 auto)
+      have "h_sel c = h_sel a3_pre" using hc(2) \<open>h_sel a3_pre = inv_tr a3'\<close> by (by100 simp)
+      have "c \<in> top1_S2 - {p}" using \<open>c \<in> C\<close> hC_sub_S2p by (by100 blast)
+      have "c = a3_pre" by (rule inj_onD[OF hh_inj \<open>h_sel c = h_sel a3_pre\<close>
+          \<open>c \<in> top1_S2 - {p}\<close> \<open>a3_pre \<in> top1_S2 - {p}\<close>])
+      thus ?thesis using \<open>c \<in> C\<close> by (by100 simp)
     qed
     have ha1_S2p: "a1_pre \<in> top1_S2 - {p}" using ha1_C hC_sub_S2p by (by100 blast)
     have ha3_S2p: "a3_pre \<in> top1_S2 - {p}" using ha3_C hC_sub_S2p by (by100 blast)
@@ -5840,7 +5852,7 @@ proof -
     qed
     have hq_in_Us_final: "h_sel q \<in> U_s" using hq_in_Us .
     \<comment> \<open>Combine into the obtain conclusion.\<close>
-    have "W_seg \<inter> h_sel ` C = {}" sorry
+    have hUs_disj_C: "U_s \<inter> h_sel ` C = {}" using hUVs(4) by (by100 blast)
     show ?thesis sorry
   qed
   \<comment> \<open>Step 1: Decompose C into two arcs C1, C2 at the x-axis-derived a1, a3.\<close>
