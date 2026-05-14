@@ -5256,10 +5256,30 @@ proof -
          But S2-{a'}-{b} is a DIFFERENT space.
 
        Both require the homotopy argument (F connects the two spaces).\<close>
+    \<comment> \<open>Use Theorem\_58\_7\_fixed: if id: C \<rightarrow> S2-{a'}-{b} is a homotopy equivalence,
+       then group\_iso\_on (hence bij\_betw) follows.\<close>
     have hk_bij: "bij_betw ?k_star
         (top1_fundamental_group_carrier C ?TC c0)
         (top1_fundamental_group_carrier (top1_S2 - {a'} - {b}) ?TX' c0)"
-      sorry
+    proof -
+      \<comment> \<open>Show C \<subseteq> S2-{a'}-{b} is a homotopy equivalence (id, r).\<close>
+      have hheq: "top1_homotopy_equivalence_on C ?TC (top1_S2 - {a'} - {b}) ?TX' id r"
+        for r sorry \<comment> \<open>C is deformation retract of S2-{a'}-{b}. Transfers from S1 \<subseteq> R2-{0} via h.\<close>
+      from Theorem_58_7_fixed[OF hTC hTX' hheq assms(9)]
+      have "top1_group_iso_on
+          (top1_fundamental_group_carrier C ?TC c0)
+          (top1_fundamental_group_mul C ?TC c0)
+          (top1_fundamental_group_carrier (top1_S2 - {a'} - {b}) ?TX' (id c0))
+          (top1_fundamental_group_mul (top1_S2 - {a'} - {b}) ?TX' (id c0))
+          (top1_fundamental_group_induced_on C ?TC c0 (top1_S2 - {a'} - {b}) ?TX' (id c0) id)" .
+      hence "top1_group_iso_on
+          (top1_fundamental_group_carrier C ?TC c0)
+          (top1_fundamental_group_mul C ?TC c0)
+          (top1_fundamental_group_carrier (top1_S2 - {a'} - {b}) ?TX' c0)
+          (top1_fundamental_group_mul (top1_S2 - {a'} - {b}) ?TX' c0)
+          ?k_star" by (by100 simp)
+      thus ?thesis unfolding top1_group_iso_on_def by (by100 blast)
+    qed
     show ?thesis unfolding top1_group_iso_on_def using hk_hom hk_bij by (by100 blast)
   qed
 qed
