@@ -4469,6 +4469,78 @@ proof -
 
      The homotopy argument gives this: j and f\<circ>k are homotopic \<Rightarrow> same induced map
      (up to basepoint change) \<Rightarrow> both or neither are iso.\<close>
+  \<comment> \<open>Step A: Setup.\<close>
+  have hTopS2: "is_topology_on top1_S2 top1_S2_topology"
+    using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
+  have hC_sub_S2: "C \<subseteq> top1_S2" using assms(2) by (rule simple_closed_curve_subset)
+  have hb_notC: "b \<notin> C" using assms(5) by (by100 blast)
+  have hC_sub_S2b: "C \<subseteq> top1_S2 - {b}" using hC_sub_S2 hb_notC by (by100 blast)
+  have ha_S2b: "a \<in> top1_S2 - {b}" using assms(3,7) by (by100 blast)
+  have ha'_S2b: "a' \<in> top1_S2 - {b}" using assms(4,8) by (by100 blast)
+  have hc0_S2b: "c0 \<in> top1_S2 - {b}" using assms(9) hC_sub_S2b by (by100 blast)
+  \<comment> \<open>Step B: Transfer to R2. Let D = h(C), r = h(a), r' = h(a'), d0 = h(c0).\<close>
+  define D where "D = h ` C"
+  define r where "r = h a" define r' where "r' = h a'"
+  define d0 where "d0 = h c0"
+  \<comment> \<open>Key properties in R2.\<close>
+  have hd0_D: "d0 \<in> D" unfolding d0_def D_def using assms(9) by (by100 blast)
+  have hh_inj: "inj_on h (top1_S2 - {b})"
+    using hh unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+  have hr_notD: "r \<notin> D"
+  proof
+    assume "r \<in> D"
+    then obtain c where "c \<in> C" "h c = r" unfolding D_def by (by100 blast)
+    have "c \<in> top1_S2 - {b}" using \<open>c \<in> C\<close> hC_sub_S2b by (by100 blast)
+    have "h c = h a" using \<open>h c = r\<close> unfolding r_def by (by100 simp)
+    have "c = a" by (rule inj_onD[OF hh_inj \<open>h c = h a\<close> \<open>c \<in> top1_S2 - {b}\<close> ha_S2b])
+    thus False using \<open>c \<in> C\<close> assms(3) by (by100 blast)
+  qed
+  have hr'_notD: "r' \<notin> D"
+  proof
+    assume "r' \<in> D"
+    then obtain c where "c \<in> C" "h c = r'" unfolding D_def by (by100 blast)
+    have "c \<in> top1_S2 - {b}" using \<open>c \<in> C\<close> hC_sub_S2b by (by100 blast)
+    have "h c = h a'" using \<open>h c = r'\<close> unfolding r'_def by (by100 simp)
+    have "c = a'" by (rule inj_onD[OF hh_inj \<open>h c = h a'\<close> \<open>c \<in> top1_S2 - {b}\<close> ha'_S2b])
+    thus False using \<open>c \<in> C\<close> assms(4) by (by100 blast)
+  qed
+  \<comment> \<open>Step C: Path from r to r' in R2-D (from a, a' in same path-component of S2-C,
+     transferred via h).\<close>
+  have "\<exists>\<alpha>. top1_is_path_on (UNIV - D) (subspace_topology UNIV
+      (product_topology_on top1_open_sets top1_open_sets) (UNIV - D)) r r' \<alpha>"
+    sorry \<comment> \<open>Transfer path in S2-C via h.\<close>
+  then obtain \<alpha> where h\<alpha>: "top1_is_path_on (UNIV - D) (subspace_topology UNIV
+      (product_topology_on top1_open_sets top1_open_sets) (UNIV - D)) r r' \<alpha>" by (by100 blast)
+  \<comment> \<open>Step D: Homotopy F(x,t) = x - \<alpha>(t) + r: D \<times> I \<rightarrow> R2-{r}.
+     F(x,0) = x - r + r = x = j(x).
+     F(x,1) = x - r' + r = f(x) where f(x) = x - r' + r.
+     F well-defined: x \<in> D, \<alpha>(t) \<notin> D, so x \<noteq> \<alpha>(t), hence x - \<alpha>(t) + r \<noteq> r.\<close>
+  define F where "F \<equiv> \<lambda>(x :: real \<times> real, t :: real).
+    (fst x - fst (\<alpha> t) + fst r, snd x - snd (\<alpha> t) + snd r)"
+  \<comment> \<open>Step E: F is continuous D\<times>I \<rightarrow> R2-{r}.\<close>
+  have hF_cont: "top1_continuous_map_on (D \<times> I_set)
+      (product_topology_on (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) D) I_top)
+      (UNIV - {r}) (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {r})) F"
+    sorry \<comment> \<open>F continuous (subtract continuous path from identity).\<close>
+  \<comment> \<open>Step F: F(x,0) = x, F(x,1) = x - r' + r.\<close>
+  have h\<alpha>0: "\<alpha> 0 = r" using h\<alpha> unfolding top1_is_path_on_def by (by100 blast)
+  have h\<alpha>1: "\<alpha> 1 = r'" using h\<alpha> unfolding top1_is_path_on_def by (by100 blast)
+  have hF0: "\<forall>x \<in> D. F (x, 0) = x"
+  proof (intro ballI)
+    fix x assume "x \<in> D"
+    show "F (x, 0) = x" unfolding F_def using h\<alpha>0 by (cases x) (by100 simp)
+  qed
+  have hF1: "\<forall>x \<in> D. F (x, 1) = (fst x - fst r' + fst r, snd x - snd r' + snd r)"
+  proof (intro ballI)
+    fix x assume "x \<in> D"
+    show "F (x, 1) = (fst x - fst r' + fst r, snd x - snd r' + snd r)"
+      unfolding F_def using h\<alpha>1 by (cases x) (by100 simp)
+  qed
+  \<comment> \<open>Step G: Apply homotopy theory. j and f\<circ>k are homotopic via F.
+     By homotopy\_induced\_basepoint\_change, the induced maps on \<pi>\_1 are related
+     by conjugation with the basepoint path. Since j* is an iso, so is (f\<circ>k)*.
+     Since f is a homeomorphism, k* is also an iso.\<close>
+  \<comment> \<open>Step H: Transfer back to S2.\<close>
   show ?thesis sorry
 qed
 
