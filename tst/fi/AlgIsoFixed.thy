@@ -4558,15 +4558,41 @@ proof -
           top1_continuous_map_on_def by (by100 blast)
       have "\<forall>t \<in> I_set. f_p t \<in> top1_path_component_of_on (top1_S2 - C)
           (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) a"
-        using top1_is_path_on_point_in_path_component[OF hT_SC
-            \<open>top1_is_path_on _ _ a a' f_p\<close>] sorry
+      proof (intro ballI)
+        fix t assume "t \<in> I_set"
+        from top1_is_path_on_point_in_path_component[OF hT_SC
+            \<open>top1_is_path_on _ _ a a' f_p\<close> this]
+        show "f_p t \<in> top1_path_component_of_on (top1_S2 - C)
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) a"
+          unfolding top1_path_component_of_on_def by (by100 blast)
+      qed
       hence "\<forall>t \<in> I_set. f_p t \<noteq> b" using False by (by100 blast)
       hence "\<forall>t \<in> I_set. f_p t \<in> top1_S2 - C - {b}"
         using \<open>\<forall>t \<in> I_set. f_p t \<in> top1_S2 - C\<close> by (by100 blast)
       \<comment> \<open>f\_p is a path in S2-C-{b}.\<close>
       have "top1_is_path_on (top1_S2 - C - {b})
           (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C - {b})) a a' f_p"
-        sorry \<comment> \<open>Restrict codomain of path from S2-C to S2-C-{b}.\<close>
+      proof -
+        have hfp_cont_SC: "top1_continuous_map_on I_set I_top (top1_S2 - C)
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) f_p"
+          using \<open>top1_is_path_on _ _ a a' f_p\<close> unfolding top1_is_path_on_def by (by100 blast)
+        have hfp_into: "\<forall>t \<in> I_set. f_p t \<in> top1_S2 - C - {b}"
+          using \<open>\<forall>t \<in> I_set. f_p t \<in> top1_S2 - C - {b}\<close> .
+        have hSCb_sub: "top1_S2 - C - {b} \<subseteq> top1_S2 - C" by (by100 blast)
+        \<comment> \<open>Restrict codomain from S2-C to S2-C-{b}.\<close>
+        have hfp_cont_SCb: "top1_continuous_map_on I_set I_top (top1_S2 - C - {b})
+            (subspace_topology (top1_S2 - C) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) (top1_S2 - C - {b})) f_p"
+          by (rule continuous_map_restrict_codomain[OF hfp_cont_SC hfp_into hSCb_sub])
+        have "subspace_topology (top1_S2 - C) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) (top1_S2 - C - {b})
+            = subspace_topology top1_S2 top1_S2_topology (top1_S2 - C - {b})"
+          by (rule subspace_topology_trans) (by100 blast)
+        hence "top1_continuous_map_on I_set I_top (top1_S2 - C - {b})
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C - {b})) f_p"
+          using hfp_cont_SCb by (by100 simp)
+        moreover have "f_p 0 = a" "f_p 1 = a'"
+          using \<open>top1_is_path_on _ _ a a' f_p\<close> unfolding top1_is_path_on_def by (by100 blast)+
+        ultimately show ?thesis unfolding top1_is_path_on_def by (by100 blast)
+      qed
       thus ?thesis by (by100 blast)
     next
       case True
