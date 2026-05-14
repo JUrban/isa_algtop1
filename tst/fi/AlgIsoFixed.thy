@@ -5263,8 +5263,8 @@ proof -
         (top1_fundamental_group_carrier (top1_S2 - {a'} - {b}) ?TX' c0)"
     proof -
       \<comment> \<open>Show C \<subseteq> S2-{a'}-{b} is a homotopy equivalence (id, r).\<close>
-      have hheq: "top1_homotopy_equivalence_on C ?TC (top1_S2 - {a'} - {b}) ?TX' id r"
-        for r sorry \<comment> \<open>C is deformation retract of S2-{a'}-{b}. Transfers from S1 \<subseteq> R2-{0} via h.\<close>
+      obtain r_retract where hheq: "top1_homotopy_equivalence_on C ?TC (top1_S2 - {a'} - {b}) ?TX' id r_retract"
+        sorry \<comment> \<open>C is deformation retract of S2-{a'}-{b}. Transfers from S1 \<subseteq> R2-{0} via h.\<close>
       from Theorem_58_7_fixed[OF hTC hTX' hheq assms(9)]
       have "top1_group_iso_on
           (top1_fundamental_group_carrier C ?TC c0)
