@@ -5087,6 +5087,22 @@ proof -
        Since (h\<inverse>\<circ>f\<circ>h)* composed with k* is iso, and (h\<inverse>\<circ>f\<circ>h)* is iso (homeomorphism),
        k* must be iso. This gives the conclusion.\<close>
     \<comment> \<open>This avoids the explicit R2 transfer by working directly on S2.\<close>
+    \<comment> \<open>Formal proof outline: Define the S2 homotopy
+       G(y,t) = h\<inverse>(F(h(y),t)) = h\<inverse>(h(y) - \<alpha>(t) + r)
+       for y \<in> C, t \<in> I. G maps C\<times>I \<rightarrow> S2-{a}-{b} continuously.
+       G(y,0) = h\<inverse>(h(y)) = y = id(y) = inclusion(y).
+       G(y,1) = h\<inverse>(h(y) - r' + r) = (h\<inverse> \<circ> f \<circ> h)(y).
+       Define \<phi> = h\<inverse> \<circ> f \<circ> h: S2-{a'}-{b} \<rightarrow> S2-{a}-{b} (homeomorphism).
+       So G is homotopy from inclusion j to \<phi>\<circ>(inclusion k) on C.
+       By homotopy\_induced\_basepoint\_change:
+         j*([l]) = [\<beta>\<inverse> * (\<phi> \<circ> k)*(l) * \<beta>]
+       where \<beta>(t) = G(c0,t).
+       Since j* is iso (hypothesis), conjugation by [\<beta>] composed with (\<phi>\<circ>k)* is iso.
+       Conjugation is an automorphism, so (\<phi>\<circ>k)* is iso.
+       (\<phi>\<circ>k)* = \<phi>* \<circ> k* (functoriality).
+       \<phi>* is iso (homeomorphism). So k* = (\<phi>*)\<inverse> \<circ> (\<phi>\<circ>k)* is iso.
+       k* = top1\_fundamental\_group\_induced\_on C TC c0 (S2-{a'}-{b}) ... c0 id.
+       QED.\<close>
     show ?thesis sorry
   qed
 qed
