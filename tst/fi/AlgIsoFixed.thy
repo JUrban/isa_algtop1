@@ -5152,6 +5152,20 @@ proof -
        conj_\<beta> \<circ> (\<phi>\<circ>k)* = j* (from homotopy\_induced\_basepoint\_change).
        j* iso, conj_\<beta> iso \<Rightarrow> (\<phi>\<circ>k)* iso.
        \<phi>* iso (at basepoint c0 \<rightarrow> \<phi>(c0)). k* = (\<phi>*)\<inverse> \<circ> (\<phi>\<circ>k)* iso.\<close>
+    \<comment> \<open>We work in R2 via h. The homotopy F connects j (=id on D) to \<phi>|_C
+       (=translation on D), both valued in R2-{r}.
+       Step 1: Apply homotopy\_induced\_basepoint\_change to F on D.
+       Step 2: Conclude that the translation-composed-with-inclusion also induces iso.
+       Step 3: Factor translation = homeomorphism, derive inclusion D \<rightarrow> R2-{r'} iso.
+       Step 4: Transfer back to S2.\<close>
+    \<comment> \<open>The proof uses the key group-theoretic fact:
+       If \<psi>: G \<rightarrow> H is a group isomorphism (bij + hom),
+       and \<psi> = \<phi> \<circ> \<iota> where \<phi>: H' \<rightarrow> H is also a group isomorphism,
+       then \<iota> = \<phi>\<inverse> \<circ> \<psi> is a group isomorphism G \<rightarrow> H'.
+       In our case: G = \<pi>\_1(C), H = \<pi>\_1(S2-{a}-{b}), H' = \<pi>\_1(S2-{a'}-{b}),
+       \<psi> = j* (iso by hypothesis), \<iota> = k* (goal), \<phi> = (\<phi>|...)* (iso by homeomorphism).\<close>
+    \<comment> \<open>However, the basepoint changes make this more complex.
+       The actual proof follows the book's Corollary 58.5 argument.\<close>
     show ?thesis sorry
   qed
 qed
