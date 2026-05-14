@@ -5262,51 +5262,982 @@ proof -
         (top1_fundamental_group_carrier C ?TC c0)
         (top1_fundamental_group_carrier (top1_S2 - {a'} - {b}) ?TX' c0)"
     proof -
-      \<comment> \<open>Show C \<subseteq> S2-{a'}-{b} is a homotopy equivalence (id, r).\<close>
-      \<comment> \<open>Following book Corollary 58.5 EXACTLY.
-         j* = \<beta>\<circumflex> \<circ> (f\<circ>k\<tilde>)*  from homotopy\_induced\_basepoint\_change.
-         j* bij (hypothesis via h). \<beta>\<circumflex> bij (basepoint change). f* bij (homeomorphism).
-         k\<tilde>* = (f*)\<inverse> \<circ> (\<beta>\<circumflex>)\<inverse> \<circ> j* = composition of bijections = bij.\<close>
-      \<comment> \<open>All three groups (\<pi>\_1(C), \<pi>\_1(S2-{a}-{b}), \<pi>\_1(S2-{a'}-{b})) are \<cong> Z.
-         A group homomorphism Z \<rightarrow> Z is bijective iff it sends 1 to \<pm>1.
-         j\_star is bij (sends generator to \<pm>1). k\_star is a hom Z \<rightarrow> Z.
-         The homotopy shows j\_star and (f\<circ>k\_star) are conjugate.
-         Since f* is bij, k\_star is also bij (sends generator to \<pm>1).
-
-         For the formal proof: we use that both source and target are Z,
-         k\_star is a hom, and its image generates the target (from the
-         homotopy + hypothesis iso + homeomorphism factoring).
-
-         Alternatively: use that S2-{a'}-{b} has \<pi>\_1 \<cong> Z and C has \<pi>\_1 \<cong> Z,
-         and k\_star is a non-zero homomorphism (since j\_star is iso and they're
-         related by the homotopy + homeomorphism).
-         A non-zero hom Z \<rightarrow> Z that's also a hom from a group isomorphic to Z
-         to a group isomorphic to Z, where the composed map j* = \<beta>\<circ>f*\<circ>k* is
-         bij, implies k* is bij (injective follows from f*\<circ>k* injective, surjective
-         follows from \<beta>\<circ>f*\<circ>k* surjective + \<beta>,f* bij).\<close>
-      \<comment> \<open>Formal proof: k\_star injective + surjective.\<close>
-      \<comment> \<open>Key equation from homotopy\_induced\_basepoint\_change:
-         For all loops l at c0 in C:
-           j*([l]) = \<beta>\<circumflex>((f\<circ>k)*([l]))
-         where \<beta>\<circumflex> is basepoint change (conjugation), a bijection.
-         Hence: j* = \<beta>\<circumflex> \<circ> (f\<circ>k)*. j* bij, \<beta>\<circumflex> bij \<Rightarrow> (f\<circ>k)* bij.
-         (f\<circ>k)* = f* \<circ> k* (functoriality). f* bij (homeomorphism).
-         \<Rightarrow> k* bij.\<close>
-      \<comment> \<open>This entire chain works in R2 (via h). Transfer back via h\<inverse>.\<close>
-      \<comment> \<open>Use the Z structure: both source and target \<cong> Z. k* is hom Z \<rightarrow> Z.
-         The hypothesis j* is bij (iso Z \<rightarrow> Z). The homotopy + homeomorphism factoring
-         shows k* sends the generator to \<pm>1 (same as j*, up to signs from \<phi> and \<beta>).
-         In Z, any hom sending 1 to \<pm>1 is bijective.\<close>
-      \<comment> \<open>Alternative direct proof: both groups have same cardinality (\<cong> Z \<cong> UNIV::int set).
-         k* is a group homomorphism. From the homotopy argument, k* is not the zero map.
-         A non-zero group homomorphism from Z to Z whose composition with a bijection
-         gives a bijection must itself be a bijection (since Z has no proper non-trivial quotients
-         that are isomorphic to Z).\<close>
+      \<comment> \<open>Following book Corollary 58.5: apply hbc to F in R2, transfer to S2 via h.
+         Key equation: for each loop l in C at c0,
+           l \<simeq> bc(rev\_\<beta>, \<phi>\<circ>l) in S2-{a}-{b}.
+         Then: k* inj from j* inj + \<phi>-transfer; k* surj from j* surj + \<phi>\<inverse>.\<close>
+      \<comment> \<open>Step A: R2 topology infrastructure.\<close>
+      let ?TD = "subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) D"
+      let ?TR = "subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {r})"
+      let ?TX_ab = "subspace_topology top1_S2 top1_S2_topology (top1_S2 - {a} - {b})"
+      have hTR2: "is_topology_on (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets)"
+      proof -
+        have "is_topology_on ((UNIV :: real set) \<times> (UNIV :: real set)) (product_topology_on top1_open_sets top1_open_sets)"
+          by (rule product_topology_on_is_topology_on[OF top1_open_sets_is_topology_on_UNIV top1_open_sets_is_topology_on_UNIV])
+        thus ?thesis by (by100 simp)
+      qed
+      have hTD: "is_topology_on D ?TD"
+        by (rule subspace_topology_is_topology_on[OF hTR2]) (by100 blast)
+      have hTR: "is_topology_on (UNIV - {r} :: (real \<times> real) set) ?TR"
+        by (rule subspace_topology_is_topology_on[OF hTR2]) (by100 blast)
+      have hTX_ab: "is_topology_on (top1_S2 - {a} - {b}) ?TX_ab"
+        by (rule subspace_topology_is_topology_on[OF hTopS2]) (by100 blast)
+      \<comment> \<open>Step B: h and h\<inverse> infrastructure.\<close>
+      have hh_cont_loc: "top1_continuous_map_on (top1_S2 - {b})
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b}))
+          UNIV (product_topology_on top1_open_sets top1_open_sets) h"
+        using hh unfolding top1_homeomorphism_on_def by (by100 blast)
+      have hinv_cont_loc: "top1_continuous_map_on (UNIV :: (real \<times> real) set)
+          (product_topology_on top1_open_sets top1_open_sets)
+          (top1_S2 - {b}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b}))
+          (inv_into (top1_S2 - {b}) h)"
+        using hh unfolding top1_homeomorphism_on_def by (by100 blast)
+      have hh_bij_loc: "bij_betw h (top1_S2 - {b}) (UNIV :: (real \<times> real) set)"
+        using hh unfolding top1_homeomorphism_on_def by (by100 blast)
+      have hinv_h: "\<And>y. y \<in> top1_S2 - {b} \<Longrightarrow> inv_into (top1_S2 - {b}) h (h y) = y"
+        by (rule inv_into_f_f[OF hh_inj])
+      have hh_c0: "h c0 = d0" unfolding d0_def by (by100 simp)
+      have hinv_d0: "inv_into (top1_S2 - {b}) h d0 = c0"
+        using hinv_h[OF hc0_S2b] hh_c0 by (by100 simp)
+      \<comment> \<open>Step C: h\<inverse> restricted to R2-{r} maps into S2-{a}-{b}.\<close>
+      have hinv_into_ab: "\<And>x. x \<in> UNIV - {r} \<Longrightarrow> inv_into (top1_S2 - {b}) h x \<in> top1_S2 - {a} - {b}"
+      proof -
+        fix x :: "real \<times> real" assume hx: "x \<in> UNIV - {r}"
+        have hx_R2: "x \<in> (UNIV :: (real \<times> real) set)" by (by100 blast)
+        have hh_surj_loc: "h ` (top1_S2 - {b}) = (UNIV :: (real \<times> real) set)"
+          using hh_bij_loc unfolding bij_betw_def by (by100 blast)
+        have hinv_x_S2b: "inv_into (top1_S2 - {b}) h x \<in> top1_S2 - {b}"
+        proof -
+          have "x \<in> h ` (top1_S2 - {b})" using hh_surj_loc hx_R2 by (by100 blast)
+          thus ?thesis by (rule inv_into_into)
+        qed
+        have "inv_into (top1_S2 - {b}) h x \<noteq> a"
+        proof
+          assume "inv_into (top1_S2 - {b}) h x = a"
+          hence "h (inv_into (top1_S2 - {b}) h x) = h a" by (by100 simp)
+          hence "x = r" using f_inv_into_f[of x h "top1_S2 - {b}"] hh_surj_loc hx_R2
+            unfolding r_def by (by100 simp)
+          thus False using hx by (by100 blast)
+        qed
+        thus "inv_into (top1_S2 - {b}) h x \<in> top1_S2 - {a} - {b}"
+          using hinv_x_S2b by (by100 blast)
+      qed
+      \<comment> \<open>Step D: h\<inverse> continuous R2-{r} \<rightarrow> S2-{a}-{b}.\<close>
+      have hinv_cont_r: "top1_continuous_map_on (UNIV - {r} :: (real \<times> real) set) ?TR
+          (top1_S2 - {a} - {b}) ?TX_ab (inv_into (top1_S2 - {b}) h)"
+      proof -
+        \<comment> \<open>Step 1: Restrict domain of h\<inverse> from UNIV to UNIV-{r}.\<close>
+        have h1: "top1_continuous_map_on (UNIV - {r} :: (real \<times> real) set) ?TR
+            (top1_S2 - {b}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b}))
+            (inv_into (top1_S2 - {b}) h)"
+          by (rule top1_continuous_map_on_restrict_domain_simple[OF hinv_cont_loc]) (by100 blast)
+        \<comment> \<open>Step 2: Restrict codomain from S2-{b} to S2-{a}-{b}.\<close>
+        have h_into: "\<forall>x \<in> UNIV - {r} :: (real \<times> real) set.
+            inv_into (top1_S2 - {b}) h x \<in> top1_S2 - {a} - {b}"
+          using hinv_into_ab by (by100 blast)
+        have h_sub: "top1_S2 - {a} - {b} \<subseteq> top1_S2 - {b}" by (by100 blast)
+        from continuous_map_restrict_codomain[OF h1 h_into h_sub]
+        have h2: "top1_continuous_map_on (UNIV - {r} :: (real \<times> real) set) ?TR
+            (top1_S2 - {a} - {b})
+            (subspace_topology (top1_S2 - {b}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b}))
+              (top1_S2 - {a} - {b}))
+            (inv_into (top1_S2 - {b}) h)" .
+        \<comment> \<open>Step 3: Bridge subspace topology: subspace of subspace = subspace.\<close>
+        have "subspace_topology (top1_S2 - {b}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b}))
+              (top1_S2 - {a} - {b}) = ?TX_ab"
+          by (rule subspace_topology_trans[OF h_sub])
+        thus ?thesis using h2 by (by100 simp)
+      qed
+      \<comment> \<open>Step E: Apply hbc to F. For each loop lD at d0 in D:
+         loop\_equiv (R2-{r}) d0 lD (bc(rev\_\<gamma>, f\_trans\<circ>lD)).\<close>
+      have hF0_id: "\<forall>x \<in> D. F (x, 0) = id x" using hF0 by (by100 simp)
+      define f_trans where "f_trans \<equiv> \<lambda>x :: real \<times> real. (fst x - fst r' + fst r, snd x - snd r' + snd r)"
+      have hF1_f: "\<forall>x \<in> D. F (x, 1) = f_trans x" using hF1 unfolding f_trans_def by (by100 blast)
+      define \<gamma> where "\<gamma> \<equiv> \<lambda>t. F (d0, t)"
+      have hbc_R2: "\<And>lD. top1_is_loop_on D ?TD d0 lD \<Longrightarrow>
+          top1_loop_equiv_on (UNIV - {r} :: (real \<times> real) set) ?TR d0 lD
+            (top1_basepoint_change_on (UNIV - {r}) ?TR (f_trans d0) d0
+              (top1_path_reverse \<gamma>) (f_trans \<circ> lD))"
+      proof -
+        fix lD assume hlD: "top1_is_loop_on D ?TD d0 lD"
+        note hbc_raw = homotopy_induced_basepoint_change[OF hTD hTR hF_cont hF0_id hF1_f hlD hd0_D]
+        have "id \<circ> lD = lD" by (by100 simp)
+        have "id d0 = d0" by (by100 simp)
+        have "(\<lambda>t. F (d0, t)) = \<gamma>" unfolding \<gamma>_def by (by100 simp)
+        show "top1_loop_equiv_on (UNIV - {r} :: (real \<times> real) set) ?TR d0 lD
+            (top1_basepoint_change_on (UNIV - {r}) ?TR (f_trans d0) d0
+              (top1_path_reverse \<gamma>) (f_trans \<circ> lD))"
+          using hbc_raw unfolding \<open>id \<circ> lD = lD\<close> \<open>id d0 = d0\<close> \<open>(\<lambda>t. F (d0, t)) = \<gamma>\<close> by (by100 simp)
+      qed
+      \<comment> \<open>Step F: Transfer to S2. Define \<beta> = h\<inverse>\<circ>\<gamma>. Key equation on S2:
+         For each loop l in C: l \<simeq> bc(rev\_\<beta>, \<phi>\<circ>l) in S2-{a}-{b}.\<close>
+      define \<beta> where "\<beta> \<equiv> \<lambda>t. inv_into (top1_S2 - {b}) h (\<gamma> t)"
+      \<comment> \<open>\<phi>\<circ>l = h\<inverse>\<circ>f\_trans\<circ>h\<circ>l and \<beta> = h\<inverse>\<circ>\<gamma>. Also h\<inverse> distributes over bc.\<close>
+      have hphi_eq: "\<And>y. y \<in> top1_S2 - {b} \<Longrightarrow>
+          \<phi> y = inv_into (top1_S2 - {b}) h (f_trans (h y))"
+        unfolding \<phi>_def f_trans_def by (by100 simp)
+      \<comment> \<open>h restricted to C \<rightarrow> D is continuous.\<close>
+      have hh_C_cont: "top1_continuous_map_on C ?TC D ?TD h"
+      proof -
+        have hC_sub_S2b: "C \<subseteq> top1_S2 - {b}" using hC_sub_S2 assms(5) by (by100 blast)
+        from top1_continuous_map_on_restrict_domain_simple[OF hh_cont_loc hC_sub_S2b]
+        have h1: "top1_continuous_map_on C
+            (subspace_topology (top1_S2 - {b}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b})) C)
+            (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets) h" .
+        have hTC_eq_loc: "subspace_topology (top1_S2 - {b})
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b})) C = ?TC"
+          by (rule subspace_topology_trans[OF hC_sub_S2b])
+        hence h1': "top1_continuous_map_on C ?TC (UNIV :: (real \<times> real) set)
+            (product_topology_on top1_open_sets top1_open_sets) h"
+          using h1 by (by100 simp)
+        have h_into: "\<forall>y \<in> C. h y \<in> D" unfolding D_def by (by100 blast)
+        have hD_sub: "D \<subseteq> (UNIV :: (real \<times> real) set)" by (by100 blast)
+        from continuous_map_restrict_codomain[OF h1' h_into hD_sub]
+        show ?thesis .
+      qed
+      have hbc_key: "\<And>l. top1_is_loop_on C ?TC c0 l \<Longrightarrow>
+          top1_loop_equiv_on (top1_S2 - {a} - {b}) ?TX_ab c0 l
+            (top1_basepoint_change_on (top1_S2 - {a} - {b}) ?TX_ab (\<phi> c0) c0
+              (top1_path_reverse \<beta>) (\<phi> \<circ> l))"
+      proof -
+        fix l assume hl: "top1_is_loop_on C ?TC c0 l"
+        \<comment> \<open>Step 1: h\<circ>l is a loop at d0 in D.\<close>
+        have hhl_loop: "top1_is_loop_on D ?TD (h c0) (h \<circ> l)"
+          by (rule top1_continuous_map_loop[OF hh_C_cont hl])
+        have hhl_loop': "top1_is_loop_on D ?TD d0 (h \<circ> l)"
+          using hhl_loop hh_c0 by (by100 simp)
+        \<comment> \<open>Step 2: R2 hbc gives: h\<circ>l \<simeq> bc(rev\_\<gamma>, f\_trans\<circ>(h\<circ>l)) in R2-{r}.\<close>
+        note hbc_hl = hbc_R2[OF hhl_loop']
+        \<comment> \<open>Step 3: Apply h\<inverse> to both sides.\<close>
+        \<comment> \<open>Need: both sides are loops in R2-{r}, and h\<inverse> continuous R2-{r} \<rightarrow> S2-{a}-{b}.\<close>
+        have hhl_R2_loop: "top1_is_loop_on (UNIV - {r} :: (real \<times> real) set) ?TR d0 (h \<circ> l)"
+          using hbc_hl unfolding top1_loop_equiv_on_def by (by100 blast)
+        have hbc_hl_loop: "top1_is_loop_on (UNIV - {r} :: (real \<times> real) set) ?TR d0
+            (top1_basepoint_change_on (UNIV - {r}) ?TR (f_trans d0) d0
+              (top1_path_reverse \<gamma>) (f_trans \<circ> (h \<circ> l)))"
+          using hbc_hl unfolding top1_loop_equiv_on_def by (by100 blast)
+        \<comment> \<open>Apply top1\_induced\_preserves\_loop\_equiv with h\<inverse>.\<close>
+        have hinv_hl: "top1_loop_equiv_on (top1_S2 - {a} - {b}) ?TX_ab
+            (inv_into (top1_S2 - {b}) h d0)
+            (inv_into (top1_S2 - {b}) h \<circ> (h \<circ> l))
+            (inv_into (top1_S2 - {b}) h \<circ>
+              (top1_basepoint_change_on (UNIV - {r}) ?TR (f_trans d0) d0
+                (top1_path_reverse \<gamma>) (f_trans \<circ> (h \<circ> l))))"
+          by (rule top1_induced_preserves_loop_equiv[OF hTR hinv_cont_r hhl_R2_loop hbc_hl_loop hbc_hl])
+        \<comment> \<open>Step 4: Simplify h\<inverse>(d0) = c0.\<close>
+        have hinv_hl': "top1_loop_equiv_on (top1_S2 - {a} - {b}) ?TX_ab c0
+            (inv_into (top1_S2 - {b}) h \<circ> (h \<circ> l))
+            (inv_into (top1_S2 - {b}) h \<circ>
+              (top1_basepoint_change_on (UNIV - {r}) ?TR (f_trans d0) d0
+                (top1_path_reverse \<gamma>) (f_trans \<circ> (h \<circ> l))))"
+          using hinv_hl hinv_d0 by (by100 simp)
+        \<comment> \<open>Step 5: h\<inverse>\<circ>h\<circ>l agrees with l on I\_set.\<close>
+        have hinv_h_l_agree: "\<forall>s \<in> I_set. (inv_into (top1_S2 - {b}) h \<circ> (h \<circ> l)) s = l s"
+        proof (intro ballI)
+          fix s assume "s \<in> I_set"
+          have "l s \<in> C" using hl \<open>s \<in> I_set\<close>
+            unfolding top1_is_loop_on_def top1_is_path_on_def top1_continuous_map_on_def
+            by (by100 blast)
+          hence "l s \<in> top1_S2 - {b}" using hC_sub_S2 assms(5) by (by100 blast)
+          thus "(inv_into (top1_S2 - {b}) h \<circ> (h \<circ> l)) s = l s"
+            using hinv_h by (by100 simp)
+        qed
+        \<comment> \<open>By loop\_agree\_on\_I: since l is a loop in S2-{a}-{b} and the compositions agree on I,
+           they are loop\_equiv. Use the S2-{a}-{b} version (need hl as loop in S2-{a}-{b}).\<close>
+        have hl_ab_in_hbc: "top1_is_loop_on (top1_S2 - {a} - {b}) ?TX_ab c0
+            (inv_into (top1_S2 - {b}) h \<circ> (h \<circ> l))"
+          using hinv_hl' unfolding top1_loop_equiv_on_def by (by100 blast)
+        \<comment> \<open>Step 6: h\<inverse> distributes over bc (basepoint\_change = path\_product(rev, path\_product(loop, path))).
+           h\<inverse>\<circ>bc(Y,TY,y1,y0,\<alpha>,m) = bc(X,TX,h\<inverse>(y1),h\<inverse>(y0),h\<inverse>\<circ>\<alpha>,h\<inverse>\<circ>m).\<close>
+        have hinv_bc: "inv_into (top1_S2 - {b}) h \<circ>
+            (top1_basepoint_change_on (UNIV - {r}) ?TR (f_trans d0) d0
+              (top1_path_reverse \<gamma>) (f_trans \<circ> (h \<circ> l)))
+            = top1_basepoint_change_on (top1_S2 - {a} - {b}) ?TX_ab
+                (inv_into (top1_S2 - {b}) h (f_trans d0))
+                (inv_into (top1_S2 - {b}) h d0)
+                (inv_into (top1_S2 - {b}) h \<circ> (top1_path_reverse \<gamma>))
+                (inv_into (top1_S2 - {b}) h \<circ> (f_trans \<circ> (h \<circ> l)))"
+          unfolding top1_basepoint_change_on_def top1_path_product_def top1_path_reverse_def comp_def
+          by (rule ext) (by100 simp)
+        \<comment> \<open>Step 7: Simplify the components.\<close>
+        \<comment> \<open>h\<inverse>(f\_trans d0) = \<phi>(c0): from hphi\_eq.\<close>
+        \<comment> \<open>h\<inverse>(d0) = c0.\<close>
+        \<comment> \<open>h\<inverse>\<circ>rev\_\<gamma> = rev(h\<inverse>\<circ>\<gamma>) = rev\_\<beta>.\<close>
+        \<comment> \<open>h\<inverse>\<circ>f\_trans\<circ>h\<circ>l = \<phi>\<circ>l.\<close>
+        have hinv_ftd0: "inv_into (top1_S2 - {b}) h (f_trans d0) = \<phi> c0"
+          using hphi_eq[OF hc0_S2b] hh_c0 f_trans_def by (by100 simp)
+        have hinv_rev_gamma: "inv_into (top1_S2 - {b}) h \<circ> (top1_path_reverse \<gamma>)
+            = top1_path_reverse \<beta>"
+          unfolding top1_path_reverse_def \<beta>_def comp_def by (rule ext) (by100 simp)
+        \<comment> \<open>h\<inverse>\<circ>f\_trans\<circ>h\<circ>l agrees with \<phi>\<circ>l on I\_set.\<close>
+        have hinv_fhl_agree: "\<forall>s \<in> I_set. (inv_into (top1_S2 - {b}) h \<circ> (f_trans \<circ> (h \<circ> l))) s = (\<phi> \<circ> l) s"
+        proof (intro ballI)
+          fix s assume "s \<in> I_set"
+          have "l s \<in> C" using hl \<open>s \<in> I_set\<close>
+            unfolding top1_is_loop_on_def top1_is_path_on_def top1_continuous_map_on_def
+            by (by100 blast)
+          hence "l s \<in> top1_S2 - {b}" using hC_sub_S2 assms(5) by (by100 blast)
+          show "(inv_into (top1_S2 - {b}) h \<circ> (f_trans \<circ> (h \<circ> l))) s = (\<phi> \<circ> l) s"
+            using hphi_eq[OF \<open>l s \<in> top1_S2 - {b}\<close>] f_trans_def by (by100 simp)
+        qed
+        \<comment> \<open>bc with functions agreeing on I\_set gives same bc on I\_set.
+           Hence: bc(rev\_\<beta>, h\<inverse>\<circ>f\_trans\<circ>h\<circ>l) is loop\_equiv to bc(rev\_\<beta>, \<phi>\<circ>l).\<close>
+        have hinv_fhl: "inv_into (top1_S2 - {b}) h \<circ> (f_trans \<circ> (h \<circ> l)) = \<phi> \<circ> l"
+          unfolding \<phi>_def f_trans_def comp_def by (rule ext) (by100 simp)
+        \<comment> \<open>From loop\_agree\_on\_I: l \<simeq> h\<inverse>\<circ>h\<circ>l in S2-{a}-{b}.\<close>
+        have hl_ab_loop_for_agree: "top1_is_loop_on (top1_S2 - {a} - {b}) ?TX_ab c0 l"
+        proof -
+          have hC_sub_ab_loc: "C \<subseteq> top1_S2 - {a} - {b}" using hC_sub_S2 assms(3,5) by (by100 blast)
+          have hid_ab_raw: "top1_continuous_map_on (top1_S2 - {a} - {b}) ?TX_ab (top1_S2 - {a} - {b}) ?TX_ab id"
+            by (rule top1_continuous_map_on_id[OF hTX_ab])
+          have "top1_continuous_map_on (top1_S2 - {a} - {b}) ?TX_ab (top1_S2 - {a} - {b}) ?TX_ab (\<lambda>x. x)"
+            using hid_ab_raw unfolding id_def .
+          from top1_continuous_map_on_restrict_domain_simple[OF this hC_sub_ab_loc]
+          have hid_ab_C: "top1_continuous_map_on C
+              (subspace_topology (top1_S2 - {a} - {b}) ?TX_ab C) (top1_S2 - {a} - {b}) ?TX_ab (\<lambda>x. x)" .
+          have "subspace_topology (top1_S2 - {a} - {b}) ?TX_ab C = ?TC"
+            using subspace_topology_trans[of C "top1_S2 - {a} - {b}" top1_S2 top1_S2_topology]
+              hC_sub_ab_loc by (by100 simp)
+          hence "top1_continuous_map_on C ?TC (top1_S2 - {a} - {b}) ?TX_ab (\<lambda>x. x)"
+            using hid_ab_C by (by100 simp)
+          from top1_continuous_map_loop[OF this hl]
+          have "top1_is_loop_on (top1_S2 - {a} - {b}) ?TX_ab ((\<lambda>x. x) c0) ((\<lambda>x. x) \<circ> l)" .
+          moreover have "((\<lambda>x. x) c0 :: real \<times> real \<times> real) = c0" by (by100 simp)
+          moreover have "(\<lambda>x. x) \<circ> l = l" by (rule ext) (by100 simp)
+          ultimately show ?thesis by (by100 simp)
+        qed
+        have hl_equiv_hinvhl: "top1_path_homotopic_on (top1_S2 - {a} - {b}) ?TX_ab c0 c0 l
+            (inv_into (top1_S2 - {b}) h \<circ> (h \<circ> l))"
+          using loop_agree_on_I[OF hl_ab_loop_for_agree hinv_h_l_agree] by (by100 blast)
+        have hl_loop_equiv_hinvhl: "top1_loop_equiv_on (top1_S2 - {a} - {b}) ?TX_ab c0 l
+            (inv_into (top1_S2 - {b}) h \<circ> (h \<circ> l))"
+          unfolding top1_loop_equiv_on_def using hl_ab_loop_for_agree hl_ab_in_hbc hl_equiv_hinvhl
+          by (by100 blast)
+        \<comment> \<open>Combine: l \<simeq> h\<inverse>\<circ>h\<circ>l \<simeq> h\<inverse>\<circ>bc(rev\_\<gamma>, f\_trans\<circ>h\<circ>l).\<close>
+        have hinv_hl'': "top1_loop_equiv_on (top1_S2 - {a} - {b}) ?TX_ab c0 l
+            (inv_into (top1_S2 - {b}) h \<circ>
+              (top1_basepoint_change_on (UNIV - {r}) ?TR (f_trans d0) d0
+                (top1_path_reverse \<gamma>) (f_trans \<circ> (h \<circ> l))))"
+          by (rule top1_loop_equiv_on_trans[OF hTX_ab hl_loop_equiv_hinvhl hinv_hl'])
+        show "top1_loop_equiv_on (top1_S2 - {a} - {b}) ?TX_ab c0 l
+            (top1_basepoint_change_on (top1_S2 - {a} - {b}) ?TX_ab (\<phi> c0) c0
+              (top1_path_reverse \<beta>) (\<phi> \<circ> l))"
+        proof -
+          from hinv_hl''
+          have "top1_loop_equiv_on (top1_S2 - {a} - {b}) ?TX_ab c0 l
+              (top1_basepoint_change_on (top1_S2 - {a} - {b}) ?TX_ab
+                (inv_into (top1_S2 - {b}) h (f_trans d0))
+                (inv_into (top1_S2 - {b}) h d0)
+                (inv_into (top1_S2 - {b}) h \<circ> (top1_path_reverse \<gamma>))
+                (inv_into (top1_S2 - {b}) h \<circ> (f_trans \<circ> (h \<circ> l))))"
+            unfolding hinv_bc .
+          thus ?thesis unfolding hinv_d0 hinv_ftd0 hinv_rev_gamma hinv_fhl .
+        qed
+      qed
+      \<comment> \<open>Step G: \<phi> continuous S2-{a'}-{b} \<rightarrow> S2-{a}-{b}.\<close>
+      have h\<phi>_cont: "top1_continuous_map_on (top1_S2 - {a'} - {b}) ?TX'
+          (top1_S2 - {a} - {b}) ?TX_ab \<phi>"
+      proof -
+        \<comment> \<open>\<phi> = h\<inverse> \<circ> f\_trans \<circ> h. Prove each piece continuous, compose, restrict codomain.\<close>
+        have hX'_sub_S2b: "top1_S2 - {a'} - {b} \<subseteq> top1_S2 - {b}" by (by100 blast)
+        \<comment> \<open>h: S2-{a'}-{b} \<rightarrow> R2.\<close>
+        from top1_continuous_map_on_restrict_domain_simple[OF hh_cont_loc hX'_sub_S2b]
+        have hh_X': "top1_continuous_map_on (top1_S2 - {a'} - {b})
+            (subspace_topology (top1_S2 - {b}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b}))
+              (top1_S2 - {a'} - {b}))
+            (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets) h" .
+        have "subspace_topology (top1_S2 - {b}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b}))
+              (top1_S2 - {a'} - {b}) = ?TX'"
+          by (rule subspace_topology_trans[OF hX'_sub_S2b])
+        hence hh_X'': "top1_continuous_map_on (top1_S2 - {a'} - {b}) ?TX'
+            (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets) h"
+          using hh_X' by (by100 simp)
+        \<comment> \<open>f\_trans: R2 \<rightarrow> R2 continuous (translation).\<close>
+        have hf_R2: "top1_continuous_map_on (UNIV :: (real \<times> real) set)
+            (product_topology_on top1_open_sets top1_open_sets)
+            (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets) f_trans"
+        proof -
+          have "continuous_on (UNIV :: (real \<times> real) set) f_trans"
+            unfolding f_trans_def by (intro continuous_intros)
+          have "\<And>p :: real \<times> real. p \<in> UNIV \<Longrightarrow> f_trans p \<in> (UNIV :: (real \<times> real) set)" by (by100 blast)
+          from top1_continuous_map_on_real2_subspace[OF this \<open>continuous_on UNIV f_trans\<close>]
+          have "top1_continuous_map_on (UNIV :: (real \<times> real) set)
+              (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) UNIV)
+              (UNIV :: (real \<times> real) set)
+              (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) UNIV)
+              f_trans" .
+          moreover have "(subspace_topology (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets) UNIV)
+              = product_topology_on top1_open_sets top1_open_sets"
+            unfolding subspace_topology_def by (by100 force)
+          ultimately show ?thesis by (by100 simp)
+        qed
+        \<comment> \<open>h\<inverse>: R2 \<rightarrow> S2-{b} continuous.\<close>
+        \<comment> \<open>Compose: h\<inverse> \<circ> f\_trans \<circ> h: S2-{a'}-{b} \<rightarrow> S2-{b}.\<close>
+        have hcomp1: "top1_continuous_map_on (top1_S2 - {a'} - {b}) ?TX'
+            (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets) (f_trans \<circ> h)"
+          by (rule top1_continuous_map_on_comp[OF hh_X'' hf_R2])
+        have hcomp2: "top1_continuous_map_on (top1_S2 - {a'} - {b}) ?TX'
+            (top1_S2 - {b}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b}))
+            (inv_into (top1_S2 - {b}) h \<circ> (f_trans \<circ> h))"
+          by (rule top1_continuous_map_on_comp[OF hcomp1 hinv_cont_loc])
+        \<comment> \<open>\<phi> agrees with h\<inverse> \<circ> f\_trans \<circ> h on S2-{a'}-{b} (extensionally).\<close>
+        have h\<phi>_eq: "\<phi> = inv_into (top1_S2 - {b}) h \<circ> (f_trans \<circ> h)"
+          unfolding \<phi>_def f_trans_def comp_def by (rule ext) (by100 simp)
+        hence hcomp2': "top1_continuous_map_on (top1_S2 - {a'} - {b}) ?TX'
+            (top1_S2 - {b}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b})) \<phi>"
+          using hcomp2 by (by100 simp)
+        \<comment> \<open>Restrict codomain to S2-{a}-{b}.\<close>
+        have h\<phi>_into: "\<forall>y \<in> top1_S2 - {a'} - {b}. \<phi> y \<in> top1_S2 - {a} - {b}"
+        proof (intro ballI)
+          fix y assume "y \<in> top1_S2 - {a'} - {b}"
+          hence "y \<in> top1_S2 - {b}" using hX'_sub_S2b by (by100 blast)
+          have "h y \<in> (UNIV :: (real \<times> real) set)"  by (by100 blast)
+          have "f_trans (h y) \<in> (UNIV :: (real \<times> real) set)" by (by100 blast)
+          have "f_trans (h y) \<noteq> r"
+          proof
+            assume "f_trans (h y) = r"
+            have hf_eq: "f_trans (h y) = (fst (h y) - fst r' + fst r, snd (h y) - snd r' + snd r)"
+              unfolding f_trans_def by (by100 simp)
+            have "fst (f_trans (h y)) = fst r" using \<open>f_trans (h y) = r\<close> by (by100 simp)
+            have "fst (h y) - fst r' + fst r = fst r" using \<open>fst (f_trans (h y)) = fst r\<close> hf_eq by (by100 simp)
+            have "snd (f_trans (h y)) = snd r" using \<open>f_trans (h y) = r\<close> by (by100 simp)
+            have "snd (h y) - snd r' + snd r = snd r" using \<open>snd (f_trans (h y)) = snd r\<close> hf_eq by (by100 simp)
+            have "fst (h y) = fst r'" using \<open>fst (h y) - fst r' + fst r = fst r\<close> by (by100 linarith)
+            have "snd (h y) = snd r'" using \<open>snd (h y) - snd r' + snd r = snd r\<close> by (by100 linarith)
+            hence "h y = r'" using \<open>fst (h y) = fst r'\<close>
+              by (cases "h y", cases r') (by100 auto)
+            hence "h y = h a'" unfolding r'_def by (by100 simp)
+            hence "y = a'" by (rule inj_onD[OF hh_inj])
+              (use \<open>y \<in> top1_S2 - {b}\<close> ha'_S2b in \<open>by100 blast\<close>)+
+            thus False using \<open>y \<in> top1_S2 - {a'} - {b}\<close> by (by100 blast)
+          qed
+          hence "f_trans (h y) \<in> UNIV - {r}" by (by100 blast)
+          from hinv_into_ab[OF this]
+          show "\<phi> y \<in> top1_S2 - {a} - {b}" using hphi_eq[OF \<open>y \<in> top1_S2 - {b}\<close>] by (by100 simp)
+        qed
+        have hab_sub: "top1_S2 - {a} - {b} \<subseteq> top1_S2 - {b}" by (by100 blast)
+        from continuous_map_restrict_codomain[OF hcomp2' h\<phi>_into hab_sub]
+        have "top1_continuous_map_on (top1_S2 - {a'} - {b}) ?TX' (top1_S2 - {a} - {b})
+            (subspace_topology (top1_S2 - {b}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b}))
+              (top1_S2 - {a} - {b})) \<phi>" .
+        moreover have "subspace_topology (top1_S2 - {b}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b}))
+              (top1_S2 - {a} - {b}) = ?TX_ab"
+          by (rule subspace_topology_trans[OF hab_sub])
+        ultimately show ?thesis by (by100 simp)
+      qed
+      have h\<phi>_c0: "\<phi> c0 \<in> top1_S2 - {a} - {b}"
+        using hinv_into_ab
+        proof -
+          have hd0_R2: "d0 \<in> (UNIV :: (real \<times> real) set)" by (by100 blast)
+          have "f_trans d0 \<in> (UNIV :: (real \<times> real) set) - {r}"
+          proof -
+            have "f_trans d0 \<noteq> r"
+            proof
+              assume hfr: "f_trans d0 = r"
+              have hf_eq: "f_trans d0 = (fst d0 - fst r' + fst r, snd d0 - snd r' + snd r)"
+                unfolding f_trans_def by (by100 simp)
+              have "fst (f_trans d0) = fst r" using hfr by (by100 simp)
+              have hfst: "fst d0 - fst r' + fst r = fst r" using \<open>fst (f_trans d0) = fst r\<close> hf_eq by (by100 simp)
+              have "snd (f_trans d0) = snd r" using hfr by (by100 simp)
+              have hsnd: "snd d0 - snd r' + snd r = snd r" using \<open>snd (f_trans d0) = snd r\<close> hf_eq by (by100 simp)
+              have "fst d0 = fst r'" using hfst by (by100 linarith)
+              have "snd d0 = snd r'" using hsnd by (by100 linarith)
+              hence "d0 = r'" using \<open>fst d0 = fst r'\<close>
+                by (cases d0, cases r') (by100 auto)
+              thus False using hd0_D hr'_notD by (by100 blast)
+            qed
+            thus ?thesis by (by100 blast)
+          qed
+          hence "inv_into (top1_S2 - {b}) h (f_trans d0) \<in> top1_S2 - {a} - {b}"
+            by (rule hinv_into_ab)
+          moreover have "\<phi> c0 = inv_into (top1_S2 - {b}) h (f_trans (h c0))"
+            using hphi_eq[OF hc0_S2b] f_trans_def by (by100 simp)
+          moreover have "h c0 = d0" using hh_c0 by (by100 simp)
+          ultimately show ?thesis by (by100 simp)
+        qed
+      \<comment> \<open>Step H: \<beta> is a path from c0 to \<phi>(c0) in S2-{a}-{b}.\<close>
+      have h\<beta>_path: "top1_is_path_on (top1_S2 - {a} - {b}) ?TX_ab c0 (\<phi> c0) \<beta>"
+      proof -
+        \<comment> \<open>\<gamma> is a path from d0 to f\_trans(d0) in R2-{r}.\<close>
+        \<comment> \<open>From hbc\_R2 applied to constant loop: extract that \<gamma> is continuous I \<rightarrow> R2-{r}.\<close>
+        have h\<gamma>_cont: "top1_continuous_map_on I_set I_top (UNIV - {r} :: (real \<times> real) set) ?TR \<gamma>"
+        proof -
+          \<comment> \<open>\<gamma>(t) = F(d0, t). F is continuous D\<times>I \<rightarrow> R2-{r}. Compose with (\<lambda>t. (d0, t)).\<close>
+          have hTI: "is_topology_on I_set I_top"
+            by (rule top1_unit_interval_topology_is_topology_on)
+          have hconst_d0: "top1_continuous_map_on I_set I_top D ?TD (\<lambda>_. d0)"
+            by (rule top1_continuous_map_on_const[OF hTI hTD hd0_D])
+          have hid_I: "top1_continuous_map_on I_set I_top I_set I_top id"
+            by (rule top1_continuous_map_on_id[OF hTI])
+          have hp1: "(pi1 \<circ> (\<lambda>t. (d0, t))) = (\<lambda>_. d0)" unfolding pi1_def by (rule ext) (by100 simp)
+          have hp2: "(pi2 \<circ> (\<lambda>t. (d0, t))) = id" unfolding pi2_def by (rule ext) (by100 simp)
+          have hpair: "top1_continuous_map_on I_set I_top (D \<times> I_set)
+              (product_topology_on ?TD I_top) (\<lambda>t. (d0, t))"
+            using iffD2[OF Theorem_18_4[OF hTI hTD hTI]]
+                  hconst_d0[folded hp1] hid_I[folded hp2] by (by100 blast)
+          have hcomp: "top1_continuous_map_on I_set I_top (UNIV - {r} :: (real \<times> real) set) ?TR
+              (\<lambda>t. F (d0, t))"
+            using top1_continuous_map_on_comp[OF hpair hF_cont] by (simp add: comp_def)
+          have "(\<lambda>t. F (d0, t)) = \<gamma>" unfolding \<gamma>_def by (by100 simp)
+          thus ?thesis using hcomp by (by100 simp)
+        qed
+        \<comment> \<open>\<beta> = h\<inverse> \<circ> \<gamma> is continuous I \<rightarrow> S2-{a}-{b}.\<close>
+        have h\<beta>_cont: "top1_continuous_map_on I_set I_top (top1_S2 - {a} - {b}) ?TX_ab \<beta>"
+        proof -
+          have "\<beta> = inv_into (top1_S2 - {b}) h \<circ> \<gamma>" unfolding \<beta>_def comp_def by (rule ext) (by100 simp)
+          thus ?thesis using top1_continuous_map_on_comp[OF h\<gamma>_cont hinv_cont_r] by (by100 simp)
+        qed
+        \<comment> \<open>\<beta>(0) = c0 and \<beta>(1) = \<phi>(c0).\<close>
+        have h\<beta>0: "\<beta> 0 = c0"
+          unfolding \<beta>_def \<gamma>_def using hF0 hd0_D hinv_d0 hh_c0 by (by100 simp)
+        have h\<beta>1: "\<beta> 1 = \<phi> c0"
+          unfolding \<beta>_def \<gamma>_def using hF1 hd0_D hphi_eq[OF hc0_S2b] hh_c0 f_trans_def by (by100 simp)
+        show ?thesis unfolding top1_is_path_on_def using h\<beta>_cont h\<beta>0 h\<beta>1 by (by100 blast)
+      qed
+      have hrev_\<beta>: "top1_is_path_on (top1_S2 - {a} - {b}) ?TX_ab (\<phi> c0) c0 (top1_path_reverse \<beta>)"
+        by (rule top1_path_reverse_is_path[OF h\<beta>_path])
+      \<comment> \<open>Step I: \<phi>\<inverse> continuous S2-{a}-{b} \<rightarrow> S2-{a'}-{b}, \<phi>\<inverse>\<circ>\<phi> = id on S2-{a'}-{b}.\<close>
+      define \<phi>_inv where "\<phi>_inv \<equiv> \<lambda>z. inv_into (top1_S2 - {b}) h
+          (fst (h z) + fst r' - fst r, snd (h z) + snd r' - snd r)"
+      have h\<phi>_inv_cont: "top1_continuous_map_on (top1_S2 - {a} - {b}) ?TX_ab
+          (top1_S2 - {a'} - {b}) ?TX' \<phi>_inv"
+      proof -
+        define f_inv_trans where "f_inv_trans \<equiv> \<lambda>x :: real \<times> real. (fst x + fst r' - fst r, snd x + snd r' - snd r)"
+        have h\<phi>_inv_eq: "\<phi>_inv = inv_into (top1_S2 - {b}) h \<circ> (f_inv_trans \<circ> h)"
+          unfolding \<phi>_inv_def f_inv_trans_def comp_def by (rule ext) (by100 simp)
+        have hab_sub_S2b: "top1_S2 - {a} - {b} \<subseteq> top1_S2 - {b}" by (by100 blast)
+        \<comment> \<open>h: S2-{a}-{b} \<rightarrow> R2.\<close>
+        from top1_continuous_map_on_restrict_domain_simple[OF hh_cont_loc hab_sub_S2b]
+        have hh_ab: "top1_continuous_map_on (top1_S2 - {a} - {b})
+            (subspace_topology (top1_S2 - {b}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b}))
+              (top1_S2 - {a} - {b}))
+            (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets) h" .
+        have "subspace_topology (top1_S2 - {b}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b}))
+              (top1_S2 - {a} - {b}) = ?TX_ab"
+          by (rule subspace_topology_trans[OF hab_sub_S2b])
+        hence hh_ab': "top1_continuous_map_on (top1_S2 - {a} - {b}) ?TX_ab
+            (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets) h"
+          using hh_ab by (by100 simp)
+        \<comment> \<open>f\_inv\_trans: R2 \<rightarrow> R2 continuous.\<close>
+        have "continuous_on (UNIV :: (real \<times> real) set) f_inv_trans"
+          unfolding f_inv_trans_def by (intro continuous_intros)
+        have "\<And>p :: real \<times> real. p \<in> UNIV \<Longrightarrow> f_inv_trans p \<in> (UNIV :: (real \<times> real) set)" by (by100 blast)
+        from top1_continuous_map_on_real2_subspace[OF this \<open>continuous_on UNIV f_inv_trans\<close>]
+        have hfi_sub: "top1_continuous_map_on (UNIV :: (real \<times> real) set)
+            (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) UNIV)
+            (UNIV :: (real \<times> real) set)
+            (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) UNIV)
+            f_inv_trans" .
+        have hfi: "top1_continuous_map_on (UNIV :: (real \<times> real) set)
+            (product_topology_on top1_open_sets top1_open_sets)
+            (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets) f_inv_trans"
+        proof -
+          have "(subspace_topology (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets) UNIV)
+              = product_topology_on top1_open_sets top1_open_sets"
+            unfolding subspace_topology_def by (by100 force)
+          thus ?thesis using hfi_sub by (by100 simp)
+        qed
+        \<comment> \<open>Compose: h\<inverse> \<circ> f\_inv\_trans \<circ> h: S2-{a}-{b} \<rightarrow> S2-{b}.\<close>
+        have hcomp1: "top1_continuous_map_on (top1_S2 - {a} - {b}) ?TX_ab
+            (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets) (f_inv_trans \<circ> h)"
+          by (rule top1_continuous_map_on_comp[OF hh_ab' hfi])
+        have hcomp2: "top1_continuous_map_on (top1_S2 - {a} - {b}) ?TX_ab
+            (top1_S2 - {b}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b}))
+            (inv_into (top1_S2 - {b}) h \<circ> (f_inv_trans \<circ> h))"
+          by (rule top1_continuous_map_on_comp[OF hcomp1 hinv_cont_loc])
+        hence hcomp2': "top1_continuous_map_on (top1_S2 - {a} - {b}) ?TX_ab
+            (top1_S2 - {b}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b})) \<phi>_inv"
+          using h\<phi>_inv_eq by (by100 simp)
+        \<comment> \<open>Restrict codomain to S2-{a'}-{b}.\<close>
+        have h\<phi>_inv_into: "\<forall>y \<in> top1_S2 - {a} - {b}. \<phi>_inv y \<in> top1_S2 - {a'} - {b}"
+        proof (intro ballI)
+          fix y assume "y \<in> top1_S2 - {a} - {b}"
+          hence "y \<in> top1_S2 - {b}" by (by100 blast)
+          have "f_inv_trans (h y) \<noteq> r'"
+          proof
+            assume "f_inv_trans (h y) = r'"
+            have hfi_eq: "f_inv_trans (h y) = (fst (h y) + fst r' - fst r, snd (h y) + snd r' - snd r)"
+              unfolding f_inv_trans_def by (by100 simp)
+            have "fst (f_inv_trans (h y)) = fst r'" using \<open>f_inv_trans (h y) = r'\<close> by (by100 simp)
+            have "fst (h y) + fst r' - fst r = fst r'" using \<open>fst (f_inv_trans (h y)) = fst r'\<close> hfi_eq by (by100 simp)
+            have "snd (f_inv_trans (h y)) = snd r'" using \<open>f_inv_trans (h y) = r'\<close> by (by100 simp)
+            have "snd (h y) + snd r' - snd r = snd r'" using \<open>snd (f_inv_trans (h y)) = snd r'\<close> hfi_eq by (by100 simp)
+            have "fst (h y) = fst r" using \<open>fst (h y) + fst r' - fst r = fst r'\<close> by (by100 linarith)
+            have "snd (h y) = snd r" using \<open>snd (h y) + snd r' - snd r = snd r'\<close> by (by100 linarith)
+            hence "h y = r" using \<open>fst (h y) = fst r\<close> by (cases "h y", cases r) (by100 auto)
+            hence "h y = h a" unfolding r_def by (by100 simp)
+            hence "y = a" by (rule inj_onD[OF hh_inj])
+              (use \<open>y \<in> top1_S2 - {b}\<close> ha_S2b in \<open>by100 blast\<close>)+
+            thus False using \<open>y \<in> top1_S2 - {a} - {b}\<close> by (by100 blast)
+          qed
+          have hfi_R2: "f_inv_trans (h y) \<in> (UNIV :: (real \<times> real) set)" by (by100 blast)
+          have hfi_ne_r': "f_inv_trans (h y) \<in> UNIV - {r'}" using \<open>f_inv_trans (h y) \<noteq> r'\<close> by (by100 blast)
+          have hh_surj_loc2: "h ` (top1_S2 - {b}) = (UNIV :: (real \<times> real) set)"
+            using hh_bij_loc unfolding bij_betw_def by (by100 blast)
+          have hinv_fi: "inv_into (top1_S2 - {b}) h (f_inv_trans (h y)) \<in> top1_S2 - {b}"
+          proof -
+            have "f_inv_trans (h y) \<in> h ` (top1_S2 - {b})" using hh_surj_loc2 hfi_R2 by (by100 blast)
+            thus ?thesis by (rule inv_into_into)
+          qed
+          have "inv_into (top1_S2 - {b}) h (f_inv_trans (h y)) \<noteq> a'"
+          proof
+            assume "inv_into (top1_S2 - {b}) h (f_inv_trans (h y)) = a'"
+            hence "h (inv_into (top1_S2 - {b}) h (f_inv_trans (h y))) = h a'" by (by100 simp)
+            have "h (inv_into (top1_S2 - {b}) h (f_inv_trans (h y))) = f_inv_trans (h y)"
+              using f_inv_into_f[of "f_inv_trans (h y)" h "top1_S2 - {b}"] hh_surj_loc2 by (by100 blast)
+            hence "f_inv_trans (h y) = r'" using \<open>h (inv_into _ h _) = h a'\<close> r'_def by (by100 simp)
+            thus False using \<open>f_inv_trans (h y) \<noteq> r'\<close> by (by100 blast)
+          qed
+          show "\<phi>_inv y \<in> top1_S2 - {a'} - {b}"
+            using hinv_fi \<open>inv_into (top1_S2 - {b}) h (f_inv_trans (h y)) \<noteq> a'\<close>
+            unfolding \<phi>_inv_def f_inv_trans_def by (by100 simp)
+        qed
+        have hX'_sub_S2b: "top1_S2 - {a'} - {b} \<subseteq> top1_S2 - {b}" by (by100 blast)
+        from continuous_map_restrict_codomain[OF hcomp2' h\<phi>_inv_into hX'_sub_S2b]
+        have "top1_continuous_map_on (top1_S2 - {a} - {b}) ?TX_ab (top1_S2 - {a'} - {b})
+            (subspace_topology (top1_S2 - {b}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b}))
+              (top1_S2 - {a'} - {b})) \<phi>_inv" .
+        moreover have "subspace_topology (top1_S2 - {b}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {b}))
+              (top1_S2 - {a'} - {b}) = ?TX'"
+          by (rule subspace_topology_trans[OF hX'_sub_S2b])
+        ultimately show ?thesis by (by100 simp)
+      qed
+      have h\<phi>_inv_\<phi>: "\<And>y. y \<in> top1_S2 - {a'} - {b} \<Longrightarrow> \<phi>_inv (\<phi> y) = y"
+      proof -
+        fix y assume hy: "y \<in> top1_S2 - {a'} - {b}"
+        have hy_S2b: "y \<in> top1_S2 - {b}" using hy by (by100 blast)
+        have hhy_R2: "(fst (h y) - fst r' + fst r, snd (h y) - snd r' + snd r) \<in> (UNIV :: (real \<times> real) set)"
+          by (by100 blast)
+        have hh_surj_loc: "h ` (top1_S2 - {b}) = (UNIV :: (real \<times> real) set)"
+          using hh_bij_loc unfolding bij_betw_def by (by100 blast)
+        have h\<phi>y_S2b: "\<phi> y \<in> top1_S2 - {b}"
+        proof -
+          have "inv_into (top1_S2 - {b}) h (fst (h y) - fst r' + fst r, snd (h y) - snd r' + snd r) \<in> top1_S2 - {b}"
+            by (rule inv_into_into) (use hh_surj_loc hhy_R2 in \<open>by100 blast\<close>)
+          thus ?thesis unfolding \<phi>_def by (by100 simp)
+        qed
+        have hh_\<phi>y: "h (\<phi> y) = (fst (h y) - fst r' + fst r, snd (h y) - snd r' + snd r)"
+          using f_inv_into_f[of "(fst (h y) - fst r' + fst r, snd (h y) - snd r' + snd r)" h "top1_S2 - {b}"]
+            hh_surj_loc hhy_R2 unfolding \<phi>_def by (by100 simp)
+        have "fst (h (\<phi> y)) + fst r' - fst r = fst (h y)" using hh_\<phi>y by (by100 simp)
+        have "snd (h (\<phi> y)) + snd r' - snd r = snd (h y)" using hh_\<phi>y by (by100 simp)
+        have "(fst (h (\<phi> y)) + fst r' - fst r, snd (h (\<phi> y)) + snd r' - snd r) = h y"
+          using \<open>fst (h (\<phi> y)) + fst r' - fst r = fst (h y)\<close>
+                \<open>snd (h (\<phi> y)) + snd r' - snd r = snd (h y)\<close> by (by100 simp)
+        thus "\<phi>_inv (\<phi> y) = y" unfolding \<phi>_inv_def
+          using hinv_h[OF hy_S2b] by (by100 simp)
+      qed
+      have h\<phi>_inv_c0: "\<phi>_inv (\<phi> c0) = c0"
+        using h\<phi>_inv_\<phi>[of c0] hC_sub_X' assms(9) by (by100 blast)
+      \<comment> \<open>INJECTIVITY of k*.\<close>
       have hk_inj: "inj_on ?k_star (top1_fundamental_group_carrier C ?TC c0)"
-        sorry
+      proof (rule inj_onI)
+        fix c1 c2
+        assume hc1: "c1 \<in> top1_fundamental_group_carrier C ?TC c0"
+        assume hc2: "c2 \<in> top1_fundamental_group_carrier C ?TC c0"
+        assume hk_eq: "?k_star c1 = ?k_star c2"
+        obtain l1 where hl1: "top1_is_loop_on C ?TC c0 l1"
+            and hc1_eq: "c1 = {h. top1_loop_equiv_on C ?TC c0 l1 h}"
+          using hc1 unfolding top1_fundamental_group_carrier_def by (by100 blast)
+        obtain l2 where hl2: "top1_is_loop_on C ?TC c0 l2"
+            and hc2_eq: "c2 = {h. top1_loop_equiv_on C ?TC c0 l2 h}"
+          using hc2 unfolding top1_fundamental_group_carrier_def by (by100 blast)
+        \<comment> \<open>k*(c1) = k*(c2) \<Rightarrow> l1 \<simeq> l2 in S2-{a'}-{b}.\<close>
+        have hTC_eq: "subspace_topology (top1_S2 - {a'} - {b}) ?TX' C = ?TC"
+          using subspace_topology_trans[of C "top1_S2 - {a'} - {b}" top1_S2 top1_S2_topology]
+            hC_sub_X' by (by100 simp)
+        have hl1_X': "top1_is_loop_on C (subspace_topology (top1_S2 - {a'} - {b}) ?TX' C) c0 l1"
+          using hl1 hTC_eq by (by100 simp)
+        have hl2_X': "top1_is_loop_on C (subspace_topology (top1_S2 - {a'} - {b}) ?TX' C) c0 l2"
+          using hl2 hTC_eq by (by100 simp)
+        have hid_lam: "id = (\<lambda>x. x)" by (rule ext) (by100 simp)
+        have hk_c1: "?k_star c1 = {k. top1_loop_equiv_on (top1_S2 - {a'} - {b}) ?TX' c0 l1 k}"
+          unfolding hc1_eq hid_lam using subspace_inclusion_induced_class[OF hTX' hC_sub_X' hl1_X']
+          unfolding hTC_eq by (by100 simp)
+        have hk_c2: "?k_star c2 = {k. top1_loop_equiv_on (top1_S2 - {a'} - {b}) ?TX' c0 l2 k}"
+          unfolding hc2_eq hid_lam using subspace_inclusion_induced_class[OF hTX' hC_sub_X' hl2_X']
+          unfolding hTC_eq by (by100 simp)
+        have hl1_refl: "top1_loop_equiv_on (top1_S2 - {a'} - {b}) ?TX' c0 l1 l1"
+        proof -
+          have "top1_is_loop_on (top1_S2 - {a'} - {b}) ?TX' c0 l1"
+            using top1_continuous_map_loop[OF hid_cont hl1] by (by100 simp)
+          thus ?thesis by (rule top1_loop_equiv_on_refl)
+        qed
+        have "l1 \<in> ?k_star c1" using hl1_refl hk_c1 by (by100 blast)
+        hence "l1 \<in> ?k_star c2" using hk_eq by (by100 simp)
+        hence "top1_loop_equiv_on (top1_S2 - {a'} - {b}) ?TX' c0 l2 l1"
+          using hk_c2 by (by100 simp)
+        hence hl12_X': "top1_loop_equiv_on (top1_S2 - {a'} - {b}) ?TX' c0 l1 l2"
+          by (rule top1_loop_equiv_on_sym)
+        \<comment> \<open>Apply \<phi>: \<phi>\<circ>l1 \<simeq> \<phi>\<circ>l2 in S2-{a}-{b} at \<phi>(c0).\<close>
+        have hl1_X'_loop: "top1_is_loop_on (top1_S2 - {a'} - {b}) ?TX' c0 l1"
+          using hl12_X' unfolding top1_loop_equiv_on_def by (by100 blast)
+        have hl2_X'_loop: "top1_is_loop_on (top1_S2 - {a'} - {b}) ?TX' c0 l2"
+          using hl12_X' unfolding top1_loop_equiv_on_def by (by100 blast)
+        have h\<phi>l12: "top1_loop_equiv_on (top1_S2 - {a} - {b}) ?TX_ab (\<phi> c0)
+            (\<phi> \<circ> l1) (\<phi> \<circ> l2)"
+          by (rule top1_induced_preserves_loop_equiv[OF hTX' h\<phi>_cont hl1_X'_loop hl2_X'_loop hl12_X'])
+        \<comment> \<open>Basepoint change: bc(rev\_\<beta>, \<phi>\<circ>l1) \<simeq> bc(rev\_\<beta>, \<phi>\<circ>l2) in S2-{a}-{b} at c0.\<close>
+        have h\<phi>l1_loop: "top1_is_loop_on (top1_S2 - {a} - {b}) ?TX_ab (\<phi> c0) (\<phi> \<circ> l1)"
+          using h\<phi>l12 unfolding top1_loop_equiv_on_def by (by100 blast)
+        have h\<phi>l2_loop: "top1_is_loop_on (top1_S2 - {a} - {b}) ?TX_ab (\<phi> c0) (\<phi> \<circ> l2)"
+          using h\<phi>l12 unfolding top1_loop_equiv_on_def by (by100 blast)
+        have hbc_l12: "top1_loop_equiv_on (top1_S2 - {a} - {b}) ?TX_ab c0
+            (top1_basepoint_change_on (top1_S2 - {a} - {b}) ?TX_ab (\<phi> c0) c0 (top1_path_reverse \<beta>) (\<phi> \<circ> l1))
+            (top1_basepoint_change_on (top1_S2 - {a} - {b}) ?TX_ab (\<phi> c0) c0 (top1_path_reverse \<beta>) (\<phi> \<circ> l2))"
+          by (rule top1_basepoint_change_loop_equiv[OF hTX_ab hrev_\<beta> h\<phi>l1_loop h\<phi>l2_loop h\<phi>l12])
+        \<comment> \<open>From homotopy: l1 \<simeq> bc(rev\_\<beta>, \<phi>\<circ>l1) and l2 \<simeq> bc(rev\_\<beta>, \<phi>\<circ>l2).\<close>
+        note hbc1 = hbc_key[OF hl1]
+        note hbc2 = hbc_key[OF hl2]
+        \<comment> \<open>Transitivity: l1 \<simeq> l2 in S2-{a}-{b}.\<close>
+        have hl12_ab: "top1_loop_equiv_on (top1_S2 - {a} - {b}) ?TX_ab c0 l1 l2"
+          by (rule top1_loop_equiv_on_trans[OF hTX_ab
+              top1_loop_equiv_on_trans[OF hTX_ab hbc1 hbc_l12]
+              top1_loop_equiv_on_sym[OF hbc2]])
+        \<comment> \<open>j*(c1) = j*(c2).\<close>
+        have hC_sub_ab: "C \<subseteq> top1_S2 - {a} - {b}" using hC_sub_S2 assms(3,5) by (by100 blast)
+        have hTC_ab_eq: "subspace_topology (top1_S2 - {a} - {b}) ?TX_ab C = ?TC"
+          using subspace_topology_trans[of C "top1_S2 - {a} - {b}" top1_S2 top1_S2_topology]
+            hC_sub_ab by (by100 simp)
+        have hl1_ab: "top1_is_loop_on C (subspace_topology (top1_S2 - {a} - {b}) ?TX_ab C) c0 l1"
+          using hl1 hTC_ab_eq by (by100 simp)
+        have hl2_ab: "top1_is_loop_on C (subspace_topology (top1_S2 - {a} - {b}) ?TX_ab C) c0 l2"
+          using hl2 hTC_ab_eq by (by100 simp)
+        have hj_c1: "?j_star c1 = {k. top1_loop_equiv_on (top1_S2 - {a} - {b}) ?TX c0 l1 k}"
+          unfolding hc1_eq hid_lam using subspace_inclusion_induced_class[OF hTX_ab hC_sub_ab hl1_ab]
+          unfolding hTC_ab_eq by (by100 simp)
+        have hj_c2: "?j_star c2 = {k. top1_loop_equiv_on (top1_S2 - {a} - {b}) ?TX c0 l2 k}"
+          unfolding hc2_eq hid_lam using subspace_inclusion_induced_class[OF hTX_ab hC_sub_ab hl2_ab]
+          unfolding hTC_ab_eq by (by100 simp)
+        \<comment> \<open>But wait: j* uses ?TX not ?TX\_ab! Check: ?TX = ?TX\_ab since both = subspace S2 S2\_top (S2-{a}-{b}).\<close>
+        have hTX_eq: "?TX = ?TX_ab" by (by100 simp)
+        have hj_eq: "?j_star c1 = ?j_star c2"
+        proof -
+          have hsets_eq: "{k. top1_loop_equiv_on (top1_S2 - {a} - {b}) ?TX_ab c0 l1 k}
+              = {k. top1_loop_equiv_on (top1_S2 - {a} - {b}) ?TX_ab c0 l2 k}"
+          proof (intro set_eqI iffI)
+            fix k assume "k \<in> {k. top1_loop_equiv_on (top1_S2 - {a} - {b}) ?TX_ab c0 l1 k}"
+            hence "top1_loop_equiv_on (top1_S2 - {a} - {b}) ?TX_ab c0 l1 k" by (by100 simp)
+            thus "k \<in> {k. top1_loop_equiv_on (top1_S2 - {a} - {b}) ?TX_ab c0 l2 k}"
+              using top1_loop_equiv_on_trans[OF hTX_ab top1_loop_equiv_on_sym[OF hl12_ab]] by (by100 blast)
+          next
+            fix k assume "k \<in> {k. top1_loop_equiv_on (top1_S2 - {a} - {b}) ?TX_ab c0 l2 k}"
+            hence "top1_loop_equiv_on (top1_S2 - {a} - {b}) ?TX_ab c0 l2 k" by (by100 simp)
+            thus "k \<in> {k. top1_loop_equiv_on (top1_S2 - {a} - {b}) ?TX_ab c0 l1 k}"
+              using top1_loop_equiv_on_trans[OF hTX_ab hl12_ab] by (by100 blast)
+          qed
+          show ?thesis using hj_c1 hj_c2 hsets_eq by (by100 metis)
+        qed
+        show "c1 = c2" using inj_onD[OF hj_inj hj_eq hc1 hc2] .
+      qed
+      \<comment> \<open>SURJECTIVITY of k*.\<close>
       have hk_surj: "?k_star ` (top1_fundamental_group_carrier C ?TC c0)
           = top1_fundamental_group_carrier (top1_S2 - {a'} - {b}) ?TX' c0"
-        sorry
+      proof (intro set_eqI iffI)
+        \<comment> \<open>(\<subseteq>): Image of carrier \<subseteq> carrier. From hom property.\<close>
+        fix d assume "d \<in> ?k_star ` (top1_fundamental_group_carrier C ?TC c0)"
+        then obtain c where hc: "c \<in> top1_fundamental_group_carrier C ?TC c0" "d = ?k_star c"
+          by (by100 blast)
+        have "c0 \<in> top1_S2 - {a'} - {b}" using assms(9) hC_sub_X' by (by100 blast)
+        show "d \<in> top1_fundamental_group_carrier (top1_S2 - {a'} - {b}) ?TX' c0"
+          using hk_hom hc unfolding top1_group_hom_on_def by (by100 blast)
+      next
+        \<comment> \<open>(\<supseteq>): For each [m] in \<pi>\_1(S2-{a'}-{b}), find [l] in C with k*([l]) = [m].\<close>
+        fix d assume hd: "d \<in> top1_fundamental_group_carrier (top1_S2 - {a'} - {b}) ?TX' c0"
+        obtain m where hm: "top1_is_loop_on (top1_S2 - {a'} - {b}) ?TX' c0 m"
+            and hd_eq: "d = {k. top1_loop_equiv_on (top1_S2 - {a'} - {b}) ?TX' c0 m k}"
+          using hd unfolding top1_fundamental_group_carrier_def by (by100 blast)
+        \<comment> \<open>\<phi>\<circ>m is loop at \<phi>(c0) in S2-{a}-{b}.\<close>
+        have h\<phi>m_loop: "top1_is_loop_on (top1_S2 - {a} - {b}) ?TX_ab (\<phi> c0) (\<phi> \<circ> m)"
+          by (rule top1_continuous_map_loop[OF h\<phi>_cont hm])
+        \<comment> \<open>bc(rev\_\<beta>, \<phi>\<circ>m) is loop at c0 in S2-{a}-{b}.\<close>
+        have hbc_m_loop: "top1_is_loop_on (top1_S2 - {a} - {b}) ?TX_ab c0
+            (top1_basepoint_change_on (top1_S2 - {a} - {b}) ?TX_ab (\<phi> c0) c0 (top1_path_reverse \<beta>) (\<phi> \<circ> m))"
+          by (rule top1_basepoint_change_is_loop[OF hTX_ab hrev_\<beta> h\<phi>m_loop])
+        \<comment> \<open>j* surjective: \<exists>l. loop\_equiv (S2-{a}-{b}) c0 l (bc(rev\_\<beta>, \<phi>\<circ>m)).\<close>
+        have hTX_eq: "?TX = ?TX_ab" by (by100 simp)
+        have hC_sub_ab: "C \<subseteq> top1_S2 - {a} - {b}" using hC_sub_S2 assms(3,5) by (by100 blast)
+        have hbc_m_class: "{k. top1_loop_equiv_on (top1_S2 - {a} - {b}) ?TX_ab c0
+            (top1_basepoint_change_on (top1_S2 - {a} - {b}) ?TX_ab (\<phi> c0) c0 (top1_path_reverse \<beta>) (\<phi> \<circ> m)) k}
+            \<in> top1_fundamental_group_carrier (top1_S2 - {a} - {b}) ?TX_ab c0"
+          unfolding top1_fundamental_group_carrier_def using hbc_m_loop by (by100 blast)
+        have hj_surj_eq: "?j_star ` (top1_fundamental_group_carrier C ?TC c0)
+            = top1_fundamental_group_carrier (top1_S2 - {a} - {b}) ?TX_ab c0"
+          using hj_surj .
+        have hbc_m_in_img: "{k. top1_loop_equiv_on (top1_S2 - {a} - {b}) ?TX_ab c0
+              (top1_basepoint_change_on (top1_S2 - {a} - {b}) ?TX_ab (\<phi> c0) c0 (top1_path_reverse \<beta>) (\<phi> \<circ> m)) k}
+              \<in> ?j_star ` (top1_fundamental_group_carrier C ?TC c0)"
+          using hj_surj_eq hbc_m_class by (by100 blast)
+        from hbc_m_in_img obtain c0_class where hc0_cl: "c0_class \<in> top1_fundamental_group_carrier C ?TC c0"
+            and hj_c0_eq: "?j_star c0_class = {k. top1_loop_equiv_on (top1_S2 - {a} - {b}) ?TX_ab c0
+              (top1_basepoint_change_on (top1_S2 - {a} - {b}) ?TX_ab (\<phi> c0) c0 (top1_path_reverse \<beta>) (\<phi> \<circ> m)) k}"
+          by (by100 blast)
+        obtain l where hl: "top1_is_loop_on C ?TC c0 l"
+            and hcl_eq: "c0_class = {k. top1_loop_equiv_on C ?TC c0 l k}"
+          using hc0_cl unfolding top1_fundamental_group_carrier_def by (by100 blast)
+        \<comment> \<open>j*(c0\_class) = {k. loop\_equiv S2ab c0 l k} by inclusion\_induced\_class.\<close>
+        have hTC_ab_eq: "subspace_topology (top1_S2 - {a} - {b}) ?TX_ab C = ?TC"
+          using subspace_topology_trans[of C "top1_S2 - {a} - {b}" top1_S2 top1_S2_topology]
+            hC_sub_ab by (by100 simp)
+        have hl_ab: "top1_is_loop_on C (subspace_topology (top1_S2 - {a} - {b}) ?TX_ab C) c0 l"
+          using hl hTC_ab_eq by (by100 simp)
+        have hid_lam2: "(id :: (real \<times> real \<times> real) \<Rightarrow> _) = (\<lambda>x. x)" by (rule ext) (by100 simp)
+        have hj_cl_lam: "top1_fundamental_group_induced_on C ?TC c0 (top1_S2 - {a} - {b}) ?TX_ab c0 (\<lambda>x. x) c0_class
+            = {k. top1_loop_equiv_on (top1_S2 - {a} - {b}) ?TX_ab c0 l k}"
+        proof -
+          have "top1_fundamental_group_induced_on C ?TC c0 (top1_S2 - {a} - {b}) ?TX_ab c0 (\<lambda>x. x)
+              {k. top1_loop_equiv_on C ?TC c0 l k}
+              = {k. top1_loop_equiv_on (top1_S2 - {a} - {b}) ?TX_ab c0 l k}"
+            using subspace_inclusion_induced_class[OF hTX_ab hC_sub_ab hl_ab]
+            unfolding hTC_ab_eq by (by100 simp)
+          thus ?thesis unfolding hcl_eq .
+        qed
+        have hj_cl: "?j_star c0_class = {k. top1_loop_equiv_on (top1_S2 - {a} - {b}) ?TX_ab c0 l k}"
+        proof -
+          \<comment> \<open>Unfold the definition of ?j\_star and simplify id\<circ>l' = l'.\<close>
+          have h_unfold: "?j_star c0_class = {h. \<exists>l'\<in>c0_class. top1_loop_equiv_on (top1_S2 - {a} - {b}) ?TX_ab c0 l' h}"
+          proof -
+            have "?j_star c0_class = {h. \<exists>l'\<in>c0_class. top1_loop_equiv_on (top1_S2 - {a} - {b}) ?TX c0 (id \<circ> l') h}"
+              unfolding top1_fundamental_group_induced_on_def by (by100 simp)
+            moreover have "\<And>l'. id \<circ> l' = l'" by (rule ext) (by100 simp)
+            ultimately show ?thesis by (by100 simp)
+          qed
+          \<comment> \<open>This is the same as the \<lambda>x.x version, applied to c0\_class.\<close>
+          also have "\<dots> = {k. top1_loop_equiv_on (top1_S2 - {a} - {b}) ?TX_ab c0 l k}"
+          proof -
+            \<comment> \<open>c0\_class = {k. loop\_equiv C c0 l k}. Membership in c0\_class iff loop\_equiv C c0 l l'.
+               Then loop\_equiv S2ab c0 l' h iff loop\_equiv S2ab c0 l h (by transitivity).\<close>
+            show ?thesis unfolding hcl_eq
+            proof (intro set_eqI iffI)
+              fix h assume "h \<in> {h. \<exists>l'\<in>{k. top1_loop_equiv_on C ?TC c0 l k}.
+                  top1_loop_equiv_on (top1_S2 - {a} - {b}) ?TX_ab c0 l' h}"
+              then obtain l' where hl'_C: "top1_loop_equiv_on C ?TC c0 l l'"
+                  and hl'h: "top1_loop_equiv_on (top1_S2 - {a} - {b}) ?TX_ab c0 l' h" by (by100 blast)
+              \<comment> \<open>l \<simeq> l' in C implies l \<simeq> l' in S2-{a}-{b} (inclusion preserves equiv).\<close>
+              have hl_loop_ab: "top1_is_loop_on (top1_S2 - {a} - {b}) ?TX_ab c0 l"
+              proof -
+                have hid_ab_raw: "top1_continuous_map_on (top1_S2 - {a} - {b}) ?TX_ab (top1_S2 - {a} - {b}) ?TX_ab id"
+                  by (rule top1_continuous_map_on_id[OF hTX_ab])
+                have "top1_continuous_map_on (top1_S2 - {a} - {b}) ?TX_ab (top1_S2 - {a} - {b}) ?TX_ab (\<lambda>x. x)"
+                  using hid_ab_raw unfolding id_def .
+                from top1_continuous_map_on_restrict_domain_simple[OF this hC_sub_ab]
+                have "top1_continuous_map_on C (subspace_topology (top1_S2 - {a} - {b}) ?TX_ab C) (top1_S2 - {a} - {b}) ?TX_ab (\<lambda>x. x)" .
+                hence hid_C_ab_loc: "top1_continuous_map_on C ?TC (top1_S2 - {a} - {b}) ?TX_ab (\<lambda>x. x)"
+                  using hTC_ab_eq by (by100 simp)
+                have "top1_is_loop_on (top1_S2 - {a} - {b}) ?TX_ab ((\<lambda>x. x) c0) ((\<lambda>x. x) \<circ> l)"
+                  by (rule top1_continuous_map_loop[OF hid_C_ab_loc hl])
+                moreover have "((\<lambda>x. x) c0 :: real \<times> real \<times> real) = c0" by (by100 simp)
+                moreover have "(\<lambda>x. x) \<circ> l = l" by (rule ext) (by100 simp)
+                ultimately show ?thesis by (by100 simp)
+              qed
+              have hl'_loop_ab: "top1_is_loop_on (top1_S2 - {a} - {b}) ?TX_ab c0 l'"
+                using hl'h unfolding top1_loop_equiv_on_def by (by100 blast)
+              have hll'_ab: "top1_loop_equiv_on (top1_S2 - {a} - {b}) ?TX_ab c0 l l'"
+              proof -
+                have hid_C_ab: "top1_continuous_map_on C ?TC (top1_S2 - {a} - {b}) ?TX_ab (\<lambda>x. x)"
+                proof -
+                  have "top1_continuous_map_on (top1_S2 - {a} - {b}) ?TX_ab (top1_S2 - {a} - {b}) ?TX_ab (\<lambda>x. x)"
+                    using top1_continuous_map_on_id[OF hTX_ab] unfolding id_def .
+                  from top1_continuous_map_on_restrict_domain_simple[OF this hC_sub_ab]
+                  show ?thesis using hTC_ab_eq by (by100 simp)
+                qed
+                have hl_C: "top1_is_loop_on C ?TC c0 l" using hl .
+                have hl'_C_loop: "top1_is_loop_on C ?TC c0 l'"
+                  using hl'_C unfolding top1_loop_equiv_on_def by (by100 blast)
+                have "top1_loop_equiv_on (top1_S2 - {a} - {b}) ?TX_ab ((\<lambda>x. x) c0) ((\<lambda>x. x) \<circ> l) ((\<lambda>x. x) \<circ> l')"
+                  by (rule top1_induced_preserves_loop_equiv[OF hTC hid_C_ab hl_C hl'_C_loop hl'_C])
+                moreover have "((\<lambda>x. x) c0 :: real \<times> real \<times> real) = c0" by (by100 simp)
+                moreover have "(\<lambda>x. x) \<circ> l = l" by (rule ext) (by100 simp)
+                moreover have "(\<lambda>x. x) \<circ> l' = l'" by (rule ext) (by100 simp)
+                ultimately show ?thesis by (by100 simp)
+              qed
+              from top1_loop_equiv_on_trans[OF hTX_ab hll'_ab hl'h]
+              show "h \<in> {h. top1_loop_equiv_on (top1_S2 - {a} - {b}) ?TX_ab c0 l h}" by (by100 blast)
+            next
+              fix h assume "h \<in> {h. top1_loop_equiv_on (top1_S2 - {a} - {b}) ?TX_ab c0 l h}"
+              hence hlh: "top1_loop_equiv_on (top1_S2 - {a} - {b}) ?TX_ab c0 l h" by (by100 simp)
+              have "top1_loop_equiv_on C ?TC c0 l l" by (rule top1_loop_equiv_on_refl[OF hl])
+              hence "l \<in> {k. top1_loop_equiv_on C ?TC c0 l k}" by (by100 blast)
+              thus "h \<in> {h. \<exists>l'\<in>{k. top1_loop_equiv_on C ?TC c0 l k}.
+                  top1_loop_equiv_on (top1_S2 - {a} - {b}) ?TX_ab c0 l' h}"
+                using hlh by (by100 blast)
+            qed
+          qed
+          finally show ?thesis .
+        qed
+        \<comment> \<open>So: l \<simeq> bc(rev\_\<beta>, \<phi>\<circ>m) in S2-{a}-{b}.\<close>
+        have hl_bc_m: "top1_loop_equiv_on (top1_S2 - {a} - {b}) ?TX_ab c0 l
+            (top1_basepoint_change_on (top1_S2 - {a} - {b}) ?TX_ab (\<phi> c0) c0 (top1_path_reverse \<beta>) (\<phi> \<circ> m))"
+        proof -
+          have hl_ab_loop: "top1_is_loop_on (top1_S2 - {a} - {b}) ?TX_ab c0 l"
+          proof -
+            have hid_ab_raw: "top1_continuous_map_on (top1_S2 - {a} - {b}) ?TX_ab (top1_S2 - {a} - {b}) ?TX_ab id"
+              by (rule top1_continuous_map_on_id[OF hTX_ab])
+            have "top1_continuous_map_on (top1_S2 - {a} - {b}) ?TX_ab (top1_S2 - {a} - {b}) ?TX_ab (\<lambda>x. x)"
+              using hid_ab_raw unfolding id_def .
+            from top1_continuous_map_on_restrict_domain_simple[OF this hC_sub_ab]
+            have hid_ab: "top1_continuous_map_on C
+                (subspace_topology (top1_S2 - {a} - {b}) ?TX_ab C)
+                (top1_S2 - {a} - {b}) ?TX_ab (\<lambda>x. x)" .
+            have "subspace_topology (top1_S2 - {a} - {b}) ?TX_ab C = ?TC"
+              using subspace_topology_trans[of C "top1_S2 - {a} - {b}" top1_S2 top1_S2_topology]
+                hC_sub_ab by (by100 simp)
+            hence hid_ab': "top1_continuous_map_on C ?TC (top1_S2 - {a} - {b}) ?TX_ab (\<lambda>x. x)"
+              using hid_ab by (by100 simp)
+            have "top1_is_loop_on (top1_S2 - {a} - {b}) ?TX_ab ((\<lambda>x. x) c0) ((\<lambda>x. x) \<circ> l)"
+              by (rule top1_continuous_map_loop[OF hid_ab' hl])
+            moreover have "((\<lambda>x. x) c0 :: real \<times> real \<times> real) = c0" by (by100 simp)
+            moreover have "(\<lambda>x. x) \<circ> l = l" by (rule ext) (by100 simp)
+            ultimately show ?thesis by (by100 simp)
+          qed
+          have "l \<in> {k. top1_loop_equiv_on (top1_S2 - {a} - {b}) ?TX_ab c0 l k}"
+            using top1_loop_equiv_on_refl[OF hl_ab_loop] by (by100 blast)
+          hence "l \<in> ?j_star c0_class" using hj_cl by (by100 simp)
+          hence "l \<in> {k. top1_loop_equiv_on (top1_S2 - {a} - {b}) ?TX_ab c0
+              (top1_basepoint_change_on (top1_S2 - {a} - {b}) ?TX_ab (\<phi> c0) c0 (top1_path_reverse \<beta>) (\<phi> \<circ> m)) k}"
+            using hj_c0_eq by (by100 blast)
+          hence "top1_loop_equiv_on (top1_S2 - {a} - {b}) ?TX_ab c0
+              (top1_basepoint_change_on (top1_S2 - {a} - {b}) ?TX_ab (\<phi> c0) c0 (top1_path_reverse \<beta>) (\<phi> \<circ> m)) l"
+            by (by100 simp)
+          thus ?thesis by (rule top1_loop_equiv_on_sym)
+        qed
+        \<comment> \<open>From homotopy: l \<simeq> bc(rev\_\<beta>, \<phi>\<circ>l) in S2-{a}-{b}.\<close>
+        note hbc_l = hbc_key[OF hl]
+        \<comment> \<open>Therefore: bc(rev\_\<beta>, \<phi>\<circ>l) \<simeq> bc(rev\_\<beta>, \<phi>\<circ>m) in S2-{a}-{b}.\<close>
+        have hbc_lm: "top1_loop_equiv_on (top1_S2 - {a} - {b}) ?TX_ab c0
+            (top1_basepoint_change_on (top1_S2 - {a} - {b}) ?TX_ab (\<phi> c0) c0 (top1_path_reverse \<beta>) (\<phi> \<circ> l))
+            (top1_basepoint_change_on (top1_S2 - {a} - {b}) ?TX_ab (\<phi> c0) c0 (top1_path_reverse \<beta>) (\<phi> \<circ> m))"
+          by (rule top1_loop_equiv_on_trans[OF hTX_ab top1_loop_equiv_on_sym[OF hbc_l] hl_bc_m])
+        \<comment> \<open>Undo bc: \<phi>\<circ>l \<simeq> \<phi>\<circ>m in S2-{a}-{b} at \<phi>(c0).\<close>
+        have hl_X'_loop3: "top1_is_loop_on (top1_S2 - {a'} - {b}) ?TX' c0 l"
+        proof -
+          have "top1_is_loop_on (top1_S2 - {a'} - {b}) ?TX' (id c0) (id \<circ> l)"
+            by (rule top1_continuous_map_loop[OF hid_cont hl])
+          thus ?thesis by (by100 simp)
+        qed
+        have h\<phi>l_loop: "top1_is_loop_on (top1_S2 - {a} - {b}) ?TX_ab (\<phi> c0) (\<phi> \<circ> l)"
+          by (rule top1_continuous_map_loop[OF h\<phi>_cont hl_X'_loop3])
+        have h\<phi>l_bc: "top1_is_loop_on (top1_S2 - {a} - {b}) ?TX_ab c0
+            (top1_basepoint_change_on (top1_S2 - {a} - {b}) ?TX_ab (\<phi> c0) c0 (top1_path_reverse \<beta>) (\<phi> \<circ> l))"
+          by (rule top1_basepoint_change_is_loop[OF hTX_ab hrev_\<beta> h\<phi>l_loop])
+        have h\<phi>lm: "top1_loop_equiv_on (top1_S2 - {a} - {b}) ?TX_ab (\<phi> c0) (\<phi> \<circ> l) (\<phi> \<circ> m)"
+        proof -
+          \<comment> \<open>Use roundtrip: p \<simeq> bc(\<beta>, bc(rev\_\<beta>, p)) for loops p at \<phi>(c0).\<close>
+          have hrt_l: "top1_path_homotopic_on (top1_S2 - {a} - {b}) ?TX_ab (\<phi> c0) (\<phi> c0) (\<phi> \<circ> l)
+              (top1_basepoint_change_on (top1_S2 - {a} - {b}) ?TX_ab c0 (\<phi> c0) \<beta>
+                (top1_basepoint_change_on (top1_S2 - {a} - {b}) ?TX_ab (\<phi> c0) c0 (top1_path_reverse \<beta>) (\<phi> \<circ> l)))"
+            using top1_basepoint_change_roundtrip[OF hTX_ab hrev_\<beta> h\<phi>l_loop]
+            unfolding top1_path_reverse_twice .
+          have hrt_m: "top1_path_homotopic_on (top1_S2 - {a} - {b}) ?TX_ab (\<phi> c0) (\<phi> c0) (\<phi> \<circ> m)
+              (top1_basepoint_change_on (top1_S2 - {a} - {b}) ?TX_ab c0 (\<phi> c0) \<beta>
+                (top1_basepoint_change_on (top1_S2 - {a} - {b}) ?TX_ab (\<phi> c0) c0 (top1_path_reverse \<beta>) (\<phi> \<circ> m)))"
+            using top1_basepoint_change_roundtrip[OF hTX_ab hrev_\<beta> h\<phi>m_loop]
+            unfolding top1_path_reverse_twice .
+          have hbc_lm_up: "top1_loop_equiv_on (top1_S2 - {a} - {b}) ?TX_ab (\<phi> c0)
+              (top1_basepoint_change_on (top1_S2 - {a} - {b}) ?TX_ab c0 (\<phi> c0) \<beta>
+                (top1_basepoint_change_on (top1_S2 - {a} - {b}) ?TX_ab (\<phi> c0) c0 (top1_path_reverse \<beta>) (\<phi> \<circ> l)))
+              (top1_basepoint_change_on (top1_S2 - {a} - {b}) ?TX_ab c0 (\<phi> c0) \<beta>
+                (top1_basepoint_change_on (top1_S2 - {a} - {b}) ?TX_ab (\<phi> c0) c0 (top1_path_reverse \<beta>) (\<phi> \<circ> m)))"
+            by (rule top1_basepoint_change_loop_equiv[OF hTX_ab h\<beta>_path h\<phi>l_bc hbc_m_loop hbc_lm])
+          have hrt_l_eq: "top1_loop_equiv_on (top1_S2 - {a} - {b}) ?TX_ab (\<phi> c0) (\<phi> \<circ> l)
+              (top1_basepoint_change_on (top1_S2 - {a} - {b}) ?TX_ab c0 (\<phi> c0) \<beta>
+                (top1_basepoint_change_on (top1_S2 - {a} - {b}) ?TX_ab (\<phi> c0) c0 (top1_path_reverse \<beta>) (\<phi> \<circ> l)))"
+            using hrt_l unfolding top1_loop_equiv_on_def top1_path_reverse_twice
+            using h\<phi>l_loop top1_basepoint_change_is_loop[OF hTX_ab h\<beta>_path h\<phi>l_bc] by (by100 blast)
+          have hrt_m_eq: "top1_loop_equiv_on (top1_S2 - {a} - {b}) ?TX_ab (\<phi> c0) (\<phi> \<circ> m)
+              (top1_basepoint_change_on (top1_S2 - {a} - {b}) ?TX_ab c0 (\<phi> c0) \<beta>
+                (top1_basepoint_change_on (top1_S2 - {a} - {b}) ?TX_ab (\<phi> c0) c0 (top1_path_reverse \<beta>) (\<phi> \<circ> m)))"
+            using hrt_m unfolding top1_loop_equiv_on_def top1_path_reverse_twice
+            using h\<phi>m_loop top1_basepoint_change_is_loop[OF hTX_ab h\<beta>_path hbc_m_loop] by (by100 blast)
+          show ?thesis
+            by (rule top1_loop_equiv_on_trans[OF hTX_ab
+                top1_loop_equiv_on_trans[OF hTX_ab hrt_l_eq hbc_lm_up]
+                top1_loop_equiv_on_sym[OF hrt_m_eq]])
+        qed
+        \<comment> \<open>Apply \<phi>\<inverse>: l \<simeq> m in S2-{a'}-{b}.\<close>
+        have hl_X'_loop2: "top1_is_loop_on (top1_S2 - {a} - {b}) ?TX_ab (\<phi> c0) (\<phi> \<circ> l)"
+          using h\<phi>l_loop .
+        have hm_ab_loop: "top1_is_loop_on (top1_S2 - {a} - {b}) ?TX_ab (\<phi> c0) (\<phi> \<circ> m)"
+          using h\<phi>m_loop .
+        have h\<phi>inv_lm: "top1_loop_equiv_on (top1_S2 - {a'} - {b}) ?TX' (\<phi>_inv (\<phi> c0))
+            (\<phi>_inv \<circ> (\<phi> \<circ> l)) (\<phi>_inv \<circ> (\<phi> \<circ> m))"
+          by (rule top1_induced_preserves_loop_equiv[OF hTX_ab h\<phi>_inv_cont hl_X'_loop2 hm_ab_loop h\<phi>lm])
+        have hlm_X': "top1_loop_equiv_on (top1_S2 - {a'} - {b}) ?TX' c0 l m"
+        proof -
+          \<comment> \<open>From h\<phi>inv\_lm at basepoint \<phi>\_inv(\<phi> c0) = c0.\<close>
+          have h\<phi>inv_lm': "top1_loop_equiv_on (top1_S2 - {a'} - {b}) ?TX' c0
+              (\<phi>_inv \<circ> (\<phi> \<circ> l)) (\<phi>_inv \<circ> (\<phi> \<circ> m))"
+            using h\<phi>inv_lm h\<phi>_inv_c0 by (by100 simp)
+          \<comment> \<open>\<phi>\_inv \<circ> \<phi> \<circ> l agrees with l on I\_set.\<close>
+          have hagree_l: "\<forall>s \<in> I_set. (\<phi>_inv \<circ> (\<phi> \<circ> l)) s = l s"
+          proof (intro ballI)
+            fix s assume "s \<in> I_set"
+            have "l s \<in> C" using hl \<open>s \<in> I_set\<close>
+              unfolding top1_is_loop_on_def top1_is_path_on_def top1_continuous_map_on_def
+              by (by100 blast)
+            hence "l s \<in> top1_S2 - {a'} - {b}" using hC_sub_X' by (by100 blast)
+            thus "(\<phi>_inv \<circ> (\<phi> \<circ> l)) s = l s" using h\<phi>_inv_\<phi> by (by100 simp)
+          qed
+          have hl_X'_loop4: "top1_is_loop_on (top1_S2 - {a'} - {b}) ?TX' c0 l"
+          proof -
+            have "top1_is_loop_on (top1_S2 - {a'} - {b}) ?TX' (id c0) (id \<circ> l)"
+              by (rule top1_continuous_map_loop[OF hid_cont hl])
+            thus ?thesis by (by100 simp)
+          qed
+          have "top1_path_homotopic_on (top1_S2 - {a'} - {b}) ?TX' c0 c0 l (\<phi>_inv \<circ> (\<phi> \<circ> l))"
+            using loop_agree_on_I[OF hl_X'_loop4 hagree_l] by (by100 blast)
+          have h\<phi>inv_\<phi>l_loop: "top1_is_loop_on (top1_S2 - {a'} - {b}) ?TX' c0 (\<phi>_inv \<circ> (\<phi> \<circ> l))"
+            using h\<phi>inv_lm' unfolding top1_loop_equiv_on_def by (by100 blast)
+          hence hl_eq_inv: "top1_loop_equiv_on (top1_S2 - {a'} - {b}) ?TX' c0 l (\<phi>_inv \<circ> (\<phi> \<circ> l))"
+            unfolding top1_loop_equiv_on_def
+            using hl_X'_loop4 \<open>top1_path_homotopic_on _ _ c0 c0 l (\<phi>_inv \<circ> (\<phi> \<circ> l))\<close>
+            by (by100 blast)
+          \<comment> \<open>\<phi>\_inv \<circ> \<phi> \<circ> m agrees with m on I\_set.\<close>
+          have hagree_m: "\<forall>s \<in> I_set. (\<phi>_inv \<circ> (\<phi> \<circ> m)) s = m s"
+          proof (intro ballI)
+            fix s assume "s \<in> I_set"
+            have "m s \<in> top1_S2 - {a'} - {b}" using hm \<open>s \<in> I_set\<close>
+              unfolding top1_is_loop_on_def top1_is_path_on_def top1_continuous_map_on_def
+              by (by100 blast)
+            thus "(\<phi>_inv \<circ> (\<phi> \<circ> m)) s = m s" using h\<phi>_inv_\<phi> by (by100 simp)
+          qed
+          have hm_X'_loop: "top1_is_loop_on (top1_S2 - {a'} - {b}) ?TX' c0 m"
+            using hm .
+          have "top1_path_homotopic_on (top1_S2 - {a'} - {b}) ?TX' c0 c0 m (\<phi>_inv \<circ> (\<phi> \<circ> m))"
+            using loop_agree_on_I[OF hm_X'_loop hagree_m] by (by100 blast)
+          have h\<phi>inv_\<phi>m_loop: "top1_is_loop_on (top1_S2 - {a'} - {b}) ?TX' c0 (\<phi>_inv \<circ> (\<phi> \<circ> m))"
+            using h\<phi>inv_lm' unfolding top1_loop_equiv_on_def by (by100 blast)
+          hence hm_eq_inv: "top1_loop_equiv_on (top1_S2 - {a'} - {b}) ?TX' c0 m (\<phi>_inv \<circ> (\<phi> \<circ> m))"
+            unfolding top1_loop_equiv_on_def
+            using hm_X'_loop \<open>top1_path_homotopic_on _ _ c0 c0 m (\<phi>_inv \<circ> (\<phi> \<circ> m))\<close>
+            by (by100 blast)
+          \<comment> \<open>Chain: l \<simeq> \<phi>\_inv\<circ>\<phi>\<circ>l \<simeq> \<phi>\_inv\<circ>\<phi>\<circ>m \<simeq> m.\<close>
+          show ?thesis
+            by (rule top1_loop_equiv_on_trans[OF hTX'
+                top1_loop_equiv_on_trans[OF hTX' hl_eq_inv h\<phi>inv_lm']
+                top1_loop_equiv_on_sym[OF hm_eq_inv]])
+        qed
+        \<comment> \<open>k*([l]) = d.\<close>
+        have hTC_eq: "subspace_topology (top1_S2 - {a'} - {b}) ?TX' C = ?TC"
+          using subspace_topology_trans[of C "top1_S2 - {a'} - {b}" top1_S2 top1_S2_topology]
+            hC_sub_X' by (by100 simp)
+        have hl_X'2: "top1_is_loop_on C (subspace_topology (top1_S2 - {a'} - {b}) ?TX' C) c0 l"
+          using hl hTC_eq by (by100 simp)
+        have hk_cl: "?k_star c0_class = {k. top1_loop_equiv_on (top1_S2 - {a'} - {b}) ?TX' c0 l k}"
+          unfolding hcl_eq hid_lam2 using subspace_inclusion_induced_class[OF hTX' hC_sub_X' hl_X'2]
+          unfolding hTC_eq by (by100 simp)
+        have hk_cl_eq_d: "?k_star c0_class = d"
+        proof -
+          have "\<And>k. top1_loop_equiv_on (top1_S2 - {a'} - {b}) ?TX' c0 l k
+              \<longleftrightarrow> top1_loop_equiv_on (top1_S2 - {a'} - {b}) ?TX' c0 m k"
+            using hlm_X' top1_loop_equiv_on_trans[OF hTX']
+                  top1_loop_equiv_on_trans[OF hTX' top1_loop_equiv_on_sym[OF hlm_X']]
+            by (by100 blast)
+          thus ?thesis unfolding hk_cl hd_eq by (by100 auto)
+        qed
+        show "d \<in> ?k_star ` (top1_fundamental_group_carrier C ?TC c0)"
+          using hk_cl_eq_d hc0_cl by (by100 blast)
+      qed
       thus ?thesis unfolding bij_betw_def using hk_inj hk_surj by (by100 blast)
     qed
     show ?thesis unfolding top1_group_iso_on_def using hk_hom hk_bij by (by100 blast)

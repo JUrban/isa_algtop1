@@ -4016,8 +4016,179 @@ corollary pi1_S2_minus_two_points_iso_Z:
       (top1_fundamental_group_mul (top1_S2 - {p} - {q})
         (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p} - {q})) a)
       top1_Z_group top1_Z_mul"
-  sorry \<comment> \<open>Same proof as pi1\_S2\_minus\_two\_points\_infinite\_cyclic lines 2975-3638.
-     The Z-iso hpi1\_iso\_Z is an intermediate result in that proof.\<close>
+  sorry \<comment> \<open>Proved as pi1\_S2\_minus\_two\_points\_iso\_Z\_proved in AlgTopCached.thy.
+     The proof chains: stereographic \<rightarrow> restrict \<rightarrow> translate \<rightarrow> deformation retract \<rightarrow> Thm 54.5.
+     Infrastructure (Corollary\_52\_5, groups\_isomorphic\_trans\_fwd) not available at AlgTop0 level.\<close>
+
+text \<open>DEAD CODE: old proof skeleton replaced by sorry + proved version in AlgTopCached.\<close>
+(*
+proof -
+  \<comment> \<open>Chain: S2-{p} homeo R2. Restrict: S2-{p,q} homeo R2-{q'}.
+     Translate: R2-{q'} homeo R2-{0}. Deformation retract: R2-{0} \<rightarrow> S1.
+     S1 has \<pi>\_1 \<cong> Z (Theorem 54.5). Compose iso chain.\<close>
+  let ?X = "top1_S2 - {p} - {q}"
+  let ?TX = "subspace_topology top1_S2 top1_S2_topology ?X"
+  have hTopS2: "is_topology_on top1_S2 top1_S2_topology"
+    using assms(1) unfolding is_topology_on_strict_def by blast
+  have hTX: "is_topology_on ?X ?TX" by (rule subspace_topology_is_topology_on[OF hTopS2]) blast
+  \<comment> \<open>Step 1: Stereographic: S2-{p} \<cong> R2.\<close>
+  obtain \<sigma> where h\<sigma>: "top1_homeomorphism_on (top1_S2 - {p})
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p}))
+      (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets) \<sigma>"
+    using S2_minus_point_homeo_R2[OF assms(2)] by blast
+  \<comment> \<open>Step 2: Restrict to S2-{p,q} \<cong> R2-{\<sigma>(q)}.\<close>
+  have hq_in: "q \<in> top1_S2 - {p}" using assms(3,4) by blast
+  define q' where "q' = \<sigma> q"
+  have h\<sigma>_rest: "top1_homeomorphism_on ?X ?TX (UNIV - {q'} :: (real \<times> real) set)
+      (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {q'})) \<sigma>"
+  proof -
+    from homeomorphism_restrict_point[OF h\<sigma> hq_in]
+    have h1: "top1_homeomorphism_on ((top1_S2 - {p}) - {q})
+        (subspace_topology (top1_S2 - {p}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p}))
+          ((top1_S2 - {p}) - {q}))
+        ((UNIV :: (real \<times> real) set) - {\<sigma> q})
+        (subspace_topology (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets)
+          (UNIV - {\<sigma> q})) \<sigma>" .
+    have hXeq: "(top1_S2 - {p}) - {q} = ?X" by blast
+    have hTXeq: "subspace_topology (top1_S2 - {p})
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p})) ((top1_S2 - {p}) - {q}) = ?TX"
+      using subspace_topology_trans[of ?X "top1_S2 - {p}" top1_S2 top1_S2_topology] by auto
+    show ?thesis using h1 hXeq hTXeq q'_def by simp
+  qed
+  \<comment> \<open>Step 3: Translate R2-{q'} \<cong> R2-{0}.\<close>
+  define R2_0 :: "(real \<times> real) set" where "R2_0 = UNIV - {(0, 0)}"
+  define TR2_0 where "TR2_0 = subspace_topology (UNIV :: (real \<times> real) set)
+      (product_topology_on top1_open_sets top1_open_sets) R2_0"
+  define t :: "real \<times> real \<Rightarrow> real \<times> real" where
+    "t = (\<lambda>x. (fst x - fst q', snd x - snd q'))"
+  have ht_homeo: "top1_homeomorphism_on (UNIV - {q'} :: (real \<times> real) set)
+      (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {q'}))
+      R2_0 TR2_0 t"
+    unfolding R2_0_def TR2_0_def t_def by (rule translation_homeo_R2[of q'])
+  \<comment> \<open>Step 4: Compose: h = t \<circ> \<sigma> : S2-{p,q} \<cong> R2-{0}.\<close>
+  define h where "h = t \<circ> \<sigma>"
+  have hh: "top1_homeomorphism_on ?X ?TX R2_0 TR2_0 h"
+    unfolding h_def by (rule homeomorphism_comp[OF h\<sigma>_rest ht_homeo])
+  \<comment> \<open>Step 5: S1 is a deformation retract of R2-{0}. \<pi>\_1(R2-{0}) \<cong> \<pi>\_1(S1) \<cong> Z.\<close>
+  \<comment> \<open>Use Theorem\_58\_2\_inclusion\_iso + Theorem\_54\_5\_iso + basepoint change.\<close>
+  \<comment> \<open>Step 6: Compose all isomorphisms to get \<pi>\_1(?X, a) \<cong> Z.\<close>
+  \<comment> \<open>Helper: homeomorphism induces \<pi>\_1 iso (proves Corollary 52.5 inline).\<close>
+  have hTR2: "is_topology_on R2_0 TR2_0"
+    using hh unfolding top1_homeomorphism_on_def by blast
+  have hha: "h a \<in> R2_0"
+    using hh assms(5) unfolding top1_homeomorphism_on_def bij_betw_def by blast
+  have hiso1: "top1_groups_isomorphic_on
+      (top1_fundamental_group_carrier ?X ?TX a)
+      (top1_fundamental_group_mul ?X ?TX a)
+      (top1_fundamental_group_carrier R2_0 TR2_0 (h a))
+      (top1_fundamental_group_mul R2_0 TR2_0 (h a))"
+    sorry
+  \<comment> \<open>Basepoint change in R2-{0}: h(a) to (1,0).\<close>
+  have h10: "(1::real, 0::real) \<in> R2_0" unfolding R2_0_def by simp
+  have hpc: "top1_path_connected_on R2_0 TR2_0"
+    unfolding R2_0_def TR2_0_def using R2_minus_point_path_connected[of "(0,0)"] by simp
+  obtain \<gamma> where h\<gamma>: "top1_is_path_on R2_0 TR2_0 (h a) (1, 0) \<gamma>"
+    using hpc hha h10 unfolding top1_path_connected_on_def by blast
+  have hiso2: "top1_groups_isomorphic_on
+      (top1_fundamental_group_carrier R2_0 TR2_0 (h a))
+      (top1_fundamental_group_mul R2_0 TR2_0 (h a))
+      (top1_fundamental_group_carrier R2_0 TR2_0 (1, 0))
+      (top1_fundamental_group_mul R2_0 TR2_0 (1, 0))"
+    by (rule basepoint_change_iso_via_path[OF hTR2 h\<gamma>])
+  \<comment> \<open>Deformation retract: S1 \<hookrightarrow> R2-{0} induces iso.\<close>
+  have hiso3: "top1_groups_isomorphic_on
+      (top1_fundamental_group_carrier top1_S1
+        (subspace_topology R2_0 TR2_0 top1_S1) (1, 0))
+      (top1_fundamental_group_mul top1_S1
+        (subspace_topology R2_0 TR2_0 top1_S1) (1, 0))
+      (top1_fundamental_group_carrier R2_0 TR2_0 (1, 0))
+      (top1_fundamental_group_mul R2_0 TR2_0 (1, 0))"
+    unfolding R2_0_def TR2_0_def by (rule Theorem_58_2_inclusion_iso)
+  \<comment> \<open>S1 subspace topology in R2-{0} = S1\_topology.\<close>
+  have hS1_sub: "top1_S1 \<subseteq> R2_0"
+  proof -
+    have "(0::real, 0::real) \<notin> top1_S1" unfolding top1_S1_def by simp
+    thus ?thesis unfolding R2_0_def by blast
+  qed
+  have hS1_topo: "subspace_topology R2_0 TR2_0 top1_S1 = top1_S1_topology"
+  proof -
+    have "subspace_topology R2_0 TR2_0 top1_S1 =
+        subspace_topology (UNIV :: (real \<times> real) set)
+          (product_topology_on top1_open_sets top1_open_sets) top1_S1"
+      unfolding TR2_0_def using subspace_topology_trans[of top1_S1 R2_0] hS1_sub by simp
+    also have "\<dots> = top1_S1_topology" unfolding top1_S1_topology_def by simp
+    finally show ?thesis .
+  qed
+  \<comment> \<open>Theorem 54.5: \<pi>\_1(S1) \<cong> Z.\<close>
+  have hiso_S1Z: "top1_groups_isomorphic_on
+      (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
+      (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))
+      top1_Z_group top1_Z_mul"
+    by (rule Theorem_54_5_iso)
+  \<comment> \<open>Helper: transitivity of group iso.\<close>
+  have iso_trans: "\<And>G mulG H mulH K mulK.
+      top1_groups_isomorphic_on G mulG H mulH \<Longrightarrow>
+      top1_groups_isomorphic_on H mulH K mulK \<Longrightarrow>
+      top1_groups_isomorphic_on G mulG K mulK"
+  proof -
+    fix G mulG H mulH K mulK
+    assume h1: "top1_groups_isomorphic_on G mulG H mulH"
+       and h2: "top1_groups_isomorphic_on H mulH K mulK"
+    from h1 obtain f where hf: "top1_group_hom_on G mulG H mulH f" "bij_betw f G H"
+      unfolding top1_groups_isomorphic_on_def top1_group_iso_on_def by blast
+    from h2 obtain g where hg: "top1_group_hom_on H mulH K mulK g" "bij_betw g H K"
+      unfolding top1_groups_isomorphic_on_def top1_group_iso_on_def by blast
+    have "top1_group_hom_on G mulG K mulK (g \<circ> f)"
+      unfolding top1_group_hom_on_def
+    proof (intro conjI ballI)
+      fix x assume "x \<in> G"
+      thus "(g \<circ> f) x \<in> K"
+        using hf(1) hg(1) unfolding top1_group_hom_on_def comp_def by blast
+    next
+      fix x y assume "x \<in> G" "y \<in> G"
+      thus "(g \<circ> f) (mulG x y) = mulK ((g \<circ> f) x) ((g \<circ> f) y)"
+        using hf(1) hg(1) unfolding top1_group_hom_on_def comp_def by force
+    qed
+    moreover have "bij_betw (g \<circ> f) G K"
+      by (rule bij_betw_trans[OF hf(2) hg(2)])
+    ultimately show "top1_groups_isomorphic_on G mulG K mulK"
+      unfolding top1_groups_isomorphic_on_def top1_group_iso_on_def by blast
+  qed
+  \<comment> \<open>Helper: symmetric iso (need to flip hiso3 direction).\<close>
+  have iso_sym: "\<And>G mulG eG invgG H mulH eH invgH.
+      top1_groups_isomorphic_on G mulG H mulH \<Longrightarrow>
+      top1_is_group_on G mulG eG invgG \<Longrightarrow>
+      top1_is_group_on H mulH eH invgH \<Longrightarrow>
+      top1_groups_isomorphic_on H mulH G mulG"
+    sorry
+  \<comment> \<open>Compose: \<pi>\_1(?X, a) \<cong> \<pi>\_1(R2\_0, h(a)) \<cong> \<pi>\_1(R2\_0, (1,0)) \<cong> Z.\<close>
+  have hchain12: "top1_groups_isomorphic_on
+      (top1_fundamental_group_carrier ?X ?TX a)
+      (top1_fundamental_group_mul ?X ?TX a)
+      (top1_fundamental_group_carrier R2_0 TR2_0 (1, 0))
+      (top1_fundamental_group_mul R2_0 TR2_0 (1, 0))"
+    by (rule iso_trans[OF hiso1 hiso2])
+  \<comment> \<open>Flip hiso3: \<pi>\_1(R2\_0,(1,0)) \<cong> \<pi>\_1(S1,(1,0)).\<close>
+  have hiso3': "top1_groups_isomorphic_on
+      (top1_fundamental_group_carrier R2_0 TR2_0 (1, 0))
+      (top1_fundamental_group_mul R2_0 TR2_0 (1, 0))
+      (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
+      (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))"
+  proof -
+    have hTS1: "is_topology_on top1_S1 top1_S1_topology"
+      using top1_S1_is_topology_on_strict unfolding is_topology_on_strict_def by blast
+    have h10_S1: "(1::real, 0::real) \<in> top1_S1" unfolding top1_S1_def by simp
+    from iso_sym[OF hiso3[unfolded hS1_topo]] show ?thesis using hS1_topo sorry
+  qed
+  have hchain123: "top1_groups_isomorphic_on
+      (top1_fundamental_group_carrier ?X ?TX a)
+      (top1_fundamental_group_mul ?X ?TX a)
+      (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
+      (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))"
+    by (rule iso_trans[OF hchain12 hiso3'])
+  show ?thesis by (rule iso_trans[OF hchain123 hiso_S1Z])
+qed
+*)
 
 text \<open>If f \<simeq> g (loops at a), then f^n \<simeq> g^n.\<close>
 lemma path_homotopic_path_power:

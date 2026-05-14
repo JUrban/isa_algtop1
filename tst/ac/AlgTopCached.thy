@@ -58836,4 +58836,102 @@ next
   show "W' \<in> TE" unfolding TE_def using hW'_sub heven hodd by (by100 blast)
 qed
 
+text \<open>Proved version of pi1\_S2\_minus\_two\_points\_iso\_Z (sorry'd in AlgTop0).
+  Uses infrastructure from this theory (Corollary\_52\_5, groups\_isomorphic\_trans\_fwd, etc.).\<close>
+corollary pi1_S2_minus_two_points_iso_Z_proved:
+  assumes "is_topology_on_strict top1_S2 top1_S2_topology"
+      and "p \<in> top1_S2" and "q \<in> top1_S2" and "p \<noteq> q"
+      and "a \<in> top1_S2 - {p} - {q}"
+  shows "top1_groups_isomorphic_on
+      (top1_fundamental_group_carrier (top1_S2 - {p} - {q})
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p} - {q})) a)
+      (top1_fundamental_group_mul (top1_S2 - {p} - {q})
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p} - {q})) a)
+      top1_Z_group top1_Z_mul"
+proof -
+  let ?X = "top1_S2 - {p} - {q}"
+  let ?TX = "subspace_topology top1_S2 top1_S2_topology ?X"
+  have hTopS2: "is_topology_on top1_S2 top1_S2_topology"
+    using assms(1) unfolding is_topology_on_strict_def by blast
+  have hTX: "is_topology_on ?X ?TX"
+    by (rule subspace_topology_is_topology_on[OF hTopS2]) blast
+  obtain \<sigma> where h\<sigma>: "top1_homeomorphism_on (top1_S2 - {p})
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p}))
+      (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets) \<sigma>"
+    using S2_minus_point_homeo_R2[OF assms(2)] by blast
+  define q' where "q' = \<sigma> q"
+  define R2_0 :: "(real \<times> real) set" where "R2_0 = UNIV - {(0, 0)}"
+  define TR2_0 where "TR2_0 = subspace_topology (UNIV :: (real \<times> real) set)
+      (product_topology_on top1_open_sets top1_open_sets) R2_0"
+  obtain h where hh: "top1_homeomorphism_on ?X ?TX R2_0 TR2_0 h"
+  proof -
+    have hq_in: "q \<in> top1_S2 - {p}" using assms(3,4) by blast
+    have h\<sigma>_rest: "top1_homeomorphism_on ?X ?TX (UNIV - {q'} :: (real \<times> real) set)
+        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (UNIV - {q'})) \<sigma>"
+    proof -
+      from homeomorphism_restrict_point[OF h\<sigma> hq_in]
+      show ?thesis using subspace_topology_trans[of ?X "top1_S2 - {p}" top1_S2 top1_S2_topology]
+        q'_def by auto
+    qed
+    define t :: "real \<times> real \<Rightarrow> real \<times> real" where "t = (\<lambda>x. (fst x - fst q', snd x - snd q'))"
+    from homeomorphism_comp[OF h\<sigma>_rest
+        translation_homeo_R2[of q', folded R2_0_def TR2_0_def t_def]]
+    show ?thesis by (rule that)
+  qed
+  have hTR2: "is_topology_on R2_0 TR2_0"
+    using hh unfolding top1_homeomorphism_on_def by blast
+  have hha: "h a \<in> R2_0"
+    using hh assms(5) unfolding top1_homeomorphism_on_def bij_betw_def by blast
+  have hiso1: "top1_groups_isomorphic_on
+      (top1_fundamental_group_carrier ?X ?TX a) (top1_fundamental_group_mul ?X ?TX a)
+      (top1_fundamental_group_carrier R2_0 TR2_0 (h a)) (top1_fundamental_group_mul R2_0 TR2_0 (h a))"
+    by (rule Corollary_52_5_homeomorphism_iso[OF hTX hTR2 hh assms(5)]) simp
+  have h10: "(1::real, 0::real) \<in> R2_0" unfolding R2_0_def by simp
+  have hpc: "top1_path_connected_on R2_0 TR2_0"
+    unfolding R2_0_def TR2_0_def using R2_minus_point_path_connected[of "(0,0)"] by simp
+  obtain \<gamma> where h\<gamma>: "top1_is_path_on R2_0 TR2_0 (h a) (1, 0) \<gamma>"
+    using hpc hha h10 unfolding top1_path_connected_on_def by blast
+  have hiso2: "top1_groups_isomorphic_on
+      (top1_fundamental_group_carrier R2_0 TR2_0 (h a)) (top1_fundamental_group_mul R2_0 TR2_0 (h a))
+      (top1_fundamental_group_carrier R2_0 TR2_0 (1, 0)) (top1_fundamental_group_mul R2_0 TR2_0 (1, 0))"
+    by (rule basepoint_change_iso_via_path[OF hTR2 h\<gamma>])
+  have hS1_sub: "top1_S1 \<subseteq> R2_0"
+  proof -
+    have "(0::real, 0::real) \<notin> top1_S1" unfolding top1_S1_def by simp
+    thus ?thesis unfolding R2_0_def by blast
+  qed
+  have hS1_topo: "subspace_topology R2_0 TR2_0 top1_S1 = top1_S1_topology"
+    unfolding TR2_0_def using subspace_topology_trans[of top1_S1 R2_0] hS1_sub
+      top1_S1_topology_def by auto
+  have hiso3: "top1_groups_isomorphic_on
+      (top1_fundamental_group_carrier R2_0 TR2_0 (1, 0)) (top1_fundamental_group_mul R2_0 TR2_0 (1, 0))
+      (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
+      (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))"
+  proof -
+    have hTS1: "is_topology_on top1_S1 top1_S1_topology"
+      using top1_S1_is_topology_on_strict unfolding is_topology_on_strict_def by blast
+    have h10_S1: "(1::real, 0::real) \<in> top1_S1" unfolding top1_S1_def by simp
+    have hiso_incl: "top1_groups_isomorphic_on
+        (top1_fundamental_group_carrier top1_S1 (subspace_topology R2_0 TR2_0 top1_S1) (1, 0))
+        (top1_fundamental_group_mul top1_S1 (subspace_topology R2_0 TR2_0 top1_S1) (1, 0))
+        (top1_fundamental_group_carrier R2_0 TR2_0 (1, 0))
+        (top1_fundamental_group_mul R2_0 TR2_0 (1, 0))"
+      unfolding R2_0_def TR2_0_def by (rule Theorem_58_2_inclusion_iso)
+    have hiso_incl': "top1_groups_isomorphic_on
+        (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
+        (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))
+        (top1_fundamental_group_carrier R2_0 TR2_0 (1, 0))
+        (top1_fundamental_group_mul R2_0 TR2_0 (1, 0))"
+      using hiso_incl hS1_topo by simp
+    show ?thesis
+      by (rule top1_groups_isomorphic_on_sym[OF hiso_incl'
+          top1_fundamental_group_is_group[OF hTS1 h10_S1]
+          top1_fundamental_group_is_group[OF hTR2 h10]])
+  qed
+  show ?thesis
+    by (rule groups_isomorphic_trans_fwd[OF
+        groups_isomorphic_trans_fwd[OF groups_isomorphic_trans_fwd[OF hiso1 hiso2] hiso3]
+        Theorem_54_5_iso])
+qed
+
 end
