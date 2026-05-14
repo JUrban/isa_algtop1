@@ -5703,7 +5703,36 @@ proof -
         qed
         \<comment> \<open>Step 7: cl\_S2(W\_q) \<subseteq> S2-{p}. Compact (closed in compact S2). h\_sel continuous
            on S2-{p}. Image compact hence bounded.\<close>
-        have hWq_bdd: "\<exists>M. \<forall>x \<in> h_sel ` W_q. fst x ^ 2 + snd x ^ 2 \<le> M" sorry
+        have hWq_bdd: "\<exists>M. \<forall>x \<in> h_sel ` W_q. fst x ^ 2 + snd x ^ 2 \<le> M"
+        proof -
+          \<comment> \<open>Use Lemma\_61\_1\_components\_correspond: p \<notin> W\_q \<Rightarrow> h\_sel(W\_q) bounded.\<close>
+          \<comment> \<open>Need: W\_q is a connected component of S2-C.\<close>
+          have hWq_component: "W_q \<in> top1_components_on (top1_S2 - C)
+              (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C))"
+            sorry \<comment> \<open>Path-component = connected component in LPC space.\<close>
+          have hWq_connected: "top1_connected_on W_q
+              (subspace_topology top1_S2 top1_S2_topology W_q)"
+            sorry \<comment> \<open>Component is connected.\<close>
+          have hWq_sub_SC: "W_q \<subseteq> top1_S2 - C"
+            unfolding W_q_def using top1_path_component_of_on_subset[OF hT_SC hq_SC] .
+          have hC_compact_loc: "top1_compact_on C (subspace_topology top1_S2 top1_S2_topology C)"
+          proof -
+            from assms(2) obtain g where hg:
+                "top1_continuous_map_on top1_S1 top1_S1_topology top1_S2 top1_S2_topology g"
+                "g ` top1_S1 = C"
+              unfolding top1_simple_closed_curve_on_def by (by100 blast)
+            have "is_topology_on top1_S1 top1_S1_topology"
+              using top1_S1_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
+            from Theorem_26_5[OF this hTopS2 S1_compact hg(1)]
+            show ?thesis using hg(2) by (by100 simp)
+          qed
+          have hp_SC: "p \<in> top1_S2 - C" using assms(3) by (by100 blast)
+          from Lemma_61_1_components_correspond[OF assms(1) hC_sub_S2 hC_compact_loc hp_SC hh_sel
+              hWq_connected hWq_sub_SC hWq_component]
+          have "\<exists>M. \<forall>x\<in>W_q. fst (h_sel x) ^ 2 + snd (h_sel x) ^ 2 \<le> M"
+            using hp_not_Wq by (by100 blast)
+          thus ?thesis by (by100 blast)
+        qed
         \<comment> \<open>Step 8: h\_sel(W\_q) \<subseteq> U\_s or V\_s (path-connected + connectedD with open U\_s, V\_s).
            h\_sel(W\_q) bounded. If h\_sel(W\_q) \<subseteq> V\_s, since h\_sel\<inverse>(V\_s) is path-connected
            and \<subseteq> S2-C, h\_sel\<inverse>(V\_s) \<subseteq> W\_q or some path-component. But then
