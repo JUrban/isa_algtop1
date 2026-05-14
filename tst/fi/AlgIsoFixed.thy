@@ -4938,8 +4938,8 @@ proof -
           using h\<alpha> unfolding top1_is_path_on_def by (by100 blast)
         have h\<alpha>_into: "\<forall>t \<in> I_set. \<alpha> t \<in> UNIV - D"
           using h\<alpha>_cont unfolding top1_continuous_map_on_def by (by100 blast)
-        \<comment> \<open>For every open W \<subseteq> R2, {\<alpha>\<inverse>(W) \<inter> I\_set} is relatively open in I\_set.\<close>
-        have "\<forall>W. open W \<longrightarrow> openin (top_of_set I_set) {t \<in> I_set. \<alpha> t \<in> W}"
+        \<comment> \<open>Derive continuous\_on\_open\_invariant form directly.\<close>
+        have "\<forall>B. open B \<longrightarrow> (\<exists>A. open A \<and> A \<inter> I_set = \<alpha> -` B \<inter> I_set)"
         proof (intro allI impI)
           fix W :: "(real \<times> real) set" assume "open W"
           \<comment> \<open>(UNIV-D) \<inter> W \<in> subspace topology.\<close>
@@ -4956,23 +4956,17 @@ proof -
             by (by100 blast)
           hence "{t \<in> I_set. \<alpha> t \<in> W} \<in> I_top"
             using \<open>{t \<in> I_set. \<alpha> t \<in> (UNIV - D) \<inter> W} \<in> I_top\<close> by (by100 simp)
-          \<comment> \<open>I\_top = subspace UNIV top1\_open\_sets I\_set. So {t \<in> I. \<alpha> t \<in> W} = I \<inter> U for open U.\<close>
-          hence "\<exists>U. open U \<and> {t \<in> I_set. \<alpha> t \<in> W} = I_set \<inter> U"
-            unfolding top1_unit_interval_topology_def subspace_topology_def top1_open_sets_def
+          \<comment> \<open>I\_top = {I\_set \<inter> U | U \<in> top1\_open\_sets} = {I\_set \<inter> U | open U}.\<close>
+          have "{t \<in> I_set. \<alpha> t \<in> W} \<in> {I_set \<inter> U | U. U \<in> top1_open_sets}"
+            using \<open>{t \<in> I_set. \<alpha> t \<in> W} \<in> I_top\<close>
+            unfolding top1_unit_interval_topology_def subspace_topology_def by (by100 blast)
+          then obtain U where hU: "U \<in> top1_open_sets" "{t \<in> I_set. \<alpha> t \<in> W} = I_set \<inter> U"
             by (by100 blast)
-          thus "openin (top_of_set I_set) {t \<in> I_set. \<alpha> t \<in> W}"
-            sorry \<comment> \<open>openin bridge.\<close>
-        qed
-        have "\<forall>B. open B \<longrightarrow> (\<exists>A. open A \<and> A \<inter> I_set = \<alpha> -` B \<inter> I_set)"
-        proof (intro allI impI)
-          fix B :: "(real \<times> real) set" assume "open B"
-          from \<open>\<forall>W. open W \<longrightarrow> openin (top_of_set I_set) {t \<in> I_set. \<alpha> t \<in> W}\<close>[rule_format, OF \<open>open B\<close>]
-          have "openin (top_of_set I_set) {t \<in> I_set. \<alpha> t \<in> B}" .
-          then obtain A where "open A" "{t \<in> I_set. \<alpha> t \<in> B} = I_set \<inter> A"
-            sorry \<comment> \<open>openin bridge.\<close>
-          moreover have "{t \<in> I_set. \<alpha> t \<in> B} = \<alpha> -` B \<inter> I_set" by (by100 blast)
-          ultimately have "open A \<and> A \<inter> I_set = \<alpha> -` B \<inter> I_set" by (by100 blast)
-          thus "\<exists>A. open A \<and> A \<inter> I_set = \<alpha> -` B \<inter> I_set" by (by100 blast)
+          have "open U" using hU(1) unfolding top1_open_sets_def by (by100 blast)
+          have "{t \<in> I_set. \<alpha> t \<in> W} = \<alpha> -` W \<inter> I_set" by (by100 blast)
+          hence "U \<inter> I_set = \<alpha> -` W \<inter> I_set" using hU(2) by (by100 blast)
+          thus "\<exists>A. open A \<and> A \<inter> I_set = \<alpha> -` W \<inter> I_set"
+            using \<open>open U\<close> by (by100 blast)
         qed
         thus ?thesis unfolding continuous_on_open_invariant .
       qed
