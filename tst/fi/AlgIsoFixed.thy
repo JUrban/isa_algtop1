@@ -5293,19 +5293,20 @@ proof -
          (f\<circ>k)* = f* \<circ> k* (functoriality). f* bij (homeomorphism).
          \<Rightarrow> k* bij.\<close>
       \<comment> \<open>This entire chain works in R2 (via h). Transfer back via h\<inverse>.\<close>
-      \<comment> \<open>For the formal proof: each step is a separate sorry.\<close>
-      have hfk_bij: "bij_betw (\<lambda>c. top1_fundamental_group_induced_on C ?TC c0
-          (top1_S2 - {a} - {b}) ?TX c0 (\<lambda>y. inv_into (top1_S2 - {b}) h
-              (fst (h y) - fst r' + fst r, snd (h y) - snd r' + snd r)) c)
-          (top1_fundamental_group_carrier C ?TC c0)
-          (top1_fundamental_group_carrier (top1_S2 - {a} - {b}) ?TX
-              (inv_into (top1_S2 - {b}) h (fst (h c0) - fst r' + fst r, snd (h c0) - snd r' + snd r)))"
-        sorry \<comment> \<open>(\<phi>\<circ>k)* bij from: j* = \<beta>\<circumflex> \<circ> (\<phi>\<circ>k)*, j* bij, \<beta>\<circumflex> bij.\<close>
+      \<comment> \<open>Use the Z structure: both source and target \<cong> Z. k* is hom Z \<rightarrow> Z.
+         The hypothesis j* is bij (iso Z \<rightarrow> Z). The homotopy + homeomorphism factoring
+         shows k* sends the generator to \<pm>1 (same as j*, up to signs from \<phi> and \<beta>).
+         In Z, any hom sending 1 to \<pm>1 is bijective.\<close>
+      \<comment> \<open>Alternative direct proof: both groups have same cardinality (\<cong> Z \<cong> UNIV::int set).
+         k* is a group homomorphism. From the homotopy argument, k* is not the zero map.
+         A non-zero group homomorphism from Z to Z whose composition with a bijection
+         gives a bijection must itself be a bijection (since Z has no proper non-trivial quotients
+         that are isomorphic to Z).\<close>
       have hk_inj: "inj_on ?k_star (top1_fundamental_group_carrier C ?TC c0)"
-        sorry \<comment> \<open>k* = (\<phi>*)\<inverse> \<circ> (\<phi>\<circ>k)* = composition of injective maps.\<close>
+        sorry
       have hk_surj: "?k_star ` (top1_fundamental_group_carrier C ?TC c0)
           = top1_fundamental_group_carrier (top1_S2 - {a'} - {b}) ?TX' c0"
-        sorry \<comment> \<open>k* = (\<phi>*)\<inverse> \<circ> (\<phi>\<circ>k)* = composition of surjective maps.\<close>
+        sorry
       thus ?thesis unfolding bij_betw_def using hk_inj hk_surj by (by100 blast)
     qed
     show ?thesis unfolding top1_group_iso_on_def using hk_hom hk_bij by (by100 blast)
