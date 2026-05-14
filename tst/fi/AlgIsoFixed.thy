@@ -5796,7 +5796,96 @@ proof -
           \<comment> \<open>Vinv is path-connected.\<close>
           have hVinv_pc: "top1_path_connected_on Vinv
               (subspace_topology (top1_S2 - C) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) Vinv)"
-            sorry \<comment> \<open>Homeomorphic image of path-connected V\_s.\<close>
+          proof -
+            \<comment> \<open>Vinv ⊆ S2-C ⊆ S2. subspace\_topology\_trans: subspace (S2-C) (subspace S2 T (S2-C)) Vinv
+               = subspace S2 T Vinv.\<close>
+            have hVinv_sub_SC: "Vinv \<subseteq> top1_S2 - C" using hVinv_sub .
+            have "subspace_topology (top1_S2 - C) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) Vinv
+                = subspace_topology top1_S2 top1_S2_topology Vinv"
+              by (rule subspace_topology_trans[OF hVinv_sub_SC])
+            \<comment> \<open>Also Vinv \<subseteq> S2-{p}: subspace S2 T Vinv = subspace (S2-{p}) (subspace S2 T (S2-{p})) Vinv.\<close>
+            have hVinv_sub_S2p: "Vinv \<subseteq> top1_S2 - {p}"
+            proof (intro subsetI)
+              fix x assume "x \<in> Vinv"
+              then obtain v where "v \<in> V_s" "x = inv_into (top1_S2 - {p}) h_sel v"
+                unfolding Vinv_def by (by100 blast)
+              have "v \<in> h_sel ` (top1_S2 - {p})"
+                using \<open>v \<in> V_s\<close> hh_sel unfolding top1_homeomorphism_on_def bij_betw_def
+                by (by100 blast)
+              show "x \<in> top1_S2 - {p}" unfolding \<open>x = inv_into _ _ v\<close>
+                by (rule inv_into_into[OF \<open>v \<in> h_sel ` (top1_S2 - {p})\<close>])
+            qed
+            have "subspace_topology (top1_S2 - {p}) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p})) Vinv
+                = subspace_topology top1_S2 top1_S2_topology Vinv"
+              by (rule subspace_topology_trans[OF hVinv_sub_S2p])
+            \<comment> \<open>V\_s path-connected in R2 subspace. h\_sel\<inverse> homeomorphism R2 \<rightarrow> S2-{p}.
+               For any a, b \<in> Vinv: h\_sel(a), h\_sel(b) \<in> V\_s. Path f in V\_s.
+               h\_sel\<inverse> \<circ> f: path in Vinv.\<close>
+            have hT_Vinv: "is_topology_on Vinv
+                (subspace_topology (top1_S2 - C) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) Vinv)"
+            proof -
+              have "is_topology_on Vinv (subspace_topology top1_S2 top1_S2_topology Vinv)"
+                by (rule subspace_topology_is_topology_on[OF hTopS2])
+                   (use hVinv_sub hC_sub_S2 in \<open>by100 blast\<close>)
+              thus ?thesis using \<open>subspace_topology (top1_S2 - C) _ Vinv = subspace_topology top1_S2 _ Vinv\<close>
+                by (by100 simp)
+            qed
+            have "\<forall>x \<in> Vinv. \<forall>y \<in> Vinv. \<exists>f. top1_is_path_on Vinv
+                (subspace_topology (top1_S2 - C) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) Vinv) x y f"
+            proof (intro ballI)
+              fix a b assume "a \<in> Vinv" "b \<in> Vinv"
+              \<comment> \<open>h\_sel(a) and h\_sel(b) are in V\_s.\<close>
+              have ha_S2p: "a \<in> top1_S2 - {p}" using \<open>a \<in> Vinv\<close> hVinv_sub_S2p by (by100 blast)
+              have hb_S2p: "b \<in> top1_S2 - {p}" using \<open>b \<in> Vinv\<close> hVinv_sub_S2p by (by100 blast)
+              have "h_sel a \<in> V_s"
+              proof -
+                from \<open>a \<in> Vinv\<close> obtain v where "v \<in> V_s" "a = inv_into (top1_S2 - {p}) h_sel v"
+                  unfolding Vinv_def by (by100 blast)
+                have "v \<in> h_sel ` (top1_S2 - {p})"
+                  using \<open>v \<in> V_s\<close> hh_sel unfolding top1_homeomorphism_on_def bij_betw_def
+                  by (by100 blast)
+                have "h_sel a = v" using \<open>a = inv_into _ _ v\<close> f_inv_into_f[OF \<open>v \<in> h_sel ` _\<close>]
+                  by (by100 simp)
+                thus ?thesis using \<open>v \<in> V_s\<close> by (by100 simp)
+              qed
+              have "h_sel b \<in> V_s"
+              proof -
+                from \<open>b \<in> Vinv\<close> obtain v where "v \<in> V_s" "b = inv_into (top1_S2 - {p}) h_sel v"
+                  unfolding Vinv_def by (by100 blast)
+                have "v \<in> h_sel ` (top1_S2 - {p})"
+                  using \<open>v \<in> V_s\<close> hh_sel unfolding top1_homeomorphism_on_def bij_betw_def
+                  by (by100 blast)
+                have "h_sel b = v" using \<open>b = inv_into _ _ v\<close> f_inv_into_f[OF \<open>v \<in> h_sel ` _\<close>]
+                  by (by100 simp)
+                thus ?thesis using \<open>v \<in> V_s\<close> by (by100 simp)
+              qed
+              \<comment> \<open>Path in V\_s from h\_sel(a) to h\_sel(b).\<close>
+              have hR2_top: "is_topology_on (UNIV :: (real \<times> real) set)
+                  (product_topology_on top1_open_sets top1_open_sets)"
+                using product_topology_on_is_topology_on[OF
+                    top1_open_sets_is_topology_on_UNIV[where 'a=real]
+                    top1_open_sets_is_topology_on_UNIV[where 'a=real]] by (by100 simp)
+              have hVs_sub: "V_s \<subseteq> (UNIV :: (real \<times> real) set)" by (by100 blast)
+              have hT_Vs: "is_topology_on V_s
+                  (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) V_s)"
+                by (rule subspace_topology_is_topology_on[OF hR2_top hVs_sub])
+              from hUVs(6) \<open>h_sel a \<in> V_s\<close> \<open>h_sel b \<in> V_s\<close>
+              obtain g where hg: "top1_is_path_on V_s
+                  (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) V_s)
+                  (h_sel a) (h_sel b) g"
+                unfolding top1_path_connected_on_def by (by100 blast)
+              \<comment> \<open>Compose with h\_sel\<inverse> to get path in Vinv.\<close>
+              define hinv where "hinv = inv_into (top1_S2 - {p}) h_sel"
+              have "top1_is_path_on Vinv
+                  (subspace_topology (top1_S2 - C) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) Vinv)
+                  a b (hinv \<circ> g)"
+                sorry \<comment> \<open>Composition of continuous path g with continuous hinv.\<close>
+              thus "\<exists>f. top1_is_path_on Vinv
+                  (subspace_topology (top1_S2 - C) (subspace_topology top1_S2 top1_S2_topology (top1_S2 - C)) Vinv) a b f"
+                by (by100 blast)
+            qed
+            thus ?thesis unfolding top1_path_connected_on_def using hT_Vinv by (by100 blast)
+          qed
           \<comment> \<open>q \<in> Vinv (since h\_sel(q) \<in> V\_s).\<close>
           have hq_Vinv: "q \<in> Vinv"
           proof -
