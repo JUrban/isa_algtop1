@@ -5833,9 +5833,26 @@ proof -
                 ux uy f"
           unfolding top1_path_connected_on_def by (by100 blast)
         \<comment> \<open>tr \<circ> f: [0,1] \<rightarrow> U' is the desired path.\<close>
+        \<comment> \<open>tr restricted to U\_s \<rightarrow> U' is continuous.\<close>
+        have htr_Us: "top1_continuous_map_on U_s
+            (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) U_s) U'
+            (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) U') tr"
+          sorry \<comment> \<open>From tr: UNIV \<rightarrow> UNIV continuous + restrict domain/codomain.\<close>
+        have hcomp: "top1_continuous_map_on I_set I_top U'
+            (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) U') (tr \<circ> f)"
+        proof -
+          have hf_cont: "top1_continuous_map_on I_set I_top U_s
+              (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) U_s) f"
+            using hf unfolding top1_is_path_on_def by (by100 blast)
+          from top1_continuous_map_on_comp[OF hf_cont htr_Us]
+          show ?thesis .
+        qed
+        have "(tr \<circ> f) 0 = x" using hf unfolding top1_is_path_on_def using hux(2) by (by100 simp)
+        have "(tr \<circ> f) 1 = y" using hf unfolding top1_is_path_on_def using huy(2) by (by100 simp)
         have "top1_is_path_on U'
             (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) U') x y (tr \<circ> f)"
-          sorry \<comment> \<open>Composition of continuous maps, tr(f(0))=tr(ux)=x, tr(f(1))=tr(uy)=y.\<close>
+          unfolding top1_is_path_on_def using hcomp \<open>(tr \<circ> f) 0 = x\<close> \<open>(tr \<circ> f) 1 = y\<close>
+          by (by100 blast)
         thus "\<exists>f. top1_is_path_on U'
             (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) U') x y f"
           by (by100 blast)
