@@ -5103,6 +5103,55 @@ proof -
        \<phi>* is iso (homeomorphism). So k* = (\<phi>*)\<inverse> \<circ> (\<phi>\<circ>k)* is iso.
        k* = top1\_fundamental\_group\_induced\_on C TC c0 (S2-{a'}-{b}) ... c0 id.
        QED.\<close>
+    \<comment> \<open>Define \<phi>: S2-{a'}-{b} \<rightarrow> S2-{a}-{b}, \<phi>(y) = h\<inverse>(h(y)-r'+r).
+       This is a homeomorphism (composition of homeomorphisms).\<close>
+    define \<phi> where "\<phi> \<equiv> \<lambda>y. inv_into (top1_S2 - {b}) h
+        (fst (h y) - fst r' + fst r, snd (h y) - snd r' + snd r)"
+    \<comment> \<open>The key relationship: for y \<in> C,
+       \<phi>(y) \<in> S2-{a}-{b}, and (inclusion C \<rightarrow> S2-{a}-{b}) = \<phi> \<circ> (inclusion C \<rightarrow> S2-{a'}-{b}).
+       Actually: the inclusion id maps y \<mapsto> y, and \<phi> maps y \<mapsto> \<phi>(y).
+       So \<phi> \<circ> id = \<phi> on C. And id = j on C (inclusion into S2-{a}-{b}).
+       The homotopy G connects: id (=j) to \<phi>\<circ>id (=\<phi>) on C valued in S2-{a}-{b}.
+       By homotopy\_induced\_basepoint\_change: j* \<sim> conj \<circ> \<phi>*.
+       j* iso \<Rightarrow> \<phi>* iso (conjugation of iso is iso).
+       \<phi>* = (\<phi>|_{S2-{a'}-{b}})* \<circ> (inclusion C \<rightarrow> S2-{a'}-{b})* on loops.
+       Wait: \<phi>*: \<pi>\_1(C,c0) \<rightarrow> \<pi>\_1(S2-{a}-{b},\<phi>(c0)) sends [l] to [\<phi>\<circ>l].
+       But I need (inclusion C \<rightarrow> S2-{a'}-{b})* which sends [l] to [l] in S2-{a'}-{b}.
+       The factoring: \<phi> \<circ> (inclusion C \<rightarrow> S2-{a'}-{b})(y) = \<phi>(y),
+       and (inclusion C \<rightarrow> S2-{a}-{b})(y) = y.
+       So the homotopy G connects y to \<phi>(y), NOT y to y.
+       The homotopy connects j (=id) to \<phi>: C \<rightarrow> S2-{a}-{b}.
+       j maps y \<mapsto> y. \<phi> maps y \<mapsto> \<phi>(y).
+       j* iso \<Rightarrow> \<phi>* iso (up to basepoint change).
+       \<phi>* = (\<phi> as map S2-{a'}-{b} \<rightarrow> S2-{a}-{b})* \<circ> (inclusion C \<rightarrow> S2-{a'}-{b})*.
+       Functoriality: (\<phi>\<circ>k)* = \<phi>* \<circ> k* where k = inclusion.
+       So: \<phi>* iso AND \<phi>* = (\<phi>|...)* \<circ> k*.
+       (\<phi>|...)* is iso (homeomorphism). So k* = ((\<phi>|...)*)\<inverse> \<circ> \<phi>*.
+       k* is composition of isos = iso.
+
+       BUT: the basepoints don't match! \<phi>* goes to \<pi>\_1(S2-{a}-{b}, \<phi>(c0)),
+       while k* goes to \<pi>\_1(S2-{a'}-{b}, c0), and (\<phi>|...)* goes between them.
+       The factoring needs careful basepoint tracking.\<close>
+    \<comment> \<open>Actually: the simplest argument is:
+       (1) j* = (induced C \<rightarrow> S2-{a}-{b} id): \<pi>\_1(C,c0) \<rightarrow> \<pi>\_1(S2-{a}-{b},c0) is iso.
+       (2) F homotopy shows j homotopic to \<phi>|_C: C \<rightarrow> S2-{a}-{b} (in R2: id homotopic to translation).
+       (3) By homotopy theory, \<phi>|_C also induces iso (at appropriate basepoint).
+       (4) \<phi>|_C = \<phi> \<circ> id_{C \<rightarrow> S2-{a'}-{b}} = \<phi> \<circ> k
+           where k = (induced C \<rightarrow> S2-{a'}-{b} id).
+       (5) (\<phi>|_C)* = \<phi>* \<circ> k* (functoriality).
+       (6) \<phi>* iso (homeomorphism). (\<phi>|_C)* iso (from step 3). k* = (\<phi>*)\<inverse> \<circ> (\<phi>|_C)*.
+       (7) k* is iso (composition of isos).
+
+       The issue is step (3): the homotopy has MOVING basepoint. So (\<phi>|_C)* is iso
+       at basepoint \<phi>(c0), not c0. And k* maps \<pi>\_1(C,c0) \<rightarrow> \<pi>\_1(S2-{a'}-{b},c0).
+       And \<phi>*: \<pi>\_1(S2-{a'}-{b},c0) \<rightarrow> \<pi>\_1(S2-{a}-{b},\<phi>(c0)).
+       So (\<phi>\<circ>k)*: \<pi>\_1(C,c0) \<rightarrow> \<pi>\_1(S2-{a}-{b},\<phi>(c0)).
+       And j*: \<pi>\_1(C,c0) \<rightarrow> \<pi>\_1(S2-{a}-{b},c0).
+
+       The basepoint change \<beta>: c0 \<rightarrow> \<phi>(c0) in S2-{a}-{b} (from the homotopy).
+       conj_\<beta> \<circ> (\<phi>\<circ>k)* = j* (from homotopy\_induced\_basepoint\_change).
+       j* iso, conj_\<beta> iso \<Rightarrow> (\<phi>\<circ>k)* iso.
+       \<phi>* iso (at basepoint c0 \<rightarrow> \<phi>(c0)). k* = (\<phi>*)\<inverse> \<circ> (\<phi>\<circ>k)* iso.\<close>
     show ?thesis sorry
   qed
 qed
