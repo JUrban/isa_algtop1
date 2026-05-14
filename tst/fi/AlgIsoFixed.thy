@@ -5583,16 +5583,7 @@ proof -
       moreover have "h_sel q \<in> U_s" using hq_in_Us .
       ultimately show ?thesis unfolding U'_def by (by100 force)
     qed
-    \<comment> \<open>Apply Munkres\_xaxis\_segment to D' with translated components.\<close>
-    \<comment> \<open>Need: D' SCC, U'/V' decomposition with right properties, open U'/V', (0,0)\<in>U'.\<close>
-    \<comment> \<open>Translation is a homeomorphism, preserving all these properties.\<close>
-    \<comment> \<open>Detailed application deferred.\<close>
-    \<comment> \<open>D' is SCC (translation preserves SCC).\<close>
-    have hD'_scc: "top1_simple_closed_curve_on (UNIV :: (real \<times> real) set)
-        (product_topology_on top1_open_sets top1_open_sets) D'" sorry
-    \<comment> \<open>U', V' satisfy Munkres\_xaxis\_segment preconditions.\<close>
-    have hU'_ne: "U' \<noteq> {}" using hUVs(1) unfolding U'_def by (by100 blast)
-    have hV'_ne: "V' \<noteq> {}" using hUVs(2) unfolding V'_def by (by100 blast)
+    \<comment> \<open>tr is injective, surjective, bijective.\<close>
     have htr_inj: "inj tr" unfolding tr_def inj_def by (by100 auto)
     have htr_surj: "surj tr"
     proof (rule surjI)
@@ -5601,6 +5592,53 @@ proof -
         unfolding tr_def by (by100 simp)
     qed
     have htr_bij: "bij tr" using htr_inj htr_surj unfolding bij_def by (by100 blast)
+    \<comment> \<open>D' is SCC (translation preserves SCC).\<close>
+    have hD'_scc: "top1_simple_closed_curve_on (UNIV :: (real \<times> real) set)
+        (product_topology_on top1_open_sets top1_open_sets) D'"
+    proof -
+      \<comment> \<open>h\_sel(C) is SCC: get parametrization g: S1 \<rightarrow> h\_sel(C).\<close>
+      from hhC_scc_early obtain g where hg:
+          "top1_continuous_map_on top1_S1 top1_S1_topology UNIV
+              (product_topology_on top1_open_sets top1_open_sets) g"
+          "inj_on g top1_S1" "g ` top1_S1 = h_sel ` C"
+        unfolding top1_simple_closed_curve_on_def by blast
+      \<comment> \<open>tr \<circ> g: S1 \<rightarrow> D' is continuous, injective, surjective.\<close>
+      have htr_cont_loc: "continuous_on UNIV tr" unfolding tr_def by (intro continuous_intros)
+      have htr_cont_map: "top1_continuous_map_on UNIV
+          (product_topology_on top1_open_sets top1_open_sets) UNIV
+          (product_topology_on top1_open_sets top1_open_sets) tr"
+      proof -
+        have "\<And>x :: real \<times> real. tr x \<in> (UNIV :: (real \<times> real) set)" by (by100 blast)
+        from top1_continuous_map_on_real2_subspace[OF this htr_cont_loc]
+        have "top1_continuous_map_on UNIV
+            (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) UNIV)
+            UNIV
+            (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) UNIV) tr" .
+        have "subspace_topology (UNIV :: (real \<times> real) set)
+            (product_topology_on top1_open_sets top1_open_sets) UNIV =
+            product_topology_on top1_open_sets top1_open_sets"
+          by (rule subspace_topology_self_carrier) (by100 blast)
+        thus ?thesis using \<open>top1_continuous_map_on UNIV _ UNIV _ tr\<close> by (by100 simp)
+      qed
+      have htrg_cont: "top1_continuous_map_on top1_S1 top1_S1_topology UNIV
+          (product_topology_on top1_open_sets top1_open_sets) (tr \<circ> g)"
+        by (rule top1_continuous_map_on_comp[OF hg(1) htr_cont_map])
+      have htrg_inj: "inj_on (tr \<circ> g) top1_S1"
+      proof (rule inj_onI)
+        fix x y assume "x \<in> top1_S1" "y \<in> top1_S1" "(tr \<circ> g) x = (tr \<circ> g) y"
+        hence "tr (g x) = tr (g y)" by (by100 simp)
+        hence "g x = g y" using htr_inj unfolding inj_def by (by100 blast)
+        show "x = y" using inj_onD[OF hg(2) \<open>g x = g y\<close> \<open>x \<in> top1_S1\<close> \<open>y \<in> top1_S1\<close>]
+          by (by100 blast)
+      qed
+      have htrg_img: "(tr \<circ> g) ` top1_S1 = D'"
+        unfolding D'_def using hg(3) image_comp[of tr g top1_S1] by (by100 simp)
+      show ?thesis unfolding top1_simple_closed_curve_on_def
+        using htrg_cont htrg_inj htrg_img by (by100 blast)
+    qed
+    \<comment> \<open>U', V' satisfy Munkres\_xaxis\_segment preconditions.\<close>
+    have hU'_ne: "U' \<noteq> {}" using hUVs(1) unfolding U'_def by (by100 blast)
+    have hV'_ne: "V' \<noteq> {}" using hUVs(2) unfolding V'_def by (by100 blast)
     have hUV'_disj: "U' \<inter> V' = {}"
     proof (rule ccontr)
       assume "U' \<inter> V' \<noteq> {}"
