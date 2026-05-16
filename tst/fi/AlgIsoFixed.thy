@@ -2,7 +2,7 @@ theory AlgIsoFixed
 imports AlgIsoFixedBase.AlgIsoFixedBase
 begin
 
-theorem Theorem_58_7_fixed:
+theorem Theorem_58_7:
   assumes hTX: "is_topology_on X TX" and hTY: "is_topology_on Y TY"
       and heq: "top1_homotopy_equivalence_on X TX Y TY f g" and hx0: "x0 \<in> X"
   shows "top1_group_iso_on
@@ -722,7 +722,7 @@ proof -
     unfolding top1_homotopy_equivalence_on_def
     using hj_cont hr_cont hgf hfg by (by100 blast)
   have hid10: "id (1::real, 0::real) = (1, 0)" by (by100 simp)
-  from Theorem_58_7_fixed[OF hTS1 hTR2_0 heq h10_S1, unfolded hid10]
+  from Theorem_58_7[OF hTS1 hTR2_0 heq h10_S1, unfolded hid10]
   show ?thesis .
 qed
 
@@ -736,7 +736,7 @@ text \<open>Munkres Lemma 65.1(b): Let G be a K_4 subgraph of S2, C the 4-cycle,
   Since \<alpha>*\<beta> \<in> C, the inclusion-induced map j_* is surjective.
   Surjective homomorphism between infinite cyclic groups is an isomorphism.\<close>
 
-lemma Lemma_65_1_fixed:
+lemma Lemma_65_1:
   fixes a1 a2 a3 a4 :: "real \<times> real \<times> real"
     and e12 e23 e34 e41 e13 e24 :: "(real \<times> real \<times> real) set"
     and C :: "(real \<times> real \<times> real) set"
@@ -930,7 +930,7 @@ proof -
   have hX_pi1_Z: "top1_groups_isomorphic_on
       (top1_fundamental_group_carrier ?X ?TX c0) (top1_fundamental_group_mul ?X ?TX c0)
       top1_Z_group top1_Z_mul"
-    by (rule pi1_S2_minus_two_points_iso_Z[OF assms(1) hp_S2 hq_S2 hp_ne_q hc0_X])
+    by (rule pi1_S2_minus_two_points_iso_Z_proved[OF assms(1) hp_S2 hq_S2 hp_ne_q hc0_X])
   \<comment> \<open>Step 4 (KEY - textbook 65.1(b)): j\_* is surjective.
      Construct \<alpha>*\<beta> loop in C that generates \<pi>_1(X) via Theorem 63.1.
      j\_*([a*b]\_C) = [a*b]\_X = generator. Generator hit \<Rightarrow> surjective.\<close>
@@ -1316,7 +1316,7 @@ proof -
 qed
 
 \<comment> \<open>Alternative: iso at an EXISTENTIAL basepoint (avoids basepoint change).\<close>
-lemma Lemma_65_1_fixed_exists_basepoint:
+lemma Lemma_65_1_exists_basepoint:
   fixes a1 a2 a3 a4 :: "real \<times> real \<times> real"
     and e12 e23 e34 e41 e13 e24 :: "(real \<times> real \<times> real) set"
     and C :: "(real \<times> real \<times> real) set"
@@ -1471,7 +1471,7 @@ proof -
         moreover have "p \<noteq> a2" "p \<noteq> a4" using \<open>p = q\<close> assms(38) by (by100 blast)+
         ultimately show False by (by100 blast)
       qed
-      show ?thesis by (rule pi1_S2_minus_two_points_iso_Z[OF assms(1) hp_S2 hq_S2 hp_ne_q hx_X])
+      show ?thesis by (rule pi1_S2_minus_two_points_iso_Z_proved[OF assms(1) hp_S2 hq_S2 hp_ne_q hx_X])
     qed
     have hGX_closed_x: "\<And>a b. a \<in> top1_fundamental_group_carrier C ?TC x \<Longrightarrow>
         b \<in> top1_fundamental_group_carrier C ?TC x \<Longrightarrow>
@@ -10281,7 +10281,7 @@ proof -
         in blast)
 qed
 
-theorem Theorem_65_2_fixed:
+theorem Theorem_65_2:
   assumes "is_topology_on_strict top1_S2 top1_S2_topology"
   and "top1_simple_closed_curve_on top1_S2 top1_S2_topology C"
   and "p \<in> top1_S2 - C" and "q \<in> top1_S2 - C"
@@ -10348,7 +10348,7 @@ proof -
        (subspace_topology top1_S2 top1_S2_topology C) c0
        (top1_S2 - {q0} - {p0})
        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {q0} - {p0})) c0 id)"
-    by (rule Lemma_65_1_fixed[OF assms(1)
+    by (rule Lemma_65_1[OF assms(1)
         hK4(1) hK4(3) hK4(4) hK4(5) hK4(6) hK4(7) hK4(8) hK4(9)
         hK4(10) hK4(11) hK4(12) hK4(13) hK4(14) hK4(15)
         hK4(16) hK4(17) hK4(18) hK4(19) hK4(20) hK4(21)
