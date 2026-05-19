@@ -1885,9 +1885,14 @@ proof -
     apply (rule exI[of _ R1])
     apply (rule exI[of _ W1])
     apply (rule exI[of _ W2])
-    using hP(1) hR(1) hW(1,2) hfour_disj hfour_union hP(5) hR(5) hW(5,6)
-        hbd_P1 hbd_R1 hbd_W1 hbd_W2
-    sorry
+    apply (intro conjI)
+    apply (fact hP(1)) apply (fact hR(1)) apply (fact hW(1)) apply (fact hW(2))
+    apply (fact hfour_disj(1)) apply (fact hfour_disj(2)) apply (fact hfour_disj(3))
+    apply (fact hfour_disj(4)) apply (fact hfour_disj(5)) apply (fact hfour_disj(6))
+    apply (fact hfour_union)
+    apply (fact hP(5)) apply (fact hR(5)) apply (fact hW(5)) apply (fact hW(6))
+    apply (fact hbd_P1) apply (fact hbd_R1) apply (fact hbd_W1) apply (fact hbd_W2)
+    done
 qed
 
 text \<open>Theorem 64.4 (K5 non-planarity). Assumptions ordered so K4-compatible ones come first.\<close>
@@ -2042,12 +2047,18 @@ proof -
      - a5 \<in> Ui, Ui is component of S2-X
      - connected subset of S2-X meeting Ui \<Rightarrow> \<subseteq> Ui
      - a\_j \<in> closure(e\_{j,5} - {a\_j, a5}) \<subseteq> closure(Ui)\<close>
-  \<comment> \<open>All 4 hall\_i have the same proof, parameterized by Ui.
-     We sorry them for now and prove after hU\_boundary.\<close>
-  have hall1: "a5 \<in> U1 \<Longrightarrow> {a1,a2,a3,a4} \<subseteq> closure_on top1_S2 top1_S2_topology U1" sorry
-  have hall2: "a5 \<in> U2 \<Longrightarrow> {a1,a2,a3,a4} \<subseteq> closure_on top1_S2 top1_S2_topology U2" sorry
-  have hall3: "a5 \<in> U3 \<Longrightarrow> {a1,a2,a3,a4} \<subseteq> closure_on top1_S2 top1_S2_topology U3" sorry
-  have hall4: "a5 \<in> U4 \<Longrightarrow> {a1,a2,a3,a4} \<subseteq> closure_on top1_S2 top1_S2_topology U4" sorry
+  \<comment> \<open>Generic: if a5 \<in> Ui and Ui is one of the 4 components, all vertices in closure(Ui).\<close>
+  have hall_generic: "\<And>Ui. Ui \<in> {U1,U2,U3,U4} \<Longrightarrow> a5 \<in> Ui \<Longrightarrow>
+      {a1,a2,a3,a4} \<subseteq> closure_on top1_S2 top1_S2_topology Ui"
+    sorry
+  have hall1: "a5 \<in> U1 \<Longrightarrow> {a1,a2,a3,a4} \<subseteq> closure_on top1_S2 top1_S2_topology U1"
+    by (rule hall_generic) (by100 blast)
+  have hall2: "a5 \<in> U2 \<Longrightarrow> {a1,a2,a3,a4} \<subseteq> closure_on top1_S2 top1_S2_topology U2"
+    by (rule hall_generic) (by100 blast)
+  have hall3: "a5 \<in> U3 \<Longrightarrow> {a1,a2,a3,a4} \<subseteq> closure_on top1_S2 top1_S2_topology U3"
+    by (rule hall_generic) (by100 blast)
+  have hall4: "a5 \<in> U4 \<Longrightarrow> {a1,a2,a3,a4} \<subseteq> closure_on top1_S2 top1_S2_topology U4"
+    by (rule hall_generic) (by100 blast)
   \<comment> \<open>But hU\_boundary says no component has all 4 vertices in its closure.\<close>
   show False using ha5_in_comp hall1 hall2 hall3 hall4 hU_boundary by (by100 blast)
 qed
