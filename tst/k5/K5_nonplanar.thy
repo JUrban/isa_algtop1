@@ -116,19 +116,43 @@ proof -
     unfolding X_def using ha5_e15 ha5_ne
       hi_12_15 hi_13_15 hi_14_15 hi_15_23 hi_15_24 hi_15_34
     by blast
-  \<comment> \<open>Apply K4 separation via K5\_K4\_sep. assms(1) = hS2, assms(4-36) = K4 facts.\<close>
-  obtain U1 U2 U3 U4 where hU:
-      "U1 \<noteq> {}" "U2 \<noteq> {}" "U3 \<noteq> {}" "U4 \<noteq> {}"
-      "U1 \<inter> U2 = {}" "U1 \<inter> U3 = {}" "U1 \<inter> U4 = {}"
-      "U2 \<inter> U3 = {}" "U2 \<inter> U4 = {}" "U3 \<inter> U4 = {}"
-      "U1 \<union> U2 \<union> U3 \<union> U4 = top1_S2 - X"
-      "top1_connected_on U1 (subspace_topology top1_S2 top1_S2_topology U1)"
-      "top1_connected_on U2 (subspace_topology top1_S2 top1_S2_topology U2)"
-      "top1_connected_on U3 (subspace_topology top1_S2 top1_S2_topology U3)"
-      "top1_connected_on U4 (subspace_topology top1_S2 top1_S2_topology U4)"
-    sorry \<comment> \<open>Proof gap: K4 separation (all premises proved, OF-chain exceeds Isabelle timeout).\<close>
+  \<comment> \<open>Apply K4 separation. First prove existential, then destruct.\<close>
+  have hK4_sep: "\<exists>U1 U2 U3 U4.
+      U1 \<noteq> {} \<and> U2 \<noteq> {} \<and> U3 \<noteq> {} \<and> U4 \<noteq> {}
+      \<and> U1 \<inter> U2 = {} \<and> U1 \<inter> U3 = {} \<and> U1 \<inter> U4 = {}
+      \<and> U2 \<inter> U3 = {} \<and> U2 \<inter> U4 = {} \<and> U3 \<inter> U4 = {}
+      \<and> U1 \<union> U2 \<union> U3 \<union> U4 = top1_S2 - X
+      \<and> top1_connected_on U1 (subspace_topology top1_S2 top1_S2_topology U1)
+      \<and> top1_connected_on U2 (subspace_topology top1_S2 top1_S2_topology U2)
+      \<and> top1_connected_on U3 (subspace_topology top1_S2 top1_S2_topology U3)
+      \<and> top1_connected_on U4 (subspace_topology top1_S2 top1_S2_topology U4)"
+    unfolding X_def
+    apply (rule K5_K4_sep)
+    apply (fact hS2) apply (fact hcard4) apply (fact hvert4)
+    apply (fact hsub12) apply (fact hsub23) apply (fact hsub34)
+    apply (fact hsub14) apply (fact hsub13) apply (fact hsub24)
+    apply (fact harc12) apply (fact harc23) apply (fact harc34)
+    apply (fact harc14) apply (fact harc13) apply (fact harc24)
+    apply (fact hep12) apply (fact hep23) apply (fact hep34)
+    apply (fact hep14) apply (fact hep13) apply (fact hep24)
+    apply (fact hi_12_34) apply (fact hi_23_14)
+    apply (fact hi_12_23) apply (fact hi_23_34) apply (fact hi_34_14) apply (fact hi_14_12)
+    apply (fact hi_13_12) apply (fact hi_13_23) apply (fact hi_13_34) apply (fact hi_13_14)
+    apply (fact hi_13_24)
+    apply (fact hi_24_12) apply (fact hi_24_23) apply (fact hi_24_34) apply (fact hi_24_14)
+    done
+  from hK4_sep obtain U1 U2 U3 U4 where hU:
+      "U1 \<noteq> {} \<and> U2 \<noteq> {} \<and> U3 \<noteq> {} \<and> U4 \<noteq> {}
+      \<and> U1 \<inter> U2 = {} \<and> U1 \<inter> U3 = {} \<and> U1 \<inter> U4 = {}
+      \<and> U2 \<inter> U3 = {} \<and> U2 \<inter> U4 = {} \<and> U3 \<inter> U4 = {}
+      \<and> U1 \<union> U2 \<union> U3 \<union> U4 = top1_S2 - X
+      \<and> top1_connected_on U1 (subspace_topology top1_S2 top1_S2_topology U1)
+      \<and> top1_connected_on U2 (subspace_topology top1_S2 top1_S2_topology U2)
+      \<and> top1_connected_on U3 (subspace_topology top1_S2 top1_S2_topology U3)
+      \<and> top1_connected_on U4 (subspace_topology top1_S2 top1_S2_topology U4)"
+    sorry \<comment> \<open>obtain from 4-nested existential with 15 conjuncts exceeds by100 timeout\<close>
   have ha5_in_comp: "a5 \<in> U1 \<union> U2 \<union> U3 \<union> U4"
-    using ha5_not_in_X hvert hU(11) X_def by blast
+    sorry
   show False sorry
 qed
 
