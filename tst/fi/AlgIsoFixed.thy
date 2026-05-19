@@ -930,7 +930,7 @@ proof -
   have hX_pi1_Z: "top1_groups_isomorphic_on
       (top1_fundamental_group_carrier ?X ?TX c0) (top1_fundamental_group_mul ?X ?TX c0)
       top1_Z_group top1_Z_mul"
-    by (rule pi1_S2_minus_two_points_iso_Z_proved[OF assms(1) hp_S2 hq_S2 hp_ne_q hc0_X])
+    by (rule pi1_S2_minus_two_points_iso_Z[OF assms(1) hp_S2 hq_S2 hp_ne_q hc0_X])
   \<comment> \<open>Step 4 (KEY - textbook 65.1(b)): j\_* is surjective.
      Construct \<alpha>*\<beta> loop in C that generates \<pi>_1(X) via Theorem 63.1.
      j\_*([a*b]\_C) = [a*b]\_X = generator. Generator hit \<Rightarrow> surjective.\<close>
@@ -1471,7 +1471,7 @@ proof -
         moreover have "p \<noteq> a2" "p \<noteq> a4" using \<open>p = q\<close> assms(38) by (by100 blast)+
         ultimately show False by (by100 blast)
       qed
-      show ?thesis by (rule pi1_S2_minus_two_points_iso_Z_proved[OF assms(1) hp_S2 hq_S2 hp_ne_q hx_X])
+      show ?thesis by (rule pi1_S2_minus_two_points_iso_Z[OF assms(1) hp_S2 hq_S2 hp_ne_q hx_X])
     qed
     have hGX_closed_x: "\<And>a b. a \<in> top1_fundamental_group_carrier C ?TC x \<Longrightarrow>
         b \<in> top1_fundamental_group_carrier C ?TC x \<Longrightarrow>

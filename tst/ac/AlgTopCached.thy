@@ -58838,7 +58838,7 @@ qed
 
 text \<open>Proved version of pi1\_S2\_minus\_two\_points\_iso\_Z (has proof gap in AlgTop0, proved here).
   Uses infrastructure from this theory (Corollary\_52\_5, groups\_isomorphic\_trans\_fwd, etc.).\<close>
-corollary pi1_S2_minus_two_points_iso_Z_proved:
+corollary pi1_S2_minus_two_points_iso_Z:
   assumes "is_topology_on_strict top1_S2 top1_S2_topology"
       and "p \<in> top1_S2" and "q \<in> top1_S2" and "p \<noteq> q"
       and "a \<in> top1_S2 - {p} - {q}"

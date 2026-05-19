@@ -4004,21 +4004,8 @@ qed
 text \<open>Corollary: \<pi>_1(S2-\{p,q\}) is isomorphic to Z as a group.
   Derived from pi1\_S2\_minus\_two\_points\_infinite\_cyclic: the Z-isomorphism
   hpi1\_iso\_Z is an intermediate result in its proof (line 3375).
-  We extract it via the generation property + the covering space (helix)
-  giving gen infinite order.\<close>
-corollary pi1_S2_minus_two_points_iso_Z:
-  assumes "is_topology_on_strict top1_S2 top1_S2_topology"
-      and "p \<in> top1_S2" and "q \<in> top1_S2" and "p \<noteq> q"
-      and "a \<in> top1_S2 - {p} - {q}"
-  shows "top1_groups_isomorphic_on
-      (top1_fundamental_group_carrier (top1_S2 - {p} - {q})
-        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p} - {q})) a)
-      (top1_fundamental_group_mul (top1_S2 - {p} - {q})
-        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p} - {q})) a)
-      top1_Z_group top1_Z_mul"
-  sorry \<comment> \<open>Proof gap: proved as pi1_S2_minus_two_points_iso_Z_proved in AlgTopCached.thy.
-     The proof chains: stereographic \<rightarrow> restrict \<rightarrow> translate \<rightarrow> deformation retract \<rightarrow> Thm 54.5.
-     Infrastructure (Corollary\_52\_5, groups\_isomorphic\_trans\_fwd) not available at AlgTop0 level.\<close>
+  Proved as pi1\_S2\_minus\_two\_points\_iso\_Z in AlgTopCached.thy.\<close>
+
 text \<open>If f \<simeq> g (loops at a), then f^n \<simeq> g^n.\<close>
 lemma path_homotopic_path_power:
   assumes "is_topology_on X TX"
