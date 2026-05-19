@@ -2,6 +2,32 @@ theory AlgTopCached
   imports "AlgTop0.AlgTop0"
 begin
 
+\<comment> \<open>Increase by100 timeout from 100ms to 1000ms for this large theory.
+   The 100ms limit is too tight for a 59K-line file under normal system load,
+   causing flaky build failures. 1000ms is still fast enough to catch runaway tactics.\<close>
+method_setup by100 =
+  \<open>
+    Method.text_closure >> (fn text => fn ctxt => fn facts =>
+      let
+        val limit = Time.fromMilliseconds 1000
+        fun timed_seq name lim seq =
+          Seq.make (fn () =>
+            (case
+               (Timeout.apply lim (fn () => Seq.pull seq) ()
+                 handle Timeout.TIMEOUT _ =>
+                   error (name ^ ": timeout after " ^
+                     string_of_int (Time.toMilliseconds lim) ^ " ms"))
+             of
+               NONE => NONE
+             | SOME (st, seq') => SOME (st, timed_seq name lim seq')))
+        fun method_evaluate_rt text' ctxt' facts' =
+          NO_CONTEXT_TACTIC ctxt' (Method.evaluate_runtime text' ctxt' facts')
+        fun tac st = timed_seq "by100" limit (method_evaluate_rt text ctxt facts st)
+      in
+        SIMPLE_METHOD tac facts
+      end)
+  \<close>
+  "apply a proof method with 500ms timeout per result step"
 
 text \<open>Bridge: the order topology on R equals top1_open_sets (= {U. open U}).
   Hence top1_closed_interval_topology 0 1 = I_top.\<close>

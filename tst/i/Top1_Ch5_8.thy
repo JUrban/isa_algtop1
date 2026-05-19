@@ -33325,10 +33325,12 @@ text \<open>Counterexample: LP-compact does not imply compact in general topolog
   justified by the mathematical literature.\<close>
 
 text \<open>The following is provable in ZFC but requires ordinal spaces to formalize.
-  We state it as sorry, documented by the discussion above.\<close>
+  Commented out to avoid polluting thm\_oracles for the entire downstream chain.\<close>
+(*
 lemma lp_compact_not_imp_compact_in_general:
   "\<exists>(X::'a set) T. top1_limit_point_compact_on X T \<and> \<not> top1_compact_on X T"
   sorry
+*)
 
 text \<open>In first-countable T₁ spaces, LP-compact implies sequentially compact.
   This generalizes part of Theorem 28.2 beyond metric spaces.\<close>
