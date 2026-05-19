@@ -155,13 +155,43 @@ proof -
     done
   have ha5_in_comp: "a5 \<in> U1 \<union> U2 \<union> U3 \<union> U4"
     using ha5_not_in_X hvert hU(11) X_def by (by100 blast)
-  \<comment> \<open>Following textbook Lemma 64.3 structure: form a theta space from 5 of the 6
-     K4 edges (Y = A\<union>B\<union>C with A = e12\<union>e23, B = e13, C = e14\<union>e34, endpoints {a1,a3}).
-     Then e24 interior is in one theta component (W). a5 is in some K4 component,
-     hence in some theta component. The star edges e15,e25,e35,e45 provide
-     connected paths from a5 reaching the interior of each theta arc A,B,C.
-     By theta\_space\_vertex\_exclusion, this is impossible.\<close>
-  show False sorry
+  \<comment> \<open>Key fact: the component containing a5 does not have all 4 vertices in its closure.
+     Proved via strengthened K4 lemma (Lemma 64.3 with boundary info).\<close>
+  \<comment> \<open>Step A: each e\_i5 - {a\_i} \<subseteq> S2-X, connected, contains a5. So \<subseteq> component of a5.\<close>
+  \<comment> \<open>Step B: a\_i \<in> closure(component of a5) for all i.\<close>
+  \<comment> \<open>Step C: but K4 boundary structure \<Rightarrow> some a\_i \<notin> closure(component of a5). Contradiction.\<close>
+  \<comment> \<open>Step C needs: for each K4 component, at least one vertex is NOT in its closure.\<close>
+  have hU_boundary: "\<not> ({a1, a2, a3, a4} \<subseteq> closure_on top1_S2 top1_S2_topology U1)
+      \<and> \<not> ({a1, a2, a3, a4} \<subseteq> closure_on top1_S2 top1_S2_topology U2)
+      \<and> \<not> ({a1, a2, a3, a4} \<subseteq> closure_on top1_S2 top1_S2_topology U3)
+      \<and> \<not> ({a1, a2, a3, a4} \<subseteq> closure_on top1_S2 top1_S2_topology U4)"
+    sorry
+  \<comment> \<open>Each X\_i = 3 edges not incident to a\_i forms an SCC.
+     By JCT, X\_i separates S2. Since e\_{i,5} \<inter> X\_i = {} and e\_{i,5} connects
+     a5 to a\_i, they are on the same side of X\_i.
+     But a5 being in one K4 component means a5 is on one specific side of each X\_i,
+     and being on a\_i's side for ALL i is impossible (the 4 faces are disjoint).\<close>
+  \<comment> \<open>X1 = e23 \<union> e24 \<union> e34 (SCC, missing a1).
+     X2 = e13 \<union> e14 \<union> e34 (SCC, missing a2).
+     X3 = e12 \<union> e14 \<union> e24 (SCC, missing a3).
+     X4 = e12 \<union> e13 \<union> e23 (SCC, missing a4).\<close>
+  \<comment> \<open>e15 \<inter> X1 = e15 \<inter> (e23\<union>e24\<union>e34) = {}\<union>{}\<union>{} = {} (from intersection assumptions).
+     Similarly for e25 \<inter> X2, e35 \<inter> X3, e45 \<inter> X4.\<close>
+  have he15_X1: "e15 \<inter> (e23 \<union> e24 \<union> e34) = {}"
+    using hi_15_23 hi_15_24 hi_15_34 by (by100 blast)
+  have he25_X2: "e25 \<inter> (e13 \<union> e14 \<union> e34) = {}"
+    using hi_13_25 hi_14_25 hi_25_34 by (by100 blast)
+  have he35_X3: "e35 \<inter> (e12 \<union> e14 \<union> e24) = {}"
+    using hi_12_35 hi_14_35 hi_24_35 by (by100 blast)
+  have he45_X4: "e45 \<inter> (e12 \<union> e13 \<union> e23) = {}"
+    using hi_12_45 hi_13_45 hi_23_45 by (by100 blast)
+  \<comment> \<open>Step A+B: for each component, if a5 is in it, all 4 vertices are in its closure.\<close>
+  have hall1: "a5 \<in> U1 \<Longrightarrow> {a1,a2,a3,a4} \<subseteq> closure_on top1_S2 top1_S2_topology U1" sorry
+  have hall2: "a5 \<in> U2 \<Longrightarrow> {a1,a2,a3,a4} \<subseteq> closure_on top1_S2 top1_S2_topology U2" sorry
+  have hall3: "a5 \<in> U3 \<Longrightarrow> {a1,a2,a3,a4} \<subseteq> closure_on top1_S2 top1_S2_topology U3" sorry
+  have hall4: "a5 \<in> U4 \<Longrightarrow> {a1,a2,a3,a4} \<subseteq> closure_on top1_S2 top1_S2_topology U4" sorry
+  \<comment> \<open>But hU\_boundary says no component has all 4 vertices in its closure.\<close>
+  show False using ha5_in_comp hall1 hall2 hall3 hall4 hU_boundary by (by100 blast)
 qed
 
 end
