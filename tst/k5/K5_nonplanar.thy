@@ -2048,9 +2048,206 @@ proof -
      - connected subset of S2-X meeting Ui \<Rightarrow> \<subseteq> Ui
      - a\_j \<in> closure(e\_{j,5} - {a\_j, a5}) \<subseteq> closure(Ui)\<close>
   \<comment> \<open>Generic: if a5 \<in> Ui and Ui is one of the 4 components, all vertices in closure(Ui).\<close>
+  have hS2_strict: "is_topology_on_strict top1_S2 top1_S2_topology" by (rule hS2)
+  have hS2_haus: "is_hausdorff_on top1_S2 top1_S2_topology" by (rule top1_S2_is_hausdorff)
+  have hTS2: "is_topology_on top1_S2 top1_S2_topology"
+    using hS2 unfolding is_topology_on_strict_def by (by100 blast)
+  have hX_sub: "X \<subseteq> top1_S2" unfolding X_def
+    using hsub12 hsub23 hsub34 hsub14 hsub13 hsub24 by (by100 blast)
+  have hSX_open: "top1_S2 - X \<in> top1_S2_topology"
+  proof -
+    have "closedin_on top1_S2 top1_S2_topology X"
+      sorry
+    thus ?thesis using hS2 unfolding is_topology_on_strict_def closedin_on_def by (by100 blast)
+  qed
+  \<comment> \<open>Each Ui is open in S2 (component of open set in locally path connected space).\<close>
+  have hU_open: "U1 \<in> top1_S2_topology" "U2 \<in> top1_S2_topology"
+      "U3 \<in> top1_S2_topology" "U4 \<in> top1_S2_topology"
+    sorry \<comment> \<open>Components of open set in locally connected S2 are open.\<close>
+  \<comment> \<open>Helper: if Y connected, Y \<subseteq> S2-X, Y \<inter> Ui \<noteq> {}, then Y \<subseteq> Ui.\<close>
+  have hcomp_max: "\<And>Y Ui. Ui \<in> {U1,U2,U3,U4} \<Longrightarrow>
+      Y \<subseteq> top1_S2 - X \<Longrightarrow> top1_connected_on Y (subspace_topology top1_S2 top1_S2_topology Y) \<Longrightarrow>
+      Y \<inter> Ui \<noteq> {} \<Longrightarrow> Y \<subseteq> Ui"
+    sorry \<comment> \<open>Separation argument: Ui open, rest open, Y connected meets Ui.\<close>
+  \<comment> \<open>Helper: for each arc e\_{j,5}: e\_{j,5}-{a\_j} is connected in S2.\<close>
+  have ha_ne_a5: "a1 \<noteq> a5" "a2 \<noteq> a5" "a3 \<noteq> a5" "a4 \<noteq> a5"
+    using ha5_ne by (by100 blast)+
+  \<comment> \<open>e\_{j,5} - {a\_j} connected: arc minus both endpoints connected (existing lemma),
+     then Theorem\_23\_4 extends to include the other endpoint a5.\<close>
+  have hconn15: "top1_connected_on (e15 - {a1}) (subspace_topology top1_S2 top1_S2_topology (e15 - {a1}))"
+  proof -
+    have h1: "top1_connected_on (e15 - {a1, a5}) (subspace_topology top1_S2 top1_S2_topology (e15 - {a1, a5}))"
+      by (rule arc_minus_endpoints_connected[OF hS2_strict hS2_haus hsub15 harc15 hep15 ha_ne_a5(1)])
+    have h2: "e15 - {a1, a5} \<subseteq> e15 - {a1}" by (by100 blast)
+    have h3: "e15 - {a1} \<subseteq> top1_S2" using hsub15 by (by100 blast)
+    have h4: "e15 - {a1} \<subseteq> closure_on top1_S2 top1_S2_topology (e15 - {a1, a5})"
+    proof -
+      have "a5 \<in> closure_on top1_S2 top1_S2_topology (e15 - {a1, a5})"
+        by (rule arc_endpoint_in_closure_of_interior(2)[OF hS2_strict hS2_haus hsub15 harc15 hep15 ha_ne_a5(1)])
+      moreover have "e15 - {a1, a5} \<subseteq> closure_on top1_S2 top1_S2_topology (e15 - {a1, a5})"
+        using subset_closure_on[of "e15-{a1,a5}" top1_S2 top1_S2_topology] h3 by (by100 blast)
+      moreover have "e15 - {a1} = (e15 - {a1, a5}) \<union> {a5}" using ha5_e15 ha5_ne(1) by (by100 blast)
+      ultimately show ?thesis by (by100 blast)
+    qed
+    have h0: "e15 - {a1, a5} \<subseteq> top1_S2" using hsub15 by (by100 blast)
+    from Theorem_23_4[OF hTS2 h0 h3 h2 h4 h1]
+    show ?thesis .
+  qed
+  have hconn25: "top1_connected_on (e25 - {a2}) (subspace_topology top1_S2 top1_S2_topology (e25 - {a2}))"
+  proof -
+    have ha5_e25: "a5 \<in> e25"
+      using arc_endpoints_subset[of e25 "subspace_topology top1_S2 top1_S2_topology e25"] hep25 by (by100 blast)
+    have h1: "top1_connected_on (e25 - {a2, a5}) (subspace_topology top1_S2 top1_S2_topology (e25 - {a2, a5}))"
+      by (rule arc_minus_endpoints_connected[OF hS2_strict hS2_haus hsub25 harc25 hep25 ha_ne_a5(2)])
+    have h0: "e25 - {a2, a5} \<subseteq> top1_S2" using hsub25 by (by100 blast)
+    have h2: "e25 - {a2, a5} \<subseteq> e25 - {a2}" by (by100 blast)
+    have h3: "e25 - {a2} \<subseteq> top1_S2" using hsub25 by (by100 blast)
+    have h4: "e25 - {a2} \<subseteq> closure_on top1_S2 top1_S2_topology (e25 - {a2, a5})"
+    proof -
+      have "a5 \<in> closure_on top1_S2 top1_S2_topology (e25 - {a2, a5})"
+        by (rule arc_endpoint_in_closure_of_interior(2)[OF hS2_strict hS2_haus hsub25 harc25 hep25 ha_ne_a5(2)])
+      moreover have "e25 - {a2, a5} \<subseteq> closure_on top1_S2 top1_S2_topology (e25 - {a2, a5})"
+        using subset_closure_on[of "e25-{a2,a5}" top1_S2 top1_S2_topology] h0 by (by100 blast)
+      moreover have "e25 - {a2} = (e25 - {a2, a5}) \<union> {a5}" using ha5_e25 ha5_ne(2) by (by100 blast)
+      ultimately show ?thesis by (by100 blast)
+    qed
+    from Theorem_23_4[OF hTS2 h0 h3 h2 h4 h1] show ?thesis .
+  qed
+  have hconn35: "top1_connected_on (e35 - {a3}) (subspace_topology top1_S2 top1_S2_topology (e35 - {a3}))"
+  proof -
+    have ha5_e35: "a5 \<in> e35"
+      using arc_endpoints_subset[of e35 "subspace_topology top1_S2 top1_S2_topology e35"] hep35 by (by100 blast)
+    have h1: "top1_connected_on (e35 - {a3, a5}) (subspace_topology top1_S2 top1_S2_topology (e35 - {a3, a5}))"
+      by (rule arc_minus_endpoints_connected[OF hS2_strict hS2_haus hsub35 harc35 hep35 ha_ne_a5(3)])
+    have h0: "e35 - {a3, a5} \<subseteq> top1_S2" using hsub35 by (by100 blast)
+    have h2: "e35 - {a3, a5} \<subseteq> e35 - {a3}" by (by100 blast)
+    have h3: "e35 - {a3} \<subseteq> top1_S2" using hsub35 by (by100 blast)
+    have h4: "e35 - {a3} \<subseteq> closure_on top1_S2 top1_S2_topology (e35 - {a3, a5})"
+    proof -
+      have "a5 \<in> closure_on top1_S2 top1_S2_topology (e35 - {a3, a5})"
+        by (rule arc_endpoint_in_closure_of_interior(2)[OF hS2_strict hS2_haus hsub35 harc35 hep35 ha_ne_a5(3)])
+      moreover have "e35 - {a3, a5} \<subseteq> closure_on top1_S2 top1_S2_topology (e35 - {a3, a5})"
+        using subset_closure_on[of "e35-{a3,a5}" top1_S2 top1_S2_topology] h0 by (by100 blast)
+      moreover have "e35 - {a3} = (e35 - {a3, a5}) \<union> {a5}" using ha5_e35 ha5_ne(3) by (by100 blast)
+      ultimately show ?thesis by (by100 blast)
+    qed
+    from Theorem_23_4[OF hTS2 h0 h3 h2 h4 h1] show ?thesis .
+  qed
+  have hconn45: "top1_connected_on (e45 - {a4}) (subspace_topology top1_S2 top1_S2_topology (e45 - {a4}))"
+  proof -
+    have ha5_e45: "a5 \<in> e45"
+      using arc_endpoints_subset[of e45 "subspace_topology top1_S2 top1_S2_topology e45"] hep45 by (by100 blast)
+    have h1: "top1_connected_on (e45 - {a4, a5}) (subspace_topology top1_S2 top1_S2_topology (e45 - {a4, a5}))"
+      by (rule arc_minus_endpoints_connected[OF hS2_strict hS2_haus hsub45 harc45 hep45 ha_ne_a5(4)])
+    have h0: "e45 - {a4, a5} \<subseteq> top1_S2" using hsub45 by (by100 blast)
+    have h2: "e45 - {a4, a5} \<subseteq> e45 - {a4}" by (by100 blast)
+    have h3: "e45 - {a4} \<subseteq> top1_S2" using hsub45 by (by100 blast)
+    have h4: "e45 - {a4} \<subseteq> closure_on top1_S2 top1_S2_topology (e45 - {a4, a5})"
+    proof -
+      have "a5 \<in> closure_on top1_S2 top1_S2_topology (e45 - {a4, a5})"
+        by (rule arc_endpoint_in_closure_of_interior(2)[OF hS2_strict hS2_haus hsub45 harc45 hep45 ha_ne_a5(4)])
+      moreover have "e45 - {a4, a5} \<subseteq> closure_on top1_S2 top1_S2_topology (e45 - {a4, a5})"
+        using subset_closure_on[of "e45-{a4,a5}" top1_S2 top1_S2_topology] h0 by (by100 blast)
+      moreover have "e45 - {a4} = (e45 - {a4, a5}) \<union> {a5}" using ha5_e45 ha5_ne(4) by (by100 blast)
+      ultimately show ?thesis by (by100 blast)
+    qed
+    from Theorem_23_4[OF hTS2 h0 h3 h2 h4 h1] show ?thesis .
+  qed
+  \<comment> \<open>e\_{j,5} - {a\_j} \<subseteq> S2-X (from intersection facts).\<close>
+  have he15_X: "e15 \<inter> X = {a1}"
+  proof -
+    have "e15 \<inter> X = (e15\<inter>e12) \<union> (e15\<inter>e23) \<union> (e15\<inter>e34) \<union> (e15\<inter>e14) \<union> (e15\<inter>e13) \<union> (e15\<inter>e24)"
+      unfolding X_def by (by100 blast)
+    also have "\<dots> = {a1} \<union> {} \<union> {} \<union> {a1} \<union> {a1} \<union> {}"
+      using hi_12_15 hi_15_23 hi_15_34 hi_14_15 hi_13_15 hi_15_24
+      apply (simp add: Int_commute)
+      done
+    also have "\<dots> = {a1}" by (by100 blast)
+    finally show ?thesis .
+  qed
+  have he25_X: "e25 \<inter> X = {a2}"
+  proof -
+    have "e25 \<inter> X = (e25\<inter>e12) \<union> (e25\<inter>e23) \<union> (e25\<inter>e34) \<union> (e25\<inter>e14) \<union> (e25\<inter>e13) \<union> (e25\<inter>e24)"
+      unfolding X_def by (by100 blast)
+    also have "\<dots> = {a2} \<union> {a2} \<union> {} \<union> {} \<union> {} \<union> {a2}"
+      using hi_12_25 hi_23_25 hi_25_34 hi_14_25 hi_13_25 hi_24_25
+      apply (simp add: Int_commute)
+      done
+    also have "\<dots> = {a2}" by (by100 blast)
+    finally show ?thesis .
+  qed
+  have he35_X: "e35 \<inter> X = {a3}"
+  proof -
+    have "e35 \<inter> X = (e35\<inter>e12) \<union> (e35\<inter>e23) \<union> (e35\<inter>e34) \<union> (e35\<inter>e14) \<union> (e35\<inter>e13) \<union> (e35\<inter>e24)"
+      unfolding X_def by (by100 blast)
+    also have "\<dots> = {} \<union> {a3} \<union> {a3} \<union> {} \<union> {a3} \<union> {}"
+      using hi_12_35 hi_23_35 hi_34_35 hi_14_35 hi_13_35 hi_24_35
+      apply (simp add: Int_commute)
+      done
+    also have "\<dots> = {a3}" by (by100 blast)
+    finally show ?thesis .
+  qed
+  have he45_X: "e45 \<inter> X = {a4}"
+  proof -
+    have "e45 \<inter> X = (e45\<inter>e12) \<union> (e45\<inter>e23) \<union> (e45\<inter>e34) \<union> (e45\<inter>e14) \<union> (e45\<inter>e13) \<union> (e45\<inter>e24)"
+      unfolding X_def by (by100 blast)
+    also have "\<dots> = {} \<union> {} \<union> {a4} \<union> {a4} \<union> {} \<union> {a4}"
+      using hi_12_45 hi_23_45 hi_34_45 hi_14_45 hi_13_45 hi_24_45
+      apply (simp add: Int_commute)
+      done
+    also have "\<dots> = {a4}" by (by100 blast)
+    finally show ?thesis .
+  qed
+  have hsub15X: "e15 - {a1} \<subseteq> top1_S2 - X" using he15_X hsub15 by (by100 blast)
+  have hsub25X: "e25 - {a2} \<subseteq> top1_S2 - X" using he25_X hsub25 by (by100 blast)
+  have hsub35X: "e35 - {a3} \<subseteq> top1_S2 - X" using he35_X hsub35 by (by100 blast)
+  have hsub45X: "e45 - {a4} \<subseteq> top1_S2 - X" using he45_X hsub45 by (by100 blast)
+  \<comment> \<open>a5 \<in> e\_{j,5} - {a\_j}.\<close>
+  have ha5_15: "a5 \<in> e15 - {a1}" using ha5_e15 ha5_ne(1) by (by100 blast)
+  have ha5_25: "a5 \<in> e25 - {a2}"
+    using arc_endpoints_subset[of e25 "subspace_topology top1_S2 top1_S2_topology e25"] hep25 ha5_ne(2)
+    by (by100 blast)
+  have ha5_35: "a5 \<in> e35 - {a3}"
+    using arc_endpoints_subset[of e35 "subspace_topology top1_S2 top1_S2_topology e35"] hep35 ha5_ne(3)
+    by (by100 blast)
+  have ha5_45: "a5 \<in> e45 - {a4}"
+    using arc_endpoints_subset[of e45 "subspace_topology top1_S2 top1_S2_topology e45"] hep45 ha5_ne(4)
+    by (by100 blast)
+  \<comment> \<open>a\_j \<in> closure(e\_{j,5} - {a\_j, a5}) (arc endpoint in closure of interior).\<close>
+  have hcl1: "a1 \<in> closure_on top1_S2 top1_S2_topology (e15 - {a1, a5})"
+    by (rule arc_endpoint_in_closure_of_interior(1)[OF hS2_strict hS2_haus hsub15 harc15 hep15 ha_ne_a5(1)])
+  have hcl2: "a2 \<in> closure_on top1_S2 top1_S2_topology (e25 - {a2, a5})"
+    by (rule arc_endpoint_in_closure_of_interior(1)[OF hS2_strict hS2_haus hsub25 harc25 hep25 ha_ne_a5(2)])
+  have hcl3: "a3 \<in> closure_on top1_S2 top1_S2_topology (e35 - {a3, a5})"
+    by (rule arc_endpoint_in_closure_of_interior(1)[OF hS2_strict hS2_haus hsub35 harc35 hep35 ha_ne_a5(3)])
+  have hcl4: "a4 \<in> closure_on top1_S2 top1_S2_topology (e45 - {a4, a5})"
+    by (rule arc_endpoint_in_closure_of_interior(1)[OF hS2_strict hS2_haus hsub45 harc45 hep45 ha_ne_a5(4)])
   have hall_generic: "\<And>Ui. Ui \<in> {U1,U2,U3,U4} \<Longrightarrow> a5 \<in> Ui \<Longrightarrow>
       {a1,a2,a3,a4} \<subseteq> closure_on top1_S2 top1_S2_topology Ui"
-    sorry
+  proof (intro subsetI)
+    fix Ui v assume hUi: "Ui \<in> {U1,U2,U3,U4}" and ha5Ui: "a5 \<in> Ui"
+        and hv: "v \<in> {a1,a2,a3,a4}"
+    \<comment> \<open>Pick the right star edge for vertex v.\<close>
+    have "v \<in> closure_on top1_S2 top1_S2_topology Ui"
+    proof -
+      obtain ej5 where hej5: "ej5 - {v} \<subseteq> top1_S2 - X"
+          "top1_connected_on (ej5 - {v}) (subspace_topology top1_S2 top1_S2_topology (ej5 - {v}))"
+          "a5 \<in> ej5 - {v}"
+          "v \<in> closure_on top1_S2 top1_S2_topology (ej5 - {v, a5})"
+        using hv hsub15X hconn15 ha5_15 hcl1
+              hsub25X hconn25 ha5_25 hcl2
+              hsub35X hconn35 ha5_35 hcl3
+              hsub45X hconn45 ha5_45 hcl4
+        by (by100 blast)
+      have "ej5 - {v} \<subseteq> Ui"
+        by (rule hcomp_max[OF hUi hej5(1) hej5(2)]) (use hej5(3) ha5Ui in \<open>by100 blast\<close>)
+      hence "ej5 - {v, a5} \<subseteq> Ui" by (by100 blast)
+      hence "closure_on top1_S2 top1_S2_topology (ej5 - {v, a5}) \<subseteq> closure_on top1_S2 top1_S2_topology Ui"
+        by (rule closure_on_mono)
+      thus ?thesis using hej5(4) by (by100 blast)
+    qed
+    thus "v \<in> closure_on top1_S2 top1_S2_topology Ui" .
+  qed
   have hall1: "a5 \<in> U1 \<Longrightarrow> {a1,a2,a3,a4} \<subseteq> closure_on top1_S2 top1_S2_topology U1"
     by (rule hall_generic) (by100 blast)
   have hall2: "a5 \<in> U2 \<Longrightarrow> {a1,a2,a3,a4} \<subseteq> closure_on top1_S2 top1_S2_topology U2"
