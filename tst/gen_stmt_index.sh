@@ -7,7 +7,7 @@
 THEORIES=(
   i/Top1_Ch2.thy i/Top1_Ch3.thy i/Top1_Ch4.thy i/Top1_Ch5_8.thy i/Top1_Ch9_13.thy
   h/AlgTopHelpers.thy b0/AlgTop_JCT_Base0.thy b/AlgTop_JCT_Base.thy
-  a0/AlgTop0.thy ac/AlgTopCached.thy AlgTop.thy
+  a0/AlgTop0.thy ac/AlgTopCached.thy fib/AlgIsoFixedBase.thy fi/AlgIsoFixed.thy AlgTop.thy
 )
 
 OUT=STMT_INDEX.txt

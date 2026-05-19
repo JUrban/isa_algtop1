@@ -16,8 +16,9 @@ THEORIES=(
   b/AlgTop_JCT_Base.thy
   a0/AlgTop0.thy
   ac/AlgTopCached.thy
-  AlgTop.thy
+  fib/AlgIsoFixedBase.thy
   fi/AlgIsoFixed.thy
+  AlgTop.thy
 )
 
 TXT=THEOREMS_AND_DEFS.txt

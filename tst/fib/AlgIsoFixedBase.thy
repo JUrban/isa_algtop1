@@ -4971,4 +4971,127 @@ proof -
   qed
 qed
 
+section \<open>Reusable SCC / arc / homeomorphism lemmas\<close>
+
+text \<open>Named lemmas for common SCC properties, reducing repeated inline reasoning.\<close>
+
+\<comment> \<open>Aliases for existing lemmas with reviewer-suggested names.\<close>
+lemmas sphere_minus_point_homeomorphic_R2 = S2_minus_point_homeo_R2
+lemmas stereographic_projection_homeomorphism = S2_minus_point_homeo_R2
+
+lemma simple_closed_curve_compact:
+  assumes "is_topology_on_strict top1_S2 top1_S2_topology"
+      and "top1_simple_closed_curve_on top1_S2 top1_S2_topology C"
+  shows "top1_compact_on C (subspace_topology top1_S2 top1_S2_topology C)"
+proof -
+  obtain f where hf: "top1_continuous_map_on top1_S1 top1_S1_topology top1_S2 top1_S2_topology f"
+      "f ` top1_S1 = C" using assms(2) unfolding top1_simple_closed_curve_on_def by blast
+  have hTS1: "is_topology_on top1_S1 top1_S1_topology"
+    using top1_S1_is_topology_on_strict unfolding is_topology_on_strict_def by blast
+  have hTS2: "is_topology_on top1_S2 top1_S2_topology"
+    using assms(1) unfolding is_topology_on_strict_def by blast
+  from Theorem_26_5[OF hTS1 hTS2 S1_compact hf(1)]
+  show ?thesis using hf(2) by simp
+qed
+
+lemma simple_closed_curve_nonempty:
+  assumes "top1_simple_closed_curve_on X TX C"
+  shows "C \<noteq> {}"
+proof -
+  obtain f where "f ` top1_S1 = C"
+    using assms unfolding top1_simple_closed_curve_on_def by blast
+  moreover have "(1::real, 0::real) \<in> top1_S1" unfolding top1_S1_def by simp
+  ultimately show ?thesis by blast
+qed
+
+lemma simple_closed_curve_closed_in_S2:
+  assumes "is_topology_on_strict top1_S2 top1_S2_topology"
+      and "top1_simple_closed_curve_on top1_S2 top1_S2_topology C"
+  shows "closedin_on top1_S2 top1_S2_topology C"
+  by (rule Theorem_26_3[OF top1_S2_is_hausdorff
+      simple_closed_curve_subset[OF assms(2)]
+      simple_closed_curve_compact[OF assms]])
+
+lemma simple_closed_curve_complement_open:
+  assumes "is_topology_on_strict top1_S2 top1_S2_topology"
+      and "top1_simple_closed_curve_on top1_S2 top1_S2_topology C"
+  shows "top1_S2 - C \<in> top1_S2_topology"
+  using simple_closed_curve_closed_in_S2[OF assms] assms(1)
+  unfolding is_topology_on_strict_def closedin_on_def by blast
+
+lemma simple_closed_curve_complement_components_two:
+  assumes "is_topology_on_strict top1_S2 top1_S2_topology"
+      and "top1_simple_closed_curve_on top1_S2 top1_S2_topology C"
+  shows "top1_separates_on top1_S2 top1_S2_topology C"
+  by (rule Theorem_61_3_JordanSeparation_S2[OF assms])
+
+lemma simple_closed_curve_component_path_connected:
+  assumes "is_topology_on_strict top1_S2 top1_S2_topology"
+      and "top1_simple_closed_curve_on top1_S2 top1_S2_topology C"
+      and "W \<subseteq> top1_S2 - C"
+      and "top1_connected_on W (subspace_topology top1_S2 top1_S2_topology W)"
+      and "W \<noteq> {}"
+      and "W \<in> top1_S2_topology"
+  shows "top1_path_connected_on W (subspace_topology top1_S2 top1_S2_topology W)"
+proof -
+  have hTS2: "is_topology_on top1_S2 top1_S2_topology"
+    using assms(1) unfolding is_topology_on_strict_def by blast
+  have hW_lpc: "top1_locally_path_connected_on W (subspace_topology top1_S2 top1_S2_topology W)"
+    by (rule open_subset_locally_path_connected[OF S2_locally_path_connected assms(6)])
+       (use assms(3) simple_closed_curve_subset[OF assms(2)] in blast)
+  have hW_sub: "W \<subseteq> top1_S2" using assms(3) simple_closed_curve_subset[OF assms(2)] by blast
+  have hTW: "is_topology_on W (subspace_topology top1_S2 top1_S2_topology W)"
+    by (rule subspace_topology_is_topology_on[OF hTS2 hW_sub])
+  from connected_locally_path_connected_imp_path_connected[OF hTW assms(4) hW_lpc assms(5)]
+  show ?thesis .
+qed
+
+lemma simple_closed_curve_separates_connected_set:
+  assumes "is_topology_on_strict top1_S2 top1_S2_topology"
+      and "top1_simple_closed_curve_on top1_S2 top1_S2_topology C"
+      and "top1_connected_on E (subspace_topology top1_S2 top1_S2_topology E)"
+      and "E \<subseteq> top1_S2 - C"
+      and "W1 \<subseteq> top1_S2 - C" and "W2 \<subseteq> top1_S2 - C"
+      and "W1 \<inter> W2 = {}" and "W1 \<union> W2 = top1_S2 - C"
+      and "W1 \<noteq> {}" and "W2 \<noteq> {}"
+      and "W1 \<in> top1_S2_topology" and "W2 \<in> top1_S2_topology"
+      and "\<exists>e1 \<in> E. e1 \<in> W1" and "\<exists>e2 \<in> E. e2 \<in> W2"
+  shows False
+proof -
+  have hTS2: "is_topology_on top1_S2 top1_S2_topology"
+    using assms(1) unfolding is_topology_on_strict_def by blast
+  have hT_E: "is_topology_on E (subspace_topology top1_S2 top1_S2_topology E)"
+    by (rule subspace_topology_is_topology_on[OF hTS2]) (use assms(4) in blast)
+  have hE_sub_W12: "E \<subseteq> W1 \<union> W2" using assms(4,8) by blast
+  have hE1: "E \<inter> W1 \<noteq> {}" using assms(13) by blast
+  have hE2: "E \<inter> W2 \<noteq> {}" using assms(14) by blast
+  have "E = (E \<inter> W1) \<union> (E \<inter> W2)" using hE_sub_W12 by blast
+  moreover have "(E \<inter> W1) \<inter> (E \<inter> W2) = {}" using assms(7) by blast
+  moreover have "E \<inter> W1 \<noteq> {}" using hE1 .
+  moreover have "E \<inter> W2 \<noteq> {}" using hE2 .
+  moreover have "E \<inter> W1 \<in> subspace_topology top1_S2 top1_S2_topology E"
+    unfolding subspace_topology_def using assms(11) by blast
+  moreover have "E \<inter> W2 \<in> subspace_topology top1_S2 top1_S2_topology E"
+    unfolding subspace_topology_def using assms(12) by blast
+  ultimately show False using assms(3) unfolding top1_connected_on_def
+    by (by100 blast)
+qed
+
+lemma component_image_under_homeomorphism:
+  assumes "is_topology_on X TX" and "is_topology_on Y TY"
+      and "top1_homeomorphism_on X TX Y TY h"
+      and "top1_connected_on W (subspace_topology X TX W)"
+      and "W \<subseteq> X"
+  shows "top1_connected_on (h ` W) (subspace_topology Y TY (h ` W))"
+proof -
+  have hcont: "top1_continuous_map_on X TX Y TY h"
+    using assms(3) unfolding top1_homeomorphism_on_def by blast
+  have hTW: "is_topology_on W (subspace_topology X TX W)"
+    by (rule subspace_topology_is_topology_on[OF assms(1) assms(5)])
+  have hcont_W: "top1_continuous_map_on W (subspace_topology X TX W) Y TY h"
+    by (rule top1_continuous_map_on_restrict_domain_simple[OF hcont assms(5)])
+  from Theorem_23_5[OF hTW assms(2) assms(4) hcont_W]
+  show ?thesis .
+qed
+
 end
