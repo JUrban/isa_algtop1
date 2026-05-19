@@ -5094,4 +5094,54 @@ proof -
   show ?thesis .
 qed
 
+lemma arc_endpoints_under_homeomorphism:
+  assumes "is_topology_on_strict X TX" and "is_topology_on_strict Y TY"
+      and "is_hausdorff_on X TX" and "is_hausdorff_on Y TY"
+      and "top1_homeomorphism_on X TX Y TY g"
+      and "A \<subseteq> X" and "top1_is_arc_on A (subspace_topology X TX A)"
+      and "top1_arc_endpoints_on A (subspace_topology X TX A) = {a, b}"
+      and "a \<noteq> b"
+  shows "top1_is_arc_on (g ` A) (subspace_topology Y TY (g ` A))
+       \<and> top1_arc_endpoints_on (g ` A) (subspace_topology Y TY (g ` A)) = {g a, g b}"
+proof -
+  obtain \<phi> where h\<phi>: "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
+      A (subspace_topology X TX A) \<phi>"
+    using assms(7) unfolding top1_is_arc_on_def is_topology_on_strict_def by blast
+  have hg_A: "top1_homeomorphism_on A (subspace_topology X TX A)
+      (g ` A) (subspace_topology Y TY (g ` A)) g"
+    by (rule homeomorphism_on_restrict[OF assms(5) assms(6)])
+  have hcomp: "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
+      (g ` A) (subspace_topology Y TY (g ` A)) (g \<circ> \<phi>)"
+    by (rule homeomorphism_comp[OF h\<phi> hg_A])
+  have hgA_sub: "g ` A \<subseteq> Y"
+    using assms(5,6) unfolding top1_homeomorphism_on_def top1_continuous_map_on_def by blast
+  have hTY_plain: "is_topology_on Y TY"
+    using assms(2) unfolding is_topology_on_strict_def by blast
+  have hT_gA: "is_topology_on_strict (g ` A) (subspace_topology Y TY (g ` A))"
+    by (rule subspace_topology_is_strict[OF assms(2) hgA_sub])
+  have harc_gA: "top1_is_arc_on (g ` A) (subspace_topology Y TY (g ` A))"
+    unfolding top1_is_arc_on_def using hT_gA hcomp by blast
+  have hep: "top1_arc_endpoints_on (g ` A) (subspace_topology Y TY (g ` A)) = {(g \<circ> \<phi>) 0, (g \<circ> \<phi>) 1}"
+    by (rule arc_endpoints_are_boundary[OF assms(2) assms(4) hgA_sub harc_gA hcomp])
+  have hep_A: "{\<phi> 0, \<phi> 1} = {a, b}"
+    using arc_endpoints_are_boundary[OF assms(1) assms(3) assms(6) assms(7) h\<phi>] assms(8) by simp
+  have "{g (\<phi> 0), g (\<phi> 1)} = {g a, g b}"
+  proof -
+    from hep_A assms(9) have "(\<phi> 0 = a \<and> \<phi> 1 = b) \<or> (\<phi> 0 = b \<and> \<phi> 1 = a)"
+      by (by100 fast)
+    thus ?thesis
+    proof
+      assume "\<phi> 0 = a \<and> \<phi> 1 = b" thus ?thesis by (by100 simp)
+    next
+      assume "\<phi> 0 = b \<and> \<phi> 1 = a"
+      hence "{g (\<phi> 0), g (\<phi> 1)} = {g b, g a}" by (by100 simp)
+      also have "\<dots> = {g a, g b}" by (by100 blast)
+      finally show ?thesis .
+    qed
+  qed
+  hence "top1_arc_endpoints_on (g ` A) (subspace_topology Y TY (g ` A)) = {g a, g b}"
+    using hep by (by100 simp)
+  thus ?thesis using harc_gA by blast
+qed
+
 end

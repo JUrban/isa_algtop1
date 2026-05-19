@@ -423,6 +423,7 @@ fi/AlgIsoFixed.thy|lemma|arc_endpoint_in_closure_of_complement_S2|3723
 ac/AlgTopCached.thy|lemma|arc_endpoint_in_closure_of_interior|52919
 fi/AlgIsoFixed.thy|lemma|arc_endpoint_not_interior_S2|3326
 ac/AlgTopCached.thy|lemma|arc_endpoints_are_boundary|48513
+fib/AlgIsoFixedBase.thy|lemma|arc_endpoints_under_homeomorphism|5097
 a0/AlgTop0.thy|lemma|arc_in_S2_closed|4888
 a0/AlgTop0.thy|lemma|arc_joining_lemma|5620
 ac/AlgTopCached.thy|lemma|arc_minus_endpoints_connected|51926

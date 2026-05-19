@@ -4,7 +4,7 @@
 #
 # Files: i/Top1_Ch2.thy,i/Top1_Ch3.thy,i/Top1_Ch4.thy,i/Top1_Ch5_8.thy,i/Top1_Ch9_13.thy,h/AlgTopHelpers.thy,b0/AlgTop_JCT_Base0.thy,b/AlgTop_JCT_Base.thy,a0/AlgTop0.thy,ac/AlgTopCached.thy,fib/AlgIsoFixedBase.thy,fi/AlgIsoFixed.thy,AlgTop.thy
 #
-# Total entries: 1869
+# Total entries: 1870
 # Duplicate names: 16
 
 ## definitions (329)
@@ -359,7 +359,7 @@ top1_urysohn_U                                 i/Top1_Ch4.thy                   
 
 top1_I01                                       i/Top1_Ch5_8.thy                     line 25035
 
-## lemmas (1235)
+## lemmas (1236)
 
 abelianization_concrete                        ac/AlgTopCached.thy                  line 9544
 abs_diff_le_of_bounds                          i/Top1_Ch4.thy                       line 12764
@@ -379,6 +379,7 @@ arc_endpoint_in_closure_of_complement_S2       fi/AlgIsoFixed.thy               
 arc_endpoint_in_closure_of_interior            ac/AlgTopCached.thy                  line 52919
 arc_endpoint_not_interior_S2                   fi/AlgIsoFixed.thy                   line 3326
 arc_endpoints_are_boundary                     ac/AlgTopCached.thy                  line 48513
+arc_endpoints_under_homeomorphism              fib/AlgIsoFixedBase.thy              line 5097
 arc_in_S2_closed                               a0/AlgTop0.thy                       line 4888
 arc_joining_lemma                              a0/AlgTop0.thy                       line 5620
 arc_minus_endpoints_connected                  ac/AlgTopCached.thy                  line 51926
