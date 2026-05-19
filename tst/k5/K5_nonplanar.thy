@@ -1,5 +1,5 @@
 theory K5_nonplanar
-imports AlgTopC.AlgTopCached
+imports AlgTop.AlgTop
 begin
 
 lemma arc_endpoints_subset:
@@ -155,11 +155,12 @@ proof -
     done
   have ha5_in_comp: "a5 \<in> U1 \<union> U2 \<union> U3 \<union> U4"
     using ha5_not_in_X hvert hU(11) X_def by (by100 blast)
-  \<comment> \<open>Following textbook: the star e15\<union>e25\<union>e35\<union>e45 is connected (shares a5).
-     Each e\_i5 - {a\_i} \<subseteq> S2-X (from he\_i5\_X). Connected, contains a5 \<in> Uj.
-     So e\_i5 - {a\_i} \<subseteq> Uj. Hence a\_i \<in> closure(Uj).
-     All 4 vertices in closure(Uj). But no component has all 4 in its closure.
-     Contradiction.\<close>
+  \<comment> \<open>Following textbook Lemma 64.3 structure: form a theta space from 5 of the 6
+     K4 edges (Y = A\<union>B\<union>C with A = e12\<union>e23, B = e13, C = e14\<union>e34, endpoints {a1,a3}).
+     Then e24 interior is in one theta component (W). a5 is in some K4 component,
+     hence in some theta component. The star edges e15,e25,e35,e45 provide
+     connected paths from a5 reaching the interior of each theta arc A,B,C.
+     By theta\_space\_vertex\_exclusion, this is impossible.\<close>
   show False sorry
 qed
 
