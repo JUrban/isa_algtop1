@@ -6,10 +6,10 @@ text \<open>Fixed versions of theorems that should state a SPECIFIC MAP is an is
   not just that the groups are abstractly isomorphic.
   See REPORT_wrong_iso_statements.md for details.\<close>
 
-section \<open>Copied infrastructure (sorry-free, from AlgTop.thy)\<close>
+section \<open>Copied infrastructure (oracle-clean, from AlgTop.thy)\<close>
 
 text \<open>These lemmas are proved in AlgTop.thy but not accessible from this session.
-  Copied verbatim. Both are sorry-free (verified by thm\_oracles).\<close>
+  Copied verbatim. Both are oracle-clean (verified by thm\_oracles).\<close>
 
 lemma SCC_pi1_iso_Z:
   assumes "is_topology_on_strict top1_S2 top1_S2_topology"
@@ -1164,7 +1164,7 @@ proof -
   thus ?thesis unfolding induced_id_eq_lam .
 qed
 
-\<comment> \<open>Helpers and K4_nonadjacent copied from AlgTop.thy (sorry-free).\<close>
+\<comment> \<open>Helpers and K4_nonadjacent copied from AlgTop.thy (oracle-clean).\<close>
 
 lemma subset_disjoint_helper:
   assumes "S \<subseteq> A" and "A \<inter> B = {}" shows "S \<inter> B = {}"
@@ -2760,7 +2760,7 @@ qed
 
 \<comment> \<open>Key lemma for 65.1(b): the K4 construction yields a loop in C that generates \<pi>_1(X).
    This is the textbook's \<alpha>*\<beta> loop. Proof: the full D1/D2/U/V construction from Lemma\_65\_1
-   in AlgTop.thy (~2000 lines, sorry-free) establishes this. We state it as a separate
+   in AlgTop.thy (~2000 lines, oracle-clean) establishes this. We state it as a separate
    lemma to be copied/proved later.\<close>
 lemma K4_generator_loop_in_C:
   fixes a1 a2 a3 a4 :: "real \<times> real \<times> real"

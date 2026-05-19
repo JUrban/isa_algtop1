@@ -4016,7 +4016,7 @@ corollary pi1_S2_minus_two_points_iso_Z:
       (top1_fundamental_group_mul (top1_S2 - {p} - {q})
         (subspace_topology top1_S2 top1_S2_topology (top1_S2 - {p} - {q})) a)
       top1_Z_group top1_Z_mul"
-  sorry \<comment> \<open>Proved as pi1\_S2\_minus\_two\_points\_iso\_Z\_proved in AlgTopCached.thy.
+  sorry \<comment> \<open>Proof gap: proved as pi1_S2_minus_two_points_iso_Z_proved in AlgTopCached.thy.
      The proof chains: stereographic \<rightarrow> restrict \<rightarrow> translate \<rightarrow> deformation retract \<rightarrow> Thm 54.5.
      Infrastructure (Corollary\_52\_5, groups\_isomorphic\_trans\_fwd) not available at AlgTop0 level.\<close>
 text \<open>If f \<simeq> g (loops at a), then f^n \<simeq> g^n.\<close>
@@ -4515,7 +4515,7 @@ proof -
     have hg'_path: "top1_is_path_on X TX a a g'"
       using hg'_loop unfolding top1_is_loop_on_def by simp
     \<comment> \<open>g \<simeq> (gen\<inverse>)^n2, so g\<inverse> \<simeq> ((gen\<inverse>)^n2)\<inverse> \<simeq> gen^n2.
-       But proving ((gen\<inverse>)^n2)\<inverse> \<simeq> gen^n2 is complex. Use sorry.\<close>
+       But proving ((gen\<inverse>)^n2)\<inverse> \<simeq> gen^n2 is complex. Proof omitted here.\<close>
     have hg'_gen: "top1_path_homotopic_on X TX a a g' (top1_path_power gen a n2)"
     proof -
       define gen_inv where "gen_inv = top1_path_reverse gen"
@@ -9833,7 +9833,7 @@ proof -
                  Actually the real issue: we assumed x \<notin> W2 and derived W1 \<subseteq> PC_N. This doesn't
                  contradict anything directly. We need: S2C = PC_N \<Rightarrow> connected \<Rightarrow> but S2C separated.
                  S2C separated means W1, W2 open. W1 open in TS2C \<Rightarrow> need W1 path-component (lpc).
-                 For now, sorry the contradiction.\<close>
+                 For now, contradiction proof omitted.\<close>
               \<comment> \<open>S2C = PC_N (path-connected). But S2C is NOT connected (separated by C1'\<union>C2').\<close>
               \<comment> \<open>W2_S2 \<subseteq> PC_N (same separation argument as for W2\<subseteq>PC_N direction below).\<close>
               have hW2_sub_PC_local: "W2_S2 \<subseteq> PC_N"

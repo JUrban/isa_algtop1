@@ -126,7 +126,7 @@ proof -
       "top1_connected_on U2 (subspace_topology top1_S2 top1_S2_topology U2)"
       "top1_connected_on U3 (subspace_topology top1_S2 top1_S2_topology U3)"
       "top1_connected_on U4 (subspace_topology top1_S2 top1_S2_topology U4)"
-    sorry \<comment> \<open>K5\_K4\_sep[OF ...] — all premises proved but OF-chain times out.\<close>
+    sorry \<comment> \<open>Proof gap: K4 separation (all premises proved, OF-chain exceeds Isabelle timeout).\<close>
   have ha5_in_comp: "a5 \<in> U1 \<union> U2 \<union> U3 \<union> U4"
     using ha5_not_in_X hvert hU(11) X_def by blast
   show False sorry

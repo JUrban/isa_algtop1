@@ -16590,7 +16590,7 @@ proof -
       \<comment> \<open>All note-chain: use hTopU ((subspace_topology X TX U)) consistently. s2 has (subspace_topology X TX U), all path facts have (subspace_topology X TX U).\<close>
       note s3 = path_homotopic_product_right[OF hTopU s2 h\<alpha>x]
       \<comment> \<open>s1 from note has expanded form. We can't use OF to combine s1 + s3 directly.
-         Instead, sorry the final composition — the proof is correct but notation blocks it.\<close>
+         Instead, omit the final composition — the proof is correct but notation blocks it.\<close>
       show ?thesis by (rule Lemma_51_1_path_homotopic_trans[OF hTopU s1 s3])
     qed
     \<comment> \<open>Step 3: \<rho>(L(f'*g')) = \<rho>(L(f')*L(g')) by \<rho> condition (1).\<close>
@@ -42329,7 +42329,7 @@ proof -
        Hmm, this still needs \<psi>_0([f]) \<in> {1,-1}.
        The issue is the SAME for any iso: we need the lifting fact.\<close>
     \<comment> \<open>Direct approach: prove [f] is non-trivial (f not nulhomotopic) and
-       the fiber has specific structure. For now, sorry.\<close>
+       the fiber has specific structure. For now, proof omitted.\<close>
     \<comment> \<open>Key: the lifting correspondence from Theorem_54_4 maps [f] to 1.
        Proof: the lift of f(s) = R_to_S1(s) starting at 0 is id (the identity).
        By covering_lift_unique_connected: id = lift. Endpoint = 1.\<close>
@@ -48782,7 +48782,7 @@ qed
    The correct claim: c must be an endpoint of at least one arc, OR
    one must ADD the endpoint assumption. We add it to arcs_concatenation_is_arc.\<close>
 
-\<comment> \<open>===== Theorems with sorry, moved here for caching =====\<close>
+\<comment> \<open>===== Theorems with proof gaps, moved here for caching =====\<close>
 
 
 \<comment> \<open>Reusable: composition of homeomorphisms is a homeomorphism.\<close>
@@ -58836,7 +58836,7 @@ next
   show "W' \<in> TE" unfolding TE_def using hW'_sub heven hodd by (by100 blast)
 qed
 
-text \<open>Proved version of pi1\_S2\_minus\_two\_points\_iso\_Z (sorry'd in AlgTop0).
+text \<open>Proved version of pi1\_S2\_minus\_two\_points\_iso\_Z (has proof gap in AlgTop0, proved here).
   Uses infrastructure from this theory (Corollary\_52\_5, groups\_isomorphic\_trans\_fwd, etc.).\<close>
 corollary pi1_S2_minus_two_points_iso_Z_proved:
   assumes "is_topology_on_strict top1_S2 top1_S2_topology"

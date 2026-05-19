@@ -3798,7 +3798,7 @@ proof -
 qed
 
 \<comment> \<open>Note: quotient\_strict\_extract was removed because automation can't handle the
-   50+ atom obtains formula. The "no extra identifications" condition is sorry'd
+   50+ atom obtains formula. The "no extra identifications" condition has a proof gap
    directly in Theorem\_74\_1 instead. The top1\_is\_polygonal\_quotient\_strict\_on
    definition remains available for future use if the automation issue is resolved.\<close>
 
@@ -3838,7 +3838,7 @@ proof -
                     (1-t) * vy i + t * vy (Suc i mod length scheme)))
            \<longrightarrow> (\<forall>p'\<in>P. q p = q p' \<longrightarrow> p = p')"
     by (rule quotient_of_scheme_extract_full[OF hsch])
-  \<comment> \<open>The "no extra identifications" condition: sorry. This requires
+  \<comment> \<open>The "no extra identifications" condition: proof gap. This requires
      the polygonal quotient to have ONLY the scheme-specified identifications
      on the boundary. The current definition doesn't guarantee this.\<close>
   have hno_extra_full: "\<forall>i<length scheme. \<forall>j<length scheme. \<forall>t\<in>I_set. \<forall>s\<in>I_set.

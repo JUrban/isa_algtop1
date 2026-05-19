@@ -7279,7 +7279,7 @@ proof -
       (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets) h_sel"
     by (by100 blast)
   \<comment> \<open>Step 0b: Find x-axis points on h\_sel(C) via Munkres\_xaxis\_segment.
-     (Details sorry'd — requires JCT + translation + xaxis construction.
+     (Details omitted — requires JCT + translation + xaxis construction.
      This gives us two specific S2 points to decompose C at.)\<close>
   \<comment> \<open>The x-axis segment property: for the DIAGONAL of the K4.\<close>
   obtain a1 a3 W_seg where ha1a3: "a1 \<in> C" "a3 \<in> C" "a1 \<noteq> a3"
@@ -8699,7 +8699,7 @@ proof -
   qed
   \<comment> \<open>NEW APPROACH: Use vertices {a1, a2', a3, a4'} instead of {a2', b2, a4', b4}.
      Diagonal e24 = D13 (from a2' to a4', interior in component(p)).
-     Diagonal e13 from a1 to a3 (interior in component(q)) — sorry for now.
+     Diagonal e13 from a1 to a3 (interior in component(q)) — proof omitted here.
      Choose p0 from D13 interior, q0 from e13 interior.\<close>
   have ha4'_ne: "a4' \<noteq> a1" "a4' \<noteq> a3" using hFp(1) harc_f(2) hC12(2) by (by100 blast)+
   have ha2'_ne: "a2' \<noteq> a1" "a2' \<noteq> a3" using hGp(1) harc_g(2) hC12(2) by (by100 blast)+
