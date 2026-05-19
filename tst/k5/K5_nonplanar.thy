@@ -185,7 +185,17 @@ proof -
     using hi_12_35 hi_14_35 hi_24_35 by (by100 blast)
   have he45_X4: "e45 \<inter> (e12 \<union> e13 \<union> e23) = {}"
     using hi_12_45 hi_13_45 hi_23_45 by (by100 blast)
-  \<comment> \<open>Step A+B: for each component, if a5 is in it, all 4 vertices are in its closure.\<close>
+  \<comment> \<open>Step A+B: for each component Ui containing a5, all 4 vertices are in closure(Ui).
+     Generic argument for each vertex aj:
+     - e\_{j,5} \<inter> X = {a\_j} (proved above)
+     - e\_{j,5} - {a\_j} \<subseteq> S2-X
+     - e\_{j,5} - {a\_j} is connected (arc minus one endpoint)
+     - a5 \<in> e\_{j,5} - {a\_j} (a5 is endpoint, a5 \<noteq> a\_j)
+     - a5 \<in> Ui, Ui is component of S2-X
+     - connected subset of S2-X meeting Ui \<Rightarrow> \<subseteq> Ui
+     - a\_j \<in> closure(e\_{j,5} - {a\_j, a5}) \<subseteq> closure(Ui)\<close>
+  \<comment> \<open>All 4 hall\_i have the same proof, parameterized by Ui.
+     We sorry them for now and prove after hU\_boundary.\<close>
   have hall1: "a5 \<in> U1 \<Longrightarrow> {a1,a2,a3,a4} \<subseteq> closure_on top1_S2 top1_S2_topology U1" sorry
   have hall2: "a5 \<in> U2 \<Longrightarrow> {a1,a2,a3,a4} \<subseteq> closure_on top1_S2 top1_S2_topology U2" sorry
   have hall3: "a5 \<in> U3 \<Longrightarrow> {a1,a2,a3,a4} \<subseteq> closure_on top1_S2 top1_S2_topology U3" sorry
