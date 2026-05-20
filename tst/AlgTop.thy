@@ -2214,7 +2214,16 @@ proof -
           using h1 h2 by (by100 simp)
         moreover have "inj_on f G" using hf_bij unfolding bij_betw_def by (by100 blast)
         moreover have "top1_group_word_product mul e invg (map (\<lambda>(s, b). (\<iota> s, b)) ws) \<in> G"
-          sorry \<comment> \<open>Word product of generators is in G (word\_product\_in\_group, defined in \<S>69).\<close>
+        proof (rule word_product_in_group[OF hG])
+          show "\<forall>i<length (map (\<lambda>(s, b). (\<iota> s, b)) ws). fst (map (\<lambda>(s, b). (\<iota> s, b)) ws ! i) \<in> G"
+          proof (intro allI impI)
+            fix i assume hi: "i < length (map (\<lambda>(s, b). (\<iota> s, b)) ws)"
+            obtain si bi where hwi: "ws ! i = (si, bi)" by (cases "ws ! i") (by100 blast)
+            have hsi: "si \<in> S" using hin hi hwi by (by100 force)
+            show "fst (map (\<lambda>(s, b). (\<iota> s, b)) ws ! i) \<in> G"
+              using hi hwi h\<iota>_in hsi by (by100 simp)
+          qed
+        qed
         moreover have "e \<in> G" using hG unfolding top1_is_group_on_def by (by100 blast)
         ultimately show ?thesis unfolding inj_on_def by (by100 blast)
       qed
