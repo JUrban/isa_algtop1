@@ -4328,7 +4328,8 @@ proof -
   \<comment> \<open>Compute ker(j) where j = \<phi>G \<circ> \<pi>.\<close>
   \<comment> \<open>Step A: \<pi>([F,F]) = [G,G] (surjective hom maps commutator subgroup onto commutator subgroup).\<close>
   have hpi_comm: "\<pi> ` ?NF \<supseteq> ?NG"
-    sorry \<comment> \<open>Each commutator [g,h] in G lifts to [\<pi>\<inverse>(g), \<pi>\<inverse>(h)] in F (surjectivity).\<close>
+    sorry \<comment> \<open>Surjective hom maps [F,F] onto [G,G]: each commutator [g,h] in G lifts
+       to [\<pi>\<inverse>(g), \<pi>\<inverse>(h)] in F. Uses: subgroup\_generated\_minimal + image-of-subgroup.\<close>
   have hpi_comm2: "\<pi> ` ?NF \<subseteq> ?NG"
   proof -
     \<comment> \<open>G/[G,G] is abelian, so [G,G] \<subseteq> ker of the projection G \<rightarrow> G/[G,G].
