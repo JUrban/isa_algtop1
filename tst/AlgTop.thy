@@ -3476,6 +3476,58 @@ next
   thus ?case by (by100 simp)
 qed
 
+text \<open>Homomorphism distributes over group\_pow.\<close>
+lemma hom_group_pow:
+  assumes hG: "top1_is_group_on G mul e invg"
+      and hH: "top1_is_group_on H mulH eH invgH"
+      and hhom: "top1_group_hom_on G mul H mulH f"
+      and hx: "x \<in> G"
+  shows "f (top1_group_pow mul e x n) = top1_group_pow mulH eH (f x) n"
+proof (induction n)
+  case 0
+  have "f (top1_group_pow mul e x 0) = f e" by (by100 simp)
+  also have "\<dots> = eH" by (rule hom_preserves_id[OF hG hH hhom])
+  finally show ?case by (by100 simp)
+next
+  case (Suc n)
+  have hpow_G: "top1_group_pow mul e x n \<in> G" by (rule group_pow_in_group[OF hG hx])
+  have "f (top1_group_pow mul e x (Suc n)) = f (mul x (top1_group_pow mul e x n))"
+    by (by100 simp)
+  also have "\<dots> = mulH (f x) (f (top1_group_pow mul e x n))"
+    using hhom hx hpow_G unfolding top1_group_hom_on_def by (by100 blast)
+  also have "\<dots> = mulH (f x) (top1_group_pow mulH eH (f x) n)"
+    using Suc.IH by (by100 simp)
+  finally show ?case by (by100 simp)
+qed
+
+text \<open>Homomorphism distributes over foldr mul.\<close>
+lemma hom_foldr_mul:
+  assumes hG: "top1_is_group_on G mul e invg"
+      and hH: "top1_is_group_on H mulH eH invgH"
+      and hhom: "top1_group_hom_on G mul H mulH f"
+      and hxs: "\<forall>i<length xs. xs!i \<in> G"
+  shows "f (foldr mul xs e) = foldr mulH (map f xs) eH"
+  using hxs
+proof (induction xs)
+  case Nil show ?case using hom_preserves_id[OF hG hH hhom] by (by100 simp)
+next
+  case (Cons a xs')
+  have ha: "a \<in> G" using Cons.prems by (by100 force)
+  have hxs': "\<forall>i<length xs'. xs'!i \<in> G" using Cons.prems by (by100 force)
+  have hprod: "foldr mul xs' e \<in> G"
+  proof -
+    have "\<forall>i<length (map (\<lambda>x. (x, True)) xs'). fst ((map (\<lambda>x. (x, True)) xs')!i) \<in> G"
+      using hxs' by (by100 auto)
+    thus ?thesis sorry \<comment> \<open>foldr mul xs' e \<in> G (needs foldr\_mul\_closed variant).\<close>
+  qed
+  have "f (foldr mul (a # xs') e) = f (mul a (foldr mul xs' e))" by (by100 simp)
+  also have "\<dots> = mulH (f a) (f (foldr mul xs' e))"
+    using hhom ha hprod unfolding top1_group_hom_on_def by (by100 blast)
+  also have "\<dots> = mulH (f a) (foldr mulH (map f xs') eH)"
+    using Cons.IH[OF hxs'] by (by100 simp)
+  finally show ?case by (by100 simp)
+qed
+
 (** from \<S>69 Theorem 69.4: abelianization of free group is free abelian.
     If G is free on S, then G/[G,G] is free abelian on the images of S. **)
 theorem Theorem_69_4:
