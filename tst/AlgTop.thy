@@ -1980,7 +1980,7 @@ proof -
       and hin: "\<forall>i<length ws. fst (ws!i) \<in> S"
     \<comment> \<open>Reducedness of \<iota>'(ws) implies reducedness of \<iota>(ws) since f\<circ>\<iota> is injective.\<close>
     have hred_G: "top1_is_reduced_word (map (\<lambda>(s, b). (\<iota> s, b)) ws)"
-      sorry \<comment> \<open>Induction: if f(\<iota> s) \<noteq> f(\<iota> t) \<or> b=c then \<iota> s \<noteq> \<iota> t \<or> b=c (by inj of f\<circ>\<iota>).\<close>
+      sorry \<comment> \<open>Induction on ws: \<iota>' inj on S \<Longrightarrow> reduced(\<iota>') \<Longrightarrow> reduced(\<iota>).\<close>
     \<comment> \<open>Product in H = f(product in G) by homomorphism.\<close>
     have hf_e: "f e = eH" by (rule hom_preserves_id[OF hG assms(3) hf_hom])
     have hprod: "top1_group_word_product mulH eH invgH (map (\<lambda>(s, b). (\<iota>' s, b)) ws)
