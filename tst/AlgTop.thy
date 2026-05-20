@@ -4328,8 +4328,63 @@ proof -
   \<comment> \<open>Compute ker(j) where j = \<phi>G \<circ> \<pi>.\<close>
   \<comment> \<open>Step A: \<pi>([F,F]) = [G,G] (surjective hom maps commutator subgroup onto commutator subgroup).\<close>
   have hpi_comm: "\<pi> ` ?NF \<supseteq> ?NG"
-    sorry \<comment> \<open>Surjective hom maps [F,F] onto [G,G]: each commutator [g,h] in G lifts
-       to [\<pi>\<inverse>(g), \<pi>\<inverse>(h)] in F. Uses: subgroup\_generated\_minimal + image-of-subgroup.\<close>
+  proof -
+    \<comment> \<open>Every commutator in G lifts to a commutator in F (via surjectivity of \<pi>).\<close>
+    have hcomms_in_image: "{top1_group_commutator_on mulG invgG g h |g h. g \<in> G \<and> h \<in> G}
+        \<subseteq> \<pi> ` ?NF"
+    proof (rule subsetI, clarify)
+      fix g h assume hg: "g \<in> G" and hh: "h \<in> G"
+      obtain a where ha: "a \<in> F" "\<pi> a = g" using hpi_surj hg by (by100 blast)
+      obtain b where hb: "b \<in> F" "\<pi> b = h" using hpi_surj hh by (by100 blast)
+      \<comment> \<open>[a,b] \<in> [F,F]: commutator is a generator of commutator subgroup.\<close>
+      have hcomms_sub_F: "{top1_group_commutator_on mulF invgF x y |x y. x \<in> F \<and> y \<in> F} \<subseteq> F"
+      proof (rule subsetI, clarify)
+        fix x y assume "x \<in> F" "y \<in> F"
+        have hinvx: "invgF x \<in> F" using hF_grp \<open>x \<in> F\<close> unfolding top1_is_group_on_def by (by100 blast)
+        have hinvy: "invgF y \<in> F" using hF_grp \<open>y \<in> F\<close> unfolding top1_is_group_on_def by (by100 blast)
+        show "top1_group_commutator_on mulF invgF x y \<in> F"
+          unfolding top1_group_commutator_on_def
+          using hF_grp \<open>x \<in> F\<close> \<open>y \<in> F\<close> hinvx hinvy unfolding top1_is_group_on_def by (by100 blast)
+      qed
+      have "top1_group_commutator_on mulF invgF a b
+          \<in> {top1_group_commutator_on mulF invgF x y |x y. x \<in> F \<and> y \<in> F}"
+        using ha(1) hb(1) by (by100 blast)
+      hence hab_NF: "top1_group_commutator_on mulF invgF a b \<in> ?NF"
+        unfolding top1_commutator_subgroup_on_def
+        by (rule subgroup_generated_contains[OF hF_grp hcomms_sub_F])
+      \<comment> \<open>\<pi>([a,b]) = [\<pi>(a),\<pi>(b)] = [g,h]: hom preserves commutator.\<close>
+      have hinva: "invgF a \<in> F" using hF_grp ha(1) unfolding top1_is_group_on_def by (by100 blast)
+      have hinvb: "invgF b \<in> F" using hF_grp hb(1) unfolding top1_is_group_on_def by (by100 blast)
+      have hab_F: "mulF a b \<in> F" using hF_grp ha(1) hb(1) unfolding top1_is_group_on_def by (by100 blast)
+      have habinva: "mulF (mulF a b) (invgF a) \<in> F"
+        using hF_grp hab_F hinva unfolding top1_is_group_on_def by (by100 blast)
+      have "\<pi> (top1_group_commutator_on mulF invgF a b)
+          = top1_group_commutator_on mulG invgG g h"
+        unfolding top1_group_commutator_on_def
+        using hpi_hom ha hb hinva hinvb hab_F habinva
+        unfolding top1_group_hom_on_def
+        using hom_preserves_inv[OF hF_grp hG_grp hpi_hom ha(1)]
+              hom_preserves_inv[OF hF_grp hG_grp hpi_hom hb(1)]
+        by (by100 simp)
+      thus "top1_group_commutator_on mulG invgG g h \<in> \<pi> ` ?NF"
+        using hab_NF by (by100 force)
+    qed
+    \<comment> \<open>[G,G] = ⟨commutators⟩ \<subseteq> \<pi>([F,F]) since \<pi>([F,F]) is a subgroup containing commutators.\<close>
+    have himage_sub: "\<pi> ` ?NF \<subseteq> G"
+    proof (rule image_subsetI)
+      fix x assume "x \<in> ?NF"
+      hence "x \<in> F" using commutator_subgroup_is_normal[OF hF_grp]
+        unfolding top1_normal_subgroup_on_def by (by100 blast)
+      thus "\<pi> x \<in> G" using hpi_hom unfolding top1_group_hom_on_def by (by100 blast)
+    qed
+    have himage_grp: "top1_is_group_on (\<pi> ` ?NF) mulG eG invgG"
+      sorry \<comment> \<open>Image of subgroup under hom is a subgroup.\<close>
+    have "top1_subgroup_generated_on G mulG eG invgG
+        {top1_group_commutator_on mulG invgG g h |g h. g \<in> G \<and> h \<in> G}
+      \<subseteq> \<pi> ` ?NF"
+      by (rule subgroup_generated_minimal[OF hcomms_in_image himage_sub himage_grp])
+    thus ?thesis unfolding top1_commutator_subgroup_on_def by (by100 blast)
+  qed
   have hpi_comm2: "\<pi> ` ?NF \<subseteq> ?NG"
   proof -
     \<comment> \<open>G/[G,G] is abelian, so [G,G] \<subseteq> ker of the projection G \<rightarrow> G/[G,G].
