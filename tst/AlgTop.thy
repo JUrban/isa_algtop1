@@ -1553,7 +1553,18 @@ lemma group_iso_on_image_normal_subgroup:
       and "top1_is_group_on H mulH eH invgH"
       and "top1_normal_subgroup_on G mulG eG invgG N"
   shows "top1_normal_subgroup_on H mulH eH invgH (f ` N)"
-  sorry
+proof -
+  have hf_hom: "top1_group_hom_on G mulG H mulH f" and hf_bij: "bij_betw f G H"
+    using assms(1) unfolding top1_group_iso_on_def by (by100 blast)+
+  have hN_sub: "N \<subseteq> G" and hN_grp: "top1_is_group_on N mulG eG invgG"
+    and hN_conj: "\<forall>g\<in>G. \<forall>n\<in>N. mulG (mulG g n) (invgG g) \<in> N"
+    using assms(4) unfolding top1_normal_subgroup_on_def by (by100 blast)+
+  \<comment> \<open>f(N) \<subseteq> H: image of subset.\<close>
+  have hfN_sub: "f ` N \<subseteq> H"
+    using hf_hom hN_sub unfolding top1_group_hom_on_def by (by100 blast)
+  \<comment> \<open>f(N) is a group and conjugation-closed: sorry for now (needs careful element-level work).\<close>
+  show ?thesis unfolding top1_normal_subgroup_on_def sorry
+qed
 
 text \<open>Normal closure is the least normal subgroup containing a set.\<close>
 lemma normal_closure_least:
