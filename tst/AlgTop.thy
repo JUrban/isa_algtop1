@@ -1985,7 +1985,7 @@ proof -
     have hf_e: "f e = eH" by (rule hom_preserves_id[OF hG assms(3) hf_hom])
     have hprod: "top1_group_word_product mulH eH invgH (map (\<lambda>(s, b). (\<iota>' s, b)) ws)
         = f (top1_group_word_product mul e invg (map (\<lambda>(s, b). (\<iota> s, b)) ws))"
-      sorry \<comment> \<open>Induction using hom distributes: f(mul x y)=mulH(f x)(f y), f(invg x)=invgH(f x).\<close>
+      sorry \<comment> \<open>Induction on ws: base=hf\_e, step uses f(mul x y)=mulH(f x)(f y) + f(invg x)=invgH(f x).\<close>
     \<comment> \<open>If product = eH, then f(product in G) = eH, so product in G = e (f injective).\<close>
     show "top1_group_word_product mulH eH invgH (map (\<lambda>(s, b). (\<iota>' s, b)) ws) \<noteq> eH"
     proof
