@@ -4330,7 +4330,40 @@ proof -
   have hpi_comm: "\<pi> ` ?NF \<supseteq> ?NG"
     sorry \<comment> \<open>Each commutator [g,h] in G lifts to [\<pi>\<inverse>(g), \<pi>\<inverse>(h)] in F (surjectivity).\<close>
   have hpi_comm2: "\<pi> ` ?NF \<subseteq> ?NG"
-    sorry \<comment> \<open>\<pi>([a,b]) = [\<pi>(a),\<pi>(b)] \<in> [G,G] for all a,b \<in> F.\<close>
+  proof -
+    \<comment> \<open>G/[G,G] is abelian, so [G,G] \<subseteq> ker of the projection G \<rightarrow> G/[G,G].
+       Equivalently, [F,F] maps into ker of F \<rightarrow> G \<rightarrow> G/[G,G] which contains [G,G].\<close>
+    \<comment> \<open>More directly: the image of [F,F] under any hom to any group lands in [G,G]
+       because hom preserves commutators.\<close>
+    have hNG_normal: "top1_normal_subgroup_on G mulG eG invgG ?NG"
+      by (rule commutator_subgroup_is_normal[OF hG_grp])
+    have hNG_sub: "?NG \<subseteq> G" using hNG_normal unfolding top1_normal_subgroup_on_def by (by100 blast)
+    have hHG_abel: "top1_is_abelian_group_on ?HG ?mulHG ?eHG
+        (\<lambda>C. top1_group_coset_on G mulG ?NG (invgG (SOME g. g \<in> G \<and> C = ?\<phi>G g)))"
+      using habel_G unfolding top1_is_abelianization_of_def by (by100 blast)
+    have hphiG_hom: "top1_group_hom_on G mulG ?HG ?mulHG ?\<phi>G"
+      using habel_G unfolding top1_is_abelianization_of_def by (by100 blast)
+    \<comment> \<open>\<phi>G \<circ> \<pi> maps [F,F] into ker(\<phi>G) = [G,G] because G/[G,G] is abelian.\<close>
+    have hj_hom: "top1_group_hom_on F mulF ?HG ?mulHG (\<lambda>f. ?\<phi>G (\<pi> f))"
+      sorry \<comment> \<open>Composition of homs.\<close>
+    have "?NF \<subseteq> top1_group_kernel_on F ?eHG (\<lambda>f. ?\<phi>G (\<pi> f))"
+      by (rule Lemma_69_3_commutator_in_kernel[OF hF_grp hHG_abel hj_hom])
+    hence "\<forall>f\<in>?NF. ?\<phi>G (\<pi> f) = ?eHG"
+      unfolding top1_group_kernel_on_def by (by100 blast)
+    hence "\<forall>f\<in>?NF. \<pi> f \<in> ?NG"
+    proof (intro ballI)
+      fix f assume hf: "f \<in> ?NF" and hall: "\<forall>f\<in>?NF. ?\<phi>G (\<pi> f) = ?eHG"
+      have hfF: "f \<in> F" using hf commutator_subgroup_is_normal[OF hF_grp]
+        unfolding top1_normal_subgroup_on_def by (by100 blast)
+      have hpif: "\<pi> f \<in> G" using hpi_hom hfF unfolding top1_group_hom_on_def by (by100 blast)
+      have "?\<phi>G (\<pi> f) = ?eHG" using hall hf by (by100 blast)
+      have "top1_group_kernel_on G ?eHG ?\<phi>G = ?NG"
+        using habel_G unfolding top1_is_abelianization_of_def by (by100 blast)
+      thus "\<pi> f \<in> ?NG" using \<open>?\<phi>G (\<pi> f) = ?eHG\<close> hpif
+        unfolding top1_group_kernel_on_def by (by100 blast)
+    qed
+    thus ?thesis by (by100 blast)
+  qed
   \<comment> \<open>Step B: ker(j) = [F,F].\<close>
   let ?j = "\<lambda>f. ?\<phi>G (\<pi> f)"
   have hker_j: "top1_group_kernel_on F ?eHG ?j = ?NF"
