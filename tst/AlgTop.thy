@@ -10978,12 +10978,51 @@ proof -
   let ?Cov = "{h. top1_covering_transformation_on E TE B TB p h}"
   let ?mul = "\<lambda>h k e. h (k e)"
   \<comment> \<open>Identity: id is a covering transformation.\<close>
+  have hTE: "is_topology_on E TE" using assms(2) unfolding is_topology_on_strict_def by (by100 blast)
+  \<comment> \<open>id is continuous E \<rightarrow> E.\<close>
+  have hid_cont: "top1_continuous_map_on E TE E TE id"
+    unfolding top1_continuous_map_on_def
+  proof (intro conjI ballI)
+    fix x assume "x \<in> E" thus "id x \<in> E" by (by100 simp)
+  next
+    fix V assume hV: "V \<in> TE"
+    have "V \<subseteq> E" using assms(2) hV unfolding is_topology_on_strict_def by (by100 blast)
+    hence "{x \<in> E. id x \<in> V} = V" by (by100 auto)
+    thus "{x \<in> E. id x \<in> V} \<in> TE" using hV by (by100 simp)
+  qed
+  have hid_homeo: "top1_homeomorphism_on E TE E TE id"
+    unfolding top1_homeomorphism_on_def
+  proof (intro conjI)
+    show "is_topology_on E TE" by (rule hTE)
+    show "is_topology_on E TE" by (rule hTE)
+    show "bij_betw id E E" by (by100 simp)
+    show "top1_continuous_map_on E TE E TE id" by (rule hid_cont)
+    show "top1_continuous_map_on E TE E TE (inv_into E id)"
+      unfolding top1_continuous_map_on_def
+    proof (intro conjI ballI)
+      fix x assume "x \<in> E" thus "inv_into E id x \<in> E"
+        using inv_into_f_f[of id E, simplified] by (by100 simp)
+    next
+      fix V assume hV: "V \<in> TE"
+      have "V \<subseteq> E" using assms(2) hV unfolding is_topology_on_strict_def by (by100 blast)
+      hence "{x \<in> E. inv_into E id x \<in> V} = V"
+        using inv_into_f_f[of id E, simplified] by (by100 auto)
+      thus "{x \<in> E. inv_into E id x \<in> V} \<in> TE" using hV by (by100 simp)
+    qed
+  qed
   have hid_ct: "top1_covering_transformation_on E TE B TB p id"
-    unfolding top1_covering_transformation_on_def
-    sorry \<comment> \<open>id is homeomorphism E\<rightarrow>E, p\<circ>id = p.\<close>
-  \<comment> \<open>Inverse: for CT h, the inverse homeomorphism is a CT.\<close>
-  \<comment> \<open>The group exists with eC = id and invgC = inverse homeomorphism.\<close>
-  show ?thesis sorry
+    unfolding top1_covering_transformation_on_def using hid_homeo by (by100 simp)
+  \<comment> \<open>Composition of CTs is a CT; inverse CT is a CT.\<close>
+  have hmul_closed: "\<And>h k. top1_covering_transformation_on E TE B TB p h \<Longrightarrow>
+      top1_covering_transformation_on E TE B TB p k \<Longrightarrow>
+      top1_covering_transformation_on E TE B TB p (\<lambda>e. h (k e))"
+    sorry \<comment> \<open>Composition of homeomorphisms, p\<circ>(h\<circ>k) = p.\<close>
+  have hinv: "\<And>h. top1_covering_transformation_on E TE B TB p h \<Longrightarrow>
+      top1_covering_transformation_on E TE B TB p (inv_into E h)"
+    sorry \<comment> \<open>Inverse homeomorphism is CT: p(h\<inverse>(e)) = p(e) since h is CT.\<close>
+  \<comment> \<open>Group axioms.\<close>
+  show ?thesis
+    sorry \<comment> \<open>id, mul=compose, inv=inv\_into give group on ?Cov.\<close>
 qed
 
 (** from *\<S>81 Theorem 81.2: the group of covering transformations Cov(p) is
