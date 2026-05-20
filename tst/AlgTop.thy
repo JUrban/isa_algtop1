@@ -10695,7 +10695,17 @@ lemma deck_transformations_group:
   shows "\<exists>eC invgC. top1_is_group_on
       {h. top1_covering_transformation_on E TE B TB p h}
       (\<lambda>h k e. h (k e)) eC invgC"
-  sorry
+proof -
+  let ?Cov = "{h. top1_covering_transformation_on E TE B TB p h}"
+  let ?mul = "\<lambda>h k e. h (k e)"
+  \<comment> \<open>Identity: id is a covering transformation.\<close>
+  have hid_ct: "top1_covering_transformation_on E TE B TB p id"
+    unfolding top1_covering_transformation_on_def
+    sorry \<comment> \<open>id is homeomorphism E\<rightarrow>E, p\<circ>id = p.\<close>
+  \<comment> \<open>Inverse: for CT h, the inverse homeomorphism is a CT.\<close>
+  \<comment> \<open>The group exists with eC = id and invgC = inverse homeomorphism.\<close>
+  show ?thesis sorry
+qed
 
 (** from *\<S>81 Theorem 81.2: the group of covering transformations Cov(p) is
     isomorphic to N(H)/H, where H = p_*(\<pi>_1(E, e_0)) and N(H) is its normalizer
