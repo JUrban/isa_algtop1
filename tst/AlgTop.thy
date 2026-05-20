@@ -11087,7 +11087,43 @@ proof -
   qed
   have hinv: "\<And>h. top1_covering_transformation_on E TE B TB p h \<Longrightarrow>
       top1_covering_transformation_on E TE B TB p (inv_into E h)"
-    sorry \<comment> \<open>Inverse homeomorphism is CT: p(h\<inverse>(e)) = p(e) since h is CT.\<close>
+  proof -
+    fix h assume hh: "top1_covering_transformation_on E TE B TB p h"
+    have hh_homeo: "top1_homeomorphism_on E TE E TE h"
+      using hh unfolding top1_covering_transformation_on_def by (by100 blast)
+    have hh_p: "\<forall>e\<in>E. p (h e) = p e"
+      using hh unfolding top1_covering_transformation_on_def by (by100 blast)
+    have hh_out: "\<forall>e. e \<notin> E \<longrightarrow> h e = e"
+      using hh unfolding top1_covering_transformation_on_def by (by100 blast)
+    \<comment> \<open>inv\_into E h is a homeomorphism.\<close>
+    have hinv_homeo: "top1_homeomorphism_on E TE E TE (inv_into E h)"
+      by (rule homeomorphism_inverse[OF hh_homeo])
+    \<comment> \<open>p(inv\_into E h e) = p(e): let x = inv\_into E h e, so h(x) = e.\<close>
+    have hinv_p: "\<forall>e\<in>E. p (inv_into E h e) = p e"
+    proof (intro ballI)
+      fix e assume he: "e \<in> E"
+      have hbij: "bij_betw h E E" using hh_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+      have hinj: "inj_on h E" using hbij unfolding bij_betw_def by (by100 blast)
+      have hsurj: "h ` E = E" using hbij unfolding bij_betw_def by (by100 blast)
+      have "e \<in> h ` E" using he hsurj by (by100 blast)
+      have hinv_E: "inv_into E h e \<in> E" using inv_into_into[OF \<open>e \<in> h ` E\<close>] by (by100 blast)
+      have hh_inv: "h (inv_into E h e) = e"
+        using f_inv_into_f[OF \<open>e \<in> h ` E\<close>] by (by100 blast)
+      have "p (h (inv_into E h e)) = p (inv_into E h e)"
+        using hh_p hinv_E by (by100 blast)
+      hence "p e = p (inv_into E h e)" using hh_inv by (by100 simp)
+      thus "p (inv_into E h e) = p e" by (by100 simp)
+    qed
+    \<comment> \<open>Outside E: inv\_into E h maps E\<rightarrow>E (from bij), so for e \<notin> E,
+       there is no preimage in E. The CT definition requires id outside E,
+       so we note that the existing proof of Theorem 81.2 (below) uses a
+       modified inverse (\<lambda>e. if e \<in> E then inv\_into E h e else e).\<close>
+    have hinv_out: "\<forall>e. e \<notin> E \<longrightarrow> inv_into E h e = e"
+      sorry \<comment> \<open>Needs: inv\_into E h e for e \<notin> h ` E is undefined; requires modified inverse.\<close>
+    show "top1_covering_transformation_on E TE B TB p (inv_into E h)"
+      unfolding top1_covering_transformation_on_def
+      using hinv_homeo hinv_p hinv_out by (by100 blast)
+  qed
   \<comment> \<open>Group axioms.\<close>
   show ?thesis
     sorry \<comment> \<open>id, mul=compose, inv=inv\_into give group on ?Cov.\<close>
