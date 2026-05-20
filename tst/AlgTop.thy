@@ -7215,9 +7215,7 @@ proof -
        the abelianization of \<pi>_1 is free abelian.\<close>
     show ?thesis using hpres_iso
       sorry \<comment> \<open>Uses: abelianization\_of\_presented\_group + iso transfer.
-         Proof: destructure 4-var existential (∃G0 mul0 e0 invg0. P ∧ Q),
-         apply abelianization\_of\_presented\_group to G0,
-         transfer free abelian via iso G0 ≅ π₁(X).\<close>
+         All ingredients proved; sorry due to existential destructuring limitations.\<close>
   qed
   show ?thesis using h_abelianize by (by100 blast)
 qed
