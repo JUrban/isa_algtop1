@@ -11283,48 +11283,70 @@ proof -
       unfolding top1_covering_transformation_on_def
       using hcomp_homeo hcomp_p hcomp_out by (by100 blast)
   qed
+  \<comment> \<open>Use modified inverse: identity outside E, inv\_into inside E.\<close>
+  let ?invC = "\<lambda>h. (\<lambda>e. if e \<in> E then inv_into E h e else e)"
   have hinv: "\<And>h. top1_covering_transformation_on E TE B TB p h \<Longrightarrow>
-      top1_covering_transformation_on E TE B TB p (inv_into E h)"
-  proof -
-    fix h assume hh: "top1_covering_transformation_on E TE B TB p h"
+      top1_covering_transformation_on E TE B TB p (?invC h)"
+    sorry \<comment> \<open>Modified inverse is CT: homeomorphism via cong + inv\_into,
+       p-preservation by same chain as before, identity outside E by if-then-else.\<close>
+  \<comment> \<open>Group axioms: associativity, identity, inverse.\<close>
+  have hassoc: "\<forall>h\<in>?Cov. \<forall>k\<in>?Cov. \<forall>l\<in>?Cov.
+      ?mul (?mul h k) l = ?mul h (?mul k l)"
+    by (by100 blast)
+  have hident: "\<forall>h\<in>?Cov. ?mul id h = h \<and> ?mul h id = h"
+    by (by100 auto)
+  have hinverse: "\<forall>h\<in>?Cov. ?mul (?invC h) h = id \<and> ?mul h (?invC h) = id"
+  proof (intro ballI conjI ext)
+    fix h e assume hh: "h \<in> ?Cov"
     have hh_homeo: "top1_homeomorphism_on E TE E TE h"
-      using hh unfolding top1_covering_transformation_on_def by (by100 blast)
-    have hh_p: "\<forall>e\<in>E. p (h e) = p e"
       using hh unfolding top1_covering_transformation_on_def by (by100 blast)
     have hh_out: "\<forall>e. e \<notin> E \<longrightarrow> h e = e"
       using hh unfolding top1_covering_transformation_on_def by (by100 blast)
-    \<comment> \<open>inv\_into E h is a homeomorphism.\<close>
-    have hinv_homeo: "top1_homeomorphism_on E TE E TE (inv_into E h)"
-      by (rule homeomorphism_inverse[OF hh_homeo])
-    \<comment> \<open>p(inv\_into E h e) = p(e): let x = inv\_into E h e, so h(x) = e.\<close>
-    have hinv_p: "\<forall>e\<in>E. p (inv_into E h e) = p e"
-    proof (intro ballI)
-      fix e assume he: "e \<in> E"
-      have hbij: "bij_betw h E E" using hh_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
-      have hinj: "inj_on h E" using hbij unfolding bij_betw_def by (by100 blast)
-      have hsurj: "h ` E = E" using hbij unfolding bij_betw_def by (by100 blast)
-      have "e \<in> h ` E" using he hsurj by (by100 blast)
-      have hinv_E: "inv_into E h e \<in> E" using inv_into_into[OF \<open>e \<in> h ` E\<close>] by (by100 blast)
-      have hh_inv: "h (inv_into E h e) = e"
-        using f_inv_into_f[OF \<open>e \<in> h ` E\<close>] by (by100 blast)
-      have "p (h (inv_into E h e)) = p (inv_into E h e)"
-        using hh_p hinv_E by (by100 blast)
-      hence "p e = p (inv_into E h e)" using hh_inv by (by100 simp)
-      thus "p (inv_into E h e) = p e" by (by100 simp)
+    have hbij: "bij_betw h E E" using hh_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+    have hinj: "inj_on h E" using hbij unfolding bij_betw_def by (by100 blast)
+    have hsurj: "h ` E = E" using hbij unfolding bij_betw_def by (by100 blast)
+    \<comment> \<open>Left inverse: (?invC h)(h e) = e.\<close>
+    show "?mul (?invC h) h e = id e"
+    proof (cases "e \<in> E")
+      case True
+      have "h e \<in> E" using True hsurj by (by100 blast)
+      hence "?mul (?invC h) h e = inv_into E h (h e)" by (by100 simp)
+      also have "\<dots> = e" by (rule inv_into_f_f[OF hinj True])
+      finally show ?thesis by (by100 simp)
+    next
+      case False
+      hence "h e = e" using hh_out by (by100 blast)
+      hence "?mul (?invC h) h e = (if e \<in> E then inv_into E h e else e)" by (by100 simp)
+      also have "\<dots> = e" using False by (by100 simp)
+      finally show ?thesis by (by100 simp)
     qed
-    \<comment> \<open>Outside E: inv\_into E h maps E\<rightarrow>E (from bij), so for e \<notin> E,
-       there is no preimage in E. The CT definition requires id outside E,
-       so we note that the existing proof of Theorem 81.2 (below) uses a
-       modified inverse (\<lambda>e. if e \<in> E then inv\_into E h e else e).\<close>
-    have hinv_out: "\<forall>e. e \<notin> E \<longrightarrow> inv_into E h e = e"
-      sorry \<comment> \<open>Needs: inv\_into E h e for e \<notin> h ` E is undefined; requires modified inverse.\<close>
-    show "top1_covering_transformation_on E TE B TB p (inv_into E h)"
-      unfolding top1_covering_transformation_on_def
-      using hinv_homeo hinv_p hinv_out by (by100 blast)
+  next
+    fix h e assume hh: "h \<in> ?Cov"
+    have hh_homeo: "top1_homeomorphism_on E TE E TE h"
+      using hh unfolding top1_covering_transformation_on_def by (by100 blast)
+    have hh_out: "\<forall>e. e \<notin> E \<longrightarrow> h e = e"
+      using hh unfolding top1_covering_transformation_on_def by (by100 blast)
+    have hbij: "bij_betw h E E" using hh_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+    have hsurj: "h ` E = E" using hbij unfolding bij_betw_def by (by100 blast)
+    \<comment> \<open>Right inverse: h((?invC h) e) = e.\<close>
+    show "?mul h (?invC h) e = id e"
+    proof (cases "e \<in> E")
+      case True
+      have "e \<in> h ` E" using True hsurj by (by100 blast)
+      have "?mul h (?invC h) e = h (inv_into E h e)" using True by (by100 simp)
+      also have "\<dots> = e" using f_inv_into_f[OF \<open>e \<in> h ` E\<close>] by (by100 blast)
+      finally show ?thesis by (by100 simp)
+    next
+      case False
+      hence "?mul h (?invC h) e = h e" by (by100 simp)
+      also have "\<dots> = e" using hh_out False by (by100 blast)
+      finally show ?thesis by (by100 simp)
+    qed
   qed
-  \<comment> \<open>Group axioms.\<close>
   show ?thesis
-    sorry \<comment> \<open>id, mul=compose, inv=inv\_into give group on ?Cov.\<close>
+    apply (rule exI[of _ id], rule exI[of _ ?invC])
+    unfolding top1_is_group_on_def
+    using hid_ct hmul_closed hinv hassoc hident hinverse by (by100 blast)
 qed
 
 (** from *\<S>81 Theorem 81.2: the group of covering transformations Cov(p) is
