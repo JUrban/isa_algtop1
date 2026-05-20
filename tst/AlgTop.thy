@@ -1577,7 +1577,21 @@ proof -
           = {top1_group_coset_on G mul {e} g | g. g \<in> G}"
         unfolding top1_quotient_group_carrier_on_def by (by100 blast)
       also have "\<dots> = {{e}}" using hG_trivial
-        sorry \<comment> \<open>G = {e}, coset of e in {e} = {e}.\<close>
+      proof -
+        assume hG_e: "G = {e}"
+        have "top1_group_coset_on G mul {e} e = {mul e n | n. n \<in> {e}}"
+          unfolding top1_group_coset_on_def by (by100 blast)
+        also have "\<dots> = {mul e e}" by (by100 blast)
+        also have "\<dots> = {e}"
+        proof -
+          have "e \<in> G" using hG_grp unfolding top1_is_group_on_def by (by100 blast)
+          have "mul e e = e" using hG_grp \<open>e \<in> G\<close> unfolding top1_is_group_on_def by (by100 blast)
+          thus ?thesis by (by100 blast)
+        qed
+        finally have hcoset_e: "top1_group_coset_on G mul {e} e = {e}" .
+        show "{top1_group_coset_on G mul {e} g | g. g \<in> G} = {{e}}"
+          using hG_e hcoset_e by (by100 blast)
+      qed
       finally show ?thesis using h2G by (by100 simp)
     qed
     thus ?case using \<open>S = {}\<close> \<open>finite S\<close> by (by100 simp)
