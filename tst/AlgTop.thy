@@ -3727,7 +3727,8 @@ proof -
           if c s \<ge> 0 then top1_group_pow ?mulH ?eH (?\<iota>H s) (nat (c s))
           else top1_group_pow ?mulH ?eH (?invgH (?\<iota>H s)) (nat (- c s)))
         ?xs) ?eH = ?\<phi> ?gp"
-      sorry \<comment> \<open>Quotient homomorphism distributes over foldr and group\_pow.\<close>
+      sorry \<comment> \<open>Quotient hom distributes: \<phi>(foldr mul ms e) = foldr mulH (map \<phi> ms) eH
+         using hom\_foldr\_mul + hom\_group\_pow + hom\_preserves\_inv.\<close>
     show "foldr ?mulH (map (\<lambda>s.
           if c s \<ge> 0 then top1_group_pow ?mulH ?eH (?\<iota>H s) (nat (c s))
           else top1_group_pow ?mulH ?eH (?invgH (?\<iota>H s)) (nat (- c s)))
