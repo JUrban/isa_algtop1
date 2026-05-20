@@ -7198,10 +7198,26 @@ proof -
     \<comment> \<open>The presented group G0 and its presentation exist from h\_presentation.
        We use SOME to extract witnesses since obtain fails on deep existentials.\<close>
     \<comment> \<open>Use h\_presentation to apply abelianization\_of\_presented\_group.\<close>
-    show ?thesis using h_presentation
-      sorry \<comment> \<open>Extract G0 from 4-var existential, extract F from presented\_by,
-         show ker \<subseteq> [F,F], apply abelianization\_of\_presented\_group,
-         transfer via iso G0 \<cong> \<pi>_1(X). All ingredients proved.\<close>
+    \<comment> \<open>Use Theorem\_74\_3 directly (not via h\_presentation) to get both conjuncts.\<close>
+    from Theorem_74_3_fund_group_n_torus[OF assms]
+    have hpres_iso: "\<exists>(G::'g set) mul e invg.
+        top1_group_presented_by_on G mul e invg ({..<2*n}::nat set)
+          { concat (map (\<lambda>i. [(2*i, True), (2*i+1, True),
+                                (2*i, False), (2*i+1, False)]) [0..<n]) }
+        \<and> top1_groups_isomorphic_on G mul
+            (top1_fundamental_group_carrier X TX x0)
+            (top1_fundamental_group_mul X TX x0)" by (by100 auto)
+    \<comment> \<open>From the presentation: G0 = F/N, with F free on S and N = ker(\<pi>).
+       The relator is \<Sigma>[a_i,b_i] (product of commutators), hence N \<subseteq> [F,F].
+       abelianization\_of\_presented\_group gives: abelianization of G0 is free abelian on S.
+       The iso G0 \<cong> \<pi>_1(X) transfers the abelianization.\<close>
+    \<comment> \<open>Prove universal: for ANY presented group with commutator relator that's iso to \<pi>_1,
+       the abelianization of \<pi>_1 is free abelian.\<close>
+    show ?thesis using hpres_iso
+      sorry \<comment> \<open>Uses: abelianization\_of\_presented\_group + iso transfer.
+         Proof: destructure 4-var existential (∃G0 mul0 e0 invg0. P ∧ Q),
+         apply abelianization\_of\_presented\_group to G0,
+         transfer free abelian via iso G0 ≅ π₁(X).\<close>
   qed
   show ?thesis using h_abelianize by (by100 blast)
 qed
