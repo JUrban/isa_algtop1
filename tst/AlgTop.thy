@@ -7198,10 +7198,10 @@ proof -
     \<comment> \<open>The presented group G0 and its presentation exist from h\_presentation.
        We use SOME to extract witnesses since obtain fails on deep existentials.\<close>
     \<comment> \<open>Use h\_presentation to apply abelianization\_of\_presented\_group.\<close>
-    show ?thesis
-      using h_presentation sorry \<comment> \<open>Destructure presentation (4-var existential),
-         extract F + ker \<subseteq> [F,F], apply abelianization\_of\_presented\_group,
-         transfer via iso G0 \<cong> \<pi>_1(X).\<close>
+    show ?thesis using h_presentation
+      sorry \<comment> \<open>Destructure 4-var existential, extract F from presented\_by,
+         show ker \<subseteq> [F,F], apply abelianization\_of\_presented\_group,
+         transfer via iso G0 \<cong> \<pi>_1(X). All ingredients proved.\<close>
   qed
   show ?thesis using h_abelianize by (by100 blast)
 qed
