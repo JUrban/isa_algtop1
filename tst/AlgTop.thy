@@ -3515,11 +3515,7 @@ next
   have ha: "a \<in> G" using Cons.prems by (by100 force)
   have hxs': "\<forall>i<length xs'. xs'!i \<in> G" using Cons.prems by (by100 force)
   have hprod: "foldr mul xs' e \<in> G"
-  proof -
-    have "\<forall>i<length (map (\<lambda>x. (x, True)) xs'). fst ((map (\<lambda>x. (x, True)) xs')!i) \<in> G"
-      using hxs' by (by100 auto)
-    thus ?thesis sorry \<comment> \<open>foldr mul xs' e \<in> G (needs foldr\_mul\_closed variant).\<close>
-  qed
+    by (rule foldr_mul_closed[OF hG hxs'])
   have "f (foldr mul (a # xs') e) = f (mul a (foldr mul xs' e))" by (by100 simp)
   also have "\<dots> = mulH (f a) (f (foldr mul xs' e))"
     using hhom ha hprod unfolding top1_group_hom_on_def by (by100 blast)
