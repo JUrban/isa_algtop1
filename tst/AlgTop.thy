@@ -4811,7 +4811,18 @@ proof -
       (top1_group_coset_on F mulF ?NF eF)
       (\<lambda>C. top1_group_coset_on F mulF ?NF (invgF (SOME g. g \<in> F \<and>
           C = top1_group_coset_on F mulF ?NF g))) \<iota>HF S"
-    using Theorem_69_4[OF hF_free] sorry \<comment> \<open>Extract concrete free abelian from Theorem 69.4.\<close>
+  proof -
+    \<comment> \<open>Theorem\_69\_4 gives some (HF :: 'g set set) that's free abelian on S.\<close>
+    have hexist: "\<exists>(HF :: 'g set set) mulHF eHF invgHF \<phi>F \<iota>HF.
+        top1_is_free_abelian_group_full_on HF mulHF eHF invgHF \<iota>HF S"
+      using Theorem_69_4[OF hF_free] by (by100 blast)
+    \<comment> \<open>Both HF and F/[F,F] (concrete) are abelianizations of F, hence isomorphic.
+       G/[G,G] \<cong> F/[F,F] (from hiso). HF is free abelian on S.
+       Transfer: HF \<cong> F/[F,F] \<cong> G/[G,G] ⁻¹ (inverse iso from hiso).
+       Apply free\_abelian\_invariant\_under\_iso twice.\<close>
+    show ?thesis using hexist hiso
+      sorry \<comment> \<open>Chain: HF \<cong> F/[F,F] \<cong> G/[G,G]\<inverse>; transfer free\_abelian.\<close>
+  qed
   \<comment> \<open>The iso gives G/[G,G] \<cong> F/[F,F]. Transfer free abelian.\<close>
   from hfab_F obtain \<iota>HF where hfa_F:
     "top1_is_free_abelian_group_full_on
