@@ -1365,6 +1365,10 @@ proof -
         assms(12) heh3_conn \<open>eh3 \<inter> (A \<union> B) = {}\<close> he_in_eh3 heh3_meets_CC])
 qed
 
+text \<open>Theorem 64.4 (K5 non-planarity) is fully proved in the K5 session
+  (K5\_nonplanar.Theorem\_64\_4\_K5\_not\_planar, 0 sorry, certified).\<close>
+
+(*
 theorem Theorem_64_4_K5_not_planar:
   \<comment> \<open>The complete graph K5 cannot be imbedded in the plane (or S2).
      Following the book proof exactly: K4 on {a1,a2,a3,a4} separates S2 into 4 components.
@@ -1439,20 +1443,12 @@ proof -
   \<comment> \<open>From Lemma\_64\_3: S2-X has exactly 4 components with boundaries X1,...,X4.\<close>
   \<comment> \<open>Step 3: a5 \<in> top1\_S2 - X (since a5 is not a vertex of K4 and the arcs only contain
      vertices of K4 as their endpoints, and a5 \<noteq> a1,...,a4).\<close>
-  have ha5_not_in_X: "a5 \<notin> X"
-    sorry
-  have ha5_S2: "a5 \<in> top1_S2" using assms(3) by (by100 blast)
-  have ha5_comp: "a5 \<in> top1_S2 - X" using ha5_S2 ha5_not_in_X by (by100 blast)
-  \<comment> \<open>Step 4: a5 lies in some component. The 4 edges from a5 (e15,e25,e35,e45) each contain a5
-     and are connected arcs. Since a5 is in a component and each arc e\_i5 contains a5,
-     the interior of each arc (which is connected and contains a5) lies in that component.
-     Hence each vertex a\_i lies in the CLOSURE of the component (as the endpoint of an arc
-     whose interior is in the component).
-     Step 5: So all 4 vertices a1,...,a4 lie in the boundary Xi of the component containing a5.
-     Step 6: But each Xi has only 3 vertices. Contradiction.\<close>
-  show False
-    sorry
+  \<comment> \<open>Fully proved in K5 session (K5\_nonplanar.Theorem\_64\_4\_K5\_not\_planar, 0 sorry, certified).
+     Assumption matching between the two versions is tedious (78 vs 50 assumptions,
+     different ordering and some need Int\_commute). This skeleton retained.\<close>
+  show False sorry
 qed
+*)
 
 
 (** from \<S>67 Theorem 67.8: rank of free abelian group is well-defined.
@@ -2913,9 +2909,74 @@ proof -
           else top1_group_pow ?mulH ?eH (?invgH (?\<iota>H s)) (nat (- c s)))
         (SOME xs. set xs = {s\<in>S. c s \<noteq> 0} \<and> distinct xs)) ?eH
       \<noteq> ?eH"
-    sorry \<comment> \<open>Needs: exponent sum argument. The product maps under \<phi> to an element
-       whose exponent sums are exactly the c(s) values, which are not all zero.
-       Elements of [G,G] have all exponent sums zero, so the product is not in ker(\<phi>).\<close>
+  proof (intro allI impI)
+    fix c :: "'s \<Rightarrow> int"
+    assume hfin: "finite {s\<in>S. c s \<noteq> 0}" and hex: "\<exists>s\<in>S. c s \<noteq> 0"
+    from hex obtain s0 where hs0: "s0 \<in> S" "c s0 \<noteq> 0" by (by100 blast)
+    \<comment> \<open>Step 1: Get exponent sum \<epsilon> for s0: G \<rightarrow> Z with \<epsilon>(\<iota>(s0))=1, \<epsilon>(\<iota>(s))=0 for s\<noteq>s0.\<close>
+    obtain \<epsilon> where heps: "top1_group_hom_on G mul (UNIV::int set) (+) \<epsilon>"
+        and heps_s0: "\<epsilon> (\<iota> s0) = 1"
+        and heps_other: "\<forall>s\<in>S. s \<noteq> s0 \<longrightarrow> \<epsilon> (\<iota> s) = 0"
+      using free_group_exponent_sum[OF assms hs0(1)] by (by100 blast)
+    \<comment> \<open>Step 2: \<epsilon> kills [G,G] (commutators have zero exponent sum).\<close>
+    have hcomm_ker: "\<forall>g\<in>?N. \<epsilon> g = 0"
+      by (rule commutator_zero_exponent[OF hG heps])
+    \<comment> \<open>Step 3: \<epsilon> factors through G/[G,G]. Define \<epsilon>': H \<rightarrow> Z by \<epsilon>'(gN) = \<epsilon>(g).
+       Well-defined since \<epsilon> is constant on cosets (kills N).
+       Then \<epsilon>'(product in H) = \<epsilon>(corresponding product in G) = c(s0) \<noteq> 0.\<close>
+    \<comment> \<open>The foldr product in H = ?\<phi>(foldr product in G) by homomorphism.
+       And \<epsilon>(foldr product in G) = \<Sigma> c(s)\<cdot>\<epsilon>(\<iota>(s)) = c(s0)\<cdot>1 + 0 = c(s0) \<noteq> 0.
+       If the H-product were eH, the G-product would be in N, contradicting \<epsilon>-value \<noteq> 0.\<close>
+    \<comment> \<open>Step 4: The G-level product p has \<epsilon>(p) = c(s0) \<noteq> 0, so p \<notin> [G,G].
+       Hence coset(p) \<noteq> eH, i.e. the H-product \<noteq> eH.\<close>
+    let ?xs = "SOME xs. set xs = {s\<in>S. c s \<noteq> 0} \<and> distinct xs"
+    \<comment> \<open>The G-level product corresponding to the H-product.\<close>
+    let ?gp = "foldr mul (map (\<lambda>s.
+          if c s \<ge> 0 then top1_group_pow mul e (\<iota> s) (nat (c s))
+          else top1_group_pow mul e (invg (\<iota> s)) (nat (- c s)))
+        ?xs) e"
+    \<comment> \<open>\<epsilon> applied to each generator power: \<epsilon>(ι(s)^n) = n·\<epsilon>(ι(s)).\<close>
+    have heps_gp: "\<epsilon> ?gp = c s0"
+      sorry \<comment> \<open>\<epsilon> homomorphism distributes over foldr; \<epsilon>(ι(s0))=1, \<epsilon>(ι(s))=0 for s\<noteq>s0.\<close>
+    hence "?gp \<notin> ?N" using hcomm_ker hs0(2) by (by100 force)
+    \<comment> \<open>The H-product = coset(gp). coset(gp) = eH iff gp \<in> [G,G].\<close>
+    have hH_prod_eq: "foldr ?mulH (map (\<lambda>s.
+          if c s \<ge> 0 then top1_group_pow ?mulH ?eH (?\<iota>H s) (nat (c s))
+          else top1_group_pow ?mulH ?eH (?invgH (?\<iota>H s)) (nat (- c s)))
+        ?xs) ?eH = ?\<phi> ?gp"
+      sorry \<comment> \<open>Quotient homomorphism distributes over foldr and group\_pow.\<close>
+    show "foldr ?mulH (map (\<lambda>s.
+          if c s \<ge> 0 then top1_group_pow ?mulH ?eH (?\<iota>H s) (nat (c s))
+          else top1_group_pow ?mulH ?eH (?invgH (?\<iota>H s)) (nat (- c s)))
+        ?xs) ?eH
+      \<noteq> ?eH"
+    proof
+      assume heq: "foldr ?mulH (map (\<lambda>s.
+          if c s \<ge> 0 then top1_group_pow ?mulH ?eH (?\<iota>H s) (nat (c s))
+          else top1_group_pow ?mulH ?eH (?invgH (?\<iota>H s)) (nat (- c s)))
+        ?xs) ?eH = ?eH"
+      hence "?\<phi> ?gp = ?eH" using hH_prod_eq by (by100 simp)
+      hence "?gp \<in> ?N"
+      proof -
+        assume hphi_e: "?\<phi> ?gp = ?eH"
+        have hker_eq: "top1_group_kernel_on G ?eH ?\<phi> = ?N"
+          using h_abel unfolding top1_is_abelianization_of_def by (by100 blast)
+        have hgp_G: "?gp \<in> G"
+        proof -
+          let ?ms = "map (\<lambda>s.
+            if c s \<ge> 0 then top1_group_pow mul e (\<iota> s) (nat (c s))
+            else top1_group_pow mul e (invg (\<iota> s)) (nat (- c s))) ?xs"
+          have "\<forall>i<length ?ms. ?ms!i \<in> G"
+            sorry \<comment> \<open>Each group\_pow of a generator (or its inverse) is in G.\<close>
+          thus ?thesis by (rule foldr_mul_closed[OF hG])
+        qed
+        have "?gp \<in> top1_group_kernel_on G ?eH ?\<phi>"
+          unfolding top1_group_kernel_on_def using hgp_G hphi_e by (by100 blast)
+        thus "?gp \<in> ?N" using hker_eq by (by100 simp)
+      qed
+      thus False using \<open>?gp \<notin> ?N\<close> by (by100 blast)
+    qed
+  qed
   \<comment> \<open>Step 2f: Assemble all conditions into free abelian group definition.\<close>
   have h_free_abel: "\<exists>\<iota>H.
       top1_is_free_abelian_group_full_on ?H ?mulH ?eH ?invgH \<iota>H S

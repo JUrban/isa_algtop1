@@ -1,5 +1,5 @@
 theory K5_nonplanar
-imports AlgTop.AlgTop
+imports AlgIsoFixed.AlgIsoFixed
 begin
 
 lemma arc_endpoints_subset:
@@ -87,7 +87,9 @@ lemma K4_four_components_with_boundary:
       \<and> \<not> ({a1,a2,a3,a4} \<subseteq> closure_on top1_S2 top1_S2_topology U1)
       \<and> \<not> ({a1,a2,a3,a4} \<subseteq> closure_on top1_S2 top1_S2_topology U2)
       \<and> \<not> ({a1,a2,a3,a4} \<subseteq> closure_on top1_S2 top1_S2_topology U3)
-      \<and> \<not> ({a1,a2,a3,a4} \<subseteq> closure_on top1_S2 top1_S2_topology U4)"
+      \<and> \<not> ({a1,a2,a3,a4} \<subseteq> closure_on top1_S2 top1_S2_topology U4)
+      \<and> U1 \<in> top1_S2_topology \<and> U2 \<in> top1_S2_topology
+      \<and> U3 \<in> top1_S2_topology \<and> U4 \<in> top1_S2_topology"
 proof -
   \<comment> \<open>Extract vertex distinctness.\<close>
   have hdist: "a1 \<noteq> a2" "a1 \<noteq> a3" "a1 \<noteq> a4" "a2 \<noteq> a3" "a2 \<noteq> a4" "a3 \<noteq> a4"
@@ -1810,6 +1812,21 @@ proof -
     using Theorem_63_5_two_closed_connected[OF assms(1) hC1_closed he24_closed
         hC1_conn he24_conn_full hC1_e24_card hC1_no_sep he24_no_sep]
     by (by100 metis)
+  \<comment> \<open>W1, W2 are open (via theta-space separation + two-component lemma).\<close>
+  have hC1_sub_S2: "?C1 \<subseteq> top1_S2" using hC1_closed unfolding closedin_on_def by (by100 blast)
+  have hC1e24_sep: "top1_separates_on top1_S2 top1_S2_topology (?C1 \<union> e24)"
+    by (rule Theorem_61_4_general_separation[OF assms(1) hC1_sub_S2 assms(9)
+        hC1_closed he24_closed hC1_conn he24_conn_full hC1_e24_card])
+  have hC1e24_closed: "closedin_on top1_S2 top1_S2_topology (?C1 \<union> e24)"
+    by (rule closedin_on_Un[OF hTopS2 hC1_closed he24_closed])
+  have hC1e24_open: "top1_S2 - (?C1 \<union> e24) \<in> top1_S2_topology"
+    using hC1e24_closed hTopS2 unfolding closedin_on_def is_topology_on_def by (by100 blast)
+  have hC1e24_not_conn: "\<not> top1_connected_on (top1_S2 - (?C1 \<union> e24))
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?C1 \<union> e24)))"
+    using hC1e24_sep unfolding top1_separates_on_def by (by100 blast)
+  have hW1_open: "W1 \<in> top1_S2_topology" and hW2_open: "W2 \<in> top1_S2_topology"
+    using S2_two_component_open[OF hC1e24_open _ hW(1,2,3,4,5,6) hC1e24_not_conn]
+    by (by100 blast)+
   \<comment> \<open>Step 6: Package the 4 components P1, R1, W1, W2.\<close>
   have hfour_union: "P1 \<union> R1 \<union> W1 \<union> W2 = top1_S2 - (e12 \<union> e23 \<union> e34 \<union> e41 \<union> e13 \<union> e24)"
   proof -
@@ -1876,11 +1893,1142 @@ proof -
     hence "a2 \<notin> closure_on top1_S2 top1_S2_topology R1" using hcl_R1 by (by100 simp)
     thus ?thesis by (by100 blast)
   qed
+  \<comment> \<open>Boundary of W1, W2 via second theta (Munkres ``symmetry'' argument).
+     Second theta: arcs from a2 to a4: A' = e12\<union>e41, B' = e24, C' = e23\<union>e34.
+     Lemma\_64\_1 gives 3 components. Two of them are W1, W2.
+     Component with boundary A'\<union>B' misses a3. Component with boundary B'\<union>C' misses a1.\<close>
+  \<comment> \<open>Step 1: Build arcs A' = e12\<union>e41 and C' = e23\<union>e34 from a2 to a4.\<close>
+  have ha1_ep12: "a1 \<in> top1_arc_endpoints_on e12 (subspace_topology top1_S2 top1_S2_topology e12)"
+    using assms(16) by (by100 blast)
+  have ha1_ep41: "a1 \<in> top1_arc_endpoints_on e41 (subspace_topology top1_S2 top1_S2_topology e41)"
+    using assms(19) by (by100 blast)
+  have he12_e41: "e12 \<inter> e41 = {a1}" using assms(27) by (by100 blast)
+  have hA'_arc: "top1_is_arc_on (e12 \<union> e41) (subspace_topology top1_S2 top1_S2_topology (e12 \<union> e41))"
+    by (rule arcs_concatenation_is_arc[OF hS2_strict hS2_haus assms(10) assms(4)
+        assms(13) assms(7) he12_e41 ha1_ep12 ha1_ep41])
+  have hA'_sub: "e12 \<union> e41 \<subseteq> top1_S2" using assms(4,7) by (by100 blast)
+  have ha3_ep23: "a3 \<in> top1_arc_endpoints_on e23 (subspace_topology top1_S2 top1_S2_topology e23)"
+    using assms(17) by (by100 blast)
+  have ha3_ep34: "a3 \<in> top1_arc_endpoints_on e34 (subspace_topology top1_S2 top1_S2_topology e34)"
+    using assms(18) by (by100 blast)
+  have hC'_arc: "top1_is_arc_on (e23 \<union> e34) (subspace_topology top1_S2 top1_S2_topology (e23 \<union> e34))"
+    by (rule arcs_concatenation_is_arc[OF hS2_strict hS2_haus assms(11) assms(5)
+        assms(12) assms(6) assms(25) ha3_ep23 ha3_ep34])
+  have hC'_sub: "e23 \<union> e34 \<subseteq> top1_S2" using assms(5,6) by (by100 blast)
+  \<comment> \<open>Step 2: Compute endpoints and intersections for the second theta.\<close>
+  have ha2_ep12': "a2 \<in> top1_arc_endpoints_on e12 (subspace_topology top1_S2 top1_S2_topology e12)"
+    using assms(16) by (by100 blast)
+  have ha4_ep41': "a4 \<in> top1_arc_endpoints_on e41 (subspace_topology top1_S2 top1_S2_topology e41)"
+    using assms(19) by (by100 blast)
+  have hA'_ep: "top1_arc_endpoints_on (e12 \<union> e41) (subspace_topology top1_S2 top1_S2_topology (e12 \<union> e41)) = {a2, a4}"
+  proof -
+    have hep12: "top1_arc_endpoints_on e12 (subspace_topology top1_S2 top1_S2_topology e12) = {a2, a1}"
+      using assms(16) by (by100 blast)
+    have hep41: "top1_arc_endpoints_on e41 (subspace_topology top1_S2 top1_S2_topology e41) = {a1, a4}"
+      using assms(19) by (by100 blast)
+    have "a2 \<noteq> a1" using hdist(1) by (by100 blast)
+    have "a1 \<noteq> a4" by (rule hdist(3))
+    show ?thesis
+      by (rule arc_concat_endpoints[OF hS2_strict hS2_haus assms(10) assms(4)
+          assms(13) assms(7) he12_e41 ha1_ep12 ha1_ep41 hep12 hep41 \<open>a2 \<noteq> a1\<close> \<open>a1 \<noteq> a4\<close>])
+  qed
+  have ha2_ep23': "a2 \<in> top1_arc_endpoints_on e23 (subspace_topology top1_S2 top1_S2_topology e23)"
+    using assms(17) by (by100 blast)
+  have ha4_ep34': "a4 \<in> top1_arc_endpoints_on e34 (subspace_topology top1_S2 top1_S2_topology e34)"
+    using assms(18) by (by100 blast)
+  have hC'_ep: "top1_arc_endpoints_on (e23 \<union> e34) (subspace_topology top1_S2 top1_S2_topology (e23 \<union> e34)) = {a2, a4}"
+  proof -
+    have hep23: "top1_arc_endpoints_on e23 (subspace_topology top1_S2 top1_S2_topology e23) = {a2, a3}"
+      using assms(17) by (by100 blast)
+    have hep34: "top1_arc_endpoints_on e34 (subspace_topology top1_S2 top1_S2_topology e34) = {a3, a4}"
+      using assms(18) by (by100 blast)
+    show ?thesis
+      by (rule arc_concat_endpoints[OF hS2_strict hS2_haus assms(11) assms(5)
+          assms(12) assms(6) assms(25) ha3_ep23 ha3_ep34 hep23 hep34 hdist(4) hdist(6)])
+  qed
+  \<comment> \<open>Pairwise intersections = {a2, a4}.\<close>
+  have hA'B': "(e12 \<union> e41) \<inter> e24 = {a2, a4}"
+  proof -
+    have "(e12 \<union> e41) \<inter> e24 = (e12 \<inter> e24) \<union> (e41 \<inter> e24)" by (by100 blast)
+    also have "\<dots> = {a2} \<union> {a4}" using assms(33) assms(36)
+      apply (simp add: Int_commute)
+      done
+    finally show ?thesis by (by100 blast)
+  qed
+  have hB'C': "e24 \<inter> (e23 \<union> e34) = {a2, a4}"
+  proof -
+    have "e24 \<inter> (e23 \<union> e34) = (e24 \<inter> e23) \<union> (e24 \<inter> e34)" by (by100 blast)
+    also have "\<dots> = {a2} \<union> {a4}" using assms(34) assms(35) by (by100 blast)
+    finally show ?thesis by (by100 blast)
+  qed
+  have hA'C': "(e12 \<union> e41) \<inter> (e23 \<union> e34) = {a2, a4}"
+  proof -
+    have "(e12 \<union> e41) \<inter> (e23 \<union> e34) = (e12 \<inter> e23) \<union> (e12 \<inter> e34) \<union> (e41 \<inter> e23) \<union> (e41 \<inter> e34)"
+      by (by100 blast)
+    also have "\<dots> = {a2} \<union> {} \<union> {} \<union> {a4}"
+      using assms(24) assms(22) assms(23) assms(26)
+      apply (simp add: Int_commute)
+      done
+    also have "\<dots> = {a2, a4}" by (by100 blast)
+    finally show ?thesis .
+  qed
+  \<comment> \<open>Step 3 (Munkres symmetry): JCT component F3 of S2-(triangle a1a2a4) with a3 \<notin> closure.\<close>
+  have hA'B'_scc: "top1_simple_closed_curve_on top1_S2 top1_S2_topology ((e12 \<union> e41) \<union> e24)"
+    by (rule arcs_form_simple_closed_curve[OF hS2_strict hS2_haus hA'_arc hA'_sub
+        assms(15) assms(9) hA'B' hdist(5) hA'_ep assms(21)])
+  have hA'B'_sep: "top1_separates_on top1_S2 top1_S2_topology ((e12 \<union> e41) \<union> e24)"
+    by (rule Theorem_61_3_JordanSeparation_S2[OF assms(1) hA'B'_scc])
+  have hA'_closed: "closedin_on top1_S2 top1_S2_topology (e12 \<union> e41)"
+    by (rule closedin_on_Un[OF hTopS2 arc_in_S2_closed[OF assms(4) assms(10)] arc_in_S2_closed[OF assms(7) assms(13)]])
+  have hA'_conn: "top1_connected_on (e12 \<union> e41) (subspace_topology top1_S2 top1_S2_topology (e12 \<union> e41))"
+    using arc_connected[OF hA'_arc] .
+  have hA'B'_card: "card ((e12 \<union> e41) \<inter> e24) = 2" using hA'B' hdist(5) by (by100 simp)
+  obtain G1 G2 where hG: "G1 \<noteq> {}" "G2 \<noteq> {}" "G1 \<inter> G2 = {}"
+      "G1 \<union> G2 = top1_S2 - ((e12 \<union> e41) \<union> e24)"
+      "top1_connected_on G1 (subspace_topology top1_S2 top1_S2_topology G1)"
+      "top1_connected_on G2 (subspace_topology top1_S2 top1_S2_topology G2)"
+    using Theorem_63_5_two_closed_connected[OF assms(1) hA'_closed
+        arc_in_S2_closed[OF assms(9) assms(15)]
+        hA'_conn arc_connected[OF assms(15)] hA'B'_card
+        Theorem_63_2_arc_no_separation[OF assms(1) hA'_sub hA'_arc]
+        Theorem_63_2_arc_no_separation[OF assms(1) assms(9) assms(15)]]
+    by (by100 metis)
+  have hA'B'_open: "top1_S2 - ((e12 \<union> e41) \<union> e24) \<in> top1_S2_topology"
+    using closedin_on_Un[OF hTopS2 hA'_closed arc_in_S2_closed[OF assms(9) assms(15)]]
+    hTopS2 unfolding closedin_on_def is_topology_on_def by (by100 blast)
+  have hA'B'_nc: "\<not> top1_connected_on (top1_S2 - ((e12 \<union> e41) \<union> e24))
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - ((e12 \<union> e41) \<union> e24)))"
+    using hA'B'_sep unfolding top1_separates_on_def by (by100 blast)
+  have hG_open: "G1 \<in> top1_S2_topology" "G2 \<in> top1_S2_topology"
+    using S2_two_component_open[OF hA'B'_open _ hG(1,2,3,4,5,6) hA'B'_nc] by (by100 blast)+
+  \<comment> \<open>Vertex/edge facts for intersection arguments.\<close>
+  have ha3_e34_loc: "a3 \<in> e34" using assms(18) unfolding top1_arc_endpoints_on_def by (by100 blast)
+  have ha3_not_A'B': "a3 \<notin> (e12 \<union> e41) \<union> e24"
+  proof -
+    have "a3 \<notin> e12" using assms(22) ha3_e34_loc by (by100 blast)
+    have "a3 \<notin> e41"
+    proof assume "a3 \<in> e41"
+      hence "a3 \<in> e41 \<inter> e34" using ha3_e34_loc by (by100 blast)
+      hence "a3 = a4" using assms(26) by (by100 blast)
+      thus False using hdist(6) by (by100 blast) qed
+    have "a3 \<notin> e24"
+    proof assume "a3 \<in> e24"
+      hence "a3 \<in> e24 \<inter> e34" using ha3_e34_loc by (by100 blast)
+      hence "a3 = a4" using assms(35) by (by100 blast)
+      thus False using hdist(6) by (by100 blast) qed
+    thus ?thesis using \<open>a3 \<notin> e12\<close> \<open>a3 \<notin> e41\<close> \<open>a3 \<notin> e24\<close> by (by100 blast)
+  qed
+  have ha1_e12_loc: "a1 \<in> e12" using assms(16) unfolding top1_arc_endpoints_on_def by (by100 blast)
+  \<comment> \<open>Place C'int = (e23\<union>e34)-{a2,a4} in G1 or G2 via connectivity.\<close>
+  have hC'_int_conn: "top1_connected_on ((e23 \<union> e34) - {a2, a4})
+      (subspace_topology top1_S2 top1_S2_topology ((e23 \<union> e34) - {a2, a4}))"
+    by (rule arc_minus_endpoints_connected[OF hS2_strict hS2_haus hC'_sub hC'_arc hC'_ep hdist(5)])
+  have hC'_int_in_SCC: "(e23 \<union> e34) - {a2, a4} \<subseteq> top1_S2 - ((e12 \<union> e41) \<union> e24)"
+  proof -
+    have "(e23 \<union> e34) \<inter> ((e12 \<union> e41) \<union> e24) \<subseteq> {a2, a4}"
+    proof -
+      have "(e23 \<union> e34) \<inter> ((e12 \<union> e41) \<union> e24) = (e23\<inter>e12) \<union> (e23\<inter>e41) \<union> (e23\<inter>e24)
+          \<union> (e34\<inter>e12) \<union> (e34\<inter>e41) \<union> (e34\<inter>e24)" by (by100 blast)
+      also have "\<dots> \<subseteq> {a2} \<union> {} \<union> {a2} \<union> {} \<union> {a4} \<union> {a4}"
+        using assms(24) assms(23) assms(34) assms(22) assms(26) assms(35)
+        apply (simp add: Int_commute) done
+      finally show ?thesis by (by100 blast)
+    qed
+    thus ?thesis using hC'_sub by (by100 blast)
+  qed
+  \<comment> \<open>C'int is connected, in S2-SCC, so in G1 or G2.\<close>
+  have hC'_int_ne: "(e23 \<union> e34) - {a2, a4} \<noteq> {}"
+  proof -
+    \<comment> \<open>a2 \<in> closure(C'-{a2,a4}) implies C'-{a2,a4} \<noteq> {} (closure of empty is empty).\<close>
+    have "a2 \<in> closure_on top1_S2 top1_S2_topology ((e23 \<union> e34) - {a2, a4})"
+      by (rule arc_endpoint_in_closure_of_interior(1)[OF hS2_strict hS2_haus hC'_sub hC'_arc hC'_ep hdist(5)])
+    moreover have "closure_on top1_S2 top1_S2_topology {} = {}"
+      by (rule top1_closure_on_empty[OF hTopS2])
+    ultimately show ?thesis by (by100 force)
+  qed
+  \<comment> \<open>Choose F3 = the JCT component NOT containing C'int. F3' = the other.\<close>
+  have hC'_in_G: "(e23 \<union> e34) - {a2, a4} \<subseteq> G1 \<or> (e23 \<union> e34) - {a2, a4} \<subseteq> G2"
+  proof -
+    have hT: "is_topology_on (top1_S2 - ((e12 \<union> e41) \<union> e24))
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - ((e12 \<union> e41) \<union> e24)))"
+      by (rule subspace_topology_is_topology_on[OF hTopS2]) (by100 blast)
+    have hG1_oT: "G1 \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - ((e12 \<union> e41) \<union> e24))"
+    proof -
+      have "G1 = (top1_S2 - ((e12 \<union> e41) \<union> e24)) \<inter> G1" using hG(4) by (by100 blast)
+      thus ?thesis unfolding subspace_topology_def using hG_open(1) by (by100 blast)
+    qed
+    have hG2_oT: "G2 \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - ((e12 \<union> e41) \<union> e24))"
+    proof -
+      have "G2 = (top1_S2 - ((e12 \<union> e41) \<union> e24)) \<inter> G2" using hG(4) by (by100 blast)
+      thus ?thesis unfolding subspace_topology_def using hG_open(2) by (by100 blast)
+    qed
+    have hsep: "top1_is_separation_on (top1_S2 - ((e12 \<union> e41) \<union> e24))
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - ((e12 \<union> e41) \<union> e24))) G1 G2"
+      unfolding top1_is_separation_on_def using hG1_oT hG2_oT hG(1,2,3,4) by (by100 blast)
+    have hC'_conn_T: "top1_connected_on ((e23 \<union> e34) - {a2, a4})
+        (subspace_topology (top1_S2 - ((e12 \<union> e41) \<union> e24))
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - ((e12 \<union> e41) \<union> e24)))
+            ((e23 \<union> e34) - {a2, a4}))"
+    proof -
+      have "subspace_topology top1_S2 top1_S2_topology ((e23 \<union> e34) - {a2, a4}) =
+          subspace_topology (top1_S2 - ((e12 \<union> e41) \<union> e24))
+              (subspace_topology top1_S2 top1_S2_topology (top1_S2 - ((e12 \<union> e41) \<union> e24)))
+              ((e23 \<union> e34) - {a2, a4})"
+        using subspace_topology_trans[of "(e23 \<union> e34) - {a2, a4}" "top1_S2 - ((e12 \<union> e41) \<union> e24)"
+            top1_S2 top1_S2_topology] hC'_int_in_SCC by (by100 simp)
+      thus ?thesis using hC'_int_conn by (by100 simp)
+    qed
+    from Lemma_23_2[OF hT hsep hC'_int_in_SCC hC'_conn_T] show ?thesis by (by100 blast)
+  qed
+  obtain F3 F3' where hF3_props: "F3 \<noteq> {}" "F3 \<in> top1_S2_topology"
+      "F3 \<union> F3' = top1_S2 - ((e12 \<union> e41) \<union> e24)" "F3 \<inter> F3' = {}"
+      "top1_connected_on F3 (subspace_topology top1_S2 top1_S2_topology F3)"
+      "F3' \<in> top1_S2_topology"
+      and hC'_in_F3': "(e23 \<union> e34) - {a2, a4} \<subseteq> F3'"
+  proof -
+    from hC'_in_G show ?thesis
+    proof
+      assume "(e23 \<union> e34) - {a2, a4} \<subseteq> G1"
+      show ?thesis by (rule that[of G2 G1])
+        (use hG(1,2,3,4,5,6) hG_open \<open>(e23 \<union> e34) - {a2, a4} \<subseteq> G1\<close> in \<open>by100 blast\<close>)+
+    next
+      assume "(e23 \<union> e34) - {a2, a4} \<subseteq> G2"
+      show ?thesis by (rule that[of G1 G2])
+        (use hG(1,2,3,4,5,6) hG_open \<open>(e23 \<union> e34) - {a2, a4} \<subseteq> G2\<close> in \<open>by100 blast\<close>)+
+    qed
+  qed
+  \<comment> \<open>Closure bound: cl(F3) \<subseteq> F3 \<union> (A'\<union>B') since F3' open, disjoint.\<close>
+  have hF3'_sub: "F3' \<subseteq> top1_S2" using hF3_props(3) by (by100 blast)
+  have hcl_F3: "closedin_on top1_S2 top1_S2_topology (top1_S2 - F3')"
+  proof -
+    have "top1_S2 - (top1_S2 - F3') = F3'" using hF3'_sub by (by100 blast)
+    hence "top1_S2 - (top1_S2 - F3') \<in> top1_S2_topology" using hF3_props(6) by (by100 simp)
+    thus ?thesis unfolding closedin_on_def by (by100 blast)
+  qed
+  have "F3 \<subseteq> top1_S2 - F3'" using hF3_props(3,4) by (by100 blast)
+  hence hcl_F3_bound: "closure_on top1_S2 top1_S2_topology F3 \<subseteq> F3 \<union> ((e12 \<union> e41) \<union> e24)"
+  proof -
+    have "closure_on top1_S2 top1_S2_topology F3 \<subseteq> top1_S2 - F3'"
+      by (rule closure_on_subset_of_closed[OF hcl_F3 \<open>F3 \<subseteq> top1_S2 - F3'\<close>])
+    thus ?thesis using hF3_props(3) by (by100 blast)
+  qed
+  \<comment> \<open>a3 \<notin> closure(F3): a3 \<in> C'int \<subseteq> F3', so a3 \<notin> F3; and a3 \<notin> A'\<union>B'.\<close>
+  have ha3_in_F3': "a3 \<in> F3'"
+    using hC'_in_F3' ha3_e34_loc hdist(4) hdist(6) by (by100 blast)
+  hence "a3 \<notin> F3" using hF3_props(4) by (by100 blast)
+  hence ha3_not_cl_F3: "a3 \<notin> closure_on top1_S2 top1_S2_topology F3"
+    using hcl_F3_bound ha3_not_A'B' by (by100 blast)
+  \<comment> \<open>e13 \<inter> F3 = {}: if not, e13-{a1,a3} connected, in S2-SCC, meets F3, so \<subseteq> F3.
+     Then a3 \<in> cl(e13-{a1,a3}) \<subseteq> cl(F3). Contradicts ha3\_not\_cl\_F3.\<close>
+  have he13_disj_F3: "e13 \<inter> F3 = {}"
+  proof (rule ccontr)
+    assume "\<not> ?thesis"
+    then obtain z where "z \<in> e13" "z \<in> F3" by (by100 blast)
+    have "z \<noteq> a1" using \<open>z \<in> F3\<close> hF3_props(3) ha1_e12_loc by (by100 blast)
+    have "z \<noteq> a3" using \<open>z \<in> F3\<close> \<open>a3 \<notin> F3\<close> by (by100 blast)
+    have "z \<in> e13 - {a1, a3}" using \<open>z \<in> e13\<close> \<open>z \<noteq> a1\<close> \<open>z \<noteq> a3\<close> by (by100 blast)
+    have he13_conn: "top1_connected_on (e13 - {a1, a3})
+        (subspace_topology top1_S2 top1_S2_topology (e13 - {a1, a3}))"
+      by (rule arc_minus_endpoints_connected[OF hS2_strict hS2_haus assms(8) assms(14) assms(20) hdist(2)])
+    have he13_sub: "e13 - {a1, a3} \<subseteq> top1_S2 - ((e12 \<union> e41) \<union> e24)"
+    proof -
+      have "e13 \<inter> e12 = {a1}" by (rule assms(28))
+      have "e13 \<inter> e41 = {a1}" by (rule assms(31))
+      have "e13 \<inter> ((e12 \<union> e41) \<union> e24) \<subseteq> {a1}"
+      proof -
+        have "e24 \<inter> e13 = {}"
+        proof -
+          have "a1 \<notin> e24" proof assume "a1 \<in> e24"
+            hence "a1 \<in> e24 \<inter> e12" using ha1_e12_loc by (by100 blast)
+            thus False using assms(33) hdist(1) by (by100 blast) qed
+          have "a3 \<notin> e24" proof assume "a3 \<in> e24"
+            hence "a3 \<in> e24 \<inter> e34" using ha3_e34_loc by (by100 blast)
+            thus False using assms(35) hdist(6) by (by100 blast) qed
+          have "a2 \<notin> e13" proof assume "a2 \<in> e13"
+            hence "a2 \<in> e13 \<inter> e23" using assms(17) unfolding top1_arc_endpoints_on_def by (by100 blast)
+            thus False using assms(29) hdist(4) by (by100 blast) qed
+          have "a4 \<notin> e13" proof assume "a4 \<in> e13"
+            hence "a4 \<in> e13 \<inter> e41" using assms(19) unfolding top1_arc_endpoints_on_def by (by100 blast)
+            hence "a4 \<in> {a1}" using assms(31) by (by100 blast)
+            thus False using hdist(3) by (by100 simp) qed
+          have "\<forall>x \<in> {a1,a2,a3,a4}. x \<notin> e24 \<inter> e13"
+            using \<open>a1 \<notin> e24\<close> \<open>a3 \<notin> e24\<close> \<open>a2 \<notin> e13\<close> \<open>a4 \<notin> e13\<close> by (by100 blast)
+          thus ?thesis using assms(32) by (by100 blast)
+        qed
+        thus ?thesis using \<open>e13 \<inter> e12 = {a1}\<close> \<open>e13 \<inter> e41 = {a1}\<close> by (by100 blast)
+      qed
+      thus ?thesis using assms(8) by (by100 blast)
+    qed
+    have "(e13 - {a1, a3}) \<inter> F3 \<noteq> {}" using \<open>z \<in> e13 - {a1,a3}\<close> \<open>z \<in> F3\<close> by (by100 blast)
+    \<comment> \<open>e13-{a1,a3} connected, in S2-SCC, meets F3 \<Rightarrow> \<subseteq> F3 (by SCC separation).\<close>
+    have "e13 - {a1, a3} \<subseteq> F3"
+    proof -
+      have "\<forall>x. x \<in> e13 - {a1,a3} \<longrightarrow> x \<in> F3 \<union> F3'"
+        using he13_sub hF3_props(3) by (by100 blast)
+      hence "\<forall>x. x \<in> e13 - {a1,a3} \<longrightarrow> x \<notin> F3 \<longrightarrow> x \<in> F3'"
+        by (by100 blast)
+      have "e13 - {a1,a3} \<subseteq> F3 \<or> e13 - {a1,a3} \<subseteq> F3'"
+      proof -
+        have hT: "is_topology_on (top1_S2 - ((e12 \<union> e41) \<union> e24))
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - ((e12 \<union> e41) \<union> e24)))"
+          by (rule subspace_topology_is_topology_on[OF hTopS2]) (by100 blast)
+        have hF3_oT: "F3 \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - ((e12 \<union> e41) \<union> e24))"
+        proof -
+          have "F3 = (top1_S2 - ((e12 \<union> e41) \<union> e24)) \<inter> F3" using hF3_props(3) by (by100 blast)
+          thus ?thesis unfolding subspace_topology_def using hF3_props(2) by (by100 blast)
+        qed
+        have hF3'_oT: "F3' \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - ((e12 \<union> e41) \<union> e24))"
+        proof -
+          have "F3' = (top1_S2 - ((e12 \<union> e41) \<union> e24)) \<inter> F3'" using hF3_props(3) by (by100 blast)
+          thus ?thesis unfolding subspace_topology_def using hF3_props(6) by (by100 blast)
+        qed
+        have hsep: "top1_is_separation_on (top1_S2 - ((e12 \<union> e41) \<union> e24))
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - ((e12 \<union> e41) \<union> e24))) F3 F3'"
+        proof -
+          have "F3' \<noteq> {}" using hC'_in_F3' hC'_int_ne by (by100 blast)
+          show ?thesis unfolding top1_is_separation_on_def
+            using hF3_oT hF3'_oT hF3_props(1) \<open>F3' \<noteq> {}\<close> hF3_props(4,3) by (by100 blast)
+        qed
+        have he13_conn_T: "top1_connected_on (e13 - {a1, a3})
+            (subspace_topology (top1_S2 - ((e12 \<union> e41) \<union> e24))
+                (subspace_topology top1_S2 top1_S2_topology (top1_S2 - ((e12 \<union> e41) \<union> e24))) (e13 - {a1, a3}))"
+        proof -
+          have "subspace_topology top1_S2 top1_S2_topology (e13 - {a1, a3}) =
+              subspace_topology (top1_S2 - ((e12 \<union> e41) \<union> e24))
+                  (subspace_topology top1_S2 top1_S2_topology (top1_S2 - ((e12 \<union> e41) \<union> e24))) (e13 - {a1, a3})"
+            using subspace_topology_trans[of "e13-{a1,a3}" "top1_S2 - ((e12 \<union> e41) \<union> e24)" top1_S2 top1_S2_topology]
+                he13_sub by (by100 simp)
+          thus ?thesis using he13_conn by (by100 simp)
+        qed
+        from Lemma_23_2[OF hT hsep he13_sub he13_conn_T] show ?thesis by (by100 blast)
+      qed
+      thus ?thesis
+      proof
+        assume "e13 - {a1,a3} \<subseteq> F3" thus ?thesis .
+      next
+        assume h_sub_F3': "e13 - {a1,a3} \<subseteq> F3'"
+        have "F3 \<inter> F3' = {}" by (rule hF3_props(4))
+        have "(e13 - {a1,a3}) \<inter> F3 = {}"
+        proof -
+          have "\<forall>x. x \<in> e13 - {a1,a3} \<longrightarrow> x \<notin> F3"
+          proof (intro allI impI)
+            fix x assume "x \<in> e13 - {a1,a3}"
+            hence "x \<in> F3'" using h_sub_F3' by (by100 blast)
+            thus "x \<notin> F3" using \<open>F3 \<inter> F3' = {}\<close> by (by100 blast)
+          qed
+          show ?thesis
+            apply (rule Int_emptyI)
+            using \<open>\<forall>x. x \<in> e13 - {a1,a3} \<longrightarrow> x \<notin> F3\<close>
+            apply (by100 simp)
+            done
+        qed
+        thus ?thesis using \<open>(e13 - {a1, a3}) \<inter> F3 \<noteq> {}\<close>
+          apply (by100 simp)
+          done
+      qed
+    qed
+    hence "a3 \<in> closure_on top1_S2 top1_S2_topology F3"
+      using closure_on_mono[of "e13 - {a1,a3}" F3 top1_S2 top1_S2_topology]
+          arc_endpoint_in_closure_of_interior(2)[OF hS2_strict hS2_haus assms(8) assms(14) assms(20) hdist(2)]
+      by (by100 blast)
+    thus False using ha3_not_cl_F3 by (by100 blast)
+  qed
+  \<comment> \<open>F3 \<subseteq> S2-X.\<close>
+  have hF3_sub_SX: "F3 \<subseteq> top1_S2 - (e12 \<union> e23 \<union> e34 \<union> e41 \<union> e13 \<union> e24)"
+  proof
+    fix x assume "x \<in> F3"
+    hence "x \<in> top1_S2 - ((e12 \<union> e41) \<union> e24)" using hF3_props(3) by (by100 blast)
+    hence "x \<notin> e12" "x \<notin> e41" "x \<notin> e24" "x \<in> top1_S2" by (by100 blast)+
+    have "x \<notin> e13" using \<open>x \<in> F3\<close> he13_disj_F3 by (by100 blast)
+    have "x \<notin> e23 \<and> x \<notin> e34"
+    proof -
+      have hF3_sub: "F3 \<subseteq> top1_S2 - ((e12 \<union> e41) \<union> e24)" using hF3_props(3,4) by (by100 force)
+      \<comment> \<open>F3 \<subseteq> S2-((e12\<union>e41)\<union>e24). Need also F3 \<inter> (e23\<union>e34) = {}.
+         F3 is a JCT component. C'int = (e23\<union>e34)-{a2,a4} \<subseteq> F3' (not in F3).
+         And {a2,a4} \<subseteq> (e12\<union>e41)\<union>e24. So (e23\<union>e34) \<inter> F3 \<subseteq> {a2,a4} \<inter> F3 = {}.
+         Because {a2,a4} \<subseteq> SCC = (e12\<union>e41)\<union>e24 and F3 \<subseteq> S2-SCC.\<close>
+      have "(e23 \<union> e34) - {a2,a4} \<subseteq> F3'" by (rule hC'_in_F3')
+      have "x \<notin> (e23 \<union> e34) - {a2,a4}" using \<open>x \<in> F3\<close> hF3_props(4)
+        \<open>(e23 \<union> e34) - {a2,a4} \<subseteq> F3'\<close> by (by100 blast)
+      moreover have "x \<notin> {a2, a4}" using \<open>x \<notin> e12\<close> \<open>x \<notin> e41\<close> \<open>x \<notin> e24\<close>
+        arc_endpoints_subset[of e12] arc_endpoints_subset[of e41] arc_endpoints_subset[of e24]
+        assms(16) assms(19) assms(21) by (by100 blast)
+      ultimately show ?thesis by (by100 blast)
+    qed
+    show "x \<in> top1_S2 - (e12 \<union> e23 \<union> e34 \<union> e41 \<union> e13 \<union> e24)"
+      using \<open>x \<in> top1_S2\<close> \<open>x \<notin> e12\<close> \<open>x \<notin> e41\<close> \<open>x \<notin> e24\<close> \<open>x \<notin> e13\<close> \<open>x \<notin> e23 \<and> x \<notin> e34\<close>
+      by (by100 blast)
+  qed
+  \<comment> \<open>F3 \<in> {W1, W2}: F3 connected open, F3 \<subseteq> S2-X = P1\<union>R1\<union>W1\<union>W2.
+     F3 \<noteq> P1: a3 \<in> cl(P1) but a3 \<notin> cl(F3). If F3 \<subseteq> P1: cl(F3) \<subseteq> cl(P1), contradiction.
+     F3 \<noteq> R1: a3 \<in> cl(R1) but a3 \<notin> cl(F3). Same argument.\<close>
+  have hF3_in_WW: "F3 \<in> {W1, W2}"
+  proof -
+    \<comment> \<open>P1 \<subseteq> S2-(A'\<union>B') = F3\<union>F3'. P1 connected \<Rightarrow> P1 \<subseteq> F3 or F3'.
+       If P1 \<subseteq> F3: cl(P1) \<subseteq> cl(F3), a3 \<in> cl(P1), a3 \<notin> cl(F3). Contradiction.
+       So P1 \<subseteq> F3'. Hence F3 \<inter> P1 = {}. Similarly R1.\<close>
+    have hP1_sub_AB': "P1 \<subseteq> top1_S2 - ((e12 \<union> e41) \<union> e24)"
+    proof -
+      have "P1 \<inter> e12 = {}" using hP(4) hfour_union by (by100 blast)
+      have "P1 \<inter> e41 = {}" using hP(4) hfour_union by (by100 blast)
+      have "P1 \<inter> e24 = {}" using hP(4) hfour_union by (by100 blast)
+      have "P1 \<subseteq> top1_S2" using hP(4) by (by100 blast)
+      thus ?thesis using \<open>P1 \<inter> e12 = {}\<close> \<open>P1 \<inter> e41 = {}\<close> \<open>P1 \<inter> e24 = {}\<close> by (by100 blast)
+    qed
+    have "P1 \<subseteq> F3 \<or> P1 \<subseteq> F3'"
+    proof -
+      have hT_AB': "is_topology_on (top1_S2 - ((e12 \<union> e41) \<union> e24))
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - ((e12 \<union> e41) \<union> e24)))"
+        by (rule subspace_topology_is_topology_on[OF hTopS2]) (by100 blast)
+      have hF3_oT: "F3 \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - ((e12 \<union> e41) \<union> e24))"
+      proof -
+        have "F3 = (top1_S2 - ((e12 \<union> e41) \<union> e24)) \<inter> F3" using hF3_props(3) by (by100 blast)
+        thus ?thesis unfolding subspace_topology_def using hF3_props(2) by (by100 blast)
+      qed
+      have hF3'_oT: "F3' \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - ((e12 \<union> e41) \<union> e24))"
+      proof -
+        have "F3' = (top1_S2 - ((e12 \<union> e41) \<union> e24)) \<inter> F3'" using hF3_props(3) by (by100 blast)
+        thus ?thesis unfolding subspace_topology_def using hF3_props(6) by (by100 blast)
+      qed
+      have "F3' \<noteq> {}" using hC'_in_F3' hC'_int_ne by (by100 blast)
+      have hsep: "top1_is_separation_on (top1_S2 - ((e12 \<union> e41) \<union> e24))
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - ((e12 \<union> e41) \<union> e24))) F3 F3'"
+        unfolding top1_is_separation_on_def
+        using hF3_oT hF3'_oT hF3_props(1) \<open>F3' \<noteq> {}\<close> hF3_props(4,3) by (by100 blast)
+      have hP1_conn_AB': "top1_connected_on P1 (subspace_topology (top1_S2 - ((e12 \<union> e41) \<union> e24))
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - ((e12 \<union> e41) \<union> e24))) P1)"
+      proof -
+        have "subspace_topology top1_S2 top1_S2_topology P1 =
+            subspace_topology (top1_S2 - ((e12 \<union> e41) \<union> e24))
+                (subspace_topology top1_S2 top1_S2_topology (top1_S2 - ((e12 \<union> e41) \<union> e24))) P1"
+          using subspace_topology_trans[of P1 "top1_S2 - ((e12 \<union> e41) \<union> e24)" top1_S2 top1_S2_topology]
+              hP1_sub_AB' by (by100 simp)
+        thus ?thesis using hP(5) by (by100 simp)
+      qed
+      from Lemma_23_2[OF hT_AB' hsep hP1_sub_AB' hP1_conn_AB'] show ?thesis by (by100 blast)
+    qed
+    hence hP1_in_F3': "P1 \<subseteq> F3'"
+    proof
+      assume "P1 \<subseteq> F3"
+      hence "closure_on top1_S2 top1_S2_topology P1 \<subseteq> closure_on top1_S2 top1_S2_topology F3"
+        by (rule closure_on_mono)
+      have "a3 \<in> closure_on top1_S2 top1_S2_topology P1"
+        using hcl_P1 ha3_e34_loc assms(25) by (by100 blast)
+      hence "a3 \<in> closure_on top1_S2 top1_S2_topology F3"
+        using \<open>closure_on top1_S2 top1_S2_topology P1 \<subseteq> closure_on top1_S2 top1_S2_topology F3\<close>
+        by (by100 blast)
+      thus ?thesis using ha3_not_cl_F3 by (by100 blast)
+    next
+      assume "P1 \<subseteq> F3'" thus ?thesis .
+    qed
+    hence hF3_not_P1: "F3 \<inter> P1 = {}" using hF3_props(4) by (by100 blast)
+    \<comment> \<open>Similarly R1 \<subseteq> F3' (same argument: a3 \<in> cl(R1) but a3 \<notin> cl(F3)).\<close>
+    have hR1_sub_AB': "R1 \<subseteq> top1_S2 - ((e12 \<union> e41) \<union> e24)"
+    proof -
+      have "R1 \<inter> e12 = {}" using hR(4) hfour_union by (by100 blast)
+      have "R1 \<inter> e41 = {}" using hR(4) hfour_union by (by100 blast)
+      have "R1 \<inter> e24 = {}" using hR(4) hfour_union by (by100 blast)
+      have "R1 \<subseteq> top1_S2" using hR(4) by (by100 blast)
+      thus ?thesis using \<open>R1 \<inter> e12 = {}\<close> \<open>R1 \<inter> e41 = {}\<close> \<open>R1 \<inter> e24 = {}\<close> by (by100 blast)
+    qed
+    have "R1 \<subseteq> F3 \<or> R1 \<subseteq> F3'"
+    proof -
+      have hT_AB': "is_topology_on (top1_S2 - ((e12 \<union> e41) \<union> e24))
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - ((e12 \<union> e41) \<union> e24)))"
+        by (rule subspace_topology_is_topology_on[OF hTopS2]) (by100 blast)
+      have hF3_oT: "F3 \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - ((e12 \<union> e41) \<union> e24))"
+      proof -
+        have "F3 = (top1_S2 - ((e12 \<union> e41) \<union> e24)) \<inter> F3" using hF3_props(3) by (by100 blast)
+        thus ?thesis unfolding subspace_topology_def using hF3_props(2) by (by100 blast)
+      qed
+      have hF3'_oT: "F3' \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - ((e12 \<union> e41) \<union> e24))"
+      proof -
+        have "F3' = (top1_S2 - ((e12 \<union> e41) \<union> e24)) \<inter> F3'" using hF3_props(3) by (by100 blast)
+        thus ?thesis unfolding subspace_topology_def using hF3_props(6) by (by100 blast)
+      qed
+      have "F3' \<noteq> {}" using hC'_in_F3' hC'_int_ne by (by100 blast)
+      have hsep: "top1_is_separation_on (top1_S2 - ((e12 \<union> e41) \<union> e24))
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - ((e12 \<union> e41) \<union> e24))) F3 F3'"
+        unfolding top1_is_separation_on_def
+        using hF3_oT hF3'_oT hF3_props(1) \<open>F3' \<noteq> {}\<close> hF3_props(4,3) by (by100 blast)
+      have hR1_conn_AB': "top1_connected_on R1 (subspace_topology (top1_S2 - ((e12 \<union> e41) \<union> e24))
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - ((e12 \<union> e41) \<union> e24))) R1)"
+      proof -
+        have "subspace_topology top1_S2 top1_S2_topology R1 =
+            subspace_topology (top1_S2 - ((e12 \<union> e41) \<union> e24))
+                (subspace_topology top1_S2 top1_S2_topology (top1_S2 - ((e12 \<union> e41) \<union> e24))) R1"
+          using subspace_topology_trans[of R1 "top1_S2 - ((e12 \<union> e41) \<union> e24)" top1_S2 top1_S2_topology]
+              hR1_sub_AB' by (by100 simp)
+        thus ?thesis using hR(5) by (by100 simp)
+      qed
+      from Lemma_23_2[OF hT_AB' hsep hR1_sub_AB' hR1_conn_AB'] show ?thesis by (by100 blast)
+    qed
+    hence "R1 \<subseteq> F3'"
+    proof
+      assume "R1 \<subseteq> F3"
+      hence "closure_on top1_S2 top1_S2_topology R1 \<subseteq> closure_on top1_S2 top1_S2_topology F3"
+        by (rule closure_on_mono)
+      have "a3 \<in> closure_on top1_S2 top1_S2_topology R1"
+        using hcl_R1 ha3_e34_loc assms(29,30) by (by100 blast)
+      hence "a3 \<in> closure_on top1_S2 top1_S2_topology F3"
+        using \<open>closure_on top1_S2 top1_S2_topology R1 \<subseteq> closure_on top1_S2 top1_S2_topology F3\<close>
+        by (by100 blast)
+      thus ?thesis using ha3_not_cl_F3 by (by100 blast)
+    next
+      assume "R1 \<subseteq> F3'" thus ?thesis .
+    qed
+    hence hF3_not_R1: "F3 \<inter> R1 = {}" using hF3_props(4) by (by100 blast)
+    \<comment> \<open>F3 \<subseteq> S2-X, F3 \<inter> P1 = {}, F3 \<inter> R1 = {} \<Rightarrow> F3 \<subseteq> W1 \<union> W2.\<close>
+    have "F3 \<subseteq> W1 \<union> W2"
+    proof -
+      have "F3 \<subseteq> P1 \<union> R1 \<union> W1 \<union> W2" using hF3_sub_SX hfour_union by (by100 blast)
+      thus ?thesis using hF3_not_P1 hF3_not_R1 by (by100 blast)
+    qed
+    \<comment> \<open>F3 connected, W1 and W2 open disjoint: F3 in one of them.\<close>
+    moreover have "F3 \<noteq> {}" by (rule hF3_props(1))
+    ultimately have "F3 \<subseteq> W1 \<or> F3 \<subseteq> W2"
+    proof -
+      assume hF3_sub_WW: "F3 \<subseteq> W1 \<union> W2" and hF3_ne: "F3 \<noteq> {}"
+      have hF3_sub_C1e24: "F3 \<subseteq> top1_S2 - (?C1 \<union> e24)"
+        using hF3_sub_WW hW(4) by (by100 blast)
+      have hT_C1: "is_topology_on (top1_S2 - (?C1 \<union> e24))
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?C1 \<union> e24)))"
+        by (rule subspace_topology_is_topology_on[OF hTopS2]) (by100 blast)
+      have hW1_oT: "W1 \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?C1 \<union> e24))"
+      proof -
+        have "W1 = (top1_S2 - (?C1 \<union> e24)) \<inter> W1" using hW(4) by (by100 blast)
+        thus ?thesis unfolding subspace_topology_def using hW1_open by (by100 blast)
+      qed
+      have hW2_oT: "W2 \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?C1 \<union> e24))"
+      proof -
+        have "W2 = (top1_S2 - (?C1 \<union> e24)) \<inter> W2" using hW(4) by (by100 blast)
+        thus ?thesis unfolding subspace_topology_def using hW2_open by (by100 blast)
+      qed
+      have hsep_W: "top1_is_separation_on (top1_S2 - (?C1 \<union> e24))
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?C1 \<union> e24))) W1 W2"
+        unfolding top1_is_separation_on_def
+        using hW1_oT hW2_oT hW(1,2,3,4) by (by100 blast)
+      have hF3_conn_C1: "top1_connected_on F3 (subspace_topology (top1_S2 - (?C1 \<union> e24))
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?C1 \<union> e24))) F3)"
+      proof -
+        have "subspace_topology top1_S2 top1_S2_topology F3 =
+            subspace_topology (top1_S2 - (?C1 \<union> e24))
+                (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?C1 \<union> e24))) F3"
+          using subspace_topology_trans[of F3 "top1_S2 - (?C1 \<union> e24)" top1_S2 top1_S2_topology]
+              hF3_sub_C1e24 by (by100 simp)
+        thus ?thesis using hF3_props(5) by (by100 simp)
+      qed
+      from Lemma_23_2[OF hT_C1 hsep_W hF3_sub_C1e24 hF3_conn_C1] show ?thesis by (by100 blast)
+    qed
+    \<comment> \<open>F3 \<subseteq> Wi \<Rightarrow> F3 = Wi: W1 \<subseteq> S2-(C1\<union>e24) \<subseteq> S2-(A'\<union>B') = F3\<union>F3'.
+       W1 connected \<Rightarrow> W1 \<subseteq> F3 or F3'. If W1 \<subseteq> F3: F3 = W1. If W1 \<subseteq> F3': F3\<inter>W1={}, contradicting F3 \<subseteq> W1, F3\<noteq>{}.\<close>
+    moreover have "\<And>Wi. Wi \<in> {W1,W2} \<Longrightarrow> F3 \<subseteq> Wi \<Longrightarrow> F3 = Wi"
+    proof -
+      fix Wi assume hWi: "Wi \<in> {W1,W2}" and hF3_Wi: "F3 \<subseteq> Wi"
+      have hWi_sub: "Wi \<subseteq> top1_S2 - (?C1 \<union> e24)"
+        using hWi hW(4) by (by100 blast)
+      have "?C1 \<union> e24 \<supseteq> (e12 \<union> e41) \<union> e24" using hC1_eq by (by100 blast)
+      hence "Wi \<subseteq> top1_S2 - ((e12 \<union> e41) \<union> e24)" using hWi_sub by (by100 blast)
+      hence "Wi \<subseteq> F3 \<union> F3'" using hF3_props(3) by (by100 blast)
+      have hWi_conn: "top1_connected_on Wi (subspace_topology top1_S2 top1_S2_topology Wi)"
+        using hWi hW(5,6) by (by100 blast)
+      have "Wi \<subseteq> F3 \<or> Wi \<subseteq> F3'"
+      proof -
+        have hT_AB': "is_topology_on (top1_S2 - ((e12 \<union> e41) \<union> e24))
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - ((e12 \<union> e41) \<union> e24)))"
+          by (rule subspace_topology_is_topology_on[OF hTopS2]) (by100 blast)
+        have hF3_oT: "F3 \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - ((e12 \<union> e41) \<union> e24))"
+        proof -
+          have "F3 = (top1_S2 - ((e12 \<union> e41) \<union> e24)) \<inter> F3" using hF3_props(3) by (by100 blast)
+          thus ?thesis unfolding subspace_topology_def using hF3_props(2) by (by100 blast)
+        qed
+        have hF3'_oT: "F3' \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - ((e12 \<union> e41) \<union> e24))"
+        proof -
+          have "F3' = (top1_S2 - ((e12 \<union> e41) \<union> e24)) \<inter> F3'" using hF3_props(3) by (by100 blast)
+          thus ?thesis unfolding subspace_topology_def using hF3_props(6) by (by100 blast)
+        qed
+        have "F3' \<noteq> {}" using hC'_in_F3' hC'_int_ne by (by100 blast)
+        have hsep: "top1_is_separation_on (top1_S2 - ((e12 \<union> e41) \<union> e24))
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - ((e12 \<union> e41) \<union> e24))) F3 F3'"
+          unfolding top1_is_separation_on_def
+          using hF3_oT hF3'_oT hF3_props(1) \<open>F3' \<noteq> {}\<close> hF3_props(4,3) by (by100 blast)
+        have hWi_conn_AB': "top1_connected_on Wi (subspace_topology (top1_S2 - ((e12 \<union> e41) \<union> e24))
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - ((e12 \<union> e41) \<union> e24))) Wi)"
+        proof -
+          have "subspace_topology top1_S2 top1_S2_topology Wi =
+              subspace_topology (top1_S2 - ((e12 \<union> e41) \<union> e24))
+                  (subspace_topology top1_S2 top1_S2_topology (top1_S2 - ((e12 \<union> e41) \<union> e24))) Wi"
+            using subspace_topology_trans[of Wi "top1_S2 - ((e12 \<union> e41) \<union> e24)" top1_S2 top1_S2_topology]
+                \<open>Wi \<subseteq> top1_S2 - ((e12 \<union> e41) \<union> e24)\<close> by (by100 simp)
+          thus ?thesis using hWi_conn by (by100 simp)
+        qed
+        from Lemma_23_2[OF hT_AB' hsep \<open>Wi \<subseteq> top1_S2 - ((e12 \<union> e41) \<union> e24)\<close> hWi_conn_AB']
+        show ?thesis by (by100 blast)
+      qed
+      thus "F3 = Wi"
+      proof
+        assume "Wi \<subseteq> F3" thus ?thesis using hF3_Wi by (by100 blast)
+      next
+        assume "Wi \<subseteq> F3'" hence "F3 \<inter> Wi = {}" using hF3_props(4) by (by100 blast)
+        hence "F3 = {}" using hF3_Wi by (by100 blast)
+        thus ?thesis using hF3_props(1) by (by100 blast)
+      qed
+    qed
+    ultimately show ?thesis by (by100 blast)
+  qed
+  \<comment> \<open>Step 4b (symmetric): JCT component F1 of S2-(B'\<union>C') = S2-(e24\<union>(e23\<union>e34)) with a1 \<notin> closure.
+     Exact symmetric copy of F3 construction. B'\<union>C' is SCC. Place A'-{a2,a4} in one component.\<close>
+  have hB'C'_scc: "top1_simple_closed_curve_on top1_S2 top1_S2_topology (e24 \<union> (e23 \<union> e34))"
+    by (rule arcs_form_simple_closed_curve[OF hS2_strict hS2_haus assms(15) assms(9)
+        hC'_arc hC'_sub hB'C' hdist(5) assms(21) hC'_ep])
+  have hB'C'_sep: "top1_separates_on top1_S2 top1_S2_topology (e24 \<union> (e23 \<union> e34))"
+    by (rule Theorem_61_3_JordanSeparation_S2[OF assms(1) hB'C'_scc])
+  have hC'_closed: "closedin_on top1_S2 top1_S2_topology (e23 \<union> e34)"
+    by (rule closedin_on_Un[OF hTopS2 arc_in_S2_closed[OF assms(5) assms(11)] arc_in_S2_closed[OF assms(6) assms(12)]])
+  have hB'C'_card: "card (e24 \<inter> (e23 \<union> e34)) = 2" using hB'C' hdist(5) by (by100 simp)
+  obtain H1 H2 where hH: "H1 \<noteq> {}" "H2 \<noteq> {}" "H1 \<inter> H2 = {}"
+      "H1 \<union> H2 = top1_S2 - (e24 \<union> (e23 \<union> e34))"
+      "top1_connected_on H1 (subspace_topology top1_S2 top1_S2_topology H1)"
+      "top1_connected_on H2 (subspace_topology top1_S2 top1_S2_topology H2)"
+    using Theorem_63_5_two_closed_connected[OF assms(1)
+        arc_in_S2_closed[OF assms(9) assms(15)] hC'_closed
+        arc_connected[OF assms(15)] arc_connected[OF hC'_arc] hB'C'_card
+        Theorem_63_2_arc_no_separation[OF assms(1) assms(9) assms(15)]
+        Theorem_63_2_arc_no_separation[OF assms(1) hC'_sub hC'_arc]]
+    by (by100 metis)
+  have hB'C'_open: "top1_S2 - (e24 \<union> (e23 \<union> e34)) \<in> top1_S2_topology"
+    using closedin_on_Un[OF hTopS2 arc_in_S2_closed[OF assms(9) assms(15)] hC'_closed]
+    hTopS2 unfolding closedin_on_def is_topology_on_def by (by100 blast)
+  have hB'C'_nc: "\<not> top1_connected_on (top1_S2 - (e24 \<union> (e23 \<union> e34)))
+      (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (e24 \<union> (e23 \<union> e34))))"
+    using hB'C'_sep unfolding top1_separates_on_def by (by100 blast)
+  have hH_open: "H1 \<in> top1_S2_topology" "H2 \<in> top1_S2_topology"
+    using S2_two_component_open[OF hB'C'_open _ hH(1,2,3,4,5,6) hB'C'_nc] by (by100 blast)+
+  \<comment> \<open>Place A'int = (e12\<union>e41)-{a2,a4}.\<close>
+  have hA'_int_conn: "top1_connected_on ((e12 \<union> e41) - {a2, a4})
+      (subspace_topology top1_S2 top1_S2_topology ((e12 \<union> e41) - {a2, a4}))"
+    by (rule arc_minus_endpoints_connected[OF hS2_strict hS2_haus hA'_sub hA'_arc hA'_ep hdist(5)])
+  have hA'_int_in_SCC: "(e12 \<union> e41) - {a2, a4} \<subseteq> top1_S2 - (e24 \<union> (e23 \<union> e34))"
+  proof -
+    have "(e12 \<union> e41) \<inter> (e24 \<union> (e23 \<union> e34)) \<subseteq> {a2, a4}"
+    proof -
+      have "(e12 \<union> e41) \<inter> (e24 \<union> (e23 \<union> e34)) = (e12\<inter>e24) \<union> (e12\<inter>e23) \<union> (e12\<inter>e34)
+          \<union> (e41\<inter>e24) \<union> (e41\<inter>e23) \<union> (e41\<inter>e34)" by (by100 blast)
+      also have "\<dots> \<subseteq> {a2} \<union> {a2} \<union> {} \<union> {a4} \<union> {} \<union> {a4}"
+        using assms(33) assms(24) assms(22) assms(36) assms(23) assms(26)
+        apply (simp add: Int_commute) done
+      finally show ?thesis by (by100 blast)
+    qed
+    thus ?thesis using hA'_sub by (by100 blast)
+  qed
+  have hA'_int_ne: "(e12 \<union> e41) - {a2, a4} \<noteq> {}"
+  proof -
+    have "a2 \<in> closure_on top1_S2 top1_S2_topology ((e12 \<union> e41) - {a2, a4})"
+      by (rule arc_endpoint_in_closure_of_interior(1)[OF hS2_strict hS2_haus hA'_sub hA'_arc hA'_ep hdist(5)])
+    moreover have "closure_on top1_S2 top1_S2_topology {} = {}"
+      by (rule top1_closure_on_empty[OF hTopS2])
+    ultimately show ?thesis by (by100 force)
+  qed
+  \<comment> \<open>Choose F1 = JCT component NOT containing A'int. F1' = the other.\<close>
+  have hA'_in_H: "(e12 \<union> e41) - {a2, a4} \<subseteq> H1 \<or> (e12 \<union> e41) - {a2, a4} \<subseteq> H2"
+  proof -
+    have hT_BC': "is_topology_on (top1_S2 - (e24 \<union> (e23 \<union> e34)))
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (e24 \<union> (e23 \<union> e34))))"
+      by (rule subspace_topology_is_topology_on[OF hTopS2]) (by100 blast)
+    have hH1_oT: "H1 \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - (e24 \<union> (e23 \<union> e34)))"
+    proof -
+      have "H1 = (top1_S2 - (e24 \<union> (e23 \<union> e34))) \<inter> H1" using hH(4) by (by100 blast)
+      thus ?thesis unfolding subspace_topology_def using hH_open(1) by (by100 blast)
+    qed
+    have hH2_oT: "H2 \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - (e24 \<union> (e23 \<union> e34)))"
+    proof -
+      have "H2 = (top1_S2 - (e24 \<union> (e23 \<union> e34))) \<inter> H2" using hH(4) by (by100 blast)
+      thus ?thesis unfolding subspace_topology_def using hH_open(2) by (by100 blast)
+    qed
+    have hsep: "top1_is_separation_on (top1_S2 - (e24 \<union> (e23 \<union> e34)))
+        (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (e24 \<union> (e23 \<union> e34)))) H1 H2"
+      unfolding top1_is_separation_on_def using hH1_oT hH2_oT hH(1,2,3,4) by (by100 blast)
+    have hA'_conn_BC': "top1_connected_on ((e12 \<union> e41) - {a2, a4})
+        (subspace_topology (top1_S2 - (e24 \<union> (e23 \<union> e34)))
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (e24 \<union> (e23 \<union> e34))))
+            ((e12 \<union> e41) - {a2, a4}))"
+    proof -
+      have "subspace_topology top1_S2 top1_S2_topology ((e12 \<union> e41) - {a2, a4}) =
+          subspace_topology (top1_S2 - (e24 \<union> (e23 \<union> e34)))
+              (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (e24 \<union> (e23 \<union> e34))))
+              ((e12 \<union> e41) - {a2, a4})"
+        using subspace_topology_trans[of "(e12 \<union> e41) - {a2, a4}" "top1_S2 - (e24 \<union> (e23 \<union> e34))"
+            top1_S2 top1_S2_topology] hA'_int_in_SCC by (by100 simp)
+      thus ?thesis using hA'_int_conn by (by100 simp)
+    qed
+    from Lemma_23_2[OF hT_BC' hsep hA'_int_in_SCC hA'_conn_BC'] show ?thesis by (by100 blast)
+  qed
+  obtain F1 F1' where hF1_props: "F1 \<noteq> {}" "F1 \<in> top1_S2_topology"
+      "F1 \<union> F1' = top1_S2 - (e24 \<union> (e23 \<union> e34))" "F1 \<inter> F1' = {}"
+      "top1_connected_on F1 (subspace_topology top1_S2 top1_S2_topology F1)"
+      "F1' \<in> top1_S2_topology"
+      "top1_connected_on F1' (subspace_topology top1_S2 top1_S2_topology F1')"
+      and hA'_in_F1': "(e12 \<union> e41) - {a2, a4} \<subseteq> F1'"
+  proof -
+    from hA'_in_H show ?thesis
+    proof
+      assume h: "(e12 \<union> e41) - {a2, a4} \<subseteq> H1"
+      show ?thesis
+        apply (rule that[of H2 H1])
+        using hH(1,2,3,4,5,6) hH_open h apply (by100 blast)+
+        done
+    next
+      assume h: "(e12 \<union> e41) - {a2, a4} \<subseteq> H2"
+      show ?thesis
+        apply (rule that[of H1 H2])
+        using hH(1,2,3,4,5,6) hH_open h apply (by100 blast)+
+        done
+    qed
+  qed
+  \<comment> \<open>Closure bound: cl(F1) \<subseteq> F1 \<union> (B'\<union>C').\<close>
+  have hF1'_sub: "F1' \<subseteq> top1_S2" using hF1_props(3) by (by100 blast)
+  have hcl_F1: "closedin_on top1_S2 top1_S2_topology (top1_S2 - F1')"
+  proof -
+    have "top1_S2 - (top1_S2 - F1') = F1'" using hF1'_sub by (by100 blast)
+    hence "top1_S2 - (top1_S2 - F1') \<in> top1_S2_topology" using hF1_props(6) by (by100 simp)
+    thus ?thesis unfolding closedin_on_def by (by100 blast)
+  qed
+  have "F1 \<subseteq> top1_S2 - F1'" using hF1_props(3,4) by (by100 blast)
+  have hcl_F1_bound: "closure_on top1_S2 top1_S2_topology F1 \<subseteq> F1 \<union> (e24 \<union> (e23 \<union> e34))"
+  proof -
+    have "closure_on top1_S2 top1_S2_topology F1 \<subseteq> top1_S2 - F1'"
+      by (rule closure_on_subset_of_closed[OF hcl_F1 \<open>F1 \<subseteq> top1_S2 - F1'\<close>])
+    thus ?thesis using hF1_props(3) by (by100 blast)
+  qed
+  \<comment> \<open>a1 \<notin> closure(F1).\<close>
+  have ha1_not_B'C': "a1 \<notin> e24 \<union> (e23 \<union> e34)"
+  proof -
+    have "a1 \<notin> e24" proof assume "a1 \<in> e24"
+      hence "a1 \<in> e12 \<inter> e24" using ha1_e12_loc by (by100 blast)
+      thus False using assms(33) hdist(1) by (by100 blast) qed
+    have "a1 \<notin> e23" proof assume "a1 \<in> e23"
+      hence "a1 \<in> e12 \<inter> e23" using ha1_e12_loc by (by100 blast)
+      thus False using assms(24) hdist(1) by (by100 blast) qed
+    have "a1 \<notin> e34" using assms(22) ha1_e12_loc by (by100 blast)
+    thus ?thesis using \<open>a1 \<notin> e24\<close> \<open>a1 \<notin> e23\<close> \<open>a1 \<notin> e34\<close> by (by100 blast)
+  qed
+  have "a1 \<in> (e12 \<union> e41) - {a2, a4}"
+    using ha1_e12_loc hdist(1) hdist(3) by (by100 blast)
+  hence "a1 \<in> F1'" using hA'_in_F1' by (by100 blast)
+  hence "a1 \<notin> F1" using hF1_props(4) by (by100 blast)
+  hence ha1_not_cl_F1: "a1 \<notin> closure_on top1_S2 top1_S2_topology F1"
+    using hcl_F1_bound ha1_not_B'C' by (by100 blast)
+  \<comment> \<open>F1 \<in> {W1, W2}: same argument as F3 (e13\<inter>F1={}, P1\<subseteq>F1', R1\<subseteq>F1', F1\<subseteq>W1\<union>W2).\<close>
+  have hF1_in_WW: "F1 \<in> {W1, W2}"
+  proof -
+    \<comment> \<open>e13 \<inter> F1 = {}: same argument as F3. a1 \<in> cl(e13-{a1,a3}) \<subseteq> cl(F1) if e13 meets F1.\<close>
+    have he13_disj_F1: "e13 \<inter> F1 = {}"
+    proof (rule ccontr)
+      assume "\<not> ?thesis"
+      then obtain z where "z \<in> e13" "z \<in> F1" by (by100 force)
+      have hF1_sub_BC: "F1 \<subseteq> top1_S2 - (e24 \<union> (e23 \<union> e34))" using hF1_props(3) by (by100 blast)
+      have "z \<notin> e24 \<union> (e23 \<union> e34)" using \<open>z \<in> F1\<close> hF1_sub_BC by (by100 blast)
+      have "z \<noteq> a2"
+      proof -
+        have "a2 \<in> e23" using arc_endpoints_subset[of e23] assms(17) by (by100 blast)
+        thus ?thesis using \<open>z \<notin> e24 \<union> (e23 \<union> e34)\<close> by (by100 blast)
+      qed
+      have "z \<noteq> a4"
+      proof -
+        have "a4 \<in> e34" using arc_endpoints_subset[of e34] assms(18) by (by100 blast)
+        thus ?thesis using \<open>z \<notin> e24 \<union> (e23 \<union> e34)\<close> by (by100 blast)
+      qed
+      have "z \<noteq> a1" using \<open>z \<in> F1\<close> \<open>a1 \<notin> F1\<close> by (by100 blast)
+      have "z \<noteq> a3"
+      proof assume "z = a3"
+        hence "a3 \<in> F1" using \<open>z \<in> F1\<close> by (by100 simp)
+        hence "a3 \<in> top1_S2 - (e24 \<union> (e23 \<union> e34))" using hF1_props(3) by (by100 blast)
+        thus False using ha3_e34_loc by (by100 blast)
+      qed
+      hence "z \<in> e13 - {a1, a3}" using \<open>z \<in> e13\<close> \<open>z \<noteq> a1\<close> \<open>z \<noteq> a3\<close> by (by100 blast)
+      have he13_conn: "top1_connected_on (e13 - {a1, a3})
+          (subspace_topology top1_S2 top1_S2_topology (e13 - {a1, a3}))"
+        by (rule arc_minus_endpoints_connected[OF hS2_strict hS2_haus assms(8) assms(14) assms(20) hdist(2)])
+      have he13_sub_BC: "e13 - {a1, a3} \<subseteq> top1_S2 - (e24 \<union> (e23 \<union> e34))"
+      proof -
+        have "e13 \<inter> e24 = {}"
+        proof -
+          have "a1 \<notin> e24" using ha1_not_B'C' by (by100 blast)
+          have "a3 \<notin> e24" using ha3_not_A'B' by (by100 blast)
+          have "a2 \<notin> e13" proof assume "a2 \<in> e13"
+            hence "a2 \<in> e13 \<inter> e23" using assms(17) unfolding top1_arc_endpoints_on_def by (by100 blast)
+            thus False using assms(29) hdist(4) by (by100 blast) qed
+          have "a4 \<notin> e13" proof assume "a4 \<in> e13"
+            hence "a4 \<in> e13 \<inter> e41" using assms(19) unfolding top1_arc_endpoints_on_def by (by100 blast)
+            hence "a4 \<in> {a1}" using assms(31) by (by100 blast)
+            thus False using hdist(3) by (by100 simp) qed
+          have "\<forall>x \<in> {a1,a2,a3,a4}. x \<notin> e24 \<inter> e13"
+            using \<open>a1 \<notin> e24\<close> \<open>a3 \<notin> e24\<close> \<open>a2 \<notin> e13\<close> \<open>a4 \<notin> e13\<close> by (by100 blast)
+          thus ?thesis using assms(32) by (by100 blast)
+        qed
+        have "e13 \<inter> e23 = {a3}" by (rule assms(29))
+        have "e13 \<inter> e34 = {a3}" by (rule assms(30))
+        have "e13 \<inter> (e24 \<union> (e23 \<union> e34)) \<subseteq> {a3}"
+          using \<open>e13 \<inter> e24 = {}\<close> \<open>e13 \<inter> e23 = {a3}\<close> \<open>e13 \<inter> e34 = {a3}\<close> by (by100 blast)
+        thus ?thesis using assms(8) by (by100 blast)
+      qed
+      \<comment> \<open>e13-{a1,a3} connected, in S2-(B'\<union>C'), meets F1 \<Rightarrow> \<subseteq> F1 (by separation).\<close>
+      have "e13 - {a1, a3} \<subseteq> F1"
+      proof -
+        have hT_BC': "is_topology_on (top1_S2 - (e24 \<union> (e23 \<union> e34)))
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (e24 \<union> (e23 \<union> e34))))"
+          by (rule subspace_topology_is_topology_on[OF hTopS2]) (by100 blast)
+        have hF1_oT: "F1 \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - (e24 \<union> (e23 \<union> e34)))"
+        proof -
+          have "F1 = (top1_S2 - (e24 \<union> (e23 \<union> e34))) \<inter> F1" using hF1_props(3) by (by100 blast)
+          thus ?thesis unfolding subspace_topology_def using hF1_props(2) by (by100 blast)
+        qed
+        have hF1'_oT: "F1' \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - (e24 \<union> (e23 \<union> e34)))"
+        proof -
+          have "F1' = (top1_S2 - (e24 \<union> (e23 \<union> e34))) \<inter> F1'" using hF1_props(3) by (by100 blast)
+          thus ?thesis unfolding subspace_topology_def using hF1_props(6) by (by100 blast)
+        qed
+        have "F1' \<noteq> {}" using hA'_in_F1' hA'_int_ne by (by100 blast)
+        have hsep: "top1_is_separation_on (top1_S2 - (e24 \<union> (e23 \<union> e34)))
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (e24 \<union> (e23 \<union> e34)))) F1 F1'"
+        proof -
+          show ?thesis unfolding top1_is_separation_on_def
+            using hF1_oT hF1'_oT hF1_props(1) \<open>F1' \<noteq> {}\<close> hF1_props(4,3) by (by100 blast)
+        qed
+        have he13_conn_BC': "top1_connected_on (e13 - {a1, a3})
+            (subspace_topology (top1_S2 - (e24 \<union> (e23 \<union> e34)))
+                (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (e24 \<union> (e23 \<union> e34)))) (e13 - {a1, a3}))"
+        proof -
+          have "subspace_topology top1_S2 top1_S2_topology (e13 - {a1, a3}) =
+              subspace_topology (top1_S2 - (e24 \<union> (e23 \<union> e34)))
+                  (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (e24 \<union> (e23 \<union> e34)))) (e13 - {a1, a3})"
+            using subspace_topology_trans[of "e13-{a1,a3}" "top1_S2 - (e24 \<union> (e23 \<union> e34))"
+                top1_S2 top1_S2_topology] he13_sub_BC by (by100 simp)
+          thus ?thesis using he13_conn by (by100 simp)
+        qed
+        from Lemma_23_2[OF hT_BC' hsep he13_sub_BC he13_conn_BC']
+        have "e13 - {a1,a3} \<subseteq> F1 \<or> e13 - {a1,a3} \<subseteq> F1'" by (by100 blast)
+        thus ?thesis
+        proof
+          assume "e13 - {a1,a3} \<subseteq> F1" thus ?thesis .
+        next
+          assume h_sub_F1': "e13 - {a1,a3} \<subseteq> F1'"
+          have "\<forall>x. x \<in> e13 - {a1,a3} \<longrightarrow> x \<notin> F1"
+          proof (intro allI impI)
+            fix x assume "x \<in> e13 - {a1,a3}"
+            hence "x \<in> F1'" using h_sub_F1' by (by100 blast)
+            thus "x \<notin> F1" using hF1_props(4) by (by100 blast)
+          qed
+          have "(e13 - {a1,a3}) \<inter> F1 = {}"
+            apply (rule Int_emptyI)
+            using \<open>\<forall>x. x \<in> e13 - {a1,a3} \<longrightarrow> x \<notin> F1\<close> apply (by100 simp) done
+          hence False using \<open>z \<in> e13 - {a1, a3}\<close> \<open>z \<in> F1\<close> by (by100 blast)
+          thus ?thesis ..
+        qed
+      qed
+      hence "a1 \<in> closure_on top1_S2 top1_S2_topology F1"
+        using closure_on_mono[of "e13 - {a1,a3}" F1 top1_S2 top1_S2_topology]
+            arc_endpoint_in_closure_of_interior(1)[OF hS2_strict hS2_haus assms(8) assms(14) assms(20) hdist(2)]
+        by (by100 blast)
+      thus False using ha1_not_cl_F1 by (by100 blast)
+    qed
+    \<comment> \<open>F1 \<subseteq> S2-X.\<close>
+    have hF1_sub_SX: "F1 \<subseteq> top1_S2 - (e12 \<union> e23 \<union> e34 \<union> e41 \<union> e13 \<union> e24)"
+    proof
+      fix x assume "x \<in> F1"
+      hence "x \<in> top1_S2 - (e24 \<union> (e23 \<union> e34))" using hF1_props(3) by (by100 blast)
+      hence "x \<notin> e24" "x \<notin> e23" "x \<notin> e34" "x \<in> top1_S2" by (by100 blast)+
+      have "x \<notin> e13" using \<open>x \<in> F1\<close> he13_disj_F1 by (by100 blast)
+      have "x \<notin> e12 \<and> x \<notin> e41"
+      proof -
+        have "(e12 \<union> e41) - {a2,a4} \<subseteq> F1'" by (rule hA'_in_F1')
+        have "x \<notin> (e12 \<union> e41) - {a2,a4}" using \<open>x \<in> F1\<close> hF1_props(4)
+          \<open>(e12 \<union> e41) - {a2,a4} \<subseteq> F1'\<close> by (by100 blast)
+        moreover have "x \<notin> {a2, a4}" using \<open>x \<notin> e24\<close> \<open>x \<notin> e23\<close> \<open>x \<notin> e34\<close>
+          arc_endpoints_subset[of e24] arc_endpoints_subset[of e23] arc_endpoints_subset[of e34]
+          assms(21) assms(17) assms(18) by (by100 blast)
+        ultimately show ?thesis by (by100 blast)
+      qed
+      show "x \<in> top1_S2 - (e12 \<union> e23 \<union> e34 \<union> e41 \<union> e13 \<union> e24)"
+        using \<open>x \<in> top1_S2\<close> \<open>x \<notin> e24\<close> \<open>x \<notin> e23\<close> \<open>x \<notin> e34\<close> \<open>x \<notin> e13\<close> \<open>x \<notin> e12 \<and> x \<notin> e41\<close>
+        by (by100 blast)
+    qed
+    \<comment> \<open>P1, R1 \<subseteq> F1' (a1 \<in> cl(P1), cl(R1) but a1 \<notin> cl(F1)).\<close>
+    have hP1_sub_BC': "P1 \<subseteq> top1_S2 - (e24 \<union> (e23 \<union> e34))"
+    proof -
+      have "P1 \<inter> e24 = {}" "P1 \<inter> e23 = {}" "P1 \<inter> e34 = {}" using hP(4) hfour_union by (by100 blast)+
+      have "P1 \<subseteq> top1_S2" using hP(4) by (by100 blast)
+      thus ?thesis using \<open>P1 \<inter> e24 = {}\<close> \<open>P1 \<inter> e23 = {}\<close> \<open>P1 \<inter> e34 = {}\<close> by (by100 blast)
+    qed
+    have "P1 \<subseteq> F1 \<or> P1 \<subseteq> F1'"
+    proof -
+      have hT_BC': "is_topology_on (top1_S2 - (e24 \<union> (e23 \<union> e34)))
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (e24 \<union> (e23 \<union> e34))))"
+        by (rule subspace_topology_is_topology_on[OF hTopS2]) (by100 blast)
+      have hF1_oT: "F1 \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - (e24 \<union> (e23 \<union> e34)))"
+      proof -
+        have "F1 = (top1_S2 - (e24 \<union> (e23 \<union> e34))) \<inter> F1" using hF1_props(3) by (by100 blast)
+        thus ?thesis unfolding subspace_topology_def using hF1_props(2) by (by100 blast)
+      qed
+      have hF1'_oT: "F1' \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - (e24 \<union> (e23 \<union> e34)))"
+      proof -
+        have "F1' = (top1_S2 - (e24 \<union> (e23 \<union> e34))) \<inter> F1'" using hF1_props(3) by (by100 blast)
+        thus ?thesis unfolding subspace_topology_def using hF1_props(6) by (by100 blast)
+      qed
+      have "F1' \<noteq> {}" using hA'_in_F1' hA'_int_ne by (by100 blast)
+      have hsep: "top1_is_separation_on (top1_S2 - (e24 \<union> (e23 \<union> e34)))
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (e24 \<union> (e23 \<union> e34)))) F1 F1'"
+        unfolding top1_is_separation_on_def
+        using hF1_oT hF1'_oT hF1_props(1) \<open>F1' \<noteq> {}\<close> hF1_props(4,3) by (by100 blast)
+      have hP1_conn_BC': "top1_connected_on P1 (subspace_topology (top1_S2 - (e24 \<union> (e23 \<union> e34)))
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (e24 \<union> (e23 \<union> e34)))) P1)"
+      proof -
+        have "subspace_topology top1_S2 top1_S2_topology P1 =
+            subspace_topology (top1_S2 - (e24 \<union> (e23 \<union> e34)))
+                (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (e24 \<union> (e23 \<union> e34)))) P1"
+          using subspace_topology_trans[of P1 "top1_S2 - (e24 \<union> (e23 \<union> e34))" top1_S2 top1_S2_topology]
+              hP1_sub_BC' by (by100 simp)
+        thus ?thesis using hP(5) by (by100 simp)
+      qed
+      from Lemma_23_2[OF hT_BC' hsep hP1_sub_BC' hP1_conn_BC'] show ?thesis by (by100 blast)
+    qed
+    hence "P1 \<subseteq> F1'"
+    proof
+      assume "P1 \<subseteq> F1"
+      hence "closure_on top1_S2 top1_S2_topology P1 \<subseteq> closure_on top1_S2 top1_S2_topology F1"
+        by (rule closure_on_mono)
+      have "a1 \<in> closure_on top1_S2 top1_S2_topology P1"
+        using hcl_P1 ha1_e12_loc by (by100 blast)
+      hence "a1 \<in> closure_on top1_S2 top1_S2_topology F1"
+        using \<open>closure_on top1_S2 top1_S2_topology P1 \<subseteq> closure_on top1_S2 top1_S2_topology F1\<close>
+        by (by100 blast)
+      thus ?thesis using ha1_not_cl_F1 by (by100 blast)
+    next
+      assume "P1 \<subseteq> F1'" thus ?thesis .
+    qed
+    hence hF1_not_P1: "F1 \<inter> P1 = {}" using hF1_props(4) by (by100 blast)
+    \<comment> \<open>R1 \<subseteq> F1' (same argument).\<close>
+    have hR1_sub_BC': "R1 \<subseteq> top1_S2 - (e24 \<union> (e23 \<union> e34))"
+    proof -
+      have "R1 \<inter> e24 = {}" "R1 \<inter> e23 = {}" "R1 \<inter> e34 = {}" using hR(4) hfour_union by (by100 blast)+
+      have "R1 \<subseteq> top1_S2" using hR(4) by (by100 blast)
+      thus ?thesis using \<open>R1 \<inter> e24 = {}\<close> \<open>R1 \<inter> e23 = {}\<close> \<open>R1 \<inter> e34 = {}\<close> by (by100 blast)
+    qed
+    have "R1 \<subseteq> F1 \<or> R1 \<subseteq> F1'"
+    proof -
+      have hT_BC': "is_topology_on (top1_S2 - (e24 \<union> (e23 \<union> e34)))
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (e24 \<union> (e23 \<union> e34))))"
+        by (rule subspace_topology_is_topology_on[OF hTopS2]) (by100 blast)
+      have hF1_oT: "F1 \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - (e24 \<union> (e23 \<union> e34)))"
+      proof -
+        have "F1 = (top1_S2 - (e24 \<union> (e23 \<union> e34))) \<inter> F1" using hF1_props(3) by (by100 blast)
+        thus ?thesis unfolding subspace_topology_def using hF1_props(2) by (by100 blast)
+      qed
+      have hF1'_oT: "F1' \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - (e24 \<union> (e23 \<union> e34)))"
+      proof -
+        have "F1' = (top1_S2 - (e24 \<union> (e23 \<union> e34))) \<inter> F1'" using hF1_props(3) by (by100 blast)
+        thus ?thesis unfolding subspace_topology_def using hF1_props(6) by (by100 blast)
+      qed
+      have "F1' \<noteq> {}" using hA'_in_F1' hA'_int_ne by (by100 blast)
+      have hsep: "top1_is_separation_on (top1_S2 - (e24 \<union> (e23 \<union> e34)))
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (e24 \<union> (e23 \<union> e34)))) F1 F1'"
+        unfolding top1_is_separation_on_def
+        using hF1_oT hF1'_oT hF1_props(1) \<open>F1' \<noteq> {}\<close> hF1_props(4,3) by (by100 blast)
+      have hR1_conn_BC': "top1_connected_on R1 (subspace_topology (top1_S2 - (e24 \<union> (e23 \<union> e34)))
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (e24 \<union> (e23 \<union> e34)))) R1)"
+      proof -
+        have "subspace_topology top1_S2 top1_S2_topology R1 =
+            subspace_topology (top1_S2 - (e24 \<union> (e23 \<union> e34)))
+                (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (e24 \<union> (e23 \<union> e34)))) R1"
+          using subspace_topology_trans[of R1 "top1_S2 - (e24 \<union> (e23 \<union> e34))" top1_S2 top1_S2_topology]
+              hR1_sub_BC' by (by100 simp)
+        thus ?thesis using hR(5) by (by100 simp)
+      qed
+      from Lemma_23_2[OF hT_BC' hsep hR1_sub_BC' hR1_conn_BC'] show ?thesis by (by100 blast)
+    qed
+    hence "R1 \<subseteq> F1'"
+    proof
+      assume "R1 \<subseteq> F1"
+      hence "closure_on top1_S2 top1_S2_topology R1 \<subseteq> closure_on top1_S2 top1_S2_topology F1"
+        by (rule closure_on_mono)
+      have "a1 \<in> closure_on top1_S2 top1_S2_topology R1"
+        using hcl_R1 assms(19) unfolding top1_arc_endpoints_on_def by (by100 blast)
+      hence "a1 \<in> closure_on top1_S2 top1_S2_topology F1"
+        using \<open>closure_on top1_S2 top1_S2_topology R1 \<subseteq> closure_on top1_S2 top1_S2_topology F1\<close>
+        by (by100 blast)
+      thus ?thesis using ha1_not_cl_F1 by (by100 blast)
+    next
+      assume "R1 \<subseteq> F1'" thus ?thesis .
+    qed
+    hence hF1_not_R1: "F1 \<inter> R1 = {}" using hF1_props(4) by (by100 blast)
+    \<comment> \<open>F1 \<subseteq> W1\<union>W2, then in one of them.\<close>
+    have "F1 \<subseteq> W1 \<union> W2"
+    proof -
+      have "F1 \<subseteq> P1 \<union> R1 \<union> W1 \<union> W2" using hF1_sub_SX hfour_union by (by100 blast)
+      thus ?thesis using hF1_not_P1 hF1_not_R1 by (by100 blast)
+    qed
+    moreover have "F1 \<noteq> {}" by (rule hF1_props(1))
+    ultimately have "F1 \<subseteq> W1 \<or> F1 \<subseteq> W2"
+    proof -
+      assume hF1_sub_WW: "F1 \<subseteq> W1 \<union> W2" and hF1_ne: "F1 \<noteq> {}"
+      have hF1_sub_C1e24: "F1 \<subseteq> top1_S2 - (?C1 \<union> e24)" using hF1_sub_WW hW(4) by (by100 blast)
+      have hT_C1: "is_topology_on (top1_S2 - (?C1 \<union> e24))
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?C1 \<union> e24)))"
+        by (rule subspace_topology_is_topology_on[OF hTopS2]) (by100 blast)
+      have hW1_oT: "W1 \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?C1 \<union> e24))"
+      proof -
+        have "W1 = (top1_S2 - (?C1 \<union> e24)) \<inter> W1" using hW(4) by (by100 blast)
+        thus ?thesis unfolding subspace_topology_def using hW1_open by (by100 blast)
+      qed
+      have hW2_oT: "W2 \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?C1 \<union> e24))"
+      proof -
+        have "W2 = (top1_S2 - (?C1 \<union> e24)) \<inter> W2" using hW(4) by (by100 blast)
+        thus ?thesis unfolding subspace_topology_def using hW2_open by (by100 blast)
+      qed
+      have hsep_W: "top1_is_separation_on (top1_S2 - (?C1 \<union> e24))
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?C1 \<union> e24))) W1 W2"
+        unfolding top1_is_separation_on_def using hW1_oT hW2_oT hW(1,2,3,4) by (by100 blast)
+      have hF1_conn_C1: "top1_connected_on F1 (subspace_topology (top1_S2 - (?C1 \<union> e24))
+          (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?C1 \<union> e24))) F1)"
+      proof -
+        have "subspace_topology top1_S2 top1_S2_topology F1 =
+            subspace_topology (top1_S2 - (?C1 \<union> e24))
+                (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (?C1 \<union> e24))) F1"
+          using subspace_topology_trans[of F1 "top1_S2 - (?C1 \<union> e24)" top1_S2 top1_S2_topology]
+              hF1_sub_C1e24 by (by100 simp)
+        thus ?thesis using hF1_props(5) by (by100 simp)
+      qed
+      from Lemma_23_2[OF hT_C1 hsep_W hF1_sub_C1e24 hF1_conn_C1] show ?thesis by (by100 blast)
+    qed
+    \<comment> \<open>F1 = Wi (bidirectional subset).\<close>
+    moreover have "\<And>Wi. Wi \<in> {W1,W2} \<Longrightarrow> F1 \<subseteq> Wi \<Longrightarrow> F1 = Wi"
+    proof -
+      fix Wi assume hWi: "Wi \<in> {W1,W2}" and hF1_Wi: "F1 \<subseteq> Wi"
+      have hWi_sub: "Wi \<subseteq> top1_S2 - (?C1 \<union> e24)" using hWi hW(4) by (by100 blast)
+      have "?C1 \<union> e24 \<supseteq> e24 \<union> (e23 \<union> e34)" using hC1_eq by (by100 blast)
+      hence "Wi \<subseteq> top1_S2 - (e24 \<union> (e23 \<union> e34))" using hWi_sub by (by100 blast)
+      hence "Wi \<subseteq> F1 \<union> F1'" using hF1_props(3) by (by100 blast)
+      have hWi_conn: "top1_connected_on Wi (subspace_topology top1_S2 top1_S2_topology Wi)"
+        using hWi hW(5,6) by (by100 blast)
+      have "Wi \<subseteq> F1 \<or> Wi \<subseteq> F1'"
+      proof -
+        have hT_BC': "is_topology_on (top1_S2 - (e24 \<union> (e23 \<union> e34)))
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (e24 \<union> (e23 \<union> e34))))"
+          by (rule subspace_topology_is_topology_on[OF hTopS2]) (by100 blast)
+        have hF1_oT: "F1 \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - (e24 \<union> (e23 \<union> e34)))"
+        proof -
+          have "F1 = (top1_S2 - (e24 \<union> (e23 \<union> e34))) \<inter> F1" using hF1_props(3) by (by100 blast)
+          thus ?thesis unfolding subspace_topology_def using hF1_props(2) by (by100 blast)
+        qed
+        have hF1'_oT: "F1' \<in> subspace_topology top1_S2 top1_S2_topology (top1_S2 - (e24 \<union> (e23 \<union> e34)))"
+        proof -
+          have "F1' = (top1_S2 - (e24 \<union> (e23 \<union> e34))) \<inter> F1'" using hF1_props(3) by (by100 blast)
+          thus ?thesis unfolding subspace_topology_def using hF1_props(6) by (by100 blast)
+        qed
+        have "F1' \<noteq> {}" using hA'_in_F1' hA'_int_ne by (by100 blast)
+        have hsep: "top1_is_separation_on (top1_S2 - (e24 \<union> (e23 \<union> e34)))
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (e24 \<union> (e23 \<union> e34)))) F1 F1'"
+          unfolding top1_is_separation_on_def
+          using hF1_oT hF1'_oT hF1_props(1) \<open>F1' \<noteq> {}\<close> hF1_props(4,3) by (by100 blast)
+        have hWi_conn_BC': "top1_connected_on Wi (subspace_topology (top1_S2 - (e24 \<union> (e23 \<union> e34)))
+            (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (e24 \<union> (e23 \<union> e34)))) Wi)"
+        proof -
+          have "subspace_topology top1_S2 top1_S2_topology Wi =
+              subspace_topology (top1_S2 - (e24 \<union> (e23 \<union> e34)))
+                  (subspace_topology top1_S2 top1_S2_topology (top1_S2 - (e24 \<union> (e23 \<union> e34)))) Wi"
+            using subspace_topology_trans[of Wi "top1_S2 - (e24 \<union> (e23 \<union> e34))" top1_S2 top1_S2_topology]
+                \<open>Wi \<subseteq> top1_S2 - (e24 \<union> (e23 \<union> e34))\<close> by (by100 simp)
+          thus ?thesis using hWi_conn by (by100 simp)
+        qed
+        from Lemma_23_2[OF hT_BC' hsep \<open>Wi \<subseteq> top1_S2 - (e24 \<union> (e23 \<union> e34))\<close> hWi_conn_BC']
+        show ?thesis by (by100 blast)
+      qed
+      thus "F1 = Wi"
+      proof
+        assume "Wi \<subseteq> F1" thus ?thesis using hF1_Wi by (by100 blast)
+      next
+        assume "Wi \<subseteq> F1'" hence "F1 \<inter> Wi = {}" using hF1_props(4) by (by100 blast)
+        hence "F1 = {}" using hF1_Wi by (by100 blast)
+        thus ?thesis using hF1_props(1) by (by100 blast)
+      qed
+    qed
+    ultimately show ?thesis by (by100 blast)
+  qed
+  \<comment> \<open>F3 \<noteq> F1: a3 \<in> closure(F1) (from SCC boundary) but a3 \<notin> closure(F3).\<close>
+  have hF3_ne_F1: "F3 \<noteq> F1"
+  proof
+    assume "F3 = F1"
+    \<comment> \<open>a3 \<in> B'\<union>C' = e24\<union>(e23\<union>e34), specifically a3 \<in> e23\<union>e34.
+       By SCC boundary property, a3 \<in> closure(F1).\<close>
+    have "a3 \<in> e23 \<union> e34" using ha3_e34_loc assms(17)
+      unfolding top1_arc_endpoints_on_def by (by100 blast)
+    hence "a3 \<in> e24 \<union> (e23 \<union> e34)" by (by100 blast)
+    \<comment> \<open>Every point of the SCC is in closure of each component (by boundary meets component lemma).\<close>
+    have ha3_cl_F1: "a3 \<in> closure_on top1_S2 top1_S2_topology F1"
+    proof (rule iffD2[OF Theorem_17_5a[OF hTopS2 _ _]])
+      show "a3 \<in> top1_S2" using assms(3) by (by100 blast)
+      have "F1 \<subseteq> top1_S2" using hF1_props(3) by (by100 blast)
+      thus "F1 \<subseteq> top1_S2" .
+      show "\<forall>U. neighborhood_of a3 top1_S2 top1_S2_topology U \<longrightarrow> intersects U F1"
+      proof (intro allI impI)
+        fix V assume hV: "neighborhood_of a3 top1_S2 top1_S2_topology V"
+        have hV_open: "V \<in> top1_S2_topology" and ha3V: "a3 \<in> V"
+          using hV unfolding neighborhood_of_def by (by100 blast)+
+        have "V \<inter> F1 \<noteq> {}"
+        proof -
+          have "F1' \<noteq> {}" using hA'_in_F1' hA'_int_ne by (by100 blast)
+          have hF1_conn2: "top1_connected_on F1' (subspace_topology top1_S2 top1_S2_topology F1')"
+            by (rule hF1_props(7))
+          show ?thesis
+            by (rule simple_closed_curve_boundary_meets_component[OF assms(1) hB'C'_scc
+                hF1_props(5) hF1_conn2 hF1_props(4,3) hF1_props(1) \<open>F1' \<noteq> {}\<close>
+                hF1_props(2,6)
+                \<open>a3 \<in> e24 \<union> (e23 \<union> e34)\<close> hV_open ha3V])
+        qed
+        thus "intersects V F1" unfolding intersects_def by (by100 blast)
+      qed
+    qed
+    hence "a3 \<in> closure_on top1_S2 top1_S2_topology F3" using \<open>F3 = F1\<close> by (by100 simp)
+    thus False using ha3_not_cl_F3 by (by100 blast)
+  qed
+  \<comment> \<open>Since F3, F1 \<in> {W1, W2} and F3 \<noteq> F1: {F3, F1} = {W1, W2}.\<close>
+  \<comment> \<open>Conclude hbd\_W1 and hbd\_W2.\<close>
   have hbd_W1: "\<not> ({a1,a2,a3,a4} \<subseteq> closure_on top1_S2 top1_S2_topology W1)"
-    sorry
+  proof -
+    from hF3_in_WW have "F3 = W1 \<or> F3 = W2" by (by100 blast)
+    thus ?thesis
+    proof
+      assume "F3 = W1" thus ?thesis using ha3_not_cl_F3 by (by100 blast)
+    next
+      assume "F3 = W2"
+      from hF1_in_WW have "F1 = W1 \<or> F1 = W2" by (by100 blast)
+      thus ?thesis
+      proof
+        assume "F1 = W1" thus ?thesis using ha1_not_cl_F1 by (by100 blast)
+      next
+        assume "F1 = W2" hence "F3 = F1" using \<open>F3 = W2\<close> by (by100 simp)
+        thus ?thesis using hF3_ne_F1 by (by100 blast)
+      qed
+    qed
+  qed
   have hbd_W2: "\<not> ({a1,a2,a3,a4} \<subseteq> closure_on top1_S2 top1_S2_topology W2)"
-    sorry
-  show ?thesis
+  proof -
+    from hF3_in_WW have "F3 = W1 \<or> F3 = W2" by (by100 blast)
+    thus ?thesis
+    proof
+      assume "F3 = W2" thus ?thesis using ha3_not_cl_F3 by (by100 blast)
+    next
+      assume "F3 = W1"
+      from hF1_in_WW have "F1 = W1 \<or> F1 = W2" by (by100 blast)
+      thus ?thesis
+      proof
+        assume "F1 = W2" thus ?thesis using ha1_not_cl_F1 by (by100 blast)
+      next
+        assume "F1 = W1" hence "F3 = F1" using \<open>F3 = W1\<close> by (by100 simp)
+        thus ?thesis using hF3_ne_F1 by (by100 blast)
+      qed
+    qed
+  qed  show ?thesis
     apply (rule exI[of _ P1])
     apply (rule exI[of _ R1])
     apply (rule exI[of _ W1])
@@ -1892,6 +3040,7 @@ proof -
     apply (fact hfour_union)
     apply (fact hP(5)) apply (fact hR(5)) apply (fact hW(5)) apply (fact hW(6))
     apply (fact hbd_P1) apply (fact hbd_R1) apply (fact hbd_W1) apply (fact hbd_W2)
+    apply (fact hP1_open) apply (fact hR1_open) apply (fact hW1_open) apply (fact hW2_open)
     done
 qed
 
@@ -1980,7 +3129,9 @@ proof -
       \<and> \<not> ({a1,a2,a3,a4} \<subseteq> closure_on top1_S2 top1_S2_topology U1)
       \<and> \<not> ({a1,a2,a3,a4} \<subseteq> closure_on top1_S2 top1_S2_topology U2)
       \<and> \<not> ({a1,a2,a3,a4} \<subseteq> closure_on top1_S2 top1_S2_topology U3)
-      \<and> \<not> ({a1,a2,a3,a4} \<subseteq> closure_on top1_S2 top1_S2_topology U4)"
+      \<and> \<not> ({a1,a2,a3,a4} \<subseteq> closure_on top1_S2 top1_S2_topology U4)
+      \<and> U1 \<in> top1_S2_topology \<and> U2 \<in> top1_S2_topology
+      \<and> U3 \<in> top1_S2_topology \<and> U4 \<in> top1_S2_topology"
     unfolding X_def
     apply (rule K4_four_components_with_boundary)
     apply (fact hS2) apply (fact hcard4) apply (fact hvert4)
@@ -2009,6 +3160,8 @@ proof -
       "\<not> ({a1,a2,a3,a4} \<subseteq> closure_on top1_S2 top1_S2_topology U2)"
       "\<not> ({a1,a2,a3,a4} \<subseteq> closure_on top1_S2 top1_S2_topology U3)"
       "\<not> ({a1,a2,a3,a4} \<subseteq> closure_on top1_S2 top1_S2_topology U4)"
+      "U1 \<in> top1_S2_topology" "U2 \<in> top1_S2_topology"
+      "U3 \<in> top1_S2_topology" "U4 \<in> top1_S2_topology"
     apply (elim exE conjE)
     apply (intro that; assumption)
     done
@@ -2056,19 +3209,104 @@ proof -
     using hsub12 hsub23 hsub34 hsub14 hsub13 hsub24 by (by100 blast)
   have hSX_open: "top1_S2 - X \<in> top1_S2_topology"
   proof -
-    have "closedin_on top1_S2 top1_S2_topology X"
-      sorry
-    thus ?thesis using hS2 unfolding is_topology_on_strict_def closedin_on_def by (by100 blast)
+    have hcl12: "closedin_on top1_S2 top1_S2_topology e12" by (rule arc_in_S2_closed[OF hsub12 harc12])
+    have hcl23: "closedin_on top1_S2 top1_S2_topology e23" by (rule arc_in_S2_closed[OF hsub23 harc23])
+    have hcl34: "closedin_on top1_S2 top1_S2_topology e34" by (rule arc_in_S2_closed[OF hsub34 harc34])
+    have hcl14: "closedin_on top1_S2 top1_S2_topology e14" by (rule arc_in_S2_closed[OF hsub14 harc14])
+    have hcl13: "closedin_on top1_S2 top1_S2_topology e13" by (rule arc_in_S2_closed[OF hsub13 harc13])
+    have hcl24: "closedin_on top1_S2 top1_S2_topology e24" by (rule arc_in_S2_closed[OF hsub24 harc24])
+    have hclX: "closedin_on top1_S2 top1_S2_topology X"
+    proof -
+      have "X = \<Union>{e12, e23, e34, e14, e13, e24}" unfolding X_def by (by100 blast)
+      moreover have "closedin_on top1_S2 top1_S2_topology (\<Union>{e12, e23, e34, e14, e13, e24})"
+        apply (rule closedin_Union_finite[OF hTS2])
+        apply (by100 simp)
+        using hcl12 hcl23 hcl34 hcl14 hcl13 hcl24 apply (by100 blast)
+        done
+      ultimately show ?thesis by (by100 simp)
+    qed
+    show ?thesis using hclX hS2 unfolding is_topology_on_strict_def closedin_on_def by (by100 blast)
   qed
   \<comment> \<open>Each Ui is open in S2 (component of open set in locally path connected space).\<close>
   have hU_open: "U1 \<in> top1_S2_topology" "U2 \<in> top1_S2_topology"
       "U3 \<in> top1_S2_topology" "U4 \<in> top1_S2_topology"
-    sorry \<comment> \<open>Components of open set in locally connected S2 are open.\<close>
+    using hU(20,21,22,23) by (by100 blast)+
   \<comment> \<open>Helper: if Y connected, Y \<subseteq> S2-X, Y \<inter> Ui \<noteq> {}, then Y \<subseteq> Ui.\<close>
   have hcomp_max: "\<And>Y Ui. Ui \<in> {U1,U2,U3,U4} \<Longrightarrow>
       Y \<subseteq> top1_S2 - X \<Longrightarrow> top1_connected_on Y (subspace_topology top1_S2 top1_S2_topology Y) \<Longrightarrow>
       Y \<inter> Ui \<noteq> {} \<Longrightarrow> Y \<subseteq> Ui"
-    sorry \<comment> \<open>Separation argument: Ui open, rest open, Y connected meets Ui.\<close>
+  proof -
+    fix Y Ui assume hUi_mem: "Ui \<in> {U1,U2,U3,U4}" and hY_sub: "Y \<subseteq> top1_S2 - X"
+        and hY_conn: "top1_connected_on Y (subspace_topology top1_S2 top1_S2_topology Y)"
+        and hY_meet: "Y \<inter> Ui \<noteq> {}"
+    \<comment> \<open>Ui is open and the rest (S2-X-Ui) is open (union of 3 open sets).\<close>
+    have hUi_open: "Ui \<in> top1_S2_topology" using hUi_mem hU_open by (by100 blast)
+    have hrest_eq: "top1_S2 - X - Ui = (U1 \<union> U2 \<union> U3 \<union> U4) - Ui"
+      using hU(11) by (by100 blast)
+    have hrest_open: "(top1_S2 - X) - Ui \<in> top1_S2_topology"
+    proof -
+      have hunion_open: "\<And>A B C. A \<in> top1_S2_topology \<Longrightarrow> B \<in> top1_S2_topology \<Longrightarrow>
+          C \<in> top1_S2_topology \<Longrightarrow> A \<union> B \<union> C \<in> top1_S2_topology"
+      proof -
+        fix A B C assume "A \<in> top1_S2_topology" "B \<in> top1_S2_topology" "C \<in> top1_S2_topology"
+        have "{A, B, C} \<subseteq> top1_S2_topology" using \<open>A \<in> _\<close> \<open>B \<in> _\<close> \<open>C \<in> _\<close> by (by100 blast)
+        hence "\<Union>{A, B, C} \<in> top1_S2_topology" using hTS2 unfolding is_topology_on_def by (by100 blast)
+        moreover have "\<Union>{A, B, C} = A \<union> B \<union> C" by (by100 blast)
+        ultimately show "A \<union> B \<union> C \<in> top1_S2_topology" by (by100 simp)
+      qed
+      have h: "(U1 \<union> U2 \<union> U3 \<union> U4) - Ui \<in> top1_S2_topology"
+      proof -
+        { assume "Ui = U1"
+          have "(U1 \<union> U2 \<union> U3 \<union> U4) - U1 = U2 \<union> U3 \<union> U4"
+            using hU(5,6,7) by (by100 blast)
+          hence ?thesis using \<open>Ui = U1\<close> hunion_open[OF hU_open(2) hU_open(3) hU_open(4)]
+            by (by100 simp)
+        }
+        moreover { assume "Ui = U2"
+          have "(U1 \<union> U2 \<union> U3 \<union> U4) - U2 = U1 \<union> U3 \<union> U4"
+            using hU(5,8,9) by (by100 blast)
+          hence ?thesis using \<open>Ui = U2\<close> hunion_open[OF hU_open(1) hU_open(3) hU_open(4)]
+            by (by100 simp)
+        }
+        moreover { assume "Ui = U3"
+          have "(U1 \<union> U2 \<union> U3 \<union> U4) - U3 = U1 \<union> U2 \<union> U4"
+            using hU(6,8,10) by (by100 blast)
+          hence ?thesis using \<open>Ui = U3\<close> hunion_open[OF hU_open(1) hU_open(2) hU_open(4)]
+            by (by100 simp)
+        }
+        moreover { assume "Ui = U4"
+          have "(U1 \<union> U2 \<union> U3 \<union> U4) - U4 = U1 \<union> U2 \<union> U3"
+            using hU(7,9,10) by (by100 blast)
+          hence ?thesis using \<open>Ui = U4\<close> hunion_open[OF hU_open(1) hU_open(2) hU_open(3)]
+            by (by100 simp)
+        }
+        ultimately show ?thesis using hUi_mem by (by100 blast)
+      qed
+      thus ?thesis using hrest_eq by (by100 simp)
+    qed
+    \<comment> \<open>Y = (Y \<inter> Ui) \<union> (Y - Ui); both are open in Y-subspace; Y is connected.\<close>
+    have hY_sub_S2: "Y \<subseteq> top1_S2" using hY_sub by (by100 blast)
+    have hYUi_open_Y: "Y \<inter> Ui \<in> subspace_topology top1_S2 top1_S2_topology Y"
+      unfolding subspace_topology_def using hUi_open by (by100 blast)
+    have hYmUi_open_Y: "Y - Ui \<in> subspace_topology top1_S2 top1_S2_topology Y"
+    proof -
+      have "Y - Ui = Y \<inter> ((top1_S2 - X) - Ui)" using hY_sub by (by100 blast)
+      thus ?thesis unfolding subspace_topology_def using hrest_open by (by100 blast)
+    qed
+    have hY_part: "Y = (Y \<inter> Ui) \<union> (Y - Ui)" by (by100 blast)
+    have hY_disj: "(Y \<inter> Ui) \<inter> (Y - Ui) = {}" by (by100 blast)
+    \<comment> \<open>Y connected: if both parts nonempty, contradiction.\<close>
+    show "Y \<subseteq> Ui"
+    proof (rule ccontr)
+      assume "\<not> Y \<subseteq> Ui"
+      hence "Y - Ui \<noteq> {}" by (by100 blast)
+      have "\<not> top1_connected_on Y (subspace_topology top1_S2 top1_S2_topology Y)"
+        unfolding top1_connected_on_def
+        using hYUi_open_Y hYmUi_open_Y hY_part hY_disj hY_meet \<open>Y - Ui \<noteq> {}\<close>
+        by (by100 blast)
+      thus False using hY_conn by (by100 blast)
+    qed
+  qed
   \<comment> \<open>Helper: for each arc e\_{j,5}: e\_{j,5}-{a\_j} is connected in S2.\<close>
   have ha_ne_a5: "a1 \<noteq> a5" "a2 \<noteq> a5" "a3 \<noteq> a5" "a4 \<noteq> a5"
     using ha5_ne by (by100 blast)+
