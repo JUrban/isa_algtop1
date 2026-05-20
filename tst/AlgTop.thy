@@ -12274,7 +12274,20 @@ proof -
             (top1_fundamental_group_invg B TB b0) ?H)
          (top1_fundamental_group_mul B TB b0) ?H"
   let ?mulQ = "top1_quotient_group_mul_on (top1_fundamental_group_mul B TB b0)"
-  have h_iso: "top1_groups_isomorphic_on ?Cov (\<lambda>h k e. h (k e)) ?Q ?mulQ" sorry
+  have h_iso: "top1_groups_isomorphic_on ?Cov (\<lambda>h k e. h (k e)) ?Q ?mulQ"
+  proof -
+    \<comment> \<open>Munkres 81.2: Construct \<Phi>\<inverse>\<circ>\<Psi>: Cov(p) \<rightarrow> N(H)/H.
+       \<Psi>(h) = h(e0) maps each covering transformation to its value at e0.
+       \<Phi>: N(H)/H \<rightarrow> p\<inverse>(b0) is the lifting correspondence.
+       Step 1: For h \<in> Cov(p), pick a path \<gamma>: e0 \<rightarrow> h(e0) in E.
+       Then p\<circ>\<gamma> is a loop at b0, and [p\<circ>\<gamma>] \<in> N(H).
+       Define f(h) = [p\<circ>\<gamma>] \<cdot> H (the coset in N(H)/H).
+       Step 2: f is well-defined (different paths give same coset).
+       Step 3: f is a group homomorphism:
+         f(h\<circ>k) = [p\<circ>(\<gamma>*(h\<circ>\<delta>))] \<cdot> H = [p\<circ>\<gamma>]*[p\<circ>\<delta>] \<cdot> H = f(h) \<cdot> f(k).
+       Step 4: f is bijective (from Lemma 81.1 + injectivity of \<Psi>).\<close>
+    show ?thesis sorry \<comment> \<open>Construct the isomorphism f and verify all properties.\<close>
+  qed
   obtain eC invgC where hCov_grp: "top1_is_group_on ?Cov (\<lambda>h k e. h (k e)) eC invgC"
     using hCov_group by (by100 blast)
   show ?thesis
@@ -12369,8 +12382,17 @@ proof -
   \<comment> \<open>===== Step 6: p_*(\<pi>_1(E, e0)) = H =====\<close>
   \<comment> \<open>A loop \<gamma> at b0 lifts to a path from e0 = [const]_H to [\<gamma>]_H.
      Lift is a loop iff [\<gamma>]_H = [const]_H iff [\<gamma>] \<in> H.\<close>
-  show ?thesis sorry \<comment> \<open>Full construction needs: abstract type for E, basis topology,
-     covering map verification, connectivity, and subgroup matching.\<close>
+  show ?thesis
+  proof -
+    \<comment> \<open>Munkres 82.1: Construct E = paths from b0 modulo H-equivalence.
+       Step 1: E = {α\<sharp> | α path from b0}. p(α\<sharp>) = α(1).
+       Step 2: Topology on E via basis B(U,α) = {(α*δ)\<sharp> | δ path in U from α(1)}.
+       Step 3: p is a covering map (each U evenly covered by sheets B(U,α)).
+       Step 4: E is path-connected (prefix paths give connectivity).
+       Step 5: E is locally path-connected (basis elements path-connected).
+       Step 6: p_*(π₁(E,e0)) = H (loop γ lifts to loop iff [γ] ∈ H).\<close>
+    show ?thesis sorry \<comment> \<open>Full 6-step construction of covering space.\<close>
+  qed
 qed
 
 section \<open>Chapter 14: Applications to Group Theory\<close>
