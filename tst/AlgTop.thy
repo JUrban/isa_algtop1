@@ -3802,7 +3802,8 @@ proof -
         hence "(\<Sum>s\<leftarrow>?xs. c s * \<epsilon> (\<iota> s)) = (\<Sum>s\<leftarrow>?xs. if s = s0 then c s0 else 0)"
           sorry \<comment> \<open>Each term equal \<Rightarrow> sum\_list equal.\<close>
         also have "\<dots> = c s0"
-          sorry \<comment> \<open>sum\_list [if s=s0 then c(s0) else 0 | s \<leftarrow> xs] = c(s0) when s0 \<in> set xs, distinct.\<close>
+          sorry \<comment> \<open>sum\_list [if s=s0 then c(s0) else 0 | s \<leftarrow> xs] = c(s0);
+             s0 \<in> set xs, distinct xs \<Rightarrow> exactly one nonzero term.\<close>
         finally show ?thesis .
       qed
       show ?thesis using heps_foldr heps_sum by (by100 simp)
