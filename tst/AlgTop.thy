@@ -3665,6 +3665,89 @@ next
   finally show ?case by (by100 simp)
 qed
 
+text \<open>The quotient map G \<rightarrow> G/[G,G] is injective on generators of a free group.
+  Extracted from Theorem 69.4 proof for reuse.\<close>
+lemma abelianization_injective_on_generators:
+  fixes G :: "'g set" and mul :: "'g \<Rightarrow> 'g \<Rightarrow> 'g"
+    and e :: 'g and invg :: "'g \<Rightarrow> 'g"
+    and \<iota> :: "'s \<Rightarrow> 'g" and S :: "'s set"
+  assumes "top1_is_free_group_full_on G mul e invg \<iota> S"
+  shows "inj_on (\<lambda>s. top1_group_coset_on G mul
+      (top1_commutator_subgroup_on G mul e invg) (\<iota> s)) S"
+proof -
+  have hG: "top1_is_group_on G mul e invg"
+    using assms unfolding top1_is_free_group_full_on_def by (by100 blast)
+  have hgen_in_G: "\<forall>s\<in>S. \<iota> s \<in> G"
+    using assms unfolding top1_is_free_group_full_on_def by (by100 blast)
+  let ?N = "top1_commutator_subgroup_on G mul e invg"
+  let ?\<phi> = "\<lambda>g. top1_group_coset_on G mul ?N g"
+  show ?thesis
+  proof (rule inj_onI)
+    fix s1 s2 assume hs1: "s1 \<in> S" and hs2: "s2 \<in> S" and heq: "?\<phi> (\<iota> s1) = ?\<phi> (\<iota> s2)"
+    show "s1 = s2"
+    proof (rule ccontr)
+      assume hne: "s1 \<noteq> s2"
+      obtain \<epsilon> where heps_hom: "top1_group_hom_on G mul (UNIV::int set) (+) \<epsilon>"
+          and heps_s1: "\<epsilon> (\<iota> s1) = 1"
+          and heps_other: "\<forall>s\<in>S. s \<noteq> s1 \<longrightarrow> \<epsilon> (\<iota> s) = 0"
+        using free_group_exponent_sum[OF assms hs1] by (by100 blast)
+      have h_comm_ker: "\<forall>g\<in>?N. \<epsilon> g = 0"
+        by (rule commutator_zero_exponent[OF hG heps_hom])
+      have hs1G: "\<iota> s1 \<in> G" using hgen_in_G hs1 by (by100 blast)
+      have hs2G: "\<iota> s2 \<in> G" using hgen_in_G hs2 by (by100 blast)
+      \<comment> \<open>Coset equality \<Rightarrow> \<iota>(s1)\<cdot>invg(\<iota>(s2)) \<in> [G,G].\<close>
+      have hprod_N: "mul (\<iota> s1) (invg (\<iota> s2)) \<in> ?N"
+      proof -
+        have hN_normal: "top1_normal_subgroup_on G mul e invg ?N"
+          by (rule commutator_subgroup_is_normal[OF hG])
+        have heq_sym: "?\<phi> (\<iota> s2) = ?\<phi> (\<iota> s1)" using heq by (by100 simp)
+        have "mul (invg (\<iota> s2)) (\<iota> s1) \<in> ?N"
+          using normal_coset_eq[OF hG hN_normal hs2G hs1G] heq_sym by (by100 blast)
+        have hinvs2: "invg (\<iota> s2) \<in> G" using hG hs2G unfolding top1_is_group_on_def by (by100 blast)
+        have hconj0: "mul (mul (\<iota> s1) (mul (invg (\<iota> s2)) (\<iota> s1))) (invg (\<iota> s1)) \<in> ?N"
+          using hN_normal hs1G \<open>mul (invg (\<iota> s2)) (\<iota> s1) \<in> ?N\<close>
+          unfolding top1_normal_subgroup_on_def by (by100 blast)
+        have "mul (mul (invg (\<iota> s2)) (\<iota> s1)) (invg (\<iota> s1)) = invg (\<iota> s2)"
+        proof -
+          have "mul (mul (invg (\<iota> s2)) (\<iota> s1)) (invg (\<iota> s1))
+              = mul (invg (\<iota> s2)) (mul (\<iota> s1) (invg (\<iota> s1)))"
+            using hG hinvs2 hs1G unfolding top1_is_group_on_def by (by100 blast)
+          also have "mul (\<iota> s1) (invg (\<iota> s1)) = e"
+            using hG hs1G unfolding top1_is_group_on_def by (by100 blast)
+          also have "mul (invg (\<iota> s2)) e = invg (\<iota> s2)"
+            using hG hinvs2 unfolding top1_is_group_on_def by (by100 blast)
+          finally show ?thesis .
+        qed
+        have hprod_in_G: "mul (invg (\<iota> s2)) (\<iota> s1) \<in> G"
+          using hG hinvs2 hs1G unfolding top1_is_group_on_def by (by100 blast)
+        have hinvs1: "invg (\<iota> s1) \<in> G" using hG hs1G unfolding top1_is_group_on_def by (by100 blast)
+        have "mul (mul (\<iota> s1) (mul (invg (\<iota> s2)) (\<iota> s1))) (invg (\<iota> s1))
+            = mul (\<iota> s1) (mul (mul (invg (\<iota> s2)) (\<iota> s1)) (invg (\<iota> s1)))"
+          using hG hs1G hprod_in_G hinvs1 unfolding top1_is_group_on_def by (by100 blast)
+        hence "mul (\<iota> s1) (mul (mul (invg (\<iota> s2)) (\<iota> s1)) (invg (\<iota> s1))) \<in> ?N"
+          using hconj0 by (by100 simp)
+        hence "mul (\<iota> s1) (invg (\<iota> s2)) \<in> ?N"
+          using \<open>mul (mul (invg (\<iota> s2)) (\<iota> s1)) (invg (\<iota> s1)) = invg (\<iota> s2)\<close> by (by100 simp)
+        thus ?thesis .
+      qed
+      \<comment> \<open>\<epsilon>-value contradiction.\<close>
+      have heps_zero: "\<epsilon> (mul (\<iota> s1) (invg (\<iota> s2))) = 0" using h_comm_ker hprod_N by (by100 blast)
+      have hinvG_s2: "invg (\<iota> s2) \<in> G"
+        using hG hs2G unfolding top1_is_group_on_def by (by100 blast)
+      have "\<epsilon> (mul (\<iota> s1) (invg (\<iota> s2))) = \<epsilon> (\<iota> s1) + \<epsilon> (invg (\<iota> s2))"
+        using heps_hom hs1G hinvG_s2 unfolding top1_group_hom_on_def by (by100 blast)
+      moreover have "\<epsilon> (invg (\<iota> s2)) = - \<epsilon> (\<iota> s2)"
+      proof -
+        have hZ_grp: "top1_is_group_on (UNIV::int set) (+) (0::int) uminus"
+          unfolding top1_is_group_on_def by (by100 auto)
+        show ?thesis by (rule hom_preserves_inv[OF hG hZ_grp heps_hom hs2G])
+      qed
+      moreover have "\<epsilon> (\<iota> s2) = 0" using heps_other hs2 hne[symmetric] by (by100 blast)
+      ultimately show False using heps_s1 heps_zero by (by100 simp)
+    qed
+  qed
+qed
+
 (** from \<S>69 Theorem 69.4: abelianization of free group is free abelian.
     If G is free on S, then G/[G,G] is free abelian on the images of S. **)
 theorem Theorem_69_4:
@@ -3714,92 +3797,7 @@ proof -
      and its exponent sums are nonzero, so it cannot be in [G,G].
      (The exponent sum of s1 is +1, of s2 is -1.)\<close>
   have hiotaH_inj: "inj_on ?\<iota>H S"
-  proof (rule inj_onI)
-    fix s1 s2 assume hs1: "s1 \<in> S" and hs2: "s2 \<in> S" and heq: "?\<iota>H s1 = ?\<iota>H s2"
-    \<comment> \<open>\<phi>(\<iota> s1) = \<phi>(\<iota> s2) means \<iota>(s1) and \<iota>(s2) are in the same coset of [G,G].
-       Use the exponent sum: \<exists>\<epsilon>: G \<rightarrow> Z with \<epsilon>(\<iota>(s1)) = 1, \<epsilon>(\<iota>(s)) = 0 for s \<noteq> s1.
-       Since Z is abelian, [G,G] \<subseteq> ker(\<epsilon>). So coset equality implies \<epsilon>(\<iota>(s1)) = \<epsilon>(\<iota>(s2)).
-       If s1 \<noteq> s2, then 1 = 0, contradiction.\<close>
-    show "s1 = s2"
-    proof (rule ccontr)
-      assume hne: "s1 \<noteq> s2"
-      \<comment> \<open>Get exponent sum homomorphism for s1.\<close>
-      obtain \<epsilon> where heps_hom: "top1_group_hom_on G mul (UNIV::int set) (+) \<epsilon>"
-          and heps_s1: "\<epsilon> (\<iota> s1) = 1"
-          and heps_other: "\<forall>s\<in>S. s \<noteq> s1 \<longrightarrow> \<epsilon> (\<iota> s) = 0"
-        using free_group_exponent_sum[OF assms hs1] by (by100 blast)
-      \<comment> \<open>Since [G,G] \<subseteq> ker(\<epsilon>) (Z is abelian), coset equality implies equal \<epsilon>-values.\<close>
-      have h_comm_ker: "\<forall>g\<in>?N. \<epsilon> g = 0"
-        by (rule commutator_zero_exponent[OF hG heps_hom])
-      \<comment> \<open>\<phi>(\<iota>(s1)) = \<phi>(\<iota>(s2)) means \<iota>(s1) \<cdot> invg(\<iota>(s2)) \<in> [G,G].\<close>
-      have hs1G: "\<iota> s1 \<in> G" using hgen_in_G hs1 by (by100 blast)
-      have hs2G: "\<iota> s2 \<in> G" using hgen_in_G hs2 by (by100 blast)
-      have hprod_N: "mul (\<iota> s1) (invg (\<iota> s2)) \<in> ?N"
-      proof -
-        \<comment> \<open>?\<phi> is a homomorphism with ker(?\<phi>) = [G,G]. From heq: ?\<phi>(\<iota> s1) = ?\<phi>(\<iota> s2).
-           So ?\<phi>(mul (\<iota> s1) (invg (\<iota> s2))) = ?\<phi>(\<iota> s1) \<cdot> invgH(?\<phi>(\<iota> s2))
-           = ?\<phi>(\<iota> s1) \<cdot> invgH(?\<phi>(\<iota> s1)) = eH.
-           Hence mul (\<iota> s1) (invg (\<iota> s2)) \<in> ker(?\<phi>) = [G,G].\<close>
-        have hN_normal: "top1_normal_subgroup_on G mul e invg ?N"
-          by (rule commutator_subgroup_is_normal[OF hG])
-        \<comment> \<open>From coset equality (reversed): coset (\<iota> s2) = coset (\<iota> s1).\<close>
-        have heq_sym: "?\<phi> (\<iota> s2) = ?\<phi> (\<iota> s1)" using heq by (by100 simp)
-        \<comment> \<open>normal_coset_eq: coset g = coset h iff invg(g)\<cdot>h \<in> N. With g=s2, h=s1:\<close>
-        have "mul (invg (\<iota> s2)) (\<iota> s1) \<in> ?N"
-          using normal_coset_eq[OF hG hN_normal hs2G hs1G] heq_sym by (by100 blast)
-        \<comment> \<open>N is normal: g \<cdot> n \<cdot> invg(g) \<in> N for any g \<in> G, n \<in> N.\<close>
-        \<comment> \<open>With n = invg(\<iota> s2)\<cdot>\<iota> s1 and g = \<iota> s1:
-           \<iota> s1 \<cdot> (invg(\<iota> s2)\<cdot>\<iota> s1) \<cdot> invg(\<iota> s1) = \<iota> s1 \<cdot> invg(\<iota> s2) (by associativity + cancellation).\<close>
-        \<comment> \<open>Normal: mul (mul g n) (invg g) \<in> N for g \<in> G, n \<in> N.\<close>
-        have hconj0: "mul (mul (\<iota> s1) (mul (invg (\<iota> s2)) (\<iota> s1))) (invg (\<iota> s1)) \<in> ?N"
-          using hN_normal hs1G \<open>mul (invg (\<iota> s2)) (\<iota> s1) \<in> ?N\<close>
-          unfolding top1_normal_subgroup_on_def by (by100 blast)
-        \<comment> \<open>Simplify: (a\<cdot>b)\<cdot>b\<inverse> = a for a = invg(\<iota> s2), b = \<iota> s1.\<close>
-        have hinvs2: "invg (\<iota> s2) \<in> G" using hG hs2G unfolding top1_is_group_on_def by (by100 blast)
-        have "mul (mul (invg (\<iota> s2)) (\<iota> s1)) (invg (\<iota> s1))
-            = invg (\<iota> s2)"
-        proof -
-          have "mul (mul (invg (\<iota> s2)) (\<iota> s1)) (invg (\<iota> s1))
-              = mul (invg (\<iota> s2)) (mul (\<iota> s1) (invg (\<iota> s1)))"
-            using hG hinvs2 hs1G unfolding top1_is_group_on_def by (by100 blast)
-          also have "mul (\<iota> s1) (invg (\<iota> s1)) = e"
-            using hG hs1G unfolding top1_is_group_on_def by (by100 blast)
-          also have "mul (invg (\<iota> s2)) e = invg (\<iota> s2)"
-            using hG hinvs2 unfolding top1_is_group_on_def by (by100 blast)
-          finally show ?thesis .
-        qed
-        \<comment> \<open>By associativity: mul (mul g X) (invg g) = mul g (mul X (invg g)).\<close>
-        have hN_sub: "?N \<subseteq> G" using hN_normal unfolding top1_normal_subgroup_on_def by (by100 blast)
-        have hprod_in_G: "mul (invg (\<iota> s2)) (\<iota> s1) \<in> G"
-          using hG hinvs2 hs1G unfolding top1_is_group_on_def by (by100 blast)
-        have hinvs1: "invg (\<iota> s1) \<in> G" using hG hs1G unfolding top1_is_group_on_def by (by100 blast)
-        have hassoc: "mul (mul (\<iota> s1) (mul (invg (\<iota> s2)) (\<iota> s1))) (invg (\<iota> s1))
-            = mul (\<iota> s1) (mul (mul (invg (\<iota> s2)) (\<iota> s1)) (invg (\<iota> s1)))"
-          using hG hs1G hprod_in_G hinvs1 unfolding top1_is_group_on_def by (by100 blast)
-        hence "mul (\<iota> s1) (mul (mul (invg (\<iota> s2)) (\<iota> s1)) (invg (\<iota> s1))) \<in> ?N"
-          using hconj0 by (by100 simp)
-        hence "mul (\<iota> s1) (invg (\<iota> s2)) \<in> ?N" using \<open>mul (mul (invg (\<iota> s2)) (\<iota> s1)) (invg (\<iota> s1)) = invg (\<iota> s2)\<close> by (by100 simp)
-        thus ?thesis .
-      qed
-      \<comment> \<open>But \<epsilon>(\<iota>(s1)·invg(\<iota>(s2))) = \<epsilon>(\<iota>(s1)) + \<epsilon>(invg(\<iota>(s2)))
-         = 1 + (-0) = 1 \<noteq> 0. Contradiction with h_comm_ker.\<close>
-      have heps_zero: "\<epsilon> (mul (\<iota> s1) (invg (\<iota> s2))) = 0" using h_comm_ker hprod_N by (by100 blast)
-      have hinvG_s2: "invg (\<iota> s2) \<in> G"
-        using hG hs2G unfolding top1_is_group_on_def by (by100 blast)
-      moreover have "\<epsilon> (mul (\<iota> s1) (invg (\<iota> s2))) = \<epsilon> (\<iota> s1) + \<epsilon> (invg (\<iota> s2))"
-        using heps_hom hs1G hinvG_s2 unfolding top1_group_hom_on_def by (by100 blast)
-      moreover have "\<epsilon> (invg (\<iota> s2)) = - \<epsilon> (\<iota> s2)"
-      proof -
-        have hZ_grp: "top1_is_group_on (UNIV::int set) (+) (0::int) uminus"
-          unfolding top1_is_group_on_def by (by100 auto)
-        have "(\<epsilon> (invg (\<iota> s2))::int) = uminus (\<epsilon> (\<iota> s2))"
-          by (rule hom_preserves_inv[OF hG hZ_grp heps_hom hs2G])
-        thus ?thesis by (by100 simp)
-      qed
-      moreover have "\<epsilon> (\<iota> s2) = 0" using heps_other hs2 hne[symmetric] by (by100 blast)
-      ultimately show False using heps_s1 heps_zero by (by100 simp)
-    qed
-  qed
+    by (rule abelianization_injective_on_generators[OF assms])
   \<comment> \<open>Step 2d: H = \<langle>\<iota>H(S)\<rangle> (generated by images of generators).
      Since G = \<langle>\<iota>(S)\<rangle> and \<phi> is surjective, H = \<phi>(G) = \<phi>(\<langle>\<iota>(S)\<rangle>) = \<langle>\<phi>(\<iota>(S))\<rangle> = \<langle>\<iota>H(S)\<rangle>.\<close>
   have hH_gen: "?H = top1_subgroup_generated_on ?H ?mulH ?eH ?invgH (?\<iota>H ` S)"
@@ -4296,8 +4294,7 @@ proof -
   qed
   \<comment> \<open>Step 2: ?\<iota>H is injective on S.\<close>
   have h\<iota>H_inj: "inj_on ?\<iota>H S"
-    sorry \<comment> \<open>If \<phi>(\<iota>(s1)) = \<phi>(\<iota>(s2)) then \<iota>(s1)\<cdot>\<iota>(s2)\<inverse> \<in> [G,G].
-       By exponent sum: this forces s1 = s2.\<close>
+    by (rule abelianization_injective_on_generators[OF assms])
   \<comment> \<open>Step 3: ?\<iota>H(S) generates ?H.\<close>
   have hH_gen: "?H = top1_subgroup_generated_on ?H ?mulH ?eH ?invgH (?\<iota>H ` S)"
   proof -
