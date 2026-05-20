@@ -4466,6 +4466,82 @@ proof -
   thus ?thesis by (by100 blast)
 qed
 
+text \<open>Concrete corollary: the quotient G/[G,G] is free abelian on S
+  (extracts the concrete quotient from Theorem 69.4 by re-using the same proof).\<close>
+lemma Theorem_69_4_concrete_free_abelian:
+  assumes "top1_is_free_group_full_on G mul e invg \<iota> S"
+  shows "\<exists>\<iota>H. top1_is_free_abelian_group_full_on
+      (top1_quotient_group_carrier_on G mul (top1_commutator_subgroup_on G mul e invg))
+      (top1_quotient_group_mul_on mul)
+      (top1_group_coset_on G mul (top1_commutator_subgroup_on G mul e invg) e)
+      (\<lambda>C. top1_group_coset_on G mul (top1_commutator_subgroup_on G mul e invg)
+         (invg (SOME g. g \<in> G \<and> C = top1_group_coset_on G mul
+            (top1_commutator_subgroup_on G mul e invg) g)))
+      \<iota>H S"
+proof -
+  \<comment> \<open>The abelianization property holds for the concrete quotient.\<close>
+  have hG: "top1_is_group_on G mul e invg"
+    using assms unfolding top1_is_free_group_full_on_def by (by100 blast)
+  let ?N = "top1_commutator_subgroup_on G mul e invg"
+  let ?H = "top1_quotient_group_carrier_on G mul ?N"
+  let ?mulH = "top1_quotient_group_mul_on mul"
+  let ?eH = "top1_group_coset_on G mul ?N e"
+  let ?invgH = "\<lambda>C. top1_group_coset_on G mul ?N (invg (SOME g. g \<in> G \<and> C = top1_group_coset_on G mul ?N g))"
+  let ?\<phi> = "\<lambda>g. top1_group_coset_on G mul ?N g"
+  let ?\<iota>H = "\<lambda>s. ?\<phi> (\<iota> s)"
+  have h_abel: "top1_is_abelianization_of ?H ?mulH ?eH ?invgH G mul e invg ?\<phi>"
+    by (rule abelianization_concrete[OF hG])
+  \<comment> \<open>The proof of Theorem\_69\_4 returns exactly ?H, ?mulH, etc. as witnesses.
+     We need: free\_abelian\_full\_on ?H ?mulH ?eH ?invgH ?\<iota>H S.
+     Since this IS what Theorem\_69\_4's proof establishes (h\_free\_abel fact),
+     we re-derive the key parts inline.\<close>
+  \<comment> \<open>Step 1: ?\<iota>H maps S into ?H.\<close>
+  have h\<iota>H_in: "\<forall>s\<in>S. ?\<iota>H s \<in> ?H"
+  proof (intro ballI)
+    fix s assume hs: "s \<in> S"
+    have "\<iota> s \<in> G" using assms hs unfolding top1_is_free_group_full_on_def by (by100 blast)
+    hence "?\<phi> (\<iota> s) \<in> ?\<phi> ` G" by (by100 blast)
+    also have "?\<phi> ` G = ?H" using h_abel unfolding top1_is_abelianization_of_def by (by100 blast)
+    finally show "?\<iota>H s \<in> ?H" by (by100 simp)
+  qed
+  \<comment> \<open>Step 2: ?\<iota>H is injective on S.\<close>
+  have h\<iota>H_inj: "inj_on ?\<iota>H S"
+    by (rule abelianization_injective_on_generators[OF assms])
+  \<comment> \<open>Step 3: ?\<iota>H(S) generates ?H.\<close>
+  have hH_gen: "?H = top1_subgroup_generated_on ?H ?mulH ?eH ?invgH (?\<iota>H ` S)"
+  proof -
+    have hH_grp: "top1_is_group_on ?H ?mulH ?eH ?invgH"
+      using h_abel unfolding top1_is_abelianization_of_def top1_is_abelian_group_on_def
+      by (by100 blast)
+    have hphi_hom: "top1_group_hom_on G mul ?H ?mulH ?\<phi>"
+      using h_abel unfolding top1_is_abelianization_of_def by (by100 blast)
+    have hphi_surj: "?\<phi> ` G = ?H"
+      using h_abel unfolding top1_is_abelianization_of_def by (by100 blast)
+    have hG_gen: "G = top1_subgroup_generated_on G mul e invg (\<iota> ` S)"
+      using assms unfolding top1_is_free_group_full_on_def by (by100 blast)
+    have h\<iota>S_sub: "\<iota> ` S \<subseteq> G"
+      using assms unfolding top1_is_free_group_full_on_def by (by100 blast)
+    have "?\<iota>H ` S = ?\<phi> ` (\<iota> ` S)" by (by100 force)
+    thus ?thesis
+      by (metis surj_hom_generated[OF hG hH_grp hphi_hom hphi_surj h\<iota>S_sub hG_gen])
+  qed
+  \<comment> \<open>Step 4: Independence (no nontrivial integer combination = ?eH).\<close>
+  have hH_indep: "\<And>c. finite {s\<in>S. c s \<noteq> 0} \<Longrightarrow> (\<exists>s\<in>S. c s \<noteq> 0) \<Longrightarrow>
+      foldr ?mulH (map (\<lambda>s.
+          if c s \<ge> 0 then top1_group_pow ?mulH ?eH (?\<iota>H s) (nat (c s))
+          else top1_group_pow ?mulH ?eH (?invgH (?\<iota>H s)) (nat (- c s)))
+        (SOME xs. set xs = {s\<in>S. c s \<noteq> 0} \<and> distinct xs)) ?eH \<noteq> ?eH"
+    by (rule abelianization_independence_on_generators[OF assms])
+  \<comment> \<open>Step 5: ?H is abelian.\<close>
+  have hH_abel: "top1_is_abelian_group_on ?H ?mulH ?eH ?invgH"
+    using h_abel unfolding top1_is_abelianization_of_def by (by100 blast)
+  show ?thesis
+    apply (rule exI[of _ ?\<iota>H])
+    unfolding top1_is_free_abelian_group_full_on_def
+    using hH_abel h\<iota>H_in h\<iota>H_inj hH_gen hH_indep by (by100 blast)
+qed
+
+
 lemma abelianization_of_presented_group:
   fixes F :: "'g set" and mulF :: "'g \<Rightarrow> 'g \<Rightarrow> 'g"
     and eF :: 'g and invgF :: "'g \<Rightarrow> 'g"
@@ -4813,15 +4889,7 @@ proof -
           C = top1_group_coset_on F mulF ?NF g))) \<iota>HF S"
   proof -
     \<comment> \<open>Theorem\_69\_4 gives some (HF :: 'g set set) that's free abelian on S.\<close>
-    have hexist: "\<exists>(HF :: 'g set set) mulHF eHF invgHF \<phi>F \<iota>HF.
-        top1_is_free_abelian_group_full_on HF mulHF eHF invgHF \<iota>HF S"
-      using Theorem_69_4[OF hF_free] by (by100 blast)
-    \<comment> \<open>Both HF and F/[F,F] (concrete) are abelianizations of F, hence isomorphic.
-       G/[G,G] \<cong> F/[F,F] (from hiso). HF is free abelian on S.
-       Transfer: HF \<cong> F/[F,F] \<cong> G/[G,G] ⁻¹ (inverse iso from hiso).
-       Apply free\_abelian\_invariant\_under\_iso twice.\<close>
-    show ?thesis using hexist hiso
-      sorry \<comment> \<open>Chain: HF \<cong> F/[F,F] \<cong> G/[G,G]\<inverse>; transfer free\_abelian.\<close>
+    show ?thesis by (rule Theorem_69_4_concrete_free_abelian[OF hF_free])
   qed
   \<comment> \<open>The iso gives G/[G,G] \<cong> F/[F,F]. Transfer free abelian.\<close>
   from hfab_F obtain \<iota>HF where hfa_F:
@@ -4841,9 +4909,43 @@ proof -
       (top1_quotient_group_carrier_on F mulF ?NF) (top1_quotient_group_mul_on mulF) fiso"
     unfolding top1_groups_isomorphic_on_def by (by100 blast)
   \<comment> \<open>The inverse iso transfers free abelian from F/[F,F] to G/[G,G].\<close>
+  \<comment> \<open>Reverse iso: F/[F,F] \<cong> G/[G,G].\<close>
+  have hHG_grp2: "top1_is_group_on ?HG ?mulHG ?eHG
+      (\<lambda>C. top1_group_coset_on G mulG ?NG (invgG (SOME g. g \<in> G \<and> C = ?\<phi>G g)))"
+    using hHG_abel unfolding top1_is_abelian_group_on_def by (by100 blast)
+  have hFN_grp: "top1_is_group_on (top1_quotient_group_carrier_on F mulF ?NF)
+      (top1_quotient_group_mul_on mulF)
+      (top1_group_coset_on F mulF ?NF eF)
+      (\<lambda>C. top1_group_coset_on F mulF ?NF (invgF (SOME g. g \<in> F \<and>
+          C = top1_group_coset_on F mulF ?NF g)))"
+    by (rule quotient_group_is_group[OF hF_grp hNF_normal])
+  have hrev_iso: "top1_groups_isomorphic_on
+      (top1_quotient_group_carrier_on F mulF ?NF) (top1_quotient_group_mul_on mulF)
+      ?HG ?mulHG"
+    by (rule top1_groups_isomorphic_on_sym[OF hiso hHG_grp2 hFN_grp])
+  \<comment> \<open>Transfer free abelian from F/[F,F] to G/[G,G] via reverse iso.\<close>
+  have hFN_abel: "top1_is_abelian_group_on (top1_quotient_group_carrier_on F mulF ?NF)
+      (top1_quotient_group_mul_on mulF)
+      (top1_group_coset_on F mulF ?NF eF)
+      (\<lambda>C. top1_group_coset_on F mulF ?NF (invgF (SOME g. g \<in> F \<and>
+          C = top1_group_coset_on F mulF ?NF g)))"
+  proof -
+    have h_ab_F: "top1_is_abelianization_of
+        (top1_quotient_group_carrier_on F mulF ?NF) (top1_quotient_group_mul_on mulF)
+        (top1_group_coset_on F mulF ?NF eF)
+        (\<lambda>C. top1_group_coset_on F mulF ?NF (invgF (SOME g. g \<in> F \<and>
+            C = top1_group_coset_on F mulF ?NF g)))
+        F mulF eF invgF (\<lambda>g. top1_group_coset_on F mulF ?NF g)"
+      by (rule abelianization_concrete[OF hF_grp])
+    thus ?thesis unfolding top1_is_abelianization_of_def by (by100 blast)
+  qed
+  from hrev_iso obtain f_rev where hf_rev:
+    "top1_group_iso_on (top1_quotient_group_carrier_on F mulF ?NF)
+      (top1_quotient_group_mul_on mulF) ?HG ?mulHG f_rev"
+    unfolding top1_groups_isomorphic_on_def by (by100 blast)
   have "\<exists>\<iota>'. top1_is_free_abelian_group_full_on ?HG ?mulHG ?eHG
       (\<lambda>C. top1_group_coset_on G mulG ?NG (invgG (SOME g. g \<in> G \<and> C = ?\<phi>G g))) \<iota>' S"
-    sorry \<comment> \<open>Need inverse iso + free\_abelian\_invariant\_under\_iso. Type issues.\<close>
+    by (rule free_abelian_invariant_under_iso[OF hfa_F hf_rev hHG_abel])
   then obtain \<iota>H where hfa_G: "top1_is_free_abelian_group_full_on ?HG ?mulHG ?eHG
       (\<lambda>C. top1_group_coset_on G mulG ?NG (invgG (SOME g. g \<in> G \<and> C = ?\<phi>G g))) \<iota>H S"
     by (by100 blast)
@@ -4854,81 +4956,6 @@ proof -
     using habel_G hfa_G by (by100 blast)
 qed
 
-
-text \<open>Concrete corollary: the quotient G/[G,G] is free abelian on S
-  (extracts the concrete quotient from Theorem 69.4 by re-using the same proof).\<close>
-lemma Theorem_69_4_concrete_free_abelian:
-  assumes "top1_is_free_group_full_on G mul e invg \<iota> S"
-  shows "\<exists>\<iota>H. top1_is_free_abelian_group_full_on
-      (top1_quotient_group_carrier_on G mul (top1_commutator_subgroup_on G mul e invg))
-      (top1_quotient_group_mul_on mul)
-      (top1_group_coset_on G mul (top1_commutator_subgroup_on G mul e invg) e)
-      (\<lambda>C. top1_group_coset_on G mul (top1_commutator_subgroup_on G mul e invg)
-         (invg (SOME g. g \<in> G \<and> C = top1_group_coset_on G mul
-            (top1_commutator_subgroup_on G mul e invg) g)))
-      \<iota>H S"
-proof -
-  \<comment> \<open>The abelianization property holds for the concrete quotient.\<close>
-  have hG: "top1_is_group_on G mul e invg"
-    using assms unfolding top1_is_free_group_full_on_def by (by100 blast)
-  let ?N = "top1_commutator_subgroup_on G mul e invg"
-  let ?H = "top1_quotient_group_carrier_on G mul ?N"
-  let ?mulH = "top1_quotient_group_mul_on mul"
-  let ?eH = "top1_group_coset_on G mul ?N e"
-  let ?invgH = "\<lambda>C. top1_group_coset_on G mul ?N (invg (SOME g. g \<in> G \<and> C = top1_group_coset_on G mul ?N g))"
-  let ?\<phi> = "\<lambda>g. top1_group_coset_on G mul ?N g"
-  let ?\<iota>H = "\<lambda>s. ?\<phi> (\<iota> s)"
-  have h_abel: "top1_is_abelianization_of ?H ?mulH ?eH ?invgH G mul e invg ?\<phi>"
-    by (rule abelianization_concrete[OF hG])
-  \<comment> \<open>The proof of Theorem\_69\_4 returns exactly ?H, ?mulH, etc. as witnesses.
-     We need: free\_abelian\_full\_on ?H ?mulH ?eH ?invgH ?\<iota>H S.
-     Since this IS what Theorem\_69\_4's proof establishes (h\_free\_abel fact),
-     we re-derive the key parts inline.\<close>
-  \<comment> \<open>Step 1: ?\<iota>H maps S into ?H.\<close>
-  have h\<iota>H_in: "\<forall>s\<in>S. ?\<iota>H s \<in> ?H"
-  proof (intro ballI)
-    fix s assume hs: "s \<in> S"
-    have "\<iota> s \<in> G" using assms hs unfolding top1_is_free_group_full_on_def by (by100 blast)
-    hence "?\<phi> (\<iota> s) \<in> ?\<phi> ` G" by (by100 blast)
-    also have "?\<phi> ` G = ?H" using h_abel unfolding top1_is_abelianization_of_def by (by100 blast)
-    finally show "?\<iota>H s \<in> ?H" by (by100 simp)
-  qed
-  \<comment> \<open>Step 2: ?\<iota>H is injective on S.\<close>
-  have h\<iota>H_inj: "inj_on ?\<iota>H S"
-    by (rule abelianization_injective_on_generators[OF assms])
-  \<comment> \<open>Step 3: ?\<iota>H(S) generates ?H.\<close>
-  have hH_gen: "?H = top1_subgroup_generated_on ?H ?mulH ?eH ?invgH (?\<iota>H ` S)"
-  proof -
-    have hH_grp: "top1_is_group_on ?H ?mulH ?eH ?invgH"
-      using h_abel unfolding top1_is_abelianization_of_def top1_is_abelian_group_on_def
-      by (by100 blast)
-    have hphi_hom: "top1_group_hom_on G mul ?H ?mulH ?\<phi>"
-      using h_abel unfolding top1_is_abelianization_of_def by (by100 blast)
-    have hphi_surj: "?\<phi> ` G = ?H"
-      using h_abel unfolding top1_is_abelianization_of_def by (by100 blast)
-    have hG_gen: "G = top1_subgroup_generated_on G mul e invg (\<iota> ` S)"
-      using assms unfolding top1_is_free_group_full_on_def by (by100 blast)
-    have h\<iota>S_sub: "\<iota> ` S \<subseteq> G"
-      using assms unfolding top1_is_free_group_full_on_def by (by100 blast)
-    have "?\<iota>H ` S = ?\<phi> ` (\<iota> ` S)" by (by100 force)
-    thus ?thesis
-      by (metis surj_hom_generated[OF hG hH_grp hphi_hom hphi_surj h\<iota>S_sub hG_gen])
-  qed
-  \<comment> \<open>Step 4: Independence (no nontrivial integer combination = ?eH).\<close>
-  have hH_indep: "\<And>c. finite {s\<in>S. c s \<noteq> 0} \<Longrightarrow> (\<exists>s\<in>S. c s \<noteq> 0) \<Longrightarrow>
-      foldr ?mulH (map (\<lambda>s.
-          if c s \<ge> 0 then top1_group_pow ?mulH ?eH (?\<iota>H s) (nat (c s))
-          else top1_group_pow ?mulH ?eH (?invgH (?\<iota>H s)) (nat (- c s)))
-        (SOME xs. set xs = {s\<in>S. c s \<noteq> 0} \<and> distinct xs)) ?eH \<noteq> ?eH"
-    by (rule abelianization_independence_on_generators[OF assms])
-  \<comment> \<open>Step 5: ?H is abelian.\<close>
-  have hH_abel: "top1_is_abelian_group_on ?H ?mulH ?eH ?invgH"
-    using h_abel unfolding top1_is_abelianization_of_def by (by100 blast)
-  show ?thesis
-    apply (rule exI[of _ ?\<iota>H])
-    unfolding top1_is_free_abelian_group_full_on_def
-    using hH_abel h\<iota>H_in h\<iota>H_inj hH_gen hH_indep by (by100 blast)
-qed
 
 text \<open>Rank of a finitely generated free group is invariant.\<close>
 lemma free_group_rank_invariant_finite:
