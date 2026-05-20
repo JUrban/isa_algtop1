@@ -4322,8 +4322,8 @@ proof -
           if c s \<ge> 0 then top1_group_pow mulH eH (\<iota>' s) (nat (c s))
           else top1_group_pow mulH eH (invgH (\<iota>' s)) (nat (- c s)))
         (SOME xs. set xs = {s\<in>S. c s \<noteq> 0} \<and> distinct xs)) eH \<noteq> eH"
-    sorry \<comment> \<open>If nontrivial combination = eH, apply f\<inverse>: G-combination = e, contradiction
-       with independence of G. Uses: hom\_group\_pow (f distributes), injectivity of f.\<close>
+    sorry \<comment> \<open>If combination = eH, then f\<inverse> gives combination = e in G.
+       By G-independence: contradiction. Uses hom\_group\_pow + injectivity.\<close>
   have "top1_is_free_abelian_group_full_on H mulH eH invgH \<iota>' S"
     unfolding top1_is_free_abelian_group_full_on_def
     using assms(3) h1 h2 h3 h4 by (by100 blast)
