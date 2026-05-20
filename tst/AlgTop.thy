@@ -12037,7 +12037,7 @@ lemma graph_covering_is_graph:
       and "top1_covering_map_on E TE B TB p"
       and "is_topology_on_strict E TE"
   shows "top1_is_graph_on E TE"
-  sorry
+  by (rule Theorem_83_4_covering_of_graph_is_graph[OF assms])
 
 text \<open>Schreier rank formula: if F is free of rank n and H has index k,
   then H is free of rank kn - k + 1 = k(n-1) + 1.\<close>
