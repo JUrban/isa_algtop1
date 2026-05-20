@@ -4272,6 +4272,136 @@ text \<open>Key algebraic fact: if G = F/N where F is free on S and N \<subseteq
   then the abelianization G/[G,G] is isomorphic to F/[F,F] (free abelian on S).
   Proof via first isomorphism theorem: the composition F \<rightarrow> G \<rightarrow> G/[G,G]
   is surjective with kernel [F,F]\<cdot>N = [F,F] (since N \<subseteq> [F,F]).\<close>
+text \<open>Independence transfers through group isomorphism: if G has independence
+  and f: G \<rightarrow> H is an iso, then H has independence (via f\<inverse>).\<close>
+lemma free_abelian_independence_transfer:
+  fixes G :: "'g set" and mul :: "'g \<Rightarrow> 'g \<Rightarrow> 'g"
+    and e :: 'g and invg :: "'g \<Rightarrow> 'g"
+    and \<iota> :: "'s \<Rightarrow> 'g" and S :: "'s set"
+    and H :: "'h set" and mulH :: "'h \<Rightarrow> 'h \<Rightarrow> 'h"
+    and eH :: 'h and invgH :: "'h \<Rightarrow> 'h"
+    and f :: "'g \<Rightarrow> 'h"
+  assumes hG_grp: "top1_is_group_on G mul e invg"
+      and hH_grp: "top1_is_group_on H mulH eH invgH"
+      and hf_hom: "top1_group_hom_on G mul H mulH f"
+      and hf_bij: "bij_betw f G H"
+      and h\<iota>_in: "\<forall>s\<in>S. \<iota> s \<in> G"
+      and hG_indep: "\<And>c. finite {s\<in>S. c s \<noteq> 0} \<Longrightarrow> (\<exists>s\<in>S. c s \<noteq> 0) \<Longrightarrow>
+          foldr mul (map (\<lambda>s. if c s \<ge> 0 then top1_group_pow mul e (\<iota> s) (nat (c s))
+              else top1_group_pow mul e (invg (\<iota> s)) (nat (- c s)))
+            (SOME xs. set xs = {s\<in>S. c s \<noteq> 0} \<and> distinct xs)) e \<noteq> e"
+      and hfin: "finite {s\<in>S. c s \<noteq> 0}" and hex: "\<exists>s\<in>S. c s \<noteq> 0"
+  shows "foldr mulH (map (\<lambda>s.
+          if c s \<ge> 0 then top1_group_pow mulH eH (f (\<iota> s)) (nat (c s))
+          else top1_group_pow mulH eH (invgH (f (\<iota> s))) (nat (- c s)))
+        (SOME xs. set xs = {s\<in>S. c s \<noteq> 0} \<and> distinct xs)) eH \<noteq> eH"
+proof -
+  let ?gterm = "\<lambda>s. if c s \<ge> 0 then top1_group_pow mul e (\<iota> s) (nat (c s))
+      else top1_group_pow mul e (invg (\<iota> s)) (nat (- c s))"
+  let ?hterm = "\<lambda>s. if c s \<ge> 0 then top1_group_pow mulH eH (f (\<iota> s)) (nat (c s))
+      else top1_group_pow mulH eH (invgH (f (\<iota> s))) (nat (- c s))"
+  let ?xs = "SOME xs. set xs = {s\<in>S. c s \<noteq> 0} \<and> distinct xs"
+  \<comment> \<open>H-product = f(G-product) by induction.\<close>
+  {fix ys :: "'s list"
+   assume hys: "\<forall>i<length ys. ys!i \<in> S"
+   hence "foldr mulH (map ?hterm ys) eH = f (foldr mul (map ?gterm ys) e)"
+   proof (induction ys)
+     case Nil show ?case using hom_preserves_id[OF hG_grp hH_grp hf_hom] by (by100 simp)
+   next
+     case (Cons s ys')
+     have hs: "s \<in> S" using Cons.prems by (by100 force)
+     have hys': "\<forall>i<length ys'. ys'!i \<in> S" using Cons.prems by (by100 force)
+     have h\<iota>s: "\<iota> s \<in> G" using h\<iota>_in hs by (by100 blast)
+     have hinvs: "invg (\<iota> s) \<in> G" using hG_grp h\<iota>s unfolding top1_is_group_on_def by (by100 blast)
+     have hgs: "?gterm s \<in> G"
+       using group_pow_in_group[OF hG_grp h\<iota>s] group_pow_in_group[OF hG_grp hinvs] by (by100 auto)
+     have hprod: "foldr mul (map ?gterm ys') e \<in> G"
+     proof (rule foldr_mul_closed[OF hG_grp])
+       show "\<forall>i<length (map ?gterm ys'). (map ?gterm ys')!i \<in> G"
+       proof (intro allI impI)
+         fix i assume hi: "i < length (map ?gterm ys')"
+         have hsi: "ys'!i \<in> S" using hys' hi by (by100 simp)
+         have h\<iota>si: "\<iota> (ys'!i) \<in> G" using h\<iota>_in hsi by (by100 blast)
+         have hinvsi: "invg (\<iota> (ys'!i)) \<in> G" using hG_grp h\<iota>si unfolding top1_is_group_on_def by (by100 blast)
+         show "(map ?gterm ys')!i \<in> G" using hi
+           group_pow_in_group[OF hG_grp h\<iota>si] group_pow_in_group[OF hG_grp hinvsi] by (by100 auto)
+       qed
+     qed
+     have h_eq: "f (?gterm s) = ?hterm s"
+     proof (cases "c s \<ge> 0")
+       case True
+       have "f (top1_group_pow mul e (\<iota> s) (nat (c s)))
+           = top1_group_pow mulH eH (f (\<iota> s)) (nat (c s))"
+         by (rule hom_group_pow[OF hG_grp hH_grp hf_hom h\<iota>s])
+       thus ?thesis using True by (by100 simp)
+     next
+       case False
+       have "f (top1_group_pow mul e (invg (\<iota> s)) (nat (- c s)))
+           = top1_group_pow mulH eH (f (invg (\<iota> s))) (nat (- c s))"
+         by (rule hom_group_pow[OF hG_grp hH_grp hf_hom hinvs])
+       moreover have "f (invg (\<iota> s)) = invgH (f (\<iota> s))"
+         by (rule hom_preserves_inv[OF hG_grp hH_grp hf_hom h\<iota>s])
+       ultimately show ?thesis using False by (by100 simp)
+     qed
+     have "foldr mulH (map ?hterm (s # ys')) eH
+         = mulH (?hterm s) (foldr mulH (map ?hterm ys') eH)" by (by100 simp)
+     also have "\<dots> = mulH (?hterm s) (f (foldr mul (map ?gterm ys') e))"
+       using Cons.IH[OF hys'] by (by100 simp)
+     also have "?hterm s = f (?gterm s)" using h_eq by (by100 simp)
+     also have "mulH (f (?gterm s)) (f (foldr mul (map ?gterm ys') e))
+         = f (mul (?gterm s) (foldr mul (map ?gterm ys') e))"
+     proof -
+       have "f (mul (?gterm s) (foldr mul (map ?gterm ys') e))
+           = mulH (f (?gterm s)) (f (foldr mul (map ?gterm ys') e))"
+         using hf_hom hgs hprod unfolding top1_group_hom_on_def by (by100 blast)
+       thus ?thesis by (by100 simp)
+     qed
+     also have "mul (?gterm s) (foldr mul (map ?gterm ys') e)
+         = foldr mul (map ?gterm (s # ys')) e" by (by100 simp)
+     finally show ?case by (by100 simp)
+   qed}
+  moreover have hxs_S: "\<forall>i<length ?xs. ?xs!i \<in> S"
+  proof (intro allI impI)
+    fix i assume hi: "i < length ?xs"
+    have "\<exists>xs. set xs = {s \<in> S. c s \<noteq> 0} \<and> distinct xs"
+      using finite_distinct_list[OF hfin] by (by100 blast)
+    hence "set ?xs = {s \<in> S. c s \<noteq> 0} \<and> distinct ?xs" by (rule someI_ex)
+    thus "?xs!i \<in> S" using nth_mem[OF hi] by (by100 blast)
+  qed
+  ultimately have hH_eq: "foldr mulH (map ?hterm ?xs) eH = f (foldr mul (map ?gterm ?xs) e)"
+    by (by100 simp)
+  \<comment> \<open>Contradiction via injectivity.\<close>
+  show ?thesis
+  proof
+    assume heq: "foldr mulH (map ?hterm ?xs) eH = eH"
+    have "f (foldr mul (map ?gterm ?xs) e) = eH" using heq hH_eq by (by100 simp)
+    moreover have "f e = eH" by (rule hom_preserves_id[OF hG_grp hH_grp hf_hom])
+    moreover have "inj_on f G" using hf_bij unfolding bij_betw_def by (by100 blast)
+    moreover have "foldr mul (map ?gterm ?xs) e \<in> G"
+    proof (rule foldr_mul_closed[OF hG_grp])
+      show "\<forall>i<length (map ?gterm ?xs). (map ?gterm ?xs)!i \<in> G"
+      proof (intro allI impI)
+        fix i assume hi: "i < length (map ?gterm ?xs)"
+        have hsi: "?xs!i \<in> S" using hxs_S hi by (by100 simp)
+        have h\<iota>si: "\<iota> (?xs!i) \<in> G" using h\<iota>_in hsi by (by100 blast)
+        have hinvsi: "invg (\<iota> (?xs!i)) \<in> G" using hG_grp h\<iota>si unfolding top1_is_group_on_def by (by100 blast)
+        show "(map ?gterm ?xs)!i \<in> G" using hi
+          group_pow_in_group[OF hG_grp h\<iota>si] group_pow_in_group[OF hG_grp hinvsi] by (by100 auto)
+      qed
+    qed
+    moreover have "e \<in> G" using hG_grp unfolding top1_is_group_on_def by (by100 blast)
+    ultimately have "foldr mul (map ?gterm ?xs) e = e"
+    proof -
+      assume h1: "f (foldr mul (map ?gterm ?xs) e) = eH"
+         and h2: "f e = eH" and h3: "inj_on f G"
+         and h4: "foldr mul (map ?gterm ?xs) e \<in> G" and h5: "e \<in> G"
+      have "f (foldr mul (map ?gterm ?xs) e) = f e" using h1 h2 by (by100 simp)
+      thus ?thesis using h3 h4 h5 unfolding inj_on_def by (by100 blast)
+    qed
+    thus False using hG_indep[OF hfin hex] by (by100 blast)
+  qed
+qed
+
 text \<open>Free abelian groups are preserved under group isomorphism.\<close>
 lemma free_abelian_invariant_under_iso:
   assumes "top1_is_free_abelian_group_full_on G mul e invg \<iota> S"
@@ -4316,17 +4446,23 @@ proof -
     ultimately show ?thesis
       by (metis surj_hom_generated[OF hG_grp hH_grp hf_hom _ _ _])
   qed
-  \<comment> \<open>Part 4: Independence.\<close>
-  have h4: "\<And>c. finite {s\<in>S. c s \<noteq> 0} \<Longrightarrow> (\<exists>s\<in>S. c s \<noteq> 0) \<Longrightarrow>
-      foldr mulH (map (\<lambda>s.
-          if c s \<ge> 0 then top1_group_pow mulH eH (\<iota>' s) (nat (c s))
-          else top1_group_pow mulH eH (invgH (\<iota>' s)) (nat (- c s)))
-        (SOME xs. set xs = {s\<in>S. c s \<noteq> 0} \<and> distinct xs)) eH \<noteq> eH"
-    sorry \<comment> \<open>If combination = eH, then f\<inverse> gives combination = e in G.
-       By G-independence: contradiction. Uses hom\_group\_pow + injectivity.\<close>
+  \<comment> \<open>Part 4: Independence via free\_abelian\_independence\_transfer.\<close>
   have "top1_is_free_abelian_group_full_on H mulH eH invgH \<iota>' S"
-    unfolding top1_is_free_abelian_group_full_on_def
-    using assms(3) h1 h2 h3 h4 by (by100 blast)
+    unfolding top1_is_free_abelian_group_full_on_def \<iota>'_def
+  proof (intro conjI)
+    show "top1_is_abelian_group_on H mulH eH invgH" by (rule assms(3))
+    show "\<forall>s\<in>S. f (\<iota> s) \<in> H" using h1 unfolding \<iota>'_def by (by100 blast)
+    show "inj_on (\<lambda>s. f (\<iota> s)) S" using h2 unfolding \<iota>'_def by (by100 blast)
+    show "H = top1_subgroup_generated_on H mulH eH invgH ((\<lambda>s. f (\<iota> s)) ` S)"
+      using h3 unfolding \<iota>'_def by (by100 blast)
+  next
+    show "\<forall>c. finite {s \<in> S. c s \<noteq> 0} \<longrightarrow> (\<exists>s\<in>S. c s \<noteq> 0) \<longrightarrow>
+        foldr mulH (map (\<lambda>s. if 0 \<le> c s then top1_group_pow mulH eH (f (\<iota> s)) (nat (c s))
+            else top1_group_pow mulH eH (invgH (f (\<iota> s))) (nat (- c s)))
+          (SOME xs. set xs = {s \<in> S. c s \<noteq> 0} \<and> distinct xs)) eH \<noteq> eH"
+      using free_abelian_independence_transfer[OF hG_grp hH_grp hf_hom hf_bij h\<iota>_in]
+        assms(1) unfolding top1_is_free_abelian_group_full_on_def by (by100 blast)
+  qed
   thus ?thesis by (by100 blast)
 qed
 
