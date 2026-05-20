@@ -4280,11 +4280,23 @@ proof -
   let ?mulH = "top1_quotient_group_mul_on mul"
   let ?eH = "top1_group_coset_on G mul ?N e"
   let ?invgH = "\<lambda>C. top1_group_coset_on G mul ?N (invg (SOME g. g \<in> G \<and> C = top1_group_coset_on G mul ?N g))"
-  \<comment> \<open>Steps 2-3: Theorem 69.4 gives free abelian on S1 and S2.\<close>
-  \<comment> \<open>Munkres Corollary 69.5: Theorem\_69\_4 gives free abelian on S1 and S2.
-     Abelianization uniqueness + Theorem\_67\_8 gives |S1| = |S2|.\<close>
-  show "card S1 = card S2" using Theorem_69_4[OF assms(1)] Theorem_69_4[OF assms(2)]
-    assms(3,4) sorry
+  \<comment> \<open>Step 2: Apply Theorem 69.4 to get free abelian on S1.\<close>
+  let ?\<phi> = "\<lambda>g. top1_group_coset_on G mul ?N g"
+  let ?\<iota>H1 = "\<lambda>s. ?\<phi> (\<iota>1 s)"
+  let ?\<iota>H2 = "\<lambda>s. ?\<phi> (\<iota>2 s)"
+  \<comment> \<open>Both Theorem\_69\_4 applications return the same concrete H, mulH, eH, invgH.\<close>
+  have hfab1: "\<exists>\<iota>H. top1_is_free_abelian_group_full_on ?H ?mulH ?eH ?invgH \<iota>H S1"
+    using Theorem_69_4[OF assms(1)] sorry \<comment> \<open>Extract free\_abelian from existential (same H).\<close>
+  have hfab2: "\<exists>\<iota>H. top1_is_free_abelian_group_full_on ?H ?mulH ?eH ?invgH \<iota>H S2"
+    using Theorem_69_4[OF assms(2)] sorry \<comment> \<open>Same extraction for S2.\<close>
+  \<comment> \<open>Step 3: Both are free abelian on the same H. Apply Theorem 67.8.\<close>
+  from hfab1 obtain \<iota>H1 where hfa1: "top1_is_free_abelian_group_full_on ?H ?mulH ?eH ?invgH \<iota>H1 S1"
+    by (by100 blast)
+  from hfab2 obtain \<iota>H2 where hfa2: "top1_is_free_abelian_group_full_on ?H ?mulH ?eH ?invgH \<iota>H2 S2"
+    by (by100 blast)
+  from Theorem_67_8_rank_unique[OF hfa1 hfa2 assms(3,4)]
+  obtain f where "bij_betw f S1 S2" by (by100 blast)
+  thus "card S1 = card S2" using bij_betw_same_card by (by100 blast)
 qed
 
 
