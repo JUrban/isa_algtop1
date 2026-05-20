@@ -5706,7 +5706,7 @@ lemma covering_lift_unique_path:
       and "\<forall>t\<in>I_set. p (ftilde1 t) = f t"
       and "\<forall>t\<in>I_set. p (ftilde2 t) = f t"
   shows "\<forall>t\<in>I_set. ftilde1 t = ftilde2 t"
-  sorry
+  by (rule Lemma_54_1_uniqueness[OF assms(1,4,5,3,6,8,7,9)])
 
 text \<open>The induced homomorphism p_*: \<pi>_1(E, e0) \<rightarrow> \<pi>_1(B, b0) is injective.\<close>
 lemma covering_induced_injective:
@@ -5717,22 +5717,8 @@ lemma covering_induced_injective:
       (top1_fundamental_group_carrier E TE e0)"
   sorry
 
-text \<open>Deck transformations are homeomorphisms.\<close>
-lemma deck_transformation_homeomorphism:
-  assumes "top1_covering_map_on E TE B TB p"
-      and "top1_covering_transformation_on E TE B TB p h"
-      and "is_topology_on_strict E TE"
-  shows "top1_homeomorphism_on E TE E TE h"
-  sorry
-
-text \<open>Deck transformations form a group under composition.\<close>
-lemma deck_transformations_group:
-  assumes "top1_covering_map_on E TE B TB p"
-      and "is_topology_on_strict E TE"
-  shows "\<exists>eC invgC. top1_is_group_on
-      {h. top1_covering_transformation_on E TE B TB p h}
-      (\<lambda>h k e. h (k e)) eC invgC"
-  sorry
+text \<open>deck\_transformation\_homeomorphism and deck\_transformations\_group are defined
+  after the top1\_covering\_transformation\_on definition in \<S>81.\<close>
 
 text \<open>General lift uniqueness: if two continuous maps into a covering space
   agree at one point, both lift the same base map, and the domain is connected,
@@ -10528,6 +10514,21 @@ definition top1_covering_transformation_on :: "'e set \<Rightarrow> 'e set set \
   "top1_covering_transformation_on E TE B TB p h \<longleftrightarrow>
      top1_homeomorphism_on E TE E TE h \<and> (\<forall>e\<in>E. p (h e) = p e)
      \<and> (\<forall>e. e \<notin> E \<longrightarrow> h e = e)"
+
+text \<open>Reviewer-requested: deck transformations are homeomorphisms (immediate from definition).\<close>
+lemma deck_transformation_homeomorphism:
+  assumes "top1_covering_transformation_on E TE B TB p h"
+  shows "top1_homeomorphism_on E TE E TE h"
+  using assms unfolding top1_covering_transformation_on_def by (by100 blast)
+
+text \<open>Reviewer-requested: deck transformations form a group under composition.\<close>
+lemma deck_transformations_group:
+  assumes "top1_covering_map_on E TE B TB p"
+      and "is_topology_on_strict E TE"
+  shows "\<exists>eC invgC. top1_is_group_on
+      {h. top1_covering_transformation_on E TE B TB p h}
+      (\<lambda>h k e. h (k e)) eC invgC"
+  sorry
 
 (** from *\<S>81 Theorem 81.2: the group of covering transformations Cov(p) is
     isomorphic to N(H)/H, where H = p_*(\<pi>_1(E, e_0)) and N(H) is its normalizer
