@@ -4272,6 +4272,14 @@ text \<open>Key algebraic fact: if G = F/N where F is free on S and N \<subseteq
   then the abelianization G/[G,G] is isomorphic to F/[F,F] (free abelian on S).
   Proof via first isomorphism theorem: the composition F \<rightarrow> G \<rightarrow> G/[G,G]
   is surjective with kernel [F,F]\<cdot>N = [F,F] (since N \<subseteq> [F,F]).\<close>
+text \<open>Free abelian groups are preserved under group isomorphism.\<close>
+lemma free_abelian_invariant_under_iso:
+  assumes "top1_is_free_abelian_group_full_on G mul e invg \<iota> S"
+      and "top1_group_iso_on G mul H mulH f"
+      and "top1_is_abelian_group_on H mulH eH invgH"
+  shows "\<exists>\<iota>'. top1_is_free_abelian_group_full_on H mulH eH invgH \<iota>' S"
+  sorry \<comment> \<open>Analogous to free\_group\_invariant\_under\_iso: transfer abelian, inj, gen, indep.\<close>
+
 lemma abelianization_of_presented_group:
   fixes F :: "'g set" and mulF :: "'g \<Rightarrow> 'g \<Rightarrow> 'g"
     and eF :: 'g and invgF :: "'g \<Rightarrow> 'g"
@@ -4567,8 +4575,52 @@ proof -
   qed
   \<comment> \<open>Step C: Apply first iso theorem: F/[F,F] \<cong> G/[G,G].\<close>
   \<comment> \<open>Then transfer free abelian from F/[F,F] (via Theorem 69.4) to G/[G,G].\<close>
-  show ?thesis using hfab habel_G hker_j
-    sorry \<comment> \<open>First iso theorem F/ker(j) \<cong> im(j) = G/[G,G]; transfer free\_abelian.\<close>
+  \<comment> \<open>Step C1: j = \<phi>G \<circ> \<pi> is a surjective hom with kernel [F,F].\<close>
+  let ?j = "\<lambda>f. ?\<phi>G (\<pi> f)"
+  have hj_hom: "top1_group_hom_on F mulF ?HG ?mulHG ?j"
+  proof -
+    have hphiG_hom: "top1_group_hom_on G mulG ?HG ?mulHG ?\<phi>G"
+      using habel_G unfolding top1_is_abelianization_of_def by (by100 blast)
+    show ?thesis unfolding top1_group_hom_on_def
+    proof (intro conjI ballI)
+      fix f assume hf: "f \<in> F"
+      have "\<pi> f \<in> G" using hpi_hom hf unfolding top1_group_hom_on_def by (by100 blast)
+      thus "?j f \<in> ?HG" using hphiG_hom unfolding top1_group_hom_on_def by (by100 blast)
+    next
+      fix f1 f2 assume hf1: "f1 \<in> F" and hf2: "f2 \<in> F"
+      have h1: "\<pi> f1 \<in> G" using hpi_hom hf1 unfolding top1_group_hom_on_def by (by100 blast)
+      have h2: "\<pi> f2 \<in> G" using hpi_hom hf2 unfolding top1_group_hom_on_def by (by100 blast)
+      have "\<pi> (mulF f1 f2) = mulG (\<pi> f1) (\<pi> f2)"
+        using hpi_hom hf1 hf2 unfolding top1_group_hom_on_def by (by100 blast)
+      hence "?j (mulF f1 f2) = ?\<phi>G (mulG (\<pi> f1) (\<pi> f2))" by (by100 simp)
+      also have "\<dots> = ?mulHG (?j f1) (?j f2)"
+        using hphiG_hom h1 h2 unfolding top1_group_hom_on_def by (by100 blast)
+      finally show "?j (mulF f1 f2) = ?mulHG (?j f1) (?j f2)" .
+    qed
+  qed
+  have hj_surj: "?j ` F = ?HG"
+  proof -
+    have "?j ` F = ?\<phi>G ` (\<pi> ` F)" by (by100 auto)
+    also have "\<pi> ` F = G" by (rule hpi_surj)
+    also have "?\<phi>G ` G = ?HG"
+      using habel_G unfolding top1_is_abelianization_of_def by (by100 blast)
+    finally show ?thesis .
+  qed
+  have hNF_normal: "top1_normal_subgroup_on F mulF eF invgF ?NF"
+    by (rule commutator_subgroup_is_normal[OF hF_grp])
+  have hHG_grp: "top1_is_group_on ?HG ?mulHG ?eHG
+      (\<lambda>C. top1_group_coset_on G mulG ?NG (invgG (SOME g. g \<in> G \<and> C = ?\<phi>G g)))"
+    using habel_G unfolding top1_is_abelianization_of_def top1_is_abelian_group_on_def
+    by (by100 blast)
+  \<comment> \<open>Step C2: By first iso theorem: G/[G,G] \<cong> F/[F,F].\<close>
+  have hiso: "top1_groups_isomorphic_on ?HG ?mulHG
+      (top1_quotient_group_carrier_on F mulF ?NF)
+      (top1_quotient_group_mul_on mulF)"
+    by (rule first_isomorphism_theorem[OF hF_grp hNF_normal hHG_grp hj_hom hj_surj hker_j])
+  \<comment> \<open>Step C3: F/[F,F] is free abelian on S (Theorem 69.4).\<close>
+  \<comment> \<open>Step C4: Transfer via iso G/[G,G] \<cong> F/[F,F] + free\_abelian\_invariant\_under\_iso.\<close>
+  show ?thesis using hfab habel_G hiso
+    sorry \<comment> \<open>First iso + Theorem\_69\_4 + free\_abelian\_invariant\_under\_iso.\<close>
 qed
 
 
