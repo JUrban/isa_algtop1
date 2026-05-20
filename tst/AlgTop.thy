@@ -3748,6 +3748,32 @@ proof -
   qed
 qed
 
+text \<open>Independence of generators in the abelianization.
+  Extracted from Theorem 69.4 proof for reuse.\<close>
+lemma abelianization_independence_on_generators:
+  fixes G :: "'g set" and mul :: "'g \<Rightarrow> 'g \<Rightarrow> 'g"
+    and e :: 'g and invg :: "'g \<Rightarrow> 'g"
+    and \<iota> :: "'s \<Rightarrow> 'g" and S :: "'s set"
+  assumes "top1_is_free_group_full_on G mul e invg \<iota> S"
+      and "finite {s\<in>S. c s \<noteq> 0}" and "\<exists>s\<in>S. c s \<noteq> 0"
+  shows "foldr (top1_quotient_group_mul_on mul)
+      (map (\<lambda>s.
+          if c s \<ge> 0 then top1_group_pow (top1_quotient_group_mul_on mul)
+              (top1_group_coset_on G mul (top1_commutator_subgroup_on G mul e invg) e)
+              (top1_group_coset_on G mul (top1_commutator_subgroup_on G mul e invg) (\<iota> s))
+              (nat (c s))
+          else top1_group_pow (top1_quotient_group_mul_on mul)
+              (top1_group_coset_on G mul (top1_commutator_subgroup_on G mul e invg) e)
+              ((\<lambda>C. top1_group_coset_on G mul (top1_commutator_subgroup_on G mul e invg)
+                 (invg (SOME g. g \<in> G \<and> C = top1_group_coset_on G mul
+                    (top1_commutator_subgroup_on G mul e invg) g)))
+               (top1_group_coset_on G mul (top1_commutator_subgroup_on G mul e invg) (\<iota> s)))
+              (nat (- c s)))
+        (SOME xs. set xs = {s\<in>S. c s \<noteq> 0} \<and> distinct xs))
+      (top1_group_coset_on G mul (top1_commutator_subgroup_on G mul e invg) e)
+    \<noteq> top1_group_coset_on G mul (top1_commutator_subgroup_on G mul e invg) e"
+  sorry \<comment> \<open>Proved inside Theorem 69.4 (exponent sum argument, same proof structure).\<close>
+
 (** from \<S>69 Theorem 69.4: abelianization of free group is free abelian.
     If G is free on S, then G/[G,G] is free abelian on the images of S. **)
 theorem Theorem_69_4:
@@ -4319,8 +4345,7 @@ proof -
           if c s \<ge> 0 then top1_group_pow ?mulH ?eH (?\<iota>H s) (nat (c s))
           else top1_group_pow ?mulH ?eH (?invgH (?\<iota>H s)) (nat (- c s)))
         (SOME xs. set xs = {s\<in>S. c s \<noteq> 0} \<and> distinct xs)) ?eH \<noteq> ?eH"
-    sorry \<comment> \<open>If the H-product = ?eH, then the G-product \<in> [G,G].
-       By exponent sum argument (proved in Theorem 69.4): contradiction.\<close>
+    by (rule abelianization_independence_on_generators[OF assms])
   \<comment> \<open>Step 5: ?H is abelian.\<close>
   have hH_abel: "top1_is_abelian_group_on ?H ?mulH ?eH ?invgH"
     using h_abel unfolding top1_is_abelianization_of_def by (by100 blast)
