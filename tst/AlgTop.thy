@@ -1517,8 +1517,32 @@ lemma Lemma_67_7_free_abelian_extension:
       and hphi: "\<forall>s\<in>S. \<phi> s \<in> H"
   shows "\<exists>\<psi>. top1_group_hom_on G mul H mulH \<psi>
     \<and> (\<forall>s\<in>S. \<psi> (\<iota> s) = \<phi> s)"
-  sorry \<comment> \<open>Munkres Lemma 67.7: define \<psi> on words by \<psi>(\<Sigma> c_s \<cdot> \<iota>(s)) = \<Sigma> c_s \<cdot> \<phi>(s).
-     Well-defined by independence of \<iota>(S). Unique by generation.\<close>
+proof -
+  \<comment> \<open>Munkres Lemma 67.7 (converse direction): free abelian \<Rightarrow> extension property.
+     Proof: For each g \<in> G, there exist unique coefficients c_s (finitely many nonzero)
+     such that g = \<Sigma> c_s \<cdot> \<iota>(s). Define \<psi>(g) = \<Sigma> c_s \<cdot> \<phi>(s).
+     Well-defined by UNIQUENESS of coefficients (independence of \<iota>(S)).
+     Homomorphism because \<phi>(s) operations in abelian H commute.\<close>
+  have hG_grp: "top1_is_group_on G mul e invg"
+    using hfree unfolding top1_is_free_abelian_group_full_on_def
+      top1_is_abelian_group_on_def by (by100 blast)
+  have hG_abel: "top1_is_abelian_group_on G mul e invg"
+    using hfree unfolding top1_is_free_abelian_group_full_on_def by (by100 blast)
+  have h\<iota>_in: "\<forall>s\<in>S. \<iota> s \<in> G"
+    using hfree unfolding top1_is_free_abelian_group_full_on_def by (by100 blast)
+  have h\<iota>_inj: "inj_on \<iota> S"
+    using hfree unfolding top1_is_free_abelian_group_full_on_def by (by100 blast)
+  have hG_gen: "G = top1_subgroup_generated_on G mul e invg (\<iota> ` S)"
+    using hfree unfolding top1_is_free_abelian_group_full_on_def by (by100 blast)
+  \<comment> \<open>Construction: define \<psi> on words and show well-definedness.
+     For each g \<in> G, pick a word representation and evaluate in H.
+     The independence condition ensures this is unique.\<close>
+  \<comment> \<open>Alternative approach: use the fact that a free abelian group on S
+     is isomorphic to a direct sum of copies of Z (one per s \<in> S).
+     The direct sum has the extension property by definition.\<close>
+  show ?thesis sorry \<comment> \<open>Needs: G is internal direct sum of ⟨\<iota>(s)⟩ (each ≅ Z),
+     or equivalently: coefficient extraction + well-definedness.\<close>
+qed
 
 text \<open>Corollary: coordinate projections exist for free abelian groups.
   For each s0 \<in> S, there is a homomorphism \<epsilon>: G \<rightarrow> Z with \<epsilon>(\<iota>(s0)) = 1
