@@ -1967,7 +1967,72 @@ proof -
     have h\<iota>S_sub: "\<iota> ` S \<subseteq> G" using h\<iota>_in by (by100 blast)
     \<comment> \<open>H \<subseteq> \<langle>\<iota>'(S)\<rangle>: every h \<in> H is f(g) for some g \<in> G = \<langle>\<iota>(S)\<rangle>.
        g in every subgroup containing \<iota>(S) \<Rightarrow> f(g) in every subgroup containing f(\<iota>(S)).\<close>
-    show ?thesis sorry \<comment> \<open>Uses same preimage argument as surj_hom_generated (defined below).\<close>
+    \<comment> \<open>Inline proof: f surjective + \<iota>(S) generates G \<Rightarrow> f(\<iota>(S)) generates H.\<close>
+    have h\<iota>'_sub_H: "\<iota>' ` S \<subseteq> H" using h1 by (by100 blast)
+    have hK_sub: "top1_subgroup_generated_on H mulH eH invgH (\<iota>' ` S) \<subseteq> H"
+      by (rule subgroup_generated_subset[OF assms(3) h\<iota>'_sub_H])
+    show ?thesis
+    proof (rule set_eqI, rule iffI)
+      fix h assume hh: "h \<in> H"
+      obtain g where hg: "g \<in> G" "f g = h" using hh hf_surj by (by100 blast)
+      have "f g \<in> top1_subgroup_generated_on H mulH eH invgH (\<iota>' ` S)"
+        unfolding top1_subgroup_generated_on_def
+      proof (rule InterI, clarify)
+        fix K assume hK_cond: "\<iota>' ` S \<subseteq> K" and hK_sub2: "K \<subseteq> H"
+            and hK_grp: "top1_is_group_on K mulH eH invgH"
+        \<comment> \<open>Preimage f\<inverse>(K) is a subgroup of G containing \<iota>(S).\<close>
+        let ?preK = "{g \<in> G. f g \<in> K}"
+        have hpreK_grp: "top1_is_group_on ?preK mul e invg"
+        proof -
+          have hf_e: "f e = eH" by (rule hom_preserves_id[OF hG assms(3) hf_hom])
+          have heG: "e \<in> G" using hG unfolding top1_is_group_on_def by (by100 blast)
+          have h_e: "e \<in> ?preK" using heG hf_e hK_grp unfolding top1_is_group_on_def by (by100 blast)
+          have h_mul: "\<forall>x\<in>?preK. \<forall>y\<in>?preK. mul x y \<in> ?preK"
+          proof (intro ballI)
+            fix x y assume hx: "x \<in> ?preK" and hy: "y \<in> ?preK"
+            have "mul x y \<in> G" using hG hx hy unfolding top1_is_group_on_def by (by100 blast)
+            moreover have "f (mul x y) = mulH (f x) (f y)"
+              using hf_hom hx hy unfolding top1_group_hom_on_def by (by100 blast)
+            moreover have "mulH (f x) (f y) \<in> K"
+              using hK_grp hx hy unfolding top1_is_group_on_def by (by100 blast)
+            ultimately have "mul x y \<in> G" "f (mul x y) \<in> K" by (by100 simp)+
+            thus "mul x y \<in> ?preK" by (by100 blast)
+          qed
+          have h_inv: "\<forall>x\<in>?preK. invg x \<in> ?preK"
+          proof (intro ballI)
+            fix x assume hx: "x \<in> ?preK"
+            have hxG: "x \<in> G" using hx by (by100 blast)
+            have "invg x \<in> G" using hG hxG unfolding top1_is_group_on_def by (by100 blast)
+            moreover have "f (invg x) = invgH (f x)"
+              by (rule hom_preserves_inv[OF hG assms(3) hf_hom hxG])
+            moreover have "invgH (f x) \<in> K"
+              using hK_grp hx unfolding top1_is_group_on_def by (by100 blast)
+            ultimately have "invg x \<in> G" "f (invg x) \<in> K" by (by100 simp)+
+            thus "invg x \<in> ?preK" by (by100 blast)
+          qed
+          have h_assoc: "\<forall>x\<in>?preK. \<forall>y\<in>?preK. \<forall>z\<in>?preK. mul (mul x y) z = mul x (mul y z)"
+            using hG unfolding top1_is_group_on_def by (by100 blast)
+          have h_id: "\<forall>x\<in>?preK. mul e x = x \<and> mul x e = x"
+            using hG unfolding top1_is_group_on_def by (by100 blast)
+          have h_invax: "\<forall>x\<in>?preK. mul (invg x) x = e \<and> mul x (invg x) = e"
+            using hG unfolding top1_is_group_on_def by (by100 blast)
+          show ?thesis unfolding top1_is_group_on_def
+            using h_e h_mul h_inv h_assoc h_id h_invax by (by100 blast)
+        qed
+        have h\<iota>S_preK: "\<iota> ` S \<subseteq> ?preK"
+          using h\<iota>S_sub hK_cond unfolding \<iota>'_def by (by100 blast)
+        have hpreK_sub: "?preK \<subseteq> G" by (by100 blast)
+        have "top1_subgroup_generated_on G mul e invg (\<iota> ` S) \<subseteq> ?preK"
+          by (rule subgroup_generated_minimal[OF h\<iota>S_preK hpreK_sub hpreK_grp])
+        hence "g \<in> ?preK" using hg(1) hG_gen by (by100 blast)
+        thus "f g \<in> K" by (by100 blast)
+      qed
+      thus "h \<in> top1_subgroup_generated_on H mulH eH invgH (\<iota>' ` S)"
+        using hg(2) by (by100 simp)
+    next
+      fix h assume "h \<in> top1_subgroup_generated_on H mulH eH invgH (\<iota>' ` S)"
+      thus "h \<in> H" using hK_sub by (by100 blast)
+    qed
   qed
   \<comment> \<open>Part 4: No nontrivial reduced word in \<iota>'(S) evaluates to eH.\<close>
   have h4: "\<And>ws. ws \<noteq> [] \<Longrightarrow>
