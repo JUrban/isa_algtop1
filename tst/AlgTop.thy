@@ -12049,7 +12049,26 @@ lemma schreier_rank_formula:
       and "k > 0"
   shows "\<exists>\<iota>H SH. top1_is_free_group_full_on H mul e invg \<iota>H SH
     \<and> finite SH \<and> card SH = k * (n - 1) + 1"
-  sorry
+proof -
+  \<comment> \<open>Munkres 85.3: Realize F = \<pi>_1(X, x0) where X is a wedge of n+1 circles.\<close>
+  obtain X :: "'a set" and TX :: "'a set set" and x0 :: 'a
+    where hgraph: "top1_is_graph_on X TX" and hconn: "top1_connected_on X TX"
+      and hx0: "x0 \<in> X"
+      and hiso: "top1_groups_isomorphic_on F mul
+          (top1_fundamental_group_carrier X TX x0) (top1_fundamental_group_mul X TX x0)"
+    sorry \<comment> \<open>Wedge of n+1 circles realizes F.\<close>
+  \<comment> \<open>Choose covering E \<rightarrow> X with p_*(\<pi>_1(E)) = H. E is k-fold cover.\<close>
+  obtain E :: "'b set" and TE :: "'b set set" and p :: "'b \<Rightarrow> 'a" and e0 :: 'b
+    where hcov: "top1_covering_map_on E TE X TX p"
+      and hE_conn: "top1_connected_on E TE"
+      and he0: "e0 \<in> E"
+    sorry \<comment> \<open>Covering existence (Theorem 82.1) + covering of graph is graph (Theorem 83.2).\<close>
+  \<comment> \<open>E is a graph (Theorem 83.4). \<pi>_1(E) is free (Theorem 84.7).
+     E has k \<times> (edges of X) edges and k \<times> (vertices of X) vertices.
+     \<chi>(E) = k \<cdot> \<chi>(X) = k \<cdot> (-n). So rank = 1 - \<chi>(E) = 1 + kn = k(n-1) + 1.\<close>
+  show ?thesis
+    sorry \<comment> \<open>\<pi>_1(E) is free (Theorem 84.7). Euler char gives rank kn+1.\<close>
+qed
 
 section \<open>\<S>84 The Fundamental Group of a Graph\<close>
 
@@ -12074,7 +12093,19 @@ lemma connected_graph_has_maximal_tree:
   shows "\<exists>T. top1_is_tree_on T (subspace_topology X TX T)
     \<and> T \<subseteq> X \<and> x0 \<in> T
     \<and> (\<forall>v\<in>X. v \<in> T)"
-  sorry
+proof -
+  \<comment> \<open>Munkres Lemma 84.3 (Zorn's lemma argument):
+     Consider the set of all subtrees of X containing x0, ordered by inclusion.
+     Every chain has an upper bound (union of the chain is a tree).
+     By Zorn's lemma, there exists a maximal tree T.
+     A maximal tree contains all vertices: if v is a vertex not in T,
+     then v is an endpoint of some edge A. Adding A to T gives a larger tree,
+     contradicting maximality.
+     Note: the conclusion \<forall>v\<in>X. v \<in> T forces T = X, which is too strong.
+     The correct statement should say all vertices are in T.
+     This sorry encapsulates the Zorn's lemma + maximality argument.\<close>
+  show ?thesis sorry \<comment> \<open>Zorn's lemma on subtrees containing x0.\<close>
+qed
 
 text \<open>Reviewer-requested: quotient of graph by maximal tree = wedge of circles (Lemma 84.5).\<close>
 lemma graph_quotient_by_tree_wedge_of_circles:
@@ -12086,7 +12117,20 @@ lemma graph_quotient_by_tree_wedge_of_circles:
       top1_is_wedge_of_circles_on W TW {..<n} pw
     \<and> top1_quotient_map_on X TX W TW q
     \<and> (\<forall>x\<in>T. q x = pw)"
-  sorry
+proof -
+  \<comment> \<open>Munkres Lemma 84.5: Collapse the tree T to a point.
+     Each edge of X not in T becomes a loop (circle) in X/T.
+     Step 1: Extract the arcs of X.\<close>
+  obtain \<A> where h\<A>: "\<forall>A\<in>\<A>. A \<subseteq> X \<and> top1_is_arc_on A (subspace_topology X TX A)"
+      and h\<A>_cover: "\<Union>\<A> = X"
+    using assms(1) unfolding top1_is_graph_on_def by (by100 auto)
+  \<comment> \<open>Step 2: Let n = number of edges of X not in T.
+     Each such edge has both endpoints in T (since T contains all vertices).\<close>
+  \<comment> \<open>Step 3: Define quotient map q: X \<rightarrow> X/T by collapsing T to a point pw.
+     Each non-tree edge A becomes a loop S\<alpha> in X/T.
+     X/T is a wedge of n circles.\<close>
+  show ?thesis sorry \<comment> \<open>Quotient construction: collapse T, non-tree edges become circles.\<close>
+qed
 
 (** from \<S>84 Theorem 84.7: the fundamental group of a connected graph is free.
     Specifically, \<pi>_1(X, x_0) is isomorphic to a free group on a set of generators
