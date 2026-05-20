@@ -1,0 +1,7 @@
+Build started for Isabelle/AlgTop ...
+Building AlgTop ...
+AlgTop FAILED (see also "isabelle build_log -H Error AlgTop")
+*** by100: timeout after 100 ms
+*** At command "by" (line 5000 of "~~/tst/AlgTop.thy")
+Unfinished session(s): AlgTop
+*** Failed to build Isabelle/AlgTop

@@ -1,0 +1,17 @@
+Running Draft ...
+
+Output (line 724 of "Draft/AlgTop.thy"):
+Sledgehammering...
+
+Output (line 727 of "Draft/AlgTop.thy"):
+Sledgehammering...
+
+Output (line 730 of "Draft/AlgTop.thy"):
+Sledgehammering...
+
+Output (line 724 of "Draft/AlgTop.thy"):
+No proof found
+
+Output (line 727 of "Draft/AlgTop.thy"):
+No proof found
+Finished Draft (0:00:20 elapsed time, 0:01:39 cpu time, factor 4.79)
