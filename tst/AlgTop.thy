@@ -7167,7 +7167,9 @@ proof -
   have h_presentation: "\<exists>(G::'g set) mul e invg.
       top1_group_presented_by_on G mul e invg ({..<2*n}::nat set)
         { concat (map (\<lambda>i. [(2*i, True), (2*i+1, True),
-                              (2*i, False), (2*i+1, False)]) [0..<n]) }"
+                              (2*i, False), (2*i+1, False)]) [0..<n]) }
+      \<and> top1_groups_isomorphic_on G mul
+          (top1_fundamental_group_carrier X TX x0) (top1_fundamental_group_mul X TX x0)"
     using Theorem_74_3_fund_group_n_torus[OF assms] by (by100 auto)
   \<comment> \<open>Step 2: Abelianize. The presentation ⟨a₁,b₁,...|[a₁,b₁]...[aₙ,bₙ]⟩ abelianizes to
      the free abelian group on 2n generators (commutator relator becomes trivial).\<close>
@@ -7195,19 +7197,11 @@ proof -
        and showing relator \<in> [F,F]. Then transfer via G0 \<cong> \<pi>_1(X).\<close>
     \<comment> \<open>The presented group G0 and its presentation exist from h\_presentation.
        We use SOME to extract witnesses since obtain fails on deep existentials.\<close>
-    have h_pres_core: "\<exists>(G0::'g set) mul0 e0 invg0 (F::'g set) mulF eF invgF (\<iota>F::nat \<Rightarrow> 'g) \<pi>.
-        top1_is_free_group_full_on F mulF eF invgF \<iota>F ({..<2*n}::nat set)
-      \<and> top1_is_group_on G0 mul0 e0 invg0
-      \<and> top1_group_hom_on F mulF G0 mul0 \<pi> \<and> \<pi> ` F = G0
-      \<and> top1_group_kernel_on F e0 \<pi> \<subseteq> top1_commutator_subgroup_on F mulF eF invgF
-      \<and> top1_groups_isomorphic_on G0 mul0
-          (top1_fundamental_group_carrier X TX x0) (top1_fundamental_group_mul X TX x0)"
-      using h_presentation
-      sorry \<comment> \<open>Extract F from presented\_by + show relator's word product \<in> [F,F]
-         hence ker(\<pi>) = normal\_closure(relator) \<subseteq> [F,F].\<close>
-    \<comment> \<open>Apply abelianization\_of\_presented\_group + iso transfer.\<close>
-    show ?thesis using h_pres_core
-      sorry \<comment> \<open>abelianization\_of\_presented\_group + iso transfer to \<pi>_1(X).\<close>
+    \<comment> \<open>Use h\_presentation to apply abelianization\_of\_presented\_group.\<close>
+    show ?thesis
+      using h_presentation sorry \<comment> \<open>Destructure presentation (4-var existential),
+         extract F + ker \<subseteq> [F,F], apply abelianization\_of\_presented\_group,
+         transfer via iso G0 \<cong> \<pi>_1(X).\<close>
   qed
   show ?thesis using h_abelianize by (by100 blast)
 qed
