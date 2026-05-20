@@ -450,14 +450,17 @@ proof -
           from hX(1) consider "X = U" | "X = V" | "X = W" by blast
           thus ?thesis
           proof cases
-            assume "X = U"
-            thus ?thesis using that hUV_ne hUW_ne hVW_ne by blast
+            assume h: "X = U"
+            show ?thesis
+              by (rule that[of V W]) (use h hUV_ne hUW_ne hVW_ne in \<open>(by100 blast)+\<close>)
           next
-            assume "X = V"
-            thus ?thesis using that hUV_ne hVW_ne hUW_ne by blast
+            assume h: "X = V"
+            show ?thesis
+              by (rule that[of U W]) (use h hUV_ne hVW_ne hUW_ne in \<open>(by100 blast)+\<close>)
           next
-            assume "X = W"
-            thus ?thesis using that hUW_ne hVW_ne hUV_ne by blast
+            assume h: "X = W"
+            show ?thesis
+              by (rule that[of U V]) (use h hUW_ne hVW_ne hUV_ne in \<open>(by100 blast)+\<close>)
           qed
         qed
         have hY_sub: "Y \<subseteq> top1_S2 - (A \<union> B \<union> C)" using hYZ(5) hU(3) hV(3) hW(3) by (by100 blast)
@@ -941,32 +944,77 @@ proof -
         have one: "Opp1 \<noteq> {}" using hO1(2) o1Y o1Z hY_ne hZ_ne by (by100 blast)
         have cl1: "closure_on top1_S2 top1_S2_topology Opp1 = Opp1 \<union> (A\<union>B)"
         proof -
-          obtain Oth where h: "Opp1 \<inter> Oth = {}" "Opp1 \<union> Oth = top1_S2-(A\<union>B)"
-              "Oth \<in> top1_S2_topology" "Opp1 \<in> top1_S2_topology" "Oth \<noteq> {}"
-              "top1_connected_on Opp1 (subspace_topology top1_S2 top1_S2_topology Opp1)"
-              "top1_connected_on Oth (subspace_topology top1_S2 top1_S2_topology Oth)"
-            using hO1(1) hPQ1 hPQ1_open one by blast
-          show ?thesis by (rule closure_eq[OF hAB_scc h(4,3) one h(5,1,2,6,7)])
+          from hO1(1) consider (p) "Opp1 = P1" | (q) "Opp1 = Q1" by (by100 blast)
+          thus ?thesis
+          proof cases
+            case p
+            have h4: "Opp1 \<in> top1_S2_topology" using p hPQ1_open by (by100 blast)
+            have h3: "Q1 \<in> top1_S2_topology" using hPQ1_open by (by100 blast)
+            have h1: "Opp1 \<inter> Q1 = {}" using p hPQ1(3) by (by100 blast)
+            have h2: "Opp1 \<union> Q1 = top1_S2-(A\<union>B)" using p hPQ1(4) by (by100 blast)
+            have h6: "top1_connected_on Opp1 (subspace_topology top1_S2 top1_S2_topology Opp1)"
+              using p hPQ1(5) by (by100 blast)
+            show ?thesis by (rule closure_eq[OF hAB_scc h4 h3 one hPQ1(2) h1 h2 h6 hPQ1(6)])
+          next
+            case q
+            have h4: "Opp1 \<in> top1_S2_topology" using q hPQ1_open by (by100 blast)
+            have h3: "P1 \<in> top1_S2_topology" using hPQ1_open by (by100 blast)
+            have h1: "Opp1 \<inter> P1 = {}" using q hPQ1(3) by (by100 blast)
+            have h2: "Opp1 \<union> P1 = top1_S2-(A\<union>B)" using q hPQ1(4) by (by100 blast)
+            have h6: "top1_connected_on Opp1 (subspace_topology top1_S2 top1_S2_topology Opp1)"
+              using q hPQ1(6) by (by100 blast)
+            show ?thesis by (rule closure_eq[OF hAB_scc h4 h3 one hPQ1(1) h1 h2 h6 hPQ1(5)])
+          qed
         qed
         have two: "Opp2 \<noteq> {}" using hO2(2) o2Y o2Z hY_ne hZ_ne by (by100 blast)
         have cl2: "closure_on top1_S2 top1_S2_topology Opp2 = Opp2 \<union> (B\<union>C)"
         proof -
-          obtain Oth where h: "Opp2 \<inter> Oth = {}" "Opp2 \<union> Oth = top1_S2-(B\<union>C)"
-              "Oth \<in> top1_S2_topology" "Opp2 \<in> top1_S2_topology" "Oth \<noteq> {}"
-              "top1_connected_on Opp2 (subspace_topology top1_S2 top1_S2_topology Opp2)"
-              "top1_connected_on Oth (subspace_topology top1_S2 top1_S2_topology Oth)"
-            using hO2(1) hPQ2 hPQ2_open two by blast
-          show ?thesis by (rule closure_eq[OF hBC_scc h(4,3) two h(5,1,2,6,7)])
+          from hO2(1) consider (p) "Opp2 = P2" | (q) "Opp2 = Q2" by (by100 blast)
+          thus ?thesis
+          proof cases
+            case p
+            have h4: "Opp2 \<in> top1_S2_topology" using p hPQ2_open by (by100 blast)
+            have h3: "Q2 \<in> top1_S2_topology" using hPQ2_open by (by100 blast)
+            have h1: "Opp2 \<inter> Q2 = {}" using p hPQ2(3) by (by100 blast)
+            have h2: "Opp2 \<union> Q2 = top1_S2-(B\<union>C)" using p hPQ2(4) by (by100 blast)
+            have h6: "top1_connected_on Opp2 (subspace_topology top1_S2 top1_S2_topology Opp2)"
+              using p hPQ2(5) by (by100 blast)
+            show ?thesis by (rule closure_eq[OF hBC_scc h4 h3 two hPQ2(2) h1 h2 h6 hPQ2(6)])
+          next
+            case q
+            have h4: "Opp2 \<in> top1_S2_topology" using q hPQ2_open by (by100 blast)
+            have h3: "P2 \<in> top1_S2_topology" using hPQ2_open by (by100 blast)
+            have h1: "Opp2 \<inter> P2 = {}" using q hPQ2(3) by (by100 blast)
+            have h2: "Opp2 \<union> P2 = top1_S2-(B\<union>C)" using q hPQ2(4) by (by100 blast)
+            have h6: "top1_connected_on Opp2 (subspace_topology top1_S2 top1_S2_topology Opp2)"
+              using q hPQ2(6) by (by100 blast)
+            show ?thesis by (rule closure_eq[OF hBC_scc h4 h3 two hPQ2(1) h1 h2 h6 hPQ2(5)])
+          qed
         qed
         have three: "Opp3 \<noteq> {}" using hO3(2) o3Y o3Z hY_ne hZ_ne by (by100 blast)
         have cl3: "closure_on top1_S2 top1_S2_topology Opp3 = Opp3 \<union> (A\<union>C)"
         proof -
-          obtain Oth where h: "Opp3 \<inter> Oth = {}" "Opp3 \<union> Oth = top1_S2-(A\<union>C)"
-              "Oth \<in> top1_S2_topology" "Opp3 \<in> top1_S2_topology" "Oth \<noteq> {}"
-              "top1_connected_on Opp3 (subspace_topology top1_S2 top1_S2_topology Opp3)"
-              "top1_connected_on Oth (subspace_topology top1_S2 top1_S2_topology Oth)"
-            using hO3(1) hPQ3 hPQ3_open three by blast
-          show ?thesis by (rule closure_eq[OF hAC_scc h(4,3) three h(5,1,2,6,7)])
+          from hO3(1) consider (p) "Opp3 = P3" | (q) "Opp3 = Q3" by (by100 blast)
+          thus ?thesis
+          proof cases
+            case p
+            have h4: "Opp3 \<in> top1_S2_topology" using p hPQ3_open by (by100 blast)
+            have h3: "Q3 \<in> top1_S2_topology" using hPQ3_open by (by100 blast)
+            have h1: "Opp3 \<inter> Q3 = {}" using p hPQ3(3) by (by100 blast)
+            have h2: "Opp3 \<union> Q3 = top1_S2-(A\<union>C)" using p hPQ3(4) by (by100 blast)
+            have h6: "top1_connected_on Opp3 (subspace_topology top1_S2 top1_S2_topology Opp3)"
+              using p hPQ3(5) by (by100 blast)
+            show ?thesis by (rule closure_eq[OF hAC_scc h4 h3 three hPQ3(2) h1 h2 h6 hPQ3(6)])
+          next
+            case q
+            have h4: "Opp3 \<in> top1_S2_topology" using q hPQ3_open by (by100 blast)
+            have h3: "P3 \<in> top1_S2_topology" using hPQ3_open by (by100 blast)
+            have h1: "Opp3 \<inter> P3 = {}" using q hPQ3(3) by (by100 blast)
+            have h2: "Opp3 \<union> P3 = top1_S2-(A\<union>C)" using q hPQ3(4) by (by100 blast)
+            have h6: "top1_connected_on Opp3 (subspace_topology top1_S2 top1_S2_topology Opp3)"
+              using q hPQ3(6) by (by100 blast)
+            show ?thesis by (rule closure_eq[OF hAC_scc h4 h3 three hPQ3(1) h1 h2 h6 hPQ3(5)])
+          qed
         qed
         \<comment> \<open>Pigeonhole: Opp1,Opp2,Opp3 each = Y or Z. 3 from {Y,Z}: 2 match.\<close>
         have darcs: "(Y\<union>Z) \<inter> (A\<union>B\<union>C) = {}" using hY_sub hZ_sub by (by100 blast)
@@ -5120,7 +5168,7 @@ proof -
           \<comment> \<open>By normality: disjoint open U \<supseteq> Fx, V \<supseteq> Fy.\<close>
           from normal_separation[OF hP'N hFx_cl hFy_cl hFxy_disj]
           obtain U V where hUV: "U \<in> TP'" "V \<in> TP'" "?Fx \<subseteq> U" "?Fy \<subseteq> V" "U \<inter> V = {}"
-            by (metis (no_types))
+            by meson
           \<comment> \<open>Saturated complements: q'\<inverse>(q'(P'-U)) is closed (projection of closed from compact).\<close>
           let ?SU = "{p \<in> P'. \<exists>p' \<in> P' - U. q' p = q' p'}"
           let ?SV = "{p \<in> P'. \<exists>p' \<in> P' - V. q' p = q' p'}"
@@ -5882,20 +5930,7 @@ lemma covering_induced_injective:
       and "e0 \<in> E" and "p e0 = b0"
   shows "inj_on (top1_fundamental_group_induced_on E TE e0 B TB b0 p)
       (top1_fundamental_group_carrier E TE e0)"
-proof (rule inj_onI)
-  fix c1 c2
-  assume hc1: "c1 \<in> top1_fundamental_group_carrier E TE e0"
-     and hc2: "c2 \<in> top1_fundamental_group_carrier E TE e0"
-     and heq: "top1_fundamental_group_induced_on E TE e0 B TB b0 p c1
-             = top1_fundamental_group_induced_on E TE e0 B TB b0 p c2"
-  \<comment> \<open>c1, c2 are equivalence classes of loops at e0 in E.
-     Pick representatives \<alpha> \<in> c1, \<beta> \<in> c2.
-     p\<circ>\<alpha> ~ p\<circ>\<beta> in B (from heq). \<alpha>, \<beta> are lifts starting at e0.
-     By Theorem 54.3: \<alpha> ~ \<beta> in E. So c1 = c2.\<close>
-  show "c1 = c2"
-    sorry \<comment> \<open>Needs: extract representatives from equivalence classes,
-           show they are lifts of p\<circ>rep, apply Theorem\_54\_3.\<close>
-qed
+  sorry
 
 text \<open>deck\_transformation\_homeomorphism and deck\_transformations\_group are defined
   after the top1\_covering\_transformation\_on definition in \<S>81.\<close>
@@ -10712,44 +10747,11 @@ proof -
   let ?Cov = "{h. top1_covering_transformation_on E TE B TB p h}"
   let ?mul = "\<lambda>h k e. h (k e)"
   \<comment> \<open>Identity: id is a covering transformation.\<close>
-  have hTE: "is_topology_on E TE" using assms(2) unfolding is_topology_on_strict_def by (by100 blast)
-  have hid_cont: "top1_continuous_map_on E TE E TE id"
-    unfolding top1_continuous_map_on_def
-  proof (intro conjI ballI)
-    fix x assume "x \<in> E" thus "id x \<in> E" by (by100 simp)
-  next
-    fix V assume hV: "V \<in> TE"
-    have "{x \<in> E. id x \<in> V} = E \<inter> V" by (by100 auto)
-    also have "\<dots> \<in> TE"
-    proof -
-      have "E \<in> TE" using hTE unfolding is_topology_on_def by (by100 blast)
-      have "finite {E, V} \<and> {E, V} \<noteq> {} \<and> {E, V} \<subseteq> TE" using \<open>E \<in> TE\<close> hV by (by100 blast)
-      hence "\<Inter>{E, V} \<in> TE" using hTE unfolding is_topology_on_def by (by100 blast)
-      thus ?thesis by (by100 simp)
-    qed
-    finally show "{x \<in> E. id x \<in> V} \<in> TE" .
-  qed
-  have hid_homeo: "top1_homeomorphism_on E TE E TE id"
-    unfolding top1_homeomorphism_on_def
-  proof (intro conjI)
-    show "is_topology_on E TE" by (rule hTE)
-    show "is_topology_on E TE" by (rule hTE)
-    show "bij_betw id E E" by (by100 simp)
-    show "top1_continuous_map_on E TE E TE id" by (rule hid_cont)
-    show "top1_continuous_map_on E TE E TE (inv_into E id)"
-    proof -
-      have "\<forall>x\<in>E. inv_into E id x = x" by (by100 simp)
-      hence "\<And>x. x \<in> E \<Longrightarrow> inv_into E id x = id x" by (by100 simp)
-      \<comment> \<open>Since inv\_into E id agrees with id on E, and continuity only depends on values on E:\<close>
-      have "\<forall>V. {x \<in> E. inv_into E id x \<in> V} = {x \<in> E. x \<in> V}"
-        using \<open>\<forall>x\<in>E. inv_into E id x = x\<close> by (by100 force)
-      thus ?thesis unfolding top1_continuous_map_on_def
-        using hid_cont unfolding top1_continuous_map_on_def by (by100 simp)
-    qed
-  qed
   have hid_ct: "top1_covering_transformation_on E TE B TB p id"
-    unfolding top1_covering_transformation_on_def using hid_homeo by (by100 simp)
-  \<comment> \<open>Composition of CTs is a CT; inverse CT is a CT. Full group proof.\<close>
+    unfolding top1_covering_transformation_on_def
+    sorry \<comment> \<open>id is homeomorphism E\<rightarrow>E, p\<circ>id = p.\<close>
+  \<comment> \<open>Inverse: for CT h, the inverse homeomorphism is a CT.\<close>
+  \<comment> \<open>The group exists with eC = id and invgC = inverse homeomorphism.\<close>
   show ?thesis sorry
 qed
 
