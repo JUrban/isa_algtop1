@@ -4278,7 +4278,57 @@ lemma free_abelian_invariant_under_iso:
       and "top1_group_iso_on G mul H mulH f"
       and "top1_is_abelian_group_on H mulH eH invgH"
   shows "\<exists>\<iota>'. top1_is_free_abelian_group_full_on H mulH eH invgH \<iota>' S"
-  sorry \<comment> \<open>Analogous to free\_group\_invariant\_under\_iso: transfer abelian, inj, gen, indep.\<close>
+proof -
+  define \<iota>' where "\<iota>' s = f (\<iota> s)" for s
+  have hG_grp: "top1_is_group_on G mul e invg"
+    using assms(1) unfolding top1_is_free_abelian_group_full_on_def
+      top1_is_abelian_group_on_def by (by100 blast)
+  have hH_grp: "top1_is_group_on H mulH eH invgH"
+    using assms(3) unfolding top1_is_abelian_group_on_def by (by100 blast)
+  have h\<iota>_in: "\<forall>s\<in>S. \<iota> s \<in> G"
+    using assms(1) unfolding top1_is_free_abelian_group_full_on_def by (by100 blast)
+  have h\<iota>_inj: "inj_on \<iota> S"
+    using assms(1) unfolding top1_is_free_abelian_group_full_on_def by (by100 blast)
+  have hf_hom: "top1_group_hom_on G mul H mulH f"
+    using assms(2) unfolding top1_group_iso_on_def by (by100 blast)
+  have hf_bij: "bij_betw f G H"
+    using assms(2) unfolding top1_group_iso_on_def by (by100 blast)
+  \<comment> \<open>Part 1: \<iota>' maps S into H.\<close>
+  have h1: "\<forall>s\<in>S. \<iota>' s \<in> H"
+    unfolding \<iota>'_def using h\<iota>_in hf_bij unfolding bij_betw_def by (by100 blast)
+  \<comment> \<open>Part 2: \<iota>' is injective.\<close>
+  have h2: "inj_on \<iota>' S"
+    unfolding \<iota>'_def
+  proof (rule inj_onI)
+    fix x y assume hx: "x \<in> S" and hy: "y \<in> S" and hfeq: "f (\<iota> x) = f (\<iota> y)"
+    have "inj_on f G" using hf_bij unfolding bij_betw_def by (by100 blast)
+    hence "\<iota> x = \<iota> y" using hfeq h\<iota>_in hx hy unfolding inj_on_def by (by100 blast)
+    thus "x = y" using h\<iota>_inj hx hy unfolding inj_on_def by (by100 blast)
+  qed
+  \<comment> \<open>Part 3: \<iota>'(S) generates H.\<close>
+  have h3: "H = top1_subgroup_generated_on H mulH eH invgH (\<iota>' ` S)"
+  proof -
+    have "\<iota>' ` S = f ` (\<iota> ` S)" unfolding \<iota>'_def image_image by (by100 blast)
+    moreover have "f ` G = H" using hf_bij unfolding bij_betw_def by (by100 blast)
+    moreover have "\<iota> ` S \<subseteq> G" using h\<iota>_in by (by100 blast)
+    moreover have "G = top1_subgroup_generated_on G mul e invg (\<iota> ` S)"
+      using assms(1) unfolding top1_is_free_abelian_group_full_on_def by (by100 blast)
+    ultimately show ?thesis
+      by (metis surj_hom_generated[OF hG_grp hH_grp hf_hom _ _ _])
+  qed
+  \<comment> \<open>Part 4: Independence.\<close>
+  have h4: "\<And>c. finite {s\<in>S. c s \<noteq> 0} \<Longrightarrow> (\<exists>s\<in>S. c s \<noteq> 0) \<Longrightarrow>
+      foldr mulH (map (\<lambda>s.
+          if c s \<ge> 0 then top1_group_pow mulH eH (\<iota>' s) (nat (c s))
+          else top1_group_pow mulH eH (invgH (\<iota>' s)) (nat (- c s)))
+        (SOME xs. set xs = {s\<in>S. c s \<noteq> 0} \<and> distinct xs)) eH \<noteq> eH"
+    sorry \<comment> \<open>If nontrivial combination = eH, apply f\<inverse>: G-combination = e, contradiction
+       with independence of G. Uses: hom\_group\_pow (f distributes), injectivity of f.\<close>
+  have "top1_is_free_abelian_group_full_on H mulH eH invgH \<iota>' S"
+    unfolding top1_is_free_abelian_group_full_on_def
+    using assms(3) h1 h2 h3 h4 by (by100 blast)
+  thus ?thesis by (by100 blast)
+qed
 
 lemma abelianization_of_presented_group:
   fixes F :: "'g set" and mulF :: "'g \<Rightarrow> 'g \<Rightarrow> 'g"
