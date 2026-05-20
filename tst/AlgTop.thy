@@ -7190,9 +7190,12 @@ proof -
        Step 3: N \<subseteq> [F,F], so abelianization = F/[F,F] = free abelian on 2n gens.\<close>
     \<comment> \<open>Extract F, π from the presentation and show ker(π) ⊆ [F,F].\<close>
     \<comment> \<open>Then apply abelianization\_of\_presented\_group + transfer via G0 ≅ π₁(X).\<close>
+    \<comment> \<open>Step 1: Extract G0 (presented group) and its iso to \<pi>_1(X).\<close>
+    \<comment> \<open>Uses abelianization\_of\_presented\_group after extracting F, \<pi> from presentation
+       and showing relator \<in> [F,F]. Then transfer via G0 \<cong> \<pi>_1(X).\<close>
     show ?thesis using h_presentation
-      sorry \<comment> \<open>Extract presentation F, show relator \<in> [F,F] \<Rightarrow> ker \<subseteq> [F,F],
-         apply abelianization\_of\_presented\_group, transfer via iso G0 \<cong> \<pi>₁(X).\<close>
+      sorry \<comment> \<open>Extract F from presentation, show ker \<subseteq> [F,F],
+         apply abelianization\_of\_presented\_group, transfer via iso.\<close>
   qed
   show ?thesis using h_abelianize by (by100 blast)
 qed
