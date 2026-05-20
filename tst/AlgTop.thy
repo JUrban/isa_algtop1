@@ -4378,7 +4378,55 @@ proof -
       thus "\<pi> x \<in> G" using hpi_hom unfolding top1_group_hom_on_def by (by100 blast)
     qed
     have himage_grp: "top1_is_group_on (\<pi> ` ?NF) mulG eG invgG"
-      sorry \<comment> \<open>Image of subgroup under hom is a subgroup.\<close>
+    proof -
+      have hNF_grp: "top1_is_group_on ?NF mulF eF invgF"
+        using commutator_subgroup_is_normal[OF hF_grp] unfolding top1_normal_subgroup_on_def
+        by (by100 blast)
+      have hNF_sub: "?NF \<subseteq> F" using hNF_grp commutator_subgroup_is_normal[OF hF_grp]
+        unfolding top1_normal_subgroup_on_def by (by100 blast)
+      \<comment> \<open>Identity: eG = \<pi>(eF) \<in> \<pi>([F,F]).\<close>
+      have heF_NF: "eF \<in> ?NF" using hNF_grp unfolding top1_is_group_on_def by (by100 blast)
+      have heG_im: "eG \<in> \<pi> ` ?NF"
+      proof -
+        have "\<pi> eF = eG" by (rule hom_preserves_id[OF hF_grp hG_grp hpi_hom])
+        thus ?thesis using heF_NF by (by100 force)
+      qed
+      \<comment> \<open>Closure: \<pi>(x) \<cdot> \<pi>(y) = \<pi>(x\<cdot>y) \<in> \<pi>([F,F]).\<close>
+      have hclos: "\<forall>x\<in>\<pi> ` ?NF. \<forall>y\<in>\<pi> ` ?NF. mulG x y \<in> \<pi> ` ?NF"
+      proof (intro ballI)
+        fix px py assume "px \<in> \<pi> ` ?NF" "py \<in> \<pi> ` ?NF"
+        then obtain x y where hx: "x \<in> ?NF" "px = \<pi> x" and hy: "y \<in> ?NF" "py = \<pi> y"
+          by (by100 blast)
+        have "\<pi> (mulF x y) = mulG (\<pi> x) (\<pi> y)"
+          using hpi_hom hx(1) hy(1) hNF_sub unfolding top1_group_hom_on_def by (by100 blast)
+        hence "mulG px py = \<pi> (mulF x y)" using hx(2) hy(2) by (by100 simp)
+        moreover have "mulF x y \<in> ?NF"
+          using hNF_grp hx(1) hy(1) unfolding top1_is_group_on_def by (by100 blast)
+        ultimately show "mulG px py \<in> \<pi> ` ?NF" by (by100 force)
+      qed
+      \<comment> \<open>Inverse: invgG(\<pi>(x)) = \<pi>(invgF(x)) \<in> \<pi>([F,F]).\<close>
+      have hinv: "\<forall>x\<in>\<pi> ` ?NF. invgG x \<in> \<pi> ` ?NF"
+      proof (intro ballI)
+        fix px assume "px \<in> \<pi> ` ?NF"
+        then obtain x where hx: "x \<in> ?NF" "px = \<pi> x" by (by100 blast)
+        have hxF: "x \<in> F" using hx(1) hNF_sub by (by100 blast)
+        have "invgG px = \<pi> (invgF x)"
+          using hx(2) hom_preserves_inv[OF hF_grp hG_grp hpi_hom hxF] by (by100 simp)
+        moreover have "invgF x \<in> ?NF"
+          using hNF_grp hx(1) unfolding top1_is_group_on_def by (by100 blast)
+        ultimately show "invgG px \<in> \<pi> ` ?NF" by (by100 force)
+      qed
+      \<comment> \<open>Group axioms (associativity, identity, inverse) from G restricted to image.\<close>
+      have hassoc: "\<forall>x\<in>\<pi>`?NF. \<forall>y\<in>\<pi>`?NF. \<forall>z\<in>\<pi>`?NF.
+          mulG (mulG x y) z = mulG x (mulG y z)"
+        using hG_grp himage_sub unfolding top1_is_group_on_def by (by100 blast)
+      have hid: "\<forall>x\<in>\<pi>`?NF. mulG eG x = x \<and> mulG x eG = x"
+        using hG_grp himage_sub unfolding top1_is_group_on_def by (by100 blast)
+      have hinvax: "\<forall>x\<in>\<pi>`?NF. mulG (invgG x) x = eG \<and> mulG x (invgG x) = eG"
+        using hG_grp himage_sub unfolding top1_is_group_on_def by (by100 blast)
+      show ?thesis unfolding top1_is_group_on_def
+        using heG_im hclos hinv hassoc hid hinvax by (by100 blast)
+    qed
     have "top1_subgroup_generated_on G mulG eG invgG
         {top1_group_commutator_on mulG invgG g h |g h. g \<in> G \<and> h \<in> G}
       \<subseteq> \<pi> ` ?NF"
