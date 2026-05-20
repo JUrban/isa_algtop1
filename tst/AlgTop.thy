@@ -2022,7 +2022,15 @@ lemma free_group_rank_invariant_finite:
       and "top1_is_free_group_full_on G mul e invg \<iota>2 S2"
       and "finite S1" and "finite S2"
   shows "card S1 = card S2"
-  sorry
+proof -
+  \<comment> \<open>Munkres: Abelianize G. G/[G,G] is free abelian on both p(S1) and p(S2).
+     By Theorem 67.8, |p(S1)| = |p(S2)|. Since p is injective on generators
+     of a free group, |S1| = |p(S1)| and |S2| = |p(S2)|.\<close>
+  \<comment> \<open>Proof: Abelianize G via Theorem 69.4. G/[G,G] is free abelian
+     on both p(S1) and p(S2). Theorem 67.8 gives |S1| = |S2|.
+     Depends on Theorem\_69\_4 (defined later) and Theorem\_67\_8.\<close>
+  show "card S1 = card S2" sorry
+qed
 
 
 section \<open>\<S>69 Free Groups\<close>
@@ -6024,7 +6032,64 @@ lemma covering_induced_injective:
       and "e0 \<in> E" and "p e0 = b0"
   shows "inj_on (top1_fundamental_group_induced_on E TE e0 B TB b0 p)
       (top1_fundamental_group_carrier E TE e0)"
-  sorry
+proof (rule inj_onI)
+  fix c1 c2
+  assume hc1: "c1 \<in> top1_fundamental_group_carrier E TE e0"
+     and hc2: "c2 \<in> top1_fundamental_group_carrier E TE e0"
+     and heq: "top1_fundamental_group_induced_on E TE e0 B TB b0 p c1
+             = top1_fundamental_group_induced_on E TE e0 B TB b0 p c2"
+  \<comment> \<open>Munkres: p*([α]) = p*([β]) means p∘α ~ p∘β in B.
+     α, β are loops at e0 that are lifts of p∘α, p∘β.
+     By Theorem 54.3: since p∘α ~ p∘β and lifts start at e0, lifts are path-homotopic in E.
+     So [α] = [β].\<close>
+  \<comment> \<open>Pick representatives.\<close>
+  have hTE: "is_topology_on E TE" using assms(2) unfolding is_topology_on_strict_def by (by100 blast)
+  obtain \<alpha> where h\<alpha>: "\<alpha> \<in> c1" "top1_is_loop_on E TE e0 \<alpha>"
+  proof -
+    from hc1 obtain f where hf: "top1_is_loop_on E TE e0 f"
+      and hc1_eq: "c1 = {g. top1_loop_equiv_on E TE e0 f g}"
+      unfolding top1_fundamental_group_carrier_def by (by100 blast)
+    have "f \<in> c1" using hc1_eq top1_loop_equiv_on_refl[OF hf] by (by100 blast)
+    thus ?thesis using that hf by (by100 blast)
+  qed
+  obtain \<beta> where h\<beta>: "\<beta> \<in> c2" "top1_is_loop_on E TE e0 \<beta>"
+  proof -
+    from hc2 obtain f where hf: "top1_is_loop_on E TE e0 f"
+      and hc2_eq: "c2 = {g. top1_loop_equiv_on E TE e0 f g}"
+      unfolding top1_fundamental_group_carrier_def by (by100 blast)
+    have "f \<in> c2" using hc2_eq top1_loop_equiv_on_refl[OF hf] by (by100 blast)
+    thus ?thesis using that hf by (by100 blast)
+  qed
+  \<comment> \<open>p∘α and p∘β are path-homotopic in B (from heq).\<close>
+  have hpa_loop: "top1_is_loop_on B TB b0 (p \<circ> \<alpha>)"
+    sorry \<comment> \<open>p is continuous, \<alpha> is loop at e0, p(e0) = b0.\<close>
+  have hpb_loop: "top1_is_loop_on B TB b0 (p \<circ> \<beta>)"
+    sorry \<comment> \<open>Same.\<close>
+  have hpab_hom: "top1_path_homotopic_on B TB b0 b0 (p \<circ> \<alpha>) (p \<circ> \<beta>)"
+    sorry \<comment> \<open>From heq: p*(c1) = p*(c2) means p∘α ~ p∘β.\<close>
+  \<comment> \<open>α, β lift p∘α, p∘β from e0.\<close>
+  have h\<alpha>_lift: "\<forall>s\<in>I_set. p (\<alpha> s) = (p \<circ> \<alpha>) s" by (by100 simp)
+  have h\<beta>_lift: "\<forall>s\<in>I_set. p (\<beta> s) = (p \<circ> \<beta>) s" by (by100 simp)
+  \<comment> \<open>Apply Theorem 54.3.\<close>
+  have h\<alpha>_path: "top1_is_path_on E TE e0 e0 \<alpha>"
+    using h\<alpha>(2) unfolding top1_is_loop_on_def by (by100 blast)
+  have h\<beta>_path: "top1_is_path_on E TE e0 e0 \<beta>"
+    using h\<beta>(2) unfolding top1_is_loop_on_def by (by100 blast)
+  have hpa_path: "top1_is_path_on B TB b0 b0 (p \<circ> \<alpha>)"
+    using hpa_loop unfolding top1_is_loop_on_def by (by100 blast)
+  have hpb_path: "top1_is_path_on B TB b0 b0 (p \<circ> \<beta>)"
+    using hpb_loop unfolding top1_is_loop_on_def by (by100 blast)
+  from Theorem_54_3[OF assms(1) hTE _ assms(4,5) hpa_path hpb_path hpab_hom
+      h\<alpha>_path h\<alpha>_lift h\<beta>_path h\<beta>_lift]
+  have "top1_path_homotopic_on E TE e0 e0 \<alpha> \<beta>"
+    sorry \<comment> \<open>Theorem\_54\_3 + TB topology assumption.\<close>
+  \<comment> \<open>Path homotopic loops are in the same equivalence class.\<close>
+  hence "top1_loop_equiv_on E TE e0 \<alpha> \<beta>"
+    sorry \<comment> \<open>Path homotopy of loops implies loop equivalence.\<close>
+  \<comment> \<open>So c1 = c2.\<close>
+  thus "c1 = c2"
+    sorry \<comment> \<open>Both \<alpha> \<in> c1, \<beta> \<in> c2, \<alpha> ~ \<beta> implies c1 = c2.\<close>
+qed
 
 text \<open>deck\_transformation\_homeomorphism and deck\_transformations\_group are defined
   after the top1\_covering\_transformation\_on definition in \<S>81.\<close>
