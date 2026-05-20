@@ -4805,8 +4805,42 @@ proof -
     by (rule first_isomorphism_theorem[OF hF_grp hNF_normal hHG_grp hj_hom hj_surj hker_j])
   \<comment> \<open>Step C3: F/[F,F] is free abelian on S (Theorem 69.4).\<close>
   \<comment> \<open>Step C4: Transfer via iso G/[G,G] \<cong> F/[F,F] + free\_abelian\_invariant\_under\_iso.\<close>
-  show ?thesis using hfab habel_G hiso
-    sorry \<comment> \<open>First iso + Theorem\_69\_4 + free\_abelian\_invariant\_under\_iso.\<close>
+  \<comment> \<open>Step C3-C4: F/[F,F] is free abelian on S. Transfer to G/[G,G] via iso.\<close>
+  have hfab_F: "\<exists>\<iota>HF. top1_is_free_abelian_group_full_on
+      (top1_quotient_group_carrier_on F mulF ?NF) (top1_quotient_group_mul_on mulF)
+      (top1_group_coset_on F mulF ?NF eF)
+      (\<lambda>C. top1_group_coset_on F mulF ?NF (invgF (SOME g. g \<in> F \<and>
+          C = top1_group_coset_on F mulF ?NF g))) \<iota>HF S"
+    using Theorem_69_4[OF hF_free] sorry \<comment> \<open>Extract concrete free abelian from Theorem 69.4.\<close>
+  \<comment> \<open>The iso gives G/[G,G] \<cong> F/[F,F]. Transfer free abelian.\<close>
+  from hfab_F obtain \<iota>HF where hfa_F:
+    "top1_is_free_abelian_group_full_on
+      (top1_quotient_group_carrier_on F mulF ?NF) (top1_quotient_group_mul_on mulF)
+      (top1_group_coset_on F mulF ?NF eF)
+      (\<lambda>C. top1_group_coset_on F mulF ?NF (invgF (SOME g. g \<in> F \<and>
+          C = top1_group_coset_on F mulF ?NF g))) \<iota>HF S"
+    by (by100 blast)
+  \<comment> \<open>G/[G,G] is abelian.\<close>
+  have hHG_abel: "top1_is_abelian_group_on ?HG ?mulHG ?eHG
+      (\<lambda>C. top1_group_coset_on G mulG ?NG (invgG (SOME g. g \<in> G \<and> C = ?\<phi>G g)))"
+    using habel_G unfolding top1_is_abelianization_of_def by (by100 blast)
+  \<comment> \<open>Use isomorphism + free\_abelian\_invariant\_under\_iso.\<close>
+  from hiso obtain fiso where hfiso:
+    "top1_group_iso_on ?HG ?mulHG
+      (top1_quotient_group_carrier_on F mulF ?NF) (top1_quotient_group_mul_on mulF) fiso"
+    unfolding top1_groups_isomorphic_on_def by (by100 blast)
+  \<comment> \<open>The inverse iso transfers free abelian from F/[F,F] to G/[G,G].\<close>
+  have "\<exists>\<iota>'. top1_is_free_abelian_group_full_on ?HG ?mulHG ?eHG
+      (\<lambda>C. top1_group_coset_on G mulG ?NG (invgG (SOME g. g \<in> G \<and> C = ?\<phi>G g))) \<iota>' S"
+    sorry \<comment> \<open>Need inverse iso + free\_abelian\_invariant\_under\_iso. Type issues.\<close>
+  then obtain \<iota>H where hfa_G: "top1_is_free_abelian_group_full_on ?HG ?mulHG ?eHG
+      (\<lambda>C. top1_group_coset_on G mulG ?NG (invgG (SOME g. g \<in> G \<and> C = ?\<phi>G g))) \<iota>H S"
+    by (by100 blast)
+  show ?thesis
+    apply (rule exI[of _ ?HG], rule exI[of _ ?mulHG], rule exI[of _ ?eHG])
+    apply (rule exI[of _ "\<lambda>C. top1_group_coset_on G mulG ?NG (invgG (SOME g. g \<in> G \<and> C = ?\<phi>G g))"])
+    apply (rule exI[of _ ?\<phi>G], rule exI[of _ \<iota>H])
+    using habel_G hfa_G by (by100 blast)
 qed
 
 
