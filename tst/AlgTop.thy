@@ -7193,9 +7193,21 @@ proof -
     \<comment> \<open>Step 1: Extract G0 (presented group) and its iso to \<pi>_1(X).\<close>
     \<comment> \<open>Uses abelianization\_of\_presented\_group after extracting F, \<pi> from presentation
        and showing relator \<in> [F,F]. Then transfer via G0 \<cong> \<pi>_1(X).\<close>
-    show ?thesis using h_presentation
-      sorry \<comment> \<open>Extract F from presentation, show ker \<subseteq> [F,F],
-         apply abelianization\_of\_presented\_group, transfer via iso.\<close>
+    \<comment> \<open>The presented group G0 and its presentation exist from h\_presentation.
+       We use SOME to extract witnesses since obtain fails on deep existentials.\<close>
+    have h_pres_core: "\<exists>(G0::'g set) mul0 e0 invg0 (F::'g set) mulF eF invgF (\<iota>F::nat \<Rightarrow> 'g) \<pi>.
+        top1_is_free_group_full_on F mulF eF invgF \<iota>F ({..<2*n}::nat set)
+      \<and> top1_is_group_on G0 mul0 e0 invg0
+      \<and> top1_group_hom_on F mulF G0 mul0 \<pi> \<and> \<pi> ` F = G0
+      \<and> top1_group_kernel_on F e0 \<pi> \<subseteq> top1_commutator_subgroup_on F mulF eF invgF
+      \<and> top1_groups_isomorphic_on G0 mul0
+          (top1_fundamental_group_carrier X TX x0) (top1_fundamental_group_mul X TX x0)"
+      using h_presentation
+      sorry \<comment> \<open>Extract F from presented\_by + show relator's word product \<in> [F,F]
+         hence ker(\<pi>) = normal\_closure(relator) \<subseteq> [F,F].\<close>
+    \<comment> \<open>Apply abelianization\_of\_presented\_group + iso transfer.\<close>
+    show ?thesis using h_pres_core
+      sorry \<comment> \<open>abelianization\_of\_presented\_group + iso transfer to \<pi>_1(X).\<close>
   qed
   show ?thesis using h_abelianize by (by100 blast)
 qed
