@@ -1546,13 +1546,13 @@ proof -
   show ?thesis unfolding top1_group_iso_on_def using hgf_hom hgf_bij by (by100 blast)
 qed
 
-text \<open>Isomorphism maps subgroups to subgroups.\<close>
-lemma group_iso_on_image_subgroup:
+text \<open>Isomorphism maps normal subgroups to normal subgroups.\<close>
+lemma group_iso_on_image_normal_subgroup:
   assumes "top1_group_iso_on G mulG H mulH f"
       and "top1_is_group_on G mulG eG invgG"
       and "top1_is_group_on H mulH eH invgH"
-      and "top1_is_subgroup_on G mulG eG invgG S"
-  shows "top1_is_subgroup_on H mulH eH invgH (f ` S)"
+      and "top1_normal_subgroup_on G mulG eG invgG N"
+  shows "top1_normal_subgroup_on H mulH eH invgH (f ` N)"
   sorry
 
 text \<open>Normal closure is the least normal subgroup containing a set.\<close>
@@ -1617,7 +1617,10 @@ proof -
       also have "\<dots> = mulH (mulH (invgH (f e)) (f e)) (f e)"
         using \<open>mulH (invgH (f e)) (f e) = eH\<close> by (by100 simp)
       also have "\<dots> = mulH (invgH (f e)) (mulH (f e) (f e))"
-        sorry \<comment> \<open>Associativity in H.\<close>
+      proof -
+        have "invgH (f e) \<in> H" using assms(3) hfe_H unfolding top1_is_group_on_def by (by100 blast)
+        thus ?thesis using assms(3) \<open>invgH (f e) \<in> H\<close> hfe_H unfolding top1_is_group_on_def by (by100 blast)
+      qed
       also have "\<dots> = mulH (invgH (f e)) (f e)" using \<open>mulH (f e) (f e) = f e\<close> by (by100 simp)
       also have "\<dots> = eH" using \<open>mulH (invgH (f e)) (f e) = eH\<close> .
       finally show "f e = eH" .
@@ -1626,15 +1629,71 @@ proof -
     \<comment> \<open>From mulH(f(invg g))(f h) = eH and mulH(f g)(f(invg g)) = eH:
        f(invg g) = invgH(f g), so f h = f g.\<close>
     show "f g = f h"
-      using \<open>mulH (f (invg g)) (f h) = eH\<close> \<open>mulH (f g) (f (invg g)) = eH\<close>
-        hfg_H hfh_H hfinvg_H assms(3)
-      unfolding top1_is_group_on_def
-      sorry \<comment> \<open>Group cancellation: a\<cdot>b=e and c\<cdot>a=e imply b=c.\<close>
+    proof -
+      \<comment> \<open>From mulH(f g)(f(invg g)) = eH: f(invg g) = invgH(f g).\<close>
+      have hH_id: "\<And>x. x \<in> H \<Longrightarrow> mulH eH x = x"
+        using assms(3) unfolding top1_is_group_on_def by (by100 blast)
+      have hH_assoc: "\<And>x y z. x \<in> H \<Longrightarrow> y \<in> H \<Longrightarrow> z \<in> H \<Longrightarrow> mulH (mulH x y) z = mulH x (mulH y z)"
+        using assms(3) unfolding top1_is_group_on_def by (by100 blast)
+      have hH_rid: "\<And>x. x \<in> H \<Longrightarrow> mulH x eH = x"
+        using assms(3) unfolding top1_is_group_on_def by (by100 blast)
+      have "f h = mulH eH (f h)" using hH_id[OF hfh_H] by (by100 simp)
+      also have "\<dots> = mulH (mulH (f g) (f (invg g))) (f h)"
+        using \<open>mulH (f g) (f (invg g)) = eH\<close> by (by100 simp)
+      also have "\<dots> = mulH (f g) (mulH (f (invg g)) (f h))"
+        using hH_assoc[OF hfg_H hfinvg_H hfh_H] by (by100 simp)
+      also have "\<dots> = mulH (f g) eH"
+        using \<open>mulH (f (invg g)) (f h) = eH\<close> by (by100 simp)
+      also have "\<dots> = f g" using hH_rid[OF hfg_H] by (by100 simp)
+      finally show ?thesis by (by100 simp)
+    qed
   qed
   have hfbar_eq: "\<forall>g\<in>G. fbar (?coset g) = f g"
-    sorry \<comment> \<open>From well-definedness + SOME choice.\<close>
+  proof (intro ballI)
+    fix g assume hg: "g \<in> G"
+    \<comment> \<open>fbar(coset g) = f(SOME g'. g' \<in> G \<and> coset g = coset g').\<close>
+    let ?rep = "SOME g'. g' \<in> G \<and> ?coset g = ?coset g'"
+    have "?rep \<in> G \<and> ?coset g = ?coset ?rep"
+    proof (rule someI[of "\<lambda>g'. g' \<in> G \<and> ?coset g = ?coset g'"])
+      show "g \<in> G \<and> ?coset g = ?coset g" using hg by (by100 blast)
+    qed
+    hence hrep_G: "?rep \<in> G" and hrep_eq: "?coset g = ?coset ?rep" by (by100 blast)+
+    show "fbar (?coset g) = f g"
+      unfolding fbar_def using hwd hrep_G hg hrep_eq by (by100 blast)
+  qed
   have hfbar_hom: "top1_group_hom_on ?Q ?mulQ H mulH fbar"
-    sorry \<comment> \<open>From normal\_coset\_mul\_eq + hfbar\_eq.\<close>
+    unfolding top1_group_hom_on_def
+  proof (intro conjI ballI)
+    \<comment> \<open>fbar maps Q into H.\<close>
+    fix C assume "C \<in> ?Q"
+    then obtain g where hg: "g \<in> G" "C = ?coset g"
+      unfolding top1_quotient_group_carrier_on_def by (by100 blast)
+    have "fbar C = fbar (?coset g)" using hg(2) by (by100 simp)
+    also have "\<dots> = f g" using hfbar_eq hg(1) by (by100 blast)
+    finally have "fbar C = f g" .
+    moreover have "f g \<in> H" using assms(4) hg(1) unfolding top1_group_hom_on_def by (by100 blast)
+    ultimately show "fbar C \<in> H" by (by100 simp)
+  next
+    \<comment> \<open>fbar(C1 \<cdot> C2) = mulH(fbar C1)(fbar C2).\<close>
+    fix C1 C2 assume hC1: "C1 \<in> ?Q" and hC2: "C2 \<in> ?Q"
+    obtain g1 where hg1: "g1 \<in> G" "C1 = ?coset g1"
+      using hC1 unfolding top1_quotient_group_carrier_on_def by (by100 blast)
+    obtain g2 where hg2: "g2 \<in> G" "C2 = ?coset g2"
+      using hC2 unfolding top1_quotient_group_carrier_on_def by (by100 blast)
+    have "?mulQ C1 C2 = ?coset (mul g1 g2)"
+      using normal_coset_mul_eq[OF assms(1,2) hg1(1) hg2(1)] hg1(2) hg2(2) by (by100 simp)
+    hence "fbar (?mulQ C1 C2) = f (mul g1 g2)"
+    proof -
+      have "mul g1 g2 \<in> G" using assms(1) hg1(1) hg2(1) unfolding top1_is_group_on_def by (by100 blast)
+      have "fbar (?coset (mul g1 g2)) = f (mul g1 g2)" using hfbar_eq \<open>mul g1 g2 \<in> G\<close> by (by100 blast)
+      thus ?thesis using \<open>?mulQ C1 C2 = ?coset (mul g1 g2)\<close> by (by100 simp)
+    qed
+    also have "\<dots> = mulH (f g1) (f g2)"
+      using assms(4) hg1(1) hg2(1) unfolding top1_group_hom_on_def by (by100 blast)
+    also have "\<dots> = mulH (fbar C1) (fbar C2)"
+      using hfbar_eq hg1 hg2 by (by100 simp)
+    finally show "fbar (?mulQ C1 C2) = mulH (fbar C1) (fbar C2)" .
+  qed
   show ?thesis using hfbar_hom hfbar_eq by (by100 blast)
 qed
 
