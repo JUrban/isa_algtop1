@@ -3473,6 +3473,20 @@ next
   thus ?case by (by100 simp)
 qed
 
+text \<open>Integer group\_pow: iterated addition = multiplication.\<close>
+lemma int_group_pow: "top1_group_pow (+) (0::int) k n = int n * k"
+proof (induction n)
+  case 0 show ?case by (by100 simp)
+next
+  case (Suc n)
+  have "top1_group_pow (+) (0::int) k (Suc n) = k + top1_group_pow (+) (0::int) k n"
+    by (by100 simp)
+  also have "\<dots> = k + int n * k" using Suc.IH by (by100 simp)
+  also have "\<dots> = (1 + int n) * k" by (by100 algebra)
+  also have "\<dots> = int (Suc n) * k" by (by100 simp)
+  finally show ?case .
+qed
+
 text \<open>Homomorphism distributes over group\_pow.\<close>
 lemma hom_group_pow:
   assumes hG: "top1_is_group_on G mul e invg"
@@ -3725,7 +3739,40 @@ proof -
       have heps_term: "\<And>s. s \<in> S \<Longrightarrow>
         \<epsilon> (if c s \<ge> 0 then top1_group_pow mul e (\<iota> s) (nat (c s))
             else top1_group_pow mul e (invg (\<iota> s)) (nat (- c s))) = c s * \<epsilon> (\<iota> s)"
-        sorry \<comment> \<open>hom\_group\_pow: \<epsilon>(pow(\<iota> s, n)) = n\<cdot>\<epsilon>(\<iota> s); hom\_preserves\_inv for neg case.\<close>
+      proof -
+        fix s assume hs: "s \<in> S"
+        have h\<iota>s: "\<iota> s \<in> G" using hgen_in_G hs by (by100 blast)
+        have hinvs: "invg (\<iota> s) \<in> G" using hG h\<iota>s unfolding top1_is_group_on_def by (by100 blast)
+        show "\<epsilon> (if c s \<ge> 0 then top1_group_pow mul e (\<iota> s) (nat (c s))
+            else top1_group_pow mul e (invg (\<iota> s)) (nat (- c s))) = c s * \<epsilon> (\<iota> s)"
+        proof (cases "c s \<ge> 0")
+          case True
+          \<comment> \<open>\<epsilon>(pow(\<iota> s, nat(c s))) = pow (+) 0 (\<epsilon>(\<iota> s)) (nat(c s)) by hom\_group\_pow.\<close>
+          have "\<epsilon> (top1_group_pow mul e (\<iota> s) (nat (c s)))
+              = top1_group_pow (+) (0::int) (\<epsilon> (\<iota> s)) (nat (c s))"
+            by (rule hom_group_pow[OF hG hZ heps h\<iota>s])
+          \<comment> \<open>pow (+) 0 k n = int n * k.\<close>
+          also have "top1_group_pow (+) (0::int) (\<epsilon> (\<iota> s)) (nat (c s)) = int (nat (c s)) * \<epsilon> (\<iota> s)"
+            by (rule int_group_pow)
+          also have "int (nat (c s)) = c s" using True by (by100 simp)
+          finally show ?thesis using True by (by100 simp)
+        next
+          case False
+          hence hlt: "c s < 0" by (by100 simp)
+          \<comment> \<open>\<epsilon>(invg(\<iota> s)) = -\<epsilon>(\<iota> s) by hom\_preserves\_inv.\<close>
+          have heps_inv: "\<epsilon> (invg (\<iota> s)) = - \<epsilon> (\<iota> s)"
+            by (rule hom_preserves_inv[OF hG hZ heps h\<iota>s])
+          \<comment> \<open>\<epsilon>(pow(invg(\<iota> s), nat(-c s))) = nat(-c s) * \<epsilon>(invg(\<iota> s)).\<close>
+          have "\<epsilon> (top1_group_pow mul e (invg (\<iota> s)) (nat (- c s)))
+              = top1_group_pow (+) (0::int) (\<epsilon> (invg (\<iota> s))) (nat (- c s))"
+            by (rule hom_group_pow[OF hG hZ heps hinvs])
+          also have "\<dots> = int (nat (- c s)) * \<epsilon> (invg (\<iota> s))"
+            by (rule int_group_pow)
+          also have "\<dots> = int (nat (- c s)) * (- \<epsilon> (\<iota> s))" using heps_inv by (by100 simp)
+          also have "\<dots> = c s * \<epsilon> (\<iota> s)" using hlt by (by100 simp)
+          finally show ?thesis using False by (by100 simp)
+        qed
+      qed
       \<comment> \<open>Step 2: \<epsilon> distributes over foldr → sum of individual terms.\<close>
       have heps_foldr: "\<epsilon> ?gp = (\<Sum>s\<leftarrow>?xs. c s * \<epsilon> (\<iota> s))"
         sorry \<comment> \<open>hom\_foldr\_mul for \<epsilon> + step 1 → sum\_list of c(s)\<cdot>\<epsilon>(\<iota>(s)).\<close>
