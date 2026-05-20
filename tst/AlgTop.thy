@@ -1575,7 +1575,30 @@ lemma quotient_group_universal_property:
   shows "\<exists>fbar. top1_group_hom_on (top1_quotient_group_carrier_on G mul N)
       (top1_quotient_group_mul_on mul) H mulH fbar
     \<and> (\<forall>g\<in>G. fbar (top1_group_coset_on G mul N g) = f g)"
-  sorry
+proof -
+  let ?coset = "\<lambda>g. top1_group_coset_on G mul N g"
+  let ?Q = "top1_quotient_group_carrier_on G mul N"
+  let ?mulQ = "top1_quotient_group_mul_on mul"
+  \<comment> \<open>Define fbar: for coset C, pick representative g and return f(g).\<close>
+  define fbar where "fbar = (\<lambda>C. f (SOME g. g \<in> G \<and> C = ?coset g))"
+  \<comment> \<open>Well-defined: if ?coset g = ?coset h then f g = f h.\<close>
+  have hwd: "\<forall>g\<in>G. \<forall>h\<in>G. ?coset g = ?coset h \<longrightarrow> f g = f h"
+  proof (intro ballI impI)
+    fix g h assume hg: "g \<in> G" and hh: "h \<in> G" and heq: "?coset g = ?coset h"
+    have "mul (invg g) h \<in> N"
+      using normal_coset_eq[OF assms(1,2) hg hh] heq by (by100 blast)
+    hence "mul (invg g) h \<in> top1_group_kernel_on G eH f" using assms(5) by (by100 blast)
+    hence "f (mul (invg g) h) = eH" unfolding top1_group_kernel_on_def by (by100 blast)
+    moreover have "f (mul (invg g) h) = mulH (f (invg g)) (f h)"
+      sorry \<comment> \<open>f is homomorphism; invg g \<in> G and h \<in> G.\<close>
+    ultimately show "f g = f h" sorry \<comment> \<open>From f(g\<inverse>\<cdot>h)=e: f(g\<inverse>)\<cdot>f(h)=e, so f(h)=f(g).\<close>
+  qed
+  have hfbar_eq: "\<forall>g\<in>G. fbar (?coset g) = f g"
+    sorry \<comment> \<open>From well-definedness + SOME choice.\<close>
+  have hfbar_hom: "top1_group_hom_on ?Q ?mulQ H mulH fbar"
+    sorry \<comment> \<open>From normal\_coset\_mul\_eq + hfbar\_eq.\<close>
+  show ?thesis using hfbar_hom hfbar_eq by (by100 blast)
+qed
 
 text \<open>Free groups are invariant under group isomorphism: if G is free on S and G \<cong> H,
   then H is free on the image of S.\<close>
