@@ -2035,7 +2035,7 @@ next
   moreover have "top1_is_reduced_word (map (\<lambda>(s, b). (g s, b)) (b # ws'))"
     by (rule 3(2)[OF hin_rest hrest])
   ultimately show ?case using ha hb
-    sorry \<comment> \<open>Assembling conjunction: pair ≠/= + reduced tail → reduced full list.\<close>
+    using \<open>g sa \<noteq> g sb \<or> ba = bb\<close> by (by100 force)
 qed
 
 text \<open>Free groups are invariant under group isomorphism: if G is free on S and G \<cong> H,
@@ -2168,7 +2168,10 @@ proof -
       and hin: "\<forall>i<length ws. fst (ws!i) \<in> S"
     \<comment> \<open>Reducedness of \<iota>'(ws) implies reducedness of \<iota>(ws) since f\<circ>\<iota> is injective.\<close>
     have hred_G: "top1_is_reduced_word (map (\<lambda>(s, b). (\<iota> s, b)) ws)"
-      sorry \<comment> \<open>Induction on ws: \<iota>' inj on S \<Longrightarrow> reduced(\<iota>') \<Longrightarrow> reduced(\<iota>).\<close>
+    proof (rule reduced_word_transfer[OF _ hin hred])
+      fix s t assume "s \<in> S" "t \<in> S" "\<iota> s = \<iota> t"
+      thus "\<iota>' s = \<iota>' t" unfolding \<iota>'_def by (by100 simp)
+    qed
     \<comment> \<open>Product in H = f(product in G) by homomorphism.\<close>
     have hf_e: "f e = eH" by (rule hom_preserves_id[OF hG assms(3) hf_hom])
     have hprod: "top1_group_word_product mulH eH invgH (map (\<lambda>(s, b). (\<iota>' s, b)) ws)
