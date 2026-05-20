@@ -11287,8 +11287,114 @@ proof -
   let ?invC = "\<lambda>h. (\<lambda>e. if e \<in> E then inv_into E h e else e)"
   have hinv: "\<And>h. top1_covering_transformation_on E TE B TB p h \<Longrightarrow>
       top1_covering_transformation_on E TE B TB p (?invC h)"
-    sorry \<comment> \<open>Modified inverse is CT: homeomorphism via cong + inv\_into,
-       p-preservation by same chain as before, identity outside E by if-then-else.\<close>
+  proof -
+    fix h assume hh: "top1_covering_transformation_on E TE B TB p h"
+    have hh_homeo: "top1_homeomorphism_on E TE E TE h"
+      using hh unfolding top1_covering_transformation_on_def by (by100 blast)
+    have hh_p: "\<forall>e\<in>E. p (h e) = p e"
+      using hh unfolding top1_covering_transformation_on_def by (by100 blast)
+    have hh_out: "\<forall>e. e \<notin> E \<longrightarrow> h e = e"
+      using hh unfolding top1_covering_transformation_on_def by (by100 blast)
+    have hbij: "bij_betw h E E" using hh_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+    have hinj: "inj_on h E" using hbij unfolding bij_betw_def by (by100 blast)
+    have hsurj: "h ` E = E" using hbij unfolding bij_betw_def by (by100 blast)
+    \<comment> \<open>Condition 1: homeomorphism (via agree-on-E with inv\_into E h).\<close>
+    have hinv_raw: "top1_homeomorphism_on E TE E TE (inv_into E h)"
+      by (rule homeomorphism_inverse[OF hh_homeo])
+    have hagree: "\<forall>e\<in>E. (?invC h) e = inv_into E h e" by (by100 simp)
+    have h_homeo: "top1_homeomorphism_on E TE E TE (?invC h)"
+      unfolding top1_homeomorphism_on_def
+    proof (intro conjI)
+      show "is_topology_on E TE" by (rule hTE)
+      show "is_topology_on E TE" by (rule hTE)
+      \<comment> \<open>bij\_betw: since ?invC h agrees with inv\_into E h on E.\<close>
+      have hbij_raw: "bij_betw (inv_into E h) E E"
+        using hinv_raw unfolding top1_homeomorphism_on_def by (by100 blast)
+      show "bij_betw (?invC h) E E"
+      proof -
+        have "inj_on (?invC h) E"
+        proof (rule inj_onI)
+          fix x y assume hx: "x \<in> E" and hy: "y \<in> E"
+            and heq: "(?invC h) x = (?invC h) y"
+          from heq hx hy have "inv_into E h x = inv_into E h y" by (by100 simp)
+          thus "x = y" using hbij_raw hx hy
+            unfolding bij_betw_def inj_on_def by (by100 blast)
+        qed
+        moreover have "(?invC h) ` E = E"
+        proof -
+          have "\<forall>e\<in>E. (?invC h) e = inv_into E h e" by (by100 simp)
+          hence "(?invC h) ` E = inv_into E h ` E" by (by100 force)
+          also have "\<dots> = E" using hbij_raw unfolding bij_betw_def by (by100 blast)
+          finally show ?thesis .
+        qed
+        ultimately show ?thesis unfolding bij_betw_def by (by100 blast)
+      qed
+      \<comment> \<open>Continuity: via cong with inv\_into E h.\<close>
+      have hcont_raw: "top1_continuous_map_on E TE E TE (inv_into E h)"
+        using hinv_raw unfolding top1_homeomorphism_on_def by (by100 blast)
+      show "top1_continuous_map_on E TE E TE (?invC h)"
+        using top1_continuous_map_on_cong[of E "?invC h" "inv_into E h"] hagree hcont_raw
+        by (by100 blast)
+      \<comment> \<open>Inverse continuity: inv\_into E (?invC h) agrees with h on E.\<close>
+      show "top1_continuous_map_on E TE E TE (inv_into E (?invC h))"
+      proof -
+        \<comment> \<open>inv\_into E (?invC h) agrees with h on E.\<close>
+        have "\<forall>e\<in>E. inv_into E (?invC h) e = h e"
+        proof (intro ballI)
+          fix e assume he: "e \<in> E"
+          have hhe: "h e \<in> E" using hsurj he by (by100 blast)
+          have "(?invC h) (h e) = inv_into E h (h e)" using hhe by (by100 simp)
+          also have "\<dots> = e" by (rule inv_into_f_f[OF hinj he])
+          finally have "(?invC h) (h e) = e" .
+          moreover have "h e \<in> E" by (rule hhe)
+          moreover have "inj_on (?invC h) E"
+          proof (rule inj_onI)
+            fix x y assume hx: "x \<in> E" and hy: "y \<in> E"
+              and heq: "(?invC h) x = (?invC h) y"
+            from heq hx hy have "inv_into E h x = inv_into E h y" by (by100 simp)
+            thus "x = y" using hbij_raw hx hy
+              unfolding bij_betw_def inj_on_def by (by100 blast)
+          qed
+          ultimately show "inv_into E (?invC h) e = h e"
+          proof -
+            assume h1: "(?invC h) (h e) = e" and h2: "h e \<in> E"
+               and h3: "inj_on (?invC h) E"
+            have "inv_into E (?invC h) ((?invC h) (h e)) = h e"
+              by (rule inv_into_f_f[OF h3 h2])
+            thus ?thesis using h1 by (by100 simp)
+          qed
+        qed
+        hence "top1_continuous_map_on E TE E TE (inv_into E (?invC h))
+             \<longleftrightarrow> top1_continuous_map_on E TE E TE h"
+          by (rule top1_continuous_map_on_cong)
+        moreover have "top1_continuous_map_on E TE E TE h"
+          using hh_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+        ultimately show ?thesis by (by100 blast)
+      qed
+    qed
+    \<comment> \<open>Condition 2: p-preservation.\<close>
+    have h_p: "\<forall>e\<in>E. p ((?invC h) e) = p e"
+    proof (intro ballI)
+      fix e assume he: "e \<in> E"
+      have "e \<in> h ` E" using he hsurj by (by100 blast)
+      have hinv_E: "inv_into E h e \<in> E" using inv_into_into[OF \<open>e \<in> h ` E\<close>] by (by100 blast)
+      have "(?invC h) e = inv_into E h e" using he by (by100 simp)
+      moreover have "p (inv_into E h e) = p e"
+      proof -
+        have "p (h (inv_into E h e)) = p (inv_into E h e)"
+          using hh_p hinv_E by (by100 blast)
+        moreover have "h (inv_into E h e) = e"
+          using f_inv_into_f[OF \<open>e \<in> h ` E\<close>] by (by100 blast)
+        ultimately show ?thesis by (by100 simp)
+      qed
+      ultimately show "p ((?invC h) e) = p e" by (by100 simp)
+    qed
+    \<comment> \<open>Condition 3: identity outside E (trivial from if-then-else).\<close>
+    have h_out: "\<forall>e. e \<notin> E \<longrightarrow> (?invC h) e = e" by (by100 simp)
+    show "top1_covering_transformation_on E TE B TB p (?invC h)"
+      unfolding top1_covering_transformation_on_def
+      using h_homeo h_p h_out by (by100 blast)
+  qed
   \<comment> \<open>Group axioms: associativity, identity, inverse.\<close>
   have hassoc: "\<forall>h\<in>?Cov. \<forall>k\<in>?Cov. \<forall>l\<in>?Cov.
       ?mul (?mul h k) l = ?mul h (?mul k l)"
