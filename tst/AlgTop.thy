@@ -3799,11 +3799,47 @@ proof -
             case False thus ?thesis using heps_other hs_S by (by100 simp)
           qed
         qed
+        hence hterm_map: "map (\<lambda>s. c s * \<epsilon> (\<iota> s)) ?xs = map (\<lambda>s. if s = s0 then c s0 else (0::int)) ?xs"
+        proof (intro nth_equalityI)
+          show "length (map (\<lambda>s. c s * \<epsilon> (\<iota> s)) ?xs) = length (map (\<lambda>s. if s = s0 then c s0 else 0) ?xs)"
+            by (by100 simp)
+        next
+          fix i assume "i < length (map (\<lambda>s. c s * \<epsilon> (\<iota> s)) ?xs)"
+          hence hi: "i < length ?xs" by (by100 simp)
+          hence "?xs!i \<in> set ?xs" by (rule nth_mem)
+          thus "map (\<lambda>s. c s * \<epsilon> (\<iota> s)) ?xs ! i = map (\<lambda>s. if s = s0 then c s0 else (0::int)) ?xs ! i"
+            using \<open>\<And>s. s \<in> set ?xs \<Longrightarrow> c s * \<epsilon> (\<iota> s) = (if s = s0 then c s0 else 0)\<close> hi
+            by (by100 simp)
+        qed
+        hence "sum_list (map (\<lambda>s. c s * \<epsilon> (\<iota> s)) ?xs) = sum_list (map (\<lambda>s. if s = s0 then c s0 else (0::int)) ?xs)"
+          by (rule arg_cong[of _ _ sum_list])
         hence "(\<Sum>s\<leftarrow>?xs. c s * \<epsilon> (\<iota> s)) = (\<Sum>s\<leftarrow>?xs. if s = s0 then c s0 else 0)"
-          sorry \<comment> \<open>Each term equal \<Rightarrow> sum\_list equal.\<close>
+          by (by100 simp)
         also have "\<dots> = c s0"
-          sorry \<comment> \<open>sum\_list [if s=s0 then c(s0) else 0 | s \<leftarrow> xs] = c(s0);
-             s0 \<in> set xs, distinct xs \<Rightarrow> exactly one nonzero term.\<close>
+        proof -
+          {fix ys :: "'s list"
+           assume hyin: "s0 \<in> set ys" and hdist: "distinct ys"
+           hence "(\<Sum>s\<leftarrow>ys. if s = s0 then c s0 else (0::int)) = c s0"
+           proof (induction ys)
+             case Nil thus ?case by (by100 simp)
+           next
+             case (Cons a ys')
+             show ?case
+             proof (cases "a = s0")
+               case True
+               hence "s0 \<notin> set ys'" using Cons.prems(2) by (by100 force)
+               hence "(\<Sum>s\<leftarrow>ys'. if s = s0 then c s0 else (0::int)) = 0"
+                 by (induction ys') (by100 auto)+
+               thus ?thesis using True by (by100 simp)
+             next
+               case False
+               hence "s0 \<in> set ys'" using Cons.prems(1) by (by100 simp)
+               moreover have "distinct ys'" using Cons.prems(2) by (by100 simp)
+               ultimately show ?thesis using False Cons.IH by (by100 simp)
+             qed
+           qed}
+          thus ?thesis using hs0_in hdist by (by100 blast)
+        qed
         finally show ?thesis .
       qed
       show ?thesis using heps_foldr heps_sum by (by100 simp)
