@@ -3762,7 +3762,57 @@ proof -
         qed
       qed
       \<comment> \<open>The full H-level foldr = \<phi>(G-level foldr) by induction using h\_term\_eq.\<close>
-      show ?thesis sorry \<comment> \<open>Induction on ?xs using h\_term\_eq + hom distributes over mul.\<close>
+      \<comment> \<open>The H-level map = map \<phi> of G-level map (by h\_term\_eq).\<close>
+      let ?g_terms = "map (\<lambda>s. if c s \<ge> 0 then top1_group_pow mul e (\<iota> s) (nat (c s))
+          else top1_group_pow mul e (invg (\<iota> s)) (nat (- c s))) ?xs"
+      have hmap_phi: "map (\<lambda>s.
+          if c s \<ge> 0 then top1_group_pow ?mulH ?eH (?\<iota>H s) (nat (c s))
+          else top1_group_pow ?mulH ?eH (?invgH (?\<iota>H s)) (nat (- c s))) ?xs
+        = map ?\<phi> ?g_terms"
+      proof (rule nth_equalityI)
+        show "length (map (\<lambda>s.
+          if c s \<ge> 0 then top1_group_pow ?mulH ?eH (?\<iota>H s) (nat (c s))
+          else top1_group_pow ?mulH ?eH (?invgH (?\<iota>H s)) (nat (- c s))) ?xs)
+        = length (map ?\<phi> ?g_terms)" by (by100 simp)
+      next
+        fix i assume hi: "i < length (map (\<lambda>s.
+          if c s \<ge> 0 then top1_group_pow ?mulH ?eH (?\<iota>H s) (nat (c s))
+          else top1_group_pow ?mulH ?eH (?invgH (?\<iota>H s)) (nat (- c s))) ?xs)"
+        hence hi': "i < length ?xs" by (by100 simp)
+        have hsi: "?xs ! i \<in> S"
+        proof -
+          have "\<exists>xs. set xs = {s \<in> S. c s \<noteq> 0} \<and> distinct xs"
+            using finite_distinct_list[OF hfin] by (by100 blast)
+          hence "set ?xs = {s \<in> S. c s \<noteq> 0} \<and> distinct ?xs" by (rule someI_ex)
+          thus ?thesis using nth_mem[OF hi'] by (by100 blast)
+        qed
+        show "(map (\<lambda>s. if c s \<ge> 0 then top1_group_pow ?mulH ?eH (?\<iota>H s) (nat (c s))
+          else top1_group_pow ?mulH ?eH (?invgH (?\<iota>H s)) (nat (- c s))) ?xs) ! i
+          = (map ?\<phi> ?g_terms) ! i"
+          using h_term_eq[OF hsi] hi' by (by100 simp)
+      qed
+      \<comment> \<open>Now use hom\_foldr\_mul: \<phi>(foldr mul ?g\_terms e) = foldr ?mulH (map \<phi> ?g\_terms) ?eH.\<close>
+      have hg_terms_G: "\<forall>i<length ?g_terms. ?g_terms!i \<in> G"
+      proof (intro allI impI)
+        fix i assume hi: "i < length ?g_terms"
+        hence hi': "i < length ?xs" by (by100 simp)
+        have hsi: "?xs ! i \<in> S"
+        proof -
+          have "\<exists>xs. set xs = {s \<in> S. c s \<noteq> 0} \<and> distinct xs"
+            using finite_distinct_list[OF hfin] by (by100 blast)
+          hence "set ?xs = {s \<in> S. c s \<noteq> 0} \<and> distinct ?xs" by (rule someI_ex)
+          thus ?thesis using nth_mem[OF hi'] by (by100 blast)
+        qed
+        have h\<iota>si: "\<iota> (?xs!i) \<in> G" using hgen_in_G hsi by (by100 blast)
+        have hinvsi: "invg (\<iota> (?xs!i)) \<in> G"
+          using hG h\<iota>si unfolding top1_is_group_on_def by (by100 blast)
+        show "?g_terms!i \<in> G" using hi'
+          group_pow_in_group[OF hG h\<iota>si] group_pow_in_group[OF hG hinvsi]
+          by (by100 auto)
+      qed
+      have hfoldr_eq: "?\<phi> (foldr mul ?g_terms e) = foldr ?mulH (map ?\<phi> ?g_terms) ?eH"
+        sorry \<comment> \<open>hom\_foldr\_mul[OF hG hH\_grp' hphi\_hom' hg\_terms\_G] -- unification issue.\<close>
+      show ?thesis using hmap_phi hfoldr_eq sorry
     qed
     show "foldr ?mulH (map (\<lambda>s.
           if c s \<ge> 0 then top1_group_pow ?mulH ?eH (?\<iota>H s) (nat (c s))
