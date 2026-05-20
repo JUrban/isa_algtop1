@@ -2235,22 +2235,6 @@ proof -
   ultimately show ?thesis by (by100 blast)
 qed
 
-text \<open>Rank of a finitely generated free group is invariant.\<close>
-lemma free_group_rank_invariant_finite:
-  assumes "top1_is_free_group_full_on G mul e invg \<iota>1 S1"
-      and "top1_is_free_group_full_on G mul e invg \<iota>2 S2"
-      and "finite S1" and "finite S2"
-  shows "card S1 = card S2"
-proof -
-  \<comment> \<open>Munkres: Abelianize G. G/[G,G] is free abelian on both p(S1) and p(S2).
-     By Theorem 67.8, |p(S1)| = |p(S2)|. Since p is injective on generators
-     of a free group, |S1| = |p(S1)| and |S2| = |p(S2)|.\<close>
-  \<comment> \<open>Proof: Abelianize G via Theorem 69.4. G/[G,G] is free abelian
-     on both p(S1) and p(S2). Theorem 67.8 gives |S1| = |S2|.
-     Depends on Theorem\_69\_4 (defined later) and Theorem\_67\_8.\<close>
-  show "card S1 = card S2" sorry
-qed
-
 
 section \<open>\<S>69 Free Groups\<close>
 
@@ -4125,6 +4109,38 @@ proof -
   qed
   show ?thesis using h_abel h_free_abel by (by100 blast)
 qed
+
+text \<open>Rank of a finitely generated free group is invariant.\<close>
+lemma free_group_rank_invariant_finite:
+  assumes "top1_is_free_group_full_on G mul e invg \<iota>1 S1"
+      and "top1_is_free_group_full_on G mul e invg \<iota>2 S2"
+      and "finite S1" and "finite S2"
+  shows "card S1 = card S2"
+proof -
+  \<comment> \<open>Munkres: Abelianize G. G/[G,G] is free abelian on both p(S1) and p(S2).
+     By Theorem 67.8, |p(S1)| = |p(S2)|. Since p is injective on generators
+     of a free group, |S1| = |p(S1)| and |S2| = |p(S2)|.\<close>
+  \<comment> \<open>Proof: Abelianize G via Theorem 69.4. G/[G,G] is free abelian
+     on both p(S1) and p(S2). Theorem 67.8 gives |S1| = |S2|.
+     Depends on Theorem\_69\_4 (defined later) and Theorem\_67\_8.\<close>
+  \<comment> \<open>Munkres Corollary 69.5: Abelianize G via Theorem 69.4. G/[G,G] is free abelian
+     on S1 (from first free group structure) and on S2 (from second).
+     By Theorem 67.8, |S1| = |S2|.\<close>
+  \<comment> \<open>Step 1: Get the concrete abelianization = G/[G,G].\<close>
+  have hG: "top1_is_group_on G mul e invg"
+    using assms(1) unfolding top1_is_free_group_full_on_def by (by100 blast)
+  let ?N = "top1_commutator_subgroup_on G mul e invg"
+  let ?H = "top1_quotient_group_carrier_on G mul ?N"
+  let ?mulH = "top1_quotient_group_mul_on mul"
+  let ?eH = "top1_group_coset_on G mul ?N e"
+  let ?invgH = "\<lambda>C. top1_group_coset_on G mul ?N (invg (SOME g. g \<in> G \<and> C = top1_group_coset_on G mul ?N g))"
+  \<comment> \<open>Steps 2-3: Theorem 69.4 gives free abelian on S1 and S2.\<close>
+  \<comment> \<open>Munkres Corollary 69.5: Theorem\_69\_4 gives free abelian on S1 and S2.
+     Abelianization uniqueness + Theorem\_67\_8 gives |S1| = |S2|.\<close>
+  show "card S1 = card S2" using Theorem_69_4[OF assms(1)] Theorem_69_4[OF assms(2)]
+    assms(3,4) sorry
+qed
+
 
 
 
