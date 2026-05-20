@@ -3772,7 +3772,318 @@ lemma abelianization_independence_on_generators:
         (SOME xs. set xs = {s\<in>S. c s \<noteq> 0} \<and> distinct xs))
       (top1_group_coset_on G mul (top1_commutator_subgroup_on G mul e invg) e)
     \<noteq> top1_group_coset_on G mul (top1_commutator_subgroup_on G mul e invg) e"
-  sorry \<comment> \<open>Proved inside Theorem 69.4 (exponent sum argument, same proof structure).\<close>
+proof -
+  have hG: "top1_is_group_on G mul e invg"
+    using assms(1) unfolding top1_is_free_group_full_on_def by (by100 blast)
+  have hgen_in_G: "\<forall>s\<in>S. \<iota> s \<in> G"
+    using assms(1) unfolding top1_is_free_group_full_on_def by (by100 blast)
+  let ?N = "top1_commutator_subgroup_on G mul e invg"
+  let ?mulH = "top1_quotient_group_mul_on mul"
+  let ?eH = "top1_group_coset_on G mul ?N e"
+  let ?invgH = "\<lambda>C. top1_group_coset_on G mul ?N (invg (SOME g. g \<in> G \<and> C = top1_group_coset_on G mul ?N g))"
+  let ?\<phi> = "\<lambda>g. top1_group_coset_on G mul ?N g"
+  let ?\<iota>H = "\<lambda>s. ?\<phi> (\<iota> s)"
+  have h_abel: "top1_is_abelianization_of
+      (top1_quotient_group_carrier_on G mul ?N) ?mulH ?eH ?invgH G mul e invg ?\<phi>"
+    by (rule abelianization_concrete[OF hG])
+  have hH_abel: "top1_is_abelian_group_on
+      (top1_quotient_group_carrier_on G mul ?N) ?mulH ?eH ?invgH"
+    using h_abel unfolding top1_is_abelianization_of_def by (by100 blast)
+  have hphi_hom: "top1_group_hom_on G mul (top1_quotient_group_carrier_on G mul ?N) ?mulH ?\<phi>"
+    using h_abel unfolding top1_is_abelianization_of_def by (by100 blast)
+  \<comment> \<open>The proof follows the same structure as Theorem 69.4's hH\_indep.
+     For the given nonzero c with support s0, use the exponent sum \<epsilon>
+     to show the G-level product has \<epsilon>-value c(s0) \<noteq> 0,
+     contradicting membership in [G,G].\<close>
+  from assms(3) obtain s0 where hs0: "s0 \<in> S" "c s0 \<noteq> 0" by (by100 blast)
+  obtain \<epsilon> where heps: "top1_group_hom_on G mul (UNIV::int set) (+) \<epsilon>"
+      and heps_s0: "\<epsilon> (\<iota> s0) = 1"
+      and heps_other: "\<forall>s\<in>S. s \<noteq> s0 \<longrightarrow> \<epsilon> (\<iota> s) = 0"
+    using free_group_exponent_sum[OF assms(1) hs0(1)] by (by100 blast)
+  have hcomm_ker: "\<forall>g\<in>?N. \<epsilon> g = 0"
+    by (rule commutator_zero_exponent[OF hG heps])
+  let ?xs = "SOME xs. set xs = {s\<in>S. c s \<noteq> 0} \<and> distinct xs"
+  let ?gp = "foldr mul (map (\<lambda>s.
+        if c s \<ge> 0 then top1_group_pow mul e (\<iota> s) (nat (c s))
+        else top1_group_pow mul e (invg (\<iota> s)) (nat (- c s)))
+      ?xs) e"
+  \<comment> \<open>\<epsilon>(gp) = c(s0) (proved in Theorem 69.4).\<close>
+  have heps_gp: "\<epsilon> ?gp = c s0"
+  proof -
+    have hZ: "top1_is_group_on (UNIV::int set) (+) (0::int) uminus"
+      unfolding top1_is_group_on_def by (by100 auto)
+    \<comment> \<open>Step 1: \<epsilon> of each term = c(s)\<cdot>\<epsilon>(\<iota>(s)).\<close>
+    have heps_term: "\<And>s. s \<in> S \<Longrightarrow>
+        \<epsilon> (if c s \<ge> 0 then top1_group_pow mul e (\<iota> s) (nat (c s))
+            else top1_group_pow mul e (invg (\<iota> s)) (nat (- c s))) = c s * \<epsilon> (\<iota> s)"
+    proof -
+      fix s assume hs: "s \<in> S"
+      have h\<iota>s: "\<iota> s \<in> G" using hgen_in_G hs by (by100 blast)
+      have hinvs: "invg (\<iota> s) \<in> G" using hG h\<iota>s unfolding top1_is_group_on_def by (by100 blast)
+      show "\<epsilon> (if c s \<ge> 0 then top1_group_pow mul e (\<iota> s) (nat (c s))
+          else top1_group_pow mul e (invg (\<iota> s)) (nat (- c s))) = c s * \<epsilon> (\<iota> s)"
+      proof (cases "c s \<ge> 0")
+        case True
+        have "\<epsilon> (top1_group_pow mul e (\<iota> s) (nat (c s)))
+            = top1_group_pow (+) (0::int) (\<epsilon> (\<iota> s)) (nat (c s))"
+          by (rule hom_group_pow[OF hG hZ heps h\<iota>s])
+        also have "\<dots> = int (nat (c s)) * \<epsilon> (\<iota> s)" by (rule int_group_pow)
+        also have "int (nat (c s)) = c s" using True by (by100 simp)
+        finally show ?thesis using True by (by100 simp)
+      next
+        case False
+        have "\<epsilon> (top1_group_pow mul e (invg (\<iota> s)) (nat (- c s)))
+            = top1_group_pow (+) (0::int) (\<epsilon> (invg (\<iota> s))) (nat (- c s))"
+          by (rule hom_group_pow[OF hG hZ heps hinvs])
+        also have "\<dots> = int (nat (- c s)) * \<epsilon> (invg (\<iota> s))" by (rule int_group_pow)
+        also have "\<epsilon> (invg (\<iota> s)) = - \<epsilon> (\<iota> s)"
+          by (rule hom_preserves_inv[OF hG hZ heps h\<iota>s])
+        also have "int (nat (- c s)) * (- \<epsilon> (\<iota> s)) = c s * \<epsilon> (\<iota> s)"
+          using False by (by100 simp)
+        finally show ?thesis using False by (by100 simp)
+      qed
+    qed
+    \<comment> \<open>Step 2: \<epsilon> distributes over foldr.\<close>
+    let ?gterm = "\<lambda>s. if c s \<ge> 0 then top1_group_pow mul e (\<iota> s) (nat (c s))
+        else top1_group_pow mul e (invg (\<iota> s)) (nat (- c s))"
+    {fix ys :: "'s list"
+     assume hys: "\<forall>i<length ys. ys!i \<in> S"
+     hence "\<epsilon> (foldr mul (map ?gterm ys) e) = (\<Sum>s\<leftarrow>ys. c s * \<epsilon> (\<iota> s))"
+     proof (induction ys)
+       case Nil show ?case using hom_preserves_id[OF hG hZ heps] by (by100 simp)
+     next
+       case (Cons s ys')
+       have hs: "s \<in> S" using Cons.prems by (by100 force)
+       have hys': "\<forall>i<length ys'. ys'!i \<in> S" using Cons.prems by (by100 force)
+       have hgs: "?gterm s \<in> G"
+       proof -
+         have h\<iota>s: "\<iota> s \<in> G" using hgen_in_G hs by (by100 blast)
+         have hinvs: "invg (\<iota> s) \<in> G" using hG h\<iota>s unfolding top1_is_group_on_def by (by100 blast)
+         show ?thesis using group_pow_in_group[OF hG h\<iota>s] group_pow_in_group[OF hG hinvs] by (by100 auto)
+       qed
+       have hprod: "foldr mul (map ?gterm ys') e \<in> G"
+       proof (rule foldr_mul_closed[OF hG])
+         show "\<forall>i<length (map ?gterm ys'). (map ?gterm ys')!i \<in> G"
+         proof (intro allI impI)
+           fix i assume hi: "i < length (map ?gterm ys')"
+           have hsi: "ys'!i \<in> S" using hys' hi by (by100 simp)
+           have h\<iota>si: "\<iota> (ys'!i) \<in> G" using hgen_in_G hsi by (by100 blast)
+           have hinvsi: "invg (\<iota> (ys'!i)) \<in> G" using hG h\<iota>si unfolding top1_is_group_on_def by (by100 blast)
+           show "(map ?gterm ys')!i \<in> G" using hi group_pow_in_group[OF hG h\<iota>si] group_pow_in_group[OF hG hinvsi] by (by100 auto)
+         qed
+       qed
+       have "\<epsilon> (foldr mul (map ?gterm (s # ys')) e)
+           = \<epsilon> (mul (?gterm s) (foldr mul (map ?gterm ys') e))" by (by100 simp)
+       also have "\<dots> = \<epsilon> (?gterm s) + \<epsilon> (foldr mul (map ?gterm ys') e)"
+         using heps hgs hprod unfolding top1_group_hom_on_def by (by100 blast)
+       also have "\<epsilon> (?gterm s) = c s * \<epsilon> (\<iota> s)" by (rule heps_term[OF hs])
+       also have "c s * \<epsilon> (\<iota> s) + \<epsilon> (foldr mul (map ?gterm ys') e)
+           = c s * \<epsilon> (\<iota> s) + (\<Sum>s\<leftarrow>ys'. c s * \<epsilon> (\<iota> s))"
+         using Cons.IH[OF hys'] by (by100 simp)
+       finally show ?case by (by100 simp)
+     qed}
+    moreover have hxs_S: "\<forall>i<length ?xs. ?xs!i \<in> S"
+    proof (intro allI impI)
+      fix i assume hi: "i < length ?xs"
+      have "\<exists>xs. set xs = {s \<in> S. c s \<noteq> 0} \<and> distinct xs"
+        using finite_distinct_list[OF assms(2)] by (by100 blast)
+      hence "set ?xs = {s \<in> S. c s \<noteq> 0} \<and> distinct ?xs" by (rule someI_ex)
+      thus "?xs!i \<in> S" using nth_mem[OF hi] by (by100 blast)
+    qed
+    ultimately have hfoldr: "\<epsilon> ?gp = (\<Sum>s\<leftarrow>?xs. c s * \<epsilon> (\<iota> s))" by (by100 simp)
+    \<comment> \<open>Step 3: Kronecker delta: sum = c(s0).\<close>
+    have hprop: "set ?xs = {s \<in> S. c s \<noteq> 0} \<and> distinct ?xs"
+    proof -
+      have "\<exists>xs. set xs = {s \<in> S. c s \<noteq> 0} \<and> distinct xs"
+        using finite_distinct_list[OF assms(2)] by (by100 blast)
+      thus ?thesis by (rule someI_ex)
+    qed
+    have hs0_in: "s0 \<in> set ?xs" using hprop hs0 by (by100 blast)
+    have hdist: "distinct ?xs" using hprop by (by100 blast)
+    have "\<And>s. s \<in> set ?xs \<Longrightarrow> c s * \<epsilon> (\<iota> s) = (if s = s0 then c s0 else 0)"
+    proof -
+      fix s assume hs_in: "s \<in> set ?xs"
+      have hs_S: "s \<in> S" using hs_in hprop by (by100 blast)
+      show "c s * \<epsilon> (\<iota> s) = (if s = s0 then c s0 else 0)"
+      proof (cases "s = s0")
+        case True thus ?thesis using heps_s0 by (by100 simp)
+      next
+        case False thus ?thesis using heps_other hs_S by (by100 simp)
+      qed
+    qed
+    have "map (\<lambda>s. c s * \<epsilon> (\<iota> s)) ?xs = map (\<lambda>s. if s = s0 then c s0 else (0::int)) ?xs"
+    proof (rule nth_equalityI)
+      show "length (map (\<lambda>s. c s * \<epsilon> (\<iota> s)) ?xs) = length (map (\<lambda>s. if s = s0 then c s0 else 0) ?xs)"
+        by (by100 simp)
+    next
+      fix i assume "i < length (map (\<lambda>s. c s * \<epsilon> (\<iota> s)) ?xs)"
+      hence hi: "i < length ?xs" by (by100 simp)
+      hence "?xs!i \<in> set ?xs" by (rule nth_mem)
+      thus "map (\<lambda>s. c s * \<epsilon> (\<iota> s)) ?xs ! i = map (\<lambda>s. if s = s0 then c s0 else (0::int)) ?xs ! i"
+        using \<open>\<And>s. s \<in> set ?xs \<Longrightarrow> c s * \<epsilon> (\<iota> s) = (if s = s0 then c s0 else 0)\<close> hi by (by100 simp)
+    qed
+    hence "sum_list (map (\<lambda>s. c s * \<epsilon> (\<iota> s)) ?xs) = sum_list (map (\<lambda>s. if s = s0 then c s0 else (0::int)) ?xs)"
+      by (rule arg_cong[of _ _ sum_list])
+    hence "(\<Sum>s\<leftarrow>?xs. c s * \<epsilon> (\<iota> s)) = (\<Sum>s\<leftarrow>?xs. if s = s0 then c s0 else 0)" by (by100 simp)
+    also have "\<dots> = c s0"
+    proof -
+      {fix ys :: "'s list"
+       assume hyin: "s0 \<in> set ys" and hdist: "distinct ys"
+       hence "(\<Sum>s\<leftarrow>ys. if s = s0 then c s0 else (0::int)) = c s0"
+       proof (induction ys)
+         case Nil thus ?case by (by100 simp)
+       next
+         case (Cons a ys')
+         show ?case
+         proof (cases "a = s0")
+           case True
+           hence "s0 \<notin> set ys'" using Cons.prems(2) by (by100 force)
+           hence "(\<Sum>s\<leftarrow>ys'. if s = s0 then c s0 else (0::int)) = 0"
+             by (induction ys') (by100 auto)+
+           thus ?thesis using True by (by100 simp)
+         next
+           case False
+           hence "s0 \<in> set ys'" using Cons.prems(1) by (by100 simp)
+           moreover have "distinct ys'" using Cons.prems(2) by (by100 simp)
+           ultimately show ?thesis using False Cons.IH by (by100 simp)
+         qed
+       qed}
+      thus ?thesis using hs0_in hdist by (by100 blast)
+    qed
+    finally show ?thesis using hfoldr by (by100 simp)
+  qed
+  hence "?gp \<notin> ?N" using hcomm_ker hs0(2) by (by100 force)
+  \<comment> \<open>The H-product = \<phi>(gp).\<close>
+  have hH_grp: "top1_is_group_on (top1_quotient_group_carrier_on G mul ?N) ?mulH ?eH ?invgH"
+    using hH_abel unfolding top1_is_abelian_group_on_def by (by100 blast)
+  have hH_prod_eq: "foldr ?mulH (map (\<lambda>s.
+        if c s \<ge> 0 then top1_group_pow ?mulH ?eH (?\<iota>H s) (nat (c s))
+        else top1_group_pow ?mulH ?eH (?invgH (?\<iota>H s)) (nat (- c s)))
+      ?xs) ?eH = ?\<phi> ?gp"
+  proof -
+    let ?hterm = "\<lambda>s. if c s \<ge> 0 then top1_group_pow ?mulH ?eH (?\<iota>H s) (nat (c s))
+        else top1_group_pow ?mulH ?eH (?invgH (?\<iota>H s)) (nat (- c s))"
+    let ?gterm = "\<lambda>s. if c s \<ge> 0 then top1_group_pow mul e (\<iota> s) (nat (c s))
+        else top1_group_pow mul e (invg (\<iota> s)) (nat (- c s))"
+    \<comment> \<open>h\_term\_eq: \<phi>(gterm s) = hterm s for each s \<in> S.\<close>
+    have h_term_eq: "\<And>s. s \<in> S \<Longrightarrow> ?\<phi> (?gterm s) = ?hterm s"
+    proof -
+      fix s assume hs: "s \<in> S"
+      have h\<iota>s: "\<iota> s \<in> G" using hgen_in_G hs by (by100 blast)
+      have hinvs: "invg (\<iota> s) \<in> G" using hG h\<iota>s unfolding top1_is_group_on_def by (by100 blast)
+      show "?\<phi> (?gterm s) = ?hterm s"
+      proof (cases "c s \<ge> 0")
+        case True
+        have "?\<phi> (top1_group_pow mul e (\<iota> s) (nat (c s)))
+            = top1_group_pow ?mulH ?eH (?\<phi> (\<iota> s)) (nat (c s))"
+          by (rule hom_group_pow[OF hG hH_grp hphi_hom h\<iota>s])
+        thus ?thesis using True by (by100 simp)
+      next
+        case False
+        have "?\<phi> (top1_group_pow mul e (invg (\<iota> s)) (nat (- c s)))
+            = top1_group_pow ?mulH ?eH (?\<phi> (invg (\<iota> s))) (nat (- c s))"
+          by (rule hom_group_pow[OF hG hH_grp hphi_hom hinvs])
+        moreover have "?\<phi> (invg (\<iota> s)) = ?invgH (?\<phi> (\<iota> s))"
+          by (rule hom_preserves_inv[OF hG hH_grp hphi_hom h\<iota>s])
+        ultimately show ?thesis using False by (by100 simp)
+      qed
+    qed
+    \<comment> \<open>Induction on ?xs.\<close>
+    {fix ys :: "'s list"
+     assume hys: "\<forall>i<length ys. ys!i \<in> S"
+     hence "foldr ?mulH (map ?hterm ys) ?eH = ?\<phi> (foldr mul (map ?gterm ys) e)"
+     proof (induction ys)
+       case Nil show ?case using hom_preserves_id[OF hG hH_grp hphi_hom] by (by100 simp)
+     next
+       case (Cons s ys')
+       have hs: "s \<in> S" using Cons.prems by (by100 force)
+       have hys': "\<forall>i<length ys'. ys'!i \<in> S" using Cons.prems by (by100 force)
+       have hgs: "?gterm s \<in> G"
+       proof -
+         have h\<iota>s: "\<iota> s \<in> G" using hgen_in_G hs by (by100 blast)
+         have hinvs: "invg (\<iota> s) \<in> G" using hG h\<iota>s unfolding top1_is_group_on_def by (by100 blast)
+         show ?thesis using group_pow_in_group[OF hG h\<iota>s] group_pow_in_group[OF hG hinvs]
+           by (by100 auto)
+       qed
+       have hprod: "foldr mul (map ?gterm ys') e \<in> G"
+       proof (rule foldr_mul_closed[OF hG])
+         show "\<forall>i<length (map ?gterm ys'). (map ?gterm ys')!i \<in> G"
+         proof (intro allI impI)
+           fix i assume hi: "i < length (map ?gterm ys')"
+           have hsi: "ys'!i \<in> S" using hys' hi by (by100 simp)
+           have h\<iota>si: "\<iota> (ys'!i) \<in> G" using hgen_in_G hsi by (by100 blast)
+           have hinvsi: "invg (\<iota> (ys'!i)) \<in> G" using hG h\<iota>si unfolding top1_is_group_on_def by (by100 blast)
+           show "(map ?gterm ys')!i \<in> G" using hi
+             group_pow_in_group[OF hG h\<iota>si] group_pow_in_group[OF hG hinvsi] by (by100 auto)
+         qed
+       qed
+       have "foldr ?mulH (map ?hterm (s # ys')) ?eH
+           = ?mulH (?hterm s) (foldr ?mulH (map ?hterm ys') ?eH)" by (by100 simp)
+       also have "\<dots> = ?mulH (?hterm s) (?\<phi> (foldr mul (map ?gterm ys') e))"
+         using Cons.IH[OF hys'] by (by100 simp)
+       also have "?hterm s = ?\<phi> (?gterm s)" using h_term_eq[OF hs] by (by100 simp)
+       also have "?mulH (?\<phi> (?gterm s)) (?\<phi> (foldr mul (map ?gterm ys') e))
+           = ?\<phi> (mul (?gterm s) (foldr mul (map ?gterm ys') e))"
+         using hphi_hom hgs hprod unfolding top1_group_hom_on_def by (by100 blast)
+       also have "mul (?gterm s) (foldr mul (map ?gterm ys') e)
+           = foldr mul (map ?gterm (s # ys')) e" by (by100 simp)
+       finally show ?case by (by100 simp)
+     qed}
+    moreover have "\<forall>i<length ?xs. ?xs!i \<in> S"
+    proof (intro allI impI)
+      fix i assume hi: "i < length ?xs"
+      have "\<exists>xs. set xs = {s \<in> S. c s \<noteq> 0} \<and> distinct xs"
+        using finite_distinct_list[OF assms(2)] by (by100 blast)
+      hence "set ?xs = {s \<in> S. c s \<noteq> 0} \<and> distinct ?xs" by (rule someI_ex)
+      thus "?xs!i \<in> S" using nth_mem[OF hi] by (by100 blast)
+    qed
+    ultimately show ?thesis by (by100 simp)
+  qed
+  \<comment> \<open>If the H-product = ?eH, then \<phi>(gp) = ?eH, so gp \<in> [G,G]. Contradiction.\<close>
+  show ?thesis
+  proof
+    assume heq: "foldr ?mulH (map (\<lambda>s.
+        if c s \<ge> 0 then top1_group_pow ?mulH ?eH (?\<iota>H s) (nat (c s))
+        else top1_group_pow ?mulH ?eH (?invgH (?\<iota>H s)) (nat (- c s)))
+      ?xs) ?eH = ?eH"
+    hence "?\<phi> ?gp = ?eH" using hH_prod_eq by (by100 simp)
+    hence "?gp \<in> ?N"
+    proof -
+      assume hphi_e: "?\<phi> ?gp = ?eH"
+      have hker_eq: "top1_group_kernel_on G ?eH ?\<phi> = ?N"
+        using h_abel unfolding top1_is_abelianization_of_def by (by100 blast)
+      have hgp_G: "?gp \<in> G"
+      proof (rule foldr_mul_closed[OF hG])
+        show "\<forall>i<length (map (\<lambda>s. if c s \<ge> 0 then top1_group_pow mul e (\<iota> s) (nat (c s))
+            else top1_group_pow mul e (invg (\<iota> s)) (nat (- c s))) ?xs).
+          (map (\<lambda>s. if c s \<ge> 0 then top1_group_pow mul e (\<iota> s) (nat (c s))
+            else top1_group_pow mul e (invg (\<iota> s)) (nat (- c s))) ?xs) ! i \<in> G"
+        proof (intro allI impI)
+          fix i assume hi: "i < length (map (\<lambda>s. if c s \<ge> 0 then top1_group_pow mul e (\<iota> s) (nat (c s))
+            else top1_group_pow mul e (invg (\<iota> s)) (nat (- c s))) ?xs)"
+          have hsi: "?xs ! i \<in> S"
+          proof -
+            have "\<exists>xs. set xs = {s \<in> S. c s \<noteq> 0} \<and> distinct xs"
+              using finite_distinct_list[OF assms(2)] by (by100 blast)
+            hence "set ?xs = {s \<in> S. c s \<noteq> 0} \<and> distinct ?xs" by (rule someI_ex)
+            thus ?thesis using nth_mem hi by (by100 force)
+          qed
+          have h\<iota>si: "\<iota> (?xs!i) \<in> G" using hgen_in_G hsi by (by100 blast)
+          have hinvsi: "invg (\<iota> (?xs!i)) \<in> G"
+            using hG h\<iota>si unfolding top1_is_group_on_def by (by100 blast)
+          show "(map (\<lambda>s. if c s \<ge> 0 then top1_group_pow mul e (\<iota> s) (nat (c s))
+            else top1_group_pow mul e (invg (\<iota> s)) (nat (- c s))) ?xs) ! i \<in> G"
+            using hi group_pow_in_group[OF hG h\<iota>si] group_pow_in_group[OF hG hinvsi]
+            by (by100 auto)
+        qed
+      qed
+      have "?gp \<in> top1_group_kernel_on G ?eH ?\<phi>"
+        unfolding top1_group_kernel_on_def using hgp_G hphi_e by (by100 blast)
+      thus "?gp \<in> ?N" using hker_eq by (by100 simp)
+    qed
+    thus False using \<open>?gp \<notin> ?N\<close> by (by100 blast)
+  qed
+qed
 
 (** from \<S>69 Theorem 69.4: abelianization of free group is free abelian.
     If G is free on S, then G/[G,G] is free abelian on the images of S. **)
