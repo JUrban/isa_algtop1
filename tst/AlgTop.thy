@@ -1974,7 +1974,40 @@ proof -
       top1_is_reduced_word (map (\<lambda>(s, b). (\<iota>' s, b)) ws) \<Longrightarrow>
       (\<forall>i<length ws. fst (ws!i) \<in> S) \<Longrightarrow>
       top1_group_word_product mulH eH invgH (map (\<lambda>(s, b). (\<iota>' s, b)) ws) \<noteq> eH"
-    sorry \<comment> \<open>If reduced word in f(\<iota>(S)) = eH, apply f\<inverse> to get reduced word in \<iota>(S) = e.\<close>
+  proof -
+    fix ws assume hne: "ws \<noteq> []"
+      and hred: "top1_is_reduced_word (map (\<lambda>(s, b). (\<iota>' s, b)) ws)"
+      and hin: "\<forall>i<length ws. fst (ws!i) \<in> S"
+    \<comment> \<open>Reducedness of \<iota>'(ws) implies reducedness of \<iota>(ws) since f\<circ>\<iota> is injective.\<close>
+    have hred_G: "top1_is_reduced_word (map (\<lambda>(s, b). (\<iota> s, b)) ws)"
+      sorry \<comment> \<open>Induction: if f(\<iota> s) \<noteq> f(\<iota> t) \<or> b=c then \<iota> s \<noteq> \<iota> t \<or> b=c (by inj of f\<circ>\<iota>).\<close>
+    \<comment> \<open>Product in H = f(product in G) by homomorphism.\<close>
+    have hf_e: "f e = eH" by (rule hom_preserves_id[OF hG assms(3) hf_hom])
+    have hprod: "top1_group_word_product mulH eH invgH (map (\<lambda>(s, b). (\<iota>' s, b)) ws)
+        = f (top1_group_word_product mul e invg (map (\<lambda>(s, b). (\<iota> s, b)) ws))"
+      sorry \<comment> \<open>Induction using hom distributes: f(mul x y)=mulH(f x)(f y), f(invg x)=invgH(f x).\<close>
+    \<comment> \<open>If product = eH, then f(product in G) = eH, so product in G = e (f injective).\<close>
+    show "top1_group_word_product mulH eH invgH (map (\<lambda>(s, b). (\<iota>' s, b)) ws) \<noteq> eH"
+    proof
+      assume heq: "top1_group_word_product mulH eH invgH (map (\<lambda>(s, b). (\<iota>' s, b)) ws) = eH"
+      have "f (top1_group_word_product mul e invg (map (\<lambda>(s, b). (\<iota> s, b)) ws)) = eH"
+        using heq hprod by (by100 simp)
+      moreover have "f e = eH" by (rule hf_e)
+      ultimately have "top1_group_word_product mul e invg (map (\<lambda>(s, b). (\<iota> s, b)) ws) = e"
+      proof -
+        assume h1: "f (top1_group_word_product mul e invg (map (\<lambda>(s, b). (\<iota> s, b)) ws)) = eH"
+           and h2: "f e = eH"
+        have "f (top1_group_word_product mul e invg (map (\<lambda>(s, b). (\<iota> s, b)) ws)) = f e"
+          using h1 h2 by (by100 simp)
+        moreover have "inj_on f G" using hf_bij unfolding bij_betw_def by (by100 blast)
+        moreover have "top1_group_word_product mul e invg (map (\<lambda>(s, b). (\<iota> s, b)) ws) \<in> G"
+          sorry \<comment> \<open>Word product of group elements is in G.\<close>
+        moreover have "e \<in> G" using hG unfolding top1_is_group_on_def by (by100 blast)
+        ultimately show ?thesis unfolding inj_on_def by (by100 blast)
+      qed
+      thus False using hG_red[OF hne hred_G hin] by (by100 blast)
+    qed
+  qed
   \<comment> \<open>Combine into free group definition.\<close>
   have "top1_is_free_group_full_on H mulH eH invgH \<iota>' S"
     unfolding top1_is_free_group_full_on_def
