@@ -5882,7 +5882,20 @@ lemma covering_induced_injective:
       and "e0 \<in> E" and "p e0 = b0"
   shows "inj_on (top1_fundamental_group_induced_on E TE e0 B TB b0 p)
       (top1_fundamental_group_carrier E TE e0)"
-  sorry
+proof (rule inj_onI)
+  fix c1 c2
+  assume hc1: "c1 \<in> top1_fundamental_group_carrier E TE e0"
+     and hc2: "c2 \<in> top1_fundamental_group_carrier E TE e0"
+     and heq: "top1_fundamental_group_induced_on E TE e0 B TB b0 p c1
+             = top1_fundamental_group_induced_on E TE e0 B TB b0 p c2"
+  \<comment> \<open>c1, c2 are equivalence classes of loops at e0 in E.
+     Pick representatives \<alpha> \<in> c1, \<beta> \<in> c2.
+     p\<circ>\<alpha> ~ p\<circ>\<beta> in B (from heq). \<alpha>, \<beta> are lifts starting at e0.
+     By Theorem 54.3: \<alpha> ~ \<beta> in E. So c1 = c2.\<close>
+  show "c1 = c2"
+    sorry \<comment> \<open>Needs: extract representatives from equivalence classes,
+           show they are lifts of p\<circ>rep, apply Theorem\_54\_3.\<close>
+qed
 
 text \<open>deck\_transformation\_homeomorphism and deck\_transformations\_group are defined
   after the top1\_covering\_transformation\_on definition in \<S>81.\<close>
@@ -10699,11 +10712,44 @@ proof -
   let ?Cov = "{h. top1_covering_transformation_on E TE B TB p h}"
   let ?mul = "\<lambda>h k e. h (k e)"
   \<comment> \<open>Identity: id is a covering transformation.\<close>
+  have hTE: "is_topology_on E TE" using assms(2) unfolding is_topology_on_strict_def by (by100 blast)
+  have hid_cont: "top1_continuous_map_on E TE E TE id"
+    unfolding top1_continuous_map_on_def
+  proof (intro conjI ballI)
+    fix x assume "x \<in> E" thus "id x \<in> E" by (by100 simp)
+  next
+    fix V assume hV: "V \<in> TE"
+    have "{x \<in> E. id x \<in> V} = E \<inter> V" by (by100 auto)
+    also have "\<dots> \<in> TE"
+    proof -
+      have "E \<in> TE" using hTE unfolding is_topology_on_def by (by100 blast)
+      have "finite {E, V} \<and> {E, V} \<noteq> {} \<and> {E, V} \<subseteq> TE" using \<open>E \<in> TE\<close> hV by (by100 blast)
+      hence "\<Inter>{E, V} \<in> TE" using hTE unfolding is_topology_on_def by (by100 blast)
+      thus ?thesis by (by100 simp)
+    qed
+    finally show "{x \<in> E. id x \<in> V} \<in> TE" .
+  qed
+  have hid_homeo: "top1_homeomorphism_on E TE E TE id"
+    unfolding top1_homeomorphism_on_def
+  proof (intro conjI)
+    show "is_topology_on E TE" by (rule hTE)
+    show "is_topology_on E TE" by (rule hTE)
+    show "bij_betw id E E" by (by100 simp)
+    show "top1_continuous_map_on E TE E TE id" by (rule hid_cont)
+    show "top1_continuous_map_on E TE E TE (inv_into E id)"
+    proof -
+      have "\<forall>x\<in>E. inv_into E id x = x" by (by100 simp)
+      hence "\<And>x. x \<in> E \<Longrightarrow> inv_into E id x = id x" by (by100 simp)
+      \<comment> \<open>Since inv\_into E id agrees with id on E, and continuity only depends on values on E:\<close>
+      have "\<forall>V. {x \<in> E. inv_into E id x \<in> V} = {x \<in> E. x \<in> V}"
+        using \<open>\<forall>x\<in>E. inv_into E id x = x\<close> by (by100 force)
+      thus ?thesis unfolding top1_continuous_map_on_def
+        using hid_cont unfolding top1_continuous_map_on_def by (by100 simp)
+    qed
+  qed
   have hid_ct: "top1_covering_transformation_on E TE B TB p id"
-    unfolding top1_covering_transformation_on_def
-    sorry \<comment> \<open>id is homeomorphism E\<rightarrow>E, p\<circ>id = p.\<close>
-  \<comment> \<open>Inverse: for CT h, the inverse homeomorphism is a CT.\<close>
-  \<comment> \<open>The group exists with eC = id and invgC = inverse homeomorphism.\<close>
+    unfolding top1_covering_transformation_on_def using hid_homeo by (by100 simp)
+  \<comment> \<open>Composition of CTs is a CT; inverse CT is a CT. Full group proof.\<close>
   show ?thesis sorry
 qed
 
