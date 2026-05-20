@@ -4345,7 +4345,25 @@ proof -
       using habel_G unfolding top1_is_abelianization_of_def by (by100 blast)
     \<comment> \<open>\<phi>G \<circ> \<pi> maps [F,F] into ker(\<phi>G) = [G,G] because G/[G,G] is abelian.\<close>
     have hj_hom: "top1_group_hom_on F mulF ?HG ?mulHG (\<lambda>f. ?\<phi>G (\<pi> f))"
-      sorry \<comment> \<open>Composition of homs.\<close>
+    proof -
+      show ?thesis unfolding top1_group_hom_on_def
+      proof (intro conjI ballI)
+        fix f assume hf: "f \<in> F"
+        have "\<pi> f \<in> G" using hpi_hom hf unfolding top1_group_hom_on_def by (by100 blast)
+        thus "?\<phi>G (\<pi> f) \<in> ?HG" using hphiG_hom unfolding top1_group_hom_on_def by (by100 blast)
+      next
+        fix f1 f2 assume hf1: "f1 \<in> F" and hf2: "f2 \<in> F"
+        have h1: "\<pi> f1 \<in> G" using hpi_hom hf1 unfolding top1_group_hom_on_def by (by100 blast)
+        have h2: "\<pi> f2 \<in> G" using hpi_hom hf2 unfolding top1_group_hom_on_def by (by100 blast)
+        have "\<pi> (mulF f1 f2) = mulG (\<pi> f1) (\<pi> f2)"
+          using hpi_hom hf1 hf2 unfolding top1_group_hom_on_def by (by100 blast)
+        hence "?\<phi>G (\<pi> (mulF f1 f2)) = ?\<phi>G (mulG (\<pi> f1) (\<pi> f2))"
+          by (by100 simp)
+        also have "\<dots> = ?mulHG (?\<phi>G (\<pi> f1)) (?\<phi>G (\<pi> f2))"
+          using hphiG_hom h1 h2 unfolding top1_group_hom_on_def by (by100 blast)
+        finally show "?\<phi>G (\<pi> (mulF f1 f2)) = ?mulHG (?\<phi>G (\<pi> f1)) (?\<phi>G (\<pi> f2))" .
+      qed
+    qed
     have "?NF \<subseteq> top1_group_kernel_on F ?eHG (\<lambda>f. ?\<phi>G (\<pi> f))"
       by (rule Lemma_69_3_commutator_in_kernel[OF hF_grp hHG_abel hj_hom])
     hence "\<forall>f\<in>?NF. ?\<phi>G (\<pi> f) = ?eHG"
