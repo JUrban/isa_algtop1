@@ -1502,6 +1502,39 @@ qed
 *)
 
 
+text \<open>In an abelian group, the product of a word can be decomposed by counting
+  net occurrences of each generator. This gives a "net count" homomorphism.\<close>
+lemma abelian_word_net_count:
+  fixes G :: "'g set" and mul :: "'g \<Rightarrow> 'g \<Rightarrow> 'g"
+    and e :: 'g and invg :: "'g \<Rightarrow> 'g"
+    and x :: 'g
+  assumes hG: "top1_is_abelian_group_on G mul e invg"
+      and hx: "x \<in> G"
+      and hws: "\<forall>i<length ws. ws!i \<in> G"
+  shows "foldr mul (x # ws) e = mul x (foldr mul ws e)"
+  by (by100 simp)
+
+text \<open>Key fact: in an abelian group, foldr mul commutes with permutations.
+  More specifically: mul a (mul b c) = mul b (mul a c) for a, b, c \<in> G.\<close>
+lemma abelian_mul_left_commute:
+  assumes "top1_is_abelian_group_on G mul e invg"
+      and "a \<in> G" and "b \<in> G" and "c \<in> G"
+  shows "mul a (mul b c) = mul b (mul a c)"
+proof -
+  have hG: "top1_is_group_on G mul e invg"
+    using assms(1) unfolding top1_is_abelian_group_on_def by (by100 blast)
+  have hcomm: "mul a b = mul b a"
+    using assms unfolding top1_is_abelian_group_on_def by (by100 blast)
+  have hassoc1: "mul (mul a b) c = mul a (mul b c)"
+    using hG assms(2,3,4) unfolding top1_is_group_on_def by (by100 blast)
+  have hassoc2: "mul (mul b a) c = mul b (mul a c)"
+    using hG assms(2,3,4) unfolding top1_is_group_on_def by (by100 blast)
+  have "mul a (mul b c) = mul (mul a b) c" using hassoc1 by (by100 simp)
+  also have "\<dots> = mul (mul b a) c" using hcomm by (by100 simp)
+  also have "\<dots> = mul b (mul a c)" using hassoc2 by (by100 simp)
+  finally show ?thesis .
+qed
+
 text \<open>Lemma 67.7 (extension property): free abelian group G with basis S has the universal
   property: for any abelian group H and map \<phi>: S \<rightarrow> H, there exists a unique homomorphism
   \<psi>: G \<rightarrow> H with \<psi> \<circ> \<iota> = \<phi> on S.\<close>
