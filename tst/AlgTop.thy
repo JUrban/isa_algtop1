@@ -3810,9 +3810,67 @@ proof -
           group_pow_in_group[OF hG h\<iota>si] group_pow_in_group[OF hG hinvsi]
           by (by100 auto)
       qed
-      have hfoldr_eq: "?\<phi> (foldr mul ?g_terms e) = foldr ?mulH (map ?\<phi> ?g_terms) ?eH"
-        sorry \<comment> \<open>hom\_foldr\_mul[OF hG hH\_grp' hphi\_hom' hg\_terms\_G] -- unification issue.\<close>
-      show ?thesis using hmap_phi hfoldr_eq sorry
+      \<comment> \<open>Direct induction on ?xs to show H-level foldr = \<phi>(G-level foldr).\<close>
+      let ?gterm = "\<lambda>s. if c s \<ge> 0 then top1_group_pow mul e (\<iota> s) (nat (c s))
+          else top1_group_pow mul e (invg (\<iota> s)) (nat (- c s))"
+      let ?hterm = "\<lambda>s. if c s \<ge> 0 then top1_group_pow ?mulH ?eH (?\<iota>H s) (nat (c s))
+          else top1_group_pow ?mulH ?eH (?invgH (?\<iota>H s)) (nat (- c s))"
+      {fix ys :: "'s list"
+       assume hys: "\<forall>i<length ys. ys!i \<in> S"
+       hence "foldr ?mulH (map ?hterm ys) ?eH = ?\<phi> (foldr mul (map ?gterm ys) e)"
+       proof (induction ys)
+         case Nil show ?case
+           using hom_preserves_id[OF hG hH_grp' hphi_hom'] by (by100 simp)
+       next
+         case (Cons s ys')
+         have hs: "s \<in> S" using Cons.prems by (by100 force)
+         have hys': "\<forall>i<length ys'. ys'!i \<in> S" using Cons.prems by (by100 force)
+         have hgs: "?gterm s \<in> G"
+         proof -
+           have h\<iota>s: "\<iota> s \<in> G" using hgen_in_G hs by (by100 blast)
+           have hinvs: "invg (\<iota> s) \<in> G" using hG h\<iota>s unfolding top1_is_group_on_def by (by100 blast)
+           show ?thesis using group_pow_in_group[OF hG h\<iota>s] group_pow_in_group[OF hG hinvs]
+             by (by100 auto)
+         qed
+         have hprod: "foldr mul (map ?gterm ys') e \<in> G"
+         proof (rule foldr_mul_closed[OF hG])
+           show "\<forall>i<length (map ?gterm ys'). (map ?gterm ys')!i \<in> G"
+           proof (intro allI impI)
+             fix i assume hi: "i < length (map ?gterm ys')"
+             have hsi: "ys'!i \<in> S" using hys' hi by (by100 simp)
+             have h\<iota>si: "\<iota> (ys'!i) \<in> G" using hgen_in_G hsi by (by100 blast)
+             have hinvsi: "invg (\<iota> (ys'!i)) \<in> G" using hG h\<iota>si unfolding top1_is_group_on_def by (by100 blast)
+             show "(map ?gterm ys')!i \<in> G" using hi
+               group_pow_in_group[OF hG h\<iota>si] group_pow_in_group[OF hG hinvsi] by (by100 auto)
+           qed
+         qed
+         have "foldr ?mulH (map ?hterm (s # ys')) ?eH
+             = ?mulH (?hterm s) (foldr ?mulH (map ?hterm ys') ?eH)" by (by100 simp)
+         also have "\<dots> = ?mulH (?hterm s) (?\<phi> (foldr mul (map ?gterm ys') e))"
+           using Cons.IH[OF hys'] by (by100 simp)
+         also have "?hterm s = ?\<phi> (?gterm s)" using h_term_eq[OF hs] by (by100 simp)
+         also have "?mulH (?\<phi> (?gterm s)) (?\<phi> (foldr mul (map ?gterm ys') e))
+             = ?\<phi> (mul (?gterm s) (foldr mul (map ?gterm ys') e))"
+           using hphi_hom' hgs hprod unfolding top1_group_hom_on_def by (by100 blast)
+         also have "mul (?gterm s) (foldr mul (map ?gterm ys') e)
+             = foldr mul (map ?gterm (s # ys')) e" by (by100 simp)
+         finally show ?case by (by100 simp)
+       qed}
+      hence hfull: "foldr ?mulH (map ?hterm ?xs) ?eH = ?\<phi> (foldr mul (map ?gterm ?xs) e)"
+      proof -
+        assume hInd: "\<And>ys. \<forall>i<length ys. ys!i \<in> S \<Longrightarrow>
+          foldr ?mulH (map ?hterm ys) ?eH = ?\<phi> (foldr mul (map ?gterm ys) e)"
+        have hxs_S: "\<forall>i<length ?xs. ?xs!i \<in> S"
+        proof (intro allI impI)
+          fix i assume hi: "i < length ?xs"
+          have "\<exists>xs. set xs = {s \<in> S. c s \<noteq> 0} \<and> distinct xs"
+            using finite_distinct_list[OF hfin] by (by100 blast)
+          hence "set ?xs = {s \<in> S. c s \<noteq> 0} \<and> distinct ?xs" by (rule someI_ex)
+          thus "?xs!i \<in> S" using nth_mem[OF hi] by (by100 blast)
+        qed
+        show ?thesis by (rule hInd[OF hxs_S])
+      qed
+      show ?thesis using hfull by (by100 simp)
     qed
     show "foldr ?mulH (map (\<lambda>s.
           if c s \<ge> 0 then top1_group_pow ?mulH ?eH (?\<iota>H s) (nat (c s))
