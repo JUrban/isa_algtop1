@@ -3778,7 +3778,33 @@ proof -
         sorry \<comment> \<open>hom\_foldr\_mul for \<epsilon> + step 1 → sum\_list of c(s)\<cdot>\<epsilon>(\<iota>(s)).\<close>
       \<comment> \<open>Step 3: \<epsilon>(\<iota>(s)) = \<delta>_{s,s0} → only s0 contributes → sum = c(s0).\<close>
       have heps_sum: "(\<Sum>s\<leftarrow>?xs. c s * \<epsilon> (\<iota> s)) = c s0"
-        sorry \<comment> \<open>s0 \<in> set ?xs (since c(s0)\<noteq>0), distinct ?xs, \<epsilon>(\<iota>(s))=\<delta>_{s,s0}.\<close>
+      proof -
+        have hprop: "set ?xs = {s \<in> S. c s \<noteq> 0} \<and> distinct ?xs"
+        proof -
+          have "\<exists>xs. set xs = {s \<in> S. c s \<noteq> 0} \<and> distinct xs"
+            using finite_distinct_list[OF hfin] by (by100 blast)
+          thus ?thesis by (rule someI_ex)
+        qed
+        have hs0_in: "s0 \<in> set ?xs" using hprop hs0 by (by100 blast)
+        have hdist: "distinct ?xs" using hprop by (by100 blast)
+        \<comment> \<open>Each term: c s * \<epsilon>(\<iota> s) = c s * (if s = s0 then 1 else 0) = (if s = s0 then c s else 0).\<close>
+        have "\<And>s. s \<in> set ?xs \<Longrightarrow> c s * \<epsilon> (\<iota> s) = (if s = s0 then c s0 else 0)"
+        proof -
+          fix s assume hs_in: "s \<in> set ?xs"
+          have hs_S: "s \<in> S" using hs_in hprop by (by100 blast)
+          show "c s * \<epsilon> (\<iota> s) = (if s = s0 then c s0 else 0)"
+          proof (cases "s = s0")
+            case True thus ?thesis using heps_s0 by (by100 simp)
+          next
+            case False thus ?thesis using heps_other hs_S by (by100 simp)
+          qed
+        qed
+        hence "(\<Sum>s\<leftarrow>?xs. c s * \<epsilon> (\<iota> s)) = (\<Sum>s\<leftarrow>?xs. if s = s0 then c s0 else 0)"
+          sorry \<comment> \<open>Each term equal \<Rightarrow> sum\_list equal.\<close>
+        also have "\<dots> = c s0"
+          sorry \<comment> \<open>sum\_list [if s=s0 then c(s0) else 0 | s \<leftarrow> xs] = c(s0) when s0 \<in> set xs, distinct.\<close>
+        finally show ?thesis .
+      qed
       show ?thesis using heps_foldr heps_sum by (by100 simp)
     qed
     hence "?gp \<notin> ?N" using hcomm_ker hs0(2) by (by100 force)
