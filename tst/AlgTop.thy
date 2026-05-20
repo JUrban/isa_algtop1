@@ -1531,11 +1531,8 @@ proof -
   have hcard_helper: "\<And>S iota. top1_is_free_abelian_group_full_on G mul e invg iota S \<Longrightarrow>
       finite S \<Longrightarrow>
       card (top1_quotient_group_carrier_on G mul ?twoG) = 2 ^ card S"
-    sorry \<comment> \<open>Free abelian mod 2: G/2G \<cong> (Z/2Z)^S, hence |G/2G| = 2^|S|.
-           Proof sketch: define \<phi>: G \<rightarrow> (S\<rightarrow>Z/2Z) by \<phi>(g)(s) = c_s mod 2
-           where g = \<Sigma> c_s \<cdot> \<iota>(s). Well-defined by independence.
-           Surjective: for any f:S\<rightarrow>{0,1}, take g = \<Sigma> f(s)\<cdot>\<iota>(s).
-           Kernel = 2G. So G/2G \<cong> (S\<rightarrow>Z/2Z). |S\<rightarrow>{0,1}| = 2^|S|.\<close>
+    sorry \<comment> \<open>Munkres 67.8: G \<cong> Z^n; 2G \<cong> (2Z)^n; G/2G \<cong> (Z/2Z)^n has 2^n elements.
+       Formal approach: bijection between cosets and (S \<rightarrow> bool) via mod-2 coefficients.\<close>
   have hcard1: "card (top1_quotient_group_carrier_on G mul ?twoG) = 2 ^ card S1"
     by (rule hcard_helper[OF assms(1) hfinS1])
   have hcard2: "card (top1_quotient_group_carrier_on G mul ?twoG) = 2 ^ card S2"
@@ -3727,8 +3724,46 @@ proof -
           if c s \<ge> 0 then top1_group_pow ?mulH ?eH (?\<iota>H s) (nat (c s))
           else top1_group_pow ?mulH ?eH (?invgH (?\<iota>H s)) (nat (- c s)))
         ?xs) ?eH = ?\<phi> ?gp"
-      sorry \<comment> \<open>Quotient hom distributes: \<phi>(foldr mul ms e) = foldr mulH (map \<phi> ms) eH
-         using hom\_foldr\_mul + hom\_group\_pow + hom\_preserves\_inv.\<close>
+    proof -
+      \<comment> \<open>The H-level map = map \<phi> of the G-level map, and \<phi> distributes over foldr.\<close>
+      have hH_grp': "top1_is_group_on ?H ?mulH ?eH ?invgH"
+        using hH_abel unfolding top1_is_abelian_group_on_def by (by100 blast)
+      have hphi_hom': "top1_group_hom_on G mul ?H ?mulH ?\<phi>"
+        using h_abel unfolding top1_is_abelianization_of_def by (by100 blast)
+      \<comment> \<open>For each s, \<phi>(G-level term) = H-level term.\<close>
+      have h_term_eq: "\<And>s. s \<in> S \<Longrightarrow>
+          ?\<phi> (if c s \<ge> 0 then top1_group_pow mul e (\<iota> s) (nat (c s))
+               else top1_group_pow mul e (invg (\<iota> s)) (nat (- c s)))
+        = (if c s \<ge> 0 then top1_group_pow ?mulH ?eH (?\<iota>H s) (nat (c s))
+               else top1_group_pow ?mulH ?eH (?invgH (?\<iota>H s)) (nat (- c s)))"
+      proof -
+        fix s assume hs: "s \<in> S"
+        have h\<iota>s_G: "\<iota> s \<in> G" using hgen_in_G hs by (by100 blast)
+        have hinv\<iota>s_G: "invg (\<iota> s) \<in> G"
+          using hG h\<iota>s_G unfolding top1_is_group_on_def by (by100 blast)
+        show "?\<phi> (if c s \<ge> 0 then top1_group_pow mul e (\<iota> s) (nat (c s))
+               else top1_group_pow mul e (invg (\<iota> s)) (nat (- c s)))
+            = (if c s \<ge> 0 then top1_group_pow ?mulH ?eH (?\<iota>H s) (nat (c s))
+               else top1_group_pow ?mulH ?eH (?invgH (?\<iota>H s)) (nat (- c s)))"
+        proof (cases "c s \<ge> 0")
+          case True
+          have "?\<phi> (top1_group_pow mul e (\<iota> s) (nat (c s)))
+              = top1_group_pow ?mulH ?eH (?\<phi> (\<iota> s)) (nat (c s))"
+            by (rule hom_group_pow[OF hG hH_grp' hphi_hom' h\<iota>s_G])
+          thus ?thesis using True by (by100 simp)
+        next
+          case False
+          have "?\<phi> (top1_group_pow mul e (invg (\<iota> s)) (nat (- c s)))
+              = top1_group_pow ?mulH ?eH (?\<phi> (invg (\<iota> s))) (nat (- c s))"
+            by (rule hom_group_pow[OF hG hH_grp' hphi_hom' hinv\<iota>s_G])
+          moreover have "?\<phi> (invg (\<iota> s)) = ?invgH (?\<phi> (\<iota> s))"
+            by (rule hom_preserves_inv[OF hG hH_grp' hphi_hom' h\<iota>s_G])
+          ultimately show ?thesis using False by (by100 simp)
+        qed
+      qed
+      \<comment> \<open>The full H-level foldr = \<phi>(G-level foldr) by induction using h\_term\_eq.\<close>
+      show ?thesis sorry \<comment> \<open>Induction on ?xs using h\_term\_eq + hom distributes over mul.\<close>
+    qed
     show "foldr ?mulH (map (\<lambda>s.
           if c s \<ge> 0 then top1_group_pow ?mulH ?eH (?\<iota>H s) (nat (c s))
           else top1_group_pow ?mulH ?eH (?invgH (?\<iota>H s)) (nat (- c s)))
