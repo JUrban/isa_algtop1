@@ -3274,6 +3274,18 @@ proof (intro ballI)
   thus "\<epsilon> g = 0" unfolding top1_group_kernel_on_def by (by100 blast)
 qed
 
+lemma group_pow_in_group:
+  assumes "top1_is_group_on G mul e invg" and "x \<in> G"
+  shows "top1_group_pow mul e x n \<in> G"
+proof (induction n)
+  case 0 thus ?case using assms(1) unfolding top1_is_group_on_def by (by100 simp)
+next
+  case (Suc n)
+  have "mul x (top1_group_pow mul e x n) \<in> G"
+    using assms Suc.IH unfolding top1_is_group_on_def by (by100 blast)
+  thus ?case by (by100 simp)
+qed
+
 (** from \<S>69 Theorem 69.4: abelianization of free group is free abelian.
     If G is free on S, then G/[G,G] is free abelian on the images of S. **)
 theorem Theorem_69_4:
@@ -3500,7 +3512,19 @@ proof -
             if c s \<ge> 0 then top1_group_pow mul e (\<iota> s) (nat (c s))
             else top1_group_pow mul e (invg (\<iota> s)) (nat (- c s))) ?xs"
           have "\<forall>i<length ?ms. ?ms!i \<in> G"
-            sorry \<comment> \<open>Each group\_pow of a generator (or its inverse) is in G.\<close>
+          proof (intro allI impI)
+            fix i assume hi: "i < length ?ms"
+            have hsi: "(SOME xs. set xs = {s \<in> S. c s \<noteq> 0} \<and> distinct xs) ! i \<in> S"
+              sorry \<comment> \<open>xs is a list of elements from S.\<close>
+            let ?si = "(SOME xs. set xs = {s \<in> S. c s \<noteq> 0} \<and> distinct xs) ! i"
+            have h\<iota>si: "\<iota> ?si \<in> G"
+              using assms hsi unfolding top1_is_free_group_full_on_def by (by100 blast)
+            have hinv_si: "invg (\<iota> ?si) \<in> G"
+              using hG h\<iota>si unfolding top1_is_group_on_def by (by100 blast)
+            show "?ms ! i \<in> G" using hi
+              group_pow_in_group[OF hG h\<iota>si] group_pow_in_group[OF hG hinv_si]
+              by (by100 auto)
+          qed
           thus ?thesis by (rule foldr_mul_closed[OF hG])
         qed
         have "?gp \<in> top1_group_kernel_on G ?eH ?\<phi>"
