@@ -7188,7 +7188,11 @@ proof -
     \<comment> \<open>Step 1: Extract the free group F and quotient map π from the presentation.\<close>
     \<comment> \<open>Step 2: The relator is in [F,F] (product of commutators).
        Step 3: N \<subseteq> [F,F], so abelianization = F/[F,F] = free abelian on 2n gens.\<close>
-    show ?thesis using h_presentation sorry \<comment> \<open>N \<subseteq> [F,F] + third iso theorem + Theorem 69.4.\<close>
+    \<comment> \<open>Extract F, π from the presentation and show ker(π) ⊆ [F,F].\<close>
+    \<comment> \<open>Then apply abelianization\_of\_presented\_group + transfer via G0 ≅ π₁(X).\<close>
+    show ?thesis using h_presentation
+      sorry \<comment> \<open>Extract presentation F, show relator \<in> [F,F] \<Rightarrow> ker \<subseteq> [F,F],
+         apply abelianization\_of\_presented\_group, transfer via iso G0 \<cong> \<pi>₁(X).\<close>
   qed
   show ?thesis using h_abelianize by (by100 blast)
 qed
