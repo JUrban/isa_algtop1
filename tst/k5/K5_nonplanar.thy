@@ -84,12 +84,15 @@ lemma K4_four_components_with_boundary:
       \<and> top1_connected_on U2 (subspace_topology top1_S2 top1_S2_topology U2)
       \<and> top1_connected_on U3 (subspace_topology top1_S2 top1_S2_topology U3)
       \<and> top1_connected_on U4 (subspace_topology top1_S2 top1_S2_topology U4)
-      \<and> \<not> ({a1,a2,a3,a4} \<subseteq> closure_on top1_S2 top1_S2_topology U1)
-      \<and> \<not> ({a1,a2,a3,a4} \<subseteq> closure_on top1_S2 top1_S2_topology U2)
-      \<and> \<not> ({a1,a2,a3,a4} \<subseteq> closure_on top1_S2 top1_S2_topology U3)
-      \<and> \<not> ({a1,a2,a3,a4} \<subseteq> closure_on top1_S2 top1_S2_topology U4)
       \<and> U1 \<in> top1_S2_topology \<and> U2 \<in> top1_S2_topology
-      \<and> U3 \<in> top1_S2_topology \<and> U4 \<in> top1_S2_topology"
+      \<and> U3 \<in> top1_S2_topology \<and> U4 \<in> top1_S2_topology
+      \<comment> \<open>Munkres Lemma 64.3: exact boundary (closure) characterization.\<close>
+      \<and> closure_on top1_S2 top1_S2_topology U1 = U1 \<union> (e12 \<union> e23 \<union> e13)
+      \<and> closure_on top1_S2 top1_S2_topology U2 = U2 \<union> (e13 \<union> e41 \<union> e34)
+      \<and> ((closure_on top1_S2 top1_S2_topology U3 = U3 \<union> (e12 \<union> e41 \<union> e24)
+          \<and> closure_on top1_S2 top1_S2_topology U4 = U4 \<union> (e23 \<union> e34 \<union> e24))
+        \<or> (closure_on top1_S2 top1_S2_topology U3 = U3 \<union> (e23 \<union> e34 \<union> e24)
+          \<and> closure_on top1_S2 top1_S2_topology U4 = U4 \<union> (e12 \<union> e41 \<union> e24)))"
 proof -
   \<comment> \<open>Extract vertex distinctness.\<close>
   have hdist: "a1 \<noteq> a2" "a1 \<noteq> a3" "a1 \<noteq> a4" "a2 \<noteq> a3" "a2 \<noteq> a4" "a3 \<noteq> a4"
@@ -2084,6 +2087,7 @@ proof -
       "F3 \<union> F3' = top1_S2 - ((e12 \<union> e41) \<union> e24)" "F3 \<inter> F3' = {}"
       "top1_connected_on F3 (subspace_topology top1_S2 top1_S2_topology F3)"
       "F3' \<in> top1_S2_topology"
+      "top1_connected_on F3' (subspace_topology top1_S2 top1_S2_topology F3')"
       and hC'_in_F3': "(e23 \<union> e34) - {a2, a4} \<subseteq> F3'"
   proof -
     from hC'_in_G show ?thesis
@@ -2991,6 +2995,82 @@ proof -
     hence "a3 \<in> closure_on top1_S2 top1_S2_topology F3" using \<open>F3 = F1\<close> by (by100 simp)
     thus False using ha3_not_cl_F3 by (by100 blast)
   qed
+  \<comment> \<open>Exact closure for F3: closure(F3) = F3 \<union> (e12\<union>e41\<union>e24) by SCC boundary-meets-component.\<close>
+  have hcl_F3_sup: "(e12 \<union> e41) \<union> e24 \<subseteq> closure_on top1_S2 top1_S2_topology F3"
+  proof
+    fix z assume hz: "z \<in> (e12 \<union> e41) \<union> e24"
+    have hz_S2: "z \<in> top1_S2" using hz hA'_sub assms(9) by (by100 blast)
+    have hF3_sub_S2: "F3 \<subseteq> top1_S2" using hF3_props(3) by (by100 blast)
+    show "z \<in> closure_on top1_S2 top1_S2_topology F3"
+    proof (rule iffD2[OF Theorem_17_5a[OF hTopS2 hz_S2 hF3_sub_S2]])
+      show "\<forall>U. neighborhood_of z top1_S2 top1_S2_topology U \<longrightarrow> intersects U F3"
+      proof (intro allI impI)
+        fix V assume hV: "neighborhood_of z top1_S2 top1_S2_topology V"
+        have hV_open: "V \<in> top1_S2_topology" and hzV: "z \<in> V"
+          using hV unfolding neighborhood_of_def by (by100 blast)+
+        have "F3' \<noteq> {}" using hC'_in_F3' hC'_int_ne by (by100 blast)
+        have "V \<inter> F3 \<noteq> {}"
+          by (rule simple_closed_curve_boundary_meets_component[OF assms(1) hA'B'_scc
+              hF3_props(5) hF3_props(7) hF3_props(4,3) hF3_props(1) \<open>F3' \<noteq> {}\<close>
+              hF3_props(2,6) hz hV_open hzV])
+        thus "intersects V F3" unfolding intersects_def by (by100 blast)
+      qed
+    qed
+  qed
+  have hcl_F3_exact: "closure_on top1_S2 top1_S2_topology F3 = F3 \<union> ((e12 \<union> e41) \<union> e24)"
+    using hcl_F3_bound hcl_F3_sup subset_closure_on[of F3 top1_S2 top1_S2_topology]
+    by (by100 blast)
+  \<comment> \<open>Exact closure for F1: closure(F1) = F1 \<union> (e24\<union>(e23\<union>e34)).\<close>
+  have hcl_F1_sup: "e24 \<union> (e23 \<union> e34) \<subseteq> closure_on top1_S2 top1_S2_topology F1"
+  proof
+    fix z assume hz: "z \<in> e24 \<union> (e23 \<union> e34)"
+    have hz_S2: "z \<in> top1_S2" using hz assms(9) hC'_sub by (by100 blast)
+    have hF1_sub_S2: "F1 \<subseteq> top1_S2" using hF1_props(3) by (by100 blast)
+    show "z \<in> closure_on top1_S2 top1_S2_topology F1"
+    proof (rule iffD2[OF Theorem_17_5a[OF hTopS2 hz_S2 hF1_sub_S2]])
+      show "\<forall>U. neighborhood_of z top1_S2 top1_S2_topology U \<longrightarrow> intersects U F1"
+      proof (intro allI impI)
+        fix V assume hV: "neighborhood_of z top1_S2 top1_S2_topology V"
+        have hV_open: "V \<in> top1_S2_topology" and hzV: "z \<in> V"
+          using hV unfolding neighborhood_of_def by (by100 blast)+
+        have "F1' \<noteq> {}" using hA'_in_F1' hA'_int_ne by (by100 blast)
+        have "V \<inter> F1 \<noteq> {}"
+          by (rule simple_closed_curve_boundary_meets_component[OF assms(1) hB'C'_scc
+              hF1_props(5) hF1_props(7) hF1_props(4,3) hF1_props(1) \<open>F1' \<noteq> {}\<close>
+              hF1_props(2,6) hz hV_open hzV])
+        thus "intersects V F1" unfolding intersects_def by (by100 blast)
+      qed
+    qed
+  qed
+  have hcl_F1_exact: "closure_on top1_S2 top1_S2_topology F1 = F1 \<union> (e24 \<union> (e23 \<union> e34))"
+    using hcl_F1_bound hcl_F1_sup subset_closure_on[of F1 top1_S2 top1_S2_topology]
+    by (by100 blast)
+  \<comment> \<open>Derive exact closures for W1, W2 from F3, F1 assignment.\<close>
+  have hcl_W12: "(closure_on top1_S2 top1_S2_topology W1 = W1 \<union> (e12 \<union> e41 \<union> e24)
+      \<and> closure_on top1_S2 top1_S2_topology W2 = W2 \<union> (e23 \<union> e34 \<union> e24))
+    \<or> (closure_on top1_S2 top1_S2_topology W1 = W1 \<union> (e23 \<union> e34 \<union> e24)
+      \<and> closure_on top1_S2 top1_S2_topology W2 = W2 \<union> (e12 \<union> e41 \<union> e24))"
+  proof -
+    from hF3_in_WW have "F3 = W1 \<or> F3 = W2" by (by100 blast)
+    thus ?thesis
+    proof
+      assume "F3 = W1"
+      hence "F1 = W2" using hF1_in_WW hF3_ne_F1 by (by100 blast)
+      have "closure_on top1_S2 top1_S2_topology W1 = W1 \<union> ((e12 \<union> e41) \<union> e24)"
+        using hcl_F3_exact \<open>F3 = W1\<close> by (by100 simp)
+      moreover have "closure_on top1_S2 top1_S2_topology W2 = W2 \<union> (e24 \<union> (e23 \<union> e34))"
+        using hcl_F1_exact \<open>F1 = W2\<close> by (by100 simp)
+      ultimately show ?thesis by (by100 blast)
+    next
+      assume "F3 = W2"
+      hence "F1 = W1" using hF1_in_WW hF3_ne_F1 by (by100 blast)
+      have "closure_on top1_S2 top1_S2_topology W2 = W2 \<union> ((e12 \<union> e41) \<union> e24)"
+        using hcl_F3_exact \<open>F3 = W2\<close> by (by100 simp)
+      moreover have "closure_on top1_S2 top1_S2_topology W1 = W1 \<union> (e24 \<union> (e23 \<union> e34))"
+        using hcl_F1_exact \<open>F1 = W1\<close> by (by100 simp)
+      ultimately show ?thesis by (by100 blast)
+    qed
+  qed
   \<comment> \<open>Since F3, F1 \<in> {W1, W2} and F3 \<noteq> F1: {F3, F1} = {W1, W2}.\<close>
   \<comment> \<open>Conclude hbd\_W1 and hbd\_W2.\<close>
   have hbd_W1: "\<not> ({a1,a2,a3,a4} \<subseteq> closure_on top1_S2 top1_S2_topology W1)"
@@ -3039,8 +3119,10 @@ proof -
     apply (fact hfour_disj(4)) apply (fact hfour_disj(5)) apply (fact hfour_disj(6))
     apply (fact hfour_union)
     apply (fact hP(5)) apply (fact hR(5)) apply (fact hW(5)) apply (fact hW(6))
-    apply (fact hbd_P1) apply (fact hbd_R1) apply (fact hbd_W1) apply (fact hbd_W2)
     apply (fact hP1_open) apply (fact hR1_open) apply (fact hW1_open) apply (fact hW2_open)
+    using hcl_P1 apply (by100 blast)
+    using hcl_R1 apply (by100 blast)
+    using hcl_W12 apply (by100 blast)
     done
 qed
 
@@ -3126,12 +3208,14 @@ proof -
       \<and> top1_connected_on U2 (subspace_topology top1_S2 top1_S2_topology U2)
       \<and> top1_connected_on U3 (subspace_topology top1_S2 top1_S2_topology U3)
       \<and> top1_connected_on U4 (subspace_topology top1_S2 top1_S2_topology U4)
-      \<and> \<not> ({a1,a2,a3,a4} \<subseteq> closure_on top1_S2 top1_S2_topology U1)
-      \<and> \<not> ({a1,a2,a3,a4} \<subseteq> closure_on top1_S2 top1_S2_topology U2)
-      \<and> \<not> ({a1,a2,a3,a4} \<subseteq> closure_on top1_S2 top1_S2_topology U3)
-      \<and> \<not> ({a1,a2,a3,a4} \<subseteq> closure_on top1_S2 top1_S2_topology U4)
       \<and> U1 \<in> top1_S2_topology \<and> U2 \<in> top1_S2_topology
-      \<and> U3 \<in> top1_S2_topology \<and> U4 \<in> top1_S2_topology"
+      \<and> U3 \<in> top1_S2_topology \<and> U4 \<in> top1_S2_topology
+      \<and> closure_on top1_S2 top1_S2_topology U1 = U1 \<union> (e12 \<union> e23 \<union> e13)
+      \<and> closure_on top1_S2 top1_S2_topology U2 = U2 \<union> (e13 \<union> e14 \<union> e34)
+      \<and> ((closure_on top1_S2 top1_S2_topology U3 = U3 \<union> (e12 \<union> e14 \<union> e24)
+          \<and> closure_on top1_S2 top1_S2_topology U4 = U4 \<union> (e23 \<union> e34 \<union> e24))
+        \<or> (closure_on top1_S2 top1_S2_topology U3 = U3 \<union> (e23 \<union> e34 \<union> e24)
+          \<and> closure_on top1_S2 top1_S2_topology U4 = U4 \<union> (e12 \<union> e14 \<union> e24)))"
     unfolding X_def
     apply (rule K4_four_components_with_boundary)
     apply (fact hS2) apply (fact hcard4) apply (fact hvert4)
@@ -3156,22 +3240,133 @@ proof -
       "top1_connected_on U2 (subspace_topology top1_S2 top1_S2_topology U2)"
       "top1_connected_on U3 (subspace_topology top1_S2 top1_S2_topology U3)"
       "top1_connected_on U4 (subspace_topology top1_S2 top1_S2_topology U4)"
-      "\<not> ({a1,a2,a3,a4} \<subseteq> closure_on top1_S2 top1_S2_topology U1)"
-      "\<not> ({a1,a2,a3,a4} \<subseteq> closure_on top1_S2 top1_S2_topology U2)"
-      "\<not> ({a1,a2,a3,a4} \<subseteq> closure_on top1_S2 top1_S2_topology U3)"
-      "\<not> ({a1,a2,a3,a4} \<subseteq> closure_on top1_S2 top1_S2_topology U4)"
       "U1 \<in> top1_S2_topology" "U2 \<in> top1_S2_topology"
       "U3 \<in> top1_S2_topology" "U4 \<in> top1_S2_topology"
+      "closure_on top1_S2 top1_S2_topology U1 = U1 \<union> (e12 \<union> e23 \<union> e13)"
+      "closure_on top1_S2 top1_S2_topology U2 = U2 \<union> (e13 \<union> e14 \<union> e34)"
+      "(closure_on top1_S2 top1_S2_topology U3 = U3 \<union> (e12 \<union> e14 \<union> e24)
+          \<and> closure_on top1_S2 top1_S2_topology U4 = U4 \<union> (e23 \<union> e34 \<union> e24))
+        \<or> (closure_on top1_S2 top1_S2_topology U3 = U3 \<union> (e23 \<union> e34 \<union> e24)
+          \<and> closure_on top1_S2 top1_S2_topology U4 = U4 \<union> (e12 \<union> e14 \<union> e24))"
     apply (elim exE conjE)
     apply (intro that; assumption)
     done
   have ha5_in_comp: "a5 \<in> U1 \<union> U2 \<union> U3 \<union> U4"
     using ha5_not_in_X hvert hU(11) X_def by (by100 blast)
+  \<comment> \<open>Derive boundary conditions from exact closures.\<close>
   have hU_boundary: "\<not> ({a1, a2, a3, a4} \<subseteq> closure_on top1_S2 top1_S2_topology U1)
       \<and> \<not> ({a1, a2, a3, a4} \<subseteq> closure_on top1_S2 top1_S2_topology U2)
       \<and> \<not> ({a1, a2, a3, a4} \<subseteq> closure_on top1_S2 top1_S2_topology U3)
       \<and> \<not> ({a1, a2, a3, a4} \<subseteq> closure_on top1_S2 top1_S2_topology U4)"
-    using hU(16,17,18,19) by (by100 blast)
+  proof -
+    \<comment> \<open>From exact closures: each Xi = 3 edges has only 3 vertices. The 4th is missing.\<close>
+    \<comment> \<open>a4 \<notin> closure(U1): a4 \<notin> U1 (vertices on edges, U1 \<subseteq> S2-X) and a4 \<notin> e12\<union>e23\<union>e13.\<close>
+    have ha4_not_U1_edges: "a4 \<notin> e12 \<union> e23 \<union> e13"
+    proof -
+      have ha4_e34: "a4 \<in> e34" using arc_endpoints_subset[of e34] hep34 by (by100 blast)
+      have "a4 \<notin> e12" using hi_12_34 ha4_e34 by (by100 blast)
+      moreover have "a4 \<notin> e23"
+      proof assume "a4 \<in> e23"
+        hence "a4 \<in> e23 \<inter> e34" using ha4_e34 by (by100 blast)
+        hence "a4 \<in> {a3}" using hi_23_34 by (by100 blast)
+        thus False using hcard5 by (auto simp: card_insert_if split: if_splits) qed
+      moreover have "a4 \<notin> e13"
+      proof assume "a4 \<in> e13"
+        hence "a4 \<in> e13 \<inter> e34" using ha4_e34 by (by100 blast)
+        hence "a4 \<in> {a3}" using hi_13_34 by (by100 blast)
+        thus False using hcard5 by (auto simp: card_insert_if split: if_splits) qed
+      ultimately show ?thesis by (by100 blast)
+    qed
+    have "a4 \<notin> U1"
+    proof -
+      have "a4 \<in> e34" using arc_endpoints_subset[of e34] hep34 by (by100 blast)
+      hence "a4 \<in> e12 \<union> e23 \<union> e34 \<union> e14 \<union> e13 \<union> e24" by (by100 blast)
+      hence "a4 \<notin> top1_S2 - (e12 \<union> e23 \<union> e34 \<union> e14 \<union> e13 \<union> e24)" by (by100 blast)
+      thus ?thesis using hU(11) X_def by (by100 blast)
+    qed
+    hence h1: "\<not> ({a1,a2,a3,a4} \<subseteq> closure_on top1_S2 top1_S2_topology U1)"
+      using hU(20) ha4_not_U1_edges by (by100 blast)
+    \<comment> \<open>a2 \<notin> closure(U2): a2 \<notin> e13\<union>e14\<union>e34.\<close>
+    have ha2_not_U2_edges: "a2 \<notin> e13 \<union> e14 \<union> e34"
+    proof -
+      have ha2_e12: "a2 \<in> e12" using arc_endpoints_subset[of e12] hep12 by (by100 blast)
+      have "a2 \<notin> e13" using hi_13_12 ha2_e12 hcard5 by (auto simp: card_insert_if split: if_splits)
+      moreover have "a2 \<notin> e14" using hi_14_12 ha2_e12 hcard5 by (auto simp: card_insert_if split: if_splits)
+      moreover have "a2 \<notin> e34" using hi_12_34 ha2_e12 by (by100 blast)
+      ultimately show ?thesis by (by100 blast)
+    qed
+    have "a2 \<notin> U2"
+    proof -
+      have "a2 \<in> e12" using arc_endpoints_subset[of e12] hep12 by (by100 blast)
+      hence "a2 \<in> e12 \<union> e23 \<union> e34 \<union> e14 \<union> e13 \<union> e24" by (by100 blast)
+      hence "a2 \<notin> top1_S2 - (e12 \<union> e23 \<union> e34 \<union> e14 \<union> e13 \<union> e24)" by (by100 blast)
+      thus ?thesis using hU(11) X_def by (by100 blast)
+    qed
+    hence h2: "\<not> ({a1,a2,a3,a4} \<subseteq> closure_on top1_S2 top1_S2_topology U2)"
+      using hU(21) ha2_not_U2_edges by (by100 blast)
+    \<comment> \<open>U3, U4: from the disjunction, each has a missing vertex.\<close>
+    have ha3_not_X3: "a3 \<notin> e12 \<union> e14 \<union> e24"
+    proof -
+      have ha3_e34: "a3 \<in> e34" using arc_endpoints_subset[of e34] hep34 by (by100 blast)
+      have "a3 \<notin> e12" using hi_12_34 ha3_e34 by (by100 blast)
+      moreover have "a3 \<notin> e14"
+      proof assume "a3 \<in> e14"
+        hence "a3 \<in> e14 \<inter> e34" using ha3_e34 by (by100 blast)
+        hence "a3 \<in> {a4}" using hi_34_14 by (by100 blast)
+        thus False using hcard5 by (auto simp: card_insert_if split: if_splits) qed
+      moreover have "a3 \<notin> e24"
+      proof assume "a3 \<in> e24"
+        hence "a3 \<in> e24 \<inter> e34" using ha3_e34 by (by100 blast)
+        hence "a3 \<in> {a4}" using hi_24_34 by (by100 blast)
+        thus False using hcard5 by (auto simp: card_insert_if split: if_splits) qed
+      ultimately show ?thesis by (by100 blast)
+    qed
+    have ha1_not_X1: "a1 \<notin> e23 \<union> e34 \<union> e24"
+    proof -
+      have ha1_e12: "a1 \<in> e12" using arc_endpoints_subset[of e12] hep12 by (by100 blast)
+      have "a1 \<notin> e23"
+      proof assume "a1 \<in> e23"
+        hence "a1 \<in> e12 \<inter> e23" using ha1_e12 by (by100 blast)
+        hence "a1 \<in> {a2}" using hi_12_23 by (by100 blast)
+        thus False using hcard5 by (auto simp: card_insert_if split: if_splits) qed
+      moreover have "a1 \<notin> e34" using hi_12_34 ha1_e12 by (by100 blast)
+      moreover have "a1 \<notin> e24"
+      proof assume "a1 \<in> e24"
+        hence "a1 \<in> e12 \<inter> e24" using ha1_e12 by (by100 blast)
+        hence "a1 \<in> {a2}" using hi_24_12 by (by100 blast)
+        thus False using hcard5 by (auto simp: card_insert_if split: if_splits) qed
+      ultimately show ?thesis by (by100 blast)
+    qed
+    have ha3_not_U: "a3 \<notin> U3 \<and> a3 \<notin> U4"
+    proof -
+      have "a3 \<in> e34" using arc_endpoints_subset[of e34] hep34 by (by100 blast)
+      hence "a3 \<notin> top1_S2 - (e12 \<union> e23 \<union> e34 \<union> e14 \<union> e13 \<union> e24)" by (by100 blast)
+      thus ?thesis using hU(11) X_def by (by100 blast)
+    qed
+    have ha1_not_U: "a1 \<notin> U3 \<and> a1 \<notin> U4"
+    proof -
+      have "a1 \<in> e12" using arc_endpoints_subset[of e12] hep12 by (by100 blast)
+      hence "a1 \<notin> top1_S2 - (e12 \<union> e23 \<union> e34 \<union> e14 \<union> e13 \<union> e24)" by (by100 blast)
+      thus ?thesis using hU(11) X_def by (by100 blast)
+    qed
+    have h34: "\<not> ({a1,a2,a3,a4} \<subseteq> closure_on top1_S2 top1_S2_topology U3)
+        \<and> \<not> ({a1,a2,a3,a4} \<subseteq> closure_on top1_S2 top1_S2_topology U4)"
+      using hU(22)
+    proof
+      assume h: "closure_on top1_S2 top1_S2_topology U3 = U3 \<union> (e12 \<union> e14 \<union> e24)
+          \<and> closure_on top1_S2 top1_S2_topology U4 = U4 \<union> (e23 \<union> e34 \<union> e24)"
+      have "\<not> ({a1,a2,a3,a4} \<subseteq> U3 \<union> (e12 \<union> e14 \<union> e24))" using ha3_not_X3 ha3_not_U by (by100 blast)
+      moreover have "\<not> ({a1,a2,a3,a4} \<subseteq> U4 \<union> (e23 \<union> e34 \<union> e24))" using ha1_not_X1 ha1_not_U by (by100 blast)
+      ultimately show ?thesis using conjunct1[OF h] conjunct2[OF h] by (by100 simp)
+    next
+      assume h: "closure_on top1_S2 top1_S2_topology U3 = U3 \<union> (e23 \<union> e34 \<union> e24)
+          \<and> closure_on top1_S2 top1_S2_topology U4 = U4 \<union> (e12 \<union> e14 \<union> e24)"
+      have "\<not> ({a1,a2,a3,a4} \<subseteq> U3 \<union> (e23 \<union> e34 \<union> e24))" using ha1_not_X1 ha1_not_U by (by100 blast)
+      moreover have "\<not> ({a1,a2,a3,a4} \<subseteq> U4 \<union> (e12 \<union> e14 \<union> e24))" using ha3_not_X3 ha3_not_U by (by100 blast)
+      ultimately show ?thesis using conjunct1[OF h] conjunct2[OF h] by (by100 simp)
+    qed
+    show ?thesis using h1 h2 h34 by (by100 blast)
+  qed
   \<comment> \<open>Each X\_i = 3 edges not incident to a\_i forms an SCC.
      By JCT, X\_i separates S2. Since e\_{i,5} \<inter> X\_i = {} and e\_{i,5} connects
      a5 to a\_i, they are on the same side of X\_i.
@@ -3230,7 +3425,7 @@ proof -
   \<comment> \<open>Each Ui is open in S2 (component of open set in locally path connected space).\<close>
   have hU_open: "U1 \<in> top1_S2_topology" "U2 \<in> top1_S2_topology"
       "U3 \<in> top1_S2_topology" "U4 \<in> top1_S2_topology"
-    using hU(20,21,22,23) by (by100 blast)+
+    using hU(16,17,18,19) by (by100 blast)+
   \<comment> \<open>Helper: if Y connected, Y \<subseteq> S2-X, Y \<inter> Ui \<noteq> {}, then Y \<subseteq> Ui.\<close>
   have hcomp_max: "\<And>Y Ui. Ui \<in> {U1,U2,U3,U4} \<Longrightarrow>
       Y \<subseteq> top1_S2 - X \<Longrightarrow> top1_connected_on Y (subspace_topology top1_S2 top1_S2_topology Y) \<Longrightarrow>
