@@ -2133,7 +2133,29 @@ proof -
     have hf_e: "f e = eH" by (rule hom_preserves_id[OF hG assms(3) hf_hom])
     have hprod: "top1_group_word_product mulH eH invgH (map (\<lambda>(s, b). (\<iota>' s, b)) ws)
         = f (top1_group_word_product mul e invg (map (\<lambda>(s, b). (\<iota> s, b)) ws))"
-      sorry \<comment> \<open>Uses hom\_word\_product + map composition (ι' = f∘ι).\<close>
+    proof -
+      \<comment> \<open>The mapped words are equal: map (ι'×id) ws = map (f×id) (map (ι×id) ws).\<close>
+      have hmap_eq: "map (\<lambda>(s, b). (\<iota>' s, b)) ws = map (\<lambda>(x, b). (f x, b)) (map (\<lambda>(s, b). (\<iota> s, b)) ws)"
+      proof (rule nth_equalityI)
+        show "length (map (\<lambda>(s, b). (\<iota>' s, b)) ws) = length (map (\<lambda>(x, b). (f x, b)) (map (\<lambda>(s, b). (\<iota> s, b)) ws))"
+          by (by100 simp)
+      next
+        fix i assume "i < length (map (\<lambda>(s, b). (\<iota>' s, b)) ws)"
+        hence hi: "i < length ws" by (by100 simp)
+        obtain si bi where hwi: "ws ! i = (si, bi)" by (cases "ws ! i") (by100 blast)
+        show "(map (\<lambda>(s, b). (\<iota>' s, b)) ws) ! i = (map (\<lambda>(x, b). (f x, b)) (map (\<lambda>(s, b). (\<iota> s, b)) ws)) ! i"
+          using hi hwi unfolding \<iota>'_def by (by100 simp)
+      qed
+      have hws_G: "\<forall>i<length (map (\<lambda>(s, b). (\<iota> s, b)) ws). fst ((map (\<lambda>(s, b). (\<iota> s, b)) ws) ! i) \<in> G"
+      proof (intro allI impI)
+        fix i assume hi: "i < length (map (\<lambda>(s, b). (\<iota> s, b)) ws)"
+        obtain si bi where hwi: "ws ! i = (si, bi)" by (cases "ws ! i") (by100 blast)
+        have "si \<in> S" using hin hi hwi by (by100 force)
+        thus "fst ((map (\<lambda>(s, b). (\<iota> s, b)) ws) ! i) \<in> G" using h\<iota>_in hi hwi by (by100 simp)
+      qed
+      show ?thesis unfolding hmap_eq
+        by (rule hom_word_product[OF hG assms(3) hf_hom hws_G, symmetric])
+    qed
     \<comment> \<open>If product = eH, then f(product in G) = eH, so product in G = e (f injective).\<close>
     show "top1_group_word_product mulH eH invgH (map (\<lambda>(s, b). (\<iota>' s, b)) ws) \<noteq> eH"
     proof
