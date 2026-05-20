@@ -452,15 +452,18 @@ proof -
           proof cases
             assume h: "X = U"
             show ?thesis
-              by (rule that[of V W]) (use h hUV_ne hUW_ne hVW_ne in \<open>(by100 blast)+\<close>)
+              apply (rule that[of V W])
+              using h hUV_ne hUW_ne hVW_ne by (by100 simp) (by100 blast)+
           next
             assume h: "X = V"
             show ?thesis
-              by (rule that[of U W]) (use h hUV_ne hVW_ne hUW_ne in \<open>(by100 blast)+\<close>)
+              apply (rule that[of U W])
+              using h hUV_ne hVW_ne hUW_ne by (by100 simp) (by100 blast)+
           next
             assume h: "X = W"
             show ?thesis
-              by (rule that[of U V]) (use h hUW_ne hVW_ne hUV_ne in \<open>(by100 blast)+\<close>)
+              apply (rule that[of U V])
+              using h hUW_ne hVW_ne hUV_ne by (by100 simp) (by100 blast)+
           qed
         qed
         have hY_sub: "Y \<subseteq> top1_S2 - (A \<union> B \<union> C)" using hYZ(5) hU(3) hV(3) hW(3) by (by100 blast)
@@ -1920,7 +1923,65 @@ lemma free_group_invariant_under_iso:
       and "top1_is_group_on H mulH eH invgH"
   shows "\<exists>\<iota>'. top1_is_free_group_full_on H mulH eH invgH \<iota>' S
     \<and> (\<forall>s\<in>S. \<iota>' s = f (\<iota> s))"
-  sorry
+proof -
+  \<comment> \<open>Define \<iota>' = f \<circ> \<iota>.\<close>
+  define \<iota>' where "\<iota>' s = f (\<iota> s)" for s
+  \<comment> \<open>Extract free group properties of G.\<close>
+  have hG: "top1_is_group_on G mul e invg"
+    using assms(1) unfolding top1_is_free_group_full_on_def by (by100 blast)
+  have h\<iota>_in: "\<forall>s\<in>S. \<iota> s \<in> G"
+    using assms(1) unfolding top1_is_free_group_full_on_def by (by100 blast)
+  have h\<iota>_inj: "inj_on \<iota> S"
+    using assms(1) unfolding top1_is_free_group_full_on_def by (by100 blast)
+  have hG_gen: "G = top1_subgroup_generated_on G mul e invg (\<iota> ` S)"
+    using assms(1) unfolding top1_is_free_group_full_on_def by (by100 blast)
+  have hG_red: "\<And>ws. ws \<noteq> [] \<Longrightarrow>
+      top1_is_reduced_word (map (\<lambda>(s, b). (\<iota> s, b)) ws) \<Longrightarrow>
+      (\<forall>i<length ws. fst (ws!i) \<in> S) \<Longrightarrow>
+      top1_group_word_product mul e invg (map (\<lambda>(s, b). (\<iota> s, b)) ws) \<noteq> e"
+    using assms(1) unfolding top1_is_free_group_full_on_def by (by100 blast)
+  \<comment> \<open>Extract isomorphism properties.\<close>
+  have hf_hom: "top1_group_hom_on G mul H mulH f"
+    using assms(2) unfolding top1_group_iso_on_def by (by100 blast)
+  have hf_bij: "bij_betw f G H"
+    using assms(2) unfolding top1_group_iso_on_def by (by100 blast)
+  \<comment> \<open>Part 1: \<iota>' maps S into H.\<close>
+  have h1: "\<forall>s\<in>S. \<iota>' s \<in> H"
+    unfolding \<iota>'_def using h\<iota>_in hf_bij unfolding bij_betw_def by (by100 blast)
+  \<comment> \<open>Part 2: \<iota>' is injective on S (f is injective, \<iota> is injective).\<close>
+  have h2: "inj_on \<iota>' S"
+    unfolding \<iota>'_def
+  proof (rule inj_onI)
+    fix x y assume hx: "x \<in> S" and hy: "y \<in> S" and hfeq: "f (\<iota> x) = f (\<iota> y)"
+    have "inj_on f G" using hf_bij unfolding bij_betw_def by (by100 blast)
+    hence "\<iota> x = \<iota> y" using hfeq h\<iota>_in hx hy unfolding inj_on_def by (by100 blast)
+    thus "x = y" using h\<iota>_inj hx hy unfolding inj_on_def by (by100 blast)
+  qed
+  \<comment> \<open>Part 3: \<iota>'(S) generates H.\<close>
+  have h3: "H = top1_subgroup_generated_on H mulH eH invgH (\<iota>' ` S)"
+  proof -
+    \<comment> \<open>Proof: \<iota>'(S) = f(\<iota>(S)). Since f is surjective and \<iota>(S) generates G,
+       f(\<iota>(S)) generates H. Direct argument via subgroup_generated.\<close>
+    have h\<iota>'_img: "\<iota>' ` S = f ` (\<iota> ` S)" unfolding \<iota>'_def image_image by (by100 blast)
+    have hf_surj: "f ` G = H" using hf_bij unfolding bij_betw_def by (by100 blast)
+    have h\<iota>S_sub: "\<iota> ` S \<subseteq> G" using h\<iota>_in by (by100 blast)
+    \<comment> \<open>H \<subseteq> \<langle>\<iota>'(S)\<rangle>: every h \<in> H is f(g) for some g \<in> G = \<langle>\<iota>(S)\<rangle>.
+       g in every subgroup containing \<iota>(S) \<Rightarrow> f(g) in every subgroup containing f(\<iota>(S)).\<close>
+    show ?thesis sorry \<comment> \<open>Uses same preimage argument as surj_hom_generated (defined below).\<close>
+  qed
+  \<comment> \<open>Part 4: No nontrivial reduced word in \<iota>'(S) evaluates to eH.\<close>
+  have h4: "\<And>ws. ws \<noteq> [] \<Longrightarrow>
+      top1_is_reduced_word (map (\<lambda>(s, b). (\<iota>' s, b)) ws) \<Longrightarrow>
+      (\<forall>i<length ws. fst (ws!i) \<in> S) \<Longrightarrow>
+      top1_group_word_product mulH eH invgH (map (\<lambda>(s, b). (\<iota>' s, b)) ws) \<noteq> eH"
+    sorry \<comment> \<open>If reduced word in f(\<iota>(S)) = eH, apply f\<inverse> to get reduced word in \<iota>(S) = e.\<close>
+  \<comment> \<open>Combine into free group definition.\<close>
+  have "top1_is_free_group_full_on H mulH eH invgH \<iota>' S"
+    unfolding top1_is_free_group_full_on_def
+    using assms(3) h1 h2 h3 h4 by (by100 blast)
+  moreover have "\<forall>s\<in>S. \<iota>' s = f (\<iota> s)" unfolding \<iota>'_def by (by100 blast)
+  ultimately show ?thesis by (by100 blast)
+qed
 
 text \<open>Rank of a finitely generated free group is invariant.\<close>
 lemma free_group_rank_invariant_finite:
