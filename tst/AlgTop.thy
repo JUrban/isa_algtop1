@@ -3717,7 +3717,23 @@ proof -
         ?xs) e"
     \<comment> \<open>\<epsilon> applied to each generator power: \<epsilon>(ι(s)^n) = n·\<epsilon>(ι(s)).\<close>
     have heps_gp: "\<epsilon> ?gp = c s0"
-      sorry \<comment> \<open>\<epsilon> homomorphism distributes over foldr; \<epsilon>(ι(s0))=1, \<epsilon>(ι(s))=0 for s\<noteq>s0.\<close>
+    proof -
+      \<comment> \<open>Munkres: \<epsilon>(foldr mul [pow(\<iota> s, c s) | s \<in> xs] e) = \<Sigma>_s c(s)\<cdot>\<epsilon>(\<iota>(s)) = c(s0).\<close>
+      have hZ: "top1_is_group_on (UNIV::int set) (+) (0::int) uminus"
+        unfolding top1_is_group_on_def by (by100 auto)
+      \<comment> \<open>Step 1: \<epsilon> of each generator power.\<close>
+      have heps_term: "\<And>s. s \<in> S \<Longrightarrow>
+        \<epsilon> (if c s \<ge> 0 then top1_group_pow mul e (\<iota> s) (nat (c s))
+            else top1_group_pow mul e (invg (\<iota> s)) (nat (- c s))) = c s * \<epsilon> (\<iota> s)"
+        sorry \<comment> \<open>hom\_group\_pow: \<epsilon>(pow(\<iota> s, n)) = n\<cdot>\<epsilon>(\<iota> s); hom\_preserves\_inv for neg case.\<close>
+      \<comment> \<open>Step 2: \<epsilon> distributes over foldr → sum of individual terms.\<close>
+      have heps_foldr: "\<epsilon> ?gp = (\<Sum>s\<leftarrow>?xs. c s * \<epsilon> (\<iota> s))"
+        sorry \<comment> \<open>hom\_foldr\_mul for \<epsilon> + step 1 → sum\_list of c(s)\<cdot>\<epsilon>(\<iota>(s)).\<close>
+      \<comment> \<open>Step 3: \<epsilon>(\<iota>(s)) = \<delta>_{s,s0} → only s0 contributes → sum = c(s0).\<close>
+      have heps_sum: "(\<Sum>s\<leftarrow>?xs. c s * \<epsilon> (\<iota> s)) = c s0"
+        sorry \<comment> \<open>s0 \<in> set ?xs (since c(s0)\<noteq>0), distinct ?xs, \<epsilon>(\<iota>(s))=\<delta>_{s,s0}.\<close>
+      show ?thesis using heps_foldr heps_sum by (by100 simp)
+    qed
     hence "?gp \<notin> ?N" using hcomm_ker hs0(2) by (by100 force)
     \<comment> \<open>The H-product = coset(gp). coset(gp) = eH iff gp \<in> [G,G].\<close>
     have hH_prod_eq: "foldr ?mulH (map (\<lambda>s.
