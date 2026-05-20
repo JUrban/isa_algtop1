@@ -1506,7 +1506,11 @@ text \<open>Reflexivity: any group is isomorphic to itself (via the identity).\<
 lemma group_iso_on_refl:
   assumes "top1_is_group_on G mul e invg"
   shows "top1_groups_isomorphic_on G mul G mul"
-  sorry
+  unfolding top1_groups_isomorphic_on_def top1_group_iso_on_def top1_group_hom_on_def
+  apply (rule exI[of _ id])
+  using assms unfolding top1_is_group_on_def
+  apply (by100 auto)
+  done
 
 text \<open>Composition of group isomorphisms.\<close>
 lemma group_iso_on_compose:
@@ -1533,7 +1537,8 @@ lemma normal_closure_least:
       and "top1_normal_subgroup_on G mul e invg N"
       and "S \<subseteq> N"
   shows "top1_normal_subgroup_generated_on G mul e invg S \<subseteq> N"
-  sorry
+  unfolding top1_normal_subgroup_generated_on_def
+  using assms(2,3) by (by100 blast)
 
 text \<open>Quotient group universal property: a homomorphism whose kernel contains N
   factors uniquely through G/N.\<close>
@@ -5537,14 +5542,14 @@ text \<open>Covering map is surjective.\<close>
 lemma covering_map_surjective:
   assumes "top1_covering_map_on E TE B TB p"
   shows "p ` E = B"
-  using assms unfolding top1_covering_map_on_def sorry
+  using assms unfolding top1_covering_map_on_def by (by100 blast)
 
 text \<open>Every point has an evenly covered neighborhood.\<close>
 lemma covering_map_evenly_covered_neighborhood:
   assumes "top1_covering_map_on E TE B TB p"
       and "b \<in> B"
-  shows "\<exists>U. b \<in> U \<and> U \<in> TB \<and> top1_evenly_covered_by_on E TE B TB p U"
-  using assms unfolding top1_covering_map_on_def sorry
+  shows "\<exists>U. b \<in> U \<and> top1_evenly_covered_on E TE B TB p U"
+  using assms unfolding top1_covering_map_on_def by (by100 blast)
 
 text \<open>Unique path lifting.\<close>
 lemma covering_lift_unique_path:
