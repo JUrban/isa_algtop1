@@ -1589,9 +1589,47 @@ proof -
       using normal_coset_eq[OF assms(1,2) hg hh] heq by (by100 blast)
     hence "mul (invg g) h \<in> top1_group_kernel_on G eH f" using assms(5) by (by100 blast)
     hence "f (mul (invg g) h) = eH" unfolding top1_group_kernel_on_def by (by100 blast)
+    moreover have hinvgG: "invg g \<in> G"
+      using assms(1) hg unfolding top1_is_group_on_def by (by100 blast)
     moreover have "f (mul (invg g) h) = mulH (f (invg g)) (f h)"
-      sorry \<comment> \<open>f is homomorphism; invg g \<in> G and h \<in> G.\<close>
-    ultimately show "f g = f h" sorry \<comment> \<open>From f(g\<inverse>\<cdot>h)=e: f(g\<inverse>)\<cdot>f(h)=e, so f(h)=f(g).\<close>
+      using assms(4) hinvgG hh unfolding top1_group_hom_on_def by (by100 blast)
+    ultimately have "mulH (f (invg g)) (f h) = eH" by (by100 simp)
+    \<comment> \<open>f(invg g) is the H-inverse of f(g): f(g\<cdot>invg(g))=f(e)=eH, so f(invg g) = invgH(f(g)).\<close>
+    have hfg_H: "f g \<in> H" using assms(4) hg unfolding top1_group_hom_on_def by (by100 blast)
+    have hfh_H: "f h \<in> H" using assms(4) hh unfolding top1_group_hom_on_def by (by100 blast)
+    have hfinvg_H: "f (invg g) \<in> H" using assms(4) hinvgG unfolding top1_group_hom_on_def by (by100 blast)
+    have hf_mul: "\<And>x y. x \<in> G \<Longrightarrow> y \<in> G \<Longrightarrow> f (mul x y) = mulH (f x) (f y)"
+      using assms(4) unfolding top1_group_hom_on_def by (by100 blast)
+    have "mulH (f g) (f (invg g)) = f (mul g (invg g))"
+      using hf_mul[OF hg hinvgG] by (by100 simp)
+    also have "mul g (invg g) = e" using assms(1) hg unfolding top1_is_group_on_def by (by100 blast)
+    also have "f e = eH"
+    proof -
+      have he_G: "e \<in> G" using assms(1) unfolding top1_is_group_on_def by (by100 blast)
+      have "mulH (f e) (f e) = f (mul e e)" using hf_mul[OF he_G he_G] by (by100 simp)
+      also have "mul e e = e" using assms(1) unfolding top1_is_group_on_def by (by100 blast)
+      finally have "mulH (f e) (f e) = f e" .
+      have hfe_H: "f e \<in> H" using assms(4) he_G unfolding top1_group_hom_on_def by (by100 blast)
+      \<comment> \<open>Idempotent in group = identity: a\<cdot>a=a implies a=e.\<close>
+      have "mulH eH (f e) = f e" using assms(3) hfe_H unfolding top1_is_group_on_def by (by100 blast)
+      have "mulH (invgH (f e)) (f e) = eH" using assms(3) hfe_H unfolding top1_is_group_on_def by (by100 blast)
+      have "f e = mulH eH (f e)" using \<open>mulH eH (f e) = f e\<close> by (by100 simp)
+      also have "\<dots> = mulH (mulH (invgH (f e)) (f e)) (f e)"
+        using \<open>mulH (invgH (f e)) (f e) = eH\<close> by (by100 simp)
+      also have "\<dots> = mulH (invgH (f e)) (mulH (f e) (f e))"
+        sorry \<comment> \<open>Associativity in H.\<close>
+      also have "\<dots> = mulH (invgH (f e)) (f e)" using \<open>mulH (f e) (f e) = f e\<close> by (by100 simp)
+      also have "\<dots> = eH" using \<open>mulH (invgH (f e)) (f e) = eH\<close> .
+      finally show "f e = eH" .
+    qed
+    finally have "mulH (f g) (f (invg g)) = eH" .
+    \<comment> \<open>From mulH(f(invg g))(f h) = eH and mulH(f g)(f(invg g)) = eH:
+       f(invg g) = invgH(f g), so f h = f g.\<close>
+    show "f g = f h"
+      using \<open>mulH (f (invg g)) (f h) = eH\<close> \<open>mulH (f g) (f (invg g)) = eH\<close>
+        hfg_H hfh_H hfinvg_H assms(3)
+      unfolding top1_is_group_on_def
+      sorry \<comment> \<open>Group cancellation: a\<cdot>b=e and c\<cdot>a=e imply b=c.\<close>
   qed
   have hfbar_eq: "\<forall>g\<in>G. fbar (?coset g) = f g"
     sorry \<comment> \<open>From well-definedness + SOME choice.\<close>
