@@ -1562,8 +1562,85 @@ proof -
   \<comment> \<open>f(N) \<subseteq> H: image of subset.\<close>
   have hfN_sub: "f ` N \<subseteq> H"
     using hf_hom hN_sub unfolding top1_group_hom_on_def by (by100 blast)
-  \<comment> \<open>f(N) is a group and conjugation-closed: sorry for now (needs careful element-level work).\<close>
-  show ?thesis unfolding top1_normal_subgroup_on_def sorry
+  \<comment> \<open>f(N) is a group under mulH (image of group under iso).\<close>
+  have hfN_grp: "top1_is_group_on (f ` N) mulH eH invgH"
+    sorry \<comment> \<open>Image of group under iso inherits group structure.\<close>
+  \<comment> \<open>Conjugation-closed: for h \<in> H, fn \<in> f(N): h\<cdot>fn\<cdot>h\<inverse> \<in> f(N).\<close>
+  have hfN_conj: "\<forall>h\<in>H. \<forall>fn\<in>f ` N. mulH (mulH h fn) (invgH h) \<in> f ` N"
+  proof (intro ballI)
+    fix h fn assume hh: "h \<in> H" and hfn: "fn \<in> f ` N"
+    \<comment> \<open>h = f(g) for some g (f surjective). fn = f(n) for some n \<in> N.\<close>
+    obtain g where hg: "g \<in> G" "f g = h" using hf_bij hh unfolding bij_betw_def by (by100 blast)
+    obtain n where hn: "n \<in> N" "f n = fn" using hfn by (by100 blast)
+    \<comment> \<open>mulG(mulG g n)(invgG g) \<in> N by normality.\<close>
+    have "mulG (mulG g n) (invgG g) \<in> N"
+      using hN_conj hg(1) hn(1) by (by100 blast)
+    \<comment> \<open>f maps this to mulH(mulH h fn)(invgH h) by homomorphism.\<close>
+    hence "f (mulG (mulG g n) (invgG g)) \<in> f ` N" by (by100 blast)
+    moreover have "f (mulG (mulG g n) (invgG g)) = mulH (mulH h fn) (invgH h)"
+    proof -
+      have hf_mul: "\<And>x y. x \<in> G \<Longrightarrow> y \<in> G \<Longrightarrow> f (mulG x y) = mulH (f x) (f y)"
+        using hf_hom unfolding top1_group_hom_on_def by (by100 blast)
+      have hn_G: "n \<in> G" using hN_sub hn(1) by (by100 blast)
+      have hinvg_G: "invgG g \<in> G" using assms(2) hg(1) unfolding top1_is_group_on_def by (by100 blast)
+      have hgn_G: "mulG g n \<in> G" using assms(2) hg(1) hn_G unfolding top1_is_group_on_def by (by100 blast)
+      have "f (mulG (mulG g n) (invgG g)) = mulH (f (mulG g n)) (f (invgG g))"
+        using hf_mul[OF hgn_G hinvg_G] .
+      also have "f (mulG g n) = mulH (f g) (f n)" using hf_mul[OF hg(1) hn_G] .
+      also have "f g = h" by (rule hg(2))
+      also have "f n = fn" by (rule hn(2))
+      finally have h1: "f (mulG (mulG g n) (invgG g)) = mulH (mulH h fn) (f (invgG g))" .
+      \<comment> \<open>f(invgG g) = invgH(f g) = invgH(h): iso preserves inverse.\<close>
+      have "mulH (f g) (f (invgG g)) = f (mulG g (invgG g))"
+        using hf_mul[OF hg(1) hinvg_G] by (by100 simp)
+      also have "mulG g (invgG g) = eG" using assms(2) hg(1) unfolding top1_is_group_on_def by (by100 blast)
+      also have "f eG = eH"
+      proof -
+        have "eG \<in> G" using assms(2) unfolding top1_is_group_on_def by (by100 blast)
+        have "mulH (f eG) (f eG) = f (mulG eG eG)" using hf_mul[OF \<open>eG \<in> G\<close> \<open>eG \<in> G\<close>] by (by100 simp)
+        also have "mulG eG eG = eG" using assms(2) unfolding top1_is_group_on_def by (by100 blast)
+        finally have "mulH (f eG) (f eG) = f eG" .
+        have "f eG \<in> H" using hf_hom \<open>eG \<in> G\<close> unfolding top1_group_hom_on_def by (by100 blast)
+        \<comment> \<open>Idempotent in group = identity.\<close>
+        have "mulH eH (f eG) = f eG" using assms(3) \<open>f eG \<in> H\<close> unfolding top1_is_group_on_def by (by100 blast)
+        have "mulH (invgH (f eG)) (f eG) = eH" using assms(3) \<open>f eG \<in> H\<close> unfolding top1_is_group_on_def by (by100 blast)
+        have "invgH (f eG) \<in> H" using assms(3) \<open>f eG \<in> H\<close> unfolding top1_is_group_on_def by (by100 blast)
+        have "f eG = mulH (mulH (invgH (f eG)) (f eG)) (f eG)"
+          using \<open>mulH (invgH (f eG)) (f eG) = eH\<close> \<open>mulH eH (f eG) = f eG\<close> by (by100 simp)
+        also have "\<dots> = mulH (invgH (f eG)) (mulH (f eG) (f eG))"
+          using assms(3) \<open>invgH (f eG) \<in> H\<close> \<open>f eG \<in> H\<close> unfolding top1_is_group_on_def by (by100 blast)
+        also have "\<dots> = mulH (invgH (f eG)) (f eG)"
+          using \<open>mulH (f eG) (f eG) = f eG\<close> by (by100 simp)
+        also have "\<dots> = eH" using \<open>mulH (invgH (f eG)) (f eG) = eH\<close> .
+        finally show ?thesis .
+      qed
+      finally have "mulH h (f (invgG g)) = eH" using hg(2) by (by100 simp)
+      \<comment> \<open>So f(invgG g) = invgH(h).\<close>
+      have hfg_H: "h \<in> H" by (rule hh)
+      have hfinvg_H: "f (invgG g) \<in> H" using hf_hom hinvg_G unfolding top1_group_hom_on_def by (by100 blast)
+      have "invgH h \<in> H" using assms(3) hh unfolding top1_is_group_on_def by (by100 blast)
+      have "mulH h (invgH h) = eH" using assms(3) hh unfolding top1_is_group_on_def by (by100 blast)
+      \<comment> \<open>From mulH h x = eH and mulH h (invgH h) = eH, deduce x = invgH h.\<close>
+      have hH_lid: "\<And>x. x \<in> H \<Longrightarrow> mulH eH x = x" using assms(3) unfolding top1_is_group_on_def by (by100 blast)
+      have hH_rid: "\<And>x. x \<in> H \<Longrightarrow> mulH x eH = x" using assms(3) unfolding top1_is_group_on_def by (by100 blast)
+      have hH_linv: "\<And>x. x \<in> H \<Longrightarrow> mulH (invgH x) x = eH" using assms(3) unfolding top1_is_group_on_def by (by100 blast)
+      have hH_assoc: "\<And>x y z. x \<in> H \<Longrightarrow> y \<in> H \<Longrightarrow> z \<in> H \<Longrightarrow> mulH (mulH x y) z = mulH x (mulH y z)"
+        using assms(3) unfolding top1_is_group_on_def by (by100 blast)
+      have "f (invgG g) = mulH eH (f (invgG g))" using hH_lid[OF hfinvg_H] by (by100 simp)
+      also have "\<dots> = mulH (mulH (invgH h) h) (f (invgG g))"
+        using hH_linv[OF hh] by (by100 simp)
+      also have "\<dots> = mulH (invgH h) (mulH h (f (invgG g)))"
+        using hH_assoc[OF \<open>invgH h \<in> H\<close> hh hfinvg_H] by (by100 simp)
+      also have "\<dots> = mulH (invgH h) eH"
+        using \<open>mulH h (f (invgG g)) = eH\<close> by (by100 simp)
+      also have "\<dots> = invgH h" using hH_rid[OF \<open>invgH h \<in> H\<close>] by (by100 simp)
+      finally have "f (invgG g) = invgH h" .
+      show ?thesis using h1 \<open>f (invgG g) = invgH h\<close> by (by100 simp)
+    qed
+    ultimately show "mulH (mulH h fn) (invgH h) \<in> f ` N" by (by100 simp)
+  qed
+  show ?thesis unfolding top1_normal_subgroup_on_def
+    using hfN_sub hfN_grp hfN_conj by (by100 blast)
 qed
 
 text \<open>Normal closure is the least normal subgroup containing a set.\<close>
