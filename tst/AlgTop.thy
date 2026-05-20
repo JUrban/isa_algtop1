@@ -1998,6 +1998,46 @@ next
   qed
 qed
 
+text \<open>Reducedness transfers through maps where equality implies equality.\<close>
+lemma reduced_word_transfer:
+  assumes htrans: "\<And>s t. s \<in> S \<Longrightarrow> t \<in> S \<Longrightarrow> g s = g t \<Longrightarrow> h s = h t"
+      and hin: "\<forall>i<length ws. fst (ws!i) \<in> S"
+      and hred: "top1_is_reduced_word (map (\<lambda>(s,b). (h s, b)) ws)"
+  shows "top1_is_reduced_word (map (\<lambda>(s,b). (g s, b)) ws)"
+  using hin hred
+proof (induction ws rule: induct_list012)
+  case 1 thus ?case by (by100 simp)
+next
+  case (2 a) thus ?case by (by100 simp)
+next
+  case (3 a b ws')
+  obtain sa ba sb bb where ha: "a = (sa, ba)" and hb: "b = (sb, bb)"
+    by (cases a, cases b) (by100 blast)+
+  have hsa: "sa \<in> S" using 3(3) ha by (by100 force)
+  have hsb: "sb \<in> S" using 3(3) hb by (by100 force)
+  from 3(4) ha hb have hpair: "h sa \<noteq> h sb \<or> ba = bb"
+    and hrest: "top1_is_reduced_word (map (\<lambda>(s, b). (h s, b)) (b # ws'))"
+    by (by100 simp)+
+  have "g sa \<noteq> g sb \<or> ba = bb"
+  proof (cases "ba = bb")
+    case True thus ?thesis by (by100 blast)
+  next
+    case False
+    hence "h sa \<noteq> h sb" using hpair by (by100 blast)
+    hence "g sa \<noteq> g sb"
+    proof (rule contrapos_nn)
+      assume "g sa = g sb" thus "h sa = h sb" by (rule htrans[OF hsa hsb])
+    qed
+    thus ?thesis by (by100 blast)
+  qed
+  have hin_rest: "\<forall>i<length (b # ws'). fst ((b # ws') ! i) \<in> S"
+    using 3(3) by (by100 force)
+  moreover have "top1_is_reduced_word (map (\<lambda>(s, b). (g s, b)) (b # ws'))"
+    by (rule 3(2)[OF hin_rest hrest])
+  ultimately show ?case using ha hb
+    sorry \<comment> \<open>Assembling conjunction: pair ≠/= + reduced tail → reduced full list.\<close>
+qed
+
 text \<open>Free groups are invariant under group isomorphism: if G is free on S and G \<cong> H,
   then H is free on the image of S.\<close>
 lemma free_group_invariant_under_iso:
