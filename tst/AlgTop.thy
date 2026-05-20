@@ -4325,8 +4325,95 @@ proof -
      ker(j) = [F,F] \<cdot> ker(\<pi>) = [F,F].
      By first iso theorem: F/ker(j) = F/[F,F] \<cong> im(j) = G/[G,G].
      The free abelian structure transfers.\<close>
-  show ?thesis using hfab habel_G sorry
-    \<comment> \<open>First iso theorem on j with ker = [F,F]; transfer free\_abelian.\<close>
+  \<comment> \<open>Compute ker(j) where j = \<phi>G \<circ> \<pi>.\<close>
+  \<comment> \<open>Step A: \<pi>([F,F]) = [G,G] (surjective hom maps commutator subgroup onto commutator subgroup).\<close>
+  have hpi_comm: "\<pi> ` ?NF \<supseteq> ?NG"
+    sorry \<comment> \<open>Each commutator [g,h] in G lifts to [\<pi>\<inverse>(g), \<pi>\<inverse>(h)] in F (surjectivity).\<close>
+  have hpi_comm2: "\<pi> ` ?NF \<subseteq> ?NG"
+    sorry \<comment> \<open>\<pi>([a,b]) = [\<pi>(a),\<pi>(b)] \<in> [G,G] for all a,b \<in> F.\<close>
+  \<comment> \<open>Step B: ker(j) = [F,F].\<close>
+  let ?j = "\<lambda>f. ?\<phi>G (\<pi> f)"
+  have hker_j: "top1_group_kernel_on F ?eHG ?j = ?NF"
+  proof (rule set_eqI, rule iffI)
+    \<comment> \<open>\<supseteq>: f \<in> [F,F] \<Longrightarrow> \<pi>(f) \<in> [G,G] \<Longrightarrow> \<phi>G(\<pi>(f)) = eHG.\<close>
+    fix f assume "f \<in> ?NF"
+    hence "\<pi> f \<in> ?NG" using hpi_comm2 by (by100 blast)
+    hence "?\<phi>G (\<pi> f) = ?eHG"
+      using habel_G unfolding top1_is_abelianization_of_def top1_group_kernel_on_def
+      by (by100 blast)
+    moreover have "f \<in> F"
+    proof -
+      have "?NF \<subseteq> F" using commutator_subgroup_is_normal[OF hF_grp]
+        unfolding top1_normal_subgroup_on_def by (by100 blast)
+      thus ?thesis using \<open>f \<in> ?NF\<close> by (by100 blast)
+    qed
+    ultimately show "f \<in> top1_group_kernel_on F ?eHG ?j"
+      unfolding top1_group_kernel_on_def by (by100 blast)
+  next
+    \<comment> \<open>\<subseteq>: f \<in> ker(j) \<Longrightarrow> \<pi>(f) \<in> [G,G] = \<pi>([F,F]).
+       Pick c \<in> [F,F] with \<pi>(c) = \<pi>(f). Then f\<cdot>c\<inverse> \<in> ker(\<pi>) \<subseteq> [F,F].
+       Hence f = (f\<cdot>c\<inverse>)\<cdot>c \<in> [F,F]\<cdot>[F,F] = [F,F].\<close>
+    fix f assume hf: "f \<in> top1_group_kernel_on F ?eHG ?j"
+    hence hfF: "f \<in> F" and hfker: "?\<phi>G (\<pi> f) = ?eHG"
+      unfolding top1_group_kernel_on_def by (by100 blast)+
+    \<comment> \<open>\<pi>(f) \<in> [G,G] (from \<phi>G(\<pi>(f)) = eHG and ker(\<phi>G) = [G,G]).\<close>
+    have hpif_NG: "\<pi> f \<in> ?NG"
+    proof -
+      have "top1_group_kernel_on G ?eHG ?\<phi>G = ?NG"
+        using habel_G unfolding top1_is_abelianization_of_def by (by100 blast)
+      moreover have "\<pi> f \<in> G" using hpi_hom hfF unfolding top1_group_hom_on_def by (by100 blast)
+      ultimately show ?thesis using hfker unfolding top1_group_kernel_on_def by (by100 blast)
+    qed
+    \<comment> \<open>Pick c \<in> [F,F] with \<pi>(c) = \<pi>(f).\<close>
+    have "\<pi> f \<in> \<pi> ` ?NF" using hpif_NG hpi_comm by (by100 blast)
+    then obtain c where hc: "c \<in> ?NF" "\<pi> c = \<pi> f" by (by100 auto)
+    \<comment> \<open>f\<cdot>c\<inverse> \<in> ker(\<pi>).\<close>
+    have hcF: "c \<in> F" using hc(1) commutator_subgroup_is_normal[OF hF_grp]
+      unfolding top1_normal_subgroup_on_def by (by100 blast)
+    have hinvc: "invgF c \<in> F" using hF_grp hcF unfolding top1_is_group_on_def by (by100 blast)
+    have hfc: "mulF f (invgF c) \<in> F" using hF_grp hfF hinvc
+      unfolding top1_is_group_on_def by (by100 blast)
+    have "\<pi> (mulF f (invgF c)) = mulG (\<pi> f) (invgG (\<pi> c))"
+    proof -
+      have "\<pi> (mulF f (invgF c)) = mulG (\<pi> f) (\<pi> (invgF c))"
+        using hpi_hom hfF hinvc unfolding top1_group_hom_on_def by (by100 blast)
+      moreover have "\<pi> (invgF c) = invgG (\<pi> c)"
+        by (rule hom_preserves_inv[OF hF_grp hG_grp hpi_hom hcF])
+      ultimately show ?thesis by (by100 simp)
+    qed
+    also have "mulG (\<pi> f) (invgG (\<pi> c)) = mulG (\<pi> f) (invgG (\<pi> f))"
+      using hc(2) by (by100 simp)
+    also have "\<dots> = eG" using hG_grp hpi_hom hfF
+      unfolding top1_group_hom_on_def top1_is_group_on_def by (by100 blast)
+    finally have "mulF f (invgF c) \<in> top1_group_kernel_on F eG \<pi>"
+      unfolding top1_group_kernel_on_def using hfc by (by100 blast)
+    hence "mulF f (invgF c) \<in> ?NF" using hker_sub_comm by (by100 blast)
+    \<comment> \<open>f = (f\<cdot>c\<inverse>)\<cdot>c \<in> [F,F].\<close>
+    have "f = mulF (mulF f (invgF c)) c"
+    proof -
+      have "mulF (mulF f (invgF c)) c = mulF f (mulF (invgF c) c)"
+        using hF_grp hfF hinvc hcF unfolding top1_is_group_on_def by (by100 blast)
+      also have "mulF (invgF c) c = eF"
+        using hF_grp hcF unfolding top1_is_group_on_def by (by100 blast)
+      also have "mulF f eF = f"
+        using hF_grp hfF unfolding top1_is_group_on_def by (by100 blast)
+      finally show ?thesis by (by100 simp)
+    qed
+    moreover have "mulF (mulF f (invgF c)) c \<in> ?NF"
+    proof -
+      have hNF_grp: "top1_is_group_on ?NF mulF eF invgF"
+        using commutator_subgroup_is_normal[OF hF_grp]
+        unfolding top1_normal_subgroup_on_def by (by100 blast)
+      have "\<forall>x\<in>?NF. \<forall>y\<in>?NF. mulF x y \<in> ?NF"
+        using hNF_grp unfolding top1_is_group_on_def by (by100 blast)
+      thus ?thesis using \<open>mulF f (invgF c) \<in> ?NF\<close> hc(1) by (by100 blast)
+    qed
+    ultimately show "f \<in> ?NF" by (by100 simp)
+  qed
+  \<comment> \<open>Step C: Apply first iso theorem: F/[F,F] \<cong> G/[G,G].\<close>
+  \<comment> \<open>Then transfer free abelian from F/[F,F] (via Theorem 69.4) to G/[G,G].\<close>
+  show ?thesis using hfab habel_G hker_j
+    sorry \<comment> \<open>First iso theorem F/ker(j) \<cong> im(j) = G/[G,G]; transfer free\_abelian.\<close>
 qed
 
 
