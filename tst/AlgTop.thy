@@ -11040,7 +11040,46 @@ proof -
   have hmul_closed: "\<And>h k. top1_covering_transformation_on E TE B TB p h \<Longrightarrow>
       top1_covering_transformation_on E TE B TB p k \<Longrightarrow>
       top1_covering_transformation_on E TE B TB p (\<lambda>e. h (k e))"
-    sorry \<comment> \<open>Composition of homeomorphisms, p\<circ>(h\<circ>k) = p.\<close>
+  proof -
+    fix h k assume hh: "top1_covering_transformation_on E TE B TB p h"
+      and hk: "top1_covering_transformation_on E TE B TB p k"
+    have hh_homeo: "top1_homeomorphism_on E TE E TE h"
+      using hh unfolding top1_covering_transformation_on_def by (by100 blast)
+    have hk_homeo: "top1_homeomorphism_on E TE E TE k"
+      using hk unfolding top1_covering_transformation_on_def by (by100 blast)
+    have hh_p: "\<forall>e\<in>E. p (h e) = p e"
+      using hh unfolding top1_covering_transformation_on_def by (by100 blast)
+    have hk_p: "\<forall>e\<in>E. p (k e) = p e"
+      using hk unfolding top1_covering_transformation_on_def by (by100 blast)
+    have hh_out: "\<forall>e. e \<notin> E \<longrightarrow> h e = e"
+      using hh unfolding top1_covering_transformation_on_def by (by100 blast)
+    have hk_out: "\<forall>e. e \<notin> E \<longrightarrow> k e = e"
+      using hk unfolding top1_covering_transformation_on_def by (by100 blast)
+    \<comment> \<open>Composition h\<circ>k is homeomorphism E \<rightarrow> E.\<close>
+    have hcomp_homeo: "top1_homeomorphism_on E TE E TE (\<lambda>e. h (k e))"
+      sorry \<comment> \<open>Composition of homeomorphisms E\<rightarrow>E.\<close>
+    \<comment> \<open>p \<circ> (h\<circ>k) = p: for e \<in> E, p(h(k(e))) = p(k(e)) = p(e).\<close>
+    have hcomp_p: "\<forall>e\<in>E. p (h (k e)) = p e"
+    proof (intro ballI)
+      fix e assume he: "e \<in> E"
+      have "k e \<in> E" using hk_homeo he unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+      hence "p (h (k e)) = p (k e)" using hh_p by (by100 blast)
+      also have "p (k e) = p e" using hk_p he by (by100 blast)
+      finally show "p (h (k e)) = p e" .
+    qed
+    \<comment> \<open>Outside E: h(k(e)) = h(e) = e.\<close>
+    have hcomp_out: "\<forall>e. e \<notin> E \<longrightarrow> h (k e) = e"
+    proof (intro allI impI)
+      fix e assume he: "e \<notin> E"
+      have "k e = e" using hk_out he by (by100 blast)
+      hence "h (k e) = h e" by (by100 simp)
+      also have "h e = e" using hh_out he by (by100 blast)
+      finally show "h (k e) = e" .
+    qed
+    show "top1_covering_transformation_on E TE B TB p (\<lambda>e. h (k e))"
+      unfolding top1_covering_transformation_on_def
+      using hcomp_homeo hcomp_p hcomp_out by (by100 blast)
+  qed
   have hinv: "\<And>h. top1_covering_transformation_on E TE B TB p h \<Longrightarrow>
       top1_covering_transformation_on E TE B TB p (inv_into E h)"
     sorry \<comment> \<open>Inverse homeomorphism is CT: p(h\<inverse>(e)) = p(e) since h is CT.\<close>
