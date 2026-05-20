@@ -1520,7 +1520,31 @@ lemma group_iso_on_compose:
       and "top1_is_group_on H mulH eH invgH"
       and "top1_is_group_on K mulK eK invgK"
   shows "top1_group_iso_on G mulG K mulK (g \<circ> f)"
-  sorry
+proof -
+  have hf_hom: "top1_group_hom_on G mulG H mulH f" and hf_bij: "bij_betw f G H"
+    using assms(1) unfolding top1_group_iso_on_def by (by100 blast)+
+  have hg_hom: "top1_group_hom_on H mulH K mulK g" and hg_bij: "bij_betw g H K"
+    using assms(2) unfolding top1_group_iso_on_def by (by100 blast)+
+  have hgf_hom: "top1_group_hom_on G mulG K mulK (g \<circ> f)"
+    unfolding top1_group_hom_on_def comp_def
+  proof (intro conjI ballI)
+    fix x assume "x \<in> G"
+    hence "f x \<in> H" using hf_hom unfolding top1_group_hom_on_def by (by100 blast)
+    thus "g (f x) \<in> K" using hg_hom unfolding top1_group_hom_on_def by (by100 blast)
+  next
+    fix x y assume "x \<in> G" "y \<in> G"
+    have "f (mulG x y) = mulH (f x) (f y)"
+      using hf_hom \<open>x \<in> G\<close> \<open>y \<in> G\<close> unfolding top1_group_hom_on_def by (by100 blast)
+    moreover have "f x \<in> H" "f y \<in> H"
+      using hf_hom \<open>x \<in> G\<close> \<open>y \<in> G\<close> unfolding top1_group_hom_on_def by (by100 blast)+
+    moreover have "g (mulH (f x) (f y)) = mulK (g (f x)) (g (f y))"
+      using hg_hom \<open>f x \<in> H\<close> \<open>f y \<in> H\<close> unfolding top1_group_hom_on_def by (by100 blast)
+    ultimately show "g (f (mulG x y)) = mulK (g (f x)) (g (f y))" by (by100 simp)
+  qed
+  have hgf_bij: "bij_betw (g \<circ> f) G K"
+    by (rule bij_betw_trans[OF hf_bij hg_bij])
+  show ?thesis unfolding top1_group_iso_on_def using hgf_hom hgf_bij by (by100 blast)
+qed
 
 text \<open>Isomorphism maps subgroups to subgroups.\<close>
 lemma group_iso_on_image_subgroup:
