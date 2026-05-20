@@ -4281,13 +4281,56 @@ proof -
   let ?\<iota>H = "\<lambda>s. ?\<phi> (\<iota> s)"
   have h_abel: "top1_is_abelianization_of ?H ?mulH ?eH ?invgH G mul e invg ?\<phi>"
     by (rule abelianization_concrete[OF hG])
-  \<comment> \<open>Re-derive the free abelian property from Theorem 69.4's proof structure.\<close>
-  from Theorem_69_4[OF assms] obtain H0 mulH0 eH0 invgH0 \<phi>0 \<iota>H0
-    where hab0: "top1_is_abelianization_of H0 mulH0 eH0 invgH0 G mul e invg \<phi>0"
-      and hfab0: "top1_is_free_abelian_group_full_on H0 mulH0 eH0 invgH0 \<iota>H0 S"
-    sorry \<comment> \<open>Destructure existential.\<close>
-  \<comment> \<open>H0 = ?H via first isomorphism theorem (both are G/[G,G]).\<close>
-  show ?thesis sorry \<comment> \<open>Transfer free\_abelian from H0 to ?H via iso.\<close>
+  \<comment> \<open>The proof of Theorem\_69\_4 returns exactly ?H, ?mulH, etc. as witnesses.
+     We need: free\_abelian\_full\_on ?H ?mulH ?eH ?invgH ?\<iota>H S.
+     Since this IS what Theorem\_69\_4's proof establishes (h\_free\_abel fact),
+     we re-derive the key parts inline.\<close>
+  \<comment> \<open>Step 1: ?\<iota>H maps S into ?H.\<close>
+  have h\<iota>H_in: "\<forall>s\<in>S. ?\<iota>H s \<in> ?H"
+  proof (intro ballI)
+    fix s assume hs: "s \<in> S"
+    have "\<iota> s \<in> G" using assms hs unfolding top1_is_free_group_full_on_def by (by100 blast)
+    hence "?\<phi> (\<iota> s) \<in> ?\<phi> ` G" by (by100 blast)
+    also have "?\<phi> ` G = ?H" using h_abel unfolding top1_is_abelianization_of_def by (by100 blast)
+    finally show "?\<iota>H s \<in> ?H" by (by100 simp)
+  qed
+  \<comment> \<open>Step 2: ?\<iota>H is injective on S.\<close>
+  have h\<iota>H_inj: "inj_on ?\<iota>H S"
+    sorry \<comment> \<open>If \<phi>(\<iota>(s1)) = \<phi>(\<iota>(s2)) then \<iota>(s1)\<cdot>\<iota>(s2)\<inverse> \<in> [G,G].
+       By exponent sum: this forces s1 = s2.\<close>
+  \<comment> \<open>Step 3: ?\<iota>H(S) generates ?H.\<close>
+  have hH_gen: "?H = top1_subgroup_generated_on ?H ?mulH ?eH ?invgH (?\<iota>H ` S)"
+  proof -
+    have hH_grp: "top1_is_group_on ?H ?mulH ?eH ?invgH"
+      using h_abel unfolding top1_is_abelianization_of_def top1_is_abelian_group_on_def
+      by (by100 blast)
+    have hphi_hom: "top1_group_hom_on G mul ?H ?mulH ?\<phi>"
+      using h_abel unfolding top1_is_abelianization_of_def by (by100 blast)
+    have hphi_surj: "?\<phi> ` G = ?H"
+      using h_abel unfolding top1_is_abelianization_of_def by (by100 blast)
+    have hG_gen: "G = top1_subgroup_generated_on G mul e invg (\<iota> ` S)"
+      using assms unfolding top1_is_free_group_full_on_def by (by100 blast)
+    have h\<iota>S_sub: "\<iota> ` S \<subseteq> G"
+      using assms unfolding top1_is_free_group_full_on_def by (by100 blast)
+    have "?\<iota>H ` S = ?\<phi> ` (\<iota> ` S)" by (by100 force)
+    thus ?thesis
+      by (metis surj_hom_generated[OF hG hH_grp hphi_hom hphi_surj h\<iota>S_sub hG_gen])
+  qed
+  \<comment> \<open>Step 4: Independence (no nontrivial integer combination = ?eH).\<close>
+  have hH_indep: "\<And>c. finite {s\<in>S. c s \<noteq> 0} \<Longrightarrow> (\<exists>s\<in>S. c s \<noteq> 0) \<Longrightarrow>
+      foldr ?mulH (map (\<lambda>s.
+          if c s \<ge> 0 then top1_group_pow ?mulH ?eH (?\<iota>H s) (nat (c s))
+          else top1_group_pow ?mulH ?eH (?invgH (?\<iota>H s)) (nat (- c s)))
+        (SOME xs. set xs = {s\<in>S. c s \<noteq> 0} \<and> distinct xs)) ?eH \<noteq> ?eH"
+    sorry \<comment> \<open>If the H-product = ?eH, then the G-product \<in> [G,G].
+       By exponent sum argument (proved in Theorem 69.4): contradiction.\<close>
+  \<comment> \<open>Step 5: ?H is abelian.\<close>
+  have hH_abel: "top1_is_abelian_group_on ?H ?mulH ?eH ?invgH"
+    using h_abel unfolding top1_is_abelianization_of_def by (by100 blast)
+  show ?thesis
+    apply (rule exI[of _ ?\<iota>H])
+    unfolding top1_is_free_abelian_group_full_on_def
+    using hH_abel h\<iota>H_in h\<iota>H_inj hH_gen hH_indep by (by100 blast)
 qed
 
 text \<open>Rank of a finitely generated free group is invariant.\<close>
