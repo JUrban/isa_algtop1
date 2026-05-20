@@ -6562,7 +6562,20 @@ proof -
         (top1_fundamental_group_carrier X TX x0) (top1_fundamental_group_mul X TX x0)
         (top1_fundamental_group_id X TX x0) (top1_fundamental_group_invg X TX x0) \<phi>
       \<and> top1_is_free_abelian_group_full_on H mulH eH invgH (\<iota>_S::nat \<Rightarrow> 'h) {..<2*n}"
-    sorry \<comment> \<open>Abelianization of group with commutator relator = free abelian.\<close>
+  proof -
+    \<comment> \<open>Munkres Corollary 73.2 / 75.1: The relator is a product of commutators
+       [a₁,b₁]...[aₙ,bₙ]. In the abelianization, commutators vanish, so the
+       relator becomes trivial. Hence the abelianization = free abelian on 2n gens.
+       Formally: G ≅ π₁(X) has presentation ⟨S|R⟩ where S = {0,...,2n-1}.
+       G = F/N where F is free on S and N = ⟨⟨R⟩⟩.
+       The relator R is a product of commutators, so N ⊆ [F,F].
+       Hence G/[G,G] = (F/N)/[(F/N),(F/N)] ≅ F/[F,F] (third iso theorem).
+       By Theorem 69.4: F/[F,F] is free abelian on S.\<close>
+    \<comment> \<open>Step 1: Extract the free group F and quotient map π from the presentation.\<close>
+    \<comment> \<open>Step 2: The relator is in [F,F] (product of commutators).
+       Step 3: N \<subseteq> [F,F], so abelianization = F/[F,F] = free abelian on 2n gens.\<close>
+    show ?thesis using h_presentation sorry \<comment> \<open>N \<subseteq> [F,F] + third iso theorem + Theorem 69.4.\<close>
+  qed
   show ?thesis using h_abelianize by (by100 blast)
 qed
 
