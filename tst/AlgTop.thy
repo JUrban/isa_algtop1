@@ -6061,12 +6061,43 @@ proof (rule inj_onI)
     thus ?thesis using that hf by (by100 blast)
   qed
   \<comment> \<open>p∘α and p∘β are path-homotopic in B (from heq).\<close>
+  have hp_cont: "top1_continuous_map_on E TE B TB p"
+    using assms(1) by (rule top1_covering_map_on_continuous)
   have hpa_loop: "top1_is_loop_on B TB b0 (p \<circ> \<alpha>)"
-    sorry \<comment> \<open>p is continuous, \<alpha> is loop at e0, p(e0) = b0.\<close>
+    using top1_continuous_map_loop_early[OF hp_cont h\<alpha>(2)] assms(5) by (by100 simp)
   have hpb_loop: "top1_is_loop_on B TB b0 (p \<circ> \<beta>)"
-    sorry \<comment> \<open>Same.\<close>
+    using top1_continuous_map_loop_early[OF hp_cont h\<beta>(2)] assms(5) by (by100 simp)
   have hpab_hom: "top1_path_homotopic_on B TB b0 b0 (p \<circ> \<alpha>) (p \<circ> \<beta>)"
-    sorry \<comment> \<open>From heq: p*(c1) = p*(c2) means p∘α ~ p∘β.\<close>
+  proof -
+    have hTB: "is_topology_on B TB" using assms(3) unfolding is_topology_on_strict_def by (by100 blast)
+    \<comment> \<open>p* is a group homomorphism, so p*(c2) \<in> \<pi>_1(B, b0).\<close>
+    have hp_hom: "top1_group_hom_on
+        (top1_fundamental_group_carrier E TE e0) (top1_fundamental_group_mul E TE e0)
+        (top1_fundamental_group_carrier B TB b0) (top1_fundamental_group_mul B TB b0)
+        (top1_fundamental_group_induced_on E TE e0 B TB b0 p)"
+    proof -
+      have "b0 \<in> B" using assms(1,4,5) unfolding top1_covering_map_on_def by (by100 blast)
+      thus ?thesis
+        by (rule top1_fundamental_group_induced_on_is_hom[OF hTE hTB assms(4) _ hp_cont assms(5)])
+    qed
+    have hp_c2: "top1_fundamental_group_induced_on E TE e0 B TB b0 p c2
+        \<in> top1_fundamental_group_carrier B TB b0"
+      using hp_hom hc2 unfolding top1_group_hom_on_def by (by100 blast)
+    \<comment> \<open>p\<circ>\<alpha> \<in> p*(c1) = p*(c2) and p\<circ>\<beta> \<in> p*(c2).\<close>
+    have hpa_in: "p \<circ> \<alpha> \<in> top1_fundamental_group_induced_on E TE e0 B TB b0 p c1"
+      unfolding top1_fundamental_group_induced_on_def
+      using h\<alpha>(1) top1_loop_equiv_on_refl[OF hpa_loop] by (by100 blast)
+    have hpb_in: "p \<circ> \<beta> \<in> top1_fundamental_group_induced_on E TE e0 B TB b0 p c2"
+      unfolding top1_fundamental_group_induced_on_def
+      using h\<beta>(1) top1_loop_equiv_on_refl[OF hpb_loop] by (by100 blast)
+    \<comment> \<open>Since p*(c1) = p*(c2), both p\<circ>\<alpha> and p\<circ>\<beta> are in p*(c2) \<in> \<pi>_1(B, b0).\<close>
+    have hpa_in2: "p \<circ> \<alpha> \<in> top1_fundamental_group_induced_on E TE e0 B TB b0 p c2"
+      using hpa_in heq by (by100 simp)
+    \<comment> \<open>Two members of the same \<pi>_1 class are loop-equivalent.\<close>
+    have "top1_loop_equiv_on B TB b0 (p \<circ> \<alpha>) (p \<circ> \<beta>)"
+      by (rule fundamental_group_class_members_equiv[OF hTB hp_c2 hpa_in2 hpb_in])
+    thus ?thesis unfolding top1_loop_equiv_on_def by (by100 blast)
+  qed
   \<comment> \<open>α, β lift p∘α, p∘β from e0.\<close>
   have h\<alpha>_lift: "\<forall>s\<in>I_set. p (\<alpha> s) = (p \<circ> \<alpha>) s" by (by100 simp)
   have h\<beta>_lift: "\<forall>s\<in>I_set. p (\<beta> s) = (p \<circ> \<beta>) s" by (by100 simp)
@@ -6079,16 +6110,57 @@ proof (rule inj_onI)
     using hpa_loop unfolding top1_is_loop_on_def by (by100 blast)
   have hpb_path: "top1_is_path_on B TB b0 b0 (p \<circ> \<beta>)"
     using hpb_loop unfolding top1_is_loop_on_def by (by100 blast)
-  from Theorem_54_3[OF assms(1) hTE _ assms(4,5) hpa_path hpb_path hpab_hom
+  have hTB: "is_topology_on B TB" using assms(3) unfolding is_topology_on_strict_def by (by100 blast)
+  from Theorem_54_3[OF assms(1) hTE hTB assms(4,5) hpa_path hpb_path hpab_hom
       h\<alpha>_path h\<alpha>_lift h\<beta>_path h\<beta>_lift]
-  have "top1_path_homotopic_on E TE e0 e0 \<alpha> \<beta>"
-    sorry \<comment> \<open>Theorem\_54\_3 + TB topology assumption.\<close>
-  \<comment> \<open>Path homotopic loops are in the same equivalence class.\<close>
-  hence "top1_loop_equiv_on E TE e0 \<alpha> \<beta>"
-    sorry \<comment> \<open>Path homotopy of loops implies loop equivalence.\<close>
-  \<comment> \<open>So c1 = c2.\<close>
-  thus "c1 = c2"
-    sorry \<comment> \<open>Both \<alpha> \<in> c1, \<beta> \<in> c2, \<alpha> ~ \<beta> implies c1 = c2.\<close>
+  have h\<alpha>\<beta>_hom: "top1_path_homotopic_on E TE e0 e0 \<alpha> \<beta>" by (by100 blast)
+  \<comment> \<open>Path homotopic loops are loop-equivalent.\<close>
+  hence h\<alpha>\<beta>_equiv: "top1_loop_equiv_on E TE e0 \<alpha> \<beta>"
+    unfolding top1_loop_equiv_on_def top1_is_loop_on_def
+    using h\<alpha>_path h\<beta>_path by (by100 blast)
+  \<comment> \<open>So c1 = c2: \<alpha> \<in> c1, \<beta> \<in> c2, and \<alpha> ~ \<beta>.\<close>
+  show "c1 = c2"
+  proof -
+    \<comment> \<open>c1 and c2 are equivalence classes; members of the same class implies classes equal.\<close>
+    from hc1 obtain f1 where hf1: "top1_is_loop_on E TE e0 f1"
+      "c1 = {g. top1_loop_equiv_on E TE e0 f1 g}"
+      unfolding top1_fundamental_group_carrier_def by (by100 blast)
+    from hc2 obtain f2 where hf2: "top1_is_loop_on E TE e0 f2"
+      "c2 = {g. top1_loop_equiv_on E TE e0 f2 g}"
+      unfolding top1_fundamental_group_carrier_def by (by100 blast)
+    \<comment> \<open>\<alpha> \<in> c1 means f1 ~ \<alpha>. \<beta> \<in> c2 means f2 ~ \<beta>.
+       f1 ~ \<alpha> ~ \<beta> ~ f2 \<Rightarrow> f1 ~ f2 (transitivity + symmetry).
+       So c1 = {g. f1 ~ g} = {g. f2 ~ g} = c2.\<close>
+    have "top1_loop_equiv_on E TE e0 f1 \<alpha>" using h\<alpha>(1) hf1(2) by (by100 blast)
+    moreover have "top1_loop_equiv_on E TE e0 f2 \<beta>" using h\<beta>(1) hf2(2) by (by100 blast)
+    ultimately have "top1_loop_equiv_on E TE e0 f1 f2"
+    proof -
+      assume hf1a: "top1_loop_equiv_on E TE e0 f1 \<alpha>"
+         and hf2b: "top1_loop_equiv_on E TE e0 f2 \<beta>"
+      have "top1_loop_equiv_on E TE e0 f1 \<beta>"
+        by (rule top1_loop_equiv_on_trans[OF hTE hf1a h\<alpha>\<beta>_equiv])
+      hence "top1_loop_equiv_on E TE e0 f1 f2"
+        using top1_loop_equiv_on_sym[OF hf2b]
+        by (rule top1_loop_equiv_on_trans[OF hTE])
+      thus ?thesis .
+    qed
+    hence "\<And>g. top1_loop_equiv_on E TE e0 f1 g \<longleftrightarrow> top1_loop_equiv_on E TE e0 f2 g"
+    proof -
+      fix g
+      assume hf12: "top1_loop_equiv_on E TE e0 f1 f2"
+      show "top1_loop_equiv_on E TE e0 f1 g \<longleftrightarrow> top1_loop_equiv_on E TE e0 f2 g"
+      proof
+        assume h: "top1_loop_equiv_on E TE e0 f1 g"
+        show "top1_loop_equiv_on E TE e0 f2 g"
+          by (rule top1_loop_equiv_on_trans[OF hTE top1_loop_equiv_on_sym[OF hf12] h])
+      next
+        assume h: "top1_loop_equiv_on E TE e0 f2 g"
+        show "top1_loop_equiv_on E TE e0 f1 g"
+          by (rule top1_loop_equiv_on_trans[OF hTE hf12 h])
+      qed
+    qed
+    thus "c1 = c2" using hf1(2) hf2(2) by (by100 blast)
+  qed
 qed
 
 text \<open>deck\_transformation\_homeomorphism and deck\_transformations\_group are defined
