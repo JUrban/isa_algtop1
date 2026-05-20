@@ -6688,7 +6688,13 @@ proof -
   \<comment> \<open>Step 4: Place disjoint copies of the simplex in R² (translated apart).
      Define q by pasting all h0(T) on corresponding copies.
      The edge identifications recreate X from the disjoint union.\<close>
-  show ?thesis sorry \<comment> \<open>Disjoint simplex copies + pasting map gives quotient presentation.\<close>
+  show ?thesis
+  proof -
+    \<comment> \<open>Munkres 78.1: Place disjoint copies of standard 2-simplex in the plane.
+       The triangulation gives a finite set of triangles with edge identifications.
+       Define q by pasting the copies via the identification maps.\<close>
+    show ?thesis sorry \<comment> \<open>Disjoint simplex copies + pasting construction.\<close>
+  qed
 qed
 
 (** from \<S>78 Theorem 78.2: connected compact triangulable surfaces are
@@ -6717,7 +6723,14 @@ proof -
      Each merge: paste two polygons along a common edge to get a larger polygon.\<close>
   \<comment> \<open>Step 3: After merging all triangles, we have a single polygon P with
      boundary identifications reproducing X.\<close>
-  show ?thesis sorry \<comment> \<open>Iterative merging via spanning tree of dual graph.\<close>
+  show ?thesis
+  proof -
+    \<comment> \<open>Munkres 78.2: Iterative merging along spanning tree of dual graph.
+       The dual graph has triangles as vertices, edges where triangles share an edge.
+       Since X is connected, the dual graph is connected.
+       Walk a spanning tree, merging triangles along shared edges at each step.\<close>
+    show ?thesis sorry \<comment> \<open>Iterative merging construction.\<close>
+  qed
 qed
 
 section \<open>\<S>77 The Classification Theorem\<close>
