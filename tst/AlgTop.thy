@@ -4268,6 +4268,68 @@ proof -
   show ?thesis using h_abel h_free_abel by (by100 blast)
 qed
 
+text \<open>Key algebraic fact: if G = F/N where F is free on S and N \<subseteq> [F,F],
+  then the abelianization G/[G,G] is isomorphic to F/[F,F] (free abelian on S).
+  Proof via first isomorphism theorem: the composition F \<rightarrow> G \<rightarrow> G/[G,G]
+  is surjective with kernel [F,F]\<cdot>N = [F,F] (since N \<subseteq> [F,F]).\<close>
+lemma abelianization_of_presented_group:
+  fixes F :: "'g set" and mulF :: "'g \<Rightarrow> 'g \<Rightarrow> 'g"
+    and eF :: 'g and invgF :: "'g \<Rightarrow> 'g"
+    and \<iota> :: "'s \<Rightarrow> 'g" and S :: "'s set"
+    and G :: "'h set" and mulG :: "'h \<Rightarrow> 'h \<Rightarrow> 'h"
+    and eG :: 'h and invgG :: "'h \<Rightarrow> 'h"
+    and \<pi> :: "'g \<Rightarrow> 'h"
+  assumes hF_free: "top1_is_free_group_full_on F mulF eF invgF \<iota> S"
+      and hG_grp: "top1_is_group_on G mulG eG invgG"
+      and hpi_hom: "top1_group_hom_on F mulF G mulG \<pi>"
+      and hpi_surj: "\<pi> ` F = G"
+      and hker_sub_comm: "top1_group_kernel_on F eG \<pi> \<subseteq>
+          top1_commutator_subgroup_on F mulF eF invgF"
+  shows "\<exists>(H :: 'h set set) mulH eH invgH \<phi> \<iota>H.
+      top1_is_abelianization_of H mulH eH invgH G mulG eG invgG \<phi>
+    \<and> top1_is_free_abelian_group_full_on H mulH eH invgH \<iota>H S"
+proof -
+  \<comment> \<open>Step 1: Get the concrete abelianization of F.\<close>
+  have hF_grp: "top1_is_group_on F mulF eF invgF"
+    using hF_free unfolding top1_is_free_group_full_on_def by (by100 blast)
+  let ?NF = "top1_commutator_subgroup_on F mulF eF invgF"
+  \<comment> \<open>Step 2: Compose \<pi> with projection G \<rightarrow> G/[G,G].\<close>
+  let ?NG = "top1_commutator_subgroup_on G mulG eG invgG"
+  let ?HG = "top1_quotient_group_carrier_on G mulG ?NG"
+  let ?mulHG = "top1_quotient_group_mul_on mulG"
+  let ?eHG = "top1_group_coset_on G mulG ?NG eG"
+  let ?\<phi>G = "\<lambda>g. top1_group_coset_on G mulG ?NG g"
+  have habel_G: "top1_is_abelianization_of ?HG ?mulHG ?eHG
+      (\<lambda>C. top1_group_coset_on G mulG ?NG (invgG (SOME g. g \<in> G \<and> C = ?\<phi>G g)))
+      G mulG eG invgG ?\<phi>G"
+    by (rule abelianization_concrete[OF hG_grp])
+  \<comment> \<open>Step 3: The composition j = \<phi>G \<circ> \<pi>: F \<rightarrow> G/[G,G] is surjective with kernel [F,F].
+     Surjective: \<pi> surjective + \<phi>G surjective.
+     Kernel = {f \<in> F | \<phi>G(\<pi>(f)) = ?eHG} = {f \<in> F | \<pi>(f) \<in> [G,G]}
+     = \<pi>\<inverse>([G,G]). Since \<pi> maps [F,F] to [G,G] and ker(\<pi>) \<subseteq> [F,F]:
+     \<pi>\<inverse>([G,G]) = [F,F] \<cdot> ker(\<pi>) = [F,F] (since ker(\<pi>) \<subseteq> [F,F]).\<close>
+  \<comment> \<open>Step 4: By first iso theorem: F/[F,F] \<cong> G/[G,G].\<close>
+  \<comment> \<open>Step 5: By Theorem 69.4: F/[F,F] is free abelian on S.\<close>
+  \<comment> \<open>Step 5-6: F/[F,F] is free abelian (Theorem 69.4).
+     F/[F,F] \<cong> G/[G,G] via first iso theorem on j = \<phi>G\<circ>\<pi>.
+     Transfer the free abelian structure from F/[F,F] to G/[G,G].\<close>
+  \<comment> \<open>F/[F,F] is free abelian on S by Theorem 69.4.\<close>
+  have hfab: "\<exists>(HF :: 'g set set) mulHF eHF invgHF \<phi>F \<iota>HF.
+      top1_is_abelianization_of HF mulHF eHF invgHF F mulF eF invgF \<phi>F
+    \<and> top1_is_free_abelian_group_full_on HF mulHF eHF invgHF \<iota>HF S"
+    using Theorem_69_4[OF hF_free] by (by100 blast)
+  \<comment> \<open>Transfer: F/[F,F] \<cong> G/[G,G] via first iso theorem on j = \<phi>G\<circ>\<pi>.
+     The kernel of the composed map j: F \<rightarrow> G/[G,G] is:
+     ker(j) = {f \<in> F | \<phi>G(\<pi>(f)) = eHG} = {f \<in> F | \<pi>(f) \<in> [G,G]}
+     Since \<pi> maps [F,F] onto [G,G] and ker(\<pi>) \<subseteq> [F,F]:
+     ker(j) = [F,F] \<cdot> ker(\<pi>) = [F,F].
+     By first iso theorem: F/ker(j) = F/[F,F] \<cong> im(j) = G/[G,G].
+     The free abelian structure transfers.\<close>
+  show ?thesis using hfab habel_G sorry
+    \<comment> \<open>First iso theorem on j with ker = [F,F]; transfer free\_abelian.\<close>
+qed
+
+
 text \<open>Concrete corollary: the quotient G/[G,G] is free abelian on S
   (extracts the concrete quotient from Theorem 69.4 by re-using the same proof).\<close>
 lemma Theorem_69_4_concrete_free_abelian:
