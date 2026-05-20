@@ -11057,7 +11057,12 @@ proof -
       using hk unfolding top1_covering_transformation_on_def by (by100 blast)
     \<comment> \<open>Composition h\<circ>k is homeomorphism E \<rightarrow> E.\<close>
     have hcomp_homeo: "top1_homeomorphism_on E TE E TE (\<lambda>e. h (k e))"
-      sorry \<comment> \<open>Composition of homeomorphisms E\<rightarrow>E.\<close>
+    proof -
+      have "top1_homeomorphism_on E TE E TE (h \<circ> k)"
+        by (rule homeomorphism_compose[OF hk_homeo hh_homeo])
+      moreover have "(h \<circ> k) = (\<lambda>e. h (k e))" unfolding comp_def by (by100 blast)
+      ultimately show ?thesis by (by100 simp)
+    qed
     \<comment> \<open>p \<circ> (h\<circ>k) = p: for e \<in> E, p(h(k(e))) = p(k(e)) = p(e).\<close>
     have hcomp_p: "\<forall>e\<in>E. p (h (k e)) = p e"
     proof (intro ballI)
