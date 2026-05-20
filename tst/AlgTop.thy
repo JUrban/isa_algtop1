@@ -1502,6 +1502,50 @@ qed
 *)
 
 
+text \<open>Lemma 67.7 (extension property): free abelian group G with basis S has the universal
+  property: for any abelian group H and map \<phi>: S \<rightarrow> H, there exists a unique homomorphism
+  \<psi>: G \<rightarrow> H with \<psi> \<circ> \<iota> = \<phi> on S.\<close>
+lemma Lemma_67_7_free_abelian_extension:
+  fixes G :: "'g set" and mul :: "'g \<Rightarrow> 'g \<Rightarrow> 'g"
+    and e :: 'g and invg :: "'g \<Rightarrow> 'g"
+    and \<iota> :: "'s \<Rightarrow> 'g" and S :: "'s set"
+    and H :: "'h set" and mulH :: "'h \<Rightarrow> 'h \<Rightarrow> 'h"
+    and eH :: 'h and invgH :: "'h \<Rightarrow> 'h"
+    and \<phi> :: "'s \<Rightarrow> 'h"
+  assumes hfree: "top1_is_free_abelian_group_full_on G mul e invg \<iota> S"
+      and hH: "top1_is_abelian_group_on H mulH eH invgH"
+      and hphi: "\<forall>s\<in>S. \<phi> s \<in> H"
+  shows "\<exists>\<psi>. top1_group_hom_on G mul H mulH \<psi>
+    \<and> (\<forall>s\<in>S. \<psi> (\<iota> s) = \<phi> s)"
+  sorry \<comment> \<open>Munkres Lemma 67.7: define \<psi> on words by \<psi>(\<Sigma> c_s \<cdot> \<iota>(s)) = \<Sigma> c_s \<cdot> \<phi>(s).
+     Well-defined by independence of \<iota>(S). Unique by generation.\<close>
+
+text \<open>Corollary: coordinate projections exist for free abelian groups.
+  For each s0 \<in> S, there is a homomorphism \<epsilon>: G \<rightarrow> Z with \<epsilon>(\<iota>(s0)) = 1
+  and \<epsilon>(\<iota>(s)) = 0 for s \<noteq> s0.\<close>
+lemma free_abelian_coordinate_projection:
+  fixes G :: "'g set" and mul :: "'g \<Rightarrow> 'g \<Rightarrow> 'g"
+    and e :: 'g and invg :: "'g \<Rightarrow> 'g"
+    and \<iota> :: "'s \<Rightarrow> 'g" and S :: "'s set" and s0 :: 's
+  assumes "top1_is_free_abelian_group_full_on G mul e invg \<iota> S"
+      and "s0 \<in> S"
+  shows "\<exists>\<epsilon>. top1_group_hom_on G mul (UNIV::int set) (+) \<epsilon>
+    \<and> \<epsilon> (\<iota> s0) = 1
+    \<and> (\<forall>s\<in>S. s \<noteq> s0 \<longrightarrow> \<epsilon> (\<iota> s) = 0)"
+proof -
+  have hZ: "top1_is_abelian_group_on (UNIV::int set) (+) (0::int) uminus"
+    unfolding top1_is_abelian_group_on_def top1_is_group_on_def by (by100 auto)
+  let ?\<phi> = "\<lambda>s. if s = s0 then (1::int) else 0"
+  have hphi: "\<forall>s\<in>S. ?\<phi> s \<in> (UNIV::int set)" by (by100 blast)
+  from Lemma_67_7_free_abelian_extension[OF assms(1) hZ hphi]
+  obtain \<psi> where hpsi: "top1_group_hom_on G mul (UNIV::int set) (+) \<psi>"
+    and hpsi_val: "\<forall>s\<in>S. \<psi> (\<iota> s) = ?\<phi> s"
+    by (by100 blast)
+  have "\<psi> (\<iota> s0) = 1" using hpsi_val assms(2) by (by100 simp)
+  moreover have "\<forall>s\<in>S. s \<noteq> s0 \<longrightarrow> \<psi> (\<iota> s) = 0" using hpsi_val by (by100 auto)
+  ultimately show ?thesis using hpsi by (by100 blast)
+qed
+
 text \<open>Key lemma for Theorem 67.8: |G/2G| = 2^|S| for free abelian G on finite basis S.\<close>
 lemma free_abelian_mod2_card:
   fixes G :: "'g set" and mul :: "'g \<Rightarrow> 'g \<Rightarrow> 'g"
