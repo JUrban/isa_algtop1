@@ -1915,6 +1915,89 @@ proof -
   show ?thesis using hfbar_hom hfbar_eq by (by100 blast)
 qed
 
+
+text \<open>Word product of elements from G stays in G.\<close>
+lemma word_product_in_group:
+  assumes "top1_is_group_on G mul e invg"
+      and "\<forall>i<length ws. fst (ws ! i) \<in> G"
+  shows "top1_group_word_product mul e invg ws \<in> G"
+  using assms(2)
+proof (induct ws)
+  case Nil thus ?case using assms(1) unfolding top1_is_group_on_def by (by100 simp)
+next
+  case (Cons a ws)
+  obtain x b where ha: "a = (x, b)" by (cases a) (by100 blast)
+  have hx: "x \<in> G" using Cons(2) ha by (by100 force)
+  have hws': "\<forall>i<length ws. fst (ws ! i) \<in> G" using Cons(2) by (by100 force)
+  have hIH: "top1_group_word_product mul e invg ws \<in> G" by (rule Cons(1)[OF hws'])
+  show ?case
+  proof (cases b)
+    case True
+    have "top1_group_word_product mul e invg (a # ws) = mul x (top1_group_word_product mul e invg ws)"
+      using ha True by (by100 simp)
+    moreover have "mul x (top1_group_word_product mul e invg ws) \<in> G"
+      using assms(1) hx hIH unfolding top1_is_group_on_def by (by100 blast)
+    ultimately show ?thesis by (by100 simp)
+  next
+    case False
+    have "top1_group_word_product mul e invg (a # ws) = mul (invg x) (top1_group_word_product mul e invg ws)"
+      using ha False by (by100 simp)
+    moreover have "invg x \<in> G" using assms(1) hx unfolding top1_is_group_on_def by (by100 blast)
+    moreover have "mul (invg x) (top1_group_word_product mul e invg ws) \<in> G"
+      using assms(1) calculation(2) hIH unfolding top1_is_group_on_def by (by100 blast)
+    ultimately show ?thesis by (by100 simp)
+  qed
+qed
+
+text \<open>Homomorphism distributes over word product.\<close>
+lemma hom_word_product:
+  assumes hG: "top1_is_group_on G mul e invg"
+      and hH: "top1_is_group_on H mulH eH invgH"
+      and hhom: "top1_group_hom_on G mul H mulH f"
+      and hws: "\<forall>i<length ws. fst (ws ! i) \<in> G"
+  shows "f (top1_group_word_product mul e invg ws)
+       = top1_group_word_product mulH eH invgH (map (\<lambda>(x,b). (f x, b)) ws)"
+  using hws
+proof (induction ws)
+  case Nil thus ?case using hom_preserves_id[OF hG hH hhom] by (by100 simp)
+next
+  case (Cons a ws')
+  obtain x b where ha: "a = (x, b)" by (cases a) (by100 blast)
+  have hx: "x \<in> G" using Cons.prems ha by (by100 force)
+  have hws'G: "\<forall>i<length ws'. fst (ws' ! i) \<in> G" using Cons.prems by (by100 force)
+  have hIH: "f (top1_group_word_product mul e invg ws')
+       = top1_group_word_product mulH eH invgH (map (\<lambda>(x,b). (f x, b)) ws')"
+    by (rule Cons.IH[OF hws'G])
+  have hprod_G: "top1_group_word_product mul e invg ws' \<in> G"
+    by (rule word_product_in_group[OF hG hws'G])
+  show ?case
+  proof (cases b)
+    case True
+    have "f (top1_group_word_product mul e invg (a # ws'))
+        = f (mul x (top1_group_word_product mul e invg ws'))" using ha True by (by100 simp)
+    also have "\<dots> = mulH (f x) (f (top1_group_word_product mul e invg ws'))"
+      using hhom hx hprod_G unfolding top1_group_hom_on_def by (by100 blast)
+    also have "\<dots> = mulH (f x) (top1_group_word_product mulH eH invgH (map (\<lambda>(x,b). (f x, b)) ws'))"
+      using hIH by (by100 simp)
+    also have "\<dots> = top1_group_word_product mulH eH invgH (map (\<lambda>(x,b). (f x, b)) (a # ws'))"
+      using ha True by (by100 simp)
+    finally show ?thesis .
+  next
+    case False
+    have hinvx: "invg x \<in> G" using hG hx unfolding top1_is_group_on_def by (by100 blast)
+    have step1: "f (top1_group_word_product mul e invg (a # ws'))
+        = f (mul (invg x) (top1_group_word_product mul e invg ws'))" using ha False by (by100 simp)
+    have step2: "f (mul (invg x) (top1_group_word_product mul e invg ws'))
+        = mulH (f (invg x)) (f (top1_group_word_product mul e invg ws'))"
+      using hhom hinvx hprod_G unfolding top1_group_hom_on_def by (by100 blast)
+    have step3: "f (invg x) = invgH (f x)" by (rule hom_preserves_inv[OF hG hH hhom hx])
+    have step4: "top1_group_word_product mulH eH invgH (map (\<lambda>(x,b). (f x, b)) (a # ws'))
+        = mulH (invgH (f x)) (top1_group_word_product mulH eH invgH (map (\<lambda>(x,b). (f x, b)) ws'))"
+      using ha False by (by100 simp)
+    show ?thesis using step1 step2 step3 step4 hIH by (by100 simp)
+  qed
+qed
+
 text \<open>Free groups are invariant under group isomorphism: if G is free on S and G \<cong> H,
   then H is free on the image of S.\<close>
 lemma free_group_invariant_under_iso:
@@ -2050,7 +2133,7 @@ proof -
     have hf_e: "f e = eH" by (rule hom_preserves_id[OF hG assms(3) hf_hom])
     have hprod: "top1_group_word_product mulH eH invgH (map (\<lambda>(s, b). (\<iota>' s, b)) ws)
         = f (top1_group_word_product mul e invg (map (\<lambda>(s, b). (\<iota> s, b)) ws))"
-      sorry \<comment> \<open>Induction on ws: base=hf\_e, step uses f(mul x y)=mulH(f x)(f y) + f(invg x)=invgH(f x).\<close>
+      sorry \<comment> \<open>Uses hom\_word\_product + map composition (ι' = f∘ι).\<close>
     \<comment> \<open>If product = eH, then f(product in G) = eH, so product in G = e (f injective).\<close>
     show "top1_group_word_product mulH eH invgH (map (\<lambda>(s, b). (\<iota>' s, b)) ws) \<noteq> eH"
     proof
@@ -2276,38 +2359,6 @@ proof -
   thus ?thesis by (by100 blast)
 qed
 
-text \<open>Word product of elements from G stays in G.\<close>
-lemma word_product_in_group:
-  assumes "top1_is_group_on G mul e invg"
-      and "\<forall>i<length ws. fst (ws ! i) \<in> G"
-  shows "top1_group_word_product mul e invg ws \<in> G"
-  using assms(2)
-proof (induct ws)
-  case Nil thus ?case using assms(1) unfolding top1_is_group_on_def by (by100 simp)
-next
-  case (Cons a ws)
-  obtain x b where ha: "a = (x, b)" by (cases a) (by100 blast)
-  have hx: "x \<in> G" using Cons(2) ha by (by100 force)
-  have hws': "\<forall>i<length ws. fst (ws ! i) \<in> G" using Cons(2) by (by100 force)
-  have hIH: "top1_group_word_product mul e invg ws \<in> G" by (rule Cons(1)[OF hws'])
-  show ?case
-  proof (cases b)
-    case True
-    have "top1_group_word_product mul e invg (a # ws) = mul x (top1_group_word_product mul e invg ws)"
-      using ha True by (by100 simp)
-    moreover have "mul x (top1_group_word_product mul e invg ws) \<in> G"
-      using assms(1) hx hIH unfolding top1_is_group_on_def by (by100 blast)
-    ultimately show ?thesis by (by100 simp)
-  next
-    case False
-    have "top1_group_word_product mul e invg (a # ws) = mul (invg x) (top1_group_word_product mul e invg ws)"
-      using ha False by (by100 simp)
-    moreover have "invg x \<in> G" using assms(1) hx unfolding top1_is_group_on_def by (by100 blast)
-    moreover have "mul (invg x) (top1_group_word_product mul e invg ws) \<in> G"
-      using assms(1) calculation(2) hIH unfolding top1_is_group_on_def by (by100 blast)
-    ultimately show ?thesis by (by100 simp)
-  qed
-qed
 
 text \<open>Word product distributes over list append.\<close>
 lemma word_product_append:
