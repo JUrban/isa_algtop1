@@ -12424,7 +12424,44 @@ proof -
       \<and> (\<forall>C. C \<subseteq> E \<longrightarrow>
            (closedin_on E TE C \<longleftrightarrow>
             (\<forall>A'\<in>\<A>E. closedin_on A' (subspace_topology E TE A') (A' \<inter> C))))"
-    sorry \<comment> \<open>Lift graph structure from B: arcs + intersection + weak topology.\<close>
+  proof -
+    \<comment> \<open>Munkres 83.4: Lift graph structure from B to E.
+       Step 1: For each arc A \<in> \<A>B, the path components of p\<inverse>(A) are arcs in E.
+       Since A is path-connected and simply connected (an arc), p restricted to each
+       path component B is a homeomorphism B \<rightarrow> A (by Theorem 54.4: lifting
+       correspondence is bijective for simply-connected base).
+       Step 2: These lifted arcs cover E (since \<A>B covers B and p is surjective on arcs).
+       Different lifted arcs from different base arcs intersect at most in endpoints
+       (from the intersection property of the base graph + homeomorphism of sheets).
+       Step 3: E has the coherent (weak) topology with respect to the lifted arcs
+       (from the covering map property: open sets in E are determined by sheets).\<close>
+    \<comment> \<open>Define \<A>E = path components of p\<inverse>(A) for each A \<in> \<A>B.\<close>
+    let ?\<A>E = "\<Union>A\<in>\<A>B. {B. B \<noteq> {} \<and> B \<subseteq> {e \<in> E. p e \<in> A}
+        \<and> top1_connected_on B (subspace_topology E TE B)
+        \<and> (\<forall>C. C \<supseteq> B \<longrightarrow> C \<subseteq> {e \<in> E. p e \<in> A}
+            \<longrightarrow> top1_connected_on C (subspace_topology E TE C)
+            \<longrightarrow> C = B)}"
+    \<comment> \<open>Each B \<in> \<A>E is an arc (homeomorphic to A via p|_B).\<close>
+    have hAE_arcs: "\<forall>B'\<in>?\<A>E. B' \<subseteq> E \<and> top1_is_arc_on B' (subspace_topology E TE B')"
+      sorry \<comment> \<open>p|\_B: B \<rightarrow> A is a covering map of simply-connected A;
+         by Thm 54.4, p|\_B is a homeomorphism; A is an arc, so B is an arc.\<close>
+    have hAE_cover: "\<Union>?\<A>E = E"
+      sorry \<comment> \<open>\<A>B covers B; p is surjective; path components cover preimage.\<close>
+    have hAE_intersect: "\<forall>A'\<in>?\<A>E. \<forall>B'\<in>?\<A>E. A' \<noteq> B' \<longrightarrow>
+         A' \<inter> B' \<subseteq> top1_arc_endpoints_on A' (subspace_topology E TE A')
+       \<and> A' \<inter> B' \<subseteq> top1_arc_endpoints_on B' (subspace_topology E TE B')
+       \<and> finite (A' \<inter> B') \<and> card (A' \<inter> B') \<le> 2"
+      sorry \<comment> \<open>If A'\<noteq>B' come from same base arc: disjoint (different sheets).
+         If from different base arcs: intersect in at most an endpoint.\<close>
+    have hAE_topology: "\<forall>C. C \<subseteq> E \<longrightarrow>
+         (closedin_on E TE C \<longleftrightarrow>
+          (\<forall>A'\<in>?\<A>E. closedin_on A' (subspace_topology E TE A') (A' \<inter> C)))"
+      sorry \<comment> \<open>E has coherent topology: W open iff W \<inter> B open in B for all B.
+         Proof: p(W) open in X (coherent topology of X); then W open via slices.\<close>
+    show ?thesis
+      apply (rule exI[of _ ?\<A>E])
+      using hAE_arcs hAE_cover hAE_intersect hAE_topology by (by100 blast)
+  qed
   \<comment> \<open>Step 2: E is Hausdorff (covering space of Hausdorff is Hausdorff).\<close>
   have hE_hausdorff: "is_hausdorff_on E TE"
   proof -
