@@ -1564,7 +1564,86 @@ proof -
     using hf_hom hN_sub unfolding top1_group_hom_on_def by (by100 blast)
   \<comment> \<open>f(N) is a group under mulH (image of group under iso).\<close>
   have hfN_grp: "top1_is_group_on (f ` N) mulH eH invgH"
-    sorry \<comment> \<open>Image of group under iso inherits group structure.\<close>
+  proof -
+    have hf_mul: "\<And>x y. x \<in> G \<Longrightarrow> y \<in> G \<Longrightarrow> f (mulG x y) = mulH (f x) (f y)"
+      using hf_hom unfolding top1_group_hom_on_def by (by100 blast)
+    have hf_in: "\<And>x. x \<in> G \<Longrightarrow> f x \<in> H"
+      using hf_hom unfolding top1_group_hom_on_def by (by100 blast)
+    have hH_lid: "\<And>x. x \<in> H \<Longrightarrow> mulH eH x = x" using assms(3) unfolding top1_is_group_on_def by (by100 blast)
+    have hH_rid: "\<And>x. x \<in> H \<Longrightarrow> mulH x eH = x" using assms(3) unfolding top1_is_group_on_def by (by100 blast)
+    have hH_linv: "\<And>x. x \<in> H \<Longrightarrow> mulH (invgH x) x = eH" using assms(3) unfolding top1_is_group_on_def by (by100 blast)
+    have hH_assoc: "\<And>x y z. x \<in> H \<Longrightarrow> y \<in> H \<Longrightarrow> z \<in> H \<Longrightarrow> mulH (mulH x y) z = mulH x (mulH y z)"
+      using assms(3) unfolding top1_is_group_on_def by (by100 blast)
+    have hH_inv_in: "\<And>x. x \<in> H \<Longrightarrow> invgH x \<in> H" using assms(3) unfolding top1_is_group_on_def by (by100 blast)
+    \<comment> \<open>eH = f(eG) \<in> f(N).\<close>
+    have heG_N: "eG \<in> N" using hN_grp unfolding top1_is_group_on_def by (by100 blast)
+    have heG_G: "eG \<in> G" using assms(2) unfolding top1_is_group_on_def by (by100 blast)
+    have "f eG = eH"
+    proof -
+      have "mulH (f eG) (f eG) = f (mulG eG eG)" using hf_mul[OF heG_G heG_G] by (by100 simp)
+      also have "mulG eG eG = eG" using assms(2) unfolding top1_is_group_on_def by (by100 blast)
+      finally have "mulH (f eG) (f eG) = f eG" .
+      have hfe: "f eG \<in> H" using hf_in[OF heG_G] .
+      have "invgH (f eG) \<in> H" using assms(3) hfe unfolding top1_is_group_on_def by (by100 blast)
+      have hinvfe: "invgH (f eG) \<in> H" using hH_inv_in[OF hfe] .
+      have "f eG = mulH eH (f eG)" using hH_lid[OF hfe] by (by100 simp)
+      also have "\<dots> = mulH (mulH (invgH (f eG)) (f eG)) (f eG)"
+        using hH_linv[OF hfe] by (by100 simp)
+      also have "\<dots> = mulH (invgH (f eG)) (mulH (f eG) (f eG))"
+        using hH_assoc[OF hinvfe hfe hfe] by (by100 simp)
+      also have "\<dots> = mulH (invgH (f eG)) (f eG)" using \<open>mulH (f eG) (f eG) = f eG\<close> by (by100 simp)
+      also have "\<dots> = eH" using hH_linv[OF hfe] .
+      finally show ?thesis .
+    qed
+    hence "eH \<in> f ` N" using heG_N by (by100 force)
+    \<comment> \<open>Closure under mulH: f(n1)\<cdot>f(n2) = f(n1\<cdot>n2) \<in> f(N).\<close>
+    have hfN_mul: "\<forall>x\<in>f ` N. \<forall>y\<in>f ` N. mulH x y \<in> f ` N"
+    proof (intro ballI)
+      fix fx fy assume "fx \<in> f ` N" "fy \<in> f ` N"
+      then obtain n1 n2 where hn: "n1 \<in> N" "f n1 = fx" "n2 \<in> N" "f n2 = fy" by (by100 blast)
+      have "mulG n1 n2 \<in> N" using hN_grp hn(1,3) unfolding top1_is_group_on_def by (by100 blast)
+      moreover have "f (mulG n1 n2) = mulH fx fy"
+        using hf_mul[OF _ _] hN_sub hn by (by100 blast)
+      ultimately show "mulH fx fy \<in> f ` N" by (by100 force)
+    qed
+    \<comment> \<open>Closure under invgH: invgH(f(n)) = f(invgG(n)) \<in> f(N).\<close>
+    have hfN_inv: "\<forall>x\<in>f ` N. invgH x \<in> f ` N"
+    proof (intro ballI)
+      fix fx assume "fx \<in> f ` N"
+      then obtain n where hn: "n \<in> N" "f n = fx" by (by100 blast)
+      have hn_G: "n \<in> G" using hN_sub hn(1) by (by100 blast)
+      have "invgG n \<in> N" using hN_grp hn(1) unfolding top1_is_group_on_def by (by100 blast)
+      moreover have "f (invgG n) = invgH fx"
+      proof -
+        have hinvn_G: "invgG n \<in> G" using assms(2) hn_G unfolding top1_is_group_on_def by (by100 blast)
+        have "mulH fx (f (invgG n)) = f (mulG n (invgG n))" using hf_mul[OF hn_G hinvn_G] hn(2) by (by100 simp)
+        also have "mulG n (invgG n) = eG" using assms(2) hn_G unfolding top1_is_group_on_def by (by100 blast)
+        finally have "mulH fx (f (invgG n)) = eH" using \<open>f eG = eH\<close> by (by100 simp)
+        \<comment> \<open>fx \<cdot> f(invgG n) = eH implies f(invgG n) = invgH(fx).\<close>
+        have hfx_H: "fx \<in> H" using hfN_sub \<open>fx \<in> f ` N\<close> by (by100 blast)
+        have hfinvn_H: "f (invgG n) \<in> H" using hf_in[OF hinvn_G] .
+        have "invgH fx \<in> H" using assms(3) hfx_H unfolding top1_is_group_on_def by (by100 blast)
+        have "f (invgG n) = mulH eH (f (invgG n))" using hH_lid[OF hfinvn_H] by (by100 simp)
+        also have "\<dots> = mulH (mulH (invgH fx) fx) (f (invgG n))"
+          using hH_linv[OF hfx_H] by (by100 simp)
+        also have "\<dots> = mulH (invgH fx) (mulH fx (f (invgG n)))"
+          using hH_assoc[OF \<open>invgH fx \<in> H\<close> hfx_H hfinvn_H] by (by100 simp)
+        also have "\<dots> = mulH (invgH fx) eH" using \<open>mulH fx (f (invgG n)) = eH\<close> by (by100 simp)
+        also have "\<dots> = invgH fx" using hH_rid[OF \<open>invgH fx \<in> H\<close>] by (by100 simp)
+        finally show ?thesis .
+      qed
+      ultimately show "invgH fx \<in> f ` N" by (by100 force)
+    qed
+    \<comment> \<open>Associativity, identity, inverse in f(N) inherited from H.\<close>
+    have "\<forall>x\<in>f ` N. \<forall>y\<in>f ` N. \<forall>z\<in>f ` N. mulH (mulH x y) z = mulH x (mulH y z)"
+      using hfN_sub hH_assoc by (by100 blast)
+    moreover have "\<forall>x\<in>f ` N. mulH eH x = x \<and> mulH x eH = x"
+      using hfN_sub hH_lid hH_rid by (by100 blast)
+    moreover have "\<forall>x\<in>f ` N. mulH (invgH x) x = eH \<and> mulH x (invgH x) = eH"
+      using hfN_sub assms(3) unfolding top1_is_group_on_def by (by100 blast)
+    ultimately show ?thesis unfolding top1_is_group_on_def
+      using \<open>eH \<in> f ` N\<close> hfN_mul hfN_inv by (by100 blast)
+  qed
   \<comment> \<open>Conjugation-closed: for h \<in> H, fn \<in> f(N): h\<cdot>fn\<cdot>h\<inverse> \<in> f(N).\<close>
   have hfN_conj: "\<forall>h\<in>H. \<forall>fn\<in>f ` N. mulH (mulH h fn) (invgH h) \<in> f ` N"
   proof (intro ballI)
