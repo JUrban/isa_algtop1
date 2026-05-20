@@ -4256,6 +4256,40 @@ proof -
   show ?thesis using h_abel h_free_abel by (by100 blast)
 qed
 
+text \<open>Concrete corollary: the quotient G/[G,G] is free abelian on S
+  (extracts the concrete quotient from Theorem 69.4 by re-using the same proof).\<close>
+lemma Theorem_69_4_concrete_free_abelian:
+  assumes "top1_is_free_group_full_on G mul e invg \<iota> S"
+  shows "\<exists>\<iota>H. top1_is_free_abelian_group_full_on
+      (top1_quotient_group_carrier_on G mul (top1_commutator_subgroup_on G mul e invg))
+      (top1_quotient_group_mul_on mul)
+      (top1_group_coset_on G mul (top1_commutator_subgroup_on G mul e invg) e)
+      (\<lambda>C. top1_group_coset_on G mul (top1_commutator_subgroup_on G mul e invg)
+         (invg (SOME g. g \<in> G \<and> C = top1_group_coset_on G mul
+            (top1_commutator_subgroup_on G mul e invg) g)))
+      \<iota>H S"
+proof -
+  \<comment> \<open>The abelianization property holds for the concrete quotient.\<close>
+  have hG: "top1_is_group_on G mul e invg"
+    using assms unfolding top1_is_free_group_full_on_def by (by100 blast)
+  let ?N = "top1_commutator_subgroup_on G mul e invg"
+  let ?H = "top1_quotient_group_carrier_on G mul ?N"
+  let ?mulH = "top1_quotient_group_mul_on mul"
+  let ?eH = "top1_group_coset_on G mul ?N e"
+  let ?invgH = "\<lambda>C. top1_group_coset_on G mul ?N (invg (SOME g. g \<in> G \<and> C = top1_group_coset_on G mul ?N g))"
+  let ?\<phi> = "\<lambda>g. top1_group_coset_on G mul ?N g"
+  let ?\<iota>H = "\<lambda>s. ?\<phi> (\<iota> s)"
+  have h_abel: "top1_is_abelianization_of ?H ?mulH ?eH ?invgH G mul e invg ?\<phi>"
+    by (rule abelianization_concrete[OF hG])
+  \<comment> \<open>Re-derive the free abelian property from Theorem 69.4's proof structure.\<close>
+  from Theorem_69_4[OF assms] obtain H0 mulH0 eH0 invgH0 \<phi>0 \<iota>H0
+    where hab0: "top1_is_abelianization_of H0 mulH0 eH0 invgH0 G mul e invg \<phi>0"
+      and hfab0: "top1_is_free_abelian_group_full_on H0 mulH0 eH0 invgH0 \<iota>H0 S"
+    sorry \<comment> \<open>Destructure existential.\<close>
+  \<comment> \<open>H0 = ?H via first isomorphism theorem (both are G/[G,G]).\<close>
+  show ?thesis sorry \<comment> \<open>Transfer free\_abelian from H0 to ?H via iso.\<close>
+qed
+
 text \<open>Rank of a finitely generated free group is invariant.\<close>
 lemma free_group_rank_invariant_finite:
   assumes "top1_is_free_group_full_on G mul e invg \<iota>1 S1"
@@ -4286,9 +4320,9 @@ proof -
   let ?\<iota>H2 = "\<lambda>s. ?\<phi> (\<iota>2 s)"
   \<comment> \<open>Both Theorem\_69\_4 applications return the same concrete H, mulH, eH, invgH.\<close>
   have hfab1: "\<exists>\<iota>H. top1_is_free_abelian_group_full_on ?H ?mulH ?eH ?invgH \<iota>H S1"
-    using Theorem_69_4[OF assms(1)] sorry \<comment> \<open>Extract free\_abelian from existential (same H).\<close>
+    by (rule Theorem_69_4_concrete_free_abelian[OF assms(1)])
   have hfab2: "\<exists>\<iota>H. top1_is_free_abelian_group_full_on ?H ?mulH ?eH ?invgH \<iota>H S2"
-    using Theorem_69_4[OF assms(2)] sorry \<comment> \<open>Same extraction for S2.\<close>
+    by (rule Theorem_69_4_concrete_free_abelian[OF assms(2)])
   \<comment> \<open>Step 3: Both are free abelian on the same H. Apply Theorem 67.8.\<close>
   from hfab1 obtain \<iota>H1 where hfa1: "top1_is_free_abelian_group_full_on ?H ?mulH ?eH ?invgH \<iota>H1 S1"
     by (by100 blast)
