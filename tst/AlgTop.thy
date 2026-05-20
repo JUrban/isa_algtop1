@@ -3515,7 +3515,15 @@ proof -
           proof (intro allI impI)
             fix i assume hi: "i < length ?ms"
             have hsi: "(SOME xs. set xs = {s \<in> S. c s \<noteq> 0} \<and> distinct xs) ! i \<in> S"
-              sorry \<comment> \<open>xs is a list of elements from S.\<close>
+            proof -
+              have "\<exists>xs. set xs = {s \<in> S. c s \<noteq> 0} \<and> distinct xs"
+                using finite_distinct_list[OF hfin] by (by100 blast)
+              hence hprop: "set ?xs = {s \<in> S. c s \<noteq> 0} \<and> distinct ?xs"
+                by (rule someI_ex)
+              have "i < length ?xs" using hi by (by100 simp)
+              hence "?xs ! i \<in> set ?xs" by (rule nth_mem)
+              thus ?thesis using hprop by (by100 blast)
+            qed
             let ?si = "(SOME xs. set xs = {s \<in> S. c s \<noteq> 0} \<and> distinct xs) ! i"
             have h\<iota>si: "\<iota> ?si \<in> G"
               using assms hsi unfolding top1_is_free_group_full_on_def by (by100 blast)
