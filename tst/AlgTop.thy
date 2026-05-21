@@ -2,6 +2,163 @@ theory AlgTop
   imports "AlgIsoFixed.AlgIsoFixed"
 begin
 
+\<comment> \<open>Method by5000: like by100 but with 5000ms timeout for hard proof steps.\<close>
+method_setup by5000 =
+  \<open>
+    Method.text_closure >> (fn text => fn ctxt => fn facts =>
+      let
+        val limit = Time.fromMilliseconds 5000
+        fun timed_seq name lim seq =
+          Seq.make (fn () =>
+            (case
+               (Timeout.apply lim (fn () => Seq.pull seq) ()
+                 handle Timeout.TIMEOUT _ =>
+                   error (name ^ ": timeout after " ^
+                     string_of_int (Time.toMilliseconds lim) ^ " ms"))
+             of
+               NONE => NONE
+             | SOME (st, seq') => SOME (st, timed_seq name lim seq')))
+        fun method_evaluate_rt text' ctxt' facts' =
+          NO_CONTEXT_TACTIC ctxt' (Method.evaluate_runtime text' ctxt' facts')
+        fun tac st = timed_seq "by5000" limit (method_evaluate_rt text ctxt facts st)
+      in
+        SIMPLE_METHOD tac facts
+      end)
+  \<close>
+
+lemma map_tl_pair: "tl (map (\<lambda>(s,b). (f s, b)) ws) = map (\<lambda>(s,b). (f s, b)) (tl ws)"
+  by (cases ws) (by100 simp)+
+
+lemma tl_take_drop_eq: assumes "j > 0"
+  shows "tl (take j ws) @ drop (Suc j) ws = take (j-1) (tl ws) @ drop j (tl ws)"
+  using assms by (cases ws; cases j) (by100 simp)+
+
+lemma tl_take_map_pair: "tl (take j (map (\<lambda>(s,b). (f s, b)) ws))
+    = map (\<lambda>(s,b). (f s, b)) (take (j - 1) (tl ws))"
+proof -
+  have "take j (map (\<lambda>(s,b). (f s, b)) ws) = map (\<lambda>(s,b). (f s, b)) (take j ws)"
+    by (rule take_map)
+  hence "tl (take j (map (\<lambda>(s,b). (f s, b)) ws)) = tl (map (\<lambda>(s,b). (f s, b)) (take j ws))"
+    by (by100 simp)
+  also have "\<dots> = map (\<lambda>(s,b). (f s, b)) (tl (take j ws))"
+    by (rule map_tl_pair)
+  also have "tl (take j ws) = take (j - 1) (tl ws)"
+  proof (cases ws)
+    case Nil thus ?thesis by (by100 simp)
+  next
+    case (Cons a ws')
+    thus ?thesis by (cases j) (by100 simp)+
+  qed
+  finally show ?thesis by (by100 simp)
+qed
+
+lemma tl_take_drop_map_pair:
+  assumes "j > 0"
+  shows "tl (take j (map (\<lambda>(s,b). (f s, b)) ws)) @ drop (Suc j) (map (\<lambda>(s,b). (f s, b)) ws)
+       = map (\<lambda>(s,b). (f s, b)) (take (j - 1) (tl ws) @ drop j (tl ws))"
+proof -
+  have h1: "tl (take j (map (\<lambda>(s,b). (f s, b)) ws)) = map (\<lambda>(s,b). (f s, b)) (take (j - 1) (tl ws))"
+    by (rule tl_take_map_pair)
+  have "drop (Suc j) (map (\<lambda>(s,b). (f s, b)) ws) = map (\<lambda>(s,b). (f s, b)) (drop (Suc j) ws)"
+    by (rule drop_map)
+  also have "drop (Suc j) ws = drop j (tl ws)"
+    by (cases ws) (by100 simp)+
+  finally have h2: "drop (Suc j) (map (\<lambda>(s,b). (f s, b)) ws) = map (\<lambda>(s,b). (f s, b)) (drop j (tl ws))"
+    by (by100 simp)
+  have "tl (take j (map (\<lambda>(s,b). (f s, b)) ws)) @ drop (Suc j) (map (\<lambda>(s,b). (f s, b)) ws)
+      = map (\<lambda>(s,b). (f s, b)) (take (j - 1) (tl ws)) @ map (\<lambda>(s,b). (f s, b)) (drop j (tl ws))"
+    using h1 h2 by (by100 simp)
+  also have "\<dots> = map (\<lambda>(s,b). (f s, b)) (take (j - 1) (tl ws) @ drop j (tl ws))"
+    by (by100 simp)
+  finally show ?thesis .
+qed
+
+text \<open>Helper: fst-set of flipped/reversed word = fst-set of original.\<close>
+lemma fst_set_flip_rev: "fst ` set (map (\<lambda>(s,b). (s, \<not>b)) (rev ws)) = fst ` set ws"
+proof -
+  have "set (map (\<lambda>(s,b). (s, \<not>b)) (rev ws)) = (\<lambda>(s,b). (s, \<not>b)) ` set (rev ws)"
+    by (by100 simp)
+  also have "set (rev ws) = set ws" by (by100 simp)
+  finally have h1: "set (map (\<lambda>(s,b). (s, \<not>b)) (rev ws)) = (\<lambda>(s,b). (s, \<not>b)) ` set ws" .
+  show ?thesis
+  proof (rule set_eqI, rule iffI)
+    fix x assume "x \<in> fst ` set (map (\<lambda>(s,b). (s, \<not>b)) (rev ws))"
+    then obtain p where "p \<in> set (map (\<lambda>(s,b). (s, \<not>b)) (rev ws))" "fst p = x" by (by100 blast)
+    hence "p \<in> (\<lambda>(s,b). (s, \<not>b)) ` set ws" using h1 by (by100 blast)
+    then obtain s b where "(s, b) \<in> set ws" "p = (s, \<not>b)" by (by100 auto)
+    hence "x = s" using \<open>fst p = x\<close> by (by100 simp)
+    thus "x \<in> fst ` set ws" using \<open>(s,b) \<in> set ws\<close> by (by100 force)
+  next
+    fix x assume "x \<in> fst ` set ws"
+    then obtain s b where "(s, b) \<in> set ws" "x = s" by (by100 force)
+    hence "(s, \<not>b) \<in> (\<lambda>(s,b). (s, \<not>b)) ` set ws" by (by100 force)
+    hence "(s, \<not>b) \<in> set (map (\<lambda>(s,b). (s, \<not>b)) (rev ws))" using h1 by (by100 blast)
+    thus "x \<in> fst ` set (map (\<lambda>(s,b). (s, \<not>b)) (rev ws))" using \<open>x = s\<close> by (by100 force)
+  qed
+qed
+
+text \<open>Helper: mapped word membership transfer through flip\_rev.\<close>
+lemma mapped_word_fst_flip_rev:
+  assumes "\<forall>i<length (map (\<lambda>(s,b). (f s, b)) ws). fst (map (\<lambda>(s,b). (f s, b)) ws ! i) \<in> H"
+  shows "\<forall>i<length (map (\<lambda>(s,b). (f s, b)) (map (\<lambda>(s,b). (s, \<not>b)) (rev ws))).
+    fst (map (\<lambda>(s,b). (f s, b)) (map (\<lambda>(s,b). (s, \<not>b)) (rev ws)) ! i) \<in> H"
+proof (intro allI impI)
+  fix i assume hi: "i < length (map (\<lambda>(s,b). (f s, b)) (map (\<lambda>(s,b). (s, \<not>b)) (rev ws)))"
+  hence hi': "i < length ws" by (by100 simp)
+  \<comment> \<open>Use fst\_set\_flip\_rev: fst-set is preserved by flip+rev.\<close>
+  define mws where "mws = map (\<lambda>(s,b). (f s, b)) ws"
+  define ys where "ys = map (\<lambda>(x,b). (x, \<not>b)) (rev mws)"
+  have hflip: "map (\<lambda>(s,b). (f s, b)) (map (\<lambda>(s,b). (s, \<not>b)) (rev ws))
+      = map (\<lambda>(s,b). (s, \<not>b)) (map (\<lambda>(s,b). (f s, b)) (rev ws))"
+    by (induction ws) (by100 auto)+
+  have hrev: "map (\<lambda>(s,b). (f s, b)) (rev ws) = rev mws"
+    unfolding mws_def by (induction ws) (by100 simp)+
+  have hys_eq: "map (\<lambda>(s,b). (f s, b)) (map (\<lambda>(s,b). (s, \<not>b)) (rev ws)) = ys"
+    unfolding ys_def using hflip hrev by (by100 simp)
+  have "fst (ys ! i) \<in> fst ` set ys"
+  proof -
+    have "i < length ys" using hi hys_eq by (by100 simp)
+    hence "ys ! i \<in> set ys" using nth_mem by (by100 blast)
+    thus ?thesis by (by100 force)
+  qed
+  also have "fst ` set ys = fst ` set mws"
+    unfolding ys_def by (rule fst_set_flip_rev)
+  finally have "fst (ys ! i) \<in> fst ` set mws" .
+  hence "fst (ys ! i) \<in> H"
+  proof -
+    assume "fst (ys ! i) \<in> fst ` set mws"
+    then obtain p where "p \<in> set mws" "fst p = fst (ys ! i)" by (by100 force)
+    then obtain k where "k < length mws" "mws ! k = p" using in_set_conv_nth by (by100 metis)
+    have "fst (mws ! k) \<in> H" using assms \<open>k < length mws\<close> unfolding mws_def by (by100 blast)
+    thus ?thesis using \<open>mws ! k = p\<close> \<open>fst p = fst (ys ! i)\<close> by (by100 simp)
+  qed
+  thus "fst (map (\<lambda>(s,b). (f s, b)) (map (\<lambda>(s,b). (s, \<not>b)) (rev ws)) ! i) \<in> H"
+    using hys_eq hi by (by100 simp)
+qed
+
+text \<open>Helper: map that applies f to fst of pairs commutes with rev and flip.\<close>
+lemma map_pair_fst_rev: "map (\<lambda>(s,b). (f s, b)) (rev ws) = rev (map (\<lambda>(s,b). (f s, b)) ws)"
+  by (induction ws) (by100 simp)+
+
+lemma map_pair_fst_flip: "map (\<lambda>(s,b). (f s, b)) (map (\<lambda>(s,b). (s, \<not>b)) ws)
+    = map (\<lambda>(s,b). (s, \<not>b)) (map (\<lambda>(s,b). (f s, b)) ws)"
+  by (induction ws) (by100 auto)+
+
+lemma map_pair_fst_flip_rev: "map (\<lambda>(s,b). (f s, b)) (map (\<lambda>(s,b). (s, \<not>b)) (rev ws))
+    = map (\<lambda>(x,b). (x, \<not>b)) (rev (map (\<lambda>(s,b). (f s, b)) ws))"
+proof -
+  have "map (\<lambda>(s,b). (f s, b)) (map (\<lambda>(s,b). (s, \<not>b)) (rev ws))
+      = map (\<lambda>(s,b). (s, \<not>b)) (map (\<lambda>(s,b). (f s, b)) (rev ws))"
+    by (rule map_pair_fst_flip)
+  also have "map (\<lambda>(s,b). (f s, b)) (rev ws) = rev (map (\<lambda>(s,b). (f s, b)) ws)"
+    by (rule map_pair_fst_rev)
+  finally show ?thesis .
+qed
+
+lemma map_pair_fst_append: "map (\<lambda>(s,b). (f s, b)) (ws1 @ ws2)
+    = map (\<lambda>(s,b). (f s, b)) ws1 @ map (\<lambda>(s,b). (f s, b)) ws2"
+  by (by100 simp)
+
 text \<open>Theorems 58.7, 63.1(b), 65.1, 65.2 and supporting lemmas (SCC\_pi1\_iso\_Z,
   K4\_final\_contradiction, K4\_nonadjacent\_edges\_different\_components) are in
   AlgIsoFixedBase.thy and AlgIsoFixed.thy (imported above).\<close>
@@ -1535,236 +1692,234 @@ proof -
   finally show ?thesis .
 qed
 
-text \<open>Lemma 67.7 (extension property): free abelian group G with basis S has the universal
-  property: for any abelian group H and map \<phi>: S \<rightarrow> H, there exists a unique homomorphism
-  \<psi>: G \<rightarrow> H with \<psi> \<circ> \<iota> = \<phi> on S.\<close>
-lemma Lemma_67_7_free_abelian_extension:
-  fixes G :: "'g set" and mul :: "'g \<Rightarrow> 'g \<Rightarrow> 'g"
-    and e :: 'g and invg :: "'g \<Rightarrow> 'g"
-    and \<iota> :: "'s \<Rightarrow> 'g" and S :: "'s set"
-    and H :: "'h set" and mulH :: "'h \<Rightarrow> 'h \<Rightarrow> 'h"
-    and eH :: 'h and invgH :: "'h \<Rightarrow> 'h"
-    and \<phi> :: "'s \<Rightarrow> 'h"
-  assumes hfree: "top1_is_free_abelian_group_full_on G mul e invg \<iota> S"
-      and hH: "top1_is_abelian_group_on H mulH eH invgH"
-      and hphi: "\<forall>s\<in>S. \<phi> s \<in> H"
-  shows "\<exists>\<psi>. top1_group_hom_on G mul H mulH \<psi>
-    \<and> (\<forall>s\<in>S. \<psi> (\<iota> s) = \<phi> s)"
-proof -
-  \<comment> \<open>Munkres Lemma 67.7 (converse direction): free abelian \<Rightarrow> extension property.
-     Proof: For each g \<in> G, there exist unique coefficients c_s (finitely many nonzero)
-     such that g = \<Sigma> c_s \<cdot> \<iota>(s). Define \<psi>(g) = \<Sigma> c_s \<cdot> \<phi>(s).
-     Well-defined by UNIQUENESS of coefficients (independence of \<iota>(S)).
-     Homomorphism because \<phi>(s) operations in abelian H commute.\<close>
+text \<open>Key lemma: in an abelian group, an element can be extracted from any position
+  in a foldr mul product to the front. This is the building block for permutation
+  invariance of products in abelian groups.\<close>
+lemma abelian_foldr_mul_extract:
+  assumes hG: "top1_is_abelian_group_on G mul e invg"
+      and hxs: "\<forall>i<length xs. xs ! i \<in> G"
+      and ha: "a \<in> G"
+      and hys: "\<forall>i<length ys. ys ! i \<in> G"
+  shows "foldr mul (xs @ [a] @ ys) e = mul a (foldr mul (xs @ ys) e)"
+  using hxs
+proof (induction xs)
+  case Nil
+  show ?case by (by100 simp)
+next
+  case (Cons b xs')
+  have hb: "b \<in> G" using Cons.prems by (by100 force)
+  have hxs': "\<forall>i<length xs'. xs' ! i \<in> G" using Cons.prems by (by100 force)
   have hG_grp: "top1_is_group_on G mul e invg"
-    using hfree unfolding top1_is_free_abelian_group_full_on_def
-      top1_is_abelian_group_on_def by (by100 blast)
-  have hG_abel: "top1_is_abelian_group_on G mul e invg"
-    using hfree unfolding top1_is_free_abelian_group_full_on_def by (by100 blast)
-  have h\<iota>_in: "\<forall>s\<in>S. \<iota> s \<in> G"
-    using hfree unfolding top1_is_free_abelian_group_full_on_def by (by100 blast)
-  have h\<iota>_inj: "inj_on \<iota> S"
-    using hfree unfolding top1_is_free_abelian_group_full_on_def by (by100 blast)
-  have hG_gen: "G = top1_subgroup_generated_on G mul e invg (\<iota> ` S)"
-    using hfree unfolding top1_is_free_abelian_group_full_on_def by (by100 blast)
-  \<comment> \<open>Construction: define \<psi> on words and show well-definedness.
-     For each g \<in> G, pick a word representation and evaluate in H.
-     The independence condition ensures this is unique.\<close>
-  \<comment> \<open>Alternative approach: use the fact that a free abelian group on S
-     is isomorphic to a direct sum of copies of Z (one per s \<in> S).
-     The direct sum has the extension property by definition.\<close>
-  show ?thesis sorry \<comment> \<open>Needs: G is internal direct sum of ⟨\<iota>(s)⟩ (each ≅ Z),
-     or equivalently: coefficient extraction + well-definedness.\<close>
+    using hG unfolding top1_is_abelian_group_on_def by (by100 blast)
+  have hIH: "foldr mul (xs' @ [a] @ ys) e = mul a (foldr mul (xs' @ ys) e)"
+    by (rule Cons.IH[OF hxs'])
+  have hxsys: "\<forall>i<length (xs' @ ys). (xs' @ ys) ! i \<in> G"
+  proof (intro allI impI)
+    fix i assume hi: "i < length (xs' @ ys)"
+    show "(xs' @ ys) ! i \<in> G"
+    proof (cases "i < length xs'")
+      case True thus ?thesis using hxs' nth_append[of xs' ys i] by (by100 simp)
+    next
+      case False thus ?thesis using hys hi nth_append[of xs' ys i] by (by100 force)
+    qed
+  qed
+  have hfoldr_rest: "foldr mul (xs' @ ys) e \<in> G"
+    by (rule foldr_mul_closed[OF hG_grp hxsys])
+  have "foldr mul ((b # xs') @ [a] @ ys) e = mul b (foldr mul (xs' @ [a] @ ys) e)"
+    by (by100 simp)
+  also have "\<dots> = mul b (mul a (foldr mul (xs' @ ys) e))" using hIH by (by100 simp)
+  also have "\<dots> = mul a (mul b (foldr mul (xs' @ ys) e))"
+    by (rule abelian_mul_left_commute[OF hG hb ha hfoldr_rest])
+  also have "\<dots> = mul a (foldr mul ((b # xs') @ ys) e)" by (by100 simp)
+  finally show ?case .
 qed
 
-text \<open>Corollary: coordinate projections exist for free abelian groups.
-  For each s0 \<in> S, there is a homomorphism \<epsilon>: G \<rightarrow> Z with \<epsilon>(\<iota>(s0)) = 1
-  and \<epsilon>(\<iota>(s)) = 0 for s \<noteq> s0.\<close>
-lemma free_abelian_coordinate_projection:
-  fixes G :: "'g set" and mul :: "'g \<Rightarrow> 'g \<Rightarrow> 'g"
-    and e :: 'g and invg :: "'g \<Rightarrow> 'g"
-    and \<iota> :: "'s \<Rightarrow> 'g" and S :: "'s set" and s0 :: 's
-  assumes "top1_is_free_abelian_group_full_on G mul e invg \<iota> S"
-      and "s0 \<in> S"
-  shows "\<exists>\<epsilon>. top1_group_hom_on G mul (UNIV::int set) (+) \<epsilon>
-    \<and> \<epsilon> (\<iota> s0) = 1
-    \<and> (\<forall>s\<in>S. s \<noteq> s0 \<longrightarrow> \<epsilon> (\<iota> s) = 0)"
+text \<open>Removing an inverse pair from a foldr product.\<close>
+lemma abelian_foldr_mul_cancel_pair:
+  assumes hG: "top1_is_abelian_group_on G mul e invg"
+      and hxs: "\<forall>i<length xs. xs ! i \<in> G" and ha: "a \<in> G"
+      and hys: "\<forall>i<length ys. ys ! i \<in> G"
+      and hzs: "\<forall>i<length zs. zs ! i \<in> G"
+  shows "foldr mul (xs @ [a] @ ys @ [invg a] @ zs) e = foldr mul (xs @ ys @ zs) e"
 proof -
-  have hZ: "top1_is_abelian_group_on (UNIV::int set) (+) (0::int) uminus"
-    unfolding top1_is_abelian_group_on_def top1_is_group_on_def by (by100 auto)
-  let ?\<phi> = "\<lambda>s. if s = s0 then (1::int) else 0"
-  have hphi: "\<forall>s\<in>S. ?\<phi> s \<in> (UNIV::int set)" by (by100 blast)
-  from Lemma_67_7_free_abelian_extension[OF assms(1) hZ hphi]
-  obtain \<psi> where hpsi: "top1_group_hom_on G mul (UNIV::int set) (+) \<psi>"
-    and hpsi_val: "\<forall>s\<in>S. \<psi> (\<iota> s) = ?\<phi> s"
-    by (by100 blast)
-  have "\<psi> (\<iota> s0) = 1" using hpsi_val assms(2) by (by100 simp)
-  moreover have "\<forall>s\<in>S. s \<noteq> s0 \<longrightarrow> \<psi> (\<iota> s) = 0" using hpsi_val by (by100 auto)
-  ultimately show ?thesis using hpsi by (by100 blast)
-qed
-
-text \<open>Key lemma for Theorem 67.8: |G/2G| = 2^|S| for free abelian G on finite basis S.\<close>
-lemma free_abelian_mod2_card:
-  fixes G :: "'g set" and mul :: "'g \<Rightarrow> 'g \<Rightarrow> 'g"
-    and e :: 'g and invg :: "'g \<Rightarrow> 'g"
-    and iota :: "'s \<Rightarrow> 'g" and S :: "'s set"
-  assumes "top1_is_free_abelian_group_full_on G mul e invg iota S"
-      and "finite S"
-  shows "card (top1_quotient_group_carrier_on G mul {mul g g | g. g \<in> G}) = 2 ^ card S"
-proof -
-  \<comment> \<open>Munkres 67.8: G \<cong> Z^S, so G/2G \<cong> (Z/2Z)^S has 2^|S| elements.\<close>
-  \<comment> \<open>Proof by induction on |S|.\<close>
-  show ?thesis using assms
-  proof (induction "card S" arbitrary: S iota)
-    case 0
-    \<comment> \<open>card S = 0 \<Rightarrow> S = {} \<Rightarrow> G = {e}. 2G = {e}. G/2G = {{e}}. |G/2G| = 1 = 2^0.\<close>
-    hence "S = {}" using \<open>finite S\<close> by (by100 simp)
-    hence hS_empty: "S = {}" using \<open>finite S\<close> by (by100 simp)
-    have hG_grp: "top1_is_group_on G mul e invg"
-      using 0(2) unfolding top1_is_free_abelian_group_full_on_def
-        top1_is_abelian_group_on_def by (by100 blast)
-    have hG_gen: "G = top1_subgroup_generated_on G mul e invg (iota ` S)"
-      using 0(2) unfolding top1_is_free_abelian_group_full_on_def by (by100 blast)
-    hence hG_trivial: "G = {e}"
-    proof -
-      have "iota ` S = {}" using hS_empty by (by100 simp)
-      hence "G = top1_subgroup_generated_on G mul e invg {}" using hG_gen by (by100 simp)
-      also have "\<dots> = {e}"
-      proof (rule set_eqI, rule iffI)
-        fix x assume "x \<in> top1_subgroup_generated_on G mul e invg {}"
-        hence hx: "\<And>H. H \<subseteq> G \<Longrightarrow> top1_is_group_on H mul e invg \<Longrightarrow> x \<in> H"
-          unfolding top1_subgroup_generated_on_def by (by100 blast)
-        \<comment> \<open>{e} is a subgroup of G.\<close>
-        have he_G: "e \<in> G" using hG_grp unfolding top1_is_group_on_def by (by100 blast)
-        have "{e} \<subseteq> G" using he_G by (by100 blast)
-        moreover have "top1_is_group_on {e} mul e invg"
-        proof -
-          have hmul_ee: "mul e e = e" using hG_grp he_G unfolding top1_is_group_on_def by (by100 blast)
-          have hinve_G: "invg e \<in> G" using hG_grp he_G unfolding top1_is_group_on_def by (by100 blast)
-          have hinve: "invg e = e"
-          proof -
-            have "mul e (invg e) = invg e" using hG_grp hinve_G unfolding top1_is_group_on_def by (by100 blast)
-            moreover have "mul e (invg e) = e" using hG_grp he_G unfolding top1_is_group_on_def by (by100 blast)
-            ultimately show ?thesis by (by100 simp)
-          qed
-          have "\<forall>x\<in>{e}. x = e" by (by100 blast)
-          thus ?thesis unfolding top1_is_group_on_def
-            using hmul_ee hinve by (by100 force)
-        qed
-        ultimately have "x \<in> {e}" using hx by (by100 blast)
-        thus "x \<in> {e}" .
+  have hG_grp: "top1_is_group_on G mul e invg"
+    using hG unfolding top1_is_abelian_group_on_def by (by100 blast)
+  have hinva: "invg a \<in> G"
+    using hG_grp ha unfolding top1_is_group_on_def by (by100 blast)
+  have hyszs1: "\<forall>i<length (ys @ [invg a] @ zs). (ys @ [invg a] @ zs) ! i \<in> G"
+  proof (intro allI impI)
+    fix i assume hi: "i < length (ys @ [invg a] @ zs)"
+    show "(ys @ [invg a] @ zs) ! i \<in> G"
+    proof (cases "i < length ys")
+      case True
+      hence "(ys @ [invg a] @ zs) ! i = ys ! i"
+        apply (simp only: nth_append if_True) done
+      thus ?thesis using hys True by (by100 simp)
+    next
+      case False
+      hence hge: "i \<ge> length ys" by (by100 simp)
+      show ?thesis
+      proof (cases "i = length ys")
+        case True
+        hence "(ys @ [invg a] @ zs) ! i = invg a"
+          apply (simp only: nth_append if_False) using True by (by100 simp)
+        thus ?thesis using hinva by (by100 simp)
       next
-        fix x assume "x \<in> {e}"
-        hence "x = e" by (by100 blast)
-        show "x \<in> top1_subgroup_generated_on G mul e invg {}"
-          unfolding top1_subgroup_generated_on_def
-        proof (rule InterI, clarify)
-          fix H assume "H \<subseteq> G" "top1_is_group_on H mul e invg"
-          thus "x \<in> H" using \<open>x = e\<close> unfolding top1_is_group_on_def by (by100 blast)
-        qed
+        case False
+        hence "i > length ys" using hge by (by100 simp)
+        hence "i - length ys - 1 < length zs" using hi by (by100 simp)
+        thus ?thesis using hzs \<open>i > length ys\<close> hi
+          apply (simp only: nth_append if_False)
+          by (by100 force)
       qed
-      finally show ?thesis .
     qed
-    hence h2G: "{mul g g | g. g \<in> G} = {e}"
-    proof -
-      have "e \<in> G" using hG_grp unfolding top1_is_group_on_def by (by100 blast)
-      have "{mul g g | g. g \<in> G} = {mul e e}" using hG_trivial by (by100 blast)
-      also have "mul e e = e" using hG_grp \<open>e \<in> G\<close> unfolding top1_is_group_on_def by (by100 blast)
-      finally show ?thesis by (by100 blast)
-    qed
-    hence "top1_quotient_group_carrier_on G mul {mul g g | g. g \<in> G} = {{e}}"
-    proof -
-      have "top1_quotient_group_carrier_on G mul {e}
-          = {top1_group_coset_on G mul {e} g | g. g \<in> G}"
-        unfolding top1_quotient_group_carrier_on_def by (by100 blast)
-      also have "\<dots> = {{e}}" using hG_trivial
-      proof -
-        assume hG_e: "G = {e}"
-        have "top1_group_coset_on G mul {e} e = {mul e n | n. n \<in> {e}}"
-          unfolding top1_group_coset_on_def by (by100 blast)
-        also have "\<dots> = {mul e e}" by (by100 blast)
-        also have "\<dots> = {e}"
-        proof -
-          have "e \<in> G" using hG_grp unfolding top1_is_group_on_def by (by100 blast)
-          have "mul e e = e" using hG_grp \<open>e \<in> G\<close> unfolding top1_is_group_on_def by (by100 blast)
-          thus ?thesis by (by100 blast)
-        qed
-        finally have hcoset_e: "top1_group_coset_on G mul {e} e = {e}" .
-        show "{top1_group_coset_on G mul {e} g | g. g \<in> G} = {{e}}"
-          using hG_e hcoset_e by (by100 blast)
-      qed
-      finally show ?thesis using h2G by (by100 simp)
-    qed
-    thus ?case using \<open>S = {}\<close> \<open>finite S\<close> by (by100 simp)
-  next
-    case (Suc n)
-    \<comment> \<open>card S = Suc n. Pick s0 \<in> S, let S' = S - {s0}.
-       G decomposes as "Z-component for s0" × "subgroup generated by S'".
-       G/2G \<cong> (Z/2Z) × (H/2H) where H = \<langle>\<iota>(S')\<rangle>.
-       By IH, |H/2H| = 2^n. So |G/2G| = 2 \<times> 2^n = 2^{n+1}.\<close>
-    \<comment> \<open>Following Munkres 67.8: pick s0 \<in> S, use coordinate projection \<epsilon>_{s0}.\<close>
-    have hfree: "top1_is_free_abelian_group_full_on G mul e invg iota S"
-      using Suc.prems(1) by (by100 blast)
-    have hfin: "finite S" using Suc.prems(2) by (by100 blast)
-    have "card S > 0" using Suc.hyps by (by100 simp)
-    then obtain s0 where hs0: "s0 \<in> S" using card_gt_0_iff hfin by (by100 force)
-    let ?S' = "S - {s0}"
-    have hcard': "card ?S' = n" using Suc.hyps hfin hs0 by (by100 simp)
-    \<comment> \<open>Get coordinate projection \<epsilon>_{s0}: G \<rightarrow> Z.\<close>
-    obtain \<epsilon> where heps: "top1_group_hom_on G mul (UNIV::int set) (+) \<epsilon>"
-        and heps_s0: "\<epsilon> (iota s0) = 1"
-        and heps_other: "\<forall>s\<in>S. s \<noteq> s0 \<longrightarrow> \<epsilon> (iota s) = 0"
-      using free_abelian_coordinate_projection[OF hfree hs0] by (by100 blast)
-    \<comment> \<open>The kernel ker(\<epsilon>) contains \<iota>(S') and is free abelian on S'.
-       G decomposes as Z \<times> ker(\<epsilon>) via g \<mapsto> (\<epsilon>(g), g \<cdot> \<iota>(s0)^{-\<epsilon>(g)}).
-       This gives G/2G \<cong> Z/2Z \<times> ker(\<epsilon>)/2\<cdot>ker(\<epsilon>).
-       |G/2G| = 2 \<times> |ker(\<epsilon>)/2\<cdot>ker(\<epsilon>)| = 2 \<times> 2^n = 2^{n+1}.\<close>
-    thus ?case sorry \<comment> \<open>Decomposition via \<epsilon> + IH on ker(\<epsilon>).\<close>
   qed
+  have hxsys: "\<forall>i<length (xs @ ys). (xs @ ys) ! i \<in> G"
+  proof (intro allI impI)
+    fix i assume hi: "i < length (xs @ ys)"
+    show "(xs @ ys) ! i \<in> G"
+    proof (cases "i < length xs")
+      case True
+      hence "(xs @ ys) ! i = xs ! i"
+        apply (simp only: nth_append if_True) done
+      thus ?thesis using hxs True by (by100 simp)
+    next
+      case False
+      hence "\<not> i < length xs" by (by100 simp)
+      hence "(xs @ ys) ! i = ys ! (i - length xs)"
+        apply (simp only: nth_append if_False) done
+      moreover have "i - length xs < length ys" using hi False by (by100 simp)
+      ultimately show ?thesis using hys by (by100 simp)
+    qed
+  qed
+  have hxsyszs: "\<forall>i<length (xs @ ys @ zs). (xs @ ys @ zs) ! i \<in> G"
+  proof (intro allI impI)
+    fix i assume hi: "i < length (xs @ ys @ zs)"
+    show "(xs @ ys @ zs) ! i \<in> G"
+    proof (cases "i < length xs")
+      case True
+      hence "(xs @ ys @ zs) ! i = xs ! i"
+        apply (simp only: nth_append if_True) done
+      thus ?thesis using hxs True by (by100 simp)
+    next
+      case False
+      hence "(xs @ ys @ zs) ! i = (ys @ zs) ! (i - length xs)"
+        apply (simp only: nth_append if_False) done
+      moreover have "i - length xs < length (ys @ zs)" using hi False by (by100 simp)
+      ultimately show ?thesis using hys hzs False hi
+        apply (simp only: nth_append if_True if_False)
+        apply (by100 force)
+        done
+    qed
+  qed
+  \<comment> \<open>Step 1: extract a.\<close>
+  have h1: "foldr mul (xs @ [a] @ (ys @ [invg a] @ zs)) e
+      = mul a (foldr mul (xs @ (ys @ [invg a] @ zs)) e)"
+    apply (rule abelian_foldr_mul_extract)
+    apply (rule hG) apply (rule hxs) apply (rule ha) apply (rule hyszs1)
+    done
+  \<comment> \<open>Step 2: extract invg(a).\<close>
+  have h2: "foldr mul ((xs @ ys) @ [invg a] @ zs) e
+      = mul (invg a) (foldr mul ((xs @ ys) @ zs) e)"
+    apply (rule abelian_foldr_mul_extract)
+    apply (rule hG) apply (rule hxsys) apply (rule hinva) apply (rule hzs)
+    done
+  \<comment> \<open>Step 3: cancel.\<close>
+  have hprod: "foldr mul (xs @ ys @ zs) e \<in> G"
+    by (rule foldr_mul_closed[OF hG_grp hxsyszs])
+  have "mul a (mul (invg a) (foldr mul (xs @ ys @ zs) e)) = foldr mul (xs @ ys @ zs) e"
+  proof -
+    have "mul a (mul (invg a) (foldr mul (xs @ ys @ zs) e))
+        = mul (mul a (invg a)) (foldr mul (xs @ ys @ zs) e)"
+      using group_assoc[OF hG_grp ha hinva hprod] by (by100 simp)
+    also have "mul a (invg a) = e"
+      using hG_grp ha unfolding top1_is_group_on_def by (by100 blast)
+    also have "mul e (foldr mul (xs @ ys @ zs) e) = foldr mul (xs @ ys @ zs) e"
+      using hG_grp hprod unfolding top1_is_group_on_def by (by100 blast)
+    finally show ?thesis .
+  qed
+  \<comment> \<open>Combine.\<close>
+  show ?thesis using h1 h2 \<open>mul a (mul (invg a) (foldr mul (xs @ ys @ zs) e)) = foldr mul (xs @ ys @ zs) e\<close>
+    by (by100 simp)
 qed
 
-(** from \<S>67 Theorem 67.8: rank of free abelian group is well-defined.
-    Any two bases of a free abelian group have the same cardinality. **)
-theorem Theorem_67_8_rank_unique:
-  fixes G :: "'g set" and mul :: "'g \<Rightarrow> 'g \<Rightarrow> 'g"
-    and e :: 'g and invg :: "'g \<Rightarrow> 'g"
-    and iota1 :: "'s1 \<Rightarrow> 'g" and S1 :: "'s1 set"
-    and iota2 :: "'s2 \<Rightarrow> 'g" and S2 :: "'s2 set"
-  assumes "top1_is_free_abelian_group_full_on G mul e invg iota1 S1"
-      and "top1_is_free_abelian_group_full_on G mul e invg iota2 S2"
-      and "finite S1" and "finite S2"
-  shows "\<exists>f. bij_betw f S1 S2"
-proof -
-  \<comment> \<open>Munkres 67.8: Tensor with Z/2Z: G/2G is a vector space over Z/2Z of dimension
-     equal to the rank. Dimension of a vector space is unique.
-     Step 1: G \<cong> Z^S1 (free abelian on S1) and G \<cong> Z^S2 (free abelian on S2).
-     Step 2: G/2G \<cong> (Z/2Z)^S1 \<cong> (Z/2Z)^S2.
-     Step 3: Vector space dimension: |S1| = dim (Z/2Z)^S1 = dim (Z/2Z)^S2 = |S2|.
-     Step 4: Hence |S1| = |S2|, i.e. there exists a bijection.\<close>
-  \<comment> \<open>Munkres 67.8: G/2G has cardinality 2^|S| for any basis S.
-     So 2^|S1| = |G/2G| = 2^|S2|, hence |S1| = |S2|.\<close>
-  let ?twoG = "{mul g g | g. g \<in> G}"
-  \<comment> \<open>Step 1: |G/2G| = 2^|S1| and |G/2G| = 2^|S2|.
-     Proof: G \<cong> Z^S_i, so G/2G \<cong> (Z/2Z)^S_i, hence |G/2G| = 2^|S_i|.\<close>
-  have hfinS1: "finite S1" by (rule assms(3))
-  have hfinS2: "finite S2" by (rule assms(4))
-  \<comment> \<open>Helper: for free abelian G on finite basis S, |G/2G| = 2^|S|.\<close>
-  have hcard_helper: "\<And>S iota. top1_is_free_abelian_group_full_on G mul e invg iota S \<Longrightarrow>
-      finite S \<Longrightarrow>
-      card (top1_quotient_group_carrier_on G mul ?twoG) = 2 ^ card S"
-    by (rule free_abelian_mod2_card)
-  have hcard1: "card (top1_quotient_group_carrier_on G mul ?twoG) = 2 ^ card S1"
-    by (rule hcard_helper[OF assms(1) hfinS1])
-  have hcard2: "card (top1_quotient_group_carrier_on G mul ?twoG) = 2 ^ card S2"
-    by (rule hcard_helper[OF assms(2) hfinS2])
-  \<comment> \<open>Step 2: 2^|S1| = 2^|S2| implies |S1| = |S2|.\<close>
-  have "card S1 = card S2"
-  proof -
-    have "2 ^ card S1 = (2::nat) ^ card S2" using hcard1 hcard2 by (by100 simp)
-    thus ?thesis by (by100 simp)
+
+text \<open>Corollary: in abelian group, foldr mul of xs @ [a] @ ys = mul a (foldr mul (xs @ ys) e).
+  Applied to filter: foldr mul xs e = foldr mul (filter P xs @ filter (Not \<circ> P) xs) e
+  = mul (foldr mul (filter P xs) e) (foldr mul (filter (Not \<circ> P) xs) e).\<close>
+lemma abelian_foldr_mul_split_filter:
+  assumes hG: "top1_is_abelian_group_on G mul e invg"
+      and hxs: "\<forall>i<length xs. xs ! i \<in> G"
+  shows "foldr mul xs e = mul (foldr mul (filter P xs) e) (foldr mul (filter (\<lambda>x. \<not> P x) xs) e)"
+  using hxs
+proof (induction xs)
+  case Nil
+  have "mul e e = e"
+    using hG unfolding top1_is_abelian_group_on_def top1_is_group_on_def by (by100 blast)
+  thus ?case by (by100 simp)
+next
+  case (Cons a xs)
+  have ha: "a \<in> G" using Cons(2) by (by100 force)
+  have hxs': "\<forall>i<length xs. xs ! i \<in> G" using Cons(2) by (by100 force)
+  have hG_grp: "top1_is_group_on G mul e invg"
+    using hG unfolding top1_is_abelian_group_on_def by (by100 blast)
+  have hIH: "foldr mul xs e = mul (foldr mul (filter P xs) e) (foldr mul (filter (\<lambda>x. \<not> P x) xs) e)"
+    using Cons(1) hxs' by (by100 blast)
+  have hfP_G: "\<forall>i<length (filter P xs). (filter P xs) ! i \<in> G"
+  proof (intro allI impI)
+    fix i assume "i < length (filter P xs)"
+    hence "filter P xs ! i \<in> set (filter P xs)" using nth_mem by (by100 blast)
+    hence "filter P xs ! i \<in> set xs" by (by100 auto)
+    then obtain k where hk: "k < length xs" "xs ! k = filter P xs ! i"
+      using in_set_conv_nth by (by100 metis)
+    have "xs ! k \<in> G" using hxs' hk(1) by (by100 blast)
+    thus "(filter P xs) ! i \<in> G" using hk(2) by (by100 simp)
   qed
-  \<comment> \<open>Step 3: Finite sets of equal cardinality have a bijection.\<close>
-  show ?thesis by (rule finite_same_card_bij[OF hfinS1 hfinS2 \<open>card S1 = card S2\<close>])
+  have hfP: "foldr mul (filter P xs) e \<in> G"
+    by (rule foldr_mul_closed[OF hG_grp hfP_G])
+  have hfNP_G: "\<forall>i<length (filter (\<lambda>x. \<not> P x) xs). (filter (\<lambda>x. \<not> P x) xs) ! i \<in> G"
+  proof (intro allI impI)
+    fix i assume "i < length (filter (\<lambda>x. \<not> P x) xs)"
+    hence "filter (\<lambda>x. \<not> P x) xs ! i \<in> set (filter (\<lambda>x. \<not> P x) xs)" using nth_mem by (by100 blast)
+    hence "filter (\<lambda>x. \<not> P x) xs ! i \<in> set xs" by (by100 auto)
+    then obtain k where hk: "k < length xs" "xs ! k = filter (\<lambda>x. \<not> P x) xs ! i"
+      using in_set_conv_nth by (by100 metis)
+    have "xs ! k \<in> G" using hxs' hk(1) by (by100 blast)
+    thus "(filter (\<lambda>x. \<not> P x) xs) ! i \<in> G" using hk(2) by (by100 simp)
+  qed
+  have hfNP: "foldr mul (filter (\<lambda>x. \<not> P x) xs) e \<in> G"
+    by (rule foldr_mul_closed[OF hG_grp hfNP_G])
+  show ?case
+  proof (cases "P a")
+    case True
+    have "foldr mul (a # xs) e = mul a (foldr mul xs e)" by (by100 simp)
+    also have "\<dots> = mul a (mul (foldr mul (filter P xs) e) (foldr mul (filter (\<lambda>x. \<not> P x) xs) e))"
+      using hIH by (by100 simp)
+    also have "\<dots> = mul (mul a (foldr mul (filter P xs) e)) (foldr mul (filter (\<lambda>x. \<not> P x) xs) e)"
+    proof -
+      have "mul a (mul (foldr mul (filter P xs) e) (foldr mul (filter (\<lambda>x. \<not> P x) xs) e))
+          = mul (mul a (foldr mul (filter P xs) e)) (foldr mul (filter (\<lambda>x. \<not> P x) xs) e)"
+        using group_assoc[OF hG_grp ha hfP hfNP] by (by100 simp)
+      thus ?thesis by (by100 simp)
+    qed
+    also have "mul a (foldr mul (filter P xs) e) = foldr mul (filter P (a # xs)) e"
+      using True by (by100 simp)
+    also have "filter (\<lambda>x. \<not> P x) xs = filter (\<lambda>x. \<not> P x) (a # xs)"
+      using True by (by100 simp)
+    finally show ?thesis by (by100 simp)
+  next
+    case False
+    have "foldr mul (a # xs) e = mul a (foldr mul xs e)" by (by100 simp)
+    also have "\<dots> = mul a (mul (foldr mul (filter P xs) e) (foldr mul (filter (\<lambda>x. \<not> P x) xs) e))"
+      using hIH by (by100 simp)
+    also have "\<dots> = mul (foldr mul (filter P xs) e) (mul a (foldr mul (filter (\<lambda>x. \<not> P x) xs) e))"
+      by (rule abelian_mul_left_commute[OF hG ha hfP hfNP])
+    also have "mul a (foldr mul (filter (\<lambda>x. \<not> P x) xs) e) = foldr mul (filter (\<lambda>x. \<not> P x) (a # xs)) e"
+      using False by (by100 simp)
+    also have "filter P xs = filter P (a # xs)"
+      using False by (by100 simp)
+    finally show ?thesis by (by100 simp)
+  qed
 qed
 
 
@@ -3209,6 +3364,1493 @@ proof -
       qed
     qed
   qed
+qed
+
+text \<open>Helper: in an abelian group, swapping two adjacent elements in a word preserves
+  the word product. Uses abelian\_mul\_left\_commute + word\_product\_append.\<close>
+lemma abelian_word_product_swap:
+  assumes hG: "top1_is_abelian_group_on G mul e invg"
+      and hpre: "\<forall>i<length pre. fst (pre ! i) \<in> G"
+      and ha: "fst a \<in> G" and hb: "fst b \<in> G"
+      and hpost: "\<forall>i<length post. fst (post ! i) \<in> G"
+  shows "top1_group_word_product mul e invg (pre @ [a, b] @ post)
+       = top1_group_word_product mul e invg (pre @ [b, a] @ post)"
+proof -
+  have hG_grp: "top1_is_group_on G mul e invg"
+    using hG unfolding top1_is_abelian_group_on_def by (by100 blast)
+  obtain xa ba where ha_eq: "a = (xa, ba)" by (cases a) (by100 blast)
+  obtain xb bb where hb_eq: "b = (xb, bb)" by (cases b) (by100 blast)
+  let ?ga = "if ba then xa else invg xa"
+  let ?gb = "if bb then xb else invg xb"
+  have hxa: "xa \<in> G" using ha ha_eq by (by100 simp)
+  have hxb: "xb \<in> G" using hb hb_eq by (by100 simp)
+  have hinvxa: "invg xa \<in> G" using hxa hG_grp unfolding top1_is_group_on_def by (by100 blast)
+  have hinvxb: "invg xb \<in> G" using hxb hG_grp unfolding top1_is_group_on_def by (by100 blast)
+  have hga: "?ga \<in> G" using hxa hinvxa by (by100 simp)
+  have hgb: "?gb \<in> G" using hxb hinvxb by (by100 simp)
+  have hwp_post: "top1_group_word_product mul e invg post \<in> G"
+    by (rule word_product_in_group[OF hG_grp hpost])
+  \<comment> \<open>Key: mul ?ga (mul ?gb c) = mul ?gb (mul ?ga c) by abelian\_mul\_left\_commute.\<close>
+  have hswap: "mul ?ga (mul ?gb (top1_group_word_product mul e invg post))
+             = mul ?gb (mul ?ga (top1_group_word_product mul e invg post))"
+    by (rule abelian_mul_left_commute[OF hG hga hgb hwp_post])
+  \<comment> \<open>word\_product [a,b] @ post = ?ga \<cdot> ?gb \<cdot> wp(post).\<close>
+  have hlhs: "top1_group_word_product mul e invg ([a, b] @ post)
+       = mul ?ga (mul ?gb (top1_group_word_product mul e invg post))"
+    using ha_eq hb_eq by (by100 simp)
+  have hrhs: "top1_group_word_product mul e invg ([b, a] @ post)
+       = mul ?gb (mul ?ga (top1_group_word_product mul e invg post))"
+    using ha_eq hb_eq by (by100 simp)
+  \<comment> \<open>Connect via word\_product\_append on pre.\<close>
+  have hab_G: "\<forall>i<length ([a, b] @ post). fst (([a, b] @ post) ! i) \<in> G"
+  proof (intro allI impI)
+    fix i assume hi: "i < length ([a, b] @ post)"
+    show "fst (([a, b] @ post) ! i) \<in> G"
+    proof (cases "i < 2")
+      case True
+      hence "i = 0 \<or> i = Suc 0" by (by100 auto)
+      thus ?thesis using ha hb ha_eq hb_eq by (by100 auto)
+    next
+      case False
+      hence "\<not> i < length [a, b]" by (by100 simp)
+      hence "(([a, b] @ post) ! i) = post ! (i - length [a, b])"
+        apply (simp only: nth_append if_False)
+        done
+      moreover have "i - length [a, b] < length post" using hi False by (by100 simp)
+      ultimately show ?thesis using hpost by (by100 force)
+    qed
+  qed
+  have hba_G: "\<forall>i<length ([b, a] @ post). fst (([b, a] @ post) ! i) \<in> G"
+  proof (intro allI impI)
+    fix i assume hi: "i < length ([b, a] @ post)"
+    show "fst (([b, a] @ post) ! i) \<in> G"
+    proof (cases "i < 2")
+      case True
+      hence "i = 0 \<or> i = Suc 0" by (by100 auto)
+      thus ?thesis using ha hb ha_eq hb_eq by (by100 auto)
+    next
+      case False
+      hence "\<not> i < length [b, a]" by (by100 simp)
+      hence "(([b, a] @ post) ! i) = post ! (i - length [b, a])"
+        apply (simp only: nth_append if_False)
+        done
+      moreover have "i - length [b, a] < length post" using hi False by (by100 simp)
+      ultimately show ?thesis using hpost by (by100 force)
+    qed
+  qed
+  have "top1_group_word_product mul e invg (pre @ [a, b] @ post)
+      = mul (top1_group_word_product mul e invg pre)
+            (top1_group_word_product mul e invg ([a, b] @ post))"
+    by (rule word_product_append[OF hG_grp hpre hab_G])
+  also have "\<dots> = mul (top1_group_word_product mul e invg pre)
+            (top1_group_word_product mul e invg ([b, a] @ post))"
+    using hlhs hrhs hswap by (by100 simp)
+  also have "\<dots> = top1_group_word_product mul e invg (pre @ [b, a] @ post)"
+    by (rule word_product_append[OF hG_grp hpre hba_G, symmetric])
+  finally show ?thesis .
+qed
+
+text \<open>Connection: word\_product = foldr mul on gen-mapped list.\<close>
+lemma word_product_as_foldr:
+  "top1_group_word_product mul e invg ws
+   = foldr mul (map (\<lambda>(x,b). if b then x else invg x) ws) e"
+proof (induction ws)
+  case Nil thus ?case by (by100 fastforce)
+next
+  case (Cons a ws)
+  obtain x b where ha: "a = (x, b)" by (cases a) (by100 blast)
+  show ?case using Cons ha by (cases b) (by100 simp)+
+qed
+
+text \<open>Helper: foldr mul of n copies of x equals group\_pow.\<close>
+lemma foldr_mul_replicate:
+  assumes "top1_is_group_on G mul e invg" and "x \<in> G"
+  shows "foldr mul (replicate n x) e = top1_group_pow mul e x n"
+proof (induction n)
+  case 0 thus ?case by (by100 simp)
+next
+  case (Suc n) thus ?case by (by100 simp)
+qed
+
+text \<open>Helper: filter for a specific element gives replicate, so foldr mul = group\_pow.\<close>
+lemma filter_eq_replicate: "filter (\<lambda>x. x = a) xs = replicate (length (filter (\<lambda>x. x = a) xs)) a"
+  by (induction xs) (by100 simp)+
+
+lemma abelian_foldr_mul_filter_eq:
+  assumes "top1_is_group_on G mul e invg" and "a \<in> G"
+  shows "foldr mul (filter (\<lambda>x. x = a) xs) e = top1_group_pow mul e a (length (filter (\<lambda>x. x = a) xs))"
+proof -
+  let ?n = "length (filter (\<lambda>x. x = a) xs)"
+  have "filter (\<lambda>x. x = a) xs = replicate ?n a" by (rule filter_eq_replicate)
+  hence "foldr mul (filter (\<lambda>x. x = a) xs) e = foldr mul (replicate ?n a) e" by (by100 simp)
+  also have "\<dots> = top1_group_pow mul e a ?n" by (rule foldr_mul_replicate[OF assms])
+  finally show ?thesis .
+qed
+
+text \<open>Helper: In abelian group, move element at position i to position 0 preserving
+  the word product. Uses abelian\_foldr\_mul\_extract on the gen-mapped list.\<close>
+lemma abelian_word_product_move_front:
+  assumes hG: "top1_is_abelian_group_on G mul e invg"
+      and hws: "\<forall>j<length ws. fst (ws ! j) \<in> G"
+      and hi: "i < length ws"
+  shows "top1_group_word_product mul e invg ws
+       = top1_group_word_product mul e invg (ws ! i # take i ws @ drop (Suc i) ws)"
+proof -
+  have hG_grp: "top1_is_group_on G mul e invg"
+    using hG unfolding top1_is_abelian_group_on_def by (by100 blast)
+  let ?gen = "\<lambda>(x::('a::type),b::bool). if b then x else invg x"
+  let ?gs = "map ?gen ws"
+  \<comment> \<open>All gen-mapped elements are in G.\<close>
+  have hgs: "\<forall>j<length ?gs. ?gs ! j \<in> G"
+  proof (intro allI impI)
+    fix j assume hj: "j < length ?gs"
+    hence hj': "j < length ws" by (by100 simp)
+    obtain xj bj where hwj: "ws ! j = (xj, bj)" by (cases "ws ! j") (by100 blast)
+    have "xj \<in> G" using hws hj' hwj by (by100 force)
+    hence "invg xj \<in> G" using hG_grp unfolding top1_is_group_on_def by (by100 blast)
+    have "?gs ! j = ?gen (ws ! j)" using hj' by (by100 simp)
+    thus "?gs ! j \<in> G" using hwj \<open>xj \<in> G\<close> \<open>invg xj \<in> G\<close> by (by100 simp)
+  qed
+  \<comment> \<open>Decompose: map gen ws = take i (map gen ws) @ [gen(ws!i)] @ drop (Suc i) (map gen ws).\<close>
+  have hdecomp: "?gs = take i ?gs @ [?gen (ws ! i)] @ drop (Suc i) ?gs"
+  proof -
+    have hi_gs: "i < length ?gs" using hi by (by100 simp)
+    have "?gs = take i ?gs @ ?gs ! i # drop (Suc i) ?gs"
+      using hi_gs by (rule id_take_nth_drop)
+    moreover have "?gs ! i = ?gen (ws ! i)" using hi by (by100 simp)
+    ultimately show ?thesis by (by100 simp)
+  qed
+  have htake_gs: "\<forall>j<length (take i ?gs). (take i ?gs) ! j \<in> G"
+    using hgs by (by100 fastforce)
+  have hdrop_gs: "\<forall>j<length (drop (Suc i) ?gs). (drop (Suc i) ?gs) ! j \<in> G"
+    using hgs hi by (by100 fastforce)
+  have hgi: "?gen (ws ! i) \<in> G" using hgs hi by (by100 fastforce)
+  \<comment> \<open>By abelian\_foldr\_mul\_extract:\<close>
+  have "foldr mul ?gs e = foldr mul (take i ?gs @ [?gen (ws ! i)] @ drop (Suc i) ?gs) e"
+    using hdecomp by (by100 simp)
+  also have "\<dots> = mul (?gen (ws ! i)) (foldr mul (take i ?gs @ drop (Suc i) ?gs) e)"
+    by (rule abelian_foldr_mul_extract[OF hG htake_gs hgi hdrop_gs])
+  finally have hfoldr: "foldr mul ?gs e = mul (?gen (ws ! i)) (foldr mul (take i ?gs @ drop (Suc i) ?gs) e)" .
+  \<comment> \<open>Convert back: LHS = word\_product(ws), RHS = word\_product(ws!i # rest).\<close>
+  \<comment> \<open>LHS: word\_product ws = foldr mul ?gs e = mul(gen(ws!i), foldr ...) = mul(gen(ws!i), word\_product(rest)).\<close>
+  have hlhs: "top1_group_word_product mul e invg ws
+    = mul (?gen (ws ! i)) (top1_group_word_product mul e invg (take i ws @ drop (Suc i) ws))"
+  proof -
+    have "top1_group_word_product mul e invg ws = foldr mul ?gs e"
+      by (rule word_product_as_foldr)
+    also have "\<dots> = mul (?gen (ws ! i)) (foldr mul (take i ?gs @ drop (Suc i) ?gs) e)"
+      by (rule hfoldr)
+    finally have h1: "top1_group_word_product mul e invg ws
+        = mul (?gen (ws ! i)) (foldr mul (take i ?gs @ drop (Suc i) ?gs) e)" .
+    have "take i ?gs = map ?gen (take i ws)" by (rule take_map)
+    moreover have "drop (Suc i) ?gs = map ?gen (drop (Suc i) ws)" by (rule drop_map)
+    ultimately have "take i ?gs @ drop (Suc i) ?gs = map ?gen (take i ws) @ map ?gen (drop (Suc i) ws)"
+      by (by100 simp)
+    hence htd: "take i ?gs @ drop (Suc i) ?gs = map ?gen (take i ws @ drop (Suc i) ws)"
+      by (by100 simp)
+    hence "foldr mul (take i ?gs @ drop (Suc i) ?gs) e
+         = top1_group_word_product mul e invg (take i ws @ drop (Suc i) ws)"
+      using word_product_as_foldr[of mul e invg "take i ws @ drop (Suc i) ws"] by (by100 simp)
+    thus ?thesis using h1 by (by100 simp)
+  qed
+  \<comment> \<open>RHS: word\_product(ws!i # rest) = mul(gen(ws!i), word\_product(rest)).\<close>
+  have hrhs: "top1_group_word_product mul e invg (ws ! i # take i ws @ drop (Suc i) ws)
+    = mul (?gen (ws ! i)) (top1_group_word_product mul e invg (take i ws @ drop (Suc i) ws))"
+  proof -
+    obtain xi bi where hwi: "ws ! i = (xi, bi)" by (cases "ws ! i") (by100 blast)
+    show ?thesis using hwi by (cases bi) (by100 simp)+
+  qed
+  show ?thesis using hlhs hrhs by (by100 simp)
+qed
+
+text \<open>Word-level cancel pair by direct argument.\<close>
+lemma word_product_cancel_matching_pair:
+  assumes hG: "top1_is_abelian_group_on G mul e invg"
+      and hws: "\<forall>i<length ws. fst (ws ! i) \<in> G"
+      and h0: "ws ! 0 = (s, b)" and hj0: "j > 0" and hj: "j < length ws"
+      and hwj: "ws ! j = (s, \<not>b)"
+  shows "top1_group_word_product mul e invg ws
+       = top1_group_word_product mul e invg (tl (take j ws) @ drop (Suc j) ws)"
+proof -
+  have hG_grp: "top1_is_group_on G mul e invg"
+    using hG unfolding top1_is_abelian_group_on_def by (by100 blast)
+  \<comment> \<open>Decompose ws = a # rest where a = (s,b).\<close>
+  obtain a rest where hws_eq: "ws = a # rest" and ha: "a = (s, b)"
+    using hj hj0 h0 by (cases ws) (by100 auto)
+  have hrest_G: "\<forall>i<length rest. fst (rest ! i) \<in> G"
+    using hws hws_eq by (by100 force)
+  have hj': "j - 1 < length rest" using hj hws_eq hj0 by (by100 simp)
+  have hwj': "rest ! (j - 1) = (s, \<not>b)" using hwj hws_eq hj0 by (by100 simp)
+  \<comment> \<open>Move rest!(j-1) to front of rest.\<close>
+  have hmove: "top1_group_word_product mul e invg rest
+      = top1_group_word_product mul e invg (rest ! (j-1) # take (j-1) rest @ drop (Suc (j-1)) rest)"
+    apply (rule abelian_word_product_move_front)
+    apply (rule hG) apply (rule hrest_G) apply (rule hj') done
+  hence hmove': "top1_group_word_product mul e invg rest
+      = top1_group_word_product mul e invg (rest ! (j-1) # take (j-1) rest @ drop j rest)"
+    using hj0 by (by100 simp)
+  \<comment> \<open>ws = (s,b) # rest. word\_product ws = gen(s,b) \<cdot> word\_product(rest).\<close>
+  have hs_G: "s \<in> G" using hws h0 hj hj0 by (by100 force)
+  \<comment> \<open>After moving: rest starts with (s,\<not>b).
+     word\_product(ws) = gen(s,b) \<cdot> gen(s,\<not>b) \<cdot> word\_product(rest').
+     gen(s,b) \<cdot> gen(s,\<not>b) = e. So word\_product(ws) = word\_product(rest').\<close>
+  \<comment> \<open>rest' = take(j-1) rest @ drop j rest = tl(take j ws) @ drop(Suc j) ws.\<close>
+  have hrest'_eq: "take (j-1) rest @ drop j rest = tl (take j ws) @ drop (Suc j) ws"
+  proof -
+    have "take j (a # rest) = a # take (j - 1) rest" using hj0
+      by (cases j) (by100 simp)+
+    hence "tl (take j ws) = take (j - 1) rest" using hws_eq hj0
+      by (cases j) (by100 simp)+
+    moreover have "drop (Suc j) ws = drop j rest" using hws_eq by (by100 simp)
+    ultimately show ?thesis by (by100 simp)
+  qed
+  \<comment> \<open>word\_product(ws) = word\_product((s,b) # rest)
+     = gen(s,b) \<cdot> word\_product(rest)
+     = gen(s,b) \<cdot> gen(s,\<not>b) \<cdot> word\_product(rest')
+     = e \<cdot> word\_product(rest') = word\_product(rest') = word\_product(w').\<close>
+  have hwp_cons: "top1_group_word_product mul e invg ws
+      = top1_group_word_product mul e invg ((s, b) # rest)"
+    using hws_eq ha by (by100 simp)
+  define w' where "w' = tl (take j ws) @ drop (Suc j) ws"
+  have hwp_rest: "top1_group_word_product mul e invg ((s, b) # rest)
+      = (if b then mul s else mul (invg s)) (top1_group_word_product mul e invg rest)"
+    by (cases b) (by100 simp)+
+  have hwp_moved: "top1_group_word_product mul e invg ((s, \<not>b) # take (j-1) rest @ drop j rest)
+      = (if \<not>b then mul s else mul (invg s)) (top1_group_word_product mul e invg (take (j-1) rest @ drop j rest))"
+    by (cases b) (by100 simp)+
+  have hwp_w': "top1_group_word_product mul e invg (take (j-1) rest @ drop j rest)
+      = top1_group_word_product mul e invg w'"
+    using hrest'_eq unfolding w'_def by (by100 simp)
+  have hprod_w': "top1_group_word_product mul e invg w' \<in> G"
+  proof -
+    have hw'_G: "\<forall>i<length w'. fst (w' ! i) \<in> G"
+    proof (intro allI impI)
+      fix i assume hi: "i < length w'"
+      have "w' ! i \<in> set w'" using hi nth_mem by (by100 blast)
+      have "set w' \<subseteq> set (tl (take j ws)) \<union> set (drop (Suc j) ws)"
+        unfolding w'_def by (by100 auto)
+      hence "w' ! i \<in> set (tl (take j ws)) \<or> w' ! i \<in> set (drop (Suc j) ws)"
+        using \<open>w' ! i \<in> set w'\<close> by (by100 blast)
+      hence "w' ! i \<in> set ws"
+      proof
+        assume "w' ! i \<in> set (tl (take j ws))"
+        moreover have "set (tl (take j ws)) \<subseteq> set (take j ws)"
+          by (cases "take j ws") (by100 auto)+
+        moreover have "set (take j ws) \<subseteq> set ws" by (rule set_take_subset)
+        ultimately show "w' ! i \<in> set ws" by (by100 blast)
+      next
+        assume "w' ! i \<in> set (drop (Suc j) ws)"
+        moreover have "set (drop (Suc j) ws) \<subseteq> set ws" by (rule set_drop_subset)
+        ultimately show "w' ! i \<in> set ws" by (by100 blast)
+      qed
+      then obtain k where hk: "k < length ws" "ws ! k = w' ! i"
+        using in_set_conv_nth by (by100 metis)
+      have "fst (ws ! k) \<in> G" using hws hk(1) by (by100 blast)
+      thus "fst (w' ! i) \<in> G" using hk(2) by (by100 simp)
+    qed
+    show ?thesis
+      apply (rule word_product_in_group)
+      apply (rule hG_grp)
+      apply (rule hw'_G)
+      done
+  qed
+  have hinvs: "invg s \<in> G" using hG_grp hs_G unfolding top1_is_group_on_def by (by100 blast)
+  have "top1_group_word_product mul e invg ws
+      = (if b then mul s else mul (invg s))
+        ((if \<not>b then mul s else mul (invg s)) (top1_group_word_product mul e invg w'))"
+  proof -
+    have "top1_group_word_product mul e invg ws
+        = (if b then mul s else mul (invg s)) (top1_group_word_product mul e invg rest)"
+      using hwp_cons hwp_rest by (by100 simp)
+    also have "(if b then mul s else mul (invg s)) (top1_group_word_product mul e invg rest)
+        = (if b then mul s else mul (invg s))
+          ((if \<not>b then mul s else mul (invg s)) (top1_group_word_product mul e invg w'))"
+    proof -
+      have "top1_group_word_product mul e invg rest
+          = top1_group_word_product mul e invg ((s, \<not>b) # take (j-1) rest @ drop j rest)"
+        using hmove' hwj' by (by100 simp)
+      also have "\<dots> = (if \<not>b then mul s else mul (invg s))
+          (top1_group_word_product mul e invg (take (j-1) rest @ drop j rest))"
+        by (rule hwp_moved)
+      also have "top1_group_word_product mul e invg (take (j-1) rest @ drop j rest)
+          = top1_group_word_product mul e invg w'"
+        by (rule hwp_w')
+      finally have "top1_group_word_product mul e invg rest
+          = (if \<not>b then mul s else mul (invg s)) (top1_group_word_product mul e invg w')" by (by100 simp)
+      thus ?thesis by (by100 simp)
+    qed
+    finally show ?thesis .
+  qed
+  also have "\<dots> = top1_group_word_product mul e invg w'"
+  proof (cases b)
+    case True
+    have "mul s (mul (invg s) (top1_group_word_product mul e invg w'))
+        = mul (mul s (invg s)) (top1_group_word_product mul e invg w')"
+      using group_assoc[OF hG_grp hs_G hinvs hprod_w'] by (by100 simp)
+    also have "mul s (invg s) = e"
+      using hG_grp hs_G unfolding top1_is_group_on_def by (by100 blast)
+    also have "mul e (top1_group_word_product mul e invg w') = top1_group_word_product mul e invg w'"
+      using hG_grp hprod_w' unfolding top1_is_group_on_def by (by100 blast)
+    finally show ?thesis using True by (by100 simp)
+  next
+    case False
+    have "mul (invg s) (mul s (top1_group_word_product mul e invg w'))
+        = mul (mul (invg s) s) (top1_group_word_product mul e invg w')"
+      using group_assoc[OF hG_grp hinvs hs_G hprod_w'] by (by100 simp)
+    also have "mul (invg s) s = e"
+      using hG_grp hs_G unfolding top1_is_group_on_def by (by100 blast)
+    also have "mul e (top1_group_word_product mul e invg w') = top1_group_word_product mul e invg w'"
+      using hG_grp hprod_w' unfolding top1_is_group_on_def by (by100 blast)
+    finally show ?thesis using False by (by100 simp)
+  qed
+  finally show ?thesis unfolding w'_def .
+qed
+
+text \<open>Helper: in an abelian group, if every generator in w has equal True/False counts,
+  then the word product is the identity. Proof by strong induction: find a cancellable
+  pair, bring them adjacent using abelian\_word\_product\_move\_front, cancel, apply IH.\<close>
+lemma abelian_word_product_zero_net_coeff:
+  fixes w :: "('s \<times> bool) list"
+  assumes hH: "top1_is_abelian_group_on H mulH eH invgH"
+      and hphi: "\<forall>s \<in> fst ` set w. \<phi> s \<in> H"
+      and hzero: "\<forall>s. length (filter (\<lambda>(t,b). t = s \<and> b) w)
+                    = length (filter (\<lambda>(t,b). t = s \<and> \<not>b) w)"
+  shows "top1_group_word_product mulH eH invgH (map (\<lambda>(s,b). (\<phi> s, b)) w) = eH"
+  using hphi hzero
+proof (induction "length w" arbitrary: w rule: less_induct)
+  case (less w)
+  show ?case
+  proof (cases "w = []")
+    case True thus ?thesis by (by100 simp)
+  next
+    case False
+    \<comment> \<open>w is nonempty. Take the first element (s0, b0).
+       Since net coeff of s0 = 0, there exists j > 0 with w!j = (s0, \<not>b0).
+       Move w!j to position 1, cancel the pair, apply IH.\<close>
+    obtain s0 b0 where hfirst: "w ! 0 = (s0, b0)" by (cases "w ! 0") (by100 blast)
+    have hw_ne: "w \<noteq> []" using False by (by100 simp)
+    have h0_len: "0 < length w" using hw_ne by (by100 simp)
+    have "(s0, b0) \<in> set w" using hfirst nth_mem[OF h0_len] by (by100 simp)
+    hence hs0_in: "s0 \<in> fst ` set w" by (by100 force)
+    \<comment> \<open>Net coeff of s0 = 0 means equal True/False counts.
+       Since (s0,b0) appears, (s0,\<not>b0) must also appear.\<close>
+    have "\<exists>j. j < length w \<and> j > 0 \<and> w ! j = (s0, \<not>b0)"
+    proof -
+      \<comment> \<open>(s0, b0) \<in> set w means count\_True or count\_False > 0.
+         Equal counts means the OTHER polarity also has count > 0.
+         So (s0, \<not>b0) \<in> set w. Find j with w!j = (s0,\<not>b0).
+         If j=0 then w!0=(s0,\<not>b0)=(s0,b0) so b0=\<not>b0, contradiction. Hence j>0.\<close>
+      have "(s0, b0) \<in> set (filter (\<lambda>(t,b). t = s0 \<and> b = b0) w)"
+        using \<open>(s0, b0) \<in> set w\<close> by (by100 simp)
+      hence "filter (\<lambda>(t,b). t = s0 \<and> b = b0) w \<noteq> []" by (by100 force)
+      hence hcount_pos: "length (filter (\<lambda>(t,b). t = s0 \<and> b = b0) w) > 0" by (by100 simp)
+      have hcount_eq: "length (filter (\<lambda>(t,b). t = s0 \<and> b) w)
+                     = length (filter (\<lambda>(t,b). t = s0 \<and> \<not>b) w)"
+        using less(3) by (by100 blast)
+      have hcount_neg: "length (filter (\<lambda>(t,b). t = s0 \<and> b = (\<not>b0)) w) > 0"
+        using hcount_pos hcount_eq by (cases b0) (by100 simp)+
+      hence "filter (\<lambda>(t,b). t = s0 \<and> b = (\<not>b0)) w \<noteq> []" by (by100 simp)
+      then obtain p ps where "filter (\<lambda>(t,b). t = s0 \<and> b = (\<not>b0)) w = p # ps"
+        using list.exhaust by (by100 blast)
+      hence "p \<in> set (filter (\<lambda>(t,b). t = s0 \<and> b = (\<not>b0)) w)" by (by100 simp)
+      hence hp: "p \<in> set w" and "(\<lambda>(t,b). t = s0 \<and> b = (\<not>b0)) p" by (by100 auto)+
+      then obtain tp bp where "p = (tp, bp)" and "tp = s0" and "bp = (\<not>b0)"
+        by (cases p) (by100 auto)
+      hence "(s0, \<not>b0) \<in> set w" using hp by (by100 simp)
+      then obtain j where hj: "j < length w" and hwj: "w ! j = (s0, \<not>b0)"
+        using in_set_conv_nth by (by100 metis)
+      have "j \<noteq> 0"
+      proof
+        assume "j = 0"
+        hence "w ! 0 = (s0, \<not>b0)" using hwj by (by100 simp)
+        hence "(s0, b0) = (s0, \<not>b0)" using hfirst by (by100 simp)
+        thus False by (by100 simp)
+      qed
+      thus ?thesis using hj hwj by (by100 blast)
+    qed
+    then obtain j where hj: "j < length w" and hj0: "j > 0" and hwj: "w ! j = (s0, \<not>b0)"
+      by (by100 blast)
+    \<comment> \<open>Move w!j to position 1 using abelian swap.\<close>
+    let ?w' = "take (j - 1) (tl w) @ drop j (tl w)"
+    \<comment> \<open>After moving w!j next to w!0 and cancelling: length decreases by 2, IH applies.\<close>
+    have hlen: "length ?w' < length w" using hj by (by100 fastforce)
+    have hzero': "\<forall>s. length (filter (\<lambda>(t,b). t = s \<and> b) ?w')
+                     = length (filter (\<lambda>(t,b). t = s \<and> \<not>b) ?w')"
+    proof (intro allI)
+      fix s
+      \<comment> \<open>Decompose w into w!0 # middle @ [w!j] @ tail where middle @ tail = ?w'.\<close>
+      obtain jn where hjn: "j = Suc jn" using hj0 by (cases j) (by100 auto)+
+      have htlw_decomp: "tl w = take jn (tl w) @ [(tl w) ! jn] @ drop (Suc jn) (tl w)"
+      proof -
+        have "jn < length (tl w)" using hj hjn by (by100 simp)
+        thus ?thesis using id_take_nth_drop[of jn "tl w"] by (by100 simp)
+      qed
+      have htlj: "(tl w) ! jn = (s0, \<not>b0)"
+      proof (cases w)
+        case Nil thus ?thesis using hj by (by100 simp)
+      next
+        case (Cons a rest)
+        have "w ! j = rest ! jn" using Cons hjn by (by100 simp)
+        hence "rest ! jn = (s0, \<not>b0)" using hwj by (by100 simp)
+        thus ?thesis using Cons by (by100 simp)
+      qed
+      \<comment> \<open>?w' = take jn (tl w) @ drop (Suc jn) (tl w) = take jn (tl w) @ drop j (tl w).\<close>
+      have hw'_eq: "?w' = take jn (tl w) @ drop (Suc jn) (tl w)"
+        using hjn by (by100 simp)
+      \<comment> \<open>For any P: filter P (tl w) = filter P ?w' inserted with P-filtered w!j.
+         length(filter P (tl w)) = length(filter P ?w') + (if P(w!j) then 1 else 0).\<close>
+      have "\<And>P. length (filter P (tl w)) = length (filter P ?w') + (if P (s0, \<not>b0) then 1 else 0)"
+      proof -
+        fix P :: "('s \<times> bool) \<Rightarrow> bool"
+        have "filter P (tl w) = filter P (take jn (tl w) @ [(tl w) ! jn] @ drop (Suc jn) (tl w))"
+          using htlw_decomp by (by100 simp)
+        also have "\<dots> = filter P (take jn (tl w)) @ filter P [(tl w) ! jn] @ filter P (drop (Suc jn) (tl w))"
+          by (by100 simp)
+        finally have hlen_decomp: "length (filter P (tl w))
+            = length (filter P (take jn (tl w))) + length (filter P [(tl w) ! jn])
+              + length (filter P (drop (Suc jn) (tl w)))" by (by100 simp)
+        have "length (filter P (take jn (tl w))) + length (filter P (drop (Suc jn) (tl w)))
+            = length (filter P ?w')" using hw'_eq by (by100 simp)
+        have "length (filter P [(tl w) ! jn]) = (if P (s0, \<not>b0) then 1 else 0)"
+          using htlj by (by100 simp)
+        thus "length (filter P (tl w)) = length (filter P ?w') + (if P (s0, \<not>b0) then 1 else 0)"
+          using hlen_decomp \<open>length (filter P (take jn (tl w))) + length (filter P (drop (Suc jn) (tl w)))
+              = length (filter P ?w')\<close>
+          by (by100 linarith)
+      qed
+      hence hcount_tl: "\<And>P. length (filter P w) = (if P (s0, b0) then 1 else 0)
+          + length (filter P ?w') + (if P (s0, \<not>b0) then 1 else 0)"
+        using \<open>w \<noteq> []\<close> hfirst by (cases w) (by100 simp)+
+      have "length (filter (\<lambda>(t,b). t = s \<and> b) w) = length (filter (\<lambda>(t,b). t = s \<and> \<not>b) w)"
+        using less(3) by (by100 blast)
+      have htrue_w: "length (filter (\<lambda>(t,b). t = s \<and> b) w)
+          = (if s0 = s \<and> b0 then 1 else 0) + length (filter (\<lambda>(t,b). t = s \<and> b) ?w')
+            + (if s0 = s \<and> \<not>b0 then 1 else 0)"
+        using hcount_tl[of "\<lambda>(t,b). t = s \<and> b"] by (by100 simp)
+      have hfalse_w: "length (filter (\<lambda>(t,b). t = s \<and> \<not>b) w)
+          = (if s0 = s \<and> \<not>b0 then 1 else 0) + length (filter (\<lambda>(t,b). t = s \<and> \<not>b) ?w')
+            + (if s0 = s \<and> b0 then 1 else 0)"
+        using hcount_tl[of "\<lambda>(t,b). t = s \<and> \<not>b"] by (by100 simp)
+      thus "length (filter (\<lambda>(t,b). t = s \<and> b) ?w') = length (filter (\<lambda>(t,b). t = s \<and> \<not>b) ?w')"
+        using \<open>length (filter (\<lambda>(t,b). t = s \<and> b) w) = length (filter (\<lambda>(t,b). t = s \<and> \<not>b) w)\<close>
+              htrue_w hfalse_w by (by100 linarith)
+    qed
+    have hset_sub: "set ?w' \<subseteq> set w"
+    proof (rule subsetI)
+      fix x assume "x \<in> set ?w'"
+      have "set ?w' \<subseteq> set (take (j-1) (tl w)) \<union> set (drop j (tl w))" by (by100 auto)
+      moreover have "set (take (j-1) (tl w)) \<subseteq> set (tl w)" by (rule set_take_subset)
+      moreover have "set (drop j (tl w)) \<subseteq> set (tl w)" by (rule set_drop_subset)
+      moreover have "set (tl w) \<subseteq> set w"
+        by (cases w) (by100 auto)+
+      ultimately show "x \<in> set w" using \<open>x \<in> set ?w'\<close> by (by100 blast)
+    qed
+    have hphi': "\<forall>s \<in> fst ` set ?w'. \<phi> s \<in> H"
+      using less(2) hset_sub by (by100 blast)
+    have "top1_group_word_product mulH eH invgH (map (\<lambda>(s,b). (\<phi> s, b)) ?w') = eH"
+      using less(1)[OF hlen hphi' hzero'] by (by100 blast)
+    \<comment> \<open>Now show eval\_H(w) = eval\_H(?w') using foldr mul + abelian\_foldr\_mul\_extract.\<close>
+    \<comment> \<open>The approach: via word\_product\_as\_foldr, work at the foldr mul level.
+       Extract genH(w!0) and genH(w!j) from the product — they cancel (inverse pair).
+       The remaining product = eval\_H(?w').\<close>
+    \<comment> \<open>Apply word\_product\_cancel\_matching\_pair on the \<phi>-mapped word.\<close>
+    let ?mw = "map (\<lambda>(s,b). (\<phi> s, b)) w"
+    have hmw_G: "\<forall>i<length ?mw. fst (?mw ! i) \<in> H"
+    proof (intro allI impI)
+      fix i assume "i < length ?mw"
+      hence hi: "i < length w" by (by100 simp)
+      obtain si bi where hwi: "w ! i = (si, bi)" by (cases "w ! i") (by100 blast)
+      have "si \<in> fst ` set w" using hi hwi nth_mem by (by100 force)
+      hence "\<phi> si \<in> H" using less(2) by (by100 blast)
+      thus "fst (?mw ! i) \<in> H" using hi hwi by (by100 simp)
+    qed
+    have hmw_0: "?mw ! 0 = (\<phi> s0, b0)" using h0_len hfirst by (by100 simp)
+    have hmw_j: "?mw ! j = (\<phi> s0, \<not>b0)" using hj hwj by (by100 simp)
+    have hmw_jlen: "j < length ?mw" using hj by (by100 simp)
+    have "top1_group_word_product mulH eH invgH ?mw
+        = top1_group_word_product mulH eH invgH (tl (take j ?mw) @ drop (Suc j) ?mw)"
+      apply (rule word_product_cancel_matching_pair[where s="\<phi> s0" and b=b0])
+      apply (rule hH)
+      apply (rule hmw_G)
+      apply (rule hmw_0)
+      apply (rule hj0)
+      apply (rule hmw_jlen)
+      apply (rule hmw_j)
+      done
+    \<comment> \<open>And tl(take j ?mw) @ drop(Suc j) ?mw = map \<phi> ?w'.\<close>
+    moreover have "tl (take j ?mw) @ drop (Suc j) ?mw = map (\<lambda>(s,b). (\<phi> s, b)) ?w'"
+      by (rule tl_take_drop_map_pair[OF hj0])
+    ultimately have "top1_group_word_product mulH eH invgH (map (\<lambda>(s,b). (\<phi> s, b)) w)
+        = top1_group_word_product mulH eH invgH (map (\<lambda>(s,b). (\<phi> s, b)) ?w')"
+      by (by100 simp)
+    thus ?thesis using \<open>top1_group_word_product mulH eH invgH (map (\<lambda>(s,b). (\<phi> s, b)) ?w') = eH\<close>
+      by (by100 simp)
+  qed
+qed
+
+text \<open>Helper: every element of the generated subgroup has a word representation.\<close>
+lemma subgroup_generated_word_rep:
+  assumes hG: "top1_is_group_on G mul e invg"
+      and hS: "X \<subseteq> G"
+      and hg: "g \<in> top1_subgroup_generated_on G mul e invg X"
+  shows "\<exists>ws. (\<forall>i<length ws. fst (ws ! i) \<in> X) \<and> g = top1_group_word_product mul e invg ws"
+proof -
+  let ?W = "{g. \<exists>ws. (\<forall>i<length ws. fst (ws ! i) \<in> X) \<and> g = top1_group_word_product mul e invg ws}"
+  have hW_sub: "?W \<subseteq> G"
+  proof (rule subsetI)
+    fix g assume "g \<in> ?W"
+    then obtain ws where hws: "\<forall>i<length ws. fst (ws!i) \<in> X"
+        and hg: "g = top1_group_word_product mul e invg ws" by (by100 blast)
+    have "\<forall>i<length ws. fst (ws!i) \<in> G" using hws hS by (by100 blast)
+    thus "g \<in> G" using hg word_product_in_group[OF hG] by (by100 blast)
+  qed
+  have hX_sub: "X \<subseteq> ?W"
+  proof (rule subsetI)
+    fix x assume hx: "x \<in> X"
+    have "x \<in> G" using hx hS by (by100 blast)
+    hence "x = top1_group_word_product mul e invg [(x, True)]"
+      using hG unfolding top1_is_group_on_def by (by100 simp)
+    moreover have "\<forall>i<length [(x, True)]. fst ([(x, True)] ! i) \<in> X"
+      using hx by (by100 auto)
+    ultimately show "x \<in> ?W" by (by100 blast)
+  qed
+  have hW_grp: "top1_is_group_on ?W mul e invg"
+  proof -
+    have he: "e \<in> ?W"
+    proof -
+      let ?ws = "[]::('a \<times> bool) list"
+      have "(\<forall>i<length ?ws. fst (?ws ! i) \<in> X) \<and> e = top1_group_word_product mul e invg ?ws"
+        by (by100 simp)
+      thus ?thesis by (by100 blast)
+    qed
+    have hmul: "\<forall>a\<in>?W. \<forall>b\<in>?W. mul a b \<in> ?W"
+    proof (intro ballI)
+      fix a b assume "a \<in> ?W" "b \<in> ?W"
+      then obtain ws1 ws2 where hw1: "\<forall>i<length ws1. fst(ws1!i) \<in> X"
+          and ha: "a = top1_group_word_product mul e invg ws1"
+          and hw2: "\<forall>i<length ws2. fst(ws2!i) \<in> X"
+          and hb: "b = top1_group_word_product mul e invg ws2" by (by100 blast)
+      have hw1G: "\<forall>i<length ws1. fst(ws1!i) \<in> G" using hw1 hS by (by100 blast)
+      have hw2G: "\<forall>i<length ws2. fst(ws2!i) \<in> G" using hw2 hS by (by100 blast)
+      have "mul a b = top1_group_word_product mul e invg (ws1 @ ws2)"
+        using ha hb word_product_append[OF hG hw1G hw2G] by (by100 simp)
+      moreover have "\<forall>i<length (ws1 @ ws2). fst((ws1 @ ws2)!i) \<in> X"
+      proof (intro allI impI)
+        fix i assume hi: "i < length (ws1 @ ws2)"
+        show "fst ((ws1 @ ws2) ! i) \<in> X"
+        proof (cases "i < length ws1")
+          case True
+          hence "\<not> i < length ws1 = False" by (by100 simp)
+          have "(ws1 @ ws2) ! i = ws1 ! i"
+            apply (simp only: nth_append)
+            using True by (by100 simp)
+          thus ?thesis using hw1 True by (by100 simp)
+        next
+          case False
+          hence "\<not> i < length ws1" by (by100 simp)
+          hence "(ws1 @ ws2) ! i = ws2 ! (i - length ws1)"
+            apply (simp only: nth_append if_False)
+            done
+          moreover have "i - length ws1 < length ws2" using hi False by (by100 simp)
+          ultimately show ?thesis using hw2 by (by100 force)
+        qed
+      qed
+      ultimately show "mul a b \<in> ?W" by (by100 blast)
+    qed
+    have hinv: "\<forall>a\<in>?W. invg a \<in> ?W"
+    proof (intro ballI)
+      fix a assume "a \<in> ?W"
+      then obtain ws where hws: "\<forall>i<length ws. fst(ws!i) \<in> X"
+          and ha: "a = top1_group_word_product mul e invg ws" by (by100 auto)
+      have hwsG: "\<forall>i<length ws. fst(ws!i) \<in> G" using hws hS by (by100 blast)
+      let ?ws' = "map (\<lambda>(x,b). (x, \<not>b)) (rev ws)"
+      have "invg a = top1_group_word_product mul e invg ?ws'"
+        using ha word_product_rev_inv[OF hG hwsG] by (by100 simp)
+      moreover have "\<forall>i<length ?ws'. fst(?ws'!i) \<in> X"
+      proof (intro allI impI)
+        fix i assume hi: "i < length ?ws'"
+        hence hi2: "i < length ws" using hi by (by100 simp)
+        have hidx: "length ws - 1 - i < length ws" using hi2 by (by100 simp)
+        have "?ws'!i = (\<lambda>(x,b). (x, \<not>b)) (rev ws ! i)" using hi2 by (by100 simp)
+        have "rev ws ! i = ws ! (length ws - 1 - i)" using rev_nth hi2 by (by100 simp)
+        obtain xk bk where hwk: "ws ! (length ws - 1 - i) = (xk, bk)"
+          by (cases "ws ! (length ws - 1 - i)") (by100 blast)
+        have "fst (?ws' ! i) = xk"
+          using \<open>?ws' ! i = (\<lambda>(x,b). (x, \<not>b)) (rev ws ! i)\<close>
+                \<open>rev ws ! i = ws ! (length ws - 1 - i)\<close> hwk by (by100 simp)
+        moreover have "fst (ws ! (length ws - 1 - i)) = xk" using hwk by (by100 simp)
+        ultimately have "fst (?ws' ! i) = fst (ws ! (length ws - 1 - i))" by (by100 simp)
+        thus "fst (?ws' ! i) \<in> X" using hws hidx by (by100 simp)
+      qed
+      ultimately show "invg a \<in> ?W" by (by100 blast)
+    qed
+    have hG_assoc: "\<forall>x\<in>G. \<forall>y\<in>G. \<forall>z\<in>G. mul (mul x y) z = mul x (mul y z)"
+      using hG unfolding top1_is_group_on_def by (by100 blast)
+    have hG_id: "\<forall>x\<in>G. mul e x = x \<and> mul x e = x"
+      using hG unfolding top1_is_group_on_def by (by100 blast)
+    have hG_inv: "\<forall>x\<in>G. mul (invg x) x = e \<and> mul x (invg x) = e"
+      using hG unfolding top1_is_group_on_def by (by100 blast)
+    have hassoc: "\<forall>x\<in>?W. \<forall>y\<in>?W. \<forall>z\<in>?W. mul (mul x y) z = mul x (mul y z)"
+      using hW_sub hG_assoc by (by5000 blast)
+    have hid: "\<forall>x\<in>?W. mul e x = x \<and> mul x e = x"
+      using hW_sub hG_id by (by100 blast)
+    have hinverse: "\<forall>x\<in>?W. mul (invg x) x = e \<and> mul x (invg x) = e"
+      using hW_sub hG_inv by (by100 blast)
+    have hmul_closed: "\<forall>x\<in>?W. \<forall>y\<in>?W. mul x y \<in> ?W" using hmul by (by100 blast)
+    have hinv_closed: "\<forall>x\<in>?W. invg x \<in> ?W" using hinv by (by100 blast)
+    show ?thesis unfolding top1_is_group_on_def
+      using he hmul_closed hinv_closed hassoc hid hinverse by (by100 blast)
+  qed
+  have "top1_subgroup_generated_on G mul e invg X \<subseteq> ?W"
+    by (rule subgroup_generated_minimal[OF hX_sub hW_sub hW_grp])
+  thus ?thesis using hg by (by100 blast)
+qed
+
+text \<open>Abelian permutation invariance for distinct lists: two distinct lists with the
+  same set produce the same foldr mul product in an abelian group.\<close>
+lemma abelian_foldr_perm_distinct:
+  assumes hG: "top1_is_abelian_group_on G mul e invg"
+      and hxs: "set xs \<subseteq> G" and hys: "set ys \<subseteq> G"
+      and hdx: "distinct xs" and hdy: "distinct ys"
+      and hset: "set xs = set ys"
+  shows "foldr mul xs e = foldr mul ys e"
+  using assms(2-6)
+proof (induction xs arbitrary: ys)
+  case Nil thus ?case by (by100 simp)
+next
+  case (Cons a rest)
+  have ha_G: "a \<in> G" using Cons(2) by (by100 simp)
+  have hrest_G: "set rest \<subseteq> G" using Cons(2) by (by100 simp)
+  have hdrest: "distinct rest" using Cons(4) by (by100 simp)
+  have ha_ys: "a \<in> set ys"
+  proof -
+    have "a \<in> set (a # rest)" by (by100 simp)
+    thus ?thesis using Cons(6) by (by5000 blast)
+  qed
+  then obtain j where hj: "j < length ys" and hyj: "ys ! j = a"
+    using in_set_conv_nth by (by100 metis)
+  have ha_not_rest: "a \<notin> set rest" using Cons(4) by (by100 simp)
+  \<comment> \<open>Decompose ys at position j: ys = take j ys @ [a] @ drop (Suc j) ys.\<close>
+  let ?ys' = "take j ys @ drop (Suc j) ys"
+  have hys_decomp: "ys = take j ys @ [a] @ drop (Suc j) ys"
+    using id_take_nth_drop[OF hj] hyj by (by100 simp)
+  \<comment> \<open>By abelian\_foldr\_mul\_extract, foldr mul ys e = mul a (foldr mul ?ys' e).\<close>
+  have htake_G: "\<forall>i<length (take j ys). (take j ys) ! i \<in> G"
+  proof (intro allI impI)
+    fix i assume hi: "i < length (take j ys)"
+    have "take j ys ! i \<in> set (take j ys)" using hi nth_mem by (by100 blast)
+    moreover have "set (take j ys) \<subseteq> set ys" by (rule set_take_subset)
+    ultimately show "(take j ys) ! i \<in> G" using Cons(3) by (by100 blast)
+  qed
+  have hdrop_G: "\<forall>i<length (drop (Suc j) ys). (drop (Suc j) ys) ! i \<in> G"
+  proof (intro allI impI)
+    fix i assume hi: "i < length (drop (Suc j) ys)"
+    have "drop (Suc j) ys ! i \<in> set (drop (Suc j) ys)" using hi nth_mem by (by100 blast)
+    moreover have "set (drop (Suc j) ys) \<subseteq> set ys" by (rule set_drop_subset)
+    ultimately show "(drop (Suc j) ys) ! i \<in> G" using Cons(3) by (by100 blast)
+  qed
+  have "foldr mul ys e = foldr mul (take j ys @ [a] @ drop (Suc j) ys) e"
+    using hys_decomp by (by100 simp)
+  also have "\<dots> = mul a (foldr mul ?ys' e)"
+    by (rule abelian_foldr_mul_extract[OF hG htake_G ha_G hdrop_G])
+  finally have hys_eq: "foldr mul ys e = mul a (foldr mul ?ys' e)" .
+  \<comment> \<open>xs side: foldr mul (a # rest) e = mul a (foldr mul rest e).\<close>
+  have hxs_eq: "foldr mul (a # rest) e = mul a (foldr mul rest e)" by (by100 simp)
+  \<comment> \<open>set rest = set ?ys' and distinct ?ys', all in G.\<close>
+  have hys'_set: "set ?ys' = set ys - {a}"
+  proof -
+    have hdecomp: "set ys = set (take j ys @ [a] @ drop (Suc j) ys)"
+      using hys_decomp by (by100 simp)
+    hence "set ys = set (take j ys) \<union> {a} \<union> set (drop (Suc j) ys)" by (by5000 simp)
+    moreover have "a \<notin> set (take j ys)"
+    proof -
+      from Cons(5) hys_decomp have "distinct (take j ys @ [a] @ drop (Suc j) ys)"
+        by (by100 simp)
+      thus ?thesis by (by5000 simp)
+    qed
+    moreover have "a \<notin> set (drop (Suc j) ys)"
+    proof -
+      from Cons(5) hys_decomp have "distinct (take j ys @ [a] @ drop (Suc j) ys)"
+        by (by100 simp)
+      thus ?thesis by (by5000 simp)
+    qed
+    moreover have "set ?ys' = set (take j ys) \<union> set (drop (Suc j) ys)" by (by5000 simp)
+    ultimately show ?thesis by (by5000 blast)
+  qed
+  have hset_eq: "set rest = set ?ys'"
+  proof -
+    have "set (a # rest) = set ys" using Cons(6) .
+    hence "insert a (set rest) = set ys" by (by100 simp)
+    thus ?thesis using ha_not_rest hys'_set by (by5000 auto)
+  qed
+  have hdy': "distinct ?ys'"
+  proof -
+    from Cons(5) hys_decomp have "distinct (take j ys @ [a] @ drop (Suc j) ys)"
+      by (by100 simp)
+    hence "distinct (take j ys)" and "distinct (drop (Suc j) ys)"
+        and "set (take j ys) \<inter> set (drop (Suc j) ys) = {}"
+      by (by5000 simp)+
+    thus ?thesis by (by5000 simp)
+  qed
+  have hys'_G: "set ?ys' \<subseteq> G"
+    using hset_eq hrest_G by (by100 simp)
+  \<comment> \<open>By IH: foldr mul rest e = foldr mul ?ys' e.\<close>
+  have "foldr mul rest e = foldr mul ?ys' e"
+    by (rule Cons(1)[OF hrest_G hys'_G hdrest hdy' hset_eq])
+  \<comment> \<open>Combine: mul a (foldr mul rest e) = mul a (foldr mul ?ys' e).\<close>
+  thus ?case using hxs_eq hys_eq by (by100 simp)
+qed
+
+text \<open>Free abelian word kernel: if a word evaluates to e in a free abelian group,
+  then it evaluates to eH in any abelian group H.
+  This delegates to free\_abelian\_word\_kernel\_v2 which is placed after word\_product infrastructure.\<close>
+lemma free_abelian_word_kernel:
+  fixes w :: "('s \<times> bool) list"
+  assumes hfree: "top1_is_free_abelian_group_full_on G mul e invg \<iota> S"
+      and hH: "top1_is_abelian_group_on H mulH eH invgH"
+      and hphi: "\<forall>s\<in>S. \<phi> s \<in> H"
+      and hws: "\<forall>s \<in> fst ` set w. s \<in> S"
+      and heval: "top1_group_word_product mul e invg (map (\<lambda>(s,b). (\<iota> s, b)) w) = e"
+  shows "top1_group_word_product mulH eH invgH (map (\<lambda>(s,b). (\<phi> s, b)) w) = eH"
+proof -
+  have hG_grp: "top1_is_group_on G mul e invg"
+    using hfree unfolding top1_is_free_abelian_group_full_on_def
+      top1_is_abelian_group_on_def by (by100 blast)
+  have hG_abel: "top1_is_abelian_group_on G mul e invg"
+    using hfree unfolding top1_is_free_abelian_group_full_on_def by (by100 blast)
+  have hH_grp: "top1_is_group_on H mulH eH invgH"
+    using hH unfolding top1_is_abelian_group_on_def by (by100 blast)
+  have h\<iota>_in: "\<forall>s\<in>S. \<iota> s \<in> G"
+    using hfree unfolding top1_is_free_abelian_group_full_on_def by (by100 blast)
+  \<comment> \<open>By strong induction on length w.
+     If w = [], trivial.
+     If w nonempty, look at w!0 = (s0, b0). Either (s0, \<not>b0) appears in tl w or not.
+     If yes: move it adjacent to w!0 (abelian), cancel the pair, apply IH (shorter word).
+     If no: net coeff of s0 \<noteq> 0, contradicting independence + eval = e.\<close>
+  show ?thesis using hws heval
+  proof (induction "length w" arbitrary: w rule: less_induct)
+    case (less w)
+    show ?case
+    proof (cases "w = []")
+      case True thus ?thesis by (by100 simp)
+    next
+      case False
+      obtain s0 b0 where hfirst: "w ! 0 = (s0, b0)" by (cases "w ! 0") (by100 blast)
+      have hw_ne: "w \<noteq> []" using False by (by100 simp)
+      have h0_len: "0 < length w" using hw_ne by (by100 simp)
+      have hs0_S: "s0 \<in> S"
+        using h0_len hfirst less(2) nth_mem by (by100 fastforce)
+      show ?thesis
+      proof (cases "\<exists>j. j < length w \<and> j > 0 \<and> w ! j = (s0, \<not>b0)")
+        case True
+        then obtain j where hj: "j < length w" and hj0: "j > 0"
+            and hwj: "w ! j = (s0, \<not>b0)" by (by100 blast)
+        \<comment> \<open>Cancel pair at positions 0 and j.\<close>
+        let ?w' = "tl (take j w) @ drop (Suc j) w"
+        \<comment> \<open>Cancel pair at positions 0 and j. Using foldr approach:
+           word\_product\_as\_foldr + abelian\_foldr\_mul\_extract to extract positions 0 and j,
+           then inverse cancellation. Same result in G (eval=e) and H (eval\_H=eH).\<close>
+        have heval_G': "top1_group_word_product mul e invg
+            (map (\<lambda>(s,b). (\<iota> s, b)) ?w') = e"
+        proof -
+          have hG_abel: "top1_is_abelian_group_on G mul e invg"
+            using hfree unfolding top1_is_free_abelian_group_full_on_def by (by100 blast)
+          let ?mw = "map (\<lambda>(s,b). (\<iota> s, b)) w"
+          have h\<iota>_in: "\<forall>s\<in>S. \<iota> s \<in> G"
+            using hfree unfolding top1_is_free_abelian_group_full_on_def by (by100 blast)
+          have hmw_G: "\<forall>i<length ?mw. fst (?mw ! i) \<in> G"
+          proof (intro allI impI)
+            fix i assume "i < length ?mw"
+            hence hi: "i < length w" by (by100 simp)
+            obtain si bi where "w ! i = (si, bi)" by (cases "w ! i") (by100 blast)
+            have "si \<in> fst ` set w" using hi \<open>w ! i = (si, bi)\<close> nth_mem by (by100 force)
+            hence "si \<in> S" using less(2) by (by100 blast)
+            thus "fst (?mw ! i) \<in> G" using h\<iota>_in hi \<open>w ! i = (si, bi)\<close> by (by100 simp)
+          qed
+          have hmw_0: "?mw ! 0 = (\<iota> s0, b0)" using hfirst h0_len by (by100 simp)
+          have hmw_j: "?mw ! j = (\<iota> s0, \<not>b0)" using hwj hj by (by100 simp)
+          have "top1_group_word_product mul e invg ?mw
+              = top1_group_word_product mul e invg (tl (take j ?mw) @ drop (Suc j) ?mw)"
+            apply (rule word_product_cancel_matching_pair[where s="\<iota> s0" and b=b0])
+            apply (rule hG_abel)
+            apply (rule hmw_G)
+            apply (rule hmw_0)
+            apply (rule hj0)
+            apply (simp only: length_map, rule hj)
+            apply (rule hmw_j)
+            done
+          have "tl (take j ?mw) @ drop (Suc j) ?mw
+              = map (\<lambda>(s,b). (\<iota> s, b)) (take (j-1) (tl w) @ drop j (tl w))"
+            by (rule tl_take_drop_map_pair[OF hj0])
+          moreover have "take (j-1) (tl w) @ drop j (tl w) = tl (take j w) @ drop (Suc j) w"
+            using tl_take_drop_eq[OF hj0, symmetric] .
+          ultimately have "tl (take j ?mw) @ drop (Suc j) ?mw = map (\<lambda>(s,b). (\<iota> s, b)) ?w'"
+            by (by100 simp)
+          hence "top1_group_word_product mul e invg ?mw
+              = top1_group_word_product mul e invg (map (\<lambda>(s,b). (\<iota> s, b)) ?w')"
+            using \<open>top1_group_word_product mul e invg ?mw = top1_group_word_product mul e invg (tl (take j ?mw) @ drop (Suc j) ?mw)\<close>
+            by (by100 simp)
+          thus ?thesis using less(3) by (by100 simp)
+        qed
+        have hlen': "length ?w' < length w" using hj by (by100 fastforce)
+        have hset_sub: "set ?w' \<subseteq> set w"
+        proof (rule subsetI)
+          fix x assume "x \<in> set ?w'"
+          have "set ?w' \<subseteq> set (tl (take j w)) \<union> set (drop (j + 1) w)" by (by100 auto)
+          moreover have "set (tl (take j w)) \<subseteq> set (take j w)"
+            by (cases "take j w") (by100 auto)+
+          moreover have "set (take j w) \<subseteq> set w" by (rule set_take_subset)
+          moreover have "set (drop (j + 1) w) \<subseteq> set w" by (rule set_drop_subset)
+          ultimately show "x \<in> set w" using \<open>x \<in> set ?w'\<close> by (by100 blast)
+        qed
+        have hws': "\<forall>s \<in> fst ` set ?w'. s \<in> S"
+          using less(2) hset_sub by (by100 blast)
+        have hIH: "top1_group_word_product mulH eH invgH
+            (map (\<lambda>(s,b). (\<phi> s, b)) ?w') = eH"
+          by (rule less(1)[OF hlen' hws' heval_G'])
+        have "top1_group_word_product mulH eH invgH (map (\<lambda>(s,b). (\<phi> s, b)) w)
+            = top1_group_word_product mulH eH invgH (map (\<lambda>(s,b). (\<phi> s, b)) ?w')"
+        proof -
+          let ?mw = "map (\<lambda>(s,b). (\<phi> s, b)) w"
+          have hmw_H: "\<forall>i<length ?mw. fst (?mw ! i) \<in> H"
+          proof (intro allI impI)
+            fix i assume "i < length ?mw"
+            hence hi: "i < length w" by (by100 simp)
+            obtain si bi where "w ! i = (si, bi)" by (cases "w ! i") (by100 blast)
+            have "si \<in> fst ` set w" using hi \<open>w ! i = (si, bi)\<close> nth_mem by (by100 force)
+            hence "si \<in> S" using less(2) by (by100 blast)
+            thus "fst (?mw ! i) \<in> H" using hphi hi \<open>w ! i = (si, bi)\<close> by (by100 simp)
+          qed
+          have "top1_group_word_product mulH eH invgH ?mw
+              = top1_group_word_product mulH eH invgH (tl (take j ?mw) @ drop (Suc j) ?mw)"
+            apply (rule word_product_cancel_matching_pair[where s="\<phi> s0" and b=b0])
+            apply (rule hH)
+            apply (rule hmw_H)
+            using hfirst h0_len apply (by100 simp)
+            apply (rule hj0)
+            apply (simp only: length_map, rule hj)
+            using hwj hj apply (by100 simp)
+            done
+          have htld: "tl (take j ?mw) @ drop (Suc j) ?mw = map (\<lambda>(s,b). (\<phi> s, b)) ?w'"
+          proof -
+            have "tl (take j ?mw) @ drop (Suc j) ?mw
+                = map (\<lambda>(s,b). (\<phi> s, b)) (take (j-1) (tl w) @ drop j (tl w))"
+              by (rule tl_take_drop_map_pair[OF hj0])
+            moreover have "take (j-1) (tl w) @ drop j (tl w) = tl (take j w) @ drop (Suc j) w"
+              using tl_take_drop_eq[OF hj0, symmetric] .
+            ultimately show ?thesis by (by100 simp)
+          qed
+          show ?thesis
+            using \<open>top1_group_word_product mulH eH invgH ?mw = top1_group_word_product mulH eH invgH (tl (take j ?mw) @ drop (Suc j) ?mw)\<close>
+                  htld by (by100 simp)
+        qed
+        thus ?thesis using hIH by (by100 simp)
+      next
+        case no_pair: False
+        \<comment> \<open>No (s0, \<not>b0) in tl w. Net coeff of s0 \<noteq> 0.
+           By independence, canonical product \<noteq> e, contradicting eval = e.\<close>
+        have "top1_group_word_product mul e invg (map (\<lambda>(s,b). (\<iota> s, b)) w) \<noteq> e"
+          sorry \<comment> \<open>Abelian rearrangement + independence.\<close>
+        thus ?thesis using less(3) by (by100 blast)
+      qed
+    qed
+  qed
+qed
+
+text \<open>Helper: in a free abelian group, if the word product equals e, then the
+  net coefficient for every generator is zero.
+  Proof: apply free\_abelian\_word\_kernel with H = \<int> and indicator map \<phi>(s') = if s'=s then 1 else 0.
+  The word product in \<int> equals count\_True(s) - count\_False(s) = 0, so counts are equal.\<close>
+lemma free_abelian_eval_e_zero_net_coeff:
+  fixes w :: "('s \<times> bool) list"
+  assumes hfree: "top1_is_free_abelian_group_full_on G mul e invg \<iota> S"
+      and hall: "\<forall>s \<in> fst ` set w. s \<in> S"
+      and heval: "top1_group_word_product mul e invg (map (\<lambda>(s,b). (\<iota> s, b)) w) = e"
+  shows "\<forall>s. length (filter (\<lambda>(t,b). t = s \<and> b) w)
+           = length (filter (\<lambda>(t,b). t = s \<and> \<not>b) w)"
+proof -
+  \<comment> \<open>\<int> with (+, 0, uminus) is an abelian group.\<close>
+  have hZ: "top1_is_abelian_group_on (UNIV::int set) (+) (0::int) uminus"
+    unfolding top1_is_abelian_group_on_def top1_is_group_on_def
+    by (by5000 auto)
+  show ?thesis
+  proof (intro allI)
+    fix s :: 's
+    \<comment> \<open>Indicator map: \<phi>(s') = 1 if s'=s, else 0.\<close>
+    define \<phi> :: "'s \<Rightarrow> int" where "\<phi> = (\<lambda>s'. if s' = s then 1 else 0)"
+    have hphi: "\<forall>t\<in>S. \<phi> t \<in> (UNIV::int set)" unfolding \<phi>_def by (by100 simp)
+    \<comment> \<open>By free\_abelian\_word\_kernel, the word evaluates to 0 in \<int>.\<close>
+    have hkernel: "top1_group_word_product (+) (0::int) uminus
+        (map (\<lambda>(s',b). (\<phi> s', b)) w) = 0"
+      using free_abelian_word_kernel[OF hfree hZ hphi hall heval] by (by100 simp)
+    \<comment> \<open>Word product in \<int> = count\_True(s) - count\_False(s), by induction on w.\<close>
+    have hrelate: "top1_group_word_product (+) (0::int) uminus
+        (map (\<lambda>(s',b). (\<phi> s', b)) w)
+      = int (length (filter (\<lambda>(t,c). t = s \<and> c) w))
+        - int (length (filter (\<lambda>(t,c). t = s \<and> \<not>c) w))"
+    proof (induction w)
+      case Nil show ?case by (by100 simp)
+    next
+      case (Cons a rest)
+      obtain s' b' where ha: "a = (s', b')" by (cases a) (by100 blast)
+      show ?case
+      proof (cases b')
+        case True show ?thesis using Cons ha True unfolding \<phi>_def
+          by (cases "s' = s") (by5000 simp)+
+      next
+        case False show ?thesis using Cons ha False unfolding \<phi>_def
+          by (cases "s' = s") (by5000 simp)+
+      qed
+    qed
+    \<comment> \<open>Combine: 0 = count\_True - count\_False implies count\_True = count\_False.\<close>
+    show "length (filter (\<lambda>(t,b). t = s \<and> b) w) = length (filter (\<lambda>(t,b). t = s \<and> \<not>b) w)"
+      using hkernel hrelate by (by100 linarith)
+  qed
+qed
+
+text \<open>Lemma 67.7 (extension property): free abelian group G with basis S has the universal
+  property: for any abelian group H and map \<phi>: S \<rightarrow> H, there exists a unique homomorphism
+  \<psi>: G \<rightarrow> H with \<psi> \<circ> \<iota> = \<phi> on S.\<close>
+lemma Lemma_67_7_free_abelian_extension:
+  fixes G :: "'g set" and mul :: "'g \<Rightarrow> 'g \<Rightarrow> 'g"
+    and e :: 'g and invg :: "'g \<Rightarrow> 'g"
+    and \<iota> :: "'s \<Rightarrow> 'g" and S :: "'s set"
+    and H :: "'h set" and mulH :: "'h \<Rightarrow> 'h \<Rightarrow> 'h"
+    and eH :: 'h and invgH :: "'h \<Rightarrow> 'h"
+    and \<phi> :: "'s \<Rightarrow> 'h"
+  assumes hfree: "top1_is_free_abelian_group_full_on G mul e invg \<iota> S"
+      and hH: "top1_is_abelian_group_on H mulH eH invgH"
+      and hphi: "\<forall>s\<in>S. \<phi> s \<in> H"
+  shows "\<exists>\<psi>. top1_group_hom_on G mul H mulH \<psi>
+    \<and> (\<forall>s\<in>S. \<psi> (\<iota> s) = \<phi> s)"
+proof -
+  have hG_grp: "top1_is_group_on G mul e invg"
+    using hfree unfolding top1_is_free_abelian_group_full_on_def
+      top1_is_abelian_group_on_def by (by100 blast)
+  have hG_abel: "top1_is_abelian_group_on G mul e invg"
+    using hfree unfolding top1_is_free_abelian_group_full_on_def by (by100 blast)
+  have h\<iota>_in: "\<forall>s\<in>S. \<iota> s \<in> G"
+    using hfree unfolding top1_is_free_abelian_group_full_on_def by (by100 blast)
+  have hG_gen: "G = top1_subgroup_generated_on G mul e invg (\<iota> ` S)"
+    using hfree unfolding top1_is_free_abelian_group_full_on_def by (by100 blast)
+  have hH_grp: "top1_is_group_on H mulH eH invgH"
+    using hH unfolding top1_is_abelian_group_on_def by (by100 blast)
+  \<comment> \<open>For each g \<in> G, pick a word over S and evaluate in H.
+     Well-definedness: if w1 and w2 both represent g, then w1 @ flip\_rev(w2)
+     evaluates to e in G. By free\_abelian\_word\_kernel, it evaluates to eH in H.
+     So eval\_H(w1) = eval\_H(w2).\<close>
+  \<comment> \<open>Step 1: word representations exist (using subgroup\_generated\_word\_rep).\<close>
+  \<comment> \<open>Step 2: define \<psi> via SOME word.\<close>
+  let ?eval_G = "\<lambda>ws. top1_group_word_product mul e invg (map (\<lambda>(s,b). (\<iota> s, b)) ws)"
+  let ?eval_H = "\<lambda>ws. top1_group_word_product mulH eH invgH (map (\<lambda>(s,b). (\<phi> s, b)) ws)"
+  let ?good = "\<lambda>ws g. (\<forall>i<length ws. fst (ws ! i) \<in> S) \<and> ?eval_G ws = g"
+  \<comment> \<open>Every g \<in> G has a good word.\<close>
+  have hword_exists: "\<forall>g\<in>G. \<exists>ws. ?good ws g"
+  proof
+    fix g assume "g \<in> G"
+    hence "g \<in> top1_subgroup_generated_on G mul e invg (\<iota> ` S)"
+      using hG_gen by (by100 simp)
+    have h\<iota>S_sub: "\<iota> ` S \<subseteq> G" using h\<iota>_in by (by100 blast)
+    obtain ws where hws: "\<forall>i<length ws. fst (ws ! i) \<in> \<iota> ` S"
+        and hg: "g = top1_group_word_product mul e invg ws"
+      using subgroup_generated_word_rep[OF hG_grp h\<iota>S_sub \<open>g \<in> top1_subgroup_generated_on G mul e invg (\<iota> ` S)\<close>]
+      by (by100 blast)
+    \<comment> \<open>Convert from words over \<iota>(S) to words over S using inv\_into.\<close>
+    let ?ws' = "map (\<lambda>(x,b). (inv_into S \<iota> x, b)) ws"
+    have hws'_S: "\<forall>i<length ?ws'. fst (?ws' ! i) \<in> S"
+    proof (intro allI impI)
+      fix i assume hi: "i < length ?ws'"
+      hence hi': "i < length ws" by (by100 simp)
+      obtain xi bi where hwi: "ws ! i = (xi, bi)" by (cases "ws ! i") (by100 blast)
+      have hxi_img: "xi \<in> \<iota> ` S" using hws hi' hwi by (by100 force)
+      hence "inv_into S \<iota> xi \<in> S" by (rule inv_into_into)
+      moreover have "?ws' ! i = (inv_into S \<iota> xi, bi)" using hi' hwi by (by100 simp)
+      ultimately show "fst (?ws' ! i) \<in> S" by (by100 simp)
+    qed
+    have hmap_back: "map (\<lambda>(s,b). (\<iota> s, b)) ?ws' = ws"
+    proof (rule nth_equalityI)
+      show "length (map (\<lambda>(s,b). (\<iota> s, b)) ?ws') = length ws" by (by100 fastforce)
+    next
+      fix i assume "i < length (map (\<lambda>(s,b). (\<iota> s, b)) ?ws')"
+      hence hi: "i < length ws" by (by100 auto)
+      obtain xi bi where hwi: "ws ! i = (xi, bi)" by (cases "ws ! i") (by100 fastforce)
+      have hxi_img: "xi \<in> \<iota> ` S" using hws hi hwi by (by100 force)
+      have "map (\<lambda>(s,b). (\<iota> s, b)) ?ws' ! i = (\<iota> (inv_into S \<iota> xi), bi)"
+        using hi hwi by (by100 simp)
+      also have "\<iota> (inv_into S \<iota> xi) = xi"
+        by (rule f_inv_into_f[OF hxi_img])
+      finally show "map (\<lambda>(s,b). (\<iota> s, b)) ?ws' ! i = ws ! i" using hwi by (by100 simp)
+    qed
+    have hws'_eval: "?eval_G ?ws' = g" using hmap_back hg by (by100 simp)
+    have "?good ?ws' g" using hws'_S hws'_eval by (by100 blast)
+    thus "\<exists>ws. ?good ws g" by (by100 blast)
+  qed
+  \<comment> \<open>Well-definedness: if ?good ws1 g and ?good ws2 g, then ?eval\_H ws1 = ?eval\_H ws2.\<close>
+  have hwell_def: "\<forall>g\<in>G. \<forall>ws1 ws2. ?good ws1 g \<longrightarrow> ?good ws2 g \<longrightarrow> ?eval_H ws1 = ?eval_H ws2"
+  proof (intro ballI allI impI)
+    fix g ws1 ws2
+    assume hg: "g \<in> G" and hgood1: "?good ws1 g" and hgood2: "?good ws2 g"
+    have hS1: "\<forall>i<length ws1. fst (ws1 ! i) \<in> S" using hgood1 by (by100 blast)
+    have hS2: "\<forall>i<length ws2. fst (ws2 ! i) \<in> S" using hgood2 by (by100 blast)
+    have heval1: "?eval_G ws1 = g" using hgood1 by (by100 blast)
+    have heval2: "?eval_G ws2 = g" using hgood2 by (by100 blast)
+    \<comment> \<open>ws1 @ rev\_flip(ws2) evaluates to e in G.\<close>
+    let ?ws2_inv = "map (\<lambda>(s,b). (s, \<not>b)) (rev ws2)"
+    \<comment> \<open>Mapped words for G.\<close>
+    let ?mws1 = "map (\<lambda>(s,b). (\<iota> s, b)) ws1"
+    let ?mws2 = "map (\<lambda>(s,b). (\<iota> s, b)) ws2"
+    let ?mws2_inv = "map (\<lambda>(s,b). (\<iota> s, b)) ?ws2_inv"
+    have hmws1_G: "\<forall>i<length ?mws1. fst (?mws1 ! i) \<in> G"
+    proof (intro allI impI)
+      fix i assume "i < length ?mws1"
+      hence hi: "i < length ws1" by (by100 simp)
+      obtain si bi where "ws1 ! i = (si, bi)" by (cases "ws1 ! i") (by100 blast)
+      hence "si \<in> S" using hS1 hi by (by100 force)
+      thus "fst (?mws1 ! i) \<in> G" using h\<iota>_in hi \<open>ws1 ! i = (si, bi)\<close> by (by100 simp)
+    qed
+    have hmws2_G: "\<forall>i<length ?mws2. fst (?mws2 ! i) \<in> G"
+    proof (intro allI impI)
+      fix i assume "i < length ?mws2"
+      hence hi: "i < length ws2" by (by100 simp)
+      obtain si bi where "ws2 ! i = (si, bi)" by (cases "ws2 ! i") (by100 blast)
+      hence "si \<in> S" using hS2 hi by (by100 force)
+      thus "fst (?mws2 ! i) \<in> G" using h\<iota>_in hi \<open>ws2 ! i = (si, bi)\<close> by (by100 simp)
+    qed
+    \<comment> \<open>map (\<lambda>(s,b). (\<iota> s, b)) (map (\<lambda>(s,b). (s,\<not>b)) (rev ws2))
+       = map (\<lambda>(x,b). (x, \<not>b)) (rev ?mws2)\<close>
+    have hflip_comm: "?mws2_inv = map (\<lambda>(x,b). (x, \<not>b)) (rev ?mws2)"
+      by (rule map_pair_fst_flip_rev)
+    have hmws2_inv_G: "\<forall>i<length ?mws2_inv. fst (?mws2_inv ! i) \<in> G"
+      by (rule mapped_word_fst_flip_rev[OF hmws2_G])
+    have heval_concat: "?eval_G (ws1 @ ?ws2_inv) = e"
+    proof -
+      have "map (\<lambda>(s,b). (\<iota> s, b)) (ws1 @ ?ws2_inv) = ?mws1 @ ?mws2_inv"
+        by (by100 simp)
+      hence "?eval_G (ws1 @ ?ws2_inv)
+          = top1_group_word_product mul e invg (?mws1 @ ?mws2_inv)"
+        by (by100 simp)
+      also have "\<dots> = mul (top1_group_word_product mul e invg ?mws1)
+                          (top1_group_word_product mul e invg ?mws2_inv)"
+        by (rule word_product_append[OF hG_grp hmws1_G hmws2_inv_G])
+      also have "top1_group_word_product mul e invg ?mws2_inv
+          = invg (top1_group_word_product mul e invg ?mws2)"
+        using hflip_comm word_product_rev_inv[OF hG_grp hmws2_G] by (by100 simp)
+      also have "mul (top1_group_word_product mul e invg ?mws1)
+                     (invg (top1_group_word_product mul e invg ?mws2))
+                 = mul g (invg g)"
+        using heval1 heval2 by (by100 simp)
+      also have "\<dots> = e"
+      proof -
+        have "g \<in> G" using hg by (by100 blast)
+        thus ?thesis using hG_grp unfolding top1_is_group_on_def by (by100 blast)
+      qed
+      finally show ?thesis .
+    qed
+    have hS_concat: "\<forall>s \<in> fst ` set (ws1 @ ?ws2_inv). s \<in> S"
+    proof (intro ballI)
+      fix s assume "s \<in> fst ` set (ws1 @ ?ws2_inv)"
+      hence "s \<in> fst ` set ws1 \<or> s \<in> fst ` set ?ws2_inv" by (by100 auto)
+      thus "s \<in> S"
+      proof
+        assume "s \<in> fst ` set ws1"
+        then obtain p where "p \<in> set ws1" and "fst p = s" by (by100 blast)
+        then obtain i where "i < length ws1" and "ws1 ! i = p"
+          using in_set_conv_nth by (by100 metis)
+        hence "fst (ws1 ! i) = s" using \<open>fst p = s\<close> by (by100 simp)
+        thus ?thesis using hS1 \<open>i < length ws1\<close> by (by100 blast)
+      next
+        assume "s \<in> fst ` set ?ws2_inv"
+        then obtain p where "p \<in> set ?ws2_inv" and "fst p = s" by (by100 blast)
+        then obtain q where "q \<in> set ws2" and "fst q = s"
+        proof -
+          from \<open>p \<in> set ?ws2_inv\<close> obtain x b where "p = (x, \<not>b)" and "(x, b) \<in> set ws2"
+            by (by100 auto)
+          hence "fst (x, b) = s" using \<open>fst p = s\<close> by (by100 simp)
+          thus ?thesis using that \<open>(x, b) \<in> set ws2\<close> by (by100 blast)
+        qed
+        then obtain i where "i < length ws2" and "ws2 ! i = q"
+          using in_set_conv_nth by (by100 metis)
+        hence "fst (ws2 ! i) = s" using \<open>fst q = s\<close> by (by100 simp)
+        thus ?thesis using hS2 \<open>i < length ws2\<close> by (by100 blast)
+      qed
+    qed
+    have hevalH_eH: "?eval_H (ws1 @ ?ws2_inv) = eH"
+      by (rule free_abelian_word_kernel[OF hfree hH hphi hS_concat heval_concat])
+    \<comment> \<open>Decompose hevalH\_eH: eval\_H(ws1 @ rev\_flip ws2) = mulH(eval\_H ws1, invgH(eval\_H ws2)) = eH.
+       Then eval\_H ws1 = eval\_H ws2 by group cancellation.\<close>
+    \<comment> \<open>Decompose eval\_H(ws1 @ flip\_rev ws2) into mulH(eval\_H ws1, invgH(eval\_H ws2)).\<close>
+    have hmH1: "\<forall>i<length (map (\<lambda>(s,b). (\<phi> s, b)) ws1). fst (map (\<lambda>(s,b). (\<phi> s, b)) ws1 ! i) \<in> H"
+    proof (intro allI impI)
+      fix i assume "i < length (map (\<lambda>(s,b). (\<phi> s, b)) ws1)"
+      hence hi: "i < length ws1" by (by100 simp)
+      obtain si bi where "ws1 ! i = (si, bi)" by (cases "ws1 ! i") (by100 blast)
+      have "si \<in> S" using hS1 hi \<open>ws1 ! i = (si, bi)\<close> by (by100 force)
+      thus "fst (map (\<lambda>(s,b). (\<phi> s, b)) ws1 ! i) \<in> H" using hphi hi \<open>ws1 ! i = (si, bi)\<close> by (by100 simp)
+    qed
+    have hmH2: "\<forall>i<length (map (\<lambda>(s,b). (\<phi> s, b)) ws2). fst (map (\<lambda>(s,b). (\<phi> s, b)) ws2 ! i) \<in> H"
+    proof (intro allI impI)
+      fix i assume "i < length (map (\<lambda>(s,b). (\<phi> s, b)) ws2)"
+      hence hi: "i < length ws2" by (by100 simp)
+      obtain si bi where "ws2 ! i = (si, bi)" by (cases "ws2 ! i") (by100 blast)
+      have "si \<in> S" using hS2 hi \<open>ws2 ! i = (si, bi)\<close> by (by100 force)
+      thus "fst (map (\<lambda>(s,b). (\<phi> s, b)) ws2 ! i) \<in> H" using hphi hi \<open>ws2 ! i = (si, bi)\<close> by (by100 simp)
+    qed
+    \<comment> \<open>eval\_H(ws1 @ flip\_rev ws2) = mulH(eval\_H ws1, eval\_H(flip\_rev ws2)).\<close>
+    have hflip_H: "map (\<lambda>(s,b). (\<phi> s, b)) ?ws2_inv = map (\<lambda>(x,b). (x, \<not>b)) (rev (map (\<lambda>(s,b). (\<phi> s, b)) ws2))"
+      by (rule map_pair_fst_flip_rev)
+    have hmH2_inv: "\<forall>i<length (map (\<lambda>(s,b). (\<phi> s, b)) ?ws2_inv). fst (map (\<lambda>(s,b). (\<phi> s, b)) ?ws2_inv ! i) \<in> H"
+      by (rule mapped_word_fst_flip_rev[OF hmH2])
+    have hconcat_H: "?eval_H (ws1 @ ?ws2_inv) = mulH (?eval_H ws1) (?eval_H ?ws2_inv)"
+      using word_product_append[OF hH_grp hmH1 hmH2_inv] map_pair_fst_append by (by100 simp)
+    have hrev_H: "?eval_H ?ws2_inv = invgH (?eval_H ws2)"
+      using hflip_H word_product_rev_inv[OF hH_grp hmH2] by (by100 simp)
+    have ha_H: "?eval_H ws1 \<in> H" using word_product_in_group[OF hH_grp hmH1] by (by100 blast)
+    have hb_H: "?eval_H ws2 \<in> H" using word_product_in_group[OF hH_grp hmH2] by (by100 blast)
+    \<comment> \<open>mulH(eval\_H ws1, invgH(eval\_H ws2)) = eH, so eval\_H ws1 = eval\_H ws2.\<close>
+    have "mulH (?eval_H ws1) (invgH (?eval_H ws2)) = eH"
+      using hevalH_eH hconcat_H hrev_H by (by100 simp)
+    hence "?eval_H ws1 = ?eval_H ws2"
+    proof -
+      assume hmul_eH: "mulH (?eval_H ws1) (invgH (?eval_H ws2)) = eH"
+      have hinvb: "invgH (?eval_H ws2) \<in> H"
+        using hH_grp hb_H unfolding top1_is_group_on_def by (by100 blast)
+      have hid_r: "\<forall>x\<in>H. mulH x eH = x"
+        using hH_grp unfolding top1_is_group_on_def by (by100 blast)
+      have hid_l: "\<forall>x\<in>H. mulH eH x = x"
+        using hH_grp unfolding top1_is_group_on_def by (by100 blast)
+      have hinv_l: "mulH (invgH (?eval_H ws2)) (?eval_H ws2) = eH"
+        using hH_grp hb_H unfolding top1_is_group_on_def by (by100 blast)
+      have "mulH (?eval_H ws1) eH = ?eval_H ws1"
+        using hid_r ha_H by (by100 blast)
+      hence "?eval_H ws1 = mulH (?eval_H ws1) (mulH (invgH (?eval_H ws2)) (?eval_H ws2))"
+        using hinv_l by (by100 simp)
+      also have "\<dots> = mulH (mulH (?eval_H ws1) (invgH (?eval_H ws2))) (?eval_H ws2)"
+        using group_assoc[OF hH_grp ha_H hinvb hb_H] by (by100 simp)
+      also have "\<dots> = mulH eH (?eval_H ws2)" using hmul_eH by (by100 simp)
+      also have "\<dots> = ?eval_H ws2" using hid_l hb_H by (by100 blast)
+      finally show ?thesis .
+    qed
+    thus "?eval_H ws1 = ?eval_H ws2" .
+  qed
+  \<comment> \<open>Define \<psi>.\<close>
+  define \<psi> where "\<psi> g = ?eval_H (SOME ws. ?good ws g)" for g
+  \<comment> \<open>Key: \<psi>(g) equals ?eval\_H ws for ANY good ws for g (by well-definedness).\<close>
+  have h\<psi>_val: "\<And>g ws. g \<in> G \<Longrightarrow> ?good ws g \<Longrightarrow> \<psi> g = ?eval_H ws"
+  proof -
+    fix g ws assume hg: "g \<in> G" and hgood: "?good ws g"
+    have "\<exists>ws. ?good ws g" using hword_exists hg by (by100 blast)
+    hence hsome: "?good (SOME ws. ?good ws g) g"
+      by (rule someI_ex)
+    show "\<psi> g = ?eval_H ws" unfolding \<psi>_def
+      using hwell_def[rule_format, OF hg] hsome hgood by (by100 blast)
+  qed
+  \<comment> \<open>\<psi> is a homomorphism.\<close>
+  have h\<psi>_hom: "top1_group_hom_on G mul H mulH \<psi>"
+  proof -
+    have h\<psi>_in: "\<And>g. g \<in> G \<Longrightarrow> \<psi> g \<in> H"
+    proof -
+      fix g assume hg: "g \<in> G"
+      obtain ws where hgood: "?good ws g" using hword_exists hg by (by100 blast)
+      have "\<psi> g = ?eval_H ws" by (rule h\<psi>_val[OF hg hgood])
+      also have "\<dots> \<in> H"
+      proof -
+        have hmw_H: "\<forall>i<length (map (\<lambda>(s,b). (\<phi> s, b)) ws). fst (map (\<lambda>(s,b). (\<phi> s, b)) ws ! i) \<in> H"
+        proof (intro allI impI)
+          fix i assume "i < length (map (\<lambda>(s,b). (\<phi> s, b)) ws)"
+          hence hi: "i < length ws" by (by100 simp)
+          obtain si bi where "ws ! i = (si, bi)" by (cases "ws ! i") (by100 blast)
+          have "si \<in> S" using hgood hi \<open>ws ! i = (si, bi)\<close> by (by100 force)
+          thus "fst (map (\<lambda>(s,b). (\<phi> s, b)) ws ! i) \<in> H"
+            using hphi hi \<open>ws ! i = (si, bi)\<close> by (by100 simp)
+        qed
+        show ?thesis using word_product_in_group[OF hH_grp hmw_H] by (by100 blast)
+      qed
+      finally show "\<psi> g \<in> H" .
+    qed
+    show ?thesis unfolding top1_group_hom_on_def
+    proof (intro conjI ballI)
+      fix g show "g \<in> G \<Longrightarrow> \<psi> g \<in> H" by (rule h\<psi>_in)
+    next
+      fix g1 g2 assume hg1: "g1 \<in> G" and hg2: "g2 \<in> G"
+      obtain ws1 where hw1: "?good ws1 g1" using hword_exists hg1 by (by100 blast)
+      obtain ws2 where hw2: "?good ws2 g2" using hword_exists hg2 by (by100 blast)
+      have hg1g2: "mul g1 g2 \<in> G" using hG_grp hg1 hg2 unfolding top1_is_group_on_def by (by100 blast)
+      \<comment> \<open>ws1 @ ws2 is good for mul g1 g2.\<close>
+      have hS1': "\<forall>i<length ws1. fst (ws1 ! i) \<in> S" using hw1 by (by100 blast)
+      have hS2': "\<forall>i<length ws2. fst (ws2 ! i) \<in> S" using hw2 by (by100 blast)
+      have heval1': "?eval_G ws1 = g1" using hw1 by (by100 blast)
+      have heval2': "?eval_G ws2 = g2" using hw2 by (by100 blast)
+      have hmws1_G: "\<forall>i<length (map (\<lambda>(s,b). (\<iota> s, b)) ws1). fst (map (\<lambda>(s,b). (\<iota> s, b)) ws1 ! i) \<in> G"
+      proof (intro allI impI)
+        fix i assume "i < length (map (\<lambda>(s,b). (\<iota> s, b)) ws1)"
+        hence hi: "i < length ws1" by (by100 simp)
+        obtain si bi where hwi: "ws1 ! i = (si, bi)" by (cases "ws1 ! i") (by100 blast)
+        have "si \<in> S" using hS1' hi hwi by (by100 force)
+        have "map (\<lambda>(s,b). (\<iota> s, b)) ws1 ! i = (\<iota> si, bi)" using hi hwi by (by100 simp)
+        thus "fst (map (\<lambda>(s,b). (\<iota> s, b)) ws1 ! i) \<in> G"
+          using h\<iota>_in \<open>si \<in> S\<close> by (by100 simp)
+      qed
+      have hmws2_G: "\<forall>i<length (map (\<lambda>(s,b). (\<iota> s, b)) ws2). fst (map (\<lambda>(s,b). (\<iota> s, b)) ws2 ! i) \<in> G"
+      proof (intro allI impI)
+        fix i assume "i < length (map (\<lambda>(s,b). (\<iota> s, b)) ws2)"
+        hence hi: "i < length ws2" by (by100 simp)
+        obtain si bi where hwi: "ws2 ! i = (si, bi)" by (cases "ws2 ! i") (by100 blast)
+        have "si \<in> S" using hS2' hi hwi by (by100 force)
+        have "map (\<lambda>(s,b). (\<iota> s, b)) ws2 ! i = (\<iota> si, bi)" using hi hwi by (by100 simp)
+        thus "fst (map (\<lambda>(s,b). (\<iota> s, b)) ws2 ! i) \<in> G"
+          using h\<iota>_in \<open>si \<in> S\<close> by (by100 simp)
+      qed
+      have hgood12: "?good (ws1 @ ws2) (mul g1 g2)"
+      proof (intro conjI)
+        show "\<forall>i<length (ws1 @ ws2). fst ((ws1 @ ws2) ! i) \<in> S"
+          using hS1' hS2' nth_append
+          apply (simp only: nth_append if_True if_False)
+          apply (by100 simp)
+          done
+        show "?eval_G (ws1 @ ws2) = mul g1 g2"
+          using heval1' heval2' word_product_append[OF hG_grp hmws1_G hmws2_G]
+          by (by100 simp)
+      qed
+      have "\<psi> (mul g1 g2) = ?eval_H (ws1 @ ws2)"
+        by (rule h\<psi>_val[OF hg1g2 hgood12])
+      also have "\<dots> = mulH (?eval_H ws1) (?eval_H ws2)"
+      proof -
+        have hmH1: "\<forall>i<length (map (\<lambda>(s,b). (\<phi> s, b)) ws1). fst (map (\<lambda>(s,b). (\<phi> s, b)) ws1 ! i) \<in> H"
+        proof (intro allI impI)
+          fix i assume "i < length (map (\<lambda>(s,b). (\<phi> s, b)) ws1)"
+          hence hi: "i < length ws1" by (by100 simp)
+          obtain si bi where "ws1 ! i = (si, bi)" by (cases "ws1 ! i") (by100 blast)
+          have "si \<in> S" using hS1' hi \<open>ws1 ! i = (si, bi)\<close> by (by100 force)
+          thus "fst (map (\<lambda>(s,b). (\<phi> s, b)) ws1 ! i) \<in> H"
+            using hphi hi \<open>ws1 ! i = (si, bi)\<close> by (by100 simp)
+        qed
+        have hmH2: "\<forall>i<length (map (\<lambda>(s,b). (\<phi> s, b)) ws2). fst (map (\<lambda>(s,b). (\<phi> s, b)) ws2 ! i) \<in> H"
+        proof (intro allI impI)
+          fix i assume "i < length (map (\<lambda>(s,b). (\<phi> s, b)) ws2)"
+          hence hi: "i < length ws2" by (by100 simp)
+          obtain si bi where "ws2 ! i = (si, bi)" by (cases "ws2 ! i") (by100 blast)
+          have "si \<in> S" using hS2' hi \<open>ws2 ! i = (si, bi)\<close> by (by100 force)
+          thus "fst (map (\<lambda>(s,b). (\<phi> s, b)) ws2 ! i) \<in> H"
+            using hphi hi \<open>ws2 ! i = (si, bi)\<close> by (by100 simp)
+        qed
+        have "map (\<lambda>(s,b). (\<phi> s, b)) (ws1 @ ws2) = map (\<lambda>(s,b). (\<phi> s, b)) ws1 @ map (\<lambda>(s,b). (\<phi> s, b)) ws2"
+          by (by100 simp)
+        thus ?thesis
+          using word_product_append[OF hH_grp hmH1 hmH2] by (by100 simp)
+      qed
+      also have "?eval_H ws1 = \<psi> g1" by (rule h\<psi>_val[OF hg1 hw1, symmetric])
+      also have "?eval_H ws2 = \<psi> g2" by (rule h\<psi>_val[OF hg2 hw2, symmetric])
+      finally show "\<psi> (mul g1 g2) = mulH (\<psi> g1) (\<psi> g2)" .
+    qed
+  qed
+  \<comment> \<open>\<psi> extends \<phi>.\<close>
+  have h\<psi>_ext: "\<forall>s\<in>S. \<psi> (\<iota> s) = \<phi> s"
+  proof (intro ballI)
+    fix s assume hs: "s \<in> S"
+    have h\<iota>s_G: "\<iota> s \<in> G" using h\<iota>_in hs by (by100 blast)
+    have hgood_s: "?good [(s, True)] (\<iota> s)"
+    proof (intro conjI)
+      show "\<forall>i<length [(s, True)]. fst ([(s, True)] ! i) \<in> S" using hs by (by100 auto)
+      show "?eval_G [(s, True)] = \<iota> s"
+        using hG_grp h\<iota>s_G unfolding top1_is_group_on_def by (by100 simp)
+    qed
+    have "\<psi> (\<iota> s) = ?eval_H [(s, True)]"
+      by (rule h\<psi>_val[OF h\<iota>s_G hgood_s])
+    also have "?eval_H [(s, True)] = \<phi> s"
+      using hH_grp hphi hs unfolding top1_is_group_on_def by (by100 simp)
+    finally show "\<psi> (\<iota> s) = \<phi> s" .
+  qed
+  show ?thesis using h\<psi>_hom h\<psi>_ext by (by100 blast)
+qed
+
+text \<open>Corollary: coordinate projections exist for free abelian groups.
+  For each s0 \<in> S, there is a homomorphism \<epsilon>: G \<rightarrow> Z with \<epsilon>(\<iota>(s0)) = 1
+  and \<epsilon>(\<iota>(s)) = 0 for s \<noteq> s0.\<close>
+lemma free_abelian_coordinate_projection:
+  fixes G :: "'g set" and mul :: "'g \<Rightarrow> 'g \<Rightarrow> 'g"
+    and e :: 'g and invg :: "'g \<Rightarrow> 'g"
+    and \<iota> :: "'s \<Rightarrow> 'g" and S :: "'s set" and s0 :: 's
+  assumes "top1_is_free_abelian_group_full_on G mul e invg \<iota> S"
+      and "s0 \<in> S"
+  shows "\<exists>\<epsilon>. top1_group_hom_on G mul (UNIV::int set) (+) \<epsilon>
+    \<and> \<epsilon> (\<iota> s0) = 1
+    \<and> (\<forall>s\<in>S. s \<noteq> s0 \<longrightarrow> \<epsilon> (\<iota> s) = 0)"
+proof -
+  have hZ: "top1_is_abelian_group_on (UNIV::int set) (+) (0::int) uminus"
+    unfolding top1_is_abelian_group_on_def top1_is_group_on_def by (by100 auto)
+  let ?\<phi> = "\<lambda>s. if s = s0 then (1::int) else 0"
+  have hphi: "\<forall>s\<in>S. ?\<phi> s \<in> (UNIV::int set)" by (by100 blast)
+  from Lemma_67_7_free_abelian_extension[OF assms(1) hZ hphi]
+  obtain \<psi> where hpsi: "top1_group_hom_on G mul (UNIV::int set) (+) \<psi>"
+    and hpsi_val: "\<forall>s\<in>S. \<psi> (\<iota> s) = ?\<phi> s"
+    by (by100 blast)
+  have "\<psi> (\<iota> s0) = 1" using hpsi_val assms(2) by (by100 simp)
+  moreover have "\<forall>s\<in>S. s \<noteq> s0 \<longrightarrow> \<psi> (\<iota> s) = 0" using hpsi_val by (by100 auto)
+  ultimately show ?thesis using hpsi by (by100 blast)
+qed
+
+text \<open>Key lemma for Theorem 67.8: |G/2G| = 2^|S| for free abelian G on finite basis S.\<close>
+lemma free_abelian_mod2_card:
+  fixes G :: "'g set" and mul :: "'g \<Rightarrow> 'g \<Rightarrow> 'g"
+    and e :: 'g and invg :: "'g \<Rightarrow> 'g"
+    and iota :: "'s \<Rightarrow> 'g" and S :: "'s set"
+  assumes "top1_is_free_abelian_group_full_on G mul e invg iota S"
+      and "finite S"
+  shows "card (top1_quotient_group_carrier_on G mul {mul g g | g. g \<in> G}) = 2 ^ card S"
+proof -
+  \<comment> \<open>Munkres 67.8: G \<cong> Z^S, so G/2G \<cong> (Z/2Z)^S has 2^|S| elements.\<close>
+  \<comment> \<open>Proof by induction on |S|.\<close>
+  show ?thesis using assms
+  proof (induction "card S" arbitrary: S iota)
+    case 0
+    \<comment> \<open>card S = 0 \<Rightarrow> S = {} \<Rightarrow> G = {e}. 2G = {e}. G/2G = {{e}}. |G/2G| = 1 = 2^0.\<close>
+    hence "S = {}" using \<open>finite S\<close> by (by100 simp)
+    hence hS_empty: "S = {}" using \<open>finite S\<close> by (by100 simp)
+    have hG_grp: "top1_is_group_on G mul e invg"
+      using 0(2) unfolding top1_is_free_abelian_group_full_on_def
+        top1_is_abelian_group_on_def by (by100 blast)
+    have hG_gen: "G = top1_subgroup_generated_on G mul e invg (iota ` S)"
+      using 0(2) unfolding top1_is_free_abelian_group_full_on_def by (by100 blast)
+    hence hG_trivial: "G = {e}"
+    proof -
+      have "iota ` S = {}" using hS_empty by (by100 simp)
+      hence "G = top1_subgroup_generated_on G mul e invg {}" using hG_gen by (by100 simp)
+      also have "\<dots> = {e}"
+      proof (rule set_eqI, rule iffI)
+        fix x assume "x \<in> top1_subgroup_generated_on G mul e invg {}"
+        hence hx: "\<And>H. H \<subseteq> G \<Longrightarrow> top1_is_group_on H mul e invg \<Longrightarrow> x \<in> H"
+          unfolding top1_subgroup_generated_on_def by (by100 blast)
+        \<comment> \<open>{e} is a subgroup of G.\<close>
+        have he_G: "e \<in> G" using hG_grp unfolding top1_is_group_on_def by (by100 blast)
+        have "{e} \<subseteq> G" using he_G by (by100 blast)
+        moreover have "top1_is_group_on {e} mul e invg"
+        proof -
+          have hmul_ee: "mul e e = e" using hG_grp he_G unfolding top1_is_group_on_def by (by100 blast)
+          have hinve_G: "invg e \<in> G" using hG_grp he_G unfolding top1_is_group_on_def by (by100 blast)
+          have hinve: "invg e = e"
+          proof -
+            have "mul e (invg e) = invg e" using hG_grp hinve_G unfolding top1_is_group_on_def by (by100 blast)
+            moreover have "mul e (invg e) = e" using hG_grp he_G unfolding top1_is_group_on_def by (by100 blast)
+            ultimately show ?thesis by (by100 simp)
+          qed
+          have "\<forall>x\<in>{e}. x = e" by (by100 blast)
+          thus ?thesis unfolding top1_is_group_on_def
+            using hmul_ee hinve by (by100 force)
+        qed
+        ultimately have "x \<in> {e}" using hx by (by100 blast)
+        thus "x \<in> {e}" .
+      next
+        fix x assume "x \<in> {e}"
+        hence "x = e" by (by100 blast)
+        show "x \<in> top1_subgroup_generated_on G mul e invg {}"
+          unfolding top1_subgroup_generated_on_def
+        proof (rule InterI, clarify)
+          fix H assume "H \<subseteq> G" "top1_is_group_on H mul e invg"
+          thus "x \<in> H" using \<open>x = e\<close> unfolding top1_is_group_on_def by (by100 blast)
+        qed
+      qed
+      finally show ?thesis .
+    qed
+    hence h2G: "{mul g g | g. g \<in> G} = {e}"
+    proof -
+      have "e \<in> G" using hG_grp unfolding top1_is_group_on_def by (by100 blast)
+      have "{mul g g | g. g \<in> G} = {mul e e}" using hG_trivial by (by100 blast)
+      also have "mul e e = e" using hG_grp \<open>e \<in> G\<close> unfolding top1_is_group_on_def by (by100 blast)
+      finally show ?thesis by (by100 blast)
+    qed
+    hence "top1_quotient_group_carrier_on G mul {mul g g | g. g \<in> G} = {{e}}"
+    proof -
+      have "top1_quotient_group_carrier_on G mul {e}
+          = {top1_group_coset_on G mul {e} g | g. g \<in> G}"
+        unfolding top1_quotient_group_carrier_on_def by (by100 blast)
+      also have "\<dots> = {{e}}" using hG_trivial
+      proof -
+        assume hG_e: "G = {e}"
+        have "top1_group_coset_on G mul {e} e = {mul e n | n. n \<in> {e}}"
+          unfolding top1_group_coset_on_def by (by100 blast)
+        also have "\<dots> = {mul e e}" by (by100 blast)
+        also have "\<dots> = {e}"
+        proof -
+          have "e \<in> G" using hG_grp unfolding top1_is_group_on_def by (by100 blast)
+          have "mul e e = e" using hG_grp \<open>e \<in> G\<close> unfolding top1_is_group_on_def by (by100 blast)
+          thus ?thesis by (by100 blast)
+        qed
+        finally have hcoset_e: "top1_group_coset_on G mul {e} e = {e}" .
+        show "{top1_group_coset_on G mul {e} g | g. g \<in> G} = {{e}}"
+          using hG_e hcoset_e by (by100 blast)
+      qed
+      finally show ?thesis using h2G by (by100 simp)
+    qed
+    thus ?case using \<open>S = {}\<close> \<open>finite S\<close> by (by100 simp)
+  next
+    case (Suc n)
+    \<comment> \<open>card S = Suc n. Pick s0 \<in> S, let S' = S - {s0}.
+       G decomposes as "Z-component for s0" × "subgroup generated by S'".
+       G/2G \<cong> (Z/2Z) × (H/2H) where H = \<langle>\<iota>(S')\<rangle>.
+       By IH, |H/2H| = 2^n. So |G/2G| = 2 \<times> 2^n = 2^{n+1}.\<close>
+    \<comment> \<open>Following Munkres 67.8: pick s0 \<in> S, use coordinate projection \<epsilon>_{s0}.\<close>
+    have hfree: "top1_is_free_abelian_group_full_on G mul e invg iota S"
+      using Suc.prems(1) by (by100 blast)
+    have hfin: "finite S" using Suc.prems(2) by (by100 blast)
+    have "card S > 0" using Suc.hyps by (by100 simp)
+    then obtain s0 where hs0: "s0 \<in> S" using card_gt_0_iff hfin by (by100 force)
+    let ?S' = "S - {s0}"
+    have hcard': "card ?S' = n" using Suc.hyps hfin hs0 by (by100 simp)
+    \<comment> \<open>Get coordinate projection \<epsilon>_{s0}: G \<rightarrow> Z.\<close>
+    obtain \<epsilon> where heps: "top1_group_hom_on G mul (UNIV::int set) (+) \<epsilon>"
+        and heps_s0: "\<epsilon> (iota s0) = 1"
+        and heps_other: "\<forall>s\<in>S. s \<noteq> s0 \<longrightarrow> \<epsilon> (iota s) = 0"
+      using free_abelian_coordinate_projection[OF hfree hs0] by (by100 blast)
+    \<comment> \<open>The kernel ker(\<epsilon>) contains \<iota>(S') and is free abelian on S'.
+       G decomposes as Z \<times> ker(\<epsilon>) via g \<mapsto> (\<epsilon>(g), g \<cdot> \<iota>(s0)^{-\<epsilon>(g)}).
+       This gives G/2G \<cong> Z/2Z \<times> ker(\<epsilon>)/2\<cdot>ker(\<epsilon>).
+       |G/2G| = 2 \<times> |ker(\<epsilon>)/2\<cdot>ker(\<epsilon>)| = 2 \<times> 2^n = 2^{n+1}.\<close>
+    thus ?case sorry \<comment> \<open>Decomposition via \<epsilon> + IH on ker(\<epsilon>).\<close>
+  qed
+qed
+
+(** from \<S>67 Theorem 67.8: rank of free abelian group is well-defined.
+    Any two bases of a free abelian group have the same cardinality. **)
+theorem Theorem_67_8_rank_unique:
+  fixes G :: "'g set" and mul :: "'g \<Rightarrow> 'g \<Rightarrow> 'g"
+    and e :: 'g and invg :: "'g \<Rightarrow> 'g"
+    and iota1 :: "'s1 \<Rightarrow> 'g" and S1 :: "'s1 set"
+    and iota2 :: "'s2 \<Rightarrow> 'g" and S2 :: "'s2 set"
+  assumes "top1_is_free_abelian_group_full_on G mul e invg iota1 S1"
+      and "top1_is_free_abelian_group_full_on G mul e invg iota2 S2"
+      and "finite S1" and "finite S2"
+  shows "\<exists>f. bij_betw f S1 S2"
+proof -
+  \<comment> \<open>Munkres 67.8: Tensor with Z/2Z: G/2G is a vector space over Z/2Z of dimension
+     equal to the rank. Dimension of a vector space is unique.
+     Step 1: G \<cong> Z^S1 (free abelian on S1) and G \<cong> Z^S2 (free abelian on S2).
+     Step 2: G/2G \<cong> (Z/2Z)^S1 \<cong> (Z/2Z)^S2.
+     Step 3: Vector space dimension: |S1| = dim (Z/2Z)^S1 = dim (Z/2Z)^S2 = |S2|.
+     Step 4: Hence |S1| = |S2|, i.e. there exists a bijection.\<close>
+  \<comment> \<open>Munkres 67.8: G/2G has cardinality 2^|S| for any basis S.
+     So 2^|S1| = |G/2G| = 2^|S2|, hence |S1| = |S2|.\<close>
+  let ?twoG = "{mul g g | g. g \<in> G}"
+  \<comment> \<open>Step 1: |G/2G| = 2^|S1| and |G/2G| = 2^|S2|.
+     Proof: G \<cong> Z^S_i, so G/2G \<cong> (Z/2Z)^S_i, hence |G/2G| = 2^|S_i|.\<close>
+  have hfinS1: "finite S1" by (rule assms(3))
+  have hfinS2: "finite S2" by (rule assms(4))
+  \<comment> \<open>Helper: for free abelian G on finite basis S, |G/2G| = 2^|S|.\<close>
+  have hcard_helper: "\<And>S iota. top1_is_free_abelian_group_full_on G mul e invg iota S \<Longrightarrow>
+      finite S \<Longrightarrow>
+      card (top1_quotient_group_carrier_on G mul ?twoG) = 2 ^ card S"
+    by (rule free_abelian_mod2_card)
+  have hcard1: "card (top1_quotient_group_carrier_on G mul ?twoG) = 2 ^ card S1"
+    by (rule hcard_helper[OF assms(1) hfinS1])
+  have hcard2: "card (top1_quotient_group_carrier_on G mul ?twoG) = 2 ^ card S2"
+    by (rule hcard_helper[OF assms(2) hfinS2])
+  \<comment> \<open>Step 2: 2^|S1| = 2^|S2| implies |S1| = |S2|.\<close>
+  have "card S1 = card S2"
+  proof -
+    have "2 ^ card S1 = (2::nat) ^ card S2" using hcard1 hcard2 by (by100 simp)
+    thus ?thesis by (by100 simp)
+  qed
+  \<comment> \<open>Step 3: Finite sets of equal cardinality have a bijection.\<close>
+  show ?thesis by (rule finite_same_card_bij[OF hfinS1 hfinS2 \<open>card S1 = card S2\<close>])
 qed
 
 text \<open>Existence part of universal property.\<close>
@@ -7143,6 +8785,51 @@ proof -
     unfolding top1_is_abelianization_of_def
     using h_quot_abelian hG h_hom h_surj h_ker_comm hcoset_e by (by100 blast)
   thus ?thesis by (by100 blast)
+qed
+
+text \<open>Helper: if a group G is presented by generators S with relators R, and
+  all relators are in [F,F] (commutator subgroup) of any free group F on S,
+  then the abelianization of G is free abelian on S.
+  This wraps abelianization\_of\_presented\_group to hide the existential.\<close>
+lemma presented_comm_relator_abelianization:
+  fixes G :: "'g set" and mul :: "'g \<Rightarrow> 'g \<Rightarrow> 'g"
+    and e :: 'g and invg :: "'g \<Rightarrow> 'g"
+    and S :: "'s set" and R :: "('s \<times> bool) list set"
+  assumes hpres: "top1_group_presented_by_on G mul e invg S R"
+      and hcomm: "\<And>(F::'g set) mulF eF invgF \<iota> \<pi>.
+           top1_is_free_group_full_on F mulF eF invgF \<iota> S \<Longrightarrow>
+           top1_group_hom_on F mulF G mul \<pi> \<Longrightarrow>
+           \<pi> ` F = G \<Longrightarrow>
+           top1_group_kernel_on F e \<pi>
+             = top1_normal_subgroup_generated_on F mulF eF invgF
+                 {r. \<exists>w\<in>R. r = top1_group_word_product mulF eF invgF
+                              (map (\<lambda>(s, b). (\<iota> s, b)) w)} \<Longrightarrow>
+           top1_group_kernel_on F e \<pi>
+             \<subseteq> top1_commutator_subgroup_on F mulF eF invgF"
+  shows "\<exists>(H :: 'g set set) mulH eH invgH \<phi> \<iota>H.
+      top1_is_abelianization_of H mulH eH invgH G mul e invg \<phi>
+    \<and> top1_is_free_abelian_group_full_on H mulH eH invgH \<iota>H S"
+proof -
+  have hG_grp: "top1_is_group_on G mul e invg"
+    using hpres unfolding top1_group_presented_by_on_def by (by100 blast)
+  \<comment> \<open>Extract the inner existential from the presentation definition.\<close>
+  \<comment> \<open>Extract the inner existential from the presentation definition.
+     Uses the fact that the definition unfolds to A \<and> (\<exists>...). We extract A and \<exists>... separately.\<close>
+  obtain F mulF eF invgF \<iota> \<pi> where
+      hfree: "top1_is_free_group_full_on F mulF eF invgF \<iota> S"
+      and hpi: "top1_group_hom_on F mulF G mul \<pi>"
+      and hsurj: "\<pi> ` F = G"
+      and hker: "top1_group_kernel_on F e \<pi>
+           = top1_normal_subgroup_generated_on F mulF eF invgF
+               {r. \<exists>w\<in>R. r = top1_group_word_product mulF eF invgF
+                            (map (\<lambda>(s, b). (\<iota> s, b)) w)}"
+    sorry \<comment> \<open>Obtain from hpres[unfolded top1\_group\_presented\_by\_on\_def].
+       6-variable existential extraction; needs explicit exE chain.\<close>
+  have hker_sub: "top1_group_kernel_on F e \<pi>
+      \<subseteq> top1_commutator_subgroup_on F mulF eF invgF"
+    sorry \<comment> \<open>hcomm applied to hfree hpi hsurj hker. Blocked by ι type resolution.\<close>
+  from abelianization_of_presented_group[OF hfree hG_grp hpi hsurj hker_sub]
+  show ?thesis by (by100 blast)
 qed
 
 (** from \<S>75 Theorem 75.3: H_1 of n-fold torus is free abelian of rank 2n.
@@ -14634,6 +16321,28 @@ end
  
   
  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
