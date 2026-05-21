@@ -4667,8 +4667,10 @@ proof -
      decomposes into per-generator powers via abelian\_foldr\_split\_one\_element / remdups\_pow.
      These per-generator powers match the term function applied to the support.
      The ordering is reconciled via abelian\_foldr\_perm\_distinct.\<close>
-  have "foldr mul ?gs e = foldr mul (map ?term ?supp_list) e"
+  \<comment> \<open>Prove the conclusion directly: word\_product \<noteq> e.\<close>
+  show ?thesis
   proof -
+    \<comment> \<open>Step 5: word\_product = canonical\_product.\<close>
     \<comment> \<open>Step 5a: By abelian\_foldr\_remdups\_pow, collapse repeated elements.\<close>
     have hgs_G: "set ?gs \<subseteq> G"
     proof (rule subsetI)
@@ -4752,14 +4754,24 @@ proof -
       by (rule abelian_foldr_map_perm_distinct[OF hG_abel hterm_G hgens_dist hsupp_dist hgens_eq_supp])
     \<comment> \<open>Show: foldr mul (map ?pow\_gs (remdups ?gs)) e = foldr mul (map ?term (remdups (map fst w))) e.
        This requires: pow\_gs(gen(s, b\_s)) = term(s) for each s.\<close>
-    moreover have "foldr mul (map ?pow_gs (remdups ?gs)) e
-        = foldr mul (map ?term (remdups (map fst w))) e"
-      sorry \<comment> \<open>The gen-level collapse matches the coefficient-level terms.
-         pow\_gs(gen(s, b\_s)) = pow(gen(s, b\_s), count) = term(s).\<close>
-    ultimately show ?thesis using hcollapse by (by100 simp)
+    \<comment> \<open>Key: map ?pow\_gs (remdups ?gs) = map ?term (remdups (map fst w)) as lists.
+       Both enumerate per-generator powers in first-occurrence order.
+       Since ?gen is injective on generators (single-polarity), the remdups orderings match.\<close>
+    have hlist_eq: "map ?pow_gs (remdups ?gs) = map ?term (remdups (map fst w))"
+      sorry
+    hence "foldr mul (map ?pow_gs (remdups ?gs)) e
+        = foldr mul (map ?term (remdups (map fst w))) e" by (by100 simp)
+    hence "foldr mul (map ?pow_gs (remdups ?gs)) e = foldr mul (map ?term ?supp_list) e"
+      using \<open>foldr mul (map ?term (remdups (map fst w))) e = foldr mul (map ?term ?supp_list) e\<close>
+      by (by100 simp)
+    hence "foldr mul ?gs e = foldr mul (map ?term ?supp_list) e" using hcollapse by (by100 simp)
+    \<comment> \<open>Step 6: Combine with heval\_foldr and hcanonical\_ne.\<close>
+    hence "top1_group_word_product mul e invg (map (\<lambda>(s,b). (\<iota> s, b)) w) = foldr mul (map ?term ?supp_list) e"
+      using heval_foldr by (by100 simp)
+    hence "top1_group_word_product mul e invg (map (\<lambda>(s,b). (\<iota> s, b)) w) = foldr mul (map ?term ?supp_list) e"
+      using heval_foldr by (by100 simp)
+    thus ?thesis using hcanonical_ne by (by100 simp)
   qed
-  \<comment> \<open>Step 6: Combine.\<close>
-  thus ?thesis using heval_foldr hcanonical_ne by (by100 simp)
 qed
 
 text \<open>Free abelian word kernel: if a word evaluates to e in a free abelian group,
