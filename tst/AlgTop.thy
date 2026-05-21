@@ -4870,7 +4870,46 @@ proof -
             next
               case False \<comment> \<open>Both False: invg(\<iota> s1) = invg(\<iota> s2), so \<iota> s1 = \<iota> s2.\<close>
               hence "invg (\<iota> s1) = invg (\<iota> s2)" using heq h1 h2 hb1 by (by100 simp)
-              hence "\<iota> s1 = \<iota> s2" sorry \<comment> \<open>invg injective (group axiom).\<close>
+              hence "\<iota> s1 = \<iota> s2"
+              proof -
+                assume h: "invg (\<iota> s1) = invg (\<iota> s2)"
+                have h1: "\<iota> s1 \<in> G" using h\<iota>_in hs1 by (by100 blast)
+                have h2: "\<iota> s2 \<in> G" using h\<iota>_in hs2 by (by100 blast)
+                \<comment> \<open>mul(invg(\<iota> s1), \<iota> s1) = e, and invg(\<iota> s1) = invg(\<iota> s2),
+                   so mul(invg(\<iota> s2), \<iota> s1) = e, hence \<iota> s1 = \<iota> s2 by left cancel.\<close>
+                have "mul (invg (\<iota> s2)) (\<iota> s1) = e"
+                proof -
+                  have "mul (invg (\<iota> s1)) (\<iota> s1) = e"
+                    using hG_grp h1 unfolding top1_is_group_on_def by (by100 blast)
+                  thus ?thesis using h by (by100 simp)
+                qed
+                moreover have "mul (invg (\<iota> s2)) (\<iota> s2) = e"
+                  using hG_grp h2 unfolding top1_is_group_on_def by (by100 blast)
+                ultimately have "mul (invg (\<iota> s2)) (\<iota> s1) = mul (invg (\<iota> s2)) (\<iota> s2)"
+                  by (by100 simp)
+                \<comment> \<open>Left-cancel invg(\<iota> s2): mul(c, a) = mul(c, b) \<Longrightarrow> a = b.\<close>
+                have hinvg2: "invg (\<iota> s2) \<in> G"
+                  using hG_grp h2 unfolding top1_is_group_on_def by (by100 blast)
+                have "mul e (\<iota> s1) = mul e (\<iota> s2)"
+                proof -
+                  have hassoc: "\<forall>x\<in>G. \<forall>y\<in>G. \<forall>z\<in>G. mul (mul x y) z = mul x (mul y z)"
+                    using hG_grp unfolding top1_is_group_on_def by (by100 blast)
+                  have "mul (invg (invg (\<iota> s2))) (mul (invg (\<iota> s2)) (\<iota> s1))
+                      = mul (invg (invg (\<iota> s2))) (mul (invg (\<iota> s2)) (\<iota> s2))"
+                    using \<open>mul (invg (\<iota> s2)) (\<iota> s1) = mul (invg (\<iota> s2)) (\<iota> s2)\<close> by (by100 simp)
+                  moreover have "invg (invg (\<iota> s2)) \<in> G"
+                    using hG_grp hinvg2 unfolding top1_is_group_on_def by (by100 blast)
+                  \<comment> \<open>mul(e, \<iota> s1) = \<iota> s1 and mul(e, \<iota> s2) = \<iota> s2.\<close>
+                  ultimately show ?thesis
+                    using hG_grp h1 h2 hinvg2 \<open>invg (invg (\<iota> s2)) \<in> G\<close>
+                    unfolding top1_is_group_on_def by (by5000 metis)
+                qed
+                moreover have "mul e (\<iota> s1) = \<iota> s1"
+                  using hG_grp h1 unfolding top1_is_group_on_def by (by100 blast)
+                moreover have "mul e (\<iota> s2) = \<iota> s2"
+                  using hG_grp h2 unfolding top1_is_group_on_def by (by100 blast)
+                ultimately show "\<iota> s1 = \<iota> s2" by (by100 simp)
+              qed
               thus ?thesis using \<open>\<iota> s1 \<noteq> \<iota> s2\<close> by (by100 blast)
             qed
           qed
