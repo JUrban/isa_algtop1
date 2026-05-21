@@ -4126,6 +4126,114 @@ proof -
   show ?thesis using hsplit hpow by (by100 simp)
 qed
 
+text \<open>In an abelian group, if one element in a list is replaced by mul(a, element),
+  the foldr product is multiplied by a.\<close>
+lemma abelian_foldr_replace_one:
+  assumes hG: "top1_is_abelian_group_on G mul e invg"
+      and hxs: "set xs \<subseteq> G" and hys: "set ys \<subseteq> G"
+      and ha: "a \<in> G"
+      and hlen: "length xs = length ys"
+      and hj: "j < length xs"
+      and hat_j: "xs ! j = mul a (ys ! j)"
+      and hothers: "\<forall>i<length xs. i \<noteq> j \<longrightarrow> xs ! i = ys ! i"
+  shows "foldr mul xs e = mul a (foldr mul ys e)"
+proof -
+  have hG_grp: "top1_is_group_on G mul e invg"
+    using hG unfolding top1_is_abelian_group_on_def by (by100 blast)
+  \<comment> \<open>Decompose xs at position j: xs = take j xs @ [xs!j] @ drop (Suc j) xs.\<close>
+  have hxs_decomp: "xs = take j xs @ [xs ! j] @ drop (Suc j) xs"
+    using id_take_nth_drop[OF hj] by (by100 simp)
+  have hys_decomp: "ys = take j ys @ [ys ! j] @ drop (Suc j) ys"
+    using id_take_nth_drop[OF hj[unfolded hlen]] hlen by (by100 simp)
+  \<comment> \<open>By abelian\_foldr\_mul\_extract on xs:\<close>
+  have htake_xs_G: "\<forall>i<length (take j xs). (take j xs) ! i \<in> G"
+  proof (intro allI impI)
+    fix i assume "i < length (take j xs)"
+    have "(take j xs) ! i \<in> set (take j xs)" using nth_mem \<open>i < length (take j xs)\<close> by (by100 blast)
+    hence "(take j xs) ! i \<in> set xs" using set_take_subset[of j xs] by (by100 blast)
+    thus "(take j xs) ! i \<in> G" using hxs by (by100 blast)
+  qed
+  have hdrop_xs_G: "\<forall>i<length (drop (Suc j) xs). (drop (Suc j) xs) ! i \<in> G"
+  proof (intro allI impI)
+    fix i assume "i < length (drop (Suc j) xs)"
+    have "(drop (Suc j) xs) ! i \<in> set (drop (Suc j) xs)"
+      using nth_mem \<open>i < length (drop (Suc j) xs)\<close> by (by100 blast)
+    hence "(drop (Suc j) xs) ! i \<in> set xs" using set_drop_subset[of "Suc j" xs] by (by100 blast)
+    thus "(drop (Suc j) xs) ! i \<in> G" using hxs by (by100 blast)
+  qed
+  have hxs_j_G: "xs ! j \<in> G"
+  proof -
+    have "xs ! j \<in> set xs" using hj nth_mem by (by100 blast)
+    thus ?thesis using hxs by (by100 blast)
+  qed
+  have hj_ys: "j < length ys" using hj hlen by (by100 simp)
+  have hys_j_G: "ys ! j \<in> G"
+  proof -
+    have "ys ! j \<in> set ys" using hj_ys nth_mem by (by100 blast)
+    thus ?thesis using hys by (by100 blast)
+  qed
+  have hfoldr_xs: "foldr mul xs e = mul (xs ! j) (foldr mul (take j xs @ drop (Suc j) xs) e)"
+    using hxs_decomp abelian_foldr_mul_extract[OF hG htake_xs_G hxs_j_G hdrop_xs_G] by (by100 simp)
+  \<comment> \<open>Similarly for ys:\<close>
+  have htake_ys_G: "\<forall>i<length (take j ys). (take j ys) ! i \<in> G"
+  proof (intro allI impI)
+    fix i assume "i < length (take j ys)"
+    have "(take j ys) ! i \<in> set (take j ys)" using nth_mem \<open>i < length (take j ys)\<close> by (by100 blast)
+    hence "(take j ys) ! i \<in> set ys" using set_take_subset[of j ys] by (by100 blast)
+    thus "(take j ys) ! i \<in> G" using hys by (by100 blast)
+  qed
+  have hdrop_ys_G: "\<forall>i<length (drop (Suc j) ys). (drop (Suc j) ys) ! i \<in> G"
+  proof (intro allI impI)
+    fix i assume "i < length (drop (Suc j) ys)"
+    have "(drop (Suc j) ys) ! i \<in> set (drop (Suc j) ys)"
+      using nth_mem \<open>i < length (drop (Suc j) ys)\<close> by (by100 blast)
+    hence "(drop (Suc j) ys) ! i \<in> set ys" using set_drop_subset[of "Suc j" ys] by (by100 blast)
+    thus "(drop (Suc j) ys) ! i \<in> G" using hys by (by100 blast)
+  qed
+  have hfoldr_ys: "foldr mul ys e = mul (ys ! j) (foldr mul (take j ys @ drop (Suc j) ys) e)"
+    using hys_decomp abelian_foldr_mul_extract[OF hG htake_ys_G hys_j_G hdrop_ys_G] by (by100 simp)
+  \<comment> \<open>The take/drop parts are equal (elements agree at all positions \<noteq> j).\<close>
+  have htake_eq: "take j xs = take j ys"
+  proof (rule nth_equalityI)
+    show "length (take j xs) = length (take j ys)" using hlen by (by100 simp)
+    fix i assume "i < length (take j xs)"
+    hence hi: "i < j" by (by5000 simp)
+    hence "i < length xs" and "i \<noteq> j" using hj by (by100 simp)+
+    hence "xs ! i = ys ! i" using hothers by (by100 blast)
+    thus "take j xs ! i = take j ys ! i" using hi hj hj_ys by (by5000 simp)
+  qed
+  have hdrop_eq: "drop (Suc j) xs = drop (Suc j) ys"
+  proof (rule nth_equalityI)
+    show "length (drop (Suc j) xs) = length (drop (Suc j) ys)" using hlen by (by100 simp)
+    fix i assume "i < length (drop (Suc j) xs)"
+    hence hi: "i + Suc j < length xs" by (by100 simp)
+    hence "i + Suc j \<noteq> j" by (by100 simp)
+    have hisj: "i + Suc j < length xs" using hi .
+    have hisj_ne: "i + Suc j \<noteq> j" by (by100 simp)
+    have "xs ! (i + Suc j) = ys ! (i + Suc j)" using hothers hisj hisj_ne by (by100 blast)
+    moreover have "drop (Suc j) xs ! i = xs ! (i + Suc j)" using hi by (simp add: add.commute)
+    moreover have "drop (Suc j) ys ! i = ys ! (i + Suc j)" using hi hlen by (simp add: add.commute)
+    ultimately show "drop (Suc j) xs ! i = drop (Suc j) ys ! i" by (by100 simp)
+  qed
+  \<comment> \<open>Combine: xs!j = mul a (ys!j), so foldr xs = mul (mul a (ys!j)) rest = mul a (mul (ys!j) rest).\<close>
+  have hassoc: "mul (xs ! j) (foldr mul (take j xs @ drop (Suc j) xs) e)
+      = mul a (mul (ys ! j) (foldr mul (take j ys @ drop (Suc j) ys) e))"
+  proof -
+    have "mul (xs ! j) (foldr mul (take j xs @ drop (Suc j) xs) e)
+        = mul (mul a (ys ! j)) (foldr mul (take j ys @ drop (Suc j) ys) e)"
+      using hat_j htake_eq hdrop_eq by (by100 simp)
+    also have "\<dots> = mul a (mul (ys ! j) (foldr mul (take j ys @ drop (Suc j) ys) e))"
+    proof -
+      have hrest_G: "foldr mul (take j ys @ drop (Suc j) ys) e \<in> G"
+        sorry \<comment> \<open>Foldr of group elements is in G. Needs word\_product\_in\_group or similar.\<close>
+      show ?thesis using hG_grp ha hys_j_G hrest_G
+        unfolding top1_is_group_on_def by (by5000 blast)
+    qed
+    finally show ?thesis .
+  qed
+  show ?thesis using hfoldr_xs hassoc hfoldr_ys by (by100 simp)
+qed
+
 text \<open>In an abelian group, foldr of a list decomposes into per-element powers,
   collected by remdups. Proved by induction on the list.\<close>
 lemma abelian_foldr_remdups_pow:
@@ -4230,8 +4338,45 @@ next
        to split by a. Then relate.\<close>
     have hRHS: "foldr mul (map ?powfn (remdups rest)) e
         = mul a (foldr mul (map ?powfn_r (remdups rest)) e)"
-      sorry \<comment> \<open>Replacing powfn\_r a with mul(a, powfn\_r a) at position of a
-         extracts factor a. Needs abelian extract + assoc.\<close>
+    proof -
+      \<comment> \<open>Apply abelian\_foldr\_replace\_one: map powfn (remdups rest) differs from
+         map powfn\_r (remdups rest) exactly at position j (where a sits):
+         powfn a = mul(a, powfn\_r a), all others equal.\<close>
+      have hset_powfn: "set (map ?powfn (remdups rest)) \<subseteq> G" sorry
+      have hset_powfn_r: "set (map ?powfn_r (remdups rest)) \<subseteq> G" sorry
+      have hlen_maps: "length (map ?powfn (remdups rest)) = length (map ?powfn_r (remdups rest))"
+        by (by100 simp)
+      have hj_map: "j < length (map ?powfn (remdups rest))" using hj by (by100 simp)
+      have hat_j: "map ?powfn (remdups rest) ! j = mul a (map ?powfn_r (remdups rest) ! j)"
+      proof -
+        have "map ?powfn (remdups rest) ! j = ?powfn (remdups rest ! j)"
+          using hj by (by100 simp)
+        also have "remdups rest ! j = a" using hremj .
+        also have "?powfn a = mul a (?powfn_r a)" using hpowfn_a .
+        also have "?powfn_r a = map ?powfn_r (remdups rest) ! j"
+          using hj hremj by (by100 simp)
+        finally show ?thesis by (by100 simp)
+      qed
+      have hothers_j: "\<forall>i<length (map ?powfn (remdups rest)). i \<noteq> j \<longrightarrow>
+          map ?powfn (remdups rest) ! i = map ?powfn_r (remdups rest) ! i"
+      proof (intro allI impI)
+        fix i assume "i < length (map ?powfn (remdups rest))" and "i \<noteq> j"
+        hence hi: "i < length (remdups rest)" by (by100 simp)
+        have hv: "remdups rest ! i \<noteq> a"
+        proof -
+          have "remdups rest ! i \<noteq> remdups rest ! j"
+            sorry \<comment> \<open>distinct (remdups rest) + i\<noteq>j + bounds \<Rightarrow> nth differ.\<close>
+          thus ?thesis using hremj by (by100 simp)
+        qed
+        have "remdups rest ! i \<in> set (remdups rest)" using hi nth_mem by (by100 blast)
+        hence "?powfn (remdups rest ! i) = ?powfn_r (remdups rest ! i)"
+          using hpowfn_other hv by (by100 blast)
+        thus "map ?powfn (remdups rest) ! i = map ?powfn_r (remdups rest) ! i"
+          using hi by (by100 simp)
+      qed
+      show ?thesis
+        by (rule abelian_foldr_replace_one[OF hG hset_powfn hset_powfn_r ha_G hlen_maps hj_map hat_j hothers_j])
+    qed
     have "foldr mul (a # rest) e
         = foldr mul (map ?powfn (remdups (a # rest))) e"
     proof -
