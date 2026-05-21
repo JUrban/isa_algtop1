@@ -10257,11 +10257,34 @@ proof (induction "is")
   ultimately show ?case by (by100 simp)
 next
   case (Cons j js)
-  \<comment> \<open>word\_product of concat(j # js) = word\_product(sub\_j @ rest).
-     = mul(word\_product(sub\_j), word\_product(rest)) by word\_product\_append.
-     word\_product(sub\_j) = commutator(a j, b j) \<in> [G,G].
-     word\_product(rest) \<in> [G,G] by IH. Product of [G,G] elements \<in> [G,G].\<close>
-  show ?case sorry
+  let ?sub = "[(a j, True), (b j, True), (a j, False), (b j, False)]"
+  let ?rest_word = "concat (map (\<lambda>i. [(a i, True), (b i, True), (a i, False), (b i, False)]) js)"
+  \<comment> \<open>concat(map ... (j # js)) = ?sub @ ?rest\_word.\<close>
+  have hconcat: "concat (map (\<lambda>i. [(a i, True), (b i, True), (a i, False), (b i, False)]) (j # js))
+      = ?sub @ ?rest_word" by (by100 simp)
+  \<comment> \<open>word\_product(?sub @ ?rest\_word) = mul(word\_product(?sub), word\_product(?rest\_word)).\<close>
+  have haj: "a j \<in> G" and hbj: "b j \<in> G"
+    using Cons(2) sorry
+  have hsub_G: "\<forall>i<length ?sub. fst (?sub ! i) \<in> G"
+    using haj hbj sorry
+  have hrest_G: "\<forall>i<length ?rest_word. fst (?rest_word ! i) \<in> G" sorry
+  have hprod: "top1_group_word_product mul e invg (?sub @ ?rest_word)
+      = mul (top1_group_word_product mul e invg ?sub) (top1_group_word_product mul e invg ?rest_word)"
+    by (rule word_product_append[OF hG hsub_G hrest_G])
+  \<comment> \<open>word\_product(?sub) = commutator(a j, b j) \<in> [G,G].\<close>
+  have hcomm_elem: "top1_group_word_product mul e invg ?sub
+      \<in> top1_commutator_subgroup_on G mul e invg" sorry
+  \<comment> \<open>word\_product(?rest\_word) \<in> [G,G] by IH.\<close>
+  have hIH: "top1_group_word_product mul e invg ?rest_word
+      \<in> top1_commutator_subgroup_on G mul e invg"
+    using Cons sorry
+  \<comment> \<open>mul of two [G,G] elements \<in> [G,G].\<close>
+  have hcomm_grp: "top1_is_group_on (top1_commutator_subgroup_on G mul e invg) mul e invg"
+    using commutator_subgroup_is_normal[OF hG] unfolding top1_normal_subgroup_on_def by (by100 blast)
+  have "mul (top1_group_word_product mul e invg ?sub) (top1_group_word_product mul e invg ?rest_word)
+      \<in> top1_commutator_subgroup_on G mul e invg"
+    using hcomm_grp hcomm_elem hIH unfolding top1_is_group_on_def by (by100 blast)
+  thus ?case using hconcat hprod by (by100 simp)
 qed
 
 text \<open>The torus relator [a₁,b₁]⋯[aₙ,bₙ] is a product of commutators, so
