@@ -5118,7 +5118,43 @@ proof -
         \<comment> \<open>Step 1: length(filter (= gen(s,b)) (map gen w)) = length(filter (fst = s) w).
            Because gen is injective on set w: gen(t,c) = gen(s,b) iff (t,c) = (s,b) iff t = s.\<close>
         have hcount_eq: "length (filter (\<lambda>x. x = ?gen (s,b)) ?gs) = length (filter (\<lambda>(t,c). t = s) w)"
-          sorry \<comment> \<open>filter count via gen injectivity\<close>
+        proof -
+          \<comment> \<open>Show: filter (= gen(s,b)) (map gen w) = map gen (filter (\<lambda>(t,c). t = s) w).
+             Then length equality follows since map preserves length.\<close>
+          have hfilt_eq: "filter (\<lambda>x. x = ?gen (s,b)) (map ?gen w) = map ?gen (filter (\<lambda>(t,c). t = s) w)"
+          proof (induction w)
+            case Nil show ?case by (by100 simp)
+          next
+            case (Cons p rest)
+            obtain t' c' where hp: "p = (t', c')" by (cases p) (by100 blast)
+            show ?case
+            proof (cases "t' = s")
+              case True
+              have "c' = b"
+              proof (rule ccontr)
+                assume "c' \<noteq> b" hence "c' = (\<not>b)" by (by100 auto)
+                hence "(s, \<not>b) \<in> set (p # rest)" using hp True by (by100 simp)
+                thus False using huni hsb sorry
+              qed
+              hence "?gen p = ?gen (s,b)" using hp True by (by100 simp)
+              moreover have "(case p of (t,c) \<Rightarrow> t = s)" using hp True by (by100 simp)
+              ultimately show ?thesis using Cons hp by (by100 simp)
+            next
+              case False
+              have "?gen p \<noteq> ?gen (s,b)"
+              proof
+                assume heq: "?gen p = ?gen (s,b)"
+                have "p \<in> set (p # rest)" by (by100 simp)
+                hence "p = (s,b)"
+                  using hgen_inj hsb heq \<open>p \<in> set (p # rest)\<close> unfolding inj_on_def sorry
+                thus False using hp False by (by100 simp)
+              qed
+              moreover have "\<not>(case p of (t,c) \<Rightarrow> t = s)" using hp False by (by100 simp)
+              ultimately show ?thesis using Cons hp by (by100 simp)
+            qed
+          qed
+          thus ?thesis by (by100 simp)
+        qed
         \<comment> \<open>Step 2: Expand c(s) and show pow\_gs(gen(s,b)) = term(s).\<close>
         define cnt where "cnt = length (filter (\<lambda>(t,c). t = s) w)"
         have hfilter_ne: "filter (\<lambda>(t,c). t = s) w \<noteq> []"
