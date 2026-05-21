@@ -10302,8 +10302,8 @@ proof -
     \<comment> \<open>Prove universal: for ANY presented group with commutator relator that's iso to \<pi>_1,
        the abelianization of \<pi>_1 is free abelian.\<close>
     show ?thesis using hpres_iso
-      sorry \<comment> \<open>Uses: abelianization\_of\_presented\_group + iso transfer.
-         All ingredients proved; sorry due to existential destructuring limitations.\<close>
+      sorry \<comment> \<open>Extract presented group, apply presented\_comm\_relator\_abelianization
+         (now proved), show relator \<in> [F,F], transfer via iso.\<close>
   qed
   show ?thesis using h_abelianize by (by100 blast)
 qed
