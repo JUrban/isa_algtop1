@@ -4101,6 +4101,46 @@ next
   thus ?case using hxs_eq hys_eq by (by100 simp)
 qed
 
+text \<open>Foldr of group elements stays in G.\<close>
+lemma foldr_mul_in_group:
+  assumes "top1_is_group_on G mul e invg" and "set xs \<subseteq> G"
+  shows "foldr mul xs e \<in> G"
+  using assms(2)
+proof (induction xs)
+  case Nil
+  have "e \<in> G" using assms(1) unfolding top1_is_group_on_def by (by100 blast)
+  thus ?case by (by100 simp)
+next
+  case (Cons a xs)
+  have "a \<in> G" using Cons(2) by (by100 simp)
+  have "foldr mul xs e \<in> G" using Cons(1) Cons(2) by (by100 simp)
+  have "mul a (foldr mul xs e) \<in> G"
+  proof -
+    have "\<forall>x\<in>G. \<forall>y\<in>G. mul x y \<in> G"
+      using assms(1) unfolding top1_is_group_on_def by (by100 blast)
+    thus ?thesis using \<open>a \<in> G\<close> \<open>foldr mul xs e \<in> G\<close> by (by100 blast)
+  qed
+  thus ?case by (by100 simp)
+qed
+
+text \<open>Group power stays in G.\<close>
+lemma group_pow_in_group':
+  assumes "top1_is_group_on G mul e invg" and "x \<in> G"
+  shows "top1_group_pow mul e x n \<in> G"
+  using assms
+proof (induction n)
+  case 0
+  have "e \<in> G" using assms(1) unfolding top1_is_group_on_def by (by100 blast)
+  thus ?case by (by100 simp)
+next
+  case (Suc n)
+  have hmul: "\<forall>x\<in>G. \<forall>y\<in>G. mul x y \<in> G"
+    using assms(1) unfolding top1_is_group_on_def by (by100 blast)
+  have "top1_group_pow mul e x n \<in> G" using Suc .
+  hence hpow_n: "top1_group_pow mul e x n \<in> G" .
+  thus ?case using hmul assms(2) by (by100 simp)
+qed
+
 text \<open>Split one element type from foldr product: pow(v, count) \<cdot> rest.\<close>
 lemma abelian_foldr_split_one_element:
   assumes hG: "top1_is_abelian_group_on G mul e invg"
@@ -4225,7 +4265,12 @@ proof -
     also have "\<dots> = mul a (mul (ys ! j) (foldr mul (take j ys @ drop (Suc j) ys) e))"
     proof -
       have hrest_G: "foldr mul (take j ys @ drop (Suc j) ys) e \<in> G"
-        sorry \<comment> \<open>Foldr of group elements is in G. Needs word\_product\_in\_group or similar.\<close>
+      proof -
+        have "set (take j ys @ drop (Suc j) ys) \<subseteq> set ys"
+          using set_take_subset[of j ys] set_drop_subset[of "Suc j" ys] by (by100 auto)
+        hence "set (take j ys @ drop (Suc j) ys) \<subseteq> G" using hys by (by100 blast)
+        thus ?thesis by (rule foldr_mul_in_group[OF hG_grp])
+      qed
       show ?thesis using hG_grp ha hys_j_G hrest_G
         unfolding top1_is_group_on_def by (by5000 blast)
     qed
@@ -4342,8 +4387,24 @@ next
       \<comment> \<open>Apply abelian\_foldr\_replace\_one: map powfn (remdups rest) differs from
          map powfn\_r (remdups rest) exactly at position j (where a sits):
          powfn a = mul(a, powfn\_r a), all others equal.\<close>
-      have hset_powfn: "set (map ?powfn (remdups rest)) \<subseteq> G" sorry
-      have hset_powfn_r: "set (map ?powfn_r (remdups rest)) \<subseteq> G" sorry
+      have hG_grp_loc: "top1_is_group_on G mul e invg"
+        using hG unfolding top1_is_abelian_group_on_def by (by100 blast)
+      have hset_powfn: "set (map ?powfn (remdups rest)) \<subseteq> G"
+      proof (rule subsetI)
+        fix y assume "y \<in> set (map ?powfn (remdups rest))"
+        then obtain v where "v \<in> set (remdups rest)" and hy: "y = ?powfn v" by (by100 auto)
+        hence "v \<in> set rest" by (by100 simp)
+        hence "v \<in> G" using hrest_G by (by100 blast)
+        thus "y \<in> G" using hy group_pow_in_group'[OF hG_grp_loc \<open>v \<in> G\<close>] by (by100 simp)
+      qed
+      have hset_powfn_r: "set (map ?powfn_r (remdups rest)) \<subseteq> G"
+      proof (rule subsetI)
+        fix y assume "y \<in> set (map ?powfn_r (remdups rest))"
+        then obtain v where "v \<in> set (remdups rest)" and hy: "y = ?powfn_r v" by (by100 auto)
+        hence "v \<in> set rest" by (by100 simp)
+        hence "v \<in> G" using hrest_G by (by100 blast)
+        thus "y \<in> G" using hy group_pow_in_group'[OF hG_grp_loc \<open>v \<in> G\<close>] by (by100 simp)
+      qed
       have hlen_maps: "length (map ?powfn (remdups rest)) = length (map ?powfn_r (remdups rest))"
         by (by100 simp)
       have hj_map: "j < length (map ?powfn (remdups rest))" using hj by (by100 simp)
@@ -4504,7 +4565,15 @@ proof -
   have "foldr mul ?gs e = foldr mul (map ?term ?supp_list) e"
   proof -
     \<comment> \<open>Step 5a: By abelian\_foldr\_remdups\_pow, collapse repeated elements.\<close>
-    have hgs_G: "set ?gs \<subseteq> G" sorry
+    have hgs_G: "set ?gs \<subseteq> G"
+    proof (rule subsetI)
+      fix y assume "y \<in> set ?gs"
+      then obtain s b where "(s, b) \<in> set w" and hy: "y = ?gen (s, b)" by (by5000 auto)
+      have "s \<in> S" using \<open>(s, b) \<in> set w\<close> hall by (by100 force)
+      hence "\<iota> s \<in> G" using h\<iota>_in by (by100 blast)
+      hence "invg (\<iota> s) \<in> G" using hG_grp unfolding top1_is_group_on_def by (by100 blast)
+      thus "y \<in> G" using hy \<open>\<iota> s \<in> G\<close> \<open>invg (\<iota> s) \<in> G\<close> by (by100 auto)
+    qed
     let ?pow_gs = "\<lambda>v. top1_group_pow mul e v (length (filter (\<lambda>x. x = v) ?gs))"
     have hcollapse: "foldr mul ?gs e = foldr mul (map ?pow_gs (remdups ?gs)) e"
       by (rule abelian_foldr_remdups_pow[OF hG_abel hgs_G])
