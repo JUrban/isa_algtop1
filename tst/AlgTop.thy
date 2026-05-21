@@ -5578,7 +5578,7 @@ proof -
             hence "top1_group_word_product mul e invg ?mw1
                 = top1_group_word_product mul e invg (map (\<lambda>(s,b). (\<iota> s, b)) ?w')"
               using \<open>top1_group_word_product mul e invg ?mw1 = top1_group_word_product mul e invg (tl (take j1 ?mw1) @ drop (Suc j1) ?mw1)\<close>
-              by (by100 simp)
+              by (by5000 simp)
             thus ?thesis using heval_w1_G less(3) by (by100 simp)
           qed
           have hlen': "length ?w' < length w"
@@ -10313,12 +10313,24 @@ next
         proof -
           have "mul (invg (a j)) (invg (b j)) \<in> G"
             using hG hinva hinvb unfolding top1_is_group_on_def by (by100 blast)
-          thus ?thesis sorry \<comment> \<open>associativity: mul(a, mul(b, mul(ia,ib))) = mul(mul(a,b), mul(ia,ib)).\<close>
+          have "mul (mul (a j) (b j)) (mul (invg (a j)) (invg (b j)))
+              = mul (a j) (mul (b j) (mul (invg (a j)) (invg (b j))))"
+            apply (rule hassoc[unfolded Ball_def, THEN spec, THEN mp, THEN spec, THEN mp, THEN spec, THEN mp])
+            apply (rule haj) apply (rule hbj) apply (rule \<open>mul (invg (a j)) (invg (b j)) \<in> G\<close>)
+            done
+          thus ?thesis by (by100 simp)
         qed
         \<comment> \<open>mul(mul(a,b), mul(ia, ib)) = mul(mul(mul(a,b), ia), ib) [assoc on ab, ia, ib]\<close>
         have h2: "mul (mul (a j) (b j)) (mul (invg (a j)) (invg (b j)))
             = mul (mul (mul (a j) (b j)) (invg (a j))) (invg (b j))"
-          using hassoc hab hinva hinvb sorry
+        proof -
+          have "mul (mul (mul (a j) (b j)) (invg (a j))) (invg (b j))
+              = mul (mul (a j) (b j)) (mul (invg (a j)) (invg (b j)))"
+            apply (rule hassoc[unfolded Ball_def, THEN spec, THEN mp, THEN spec, THEN mp, THEN spec, THEN mp])
+            apply (rule hab) apply (rule hinva) apply (rule hinvb)
+            done
+          thus ?thesis by (by100 simp)
+        qed
         show ?thesis unfolding top1_group_commutator_on_def using h1 h2 by (by100 simp)
       qed
       finally show ?thesis .
