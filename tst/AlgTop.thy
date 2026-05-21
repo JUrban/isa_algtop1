@@ -4365,7 +4365,11 @@ next
         have hv: "remdups rest ! i \<noteq> a"
         proof -
           have "remdups rest ! i \<noteq> remdups rest ! j"
-            sorry \<comment> \<open>distinct (remdups rest) + i\<noteq>j + bounds \<Rightarrow> nth differ.\<close>
+          proof -
+            have "distinct (remdups rest)" by (by100 simp)
+            from nth_eq_iff_index_eq[OF this hi hj]
+            show ?thesis using \<open>i \<noteq> j\<close> by (by100 simp)
+          qed
           thus ?thesis using hremj by (by100 simp)
         qed
         have "remdups rest ! i \<in> set (remdups rest)" using hi nth_mem by (by100 blast)
