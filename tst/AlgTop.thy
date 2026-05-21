@@ -5137,8 +5137,27 @@ proof -
           proof (rule filter_pred_eq)
             fix p assume hp: "p \<in> set w"
             obtain t c where hp': "p = (t, c)" by (cases p) (by100 blast)
-            show "((\<lambda>x. x = ?gen (s,b)) \<circ> ?gen) p = (case p of (t,c) \<Rightarrow> t = s)"
-              sorry \<comment> \<open>gen(p) = gen(s,b) iff fst p = s, by gen\_inj + single polarity.\<close>
+            \<comment> \<open>LHS: gen(t,c) = gen(s,b). RHS: t = s.\<close>
+            have "(?gen (t,c) = ?gen (s,b)) = (t = s)"
+            proof
+              assume "?gen (t,c) = ?gen (s,b)"
+              hence "(t,c) = (s,b)" using hgen_inj hp hsb hp'
+                unfolding inj_on_def by (by100 blast)
+              thus "t = s" by (by100 simp)
+            next
+              assume "t = s"
+              have "(s,c) \<in> set w" using hp hp' \<open>t = s\<close> by (by100 simp)
+              have "c = b"
+              proof (rule ccontr)
+                assume "c \<noteq> b" hence "c = (\<not>b)" by (by100 auto)
+                hence "(s, \<not>b) \<in> set w" using \<open>(s,c) \<in> set w\<close> by (by100 simp)
+                thus False using huni hsb by (by100 blast)
+              qed
+              thus "?gen (t,c) = ?gen (s,b)" using \<open>t = s\<close> by (by100 simp)
+            qed
+            \<comment> \<open>Rewrite to match the goal's form with comp and case\_prod.\<close>
+            thus "((\<lambda>x. x = ?gen (s,b)) \<circ> ?gen) p = (case p of (t,c) \<Rightarrow> t = s)"
+              using hp' by (by100 simp)
           qed
           show ?thesis using h1 h2 by (by100 simp)
         qed
