@@ -10265,11 +10265,18 @@ proof -
   proof (rule subsetI)
     fix r assume "r \<in> ?relators"
     then obtain w where hw: "w \<in> ?R" and hr: "r = top1_group_word_product mulF eF invgF
-        (map (\<lambda>(s, b). (\<iota> s, b)) w)" sorry
+        (map (\<lambda>(s, b). (\<iota> s, b)) w)" by (by100 blast)
     \<comment> \<open>w is the single relator word: concat(map (\<lambda>i. ...) [0..<n]).
        word\_product of this = product of commutators [\<iota>(2i), \<iota>(2i+1)] for i < n.
        Each commutator \<in> [F,F], and [F,F] is a subgroup, so the product \<in> [F,F].\<close>
-    show "r \<in> top1_commutator_subgroup_on F mulF eF invgF" sorry
+    \<comment> \<open>w is the single relator: concat of commutator sub-words.
+       The word product is a product of commutator elements, each in [F,F].\<close>
+    have hw_eq: "w = concat (map (\<lambda>i. [(2*i, True), (2*i+1, True),
+                    (2*i, False), (2*i+1, False)]) [0..<n])"
+      using hw by (by100 blast)
+    \<comment> \<open>By induction on n: word\_product of this concat \<in> [F,F].\<close>
+    show "r \<in> top1_commutator_subgroup_on F mulF eF invgF"
+      using hr hw_eq sorry
   qed
   hence "top1_normal_subgroup_generated_on F mulF eF invgF ?relators
       \<subseteq> top1_commutator_subgroup_on F mulF eF invgF"
