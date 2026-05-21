@@ -10287,7 +10287,42 @@ next
        = commutator(a, b) after simplification with group axioms.\<close>
     have "top1_group_word_product mul e invg ?sub
         = top1_group_commutator_on mul invg (a j) (b j)"
-      sorry
+    proof -
+      \<comment> \<open>wp [(a,T),(b,T),(a,F),(b,F)] = mul(a, mul(b, mul(invg a, mul(invg b, e))))
+         = mul(a, mul(b, mul(invg a, invg b)))  [right identity on invg b]
+         = mul(mul(mul(a, b), invg a), invg b)  [associativity]
+         = commutator(a, b).\<close>
+      have hrid_invb: "mul (invg (b j)) e = invg (b j)"
+        using hG hbj unfolding top1_is_group_on_def by (by100 blast)
+      \<comment> \<open>Step-by-step unfolding of word\_product.\<close>
+      have "top1_group_word_product mul e invg ?sub
+          = mul (a j) (mul (b j) (mul (invg (a j)) (mul (invg (b j)) e)))"
+        by (by5000 simp)
+      also have "\<dots> = mul (a j) (mul (b j) (mul (invg (a j)) (invg (b j))))"
+        using hrid_invb by (by100 simp)
+      also have "\<dots> = top1_group_commutator_on mul invg (a j) (b j)"
+      proof -
+        have hassoc: "\<forall>x\<in>G. \<forall>y\<in>G. \<forall>z\<in>G. mul (mul x y) z = mul x (mul y z)"
+          using hG unfolding top1_is_group_on_def by (by100 blast)
+        have hinva: "invg (a j) \<in> G" using hG haj unfolding top1_is_group_on_def by (by100 blast)
+        have hinvb: "invg (b j) \<in> G" using hG hbj unfolding top1_is_group_on_def by (by100 blast)
+        have hab: "mul (a j) (b j) \<in> G" using hG haj hbj unfolding top1_is_group_on_def by (by100 blast)
+        \<comment> \<open>mul(a, mul(b, mul(ia, ib))) = mul(mul(a, b), mul(ia, ib)) [assoc on a,b,mul(ia,ib)]\<close>
+        have h1: "mul (a j) (mul (b j) (mul (invg (a j)) (invg (b j))))
+            = mul (mul (a j) (b j)) (mul (invg (a j)) (invg (b j)))"
+        proof -
+          have "mul (invg (a j)) (invg (b j)) \<in> G"
+            using hG hinva hinvb unfolding top1_is_group_on_def by (by100 blast)
+          thus ?thesis sorry \<comment> \<open>associativity: mul(a, mul(b, mul(ia,ib))) = mul(mul(a,b), mul(ia,ib)).\<close>
+        qed
+        \<comment> \<open>mul(mul(a,b), mul(ia, ib)) = mul(mul(mul(a,b), ia), ib) [assoc on ab, ia, ib]\<close>
+        have h2: "mul (mul (a j) (b j)) (mul (invg (a j)) (invg (b j)))
+            = mul (mul (mul (a j) (b j)) (invg (a j))) (invg (b j))"
+          using hassoc hab hinva hinvb sorry
+        show ?thesis unfolding top1_group_commutator_on_def using h1 h2 by (by100 simp)
+      qed
+      finally show ?thesis .
+    qed
     moreover have "top1_group_commutator_on mul invg (a j) (b j)
         \<in> top1_commutator_subgroup_on G mul e invg"
     proof -
