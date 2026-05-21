@@ -4696,7 +4696,67 @@ proof -
       thus ?thesis by (rule someI_ex)
     qed
     \<comment> \<open>For now, the remaining correspondence argument:\<close>
-    show ?thesis using hcollapse sorry
+    \<comment> \<open>Step 5c: Use abelian\_foldr\_map\_perm\_distinct to match orderings.\<close>
+    \<comment> \<open>Both remdups (map fst w) and ?supp\_list enumerate the support distinctly.\<close>
+    have hgens_dist: "distinct (remdups (map fst w))" by (by100 simp)
+    have hsupp_dist: "distinct ?supp_list" using hsupp_spec by (by100 blast)
+    have hsupp_set: "set ?supp_list = {s \<in> S. c s \<noteq> 0}" using hsupp_spec by (by100 blast)
+    \<comment> \<open>The support = fst ` set w \<inter> S = fst ` set w (since hall says all fst in S).\<close>
+    have hgens_set: "set (remdups (map fst w)) = fst ` set w" by (by100 simp)
+    \<comment> \<open>Show: fst ` set w = {s \<in> S. c s \<noteq> 0}.\<close>
+    have hsets_gen_supp: "fst ` set w = {s \<in> S. c s \<noteq> 0}"
+    proof
+      show "fst ` set w \<subseteq> {s \<in> S. c s \<noteq> 0}"
+      proof (rule subsetI)
+        fix s assume "s \<in> fst ` set w"
+        hence "s \<in> S" using hall by (by100 blast)
+        moreover have "c s \<noteq> 0"
+        proof -
+          from \<open>s \<in> fst ` set w\<close> obtain b where "(s, b) \<in> set w" by (by100 force)
+          hence "(s, b) \<in> set (filter (\<lambda>(t,b). t = s) w)" by (by5000 auto)
+          hence hne_filter: "filter (\<lambda>(t,b). t = s) w \<noteq> []" by (by100 force)
+          define bs where "bs = filter (\<lambda>(t,b). t = s) w"
+          have "bs \<noteq> []" using hne_filter unfolding bs_def .
+          hence "length bs > 0" by (by100 simp)
+          thus ?thesis
+          proof (cases "snd (hd bs)")
+            case True thus ?thesis using \<open>length bs > 0\<close> \<open>bs \<noteq> []\<close>
+              unfolding c_def bs_def[symmetric] by (by5000 auto)
+          next
+            case False thus ?thesis using \<open>length bs > 0\<close> \<open>bs \<noteq> []\<close>
+              unfolding c_def bs_def[symmetric] by (by5000 auto)
+          qed
+        qed
+        ultimately show "s \<in> {s \<in> S. c s \<noteq> 0}" by (by100 blast)
+      qed
+    next
+      show "{s \<in> S. c s \<noteq> 0} \<subseteq> fst ` set w" using hsupp_sub .
+    qed
+    hence hgens_eq_supp: "set (remdups (map fst w)) = set ?supp_list"
+      using hgens_set hsupp_set by (by100 simp)
+    \<comment> \<open>Show: ?term maps generators in the support into G.\<close>
+    have hterm_G: "\<forall>s \<in> set (remdups (map fst w)). ?term s \<in> G"
+    proof (intro ballI)
+      fix s assume "s \<in> set (remdups (map fst w))"
+      hence "s \<in> fst ` set w" by (by100 simp)
+      hence "s \<in> S" using hall by (by100 blast)
+      hence "\<iota> s \<in> G" using h\<iota>_in by (by100 blast)
+      hence "invg (\<iota> s) \<in> G" using hG_grp unfolding top1_is_group_on_def by (by100 blast)
+      show "?term s \<in> G"
+        using group_pow_in_group'[OF hG_grp \<open>\<iota> s \<in> G\<close>]
+              group_pow_in_group'[OF hG_grp \<open>invg (\<iota> s) \<in> G\<close>]
+        by (by100 auto)
+    qed
+    \<comment> \<open>Apply abelian\_foldr\_map\_perm\_distinct.\<close>
+    have "foldr mul (map ?term (remdups (map fst w))) e = foldr mul (map ?term ?supp_list) e"
+      by (rule abelian_foldr_map_perm_distinct[OF hG_abel hterm_G hgens_dist hsupp_dist hgens_eq_supp])
+    \<comment> \<open>Show: foldr mul (map ?pow\_gs (remdups ?gs)) e = foldr mul (map ?term (remdups (map fst w))) e.
+       This requires: pow\_gs(gen(s, b\_s)) = term(s) for each s.\<close>
+    moreover have "foldr mul (map ?pow_gs (remdups ?gs)) e
+        = foldr mul (map ?term (remdups (map fst w))) e"
+      sorry \<comment> \<open>The gen-level collapse matches the coefficient-level terms.
+         pow\_gs(gen(s, b\_s)) = pow(gen(s, b\_s), count) = term(s).\<close>
+    ultimately show ?thesis using hcollapse by (by100 simp)
   qed
   \<comment> \<open>Step 6: Combine.\<close>
   thus ?thesis using heval_foldr hcanonical_ne by (by100 simp)
