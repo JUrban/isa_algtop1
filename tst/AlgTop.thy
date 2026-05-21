@@ -10263,10 +10263,18 @@ next
   have hconcat: "concat (map (\<lambda>i. [(a i, True), (b i, True), (a i, False), (b i, False)]) (j # js))
       = ?sub @ ?rest_word" by (by100 simp)
   \<comment> \<open>word\_product(?sub @ ?rest\_word) = mul(word\_product(?sub), word\_product(?rest\_word)).\<close>
-  have haj: "a j \<in> G" and hbj: "b j \<in> G"
-    using Cons(2) sorry
+  have hab_j: "a j \<in> G \<and> b j \<in> G"
+    apply (rule Cons(2)[rule_format])
+    apply (by100 simp)
+    done
+  have haj: "a j \<in> G" using hab_j by (by100 blast)
+  have hbj: "b j \<in> G" using hab_j by (by100 blast)
   have hsub_G: "\<forall>i<length ?sub. fst (?sub ! i) \<in> G"
-    using haj hbj sorry
+  proof (intro allI impI)
+    fix i assume hi: "i < length ?sub"
+    hence "i \<in> {0, 1, 2, 3}" by (by100 auto)
+    thus "fst (?sub ! i) \<in> G" using haj hbj by (by100 auto)
+  qed
   have hrest_G: "\<forall>i<length ?rest_word. fst (?rest_word ! i) \<in> G" sorry
   have hprod: "top1_group_word_product mul e invg (?sub @ ?rest_word)
       = mul (top1_group_word_product mul e invg ?sub) (top1_group_word_product mul e invg ?rest_word)"
@@ -10277,7 +10285,17 @@ next
   \<comment> \<open>word\_product(?rest\_word) \<in> [G,G] by IH.\<close>
   have hIH: "top1_group_word_product mul e invg ?rest_word
       \<in> top1_commutator_subgroup_on G mul e invg"
-    using Cons sorry
+  proof -
+    have "\<forall>i \<in> set js. a i \<in> G \<and> b i \<in> G"
+    proof (intro ballI)
+      fix i assume "i \<in> set js"
+      hence "i \<in> set (j # js)" by (by100 simp)
+      thus "a i \<in> G \<and> b i \<in> G"
+        apply (rule Cons(2)[rule_format])
+        done
+    qed
+    thus ?thesis by (rule Cons(1))
+  qed
   \<comment> \<open>mul of two [G,G] elements \<in> [G,G].\<close>
   have hcomm_grp: "top1_is_group_on (top1_commutator_subgroup_on G mul e invg) mul e invg"
     using commutator_subgroup_is_normal[OF hG] unfolding top1_normal_subgroup_on_def by (by100 blast)
