@@ -10226,28 +10226,12 @@ lemma presented_comm_relator_abelianization:
   shows "\<exists>(H :: 'g set set) mulH eH invgH \<phi> \<iota>H.
       top1_is_abelianization_of H mulH eH invgH G mul e invg \<phi>
     \<and> top1_is_free_abelian_group_full_on H mulH eH invgH \<iota>H S"
-proof -
-  have hG_grp: "top1_is_group_on G mul e invg"
-    using hpres unfolding top1_group_presented_by_on_def by (by100 blast)
-  \<comment> \<open>Extract the inner existential from the presentation definition.\<close>
-  \<comment> \<open>Extract the inner existential from the presentation definition.
-     Uses the fact that the definition unfolds to A \<and> (\<exists>...). We extract A and \<exists>... separately.\<close>
-  obtain F mulF eF invgF \<iota> \<pi> where
-      hfree: "top1_is_free_group_full_on F mulF eF invgF \<iota> S"
-      and hpi: "top1_group_hom_on F mulF G mul \<pi>"
-      and hsurj: "\<pi> ` F = G"
-      and hker: "top1_group_kernel_on F e \<pi>
-           = top1_normal_subgroup_generated_on F mulF eF invgF
-               {r. \<exists>w\<in>R. r = top1_group_word_product mulF eF invgF
-                            (map (\<lambda>(s, b). (\<iota> s, b)) w)}"
-    sorry \<comment> \<open>Obtain from hpres[unfolded top1\_group\_presented\_by\_on\_def].
-       6-variable existential extraction; needs explicit exE chain.\<close>
-  have hker_sub: "top1_group_kernel_on F e \<pi>
-      \<subseteq> top1_commutator_subgroup_on F mulF eF invgF"
-    sorry \<comment> \<open>hcomm applied to hfree hpi hsurj hker. Blocked by ι type resolution.\<close>
-  from abelianization_of_presented_group[OF hfree hG_grp hpi hsurj hker_sub]
-  show ?thesis by (by100 blast)
-qed
+  using hpres[unfolded top1_group_presented_by_on_def]
+  apply (elim conjE exE)
+  apply (frule hcomm, assumption+)
+  apply (drule(4) abelianization_of_presented_group)
+  apply (by100 blast)
+  done
 
 (** from \<S>75 Theorem 75.3: H_1 of n-fold torus is free abelian of rank 2n.
     The abelianization of \<pi>_1(T_n) is free abelian on 2n generators. **)
