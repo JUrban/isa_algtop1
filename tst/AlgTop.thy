@@ -4623,6 +4623,12 @@ proof -
   qed
 qed
 
+text \<open>Two filters agree if predicates agree pointwise on set.\<close>
+lemma filter_pred_eq:
+  assumes "\<And>x. x \<in> set xs \<Longrightarrow> P x = Q x"
+  shows "filter P xs = filter Q xs"
+  using assms by (induction xs) (by100 simp)+
+
 text \<open>Canonical product over a 2-element support {s1, s2} equals mul(term s1, term s2).\<close>
 lemma canonical_product_two_eq:
   assumes hG: "top1_is_abelian_group_on G mul e invg"
@@ -5128,7 +5134,12 @@ proof -
           \<comment> \<open>The two filter predicates agree on set w (gen inj + single polarity).
              Hence the filters produce the same result.\<close>
           have h2: "filter ((\<lambda>x. x = ?gen (s,b)) \<circ> ?gen) w = filter (\<lambda>(t,c). t = s) w"
-            sorry
+          proof (rule filter_pred_eq)
+            fix p assume hp: "p \<in> set w"
+            obtain t c where hp': "p = (t, c)" by (cases p) (by100 blast)
+            show "((\<lambda>x. x = ?gen (s,b)) \<circ> ?gen) p = (case p of (t,c) \<Rightarrow> t = s)"
+              sorry \<comment> \<open>gen(p) = gen(s,b) iff fst p = s, by gen\_inj + single polarity.\<close>
+          qed
           show ?thesis using h1 h2 by (by100 simp)
         qed
         \<comment> \<open>Step 2: Expand c(s) and show pow\_gs(gen(s,b)) = term(s).\<close>
