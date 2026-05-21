@@ -5113,7 +5113,62 @@ proof -
         by (rule remdups_map_inj_on[OF hgen_inj])
       \<comment> \<open>(3) pow\_gs(gen(s,b)) = term(s) for (s,b) \<in> set w.\<close>
       have hpt: "\<And>s b. (s,b) \<in> set w \<Longrightarrow> ?pow_gs (?gen (s,b)) = ?term s"
-        sorry
+      proof -
+        fix s b assume hsb: "(s, b) \<in> set w"
+        \<comment> \<open>Step 1: length(filter (= gen(s,b)) (map gen w)) = length(filter (fst = s) w).
+           Because gen is injective on set w: gen(t,c) = gen(s,b) iff (t,c) = (s,b) iff t = s.\<close>
+        have hcount_eq: "length (filter (\<lambda>x. x = ?gen (s,b)) ?gs) = length (filter (\<lambda>(t,c). t = s) w)"
+          sorry \<comment> \<open>filter count via gen injectivity\<close>
+        \<comment> \<open>Step 2: Expand c(s) and show pow\_gs(gen(s,b)) = term(s).\<close>
+        define cnt where "cnt = length (filter (\<lambda>(t,c). t = s) w)"
+        have hfilter_ne: "filter (\<lambda>(t,c). t = s) w \<noteq> []"
+        proof -
+          have "(s,b) \<in> set (filter (\<lambda>(t,c). t = s) w)" using hsb by (by5000 auto)
+          thus ?thesis by (by100 force)
+        qed
+        have hcnt_pos: "cnt > 0" using hfilter_ne unfolding cnt_def by (by100 simp)
+        have hpol: "snd (hd (filter (\<lambda>(t,cb). t = s) w)) = b"
+        proof -
+          \<comment> \<open>The first element of filter has fst = s. By single polarity, its snd = b.\<close>
+          obtain t' c' rest where hfilt: "filter (\<lambda>(t,c). t = s) w = (t', c') # rest"
+            using hfilter_ne by (cases "filter (\<lambda>(t,c). t = s) w") (by100 auto)+
+          have "(t', c') \<in> set (filter (\<lambda>(t,c). t = s) w)" using hfilt by (by100 simp)
+          hence "(t', c') \<in> set w \<and> t' = s" by (by5000 auto)
+          hence "(s, c') \<in> set w" by (by100 simp)
+          have "c' = b"
+          proof (rule ccontr)
+            assume "c' \<noteq> b" hence "c' = (\<not>b)" by (by100 auto)
+            hence "(s, \<not>b) \<in> set w" using \<open>(s, c') \<in> set w\<close> by (by100 simp)
+            thus False using huni hsb by (by100 blast)
+          qed
+          thus ?thesis using hfilt by (by100 simp)
+        qed
+        \<comment> \<open>c(s) = (if b then int cnt else -int cnt).\<close>
+        have hc_val: "c s = (if b then int cnt else - int cnt)"
+          using hfilter_ne hpol unfolding c_def cnt_def by (by5000 auto)
+        \<comment> \<open>pow\_gs(gen(s,b)) = pow(gen(s,b), cnt).\<close>
+        have "?pow_gs (?gen (s,b)) = top1_group_pow mul e (?gen (s,b)) cnt"
+          using hcount_eq unfolding cnt_def by (by100 simp)
+        \<comment> \<open>term(s) = pow(gen(s,b), cnt) by expanding c.\<close>
+        also have "\<dots> = ?term s"
+        proof (cases b)
+          case True
+          hence "c s = int cnt" using hc_val by (by100 simp)
+          hence hcge: "c s \<ge> 0" using hcnt_pos by (by100 simp)
+          have "nat (c s) = cnt" using \<open>c s = int cnt\<close> by (by100 simp)
+          \<comment> \<open>gen(s, True) = \<iota> s. pow(\<iota> s, cnt) = term(s) since c(s) \<ge> 0.\<close>
+          show ?thesis using True hcge \<open>nat (c s) = cnt\<close> by (by100 simp)
+        next
+          case False
+          hence "c s = - int cnt" using hc_val by (by100 simp)
+          hence hclt: "c s < 0" using hcnt_pos by (by100 simp)
+          have hclt': "\<not> (c s \<ge> 0)" using hclt by (by100 simp)
+          have "nat (- c s) = cnt" using \<open>c s = - int cnt\<close> by (by100 simp)
+          \<comment> \<open>gen(s, False) = invg(\<iota> s). pow(invg(\<iota> s), cnt) = term(s) since c(s) < 0.\<close>
+          show ?thesis using False hclt' \<open>nat (- c s) = cnt\<close> by (by100 simp)
+        qed
+        finally show "?pow_gs (?gen (s,b)) = ?term s" .
+      qed
       \<comment> \<open>(4) map fst (remdups w) = remdups (map fst w).\<close>
       have hfr: "map fst (remdups w) = remdups (map fst w)"
         by (rule remdups_fst_single_pol[OF huni])
