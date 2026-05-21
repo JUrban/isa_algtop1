@@ -4829,11 +4829,44 @@ proof -
          Chain: remdups(map gen w) = map gen (remdups w) [gen injective],
          then map pow\_gs (map gen (remdups w)) = map (term \<circ> fst) (remdups w)
          = map term (remdups (map fst w)) [single polarity: fst of remdups = remdups of fst].\<close>
-      \<comment> \<open>The list equality follows from: gen injective on set w (single polarity + \<iota> injective),
-         pow\_gs(gen(s,b)) = term(s), remdups commutes with injective map, and
-         fst of remdups = remdups of fst (single polarity).\<close>
-      have "map ?pow_gs (remdups ?gs) = map ?term (remdups (map fst w))"
-        sorry \<comment> \<open>gen-to-term list correspondence. Needs gen\_inj + pow=term + remdups lemmas.\<close>
+      \<comment> \<open>(1) gen is injective on set w.\<close>
+      have hgen_inj: "inj_on ?gen (set w)"
+        sorry
+      \<comment> \<open>(2) remdups (map gen w) = map gen (remdups w).\<close>
+      have hrm: "remdups (map ?gen w) = map ?gen (remdups w)"
+        by (rule remdups_map_inj_on[OF hgen_inj])
+      \<comment> \<open>(3) pow\_gs(gen(s,b)) = term(s) for (s,b) \<in> set w.\<close>
+      have hpt: "\<And>s b. (s,b) \<in> set w \<Longrightarrow> ?pow_gs (?gen (s,b)) = ?term s"
+        sorry
+      \<comment> \<open>(4) map fst (remdups w) = remdups (map fst w).\<close>
+      have hfr: "map fst (remdups w) = remdups (map fst w)"
+        by (rule remdups_fst_single_pol[OF huni])
+      \<comment> \<open>Chain.\<close>
+      have "map ?pow_gs (remdups ?gs) = map ?pow_gs (map ?gen (remdups w))"
+        using hrm by (by100 simp)
+      also have "\<dots> = map (\<lambda>p. ?pow_gs (?gen p)) (remdups w)" by (by100 simp)
+      also have "\<dots> = map ?term (map fst (remdups w))"
+      proof (rule nth_equalityI)
+        show "length (map (\<lambda>p. ?pow_gs (?gen p)) (remdups w)) = length (map ?term (map fst (remdups w)))"
+          by (by100 simp)
+        fix i assume hi': "i < length (map (\<lambda>p. ?pow_gs (?gen p)) (remdups w))"
+        hence hi: "i < length (remdups w)" by (by100 simp)
+        obtain s b where hx: "remdups w ! i = (s, b)" by (cases "remdups w ! i") (by100 blast)
+        have hsb_w: "(s, b) \<in> set w"
+        proof -
+          have "remdups w ! i \<in> set (remdups w)" using hi nth_mem by (by100 blast)
+          thus ?thesis using hx by (by100 simp)
+        qed
+        have "map (\<lambda>p. ?pow_gs (?gen p)) (remdups w) ! i = ?pow_gs (?gen (remdups w ! i))"
+          using hi by (by100 simp)
+        also have "\<dots> = ?pow_gs (?gen (s, b))" using hx by (by100 simp)
+        also have "\<dots> = ?term s" using hpt[OF hsb_w] .
+        also have "\<dots> = map ?term (map fst (remdups w)) ! i"
+          using hi hx by (by100 simp)
+        finally show "map (\<lambda>p. ?pow_gs (?gen p)) (remdups w) ! i = map ?term (map fst (remdups w)) ! i" .
+      qed
+      also have "\<dots> = map ?term (remdups (map fst w))" using hfr by (by100 simp)
+      finally have "map ?pow_gs (remdups ?gs) = map ?term (remdups (map fst w))" .
       thus ?thesis by (by100 simp)
     qed
     hence "foldr mul (map ?pow_gs (remdups ?gs)) e = foldr mul (map ?term ?supp_list) e"
@@ -9835,10 +9868,10 @@ proof -
                {r. \<exists>w\<in>R. r = top1_group_word_product mulF eF invgF
                             (map (\<lambda>(s, b). (\<iota> s, b)) w)}"
     sorry \<comment> \<open>Obtain from hpres[unfolded top1\_group\_presented\_by\_on\_def].
-       6-variable existential extraction; blast times out even at 5s.\<close>
+       6-variable existential extraction; needs explicit exE chain.\<close>
   have hker_sub: "top1_group_kernel_on F e \<pi>
       \<subseteq> top1_commutator_subgroup_on F mulF eF invgF"
-    sorry \<comment> \<open>hcomm applied to hfree hpi hsurj hker. Blocked by \<iota> type resolution.\<close>
+    sorry \<comment> \<open>hcomm applied to hfree hpi hsurj hker. Blocked by ι type resolution.\<close>
   from abelianization_of_presented_group[OF hfree hG_grp hpi hsurj hker_sub]
   show ?thesis by (by100 blast)
 qed
