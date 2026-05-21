@@ -4874,10 +4874,38 @@ proof -
               qed
               moreover have "\<exists>s\<in>S. c' s \<noteq> 0"
                 using hs1 unfolding c'_def by (by100 auto)
+              \<comment> \<open>Show canonical\_product(c') = mul(\<iota> s1, \<iota> s2) = e.\<close>
               moreover have "foldr mul (map (\<lambda>s. if c' s \<ge> 0 then top1_group_pow mul e (\<iota> s) (nat (c' s))
                   else top1_group_pow mul e (invg (\<iota> s)) (nat (- c' s)))
                   (SOME xs. set xs = {s \<in> S. c' s \<noteq> 0} \<and> distinct xs)) e = e"
-                sorry \<comment> \<open>The canonical product with c'(s1)=1, c'(s2)=1 = mul(\<iota> s1, \<iota> s2) = e.\<close>
+              proof -
+                let ?t = "\<lambda>s. if c' s \<ge> 0 then top1_group_pow mul e (\<iota> s) (nat (c' s))
+                             else top1_group_pow mul e (invg (\<iota> s)) (nat (- c' s))"
+                \<comment> \<open>Support = {s1, s2}.\<close>
+                have hsupp: "{s \<in> S. c' s \<noteq> 0} = {s1, s2}"
+                  using hs1 hs2 hne unfolding c'_def by (by5000 auto)
+                \<comment> \<open>SOME xs with set = {s1,s2} and distinct: exists.\<close>
+                have "\<exists>xs::'s list. set xs = {s1, s2} \<and> distinct xs"
+                proof -
+                  have "set [s1, s2] = {s1, s2}" by (by100 simp)
+                  moreover have "distinct [s1, s2]" using hne by (by100 simp)
+                  ultimately show ?thesis by (by100 blast)
+                qed
+                hence hspec: "set (SOME xs::'s list. set xs = {s1, s2} \<and> distinct xs) = {s1, s2}
+                    \<and> distinct (SOME xs::'s list. set xs = {s1, s2} \<and> distinct xs)"
+                  by (rule someI_ex)
+                let ?xs = "SOME xs::'s list. set xs = {s1, s2} \<and> distinct xs"
+                \<comment> \<open>t(s1) = pow(\<iota> s1, 1) = \<iota> s1, t(s2) = pow(\<iota> s2, 1) = \<iota> s2.\<close>
+                have ht1: "?t s1 = \<iota> s1" unfolding c'_def
+                  using hG_grp h\<iota>_in hs1 unfolding top1_is_group_on_def by (by5000 auto)
+                have ht2: "?t s2 = \<iota> s2" unfolding c'_def
+                  using hne hG_grp h\<iota>_in hs2 unfolding top1_is_group_on_def by (by5000 auto)
+                \<comment> \<open>The product of [\<iota> s1, \<iota> s2] = mul(\<iota> s1, \<iota> s2) regardless of order (abelian).\<close>
+                have "foldr mul (map ?t ?xs) e = mul (\<iota> s1) (\<iota> s2)"
+                  sorry \<comment> \<open>SOME ordering of {s1,s2}: product = mul(\<iota> s1, \<iota> s2) by abelian commutativity.\<close>
+                \<comment> \<open>Rewrite: SOME xs with set = supp corresponds to SOME with hsupp.\<close>
+                thus ?thesis using \<open>mul (\<iota> s1) (\<iota> s2) = e\<close> hsupp sorry
+              qed
               ultimately have False
                 using hfree unfolding top1_is_free_abelian_group_full_on_def by (by5000 blast)
               thus ?thesis ..
