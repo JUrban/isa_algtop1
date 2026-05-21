@@ -4580,8 +4580,16 @@ proof -
     \<comment> \<open>Step 5b: Show map pow\_gs (remdups ?gs) and map ?term ?supp\_list have the
        same set, both are distinct, and all elements are in G.
        Then abelian\_foldr\_perm\_distinct gives equality.\<close>
-    \<comment> \<open>For now, sorry the rest.\<close>
-    show ?thesis sorry
+    \<comment> \<open>Step 5b: map pow\_gs (remdups ?gs) and map ?term ?supp\_list have the same
+       set (both enumerate per-generator powers), both distinct, all in G.\<close>
+    have hset_pow_gs: "set (map ?pow_gs (remdups ?gs)) \<subseteq> G" sorry
+    have hset_term: "set (map ?term ?supp_list) \<subseteq> G" sorry
+    have hdist_pow: "distinct (map ?pow_gs (remdups ?gs))" sorry
+    have hdist_term: "distinct (map ?term ?supp_list)" sorry
+    have hsets_eq: "set (map ?pow_gs (remdups ?gs)) = set (map ?term ?supp_list)" sorry
+    have "foldr mul (map ?pow_gs (remdups ?gs)) e = foldr mul (map ?term ?supp_list) e"
+      by (rule abelian_foldr_perm_distinct[OF hG_abel hset_pow_gs hset_term hdist_pow hdist_term hsets_eq])
+    thus ?thesis using hcollapse by (by100 simp)
   qed
   \<comment> \<open>Step 6: Combine.\<close>
   thus ?thesis using heval_foldr hcanonical_ne by (by100 simp)
