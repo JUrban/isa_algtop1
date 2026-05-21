@@ -10265,8 +10265,7 @@ proof -
     sorry \<comment> \<open>Each commutator word [a,b] = a\<cdot>b\<cdot>a\<inverse>\<cdot>b\<inverse> evaluates to an element of [F,F].\<close>
   hence "top1_normal_subgroup_generated_on F mulF eF invgF ?relators
       \<subseteq> top1_commutator_subgroup_on F mulF eF invgF"
-    using normal_closure_least[OF hF_grp] commutator_subgroup_is_normal[OF hF_grp]
-    sorry
+    by (rule normal_closure_least[OF hF_grp commutator_subgroup_is_normal[OF hF_grp]])
   thus ?thesis using hker by (by100 simp)
 qed
 
