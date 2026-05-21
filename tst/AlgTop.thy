@@ -5654,7 +5654,7 @@ proof -
             qed
             thus ?thesis
               using \<open>top1_group_word_product mulH eH invgH ?mw1H = top1_group_word_product mulH eH invgH (tl (take j1 ?mw1H) @ drop (Suc j1) ?mw1H)\<close>
-              by (by100 simp)
+              by (by5000 simp)
           qed
           hence "top1_group_word_product mulH eH invgH (map (\<lambda>(s,b). (\<phi> s, b)) ?w1) = eH"
             using hIH by (by100 simp)
@@ -10301,8 +10301,14 @@ proof -
        The iso G0 \<cong> \<pi>_1(X) transfers the abelianization.\<close>
     \<comment> \<open>Prove universal: for ANY presented group with commutator relator that's iso to \<pi>_1,
        the abelianization of \<pi>_1 is free abelian.\<close>
+    \<comment> \<open>Extract G0, verify hcomm (relator \<in> [F,F]), apply presented\_comm\_relator\_abelianization,
+       transfer abelianization via G0 \<cong> \<pi>_1(X).\<close>
+    \<comment> \<open>Use the apply-style approach: extract the presented group from hpres\_iso,
+       apply presented\_comm\_relator\_abelianization (which needs hcomm),
+       and transfer via the iso.\<close>
     show ?thesis using hpres_iso
-      sorry \<comment> \<open>Extract G0, apply presented\_comm\_relator\_abelianization, transfer via iso.\<close>
+      sorry \<comment> \<open>Extract G0, apply presented\_comm\_relator\_abelianization with
+         commutator relator hcomm, transfer abelianization via G0 \<cong> \<pi>_1(X).\<close>
   qed
   show ?thesis using h_abelianize by (by100 blast)
 qed
