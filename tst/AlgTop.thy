@@ -4762,7 +4762,10 @@ proof -
        Use abelian\_foldr\_map\_perm\_distinct on gen/term correspondence.\<close>
     have "foldr mul (map ?pow_gs (remdups ?gs)) e
         = foldr mul (map ?term (remdups (map fst w))) e"
-      sorry
+      sorry \<comment> \<open>gen-to-term correspondence: pow\_gs(gen(s,b)) = term(s),
+         gen injective (single polarity + \<iota> injective),
+         remdups(map gen w) = map gen (remdups w),
+         map fst (remdups w) = remdups (map fst w).\<close>
     hence "foldr mul (map ?pow_gs (remdups ?gs)) e = foldr mul (map ?term ?supp_list) e"
       using \<open>foldr mul (map ?term (remdups (map fst w))) e = foldr mul (map ?term ?supp_list) e\<close>
       by (by100 simp)
