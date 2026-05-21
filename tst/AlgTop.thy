@@ -4101,6 +4101,143 @@ next
   thus ?case using hxs_eq hys_eq by (by100 simp)
 qed
 
+text \<open>Split one element type from foldr product: pow(v, count) \<cdot> rest.\<close>
+lemma abelian_foldr_split_one_element:
+  assumes hG: "top1_is_abelian_group_on G mul e invg"
+      and hgs: "set gs \<subseteq> G" and hv: "v \<in> G"
+  shows "foldr mul gs e
+       = mul (top1_group_pow mul e v (length (filter (\<lambda>x. x = v) gs)))
+             (foldr mul (filter (\<lambda>x. x \<noteq> v) gs) e)"
+proof -
+  have hG_grp: "top1_is_group_on G mul e invg"
+    using hG unfolding top1_is_abelian_group_on_def by (by100 blast)
+  have hgs': "\<forall>i<length gs. gs ! i \<in> G"
+  proof (intro allI impI)
+    fix i assume "i < length gs"
+    hence "gs ! i \<in> set gs" using nth_mem by (by100 blast)
+    thus "gs ! i \<in> G" using hgs by (by100 blast)
+  qed
+  have hsplit: "foldr mul gs e
+      = mul (foldr mul (filter (\<lambda>x. x = v) gs) e) (foldr mul (filter (\<lambda>x. x \<noteq> v) gs) e)"
+    by (rule abelian_foldr_mul_split_filter[OF hG hgs', of "\<lambda>x. x = v"])
+  have hpow: "foldr mul (filter (\<lambda>x. x = v) gs) e
+      = top1_group_pow mul e v (length (filter (\<lambda>x. x = v) gs))"
+    by (rule abelian_foldr_mul_filter_eq[OF hG_grp hv])
+  show ?thesis using hsplit hpow by (by100 simp)
+qed
+
+text \<open>In a free abelian group, if a nonempty word has no matching pairs,
+  the word product \<noteq> e. Follows the book: decompose into per-generator
+  powers, apply direct sum / independence condition.\<close>
+lemma no_matching_pair_word_ne_e:
+  fixes w :: "('s \<times> bool) list"
+  assumes hfree: "top1_is_free_abelian_group_full_on G mul e invg \<iota> S"
+      and hall: "\<forall>s \<in> fst ` set w. s \<in> S"
+      and hne: "w \<noteq> []"
+      and huni: "\<forall>s b. (s, b) \<in> set w \<longrightarrow> (s, \<not>b) \<notin> set w"
+  shows "top1_group_word_product mul e invg (map (\<lambda>(s,b). (\<iota> s, b)) w) \<noteq> e"
+proof -
+  have hG_abel: "top1_is_abelian_group_on G mul e invg"
+    using hfree unfolding top1_is_free_abelian_group_full_on_def by (by100 blast)
+  have hG_grp: "top1_is_group_on G mul e invg"
+    using hG_abel unfolding top1_is_abelian_group_on_def by (by100 blast)
+  have h\<iota>_in: "\<forall>s\<in>S. \<iota> s \<in> G"
+    using hfree unfolding top1_is_free_abelian_group_full_on_def by (by100 blast)
+  \<comment> \<open>Step 1: Convert word\_product to foldr form.\<close>
+  let ?gen = "\<lambda>(s::'s,b::bool). if b then \<iota> s else invg (\<iota> s)"
+  let ?gs = "map ?gen w"
+  have heval_foldr: "top1_group_word_product mul e invg (map (\<lambda>(s,b). (\<iota> s, b)) w) = foldr mul ?gs e"
+  proof -
+    have "top1_group_word_product mul e invg (map (\<lambda>(s,b). (\<iota> s, b)) w)
+        = foldr mul (map (\<lambda>(x,b). if b then x else invg x) (map (\<lambda>(s,b). (\<iota> s, b)) w)) e"
+      by (rule word_product_as_foldr)
+    also have "map (\<lambda>(x,b). if b then x else invg x) (map (\<lambda>(s,b). (\<iota> s, b)) w) = ?gs"
+    proof (rule nth_equalityI)
+      show "length (map (\<lambda>(x,b). if b then x else invg x) (map (\<lambda>(s,b). (\<iota> s, b)) w)) = length ?gs"
+        by (by100 simp)
+      fix i assume "i < length (map (\<lambda>(x,b). if b then x else invg x) (map (\<lambda>(s,b). (\<iota> s, b)) w))"
+      hence hi: "i < length w" by (by100 simp)
+      obtain si bi where hwi: "w ! i = (si, bi)" by (cases "w ! i") (by100 blast)
+      show "map (\<lambda>(x,b). if b then x else invg x) (map (\<lambda>(s,b). (\<iota> s, b)) w) ! i = ?gs ! i"
+        using hi hwi by (by100 simp)
+    qed
+    finally show ?thesis by (by100 simp)
+  qed
+  \<comment> \<open>Step 2: Define coefficient function c.\<close>
+  define c :: "'s \<Rightarrow> int" where
+    "c s = (let bs = filter (\<lambda>(t,b). t = s) w
+             in if bs = [] then 0
+                else if snd (hd bs) then int (length bs)
+                else - int (length bs))" for s
+  \<comment> \<open>Step 3: Support is finite, nonempty, contained in S.\<close>
+  have hsupp_sub: "{s \<in> S. c s \<noteq> 0} \<subseteq> fst ` set w"
+  proof (rule subsetI)
+    fix s assume "s \<in> {s \<in> S. c s \<noteq> 0}"
+    hence "c s \<noteq> 0" by (by100 blast)
+    hence hne_filter: "filter (\<lambda>(t,b). t = s) w \<noteq> []" unfolding c_def by (by5000 auto)
+    then obtain p ps where "filter (\<lambda>(t,b). t = s) w = p # ps" using list.exhaust by (by100 blast)
+    hence "p \<in> set (filter (\<lambda>(t,b). t = s) w)" by (by100 simp)
+    hence "p \<in> set w \<and> fst p = s" by (by5000 auto)
+    thus "s \<in> fst ` set w" by (by100 force)
+  qed
+  have hfin: "finite {s \<in> S. c s \<noteq> 0}"
+  proof -
+    have "finite (fst ` set w)" by (by100 simp)
+    from finite_subset[OF hsupp_sub this] show ?thesis .
+  qed
+  have hnonzero: "\<exists>s\<in>S. c s \<noteq> 0"
+  proof -
+    obtain s0 b0 where hw0: "w ! 0 = (s0, b0)" by (cases "w ! 0") (by100 blast)
+    have "0 < length w" using hne by (by100 simp)
+    hence hs0_w: "(s0, b0) \<in> set w" using hw0 nth_mem by (by100 force)
+    have hs0_S: "s0 \<in> S" using hs0_w hall by (by100 force)
+    have hfilter_ne: "filter (\<lambda>(t,b). t = s0) w \<noteq> []"
+    proof -
+      have "(s0, b0) \<in> set (filter (\<lambda>(t,b). t = s0) w)"
+        using hs0_w by (by5000 auto)
+      thus ?thesis by (by100 force)
+    qed
+    have "c s0 \<noteq> 0"
+    proof -
+      define bs where "bs = filter (\<lambda>(t,b). t = s0) w"
+      have "bs \<noteq> []" using hfilter_ne unfolding bs_def .
+      hence "length bs > 0" by (by100 simp)
+      hence "int (length bs) > 0" by (by100 simp)
+      show ?thesis
+      proof (cases "snd (hd bs)")
+        case True thus ?thesis using \<open>int (length bs) > 0\<close>
+          unfolding c_def bs_def[symmetric] using \<open>bs \<noteq> []\<close> by (by5000 auto)
+      next
+        case False thus ?thesis using \<open>int (length bs) > 0\<close>
+          unfolding c_def bs_def[symmetric] using \<open>bs \<noteq> []\<close> by (by5000 auto)
+      qed
+    qed
+    thus ?thesis using hs0_S by (by100 blast)
+  qed
+  \<comment> \<open>Step 4: Independence: canonical\_product(c) \<noteq> e.\<close>
+  let ?term = "\<lambda>s. if c s \<ge> 0 then top1_group_pow mul e (\<iota> s) (nat (c s))
+                   else top1_group_pow mul e (invg (\<iota> s)) (nat (- c s))"
+  let ?supp_list = "SOME xs :: 's list. set xs = {s \<in> S. c s \<noteq> 0} \<and> distinct xs"
+  have hcanonical_ne: "foldr mul (map ?term ?supp_list) e \<noteq> e"
+  proof -
+    have hindep: "\<forall>c :: 's \<Rightarrow> int.
+        finite {s\<in>S. c s \<noteq> 0} \<longrightarrow> (\<exists>s\<in>S. c s \<noteq> 0) \<longrightarrow>
+        foldr mul (map (\<lambda>s. if c s \<ge> 0 then top1_group_pow mul e (\<iota> s) (nat (c s))
+                            else top1_group_pow mul e (invg (\<iota> s)) (nat (- c s)))
+          (SOME xs. set xs = {s\<in>S. c s \<noteq> 0} \<and> distinct xs)) e \<noteq> e"
+      using hfree unfolding top1_is_free_abelian_group_full_on_def by (by5000 blast)
+    from hindep[rule_format, OF hfin hnonzero] show ?thesis .
+  qed
+  \<comment> \<open>Step 5: Show word\_product = canonical\_product.
+     Key step: foldr mul ?gs e = foldr mul (map ?term ?supp\_list) e.
+     Use abelian\_foldr\_split\_one\_element iteratively + abelian\_foldr\_perm\_distinct.\<close>
+  have "foldr mul ?gs e = foldr mul (map ?term ?supp_list) e"
+    sorry \<comment> \<open>Key equality: word product = canonical product.
+       Iterative abelian\_foldr\_split\_one\_element + abelian\_foldr\_perm\_distinct.\<close>
+  \<comment> \<open>Step 6: Combine.\<close>
+  thus ?thesis using heval_foldr hcanonical_ne by (by100 simp)
+qed
+
 text \<open>Free abelian word kernel: if a word evaluates to e in a free abelian group,
   then it evaluates to eH in any abelian group H.
   This delegates to free\_abelian\_word\_kernel\_v2 which is placed after word\_product infrastructure.\<close>
@@ -4247,11 +4384,274 @@ proof -
         thus ?thesis using hIH by (by100 simp)
       next
         case no_pair: False
-        \<comment> \<open>No (s0, \<not>b0) in tl w. Net coeff of s0 \<noteq> 0.
-           By independence, canonical product \<noteq> e, contradicting eval = e.\<close>
-        have "top1_group_word_product mul e invg (map (\<lambda>(s,b). (\<iota> s, b)) w) \<noteq> e"
-          sorry \<comment> \<open>Abelian rearrangement + independence.\<close>
-        thus ?thesis using less(3) by (by100 blast)
+        \<comment> \<open>s0 has no matching pair. Split: either some OTHER generator has a matching
+           pair (cancel it via IH), or no generator has any matching pair (independence).\<close>
+        show ?thesis
+        proof (cases "\<exists>s1 b1. (s1, b1) \<in> set w \<and> (s1, \<not>b1) \<in> set w")
+          case True
+          \<comment> \<open>Some generator has a matching pair. Cancel it and use IH directly.\<close>
+          \<comment> \<open>Move one element of the pair to position 0, cancel, apply IH.\<close>
+          \<comment> \<open>This case gives eval\_H = eH directly via cancel in G and H + IH.\<close>
+          then obtain s1 b1 where hpair1: "(s1, b1) \<in> set w" "(s1, \<not>b1) \<in> set w"
+            by (by100 blast)
+          \<comment> \<open>Move (s1, b1) to position 0, then cancel against (s1, \<not>b1).\<close>
+          from hpair1(1) obtain i1 where hi1: "i1 < length w" and hwi1: "w ! i1 = (s1, b1)"
+            using in_set_conv_nth by (by100 metis)
+          \<comment> \<open>Form w1 = w!i1 # take i1 w @ drop (Suc i1) w (move position i1 to front).\<close>
+          let ?w1 = "w ! i1 # take i1 w @ drop (Suc i1) w"
+          have hw1_0: "?w1 ! 0 = (s1, b1)" using hwi1 by (by100 simp)
+          have hw1_len: "length ?w1 = length w" using hi1 by (by100 simp)
+          \<comment> \<open>eval\_G(?w1) = eval\_G(w) via abelian\_word\_product\_move\_front.\<close>
+          \<comment> \<open>Membership lemma for mapped word.\<close>
+          have hmw_G: "\<forall>k<length (map (\<lambda>(s,b). (\<iota> s, b)) w). fst ((map (\<lambda>(s,b). (\<iota> s, b)) w) ! k) \<in> G"
+          proof (intro allI impI)
+            fix k assume "k < length (map (\<lambda>(s,b). (\<iota> s, b)) w)"
+            hence hk: "k < length w" by (by100 simp)
+            obtain sk bk where "w ! k = (sk, bk)" by (cases "w ! k") (by100 blast)
+            have "sk \<in> fst ` set w" using hk \<open>w ! k = (sk, bk)\<close> nth_mem by (by100 force)
+            hence "sk \<in> S" using less(2) by (by100 blast)
+            thus "fst ((map (\<lambda>(s,b). (\<iota> s, b)) w) ! k) \<in> G"
+              using h\<iota>_in hk \<open>w ! k = (sk, bk)\<close> by (by100 simp)
+          qed
+          have heval_w1_G: "top1_group_word_product mul e invg (map (\<lambda>(s,b). (\<iota> s, b)) ?w1)
+              = top1_group_word_product mul e invg (map (\<lambda>(s,b). (\<iota> s, b)) w)"
+          proof -
+            have "top1_group_word_product mul e invg (map (\<lambda>(s,b). (\<iota> s, b)) w)
+                = top1_group_word_product mul e invg
+                    ((map (\<lambda>(s,b). (\<iota> s, b)) w) ! i1 # take i1 (map (\<lambda>(s,b). (\<iota> s, b)) w) @ drop (Suc i1) (map (\<lambda>(s,b). (\<iota> s, b)) w))"
+              by (rule abelian_word_product_move_front[OF hG_abel hmw_G])
+                 (simp add: hi1)
+            moreover have "(map (\<lambda>(s,b). (\<iota> s, b)) w) ! i1 # take i1 (map (\<lambda>(s,b). (\<iota> s, b)) w) @ drop (Suc i1) (map (\<lambda>(s,b). (\<iota> s, b)) w)
+                = map (\<lambda>(s,b). (\<iota> s, b)) ?w1"
+            proof -
+              have "(map (\<lambda>(s,b). (\<iota> s, b)) w) ! i1 = (\<iota> s1, b1)"
+                using hi1 hwi1 by (by100 simp)
+              moreover have "take i1 (map (\<lambda>(s,b). (\<iota> s, b)) w) = map (\<lambda>(s,b). (\<iota> s, b)) (take i1 w)"
+                by (rule take_map)
+              moreover have "drop (Suc i1) (map (\<lambda>(s,b). (\<iota> s, b)) w) = map (\<lambda>(s,b). (\<iota> s, b)) (drop (Suc i1) w)"
+                by (rule drop_map)
+              ultimately show ?thesis using hwi1 by (by100 simp)
+            qed
+            ultimately show ?thesis by (by100 simp)
+          qed
+          \<comment> \<open>eval\_H(?w1) = eval\_H(w) similarly.\<close>
+          have hmw_H: "\<forall>k<length (map (\<lambda>(s,b). (\<phi> s, b)) w). fst ((map (\<lambda>(s,b). (\<phi> s, b)) w) ! k) \<in> H"
+          proof (intro allI impI)
+            fix k assume "k < length (map (\<lambda>(s,b). (\<phi> s, b)) w)"
+            hence hk: "k < length w" by (by100 simp)
+            obtain sk bk where "w ! k = (sk, bk)" by (cases "w ! k") (by100 blast)
+            have "sk \<in> fst ` set w" using hk \<open>w ! k = (sk, bk)\<close> nth_mem by (by100 force)
+            hence "sk \<in> S" using less(2) by (by100 blast)
+            thus "fst ((map (\<lambda>(s,b). (\<phi> s, b)) w) ! k) \<in> H"
+              using hphi hk \<open>w ! k = (sk, bk)\<close> by (by100 simp)
+          qed
+          have heval_w1_H: "top1_group_word_product mulH eH invgH (map (\<lambda>(s,b). (\<phi> s, b)) ?w1)
+              = top1_group_word_product mulH eH invgH (map (\<lambda>(s,b). (\<phi> s, b)) w)"
+          proof -
+            have "top1_group_word_product mulH eH invgH (map (\<lambda>(s,b). (\<phi> s, b)) w)
+                = top1_group_word_product mulH eH invgH
+                    ((map (\<lambda>(s,b). (\<phi> s, b)) w) ! i1 # take i1 (map (\<lambda>(s,b). (\<phi> s, b)) w) @ drop (Suc i1) (map (\<lambda>(s,b). (\<phi> s, b)) w))"
+              by (rule abelian_word_product_move_front[OF hH hmw_H])
+                 (simp add: hi1)
+            moreover have "(map (\<lambda>(s,b). (\<phi> s, b)) w) ! i1 # take i1 (map (\<lambda>(s,b). (\<phi> s, b)) w) @ drop (Suc i1) (map (\<lambda>(s,b). (\<phi> s, b)) w)
+                = map (\<lambda>(s,b). (\<phi> s, b)) ?w1"
+            proof -
+              have "(map (\<lambda>(s,b). (\<phi> s, b)) w) ! i1 = (\<phi> s1, b1)"
+                using hi1 hwi1 by (by100 simp)
+              moreover have "take i1 (map (\<lambda>(s,b). (\<phi> s, b)) w) = map (\<lambda>(s,b). (\<phi> s, b)) (take i1 w)"
+                by (rule take_map)
+              moreover have "drop (Suc i1) (map (\<lambda>(s,b). (\<phi> s, b)) w) = map (\<lambda>(s,b). (\<phi> s, b)) (drop (Suc i1) w)"
+                by (rule drop_map)
+              ultimately show ?thesis using hwi1 by (by100 simp)
+            qed
+            ultimately show ?thesis by (by100 simp)
+          qed
+          \<comment> \<open>Find (s1, \<not>b1) at position j1 > 0 in ?w1.\<close>
+          have hset_w1: "set ?w1 = set w"
+          proof
+            show "set ?w1 \<subseteq> set w"
+            proof (rule subsetI)
+              fix x assume "x \<in> set ?w1"
+              hence "x = w ! i1 \<or> x \<in> set (take i1 w) \<or> x \<in> set (drop (Suc i1) w)"
+                by (by5000 auto)
+              moreover have "w ! i1 \<in> set w" using hi1 nth_mem by (by100 blast)
+              moreover have "set (take i1 w) \<subseteq> set w" by (rule set_take_subset)
+              moreover have "set (drop (Suc i1) w) \<subseteq> set w" by (rule set_drop_subset)
+              ultimately show "x \<in> set w" by (by100 blast)
+            qed
+          next
+            show "set w \<subseteq> set ?w1"
+            proof (rule subsetI)
+              fix x assume "x \<in> set w"
+              have "w = take i1 w @ [w ! i1] @ drop (Suc i1) w"
+                using id_take_nth_drop[OF hi1] by (by100 simp)
+              hence "x \<in> set (take i1 w @ [w ! i1] @ drop (Suc i1) w)" using \<open>x \<in> set w\<close>
+                by (by100 simp)
+              thus "x \<in> set ?w1" by (by5000 auto)
+            qed
+          qed
+          have "(s1, \<not>b1) \<in> set ?w1" using hpair1(2) hset_w1 by (by100 blast)
+          then obtain j1 where hj1: "j1 < length ?w1" and hj1_0: "j1 > 0"
+              and hw1j1: "?w1 ! j1 = (s1, \<not>b1)"
+          proof -
+            from \<open>(s1, \<not>b1) \<in> set ?w1\<close> obtain j1 where hj1: "j1 < length ?w1"
+                and hw1j1: "?w1 ! j1 = (s1, \<not>b1)" using in_set_conv_nth by (by100 metis)
+            have "j1 > 0"
+            proof (rule ccontr)
+              assume "\<not> j1 > 0" hence "j1 = 0" by (by100 simp)
+              hence "(s1, b1) = (s1, \<not>b1)" using hw1_0 hw1j1 by (by100 simp)
+              thus False by (by100 simp)
+            qed
+            thus ?thesis using that hj1 hw1j1 by (by100 blast)
+          qed
+          \<comment> \<open>Cancel pair in ?w1 at positions 0 and j1. Same pattern as existing True case.\<close>
+          let ?w' = "tl (take j1 ?w1) @ drop (Suc j1) ?w1"
+          have heval_G': "top1_group_word_product mul e invg (map (\<lambda>(s,b). (\<iota> s, b)) ?w') = e"
+          proof -
+            let ?mw1 = "map (\<lambda>(s,b). (\<iota> s, b)) ?w1"
+            have hmw1_G: "\<forall>k<length ?mw1. fst (?mw1 ! k) \<in> G"
+            proof (intro allI impI)
+              fix k assume "k < length ?mw1"
+              hence hk: "k < length ?w1" by (by100 simp)
+              obtain sk bk where "?w1 ! k = (sk, bk)" by (cases "?w1 ! k") (by100 blast)
+              have "?w1 ! k \<in> set ?w1" using hk nth_mem by (by100 blast)
+              hence "(sk, bk) \<in> set ?w1" using \<open>?w1 ! k = (sk, bk)\<close> by (by100 simp)
+              hence "(sk, bk) \<in> set w" using hset_w1 by (by100 blast)
+              hence "sk \<in> fst ` set w" by (by100 force)
+              hence "sk \<in> S" using less(2) by (by100 blast)
+              have "\<iota> sk \<in> G" using h\<iota>_in \<open>sk \<in> S\<close> by (by100 blast)
+              have "?mw1 ! k = (\<lambda>(s,b). (\<iota> s, b)) (?w1 ! k)"
+                using nth_map[OF hk] by (by100 simp)
+              hence "?mw1 ! k = (\<iota> sk, bk)" using \<open>?w1 ! k = (sk, bk)\<close> by (by100 simp)
+              thus "fst (?mw1 ! k) \<in> G" using \<open>\<iota> sk \<in> G\<close> by (by100 simp)
+            qed
+            have hmw1_0: "?mw1 ! 0 = (\<iota> s1, b1)"
+            proof -
+              have "0 < length ?w1" using hw1_len hw_ne by (by100 simp)
+              hence "?mw1 ! 0 = (\<lambda>(s,b). (\<iota> s, b)) (?w1 ! 0)"
+                using nth_map[of 0 ?w1] by (by100 simp)
+              thus ?thesis using hw1_0 by (by100 simp)
+            qed
+            have hmw1_j: "?mw1 ! j1 = (\<iota> s1, \<not>b1)"
+            proof -
+              have "j1 < length ?w1" using hj1 .
+              hence "?mw1 ! j1 = (\<lambda>(s,b). (\<iota> s, b)) (?w1 ! j1)"
+                using nth_map[of j1 ?w1] by (by100 simp)
+              thus ?thesis using hw1j1 by (by100 simp)
+            qed
+            have "top1_group_word_product mul e invg ?mw1
+                = top1_group_word_product mul e invg (tl (take j1 ?mw1) @ drop (Suc j1) ?mw1)"
+              apply (rule word_product_cancel_matching_pair[where s="\<iota> s1" and b=b1])
+              apply (rule hG_abel)
+              apply (rule hmw1_G)
+              apply (rule hmw1_0)
+              apply (rule hj1_0)
+              apply (simp only: length_map, rule hj1)
+              apply (rule hmw1_j)
+              done
+            have "tl (take j1 ?mw1) @ drop (Suc j1) ?mw1 = map (\<lambda>(s,b). (\<iota> s, b)) ?w'"
+            proof -
+              have "tl (take j1 (map (\<lambda>(s,b). (\<iota> s, b)) ?w1)) @ drop (Suc j1) (map (\<lambda>(s,b). (\<iota> s, b)) ?w1)
+                  = map (\<lambda>(s,b). (\<iota> s, b)) (take (j1 - 1) (tl ?w1) @ drop j1 (tl ?w1))"
+                by (rule tl_take_drop_map_pair[OF hj1_0])
+              moreover have "take (j1 - 1) (tl ?w1) @ drop j1 (tl ?w1) = ?w'"
+                using tl_take_drop_eq[OF hj1_0, symmetric] .
+              ultimately show ?thesis by (by5000 simp)
+            qed
+            hence "top1_group_word_product mul e invg ?mw1
+                = top1_group_word_product mul e invg (map (\<lambda>(s,b). (\<iota> s, b)) ?w')"
+              using \<open>top1_group_word_product mul e invg ?mw1 = top1_group_word_product mul e invg (tl (take j1 ?mw1) @ drop (Suc j1) ?mw1)\<close>
+              by (by100 simp)
+            thus ?thesis using heval_w1_G less(3) by (by100 simp)
+          qed
+          have hlen': "length ?w' < length w"
+            using hj1 hw1_len by (by5000 fastforce)
+          have hset_w'_sub: "set ?w' \<subseteq> set ?w1"
+          proof (rule subsetI)
+            fix x assume "x \<in> set ?w'"
+            have "set ?w' \<subseteq> set (tl (take j1 ?w1)) \<union> set (drop (j1 + 1) ?w1)" by (by100 auto)
+            moreover have "set (tl (take j1 ?w1)) \<subseteq> set (take j1 ?w1)"
+              by (cases "take j1 ?w1") (by100 auto)+
+            moreover have "set (take j1 ?w1) \<subseteq> set ?w1" by (rule set_take_subset)
+            moreover have "set (drop (j1 + 1) ?w1) \<subseteq> set ?w1" by (rule set_drop_subset)
+            ultimately show "x \<in> set ?w1" using \<open>x \<in> set ?w'\<close> by (by100 blast)
+          qed
+          have hws': "\<forall>s \<in> fst ` set ?w'. s \<in> S"
+            using less(2) hset_w'_sub hset_w1 by (by5000 force)
+          \<comment> \<open>IH on ?w'.\<close>
+          have hIH: "top1_group_word_product mulH eH invgH (map (\<lambda>(s,b). (\<phi> s, b)) ?w') = eH"
+            by (rule less(1)[OF hlen' hws' heval_G'])
+          \<comment> \<open>Cancel in H: eval\_H(?w1) = eval\_H(?w') = eH.\<close>
+          have "top1_group_word_product mulH eH invgH (map (\<lambda>(s,b). (\<phi> s, b)) ?w1)
+              = top1_group_word_product mulH eH invgH (map (\<lambda>(s,b). (\<phi> s, b)) ?w')"
+          proof -
+            let ?mw1H = "map (\<lambda>(s,b). (\<phi> s, b)) ?w1"
+            have hmw1_H: "\<forall>k<length ?mw1H. fst (?mw1H ! k) \<in> H"
+            proof (intro allI impI)
+              fix k assume "k < length ?mw1H"
+              hence hk: "k < length ?w1" by (by100 simp)
+              obtain sk bk where "?w1 ! k = (sk, bk)" by (cases "?w1 ! k") (by100 blast)
+              have "?w1 ! k \<in> set ?w1" using hk nth_mem by (by100 blast)
+              hence "(sk, bk) \<in> set ?w1" using \<open>?w1 ! k = (sk, bk)\<close> by (by100 simp)
+              hence "(sk, bk) \<in> set w" using hset_w1 by (by100 blast)
+              hence "sk \<in> fst ` set w" by (by100 force)
+              hence "sk \<in> S" using less(2) by (by100 blast)
+              have "\<phi> sk \<in> H" using hphi \<open>sk \<in> S\<close> by (by100 blast)
+              have "?mw1H ! k = (\<lambda>(s,b). (\<phi> s, b)) (?w1 ! k)"
+                using nth_map[OF hk] by (by100 simp)
+              hence "?mw1H ! k = (\<phi> sk, bk)" using \<open>?w1 ! k = (sk, bk)\<close> by (by100 simp)
+              thus "fst (?mw1H ! k) \<in> H" using \<open>\<phi> sk \<in> H\<close> by (by100 simp)
+            qed
+            have hmw1H_0: "?mw1H ! 0 = (\<phi> s1, b1)"
+            proof -
+              have "0 < length ?w1" using hw1_len hw_ne by (by100 simp)
+              hence "?mw1H ! 0 = (\<lambda>(s,b). (\<phi> s, b)) (?w1 ! 0)"
+                using nth_map[of 0 ?w1] by (by100 simp)
+              thus ?thesis using hw1_0 by (by100 simp)
+            qed
+            have hmw1H_j: "?mw1H ! j1 = (\<phi> s1, \<not>b1)"
+            proof -
+              have "j1 < length ?w1" using hj1 .
+              hence "?mw1H ! j1 = (\<lambda>(s,b). (\<phi> s, b)) (?w1 ! j1)"
+                using nth_map[of j1 ?w1] by (by100 simp)
+              thus ?thesis using hw1j1 by (by100 simp)
+            qed
+            have "top1_group_word_product mulH eH invgH ?mw1H
+                = top1_group_word_product mulH eH invgH (tl (take j1 ?mw1H) @ drop (Suc j1) ?mw1H)"
+              apply (rule word_product_cancel_matching_pair[where s="\<phi> s1" and b=b1])
+              apply (rule hH)
+              apply (rule hmw1_H)
+              apply (rule hmw1H_0)
+              apply (rule hj1_0)
+              apply (simp only: length_map, rule hj1)
+              apply (rule hmw1H_j)
+              done
+            have "tl (take j1 ?mw1H) @ drop (Suc j1) ?mw1H = map (\<lambda>(s,b). (\<phi> s, b)) ?w'"
+            proof -
+              have "tl (take j1 (map (\<lambda>(s,b). (\<phi> s, b)) ?w1)) @ drop (Suc j1) (map (\<lambda>(s,b). (\<phi> s, b)) ?w1)
+                  = map (\<lambda>(s,b). (\<phi> s, b)) (take (j1 - 1) (tl ?w1) @ drop j1 (tl ?w1))"
+                by (rule tl_take_drop_map_pair[OF hj1_0])
+              moreover have "take (j1 - 1) (tl ?w1) @ drop j1 (tl ?w1) = ?w'"
+                using tl_take_drop_eq[OF hj1_0, symmetric] .
+              ultimately show ?thesis by (by5000 simp)
+            qed
+            thus ?thesis
+              using \<open>top1_group_word_product mulH eH invgH ?mw1H = top1_group_word_product mulH eH invgH (tl (take j1 ?mw1H) @ drop (Suc j1) ?mw1H)\<close>
+              by (by100 simp)
+          qed
+          hence "top1_group_word_product mulH eH invgH (map (\<lambda>(s,b). (\<phi> s, b)) ?w1) = eH"
+            using hIH by (by100 simp)
+          thus ?thesis using heval_w1_H by (by100 simp)
+        next
+          case all_single: False
+          \<comment> \<open>No generator has any matching pair. All single polarity.
+             By no\_matching\_pair\_word\_ne\_e, eval\_G(w) \<noteq> e.\<close>
+          have huni: "\<forall>s b. (s, b) \<in> set w \<longrightarrow> (s, \<not>b) \<notin> set w"
+            using all_single by (by100 blast)
+          have "top1_group_word_product mul e invg (map (\<lambda>(s,b). (\<iota> s, b)) w) \<noteq> e"
+            by (rule no_matching_pair_word_ne_e[OF hfree less(2) hw_ne huni])
+          thus ?thesis using less(3) by (by100 blast)
+        qed
       qed
     qed
   qed
@@ -10499,7 +10899,7 @@ proof -
               qed
               moreover have "(top1_path_product \<alpha>0 \<sigma>) s = \<alpha>0 (2 * s)"
                 unfolding top1_path_product_def using True by (by100 simp)
-              ultimately show ?thesis by (by100 simp)
+              ultimately show ?thesis by (by5000 simp)
             next
               case False
               hence hgt: "s > 1/2" by (by100 simp)
@@ -10511,7 +10911,7 @@ proof -
               qed
               moreover have "(top1_path_product \<alpha>0 \<sigma>) s = \<sigma> (2 * s - 1)"
                 unfolding top1_path_product_def using False by (by100 simp)
-              ultimately show ?thesis by (by100 simp)
+              ultimately show ?thesis by (by5000 simp)
             qed
           qed
           \<comment> \<open>By ftilde_eq_lift: ftilde(y') = endpoint of this lift = inv_into W0 p (f y').\<close>
@@ -10621,7 +11021,7 @@ proof -
               ultimately have "\<Inter>{U, V} \<in> TB"
                 using \<open>\<forall>F. _\<close> by (by100 blast)
               moreover have "\<Inter>{U, V} = U \<inter> V" by (by100 auto)
-              ultimately show ?thesis by (by100 simp)
+              ultimately show ?thesis by (by5000 simp)
             qed
             thus "p ` (W0 \<inter> W) \<in> TB" using hpWW_eq by (by100 simp)
           qed
