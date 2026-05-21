@@ -10248,7 +10248,12 @@ proof (induction "is")
   have "top1_group_word_product mul e invg (concat (map (\<lambda>i. [(a i, True), (b i, True),
       (a i, False), (b i, False)]) [])) = e" by (by100 simp)
   moreover have "e \<in> top1_commutator_subgroup_on G mul e invg"
-    using commutator_subgroup_is_normal[OF hG] sorry
+  proof -
+    from commutator_subgroup_is_normal[OF hG]
+    have "top1_is_group_on (top1_commutator_subgroup_on G mul e invg) mul e invg"
+      unfolding top1_normal_subgroup_on_def by (by100 blast)
+    thus ?thesis unfolding top1_is_group_on_def by (by100 blast)
+  qed
   ultimately show ?case by (by100 simp)
 next
   case (Cons j js)
