@@ -4830,8 +4830,66 @@ proof -
          then map pow\_gs (map gen (remdups w)) = map (term \<circ> fst) (remdups w)
          = map term (remdups (map fst w)) [single polarity: fst of remdups = remdups of fst].\<close>
       \<comment> \<open>(1) gen is injective on set w.\<close>
+      have h\<iota>_inj: "inj_on \<iota> S"
+        using hfree unfolding top1_is_free_abelian_group_full_on_def by (by100 blast)
       have hgen_inj: "inj_on ?gen (set w)"
-        sorry
+      proof (rule inj_onI)
+        fix p1 p2 assume hp1: "p1 \<in> set w" and hp2: "p2 \<in> set w"
+            and heq: "?gen p1 = ?gen p2"
+        obtain s1 b1 where h1: "p1 = (s1, b1)" by (cases p1) (by100 blast)
+        obtain s2 b2 where h2: "p2 = (s2, b2)" by (cases p2) (by100 blast)
+        have hs1: "s1 \<in> S" using hp1 h1 hall by (by100 force)
+        have hs2: "s2 \<in> S" using hp2 h2 hall by (by100 force)
+        \<comment> \<open>If s1 = s2: by huni, b1 = b2.\<close>
+        \<comment> \<open>If s1 \<noteq> s2: gen values differ (by \<iota> injective + invg injective).\<close>
+        have "s1 = s2"
+        proof (rule ccontr)
+          assume hne: "s1 \<noteq> s2"
+          have "\<iota> s1 \<noteq> \<iota> s2" using h\<iota>_inj hs1 hs2 hne unfolding inj_on_def by (by100 blast)
+          \<comment> \<open>Case analysis on b1, b2.\<close>
+          show False
+          proof (cases b1)
+            case True note hb1 = this
+            show ?thesis
+            proof (cases b2)
+              case True \<comment> \<open>Both True: \<iota> s1 = \<iota> s2, contradicts \<iota> injective.\<close>
+              thus ?thesis using heq h1 h2 hb1 \<open>\<iota> s1 \<noteq> \<iota> s2\<close> by (by100 simp)
+            next
+              case False \<comment> \<open>s1 True, s2 False: \<iota> s1 = invg(\<iota> s2). Then mul(\<iota> s1, \<iota> s2) = e.\<close>
+              hence "\<iota> s1 = invg (\<iota> s2)" using heq h1 h2 hb1 by (by100 simp)
+              \<comment> \<open>This contradicts independence: the canonical product with c(s1)=1, c(s2)=1 would be e.\<close>
+              thus ?thesis sorry
+            qed
+          next
+            case False note hb1 = this
+            show ?thesis
+            proof (cases b2)
+              case True \<comment> \<open>s1 False, s2 True: invg(\<iota> s1) = \<iota> s2. Same as above.\<close>
+              hence "invg (\<iota> s1) = \<iota> s2" using heq h1 h2 hb1 by (by100 simp)
+              thus ?thesis sorry
+            next
+              case False \<comment> \<open>Both False: invg(\<iota> s1) = invg(\<iota> s2), so \<iota> s1 = \<iota> s2.\<close>
+              hence "invg (\<iota> s1) = invg (\<iota> s2)" using heq h1 h2 hb1 by (by100 simp)
+              hence "\<iota> s1 = \<iota> s2" sorry \<comment> \<open>invg injective (group axiom).\<close>
+              thus ?thesis using \<open>\<iota> s1 \<noteq> \<iota> s2\<close> by (by100 blast)
+            qed
+          qed
+        qed
+        hence "b1 = b2"
+        proof -
+          have "(s1, b1) \<in> set w" using hp1 h1 by (by100 simp)
+          have "(s2, b2) \<in> set w" using hp2 h2 by (by100 simp)
+          hence "(s1, b2) \<in> set w" using \<open>s1 = s2\<close> by (by100 simp)
+          show ?thesis
+          proof (rule ccontr)
+            assume "b1 \<noteq> b2"
+            hence "b2 = (\<not>b1)" by (by100 auto)
+            hence "(s1, \<not>b1) \<in> set w" using \<open>(s1, b2) \<in> set w\<close> by (by100 simp)
+            thus False using huni \<open>(s1, b1) \<in> set w\<close> by (by100 blast)
+          qed
+        qed
+        show "p1 = p2" using h1 h2 \<open>s1 = s2\<close> \<open>b1 = b2\<close> by (by100 simp)
+      qed
       \<comment> \<open>(2) remdups (map gen w) = map gen (remdups w).\<close>
       have hrm: "remdups (map ?gen w) = map ?gen (remdups w)"
         by (rule remdups_map_inj_on[OF hgen_inj])
