@@ -10233,6 +10233,24 @@ lemma presented_comm_relator_abelianization:
   apply (by100 blast)
   done
 
+text \<open>The torus relator [a₁,b₁]⋯[aₙ,bₙ] is a product of commutators, so
+  for any free group F on S with quotient π, the kernel of π (= normal closure
+  of the relator) is contained in [F,F].\<close>
+lemma torus_relator_commutator:
+  fixes n :: nat
+  assumes hfree: "top1_is_free_group_full_on F mulF eF invgF \<iota> ({..<2*n}::nat set)"
+      and hpi: "top1_group_hom_on F mulF G mul \<pi>"
+      and hsurj: "\<pi> ` F = G"
+      and hker: "top1_group_kernel_on F eG \<pi>
+           = top1_normal_subgroup_generated_on F mulF eF invgF
+               {r. \<exists>w\<in>{ concat (map (\<lambda>i. [(2*i, True), (2*i+1, True),
+                          (2*i, False), (2*i+1, False)]) [0..<n]) }.
+                   r = top1_group_word_product mulF eF invgF
+                        (map (\<lambda>(s, b). (\<iota> s, b)) w)}"
+  shows "top1_group_kernel_on F eG \<pi>
+       \<subseteq> top1_commutator_subgroup_on F mulF eF invgF"
+  sorry
+
 (** from \<S>75 Theorem 75.3: H_1 of n-fold torus is free abelian of rank 2n.
     The abelianization of \<pi>_1(T_n) is free abelian on 2n generators. **)
 theorem Theorem_75_3_H1_n_torus:
@@ -10306,9 +10324,13 @@ proof -
     \<comment> \<open>Use the apply-style approach: extract the presented group from hpres\_iso,
        apply presented\_comm\_relator\_abelianization (which needs hcomm),
        and transfer via the iso.\<close>
-    show ?thesis using hpres_iso
-      sorry \<comment> \<open>Extract G0, apply presented\_comm\_relator\_abelianization with
-         commutator relator hcomm, transfer abelianization via G0 \<cong> \<pi>_1(X).\<close>
+    \<comment> \<open>The torus relator is a product of commutators, so it satisfies the hcomm condition
+       of presented\_comm\_relator\_abelianization. Once we have the abelianization of the
+       presented group G0, we transfer it to \<pi>_1(X) via the isomorphism.\<close>
+    show ?thesis using hpres_iso sorry
+      \<comment> \<open>Proof plan: elim exE conjE to extract G0, then
+         presented\_comm\_relator\_abelianization[OF _ torus\_relator\_commutator]
+         gives abelianization of G0, then transfer via iso.\<close>
   qed
   show ?thesis using h_abelianize by (by100 blast)
 qed
