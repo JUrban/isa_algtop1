@@ -4126,6 +4126,127 @@ proof -
   show ?thesis using hsplit hpow by (by100 simp)
 qed
 
+text \<open>In an abelian group, foldr of a list decomposes into per-element powers,
+  collected by remdups. Proved by induction on the list.\<close>
+lemma abelian_foldr_remdups_pow:
+  assumes hG: "top1_is_abelian_group_on G mul e invg"
+      and hgs: "set gs \<subseteq> G"
+  shows "foldr mul gs e
+       = foldr mul (map (\<lambda>v. top1_group_pow mul e v (length (filter (\<lambda>x. x = v) gs))) (remdups gs)) e"
+  using hgs
+proof (induction gs)
+  case Nil show ?case by (by100 simp)
+next
+  case (Cons a rest)
+  have ha_G: "a \<in> G" using Cons(2) by (by100 simp)
+  have hrest_G: "set rest \<subseteq> G" using Cons(2) by (by100 auto)
+  let ?powfn = "\<lambda>v. top1_group_pow mul e v (length (filter (\<lambda>x. x = v) (a # rest)))"
+  let ?powfn_r = "\<lambda>v. top1_group_pow mul e v (length (filter (\<lambda>x. x = v) rest))"
+  have hIH: "foldr mul rest e = foldr mul (map ?powfn_r (remdups rest)) e"
+    using Cons(1)[OF hrest_G] .
+  show ?case
+  proof (cases "a \<in> set rest")
+    case False
+    \<comment> \<open>a not in rest: remdups(a#rest) = a # remdups rest.\<close>
+    have hremdups: "remdups (a # rest) = a # remdups rest"
+      using False by (by100 simp)
+    \<comment> \<open>count(a, a#rest) = 1 since a \<notin> rest, count(v, a#rest) = count(v, rest) for v \<noteq> a.\<close>
+    have hcount_a: "length (filter (\<lambda>x. x = a) (a # rest)) = Suc 0"
+    proof -
+      have "filter (\<lambda>x. x = a) rest = []"
+        using False filter_empty_conv by (by5000 fast)
+      thus ?thesis by (by100 simp)
+    qed
+    have hcount_other: "\<forall>v \<in> set (remdups rest). v \<noteq> a \<longrightarrow>
+        length (filter (\<lambda>x. x = v) (a # rest)) = length (filter (\<lambda>x. x = v) rest)"
+      by (by5000 auto)
+    \<comment> \<open>pow(a, 1) = mul(a, e) which we need = a. Use right identity.\<close>
+    have hpow1: "top1_group_pow mul e a (Suc 0) = mul a e"
+      by (by100 simp)
+    have hG_grp: "top1_is_group_on G mul e invg"
+      using hG unfolding top1_is_abelian_group_on_def by (by100 blast)
+    have hrid: "mul a e = a"
+      using hG_grp ha_G unfolding top1_is_group_on_def by (by100 blast)
+    \<comment> \<open>Map is: ?powfn a = pow(a, 1) = a; ?powfn v = ?powfn\_r v for v \<noteq> a.\<close>
+    \<comment> \<open>powfn v = powfn\_r v for v \<in> remdups rest (since v \<noteq> a, count unchanged).\<close>
+    have hpowfn_eq: "\<forall>v \<in> set (remdups rest). ?powfn v = ?powfn_r v"
+    proof (intro ballI)
+      fix v assume "v \<in> set (remdups rest)"
+      hence "v \<noteq> a" using False by (by5000 auto)
+      hence "filter (\<lambda>x. x = v) (a # rest) = filter (\<lambda>x. x = v) rest"
+        by (by100 simp)
+      thus "?powfn v = ?powfn_r v" by (by100 simp)
+    qed
+    have hmap_eq: "map ?powfn (remdups (a # rest)) = a # map ?powfn_r (remdups rest)"
+    proof -
+      have "map ?powfn (remdups (a # rest)) = map ?powfn (a # remdups rest)"
+        using hremdups by (by100 simp)
+      also have "\<dots> = ?powfn a # map ?powfn (remdups rest)" by (by100 simp)
+      also have "?powfn a = a" using hcount_a hpow1 hrid by (by100 simp)
+      also have "map ?powfn (remdups rest) = map ?powfn_r (remdups rest)"
+        using hpowfn_eq by (by5000 auto)
+      finally show ?thesis by (by100 simp)
+    qed
+    \<comment> \<open>LHS = mul(a, foldr mul rest e) = mul(a, foldr mul (map powfn\_r (remdups rest)) e) by IH.
+       RHS = foldr mul (a # map powfn\_r (remdups rest)) e = mul(a, foldr mul (map ...) e).\<close>
+    show ?thesis
+    proof -
+      have "foldr mul (a # rest) e = mul a (foldr mul rest e)" by (by100 simp)
+      also have "\<dots> = mul a (foldr mul (map ?powfn_r (remdups rest)) e)" using hIH by (by100 simp)
+      also have "\<dots> = foldr mul (a # map ?powfn_r (remdups rest)) e" by (by100 simp)
+      also have "a # map ?powfn_r (remdups rest) = map ?powfn (remdups (a # rest))"
+        using hmap_eq by (by100 simp)
+      finally show ?thesis by (by100 simp)
+    qed
+  next
+    case True
+    \<comment> \<open>a in rest: remdups(a#rest) = remdups rest.
+       count(a, a#rest) = 1 + count(a, rest), others unchanged.
+       Need: mul(a, foldr mul (map powfn\_r (remdups rest)) e)
+            = foldr mul (map powfn (remdups rest)) e
+       where powfn is powfn\_r except at a: pow(a, count+1) = mul(a, pow(a, count)).\<close>
+    have hremdups_eq: "remdups (a # rest) = remdups rest"
+      using True by (by100 simp)
+    \<comment> \<open>LHS: foldr mul (a # rest) e = mul a (foldr mul (map powfn\_r (remdups rest)) e).\<close>
+    have hLHS: "foldr mul (a # rest) e = mul a (foldr mul (map ?powfn_r (remdups rest)) e)"
+      using hIH by (by100 simp)
+    \<comment> \<open>RHS: foldr mul (map powfn (remdups (a#rest))) e = foldr mul (map powfn (remdups rest)) e.\<close>
+    \<comment> \<open>Key: powfn v = powfn\_r v for v \<noteq> a, and powfn a = mul(a, powfn\_r a).\<close>
+    have hpowfn_a: "?powfn a = mul a (?powfn_r a)"
+      by (by5000 simp)
+    have hpowfn_other: "\<forall>v \<in> set (remdups rest). v \<noteq> a \<longrightarrow> ?powfn v = ?powfn_r v"
+      by (by5000 auto)
+    \<comment> \<open>map powfn (remdups rest) = (at position of a, replace powfn\_r a with mul(a, powfn\_r a)).
+       By abelian extract: foldr mul (map powfn (remdups rest)) e
+       = mul a (foldr mul (map powfn\_r (remdups rest)) e).\<close>
+    have ha_in_rem: "a \<in> set (remdups rest)" using True by (by100 simp)
+    then obtain j where hj: "j < length (remdups rest)" and hremj: "remdups rest ! j = a"
+      using in_set_conv_nth by (by100 metis)
+    \<comment> \<open>Decompose: remdups rest = take j (remdups rest) @ [a] @ drop (Suc j) (remdups rest).\<close>
+    \<comment> \<open>Then map powfn (remdups rest) = (take part, with powfn\_r) @ [mul(a, powfn\_r a)] @ (drop part, with powfn\_r).
+       And map powfn\_r (remdups rest) = (take part, with powfn\_r) @ [powfn\_r a] @ (drop part, with powfn\_r).
+       By abelian extract: the extra factor a can be extracted.\<close>
+    \<comment> \<open>Simpler approach: use abelian\_foldr\_split\_one\_element on map powfn (remdups rest)
+       to split by a. Then relate.\<close>
+    have hRHS: "foldr mul (map ?powfn (remdups rest)) e
+        = mul a (foldr mul (map ?powfn_r (remdups rest)) e)"
+      sorry \<comment> \<open>Replacing powfn\_r a with mul(a, powfn\_r a) at position of a
+         extracts factor a. Needs abelian extract + assoc.\<close>
+    have "foldr mul (a # rest) e
+        = foldr mul (map ?powfn (remdups (a # rest))) e"
+    proof -
+      have "foldr mul (a # rest) e = mul a (foldr mul (map ?powfn_r (remdups rest)) e)"
+        using hLHS .
+      also have "\<dots> = foldr mul (map ?powfn (remdups rest)) e"
+        using hRHS by (by100 simp)
+      also have "\<dots> = foldr mul (map ?powfn (remdups (a # rest))) e"
+        using hremdups_eq by (by100 simp)
+      finally show ?thesis .
+    qed
+    thus ?thesis .
+  qed
+qed
+
 text \<open>In a free abelian group, if a nonempty word has no matching pairs,
   the word product \<noteq> e. Follows the book: decompose into per-generator
   powers, apply direct sum / independence condition.\<close>
@@ -4232,8 +4353,18 @@ proof -
      Key step: foldr mul ?gs e = foldr mul (map ?term ?supp\_list) e.
      Use abelian\_foldr\_split\_one\_element iteratively + abelian\_foldr\_perm\_distinct.\<close>
   have "foldr mul ?gs e = foldr mul (map ?term ?supp_list) e"
-    sorry \<comment> \<open>Key equality: word product = canonical product.
-       Iterative abelian\_foldr\_split\_one\_element + abelian\_foldr\_perm\_distinct.\<close>
+  proof -
+    \<comment> \<open>Step 5a: By abelian\_foldr\_remdups\_pow, collapse repeated elements.\<close>
+    have hgs_G: "set ?gs \<subseteq> G" sorry
+    let ?pow_gs = "\<lambda>v. top1_group_pow mul e v (length (filter (\<lambda>x. x = v) ?gs))"
+    have hcollapse: "foldr mul ?gs e = foldr mul (map ?pow_gs (remdups ?gs)) e"
+      by (rule abelian_foldr_remdups_pow[OF hG_abel hgs_G])
+    \<comment> \<open>Step 5b: Show map pow\_gs (remdups ?gs) and map ?term ?supp\_list have the
+       same set, both are distinct, and all elements are in G.
+       Then abelian\_foldr\_perm\_distinct gives equality.\<close>
+    \<comment> \<open>For now, sorry the rest.\<close>
+    show ?thesis sorry
+  qed
   \<comment> \<open>Step 6: Combine.\<close>
   thus ?thesis using heval_foldr hcanonical_ne by (by100 simp)
 qed
