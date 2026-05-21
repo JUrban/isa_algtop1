@@ -4561,6 +4561,68 @@ next
   qed
 qed
 
+text \<open>remdups commutes with map when the function is injective.\<close>
+lemma remdups_map_inj_on:
+  assumes "inj_on f (set xs)"
+  shows "remdups (map f xs) = map f (remdups xs)"
+  using assms
+proof (induction xs)
+  case Nil show ?case by (by100 simp)
+next
+  case (Cons a rest)
+  have hIH: "remdups (map f rest) = map f (remdups rest)"
+    using Cons(1) Cons(2) by (by5000 auto)
+  have "f a \<in> set (map f rest) \<longleftrightarrow> a \<in> set rest"
+  proof
+    assume "f a \<in> set (map f rest)"
+    then obtain a' where "a' \<in> set rest" "f a' = f a" by (by100 auto)
+    have "a' \<in> set (a # rest)" using \<open>a' \<in> set rest\<close> by (by100 simp)
+    moreover have "a \<in> set (a # rest)" by (by100 simp)
+    ultimately have "a' = a"
+      using Cons(2) \<open>f a' = f a\<close> unfolding inj_on_def by (by100 blast)
+    thus "a \<in> set rest" using \<open>a' \<in> set rest\<close> by (by100 simp)
+  next
+    assume "a \<in> set rest" thus "f a \<in> set (map f rest)" by (by100 force)
+  qed
+  thus ?case using hIH by (by100 simp)
+qed
+
+text \<open>For single-polarity pairs, map fst (remdups w) = remdups (map fst w).\<close>
+lemma remdups_fst_single_pol:
+  assumes "\<forall>s b. (s, b) \<in> set w \<longrightarrow> (s, \<not>b) \<notin> set w"
+  shows "map fst (remdups w) = remdups (map fst w)"
+  using assms
+proof (induction w)
+  case Nil show ?case by (by100 simp)
+next
+  case (Cons a rest)
+  obtain s b where ha: "a = (s, b)" by (cases a) (by100 blast)
+  have huni_rest: "\<forall>s b. (s, b) \<in> set rest \<longrightarrow> (s, \<not>b) \<notin> set rest"
+    using Cons(2) by (by100 auto)
+  have hIH: "map fst (remdups rest) = remdups (map fst rest)"
+    using Cons(1)[OF huni_rest] .
+  \<comment> \<open>Key: a \<in> set rest \<longleftrightarrow> fst a \<in> set (map fst rest), because single polarity means
+     if (s, b') \<in> set rest with fst = s = fst a, then b' = b (since \<not>b not in set).\<close>
+  have "a \<in> set rest \<longleftrightarrow> fst a \<in> set (map fst rest)"
+  proof
+    assume "a \<in> set rest" thus "fst a \<in> set (map fst rest)" by (by100 force)
+  next
+    assume "fst a \<in> set (map fst rest)"
+    then obtain b' where "(s, b') \<in> set rest" using ha by (by100 force)
+    have "b' = b"
+    proof (rule ccontr)
+      assume "b' \<noteq> b"
+      hence "b' = (\<not>b)" by (by100 auto)
+      hence "(s, \<not>b) \<in> set rest" using \<open>(s, b') \<in> set rest\<close> by (by100 simp)
+      hence "(s, \<not>b) \<in> set (a # rest)" by (by100 simp)
+      moreover have "(s, b) \<in> set (a # rest)" using ha by (by100 simp)
+      ultimately show False using Cons(2) by (by5000 blast)
+    qed
+    thus "a \<in> set rest" using \<open>(s, b') \<in> set rest\<close> ha by (by100 simp)
+  qed
+  thus ?case using ha hIH by (by100 simp)
+qed
+
 text \<open>In a free abelian group, if a nonempty word has no matching pairs,
   the word product \<noteq> e. Follows the book: decompose into per-generator
   powers, apply direct sum / independence condition.\<close>
@@ -4762,10 +4824,15 @@ proof -
        Use abelian\_foldr\_map\_perm\_distinct on gen/term correspondence.\<close>
     have "foldr mul (map ?pow_gs (remdups ?gs)) e
         = foldr mul (map ?term (remdups (map fst w))) e"
-      sorry \<comment> \<open>gen-to-term correspondence: pow\_gs(gen(s,b)) = term(s),
-         gen injective (single polarity + \<iota> injective),
-         remdups(map gen w) = map gen (remdups w),
-         map fst (remdups w) = remdups (map fst w).\<close>
+    proof -
+      \<comment> \<open>Prove the LIST equality: map pow\_gs (remdups gs) = map term (remdups (map fst w)).
+         Chain: remdups(map gen w) = map gen (remdups w) [gen injective],
+         then map pow\_gs (map gen (remdups w)) = map (term \<circ> fst) (remdups w)
+         = map term (remdups (map fst w)) [single polarity: fst of remdups = remdups of fst].\<close>
+      have "map ?pow_gs (remdups ?gs) = map ?term (remdups (map fst w))"
+        sorry
+      thus ?thesis by (by100 simp)
+    qed
     hence "foldr mul (map ?pow_gs (remdups ?gs)) e = foldr mul (map ?term ?supp_list) e"
       using \<open>foldr mul (map ?term (remdups (map fst w))) e = foldr mul (map ?term ?supp_list) e\<close>
       by (by100 simp)
