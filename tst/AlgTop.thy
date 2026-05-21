@@ -4856,17 +4856,60 @@ proof -
               thus ?thesis using heq h1 h2 hb1 \<open>\<iota> s1 \<noteq> \<iota> s2\<close> by (by100 simp)
             next
               case False \<comment> \<open>s1 True, s2 False: \<iota> s1 = invg(\<iota> s2). Then mul(\<iota> s1, \<iota> s2) = e.\<close>
-              hence "\<iota> s1 = invg (\<iota> s2)" using heq h1 h2 hb1 by (by100 simp)
-              \<comment> \<open>This contradicts independence: the canonical product with c(s1)=1, c(s2)=1 would be e.\<close>
-              thus ?thesis sorry
+              hence h_eq: "\<iota> s1 = invg (\<iota> s2)" using heq h1 h2 hb1 by (by100 simp)
+              \<comment> \<open>mul(\<iota> s1, \<iota> s2) = e. Define c' with c'(s1) = 1, c'(s2) = 1.
+                 canonical\_product(c') = mul(\<iota> s1, \<iota> s2) = e, contradicting independence.\<close>
+              have "mul (\<iota> s1) (\<iota> s2) = e"
+              proof -
+                have "mul (invg (\<iota> s2)) (\<iota> s2) = e"
+                  using hG_grp h\<iota>_in hs2 unfolding top1_is_group_on_def by (by100 blast)
+                thus ?thesis using h_eq by (by100 simp)
+              qed
+              \<comment> \<open>This contradicts independence with c(s1) = 1, c(s2) = 1.\<close>
+              define c' :: "'s \<Rightarrow> int" where "c' = (\<lambda>s. if s = s1 then 1 else if s = s2 then 1 else 0)"
+              have "finite {s \<in> S. c' s \<noteq> 0}"
+              proof -
+                have "{s \<in> S. c' s \<noteq> 0} \<subseteq> {s1, s2}" unfolding c'_def by (by5000 auto)
+                thus ?thesis by (rule finite_subset) (by100 simp)
+              qed
+              moreover have "\<exists>s\<in>S. c' s \<noteq> 0"
+                using hs1 unfolding c'_def by (by100 auto)
+              moreover have "foldr mul (map (\<lambda>s. if c' s \<ge> 0 then top1_group_pow mul e (\<iota> s) (nat (c' s))
+                  else top1_group_pow mul e (invg (\<iota> s)) (nat (- c' s)))
+                  (SOME xs. set xs = {s \<in> S. c' s \<noteq> 0} \<and> distinct xs)) e = e"
+                sorry \<comment> \<open>The canonical product with c'(s1)=1, c'(s2)=1 = mul(\<iota> s1, \<iota> s2) = e.\<close>
+              ultimately have False
+                using hfree unfolding top1_is_free_abelian_group_full_on_def by (by5000 blast)
+              thus ?thesis ..
             qed
           next
             case False note hb1 = this
             show ?thesis
             proof (cases b2)
-              case True \<comment> \<open>s1 False, s2 True: invg(\<iota> s1) = \<iota> s2. Same as above.\<close>
-              hence "invg (\<iota> s1) = \<iota> s2" using heq h1 h2 hb1 by (by100 simp)
-              thus ?thesis sorry
+              case True \<comment> \<open>s1 False, s2 True: invg(\<iota> s1) = \<iota> s2.\<close>
+              hence h_eq2: "invg (\<iota> s1) = \<iota> s2" using heq h1 h2 hb1 by (by100 simp)
+              have "mul (\<iota> s1) (\<iota> s2) = e"
+              proof -
+                have "mul (\<iota> s1) (invg (\<iota> s1)) = e"
+                  using hG_grp h\<iota>_in hs1 unfolding top1_is_group_on_def by (by100 blast)
+                thus ?thesis using h_eq2 by (by100 simp)
+              qed
+              \<comment> \<open>Same independence contradiction as above.\<close>
+              define c'' :: "'s \<Rightarrow> int" where "c'' = (\<lambda>s. if s = s1 then 1 else if s = s2 then 1 else 0)"
+              have "finite {s \<in> S. c'' s \<noteq> 0}"
+              proof -
+                have "{s \<in> S. c'' s \<noteq> 0} \<subseteq> {s1, s2}" unfolding c''_def by (by5000 auto)
+                thus ?thesis by (rule finite_subset) (by100 simp)
+              qed
+              moreover have "\<exists>s\<in>S. c'' s \<noteq> 0"
+                using hs1 unfolding c''_def by (by100 auto)
+              moreover have "foldr mul (map (\<lambda>s. if c'' s \<ge> 0 then top1_group_pow mul e (\<iota> s) (nat (c'' s))
+                  else top1_group_pow mul e (invg (\<iota> s)) (nat (- c'' s)))
+                  (SOME xs. set xs = {s \<in> S. c'' s \<noteq> 0} \<and> distinct xs)) e = e"
+                sorry \<comment> \<open>canonical product = mul(\<iota> s1, \<iota> s2) = e.\<close>
+              ultimately have False
+                using hfree unfolding top1_is_free_abelian_group_full_on_def by (by5000 blast)
+              thus ?thesis ..
             next
               case False \<comment> \<open>Both False: invg(\<iota> s1) = invg(\<iota> s2), so \<iota> s1 = \<iota> s2.\<close>
               hence "invg (\<iota> s1) = invg (\<iota> s2)" using heq h1 h2 hb1 by (by100 simp)
