@@ -10262,7 +10262,15 @@ proof -
   \<comment> \<open>The relator word evaluates to a product of commutators \<in> [F,F].
      [F,F] is normal, so normal closure of relators \<subseteq> [F,F] = ker \<subseteq> [F,F].\<close>
   have "?relators \<subseteq> top1_commutator_subgroup_on F mulF eF invgF"
-    sorry \<comment> \<open>Each commutator word [a,b] = a\<cdot>b\<cdot>a\<inverse>\<cdot>b\<inverse> evaluates to an element of [F,F].\<close>
+  proof (rule subsetI)
+    fix r assume "r \<in> ?relators"
+    then obtain w where hw: "w \<in> ?R" and hr: "r = top1_group_word_product mulF eF invgF
+        (map (\<lambda>(s, b). (\<iota> s, b)) w)" sorry
+    \<comment> \<open>w is the single relator word: concat(map (\<lambda>i. ...) [0..<n]).
+       word\_product of this = product of commutators [\<iota>(2i), \<iota>(2i+1)] for i < n.
+       Each commutator \<in> [F,F], and [F,F] is a subgroup, so the product \<in> [F,F].\<close>
+    show "r \<in> top1_commutator_subgroup_on F mulF eF invgF" sorry
+  qed
   hence "top1_normal_subgroup_generated_on F mulF eF invgF ?relators
       \<subseteq> top1_commutator_subgroup_on F mulF eF invgF"
     by (rule normal_closure_least[OF hF_grp commutator_subgroup_is_normal[OF hF_grp]])
