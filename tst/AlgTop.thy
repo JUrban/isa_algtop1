@@ -4561,6 +4561,88 @@ next
   qed
 qed
 
+text \<open>For any ordering of a 2-element set in an abelian group, the foldr product
+  equals mul(f a, f b) (order doesn't matter).\<close>
+lemma abelian_foldr_two_element:
+  assumes hG: "top1_is_abelian_group_on G mul e invg"
+      and hfa: "f a \<in> G" and hfb: "f b \<in> G" and hab: "a \<noteq> b"
+      and hxs: "set xs = {a, b}" and hdx: "distinct xs"
+  shows "foldr mul (map f xs) e = mul (f a) (f b)"
+proof -
+  have hG_grp: "top1_is_group_on G mul e invg"
+    using hG unfolding top1_is_abelian_group_on_def by (by100 blast)
+  have hlen: "length xs = 2"
+  proof -
+    have "card {a, b} = 2" using hab by (by100 simp)
+    hence "card (set xs) = 2" using hxs by (by100 simp)
+    moreover have "length xs = card (set xs)" using hdx by (rule distinct_card[symmetric])
+    ultimately show ?thesis by (by100 simp)
+  qed
+  then obtain x0 x1 where hxs_eq: "xs = [x0, x1]"
+  proof -
+    from hlen obtain x0 rest where "xs = x0 # rest" and "length rest = 1"
+      by (cases xs) (by100 simp)+
+    from \<open>length rest = 1\<close> obtain x1 where "rest = [x1]"
+      by (cases rest) (by100 simp)+
+    thus ?thesis using that \<open>xs = x0 # rest\<close> by (by100 simp)
+  qed
+  have hset01: "{x0, x1} = {a, b}" using hxs hxs_eq by (by100 simp)
+  have hne01: "x0 \<noteq> x1" using hdx hxs_eq by (by100 simp)
+  have hfoldr: "foldr mul (map f xs) e = mul (f x0) (mul (f x1) e)"
+    using hxs_eq by (by100 simp)
+  have "f x1 \<in> G"
+  proof -
+    have "x1 \<in> {a, b}" using hset01 by (by100 blast)
+    thus ?thesis using hfa hfb by (by100 blast)
+  qed
+  have hrid: "mul (f x1) e = f x1"
+    using hG_grp \<open>f x1 \<in> G\<close> unfolding top1_is_group_on_def by (by100 blast)
+  have hfoldr2: "foldr mul (map f xs) e = mul (f x0) (f x1)"
+    using hfoldr hrid by (by100 simp)
+  have hx0_ab: "x0 \<in> {a, b}" and hx1_ab: "x1 \<in> {a, b}"
+    using hset01 by (by100 auto)+
+  have "(x0 = a \<and> x1 = b) \<or> (x0 = b \<and> x1 = a)"
+  proof (cases "x0 = a")
+    case True hence "x1 = b" using hne01 hx1_ab by (by100 blast)
+    thus ?thesis using True by (by100 blast)
+  next
+    case False hence "x0 = b" using hx0_ab by (by100 blast)
+    hence "x1 = a" using hne01 hx1_ab by (by100 blast)
+    thus ?thesis using \<open>x0 = b\<close> by (by100 blast)
+  qed
+  thus ?thesis
+  proof
+    assume "x0 = a \<and> x1 = b"
+    thus ?thesis using hfoldr2 by (by100 simp)
+  next
+    assume "x0 = b \<and> x1 = a"
+    hence "foldr mul (map f xs) e = mul (f b) (f a)" using hfoldr2 by (by100 simp)
+    moreover have "mul (f b) (f a) = mul (f a) (f b)"
+      using hG hfa hfb unfolding top1_is_abelian_group_on_def by (by100 blast)
+    ultimately show ?thesis by (by100 simp)
+  qed
+qed
+
+text \<open>Canonical product over a 2-element support {s1, s2} equals mul(term s1, term s2).\<close>
+lemma canonical_product_two_eq:
+  assumes hG: "top1_is_abelian_group_on G mul e invg"
+      and hfa: "f a \<in> G" and hfb: "f b \<in> G" and hab: "a \<noteq> b"
+  shows "foldr mul (map f (SOME xs. set xs = {a, b} \<and> distinct xs)) e = mul (f a) (f b)"
+proof -
+  have "\<exists>xs. set xs = {a, b} \<and> distinct xs"
+  proof -
+    have "set [a, b] = {a, b}" by (by100 simp)
+    moreover have "distinct [a, b]" using hab by (by100 simp)
+    ultimately show ?thesis by (by100 blast)
+  qed
+  hence hspec: "set (SOME xs. set xs = {a, b} \<and> distinct xs) = {a, b}
+      \<and> distinct (SOME xs. set xs = {a, b} \<and> distinct xs)"
+    by (rule someI_ex)
+  show ?thesis
+    by (rule abelian_foldr_two_element[OF hG hfa hfb hab])
+       (use hspec in \<open>by100 blast\<close>)+
+qed
+
 text \<open>remdups commutes with map when the function is injective.\<close>
 lemma remdups_map_inj_on:
   assumes "inj_on f (set xs)"
@@ -4901,10 +4983,17 @@ proof -
                 have ht2: "?t s2 = \<iota> s2" unfolding c'_def
                   using hne hG_grp h\<iota>_in hs2 unfolding top1_is_group_on_def by (by5000 auto)
                 \<comment> \<open>The product of [\<iota> s1, \<iota> s2] = mul(\<iota> s1, \<iota> s2) regardless of order (abelian).\<close>
-                have "foldr mul (map ?t ?xs) e = mul (\<iota> s1) (\<iota> s2)"
-                  sorry \<comment> \<open>SOME ordering of {s1,s2}: product = mul(\<iota> s1, \<iota> s2) by abelian commutativity.\<close>
-                \<comment> \<open>Rewrite: SOME xs with set = supp corresponds to SOME with hsupp.\<close>
-                thus ?thesis using \<open>mul (\<iota> s1) (\<iota> s2) = e\<close> hsupp sorry
+                have ht1_G: "?t s1 \<in> G" using ht1 h\<iota>_in hs1 by (by100 simp)
+                have ht2_G: "?t s2 \<in> G" using ht2 h\<iota>_in hs2 by (by100 simp)
+                have "foldr mul (map ?t (SOME xs. set xs = {s1, s2} \<and> distinct xs)) e
+                    = mul (?t s1) (?t s2)"
+                  by (rule canonical_product_two_eq[OF hG_abel ht1_G ht2_G hne])
+                hence "foldr mul (map ?t (SOME xs. set xs = {s1, s2} \<and> distinct xs)) e
+                    = mul (\<iota> s1) (\<iota> s2)" using ht1 ht2 by (by100 simp)
+                hence "foldr mul (map ?t (SOME xs. set xs = {s1, s2} \<and> distinct xs)) e = e"
+                  using \<open>mul (\<iota> s1) (\<iota> s2) = e\<close> by (by100 simp)
+                \<comment> \<open>Rewrite {s1,s2} to {s \<in> S. c' s \<noteq> 0} using hsupp.\<close>
+                thus ?thesis using hsupp by (by5000 simp)
               qed
               ultimately have False
                 using hfree unfolding top1_is_free_abelian_group_full_on_def by (by5000 blast)
@@ -4934,7 +5023,26 @@ proof -
               moreover have "foldr mul (map (\<lambda>s. if c'' s \<ge> 0 then top1_group_pow mul e (\<iota> s) (nat (c'' s))
                   else top1_group_pow mul e (invg (\<iota> s)) (nat (- c'' s)))
                   (SOME xs. set xs = {s \<in> S. c'' s \<noteq> 0} \<and> distinct xs)) e = e"
-                sorry \<comment> \<open>canonical product = mul(\<iota> s1, \<iota> s2) = e.\<close>
+              proof -
+                let ?f'' = "\<lambda>s. if c'' s \<ge> 0 then top1_group_pow mul e (\<iota> s) (nat (c'' s))
+                               else top1_group_pow mul e (invg (\<iota> s)) (nat (- c'' s))"
+                have hsupp'': "{s \<in> S. c'' s \<noteq> 0} = {s1, s2}"
+                  using hs1 hs2 hne unfolding c''_def by (by5000 auto)
+                have hf1: "?f'' s1 = \<iota> s1"
+                  unfolding c''_def using hG_grp h\<iota>_in hs1
+                  unfolding top1_is_group_on_def by (by5000 auto)
+                have hf2: "?f'' s2 = \<iota> s2"
+                  unfolding c''_def using hne hG_grp h\<iota>_in hs2
+                  unfolding top1_is_group_on_def by (by5000 auto)
+                have hf1_G: "?f'' s1 \<in> G" using hf1 h\<iota>_in hs1 by (by100 simp)
+                have hf2_G: "?f'' s2 \<in> G" using hf2 h\<iota>_in hs2 by (by100 simp)
+                have "foldr mul (map ?f'' (SOME xs. set xs = {s1, s2} \<and> distinct xs)) e
+                    = mul (?f'' s1) (?f'' s2)"
+                  by (rule canonical_product_two_eq[OF hG_abel hf1_G hf2_G hne])
+                hence "foldr mul (map ?f'' (SOME xs. set xs = {s1, s2} \<and> distinct xs)) e
+                    = mul (\<iota> s1) (\<iota> s2)" using hf1 hf2 by (by100 simp)
+                thus ?thesis using \<open>mul (\<iota> s1) (\<iota> s2) = e\<close> hsupp'' by (by5000 simp)
+              qed
               ultimately have False
                 using hfree unfolding top1_is_free_abelian_group_full_on_def by (by5000 blast)
               thus ?thesis ..
