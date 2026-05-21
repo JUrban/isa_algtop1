@@ -4757,10 +4757,12 @@ proof -
     \<comment> \<open>Key: map ?pow\_gs (remdups ?gs) = map ?term (remdups (map fst w)) as lists.
        Both enumerate per-generator powers in first-occurrence order.
        Since ?gen is injective on generators (single-polarity), the remdups orderings match.\<close>
-    have hlist_eq: "map ?pow_gs (remdups ?gs) = map ?term (remdups (map fst w))"
+    \<comment> \<open>Show the foldr products match. Both compute per-generator powers.
+       pow\_gs(gen(s,b)) = pow(gen(s,b), count) = term(s) for each generator s.
+       Use abelian\_foldr\_map\_perm\_distinct on gen/term correspondence.\<close>
+    have "foldr mul (map ?pow_gs (remdups ?gs)) e
+        = foldr mul (map ?term (remdups (map fst w))) e"
       sorry
-    hence "foldr mul (map ?pow_gs (remdups ?gs)) e
-        = foldr mul (map ?term (remdups (map fst w))) e" by (by100 simp)
     hence "foldr mul (map ?pow_gs (remdups ?gs)) e = foldr mul (map ?term ?supp_list) e"
       using \<open>foldr mul (map ?term (remdups (map fst w))) e = foldr mul (map ?term ?supp_list) e\<close>
       by (by100 simp)
