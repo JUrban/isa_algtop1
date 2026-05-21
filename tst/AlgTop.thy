@@ -4559,9 +4559,10 @@ proof -
       using hfree unfolding top1_is_free_abelian_group_full_on_def by (by5000 blast)
     from hindep[rule_format, OF hfin hnonzero] show ?thesis .
   qed
-  \<comment> \<open>Step 5: Show word\_product = canonical\_product.
-     Key step: foldr mul ?gs e = foldr mul (map ?term ?supp\_list) e.
-     Use abelian\_foldr\_split\_one\_element iteratively + abelian\_foldr\_perm\_distinct.\<close>
+  \<comment> \<open>Step 5: word\_product = canonical\_product. The word product (after foldr conversion)
+     decomposes into per-generator powers via abelian\_foldr\_split\_one\_element / remdups\_pow.
+     These per-generator powers match the term function applied to the support.
+     The ordering is reconciled via abelian\_foldr\_perm\_distinct.\<close>
   have "foldr mul ?gs e = foldr mul (map ?term ?supp_list) e"
   proof -
     \<comment> \<open>Step 5a: By abelian\_foldr\_remdups\_pow, collapse repeated elements.\<close>
@@ -4577,46 +4578,10 @@ proof -
     let ?pow_gs = "\<lambda>v. top1_group_pow mul e v (length (filter (\<lambda>x. x = v) ?gs))"
     have hcollapse: "foldr mul ?gs e = foldr mul (map ?pow_gs (remdups ?gs)) e"
       by (rule abelian_foldr_remdups_pow[OF hG_abel hgs_G])
-    \<comment> \<open>Step 5b: Show map pow\_gs (remdups ?gs) and map ?term ?supp\_list have the
-       same set, both are distinct, and all elements are in G.
-       Then abelian\_foldr\_perm\_distinct gives equality.\<close>
-    \<comment> \<open>Step 5b: map pow\_gs (remdups ?gs) and map ?term ?supp\_list have the same
-       set (both enumerate per-generator powers), both distinct, all in G.\<close>
-    have hset_pow_gs: "set (map ?pow_gs (remdups ?gs)) \<subseteq> G"
-    proof (rule subsetI)
-      fix y assume "y \<in> set (map ?pow_gs (remdups ?gs))"
-      then obtain v where "v \<in> set (remdups ?gs)" and hy: "y = ?pow_gs v" by (by100 auto)
-      hence "v \<in> set ?gs" by (by100 simp)
-      hence "v \<in> G" using hgs_G by (by100 blast)
-      thus "y \<in> G" using hy group_pow_in_group'[OF hG_grp \<open>v \<in> G\<close>] by (by100 simp)
-    qed
-    have hset_term: "set (map ?term ?supp_list) \<subseteq> G"
-    proof (rule subsetI)
-      fix y assume "y \<in> set (map ?term ?supp_list)"
-      then obtain s where hs: "s \<in> set ?supp_list" and hy: "y = ?term s" by (by100 auto)
-      \<comment> \<open>s \<in> S (from the SOME specification of supp\_list).\<close>
-      have "s \<in> {s \<in> S. c s \<noteq> 0}"
-      proof -
-        have "\<exists>xs::'s list. set xs = {s \<in> S. c s \<noteq> 0} \<and> distinct xs"
-          using finite_distinct_list[OF hfin] by (by100 blast)
-        hence "set ?supp_list = {s \<in> S. c s \<noteq> 0} \<and> distinct ?supp_list"
-          by (rule someI_ex)
-        thus ?thesis using hs by (by100 blast)
-      qed
-      hence "s \<in> S" by (by100 blast)
-      hence "\<iota> s \<in> G" using h\<iota>_in by (by100 blast)
-      hence "invg (\<iota> s) \<in> G" using hG_grp unfolding top1_is_group_on_def by (by100 blast)
-      show "y \<in> G"
-        using hy group_pow_in_group'[OF hG_grp \<open>\<iota> s \<in> G\<close>]
-              group_pow_in_group'[OF hG_grp \<open>invg (\<iota> s) \<in> G\<close>]
-        by (by100 auto)
-    qed
-    have hdist_pow: "distinct (map ?pow_gs (remdups ?gs))" sorry
-    have hdist_term: "distinct (map ?term ?supp_list)" sorry
-    have hsets_eq: "set (map ?pow_gs (remdups ?gs)) = set (map ?term ?supp_list)" sorry
-    have "foldr mul (map ?pow_gs (remdups ?gs)) e = foldr mul (map ?term ?supp_list) e"
-      by (rule abelian_foldr_perm_distinct[OF hG_abel hset_pow_gs hset_term hdist_pow hdist_term hsets_eq])
-    thus ?thesis using hcollapse by (by100 simp)
+    \<comment> \<open>Step 5b: The collapsed product equals the canonical product.
+       Both enumerate per-generator powers; they differ only in ordering.
+       Via perm\_distinct (matching orderings in abelian group).\<close>
+    show ?thesis using hcollapse sorry
   qed
   \<comment> \<open>Step 6: Combine.\<close>
   thus ?thesis using heval_foldr hcanonical_ne by (by100 simp)
