@@ -4141,6 +4141,110 @@ next
   thus ?case using hmul assms(2) by (by100 simp)
 qed
 
+text \<open>Corollary: foldr mul (map f xs) e = foldr mul (map f ys) e when f maps into G,
+  both xs/ys are distinct, and set xs = set ys. Map f may not be injective.\<close>
+lemma abelian_foldr_map_perm_distinct:
+  assumes hG: "top1_is_abelian_group_on G mul e invg"
+      and hf: "\<forall>x \<in> set xs. f x \<in> G"
+      and hdx: "distinct xs" and hdy: "distinct ys"
+      and hset: "set xs = set ys"
+  shows "foldr mul (map f xs) e = foldr mul (map f ys) e"
+  using hf hdx hdy hset
+proof (induction xs arbitrary: ys)
+  case Nil
+  \<comment> \<open>Nil(2) = hf, Nil(3) = hdx, Nil(4) = hdy, Nil(5) = hset.\<close>
+  hence "set ys = {}" by (by100 simp)
+  hence "ys = []" using Nil(4) by (by5000 simp)
+  thus ?case by (by100 simp)
+next
+  case (Cons a rest)
+  \<comment> \<open>Cons(2) = hf, Cons(3) = hdx, Cons(4) = hdy, Cons(5) = hset.\<close>
+  have ha_G: "f a \<in> G" using Cons(2) by (by100 simp)
+  have hrest_f: "\<forall>x \<in> set rest. f x \<in> G" using Cons(2) by (by100 auto)
+  have hdy_ys: "distinct ys" using Cons(4) .
+  have ha_ys: "a \<in> set ys"
+  proof -
+    have "a \<in> set (a # rest)" by (by100 simp)
+    thus ?thesis using Cons(5) by (by5000 blast)
+  qed
+  then obtain j where hj: "j < length ys" and hyj: "ys ! j = a"
+    using in_set_conv_nth by (by100 metis)
+  let ?ys' = "take j ys @ drop (Suc j) ys"
+  have hys_decomp: "ys = take j ys @ [a] @ drop (Suc j) ys"
+    using id_take_nth_drop[OF hj] hyj by (by100 simp)
+  have ha_not_rest: "a \<notin> set rest" using Cons(3) by (by5000 simp)
+  have hys'_set: "set ?ys' = set ys - {a}"
+  proof -
+    have hd_ys: "distinct ys" using hdy_ys .
+    from hdy_ys hys_decomp have "distinct (take j ys @ [a] @ drop (Suc j) ys)" by (by100 simp)
+    hence "a \<notin> set (take j ys)" and "a \<notin> set (drop (Suc j) ys)" by (by5000 simp)+
+    moreover have "set ?ys' = set (take j ys) \<union> set (drop (Suc j) ys)" by (by5000 simp)
+    moreover have "set ys = set (take j ys) \<union> {a} \<union> set (drop (Suc j) ys)"
+    proof -
+      have "set ys = set (take j ys @ [a] @ drop (Suc j) ys)" using hys_decomp by (by100 simp)
+      thus ?thesis by (by5000 simp)
+    qed
+    ultimately show ?thesis by (by5000 blast)
+  qed
+  have hset_eq: "set rest = set ?ys'"
+  proof -
+    have "insert a (set rest) = set ys" using Cons(5) by (by100 simp)
+    thus ?thesis using ha_not_rest hys'_set by (by5000 auto)
+  qed
+  have hdy': "distinct ?ys'"
+  proof -
+    from hdy_ys hys_decomp have "distinct (take j ys @ [a] @ drop (Suc j) ys)" by (by100 simp)
+    hence "distinct (take j ys)" "distinct (drop (Suc j) ys)"
+        "set (take j ys) \<inter> set (drop (Suc j) ys) = {}"
+      by (by5000 simp)+
+    thus ?thesis by (by5000 simp)
+  qed
+  \<comment> \<open>foldr mul (map f ys) e = mul (f a) (foldr mul (map f ?ys') e) by extract.\<close>
+  have hfoldr_ys: "foldr mul (map f ys) e = mul (f a) (foldr mul (map f ?ys') e)"
+  proof -
+    have "map f ys = map f (take j ys) @ [f a] @ map f (drop (Suc j) ys)"
+    proof -
+      have "map f ys = map f (take j ys @ [a] @ drop (Suc j) ys)" using hys_decomp by (by100 simp)
+      thus ?thesis by (by100 simp)
+    qed
+    hence "foldr mul (map f ys) e
+        = foldr mul (map f (take j ys) @ [f a] @ map f (drop (Suc j) ys)) e"
+      by (by100 simp)
+    also have "\<dots> = mul (f a) (foldr mul (map f (take j ys) @ map f (drop (Suc j) ys)) e)"
+    proof -
+      have hf_ys: "\<forall>x \<in> set ys. f x \<in> G"
+        using Cons(2) Cons(5) by (by5000 blast)
+      have hmf_take: "\<forall>i<length (map f (take j ys)). map f (take j ys) ! i \<in> G"
+      proof (intro allI impI)
+        fix i assume hi: "i < length (map f (take j ys))"
+        hence "i < length (take j ys)" by (by100 simp)
+        hence "take j ys ! i \<in> set (take j ys)" using nth_mem by (by100 blast)
+        hence "take j ys ! i \<in> set ys" using set_take_subset[of j ys] by (by100 blast)
+        hence "f (take j ys ! i) \<in> G" using hf_ys by (by100 blast)
+        thus "map f (take j ys) ! i \<in> G" using \<open>i < length (take j ys)\<close> by (by100 simp)
+      qed
+      moreover have hmf_drop: "\<forall>i<length (map f (drop (Suc j) ys)). map f (drop (Suc j) ys) ! i \<in> G"
+      proof (intro allI impI)
+        fix i assume hi: "i < length (map f (drop (Suc j) ys))"
+        hence "i < length (drop (Suc j) ys)" by (by100 simp)
+        hence "drop (Suc j) ys ! i \<in> set (drop (Suc j) ys)" using nth_mem by (by100 blast)
+        hence "drop (Suc j) ys ! i \<in> set ys" using set_drop_subset[of "Suc j" ys] by (by100 blast)
+        hence "f (drop (Suc j) ys ! i) \<in> G" using hf_ys by (by100 blast)
+        thus "map f (drop (Suc j) ys) ! i \<in> G" using \<open>i < length (drop (Suc j) ys)\<close> by (by100 simp)
+      qed
+      ultimately show ?thesis by (rule abelian_foldr_mul_extract[OF hG _ ha_G])
+    qed
+    also have "map f (take j ys) @ map f (drop (Suc j) ys) = map f ?ys'" by (by100 simp)
+    finally show ?thesis .
+  qed
+  have hfoldr_xs: "foldr mul (map f (a # rest)) e = mul (f a) (foldr mul (map f rest) e)"
+    by (by100 simp)
+  have hdrest: "distinct rest" using Cons(3) by (by5000 simp)
+  have hIH: "foldr mul (map f rest) e = foldr mul (map f ?ys') e"
+    by (rule Cons(1)[OF hrest_f hdrest hdy' hset_eq])
+  show ?case using hfoldr_xs hfoldr_ys hIH by (by100 simp)
+qed
+
 text \<open>Split one element type from foldr product: pow(v, count) \<cdot> rest.\<close>
 lemma abelian_foldr_split_one_element:
   assumes hG: "top1_is_abelian_group_on G mul e invg"
@@ -4578,9 +4682,20 @@ proof -
     let ?pow_gs = "\<lambda>v. top1_group_pow mul e v (length (filter (\<lambda>x. x = v) ?gs))"
     have hcollapse: "foldr mul ?gs e = foldr mul (map ?pow_gs (remdups ?gs)) e"
       by (rule abelian_foldr_remdups_pow[OF hG_abel hgs_G])
-    \<comment> \<open>Step 5b: The collapsed product equals the canonical product.
-       Both enumerate per-generator powers; they differ only in ordering.
-       Via perm\_distinct (matching orderings in abelian group).\<close>
+    \<comment> \<open>Step 5b: Show collapsed product = canonical product.
+       Both sides enumerate per-generator powers.
+       pow\_gs(gen(s, b\_s)) = term(s) for each generator s.
+       The ordering differs but abelian group products are order-independent.
+       Use abelian\_foldr\_perm\_distinct on the value lists.\<close>
+    \<comment> \<open>Show: the set of gen values in ?gs corresponds bijectively to the support.
+       Each gen value maps to the same power as the corresponding term.\<close>
+    have hsupp_spec: "set ?supp_list = {s \<in> S. c s \<noteq> 0} \<and> distinct ?supp_list"
+    proof -
+      have "\<exists>xs::'s list. set xs = {s \<in> S. c s \<noteq> 0} \<and> distinct xs"
+        using finite_distinct_list[OF hfin] .
+      thus ?thesis by (rule someI_ex)
+    qed
+    \<comment> \<open>For now, the remaining correspondence argument:\<close>
     show ?thesis using hcollapse sorry
   qed
   \<comment> \<open>Step 6: Combine.\<close>
