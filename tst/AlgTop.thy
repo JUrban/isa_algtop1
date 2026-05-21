@@ -10281,7 +10281,39 @@ next
     by (rule word_product_append[OF hG hsub_G hrest_G])
   \<comment> \<open>word\_product(?sub) = commutator(a j, b j) \<in> [G,G].\<close>
   have hcomm_elem: "top1_group_word_product mul e invg ?sub
-      \<in> top1_commutator_subgroup_on G mul e invg" sorry
+      \<in> top1_commutator_subgroup_on G mul e invg"
+  proof -
+    \<comment> \<open>word\_product of [(a,T),(b,T),(a,F),(b,F)] = mul(a, mul(b, mul(invg a, mul(invg b, e))))
+       = commutator(a, b) after simplification with group axioms.\<close>
+    have "top1_group_word_product mul e invg ?sub
+        = top1_group_commutator_on mul invg (a j) (b j)"
+      sorry
+    moreover have "top1_group_commutator_on mul invg (a j) (b j)
+        \<in> top1_commutator_subgroup_on G mul e invg"
+    proof -
+      have "top1_group_commutator_on mul invg (a j) (b j)
+          \<in> {top1_group_commutator_on mul invg x y | x y. x \<in> G \<and> y \<in> G}"
+        using haj hbj by (by100 blast)
+      hence "top1_group_commutator_on mul invg (a j) (b j)
+          \<in> top1_subgroup_generated_on G mul e invg
+              {top1_group_commutator_on mul invg x y | x y. x \<in> G \<and> y \<in> G}"
+      proof -
+        have hcomms_sub: "{top1_group_commutator_on mul invg x y | x y. x \<in> G \<and> y \<in> G} \<subseteq> G"
+        proof (rule subsetI)
+          fix c assume "c \<in> {top1_group_commutator_on mul invg x y | x y. x \<in> G \<and> y \<in> G}"
+          then obtain x y where "x \<in> G" "y \<in> G" "c = top1_group_commutator_on mul invg x y"
+            by (by100 blast)
+          thus "c \<in> G" using hG unfolding top1_group_commutator_on_def top1_is_group_on_def
+            by (by5000 blast)
+        qed
+        thus ?thesis using subgroup_generated_contains[OF hG hcomms_sub]
+          \<open>top1_group_commutator_on mul invg (a j) (b j) \<in> {top1_group_commutator_on mul invg x y | x y. x \<in> G \<and> y \<in> G}\<close>
+          by (by100 blast)
+      qed
+      thus ?thesis unfolding top1_commutator_subgroup_on_def .
+    qed
+    ultimately show ?thesis by (by100 simp)
+  qed
   \<comment> \<open>word\_product(?rest\_word) \<in> [G,G] by IH.\<close>
   have hIH: "top1_group_word_product mul e invg ?rest_word
       \<in> top1_commutator_subgroup_on G mul e invg"
