@@ -10233,6 +10233,32 @@ lemma presented_comm_relator_abelianization:
   apply (by100 blast)
   done
 
+text \<open>Word product of commutator concat is in [F,F]:
+  word\_product(concat(map (\<lambda>i. [(a\_i, T), (b\_i, T), (a\_i, F), (b\_i, F)]) is)) \<in> [G,G].\<close>
+lemma word_product_commutator_concat_in_comm:
+  assumes hG: "top1_is_group_on G mul e invg"
+      and hf: "\<forall>i \<in> set is. a i \<in> G \<and> b i \<in> G"
+  shows "top1_group_word_product mul e invg
+      (concat (map (\<lambda>i. [(a i, True), (b i, True), (a i, False), (b i, False)]) is))
+    \<in> top1_commutator_subgroup_on G mul e invg"
+  using hf
+proof (induction "is")
+  case Nil
+  \<comment> \<open>word\_product [] = e. e \<in> [G,G] since [G,G] is a subgroup.\<close>
+  have "top1_group_word_product mul e invg (concat (map (\<lambda>i. [(a i, True), (b i, True),
+      (a i, False), (b i, False)]) [])) = e" by (by100 simp)
+  moreover have "e \<in> top1_commutator_subgroup_on G mul e invg"
+    using commutator_subgroup_is_normal[OF hG] sorry
+  ultimately show ?case by (by100 simp)
+next
+  case (Cons j js)
+  \<comment> \<open>word\_product of concat(j # js) = word\_product(sub\_j @ rest).
+     = mul(word\_product(sub\_j), word\_product(rest)) by word\_product\_append.
+     word\_product(sub\_j) = commutator(a j, b j) \<in> [G,G].
+     word\_product(rest) \<in> [G,G] by IH. Product of [G,G] elements \<in> [G,G].\<close>
+  show ?case sorry
+qed
+
 text \<open>The torus relator [a₁,b₁]⋯[aₙ,bₙ] is a product of commutators, so
   for any free group F on S with quotient π, the kernel of π (= normal closure
   of the relator) is contained in [F,F].\<close>
