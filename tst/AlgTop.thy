@@ -10249,7 +10249,26 @@ lemma torus_relator_commutator:
                         (map (\<lambda>(s, b). (\<iota> s, b)) w)}"
   shows "top1_group_kernel_on F eG \<pi>
        \<subseteq> top1_commutator_subgroup_on F mulF eF invgF"
-  sorry
+proof -
+  have hF_grp: "top1_is_group_on F mulF eF invgF"
+    using hfree unfolding top1_is_free_group_full_on_def by (by5000 blast)
+  let ?R = "{ concat (map (\<lambda>i. [(2*i, True), (2*i+1, True),
+                (2*i, False), (2*i+1, False)]) [0..<n]) }"
+  let ?relators = "{r. \<exists>w\<in>?R. r = top1_group_word_product mulF eF invgF
+                        (map (\<lambda>(s, b). (\<iota> s, b)) w)}"
+  \<comment> \<open>The relator set has one element: the word product of the commutator word.\<close>
+  \<comment> \<open>This word product is a product of commutators [a_{2i}, a_{2i+1}] for i < n.
+     Each commutator is in [F,F]. The product is in [F,F] (subgroup).\<close>
+  \<comment> \<open>The relator word evaluates to a product of commutators \<in> [F,F].
+     [F,F] is normal, so normal closure of relators \<subseteq> [F,F] = ker \<subseteq> [F,F].\<close>
+  have "?relators \<subseteq> top1_commutator_subgroup_on F mulF eF invgF"
+    sorry \<comment> \<open>Each commutator word [a,b] = a\<cdot>b\<cdot>a\<inverse>\<cdot>b\<inverse> evaluates to an element of [F,F].\<close>
+  hence "top1_normal_subgroup_generated_on F mulF eF invgF ?relators
+      \<subseteq> top1_commutator_subgroup_on F mulF eF invgF"
+    using normal_closure_least[OF hF_grp] commutator_subgroup_is_normal[OF hF_grp]
+    sorry
+  thus ?thesis using hker by (by100 simp)
+qed
 
 (** from \<S>75 Theorem 75.3: H_1 of n-fold torus is free abelian of rank 2n.
     The abelianization of \<pi>_1(T_n) is free abelian on 2n generators. **)
