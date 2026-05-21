@@ -9835,10 +9835,10 @@ proof -
                {r. \<exists>w\<in>R. r = top1_group_word_product mulF eF invgF
                             (map (\<lambda>(s, b). (\<iota> s, b)) w)}"
     sorry \<comment> \<open>Obtain from hpres[unfolded top1\_group\_presented\_by\_on\_def].
-       6-variable existential extraction; needs explicit exE chain.\<close>
+       6-variable existential extraction; blast times out even at 5s.\<close>
   have hker_sub: "top1_group_kernel_on F e \<pi>
       \<subseteq> top1_commutator_subgroup_on F mulF eF invgF"
-    sorry \<comment> \<open>hcomm applied to hfree hpi hsurj hker. Blocked by ι type resolution.\<close>
+    sorry \<comment> \<open>hcomm applied to hfree hpi hsurj hker. Blocked by \<iota> type resolution.\<close>
   from abelianization_of_presented_group[OF hfree hG_grp hpi hsurj hker_sub]
   show ?thesis by (by100 blast)
 qed
