@@ -5134,7 +5134,9 @@ proof -
               proof (rule ccontr)
                 assume "c' \<noteq> b" hence "c' = (\<not>b)" by (by100 auto)
                 hence "(s, \<not>b) \<in> set (p # rest)" using hp True by (by100 simp)
-                thus False using huni hsb sorry
+                have hnotin: "(s, \<not>b) \<notin> set (p # rest)"
+                  using huni hsb sorry
+                thus False using \<open>(s, \<not>b) \<in> set (p # rest)\<close> by (by100 blast)
               qed
               hence "?gen p = ?gen (s,b)" using hp True by (by100 simp)
               moreover have "(case p of (t,c) \<Rightarrow> t = s)" using hp True by (by100 simp)
