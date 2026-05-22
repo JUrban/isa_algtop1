@@ -2152,6 +2152,49 @@ proof -
   show ?thesis unfolding top1_compact_on_def using hTA_top hcover by (by100 blast)
 qed
 
+text \<open>Helper: 2D cross product (signed area of parallelogram).\<close>
+definition cross2 :: "real \<times> real \<Rightarrow> real \<times> real \<Rightarrow> real" where
+  "cross2 a b = fst a * snd b - snd a * fst b"
+
+text \<open>For a convex polygon with centroid c, the cross products cross(v_i - c, d)
+  sum to 0 for any direction d. This means there exists a sign change,
+  giving the sector containing d.\<close>
+lemma cross2_centroid_sum_zero:
+  fixes vx vy :: "nat \<Rightarrow> real" and n :: nat and dx dy :: real
+  assumes "n \<ge> 1"
+  defines "cx \<equiv> (\<Sum>i<n. vx i) / real n" and "cy \<equiv> (\<Sum>i<n. vy i) / real n"
+  shows "(\<Sum>i<n. cross2 (vx i - cx, vy i - cy) (dx, dy)) = 0"
+proof -
+  have hvx_sum: "(\<Sum>i<n. vx i) = real n * cx" unfolding cx_def using assms by (by100 simp)
+  have hvy_sum: "(\<Sum>i<n. vy i) = real n * cy" unfolding cy_def using assms by (by100 simp)
+  \<comment> \<open>The sum telescopes: cross2(v_i-c, d) = (vx_i-cx)*dy - (vy_i-cy)*dx.
+     \<Sum> = dy*(\<Sum>vx_i - n*cx) - dx*(\<Sum>vy_i - n*cy) = dy*0 - dx*0 = 0.\<close>
+  have hstep1: "\<And>i. (vx i - cx) * dy - (vy i - cy) * dx
+      = vx i * dy - cx * dy - (vy i * dx - cy * dx)"
+    by (simp add: algebra_simps)
+  \<comment> \<open>Direct computation: distribute, factor, cancel.\<close>
+  have "(\<Sum>i<n. cross2 (vx i - cx, vy i - cy) (dx, dy))
+      = (\<Sum>i<n. (vx i - cx) * dy - (vy i - cy) * dx)"
+    unfolding cross2_def by (by100 simp)
+  also have "\<dots> = (\<Sum>i<n. (vx i - cx) * dy) - (\<Sum>i<n. (vy i - cy) * dx)"
+    using sum_subtractf[of "\<lambda>i. (vx i - cx) * dy" "\<lambda>i. (vy i - cy) * dx" "{..<n}", symmetric]
+    by (by5000 simp)
+  also have "(\<Sum>i<n. (vx i - cx) * dy) = dy * ((\<Sum>i<n. vx i) - real n * cx)"
+    using sum_subtractf[of "\<lambda>i. vx i" "\<lambda>_. cx" "{..<n}"]
+    using sum_distrib_right[of "\<lambda>i. vx i - cx" "{..<n}" dy, symmetric]
+    sorry
+  also have "\<dots> = 0" using hvx_sum by (by100 simp)
+  finally show ?thesis sorry
+qed
+
+text \<open>If a sequence of reals sums to 0 and is not all zero, there exists an index
+  where consecutive elements have opposite signs (a sign change).\<close>
+lemma cyclic_sign_change:
+  fixes f :: "nat \<Rightarrow> real" and n :: nat
+  assumes "n \<ge> 2" and "(\<Sum>i<n. f i) = 0" and "\<exists>i<n. f i \<noteq> 0"
+  shows "\<exists>i<n. f i \<ge> 0 \<and> f ((i+1) mod n) \<le> 0"
+  sorry
+
 text \<open>A convex polygon in R^2 is homeomorphic to B^2 (the closed unit disk).
   This is a standard topology fact (radial projection from centroid).\<close>
 lemma polygon_homeomorphic_to_disk:
@@ -2662,23 +2705,22 @@ proof -
               \<and> fst z = (1-s) * cx + s * fst b
               \<and> snd z = (1-s) * cy + s * snd b"
       proof -
-        \<comment> \<open>Following book: "P is union of all line segments from p to Bd P."
-           Step A: Since z \<in> P and z \<noteq> c, extend the ray from c through z.
-           The ray hits Bd P at some point b (since P is bounded and c is interior).
-           Step B: b is on some edge of P.
-           Step C: z lies between c and b on the ray.\<close>
-        \<comment> \<open>Step A: z \<in> P means z = \<Sum> a_j v_j with a_j \<ge> 0, \<Sum>a_j = 1.
-           z ≠ c means not all a_j = 1/n. Consider t* = max{t | c + t(z-c) \<in> P}.
-           Since P = convex hull of finitely many points, this max is achieved and finite.
-           b = c + t*(z-c) is on the boundary of P.\<close>
-        \<comment> \<open>Since P is a convex hull of finite points, membership is decidable by linear
-           programming. The boundary consists of edges between consecutive vertices.\<close>
-        \<comment> \<open>For now, we sorry this fundamental geometric fact.
-           A complete proof would require:
-           - Showing P has topological interior (centroid is interior)
-           - Ray-convex intersection (ray from interior point exits through boundary)
-           - Boundary = union of edges (for convex polygons)
-           These are standard results but each requires ~30 lines of formal proof.\<close>
+        \<comment> \<open>Algebraic approach: solve z - c = \<beta>'·(v_i - c) + \<gamma>'·(v_{i+1} - c) via
+           2D cross product determinants. For the right i, \<beta>' \<ge> 0, \<gamma>' \<ge> 0, \<beta>'+\<gamma>' \<le> 1.
+
+           Define cross(a,b) = fst a * snd b - snd a * fst b.
+           For each i, the determinant D_i = cross(v_i - c, v_{i+1} - c).
+           The solution is:
+             \<beta>'_i = cross(z - c, v_{i+1} - c) / D_i
+             \<gamma>'_i = cross(v_i - c, z - c) / D_i
+
+           For a convex polygon with centroid c: D_i > 0 for all i (counterclockwise).
+           The sector containing z-c has \<beta>' \<ge> 0 and \<gamma>' \<ge> 0.
+           z \<in> P ensures \<beta>'+\<gamma>' \<le> 1 (not beyond boundary).\<close>
+        \<comment> \<open>This requires showing:
+           (1) D_i > 0 for all i (convex position + centroid interior)
+           (2) Existence of i with \<beta>'_i \<ge> 0 \<and> \<gamma>'_i \<ge> 0 (sector argument)
+           (3) \<beta>'_i + \<gamma>'_i \<le> 1 for z \<in> P (convex hull containment)\<close>
         show ?thesis sorry
       qed
       then obtain s where hs: "0 < s" "s \<le> 1"
