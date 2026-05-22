@@ -7072,8 +7072,38 @@ proof -
     let ?QG = "top1_quotient_group_carrier_on G mul {mul g g | g. g \<in> G}"
     let ?QK = "top1_quotient_group_carrier_on ?K mul {mul g g | g. g \<in> ?K}"
     \<comment> \<open>Key: every element g \<in> G is congruent mod 2G to either k or mul (iota s0) k for some k \<in> K.\<close>
+    have habel: "top1_is_abelian_group_on G mul e invg"
+      using hfree unfolding top1_is_free_abelian_group_full_on_def by (by100 blast)
     have h2G_normal: "top1_normal_subgroup_on G mul e invg {mul g g | g. g \<in> G}"
-      sorry \<comment> \<open>2G is normal in abelian G.\<close>
+      unfolding top1_normal_subgroup_on_def
+    proof (intro conjI)
+      show "{mul g g | g. g \<in> G} \<subseteq> G"
+        using hG_grp unfolding top1_is_group_on_def by (by5000 blast)
+      show "top1_is_group_on {mul g g | g. g \<in> G} mul e invg" sorry
+      show "\<forall>g\<in>G. \<forall>n\<in>{mul g g | g. g \<in> G}. mul (mul g n) (invg g) \<in> {mul g g | g. g \<in> G}"
+      proof (intro ballI)
+        fix g n assume "g \<in> G" "n \<in> {mul g g | g. g \<in> G}"
+        then obtain n' where "n' \<in> G" "n = mul n' n'" by (by100 blast)
+        have hn_G: "n \<in> G" using hG_grp \<open>n' \<in> G\<close> \<open>n = mul n' n'\<close>
+          unfolding top1_is_group_on_def by (by100 blast)
+        \<comment> \<open>In abelian group: mul(mul g n)(invg g) = n.\<close>
+        have hcomm: "\<And>x y. x \<in> G \<Longrightarrow> y \<in> G \<Longrightarrow> mul x y = mul y x"
+          using habel unfolding top1_is_abelian_group_on_def by (by100 blast)
+        have hassoc': "\<forall>a\<in>G. \<forall>b\<in>G. \<forall>c\<in>G. mul (mul a b) c = mul a (mul b c)"
+          using hG_grp unfolding top1_is_group_on_def by (by100 blast)
+        have "invg g \<in> G" using hG_grp \<open>g \<in> G\<close> unfolding top1_is_group_on_def by (by100 blast)
+        have "mul (mul g n) (invg g) = mul g (mul n (invg g))"
+          using hassoc'[rule_format, OF \<open>g \<in> G\<close> hn_G \<open>invg g \<in> G\<close>] by (by100 simp)
+        also have "mul n (invg g) = mul (invg g) n"
+          using hcomm[OF hn_G \<open>invg g \<in> G\<close>] by (by100 simp)
+        also have "mul g (mul (invg g) n) = mul (mul g (invg g)) n"
+          using hassoc'[rule_format, OF \<open>g \<in> G\<close> \<open>invg g \<in> G\<close> hn_G] by (by100 simp)
+        also have "mul g (invg g) = e" using hG_grp \<open>g \<in> G\<close> unfolding top1_is_group_on_def by (by100 blast)
+        also have "mul e n = n" using hG_grp hn_G unfolding top1_is_group_on_def by (by100 blast)
+        finally show "mul (mul g n) (invg g) \<in> {mul g g | g. g \<in> G}"
+          using \<open>n \<in> {mul g g | g. g \<in> G}\<close> by (by100 simp)
+      qed
+    qed
     have hrepr: "\<forall>g\<in>G. \<exists>k\<in>?K. \<exists>b::bool.
         top1_group_coset_on G mul {mul g g | g. g \<in> G} g =
         top1_group_coset_on G mul {mul g g | g. g \<in> G} (if b then mul (iota s0) k else k)"
