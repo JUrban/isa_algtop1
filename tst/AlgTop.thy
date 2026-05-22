@@ -6255,15 +6255,41 @@ proof -
     have hgenK_eq_genG: "top1_subgroup_generated_on ?K mul e invg (iota ` ?S')
         = top1_subgroup_generated_on G mul e invg (iota ` ?S')"
     proof (rule set_eqI, rule iffI)
-      fix x assume "x \<in> top1_subgroup_generated_on ?K mul e invg (iota ` ?S')"
+      fix x assume hx: "x \<in> top1_subgroup_generated_on ?K mul e invg (iota ` ?S')"
+      \<comment> \<open>⟨\<iota>(S')⟩_G is a subgroup of K containing \<iota>(S'), so ⟨\<iota>(S')⟩_K \<subseteq> ⟨\<iota>(S')⟩_G.\<close>
+      have hgenG_grp: "top1_is_group_on (top1_subgroup_generated_on G mul e invg (iota ` ?S')) mul e invg"
+        by (rule intersection_of_subgroups_is_group[OF hG_grp hiotaS'_sub_G])
+      have hgenG_sub_K': "top1_subgroup_generated_on G mul e invg (iota ` ?S') \<subseteq> ?K"
+        using hgenG_sub_K by (by100 blast)
+      have hiotaS'_in_genG: "iota ` ?S' \<subseteq> top1_subgroup_generated_on G mul e invg (iota ` ?S')"
+      proof (rule image_subsetI)
+        fix s assume "s \<in> ?S'"
+        hence "iota s \<in> iota ` ?S'" by (by100 blast)
+        thus "iota s \<in> top1_subgroup_generated_on G mul e invg (iota ` ?S')"
+          by (rule subgroup_generated_contains[OF hG_grp hiotaS'_sub_G])
+      qed
+      \<comment> \<open>⟨\<iota>(S')⟩_K \<subseteq> ⟨\<iota>(S')⟩_G by subgroup\_generated\_minimal in K.\<close>
+      have "top1_subgroup_generated_on ?K mul e invg (iota ` ?S')
+          \<subseteq> top1_subgroup_generated_on G mul e invg (iota ` ?S')"
+        by (rule subgroup_generated_minimal[OF hiotaS'_in_genG hgenG_sub_K' hgenG_grp])
       thus "x \<in> top1_subgroup_generated_on G mul e invg (iota ` ?S')"
-        using subgroup_generated_subset[OF hK_grp hiotaS'_sub_K] hgenG_sub_K
-        sorry
+        using hx by (by100 blast)
     next
-      fix x assume "x \<in> top1_subgroup_generated_on G mul e invg (iota ` ?S')"
-      hence "x \<in> ?K" using hgenG_sub_K by (by100 blast)
-      thus "x \<in> top1_subgroup_generated_on ?K mul e invg (iota ` ?S')"
-        sorry
+      fix x assume hx: "x \<in> top1_subgroup_generated_on G mul e invg (iota ` ?S')"
+      hence hx_K: "x \<in> ?K" using hgenG_sub_K by (by100 blast)
+      \<comment> \<open>x \<in> ⟨\<iota>(S')⟩_G means x is in every subgroup of G containing \<iota>(S').
+         Any subgroup H of K containing \<iota>(S') is also a subgroup of G.
+         So ⟨\<iota>(S')⟩_G \<subseteq> H. Hence x \<in> H for all such H, i.e., x \<in> ⟨\<iota>(S')⟩_K.\<close>
+      show "x \<in> top1_subgroup_generated_on ?K mul e invg (iota ` ?S')"
+        unfolding top1_subgroup_generated_on_def
+      proof (rule InterI, clarify)
+        fix H assume hH_sub: "H \<subseteq> ?K" and hH_grp: "top1_is_group_on H mul e invg"
+            and hH_gen: "iota ` ?S' \<subseteq> H"
+        have "H \<subseteq> G" using hH_sub by (by100 blast)
+        hence "top1_subgroup_generated_on G mul e invg (iota ` ?S') \<subseteq> H"
+          by (rule subgroup_generated_minimal[OF hH_gen _ hH_grp])
+        thus "x \<in> H" using hx by (by100 blast)
+      qed
     qed
     \<comment> \<open>Now show g \<in> ⟨\<iota>(S')⟩_G. Since g \<in> G = ⟨\<iota>(S)⟩ and \<epsilon>(g) = 0.\<close>
     have "g \<in> top1_subgroup_generated_on G mul e invg (iota ` ?S')"
