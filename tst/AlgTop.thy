@@ -6194,8 +6194,35 @@ proof -
     \<comment> \<open>Key: g \<in> G = ⟨\<iota>(S)⟩. By word repr, g is a product of \<iota>(s) and invg(\<iota>(s)).
        In the abelian group, split by s0 vs non-s0. The s0-part evaluates to e
        (since \<epsilon>(g) = 0 forces balanced s0-counts). So g = non-s0 part \<in> ⟨\<iota>(S')⟩.\<close>
-    show "g \<in> top1_subgroup_generated_on ?K mul e invg (iota ` ?S')"
-      sorry
+    \<comment> \<open>Suffices to show g \<in> ⟨\<iota>(S')⟩_G, since ⟨\<iota>(S')⟩_G \<subseteq> K
+       (all generators have \<epsilon> = 0, and K is closed under mul/invg).\<close>
+    have hiotaS'_sub_K: "iota ` ?S' \<subseteq> ?K" using hiota_K by (by100 blast)
+    have hiotaS'_sub_G: "iota ` ?S' \<subseteq> G"
+    proof (rule image_subsetI)
+      fix s assume "s \<in> ?S'"
+      hence "s \<in> S" by (by100 blast)
+      thus "iota s \<in> G" using hfree unfolding top1_is_free_abelian_group_full_on_def by (by100 blast)
+    qed
+    have hgenG_sub_K: "top1_subgroup_generated_on G mul e invg (iota ` ?S') \<subseteq> ?K"
+      by (rule subgroup_generated_minimal[OF hiotaS'_sub_K _ hK_grp], by100 blast)
+    have hgenK_eq_genG: "top1_subgroup_generated_on ?K mul e invg (iota ` ?S')
+        = top1_subgroup_generated_on G mul e invg (iota ` ?S')"
+    proof (rule set_eqI, rule iffI)
+      fix x assume "x \<in> top1_subgroup_generated_on ?K mul e invg (iota ` ?S')"
+      thus "x \<in> top1_subgroup_generated_on G mul e invg (iota ` ?S')"
+        using subgroup_generated_subset[OF hK_grp hiotaS'_sub_K] hgenG_sub_K
+        sorry
+    next
+      fix x assume "x \<in> top1_subgroup_generated_on G mul e invg (iota ` ?S')"
+      hence "x \<in> ?K" using hgenG_sub_K by (by100 blast)
+      thus "x \<in> top1_subgroup_generated_on ?K mul e invg (iota ` ?S')"
+        sorry
+    qed
+    \<comment> \<open>Now show g \<in> ⟨\<iota>(S')⟩_G. Since g \<in> G = ⟨\<iota>(S)⟩ and \<epsilon>(g) = 0.\<close>
+    have "g \<in> top1_subgroup_generated_on G mul e invg (iota ` ?S')"
+      sorry \<comment> \<open>Main claim: word representation + abelian s0-cancellation.\<close>
+    thus "g \<in> top1_subgroup_generated_on ?K mul e invg (iota ` ?S')"
+      using hgenK_eq_genG by (by100 simp)
   next
     fix g assume "g \<in> top1_subgroup_generated_on ?K mul e invg (iota ` ?S')"
     \<comment> \<open>\<iota>(S') \<subseteq> K, K is a group, so ⟨\<iota>(S')⟩_K \<subseteq> K.\<close>
