@@ -7215,7 +7215,46 @@ proof -
         qed
         \<comment> \<open>\<epsilon>(pow\_a) = \<epsilon>(g0).\<close>
         have heps_pow: "\<epsilon> pow_a = \<epsilon> g0"
-          sorry \<comment> \<open>From hom\_group\_pow\_early + \<epsilon>(a)=1.\<close>
+        proof -
+          have hia_G: "invg a \<in> G" using hG_grp ha unfolding top1_is_group_on_def by (by100 blast)
+          from hm show ?thesis
+          proof (elim disjE)
+            assume hpos: "\<epsilon> g0 = 2 * int m"
+            hence "pow_a = top1_group_pow mul e a (nat (\<epsilon> g0))"
+              unfolding pow_a_def by (by100 simp)
+            hence "\<epsilon> pow_a = top1_group_pow (+) (0::int) (\<epsilon> a) (nat (\<epsilon> g0))"
+              using hom_group_pow_early[OF hG_grp hZ_grp heps ha] by (by100 simp)
+            also have "\<dots> = top1_group_pow (+) (0::int) 1 (nat (\<epsilon> g0))"
+              using heps_a by (by100 simp)
+            also have "\<dots> = int (nat (\<epsilon> g0))"
+            proof -
+              define mm where "mm = nat (\<epsilon> g0)"
+              have "top1_group_pow (+) (0::int) 1 mm = int mm" by (induction mm, by100 simp, by100 simp)
+              thus ?thesis unfolding mm_def by (by100 simp)
+            qed
+            also have "\<dots> = \<epsilon> g0" using hpos by (by100 simp)
+            finally show ?thesis .
+          next
+            assume hneg: "\<epsilon> g0 = -(2 * int m)"
+            hence "pow_a = top1_group_pow mul e (invg a) (nat (- \<epsilon> g0))"
+              unfolding pow_a_def by (by100 simp)
+            hence "\<epsilon> pow_a = top1_group_pow (+) (0::int) (\<epsilon> (invg a)) (nat (- \<epsilon> g0))"
+              using hom_group_pow_early[OF hG_grp hZ_grp heps hia_G] by (by100 simp)
+            also have "\<epsilon> (invg a) = -1"
+              using hom_preserves_inv[OF hG_grp hZ_grp heps ha] heps_a by (by100 simp)
+            hence "top1_group_pow (+) (0::int) (\<epsilon> (invg a)) (nat (- \<epsilon> g0))
+                = top1_group_pow (+) (0::int) (-1) (nat (- \<epsilon> g0))"
+              by (by100 simp)
+            also have "\<dots> = - int (nat (- \<epsilon> g0))"
+            proof -
+              define mm where "mm = nat (- \<epsilon> g0)"
+              have "top1_group_pow (+) (0::int) (-1) mm = - int mm" by (induction mm, by100 simp, by100 simp)
+              thus ?thesis unfolding mm_def by (by100 simp)
+            qed
+            also have "\<dots> = \<epsilon> g0" using hneg by (by100 simp)
+            finally show ?thesis .
+          qed
+        qed
         \<comment> \<open>k = g0 \<cdot> invg(pow\_a) \<in> K.\<close>
         define k where "k = mul g0 (invg pow_a)"
         have hk_G: "k \<in> G"
