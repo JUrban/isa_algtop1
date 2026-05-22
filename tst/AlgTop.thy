@@ -7119,7 +7119,15 @@ proof -
         \<comment> \<open>Alternatively: direct bijection via coset containment.
            For each C_K \<in> K/2K, define \<psi>(C_K) = {g \<in> G. \<exists>k\<in>C_K. g - k \<in> 2G} = coset in G/2G.\<close>
         \<comment> \<open>Since K \<inter> 2G = 2K, the map C_K \<mapsto> {g \<in> G : g mod 2G \<in> C_K} is a bijection.\<close>
-        show ?thesis sorry
+        \<comment> \<open>Define the bijection \<psi>: K/2K \<rightarrow> ?even.\<close>
+        let ?\<psi> = "\<lambda>CK. top1_group_coset_on G mul ?twoG (SOME k. k \<in> CK)"
+        \<comment> \<open>Injectivity of \<psi>: K \<inter> 2G = 2K ensures different K-cosets give different G-cosets.\<close>
+        have hpsi_inj: "inj_on ?\<psi> ?QK"
+          sorry \<comment> \<open>If [k1]_G = [k2]_G, then k1-k2 \<in> 2G \<inter> K = 2K, so [k1]_K = [k2]_K.\<close>
+        \<comment> \<open>Image of \<psi> = ?even: every even G-coset has a K-representative.\<close>
+        have hpsi_image: "?\<psi> ` ?QK = ?even"
+          sorry \<comment> \<open>Every even coset [g] with \<epsilon>(g) even has k \<in> K with [g]_G = [k]_G.\<close>
+        show ?thesis using card_image[OF hpsi_inj] hpsi_image by (by100 simp)
       qed
       \<comment> \<open>|odd| = |even|: translation by \<iota>(s0) gives a bijection.\<close>
       have hodd_card: "card ?odd = card ?even"
