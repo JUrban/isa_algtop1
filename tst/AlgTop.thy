@@ -6220,7 +6220,101 @@ proof -
     qed
     \<comment> \<open>Now show g \<in> ⟨\<iota>(S')⟩_G. Since g \<in> G = ⟨\<iota>(S)⟩ and \<epsilon>(g) = 0.\<close>
     have "g \<in> top1_subgroup_generated_on G mul e invg (iota ` ?S')"
-      sorry \<comment> \<open>Main claim: word representation + abelian s0-cancellation.\<close>
+    proof (cases "g = e")
+      case True
+      have "e \<in> top1_subgroup_generated_on G mul e invg (iota ` ?S')"
+      proof -
+        have "top1_is_group_on (top1_subgroup_generated_on G mul e invg (iota ` ?S')) mul e invg"
+          by (rule intersection_of_subgroups_is_group[OF hG_grp hiotaS'_sub_G])
+        thus ?thesis unfolding top1_is_group_on_def by (by100 blast)
+      qed
+      thus ?thesis using True by (by100 simp)
+    next
+      case False
+      \<comment> \<open>g \<in> G = ⟨\<iota>(S)⟩, g \<noteq> e. By word representation:\<close>
+      have hiotaS_sub: "iota ` S \<subseteq> G"
+        using hfree unfolding top1_is_free_abelian_group_full_on_def by (by100 blast)
+      have hG_gen: "G = top1_subgroup_generated_on G mul e invg (iota ` S)"
+        using hfree unfolding top1_is_free_abelian_group_full_on_def by (by100 blast)
+      have hg_gen: "g \<in> top1_subgroup_generated_on G mul e invg (iota ` S)"
+        using hg_G hG_gen by (by100 simp)
+      from subgroup_generated_word_repr[OF hG_grp hiotaS_sub hg_gen] False
+      obtain ws where hws_len: "length ws > 0"
+          and hws_gen: "\<forall>i < length ws. ws ! i \<in> iota ` S \<or> (\<exists>s \<in> iota ` S. ws ! i = invg s)"
+          and hws_prod: "foldr mul ws e = g"
+        by (by100 blast)
+      \<comment> \<open>Split ws into s0-related and non-s0 entries.\<close>
+      let ?is_s0 = "\<lambda>x. x = iota s0 \<or> x = invg (iota s0)"
+      let ?ws_s0 = "filter ?is_s0 ws"
+      let ?ws_rest = "filter (\<lambda>x. \<not> ?is_s0 x) ws"
+      \<comment> \<open>All entries are in G.\<close>
+      have hws_G: "\<forall>i < length ws. ws ! i \<in> G"
+      proof (intro allI impI)
+        fix i assume "i < length ws"
+        from hws_gen[rule_format, OF this]
+        show "ws ! i \<in> G"
+        proof (elim disjE)
+          assume "ws ! i \<in> iota ` S"
+          thus ?thesis using hiotaS_sub by (by100 blast)
+        next
+          assume "\<exists>s \<in> iota ` S. ws ! i = invg s"
+          then obtain s where "s \<in> iota ` S" "ws ! i = invg s" by (by100 blast)
+          hence "s \<in> G" using hiotaS_sub by (by100 blast)
+          hence "invg s \<in> G" using hG_grp unfolding top1_is_group_on_def by (by100 blast)
+          thus ?thesis using \<open>ws ! i = invg s\<close> by (by100 simp)
+        qed
+      qed
+      \<comment> \<open>By abelian split: g = (s0-part) \<cdot> (rest-part).\<close>
+      have hsplit: "g = mul (foldr mul ?ws_s0 e) (foldr mul ?ws_rest e)"
+      proof -
+        have "foldr mul ws e = mul (foldr mul (filter ?is_s0 ws) e)
+            (foldr mul (filter (\<lambda>x. \<not> ?is_s0 x) ws) e)"
+          by (rule abelian_foldr_mul_split_filter[OF hG_abel hws_G])
+        moreover have "(\<lambda>x. \<not> ?is_s0 x) = (\<lambda>x. x \<noteq> iota s0 \<and> x \<noteq> invg (iota s0))"
+          by (by100 auto)
+        ultimately show ?thesis using hws_prod by (by5000 simp)
+      qed
+      \<comment> \<open>The rest-part entries are from \<iota>(S') \<union> invg(\<iota>(S')).\<close>
+      \<comment> \<open>The s0-part has \<epsilon> = 0 (since \<epsilon>(g) = 0 and \<epsilon>(rest) = 0).\<close>
+      \<comment> \<open>Hence s0-part = e, and g = rest-part \<in> ⟨\<iota>(S')⟩.\<close>
+      \<comment> \<open>Step 1: \<epsilon>(rest) = 0 (each non-s0 entry has \<epsilon> = 0).\<close>
+      \<comment> \<open>Step 2: \<epsilon>(s0-part) = \<epsilon>(g) - \<epsilon>(rest) = 0 - 0 = 0.\<close>
+      \<comment> \<open>Step 3: s0-part is a product of balanced \<iota>(s0) and invg(\<iota>(s0)), so = e.\<close>
+      \<comment> \<open>Step 4: g = e \<cdot> rest = rest \<in> ⟨\<iota>(S')⟩.\<close>
+      \<comment> \<open>The rest entries are from \<iota>(S') \<union> invg(\<iota>(S')).\<close>
+      have hrest_gen: "\<forall>x \<in> set ?ws_rest. x \<in> iota ` ?S' \<or> (\<exists>s \<in> iota ` ?S'. x = invg s)"
+      proof (intro ballI)
+        fix x assume "x \<in> set ?ws_rest"
+        hence "x \<in> set ws" "\<not> ?is_s0 x" by (by100 auto)+
+        from \<open>x \<in> set ws\<close> obtain i where "i < length ws" "ws ! i = x"
+          using in_set_conv_nth by (by5000 metis)
+        from hws_gen[rule_format, OF \<open>i < length ws\<close>]
+        have "ws ! i \<in> iota ` S \<or> (\<exists>s \<in> iota ` S. ws ! i = invg s)" .
+        thus "x \<in> iota ` ?S' \<or> (\<exists>s \<in> iota ` ?S'. x = invg s)"
+          using \<open>ws ! i = x\<close> \<open>\<not> ?is_s0 x\<close> by (by5000 auto)
+      qed
+      \<comment> \<open>The rest-part is in ⟨\<iota>(S')⟩_G.\<close>
+      have hrest_in_gen: "foldr mul ?ws_rest e
+          \<in> top1_subgroup_generated_on G mul e invg (iota ` ?S')"
+        sorry \<comment> \<open>Induction on list: each entry from \<iota>(S') \<union> invg(\<iota>(S')),
+           closed under mul in the generated subgroup.\<close>
+      \<comment> \<open>The s0-part evaluates to e (balanced \<iota>(s0) and invg(\<iota>(s0))).\<close>
+      have hs0_eq_e: "foldr mul ?ws_s0 e = e"
+        sorry \<comment> \<open>Key: \<epsilon>(g) = 0 forces equal counts of \<iota>(s0) and invg(\<iota>(s0)).
+           In any group, pow(x,n) \<cdot> pow(invg(x),n) = e.\<close>
+      \<comment> \<open>Therefore g = e \<cdot> rest = rest \<in> ⟨\<iota>(S')⟩.\<close>
+      have "g = mul e (foldr mul ?ws_rest e)"
+        using hsplit hs0_eq_e by (by100 simp)
+      also have "\<dots> = foldr mul ?ws_rest e"
+      proof -
+        have "foldr mul ?ws_rest e \<in> G"
+          using hrest_in_gen
+            subgroup_generated_subset[OF hG_grp hiotaS'_sub_G]
+          by (by100 blast)
+        thus ?thesis using hG_grp unfolding top1_is_group_on_def by (by100 blast)
+      qed
+      finally show ?thesis using hrest_in_gen by (by100 simp)
+    qed
     thus "g \<in> top1_subgroup_generated_on ?K mul e invg (iota ` ?S')"
       using hgenK_eq_genG by (by100 simp)
   next
