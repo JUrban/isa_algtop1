@@ -7041,8 +7041,9 @@ proof -
             unfolding top1_group_coset_on_def by (by100 blast)
           then obtain h where "h \<in> ?twoG" "g = mul g0 h" by (by100 blast)
           then obtain h' where "h' \<in> G" "h = mul h' h'" by (by100 blast)
-          have "\<epsilon> h = \<epsilon> h' + \<epsilon> h'"
+          have "\<epsilon> (mul h' h') = \<epsilon> h' + \<epsilon> h'"
             using heps \<open>h' \<in> G\<close> unfolding top1_group_hom_on_def by (by100 blast)
+          hence "\<epsilon> h = \<epsilon> h' + \<epsilon> h'" using \<open>h = mul h' h'\<close> by (by100 simp)
           hence "even (\<epsilon> h)" by (by100 simp)
           have "\<epsilon> g = \<epsilon> g0 + \<epsilon> h"
             using heps hg0(1) \<open>g = mul g0 h\<close>
@@ -7055,7 +7056,25 @@ proof -
           thus "\<epsilon> g mod 2 = \<epsilon> g0 mod 2" using \<open>even (\<epsilon> h)\<close> by (by5000 auto)
         qed
         thus "(\<forall>g\<in>C. even (\<epsilon> g)) \<or> (\<forall>g\<in>C. odd (\<epsilon> g))"
-          by (by5000 auto)
+        proof (cases "even (\<epsilon> g0)")
+          case True
+          have "\<forall>g\<in>C. even (\<epsilon> g)"
+          proof (intro ballI)
+            fix g assume "g \<in> C"
+            hence "\<epsilon> g mod 2 = \<epsilon> g0 mod 2" using \<open>\<forall>g\<in>C. \<epsilon> g mod 2 = \<epsilon> g0 mod 2\<close> by (by100 blast)
+            thus "even (\<epsilon> g)" using True by (by5000 auto)
+          qed
+          thus ?thesis by (by100 blast)
+        next
+          case False
+          have "\<forall>g\<in>C. odd (\<epsilon> g)"
+          proof (intro ballI)
+            fix g assume "g \<in> C"
+            hence "\<epsilon> g mod 2 = \<epsilon> g0 mod 2" using \<open>\<forall>g\<in>C. \<epsilon> g mod 2 = \<epsilon> g0 mod 2\<close> by (by100 blast)
+            thus "odd (\<epsilon> g)" using False by (by5000 auto)
+          qed
+          thus ?thesis by (by100 blast)
+        qed
       qed
       \<comment> \<open>Partition: G/2G = even \<union> odd, disjoint.\<close>
       have hpartition: "?QG = ?even \<union> ?odd"
@@ -7068,7 +7087,29 @@ proof -
         thus "C \<in> ?QG" by (by100 blast)
       qed
       have hdisjoint: "?even \<inter> ?odd = {}"
-        by (by100 blast)
+      proof (rule ccontr)
+        assume "?even \<inter> ?odd \<noteq> {}"
+        then obtain C where "C \<in> ?even" "C \<in> ?odd" by (by100 blast)
+        hence hev: "\<forall>g\<in>C. even (\<epsilon> g)" and hod: "\<forall>g\<in>C. odd (\<epsilon> g)"
+          and "C \<in> ?QG" by (by100 auto)+
+        \<comment> \<open>C is non-empty (cosets are non-empty).\<close>
+        have "\<exists>g0\<in>G. C = top1_group_coset_on G mul ?twoG g0"
+          using \<open>C \<in> ?QG\<close> unfolding top1_quotient_group_carrier_on_def by (by100 blast)
+        then obtain g0 where "g0 \<in> G" "C = top1_group_coset_on G mul ?twoG g0" by (by100 blast)
+        have "g0 \<in> C"
+        proof -
+          have he_G: "e \<in> G" using hG_grp unfolding top1_is_group_on_def by (by100 blast)
+          have "mul e e = e" using hG_grp he_G unfolding top1_is_group_on_def by (by100 blast)
+          hence "e \<in> ?twoG" using he_G by (by100 force)
+          have "mul g0 e = g0" using hG_grp \<open>g0 \<in> G\<close> unfolding top1_is_group_on_def by (by100 blast)
+          hence "g0 = mul g0 e" by (by100 simp)
+          thus ?thesis using \<open>C = top1_group_coset_on G mul ?twoG g0\<close> \<open>e \<in> ?twoG\<close>
+            unfolding top1_group_coset_on_def by (by100 blast)
+        qed
+        have "even (\<epsilon> g0)" using hev \<open>g0 \<in> C\<close> by (by100 blast)
+        have "odd (\<epsilon> g0)" using hod \<open>g0 \<in> C\<close> by (by100 blast)
+        thus False using \<open>even (\<epsilon> g0)\<close> by (by100 simp)
+      qed
       \<comment> \<open>|even| = |K/2K|: the map K/2K \<rightarrow> even part sending {k + 2K} \<mapsto> {k + 2G} is a bijection.\<close>
       have heven_card: "card ?even = card ?QK"
       proof -
@@ -7106,17 +7147,15 @@ proof -
       have hfin_even: "finite ?even" sorry
       have hfin_odd: "finite ?odd" sorry
       have "card ?QG = card ?even + card ?odd"
-        using hpartition hdisjoint hfin_even hfin_odd
-        by (by5000 simp add: card_Un_disjoint)
+        using hpartition card_Un_disjoint[OF hfin_even hfin_odd hdisjoint]
+        by (by100 simp)
       also have "\<dots> = card ?QK + card ?QK"
         using heven_card hodd_card by (by100 simp)
       also have "\<dots> = 2 * card ?QK" by (by100 simp)
       finally show ?thesis .
     qed
-    thus "card (top1_quotient_group_carrier_on G mul {mul g g | g. g \<in> G})
-       = 2 * card (top1_quotient_group_carrier_on ?K mul {mul g g | g. g \<in> ?K})"
-      by (by100 simp)
-    also have "\<dots> = 2 * 2 ^ n" using hIH by (by100 simp)
+    hence "card (top1_quotient_group_carrier_on G mul {mul g g | g. g \<in> G})
+       = 2 * 2 ^ n" using hIH by (by100 simp)
     also have "\<dots> = 2 ^ Suc n" by (by100 simp)
     finally show ?case using Suc.hyps by (by100 simp)
   qed
