@@ -2358,8 +2358,63 @@ lemma polygonal_region_convex_combo:
   assumes "top1_is_polygonal_region_on P n" and "n \<ge> 3"
       and "x \<in> P" and "y \<in> P" and "0 \<le> t" and "t \<le> 1"
   shows "((1-t) * fst x + t * fst y, (1-t) * snd x + t * snd y) \<in> P"
-  sorry \<comment> \<open>P is convex (convex hull of finite points). Standard fact:
-     x = \<Sum> a_j v_j, y = \<Sum> b_j v_j, then (1-t)*x + t*y = \<Sum>((1-t)*a_j + t*b_j)*v_j.\<close>
+proof -
+  from assms(1)[unfolded top1_is_polygonal_region_on_def]
+  obtain vx vy where
+    hP_eq: "P = {(x, y) | x y. \<exists>coeffs. (\<forall>i<n. coeffs i \<ge> 0) \<and> (\<Sum>i<n. coeffs i) = 1
+          \<and> x = (\<Sum>i<n. coeffs i * vx i) \<and> y = (\<Sum>i<n. coeffs i * vy i)}"
+    by (elim conjE exE) (rule that, assumption+)
+  obtain xx xy where hx_eq: "x = (xx, xy)" by (cases x) (by100 blast)
+  obtain yx yy where hy_eq: "y = (yx, yy)" by (cases y) (by100 blast)
+  from assms(3) obtain a where ha: "\<forall>i<n. a i \<ge> 0" "(\<Sum>i<n. a i) = 1"
+      "xx = (\<Sum>i<n. a i * vx i)" "xy = (\<Sum>i<n. a i * vy i)"
+    unfolding hP_eq hx_eq by (by5000 auto)
+  from assms(4) obtain b where hb: "\<forall>i<n. b i \<ge> 0" "(\<Sum>i<n. b i) = 1"
+      "yx = (\<Sum>i<n. b i * vx i)" "yy = (\<Sum>i<n. b i * vy i)"
+    unfolding hP_eq hy_eq by (by5000 auto)
+  define c where "c i = (1-t) * a i + t * b i" for i
+  have hcge: "\<forall>i<n. c i \<ge> 0" unfolding c_def using ha(1) hb(1) assms(5,6) by (by100 auto)
+  have hcsum: "(\<Sum>i<n. c i) = 1"
+  proof -
+    have "(\<Sum>i<n. c i) = (\<Sum>i<n. (1-t) * a i) + (\<Sum>i<n. t * b i)"
+      unfolding c_def using sum.distrib[of "\<lambda>i. (1-t)*a i" "\<lambda>i. t*b i" "{..<n}", symmetric]
+      by (by100 simp)
+    also have "(\<Sum>i<n. (1-t) * a i) = (1-t) * (\<Sum>i<n. a i)"
+      using sum_distrib_left[of "1-t" a "{..<n}", symmetric] by (by100 simp)
+    also have "(\<Sum>i<n. t * b i) = t * (\<Sum>i<n. b i)"
+      using sum_distrib_left[of t b "{..<n}", symmetric] by (by100 simp)
+    finally show ?thesis using ha(2) hb(2) by (by100 simp)
+  qed
+  have hcvx: "(1-t)*xx + t*yx = (\<Sum>i<n. c i * vx i)"
+  proof -
+    have "(\<Sum>i<n. c i * vx i) = (\<Sum>i<n. ((1-t)*a i + t*b i) * vx i)" unfolding c_def ..
+    also have "\<dots> = (\<Sum>i<n. (1-t)*a i*vx i + t*b i*vx i)"
+      by (rule sum.cong) (simp add: algebra_simps)+
+    also have "\<dots> = (\<Sum>i<n. (1-t)*(a i*vx i)) + (\<Sum>i<n. t*(b i*vx i))"
+      using sum.distrib[of "\<lambda>i. (1-t)*(a i*vx i)" "\<lambda>i. t*(b i*vx i)" "{..<n}", symmetric]
+      by (simp add: mult.assoc)
+    also have "(\<Sum>i<n. (1-t)*(a i*vx i)) = (1-t)*(\<Sum>i<n. a i*vx i)"
+      using sum_distrib_left[of "1-t" "\<lambda>i. a i*vx i" "{..<n}", symmetric] by (by100 simp)
+    also have "(\<Sum>i<n. t*(b i*vx i)) = t*(\<Sum>i<n. b i*vx i)"
+      using sum_distrib_left[of t "\<lambda>i. b i*vx i" "{..<n}", symmetric] by (by100 simp)
+    finally show ?thesis using ha(3) hb(3) by (by100 simp)
+  qed
+  have hcvy: "(1-t)*xy + t*yy = (\<Sum>i<n. c i * vy i)"
+  proof -
+    have "(\<Sum>i<n. c i * vy i) = (\<Sum>i<n. ((1-t)*a i + t*b i) * vy i)" unfolding c_def ..
+    also have "\<dots> = (\<Sum>i<n. (1-t)*a i*vy i + t*b i*vy i)"
+      by (rule sum.cong) (simp add: algebra_simps)+
+    also have "\<dots> = (\<Sum>i<n. (1-t)*(a i*vy i)) + (\<Sum>i<n. t*(b i*vy i))"
+      using sum.distrib[of "\<lambda>i. (1-t)*(a i*vy i)" "\<lambda>i. t*(b i*vy i)" "{..<n}", symmetric]
+      by (simp add: mult.assoc)
+    also have "(\<Sum>i<n. (1-t)*(a i*vy i)) = (1-t)*(\<Sum>i<n. a i*vy i)"
+      using sum_distrib_left[of "1-t" "\<lambda>i. a i*vy i" "{..<n}", symmetric] by (by100 simp)
+    also have "(\<Sum>i<n. t*(b i*vy i)) = t*(\<Sum>i<n. b i*vy i)"
+      using sum_distrib_left[of t "\<lambda>i. b i*vy i" "{..<n}", symmetric] by (by100 simp)
+    finally show ?thesis using ha(4) hb(4) by (by100 simp)
+  qed
+  show ?thesis unfolding hP_eq hx_eq hy_eq using hcge hcsum hcvx hcvy by (by5000 auto)
+qed
 
 lemma polygonal_region_compact:
   assumes "top1_is_polygonal_region_on P n" and "n \<ge> 3"
