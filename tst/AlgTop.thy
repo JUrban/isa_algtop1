@@ -6296,8 +6296,55 @@ proof -
       \<comment> \<open>The rest-part is in ⟨\<iota>(S')⟩_G.\<close>
       have hrest_in_gen: "foldr mul ?ws_rest e
           \<in> top1_subgroup_generated_on G mul e invg (iota ` ?S')"
-        sorry \<comment> \<open>Induction on list: each entry from \<iota>(S') \<union> invg(\<iota>(S')),
-           closed under mul in the generated subgroup.\<close>
+      proof -
+        let ?H = "top1_subgroup_generated_on G mul e invg (iota ` ?S')"
+        have hH_grp: "top1_is_group_on ?H mul e invg"
+          by (rule intersection_of_subgroups_is_group[OF hG_grp hiotaS'_sub_G])
+        have hH_sub: "?H \<subseteq> G"
+          by (rule subgroup_generated_subset[OF hG_grp hiotaS'_sub_G])
+        have hiotaS'_in_H: "\<forall>s\<in>?S'. iota s \<in> ?H"
+        proof (intro ballI)
+          fix s assume "s \<in> ?S'"
+          hence "iota s \<in> iota ` ?S'" by (by100 blast)
+          thus "iota s \<in> ?H"
+            by (rule subgroup_generated_contains[OF hG_grp hiotaS'_sub_G])
+        qed
+        \<comment> \<open>By induction on the list: foldr of generators/inverses is in H.\<close>
+        have "\<forall>xs. (\<forall>x\<in>set xs. x \<in> iota ` ?S' \<or> (\<exists>s\<in>iota ` ?S'. x = invg s))
+            \<longrightarrow> foldr mul xs e \<in> ?H"
+        proof (intro allI impI)
+          fix xs :: "'g list"
+          assume hxs: "\<forall>x\<in>set xs. x \<in> iota ` ?S' \<or> (\<exists>s\<in>iota ` ?S'. x = invg s)"
+          show "foldr mul xs e \<in> ?H"
+          using hxs proof (induction xs)
+            case Nil
+            show ?case using hH_grp unfolding top1_is_group_on_def by (by100 simp)
+          next
+            case (Cons a xs)
+            have ha_entry: "a \<in> iota ` ?S' \<or> (\<exists>s\<in>iota ` ?S'. a = invg s)"
+              using Cons(2) by (by100 simp)
+            have hxs_entry: "\<forall>x\<in>set xs. x \<in> iota ` ?S' \<or> (\<exists>s\<in>iota ` ?S'. x = invg s)"
+              using Cons(2) by (by100 simp)
+            have hIH: "foldr mul xs e \<in> ?H" using Cons(1) hxs_entry by (by100 blast)
+            have ha_H: "a \<in> ?H"
+            proof (cases "a \<in> iota ` ?S'")
+              case True
+              thus ?thesis using subgroup_generated_contains[OF hG_grp hiotaS'_sub_G] by (by100 blast)
+            next
+              case False
+              hence "\<exists>s\<in>iota ` ?S'. a = invg s" using ha_entry by (by100 blast)
+              then obtain s where "s \<in> iota ` ?S'" "a = invg s" by (by100 blast)
+              have "s \<in> ?H" using subgroup_generated_contains[OF hG_grp hiotaS'_sub_G \<open>s \<in> iota ` ?S'\<close>] .
+              hence "invg s \<in> ?H" using hH_grp unfolding top1_is_group_on_def by (by100 blast)
+              thus ?thesis using \<open>a = invg s\<close> by (by100 simp)
+            qed
+            have "foldr mul (a # xs) e = mul a (foldr mul xs e)" by (by100 simp)
+            also have "\<dots> \<in> ?H" using hH_grp ha_H hIH unfolding top1_is_group_on_def by (by100 blast)
+            finally show ?case .
+          qed
+        qed
+        thus ?thesis using hrest_gen by (by100 blast)
+      qed
       \<comment> \<open>The s0-part evaluates to e (balanced \<iota>(s0) and invg(\<iota>(s0))).\<close>
       have hs0_eq_e: "foldr mul ?ws_s0 e = e"
         sorry \<comment> \<open>Key: \<epsilon>(g) = 0 forces equal counts of \<iota>(s0) and invg(\<iota>(s0)).
