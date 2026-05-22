@@ -3825,7 +3825,7 @@ proof -
   \<comment> \<open>Step 3: Apply Theorem 72.1 with the CW data.
      From n\_torus\_scheme\_CW\_data we get A (wedge of 2n circles) and h (attaching map).
      Theorem 72.1 gives: \<pi>_1(X) \<cong> \<pi>_1(A)/N(k_*([standard loop]))
-     where k = h|_{S\<^sup>1} and N is the normal closure.
+     where k = h|_{S^1} and N is the normal closure.
      Step 4: \<pi>_1(A) is free on 2n generators (Theorem 71.1).
      The attaching word traces [a_1,b_1]...[a_n,b_n] on the 1-skeleton.
      So the quotient = presented group with relator [a_1,b_1]...[a_n,b_n].\<close>
@@ -3836,14 +3836,14 @@ proof -
       and hh_S1: "h_att ` top1_S1 \<subseteq> A"
     by (by100 blast)
   \<comment> \<open>Apply Theorem 72.1.\<close>
-  \<comment> \<open>Need additionally: Hausdorff, path-connected A, h|_{Int B\<^sup>2} homeomorphism onto X-A.\<close>
+  \<comment> \<open>Need additionally: Hausdorff, path-connected A, h|_{Int B^2} homeomorphism onto X-A.\<close>
   have hX_strict: "is_topology_on_strict X TX"
     using assms(1) unfolding top1_is_n_fold_torus_on_def top1_quotient_of_scheme_on_def by (by100 blast)
   have hX_haus: "is_hausdorff_on X TX"
     using Theorem_74_1_polygon_quotient_compact_hausdorff[OF hX_strict h_poly] by (by100 blast)
   have hA_pc: "top1_path_connected_on A (subspace_topology X TX A)"
     sorry \<comment> \<open>Wedge of circles is path-connected: each circle is path-connected
-       (homeomorphic to S\<^sup>1 which is path-connected by S1\_path\_connected),
+       (homeomorphic to S^1 which is path-connected by S1\_path\_connected),
        and they share the basepoint. Iterate path\_connected\_union.\<close>
   have hh_homeo: "top1_homeomorphism_on
       (top1_B2 - top1_S1) (subspace_topology top1_B2 top1_B2_topology (top1_B2 - top1_S1))
@@ -3949,9 +3949,11 @@ qed
 
 section \<open>\<S>75 Homology of Surfaces\<close>
 
-(** from \<S>75 Theorem 75.1: H_1(X, x_0) is the abelianization of \<pi>_1(X, x_0).
-    There exists an abelian group H together with a surjective homomorphism
-    \<pi>_1(X, x_0) \<rightarrow> H whose kernel is the commutator subgroup of \<pi>_1. **)
+(** from \<S>75 Theorem 75.1: The first homology group H_1(X, x_0) is defined as the
+    abelianization of \<pi>_1(X, x_0) (i.e. \<pi>_1/[\<pi>_1, \<pi>_1]).
+    Note: this formalization defines H_1 as the abelianization, following Munkres §75.
+    There is no separate homology theory; H_1 IS the abelianization by definition.
+    The theorem constructs it concretely as the quotient by the commutator subgroup. **)
 theorem Theorem_75_1_H1_abelianization:
   fixes X :: "'a set" and TX :: "'a set set" and x0 :: 'a
   assumes "is_topology_on X TX" and "x0 \<in> X"
@@ -4633,6 +4635,10 @@ proof -
   thus ?thesis using hfab by (by100 blast)
 qed
 
+(** from \<S>75 Theorem 75.3: The abelianization of \<pi>_1(T_n) is free abelian of rank 2n.
+    Equivalently (by our definition): H_1(T_n) \<cong> Z^{2n}.
+    Note: this theorem's own proof has 0 sorry, but it depends on Theorem 74.3
+    (n-torus \<pi>_1 presentation) which has sorrys in the CW structure extraction. **)
 theorem Theorem_75_3_H1_n_torus:
   fixes n :: nat and X :: "'a set" and TX :: "'a set set" and x0 :: 'a
   assumes "top1_is_n_fold_torus_on X TX n"
