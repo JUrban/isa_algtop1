@@ -10560,10 +10560,28 @@ proof -
     \<comment> \<open>The torus relator is a product of commutators, so it satisfies the hcomm condition
        of presented\_comm\_relator\_abelianization. Once we have the abelianization of the
        presented group G0, we transfer it to \<pi>_1(X) via the isomorphism.\<close>
-    show ?thesis using hpres_iso sorry
-      \<comment> \<open>Proof plan: elim exE conjE to extract G0, then
-         presented\_comm\_relator\_abelianization[OF _ torus\_relator\_commutator]
-         gives abelianization of G0, then transfer via iso.\<close>
+    \<comment> \<open>Extract the presented group from hpres\_iso, apply presented\_comm\_relator\_abelianization
+       with torus\_relator\_commutator, then transfer via the iso.\<close>
+    \<comment> \<open>Inline the full proof: extract G0 from hpres\_iso, unfold presentation,
+       apply torus\_relator\_commutator, then abelianization\_of\_presented\_group.\<close>
+    from hpres_iso obtain G0 :: "'g set" and mul0 e0 invg0
+      where hpres0: "top1_group_presented_by_on G0 mul0 e0 invg0 ({..<2*n}::nat set)
+          { concat (map (\<lambda>i. [(2*i, True), (2*i+1, True),
+                                (2*i, False), (2*i+1, False)]) [0..<n]) }"
+        and hiso0: "top1_groups_isomorphic_on G0 mul0
+            (top1_fundamental_group_carrier X TX x0)
+            (top1_fundamental_group_mul X TX x0)"
+      sorry
+    have habel0: "\<exists>(H :: 'g set set) mulH eH invgH \<phi> \<iota>H.
+        top1_is_abelianization_of H mulH eH invgH G0 mul0 e0 invg0 \<phi>
+      \<and> top1_is_free_abelian_group_full_on H mulH eH invgH \<iota>H ({..<2*n}::nat set)"
+      using hpres0[unfolded top1_group_presented_by_on_def]
+      apply (elim conjE exE)
+      apply (frule torus_relator_commutator, assumption+)
+      apply (drule(4) abelianization_of_presented_group)
+      apply (by100 blast)
+      done
+    show ?thesis using habel0 hiso0 sorry
   qed
   show ?thesis using h_abelianize by (by100 blast)
 qed
