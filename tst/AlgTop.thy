@@ -2172,19 +2172,33 @@ proof -
   have hstep1: "\<And>i. (vx i - cx) * dy - (vy i - cy) * dx
       = vx i * dy - cx * dy - (vy i * dx - cy * dx)"
     by (simp add: algebra_simps)
-  \<comment> \<open>Direct computation: distribute, factor, cancel.\<close>
-  have "(\<Sum>i<n. cross2 (vx i - cx, vy i - cy) (dx, dy))
+  \<comment> \<open>Step 1: Expand cross2.\<close>
+  have heq1: "(\<Sum>i<n. cross2 (vx i - cx, vy i - cy) (dx, dy))
       = (\<Sum>i<n. (vx i - cx) * dy - (vy i - cy) * dx)"
     unfolding cross2_def by (by100 simp)
-  also have "\<dots> = (\<Sum>i<n. (vx i - cx) * dy) - (\<Sum>i<n. (vy i - cy) * dx)"
+  \<comment> \<open>Step 2: Split sum of differences.\<close>
+  have heq2: "(\<Sum>i<n. (vx i - cx) * dy - (vy i - cy) * dx)
+      = (\<Sum>i<n. (vx i - cx) * dy) - (\<Sum>i<n. (vy i - cy) * dx)"
     using sum_subtractf[of "\<lambda>i. (vx i - cx) * dy" "\<lambda>i. (vy i - cy) * dx" "{..<n}", symmetric]
     by (by5000 simp)
-  also have "(\<Sum>i<n. (vx i - cx) * dy) = dy * ((\<Sum>i<n. vx i) - real n * cx)"
-    using sum_subtractf[of "\<lambda>i. vx i" "\<lambda>_. cx" "{..<n}"]
-    using sum_distrib_right[of "\<lambda>i. vx i - cx" "{..<n}" dy, symmetric]
-    sorry
-  also have "\<dots> = 0" using hvx_sum by (by100 simp)
-  finally show ?thesis sorry
+  \<comment> \<open>Step 3: Each sub-sum is zero because \<Sum>(vx_i - cx) = \<Sum>vx_i - n*cx = 0.\<close>
+  have hvx_diff_sum: "(\<Sum>i<n. vx i - cx) = 0"
+    using sum_subtractf[of vx "\<lambda>_. cx" "{..<n}"] hvx_sum by (by5000 simp)
+  have hvy_diff_sum: "(\<Sum>i<n. vy i - cy) = 0"
+    using sum_subtractf[of vy "\<lambda>_. cy" "{..<n}"] hvy_sum by (by5000 simp)
+  have hx_zero: "(\<Sum>i<n. (vx i - cx) * dy) = 0"
+  proof -
+    have "(\<Sum>i<n. (vx i - cx) * dy) = (\<Sum>i<n. (vx i - cx)) * dy"
+      using sum_distrib_right[of "\<lambda>i. vx i - cx" "{..<n}" dy, symmetric] by (by100 simp)
+    thus ?thesis using hvx_diff_sum by (by100 simp)
+  qed
+  have hy_zero: "(\<Sum>i<n. (vy i - cy) * dx) = 0"
+  proof -
+    have "(\<Sum>i<n. (vy i - cy) * dx) = (\<Sum>i<n. (vy i - cy)) * dx"
+      using sum_distrib_right[of "\<lambda>i. vy i - cy" "{..<n}" dx, symmetric] by (by100 simp)
+    thus ?thesis using hvy_diff_sum by (by100 simp)
+  qed
+  show ?thesis using heq1 heq2 hx_zero hy_zero by (by100 simp)
 qed
 
 text \<open>If a sequence of reals sums to 0 and is not all zero, there exists an index
