@@ -4003,8 +4003,120 @@ proof -
           qed
           thus ?thesis using hi hkr by (by100 simp)
         qed
+        \<comment> \<open>From torus\_scheme\_nth: label/direction of edges in block k.\<close>
+        have h4k_bound: "4*k < length ?scheme" using hk_bound hn_pos by (by100 simp)
+        have h4k1_bound: "4*k+1 < length ?scheme" using hk_bound hn_pos by (by100 simp)
+        have h4k2_bound: "4*k+2 < length ?scheme" using hk_bound hn_pos by (by100 simp)
+        have h4k3_bound: "4*k+3 < length ?scheme" using hk_bound hn_pos by (by100 simp)
+        have hlabel_a: "fst (?scheme!(4*k)) = fst (?scheme!(4*k+2))"
+          using torus_scheme_nth(1,3)[OF hk_bound] by (by100 simp)
+        have hdir_a: "snd (?scheme!(4*k)) \<noteq> snd (?scheme!(4*k+2))"
+          using torus_scheme_nth(1,3)[OF hk_bound] by (by100 simp)
+        have hlabel_b: "fst (?scheme!(4*k+1)) = fst (?scheme!(4*k+3))"
+          using torus_scheme_nth(2,4)[OF hk_bound] by (by100 simp)
+        have hdir_b: "snd (?scheme!(4*k+1)) \<noteq> snd (?scheme!(4*k+3))"
+          using torus_scheme_nth(2,4)[OF hk_bound] by (by100 simp)
+        \<comment> \<open>From hedge at t=1 with edges 4k,4k+2 (same label a, diff dir):
+           q(vx(4k+1), vy(4k+1)) = q(vx(4k+2), vy(4k+2)).\<close>
+        have hedge_a_t1: "q (vx (Suc (4*k) mod length ?scheme), vy (Suc (4*k) mod length ?scheme))
+            = q (vx (4*k+2), vy (4*k+2))"
+        proof -
+          have "Suc (4*k) mod length ?scheme = 4*k+1"
+            using h4k1_bound by (by100 simp)
+          moreover from hedge[rule_format, OF h4k_bound h4k2_bound hlabel_a, rule_format, OF h1_in_I]
+          have "q ((1-1) * vx (4*k) + 1 * vx (Suc (4*k) mod length ?scheme),
+                   (1-1) * vy (4*k) + 1 * vy (Suc (4*k) mod length ?scheme))
+              = q (1 * vx (4*k+2) + (1-1) * vx (Suc (4*k+2) mod length ?scheme),
+                   1 * vy (4*k+2) + (1-1) * vy (Suc (4*k+2) mod length ?scheme))"
+            using hdir_a by (by5000 simp)
+          ultimately show ?thesis by (by5000 simp)
+        qed
+        \<comment> \<open>Similarly for t=0: q(vx(4k), vy(4k)) = q(vx(4k+3), vy(4k+3)).\<close>
+        have hedge_a_t0: "q (vx (4*k), vy (4*k)) = q (vx (Suc (4*k+2) mod length ?scheme), vy (Suc (4*k+2) mod length ?scheme))"
+        proof -
+          from hedge[rule_format, OF h4k_bound h4k2_bound hlabel_a, rule_format, OF h0_in_I]
+          have "q ((1-0) * vx (4*k) + 0 * vx (Suc (4*k) mod length ?scheme),
+                   (1-0) * vy (4*k) + 0 * vy (Suc (4*k) mod length ?scheme))
+              = q (0 * vx (4*k+2) + (1-0) * vx (Suc (4*k+2) mod length ?scheme),
+                   0 * vy (4*k+2) + (1-0) * vy (Suc (4*k+2) mod length ?scheme))"
+            using hdir_a by (by5000 simp)
+          thus ?thesis by (by5000 simp)
+        qed
+        have h4k3_eq: "Suc (4*k+2) mod length ?scheme = 4*k+3"
+          using h4k3_bound by (by100 simp)
+        have hedge_a_t0': "q (vx (4*k), vy (4*k)) = q (vx (4*k+3), vy (4*k+3))"
+          using hedge_a_t0 h4k3_eq by (by100 simp)
+        \<comment> \<open>From hedge at t=1 with edges 4k+1,4k+3: q(vx(4k+2)) = q(vx(4k+3)).\<close>
+        have hedge_b_t1: "q (vx (Suc (4*k+1) mod length ?scheme), vy (Suc (4*k+1) mod length ?scheme))
+            = q (vx (4*k+3), vy (4*k+3))"
+        proof -
+          have h4k2_eq: "Suc (4*k+1) mod length ?scheme = 4*k+2"
+            using h4k2_bound by (by100 simp)
+          from hedge[rule_format, OF h4k1_bound h4k3_bound hlabel_b, rule_format, OF h1_in_I]
+          have "q ((1-1) * vx (4*k+1) + 1 * vx (Suc (4*k+1) mod length ?scheme),
+                   (1-1) * vy (4*k+1) + 1 * vy (Suc (4*k+1) mod length ?scheme))
+              = q (1 * vx (4*k+3) + (1-1) * vx (Suc (4*k+3) mod length ?scheme),
+                   1 * vy (4*k+3) + (1-1) * vy (Suc (4*k+3) mod length ?scheme))"
+            using hdir_b by (by5000 simp)
+          thus ?thesis by (by5000 simp)
+        qed
+        have hedge_b_t1': "q (vx (4*k+2), vy (4*k+2)) = q (vx (4*k+3), vy (4*k+3))"
+          using hedge_b_t1 by (by5000 simp)
+        \<comment> \<open>From hedge at t=0 with edges 4k+1,4k+3: q(vx(4k+1)) = q(vx(4(k+1) mod 4n)).\<close>
+        have hedge_b_t0: "q (vx (4*k+1), vy (4*k+1))
+            = q (vx (Suc (4*k+3) mod length ?scheme), vy (Suc (4*k+3) mod length ?scheme))"
+        proof -
+          from hedge[rule_format, OF h4k1_bound h4k3_bound hlabel_b, rule_format, OF h0_in_I]
+          have "q ((1-0) * vx (4*k+1) + 0 * vx (Suc (4*k+1) mod length ?scheme),
+                   (1-0) * vy (4*k+1) + 0 * vy (Suc (4*k+1) mod length ?scheme))
+              = q (0 * vx (4*k+3) + (1-0) * vx (Suc (4*k+3) mod length ?scheme),
+                   0 * vy (4*k+3) + (1-0) * vy (Suc (4*k+3) mod length ?scheme))"
+            using hdir_b by (by5000 simp)
+          thus ?thesis by (by5000 simp)
+        qed
+        \<comment> \<open>Also: q(vx(4k+1)) = q(vx(4k+1)) from hedge\_a\_t1.\<close>
+        have hedge_a_t1': "q (vx (4*k+1), vy (4*k+1)) = q (vx (4*k+2), vy (4*k+2))"
+          using hedge_a_t1 by (by5000 simp)
+        \<comment> \<open>Now case split on r.\<close>
         show "q (vx i, vy i) = q (vx (Suc i mod length ?scheme), vy (Suc i mod length ?scheme))"
-          sorry \<comment> \<open>Case split on r \<in> {0,1,2,3}. Each case uses hedge + torus\_scheme\_nth.\<close>
+        proof -
+          have "r = 0 \<or> r = 1 \<or> r = 2 \<or> r = 3" using hkr(2) by (by100 auto)
+          thus ?thesis
+          proof (elim disjE)
+            assume "r = 0"
+            \<comment> \<open>v(4k) = v(4k+3) = v(4k+2) = v(4k+1). So v(4k) = v(4k+1).\<close>
+            hence "i = 4*k" using hkr(1) by (by100 simp)
+            have "q (vx (4*k), vy (4*k)) = q (vx (4*k+1), vy (4*k+1))"
+              using hedge_a_t0' hedge_b_t1' hedge_a_t1' by (by100 simp)
+            moreover have "Suc (4*k) mod length ?scheme = 4*k+1"
+              using h4k1_bound by (by100 simp)
+            ultimately show ?thesis using \<open>i = 4*k\<close> by (by100 simp)
+          next
+            assume "r = 1"
+            hence "i = 4*k+1" using hkr(1) by (by100 simp)
+            moreover have "Suc (4*k+1) mod length ?scheme = 4*k+2"
+              using h4k2_bound by (by100 simp)
+            ultimately show ?thesis using hedge_a_t1' by (by100 simp)
+          next
+            assume "r = 2"
+            hence "i = 4*k+2" using hkr(1) by (by100 simp)
+            moreover have "Suc (4*k+2) mod length ?scheme = 4*k+3"
+              using h4k3_bound by (by100 simp)
+            ultimately show ?thesis using hedge_b_t1' by (by100 simp)
+          next
+            assume "r = 3"
+            hence "i = 4*k+3" using hkr(1) by (by100 simp)
+            \<comment> \<open>v(4k+3) = v(4k) (from hedge\_a\_t0') = v(4k+1) (from r=0 chain)
+               = v(4(k+1) mod 4n) (from hedge\_b\_t0).\<close>
+            have "q (vx (4*k+3), vy (4*k+3)) = q (vx (4*k), vy (4*k))"
+              using hedge_a_t0' by (by100 simp)
+            also have "\<dots> = q (vx (4*k+1), vy (4*k+1))"
+              using hedge_a_t0' hedge_b_t1' hedge_a_t1' by (by100 simp)
+            also have "\<dots> = q (vx (Suc (4*k+3) mod length ?scheme), vy (Suc (4*k+3) mod length ?scheme))"
+              using hedge_b_t0 by (by100 simp)
+            finally show ?thesis using \<open>i = 4*k+3\<close> by (by100 simp)
+          qed
+        qed
       qed
       \<comment> \<open>From hadjacent, all vertices are in the same equivalence class.\<close>
       \<comment> \<open>From hadjacent, iterate: q(vx 0, vy 0) = q(vx 1, vy 1) = ... = q(vx (4n-1), vy (4n-1)).\<close>
