@@ -10426,8 +10426,37 @@ proof -
                     (2*i, False), (2*i+1, False)]) [0..<n])"
       using hw by (by100 blast)
     \<comment> \<open>By induction on n: word\_product of this concat \<in> [F,F].\<close>
-    show "r \<in> top1_commutator_subgroup_on F mulF eF invgF"
-      using hr hw_eq sorry
+    \<comment> \<open>Rewrite: map \<iota> w = concat(map (\<lambda>i. [(\<iota>(2i),T),(\<iota>(2i+1),T),(\<iota>(2i),F),(\<iota>(2i+1),F)]) [0..<n]).\<close>
+    have hmap_w: "map (\<lambda>(s,b). (\<iota> s, b)) w
+        = concat (map (\<lambda>i. [(\<iota> (2*i), True), (\<iota> (2*i+1), True),
+                    (\<iota> (2*i), False), (\<iota> (2*i+1), False)]) [0..<n])"
+      sorry
+    have "top1_group_word_product mulF eF invgF (map (\<lambda>(s,b). (\<iota> s, b)) w)
+      \<in> top1_commutator_subgroup_on F mulF eF invgF"
+    proof -
+      have h\<iota>_in: "\<forall>s \<in> ({..<2*n}::nat set). \<iota> s \<in> F"
+        using hfree unfolding top1_is_free_group_full_on_def by (by100 blast)
+      have "\<forall>i \<in> set [0..<n]. \<iota> (2*i) \<in> F \<and> \<iota> (2*i+1) \<in> F"
+      proof (intro ballI conjI)
+        fix i assume "i \<in> set [0..<n]"
+        hence "i < n" by (by100 simp)
+        hence "2*i < 2*n" and "2*i+1 < 2*n" by (by100 simp)+
+        show "\<iota> (2*i) \<in> F"
+          apply (rule h\<iota>_in[rule_format]) using \<open>2*i < 2*n\<close> by (by100 simp)
+        show "\<iota> (2*i+1) \<in> F"
+          apply (rule h\<iota>_in[rule_format]) using \<open>2*i+1 < 2*n\<close> by (by100 simp)
+      qed
+      hence "top1_group_word_product mulF eF invgF
+          (concat (map (\<lambda>i. [(\<iota> (2*i), True), (\<iota> (2*i+1), True),
+                      (\<iota> (2*i), False), (\<iota> (2*i+1), False)]) [0..<n]))
+        \<in> top1_commutator_subgroup_on F mulF eF invgF"
+        by (rule word_product_commutator_concat_in_comm[OF hF_grp])
+      thus "top1_group_word_product mulF eF invgF (map (\<lambda>(s,b). (\<iota> s, b)) w)
+        \<in> top1_commutator_subgroup_on F mulF eF invgF"
+        using hmap_w by (by100 simp)
+    qed
+    thus "r \<in> top1_commutator_subgroup_on F mulF eF invgF"
+      using hr by (by100 simp)
   qed
   hence "top1_normal_subgroup_generated_on F mulF eF invgF ?relators
       \<subseteq> top1_commutator_subgroup_on F mulF eF invgF"
