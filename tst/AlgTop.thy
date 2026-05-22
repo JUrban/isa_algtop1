@@ -2362,8 +2362,26 @@ lemma top1_path_connected_continuous_image:
       and "f ` X = Z" and "Z \<subseteq> Y"
       and "TZ = subspace_topology Y TY Z"
   shows "top1_path_connected_on Z TZ"
-  sorry \<comment> \<open>Standard: for a,b \<in> Z, pick preimages x,y \<in> X. Path \<gamma> from x to y in X
-     gives path f\<circ>\<gamma> from a to b in Z. Needs top1\_is\_path\_on composition lemma.\<close>
+proof -
+  show ?thesis unfolding top1_path_connected_on_def
+  proof (intro conjI)
+    show "is_topology_on Z TZ" unfolding assms(6) sorry \<comment> \<open>Subspace topology is topology.\<close>
+    show "\<forall>a\<in>Z. \<forall>b\<in>Z. \<exists>\<gamma>. top1_is_path_on Z TZ a b \<gamma>"
+    proof (intro ballI)
+      fix a b assume ha: "a \<in> Z" and hb: "b \<in> Z"
+      \<comment> \<open>Pick preimages x, y \<in> X.\<close>
+      from ha assms(4) obtain x where hx: "x \<in> X" "f x = a" by (by100 blast)
+      from hb assms(4) obtain y where hy: "y \<in> X" "f y = b" by (by100 blast)
+      \<comment> \<open>Path from x to y in X.\<close>
+      from assms(1)[unfolded top1_path_connected_on_def] hx(1) hy(1)
+      obtain \<gamma> where h\<gamma>: "top1_is_path_on X TX x y \<gamma>" by (by100 blast)
+      \<comment> \<open>f \<circ> \<gamma> is a path from a to b in Z.\<close>
+      show "\<exists>\<gamma>. top1_is_path_on Z TZ a b \<gamma>"
+        sorry \<comment> \<open>Compose: f\<circ>\<gamma> continuous, f(\<gamma>(0))=f(x)=a, f(\<gamma>(1))=f(y)=b.
+           Needs top1\_is\_path\_on composition with f, restricting codomain to Z.\<close>
+    qed
+  qed
+qed
 
 lemma polygonal_region_convex_combo:
   assumes "top1_is_polygonal_region_on P n" and "n \<ge> 3"
