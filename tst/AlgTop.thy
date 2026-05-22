@@ -7135,7 +7135,66 @@ proof -
         let ?\<psi> = "\<lambda>CK. top1_group_coset_on G mul ?twoG (SOME k. k \<in> CK)"
         \<comment> \<open>Injectivity of \<psi>: K \<inter> 2G = 2K ensures different K-cosets give different G-cosets.\<close>
         have hpsi_inj: "inj_on ?\<psi> ?QK"
-          sorry \<comment> \<open>If [k1]_G = [k2]_G, then k1-k2 \<in> 2G \<inter> K = 2K, so [k1]_K = [k2]_K.\<close>
+        proof (rule inj_onI)
+          fix CK1 CK2 assume hCK1: "CK1 \<in> ?QK" and hCK2: "CK2 \<in> ?QK"
+              and heq: "?\<psi> CK1 = ?\<psi> CK2"
+          \<comment> \<open>Get representatives k1 \<in> CK1, k2 \<in> CK2 via SOME.\<close>
+          let ?k1 = "SOME k. k \<in> CK1" and ?k2 = "SOME k. k \<in> CK2"
+          have hk1_mem: "?k1 \<in> CK1"
+          proof (rule someI_ex)
+            from hCK1 obtain k0 where "k0 \<in> ?K" "CK1 = top1_group_coset_on ?K mul ?twoK k0"
+              unfolding top1_quotient_group_carrier_on_def by (by100 blast)
+            have "k0 \<in> CK1"
+            proof -
+              have "e \<in> ?twoK" using hK_grp unfolding top1_is_group_on_def by (by100 force)
+              have "mul k0 e = k0" using hK_grp \<open>k0 \<in> ?K\<close> unfolding top1_is_group_on_def by (by100 blast)
+              thus ?thesis using \<open>CK1 = _\<close> \<open>e \<in> ?twoK\<close>
+                unfolding top1_group_coset_on_def by (by100 force)
+            qed
+            thus "\<exists>k. k \<in> CK1" by (by100 blast)
+          qed
+          have hk2_mem: "?k2 \<in> CK2"
+          proof (rule someI_ex)
+            from hCK2 obtain k0 where "k0 \<in> ?K" "CK2 = top1_group_coset_on ?K mul ?twoK k0"
+              unfolding top1_quotient_group_carrier_on_def by (by100 blast)
+            have "k0 \<in> CK2"
+            proof -
+              have "e \<in> ?twoK" using hK_grp unfolding top1_is_group_on_def by (by100 force)
+              have "mul k0 e = k0" using hK_grp \<open>k0 \<in> ?K\<close> unfolding top1_is_group_on_def by (by100 blast)
+              thus ?thesis using \<open>CK2 = _\<close> \<open>e \<in> ?twoK\<close>
+                unfolding top1_group_coset_on_def by (by100 force)
+            qed
+            thus "\<exists>k. k \<in> CK2" by (by100 blast)
+          qed
+          \<comment> \<open>k1, k2 \<in> K.\<close>
+          have hk1_K: "?k1 \<in> ?K"
+          proof -
+            from hCK1 obtain k0 where "k0 \<in> ?K" "CK1 = top1_group_coset_on ?K mul ?twoK k0"
+              unfolding top1_quotient_group_carrier_on_def by (by100 blast)
+            from hk1_mem \<open>CK1 = _\<close> obtain h where "h \<in> ?twoK" "?k1 = mul k0 h"
+              unfolding top1_group_coset_on_def by (by100 blast)
+            from \<open>h \<in> ?twoK\<close> obtain h' where "h' \<in> ?K" "h = mul h' h'" by (by100 blast)
+            have "h \<in> ?K" using hK_grp \<open>h' \<in> ?K\<close> \<open>h = mul h' h'\<close>
+              unfolding top1_is_group_on_def by (by100 blast)
+            thus ?thesis using hK_grp \<open>k0 \<in> ?K\<close> \<open>?k1 = mul k0 h\<close>
+              unfolding top1_is_group_on_def by (by100 blast)
+          qed
+          have hk2_K: "?k2 \<in> ?K"
+          proof -
+            from hCK2 obtain k0 where "k0 \<in> ?K" "CK2 = top1_group_coset_on ?K mul ?twoK k0"
+              unfolding top1_quotient_group_carrier_on_def by (by100 blast)
+            from hk2_mem \<open>CK2 = _\<close> obtain h where "h \<in> ?twoK" "?k2 = mul k0 h"
+              unfolding top1_group_coset_on_def by (by100 blast)
+            from \<open>h \<in> ?twoK\<close> obtain h' where "h' \<in> ?K" "h = mul h' h'" by (by100 blast)
+            have "h \<in> ?K" using hK_grp \<open>h' \<in> ?K\<close> \<open>h = mul h' h'\<close>
+              unfolding top1_is_group_on_def by (by100 blast)
+            thus ?thesis using hK_grp \<open>k0 \<in> ?K\<close> \<open>?k2 = mul k0 h\<close>
+              unfolding top1_is_group_on_def by (by100 blast)
+          qed
+          \<comment> \<open>coset_G(k1) = coset_G(k2) means k1 - k2 \<in> 2G.\<close>
+          \<comment> \<open>k1, k2 \<in> K, so k1 - k2 \<in> K \<inter> 2G = 2K. Hence coset_K(k1) = coset_K(k2), i.e., CK1 = CK2.\<close>
+          show "CK1 = CK2" sorry
+        qed
         \<comment> \<open>Image of \<psi> = ?even: every even G-coset has a K-representative.\<close>
         have hpsi_image: "?\<psi> ` ?QK = ?even"
           sorry \<comment> \<open>Every even coset [g] with \<epsilon>(g) even has k \<in> K with [g]_G = [k]_G.\<close>
