@@ -10275,7 +10275,29 @@ next
     hence "i \<in> {0, 1, 2, 3}" by (by100 auto)
     thus "fst (?sub ! i) \<in> G" using haj hbj by (by100 auto)
   qed
-  have hrest_G: "\<forall>i<length ?rest_word. fst (?rest_word ! i) \<in> G" sorry
+  have hrest_G: "\<forall>i<length ?rest_word. fst (?rest_word ! i) \<in> G"
+  proof (intro allI impI)
+    fix i assume hi: "i < length ?rest_word"
+    have "?rest_word ! i \<in> set ?rest_word" using hi nth_mem by (by100 blast)
+    hence "?rest_word ! i \<in> (\<Union>k \<in> set js. set [(a k, True), (b k, True), (a k, False), (b k, False)])"
+      unfolding set_concat by (by100 simp)
+    then obtain k where hk: "k \<in> set js" and helem: "?rest_word ! i \<in> set [(a k, True), (b k, True), (a k, False), (b k, False)]"
+      by (by100 blast)
+    from helem have "?rest_word ! i = (a k, True) \<or> ?rest_word ! i = (b k, True)
+        \<or> ?rest_word ! i = (a k, False) \<or> ?rest_word ! i = (b k, False)"
+      by (by100 auto)
+    hence hfst: "fst (?rest_word ! i) \<in> {a k, b k}" by (by100 auto)
+    have "k \<in> set (j # js)" using hk by (by100 simp)
+    hence "a k \<in> G \<and> b k \<in> G"
+      apply (rule Cons(2)[rule_format])
+      done
+    hence "a k \<in> G" and "b k \<in> G" by (by100 blast)+
+    define v where "v = fst (?rest_word ! i)"
+    have "v \<in> {a k, b k}" using hfst unfolding v_def .
+    hence "v = a k \<or> v = b k" by (by100 blast)
+    hence "v \<in> G" using \<open>a k \<in> G\<close> \<open>b k \<in> G\<close> by (by100 blast)
+    thus "fst (?rest_word ! i) \<in> G" unfolding v_def .
+  qed
   have hprod: "top1_group_word_product mul e invg (?sub @ ?rest_word)
       = mul (top1_group_word_product mul e invg ?sub) (top1_group_word_product mul e invg ?rest_word)"
     by (rule word_product_append[OF hG hsub_G hrest_G])
