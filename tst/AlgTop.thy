@@ -6840,24 +6840,6 @@ proof -
     using hK_abel hiota_K hiota_inj hK_gen hK_indep by (by100 blast)
 qed
 
-text \<open>If G = K \<times> Z (internal direct sum with Z-component via \<epsilon>),
-  then |G/2G| = 2 \<times> |K/2K|.\<close>
-lemma quotient_2G_decomposition:
-  fixes G :: "'g set" and mul :: "'g \<Rightarrow> 'g \<Rightarrow> 'g"
-    and e :: 'g and invg :: "'g \<Rightarrow> 'g"
-    and \<epsilon> :: "'g \<Rightarrow> int" and a :: 'g
-  assumes hG: "top1_is_abelian_group_on G mul e invg"
-      and heps: "top1_group_hom_on G mul (UNIV::int set) (+) \<epsilon>"
-      and ha: "a \<in> G" and heps_a: "\<epsilon> a = 1"
-      and hdecomp: "\<forall>g\<in>G. \<exists>!k. k \<in> {g \<in> G. \<epsilon> g = 0} \<and>
-          (\<exists>n::int. g = mul k (top1_group_pow mul e (if n \<ge> 0 then a else invg a) (nat (abs n))))"
-      and hK_fin: "finite (top1_quotient_group_carrier_on
-            {g \<in> G. \<epsilon> g = 0} mul {mul g g | g. g \<in> {g \<in> G. \<epsilon> g = 0}})"
-  shows "card (top1_quotient_group_carrier_on G mul {mul g g | g. g \<in> G})
-       = 2 * card (top1_quotient_group_carrier_on
-            {g \<in> G. \<epsilon> g = 0} mul {mul g g | g. g \<in> {g \<in> G. \<epsilon> g = 0}})"
-  sorry
-
 text \<open>Key lemma for Theorem 67.8: |G/2G| = 2^|S| for free abelian G on finite basis S.\<close>
 lemma free_abelian_mod2_card:
   fixes G :: "'g set" and mul :: "'g \<Rightarrow> 'g \<Rightarrow> 'g"
@@ -6981,26 +6963,23 @@ proof -
       note hIH_raw = Suc.hyps(1)
       show ?thesis using hIH_raw[OF hcard'[symmetric] hK_free hfin'] hcard' by (by100 simp)
     qed
-    \<comment> \<open>G/2G = 2 \<times> K/2K by quotient\_2G\_decomposition.\<close>
-    \<comment> \<open>Need: unique decomposition g = k + m\<cdot>\<iota>(s0) with k \<in> K.\<close>
+    \<comment> \<open>Following book proof of Theorem 67.8:
+       G \<cong> Z^S via coordinate projections. 2G \<leftrightarrow> (2Z)^S. G/2G \<cong> (Z/2Z)^S has 2^|S| elements.
+       We use the \<epsilon> coordinate projection to split: G/2G \<cong> (Z/2Z) \<times> K/2K, giving
+       |G/2G| = 2 \<times> |K/2K| = 2 \<times> 2^n = 2^{n+1}.\<close>
     have habel: "top1_is_abelian_group_on G mul e invg"
       using hfree unfolding top1_is_free_abelian_group_full_on_def by (by100 blast)
+    have hG_grp: "top1_is_group_on G mul e invg"
+      using habel unfolding top1_is_abelian_group_on_def by (by100 blast)
     have ha_G: "iota s0 \<in> G"
       using hfree hs0 unfolding top1_is_free_abelian_group_full_on_def by (by100 blast)
-    have hdecomp: "\<forall>g\<in>G. \<exists>!k. k \<in> ?K \<and>
-        (\<exists>n::int. g = mul k (top1_group_pow mul e (if n \<ge> 0 then iota s0 else invg (iota s0)) (nat (abs n))))"
-      sorry \<comment> \<open>Unique decomposition of elements in a free abelian group.\<close>
-    have hK_fin: "finite (top1_quotient_group_carrier_on ?K mul {mul g g | g. g \<in> ?K})"
-    proof (rule ccontr)
-      assume "\<not> finite (top1_quotient_group_carrier_on ?K mul {mul g g | g. g \<in> ?K})"
-      hence "card (top1_quotient_group_carrier_on ?K mul {mul g g | g. g \<in> ?K}) = 0"
-        by (by100 simp)
-      hence "2 ^ n = (0::nat)" using hIH by (by100 simp)
-      thus False by (by100 simp)
-    qed
+    \<comment> \<open>|G/2G| = 2 \<times> |K/2K| via the \<epsilon>-parity map.\<close>
     have "card (top1_quotient_group_carrier_on G mul {mul g g | g. g \<in> G})
        = 2 * card (top1_quotient_group_carrier_on ?K mul {mul g g | g. g \<in> ?K})"
-      by (rule quotient_2G_decomposition[OF habel heps ha_G heps_s0 hdecomp hK_fin])
+      sorry \<comment> \<open>Key cardinality: G/2G has twice as many cosets as K/2K.
+         Proof sketch: The map [g] \<mapsto> \<epsilon>(g) mod 2 partitions G/2G into two halves:
+         {[g] : \<epsilon>(g) even} and {[g] : \<epsilon>(g) odd}. The even half bijects with K/2K
+         via [g] \<mapsto> [g - \<epsilon>(g)\<cdot>\<iota>(s0)]. The odd half is a coset translate.\<close>
     also have "\<dots> = 2 * 2 ^ n" using hIH by (by100 simp)
     also have "\<dots> = 2 ^ Suc n" by (by100 simp)
     finally show ?case using Suc.hyps by (by100 simp)
