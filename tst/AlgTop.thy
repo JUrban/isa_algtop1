@@ -3822,7 +3822,55 @@ proof -
   \<comment> \<open>Step 3: Apply Theorem 72.1. The attaching map h: B² \<rightarrow> X wraps S¹ around
      the 1-skeleton via the word [a₁,b₁]...[aₙ,bₙ].
      Theorem 72.1 gives: \<pi>_1(X) \<cong> \<pi>_1(1-skel)/N(relator).\<close>
-  show ?thesis sorry \<comment> \<open>Theorem 72.1 + presentation by relator [a₁,b₁]...[aₙ,bₙ].\<close>
+  \<comment> \<open>Step 3: Apply Theorem 72.1 with the CW data.
+     From n\_torus\_scheme\_CW\_data we get A (wedge of 2n circles) and h (attaching map).
+     Theorem 72.1 gives: \<pi>_1(X) \<cong> \<pi>_1(A)/N(k_*([standard loop]))
+     where k = h|_{S\<^sup>1} and N is the normal closure.
+     Step 4: \<pi>_1(A) is free on 2n generators (Theorem 71.1).
+     The attaching word traces [a_1,b_1]...[a_n,b_n] on the 1-skeleton.
+     So the quotient = presented group with relator [a_1,b_1]...[a_n,b_n].\<close>
+  from n_torus_scheme_CW_data[OF assms] obtain A :: "'a set" and h_att :: "real \<times> real \<Rightarrow> 'a"
+    where hA_closed: "closedin_on X TX A"
+      and hA_wedge: "top1_is_wedge_of_circles_on A (subspace_topology X TX A) ({..<2*n}::nat set) x0"
+      and hh_cont: "top1_continuous_map_on top1_B2 top1_B2_topology X TX h_att"
+      and hh_S1: "h_att ` top1_S1 \<subseteq> A"
+    by (by100 blast)
+  \<comment> \<open>Apply Theorem 72.1.\<close>
+  \<comment> \<open>Need additionally: Hausdorff, path-connected A, h|_{Int B\<^sup>2} homeomorphism onto X-A.\<close>
+  have hX_strict: "is_topology_on_strict X TX"
+    using assms(1) unfolding top1_is_n_fold_torus_on_def top1_quotient_of_scheme_on_def by (by100 blast)
+  have hX_haus: "is_hausdorff_on X TX"
+    sorry \<comment> \<open>Polygonal quotient is Hausdorff (Theorem 74.1).\<close>
+  have hA_pc: "top1_path_connected_on A (subspace_topology X TX A)"
+    sorry \<comment> \<open>Wedge of circles is path-connected.\<close>
+  have hh_homeo: "top1_homeomorphism_on
+      (top1_B2 - top1_S1) (subspace_topology top1_B2 top1_B2_topology (top1_B2 - top1_S1))
+      (X - A) (subspace_topology X TX (X - A)) h_att"
+    sorry \<comment> \<open>Interior of polygon maps homeomorphically to X - A (from scheme quotient).\<close>
+  \<comment> \<open>Now apply Theorem 72.1.\<close>
+  have hThm721: "\<exists>\<iota>. top1_continuous_map_on top1_S1 top1_S1_topology A (subspace_topology X TX A) \<iota>
+      \<and> (\<forall>z\<in>top1_S1. \<iota> z = h_att z)
+      \<and> top1_groups_isomorphic_on
+          (top1_fundamental_group_carrier X TX x0)
+          (top1_fundamental_group_mul X TX x0)
+          (top1_quotient_group_carrier_on
+             (top1_fundamental_group_carrier A (subspace_topology X TX A) x0)
+             (top1_fundamental_group_mul A (subspace_topology X TX A) x0)
+             (top1_normal_subgroup_generated_on
+                (top1_fundamental_group_carrier A (subspace_topology X TX A) x0)
+                (top1_fundamental_group_mul A (subspace_topology X TX A) x0)
+                (top1_fundamental_group_id A (subspace_topology X TX A) x0)
+                (top1_fundamental_group_invg A (subspace_topology X TX A) x0)
+                {top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1, 0)
+                    A (subspace_topology X TX A) x0 (\<lambda>z. h_att z)
+                  {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0)
+                      (\<lambda>s. (cos (2*pi*s), sin (2*pi*s))) g}}))
+          (top1_quotient_group_mul_on
+             (top1_fundamental_group_mul A (subspace_topology X TX A) x0))"
+    sorry \<comment> \<open>Apply Theorem\_72\_1\_attaching\_two\_cell with verified hypotheses.\<close>
+  \<comment> \<open>Step 4: \<pi>_1(A) is free on 2n generators. The attaching word is the torus relator.
+     So \<pi>_1(X) \<cong> Free(2n)/N(relator) = presented group.\<close>
+  show ?thesis sorry \<comment> \<open>Identify quotient with presented group.\<close>
 qed
 
 (** from \<S>74 Theorem 74.4: \<pi>_1(P_m) has presentation \<langle>a_1, \<dots>, a_m | a_1² \<cdots> a_m²\<rangle>.
