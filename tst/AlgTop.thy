@@ -6971,7 +6971,18 @@ proof -
   qed
   \<comment> \<open>Steps 2-4: card QG\_even = card QK, card QG\_odd = card QG\_even.\<close>
   have heven_card: "card QG_even = card ?QK" sorry
-  have hodd_card: "card QG_odd = card QG_even" sorry
+  have hodd_card: "card QG_odd = card QG_even"
+  proof -
+    \<comment> \<open>Bijection: shift by a maps QG\_even \<leftrightarrow> QG\_odd.\<close>
+    define shift where "shift C = top1_group_coset_on G mul ?twoG (mul a (SOME g. g \<in> C))" for C
+    \<comment> \<open>shift maps QG\_even into QG\_odd.\<close>
+    have hshift_to_odd: "shift ` QG_even \<subseteq> QG_odd" sorry
+    \<comment> \<open>shift is injective on QG\_even.\<close>
+    have hshift_inj: "inj_on shift QG_even" sorry
+    \<comment> \<open>shift is surjective onto QG\_odd.\<close>
+    have hshift_surj: "shift ` QG_even = QG_odd" sorry
+    show ?thesis using card_image[OF hshift_inj] hshift_surj by (by100 simp)
+  qed
   have hfin_even: "finite QG_even"
   proof (rule ccontr)
     assume "\<not> finite QG_even"
