@@ -2835,7 +2835,21 @@ proof -
           \<comment> \<open>Since vertices are in convex position (n \<ge> 3), not all v_i - c are parallel.
              So there exist i, j with cross2(v_i-c, v_j-c) \<noteq> 0.\<close>
           have "\<exists>i<n. \<exists>j<n. cross2 (vx i - cx, vy i - cy) (vx j - cx, vy j - cy) \<noteq> 0"
-            sorry \<comment> \<open>Convex position: v_i - c not all parallel (n \<ge> 3, no vertex in hull of others).\<close>
+          proof (rule ccontr)
+            assume "\<not> (\<exists>i<n. \<exists>j<n. cross2 (vx i - cx, vy i - cy) (vx j - cx, vy j - cy) \<noteq> 0)"
+            hence hall_par: "\<forall>i<n. \<forall>j<n. cross2 (vx i - cx, vy i - cy) (vx j - cx, vy j - cy) = 0"
+              by (by100 blast)
+            \<comment> \<open>All v_i - c are parallel: cross2 = 0 means the 2D vectors are parallel.
+               With n \<ge> 3 distinct vertices on a line through c, the general position
+               assumption (hgp) is violated: the "middle" vertex is in the hull of others.\<close>
+            \<comment> \<open>Specifically: vertices 0, 1, 2 are collinear (on the line through c).
+               One of them is between the other two. Say v_k is between v_i, v_j.
+               Then v_k = t*v_i + (1-t)*v_j for some t \<in> (0,1), contradicting hgp.\<close>
+            show False
+              sorry \<comment> \<open>Collinearity of n \<ge> 3 distinct points contradicts general position.
+                 Needs: if cross2(v_i-c, v_j-c) = 0 for all i,j then v_0,v_1,v_2 collinear.
+                 Then one is in hull of others (middle point on a line segment).\<close>
+          qed
           then obtain i' j' where hi': "i' < n" and hj': "j' < n"
               and hdet: "cross2 (vx i' - cx, vy i' - cy) (vx j' - cx, vy j' - cy) \<noteq> 0"
             by (by100 blast)
@@ -2915,8 +2929,72 @@ proof -
             and hneg: "cross2 (vx ((i+1) mod n) - cx, vy ((i+1) mod n) - cy) (?dx, ?dy) \<le> 0"
           by (by100 blast)
         \<comment> \<open>The sign conditions mean z-c is in the sector between v_i-c and v_{i+1}-c.
-           This gives the cone decomposition.\<close>
-        show ?thesis sorry
+           Solve the 2\<times>2 linear system for barycentric coordinates.\<close>
+        let ?vi1 = "(i+1) mod n"
+        let ?D = "cross2 (vx i - cx, vy i - cy) (vx ?vi1 - cx, vy ?vi1 - cy)"
+        \<comment> \<open>D > 0 for convex polygon with counterclockwise vertices from centroid.\<close>
+        have hD_ne: "?D \<noteq> 0"
+          sorry \<comment> \<open>Convex position: adjacent vertices and centroid form non-degenerate triangle.\<close>
+        \<comment> \<open>\<beta>' = cross2(z-c, v_{i+1}-c) / D, \<gamma>' = cross2(v_i-c, z-c) / D.\<close>
+        \<comment> \<open>Note: cross2(z-c, v_{i+1}-c) = -cross2(v_{i+1}-c, z-c) = -hneg part.\<close>
+        define \<beta>' where "\<beta>' = cross2 (fst z - cx, snd z - cy) (vx ?vi1 - cx, vy ?vi1 - cy) / ?D"
+        define \<gamma>' where "\<gamma>' = cross2 (vx i - cx, vy i - cy) (fst z - cx, snd z - cy) / ?D"
+        \<comment> \<open>\<beta>' \<ge> 0: cross2(z-c, v_{i+1}-c) = -cross2(v_{i+1}-c, z-c) \<ge> 0 from hneg,
+           divided by D (same sign). Similarly \<gamma>' \<ge> 0 from hpos.\<close>
+        have h\<beta>_nn: "\<beta>' \<ge> 0" sorry
+        have h\<gamma>_nn: "\<gamma>' \<ge> 0" sorry
+        \<comment> \<open>z - c = \<beta>'*(v_i - c) + \<gamma>'*(v_{i+1} - c): by definition of \<beta>', \<gamma>' via Cramer.\<close>
+        have hzc_x: "fst z - cx = \<beta>' * (vx i - cx) + \<gamma>' * (vx ?vi1 - cx)" sorry
+        have hzc_y: "snd z - cy = \<beta>' * (vy i - cy) + \<gamma>' * (vy ?vi1 - cy)" sorry
+        \<comment> \<open>\<beta>' + \<gamma>' \<le> 1: since z \<in> P (convex hull) and c is the centroid.\<close>
+        have hsum_le: "\<beta>' + \<gamma>' \<le> 1" sorry
+        \<comment> \<open>z \<noteq> c means \<beta>' + \<gamma>' > 0.\<close>
+        have hsum_pos: "\<beta>' + \<gamma>' > 0"
+          using False hzc_x hzc_y sorry
+        \<comment> \<open>Now set: s = \<beta>' + \<gamma>', u = \<gamma>' / (\<beta>' + \<gamma>'), b = (1-u)*v_i + u*v_{i+1}.\<close>
+        define s where "s = \<beta>' + \<gamma>'"
+        define u where "u = \<gamma>' / s"
+        define b where "b = ((1-u) * vx i + u * vx ?vi1, (1-u) * vy i + u * vy ?vi1)"
+        \<comment> \<open>Verify all conditions.\<close>
+        have hs: "0 < s" "s \<le> 1" using hsum_pos hsum_le unfolding s_def by (by100 simp)+
+        have hu: "0 \<le> u" "u \<le> 1"
+        proof -
+          show "0 \<le> u" unfolding u_def s_def using h\<gamma>_nn hsum_pos by (by100 simp)
+          show "u \<le> 1" unfolding u_def s_def
+            using h\<beta>_nn h\<gamma>_nn hsum_pos divide_le_eq_1 by (by5000 simp)
+        qed
+        have hb_in: "b \<in> BdP"
+          unfolding BdP_def b_def using hi hu by (by5000 force)
+        have hzx_eq: "fst z = (1-s) * cx + s * fst b"
+          using hzc_x unfolding b_def s_def u_def using hsum_pos
+          sorry \<comment> \<open>Algebra: fst z - cx = \<beta>'*(vx_i-cx) + \<gamma>'*(vx_{i+1}-cx).
+             fst b = (1-\<gamma>'/s)*vx_i + (\<gamma>'/s)*vx_{i+1} = (\<beta>'*vx_i + \<gamma>'*vx_{i+1})/s.
+             s*fst b = \<beta>'*vx_i + \<gamma>'*vx_{i+1}.
+             (1-s)*cx + s*fst b = cx - s*cx + \<beta>'*vx_i + \<gamma>'*vx_{i+1}
+                                = cx + \<beta>'*(vx_i-cx) + \<gamma>'*(vx_{i+1}-cx)
+                                  - s*cx + \<beta>'*cx + \<gamma>'*cx
+                                = cx + (fst z - cx) + (s - s)*cx ... wrong.
+             Actually: (1-s)*cx + s*fst b where s = \<beta>'+\<gamma>'
+             = cx - (\<beta>'+\<gamma>')*cx + (\<beta>'+\<gamma>')*(((\<beta>'/(β'+\<gamma>'))*vx_i + (\<gamma>'/(β'+\<gamma>'))*vx_{i+1}))
+             = cx - (\<beta>'+\<gamma>')*cx + \<beta>'*vx_i + \<gamma>'*vx_{i+1}
+             = cx + \<beta>'*(vx_i-cx) + \<gamma>'*(vx_{i+1}-cx)
+             = cx + (fst z - cx) = fst z. \<checkmark>\<close>
+        have hzy_eq: "snd z = (1-s) * cy + s * snd b"
+          using hzc_y unfolding b_def s_def u_def using hsum_pos
+          sorry \<comment> \<open>Symmetric to x.\<close>
+        show ?thesis
+        proof (rule that[of b i u])
+          show "b \<in> BdP" by (rule hb_in)
+          show "i < n" by (rule hi)
+          show "0 \<le> u" by (rule hu(1))
+          show "u \<le> 1" by (rule hu(2))
+          show "b = ((1 - u) * vx i + u * vx ((i + 1) mod n),
+                     (1 - u) * vy i + u * vy ((i + 1) mod n))"
+            unfolding b_def by (by100 simp)
+          show "\<exists>s. 0 < s \<and> s \<le> 1 \<and> fst z = (1 - s) * cx + s * fst b
+              \<and> snd z = (1 - s) * cy + s * snd b"
+            using hs hzx_eq hzy_eq by (by100 blast)
+        qed
       qed
       then obtain s where hs: "0 < s" "s \<le> 1"
           and hzx: "fst z = (1-s) * cx + s * fst b"
