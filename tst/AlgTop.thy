@@ -2050,6 +2050,37 @@ proof -
 qed
 
 
+text \<open>Key helper: a scheme quotient provides the attaching data for Theorem 72.1.
+  The 1-skeleton A = q(boundary of polygon) is closed and path-connected.
+  The attaching map h = q composed with polygon-to-disk homeomorphism is continuous.
+  The interior of the disk maps homeomorphically to X - A.\<close>
+lemma scheme_quotient_CW_data:
+  assumes "top1_quotient_of_scheme_on X TX scheme"
+      and "length scheme \<ge> 3"
+  shows "\<exists>(A :: 'a set) (h :: real \<times> real \<Rightarrow> 'a) (a :: 'a).
+      closedin_on X TX A
+    \<and> top1_path_connected_on A (subspace_topology X TX A)
+    \<and> top1_continuous_map_on top1_B2 top1_B2_topology X TX h
+    \<and> a \<in> A
+    \<and> top1_homeomorphism_on
+        (top1_B2 - top1_S1) (subspace_topology top1_B2 top1_B2_topology (top1_B2 - top1_S1))
+        (X - A) (subspace_topology X TX (X - A)) h
+    \<and> h ` top1_S1 \<subseteq> A
+    \<and> (\<forall>z\<in>top1_S1. h z \<in> A)"
+  sorry
+
+text \<open>For the torus scheme, the 1-skeleton is a wedge of 2 circles.
+  For the dunce cap, the 1-skeleton is a single circle.\<close>
+lemma torus_scheme_CW_data:
+  assumes "top1_is_torus_on X TX"
+      and "x0 \<in> X"
+  shows "\<exists>(A :: 'a set) (h :: real \<times> real \<Rightarrow> 'a).
+      closedin_on X TX A
+    \<and> top1_is_wedge_of_circles_on A (subspace_topology X TX A) {0::nat, 1} x0
+    \<and> top1_continuous_map_on top1_B2 top1_B2_topology X TX h
+    \<and> h ` top1_S1 \<subseteq> A"
+  sorry
+
 section \<open>\<S>73 Fundamental Groups of the Torus and the Dunce Cap\<close>
 
 (** from \<S>73 Theorem 73.1: \<pi>_1(torus) has presentation <\<alpha>, \<beta> | \<alpha>\<beta>\<alpha>^{-1}\<beta>^{-1}>,
@@ -2075,7 +2106,7 @@ proof -
       and hA_wedge: "top1_is_wedge_of_circles_on A (subspace_topology T_torus TT A) {0::nat, 1} x0"
       and hh_cont: "top1_continuous_map_on top1_B2 top1_B2_topology T_torus TT h"
       and hh_S1_A: "h ` top1_S1 \<subseteq> A"
-    sorry \<comment> \<open>From torus definition: quotient of square by aba\<inverse>b\<inverse>. 1-skeleton = wedge of 2 circles.\<close>
+    using torus_scheme_CW_data[OF assms] by (by100 blast)
   \<comment> \<open>Step 2: By Theorem 72.1, \<pi>_1(T) \<cong> \<pi>_1(A)/\<langle>\<langle>k_*([p])\<rangle>\<rangle> where k = h|_{S¹}.
      \<pi>_1(A) is free on {a, b}. The relator is aba\<inverse>b\<inverse>.\<close>
   have hA_free: "\<exists>(F::int set) mulF eF invgF (\<iota>F::nat \<Rightarrow> int).
