@@ -2287,7 +2287,12 @@ proof -
         qed
         show "p \<in> {-M..M} \<times> {-M..M}" using hp hx_bdd hy_bdd by (by100 blast)
       qed
-      \<comment> \<open>P is closed: limit of convex combos is a convex combo (sequential closedness).\<close>
+      \<comment> \<open>P is closed: convex hull of finitely many points in R² is closed.
+         Proof strategy: build P inductively as P_k = hull of first k+1 vertices.
+         P₀ = {v₀} compact. P_{k+1} = image of P_k × [0,1] under (p,t) ↦ (1-t)*p + t*v_{k+1},
+         which is continuous, giving compact (hence closed) P_{k+1}.
+         After n-1 steps: P = P_{n-1} is compact, hence closed.
+         Combined with hP\_bdd and closed\_subset\_compact:\<close>
       have hP_closed: "closed P" sorry
       from closed_subset_compact[OF compact_Icc_Times hP_closed hP_bdd]
       show ?thesis .
@@ -2458,11 +2463,40 @@ proof -
   qed
   \<comment> \<open>Step 3: The quotient F({a,b})/\<langle>\<langle>aba\<inverse>b\<inverse>\<rangle>\<rangle>: since aba\<inverse>b\<inverse>=1 means ab=ba,
      the quotient is the free abelian group on {a,b}, which is Z \<times> Z.\<close>
+  \<comment> \<open>Step 3a: Need additional CW data: h|_{int B²} homeomorphism onto T-A, h(1,0) = x0.\<close>
+  have hCW_full: "\<exists>h'. top1_continuous_map_on top1_B2 top1_B2_topology T_torus TT h'
+      \<and> h' ` top1_S1 \<subseteq> A
+      \<and> top1_homeomorphism_on (top1_B2 - top1_S1)
+            (subspace_topology top1_B2 top1_B2_topology (top1_B2 - top1_S1))
+            (T_torus - A) (subspace_topology T_torus TT (T_torus - A)) h'
+      \<and> h' (1, 0) = x0"
+    sorry \<comment> \<open>Needs scheme\_quotient\_CW\_data with homeomorphism condition + basepoint.\<close>
+  \<comment> \<open>Step 3b: Apply Theorem 72.1 to get \<pi>_1(T) \<cong> \<pi>_1(A)/\<langle>\<langle>relator\<rangle>\<rangle>.\<close>
+  have hThm721: "\<exists>\<iota>. top1_groups_isomorphic_on
+      (top1_fundamental_group_carrier T_torus TT x0)
+      (top1_fundamental_group_mul T_torus TT x0)
+      (top1_quotient_group_carrier_on
+         (top1_fundamental_group_carrier A (subspace_topology T_torus TT A) x0)
+         (top1_fundamental_group_mul A (subspace_topology T_torus TT A) x0)
+         (top1_normal_subgroup_generated_on
+            (top1_fundamental_group_carrier A (subspace_topology T_torus TT A) x0)
+            (top1_fundamental_group_mul A (subspace_topology T_torus TT A) x0)
+            (top1_fundamental_group_id A (subspace_topology T_torus TT A) x0)
+            (top1_fundamental_group_invg A (subspace_topology T_torus TT A) x0)
+            {top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1, 0)
+               A (subspace_topology T_torus TT A) x0 \<iota>
+               {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0)
+                     (\<lambda>s. (cos (2 * pi * s), sin (2 * pi * s))) g}}))
+      (top1_quotient_group_mul_on
+         (top1_fundamental_group_mul A (subspace_topology T_torus TT A) x0))"
+    sorry \<comment> \<open>Apply Theorem\_72\_1 with the CW data.\<close>
+  \<comment> \<open>Step 3c: The relator is aba\<inverse>b\<inverse> = [a,b]. Quotient by [a,b] = abelianization.
+     F({a,b})/[F,F] = free abelian on {a,b} = Z \<times> Z (Theorem 69.4 + 67.8).\<close>
   have hquotient_ZZ: "top1_groups_isomorphic_on
       (top1_fundamental_group_carrier T_torus TT x0)
       (top1_fundamental_group_mul T_torus TT x0)
       (UNIV::(int \<times> int) set) (\<lambda>(a1,a2) (b1,b2). (a1+b1, a2+b2))"
-    sorry \<comment> \<open>Theorem 72.1 + abelianization: F(a,b)/\<langle>\<langle>[a,b]\<rangle>\<rangle> \<cong> Z\<times>Z.\<close>
+    sorry \<comment> \<open>Compose: \<pi>_1(T) \<cong> \<pi>_1(A)/\<langle>\<langle>[a,b]\<rangle>\<rangle> \<cong> Abel(F(a,b)) \<cong> Z\<times>Z.\<close>
   show ?thesis by (rule hquotient_ZZ)
 qed
 
