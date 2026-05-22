@@ -3959,7 +3959,49 @@ proof -
           using polygonal_region_convex_combo[OF hP hlen3 hvi hvi1 ht01(1) ht01(2)]
           by (by100 simp)
       qed
-      have "compact BdP" sorry \<comment> \<open>Finite union of compact segments.\<close>
+      have "compact BdP"
+      proof -
+        \<comment> \<open>BdP = \<Union>_{i<n} edge_i. Each edge is compact (continuous image of [0,1]).
+           Finite union of compact sets is compact.\<close>
+        have "\<forall>i<length scheme. compact {((1-t) * vx i + t * vx (Suc i mod length scheme),
+            (1-t) * vy i + t * vy (Suc i mod length scheme)) | t::real. 0 \<le> t \<and> t \<le> 1}"
+        proof (intro allI impI)
+          fix i assume "i < length scheme"
+          \<comment> \<open>Edge i = image of [0,1] under (\<lambda>t. ((1-t)*vx_i + t*vx_{i+1}, ...)).\<close>
+          have "(\<lambda>t. ((1-t) * vx i + t * vx (Suc i mod length scheme),
+                      (1-t) * vy i + t * vy (Suc i mod length scheme))) ` {0..1}
+              = {((1-t) * vx i + t * vx (Suc i mod length scheme),
+                  (1-t) * vy i + t * vy (Suc i mod length scheme)) | t. 0 \<le> t \<and> t \<le> 1}"
+            by (by100 auto)
+          moreover have "compact ((\<lambda>t. ((1-t) * vx i + t * vx (Suc i mod length scheme),
+                      (1-t) * vy i + t * vy (Suc i mod length scheme))) ` {0..1::real})"
+          proof (rule compact_continuous_image[OF _ compact_Icc])
+            show "continuous_on {0..1::real} (\<lambda>t. ((1-t) * vx i + t * vx (Suc i mod length scheme),
+                      (1-t) * vy i + t * vy (Suc i mod length scheme)))"
+              by (intro continuous_on_Pair continuous_on_add continuous_on_mult
+                  continuous_on_diff continuous_on_const continuous_on_id)
+          qed
+          ultimately show "compact {((1-t) * vx i + t * vx (Suc i mod length scheme),
+              (1-t) * vy i + t * vy (Suc i mod length scheme)) | t. 0 \<le> t \<and> t \<le> 1}"
+            by (by100 simp)
+        qed
+        define edges where "edges = (\<lambda>i. {((1-t) * vx i + t * vx (Suc i mod length scheme),
+            (1-t) * vy i + t * vy (Suc i mod length scheme)) | t::real. 0 \<le> t \<and> t \<le> 1})"
+        define edges where "edges = (\<lambda>i. {((1-t) * vx i + t * vx (Suc i mod length scheme),
+            (1-t) * vy i + t * vy (Suc i mod length scheme)) | t::real. 0 \<le> t \<and> t \<le> 1})"
+        have hfin: "finite (edges ` {..<length scheme})" by (by100 blast)
+        have hall: "\<forall>S \<in> edges ` {..<length scheme}. compact S"
+        proof (intro ballI)
+          fix S assume "S \<in> edges ` {..<length scheme}"
+          then obtain i where "i < length scheme" "S = edges i" by (by100 blast)
+          thus "compact S" using \<open>\<forall>i<length scheme. compact _\<close> unfolding edges_def by (by100 blast)
+        qed
+        have "compact (\<Union>(edges ` {..<length scheme}))"
+          by (rule compact_Union[OF hfin hall])
+        moreover have "BdP = \<Union>(edges ` {..<length scheme})"
+          unfolding BdP_def edges_def top1_unit_interval_def by (by5000 auto)
+        ultimately show "compact BdP" by (by100 simp)
+      qed
       hence "closed BdP" using compact_imp_closed by (by100 blast)
       \<comment> \<open>closed BdP means UNIV - BdP is open. In the subspace topology on P,
          P - BdP = P \<inter> (UNIV - BdP) is open, hence BdP is closedin\_on P.\<close>
