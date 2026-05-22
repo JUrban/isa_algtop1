@@ -2287,15 +2287,58 @@ proof -
         qed
         show "p \<in> {-M..M} \<times> {-M..M}" using hp hx_bdd hy_bdd by (by100 blast)
       qed
-      \<comment> \<open>P is closed: convex hull of finitely many points in R² is closed.
-         Proof strategy: build P inductively as P_k = hull of first k+1 vertices.
-         P₀ = {v₀} compact. P_{k+1} = image of P_k × [0,1] under (p,t) ↦ (1-t)*p + t*v_{k+1},
-         which is continuous, giving compact (hence closed) P_{k+1}.
-         After n-1 steps: P = P_{n-1} is compact, hence closed.
-         Combined with hP\_bdd and closed\_subset\_compact:\<close>
-      have hP_closed: "closed P" sorry
-      from closed_subset_compact[OF compact_Icc_Times hP_closed hP_bdd]
-      show ?thesis .
+      \<comment> \<open>Direct compactness via inductive hull construction.\<close>
+      define Pk where "Pk k = {(x, y) | x y. \<exists>coeffs. (\<forall>i<k. coeffs i \<ge> 0)
+          \<and> (\<Sum>i<k. coeffs i) = 1 \<and> x = (\<Sum>i<k. coeffs i * vx i)
+          \<and> y = (\<Sum>i<k. coeffs i * vy i)}" for k :: nat
+      have hPk_compact: "n \<ge> 1 \<Longrightarrow> compact (Pk n)"
+      proof (rule nat_induct_at_least[of 1 n "\<lambda>k. compact (Pk k)"])
+        show "1 \<le> n" using assms(2) by (by100 simp)
+      next
+        \<comment> \<open>Base: Pk 1 = {(vx 0, vy 0)}, compact as singleton.\<close>
+        show "compact (Pk 1)"
+        proof -
+          have "Pk 1 = {(vx 0, vy 0)}"
+          proof (rule set_eqI)
+            fix p :: "real \<times> real"
+            show "p \<in> Pk 1 \<longleftrightarrow> p \<in> {(vx 0, vy 0)}"
+            proof
+              assume "p \<in> Pk 1"
+              then obtain x y coeffs where hp: "p = (x, y)"
+                  and hcge: "\<forall>i<(1::nat). coeffs i \<ge> 0" and hcsum: "(\<Sum>i<1. coeffs i) = 1"
+                  and hx: "x = (\<Sum>i<1. coeffs i * vx i)" and hy: "y = (\<Sum>i<1. coeffs i * vy i)"
+                unfolding Pk_def by (by5000 auto)
+              have "coeffs 0 = 1" using hcsum by (by100 simp)
+              hence "x = vx 0" "y = vy 0" using hx hy by (by100 simp)+
+              thus "p \<in> {(vx 0, vy 0)}" using hp by (by100 simp)
+            next
+              assume "p \<in> {(vx 0, vy 0)}"
+              hence hp: "p = (vx 0, vy 0)" by (by100 simp)
+              have "(vx 0, vy 0) \<in> Pk 1" unfolding Pk_def
+                using exI[of _ "\<lambda>_::nat. 1::real"] by (by5000 auto)
+              thus "p \<in> Pk 1" using hp by (by100 simp)
+            qed
+          qed
+          thus ?thesis using compact_singleton by (by100 simp)
+        qed
+      next
+        \<comment> \<open>Step: Pk (Suc k) = continuous image of Pk k × [0,1], hence compact.\<close>
+        fix k assume "1 \<le> k" "compact (Pk k)"
+        have hdom_compact: "compact (Pk k \<times> {0..1::real})"
+          by (rule compact_Times_general[OF \<open>compact (Pk k)\<close> compact_Icc])
+        have hset: "Pk (Suc k) = (\<lambda>(p, t). ((1-t) * fst p + t * vx k, (1-t) * snd p + t * vy k))
+            ` (Pk k \<times> {0..1})"
+          sorry \<comment> \<open>Set equality: Pk (Suc k) = convex extension of Pk k by v_k.\<close>
+        have hcont: "continuous_on (Pk k \<times> {0..1})
+            (\<lambda>(p, t). ((1-t) * fst p + t * vx k, (1-t) * snd p + t * vy k))"
+          sorry \<comment> \<open>Continuous: polynomial in coordinates.\<close>
+        show "compact (Pk (Suc k))"
+          unfolding hset by (rule compact_continuous_image[OF hcont hdom_compact])
+      qed
+      have "Pk n = P" unfolding Pk_def hP by (by100 simp)
+      have "n \<ge> 1" using assms(2) by (by100 simp)
+      hence "compact P" using hPk_compact \<open>Pk n = P\<close> by (by100 simp)
+      thus ?thesis .
     qed
     thus ?thesis by (rule compact_R2_bridge)
   qed
