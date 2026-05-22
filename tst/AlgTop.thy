@@ -11952,26 +11952,42 @@ lemma tree_simply_connected:
   shows "top1_simply_connected_on T TT"
   using assms unfolding top1_is_tree_on_def by (by100 blast)
 
-text \<open>Reviewer-requested: connected graph has a maximal tree (Munkres Lemma 84.3).\<close>
+text \<open>Reviewer-requested: connected graph has a maximal tree (Munkres Lemma 84.3).
+  A maximal tree T is one where no strictly larger subtree of X is also a tree.\<close>
 lemma connected_graph_has_maximal_tree:
   assumes "top1_is_graph_on X TX"
       and "top1_connected_on X TX"
       and "x0 \<in> X"
   shows "\<exists>T. top1_is_tree_on T (subspace_topology X TX T)
     \<and> T \<subseteq> X \<and> x0 \<in> T
-    \<and> (\<forall>v\<in>X. v \<in> T)"
+    \<and> (\<forall>T'. T' \<subseteq> X \<longrightarrow> T \<subseteq> T' \<longrightarrow>
+          top1_is_tree_on T' (subspace_topology X TX T') \<longrightarrow> T' = T)"
 proof -
-  \<comment> \<open>Munkres Lemma 84.3 (Zorn's lemma argument):
-     Consider the set of all subtrees of X containing x0, ordered by inclusion.
-     Every chain has an upper bound (union of the chain is a tree).
-     By Zorn's lemma, there exists a maximal tree T.
-     A maximal tree contains all vertices: if v is a vertex not in T,
-     then v is an endpoint of some edge A. Adding A to T gives a larger tree,
-     contradicting maximality.
-     Note: the conclusion \<forall>v\<in>X. v \<in> T forces T = X, which is too strong.
-     The correct statement should say all vertices are in T.
-     This sorry encapsulates the Zorn's lemma + maximality argument.\<close>
-  show ?thesis sorry \<comment> \<open>Zorn's lemma on subtrees containing x0.\<close>
+  \<comment> \<open>Following Munkres Lemma 84.5 (Zorn's lemma argument).
+     Let \<A> = {T \<subseteq> X | T is a tree, x0 \<in> T}, ordered by inclusion.
+     Step 1: \<A> is non-empty ({x0} is a tree).
+     Step 2: Every chain C in \<A> has an upper bound (\<Union>C \<in> \<A>):
+       - \<Union>C is connected (any two points are in some T_i ∈ C, hence connected there)
+       - \<Union>C is simply connected (any loop is compact, hence in some T_i, hence nulhomotopic)
+       - x0 \<in> \<Union>C (from any element of C)
+     Step 3: By Zorn's Lemma, \<A> has a maximal element T.\<close>
+  define \<A> where "\<A> = {T \<in> Pow X. top1_is_tree_on T (subspace_topology X TX T) \<and> x0 \<in> T}"
+  have h\<A>_ne: "\<A> \<noteq> {}" sorry \<comment> \<open>{x0} \<in> \<A>: singleton is a tree.\<close>
+  have hchain: "\<forall>C \<in> chains \<A>. \<Union>C \<in> \<A>"
+    sorry \<comment> \<open>Union of chain of trees is a tree (connected + simply connected + x0).\<close>
+  from Zorn_Lemma[OF hchain]
+  obtain M where "M \<in> \<A>" and hmax: "\<forall>X'\<in>\<A>. M \<subseteq> X' \<longrightarrow> X' = M" by (by100 blast)
+  from \<open>M \<in> \<A>\<close> have hM_tree: "top1_is_tree_on M (subspace_topology X TX M)"
+      and hM_sub: "M \<subseteq> X" and hM_x0: "x0 \<in> M"
+    unfolding \<A>_def by (by100 blast)+
+  have hM_maximal: "\<forall>T'. T' \<subseteq> X \<longrightarrow> M \<subseteq> T' \<longrightarrow>
+      top1_is_tree_on T' (subspace_topology X TX T') \<longrightarrow> T' = M"
+  proof (intro allI impI)
+    fix T' assume "T' \<subseteq> X" "M \<subseteq> T'" "top1_is_tree_on T' (subspace_topology X TX T')"
+    hence "T' \<in> \<A>" unfolding \<A>_def using hM_x0 by (by100 blast)
+    thus "T' = M" using hmax \<open>M \<subseteq> T'\<close> by (by100 blast)
+  qed
+  show ?thesis using hM_tree hM_sub hM_x0 hM_maximal by (by100 blast)
 qed
 
 text \<open>Reviewer-requested: quotient of graph by maximal tree = wedge of circles (Lemma 84.5).\<close>
