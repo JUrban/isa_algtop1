@@ -6106,6 +6106,39 @@ proof -
   ultimately show ?thesis using hpsi by (by100 blast)
 qed
 
+text \<open>The kernel of a coordinate projection of a free abelian group is free abelian
+  on the complementary generators.\<close>
+lemma free_abelian_kernel_coordinate:
+  fixes G :: "'g set" and mul :: "'g \<Rightarrow> 'g \<Rightarrow> 'g"
+    and e :: 'g and invg :: "'g \<Rightarrow> 'g"
+    and iota :: "'s \<Rightarrow> 'g" and S :: "'s set" and s0 :: 's
+  assumes hfree: "top1_is_free_abelian_group_full_on G mul e invg iota S"
+      and hs0: "s0 \<in> S"
+      and heps: "top1_group_hom_on G mul (UNIV::int set) (+) \<epsilon>"
+      and heps_s0: "\<epsilon> (iota s0) = 1"
+      and heps_other: "\<forall>s\<in>S. s \<noteq> s0 \<longrightarrow> \<epsilon> (iota s) = 0"
+  shows "top1_is_free_abelian_group_full_on
+    {g \<in> G. \<epsilon> g = 0} mul e invg iota (S - {s0})"
+  sorry
+
+text \<open>If G = K \<times> Z (internal direct sum with Z-component via \<epsilon>),
+  then |G/2G| = 2 \<times> |K/2K|.\<close>
+lemma quotient_2G_decomposition:
+  fixes G :: "'g set" and mul :: "'g \<Rightarrow> 'g \<Rightarrow> 'g"
+    and e :: 'g and invg :: "'g \<Rightarrow> 'g"
+    and \<epsilon> :: "'g \<Rightarrow> int" and a :: 'g
+  assumes hG: "top1_is_abelian_group_on G mul e invg"
+      and heps: "top1_group_hom_on G mul (UNIV::int set) (+) \<epsilon>"
+      and ha: "a \<in> G" and heps_a: "\<epsilon> a = 1"
+      and hdecomp: "\<forall>g\<in>G. \<exists>!k. k \<in> {g \<in> G. \<epsilon> g = 0} \<and>
+          (\<exists>n::int. g = mul k (top1_group_pow mul e (if n \<ge> 0 then a else invg a) (nat (abs n))))"
+      and hK_fin: "finite (top1_quotient_group_carrier_on
+            {g \<in> G. \<epsilon> g = 0} mul {mul g g | g. g \<in> {g \<in> G. \<epsilon> g = 0}})"
+  shows "card (top1_quotient_group_carrier_on G mul {mul g g | g. g \<in> G})
+       = 2 * card (top1_quotient_group_carrier_on
+            {g \<in> G. \<epsilon> g = 0} mul {mul g g | g. g \<in> {g \<in> G. \<epsilon> g = 0}})"
+  sorry
+
 text \<open>Key lemma for Theorem 67.8: |G/2G| = 2^|S| for free abelian G on finite basis S.\<close>
 lemma free_abelian_mod2_card:
   fixes G :: "'g set" and mul :: "'g \<Rightarrow> 'g \<Rightarrow> 'g"
@@ -6118,7 +6151,7 @@ proof -
   \<comment> \<open>Munkres 67.8: G \<cong> Z^S, so G/2G \<cong> (Z/2Z)^S has 2^|S| elements.\<close>
   \<comment> \<open>Proof by induction on |S|.\<close>
   show ?thesis using assms
-  proof (induction "card S" arbitrary: S iota)
+  proof (induction "card S" arbitrary: G mul e invg S iota)
     case 0
     \<comment> \<open>card S = 0 \<Rightarrow> S = {} \<Rightarrow> G = {e}. 2G = {e}. G/2G = {{e}}. |G/2G| = 1 = 2^0.\<close>
     hence "S = {}" using \<open>finite S\<close> by (by100 simp)
@@ -6218,11 +6251,45 @@ proof -
         and heps_s0: "\<epsilon> (iota s0) = 1"
         and heps_other: "\<forall>s\<in>S. s \<noteq> s0 \<longrightarrow> \<epsilon> (iota s) = 0"
       using free_abelian_coordinate_projection[OF hfree hs0] by (by100 blast)
-    \<comment> \<open>The kernel ker(\<epsilon>) contains \<iota>(S') and is free abelian on S'.
-       G decomposes as Z \<times> ker(\<epsilon>) via g \<mapsto> (\<epsilon>(g), g \<cdot> \<iota>(s0)^{-\<epsilon>(g)}).
-       This gives G/2G \<cong> Z/2Z \<times> ker(\<epsilon>)/2\<cdot>ker(\<epsilon>).
-       |G/2G| = 2 \<times> |ker(\<epsilon>)/2\<cdot>ker(\<epsilon>)| = 2 \<times> 2^n = 2^{n+1}.\<close>
-    thus ?case sorry \<comment> \<open>Decomposition via \<epsilon> + IH on ker(\<epsilon>).\<close>
+    \<comment> \<open>The kernel ker(\<epsilon>) is free abelian on S'.\<close>
+    let ?K = "{g \<in> G. \<epsilon> g = 0}"
+    have hK_free: "top1_is_free_abelian_group_full_on ?K mul e invg iota ?S'"
+      by (rule free_abelian_kernel_coordinate[OF hfree hs0 heps heps_s0 heps_other])
+    have hfin': "finite ?S'" using hfin by (by100 simp)
+    \<comment> \<open>Apply IH: |K/2K| = 2^n.\<close>
+    have hIH: "card (top1_quotient_group_carrier_on ?K mul {mul g g | g. g \<in> ?K}) = 2 ^ n"
+    proof -
+      have hIH_raw: "\<And>G' mul' e' invg' S' iota'.
+          card S' = n \<Longrightarrow>
+          top1_is_free_abelian_group_full_on G' mul' e' invg' iota' S' \<Longrightarrow>
+          finite S' \<Longrightarrow>
+          card (top1_quotient_group_carrier_on G' mul' {mul' g g | g. g \<in> G'}) = 2 ^ card S'"
+        using Suc.hyps sorry
+      show ?thesis using hIH_raw[OF hcard' hK_free hfin'] hcard' by (by100 simp)
+    qed
+    \<comment> \<open>G/2G = 2 \<times> K/2K by quotient\_2G\_decomposition.\<close>
+    \<comment> \<open>Need: unique decomposition g = k + m\<cdot>\<iota>(s0) with k \<in> K.\<close>
+    have habel: "top1_is_abelian_group_on G mul e invg"
+      using hfree unfolding top1_is_free_abelian_group_full_on_def by (by100 blast)
+    have ha_G: "iota s0 \<in> G"
+      using hfree hs0 unfolding top1_is_free_abelian_group_full_on_def by (by100 blast)
+    have hdecomp: "\<forall>g\<in>G. \<exists>!k. k \<in> ?K \<and>
+        (\<exists>n::int. g = mul k (top1_group_pow mul e (if n \<ge> 0 then iota s0 else invg (iota s0)) (nat (abs n))))"
+      sorry \<comment> \<open>Unique decomposition of elements in a free abelian group.\<close>
+    have hK_fin: "finite (top1_quotient_group_carrier_on ?K mul {mul g g | g. g \<in> ?K})"
+    proof (rule ccontr)
+      assume "\<not> finite (top1_quotient_group_carrier_on ?K mul {mul g g | g. g \<in> ?K})"
+      hence "card (top1_quotient_group_carrier_on ?K mul {mul g g | g. g \<in> ?K}) = 0"
+        by (by100 simp)
+      hence "2 ^ n = (0::nat)" using hIH by (by100 simp)
+      thus False by (by100 simp)
+    qed
+    have "card (top1_quotient_group_carrier_on G mul {mul g g | g. g \<in> G})
+       = 2 * card (top1_quotient_group_carrier_on ?K mul {mul g g | g. g \<in> ?K})"
+      by (rule quotient_2G_decomposition[OF habel heps ha_G heps_s0 hdecomp hK_fin])
+    also have "\<dots> = 2 * 2 ^ n" using hIH by (by100 simp)
+    also have "\<dots> = 2 ^ Suc n" by (by100 simp)
+    finally show ?case using Suc.hyps by (by100 simp)
   qed
 qed
 
