@@ -6970,26 +6970,17 @@ proof -
     thus False using hg1(2) hg2(2) by (by100 simp)
   qed
   \<comment> \<open>Steps 2-4: card QG\_even = card QK, card QG\_odd = card QG\_even.\<close>
+  \<comment> \<open>Step 2: |QG\_even| = |QK|. The inclusion K \<hookrightarrow> G maps K-cosets to even G-cosets.\<close>
+  \<comment> \<open>Step 3: |QG\_odd| = |QG\_even|. Multiplication by [a] shifts even \<leftrightarrow> odd.\<close>
+  \<comment> \<open>Steps 2-3 + finiteness are all sorry'd as a block; the partition framework above is proved.\<close>
   have heven_card: "card QG_even = card ?QK" sorry
-  have hodd_card: "card QG_odd = card QG_even"
-  proof -
-    \<comment> \<open>Bijection: shift by a maps QG\_even \<leftrightarrow> QG\_odd.\<close>
-    define shift where "shift C = top1_group_coset_on G mul ?twoG (mul a (SOME g. g \<in> C))" for C
-    \<comment> \<open>shift maps QG\_even into QG\_odd.\<close>
-    have hshift_to_odd: "shift ` QG_even \<subseteq> QG_odd" sorry
-    \<comment> \<open>shift is injective on QG\_even.\<close>
-    have hshift_inj: "inj_on shift QG_even" sorry
-    \<comment> \<open>shift is surjective onto QG\_odd.\<close>
-    have hshift_surj: "shift ` QG_even = QG_odd" sorry
-    show ?thesis using card_image[OF hshift_inj] hshift_surj by (by100 simp)
-  qed
+  have hodd_card: "card QG_odd = card QG_even" sorry
   have hfin_even: "finite QG_even"
   proof (rule ccontr)
     assume "\<not> finite QG_even"
     hence "card QG_even = 0" by (by100 simp)
     hence "card ?QK = 0" using heven_card by (by100 simp)
-    \<comment> \<open>But ?QK is non-empty (contains at least the coset of e).\<close>
-    moreover have "card ?QK > 0"
+    moreover have "?QK \<noteq> {}"
     proof -
       have "e \<in> ?K"
       proof -
@@ -6997,37 +6988,27 @@ proof -
         have "\<epsilon> e = 0" using hom_preserves_id[OF hG_grp hZ_grp heps] by (by100 simp)
         thus ?thesis using \<open>e \<in> G\<close> by (by100 simp)
       qed
-      hence "top1_group_coset_on ?K mul ?twoK e \<in> ?QK"
-        unfolding top1_quotient_group_carrier_on_def by (by100 blast)
-      hence "?QK \<noteq> {}" by (by100 blast)
-      moreover have "finite ?QK" by (rule hQK_fin)
-      ultimately show ?thesis by (by100 force)
+      thus ?thesis unfolding top1_quotient_group_carrier_on_def by (by100 blast)
     qed
-    ultimately show False by (by100 simp)
+    ultimately show False using hQK_fin by (by100 force)
   qed
   have hfin_odd: "finite QG_odd"
   proof (rule ccontr)
     assume "\<not> finite QG_odd"
     hence "card QG_odd = 0" by (by100 simp)
     hence "card QG_even = 0" using hodd_card by (by100 simp)
-    thus False using hfin_even heven_card
+    hence "card ?QK = 0" using heven_card by (by100 simp)
+    moreover have "?QK \<noteq> {}"
     proof -
-      have "card ?QK = 0" using \<open>card QG_even = 0\<close> heven_card by (by100 simp)
-      moreover have "card ?QK > 0"
+      have "e \<in> ?K"
       proof -
-        have "e \<in> ?K"
-        proof -
-          have "e \<in> G" using hG_grp unfolding top1_is_group_on_def by (by100 blast)
-          have "\<epsilon> e = 0" using hom_preserves_id[OF hG_grp hZ_grp heps] by (by100 simp)
-          thus ?thesis using \<open>e \<in> G\<close> by (by100 simp)
-        qed
-        hence "top1_group_coset_on ?K mul ?twoK e \<in> ?QK"
-          unfolding top1_quotient_group_carrier_on_def by (by100 blast)
-        hence "?QK \<noteq> {}" by (by100 blast)
-        thus ?thesis using hQK_fin by (by100 force)
+        have "e \<in> G" using hG_grp unfolding top1_is_group_on_def by (by100 blast)
+        have "\<epsilon> e = 0" using hom_preserves_id[OF hG_grp hZ_grp heps] by (by100 simp)
+        thus ?thesis using \<open>e \<in> G\<close> by (by100 simp)
       qed
-      ultimately show False by (by100 simp)
+      thus ?thesis unfolding top1_quotient_group_carrier_on_def by (by100 blast)
     qed
+    ultimately show False using hQK_fin by (by100 force)
   qed
   have "card ?QG = card QG_even + card QG_odd"
     using hpartition card_Un_disjoint[OF hfin_even hfin_odd hdisjoint] by (by100 simp)
@@ -7170,13 +7151,13 @@ proof -
     have "card (top1_quotient_group_carrier_on G mul {mul g g | g. g \<in> G})
        = 2 * card (top1_quotient_group_carrier_on ?K mul {mul g g | g. g \<in> ?K})"
     proof (rule quotient_double_by_kernel[OF habel heps ha_G heps_s0 hK_free])
+      \<comment> \<open>Finiteness of K/2K from IH: card = 2^n.\<close>
       show "finite (top1_quotient_group_carrier_on ?K mul {mul g g | g. g \<in> ?K})"
       proof (rule ccontr)
         assume "\<not> finite (top1_quotient_group_carrier_on ?K mul {mul g g | g. g \<in> ?K})"
         hence "card (top1_quotient_group_carrier_on ?K mul {mul g g | g. g \<in> ?K}) = 0"
           by (by100 simp)
-        hence "2 ^ n = (0::nat)" using hIH by (by100 simp)
-        thus False by (by100 simp)
+        thus False using hIH by (by100 simp)
       qed
     qed
     hence "card (top1_quotient_group_carrier_on G mul {mul g g | g. g \<in> G}) = 2 * 2 ^ n"
