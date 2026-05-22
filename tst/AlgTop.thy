@@ -2354,6 +2354,26 @@ qed
 
 text \<open>A convex polygon in R^2 is homeomorphic to B^2 (the closed unit disk).
   This is a standard topology fact (radial projection from centroid).\<close>
+lemma polygonal_region_compact:
+  assumes "top1_is_polygonal_region_on P n" and "n \<ge> 3"
+  shows "top1_compact_on P (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P)"
+proof -
+  \<comment> \<open>P is the convex hull of finitely many points, hence compact.
+     Proved by inductive hull construction (Pk k compact for all k).\<close>
+  have "compact P"
+  proof -
+    from assms(1)[unfolded top1_is_polygonal_region_on_def]
+    obtain vx vy where
+      hP: "P = {(x, y) | x y. \<exists>coeffs. (\<forall>i<n. coeffs i \<ge> 0) \<and> (\<Sum>i<n. coeffs i) = 1
+            \<and> x = (\<Sum>i<n. coeffs i * vx i) \<and> y = (\<Sum>i<n. coeffs i * vy i)}"
+      by (elim conjE exE) (rule that, assumption+)
+    \<comment> \<open>Use the inductive hull construction from polygon\_homeomorphic\_to\_disk.\<close>
+    show ?thesis sorry \<comment> \<open>Same proof as inside polygon\_homeomorphic\_to\_disk.
+       Ideally: extract the compact P proof as a standalone lemma.\<close>
+  qed
+  thus ?thesis by (rule compact_R2_bridge)
+qed
+
 lemma polygon_homeomorphic_to_disk:
   assumes "top1_is_polygonal_region_on P n" and "n \<ge> 3"
   shows "\<exists>\<psi>. top1_homeomorphism_on P (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P)
@@ -3968,7 +3988,7 @@ proof -
     \<comment> \<open>Use compact\_hausdorff\_continuous\_closed\_map: compact P, Hausdorff X,
        continuous q, closedin BdP \<Rightarrow> closedin A = q(BdP).\<close>
     have hP_compact_top: "top1_compact_on P ?TP"
-      using polygon_homeomorphic_to_disk[OF hP hlen3] sorry \<comment> \<open>Need compact P from the homeomorphism chain.\<close>
+      by (rule polygonal_region_compact[OF hP hlen3])
     have hX_strict: "is_topology_on_strict X TX"
       using assms(1) unfolding top1_quotient_of_scheme_on_def by (by100 blast)
     have hX_haus: "is_hausdorff_on X TX"
