@@ -3039,10 +3039,37 @@ proof -
                     let ?s = "1 / (1 - t')"
                     have hs_pos: "?s > 0" using h1mt by (by100 simp)
                     have hs_lt1: "?s < 1" using ht'_neg by (by100 simp)
+                    have h1mt_s: "(1 - t') * ?s = 1" using h1mt by (by100 simp)
+                    have h1mt_1ms: "(1 - t') * (1 - ?s) = - t'" using h1mt
+                      by (simp add: field_simps)
                     have hvx0: "vx 0 = ?s * vx 1 + (1 - ?s) * vx 2"
-                      using hvx1_eq ht'_def h1mt sorry \<comment> \<open>Algebra: rearrange vx1=(1-t)*vx0+t*vx2.\<close>
+                    proof -
+                      from hvx1_eq[unfolded ht'_def[symmetric]]
+                      have "(1 - t') * vx 0 = vx 1 - t' * vx 2" by (by100 linarith)
+                      also have "vx 1 - t' * vx 2 = 1 * vx 1 + (- t') * vx 2"
+                        by (by100 linarith)
+                      also have "\<dots> = (1-t')*?s * vx 1 + (1-t')*(1-?s) * vx 2"
+                        using h1mt_s h1mt_1ms by (by100 simp)
+                      also have "\<dots> = (1 - t') * (?s * vx 1) + (1 - t') * ((1 - ?s) * vx 2)"
+                        by (by100 simp)
+                      also have "\<dots> = (1 - t') * (?s * vx 1 + (1 - ?s) * vx 2)"
+                        using distrib_left[of "1-t'" "?s * vx 1" "(1-?s)*vx 2"] by (by100 simp)
+                      finally show ?thesis using h1mt by (by100 simp)
+                    qed
                     have hvy0: "vy 0 = ?s * vy 1 + (1 - ?s) * vy 2"
-                      using hvy1_eq ht'_def h1mt sorry \<comment> \<open>Symmetric.\<close>
+                    proof -
+                      from hvy1_eq[unfolded ht'_def[symmetric]]
+                      have "(1 - t') * vy 0 = vy 1 - t' * vy 2" by (by100 linarith)
+                      also have "vy 1 - t' * vy 2 = 1 * vy 1 + (- t') * vy 2"
+                        by (by100 linarith)
+                      also have "\<dots> = (1-t')*?s * vy 1 + (1-t')*(1-?s) * vy 2"
+                        using h1mt_s h1mt_1ms by (by100 simp)
+                      also have "\<dots> = (1 - t') * (?s * vy 1) + (1 - t') * ((1 - ?s) * vy 2)"
+                        by (by100 simp)
+                      also have "\<dots> = (1 - t') * (?s * vy 1 + (1 - ?s) * vy 2)"
+                        using distrib_left[of "1-t'" "?s * vy 1" "(1-?s)*vy 2"] by (by100 simp)
+                      finally show ?thesis using h1mt by (by100 simp)
+                    qed
                     \<comment> \<open>Construct coefficients for hgp contradiction at vertex 0.\<close>
                     have hgp0: "\<not> (\<exists>coeffs. (\<forall>i<n. i \<noteq> 0 \<longrightarrow> coeffs i \<ge> 0) \<and> coeffs 0 = 0
                         \<and> (\<Sum>i<n. coeffs i) = 1
