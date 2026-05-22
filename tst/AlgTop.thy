@@ -7011,7 +7011,130 @@ proof -
   have heven_card: "card QG_even = card ?QK"
   proof -
     define \<psi> where "\<psi> CK = top1_group_coset_on G mul ?twoG (SOME k. k \<in> CK)" for CK
-    have hpsi_bij: "bij_betw \<psi> ?QK QG_even" sorry
+    have hpsi_bij: "bij_betw \<psi> ?QK QG_even"
+      unfolding bij_betw_def
+    proof (rule conjI)
+      \<comment> \<open>Injectivity: different K-cosets give different G-cosets.\<close>
+      show "inj_on \<psi> ?QK"
+      proof (rule inj_onI)
+        fix CK1 CK2 assume hCK1: "CK1 \<in> ?QK" and hCK2: "CK2 \<in> ?QK"
+            and heq: "\<psi> CK1 = \<psi> CK2"
+        \<comment> \<open>Get representatives.\<close>
+        let ?k1 = "SOME k. k \<in> CK1" and ?k2 = "SOME k. k \<in> CK2"
+        \<comment> \<open>Representatives are in their cosets and in K.\<close>
+        \<comment> \<open>Representatives are in their cosets.\<close>
+        have hk1_CK1: "?k1 \<in> CK1"
+        proof (rule someI_ex)
+          from hCK1 obtain k0 where "k0 \<in> ?K" "CK1 = top1_group_coset_on ?K mul ?twoK k0"
+            unfolding top1_quotient_group_carrier_on_def by (by100 blast)
+          have "e \<in> ?K" using hK_grp unfolding top1_is_group_on_def by (by100 blast)
+          have "mul e e = e" using hK_grp \<open>e \<in> ?K\<close> unfolding top1_is_group_on_def by (by100 blast)
+          hence "e \<in> ?twoK" using \<open>e \<in> ?K\<close> by (by5000 force)
+          have "mul k0 e = k0" using hK_grp \<open>k0 \<in> ?K\<close> unfolding top1_is_group_on_def by (by100 blast)
+          hence "k0 \<in> CK1" using \<open>CK1 = _\<close> \<open>e \<in> ?twoK\<close>
+            unfolding top1_group_coset_on_def by (by5000 force)
+          thus "\<exists>k. k \<in> CK1" by (by100 blast)
+        qed
+        have hk2_CK2: "?k2 \<in> CK2"
+        proof (rule someI_ex)
+          from hCK2 obtain k0 where "k0 \<in> ?K" "CK2 = top1_group_coset_on ?K mul ?twoK k0"
+            unfolding top1_quotient_group_carrier_on_def by (by100 blast)
+          have "e \<in> ?K" using hK_grp unfolding top1_is_group_on_def by (by100 blast)
+          have "mul e e = e" using hK_grp \<open>e \<in> ?K\<close> unfolding top1_is_group_on_def by (by100 blast)
+          hence "e \<in> ?twoK" using \<open>e \<in> ?K\<close> by (by5000 force)
+          have "mul k0 e = k0" using hK_grp \<open>k0 \<in> ?K\<close> unfolding top1_is_group_on_def by (by100 blast)
+          hence "k0 \<in> CK2" using \<open>CK2 = _\<close> \<open>e \<in> ?twoK\<close>
+            unfolding top1_group_coset_on_def by (by5000 force)
+          thus "\<exists>k. k \<in> CK2" by (by100 blast)
+        qed
+        \<comment> \<open>Representatives are in K.\<close>
+        have hk1_K: "?k1 \<in> ?K"
+        proof -
+          from hCK1 obtain k0 where "k0 \<in> ?K" "CK1 = top1_group_coset_on ?K mul ?twoK k0"
+            unfolding top1_quotient_group_carrier_on_def by (by100 blast)
+          from hk1_CK1 \<open>CK1 = _\<close> obtain h where "h \<in> ?twoK" "?k1 = mul k0 h"
+            unfolding top1_group_coset_on_def by (by100 blast)
+          from \<open>h \<in> ?twoK\<close> obtain h' where "h' \<in> ?K" "h = mul h' h'" by (by100 blast)
+          have "h \<in> ?K" using hK_grp \<open>h' \<in> ?K\<close> \<open>h = mul h' h'\<close>
+            unfolding top1_is_group_on_def by (by100 blast)
+          have "mul k0 h \<in> ?K" using hK_grp \<open>k0 \<in> ?K\<close> \<open>h \<in> ?K\<close>
+            unfolding top1_is_group_on_def by (by100 blast)
+          thus ?thesis using \<open>?k1 = mul k0 h\<close> by (by100 simp)
+        qed
+        have hk2_K: "?k2 \<in> ?K"
+        proof -
+          from hCK2 obtain k0 where "k0 \<in> ?K" "CK2 = top1_group_coset_on ?K mul ?twoK k0"
+            unfolding top1_quotient_group_carrier_on_def by (by100 blast)
+          from hk2_CK2 \<open>CK2 = _\<close> obtain h where "h \<in> ?twoK" "?k2 = mul k0 h"
+            unfolding top1_group_coset_on_def by (by100 blast)
+          from \<open>h \<in> ?twoK\<close> obtain h' where "h' \<in> ?K" "h = mul h' h'" by (by100 blast)
+          have "h \<in> ?K" using hK_grp \<open>h' \<in> ?K\<close> \<open>h = mul h' h'\<close>
+            unfolding top1_is_group_on_def by (by100 blast)
+          have "mul k0 h \<in> ?K" using hK_grp \<open>k0 \<in> ?K\<close> \<open>h \<in> ?K\<close>
+            unfolding top1_is_group_on_def by (by100 blast)
+          thus ?thesis using \<open>?k2 = mul k0 h\<close> by (by100 simp)
+        qed
+        \<comment> \<open>coset\_G(k1) = coset\_G(k2) \<Longrightarrow> mul(invg k1) k2 \<in> 2G \<inter> K = 2K.\<close>
+        have "mul (invg ?k1) ?k2 \<in> ?twoK"
+        proof -
+          have hk1_G: "?k1 \<in> G" using hk1_K by (by100 blast)
+          have hk2_G: "?k2 \<in> G" using hk2_K by (by100 blast)
+          \<comment> \<open>From heq: coset\_G(k1) = coset\_G(k2).\<close>
+          have "top1_group_coset_on G mul ?twoG ?k1 = top1_group_coset_on G mul ?twoG ?k2"
+            using heq unfolding \<psi>_def by (by100 simp)
+          \<comment> \<open>By normal\_coset\_eq: mul(invg k1) k2 \<in> 2G.\<close>
+          hence "mul (invg ?k1) ?k2 \<in> ?twoG"
+            using normal_coset_eq[OF hG_grp h2G_normal hk1_G hk2_G] by (by100 simp)
+          \<comment> \<open>Also mul(invg k1) k2 \<in> K (K closed under mul, invg).\<close>
+          moreover have "mul (invg ?k1) ?k2 \<in> ?K"
+          proof -
+            have "invg ?k1 \<in> ?K" using hK_grp hk1_K unfolding top1_is_group_on_def by (by100 blast)
+            thus ?thesis using hK_grp \<open>invg ?k1 \<in> ?K\<close> hk2_K
+              unfolding top1_is_group_on_def by (by100 blast)
+          qed
+          \<comment> \<open>By K \<inter> 2G = 2K.\<close>
+          ultimately show ?thesis using hK_cap_2G by (by100 blast)
+        qed
+        \<comment> \<open>By normal\_coset\_eq for K: coset\_K(k1) = coset\_K(k2).\<close>
+        hence hK_coset_eq: "top1_group_coset_on ?K mul ?twoK ?k1 = top1_group_coset_on ?K mul ?twoK ?k2"
+          using normal_coset_eq[OF hK_grp h2K_normal hk1_K hk2_K] by (by100 simp)
+        \<comment> \<open>k1 \<in> CK1 which equals coset\_K(k1), and k2 \<in> CK2 = coset\_K(k2).
+           Since coset\_K(k1) = coset\_K(k2), CK1 = CK2.\<close>
+        show "CK1 = CK2"
+        proof -
+          \<comment> \<open>CK1 = coset\_K(k1): since k1 \<in> CK1 \<in> QK, CK1 is the K-coset of k1.\<close>
+          from hCK1 obtain k01 where "k01 \<in> ?K" "CK1 = top1_group_coset_on ?K mul ?twoK k01"
+            unfolding top1_quotient_group_carrier_on_def by (by100 blast)
+          have "?k1 \<in> top1_group_coset_on ?K mul ?twoK k01"
+            using hk1_CK1 \<open>CK1 = _\<close> by (by100 simp)
+          \<comment> \<open>k1 is in coset(k01), so mul(invg k01) k1 \<in> 2K.\<close>
+          hence "mul (invg k01) ?k1 \<in> ?twoK"
+            using normal_coset_eq[OF hK_grp h2K_normal \<open>k01 \<in> ?K\<close> hk1_K]
+            unfolding top1_group_coset_on_def by (by5000 blast)
+          hence "top1_group_coset_on ?K mul ?twoK k01 = top1_group_coset_on ?K mul ?twoK ?k1"
+            using normal_coset_eq[OF hK_grp h2K_normal \<open>k01 \<in> ?K\<close> hk1_K] by (by100 simp)
+          hence hCK1_eq: "CK1 = top1_group_coset_on ?K mul ?twoK ?k1"
+            using \<open>CK1 = _\<close> by (by100 simp)
+          \<comment> \<open>Similarly CK2 = coset\_K(k2).\<close>
+          from hCK2 obtain k02 where "k02 \<in> ?K" "CK2 = top1_group_coset_on ?K mul ?twoK k02"
+            unfolding top1_quotient_group_carrier_on_def by (by100 blast)
+          have "?k2 \<in> top1_group_coset_on ?K mul ?twoK k02"
+            using hk2_CK2 \<open>CK2 = _\<close> by (by100 simp)
+          hence "mul (invg k02) ?k2 \<in> ?twoK"
+            using normal_coset_eq[OF hK_grp h2K_normal \<open>k02 \<in> ?K\<close> hk2_K]
+            unfolding top1_group_coset_on_def by (by5000 blast)
+          hence "top1_group_coset_on ?K mul ?twoK k02 = top1_group_coset_on ?K mul ?twoK ?k2"
+            using normal_coset_eq[OF hK_grp h2K_normal \<open>k02 \<in> ?K\<close> hk2_K] by (by100 simp)
+          hence hCK2_eq: "CK2 = top1_group_coset_on ?K mul ?twoK ?k2"
+            using \<open>CK2 = _\<close> by (by100 simp)
+          show ?thesis using hCK1_eq hCK2_eq hK_coset_eq by (by100 simp)
+        qed
+      qed
+    next
+      \<comment> \<open>Image = QG\_even.\<close>
+      show "\<psi> ` ?QK = QG_even"
+        sorry \<comment> \<open>\<subseteq>: k \<in> K has even \<epsilon>. \<supseteq>: every even coset has K-representative.\<close>
+    qed
     thus ?thesis using bij_betw_same_card[OF hpsi_bij] by (by100 simp)
   qed
   have hodd_card: "card QG_odd = card QG_even"
