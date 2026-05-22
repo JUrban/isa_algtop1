@@ -714,7 +714,176 @@ proof -
     have hshift_bij: "bij_betw shift QG_even QG_odd"
       unfolding bij_betw_def
     proof (rule conjI)
-      show "inj_on shift QG_even" sorry
+      show "inj_on shift QG_even"
+      proof (rule inj_onI)
+        fix C1 C2 assume hC1: "C1 \<in> QG_even" and hC2: "C2 \<in> QG_even"
+            and heq: "shift C1 = shift C2"
+        \<comment> \<open>Get representatives g1, g2 from C1, C2.\<close>
+        from hC1 have "C1 \<in> ?QG" unfolding QG_even_def by (by100 blast)
+        then obtain g1_rep where hg1: "g1_rep \<in> G" "C1 = top1_group_coset_on G mul ?twoG g1_rep"
+          unfolding top1_quotient_group_carrier_on_def by (by100 blast)
+        from hC2 have "C2 \<in> ?QG" unfolding QG_even_def by (by100 blast)
+        then obtain g2_rep where hg2: "g2_rep \<in> G" "C2 = top1_group_coset_on G mul ?twoG g2_rep"
+          unfolding top1_quotient_group_carrier_on_def by (by100 blast)
+        \<comment> \<open>SOME picks representatives; they are in G.\<close>
+        let ?s1 = "SOME g. g \<in> C1" and ?s2 = "SOME g. g \<in> C2"
+        have hs1_C1: "?s1 \<in> C1"
+        proof (rule someI)
+          have "mul g1_rep e = g1_rep" using hG_grp hg1(1) unfolding top1_is_group_on_def by (by100 blast)
+          moreover have "e \<in> ?twoG"
+          proof -
+            have "e \<in> G" using hG_grp unfolding top1_is_group_on_def by (by100 blast)
+            have "mul e e = e" using hG_grp \<open>e \<in> G\<close> unfolding top1_is_group_on_def by (by100 blast)
+            thus ?thesis using \<open>e \<in> G\<close> by (by5000 force)
+          qed
+          ultimately show "g1_rep \<in> C1" using hg1(2) unfolding top1_group_coset_on_def by (by5000 force)
+        qed
+        have hs2_C2: "?s2 \<in> C2"
+        proof (rule someI)
+          have "mul g2_rep e = g2_rep" using hG_grp hg2(1) unfolding top1_is_group_on_def by (by100 blast)
+          moreover have "e \<in> ?twoG"
+          proof -
+            have "e \<in> G" using hG_grp unfolding top1_is_group_on_def by (by100 blast)
+            have "mul e e = e" using hG_grp \<open>e \<in> G\<close> unfolding top1_is_group_on_def by (by100 blast)
+            thus ?thesis using \<open>e \<in> G\<close> by (by5000 force)
+          qed
+          ultimately show "g2_rep \<in> C2" using hg2(2) unfolding top1_group_coset_on_def by (by5000 force)
+        qed
+        have hs1_G: "?s1 \<in> G"
+        proof -
+          from hs1_C1 hg1(2) obtain h where "h \<in> ?twoG" "?s1 = mul g1_rep h"
+            unfolding top1_group_coset_on_def by (by100 blast)
+          from \<open>h \<in> ?twoG\<close> obtain h' where "h' \<in> G" by (by100 blast)
+          have "h \<in> G" using \<open>h' \<in> G\<close> \<open>h \<in> ?twoG\<close> hG_grp unfolding top1_is_group_on_def by (by5000 blast)
+          have "mul g1_rep h \<in> G" using hG_grp hg1(1) \<open>h \<in> G\<close> unfolding top1_is_group_on_def by (by100 blast)
+          thus ?thesis using \<open>?s1 = mul g1_rep h\<close> by (by100 simp)
+        qed
+        have hs2_G: "?s2 \<in> G"
+        proof -
+          from hs2_C2 hg2(2) obtain h where "h \<in> ?twoG" "?s2 = mul g2_rep h"
+            unfolding top1_group_coset_on_def by (by100 blast)
+          from \<open>h \<in> ?twoG\<close> obtain h' where "h' \<in> G" by (by100 blast)
+          have "h \<in> G" using \<open>h' \<in> G\<close> \<open>h \<in> ?twoG\<close> hG_grp unfolding top1_is_group_on_def by (by5000 blast)
+          have "mul g2_rep h \<in> G" using hG_grp hg2(1) \<open>h \<in> G\<close> unfolding top1_is_group_on_def by (by100 blast)
+          thus ?thesis using \<open>?s2 = mul g2_rep h\<close> by (by100 simp)
+        qed
+        \<comment> \<open>shift(C1) = coset(mul a s1), shift(C2) = coset(mul a s2). Equal by heq.\<close>
+        have has1_G: "mul a ?s1 \<in> G" using hG_grp ha hs1_G unfolding top1_is_group_on_def by (by100 blast)
+        have has2_G: "mul a ?s2 \<in> G" using hG_grp ha hs2_G unfolding top1_is_group_on_def by (by100 blast)
+        \<comment> \<open>From equal cosets: mul(invg(mul a s1))(mul a s2) \<in> 2G.\<close>
+        have hcoset_as: "top1_group_coset_on G mul ?twoG (mul a ?s1) = top1_group_coset_on G mul ?twoG (mul a ?s2)"
+          using heq unfolding shift_def Let_def by (by100 simp)
+        hence "mul (invg (mul a ?s1)) (mul a ?s2) \<in> ?twoG"
+          using normal_coset_eq[OF hG_grp h2G_normal has1_G has2_G] by (by100 simp)
+        \<comment> \<open>In abelian: invg(mul a s1) = mul(invg s1)(invg a), so
+           mul(invg(mul a s1))(mul a s2) = mul(invg s1)(mul(invg a)(mul a s2)) = mul(invg s1) s2.\<close>
+        moreover have "mul (invg (mul a ?s1)) (mul a ?s2) = mul (invg ?s1) ?s2"
+        proof -
+          have hassoc: "\<And>x y z. x \<in> G \<Longrightarrow> y \<in> G \<Longrightarrow> z \<in> G \<Longrightarrow> mul (mul x y) z = mul x (mul y z)"
+            using hG_grp unfolding top1_is_group_on_def by (by100 blast)
+          have hcomm: "\<And>x y. x \<in> G \<Longrightarrow> y \<in> G \<Longrightarrow> mul x y = mul y x"
+            using hG unfolding top1_is_abelian_group_on_def by (by100 blast)
+          have hinvs1: "invg ?s1 \<in> G" using hG_grp hs1_G unfolding top1_is_group_on_def by (by100 blast)
+          \<comment> \<open>invg(a\<cdot>s1) = invg(s1)\<cdot>invg(a) in abelian.\<close>
+          have hinv_as1: "invg (mul a ?s1) \<in> G" using hG_grp has1_G unfolding top1_is_group_on_def by (by100 blast)
+          \<comment> \<open>mul(invg(a\<cdot>s1))(a\<cdot>s2) = e when s1=s2 (trivially). In general:
+             = invg(a\<cdot>s1)\<cdot>a\<cdot>s2. Since invg(a\<cdot>s1)\<cdot>(a\<cdot>s1) = e, we have
+             invg(a\<cdot>s1)\<cdot>a = invg(s1) (by right-multiplying both sides by invg(s1) and simplifying).
+             Actually, simpler: mul(invg(a\<cdot>s1))(a\<cdot>s2) in abelian = mul(invg a)(invg s1)(a)(s2)
+             = mul(invg a)(a)(invg s1)(s2) = mul(e)(invg s1)(s2) = mul(invg s1)(s2).\<close>
+          have "mul (invg (mul a ?s1)) (mul a ?s2) = mul (mul (invg (mul a ?s1)) a) ?s2"
+            using hassoc[OF hinv_as1 ha hs2_G] by (by100 simp)
+          moreover have "mul (invg (mul a ?s1)) a = invg ?s1"
+          proof -
+            \<comment> \<open>mul(invg(a\<cdot>s1))(a) = mul(invg(a\<cdot>s1))(a\<cdot>(mul s1 (invg s1)))
+               = mul(invg(a\<cdot>s1))(mul(a\<cdot>s1)(invg s1)) = mul(e)(invg s1) = invg s1.\<close>
+            have "mul (invg (mul a ?s1)) (mul (mul a ?s1) (invg ?s1))
+                = mul (mul (invg (mul a ?s1)) (mul a ?s1)) (invg ?s1)"
+              using hassoc[OF hinv_as1 has1_G hinvs1] by (by100 simp)
+            also have "mul (invg (mul a ?s1)) (mul a ?s1) = e"
+              using hG_grp has1_G unfolding top1_is_group_on_def by (by100 blast)
+            also have "mul e (invg ?s1) = invg ?s1"
+              using hG_grp hinvs1 unfolding top1_is_group_on_def by (by100 blast)
+            finally have h1: "mul (invg (mul a ?s1)) (mul (mul a ?s1) (invg ?s1)) = invg ?s1" .
+            \<comment> \<open>Also mul(a\<cdot>s1)(invg s1) = mul a (mul s1 (invg s1)) = mul a e = a.\<close>
+            have "mul (mul a ?s1) (invg ?s1) = mul a (mul ?s1 (invg ?s1))"
+              using hassoc[OF ha hs1_G hinvs1] by (by100 simp)
+            also have "mul ?s1 (invg ?s1) = e"
+              using hG_grp hs1_G unfolding top1_is_group_on_def by (by100 blast)
+            also have "mul a e = a"
+              using hG_grp ha unfolding top1_is_group_on_def by (by100 blast)
+            finally have "mul (mul a ?s1) (invg ?s1) = a" .
+            with h1 show ?thesis by (by100 simp)
+          qed
+          ultimately show ?thesis by (by100 simp)
+        qed
+        ultimately have "mul (invg ?s1) ?s2 \<in> ?twoG" by (by100 simp)
+        \<comment> \<open>So coset(s1) = coset(s2), meaning C1 = C2.\<close>
+        hence "top1_group_coset_on G mul ?twoG ?s1 = top1_group_coset_on G mul ?twoG ?s2"
+          using normal_coset_eq[OF hG_grp h2G_normal hs1_G hs2_G] by (by100 simp)
+        \<comment> \<open>s1 \<in> C1 = coset(g1\_rep), so coset(s1) = C1. Similarly for s2.\<close>
+        moreover have "C1 = top1_group_coset_on G mul ?twoG ?s1"
+        proof -
+          \<comment> \<open>s1 \<in> C1 = coset(g1\_rep). So s1 = mul g1\_rep h for h \<in> 2G.
+             mul(invg g1\_rep) s1 = h \<in> 2G. By normal\_coset\_eq: coset(g1\_rep) = coset(s1).\<close>
+          from hs1_C1 hg1(2) obtain h where "h \<in> ?twoG" "?s1 = mul g1_rep h"
+            unfolding top1_group_coset_on_def by (by100 blast)
+          have hh_G: "h \<in> G"
+          proof -
+            from \<open>h \<in> ?twoG\<close> obtain h' where "h' \<in> G" "h = mul h' h'" by (by100 blast)
+            thus ?thesis using hG_grp unfolding top1_is_group_on_def by (by100 blast)
+          qed
+          have "mul (invg g1_rep) ?s1 = h"
+          proof -
+            have hinvg1: "invg g1_rep \<in> G" using hG_grp hg1(1) unfolding top1_is_group_on_def by (by100 blast)
+            have hassoc_l: "\<And>x y z. x \<in> G \<Longrightarrow> y \<in> G \<Longrightarrow> z \<in> G \<Longrightarrow> mul (mul x y) z = mul x (mul y z)"
+              using hG_grp unfolding top1_is_group_on_def by (by100 blast)
+            have "mul (invg g1_rep) ?s1 = mul (invg g1_rep) (mul g1_rep h)"
+              using \<open>?s1 = mul g1_rep h\<close> by (by100 simp)
+            also have "\<dots> = mul (mul (invg g1_rep) g1_rep) h"
+              using hassoc_l[OF hinvg1 hg1(1) hh_G] by (by100 simp)
+            also have "mul (invg g1_rep) g1_rep = e"
+              using hG_grp hg1(1) unfolding top1_is_group_on_def by (by100 blast)
+            also have "mul e h = h"
+              using hG_grp hh_G unfolding top1_is_group_on_def by (by100 blast)
+            finally show ?thesis .
+          qed
+          hence "mul (invg g1_rep) ?s1 \<in> ?twoG" using \<open>h \<in> ?twoG\<close> by (by100 simp)
+          hence hcoset_eq1: "top1_group_coset_on G mul ?twoG g1_rep = top1_group_coset_on G mul ?twoG ?s1"
+            using normal_coset_eq[OF hG_grp h2G_normal hg1(1) hs1_G] by (by100 simp)
+          show ?thesis using hg1(2) hcoset_eq1 by (by5000 metis)
+        qed
+        moreover have "C2 = top1_group_coset_on G mul ?twoG ?s2"
+        proof -
+          from hs2_C2 hg2(2) obtain h where "h \<in> ?twoG" "?s2 = mul g2_rep h"
+            unfolding top1_group_coset_on_def by (by100 blast)
+          have hh_G: "h \<in> G"
+          proof -
+            from \<open>h \<in> ?twoG\<close> obtain h' where "h' \<in> G" "h = mul h' h'" by (by100 blast)
+            thus ?thesis using hG_grp unfolding top1_is_group_on_def by (by100 blast)
+          qed
+          have "mul (invg g2_rep) ?s2 = h"
+          proof -
+            have hinvg2: "invg g2_rep \<in> G" using hG_grp hg2(1) unfolding top1_is_group_on_def by (by100 blast)
+            have hassoc_l: "\<And>x y z. x \<in> G \<Longrightarrow> y \<in> G \<Longrightarrow> z \<in> G \<Longrightarrow> mul (mul x y) z = mul x (mul y z)"
+              using hG_grp unfolding top1_is_group_on_def by (by100 blast)
+            have "mul (invg g2_rep) ?s2 = mul (invg g2_rep) (mul g2_rep h)"
+              using \<open>?s2 = mul g2_rep h\<close> by (by100 simp)
+            also have "\<dots> = mul (mul (invg g2_rep) g2_rep) h"
+              using hassoc_l[OF hinvg2 hg2(1) hh_G] by (by100 simp)
+            also have "mul (invg g2_rep) g2_rep = e"
+              using hG_grp hg2(1) unfolding top1_is_group_on_def by (by100 blast)
+            also have "mul e h = h"
+              using hG_grp hh_G unfolding top1_is_group_on_def by (by100 blast)
+            finally show ?thesis .
+          qed
+          hence "mul (invg g2_rep) ?s2 \<in> ?twoG" using \<open>h \<in> ?twoG\<close> by (by100 simp)
+          hence hcoset_eq2: "top1_group_coset_on G mul ?twoG g2_rep = top1_group_coset_on G mul ?twoG ?s2"
+            using normal_coset_eq[OF hG_grp h2G_normal hg2(1) hs2_G] by (by100 simp)
+          show ?thesis using hg2(2) hcoset_eq2 by (by5000 metis)
+        qed
+        ultimately show "C1 = C2" by (by100 simp)
+      qed
     next
       show "shift ` QG_even = QG_odd" sorry
     qed
