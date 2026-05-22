@@ -3656,13 +3656,9 @@ proof -
           thus False using False by (by100 simp)
         qed
         have hD_pos: "?D > 0"
-          sorry \<comment> \<open>Convex polygon: cross2(v_i-c, v_{i+1}-c) > 0 for all adjacent pairs.
-             This is equivalent to the polygon having positive (CCW) orientation from c.
-             Proof requires the convex position assumption (hgp) + centroid is interior.\<close>
-        have h\<beta>_nn: "\<beta>' \<ge> 0" unfolding \<beta>'_def
-          using hnum_\<beta> hD_pos by (by100 simp)
-        have h\<gamma>_nn: "\<gamma>' \<ge> 0" unfolding \<gamma>'_def
-          using hnum_\<gamma> hD_pos by (by100 simp)
+          sorry \<comment> \<open>D > 0: polygon orientation. Needed for \<beta>',\<gamma>' \<ge> 0.\<close>
+        have h\<beta>_nn: "\<beta>' \<ge> 0" unfolding \<beta>'_def using hnum_\<beta> hD_pos by (by100 simp)
+        have h\<gamma>_nn: "\<gamma>' \<ge> 0" unfolding \<gamma>'_def using hnum_\<gamma> hD_pos by (by100 simp)
         \<comment> \<open>z - c = \<beta>'*(v_i - c) + \<gamma>'*(v_{i+1} - c): by definition of \<beta>', \<gamma>' via Cramer.\<close>
         have hzc_x: "fst z - cx = \<beta>' * (vx i - cx) + \<gamma>' * (vx ?vi1 - cx)"
         proof -
