@@ -3874,7 +3874,23 @@ proof -
     have hq_cont: "top1_continuous_map_on P ?TP X TX q"
       using hq unfolding top1_quotient_map_on_def by (by100 blast)
     have hBdP_closed: "closedin_on P ?TP BdP"
-      sorry \<comment> \<open>BdP = finite union of compact segments, hence closed in P.\<close>
+    proof -
+      \<comment> \<open>BdP is compact (finite union of compact line segments in R²).
+         Compact in R² \<Rightarrow> closed in R² (t2\_space). Closed in R² \<Rightarrow> closedin\_on P.\<close>
+      have hBdP_sub: "BdP \<subseteq> P" sorry \<comment> \<open>Boundary \<subseteq> polygon.\<close>
+      have "compact BdP" sorry \<comment> \<open>Finite union of compact segments.\<close>
+      hence "closed BdP" using compact_imp_closed by (by100 blast)
+      \<comment> \<open>closed BdP means UNIV - BdP is open. In the subspace topology on P,
+         P - BdP = P \<inter> (UNIV - BdP) is open, hence BdP is closedin\_on P.\<close>
+      hence "open (- BdP)" unfolding closed_def by (by100 simp)
+      hence "(- BdP) \<in> top1_open_sets" unfolding top1_open_sets_def by (by100 blast)
+      hence hbdp_prod: "(- BdP) \<in> product_topology_on top1_open_sets top1_open_sets"
+        using product_topology_on_open_sets by (by5000 fast)
+      hence "P \<inter> (- BdP) \<in> ?TP" unfolding subspace_topology_def by (by5000 blast)
+      moreover have "P - BdP = P \<inter> (- BdP)" by (by100 blast)
+      ultimately have "P - BdP \<in> ?TP" by (by100 simp)
+      thus ?thesis unfolding closedin_on_def using hBdP_sub by (by100 blast)
+    qed
     from compact_hausdorff_continuous_closed_map[OF hP_compact_top hX_haus hq_cont hBdP_closed]
     show ?thesis unfolding A_def .
   qed
