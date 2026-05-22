@@ -3957,6 +3957,22 @@ proof -
       {((1-t) * vx i + t * vx (Suc i mod length scheme),
         (1-t) * vy i + t * vy (Suc i mod length scheme)) | t. t \<in> I_set})"
   define A where "A = q ` BdP"
+  have hBdP_sub_P: "BdP \<subseteq> P"
+  proof (rule subsetI)
+    fix p assume "p \<in> BdP"
+    then obtain i t where hi: "i < length scheme" and ht: "t \<in> I_set"
+        and hp: "p = ((1-t) * vx i + t * vx (Suc i mod length scheme),
+                     (1-t) * vy i + t * vy (Suc i mod length scheme))"
+      unfolding BdP_def by (by5000 force)
+    have ht01: "0 \<le> t" "t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 auto)+
+    have hvi: "(vx i, vy i) \<in> P" using hverts hi by (by100 blast)
+    have hlen_pos: "length scheme > 0" using assms(2) by (by100 linarith)
+    have hi1: "Suc i mod length scheme < length scheme" using hlen_pos by (by100 simp)
+    have hvi1: "(vx (Suc i mod length scheme), vy (Suc i mod length scheme)) \<in> P"
+      using hverts hi1 by (by100 blast)
+    show "p \<in> P" using polygonal_region_convex_combo[OF hP hlen3 hvi hvi1 ht01(1) ht01(2)]
+      hp by (by100 simp)
+  qed
   \<comment> \<open>Step 4: Define h = q \<circ> \<psi>^{-1}: B^2 \<rightarrow> X.\<close>
   let ?\<psi>inv = "inv_into P \<psi>"
   have h\<psi>inv: "top1_homeomorphism_on top1_B2 top1_B2_topology P ?TP ?\<psi>inv"
@@ -3996,7 +4012,7 @@ proof -
     proof -
       \<comment> \<open>BdP is compact (finite union of compact line segments in R²).
          Compact in R² \<Rightarrow> closed in R² (t2\_space). Closed in R² \<Rightarrow> closedin\_on P.\<close>
-      have hBdP_sub: "BdP \<subseteq> P"
+      have hBdP_sub_P: "BdP \<subseteq> P"
       proof (rule subsetI)
         fix p assume "p \<in> BdP"
         then obtain i t where hi: "i < length scheme" and ht: "t \<in> I_set"
@@ -4069,7 +4085,7 @@ proof -
       hence "P \<inter> (- BdP) \<in> ?TP" unfolding subspace_topology_def by (by5000 blast)
       moreover have "P - BdP = P \<inter> (- BdP)" by (by100 blast)
       ultimately have "P - BdP \<in> ?TP" by (by100 simp)
-      thus ?thesis unfolding closedin_on_def using hBdP_sub by (by100 blast)
+      thus ?thesis unfolding closedin_on_def using hBdP_sub_P by (by100 blast)
     qed
     from compact_hausdorff_continuous_closed_map[OF hP_compact_top hX_haus hq_cont hBdP_closed]
     show ?thesis unfolding A_def .
@@ -4088,7 +4104,7 @@ proof -
     proof -
       have hq_cont_P: "top1_continuous_map_on P ?TP X TX q"
         using hq unfolding top1_quotient_map_on_def by (by100 blast)
-      have hBdP_sub2: "BdP \<subseteq> P"
+      have hBdP_sub_P: "BdP \<subseteq> P"
       proof (rule subsetI)
         fix p assume "p \<in> BdP"
         then obtain i t where hi: "i < length scheme" and ht: "t \<in> I_set"
@@ -4104,15 +4120,37 @@ proof -
         show "p \<in> P" using polygonal_region_convex_combo[OF hP hlen3 hvi hvi1 ht01(1) ht01(2)]
           hp by (by100 simp)
       qed
-      from top1_continuous_map_on_restrict_domain_simple[OF hq_cont_P hBdP_sub2]
+      from top1_continuous_map_on_restrict_domain_simple[OF hq_cont_P hBdP_sub_P]
       have "top1_continuous_map_on BdP (subspace_topology P ?TP BdP) X TX q" .
       moreover have "subspace_topology P ?TP BdP =
           subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) BdP"
-        using subspace_topology_trans[OF hBdP_sub2] by (by100 simp)
+        using subspace_topology_trans[OF hBdP_sub_P] by (by100 simp)
       ultimately show ?thesis by (by100 simp)
     qed
     \<comment> \<open>A = q(BdP) is path-connected (continuous image of path-connected).\<close>
-    show ?thesis sorry \<comment> \<open>Apply top1\_path\_connected\_continuous\_image.\<close>
+    \<comment> \<open>Apply top1\_path\_connected\_continuous\_image: BdP path-connected, q continuous,
+       q(BdP) = A, A \<subseteq> X.\<close>
+    have himg_q: "\<forall>x \<in> BdP. q x \<in> X"
+    proof (intro ballI)
+      fix p assume "p \<in> BdP"
+      hence "p \<in> P" using hBdP_sub_P by (by100 blast)
+      thus "q p \<in> X" using hq unfolding top1_quotient_map_on_def top1_continuous_map_on_def
+        by (by5000 blast)
+    qed
+    have hA_eq: "q ` BdP = A" unfolding A_def by (by100 simp)
+    have hA_sub_X: "A \<subseteq> X"
+    proof -
+      have "q ` P = X" using hq unfolding top1_quotient_map_on_def by (by5000 blast)
+      hence "q ` BdP \<subseteq> X" using hBdP_sub_P by (by100 blast)
+      thus ?thesis unfolding A_def by (by100 simp)
+    qed
+    have hX_top: "is_topology_on X TX"
+      using assms(1) unfolding top1_quotient_of_scheme_on_def is_topology_on_strict_def
+      by (by100 blast)
+    from top1_path_connected_continuous_image[where X=BdP and TX="subspace_topology UNIV
+        (product_topology_on top1_open_sets top1_open_sets) BdP" and Y=X and TY=TX
+        and f=q and Z=A and TZ="subspace_topology X TX A"]
+    show ?thesis using hBdP_pc hq_cont_Bd himg_q hA_eq hA_sub_X hX_top by (by5000 blast)
   qed
   have hh_cont: "top1_continuous_map_on top1_B2 top1_B2_topology X TX h"
   proof -
