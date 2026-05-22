@@ -2870,8 +2870,25 @@ proof -
             have hi_eq: "(vx i' - cx) * ?dy = (vy i' - cy) * ?dx" using h0i by (by100 linarith)
             have hj_eq: "(vx j' - cx) * ?dy = (vy j' - cy) * ?dx" using h0j by (by100 linarith)
             have hdy_eq: "?D * ?dy = 0"
-              sorry \<comment> \<open>Ring identity: (a*d-b*c)*y = a*d*y - b*c*y = b*d*x - b*d*x = 0
-                 using a*y=b*x and c*y=d*x. Isabelle simp can't handle the cancellation.\<close>
+            proof -
+              let ?a = "vx i' - cx" let ?b = "vy i' - cy"
+              let ?c = "vx j' - cx" let ?d = "vy j' - cy"
+              \<comment> \<open>From hi_eq: ?a*?dy = ?b*?dx. Multiply by ?d: ?a*?d*?dy = ?b*?d*?dx.\<close>
+              have "?a * ?d * ?dy = ?b * ?dx * ?d"
+                using hi_eq by (by100 simp)
+              hence h1: "?a * ?d * ?dy = ?b * ?d * ?dx"
+                by (simp add: mult.commute mult.left_commute)
+              \<comment> \<open>From hj_eq: ?c*?dy = ?d*?dx. Multiply by ?b: ?b*?c*?dy = ?b*?d*?dx.\<close>
+              have "?b * (?c * ?dy) = ?b * (?d * ?dx)"
+                using hj_eq by (by100 simp)
+              hence h2: "?b * ?c * ?dy = ?b * ?d * ?dx"
+                by (simp add: mult.assoc)
+              \<comment> \<open>Subtract: (?a*?d - ?b*?c)*?dy = ?b*?d*?dx - ?b*?d*?dx = 0.\<close>
+              from h1 h2 have h3: "?a * ?d * ?dy - ?b * ?c * ?dy = 0" by (by100 linarith)
+              have "?D * ?dy = ?a * ?d * ?dy - ?b * ?c * ?dy"
+                by (simp add: algebra_simps)
+              thus ?thesis using h3 by (by100 simp)
+            qed
             have hdy0: "?dy = 0" using hdy_eq hdet' by (by100 simp)
             have hdx0: "?dx = 0"
             proof -
