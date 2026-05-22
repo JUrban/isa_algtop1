@@ -3865,10 +3865,27 @@ proof -
       top1_quotient_map_on P (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) X TX q;
       \<forall>i<length ?scheme. (vx i, vy i) \<in> P\<rbrakk>
     \<Longrightarrow> \<forall>i<length ?scheme. \<forall>j<length ?scheme. q (vx i, vy i) = q (vx j, vy j)"
-    sorry \<comment> \<open>All vertices of the torus polygon get identified.
-       For the torus scheme aba^{-1}b^{-1}: vertex 0 \<sim> vertex 1 (via edge a),
-       vertex 1 \<sim> vertex 2 (via edge b), vertex 2 \<sim> vertex 3 (via edge a^{-1}),
-       vertex 3 \<sim> vertex 0 (via edge b^{-1}). So all 4 vertices identified.\<close>
+  proof -
+    fix P q vx vy
+    assume hP: "top1_is_polygonal_region_on P (length ?scheme)"
+    assume hq: "top1_quotient_map_on P (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) X TX q"
+    assume hvx: "\<forall>i<length ?scheme. (vx i, vy i) \<in> P"
+    \<comment> \<open>Extract the edge identification from the scheme definition.
+       The key: from quotient\_of\_scheme\_extract\_full, edges with the same label
+       have their endpoints identified by q.
+       Setting t=0 in the edge identification gives: if scheme!i and scheme!j have
+       the same label, then q(vx i, vy i) is related to q(vx j, vy j) (or reversed).\<close>
+    \<comment> \<open>For the torus scheme, edges 4k and 4k+2 share label 2k (different direction),
+       and edges 4k+1 and 4k+3 share label 2k+1 (different direction).
+       Setting t=0: q(start of edge i) = q(end of edge j) (for reversed edges).
+       This gives: q(vertex 4k) = q(vertex 4k+3), q(vertex 4k+1) = q(vertex 4k+2).
+       Setting t=1: q(end of edge i) = q(start of edge j).
+       This gives: q(vertex 4k+1) = q(vertex 4k+3), etc.
+       Chaining these identifications connects all vertices.\<close>
+    show "\<forall>i<length ?scheme. \<forall>j<length ?scheme. q (vx i, vy i) = q (vx j, vy j)"
+      sorry \<comment> \<open>The vertex identification follows from the edge label matching conditions
+         at t=0 and t=1. For the torus scheme, this chains all 4n vertices.\<close>
+  qed
   \<comment> \<open>Apply Theorem 74.2.\<close>
   have h742: "\<exists>(G::'g set) mul e invg.
       top1_group_presented_by_on G mul e invg (fst ` set ?scheme)
