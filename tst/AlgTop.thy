@@ -885,7 +885,63 @@ proof -
         ultimately show "C1 = C2" by (by100 simp)
       qed
     next
-      show "shift ` QG_even = QG_odd" sorry
+      show "shift ` QG_even = QG_odd"
+      proof (rule set_eqI, rule iffI)
+        \<comment> \<open>\<subseteq>: shift maps even cosets to odd cosets.\<close>
+        fix C assume "C \<in> shift ` QG_even"
+        then obtain C0 where hC0: "C0 \<in> QG_even" "C = shift C0" by (by100 blast)
+        from hC0(1) have "C0 \<in> ?QG" unfolding QG_even_def by (by100 blast)
+        then obtain g0 where hg0: "g0 \<in> G" "C0 = top1_group_coset_on G mul ?twoG g0"
+          unfolding top1_quotient_group_carrier_on_def by (by100 blast)
+        \<comment> \<open>g0 has even \<epsilon> (from C0 \<in> QG\_even + \<epsilon>-coset parity).\<close>
+        have hg0_even: "even (\<epsilon> g0)"
+        proof -
+          from hC0(1) obtain g1 where "g1 \<in> C0" "even (\<epsilon> g1)" unfolding QG_even_def by (by100 blast)
+          from \<open>g1 \<in> C0\<close> hg0(2) obtain h where "h \<in> ?twoG" "g1 = mul g0 h"
+            unfolding top1_group_coset_on_def by (by100 blast)
+          thus ?thesis using heps_coset[OF hg0(1) \<open>h \<in> ?twoG\<close>] \<open>g1 = mul g0 h\<close> \<open>even (\<epsilon> g1)\<close> by (by100 simp)
+        qed
+        \<comment> \<open>shift(C0) = coset(mul a (SOME g \<in> C0)). Since SOME picks g0' from C0,
+           and g0' has even \<epsilon>, mul a g0' has odd \<epsilon>.\<close>
+        have hag0_G: "mul a g0 \<in> G" using hG_grp ha hg0(1) unfolding top1_is_group_on_def by (by100 blast)
+        \<comment> \<open>shift(C0) \<in> QG (it's a G-coset).\<close>
+        \<comment> \<open>shift(C0) has odd elements (mul a g0 has \<epsilon> = 1 + \<epsilon>(g0) which is odd).\<close>
+        show "C \<in> QG_odd"
+          sorry \<comment> \<open>shift(C0) \<in> QG\_odd: SOME representative has odd \<epsilon>.\<close>
+      next
+        \<comment> \<open>\<supseteq>: every odd coset is shift of some even coset.\<close>
+        fix C assume "C \<in> QG_odd"
+        hence hC_QG: "C \<in> ?QG" unfolding QG_odd_def by (by100 blast)
+        then obtain g0 where hg0: "g0 \<in> G" "C = top1_group_coset_on G mul ?twoG g0"
+          unfolding top1_quotient_group_carrier_on_def by (by100 blast)
+        \<comment> \<open>g0 has odd \<epsilon>.\<close>
+        have hg0_odd: "odd (\<epsilon> g0)"
+        proof -
+          from \<open>C \<in> QG_odd\<close> obtain g1 where "g1 \<in> C" "odd (\<epsilon> g1)" unfolding QG_odd_def by (by100 blast)
+          from \<open>g1 \<in> C\<close> hg0(2) obtain h where "h \<in> ?twoG" "g1 = mul g0 h"
+            unfolding top1_group_coset_on_def by (by100 blast)
+          thus ?thesis using heps_coset[OF hg0(1) \<open>h \<in> ?twoG\<close>] \<open>g1 = mul g0 h\<close> \<open>odd (\<epsilon> g1)\<close> by (by100 simp)
+        qed
+        \<comment> \<open>Let C' = coset(mul(invg a) g0). C' is even (\<epsilon> = \<epsilon>(g0) - 1 = even).
+           shift(C') = coset(mul a (SOME g \<in> C')). Need this = C.\<close>
+        let ?g0' = "mul (invg a) g0"
+        have hg0'_G: "?g0' \<in> G" using hG_grp hia_G hg0(1) unfolding top1_is_group_on_def by (by100 blast)
+        have hg0'_even: "even (\<epsilon> ?g0')"
+        proof -
+          have "\<epsilon> ?g0' = \<epsilon> (invg a) + \<epsilon> g0"
+            using heps hia_G hg0(1) unfolding top1_group_hom_on_def by (by100 blast)
+          also have "\<epsilon> (invg a) = -1"
+            using hom_preserves_inv[OF hG_grp hZ_grp heps ha] heps_a by (by100 simp)
+          finally show ?thesis using hg0_odd by (by100 simp)
+        qed
+        have "top1_group_coset_on G mul ?twoG ?g0' \<in> QG_even"
+          unfolding QG_even_def
+          using hg0'_G hg0'_even
+          unfolding top1_quotient_group_carrier_on_def by (by5000 force)
+        moreover have "shift (top1_group_coset_on G mul ?twoG ?g0') = C"
+          sorry \<comment> \<open>shift(coset(invg(a)\<cdot>g0)) = coset(mul a (SOME g \<in> coset(invg(a)\<cdot>g0))) = coset(g0) = C.\<close>
+        ultimately show "C \<in> shift ` QG_even" by (by100 blast)
+      qed
     qed
     show ?thesis using bij_betw_same_card[OF hshift_bij] by (by100 simp)
   qed
