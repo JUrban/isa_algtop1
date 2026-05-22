@@ -7171,8 +7171,74 @@ proof -
           sorry \<comment> \<open>From hC\_even + \<epsilon>-coset parity constancy.\<close>
         \<comment> \<open>Project: k = g0 \<cdot> invg(a^{\<epsilon>(g0)}) where a^{\<epsilon>(g0)} \<in> 2G.\<close>
         \<comment> \<open>Then k \<in> K and coset\_G(k) = coset\_G(g0) = C.\<close>
-        show "C \<in> \<psi> ` ?QK"
-          sorry \<comment> \<open>Projection via group\_pow\_add: a^{2m} = (a^m)^2 \<in> 2G.\<close>
+        \<comment> \<open>Projection: k = g0 \<cdot> invg(pow(a, |\<epsilon>(g0)|)) \<in> K, coset\_G(k) = C.\<close>
+        obtain m where hm: "\<epsilon> g0 = 2 * int m \<or> \<epsilon> g0 = -(2 * int m)"
+          using \<open>even (\<epsilon> g0)\<close> by (by5000 auto)
+        define pow_a where "pow_a = (if \<epsilon> g0 \<ge> 0
+            then top1_group_pow mul e a (nat (\<epsilon> g0))
+            else top1_group_pow mul e (invg a) (nat (- \<epsilon> g0)))"
+        have hpow_G: "pow_a \<in> G"
+          unfolding pow_a_def using group_pow_in_group'[OF hG_grp ha]
+            group_pow_in_group'[OF hG_grp] hG_grp ha unfolding top1_is_group_on_def
+          by (by5000 auto)
+        have hpow_2G: "pow_a \<in> ?twoG"
+        proof -
+          have hia_G: "invg a \<in> G" using hG_grp ha unfolding top1_is_group_on_def by (by100 blast)
+          from hm show ?thesis
+          proof (elim disjE)
+            assume hpos: "\<epsilon> g0 = 2 * int m"
+            hence "pow_a = top1_group_pow mul e a (2 * m)"
+              unfolding pow_a_def by (by100 simp)
+            moreover have "top1_group_pow mul e a (2 * m)
+                = mul (top1_group_pow mul e a m) (top1_group_pow mul e a m)"
+            proof -
+              have "m + m = 2 * m" by (by100 simp)
+              thus ?thesis using group_pow_add[OF hG_grp ha, of m m] by (by5000 metis)
+            qed
+            moreover have "top1_group_pow mul e a m \<in> G"
+              by (rule group_pow_in_group'[OF hG_grp ha])
+            ultimately show ?thesis by (by100 force)
+          next
+            assume hneg: "\<epsilon> g0 = -(2 * int m)"
+            hence "pow_a = top1_group_pow mul e (invg a) (2 * m)"
+              unfolding pow_a_def by (by100 simp)
+            moreover have "top1_group_pow mul e (invg a) (2 * m)
+                = mul (top1_group_pow mul e (invg a) m) (top1_group_pow mul e (invg a) m)"
+            proof -
+              have "m + m = 2 * m" by (by100 simp)
+              thus ?thesis using group_pow_add[OF hG_grp hia_G, of m m] by (by5000 metis)
+            qed
+            moreover have "top1_group_pow mul e (invg a) m \<in> G"
+              by (rule group_pow_in_group'[OF hG_grp hia_G])
+            ultimately show ?thesis by (by100 force)
+          qed
+        qed
+        \<comment> \<open>\<epsilon>(pow\_a) = \<epsilon>(g0).\<close>
+        have heps_pow: "\<epsilon> pow_a = \<epsilon> g0"
+          sorry \<comment> \<open>From hom\_group\_pow\_early + \<epsilon>(a)=1.\<close>
+        \<comment> \<open>k = g0 \<cdot> invg(pow\_a) \<in> K.\<close>
+        define k where "k = mul g0 (invg pow_a)"
+        have hk_G: "k \<in> G"
+          using hG_grp hg0(1) hpow_G unfolding k_def top1_is_group_on_def by (by100 blast)
+        have "\<epsilon> k = 0"
+        proof -
+          have "\<epsilon> (invg pow_a) = - \<epsilon> pow_a"
+            using hom_preserves_inv[OF hG_grp hZ_grp heps hpow_G] by (by100 simp)
+          have "\<epsilon> k = \<epsilon> g0 + \<epsilon> (invg pow_a)"
+            using heps hg0(1) hpow_G unfolding k_def top1_group_hom_on_def top1_is_group_on_def by (by5000 blast)
+          thus ?thesis using \<open>\<epsilon> (invg pow_a) = - \<epsilon> pow_a\<close> heps_pow by (by100 linarith)
+        qed
+        hence hk_K: "k \<in> ?K" using hk_G by (by100 simp)
+        \<comment> \<open>coset\_G(g0) = coset\_G(k) since g0 = mul k pow\_a and pow\_a \<in> 2G.\<close>
+        have hcoset_eq: "C = top1_group_coset_on G mul ?twoG k"
+          sorry \<comment> \<open>normal\_coset\_eq: mul(invg k) g0 = pow\_a \<in> 2G.\<close>
+        \<comment> \<open>k \<in> K, so coset\_K(k) \<in> QK, and \<psi>(coset\_K(k)) = coset\_G(k) = C.\<close>
+        have "top1_group_coset_on ?K mul ?twoK k \<in> ?QK"
+          unfolding top1_quotient_group_carrier_on_def using hk_K by (by100 blast)
+        moreover have "\<psi> (top1_group_coset_on ?K mul ?twoK k) = C"
+          sorry \<comment> \<open>\<psi>(coset\_K(k)) = coset\_G(SOME k'. k' \<in> coset\_K(k)) = coset\_G(k) = C.
+             Needs: SOME picks k' with coset\_G(k') = coset\_G(k).\<close>
+        ultimately show "C \<in> \<psi> ` ?QK" by (by100 blast)
       qed
     qed
     thus ?thesis using bij_betw_same_card[OF hpsi_bij] by (by100 simp)
