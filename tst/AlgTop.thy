@@ -7019,11 +7019,76 @@ proof -
        The cosets with \<epsilon>(g) odd form a translate of the image.
        So |G/2G| = 2 \<times> |K/2K|.\<close>
     have "card ?QG = 2 * card ?QK"
-      sorry \<comment> \<open>Partition G/2G by \<epsilon>-parity. Even part bijects with K/2K (by K \<cap> 2G = 2K).
-         Odd part = translate by \<iota>(s0), same size. Total = 2 \<times> |K/2K|.\<close>
+    proof -
+      \<comment> \<open>Define the even and odd parts of G/2G.\<close>
+      let ?even = "{C \<in> ?QG. \<forall>g\<in>C. even (\<epsilon> g)}"
+      let ?odd = "{C \<in> ?QG. \<forall>g\<in>C. odd (\<epsilon> g)}"
+      \<comment> \<open>\<epsilon> mod 2 is well-defined on cosets: if g1 \<equiv> g2 mod 2G, then \<epsilon>(g1) \<equiv> \<epsilon>(g2) mod 2.\<close>
+      have heps_coset_wd: "\<forall>C\<in>?QG. (\<forall>g\<in>C. even (\<epsilon> g)) \<or> (\<forall>g\<in>C. odd (\<epsilon> g))"
+      proof (intro ballI)
+        fix C assume "C \<in> ?QG"
+        hence "\<exists>g0\<in>G. C = top1_group_coset_on G mul ?twoG g0"
+          unfolding top1_quotient_group_carrier_on_def by (by100 blast)
+        then obtain g0 where hg0: "g0 \<in> G" "C = top1_group_coset_on G mul ?twoG g0"
+          by (by100 blast)
+        \<comment> \<open>Every g \<in> C satisfies g = mul g0 h for some h \<in> 2G.
+           So \<epsilon>(g) = \<epsilon>(g0) + \<epsilon>(h) = \<epsilon>(g0) + 2\<epsilon>(h'), meaning \<epsilon>(g) \<equiv> \<epsilon>(g0) mod 2.\<close>
+        have "\<forall>g\<in>C. \<epsilon> g mod 2 = \<epsilon> g0 mod 2"
+        proof (intro ballI)
+          fix g assume "g \<in> C"
+          hence "g \<in> top1_group_coset_on G mul ?twoG g0" using hg0(2) by (by100 simp)
+          hence "\<exists>h. h \<in> ?twoG \<and> g = mul g0 h"
+            unfolding top1_group_coset_on_def by (by100 blast)
+          then obtain h where "h \<in> ?twoG" "g = mul g0 h" by (by100 blast)
+          then obtain h' where "h' \<in> G" "h = mul h' h'" by (by100 blast)
+          have "\<epsilon> h = \<epsilon> h' + \<epsilon> h'"
+            using heps \<open>h' \<in> G\<close> unfolding top1_group_hom_on_def by (by100 blast)
+          hence "even (\<epsilon> h)" by (by100 simp)
+          have "\<epsilon> g = \<epsilon> g0 + \<epsilon> h"
+            using heps hg0(1) \<open>g = mul g0 h\<close>
+            proof -
+              have "h \<in> G" using \<open>h' \<in> G\<close> \<open>h = mul h' h'\<close> hG_grp
+                unfolding top1_is_group_on_def by (by100 blast)
+              thus ?thesis using heps hg0(1) \<open>g = mul g0 h\<close>
+                unfolding top1_group_hom_on_def by (by5000 auto)
+            qed
+          thus "\<epsilon> g mod 2 = \<epsilon> g0 mod 2" using \<open>even (\<epsilon> h)\<close> by (by5000 auto)
+        qed
+        thus "(\<forall>g\<in>C. even (\<epsilon> g)) \<or> (\<forall>g\<in>C. odd (\<epsilon> g))"
+          by (by5000 auto)
+      qed
+      \<comment> \<open>Partition: G/2G = even \<union> odd, disjoint.\<close>
+      have hpartition: "?QG = ?even \<union> ?odd"
+      proof (rule set_eqI, rule iffI)
+        fix C assume "C \<in> ?QG"
+        from heps_coset_wd[rule_format, OF this]
+        show "C \<in> ?even \<union> ?odd" using \<open>C \<in> ?QG\<close> by (by100 blast)
+      next
+        fix C assume "C \<in> ?even \<union> ?odd"
+        thus "C \<in> ?QG" by (by100 blast)
+      qed
+      have hdisjoint: "?even \<inter> ?odd = {}"
+        by (by100 blast)
+      \<comment> \<open>|even| = |K/2K|: the map K/2K \<rightarrow> even part sending {k + 2K} \<mapsto> {k + 2G} is a bijection.\<close>
+      have heven_card: "card ?even = card ?QK"
+        using hK_cap_2G sorry
+      \<comment> \<open>|odd| = |even|: translation by \<iota>(s0) gives a bijection.\<close>
+      have hodd_card: "card ?odd = card ?even"
+        sorry
+      \<comment> \<open>Combine: |G/2G| = |even| + |odd| = 2 \<times> |K/2K|.\<close>
+      have hfin_even: "finite ?even" sorry
+      have hfin_odd: "finite ?odd" sorry
+      have "card ?QG = card ?even + card ?odd"
+        using hpartition hdisjoint hfin_even hfin_odd
+        by (by5000 simp add: card_Un_disjoint)
+      also have "\<dots> = card ?QK + card ?QK"
+        using heven_card hodd_card by (by100 simp)
+      also have "\<dots> = 2 * card ?QK" by (by100 simp)
+      finally show ?thesis .
+    qed
     thus "card (top1_quotient_group_carrier_on G mul {mul g g | g. g \<in> G})
        = 2 * card (top1_quotient_group_carrier_on ?K mul {mul g g | g. g \<in> ?K})"
-      sorry
+      by (by100 simp)
     also have "\<dots> = 2 * 2 ^ n" using hIH by (by100 simp)
     also have "\<dots> = 2 ^ Suc n" by (by100 simp)
     finally show ?case using Suc.hyps by (by100 simp)
