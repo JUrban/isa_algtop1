@@ -2354,6 +2354,13 @@ qed
 
 text \<open>A convex polygon in R^2 is homeomorphic to B^2 (the closed unit disk).
   This is a standard topology fact (radial projection from centroid).\<close>
+lemma polygonal_region_convex_combo:
+  assumes "top1_is_polygonal_region_on P n" and "n \<ge> 3"
+      and "x \<in> P" and "y \<in> P" and "0 \<le> t" and "t \<le> 1"
+  shows "((1-t) * fst x + t * fst y, (1-t) * snd x + t * snd y) \<in> P"
+  sorry \<comment> \<open>P is convex (convex hull of finite points). Standard fact:
+     x = \<Sum> a_j v_j, y = \<Sum> b_j v_j, then (1-t)*x + t*y = \<Sum>((1-t)*a_j + t*b_j)*v_j.\<close>
+
 lemma polygonal_region_compact:
   assumes "top1_is_polygonal_region_on P n" and "n \<ge> 3"
   shows "top1_compact_on P (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P)"
@@ -3877,7 +3884,26 @@ proof -
     proof -
       \<comment> \<open>BdP is compact (finite union of compact line segments in R²).
          Compact in R² \<Rightarrow> closed in R² (t2\_space). Closed in R² \<Rightarrow> closedin\_on P.\<close>
-      have hBdP_sub: "BdP \<subseteq> P" sorry \<comment> \<open>Boundary \<subseteq> polygon.\<close>
+      have hBdP_sub: "BdP \<subseteq> P"
+      proof (rule subsetI)
+        fix p assume "p \<in> BdP"
+        then obtain i t where hi: "i < length scheme" and ht: "t \<in> I_set"
+            and hp: "p = ((1-t) * vx i + t * vx (Suc i mod length scheme),
+                         (1-t) * vy i + t * vy (Suc i mod length scheme))"
+          unfolding BdP_def by (by5000 force)
+        have ht01: "0 \<le> t" "t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 auto)+
+        have hvi: "(vx i, vy i) \<in> P" using hverts hi by (by100 blast)
+        have hlen_pos: "length scheme > 0" using assms(2) by (by100 linarith)
+        have hi1: "Suc i mod length scheme < length scheme" using hlen_pos by (by100 simp)
+        have hvi1: "(vx (Suc i mod length scheme), vy (Suc i mod length scheme)) \<in> P"
+          using hverts hi1 by (by100 blast)
+        have "p = ((1-t) * fst (vx i, vy i) + t * fst (vx (Suc i mod length scheme), vy (Suc i mod length scheme)),
+                   (1-t) * snd (vx i, vy i) + t * snd (vx (Suc i mod length scheme), vy (Suc i mod length scheme)))"
+          using hp by (by100 simp)
+        thus "p \<in> P"
+          using polygonal_region_convex_combo[OF hP hlen3 hvi hvi1 ht01(1) ht01(2)]
+          by (by100 simp)
+      qed
       have "compact BdP" sorry \<comment> \<open>Finite union of compact segments.\<close>
       hence "closed BdP" using compact_imp_closed by (by100 blast)
       \<comment> \<open>closed BdP means UNIV - BdP is open. In the subspace topology on P,
