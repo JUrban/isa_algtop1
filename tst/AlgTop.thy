@@ -2944,11 +2944,36 @@ proof -
                 let ?t = "(vx 1 - vx 0) / (vx 2 - vx 0)"
                 have ht_fact: "?t * (vx 2 - vx 0) = vx 1 - vx 0"
                   using True by (by100 simp)
+                \<comment> \<open>Introduce auxiliary real t' to avoid division in arithmetic.\<close>
+                obtain t' where ht'_def: "t' = ?t" and ht'_fact: "t' * (vx 2 - vx 0) = vx 1 - vx 0"
+                  using ht_fact by (by100 blast)
                 have hvx1_eq: "vx 1 = (1 - ?t) * vx 0 + ?t * vx 2"
-                  using ht_fact sorry \<comment> \<open>vx1 = vx0 + t*(vx2-vx0) = (1-t)*vx0 + t*vx2.
-                     Pure ring identity but linarith/simp fail on division terms.\<close>
+                proof -
+                  have "vx 1 = vx 0 + t' * (vx 2 - vx 0)" using ht'_fact by (by100 linarith)
+                  also have "\<dots> = (1 - t') * vx 0 + t' * vx 2"
+                    by (simp add: right_diff_distrib left_diff_distrib algebra_simps)
+                  finally show ?thesis unfolding ht'_def .
+                qed
                 have hvy1_eq: "vy 1 = (1 - ?t) * vy 0 + ?t * vy 2"
-                  using hcol_eq True sorry \<comment> \<open>From cross product = 0 and vx0\<noteq>vx2: divide.\<close>
+                proof -
+                  have "t' * (vy 2 - vy 0) = vy 1 - vy 0"
+                  proof -
+                    from hcol_eq have h_eq: "(vx 1 - vx 0) * (vy 2 - vy 0) = (vy 1 - vy 0) * (vx 2 - vx 0)" .
+                    \<comment> \<open>Substitute vx1 - vx0 = t'*(vx2-vx0) into h\_eq:
+                       t'*(vx2-vx0)*(vy2-vy0) = (vy1-vy0)*(vx2-vx0).
+                       Cancel (vx2-vx0) \<noteq> 0: t'*(vy2-vy0) = vy1-vy0.\<close>
+                    have "(vx 1 - vx 0) = t' * (vx 2 - vx 0)" using ht'_fact True by (by100 simp)
+                    hence "t' * (vx 2 - vx 0) * (vy 2 - vy 0) = (vy 1 - vy 0) * (vx 2 - vx 0)"
+                      using h_eq by (by100 simp)
+                    hence "t' * (vy 2 - vy 0) * (vx 2 - vx 0) = (vy 1 - vy 0) * (vx 2 - vx 0)"
+                      by (simp add: mult.commute mult.left_commute)
+                    thus ?thesis using True by (by100 simp)
+                  qed
+                  hence "vy 1 = vy 0 + t' * (vy 2 - vy 0)" by (by100 linarith)
+                  also have "\<dots> = (1 - t') * vy 0 + t' * vy 2"
+                    by (simp add: right_diff_distrib left_diff_distrib algebra_simps)
+                  finally show ?thesis unfolding ht'_def .
+                qed
                 \<comment> \<open>?t \<noteq> 0 (v0 \<noteq> v1 means vx0\<noteq>vx1 or vy0\<noteq>vy1 but if all same x...)\<close>
                 have ht_ne0: "?t \<noteq> 0" using h01_ne hvx1_eq hvy1_eq by (by100 force)
                 have ht_ne1: "?t \<noteq> 1" using h12_ne hvx1_eq hvy1_eq by (by100 force)
