@@ -6787,6 +6787,136 @@ next
   finally show ?case by (by100 simp)
 qed
 
+text \<open>In an abelian group, the "doubles" subgroup {g\<cdot>g | g \<in> G} is normal.\<close>
+lemma abelian_doubles_normal:
+  assumes hG: "top1_is_abelian_group_on G mul e invg"
+  shows "top1_normal_subgroup_on G mul e invg {mul g g | g. g \<in> G}"
+proof -
+  let ?D = "{mul g g | g. g \<in> G}"
+  have hG_grp: "top1_is_group_on G mul e invg"
+    using hG unfolding top1_is_abelian_group_on_def by (by100 blast)
+  have hassoc: "\<And>x y z. x \<in> G \<Longrightarrow> y \<in> G \<Longrightarrow> z \<in> G \<Longrightarrow> mul (mul x y) z = mul x (mul y z)"
+    using hG_grp unfolding top1_is_group_on_def by (by100 blast)
+  have hcomm: "\<And>x y. x \<in> G \<Longrightarrow> y \<in> G \<Longrightarrow> mul x y = mul y x"
+    using hG unfolding top1_is_abelian_group_on_def by (by100 blast)
+  have hD_sub: "?D \<subseteq> G"
+    using hG_grp unfolding top1_is_group_on_def by (by5000 blast)
+  \<comment> \<open>e \<in> D.\<close>
+  have he_G: "e \<in> G" using hG_grp unfolding top1_is_group_on_def by (by100 blast)
+  have "mul e e = e" using hG_grp he_G unfolding top1_is_group_on_def by (by100 blast)
+  hence he_D: "e \<in> ?D" using he_G by (by5000 force)
+  \<comment> \<open>Closure under mul: (g\<^sup>2)(h\<^sup>2) = (gh)\<^sup>2 in abelian.\<close>
+  have hmul_cl: "\<forall>x\<in>?D. \<forall>y\<in>?D. mul x y \<in> ?D"
+  proof (intro ballI)
+    fix x y assume "x \<in> ?D" "y \<in> ?D"
+    then obtain gx gy where hgx: "gx \<in> G" "x = mul gx gx"
+        and hgy: "gy \<in> G" "y = mul gy gy" by (by100 blast)
+    have hgxgy: "mul gx gy \<in> G" using hG_grp hgx(1) hgy(1) unfolding top1_is_group_on_def by (by100 blast)
+    \<comment> \<open>(gx\<cdot>gx)\<cdot>(gy\<cdot>gy) = (gx\<cdot>gy)\<cdot>(gx\<cdot>gy) in abelian group.\<close>
+    have "mul x y = mul (mul gx gx) (mul gy gy)" using hgx(2) hgy(2) by (by100 simp)
+    also have "\<dots> = mul gx (mul gx (mul gy gy))"
+      using hassoc[OF hgx(1) hgx(1)] hG_grp hgy(1) unfolding top1_is_group_on_def by (by5000 blast)
+    also have "mul gx (mul gy gy) = mul (mul gx gy) gy"
+      using hassoc[OF hgx(1) hgy(1) hgy(1)] by (by100 simp)
+    also have "mul gx (mul (mul gx gy) gy) = mul (mul gx (mul gx gy)) gy"
+      using hassoc[OF hgx(1) hgxgy hgy(1)] by (by100 simp)
+    also have "mul gx (mul gx gy) = mul (mul gx gy) gx"
+    proof -
+      have "mul gx (mul gx gy) = mul (mul gx gx) gy"
+        using hassoc[OF hgx(1) hgx(1) hgy(1)] by (by100 simp)
+      also have "\<dots> = mul (mul gx gy) gx"
+      proof -
+        have "mul gx gx = mul gx gx" by (by100 simp)
+        have "mul (mul gx gx) gy = mul gx (mul gx gy)"
+          using hassoc[OF hgx(1) hgx(1) hgy(1)] by (by100 simp)
+        also have "mul gx gy = mul gy gx" using hcomm[OF hgx(1) hgy(1)] .
+        also have "mul gx (mul gy gx) = mul (mul gx gy) gx"
+          using hassoc[OF hgx(1) hgy(1) hgx(1)] by (by100 simp)
+        finally show ?thesis .
+      qed
+      finally show ?thesis .
+    qed
+    also have "mul (mul (mul gx gy) gx) gy = mul (mul gx gy) (mul gx gy)"
+      using hassoc[OF hgxgy hgx(1) hgy(1)] by (by100 simp)
+    finally show "mul x y \<in> ?D" using hgxgy by (by100 force)
+  qed
+  \<comment> \<open>Closure under invg: invg(g\<^sup>2) = (invg g)\<^sup>2 in abelian.\<close>
+  have hinv_cl: "\<forall>x\<in>?D. invg x \<in> ?D"
+  proof (intro ballI)
+    fix x assume "x \<in> ?D"
+    then obtain gx where hgx: "gx \<in> G" "x = mul gx gx" by (by100 blast)
+    have higx: "invg gx \<in> G" using hG_grp hgx(1) unfolding top1_is_group_on_def by (by100 blast)
+    have higxigx: "mul (invg gx) (invg gx) \<in> G"
+      using hG_grp higx unfolding top1_is_group_on_def by (by100 blast)
+    \<comment> \<open>(invg gx)\<^sup>2 \<cdot> gx\<^sup>2 = ((invg gx)\<cdot>gx)\<^sup>2 = e\<^sup>2 = e.\<close>
+    have "mul (mul (invg gx) (invg gx)) (mul gx gx) = e"
+    proof -
+      have "mul (mul (invg gx) (invg gx)) (mul gx gx)
+          = mul (mul (invg gx) gx) (mul (invg gx) gx)"
+        using hmul_cl sorry \<comment> \<open>Same abelian rearrangement: (a\<cdot>a)(b\<cdot>b)=(a\<cdot>b)(a\<cdot>b).\<close>
+      also have "mul (invg gx) gx = e"
+        using hG_grp hgx(1) unfolding top1_is_group_on_def by (by100 blast)
+      also have "mul e e = e" using hG_grp he_G unfolding top1_is_group_on_def by (by100 blast)
+      finally show ?thesis .
+    qed
+    hence "mul (mul (invg gx) (invg gx)) x = e" using hgx(2) by (by100 simp)
+    \<comment> \<open>So invg x = (invg gx)\<^sup>2 (unique left inverse).\<close>
+    have hx_G: "x \<in> G" using hD_sub \<open>x \<in> ?D\<close> by (by100 blast)
+    have "invg x = mul (invg gx) (invg gx)"
+    proof -
+      have "mul (invg x) x = e" using hG_grp hx_G unfolding top1_is_group_on_def by (by100 blast)
+      have "mul (mul (invg gx) (invg gx)) x = e" using \<open>mul (mul (invg gx) (invg gx)) x = e\<close> .
+      \<comment> \<open>Both are left inverses of x, so they are equal.\<close>
+      have hinvx_G: "invg x \<in> G" using hG_grp hx_G unfolding top1_is_group_on_def by (by100 blast)
+      have "mul (invg x) x = mul (mul (invg gx) (invg gx)) x"
+        using \<open>mul (invg x) x = e\<close> \<open>mul (mul (invg gx) (invg gx)) x = e\<close> by (by100 simp)
+      \<comment> \<open>Right cancel x.\<close>
+      hence "mul (mul (invg x) x) (invg x) = mul (mul (mul (invg gx) (invg gx)) x) (invg x)"
+        by (by100 simp)
+      have "mul (mul (invg x) x) (invg x) = invg x"
+      proof -
+        have "mul (invg x) x = e" using \<open>mul (invg x) x = e\<close> .
+        thus ?thesis using hG_grp hinvx_G unfolding top1_is_group_on_def by (by100 blast)
+      qed
+      moreover have "mul (mul (mul (invg gx) (invg gx)) x) (invg x) = mul (invg gx) (invg gx)"
+      proof -
+        have "mul (mul (mul (invg gx) (invg gx)) x) (invg x)
+            = mul (mul (invg gx) (invg gx)) (mul x (invg x))"
+          using hassoc[OF higxigx hx_G hinvx_G] by (by100 simp)
+        also have "mul x (invg x) = e"
+          using hG_grp hx_G unfolding top1_is_group_on_def by (by100 blast)
+        also have "mul (mul (invg gx) (invg gx)) e = mul (invg gx) (invg gx)"
+          using hG_grp higxigx unfolding top1_is_group_on_def by (by100 blast)
+        finally show ?thesis .
+      qed
+      ultimately show ?thesis
+        using \<open>mul (mul (invg x) x) (invg x) = mul (mul (mul (invg gx) (invg gx)) x) (invg x)\<close>
+        by (by100 simp)
+    qed
+    thus "invg x \<in> ?D" using higx by (by100 force)
+  qed
+  \<comment> \<open>Assoc, id, inverse inherited from G.\<close>
+  have hD_grp: "top1_is_group_on ?D mul e invg"
+    unfolding top1_is_group_on_def
+    using hD_sub he_D hmul_cl hinv_cl hG_grp unfolding top1_is_group_on_def by (by5000 blast)
+  \<comment> \<open>Conjugation trivial in abelian.\<close>
+  have hconj: "\<forall>g\<in>G. \<forall>n\<in>?D. mul (mul g n) (invg g) \<in> ?D"
+  proof (intro ballI)
+    fix g n assume "g \<in> G" "n \<in> ?D"
+    have hn_G: "n \<in> G" using hD_sub \<open>n \<in> ?D\<close> by (by100 blast)
+    have hinvg_G: "invg g \<in> G" using hG_grp \<open>g \<in> G\<close> unfolding top1_is_group_on_def by (by100 blast)
+    have "mul (mul g n) (invg g) = mul g (mul n (invg g))"
+      using hassoc[OF \<open>g \<in> G\<close> hn_G hinvg_G] by (by100 simp)
+    also have "mul n (invg g) = mul (invg g) n" using hcomm[OF hn_G hinvg_G] .
+    also have "mul g (mul (invg g) n) = mul (mul g (invg g)) n"
+      using hassoc[OF \<open>g \<in> G\<close> hinvg_G hn_G] by (by100 simp)
+    also have "mul g (invg g) = e" using hG_grp \<open>g \<in> G\<close> unfolding top1_is_group_on_def by (by100 blast)
+    also have "mul e n = n" using hG_grp hn_G unfolding top1_is_group_on_def by (by100 blast)
+    finally show "mul (mul g n) (invg g) \<in> ?D" using \<open>n \<in> ?D\<close> by (by100 simp)
+  qed
+  show ?thesis unfolding top1_normal_subgroup_on_def using hD_sub hD_grp hconj by (by100 blast)
+qed
+
 text \<open>In an abelian group G with coordinate projection \<epsilon>: G \<rightarrow> Z (\<epsilon>(a) = 1),
   the quotient G/2G has twice as many cosets as K/2K where K = ker(\<epsilon>).
   This follows the book proof of Theorem 67.8: the short exact sequence
@@ -6919,9 +7049,11 @@ proof -
   qed
   \<comment> \<open>2G is normal in G (abelian \<Rightarrow> all subgroups normal).\<close>
   have h2G_normal: "top1_normal_subgroup_on G mul e invg ?twoG"
-    sorry \<comment> \<open>2G is a normal subgroup of abelian G. Needs: 2G is a group (closure under mul, invg).\<close>
+    by (rule abelian_doubles_normal[OF hG])
+  have hK_abel: "top1_is_abelian_group_on ?K mul e invg"
+    using hK_free unfolding top1_is_free_abelian_group_full_on_def by (by100 blast)
   have h2K_normal: "top1_normal_subgroup_on ?K mul e invg ?twoK"
-    sorry \<comment> \<open>2K is a normal subgroup of abelian K. Same argument.\<close>
+    by (rule abelian_doubles_normal[OF hK_abel])
   \<comment> \<open>Step 2: |QG\_even| = |QK|.\<close>
   \<comment> \<open>Bijection \<psi>: QK \<rightarrow> QG\_even sending coset\_K(k) \<mapsto> coset\_G(k).
      Well-defined: K \<inter> 2G = 2K ensures k1 \<equiv> k2 mod 2K \<Longrightarrow> k1 \<equiv> k2 mod 2G.
@@ -7138,7 +7270,8 @@ proof -
             have "?k \<in> G" using hk_K by (by100 blast)
             have h2G_sub: "?twoG \<subseteq> G"
               using hG_grp unfolding top1_is_group_on_def by (by5000 blast)
-            have h2G_grp: "top1_is_group_on ?twoG mul e invg" sorry
+            have h2G_grp: "top1_is_group_on ?twoG mul e invg"
+              using h2G_normal unfolding top1_normal_subgroup_on_def by (by100 blast)
             have "?k \<in> top1_group_coset_on G mul ?twoG ?k"
               by (rule coset_self_mem[OF hG_grp h2G_sub h2G_grp \<open>?k \<in> G\<close>])
             thus ?thesis using \<open>C = top1_group_coset_on G mul ?twoG ?k\<close> by (by100 simp)
