@@ -7131,16 +7131,84 @@ proof -
         have hshift_coset: "\<And>g0. g0 \<in> G \<Longrightarrow>
             ?shift (top1_group_coset_on G mul ?twoG g0)
           = top1_group_coset_on G mul ?twoG (mul ?a g0)"
-          sorry \<comment> \<open>Uses abelian commutativity: mul a (mul g0 h) = mul (mul a g0) h.\<close>
+        proof -
+          fix g0 assume hg0: "g0 \<in> G"
+          show "?shift (top1_group_coset_on G mul ?twoG g0)
+              = top1_group_coset_on G mul ?twoG (mul ?a g0)"
+          proof (rule set_eqI, rule iffI)
+            fix x assume "x \<in> ?shift (top1_group_coset_on G mul ?twoG g0)"
+            then obtain g where "g \<in> top1_group_coset_on G mul ?twoG g0" "x = mul ?a g"
+              by (by100 blast)
+            then obtain h where "h \<in> ?twoG" "g = mul g0 h"
+              unfolding top1_group_coset_on_def by (by100 blast)
+            hence "x = mul ?a (mul g0 h)" using \<open>x = mul ?a g\<close> by (by100 simp)
+            \<comment> \<open>By associativity: mul a (mul g0 h) = mul (mul a g0) h.\<close>
+            have hh_G: "h \<in> G"
+            proof -
+              from \<open>h \<in> ?twoG\<close> obtain h' where "h' \<in> G" "h = mul h' h'" by (by100 blast)
+              thus ?thesis using hG_grp unfolding top1_is_group_on_def by (by100 blast)
+            qed
+            have "mul ?a (mul g0 h) = mul (mul ?a g0) h"
+              using hG_grp ha_G hg0 hh_G unfolding top1_is_group_on_def by (by100 blast)
+            hence "x = mul (mul ?a g0) h" using \<open>x = mul ?a (mul g0 h)\<close> by (by100 simp)
+            thus "x \<in> top1_group_coset_on G mul ?twoG (mul ?a g0)"
+              using \<open>h \<in> ?twoG\<close> unfolding top1_group_coset_on_def by (by100 blast)
+          next
+            fix x assume "x \<in> top1_group_coset_on G mul ?twoG (mul ?a g0)"
+            then obtain h where "h \<in> ?twoG" "x = mul (mul ?a g0) h"
+              unfolding top1_group_coset_on_def by (by100 blast)
+            have hh_G: "h \<in> G"
+            proof -
+              from \<open>h \<in> ?twoG\<close> obtain h' where "h' \<in> G" "h = mul h' h'" by (by100 blast)
+              thus ?thesis using hG_grp unfolding top1_is_group_on_def by (by100 blast)
+            qed
+            have "mul (mul ?a g0) h = mul ?a (mul g0 h)"
+              using hG_grp ha_G hg0 hh_G unfolding top1_is_group_on_def by (by100 blast)
+            hence "x = mul ?a (mul g0 h)" using \<open>x = mul (mul ?a g0) h\<close> by (by100 simp)
+            moreover have "mul g0 h \<in> top1_group_coset_on G mul ?twoG g0"
+              using \<open>h \<in> ?twoG\<close> unfolding top1_group_coset_on_def by (by100 blast)
+            ultimately show "x \<in> ?shift (top1_group_coset_on G mul ?twoG g0)"
+              by (by100 blast)
+          qed
+        qed
         \<comment> \<open>?shift maps ?even \<rightarrow> ?odd (even parity + 1 = odd).\<close>
         have hshift_even_to_odd: "?shift ` ?even \<subseteq> ?odd"
-          sorry
-        \<comment> \<open>?shift is injective on ?even.\<close>
+          sorry \<comment> \<open>ε(mul a g) = 1 + ε(g), even→odd. Also shift(C) ∈ QG.\<close>
         have hshift_inj: "inj_on ?shift ?even"
-          sorry
-        \<comment> \<open>?shift maps ?even onto ?odd.\<close>
+          sorry \<comment> \<open>If shift(C1)=shift(C2), left-cancel a to get C1=C2.\<close>
         have hshift_surj: "?shift ` ?even = ?odd"
-          sorry
+        proof (rule set_eqI, rule iffI)
+          fix C assume "C \<in> ?shift ` ?even"
+          thus "C \<in> ?odd" using hshift_even_to_odd by (by100 blast)
+        next
+          fix C assume hC: "C \<in> ?odd"
+          \<comment> \<open>C has odd \<epsilon>. Translate back by invg(a) to get an even coset.\<close>
+          hence "C \<in> ?QG" by (by100 blast)
+          then obtain g0 where hg0: "g0 \<in> G" "C = top1_group_coset_on G mul ?twoG g0"
+            unfolding top1_quotient_group_carrier_on_def by (by100 blast)
+          let ?g0' = "mul (invg ?a) g0"
+          have hia_G: "invg ?a \<in> G" using hG_grp ha_G unfolding top1_is_group_on_def by (by100 blast)
+          have hg0'_G: "?g0' \<in> G" using hG_grp hia_G hg0(1) unfolding top1_is_group_on_def by (by100 blast)
+          have hC': "top1_group_coset_on G mul ?twoG ?g0' \<in> ?even"
+            sorry \<comment> \<open>\<epsilon>(invg(a) \<cdot> g0) = -1 + \<epsilon>(g0) = odd - 1 = even.\<close>
+          have "?shift (top1_group_coset_on G mul ?twoG ?g0')
+              = top1_group_coset_on G mul ?twoG (mul ?a ?g0')"
+            by (rule hshift_coset[OF hg0'_G])
+          also have "mul ?a ?g0' = g0"
+          proof -
+            have "mul ?a (mul (invg ?a) g0) = mul (mul ?a (invg ?a)) g0"
+              using hG_grp ha_G hia_G hg0(1) unfolding top1_is_group_on_def by (by100 blast)
+            also have "mul ?a (invg ?a) = e"
+              using hG_grp ha_G unfolding top1_is_group_on_def by (by100 blast)
+            finally have "mul ?a (mul (invg ?a) g0) = mul e g0" by (by100 simp)
+            also have "mul e g0 = g0"
+              using hG_grp hg0(1) unfolding top1_is_group_on_def by (by100 blast)
+            finally show ?thesis by (by100 simp)
+          qed
+          finally have "?shift (top1_group_coset_on G mul ?twoG ?g0') = C"
+            using hg0(2) by (by100 simp)
+          thus "C \<in> ?shift ` ?even" using hC' by (by100 blast)
+        qed
         show ?thesis using card_image[OF hshift_inj] hshift_surj by (by100 simp)
       qed
       \<comment> \<open>Combine: |G/2G| = |even| + |odd| = 2 \<times> |K/2K|.\<close>
