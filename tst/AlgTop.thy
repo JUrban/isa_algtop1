@@ -10508,11 +10508,292 @@ qed
 
 (** from \<S>75 Theorem 75.3: H_1 of n-fold torus is free abelian of rank 2n.
     The abelianization of \<pi>_1(T_n) is free abelian on 2n generators. **)
+text \<open>Transfer abelianization via isomorphism: if G \<cong> G' and H is the abelianization
+  of G (with free abelian structure), then H is also the abelianization of G'.\<close>
+lemma hom_image_commutator_sub:
+  assumes hG: "top1_is_group_on G mulG eG invgG"
+      and hH: "top1_is_group_on H mulH eH invgH"
+      and hf: "top1_group_hom_on G mulG H mulH f"
+  shows "f ` (top1_commutator_subgroup_on G mulG eG invgG)
+       \<subseteq> top1_commutator_subgroup_on H mulH eH invgH"
+proof -
+  \<comment> \<open>Key fact: for x \<in> [G,G], f(x) \<in> [H,H] because the quotient H \<rightarrow> H/[H,H]
+     composed with f gives a hom G \<rightarrow> H/[H,H] (abelian target),
+     so [G,G] \<subseteq> ker(\<phi> \<circ> f), meaning \<phi>(f(x)) = e for x \<in> [G,G], so f(x) \<in> [H,H].\<close>
+  let ?CG = "top1_commutator_subgroup_on G mulG eG invgG"
+  let ?CH = "top1_commutator_subgroup_on H mulH eH invgH"
+  let ?QH = "top1_quotient_group_carrier_on H mulH ?CH"
+  let ?mulQH = "top1_quotient_group_mul_on mulH"
+  have h_abel_QH: "top1_is_abelianization_of ?QH ?mulQH
+      (top1_group_coset_on H mulH ?CH eH)
+      (\<lambda>C. top1_group_coset_on H mulH ?CH (invgH (SOME g. g \<in> H \<and> C = top1_group_coset_on H mulH ?CH g)))
+      H mulH eH invgH (\<lambda>h. top1_group_coset_on H mulH ?CH h)"
+    by (rule abelianization_concrete[OF hH])
+  let ?\<phi> = "\<lambda>h. top1_group_coset_on H mulH ?CH h"
+  let ?eQH = "top1_group_coset_on H mulH ?CH eH"
+  have hQH_abel: "top1_is_abelian_group_on ?QH ?mulQH ?eQH
+      (\<lambda>C. top1_group_coset_on H mulH ?CH (invgH (SOME g. g \<in> H \<and> C = top1_group_coset_on H mulH ?CH g)))"
+    using h_abel_QH unfolding top1_is_abelianization_of_def by (by100 blast)
+  have hQH_grp: "top1_is_group_on ?QH ?mulQH ?eQH
+      (\<lambda>C. top1_group_coset_on H mulH ?CH (invgH (SOME g. g \<in> H \<and> C = top1_group_coset_on H mulH ?CH g)))"
+    using hQH_abel unfolding top1_is_abelian_group_on_def by (by100 blast)
+  have hphi_hom: "top1_group_hom_on H mulH ?QH ?mulQH ?\<phi>"
+    using h_abel_QH unfolding top1_is_abelianization_of_def by (by100 blast)
+  have hphi_ker: "top1_group_kernel_on H ?eQH ?\<phi> = ?CH"
+    using h_abel_QH unfolding top1_is_abelianization_of_def by (by100 blast)
+  \<comment> \<open>\<phi> \<circ> f: G \<rightarrow> QH is a hom into an abelian group.\<close>
+  have hcomp_hom: "top1_group_hom_on G mulG ?QH ?mulQH (?\<phi> \<circ> f)"
+    using group_hom_comp[OF hf hphi_hom] by (by100 simp)
+  \<comment> \<open>By Lemma 69.3: [G,G] \<subseteq> ker(\<phi> \<circ> f).\<close>
+  have hCG_sub_ker: "?CG \<subseteq> top1_group_kernel_on G ?eQH (?\<phi> \<circ> f)"
+    by (rule Lemma_69_3_commutator_in_kernel[OF hG hQH_abel hcomp_hom])
+  \<comment> \<open>For x \<in> [G,G]: (\<phi> \<circ> f)(x) = eQH, meaning \<phi>(f(x)) = eQH, meaning f(x) \<in> ker(\<phi>) = [H,H].\<close>
+  show ?thesis
+  proof (rule image_subsetI)
+    fix x assume hx: "x \<in> ?CG"
+    have "x \<in> G" using hx commutator_subgroup_is_normal[OF hG]
+      unfolding top1_normal_subgroup_on_def by (by100 blast)
+    have "x \<in> top1_group_kernel_on G ?eQH (?\<phi> \<circ> f)"
+      using hCG_sub_ker hx by (by100 blast)
+    hence "(?\<phi> \<circ> f) x = ?eQH"
+      unfolding top1_group_kernel_on_def by (by100 blast)
+    hence "?\<phi> (f x) = ?eQH" by (by100 simp)
+    have "f x \<in> H" using hf \<open>x \<in> G\<close> unfolding top1_group_hom_on_def by (by100 blast)
+    hence "f x \<in> top1_group_kernel_on H ?eQH ?\<phi>"
+      using \<open>?\<phi> (f x) = ?eQH\<close> unfolding top1_group_kernel_on_def by (by100 blast)
+    thus "f x \<in> ?CH" using hphi_ker by (by100 simp)
+  qed
+qed
+
+lemma surj_hom_image_commutator:
+  assumes hG: "top1_is_group_on G mulG eG invgG"
+      and hH: "top1_is_group_on H mulH eH invgH"
+      and hf: "top1_group_hom_on G mulG H mulH f"
+      and hsurj: "f ` G = H"
+  shows "f ` (top1_commutator_subgroup_on G mulG eG invgG)
+       = top1_commutator_subgroup_on H mulH eH invgH"
+proof (rule set_eqI, rule iffI)
+  let ?CG = "top1_commutator_subgroup_on G mulG eG invgG"
+  let ?CH = "top1_commutator_subgroup_on H mulH eH invgH"
+  fix y assume "y \<in> f ` ?CG"
+  thus "y \<in> ?CH" using hom_image_commutator_sub[OF hG hH hf] by (by100 blast)
+next
+  let ?CG = "top1_commutator_subgroup_on G mulG eG invgG"
+  let ?CH = "top1_commutator_subgroup_on H mulH eH invgH"
+  let ?commsH = "{top1_group_commutator_on mulH invgH x y | x y. x \<in> H \<and> y \<in> H}"
+  \<comment> \<open>Every H-commutator is in f(?CG).\<close>
+  have hcomms_in_image: "?commsH \<subseteq> f ` ?CG"
+  proof (rule subsetI, clarify)
+    fix h1 h2 assume hh1: "h1 \<in> H" and hh2: "h2 \<in> H"
+    from hsurj hh1 obtain g1 where hg1: "g1 \<in> G" "f g1 = h1" by (by100 blast)
+    from hsurj hh2 obtain g2 where hg2: "g2 \<in> G" "f g2 = h2" by (by100 blast)
+    \<comment> \<open>f([g1,g2]) = [h1,h2] and [g1,g2] \<in> [G,G].\<close>
+    have hinvg1: "invgG g1 \<in> G" using hG hg1(1) unfolding top1_is_group_on_def by (by100 blast)
+    have hinvg2: "invgG g2 \<in> G" using hG hg2(1) unfolding top1_is_group_on_def by (by100 blast)
+    have hg12: "mulG g1 g2 \<in> G" using hG hg1(1) hg2(1) unfolding top1_is_group_on_def by (by100 blast)
+    have hg12inv1: "mulG (mulG g1 g2) (invgG g1) \<in> G"
+      using hG hg12 hinvg1 unfolding top1_is_group_on_def by (by100 blast)
+    \<comment> \<open>f(commutator) = commutator of images.\<close>
+    have heq_unf: "f (mulG (mulG (mulG g1 g2) (invgG g1)) (invgG g2))
+        = mulH (mulH (mulH h1 h2) (invgH h1)) (invgH h2)"
+      using hf hg1 hg2 hinvg1 hinvg2 hg12 hg12inv1
+        hom_preserves_inv[OF hG hH hf hg1(1)]
+        hom_preserves_inv[OF hG hH hf hg2(1)]
+      unfolding top1_group_hom_on_def by (by5000 simp)
+    \<comment> \<open>[g1,g2] \<in> [G,G]: commutator is a generator of commutator subgroup.\<close>
+    have hcommsG_sub_G: "{top1_group_commutator_on mulG invgG x y | x y. x \<in> G \<and> y \<in> G} \<subseteq> G"
+    proof (rule subsetI, clarify)
+      fix x y assume "x \<in> G" "y \<in> G"
+      show "top1_group_commutator_on mulG invgG x y \<in> G"
+        unfolding top1_group_commutator_on_def
+        using hG \<open>x \<in> G\<close> \<open>y \<in> G\<close> unfolding top1_is_group_on_def by (by100 blast)
+    qed
+    have "top1_group_commutator_on mulG invgG g1 g2
+        \<in> {top1_group_commutator_on mulG invgG x y | x y. x \<in> G \<and> y \<in> G}"
+      using hg1(1) hg2(1) by (by100 blast)
+    hence hcomm_CG: "top1_group_commutator_on mulG invgG g1 g2 \<in> ?CG"
+      unfolding top1_commutator_subgroup_on_def
+      using subgroup_generated_contains[OF hG hcommsG_sub_G] by (by100 blast)
+    \<comment> \<open>f maps this commutator to [h1,h2].\<close>
+    have "f (top1_group_commutator_on mulG invgG g1 g2)
+        = top1_group_commutator_on mulH invgH h1 h2"
+      using heq_unf unfolding top1_group_commutator_on_def by (by100 simp)
+    thus "top1_group_commutator_on mulH invgH h1 h2 \<in> f ` ?CG"
+      using hcomm_CG by (by100 force)
+  qed
+  \<comment> \<open>f(?CG) is a subgroup of H containing all H-commutators, so [H,H] \<subseteq> f(?CG).\<close>
+  have hCG_grp: "top1_is_group_on ?CG mulG eG invgG"
+    using commutator_subgroup_is_normal[OF hG]
+    unfolding top1_normal_subgroup_on_def by (by100 blast)
+  have himage_sub: "f ` ?CG \<subseteq> H"
+  proof (rule image_subsetI)
+    fix x assume "x \<in> ?CG"
+    hence "x \<in> G" using commutator_subgroup_is_normal[OF hG]
+      unfolding top1_normal_subgroup_on_def by (by100 blast)
+    thus "f x \<in> H" using hf unfolding top1_group_hom_on_def by (by100 blast)
+  qed
+  have himage_grp: "top1_is_group_on (f ` ?CG) mulH eH invgH"
+  proof -
+    have heG_CG: "eG \<in> ?CG" using hCG_grp unfolding top1_is_group_on_def by (by100 blast)
+    have heH_im: "eH \<in> f ` ?CG"
+      using hom_preserves_id[OF hG hH hf] heG_CG by (by100 force)
+    have hmul: "\<forall>x \<in> f ` ?CG. \<forall>y \<in> f ` ?CG. mulH x y \<in> f ` ?CG"
+    proof (intro ballI)
+      fix fx fy assume "fx \<in> f ` ?CG" "fy \<in> f ` ?CG"
+      then obtain x y where hx: "x \<in> ?CG" "fx = f x" and hy: "y \<in> ?CG" "fy = f y"
+        by (by100 blast)
+      have hxG: "x \<in> G" using hx(1) commutator_subgroup_is_normal[OF hG]
+        unfolding top1_normal_subgroup_on_def by (by100 blast)
+      have hyG: "y \<in> G" using hy(1) commutator_subgroup_is_normal[OF hG]
+        unfolding top1_normal_subgroup_on_def by (by100 blast)
+      have "mulG x y \<in> ?CG" using hCG_grp hx(1) hy(1)
+        unfolding top1_is_group_on_def by (by100 blast)
+      moreover have "mulH fx fy = f (mulG x y)"
+        using hf hxG hyG hx(2) hy(2) unfolding top1_group_hom_on_def by (by100 simp)
+      ultimately show "mulH fx fy \<in> f ` ?CG" by (by100 force)
+    qed
+    have hinv: "\<forall>x \<in> f ` ?CG. invgH x \<in> f ` ?CG"
+    proof (intro ballI)
+      fix fx assume "fx \<in> f ` ?CG"
+      then obtain x where hx: "x \<in> ?CG" "fx = f x" by (by100 blast)
+      have hxG: "x \<in> G" using hx(1) commutator_subgroup_is_normal[OF hG]
+        unfolding top1_normal_subgroup_on_def by (by100 blast)
+      have "invgG x \<in> ?CG" using hCG_grp hx(1)
+        unfolding top1_is_group_on_def by (by100 blast)
+      moreover have "invgH fx = f (invgG x)"
+        using hom_preserves_inv[OF hG hH hf hxG] hx(2) by (by100 simp)
+      ultimately show "invgH fx \<in> f ` ?CG" by (by100 force)
+    qed
+    \<comment> \<open>Assoc, id, inv all inherited from H since f(?CG) \<subseteq> H.\<close>
+    have hassoc: "\<forall>x\<in>f ` ?CG. \<forall>y\<in>f ` ?CG. \<forall>z\<in>f ` ?CG.
+        mulH (mulH x y) z = mulH x (mulH y z)"
+      using hH himage_sub unfolding top1_is_group_on_def by (by100 blast)
+    have hid: "\<forall>x\<in>f ` ?CG. mulH eH x = x \<and> mulH x eH = x"
+      using hH himage_sub unfolding top1_is_group_on_def by (by100 blast)
+    have hinverse: "\<forall>x\<in>f ` ?CG. mulH (invgH x) x = eH \<and> mulH x (invgH x) = eH"
+      using hH himage_sub unfolding top1_is_group_on_def by (by100 blast)
+    show ?thesis unfolding top1_is_group_on_def
+      using heH_im hmul hinv hassoc hid hinverse by (by5000 fast)
+  qed
+  \<comment> \<open>By subgroup\_generated\_minimal: [H,H] = ⟨commsH⟩ \<subseteq> f(?CG).\<close>
+  have h_CH_eq: "?CH = top1_subgroup_generated_on H mulH eH invgH ?commsH"
+    unfolding top1_commutator_subgroup_on_def by (by100 simp)
+  have h_CH_sub: "?CH \<subseteq> f ` ?CG"
+    using subgroup_generated_minimal[OF hcomms_in_image himage_sub himage_grp]
+    h_CH_eq by (by100 simp)
+  fix y assume hy: "y \<in> ?CH"
+  thus "y \<in> f ` ?CG" using h_CH_sub by (by100 blast)
+qed
+
+lemma abelianization_transfer_iso:
+  assumes habel: "top1_is_abelianization_of H mulH eH invgH G mulG eG invgG \<phi>"
+      and hfab: "top1_is_free_abelian_group_full_on H mulH eH invgH \<iota>H S"
+      and hiso: "top1_groups_isomorphic_on G mulG G' mulG'"
+      and hG': "top1_is_group_on G' mulG' eG' invgG'"
+  shows "\<exists>\<phi>' \<iota>H'.
+      top1_is_abelianization_of H mulH eH invgH G' mulG' eG' invgG' \<phi>'
+    \<and> top1_is_free_abelian_group_full_on H mulH eH invgH \<iota>H' S"
+proof -
+  \<comment> \<open>Extract facts from habel.\<close>
+  have hH_abel: "top1_is_abelian_group_on H mulH eH invgH"
+    using habel unfolding top1_is_abelianization_of_def by (by100 blast)
+  have hG: "top1_is_group_on G mulG eG invgG"
+    using habel unfolding top1_is_abelianization_of_def by (by100 blast)
+  have hphi_hom: "top1_group_hom_on G mulG H mulH \<phi>"
+    using habel unfolding top1_is_abelianization_of_def by (by100 blast)
+  have hphi_surj: "\<phi> ` G = H"
+    using habel unfolding top1_is_abelianization_of_def by (by100 blast)
+  have hphi_ker: "top1_group_kernel_on G eH \<phi> = top1_commutator_subgroup_on G mulG eG invgG"
+    using habel unfolding top1_is_abelianization_of_def by (by100 blast)
+  \<comment> \<open>Extract f: G \<rightarrow> G' from hiso.\<close>
+  from hiso obtain f where hf_iso: "top1_group_iso_on G mulG G' mulG' f"
+    unfolding top1_groups_isomorphic_on_def by (by100 blast)
+  have hf_hom: "top1_group_hom_on G mulG G' mulG' f"
+    using hf_iso unfolding top1_group_iso_on_def by (by100 blast)
+  have hf_bij: "bij_betw f G G'"
+    using hf_iso unfolding top1_group_iso_on_def by (by100 blast)
+  \<comment> \<open>Get g = inv_into G f: G' \<rightarrow> G.\<close>
+  let ?g = "inv_into G f"
+  have hg_hom: "top1_group_hom_on G' mulG' G mulG ?g"
+    by (rule bij_hom_inv_is_hom[OF hG hG' hf_bij hf_hom])
+  have hg_bij: "bij_betw ?g G' G"
+    using bij_betw_inv_into[OF hf_bij] by (by100 simp)
+  have hg_surj: "?g ` G' = G"
+    using hg_bij unfolding bij_betw_def by (by100 blast)
+  \<comment> \<open>Define \<phi>' = \<phi> \<circ> g: G' \<rightarrow> H.\<close>
+  let ?\<phi>' = "\<phi> \<circ> ?g"
+  \<comment> \<open>\<phi>' is a homomorphism.\<close>
+  have hphi'_hom: "top1_group_hom_on G' mulG' H mulH ?\<phi>'"
+    using group_hom_comp[OF hg_hom hphi_hom] by (by100 simp)
+  \<comment> \<open>\<phi>' is surjective.\<close>
+  have hphi'_surj: "?\<phi>' ` G' = H"
+  proof -
+    have "?\<phi>' ` G' = \<phi> ` (?g ` G')" by (by100 auto)
+    also have "\<dots> = \<phi> ` G" using hg_surj by (by100 simp)
+    also have "\<dots> = H" using hphi_surj by (by100 simp)
+    finally show ?thesis .
+  qed
+  \<comment> \<open>ker(\<phi>') = [G', G']. Key step: g maps [G',G'] onto [G,G] (surjective iso).\<close>
+  have hphi'_ker: "top1_group_kernel_on G' eH ?\<phi>' = top1_commutator_subgroup_on G' mulG' eG' invgG'"
+  proof (rule set_eqI, rule iffI)
+    fix x' assume hx': "x' \<in> top1_group_kernel_on G' eH ?\<phi>'"
+    \<comment> \<open>(\<phi> \<circ> g)(x') = eH, so g(x') \<in> ker(\<phi>) = [G,G].\<close>
+    have "x' \<in> G'" using hx' unfolding top1_group_kernel_on_def by (by100 blast)
+    have "\<phi> (?g x') = eH" using hx' unfolding top1_group_kernel_on_def by (by100 simp)
+    have "?g x' \<in> G" using \<open>x' \<in> G'\<close> hg_hom unfolding top1_group_hom_on_def by (by100 blast)
+    hence "?g x' \<in> top1_group_kernel_on G eH \<phi>"
+      using \<open>\<phi> (?g x') = eH\<close> unfolding top1_group_kernel_on_def by (by100 blast)
+    hence "?g x' \<in> top1_commutator_subgroup_on G mulG eG invgG"
+      using hphi_ker by (by100 simp)
+    \<comment> \<open>g(x') \<in> [G,G]. Apply f: f(g(x')) = x' (since f \<circ> g = id on G').\<close>
+    \<comment> \<open>f([G,G]) = [G',G'] (surjective iso preserves commutator subgroup).\<close>
+    have hf_image_comm: "f ` (top1_commutator_subgroup_on G mulG eG invgG)
+        = top1_commutator_subgroup_on G' mulG' eG' invgG'"
+      by (rule surj_hom_image_commutator[OF hG hG' hf_hom])
+         (use hf_bij in \<open>unfold bij_betw_def, by100 blast\<close>)
+    have "f (?g x') \<in> top1_commutator_subgroup_on G' mulG' eG' invgG'"
+      using \<open>?g x' \<in> top1_commutator_subgroup_on G mulG eG invgG\<close>
+        hf_image_comm by (by100 blast)
+    moreover have "f (?g x') = x'"
+    proof -
+      have "?g x' \<in> G" using hg_hom \<open>x' \<in> G'\<close> unfolding top1_group_hom_on_def by (by100 blast)
+      have "f ` G = G'" using hf_bij unfolding bij_betw_def by (by100 blast)
+      hence "x' \<in> f ` G" using \<open>x' \<in> G'\<close> by (by100 blast)
+      thus ?thesis by (rule f_inv_into_f)
+    qed
+    ultimately show "x' \<in> top1_commutator_subgroup_on G' mulG' eG' invgG'"
+      by (by100 simp)
+  next
+    fix x' assume hx': "x' \<in> top1_commutator_subgroup_on G' mulG' eG' invgG'"
+    \<comment> \<open>x' \<in> [G',G']. g(x') \<in> g([G',G']) \<subseteq> [G,G] = ker(\<phi>).\<close>
+    have "x' \<in> G'" using hx' commutator_subgroup_is_normal[OF hG']
+      unfolding top1_normal_subgroup_on_def by (by100 blast)
+    have "?g x' \<in> ?g ` (top1_commutator_subgroup_on G' mulG' eG' invgG')"
+      using hx' by (by100 blast)
+    moreover have "?g ` (top1_commutator_subgroup_on G' mulG' eG' invgG')
+        \<subseteq> top1_commutator_subgroup_on G mulG eG invgG"
+      by (rule hom_image_commutator_sub[OF hG' hG hg_hom])
+    ultimately have "?g x' \<in> top1_commutator_subgroup_on G mulG eG invgG"
+      by (by100 blast)
+    hence "?g x' \<in> top1_group_kernel_on G eH \<phi>"
+      using hphi_ker by (by100 simp)
+    hence "\<phi> (?g x') = eH"
+      unfolding top1_group_kernel_on_def by (by100 blast)
+    thus "x' \<in> top1_group_kernel_on G' eH ?\<phi>'"
+      using \<open>x' \<in> G'\<close> unfolding top1_group_kernel_on_def by (by100 simp)
+  qed
+  \<comment> \<open>Assemble abelianization.\<close>
+  have "top1_is_abelianization_of H mulH eH invgH G' mulG' eG' invgG' ?\<phi>'"
+    unfolding top1_is_abelianization_of_def
+    using hH_abel hG' hphi'_hom hphi'_surj hphi'_ker by (by100 blast)
+  thus ?thesis using hfab by (by100 blast)
+qed
+
 theorem Theorem_75_3_H1_n_torus:
   fixes n :: nat and X :: "'a set" and TX :: "'a set set" and x0 :: 'a
   assumes "top1_is_n_fold_torus_on X TX n"
       and "x0 \<in> X"
-  shows "\<exists>(H::'h set) mulH eH invgH \<iota>_S \<phi>.
+  shows "\<exists>(H :: 'g set set) mulH eH invgH \<iota>_S \<phi>.
            top1_is_abelianization_of H mulH eH invgH
              (top1_fundamental_group_carrier X TX x0)
              (top1_fundamental_group_mul X TX x0)
@@ -10520,7 +10801,7 @@ theorem Theorem_75_3_H1_n_torus:
              (top1_fundamental_group_invg X TX x0)
              \<phi>
          \<and> top1_is_free_abelian_group_full_on H mulH eH invgH
-             (\<iota>_S::nat \<Rightarrow> 'h) {..<2*n}"
+             \<iota>_S ({..<2*n}::nat set)"
 proof -
   \<comment> \<open>Munkres 75.3: \<pi>_1(T_n) has presentation \<langle>a_1,...,b_n | [a_1,b_1]...[a_n,b_n]\<rangle>.
      Abelianizing: the commutator relation becomes trivial, so H_1(T_n) \<cong> Z^{2n}.\<close>
@@ -10534,61 +10815,42 @@ proof -
     using Theorem_74_3_fund_group_n_torus[OF assms] by (by100 auto)
   \<comment> \<open>Step 2: Abelianize. The presentation ⟨a₁,b₁,...|[a₁,b₁]...[aₙ,bₙ]⟩ abelianizes to
      the free abelian group on 2n generators (commutator relator becomes trivial).\<close>
-  have h_abelianize: "\<exists>(H::'h set) mulH eH invgH \<iota>_S \<phi>.
-      top1_is_abelianization_of H mulH eH invgH
-        (top1_fundamental_group_carrier X TX x0) (top1_fundamental_group_mul X TX x0)
-        (top1_fundamental_group_id X TX x0) (top1_fundamental_group_invg X TX x0) \<phi>
-      \<and> top1_is_free_abelian_group_full_on H mulH eH invgH (\<iota>_S::nat \<Rightarrow> 'h) {..<2*n}"
+  \<comment> \<open>Step 2: Apply presented\_comm\_relator\_abelianization + abelianization\_transfer\_iso.\<close>
+  from h_presentation obtain G0 :: "'g set" and mul0 e0 invg0
+    where hpres0: "top1_group_presented_by_on G0 mul0 e0 invg0 ({..<2*n}::nat set)
+        { concat (map (\<lambda>i. [(2*i, True), (2*i+1, True),
+                              (2*i, False), (2*i+1, False)]) [0..<n]) }"
+      and hiso0: "top1_groups_isomorphic_on G0 mul0
+          (top1_fundamental_group_carrier X TX x0) (top1_fundamental_group_mul X TX x0)"
+    by (by100 auto)
+  \<comment> \<open>Abelianize the presented group G0: Abel(G0) is free abelian on {..<2n}.\<close>
+  have habel0: "\<exists>(H :: 'g set set) mulH eH invgH \<phi> \<iota>H.
+      top1_is_abelianization_of H mulH eH invgH G0 mul0 e0 invg0 \<phi>
+    \<and> top1_is_free_abelian_group_full_on H mulH eH invgH \<iota>H ({..<2*n}::nat set)"
+    using hpres0[unfolded top1_group_presented_by_on_def]
+    apply (elim conjE exE)
+    apply (frule torus_relator_commutator, assumption+)
+    apply (drule(4) abelianization_of_presented_group)
+    apply (by100 blast)
+    done
+  \<comment> \<open>Extract the abelianization witnesses.\<close>
+  from habel0 obtain H0 :: "'g set set" and mulH0 eH0 invgH0 \<phi>0 \<iota>H0
+    where habel0': "top1_is_abelianization_of H0 mulH0 eH0 invgH0 G0 mul0 e0 invg0 \<phi>0"
+      and hfab0: "top1_is_free_abelian_group_full_on H0 mulH0 eH0 invgH0 \<iota>H0 ({..<2*n}::nat set)"
+    by (by100 blast)
+  \<comment> \<open>Transfer via G0 \<cong> \<pi>_1(X) using abelianization\_transfer\_iso.\<close>
+  have hpi1_grp: "top1_is_group_on
+      (top1_fundamental_group_carrier X TX x0) (top1_fundamental_group_mul X TX x0)
+      (top1_fundamental_group_id X TX x0) (top1_fundamental_group_invg X TX x0)"
   proof -
-    \<comment> \<open>Munkres Corollary 73.2 / 75.1: The relator is a product of commutators
-       [a₁,b₁]...[aₙ,bₙ]. In the abelianization, commutators vanish, so the
-       relator becomes trivial. Hence the abelianization = free abelian on 2n gens.
-       Formally: G ≅ π₁(X) has presentation ⟨S|R⟩ where S = {0,...,2n-1}.
-       G = F/N where F is free on S and N = ⟨⟨R⟩⟩.
-       The relator R is a product of commutators, so N ⊆ [F,F].
-       Hence G/[G,G] = (F/N)/[(F/N),(F/N)] ≅ F/[F,F] (third iso theorem).
-       By Theorem 69.4: F/[F,F] is free abelian on S.\<close>
-    \<comment> \<open>Step 1: Extract the free group F and quotient map π from the presentation.\<close>
-    \<comment> \<open>Step 2: The relator is in [F,F] (product of commutators).
-       Step 3: N \<subseteq> [F,F], so abelianization = F/[F,F] = free abelian on 2n gens.\<close>
-    \<comment> \<open>Extract F, π from the presentation and show ker(π) ⊆ [F,F].\<close>
-    \<comment> \<open>Then apply abelianization\_of\_presented\_group + transfer via G0 ≅ π₁(X).\<close>
-    \<comment> \<open>Step 1: Extract G0 (presented group) and its iso to \<pi>_1(X).\<close>
-    \<comment> \<open>Uses abelianization\_of\_presented\_group after extracting F, \<pi> from presentation
-       and showing relator \<in> [F,F]. Then transfer via G0 \<cong> \<pi>_1(X).\<close>
-    \<comment> \<open>The presented group G0 and its presentation exist from h\_presentation.
-       We use SOME to extract witnesses since obtain fails on deep existentials.\<close>
-    \<comment> \<open>Use h\_presentation to apply abelianization\_of\_presented\_group.\<close>
-    \<comment> \<open>Use Theorem\_74\_3 directly (not via h\_presentation) to get both conjuncts.\<close>
-    from Theorem_74_3_fund_group_n_torus[OF assms]
-    have hpres_iso: "\<exists>(G::'g set) mul e invg.
-        top1_group_presented_by_on G mul e invg ({..<2*n}::nat set)
-          { concat (map (\<lambda>i. [(2*i, True), (2*i+1, True),
-                                (2*i, False), (2*i+1, False)]) [0..<n]) }
-        \<and> top1_groups_isomorphic_on G mul
-            (top1_fundamental_group_carrier X TX x0)
-            (top1_fundamental_group_mul X TX x0)" by (by100 auto)
-    \<comment> \<open>From the presentation: G0 = F/N, with F free on S and N = ker(\<pi>).
-       The relator is \<Sigma>[a_i,b_i] (product of commutators), hence N \<subseteq> [F,F].
-       abelianization\_of\_presented\_group gives: abelianization of G0 is free abelian on S.
-       The iso G0 \<cong> \<pi>_1(X) transfers the abelianization.\<close>
-    \<comment> \<open>Prove universal: for ANY presented group with commutator relator that's iso to \<pi>_1,
-       the abelianization of \<pi>_1 is free abelian.\<close>
-    \<comment> \<open>Extract G0, verify hcomm (relator \<in> [F,F]), apply presented\_comm\_relator\_abelianization,
-       transfer abelianization via G0 \<cong> \<pi>_1(X).\<close>
-    \<comment> \<open>Use the apply-style approach: extract the presented group from hpres\_iso,
-       apply presented\_comm\_relator\_abelianization (which needs hcomm),
-       and transfer via the iso.\<close>
-    \<comment> \<open>The torus relator is a product of commutators, so it satisfies the hcomm condition
-       of presented\_comm\_relator\_abelianization. Once we have the abelianization of the
-       presented group G0, we transfer it to \<pi>_1(X) via the isomorphism.\<close>
-    \<comment> \<open>Extract the presented group from hpres\_iso, apply presented\_comm\_relator\_abelianization
-       with torus\_relator\_commutator, then transfer via the iso.\<close>
-    \<comment> \<open>Inline the full proof: extract G0 from hpres\_iso, unfold presentation,
-       apply torus\_relator\_commutator, then abelianization\_of\_presented\_group.\<close>
-    show ?thesis using hpres_iso sorry
+    have "is_topology_on X TX"
+      using assms(1) unfolding top1_is_n_fold_torus_on_def
+        top1_quotient_of_scheme_on_def is_topology_on_strict_def by (by100 blast)
+    thus ?thesis using assms(2)
+      by (rule top1_fundamental_group_is_group)
   qed
-  show ?thesis using h_abelianize by (by100 blast)
+  from abelianization_transfer_iso[OF habel0' hfab0 hiso0 hpi1_grp]
+  show ?thesis by (by100 blast)
 qed
 
 (** from \<S>75 Theorem 75.4: H_1(m-fold projective plane):

@@ -1,0 +1,36 @@
+Session 2026-05-21 (session D) - §75 Theorem 75.3 completion
+
+Starting: 46 sorrys, ~18000 lines, ~30s build
+
+Key achievements:
+
+1. PROVED hom_image_commutator_sub (0 sorry):
+   - If f: G → H is a group hom, then f([G,G]) ⊆ [H,H]
+   - Proof via quotient trick: compose with H → H/[H,H], use Lemma_69_3
+   - ~50 lines
+
+2. PROVED surj_hom_image_commutator (0 sorry):
+   - If f: G → H is a surjective group hom, then f([G,G]) = [H,H]
+   - ⊆ from hom_image_commutator_sub
+   - ⊇ by showing all H-commutators lift to G-commutators (surjectivity),
+     then using subgroup_generated_minimal
+   - ~100 lines
+
+3. PROVED abelianization_transfer_iso (0 sorry):
+   - If H is abelianization of G (free abelian on S) and G ≅ G',
+     then H is also abelianization of G' (with composed map φ' = φ ∘ f⁻¹)
+   - Uses bij_hom_inv_is_hom for the inverse iso
+   - Kernel proof: ker(φ') = f⁻¹(ker(φ)) = f⁻¹([G,G]) = [G',G']
+     via hom_image_commutator_sub + surj_hom_image_commutator
+   - Fixed statement: added hG' assumption, removed type-polymorphic H'
+   - ~100 lines
+
+4. PROVED Theorem_75_3_H1_n_torus (0 sorry):
+   - H₁(T_n) ≅ Z^{2n} (first homology of n-torus is free abelian of rank 2n)
+   - Proof: extract presented group G0 from Theorem_74_3, apply
+     presented_comm_relator_abelianization, transfer via abelianization_transfer_iso
+   - Fixed type: changed H from polymorphic 'h to concrete 'g set set
+   - Closed hpi1_grp via top1_fundamental_group_is_group + torus topology
+   - ~30 lines (main proof, excluding helper lemmas)
+
+End state: 44 sorrys, ~18100 lines, ~31s build
