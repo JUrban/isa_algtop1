@@ -7067,9 +7067,29 @@ proof -
     have hK_grp: "top1_is_group_on ?K mul e invg"
       using hK_free unfolding top1_is_free_abelian_group_full_on_def
         top1_is_abelian_group_on_def by (by100 blast)
-    have "card (top1_quotient_group_carrier_on G mul {mul g g | g. g \<in> G})
+    \<comment> \<open>Construct bijection G/2G \<cong> K/2K \<times> {False, True}.
+       For g \<in> G, project to K-component and parity bit.\<close>
+    let ?QG = "top1_quotient_group_carrier_on G mul {mul g g | g. g \<in> G}"
+    let ?QK = "top1_quotient_group_carrier_on ?K mul {mul g g | g. g \<in> ?K}"
+    \<comment> \<open>Key: every element g \<in> G is congruent mod 2G to either k or mul (iota s0) k for some k \<in> K.\<close>
+    have hrepr: "\<forall>g\<in>G. \<exists>k\<in>?K. \<exists>b::bool.
+        top1_group_coset_on G mul {mul g g | g. g \<in> G} g =
+        top1_group_coset_on G mul {mul g g | g. g \<in> G} (if b then mul (iota s0) k else k)"
+      sorry \<comment> \<open>Project: k = g \<cdot> invg(pow(\<iota>(s0), \<epsilon>(g))). Since pow(\<iota>(s0), \<epsilon>(g)) \<in> 2G when \<epsilon>(g) even,
+         and pow(\<iota>(s0), \<epsilon>(g)-1) shift for odd.\<close>
+    \<comment> \<open>The map K/2K \<times> {F,T} \<rightarrow> G/2G is injective (from K \<inter> 2G = 2K).\<close>
+    have hinj: "\<forall>k1\<in>?K. \<forall>k2\<in>?K. \<forall>b1 b2::bool.
+        top1_group_coset_on G mul {mul g g | g. g \<in> G} (if b1 then mul (iota s0) k1 else k1) =
+        top1_group_coset_on G mul {mul g g | g. g \<in> G} (if b2 then mul (iota s0) k2 else k2)
+        \<longrightarrow> b1 = b2 \<and> top1_group_coset_on ?K mul {mul g g | g. g \<in> ?K} k1 =
+            top1_group_coset_on ?K mul {mul g g | g. g \<in> ?K} k2"
+      sorry \<comment> \<open>Uses \<epsilon> to separate b1=b2 (\<epsilon> parity), then K \<inter> 2G = 2K for k1 \<equiv> k2.\<close>
+    \<comment> \<open>Cardinality: |QG| = |QK| \<times> |{F,T}| = 2 \<times> |QK|.\<close>
+    have "card ?QG = 2 * card ?QK"
+      using hrepr hinj sorry \<comment> \<open>Combine surjectivity (hrepr) + injectivity (hinj) \<rightarrow> bijection \<rightarrow> card.\<close>
+    thus "card (top1_quotient_group_carrier_on G mul {mul g g | g. g \<in> G})
        = 2 * card (top1_quotient_group_carrier_on ?K mul {mul g g | g. g \<in> ?K})"
-      sorry \<comment> \<open>Uses K \<inter> 2G = 2K + pow_even helpers for bijection.\<close>
+      by (by100 simp)
     hence "card (top1_quotient_group_carrier_on G mul {mul g g | g. g \<in> G}) = 2 * 2 ^ n"
       using hIH by (by100 simp)
     also have "\<dots> = 2 ^ Suc n" by (by100 simp)
