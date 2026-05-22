@@ -2558,9 +2558,65 @@ proof -
   qed
   \<comment> \<open>Step 3: Construct the continuous bijection \<psi>: P \<rightarrow> B^2.\<close>
   \<comment> \<open>This uses the radial projection from an interior point of P.\<close>
+  \<comment> \<open>Extract vertices for the radial projection construction.\<close>
+  from assms(1)[unfolded top1_is_polygonal_region_on_def]
+  obtain vx vy where
+    hdist: "\<forall>i<n. \<forall>j<n. i \<noteq> j \<longrightarrow> (vx i, vy i) \<noteq> (vx j, vy j)" and
+    hgp: "\<forall>k<n. \<not> (\<exists>coeffs. (\<forall>i<n. i \<noteq> k \<longrightarrow> coeffs i \<ge> 0)
+                        \<and> coeffs k = 0 \<and> (\<Sum>i<n. coeffs i) = 1
+                        \<and> vx k = (\<Sum>i<n. coeffs i * vx i)
+                        \<and> vy k = (\<Sum>i<n. coeffs i * vy i))" and
+    hP_eq: "P = {(x, y) | x y. \<exists>coeffs. (\<forall>i<n. coeffs i \<ge> 0) \<and> (\<Sum>i<n. coeffs i) = 1
+            \<and> x = (\<Sum>i<n. coeffs i * vx i) \<and> y = (\<Sum>i<n. coeffs i * vy i)}"
+    by (elim conjE exE) (rule that, assumption+)
+  \<comment> \<open>Centroid of vertices: p0 = (1/n * \<Sum> vx_i, 1/n * \<Sum> vy_i).\<close>
+  define cx where "cx = (\<Sum>i<n. vx i) / real n"
+  define cy where "cy = (\<Sum>i<n. vy i) / real n"
+  \<comment> \<open>The centroid is an interior point of P (strict convex combination).\<close>
+  have hc_in_P: "(cx, cy) \<in> P"
+  proof -
+    define c0 where "c0 = (\<lambda>i::nat. 1 / real n)"
+    have hc0ge: "\<forall>i<n. c0 i \<ge> 0" unfolding c0_def using assms(2) by (by100 simp)
+    have hc0sum: "(\<Sum>i<n. c0 i) = 1" unfolding c0_def using assms(2) by (by100 simp)
+    have hc0x: "(\<Sum>i<n. c0 i * vx i) = cx" unfolding c0_def cx_def
+      using assms(2) sum_divide_distrib[of vx "{..<n}" "real n", symmetric] by (by100 simp)
+    have hc0y: "(\<Sum>i<n. c0 i * vy i) = cy" unfolding c0_def cy_def
+      using assms(2) sum_divide_distrib[of vy "{..<n}" "real n", symmetric] by (by100 simp)
+    show ?thesis unfolding hP_eq using hc0ge hc0sum hc0x hc0y by (by5000 auto)
+  qed
+  \<comment> \<open>Boundary of P = union of edges (segments between consecutive vertices).\<close>
+  define BdP where "BdP = (\<Union>i<n.
+      {((1-t) * vx i + t * vx ((i+1) mod n),
+        (1-t) * vy i + t * vy ((i+1) mod n)) | t::real. 0 \<le> t \<and> t \<le> 1})"
+  \<comment> \<open>For each z \<in> P, z = (1-s)*centroid + s*b for unique b \<in> BdP, s \<in> [0,1].
+     Define \<psi>(z) = s * boundary\_to\_S1(b) where boundary\_to\_S1 maps edges
+     to equal arcs of S^1.\<close>
+  \<comment> \<open>Define boundary parameterization: edge i maps to arc [2\<pi>i/n, 2\<pi>(i+1)/n] of S^1.\<close>
+  define bdry_to_S1 where "bdry_to_S1 p = (
+      let i = (SOME i. i < n \<and> (\<exists>t. 0 \<le> t \<and> t \<le> 1 \<and>
+          p = ((1-t)*vx i + t*vx((i+1) mod n), (1-t)*vy i + t*vy((i+1) mod n))));
+          t = (SOME t. 0 \<le> t \<and> t \<le> 1 \<and>
+          p = ((1-t)*vx i + t*vx((i+1) mod n), (1-t)*vy i + t*vy((i+1) mod n)));
+          \<theta> = 2 * pi * (real i + t) / real n
+      in (cos \<theta>, sin \<theta>))" for p
+  \<comment> \<open>For z \<in> P, compute the radial parameter s and boundary point b.\<close>
+  define rad_param where "rad_param z = (if z = (cx, cy) then (0::real, (vx 0, vy 0))
+      else let d = (fst z - cx, snd z - cy);
+               s_max = (SOME s. s > 0 \<and> (cx + s * fst d, cy + s * snd d) \<in> BdP
+                   \<and> (\<forall>s'. s' > s \<longrightarrow> (cx + s' * fst d, cy + s' * snd d) \<notin> P));
+               s_cur = sqrt ((fst z - cx)^2 + (snd z - cy)^2) /
+                  sqrt ((s_max * fst d)^2 + (s_max * snd d)^2)
+           in (s_cur, (cx + s_max * fst d, cy + s_max * snd d)))" for z
+  define \<psi> where "\<psi> z = (let (s, b) = rad_param z in
+      (s * fst (bdry_to_S1 b), s * snd (bdry_to_S1 b)))" for z
   have "\<exists>\<psi>. continuous_on P \<psi> \<and> \<psi> ` P = top1_B2 \<and> inj_on \<psi> P"
-    sorry \<comment> \<open>Radial projection construction: pick interior point, project boundary to S^1,
-       extend linearly along rays. Continuity from piecewise-linear construction.\<close>
+  proof (rule exI[of _ \<psi>])
+    have h\<psi>_cont: "continuous_on P \<psi>" sorry
+    have h\<psi>_surj: "\<psi> ` P = top1_B2" sorry
+    have h\<psi>_inj: "inj_on \<psi> P" sorry
+    show "continuous_on P \<psi> \<and> \<psi> ` P = top1_B2 \<and> inj_on \<psi> P"
+      using h\<psi>_cont h\<psi>_surj h\<psi>_inj by (by100 blast)
+  qed
   \<comment> \<open>Step 4: Continuous bijection from compact to Hausdorff is homeomorphism.\<close>
   \<comment> \<open>Step 4: Apply Theorem 26.6 (compact + Hausdorff + continuous bijection = homeomorphism).\<close>
   from \<open>\<exists>\<psi>. continuous_on P \<psi> \<and> \<psi> ` P = top1_B2 \<and> inj_on \<psi> P\<close>
@@ -2681,7 +2737,23 @@ proof -
     moreover have "h = q \<circ> inv_into P \<psi>" unfolding h_def comp_def by (by100 simp)
     ultimately show ?thesis by (by100 simp)
   qed
-  have ha_A: "a \<in> A" sorry \<comment> \<open>a = q(v_0) \<in> q(Bd P) since v_0 is a vertex on Bd P.\<close>
+  have ha_A: "a \<in> A"
+  proof -
+    have h0_I: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+    have hlen_pos: "length scheme > 0" using assms(2) by (by100 linarith)
+    have "0 < length scheme" using hlen_pos .
+    have hv0_bd: "(vx 0, vy 0) \<in> BdP" unfolding BdP_def
+    proof -
+      have "((1-(0::real)) * vx 0 + 0 * vx (Suc 0 mod length scheme),
+             (1-0) * vy 0 + 0 * vy (Suc 0 mod length scheme)) = (vx 0, vy 0)"
+        by (by100 simp)
+      moreover have "(0::real) \<in> I_set" using h0_I .
+      ultimately show "(vx 0, vy 0) \<in> (\<Union>i<length scheme. {((1-t) * vx i + t * vx (Suc i mod length scheme),
+          (1-t) * vy i + t * vy (Suc i mod length scheme)) | t. t \<in> I_set})"
+        using hlen_pos h0_I by (by5000 force)
+    qed
+    thus ?thesis unfolding a_def A_def by (by100 blast)
+  qed
   have hh_homeo: "top1_homeomorphism_on (top1_B2 - top1_S1)
       (subspace_topology top1_B2 top1_B2_topology (top1_B2 - top1_S1))
       (X - A) (subspace_topology X TX (X - A)) h"
