@@ -589,9 +589,17 @@ proof -
                   using hG_grp \<open>mul pow_a (invg g0) \<in> G\<close> unfolding top1_is_group_on_def by (by100 blast)
                 finally show ?thesis .
               qed
-              ultimately show ?thesis
-                using \<open>mul (mul (invg k) k) (invg k) = mul (mul (mul pow_a (invg g0)) k) (invg k)\<close>
-                by (by100 simp)
+              ultimately have "invg k = mul pow_a (invg g0)"
+              proof -
+                assume h1: "mul (mul (invg k) k) (invg k) = invg k"
+                assume h2: "mul (mul (mul pow_a (invg g0)) k) (invg k) = mul pow_a (invg g0)"
+                have "invg k = mul (mul (mul pow_a (invg g0)) k) (invg k)"
+                  using h1 \<open>mul (mul (invg k) k) (invg k) = mul (mul (mul pow_a (invg g0)) k) (invg k)\<close>
+                  by (by100 simp)
+                also have "\<dots> = mul pow_a (invg g0)" using h2 .
+                finally show "invg k = mul pow_a (invg g0)" .
+              qed
+              thus ?thesis by (by100 simp)
             qed
             have hassoc: "\<forall>a\<in>G. \<forall>b\<in>G. \<forall>c\<in>G. mul (mul a b) c = mul a (mul b c)"
               using hG_grp unfolding top1_is_group_on_def by (by100 blast)
@@ -629,8 +637,9 @@ proof -
           from \<open>h \<in> ?twoK\<close> obtain h' where "h' \<in> ?K" "h = mul h' h'" by (by100 blast)
           have "h \<in> ?K" using hK_grp \<open>h' \<in> ?K\<close> \<open>h = mul h' h'\<close>
             unfolding top1_is_group_on_def by (by100 blast)
-          have hk'_K: "?k' \<in> ?K" using hK_grp hk_K \<open>h \<in> ?K\<close> \<open>?k' = mul k h\<close>
+          have "mul k h \<in> ?K" using hK_grp hk_K \<open>h \<in> ?K\<close>
             unfolding top1_is_group_on_def by (by100 blast)
+          have hk'_K: "?k' \<in> ?K" using \<open>mul k h \<in> ?K\<close> \<open>?k' = mul k h\<close> by (by100 simp)
           have hk'_G: "?k' \<in> G" using hk'_K by (by100 blast)
           \<comment> \<open>k' and k differ by h \<in> 2K \<subseteq> 2G, so coset\_G(k') = coset\_G(k).\<close>
           have "h \<in> ?twoG"

@@ -6806,7 +6806,7 @@ proof -
   have he_G: "e \<in> G" using hG_grp unfolding top1_is_group_on_def by (by100 blast)
   have "mul e e = e" using hG_grp he_G unfolding top1_is_group_on_def by (by100 blast)
   hence he_D: "e \<in> ?D" using he_G by (by5000 force)
-  \<comment> \<open>Closure under mul: (g\<^sup>2)(h\<^sup>2) = (gh)\<^sup>2 in abelian.\<close>
+  \<comment> \<open>Closure under mul: (g^2)(h^2) = (gh)^2 in abelian.\<close>
   have hmul_cl: "\<forall>x\<in>?D. \<forall>y\<in>?D. mul x y \<in> ?D"
   proof (intro ballI)
     fix x y assume "x \<in> ?D" "y \<in> ?D"
@@ -6841,7 +6841,7 @@ proof -
       using hassoc[OF hgxgy hgx(1) hgy(1)] by (by100 simp)
     finally show "mul x y \<in> ?D" using hgxgy by (by100 force)
   qed
-  \<comment> \<open>Closure under invg: invg(g\<^sup>2) = (invg g)\<^sup>2 in abelian.\<close>
+  \<comment> \<open>Closure under invg: invg(g^2) = (invg g)^2 in abelian.\<close>
   have hinv_cl: "\<forall>x\<in>?D. invg x \<in> ?D"
   proof (intro ballI)
     fix x assume "x \<in> ?D"
@@ -6849,7 +6849,7 @@ proof -
     have higx: "invg gx \<in> G" using hG_grp hgx(1) unfolding top1_is_group_on_def by (by100 blast)
     have higxigx: "mul (invg gx) (invg gx) \<in> G"
       using hG_grp higx unfolding top1_is_group_on_def by (by100 blast)
-    \<comment> \<open>(invg gx)\<^sup>2 \<cdot> gx\<^sup>2 = ((invg gx)\<cdot>gx)\<^sup>2 = e\<^sup>2 = e.\<close>
+    \<comment> \<open>(invg gx)^2 \<cdot> gx^2 = ((invg gx)\<cdot>gx)^2 = e^2 = e.\<close>
     have "mul (mul (invg gx) (invg gx)) (mul gx gx) = e"
     proof -
       have "mul (mul (invg gx) (invg gx)) (mul gx gx)
@@ -6886,7 +6886,7 @@ proof -
       finally show ?thesis .
     qed
     hence "mul (mul (invg gx) (invg gx)) x = e" using hgx(2) by (by100 simp)
-    \<comment> \<open>So invg x = (invg gx)\<^sup>2 (unique left inverse).\<close>
+    \<comment> \<open>So invg x = (invg gx)^2 (unique left inverse).\<close>
     have hx_G: "x \<in> G" using hD_sub \<open>x \<in> ?D\<close> by (by100 blast)
     have "invg x = mul (invg gx) (invg gx)"
     proof -
@@ -6915,11 +6915,19 @@ proof -
           using hG_grp higxigx unfolding top1_is_group_on_def by (by100 blast)
         finally show ?thesis .
       qed
-      ultimately show ?thesis
-        using \<open>mul (mul (invg x) x) (invg x) = mul (mul (mul (invg gx) (invg gx)) x) (invg x)\<close>
-        by (by100 simp)
+      ultimately have "invg x = mul (invg gx) (invg gx)"
+      proof -
+        assume h1: "mul (mul (invg x) x) (invg x) = invg x"
+        assume h2: "mul (mul (mul (invg gx) (invg gx)) x) (invg x) = mul (invg gx) (invg gx)"
+        have "invg x = mul (mul (mul (invg gx) (invg gx)) x) (invg x)"
+          using h1 \<open>mul (mul (invg x) x) (invg x) = mul (mul (mul (invg gx) (invg gx)) x) (invg x)\<close>
+          by (by100 simp)
+        also have "\<dots> = mul (invg gx) (invg gx)" using h2 .
+        finally show "invg x = mul (invg gx) (invg gx)" .
+      qed
+      thus ?thesis by (by100 simp)
     qed
-    thus "invg x \<in> ?D" using higx by (by100 force)
+    thus "invg x \<in> ?D" using higx by (by5000 force)
   qed
   \<comment> \<open>Assoc, id, inverse inherited from G.\<close>
   have hD_grp: "top1_is_group_on ?D mul e invg"

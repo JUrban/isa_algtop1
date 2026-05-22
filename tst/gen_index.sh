@@ -18,6 +18,8 @@ THEORIES=(
   ac/AlgTopCached.thy
   fib/AlgIsoFixedBase.thy
   fi/AlgIsoFixed.thy
+  k5/K5_nonplanar.thy
+  ag/AlgTopGroups.thy
   AlgTop.thy
 )
 
