@@ -4039,7 +4039,32 @@ proof -
     have hq_cont_Bd: "top1_continuous_map_on BdP
         (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) BdP)
         X TX q"
-      sorry \<comment> \<open>q continuous on P (quotient map), BdP \<subseteq> P, restriction continuous.\<close>
+    proof -
+      have hq_cont_P: "top1_continuous_map_on P ?TP X TX q"
+        using hq unfolding top1_quotient_map_on_def by (by100 blast)
+      have hBdP_sub2: "BdP \<subseteq> P"
+      proof (rule subsetI)
+        fix p assume "p \<in> BdP"
+        then obtain i t where hi: "i < length scheme" and ht: "t \<in> I_set"
+            and hp: "p = ((1-t) * vx i + t * vx (Suc i mod length scheme),
+                         (1-t) * vy i + t * vy (Suc i mod length scheme))"
+          unfolding BdP_def by (by5000 force)
+        have ht01: "0 \<le> t" "t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 auto)+
+        have hvi: "(vx i, vy i) \<in> P" using hverts hi by (by100 blast)
+        have hlen_pos: "length scheme > 0" using assms(2) by (by100 linarith)
+        have hi1: "Suc i mod length scheme < length scheme" using hlen_pos by (by100 simp)
+        have hvi1: "(vx (Suc i mod length scheme), vy (Suc i mod length scheme)) \<in> P"
+          using hverts hi1 by (by100 blast)
+        show "p \<in> P" using polygonal_region_convex_combo[OF hP hlen3 hvi hvi1 ht01(1) ht01(2)]
+          hp by (by100 simp)
+      qed
+      from top1_continuous_map_on_restrict_domain_simple[OF hq_cont_P hBdP_sub2]
+      have "top1_continuous_map_on BdP (subspace_topology P ?TP BdP) X TX q" .
+      moreover have "subspace_topology P ?TP BdP =
+          subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) BdP"
+        using subspace_topology_trans[OF hBdP_sub2] by (by100 simp)
+      ultimately show ?thesis by (by100 simp)
+    qed
     \<comment> \<open>A = q(BdP) is path-connected (continuous image of path-connected).\<close>
     show ?thesis sorry \<comment> \<open>Apply top1\_path\_connected\_continuous\_image.\<close>
   qed
