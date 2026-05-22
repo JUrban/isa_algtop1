@@ -3964,10 +3964,24 @@ proof -
   define a where "a = q (vx 0, vy 0)"
   \<comment> \<open>Step 5: Verify all CW data properties.\<close>
   have hA_closed: "closedin_on X TX A"
-    sorry \<comment> \<open>A = q(BdP). BdP compact (finite union of segments). q continuous (quotient map).
-       top1\_compact\_on image of compact under continuous is compact.
-       Compact subset of Hausdorff is closed (closedin\_on).
-       Requires bridging between R² compact/closed and custom topology.\<close>
+  proof -
+    \<comment> \<open>Use compact\_hausdorff\_continuous\_closed\_map: compact P, Hausdorff X,
+       continuous q, closedin BdP \<Rightarrow> closedin A = q(BdP).\<close>
+    have hP_compact_top: "top1_compact_on P ?TP"
+      using polygon_homeomorphic_to_disk[OF hP hlen3] sorry \<comment> \<open>Need compact P from the homeomorphism chain.\<close>
+    have hX_strict: "is_topology_on_strict X TX"
+      using assms(1) unfolding top1_quotient_of_scheme_on_def by (by100 blast)
+    have hX_haus: "is_hausdorff_on X TX"
+      sorry \<comment> \<open>X Hausdorff: follows from the scheme quotient being a compact Hausdorff space
+         (Theorem 74.1). Cannot use Theorem\_74\_1 directly (forward reference).
+         The proof is available in the Theorem\_74\_1 proof below.\<close>
+    have hq_cont: "top1_continuous_map_on P ?TP X TX q"
+      using hq unfolding top1_quotient_map_on_def by (by100 blast)
+    have hBdP_closed: "closedin_on P ?TP BdP"
+      sorry \<comment> \<open>BdP = finite union of compact segments, hence closed in P.\<close>
+    from compact_hausdorff_continuous_closed_map[OF hP_compact_top hX_haus hq_cont hBdP_closed]
+    show ?thesis unfolding A_def .
+  qed
   have hA_pc: "top1_path_connected_on A (subspace_topology X TX A)"
     sorry \<comment> \<open>A = q(Bd P) is path-connected: edges are paths, all vertices identified.\<close>
   have hh_cont: "top1_continuous_map_on top1_B2 top1_B2_topology X TX h"
