@@ -3485,8 +3485,16 @@ proof -
         let ?vi1 = "(i+1) mod n"
         let ?D = "cross2 (vx i - cx, vy i - cy) (vx ?vi1 - cx, vy ?vi1 - cy)"
         \<comment> \<open>D > 0 for convex polygon with counterclockwise vertices from centroid.\<close>
-        have hD_ne: "?D \<noteq> 0"
-          sorry \<comment> \<open>v_i, v_{i+1}, c non-degenerate triangle (convex position).\<close>
+        \<comment> \<open>Case split: D = 0 (degenerate: z on line through c, v_i) or D \<noteq> 0 (use Cramer).\<close>
+        show ?thesis
+        proof (cases "?D = 0")
+          case True \<comment> \<open>D = 0: v_i-c and v_{i+1}-c are parallel.\<close>
+          \<comment> \<open>From hpos and hneg with D=0: both cross2 = 0, so z-c || v_i-c.
+             z = c + s*(v_i - c) for some s > 0. Since z \<in> P and v_i on boundary: s \<le> 1.
+             So z = (1-s)*c + s*v_i + 0*v_{i+1} is in cone_i.\<close>
+          show ?thesis sorry
+        next
+          case hD_ne: False \<comment> \<open>D \<noteq> 0: use Cramer's rule.\<close>
         \<comment> \<open>\<beta>' = cross2(z-c, v_{i+1}-c) / D, \<gamma>' = cross2(v_i-c, z-c) / D.\<close>
         define \<beta>' where "\<beta>' = cross2 (fst z - cx, snd z - cy) (vx ?vi1 - cx, vy ?vi1 - cy) / ?D"
         define \<gamma>' where "\<gamma>' = cross2 (vx i - cx, vy i - cy) (fst z - cx, snd z - cy) / ?D"
@@ -3679,6 +3687,7 @@ proof -
               \<and> snd z = (1 - s) * cy + s * snd b"
             using hs hzx_eq hzy_eq by (by100 blast)
         qed
+        qed \<comment> \<open>End of case split D=0 / D\<noteq>0.\<close>
       qed
       then obtain s where hs: "0 < s" "s \<le> 1"
           and hzx: "fst z = (1-s) * cx + s * fst b"
