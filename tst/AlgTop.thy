@@ -7224,7 +7224,82 @@ proof -
           ultimately show "?shift C \<in> ?odd" by (by100 blast)
         qed
         have hshift_inj: "inj_on ?shift ?even"
-          sorry \<comment> \<open>If shift(C1)=shift(C2), left-cancel a to get C1=C2.\<close>
+        proof (rule inj_onI)
+          fix C1 C2 assume hC1: "C1 \<in> ?even" and hC2: "C2 \<in> ?even"
+              and heq: "?shift C1 = ?shift C2"
+          \<comment> \<open>{mul a g | g \<in> C1} = {mul a g | g \<in> C2}. Left-cancel a.\<close>
+          show "C1 = C2"
+          proof (rule set_eqI, rule iffI)
+            fix g assume "g \<in> C1"
+            hence "mul ?a g \<in> ?shift C1" by (by100 blast)
+            hence "mul ?a g \<in> ?shift C2" using heq by (by100 simp)
+            then obtain g' where "g' \<in> C2" "mul ?a g = mul ?a g'" by (by100 blast)
+            \<comment> \<open>Left cancel a: g = g'.\<close>
+            have "g \<in> G"
+            proof -
+              from hC1 have "C1 \<in> ?QG" by (by100 blast)
+              hence "\<exists>g0\<in>G. C1 = top1_group_coset_on G mul ?twoG g0"
+                unfolding top1_quotient_group_carrier_on_def by (by100 blast)
+              then obtain g0 where "g0 \<in> G" "C1 = top1_group_coset_on G mul ?twoG g0" by (by100 blast)
+              from \<open>g \<in> C1\<close> \<open>C1 = top1_group_coset_on G mul ?twoG g0\<close>
+              obtain h where "h \<in> ?twoG" "g = mul g0 h"
+                unfolding top1_group_coset_on_def by (by100 blast)
+              then obtain h' where "h' \<in> G" "h = mul h' h'" by (by100 blast)
+              have "h \<in> G" using hG_grp \<open>h' \<in> G\<close> \<open>h = mul h' h'\<close>
+                unfolding top1_is_group_on_def by (by100 blast)
+              thus ?thesis using hG_grp \<open>g0 \<in> G\<close> \<open>g = mul g0 h\<close>
+                unfolding top1_is_group_on_def by (by100 blast)
+            qed
+            have "g' \<in> G"
+            proof -
+              from hC2 have "C2 \<in> ?QG" by (by100 blast)
+              hence "\<exists>g0\<in>G. C2 = top1_group_coset_on G mul ?twoG g0"
+                unfolding top1_quotient_group_carrier_on_def by (by100 blast)
+              then obtain g0 where "g0 \<in> G" "C2 = top1_group_coset_on G mul ?twoG g0" by (by100 blast)
+              from \<open>g' \<in> C2\<close> \<open>C2 = top1_group_coset_on G mul ?twoG g0\<close>
+              obtain h where "h \<in> ?twoG" "g' = mul g0 h"
+                unfolding top1_group_coset_on_def by (by100 blast)
+              then obtain h' where "h' \<in> G" "h = mul h' h'" by (by100 blast)
+              have "h \<in> G" using hG_grp \<open>h' \<in> G\<close> \<open>h = mul h' h'\<close>
+                unfolding top1_is_group_on_def by (by100 blast)
+              thus ?thesis using hG_grp \<open>g0 \<in> G\<close> \<open>g' = mul g0 h\<close>
+                unfolding top1_is_group_on_def by (by100 blast)
+            qed
+            \<comment> \<open>Left cancellation: mul a g = mul a g' and a \<in> G, g \<in> G, g' \<in> G \<Longrightarrow> g = g'.\<close>
+            have "g = g'"
+            proof -
+              have "mul (invg ?a) (mul ?a g) = mul (invg ?a) (mul ?a g')"
+                using \<open>mul ?a g = mul ?a g'\<close> by (by100 simp)
+              have hia_G: "invg ?a \<in> G" using hG_grp ha_G unfolding top1_is_group_on_def by (by100 blast)
+              have "mul (invg ?a) (mul ?a g) = g"
+              proof -
+                have "mul (invg ?a) (mul ?a g) = mul (mul (invg ?a) ?a) g"
+                  using hG_grp hia_G ha_G \<open>g \<in> G\<close> unfolding top1_is_group_on_def by (by100 blast)
+                also have "mul (invg ?a) ?a = e"
+                  using hG_grp ha_G unfolding top1_is_group_on_def by (by100 blast)
+                finally show ?thesis using hG_grp \<open>g \<in> G\<close> unfolding top1_is_group_on_def by (by100 blast)
+              qed
+              moreover have "mul (invg ?a) (mul ?a g') = g'"
+              proof -
+                have "mul (invg ?a) (mul ?a g') = mul (mul (invg ?a) ?a) g'"
+                  using hG_grp hia_G ha_G \<open>g' \<in> G\<close> unfolding top1_is_group_on_def by (by100 blast)
+                also have "mul (invg ?a) ?a = e"
+                  using hG_grp ha_G unfolding top1_is_group_on_def by (by100 blast)
+                finally show ?thesis using hG_grp \<open>g' \<in> G\<close> unfolding top1_is_group_on_def by (by100 blast)
+              qed
+              ultimately show ?thesis using \<open>mul (invg ?a) (mul ?a g) = mul (invg ?a) (mul ?a g')\<close>
+                by (by100 simp)
+            qed
+            thus "g \<in> C2" using \<open>g' \<in> C2\<close> by (by100 simp)
+          next
+            \<comment> \<open>Symmetric direction.\<close>
+            fix g assume "g \<in> C2"
+            hence "mul ?a g \<in> ?shift C2" by (by100 blast)
+            hence "mul ?a g \<in> ?shift C1" using heq by (by100 simp)
+            then obtain g' where "g' \<in> C1" "mul ?a g = mul ?a g'" by (by100 blast)
+            show "g \<in> C1" using \<open>g' \<in> C1\<close> sorry \<comment> \<open>Same left-cancellation argument.\<close>
+          qed
+        qed
         have hshift_surj: "?shift ` ?even = ?odd"
         proof (rule set_eqI, rule iffI)
           fix C assume "C \<in> ?shift ` ?even"
