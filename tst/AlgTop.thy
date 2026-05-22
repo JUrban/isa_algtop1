@@ -2354,6 +2354,17 @@ qed
 
 text \<open>A convex polygon in R^2 is homeomorphic to B^2 (the closed unit disk).
   This is a standard topology fact (radial projection from centroid).\<close>
+text \<open>Continuous image of path-connected is path-connected.\<close>
+lemma top1_path_connected_continuous_image:
+  assumes "top1_path_connected_on X TX"
+      and "top1_continuous_map_on X TX Y TY f"
+      and "\<forall>x \<in> X. f x \<in> Y"
+      and "f ` X = Z" and "Z \<subseteq> Y"
+      and "TZ = subspace_topology Y TY Z"
+  shows "top1_path_connected_on Z TZ"
+  sorry \<comment> \<open>Standard: for a,b \<in> Z, pick preimages x,y \<in> X. Path \<gamma> from x to y in X
+     gives path f\<circ>\<gamma> from a to b in Z. Needs top1\_is\_path\_on composition lemma.\<close>
+
 lemma polygonal_region_convex_combo:
   assumes "top1_is_polygonal_region_on P n" and "n \<ge> 3"
       and "x \<in> P" and "y \<in> P" and "0 \<le> t" and "t \<le> 1"
@@ -4018,7 +4029,20 @@ proof -
     show ?thesis unfolding A_def .
   qed
   have hA_pc: "top1_path_connected_on A (subspace_topology X TX A)"
-    sorry \<comment> \<open>A = q(Bd P) is path-connected: edges are paths, all vertices identified.\<close>
+  proof -
+    \<comment> \<open>BdP is path-connected (polygon boundary is a cycle of edges).\<close>
+    have hBdP_pc: "top1_path_connected_on BdP (subspace_topology UNIV
+        (product_topology_on top1_open_sets top1_open_sets) BdP)"
+      sorry \<comment> \<open>BdP = cycle of line segments. Each segment is a path (continuous image of [0,1]).
+         Consecutive segments share vertices. All connected.\<close>
+    \<comment> \<open>q restricted to BdP is continuous: BdP \<subseteq> P, q continuous on P.\<close>
+    have hq_cont_Bd: "top1_continuous_map_on BdP
+        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) BdP)
+        X TX q"
+      sorry \<comment> \<open>q continuous on P (quotient map), BdP \<subseteq> P, restriction continuous.\<close>
+    \<comment> \<open>A = q(BdP) is path-connected (continuous image of path-connected).\<close>
+    show ?thesis sorry \<comment> \<open>Apply top1\_path\_connected\_continuous\_image.\<close>
+  qed
   have hh_cont: "top1_continuous_map_on top1_B2 top1_B2_topology X TX h"
   proof -
     have hq_cont: "top1_continuous_map_on P ?TP X TX q"
