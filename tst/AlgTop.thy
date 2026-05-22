@@ -7168,7 +7168,14 @@ proof -
           unfolding top1_quotient_group_carrier_on_def by (by100 blast)
         \<comment> \<open>g0 has even \<epsilon> (from C being even and \<epsilon>-coset parity).\<close>
         have "even (\<epsilon> g0)"
-          sorry \<comment> \<open>From hC\_even + \<epsilon>-coset parity constancy.\<close>
+        proof -
+          from hC_even obtain g1 where "g1 \<in> C" "even (\<epsilon> g1)" by (by100 blast)
+          from \<open>g1 \<in> C\<close> hg0(2) obtain h where "h \<in> ?twoG" "g1 = mul g0 h"
+            unfolding top1_group_coset_on_def by (by100 blast)
+          have "even (\<epsilon> g0) = even (\<epsilon> g1)"
+            using heps_coset[OF hg0(1) \<open>h \<in> ?twoG\<close>] \<open>g1 = mul g0 h\<close> by (by100 simp)
+          thus ?thesis using \<open>even (\<epsilon> g1)\<close> by (by100 simp)
+        qed
         \<comment> \<open>Project: k = g0 \<cdot> invg(a^{\<epsilon>(g0)}) where a^{\<epsilon>(g0)} \<in> 2G.\<close>
         \<comment> \<open>Then k \<in> K and coset\_G(k) = coset\_G(g0) = C.\<close>
         \<comment> \<open>Projection: k = g0 \<cdot> invg(pow(a, |\<epsilon>(g0)|)) \<in> K, coset\_G(k) = C.\<close>
