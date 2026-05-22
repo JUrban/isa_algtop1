@@ -2185,7 +2185,108 @@ proof -
         by (elim conjE exE) (rule that, assumption+)
       \<comment> \<open>P is bounded: convex combinations of bounded coords are bounded.\<close>
       define M where "M = 1 + Max ((\<lambda>i. max (abs (vx i)) (abs (vy i))) ` {..<n})"
-      have hP_bdd: "P \<subseteq> {-M..M} \<times> {-M..M}" sorry
+      have hP_bdd: "P \<subseteq> {-M..M} \<times> {-M..M}"
+      proof (rule subsetI)
+        fix p assume "p \<in> P"
+        obtain x y where hp: "p = (x, y)" by (cases p) (by100 blast)
+        from \<open>p \<in> P\<close> hp hP
+        have "\<exists>coeffs. (\<forall>i<n. coeffs i \<ge> 0) \<and> (\<Sum>i<n. coeffs i) = 1
+              \<and> x = (\<Sum>i<n. coeffs i * vx i) \<and> y = (\<Sum>i<n. coeffs i * vy i)"
+          by (by5000 auto)
+        then obtain coeffs where
+          hcge: "\<forall>i<n. coeffs i \<ge> 0" and hcsum: "(\<Sum>i<n. coeffs i) = 1"
+          and hx: "x = (\<Sum>i<n. coeffs i * vx i)" and hy: "y = (\<Sum>i<n. coeffs i * vy i)"
+          by (by100 blast)
+        have hn_pos: "n > 0" using assms(2) by (by100 simp)
+        have hM_ge: "\<And>i. i < n \<Longrightarrow> abs (vx i) \<le> M \<and> abs (vy i) \<le> M"
+        proof -
+          fix i assume "i < n"
+          have hfin: "finite ((\<lambda>i. max (abs (vx i)) (abs (vy i))) ` {..<n})" by (by100 blast)
+          have hne: "(\<lambda>i. max (abs (vx i)) (abs (vy i))) ` {..<n} \<noteq> {}"
+            using hn_pos by (by100 blast)
+          have hin: "max (abs (vx i)) (abs (vy i)) \<in> (\<lambda>i. max (abs (vx i)) (abs (vy i))) ` {..<n}"
+            using \<open>i < n\<close> by (by100 blast)
+          have "max (abs (vx i)) (abs (vy i)) \<le> Max ((\<lambda>i. max (abs (vx i)) (abs (vy i))) ` {..<n})"
+            by (rule Max_ge[OF hfin hin])
+          also have "\<dots> \<le> M" unfolding M_def by (by100 simp)
+          finally show "abs (vx i) \<le> M \<and> abs (vy i) \<le> M" by (by100 simp)
+        qed
+        \<comment> \<open>Bound x: |x| = |\<Sum> c_i * vx_i| \<le> \<Sum> |c_i * vx_i| \<le> \<Sum> c_i * M = M.\<close>
+        have hx_bdd: "x \<in> {-M..M}"
+        proof -
+          have hci_vx: "\<And>i. i < n \<Longrightarrow> coeffs i * vx i \<le> coeffs i * M"
+          proof -
+            fix i assume "i < n"
+            have "vx i \<le> M" using hM_ge[OF \<open>i < n\<close>] by (by100 linarith)
+            moreover have "0 \<le> coeffs i" using hcge \<open>i < n\<close> by (by100 blast)
+            ultimately show "coeffs i * vx i \<le> coeffs i * M"
+              by (rule mult_left_mono)
+          qed
+          hence "x \<le> (\<Sum>i<n. coeffs i * M)"
+            unfolding hx using sum_mono[of "{..<n}" "\<lambda>i. coeffs i * vx i" "\<lambda>i. coeffs i * M"]
+            by (by100 simp)
+          also have "\<dots> = M * (\<Sum>i<n. coeffs i)"
+            using sum_distrib_right[of coeffs "{..<n}" M, symmetric]
+            by (by100 simp)
+          also have "\<dots> = M" using hcsum by (by100 simp)
+          finally have h1: "x \<le> M" .
+          have "\<And>i. i < n \<Longrightarrow> coeffs i * (- M) \<le> coeffs i * vx i"
+          proof -
+            fix i assume "i < n"
+            have "- M \<le> vx i" using hM_ge[OF \<open>i < n\<close>] by (by100 linarith)
+            moreover have "0 \<le> coeffs i" using hcge \<open>i < n\<close> by (by100 blast)
+            ultimately show "coeffs i * (- M) \<le> coeffs i * vx i"
+              by (rule mult_left_mono)
+          qed
+          hence hlo: "(\<Sum>i<n. coeffs i * (- M)) \<le> (\<Sum>i<n. coeffs i * vx i)"
+            using sum_mono[of "{..<n}" "\<lambda>i. coeffs i * (- M)" "\<lambda>i. coeffs i * vx i"]
+            by (by100 simp)
+          have "(\<Sum>i<n. coeffs i * (- M)) = (- M) * (\<Sum>i<n. coeffs i)"
+            using sum_distrib_right[of coeffs "{..<n}" "- M", symmetric]
+            by (by100 simp)
+          also have "\<dots> = - M" using hcsum by (by100 simp)
+          finally have "- M \<le> x" unfolding hx using hlo by (by100 linarith)
+          thus ?thesis using h1 by (by100 simp)
+        qed
+        \<comment> \<open>Bound y: symmetric to x.\<close>
+        have hy_bdd: "y \<in> {-M..M}"
+        proof -
+          have "\<And>i. i < n \<Longrightarrow> coeffs i * vy i \<le> coeffs i * M"
+          proof -
+            fix i assume "i < n"
+            have "vy i \<le> M" using hM_ge[OF \<open>i < n\<close>] by (by100 linarith)
+            moreover have "0 \<le> coeffs i" using hcge \<open>i < n\<close> by (by100 blast)
+            ultimately show "coeffs i * vy i \<le> coeffs i * M"
+              by (rule mult_left_mono)
+          qed
+          hence "y \<le> (\<Sum>i<n. coeffs i * M)"
+            unfolding hy using sum_mono[of "{..<n}" "\<lambda>i. coeffs i * vy i" "\<lambda>i. coeffs i * M"]
+            by (by100 simp)
+          also have "\<dots> = M * (\<Sum>i<n. coeffs i)"
+            using sum_distrib_right[of coeffs "{..<n}" M, symmetric]
+            by (by100 simp)
+          also have "\<dots> = M" using hcsum by (by100 simp)
+          finally have h1: "y \<le> M" .
+          have "\<And>i. i < n \<Longrightarrow> coeffs i * (- M) \<le> coeffs i * vy i"
+          proof -
+            fix i assume "i < n"
+            have "- M \<le> vy i" using hM_ge[OF \<open>i < n\<close>] by (by100 linarith)
+            moreover have "0 \<le> coeffs i" using hcge \<open>i < n\<close> by (by100 blast)
+            ultimately show "coeffs i * (- M) \<le> coeffs i * vy i"
+              by (rule mult_left_mono)
+          qed
+          hence hlo: "(\<Sum>i<n. coeffs i * (- M)) \<le> (\<Sum>i<n. coeffs i * vy i)"
+            using sum_mono[of "{..<n}" "\<lambda>i. coeffs i * (- M)" "\<lambda>i. coeffs i * vy i"]
+            by (by100 simp)
+          have "(\<Sum>i<n. coeffs i * (- M)) = (- M) * (\<Sum>i<n. coeffs i)"
+            using sum_distrib_right[of coeffs "{..<n}" "- M", symmetric]
+            by (by100 simp)
+          also have "\<dots> = - M" using hcsum by (by100 simp)
+          finally have "- M \<le> y" unfolding hy using hlo by (by100 linarith)
+          thus ?thesis using h1 by (by100 simp)
+        qed
+        show "p \<in> {-M..M} \<times> {-M..M}" using hp hx_bdd hy_bdd by (by100 blast)
+      qed
       \<comment> \<open>P is closed: limit of convex combos is a convex combo (sequential closedness).\<close>
       have hP_closed: "closed P" sorry
       from closed_subset_compact[OF compact_Icc_Times hP_closed hP_bdd]
