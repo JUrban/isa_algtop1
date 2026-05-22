@@ -10564,24 +10564,7 @@ proof -
        with torus\_relator\_commutator, then transfer via the iso.\<close>
     \<comment> \<open>Inline the full proof: extract G0 from hpres\_iso, unfold presentation,
        apply torus\_relator\_commutator, then abelianization\_of\_presented\_group.\<close>
-    from hpres_iso obtain G0 :: "'g set" and mul0 e0 invg0
-      where hpres0: "top1_group_presented_by_on G0 mul0 e0 invg0 ({..<2*n}::nat set)
-          { concat (map (\<lambda>i. [(2*i, True), (2*i+1, True),
-                                (2*i, False), (2*i+1, False)]) [0..<n]) }"
-        and hiso0: "top1_groups_isomorphic_on G0 mul0
-            (top1_fundamental_group_carrier X TX x0)
-            (top1_fundamental_group_mul X TX x0)"
-      sorry
-    have habel0: "\<exists>(H :: 'g set set) mulH eH invgH \<phi> \<iota>H.
-        top1_is_abelianization_of H mulH eH invgH G0 mul0 e0 invg0 \<phi>
-      \<and> top1_is_free_abelian_group_full_on H mulH eH invgH \<iota>H ({..<2*n}::nat set)"
-      using hpres0[unfolded top1_group_presented_by_on_def]
-      apply (elim conjE exE)
-      apply (frule torus_relator_commutator, assumption+)
-      apply (drule(4) abelianization_of_presented_group)
-      apply (by100 blast)
-      done
-    show ?thesis using habel0 hiso0 sorry
+    show ?thesis using hpres_iso sorry
   qed
   show ?thesis using h_abelianize by (by100 blast)
 qed
