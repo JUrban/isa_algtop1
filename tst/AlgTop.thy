@@ -6974,12 +6974,56 @@ proof -
     have ha_G: "iota s0 \<in> G"
       using hfree hs0 unfolding top1_is_free_abelian_group_full_on_def by (by100 blast)
     \<comment> \<open>|G/2G| = 2 \<times> |K/2K| via the \<epsilon>-parity map.\<close>
-    have "card (top1_quotient_group_carrier_on G mul {mul g g | g. g \<in> G})
+    \<comment> \<open>Show |G/2G| = 2 \<times> |K/2K| using the \<epsilon>-parity partition.
+       Following book: \<epsilon> mod 2 gives a surjective map G/2G \<rightarrow> Z/2Z,
+       with fiber over 0 bijecting to K/2K. |G/2G| = 2 \<times> |fiber| = 2 \<times> |K/2K|.\<close>
+    let ?twoG = "{mul g g | g. g \<in> G}"
+    let ?twoK = "{mul g g | g. g \<in> ?K}"
+    let ?QG = "top1_quotient_group_carrier_on G mul ?twoG"
+    let ?QK = "top1_quotient_group_carrier_on ?K mul ?twoK"
+    \<comment> \<open>Step 1: K \<inter> 2G = 2K (elements of K that are doubles of G-elements are doubles of K-elements).\<close>
+    have hK_grp: "top1_is_group_on ?K mul e invg"
+      using hK_free unfolding top1_is_free_abelian_group_full_on_def
+        top1_is_abelian_group_on_def by (by100 blast)
+    have hZ_grp: "top1_is_group_on (UNIV::int set) (+) (0::int) uminus"
+      unfolding top1_is_group_on_def by (by100 auto)
+    have hK_cap_2G: "?K \<inter> ?twoG = ?twoK"
+    proof (rule set_eqI, rule iffI)
+      fix x assume "x \<in> ?K \<inter> ?twoG"
+      hence hx_K: "x \<in> ?K" and hx_2G: "x \<in> ?twoG" by (by100 auto)+
+      from hx_2G obtain g where hg: "g \<in> G" "x = mul g g" by (by100 blast)
+      have "\<epsilon> x = 0" using hx_K by (by100 simp)
+      hence "\<epsilon> (mul g g) = 0" using hg(2) by (by100 simp)
+      moreover have "\<epsilon> (mul g g) = \<epsilon> g + \<epsilon> g"
+        using heps hg(1) unfolding top1_group_hom_on_def by (by100 blast)
+      ultimately have "2 * \<epsilon> g = 0" by (by100 linarith)
+      hence "\<epsilon> g = 0" by (by100 linarith)
+      hence "g \<in> ?K" using hg(1) by (by100 simp)
+      thus "x \<in> ?twoK" using hg by (by100 blast)
+    next
+      fix x assume "x \<in> ?twoK"
+      then obtain k where hk: "k \<in> ?K" "x = mul k k" by (by100 blast)
+      have hk_G: "k \<in> G" using hk(1) by (by100 blast)
+      have "x \<in> ?twoG" using hk hk_G by (by100 blast)
+      moreover have "x \<in> ?K"
+      proof -
+        have "mul k k \<in> ?K"
+          using hK_grp hk(1) unfolding top1_is_group_on_def by (by100 blast)
+        thus ?thesis using hk(2) by (by100 simp)
+      qed
+      ultimately show "x \<in> ?K \<inter> ?twoG" by (by100 blast)
+    qed
+    \<comment> \<open>Step 2: The inclusion K \<hookrightarrow> G induces an injection K/2K \<hookrightarrow> G/2G
+       (since K \<inter> 2G = 2K, cosets in K/2K embed into G/2G).\<close>
+    \<comment> \<open>Step 3: The image of K/2K in G/2G consists of cosets [g] with \<epsilon>(g) even.
+       The cosets with \<epsilon>(g) odd form a translate of the image.
+       So |G/2G| = 2 \<times> |K/2K|.\<close>
+    have "card ?QG = 2 * card ?QK"
+      sorry \<comment> \<open>Partition G/2G by \<epsilon>-parity. Even part bijects with K/2K (by K \<cap> 2G = 2K).
+         Odd part = translate by \<iota>(s0), same size. Total = 2 \<times> |K/2K|.\<close>
+    thus "card (top1_quotient_group_carrier_on G mul {mul g g | g. g \<in> G})
        = 2 * card (top1_quotient_group_carrier_on ?K mul {mul g g | g. g \<in> ?K})"
-      sorry \<comment> \<open>Key cardinality: G/2G has twice as many cosets as K/2K.
-         Proof sketch: The map [g] \<mapsto> \<epsilon>(g) mod 2 partitions G/2G into two halves:
-         {[g] : \<epsilon>(g) even} and {[g] : \<epsilon>(g) odd}. The even half bijects with K/2K
-         via [g] \<mapsto> [g - \<epsilon>(g)\<cdot>\<iota>(s0)]. The odd half is a coset translate.\<close>
+      sorry
     also have "\<dots> = 2 * 2 ^ n" using hIH by (by100 simp)
     also have "\<dots> = 2 ^ Suc n" by (by100 simp)
     finally show ?case using Suc.hyps by (by100 simp)
