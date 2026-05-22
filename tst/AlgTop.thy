@@ -2671,7 +2671,16 @@ proof -
   have hA_pc: "top1_path_connected_on A (subspace_topology X TX A)"
     sorry \<comment> \<open>A = q(Bd P) is path-connected: edges are paths, all vertices identified.\<close>
   have hh_cont: "top1_continuous_map_on top1_B2 top1_B2_topology X TX h"
-    sorry \<comment> \<open>h = q \<circ> \<psi>inv, composition of continuous maps.\<close>
+  proof -
+    have hq_cont: "top1_continuous_map_on P ?TP X TX q"
+      using hq unfolding top1_quotient_map_on_def by (by100 blast)
+    have h\<psi>inv_cont: "top1_continuous_map_on top1_B2 top1_B2_topology P ?TP (inv_into P \<psi>)"
+      using h\<psi>inv unfolding top1_homeomorphism_on_def by (by100 blast)
+    from top1_continuous_map_on_comp[OF h\<psi>inv_cont hq_cont]
+    have "top1_continuous_map_on top1_B2 top1_B2_topology X TX (q \<circ> inv_into P \<psi>)" .
+    moreover have "h = q \<circ> inv_into P \<psi>" unfolding h_def comp_def by (by100 simp)
+    ultimately show ?thesis by (by100 simp)
+  qed
   have ha_A: "a \<in> A" sorry \<comment> \<open>a = q(v_0) \<in> q(Bd P) since v_0 is a vertex on Bd P.\<close>
   have hh_homeo: "top1_homeomorphism_on (top1_B2 - top1_S1)
       (subspace_topology top1_B2 top1_B2_topology (top1_B2 - top1_S1))
