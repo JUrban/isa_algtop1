@@ -6259,13 +6259,8 @@ proof -
     \<comment> \<open>Apply IH: |K/2K| = 2^n.\<close>
     have hIH: "card (top1_quotient_group_carrier_on ?K mul {mul g g | g. g \<in> ?K}) = 2 ^ n"
     proof -
-      have hIH_raw: "\<And>G' mul' e' invg' S' iota'.
-          card S' = n \<Longrightarrow>
-          top1_is_free_abelian_group_full_on G' mul' e' invg' iota' S' \<Longrightarrow>
-          finite S' \<Longrightarrow>
-          card (top1_quotient_group_carrier_on G' mul' {mul' g g | g. g \<in> G'}) = 2 ^ card S'"
-        using Suc.hyps sorry
-      show ?thesis using hIH_raw[OF hcard' hK_free hfin'] hcard' by (by100 simp)
+      note hIH_raw = Suc.hyps(1)
+      show ?thesis using hIH_raw[OF hcard'[symmetric] hK_free hfin'] hcard' by (by100 simp)
     qed
     \<comment> \<open>G/2G = 2 \<times> K/2K by quotient\_2G\_decomposition.\<close>
     \<comment> \<open>Need: unique decomposition g = k + m\<cdot>\<iota>(s0) with k \<in> K.\<close>
