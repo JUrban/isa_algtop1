@@ -2661,8 +2661,26 @@ proof -
           and "\<exists>s. 0 < s \<and> s \<le> 1
               \<and> fst z = (1-s) * cx + s * fst b
               \<and> snd z = (1-s) * cy + s * snd b"
-        sorry \<comment> \<open>Ray from centroid through z hits Bd P on edge i at parameter u.
-           Requires: P bounded (proved), c \<in> Int P, z \<in> P, z \<noteq> c.\<close>
+      proof -
+        \<comment> \<open>Following book: "P is union of all line segments from p to Bd P."
+           Step A: Since z \<in> P and z \<noteq> c, extend the ray from c through z.
+           The ray hits Bd P at some point b (since P is bounded and c is interior).
+           Step B: b is on some edge of P.
+           Step C: z lies between c and b on the ray.\<close>
+        \<comment> \<open>Step A: z \<in> P means z = \<Sum> a_j v_j with a_j \<ge> 0, \<Sum>a_j = 1.
+           z ≠ c means not all a_j = 1/n. Consider t* = max{t | c + t(z-c) \<in> P}.
+           Since P = convex hull of finitely many points, this max is achieved and finite.
+           b = c + t*(z-c) is on the boundary of P.\<close>
+        \<comment> \<open>Since P is a convex hull of finite points, membership is decidable by linear
+           programming. The boundary consists of edges between consecutive vertices.\<close>
+        \<comment> \<open>For now, we sorry this fundamental geometric fact.
+           A complete proof would require:
+           - Showing P has topological interior (centroid is interior)
+           - Ray-convex intersection (ray from interior point exits through boundary)
+           - Boundary = union of edges (for convex polygons)
+           These are standard results but each requires ~30 lines of formal proof.\<close>
+        show ?thesis sorry
+      qed
       then obtain s where hs: "0 < s" "s \<le> 1"
           and hzx: "fst z = (1-s) * cx + s * fst b"
           and hzy: "snd z = (1-s) * cy + s * snd b"
