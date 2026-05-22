@@ -2611,9 +2611,12 @@ proof -
       (s * fst (bdry_to_S1 b), s * snd (bdry_to_S1 b)))" for z
   have "\<exists>\<psi>. continuous_on P \<psi> \<and> \<psi> ` P = top1_B2 \<and> inj_on \<psi> P"
   proof (rule exI[of _ \<psi>])
-    have h\<psi>_cont: "continuous_on P \<psi>" sorry
-    have h\<psi>_surj: "\<psi> ` P = top1_B2" sorry
-    have h\<psi>_inj: "inj_on \<psi> P" sorry
+    have h\<psi>_cont: "continuous_on P \<psi>"
+      sorry
+    have h\<psi>_surj: "\<psi> ` P = top1_B2"
+      sorry
+    have h\<psi>_inj: "inj_on \<psi> P"
+      sorry
     show "continuous_on P \<psi> \<and> \<psi> ` P = top1_B2 \<and> inj_on \<psi> P"
       using h\<psi>_cont h\<psi>_surj h\<psi>_inj by (by100 blast)
   qed
@@ -2723,7 +2726,8 @@ proof -
   define h where "h z = q (inv_into P \<psi> z)" for z
   define a where "a = q (vx 0, vy 0)"
   \<comment> \<open>Step 5: Verify all CW data properties.\<close>
-  have hA_closed: "closedin_on X TX A" sorry \<comment> \<open>q(BdP) is closed: BdP compact, q continuous.\<close>
+  have hA_closed: "closedin_on X TX A"
+    sorry \<comment> \<open>q(BdP) is closed: BdP compact, q continuous.\<close>
   have hA_pc: "top1_path_connected_on A (subspace_topology X TX A)"
     sorry \<comment> \<open>A = q(Bd P) is path-connected: edges are paths, all vertices identified.\<close>
   have hh_cont: "top1_continuous_map_on top1_B2 top1_B2_topology X TX h"
