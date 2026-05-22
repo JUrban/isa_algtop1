@@ -2934,7 +2934,56 @@ proof -
                  The between one is a convex combination, contradicting hgp.
                  This is a fundamental fact about collinear points in R; the formal proof
                  requires real arithmetic and case analysis on the ordering.\<close>
-              show False sorry
+              \<comment> \<open>Strategy: show v_1 is a convex combination of v_0 and v_2 (or circular permutation).
+                 From hcol\_eq + distinctness, we get the parameterization.\<close>
+              \<comment> \<open>First show vx0 \<noteq> vx2 or vy0 \<noteq> vy2 (from h02\_ne).\<close>
+              show False
+              proof (cases "vx 0 \<noteq> vx 2")
+                case True
+                \<comment> \<open>t = (vx1-vx0)/(vx2-vx0). Then v1 = (1-t)*v0 + t*v2.\<close>
+                let ?t = "(vx 1 - vx 0) / (vx 2 - vx 0)"
+                have hvx1_eq: "vx 1 = (1 - ?t) * vx 0 + ?t * vx 2"
+                  using True sorry \<comment> \<open>t = (vx1-vx0)/(vx2-vx0), so vx1 = vx0 + t*(vx2-vx0).\<close>
+                have hvy1_eq: "vy 1 = (1 - ?t) * vy 0 + ?t * vy 2"
+                  using hcol_eq True sorry \<comment> \<open>From cross product = 0 and vx0\<noteq>vx2: divide.\<close>
+                \<comment> \<open>?t \<noteq> 0 (v0 \<noteq> v1 means vx0\<noteq>vx1 or vy0\<noteq>vy1 but if all same x...)\<close>
+                have ht_ne0: "?t \<noteq> 0" using h01_ne hvx1_eq hvy1_eq by (by100 force)
+                have ht_ne1: "?t \<noteq> 1" using h12_ne hvx1_eq hvy1_eq by (by100 force)
+                \<comment> \<open>Now we know v_1 = (1-t)*v_0 + t*v_2 with t \<noteq> 0 and t \<noteq> 1.
+                   If 0 < t < 1: v_1 is in hull of others → hgp contradiction for k=1.
+                   If t < 0 or t > 1: v_0 or v_2 is the middle point.\<close>
+                \<comment> \<open>Case analysis on t: 0<t<1 means v_1 between v_0 and v_2.
+                   t\<le>0 or t\<ge>1 handled by symmetry (v_0 or v_2 is middle).\<close>
+                show False
+                proof (cases "0 < ?t \<and> ?t < 1")
+                  case True
+                  \<comment> \<open>v_1 = (1-t)*v_0 + t*v_2. Construct coefficients for hgp contradiction.\<close>
+                  have hgp1: "\<not> (\<exists>coeffs. (\<forall>i<n. i \<noteq> 1 \<longrightarrow> coeffs i \<ge> 0) \<and> coeffs 1 = 0
+                        \<and> (\<Sum>i<n. coeffs i) = 1
+                        \<and> vx 1 = (\<Sum>i<n. coeffs i * vx i) \<and> vy 1 = (\<Sum>i<n. coeffs i * vy i))"
+                    using hgp h1n by (by100 blast)
+                  define coeffs where "coeffs = (\<lambda>i::nat. if i = 0 then 1 - ?t
+                      else if i = 2 then ?t else 0::real)"
+                  have "\<forall>i<n. i \<noteq> 1 \<longrightarrow> coeffs i \<ge> 0"
+                    using True unfolding coeffs_def by (by100 auto)
+                  moreover have "coeffs 1 = 0" unfolding coeffs_def by (by100 simp)
+                  moreover have "(\<Sum>i<n. coeffs i) = 1"
+                    sorry \<comment> \<open>\<Sum> = (1-t) + 0 + t + 0 + ... = 1.\<close>
+                  moreover have "vx 1 = (\<Sum>i<n. coeffs i * vx i)"
+                    sorry \<comment> \<open>= (1-t)*vx0 + 0 + t*vx2 + 0 + ... = vx1 by hvx1\_eq.\<close>
+                  moreover have "vy 1 = (\<Sum>i<n. coeffs i * vy i)"
+                    sorry \<comment> \<open>Symmetric.\<close>
+                  ultimately show False using hgp1 by (by100 blast)
+                next
+                  case False \<comment> \<open>t \<le> 0 or t \<ge> 1: v_0 or v_2 is the middle point.\<close>
+                  show False sorry
+                qed
+              next
+                case False
+                hence "vy 0 \<noteq> vy 2" using h02_ne by (by100 force)
+                \<comment> \<open>Symmetric case using y-coordinates.\<close>
+                show False sorry
+              qed
             qed
           qed
           then obtain i' j' where hi': "i' < n" and hj': "j' < n"
