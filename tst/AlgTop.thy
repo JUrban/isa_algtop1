@@ -3789,6 +3789,34 @@ qed
     presentation \<langle>a_1, b_1, \<dots>, a_n, b_n | [a_1,b_1]\<cdots>[a_n,b_n]\<rangle>.
     The single relator is the product (a_1 b_1 a_1\<inverse> b_1\<inverse>)\<cdots>(a_n b_n a_n\<inverse> b_n\<inverse>).
     We index generators 0, 1, ..., 2n-1 as a_i := 2i, b_i := 2i+1. **)
+
+(** from \<S>74 Theorem 74.2: If P is a polygonal region with labelling scheme w,
+    \<pi> maps all vertices to a single point x_0, and there are k distinct labels,
+    then \<pi>_1(X, x_0) is the quotient of Free(k) by the normal closure of the relator.
+    This is the general engine; 74.3 and 74.4 are immediate applications.
+    Proof (book): A = \<pi>(Bd P) is a wedge of k circles (since all vertices identified).
+    Theorem 72.1 gives \<pi>_1(X) \<cong> \<pi>_1(A)/N(relator). Then \<pi>_1(A) = Free(k). **)
+theorem Theorem_74_2_scheme_presentation:
+  fixes X :: "'a set" and TX :: "'a set set" and x0 :: 'a
+    and scheme :: "(nat \<times> bool) list"
+  assumes "top1_quotient_of_scheme_on X TX scheme"
+      and "x0 \<in> X"
+      and "length scheme \<ge> 3"
+      \<comment> \<open>All vertices identified to x0 under the quotient map.\<close>
+      and hvert: "\<And>P q vx vy. \<lbrakk>top1_is_polygonal_region_on P (length scheme);
+          top1_quotient_map_on P (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) X TX q;
+          \<forall>i<length scheme. (vx i, vy i) \<in> P\<rbrakk>
+        \<Longrightarrow> \<forall>i<length scheme. \<forall>j<length scheme. q (vx i, vy i) = q (vx j, vy j)"
+  shows "\<exists>(G::'g set) mul e invg.
+           top1_group_presented_by_on G mul e invg
+             (fst ` set scheme) \<comment> \<open>The distinct labels\<close>
+             { map (\<lambda>(s,b). (s, b)) scheme } \<comment> \<open>The relator word\<close>
+         \<and> top1_groups_isomorphic_on G mul
+             (top1_fundamental_group_carrier X TX x0)
+             (top1_fundamental_group_mul X TX x0)"
+  sorry \<comment> \<open>Following book: A = \<pi>(Bd P) is wedge of circles (all vertices identified).
+     Apply Theorem 72.1. Identification of quotient with presented group.\<close>
+
 theorem Theorem_74_3_fund_group_n_torus:
   fixes n :: nat and X :: "'a set" and TX :: "'a set set" and x0 :: 'a
   assumes "top1_is_n_fold_torus_on X TX n"
@@ -3801,78 +3829,44 @@ theorem Theorem_74_3_fund_group_n_torus:
              (top1_fundamental_group_carrier X TX x0)
              (top1_fundamental_group_mul X TX x0)"
 proof -
-  \<comment> \<open>Munkres 74.3: T_n is the quotient of a 4n-gon by the torus scheme.
-     The 1-skeleton (boundary with identifications) is a wedge of 2n circles.
-     By Theorem 72.1 (attaching the 2-cell), \<pi>_1(T_n) is the quotient of the
-     free group on 2n generators by the normal closure of the single relator
-     [a_1,b_1]...[a_n,b_n].\<close>
-  \<comment> \<open>Step 1: T_n is a polygonal quotient of a 4n-gon. Extract the scheme.\<close>
-  have h_poly: "top1_is_polygonal_quotient_on X TX"
-    unfolding top1_is_polygonal_quotient_on_def
-  proof (intro conjI)
-    show "is_topology_on_strict X TX"
-      using assms(1) unfolding top1_is_n_fold_torus_on_def top1_quotient_of_scheme_on_def by (by100 blast)
-    show "\<exists>scheme::(nat \<times> bool) list. top1_quotient_of_scheme_on X TX scheme"
-      using assms(1) unfolding top1_is_n_fold_torus_on_def by (by100 blast)
+  \<comment> \<open>Munkres 74.3: Apply Theorem 74.2 to the n-torus labelling scheme.
+     The only thing to check is that all vertices get identified.\<close>
+  let ?scheme = "top1_n_torus_scheme n"
+  have hscheme: "top1_quotient_of_scheme_on X TX ?scheme"
+    using assms(1) unfolding top1_is_n_fold_torus_on_def by (by100 blast)
+  have hlen: "length ?scheme \<ge> 3"
+  proof -
+    have "n > 0" using assms(1) unfolding top1_is_n_fold_torus_on_def by (by100 blast)
+    hence "length ?scheme \<ge> 4"
+      unfolding top1_n_torus_scheme_def sorry
+    thus ?thesis by (by100 simp)
   qed
-  \<comment> \<open>Step 2: The 4n-gon's 1-skeleton after identifications is a wedge of 2n circles.\<close>
-  have h_skel: "\<exists>A. closedin_on X TX A \<and>
-      top1_is_wedge_of_circles_on A (subspace_topology X TX A) {..<2*n} x0"
-    using n_torus_scheme_CW_data[OF assms] by (by100 blast)
-  \<comment> \<open>Step 3: Apply Theorem 72.1. The attaching map h: B² \<rightarrow> X wraps S¹ around
-     the 1-skeleton via the word [a₁,b₁]...[aₙ,bₙ].
-     Theorem 72.1 gives: \<pi>_1(X) \<cong> \<pi>_1(1-skel)/N(relator).\<close>
-  \<comment> \<open>Step 3: Apply Theorem 72.1 with the CW data.
-     From n\_torus\_scheme\_CW\_data we get A (wedge of 2n circles) and h (attaching map).
-     Theorem 72.1 gives: \<pi>_1(X) \<cong> \<pi>_1(A)/N(k_*([standard loop]))
-     where k = h|_{S^1} and N is the normal closure.
-     Step 4: \<pi>_1(A) is free on 2n generators (Theorem 71.1).
-     The attaching word traces [a_1,b_1]...[a_n,b_n] on the 1-skeleton.
-     So the quotient = presented group with relator [a_1,b_1]...[a_n,b_n].\<close>
-  from n_torus_scheme_CW_data[OF assms] obtain A :: "'a set" and h_att :: "real \<times> real \<Rightarrow> 'a"
-    where hA_closed: "closedin_on X TX A"
-      and hA_wedge: "top1_is_wedge_of_circles_on A (subspace_topology X TX A) ({..<2*n}::nat set) x0"
-      and hh_cont: "top1_continuous_map_on top1_B2 top1_B2_topology X TX h_att"
-      and hh_S1: "h_att ` top1_S1 \<subseteq> A"
-    by (by100 blast)
-  \<comment> \<open>Apply Theorem 72.1.\<close>
-  \<comment> \<open>Need additionally: Hausdorff, path-connected A, h|_{Int B^2} homeomorphism onto X-A.\<close>
-  have hX_strict: "is_topology_on_strict X TX"
-    using assms(1) unfolding top1_is_n_fold_torus_on_def top1_quotient_of_scheme_on_def by (by100 blast)
-  have hX_haus: "is_hausdorff_on X TX"
-    using Theorem_74_1_polygon_quotient_compact_hausdorff[OF hX_strict h_poly] by (by100 blast)
-  have hA_pc: "top1_path_connected_on A (subspace_topology X TX A)"
-    sorry \<comment> \<open>Wedge of circles is path-connected: each circle is path-connected
-       (homeomorphic to S^1 which is path-connected by S1\_path\_connected),
-       and they share the basepoint. Iterate path\_connected\_union.\<close>
-  have hh_homeo: "top1_homeomorphism_on
-      (top1_B2 - top1_S1) (subspace_topology top1_B2 top1_B2_topology (top1_B2 - top1_S1))
-      (X - A) (subspace_topology X TX (X - A)) h_att"
-    sorry \<comment> \<open>Interior of polygon maps homeomorphically to X - A (from scheme quotient).\<close>
-  \<comment> \<open>Now apply Theorem 72.1.\<close>
-  have hThm721: "\<exists>\<iota>. top1_continuous_map_on top1_S1 top1_S1_topology A (subspace_topology X TX A) \<iota>
-      \<and> (\<forall>z\<in>top1_S1. \<iota> z = h_att z)
-      \<and> top1_groups_isomorphic_on
+  \<comment> \<open>All vertices get identified (Munkres: "We leave this to you to check").\<close>
+  have hvert: "\<And>P q vx vy. \<lbrakk>top1_is_polygonal_region_on P (length ?scheme);
+      top1_quotient_map_on P (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) X TX q;
+      \<forall>i<length ?scheme. (vx i, vy i) \<in> P\<rbrakk>
+    \<Longrightarrow> \<forall>i<length ?scheme. \<forall>j<length ?scheme. q (vx i, vy i) = q (vx j, vy j)"
+    sorry \<comment> \<open>All vertices of the torus polygon get identified.
+       For the torus scheme aba^{-1}b^{-1}: vertex 0 \<sim> vertex 1 (via edge a),
+       vertex 1 \<sim> vertex 2 (via edge b), vertex 2 \<sim> vertex 3 (via edge a^{-1}),
+       vertex 3 \<sim> vertex 0 (via edge b^{-1}). So all 4 vertices identified.\<close>
+  \<comment> \<open>Apply Theorem 74.2.\<close>
+  have h742: "\<exists>(G::'g set) mul e invg.
+      top1_group_presented_by_on G mul e invg (fst ` set ?scheme)
+        { map (\<lambda>(s,b). (s, b)) ?scheme }
+      \<and> top1_groups_isomorphic_on G mul
           (top1_fundamental_group_carrier X TX x0)
-          (top1_fundamental_group_mul X TX x0)
-          (top1_quotient_group_carrier_on
-             (top1_fundamental_group_carrier A (subspace_topology X TX A) x0)
-             (top1_fundamental_group_mul A (subspace_topology X TX A) x0)
-             (top1_normal_subgroup_generated_on
-                (top1_fundamental_group_carrier A (subspace_topology X TX A) x0)
-                (top1_fundamental_group_mul A (subspace_topology X TX A) x0)
-                (top1_fundamental_group_id A (subspace_topology X TX A) x0)
-                (top1_fundamental_group_invg A (subspace_topology X TX A) x0)
-                {top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1, 0)
-                    A (subspace_topology X TX A) x0 (\<lambda>z. h_att z)
-                  {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0)
-                      (\<lambda>s. (cos (2*pi*s), sin (2*pi*s))) g}}))
-          (top1_quotient_group_mul_on
-             (top1_fundamental_group_mul A (subspace_topology X TX A) x0))"
-    sorry \<comment> \<open>Apply Theorem\_72\_1\_attaching\_two\_cell with verified hypotheses.\<close>
-  \<comment> \<open>Step 4: \<pi>_1(A) is free on 2n generators. The attaching word is the torus relator.
-     So \<pi>_1(X) \<cong> Free(2n)/N(relator) = presented group.\<close>
-  show ?thesis sorry \<comment> \<open>Identify quotient with presented group.\<close>
+          (top1_fundamental_group_mul X TX x0)"
+    by (rule Theorem_74_2_scheme_presentation[OF hscheme assms(2) hlen hvert])
+  \<comment> \<open>The distinct labels of the torus scheme are {0,...,2n-1}.\<close>
+  have hlabels: "fst ` set ?scheme = {..<2*n}"
+    sorry \<comment> \<open>Computation: the torus scheme uses labels 2i and 2i+1 for i \<in> [0,n).\<close>
+  \<comment> \<open>The relator word in the scheme = the torus relator.\<close>
+  have hrelator: "{ map (\<lambda>(s,b). (s, b)) ?scheme }
+      = { concat (map (\<lambda>i. [(2*i, True), (2*i+1, True),
+                              (2*i, False), (2*i+1, False)]) [0..<n]) }"
+    sorry \<comment> \<open>Computation: unfolding the torus scheme definition.\<close>
+  show ?thesis using h742 hlabels hrelator by (by5000 simp)
 qed
 
 (** from \<S>74 Theorem 74.4: \<pi>_1(P_m) has presentation \<langle>a_1, \<dots>, a_m | a_1² \<cdots> a_m²\<rangle>.
