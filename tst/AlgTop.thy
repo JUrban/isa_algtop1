@@ -6130,6 +6130,29 @@ next
   finally show ?case by (by100 simp)
 qed
 
+lemma hom_group_pow_early:
+  assumes hG: "top1_is_group_on G mul e invg"
+      and hH: "top1_is_group_on H mulH eH invgH"
+      and hhom: "top1_group_hom_on G mul H mulH f"
+      and hx: "x \<in> G"
+  shows "f (top1_group_pow mul e x n) = top1_group_pow mulH eH (f x) n"
+proof (induction n)
+  case 0
+  have "f (top1_group_pow mul e x 0) = f e" by (by100 simp)
+  also have "\<dots> = eH" by (rule hom_preserves_id[OF hG hH hhom])
+  finally show ?case by (by100 simp)
+next
+  case (Suc n)
+  have hpow_G: "top1_group_pow mul e x n \<in> G" by (rule group_pow_in_group'[OF hG hx])
+  have "f (top1_group_pow mul e x (Suc n)) = f (mul x (top1_group_pow mul e x n))"
+    by (by100 simp)
+  also have "\<dots> = mulH (f x) (f (top1_group_pow mul e x n))"
+    using hhom hx hpow_G unfolding top1_group_hom_on_def by (by100 blast)
+  also have "\<dots> = mulH (f x) (top1_group_pow mulH eH (f x) n)"
+    using Suc.IH by (by100 simp)
+  finally show ?case by (by100 simp)
+qed
+
 text \<open>The kernel of a coordinate projection of a free abelian group is free abelian
   on the complementary generators.\<close>
 lemma free_abelian_kernel_coordinate:
@@ -6475,11 +6498,112 @@ proof -
         let ?ws_pos = "filter (\<lambda>x. x = ?a) ?ws_s0"
         let ?ws_neg = "filter (\<lambda>x. x = ?ia) ?ws_s0"
         have hws_s0_split: "foldr mul ?ws_s0 e = mul (foldr mul ?ws_pos e) (foldr mul ?ws_neg e)"
-          using abelian_foldr_mul_split_filter[OF hG_abel hws_s0_G, of "\<lambda>x. x = ?a"] sorry
+        proof -
+          have h1: "foldr mul ?ws_s0 e = mul (foldr mul (filter (\<lambda>x. x = ?a) ?ws_s0) e)
+              (foldr mul (filter (\<lambda>x. \<not>(x = ?a)) ?ws_s0) e)"
+            by (rule abelian_foldr_mul_split_filter[OF hG_abel hws_s0_G])
+          \<comment> \<open>filter (\<lambda>x. x \<noteq> ?a) ws_s0 = filter (\<lambda>x. x = ?ia) ws_s0
+             since ws_s0 only contains ?a and ?ia.\<close>
+          have "filter (\<lambda>x. \<not>(x = ?a)) ?ws_s0 = filter (\<lambda>x. x = ?ia) ?ws_s0"
+        proof (rule filter_cong, by100 simp)
+            fix x assume "x \<in> set ?ws_s0"
+            hence "x = ?a \<or> x = ?ia" by (by5000 auto)
+            moreover have "?a \<noteq> ?ia"
+            proof
+              assume "?a = ?ia"
+              hence "\<epsilon> ?a = \<epsilon> ?ia" by (by100 simp)
+              have "\<epsilon> ?ia = - \<epsilon> ?a"
+                using hom_preserves_inv[OF hG_grp hZ_grp heps ha_G] by (by100 simp)
+              hence "\<epsilon> ?ia = -(1::int)" using heps_s0 by (by100 simp)
+              hence "(1::int) = -1" using \<open>\<epsilon> ?a = \<epsilon> ?ia\<close> heps_s0 by (by100 linarith)
+              thus False by (by100 simp)
+            qed
+            ultimately show "(\<not>(x = ?a)) = (x = ?ia)" by (by100 auto)
+          qed
+          thus ?thesis using h1 by (by100 simp)
+        qed
         \<comment> \<open>pos-part = pow(\<iota>(s0), k+), neg-part = pow(invg(\<iota>(s0)), k-).\<close>
         \<comment> \<open>\<epsilon>(pos) = k+, \<epsilon>(neg) = -k-. \<epsilon>(s0-part) = k+ - k- = 0, so k+ = k-.\<close>
         \<comment> \<open>pow(x, k) \<cdot> pow(invg(x), k) = e.\<close>
-        show ?thesis using hws_s0_split heps_s0_val sorry
+        \<comment> \<open>pos-part = pow(\<iota>(s0), k+) by abelian\_foldr\_mul\_filter\_eq.\<close>
+        let ?kp = "length ?ws_pos"
+        let ?kn = "length ?ws_neg"
+        \<comment> \<open>?ws\_pos = filter on filter = filter (x = a) on ws.\<close>
+        have hpos_eq: "?ws_pos = filter (\<lambda>x. x = ?a) ws"
+        proof -
+          have "filter (\<lambda>x. x = ?a) (filter ?is_s0 ws) = filter (\<lambda>x. ?is_s0 x \<and> x = ?a) ws"
+            by (by5000 simp)
+          also have "\<dots> = filter (\<lambda>x. x = ?a) ws"
+            by (rule filter_cong, by100 simp, by100 auto)
+          finally show ?thesis by (by100 simp)
+        qed
+        have hneg_eq: "?ws_neg = filter (\<lambda>x. x = ?ia) ws"
+        proof -
+          have "filter (\<lambda>x. x = ?ia) (filter ?is_s0 ws) = filter (\<lambda>x. ?is_s0 x \<and> x = ?ia) ws"
+            by (by5000 simp)
+          also have "\<dots> = filter (\<lambda>x. x = ?ia) ws"
+            by (rule filter_cong, by100 simp, by100 auto)
+          finally show ?thesis by (by100 simp)
+        qed
+        have hpos_pow: "foldr mul ?ws_pos e = top1_group_pow mul e ?a ?kp"
+          using abelian_foldr_mul_filter_eq[OF hG_grp ha_G, of ws] hpos_eq by (by100 simp)
+        have hneg_pow: "foldr mul ?ws_neg e = top1_group_pow mul e ?ia ?kn"
+          using abelian_foldr_mul_filter_eq[OF hG_grp hia_G, of ws] hneg_eq by (by100 simp)
+        \<comment> \<open>\<epsilon> on the pos/neg parts.\<close>
+        have hpos_G: "foldr mul ?ws_pos e \<in> G"
+          using hpos_pow group_pow_in_group'[OF hG_grp ha_G] by (by100 simp)
+        have hneg_G: "foldr mul ?ws_neg e \<in> G"
+          using hneg_pow group_pow_in_group'[OF hG_grp hia_G] by (by100 simp)
+        have heps_pos: "\<epsilon> (foldr mul ?ws_pos e) = int ?kp"
+        proof -
+          have "\<epsilon> (top1_group_pow mul e ?a ?kp) = top1_group_pow (+) (0::int) 1 ?kp"
+            using hom_group_pow_early[OF hG_grp hZ_grp heps ha_G] heps_s0 by (by100 simp)
+          also have "\<dots> = int ?kp" sorry \<comment> \<open>pow(+, 0, 1, n) = n for integers.\<close>
+          finally show ?thesis using hpos_pow by (by100 simp)
+        qed
+        have heps_neg: "\<epsilon> (foldr mul ?ws_neg e) = - int ?kn"
+        proof -
+          have "\<epsilon> ?ia = -(1::int)"
+            using hom_preserves_inv[OF hG_grp hZ_grp heps ha_G] heps_s0 by (by100 simp)
+          hence "\<epsilon> (top1_group_pow mul e ?ia ?kn) = top1_group_pow (+) (0::int) (-(1::int)) ?kn"
+            using hom_group_pow_early[OF hG_grp hZ_grp heps hia_G] by (by100 simp)
+          also have "\<dots> = - int ?kn" sorry \<comment> \<open>pow(+, 0, -1, n) = -n for integers.\<close>
+          finally show ?thesis using hneg_pow by (by100 simp)
+        qed
+        \<comment> \<open>From \<epsilon>(s0-part) = 0: k+ = k-.\<close>
+        have hkp_eq_kn: "?kp = ?kn"
+        proof -
+          have "\<epsilon> (foldr mul ?ws_s0 e) = \<epsilon> (mul (foldr mul ?ws_pos e) (foldr mul ?ws_neg e))"
+            using hws_s0_split by (by100 simp)
+          also have "\<dots> = \<epsilon> (foldr mul ?ws_pos e) + \<epsilon> (foldr mul ?ws_neg e)"
+            using heps hpos_G hneg_G unfolding top1_group_hom_on_def by (by100 blast)
+          also have "\<dots> = int ?kp - int ?kn" using heps_pos heps_neg by (by100 linarith)
+          finally show ?thesis using heps_s0_val by (by100 linarith)
+        qed
+        \<comment> \<open>pow(x, k) \<cdot> pow(invg(x), k) = e by induction.\<close>
+        have hpow_cancel: "\<And>n. mul (top1_group_pow mul e ?a n) (top1_group_pow mul e ?ia n) = e"
+        proof -
+          fix n show "mul (top1_group_pow mul e ?a n) (top1_group_pow mul e ?ia n) = e"
+          proof (induction n)
+            case 0
+            have "mul e e = e" using hG_grp unfolding top1_is_group_on_def by (by100 blast)
+            thus ?case by (by100 simp)
+          next
+            case (Suc n)
+            \<comment> \<open>pow(a, Suc n) = mul a (pow(a, n)). Similarly for ia.\<close>
+            \<comment> \<open>mul (mul a (pow(a,n))) (mul ia (pow(ia,n)))
+               = mul a (mul (pow(a,n)) (mul ia (pow(ia,n))))  [assoc]
+               = mul a (mul (mul (pow(a,n)) ia) (pow(ia,n)))  [assoc]
+               = mul a (mul ia (mul (pow(a,n)) (pow(ia,n))))  [commute in abelian]
+               = mul (mul a ia) (mul (pow(a,n)) (pow(ia,n)))  [assoc]
+               = mul e (mul (pow(a,n)) (pow(ia,n)))           [a * ia = e]
+               = mul (pow(a,n)) (pow(ia,n))                   [e * x = x]
+               = e                                            [IH]  \<close>
+            show ?case sorry
+          qed
+        qed
+        show ?thesis
+          using hws_s0_split hpos_pow hneg_pow hkp_eq_kn hpow_cancel[of ?kp] by (by5000 simp)
       qed
       \<comment> \<open>Therefore g = e \<cdot> rest = rest \<in> ⟨\<iota>(S')⟩.\<close>
       have "g = mul e (foldr mul ?ws_rest e)"
