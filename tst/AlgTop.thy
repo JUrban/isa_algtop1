@@ -2964,16 +2964,39 @@ proof -
                     using hgp h1n by (by100 blast)
                   define coeffs where "coeffs = (\<lambda>i::nat. if i = 0 then 1 - ?t
                       else if i = 2 then ?t else 0::real)"
-                  have "\<forall>i<n. i \<noteq> 1 \<longrightarrow> coeffs i \<ge> 0"
+                  have hnn: "\<forall>i<n. i \<noteq> 1 \<longrightarrow> coeffs i \<ge> 0"
                     using True unfolding coeffs_def by (by100 auto)
-                  moreover have "coeffs 1 = 0" unfolding coeffs_def by (by100 simp)
-                  moreover have "(\<Sum>i<n. coeffs i) = 1"
-                    sorry \<comment> \<open>\<Sum> = (1-t) + 0 + t + 0 + ... = 1.\<close>
-                  moreover have "vx 1 = (\<Sum>i<n. coeffs i * vx i)"
-                    sorry \<comment> \<open>= (1-t)*vx0 + 0 + t*vx2 + 0 + ... = vx1 by hvx1\_eq.\<close>
-                  moreover have "vy 1 = (\<Sum>i<n. coeffs i * vy i)"
-                    sorry \<comment> \<open>Symmetric.\<close>
-                  ultimately show False using hgp1 by (by100 blast)
+                  have hc1: "coeffs 1 = 0" unfolding coeffs_def by (by100 simp)
+                  have hcoeffs_rest: "\<And>i. i \<ge> 3 \<Longrightarrow> i < n \<Longrightarrow> coeffs i = 0"
+                    unfolding coeffs_def by (by100 simp)
+                  have hcoeffs_rest_mul: "\<And>f. (\<Sum>i\<in>{3..<n}. coeffs i * f i) = 0"
+                    apply (rule sum.neutral) using hcoeffs_rest by (by100 force)
+                  have hcoeffs_rest_sum: "(\<Sum>i\<in>{3..<n}. coeffs i) = 0"
+                    apply (rule sum.neutral) using hcoeffs_rest by (by100 force)
+                  have hsplit: "{..<n} = {0,1,2} \<union> {3..<n}" using assms(2) by (by100 auto)
+                  have hcsum: "(\<Sum>i<n. coeffs i) = 1"
+                  proof -
+                    have "(\<Sum>i<n. coeffs i) = (\<Sum>i\<in>{0,1,2}. coeffs i) + (\<Sum>i\<in>{3..<n}. coeffs i)"
+                      using hsplit by (simp add: sum.union_disjoint)
+                    thus ?thesis using hcoeffs_rest_sum unfolding coeffs_def by (by100 simp)
+                  qed
+                  have hcvx: "vx 1 = (\<Sum>i<n. coeffs i * vx i)"
+                  proof -
+                    have "(\<Sum>i<n. coeffs i * vx i) = (\<Sum>i\<in>{0,1,2}. coeffs i * vx i) + (\<Sum>i\<in>{3..<n}. coeffs i * vx i)"
+                      using hsplit by (simp add: sum.union_disjoint)
+                    thus ?thesis using hcoeffs_rest_mul[of vx] hvx1_eq unfolding coeffs_def by (by100 simp)
+                  qed
+                  have hcvy: "vy 1 = (\<Sum>i<n. coeffs i * vy i)"
+                  proof -
+                    have "(\<Sum>i<n. coeffs i * vy i) = (\<Sum>i\<in>{0,1,2}. coeffs i * vy i) + (\<Sum>i\<in>{3..<n}. coeffs i * vy i)"
+                      using hsplit by (simp add: sum.union_disjoint)
+                    thus ?thesis using hcoeffs_rest_mul[of vy] hvy1_eq unfolding coeffs_def by (by100 simp)
+                  qed
+                  have "\<exists>coeffs. (\<forall>i<n. i \<noteq> 1 \<longrightarrow> 0 \<le> coeffs i) \<and> coeffs 1 = 0
+                      \<and> (\<Sum>i<n. coeffs i) = 1 \<and> vx 1 = (\<Sum>i<n. coeffs i * vx i)
+                      \<and> vy 1 = (\<Sum>i<n. coeffs i * vy i)"
+                    using hnn hc1 hcsum hcvx hcvy by (by100 blast)
+                  thus False using hgp1 by (by100 blast)
                 next
                   case False \<comment> \<open>t \<le> 0 or t \<ge> 1: v_0 or v_2 is the middle point.\<close>
                   show False sorry
