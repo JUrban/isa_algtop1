@@ -2641,10 +2641,71 @@ proof -
       ultimately show ?thesis using True by (by100 blast)
     next
       case False
-      \<comment> \<open>z \<noteq> centroid: ray from c through z hits boundary on some edge i.\<close>
-      \<comment> \<open>Since z \<in> P and P is convex and bounded, the ray from c through z
-         exits P through exactly one boundary edge.\<close>
-      show ?thesis sorry
+      \<comment> \<open>Following book: "P is the union of all line segments joining p and points of Bd P."
+         The ray from c through z (extended) exits P at some boundary point b on edge i.
+         Then z = (1-s)\<cdot>c + s\<cdot>b where s = |z-c|/|b-c| \<in> (0,1]. Since b is on edge i,
+         b = (1-u)\<cdot>v_i + u\<cdot>v_{i+1}. So z = (1-s)\<cdot>c + s(1-u)\<cdot>v_i + su\<cdot>v_{i+1} \<in> cone_i.\<close>
+      \<comment> \<open>Step 1: The ray from c through z is parameterized by t \<ge> 0:
+         r(t) = (1-t)\<cdot>c + t\<cdot>z = c + t\<cdot>(z - c).
+         At t=0: c \<in> P. At t=1: z \<in> P. For large t: outside P (bounded).\<close>
+      \<comment> \<open>Step 2: Let t* = sup{t \<ge> 0 | r(t) \<in> P}. Since P bounded, t* < \<infinity>.
+         Since t=1 gives z \<in> P, t* \<ge> 1. The point b = r(t*) is on Bd P.\<close>
+      \<comment> \<open>Step 3: b \<in> Bd P means b is on some edge i: b = (1-u)\<cdot>v_i + u\<cdot>v_{i+1}.\<close>
+      \<comment> \<open>Step 4: z = r(1) = (1 - 1/t*)\<cdot>c + (1/t*)\<cdot>b. Set s = 1/t* \<in> (0,1].
+         Then z = (1-s)\<cdot>c + s\<cdot>((1-u)\<cdot>v_i + u\<cdot>v_{i+1})
+                = (1-s)\<cdot>c + s(1-u)\<cdot>v_i + su\<cdot>v_{i+1} \<in> cone_i.\<close>
+      obtain b i u where hb_bd: "b \<in> BdP" and hi: "i < n"
+          and hu: "0 \<le> u" "u \<le> 1"
+          and hb_edge: "b = ((1-u) * vx i + u * vx ((i+1) mod n),
+                             (1-u) * vy i + u * vy ((i+1) mod n))"
+          and "\<exists>s. 0 < s \<and> s \<le> 1
+              \<and> fst z = (1-s) * cx + s * fst b
+              \<and> snd z = (1-s) * cy + s * snd b"
+        sorry \<comment> \<open>Ray from centroid through z hits Bd P on edge i at parameter u.
+           Requires: P bounded (proved), c \<in> Int P, z \<in> P, z \<noteq> c.\<close>
+      then obtain s where hs: "0 < s" "s \<le> 1"
+          and hzx: "fst z = (1-s) * cx + s * fst b"
+          and hzy: "snd z = (1-s) * cy + s * snd b"
+        by (by100 blast)
+      \<comment> \<open>Now z = (1-s)\<cdot>c + s\<cdot>b = (1-s)\<cdot>c + s(1-u)\<cdot>v_i + su\<cdot>v_{i+1}.\<close>
+      \<comment> \<open>z = (1-s)*c + s*((1-u)*v_i + u*v_{i+1}) = (1-s)*c + s(1-u)*v_i + su*v_{i+1}.\<close>
+      have "in_cone i z" unfolding in_cone_def
+      proof -
+        have hfst_b: "fst b = (1-u)*vx i + u*vx((i+1) mod n)" using hb_edge by (by100 simp)
+        have hsnd_b: "snd b = (1-u)*vy i + u*vy((i+1) mod n)" using hb_edge by (by100 simp)
+        \<comment> \<open>Witnesses: \<alpha> = 1-s, \<beta> = s*(1-u), \<gamma> = s*u.\<close>
+        let ?\<alpha> = "1 - s" let ?\<beta> = "s * (1 - u)" let ?\<gamma> = "s * u"
+        have h1: "?\<alpha> \<ge> 0" using hs by (by100 simp)
+        have h2: "?\<beta> \<ge> 0" using hs hu by (by100 simp)
+        have h3: "?\<gamma> \<ge> 0" using hs hu by (by100 simp)
+        have hsu: "s * (1 - u) + s * u = s"
+          using right_diff_distrib[of s 1 u] by (by100 simp)
+        have h4: "?\<alpha> + ?\<beta> + ?\<gamma> = 1"
+          using hsu by (by100 linarith)
+        have h5: "fst z = ?\<alpha> * cx + ?\<beta> * vx i + ?\<gamma> * vx ((i+1) mod n)"
+        proof -
+          have "s * fst b = s * ((1-u)*vx i + u*vx((i+1) mod n))"
+            using hfst_b by (by100 simp)
+          also have "\<dots> = s*(1-u)*vx i + s*u*vx((i+1) mod n)"
+            using distrib_left[of s "(1-u)*vx i" "u*vx((i+1) mod n)"]
+            using mult.assoc by (by100 simp)
+          finally show ?thesis using hzx by (by100 simp)
+        qed
+        have h6: "snd z = ?\<alpha> * cy + ?\<beta> * vy i + ?\<gamma> * vy ((i+1) mod n)"
+        proof -
+          have "s * snd b = s * ((1-u)*vy i + u*vy((i+1) mod n))"
+            using hsnd_b by (by100 simp)
+          also have "\<dots> = s*(1-u)*vy i + s*u*vy((i+1) mod n)"
+            using distrib_left[of s "(1-u)*vy i" "u*vy((i+1) mod n)"]
+            using mult.assoc by (by100 simp)
+          finally show ?thesis using hzy by (by100 simp)
+        qed
+        show "\<exists>\<alpha> \<beta> \<gamma>. 0 \<le> \<alpha> \<and> 0 \<le> \<beta> \<and> 0 \<le> \<gamma> \<and> \<alpha> + \<beta> + \<gamma> = 1 \<and>
+            fst z = \<alpha> * cx + \<beta> * vx i + \<gamma> * vx ((i + 1) mod n) \<and>
+            snd z = \<alpha> * cy + \<beta> * vy i + \<gamma> * vy ((i + 1) mod n)"
+          using h1 h2 h3 h4 h5 h6 by (by100 blast)
+      qed
+      thus ?thesis using hi by (by100 blast)
     qed
   qed
   \<comment> \<open>Define \<psi> using the cone decomposition.\<close>
