@@ -6558,7 +6558,13 @@ proof -
         proof -
           have "\<epsilon> (top1_group_pow mul e ?a ?kp) = top1_group_pow (+) (0::int) 1 ?kp"
             using hom_group_pow_early[OF hG_grp hZ_grp heps ha_G] heps_s0 by (by100 simp)
-          also have "\<dots> = int ?kp" sorry \<comment> \<open>pow(+, 0, 1, n) = n for integers.\<close>
+          also have "\<dots> = int ?kp"
+          proof -
+            define m where "m = ?kp"
+            have "top1_group_pow (+) (0::int) 1 m = int m"
+              by (induction m, by100 simp, by100 simp)
+            thus ?thesis unfolding m_def by (by100 simp)
+          qed
           finally show ?thesis using hpos_pow by (by100 simp)
         qed
         have heps_neg: "\<epsilon> (foldr mul ?ws_neg e) = - int ?kn"
@@ -6567,7 +6573,13 @@ proof -
             using hom_preserves_inv[OF hG_grp hZ_grp heps ha_G] heps_s0 by (by100 simp)
           hence "\<epsilon> (top1_group_pow mul e ?ia ?kn) = top1_group_pow (+) (0::int) (-(1::int)) ?kn"
             using hom_group_pow_early[OF hG_grp hZ_grp heps hia_G] by (by100 simp)
-          also have "\<dots> = - int ?kn" sorry \<comment> \<open>pow(+, 0, -1, n) = -n for integers.\<close>
+          also have "\<dots> = - int ?kn"
+          proof -
+            define m where "m = ?kn"
+            have "top1_group_pow (+) (0::int) (-(1::int)) m = - int m"
+              by (induction m, by100 simp, by100 simp)
+            thus ?thesis unfolding m_def by (by100 simp)
+          qed
           finally show ?thesis using hneg_pow by (by100 simp)
         qed
         \<comment> \<open>From \<epsilon>(s0-part) = 0: k+ = k-.\<close>
@@ -6599,7 +6611,48 @@ proof -
                = mul e (mul (pow(a,n)) (pow(ia,n)))           [a * ia = e]
                = mul (pow(a,n)) (pow(ia,n))                   [e * x = x]
                = e                                            [IH]  \<close>
-            show ?case sorry
+            let ?pn = "top1_group_pow mul e ?a n"
+            let ?pin = "top1_group_pow mul e ?ia n"
+            have hpn_G: "?pn \<in> G" using group_pow_in_group'[OF hG_grp ha_G] by (by100 simp)
+            have hpin_G: "?pin \<in> G" using group_pow_in_group'[OF hG_grp hia_G] by (by100 simp)
+            have haia: "mul ?a ?ia = e" using hG_grp ha_G unfolding top1_is_group_on_def by (by100 blast)
+            \<comment> \<open>In abelian group: mul(mul a pn)(mul ia pin) = mul(mul a ia)(mul pn pin).\<close>
+            have "mul (mul ?a ?pn) (mul ?ia ?pin)
+                = mul (mul ?a ?ia) (mul ?pn ?pin)"
+            proof -
+              have hG_grp_loc: "top1_is_group_on G mul e invg"
+                using hG_abel unfolding top1_is_abelian_group_on_def by (by100 blast)
+              have hassoc: "\<And>x y z. x \<in> G \<Longrightarrow> y \<in> G \<Longrightarrow> z \<in> G \<Longrightarrow>
+                  mul (mul x y) z = mul x (mul y z)"
+                using hG_grp_loc unfolding top1_is_group_on_def by (by100 blast)
+              have hcomm: "\<And>x y. x \<in> G \<Longrightarrow> y \<in> G \<Longrightarrow> mul x y = mul y x"
+                using hG_abel unfolding top1_is_abelian_group_on_def by (by100 blast)
+              have h_ia_pin: "mul ?ia ?pin \<in> G"
+                using hG_grp_loc hia_G hpin_G unfolding top1_is_group_on_def by (by100 blast)
+              have h_pn_pin: "mul ?pn ?pin \<in> G"
+                using hG_grp_loc hpn_G hpin_G unfolding top1_is_group_on_def by (by100 blast)
+              \<comment> \<open>(a \<cdot> pn) \<cdot> (ia \<cdot> pin) = a \<cdot> (pn \<cdot> (ia \<cdot> pin)).\<close>
+              have s1: "mul (mul ?a ?pn) (mul ?ia ?pin) = mul ?a (mul ?pn (mul ?ia ?pin))"
+                by (rule hassoc[OF ha_G hpn_G h_ia_pin])
+              \<comment> \<open>pn \<cdot> (ia \<cdot> pin) = (pn \<cdot> ia) \<cdot> pin.\<close>
+              have s2: "mul ?pn (mul ?ia ?pin) = mul (mul ?pn ?ia) ?pin"
+                using hassoc[OF hpn_G hia_G hpin_G] by (by100 simp)
+              \<comment> \<open>pn \<cdot> ia = ia \<cdot> pn (commutativity).\<close>
+              have s3: "mul ?pn ?ia = mul ?ia ?pn"
+                by (rule hcomm[OF hpn_G hia_G])
+              \<comment> \<open>Reassemble: a \<cdot> ((ia \<cdot> pn) \<cdot> pin) = a \<cdot> (ia \<cdot> (pn \<cdot> pin)).\<close>
+              have h_ia_pn: "mul ?ia ?pn \<in> G"
+                using hG_grp_loc hia_G hpn_G unfolding top1_is_group_on_def by (by100 blast)
+              have s4: "mul (mul ?ia ?pn) ?pin = mul ?ia (mul ?pn ?pin)"
+                by (rule hassoc[OF hia_G hpn_G hpin_G])
+              \<comment> \<open>a \<cdot> (ia \<cdot> (pn \<cdot> pin)) = (a \<cdot> ia) \<cdot> (pn \<cdot> pin).\<close>
+              have s5: "mul ?a (mul ?ia (mul ?pn ?pin)) = mul (mul ?a ?ia) (mul ?pn ?pin)"
+                using hassoc[OF ha_G hia_G h_pn_pin] by (by100 simp)
+              show ?thesis using s1 s2 s3 s4 s5 by (by100 simp)
+            qed
+            also have "\<dots> = mul e e" using Suc.IH haia by (by100 simp)
+            also have "\<dots> = e" using hG_grp unfolding top1_is_group_on_def by (by100 blast)
+            finally show ?case by (by100 simp)
           qed
         qed
         show ?thesis
