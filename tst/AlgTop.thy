@@ -3838,7 +3838,26 @@ proof -
   proof -
     have "n > 0" using assms(1) unfolding top1_is_n_fold_torus_on_def by (by100 blast)
     hence "length ?scheme \<ge> 4"
-      unfolding top1_n_torus_scheme_def sorry
+    proof -
+      assume hn: "n > 0"
+      have "length ?scheme = length (concat (map (\<lambda>i. [(2*i, True), (2*i+1, True),
+          (2*i, False), (2*i+1, False)]) [0..<n]))"
+        unfolding top1_n_torus_scheme_def by (by100 simp)
+      also have "\<dots> = 4 * n"
+      proof -
+        define f where "f = (\<lambda>i::nat. [(2*i, True), (2*i+1, True), (2*i, False), (2*i+1, False)])"
+        have hlen_f: "\<And>i. length (f i) = 4" unfolding f_def by (by100 simp)
+        have "length (concat (map f [0..<n])) = sum_list (map (length \<circ> f) [0..<n])"
+          using length_concat[of "map f [0..<n]"] by (by100 simp)
+        also have "map (length \<circ> f) [0..<n] = map (\<lambda>i. 4::nat) [0..<n]"
+          using hlen_f by (by100 simp)
+        also have "sum_list (map (\<lambda>i. 4::nat) [0..<n]) = 4 * n"
+          by (induction n, by100 simp, by100 simp)
+        finally show ?thesis unfolding f_def by (by100 simp)
+      qed
+      finally have "length ?scheme = 4 * n" .
+      thus ?thesis using hn by (by100 simp)
+    qed
     thus ?thesis by (by100 simp)
   qed
   \<comment> \<open>All vertices get identified (Munkres: "We leave this to you to check").\<close>
@@ -3860,10 +3879,38 @@ proof -
     by (rule Theorem_74_2_scheme_presentation[OF hscheme assms(2) hlen hvert])
   \<comment> \<open>The distinct labels of the torus scheme are {0,...,2n-1}.\<close>
   have hlabels: "fst ` set ?scheme = {..<2*n}"
-    unfolding top1_n_torus_scheme_def sorry
-    \<comment> \<open>fst ` set (concat(map (λi. [(2i,T),(2i+1,T),(2i,F),(2i+1,F)]) [0..<n]))
-       = \<Union>{fst ` set [(2i,T),(2i+1,T),(2i,F),(2i+1,F)] | i \<in> {0..<n}}
-       = \<Union>{{2i, 2i+1} | i \<in> {0..<n}} = {..<2n}.\<close>
+  proof -
+    define f where "f = (\<lambda>i::nat. [(2*i, True), (2*i+1, True), (2*i, False), (2*i+1, False)])"
+    have hfst_f: "\<And>i. fst ` set (f i) = {2*i, 2*i+1}" unfolding f_def by (by5000 force)
+    have "fst ` set ?scheme = fst ` set (concat (map f [0..<n]))"
+      unfolding top1_n_torus_scheme_def f_def by (by100 simp)
+    also have "\<dots> = (\<Union>i\<in>{0..<n}. fst ` set (f i))" by (by5000 auto)
+    also have "\<dots> = (\<Union>i\<in>{0..<n}. {2*i, 2*i+1})" using hfst_f by (by100 simp)
+    also have "\<dots> = {..<2*n}"
+    proof (rule set_eqI, rule iffI)
+      fix x assume "x \<in> (\<Union>i\<in>{0..<n}. {2 * i, 2 * i + 1})"
+      then obtain i where "i < n" "x = 2*i \<or> x = 2*i+1" by (by5000 auto)
+      thus "x \<in> {..<2*n}" by (by100 auto)
+    next
+      fix x assume "x \<in> {..<2*n}"
+      hence "x < 2*n" by (by100 simp)
+      hence "x div 2 < n" by (by100 simp)
+      show "x \<in> (\<Union>i\<in>{0..<n}. {2 * i, 2 * i + 1})"
+      proof (cases "even x")
+        case True
+        then obtain k where "x = 2*k" by (by100 auto)
+        hence "k < n" using \<open>x < 2*n\<close> by (by100 simp)
+        thus ?thesis using \<open>x = 2*k\<close> by (by100 force)
+      next
+        case False
+        hence "odd x" by (by100 simp)
+        then obtain k where "x = 2*k+1" using oddE by (by5000 blast)
+        hence "k < n" using \<open>x < 2*n\<close> by (by100 simp)
+        thus ?thesis using \<open>x = 2*k+1\<close> by (by100 force)
+      qed
+    qed
+    finally show ?thesis .
+  qed
   \<comment> \<open>The relator word in the scheme = the torus relator.\<close>
   have hrelator: "{ map (\<lambda>(s,b). (s, b)) ?scheme }
       = { concat (map (\<lambda>i. [(2*i, True), (2*i+1, True),
