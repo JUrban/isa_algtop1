@@ -2728,7 +2728,10 @@ proof -
   define a where "a = q (vx 0, vy 0)"
   \<comment> \<open>Step 5: Verify all CW data properties.\<close>
   have hA_closed: "closedin_on X TX A"
-    sorry \<comment> \<open>q(BdP) is closed: BdP compact, q continuous.\<close>
+    sorry \<comment> \<open>A = q(BdP). BdP compact (finite union of segments). q continuous (quotient map).
+       top1\_compact\_on image of compact under continuous is compact.
+       Compact subset of Hausdorff is closed (closedin\_on).
+       Requires bridging between R² compact/closed and custom topology.\<close>
   have hA_pc: "top1_path_connected_on A (subspace_topology X TX A)"
     sorry \<comment> \<open>A = q(Bd P) is path-connected: edges are paths, all vertices identified.\<close>
   have hh_cont: "top1_continuous_map_on top1_B2 top1_B2_topology X TX h"
