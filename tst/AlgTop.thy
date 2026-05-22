@@ -7000,9 +7000,9 @@ proof -
   qed
   \<comment> \<open>2G is normal in G (abelian \<Rightarrow> all subgroups normal).\<close>
   have h2G_normal: "top1_normal_subgroup_on G mul e invg ?twoG"
-    sorry \<comment> \<open>Conjugation trivial in abelian group.\<close>
+    sorry \<comment> \<open>2G is a normal subgroup of abelian G. Needs: 2G is a group (closure under mul, invg).\<close>
   have h2K_normal: "top1_normal_subgroup_on ?K mul e invg ?twoK"
-    sorry \<comment> \<open>Same: abelian K.\<close>
+    sorry \<comment> \<open>2K is a normal subgroup of abelian K. Same argument.\<close>
   \<comment> \<open>Step 2: |QG\_even| = |QK|.\<close>
   \<comment> \<open>Bijection \<psi>: QK \<rightarrow> QG\_even sending coset\_K(k) \<mapsto> coset\_G(k).
      Well-defined: K \<inter> 2G = 2K ensures k1 \<equiv> k2 mod 2K \<Longrightarrow> k1 \<equiv> k2 mod 2G.
@@ -7133,7 +7133,47 @@ proof -
     next
       \<comment> \<open>Image = QG\_even.\<close>
       show "\<psi> ` ?QK = QG_even"
-        sorry \<comment> \<open>\<subseteq>: k \<in> K has even \<epsilon>. \<supseteq>: every even coset has K-representative.\<close>
+      proof (rule set_eqI, rule iffI)
+        \<comment> \<open>\<subseteq>: k \<in> K has \<epsilon>(k)=0 (even), so coset\_G(k) \<in> QG\_even.\<close>
+        fix C assume "C \<in> \<psi> ` ?QK"
+        then obtain CK where "CK \<in> ?QK" "C = \<psi> CK" by (by100 blast)
+        let ?k = "SOME k. k \<in> CK"
+        have hk_CK: "?k \<in> CK"
+          sorry \<comment> \<open>Same someI\_ex as before.\<close>
+        have hk_K: "?k \<in> ?K"
+          sorry \<comment> \<open>Same coset membership.\<close>
+        have "C = top1_group_coset_on G mul ?twoG ?k"
+          using \<open>C = \<psi> CK\<close> unfolding \<psi>_def by (by100 simp)
+        moreover have "C \<in> ?QG" using hk_K
+          unfolding top1_quotient_group_carrier_on_def by (by100 blast)
+        moreover have "\<exists>g\<in>C. even (\<epsilon> g)"
+        proof -
+          have "?k \<in> C"
+          proof -
+            have "?k \<in> G" using hk_K by (by100 blast)
+            thus ?thesis
+              using coset_self_mem[OF hG_grp _ hk_K] sorry
+          qed
+          moreover have "even (\<epsilon> ?k)" using hk_K by (by100 simp)
+          ultimately show ?thesis by (by100 blast)
+        qed
+        ultimately show "C \<in> QG_even" unfolding QG_even_def by (by100 blast)
+      next
+        \<comment> \<open>\<supseteq>: every even coset has a K-representative.\<close>
+        fix C assume "C \<in> QG_even"
+        hence hC_QG: "C \<in> ?QG" and hC_even: "\<exists>g\<in>C. even (\<epsilon> g)"
+          unfolding QG_even_def by (by100 auto)+
+        \<comment> \<open>Get representative g0 with even \<epsilon>.\<close>
+        from hC_QG obtain g0 where hg0: "g0 \<in> G" "C = top1_group_coset_on G mul ?twoG g0"
+          unfolding top1_quotient_group_carrier_on_def by (by100 blast)
+        \<comment> \<open>g0 has even \<epsilon> (from C being even and \<epsilon>-coset parity).\<close>
+        have "even (\<epsilon> g0)"
+          sorry \<comment> \<open>From hC\_even + \<epsilon>-coset parity constancy.\<close>
+        \<comment> \<open>Project: k = g0 \<cdot> invg(a^{\<epsilon>(g0)}) where a^{\<epsilon>(g0)} \<in> 2G.\<close>
+        \<comment> \<open>Then k \<in> K and coset\_G(k) = coset\_G(g0) = C.\<close>
+        show "C \<in> \<psi> ` ?QK"
+          sorry \<comment> \<open>Projection via group\_pow\_add: a^{2m} = (a^m)^2 \<in> 2G.\<close>
+      qed
     qed
     thus ?thesis using bij_betw_same_card[OF hpsi_bij] by (by100 simp)
   qed
