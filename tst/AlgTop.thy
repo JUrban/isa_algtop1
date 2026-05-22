@@ -3866,8 +3866,75 @@ proof -
       \<and> top1_quotient_map_on P (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) X TX q
       \<and> (\<forall>i<length ?scheme. (vx i, vy i) \<in> P)
       \<and> (\<forall>i<length ?scheme. \<forall>j<length ?scheme. q (vx i, vy i) = q (vx j, vy j))"
-    sorry \<comment> \<open>Extract (P,q,vx,vy) from scheme; verify all vertices get identified
-       using edge label matching at t=0 and t=1 (torus scheme: all 4n vertices chain).\<close>
+  proof -
+    \<comment> \<open>Extract (P, q, vx, vy) from the torus scheme definition.\<close>
+    from quotient_of_scheme_extract_full[OF hscheme]
+    obtain P q vx vy where
+      hP: "top1_is_polygonal_region_on P (length ?scheme)" and
+      hq: "top1_quotient_map_on P (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) X TX q" and
+      hverts: "\<forall>i<length ?scheme. (vx i, vy i) \<in> P" and
+      hedge: "\<forall>i<length ?scheme. \<forall>j<length ?scheme.
+          fst (?scheme!i) = fst (?scheme!j) \<longrightarrow>
+          (\<forall>t\<in>I_set.
+             q ((1-t) * vx i + t * vx (Suc i mod length ?scheme),
+                (1-t) * vy i + t * vy (Suc i mod length ?scheme))
+           = (if snd (?scheme!i) = snd (?scheme!j)
+              then q ((1-t) * vx j + t * vx (Suc j mod length ?scheme),
+                      (1-t) * vy j + t * vy (Suc j mod length ?scheme))
+              else q (t * vx j + (1-t) * vx (Suc j mod length ?scheme),
+                      t * vy j + (1-t) * vy (Suc j mod length ?scheme))))"
+      by (by100 blast)
+    \<comment> \<open>The edge identification at t=0 gives vertex identifications.
+       For edges i,j with same label and different direction (snd differs):
+       q(vx i, vy i) = q(vx(Suc j mod len), vy(Suc j mod len)).
+       For the torus scheme, this chains all vertices.\<close>
+    \<comment> \<open>From hedge at t=0: for edges with same label, different direction,
+       q(start of edge i) = q(end of edge j).
+       The torus scheme ensures all vertices are transitively connected.\<close>
+    have h0_in_I: "(0::real) \<in> I_set" unfolding I_set_def by (by100 simp)
+    have h1_in_I: "(1::real) \<in> I_set" unfolding I_set_def by (by100 simp)
+    \<comment> \<open>Suffices to show: q(vx 0, vy 0) = q(vx i, vy i) for all i.\<close>
+    have hvert_ident: "\<forall>i<length ?scheme. \<forall>j<length ?scheme.
+        q (vx i, vy i) = q (vx j, vy j)"
+    proof -
+      \<comment> \<open>It suffices to show q(vx i, vy i) = q(vx 0, vy 0) for all i < 4n.
+         We prove: q(vx i, vy i) = q(vx (Suc i mod (4*n)), vy (Suc i mod (4*n)))
+         for each i, then chain by induction.
+         This follows from hedge: adjacent edges share an endpoint.\<close>
+      have hadjacent: "\<forall>i<length ?scheme.
+          q (vx i, vy i) = q (vx (Suc i mod length ?scheme), vy (Suc i mod length ?scheme))"
+        sorry \<comment> \<open>From hedge: each edge i shares label with some edge j (for the torus scheme,
+           j = i+2 mod 4n or i-2 mod 4n). The identification at t=0 or t=1 gives
+           q(vertex i) = q(vertex (i+1) mod 4n).\<close>
+      \<comment> \<open>From hadjacent, all vertices are in the same equivalence class.\<close>
+      \<comment> \<open>From hadjacent, iterate: q(vx 0, vy 0) = q(vx 1, vy 1) = ... = q(vx (4n-1), vy (4n-1)).\<close>
+      have hchain: "\<forall>i<length ?scheme. q (vx 0, vy 0) = q (vx i, vy i)"
+      proof (intro allI impI)
+        fix i assume "i < length ?scheme"
+        show "q (vx 0, vy 0) = q (vx i, vy i)"
+        proof (induction i)
+          case 0 show ?case by (by100 simp)
+        next
+          case (Suc k)
+          hence "k < length ?scheme" using \<open>Suc k < length ?scheme\<close> by (by100 simp)
+          have "q (vx 0, vy 0) = q (vx k, vy k)" using Suc.IH[OF \<open>k < length ?scheme\<close>] .
+          also have "q (vx k, vy k) = q (vx (Suc k mod length ?scheme), vy (Suc k mod length ?scheme))"
+            using hadjacent \<open>k < length ?scheme\<close> by (by100 blast)
+          also have "Suc k mod length ?scheme = Suc k"
+            using \<open>Suc k < length ?scheme\<close> by (by100 simp)
+          finally show ?case by (by100 simp)
+        qed
+      qed
+      show ?thesis
+      proof (intro allI impI)
+        fix i j assume "i < length ?scheme" "j < length ?scheme"
+        have "q (vx 0, vy 0) = q (vx i, vy i)" using hchain \<open>i < length ?scheme\<close> by (by100 blast)
+        moreover have "q (vx 0, vy 0) = q (vx j, vy j)" using hchain \<open>j < length ?scheme\<close> by (by100 blast)
+        ultimately show "q (vx i, vy i) = q (vx j, vy j)" by (by100 simp)
+      qed
+    qed
+    show ?thesis using hP hq hverts hvert_ident by (by100 blast)
+  qed
   \<comment> \<open>Apply Theorem 74.2.\<close>
   have h742: "\<exists>(G::'g set) mul e invg.
       top1_group_presented_by_on G mul e invg (fst ` set ?scheme)
