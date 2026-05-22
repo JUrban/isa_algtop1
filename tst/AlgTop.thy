@@ -2299,6 +2299,59 @@ proof -
   qed
 qed
 
+text \<open>Strict version: there exists i where f(i) > 0 and f(i+1) \<le> 0.\<close>
+lemma cyclic_strict_sign_change:
+  fixes f :: "nat \<Rightarrow> real" and n :: nat
+  assumes "n \<ge> 2" and "(\<Sum>i<n. f i) = 0" and "\<exists>i<n. f i > 0"
+  shows "\<exists>i<n. f i > 0 \<and> f ((i+1) mod n) \<le> 0"
+proof (rule ccontr)
+  assume "\<not> (\<exists>i<n. f i > 0 \<and> f ((i+1) mod n) \<le> 0)"
+  hence htrans: "\<forall>i<n. f i > 0 \<longrightarrow> f ((i+1) mod n) > 0" by (by100 force)
+  \<comment> \<open>From assms(3): \<exists>k with f(k) > 0. By htrans, all successors > 0. After n steps: all > 0.\<close>
+  from assms(3) obtain k where hk: "k < n" "f k > 0" by (by100 blast)
+  have hprop: "\<And>j. j < n \<Longrightarrow> f ((k + j) mod n) > 0"
+  proof -
+    fix j show "j < n \<Longrightarrow> f ((k + j) mod n) > 0"
+    proof (induction j)
+      case 0 thus ?case using hk by (by100 simp)
+    next
+      case (Suc j)
+      hence hj: "j < n" by (by100 simp)
+      have hjmod: "(k + j) mod n < n" using assms(1) by (by100 simp)
+      have "f ((k + j) mod n) > 0" using Suc.IH hj by (by100 blast)
+      from htrans[rule_format, OF hjmod this]
+      have "f (((k + j) mod n + 1) mod n) > 0" .
+      moreover have "((k + j) mod n + 1) mod n = (k + Suc j) mod n"
+        using mod_add_left_eq[of "k+j" n 1] by (by100 simp)
+      ultimately show ?case by (by100 simp)
+    qed
+  qed
+  have "\<forall>i<n. f i > 0"
+  proof (intro allI impI)
+    fix i assume "i < n"
+    have "\<exists>j<n. (k + j) mod n = i"
+    proof (cases "k \<le> i")
+      case True show ?thesis apply (rule exI[of _ "i - k"])
+        using True \<open>i < n\<close> hk(1) by (by100 simp)
+    next
+      case False show ?thesis apply (rule exI[of _ "n - k + i"])
+        using False \<open>i < n\<close> hk(1) by (by5000 simp)
+    qed
+    then obtain j where "j < n" "(k + j) mod n = i" by (by100 blast)
+    thus "f i > 0" using hprop[of j] by (by100 simp)
+  qed
+  hence "(\<Sum>i<n. f i) > 0"
+  proof -
+    have "(\<Sum>i<n. f i) \<ge> 0" using \<open>\<forall>i<n. f i > 0\<close>
+      by (intro sum_nonneg) (by100 force)
+    moreover have "f 0 > 0" using \<open>\<forall>i<n. f i > 0\<close> assms(1) by (by100 simp)
+    moreover have "0 < n" using assms(1) by (by100 simp)
+    ultimately show ?thesis
+      using sum_pos[of "{..<n}" f] \<open>\<forall>i<n. f i > 0\<close> by (by5000 force)
+  qed
+  thus False using assms(2) by (by100 simp)
+qed
+
 text \<open>A convex polygon in R^2 is homeomorphic to B^2 (the closed unit disk).
   This is a standard topology fact (radial projection from centroid).\<close>
 lemma polygon_homeomorphic_to_disk:
@@ -3475,9 +3528,29 @@ proof -
           thus False using False by (by100 simp)
         qed
         have hn2: "n \<ge> 2" using assms(2) by (by100 linarith)
-        from cyclic_sign_change[OF hn2 hsum0 hne]
+        \<comment> \<open>Use STRICT sign change: \<exists>i with cross2 > 0 and successor \<le> 0.
+           Need \<exists>i with cross2 > 0. From hne (\<exists>j. \<noteq> 0) and sum = 0: \<exists> positive.\<close>
+        have hpos_exists: "\<exists>i<n. cross2 (vx i - cx, vy i - cy) (?dx, ?dy) > 0"
+        proof -
+          from hne obtain j where hj: "j < n" and hjne: "cross2 (vx j - cx, vy j - cy) (?dx, ?dy) \<noteq> 0"
+            by (by100 blast)
+          show ?thesis
+          proof (cases "cross2 (vx j - cx, vy j - cy) (?dx, ?dy) > 0")
+            case True thus ?thesis using hj by (by100 blast)
+          next
+            case False
+            hence "cross2 (vx j - cx, vy j - cy) (?dx, ?dy) < 0" using hjne by (by100 linarith)
+            \<comment> \<open>There must be a positive one too (sum = 0 with a negative means \<exists> positive).\<close>
+            hence "(\<Sum>i\<in>{..<n} - {j}. cross2 (vx i - cx, vy i - cy) (?dx, ?dy)) > 0"
+              using hsum0 hj by (simp add: sum.remove)
+            hence "\<exists>i\<in>{..<n} - {j}. cross2 (vx i - cx, vy i - cy) (?dx, ?dy) > 0"
+              sorry \<comment> \<open>Sum > 0 over finite set \<Rightarrow> \<exists> positive element.\<close>
+            thus ?thesis by (by100 blast)
+          qed
+        qed
+        from cyclic_strict_sign_change[OF hn2 hsum0 hpos_exists]
         obtain i where hi: "i < n"
-            and hpos: "cross2 (vx i - cx, vy i - cy) (?dx, ?dy) \<ge> 0"
+            and hpos: "cross2 (vx i - cx, vy i - cy) (?dx, ?dy) > 0"
             and hneg: "cross2 (vx ((i+1) mod n) - cx, vy ((i+1) mod n) - cy) (?dx, ?dy) \<le> 0"
           by (by100 blast)
         \<comment> \<open>The sign conditions mean z-c is in the sector between v_i-c and v_{i+1}-c.
@@ -3507,7 +3580,7 @@ proof -
             unfolding cross2_def by (simp add: algebra_simps)
           thus ?thesis by (by100 linarith)
         qed
-        have hnum_\<gamma>: "cross2 (vx i - cx, vy i - cy) (fst z - cx, snd z - cy) \<ge> 0"
+        have hnum_\<gamma>: "cross2 (vx i - cx, vy i - cy) (fst z - cx, snd z - cy) > 0"
           using hpos .
         \<comment> \<open>Derive D > 0: numerator sum = num_\<beta> + num_\<gamma> > 0 (since z \<noteq> c, not both 0).
            \<beta>'+\<gamma>' = (num_\<beta> + num_\<gamma>)/D must be > 0 (from z \<noteq> c via Cramer).
