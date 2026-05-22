@@ -1,5 +1,5 @@
 theory AlgTop
-  imports "AlgIsoFixed.AlgIsoFixed"
+  imports "K5.K5_nonplanar"
 begin
 
 \<comment> \<open>Method by5000: like by100 but with 5000ms timeout for hard proof steps.\<close>
@@ -1574,89 +1574,8 @@ proof -
 qed
 
 text \<open>Theorem 64.4 (K5 non-planarity) is fully proved in the K5 session
-  (K5\_nonplanar.Theorem\_64\_4\_K5\_not\_planar, 0 sorry, certified).\<close>
-
-(*
-theorem Theorem_64_4_K5_not_planar:
-  \<comment> \<open>The complete graph K5 cannot be imbedded in the plane (or S2).
-     Following the book proof exactly: K4 on {a1,a2,a3,a4} separates S2 into 4 components.
-     a5 lies in one component. All edges from a5 lie in the closure of that component.
-     So all 4 vertices lie in the boundary. But no boundary Xi contains all 4 vertices.\<close>
-  assumes hS2: "is_topology_on_strict top1_S2 top1_S2_topology"
-      and hcard: "card {a1, a2, a3, a4, a5 :: real \<times> real \<times> real} = 5"
-      \<comment> \<open>All 5 vertices in S2.\<close>
-      and "{a1, a2, a3, a4, a5} \<subseteq> top1_S2"
-      \<comment> \<open>10 arcs: one for each pair of distinct vertices.\<close>
-      and "top1_is_arc_on e12 (subspace_topology top1_S2 top1_S2_topology e12)"
-      and "top1_is_arc_on e13 (subspace_topology top1_S2 top1_S2_topology e13)"
-      and "top1_is_arc_on e14 (subspace_topology top1_S2 top1_S2_topology e14)"
-      and "top1_is_arc_on e15 (subspace_topology top1_S2 top1_S2_topology e15)"
-      and "top1_is_arc_on e23 (subspace_topology top1_S2 top1_S2_topology e23)"
-      and "top1_is_arc_on e24 (subspace_topology top1_S2 top1_S2_topology e24)"
-      and "top1_is_arc_on e25 (subspace_topology top1_S2 top1_S2_topology e25)"
-      and "top1_is_arc_on e34 (subspace_topology top1_S2 top1_S2_topology e34)"
-      and "top1_is_arc_on e35 (subspace_topology top1_S2 top1_S2_topology e35)"
-      and "top1_is_arc_on e45 (subspace_topology top1_S2 top1_S2_topology e45)"
-      \<comment> \<open>All arcs in S2.\<close>
-      and "e12 \<subseteq> top1_S2" and "e13 \<subseteq> top1_S2" and "e14 \<subseteq> top1_S2" and "e15 \<subseteq> top1_S2"
-      and "e23 \<subseteq> top1_S2" and "e24 \<subseteq> top1_S2" and "e25 \<subseteq> top1_S2"
-      and "e34 \<subseteq> top1_S2" and "e35 \<subseteq> top1_S2" and "e45 \<subseteq> top1_S2"
-      \<comment> \<open>Endpoints of arcs.\<close>
-      and "top1_arc_endpoints_on e12 (subspace_topology top1_S2 top1_S2_topology e12) = {a1, a2}"
-      and "top1_arc_endpoints_on e13 (subspace_topology top1_S2 top1_S2_topology e13) = {a1, a3}"
-      and "top1_arc_endpoints_on e14 (subspace_topology top1_S2 top1_S2_topology e14) = {a1, a4}"
-      and "top1_arc_endpoints_on e15 (subspace_topology top1_S2 top1_S2_topology e15) = {a1, a5}"
-      and "top1_arc_endpoints_on e23 (subspace_topology top1_S2 top1_S2_topology e23) = {a2, a3}"
-      and "top1_arc_endpoints_on e24 (subspace_topology top1_S2 top1_S2_topology e24) = {a2, a4}"
-      and "top1_arc_endpoints_on e25 (subspace_topology top1_S2 top1_S2_topology e25) = {a2, a5}"
-      and "top1_arc_endpoints_on e34 (subspace_topology top1_S2 top1_S2_topology e34) = {a3, a4}"
-      and "top1_arc_endpoints_on e35 (subspace_topology top1_S2 top1_S2_topology e35) = {a3, a5}"
-      and "top1_arc_endpoints_on e45 (subspace_topology top1_S2 top1_S2_topology e45) = {a4, a5}"
-      \<comment> \<open>Arcs pairwise intersect only at common endpoints.\<close>
-      and "e12 \<inter> e13 = {a1}" and "e12 \<inter> e14 = {a1}" and "e12 \<inter> e15 = {a1}"
-      and "e12 \<inter> e23 = {a2}" and "e12 \<inter> e24 = {a2}" and "e12 \<inter> e25 = {a2}"
-      and "e12 \<inter> e34 = {}" and "e12 \<inter> e35 = {}" and "e12 \<inter> e45 = {}"
-      and "e13 \<inter> e14 = {a1}" and "e13 \<inter> e15 = {a1}"
-      and "e13 \<inter> e23 = {a3}" and "e13 \<inter> e24 = {}" and "e13 \<inter> e25 = {}"
-      and "e13 \<inter> e34 = {a3}" and "e13 \<inter> e35 = {a3}" and "e13 \<inter> e45 = {}"
-      and "e14 \<inter> e15 = {a1}"
-      and "e14 \<inter> e23 = {}" and "e14 \<inter> e24 = {a4}" and "e14 \<inter> e25 = {}"
-      and "e14 \<inter> e34 = {a4}" and "e14 \<inter> e35 = {}" and "e14 \<inter> e45 = {a4}"
-      and "e15 \<inter> e23 = {}" and "e15 \<inter> e24 = {}" and "e15 \<inter> e25 = {a5}"
-      and "e15 \<inter> e34 = {}" and "e15 \<inter> e35 = {a5}" and "e15 \<inter> e45 = {a5}"
-      and "e23 \<inter> e24 = {a2}" and "e23 \<inter> e25 = {a2}"
-      and "e23 \<inter> e34 = {a3}" and "e23 \<inter> e35 = {a3}" and "e23 \<inter> e45 = {}"
-      and "e24 \<inter> e25 = {a2}"
-      and "e24 \<inter> e34 = {a4}" and "e24 \<inter> e35 = {}" and "e24 \<inter> e45 = {a4}"
-      and "e25 \<inter> e34 = {}" and "e25 \<inter> e35 = {a5}" and "e25 \<inter> e45 = {a5}"
-      and "e34 \<inter> e35 = {a3}" and "e34 \<inter> e45 = {a4}"
-      and "e35 \<inter> e45 = {a5}"
-  shows False
-proof -
-  \<comment> \<open>Step 1: Extract K4 on {a1,a2,a3,a4} from K5. The K4 uses edges e12,e13,e14,e23,e24,e34.\<close>
-  have hcard4: "card {a1, a2, a3, a4} = 4" using hcard by (auto simp: card_insert_if split: if_splits)
-  have hvert_S2: "{a1, a2, a3, a4} \<subseteq> top1_S2" using assms(3) by (by100 blast)
-  \<comment> \<open>Step 2: Apply Lemma\_64\_3: K4 separates S2 into 4 components.\<close>
-  \<comment> \<open>Need: the K4 subgraph = e12 \<union> e13 \<union> e14 \<union> e23 \<union> e24 \<union> e34.\<close>
-  define X where "X = e12 \<union> e13 \<union> e14 \<union> e23 \<union> e24 \<union> e34"
-  \<comment> \<open>X\_i = edges of K4 not containing a\_i:
-     X1 = e23 \<union> e24 \<union> e34
-     X2 = e13 \<union> e14 \<union> e34
-     X3 = e12 \<union> e14 \<union> e24
-     X4 = e12 \<union> e13 \<union> e23\<close>
-  define X1 where "X1 = e23 \<union> e24 \<union> e34"
-  define X2 where "X2 = e13 \<union> e14 \<union> e34"
-  define X3 where "X3 = e12 \<union> e14 \<union> e24"
-  define X4 where "X4 = e12 \<union> e13 \<union> e23"
-  \<comment> \<open>From Lemma\_64\_3: S2-X has exactly 4 components with boundaries X1,...,X4.\<close>
-  \<comment> \<open>Step 3: a5 \<in> top1\_S2 - X (since a5 is not a vertex of K4 and the arcs only contain
-     vertices of K4 as their endpoints, and a5 \<noteq> a1,...,a4).\<close>
-  \<comment> \<open>Fully proved in K5 session (K5\_nonplanar.Theorem\_64\_4\_K5\_not\_planar, 0 sorry, certified).
-     Assumption matching between the two versions is tedious (78 vs 50 assumptions,
-     different ordering and some need Int\_commute). This skeleton retained.\<close>
-  show False sorry
-qed
-*)
+  (K5\_nonplanar.Theorem\_64\_4\_K5\_not\_planar, 0 sorry, certified).
+  Now imported via the K5 session dependency.\<close>
 
 
 text \<open>In an abelian group, the product of a word can be decomposed by counting
@@ -3820,7 +3739,7 @@ proof (induction "length w" arbitrary: w rule: less_induct)
       qed
       hence hcount_tl: "\<And>P. length (filter P w) = (if P (s0, b0) then 1 else 0)
           + length (filter P ?w') + (if P (s0, \<not>b0) then 1 else 0)"
-        using \<open>w \<noteq> []\<close> hfirst by (cases w) (by100 simp)+
+        using \<open>w \<noteq> []\<close> hfirst by (cases w) (by5000 simp)+
       have "length (filter (\<lambda>(t,b). t = s \<and> b) w) = length (filter (\<lambda>(t,b). t = s \<and> \<not>b) w)"
         using less(3) by (by100 blast)
       have htrue_w: "length (filter (\<lambda>(t,b). t = s \<and> b) w)
@@ -6226,7 +6145,7 @@ proof -
   proof -
     have "inj_on iota S" using hfree
       unfolding top1_is_free_abelian_group_full_on_def by (by100 blast)
-    thus ?thesis using inj_on_subset by (by100 blast)
+    thus ?thesis using inj_on_subset by (by5000 blast)
   qed
   \<comment> \<open>Condition 4: K = ⟨\<iota>(S')⟩ (generated by the restricted generators).\<close>
   have hK_gen: "?K = top1_subgroup_generated_on ?K mul e invg (iota ` ?S')"
