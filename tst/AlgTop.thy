@@ -2062,7 +2062,33 @@ lemma polygon_homeomorphic_to_disk:
   assumes "top1_is_polygonal_region_on P n" and "n \<ge> 3"
   shows "\<exists>\<psi>. top1_homeomorphism_on P (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P)
     top1_B2 top1_B2_topology \<psi>"
-  sorry
+proof -
+  \<comment> \<open>Following Munkres §74 (paragraph before Theorem 74.2):
+     Pick a point p in Int P. For each x in Bd P, the line segment from p to x
+     intersects Bd P in exactly one point (convexity). The boundary map
+     h: Bd P \<rightarrow> S^1 extends radially to \<psi>: P \<rightarrow> B^2 by
+     \<psi>((1-t)\<cdot>p + t\<cdot>x) = t \<cdot> h(x) for t \<in> [0,1], x \<in> Bd P.
+     Since P is compact and B^2 is Hausdorff, a continuous bijection P \<rightarrow> B^2
+     is automatically a homeomorphism.\<close>
+  \<comment> \<open>Step 1: P is compact (closed bounded subset of R^2).\<close>
+  have hP_compact: "top1_compact_on P (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P)"
+    sorry \<comment> \<open>Polygonal regions are compact (convex hull of finitely many points).\<close>
+  \<comment> \<open>Step 2: B^2 is Hausdorff.\<close>
+  have hB2_haus: "is_hausdorff_on top1_B2 top1_B2_topology"
+  proof -
+    have "top1_B2 \<subseteq> (UNIV :: (real \<times> real) set)" by (by100 blast)
+    thus ?thesis
+      using Theorem_17_11 top1_R2_is_hausdorff
+      unfolding top1_B2_topology_def by (by5000 blast)
+  qed
+  \<comment> \<open>Step 3: Construct the continuous bijection \<psi>: P \<rightarrow> B^2.\<close>
+  \<comment> \<open>This uses the radial projection from an interior point of P.\<close>
+  have "\<exists>\<psi>. continuous_on P \<psi> \<and> \<psi> ` P = top1_B2 \<and> inj_on \<psi> P"
+    sorry \<comment> \<open>Radial projection construction: pick interior point, project boundary to S^1,
+       extend linearly along rays. Continuity from piecewise-linear construction.\<close>
+  \<comment> \<open>Step 4: Continuous bijection from compact to Hausdorff is homeomorphism.\<close>
+  show ?thesis sorry \<comment> \<open>Apply compact-to-Hausdorff homeomorphism theorem.\<close>
+qed
 
 text \<open>Key helper: a scheme quotient provides the attaching data for Theorem 72.1.
   The 1-skeleton A = q(boundary of polygon) is closed and path-connected.
