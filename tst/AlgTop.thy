@@ -2207,7 +2207,58 @@ lemma cyclic_sign_change:
   fixes f :: "nat \<Rightarrow> real" and n :: nat
   assumes "n \<ge> 2" and "(\<Sum>i<n. f i) = 0" and "\<exists>i<n. f i \<noteq> 0"
   shows "\<exists>i<n. f i \<ge> 0 \<and> f ((i+1) mod n) \<le> 0"
-  sorry
+proof -
+  \<comment> \<open>Since \<Sum>f_i = 0 and not all zero, there exist positive and negative values.\<close>
+  \<comment> \<open>If no f_i \<ge> 0 had successor f_{i+1} \<le> 0, then every f_i \<ge> 0 implies f_{i+1} \<ge> 0.
+     This transitivity around the cycle would force all f_i \<ge> 0 (starting from any
+     positive element). But \<Sum>f_i = 0 with all f_i \<ge> 0 forces all = 0, contradicting \<exists>f_i \<noteq> 0.\<close>
+  show ?thesis
+  proof (rule ccontr)
+    assume hno: "\<not> (\<exists>i<n. f i \<ge> 0 \<and> f ((i+1) mod n) \<le> 0)"
+    hence htrans: "\<forall>i<n. f i \<ge> 0 \<longrightarrow> f ((i+1) mod n) > 0" by (by100 force)
+    \<comment> \<open>From htrans: any non-negative f_i implies f_{i+1} > 0 (hence \<ge> 0), which propagates.\<close>
+    \<comment> \<open>Either all f_i < 0 (contradicts \<Sum>=0 + not all zero → some must be \<ge> 0),
+       or some f_i \<ge> 0, which propagates to all f_j > 0, contradicting \<Sum>=0.\<close>
+    \<comment> \<open>Case 1: All f_i < 0. Then \<Sum>f_i < 0 (n \<ge> 2), contradicting \<Sum>=0.\<close>
+    \<comment> \<open>Case 2: Some f_k \<ge> 0. By htrans, f_{k+1} > 0 \<ge> 0, f_{k+2} > 0, etc.
+       After n steps: all f_i > 0. But \<Sum>f_i > 0, contradicting \<Sum>=0.\<close>
+    show False
+    proof (cases "\<forall>i<n. f i < 0")
+      case True
+      have "(\<Sum>i<n. f i) < 0"
+      proof -
+        have "(\<Sum>i<n. f i) \<le> 0"
+          using sum_nonpos[of "{..<n}" f] True by (by5000 force)
+        moreover have "(\<Sum>i<n. f i) \<noteq> 0"
+        proof
+          assume "(\<Sum>i<n. f i) = 0"
+          have "(\<Sum>i<n. - f i) = - (\<Sum>i<n. f i)"
+            using sum_negf by (by100 blast)
+          hence "(\<Sum>i<n. - f i) = 0" using \<open>(\<Sum>i<n. f i) = 0\<close> by (by100 simp)
+          hence "\<forall>i\<in>{..<n}. - f i = 0"
+            using sum_nonneg_eq_0_iff[of "{..<n}" "\<lambda>i. - f i"] True
+            by (by5000 force)
+          hence "\<forall>i<n. f i = 0" by (by100 force)
+          thus False using assms(3) by (by100 blast)
+        qed
+        ultimately show ?thesis by (by100 linarith)
+      qed
+      thus False using assms(2) by (by100 simp)
+    next
+      case False
+      then obtain k where hk: "k < n" "f k \<ge> 0" by (by100 force)
+      \<comment> \<open>Propagate: f_k \<ge> 0 \<Rightarrow> f_{k+1} > 0 \<Rightarrow> f_{k+2} > 0 \<Rightarrow> ... \<Rightarrow> all > 0.\<close>
+      have hprop: "\<forall>j<n. f ((k + j) mod n) > 0 \<or> j = 0 \<and> f k \<ge> 0"
+        sorry \<comment> \<open>Induction on j using htrans.\<close>
+      hence "\<forall>i<n. f i \<ge> 0"
+        sorry \<comment> \<open>From hprop with j ranging over 0..n-1.\<close>
+      hence "\<forall>i<n. f i = 0"
+        using sum_nonneg_eq_0_iff[of "{..<n}" f] assms(2)
+        by (by5000 force)
+      thus False using assms(3) by (by100 blast)
+    qed
+  qed
+qed
 
 text \<open>A convex polygon in R^2 is homeomorphic to B^2 (the closed unit disk).
   This is a standard topology fact (radial projection from centroid).\<close>
