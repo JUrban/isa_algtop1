@@ -2084,8 +2084,70 @@ proof -
     \<comment> \<open>Each U \<in> Uc is A \<inter> V for some V \<in> ?T. The V's form an open cover of A.\<close>
     \<comment> \<open>Each V \<in> ?T corresponds to an open set (product topology = standard topology).\<close>
     \<comment> \<open>compact A gives a finite subcover of V's, hence of U's.\<close>
+    \<comment> \<open>For each U \<in> Uc, extract V \<in> R^2\_top with U = A \<inter> V.\<close>
+    define VV where "VV U = (SOME V. V \<in> ?T \<and> U = A \<inter> V)" for U
+    have hVV: "\<And>U. U \<in> Uc \<Longrightarrow> VV U \<in> ?T \<and> U = A \<inter> VV U"
+    proof -
+      fix U assume "U \<in> Uc"
+      hence "U \<in> ?TA" using hUc by (by100 blast)
+      hence "\<exists>V. V \<in> ?T \<and> U = A \<inter> V"
+        unfolding subspace_topology_def by (by5000 blast)
+      thus "VV U \<in> ?T \<and> U = A \<inter> VV U" unfolding VV_def by (rule someI_ex)
+    qed
+    \<comment> \<open>The V's cover A.\<close>
+    have hV_cover: "A \<subseteq> \<Union>(VV ` Uc)"
+    proof (rule subsetI)
+      fix x assume "x \<in> A"
+      from hcover \<open>x \<in> A\<close> obtain U where "U \<in> Uc" "x \<in> U" by (by100 blast)
+      hence "x \<in> A \<inter> VV U" using hVV by (by100 blast)
+      hence "x \<in> VV U" by (by100 blast)
+      thus "x \<in> \<Union>(VV ` Uc)" using \<open>U \<in> Uc\<close> by (by100 blast)
+    qed
+    \<comment> \<open>Each VV U is open (product topology = standard open sets).\<close>
+    have hV_open: "\<And>U. U \<in> Uc \<Longrightarrow> open (VV U)"
+    proof -
+      fix U assume "U \<in> Uc"
+      from hVV[OF this] have hvu: "VV U \<in> ?T" by (by100 blast)
+      have "?T = top1_open_sets" by (rule product_topology_on_open_sets)
+      hence "VV U \<in> top1_open_sets" using hvu by (by5000 fast)
+      thus "open (VV U)" unfolding top1_open_sets_def by (by100 blast)
+    qed
+    \<comment> \<open>compact A gives a finite subcover.\<close>
+    have "\<exists>F. finite F \<and> F \<subseteq> VV ` Uc \<and> A \<subseteq> \<Union>F"
+    proof -
+      have hopen: "\<forall>V \<in> VV ` Uc. open V" using hV_open by (by100 blast)
+      from assms have hHB: "\<And>C. (\<forall>c\<in>C. open c) \<Longrightarrow> A \<subseteq> \<Union>C \<Longrightarrow> \<exists>D\<subseteq>C. finite D \<and> A \<subseteq> \<Union>D"
+        unfolding compact_eq_Heine_Borel by (by100 blast)
+      from hHB[OF hopen hV_cover]
+      obtain D where "D \<subseteq> VV ` Uc" "finite D" "A \<subseteq> \<Union>D" by (by5000 blast)
+      thus ?thesis by (by100 blast)
+    qed
+    then obtain FV where hFV_fin: "finite FV" and hFV_sub: "FV \<subseteq> VV ` Uc"
+      and hFV_cover: "A \<subseteq> \<Union>FV" by (by5000 fast)
+    \<comment> \<open>Map back: for each V \<in> FV, pick one representative U \<in> Uc with VV U = V.\<close>
+    define rep where "rep V = (SOME U. U \<in> Uc \<and> VV U = V)" for V
+    have hrep: "\<And>V. V \<in> FV \<Longrightarrow> rep V \<in> Uc \<and> VV (rep V) = V"
+    proof -
+      fix V assume "V \<in> FV"
+      hence "V \<in> VV ` Uc" using hFV_sub by (by100 blast)
+      hence "\<exists>U. U \<in> Uc \<and> VV U = V" by (by100 blast)
+      thus "rep V \<in> Uc \<and> VV (rep V) = V" unfolding rep_def by (rule someI_ex)
+    qed
+    define FU where "FU = rep ` FV"
+    have "finite FU" unfolding FU_def using hFV_fin by (by100 blast)
+    have "FU \<subseteq> Uc" unfolding FU_def using hrep by (by100 blast)
+    have "A \<subseteq> \<Union>FU"
+    proof (rule subsetI)
+      fix x assume "x \<in> A"
+      from hFV_cover \<open>x \<in> A\<close> obtain V where "V \<in> FV" "x \<in> V" by (by100 blast)
+      have "rep V \<in> FU" unfolding FU_def using \<open>V \<in> FV\<close> by (by100 blast)
+      moreover have "x \<in> rep V"
+        using hVV[OF conjunct1[OF hrep[OF \<open>V \<in> FV\<close>]]] \<open>x \<in> A\<close> \<open>x \<in> V\<close>
+          conjunct2[OF hrep[OF \<open>V \<in> FV\<close>]] by (by100 blast)
+      ultimately show "x \<in> \<Union>FU" by (by100 blast)
+    qed
     show "\<exists>F. finite F \<and> F \<subseteq> Uc \<and> A \<subseteq> \<Union>F"
-      sorry \<comment> \<open>Extract V's from Uc, use compact A for finite subcover, map back.\<close>
+      using \<open>finite FU\<close> \<open>FU \<subseteq> Uc\<close> \<open>A \<subseteq> \<Union>FU\<close> by (by100 blast)
   qed
   show ?thesis unfolding top1_compact_on_def using hTA_top hcover by (by100 blast)
 qed
@@ -2107,7 +2169,28 @@ proof -
   \<comment> \<open>Step 1: P is compact (closed bounded subset of R^2).\<close>
   have hP_compact: "top1_compact_on P (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P)"
   proof -
-    have "compact P" sorry \<comment> \<open>P is a convex hull of finitely many points, hence compact (convex\_hull\_compact).\<close>
+    have "compact P"
+    proof -
+      \<comment> \<open>P is a convex hull of finitely many points in R^2, hence bounded and closed.
+         Compact follows from closed\_subset\_compact + compact\_Icc\_Times.\<close>
+      from assms(1)[unfolded top1_is_polygonal_region_on_def]
+      obtain vx vy where
+        hdist: "\<forall>i<n. \<forall>j<n. i \<noteq> j \<longrightarrow> (vx i, vy i) \<noteq> (vx j, vy j)" and
+        hgp: "\<forall>k<n. \<not> (\<exists>coeffs. (\<forall>i<n. i \<noteq> k \<longrightarrow> coeffs i \<ge> 0)
+                          \<and> coeffs k = 0 \<and> (\<Sum>i<n. coeffs i) = 1
+                          \<and> vx k = (\<Sum>i<n. coeffs i * vx i)
+                          \<and> vy k = (\<Sum>i<n. coeffs i * vy i))" and
+        hP: "P = {(x, y) | x y. \<exists>coeffs. (\<forall>i<n. coeffs i \<ge> 0) \<and> (\<Sum>i<n. coeffs i) = 1
+              \<and> x = (\<Sum>i<n. coeffs i * vx i) \<and> y = (\<Sum>i<n. coeffs i * vy i)}"
+        by (elim conjE exE) (rule that, assumption+)
+      \<comment> \<open>P is bounded: convex combinations of bounded coords are bounded.\<close>
+      define M where "M = 1 + Max ((\<lambda>i. max (abs (vx i)) (abs (vy i))) ` {..<n})"
+      have hP_bdd: "P \<subseteq> {-M..M} \<times> {-M..M}" sorry
+      \<comment> \<open>P is closed: limit of convex combos is a convex combo (sequential closedness).\<close>
+      have hP_closed: "closed P" sorry
+      from closed_subset_compact[OF compact_Icc_Times hP_closed hP_bdd]
+      show ?thesis .
+    qed
     thus ?thesis by (rule compact_R2_bridge)
   qed
   \<comment> \<open>Step 2: B^2 is Hausdorff.\<close>
@@ -2130,9 +2213,35 @@ proof -
       and h\<psi>_surj: "\<psi> ` P = top1_B2" and h\<psi>_inj: "inj_on \<psi> P" by (by100 blast)
   have h\<psi>_bij: "bij_betw \<psi> P top1_B2"
     unfolding bij_betw_def using h\<psi>_surj h\<psi>_inj by (by100 blast)
-  \<comment> \<open>Need to convert continuous\_on to top1\_continuous\_map\_on, then apply Theorem 26.6.\<close>
-  show ?thesis sorry \<comment> \<open>Bridge: continuous\_on \<leftrightarrow> top1\_continuous\_map\_on for R^2 subspaces.
-     Then Theorem\_26\_6 gives the homeomorphism.\<close>
+  \<comment> \<open>Bridge: continuous\_on P \<psi> \<Rightarrow> top1\_continuous\_map\_on via real2\_subspace\_general.\<close>
+  let ?TP = "subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P"
+  have h\<psi>_top1: "top1_continuous_map_on P ?TP top1_B2 top1_B2_topology \<psi>"
+  proof -
+    have himg: "\<And>p. p \<in> P \<Longrightarrow> \<psi> p \<in> top1_B2" using h\<psi>_surj by (by100 blast)
+    have "top1_B2_topology = subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) top1_B2"
+      unfolding top1_B2_topology_def ..
+    thus ?thesis using top1_continuous_map_on_real2_subspace_general[of P \<psi> top1_B2]
+      himg h\<psi>_cont by (by5000 simp)
+  qed
+  \<comment> \<open>Apply Theorem 26.6: compact P + Hausdorff B² + continuous bijection = homeomorphism.\<close>
+  have hR: "is_topology_on (UNIV::real set) top1_open_sets"
+    unfolding top1_open_sets_def is_topology_on_def
+    using open_UNIV open_empty open_Un open_Int by (by5000 auto)
+  have hR2: "is_topology_on ((UNIV::real set) \<times> (UNIV::real set))
+      (product_topology_on top1_open_sets top1_open_sets)"
+    using hR product_topology_on_is_topology_on by (by100 blast)
+  hence hR2': "is_topology_on (UNIV::(real \<times> real) set)
+      (product_topology_on top1_open_sets top1_open_sets)" by (by100 simp)
+  have hTP_top: "is_topology_on P ?TP"
+  proof -
+    have "P \<subseteq> (UNIV::(real \<times> real) set)" by (by100 blast)
+    thus ?thesis by (rule subspace_topology_is_topology_on[OF hR2'])
+  qed
+  have hTB2: "is_topology_on top1_B2 top1_B2_topology"
+    unfolding top1_B2_topology_def
+    by (rule subspace_topology_is_topology_on[OF hR2']) (by100 blast)
+  from Theorem_26_6[OF hTP_top hTB2 hP_compact hB2_haus h\<psi>_top1 h\<psi>_bij]
+  show ?thesis by (by100 blast)
 qed
 
 text \<open>Key helper: a scheme quotient provides the attaching data for Theorem 72.1.
