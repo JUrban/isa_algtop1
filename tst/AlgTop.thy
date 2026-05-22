@@ -2075,30 +2075,8 @@ lemma scheme_quotient_CW_data:
         (X - A) (subspace_topology X TX (X - A)) h
     \<and> h ` top1_S1 \<subseteq> A
     \<and> (\<forall>z\<in>top1_S1. h z \<in> A)"
-proof -
-  \<comment> \<open>Step 1: Extract polygon P, quotient map q, vertices from scheme definition.\<close>
-  from quotient_of_scheme_extract_full[OF assms(1)]
-  obtain P q vx vy where
-    hP: "top1_is_polygonal_region_on P (length scheme)" and
-    hq: "top1_quotient_map_on P (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) X TX q" and
-    hverts: "\<forall>i<length scheme. (vx i, vy i) \<in> P" and
-    hinterior: "\<forall>p\<in>P. (\<forall>i<length scheme. \<forall>t\<in>I_set.
-          p \<noteq> ((1-t) * vx i + t * vx (Suc i mod length scheme),
-                (1-t) * vy i + t * vy (Suc i mod length scheme)))
-       \<longrightarrow> (\<forall>p'\<in>P. q p = q p' \<longrightarrow> p = p')"
-    by (by5000 blast)
-  \<comment> \<open>Step 2: Get polygon-to-disk homeomorphism \<psi>: P \<rightarrow> B^2.\<close>
-  from polygon_homeomorphic_to_disk[OF hP assms(2)]
-  obtain \<psi> where h\<psi>: "top1_homeomorphism_on P
-    (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P)
-    top1_B2 top1_B2_topology \<psi>" by (by100 blast)
-  \<comment> \<open>Step 3: Define A = q(boundary of P), h = q \<circ> \<psi>^{-1}.\<close>
-  \<comment> \<open>The boundary of P consists of the edge interpolation points.\<close>
-  \<comment> \<open>h = q \<circ> inv_into top1_B2 \<psi>: B^2 \<rightarrow> P \<rightarrow> X.\<close>
-  \<comment> \<open>h is continuous (composition of continuous maps).\<close>
-  \<comment> \<open>h maps Int(B^2) homeomorphically to X - A (from interior injectivity of q).\<close>
-  show ?thesis sorry \<comment> \<open>Assemble A, h from q, \<psi>. Uses \<psi> for boundary/interior decomposition.\<close>
-qed
+  sorry \<comment> \<open>Uses polygon\_homeomorphic\_to\_disk + quotient\_of\_scheme\_extract\_full.
+     Construct A = q(boundary P), h = q composed with inverse of polygon-to-disk homeomorphism.\<close>
 
 text \<open>For the torus scheme, the 1-skeleton is a wedge of 2 circles.
   For the dunce cap, the 1-skeleton is a single circle.\<close>
@@ -3874,7 +3852,16 @@ proof -
   qed
   \<comment> \<open>concat(map f [0..<n]) = concat(map f [0..<k]) @ f(k) @ concat(map f [k+1..<n]).\<close>
   have hsplit: "concat (map ?f [0..<n]) = concat (map ?f [0..<k]) @ ?f k @ concat (map ?f [Suc k..<n])"
-    using assms by (by5000 simp add: upt_conv_Cons)
+  proof -
+    have "[0..<n] = [0..<k] @ [k..<n]"
+      using upt_add_eq_append[of 0 k "n - k"] assms by (by100 simp)
+    also have "[k..<n] = k # [Suc k..<n]" using assms upt_rec[of k n] by (by100 simp)
+    finally have "[0..<n] = [0..<k] @ k # [Suc k..<n]" .
+    hence "map ?f [0..<n] = map ?f [0..<k] @ ?f k # map ?f [Suc k..<n]" by (by100 simp)
+    hence "concat (map ?f [0..<n]) = concat (map ?f [0..<k] @ ?f k # map ?f [Suc k..<n])" by (by100 simp)
+    also have "\<dots> = concat (map ?f [0..<k]) @ ?f k @ concat (map ?f [Suc k..<n])" by (by100 simp)
+    finally show ?thesis .
+  qed
   \<comment> \<open>Now use nth\_append\_length\_plus.\<close>
   have hbase: "\<And>r. r < 4 \<Longrightarrow> concat (map ?f [0..<n]) ! (4*k + r) = ?f k ! r"
   proof -
@@ -3941,6 +3928,19 @@ proof -
       thus ?thesis using hn by (by100 simp)
     qed
     thus ?thesis by (by100 simp)
+  qed
+  have hlen_4n: "length ?scheme = 4 * n"
+  proof -
+    define f where "f = (\<lambda>i::nat. [(2*i, True), (2*i+1, True), (2*i, False), (2*i+1, False)])"
+    have "length ?scheme = length (concat (map f [0..<n]))"
+      unfolding top1_n_torus_scheme_def f_def by (by100 simp)
+    also have "\<dots> = sum_list (map (length \<circ> f) [0..<n])"
+      using length_concat[of "map f [0..<n]"] by (by100 simp)
+    also have "map (length \<circ> f) [0..<n] = map (\<lambda>i. 4::nat) [0..<n]"
+      unfolding f_def by (by100 simp)
+    also have "sum_list (map (\<lambda>i. 4::nat) [0..<n]) = 4 * n"
+      by (induction n, by100 simp, by100 simp)
+    finally show ?thesis unfolding f_def by (by100 simp)
   qed
   \<comment> \<open>All vertices get identified (Munkres: "We leave this to you to check").\<close>
   \<comment> \<open>All vertices get identified: extract specific (P,q,vx,vy) from the scheme and verify.\<close>
@@ -4017,28 +4017,12 @@ proof -
         define k where "k = i div 4"
         define r where "r = i mod 4"
         have hkr: "i = 4*k + r" "r < 4" unfolding k_def r_def by (by100 auto)+
-        have hk_bound: "k < n"
-        proof -
-          have "length ?scheme = 4 * n"
-          proof -
-            define f where "f = (\<lambda>i::nat. [(2*i, True), (2*i+1, True), (2*i, False), (2*i+1, False)])"
-            have "length ?scheme = length (concat (map f [0..<n]))"
-              unfolding top1_n_torus_scheme_def f_def by (by100 simp)
-            also have "\<dots> = sum_list (map (length \<circ> f) [0..<n])"
-              using length_concat[of "map f [0..<n]"] by (by100 simp)
-            also have "map (length \<circ> f) [0..<n] = map (\<lambda>i. 4::nat) [0..<n]"
-              unfolding f_def by (by100 simp)
-            also have "sum_list (map (\<lambda>i. 4::nat) [0..<n]) = 4 * n"
-              by (induction n, by100 simp, by100 simp)
-            finally show ?thesis unfolding f_def by (by100 simp)
-          qed
-          thus ?thesis using hi hkr by (by100 simp)
-        qed
+        have hk_bound: "k < n" using hi hkr hlen_4n by (by100 simp)
         \<comment> \<open>From torus\_scheme\_nth: label/direction of edges in block k.\<close>
-        have h4k_bound: "4*k < length ?scheme" using hk_bound hn_pos by (by100 simp)
-        have h4k1_bound: "4*k+1 < length ?scheme" using hk_bound hn_pos by (by100 simp)
-        have h4k2_bound: "4*k+2 < length ?scheme" using hk_bound hn_pos by (by100 simp)
-        have h4k3_bound: "4*k+3 < length ?scheme" using hk_bound hn_pos by (by100 simp)
+        have h4k_bound: "4*k < length ?scheme" using hk_bound hlen_4n by (by100 simp)
+        have h4k1_bound: "4*k+1 < length ?scheme" using hk_bound hlen_4n by (by100 simp)
+        have h4k2_bound: "4*k+2 < length ?scheme" using hk_bound hlen_4n by (by100 simp)
+        have h4k3_bound: "4*k+3 < length ?scheme" using hk_bound hlen_4n by (by100 simp)
         have hlabel_a: "fst (?scheme!(4*k)) = fst (?scheme!(4*k+2))"
           using torus_scheme_nth(1,3)[OF hk_bound] by (by100 simp)
         have hdir_a: "snd (?scheme!(4*k)) \<noteq> snd (?scheme!(4*k+2))"
@@ -4092,7 +4076,11 @@ proof -
           thus ?thesis by (by5000 simp)
         qed
         have hedge_b_t1': "q (vx (4*k+2), vy (4*k+2)) = q (vx (4*k+3), vy (4*k+3))"
-          using hedge_b_t1 by (by5000 simp)
+        proof -
+          have "Suc (4*k+1) mod length ?scheme = 4*k+2"
+            using h4k2_bound by (by100 simp)
+          thus ?thesis using hedge_b_t1 by (by100 simp)
+        qed
         \<comment> \<open>From hedge at t=0 with edges 4k+1,4k+3: q(vx(4k+1)) = q(vx(4(k+1) mod 4n)).\<close>
         have hedge_b_t0: "q (vx (4*k+1), vy (4*k+1))
             = q (vx (Suc (4*k+3) mod length ?scheme), vy (Suc (4*k+3) mod length ?scheme))"
@@ -4107,7 +4095,11 @@ proof -
         qed
         \<comment> \<open>Also: q(vx(4k+1)) = q(vx(4k+1)) from hedge\_a\_t1.\<close>
         have hedge_a_t1': "q (vx (4*k+1), vy (4*k+1)) = q (vx (4*k+2), vy (4*k+2))"
-          using hedge_a_t1 by (by5000 simp)
+        proof -
+          have "Suc (4*k) mod length ?scheme = 4*k+1"
+            using h4k1_bound by (by100 simp)
+          thus ?thesis using hedge_a_t1 by (by100 simp)
+        qed
         \<comment> \<open>Now case split on r.\<close>
         show "q (vx i, vy i) = q (vx (Suc i mod length ?scheme), vy (Suc i mod length ?scheme))"
         proof -
