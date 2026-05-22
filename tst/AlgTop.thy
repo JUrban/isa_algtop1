@@ -7476,13 +7476,62 @@ proof -
                 \<comment> \<open>In abelian: mul(mul pow\_a (invg g0))(mul g0 (invg pow\_a))
                    = mul(mul pow\_a (invg pow\_a))(mul(invg g0) g0) [rearrange]
                    = mul e e = e.\<close>
-                show ?thesis sorry
+                \<comment> \<open>Rearrange: (pow\_a \<cdot> invg g0) \<cdot> (g0 \<cdot> invg pow\_a)
+                   = pow\_a \<cdot> ((invg g0) \<cdot> (g0 \<cdot> invg pow\_a)) [assoc]
+                   = pow\_a \<cdot> (((invg g0) \<cdot> g0) \<cdot> invg pow\_a) [assoc]
+                   = pow\_a \<cdot> (e \<cdot> invg pow\_a) = pow\_a \<cdot> invg pow\_a = e.\<close>
+                have hinvg0_G: "invg g0 \<in> G" using hG_grp hg0(1) unfolding top1_is_group_on_def by (by100 blast)
+                have hinvpa_G: "invg pow_a \<in> G" using hG_grp hpow_G unfolding top1_is_group_on_def by (by100 blast)
+                have hg0_invpa: "mul g0 (invg pow_a) \<in> G"
+                  using hG_grp hg0(1) hinvpa_G unfolding top1_is_group_on_def by (by100 blast)
+                have hpa_invg0: "mul pow_a (invg g0) \<in> G"
+                  using hG_grp hpow_G hinvg0_G unfolding top1_is_group_on_def by (by100 blast)
+                have "mul (mul pow_a (invg g0)) (mul g0 (invg pow_a))
+                    = mul pow_a (mul (invg g0) (mul g0 (invg pow_a)))"
+                  using hassoc[rule_format, OF hpow_G hinvg0_G hg0_invpa] by (by100 simp)
+                also have "mul (invg g0) (mul g0 (invg pow_a)) = mul (mul (invg g0) g0) (invg pow_a)"
+                  using hassoc[rule_format, OF hinvg0_G hg0(1) hinvpa_G] by (by100 simp)
+                also have "mul (invg g0) g0 = e" using \<open>mul (invg g0) g0 = e\<close> .
+                also have "mul e (invg pow_a) = invg pow_a"
+                  using hG_grp hinvpa_G unfolding top1_is_group_on_def by (by100 blast)
+                also have "mul pow_a (invg pow_a) = e" using \<open>mul pow_a (invg pow_a) = e\<close> .
+                finally show ?thesis .
               qed
               \<comment> \<open>invg k = mul pow\_a (invg g0) (unique inverse).\<close>
               have "invg k \<in> G" using hG_grp hk_G unfolding top1_is_group_on_def by (by100 blast)
               have "mul pow_a (invg g0) \<in> G"
                 using hG_grp hpow_G hinv_g0 unfolding top1_is_group_on_def by (by100 blast)
-              show ?thesis sorry
+              \<comment> \<open>mul(pow\_a \<cdot> invg g0)(k) = e, and invg k is the unique left inverse.\<close>
+              have "mul (mul pow_a (invg g0)) k = e"
+                using \<open>mul (mul pow_a (invg g0)) (mul g0 (invg pow_a)) = e\<close>
+                unfolding k_def by (by100 simp)
+              \<comment> \<open>Also mul(invg k) k = e.\<close>
+              have "mul (invg k) k = e" using hG_grp hk_G unfolding top1_is_group_on_def by (by100 blast)
+              \<comment> \<open>Both are left inverses. Right-multiply both sides by invg k.\<close>
+              hence "mul (mul (invg k) k) (invg k) = mul (mul (mul pow_a (invg g0)) k) (invg k)"
+                using \<open>mul (mul pow_a (invg g0)) k = e\<close> by (by100 simp)
+              have "mul (mul (invg k) k) (invg k) = invg k"
+              proof -
+                have "mul (invg k) k = e" using \<open>mul (invg k) k = e\<close> .
+                thus ?thesis using hG_grp \<open>invg k \<in> G\<close> unfolding top1_is_group_on_def by (by100 blast)
+              qed
+              moreover have "mul (mul (mul pow_a (invg g0)) k) (invg k) = mul pow_a (invg g0)"
+              proof -
+                have hassoc_loc: "\<forall>a\<in>G. \<forall>b\<in>G. \<forall>c\<in>G. mul (mul a b) c = mul a (mul b c)"
+                  using hG_grp unfolding top1_is_group_on_def by (by100 blast)
+                have "mul (mul (mul pow_a (invg g0)) k) (invg k)
+                    = mul (mul pow_a (invg g0)) (mul k (invg k))"
+                  using hassoc_loc[rule_format, OF \<open>mul pow_a (invg g0) \<in> G\<close> hk_G \<open>invg k \<in> G\<close>]
+                  by (by100 simp)
+                also have "mul k (invg k) = e"
+                  using hG_grp hk_G unfolding top1_is_group_on_def by (by100 blast)
+                also have "mul (mul pow_a (invg g0)) e = mul pow_a (invg g0)"
+                  using hG_grp \<open>mul pow_a (invg g0) \<in> G\<close> unfolding top1_is_group_on_def by (by100 blast)
+                finally show ?thesis .
+              qed
+              ultimately show ?thesis
+                using \<open>mul (mul (invg k) k) (invg k) = mul (mul (mul pow_a (invg g0)) k) (invg k)\<close>
+                by (by100 simp)
             qed
             have hassoc: "\<forall>a\<in>G. \<forall>b\<in>G. \<forall>c\<in>G. mul (mul a b) c = mul a (mul b c)"
               using hG_grp unfolding top1_is_group_on_def by (by100 blast)
