@@ -7166,7 +7166,34 @@ proof -
         \<comment> \<open>[g] = [k] in G/2G (since g = k \<cdot> pow\_elt and pow\_elt \<in> 2G).\<close>
         have "top1_group_coset_on G mul {mul g g | g. g \<in> G} g
             = top1_group_coset_on G mul {mul g g | g. g \<in> G} k"
-          sorry \<comment> \<open>normal\_coset\_eq: mul(invg k) g = pow\_elt \<in> 2G.\<close>
+        proof -
+          \<comment> \<open>mul(invg k) g = mul(invg(mul g (invg pow\_elt))) g = pow\_elt (in abelian group).\<close>
+          have "mul (invg k) g = pow_elt"
+          proof -
+            have "invg k = mul (invg (invg pow_elt)) (invg g)"
+              using hG_grp hg hpow_G hk_G unfolding k_def top1_is_group_on_def sorry
+            also have "invg (invg pow_elt) = pow_elt"
+              using hG_grp hpow_G unfolding top1_is_group_on_def by (by5000 blast)
+            finally have "invg k = mul pow_elt (invg g)" by (by100 simp)
+            hence "mul (invg k) g = mul (mul pow_elt (invg g)) g"
+              by (by100 simp)
+            also have "\<dots> = mul pow_elt (mul (invg g) g)"
+            proof -
+              have "invg g \<in> G" using hG_grp hg unfolding top1_is_group_on_def by (by100 blast)
+              have hassoc': "\<forall>a\<in>G. \<forall>b\<in>G. \<forall>c\<in>G. mul (mul a b) c = mul a (mul b c)"
+                using hG_grp unfolding top1_is_group_on_def by (by100 blast)
+              thus ?thesis using hassoc'[rule_format, OF hpow_G \<open>invg g \<in> G\<close> hg] by (by100 simp)
+            qed
+            also have "mul (invg g) g = e"
+              using hG_grp hg unfolding top1_is_group_on_def by (by100 blast)
+            also have "mul pow_elt e = pow_elt"
+              using hG_grp hpow_G unfolding top1_is_group_on_def by (by100 blast)
+            finally show ?thesis .
+          qed
+          hence "mul (invg k) g \<in> {mul g g | g. g \<in> G}"
+            using hpow_2G by (by100 simp)
+          thus ?thesis using normal_coset_eq[OF hG_grp h2G_normal hk_G hg] by (by100 simp)
+        qed
         thus ?thesis using hk_K by (by100 force)
       next
         case False
