@@ -6106,6 +6106,38 @@ proof -
   ultimately show ?thesis using hpsi by (by100 blast)
 qed
 
+text \<open>Group power distributes over addition of exponents.\<close>
+lemma group_pow_add:
+  assumes "top1_is_group_on G mul e invg" "x \<in> G"
+  shows "top1_group_pow mul e x (m + n) = mul (top1_group_pow mul e x m) (top1_group_pow mul e x n)"
+  using assms(2)
+proof (induction m)
+  case 0
+  have "top1_group_pow mul e x n \<in> G" by (rule group_pow_in_group'[OF assms])
+  thus ?case using assms(1) unfolding top1_is_group_on_def by (by100 simp)
+next
+  case (Suc m)
+  have hpow_m: "top1_group_pow mul e x m \<in> G" by (rule group_pow_in_group'[OF assms])
+  have hpow_n: "top1_group_pow mul e x n \<in> G" by (rule group_pow_in_group'[OF assms])
+  have hpow_mn: "top1_group_pow mul e x (m + n) \<in> G" by (rule group_pow_in_group'[OF assms])
+  have hIH_eq: "top1_group_pow mul e x (m + n) = mul (top1_group_pow mul e x m) (top1_group_pow mul e x n)"
+    using Suc.IH[OF Suc.prems] by (by100 simp)
+  have "top1_group_pow mul e x (Suc m + n) = mul x (top1_group_pow mul e x (m + n))"
+    by (by100 simp)
+  also have "\<dots> = mul x (mul (top1_group_pow mul e x m) (top1_group_pow mul e x n))"
+    using hIH_eq by (by100 simp)
+  also have "\<dots> = mul (mul x (top1_group_pow mul e x m)) (top1_group_pow mul e x n)"
+  proof -
+    have hassoc: "\<forall>a\<in>G. \<forall>b\<in>G. \<forall>c\<in>G. mul (mul a b) c = mul a (mul b c)"
+      using assms(1) unfolding top1_is_group_on_def by (by100 blast)
+    have "mul x (mul (top1_group_pow mul e x m) (top1_group_pow mul e x n))
+        = mul (mul x (top1_group_pow mul e x m)) (top1_group_pow mul e x n)"
+      using hassoc[rule_format, OF assms(2) hpow_m hpow_n] by (by100 simp)
+    thus ?thesis by (by100 simp)
+  qed
+  finally show ?case by (by100 simp)
+qed
+
 text \<open>A group homomorphism distributes over foldr products.\<close>
 lemma hom_foldr_mul_early:
   assumes hG: "top1_is_group_on G mul e invg"
@@ -6967,9 +6999,52 @@ proof -
     \<comment> \<open>Need: unique decomposition g = k + m\<cdot>\<iota>(s0) with k \<in> K.\<close>
     \<comment> \<open>Following book (Theorem 67.8): \<epsilon> mod 2 partitions G/2G into even/odd halves,
        each bijects with K/2K. So |G/2G| = 2 \<times> |K/2K| = 2 \<times> 2^n = 2^{n+1}.\<close>
+    \<comment> \<open>Following book proof: |G/2G| = 2 \<times> |K/2K|.
+       Key: define \<phi>: G/2G \<rightarrow> Z/2Z \<times> K/2K via \<phi>([g]) = (\<epsilon>(g) mod 2, [g - \<epsilon>(g)\<cdot>\<iota>(s0)]_{2K}).
+       We construct this as a bijection between the coset carrier sets.\<close>
+    have hG_grp: "top1_is_group_on G mul e invg"
+      using hfree unfolding top1_is_free_abelian_group_full_on_def
+        top1_is_abelian_group_on_def by (by100 blast)
+    have ha_G: "iota s0 \<in> G"
+      using hfree hs0 unfolding top1_is_free_abelian_group_full_on_def by (by100 blast)
+    have hia_G: "invg (iota s0) \<in> G"
+      using hG_grp ha_G unfolding top1_is_group_on_def by (by100 blast)
+    have hZ_grp: "top1_is_group_on (UNIV::int set) (+) (0::int) uminus"
+      unfolding top1_is_group_on_def by (by100 auto)
+    \<comment> \<open>Key helper: for any m, \<iota>(s0)^{2m} \<in> 2G (since it equals (\<iota>(s0)^m)^2).\<close>
+    have hpow_even_in_2G: "\<And>m. top1_group_pow mul e (iota s0) (2 * m) \<in> {mul g g | g. g \<in> G}"
+    proof -
+      fix m
+      have "top1_group_pow mul e (iota s0) (2 * m)
+          = mul (top1_group_pow mul e (iota s0) m) (top1_group_pow mul e (iota s0) m)"
+      proof -
+        have h2m: "m + m = 2 * m" by (by100 simp)
+        show ?thesis using group_pow_add[OF hG_grp ha_G, of m m] h2m by (by5000 metis)
+      qed
+      moreover have "top1_group_pow mul e (iota s0) m \<in> G"
+        by (rule group_pow_in_group'[OF hG_grp ha_G])
+      ultimately show "top1_group_pow mul e (iota s0) (2 * m) \<in> {mul g g | g. g \<in> G}"
+        by (by100 blast)
+    qed
+    \<comment> \<open>Similarly for invg(\<iota>(s0)).\<close>
+    have hpow_inv_even_in_2G: "\<And>m. top1_group_pow mul e (invg (iota s0)) (2 * m) \<in> {mul g g | g. g \<in> G}"
+    proof -
+      fix m
+      have "top1_group_pow mul e (invg (iota s0)) (2 * m)
+          = mul (top1_group_pow mul e (invg (iota s0)) m) (top1_group_pow mul e (invg (iota s0)) m)"
+      proof -
+        have h2m: "m + m = 2 * m" by (by100 simp)
+        show ?thesis using group_pow_add[OF hG_grp hia_G, of m m] h2m by (by5000 metis)
+      qed
+      moreover have "top1_group_pow mul e (invg (iota s0)) m \<in> G"
+        by (rule group_pow_in_group'[OF hG_grp hia_G])
+      ultimately show "top1_group_pow mul e (invg (iota s0)) (2 * m) \<in> {mul g g | g. g \<in> G}"
+        by (by100 blast)
+    qed
     have "card (top1_quotient_group_carrier_on G mul {mul g g | g. g \<in> G})
        = 2 * card (top1_quotient_group_carrier_on ?K mul {mul g g | g. g \<in> ?K})"
-      sorry \<comment> \<open>G/2G = 2 \<times> K/2K via \<epsilon>-parity partition + K \<inter> 2G = 2K bijection.\<close>
+      sorry \<comment> \<open>Uses hpow\_even\_in\_2G to show every even coset has a K-representative,
+         and translation by \<iota>(s0) gives odd \<leftrightarrow> even bijection.\<close>
     hence "card (top1_quotient_group_carrier_on G mul {mul g g | g. g \<in> G}) = 2 * 2 ^ n"
       using hIH by (by100 simp)
     also have "\<dots> = 2 ^ Suc n" by (by100 simp)
