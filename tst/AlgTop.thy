@@ -7277,7 +7277,65 @@ proof -
         hence hk_K: "k \<in> ?K" using hk_G by (by100 simp)
         \<comment> \<open>coset\_G(g0) = coset\_G(k) since g0 = mul k pow\_a and pow\_a \<in> 2G.\<close>
         have hcoset_eq: "C = top1_group_coset_on G mul ?twoG k"
-          sorry \<comment> \<open>normal\_coset\_eq: mul(invg k) g0 = pow\_a \<in> 2G.\<close>
+        proof -
+          \<comment> \<open>Show mul(invg k) g0 = pow\_a \<in> 2G, then use normal\_coset\_eq.\<close>
+          have "mul (invg k) g0 = pow_a"
+          proof -
+            have hinv_k: "invg k = mul pow_a (invg g0)"
+            proof -
+              \<comment> \<open>k = mul g0 (invg pow\_a). In abelian: invg(mul x y) = mul(invg y)(invg x) = mul(invg x)(invg y).\<close>
+              have hinv_pa: "invg pow_a \<in> G" using hG_grp hpow_G unfolding top1_is_group_on_def by (by100 blast)
+              have hinv_g0: "invg g0 \<in> G" using hG_grp hg0(1) unfolding top1_is_group_on_def by (by100 blast)
+              \<comment> \<open>invg(k) = invg(mul g0 (invg pow\_a)).\<close>
+              \<comment> \<open>mul(invg k)(mul g0 (invg pow\_a)) = e (since invg k is the inverse of k).\<close>
+              have "mul (invg k) k = e" using hG_grp hk_G unfolding top1_is_group_on_def by (by100 blast)
+              hence "mul (invg k) (mul g0 (invg pow_a)) = e"
+                unfolding k_def by (by100 simp)
+              \<comment> \<open>Also mul(mul pow\_a (invg g0))(mul g0 (invg pow\_a)) = e in abelian.\<close>
+              \<comment> \<open>= mul pow\_a (mul(invg g0)(mul g0 (invg pow\_a))) [assoc].\<close>
+              \<comment> \<open>= mul pow\_a (mul(mul(invg g0) g0)(invg pow\_a)) [assoc].\<close>
+              \<comment> \<open>= mul pow\_a (mul e (invg pow\_a)) [invg·g0 = e].\<close>
+              \<comment> \<open>= mul pow\_a (invg pow\_a) [e·x = x].\<close>
+              \<comment> \<open>= e.\<close>
+              have "mul (mul pow_a (invg g0)) (mul g0 (invg pow_a)) = e"
+              proof -
+                have hassoc: "\<forall>a\<in>G. \<forall>b\<in>G. \<forall>c\<in>G. mul (mul a b) c = mul a (mul b c)"
+                  using hG_grp unfolding top1_is_group_on_def by (by100 blast)
+                have hcomm: "\<And>x y. x \<in> G \<Longrightarrow> y \<in> G \<Longrightarrow> mul x y = mul y x"
+                  using hG unfolding top1_is_abelian_group_on_def by (by100 blast)
+                have "mul (invg g0) g0 = e"
+                  using hG_grp hg0(1) unfolding top1_is_group_on_def by (by100 blast)
+                have "mul pow_a (invg pow_a) = e"
+                  using hG_grp hpow_G unfolding top1_is_group_on_def by (by100 blast)
+                \<comment> \<open>In abelian: mul(mul pow\_a (invg g0))(mul g0 (invg pow\_a))
+                   = mul(mul pow\_a (invg pow\_a))(mul(invg g0) g0) [rearrange]
+                   = mul e e = e.\<close>
+                show ?thesis sorry
+              qed
+              \<comment> \<open>invg k = mul pow\_a (invg g0) (unique inverse).\<close>
+              have "invg k \<in> G" using hG_grp hk_G unfolding top1_is_group_on_def by (by100 blast)
+              have "mul pow_a (invg g0) \<in> G"
+                using hG_grp hpow_G hinv_g0 unfolding top1_is_group_on_def by (by100 blast)
+              show ?thesis sorry
+            qed
+            have hassoc: "\<forall>a\<in>G. \<forall>b\<in>G. \<forall>c\<in>G. mul (mul a b) c = mul a (mul b c)"
+              using hG_grp unfolding top1_is_group_on_def by (by100 blast)
+            have hinv_g0: "invg g0 \<in> G" using hG_grp hg0(1) unfolding top1_is_group_on_def by (by100 blast)
+            have "mul (invg k) g0 = mul (mul pow_a (invg g0)) g0"
+              using hinv_k by (by100 simp)
+            also have "\<dots> = mul pow_a (mul (invg g0) g0)"
+              using hassoc[rule_format, OF hpow_G hinv_g0 hg0(1)] by (by100 simp)
+            also have "mul (invg g0) g0 = e"
+              using hG_grp hg0(1) unfolding top1_is_group_on_def by (by100 blast)
+            also have "mul pow_a e = pow_a"
+              using hG_grp hpow_G unfolding top1_is_group_on_def by (by100 blast)
+            finally show ?thesis .
+          qed
+          hence "mul (invg k) g0 \<in> ?twoG" using hpow_2G by (by100 simp)
+          hence "top1_group_coset_on G mul ?twoG k = top1_group_coset_on G mul ?twoG g0"
+            using normal_coset_eq[OF hG_grp h2G_normal hk_G hg0(1)] by (by100 simp)
+          thus ?thesis using hg0(2) by (by100 simp)
+        qed
         \<comment> \<open>k \<in> K, so coset\_K(k) \<in> QK, and \<psi>(coset\_K(k)) = coset\_G(k) = C.\<close>
         have "top1_group_coset_on ?K mul ?twoK k \<in> ?QK"
           unfolding top1_quotient_group_carrier_on_def using hk_K by (by100 blast)
