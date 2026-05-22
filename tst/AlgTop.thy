@@ -2382,8 +2382,31 @@ proof -
       obtain \<gamma> where h\<gamma>: "top1_is_path_on X TX x y \<gamma>" by (by100 blast)
       \<comment> \<open>f \<circ> \<gamma> is a path from a to b in Z.\<close>
       show "\<exists>\<gamma>. top1_is_path_on Z TZ a b \<gamma>"
-        sorry \<comment> \<open>Compose: f\<circ>\<gamma> continuous, f(\<gamma>(0))=f(x)=a, f(\<gamma>(1))=f(y)=b.
-           Needs top1\_is\_path\_on composition with f, restricting codomain to Z.\<close>
+      proof (rule exI[of _ "f \<circ> \<gamma>"])
+        show "top1_is_path_on Z TZ a b (f \<circ> \<gamma>)"
+          unfolding top1_is_path_on_def
+        proof (intro conjI)
+          \<comment> \<open>f \<circ> \<gamma> continuous from I to Z.\<close>
+          have h\<gamma>_cont: "top1_continuous_map_on I_set top1_unit_interval_topology X TX \<gamma>"
+            using h\<gamma> unfolding top1_is_path_on_def by (by100 blast)
+          have hf\<gamma>_cont_Y: "top1_continuous_map_on I_set top1_unit_interval_topology Y TY (f \<circ> \<gamma>)"
+            using top1_continuous_map_on_comp[OF h\<gamma>_cont assms(2)] .
+          \<comment> \<open>f\<circ>\<gamma> maps I to Z (since \<gamma> maps to X and f maps X to Z).\<close>
+          have himg: "\<forall>t \<in> I_set. (f \<circ> \<gamma>) t \<in> Z"
+          proof (intro ballI)
+            fix t assume "t \<in> I_set"
+            have "\<gamma> t \<in> X" using h\<gamma>_cont \<open>t \<in> I_set\<close>
+              unfolding top1_continuous_map_on_def by (by100 blast)
+            thus "(f \<circ> \<gamma>) t \<in> Z" using assms(4) by (by100 auto)
+          qed
+          \<comment> \<open>Continuous into Z = subspace of Y.\<close>
+          show "top1_continuous_map_on I_set top1_unit_interval_topology Z TZ (f \<circ> \<gamma>)"
+            unfolding assms(6)
+            by (rule continuous_map_restrict_codomain[OF hf\<gamma>_cont_Y himg assms(5)])
+          show "(f \<circ> \<gamma>) 0 = a" using h\<gamma>[unfolded top1_is_path_on_def] hx(2) by (by100 simp)
+          show "(f \<circ> \<gamma>) 1 = b" using h\<gamma>[unfolded top1_is_path_on_def] hy(2) by (by100 simp)
+        qed
+      qed
     qed
   qed
 qed
