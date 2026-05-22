@@ -7091,12 +7091,66 @@ proof -
         define pow_elt where "pow_elt = (if \<epsilon> g \<ge> 0
             then top1_group_pow mul e (iota s0) (nat (\<epsilon> g))
             else top1_group_pow mul e (invg (iota s0)) (nat (- \<epsilon> g)))"
-        have hpow_2G: "pow_elt \<in> {mul g g | g. g \<in> G}"
-          sorry \<comment> \<open>Even power: pow(\<iota>(s0), 2m) \<in> 2G from hpow\_even\_in\_2G.\<close>
         have hpow_G: "pow_elt \<in> G"
-          sorry \<comment> \<open>From group\_pow\_in\_group'.\<close>
+          unfolding pow_elt_def using group_pow_in_group'[OF hG_grp ha_G]
+            group_pow_in_group'[OF hG_grp hia_G] by (by100 simp)
+        have hpow_2G: "pow_elt \<in> {mul g g | g. g \<in> G}"
+        proof -
+          from hm have "\<epsilon> g = 2 * int m \<or> \<epsilon> g = -(2 * int m)" .
+          thus ?thesis
+          proof (elim disjE)
+            assume hpos: "\<epsilon> g = 2 * int m"
+            hence "pow_elt = top1_group_pow mul e (iota s0) (2 * m)"
+              unfolding pow_elt_def by (by100 simp)
+            thus ?thesis using hpow_even_in_2G by (by100 simp)
+          next
+            assume hneg: "\<epsilon> g = -(2 * int m)"
+            hence "pow_elt = top1_group_pow mul e (invg (iota s0)) (2 * m)"
+              unfolding pow_elt_def by (by100 simp)
+            thus ?thesis using hpow_inv_even_in_2G by (by100 simp)
+          qed
+        qed
         have heps_pow: "\<epsilon> pow_elt = \<epsilon> g"
-          sorry \<comment> \<open>From hom\_group\_pow\_early + \<epsilon>(\<iota>(s0))=1.\<close>
+        proof -
+          from hm have "\<epsilon> g = 2 * int m \<or> \<epsilon> g = -(2 * int m)" .
+          thus ?thesis
+          proof (elim disjE)
+            assume hpos: "\<epsilon> g = 2 * int m"
+            hence "pow_elt = top1_group_pow mul e (iota s0) (nat (\<epsilon> g))"
+              unfolding pow_elt_def by (by100 simp)
+            hence "\<epsilon> pow_elt = top1_group_pow (+) (0::int) (\<epsilon> (iota s0)) (nat (\<epsilon> g))"
+              using hom_group_pow_early[OF hG_grp hZ_grp heps ha_G] by (by100 simp)
+            also have "\<dots> = top1_group_pow (+) (0::int) 1 (nat (\<epsilon> g))"
+              using heps_s0 by (by100 simp)
+            also have "\<dots> = int (nat (\<epsilon> g))"
+            proof -
+              define mm where "mm = nat (\<epsilon> g)"
+              have "top1_group_pow (+) (0::int) 1 mm = int mm" by (induction mm, by100 simp, by100 simp)
+              thus ?thesis unfolding mm_def by (by100 simp)
+            qed
+            also have "\<dots> = \<epsilon> g" using hpos by (by100 simp)
+            finally show ?thesis .
+          next
+            assume hneg: "\<epsilon> g = -(2 * int m)"
+            hence "pow_elt = top1_group_pow mul e (invg (iota s0)) (nat (- \<epsilon> g))"
+              unfolding pow_elt_def by (by100 simp)
+            hence "\<epsilon> pow_elt = top1_group_pow (+) (0::int) (\<epsilon> (invg (iota s0))) (nat (- \<epsilon> g))"
+              using hom_group_pow_early[OF hG_grp hZ_grp heps hia_G] by (by100 simp)
+            also have "\<epsilon> (invg (iota s0)) = -1"
+              using hom_preserves_inv[OF hG_grp hZ_grp heps ha_G] heps_s0 by (by100 simp)
+            hence "top1_group_pow (+) (0::int) (\<epsilon> (invg (iota s0))) (nat (- \<epsilon> g))
+                = top1_group_pow (+) (0::int) (-1) (nat (- \<epsilon> g))"
+              by (by100 simp)
+            also have "\<dots> = - int (nat (- \<epsilon> g))"
+            proof -
+              define mm where "mm = nat (- \<epsilon> g)"
+              have "top1_group_pow (+) (0::int) (-1) mm = - int mm" by (induction mm, by100 simp, by100 simp)
+              thus ?thesis unfolding mm_def by (by100 simp)
+            qed
+            also have "\<dots> = \<epsilon> g" using hneg by (by100 simp)
+            finally show ?thesis .
+          qed
+        qed
         define k where "k = mul g (invg pow_elt)"
         have hk_G: "k \<in> G"
           using hG_grp hg hpow_G unfolding k_def top1_is_group_on_def by (by100 blast)
