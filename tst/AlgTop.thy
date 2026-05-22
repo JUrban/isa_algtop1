@@ -2944,8 +2944,36 @@ proof -
         have h\<beta>_nn: "\<beta>' \<ge> 0" sorry
         have h\<gamma>_nn: "\<gamma>' \<ge> 0" sorry
         \<comment> \<open>z - c = \<beta>'*(v_i - c) + \<gamma>'*(v_{i+1} - c): by definition of \<beta>', \<gamma>' via Cramer.\<close>
-        have hzc_x: "fst z - cx = \<beta>' * (vx i - cx) + \<gamma>' * (vx ?vi1 - cx)" sorry
-        have hzc_y: "snd z - cy = \<beta>' * (vy i - cy) + \<gamma>' * (vy ?vi1 - cy)" sorry
+        have hzc_x: "fst z - cx = \<beta>' * (vx i - cx) + \<gamma>' * (vx ?vi1 - cx)"
+        proof -
+          \<comment> \<open>Cramer: \<beta>'*(vx_i-cx) + \<gamma>'*(vx_{i+1}-cx)
+             = (cross2(z-c,v_{i+1}-c)*(vx_i-cx) + cross2(v_i-c,z-c)*(vx_{i+1}-cx)) / D
+             = ((fst z-cx)*(vy_{i+1}-cy) - (snd z-cy)*(vx_{i+1}-cx))*(vx_i-cx) / D
+             + ((vx_i-cx)*(snd z-cy) - (vy_i-cy)*(fst z-cx))*(vx_{i+1}-cx) / D
+             Numerator = (fst z-cx) * [(vy_{i+1}-cy)*(vx_i-cx) - (vy_i-cy)*(vx_{i+1}-cx)]
+                       + (snd z-cy) * [-(vx_{i+1}-cx)*(vx_i-cx) + (vx_i-cx)*(vx_{i+1}-cx)]
+                       = (fst z-cx) * D + 0 = (fst z-cx) * D.
+             So the whole expression = (fst z-cx) * D / D = fst z - cx.\<close>
+          have "\<beta>' * (vx i - cx) + \<gamma>' * (vx ?vi1 - cx) =
+              (cross2 (fst z - cx, snd z - cy) (vx ?vi1 - cx, vy ?vi1 - cy) * (vx i - cx) +
+               cross2 (vx i - cx, vy i - cy) (fst z - cx, snd z - cy) * (vx ?vi1 - cx)) / ?D"
+            unfolding \<beta>'_def \<gamma>'_def by (simp add: add_divide_distrib)
+          also have "\<dots> = (fst z - cx) * ?D / ?D"
+            unfolding cross2_def by (simp add: algebra_simps)
+          also have "\<dots> = fst z - cx" using hD_ne by (by100 simp)
+          finally show ?thesis by (by100 simp)
+        qed
+        have hzc_y: "snd z - cy = \<beta>' * (vy i - cy) + \<gamma>' * (vy ?vi1 - cy)"
+        proof -
+          have "\<beta>' * (vy i - cy) + \<gamma>' * (vy ?vi1 - cy) =
+              (cross2 (fst z - cx, snd z - cy) (vx ?vi1 - cx, vy ?vi1 - cy) * (vy i - cy) +
+               cross2 (vx i - cx, vy i - cy) (fst z - cx, snd z - cy) * (vy ?vi1 - cy)) / ?D"
+            unfolding \<beta>'_def \<gamma>'_def by (simp add: add_divide_distrib)
+          also have "\<dots> = (snd z - cy) * ?D / ?D"
+            unfolding cross2_def by (simp add: algebra_simps)
+          also have "\<dots> = snd z - cy" using hD_ne by (by100 simp)
+          finally show ?thesis by (by100 simp)
+        qed
         \<comment> \<open>\<beta>' + \<gamma>' \<le> 1: since z \<in> P (convex hull) and c is the centroid.\<close>
         have hsum_le: "\<beta>' + \<gamma>' \<le> 1" sorry
         \<comment> \<open>z \<noteq> c means \<beta>' + \<gamma>' > 0.\<close>
