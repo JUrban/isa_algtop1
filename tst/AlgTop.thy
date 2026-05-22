@@ -3980,8 +3980,31 @@ proof -
            - If i mod 4 = 2: hedge(4k+1, 4k+3) at t=1: v(4k+2) = v(4k+3). \<checkmark>
            - If i mod 4 = 3: v(4k+3) = v(4k) (from hedge(4k,4k+2) at t=0) = v(4k+1)
              (from case 0) = v(4k+4 mod 4n) (from hedge(4k+1,4k+3) at t=0). \<checkmark>\<close>
+        \<comment> \<open>Instantiate hedge per case i mod 4.
+           Key facts from torus\_scheme\_nth: scheme!(4k+r) for r=0,1,2,3.\<close>
+        have hn_pos: "n > 0" using assms(1) unfolding top1_is_n_fold_torus_on_def by (by100 blast)
+        define k where "k = i div 4"
+        define r where "r = i mod 4"
+        have hkr: "i = 4*k + r" "r < 4" unfolding k_def r_def by (by100 auto)+
+        have hk_bound: "k < n"
+        proof -
+          have "length ?scheme = 4 * n"
+          proof -
+            define f where "f = (\<lambda>i::nat. [(2*i, True), (2*i+1, True), (2*i, False), (2*i+1, False)])"
+            have "length ?scheme = length (concat (map f [0..<n]))"
+              unfolding top1_n_torus_scheme_def f_def by (by100 simp)
+            also have "\<dots> = sum_list (map (length \<circ> f) [0..<n])"
+              using length_concat[of "map f [0..<n]"] by (by100 simp)
+            also have "map (length \<circ> f) [0..<n] = map (\<lambda>i. 4::nat) [0..<n]"
+              unfolding f_def by (by100 simp)
+            also have "sum_list (map (\<lambda>i. 4::nat) [0..<n]) = 4 * n"
+              by (induction n, by100 simp, by100 simp)
+            finally show ?thesis unfolding f_def by (by100 simp)
+          qed
+          thus ?thesis using hi hkr by (by100 simp)
+        qed
         show "q (vx i, vy i) = q (vx (Suc i mod length ?scheme), vy (Suc i mod length ?scheme))"
-          sorry \<comment> \<open>Instantiate hedge per case i mod 4 \<in> {0,1,2,3} as described above.\<close>
+          sorry \<comment> \<open>Case split on r \<in> {0,1,2,3}. Each case uses hedge + torus\_scheme\_nth.\<close>
       qed
       \<comment> \<open>From hadjacent, all vertices are in the same equivalence class.\<close>
       \<comment> \<open>From hadjacent, iterate: q(vx 0, vy 0) = q(vx 1, vy 1) = ... = q(vx (4n-1), vy (4n-1)).\<close>
