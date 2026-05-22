@@ -3868,10 +3868,10 @@ proof -
       \<and> (\<forall>i<length ?scheme. \<forall>j<length ?scheme. q (vx i, vy i) = q (vx j, vy j))"
   proof -
     \<comment> \<open>Extract (P, q, vx, vy) from the torus scheme definition.\<close>
-    from quotient_of_scheme_extract_full[OF hscheme]
     obtain P q vx vy where
       hP: "top1_is_polygonal_region_on P (length ?scheme)" and
       hq: "top1_quotient_map_on P (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) X TX q" and
+      hlen3: "length ?scheme \<ge> 3" and
       hverts: "\<forall>i<length ?scheme. (vx i, vy i) \<in> P" and
       hedge: "\<forall>i<length ?scheme. \<forall>j<length ?scheme.
           fst (?scheme!i) = fst (?scheme!j) \<longrightarrow>
@@ -3882,8 +3882,12 @@ proof -
               then q ((1-t) * vx j + t * vx (Suc j mod length ?scheme),
                       (1-t) * vy j + t * vy (Suc j mod length ?scheme))
               else q (t * vx j + (1-t) * vx (Suc j mod length ?scheme),
-                      t * vy j + (1-t) * vy (Suc j mod length ?scheme))))"
-      by (by100 blast)
+                      t * vy j + (1-t) * vy (Suc j mod length ?scheme))))" and
+      hinterior: "\<forall>p\<in>P. (\<forall>i<length ?scheme. \<forall>t\<in>I_set.
+            p \<noteq> ((1-t) * vx i + t * vx (Suc i mod length ?scheme),
+                  (1-t) * vy i + t * vy (Suc i mod length ?scheme)))
+       \<longrightarrow> (\<forall>p'\<in>P. q p = q p' \<longrightarrow> p = p')"
+      by (rule quotient_of_scheme_extract_full[OF hscheme])
     \<comment> \<open>The edge identification at t=0 gives vertex identifications.
        For edges i,j with same label and different direction (snd differs):
        q(vx i, vy i) = q(vx(Suc j mod len), vy(Suc j mod len)).
@@ -3891,8 +3895,10 @@ proof -
     \<comment> \<open>From hedge at t=0: for edges with same label, different direction,
        q(start of edge i) = q(end of edge j).
        The torus scheme ensures all vertices are transitively connected.\<close>
-    have h0_in_I: "(0::real) \<in> I_set" unfolding I_set_def by (by100 simp)
-    have h1_in_I: "(1::real) \<in> I_set" unfolding I_set_def by (by100 simp)
+    have h0_in_I: "(0::real) \<in> I_set"
+      unfolding top1_unit_interval_def by (by100 simp)
+    have h1_in_I: "(1::real) \<in> I_set"
+      unfolding top1_unit_interval_def by (by100 simp)
     \<comment> \<open>Suffices to show: q(vx 0, vy 0) = q(vx i, vy i) for all i.\<close>
     have hvert_ident: "\<forall>i<length ?scheme. \<forall>j<length ?scheme.
         q (vx i, vy i) = q (vx j, vy j)"
@@ -3903,25 +3909,37 @@ proof -
          This follows from hedge: adjacent edges share an endpoint.\<close>
       have hadjacent: "\<forall>i<length ?scheme.
           q (vx i, vy i) = q (vx (Suc i mod length ?scheme), vy (Suc i mod length ?scheme))"
-        sorry \<comment> \<open>From hedge: each edge i shares label with some edge j (for the torus scheme,
-           j = i+2 mod 4n or i-2 mod 4n). The identification at t=0 or t=1 gives
-           q(vertex i) = q(vertex (i+1) mod 4n).\<close>
+      proof (intro allI impI)
+        fix i assume hi: "i < length ?scheme"
+        \<comment> \<open>For the torus scheme, edge i has label fst(?scheme!i).
+           Find partner j with same label but different direction.
+           Use hedge at t=0 and t=1 to chain vertex identifications.\<close>
+        \<comment> \<open>Within block k (edges 4k..4k+3):
+           - edges 4k,4k+2 share label (diff dir): q(v(4k))=q(v(4k+3)), q(v(4k+1))=q(v(4k+2))
+           - edges 4k+1,4k+3 share label (diff dir): q(v(4k+1))=q(v(4k+4 mod 4n)), q(v(4k+2))=q(v(4k+3))
+           These chain: v(i) = v(i+1) for each i.\<close>
+        show "q (vx i, vy i) = q (vx (Suc i mod length ?scheme), vy (Suc i mod length ?scheme))"
+          sorry \<comment> \<open>Index arithmetic: instantiate hedge with the right edge pair and t=0 or t=1.
+             The torus scheme structure (blocks of 4 with matching labels) ensures adjacency.\<close>
+      qed
       \<comment> \<open>From hadjacent, all vertices are in the same equivalence class.\<close>
       \<comment> \<open>From hadjacent, iterate: q(vx 0, vy 0) = q(vx 1, vy 1) = ... = q(vx (4n-1), vy (4n-1)).\<close>
       have hchain: "\<forall>i<length ?scheme. q (vx 0, vy 0) = q (vx i, vy i)"
       proof (intro allI impI)
-        fix i assume "i < length ?scheme"
+        fix i assume hi: "i < length ?scheme"
         show "q (vx 0, vy 0) = q (vx i, vy i)"
+          using hi
         proof (induction i)
           case 0 show ?case by (by100 simp)
         next
           case (Suc k)
-          hence "k < length ?scheme" using \<open>Suc k < length ?scheme\<close> by (by100 simp)
-          have "q (vx 0, vy 0) = q (vx k, vy k)" using Suc.IH[OF \<open>k < length ?scheme\<close>] .
+          hence hSk: "Suc k < length ?scheme" by (by100 simp)
+          hence hk: "k < length ?scheme" by (by100 simp)
+          have "q (vx 0, vy 0) = q (vx k, vy k)" using Suc.IH hk by (by100 blast)
           also have "q (vx k, vy k) = q (vx (Suc k mod length ?scheme), vy (Suc k mod length ?scheme))"
-            using hadjacent \<open>k < length ?scheme\<close> by (by100 blast)
+            using hadjacent hk by (by100 blast)
           also have "Suc k mod length ?scheme = Suc k"
-            using \<open>Suc k < length ?scheme\<close> by (by100 simp)
+            using hSk by (by100 simp)
           finally show ?case by (by100 simp)
         qed
       qed
