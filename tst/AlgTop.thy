@@ -7193,7 +7193,67 @@ proof -
           qed
           \<comment> \<open>coset_G(k1) = coset_G(k2) means k1 - k2 \<in> 2G.\<close>
           \<comment> \<open>k1, k2 \<in> K, so k1 - k2 \<in> K \<inter> 2G = 2K. Hence coset_K(k1) = coset_K(k2), i.e., CK1 = CK2.\<close>
-          show "CK1 = CK2" sorry
+          \<comment> \<open>coset_G(k1) = coset_G(k2) implies mul(invg k1) k2 \<in> 2G (by normal\_coset\_eq).\<close>
+          have h2G_normal: "top1_normal_subgroup_on G mul e invg ?twoG"
+            unfolding top1_normal_subgroup_on_def
+          proof (intro conjI)
+            show "?twoG \<subseteq> G"
+            proof (rule subsetI, clarify)
+              fix g assume "g \<in> G"
+              thus "mul g g \<in> G" using hG_grp unfolding top1_is_group_on_def by (by100 blast)
+            qed
+            show "top1_is_group_on ?twoG mul e invg" sorry
+            show "\<forall>g\<in>G. \<forall>n\<in>?twoG. mul (mul g n) (invg g) \<in> ?twoG"
+            proof (intro ballI)
+              fix g n assume "g \<in> G" "n \<in> ?twoG"
+              then obtain n' where "n' \<in> G" "n = mul n' n'" by (by100 blast)
+              \<comment> \<open>In abelian group: mul(mul g n)(invg g) = n (conjugation is trivial).\<close>
+              have "mul (mul g n) (invg g) = n"
+              proof -
+                have hn_G: "n \<in> G" using hG_grp \<open>n' \<in> G\<close> \<open>n = mul n' n'\<close>
+                  unfolding top1_is_group_on_def by (by100 blast)
+                have "mul (mul g n) (invg g) = mul g (mul n (invg g))"
+                  using hassoc[OF \<open>g \<in> G\<close> hn_G] hG_grp \<open>g \<in> G\<close>
+                  unfolding top1_is_group_on_def by (by5000 blast)
+                also have "mul n (invg g) = mul (invg g) n"
+                  using habel hn_G hG_grp \<open>g \<in> G\<close>
+                  unfolding top1_is_abelian_group_on_def top1_is_group_on_def by (by100 blast)
+                finally have "mul (mul g n) (invg g) = mul g (mul (invg g) n)" by (by100 simp)
+                also have "\<dots> = mul (mul g (invg g)) n"
+                  using hG_grp \<open>g \<in> G\<close> hn_G
+                  unfolding top1_is_group_on_def by (by5000 blast)
+                also have "mul g (invg g) = e"
+                  using hG_grp \<open>g \<in> G\<close> unfolding top1_is_group_on_def by (by100 blast)
+                finally show ?thesis using hid_l[OF hn_G] by (by100 simp)
+              qed
+              thus "mul (mul g n) (invg g) \<in> ?twoG" using \<open>n \<in> ?twoG\<close> by (by100 simp)
+            qed
+          qed
+          have hk1_G: "?k1 \<in> G" using hk1_K by (by100 blast)
+          have hk2_G: "?k2 \<in> G" using hk2_K by (by100 blast)
+          have "mul (invg ?k1) ?k2 \<in> ?twoG"
+            using normal_coset_eq[OF hG_grp h2G_normal hk1_G hk2_G] heq by (by100 simp)
+          \<comment> \<open>Also mul(invg k1) k2 \<in> K (K is closed under mul and invg).\<close>
+          have "mul (invg ?k1) ?k2 \<in> ?K"
+          proof -
+            have "invg ?k1 \<in> ?K" using hK_grp hk1_K unfolding top1_is_group_on_def by (by100 blast)
+            thus ?thesis using hK_grp \<open>invg ?k1 \<in> ?K\<close> hk2_K
+              unfolding top1_is_group_on_def by (by100 blast)
+          qed
+          \<comment> \<open>By K \<inter> 2G = 2K: mul(invg k1) k2 \<in> 2K.\<close>
+          have "mul (invg ?k1) ?k2 \<in> ?twoK"
+            using \<open>mul (invg ?k1) ?k2 \<in> ?twoG\<close> \<open>mul (invg ?k1) ?k2 \<in> ?K\<close>
+              hK_cap_2G by (by100 blast)
+          \<comment> \<open>By normal\_coset\_eq for K: coset_K(k1) = coset_K(k2).\<close>
+          have h2K_normal: "top1_normal_subgroup_on ?K mul e invg ?twoK"
+            sorry
+          have hcoset_K_eq: "top1_group_coset_on ?K mul ?twoK ?k1 = top1_group_coset_on ?K mul ?twoK ?k2"
+            using normal_coset_eq[OF hK_grp h2K_normal hk1_K hk2_K]
+              \<open>mul (invg ?k1) ?k2 \<in> ?twoK\<close> by (by100 simp)
+          \<comment> \<open>k1 \<in> CK1, k2 \<in> CK2, and coset_K(k1) = coset_K(k2).
+             Since CK1 = coset_K(k1) and CK2 = coset_K(k2), CK1 = CK2.\<close>
+          show "CK1 = CK2"
+            sorry
         qed
         \<comment> \<open>Image of \<psi> = ?even: every even G-coset has a K-representative.\<close>
         have hpsi_image: "?\<psi> ` ?QK = ?even"
