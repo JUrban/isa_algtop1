@@ -2367,9 +2367,264 @@ proof -
       hP: "P = {(x, y) | x y. \<exists>coeffs. (\<forall>i<n. coeffs i \<ge> 0) \<and> (\<Sum>i<n. coeffs i) = 1
             \<and> x = (\<Sum>i<n. coeffs i * vx i) \<and> y = (\<Sum>i<n. coeffs i * vy i)}"
       by (elim conjE exE) (rule that, assumption+)
-    \<comment> \<open>Use the inductive hull construction from polygon\_homeomorphic\_to\_disk.\<close>
-    show ?thesis sorry \<comment> \<open>Same proof as inside polygon\_homeomorphic\_to\_disk.
-       Ideally: extract the compact P proof as a standalone lemma.\<close>
+    \<comment> \<open>Inductive hull construction: Pk k = convex hull of first k vertices.\<close>
+    define Pk where "Pk k = {(x, y) | x y. \<exists>coeffs. (\<forall>i<k. coeffs i \<ge> 0)
+        \<and> (\<Sum>i<k. coeffs i) = 1 \<and> x = (\<Sum>i<k. coeffs i * vx i)
+        \<and> y = (\<Sum>i<k. coeffs i * vy i)}" for k :: nat
+    have hPk_compact: "n \<ge> 1 \<Longrightarrow> compact (Pk n)"
+    proof (rule nat_induct_at_least[of 1 n "\<lambda>k. compact (Pk k)"])
+      show "1 \<le> n" using assms(2) by (by100 simp)
+    next
+      \<comment> \<open>Base: Pk 1 = {(vx 0, vy 0)}, compact as singleton.\<close>
+      show "compact (Pk 1)"
+      proof -
+        have "Pk 1 = {(vx 0, vy 0)}"
+        proof (rule set_eqI)
+          fix p :: "real \<times> real"
+          show "p \<in> Pk 1 \<longleftrightarrow> p \<in> {(vx 0, vy 0)}"
+          proof
+            assume "p \<in> Pk 1"
+            then obtain x y coeffs where hp: "p = (x, y)"
+                and hcge: "\<forall>i<(1::nat). coeffs i \<ge> 0" and hcsum: "(\<Sum>i<1. coeffs i) = 1"
+                and hx: "x = (\<Sum>i<1. coeffs i * vx i)" and hy: "y = (\<Sum>i<1. coeffs i * vy i)"
+              unfolding Pk_def by (by5000 auto)
+            have "coeffs 0 = 1" using hcsum by (by100 simp)
+            hence "x = vx 0" "y = vy 0" using hx hy by (by100 simp)+
+            thus "p \<in> {(vx 0, vy 0)}" using hp by (by100 simp)
+          next
+            assume "p \<in> {(vx 0, vy 0)}"
+            hence hp: "p = (vx 0, vy 0)" by (by100 simp)
+            have "(vx 0, vy 0) \<in> Pk 1" unfolding Pk_def
+              using exI[of _ "\<lambda>_::nat. 1::real"] by (by5000 auto)
+            thus "p \<in> Pk 1" using hp by (by100 simp)
+          qed
+        qed
+        thus ?thesis using compact_singleton by (by100 simp)
+      qed
+    next
+      \<comment> \<open>Step: Pk (Suc k) = continuous image of Pk k × [0,1], hence compact.\<close>
+      fix k assume "1 \<le> k" "compact (Pk k)"
+      have hdom_compact: "compact (Pk k \<times> {0..1::real})"
+        by (rule compact_Times_general[OF \<open>compact (Pk k)\<close> compact_Icc])
+      have hset: "Pk (Suc k) = (\<lambda>(p, t). ((1-t) * fst p + t * vx k, (1-t) * snd p + t * vy k))
+          ` (Pk k \<times> {0..1})"
+      proof (rule equalityI)
+        \<comment> \<open>(\<subseteq>): element of Pk(Suc k) is a convex combo with k+1 vertices;
+           let t = c_k, normalize remaining c_i by (1-t) to get point in Pk k.\<close>
+        show "Pk (Suc k) \<subseteq> (\<lambda>(p, t). ((1-t) * fst p + t * vx k, (1-t) * snd p + t * vy k))
+            ` (Pk k \<times> {0..1})"
+        proof (rule subsetI)
+          fix q assume "q \<in> Pk (Suc k)"
+          then obtain qx qy c where hq: "q = (qx, qy)"
+              and hcge: "\<forall>i<Suc k. c i \<ge> 0" and hcsum: "(\<Sum>i<Suc k. c i) = 1"
+              and hqx: "qx = (\<Sum>i<Suc k. c i * vx i)" and hqy: "qy = (\<Sum>i<Suc k. c i * vy i)"
+            unfolding Pk_def by (by5000 auto)
+          let ?t = "c k"
+          have ht_ge: "?t \<ge> 0" using hcge by (by100 simp)
+          have hrest: "(\<Sum>i<k. c i) = 1 - ?t" using hcsum by (by100 simp)
+          have ht_le: "?t \<le> 1"
+          proof -
+            have "(\<Sum>i<k. c i) \<ge> 0"
+              using hcge by (intro sum_nonneg) (by100 simp)
+            thus ?thesis using hrest by (by100 linarith)
+          qed
+          show "q \<in> (\<lambda>(p, t). ((1-t) * fst p + t * vx k, (1-t) * snd p + t * vy k))
+              ` (Pk k \<times> {0..1})"
+          proof (cases "?t = 1")
+            case True
+            \<comment> \<open>All other c_i = 0, q = (vx k, vy k).\<close>
+            have hrest0: "(\<Sum>i<k. c i) = 0" using hrest True by (by100 simp)
+            have hci0: "\<And>i. i < k \<Longrightarrow> c i = 0"
+            proof -
+              fix i assume "i < k"
+              have "c i \<ge> 0" using hcge \<open>i < k\<close> by (by100 simp)
+              moreover have "c i \<le> (\<Sum>i<k. c i)"
+                using hcge \<open>i < k\<close> by (intro member_le_sum) (by100 auto)
+              ultimately show "c i = 0" using hrest0 by (by100 simp)
+            qed
+            have "qx = vx k" using hqx hci0 True by (by100 simp)
+            moreover have "qy = vy k" using hqy hci0 True by (by100 simp)
+            ultimately have hq_vk: "q = (vx k, vy k)" using hq by (by100 simp)
+            \<comment> \<open>v_0 \<in> Pk k (since k \<ge> 1).\<close>
+            have hv0: "(vx 0, vy 0) \<in> Pk k"
+            proof -
+              define c0 where "c0 = (\<lambda>i::nat. if i = 0 then (1::real) else 0)"
+              have hc0ge: "\<forall>i<k. c0 i \<ge> 0" unfolding c0_def by (by100 simp)
+              have hc0_eq: "\<And>f. (\<Sum>i<k. c0 i * f i) = f 0"
+              proof -
+                fix f :: "nat \<Rightarrow> real"
+                from \<open>1 \<le> k\<close> obtain k' where hk': "k = Suc k'" by (cases k) (by100 auto)
+                have "(\<Sum>i<k. c0 i * f i) = (\<Sum>i<Suc k'. c0 i * f i)" unfolding hk' ..
+                also have "\<dots> = c0 0 * f 0 + (\<Sum>i<k'. c0 (Suc i) * f (Suc i))"
+                  using sum.lessThan_Suc_shift[of "\<lambda>i. c0 i * f i" k'] by (by100 simp)
+                also have "(\<Sum>i<k'. c0 (Suc i) * f (Suc i)) = 0"
+                  unfolding c0_def by (by100 simp)
+                finally show "(\<Sum>i<k. c0 i * f i) = f 0" unfolding c0_def by (by100 simp)
+              qed
+              have hc0sum: "(\<Sum>i<k. c0 i) = 1"
+              proof -
+                have "(\<Sum>i<k. c0 i) = (\<Sum>i<k. c0 i * 1)" by (by100 simp)
+                also have "\<dots> = 1" using hc0_eq[of "\<lambda>_. 1"] by (by100 simp)
+                finally show ?thesis .
+              qed
+              have hc0x: "(\<Sum>i<k. c0 i * vx i) = vx 0" by (rule hc0_eq)
+              have hc0y: "(\<Sum>i<k. c0 i * vy i) = vy 0" by (rule hc0_eq)
+              show ?thesis unfolding Pk_def using hc0ge hc0sum hc0x hc0y by (by5000 auto)
+            qed
+            have "q = ((1 - 1) * fst (vx 0, vy 0) + 1 * vx k,
+                       (1 - 1) * snd (vx 0, vy 0) + 1 * vy k)"
+              unfolding hq_vk by (by100 simp)
+            hence "q = (case ((vx 0, vy 0), 1::real) of (p, t) \<Rightarrow>
+                ((1-t) * fst p + t * vx k, (1-t) * snd p + t * vy k))"
+              by (by100 simp)
+            moreover have "((vx 0, vy 0), 1::real) \<in> Pk k \<times> {0..1}" using hv0 by (by100 simp)
+            ultimately show ?thesis by (by100 blast)
+          next
+            case False
+            hence hlt: "?t < 1" using ht_le by (by100 simp)
+            hence h1t_pos: "1 - ?t > 0" by (by100 simp)
+            \<comment> \<open>Normalize: c'_i = c_i / (1-t).\<close>
+            define c' where "c' i = c i / (1 - ?t)" for i
+            have hc'ge: "\<forall>i<k. c' i \<ge> 0" using hcge h1t_pos unfolding c'_def by (by100 simp)
+            have hc'sum: "(\<Sum>i<k. c' i) = 1"
+              using hrest h1t_pos unfolding c'_def
+              using sum_divide_distrib[of c "{..<k}" "1 - ?t"] by (by100 simp)
+            define px where "px = (\<Sum>i<k. c' i * vx i)"
+            define py where "py = (\<Sum>i<k. c' i * vy i)"
+            have hp_in: "(px, py) \<in> Pk k" unfolding Pk_def
+              using hc'ge hc'sum unfolding px_def py_def by (by5000 auto)
+            \<comment> \<open>Show q = (1-t)*p + t*v_k.\<close>
+            have "(\<Sum>i<k. c i * vx i) = (1 - ?t) * px"
+            proof -
+              have "(1 - ?t) * px = (1 - ?t) * (\<Sum>i<k. c' i * vx i)" unfolding px_def ..
+              also have "\<dots> = (\<Sum>i<k. (1 - ?t) * (c' i * vx i))"
+                using sum_distrib_left[of "1-?t" "\<lambda>i. c' i * vx i" "{..<k}", symmetric]
+                by (by100 simp)
+              also have "\<dots> = (\<Sum>i<k. c i * vx i)"
+              proof (rule sum.cong)
+                fix i assume "i \<in> {..<k}"
+                show "(1 - ?t) * (c' i * vx i) = c i * vx i"
+                  unfolding c'_def using h1t_pos by (by100 simp)
+              qed (by100 simp)
+              finally show ?thesis by (by100 simp)
+            qed
+            hence hqx_eq: "qx = (1 - ?t) * px + ?t * vx k"
+              using hqx by (by100 simp)
+            have "(\<Sum>i<k. c i * vy i) = (1 - ?t) * py"
+            proof -
+              have "(1 - ?t) * py = (1 - ?t) * (\<Sum>i<k. c' i * vy i)" unfolding py_def ..
+              also have "\<dots> = (\<Sum>i<k. (1 - ?t) * (c' i * vy i))"
+                using sum_distrib_left[of "1-?t" "\<lambda>i. c' i * vy i" "{..<k}", symmetric]
+                by (by100 simp)
+              also have "\<dots> = (\<Sum>i<k. c i * vy i)"
+              proof (rule sum.cong)
+                fix i assume "i \<in> {..<k}"
+                show "(1 - ?t) * (c' i * vy i) = c i * vy i"
+                  unfolding c'_def using h1t_pos by (by100 simp)
+              qed (by100 simp)
+              finally show ?thesis by (by100 simp)
+            qed
+            hence hqy_eq: "qy = (1 - ?t) * py + ?t * vy k"
+              using hqy by (by100 simp)
+            have "q = ((1 - ?t) * fst (px, py) + ?t * vx k,
+                       (1 - ?t) * snd (px, py) + ?t * vy k)"
+              using hq hqx_eq hqy_eq by (by100 simp)
+            hence "q = (case ((px, py), ?t) of (p, t) \<Rightarrow>
+                ((1-t) * fst p + t * vx k, (1-t) * snd p + t * vy k))"
+              by (by100 simp)
+            moreover have "((px, py), ?t) \<in> Pk k \<times> {0..1}" using hp_in ht_ge ht_le by (by100 simp)
+            ultimately show ?thesis by (by100 blast)
+          qed
+        qed
+        \<comment> \<open>(\<supseteq>): given p \<in> Pk k with coeffs d_i, and t \<in> [0,1],
+           define c_i = (1-t)*d_i for i<k, c_k = t. Then \<Sum> c_i = 1.\<close>
+        show "(\<lambda>(p, t). ((1-t) * fst p + t * vx k, (1-t) * snd p + t * vy k))
+            ` (Pk k \<times> {0..1}) \<subseteq> Pk (Suc k)"
+        proof (rule subsetI)
+          fix q assume "q \<in> (\<lambda>(p, t). ((1-t) * fst p + t * vx k, (1-t) * snd p + t * vy k))
+              ` (Pk k \<times> {0..1})"
+          then obtain pt where hpt_in: "pt \<in> Pk k \<times> {0..1::real}"
+              and hq: "q = (case pt of (p, t) \<Rightarrow> ((1-t) * fst p + t * vx k, (1-t) * snd p + t * vy k))"
+            by (by100 blast)
+          obtain p t where hpt: "pt = (p, t)" by (cases pt) (by100 blast)
+          have hp: "p \<in> Pk k" and ht: "t \<in> {0..1::real}" using hpt_in hpt by (by100 blast)+
+          have hq2: "q = ((1-t) * fst p + t * vx k, (1-t) * snd p + t * vy k)"
+            using hq hpt by (by100 simp)
+          from hp obtain px py d where hpp: "p = (px, py)"
+              and hdge: "\<forall>i<k. d i \<ge> 0" and hdsum: "(\<Sum>i<k. d i) = 1"
+              and hpx: "px = (\<Sum>i<k. d i * vx i)" and hpy: "py = (\<Sum>i<k. d i * vy i)"
+            unfolding Pk_def by (by5000 auto)
+          define c where "c i = (if i < k then (1-t) * d i else if i = k then t else 0)" for i
+          have ht01: "0 \<le> t" "t \<le> 1" using ht by (by100 auto)+
+          have hcge: "\<forall>i<Suc k. c i \<ge> 0"
+          proof (intro allI impI)
+            fix i assume "i < Suc k"
+            show "c i \<ge> 0"
+            proof (cases "i < k")
+              case True thus ?thesis unfolding c_def using ht01 hdge by (by100 auto)
+            next
+              case False hence "i = k" using \<open>i < Suc k\<close> by (by100 simp)
+              thus ?thesis unfolding c_def using ht01 by (by100 simp)
+            qed
+          qed
+          have hcsum: "(\<Sum>i<Suc k. c i) = 1"
+          proof -
+            have "(\<Sum>i<Suc k. c i) = (\<Sum>i<k. c i) + c k" by (by100 simp)
+            also have "(\<Sum>i<k. c i) = (\<Sum>i<k. (1 - t) * d i)" unfolding c_def by (by100 simp)
+            also have "\<dots> = (1 - t) * (\<Sum>i<k. d i)"
+              using sum_distrib_left[of "1-t" d "{..<k}", symmetric] by (by100 simp)
+            also have "\<dots> = 1 - t" using hdsum by (by100 simp)
+            finally show ?thesis unfolding c_def by (by100 simp)
+          qed
+          have hqx: "fst q = (\<Sum>i<Suc k. c i * vx i)"
+          proof -
+            have "fst q = (1-t) * px + t * vx k" using hq2 hpp by (by100 simp)
+            also have "\<dots> = (1-t) * (\<Sum>i<k. d i * vx i) + t * vx k" unfolding hpx ..
+            also have "(1-t) * (\<Sum>i<k. d i * vx i) = (\<Sum>i<k. (1-t) * (d i * vx i))"
+              using sum_distrib_left[of "1-t" "\<lambda>i. d i * vx i" "{..<k}", symmetric]
+              by (by100 simp)
+            also have "\<dots> = (\<Sum>i<k. c i * vx i)" unfolding c_def
+              by (rule sum.cong) (by100 simp)+
+            finally show ?thesis unfolding c_def by (by100 simp)
+          qed
+          have hqy: "snd q = (\<Sum>i<Suc k. c i * vy i)"
+          proof -
+            have "snd q = (1-t) * py + t * vy k" using hq2 hpp by (by100 simp)
+            also have "\<dots> = (1-t) * (\<Sum>i<k. d i * vy i) + t * vy k" unfolding hpy ..
+            also have "(1-t) * (\<Sum>i<k. d i * vy i) = (\<Sum>i<k. (1-t) * (d i * vy i))"
+              using sum_distrib_left[of "1-t" "\<lambda>i. d i * vy i" "{..<k}", symmetric]
+              by (by100 simp)
+            also have "\<dots> = (\<Sum>i<k. c i * vy i)" unfolding c_def
+              by (rule sum.cong) (by100 simp)+
+            finally show ?thesis unfolding c_def by (by100 simp)
+          qed
+          obtain qx qy where hqq: "q = (qx, qy)" by (cases q) (by100 blast)
+          have "qx = (\<Sum>i<Suc k. c i * vx i)" using hqx hqq by (by100 simp)
+          moreover have "qy = (\<Sum>i<Suc k. c i * vy i)" using hqy hqq by (by100 simp)
+          moreover note hcge hcsum
+          ultimately show "q \<in> Pk (Suc k)" unfolding Pk_def hqq
+            by (by5000 auto)
+        qed
+      qed
+      have hcont: "continuous_on (Pk k \<times> {0..1})
+          (\<lambda>(p, t). ((1-t) * fst p + t * vx k, (1-t) * snd p + t * vy k))"
+      proof -
+        have hcont_eq: "(\<lambda>(p, t). ((1-t) * fst p + t * vx k, (1-t) * snd p + t * vy k))
+            = (\<lambda>pt. ((1 - snd pt) * fst (fst pt) + snd pt * vx k,
+                      (1 - snd pt) * snd (fst pt) + snd pt * vy k))"
+          by (by100 auto)
+        show ?thesis unfolding hcont_eq
+          by (intro continuous_on_Pair continuous_on_add continuous_on_mult
+              continuous_on_fst continuous_on_snd continuous_on_const
+              continuous_on_diff) (by100 auto)+
+      qed
+      show "compact (Pk (Suc k))"
+        unfolding hset by (rule compact_continuous_image[OF hcont hdom_compact])
+    qed
+    have "Pk n = P" unfolding Pk_def hP by (by100 simp)
+    have "n \<ge> 1" using assms(2) by (by100 simp)
+    hence "compact P" using hPk_compact \<open>Pk n = P\<close> by (by100 simp)
+    thus ?thesis .
   qed
   thus ?thesis by (rule compact_R2_bridge)
 qed
