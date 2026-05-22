@@ -10430,7 +10430,27 @@ proof -
     have hmap_w: "map (\<lambda>(s,b). (\<iota> s, b)) w
         = concat (map (\<lambda>i. [(\<iota> (2*i), True), (\<iota> (2*i+1), True),
                     (\<iota> (2*i), False), (\<iota> (2*i+1), False)]) [0..<n])"
-      sorry
+    proof -
+      \<comment> \<open>General fact: map f (concat xss) = concat (map (map f) xss).\<close>
+      have h1: "map (\<lambda>(s,b). (\<iota> s, b)) (concat (map (\<lambda>i. [(2*i, True), (2*i+1, True),
+                (2*i, False), (2*i+1, False)]) [0..<n]))
+          = concat (map (map (\<lambda>(s,b). (\<iota> s, b))) (map (\<lambda>i. [(2*i, True), (2*i+1, True),
+                (2*i, False), (2*i+1, False)]) [0..<n]))"
+        by (rule map_concat)
+      \<comment> \<open>Simplify: map (map f) (map g xs) = map (map f \<circ> g) xs.\<close>
+      have h2: "map (map (\<lambda>(s,b). (\<iota> s, b))) (map (\<lambda>i. [(2*i, True), (2*i+1, True),
+                (2*i, False), (2*i+1, False)]) [0..<n])
+          = map (\<lambda>i. map (\<lambda>(s,b). (\<iota> s, b)) [(2*i, True), (2*i+1, True),
+                (2*i, False), (2*i+1, False)]) [0..<n]"
+        by (by100 simp)
+      \<comment> \<open>Each sub-list: map f [(2i,T),(2i+1,T),(2i,F),(2i+1,F)] = [(\<iota>(2i),T),...].\<close>
+      have h3: "map (\<lambda>i. map (\<lambda>(s,b). (\<iota> s, b)) [(2*i, True), (2*i+1, True),
+                (2*i, False), (2*i+1, False)]) [0..<n]
+          = map (\<lambda>i. [(\<iota> (2*i), True), (\<iota> (2*i+1), True),
+                    (\<iota> (2*i), False), (\<iota> (2*i+1), False)]) [0..<n]"
+        by (by100 simp)
+      from h1[unfolded h2 h3] hw_eq show ?thesis by (by100 simp)
+    qed
     have "top1_group_word_product mulF eF invgF (map (\<lambda>(s,b). (\<iota> s, b)) w)
       \<in> top1_commutator_subgroup_on F mulF eF invgF"
     proof -
