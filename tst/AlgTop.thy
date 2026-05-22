@@ -6840,6 +6840,34 @@ proof -
     using hK_abel hiota_K hiota_inj hK_gen hK_indep by (by100 blast)
 qed
 
+text \<open>Group power distributes over addition of exponents.\<close>
+lemma group_pow_add:
+  assumes "top1_is_group_on G mul e invg" "x \<in> G"
+  shows "top1_group_pow mul e x (m + n) = mul (top1_group_pow mul e x m) (top1_group_pow mul e x n)"
+  using assms(2)
+proof (induction m)
+  case 0
+  have "top1_group_pow mul e x n \<in> G" by (rule group_pow_in_group'[OF assms])
+  thus ?case using assms(1) unfolding top1_is_group_on_def by (by100 simp)
+next
+  case (Suc m)
+  have hpow_m: "top1_group_pow mul e x m \<in> G" by (rule group_pow_in_group'[OF assms])
+  have hpow_n: "top1_group_pow mul e x n \<in> G" by (rule group_pow_in_group'[OF assms])
+  have hIH_eq: "top1_group_pow mul e x (m + n) = mul (top1_group_pow mul e x m) (top1_group_pow mul e x n)"
+    using Suc.IH[OF Suc.prems] by (by100 simp)
+  have "top1_group_pow mul e x (Suc m + n) = mul x (top1_group_pow mul e x (m + n))"
+    by (by100 simp)
+  also have "\<dots> = mul x (mul (top1_group_pow mul e x m) (top1_group_pow mul e x n))"
+    using hIH_eq by (by100 simp)
+  also have "\<dots> = mul (mul x (top1_group_pow mul e x m)) (top1_group_pow mul e x n)"
+  proof -
+    have hassoc: "\<forall>a\<in>G. \<forall>b\<in>G. \<forall>c\<in>G. mul (mul a b) c = mul a (mul b c)"
+      using assms(1) unfolding top1_is_group_on_def by (by100 blast)
+    thus ?thesis using hassoc[rule_format, OF assms(2) hpow_m hpow_n] by (by100 simp)
+  qed
+  finally show ?case by (by100 simp)
+qed
+
 text \<open>In an abelian group G with coordinate projection \<epsilon>: G \<rightarrow> Z (\<epsilon>(a) = 1),
   the quotient G/2G has twice as many cosets as K/2K where K = ker(\<epsilon>).
   This follows the book proof of Theorem 67.8: the short exact sequence
