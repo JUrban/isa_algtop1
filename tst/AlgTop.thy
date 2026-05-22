@@ -3817,6 +3817,57 @@ theorem Theorem_74_2_scheme_presentation:
   sorry \<comment> \<open>Following book: A = \<pi>(Bd P) is wedge of circles (all vertices identified).
      Apply Theorem 72.1. Identification of quotient with presented group.\<close>
 
+text \<open>Nth-element access for the torus scheme.\<close>
+lemma torus_scheme_nth:
+  assumes "k < n"
+  shows "(top1_n_torus_scheme n) ! (4*k) = (2*k, True)"
+    and "(top1_n_torus_scheme n) ! (4*k+1) = (2*k+1, True)"
+    and "(top1_n_torus_scheme n) ! (4*k+2) = (2*k, False)"
+    and "(top1_n_torus_scheme n) ! (4*k+3) = (2*k+1, False)"
+proof -
+  let ?f = "\<lambda>i::nat. [(2*i, True), (2*i+1, True), (2*i, False), (2*i+1, False)]"
+  have hscheme: "top1_n_torus_scheme n = concat (map ?f [0..<n])"
+    unfolding top1_n_torus_scheme_def by (by100 simp)
+  \<comment> \<open>The prefix concat(map f [0..<k]) has length 4k.\<close>
+  have hprefix_len: "length (concat (map ?f [0..<k])) = 4 * k"
+  proof -
+    define g where "g = ?f"
+    have "\<And>i. length (g i) = 4" unfolding g_def by (by100 simp)
+    have "length (concat (map g [0..<k])) = sum_list (map (length \<circ> g) [0..<k])"
+      using length_concat[of "map g [0..<k]"] by (by100 simp)
+    also have "map (length \<circ> g) [0..<k] = map (\<lambda>i. 4::nat) [0..<k]"
+      using \<open>\<And>i. length (g i) = 4\<close> by (by100 simp)
+    also have "sum_list (map (\<lambda>i. 4::nat) [0..<k]) = 4 * k"
+      by (induction k, by100 simp, by100 simp)
+    finally show ?thesis unfolding g_def by (by100 simp)
+  qed
+  \<comment> \<open>concat(map f [0..<n]) = concat(map f [0..<k]) @ f(k) @ concat(map f [k+1..<n]).\<close>
+  have hsplit: "concat (map ?f [0..<n]) = concat (map ?f [0..<k]) @ ?f k @ concat (map ?f [Suc k..<n])"
+    using assms by (by5000 simp add: upt_conv_Cons)
+  \<comment> \<open>Now use nth\_append\_length\_plus.\<close>
+  have hbase: "\<And>r. r < 4 \<Longrightarrow> concat (map ?f [0..<n]) ! (4*k + r) = ?f k ! r"
+  proof -
+    fix r :: nat assume "r < 4"
+    have "concat (map ?f [0..<n]) ! (4*k + r)
+        = (concat (map ?f [0..<k]) @ ?f k @ concat (map ?f [Suc k..<n])) ! (4*k + r)"
+      using hsplit by (by100 simp)
+    also have "\<dots> = (?f k @ concat (map ?f [Suc k..<n])) ! r"
+      using nth_append_length_plus[of "concat (map ?f [0..<k])" "?f k @ concat (map ?f [Suc k..<n])" r]
+        hprefix_len by (by100 simp)
+    also have "\<dots> = ?f k ! r"
+      using nth_append[of "?f k" "concat (map ?f [Suc k..<n])" r] \<open>r < 4\<close> by (by100 simp)
+    finally show "concat (map ?f [0..<n]) ! (4*k + r) = ?f k ! r" .
+  qed
+  show "(top1_n_torus_scheme n) ! (4*k) = (2*k, True)"
+    using hbase[of 0] hscheme by (by100 simp)
+  show "(top1_n_torus_scheme n) ! (4*k+1) = (2*k+1, True)"
+    using hbase[of 1] hscheme by (by100 simp)
+  show "(top1_n_torus_scheme n) ! (4*k+2) = (2*k, False)"
+    using hbase[of 2] hscheme by (by100 simp)
+  show "(top1_n_torus_scheme n) ! (4*k+3) = (2*k+1, False)"
+    using hbase[of 3] hscheme by (by100 simp)
+qed
+
 theorem Theorem_74_3_fund_group_n_torus:
   fixes n :: nat and X :: "'a set" and TX :: "'a set set" and x0 :: 'a
   assumes "top1_is_n_fold_torus_on X TX n"
@@ -3918,9 +3969,19 @@ proof -
            - edges 4k,4k+2 share label (diff dir): q(v(4k))=q(v(4k+3)), q(v(4k+1))=q(v(4k+2))
            - edges 4k+1,4k+3 share label (diff dir): q(v(4k+1))=q(v(4k+4 mod 4n)), q(v(4k+2))=q(v(4k+3))
            These chain: v(i) = v(i+1) for each i.\<close>
+        \<comment> \<open>Strategy: find partner edge j sharing a label with i, use hedge to get
+           vertex identifications, chain to show v(i) = v(i+1).
+           For the torus scheme, within block k=i div 4:
+           - If i mod 4 = 0: use hedge(4k, 4k+2) at t=1 to get v(4k+1) = v(4k+2),
+             and hedge(4k+1, 4k+3) at t=0 to get v(4k+1) = v(4k+4 mod 4n).
+             Combined with hedge(4k, 4k+2) at t=0: v(4k) = v(4k+3).
+             Chain: v(4k) = v(4k+3) = v(4k+2) = v(4k+1). So v(4k) = v(4k+1). \<checkmark>
+           - If i mod 4 = 1: hedge(4k, 4k+2) at t=1: v(4k+1) = v(4k+2). \<checkmark>
+           - If i mod 4 = 2: hedge(4k+1, 4k+3) at t=1: v(4k+2) = v(4k+3). \<checkmark>
+           - If i mod 4 = 3: v(4k+3) = v(4k) (from hedge(4k,4k+2) at t=0) = v(4k+1)
+             (from case 0) = v(4k+4 mod 4n) (from hedge(4k+1,4k+3) at t=0). \<checkmark>\<close>
         show "q (vx i, vy i) = q (vx (Suc i mod length ?scheme), vy (Suc i mod length ?scheme))"
-          sorry \<comment> \<open>Index arithmetic: instantiate hedge with the right edge pair and t=0 or t=1.
-             The torus scheme structure (blocks of 4 with matching labels) ensures adjacency.\<close>
+          sorry \<comment> \<open>Instantiate hedge per case i mod 4 \<in> {0,1,2,3} as described above.\<close>
       qed
       \<comment> \<open>From hadjacent, all vertices are in the same equivalence class.\<close>
       \<comment> \<open>From hadjacent, iterate: q(vx 0, vy 0) = q(vx 1, vy 1) = ... = q(vx (4n-1), vy (4n-1)).\<close>
