@@ -2616,8 +2616,77 @@ lemma scheme_quotient_CW_data:
         (X - A) (subspace_topology X TX (X - A)) h
     \<and> h ` top1_S1 \<subseteq> A
     \<and> (\<forall>z\<in>top1_S1. h z \<in> A)"
-  sorry \<comment> \<open>Uses polygon\_homeomorphic\_to\_disk + quotient\_of\_scheme\_extract\_full.
-     Construct A = q(boundary P), h = q composed with inverse of polygon-to-disk homeomorphism.\<close>
+proof -
+  \<comment> \<open>Step 1: Extract (P, q, vx, vy) from the scheme definition.\<close>
+  obtain P q vx vy where
+    hP: "top1_is_polygonal_region_on P (length scheme)" and
+    hq: "top1_quotient_map_on P (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) X TX q" and
+    hlen3: "length scheme \<ge> 3" and
+    hverts: "\<forall>i<length scheme. (vx i, vy i) \<in> P" and
+    hedge: "\<forall>i<length scheme. \<forall>j<length scheme.
+        fst (scheme!i) = fst (scheme!j) \<longrightarrow>
+        (\<forall>t\<in>I_set. q ((1-t) * vx i + t * vx (Suc i mod length scheme),
+           (1-t) * vy i + t * vy (Suc i mod length scheme))
+         = (if snd (scheme!i) = snd (scheme!j)
+            then q ((1-t) * vx j + t * vx (Suc j mod length scheme),
+                    (1-t) * vy j + t * vy (Suc j mod length scheme))
+            else q (t * vx j + (1-t) * vx (Suc j mod length scheme),
+                    t * vy j + (1-t) * vy (Suc j mod length scheme))))" and
+    hint: "\<forall>p\<in>P. (\<forall>i<length scheme. \<forall>t\<in>I_set.
+          p \<noteq> ((1-t) * vx i + t * vx (Suc i mod length scheme),
+                (1-t) * vy i + t * vy (Suc i mod length scheme)))
+       \<longrightarrow> (\<forall>p'\<in>P. q p = q p' \<longrightarrow> p = p')"
+    sorry \<comment> \<open>Uses quotient\_of\_scheme\_extract\_full (defined later in file).\<close>
+  \<comment> \<open>Step 2: Get homeomorphism \<psi>: P \<rightarrow> B^2 from polygon\_homeomorphic\_to\_disk.\<close>
+  let ?TP = "subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P"
+  from polygon_homeomorphic_to_disk[OF hP hlen3]
+  obtain \<psi> where h\<psi>: "top1_homeomorphism_on P ?TP top1_B2 top1_B2_topology \<psi>" by (by100 blast)
+  \<comment> \<open>Step 3: Define A = q(Bd P) where Bd P = union of edges.\<close>
+  define BdP where "BdP = (\<Union>i<length scheme.
+      {((1-t) * vx i + t * vx (Suc i mod length scheme),
+        (1-t) * vy i + t * vy (Suc i mod length scheme)) | t. t \<in> I_set})"
+  define A where "A = q ` BdP"
+  \<comment> \<open>Step 4: Define h = q \<circ> \<psi>^{-1}: B^2 \<rightarrow> X.\<close>
+  let ?\<psi>inv = "inv_into P \<psi>"
+  have h\<psi>inv: "top1_homeomorphism_on top1_B2 top1_B2_topology P ?TP ?\<psi>inv"
+    by (rule homeomorphism_inverse[OF h\<psi>])
+  have h\<psi>_bij: "bij_betw \<psi> P top1_B2"
+    using h\<psi> unfolding top1_homeomorphism_on_def by (by100 blast)
+  have h\<psi>inv_inv: "\<forall>z\<in>top1_B2. \<psi> (?\<psi>inv z) = z"
+  proof (intro ballI)
+    fix z assume "z \<in> top1_B2"
+    hence "z \<in> \<psi> ` P" using h\<psi>_bij unfolding bij_betw_def by (by100 simp)
+    thus "\<psi> (?\<psi>inv z) = z" by (rule f_inv_into_f)
+  qed
+  have h\<psi>inv_inv2: "\<forall>p\<in>P. ?\<psi>inv (\<psi> p) = p"
+  proof (intro ballI)
+    fix p assume "p \<in> P"
+    have "inj_on \<psi> P" using h\<psi>_bij unfolding bij_betw_def by (by100 blast)
+    thus "?\<psi>inv (\<psi> p) = p" using \<open>p \<in> P\<close> by (rule inv_into_f_f)
+  qed
+  define h where "h z = q (inv_into P \<psi> z)" for z
+  define a where "a = q (vx 0, vy 0)"
+  \<comment> \<open>Step 5: Verify all CW data properties.\<close>
+  have hA_closed: "closedin_on X TX A" sorry \<comment> \<open>q(BdP) is closed: BdP compact, q continuous.\<close>
+  have hA_pc: "top1_path_connected_on A (subspace_topology X TX A)"
+    sorry \<comment> \<open>A = q(Bd P) is path-connected: edges are paths, all vertices identified.\<close>
+  have hh_cont: "top1_continuous_map_on top1_B2 top1_B2_topology X TX h"
+    sorry \<comment> \<open>h = q \<circ> \<psi>inv, composition of continuous maps.\<close>
+  have ha_A: "a \<in> A" sorry \<comment> \<open>a = q(v_0) \<in> q(Bd P) since v_0 is a vertex on Bd P.\<close>
+  have hh_homeo: "top1_homeomorphism_on (top1_B2 - top1_S1)
+      (subspace_topology top1_B2 top1_B2_topology (top1_B2 - top1_S1))
+      (X - A) (subspace_topology X TX (X - A)) h"
+    sorry \<comment> \<open>\<psi>inv maps Int B^2 to Int P, q is injective on Int P (hint), so h = q\<circ>\<psi>inv is
+       a bijection Int B^2 \<rightarrow> X - A. Continuous + bijection + open map = homeomorphism.\<close>
+  have hh_S1: "h ` top1_S1 \<subseteq> A"
+    sorry \<comment> \<open>\<psi>inv(S^1) = Bd P (boundary maps to boundary), so h(S^1) = q(Bd P) = A.\<close>
+  have hh_S1': "\<forall>z\<in>top1_S1. h z \<in> A" using hh_S1 by (by100 blast)
+  show ?thesis
+    apply (rule exI[of _ A])
+    apply (rule exI[of _ h])
+    apply (rule exI[of _ a])
+    using hA_closed hA_pc hh_cont ha_A hh_homeo hh_S1 hh_S1' by (by100 blast)
+qed
 
 text \<open>For the torus scheme, the 1-skeleton is a wedge of 2 circles.
   For the dunce cap, the 1-skeleton is a single circle.\<close>
