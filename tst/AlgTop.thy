@@ -3543,8 +3543,16 @@ proof -
             \<comment> \<open>There must be a positive one too (sum = 0 with a negative means \<exists> positive).\<close>
             hence "(\<Sum>i\<in>{..<n} - {j}. cross2 (vx i - cx, vy i - cy) (?dx, ?dy)) > 0"
               using hsum0 hj by (simp add: sum.remove)
-            hence "\<exists>i\<in>{..<n} - {j}. cross2 (vx i - cx, vy i - cy) (?dx, ?dy) > 0"
-              sorry \<comment> \<open>Sum > 0 over finite set \<Rightarrow> \<exists> positive element.\<close>
+            then have hsum_pos_rest: "(\<Sum>i\<in>{..<n} - {j}. cross2 (vx i - cx, vy i - cy) (?dx, ?dy)) > 0" .
+            have "\<exists>i\<in>{..<n} - {j}. cross2 (vx i - cx, vy i - cy) (?dx, ?dy) > 0"
+            proof (rule ccontr)
+              assume "\<not> (\<exists>i\<in>{..<n} - {j}. cross2 (vx i - cx, vy i - cy) (?dx, ?dy) > 0)"
+              hence "\<forall>i\<in>{..<n} - {j}. cross2 (vx i - cx, vy i - cy) (?dx, ?dy) \<le> 0"
+                by (by100 force)
+              hence "(\<Sum>i\<in>{..<n} - {j}. cross2 (vx i - cx, vy i - cy) (?dx, ?dy)) \<le> 0"
+                by (intro sum_nonpos) (by100 blast)
+              thus False using hsum_pos_rest by (by100 linarith)
+            qed
             thus ?thesis by (by100 blast)
           qed
         qed
