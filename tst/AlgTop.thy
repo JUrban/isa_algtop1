@@ -3091,10 +3091,41 @@ proof -
                     let ?s = "1 / t'"
                     have hs_pos: "?s > 0" using ht'_pos by (by100 simp)
                     have hs_lt1: "?s < 1" using ht'_big by (by100 simp)
+                    have ht_s: "t' * ?s = 1" using ht'_pos by (by100 simp)
+                    have ht_1ms: "t' * (1 - ?s) = t' - 1" using ht'_pos
+                      by (simp add: field_simps)
                     have hvx2: "vx 2 = ?s * vx 1 + (1 - ?s) * vx 0"
-                      using hvx1_eq ht'_def ht'_pos sorry
+                    proof -
+                      have h_from: "vx 1 = (1 - t') * vx 0 + t' * vx 2"
+                        using hvx1_eq[unfolded ht'_def[symmetric]] .
+                      hence "t' * vx 2 = vx 1 - (1 - t') * vx 0"
+                        by (simp add: algebra_simps)
+                      hence h_rearr: "t' * vx 2 = vx 1 + (t' - 1) * vx 0"
+                        by (simp add: algebra_simps)
+                      have "vx 1 + (t' - 1) * vx 0 = t'*?s * vx 1 + t'*(1-?s) * vx 0"
+                        using ht_s ht_1ms by (by100 simp)
+                      hence "t' * vx 2 = t'*?s * vx 1 + t'*(1-?s) * vx 0"
+                        using h_rearr by (by100 linarith)
+                      hence "t' * vx 2 = t' * (?s * vx 1) + t' * ((1-?s) * vx 0)"
+                        by (by100 simp)
+                      hence "t' * vx 2 = t' * (?s * vx 1 + (1-?s) * vx 0)"
+                        using distrib_left[of t' "?s * vx 1" "(1-?s) * vx 0"] by (by100 simp)
+                      thus ?thesis using ht'_pos by (by100 simp)
+                    qed
                     have hvy2: "vy 2 = ?s * vy 1 + (1 - ?s) * vy 0"
-                      using hvy1_eq ht'_def ht'_pos sorry
+                    proof -
+                      have h_from: "vy 1 = (1 - t') * vy 0 + t' * vy 2"
+                        using hvy1_eq[unfolded ht'_def[symmetric]] .
+                      hence h_rearr: "t' * vy 2 = vy 1 + (t' - 1) * vy 0"
+                        by (simp add: algebra_simps)
+                      have "vy 1 + (t' - 1) * vy 0 = t'*?s * vy 1 + t'*(1-?s) * vy 0"
+                        using ht_s ht_1ms by (by100 simp)
+                      hence "t' * vy 2 = t' * (?s * vy 1) + t' * ((1-?s) * vy 0)"
+                        using h_rearr by (by100 simp)
+                      hence "t' * vy 2 = t' * (?s * vy 1 + (1-?s) * vy 0)"
+                        using distrib_left[of t' "?s * vy 1" "(1-?s) * vy 0"] by (by100 simp)
+                      thus ?thesis using ht'_pos by (by100 simp)
+                    qed
                     have hgp2: "\<not> (\<exists>coeffs. (\<forall>i<n. i \<noteq> 2 \<longrightarrow> coeffs i \<ge> 0) \<and> coeffs 2 = 0
                         \<and> (\<Sum>i<n. coeffs i) = 1
                         \<and> vx 2 = (\<Sum>i<n. coeffs i * vx i) \<and> vy 2 = (\<Sum>i<n. coeffs i * vy i))"
