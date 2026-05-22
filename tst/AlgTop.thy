@@ -2915,9 +2915,17 @@ proof -
               qed
               \<comment> \<open>Three distinct collinear points: middle is in hull of endpoints.\<close>
               \<comment> \<open>This contradicts hgp for the middle vertex.\<close>
+              \<comment> \<open>3 collinear distinct points: one is between the other two.
+                 Use cross2 = 0 meaning (vx1-vx0)*(vy2-vy0) = (vy1-vy0)*(vx2-vx0).
+                 If vx0 \<noteq> vx1: parameter t = (vx2-vx0)/(vx1-vx0) satisfies
+                   v_2 = (1-t)*v_0 + t*v_1. If 0<t<1, v_2 is between v_0 and v_1.
+                 If vx0=vx1: then (vy1-vy0)*(vx2-vx0) = 0. If vx0\<noteq>vx2: swap roles.
+                   If vx0=vx1=vx2: use y-coordinates similarly.\<close>
               show False
                 using hcross012 hdist h0n h1n h2n hgp
-                sorry \<comment> \<open>Final: 3 distinct collinear points violates general position.\<close>
+                sorry \<comment> \<open>Formal proof: case split on whether x-coords or y-coords differ,
+                   compute the convex combination parameter, verify 0<t<1 for the middle
+                   point, construct coefficients contradicting hgp.\<close>
             qed
           qed
           then obtain i' j' where hi': "i' < n" and hj': "j' < n"
