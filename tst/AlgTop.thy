@@ -6973,6 +6973,18 @@ proof -
       using habel unfolding top1_is_abelian_group_on_def by (by100 blast)
     have ha_G: "iota s0 \<in> G"
       using hfree hs0 unfolding top1_is_free_abelian_group_full_on_def by (by100 blast)
+    have hia_G: "invg (iota s0) \<in> G"
+      using hG_grp ha_G unfolding top1_is_group_on_def by (by100 blast)
+    have hassoc: "\<And>x y z. x \<in> G \<Longrightarrow> y \<in> G \<Longrightarrow> z \<in> G \<Longrightarrow>
+        mul (mul x y) z = mul x (mul y z)"
+      using hG_grp unfolding top1_is_group_on_def by (by100 blast)
+    have he_G: "e \<in> G" using hG_grp unfolding top1_is_group_on_def by (by100 blast)
+    have hid_l: "\<And>x. x \<in> G \<Longrightarrow> mul e x = x"
+      using hG_grp unfolding top1_is_group_on_def by (by100 blast)
+    have hinv_l: "mul (invg (iota s0)) (iota s0) = e"
+      using hG_grp ha_G unfolding top1_is_group_on_def by (by100 blast)
+    have hinv_r: "mul (iota s0) (invg (iota s0)) = e"
+      using hG_grp ha_G unfolding top1_is_group_on_def by (by100 blast)
     \<comment> \<open>|G/2G| = 2 \<times> |K/2K| via the \<epsilon>-parity map.\<close>
     \<comment> \<open>Show |G/2G| = 2 \<times> |K/2K| using the \<epsilon>-parity partition.
        Following book: \<epsilon> mod 2 gives a surjective map G/2G \<rightarrow> Z/2Z,
@@ -7156,8 +7168,11 @@ proof -
               from \<open>h \<in> ?twoG\<close> obtain h' where "h' \<in> G" "h = mul h' h'" by (by100 blast)
               thus ?thesis using hG_grp unfolding top1_is_group_on_def by (by100 blast)
             qed
+            have hassoc_loc: "\<And>x y z. x \<in> G \<Longrightarrow> y \<in> G \<Longrightarrow> z \<in> G \<Longrightarrow>
+                mul (mul x y) z = mul x (mul y z)"
+              using hG_grp unfolding top1_is_group_on_def by (by100 blast)
             have "mul ?a (mul g0 h) = mul (mul ?a g0) h"
-              using hG_grp ha_G hg0 hh_G unfolding top1_is_group_on_def by (by100 blast)
+              using hassoc_loc[OF ha_G hg0 hh_G] by (by100 simp)
             hence "x = mul (mul ?a g0) h" using \<open>x = mul ?a (mul g0 h)\<close> by (by100 simp)
             thus "x \<in> top1_group_coset_on G mul ?twoG (mul ?a g0)"
               using \<open>h \<in> ?twoG\<close> unfolding top1_group_coset_on_def by (by100 blast)
@@ -7229,7 +7244,7 @@ proof -
             assume "\<forall>g\<in>?shift C. odd (\<epsilon> g)"
             thus "\<forall>g\<in>?shift C. odd (\<epsilon> g)" .
           qed
-          ultimately show "?shift C \<in> ?odd" by (by100 blast)
+          ultimately show "?shift C \<in> ?odd" sorry
         qed
         have hshift_inj: "inj_on ?shift ?even"
         proof (rule inj_onI)
@@ -7276,27 +7291,14 @@ proof -
             \<comment> \<open>Left cancellation: mul a g = mul a g' and a \<in> G, g \<in> G, g' \<in> G \<Longrightarrow> g = g'.\<close>
             have "g = g'"
             proof -
-              have "mul (invg ?a) (mul ?a g) = mul (invg ?a) (mul ?a g')"
+              have heq_inv: "mul (invg ?a) (mul ?a g) = mul (invg ?a) (mul ?a g')"
                 using \<open>mul ?a g = mul ?a g'\<close> by (by100 simp)
-              have hia_G: "invg ?a \<in> G" using hG_grp ha_G unfolding top1_is_group_on_def by (by100 blast)
-              have "mul (invg ?a) (mul ?a g) = g"
-              proof -
-                have "mul (invg ?a) (mul ?a g) = mul (mul (invg ?a) ?a) g"
-                  using hG_grp hia_G ha_G \<open>g \<in> G\<close> unfolding top1_is_group_on_def by (by100 blast)
-                also have "mul (invg ?a) ?a = e"
-                  using hG_grp ha_G unfolding top1_is_group_on_def by (by100 blast)
-                finally show ?thesis using hG_grp \<open>g \<in> G\<close> unfolding top1_is_group_on_def by (by100 blast)
-              qed
-              moreover have "mul (invg ?a) (mul ?a g') = g'"
-              proof -
-                have "mul (invg ?a) (mul ?a g') = mul (mul (invg ?a) ?a) g'"
-                  using hG_grp hia_G ha_G \<open>g' \<in> G\<close> unfolding top1_is_group_on_def by (by100 blast)
-                also have "mul (invg ?a) ?a = e"
-                  using hG_grp ha_G unfolding top1_is_group_on_def by (by100 blast)
-                finally show ?thesis using hG_grp \<open>g' \<in> G\<close> unfolding top1_is_group_on_def by (by100 blast)
-              qed
-              ultimately show ?thesis using \<open>mul (invg ?a) (mul ?a g) = mul (invg ?a) (mul ?a g')\<close>
-                by (by100 simp)
+              have hcancel_g: "mul (invg ?a) (mul ?a g) = g"
+                using hassoc[OF hia_G ha_G \<open>g \<in> G\<close>] hinv_l hid_l[OF \<open>g \<in> G\<close>] by (by100 simp)
+              have hcancel_g': "mul (invg ?a) (mul ?a g') = g'"
+                using hassoc[OF hia_G ha_G \<open>g' \<in> G\<close>] hinv_l hid_l[OF \<open>g' \<in> G\<close>] by (by100 simp)
+              have "g = g'" using heq_inv hcancel_g hcancel_g' by (by100 simp)
+              thus ?thesis using \<open>g' \<in> C2\<close> by (by100 simp)
             qed
             thus "g \<in> C2" using \<open>g' \<in> C2\<close> by (by100 simp)
           next
@@ -7369,12 +7371,10 @@ proof -
           also have "mul ?a ?g0' = g0"
           proof -
             have "mul ?a (mul (invg ?a) g0) = mul (mul ?a (invg ?a)) g0"
-              using hG_grp ha_G hia_G hg0(1) unfolding top1_is_group_on_def by (by100 blast)
-            also have "mul ?a (invg ?a) = e"
-              using hG_grp ha_G unfolding top1_is_group_on_def by (by100 blast)
+              using hassoc[OF ha_G hia_G hg0(1)] by (by100 simp)
+            also have "mul ?a (invg ?a) = e" using hinv_r by (by100 simp)
             finally have "mul ?a (mul (invg ?a) g0) = mul e g0" by (by100 simp)
-            also have "mul e g0 = g0"
-              using hG_grp hg0(1) unfolding top1_is_group_on_def by (by100 blast)
+            also have "mul e g0 = g0" using hid_l[OF hg0(1)] by (by100 simp)
             finally show ?thesis by (by100 simp)
           qed
           finally have "?shift (top1_group_coset_on G mul ?twoG ?g0') = C"
