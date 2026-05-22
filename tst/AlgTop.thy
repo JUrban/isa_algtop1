@@ -6972,8 +6972,48 @@ proof -
   \<comment> \<open>Steps 2-4: card QG\_even = card QK, card QG\_odd = card QG\_even.\<close>
   \<comment> \<open>Step 2: |QG\_even| = |QK|. The inclusion K \<hookrightarrow> G maps K-cosets to even G-cosets.\<close>
   \<comment> \<open>Step 3: |QG\_odd| = |QG\_even|. Multiplication by [a] shifts even \<leftrightarrow> odd.\<close>
-  \<comment> \<open>Steps 2-3 + finiteness are all sorry'd as a block; the partition framework above is proved.\<close>
-  have heven_card: "card QG_even = card ?QK" sorry
+  \<comment> \<open>Key algebraic fact: K \<inter> 2G = 2K.\<close>
+  have hK_grp: "top1_is_group_on ?K mul e invg"
+    using hK_free unfolding top1_is_free_abelian_group_full_on_def
+      top1_is_abelian_group_on_def by (by100 blast)
+  have hK_cap_2G: "?K \<inter> ?twoG = ?twoK"
+  proof (rule set_eqI, rule iffI)
+    fix x assume "x \<in> ?K \<inter> ?twoG"
+    hence hx_K: "x \<in> ?K" and hx_2G: "x \<in> ?twoG" by (by100 auto)+
+    from hx_2G obtain g where hg: "g \<in> G" "x = mul g g" by (by100 blast)
+    have "\<epsilon> (mul g g) = \<epsilon> g + \<epsilon> g"
+      using heps hg(1) unfolding top1_group_hom_on_def by (by100 blast)
+    hence "\<epsilon> x = \<epsilon> g + \<epsilon> g" using hg(2) by (by100 simp)
+    moreover have "\<epsilon> x = 0" using hx_K by (by100 simp)
+    ultimately have "\<epsilon> g = 0" by (by100 linarith)
+    hence "g \<in> ?K" using hg(1) by (by100 simp)
+    thus "x \<in> ?twoK" using hg by (by100 blast)
+  next
+    fix x assume "x \<in> ?twoK"
+    then obtain k where "k \<in> ?K" "x = mul k k" by (by100 blast)
+    have "k \<in> G" using \<open>k \<in> ?K\<close> by (by100 blast)
+    have "x \<in> ?twoG" using \<open>k \<in> G\<close> \<open>x = mul k k\<close> by (by100 blast)
+    moreover have "mul k k \<in> ?K"
+      using hK_grp \<open>k \<in> ?K\<close> unfolding top1_is_group_on_def by (by100 blast)
+    hence "x \<in> ?K" using \<open>x = mul k k\<close> by (by100 simp)
+    ultimately show "x \<in> ?K \<inter> ?twoG" by (by100 blast)
+  qed
+  \<comment> \<open>2G is normal in G (abelian \<Rightarrow> all subgroups normal).\<close>
+  have h2G_normal: "top1_normal_subgroup_on G mul e invg ?twoG"
+    sorry \<comment> \<open>Conjugation trivial in abelian group.\<close>
+  have h2K_normal: "top1_normal_subgroup_on ?K mul e invg ?twoK"
+    sorry \<comment> \<open>Same: abelian K.\<close>
+  \<comment> \<open>Step 2: |QG\_even| = |QK|.\<close>
+  \<comment> \<open>Bijection \<psi>: QK \<rightarrow> QG\_even sending coset\_K(k) \<mapsto> coset\_G(k).
+     Well-defined: K \<inter> 2G = 2K ensures k1 \<equiv> k2 mod 2K \<Longrightarrow> k1 \<equiv> k2 mod 2G.
+     Injective: k1 \<equiv> k2 mod 2G and k1,k2 \<in> K \<Longrightarrow> k1-k2 \<in> K \<inter> 2G = 2K.
+     Surjective: every even coset has a K-representative (projection via pow(a, \<epsilon>(g))).\<close>
+  have heven_card: "card QG_even = card ?QK"
+  proof -
+    define \<psi> where "\<psi> CK = top1_group_coset_on G mul ?twoG (SOME k. k \<in> CK)" for CK
+    have hpsi_bij: "bij_betw \<psi> ?QK QG_even" sorry
+    thus ?thesis using bij_betw_same_card[OF hpsi_bij] by (by100 simp)
+  qed
   have hodd_card: "card QG_odd = card QG_even"
   proof -
     \<comment> \<open>The quotient group multiplication by [a] is a bijection QG \<rightarrow> QG
