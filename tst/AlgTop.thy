@@ -6917,7 +6917,66 @@ proof -
   \<comment> \<open>card QG = card QG\_even + card QG\_odd.\<close>
   \<comment> \<open>card QG\_even = card QK (K-cosets embed into even G-cosets).\<close>
   \<comment> \<open>card QG\_odd = card QG\_even (shift by a).\<close>
-  show ?thesis sorry
+  \<comment> \<open>Step 1: Partition QG = QG\_even \<union> QG\_odd, disjoint.\<close>
+  have hpartition: "?QG = QG_even \<union> QG_odd"
+  proof (rule set_eqI, rule iffI)
+    fix C assume "C \<in> ?QG"
+    then obtain g0 where hg0: "g0 \<in> G" "C = top1_group_coset_on G mul ?twoG g0"
+      unfolding top1_quotient_group_carrier_on_def by (by100 blast)
+    have "g0 \<in> C"
+    proof -
+      have "e \<in> G" using hG_grp unfolding top1_is_group_on_def by (by100 blast)
+      have "mul e e = e" using hG_grp \<open>e \<in> G\<close> unfolding top1_is_group_on_def by (by100 blast)
+      hence "e \<in> ?twoG" using \<open>e \<in> G\<close> by (by5000 force)
+      have "mul g0 e = g0" using hG_grp hg0(1) unfolding top1_is_group_on_def by (by100 blast)
+      thus ?thesis using hg0(2) \<open>e \<in> ?twoG\<close>
+        unfolding top1_group_coset_on_def by (by5000 force)
+    qed
+    show "C \<in> QG_even \<union> QG_odd"
+    proof (cases "even (\<epsilon> g0)")
+      case True thus ?thesis using \<open>C \<in> ?QG\<close> \<open>g0 \<in> C\<close>
+        unfolding QG_even_def by (by100 blast)
+    next
+      case False thus ?thesis using \<open>C \<in> ?QG\<close> \<open>g0 \<in> C\<close>
+        unfolding QG_odd_def by (by100 blast)
+    qed
+  next
+    fix C assume "C \<in> QG_even \<union> QG_odd"
+    thus "C \<in> ?QG" unfolding QG_even_def QG_odd_def by (by100 blast)
+  qed
+  have hdisjoint: "QG_even \<inter> QG_odd = {}"
+  proof (rule ccontr)
+    assume "QG_even \<inter> QG_odd \<noteq> {}"
+    then obtain C where hC_ev: "C \<in> QG_even" and hC_od: "C \<in> QG_odd" by (by100 blast)
+    from hC_ev obtain g1 where hg1: "g1 \<in> C" "even (\<epsilon> g1)"
+      unfolding QG_even_def by (by100 blast)
+    from hC_od obtain g2 where hg2: "g2 \<in> C" "odd (\<epsilon> g2)"
+      unfolding QG_odd_def by (by100 blast)
+    \<comment> \<open>g1, g2 in same coset C \<Longrightarrow> \<epsilon>(g1) \<equiv> \<epsilon>(g2) mod 2. Contradiction.\<close>
+    have "C \<in> ?QG" using hC_ev unfolding QG_even_def by (by100 blast)
+    then obtain g0 where hg0: "g0 \<in> G" "C = top1_group_coset_on G mul ?twoG g0"
+      unfolding top1_quotient_group_carrier_on_def by (by100 blast)
+    from hg1(1) hg0(2) obtain h1 where "h1 \<in> ?twoG" "g1 = mul g0 h1"
+      unfolding top1_group_coset_on_def by (by100 blast)
+    from hg2(1) hg0(2) obtain h2 where "h2 \<in> ?twoG" "g2 = mul g0 h2"
+      unfolding top1_group_coset_on_def by (by100 blast)
+    have "even (\<epsilon> g0) = even (\<epsilon> g1)"
+      using heps_coset[OF hg0(1) \<open>h1 \<in> ?twoG\<close>] \<open>g1 = mul g0 h1\<close> by (by100 simp)
+    moreover have "even (\<epsilon> g0) = even (\<epsilon> g2)"
+      using heps_coset[OF hg0(1) \<open>h2 \<in> ?twoG\<close>] \<open>g2 = mul g0 h2\<close> by (by100 simp)
+    ultimately have "even (\<epsilon> g1) = even (\<epsilon> g2)" by (by100 simp)
+    thus False using hg1(2) hg2(2) by (by100 simp)
+  qed
+  \<comment> \<open>Steps 2-4: card QG\_even = card QK, card QG\_odd = card QG\_even.\<close>
+  have heven_card: "card QG_even = card ?QK" sorry
+  have hodd_card: "card QG_odd = card QG_even" sorry
+  have hfin_even: "finite QG_even" sorry
+  have hfin_odd: "finite QG_odd" sorry
+  have "card ?QG = card QG_even + card QG_odd"
+    using hpartition card_Un_disjoint[OF hfin_even hfin_odd hdisjoint] by (by100 simp)
+  also have "\<dots> = card ?QK + card ?QK" using heven_card hodd_card by (by100 simp)
+  also have "\<dots> = 2 * card ?QK" by (by100 simp)
+  finally show ?thesis .
 qed
 
 text \<open>Key lemma for Theorem 67.8: |G/2G| = 2^|S| for free abelian G on finite basis S.\<close>
