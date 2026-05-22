@@ -2081,6 +2081,37 @@ lemma torus_scheme_CW_data:
     \<and> h ` top1_S1 \<subseteq> A"
   sorry
 
+lemma n_torus_scheme_CW_data:
+  assumes "top1_is_n_fold_torus_on X TX n"
+      and "x0 \<in> X"
+  shows "\<exists>(A :: 'a set) (h :: real \<times> real \<Rightarrow> 'a).
+      closedin_on X TX A
+    \<and> top1_is_wedge_of_circles_on A (subspace_topology X TX A) ({..<2*n}::nat set) x0
+    \<and> top1_continuous_map_on top1_B2 top1_B2_topology X TX h
+    \<and> h ` top1_S1 \<subseteq> A"
+  sorry
+
+lemma dunce_cap_scheme_CW_data:
+  assumes "top1_is_dunce_cap_on X TX m"
+      and "x0 \<in> X" and "m > 0"
+  shows "\<exists>(A :: 'a set) (h :: real \<times> real \<Rightarrow> 'a).
+      closedin_on X TX A
+    \<and> (\<exists>f. top1_homeomorphism_on top1_S1 top1_S1_topology A (subspace_topology X TX A) f)
+    \<and> top1_continuous_map_on top1_B2 top1_B2_topology X TX h
+    \<and> h ` top1_S1 \<subseteq> A
+    \<and> x0 \<in> A \<and> A \<subseteq> X"
+  sorry
+
+lemma m_projective_scheme_CW_data:
+  assumes "top1_is_m_fold_projective_on X TX m"
+      and "x0 \<in> X"
+  shows "\<exists>(A :: 'a set) (h :: real \<times> real \<Rightarrow> 'a).
+      closedin_on X TX A
+    \<and> top1_is_wedge_of_circles_on A (subspace_topology X TX A) ({..<m}::nat set) x0
+    \<and> top1_continuous_map_on top1_B2 top1_B2_topology X TX h
+    \<and> h ` top1_S1 \<subseteq> A"
+  sorry
+
 section \<open>\<S>73 Fundamental Groups of the Torus and the Dunce Cap\<close>
 
 (** from \<S>73 Theorem 73.1: \<pi>_1(torus) has presentation <\<alpha>, \<beta> | \<alpha>\<beta>\<alpha>^{-1}\<beta>^{-1}>,
@@ -2181,7 +2212,8 @@ proof -
       and hh_att: "top1_continuous_map_on top1_B2 top1_B2_topology X TX h"
       and hh_wrap: "\<forall>s\<in>I_set. h (cos (2*pi*s), sin (2*pi*s)) = h (cos (2*pi*n*s), sin (2*pi*n*s))"
       and hx0_A: "x0 \<in> A" and hA_sub: "A \<subseteq> X"
-    sorry \<comment> \<open>From dunce cap: A = q(S1), h = q. Circle homeomorphism from quotient structure.\<close>
+    sorry \<comment> \<open>From dunce cap: A = q(S1), h = q. Circle homeomorphism from quotient structure.
+       Uses dunce\_cap\_scheme\_CW\_data for basic structure; wrapping from dunce cap definition.\<close>
   \<comment> \<open>Step 2: \<pi>_1(A) \<cong> Z (fundamental group of circle).\<close>
   have hA_Z: "\<exists>f. top1_group_iso_on
       (top1_fundamental_group_carrier A (subspace_topology X TX A) x0)
@@ -3786,7 +3818,7 @@ proof -
   \<comment> \<open>Step 2: The 4n-gon's 1-skeleton after identifications is a wedge of 2n circles.\<close>
   have h_skel: "\<exists>A. closedin_on X TX A \<and>
       top1_is_wedge_of_circles_on A (subspace_topology X TX A) {..<2*n} x0"
-    sorry \<comment> \<open>1-skeleton of 4n-gon with torus scheme = wedge of 2n circles.\<close>
+    using n_torus_scheme_CW_data[OF assms] by (by100 blast)
   \<comment> \<open>Step 3: Apply Theorem 72.1. The attaching map h: B² \<rightarrow> X wraps S¹ around
      the 1-skeleton via the word [a₁,b₁]...[aₙ,bₙ].
      Theorem 72.1 gives: \<pi>_1(X) \<cong> \<pi>_1(1-skel)/N(relator).\<close>
@@ -3832,7 +3864,7 @@ proof -
   \<comment> \<open>Step 2: The 2m-gon's 1-skeleton after identifications is a wedge of m circles.\<close>
   have h_skel: "\<exists>A. closedin_on X TX A \<and>
       top1_is_wedge_of_circles_on A (subspace_topology X TX A) {..<m} x0"
-    sorry \<comment> \<open>1-skeleton of 2m-gon with projective scheme = wedge of m circles.\<close>
+    using m_projective_scheme_CW_data[OF assms] by (by100 blast)
   \<comment> \<open>Step 3: Theorem 72.1 with relator a₁²a₂²...aₘ².\<close>
   show ?thesis sorry \<comment> \<open>Theorem 72.1 + projective presentation.\<close>
 qed
