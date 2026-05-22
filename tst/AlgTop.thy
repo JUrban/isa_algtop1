@@ -6106,6 +6106,30 @@ proof -
   ultimately show ?thesis using hpsi by (by100 blast)
 qed
 
+text \<open>A group homomorphism distributes over foldr products.\<close>
+lemma hom_foldr_mul_early:
+  assumes hG: "top1_is_group_on G mul e invg"
+      and hH: "top1_is_group_on H mulH eH invgH"
+      and hhom: "top1_group_hom_on G mul H mulH f"
+      and hxs: "\<forall>i<length xs. xs!i \<in> G"
+  shows "f (foldr mul xs e) = foldr mulH (map f xs) eH"
+  using hxs
+proof (induction xs)
+  case Nil show ?case using hom_preserves_id[OF hG hH hhom] by (by100 simp)
+next
+  case (Cons a xs')
+  have ha: "a \<in> G" using Cons.prems by (by100 force)
+  have hxs': "\<forall>i<length xs'. xs'!i \<in> G" using Cons.prems by (by100 force)
+  have hprod: "foldr mul xs' e \<in> G"
+    by (rule foldr_mul_closed[OF hG hxs'])
+  have "f (foldr mul (a # xs') e) = f (mul a (foldr mul xs' e))" by (by100 simp)
+  also have "\<dots> = mulH (f a) (f (foldr mul xs' e))"
+    using hhom ha hprod unfolding top1_group_hom_on_def by (by100 blast)
+  also have "\<dots> = mulH (f a) (foldr mulH (map f xs') eH)"
+    using Cons.IH[OF hxs'] by (by100 simp)
+  finally show ?case by (by100 simp)
+qed
+
 text \<open>The kernel of a coordinate projection of a free abelian group is free abelian
   on the complementary generators.\<close>
 lemma free_abelian_kernel_coordinate:
@@ -6347,8 +6371,116 @@ proof -
       qed
       \<comment> \<open>The s0-part evaluates to e (balanced \<iota>(s0) and invg(\<iota>(s0))).\<close>
       have hs0_eq_e: "foldr mul ?ws_s0 e = e"
-        sorry \<comment> \<open>Key: \<epsilon>(g) = 0 forces equal counts of \<iota>(s0) and invg(\<iota>(s0)).
-           In any group, pow(x,n) \<cdot> pow(invg(x),n) = e.\<close>
+      proof -
+        let ?a = "iota s0"
+        let ?ia = "invg (iota s0)"
+        have ha_G: "?a \<in> G" using hfree hs0
+          unfolding top1_is_free_abelian_group_full_on_def by (by100 blast)
+        have hia_G: "?ia \<in> G" using hG_grp ha_G unfolding top1_is_group_on_def by (by100 blast)
+        \<comment> \<open>All entries of ws_s0 are in G.\<close>
+        have hws_s0_G: "\<forall>i<length ?ws_s0. ?ws_s0 ! i \<in> G"
+        proof (intro allI impI)
+          fix i assume "i < length ?ws_s0"
+          have "?ws_s0 ! i \<in> set ?ws_s0"
+            using nth_mem \<open>i < length ?ws_s0\<close> by (by100 blast)
+          hence "?ws_s0 ! i = ?a \<or> ?ws_s0 ! i = ?ia"
+            by (by5000 auto)
+          thus "?ws_s0 ! i \<in> G" using ha_G hia_G by (by5000 auto)
+        qed
+        \<comment> \<open>Compute \<epsilon> on ws_s0 via hom_foldr_mul.\<close>
+        have hZ_grp: "top1_is_group_on (UNIV::int set) (+) (0::int) uminus"
+          unfolding top1_is_group_on_def by (by100 auto)
+        have heps_s0_prod: "\<epsilon> (foldr mul ?ws_s0 e)
+            = foldr (+) (map \<epsilon> ?ws_s0) (0::int)"
+          using hom_foldr_mul_early[OF hG_grp hZ_grp heps hws_s0_G] by (by100 simp)
+        \<comment> \<open>\<epsilon>(rest) = 0 (each entry has \<epsilon> = 0).\<close>
+        have hws_rest_G: "\<forall>i<length ?ws_rest. ?ws_rest ! i \<in> G"
+        proof (intro allI impI)
+          fix i assume "i < length ?ws_rest"
+          have "?ws_rest ! i \<in> set ?ws_rest"
+            using nth_mem \<open>i < length ?ws_rest\<close> by (by100 blast)
+          hence "?ws_rest ! i \<in> set ws" by (by5000 auto)
+          then obtain j where "j < length ws" "ws ! j = ?ws_rest ! i"
+            using in_set_conv_nth by (by5000 metis)
+          have "ws ! j \<in> G" using hws_G \<open>j < length ws\<close> by (by100 blast)
+          thus "?ws_rest ! i \<in> G" using \<open>ws ! j = ?ws_rest ! i\<close> by (by100 simp)
+        qed
+        have heps_rest: "\<epsilon> (foldr mul ?ws_rest e) = 0"
+        proof -
+          have "map \<epsilon> ?ws_rest = map (\<lambda>x. 0::int) ?ws_rest"
+          proof (rule list.map_cong0)
+            fix x assume "x \<in> set ?ws_rest"
+            hence "x \<in> set ws" "\<not> ?is_s0 x" by (by100 auto)+
+            then obtain j where "j < length ws" "ws ! j = x"
+              using in_set_conv_nth by (by5000 metis)
+            from hws_gen[rule_format, OF \<open>j < length ws\<close>]
+            have "ws ! j \<in> iota ` S \<or> (\<exists>s \<in> iota ` S. ws ! j = invg s)" .
+            hence "x \<in> iota ` S \<or> (\<exists>s \<in> iota ` S. x = invg s)"
+              using \<open>ws ! j = x\<close> by (by100 simp)
+            thus "\<epsilon> x = 0"
+            proof (elim disjE)
+              assume "x \<in> iota ` S"
+              then obtain s where "s \<in> S" "x = iota s" by (by100 blast)
+              hence "s \<noteq> s0" using \<open>\<not> ?is_s0 x\<close> by (by100 auto)
+              thus "\<epsilon> x = 0" using heps_other \<open>s \<in> S\<close> \<open>x = iota s\<close> by (by100 simp)
+            next
+              assume "\<exists>s \<in> iota ` S. x = invg s"
+              then obtain s where "s \<in> S" "x = invg (iota s)" by (by100 blast)
+              have "iota s \<in> G" using hiotaS_sub \<open>s \<in> S\<close> by (by100 blast)
+              have "\<epsilon> (iota s) = 0"
+              proof (cases "s = s0")
+                case True
+                \<comment> \<open>If s = s0, then x = invg(iota s0), so is_s0 x = True. Contradiction.\<close>
+                hence "x = ?ia" using \<open>x = invg (iota s)\<close> by (by100 simp)
+                hence "?is_s0 x" by (by100 blast)
+                thus ?thesis using \<open>\<not> ?is_s0 x\<close> by (by100 blast)
+              next
+                case False thus ?thesis using heps_other \<open>s \<in> S\<close> by (by100 blast)
+              qed
+              have "\<epsilon> x = - \<epsilon> (iota s)"
+                using hom_preserves_inv[OF hG_grp hZ_grp heps \<open>iota s \<in> G\<close>]
+                  \<open>x = invg (iota s)\<close> by (by100 simp)
+              thus "\<epsilon> x = 0" using \<open>\<epsilon> (iota s) = 0\<close> by (by100 simp)
+            qed
+          qed
+          hence "foldr (+) (map \<epsilon> ?ws_rest) (0::int) = foldr (+) (map (\<lambda>x. 0::int) ?ws_rest) 0"
+            by (rule arg_cong[of _ _ "\<lambda>xs. foldr (+) xs 0"])
+          also have "\<dots> = (0::int)"
+          proof -
+            define ys where "ys = ?ws_rest"
+            have "foldr (+) (map (\<lambda>x. 0::int) ys) 0 = 0"
+              by (induction ys, by100 simp, by100 simp)
+            thus ?thesis unfolding ys_def by (by100 simp)
+          qed
+          finally have "foldr (+) (map \<epsilon> ?ws_rest) (0::int) = 0" .
+          moreover have "\<epsilon> (foldr mul ?ws_rest e) = foldr (+) (map \<epsilon> ?ws_rest) (0::int)"
+            using hom_foldr_mul_early[OF hG_grp hZ_grp heps hws_rest_G] by (by100 simp)
+          ultimately show ?thesis by (by100 simp)
+        qed
+        \<comment> \<open>\<epsilon>(s0-part) = \<epsilon>(g) - \<epsilon>(rest) = 0.\<close>
+        have heps_s0_val: "\<epsilon> (foldr mul ?ws_s0 e) = 0"
+        proof -
+          have hprod_s0_G: "foldr mul ?ws_s0 e \<in> G"
+            by (rule foldr_mul_closed[OF hG_grp hws_s0_G])
+          have hprod_rest_G: "foldr mul ?ws_rest e \<in> G"
+            by (rule foldr_mul_closed[OF hG_grp hws_rest_G])
+          have "\<epsilon> g = \<epsilon> (mul (foldr mul ?ws_s0 e) (foldr mul ?ws_rest e))"
+            using hsplit by (by100 simp)
+          also have "\<dots> = \<epsilon> (foldr mul ?ws_s0 e) + \<epsilon> (foldr mul ?ws_rest e)"
+            using heps hprod_s0_G hprod_rest_G unfolding top1_group_hom_on_def by (by100 blast)
+          finally show ?thesis using hg_eps heps_rest by (by100 linarith)
+        qed
+        \<comment> \<open>ws_s0 consists of k copies of \<iota>(s0) and k copies of invg(\<iota>(s0)).\<close>
+        \<comment> \<open>In the abelian group, split ws_s0 into \<iota>(s0)-entries and invg(\<iota>(s0))-entries.\<close>
+        let ?ws_pos = "filter (\<lambda>x. x = ?a) ?ws_s0"
+        let ?ws_neg = "filter (\<lambda>x. x = ?ia) ?ws_s0"
+        have hws_s0_split: "foldr mul ?ws_s0 e = mul (foldr mul ?ws_pos e) (foldr mul ?ws_neg e)"
+          using abelian_foldr_mul_split_filter[OF hG_abel hws_s0_G, of "\<lambda>x. x = ?a"] sorry
+        \<comment> \<open>pos-part = pow(\<iota>(s0), k+), neg-part = pow(invg(\<iota>(s0)), k-).\<close>
+        \<comment> \<open>\<epsilon>(pos) = k+, \<epsilon>(neg) = -k-. \<epsilon>(s0-part) = k+ - k- = 0, so k+ = k-.\<close>
+        \<comment> \<open>pow(x, k) \<cdot> pow(invg(x), k) = e.\<close>
+        show ?thesis using hws_s0_split heps_s0_val sorry
+      qed
       \<comment> \<open>Therefore g = e \<cdot> rest = rest \<in> ⟨\<iota>(S')⟩.\<close>
       have "g = mul e (foldr mul ?ws_rest e)"
         using hsplit hs0_eq_e by (by100 simp)
