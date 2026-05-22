@@ -3134,9 +3134,8 @@ proof -
         let ?vi1 = "(i+1) mod n"
         let ?D = "cross2 (vx i - cx, vy i - cy) (vx ?vi1 - cx, vy ?vi1 - cy)"
         \<comment> \<open>D > 0 for convex polygon with counterclockwise vertices from centroid.\<close>
-        have hD_pos: "?D > 0"
-          sorry \<comment> \<open>Convex position: adjacent vertices and centroid form CCW triangle, so D > 0.\<close>
-        have hD_ne: "?D \<noteq> 0" using hD_pos by (by100 simp)
+        have hD_ne: "?D \<noteq> 0"
+          sorry \<comment> \<open>Convex position: adjacent vertices and centroid form non-degenerate triangle.\<close>
         \<comment> \<open>\<beta>' = cross2(z-c, v_{i+1}-c) / D, \<gamma>' = cross2(v_i-c, z-c) / D.\<close>
         define \<beta>' where "\<beta>' = cross2 (fst z - cx, snd z - cy) (vx ?vi1 - cx, vy ?vi1 - cy) / ?D"
         define \<gamma>' where "\<gamma>' = cross2 (vx i - cx, vy i - cy) (fst z - cx, snd z - cy) / ?D"
@@ -3149,10 +3148,37 @@ proof -
             unfolding cross2_def by (simp add: algebra_simps)
           thus ?thesis by (by100 linarith)
         qed
+        have hnum_\<gamma>: "cross2 (vx i - cx, vy i - cy) (fst z - cx, snd z - cy) \<ge> 0"
+          using hpos .
+        \<comment> \<open>Derive D > 0: numerator sum = num_\<beta> + num_\<gamma> > 0 (since z \<noteq> c, not both 0).
+           \<beta>'+\<gamma>' = (num_\<beta> + num_\<gamma>)/D must be > 0 (from z \<noteq> c via Cramer).
+           Since numerator sum \<ge> 0 and must give positive quotient, D > 0.\<close>
+        have hnum_sum_pos: "cross2 (fst z - cx, snd z - cy) (vx ?vi1 - cx, vy ?vi1 - cy) +
+            cross2 (vx i - cx, vy i - cy) (fst z - cx, snd z - cy) > 0"
+        proof (rule ccontr)
+          assume "\<not> ?thesis"
+          hence "cross2 (fst z - cx, snd z - cy) (vx ?vi1 - cx, vy ?vi1 - cy) = 0
+              \<and> cross2 (vx i - cx, vy i - cy) (fst z - cx, snd z - cy) = 0"
+            using hnum_\<beta> hnum_\<gamma> by (by100 linarith)
+          \<comment> \<open>Both numerators 0 means z-c = 0 (by Cramer with D \<noteq> 0).\<close>
+          hence "fst z - cx = 0 \<and> snd z - cy = 0"
+            sorry \<comment> \<open>If cross2(d, v_{i+1}-c)=0 and cross2(v_i-c, d)=0 with D\<noteq>0, then d=0.\<close>
+          hence "z = (cx, cy)" by (by100 auto)
+          thus False using False by (by100 simp)
+        qed
+        have hD_pos: "?D > 0"
+        proof (rule ccontr)
+          assume "\<not> ?D > 0"
+          hence "?D < 0" using hD_ne by (by100 linarith)
+          hence "\<beta>' + \<gamma>' \<le> 0" unfolding \<beta>'_def \<gamma>'_def
+            using hnum_sum_pos hnum_\<beta> hnum_\<gamma> sorry
+          \<comment> \<open>But \<beta>'+\<gamma>' > 0 from z \<noteq> c (via Cramer equations). Contradiction.\<close>
+          thus False sorry
+        qed
         have h\<beta>_nn: "\<beta>' \<ge> 0" unfolding \<beta>'_def
           using hnum_\<beta> hD_pos by (by100 simp)
         have h\<gamma>_nn: "\<gamma>' \<ge> 0" unfolding \<gamma>'_def
-          using hpos hD_pos by (by100 simp)
+          using hnum_\<gamma> hD_pos by (by100 simp)
         \<comment> \<open>z - c = \<beta>'*(v_i - c) + \<gamma>'*(v_{i+1} - c): by definition of \<beta>', \<gamma>' via Cramer.\<close>
         have hzc_x: "fst z - cx = \<beta>' * (vx i - cx) + \<gamma>' * (vx ?vi1 - cx)"
         proof -
