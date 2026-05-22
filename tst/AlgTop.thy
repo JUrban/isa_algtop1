@@ -2056,6 +2056,40 @@ lemma wedge_of_circles_exists:
       top1_is_wedge_of_circles_on X TX {..<n} p"
   sorry
 
+text \<open>Bridge: compact in HOL Analysis equals top1\_compact\_on for R^2 subspaces.\<close>
+lemma compact_R2_bridge:
+  assumes "compact (A :: (real \<times> real) set)"
+  shows "top1_compact_on A (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) A)"
+proof -
+  let ?R2 = "UNIV :: (real \<times> real) set"
+  let ?T = "product_topology_on top1_open_sets top1_open_sets"
+  let ?TA = "subspace_topology ?R2 ?T A"
+  \<comment> \<open>The subspace topology is a topology.\<close>
+  have hA_sub: "A \<subseteq> ?R2" by (by100 blast)
+  have hT_top: "is_topology_on ?R2 ?T"
+  proof -
+    have "is_topology_on (UNIV::real set) top1_open_sets"
+      unfolding top1_open_sets_def is_topology_on_def
+      using open_UNIV open_empty open_Un open_Int by (by5000 auto)
+    hence "is_topology_on ((UNIV::real set) \<times> (UNIV::real set)) ?T"
+      using product_topology_on_is_topology_on by (by100 blast)
+    thus ?thesis by (by100 simp)
+  qed
+  have hTA_top: "is_topology_on A ?TA"
+    by (rule subspace_topology_is_topology_on[OF hT_top hA_sub])
+  \<comment> \<open>Every cover of A from ?TA has a finite subcover.\<close>
+  have hcover: "\<And>Uc. Uc \<subseteq> ?TA \<Longrightarrow> A \<subseteq> \<Union>Uc \<Longrightarrow> \<exists>F. finite F \<and> F \<subseteq> Uc \<and> A \<subseteq> \<Union>F"
+  proof -
+    fix Uc assume hUc: "Uc \<subseteq> ?TA" and hcover: "A \<subseteq> \<Union>Uc"
+    \<comment> \<open>Each U \<in> Uc is A \<inter> V for some V \<in> ?T. The V's form an open cover of A.\<close>
+    \<comment> \<open>Each V \<in> ?T corresponds to an open set (product topology = standard topology).\<close>
+    \<comment> \<open>compact A gives a finite subcover of V's, hence of U's.\<close>
+    show "\<exists>F. finite F \<and> F \<subseteq> Uc \<and> A \<subseteq> \<Union>F"
+      sorry \<comment> \<open>Extract V's from Uc, use compact A for finite subcover, map back.\<close>
+  qed
+  show ?thesis unfolding top1_compact_on_def using hTA_top hcover by (by100 blast)
+qed
+
 text \<open>A convex polygon in R^2 is homeomorphic to B^2 (the closed unit disk).
   This is a standard topology fact (radial projection from centroid).\<close>
 lemma polygon_homeomorphic_to_disk:
@@ -2072,7 +2106,10 @@ proof -
      is automatically a homeomorphism.\<close>
   \<comment> \<open>Step 1: P is compact (closed bounded subset of R^2).\<close>
   have hP_compact: "top1_compact_on P (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P)"
-    sorry \<comment> \<open>Polygonal regions are compact (convex hull of finitely many points).\<close>
+  proof -
+    have "compact P" sorry \<comment> \<open>P is a convex hull of finitely many points, hence compact (convex\_hull\_compact).\<close>
+    thus ?thesis by (rule compact_R2_bridge)
+  qed
   \<comment> \<open>Step 2: B^2 is Hausdorff.\<close>
   have hB2_haus: "is_hausdorff_on top1_B2 top1_B2_topology"
   proof -
