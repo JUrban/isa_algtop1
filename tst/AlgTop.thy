@@ -2050,6 +2050,12 @@ proof -
 qed
 
 
+text \<open>For any natural number n, a wedge of n circles exists as a topological space.\<close>
+lemma wedge_of_circles_exists:
+  "\<exists>(X :: (real \<times> real) set) TX (p :: real \<times> real).
+      top1_is_wedge_of_circles_on X TX {..<n} p"
+  sorry
+
 text \<open>A convex polygon in R^2 is homeomorphic to B^2 (the closed unit disk).
   This is a standard topology fact (radial projection from centroid).\<close>
 lemma polygon_homeomorphic_to_disk:
