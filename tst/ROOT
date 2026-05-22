@@ -49,7 +49,12 @@ session K5 in k5 = AlgIsoFixed +
   theories
     K5_nonplanar
 
-session AlgTop = K5 +
+session AlgTopGroups in ag = K5 +
+  options [timeout = 600]
+  theories
+    AlgTopGroups
+
+session AlgTop = AlgTopGroups +
   options [quick_and_dirty, timeout = 300]
   theories
     AlgTop
