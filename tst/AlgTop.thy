@@ -3271,9 +3271,133 @@ proof -
                   case False
                   hence "t' < 0 \<or> t' > 1" using ht_ne0 ht_ne1 by (by100 linarith)
                   thus False
-                    using hvx1_t hvy1_t hgp h0n h1n h2n assms(2) ht'_def
-                    sorry \<comment> \<open>Symmetric: t<0 gives v_0 between, t>1 gives v_2 between.
-                       Same sum decomposition as proved for the vx0\<noteq>vx2 case.\<close>
+                  proof
+                    assume ht_neg: "t' < 0"
+                    have h1mt: "1 - t' > 0" using ht_neg by (by100 linarith)
+                    let ?s = "1 / (1 - t')"
+                    have h1mt_s: "(1 - t') * ?s = 1" using h1mt by (by100 simp)
+                    have h1mt_1ms: "(1 - t') * (1 - ?s) = - t'" using h1mt by (simp add: field_simps)
+                    have hvx0: "vx 0 = ?s * vx 1 + (1 - ?s) * vx 2"
+                    proof -
+                      have "(1 - t') * vx 0 = vx 1 - t' * vx 2"
+                        using hvx1_t by (by100 linarith)
+                      also have "\<dots> = (1-t')*?s * vx 1 + (1-t')*(1-?s) * vx 2"
+                        using h1mt_s h1mt_1ms by (by100 simp)
+                      also have "\<dots> = (1 - t') * (?s * vx 1) + (1 - t') * ((1 - ?s) * vx 2)"
+                        by (by100 simp)
+                      also have "\<dots> = (1 - t') * (?s * vx 1 + (1 - ?s) * vx 2)"
+                        using distrib_left[of "1-t'" "?s * vx 1" "(1-?s)*vx 2"] by (by100 simp)
+                      finally show ?thesis using h1mt by (by100 simp)
+                    qed
+                    have hvy0: "vy 0 = ?s * vy 1 + (1 - ?s) * vy 2"
+                    proof -
+                      have "(1 - t') * vy 0 = vy 1 - t' * vy 2"
+                        using hvy1_t by (by100 linarith)
+                      also have "\<dots> = (1-t')*?s * vy 1 + (1-t')*(1-?s) * vy 2"
+                        using h1mt_s h1mt_1ms by (by100 simp)
+                      also have "\<dots> = (1 - t') * (?s * vy 1) + (1 - t') * ((1 - ?s) * vy 2)"
+                        by (by100 simp)
+                      also have "\<dots> = (1 - t') * (?s * vy 1 + (1 - ?s) * vy 2)"
+                        using distrib_left[of "1-t'" "?s * vy 1" "(1-?s)*vy 2"] by (by100 simp)
+                      finally show ?thesis using h1mt by (by100 simp)
+                    qed
+                    have hs_pos: "?s > 0" using h1mt by (by100 simp)
+                    have hs_lt1: "?s < 1" using ht_neg by (by100 simp)
+                    define cc where "cc = (\<lambda>i::nat. if i = 1 then ?s else if i = 2 then 1-?s else 0::real)"
+                    have hsplit: "{..<n} = {0,1,2} \<union> {3..<n}" using assms(2) by (by100 auto)
+                    have hrest: "\<And>f. (\<Sum>i\<in>{3..<n}. cc i * f i) = 0"
+                      apply (rule sum.neutral) unfolding cc_def by (by100 force)
+                    have hrest_sum: "(\<Sum>i\<in>{3..<n}. cc i) = 0"
+                      apply (rule sum.neutral) unfolding cc_def by (by100 force)
+                    have hnn: "\<forall>i<n. i \<noteq> 0 \<longrightarrow> cc i \<ge> 0"
+                      using hs_pos hs_lt1 unfolding cc_def by (by100 auto)
+                    have hc0: "cc 0 = 0" unfolding cc_def by (by100 simp)
+                    have hcsum: "(\<Sum>i<n. cc i) = 1"
+                    proof -
+                      have "(\<Sum>i<n. cc i) = (\<Sum>i\<in>{0,1,2}. cc i) + (\<Sum>i\<in>{3..<n}. cc i)"
+                        using hsplit by (simp add: sum.union_disjoint)
+                      thus ?thesis using hrest_sum unfolding cc_def by (by100 simp)
+                    qed
+                    have hcvx: "vx 0 = (\<Sum>i<n. cc i * vx i)"
+                    proof -
+                      have "(\<Sum>i<n. cc i * vx i) = (\<Sum>i\<in>{0,1,2}. cc i * vx i) + (\<Sum>i\<in>{3..<n}. cc i * vx i)"
+                        using hsplit by (simp add: sum.union_disjoint)
+                      thus ?thesis using hrest[of vx] hvx0 unfolding cc_def by (by100 simp)
+                    qed
+                    have hcvy: "vy 0 = (\<Sum>i<n. cc i * vy i)"
+                    proof -
+                      have "(\<Sum>i<n. cc i * vy i) = (\<Sum>i\<in>{0,1,2}. cc i * vy i) + (\<Sum>i\<in>{3..<n}. cc i * vy i)"
+                        using hsplit by (simp add: sum.union_disjoint)
+                      thus ?thesis using hrest[of vy] hvy0 unfolding cc_def by (by100 simp)
+                    qed
+                    have "\<exists>cc. (\<forall>i<n. i \<noteq> 0 \<longrightarrow> cc i \<ge> 0) \<and> cc 0 = 0 \<and> (\<Sum>i<n. cc i) = 1
+                        \<and> vx 0 = (\<Sum>i<n. cc i * vx i) \<and> vy 0 = (\<Sum>i<n. cc i * vy i)"
+                      using hnn hc0 hcsum hcvx hcvy by (by100 blast)
+                    thus False using hgp h0n by (by100 blast)
+                  next
+                    assume ht_big: "t' > 1"
+                    have ht'_pos: "t' > 0" using ht_big by (by100 linarith)
+                    let ?s = "1 / t'"
+                    have ht_s: "t' * ?s = 1" using ht'_pos by (by100 simp)
+                    have ht_1ms: "t' * (1 - ?s) = t' - 1" using ht'_pos by (simp add: field_simps)
+                    have hvx2: "vx 2 = ?s * vx 1 + (1 - ?s) * vx 0"
+                    proof -
+                      have h_from: "vx 1 = (1 - t') * vx 0 + t' * vx 2" using hvx1_t .
+                      hence h_rearr: "t' * vx 2 = vx 1 + (t' - 1) * vx 0" by (simp add: algebra_simps)
+                      have "vx 1 + (t' - 1) * vx 0 = t'*?s * vx 1 + t'*(1-?s) * vx 0"
+                        using ht_s ht_1ms by (by100 simp)
+                      hence "t' * vx 2 = t' * (?s * vx 1) + t' * ((1-?s) * vx 0)"
+                        using h_rearr by (by100 simp)
+                      hence "t' * vx 2 = t' * (?s * vx 1 + (1-?s) * vx 0)"
+                        using distrib_left[of t' "?s * vx 1" "(1-?s) * vx 0"] by (by100 simp)
+                      thus ?thesis using ht'_pos by (by100 simp)
+                    qed
+                    have hvy2: "vy 2 = ?s * vy 1 + (1 - ?s) * vy 0"
+                    proof -
+                      have h_from: "vy 1 = (1 - t') * vy 0 + t' * vy 2" using hvy1_t .
+                      hence h_rearr: "t' * vy 2 = vy 1 + (t' - 1) * vy 0" by (simp add: algebra_simps)
+                      have "vy 1 + (t' - 1) * vy 0 = t'*?s * vy 1 + t'*(1-?s) * vy 0"
+                        using ht_s ht_1ms by (by100 simp)
+                      hence "t' * vy 2 = t' * (?s * vy 1) + t' * ((1-?s) * vy 0)"
+                        using h_rearr by (by100 simp)
+                      hence "t' * vy 2 = t' * (?s * vy 1 + (1-?s) * vy 0)"
+                        using distrib_left[of t' "?s * vy 1" "(1-?s) * vy 0"] by (by100 simp)
+                      thus ?thesis using ht'_pos by (by100 simp)
+                    qed
+                    have hs_pos: "?s > 0" using ht'_pos by (by100 simp)
+                    have hs_lt1: "?s < 1" using ht_big by (by100 simp)
+                    define cc where "cc = (\<lambda>i::nat. if i = 0 then 1-?s else if i = 1 then ?s else 0::real)"
+                    have hsplit: "{..<n} = {0,1,2} \<union> {3..<n}" using assms(2) by (by100 auto)
+                    have hrest: "\<And>f. (\<Sum>i\<in>{3..<n}. cc i * f i) = 0"
+                      apply (rule sum.neutral) unfolding cc_def by (by100 force)
+                    have hrest_sum: "(\<Sum>i\<in>{3..<n}. cc i) = 0"
+                      apply (rule sum.neutral) unfolding cc_def by (by100 force)
+                    have hnn: "\<forall>i<n. i \<noteq> 2 \<longrightarrow> cc i \<ge> 0"
+                      using hs_pos hs_lt1 unfolding cc_def by (by100 auto)
+                    have hc2: "cc 2 = 0" unfolding cc_def by (by100 simp)
+                    have hcsum: "(\<Sum>i<n. cc i) = 1"
+                    proof -
+                      have "(\<Sum>i<n. cc i) = (\<Sum>i\<in>{0,1,2}. cc i) + (\<Sum>i\<in>{3..<n}. cc i)"
+                        using hsplit by (simp add: sum.union_disjoint)
+                      thus ?thesis using hrest_sum unfolding cc_def by (by100 simp)
+                    qed
+                    have hcvx: "vx 2 = (\<Sum>i<n. cc i * vx i)"
+                    proof -
+                      have "(\<Sum>i<n. cc i * vx i) = (\<Sum>i\<in>{0,1,2}. cc i * vx i) + (\<Sum>i\<in>{3..<n}. cc i * vx i)"
+                        using hsplit by (simp add: sum.union_disjoint)
+                      thus ?thesis using hrest[of vx] hvx2 unfolding cc_def by (by100 simp)
+                    qed
+                    have hcvy: "vy 2 = (\<Sum>i<n. cc i * vy i)"
+                    proof -
+                      have "(\<Sum>i<n. cc i * vy i) = (\<Sum>i\<in>{0,1,2}. cc i * vy i) + (\<Sum>i\<in>{3..<n}. cc i * vy i)"
+                        using hsplit by (simp add: sum.union_disjoint)
+                      thus ?thesis using hrest[of vy] hvy2 unfolding cc_def by (by100 simp)
+                    qed
+                    have "\<exists>cc. (\<forall>i<n. i \<noteq> 2 \<longrightarrow> cc i \<ge> 0) \<and> cc 2 = 0 \<and> (\<Sum>i<n. cc i) = 1
+                        \<and> vx 2 = (\<Sum>i<n. cc i * vx i) \<and> vy 2 = (\<Sum>i<n. cc i * vy i)"
+                      using hnn hc2 hcsum hcvx hcvy by (by100 blast)
+                    thus False using hgp h2n by (by100 blast)
+                  qed
                 qed
               qed
             qed
