@@ -2235,9 +2235,11 @@ proof -
           have "(\<Sum>i<n. - f i) = - (\<Sum>i<n. f i)"
             using sum_negf by (by100 blast)
           hence "(\<Sum>i<n. - f i) = 0" using \<open>(\<Sum>i<n. f i) = 0\<close> by (by100 simp)
+          have hnn: "\<And>x. x \<in> {..<n} \<Longrightarrow> 0 \<le> - f x"
+            using True by (by100 force)
           hence "\<forall>i\<in>{..<n}. - f i = 0"
-            using sum_nonneg_eq_0_iff[of "{..<n}" "\<lambda>i. - f i"] True
-            by (by5000 force)
+            using sum_nonneg_eq_0_iff[of "{..<n}" "\<lambda>i. - f i"]
+              \<open>(\<Sum>i<n. - f i) = 0\<close> hnn by (by100 blast)
           hence "\<forall>i<n. f i = 0" by (by100 force)
           thus False using assms(3) by (by100 blast)
         qed
@@ -2248,10 +2250,47 @@ proof -
       case False
       then obtain k where hk: "k < n" "f k \<ge> 0" by (by100 force)
       \<comment> \<open>Propagate: f_k \<ge> 0 \<Rightarrow> f_{k+1} > 0 \<Rightarrow> f_{k+2} > 0 \<Rightarrow> ... \<Rightarrow> all > 0.\<close>
-      have hprop: "\<forall>j<n. f ((k + j) mod n) > 0 \<or> j = 0 \<and> f k \<ge> 0"
-        sorry \<comment> \<open>Induction on j using htrans.\<close>
-      hence "\<forall>i<n. f i \<ge> 0"
-        sorry \<comment> \<open>From hprop with j ranging over 0..n-1.\<close>
+      have hprop: "\<And>j. j < n \<Longrightarrow> f ((k + j) mod n) \<ge> 0"
+      proof -
+        fix j show "j < n \<Longrightarrow> f ((k + j) mod n) \<ge> 0"
+        proof (induction j)
+          case 0 thus ?case using hk by (by100 simp)
+        next
+          case (Suc j)
+          hence hj: "j < n" by (by100 simp)
+          have hjmod: "(k + j) mod n < n" using assms(1) by (by100 simp)
+          have hfj: "f ((k + j) mod n) \<ge> 0" using Suc.IH hj by (by100 blast)
+          from htrans[rule_format, OF hjmod hfj]
+          have "f (((k + j) mod n + 1) mod n) > 0" .
+          moreover have "((k + j) mod n + 1) mod n = (k + Suc j) mod n"
+          proof -
+            have "((k + j) mod n + 1) mod n = (k + j + 1) mod n"
+              using mod_add_left_eq[of "k+j" n 1] by (by100 simp)
+            thus ?thesis by (by100 simp)
+          qed
+          ultimately show ?case by (by100 simp)
+        qed
+      qed
+      have "\<forall>i<n. f i \<ge> 0"
+      proof (intro allI impI)
+        fix i assume "i < n"
+        \<comment> \<open>i = (k + ((i - k) mod n)) mod n, and (i - k) mod n < n.\<close>
+        have "\<exists>j<n. (k + j) mod n = i"
+        proof (cases "k \<le> i")
+          case True
+          show ?thesis
+            apply (rule exI[of _ "i - k"])
+            using True \<open>i < n\<close> hk(1) by (by100 simp)
+        next
+          case False
+          hence hki: "k > i" by (by100 simp)
+          show ?thesis
+            apply (rule exI[of _ "n - k + i"])
+            using hki \<open>i < n\<close> hk(1) by (by5000 simp)
+        qed
+        then obtain j where "j < n" "(k + j) mod n = i" by (by100 blast)
+        thus "f i \<ge> 0" using hprop[of j] by (by100 simp)
+      qed
       hence "\<forall>i<n. f i = 0"
         using sum_nonneg_eq_0_iff[of "{..<n}" f] assms(2)
         by (by5000 force)
