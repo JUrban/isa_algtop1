@@ -2050,6 +2050,14 @@ proof -
 qed
 
 
+text \<open>A convex polygon in R^2 is homeomorphic to B^2 (the closed unit disk).
+  This is a standard topology fact (radial projection from centroid).\<close>
+lemma polygon_homeomorphic_to_disk:
+  assumes "top1_is_polygonal_region_on P n" and "n \<ge> 3"
+  shows "\<exists>\<psi>. top1_homeomorphism_on P (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P)
+    top1_B2 top1_B2_topology \<psi>"
+  sorry
+
 text \<open>Key helper: a scheme quotient provides the attaching data for Theorem 72.1.
   The 1-skeleton A = q(boundary of polygon) is closed and path-connected.
   The attaching map h = q composed with polygon-to-disk homeomorphism is continuous.
@@ -2067,7 +2075,30 @@ lemma scheme_quotient_CW_data:
         (X - A) (subspace_topology X TX (X - A)) h
     \<and> h ` top1_S1 \<subseteq> A
     \<and> (\<forall>z\<in>top1_S1. h z \<in> A)"
-  sorry
+proof -
+  \<comment> \<open>Step 1: Extract polygon P, quotient map q, vertices from scheme definition.\<close>
+  from quotient_of_scheme_extract_full[OF assms(1)]
+  obtain P q vx vy where
+    hP: "top1_is_polygonal_region_on P (length scheme)" and
+    hq: "top1_quotient_map_on P (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) X TX q" and
+    hverts: "\<forall>i<length scheme. (vx i, vy i) \<in> P" and
+    hinterior: "\<forall>p\<in>P. (\<forall>i<length scheme. \<forall>t\<in>I_set.
+          p \<noteq> ((1-t) * vx i + t * vx (Suc i mod length scheme),
+                (1-t) * vy i + t * vy (Suc i mod length scheme)))
+       \<longrightarrow> (\<forall>p'\<in>P. q p = q p' \<longrightarrow> p = p')"
+    by (by5000 blast)
+  \<comment> \<open>Step 2: Get polygon-to-disk homeomorphism \<psi>: P \<rightarrow> B^2.\<close>
+  from polygon_homeomorphic_to_disk[OF hP assms(2)]
+  obtain \<psi> where h\<psi>: "top1_homeomorphism_on P
+    (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P)
+    top1_B2 top1_B2_topology \<psi>" by (by100 blast)
+  \<comment> \<open>Step 3: Define A = q(boundary of P), h = q \<circ> \<psi>^{-1}.\<close>
+  \<comment> \<open>The boundary of P consists of the edge interpolation points.\<close>
+  \<comment> \<open>h = q \<circ> inv_into top1_B2 \<psi>: B^2 \<rightarrow> P \<rightarrow> X.\<close>
+  \<comment> \<open>h is continuous (composition of continuous maps).\<close>
+  \<comment> \<open>h maps Int(B^2) homeomorphically to X - A (from interior injectivity of q).\<close>
+  show ?thesis sorry \<comment> \<open>Assemble A, h from q, \<psi>. Uses \<psi> for boundary/interior decomposition.\<close>
+qed
 
 text \<open>For the torus scheme, the 1-skeleton is a wedge of 2 circles.
   For the dunce cap, the 1-skeleton is a single circle.\<close>
