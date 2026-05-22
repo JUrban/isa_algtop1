@@ -2933,16 +2933,25 @@ proof -
         let ?vi1 = "(i+1) mod n"
         let ?D = "cross2 (vx i - cx, vy i - cy) (vx ?vi1 - cx, vy ?vi1 - cy)"
         \<comment> \<open>D > 0 for convex polygon with counterclockwise vertices from centroid.\<close>
-        have hD_ne: "?D \<noteq> 0"
-          sorry \<comment> \<open>Convex position: adjacent vertices and centroid form non-degenerate triangle.\<close>
+        have hD_pos: "?D > 0"
+          sorry \<comment> \<open>Convex position: adjacent vertices and centroid form CCW triangle, so D > 0.\<close>
+        have hD_ne: "?D \<noteq> 0" using hD_pos by (by100 simp)
         \<comment> \<open>\<beta>' = cross2(z-c, v_{i+1}-c) / D, \<gamma>' = cross2(v_i-c, z-c) / D.\<close>
-        \<comment> \<open>Note: cross2(z-c, v_{i+1}-c) = -cross2(v_{i+1}-c, z-c) = -hneg part.\<close>
         define \<beta>' where "\<beta>' = cross2 (fst z - cx, snd z - cy) (vx ?vi1 - cx, vy ?vi1 - cy) / ?D"
         define \<gamma>' where "\<gamma>' = cross2 (vx i - cx, vy i - cy) (fst z - cx, snd z - cy) / ?D"
-        \<comment> \<open>\<beta>' \<ge> 0: cross2(z-c, v_{i+1}-c) = -cross2(v_{i+1}-c, z-c) \<ge> 0 from hneg,
-           divided by D (same sign). Similarly \<gamma>' \<ge> 0 from hpos.\<close>
-        have h\<beta>_nn: "\<beta>' \<ge> 0" sorry
-        have h\<gamma>_nn: "\<gamma>' \<ge> 0" sorry
+        \<comment> \<open>\<beta>' \<ge> 0: cross2(z-c, v_{i+1}-c) = -cross2(v_{i+1}-c, z-c) \<ge> 0 from hneg.
+           \<gamma>' \<ge> 0: cross2(v_i-c, z-c) \<ge> 0 from hpos. Both divided by D > 0.\<close>
+        have hnum_\<beta>: "cross2 (fst z - cx, snd z - cy) (vx ?vi1 - cx, vy ?vi1 - cy) \<ge> 0"
+        proof -
+          have "cross2 (vx ?vi1 - cx, vy ?vi1 - cy) (?dx, ?dy) \<le> 0" using hneg .
+          hence "- cross2 (fst z - cx, snd z - cy) (vx ?vi1 - cx, vy ?vi1 - cy) \<le> 0"
+            unfolding cross2_def by (simp add: algebra_simps)
+          thus ?thesis by (by100 linarith)
+        qed
+        have h\<beta>_nn: "\<beta>' \<ge> 0" unfolding \<beta>'_def
+          using hnum_\<beta> hD_pos by (by100 simp)
+        have h\<gamma>_nn: "\<gamma>' \<ge> 0" unfolding \<gamma>'_def
+          using hpos hD_pos by (by100 simp)
         \<comment> \<open>z - c = \<beta>'*(v_i - c) + \<gamma>'*(v_{i+1} - c): by definition of \<beta>', \<gamma>' via Cramer.\<close>
         have hzc_x: "fst z - cx = \<beta>' * (vx i - cx) + \<gamma>' * (vx ?vi1 - cx)"
         proof -
