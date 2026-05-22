@@ -6880,6 +6880,8 @@ lemma quotient_double_by_kernel:
       and heps: "top1_group_hom_on G mul (UNIV::int set) (+) \<epsilon>"
       and ha: "a \<in> G" and heps_a: "\<epsilon> a = 1"
       and hK_free: "top1_is_free_abelian_group_full_on {g \<in> G. \<epsilon> g = 0} mul e invg iota' S'"
+      and hQK_fin: "finite (top1_quotient_group_carrier_on
+            {g \<in> G. \<epsilon> g = 0} mul {mul g g | g. g \<in> {g \<in> G. \<epsilon> g = 0}})"
   shows "card (top1_quotient_group_carrier_on G mul {mul g g | g. g \<in> G})
        = 2 * card (top1_quotient_group_carrier_on
             {g \<in> G. \<epsilon> g = 0} mul {mul g g | g. g \<in> {g \<in> G. \<epsilon> g = 0}})"
@@ -6970,8 +6972,52 @@ proof -
   \<comment> \<open>Steps 2-4: card QG\_even = card QK, card QG\_odd = card QG\_even.\<close>
   have heven_card: "card QG_even = card ?QK" sorry
   have hodd_card: "card QG_odd = card QG_even" sorry
-  have hfin_even: "finite QG_even" sorry
-  have hfin_odd: "finite QG_odd" sorry
+  have hfin_even: "finite QG_even"
+  proof (rule ccontr)
+    assume "\<not> finite QG_even"
+    hence "card QG_even = 0" by (by100 simp)
+    hence "card ?QK = 0" using heven_card by (by100 simp)
+    \<comment> \<open>But ?QK is non-empty (contains at least the coset of e).\<close>
+    moreover have "card ?QK > 0"
+    proof -
+      have "e \<in> ?K"
+      proof -
+        have "e \<in> G" using hG_grp unfolding top1_is_group_on_def by (by100 blast)
+        have "\<epsilon> e = 0" using hom_preserves_id[OF hG_grp hZ_grp heps] by (by100 simp)
+        thus ?thesis using \<open>e \<in> G\<close> by (by100 simp)
+      qed
+      hence "top1_group_coset_on ?K mul ?twoK e \<in> ?QK"
+        unfolding top1_quotient_group_carrier_on_def by (by100 blast)
+      hence "?QK \<noteq> {}" by (by100 blast)
+      moreover have "finite ?QK" by (rule hQK_fin)
+      ultimately show ?thesis by (by100 force)
+    qed
+    ultimately show False by (by100 simp)
+  qed
+  have hfin_odd: "finite QG_odd"
+  proof (rule ccontr)
+    assume "\<not> finite QG_odd"
+    hence "card QG_odd = 0" by (by100 simp)
+    hence "card QG_even = 0" using hodd_card by (by100 simp)
+    thus False using hfin_even heven_card
+    proof -
+      have "card ?QK = 0" using \<open>card QG_even = 0\<close> heven_card by (by100 simp)
+      moreover have "card ?QK > 0"
+      proof -
+        have "e \<in> ?K"
+        proof -
+          have "e \<in> G" using hG_grp unfolding top1_is_group_on_def by (by100 blast)
+          have "\<epsilon> e = 0" using hom_preserves_id[OF hG_grp hZ_grp heps] by (by100 simp)
+          thus ?thesis using \<open>e \<in> G\<close> by (by100 simp)
+        qed
+        hence "top1_group_coset_on ?K mul ?twoK e \<in> ?QK"
+          unfolding top1_quotient_group_carrier_on_def by (by100 blast)
+        hence "?QK \<noteq> {}" by (by100 blast)
+        thus ?thesis using hQK_fin by (by100 force)
+      qed
+      ultimately show False by (by100 simp)
+    qed
+  qed
   have "card ?QG = card QG_even + card QG_odd"
     using hpartition card_Un_disjoint[OF hfin_even hfin_odd hdisjoint] by (by100 simp)
   also have "\<dots> = card ?QK + card ?QK" using heven_card hodd_card by (by100 simp)
@@ -7112,7 +7158,16 @@ proof -
       using hfree hs0 unfolding top1_is_free_abelian_group_full_on_def by (by100 blast)
     have "card (top1_quotient_group_carrier_on G mul {mul g g | g. g \<in> G})
        = 2 * card (top1_quotient_group_carrier_on ?K mul {mul g g | g. g \<in> ?K})"
-      by (rule quotient_double_by_kernel[OF habel heps ha_G heps_s0 hK_free])
+    proof (rule quotient_double_by_kernel[OF habel heps ha_G heps_s0 hK_free])
+      show "finite (top1_quotient_group_carrier_on ?K mul {mul g g | g. g \<in> ?K})"
+      proof (rule ccontr)
+        assume "\<not> finite (top1_quotient_group_carrier_on ?K mul {mul g g | g. g \<in> ?K})"
+        hence "card (top1_quotient_group_carrier_on ?K mul {mul g g | g. g \<in> ?K}) = 0"
+          by (by100 simp)
+        hence "2 ^ n = (0::nat)" using hIH by (by100 simp)
+        thus False by (by100 simp)
+      qed
+    qed
     hence "card (top1_quotient_group_carrier_on G mul {mul g g | g. g \<in> G}) = 2 * 2 ^ n"
       using hIH by (by100 simp)
     also have "\<dots> = 2 ^ Suc n" by (by100 simp)
