@@ -2361,11 +2361,16 @@ lemma top1_path_connected_continuous_image:
       and "\<forall>x \<in> X. f x \<in> Y"
       and "f ` X = Z" and "Z \<subseteq> Y"
       and "TZ = subspace_topology Y TY Z"
+      and "is_topology_on Y TY"
   shows "top1_path_connected_on Z TZ"
 proof -
   show ?thesis unfolding top1_path_connected_on_def
   proof (intro conjI)
-    show "is_topology_on Z TZ" unfolding assms(6) sorry \<comment> \<open>Subspace topology is topology.\<close>
+    show "is_topology_on Z TZ" unfolding assms(6)
+    proof (rule subspace_topology_is_topology_on)
+      show "is_topology_on Y TY" by (rule assms(7))
+      show "Z \<subseteq> Y" by (rule assms(5))
+    qed
     show "\<forall>a\<in>Z. \<forall>b\<in>Z. \<exists>\<gamma>. top1_is_path_on Z TZ a b \<gamma>"
     proof (intro ballI)
       fix a b assume ha: "a \<in> Z" and hb: "b \<in> Z"
