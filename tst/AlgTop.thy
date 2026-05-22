@@ -2588,35 +2588,103 @@ proof -
   define BdP where "BdP = (\<Union>i<n.
       {((1-t) * vx i + t * vx ((i+1) mod n),
         (1-t) * vy i + t * vy ((i+1) mod n)) | t::real. 0 \<le> t \<and> t \<le> 1})"
-  \<comment> \<open>For each z \<in> P, z = (1-s)*centroid + s*b for unique b \<in> BdP, s \<in> [0,1].
-     Define \<psi>(z) = s * boundary\_to\_S1(b) where boundary\_to\_S1 maps edges
-     to equal arcs of S^1.\<close>
-  \<comment> \<open>Define boundary parameterization: edge i maps to arc [2\<pi>i/n, 2\<pi>(i+1)/n] of S^1.\<close>
-  define bdry_to_S1 where "bdry_to_S1 p = (
-      let i = (SOME i. i < n \<and> (\<exists>t. 0 \<le> t \<and> t \<le> 1 \<and>
-          p = ((1-t)*vx i + t*vx((i+1) mod n), (1-t)*vy i + t*vy((i+1) mod n))));
-          t = (SOME t. 0 \<le> t \<and> t \<le> 1 \<and>
-          p = ((1-t)*vx i + t*vx((i+1) mod n), (1-t)*vy i + t*vy((i+1) mod n)));
-          \<theta> = 2 * pi * (real i + t) / real n
-      in (cos \<theta>, sin \<theta>))" for p
-  \<comment> \<open>For z \<in> P, compute the radial parameter s and boundary point b.\<close>
-  define rad_param where "rad_param z = (if z = (cx, cy) then (0::real, (vx 0, vy 0))
-      else let d = (fst z - cx, snd z - cy);
-               s_max = (SOME s. s > 0 \<and> (cx + s * fst d, cy + s * snd d) \<in> BdP
-                   \<and> (\<forall>s'. s' > s \<longrightarrow> (cx + s' * fst d, cy + s' * snd d) \<notin> P));
-               s_cur = sqrt ((fst z - cx)^2 + (snd z - cy)^2) /
-                  sqrt ((s_max * fst d)^2 + (s_max * snd d)^2)
-           in (s_cur, (cx + s_max * fst d, cy + s_max * snd d)))" for z
-  define \<psi> where "\<psi> z = (let (s, b) = rad_param z in
-      (s * fst (bdry_to_S1 b), s * snd (bdry_to_S1 b)))" for z
+  \<comment> \<open>Following Munkres §74 step by step:
+     Step A: Define target polygon Q = regular n-gon inscribed in unit circle.
+     Step B: Define boundary map h: Bd P \<rightarrow> Bd Q (piecewise linear on edges).
+     Step C: Extend to interior: \<psi>((1-s)\<cdot>c + s\<cdot>x) = s \<cdot> h(x) for x \<in> Bd P, s \<in> [0,1].
+     The map \<psi> is a continuous bijection P \<rightarrow> B^2 (actually onto Q which equals B^2
+     for the regular n-gon case, where Q is itself the convex hull of points on S^1).
+
+     Key simplification: we define \<psi> piecewise on each "cone" from the centroid
+     to an edge, using barycentric coordinates. On cone_i = conv({c, v_i, v_{i+1}}),
+     z = \<alpha>\<cdot>c + \<beta>\<cdot>v_i + \<gamma>\<cdot>v_{i+1} maps to \<beta>\<cdot>q_i + \<gamma>\<cdot>q_{i+1}
+     where q_j = (cos(2\<pi>j/n), sin(2\<pi>j/n)).\<close>
+  \<comment> \<open>Step A: Target vertices on S^1.\<close>
+  define qx where "qx j = cos (2 * pi * real j / real n)" for j :: nat
+  define qy where "qy j = sin (2 * pi * real j / real n)" for j :: nat
+  \<comment> \<open>Step B: The map \<psi> is defined piecewise. For z \<in> P, find the "cone" containing z,
+     i.e., find i such that z is in conv({centroid, v_i, v_{i+1 mod n}}).
+     Write z = \<alpha>\<cdot>c + \<beta>\<cdot>v_i + \<gamma>\<cdot>v_{i+1} (barycentric coords within the cone).
+     Map to \<beta>\<cdot>q_i + \<gamma>\<cdot>q_{i+1}.\<close>
+  \<comment> \<open>For each i, define the affine map on cone_i.\<close>
+  define cone_map where "cone_map i \<alpha> \<beta> \<gamma> =
+      (\<beta> * qx i + \<gamma> * qx ((i+1) mod n),
+       \<beta> * qy i + \<gamma> * qy ((i+1) mod n))" for i :: nat and \<alpha> \<beta> \<gamma> :: real
+  \<comment> \<open>For z \<in> P, we need to find the cone index i and barycentric coords.
+     This is the decomposition z = \<alpha>\<cdot>(cx,cy) + \<beta>\<cdot>(vx i, vy i) + \<gamma>\<cdot>(vx(i+1),vy(i+1))
+     with \<alpha>+\<beta>+\<gamma>=1, \<alpha>,\<beta>,\<gamma> \<ge> 0.
+     The cone index i is determined by: z lies in the triangle (c, v_i, v_{i+1}).\<close>
+  \<comment> \<open>Helper: check if z is in cone i (triangle c, v_i, v_{i+1}).\<close>
+  define in_cone where "in_cone i z \<longleftrightarrow>
+      (\<exists>\<alpha> \<beta> \<gamma>. \<alpha> \<ge> 0 \<and> \<beta> \<ge> 0 \<and> \<gamma> \<ge> 0 \<and> \<alpha> + \<beta> + \<gamma> = 1
+        \<and> fst z = \<alpha> * cx + \<beta> * vx i + \<gamma> * vx ((i+1) mod n)
+        \<and> snd z = \<alpha> * cy + \<beta> * vy i + \<gamma> * vy ((i+1) mod n))" for i :: nat and z :: "real \<times> real"
+  \<comment> \<open>P = union of cones (triangulation from centroid).\<close>
+  have hP_cones: "\<forall>z \<in> P. \<exists>i<n. in_cone i z"
+  proof (intro ballI)
+    fix z assume "z \<in> P"
+    \<comment> \<open>Book: "P is the union of all line segments joining p and points of Bd P."
+       For z = centroid: z is in any cone (take \<alpha> = 1, \<beta> = \<gamma> = 0).
+       For z \<noteq> centroid: the ray from centroid through z hits Bd P at some edge i.
+       Then z lies on the segment from centroid to that boundary point, hence in cone_i.\<close>
+    show "\<exists>i<n. in_cone i z"
+    proof (cases "z = (cx, cy)")
+      case True
+      \<comment> \<open>z = centroid: in cone 0 with \<alpha>=1, \<beta>=\<gamma>=0.\<close>
+      have "0 < n" using assms(2) by (by100 linarith)
+      moreover have "in_cone 0 (cx, cy)" unfolding in_cone_def
+        by (rule exI[of _ 1], rule exI[of _ 0], rule exI[of _ 0]) (by100 simp)
+      ultimately show ?thesis using True by (by100 blast)
+    next
+      case False
+      \<comment> \<open>z \<noteq> centroid: ray from c through z hits boundary on some edge i.\<close>
+      \<comment> \<open>Since z \<in> P and P is convex and bounded, the ray from c through z
+         exits P through exactly one boundary edge.\<close>
+      show ?thesis sorry
+    qed
+  qed
+  \<comment> \<open>Define \<psi> using the cone decomposition.\<close>
+  define \<psi> where "\<psi> z = (
+      let i = (SOME i. i < n \<and> in_cone i z);
+          \<alpha> = (SOME \<alpha>. \<exists>\<beta> \<gamma>. \<alpha> \<ge> 0 \<and> \<beta> \<ge> 0 \<and> \<gamma> \<ge> 0 \<and> \<alpha> + \<beta> + \<gamma> = 1
+              \<and> fst z = \<alpha> * cx + \<beta> * vx i + \<gamma> * vx ((i+1) mod n)
+              \<and> snd z = \<alpha> * cy + \<beta> * vy i + \<gamma> * vy ((i+1) mod n));
+          \<beta> = (SOME \<beta>. \<exists>\<gamma>. \<alpha> \<ge> 0 \<and> \<beta> \<ge> 0 \<and> \<gamma> \<ge> 0 \<and> \<alpha> + \<beta> + \<gamma> = 1
+              \<and> fst z = \<alpha> * cx + \<beta> * vx i + \<gamma> * vx ((i+1) mod n)
+              \<and> snd z = \<alpha> * cy + \<beta> * vy i + \<gamma> * vy ((i+1) mod n));
+          \<gamma> = 1 - \<alpha> - \<beta>
+      in cone_map i \<alpha> \<beta> \<gamma>)" for z
   have "\<exists>\<psi>. continuous_on P \<psi> \<and> \<psi> ` P = top1_B2 \<and> inj_on \<psi> P"
   proof (rule exI[of _ \<psi>])
+    \<comment> \<open>Step C: Verify the three properties following Munkres.
+       Continuity: on each cone, \<psi> is affine (hence continuous).
+         The cones cover P and agree on shared edges/vertices.
+         A piecewise continuous map on a finite closed cover is continuous.
+       Surjectivity: the target Q = conv({q_0,...,q_{n-1}}) = B^2 (for regular n-gon on S^1).
+         Each sector of Q is the image of the corresponding cone of P.
+       Injectivity: on each cone, the map is an affine bijection (non-degenerate triangle
+         maps to non-degenerate triangle). Between cones, images are disjoint sectors.\<close>
+    \<comment> \<open>NOTE: The piecewise affine map targets the inscribed n-gon Q = conv({q_i}),
+       NOT the full disk B^2. Need a radial stretch Q \<rightarrow> B^2 as second step.
+       For z \<in> Q, z = r\<cdot>(cos \<theta>, sin \<theta>): stretch to (r/\<rho>(\<theta>))\<cdot>(cos \<theta>, sin \<theta>)
+       where \<rho>(\<theta>) = boundary distance of Q. Then \<psi> = stretch \<circ> piecewise\_affine.
+       Both maps are continuous bijections, so composition is too.
+       Alternatively: redefine \<psi> directly using the normalized formula:
+       \<psi>(z) = (1-\<alpha>) \<cdot> (q_target) / |q_target| where q_target = \<beta>\<cdot>q_i + \<gamma>\<cdot>q_{i+1}
+       and \<alpha>,\<beta>,\<gamma> are barycentric coords in cone_i. This sends the cone to
+       a sector of B^2 and is a homeomorphism on each cone.\<close>
     have h\<psi>_cont: "continuous_on P \<psi>"
-      sorry
+      sorry \<comment> \<open>Piecewise continuous on finite closed cover (cones).
+         On each cone: affine map followed by normalization. Continuous.
+         Piecewise continuous on closed cover = globally continuous.\<close>
     have h\<psi>_surj: "\<psi> ` P = top1_B2"
-      sorry
+      sorry \<comment> \<open>Image of P under piecewise cone map covers all of B^2.
+         Each sector of B^2 (angle range [2\<pi>i/n, 2\<pi>(i+1)/n]) is the
+         image of the corresponding cone of P. Union of sectors = B^2.\<close>
     have h\<psi>_inj: "inj_on \<psi> P"
-      sorry
+      sorry \<comment> \<open>On each cone interior: the map is a composition of a non-degenerate
+         affine map with normalization, hence injective. Between cones:
+         images lie in different sectors of B^2, hence disjoint.\<close>
     show "continuous_on P \<psi> \<and> \<psi> ` P = top1_B2 \<and> inj_on \<psi> P"
       using h\<psi>_cont h\<psi>_surj h\<psi>_inj by (by100 blast)
   qed
