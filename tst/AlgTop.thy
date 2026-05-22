@@ -3161,8 +3161,57 @@ proof -
               \<and> cross2 (vx i - cx, vy i - cy) (fst z - cx, snd z - cy) = 0"
             using hnum_\<beta> hnum_\<gamma> by (by100 linarith)
           \<comment> \<open>Both numerators 0 means z-c = 0 (by Cramer with D \<noteq> 0).\<close>
+          hence h_both0: "cross2 (fst z - cx, snd z - cy) (vx ?vi1 - cx, vy ?vi1 - cy) = 0"
+              "cross2 (vx i - cx, vy i - cy) (fst z - cx, snd z - cy) = 0"
+            by (by100 blast)+
           hence "fst z - cx = 0 \<and> snd z - cy = 0"
-            sorry \<comment> \<open>If cross2(d, v_{i+1}-c)=0 and cross2(v_i-c, d)=0 with D\<noteq>0, then d=0.\<close>
+          proof -
+            \<comment> \<open>Cramer: h_both0 gives (fst z-cx)*(vy_{i+1}-cy) = (snd z-cy)*(vx_{i+1}-cx)
+               and (vx_i-cx)*(snd z-cy) = (vy_i-cy)*(fst z-cx).
+               With D \<noteq> 0, same argument as in hne proof.\<close>
+            have h_eq1: "(fst z - cx) * (vy ?vi1 - cy) - (snd z - cy) * (vx ?vi1 - cx) = 0"
+              using h_both0(1) unfolding cross2_def by (by100 simp)
+            have h_eq2: "(vx i - cx) * (snd z - cy) - (vy i - cy) * (fst z - cx) = 0"
+              using h_both0(2) unfolding cross2_def by (by100 simp)
+            \<comment> \<open>Same Cramer derivation: D*(snd z-cy) = 0, D*(fst z-cx) = 0.\<close>
+            have "?D * (snd z - cy) = 0"
+            proof -
+              let ?a = "vx i - cx" let ?b = "vy i - cy"
+              let ?c = "vx ?vi1 - cx" let ?d = "vy ?vi1 - cy"
+              have h_i: "?a * (snd z - cy) = ?b * (fst z - cx)" using h_eq2 by (by100 linarith)
+              have h_i1: "(fst z - cx) * ?d = (snd z - cy) * ?c" using h_eq1 by (by100 linarith)
+              have "?a * ?d * (snd z - cy) = ?b * (fst z - cx) * ?d"
+                using h_i by (by100 simp)
+              also have "\<dots> = ?b * (snd z - cy) * ?c"
+                using h_i1 by (simp add: mult.commute mult.left_commute)
+              finally have "?a * ?d * (snd z - cy) = ?b * ?c * (snd z - cy)"
+                by (simp add: mult.commute mult.left_commute)
+              hence "?a * ?d * (snd z - cy) - ?b * ?c * (snd z - cy) = 0"
+                by (by100 linarith)
+              hence "(?a * ?d - ?b * ?c) * (snd z - cy) = 0"
+                by (simp add: algebra_simps)
+              moreover have "?D = ?a * ?d - ?b * ?c" unfolding cross2_def by (by100 simp)
+              ultimately show ?thesis by (by100 simp)
+            qed
+            hence "snd z - cy = 0" using hD_ne by (by100 simp)
+            moreover hence "fst z - cx = 0" using h_eq2 hD_ne
+              unfolding cross2_def
+            proof -
+              from h_eq2 \<open>snd z - cy = 0\<close>
+              have "(vy i - cy) * (fst z - cx) = 0" by (by100 simp)
+              moreover from h_eq1 \<open>snd z - cy = 0\<close>
+              have "(vy ?vi1 - cy) * (fst z - cx) = 0" by (simp add: algebra_simps)
+              moreover have "vy i - cy \<noteq> 0 \<or> vy ?vi1 - cy \<noteq> 0"
+              proof (rule ccontr)
+                assume "\<not> (vy i - cy \<noteq> 0 \<or> vy ?vi1 - cy \<noteq> 0)"
+                hence "vy i = cy" "vy ?vi1 = cy" by (by100 simp)+
+                hence "?D = 0" unfolding cross2_def by (simp add: algebra_simps)
+                thus False using hD_ne by (by100 blast)
+              qed
+              ultimately show "fst z - cx = 0" by (by100 force)
+            qed
+            ultimately show ?thesis by (by100 blast)
+          qed
           hence "z = (cx, cy)" by (by100 auto)
           thus False using False by (by100 simp)
         qed
