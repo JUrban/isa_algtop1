@@ -2942,8 +2942,11 @@ proof -
                 case True
                 \<comment> \<open>t = (vx1-vx0)/(vx2-vx0). Then v1 = (1-t)*v0 + t*v2.\<close>
                 let ?t = "(vx 1 - vx 0) / (vx 2 - vx 0)"
+                have ht_fact: "?t * (vx 2 - vx 0) = vx 1 - vx 0"
+                  using True by (by100 simp)
                 have hvx1_eq: "vx 1 = (1 - ?t) * vx 0 + ?t * vx 2"
-                  using True sorry \<comment> \<open>t = (vx1-vx0)/(vx2-vx0), so vx1 = vx0 + t*(vx2-vx0).\<close>
+                  using ht_fact sorry \<comment> \<open>vx1 = vx0 + t*(vx2-vx0) = (1-t)*vx0 + t*vx2.
+                     Pure ring identity but linarith/simp fail on division terms.\<close>
                 have hvy1_eq: "vy 1 = (1 - ?t) * vy 0 + ?t * vy 2"
                   using hcol_eq True sorry \<comment> \<open>From cross product = 0 and vx0\<noteq>vx2: divide.\<close>
                 \<comment> \<open>?t \<noteq> 0 (v0 \<noteq> v1 means vx0\<noteq>vx1 or vy0\<noteq>vy1 but if all same x...)\<close>
