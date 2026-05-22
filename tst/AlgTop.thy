@@ -2087,7 +2087,15 @@ proof -
     sorry \<comment> \<open>Radial projection construction: pick interior point, project boundary to S^1,
        extend linearly along rays. Continuity from piecewise-linear construction.\<close>
   \<comment> \<open>Step 4: Continuous bijection from compact to Hausdorff is homeomorphism.\<close>
-  show ?thesis sorry \<comment> \<open>Apply compact-to-Hausdorff homeomorphism theorem.\<close>
+  \<comment> \<open>Step 4: Apply Theorem 26.6 (compact + Hausdorff + continuous bijection = homeomorphism).\<close>
+  from \<open>\<exists>\<psi>. continuous_on P \<psi> \<and> \<psi> ` P = top1_B2 \<and> inj_on \<psi> P\<close>
+  obtain \<psi> where h\<psi>_cont: "continuous_on P \<psi>"
+      and h\<psi>_surj: "\<psi> ` P = top1_B2" and h\<psi>_inj: "inj_on \<psi> P" by (by100 blast)
+  have h\<psi>_bij: "bij_betw \<psi> P top1_B2"
+    unfolding bij_betw_def using h\<psi>_surj h\<psi>_inj by (by100 blast)
+  \<comment> \<open>Need to convert continuous\_on to top1\_continuous\_map\_on, then apply Theorem 26.6.\<close>
+  show ?thesis sorry \<comment> \<open>Bridge: continuous\_on \<leftrightarrow> top1\_continuous\_map\_on for R^2 subspaces.
+     Then Theorem\_26\_6 gives the homeomorphism.\<close>
 qed
 
 text \<open>Key helper: a scheme quotient provides the attaching data for Theorem 72.1.
