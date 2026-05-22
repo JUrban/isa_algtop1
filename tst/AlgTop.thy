@@ -3030,16 +3030,53 @@ proof -
                   hence "?t < 0 \<or> ?t > 1" using ht_ne0 ht_ne1 by (by100 linarith)
                   thus False
                   proof
-                    assume "?t < 0"
-                    \<comment> \<open>v_0 = (1/(1-t))*v_1 + (-t/(1-t))*v_2, a convex combo since -t>0, 1/(1-t)>0.\<close>
-                    \<comment> \<open>This contradicts hgp for vertex 0.\<close>
-                    show False using hvx1_eq hvy1_eq \<open>?t < 0\<close> hgp h0n h1n h2n assms(2)
-                      sorry \<comment> \<open>Symmetric to case 0<t<1 with vertex 0 as middle point.\<close>
+                    assume ht_neg: "?t < 0"
+                    \<comment> \<open>From hvx1\_eq: vx 0 = (vx 1 - t*vx 2)/(1-t) = (1/(1-t))*vx1 + (-t/(1-t))*vx2.\<close>
+                    obtain t' where ht'_def: "t' = ?t" by (by100 blast)
+                    have ht'_neg: "t' < 0" using ht_neg ht'_def by (by100 simp)
+                    have h1mt: "1 - t' > 0" using ht'_neg by (by100 linarith)
+                    \<comment> \<open>v_0 = s*v_1 + (1-s)*v_2 where s = 1/(1-t').\<close>
+                    let ?s = "1 / (1 - t')"
+                    have hs_pos: "?s > 0" using h1mt by (by100 simp)
+                    have hs_lt1: "?s < 1" using ht'_neg by (by100 simp)
+                    have hvx0: "vx 0 = ?s * vx 1 + (1 - ?s) * vx 2"
+                      using hvx1_eq ht'_def h1mt sorry \<comment> \<open>Algebra: rearrange vx1=(1-t)*vx0+t*vx2.\<close>
+                    have hvy0: "vy 0 = ?s * vy 1 + (1 - ?s) * vy 2"
+                      using hvy1_eq ht'_def h1mt sorry \<comment> \<open>Symmetric.\<close>
+                    \<comment> \<open>Construct coefficients for hgp contradiction at vertex 0.\<close>
+                    have hgp0: "\<not> (\<exists>coeffs. (\<forall>i<n. i \<noteq> 0 \<longrightarrow> coeffs i \<ge> 0) \<and> coeffs 0 = 0
+                        \<and> (\<Sum>i<n. coeffs i) = 1
+                        \<and> vx 0 = (\<Sum>i<n. coeffs i * vx i) \<and> vy 0 = (\<Sum>i<n. coeffs i * vy i))"
+                      using hgp h0n by (by100 blast)
+                    define coeffs where "coeffs = (\<lambda>i::nat. if i = 1 then ?s
+                        else if i = 2 then 1 - ?s else 0::real)"
+                    have "\<exists>coeffs. (\<forall>i<n. i \<noteq> 0 \<longrightarrow> coeffs i \<ge> 0) \<and> coeffs 0 = 0
+                        \<and> (\<Sum>i<n. coeffs i) = 1
+                        \<and> vx 0 = (\<Sum>i<n. coeffs i * vx i) \<and> vy 0 = (\<Sum>i<n. coeffs i * vy i)"
+                      sorry \<comment> \<open>Same sum decomposition as the 0<t<1 case.\<close>
+                    thus False using hgp0 by (by100 blast)
                   next
-                    assume "?t > 1"
-                    \<comment> \<open>v_2 = (1/t)*v_1 + (1-1/t)*v_0, a convex combo since 1/t \<in> (0,1).\<close>
-                    show False using hvx1_eq hvy1_eq \<open>?t > 1\<close> hgp h0n h1n h2n assms(2)
-                      sorry \<comment> \<open>Symmetric to case 0<t<1 with vertex 2 as middle point.\<close>
+                    assume ht_big: "?t > 1"
+                    \<comment> \<open>v_2 = (1/t)*v_1 + (1-1/t)*v_0 where 1/t \<in> (0,1).\<close>
+                    obtain t' where ht'_def: "t' = ?t" by (by100 blast)
+                    have ht'_big: "t' > 1" using ht_big ht'_def by (by100 simp)
+                    have ht'_pos: "t' > 0" using ht'_big by (by100 linarith)
+                    let ?s = "1 / t'"
+                    have hs_pos: "?s > 0" using ht'_pos by (by100 simp)
+                    have hs_lt1: "?s < 1" using ht'_big by (by100 simp)
+                    have hvx2: "vx 2 = ?s * vx 1 + (1 - ?s) * vx 0"
+                      using hvx1_eq ht'_def ht'_pos sorry
+                    have hvy2: "vy 2 = ?s * vy 1 + (1 - ?s) * vy 0"
+                      using hvy1_eq ht'_def ht'_pos sorry
+                    have hgp2: "\<not> (\<exists>coeffs. (\<forall>i<n. i \<noteq> 2 \<longrightarrow> coeffs i \<ge> 0) \<and> coeffs 2 = 0
+                        \<and> (\<Sum>i<n. coeffs i) = 1
+                        \<and> vx 2 = (\<Sum>i<n. coeffs i * vx i) \<and> vy 2 = (\<Sum>i<n. coeffs i * vy i))"
+                      using hgp h2n by (by100 blast)
+                    have "\<exists>coeffs. (\<forall>i<n. i \<noteq> 2 \<longrightarrow> coeffs i \<ge> 0) \<and> coeffs 2 = 0
+                        \<and> (\<Sum>i<n. coeffs i) = 1
+                        \<and> vx 2 = (\<Sum>i<n. coeffs i * vx i) \<and> vy 2 = (\<Sum>i<n. coeffs i * vy i)"
+                      sorry
+                    thus False using hgp2 by (by100 blast)
                   qed
                 qed
               next
@@ -3135,7 +3172,7 @@ proof -
         let ?D = "cross2 (vx i - cx, vy i - cy) (vx ?vi1 - cx, vy ?vi1 - cy)"
         \<comment> \<open>D > 0 for convex polygon with counterclockwise vertices from centroid.\<close>
         have hD_ne: "?D \<noteq> 0"
-          sorry \<comment> \<open>Convex position: adjacent vertices and centroid form non-degenerate triangle.\<close>
+          sorry \<comment> \<open>v_i, v_{i+1}, c non-degenerate triangle (convex position).\<close>
         \<comment> \<open>\<beta>' = cross2(z-c, v_{i+1}-c) / D, \<gamma>' = cross2(v_i-c, z-c) / D.\<close>
         define \<beta>' where "\<beta>' = cross2 (fst z - cx, snd z - cy) (vx ?vi1 - cx, vy ?vi1 - cy) / ?D"
         define \<gamma>' where "\<gamma>' = cross2 (vx i - cx, vy i - cy) (fst z - cx, snd z - cy) / ?D"
