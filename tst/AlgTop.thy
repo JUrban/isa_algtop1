@@ -2821,10 +2821,21 @@ proof -
            For a convex polygon with centroid c: D_i > 0 for all i (counterclockwise).
            The sector containing z-c has \<beta>' \<ge> 0 and \<gamma>' \<ge> 0.
            z \<in> P ensures \<beta>'+\<gamma>' \<le> 1 (not beyond boundary).\<close>
-        \<comment> \<open>This requires showing:
-           (1) D_i > 0 for all i (convex position + centroid interior)
-           (2) Existence of i with \<beta>'_i \<ge> 0 \<and> \<gamma>'_i \<ge> 0 (sector argument)
-           (3) \<beta>'_i + \<gamma>'_i \<le> 1 for z \<in> P (convex hull containment)\<close>
+        \<comment> \<open>Use cross2\_centroid\_sum\_zero + cyclic\_sign\_change to find the sector.\<close>
+        let ?dx = "fst z - cx" let ?dy = "snd z - cy"
+        have hsum0: "(\<Sum>i<n. cross2 (vx i - cx, vy i - cy) (?dx, ?dy)) = 0"
+          using cross2_centroid_sum_zero[of n vx vy ?dx ?dy] assms(2) cx_def cy_def
+          by (by100 simp)
+        have hne: "\<exists>i<n. cross2 (vx i - cx, vy i - cy) (?dx, ?dy) \<noteq> 0"
+          sorry \<comment> \<open>From z \<noteq> c and convex position of vertices: not all cross products are 0.\<close>
+        from cyclic_sign_change[of n "\<lambda>i. cross2 (vx i - cx, vy i - cy) (?dx, ?dy)"]
+          assms(2) hsum0 hne
+        obtain i where hi: "i < n"
+            and hpos: "cross2 (vx i - cx, vy i - cy) (?dx, ?dy) \<ge> 0"
+            and hneg: "cross2 (vx ((i+1) mod n) - cx, vy ((i+1) mod n) - cy) (?dx, ?dy) \<le> 0"
+          sorry \<comment> \<open>Needs n \<ge> 2 (from n \<ge> 3) and the sign change conclusion.\<close>
+        \<comment> \<open>The sign conditions mean z-c is in the sector between v_i-c and v_{i+1}-c.
+           This gives the cone decomposition.\<close>
         show ?thesis sorry
       qed
       then obtain s where hs: "0 < s" "s \<le> 1"
