@@ -2329,12 +2329,7 @@ proof -
         have hset: "Pk (Suc k) = (\<lambda>(p, t). ((1-t) * fst p + t * vx k, (1-t) * snd p + t * vy k))
             ` (Pk k \<times> {0..1})"
           sorry \<comment> \<open>Set equality: Pk (Suc k) = convex extension of Pk k by v_k.
-             Forward: (x,y) \<in> Pk(Suc k) means \<exists>c. \<Sum>_{i\<le>k} c_i = 1, etc.
-             Let t = c_k, then (1-t) = \<Sum>_{i<k} c_i. If t < 1, define c'_i = c_i/(1-t),
-             then p = \<Sum> c'_i * v_i \<in> Pk k and (x,y) = (1-t)*p + t*v_k.
-             Backward: p = \<Sum> d_i * v_i \<in> Pk k, t \<in> [0,1].
-             Define c_i = (1-t)*d_i for i<k, c_k = t. Then \<Sum> c_i = 1 and
-             (1-t)*p + t*v_k = \<Sum> c_i * v_i. So (x,y) \<in> Pk(Suc k).\<close>
+             Proof strategy documented above: forward = normalize coeffs, backward = scale + extend.\<close>
         have hcont: "continuous_on (Pk k \<times> {0..1})
             (\<lambda>(p, t). ((1-t) * fst p + t * vx k, (1-t) * snd p + t * vy k))"
         proof -
