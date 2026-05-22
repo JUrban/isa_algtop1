@@ -7041,10 +7041,35 @@ proof -
       ultimately show "top1_group_pow mul e (invg (iota s0)) (2 * m) \<in> {mul g g | g. g \<in> G}"
         by (by100 blast)
     qed
+    \<comment> \<open>K \<inter> 2G = 2K (key for the bijection).\<close>
+    have hK_cap_2G: "?K \<inter> {mul g g | g. g \<in> G} = {mul g g | g. g \<in> ?K}"
+    proof (rule set_eqI, rule iffI)
+      fix x assume "x \<in> ?K \<inter> {mul g g | g. g \<in> G}"
+      hence hx_K: "x \<in> ?K" and hx_2G: "x \<in> {mul g g | g. g \<in> G}" by (by100 auto)+
+      from hx_2G obtain g where hg: "g \<in> G" "x = mul g g" by (by100 blast)
+      have "\<epsilon> (mul g g) = \<epsilon> g + \<epsilon> g"
+        using heps hg(1) unfolding top1_group_hom_on_def by (by100 blast)
+      hence "\<epsilon> x = \<epsilon> g + \<epsilon> g" using hg(2) by (by100 simp)
+      moreover have "\<epsilon> x = 0" using hx_K by (by100 simp)
+      ultimately have "\<epsilon> g = 0" by (by100 linarith)
+      hence "g \<in> ?K" using hg(1) by (by100 simp)
+      thus "x \<in> {mul g g | g. g \<in> ?K}" using hg by (by100 blast)
+    next
+      fix x assume "x \<in> {mul g g | g. g \<in> ?K}"
+      then obtain k where "k \<in> ?K" "x = mul k k" by (by100 blast)
+      have "k \<in> G" using \<open>k \<in> ?K\<close> by (by100 blast)
+      have "x \<in> {mul g g | g. g \<in> G}" using \<open>k \<in> G\<close> \<open>x = mul k k\<close> by (by100 blast)
+      moreover have "mul k k \<in> ?K"
+        using hK_grp \<open>k \<in> ?K\<close> unfolding top1_is_group_on_def by (by100 blast)
+      hence "x \<in> ?K" using \<open>x = mul k k\<close> by (by100 simp)
+      ultimately show "x \<in> ?K \<inter> {mul g g | g. g \<in> G}" by (by100 blast)
+    qed
+    have hK_grp: "top1_is_group_on ?K mul e invg"
+      using hK_free unfolding top1_is_free_abelian_group_full_on_def
+        top1_is_abelian_group_on_def by (by100 blast)
     have "card (top1_quotient_group_carrier_on G mul {mul g g | g. g \<in> G})
        = 2 * card (top1_quotient_group_carrier_on ?K mul {mul g g | g. g \<in> ?K})"
-      sorry \<comment> \<open>Uses hpow\_even\_in\_2G to show every even coset has a K-representative,
-         and translation by \<iota>(s0) gives odd \<leftrightarrow> even bijection.\<close>
+      sorry \<comment> \<open>Uses K \<inter> 2G = 2K + pow_even helpers for bijection.\<close>
     hence "card (top1_quotient_group_carrier_on G mul {mul g g | g. g \<in> G}) = 2 * 2 ^ n"
       using hIH by (by100 simp)
     also have "\<dots> = 2 ^ Suc n" by (by100 simp)
