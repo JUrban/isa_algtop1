@@ -2828,12 +2828,12 @@ proof -
           by (by100 simp)
         have hne: "\<exists>i<n. cross2 (vx i - cx, vy i - cy) (?dx, ?dy) \<noteq> 0"
           sorry \<comment> \<open>From z \<noteq> c and convex position of vertices: not all cross products are 0.\<close>
-        from cyclic_sign_change[of n "\<lambda>i. cross2 (vx i - cx, vy i - cy) (?dx, ?dy)"]
-          assms(2) hsum0 hne
+        have hn2: "n \<ge> 2" using assms(2) by (by100 linarith)
+        from cyclic_sign_change[OF hn2 hsum0 hne]
         obtain i where hi: "i < n"
             and hpos: "cross2 (vx i - cx, vy i - cy) (?dx, ?dy) \<ge> 0"
             and hneg: "cross2 (vx ((i+1) mod n) - cx, vy ((i+1) mod n) - cy) (?dx, ?dy) \<le> 0"
-          sorry \<comment> \<open>Needs n \<ge> 2 (from n \<ge> 3) and the sign change conclusion.\<close>
+          by (by100 blast)
         \<comment> \<open>The sign conditions mean z-c is in the sector between v_i-c and v_{i+1}-c.
            This gives the cone decomposition.\<close>
         show ?thesis sorry
