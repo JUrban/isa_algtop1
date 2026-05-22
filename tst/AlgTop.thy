@@ -2978,7 +2978,14 @@ proof -
         have hsum_le: "\<beta>' + \<gamma>' \<le> 1" sorry
         \<comment> \<open>z \<noteq> c means \<beta>' + \<gamma>' > 0.\<close>
         have hsum_pos: "\<beta>' + \<gamma>' > 0"
-          using False hzc_x hzc_y sorry
+        proof (rule ccontr)
+          assume "\<not> (\<beta>' + \<gamma>' > 0)"
+          hence "\<beta>' + \<gamma>' \<le> 0" by (by100 simp)
+          hence "\<beta>' = 0" "\<gamma>' = 0" using h\<beta>_nn h\<gamma>_nn by (by100 linarith)+
+          hence "fst z - cx = 0" "snd z - cy = 0" using hzc_x hzc_y by (by100 simp)+
+          hence "z = (cx, cy)" by (by100 auto)
+          thus False using False by (by100 simp)
+        qed
         \<comment> \<open>Now set: s = \<beta>' + \<gamma>', u = \<gamma>' / (\<beta>' + \<gamma>'), b = (1-u)*v_i + u*v_{i+1}.\<close>
         define s where "s = \<beta>' + \<gamma>'"
         define u where "u = \<gamma>' / s"
@@ -2993,23 +3000,41 @@ proof -
         qed
         have hb_in: "b \<in> BdP"
           unfolding BdP_def b_def using hi hu by (by5000 force)
+        \<comment> \<open>Key: s * fst b = s * ((1-u)*vx_i + u*vx_{i+1}) = s*(1-\<gamma>'/s)*vx_i + s*(\<gamma>'/s)*vx_{i+1}
+             = (s - \<gamma>')*vx_i + \<gamma>'*vx_{i+1} = \<beta>'*vx_i + \<gamma>'*vx_{i+1}.\<close>
+        have hs1u: "s * (1 - u) = \<beta>'" unfolding u_def s_def using hsum_pos
+          by (simp add: field_simps)
+        have hsu: "s * u = \<gamma>'" unfolding u_def s_def using hsum_pos by (by100 simp)
+        have hs_fst_b: "s * fst b = \<beta>' * vx i + \<gamma>' * vx ?vi1"
+        proof -
+          have "s * fst b = s * (1 - u) * vx i + s * u * vx ?vi1"
+            unfolding b_def by (simp add: algebra_simps)
+          thus ?thesis using hs1u hsu by (by100 simp)
+        qed
+        have hs_snd_b: "s * snd b = \<beta>' * vy i + \<gamma>' * vy ?vi1"
+        proof -
+          have "s * snd b = s * (1 - u) * vy i + s * u * vy ?vi1"
+            unfolding b_def by (simp add: algebra_simps)
+          thus ?thesis using hs1u hsu by (by100 simp)
+        qed
         have hzx_eq: "fst z = (1-s) * cx + s * fst b"
-          using hzc_x unfolding b_def s_def u_def using hsum_pos
-          sorry \<comment> \<open>Algebra: fst z - cx = \<beta>'*(vx_i-cx) + \<gamma>'*(vx_{i+1}-cx).
-             fst b = (1-\<gamma>'/s)*vx_i + (\<gamma>'/s)*vx_{i+1} = (\<beta>'*vx_i + \<gamma>'*vx_{i+1})/s.
-             s*fst b = \<beta>'*vx_i + \<gamma>'*vx_{i+1}.
-             (1-s)*cx + s*fst b = cx - s*cx + \<beta>'*vx_i + \<gamma>'*vx_{i+1}
-                                = cx + \<beta>'*(vx_i-cx) + \<gamma>'*(vx_{i+1}-cx)
-                                  - s*cx + \<beta>'*cx + \<gamma>'*cx
-                                = cx + (fst z - cx) + (s - s)*cx ... wrong.
-             Actually: (1-s)*cx + s*fst b where s = \<beta>'+\<gamma>'
-             = cx - (\<beta>'+\<gamma>')*cx + (\<beta>'+\<gamma>')*(((\<beta>'/(β'+\<gamma>'))*vx_i + (\<gamma>'/(β'+\<gamma>'))*vx_{i+1}))
-             = cx - (\<beta>'+\<gamma>')*cx + \<beta>'*vx_i + \<gamma>'*vx_{i+1}
-             = cx + \<beta>'*(vx_i-cx) + \<gamma>'*(vx_{i+1}-cx)
-             = cx + (fst z - cx) = fst z. \<checkmark>\<close>
+        proof -
+          have "(1-s) * cx + s * fst b = cx - s * cx + (\<beta>' * vx i + \<gamma>' * vx ?vi1)"
+            using hs_fst_b by (simp add: algebra_simps)
+          also have "\<dots> = cx + \<beta>' * (vx i - cx) + \<gamma>' * (vx ?vi1 - cx)"
+            unfolding s_def by (simp add: algebra_simps)
+          also have "\<dots> = cx + (fst z - cx)" using hzc_x by (by100 simp)
+          finally show ?thesis by (by100 simp)
+        qed
         have hzy_eq: "snd z = (1-s) * cy + s * snd b"
-          using hzc_y unfolding b_def s_def u_def using hsum_pos
-          sorry \<comment> \<open>Symmetric to x.\<close>
+        proof -
+          have "(1-s) * cy + s * snd b = cy - s * cy + (\<beta>' * vy i + \<gamma>' * vy ?vi1)"
+            using hs_snd_b by (simp add: algebra_simps)
+          also have "\<dots> = cy + \<beta>' * (vy i - cy) + \<gamma>' * (vy ?vi1 - cy)"
+            unfolding s_def by (simp add: algebra_simps)
+          also have "\<dots> = cy + (snd z - cy)" using hzc_y by (by100 simp)
+          finally show ?thesis by (by100 simp)
+        qed
         show ?thesis
         proof (rule that[of b i u])
           show "b \<in> BdP" by (rule hb_in)
