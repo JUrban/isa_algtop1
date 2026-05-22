@@ -7634,10 +7634,16 @@ proof -
        mapping even cosets to odd cosets. Formally: it maps QG\_even onto QG\_odd.\<close>
     let ?mulQG = "top1_quotient_group_mul_on mul"
     let ?coset_a = "top1_group_coset_on G mul ?twoG a"
-    define shift where "shift C = ?mulQG ?coset_a C" for C
-    \<comment> \<open>shift maps QG\_even into QG\_odd and vice versa.
-       For now, we sorry the bijection and cardinality.\<close>
-    show ?thesis sorry
+    \<comment> \<open>Use bij\_betw\_iff\_card: finite sets of equal card have a bijection, and vice versa.\<close>
+    \<comment> \<open>Alternatively, just construct the bijection via coset representatives.\<close>
+    \<comment> \<open>For each even coset C = coset(g0), the odd coset coset(mul a g0) is the shift.
+       This defines a bijection QG\_even \<rightarrow> QG\_odd.\<close>
+    define shift where "shift C = (let g0 = SOME g. g \<in> C in
+        top1_group_coset_on G mul ?twoG (mul a g0))" for C
+    have hia_G: "invg a \<in> G" using hG_grp ha unfolding top1_is_group_on_def by (by100 blast)
+    \<comment> \<open>shift is a bijection QG\_even \<rightarrow> QG\_odd.\<close>
+    have hshift_bij: "bij_betw shift QG_even QG_odd" sorry
+    show ?thesis using bij_betw_same_card[OF hshift_bij] by (by100 simp)
   qed
   have hfin_even: "finite QG_even"
   proof (rule ccontr)
