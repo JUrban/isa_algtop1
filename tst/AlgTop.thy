@@ -2827,7 +2827,70 @@ proof -
           using cross2_centroid_sum_zero[of n vx vy ?dx ?dy] assms(2) cx_def cy_def
           by (by100 simp)
         have hne: "\<exists>i<n. cross2 (vx i - cx, vy i - cy) (?dx, ?dy) \<noteq> 0"
-          sorry \<comment> \<open>From z \<noteq> c and convex position of vertices: not all cross products are 0.\<close>
+        proof (rule ccontr)
+          assume "\<not> (\<exists>i<n. cross2 (vx i - cx, vy i - cy) (?dx, ?dy) \<noteq> 0)"
+          hence hall0: "\<forall>i<n. cross2 (vx i - cx, vy i - cy) (?dx, ?dy) = 0" by (by100 blast)
+          \<comment> \<open>cross2(a, d) = 0 means fst a * snd d = snd a * fst d (parallel).
+             If this holds for two linearly independent a's, then d = 0.\<close>
+          \<comment> \<open>Since vertices are in convex position (n \<ge> 3), not all v_i - c are parallel.
+             So there exist i, j with cross2(v_i-c, v_j-c) \<noteq> 0.\<close>
+          have "\<exists>i<n. \<exists>j<n. cross2 (vx i - cx, vy i - cy) (vx j - cx, vy j - cy) \<noteq> 0"
+            sorry \<comment> \<open>Convex position: v_i - c not all parallel (n \<ge> 3, no vertex in hull of others).\<close>
+          then obtain i' j' where hi': "i' < n" and hj': "j' < n"
+              and hdet: "cross2 (vx i' - cx, vy i' - cy) (vx j' - cx, vy j' - cy) \<noteq> 0"
+            by (by100 blast)
+          \<comment> \<open>From hall0: (vx_i-cx)*?dy = (vy_i-cy)*?dx for all i.
+             From hdet: the matrix [v_i'-c | v_j'-c] is invertible.
+             The system (vx_i'-cx)*?dy = (vy_i'-cy)*?dx and
+                        (vx_j'-cx)*?dy = (vy_j'-cy)*?dx
+             with non-singular coefficient matrix forces ?dx = ?dy = 0.\<close>
+          have h0i: "(vx i' - cx) * ?dy - (vy i' - cy) * ?dx = 0"
+            using hall0[rule_format, OF hi'] unfolding cross2_def by (by100 simp)
+          have h0j: "(vx j' - cx) * ?dy - (vy j' - cy) * ?dx = 0"
+            using hall0[rule_format, OF hj'] unfolding cross2_def by (by100 simp)
+          \<comment> \<open>Solve: if det \<noteq> 0 and both equations hold, then ?dx = ?dy = 0.\<close>
+          have "?dx = 0 \<and> ?dy = 0"
+          proof -
+            \<comment> \<open>From h0i: (vx_i'-cx)*dy - (vy_i'-cy)*dx = 0.
+               From h0j: (vx_j'-cx)*dy - (vy_j'-cy)*dx = 0.
+               Multiply first by (vx_j'-cx), second by (vx_i'-cx), subtract:
+               cross2(v_i'-c, v_j'-c) * dy = 0. Since cross2 \<noteq> 0, dy = 0.
+               Similarly dx = 0.\<close>
+            \<comment> \<open>Cramer's rule: multiply h0i by (vx_j'-cx) and h0j by (vx_i'-cx), subtract.\<close>
+            let ?D = "(vx i' - cx) * (vy j' - cy) - (vy i' - cy) * (vx j' - cx)"
+            have hdet': "?D \<noteq> 0"
+              using hdet unfolding cross2_def by (by100 simp)
+            \<comment> \<open>(vx_j'-cx) * h0i - (vx_i'-cx) * h0j gives ?D * ?dy = 0.\<close>
+            \<comment> \<open>From h0i: (vx_i'-cx)*dy = (vy_i'-cy)*dx.
+               From h0j: (vx_j'-cx)*dy = (vy_j'-cy)*dx.
+               Multiply h0i by (vy_j'-cy): (vx_i'-cx)*(vy_j'-cy)*dy = (vy_i'-cy)*(vy_j'-cy)*dx
+               Multiply h0j by (vy_i'-cy): (vx_j'-cx)*(vy_i'-cy)*dy = (vy_j'-cy)*(vy_i'-cy)*dx
+               Subtract: ((vx_i'-cx)*(vy_j'-cy) - (vx_j'-cx)*(vy_i'-cy))*dy = 0
+               i.e. D*dy = 0.\<close>
+            have hi_eq: "(vx i' - cx) * ?dy = (vy i' - cy) * ?dx" using h0i by (by100 linarith)
+            have hj_eq: "(vx j' - cx) * ?dy = (vy j' - cy) * ?dx" using h0j by (by100 linarith)
+            have hdy_eq: "?D * ?dy = 0"
+              sorry \<comment> \<open>Ring identity: (a*d-b*c)*y = a*d*y - b*c*y = b*d*x - b*d*x = 0
+                 using a*y=b*x and c*y=d*x. Isabelle simp can't handle the cancellation.\<close>
+            have hdy0: "?dy = 0" using hdy_eq hdet' by (by100 simp)
+            have hdx0: "?dx = 0"
+            proof -
+              from hi_eq hdy0 have h1: "(vy i' - cy) * ?dx = 0" by (by100 simp)
+              from hj_eq hdy0 have h2: "(vy j' - cy) * ?dx = 0" by (by100 simp)
+              have "vy i' - cy \<noteq> 0 \<or> vy j' - cy \<noteq> 0"
+              proof (rule ccontr)
+                assume "\<not> (vy i' - cy \<noteq> 0 \<or> vy j' - cy \<noteq> 0)"
+                hence "vy i' = cy" "vy j' = cy" by (by100 simp)+
+                hence "?D = 0" by (simp add: algebra_simps)
+                thus False using hdet' by (by100 blast)
+              qed
+              thus "?dx = 0" using h1 h2 by (by100 force)
+            qed
+            show ?thesis using hdy0 hdx0 by (by100 auto)
+          qed
+          hence "z = (cx, cy)" by (by100 auto)
+          thus False using False by (by100 simp)
+        qed
         have hn2: "n \<ge> 2" using assms(2) by (by100 linarith)
         from cyclic_sign_change[OF hn2 hsum0 hne]
         obtain i where hi: "i < n"
