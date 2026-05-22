@@ -6106,38 +6106,6 @@ proof -
   ultimately show ?thesis using hpsi by (by100 blast)
 qed
 
-text \<open>Group power distributes over addition of exponents.\<close>
-lemma group_pow_add:
-  assumes "top1_is_group_on G mul e invg" "x \<in> G"
-  shows "top1_group_pow mul e x (m + n) = mul (top1_group_pow mul e x m) (top1_group_pow mul e x n)"
-  using assms(2)
-proof (induction m)
-  case 0
-  have "top1_group_pow mul e x n \<in> G" by (rule group_pow_in_group'[OF assms])
-  thus ?case using assms(1) unfolding top1_is_group_on_def by (by100 simp)
-next
-  case (Suc m)
-  have hpow_m: "top1_group_pow mul e x m \<in> G" by (rule group_pow_in_group'[OF assms])
-  have hpow_n: "top1_group_pow mul e x n \<in> G" by (rule group_pow_in_group'[OF assms])
-  have hpow_mn: "top1_group_pow mul e x (m + n) \<in> G" by (rule group_pow_in_group'[OF assms])
-  have hIH_eq: "top1_group_pow mul e x (m + n) = mul (top1_group_pow mul e x m) (top1_group_pow mul e x n)"
-    using Suc.IH[OF Suc.prems] by (by100 simp)
-  have "top1_group_pow mul e x (Suc m + n) = mul x (top1_group_pow mul e x (m + n))"
-    by (by100 simp)
-  also have "\<dots> = mul x (mul (top1_group_pow mul e x m) (top1_group_pow mul e x n))"
-    using hIH_eq by (by100 simp)
-  also have "\<dots> = mul (mul x (top1_group_pow mul e x m)) (top1_group_pow mul e x n)"
-  proof -
-    have hassoc: "\<forall>a\<in>G. \<forall>b\<in>G. \<forall>c\<in>G. mul (mul a b) c = mul a (mul b c)"
-      using assms(1) unfolding top1_is_group_on_def by (by100 blast)
-    have "mul x (mul (top1_group_pow mul e x m) (top1_group_pow mul e x n))
-        = mul (mul x (top1_group_pow mul e x m)) (top1_group_pow mul e x n)"
-      using hassoc[rule_format, OF assms(2) hpow_m hpow_n] by (by100 simp)
-    thus ?thesis by (by100 simp)
-  qed
-  finally show ?case by (by100 simp)
-qed
-
 text \<open>A group homomorphism distributes over foldr products.\<close>
 lemma hom_foldr_mul_early:
   assumes hG: "top1_is_group_on G mul e invg"
@@ -6872,6 +6840,23 @@ proof -
     using hK_abel hiota_K hiota_inj hK_gen hK_indep by (by100 blast)
 qed
 
+text \<open>In an abelian group G with coordinate projection \<epsilon>: G \<rightarrow> Z (\<epsilon>(a) = 1),
+  the quotient G/2G has twice as many cosets as K/2K where K = ker(\<epsilon>).
+  This follows the book proof of Theorem 67.8: the short exact sequence
+  0 \<rightarrow> K \<rightarrow> G \<rightarrow>^\<epsilon> Z \<rightarrow> 0 splits, giving G \<cong> K \<times> Z, hence G/2G \<cong> K/2K \<times> Z/2Z.\<close>
+lemma quotient_double_by_kernel:
+  fixes G :: "'g set" and mul :: "'g \<Rightarrow> 'g \<Rightarrow> 'g"
+    and e :: 'g and invg :: "'g \<Rightarrow> 'g"
+    and \<epsilon> :: "'g \<Rightarrow> int" and a :: 'g
+  assumes hG: "top1_is_abelian_group_on G mul e invg"
+      and heps: "top1_group_hom_on G mul (UNIV::int set) (+) \<epsilon>"
+      and ha: "a \<in> G" and heps_a: "\<epsilon> a = 1"
+      and hK_free: "top1_is_free_abelian_group_full_on {g \<in> G. \<epsilon> g = 0} mul e invg iota' S'"
+  shows "card (top1_quotient_group_carrier_on G mul {mul g g | g. g \<in> G})
+       = 2 * card (top1_quotient_group_carrier_on
+            {g \<in> G. \<epsilon> g = 0} mul {mul g g | g. g \<in> {g \<in> G. \<epsilon> g = 0}})"
+  sorry
+
 text \<open>Key lemma for Theorem 67.8: |G/2G| = 2^|S| for free abelian G on finite basis S.\<close>
 lemma free_abelian_mod2_card:
   fixes G :: "'g set" and mul :: "'g \<Rightarrow> 'g \<Rightarrow> 'g"
@@ -6999,251 +6984,13 @@ proof -
     \<comment> \<open>Need: unique decomposition g = k + m\<cdot>\<iota>(s0) with k \<in> K.\<close>
     \<comment> \<open>Following book (Theorem 67.8): \<epsilon> mod 2 partitions G/2G into even/odd halves,
        each bijects with K/2K. So |G/2G| = 2 \<times> |K/2K| = 2 \<times> 2^n = 2^{n+1}.\<close>
-    \<comment> \<open>Following book proof: |G/2G| = 2 \<times> |K/2K|.
-       Key: define \<phi>: G/2G \<rightarrow> Z/2Z \<times> K/2K via \<phi>([g]) = (\<epsilon>(g) mod 2, [g - \<epsilon>(g)\<cdot>\<iota>(s0)]_{2K}).
-       We construct this as a bijection between the coset carrier sets.\<close>
-    have hG_grp: "top1_is_group_on G mul e invg"
-      using hfree unfolding top1_is_free_abelian_group_full_on_def
-        top1_is_abelian_group_on_def by (by100 blast)
-    have ha_G: "iota s0 \<in> G"
-      using hfree hs0 unfolding top1_is_free_abelian_group_full_on_def by (by100 blast)
-    have hia_G: "invg (iota s0) \<in> G"
-      using hG_grp ha_G unfolding top1_is_group_on_def by (by100 blast)
-    have hZ_grp: "top1_is_group_on (UNIV::int set) (+) (0::int) uminus"
-      unfolding top1_is_group_on_def by (by100 auto)
-    \<comment> \<open>Key helper: for any m, \<iota>(s0)^{2m} \<in> 2G (since it equals (\<iota>(s0)^m)^2).\<close>
-    have hpow_even_in_2G: "\<And>m. top1_group_pow mul e (iota s0) (2 * m) \<in> {mul g g | g. g \<in> G}"
-    proof -
-      fix m
-      have "top1_group_pow mul e (iota s0) (2 * m)
-          = mul (top1_group_pow mul e (iota s0) m) (top1_group_pow mul e (iota s0) m)"
-      proof -
-        have h2m: "m + m = 2 * m" by (by100 simp)
-        show ?thesis using group_pow_add[OF hG_grp ha_G, of m m] h2m by (by5000 metis)
-      qed
-      moreover have "top1_group_pow mul e (iota s0) m \<in> G"
-        by (rule group_pow_in_group'[OF hG_grp ha_G])
-      ultimately show "top1_group_pow mul e (iota s0) (2 * m) \<in> {mul g g | g. g \<in> G}"
-        by (by100 blast)
-    qed
-    \<comment> \<open>Similarly for invg(\<iota>(s0)).\<close>
-    have hpow_inv_even_in_2G: "\<And>m. top1_group_pow mul e (invg (iota s0)) (2 * m) \<in> {mul g g | g. g \<in> G}"
-    proof -
-      fix m
-      have "top1_group_pow mul e (invg (iota s0)) (2 * m)
-          = mul (top1_group_pow mul e (invg (iota s0)) m) (top1_group_pow mul e (invg (iota s0)) m)"
-      proof -
-        have h2m: "m + m = 2 * m" by (by100 simp)
-        show ?thesis using group_pow_add[OF hG_grp hia_G, of m m] h2m by (by5000 metis)
-      qed
-      moreover have "top1_group_pow mul e (invg (iota s0)) m \<in> G"
-        by (rule group_pow_in_group'[OF hG_grp hia_G])
-      ultimately show "top1_group_pow mul e (invg (iota s0)) (2 * m) \<in> {mul g g | g. g \<in> G}"
-        by (by100 blast)
-    qed
-    \<comment> \<open>K \<inter> 2G = 2K (key for the bijection).\<close>
-    have hK_cap_2G: "?K \<inter> {mul g g | g. g \<in> G} = {mul g g | g. g \<in> ?K}"
-    proof (rule set_eqI, rule iffI)
-      fix x assume "x \<in> ?K \<inter> {mul g g | g. g \<in> G}"
-      hence hx_K: "x \<in> ?K" and hx_2G: "x \<in> {mul g g | g. g \<in> G}" by (by100 auto)+
-      from hx_2G obtain g where hg: "g \<in> G" "x = mul g g" by (by100 blast)
-      have "\<epsilon> (mul g g) = \<epsilon> g + \<epsilon> g"
-        using heps hg(1) unfolding top1_group_hom_on_def by (by100 blast)
-      hence "\<epsilon> x = \<epsilon> g + \<epsilon> g" using hg(2) by (by100 simp)
-      moreover have "\<epsilon> x = 0" using hx_K by (by100 simp)
-      ultimately have "\<epsilon> g = 0" by (by100 linarith)
-      hence "g \<in> ?K" using hg(1) by (by100 simp)
-      thus "x \<in> {mul g g | g. g \<in> ?K}" using hg by (by100 blast)
-    next
-      fix x assume "x \<in> {mul g g | g. g \<in> ?K}"
-      then obtain k where "k \<in> ?K" "x = mul k k" by (by100 blast)
-      have "k \<in> G" using \<open>k \<in> ?K\<close> by (by100 blast)
-      have "x \<in> {mul g g | g. g \<in> G}" using \<open>k \<in> G\<close> \<open>x = mul k k\<close> by (by100 blast)
-      moreover have "mul k k \<in> ?K"
-        using hK_grp \<open>k \<in> ?K\<close> unfolding top1_is_group_on_def by (by100 blast)
-      hence "x \<in> ?K" using \<open>x = mul k k\<close> by (by100 simp)
-      ultimately show "x \<in> ?K \<inter> {mul g g | g. g \<in> G}" by (by100 blast)
-    qed
-    have hK_grp: "top1_is_group_on ?K mul e invg"
-      using hK_free unfolding top1_is_free_abelian_group_full_on_def
-        top1_is_abelian_group_on_def by (by100 blast)
-    \<comment> \<open>Construct bijection G/2G \<cong> K/2K \<times> {False, True}.
-       For g \<in> G, project to K-component and parity bit.\<close>
-    let ?QG = "top1_quotient_group_carrier_on G mul {mul g g | g. g \<in> G}"
-    let ?QK = "top1_quotient_group_carrier_on ?K mul {mul g g | g. g \<in> ?K}"
-    \<comment> \<open>Key: every element g \<in> G is congruent mod 2G to either k or mul (iota s0) k for some k \<in> K.\<close>
     have habel: "top1_is_abelian_group_on G mul e invg"
       using hfree unfolding top1_is_free_abelian_group_full_on_def by (by100 blast)
-    have h2G_normal: "top1_normal_subgroup_on G mul e invg {mul g g | g. g \<in> G}"
-      unfolding top1_normal_subgroup_on_def
-    proof (intro conjI)
-      show "{mul g g | g. g \<in> G} \<subseteq> G"
-        using hG_grp unfolding top1_is_group_on_def by (by5000 blast)
-      show "top1_is_group_on {mul g g | g. g \<in> G} mul e invg" sorry
-      show "\<forall>g\<in>G. \<forall>n\<in>{mul g g | g. g \<in> G}. mul (mul g n) (invg g) \<in> {mul g g | g. g \<in> G}"
-      proof (intro ballI)
-        fix g n assume "g \<in> G" "n \<in> {mul g g | g. g \<in> G}"
-        then obtain n' where "n' \<in> G" "n = mul n' n'" by (by100 blast)
-        have hn_G: "n \<in> G" using hG_grp \<open>n' \<in> G\<close> \<open>n = mul n' n'\<close>
-          unfolding top1_is_group_on_def by (by100 blast)
-        \<comment> \<open>In abelian group: mul(mul g n)(invg g) = n.\<close>
-        have hcomm: "\<And>x y. x \<in> G \<Longrightarrow> y \<in> G \<Longrightarrow> mul x y = mul y x"
-          using habel unfolding top1_is_abelian_group_on_def by (by100 blast)
-        have hassoc': "\<forall>a\<in>G. \<forall>b\<in>G. \<forall>c\<in>G. mul (mul a b) c = mul a (mul b c)"
-          using hG_grp unfolding top1_is_group_on_def by (by100 blast)
-        have "invg g \<in> G" using hG_grp \<open>g \<in> G\<close> unfolding top1_is_group_on_def by (by100 blast)
-        have "mul (mul g n) (invg g) = mul g (mul n (invg g))"
-          using hassoc'[rule_format, OF \<open>g \<in> G\<close> hn_G \<open>invg g \<in> G\<close>] by (by100 simp)
-        also have "mul n (invg g) = mul (invg g) n"
-          using hcomm[OF hn_G \<open>invg g \<in> G\<close>] by (by100 simp)
-        also have "mul g (mul (invg g) n) = mul (mul g (invg g)) n"
-          using hassoc'[rule_format, OF \<open>g \<in> G\<close> \<open>invg g \<in> G\<close> hn_G] by (by100 simp)
-        also have "mul g (invg g) = e" using hG_grp \<open>g \<in> G\<close> unfolding top1_is_group_on_def by (by100 blast)
-        also have "mul e n = n" using hG_grp hn_G unfolding top1_is_group_on_def by (by100 blast)
-        finally show "mul (mul g n) (invg g) \<in> {mul g g | g. g \<in> G}"
-          using \<open>n \<in> {mul g g | g. g \<in> G}\<close> by (by100 simp)
-      qed
-    qed
-    have hrepr: "\<forall>g\<in>G. \<exists>k\<in>?K. \<exists>b::bool.
-        top1_group_coset_on G mul {mul g g | g. g \<in> G} g =
-        top1_group_coset_on G mul {mul g g | g. g \<in> G} (if b then mul (iota s0) k else k)"
-    proof (intro ballI)
-      fix g assume hg: "g \<in> G"
-      \<comment> \<open>Case split on parity of \<epsilon>(g).\<close>
-      show "\<exists>k\<in>?K. \<exists>b::bool. top1_group_coset_on G mul {mul g g | g. g \<in> G} g =
-          top1_group_coset_on G mul {mul g g | g. g \<in> G} (if b then mul (iota s0) k else k)"
-      proof (cases "even (\<epsilon> g)")
-        case True
-        \<comment> \<open>\<epsilon>(g) even. Subtract \<epsilon>(g)\<cdot>\<iota>(s0) (which is in 2G) to get a K element.\<close>
-        obtain m where hm: "\<epsilon> g = 2 * int m \<or> \<epsilon> g = -(2 * int m)"
-          using True by (by5000 auto)
-        \<comment> \<open>Define the power element: pow\_elt = \<iota>(s0)^{\<epsilon>(g)} \<in> 2G.\<close>
-        define pow_elt where "pow_elt = (if \<epsilon> g \<ge> 0
-            then top1_group_pow mul e (iota s0) (nat (\<epsilon> g))
-            else top1_group_pow mul e (invg (iota s0)) (nat (- \<epsilon> g)))"
-        have hpow_G: "pow_elt \<in> G"
-          unfolding pow_elt_def using group_pow_in_group'[OF hG_grp ha_G]
-            group_pow_in_group'[OF hG_grp hia_G] by (by100 simp)
-        have hpow_2G: "pow_elt \<in> {mul g g | g. g \<in> G}"
-        proof -
-          from hm have "\<epsilon> g = 2 * int m \<or> \<epsilon> g = -(2 * int m)" .
-          thus ?thesis
-          proof (elim disjE)
-            assume hpos: "\<epsilon> g = 2 * int m"
-            hence "pow_elt = top1_group_pow mul e (iota s0) (2 * m)"
-              unfolding pow_elt_def by (by100 simp)
-            thus ?thesis using hpow_even_in_2G by (by100 simp)
-          next
-            assume hneg: "\<epsilon> g = -(2 * int m)"
-            hence "pow_elt = top1_group_pow mul e (invg (iota s0)) (2 * m)"
-              unfolding pow_elt_def by (by100 simp)
-            thus ?thesis using hpow_inv_even_in_2G by (by100 simp)
-          qed
-        qed
-        have heps_pow: "\<epsilon> pow_elt = \<epsilon> g"
-        proof -
-          from hm have "\<epsilon> g = 2 * int m \<or> \<epsilon> g = -(2 * int m)" .
-          thus ?thesis
-          proof (elim disjE)
-            assume hpos: "\<epsilon> g = 2 * int m"
-            hence "pow_elt = top1_group_pow mul e (iota s0) (nat (\<epsilon> g))"
-              unfolding pow_elt_def by (by100 simp)
-            hence "\<epsilon> pow_elt = top1_group_pow (+) (0::int) (\<epsilon> (iota s0)) (nat (\<epsilon> g))"
-              using hom_group_pow_early[OF hG_grp hZ_grp heps ha_G] by (by100 simp)
-            also have "\<dots> = top1_group_pow (+) (0::int) 1 (nat (\<epsilon> g))"
-              using heps_s0 by (by100 simp)
-            also have "\<dots> = int (nat (\<epsilon> g))"
-            proof -
-              define mm where "mm = nat (\<epsilon> g)"
-              have "top1_group_pow (+) (0::int) 1 mm = int mm" by (induction mm, by100 simp, by100 simp)
-              thus ?thesis unfolding mm_def by (by100 simp)
-            qed
-            also have "\<dots> = \<epsilon> g" using hpos by (by100 simp)
-            finally show ?thesis .
-          next
-            assume hneg: "\<epsilon> g = -(2 * int m)"
-            hence "pow_elt = top1_group_pow mul e (invg (iota s0)) (nat (- \<epsilon> g))"
-              unfolding pow_elt_def by (by100 simp)
-            hence "\<epsilon> pow_elt = top1_group_pow (+) (0::int) (\<epsilon> (invg (iota s0))) (nat (- \<epsilon> g))"
-              using hom_group_pow_early[OF hG_grp hZ_grp heps hia_G] by (by100 simp)
-            also have "\<epsilon> (invg (iota s0)) = -1"
-              using hom_preserves_inv[OF hG_grp hZ_grp heps ha_G] heps_s0 by (by100 simp)
-            hence "top1_group_pow (+) (0::int) (\<epsilon> (invg (iota s0))) (nat (- \<epsilon> g))
-                = top1_group_pow (+) (0::int) (-1) (nat (- \<epsilon> g))"
-              by (by100 simp)
-            also have "\<dots> = - int (nat (- \<epsilon> g))"
-            proof -
-              define mm where "mm = nat (- \<epsilon> g)"
-              have "top1_group_pow (+) (0::int) (-1) mm = - int mm" by (induction mm, by100 simp, by100 simp)
-              thus ?thesis unfolding mm_def by (by100 simp)
-            qed
-            also have "\<dots> = \<epsilon> g" using hneg by (by100 simp)
-            finally show ?thesis .
-          qed
-        qed
-        define k where "k = mul g (invg pow_elt)"
-        have hk_G: "k \<in> G"
-          using hG_grp hg hpow_G unfolding k_def top1_is_group_on_def by (by100 blast)
-        have "\<epsilon> k = 0"
-        proof -
-          have "\<epsilon> (invg pow_elt) = - \<epsilon> pow_elt"
-            using hom_preserves_inv[OF hG_grp hZ_grp heps hpow_G] by (by100 simp)
-          have "\<epsilon> k = \<epsilon> g + \<epsilon> (invg pow_elt)"
-            using heps hg hpow_G unfolding k_def top1_group_hom_on_def top1_is_group_on_def by (by5000 blast)
-          thus ?thesis using \<open>\<epsilon> (invg pow_elt) = - \<epsilon> pow_elt\<close> heps_pow by (by100 linarith)
-        qed
-        hence hk_K: "k \<in> ?K" using hk_G by (by100 simp)
-        \<comment> \<open>[g] = [k] in G/2G (since g = k \<cdot> pow\_elt and pow\_elt \<in> 2G).\<close>
-        have "top1_group_coset_on G mul {mul g g | g. g \<in> G} g
-            = top1_group_coset_on G mul {mul g g | g. g \<in> G} k"
-        proof -
-          \<comment> \<open>mul(invg k) g = mul(invg(mul g (invg pow\_elt))) g = pow\_elt (in abelian group).\<close>
-          have "mul (invg k) g = pow_elt"
-          proof -
-            have "invg k = mul (invg (invg pow_elt)) (invg g)"
-              using hG_grp hg hpow_G hk_G unfolding k_def top1_is_group_on_def sorry
-            also have "invg (invg pow_elt) = pow_elt"
-              using hG_grp hpow_G unfolding top1_is_group_on_def by (by5000 blast)
-            finally have "invg k = mul pow_elt (invg g)" by (by100 simp)
-            hence "mul (invg k) g = mul (mul pow_elt (invg g)) g"
-              by (by100 simp)
-            also have "\<dots> = mul pow_elt (mul (invg g) g)"
-            proof -
-              have "invg g \<in> G" using hG_grp hg unfolding top1_is_group_on_def by (by100 blast)
-              have hassoc': "\<forall>a\<in>G. \<forall>b\<in>G. \<forall>c\<in>G. mul (mul a b) c = mul a (mul b c)"
-                using hG_grp unfolding top1_is_group_on_def by (by100 blast)
-              thus ?thesis using hassoc'[rule_format, OF hpow_G \<open>invg g \<in> G\<close> hg] by (by100 simp)
-            qed
-            also have "mul (invg g) g = e"
-              using hG_grp hg unfolding top1_is_group_on_def by (by100 blast)
-            also have "mul pow_elt e = pow_elt"
-              using hG_grp hpow_G unfolding top1_is_group_on_def by (by100 blast)
-            finally show ?thesis .
-          qed
-          hence "mul (invg k) g \<in> {mul g g | g. g \<in> G}"
-            using hpow_2G by (by100 simp)
-          thus ?thesis using normal_coset_eq[OF hG_grp h2G_normal hk_G hg] by (by100 simp)
-        qed
-        thus ?thesis using hk_K by (by100 force)
-      next
-        case False
-        \<comment> \<open>\<epsilon>(g) odd. Apply even case to mul(invg(\<iota>(s0))) g (which has even \<epsilon>).\<close>
-        sorry
-      qed
-    qed
-    \<comment> \<open>The map K/2K \<times> {F,T} \<rightarrow> G/2G is injective (from K \<inter> 2G = 2K).\<close>
-    have hinj: "\<forall>k1\<in>?K. \<forall>k2\<in>?K. \<forall>b1 b2::bool.
-        top1_group_coset_on G mul {mul g g | g. g \<in> G} (if b1 then mul (iota s0) k1 else k1) =
-        top1_group_coset_on G mul {mul g g | g. g \<in> G} (if b2 then mul (iota s0) k2 else k2)
-        \<longrightarrow> b1 = b2 \<and> top1_group_coset_on ?K mul {mul g g | g. g \<in> ?K} k1 =
-            top1_group_coset_on ?K mul {mul g g | g. g \<in> ?K} k2"
-      sorry \<comment> \<open>Uses \<epsilon> to separate b1=b2 (\<epsilon> parity), then K \<inter> 2G = 2K for k1 \<equiv> k2.\<close>
-    \<comment> \<open>Cardinality: |QG| = |QK| \<times> |{F,T}| = 2 \<times> |QK|.\<close>
-    have "card ?QG = 2 * card ?QK"
-      using hrepr hinj sorry \<comment> \<open>Combine surjectivity (hrepr) + injectivity (hinj) \<rightarrow> bijection \<rightarrow> card.\<close>
-    thus "card (top1_quotient_group_carrier_on G mul {mul g g | g. g \<in> G})
+    have ha_G: "iota s0 \<in> G"
+      using hfree hs0 unfolding top1_is_free_abelian_group_full_on_def by (by100 blast)
+    have "card (top1_quotient_group_carrier_on G mul {mul g g | g. g \<in> G})
        = 2 * card (top1_quotient_group_carrier_on ?K mul {mul g g | g. g \<in> ?K})"
-      by (by100 simp)
+      by (rule quotient_double_by_kernel[OF habel heps ha_G heps_s0 hK_free])
     hence "card (top1_quotient_group_carrier_on G mul {mul g g | g. g \<in> G}) = 2 * 2 ^ n"
       using hIH by (by100 simp)
     also have "\<dots> = 2 ^ Suc n" by (by100 simp)
