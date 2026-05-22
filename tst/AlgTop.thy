@@ -6853,7 +6853,32 @@ proof -
     proof -
       have "mul (mul (invg gx) (invg gx)) (mul gx gx)
           = mul (mul (invg gx) gx) (mul (invg gx) gx)"
-        using hmul_cl sorry \<comment> \<open>Same abelian rearrangement: (a\<cdot>a)(b\<cdot>b)=(a\<cdot>b)(a\<cdot>b).\<close>
+      proof -
+        \<comment> \<open>Same rearrangement as in hmul\_cl but with invg(gx) and gx.\<close>
+        have ha: "invg gx \<in> G" using higx .
+        have hb: "gx \<in> G" using hgx(1) .
+        have hab: "mul (invg gx) gx \<in> G" using hG_grp ha hb unfolding top1_is_group_on_def by (by100 blast)
+        have "mul (mul (invg gx) (invg gx)) (mul gx gx)
+            = mul (invg gx) (mul (invg gx) (mul gx gx))"
+          using hassoc[OF ha ha] hG_grp hb unfolding top1_is_group_on_def by (by5000 blast)
+        also have "mul (invg gx) (mul gx gx) = mul (mul (invg gx) gx) gx"
+          using hassoc[OF ha hb hb] by (by100 simp)
+        also have "mul (invg gx) (mul (mul (invg gx) gx) gx) = mul (mul (invg gx) (mul (invg gx) gx)) gx"
+          using hassoc[OF ha hab hb] by (by100 simp)
+        also have "mul (invg gx) (mul (invg gx) gx) = mul (mul (invg gx) gx) (invg gx)"
+        proof -
+          have "mul (invg gx) (mul (invg gx) gx) = mul (mul (invg gx) (invg gx)) gx"
+            using hassoc[OF ha ha hb] by (by100 simp)
+          also have "\<dots> = mul (invg gx) (mul (invg gx) gx)"
+            using hassoc[OF ha ha hb] by (by100 simp)
+          finally have eq1: "mul (invg gx) (mul (invg gx) gx) = mul (invg gx) (mul (invg gx) gx)" .
+          \<comment> \<open>We need a different approach. Use commutativity directly.\<close>
+          show ?thesis using hcomm[OF ha hab] by (by100 simp)
+        qed
+        also have "mul (mul (mul (invg gx) gx) (invg gx)) gx = mul (mul (invg gx) gx) (mul (invg gx) gx)"
+          using hassoc[OF hab ha hb] by (by100 simp)
+        finally show ?thesis by (by100 simp)
+      qed
       also have "mul (invg gx) gx = e"
         using hG_grp hgx(1) unfolding top1_is_group_on_def by (by100 blast)
       also have "mul e e = e" using hG_grp he_G unfolding top1_is_group_on_def by (by100 blast)
