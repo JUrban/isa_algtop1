@@ -3840,9 +3840,11 @@ proof -
   have hX_strict: "is_topology_on_strict X TX"
     using assms(1) unfolding top1_is_n_fold_torus_on_def top1_quotient_of_scheme_on_def by (by100 blast)
   have hX_haus: "is_hausdorff_on X TX"
-    sorry \<comment> \<open>Polygonal quotient is Hausdorff (Theorem 74.1).\<close>
+    using Theorem_74_1_polygon_quotient_compact_hausdorff[OF hX_strict h_poly] by (by100 blast)
   have hA_pc: "top1_path_connected_on A (subspace_topology X TX A)"
-    sorry \<comment> \<open>Wedge of circles is path-connected.\<close>
+    sorry \<comment> \<open>Wedge of circles is path-connected: each circle is path-connected
+       (homeomorphic to S\<^sup>1 which is path-connected by S1\_path\_connected),
+       and they share the basepoint. Iterate path\_connected\_union.\<close>
   have hh_homeo: "top1_homeomorphism_on
       (top1_B2 - top1_S1) (subspace_topology top1_B2 top1_B2_topology (top1_B2 - top1_S1))
       (X - A) (subspace_topology X TX (X - A)) h_att"
