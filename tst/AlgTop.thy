@@ -6006,10 +6006,7 @@ proof -
       \<and> top1_groups_isomorphic_on F mulF
           (top1_fundamental_group_carrier A (subspace_topology X TX A) x0)
           (top1_fundamental_group_mul A (subspace_topology X TX A) x0)"
-    sorry \<comment> \<open>Apply Theorem\_71\_1\_wedge\_of\_circles\_finite after showing
-       fst ` set scheme = {..<card(fst ` set scheme)}.
-       For torus/projective schemes, labels are {..<k} by construction.
-       Then Theorem 71.1 gives free group on {..<k}, convert to fst ` set scheme.\<close>
+    using Theorem_71_3_wedge_of_circles_general hA_wd by (by5000 fastforce)
   \<comment> \<open>Apply Theorem 72.1 to get \<pi>_1(X) \<cong> \<pi>_1(A)/N(relator word).\<close>
   have hThm72: "\<exists>(G::'g set) mul e invg.
       top1_group_presented_by_on G mul e invg (fst ` set scheme)
