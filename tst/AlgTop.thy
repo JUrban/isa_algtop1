@@ -11972,7 +11972,10 @@ proof -
        - x0 \<in> \<Union>C (from any element of C)
      Step 3: By Zorn's Lemma, \<A> has a maximal element T.\<close>
   define \<A> where "\<A> = {T \<in> Pow X. top1_is_tree_on T (subspace_topology X TX T) \<and> x0 \<in> T}"
-  have h\<A>_ne: "\<A> \<noteq> {}" sorry \<comment> \<open>{x0} \<in> \<A>: singleton is a tree.\<close>
+  have h\<A>_ne: "\<A> \<noteq> {}"
+    sorry \<comment> \<open>X is a graph containing x0, so there exists an arc A containing x0.
+       A single arc is a graph, connected, and simply connected (contractible), hence a tree.
+       So A \<in> \<A>.\<close>
   have hchain: "\<forall>C \<in> chains \<A>. \<Union>C \<in> \<A>"
     sorry \<comment> \<open>Union of chain of trees is a tree (connected + simply connected + x0).\<close>
   from Zorn_Lemma[OF hchain]
