@@ -7244,7 +7244,12 @@ proof -
             assume "\<forall>g\<in>?shift C. odd (\<epsilon> g)"
             thus "\<forall>g\<in>?shift C. odd (\<epsilon> g)" .
           qed
-          ultimately show "?shift C \<in> ?odd" sorry
+          ultimately show "?shift C \<in> ?odd"
+            apply (unfold mem_Collect_eq)
+            apply (rule conjI)
+            apply assumption
+            apply assumption
+            done
         qed
         have hshift_inj: "inj_on ?shift ?even"
         proof (rule inj_onI)
@@ -7307,7 +7312,34 @@ proof -
             hence "mul ?a g \<in> ?shift C2" by (by100 blast)
             hence "mul ?a g \<in> ?shift C1" using heq by (by100 simp)
             then obtain g' where "g' \<in> C1" "mul ?a g = mul ?a g'" by (by100 blast)
-            show "g \<in> C1" using \<open>g' \<in> C1\<close> sorry \<comment> \<open>Same left-cancellation argument.\<close>
+            have "g \<in> G"
+            proof -
+              obtain g0 where "g0 \<in> G" "C2 = top1_group_coset_on G mul ?twoG g0"
+                using hC2 unfolding top1_quotient_group_carrier_on_def by (by100 blast)
+              from \<open>g \<in> C2\<close> obtain h where "h \<in> ?twoG" "g = mul g0 h"
+                using \<open>C2 = _\<close> unfolding top1_group_coset_on_def by (by100 blast)
+              from \<open>h \<in> ?twoG\<close> obtain h' where "h' \<in> G" "h = mul h' h'" by (by100 blast)
+              thus ?thesis using hG_grp \<open>g0 \<in> G\<close> \<open>g = mul g0 h\<close> \<open>h = mul h' h'\<close>
+                unfolding top1_is_group_on_def by (by5000 blast)
+            qed
+            have "g' \<in> G"
+            proof -
+              obtain g0 where "g0 \<in> G" "C1 = top1_group_coset_on G mul ?twoG g0"
+                using hC1 unfolding top1_quotient_group_carrier_on_def by (by100 blast)
+              from \<open>g' \<in> C1\<close> obtain h where "h \<in> ?twoG" "g' = mul g0 h"
+                using \<open>C1 = _\<close> unfolding top1_group_coset_on_def by (by100 blast)
+              from \<open>h \<in> ?twoG\<close> obtain h' where "h' \<in> G" "h = mul h' h'" by (by100 blast)
+              thus ?thesis using hG_grp \<open>g0 \<in> G\<close> \<open>g' = mul g0 h\<close> \<open>h = mul h' h'\<close>
+                unfolding top1_is_group_on_def by (by5000 blast)
+            qed
+            have heq_inv: "mul (invg ?a) (mul ?a g) = mul (invg ?a) (mul ?a g')"
+              using \<open>mul ?a g = mul ?a g'\<close> by (by100 simp)
+            have "mul (invg ?a) (mul ?a g) = g"
+              using hassoc[OF hia_G ha_G \<open>g \<in> G\<close>] hinv_l hid_l[OF \<open>g \<in> G\<close>] by (by100 simp)
+            moreover have "mul (invg ?a) (mul ?a g') = g'"
+              using hassoc[OF hia_G ha_G \<open>g' \<in> G\<close>] hinv_l hid_l[OF \<open>g' \<in> G\<close>] by (by100 simp)
+            ultimately have "g = g'" using heq_inv by (by100 simp)
+            thus "g \<in> C1" using \<open>g' \<in> C1\<close> by (by100 simp)
           qed
         qed
         have hshift_surj: "?shift ` ?even = ?odd"
