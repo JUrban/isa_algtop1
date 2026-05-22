@@ -6974,7 +6974,17 @@ proof -
   \<comment> \<open>Step 3: |QG\_odd| = |QG\_even|. Multiplication by [a] shifts even \<leftrightarrow> odd.\<close>
   \<comment> \<open>Steps 2-3 + finiteness are all sorry'd as a block; the partition framework above is proved.\<close>
   have heven_card: "card QG_even = card ?QK" sorry
-  have hodd_card: "card QG_odd = card QG_even" sorry
+  have hodd_card: "card QG_odd = card QG_even"
+  proof -
+    \<comment> \<open>The quotient group multiplication by [a] is a bijection QG \<rightarrow> QG
+       mapping even cosets to odd cosets. Formally: it maps QG\_even onto QG\_odd.\<close>
+    let ?mulQG = "top1_quotient_group_mul_on mul"
+    let ?coset_a = "top1_group_coset_on G mul ?twoG a"
+    define shift where "shift C = ?mulQG ?coset_a C" for C
+    \<comment> \<open>shift maps QG\_even into QG\_odd and vice versa.
+       For now, we sorry the bijection and cardinality.\<close>
+    show ?thesis sorry
+  qed
   have hfin_even: "finite QG_even"
   proof (rule ccontr)
     assume "\<not> finite QG_even"
