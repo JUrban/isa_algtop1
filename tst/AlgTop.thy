@@ -3198,9 +3198,10 @@ proof -
               next
                 case False
                 hence hvy_ne: "vy 0 \<noteq> vy 2" using h02_ne by (by100 force)
-                \<comment> \<open>Symmetric to the vx0\<noteq>vx2 case: use t = (vy1-vy0)/(vy2-vy0).\<close>
-                show False using hcol_eq hvy_ne hdist h0n h1n h2n hgp h01_ne h02_ne h12_ne assms(2)
-                  sorry \<comment> \<open>Identical proof structure to the True case but with vy parameterization.\<close>
+                \<comment> \<open>By three\_collinear\_convex\_combo, one vertex is a convex combo of the other two.
+                   Each case gives a contradiction with hgp (same sum decomposition as above).\<close>
+                show False using hcross012 h01_ne h02_ne h12_ne hgp h0n h1n h2n assms(2)
+                  sorry \<comment> \<open>Apply three\_collinear\_convex\_combo + 3 symmetric hgp contradictions.\<close>
               qed
             qed
           qed
