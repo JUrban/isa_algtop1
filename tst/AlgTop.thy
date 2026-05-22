@@ -2921,11 +2921,20 @@ proof -
                    v_2 = (1-t)*v_0 + t*v_1. If 0<t<1, v_2 is between v_0 and v_1.
                  If vx0=vx1: then (vy1-vy0)*(vx2-vx0) = 0. If vx0\<noteq>vx2: swap roles.
                    If vx0=vx1=vx2: use y-coordinates similarly.\<close>
-              show False
-                using hcross012 hdist h0n h1n h2n hgp
-                sorry \<comment> \<open>Formal proof: case split on whether x-coords or y-coords differ,
-                   compute the convex combination parameter, verify 0<t<1 for the middle
-                   point, construct coefficients contradicting hgp.\<close>
+              \<comment> \<open>From hcross012: (vx1-vx0)*(vy2-vy0) = (vy1-vy0)*(vx2-vx0).\<close>
+              have hcol_eq: "(vx 1 - vx 0)*(vy 2 - vy 0) = (vy 1 - vy 0)*(vx 2 - vx 0)"
+                using hcross012 unfolding cross2_def by (by100 simp)
+              have h01_ne: "(vx 0, vy 0) \<noteq> (vx 1, vy 1)"
+                using hdist[rule_format, OF h0n h1n] by (by100 simp)
+              have h02_ne: "(vx 0, vy 0) \<noteq> (vx 2, vy 2)"
+                using hdist[rule_format, OF h0n h2n] by (by100 simp)
+              have h12_ne: "(vx 1, vy 1) \<noteq> (vx 2, vy 2)"
+                using hdist[rule_format, OF h1n h2n] by (by100 simp)
+              \<comment> \<open>v_0, v_1, v_2 are 3 distinct collinear points. One is between the other two.
+                 The between one is a convex combination, contradicting hgp.
+                 This is a fundamental fact about collinear points in R; the formal proof
+                 requires real arithmetic and case analysis on the ordering.\<close>
+              show False sorry
             qed
           qed
           then obtain i' j' where hi': "i' < n" and hj': "j' < n"
