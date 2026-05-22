@@ -7555,8 +7555,74 @@ proof -
         have "top1_group_coset_on ?K mul ?twoK k \<in> ?QK"
           unfolding top1_quotient_group_carrier_on_def using hk_K by (by100 blast)
         moreover have "\<psi> (top1_group_coset_on ?K mul ?twoK k) = C"
-          sorry \<comment> \<open>\<psi>(coset\_K(k)) = coset\_G(SOME k'. k' \<in> coset\_K(k)) = coset\_G(k) = C.
-             Needs: SOME picks k' with coset\_G(k') = coset\_G(k).\<close>
+        proof -
+          let ?CK_k = "top1_group_coset_on ?K mul ?twoK k"
+          let ?k' = "SOME k'. k' \<in> ?CK_k"
+          \<comment> \<open>k \<in> coset\_K(k), so SOME picks some k' in coset\_K(k).\<close>
+          have "k \<in> ?CK_k"
+            by (rule coset_self_mem[OF hK_grp])
+               (use h2K_normal hk_K in \<open>unfold top1_normal_subgroup_on_def, by100 blast\<close>)+
+          hence hk'_mem: "?k' \<in> ?CK_k" by (rule someI)
+          \<comment> \<open>k' is in K.\<close>
+          from hk'_mem obtain h where "h \<in> ?twoK" "?k' = mul k h"
+            unfolding top1_group_coset_on_def by (by100 blast)
+          from \<open>h \<in> ?twoK\<close> obtain h' where "h' \<in> ?K" "h = mul h' h'" by (by100 blast)
+          have "h \<in> ?K" using hK_grp \<open>h' \<in> ?K\<close> \<open>h = mul h' h'\<close>
+            unfolding top1_is_group_on_def by (by100 blast)
+          have hk'_K: "?k' \<in> ?K" using hK_grp hk_K \<open>h \<in> ?K\<close> \<open>?k' = mul k h\<close>
+            unfolding top1_is_group_on_def by (by100 blast)
+          have hk'_G: "?k' \<in> G" using hk'_K by (by100 blast)
+          \<comment> \<open>k' and k differ by h \<in> 2K \<subseteq> 2G, so coset\_G(k') = coset\_G(k).\<close>
+          have "h \<in> ?twoG"
+            using \<open>h \<in> ?twoK\<close> hK_cap_2G by (by100 blast)
+          have "mul (invg ?k') k \<in> {mul g g | g. g \<in> G}"
+          proof -
+            have "?k' = mul k h" using \<open>?k' = mul k h\<close> .
+            have hk_G: "k \<in> G" using hk_K by (by100 blast)
+            have hh_G: "h \<in> G" using \<open>h \<in> ?K\<close> by (by100 blast)
+            have hinvk': "invg ?k' \<in> G" using hG_grp hk'_G unfolding top1_is_group_on_def by (by100 blast)
+            \<comment> \<open>invg(mul k h) \<cdot> k = invg(h) \<cdot> invg(k) \<cdot> k = invg(h) in abelian.\<close>
+            have "mul (invg ?k') k = invg h"
+            proof -
+              have "mul ?k' (invg h) = k"
+              proof -
+                have hassoc': "\<forall>a\<in>G. \<forall>b\<in>G. \<forall>c\<in>G. mul (mul a b) c = mul a (mul b c)"
+                  using hG_grp unfolding top1_is_group_on_def by (by100 blast)
+                have hinvh: "invg h \<in> G" using hG_grp hh_G unfolding top1_is_group_on_def by (by100 blast)
+                have "mul ?k' (invg h) = mul (mul k h) (invg h)"
+                  using \<open>?k' = mul k h\<close> by (by100 simp)
+                also have "\<dots> = mul k (mul h (invg h))"
+                  using hassoc'[rule_format, OF hk_G hh_G hinvh] by (by100 simp)
+                also have "mul h (invg h) = e"
+                  using hG_grp hh_G unfolding top1_is_group_on_def by (by100 blast)
+                also have "mul k e = k"
+                  using hG_grp hk_G unfolding top1_is_group_on_def by (by100 blast)
+                finally show ?thesis .
+              qed
+              \<comment> \<open>So mul(invg k') k = mul(invg k')(mul k'(invg h)) = invg h.\<close>
+              have hassoc': "\<forall>a\<in>G. \<forall>b\<in>G. \<forall>c\<in>G. mul (mul a b) c = mul a (mul b c)"
+                using hG_grp unfolding top1_is_group_on_def by (by100 blast)
+              have hinvh: "invg h \<in> G" using hG_grp \<open>h \<in> G\<close> unfolding top1_is_group_on_def by (by100 blast)
+              have "mul (invg ?k') k = mul (invg ?k') (mul ?k' (invg h))"
+                using \<open>mul ?k' (invg h) = k\<close> by (by100 simp)
+              also have "\<dots> = mul (mul (invg ?k') ?k') (invg h)"
+                using hassoc'[rule_format, OF hinvk' hk'_G hinvh] by (by100 simp)
+              also have "mul (invg ?k') ?k' = e"
+                using hG_grp hk'_G unfolding top1_is_group_on_def by (by100 blast)
+              also have "mul e (invg h) = invg h"
+                using hG_grp hinvh unfolding top1_is_group_on_def by (by100 blast)
+              finally show ?thesis .
+            qed
+            \<comment> \<open>invg h \<in> 2G: h \<in> 2G, so invg h \<in> 2G (2G is a group).\<close>
+            moreover have "invg h \<in> {mul g g | g. g \<in> G}"
+              using h2G_normal \<open>h \<in> ?twoG\<close> unfolding top1_normal_subgroup_on_def top1_is_group_on_def
+              by (by100 blast)
+            ultimately show ?thesis by (by100 simp)
+          qed
+          hence "top1_group_coset_on G mul ?twoG ?k' = top1_group_coset_on G mul ?twoG k"
+            using normal_coset_eq[OF hG_grp h2G_normal hk'_G] hk_K by (by100 blast)
+          thus ?thesis unfolding \<psi>_def using hcoset_eq by (by100 simp)
+        qed
         ultimately show "C \<in> \<psi> ` ?QK" by (by100 blast)
       qed
     qed
