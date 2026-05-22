@@ -12055,7 +12055,8 @@ proof -
     where hW_wedge: "top1_is_wedge_of_circles_on W TW {..<n} pw"
       and hq_quotient: "top1_quotient_map_on X TX W TW q"
       and hq_T: "\<forall>x\<in>T. q x = pw"
-    sorry \<comment> \<open>Quotient X/T = wedge of circles (Munkres Lemma 84.5).\<close>
+    using graph_quotient_by_tree_wedge_of_circles[OF assms(1) assms(2) hT_tree hT_sub hx0_T]
+    by (by5000 fast)
   \<comment> \<open>Step 4: The quotient map q: X \<rightarrow> X/T is a homotopy equivalence
      (since T is contractible in X).\<close>
   have hq_equiv: "top1_groups_isomorphic_on
