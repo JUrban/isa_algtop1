@@ -7072,11 +7072,54 @@ proof -
     let ?QG = "top1_quotient_group_carrier_on G mul {mul g g | g. g \<in> G}"
     let ?QK = "top1_quotient_group_carrier_on ?K mul {mul g g | g. g \<in> ?K}"
     \<comment> \<open>Key: every element g \<in> G is congruent mod 2G to either k or mul (iota s0) k for some k \<in> K.\<close>
+    have h2G_normal: "top1_normal_subgroup_on G mul e invg {mul g g | g. g \<in> G}"
+      sorry \<comment> \<open>2G is normal in abelian G.\<close>
     have hrepr: "\<forall>g\<in>G. \<exists>k\<in>?K. \<exists>b::bool.
         top1_group_coset_on G mul {mul g g | g. g \<in> G} g =
         top1_group_coset_on G mul {mul g g | g. g \<in> G} (if b then mul (iota s0) k else k)"
-      sorry \<comment> \<open>Project: k = g \<cdot> invg(pow(\<iota>(s0), \<epsilon>(g))). Since pow(\<iota>(s0), \<epsilon>(g)) \<in> 2G when \<epsilon>(g) even,
-         and pow(\<iota>(s0), \<epsilon>(g)-1) shift for odd.\<close>
+    proof (intro ballI)
+      fix g assume hg: "g \<in> G"
+      \<comment> \<open>Case split on parity of \<epsilon>(g).\<close>
+      show "\<exists>k\<in>?K. \<exists>b::bool. top1_group_coset_on G mul {mul g g | g. g \<in> G} g =
+          top1_group_coset_on G mul {mul g g | g. g \<in> G} (if b then mul (iota s0) k else k)"
+      proof (cases "even (\<epsilon> g)")
+        case True
+        \<comment> \<open>\<epsilon>(g) even. Subtract \<epsilon>(g)\<cdot>\<iota>(s0) (which is in 2G) to get a K element.\<close>
+        obtain m where hm: "\<epsilon> g = 2 * int m \<or> \<epsilon> g = -(2 * int m)"
+          using True by (by5000 auto)
+        \<comment> \<open>Define the power element: pow\_elt = \<iota>(s0)^{\<epsilon>(g)} \<in> 2G.\<close>
+        define pow_elt where "pow_elt = (if \<epsilon> g \<ge> 0
+            then top1_group_pow mul e (iota s0) (nat (\<epsilon> g))
+            else top1_group_pow mul e (invg (iota s0)) (nat (- \<epsilon> g)))"
+        have hpow_2G: "pow_elt \<in> {mul g g | g. g \<in> G}"
+          sorry \<comment> \<open>Even power: pow(\<iota>(s0), 2m) \<in> 2G from hpow\_even\_in\_2G.\<close>
+        have hpow_G: "pow_elt \<in> G"
+          sorry \<comment> \<open>From group\_pow\_in\_group'.\<close>
+        have heps_pow: "\<epsilon> pow_elt = \<epsilon> g"
+          sorry \<comment> \<open>From hom\_group\_pow\_early + \<epsilon>(\<iota>(s0))=1.\<close>
+        define k where "k = mul g (invg pow_elt)"
+        have hk_G: "k \<in> G"
+          using hG_grp hg hpow_G unfolding k_def top1_is_group_on_def by (by100 blast)
+        have "\<epsilon> k = 0"
+        proof -
+          have "\<epsilon> (invg pow_elt) = - \<epsilon> pow_elt"
+            using hom_preserves_inv[OF hG_grp hZ_grp heps hpow_G] by (by100 simp)
+          have "\<epsilon> k = \<epsilon> g + \<epsilon> (invg pow_elt)"
+            using heps hg hpow_G unfolding k_def top1_group_hom_on_def top1_is_group_on_def by (by5000 blast)
+          thus ?thesis using \<open>\<epsilon> (invg pow_elt) = - \<epsilon> pow_elt\<close> heps_pow by (by100 linarith)
+        qed
+        hence hk_K: "k \<in> ?K" using hk_G by (by100 simp)
+        \<comment> \<open>[g] = [k] in G/2G (since g = k \<cdot> pow\_elt and pow\_elt \<in> 2G).\<close>
+        have "top1_group_coset_on G mul {mul g g | g. g \<in> G} g
+            = top1_group_coset_on G mul {mul g g | g. g \<in> G} k"
+          sorry \<comment> \<open>normal\_coset\_eq: mul(invg k) g = pow\_elt \<in> 2G.\<close>
+        thus ?thesis using hk_K by (by100 force)
+      next
+        case False
+        \<comment> \<open>\<epsilon>(g) odd. Apply even case to mul(invg(\<iota>(s0))) g (which has even \<epsilon>).\<close>
+        sorry
+      qed
+    qed
     \<comment> \<open>The map K/2K \<times> {F,T} \<rightarrow> G/2G is injective (from K \<inter> 2G = 2K).\<close>
     have hinj: "\<forall>k1\<in>?K. \<forall>k2\<in>?K. \<forall>b1 b2::bool.
         top1_group_coset_on G mul {mul g g | g. g \<in> G} (if b1 then mul (iota s0) k1 else k1) =
