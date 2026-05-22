@@ -4619,8 +4619,56 @@ theorem Theorem_74_2_scheme_presentation:
          \<and> top1_groups_isomorphic_on G mul
              (top1_fundamental_group_carrier X TX x0)
              (top1_fundamental_group_mul X TX x0)"
-  sorry \<comment> \<open>Following book: A = \<pi>(Bd P) is wedge of circles (all vertices identified).
-     Apply Theorem 72.1. Identification of quotient with presented group.\<close>
+proof -
+  \<comment> \<open>Following Munkres Theorem 74.2 proof step by step.\<close>
+  \<comment> \<open>Step 1: Extract P, q, vx, vy from hypothesis.\<close>
+  from hvert obtain P q vxP vyP where
+    hPoly: "top1_is_polygonal_region_on P (length scheme)" and
+    hq: "top1_quotient_map_on P (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) X TX q" and
+    hverts: "\<forall>i<length scheme. (vxP i, vyP i) \<in> P" and
+    hvert_id: "\<forall>i<length scheme. \<forall>j<length scheme. q (vxP i, vyP i) = q (vxP j, vyP j)"
+    by (by100 blast)
+  let ?TP = "subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P"
+  \<comment> \<open>Step 2 (book): "A = \<pi>(Bd P) is a wedge of k circles."
+     Since all vertices are identified by q, the boundary edges become loops in X.
+     Edges with the same label are identified, giving k distinct circles.
+     All circles share the common point x0 = q(vertex).\<close>
+  let ?k = "card (fst ` set scheme)"
+  have hA_wedge: "\<exists>A. closedin_on X TX A
+      \<and> top1_is_wedge_of_circles_on A (subspace_topology X TX A) (fst ` set scheme) x0"
+    sorry \<comment> \<open>Book: "A = \<pi>(Bd P) is a wedge of k circles."
+       Each label determines a pair of identified edges that form a circle in X.\<close>
+  \<comment> \<open>Step 3 (book): "The loops g_1,...,g_k represent a set of free generators for \<pi>_1(A, x0)."
+     This is Theorem 71.1 (wedge of circles has free fundamental group).\<close>
+  \<comment> \<open>Step 4 (book): "The loop running around Bd P maps to the relator word."
+     The boundary loop in order is the scheme word w.\<close>
+  \<comment> \<open>Step 5 (book): "The theorem now follows from Theorem 72.1."
+     Theorem 72.1 gives \<pi>_1(X) \<cong> \<pi>_1(A) / N(relator).
+     \<pi>_1(A) is free on {labels}. The relator is the scheme word.
+     This is exactly the group presentation.\<close>
+  \<comment> \<open>Combine steps 2-5 to get the presentation.\<close>
+  from hA_wedge obtain A where hA_cl: "closedin_on X TX A"
+      and hA_wd: "top1_is_wedge_of_circles_on A (subspace_topology X TX A) (fst ` set scheme) x0"
+    by (by100 blast)
+  \<comment> \<open>\<pi>_1(A) is free on the labels (Theorem 71.1).\<close>
+  have hA_free: "\<exists>(F::int set) mulF eF invgF (\<iota>F::nat \<Rightarrow> int).
+      top1_is_free_group_full_on F mulF eF invgF \<iota>F (fst ` set scheme)
+      \<and> top1_groups_isomorphic_on F mulF
+          (top1_fundamental_group_carrier A (subspace_topology X TX A) x0)
+          (top1_fundamental_group_mul A (subspace_topology X TX A) x0)"
+    sorry \<comment> \<open>Theorem 71.1 for wedge of circles (need finite fst ` set scheme for Thm 71.1).
+       May need to convert between {..<card S} and S.\<close>
+  \<comment> \<open>Apply Theorem 72.1 to get \<pi>_1(X) \<cong> \<pi>_1(A)/N(relator word).\<close>
+  have hThm72: "\<exists>(G::'g set) mul e invg.
+      top1_group_presented_by_on G mul e invg (fst ` set scheme)
+        { map (\<lambda>(s,b). (s, b)) scheme }
+      \<and> top1_groups_isomorphic_on G mul
+          (top1_fundamental_group_carrier X TX x0)
+          (top1_fundamental_group_mul X TX x0)"
+    sorry \<comment> \<open>Theorem 72.1 application: needs CW data (h: B^2 -> X from scheme\_quotient\_CW\_data),
+       identification of the relator with the scheme word, then group presentation.\<close>
+  show ?thesis using hThm72 by (by100 blast)
+qed
 
 text \<open>Nth-element access for the torus scheme.\<close>
 lemma torus_scheme_nth:
