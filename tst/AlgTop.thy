@@ -3027,12 +3027,15 @@ proof -
                   thus False using hgp1 by (by100 blast)
                 next
                   case False \<comment> \<open>t \<le> 0 or t \<ge> 1: v_0 or v_2 is the middle point.\<close>
+                  \<comment> \<open>Symmetric to the True case: if t\<le>0, reparametrize to show v_0 between v_1,v_2.
+                     If t\<ge>1, reparametrize to show v_2 between v_0,v_1.
+                     Both give hgp contradictions for the respective vertex.\<close>
                   show False sorry
                 qed
               next
                 case False
-                hence "vy 0 \<noteq> vy 2" using h02_ne by (by100 force)
-                \<comment> \<open>Symmetric case using y-coordinates.\<close>
+                hence hvy_ne: "vy 0 \<noteq> vy 2" using h02_ne by (by100 force)
+                \<comment> \<open>Symmetric to the vx0\<noteq>vx2 case: use t = (vy1-vy0)/(vy2-vy0).\<close>
                 show False sorry
               qed
             qed
