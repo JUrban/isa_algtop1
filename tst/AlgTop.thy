@@ -3860,12 +3860,18 @@ proof -
     by (rule Theorem_74_2_scheme_presentation[OF hscheme assms(2) hlen hvert])
   \<comment> \<open>The distinct labels of the torus scheme are {0,...,2n-1}.\<close>
   have hlabels: "fst ` set ?scheme = {..<2*n}"
-    sorry \<comment> \<open>Computation: the torus scheme uses labels 2i and 2i+1 for i \<in> [0,n).\<close>
+    unfolding top1_n_torus_scheme_def sorry
+    \<comment> \<open>fst ` set (concat(map (λi. [(2i,T),(2i+1,T),(2i,F),(2i+1,F)]) [0..<n]))
+       = \<Union>{fst ` set [(2i,T),(2i+1,T),(2i,F),(2i+1,F)] | i \<in> {0..<n}}
+       = \<Union>{{2i, 2i+1} | i \<in> {0..<n}} = {..<2n}.\<close>
   \<comment> \<open>The relator word in the scheme = the torus relator.\<close>
   have hrelator: "{ map (\<lambda>(s,b). (s, b)) ?scheme }
       = { concat (map (\<lambda>i. [(2*i, True), (2*i+1, True),
                               (2*i, False), (2*i+1, False)]) [0..<n]) }"
-    sorry \<comment> \<open>Computation: unfolding the torus scheme definition.\<close>
+  proof -
+    have "map (\<lambda>(s,b). (s, b)) ?scheme = ?scheme" by (by100 simp)
+    thus ?thesis unfolding top1_n_torus_scheme_def by (by100 simp)
+  qed
   show ?thesis using h742 hlabels hrelator by (by5000 simp)
 qed
 
