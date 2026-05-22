@@ -2695,7 +2695,8 @@ proof -
           p \<noteq> ((1-t) * vx i + t * vx (Suc i mod length scheme),
                 (1-t) * vy i + t * vy (Suc i mod length scheme)))
        \<longrightarrow> (\<forall>p'\<in>P. q p = q p' \<longrightarrow> p = p')"
-    sorry \<comment> \<open>Uses quotient\_of\_scheme\_extract\_full (defined later in file).\<close>
+    using assms(1)[unfolded top1_quotient_of_scheme_on_def] assms(2)
+    by (elim conjE exE) (rule that, assumption+)
   \<comment> \<open>Step 2: Get homeomorphism \<psi>: P \<rightarrow> B^2 from polygon\_homeomorphic\_to\_disk.\<close>
   let ?TP = "subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P"
   from polygon_homeomorphic_to_disk[OF hP hlen3]
