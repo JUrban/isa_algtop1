@@ -7642,7 +7642,13 @@ proof -
         top1_group_coset_on G mul ?twoG (mul a g0))" for C
     have hia_G: "invg a \<in> G" using hG_grp ha unfolding top1_is_group_on_def by (by100 blast)
     \<comment> \<open>shift is a bijection QG\_even \<rightarrow> QG\_odd.\<close>
-    have hshift_bij: "bij_betw shift QG_even QG_odd" sorry
+    have hshift_bij: "bij_betw shift QG_even QG_odd"
+      unfolding bij_betw_def
+    proof (rule conjI)
+      show "inj_on shift QG_even" sorry
+    next
+      show "shift ` QG_even = QG_odd" sorry
+    qed
     show ?thesis using bij_betw_same_card[OF hshift_bij] by (by100 simp)
   qed
   have hfin_even: "finite QG_even"
