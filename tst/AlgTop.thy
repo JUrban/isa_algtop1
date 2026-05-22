@@ -3799,14 +3799,14 @@ qed
 theorem Theorem_74_2_scheme_presentation:
   fixes X :: "'a set" and TX :: "'a set set" and x0 :: 'a
     and scheme :: "(nat \<times> bool) list"
-  assumes "top1_quotient_of_scheme_on X TX scheme"
-      and "x0 \<in> X"
-      and "length scheme \<ge> 3"
-      \<comment> \<open>All vertices identified to x0 under the quotient map.\<close>
-      and hvert: "\<And>P q vx vy. \<lbrakk>top1_is_polygonal_region_on P (length scheme);
-          top1_quotient_map_on P (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) X TX q;
-          \<forall>i<length scheme. (vx i, vy i) \<in> P\<rbrakk>
-        \<Longrightarrow> \<forall>i<length scheme. \<forall>j<length scheme. q (vx i, vy i) = q (vx j, vy j)"
+  assumes hscheme: "top1_quotient_of_scheme_on X TX scheme"
+      and hx0: "x0 \<in> X"
+      and hlen: "length scheme \<ge> 3"
+      \<comment> \<open>All vertices identified under the (specific extracted) quotient map.\<close>
+      and hvert: "\<exists>P q vx vy. top1_is_polygonal_region_on P (length scheme)
+          \<and> top1_quotient_map_on P (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) X TX q
+          \<and> (\<forall>i<length scheme. (vx i, vy i) \<in> P)
+          \<and> (\<forall>i<length scheme. \<forall>j<length scheme. q (vx i, vy i) = q (vx j, vy j))"
   shows "\<exists>(G::'g set) mul e invg.
            top1_group_presented_by_on G mul e invg
              (fst ` set scheme) \<comment> \<open>The distinct labels\<close>
@@ -3861,31 +3861,13 @@ proof -
     thus ?thesis by (by100 simp)
   qed
   \<comment> \<open>All vertices get identified (Munkres: "We leave this to you to check").\<close>
-  have hvert: "\<And>P q vx vy. \<lbrakk>top1_is_polygonal_region_on P (length ?scheme);
-      top1_quotient_map_on P (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) X TX q;
-      \<forall>i<length ?scheme. (vx i, vy i) \<in> P\<rbrakk>
-    \<Longrightarrow> \<forall>i<length ?scheme. \<forall>j<length ?scheme. q (vx i, vy i) = q (vx j, vy j)"
-  proof -
-    fix P q vx vy
-    assume hP: "top1_is_polygonal_region_on P (length ?scheme)"
-    assume hq: "top1_quotient_map_on P (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) X TX q"
-    assume hvx: "\<forall>i<length ?scheme. (vx i, vy i) \<in> P"
-    \<comment> \<open>Extract the edge identification from the scheme definition.
-       The key: from quotient\_of\_scheme\_extract\_full, edges with the same label
-       have their endpoints identified by q.
-       Setting t=0 in the edge identification gives: if scheme!i and scheme!j have
-       the same label, then q(vx i, vy i) is related to q(vx j, vy j) (or reversed).\<close>
-    \<comment> \<open>For the torus scheme, edges 4k and 4k+2 share label 2k (different direction),
-       and edges 4k+1 and 4k+3 share label 2k+1 (different direction).
-       Setting t=0: q(start of edge i) = q(end of edge j) (for reversed edges).
-       This gives: q(vertex 4k) = q(vertex 4k+3), q(vertex 4k+1) = q(vertex 4k+2).
-       Setting t=1: q(end of edge i) = q(start of edge j).
-       This gives: q(vertex 4k+1) = q(vertex 4k+3), etc.
-       Chaining these identifications connects all vertices.\<close>
-    show "\<forall>i<length ?scheme. \<forall>j<length ?scheme. q (vx i, vy i) = q (vx j, vy j)"
-      sorry \<comment> \<open>The vertex identification follows from the edge label matching conditions
-         at t=0 and t=1. For the torus scheme, this chains all 4n vertices.\<close>
-  qed
+  \<comment> \<open>All vertices get identified: extract specific (P,q,vx,vy) from the scheme and verify.\<close>
+  have hvert: "\<exists>P q vx vy. top1_is_polygonal_region_on P (length ?scheme)
+      \<and> top1_quotient_map_on P (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) X TX q
+      \<and> (\<forall>i<length ?scheme. (vx i, vy i) \<in> P)
+      \<and> (\<forall>i<length ?scheme. \<forall>j<length ?scheme. q (vx i, vy i) = q (vx j, vy j))"
+    sorry \<comment> \<open>Extract (P,q,vx,vy) from scheme; verify all vertices get identified
+       using edge label matching at t=0 and t=1 (torus scheme: all 4n vertices chain).\<close>
   \<comment> \<open>Apply Theorem 74.2.\<close>
   have h742: "\<exists>(G::'g set) mul e invg.
       top1_group_presented_by_on G mul e invg (fst ` set ?scheme)
