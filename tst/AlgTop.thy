@@ -2845,10 +2845,80 @@ proof -
             \<comment> \<open>Specifically: vertices 0, 1, 2 are collinear (on the line through c).
                One of them is between the other two. Say v_k is between v_i, v_j.
                Then v_k = t*v_i + (1-t)*v_j for some t \<in> (0,1), contradicting hgp.\<close>
+            \<comment> \<open>From hall\_par: all v_i - c are parallel. Since n \<ge> 3, vertices 0,1,2 are
+               collinear. One of them is "between" the other two. That one is a convex
+               combination of the other two with zero coefficients for all remaining vertices.
+               This contradicts hgp (general position: no vertex in hull of others).\<close>
+            \<comment> \<open>cross2(v_0-c, v_1-c) = 0 means v_0,c,v_1 are collinear.
+               cross2(v_0-c, v_2-c) = 0 means v_0,c,v_2 are collinear.
+               All three on the line through c parallel to v_0-c.
+               The "middle" one is a strict convex combination of the other two.\<close>
             show False
-              sorry \<comment> \<open>Collinearity of n \<ge> 3 distinct points contradicts general position.
-                 Needs: if cross2(v_i-c, v_j-c) = 0 for all i,j then v_0,v_1,v_2 collinear.
-                 Then one is in hull of others (middle point on a line segment).\<close>
+            proof -
+              have h0n: "(0::nat) < n" using assms(2) by (by100 linarith)
+              have h1n: "(1::nat) < n" using assms(2) by (by100 linarith)
+              have h2n: "(2::nat) < n" using assms(2) by (by100 linarith)
+              \<comment> \<open>From cross2 = 0: v_j - c is scalar multiple of v_0 - c.\<close>
+              have hc01: "cross2 (vx 0 - cx, vy 0 - cy) (vx 1 - cx, vy 1 - cy) = 0"
+                using hall_par h0n h1n by (by100 blast)
+              have hc02: "cross2 (vx 0 - cx, vy 0 - cy) (vx 2 - cx, vy 2 - cy) = 0"
+                using hall_par h0n h2n by (by100 blast)
+              \<comment> \<open>cross2(a,b) = 0 means a_x*b_y = a_y*b_x (collinear from origin).\<close>
+              have hcol1: "(vx 0 - cx) * (vy 1 - cy) = (vy 0 - cy) * (vx 1 - cx)"
+                using hc01 unfolding cross2_def by (by100 simp)
+              have hcol2: "(vx 0 - cx) * (vy 2 - cy) = (vy 0 - cy) * (vx 2 - cx)"
+                using hc02 unfolding cross2_def by (by100 simp)
+              \<comment> \<open>Vertices 0,1,2 are on a line through c. The middle one (in terms of
+                 parameter along the line) is a convex combination of the other two.
+                 This contradicts hgp.\<close>
+              \<comment> \<open>Formal proof: parameterize as v_i = c + t_i*(v_0 - c) where possible,
+                 or handle case v_0 = c separately.\<close>
+              \<comment> \<open>From hcol1, hcol2: v_0, v_1, v_2 are collinear (on a line through c).
+                 The "middle" one is a convex combination of the other two.
+                 This contradicts hgp for that vertex.\<close>
+              \<comment> \<open>Specifically: cross2(v_1-v_0, v_2-v_0) = 0 from the collinearity conditions.
+                 Then among the 3 distinct collinear points, one is between the other two.\<close>
+              have hcross012: "cross2 (vx 1 - vx 0, vy 1 - vy 0) (vx 2 - vx 0, vy 2 - vy 0) = 0"
+              proof -
+                \<comment> \<open>Let a = vx0-cx, b = vy0-cy, a1 = vx1-cx, b1 = vy1-cy, etc.
+                   From hcol1: a*b1 = b*a1. From hcol2: a*b2 = b*a2.
+                   Want: (a1-a)*(b2-b) - (b1-b)*(a2-a) = 0.
+                   = a1*b2 - a1*b - a*b2 + a*b - b1*a2 + b1*a + b*a2 - b*a
+                   = a1*b2 - b1*a2 + a*(b - b2) + b*(a2 - a) + a1*(-b) + b1*a ... messy.
+                   Direct: multiply hcol1 by (vx2-cx) and hcol2 by (vx1-cx), subtract.
+                   (vx0-cx)*(vy1-cy)*(vx2-cx) = (vy0-cy)*(vx1-cx)*(vx2-cx)
+                   (vx0-cx)*(vy2-cy)*(vx1-cx) = (vy0-cy)*(vx2-cx)*(vx1-cx)
+                   Subtract: (vx0-cx)*[(vy1-cy)*(vx2-cx) - (vy2-cy)*(vx1-cx)] = 0.
+                   So either vx0=cx or the bracket = 0.
+                   The bracket = cross2(v1-c, v2-c). And cross2(v1-v0, v2-v0) relates to these.\<close>
+                have hc12: "cross2 (vx 1 - cx, vy 1 - cy) (vx 2 - cx, vy 2 - cy) = 0"
+                  using hall_par h1n h2n by (by100 blast)
+                \<comment> \<open>cross2(v1-v0, v2-v0) = cross2(v1-c-(v0-c), v2-c-(v0-c))
+                   = cross2(v1-c, v2-c) - cross2(v0-c, v2-c) - cross2(v1-c, v0-c) + cross2(v0-c, v0-c)
+                   = 0 - 0 - (-0) + 0 = 0 (all pairwise cross2 = 0).\<close>
+                have "cross2 (vx 1 - vx 0, vy 1 - vy 0) (vx 2 - vx 0, vy 2 - vy 0)
+                    = cross2 (vx 1 - cx - (vx 0 - cx), vy 1 - cy - (vy 0 - cy))
+                             (vx 2 - cx - (vx 0 - cx), vy 2 - cy - (vy 0 - cy))"
+                  by (by100 simp)
+                also have "\<dots> = cross2 (vx 1 - cx, vy 1 - cy) (vx 2 - cx, vy 2 - cy)
+                    - cross2 (vx 0 - cx, vy 0 - cy) (vx 2 - cx, vy 2 - cy)
+                    - cross2 (vx 1 - cx, vy 1 - cy) (vx 0 - cx, vy 0 - cy)
+                    + cross2 (vx 0 - cx, vy 0 - cy) (vx 0 - cx, vy 0 - cy)"
+                  unfolding cross2_def by (simp add: algebra_simps)
+                also have "cross2 (vx 0 - cx, vy 0 - cy) (vx 2 - cx, vy 2 - cy) = 0"
+                  using hall_par h0n h2n by (by100 blast)
+                also have "cross2 (vx 1 - cx, vy 1 - cy) (vx 0 - cx, vy 0 - cy) = 0"
+                  using hall_par h1n h0n by (by100 blast)
+                also have "cross2 (vx 0 - cx, vy 0 - cy) (vx 0 - cx, vy 0 - cy) = 0"
+                  unfolding cross2_def by (by100 simp)
+                finally show ?thesis using hc12 by (by100 simp)
+              qed
+              \<comment> \<open>Three distinct collinear points: middle is in hull of endpoints.\<close>
+              \<comment> \<open>This contradicts hgp for the middle vertex.\<close>
+              show False
+                using hcross012 hdist h0n h1n h2n hgp
+                sorry \<comment> \<open>Final: 3 distinct collinear points violates general position.\<close>
+            qed
           qed
           then obtain i' j' where hi': "i' < n" and hj': "j' < n"
               and hdet: "cross2 (vx i' - cx, vy i' - cy) (vx j' - cx, vy j' - cy) \<noteq> 0"
