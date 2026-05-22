@@ -7071,7 +7071,15 @@ proof -
         by (by100 blast)
       \<comment> \<open>|even| = |K/2K|: the map K/2K \<rightarrow> even part sending {k + 2K} \<mapsto> {k + 2G} is a bijection.\<close>
       have heven_card: "card ?even = card ?QK"
-        using hK_cap_2G sorry
+      proof -
+        \<comment> \<open>Define the map \<phi>: K/2K \<rightarrow> even part of G/2G
+           sending coset(K, 2K, k) \<mapsto> coset(G, 2G, k).\<close>
+        let ?\<phi> = "\<lambda>C. top1_group_coset_on G mul ?twoG (SOME k. k \<in> C)"
+        \<comment> \<open>Alternatively: direct bijection via coset containment.
+           For each C_K \<in> K/2K, define \<psi>(C_K) = {g \<in> G. \<exists>k\<in>C_K. g - k \<in> 2G} = coset in G/2G.\<close>
+        \<comment> \<open>Since K \<inter> 2G = 2K, the map C_K \<mapsto> {g \<in> G : g mod 2G \<in> C_K} is a bijection.\<close>
+        show ?thesis sorry
+      qed
       \<comment> \<open>|odd| = |even|: translation by \<iota>(s0) gives a bijection.\<close>
       have hodd_card: "card ?odd = card ?even"
         sorry
