@@ -2331,7 +2331,16 @@ proof -
           sorry \<comment> \<open>Set equality: Pk (Suc k) = convex extension of Pk k by v_k.\<close>
         have hcont: "continuous_on (Pk k \<times> {0..1})
             (\<lambda>(p, t). ((1-t) * fst p + t * vx k, (1-t) * snd p + t * vy k))"
-          sorry \<comment> \<open>Continuous: polynomial in coordinates.\<close>
+        proof -
+          have hcont_eq: "(\<lambda>(p, t). ((1-t) * fst p + t * vx k, (1-t) * snd p + t * vy k))
+              = (\<lambda>pt. ((1 - snd pt) * fst (fst pt) + snd pt * vx k,
+                        (1 - snd pt) * snd (fst pt) + snd pt * vy k))"
+            by (by100 auto)
+          show ?thesis unfolding hcont_eq
+            by (intro continuous_on_Pair continuous_on_add continuous_on_mult
+                continuous_on_fst continuous_on_snd continuous_on_const
+                continuous_on_diff) (by100 auto)+
+        qed
         show "compact (Pk (Suc k))"
           unfolding hset by (rule compact_continuous_image[OF hcont hdom_compact])
       qed
