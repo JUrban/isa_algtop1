@@ -7082,7 +7082,26 @@ proof -
       qed
       \<comment> \<open>|odd| = |even|: translation by \<iota>(s0) gives a bijection.\<close>
       have hodd_card: "card ?odd = card ?even"
-        sorry
+      proof -
+        \<comment> \<open>Translation by \<iota>(s0) maps even \<leftrightarrow> odd bijectively.\<close>
+        let ?a = "iota s0"
+        let ?shift = "\<lambda>C. {mul ?a g | g. g \<in> C}"
+        \<comment> \<open>?shift maps cosets to cosets. If C = coset(g0), ?shift(C) = coset(mul a g0).\<close>
+        have hshift_coset: "\<And>g0. g0 \<in> G \<Longrightarrow>
+            ?shift (top1_group_coset_on G mul ?twoG g0)
+          = top1_group_coset_on G mul ?twoG (mul ?a g0)"
+          sorry \<comment> \<open>Uses abelian commutativity: mul a (mul g0 h) = mul (mul a g0) h.\<close>
+        \<comment> \<open>?shift maps ?even \<rightarrow> ?odd (even parity + 1 = odd).\<close>
+        have hshift_even_to_odd: "?shift ` ?even \<subseteq> ?odd"
+          sorry
+        \<comment> \<open>?shift is injective on ?even.\<close>
+        have hshift_inj: "inj_on ?shift ?even"
+          sorry
+        \<comment> \<open>?shift maps ?even onto ?odd.\<close>
+        have hshift_surj: "?shift ` ?even = ?odd"
+          sorry
+        show ?thesis using card_image[OF hshift_inj] hshift_surj by (by100 simp)
+      qed
       \<comment> \<open>Combine: |G/2G| = |even| + |odd| = 2 \<times> |K/2K|.\<close>
       have hfin_even: "finite ?even" sorry
       have hfin_odd: "finite ?odd" sorry
