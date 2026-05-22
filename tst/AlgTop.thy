@@ -6883,7 +6883,42 @@ lemma quotient_double_by_kernel:
   shows "card (top1_quotient_group_carrier_on G mul {mul g g | g. g \<in> G})
        = 2 * card (top1_quotient_group_carrier_on
             {g \<in> G. \<epsilon> g = 0} mul {mul g g | g. g \<in> {g \<in> G. \<epsilon> g = 0}})"
-  sorry
+proof -
+  let ?K = "{g \<in> G. \<epsilon> g = 0}"
+  let ?twoG = "{mul g g | g. g \<in> G}"
+  let ?twoK = "{mul g g | g. g \<in> ?K}"
+  let ?QG = "top1_quotient_group_carrier_on G mul ?twoG"
+  let ?QK = "top1_quotient_group_carrier_on ?K mul ?twoK"
+  have hG_grp: "top1_is_group_on G mul e invg"
+    using hG unfolding top1_is_abelian_group_on_def by (by100 blast)
+  have hZ_grp: "top1_is_group_on (UNIV::int set) (+) (0::int) uminus"
+    unfolding top1_is_group_on_def by (by100 auto)
+  \<comment> \<open>Define the even and odd coset sets via define (not let) to avoid expansion issues.\<close>
+  define QG_even where "QG_even = {C \<in> ?QG. \<exists>g\<in>C. even (\<epsilon> g)}"
+  define QG_odd where "QG_odd = {C \<in> ?QG. \<exists>g\<in>C. odd (\<epsilon> g)}"
+  \<comment> \<open>Key facts about \<epsilon> on cosets: \<epsilon> is constant mod 2 on each coset.\<close>
+  \<comment> \<open>Since 2G \<subseteq> ker(\<epsilon> mod 2), elements in the same coset have the same \<epsilon> parity.\<close>
+  have heps_coset: "\<And>g h. g \<in> G \<Longrightarrow> h \<in> ?twoG \<Longrightarrow> even (\<epsilon> g) = even (\<epsilon> (mul g h))"
+  proof -
+    fix g h assume hg: "g \<in> G" and hh: "h \<in> ?twoG"
+    from hh obtain h' where "h' \<in> G" "h = mul h' h'" by (by100 blast)
+    have "h \<in> G" using hG_grp \<open>h' \<in> G\<close> \<open>h = mul h' h'\<close> unfolding top1_is_group_on_def by (by100 blast)
+    have "\<epsilon> (mul g h) = \<epsilon> g + \<epsilon> h"
+      using heps hg \<open>h \<in> G\<close> unfolding top1_group_hom_on_def by (by100 blast)
+    moreover have "\<epsilon> h = \<epsilon> h' + \<epsilon> h'"
+    proof -
+      have "\<epsilon> (mul h' h') = \<epsilon> h' + \<epsilon> h'"
+        using heps \<open>h' \<in> G\<close> unfolding top1_group_hom_on_def by (by100 blast)
+      thus ?thesis using \<open>h = mul h' h'\<close> by (by100 simp)
+    qed
+    ultimately show "even (\<epsilon> g) = even (\<epsilon> (mul g h))" by (by100 simp)
+  qed
+  \<comment> \<open>Partition: every QG coset is even or odd (not both).\<close>
+  \<comment> \<open>card QG = card QG\_even + card QG\_odd.\<close>
+  \<comment> \<open>card QG\_even = card QK (K-cosets embed into even G-cosets).\<close>
+  \<comment> \<open>card QG\_odd = card QG\_even (shift by a).\<close>
+  show ?thesis sorry
+qed
 
 text \<open>Key lemma for Theorem 67.8: |G/2G| = 2^|S| for free abelian G on finite basis S.\<close>
 lemma free_abelian_mod2_card:
