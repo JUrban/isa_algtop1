@@ -3216,14 +3216,9 @@ proof -
           thus False using False by (by100 simp)
         qed
         have hD_pos: "?D > 0"
-        proof (rule ccontr)
-          assume "\<not> ?D > 0"
-          hence "?D < 0" using hD_ne by (by100 linarith)
-          hence "\<beta>' + \<gamma>' \<le> 0" unfolding \<beta>'_def \<gamma>'_def
-            using hnum_sum_pos hnum_\<beta> hnum_\<gamma> sorry
-          \<comment> \<open>But \<beta>'+\<gamma>' > 0 from z \<noteq> c (via Cramer equations). Contradiction.\<close>
-          thus False sorry
-        qed
+          sorry \<comment> \<open>Convex polygon: cross2(v_i-c, v_{i+1}-c) > 0 for all adjacent pairs.
+             This is equivalent to the polygon having positive (CCW) orientation from c.
+             Proof requires the convex position assumption (hgp) + centroid is interior.\<close>
         have h\<beta>_nn: "\<beta>' \<ge> 0" unfolding \<beta>'_def
           using hnum_\<beta> hD_pos by (by100 simp)
         have h\<gamma>_nn: "\<gamma>' \<ge> 0" unfolding \<gamma>'_def
