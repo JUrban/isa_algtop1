@@ -3198,10 +3198,83 @@ proof -
               next
                 case False
                 hence hvy_ne: "vy 0 \<noteq> vy 2" using h02_ne by (by100 force)
-                \<comment> \<open>By three\_collinear\_convex\_combo, one vertex is a convex combo of the other two.
-                   Each case gives a contradiction with hgp (same sum decomposition as above).\<close>
-                show False using hcross012 h01_ne h02_ne h12_ne hgp h0n h1n h2n assms(2)
-                  sorry \<comment> \<open>Apply three\_collinear\_convex\_combo + 3 symmetric hgp contradictions.\<close>
+                \<comment> \<open>vx0 = vx2 (from False). cross2=0 gives (vx1-vx0)*(vy2-vy0) = 0.
+                   Since vy0 \<noteq> vy2: vx1 = vx0 = vx2. All same x-coord.
+                   Use y-param: t = (vy1-vy0)/(vy2-vy0). v_1 = (1-t)*v_0 + t*v_2.\<close>
+                have hvx_eq: "vx 0 = vx 2" using False by (by100 simp)
+                have hcol_eq2: "(vx 1 - vx 0) * (vy 2 - vy 0) = (vy 1 - vy 0) * (vx 2 - vx 0)"
+                  using hcross012 unfolding cross2_def by (by100 simp)
+                have hvx1_eq0: "vx 1 = vx 0"
+                proof -
+                  from hcol_eq2 hvx_eq have "(vx 1 - vx 0) * (vy 2 - vy 0) = 0" by (by100 simp)
+                  thus ?thesis using hvy_ne by (by100 simp)
+                qed
+                \<comment> \<open>Parameterize: t = (vy1-vy0)/(vy2-vy0).\<close>
+                let ?t = "(vy 1 - vy 0) / (vy 2 - vy 0)"
+                obtain t' where ht'_def: "t' = ?t" and ht'_fact: "t' * (vy 2 - vy 0) = vy 1 - vy 0"
+                  using hvy_ne by (by100 simp)
+                have hvx1_t: "vx 1 = (1 - t') * vx 0 + t' * vx 2"
+                proof -
+                  have "(1 - t') * vx 0 + t' * vx 2 = (1 - t') * vx 0 + t' * vx 0"
+                    using hvx_eq by (by100 simp)
+                  also have "\<dots> = vx 0"
+                    by (simp add: left_diff_distrib right_diff_distrib algebra_simps)
+                  finally show ?thesis using hvx1_eq0 by (by100 simp)
+                qed
+                have hvy1_t: "vy 1 = (1 - t') * vy 0 + t' * vy 2"
+                proof -
+                  have "vy 1 = vy 0 + t' * (vy 2 - vy 0)" using ht'_fact by (by100 linarith)
+                  also have "\<dots> = (1 - t') * vy 0 + t' * vy 2"
+                    by (simp add: right_diff_distrib left_diff_distrib algebra_simps)
+                  finally show ?thesis unfolding ht'_def .
+                qed
+                \<comment> \<open>t' \<noteq> 0 and t' \<noteq> 1 (from distinct vertices).\<close>
+                have ht_ne0: "t' \<noteq> 0" using h01_ne hvx1_t hvy1_t by (by100 force)
+                have ht_ne1: "t' \<noteq> 1" using h12_ne hvx1_t hvy1_t by (by100 force)
+                \<comment> \<open>Same case analysis as the vx0\<noteq>vx2 case.\<close>
+                show False
+                proof (cases "0 < t' \<and> t' < 1")
+                  case True
+                  \<comment> \<open>v_1 in hull of v_0, v_2.\<close>
+                  define cc where "cc = (\<lambda>i::nat. if i = 0 then 1-t' else if i = 2 then t' else 0::real)"
+                  have hsplit: "{..<n} = {0,1,2} \<union> {3..<n}" using assms(2) by (by100 auto)
+                  have hrest: "\<And>f. (\<Sum>i\<in>{3..<n}. cc i * f i) = 0"
+                    apply (rule sum.neutral) unfolding cc_def by (by100 force)
+                  have hrest_sum: "(\<Sum>i\<in>{3..<n}. cc i) = 0"
+                    apply (rule sum.neutral) unfolding cc_def by (by100 force)
+                  have hcsum: "(\<Sum>i<n. cc i) = 1"
+                  proof -
+                    have "(\<Sum>i<n. cc i) = (\<Sum>i\<in>{0,1,2}. cc i) + (\<Sum>i\<in>{3..<n}. cc i)"
+                      using hsplit by (simp add: sum.union_disjoint)
+                    thus ?thesis using hrest_sum unfolding cc_def by (by100 simp)
+                  qed
+                  have hcvx: "vx 1 = (\<Sum>i<n. cc i * vx i)"
+                  proof -
+                    have "(\<Sum>i<n. cc i * vx i) = (\<Sum>i\<in>{0,1,2}. cc i * vx i) + (\<Sum>i\<in>{3..<n}. cc i * vx i)"
+                      using hsplit by (simp add: sum.union_disjoint)
+                    thus ?thesis using hrest[of vx] hvx1_t unfolding cc_def ht'_def by (by100 simp)
+                  qed
+                  have hcvy: "vy 1 = (\<Sum>i<n. cc i * vy i)"
+                  proof -
+                    have "(\<Sum>i<n. cc i * vy i) = (\<Sum>i\<in>{0,1,2}. cc i * vy i) + (\<Sum>i\<in>{3..<n}. cc i * vy i)"
+                      using hsplit by (simp add: sum.union_disjoint)
+                    thus ?thesis using hrest[of vy] hvy1_t unfolding cc_def ht'_def by (by100 simp)
+                  qed
+                  have hnn: "\<forall>i<n. i \<noteq> 1 \<longrightarrow> cc i \<ge> 0"
+                    using True unfolding cc_def ht'_def by (by100 auto)
+                  have hc1: "cc 1 = 0" unfolding cc_def by (by100 simp)
+                  have "\<exists>cc. (\<forall>i<n. i \<noteq> 1 \<longrightarrow> cc i \<ge> 0) \<and> cc 1 = 0 \<and> (\<Sum>i<n. cc i) = 1
+                      \<and> vx 1 = (\<Sum>i<n. cc i * vx i) \<and> vy 1 = (\<Sum>i<n. cc i * vy i)"
+                    using hnn hc1 hcsum hcvx hcvy by (by100 blast)
+                  thus False using hgp h1n by (by100 blast)
+                next
+                  case False
+                  hence "t' < 0 \<or> t' > 1" using ht_ne0 ht_ne1 by (by100 linarith)
+                  thus False
+                    using hvx1_t hvy1_t hgp h0n h1n h2n assms(2) ht'_def
+                    sorry \<comment> \<open>Symmetric: t<0 gives v_0 between, t>1 gives v_2 between.
+                       Same sum decomposition as proved for the vx0\<noteq>vx2 case.\<close>
+                qed
               qed
             qed
           qed
