@@ -2607,9 +2607,13 @@ proof -
      Write z = \<alpha>\<cdot>c + \<beta>\<cdot>v_i + \<gamma>\<cdot>v_{i+1} (barycentric coords within the cone).
      Map to \<beta>\<cdot>q_i + \<gamma>\<cdot>q_{i+1}.\<close>
   \<comment> \<open>For each i, define the affine map on cone_i.\<close>
-  define cone_map where "cone_map i \<alpha> \<beta> \<gamma> =
-      (\<beta> * qx i + \<gamma> * qx ((i+1) mod n),
-       \<beta> * qy i + \<gamma> * qy ((i+1) mod n))" for i :: nat and \<alpha> \<beta> \<gamma> :: real
+  \<comment> \<open>Normalized cone map: sends (α,β,γ) to (1-α) · normalize(β·q_i + γ·q_{i+1}).
+     This fills B^2 (not just the inscribed polygon).\<close>
+  define cone_map where "cone_map i \<alpha> \<beta> \<gamma> = (
+      let w = (\<beta> * qx i + \<gamma> * qx ((i+1) mod n), \<beta> * qy i + \<gamma> * qy ((i+1) mod n));
+          r = sqrt (fst w ^ 2 + snd w ^ 2)
+      in if r = 0 then (0, 0) else ((1 - \<alpha>) * fst w / r, (1 - \<alpha>) * snd w / r)
+      )" for i :: nat and \<alpha> \<beta> \<gamma> :: real
   \<comment> \<open>For z \<in> P, we need to find the cone index i and barycentric coords.
      This is the decomposition z = \<alpha>\<cdot>(cx,cy) + \<beta>\<cdot>(vx i, vy i) + \<gamma>\<cdot>(vx(i+1),vy(i+1))
      with \<alpha>+\<beta>+\<gamma>=1, \<alpha>,\<beta>,\<gamma> \<ge> 0.
@@ -4656,8 +4660,10 @@ proof -
       \<and> top1_groups_isomorphic_on F mulF
           (top1_fundamental_group_carrier A (subspace_topology X TX A) x0)
           (top1_fundamental_group_mul A (subspace_topology X TX A) x0)"
-    sorry \<comment> \<open>Theorem 71.1 for wedge of circles (need finite fst ` set scheme for Thm 71.1).
-       May need to convert between {..<card S} and S.\<close>
+    sorry \<comment> \<open>Apply Theorem\_71\_1\_wedge\_of\_circles\_finite after showing
+       fst ` set scheme = {..<card(fst ` set scheme)}.
+       For torus/projective schemes, labels are {..<k} by construction.
+       Then Theorem 71.1 gives free group on {..<k}, convert to fst ` set scheme.\<close>
   \<comment> \<open>Apply Theorem 72.1 to get \<pi>_1(X) \<cong> \<pi>_1(A)/N(relator word).\<close>
   have hThm72: "\<exists>(G::'g set) mul e invg.
       top1_group_presented_by_on G mul e invg (fst ` set scheme)
