@@ -3026,17 +3026,28 @@ proof -
                     using hnn hc1 hcsum hcvx hcvy by (by100 blast)
                   thus False using hgp1 by (by100 blast)
                 next
-                  case False \<comment> \<open>t \<le> 0 or t \<ge> 1: v_0 or v_2 is the middle point.\<close>
-                  \<comment> \<open>Symmetric to the True case: if t\<le>0, reparametrize to show v_0 between v_1,v_2.
-                     If t\<ge>1, reparametrize to show v_2 between v_0,v_1.
-                     Both give hgp contradictions for the respective vertex.\<close>
-                  show False sorry
+                  case False
+                  hence "?t < 0 \<or> ?t > 1" using ht_ne0 ht_ne1 by (by100 linarith)
+                  thus False
+                  proof
+                    assume "?t < 0"
+                    \<comment> \<open>v_0 = (1/(1-t))*v_1 + (-t/(1-t))*v_2, a convex combo since -t>0, 1/(1-t)>0.\<close>
+                    \<comment> \<open>This contradicts hgp for vertex 0.\<close>
+                    show False using hvx1_eq hvy1_eq \<open>?t < 0\<close> hgp h0n h1n h2n assms(2)
+                      sorry \<comment> \<open>Symmetric to case 0<t<1 with vertex 0 as middle point.\<close>
+                  next
+                    assume "?t > 1"
+                    \<comment> \<open>v_2 = (1/t)*v_1 + (1-1/t)*v_0, a convex combo since 1/t \<in> (0,1).\<close>
+                    show False using hvx1_eq hvy1_eq \<open>?t > 1\<close> hgp h0n h1n h2n assms(2)
+                      sorry \<comment> \<open>Symmetric to case 0<t<1 with vertex 2 as middle point.\<close>
+                  qed
                 qed
               next
                 case False
                 hence hvy_ne: "vy 0 \<noteq> vy 2" using h02_ne by (by100 force)
                 \<comment> \<open>Symmetric to the vx0\<noteq>vx2 case: use t = (vy1-vy0)/(vy2-vy0).\<close>
-                show False sorry
+                show False using hcol_eq hvy_ne hdist h0n h1n h2n hgp h01_ne h02_ne h12_ne assms(2)
+                  sorry \<comment> \<open>Identical proof structure to the True case but with vy parameterization.\<close>
               qed
             qed
           qed
