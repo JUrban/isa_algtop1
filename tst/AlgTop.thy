@@ -7424,11 +7424,11 @@ proof -
         sorry \<comment> \<open>circle loop is a loop in S1 at (1,0).\<close>
       \<comment> \<open>\<iota>_* maps \<pi>_1(S1,(1,0)) to \<pi>_1(A,a') since \<iota> is continuous and \<iota>(1,0) = a'.\<close>
       have hS1_top: "is_topology_on top1_S1 top1_S1_topology"
-        sorry
+        using top1_S1_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
       have h10_S1: "(1::real, 0::real) \<in> top1_S1"
         unfolding top1_S1_def by (by100 simp)
       have h\<iota>_10: "\<iota> (1, 0) = a'"
-        using h\<iota>_eq h10_S1 unfolding a'_def sorry
+        using h\<iota>_eq[rule_format, OF h10_S1] unfolding a'_def by (by100 simp)
       have h\<iota>_S1_hom: "top1_group_hom_on
           (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
           (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))
@@ -7436,8 +7436,7 @@ proof -
           (top1_fundamental_group_mul A (subspace_topology X TX A) a')
           (top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1, 0)
              A (subspace_topology X TX A) a' \<iota>)"
-        using top1_fundamental_group_induced_on_is_hom[OF hS1_top hTA h10_S1 ha'_A h\<iota>_cont h\<iota>_10]
-        sorry
+        using top1_fundamental_group_induced_on_is_hom[OF hS1_top hTA h10_S1 ha'_A h\<iota>_cont h\<iota>_10] .
       \<comment> \<open>relator\_class = \<iota>_*(circle\_class), which is in \<pi>_1(A,a') since \<iota>_* is a hom.\<close>
       have "relator_class = top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1, 0)
              A (subspace_topology X TX A) a' \<iota> circle_class"
@@ -7445,7 +7444,7 @@ proof -
       moreover have "top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1, 0)
              A (subspace_topology X TX A) a' \<iota> circle_class
         \<in> top1_fundamental_group_carrier A (subspace_topology X TX A) a'"
-        using h\<iota>_S1_hom hcc_in unfolding top1_group_hom_on_def sorry
+        using h\<iota>_S1_hom hcc_in unfolding top1_group_hom_on_def by (by100 blast)
       ultimately show ?thesis by (by100 simp)
     qed
     have hN_normal: "top1_normal_subgroup_on
