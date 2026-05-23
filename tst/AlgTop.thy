@@ -7470,15 +7470,13 @@ proof -
         { map (\<lambda>(s,b). (s, b)) scheme }"
       unfolding top1_group_presented_by_on_def
       using hpi1_X_grp hfree h\<pi>F_hom h\<pi>F_surj hker
-      sorry
+      sorry \<comment> \<open>Assembly: instantiate existentials with F, mulF, eF, invgF, \<iota>F, \<pi>F.\<close>
     have hiso_XG: "top1_groups_isomorphic_on
         (top1_fundamental_group_carrier X TX a')
         (top1_fundamental_group_mul X TX a')
         (top1_fundamental_group_carrier X TX a')
         (top1_fundamental_group_mul X TX a')"
-      unfolding top1_groups_isomorphic_on_def top1_group_iso_on_def
-      using hpi1_X_grp
-      sorry \<comment> \<open>Reflexivity: use identity map as iso.\<close>
+      using top1_groups_isomorphic_on_refl[OF hpi1_X_grp] .
     show ?thesis using hpresented hiso_XG sorry
   qed
   \<comment> \<open>Step (iv): Transfer a' \<rightarrow> a via basepoint change.\<close>
