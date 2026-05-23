@@ -6683,9 +6683,18 @@ proof -
     using hcomp_ker hN_eq hrel_word sorry \<comment> \<open>\<phi>^{-1}(N\_G({r})) = N\_F({\<phi>^{-1}(r)}) via iso.\<close>
   \<comment> \<open>Step 4: Q is presented by (S, {w}).\<close>
   have hQ_presented: "top1_group_presented_by_on Q mulQ eQ invgQ S {w}"
-    unfolding top1_group_presented_by_on_def
-    using hQ_grp hF_free hcomp_hom hcomp_surj hker_word
-    sorry
+  proof -
+    have h1: "top1_is_free_group_full_on F mulF eF invgF \<iota>F S
+      \<and> top1_group_hom_on F mulF Q mulQ (proj \<circ> \<phi>)
+      \<and> (proj \<circ> \<phi>) ` F = Q
+      \<and> top1_group_kernel_on F eQ (proj \<circ> \<phi>)
+           = top1_normal_subgroup_generated_on F mulF eF invgF
+               {r. \<exists>w'\<in>{w}. r = top1_group_word_product mulF eF invgF
+                            (map (\<lambda>(s, b). (\<iota>F s, b)) w')}"
+      using hF_free hcomp_hom hcomp_surj hker_word sorry
+    show ?thesis unfolding top1_group_presented_by_on_def using hQ_grp h1
+      sorry
+  qed
   \<comment> \<open>Step 5: H \<cong> Q, so use Q as the witness.\<close>
   have hQ_iso_H: "top1_groups_isomorphic_on Q mulQ H mulH"
     using top1_groups_isomorphic_on_sym[OF h\<psi>_iso hH_grp hQ_grp] .
