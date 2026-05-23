@@ -6689,10 +6689,18 @@ proof -
     define wp where "wp = top1_group_word_product mulF eF invgF (map (\<lambda>(s, b). (\<iota>F s, b)) w)"
     have hwp_eq: "wp = inv_into F \<phi> r" using hrel_word unfolding wp_def by (by100 simp)
     \<comment> \<open>\<subseteq>: if \<phi> f \<in> N\_G({r}) then f \<in> N\_F({wp}) using inj\_hom\_preimage\_normal\_closure.\<close>
-    have hN_sub: "N \<subseteq> G" using hN_eq
-      unfolding top1_normal_subgroup_generated_on_def sorry
-    have hr_in_N: "r \<in> N" using hN_eq
-      unfolding top1_normal_subgroup_generated_on_def sorry
+    have hN_sub: "N \<subseteq> G"
+    proof -
+      have hr_sub: "{r} \<subseteq> G" using hr_in by (by100 blast)
+      from normal_subgroup_generated_is_normal[OF hG_grp hr_sub]
+      show ?thesis unfolding hN_eq top1_normal_subgroup_on_def by (by100 blast)
+    qed
+    have hr_in_N: "r \<in> N"
+    proof -
+      have "{r} \<subseteq> N" unfolding hN_eq top1_normal_subgroup_generated_on_def
+        by (by100 blast)
+      thus ?thesis by (by100 blast)
+    qed
     have hsubset1: "{f \<in> F. \<phi> f \<in> N} \<subseteq>
         top1_normal_subgroup_generated_on F mulF eF invgF {wp}"
     proof (rule subsetI)
