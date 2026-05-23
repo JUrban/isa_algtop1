@@ -963,8 +963,15 @@ proof (unfold continuous_on_def, intro ballI)
     from hcont_away[unfolded continuous_on_def, rule_format, OF hz0']
     have h_lim: "(f \<longlongrightarrow> f z0) (at z0 within S - {c})" .
     \<comment> \<open>at z0 within (S - {c}) = at z0 within S since z0 \<noteq> c.\<close>
-    show ?thesis using h_lim False
-      sorry
+    \<comment> \<open>Transfer: convergence within S-{c} implies within S (for z0\<noteq>c).\<close>
+    show ?thesis
+    proof (rule filterlim_mono_eventually)
+      show "eventually (\<lambda>x. f x = f x) (at z0 within S)" by (by100 simp)
+      show "at z0 within S \<le> at z0 within (S - {c})"
+        sorry \<comment> \<open>Filter order: removing c from S doesn't affect at z0 when z0\<noteq>c.\<close>
+      show "(f \<longlongrightarrow> f z0) (at z0 within (S - {c}))" using h_lim .
+      show "nhds (f z0) \<le> nhds (f z0)" by (by100 simp)
+    qed
   next
     case True
     hence hfz0: "f z0 = (0, 0)" using hfc by (by100 simp)
