@@ -6787,7 +6787,7 @@ proof -
   have hconj: "top1_group_presented_by_on Q mulQ eQ invgQ S {w}
     \<and> top1_groups_isomorphic_on Q mulQ H mulH"
     using hQ_presented hQ_iso_H by (by100 blast)
-  from hconj show ?thesis using hconj sorry
+  show ?thesis using hQ_presented hQ_iso_H sorry
 qed
 
 lemma map_map_pair_compose:
