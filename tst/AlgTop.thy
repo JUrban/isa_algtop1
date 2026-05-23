@@ -3099,7 +3099,9 @@ proof -
      would cause some D_k = 0, contradicting CCW).\<close>
   have hno_collinear: "\<forall>i<n. \<forall>j<n. j \<noteq> i \<longrightarrow> Suc i mod n \<noteq> j \<longrightarrow>
       PolygonDisk.cross2 (vx j - vx i, vy j - vy i) (vx (Suc i mod n) - vx i, vy (Suc i mod n) - vy i) \<noteq> 0"
-    sorry \<comment> \<open>Geometric: CCW polygon with distinct edges has no 3 non-adjacent collinear vertices.\<close>
+    using ccw_polygon_no_collinear[OF assms(2) hccw]
+      convex_polygon_vertex_half_plane[OF assms(2) hP_hull hverts_in hccw]
+    by (by100 blast)
   have hvert_hp': "\<forall>i<n. \<forall>k<n. PolygonDisk.cross2 (vx k - vx i, vy k - vy i)
       (vx (Suc i mod n) - vx i, vy (Suc i mod n) - vy i) \<le> 0"
     using hvert_hp unfolding cross2_def PolygonDisk.cross2_def by (by100 simp)
@@ -3917,7 +3919,8 @@ proof -
       cross2 (vx k - vx i, vy k - vy i)
           (vx (Suc i mod length scheme) - vx i,
            vy (Suc i mod length scheme) - vy i) \<le> 0"
-    sorry \<comment> \<open>Vertex half-plane: for CCW convex polygon, each vertex is on the left of each edge.\<close>
+    using convex_polygon_vertex_half_plane[OF hlen3 hP_hull hverts hccw_extract]
+      unfolding cross2_def PolygonDisk.cross2_def by (by100 simp)
   from polygon_homeomorphic_to_disk_with_boundary[OF hP hlen3 hverts hP_hull hccw_extract hvert_hp]
   obtain \<psi> where h\<psi>: "top1_homeomorphism_on P ?TP top1_B2 top1_B2_topology \<psi>"
       and h\<psi>_bd: "\<psi> ` (\<Union>i<length scheme. {((1-t) * vx i + t * vx (Suc i mod length scheme),
@@ -7842,7 +7845,8 @@ proof -
               else q (t * vx j + (1-t) * vx (Suc j mod length ?scheme),
                       t * vy j + (1-t) * vy (Suc j mod length ?scheme)))))
         \<longrightarrow> (\<forall>i<length ?scheme. \<forall>j<length ?scheme. q (vx i, vy i) = q (vx j, vy j))"
-      sorry \<comment> \<open>Torus scheme vertex connectivity.\<close>
+      using torus_scheme_vertex_connectivity[of n]
+        unfolding top1_n_torus_scheme_def by (by5000 simp)
     from Theorem_74_2_scheme_presentation[OF hscheme assms(2) hlen hvert hvc]
     show ?thesis .
   qed

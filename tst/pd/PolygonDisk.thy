@@ -3791,4 +3791,56 @@ proof -
     done
 qed
 
+text \<open>Lemma 1: Vertex half-plane condition for convex polygons.
+  For a polygon given as convex hull of n vertices with CCW ordering (D\_i > 0),
+  every vertex is on the non-positive side of every directed edge.
+  This is the defining property of convexity for the vertex representation.\<close>
+lemma convex_polygon_vertex_half_plane:
+  assumes hn: "n \<ge> 3"
+      and hP_hull: "P = {(x, y) | x y.
+                \<exists>coeffs. (\<forall>i<n. coeffs i \<ge> 0)
+                       \<and> (\<Sum>i<n. coeffs i) = 1
+                       \<and> x = (\<Sum>i<n. coeffs i * vx i)
+                       \<and> y = (\<Sum>i<n. coeffs i * vy i)}"
+      and hverts: "\<forall>i<n. (vx i, vy i) \<in> P"
+      and hccw: "\<forall>i<n. let cx = (\<Sum>j<n. vx j) / real n; cy = (\<Sum>j<n. vy j) / real n
+         in (vx i - cx) * (vy (Suc i mod n) - cy) - (vy i - cy) * (vx (Suc i mod n) - cx) > 0"
+  shows "\<forall>i<n. \<forall>k<n. cross2 (vx k - vx i, vy k - vy i)
+      (vx (Suc i mod n) - vx i, vy (Suc i mod n) - vy i) \<le> 0"
+  sorry
+
+text \<open>Lemma 2: No 3 non-adjacent collinear vertices in a CCW convex polygon.
+  If D\_i = cross2(v\_i - c, v\_{i+1} - c) > 0 for all i, then for j \<noteq> i and
+  j \<noteq> Suc i mod n, v\_j is NOT on the line through v\_i and v\_{i+1}.\<close>
+lemma ccw_polygon_no_collinear:
+  assumes hn: "n \<ge> 3"
+      and hccw: "\<forall>i<n. let cx = (\<Sum>j<n. vx j) / real n; cy = (\<Sum>j<n. vy j) / real n
+         in (vx i - cx) * (vy (Suc i mod n) - cy) - (vy i - cy) * (vx (Suc i mod n) - cx) > 0"
+      and hvert_hp: "\<forall>i<n. \<forall>k<n. cross2 (vx k - vx i, vy k - vy i)
+          (vx (Suc i mod n) - vx i, vy (Suc i mod n) - vy i) \<le> 0"
+  shows "\<forall>i<n. \<forall>j<n. j \<noteq> i \<longrightarrow> Suc i mod n \<noteq> j \<longrightarrow>
+      cross2 (vx j - vx i, vy j - vy i) (vx (Suc i mod n) - vx i, vy (Suc i mod n) - vy i) \<noteq> 0"
+  sorry
+
+text \<open>Lemma 3: Torus scheme vertex connectivity.
+  In the torus scheme [(a1,+),(b1,+),(a1,-),(b1,-),...,(an,+),(bn,+),(an,-),(bn,-)],
+  the edge identifications (same label, opposite orientation = reversed edge) imply
+  that all vertices are identified under any quotient map respecting the scheme.\<close>
+lemma torus_scheme_vertex_connectivity:
+  fixes n :: nat
+  defines "scheme \<equiv> concat (map (\<lambda>i. [(2*i, True), (2*i+1, True),
+                                       (2*i, False), (2*i+1, False)]) [0..<n])"
+  shows "\<forall>q (vx::nat\<Rightarrow>real) (vy::nat\<Rightarrow>real).
+      (\<forall>i<length scheme. \<forall>j<length scheme.
+        fst (scheme!i) = fst (scheme!j) \<longrightarrow>
+        (\<forall>t\<in>I_set. q ((1-t) * vx i + t * vx (Suc i mod length scheme),
+           (1-t) * vy i + t * vy (Suc i mod length scheme))
+         = (if snd (scheme!i) = snd (scheme!j)
+            then q ((1-t) * vx j + t * vx (Suc j mod length scheme),
+                    (1-t) * vy j + t * vy (Suc j mod length scheme))
+            else q (t * vx j + (1-t) * vx (Suc j mod length scheme),
+                    t * vy j + (1-t) * vy (Suc j mod length scheme)))))
+      \<longrightarrow> (\<forall>i<length scheme. \<forall>j<length scheme. q (vx i, vy i) = q (vx j, vy j))"
+  sorry
+
 end
