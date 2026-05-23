@@ -7490,7 +7490,25 @@ proof -
           (top1_fundamental_group_mul A (subspace_topology X TX A) a') N
           (top1_fundamental_group_id A (subspace_topology X TX A) a'))
         (proj \<circ> \<phi>) = {f \<in> F. \<phi> f \<in> N}"
-      sorry \<comment> \<open>Kernel of composition = preimage of kernel.\<close>
+    proof -
+      \<comment> \<open>ker(proj \<circ> \<phi>) = {f \<in> F. (proj \<circ> \<phi>) f = e\_Q} = {f \<in> F. proj(\<phi> f) = coset(N, e\_A)}.
+         proj(g) = coset(N, e\_A) iff g \<in> N (from hproj\_ker).\<close>
+      have "top1_group_kernel_on F
+          (top1_group_coset_on
+            (top1_fundamental_group_carrier A (subspace_topology X TX A) a')
+            (top1_fundamental_group_mul A (subspace_topology X TX A) a') N
+            (top1_fundamental_group_id A (subspace_topology X TX A) a'))
+          (proj \<circ> \<phi>) = {f \<in> F. proj (\<phi> f) =
+            top1_group_coset_on
+              (top1_fundamental_group_carrier A (subspace_topology X TX A) a')
+              (top1_fundamental_group_mul A (subspace_topology X TX A) a') N
+              (top1_fundamental_group_id A (subspace_topology X TX A) a')}"
+        unfolding top1_group_kernel_on_def by (by100 simp)
+      also have "\<dots> = {f \<in> F. \<phi> f \<in> N}"
+        using hproj_ker unfolding top1_group_kernel_on_def proj_def
+        sorry \<comment> \<open>proj(g) = coset(N, e\_A) iff g \<in> N.\<close>
+      finally show ?thesis .
+    qed
     \<comment> \<open>By first isomorphism theorem: Q \<cong> F / ker(proj \<circ> \<phi>).
        Since Q \<cong> \<pi>_1(X,a'): \<pi>_1(X,a') \<cong> F / ker.
        If ker = N(scheme word): this gives the presentation.\<close>
