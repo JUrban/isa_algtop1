@@ -7562,7 +7562,8 @@ proof -
           (top1_fundamental_group_id A (subspace_topology X TX A) a')
           (top1_fundamental_group_invg A (subspace_topology X TX A) a')
           (map (\<lambda>(s, b). (\<phi> (\<iota>F s), b)) scheme)"
-      sorry \<comment> \<open>Group theory: hom preserves word products. Induction on scheme.\<close>
+      sorry \<comment> \<open>From hom\_word\_product: \<phi> preserves word products.
+         Available: hom\_word\_product lemma + hgens\_in (generators in F).\<close>
     \<comment> \<open>Step R3: combine R1 + R2 + bijectivity of \<phi> to get \<phi>^{-1}(relator).\<close>
     have hrelator_word: "inv_into F \<phi> relator_class =
         top1_group_word_product mulF eF invgF
