@@ -6731,10 +6731,25 @@ proof -
           (top1_normal_subgroup_generated_on F mulF eF invgF {wp})"
         using normal_subgroup_generated_is_normal[OF hF_grp, of "{wp}"] hwp_in_F
         by (by100 blast)
+      \<comment> \<open>Apply inj\_hom\_preimage\_normal\_closure.\<close>
+      have h\<phi>_surj: "\<phi> ` F = G" using h\<phi>_bij unfolding bij_betw_def by (by100 blast)
+      have h\<phi>_inj: "inj_on \<phi> F" using h\<phi>_bij unfolding bij_betw_def by (by100 blast)
+      have hwp_in_NF: "wp \<in> top1_normal_subgroup_generated_on F mulF eF invgF {wp}"
+        unfolding top1_normal_subgroup_generated_on_def by (by100 blast)
+      have h\<phi>wp: "\<phi> wp = r"
+      proof -
+        have "inv_into F \<phi> r = wp" using hwp_eq by (by100 simp)
+        moreover have "r \<in> G" using hr_in .
+        moreover have "r \<in> \<phi> ` F" using h\<phi>_surj \<open>r \<in> G\<close> by (by100 blast)
+        ultimately have "\<phi> (inv_into F \<phi> r) = r"
+          using f_inv_into_f[of r \<phi> F] by (by100 simp)
+        thus ?thesis using \<open>inv_into F \<phi> r = wp\<close> by (by100 simp)
+      qed
+      have h\<phi>c_NG: "\<phi> c \<in> top1_normal_subgroup_generated_on G mulG eG invgG {\<phi> wp}"
+        using h\<phi>c hN_eq h\<phi>wp by (by100 simp)
       show "c \<in> top1_normal_subgroup_generated_on F mulF eF invgF {wp}"
-        using inj_hom_preimage_normal_closure[OF hF_grp hG_grp h\<phi>_hom _ _ hN_F_normal]
-          hcF h\<phi>c hwp_eq
-        sorry
+        using inj_hom_preimage_normal_closure[OF hF_grp hG_grp h\<phi>_hom h\<phi>_surj h\<phi>_inj
+            hN_F_normal hwp_in_NF hcF h\<phi>c_NG] .
     qed
     \<comment> \<open>\<supseteq>: if f \<in> N\_F({wp}) then \<phi> f \<in> N\_G({r}).\<close>
     have hsubset2: "top1_normal_subgroup_generated_on F mulF eF invgF {wp} \<subseteq>
