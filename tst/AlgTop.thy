@@ -6637,6 +6637,7 @@ lemma presentation_from_free_quotient:
           top1_group_word_product mulF eF invgF (map (\<lambda>(s, b). (\<iota>F s, b)) w)"
       and hr_in: "r \<in> G"
       and hN_eq: "N = top1_normal_subgroup_generated_on G mulG eG invgG {r}"
+      and hw_valid: "\<forall>i<length w. fst (w ! i) \<in> S"
   shows "\<exists>G' mul' e' invg'.
       top1_group_presented_by_on G' mul' e' invg' S {w}
     \<and> top1_groups_isomorphic_on G' mul' H mulH"
@@ -6708,8 +6709,24 @@ proof -
       hence hcF: "c \<in> F" and h\<phi>c_N: "\<phi> c \<in> N" by (by100 blast)+
       from hN_eq have h\<phi>c: "\<phi> c \<in> top1_normal_subgroup_generated_on G mulG eG invgG {r}"
         using h\<phi>c_N by (by100 simp)
-      have hwp_in_F: "wp \<in> F" unfolding wp_def
-        sorry \<comment> \<open>word\_product of generators \<in> F.\<close>
+      have hwp_in_F: "wp \<in> F"
+      proof -
+        have "\<forall>i<length (map (\<lambda>(s, b). (\<iota>F s, b)) w).
+            fst ((map (\<lambda>(s, b). (\<iota>F s, b)) w) ! i) \<in> F"
+        proof (intro allI impI)
+          fix i assume "i < length (map (\<lambda>(s, b). (\<iota>F s, b)) w)"
+          hence hi: "i < length w" by (by100 simp)
+          have "fst (w ! i) \<in> S" using hw_valid hi by (by100 blast)
+          hence "\<iota>F (fst (w ! i)) \<in> F"
+            using hF_free unfolding top1_is_free_group_full_on_def by (by100 blast)
+          moreover have "(map (\<lambda>(s, b). (\<iota>F s, b)) w) ! i = (\<lambda>(s, b). (\<iota>F s, b)) (w ! i)"
+            using nth_map[OF hi] by (by100 blast)
+          ultimately show "fst ((map (\<lambda>(s, b). (\<iota>F s, b)) w) ! i) \<in> F"
+            by (cases "w ! i") (by100 simp)
+        qed
+        thus ?thesis unfolding wp_def
+          using word_product_in_group[OF hF_grp] by (by100 simp)
+      qed
       have hN_F_normal: "top1_normal_subgroup_on F mulF eF invgF
           (top1_normal_subgroup_generated_on F mulF eF invgF {wp})"
         using normal_subgroup_generated_is_normal[OF hF_grp, of "{wp}"] hwp_in_F
