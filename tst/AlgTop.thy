@@ -7348,11 +7348,23 @@ proof -
        The relator in \<pi>_1(A,a') = class of \<iota> \<circ> circle.
        Under \<phi>^{-1}: maps to scheme word in F.
        So ker = N(scheme word).\<close>
-    \<comment> \<open>Combine: G = \<pi>_1(X,a') is presented by (S, {scheme word}).
-       Use: hpi1\_X\_grp + hfree + composed hom + kernel identification.\<close>
+    \<comment> \<open>Step E: Construct the presentation witness.
+       From hiso\_AF get iso \<phi>: F \<rightarrow> \<pi>_1(A,a').
+       From h\<iota>\_iso get iso \<psi>: \<pi>_1(X,a') \<rightarrow> \<pi>_1(A,a')/N(r).
+       Compose: \<pi> = \<psi>^{-1} \<circ> proj \<circ> \<phi>: F \<rightarrow> \<pi>_1(X,a'), surjective.
+       ker(\<pi>) = \<phi>^{-1}(N(r)) = N(\<phi>^{-1}(r)).
+       Key: \<phi>^{-1}(r) = word\_product mulF eF invgF (map (\<lambda>(s,b). (\<iota>F s, b)) scheme).
+       This is the relator identification.\<close>
+    \<comment> \<open>For the group presentation, we need:
+       1. hpi1\_X\_grp (proved above)
+       2. hfree (from hA\_free\_a')
+       3. A surjective hom \<pi>: F \<rightarrow> \<pi>_1(X,a')
+       4. ker(\<pi>) = N(scheme word in F)
+       Items 3-4 require the group theory composition + relator identification.\<close>
     show ?thesis
       unfolding top1_group_presented_by_on_def
-      sorry
+      using hpi1_X_grp hfree hiso_AF h\<iota>_iso
+      sorry \<comment> \<open>Core: compose free iso + Thm72.1 quotient + relator ID = presentation.\<close>
   qed
   \<comment> \<open>Step (iv): Transfer a' \<rightarrow> a via basepoint change.\<close>
   have hThm72_a: "\<exists>(G::'g set) mul e invg.
