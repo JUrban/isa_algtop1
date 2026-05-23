@@ -4056,7 +4056,23 @@ lemma loop_split_at_vertices:
   defines "sub k \<equiv> (\<lambda>s. f ((real k + s) / real n))"
   shows "top1_loop_equiv_on X TX x0 f
       (foldr top1_path_product (map sub [0..<n]) (top1_constant_path x0))"
-  sorry
+proof -
+  \<comment> \<open>The loop f passes through x0 at s=0, s=1/n, ..., s=1.
+     Split f into n sub-paths, each reparametrized to [0,1].
+     The path product of these sub-paths is homotopic to f by reparametrization.\<close>
+  \<comment> \<open>Each sub path is a path from x0 to x0.\<close>
+  have hsub_loop: "\<And>k. k < n \<Longrightarrow> top1_is_loop_on X TX x0 (sub k)"
+    sorry
+  \<comment> \<open>The foldr product is a loop from x0 to x0.\<close>
+  have hprod_loop: "top1_is_loop_on X TX x0
+      (foldr top1_path_product (map sub [0..<n]) (top1_constant_path x0))"
+    sorry
+  \<comment> \<open>f is homotopic to the product (by reparametrization).\<close>
+  \<comment> \<open>Use reparam\_path\_homotopy: the reparametrization that maps
+     the binary product timing to the linear timing gives homotopy.\<close>
+  show ?thesis
+    sorry
+qed
 
 end
 
