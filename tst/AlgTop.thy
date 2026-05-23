@@ -7577,10 +7577,32 @@ proof -
       proof -
         have hF_grp: "top1_is_group_on F mulF eF invgF"
           using hfree unfolding top1_is_free_group_full_on_def by (by100 blast)
-        have "\<And>i. i < length (map (\<lambda>(s, b). (\<iota>F s, b)) scheme) \<Longrightarrow>
+        have hgens_in: "\<And>i. i < length (map (\<lambda>(s, b). (\<iota>F s, b)) scheme) \<Longrightarrow>
             fst ((map (\<lambda>(s, b). (\<iota>F s, b)) scheme) ! i) \<in> F"
-          using hfree unfolding top1_is_free_group_full_on_def sorry
-        thus ?thesis using word_product_in_group[OF hF_grp] sorry
+        proof -
+          fix i assume hi: "i < length (map (\<lambda>(s, b). (\<iota>F s, b)) scheme)"
+          hence hi': "i < length scheme" by (by100 simp)
+          have "fst ((map (\<lambda>(s, b). (\<iota>F s, b)) scheme) ! i) = \<iota>F (fst (scheme ! i))"
+          proof -
+            have "(map (\<lambda>(s, b). (\<iota>F s, b)) scheme) ! i = (\<lambda>(s, b). (\<iota>F s, b)) (scheme ! i)"
+              using nth_map[OF hi'] by (by100 blast)
+            thus ?thesis by (cases "scheme ! i") (by100 simp)
+          qed
+          moreover have "fst (scheme ! i) \<in> fst ` set scheme"
+            using hi' by (by100 force)
+          moreover have "\<iota>F (fst (scheme ! i)) \<in> F"
+          proof -
+            have "\<forall>s \<in> fst ` set scheme. \<iota>F s \<in> F"
+              using hfree unfolding top1_is_free_group_full_on_def by (by100 blast)
+            thus ?thesis using \<open>fst (scheme ! i) \<in> fst ` set scheme\<close> by (by100 blast)
+          qed
+          ultimately show "fst ((map (\<lambda>(s, b). (\<iota>F s, b)) scheme) ! i) \<in> F"
+            by (by100 simp)
+        qed
+        have hgens_in_all: "\<forall>i<length (map (\<lambda>(s, b). (\<iota>F s, b)) scheme).
+            fst ((map (\<lambda>(s, b). (\<iota>F s, b)) scheme) ! i) \<in> F"
+          using hgens_in by (by100 blast)
+        thus ?thesis using word_product_in_group[OF hF_grp hgens_in_all] by (by100 simp)
       qed
       ultimately show ?thesis
       proof -
