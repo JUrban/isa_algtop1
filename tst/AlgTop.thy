@@ -7538,13 +7538,66 @@ proof -
        3. Each sub-loop is homotopic to the edge loop g\_i (or g\_i^{-1}).
        4. Under \<phi>^{-1}: the class maps to the corresponding word in F.
        5. Word = word\_product of scheme.\<close>
+    \<comment> \<open>Core relator identification: relator\_class = \<phi>(scheme\_word\_in\_F).
+       Proof: The boundary loop \<iota> \<circ> circle decomposes as a product of edge loops.
+       Each edge loop class = \<phi>(\<iota>F(label\_i))^{sign\_i} in \<pi>_1(A,a').
+       So relator\_class = \<phi>(\<iota>F(s_0))^{b_0} * ... * \<phi>(\<iota>F(s_{n-1}))^{b_{n-1}}
+       = \<phi>(word\_product of scheme) since \<phi> is a hom.
+       Hence \<phi>^{-1}(relator\_class) = word\_product of scheme.\<close>
+    \<comment> \<open>Step R1: relator\_class = product of edge loop classes in \<pi>_1(A,a').\<close>
+    have hrel_product: "relator_class =
+        top1_group_word_product
+          (top1_fundamental_group_mul A (subspace_topology X TX A) a')
+          (top1_fundamental_group_id A (subspace_topology X TX A) a')
+          (top1_fundamental_group_invg A (subspace_topology X TX A) a')
+          (map (\<lambda>(s, b). (\<phi> (\<iota>F s), b)) scheme)"
+      sorry \<comment> \<open>Topology: boundary loop = product of edge loops.
+         Each edge i in A corresponds to generator \<phi>(\<iota>F(label\_i))^{sign\_i}.
+         The boundary loop traverses all edges in order.\<close>
+    \<comment> \<open>Step R2: \<phi> is a hom, so \<phi>(word\_product in F) = word\_product in \<pi>_1(A,a').\<close>
+    have hphi_word: "\<phi> (top1_group_word_product mulF eF invgF
+          (map (\<lambda>(s, b). (\<iota>F s, b)) scheme))
+      = top1_group_word_product
+          (top1_fundamental_group_mul A (subspace_topology X TX A) a')
+          (top1_fundamental_group_id A (subspace_topology X TX A) a')
+          (top1_fundamental_group_invg A (subspace_topology X TX A) a')
+          (map (\<lambda>(s, b). (\<phi> (\<iota>F s), b)) scheme)"
+      sorry \<comment> \<open>Group theory: hom preserves word products. Induction on scheme.\<close>
+    \<comment> \<open>Step R3: combine R1 + R2 + bijectivity of \<phi> to get \<phi>^{-1}(relator).\<close>
     have hrelator_word: "inv_into F \<phi> relator_class =
         top1_group_word_product mulF eF invgF
           (map (\<lambda>(s, b). (\<iota>F s, b)) (map (\<lambda>(s,b). (s, b)) scheme))"
-      sorry \<comment> \<open>Core topology: the boundary loop \<iota> \<circ> circle\_path decomposes
-         as the product of edge loops, matching the scheme word in the free group.
-         This is the one-sentence step in Munkres that requires ~200 lines of
-         formal path decomposition + homotopy + multiplicativity.\<close>
+    proof -
+      have "map (\<lambda>(s::nat, b::bool). (s, b)) scheme = scheme" by (by100 simp)
+      moreover have "relator_class = \<phi> (top1_group_word_product mulF eF invgF
+          (map (\<lambda>(s, b). (\<iota>F s, b)) scheme))"
+        using hrel_product hphi_word by (by100 simp)
+      moreover have hwp_in: "top1_group_word_product mulF eF invgF
+          (map (\<lambda>(s, b). (\<iota>F s, b)) scheme) \<in> F"
+      proof -
+        have hF_grp: "top1_is_group_on F mulF eF invgF"
+          using hfree unfolding top1_is_free_group_full_on_def by (by100 blast)
+        have "\<And>i. i < length (map (\<lambda>(s, b). (\<iota>F s, b)) scheme) \<Longrightarrow>
+            fst ((map (\<lambda>(s, b). (\<iota>F s, b)) scheme) ! i) \<in> F"
+          using hfree unfolding top1_is_free_group_full_on_def sorry
+        thus ?thesis using word_product_in_group[OF hF_grp] sorry
+      qed
+      ultimately show ?thesis
+      proof -
+        assume hmap: "map (\<lambda>(s::nat, b::bool). (s, b)) scheme = scheme"
+        assume hrel_eq: "relator_class = \<phi> (top1_group_word_product mulF eF invgF
+            (map (\<lambda>(s, b). (\<iota>F s, b)) scheme))"
+        have "inv_into F \<phi> (\<phi> (top1_group_word_product mulF eF invgF
+            (map (\<lambda>(s, b). (\<iota>F s, b)) scheme)))
+          = top1_group_word_product mulF eF invgF
+            (map (\<lambda>(s, b). (\<iota>F s, b)) scheme)"
+        proof -
+          have "inj_on \<phi> F" using h\<phi>_bij unfolding bij_betw_def by (by100 blast)
+          thus ?thesis using inv_into_f_f[OF _ hwp_in] by (by100 blast)
+        qed
+        thus ?thesis using hrel_eq hmap by (by100 simp)
+      qed
+    qed
     \<comment> \<open>From hrelator\_word + first\_isomorphism\_theorem + h\<iota>\_iso:
        F / N(scheme\_word\_in\_F) \<cong> Q \<cong> \<pi>_1(X,a').
        This gives the presentation.\<close>
