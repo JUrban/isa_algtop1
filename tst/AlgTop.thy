@@ -7361,10 +7361,92 @@ proof -
        3. A surjective hom \<pi>: F \<rightarrow> \<pi>_1(X,a')
        4. ker(\<pi>) = N(scheme word in F)
        Items 3-4 require the group theory composition + relator identification.\<close>
-    show ?thesis
+    \<comment> \<open>Extract the isomorphism \<phi>: F \<rightarrow> \<pi>_1(A,a').\<close>
+    from hiso_AF[unfolded top1_groups_isomorphic_on_def top1_group_iso_on_def]
+    obtain \<phi> where
+      h\<phi>_hom: "top1_group_hom_on F mulF
+          (top1_fundamental_group_carrier A (subspace_topology X TX A) a')
+          (top1_fundamental_group_mul A (subspace_topology X TX A) a') \<phi>" and
+      h\<phi>_bij: "bij_betw \<phi> F
+          (top1_fundamental_group_carrier A (subspace_topology X TX A) a')"
+      by (by100 blast)
+    \<comment> \<open>The relator class in \<pi>_1(A,a').\<close>
+    define relator_class where "relator_class =
+        top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1, 0)
+           A (subspace_topology X TX A) a' \<iota>
+           {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0)
+                 (\<lambda>s. (cos (2 * pi * s), sin (2 * pi * s))) g}"
+    \<comment> \<open>The normal subgroup N(relator).\<close>
+    define N where "N = top1_normal_subgroup_generated_on
+        (top1_fundamental_group_carrier A (subspace_topology X TX A) a')
+        (top1_fundamental_group_mul A (subspace_topology X TX A) a')
+        (top1_fundamental_group_id A (subspace_topology X TX A) a')
+        (top1_fundamental_group_invg A (subspace_topology X TX A) a')
+        {relator_class}"
+    \<comment> \<open>The quotient group.\<close>
+    define Q where "Q = top1_quotient_group_carrier_on
+        (top1_fundamental_group_carrier A (subspace_topology X TX A) a')
+        (top1_fundamental_group_mul A (subspace_topology X TX A) a') N"
+    define mulQ where "mulQ = top1_quotient_group_mul_on
+        (top1_fundamental_group_mul A (subspace_topology X TX A) a')"
+    \<comment> \<open>Extract \<psi>: \<pi>_1(X,a') \<rightarrow> Q (iso from Thm 72.1).\<close>
+    have h\<iota>_iso': "top1_groups_isomorphic_on
+        (top1_fundamental_group_carrier X TX a')
+        (top1_fundamental_group_mul X TX a') Q mulQ"
+      using h\<iota>_iso unfolding Q_def N_def relator_class_def mulQ_def by (by100 simp)
+    from h\<iota>_iso'[unfolded top1_groups_isomorphic_on_def top1_group_iso_on_def]
+    obtain \<psi> where
+      h\<psi>_hom: "top1_group_hom_on
+          (top1_fundamental_group_carrier X TX a')
+          (top1_fundamental_group_mul X TX a') Q mulQ \<psi>" and
+      h\<psi>_bij: "bij_betw \<psi>
+          (top1_fundamental_group_carrier X TX a') Q"
+      by (by100 blast)
+    \<comment> \<open>Natural quotient map proj: \<pi>_1(A,a') \<rightarrow> Q.\<close>
+    define proj where "proj g = {h. \<exists>n\<in>N. h = top1_fundamental_group_mul A (subspace_topology X TX A) a' g n}" for g
+    \<comment> \<open>Compose: \<pi> = inv(\<psi>) \<circ> proj \<circ> \<phi>.\<close>
+    define \<pi>F where "\<pi>F f = inv_into (top1_fundamental_group_carrier X TX a') \<psi> (proj (\<phi> f))" for f
+    \<comment> \<open>Show \<pi>F is a surjective hom with ker = N(scheme word).\<close>
+    have h\<pi>F_hom: "top1_group_hom_on F mulF
+        (top1_fundamental_group_carrier X TX a')
+        (top1_fundamental_group_mul X TX a') \<pi>F"
+      sorry
+    have h\<pi>F_surj: "\<pi>F ` F = top1_fundamental_group_carrier X TX a'"
+      sorry
+    \<comment> \<open>Key: the relator class under \<phi>^{-1} equals the scheme word product.
+       relator\_class = image of circle loop under \<iota>.
+       Under \<phi>^{-1}: this maps to word\_product(\<iota>F, scheme) in F.
+       This is the core topological identification.\<close>
+    have hrelator_word: "inv_into F \<phi> relator_class =
+        top1_group_word_product mulF eF invgF
+          (map (\<lambda>(s, b). (\<iota>F s, b)) (map (\<lambda>(s,b). (s, b)) scheme))"
+      sorry \<comment> \<open>Core topology: boundary loop = scheme word in free group.\<close>
+    have hker: "top1_group_kernel_on F
+        (top1_fundamental_group_id X TX a') \<pi>F =
+      top1_normal_subgroup_generated_on F mulF eF invgF
+        {r. \<exists>w\<in>{map (\<lambda>(s,b). (s, b)) scheme}.
+            r = top1_group_word_product mulF eF invgF (map (\<lambda>(s, b). (\<iota>F s, b)) w)}"
+      sorry \<comment> \<open>From hrelator\_word + kernel computation.\<close>
+    \<comment> \<open>Assemble the presentation.\<close>
+    have hpresented: "top1_group_presented_by_on
+        (top1_fundamental_group_carrier X TX a')
+        (top1_fundamental_group_mul X TX a')
+        (top1_fundamental_group_id X TX a')
+        (top1_fundamental_group_invg X TX a')
+        (fst ` set scheme)
+        { map (\<lambda>(s,b). (s, b)) scheme }"
       unfolding top1_group_presented_by_on_def
-      using hpi1_X_grp hfree hiso_AF h\<iota>_iso
-      sorry \<comment> \<open>Core: compose free iso + Thm72.1 quotient + relator ID = presentation.\<close>
+      using hpi1_X_grp hfree h\<pi>F_hom h\<pi>F_surj hker
+      sorry
+    have hiso_XG: "top1_groups_isomorphic_on
+        (top1_fundamental_group_carrier X TX a')
+        (top1_fundamental_group_mul X TX a')
+        (top1_fundamental_group_carrier X TX a')
+        (top1_fundamental_group_mul X TX a')"
+      unfolding top1_groups_isomorphic_on_def top1_group_iso_on_def
+      using hpi1_X_grp
+      sorry \<comment> \<open>Reflexivity: use identity map as iso.\<close>
+    show ?thesis using hpresented hiso_XG sorry
   qed
   \<comment> \<open>Step (iv): Transfer a' \<rightarrow> a via basepoint change.\<close>
   have hThm72_a: "\<exists>(G::'g set) mul e invg.
