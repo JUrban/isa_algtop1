@@ -4124,8 +4124,8 @@ proof -
     qed
     \<comment> \<open>sub k is a path from x0 to x0 = loop.\<close>
     show "top1_is_loop_on X TX x0 (sub k)"
-      unfolding top1_is_loop_on_def top1_is_path_on_def top1_unit_interval_def
-      using hsub0 hsub1 hsub_cont sorry
+      unfolding top1_is_loop_on_def top1_is_path_on_def
+      using hsub0 hsub1 hsub_cont by (by5000 blast)
   qed
   \<comment> \<open>The foldr product is a loop from x0 to x0.\<close>
   have hprod_loop: "top1_is_loop_on X TX x0
