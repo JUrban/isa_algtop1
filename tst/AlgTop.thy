@@ -6615,12 +6615,82 @@ qed
 text \<open>Helper: given CW data, free group iso, and Theorem 72.1 quotient,
   produce the group presentation. This factors out the relator identification
   step from Theorem 74.2 into a standalone lemma where proof blocks work.\<close>
-text \<open>TODO: Factor out the relator identification from Theorem 74.2 into a standalone
-  lemma. The key fact: the boundary loop class in \<pi>_1(A,a') equals the product
-  of edge loop classes, which under the free group isomorphism corresponds to
-  the scheme word product. This is Munkres's one-sentence argument:
-  "the loop \<pi> \<circ> f equals (g\_{i\_1})^{\<epsilon>\_1} * ... * (g\_{i\_n})^{\<epsilon>\_n}."
-  Needs ~200 lines of path decomposition + homotopy + wedge generator identification.\<close>
+text \<open>Helper: given a free group F \<cong> \<pi>_1(A), a quotient \<pi>_1(X) \<cong> \<pi>_1(A)/N(r),
+  and a word w such that \<phi>^{-1}(r) = word\_product(\<iota>F, w),
+  conclude that \<pi>_1(X) has presentation \<langle>S | w\<rangle>.\<close>
+lemma presentation_from_free_quotient:
+  fixes F :: "'f set" and mulF :: "'f \<Rightarrow> 'f \<Rightarrow> 'f" and eF :: 'f and invgF :: "'f \<Rightarrow> 'f"
+    and \<iota>F :: "'s \<Rightarrow> 'f" and S :: "'s set"
+    and G :: "'g set" and mulG :: "'g \<Rightarrow> 'g \<Rightarrow> 'g" and eG :: 'g and invgG :: "'g \<Rightarrow> 'g"
+    and H :: "'h set" and mulH :: "'h \<Rightarrow> 'h \<Rightarrow> 'h" and eH :: 'h and invgH :: "'h \<Rightarrow> 'h"
+    and w :: "('s \<times> bool) list"
+  assumes hF_free: "top1_is_free_group_full_on F mulF eF invgF \<iota>F S"
+      and hG_grp: "top1_is_group_on G mulG eG invgG"
+      and hH_grp: "top1_is_group_on H mulH eH invgH"
+      and h\<phi>: "top1_group_iso_on F mulF G mulG \<phi>"
+      and hproj_hom: "top1_group_hom_on G mulG Q mulQ proj"
+      and hproj_surj: "proj ` G = Q"
+      and hproj_ker: "top1_group_kernel_on G eQ proj = N"
+      and hQ_grp: "top1_is_group_on Q mulQ eQ invgQ"
+      and h\<psi>_iso: "top1_groups_isomorphic_on H mulH Q mulQ"
+      and hrel_word: "inv_into F \<phi> r =
+          top1_group_word_product mulF eF invgF (map (\<lambda>(s, b). (\<iota>F s, b)) w)"
+      and hr_in: "r \<in> G"
+      and hN_eq: "N = top1_normal_subgroup_generated_on G mulG eG invgG {r}"
+  shows "\<exists>G' mul' e' invg'.
+      top1_group_presented_by_on G' mul' e' invg' S {w}
+    \<and> top1_groups_isomorphic_on G' mul' H mulH"
+proof -
+  \<comment> \<open>F --\<phi>--> G --proj--> Q \<cong> H.
+     proj \<circ> \<phi>: F \<rightarrow> Q surjective hom.
+     ker(proj \<circ> \<phi>) = \<phi>^{-1}(N) = \<phi>^{-1}(N\_G({r})) = N\_F({\<phi>^{-1}(r)}) = N\_F({word\_product}).
+     So Q \<cong> F / N\_F({word\_product}) = presented group.
+     And H \<cong> Q. So \<exists>G'. presented G' \<and> G' \<cong> H.\<close>
+  \<comment> \<open>Step 1: proj \<circ> \<phi> is surjective hom.\<close>
+  have h\<phi>_hom: "top1_group_hom_on F mulF G mulG \<phi>"
+    using h\<phi> unfolding top1_group_iso_on_def by (by100 blast)
+  have h\<phi>_bij: "bij_betw \<phi> F G"
+    using h\<phi> unfolding top1_group_iso_on_def by (by100 blast)
+  have hcomp_hom: "top1_group_hom_on F mulF Q mulQ (proj \<circ> \<phi>)"
+    using group_hom_comp[OF h\<phi>_hom hproj_hom] .
+  have hcomp_surj: "(proj \<circ> \<phi>) ` F = Q"
+  proof -
+    have "\<phi> ` F = G" using h\<phi>_bij unfolding bij_betw_def by (by100 blast)
+    thus ?thesis using hproj_surj image_image[of proj \<phi> F, symmetric] by (by100 simp)
+  qed
+  \<comment> \<open>Step 2: kernel.\<close>
+  have hF_grp: "top1_is_group_on F mulF eF invgF"
+    using hF_free unfolding top1_is_free_group_full_on_def by (by100 blast)
+  have hcomp_ker: "top1_group_kernel_on F eQ (proj \<circ> \<phi>) = {f \<in> F. \<phi> f \<in> N}"
+  proof -
+    have h\<phi>_img: "\<And>f. f \<in> F \<Longrightarrow> \<phi> f \<in> G" using h\<phi>_bij unfolding bij_betw_def by (by100 blast)
+    have hker_eq: "N = {g \<in> G. proj g = eQ}" using hproj_ker unfolding top1_group_kernel_on_def by (by100 simp)
+    have "\<And>f. f \<in> F \<Longrightarrow> ((proj \<circ> \<phi>) f = eQ) = (\<phi> f \<in> N)"
+    proof -
+      fix f assume hf: "f \<in> F"
+      have h\<phi>f: "\<phi> f \<in> G" using h\<phi>_img[OF hf] .
+      have "(\<phi> f \<in> N) = (\<phi> f \<in> G \<and> proj (\<phi> f) = eQ)" using hker_eq by (by100 blast)
+      also have "\<dots> = (proj (\<phi> f) = eQ)" using h\<phi>f by (by100 simp)
+      also have "\<dots> = ((proj \<circ> \<phi>) f = eQ)" by (by100 simp)
+      finally show "((proj \<circ> \<phi>) f = eQ) = (\<phi> f \<in> N)" by (by100 simp)
+    qed
+    thus ?thesis unfolding top1_group_kernel_on_def by (by100 blast)
+  qed
+  \<comment> \<open>Step 3: \<phi>^{-1}(N\_G({r})) = N\_F({\<phi>^{-1}(r)}).\<close>
+  have hker_word: "top1_group_kernel_on F eQ (proj \<circ> \<phi>) =
+      top1_normal_subgroup_generated_on F mulF eF invgF
+        {top1_group_word_product mulF eF invgF (map (\<lambda>(s, b). (\<iota>F s, b)) w)}"
+    using hcomp_ker hN_eq hrel_word sorry \<comment> \<open>\<phi>^{-1}(N\_G({r})) = N\_F({\<phi>^{-1}(r)}) via iso.\<close>
+  \<comment> \<open>Step 4: Q is presented by (S, {w}).\<close>
+  have hQ_presented: "top1_group_presented_by_on Q mulQ eQ invgQ S {w}"
+    unfolding top1_group_presented_by_on_def
+    using hQ_grp hF_free hcomp_hom hcomp_surj hker_word
+    sorry
+  \<comment> \<open>Step 5: H \<cong> Q, so use Q as the witness.\<close>
+  have hQ_iso_H: "top1_groups_isomorphic_on Q mulQ H mulH"
+    using top1_groups_isomorphic_on_sym[OF h\<psi>_iso hH_grp hQ_grp] .
+  show ?thesis using hQ_presented hQ_iso_H sorry
+qed
 
 theorem Theorem_74_2_scheme_presentation:
   fixes X :: "'a set" and TX :: "'a set set" and x0 :: 'a
@@ -7572,8 +7642,10 @@ proof -
           (top1_fundamental_group_id A (subspace_topology X TX A) a')
           (top1_fundamental_group_invg A (subspace_topology X TX A) a')
           (map (\<lambda>(s, b). (\<phi> (\<iota>F s), b)) scheme)"
-      sorry \<comment> \<open>From hom\_word\_product: \<phi> preserves word products.
-         Available: hom\_word\_product lemma + hgens\_in (generators in F).\<close>
+      using hom_word_product[OF _ hpi1_A_grp h\<phi>_hom, of eF invgF
+          "map (\<lambda>(s, b). (\<iota>F s, b)) scheme"]
+        hfree[unfolded top1_is_free_group_full_on_def]
+      sorry \<comment> \<open>Need: generators in F + map composition = map (\<lambda>(s,b). (\<phi>(\<iota>F s), b)).\<close>
     \<comment> \<open>Step R3: combine R1 + R2 + bijectivity of \<phi> to get \<phi>^{-1}(relator).\<close>
     have hrelator_word: "inv_into F \<phi> relator_class =
         top1_group_word_product mulF eF invgF
