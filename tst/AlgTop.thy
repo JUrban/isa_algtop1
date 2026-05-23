@@ -7403,7 +7403,36 @@ proof -
           (top1_fundamental_group_carrier X TX a') Q"
       by (by100 blast)
     \<comment> \<open>Natural quotient map proj: \<pi>_1(A,a') \<rightarrow> Q.\<close>
-    define proj where "proj g = {h. \<exists>n\<in>N. h = top1_fundamental_group_mul A (subspace_topology X TX A) a' g n}" for g
+    define proj where "proj g = top1_group_coset_on
+        (top1_fundamental_group_carrier A (subspace_topology X TX A) a')
+        (top1_fundamental_group_mul A (subspace_topology X TX A) a') N g" for g
+    \<comment> \<open>Projection properties.\<close>
+    have hpi1_A_grp: "top1_is_group_on
+        (top1_fundamental_group_carrier A (subspace_topology X TX A) a')
+        (top1_fundamental_group_mul A (subspace_topology X TX A) a')
+        (top1_fundamental_group_id A (subspace_topology X TX A) a')
+        (top1_fundamental_group_invg A (subspace_topology X TX A) a')"
+      using top1_fundamental_group_is_group[OF hTA ha'_A] .
+    have hN_normal: "top1_normal_subgroup_on
+        (top1_fundamental_group_carrier A (subspace_topology X TX A) a')
+        (top1_fundamental_group_mul A (subspace_topology X TX A) a')
+        (top1_fundamental_group_id A (subspace_topology X TX A) a')
+        (top1_fundamental_group_invg A (subspace_topology X TX A) a') N"
+      unfolding N_def sorry
+    note hqpp = quotient_projection_properties[OF hpi1_A_grp hN_normal]
+    have hproj_hom: "top1_group_hom_on
+        (top1_fundamental_group_carrier A (subspace_topology X TX A) a')
+        (top1_fundamental_group_mul A (subspace_topology X TX A) a') Q mulQ proj"
+      using hqpp unfolding proj_def Q_def mulQ_def by (by5000 blast)
+    have hproj_surj: "proj ` (top1_fundamental_group_carrier A (subspace_topology X TX A) a') = Q"
+      using hqpp unfolding proj_def Q_def by (by5000 blast)
+    have hproj_ker: "top1_group_kernel_on
+        (top1_fundamental_group_carrier A (subspace_topology X TX A) a')
+        (top1_group_coset_on
+          (top1_fundamental_group_carrier A (subspace_topology X TX A) a')
+          (top1_fundamental_group_mul A (subspace_topology X TX A) a') N
+          (top1_fundamental_group_id A (subspace_topology X TX A) a')) proj = N"
+      using hqpp unfolding proj_def by (by5000 blast)
     \<comment> \<open>Compose: \<pi> = inv(\<psi>) \<circ> proj \<circ> \<phi>.\<close>
     define \<pi>F where "\<pi>F f = inv_into (top1_fundamental_group_carrier X TX a') \<psi> (proj (\<phi> f))" for f
     \<comment> \<open>Show \<pi>F is a surjective hom with ker = N(scheme word).\<close>
