@@ -4048,6 +4048,26 @@ text \<open>Path splitting lemma: a loop f: [0,1] \<rightarrow> X that passes th
   s = k/n (for k = 0,...,n) is path-homotopic to the product of n sub-loops
   f\_k: [0,1] \<rightarrow> X defined by f\_k(s) = f((k+s)/n).
   This is the key infrastructure for Theorem 74.2s relator identification.\<close>
+lemma foldr_path_product_loops_is_loop:
+  assumes htop: "is_topology_on X TX"
+      and hbase: "top1_is_loop_on X TX x0 base"
+      and hloops: "\<forall>g \<in> set gs. top1_is_loop_on X TX x0 g"
+  shows "top1_is_loop_on X TX x0 (foldr top1_path_product gs base)"
+  using hloops
+proof (induct gs)
+  case Nil show ?case using hbase by (by100 simp)
+next
+  case (Cons g gs')
+  hence hg: "top1_is_loop_on X TX x0 g" by (by100 simp)
+  have hgs': "\<forall>g \<in> set gs'. top1_is_loop_on X TX x0 g" using Cons.prems by (by100 simp)
+  have hIH: "top1_is_loop_on X TX x0 (foldr top1_path_product gs' base)"
+    using Cons.hyps[OF hgs'] .
+  show ?case unfolding top1_is_loop_on_def
+    using top1_path_product_is_path[OF htop
+        hg[unfolded top1_is_loop_on_def]
+        hIH[unfolded top1_is_loop_on_def]] by (by100 simp)
+qed
+
 lemma loop_split_at_vertices:
   assumes htop: "is_topology_on X TX"
       and hloop: "top1_is_loop_on X TX x0 f"
@@ -4130,8 +4150,24 @@ proof -
   \<comment> \<open>The foldr product is a loop from x0 to x0.\<close>
   have hprod_loop: "top1_is_loop_on X TX x0
       (foldr top1_path_product (map sub [0..<n]) (top1_constant_path x0))"
-    sorry \<comment> \<open>foldr path\_product of loops is a loop. Needs induction with
-       foldr\_append + path\_product\_is\_path. Known infrastructure gap.\<close>
+  proof -
+    have hx0_X: "x0 \<in> X"
+    proof -
+      have "f 0 = x0" using top1_is_loop_on_start[OF hloop] .
+      moreover have "f 0 \<in> X"
+      proof -
+        have "0 \<in> I_set" unfolding top1_unit_interval_def by (by100 auto)
+        thus ?thesis using hloop[unfolded top1_is_loop_on_def top1_is_path_on_def
+            top1_continuous_map_on_def] by (by100 blast)
+      qed
+      ultimately show ?thesis by (by100 simp)
+    qed
+    have hconst: "top1_is_loop_on X TX x0 (top1_constant_path x0)"
+      using top1_constant_path_is_loop[OF htop hx0_X] .
+    have hloops_set: "\<forall>g \<in> set (map sub [0..<n]). top1_is_loop_on X TX x0 g"
+      using hsub_loop by (by100 force)
+    show ?thesis using foldr_path_product_loops_is_loop[OF htop hconst hloops_set] .
+  qed
   \<comment> \<open>f is homotopic to the product (by reparametrization).\<close>
   \<comment> \<open>Use reparam\_path\_homotopy: the reparametrization that maps
      the binary product timing to the linear timing gives homotopy.\<close>
