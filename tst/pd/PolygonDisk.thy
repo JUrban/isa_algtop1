@@ -3826,6 +3826,23 @@ text \<open>Lemma 3: Torus scheme vertex connectivity.
   In the torus scheme [(a1,+),(b1,+),(a1,-),(b1,-),...,(an,+),(bn,+),(an,-),(bn,-)],
   the edge identifications (same label, opposite orientation = reversed edge) imply
   that all vertices are identified under any quotient map respecting the scheme.\<close>
+text \<open>Helper for torus vertex connectivity: all vertices identified with v\_0.\<close>
+lemma torus_scheme_all_eq_v0:
+  fixes n :: nat
+  defines "scheme \<equiv> concat (map (\<lambda>i. [(2*i, True), (2*i+1, True),
+                                       (2*i, False), (2*i+1, False)]) [0..<n])"
+  assumes hedge: "\<forall>i<length scheme. \<forall>j<length scheme.
+      fst (scheme!i) = fst (scheme!j) \<longrightarrow>
+      (\<forall>t\<in>I_set. q ((1-t) * vx i + t * vx (Suc i mod length scheme),
+         (1-t) * vy i + t * vy (Suc i mod length scheme))
+       = (if snd (scheme!i) = snd (scheme!j)
+          then q ((1-t) * vx j + t * vx (Suc j mod length scheme),
+                  (1-t) * vy j + t * vy (Suc j mod length scheme))
+          else q (t * vx j + (1-t) * vx (Suc j mod length scheme),
+                  t * vy j + (1-t) * vy (Suc j mod length scheme))))"
+  shows "\<And>i. i < length scheme \<Longrightarrow> q (vx i, vy i) = q (vx 0, vy 0)"
+  sorry
+
 lemma torus_scheme_vertex_connectivity:
   fixes n :: nat
   defines "scheme \<equiv> concat (map (\<lambda>i. [(2*i, True), (2*i+1, True),
@@ -3841,6 +3858,7 @@ lemma torus_scheme_vertex_connectivity:
             else q (t * vx j + (1-t) * vx (Suc j mod length scheme),
                     t * vy j + (1-t) * vy (Suc j mod length scheme)))))
       \<longrightarrow> (\<forall>i<length scheme. \<forall>j<length scheme. q (vx i, vy i) = q (vx j, vy j))"
+  using torus_scheme_all_eq_v0[of n] unfolding scheme_def
   sorry
 
 end
