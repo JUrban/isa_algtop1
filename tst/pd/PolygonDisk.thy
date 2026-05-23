@@ -4130,7 +4130,8 @@ proof -
   \<comment> \<open>The foldr product is a loop from x0 to x0.\<close>
   have hprod_loop: "top1_is_loop_on X TX x0
       (foldr top1_path_product (map sub [0..<n]) (top1_constant_path x0))"
-    sorry
+    sorry \<comment> \<open>Induction: constant path is loop, path product of two loops is loop.
+       Uses top1\_path\_product\_is\_path + hsub\_loop.\<close>
   \<comment> \<open>f is homotopic to the product (by reparametrization).\<close>
   \<comment> \<open>Use reparam\_path\_homotopy: the reparametrization that maps
      the binary product timing to the linear timing gives homotopy.\<close>
