@@ -7472,10 +7472,21 @@ proof -
     \<comment> \<open>Compose: \<pi> = inv(\<psi>) \<circ> proj \<circ> \<phi>.\<close>
     define \<pi>F where "\<pi>F f = inv_into (top1_fundamental_group_carrier X TX a') \<psi> (proj (\<phi> f))" for f
     \<comment> \<open>Show \<pi>F is a surjective hom with ker = N(scheme word).\<close>
+    \<comment> \<open>proj \<circ> \<phi> is a hom F \<rightarrow> Q.\<close>
+    have hproj_phi_hom: "top1_group_hom_on F mulF Q mulQ (proj \<circ> \<phi>)"
+      using group_hom_comp[OF h\<phi>_hom hproj_hom] .
+    \<comment> \<open>\<psi>^{-1} is a hom Q \<rightarrow> \<pi>_1(X,a').\<close>
+    have h\<psi>_inv_hom: "top1_group_hom_on Q mulQ
+        (top1_fundamental_group_carrier X TX a')
+        (top1_fundamental_group_mul X TX a')
+        (inv_into (top1_fundamental_group_carrier X TX a') \<psi>)"
+      sorry \<comment> \<open>Inverse of bijective hom is a hom.\<close>
+    \<comment> \<open>\<pi>F = \<psi>^{-1} \<circ> (proj \<circ> \<phi>) is a hom.\<close>
     have h\<pi>F_hom: "top1_group_hom_on F mulF
         (top1_fundamental_group_carrier X TX a')
         (top1_fundamental_group_mul X TX a') \<pi>F"
-      sorry
+      using group_hom_comp[OF hproj_phi_hom h\<psi>_inv_hom]
+        unfolding \<pi>F_def comp_def sorry
     have h\<pi>F_surj: "\<pi>F ` F = top1_fundamental_group_carrier X TX a'"
       sorry
     \<comment> \<open>Key: the relator class under \<phi>^{-1} equals the scheme word product.
