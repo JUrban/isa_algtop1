@@ -7298,17 +7298,62 @@ proof -
       \<and> top1_groups_isomorphic_on G mul
           (top1_fundamental_group_carrier X TX a')
           (top1_fundamental_group_mul X TX a')"
-    sorry \<comment> \<open>Relator identification: the core algebraic topology step.
-       Proof outline (Munkres Theorem 74.2):
-       Step A: Extract free group isomorphism from hA\_free\_a'.
-       Step B: From h\<iota>\_iso, get \<pi>_1(X,a') \<cong> F(S)/N(relator).
-       Step C: Identify relator = scheme word.
-         - The boundary loop h \<circ> (cos 2\<pi>s, sin 2\<pi>s) traces edges 0,...,n-1.
-         - Edge i with (label, True) maps to generator \<iota>(label).
-         - Edge i with (label, False) maps to inverse \<iota>(label)^{-1}.
-         - Product = scheme word in the free group.
-       Step D: Combine into group\_presented\_by\_on.
-       Available: h\<iota>\_iso, hA\_free\_a', h\<iota>\_eq, CW data from scheme\_quotient\_CW\_data.\<close>
+  proof -
+    \<comment> \<open>Following Munkres Theorem 74.2 proof:
+       "The loop f running around Bd P once in the counterclockwise direction
+        generates the fundamental group of Bd P, and the loop \<pi> \<circ> f equals
+        the loop (g_{i_1})^{\<epsilon>_1} * ... * (g_{i_n})^{\<epsilon>_n}.
+        The theorem now follows from Theorem 72.1."\<close>
+    \<comment> \<open>Step A: Extract free group from hA\_free\_a'.\<close>
+    from hA_free_a' obtain F :: "int set" and mulF eF invgF and
+        \<iota>F :: "nat \<Rightarrow> int" where
+      hfree: "top1_is_free_group_full_on F mulF eF invgF \<iota>F (fst ` set scheme)" and
+      hiso_AF: "top1_groups_isomorphic_on F mulF
+          (top1_fundamental_group_carrier A (subspace_topology X TX A) a')
+          (top1_fundamental_group_mul A (subspace_topology X TX A) a')"
+      by (elim conjE exE) (rule that, assumption+)
+    \<comment> \<open>Step B: From h\<iota>\_iso, \<pi>_1(X,a') \<cong> \<pi>_1(A,a')/N(relator).
+       Combined with the free group iso, we get \<pi>_1(X,a') \<cong> F/N(relator in F).
+       This gives a group presentation IF we can identify the relator.\<close>
+    \<comment> \<open>Step C: The relator = scheme word in the free group.
+       The relator in \<pi>_1(A,a') is the class of the loop \<iota> \<circ> circle\_path.
+       Since \<iota> = h on S1, this loop = h \<circ> circle\_path.
+       The map h sends S1 to A by tracing each edge in order.
+       Restricted to edge i, the path equals the generator loop g\_i (or g\_i^{-1}).
+       So the relator class = product of generator classes = scheme word.\<close>
+    \<comment> \<open>Step D: The quotient F/N(scheme\_word) with the isomorphism gives the presentation.\<close>
+    \<comment> \<open>Step B': \<pi>_1(X,a') is a group.\<close>
+    have hTX: "is_topology_on X TX"
+      using hX_strict unfolding is_topology_on_strict_def by (by100 blast)
+    have hTA: "is_topology_on A (subspace_topology X TX A)"
+    proof -
+      have "A \<subseteq> X" using hA_cl unfolding closedin_on_def by (by100 blast)
+      thus ?thesis by (rule subspace_topology_is_topology_on[OF hTX])
+    qed
+    have ha'_X: "a' \<in> X"
+    proof -
+      have "A \<subseteq> X" using hA_cl unfolding closedin_on_def by (by100 blast)
+      thus ?thesis using ha'_A by (by100 blast)
+    qed
+    have hpi1_X_grp: "top1_is_group_on
+        (top1_fundamental_group_carrier X TX a')
+        (top1_fundamental_group_mul X TX a')
+        (top1_fundamental_group_id X TX a')
+        (top1_fundamental_group_invg X TX a')"
+      using top1_fundamental_group_is_group[OF hTX ha'_X] .
+    \<comment> \<open>Step C': Compose: hom \<pi> = (Thm72.1 quotient map) \<circ> (free group iso).
+       F --\<phi>--> \<pi>_1(A,a') --proj--> \<pi>_1(A,a')/N(rel) --\<psi>^{-1}--> \<pi>_1(X,a').
+       This gives surjective hom \<pi>: F \<rightarrow> \<pi>_1(X,a').\<close>
+    \<comment> \<open>Step D': ker(\<pi>) = N(scheme word in F).
+       The relator in \<pi>_1(A,a') = class of \<iota> \<circ> circle.
+       Under \<phi>^{-1}: maps to scheme word in F.
+       So ker = N(scheme word).\<close>
+    \<comment> \<open>Combine: G = \<pi>_1(X,a') is presented by (S, {scheme word}).
+       Use: hpi1\_X\_grp + hfree + composed hom + kernel identification.\<close>
+    show ?thesis
+      unfolding top1_group_presented_by_on_def
+      sorry
+  qed
   \<comment> \<open>Step (iv): Transfer a' \<rightarrow> a via basepoint change.\<close>
   have hThm72_a: "\<exists>(G::'g set) mul e invg.
       top1_group_presented_by_on G mul e invg (fst ` set scheme)
