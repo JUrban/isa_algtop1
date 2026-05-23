@@ -4062,6 +4062,11 @@ lemma torus_scheme_vertex_connectivity:
             else q (t * vx j + (1-t) * vx (Suc j mod length scheme),
                     t * vy j + (1-t) * vy (Suc j mod length scheme)))))
       \<longrightarrow> (\<forall>i<length scheme. \<forall>j<length scheme. q (vx i, vy i) = q (vx j, vy j))"
-  sorry \<comment> \<open>Wrapper: from all\_eq\_v0 + transitivity. Blocked by defines scoping.\<close>
+  apply (intro allI impI)
+  subgoal for q vx vy
+    using torus_scheme_all_eq_v0[of n q vx vy]
+    unfolding scheme_def
+    by (by5000 force)
+  done
 
 end
