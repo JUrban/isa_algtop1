@@ -3807,7 +3807,15 @@ lemma convex_polygon_vertex_half_plane:
          in (vx i - cx) * (vy (Suc i mod n) - cy) - (vy i - cy) * (vx (Suc i mod n) - cx) > 0"
   shows "\<forall>i<n. \<forall>k<n. cross2 (vx k - vx i, vy k - vy i)
       (vx (Suc i mod n) - vx i, vy (Suc i mod n) - vy i) \<le> 0"
-  sorry
+  sorry \<comment> \<open>Convex polygon vertex half-plane condition.
+     Proof approach: P = convex hull of vertices. H\_i = {z. cross2(z-vi, vi+1-vi) \<le> 0} is convex.
+     Need P \<subseteq> H\_i. Since P = conv(vertices), suffices to show all vertices in H\_i.
+     This is the statement itself - so we need the CCW ordering to break circularity.
+     Key: use the centroid c \<in> interior(H\_i) (since cross2(c-vi,...) = -Di < 0)
+     and show that any vertex v\_k with cross2(v\_k-vi,...) > 0 would violate convexity
+     (segment from c to v\_k exits H\_i but stays in P, contradicting P \<subseteq> H\_i).
+     Bootstrapping issue: we need P \<subseteq> H\_i to conclude v\_k \<in> H\_i.
+     Alternative: add as scheme assumption (pragmatic, reviewer-recommended).\<close>
 
 text \<open>Lemma 2: No 3 non-adjacent collinear vertices in a CCW convex polygon.
   If D\_i = cross2(v\_i - c, v\_{i+1} - c) > 0 for all i, then for j \<noteq> i and
