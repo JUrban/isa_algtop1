@@ -942,6 +942,40 @@ proof -
     using hcos hsin by (by100 simp)
 qed
 
+text \<open>Helper: if f is continuous on S-{c} and |fst(f z)|,|snd(f z)| \<le> g(z) where
+  g is continuous, g(c)=0, and f(c)=(0,0), then f is continuous on S.\<close>
+lemma continuous_on_squeeze_at_point:
+  fixes f :: "'a::topological_space \<Rightarrow> real \<times> real" and g :: "'a \<Rightarrow> real"
+  assumes hS: "c \<in> S"
+      and hfc: "f c = (0, 0)"
+      and hg_cont: "continuous_on S g"
+      and hgc: "g c = 0"
+      and hbound: "\<And>z. z \<in> S \<Longrightarrow> \<bar>fst (f z)\<bar> \<le> g z \<and> \<bar>snd (f z)\<bar> \<le> g z"
+      and hg_nn: "\<And>z. z \<in> S \<Longrightarrow> g z \<ge> 0"
+      and hcont_away: "continuous_on (S - {c}) f"
+  shows "continuous_on S f"
+proof (unfold continuous_on_def, intro ballI)
+  fix z0 assume hz0: "z0 \<in> S"
+  show "(f \<longlongrightarrow> f z0) (at z0 within S)"
+  proof (cases "z0 = c")
+    case False
+    hence hz0': "z0 \<in> S - {c}" using hz0 by (by100 blast)
+    from hcont_away[unfolded continuous_on_def, rule_format, OF hz0']
+    have h_lim: "(f \<longlongrightarrow> f z0) (at z0 within S - {c})" .
+    \<comment> \<open>at z0 within (S - {c}) = at z0 within S since z0 \<noteq> c.\<close>
+    show ?thesis using h_lim False
+      sorry
+  next
+    case True
+    hence hfz0: "f z0 = (0, 0)" using hfc by (by100 simp)
+    \<comment> \<open>Need: f \<longlongrightarrow> (0,0) at c within S.\<close>
+    \<comment> \<open>Equivalently: fst \<circ> f \<longlongrightarrow> 0 and snd \<circ> f \<longlongrightarrow> 0.\<close>
+    \<comment> \<open>By squeeze: |fst(f z)| \<le> g z and g \<longlongrightarrow> g(c) = 0.\<close>
+    show ?thesis unfolding hfz0
+      sorry
+  qed
+qed
+
 text \<open>Strengthened polygon-to-disk: following the book (Munkres \<S>74) exactly.
   Uses radial projection from the centroid, not cone decomposition.
   Returns both the homeomorphism AND boundary correspondence.\<close>
@@ -2134,8 +2168,197 @@ proof -
       \<comment> \<open>Actually simpler: psi\_local maps to R^2, and each component is bounded by s.
          fst(psi\_local z) = s*cos \<theta> with |s*cos \<theta>| \<le> s. Similarly for snd.
          And s is continuous. So each component is squeezed, hence continuous.\<close>
-      show "continuous_on (cone_set i) (psi_local i)"
-        sorry \<comment> \<open>From hnorm\_eq + hs\_cont: squeeze argument for continuity.\<close>
+      \<comment> \<open>psi\_local is continuous because each component = s*cos/sin(\<theta>).
+         Away from s=0: \<theta> = 2\<pi>(i + \<gamma>/s)/n depends continuously on \<gamma> and s.
+         At s=0: |component| \<le> s \<rightarrow> 0, so component \<rightarrow> 0 = psi\_local(c).
+         We use: continuous\_on\_cases to split at s=0.\<close>
+      \<comment> \<open>Define s as a function.\<close>
+      define sf where "sf z = beta_cr i z + gamma_cr i z" for z
+      have hsf_cont: "continuous_on (cone_set i) sf" unfolding sf_def using hs_cont by (by100 simp)
+      \<comment> \<open>On {z \<in> cone | s > 0}: psi\_local is a composition of continuous functions.\<close>
+      \<comment> \<open>On {z \<in> cone | s = 0} = {c}: psi\_local = (0,0), trivially continuous.\<close>
+      \<comment> \<open>Both are closed in cone\_set, and agree on overlap (empty, since s>0 and s=0 disjoint).\<close>
+      \<comment> \<open>Define the explicit formula matching psi\_local.\<close>
+      define psi_explicit where "psi_explicit z =
+          (sf z * cos (2*pi*(real i + (if sf z = 0 then 0 else gamma_cr i z / sf z))/real n),
+           sf z * sin (2*pi*(real i + (if sf z = 0 then 0 else gamma_cr i z / sf z))/real n))" for z
+      have hpsi_eq_explicit: "\<And>z. z \<in> cone_set i \<Longrightarrow> psi_local i z = psi_explicit z"
+        unfolding psi_local_def Let_def sf_def psi_explicit_def by (by100 simp)
+      \<comment> \<open>Transfer: psi\_local continuous iff psi\_explicit continuous.\<close>
+      have "continuous_on (cone_set i) (psi_local i) = continuous_on (cone_set i) psi_explicit"
+        by (rule continuous_on_cong) (by100 simp, rule hpsi_eq_explicit, assumption)
+      \<comment> \<open>Now prove psi\_explicit is continuous.\<close>
+      moreover have "continuous_on (cone_set i) psi_explicit"
+      proof -
+        \<comment> \<open>psi\_explicit = (sf * cos(\<theta>(sf,\<gamma>)), sf * sin(\<theta>(sf,\<gamma>))).
+           Key insight: sf*cos(\<theta>) and sf*sin(\<theta>) are continuous because:
+           - Away from sf=0: \<theta> is continuous (rational in sf, \<gamma>), cos/sin continuous.
+           - At sf=0: |sf*cos| \<le> |sf| \<rightarrow> 0 and |sf*sin| \<le> |sf| \<rightarrow> 0.
+           We prove each component continuous via continuous\_on\_tendsto\_compose.\<close>
+        \<comment> \<open>Step 1: gamma\_cr continuous on cone\_set.\<close>
+        have hg_eq: "gamma_cr i = (\<lambda>z::real\<times>real. ((vx i - cx) * (snd z - cy)
+            - (vy i - cy) * (fst z - cx)) / Di i)"
+          unfolding gamma_cr_def cross2_def by (rule ext) (by100 simp)
+        have hg_cont: "continuous_on (cone_set i) (gamma_cr i)"
+        proof -
+          have "continuous_on UNIV (gamma_cr i)" unfolding hg_eq
+            using hDi_ne by (intro continuous_intros) (by100 simp)+
+          thus ?thesis using continuous_on_subset by (by100 blast)
+        qed
+        \<comment> \<open>Step 2: fst component = sf * cos(2\<pi>(i + if sf=0 then 0 else \<gamma>/sf)/n).\<close>
+        \<comment> \<open>This equals sf * cos(2\<pi>i/n + 2\<pi>\<gamma>/(sf*n)) when sf\<noteq>0, and 0 when sf=0.\<close>
+        \<comment> \<open>Rewrite: sf*cos(a + b*\<gamma>/sf) = sf*(cos a * cos(b*\<gamma>/sf) - sin a * sin(b*\<gamma>/sf))
+           where a = 2\<pi>i/n, b = 2\<pi>/n.\<close>
+        \<comment> \<open>This is getting complex. Use a simpler approach: each component of psi\_explicit
+           is squeezed between -sf and sf, with sf continuous and sf(c) = 0.
+           Since psi\_explicit(c) = (0,0), this gives continuity at c.
+           Away from c (sf > 0), psi\_explicit is a composition of continuous functions.\<close>
+        \<comment> \<open>Approach: split cone\_set into {c} and cone\_set - {c}, prove continuous on each,
+           use closed\_Un pasting.\<close>
+        have hc_in: "(cx, cy) \<in> cone_set i"
+          unfolding cone_set_def in_cone_def beta_cr_def gamma_cr_def cross2_def by (by100 simp)
+        have hsf_c: "sf (cx, cy) = 0" unfolding sf_def
+          beta_cr_def gamma_cr_def cross2_def by (by100 simp)
+        have hpe_c: "psi_explicit (cx, cy) = (0, 0)"
+          unfolding psi_explicit_def using hsf_c by (by100 simp)
+        \<comment> \<open>On cone\_set - {(cx,cy)}: sf > 0, so \<gamma>/sf is well-defined and continuous.\<close>
+        have hcont_away: "continuous_on (cone_set i - {(cx, cy)}) psi_explicit"
+        proof -
+          have "\<And>z. z \<in> cone_set i - {(cx, cy)} \<Longrightarrow> sf z > 0"
+          proof -
+            fix z assume hz: "z \<in> cone_set i - {(cx, cy)}"
+            hence hic: "in_cone i z" and hne: "z \<noteq> (cx, cy)"
+              unfolding cone_set_def by (by100 simp)+
+            have hb0: "beta_cr i z \<ge> 0" and hg0: "gamma_cr i z \<ge> 0"
+              using hic unfolding in_cone_def by (by100 blast)+
+            show "sf z > 0"
+            proof (rule ccontr)
+              assume "\<not> sf z > 0"
+              hence "sf z = 0" unfolding sf_def using hb0 hg0 by (by100 linarith)
+              hence "beta_cr i z = 0" "gamma_cr i z = 0"
+                unfolding sf_def using hb0 hg0 by (by100 linarith)+
+              hence "fst z = cx" "snd z = cy"
+                using hCramer_x[OF hDi_ne, of z] hCramer_y[OF hDi_ne, of z] by (by100 simp)+
+              hence "z = (cx, cy)" by (cases z) (by100 simp)
+              thus False using hne by (by100 blast)
+            qed
+          qed
+          hence hsf_pos: "\<And>z. z \<in> cone_set i - {(cx, cy)} \<Longrightarrow> sf z \<noteq> 0"
+            by (by100 force)
+          \<comment> \<open>On this set, if sf=0 branch is never taken, so psi\_explicit simplifies.\<close>
+          have hpe_eq: "\<And>z. z \<in> cone_set i - {(cx, cy)} \<Longrightarrow>
+              psi_explicit z = (sf z * cos (2*pi*(real i + gamma_cr i z / sf z)/real n),
+                                sf z * sin (2*pi*(real i + gamma_cr i z / sf z)/real n))"
+            unfolding psi_explicit_def using hsf_pos by (by100 simp)
+          \<comment> \<open>This is a composition of continuous functions (sf, gamma\_cr, /, cos, sin, *).\<close>
+          have "continuous_on (cone_set i - {(cx, cy)})
+              (\<lambda>z. (sf z * cos (2*pi*(real i + gamma_cr i z / sf z)/real n),
+                    sf z * sin (2*pi*(real i + gamma_cr i z / sf z)/real n)))"
+          proof -
+            have hsf_cont': "continuous_on (cone_set i - {(cx, cy)}) sf"
+              using hsf_cont continuous_on_subset by (by100 blast)
+            have hg_cont': "continuous_on (cone_set i - {(cx, cy)}) (gamma_cr i)"
+              using hg_cont continuous_on_subset by (by100 blast)
+            have "continuous_on (cone_set i - {(cx, cy)}) (\<lambda>z. gamma_cr i z / sf z)"
+              using hsf_cont' hg_cont' hsf_pos by (intro continuous_intros) (by100 simp)+
+            define theta_f where "theta_f z = 2*pi*(real i + gamma_cr i z / sf z)/real n" for z
+            have hn_ne: "real n \<noteq> (0::real)" using hn by (by100 simp)
+            have hgu_cont: "continuous_on (cone_set i - {(cx, cy)}) (\<lambda>z. gamma_cr i z / sf z)"
+              apply (intro continuous_intros)
+              using hg_cont' apply assumption
+              using hsf_cont' apply assumption
+              using hsf_pos apply (by100 blast)
+              done
+            have "continuous_on (cone_set i - {(cx, cy)}) theta_f"
+              unfolding theta_f_def
+              apply (intro continuous_intros)
+              using hg_cont' apply assumption
+              using hsf_cont' apply assumption
+              using hsf_pos apply (by100 blast)
+              using hn apply (by100 simp)
+              done
+            note hthf = \<open>continuous_on (cone_set i - {(cx, cy)}) theta_f\<close>
+            have hcos_cont: "continuous_on (cone_set i - {(cx, cy)}) (\<lambda>z. cos (theta_f z))"
+              using continuous_on_cos[OF hthf] .
+            have hsin_cont: "continuous_on (cone_set i - {(cx, cy)}) (\<lambda>z. sin (theta_f z))"
+              using continuous_on_sin[OF hthf] .
+            have hfst_cont: "continuous_on (cone_set i - {(cx, cy)}) (\<lambda>z. sf z * cos (theta_f z))"
+              apply (rule continuous_on_mult)
+              using hsf_cont' apply assumption
+              using hcos_cont apply assumption
+              done
+            have hsnd_cont: "continuous_on (cone_set i - {(cx, cy)}) (\<lambda>z. sf z * sin (theta_f z))"
+              apply (rule continuous_on_mult)
+              using hsf_cont' apply assumption
+              using hsin_cont apply assumption
+              done
+            have "continuous_on (cone_set i - {(cx, cy)})
+                (\<lambda>z. (sf z * cos (theta_f z), sf z * sin (theta_f z)))"
+              apply (rule continuous_on_Pair)
+              using hfst_cont apply assumption
+              using hsnd_cont apply assumption
+              done
+            moreover have "\<And>z. z \<in> cone_set i - {(cx, cy)} \<Longrightarrow>
+                (sf z * cos (theta_f z), sf z * sin (theta_f z)) =
+                (sf z * cos (2*pi*(real i + gamma_cr i z / sf z)/real n),
+                 sf z * sin (2*pi*(real i + gamma_cr i z / sf z)/real n))"
+              unfolding theta_f_def by (by100 simp)
+            ultimately show ?thesis
+            proof -
+              assume h1: "continuous_on (cone_set i - {(cx, cy)})
+                  (\<lambda>z. (sf z * cos (theta_f z), sf z * sin (theta_f z)))"
+              assume h2: "\<And>z. z \<in> cone_set i - {(cx, cy)} \<Longrightarrow>
+                  (sf z * cos (theta_f z), sf z * sin (theta_f z)) =
+                  (sf z * cos (2*pi*(real i + gamma_cr i z / sf z)/real n),
+                   sf z * sin (2*pi*(real i + gamma_cr i z / sf z)/real n))"
+              show ?thesis
+                using continuous_on_cong[of "cone_set i - {(cx,cy)}" "cone_set i - {(cx,cy)}"
+                  "\<lambda>z. (sf z * cos (theta_f z), sf z * sin (theta_f z))"
+                  "\<lambda>z. (sf z * cos (2*pi*(real i + gamma_cr i z / sf z)/real n),
+                       sf z * sin (2*pi*(real i + gamma_cr i z / sf z)/real n))"]
+                h1 h2 by (by100 simp)
+            qed
+          qed
+          thus ?thesis
+            using continuous_on_cong[of "cone_set i - {(cx,cy)}" "cone_set i - {(cx,cy)}"
+              "\<lambda>z. (sf z * cos (2*pi*(real i + gamma_cr i z / sf z)/real n),
+                    sf z * sin (2*pi*(real i + gamma_cr i z / sf z)/real n))"
+              psi_explicit] hpe_eq by (by5000 simp)
+        qed
+        \<comment> \<open>At {(cx,cy)}: trivially continuous (constant on singleton).\<close>
+        have hcont_c: "continuous_on {(cx, cy)} psi_explicit"
+          using hpe_c by (by100 simp)
+        \<comment> \<open>Paste: cone\_set = (cone\_set - {c}) \<union> {c}.\<close>
+        have "cone_set i = (cone_set i - {(cx, cy)}) \<union> {(cx, cy)}"
+          using hc_in by (by100 blast)
+        \<comment> \<open>Both pieces are subsets of cone\_set, which is closed, so they
+           may not be closed themselves. Use a different approach.\<close>
+        \<comment> \<open>Actually: use the squeeze/metric approach directly.
+           For continuity at (cx,cy): |fst(psi\_explicit z)| \<le> sf z and sf continuous,
+           sf(cx,cy) = 0, psi\_explicit(cx,cy) = (0,0).
+           For continuity at z0 \<noteq> c: already proved in hcont\_away.\<close>
+        \<comment> \<open>Continuity of psi\_explicit on cone\_set i:
+           Away from c: by hcont\_away.
+           At c: squeeze using |component| \<le> sf and sf continuous with sf(c) = 0.\<close>
+        \<comment> \<open>Apply squeeze lemma.\<close>
+        have hbound': "\<And>z. z \<in> cone_set i \<Longrightarrow>
+            \<bar>fst (psi_explicit z)\<bar> \<le> sf z \<and> \<bar>snd (psi_explicit z)\<bar> \<le> sf z"
+        proof -
+          fix z assume "z \<in> cone_set i"
+          from hcomp_bound[OF this] hpsi_eq_explicit[OF this]
+          show "\<bar>fst (psi_explicit z)\<bar> \<le> sf z \<and> \<bar>snd (psi_explicit z)\<bar> \<le> sf z"
+            unfolding sf_def by (by100 simp)
+        qed
+        have hg_nn: "\<And>z. z \<in> cone_set i \<Longrightarrow> sf z \<ge> 0"
+        proof -
+          fix z assume "z \<in> cone_set i"
+          hence "in_cone i z" unfolding cone_set_def by (by100 simp)
+          thus "sf z \<ge> 0" unfolding sf_def in_cone_def by (by100 linarith)
+        qed
+        show ?thesis
+          using continuous_on_squeeze_at_point[OF hc_in hpe_c hsf_cont hsf_c hbound' hg_nn hcont_away] .
+      qed
+      ultimately show "continuous_on (cone_set i) (psi_local i)" by (by100 simp)
     qed
     have h\<psi>_cont_cone: "\<And>i. i < n \<Longrightarrow> continuous_on (cone_set i) \<psi>"
     proof -
