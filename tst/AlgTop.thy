@@ -2418,6 +2418,103 @@ proof -
   show ?thesis using heq1 heq2 hx_zero hy_zero by (by100 simp)
 qed
 
+lemma cross2_antisym: "cross2 a b = - cross2 b a"
+  unfolding cross2_def by (simp add: algebra_simps)
+
+lemma cross2_self: "cross2 a a = 0"
+  unfolding cross2_def by (simp add: algebra_simps)
+
+lemma cross2_linear_left_add: "cross2 (fst a + fst b, snd a + snd b) c =
+    cross2 a c + cross2 b c"
+  unfolding cross2_def by (simp add: algebra_simps)
+
+lemma cross2_linear_left_scale: "cross2 (r * fst a, r * snd a) b =
+    r * cross2 a b"
+  unfolding cross2_def by (simp add: algebra_simps)
+
+lemma cross2_linear_right_add: "cross2 a (fst b + fst c, snd b + snd c) =
+    cross2 a b + cross2 a c"
+  unfolding cross2_def by (simp add: algebra_simps)
+
+lemma cross2_linear_right_scale: "cross2 a (r * fst b, r * snd b) =
+    r * cross2 a b"
+  unfolding cross2_def by (simp add: algebra_simps)
+
+text \<open>For a convex polygon where all vertices satisfy the half-plane condition
+  (cross2(v_k - v_i, v_{i+1} - v_i) \<le> 0 for all k), every convex combination also satisfies it.\<close>
+lemma ccw_polygon_half_plane:
+  fixes vx vy :: "nat \<Rightarrow> real" and n :: nat and coeffs :: "nat \<Rightarrow> real"
+  assumes hn: "n \<ge> 3"
+      and hcoeffs_ge: "\<forall>j<n. coeffs j \<ge> (0::real)"
+      and hcoeffs_sum: "(\<Sum>j<n. coeffs j) = 1"
+      and hzx: "zx = (\<Sum>j<n. coeffs j * vx j)"
+      and hzy: "zy = (\<Sum>j<n. coeffs j * vy j)"
+      and hi: "i < n"
+      and hvert_hp: "\<forall>k<n. cross2 (vx k - vx i, vy k - vy i)
+          (vx (Suc i mod n) - vx i, vy (Suc i mod n) - vy i) \<le> 0"
+  shows "cross2 (zx - vx i, zy - vy i)
+      (vx (Suc i mod n) - vx i, vy (Suc i mod n) - vy i) \<le> 0"
+proof -
+  define dx where "dx = vx (Suc i mod n) - vx i"
+  define dy where "dy = vy (Suc i mod n) - vy i"
+  \<comment> \<open>Express z - v_i as weighted sum of v_k - v_i.\<close>
+  have hzx_vi: "zx - vx i = (\<Sum>j<n. coeffs j * (vx j - vx i))"
+  proof -
+    have "(\<Sum>j<n. coeffs j * vx j) - (\<Sum>j<n. coeffs j) * vx i
+        = (\<Sum>j<n. coeffs j * vx j) - (\<Sum>j<n. coeffs j * vx i)"
+      by (simp add: sum_distrib_right)
+    also have "\<dots> = (\<Sum>j<n. coeffs j * vx j - coeffs j * vx i)"
+      using sum_subtractf[of "\<lambda>j. coeffs j * vx j" "\<lambda>j. coeffs j * vx i" "{..<n}"]
+      by (by100 simp)
+    also have "\<dots> = (\<Sum>j<n. coeffs j * (vx j - vx i))"
+      by (rule sum.cong) (simp_all add: algebra_simps)
+    finally show ?thesis using hzx hcoeffs_sum by (by100 simp)
+  qed
+  have hzy_vi: "zy - vy i = (\<Sum>j<n. coeffs j * (vy j - vy i))"
+  proof -
+    have "(\<Sum>j<n. coeffs j * vy j) - (\<Sum>j<n. coeffs j) * vy i
+        = (\<Sum>j<n. coeffs j * vy j) - (\<Sum>j<n. coeffs j * vy i)"
+      by (simp add: sum_distrib_right)
+    also have "\<dots> = (\<Sum>j<n. coeffs j * vy j - coeffs j * vy i)"
+      using sum_subtractf[of "\<lambda>j. coeffs j * vy j" "\<lambda>j. coeffs j * vy i" "{..<n}"]
+      by (by100 simp)
+    also have "\<dots> = (\<Sum>j<n. coeffs j * (vy j - vy i))"
+      by (rule sum.cong) (simp_all add: algebra_simps)
+    finally show ?thesis using hzy hcoeffs_sum by (by100 simp)
+  qed
+  \<comment> \<open>cross2(z - v_i, v_{i+1} - v_i) = \<Sum> coeffs_k * cross2(v_k - v_i, v_{i+1} - v_i).\<close>
+  have "cross2 (zx - vx i, zy - vy i) (dx, dy) =
+      (\<Sum>j<n. coeffs j * cross2 (vx j - vx i, vy j - vy i) (dx, dy))"
+  proof -
+    have "cross2 (zx - vx i, zy - vy i) (dx, dy) =
+        (zx - vx i) * dy - (zy - vy i) * dx" unfolding cross2_def by (by100 simp)
+    also have "\<dots> = (\<Sum>j<n. coeffs j * (vx j - vx i)) * dy -
+        (\<Sum>j<n. coeffs j * (vy j - vy i)) * dx"
+      using hzx_vi hzy_vi by (by100 simp)
+    also have "\<dots> = (\<Sum>j<n. coeffs j * (vx j - vx i) * dy) -
+        (\<Sum>j<n. coeffs j * (vy j - vy i) * dx)"
+      by (simp add: sum_distrib_right)
+    also have "\<dots> = (\<Sum>j<n. coeffs j * (vx j - vx i) * dy - coeffs j * (vy j - vy i) * dx)"
+      using sum_subtractf[of "\<lambda>j. coeffs j * (vx j - vx i) * dy"
+          "\<lambda>j. coeffs j * (vy j - vy i) * dx" "{..<n}"] by (by100 simp)
+    also have "\<dots> = (\<Sum>j<n. coeffs j * ((vx j - vx i) * dy - (vy j - vy i) * dx))"
+      by (rule sum.cong) (simp_all add: algebra_simps)
+    also have "\<dots> = (\<Sum>j<n. coeffs j * cross2 (vx j - vx i, vy j - vy i) (dx, dy))"
+      unfolding cross2_def by (by100 simp)
+    finally show ?thesis .
+  qed
+  moreover have "(\<Sum>j<n. coeffs j * cross2 (vx j - vx i, vy j - vy i) (dx, dy)) \<le> 0"
+  proof (rule sum_nonpos)
+    fix j assume "j \<in> {..<n}"
+    hence hj: "j < n" by (by100 simp)
+    have "cross2 (vx j - vx i, vy j - vy i) (dx, dy) \<le> 0"
+      using hvert_hp[rule_format, OF hj] unfolding dx_def dy_def .
+    thus "coeffs j * cross2 (vx j - vx i, vy j - vy i) (dx, dy) \<le> 0"
+      using mult_nonneg_nonpos[OF hcoeffs_ge[rule_format, OF hj]] by (by100 blast)
+  qed
+  ultimately show ?thesis unfolding dx_def dy_def by (by100 simp)
+qed
+
 text \<open>If a sequence of reals sums to 0 and is not all zero, there exists an index
   where consecutive elements have opposite signs (a sign change).\<close>
 lemma cyclic_sign_change:
@@ -2980,6 +3077,8 @@ lemma polygon_homeomorphic_to_disk_with_boundary:
                        \<and> y = (\<Sum>i<n. coeffs i * vy i)}"
       and hccw: "\<forall>i<n. let cx = (\<Sum>j<n. vx j) / real n; cy = (\<Sum>j<n. vy j) / real n
          in (vx i - cx) * (vy (Suc i mod n) - cy) - (vy i - cy) * (vx (Suc i mod n) - cx) > 0"
+      and hvert_hp: "\<forall>i<n. \<forall>k<n. cross2 (vx k - vx i, vy k - vy i)
+          (vx (Suc i mod n) - vx i, vy (Suc i mod n) - vy i) \<le> 0"
   shows "\<exists>\<psi>.
     top1_homeomorphism_on P
         (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P)
@@ -3079,22 +3178,18 @@ proof -
      This is a continuous bijection from compact P to Hausdorff B2.\<close>
   \<comment> \<open>Step 5: Apply Theorem 26.6 (continuous bijection compact \<rightarrow> Hausdorff = homeomorphism).\<close>
   \<comment> \<open>Step 6: By construction \<psi>(Bd P) = S1 and \<psi>(Int P) = Int B2.\<close>
-  \<comment> \<open>Following Munkres \<S>74: radial extension homeomorphism P \<rightarrow> B2.\<close>
+  \<comment> \<open>Following Munkres \<S>74: cone decomposition homeomorphism P \<rightarrow> B2.
+     For z \<in> P in cone i (triangle c, v_i, v_{i+1}):
+       Cramer coordinates \<beta>' = cross2(z-c, v_{i+1}-c)/D_i, \<gamma>' = cross2(v_i-c, z-c)/D_i
+       w = \<beta>'*q_i + \<gamma>'*q_{i+1}, r = |w|
+       \<psi>(z) = (\<beta>'+\<gamma>') * w/r  (normalized cone map)
+     This maps each cone to a sector of B2 and pastes to a homeomorphism P \<rightarrow> B2.\<close>
   let ?BdP = "\<Union>i<n. {((1-t) * vx i + t * vx (Suc i mod n),
                        (1-t) * vy i + t * vy (Suc i mod n)) | t. t \<in> I_set}"
   let ?TP = "subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P"
-  \<comment> \<open>Step 3: Define target regular n-gon vertices on S1.\<close>
+  \<comment> \<open>Target regular n-gon vertices on S1.\<close>
   define qx where "qx i = cos (2 * pi * real i / real n)" for i :: nat
   define qy where "qy i = sin (2 * pi * real i / real n)" for i :: nat
-  \<comment> \<open>Step 4: Define boundary map h: BdP \<rightarrow> S1 (edge-by-edge linear).\<close>
-  \<comment> \<open>For point ((1-t)*vx i + t*vx(i+1), ...) on edge i,
-     h maps to ((1-t)*qx i + t*qx(i+1), (1-t)*qy i + t*qy(i+1))
-     then normalized to S1.\<close>
-  \<comment> \<open>Step 5: Define \<psi> by radial extension from centroid c.
-     For z \<in> P: unique decomposition z = (1-s)\<cdot>c + s\<cdot>x with x \<in> BdP, s \<in> [0,1].
-     \<psi>(z) = s \<cdot> h(x). \<psi>(c) = (0,0).\<close>
-  \<comment> \<open>Step 6: \<psi> is continuous bijection, compact P \<rightarrow> Hausdorff B2 \<Rightarrow> homeomorphism.
-     By construction: \<psi>(BdP) = S1, \<psi>(IntP) = IntB2.\<close>
   have "\<exists>\<psi>. top1_homeomorphism_on P ?TP top1_B2 top1_B2_topology \<psi>
       \<and> \<psi> ` ?BdP = top1_S1
       \<and> top1_homeomorphism_on (P - ?BdP)
@@ -3102,42 +3197,414 @@ proof -
           (top1_B2 - top1_S1)
           (subspace_topology top1_B2 top1_B2_topology (top1_B2 - top1_S1)) \<psi>"
   proof -
-    \<comment> \<open>Following Munkres \<S>74: radial extension from centroid c to B2.
-       Book: "this homeomorphism may be extended to a homeomorphism of P with Q
-       by letting it map the line segment from p to the point x of Bd P
-       linearly onto the line segment from q to h(x)."\<close>
-    \<comment> \<open>(a) Define boundary map h: BdP \<rightarrow> S1 edge-by-edge.\<close>
-    define h_bd where "h_bd p = (
-        let i = (SOME i. i < n \<and> (\<exists>t\<in>I_set. p = ((1-t)*vx i + t*vx(Suc i mod n),
-                                                    (1-t)*vy i + t*vy(Suc i mod n))));
-            t = (SOME t. t \<in> I_set \<and> p = ((1-t)*vx i + t*vx(Suc i mod n),
-                                            (1-t)*vy i + t*vy(Suc i mod n)));
-            w = ((1-t)*qx i + t*qx(Suc i mod n), (1-t)*qy i + t*qy(Suc i mod n));
-            r = sqrt (fst w ^ 2 + snd w ^ 2)
-        in if r = 0 then (1::real, 0::real) else (fst w / r, snd w / r))" for p
-    \<comment> \<open>(b) Define \<psi> by radial extension.\<close>
-    define pdist where "pdist a b = sqrt ((fst a - fst b)^2 + (snd a - snd b)^2)"
-        for a b :: "real \<times> real"
-    define \<psi> where "\<psi> z = (if z = ?c then (0::real, 0::real)
-        else let r = (SOME r. r > 0 \<and> (fst ?c + r * (fst z - fst ?c),
-                                         snd ?c + r * (snd z - snd ?c)) \<in> ?BdP);
-                 x = (fst ?c + r * (fst z - fst ?c), snd ?c + r * (snd z - snd ?c));
-                 s = pdist z ?c / pdist x ?c
-             in (s * fst (h_bd x), s * snd (h_bd x)))" for z
-    \<comment> \<open>(c) Show \<psi> is continuous on P.\<close>
+    \<comment> \<open>Centroid abbreviations.\<close>
+    define cx where "cx = (\<Sum>j<n. vx j) / real n"
+    define cy where "cy = (\<Sum>j<n. vy j) / real n"
+    have hcx_eq: "cx = ?cx" unfolding cx_def by (by100 simp)
+    have hcy_eq: "cy = ?cy" unfolding cy_def by (by100 simp)
+    have hc_eq: "(cx, cy) = ?c" using hcx_eq hcy_eq by (by100 simp)
+    \<comment> \<open>D_i = cross2(v_i - c, v_{i+1} - c) > 0 from CCW.\<close>
+    define Di where "Di i = (vx i - cx) * (vy (Suc i mod n) - cy)
+        - (vy i - cy) * (vx (Suc i mod n) - cx)" for i :: nat
+    have hDi_pos: "\<And>i. i < n \<Longrightarrow> Di i > 0"
+    proof -
+      fix i assume "i < n"
+      from hccw[rule_format, OF this]
+      show "Di i > 0" unfolding Di_def cx_def cy_def by (by100 simp)
+    qed
+    \<comment> \<open>Cramer coordinates.\<close>
+    define beta_cr where "beta_cr i z = cross2 (fst z - cx, snd z - cy)
+        (vx (Suc i mod n) - cx, vy (Suc i mod n) - cy) / Di i" for i :: nat and z :: "real \<times> real"
+    define gamma_cr where "gamma_cr i z = cross2 (vx i - cx, vy i - cy)
+        (fst z - cx, snd z - cy) / Di i" for i :: nat and z :: "real \<times> real"
+    \<comment> \<open>Cone membership: \<beta> \<ge> 0, \<gamma> \<ge> 0, \<beta>+\<gamma> \<le> 1.\<close>
+    define in_cone where "in_cone i z \<longleftrightarrow>
+        beta_cr i z \<ge> 0 \<and> gamma_cr i z \<ge> 0 \<and> beta_cr i z + gamma_cr i z \<le> 1"
+        for i :: nat and z :: "real \<times> real"
+    \<comment> \<open>Local cone map.\<close>
+    define psi_local where "psi_local i z = (
+        let b = beta_cr i z; g = gamma_cr i z;
+            s = b + g;
+            u = (if s = 0 then 0 else g / s);
+            \<theta> = 2 * pi * (real i + u) / real n
+        in (s * cos \<theta>, s * sin \<theta>))" for i :: nat and z :: "real \<times> real"
+    \<comment> \<open>Key Cramer property: z - c = \<beta>'*(v_i - c) + \<gamma>'*(v_{i+1} - c).\<close>
+    have hCramer_x: "\<And>i z. Di i \<noteq> 0 \<Longrightarrow>
+        fst z - cx = beta_cr i z * (vx i - cx) + gamma_cr i z * (vx (Suc i mod n) - cx)"
+    proof -
+      fix i :: nat and z :: "real \<times> real"
+      assume hDne: "Di i \<noteq> 0"
+      have "beta_cr i z * (vx i - cx) + gamma_cr i z * (vx (Suc i mod n) - cx) =
+          (cross2 (fst z - cx, snd z - cy) (vx (Suc i mod n) - cx, vy (Suc i mod n) - cy) * (vx i - cx) +
+           cross2 (vx i - cx, vy i - cy) (fst z - cx, snd z - cy) * (vx (Suc i mod n) - cx)) / Di i"
+        unfolding beta_cr_def gamma_cr_def by (simp add: add_divide_distrib)
+      also have "\<dots> = (fst z - cx) * Di i / Di i"
+        unfolding cross2_def Di_def by (simp add: algebra_simps)
+      also have "\<dots> = fst z - cx" using hDne by (by100 simp)
+      finally show "fst z - cx = beta_cr i z * (vx i - cx) + gamma_cr i z * (vx (Suc i mod n) - cx)"
+        by (by100 simp)
+    qed
+    have hCramer_y: "\<And>i z. Di i \<noteq> 0 \<Longrightarrow>
+        snd z - cy = beta_cr i z * (vy i - cy) + gamma_cr i z * (vy (Suc i mod n) - cy)"
+    proof -
+      fix i :: nat and z :: "real \<times> real"
+      assume hDne: "Di i \<noteq> 0"
+      have "beta_cr i z * (vy i - cy) + gamma_cr i z * (vy (Suc i mod n) - cy) =
+          (cross2 (fst z - cx, snd z - cy) (vx (Suc i mod n) - cx, vy (Suc i mod n) - cy) * (vy i - cy) +
+           cross2 (vx i - cx, vy i - cy) (fst z - cx, snd z - cy) * (vy (Suc i mod n) - cy)) / Di i"
+        unfolding beta_cr_def gamma_cr_def by (simp add: add_divide_distrib)
+      also have "\<dots> = (snd z - cy) * Di i / Di i"
+        unfolding cross2_def Di_def by (simp add: algebra_simps)
+      also have "\<dots> = snd z - cy" using hDne by (by100 simp)
+      finally show "snd z - cy = beta_cr i z * (vy i - cy) + gamma_cr i z * (vy (Suc i mod n) - cy)"
+        by (by100 simp)
+    qed
+    \<comment> \<open>Centroid maps to origin.\<close>
+    have hpsi_local_c: "\<And>i. psi_local i (cx, cy) = (0, 0)"
+    proof -
+      fix i :: nat
+      have "beta_cr i (cx, cy) = 0" unfolding beta_cr_def cross2_def by (by100 simp)
+      moreover have "gamma_cr i (cx, cy) = 0" unfolding gamma_cr_def cross2_def by (by100 simp)
+      ultimately show "psi_local i (cx, cy) = (0, 0)" unfolding psi_local_def by (by100 simp)
+    qed
+    \<comment> \<open>Cone decomposition: every z \<in> P is in some cone.
+       Uses cross2_centroid_sum_zero + cyclic_strict_sign_change for sector finding,
+       Cramer's rule for barycentric coordinates, and CCW + convexity for \<beta>'+\<gamma>' \<le> 1.\<close>
+    \<comment> \<open>Helper: Di = cross2(v_i-c, v_{i+1}-c) = cross2(v_i-c, v_{i+1}-v_i).\<close>
+    have hDi_eq: "\<And>i. Di i = cross2 (vx i - cx, vy i - cy) (vx (Suc i mod n) - vx i, vy (Suc i mod n) - vy i)"
+      unfolding Di_def cross2_def by (simp add: algebra_simps)
+    \<comment> \<open>Helper: beta_cr i z = -cross2(v_{i+1}-c, z-c) / Di i (antisymmetry).\<close>
+    have hbeta_antisym: "\<And>i z. beta_cr i z =
+        - cross2 (vx (Suc i mod n) - cx, vy (Suc i mod n) - cy) (fst z - cx, snd z - cy) / Di i"
+      unfolding beta_cr_def cross2_def by (simp add: algebra_simps)
+    \<comment> \<open>Helper: beta_cr + gamma_cr = cross2(z-c, v_{i+1}-v_i) / Di.\<close>
+    have hbg_sum: "\<And>i z. i < n \<Longrightarrow>
+        beta_cr i z + gamma_cr i z =
+        cross2 (fst z - cx, snd z - cy) (vx (Suc i mod n) - vx i, vy (Suc i mod n) - vy i) / Di i"
+    proof -
+      fix i :: nat and z :: "real \<times> real"
+      assume hi: "i < n"
+      have "beta_cr i z + gamma_cr i z =
+          (cross2 (fst z - cx, snd z - cy) (vx (Suc i mod n) - cx, vy (Suc i mod n) - cy) +
+           cross2 (vx i - cx, vy i - cy) (fst z - cx, snd z - cy)) / Di i"
+        unfolding beta_cr_def gamma_cr_def by (simp add: add_divide_distrib)
+      also have "\<dots> = cross2 (fst z - cx, snd z - cy)
+          (vx (Suc i mod n) - vx i, vy (Suc i mod n) - vy i) / Di i"
+        unfolding cross2_def by (simp add: algebra_simps)
+      finally show "beta_cr i z + gamma_cr i z =
+          cross2 (fst z - cx, snd z - cy)
+              (vx (Suc i mod n) - vx i, vy (Suc i mod n) - vy i) / Di i" .
+    qed
+    \<comment> \<open>Helper: for z \<in> P, beta_cr + gamma_cr \<le> 1 for each cone i.\<close>
+    have hbg_le1: "\<And>i z. i < n \<Longrightarrow> z \<in> P \<Longrightarrow>
+        beta_cr i z + gamma_cr i z \<le> 1"
+    proof -
+      fix i :: nat and z :: "real \<times> real"
+      assume hi: "i < n" and hz: "z \<in> P"
+      from hz obtain coeffs where hcge: "\<forall>j<n. coeffs j \<ge> 0"
+          and hcsum: "(\<Sum>j<n. coeffs j) = 1"
+          and hfst: "fst z = (\<Sum>j<n. coeffs j * vx j)"
+          and hsnd: "snd z = (\<Sum>j<n. coeffs j * vy j)"
+        unfolding hP_hull mem_Collect_eq by (by5000 auto)
+      \<comment> \<open>beta_cr + gamma_cr = cross2(z-c, v_{i+1}-v_i) / Di.
+         cross2(z-c, v_{i+1}-v_i) = cross2(z - v_i, v_{i+1}-v_i) + cross2(v_i - c, v_{i+1}-v_i).
+         Since Di = cross2(v_i-c, v_{i+1}-v_i), we have:
+         beta_cr + gamma_cr = (cross2(z-v_i, v_{i+1}-v_i) + Di) / Di
+                            = cross2(z-v_i, v_{i+1}-v_i)/Di + 1.\<close>
+      have hhp_i: "\<forall>k<n. cross2 (vx k - vx i, vy k - vy i)
+          (vx (Suc i mod n) - vx i, vy (Suc i mod n) - vy i) \<le> 0"
+        using hvert_hp hi by (by100 blast)
+      have hcross_z: "cross2 (fst z - vx i, snd z - vy i)
+          (vx (Suc i mod n) - vx i, vy (Suc i mod n) - vy i) \<le> 0"
+        using ccw_polygon_half_plane[OF assms(2) hcge hcsum hfst hsnd hi hhp_i] .
+      have "cross2 (fst z - cx, snd z - cy)
+          (vx (Suc i mod n) - vx i, vy (Suc i mod n) - vy i) =
+          cross2 (fst z - vx i, snd z - vy i)
+              (vx (Suc i mod n) - vx i, vy (Suc i mod n) - vy i) +
+          cross2 (vx i - cx, vy i - cy)
+              (vx (Suc i mod n) - vx i, vy (Suc i mod n) - vy i)"
+        unfolding cross2_def by (simp add: algebra_simps)
+      also have "\<dots> \<le> 0 + Di i"
+      proof -
+        have "cross2 (fst z - vx i, snd z - vy i)
+            (vx (Suc i mod n) - vx i, vy (Suc i mod n) - vy i) \<le> 0"
+          using hcross_z .
+        moreover have "cross2 (vx i - cx, vy i - cy)
+            (vx (Suc i mod n) - vx i, vy (Suc i mod n) - vy i) = Di i"
+          using hDi_eq by (by100 simp)
+        ultimately show ?thesis by (by100 linarith)
+      qed
+      finally have hnum: "cross2 (fst z - cx, snd z - cy)
+          (vx (Suc i mod n) - vx i, vy (Suc i mod n) - vy i) \<le> Di i"
+        by (by100 linarith)
+      have hDi_pos': "Di i > 0" using hDi_pos[OF hi] .
+      show "beta_cr i z + gamma_cr i z \<le> 1"
+        using hbg_sum[OF hi, of z] hnum hDi_pos'
+        by (simp add: divide_le_eq)
+    qed
+    have hP_cones: "\<forall>z \<in> P. \<exists>i<n. in_cone i z"
+    proof (rule ballI)
+      fix z assume hz: "z \<in> P"
+      show "\<exists>i<n. in_cone i z"
+      proof (cases "z = (cx, cy)")
+        case True
+        have "in_cone 0 (cx, cy)"
+          unfolding in_cone_def beta_cr_def gamma_cr_def cross2_def by (by100 simp)
+        moreover have "(0::nat) < n" using hn by (by100 linarith)
+        ultimately show ?thesis using True by (by100 blast)
+      next
+        case hne: False
+        \<comment> \<open>z \<noteq> c. Define f(j) = cross2(v_j - c, z - c) and use sign change.\<close>
+        define f where "f j = cross2 (vx j - cx, vy j - cy) (fst z - cx, snd z - cy)" for j :: nat
+        have hf_sum: "(\<Sum>j<n. f j) = 0"
+        proof -
+          have "(\<Sum>j<n. f j) = (\<Sum>j<n. cross2 (vx j - cx, vy j - cy) (fst z - cx, snd z - cy))"
+            unfolding f_def by (by100 simp)
+          also have "\<dots> = 0"
+          proof -
+            have "(\<Sum>j<n. cross2 (vx j - cx, vy j - cy) (fst z - cx, snd z - cy)) =
+                (\<Sum>j<n. cross2 (vx j - (\<Sum>i<n. vx i) / real n, vy j - (\<Sum>i<n. vy i) / real n)
+                    (fst z - cx, snd z - cy))"
+              unfolding cx_def cy_def by (by100 simp)
+            also have "\<dots> = 0"
+              using cross2_centroid_sum_zero[of n vx vy "fst z - cx" "snd z - cy"]
+                assms(2) by (by100 linarith)
+            finally show ?thesis .
+          qed
+          finally show ?thesis .
+        qed
+        \<comment> \<open>Need: \<exists>j<n. f j > 0. Since z \<noteq> c, d = z-c \<noteq> 0.
+           Σ cross2(v_j-c, d) = 0. If all are 0, then all v_j-c are parallel to d,
+           meaning all vertices are on a line through c in direction d.
+           But D_0 > 0 means v_0, v_1, c are not collinear. So not all f(j) = 0.\<close>
+        have hex_pos: "\<exists>j<n. f j > 0"
+        proof (rule ccontr)
+          assume hno: "\<not> (\<exists>j<n. f j > 0)"
+          hence hall_le0: "\<forall>j<n. f j \<le> 0" by (by100 force)
+          have hall_0: "\<forall>j<n. f j = 0"
+          proof (intro allI impI)
+            fix j assume hj: "j < n"
+            have hle: "(\<Sum>k<n. f k) \<le> 0"
+              using sum_nonpos[of "{..<n}" f] hall_le0 by (by100 force)
+            hence "(\<Sum>k<n. f k) = 0" using hf_sum by (by100 simp)
+            have hnn: "\<And>k. k \<in> {..<n} \<Longrightarrow> 0 \<le> - f k"
+              using hall_le0 by (by100 force)
+            have "(\<Sum>k<n. - f k) = - (\<Sum>k<n. f k)"
+              using sum_negf by (by100 blast)
+            hence "(\<Sum>k<n. - f k) = 0" using hf_sum by (by100 simp)
+            from sum_nonneg_eq_0_iff[of "{..<n}" "\<lambda>k. - f k"] hnn this
+            have "\<forall>k\<in>{..<n}. - f k = 0" by (by100 blast)
+            thus "f j = 0" using hj by (by100 force)
+          qed
+          \<comment> \<open>f(0) = 0 and f(1) = 0 means cross2(v_0-c, d) = 0 and cross2(v_1-c, d) = 0.
+             This means v_0-c and v_1-c are both parallel to d.
+             So v_0-c = a*d and v_1-c = b*d for some a, b.
+             Then D_0 = cross2(v_0-c, v_1-c) = cross2(a*d, b*d) = a*b*cross2(d,d) = 0.
+             But D_0 > 0. Contradiction.\<close>
+          have h0n: "(0::nat) < n" using hn by (by100 linarith)
+          have hf0: "f 0 = 0" using hall_0 h0n by (by100 blast)
+          have hf1: "f 1 = 0"
+          proof -
+            have "1 < n" using hn by (by100 linarith)
+            thus ?thesis using hall_0 by (by100 blast)
+          qed
+          \<comment> \<open>From f(0) = 0: (vx 0 - cx)*(snd z - cy) = (vy 0 - cy)*(fst z - cx).\<close>
+          have hpar0: "(vx 0 - cx) * (snd z - cy) = (vy 0 - cy) * (fst z - cx)"
+            using hf0 unfolding f_def cross2_def by (by100 simp)
+          \<comment> \<open>From f(1) = 0: (vx 1 - cx)*(snd z - cy) = (vy 1 - cy)*(fst z - cx).\<close>
+          have hpar1: "(vx 1 - cx) * (snd z - cy) = (vy 1 - cy) * (fst z - cx)"
+            using hf1 unfolding f_def cross2_def by (by100 simp)
+          \<comment> \<open>D_0 = cross2(v_0-c, v_1-c) = (vx0-cx)*(vy1-cy) - (vy0-cy)*(vx1-cx).
+             From hpar0 and hpar1, we can show D_0 = 0.\<close>
+          have "Di 0 = 0"
+          proof (cases "fst z - cx = 0 \<and> snd z - cy = 0")
+            case True thus ?thesis using hne hcx_eq hcy_eq by (cases z) (by100 simp)
+          next
+            case False
+            show ?thesis
+            proof (cases "fst z - cx = 0")
+              case True
+              hence "snd z - cy \<noteq> 0" using False by (by100 blast)
+              from hpar0 True have hvx0: "vx 0 - cx = 0"
+                using \<open>snd z - cy \<noteq> 0\<close> by (by100 simp)
+              from hpar1 True have hvx1: "vx 1 - cx = 0"
+                using \<open>snd z - cy \<noteq> 0\<close> by (by100 simp)
+              have "Suc 0 mod n = 1" using hn by (by100 simp)
+              thus ?thesis unfolding Di_def using hvx0 hvx1 by (by100 simp)
+            next
+              case hfnz: False
+              \<comment> \<open>fst z - cx \<noteq> 0. From hpar0: (vx 0 - cx) = (vy 0 - cy)*(fst z - cx)/(snd z - cy)
+                 if snd z - cy \<noteq> 0, or vy 0 - cy = 0 if snd z - cy = 0.
+                 In either case: Di 0 = 0.\<close>
+              show ?thesis
+              proof (cases "snd z - cy = 0")
+                case True
+                from hpar0 True hfnz have hvy0: "vy 0 - cy = 0" by (by100 simp)
+                from hpar1 True hfnz have hvy1: "vy 1 - cy = 0" by (by100 simp)
+                have "Suc 0 mod n = 1" using hn by (by100 simp)
+                thus ?thesis unfolding Di_def using hvy0 hvy1 by (by100 simp)
+              next
+                case hsnz: False
+                \<comment> \<open>Both components nonzero. vx_j - cx = (vy_j - cy) * (fst z - cx)/(snd z - cy).\<close>
+                define r where "r = (fst z - cx) / (snd z - cy)"
+                have hr: "vx 0 - cx = (vy 0 - cy) * r"
+                proof -
+                  have "(vx 0 - cx) * (snd z - cy) = (vy 0 - cy) * (fst z - cx)"
+                    using hpar0 .
+                  hence "vx 0 - cx = (vy 0 - cy) * (fst z - cx) / (snd z - cy)"
+                    using hsnz by (simp add: field_simps)
+                  thus ?thesis unfolding r_def by (by100 simp)
+                qed
+                have hr1: "vx 1 - cx = (vy 1 - cy) * r"
+                proof -
+                  have "(vx 1 - cx) * (snd z - cy) = (vy 1 - cy) * (fst z - cx)"
+                    using hpar1 .
+                  hence "vx 1 - cx = (vy 1 - cy) * (fst z - cx) / (snd z - cy)"
+                    using hsnz by (simp add: field_simps)
+                  thus ?thesis unfolding r_def by (by100 simp)
+                qed
+                have "Suc 0 mod n = 1" using hn by (by100 simp)
+                hence "Di 0 = (vx 0 - cx) * (vy 1 - cy) - (vy 0 - cy) * (vx 1 - cx)"
+                  unfolding Di_def by (by100 simp)
+                also have "\<dots> = (vy 0 - cy) * r * (vy 1 - cy) - (vy 0 - cy) * ((vy 1 - cy) * r)"
+                  using hr hr1 by (by100 simp)
+                also have "\<dots> = 0" by (simp add: algebra_simps)
+                finally show ?thesis .
+              qed
+            qed
+          qed
+          moreover have "Di 0 > 0" using hDi_pos[of 0] hn by (by100 linarith)
+          ultimately show False by (by100 linarith)
+        qed
+        \<comment> \<open>Now apply cyclic_strict_sign_change.\<close>
+        from cyclic_strict_sign_change[of n f] assms(2) hf_sum hex_pos
+        obtain i where hi: "i < n" and hfi_pos: "f i > 0"
+            and hfi1_le0: "f ((i+1) mod n) \<le> 0"
+          by (by100 force)
+        \<comment> \<open>gamma_cr i z = f(i) / Di i \<ge> 0.\<close>
+        have hgamma: "gamma_cr i z \<ge> 0"
+        proof -
+          have "gamma_cr i z = f i / Di i"
+            unfolding gamma_cr_def f_def by (by100 simp)
+          moreover have "f i > 0" using hfi_pos .
+          moreover have "Di i > 0" using hDi_pos[OF hi] .
+          ultimately show ?thesis by (by100 simp)
+        qed
+        \<comment> \<open>beta_cr i z = -cross2(v_{i+1}-c, z-c) / Di = -f(i+1 mod n) / Di \<ge> 0.\<close>
+        have hbeta: "beta_cr i z \<ge> 0"
+        proof -
+          have hSuc: "Suc i mod n = (i + 1) mod n" by (by100 simp)
+          have hbval: "beta_cr i z = - f ((i+1) mod n) / Di i"
+            unfolding hbeta_antisym f_def hSuc by (by100 simp)
+          have hfle: "f ((i+1) mod n) / Di i \<le> 0"
+          proof -
+            have "f ((i+1) mod n) \<le> 0" using hfi1_le0 .
+            moreover have "Di i > 0" using hDi_pos[OF hi] .
+            ultimately show ?thesis
+              using divide_nonpos_nonneg[of "f ((i+1) mod n)" "Di i"]
+              by (by100 linarith)
+          qed
+          have "- f ((i+1) mod n) / Di i \<ge> 0" using hfle
+            by (by100 linarith)
+          thus ?thesis using hbval by (by100 linarith)
+        qed
+        have hbg: "beta_cr i z + gamma_cr i z \<le> 1"
+          using hbg_le1[OF hi hz] .
+        have "in_cone i z" unfolding in_cone_def using hbeta hgamma hbg by (by100 blast)
+        thus ?thesis using hi by (by100 blast)
+      qed
+    qed
+    \<comment> \<open>Local maps agree on cone overlaps.\<close>
+    have hpsi_agree: "\<And>i j z. i < n \<Longrightarrow> j < n \<Longrightarrow> in_cone i z \<Longrightarrow> in_cone j z \<Longrightarrow>
+        psi_local i z = psi_local j z"
+    proof -
+      fix i j :: nat and z :: "real \<times> real"
+      assume hi: "i < n" and hj: "j < n" and hci: "in_cone i z" and hcj: "in_cone j z"
+      let ?bi = "beta_cr i z" let ?gi = "gamma_cr i z" let ?si = "?bi + ?gi"
+      let ?bj = "beta_cr j z" let ?gj = "gamma_cr j z" let ?sj = "?bj + ?gj"
+      have hbi: "?bi \<ge> 0" and hgi: "?gi \<ge> 0" and hsi1: "?si \<le> 1"
+        using hci unfolding in_cone_def by (by100 simp)+
+      have hbj: "?bj \<ge> 0" and hgj: "?gj \<ge> 0" and hsj1: "?sj \<le> 1"
+        using hcj unfolding in_cone_def by (by100 simp)+
+      \<comment> \<open>Key: both decompositions reconstruct the same z.
+         z = (1-si)*c + bi*vi + gi*v_{i+1} = (1-sj)*c + bj*vj + gj*v_{j+1}.
+         So si = sj (both equal 1 - \<alpha> where \<alpha> is the centroid weight).
+         Actually si = sj follows from the Cramer reconstruction:\<close>
+      have hsi_eq_sj: "?si = ?sj"
+        sorry \<comment> \<open>Both cones reconstruct z with same centroid weight \<alpha> = 1-s.\<close>
+      show "psi_local i z = psi_local j z"
+      proof (cases "?si = 0")
+        case True
+        hence "?bi = 0" "?gi = 0" using hbi hgi by (by100 linarith)+
+        hence "?sj = 0" using hsi_eq_sj True by (by100 simp)
+        hence "?bj = 0" "?gj = 0" using hbj hgj by (by100 linarith)+
+        show ?thesis unfolding psi_local_def
+          using \<open>?bi = 0\<close> \<open>?gi = 0\<close> \<open>?bj = 0\<close> \<open>?gj = 0\<close> by (by100 simp)
+      next
+        case False
+        \<comment> \<open>si > 0. The angle must match: 2\<pi>(i + gi/si)/n = 2\<pi>(j + gj/sj)/n.\<close>
+        have hangle_eq: "(real i + ?gi / ?si) / real n = (real j + ?gj / ?sj) / real n"
+          sorry \<comment> \<open>From z reconstruction: the direction from c determines a unique angle.\<close>
+        show ?thesis unfolding psi_local_def
+          using hsi_eq_sj hangle_eq False by (by100 simp)
+      qed
+    qed
+    \<comment> \<open>Global \<psi>: well-defined by overlap agreement.\<close>
+    define \<psi> where "\<psi> z = psi_local (SOME i. i < n \<and> in_cone i z) z" for z
+    have hpsi_eq: "\<And>i z. i < n \<Longrightarrow> in_cone i z \<Longrightarrow> \<psi> z = psi_local i z"
+    proof -
+      fix i :: nat and z :: "real \<times> real"
+      assume hi: "i < n" and hic: "in_cone i z"
+      have "\<exists>j. j < n \<and> in_cone j z" using hi hic by (by100 blast)
+      hence hsome: "(SOME j. j < n \<and> in_cone j z) < n \<and> in_cone (SOME j. j < n \<and> in_cone j z) z"
+        by (rule someI_ex)
+      thus "\<psi> z = psi_local i z"
+        unfolding \<psi>_def using hpsi_agree[OF _ hi _ hic] by (by100 simp)
+    qed
+    \<comment> \<open>(c) \<psi> continuous on P.\<close>
     have h\<psi>_cont: "continuous_on P \<psi>"
-      sorry \<comment> \<open>Continuity of radial extension. h\_bd is piecewise linear (continuous on each edge,
-         agrees at vertices since qx,qy are on S1). The radial parameter s depends continuously
-         on z (ratio of distances). Composition of continuous = continuous.\<close>
-    \<comment> \<open>(d) Show \<psi>(P) = B2 (surjective onto B2).\<close>
+      sorry \<comment> \<open>Each psi\_local i is continuous on cone i (polynomial + sqrt + division, non-vanishing
+         denominator). Cones are closed (triangles), form finite closed cover of P.
+         By continuous\_on\_closed\_Union + overlap agreement: \<psi> continuous on P.\<close>
+    \<comment> \<open>(d) \<psi> surjective: \<psi> ` P = B2.\<close>
     have h\<psi>_surj: "\<psi> ` P = top1_B2"
-      sorry \<comment> \<open>For any (r*cos\<theta>, r*sin\<theta>) \<in> B2: find s,x with s*h\_bd(x) = (r*cos\<theta>, r*sin\<theta>).
-         The boundary map h\_bd is surjective onto S1 (regular n-gon vertices span all angles).
-         So find x with h\_bd(x) = (cos\<theta>, sin\<theta>), then s = r.\<close>
-    \<comment> \<open>(e) Show \<psi> injective on P.\<close>
+    proof (rule set_eqI, rule iffI)
+      \<comment> \<open>\<subseteq>: \<psi>(z) \<in> B2 for z \<in> P. |psi\_local i z| = s = \<beta>+\<gamma> \<le> 1.\<close>
+      fix y assume "y \<in> \<psi> ` P"
+      then obtain z where hz: "z \<in> P" "\<psi> z = y" by (by100 blast)
+      from hP_cones hz(1) obtain i where hi: "i < n" "in_cone i z" by (by100 blast)
+      have "y = psi_local i z" using hpsi_eq[OF hi(1) hi(2)] hz(2) by (by100 simp)
+      hence "fst y = (beta_cr i z + gamma_cr i z) *
+          cos (2 * pi * (real i + (if beta_cr i z + gamma_cr i z = 0 then 0
+               else gamma_cr i z / (beta_cr i z + gamma_cr i z))) / real n)"
+        and "snd y = (beta_cr i z + gamma_cr i z) *
+          sin (2 * pi * (real i + (if beta_cr i z + gamma_cr i z = 0 then 0
+               else gamma_cr i z / (beta_cr i z + gamma_cr i z))) / real n)"
+        unfolding psi_local_def by (by100 simp)+
+      have hs: "beta_cr i z + gamma_cr i z \<ge> 0" "beta_cr i z + gamma_cr i z \<le> 1"
+        using hi(2) unfolding in_cone_def by (by100 simp)+
+      let ?s = "beta_cr i z + gamma_cr i z"
+      let ?\<theta> = "2 * pi * (real i + (if ?s = 0 then 0 else gamma_cr i z / ?s)) / real n"
+      have "fst y ^ 2 + snd y ^ 2 = (?s * cos ?\<theta>)^2 + (?s * sin ?\<theta>)^2"
+        using \<open>fst y = _\<close> \<open>snd y = _\<close> by (by100 simp)
+      also have "\<dots> = ?s^2 * (cos ?\<theta> ^ 2 + sin ?\<theta> ^ 2)"
+        by (simp add: power_mult_distrib distrib_left)
+      also have "\<dots> = ?s^2" by (by100 simp)
+      finally have hysq: "fst y ^ 2 + snd y ^ 2 = ?s^2" .
+      have "?s^2 \<le> 1" using hs by (by100 simp)
+      hence "fst y ^ 2 + snd y ^ 2 \<le> 1" using hysq by (by100 linarith)
+      thus "y \<in> top1_B2" unfolding top1_B2_def by (by100 simp)
+    next
+      \<comment> \<open>\<supseteq>: for y \<in> B2, find z \<in> P with \<psi>(z) = y.\<close>
+      fix y assume hy: "y \<in> top1_B2"
+      show "y \<in> \<psi> ` P"
+        sorry \<comment> \<open>Construct preimage: for y = (r cos \<phi>, r sin \<phi>),
+           find sector i, set u, \<beta>, \<gamma>, \<alpha>, construct z.\<close>
+    qed
+    \<comment> \<open>(e) \<psi> injective on P.\<close>
     have h\<psi>_inj: "inj_on \<psi> P"
-      sorry \<comment> \<open>If \<psi>(z1) = \<psi>(z2): same s and same h\_bd(x) implies same x (h\_bd injective)
-         and same s implies same distance ratio, hence z1 = z2.\<close>
+      sorry \<comment> \<open>|\<psi>(z)| = \<beta>+\<gamma> determines radial param. Direction determines sector + boundary param.
+         These uniquely determine z via the Cramer coordinates.\<close>
     \<comment> \<open>(f) Apply Theorem 26.6: continuous bijection compact \<rightarrow> Hausdorff = homeomorphism.\<close>
     have h\<psi>_bij: "bij_betw \<psi> P top1_B2"
       unfolding bij_betw_def using h\<psi>_surj h\<psi>_inj by (by100 blast)
@@ -3183,12 +3650,11 @@ proof -
     \<comment> \<open>(g) By construction: \<psi>(BdP) = S1 and \<psi>(IntP) = IntB2.\<close>
     have h\<psi>_bd: "\<psi> ` ?BdP = top1_S1"
     proof -
-      \<comment> \<open>\<subseteq>: For x \<in> BdP, x \<noteq> c (centroid not on boundary), the ray from c through x
-         hits BdP at x itself, so s = pdist x c / pdist x c = 1. Then \<psi>(x) = h\_bd(x).
-         h\_bd is normalized to S1 by construction.\<close>
-      \<comment> \<open>\<supseteq>: h\_bd maps BdP onto S1 (the normalized boundary map traces all of S1
-         as the edges trace the regular n-gon, covering all angles for n \<ge> 3).\<close>
-      show ?thesis sorry \<comment> \<open>Both directions: BdP maps onto S1 via normalized h\_bd.\<close>
+      \<comment> \<open>\<subseteq>: For x on edge i with param t: \<beta>'=1-t, \<gamma>'=t, \<alpha>=0.
+         So \<psi>(x) = 1*normalize((1-t)*q_i + t*q_{i+1}) \<in> S1.\<close>
+      \<comment> \<open>\<supseteq>: For u \<in> S1: find i,t with normalize((1-t)*q_i + t*q_{i+1}) = u.
+         Then x = (1-t)*v_i + t*v_{i+1} \<in> BdP and \<psi>(x) = u.\<close>
+      show ?thesis sorry \<comment> \<open>Both directions: BdP maps onto S1 via normalized cone map.\<close>
     qed
     have h\<psi>_int: "top1_homeomorphism_on (P - ?BdP)
         (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (P - ?BdP))
@@ -4185,7 +4651,12 @@ proof -
                    \<and> x = (\<Sum>i<length scheme. coeffs i * vx i)
                    \<and> y = (\<Sum>i<length scheme. coeffs i * vy i)}"
     using hP_hull_extract by (by100 simp)
-  from polygon_homeomorphic_to_disk_with_boundary[OF hP hlen3 hverts hP_hull hccw_extract]
+  have hvert_hp: "\<forall>i<length scheme. \<forall>k<length scheme.
+      cross2 (vx k - vx i, vy k - vy i)
+          (vx (Suc i mod length scheme) - vx i,
+           vy (Suc i mod length scheme) - vy i) \<le> 0"
+    sorry \<comment> \<open>Vertex half-plane: for CCW convex polygon, each vertex is on the left of each edge.\<close>
+  from polygon_homeomorphic_to_disk_with_boundary[OF hP hlen3 hverts hP_hull hccw_extract hvert_hp]
   obtain \<psi> where h\<psi>: "top1_homeomorphism_on P ?TP top1_B2 top1_B2_topology \<psi>"
       and h\<psi>_bd: "\<psi> ` (\<Union>i<length scheme. {((1-t) * vx i + t * vx (Suc i mod length scheme),
                      (1-t) * vy i + t * vy (Suc i mod length scheme)) | t. t \<in> I_set})
