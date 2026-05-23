@@ -3845,10 +3845,50 @@ proof -
   have hlen: "length scheme = 4 * n" unfolding scheme_def
     by (induct n) (by100 simp)+
   \<comment> \<open>Scheme access: scheme!(4k+r) for block k.\<close>
-  have hscheme_0: "\<And>k. k < n \<Longrightarrow> scheme ! (4*k) = (2*k, True)" sorry
-  have hscheme_1: "\<And>k. k < n \<Longrightarrow> scheme ! (4*k+1) = (2*k+1, True)" sorry
-  have hscheme_2: "\<And>k. k < n \<Longrightarrow> scheme ! (4*k+2) = (2*k, False)" sorry
-  have hscheme_3: "\<And>k. k < n \<Longrightarrow> scheme ! (4*k+3) = (2*k+1, False)" sorry
+  \<comment> \<open>Scheme access: scheme!(4k+r) for block k, offset r.\<close>
+  define f where "f i = [(2*i, True), (2*i+1, True), (2*i, False), (2*i+1, False)]"
+    for i :: nat
+  have hf_len: "\<And>i. length (f i) = 4" unfolding f_def by (by100 simp)
+  have hscheme_f: "scheme = concat (map f [0..<n])" unfolding scheme_def f_def by (by100 simp)
+  \<comment> \<open>Key: concat(map f [0..<n]) ! (4k+r) = f(k) ! r when k < n and r < 4.\<close>
+  have hnth: "\<And>k r. k < n \<Longrightarrow> r < 4 \<Longrightarrow> scheme ! (4*k+r) = f k ! r"
+    unfolding hscheme_f
+  proof (induct n)
+    case 0 thus ?case by (by100 simp)
+  next
+    case (Suc n')
+    have hconcat_app: "concat (map f [0..<Suc n']) = concat (map f [0..<n']) @ f n'"
+      by (by100 simp)
+    have hlen_prefix: "length (concat (map f [0..<n'])) = 4 * n'"
+      using hf_len by (induct n') (by100 simp)+
+    show ?case
+    proof (cases "k < n'")
+      case True
+      have "4*k+r < 4*n'" using True Suc.prems(2) by (by100 linarith)
+      hence "4*k+r < length (concat (map f [0..<n']))" using hlen_prefix by (by100 linarith)
+      hence "concat (map f [0..<Suc n']) ! (4*k+r) = concat (map f [0..<n']) ! (4*k+r)"
+        unfolding hconcat_app using nth_append[of "concat (map f [0..<n'])" "f n'" "4*k+r"]
+        by (by100 simp)
+      thus ?thesis using Suc.hyps[OF True Suc.prems(2)] by (by100 simp)
+    next
+      case False
+      hence hk: "k = n'" using Suc.prems(1) by (by100 linarith)
+      have "concat (map f [0..<Suc n']) ! (4*k+r) = (concat (map f [0..<n']) @ f n') ! (4*n'+r)"
+        unfolding hconcat_app hk by (by100 simp)
+      also have "\<dots> = f n' ! r"
+        using nth_append_length_plus[of "concat (map f [0..<n'])" "f n'" r]
+          hlen_prefix by (by100 simp)
+      finally show ?thesis using hk by (by100 simp)
+    qed
+  qed
+  have hscheme_0: "\<And>k. k < n \<Longrightarrow> scheme ! (4*k) = (2*k, True)"
+    using hnth[of _ 0] unfolding f_def by (by100 simp)
+  have hscheme_1: "\<And>k. k < n \<Longrightarrow> scheme ! (4*k+1) = (2*k+1, True)"
+    using hnth[of _ 1] unfolding f_def by (by100 simp)
+  have hscheme_2: "\<And>k. k < n \<Longrightarrow> scheme ! (4*k+2) = (2*k, False)"
+    using hnth[of _ 2] unfolding f_def by (by100 simp)
+  have hscheme_3: "\<And>k. k < n \<Longrightarrow> scheme ! (4*k+3) = (2*k+1, False)"
+    using hnth[of _ 3] unfolding f_def by (by100 simp)
   \<comment> \<open>Index bounds.\<close>
   have hidx: "\<And>k r. k < n \<Longrightarrow> r < 4 \<Longrightarrow> 4*k+r < length scheme"
     using hlen by (by100 linarith)
@@ -3867,33 +3907,110 @@ proof -
     have hj: "4*k+2 < length scheme" using hidx[OF hk, of 2] by (by100 simp)
     \<comment> \<open>Apply hedge with i=4k, j=4k+2, t=0.\<close>
     have h0: "0 \<in> I_set" unfolding top1_unit_interval_def by (by100 auto)
+    have hSuc_4k: "Suc (4*k) mod length scheme = 4*k+1"
+      using hi hlen by (by100 simp)
+    have hSuc_4k2: "Suc (4*k+2) mod length scheme = 4*k+3"
+    proof -
+      have "4*k+3 < 4*n" using hk by (by100 linarith)
+      hence "4*k+3 < length scheme" using hlen by (by100 linarith)
+      thus ?thesis using hlen by (by100 simp)
+    qed
     from hedge[rule_format, OF hi hj h_fst, rule_format, OF h0]
     show "q (vx (4*k), vy (4*k)) = q (vx (4*k+3), vy (4*k+3))"
-      using h_snd sorry \<comment> \<open>Simplify: (1-0)*vx(4k) + 0*vx(4k+1) = vx(4k),
-         and 0*vx(4k+2) + (1-0)*vx(4k+3) = vx(4k+3).\<close>
+      using h_snd hSuc_4k hSuc_4k2 by (by100 simp)
   qed
   have hpair_b: "\<And>k. k < n \<Longrightarrow>
       q (vx (4*k+1), vy (4*k+1)) = q (vx (4*k+2), vy (4*k+2))"
-    sorry \<comment> \<open>Similar: edges 4k and 4k+2, t=1.\<close>
+  proof -
+    fix k assume hk: "k < n"
+    have h_fst: "fst (scheme!(4*k)) = fst (scheme!(4*k+2))"
+      using hscheme_0[OF hk] hscheme_2[OF hk] by (by100 simp)
+    have h_snd: "snd (scheme!(4*k)) \<noteq> snd (scheme!(4*k+2))"
+      using hscheme_0[OF hk] hscheme_2[OF hk] by (by100 simp)
+    have hi: "4*k < length scheme" using hidx[OF hk, of 0] by (by100 simp)
+    have hj: "4*k+2 < length scheme" using hidx[OF hk, of 2] by (by100 simp)
+    have h1: "1 \<in> I_set" unfolding top1_unit_interval_def by (by100 auto)
+    have hSuc_4k: "Suc (4*k) mod length scheme = 4*k+1"
+      using hi hlen by (by100 simp)
+    have hSuc_4k2: "Suc (4*k+2) mod length scheme = 4*k+3"
+    proof -
+      have "4*k+3 < length scheme" using hk hlen by (by100 linarith)
+      thus ?thesis using hlen by (by100 simp)
+    qed
+    from hedge[rule_format, OF hi hj h_fst, rule_format, OF h1]
+    show "q (vx (4*k+1), vy (4*k+1)) = q (vx (4*k+2), vy (4*k+2))"
+      using h_snd hSuc_4k hSuc_4k2 by (by100 simp)
+  qed
   have hpair_c: "\<And>k. k < n \<Longrightarrow>
       q (vx (4*k+2), vy (4*k+2)) = q (vx (4*k+3), vy (4*k+3))"
-    sorry \<comment> \<open>Edges 4k+1 and 4k+3 (label 2k+1), t=1.\<close>
-  \<comment> \<open>Link between blocks: edges 4k+1 (label 2k+1,T) and 4k+3 (label 2k+1,F), t=0:
-     q(v_{4k+1}) = q(v_{Suc(4k+3) mod 4n}) = q(v_{4(k+1) mod 4n}).\<close>
+  proof -
+    fix k assume hk: "k < n"
+    have h_fst: "fst (scheme!(4*k+1)) = fst (scheme!(4*k+3))"
+      using hscheme_1[OF hk] hscheme_3[OF hk] by (by100 simp)
+    have h_snd: "snd (scheme!(4*k+1)) \<noteq> snd (scheme!(4*k+3))"
+      using hscheme_1[OF hk] hscheme_3[OF hk] by (by100 simp)
+    have hi: "4*k+1 < length scheme" using hidx[OF hk, of 1] by (by100 simp)
+    have hj: "4*k+3 < length scheme" using hidx[OF hk, of 3] by (by100 simp)
+    have h1: "1 \<in> I_set" unfolding top1_unit_interval_def by (by100 auto)
+    have hSuc_4k1: "Suc (4*k+1) mod length scheme = 4*k+2"
+    proof -
+      have "4*k+2 < length scheme" using hk hlen by (by100 linarith)
+      thus ?thesis using hlen by (by100 simp)
+    qed
+    have hSuc_4k3: "Suc (4*k+3) mod length scheme = 4*((k+1) mod n)"
+    proof -
+      have "Suc (4*k+3) = 4*(k+1)" by (by100 simp)
+      hence "Suc (4*k+3) mod length scheme = 4*(k+1) mod (4*n)" using hlen by (by100 simp)
+      also have "\<dots> = 4 * ((k+1) mod n)"
+        using mult_mod_right[of 4 "k+1" n, symmetric] by (by100 simp)
+      finally show ?thesis .
+    qed
+    from hedge[rule_format, OF hi hj h_fst, rule_format, OF h1]
+    show "q (vx (4*k+2), vy (4*k+2)) = q (vx (4*k+3), vy (4*k+3))"
+      using h_snd hSuc_4k1 hSuc_4k3 by (by100 simp)
+  qed
+  \<comment> \<open>Link between blocks: edges 4k+1 and 4k+3, t=0:
+     q(v_{4k+1}) = q(v_{Suc(4k+3) mod 4n}) = q(v_{4(k+1) mod n}).\<close>
   have hlink: "\<And>k. k < n \<Longrightarrow>
       q (vx (4*k+1), vy (4*k+1)) = q (vx (4*((k+1) mod n)), vy (4*((k+1) mod n)))"
-    sorry \<comment> \<open>Edges 4k+1 and 4k+3, t=0.\<close>
+  proof -
+    fix k assume hk: "k < n"
+    have h_fst: "fst (scheme!(4*k+1)) = fst (scheme!(4*k+3))"
+      using hscheme_1[OF hk] hscheme_3[OF hk] by (by100 simp)
+    have h_snd: "snd (scheme!(4*k+1)) \<noteq> snd (scheme!(4*k+3))"
+      using hscheme_1[OF hk] hscheme_3[OF hk] by (by100 simp)
+    have hi: "4*k+1 < length scheme" using hidx[OF hk, of 1] by (by100 simp)
+    have hj: "4*k+3 < length scheme" using hidx[OF hk, of 3] by (by100 simp)
+    have h0: "0 \<in> I_set" unfolding top1_unit_interval_def by (by100 auto)
+    have hSuc_4k1: "Suc (4*k+1) mod length scheme = 4*k+2"
+    proof -
+      have "4*k+2 < length scheme" using hk hlen by (by100 linarith)
+      thus ?thesis using hlen by (by100 simp)
+    qed
+    have hSuc_4k3: "Suc (4*k+3) mod length scheme = 4*((k+1) mod n)"
+    proof -
+      have "Suc (4*k+3) = 4*(k+1)" by (by100 simp)
+      hence "Suc (4*k+3) mod length scheme = 4*(k+1) mod (4*n)" using hlen by (by100 simp)
+      also have "\<dots> = 4 * ((k+1) mod n)"
+        using mult_mod_right[of 4 "k+1" n, symmetric] by (by100 simp)
+      finally show ?thesis .
+    qed
+    from hedge[rule_format, OF hi hj h_fst, rule_format, OF h0]
+    show "q (vx (4*k+1), vy (4*k+1)) = q (vx (4*((k+1) mod n)), vy (4*((k+1) mod n)))"
+      using h_snd hSuc_4k1 hSuc_4k3 by (by100 simp)
+  qed
   \<comment> \<open>Chain within block k: q(v_{4k}) = q(v_{4k+3}) = q(v_{4k+2}) = q(v_{4k+1}).\<close>
   have hblock_eq: "\<And>k r. k < n \<Longrightarrow> r < 4 \<Longrightarrow>
       q (vx (4*k+r), vy (4*k+r)) = q (vx (4*k), vy (4*k))"
   proof -
     fix k r :: nat assume hk: "k < n" and hr: "r < 4"
     show "q (vx (4*k+r), vy (4*k+r)) = q (vx (4*k), vy (4*k))"
-    proof (cases r)
-      case 0 thus ?thesis by (by100 simp)
-    next
-      case (Suc r') thus ?thesis using hpair_a[OF hk] hpair_b[OF hk] hpair_c[OF hk] hr
-        sorry \<comment> \<open>Case r=1,2,3: chain through the block identifications.\<close>
+    proof -
+      have ha: "q (vx (4*k), vy (4*k)) = q (vx (4*k+3), vy (4*k+3))" using hpair_a[OF hk] .
+      have hb: "q (vx (4*k+1), vy (4*k+1)) = q (vx (4*k+2), vy (4*k+2))" using hpair_b[OF hk] .
+      have hc: "q (vx (4*k+2), vy (4*k+2)) = q (vx (4*k+3), vy (4*k+3))" using hpair_c[OF hk] .
+      from hr have "r = 0 \<or> r = 1 \<or> r = 2 \<or> r = 3" by (by100 linarith)
+      thus ?thesis using ha hb hc by (by100 force)
     qed
   qed
   \<comment> \<open>Chain across blocks: q(v_{4k}) = q(v_0) by induction using hlink.\<close>
@@ -3945,7 +4062,6 @@ lemma torus_scheme_vertex_connectivity:
             else q (t * vx j + (1-t) * vx (Suc j mod length scheme),
                     t * vy j + (1-t) * vy (Suc j mod length scheme)))))
       \<longrightarrow> (\<forall>i<length scheme. \<forall>j<length scheme. q (vx i, vy i) = q (vx j, vy j))"
-  using torus_scheme_all_eq_v0[of n] unfolding scheme_def
-  sorry
+  sorry \<comment> \<open>Wrapper: from all\_eq\_v0 + transitivity. Blocked by defines scoping.\<close>
 
 end
