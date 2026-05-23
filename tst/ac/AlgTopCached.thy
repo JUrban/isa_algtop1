@@ -31284,6 +31284,12 @@ definition top1_quotient_of_scheme_on ::
       \<and> (\<forall>i<length scheme. \<forall>j<length scheme.
              i \<noteq> j \<longrightarrow> (vx i, vy i) \<noteq> (vx j, vy j))
       \<and> (\<forall>i<length scheme. (vx i, vy i) \<in> P)
+      \<comment> \<open>P is the convex hull of the outer vx, vy (same vertices as used for edges).\<close>
+      \<and> P = {(x, y) | x y.
+                \<exists>coeffs. (\<forall>i<length scheme. coeffs i \<ge> 0)
+                       \<and> (\<Sum>i<length scheme. coeffs i) = 1
+                       \<and> x = (\<Sum>i<length scheme. coeffs i * vx i)
+                       \<and> y = (\<Sum>i<length scheme. coeffs i * vy i)}
       \<comment> \<open>Vertices are in cyclic order: non-adjacent edges don't share interior points.\<close>
       \<and> (\<forall>i<length scheme. \<forall>j<length scheme.
             i \<noteq> j \<longrightarrow> Suc i mod length scheme \<noteq> j \<longrightarrow> i \<noteq> Suc j mod length scheme \<longrightarrow>
@@ -31308,7 +31314,24 @@ definition top1_quotient_of_scheme_on ::
       \<and> (\<forall>p\<in>P. (\<forall>i<length scheme. \<forall>t\<in>I_set.
                     p \<noteq> ((1-t) * vx i + t * vx (Suc i mod length scheme),
                           (1-t) * vy i + t * vy (Suc i mod length scheme)))
-               \<longrightarrow> (\<forall>p'\<in>P. q p = q p' \<longrightarrow> p = p')))"
+               \<longrightarrow> (\<forall>p'\<in>P. q p = q p' \<longrightarrow> p = p'))
+      \<comment> \<open>No extra identifications: boundary identifications are ONLY the scheme-specified ones.
+          If two boundary edge points have the same q-value, they must be the same point
+          or on same-label edges at corresponding parameters.\<close>
+      \<and> (\<forall>i<length scheme. \<forall>j<length scheme. \<forall>t\<in>I_set. \<forall>s\<in>I_set.
+              q ((1-t) * vx i + t * vx (Suc i mod length scheme),
+                 (1-t) * vy i + t * vy (Suc i mod length scheme))
+            = q ((1-s) * vx j + s * vx (Suc j mod length scheme),
+                 (1-s) * vy j + s * vy (Suc j mod length scheme))
+            \<longrightarrow> (i = j \<and> t = s)
+              \<or> (fst (scheme!i) = fst (scheme!j) \<and>
+                 (if snd (scheme!i) = snd (scheme!j) then s = t else s = 1 - t)))
+      \<comment> \<open>Counterclockwise vertex ordering: cross product of consecutive edges from centroid > 0.
+          cross2 (a,b) (c,d) = a*d - b*c. Centroid = (Σvx/n, Σvy/n).\<close>
+      \<and> (\<forall>i<length scheme. let cx = (\<Sum>j<length scheme. vx j) / real (length scheme);
+                               cy = (\<Sum>j<length scheme. vy j) / real (length scheme)
+           in (vx i - cx) * (vy (Suc i mod length scheme) - cy)
+            - (vy i - cy) * (vx (Suc i mod length scheme) - cx) > 0))"
 
 text \<open>Extraction lemma: from quotient_of_scheme_on, get the polygonal region and quotient map.\<close>
 lemma quotient_of_scheme_extract:

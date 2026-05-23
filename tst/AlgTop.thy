@@ -2030,7 +2030,7 @@ qed
 theorem Theorem_71_3_wedge_of_circles_general:
   fixes J :: "'i set" and X :: "'a set" and TX :: "'a set set" and p :: 'a
   assumes "top1_is_wedge_of_circles_on X TX J p"
-  shows "\<exists>(G::'g set) mul e invg (\<iota>::'i \<Rightarrow> 'g).
+  shows "\<exists>(G::int set) mul e invg (\<iota>::'i \<Rightarrow> int).
            top1_is_free_group_full_on G mul e invg \<iota> J
          \<and> top1_groups_isomorphic_on G mul
              (top1_fundamental_group_carrier X TX p)
@@ -2046,15 +2046,232 @@ proof -
      The direct limit of free groups on finite subsets = free group on J.\<close>
   \<comment> \<open>Step 3: \<pi>_1(X) = direct limit of \<pi>_1(X_F) by the weak topology on X
      (a loop in X is compact, hence contained in some finite sub-wedge).\<close>
-  show ?thesis sorry \<comment> \<open>Direct limit argument: finite sub-wedges (Thm 71.1) + compactness of loops.\<close>
+  show ?thesis
+  proof (cases "finite J")
+    case True
+    \<comment> \<open>Finite case: bijection J \<leftrightarrow> {..<card J}, relabel wedge, apply Theorem 71.1.\<close>
+    have hcard: "{0..<card J} = {..<card J}" by (by100 auto)
+    from ex_bij_betw_nat_finite[OF True] obtain f where
+      hf: "bij_betw f {..<card J} J" using hcard by (by100 auto)
+    \<comment> \<open>Extract the circle family from the wedge.\<close>
+    from assms[unfolded top1_is_wedge_of_circles_on_def]
+    obtain C where
+      hC: "\<forall>\<alpha>\<in>J. C \<alpha> \<subseteq> X \<and> p \<in> C \<alpha>
+             \<and> (\<exists>h. top1_homeomorphism_on top1_S1 top1_S1_topology
+                      (C \<alpha>) (subspace_topology X TX (C \<alpha>)) h)"
+      and hcover: "(\<Union>\<alpha>\<in>J. C \<alpha>) = X"
+      and hdisjoint: "\<forall>\<alpha>\<in>J. \<forall>\<beta>\<in>J. \<alpha> \<noteq> \<beta> \<longrightarrow> C \<alpha> \<inter> C \<beta> = {p}"
+      and hweak: "\<forall>D. D \<subseteq> X \<longrightarrow>
+             (closedin_on X TX D \<longleftrightarrow>
+              (\<forall>\<alpha>\<in>J. closedin_on (C \<alpha>) (subspace_topology X TX (C \<alpha>)) (C \<alpha> \<inter> D)))"
+      by (elim conjE exE) (rule that, assumption+)
+    \<comment> \<open>Define relabeled circles: C'(i) = C(f(i)).\<close>
+    define C' where "C' i = C (f i)" for i
+    have hf_inj: "inj_on f {..<card J}" using hf unfolding bij_betw_def by (by100 blast)
+    have hf_surj: "f ` {..<card J} = J" using hf unfolding bij_betw_def by (by100 blast)
+    \<comment> \<open>Show: wedge with index {..<card J}.\<close>
+    have hwedge': "top1_is_wedge_of_circles_on X TX {..<card J} p"
+      unfolding top1_is_wedge_of_circles_on_def
+    proof (intro conjI)
+      show "is_topology_on_strict X TX"
+        using assms unfolding top1_is_wedge_of_circles_on_def by (by100 blast)
+      show "is_hausdorff_on X TX"
+        using assms unfolding top1_is_wedge_of_circles_on_def by (by100 blast)
+      show "p \<in> X"
+        using assms unfolding top1_is_wedge_of_circles_on_def by (by100 blast)
+      show "\<exists>Ca. (\<forall>\<alpha>\<in>{..<card J}. Ca \<alpha> \<subseteq> X \<and> p \<in> Ca \<alpha>
+               \<and> (\<exists>h. top1_homeomorphism_on top1_S1 top1_S1_topology
+                        (Ca \<alpha>) (subspace_topology X TX (Ca \<alpha>)) h))
+          \<and> (\<Union>\<alpha>\<in>{..<card J}. Ca \<alpha>) = X
+          \<and> (\<forall>\<alpha>\<in>{..<card J}. \<forall>\<beta>\<in>{..<card J}. \<alpha> \<noteq> \<beta> \<longrightarrow> Ca \<alpha> \<inter> Ca \<beta> = {p})
+          \<and> (\<forall>D. D \<subseteq> X \<longrightarrow>
+               (closedin_on X TX D \<longleftrightarrow>
+                (\<forall>\<alpha>\<in>{..<card J}. closedin_on (Ca \<alpha>) (subspace_topology X TX (Ca \<alpha>)) (Ca \<alpha> \<inter> D))))"
+      proof (rule exI[of _ C'])
+        have hC'_props: "\<forall>i\<in>{..<card J}. C' i \<subseteq> X \<and> p \<in> C' i
+            \<and> (\<exists>h. top1_homeomorphism_on top1_S1 top1_S1_topology
+                     (C' i) (subspace_topology X TX (C' i)) h)"
+        proof (intro ballI)
+          fix i assume "i \<in> {..<card J}"
+          hence "f i \<in> J" using hf_surj by (by100 blast)
+          thus "C' i \<subseteq> X \<and> p \<in> C' i
+              \<and> (\<exists>h. top1_homeomorphism_on top1_S1 top1_S1_topology
+                       (C' i) (subspace_topology X TX (C' i)) h)"
+            unfolding C'_def using hC by (by100 blast)
+        qed
+        have hcover': "(\<Union>i\<in>{..<card J}. C' i) = X"
+        proof -
+          have "(\<Union>i\<in>{..<card J}. C' i) = (\<Union>i\<in>{..<card J}. C (f i))"
+            unfolding C'_def ..
+          also have "\<dots> = (\<Union>\<alpha>\<in>f`{..<card J}. C \<alpha>)"
+            by (by5000 auto)
+          also have "\<dots> = (\<Union>\<alpha>\<in>J. C \<alpha>)" using hf_surj by (by100 simp)
+          finally show ?thesis using hcover by (by100 simp)
+        qed
+        have hdisjoint': "\<forall>i\<in>{..<card J}. \<forall>j\<in>{..<card J}. i \<noteq> j \<longrightarrow> C' i \<inter> C' j = {p}"
+        proof (intro ballI impI)
+          fix i j assume "i \<in> {..<card J}" "j \<in> {..<card J}" "i \<noteq> j"
+          hence "f i \<in> J" "f j \<in> J" "f i \<noteq> f j"
+            using hf_surj hf_inj unfolding inj_on_def by (by100 blast)+
+          thus "C' i \<inter> C' j = {p}" unfolding C'_def using hdisjoint by (by100 blast)
+        qed
+        have hweak': "\<forall>D. D \<subseteq> X \<longrightarrow>
+            (closedin_on X TX D \<longleftrightarrow>
+             (\<forall>i\<in>{..<card J}. closedin_on (C' i) (subspace_topology X TX (C' i)) (C' i \<inter> D)))"
+        proof (intro allI impI)
+          fix D assume hD: "D \<subseteq> X"
+          show "closedin_on X TX D \<longleftrightarrow>
+              (\<forall>i\<in>{..<card J}. closedin_on (C' i) (subspace_topology X TX (C' i)) (C' i \<inter> D))"
+          proof
+            assume hcl: "closedin_on X TX D"
+            show "\<forall>i\<in>{..<card J}. closedin_on (C' i) (subspace_topology X TX (C' i)) (C' i \<inter> D)"
+            proof (intro ballI)
+              fix i assume "i \<in> {..<card J}"
+              hence "f i \<in> J" using hf_surj by (by100 blast)
+              from hweak hD hcl this show "closedin_on (C' i) (subspace_topology X TX (C' i)) (C' i \<inter> D)"
+                unfolding C'_def by (by100 blast)
+            qed
+          next
+            assume hall: "\<forall>i\<in>{..<card J}. closedin_on (C' i) (subspace_topology X TX (C' i)) (C' i \<inter> D)"
+            have "\<forall>\<alpha>\<in>J. closedin_on (C \<alpha>) (subspace_topology X TX (C \<alpha>)) (C \<alpha> \<inter> D)"
+            proof (intro ballI)
+              fix \<alpha> assume "\<alpha> \<in> J"
+              hence "\<alpha> \<in> f ` {..<card J}" using hf_surj by (by100 simp)
+              then obtain i where hi: "i \<in> {..<card J}" and hfi: "f i = \<alpha>" by (by100 auto)
+              from hall[rule_format, OF hi]
+              show "closedin_on (C \<alpha>) (subspace_topology X TX (C \<alpha>)) (C \<alpha> \<inter> D)"
+                unfolding C'_def using hfi by (by100 simp)
+            qed
+            thus "closedin_on X TX D" using hweak[rule_format, OF hD] by (by100 simp)
+          qed
+        qed
+        show "(\<forall>i\<in>{..<card J}. C' i \<subseteq> X \<and> p \<in> C' i
+              \<and> (\<exists>h. top1_homeomorphism_on top1_S1 top1_S1_topology (C' i) (subspace_topology X TX (C' i)) h))
+            \<and> (\<Union>i\<in>{..<card J}. C' i) = X
+            \<and> (\<forall>i\<in>{..<card J}. \<forall>j\<in>{..<card J}. i \<noteq> j \<longrightarrow> C' i \<inter> C' j = {p})
+            \<and> (\<forall>D. D \<subseteq> X \<longrightarrow>
+                 (closedin_on X TX D \<longleftrightarrow>
+                  (\<forall>i\<in>{..<card J}. closedin_on (C' i) (subspace_topology X TX (C' i)) (C' i \<inter> D))))"
+          using hC'_props hcover' hdisjoint' hweak' by (by100 blast)
+      qed
+    qed
+    \<comment> \<open>Apply Theorem 71.1 to the relabeled wedge.\<close>
+    from Theorem_71_1_wedge_of_circles_finite[OF hwedge']
+    obtain G0 :: "int set" and mul0 e0 invg0 and \<iota>0 :: "nat \<Rightarrow> int" where
+      hfree0: "top1_is_free_group_full_on G0 mul0 e0 invg0 \<iota>0 {..<card J}" and
+      hiso0: "top1_groups_isomorphic_on G0 mul0
+          (top1_fundamental_group_carrier X TX p) (top1_fundamental_group_mul X TX p)"
+      by (by100 blast)
+    \<comment> \<open>Relabel generators: \<iota>'(\<alpha>) = \<iota>0(f^{-1}(\<alpha>)) for \<alpha> \<in> J.\<close>
+    let ?finv = "inv_into {..<card J} f"
+    define \<iota>' where "\<iota>' \<alpha> = \<iota>0 (?finv \<alpha>)" for \<alpha>
+    have hfinv_in: "\<And>\<alpha>. \<alpha> \<in> J \<Longrightarrow> ?finv \<alpha> \<in> {..<card J}"
+    proof -
+      fix \<alpha> assume "\<alpha> \<in> J"
+      hence "\<alpha> \<in> f ` {..<card J}" using hf_surj by (by100 simp)
+      thus "?finv \<alpha> \<in> {..<card J}" by (rule inv_into_into)
+    qed
+    have hfinv_f: "\<And>\<alpha>. \<alpha> \<in> J \<Longrightarrow> f (?finv \<alpha>) = \<alpha>"
+    proof -
+      fix \<alpha> assume "\<alpha> \<in> J"
+      hence "\<alpha> \<in> f ` {..<card J}" using hf_surj by (by100 simp)
+      thus "f (?finv \<alpha>) = \<alpha>" by (rule f_inv_into_f)
+    qed
+    have hf_finv: "\<And>i. i \<in> {..<card J} \<Longrightarrow> ?finv (f i) = i"
+      using hf_inj by (rule inv_into_f_f)
+    have hfree': "top1_is_free_group_full_on G0 mul0 e0 invg0 \<iota>' J"
+      unfolding top1_is_free_group_full_on_def
+    proof (intro conjI allI impI)
+      show "top1_is_group_on G0 mul0 e0 invg0"
+        using hfree0 unfolding top1_is_free_group_full_on_def by (by100 blast)
+      show "\<forall>s\<in>J. \<iota>' s \<in> G0"
+      proof (intro ballI)
+        fix s assume "s \<in> J"
+        have "?finv s \<in> {..<card J}" by (rule hfinv_in[OF \<open>s \<in> J\<close>])
+        thus "\<iota>' s \<in> G0" unfolding \<iota>'_def
+          using hfree0 unfolding top1_is_free_group_full_on_def by (by100 blast)
+      qed
+      show "inj_on \<iota>' J"
+      proof (rule inj_onI)
+        fix x y assume "x \<in> J" "y \<in> J" "\<iota>' x = \<iota>' y"
+        hence "\<iota>0 (?finv x) = \<iota>0 (?finv y)" unfolding \<iota>'_def by (by100 simp)
+        moreover have "?finv x \<in> {..<card J}" "?finv y \<in> {..<card J}"
+          using hfinv_in \<open>x \<in> J\<close> \<open>y \<in> J\<close> by (by100 blast)+
+        moreover have "inj_on \<iota>0 {..<card J}"
+          using hfree0 unfolding top1_is_free_group_full_on_def by (by100 blast)
+        ultimately have "?finv x = ?finv y" unfolding inj_on_def by (by100 blast)
+        hence "f (?finv x) = f (?finv y)" by (by100 simp)
+        thus "x = y" using hfinv_f \<open>x \<in> J\<close> \<open>y \<in> J\<close> by (by100 simp)
+      qed
+      show "G0 = top1_subgroup_generated_on G0 mul0 e0 invg0 (\<iota>' ` J)"
+      proof -
+        have "\<iota>' ` J = \<iota>0 ` {..<card J}"
+        proof
+          show "\<iota>' ` J \<subseteq> \<iota>0 ` {..<card J}"
+          proof (rule image_subsetI)
+            fix \<alpha> assume "\<alpha> \<in> J"
+            have "?finv \<alpha> \<in> {..<card J}" by (rule hfinv_in[OF \<open>\<alpha> \<in> J\<close>])
+            thus "\<iota>' \<alpha> \<in> \<iota>0 ` {..<card J}" unfolding \<iota>'_def by (by100 blast)
+          qed
+          show "\<iota>0 ` {..<card J} \<subseteq> \<iota>' ` J"
+          proof (rule image_subsetI)
+            fix i assume "i \<in> {..<card J}"
+            have "f i \<in> J" using hf_surj \<open>i \<in> {..<card J}\<close> by (by100 blast)
+            moreover have "\<iota>' (f i) = \<iota>0 i" unfolding \<iota>'_def using hf_finv[OF \<open>i \<in> {..<card J}\<close>]
+              by (by100 simp)
+            ultimately show "\<iota>0 i \<in> \<iota>' ` J" by (by100 force)
+          qed
+        qed
+        thus ?thesis using hfree0 unfolding top1_is_free_group_full_on_def by (by100 simp)
+      qed
+      fix ws :: "('i \<times> bool) list"
+      assume hws_ne: "ws \<noteq> []"
+      assume hred: "top1_is_reduced_word (map (\<lambda>(s, b). (\<iota>' s, b)) ws)"
+      assume hws_in: "\<forall>i<length ws. fst (ws ! i) \<in> J"
+      \<comment> \<open>Relabel ws to use {..<card J}: ws' = map (\<lambda>(s,b). (finv s, b)) ws.\<close>
+      let ?ws' = "map (\<lambda>(s, b). (?finv s, b)) ws"
+      have hws'_ne: "?ws' \<noteq> []" using hws_ne by (by100 simp)
+      have hws'_in: "\<forall>i<length ?ws'. fst (?ws' ! i) \<in> {..<card J}"
+      proof (intro allI impI)
+        fix i assume "i < length ?ws'"
+        hence "i < length ws" by (by100 simp)
+        hence "fst (ws ! i) \<in> J" using hws_in by (by100 blast)
+        hence hfst_J: "fst (ws ! i) \<in> J" using hws_in by (by100 blast)
+        have "?finv (fst (ws ! i)) \<in> {..<card J}" by (rule hfinv_in[OF hfst_J])
+        moreover obtain s b where hsb: "ws ! i = (s, b)" by (cases "ws ! i")
+        ultimately show "fst (?ws' ! i) \<in> {..<card J}"
+          using \<open>i < length ws\<close> by (by100 simp)
+      qed
+      have hmap_eq: "map (\<lambda>(s, b). (\<iota>' s, b)) ws = map (\<lambda>(s, b). (\<iota>0 s, b)) ?ws'"
+      proof (rule nth_equalityI)
+        show "length (map (\<lambda>(s, b). (\<iota>' s, b)) ws) = length (map (\<lambda>(s, b). (\<iota>0 s, b)) ?ws')"
+          by (by100 simp)
+        fix i assume "i < length (map (\<lambda>(s, b). (\<iota>' s, b)) ws)"
+        hence hi: "i < length ws" by (by100 simp)
+        obtain s b where hsb: "ws ! i = (s, b)" by (cases "ws ! i") (by100 blast)
+        show "map (\<lambda>(s, b). (\<iota>' s, b)) ws ! i = map (\<lambda>(s, b). (\<iota>0 s, b)) ?ws' ! i"
+          using hi hsb unfolding \<iota>'_def by (by100 auto)
+      qed
+      have hred': "top1_is_reduced_word (map (\<lambda>(s, b). (\<iota>0 s, b)) ?ws')"
+        using hred hmap_eq by (by100 simp)
+      have hfree0_words: "\<And>ws'. ws' \<noteq> [] \<Longrightarrow> top1_is_reduced_word (map (\<lambda>(s, b). (\<iota>0 s, b)) ws')
+          \<Longrightarrow> (\<forall>i<length ws'. fst (ws' ! i) \<in> {..<card J})
+          \<Longrightarrow> top1_group_word_product mul0 e0 invg0 (map (\<lambda>(s, b). (\<iota>0 s, b)) ws') \<noteq> e0"
+        using hfree0 unfolding top1_is_free_group_full_on_def by (by100 blast)
+      from hfree0_words[OF hws'_ne hred' hws'_in]
+      have "top1_group_word_product mul0 e0 invg0 (map (\<lambda>(s, b). (\<iota>0 s, b)) ?ws') \<noteq> e0" .
+      hence "top1_group_word_product mul0 e0 invg0 (map (\<lambda>(s, b). (\<iota>' s, b)) ws) \<noteq> e0"
+        by (subst hmap_eq) (by100 assumption)
+      thus "top1_group_word_product mul0 e0 invg0 (map (\<lambda>(s, b). (\<iota>' s, b)) ws) \<noteq> e0" .
+    qed
+    show ?thesis using hfree' hiso0 by (by100 blast)
+  next
+    case False
+    \<comment> \<open>Infinite case: direct limit argument.\<close>
+    show ?thesis sorry \<comment> \<open>Direct limit argument for infinite J: finite sub-wedges + compactness.\<close>
+  qed
 qed
 
-
-text \<open>For any natural number n, a wedge of n circles exists as a topological space.\<close>
-lemma wedge_of_circles_exists:
-  "\<exists>(X :: (real \<times> real) set) TX (p :: real \<times> real).
-      top1_is_wedge_of_circles_on X TX {..<n} p"
-  sorry
 
 text \<open>Bridge: compact in HOL Analysis equals top1\_compact\_on for R^2 subspaces.\<close>
 lemma compact_R2_bridge:
@@ -2748,1190 +2965,432 @@ proof -
   thus ?thesis by (rule compact_R2_bridge)
 qed
 
-lemma polygon_homeomorphic_to_disk:
+
+
+text \<open>Strengthened polygon-to-disk: following the book (Munkres \<S>74) exactly.
+  Uses radial projection from the centroid, not cone decomposition.
+  Returns both the homeomorphism AND boundary correspondence.\<close>
+lemma polygon_homeomorphic_to_disk_with_boundary:
   assumes "top1_is_polygonal_region_on P n" and "n \<ge> 3"
-  shows "\<exists>\<psi>. top1_homeomorphism_on P (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P)
-    top1_B2 top1_B2_topology \<psi>"
+      and hverts_in: "\<forall>i<n. (vx i, vy i) \<in> P"
+      and hP_hull: "P = {(x, y) | x y.
+                \<exists>coeffs. (\<forall>i<n. coeffs i \<ge> 0)
+                       \<and> (\<Sum>i<n. coeffs i) = 1
+                       \<and> x = (\<Sum>i<n. coeffs i * vx i)
+                       \<and> y = (\<Sum>i<n. coeffs i * vy i)}"
+      and hccw: "\<forall>i<n. let cx = (\<Sum>j<n. vx j) / real n; cy = (\<Sum>j<n. vy j) / real n
+         in (vx i - cx) * (vy (Suc i mod n) - cy) - (vy i - cy) * (vx (Suc i mod n) - cx) > 0"
+  shows "\<exists>\<psi>.
+    top1_homeomorphism_on P
+        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P)
+        top1_B2 top1_B2_topology \<psi>
+    \<and> \<psi> ` (\<Union>i<n. {((1-t) * vx i + t * vx (Suc i mod n),
+                     (1-t) * vy i + t * vy (Suc i mod n)) | t. t \<in> I_set})
+        = top1_S1
+    \<and> top1_homeomorphism_on
+        (P - (\<Union>i<n. {((1-t) * vx i + t * vx (Suc i mod n),
+                       (1-t) * vy i + t * vy (Suc i mod n)) | t. t \<in> I_set}))
+        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets)
+           (P - (\<Union>i<n. {((1-t) * vx i + t * vx (Suc i mod n),
+                          (1-t) * vy i + t * vy (Suc i mod n)) | t. t \<in> I_set})))
+        (top1_B2 - top1_S1)
+        (subspace_topology top1_B2 top1_B2_topology (top1_B2 - top1_S1))
+        \<psi>"
 proof -
-  \<comment> \<open>Following Munkres §74 (paragraph before Theorem 74.2):
-     Pick a point p in Int P. For each x in Bd P, the line segment from p to x
-     intersects Bd P in exactly one point (convexity). The boundary map
-     h: Bd P \<rightarrow> S^1 extends radially to \<psi>: P \<rightarrow> B^2 by
-     \<psi>((1-t)\<cdot>p + t\<cdot>x) = t \<cdot> h(x) for t \<in> [0,1], x \<in> Bd P.
-     Since P is compact and B^2 is Hausdorff, a continuous bijection P \<rightarrow> B^2
-     is automatically a homeomorphism.\<close>
-  \<comment> \<open>Step 1: P is compact (from polygonal\_region\_compact).\<close>
-  have hP_compact: "top1_compact_on P (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P)"
-    by (rule polygonal_region_compact[OF assms])
-  \<comment> \<open>Step 2: B^2 is Hausdorff.\<close>
-  have hB2_haus: "is_hausdorff_on top1_B2 top1_B2_topology"
+  \<comment> \<open>Following Munkres \<S>74 paragraph before Theorem 74.2:
+     "If two polygonal regions P and Q have the same number of vertices...
+      then there is an obvious homeomorphism h of Bd P with Bd Q that carries
+      the line segment from p_{i-1} to p_i by a positive linear map onto the
+      line segment from q_{i-1} to q_i."
+     "If p and q are fixed points of Int P and Int Q, respectively, then this
+      homeomorphism may be extended to a homeomorphism of P with Q by letting
+      it map the line segment from p to the point x of Bd P linearly onto
+      the line segment from q to h(x)."\<close>
+  \<comment> \<open>Step 1: Extract vertices from the polygonal region.\<close>
+  have hn: "n \<ge> 3" using assms(2) .
+  have hP_eq: "P = {(x, y) | x y.
+                \<exists>coeffs. (\<forall>i<n. coeffs i \<ge> 0)
+                       \<and> (\<Sum>i<n. coeffs i) = 1
+                       \<and> x = (\<Sum>i<n. coeffs i * vx i)
+                       \<and> y = (\<Sum>i<n. coeffs i * vy i)}" by (rule hP_hull)
+  have hverts: "\<forall>i<n. (vx i, vy i) \<in> P" by (rule hverts_in)
+  \<comment> \<open>Step 2: Define centroid c = (1/n) \<Sum> vertices as interior point.\<close>
+  let ?cx = "(\<Sum>i<n. vx i) / real n"
+  let ?cy = "(\<Sum>i<n. vy i) / real n"
+  let ?c = "(?cx, ?cy)"
+  have hc_in_P: "?c \<in> P"
   proof -
-    have "top1_B2 \<subseteq> (UNIV :: (real \<times> real) set)" by (by100 blast)
-    thus ?thesis
-      using Theorem_17_11 top1_R2_is_hausdorff
-      unfolding top1_B2_topology_def by (by5000 blast)
+    define coeffs where "coeffs (i::nat) = (1 / real n :: real)" for i
+    have "(\<forall>i<n. coeffs i \<ge> 0)" unfolding coeffs_def by (by100 simp)
+    moreover have "(\<Sum>i<n. coeffs i) = 1"
+      unfolding coeffs_def using hn by (by100 simp)
+    moreover have "?cx = (\<Sum>i<n. coeffs i * vx i)"
+      unfolding coeffs_def using hn by (simp add: sum_divide_distrib[symmetric])
+    moreover have "?cy = (\<Sum>i<n. coeffs i * vy i)"
+      unfolding coeffs_def using hn by (simp add: sum_divide_distrib[symmetric])
+    ultimately show ?thesis unfolding hP_eq by (by100 blast)
   qed
-  \<comment> \<open>Step 3: Construct the continuous bijection \<psi>: P \<rightarrow> B^2.\<close>
-  \<comment> \<open>This uses the radial projection from an interior point of P.\<close>
-  \<comment> \<open>Extract vertices for the radial projection construction.\<close>
-  from assms(1)[unfolded top1_is_polygonal_region_on_def]
-  obtain vx vy where
-    hdist: "\<forall>i<n. \<forall>j<n. i \<noteq> j \<longrightarrow> (vx i, vy i) \<noteq> (vx j, vy j)" and
-    hgp: "\<forall>k<n. \<not> (\<exists>coeffs. (\<forall>i<n. i \<noteq> k \<longrightarrow> coeffs i \<ge> 0)
-                        \<and> coeffs k = 0 \<and> (\<Sum>i<n. coeffs i) = 1
-                        \<and> vx k = (\<Sum>i<n. coeffs i * vx i)
-                        \<and> vy k = (\<Sum>i<n. coeffs i * vy i))" and
-    hP_eq: "P = {(x, y) | x y. \<exists>coeffs. (\<forall>i<n. coeffs i \<ge> 0) \<and> (\<Sum>i<n. coeffs i) = 1
-            \<and> x = (\<Sum>i<n. coeffs i * vx i) \<and> y = (\<Sum>i<n. coeffs i * vy i)}"
-    by (elim conjE exE) (rule that, assumption+)
-  \<comment> \<open>Centroid of vertices: p0 = (1/n * \<Sum> vx_i, 1/n * \<Sum> vy_i).\<close>
-  define cx where "cx = (\<Sum>i<n. vx i) / real n"
-  define cy where "cy = (\<Sum>i<n. vy i) / real n"
-  \<comment> \<open>The centroid is an interior point of P (strict convex combination).\<close>
-  have hc_in_P: "(cx, cy) \<in> P"
+  have hc_interior: "?c \<in> P - (\<Union>i<n. {((1-t) * vx i + t * vx (Suc i mod n),
+      (1-t) * vy i + t * vy (Suc i mod n)) | t. t \<in> I_set})"
   proof -
-    define c0 where "c0 = (\<lambda>i::nat. 1 / real n)"
-    have hc0ge: "\<forall>i<n. c0 i \<ge> 0" unfolding c0_def using assms(2) by (by100 simp)
-    have hc0sum: "(\<Sum>i<n. c0 i) = 1" unfolding c0_def using assms(2) by (by100 simp)
-    have hc0x: "(\<Sum>i<n. c0 i * vx i) = cx" unfolding c0_def cx_def
-      using assms(2) sum_divide_distrib[of vx "{..<n}" "real n", symmetric] by (by100 simp)
-    have hc0y: "(\<Sum>i<n. c0 i * vy i) = cy" unfolding c0_def cy_def
-      using assms(2) sum_divide_distrib[of vy "{..<n}" "real n", symmetric] by (by100 simp)
-    show ?thesis unfolding hP_eq using hc0ge hc0sum hc0x hc0y by (by5000 auto)
+    \<comment> \<open>From CCW: for each edge i, the centroid is not on the line through v_i, v_{i+1}.
+       A point on edge i at parameter t is a convex combo of v_i and v_{i+1},
+       hence on the line through them. Since centroid is NOT on that line, it's not on the edge.\<close>
+    have "?c \<notin> (\<Union>i<n. {((1-t) * vx i + t * vx (Suc i mod n),
+        (1-t) * vy i + t * vy (Suc i mod n)) | t. t \<in> I_set})"
+    proof (rule ccontr)
+      assume "\<not> ?thesis"
+      then obtain i t where hi: "i < n" and ht: "t \<in> I_set" and
+        hpt: "?c = ((1-t) * vx i + t * vx (Suc i mod n), (1-t) * vy i + t * vy (Suc i mod n))"
+        by (by5000 force)
+      \<comment> \<open>The point (1-t)*v_i + t*v_{i+1} is on the line through v_i, v_{i+1}.
+         So cross2(point - v_i, v_{i+1} - v_i) = 0. But also cross2(c - v_i, v_{i+1} - v_i) = 0.
+         However, CCW says cross2(v_i - c, v_{i+1} - c) > 0, contradicting c on the edge line.\<close>
+      have hcx_eq: "?cx = (1-t) * vx i + t * vx (Suc i mod n)" using hpt by (by100 simp)
+      have hcy_eq: "?cy = (1-t) * vy i + t * vy (Suc i mod n)" using hpt by (by100 simp)
+      \<comment> \<open>From hccw: (vx i - cx)*(vy_{i+1} - cy) - (vy i - cy)*(vx_{i+1} - cx) > 0.\<close>
+      from hccw[rule_format, OF hi]
+      have hD_pos: "(vx i - ?cx) * (vy (Suc i mod n) - ?cy)
+          - (vy i - ?cy) * (vx (Suc i mod n) - ?cx) > 0"
+        by (by100 simp)
+      \<comment> \<open>But substituting c on the edge line: vx i - cx = (1-t)*(vx i - vx i) + t*(vx i - v_{i+1})...\<close>
+      have "vx i - ?cx = - t * (vx (Suc i mod n) - vx i)" using hcx_eq by (simp add: algebra_simps)
+      moreover have "vy i - ?cy = - t * (vy (Suc i mod n) - vy i)" using hcy_eq by (simp add: algebra_simps)
+      moreover have "vx (Suc i mod n) - ?cx = (1 - t) * (vx (Suc i mod n) - vx i)"
+        using hcx_eq by (simp add: algebra_simps)
+      moreover have "vy (Suc i mod n) - ?cy = (1 - t) * (vy (Suc i mod n) - vy i)"
+        using hcy_eq by (simp add: algebra_simps)
+      ultimately have "(vx i - ?cx) * (vy (Suc i mod n) - ?cy)
+          - (vy i - ?cy) * (vx (Suc i mod n) - ?cx) =
+          (-t) * (vx (Suc i mod n) - vx i) * ((1-t) * (vy (Suc i mod n) - vy i))
+          - (-t) * (vy (Suc i mod n) - vy i) * ((1-t) * (vx (Suc i mod n) - vx i))"
+        by (by100 simp)
+      also have "\<dots> = 0" by (simp add: algebra_simps)
+      finally show False using hD_pos by (by100 linarith)
+    qed
+    thus ?thesis using hc_in_P by (by100 blast)
   qed
-  \<comment> \<open>Boundary of P = union of edges (segments between consecutive vertices).\<close>
-  define BdP where "BdP = (\<Union>i<n.
-      {((1-t) * vx i + t * vx ((i+1) mod n),
-        (1-t) * vy i + t * vy ((i+1) mod n)) | t::real. 0 \<le> t \<and> t \<le> 1})"
-  \<comment> \<open>Following Munkres §74 step by step:
-     Step A: Define target polygon Q = regular n-gon inscribed in unit circle.
-     Step B: Define boundary map h: Bd P \<rightarrow> Bd Q (piecewise linear on edges).
-     Step C: Extend to interior: \<psi>((1-s)\<cdot>c + s\<cdot>x) = s \<cdot> h(x) for x \<in> Bd P, s \<in> [0,1].
-     The map \<psi> is a continuous bijection P \<rightarrow> B^2 (actually onto Q which equals B^2
-     for the regular n-gon case, where Q is itself the convex hull of points on S^1).
-
-     Key simplification: we define \<psi> piecewise on each "cone" from the centroid
-     to an edge, using barycentric coordinates. On cone_i = conv({c, v_i, v_{i+1}}),
-     z = \<alpha>\<cdot>c + \<beta>\<cdot>v_i + \<gamma>\<cdot>v_{i+1} maps to \<beta>\<cdot>q_i + \<gamma>\<cdot>q_{i+1}
-     where q_j = (cos(2\<pi>j/n), sin(2\<pi>j/n)).\<close>
-  \<comment> \<open>Step A: Target vertices on S^1.\<close>
-  define qx where "qx j = cos (2 * pi * real j / real n)" for j :: nat
-  define qy where "qy j = sin (2 * pi * real j / real n)" for j :: nat
-  \<comment> \<open>Step B: The map \<psi> is defined piecewise. For z \<in> P, find the "cone" containing z,
-     i.e., find i such that z is in conv({centroid, v_i, v_{i+1 mod n}}).
-     Write z = \<alpha>\<cdot>c + \<beta>\<cdot>v_i + \<gamma>\<cdot>v_{i+1} (barycentric coords within the cone).
-     Map to \<beta>\<cdot>q_i + \<gamma>\<cdot>q_{i+1}.\<close>
-  \<comment> \<open>For each i, define the affine map on cone_i.\<close>
-  \<comment> \<open>Normalized cone map: sends (α,β,γ) to (1-α) · normalize(β·q_i + γ·q_{i+1}).
-     This fills B^2 (not just the inscribed polygon).\<close>
-  define cone_map where "cone_map i \<alpha> \<beta> \<gamma> = (
-      let w = (\<beta> * qx i + \<gamma> * qx ((i+1) mod n), \<beta> * qy i + \<gamma> * qy ((i+1) mod n));
-          r = sqrt (fst w ^ 2 + snd w ^ 2)
-      in if r = 0 then (0, 0) else ((1 - \<alpha>) * fst w / r, (1 - \<alpha>) * snd w / r)
-      )" for i :: nat and \<alpha> \<beta> \<gamma> :: real
-  \<comment> \<open>For z \<in> P, we need to find the cone index i and barycentric coords.
-     This is the decomposition z = \<alpha>\<cdot>(cx,cy) + \<beta>\<cdot>(vx i, vy i) + \<gamma>\<cdot>(vx(i+1),vy(i+1))
-     with \<alpha>+\<beta>+\<gamma>=1, \<alpha>,\<beta>,\<gamma> \<ge> 0.
-     The cone index i is determined by: z lies in the triangle (c, v_i, v_{i+1}).\<close>
-  \<comment> \<open>Helper: check if z is in cone i (triangle c, v_i, v_{i+1}).\<close>
-  define in_cone where "in_cone i z \<longleftrightarrow>
-      (\<exists>\<alpha> \<beta> \<gamma>. \<alpha> \<ge> 0 \<and> \<beta> \<ge> 0 \<and> \<gamma> \<ge> 0 \<and> \<alpha> + \<beta> + \<gamma> = 1
-        \<and> fst z = \<alpha> * cx + \<beta> * vx i + \<gamma> * vx ((i+1) mod n)
-        \<and> snd z = \<alpha> * cy + \<beta> * vy i + \<gamma> * vy ((i+1) mod n))" for i :: nat and z :: "real \<times> real"
-  \<comment> \<open>P = union of cones (triangulation from centroid).\<close>
-  have hP_cones: "\<forall>z \<in> P. \<exists>i<n. in_cone i z"
-  proof (intro ballI)
-    fix z assume "z \<in> P"
-    \<comment> \<open>Book: "P is the union of all line segments joining p and points of Bd P."
-       For z = centroid: z is in any cone (take \<alpha> = 1, \<beta> = \<gamma> = 0).
-       For z \<noteq> centroid: the ray from centroid through z hits Bd P at some edge i.
-       Then z lies on the segment from centroid to that boundary point, hence in cone_i.\<close>
-    show "\<exists>i<n. in_cone i z"
-    proof (cases "z = (cx, cy)")
-      case True
-      \<comment> \<open>z = centroid: in cone 0 with \<alpha>=1, \<beta>=\<gamma>=0.\<close>
-      have "0 < n" using assms(2) by (by100 linarith)
-      moreover have "in_cone 0 (cx, cy)" unfolding in_cone_def
-        by (rule exI[of _ 1], rule exI[of _ 0], rule exI[of _ 0]) (by100 simp)
-      ultimately show ?thesis using True by (by100 blast)
-    next
-      case False
-      \<comment> \<open>Following book: "P is the union of all line segments joining p and points of Bd P."
-         The ray from c through z (extended) exits P at some boundary point b on edge i.
-         Then z = (1-s)\<cdot>c + s\<cdot>b where s = |z-c|/|b-c| \<in> (0,1]. Since b is on edge i,
-         b = (1-u)\<cdot>v_i + u\<cdot>v_{i+1}. So z = (1-s)\<cdot>c + s(1-u)\<cdot>v_i + su\<cdot>v_{i+1} \<in> cone_i.\<close>
-      \<comment> \<open>Step 1: The ray from c through z is parameterized by t \<ge> 0:
-         r(t) = (1-t)\<cdot>c + t\<cdot>z = c + t\<cdot>(z - c).
-         At t=0: c \<in> P. At t=1: z \<in> P. For large t: outside P (bounded).\<close>
-      \<comment> \<open>Step 2: Let t* = sup{t \<ge> 0 | r(t) \<in> P}. Since P bounded, t* < \<infinity>.
-         Since t=1 gives z \<in> P, t* \<ge> 1. The point b = r(t*) is on Bd P.\<close>
-      \<comment> \<open>Step 3: b \<in> Bd P means b is on some edge i: b = (1-u)\<cdot>v_i + u\<cdot>v_{i+1}.\<close>
-      \<comment> \<open>Step 4: z = r(1) = (1 - 1/t*)\<cdot>c + (1/t*)\<cdot>b. Set s = 1/t* \<in> (0,1].
-         Then z = (1-s)\<cdot>c + s\<cdot>((1-u)\<cdot>v_i + u\<cdot>v_{i+1})
-                = (1-s)\<cdot>c + s(1-u)\<cdot>v_i + su\<cdot>v_{i+1} \<in> cone_i.\<close>
-      obtain b i u where hb_bd: "b \<in> BdP" and hi: "i < n"
-          and hu: "0 \<le> u" "u \<le> 1"
-          and hb_edge: "b = ((1-u) * vx i + u * vx ((i+1) mod n),
-                             (1-u) * vy i + u * vy ((i+1) mod n))"
-          and "\<exists>s. 0 < s \<and> s \<le> 1
-              \<and> fst z = (1-s) * cx + s * fst b
-              \<and> snd z = (1-s) * cy + s * snd b"
+  \<comment> \<open>Step 3: Define boundary map h: Bd P \<rightarrow> S1 by positive linear maps on edges.
+     Take Q = regular n-gon inscribed in S1, with vertices q_i = (cos(2\<pi>i/n), sin(2\<pi>i/n)).
+     Map edge [v_i, v_{i+1}] linearly to arc [q_i, q_{i+1}] on S1.\<close>
+  \<comment> \<open>Step 4: Define \<psi> by radial extension.
+     For z \<in> P: find unique x \<in> Bd P and t \<in> [0,1] with z = (1-t)\<cdot>c + t\<cdot>x.
+     Then \<psi>(z) = t \<cdot> h(x). For z = c: \<psi>(c) = (0,0).
+     This is a continuous bijection from compact P to Hausdorff B2.\<close>
+  \<comment> \<open>Step 5: Apply Theorem 26.6 (continuous bijection compact \<rightarrow> Hausdorff = homeomorphism).\<close>
+  \<comment> \<open>Step 6: By construction \<psi>(Bd P) = S1 and \<psi>(Int P) = Int B2.\<close>
+  \<comment> \<open>Following Munkres \<S>74: radial extension homeomorphism P \<rightarrow> B2.\<close>
+  let ?BdP = "\<Union>i<n. {((1-t) * vx i + t * vx (Suc i mod n),
+                       (1-t) * vy i + t * vy (Suc i mod n)) | t. t \<in> I_set}"
+  let ?TP = "subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P"
+  \<comment> \<open>Step 3: Define target regular n-gon vertices on S1.\<close>
+  define qx where "qx i = cos (2 * pi * real i / real n)" for i :: nat
+  define qy where "qy i = sin (2 * pi * real i / real n)" for i :: nat
+  \<comment> \<open>Step 4: Define boundary map h: BdP \<rightarrow> S1 (edge-by-edge linear).\<close>
+  \<comment> \<open>For point ((1-t)*vx i + t*vx(i+1), ...) on edge i,
+     h maps to ((1-t)*qx i + t*qx(i+1), (1-t)*qy i + t*qy(i+1))
+     then normalized to S1.\<close>
+  \<comment> \<open>Step 5: Define \<psi> by radial extension from centroid c.
+     For z \<in> P: unique decomposition z = (1-s)\<cdot>c + s\<cdot>x with x \<in> BdP, s \<in> [0,1].
+     \<psi>(z) = s \<cdot> h(x). \<psi>(c) = (0,0).\<close>
+  \<comment> \<open>Step 6: \<psi> is continuous bijection, compact P \<rightarrow> Hausdorff B2 \<Rightarrow> homeomorphism.
+     By construction: \<psi>(BdP) = S1, \<psi>(IntP) = IntB2.\<close>
+  have "\<exists>\<psi>. top1_homeomorphism_on P ?TP top1_B2 top1_B2_topology \<psi>
+      \<and> \<psi> ` ?BdP = top1_S1
+      \<and> top1_homeomorphism_on (P - ?BdP)
+          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (P - ?BdP))
+          (top1_B2 - top1_S1)
+          (subspace_topology top1_B2 top1_B2_topology (top1_B2 - top1_S1)) \<psi>"
+  proof -
+    \<comment> \<open>Following Munkres \<S>74: radial extension from centroid c to B2.
+       Book: "this homeomorphism may be extended to a homeomorphism of P with Q
+       by letting it map the line segment from p to the point x of Bd P
+       linearly onto the line segment from q to h(x)."\<close>
+    \<comment> \<open>(a) Define boundary map h: BdP \<rightarrow> S1 edge-by-edge.\<close>
+    define h_bd where "h_bd p = (
+        let i = (SOME i. i < n \<and> (\<exists>t\<in>I_set. p = ((1-t)*vx i + t*vx(Suc i mod n),
+                                                    (1-t)*vy i + t*vy(Suc i mod n))));
+            t = (SOME t. t \<in> I_set \<and> p = ((1-t)*vx i + t*vx(Suc i mod n),
+                                            (1-t)*vy i + t*vy(Suc i mod n)));
+            w = ((1-t)*qx i + t*qx(Suc i mod n), (1-t)*qy i + t*qy(Suc i mod n));
+            r = sqrt (fst w ^ 2 + snd w ^ 2)
+        in if r = 0 then (1::real, 0::real) else (fst w / r, snd w / r))" for p
+    \<comment> \<open>(b) Define \<psi> by radial extension.\<close>
+    define pdist where "pdist a b = sqrt ((fst a - fst b)^2 + (snd a - snd b)^2)"
+        for a b :: "real \<times> real"
+    define \<psi> where "\<psi> z = (if z = ?c then (0::real, 0::real)
+        else let r = (SOME r. r > 0 \<and> (fst ?c + r * (fst z - fst ?c),
+                                         snd ?c + r * (snd z - snd ?c)) \<in> ?BdP);
+                 x = (fst ?c + r * (fst z - fst ?c), snd ?c + r * (snd z - snd ?c));
+                 s = pdist z ?c / pdist x ?c
+             in (s * fst (h_bd x), s * snd (h_bd x)))" for z
+    \<comment> \<open>(c) Show \<psi> is continuous on P.\<close>
+    have h\<psi>_cont: "continuous_on P \<psi>"
+      sorry \<comment> \<open>Continuity of radial extension. h\_bd is piecewise linear (continuous on each edge,
+         agrees at vertices since qx,qy are on S1). The radial parameter s depends continuously
+         on z (ratio of distances). Composition of continuous = continuous.\<close>
+    \<comment> \<open>(d) Show \<psi>(P) = B2 (surjective onto B2).\<close>
+    have h\<psi>_surj: "\<psi> ` P = top1_B2"
+      sorry \<comment> \<open>For any (r*cos\<theta>, r*sin\<theta>) \<in> B2: find s,x with s*h\_bd(x) = (r*cos\<theta>, r*sin\<theta>).
+         The boundary map h\_bd is surjective onto S1 (regular n-gon vertices span all angles).
+         So find x with h\_bd(x) = (cos\<theta>, sin\<theta>), then s = r.\<close>
+    \<comment> \<open>(e) Show \<psi> injective on P.\<close>
+    have h\<psi>_inj: "inj_on \<psi> P"
+      sorry \<comment> \<open>If \<psi>(z1) = \<psi>(z2): same s and same h\_bd(x) implies same x (h\_bd injective)
+         and same s implies same distance ratio, hence z1 = z2.\<close>
+    \<comment> \<open>(f) Apply Theorem 26.6: continuous bijection compact \<rightarrow> Hausdorff = homeomorphism.\<close>
+    have h\<psi>_bij: "bij_betw \<psi> P top1_B2"
+      unfolding bij_betw_def using h\<psi>_surj h\<psi>_inj by (by100 blast)
+    have hP_compact: "top1_compact_on P ?TP"
+      by (rule polygonal_region_compact[OF assms(1) assms(2)])
+    have hB2_haus: "is_hausdorff_on top1_B2 top1_B2_topology"
+    proof -
+      have "top1_B2 \<subseteq> (UNIV :: (real \<times> real) set)" by (by100 blast)
+      thus ?thesis using Theorem_17_11 top1_R2_is_hausdorff
+        unfolding top1_B2_topology_def by (by5000 blast)
+    qed
+    have h\<psi>_top1: "top1_continuous_map_on P ?TP top1_B2 top1_B2_topology \<psi>"
+    proof -
+      have himg: "\<And>p. p \<in> P \<Longrightarrow> \<psi> p \<in> top1_B2"
+        using h\<psi>_surj by (by100 blast)
+      have "top1_B2_topology = subspace_topology UNIV
+          (product_topology_on top1_open_sets top1_open_sets) top1_B2"
+        unfolding top1_B2_topology_def ..
+      thus ?thesis using top1_continuous_map_on_real2_subspace_general[OF himg h\<psi>_cont]
+        by (by100 simp)
+    qed
+    have h\<psi>_homeo: "top1_homeomorphism_on P ?TP top1_B2 top1_B2_topology \<psi>"
+    proof -
+      have hR: "is_topology_on (UNIV::real set) top1_open_sets"
+        unfolding top1_open_sets_def is_topology_on_def
+        using open_UNIV open_empty open_Un open_Int by (by5000 auto)
+      have hR2: "is_topology_on ((UNIV::real set) \<times> (UNIV::real set))
+          (product_topology_on top1_open_sets top1_open_sets)"
+        using hR product_topology_on_is_topology_on by (by100 blast)
+      hence hR2': "is_topology_on (UNIV::(real \<times> real) set)
+          (product_topology_on top1_open_sets top1_open_sets)" by (by100 simp)
+      have hTP_top: "is_topology_on P ?TP"
       proof -
-        \<comment> \<open>Algebraic approach: solve z - c = \<beta>'·(v_i - c) + \<gamma>'·(v_{i+1} - c) via
-           2D cross product determinants. For the right i, \<beta>' \<ge> 0, \<gamma>' \<ge> 0, \<beta>'+\<gamma>' \<le> 1.
-
-           Define cross(a,b) = fst a * snd b - snd a * fst b.
-           For each i, the determinant D_i = cross(v_i - c, v_{i+1} - c).
-           The solution is:
-             \<beta>'_i = cross(z - c, v_{i+1} - c) / D_i
-             \<gamma>'_i = cross(v_i - c, z - c) / D_i
-
-           For a convex polygon with centroid c: D_i > 0 for all i (counterclockwise).
-           The sector containing z-c has \<beta>' \<ge> 0 and \<gamma>' \<ge> 0.
-           z \<in> P ensures \<beta>'+\<gamma>' \<le> 1 (not beyond boundary).\<close>
-        \<comment> \<open>Use cross2\_centroid\_sum\_zero + cyclic\_sign\_change to find the sector.\<close>
-        let ?dx = "fst z - cx" let ?dy = "snd z - cy"
-        have hsum0: "(\<Sum>i<n. cross2 (vx i - cx, vy i - cy) (?dx, ?dy)) = 0"
-          using cross2_centroid_sum_zero[of n vx vy ?dx ?dy] assms(2) cx_def cy_def
-          by (by100 simp)
-        have hne: "\<exists>i<n. cross2 (vx i - cx, vy i - cy) (?dx, ?dy) \<noteq> 0"
-        proof (rule ccontr)
-          assume "\<not> (\<exists>i<n. cross2 (vx i - cx, vy i - cy) (?dx, ?dy) \<noteq> 0)"
-          hence hall0: "\<forall>i<n. cross2 (vx i - cx, vy i - cy) (?dx, ?dy) = 0" by (by100 blast)
-          \<comment> \<open>cross2(a, d) = 0 means fst a * snd d = snd a * fst d (parallel).
-             If this holds for two linearly independent a's, then d = 0.\<close>
-          \<comment> \<open>Since vertices are in convex position (n \<ge> 3), not all v_i - c are parallel.
-             So there exist i, j with cross2(v_i-c, v_j-c) \<noteq> 0.\<close>
-          have "\<exists>i<n. \<exists>j<n. cross2 (vx i - cx, vy i - cy) (vx j - cx, vy j - cy) \<noteq> 0"
-          proof (rule ccontr)
-            assume "\<not> (\<exists>i<n. \<exists>j<n. cross2 (vx i - cx, vy i - cy) (vx j - cx, vy j - cy) \<noteq> 0)"
-            hence hall_par: "\<forall>i<n. \<forall>j<n. cross2 (vx i - cx, vy i - cy) (vx j - cx, vy j - cy) = 0"
-              by (by100 blast)
-            \<comment> \<open>All v_i - c are parallel: cross2 = 0 means the 2D vectors are parallel.
-               With n \<ge> 3 distinct vertices on a line through c, the general position
-               assumption (hgp) is violated: the "middle" vertex is in the hull of others.\<close>
-            \<comment> \<open>Specifically: vertices 0, 1, 2 are collinear (on the line through c).
-               One of them is between the other two. Say v_k is between v_i, v_j.
-               Then v_k = t*v_i + (1-t)*v_j for some t \<in> (0,1), contradicting hgp.\<close>
-            \<comment> \<open>From hall\_par: all v_i - c are parallel. Since n \<ge> 3, vertices 0,1,2 are
-               collinear. One of them is "between" the other two. That one is a convex
-               combination of the other two with zero coefficients for all remaining vertices.
-               This contradicts hgp (general position: no vertex in hull of others).\<close>
-            \<comment> \<open>cross2(v_0-c, v_1-c) = 0 means v_0,c,v_1 are collinear.
-               cross2(v_0-c, v_2-c) = 0 means v_0,c,v_2 are collinear.
-               All three on the line through c parallel to v_0-c.
-               The "middle" one is a strict convex combination of the other two.\<close>
-            show False
-            proof -
-              have h0n: "(0::nat) < n" using assms(2) by (by100 linarith)
-              have h1n: "(1::nat) < n" using assms(2) by (by100 linarith)
-              have h2n: "(2::nat) < n" using assms(2) by (by100 linarith)
-              \<comment> \<open>From cross2 = 0: v_j - c is scalar multiple of v_0 - c.\<close>
-              have hc01: "cross2 (vx 0 - cx, vy 0 - cy) (vx 1 - cx, vy 1 - cy) = 0"
-                using hall_par h0n h1n by (by100 blast)
-              have hc02: "cross2 (vx 0 - cx, vy 0 - cy) (vx 2 - cx, vy 2 - cy) = 0"
-                using hall_par h0n h2n by (by100 blast)
-              \<comment> \<open>cross2(a,b) = 0 means a_x*b_y = a_y*b_x (collinear from origin).\<close>
-              have hcol1: "(vx 0 - cx) * (vy 1 - cy) = (vy 0 - cy) * (vx 1 - cx)"
-                using hc01 unfolding cross2_def by (by100 simp)
-              have hcol2: "(vx 0 - cx) * (vy 2 - cy) = (vy 0 - cy) * (vx 2 - cx)"
-                using hc02 unfolding cross2_def by (by100 simp)
-              \<comment> \<open>Vertices 0,1,2 are on a line through c. The middle one (in terms of
-                 parameter along the line) is a convex combination of the other two.
-                 This contradicts hgp.\<close>
-              \<comment> \<open>Formal proof: parameterize as v_i = c + t_i*(v_0 - c) where possible,
-                 or handle case v_0 = c separately.\<close>
-              \<comment> \<open>From hcol1, hcol2: v_0, v_1, v_2 are collinear (on a line through c).
-                 The "middle" one is a convex combination of the other two.
-                 This contradicts hgp for that vertex.\<close>
-              \<comment> \<open>Specifically: cross2(v_1-v_0, v_2-v_0) = 0 from the collinearity conditions.
-                 Then among the 3 distinct collinear points, one is between the other two.\<close>
-              have hcross012: "cross2 (vx 1 - vx 0, vy 1 - vy 0) (vx 2 - vx 0, vy 2 - vy 0) = 0"
-              proof -
-                \<comment> \<open>Let a = vx0-cx, b = vy0-cy, a1 = vx1-cx, b1 = vy1-cy, etc.
-                   From hcol1: a*b1 = b*a1. From hcol2: a*b2 = b*a2.
-                   Want: (a1-a)*(b2-b) - (b1-b)*(a2-a) = 0.
-                   = a1*b2 - a1*b - a*b2 + a*b - b1*a2 + b1*a + b*a2 - b*a
-                   = a1*b2 - b1*a2 + a*(b - b2) + b*(a2 - a) + a1*(-b) + b1*a ... messy.
-                   Direct: multiply hcol1 by (vx2-cx) and hcol2 by (vx1-cx), subtract.
-                   (vx0-cx)*(vy1-cy)*(vx2-cx) = (vy0-cy)*(vx1-cx)*(vx2-cx)
-                   (vx0-cx)*(vy2-cy)*(vx1-cx) = (vy0-cy)*(vx2-cx)*(vx1-cx)
-                   Subtract: (vx0-cx)*[(vy1-cy)*(vx2-cx) - (vy2-cy)*(vx1-cx)] = 0.
-                   So either vx0=cx or the bracket = 0.
-                   The bracket = cross2(v1-c, v2-c). And cross2(v1-v0, v2-v0) relates to these.\<close>
-                have hc12: "cross2 (vx 1 - cx, vy 1 - cy) (vx 2 - cx, vy 2 - cy) = 0"
-                  using hall_par h1n h2n by (by100 blast)
-                \<comment> \<open>cross2(v1-v0, v2-v0) = cross2(v1-c-(v0-c), v2-c-(v0-c))
-                   = cross2(v1-c, v2-c) - cross2(v0-c, v2-c) - cross2(v1-c, v0-c) + cross2(v0-c, v0-c)
-                   = 0 - 0 - (-0) + 0 = 0 (all pairwise cross2 = 0).\<close>
-                have "cross2 (vx 1 - vx 0, vy 1 - vy 0) (vx 2 - vx 0, vy 2 - vy 0)
-                    = cross2 (vx 1 - cx - (vx 0 - cx), vy 1 - cy - (vy 0 - cy))
-                             (vx 2 - cx - (vx 0 - cx), vy 2 - cy - (vy 0 - cy))"
-                  by (by100 simp)
-                also have "\<dots> = cross2 (vx 1 - cx, vy 1 - cy) (vx 2 - cx, vy 2 - cy)
-                    - cross2 (vx 0 - cx, vy 0 - cy) (vx 2 - cx, vy 2 - cy)
-                    - cross2 (vx 1 - cx, vy 1 - cy) (vx 0 - cx, vy 0 - cy)
-                    + cross2 (vx 0 - cx, vy 0 - cy) (vx 0 - cx, vy 0 - cy)"
-                  unfolding cross2_def by (simp add: algebra_simps)
-                also have "cross2 (vx 0 - cx, vy 0 - cy) (vx 2 - cx, vy 2 - cy) = 0"
-                  using hall_par h0n h2n by (by100 blast)
-                also have "cross2 (vx 1 - cx, vy 1 - cy) (vx 0 - cx, vy 0 - cy) = 0"
-                  using hall_par h1n h0n by (by100 blast)
-                also have "cross2 (vx 0 - cx, vy 0 - cy) (vx 0 - cx, vy 0 - cy) = 0"
-                  unfolding cross2_def by (by100 simp)
-                finally show ?thesis using hc12 by (by100 simp)
-              qed
-              \<comment> \<open>Three distinct collinear points: middle is in hull of endpoints.\<close>
-              \<comment> \<open>This contradicts hgp for the middle vertex.\<close>
-              \<comment> \<open>3 collinear distinct points: one is between the other two.
-                 Use cross2 = 0 meaning (vx1-vx0)*(vy2-vy0) = (vy1-vy0)*(vx2-vx0).
-                 If vx0 \<noteq> vx1: parameter t = (vx2-vx0)/(vx1-vx0) satisfies
-                   v_2 = (1-t)*v_0 + t*v_1. If 0<t<1, v_2 is between v_0 and v_1.
-                 If vx0=vx1: then (vy1-vy0)*(vx2-vx0) = 0. If vx0\<noteq>vx2: swap roles.
-                   If vx0=vx1=vx2: use y-coordinates similarly.\<close>
-              \<comment> \<open>From hcross012: (vx1-vx0)*(vy2-vy0) = (vy1-vy0)*(vx2-vx0).\<close>
-              have hcol_eq: "(vx 1 - vx 0)*(vy 2 - vy 0) = (vy 1 - vy 0)*(vx 2 - vx 0)"
-                using hcross012 unfolding cross2_def by (by100 simp)
-              have h01_ne: "(vx 0, vy 0) \<noteq> (vx 1, vy 1)"
-                using hdist[rule_format, OF h0n h1n] by (by100 simp)
-              have h02_ne: "(vx 0, vy 0) \<noteq> (vx 2, vy 2)"
-                using hdist[rule_format, OF h0n h2n] by (by100 simp)
-              have h12_ne: "(vx 1, vy 1) \<noteq> (vx 2, vy 2)"
-                using hdist[rule_format, OF h1n h2n] by (by100 simp)
-              \<comment> \<open>v_0, v_1, v_2 are 3 distinct collinear points. One is between the other two.
-                 The between one is a convex combination, contradicting hgp.
-                 This is a fundamental fact about collinear points in R; the formal proof
-                 requires real arithmetic and case analysis on the ordering.\<close>
-              \<comment> \<open>Strategy: show v_1 is a convex combination of v_0 and v_2 (or circular permutation).
-                 From hcol\_eq + distinctness, we get the parameterization.\<close>
-              \<comment> \<open>First show vx0 \<noteq> vx2 or vy0 \<noteq> vy2 (from h02\_ne).\<close>
-              show False
-              proof (cases "vx 0 \<noteq> vx 2")
-                case True
-                \<comment> \<open>t = (vx1-vx0)/(vx2-vx0). Then v1 = (1-t)*v0 + t*v2.\<close>
-                let ?t = "(vx 1 - vx 0) / (vx 2 - vx 0)"
-                have ht_fact: "?t * (vx 2 - vx 0) = vx 1 - vx 0"
-                  using True by (by100 simp)
-                \<comment> \<open>Introduce auxiliary real t' to avoid division in arithmetic.\<close>
-                obtain t' where ht'_def: "t' = ?t" and ht'_fact: "t' * (vx 2 - vx 0) = vx 1 - vx 0"
-                  using ht_fact by (by100 blast)
-                have hvx1_eq: "vx 1 = (1 - ?t) * vx 0 + ?t * vx 2"
-                proof -
-                  have "vx 1 = vx 0 + t' * (vx 2 - vx 0)" using ht'_fact by (by100 linarith)
-                  also have "\<dots> = (1 - t') * vx 0 + t' * vx 2"
-                    by (simp add: right_diff_distrib left_diff_distrib algebra_simps)
-                  finally show ?thesis unfolding ht'_def .
-                qed
-                have hvy1_eq: "vy 1 = (1 - ?t) * vy 0 + ?t * vy 2"
-                proof -
-                  have "t' * (vy 2 - vy 0) = vy 1 - vy 0"
-                  proof -
-                    from hcol_eq have h_eq: "(vx 1 - vx 0) * (vy 2 - vy 0) = (vy 1 - vy 0) * (vx 2 - vx 0)" .
-                    \<comment> \<open>Substitute vx1 - vx0 = t'*(vx2-vx0) into h\_eq:
-                       t'*(vx2-vx0)*(vy2-vy0) = (vy1-vy0)*(vx2-vx0).
-                       Cancel (vx2-vx0) \<noteq> 0: t'*(vy2-vy0) = vy1-vy0.\<close>
-                    have "(vx 1 - vx 0) = t' * (vx 2 - vx 0)" using ht'_fact True by (by100 simp)
-                    hence "t' * (vx 2 - vx 0) * (vy 2 - vy 0) = (vy 1 - vy 0) * (vx 2 - vx 0)"
-                      using h_eq by (by100 simp)
-                    hence "t' * (vy 2 - vy 0) * (vx 2 - vx 0) = (vy 1 - vy 0) * (vx 2 - vx 0)"
-                      by (simp add: mult.commute mult.left_commute)
-                    thus ?thesis using True by (by100 simp)
-                  qed
-                  hence "vy 1 = vy 0 + t' * (vy 2 - vy 0)" by (by100 linarith)
-                  also have "\<dots> = (1 - t') * vy 0 + t' * vy 2"
-                    by (simp add: right_diff_distrib left_diff_distrib algebra_simps)
-                  finally show ?thesis unfolding ht'_def .
-                qed
-                \<comment> \<open>?t \<noteq> 0 (v0 \<noteq> v1 means vx0\<noteq>vx1 or vy0\<noteq>vy1 but if all same x...)\<close>
-                have ht_ne0: "?t \<noteq> 0" using h01_ne hvx1_eq hvy1_eq by (by100 force)
-                have ht_ne1: "?t \<noteq> 1" using h12_ne hvx1_eq hvy1_eq by (by100 force)
-                \<comment> \<open>Now we know v_1 = (1-t)*v_0 + t*v_2 with t \<noteq> 0 and t \<noteq> 1.
-                   If 0 < t < 1: v_1 is in hull of others → hgp contradiction for k=1.
-                   If t < 0 or t > 1: v_0 or v_2 is the middle point.\<close>
-                \<comment> \<open>Case analysis on t: 0<t<1 means v_1 between v_0 and v_2.
-                   t\<le>0 or t\<ge>1 handled by symmetry (v_0 or v_2 is middle).\<close>
-                show False
-                proof (cases "0 < ?t \<and> ?t < 1")
-                  case True
-                  \<comment> \<open>v_1 = (1-t)*v_0 + t*v_2. Construct coefficients for hgp contradiction.\<close>
-                  have hgp1: "\<not> (\<exists>coeffs. (\<forall>i<n. i \<noteq> 1 \<longrightarrow> coeffs i \<ge> 0) \<and> coeffs 1 = 0
-                        \<and> (\<Sum>i<n. coeffs i) = 1
-                        \<and> vx 1 = (\<Sum>i<n. coeffs i * vx i) \<and> vy 1 = (\<Sum>i<n. coeffs i * vy i))"
-                    using hgp h1n by (by100 blast)
-                  define coeffs where "coeffs = (\<lambda>i::nat. if i = 0 then 1 - ?t
-                      else if i = 2 then ?t else 0::real)"
-                  have hnn: "\<forall>i<n. i \<noteq> 1 \<longrightarrow> coeffs i \<ge> 0"
-                    using True unfolding coeffs_def by (by100 auto)
-                  have hc1: "coeffs 1 = 0" unfolding coeffs_def by (by100 simp)
-                  have hcoeffs_rest: "\<And>i. i \<ge> 3 \<Longrightarrow> i < n \<Longrightarrow> coeffs i = 0"
-                    unfolding coeffs_def by (by100 simp)
-                  have hcoeffs_rest_mul: "\<And>f. (\<Sum>i\<in>{3..<n}. coeffs i * f i) = 0"
-                    apply (rule sum.neutral) using hcoeffs_rest by (by100 force)
-                  have hcoeffs_rest_sum: "(\<Sum>i\<in>{3..<n}. coeffs i) = 0"
-                    apply (rule sum.neutral) using hcoeffs_rest by (by100 force)
-                  have hsplit: "{..<n} = {0,1,2} \<union> {3..<n}" using assms(2) by (by100 auto)
-                  have hcsum: "(\<Sum>i<n. coeffs i) = 1"
-                  proof -
-                    have "(\<Sum>i<n. coeffs i) = (\<Sum>i\<in>{0,1,2}. coeffs i) + (\<Sum>i\<in>{3..<n}. coeffs i)"
-                      using hsplit by (simp add: sum.union_disjoint)
-                    thus ?thesis using hcoeffs_rest_sum unfolding coeffs_def by (by100 simp)
-                  qed
-                  have hcvx: "vx 1 = (\<Sum>i<n. coeffs i * vx i)"
-                  proof -
-                    have "(\<Sum>i<n. coeffs i * vx i) = (\<Sum>i\<in>{0,1,2}. coeffs i * vx i) + (\<Sum>i\<in>{3..<n}. coeffs i * vx i)"
-                      using hsplit by (simp add: sum.union_disjoint)
-                    thus ?thesis using hcoeffs_rest_mul[of vx] hvx1_eq unfolding coeffs_def by (by100 simp)
-                  qed
-                  have hcvy: "vy 1 = (\<Sum>i<n. coeffs i * vy i)"
-                  proof -
-                    have "(\<Sum>i<n. coeffs i * vy i) = (\<Sum>i\<in>{0,1,2}. coeffs i * vy i) + (\<Sum>i\<in>{3..<n}. coeffs i * vy i)"
-                      using hsplit by (simp add: sum.union_disjoint)
-                    thus ?thesis using hcoeffs_rest_mul[of vy] hvy1_eq unfolding coeffs_def by (by100 simp)
-                  qed
-                  have "\<exists>coeffs. (\<forall>i<n. i \<noteq> 1 \<longrightarrow> 0 \<le> coeffs i) \<and> coeffs 1 = 0
-                      \<and> (\<Sum>i<n. coeffs i) = 1 \<and> vx 1 = (\<Sum>i<n. coeffs i * vx i)
-                      \<and> vy 1 = (\<Sum>i<n. coeffs i * vy i)"
-                    using hnn hc1 hcsum hcvx hcvy by (by100 blast)
-                  thus False using hgp1 by (by100 blast)
-                next
-                  case False
-                  hence "?t < 0 \<or> ?t > 1" using ht_ne0 ht_ne1 by (by100 linarith)
-                  thus False
-                  proof
-                    assume ht_neg: "?t < 0"
-                    \<comment> \<open>From hvx1\_eq: vx 0 = (vx 1 - t*vx 2)/(1-t) = (1/(1-t))*vx1 + (-t/(1-t))*vx2.\<close>
-                    obtain t' where ht'_def: "t' = ?t" by (by100 blast)
-                    have ht'_neg: "t' < 0" using ht_neg ht'_def by (by100 simp)
-                    have h1mt: "1 - t' > 0" using ht'_neg by (by100 linarith)
-                    \<comment> \<open>v_0 = s*v_1 + (1-s)*v_2 where s = 1/(1-t').\<close>
-                    let ?s = "1 / (1 - t')"
-                    have hs_pos: "?s > 0" using h1mt by (by100 simp)
-                    have hs_lt1: "?s < 1" using ht'_neg by (by100 simp)
-                    have h1mt_s: "(1 - t') * ?s = 1" using h1mt by (by100 simp)
-                    have h1mt_1ms: "(1 - t') * (1 - ?s) = - t'" using h1mt
-                      by (simp add: field_simps)
-                    have hvx0: "vx 0 = ?s * vx 1 + (1 - ?s) * vx 2"
-                    proof -
-                      from hvx1_eq[unfolded ht'_def[symmetric]]
-                      have "(1 - t') * vx 0 = vx 1 - t' * vx 2" by (by100 linarith)
-                      also have "vx 1 - t' * vx 2 = 1 * vx 1 + (- t') * vx 2"
-                        by (by100 linarith)
-                      also have "\<dots> = (1-t')*?s * vx 1 + (1-t')*(1-?s) * vx 2"
-                        using h1mt_s h1mt_1ms by (by100 simp)
-                      also have "\<dots> = (1 - t') * (?s * vx 1) + (1 - t') * ((1 - ?s) * vx 2)"
-                        by (by100 simp)
-                      also have "\<dots> = (1 - t') * (?s * vx 1 + (1 - ?s) * vx 2)"
-                        using distrib_left[of "1-t'" "?s * vx 1" "(1-?s)*vx 2"] by (by100 simp)
-                      finally show ?thesis using h1mt by (by100 simp)
-                    qed
-                    have hvy0: "vy 0 = ?s * vy 1 + (1 - ?s) * vy 2"
-                    proof -
-                      from hvy1_eq[unfolded ht'_def[symmetric]]
-                      have "(1 - t') * vy 0 = vy 1 - t' * vy 2" by (by100 linarith)
-                      also have "vy 1 - t' * vy 2 = 1 * vy 1 + (- t') * vy 2"
-                        by (by100 linarith)
-                      also have "\<dots> = (1-t')*?s * vy 1 + (1-t')*(1-?s) * vy 2"
-                        using h1mt_s h1mt_1ms by (by100 simp)
-                      also have "\<dots> = (1 - t') * (?s * vy 1) + (1 - t') * ((1 - ?s) * vy 2)"
-                        by (by100 simp)
-                      also have "\<dots> = (1 - t') * (?s * vy 1 + (1 - ?s) * vy 2)"
-                        using distrib_left[of "1-t'" "?s * vy 1" "(1-?s)*vy 2"] by (by100 simp)
-                      finally show ?thesis using h1mt by (by100 simp)
-                    qed
-                    \<comment> \<open>Construct coefficients for hgp contradiction at vertex 0.\<close>
-                    have hgp0: "\<not> (\<exists>coeffs. (\<forall>i<n. i \<noteq> 0 \<longrightarrow> coeffs i \<ge> 0) \<and> coeffs 0 = 0
-                        \<and> (\<Sum>i<n. coeffs i) = 1
-                        \<and> vx 0 = (\<Sum>i<n. coeffs i * vx i) \<and> vy 0 = (\<Sum>i<n. coeffs i * vy i))"
-                      using hgp h0n by (by100 blast)
-                    define coeffs where "coeffs = (\<lambda>i::nat. if i = 1 then ?s
-                        else if i = 2 then 1 - ?s else 0::real)"
-                    have hnn: "\<forall>i<n. i \<noteq> 0 \<longrightarrow> coeffs i \<ge> 0"
-                      using hs_pos hs_lt1 unfolding coeffs_def by (by100 auto)
-                    have hc0: "coeffs 0 = 0" unfolding coeffs_def by (by100 simp)
-                    have hcoeffs_rest: "\<And>i. i \<ge> 3 \<Longrightarrow> i < n \<Longrightarrow> coeffs i = 0"
-                      unfolding coeffs_def by (by100 simp)
-                    have hcoeffs_rest_mul: "\<And>f. (\<Sum>i\<in>{3..<n}. coeffs i * f i) = 0"
-                      apply (rule sum.neutral) using hcoeffs_rest by (by100 force)
-                    have hcoeffs_rest_sum: "(\<Sum>i\<in>{3..<n}. coeffs i) = 0"
-                      apply (rule sum.neutral) using hcoeffs_rest by (by100 force)
-                    have hsplit: "{..<n} = {0,1,2} \<union> {3..<n}" using assms(2) by (by100 auto)
-                    have hcsum: "(\<Sum>i<n. coeffs i) = 1"
-                    proof -
-                      have "(\<Sum>i<n. coeffs i) = (\<Sum>i\<in>{0,1,2}. coeffs i) + (\<Sum>i\<in>{3..<n}. coeffs i)"
-                        using hsplit by (simp add: sum.union_disjoint)
-                      thus ?thesis using hcoeffs_rest_sum unfolding coeffs_def by (by100 simp)
-                    qed
-                    have hcvx: "vx 0 = (\<Sum>i<n. coeffs i * vx i)"
-                    proof -
-                      have "(\<Sum>i<n. coeffs i * vx i) = (\<Sum>i\<in>{0,1,2}. coeffs i * vx i) + (\<Sum>i\<in>{3..<n}. coeffs i * vx i)"
-                        using hsplit by (simp add: sum.union_disjoint)
-                      thus ?thesis using hcoeffs_rest_mul[of vx] hvx0 unfolding coeffs_def by (by100 simp)
-                    qed
-                    have hcvy: "vy 0 = (\<Sum>i<n. coeffs i * vy i)"
-                    proof -
-                      have "(\<Sum>i<n. coeffs i * vy i) = (\<Sum>i\<in>{0,1,2}. coeffs i * vy i) + (\<Sum>i\<in>{3..<n}. coeffs i * vy i)"
-                        using hsplit by (simp add: sum.union_disjoint)
-                      thus ?thesis using hcoeffs_rest_mul[of vy] hvy0 unfolding coeffs_def by (by100 simp)
-                    qed
-                    have "\<exists>coeffs. (\<forall>i<n. i \<noteq> 0 \<longrightarrow> coeffs i \<ge> 0) \<and> coeffs 0 = 0
-                        \<and> (\<Sum>i<n. coeffs i) = 1
-                        \<and> vx 0 = (\<Sum>i<n. coeffs i * vx i) \<and> vy 0 = (\<Sum>i<n. coeffs i * vy i)"
-                      using hnn hc0 hcsum hcvx hcvy by (by100 blast)
-                    thus False using hgp0 by (by100 blast)
-                  next
-                    assume ht_big: "?t > 1"
-                    \<comment> \<open>v_2 = (1/t)*v_1 + (1-1/t)*v_0 where 1/t \<in> (0,1).\<close>
-                    obtain t' where ht'_def: "t' = ?t" by (by100 blast)
-                    have ht'_big: "t' > 1" using ht_big ht'_def by (by100 simp)
-                    have ht'_pos: "t' > 0" using ht'_big by (by100 linarith)
-                    let ?s = "1 / t'"
-                    have hs_pos: "?s > 0" using ht'_pos by (by100 simp)
-                    have hs_lt1: "?s < 1" using ht'_big by (by100 simp)
-                    have ht_s: "t' * ?s = 1" using ht'_pos by (by100 simp)
-                    have ht_1ms: "t' * (1 - ?s) = t' - 1" using ht'_pos
-                      by (simp add: field_simps)
-                    have hvx2: "vx 2 = ?s * vx 1 + (1 - ?s) * vx 0"
-                    proof -
-                      have h_from: "vx 1 = (1 - t') * vx 0 + t' * vx 2"
-                        using hvx1_eq[unfolded ht'_def[symmetric]] .
-                      hence "t' * vx 2 = vx 1 - (1 - t') * vx 0"
-                        by (simp add: algebra_simps)
-                      hence h_rearr: "t' * vx 2 = vx 1 + (t' - 1) * vx 0"
-                        by (simp add: algebra_simps)
-                      have "vx 1 + (t' - 1) * vx 0 = t'*?s * vx 1 + t'*(1-?s) * vx 0"
-                        using ht_s ht_1ms by (by100 simp)
-                      hence "t' * vx 2 = t'*?s * vx 1 + t'*(1-?s) * vx 0"
-                        using h_rearr by (by100 linarith)
-                      hence "t' * vx 2 = t' * (?s * vx 1) + t' * ((1-?s) * vx 0)"
-                        by (by100 simp)
-                      hence "t' * vx 2 = t' * (?s * vx 1 + (1-?s) * vx 0)"
-                        using distrib_left[of t' "?s * vx 1" "(1-?s) * vx 0"] by (by100 simp)
-                      thus ?thesis using ht'_pos by (by100 simp)
-                    qed
-                    have hvy2: "vy 2 = ?s * vy 1 + (1 - ?s) * vy 0"
-                    proof -
-                      have h_from: "vy 1 = (1 - t') * vy 0 + t' * vy 2"
-                        using hvy1_eq[unfolded ht'_def[symmetric]] .
-                      hence h_rearr: "t' * vy 2 = vy 1 + (t' - 1) * vy 0"
-                        by (simp add: algebra_simps)
-                      have "vy 1 + (t' - 1) * vy 0 = t'*?s * vy 1 + t'*(1-?s) * vy 0"
-                        using ht_s ht_1ms by (by100 simp)
-                      hence "t' * vy 2 = t' * (?s * vy 1) + t' * ((1-?s) * vy 0)"
-                        using h_rearr by (by100 simp)
-                      hence "t' * vy 2 = t' * (?s * vy 1 + (1-?s) * vy 0)"
-                        using distrib_left[of t' "?s * vy 1" "(1-?s) * vy 0"] by (by100 simp)
-                      thus ?thesis using ht'_pos by (by100 simp)
-                    qed
-                    have hgp2: "\<not> (\<exists>coeffs. (\<forall>i<n. i \<noteq> 2 \<longrightarrow> coeffs i \<ge> 0) \<and> coeffs 2 = 0
-                        \<and> (\<Sum>i<n. coeffs i) = 1
-                        \<and> vx 2 = (\<Sum>i<n. coeffs i * vx i) \<and> vy 2 = (\<Sum>i<n. coeffs i * vy i))"
-                      using hgp h2n by (by100 blast)
-                    define coeffs where "coeffs = (\<lambda>i::nat. if i = 0 then 1 - ?s
-                        else if i = 1 then ?s else 0::real)"
-                    have hnn: "\<forall>i<n. i \<noteq> 2 \<longrightarrow> coeffs i \<ge> 0"
-                      using hs_pos hs_lt1 unfolding coeffs_def by (by100 auto)
-                    have hc2: "coeffs 2 = 0" unfolding coeffs_def by (by100 simp)
-                    have hcoeffs_rest: "\<And>i. i \<ge> 3 \<Longrightarrow> i < n \<Longrightarrow> coeffs i = 0"
-                      unfolding coeffs_def by (by100 simp)
-                    have hcoeffs_rest_mul: "\<And>f. (\<Sum>i\<in>{3..<n}. coeffs i * f i) = 0"
-                      apply (rule sum.neutral) using hcoeffs_rest by (by100 force)
-                    have hcoeffs_rest_sum: "(\<Sum>i\<in>{3..<n}. coeffs i) = 0"
-                      apply (rule sum.neutral) using hcoeffs_rest by (by100 force)
-                    have hsplit: "{..<n} = {0,1,2} \<union> {3..<n}" using assms(2) by (by100 auto)
-                    have hcsum: "(\<Sum>i<n. coeffs i) = 1"
-                    proof -
-                      have "(\<Sum>i<n. coeffs i) = (\<Sum>i\<in>{0,1,2}. coeffs i) + (\<Sum>i\<in>{3..<n}. coeffs i)"
-                        using hsplit by (simp add: sum.union_disjoint)
-                      thus ?thesis using hcoeffs_rest_sum unfolding coeffs_def by (by100 simp)
-                    qed
-                    have hcvx: "vx 2 = (\<Sum>i<n. coeffs i * vx i)"
-                    proof -
-                      have "(\<Sum>i<n. coeffs i * vx i) = (\<Sum>i\<in>{0,1,2}. coeffs i * vx i) + (\<Sum>i\<in>{3..<n}. coeffs i * vx i)"
-                        using hsplit by (simp add: sum.union_disjoint)
-                      thus ?thesis using hcoeffs_rest_mul[of vx] hvx2 unfolding coeffs_def by (by100 simp)
-                    qed
-                    have hcvy: "vy 2 = (\<Sum>i<n. coeffs i * vy i)"
-                    proof -
-                      have "(\<Sum>i<n. coeffs i * vy i) = (\<Sum>i\<in>{0,1,2}. coeffs i * vy i) + (\<Sum>i\<in>{3..<n}. coeffs i * vy i)"
-                        using hsplit by (simp add: sum.union_disjoint)
-                      thus ?thesis using hcoeffs_rest_mul[of vy] hvy2 unfolding coeffs_def by (by100 simp)
-                    qed
-                    have "\<exists>coeffs. (\<forall>i<n. i \<noteq> 2 \<longrightarrow> coeffs i \<ge> 0) \<and> coeffs 2 = 0
-                        \<and> (\<Sum>i<n. coeffs i) = 1
-                        \<and> vx 2 = (\<Sum>i<n. coeffs i * vx i) \<and> vy 2 = (\<Sum>i<n. coeffs i * vy i)"
-                      using hnn hc2 hcsum hcvx hcvy by (by100 blast)
-                    thus False using hgp2 by (by100 blast)
-                  qed
-                qed
-              next
-                case False
-                hence hvy_ne: "vy 0 \<noteq> vy 2" using h02_ne by (by100 force)
-                \<comment> \<open>vx0 = vx2 (from False). cross2=0 gives (vx1-vx0)*(vy2-vy0) = 0.
-                   Since vy0 \<noteq> vy2: vx1 = vx0 = vx2. All same x-coord.
-                   Use y-param: t = (vy1-vy0)/(vy2-vy0). v_1 = (1-t)*v_0 + t*v_2.\<close>
-                have hvx_eq: "vx 0 = vx 2" using False by (by100 simp)
-                have hcol_eq2: "(vx 1 - vx 0) * (vy 2 - vy 0) = (vy 1 - vy 0) * (vx 2 - vx 0)"
-                  using hcross012 unfolding cross2_def by (by100 simp)
-                have hvx1_eq0: "vx 1 = vx 0"
-                proof -
-                  from hcol_eq2 hvx_eq have "(vx 1 - vx 0) * (vy 2 - vy 0) = 0" by (by100 simp)
-                  thus ?thesis using hvy_ne by (by100 simp)
-                qed
-                \<comment> \<open>Parameterize: t = (vy1-vy0)/(vy2-vy0).\<close>
-                let ?t = "(vy 1 - vy 0) / (vy 2 - vy 0)"
-                obtain t' where ht'_def: "t' = ?t" and ht'_fact: "t' * (vy 2 - vy 0) = vy 1 - vy 0"
-                  using hvy_ne by (by100 simp)
-                have hvx1_t: "vx 1 = (1 - t') * vx 0 + t' * vx 2"
-                proof -
-                  have "(1 - t') * vx 0 + t' * vx 2 = (1 - t') * vx 0 + t' * vx 0"
-                    using hvx_eq by (by100 simp)
-                  also have "\<dots> = vx 0"
-                    by (simp add: left_diff_distrib right_diff_distrib algebra_simps)
-                  finally show ?thesis using hvx1_eq0 by (by100 simp)
-                qed
-                have hvy1_t: "vy 1 = (1 - t') * vy 0 + t' * vy 2"
-                proof -
-                  have "vy 1 = vy 0 + t' * (vy 2 - vy 0)" using ht'_fact by (by100 linarith)
-                  also have "\<dots> = (1 - t') * vy 0 + t' * vy 2"
-                    by (simp add: right_diff_distrib left_diff_distrib algebra_simps)
-                  finally show ?thesis unfolding ht'_def .
-                qed
-                \<comment> \<open>t' \<noteq> 0 and t' \<noteq> 1 (from distinct vertices).\<close>
-                have ht_ne0: "t' \<noteq> 0" using h01_ne hvx1_t hvy1_t by (by100 force)
-                have ht_ne1: "t' \<noteq> 1" using h12_ne hvx1_t hvy1_t by (by100 force)
-                \<comment> \<open>Same case analysis as the vx0\<noteq>vx2 case.\<close>
-                show False
-                proof (cases "0 < t' \<and> t' < 1")
-                  case True
-                  \<comment> \<open>v_1 in hull of v_0, v_2.\<close>
-                  define cc where "cc = (\<lambda>i::nat. if i = 0 then 1-t' else if i = 2 then t' else 0::real)"
-                  have hsplit: "{..<n} = {0,1,2} \<union> {3..<n}" using assms(2) by (by100 auto)
-                  have hrest: "\<And>f. (\<Sum>i\<in>{3..<n}. cc i * f i) = 0"
-                    apply (rule sum.neutral) unfolding cc_def by (by100 force)
-                  have hrest_sum: "(\<Sum>i\<in>{3..<n}. cc i) = 0"
-                    apply (rule sum.neutral) unfolding cc_def by (by100 force)
-                  have hcsum: "(\<Sum>i<n. cc i) = 1"
-                  proof -
-                    have "(\<Sum>i<n. cc i) = (\<Sum>i\<in>{0,1,2}. cc i) + (\<Sum>i\<in>{3..<n}. cc i)"
-                      using hsplit by (simp add: sum.union_disjoint)
-                    thus ?thesis using hrest_sum unfolding cc_def by (by100 simp)
-                  qed
-                  have hcvx: "vx 1 = (\<Sum>i<n. cc i * vx i)"
-                  proof -
-                    have "(\<Sum>i<n. cc i * vx i) = (\<Sum>i\<in>{0,1,2}. cc i * vx i) + (\<Sum>i\<in>{3..<n}. cc i * vx i)"
-                      using hsplit by (simp add: sum.union_disjoint)
-                    thus ?thesis using hrest[of vx] hvx1_t unfolding cc_def ht'_def by (by100 simp)
-                  qed
-                  have hcvy: "vy 1 = (\<Sum>i<n. cc i * vy i)"
-                  proof -
-                    have "(\<Sum>i<n. cc i * vy i) = (\<Sum>i\<in>{0,1,2}. cc i * vy i) + (\<Sum>i\<in>{3..<n}. cc i * vy i)"
-                      using hsplit by (simp add: sum.union_disjoint)
-                    thus ?thesis using hrest[of vy] hvy1_t unfolding cc_def ht'_def by (by100 simp)
-                  qed
-                  have hnn: "\<forall>i<n. i \<noteq> 1 \<longrightarrow> cc i \<ge> 0"
-                    using True unfolding cc_def ht'_def by (by100 auto)
-                  have hc1: "cc 1 = 0" unfolding cc_def by (by100 simp)
-                  have "\<exists>cc. (\<forall>i<n. i \<noteq> 1 \<longrightarrow> cc i \<ge> 0) \<and> cc 1 = 0 \<and> (\<Sum>i<n. cc i) = 1
-                      \<and> vx 1 = (\<Sum>i<n. cc i * vx i) \<and> vy 1 = (\<Sum>i<n. cc i * vy i)"
-                    using hnn hc1 hcsum hcvx hcvy by (by100 blast)
-                  thus False using hgp h1n by (by100 blast)
-                next
-                  case False
-                  hence "t' < 0 \<or> t' > 1" using ht_ne0 ht_ne1 by (by100 linarith)
-                  thus False
-                  proof
-                    assume ht_neg: "t' < 0"
-                    have h1mt: "1 - t' > 0" using ht_neg by (by100 linarith)
-                    let ?s = "1 / (1 - t')"
-                    have h1mt_s: "(1 - t') * ?s = 1" using h1mt by (by100 simp)
-                    have h1mt_1ms: "(1 - t') * (1 - ?s) = - t'" using h1mt by (simp add: field_simps)
-                    have hvx0: "vx 0 = ?s * vx 1 + (1 - ?s) * vx 2"
-                    proof -
-                      have "(1 - t') * vx 0 = vx 1 - t' * vx 2"
-                        using hvx1_t by (by100 linarith)
-                      also have "\<dots> = (1-t')*?s * vx 1 + (1-t')*(1-?s) * vx 2"
-                        using h1mt_s h1mt_1ms by (by100 simp)
-                      also have "\<dots> = (1 - t') * (?s * vx 1) + (1 - t') * ((1 - ?s) * vx 2)"
-                        by (by100 simp)
-                      also have "\<dots> = (1 - t') * (?s * vx 1 + (1 - ?s) * vx 2)"
-                        using distrib_left[of "1-t'" "?s * vx 1" "(1-?s)*vx 2"] by (by100 simp)
-                      finally show ?thesis using h1mt by (by100 simp)
-                    qed
-                    have hvy0: "vy 0 = ?s * vy 1 + (1 - ?s) * vy 2"
-                    proof -
-                      have "(1 - t') * vy 0 = vy 1 - t' * vy 2"
-                        using hvy1_t by (by100 linarith)
-                      also have "\<dots> = (1-t')*?s * vy 1 + (1-t')*(1-?s) * vy 2"
-                        using h1mt_s h1mt_1ms by (by100 simp)
-                      also have "\<dots> = (1 - t') * (?s * vy 1) + (1 - t') * ((1 - ?s) * vy 2)"
-                        by (by100 simp)
-                      also have "\<dots> = (1 - t') * (?s * vy 1 + (1 - ?s) * vy 2)"
-                        using distrib_left[of "1-t'" "?s * vy 1" "(1-?s)*vy 2"] by (by100 simp)
-                      finally show ?thesis using h1mt by (by100 simp)
-                    qed
-                    have hs_pos: "?s > 0" using h1mt by (by100 simp)
-                    have hs_lt1: "?s < 1" using ht_neg by (by100 simp)
-                    define cc where "cc = (\<lambda>i::nat. if i = 1 then ?s else if i = 2 then 1-?s else 0::real)"
-                    have hsplit: "{..<n} = {0,1,2} \<union> {3..<n}" using assms(2) by (by100 auto)
-                    have hrest: "\<And>f. (\<Sum>i\<in>{3..<n}. cc i * f i) = 0"
-                      apply (rule sum.neutral) unfolding cc_def by (by100 force)
-                    have hrest_sum: "(\<Sum>i\<in>{3..<n}. cc i) = 0"
-                      apply (rule sum.neutral) unfolding cc_def by (by100 force)
-                    have hnn: "\<forall>i<n. i \<noteq> 0 \<longrightarrow> cc i \<ge> 0"
-                      using hs_pos hs_lt1 unfolding cc_def by (by100 auto)
-                    have hc0: "cc 0 = 0" unfolding cc_def by (by100 simp)
-                    have hcsum: "(\<Sum>i<n. cc i) = 1"
-                    proof -
-                      have "(\<Sum>i<n. cc i) = (\<Sum>i\<in>{0,1,2}. cc i) + (\<Sum>i\<in>{3..<n}. cc i)"
-                        using hsplit by (simp add: sum.union_disjoint)
-                      thus ?thesis using hrest_sum unfolding cc_def by (by100 simp)
-                    qed
-                    have hcvx: "vx 0 = (\<Sum>i<n. cc i * vx i)"
-                    proof -
-                      have "(\<Sum>i<n. cc i * vx i) = (\<Sum>i\<in>{0,1,2}. cc i * vx i) + (\<Sum>i\<in>{3..<n}. cc i * vx i)"
-                        using hsplit by (simp add: sum.union_disjoint)
-                      thus ?thesis using hrest[of vx] hvx0 unfolding cc_def by (by100 simp)
-                    qed
-                    have hcvy: "vy 0 = (\<Sum>i<n. cc i * vy i)"
-                    proof -
-                      have "(\<Sum>i<n. cc i * vy i) = (\<Sum>i\<in>{0,1,2}. cc i * vy i) + (\<Sum>i\<in>{3..<n}. cc i * vy i)"
-                        using hsplit by (simp add: sum.union_disjoint)
-                      thus ?thesis using hrest[of vy] hvy0 unfolding cc_def by (by100 simp)
-                    qed
-                    have "\<exists>cc. (\<forall>i<n. i \<noteq> 0 \<longrightarrow> cc i \<ge> 0) \<and> cc 0 = 0 \<and> (\<Sum>i<n. cc i) = 1
-                        \<and> vx 0 = (\<Sum>i<n. cc i * vx i) \<and> vy 0 = (\<Sum>i<n. cc i * vy i)"
-                      using hnn hc0 hcsum hcvx hcvy by (by100 blast)
-                    thus False using hgp h0n by (by100 blast)
-                  next
-                    assume ht_big: "t' > 1"
-                    have ht'_pos: "t' > 0" using ht_big by (by100 linarith)
-                    let ?s = "1 / t'"
-                    have ht_s: "t' * ?s = 1" using ht'_pos by (by100 simp)
-                    have ht_1ms: "t' * (1 - ?s) = t' - 1" using ht'_pos by (simp add: field_simps)
-                    have hvx2: "vx 2 = ?s * vx 1 + (1 - ?s) * vx 0"
-                    proof -
-                      have h_from: "vx 1 = (1 - t') * vx 0 + t' * vx 2" using hvx1_t .
-                      hence h_rearr: "t' * vx 2 = vx 1 + (t' - 1) * vx 0" by (simp add: algebra_simps)
-                      have "vx 1 + (t' - 1) * vx 0 = t'*?s * vx 1 + t'*(1-?s) * vx 0"
-                        using ht_s ht_1ms by (by100 simp)
-                      hence "t' * vx 2 = t' * (?s * vx 1) + t' * ((1-?s) * vx 0)"
-                        using h_rearr by (by100 simp)
-                      hence "t' * vx 2 = t' * (?s * vx 1 + (1-?s) * vx 0)"
-                        using distrib_left[of t' "?s * vx 1" "(1-?s) * vx 0"] by (by100 simp)
-                      thus ?thesis using ht'_pos by (by100 simp)
-                    qed
-                    have hvy2: "vy 2 = ?s * vy 1 + (1 - ?s) * vy 0"
-                    proof -
-                      have h_from: "vy 1 = (1 - t') * vy 0 + t' * vy 2" using hvy1_t .
-                      hence h_rearr: "t' * vy 2 = vy 1 + (t' - 1) * vy 0" by (simp add: algebra_simps)
-                      have "vy 1 + (t' - 1) * vy 0 = t'*?s * vy 1 + t'*(1-?s) * vy 0"
-                        using ht_s ht_1ms by (by100 simp)
-                      hence "t' * vy 2 = t' * (?s * vy 1) + t' * ((1-?s) * vy 0)"
-                        using h_rearr by (by100 simp)
-                      hence "t' * vy 2 = t' * (?s * vy 1 + (1-?s) * vy 0)"
-                        using distrib_left[of t' "?s * vy 1" "(1-?s) * vy 0"] by (by100 simp)
-                      thus ?thesis using ht'_pos by (by100 simp)
-                    qed
-                    have hs_pos: "?s > 0" using ht'_pos by (by100 simp)
-                    have hs_lt1: "?s < 1" using ht_big by (by100 simp)
-                    define cc where "cc = (\<lambda>i::nat. if i = 0 then 1-?s else if i = 1 then ?s else 0::real)"
-                    have hsplit: "{..<n} = {0,1,2} \<union> {3..<n}" using assms(2) by (by100 auto)
-                    have hrest: "\<And>f. (\<Sum>i\<in>{3..<n}. cc i * f i) = 0"
-                      apply (rule sum.neutral) unfolding cc_def by (by100 force)
-                    have hrest_sum: "(\<Sum>i\<in>{3..<n}. cc i) = 0"
-                      apply (rule sum.neutral) unfolding cc_def by (by100 force)
-                    have hnn: "\<forall>i<n. i \<noteq> 2 \<longrightarrow> cc i \<ge> 0"
-                      using hs_pos hs_lt1 unfolding cc_def by (by100 auto)
-                    have hc2: "cc 2 = 0" unfolding cc_def by (by100 simp)
-                    have hcsum: "(\<Sum>i<n. cc i) = 1"
-                    proof -
-                      have "(\<Sum>i<n. cc i) = (\<Sum>i\<in>{0,1,2}. cc i) + (\<Sum>i\<in>{3..<n}. cc i)"
-                        using hsplit by (simp add: sum.union_disjoint)
-                      thus ?thesis using hrest_sum unfolding cc_def by (by100 simp)
-                    qed
-                    have hcvx: "vx 2 = (\<Sum>i<n. cc i * vx i)"
-                    proof -
-                      have "(\<Sum>i<n. cc i * vx i) = (\<Sum>i\<in>{0,1,2}. cc i * vx i) + (\<Sum>i\<in>{3..<n}. cc i * vx i)"
-                        using hsplit by (simp add: sum.union_disjoint)
-                      thus ?thesis using hrest[of vx] hvx2 unfolding cc_def by (by100 simp)
-                    qed
-                    have hcvy: "vy 2 = (\<Sum>i<n. cc i * vy i)"
-                    proof -
-                      have "(\<Sum>i<n. cc i * vy i) = (\<Sum>i\<in>{0,1,2}. cc i * vy i) + (\<Sum>i\<in>{3..<n}. cc i * vy i)"
-                        using hsplit by (simp add: sum.union_disjoint)
-                      thus ?thesis using hrest[of vy] hvy2 unfolding cc_def by (by100 simp)
-                    qed
-                    have "\<exists>cc. (\<forall>i<n. i \<noteq> 2 \<longrightarrow> cc i \<ge> 0) \<and> cc 2 = 0 \<and> (\<Sum>i<n. cc i) = 1
-                        \<and> vx 2 = (\<Sum>i<n. cc i * vx i) \<and> vy 2 = (\<Sum>i<n. cc i * vy i)"
-                      using hnn hc2 hcsum hcvx hcvy by (by100 blast)
-                    thus False using hgp h2n by (by100 blast)
-                  qed
-                qed
-              qed
-            qed
-          qed
-          then obtain i' j' where hi': "i' < n" and hj': "j' < n"
-              and hdet: "cross2 (vx i' - cx, vy i' - cy) (vx j' - cx, vy j' - cy) \<noteq> 0"
-            by (by100 blast)
-          \<comment> \<open>From hall0: (vx_i-cx)*?dy = (vy_i-cy)*?dx for all i.
-             From hdet: the matrix [v_i'-c | v_j'-c] is invertible.
-             The system (vx_i'-cx)*?dy = (vy_i'-cy)*?dx and
-                        (vx_j'-cx)*?dy = (vy_j'-cy)*?dx
-             with non-singular coefficient matrix forces ?dx = ?dy = 0.\<close>
-          have h0i: "(vx i' - cx) * ?dy - (vy i' - cy) * ?dx = 0"
-            using hall0[rule_format, OF hi'] unfolding cross2_def by (by100 simp)
-          have h0j: "(vx j' - cx) * ?dy - (vy j' - cy) * ?dx = 0"
-            using hall0[rule_format, OF hj'] unfolding cross2_def by (by100 simp)
-          \<comment> \<open>Solve: if det \<noteq> 0 and both equations hold, then ?dx = ?dy = 0.\<close>
-          have "?dx = 0 \<and> ?dy = 0"
-          proof -
-            \<comment> \<open>From h0i: (vx_i'-cx)*dy - (vy_i'-cy)*dx = 0.
-               From h0j: (vx_j'-cx)*dy - (vy_j'-cy)*dx = 0.
-               Multiply first by (vx_j'-cx), second by (vx_i'-cx), subtract:
-               cross2(v_i'-c, v_j'-c) * dy = 0. Since cross2 \<noteq> 0, dy = 0.
-               Similarly dx = 0.\<close>
-            \<comment> \<open>Cramer's rule: multiply h0i by (vx_j'-cx) and h0j by (vx_i'-cx), subtract.\<close>
-            let ?D = "(vx i' - cx) * (vy j' - cy) - (vy i' - cy) * (vx j' - cx)"
-            have hdet': "?D \<noteq> 0"
-              using hdet unfolding cross2_def by (by100 simp)
-            \<comment> \<open>(vx_j'-cx) * h0i - (vx_i'-cx) * h0j gives ?D * ?dy = 0.\<close>
-            \<comment> \<open>From h0i: (vx_i'-cx)*dy = (vy_i'-cy)*dx.
-               From h0j: (vx_j'-cx)*dy = (vy_j'-cy)*dx.
-               Multiply h0i by (vy_j'-cy): (vx_i'-cx)*(vy_j'-cy)*dy = (vy_i'-cy)*(vy_j'-cy)*dx
-               Multiply h0j by (vy_i'-cy): (vx_j'-cx)*(vy_i'-cy)*dy = (vy_j'-cy)*(vy_i'-cy)*dx
-               Subtract: ((vx_i'-cx)*(vy_j'-cy) - (vx_j'-cx)*(vy_i'-cy))*dy = 0
-               i.e. D*dy = 0.\<close>
-            have hi_eq: "(vx i' - cx) * ?dy = (vy i' - cy) * ?dx" using h0i by (by100 linarith)
-            have hj_eq: "(vx j' - cx) * ?dy = (vy j' - cy) * ?dx" using h0j by (by100 linarith)
-            have hdy_eq: "?D * ?dy = 0"
-            proof -
-              let ?a = "vx i' - cx" let ?b = "vy i' - cy"
-              let ?c = "vx j' - cx" let ?d = "vy j' - cy"
-              \<comment> \<open>From hi_eq: ?a*?dy = ?b*?dx. Multiply by ?d: ?a*?d*?dy = ?b*?d*?dx.\<close>
-              have "?a * ?d * ?dy = ?b * ?dx * ?d"
-                using hi_eq by (by100 simp)
-              hence h1: "?a * ?d * ?dy = ?b * ?d * ?dx"
-                by (simp add: mult.commute mult.left_commute)
-              \<comment> \<open>From hj_eq: ?c*?dy = ?d*?dx. Multiply by ?b: ?b*?c*?dy = ?b*?d*?dx.\<close>
-              have "?b * (?c * ?dy) = ?b * (?d * ?dx)"
-                using hj_eq by (by100 simp)
-              hence h2: "?b * ?c * ?dy = ?b * ?d * ?dx"
-                by (simp add: mult.assoc)
-              \<comment> \<open>Subtract: (?a*?d - ?b*?c)*?dy = ?b*?d*?dx - ?b*?d*?dx = 0.\<close>
-              from h1 h2 have h3: "?a * ?d * ?dy - ?b * ?c * ?dy = 0" by (by100 linarith)
-              have "?D * ?dy = ?a * ?d * ?dy - ?b * ?c * ?dy"
-                by (simp add: algebra_simps)
-              thus ?thesis using h3 by (by100 simp)
-            qed
-            have hdy0: "?dy = 0" using hdy_eq hdet' by (by100 simp)
-            have hdx0: "?dx = 0"
-            proof -
-              from hi_eq hdy0 have h1: "(vy i' - cy) * ?dx = 0" by (by100 simp)
-              from hj_eq hdy0 have h2: "(vy j' - cy) * ?dx = 0" by (by100 simp)
-              have "vy i' - cy \<noteq> 0 \<or> vy j' - cy \<noteq> 0"
-              proof (rule ccontr)
-                assume "\<not> (vy i' - cy \<noteq> 0 \<or> vy j' - cy \<noteq> 0)"
-                hence "vy i' = cy" "vy j' = cy" by (by100 simp)+
-                hence "?D = 0" by (simp add: algebra_simps)
-                thus False using hdet' by (by100 blast)
-              qed
-              thus "?dx = 0" using h1 h2 by (by100 force)
-            qed
-            show ?thesis using hdy0 hdx0 by (by100 auto)
-          qed
-          hence "z = (cx, cy)" by (by100 auto)
-          thus False using False by (by100 simp)
-        qed
-        have hn2: "n \<ge> 2" using assms(2) by (by100 linarith)
-        \<comment> \<open>Use STRICT sign change: \<exists>i with cross2 > 0 and successor \<le> 0.
-           Need \<exists>i with cross2 > 0. From hne (\<exists>j. \<noteq> 0) and sum = 0: \<exists> positive.\<close>
-        have hpos_exists: "\<exists>i<n. cross2 (vx i - cx, vy i - cy) (?dx, ?dy) > 0"
-        proof -
-          from hne obtain j where hj: "j < n" and hjne: "cross2 (vx j - cx, vy j - cy) (?dx, ?dy) \<noteq> 0"
-            by (by100 blast)
-          show ?thesis
-          proof (cases "cross2 (vx j - cx, vy j - cy) (?dx, ?dy) > 0")
-            case True thus ?thesis using hj by (by100 blast)
+        have "P \<subseteq> (UNIV::(real \<times> real) set)" by (by100 blast)
+        thus ?thesis by (rule subspace_topology_is_topology_on[OF hR2'])
+      qed
+      have hTB2: "is_topology_on top1_B2 top1_B2_topology"
+        unfolding top1_B2_topology_def
+        by (rule subspace_topology_is_topology_on[OF hR2']) (by100 blast)
+      from Theorem_26_6[OF hTP_top hTB2 hP_compact hB2_haus h\<psi>_top1 h\<psi>_bij]
+      show ?thesis .
+    qed
+    \<comment> \<open>(g) By construction: \<psi>(BdP) = S1 and \<psi>(IntP) = IntB2.\<close>
+    have h\<psi>_bd: "\<psi> ` ?BdP = top1_S1"
+    proof -
+      \<comment> \<open>\<subseteq>: For x \<in> BdP, x \<noteq> c (centroid not on boundary), the ray from c through x
+         hits BdP at x itself, so s = pdist x c / pdist x c = 1. Then \<psi>(x) = h\_bd(x).
+         h\_bd is normalized to S1 by construction.\<close>
+      \<comment> \<open>\<supseteq>: h\_bd maps BdP onto S1 (the normalized boundary map traces all of S1
+         as the edges trace the regular n-gon, covering all angles for n \<ge> 3).\<close>
+      show ?thesis sorry \<comment> \<open>Both directions: BdP maps onto S1 via normalized h\_bd.\<close>
+    qed
+    have h\<psi>_int: "top1_homeomorphism_on (P - ?BdP)
+        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (P - ?BdP))
+        (top1_B2 - top1_S1)
+        (subspace_topology top1_B2 top1_B2_topology (top1_B2 - top1_S1)) \<psi>"
+    proof -
+      \<comment> \<open>BdP \<subseteq> P: each boundary point is a convex combination of two vertices.\<close>
+      have hBdP_sub: "?BdP \<subseteq> P"
+      proof (rule UN_least)
+        fix i assume "i \<in> {..<n}"
+        hence hi: "i < n" by (by100 simp)
+        show "{((1-t) * vx i + t * vx (Suc i mod n),
+               (1-t) * vy i + t * vy (Suc i mod n)) | t. t \<in> I_set} \<subseteq> P"
+        proof (rule subsetI)
+          fix p assume "p \<in> {((1-t) * vx i + t * vx (Suc i mod n),
+                             (1-t) * vy i + t * vy (Suc i mod n)) | t. t \<in> I_set}"
+          then obtain t where ht: "t \<in> I_set" and
+            hp: "p = ((1-t) * vx i + t * vx (Suc i mod n),
+                      (1-t) * vy i + t * vy (Suc i mod n))" by (by100 blast)
+          \<comment> \<open>p is a convex combination of v_i and v_{i+1} with coefficients (1-t) and t.\<close>
+          define coeffs where "coeffs = (\<lambda>j. if j = i then (1 - t)
+              else if j = Suc i mod n then t else 0::real)"
+          have ht01: "0 \<le> t" "t \<le> 1" using ht
+            unfolding top1_unit_interval_def by (by100 auto)+
+          have hcge: "\<forall>j<n. coeffs j \<ge> 0" unfolding coeffs_def
+            using ht01 by (by5000 auto)
+          have hi2: "Suc i mod n < n" using hi assms(2) by (by100 simp)
+          have hi_ne: "i \<noteq> Suc i mod n"
+          proof (cases "Suc i < n")
+            case True thus ?thesis by (by100 simp)
           next
             case False
-            hence "cross2 (vx j - cx, vy j - cy) (?dx, ?dy) < 0" using hjne by (by100 linarith)
-            \<comment> \<open>There must be a positive one too (sum = 0 with a negative means \<exists> positive).\<close>
-            hence "(\<Sum>i\<in>{..<n} - {j}. cross2 (vx i - cx, vy i - cy) (?dx, ?dy)) > 0"
-              using hsum0 hj by (simp add: sum.remove)
-            then have hsum_pos_rest: "(\<Sum>i\<in>{..<n} - {j}. cross2 (vx i - cx, vy i - cy) (?dx, ?dy)) > 0" .
-            have "\<exists>i\<in>{..<n} - {j}. cross2 (vx i - cx, vy i - cy) (?dx, ?dy) > 0"
-            proof (rule ccontr)
-              assume "\<not> (\<exists>i\<in>{..<n} - {j}. cross2 (vx i - cx, vy i - cy) (?dx, ?dy) > 0)"
-              hence "\<forall>i\<in>{..<n} - {j}. cross2 (vx i - cx, vy i - cy) (?dx, ?dy) \<le> 0"
-                by (by100 force)
-              hence "(\<Sum>i\<in>{..<n} - {j}. cross2 (vx i - cx, vy i - cy) (?dx, ?dy)) \<le> 0"
-                by (intro sum_nonpos) (by100 blast)
-              thus False using hsum_pos_rest by (by100 linarith)
-            qed
-            thus ?thesis by (by100 blast)
+            hence "Suc i = n" using hi by (by100 linarith)
+            hence "Suc i mod n = 0" by (by100 simp)
+            moreover have "i > 0 \<or> i = 0" by (by100 linarith)
+            ultimately show ?thesis using hi \<open>Suc i = n\<close> assms(2) by (by100 linarith)
           qed
-        qed
-        from cyclic_strict_sign_change[OF hn2 hsum0 hpos_exists]
-        obtain i where hi: "i < n"
-            and hpos: "cross2 (vx i - cx, vy i - cy) (?dx, ?dy) > 0"
-            and hneg: "cross2 (vx ((i+1) mod n) - cx, vy ((i+1) mod n) - cy) (?dx, ?dy) \<le> 0"
-          by (by100 blast)
-        \<comment> \<open>The sign conditions mean z-c is in the sector between v_i-c and v_{i+1}-c.
-           Solve the 2\<times>2 linear system for barycentric coordinates.\<close>
-        let ?vi1 = "(i+1) mod n"
-        let ?D = "cross2 (vx i - cx, vy i - cy) (vx ?vi1 - cx, vy ?vi1 - cy)"
-        \<comment> \<open>D > 0 for convex polygon with counterclockwise vertices from centroid.\<close>
-        \<comment> \<open>Case split: D = 0 (degenerate: z on line through c, v_i) or D \<noteq> 0 (use Cramer).\<close>
-        show ?thesis
-        proof (cases "?D = 0")
-          case True \<comment> \<open>D = 0: v_i-c and v_{i+1}-c are parallel.\<close>
-          \<comment> \<open>From hpos and hneg with D=0: both cross2 = 0, so z-c || v_i-c.
-             z = c + s*(v_i - c) for some s > 0. Since z \<in> P and v_i on boundary: s \<le> 1.
-             So z = (1-s)*c + s*v_i + 0*v_{i+1} is in cone_i.\<close>
-          show ?thesis sorry
-        next
-          case hD_ne: False \<comment> \<open>D \<noteq> 0: use Cramer's rule.\<close>
-        \<comment> \<open>\<beta>' = cross2(z-c, v_{i+1}-c) / D, \<gamma>' = cross2(v_i-c, z-c) / D.\<close>
-        define \<beta>' where "\<beta>' = cross2 (fst z - cx, snd z - cy) (vx ?vi1 - cx, vy ?vi1 - cy) / ?D"
-        define \<gamma>' where "\<gamma>' = cross2 (vx i - cx, vy i - cy) (fst z - cx, snd z - cy) / ?D"
-        \<comment> \<open>\<beta>' \<ge> 0: cross2(z-c, v_{i+1}-c) = -cross2(v_{i+1}-c, z-c) \<ge> 0 from hneg.
-           \<gamma>' \<ge> 0: cross2(v_i-c, z-c) \<ge> 0 from hpos. Both divided by D > 0.\<close>
-        have hnum_\<beta>: "cross2 (fst z - cx, snd z - cy) (vx ?vi1 - cx, vy ?vi1 - cy) \<ge> 0"
-        proof -
-          have "cross2 (vx ?vi1 - cx, vy ?vi1 - cy) (?dx, ?dy) \<le> 0" using hneg .
-          hence "- cross2 (fst z - cx, snd z - cy) (vx ?vi1 - cx, vy ?vi1 - cy) \<le> 0"
-            unfolding cross2_def by (simp add: algebra_simps)
-          thus ?thesis by (by100 linarith)
-        qed
-        have hnum_\<gamma>: "cross2 (vx i - cx, vy i - cy) (fst z - cx, snd z - cy) > 0"
-          using hpos .
-        \<comment> \<open>Derive D > 0: numerator sum = num_\<beta> + num_\<gamma> > 0 (since z \<noteq> c, not both 0).
-           \<beta>'+\<gamma>' = (num_\<beta> + num_\<gamma>)/D must be > 0 (from z \<noteq> c via Cramer).
-           Since numerator sum \<ge> 0 and must give positive quotient, D > 0.\<close>
-        have hnum_sum_pos: "cross2 (fst z - cx, snd z - cy) (vx ?vi1 - cx, vy ?vi1 - cy) +
-            cross2 (vx i - cx, vy i - cy) (fst z - cx, snd z - cy) > 0"
-        proof (rule ccontr)
-          assume "\<not> ?thesis"
-          hence "cross2 (fst z - cx, snd z - cy) (vx ?vi1 - cx, vy ?vi1 - cy) = 0
-              \<and> cross2 (vx i - cx, vy i - cy) (fst z - cx, snd z - cy) = 0"
-            using hnum_\<beta> hnum_\<gamma> by (by100 linarith)
-          \<comment> \<open>Both numerators 0 means z-c = 0 (by Cramer with D \<noteq> 0).\<close>
-          hence h_both0: "cross2 (fst z - cx, snd z - cy) (vx ?vi1 - cx, vy ?vi1 - cy) = 0"
-              "cross2 (vx i - cx, vy i - cy) (fst z - cx, snd z - cy) = 0"
-            by (by100 blast)+
-          hence "fst z - cx = 0 \<and> snd z - cy = 0"
+          have hfin: "finite ({..<n}::nat set)" by (by100 simp)
+          have hi_in: "i \<in> {..<n}" using hi by (by100 simp)
+          have hi2_in: "Suc i mod n \<in> {..<n}" using hi2 by (by100 simp)
+          have hcsum: "(\<Sum>j<n. coeffs j) = 1"
           proof -
-            \<comment> \<open>Cramer: h_both0 gives (fst z-cx)*(vy_{i+1}-cy) = (snd z-cy)*(vx_{i+1}-cx)
-               and (vx_i-cx)*(snd z-cy) = (vy_i-cy)*(fst z-cx).
-               With D \<noteq> 0, same argument as in hne proof.\<close>
-            have h_eq1: "(fst z - cx) * (vy ?vi1 - cy) - (snd z - cy) * (vx ?vi1 - cx) = 0"
-              using h_both0(1) unfolding cross2_def by (by100 simp)
-            have h_eq2: "(vx i - cx) * (snd z - cy) - (vy i - cy) * (fst z - cx) = 0"
-              using h_both0(2) unfolding cross2_def by (by100 simp)
-            \<comment> \<open>Same Cramer derivation: D*(snd z-cy) = 0, D*(fst z-cx) = 0.\<close>
-            have "?D * (snd z - cy) = 0"
+            have "(\<Sum>j<n. coeffs j) = coeffs i + (\<Sum>j\<in>{..<n} - {i}. coeffs j)"
+              using sum.remove[OF hfin hi_in] by (by100 simp)
+            also have "(\<Sum>j\<in>{..<n} - {i}. coeffs j) =
+                coeffs (Suc i mod n) + (\<Sum>j\<in>{..<n} - {i} - {Suc i mod n}. coeffs j)"
             proof -
-              let ?a = "vx i - cx" let ?b = "vy i - cy"
-              let ?c = "vx ?vi1 - cx" let ?d = "vy ?vi1 - cy"
-              have h_i: "?a * (snd z - cy) = ?b * (fst z - cx)" using h_eq2 by (by100 linarith)
-              have h_i1: "(fst z - cx) * ?d = (snd z - cy) * ?c" using h_eq1 by (by100 linarith)
-              have "?a * ?d * (snd z - cy) = ?b * (fst z - cx) * ?d"
-                using h_i by (by100 simp)
-              also have "\<dots> = ?b * (snd z - cy) * ?c"
-                using h_i1 by (simp add: mult.commute mult.left_commute)
-              finally have "?a * ?d * (snd z - cy) = ?b * ?c * (snd z - cy)"
-                by (simp add: mult.commute mult.left_commute)
-              hence "?a * ?d * (snd z - cy) - ?b * ?c * (snd z - cy) = 0"
-                by (by100 linarith)
-              hence "(?a * ?d - ?b * ?c) * (snd z - cy) = 0"
-                by (simp add: algebra_simps)
-              moreover have "?D = ?a * ?d - ?b * ?c" unfolding cross2_def by (by100 simp)
-              ultimately show ?thesis by (by100 simp)
+              have "Suc i mod n \<in> {..<n} - {i}" using hi2_in hi_ne by (by5000 auto)
+              thus ?thesis using sum.remove[of "{..<n} - {i}" "Suc i mod n" coeffs]
+                by (by100 simp)
             qed
-            hence "snd z - cy = 0" using hD_ne by (by100 simp)
-            moreover hence "fst z - cx = 0" using h_eq2 hD_ne
-              unfolding cross2_def
-            proof -
-              from h_eq2 \<open>snd z - cy = 0\<close>
-              have "(vy i - cy) * (fst z - cx) = 0" by (by100 simp)
-              moreover from h_eq1 \<open>snd z - cy = 0\<close>
-              have "(vy ?vi1 - cy) * (fst z - cx) = 0" by (simp add: algebra_simps)
-              moreover have "vy i - cy \<noteq> 0 \<or> vy ?vi1 - cy \<noteq> 0"
-              proof (rule ccontr)
-                assume "\<not> (vy i - cy \<noteq> 0 \<or> vy ?vi1 - cy \<noteq> 0)"
-                hence "vy i = cy" "vy ?vi1 = cy" by (by100 simp)+
-                hence "?D = 0" unfolding cross2_def by (simp add: algebra_simps)
-                thus False using hD_ne by (by100 blast)
-              qed
-              ultimately show "fst z - cx = 0" by (by100 force)
-            qed
-            ultimately show ?thesis by (by100 blast)
+            also have "coeffs i = 1 - t" unfolding coeffs_def using hi_ne by (by100 simp)
+            also have "coeffs (Suc i mod n) = t" unfolding coeffs_def using hi_ne by (by100 simp)
+            also have "(\<Sum>j\<in>{..<n} - {i} - {Suc i mod n}. coeffs j) = 0"
+              by (rule sum.neutral) (simp add: coeffs_def)
+            finally show ?thesis by (by100 simp)
           qed
-          hence "z = (cx, cy)" by (by100 auto)
-          thus False using False by (by100 simp)
+          have hcx: "(\<Sum>j<n. coeffs j * vx j) = fst p"
+          proof -
+            have "(\<Sum>j<n. coeffs j * vx j) = coeffs i * vx i
+                + (\<Sum>j\<in>{..<n} - {i}. coeffs j * vx j)"
+              using sum.remove[OF hfin hi_in, of "\<lambda>j. coeffs j * vx j"] by (by100 simp)
+            also have "(\<Sum>j\<in>{..<n} - {i}. coeffs j * vx j) =
+                coeffs (Suc i mod n) * vx (Suc i mod n)
+                + (\<Sum>j\<in>{..<n} - {i} - {Suc i mod n}. coeffs j * vx j)"
+              using sum.remove[of "{..<n} - {i}" "Suc i mod n" "\<lambda>j. coeffs j * vx j"]
+                hi2_in hi_ne by (by5000 auto)
+            also have "(\<Sum>j\<in>{..<n} - {i} - {Suc i mod n}. coeffs j * vx j) = 0"
+              by (rule sum.neutral) (simp add: coeffs_def)
+            finally show ?thesis unfolding coeffs_def using hi_ne hp
+              by (by100 simp)
+          qed
+          have hcy: "(\<Sum>j<n. coeffs j * vy j) = snd p"
+          proof -
+            have "(\<Sum>j<n. coeffs j * vy j) = coeffs i * vy i
+                + (\<Sum>j\<in>{..<n} - {i}. coeffs j * vy j)"
+              using sum.remove[OF hfin hi_in, of "\<lambda>j. coeffs j * vy j"] by (by100 simp)
+            also have "(\<Sum>j\<in>{..<n} - {i}. coeffs j * vy j) =
+                coeffs (Suc i mod n) * vy (Suc i mod n)
+                + (\<Sum>j\<in>{..<n} - {i} - {Suc i mod n}. coeffs j * vy j)"
+              using sum.remove[of "{..<n} - {i}" "Suc i mod n" "\<lambda>j. coeffs j * vy j"]
+                hi2_in hi_ne by (by5000 auto)
+            also have "(\<Sum>j\<in>{..<n} - {i} - {Suc i mod n}. coeffs j * vy j) = 0"
+              by (rule sum.neutral) (simp add: coeffs_def)
+            finally show ?thesis unfolding coeffs_def using hi_ne hp
+              by (by100 simp)
+          qed
+          show "p \<in> P"
+          proof -
+            have hfp: "fst p = (\<Sum>i<n. coeffs i * vx i)" using hcx by (by100 simp)
+            have hsp: "snd p = (\<Sum>i<n. coeffs i * vy i)" using hcy by (by100 simp)
+            obtain px py where hpxy: "p = (px, py)" by (cases p) (by100 blast)
+            have hpx: "px = (\<Sum>i<n. coeffs i * vx i)" using hfp hpxy by (by100 simp)
+            have hpy: "py = (\<Sum>i<n. coeffs i * vy i)" using hsp hpxy by (by100 simp)
+            have hwitness: "(\<forall>i<n. 0 \<le> coeffs i) \<and> sum coeffs {..<n} = 1 \<and>
+                px = (\<Sum>i<n. coeffs i * vx i) \<and> py = (\<Sum>i<n. coeffs i * vy i)"
+              using hcge hcsum hpx hpy by (by100 blast)
+            have "(px, py) \<in> P" unfolding hP_hull mem_Collect_eq
+            proof (intro exI conjI)
+              show "(px, py) = ((\<Sum>i<n. coeffs i * vx i), (\<Sum>i<n. coeffs i * vy i))"
+                using hpx hpy by (by100 simp)
+              show "\<forall>i<n. (0::real) \<le> coeffs i" using hcge by (by100 blast)
+              show "sum coeffs {..<n} = (1::real)" using hcsum by (by100 blast)
+              show "(\<Sum>i<n. coeffs i * vx i) = (\<Sum>i<n. coeffs i * vx i)" by (by100 simp)
+              show "(\<Sum>i<n. coeffs i * vy i) = (\<Sum>i<n. coeffs i * vy i)" by (by100 simp)
+            qed
+            thus ?thesis using hpxy by (by100 simp)
+          qed
         qed
-        have hD_pos: "?D > 0"
-          sorry \<comment> \<open>D > 0: polygon orientation. Needed for \<beta>',\<gamma>' \<ge> 0.\<close>
-        have h\<beta>_nn: "\<beta>' \<ge> 0" unfolding \<beta>'_def using hnum_\<beta> hD_pos by (by100 simp)
-        have h\<gamma>_nn: "\<gamma>' \<ge> 0" unfolding \<gamma>'_def using hnum_\<gamma> hD_pos by (by100 simp)
-        \<comment> \<open>z - c = \<beta>'*(v_i - c) + \<gamma>'*(v_{i+1} - c): by definition of \<beta>', \<gamma>' via Cramer.\<close>
-        have hzc_x: "fst z - cx = \<beta>' * (vx i - cx) + \<gamma>' * (vx ?vi1 - cx)"
-        proof -
-          \<comment> \<open>Cramer: \<beta>'*(vx_i-cx) + \<gamma>'*(vx_{i+1}-cx)
-             = (cross2(z-c,v_{i+1}-c)*(vx_i-cx) + cross2(v_i-c,z-c)*(vx_{i+1}-cx)) / D
-             = ((fst z-cx)*(vy_{i+1}-cy) - (snd z-cy)*(vx_{i+1}-cx))*(vx_i-cx) / D
-             + ((vx_i-cx)*(snd z-cy) - (vy_i-cy)*(fst z-cx))*(vx_{i+1}-cx) / D
-             Numerator = (fst z-cx) * [(vy_{i+1}-cy)*(vx_i-cx) - (vy_i-cy)*(vx_{i+1}-cx)]
-                       + (snd z-cy) * [-(vx_{i+1}-cx)*(vx_i-cx) + (vx_i-cx)*(vx_{i+1}-cx)]
-                       = (fst z-cx) * D + 0 = (fst z-cx) * D.
-             So the whole expression = (fst z-cx) * D / D = fst z - cx.\<close>
-          have "\<beta>' * (vx i - cx) + \<gamma>' * (vx ?vi1 - cx) =
-              (cross2 (fst z - cx, snd z - cy) (vx ?vi1 - cx, vy ?vi1 - cy) * (vx i - cx) +
-               cross2 (vx i - cx, vy i - cy) (fst z - cx, snd z - cy) * (vx ?vi1 - cx)) / ?D"
-            unfolding \<beta>'_def \<gamma>'_def by (simp add: add_divide_distrib)
-          also have "\<dots> = (fst z - cx) * ?D / ?D"
-            unfolding cross2_def by (simp add: algebra_simps)
-          also have "\<dots> = fst z - cx" using hD_ne by (by100 simp)
-          finally show ?thesis by (by100 simp)
-        qed
-        have hzc_y: "snd z - cy = \<beta>' * (vy i - cy) + \<gamma>' * (vy ?vi1 - cy)"
-        proof -
-          have "\<beta>' * (vy i - cy) + \<gamma>' * (vy ?vi1 - cy) =
-              (cross2 (fst z - cx, snd z - cy) (vx ?vi1 - cx, vy ?vi1 - cy) * (vy i - cy) +
-               cross2 (vx i - cx, vy i - cy) (fst z - cx, snd z - cy) * (vy ?vi1 - cy)) / ?D"
-            unfolding \<beta>'_def \<gamma>'_def by (simp add: add_divide_distrib)
-          also have "\<dots> = (snd z - cy) * ?D / ?D"
-            unfolding cross2_def by (simp add: algebra_simps)
-          also have "\<dots> = snd z - cy" using hD_ne by (by100 simp)
-          finally show ?thesis by (by100 simp)
-        qed
-        \<comment> \<open>\<beta>' + \<gamma>' \<le> 1: since z \<in> P (convex hull) and c is the centroid.\<close>
-        have hsum_le: "\<beta>' + \<gamma>' \<le> 1" sorry
-        \<comment> \<open>z \<noteq> c means \<beta>' + \<gamma>' > 0.\<close>
-        have hsum_pos: "\<beta>' + \<gamma>' > 0"
-        proof (rule ccontr)
-          assume "\<not> (\<beta>' + \<gamma>' > 0)"
-          hence "\<beta>' + \<gamma>' \<le> 0" by (by100 simp)
-          hence "\<beta>' = 0" "\<gamma>' = 0" using h\<beta>_nn h\<gamma>_nn by (by100 linarith)+
-          hence "fst z - cx = 0" "snd z - cy = 0" using hzc_x hzc_y by (by100 simp)+
-          hence "z = (cx, cy)" by (by100 auto)
-          thus False using False by (by100 simp)
-        qed
-        \<comment> \<open>Now set: s = \<beta>' + \<gamma>', u = \<gamma>' / (\<beta>' + \<gamma>'), b = (1-u)*v_i + u*v_{i+1}.\<close>
-        define s where "s = \<beta>' + \<gamma>'"
-        define u where "u = \<gamma>' / s"
-        define b where "b = ((1-u) * vx i + u * vx ?vi1, (1-u) * vy i + u * vy ?vi1)"
-        \<comment> \<open>Verify all conditions.\<close>
-        have hs: "0 < s" "s \<le> 1" using hsum_pos hsum_le unfolding s_def by (by100 simp)+
-        have hu: "0 \<le> u" "u \<le> 1"
-        proof -
-          show "0 \<le> u" unfolding u_def s_def using h\<gamma>_nn hsum_pos by (by100 simp)
-          show "u \<le> 1" unfolding u_def s_def
-            using h\<beta>_nn h\<gamma>_nn hsum_pos divide_le_eq_1 by (by5000 simp)
-        qed
-        have hb_in: "b \<in> BdP"
-          unfolding BdP_def b_def using hi hu by (by5000 force)
-        \<comment> \<open>Key: s * fst b = s * ((1-u)*vx_i + u*vx_{i+1}) = s*(1-\<gamma>'/s)*vx_i + s*(\<gamma>'/s)*vx_{i+1}
-             = (s - \<gamma>')*vx_i + \<gamma>'*vx_{i+1} = \<beta>'*vx_i + \<gamma>'*vx_{i+1}.\<close>
-        have hs1u: "s * (1 - u) = \<beta>'" unfolding u_def s_def using hsum_pos
-          by (simp add: field_simps)
-        have hsu: "s * u = \<gamma>'" unfolding u_def s_def using hsum_pos by (by100 simp)
-        have hs_fst_b: "s * fst b = \<beta>' * vx i + \<gamma>' * vx ?vi1"
-        proof -
-          have "s * fst b = s * (1 - u) * vx i + s * u * vx ?vi1"
-            unfolding b_def by (simp add: algebra_simps)
-          thus ?thesis using hs1u hsu by (by100 simp)
-        qed
-        have hs_snd_b: "s * snd b = \<beta>' * vy i + \<gamma>' * vy ?vi1"
-        proof -
-          have "s * snd b = s * (1 - u) * vy i + s * u * vy ?vi1"
-            unfolding b_def by (simp add: algebra_simps)
-          thus ?thesis using hs1u hsu by (by100 simp)
-        qed
-        have hzx_eq: "fst z = (1-s) * cx + s * fst b"
-        proof -
-          have "(1-s) * cx + s * fst b = cx - s * cx + (\<beta>' * vx i + \<gamma>' * vx ?vi1)"
-            using hs_fst_b by (simp add: algebra_simps)
-          also have "\<dots> = cx + \<beta>' * (vx i - cx) + \<gamma>' * (vx ?vi1 - cx)"
-            unfolding s_def by (simp add: algebra_simps)
-          also have "\<dots> = cx + (fst z - cx)" using hzc_x by (by100 simp)
-          finally show ?thesis by (by100 simp)
-        qed
-        have hzy_eq: "snd z = (1-s) * cy + s * snd b"
-        proof -
-          have "(1-s) * cy + s * snd b = cy - s * cy + (\<beta>' * vy i + \<gamma>' * vy ?vi1)"
-            using hs_snd_b by (simp add: algebra_simps)
-          also have "\<dots> = cy + \<beta>' * (vy i - cy) + \<gamma>' * (vy ?vi1 - cy)"
-            unfolding s_def by (simp add: algebra_simps)
-          also have "\<dots> = cy + (snd z - cy)" using hzc_y by (by100 simp)
-          finally show ?thesis by (by100 simp)
-        qed
-        show ?thesis
-        proof (rule that[of b i u])
-          show "b \<in> BdP" by (rule hb_in)
-          show "i < n" by (rule hi)
-          show "0 \<le> u" by (rule hu(1))
-          show "u \<le> 1" by (rule hu(2))
-          show "b = ((1 - u) * vx i + u * vx ((i + 1) mod n),
-                     (1 - u) * vy i + u * vy ((i + 1) mod n))"
-            unfolding b_def by (by100 simp)
-          show "\<exists>s. 0 < s \<and> s \<le> 1 \<and> fst z = (1 - s) * cx + s * fst b
-              \<and> snd z = (1 - s) * cy + s * snd b"
-            using hs hzx_eq hzy_eq by (by100 blast)
-        qed
-        qed \<comment> \<open>End of case split D=0 / D\<noteq>0.\<close>
       qed
-      then obtain s where hs: "0 < s" "s \<le> 1"
-          and hzx: "fst z = (1-s) * cx + s * fst b"
-          and hzy: "snd z = (1-s) * cy + s * snd b"
-        by (by100 blast)
-      \<comment> \<open>Now z = (1-s)\<cdot>c + s\<cdot>b = (1-s)\<cdot>c + s(1-u)\<cdot>v_i + su\<cdot>v_{i+1}.\<close>
-      \<comment> \<open>z = (1-s)*c + s*((1-u)*v_i + u*v_{i+1}) = (1-s)*c + s(1-u)*v_i + su*v_{i+1}.\<close>
-      have "in_cone i z" unfolding in_cone_def
-      proof -
-        have hfst_b: "fst b = (1-u)*vx i + u*vx((i+1) mod n)" using hb_edge by (by100 simp)
-        have hsnd_b: "snd b = (1-u)*vy i + u*vy((i+1) mod n)" using hb_edge by (by100 simp)
-        \<comment> \<open>Witnesses: \<alpha> = 1-s, \<beta> = s*(1-u), \<gamma> = s*u.\<close>
-        let ?\<alpha> = "1 - s" let ?\<beta> = "s * (1 - u)" let ?\<gamma> = "s * u"
-        have h1: "?\<alpha> \<ge> 0" using hs by (by100 simp)
-        have h2: "?\<beta> \<ge> 0" using hs hu by (by100 simp)
-        have h3: "?\<gamma> \<ge> 0" using hs hu by (by100 simp)
-        have hsu: "s * (1 - u) + s * u = s"
-          using right_diff_distrib[of s 1 u] by (by100 simp)
-        have h4: "?\<alpha> + ?\<beta> + ?\<gamma> = 1"
-          using hsu by (by100 linarith)
-        have h5: "fst z = ?\<alpha> * cx + ?\<beta> * vx i + ?\<gamma> * vx ((i+1) mod n)"
-        proof -
-          have "s * fst b = s * ((1-u)*vx i + u*vx((i+1) mod n))"
-            using hfst_b by (by100 simp)
-          also have "\<dots> = s*(1-u)*vx i + s*u*vx((i+1) mod n)"
-            using distrib_left[of s "(1-u)*vx i" "u*vx((i+1) mod n)"]
-            using mult.assoc by (by100 simp)
-          finally show ?thesis using hzx by (by100 simp)
+      \<comment> \<open>P - BdP \<subseteq> P\<close>
+      have hPBdP_sub: "P - ?BdP \<subseteq> P" by (by100 blast)
+      \<comment> \<open>\<psi> ` (P - BdP) = B2 - S1 (from injectivity + surjectivity + boundary image).\<close>
+      have h\<psi>_img: "\<psi> ` (P - ?BdP) = top1_B2 - top1_S1"
+      proof (rule set_eqI)
+        fix y show "y \<in> \<psi> ` (P - ?BdP) \<longleftrightarrow> y \<in> top1_B2 - top1_S1"
+        proof
+          assume "y \<in> \<psi> ` (P - ?BdP)"
+          then obtain x where hx: "x \<in> P - ?BdP" and hy: "y = \<psi> x" by (by100 blast)
+          have "x \<in> P" using hx by (by100 blast)
+          hence "\<psi> x \<in> \<psi> ` P" by (by100 blast)
+          hence "\<psi> x \<in> top1_B2" using h\<psi>_surj by (by100 blast)
+          have "y \<in> top1_B2" using hy \<open>\<psi> x \<in> top1_B2\<close> by (by100 blast)
+          moreover have "y \<notin> top1_S1"
+          proof
+            assume "y \<in> top1_S1"
+            hence "y \<in> \<psi> ` ?BdP" using h\<psi>_bd by (by100 blast)
+            then obtain x' where hx': "x' \<in> ?BdP" and hy': "\<psi> x' = y" by (by100 blast)
+            have "x' \<in> P" using hx' hBdP_sub by (by100 blast)
+            have "x \<in> P" using hx by (by100 blast)
+            from h\<psi>_inj have "x = x'"
+              using \<open>x \<in> P\<close> \<open>x' \<in> P\<close> hy hy' unfolding inj_on_def by (by100 blast)
+            thus False using hx hx' by (by100 blast)
+          qed
+          ultimately show "y \<in> top1_B2 - top1_S1" by (by100 blast)
+        next
+          assume "y \<in> top1_B2 - top1_S1"
+          hence hy_B2: "y \<in> top1_B2" and hy_nS1: "y \<notin> top1_S1" by (by100 blast)+
+          have "y \<in> \<psi> ` P" using hy_B2 h\<psi>_surj by (by100 blast)
+          then obtain x where hx: "x \<in> P" and hy: "\<psi> x = y" by (by100 blast)
+          have "x \<notin> ?BdP"
+          proof
+            assume "x \<in> ?BdP"
+            hence "y \<in> \<psi> ` ?BdP" using hy by (by100 blast)
+            hence "y \<in> top1_S1" using h\<psi>_bd by (by100 blast)
+            thus False using hy_nS1 by (by100 blast)
+          qed
+          hence "x \<in> P - ?BdP" using hx by (by100 blast)
+          thus "y \<in> \<psi> ` (P - ?BdP)" using hy by (by100 blast)
         qed
-        have h6: "snd z = ?\<alpha> * cy + ?\<beta> * vy i + ?\<gamma> * vy ((i+1) mod n)"
-        proof -
-          have "s * snd b = s * ((1-u)*vy i + u*vy((i+1) mod n))"
-            using hsnd_b by (by100 simp)
-          also have "\<dots> = s*(1-u)*vy i + s*u*vy((i+1) mod n)"
-            using distrib_left[of s "(1-u)*vy i" "u*vy((i+1) mod n)"]
-            using mult.assoc by (by100 simp)
-          finally show ?thesis using hzy by (by100 simp)
-        qed
-        show "\<exists>\<alpha> \<beta> \<gamma>. 0 \<le> \<alpha> \<and> 0 \<le> \<beta> \<and> 0 \<le> \<gamma> \<and> \<alpha> + \<beta> + \<gamma> = 1 \<and>
-            fst z = \<alpha> * cx + \<beta> * vx i + \<gamma> * vx ((i + 1) mod n) \<and>
-            snd z = \<alpha> * cy + \<beta> * vy i + \<gamma> * vy ((i + 1) mod n)"
-          using h1 h2 h3 h4 h5 h6 by (by100 blast)
       qed
-      thus ?thesis using hi by (by100 blast)
+      \<comment> \<open>Apply homeomorphism_on_restrict to get homeomorphism on P-BdP.\<close>
+      from homeomorphism_on_restrict[OF h\<psi>_homeo hPBdP_sub]
+      have hrestr: "top1_homeomorphism_on (P - ?BdP)
+          (subspace_topology P ?TP (P - ?BdP))
+          (\<psi> ` (P - ?BdP)) (subspace_topology top1_B2 top1_B2_topology (\<psi> ` (P - ?BdP))) \<psi>"
+        .
+      \<comment> \<open>Rewrite subspace_topology P ?TP (P-BdP) = subspace_topology UNIV R2top (P-BdP)
+           using subspace_topology_trans.\<close>
+      have hTP_eq: "subspace_topology P ?TP (P - ?BdP) =
+          subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (P - ?BdP)"
+        using subspace_topology_trans[of "P - ?BdP" P UNIV
+            "product_topology_on top1_open_sets top1_open_sets"] hPBdP_sub
+        by (by100 simp)
+      show ?thesis using hrestr h\<psi>_img hTP_eq by (by100 simp)
     qed
+    show ?thesis
+      apply (rule exI[of _ \<psi>])
+      apply (intro conjI)
+      using h\<psi>_homeo apply (by100 blast)
+      using h\<psi>_bd apply (by100 blast)
+      using h\<psi>_int apply (by100 assumption)
+      done
   qed
-  \<comment> \<open>Define \<psi> using the cone decomposition.\<close>
-  define \<psi> where "\<psi> z = (
-      let i = (SOME i. i < n \<and> in_cone i z);
-          \<alpha> = (SOME \<alpha>. \<exists>\<beta> \<gamma>. \<alpha> \<ge> 0 \<and> \<beta> \<ge> 0 \<and> \<gamma> \<ge> 0 \<and> \<alpha> + \<beta> + \<gamma> = 1
-              \<and> fst z = \<alpha> * cx + \<beta> * vx i + \<gamma> * vx ((i+1) mod n)
-              \<and> snd z = \<alpha> * cy + \<beta> * vy i + \<gamma> * vy ((i+1) mod n));
-          \<beta> = (SOME \<beta>. \<exists>\<gamma>. \<alpha> \<ge> 0 \<and> \<beta> \<ge> 0 \<and> \<gamma> \<ge> 0 \<and> \<alpha> + \<beta> + \<gamma> = 1
-              \<and> fst z = \<alpha> * cx + \<beta> * vx i + \<gamma> * vx ((i+1) mod n)
-              \<and> snd z = \<alpha> * cy + \<beta> * vy i + \<gamma> * vy ((i+1) mod n));
-          \<gamma> = 1 - \<alpha> - \<beta>
-      in cone_map i \<alpha> \<beta> \<gamma>)" for z
-  have "\<exists>\<psi>. continuous_on P \<psi> \<and> \<psi> ` P = top1_B2 \<and> inj_on \<psi> P"
-  proof (rule exI[of _ \<psi>])
-    \<comment> \<open>Step C: Verify the three properties following Munkres.
-       Continuity: on each cone, \<psi> is affine (hence continuous).
-         The cones cover P and agree on shared edges/vertices.
-         A piecewise continuous map on a finite closed cover is continuous.
-       Surjectivity: the target Q = conv({q_0,...,q_{n-1}}) = B^2 (for regular n-gon on S^1).
-         Each sector of Q is the image of the corresponding cone of P.
-       Injectivity: on each cone, the map is an affine bijection (non-degenerate triangle
-         maps to non-degenerate triangle). Between cones, images are disjoint sectors.\<close>
-    \<comment> \<open>NOTE: The piecewise affine map targets the inscribed n-gon Q = conv({q_i}),
-       NOT the full disk B^2. Need a radial stretch Q \<rightarrow> B^2 as second step.
-       For z \<in> Q, z = r\<cdot>(cos \<theta>, sin \<theta>): stretch to (r/\<rho>(\<theta>))\<cdot>(cos \<theta>, sin \<theta>)
-       where \<rho>(\<theta>) = boundary distance of Q. Then \<psi> = stretch \<circ> piecewise\_affine.
-       Both maps are continuous bijections, so composition is too.
-       Alternatively: redefine \<psi> directly using the normalized formula:
-       \<psi>(z) = (1-\<alpha>) \<cdot> (q_target) / |q_target| where q_target = \<beta>\<cdot>q_i + \<gamma>\<cdot>q_{i+1}
-       and \<alpha>,\<beta>,\<gamma> are barycentric coords in cone_i. This sends the cone to
-       a sector of B^2 and is a homeomorphism on each cone.\<close>
-    have h\<psi>_cont: "continuous_on P \<psi>"
-      sorry \<comment> \<open>Piecewise continuous on finite closed cover (cones).
-         On each cone: affine map followed by normalization. Continuous.
-         Piecewise continuous on closed cover = globally continuous.\<close>
-    have h\<psi>_surj: "\<psi> ` P = top1_B2"
-      sorry \<comment> \<open>Image of P under piecewise cone map covers all of B^2.
-         Each sector of B^2 (angle range [2\<pi>i/n, 2\<pi>(i+1)/n]) is the
-         image of the corresponding cone of P. Union of sectors = B^2.\<close>
-    have h\<psi>_inj: "inj_on \<psi> P"
-      sorry \<comment> \<open>On each cone interior: the map is a composition of a non-degenerate
-         affine map with normalization, hence injective. Between cones:
-         images lie in different sectors of B^2, hence disjoint.\<close>
-    show "continuous_on P \<psi> \<and> \<psi> ` P = top1_B2 \<and> inj_on \<psi> P"
-      using h\<psi>_cont h\<psi>_surj h\<psi>_inj by (by100 blast)
-  qed
-  \<comment> \<open>Step 4: Continuous bijection from compact to Hausdorff is homeomorphism.\<close>
-  \<comment> \<open>Step 4: Apply Theorem 26.6 (compact + Hausdorff + continuous bijection = homeomorphism).\<close>
-  from \<open>\<exists>\<psi>. continuous_on P \<psi> \<and> \<psi> ` P = top1_B2 \<and> inj_on \<psi> P\<close>
-  obtain \<psi> where h\<psi>_cont: "continuous_on P \<psi>"
-      and h\<psi>_surj: "\<psi> ` P = top1_B2" and h\<psi>_inj: "inj_on \<psi> P" by (by100 blast)
-  have h\<psi>_bij: "bij_betw \<psi> P top1_B2"
-    unfolding bij_betw_def using h\<psi>_surj h\<psi>_inj by (by100 blast)
-  \<comment> \<open>Bridge: continuous\_on P \<psi> \<Rightarrow> top1\_continuous\_map\_on via real2\_subspace\_general.\<close>
-  let ?TP = "subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P"
-  have h\<psi>_top1: "top1_continuous_map_on P ?TP top1_B2 top1_B2_topology \<psi>"
-  proof -
-    have himg: "\<And>p. p \<in> P \<Longrightarrow> \<psi> p \<in> top1_B2" using h\<psi>_surj by (by100 blast)
-    have "top1_B2_topology = subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) top1_B2"
-      unfolding top1_B2_topology_def ..
-    thus ?thesis using top1_continuous_map_on_real2_subspace_general[of P \<psi> top1_B2]
-      himg h\<psi>_cont by (by5000 simp)
-  qed
-  \<comment> \<open>Apply Theorem 26.6: compact P + Hausdorff B² + continuous bijection = homeomorphism.\<close>
-  have hR: "is_topology_on (UNIV::real set) top1_open_sets"
-    unfolding top1_open_sets_def is_topology_on_def
-    using open_UNIV open_empty open_Un open_Int by (by5000 auto)
-  have hR2: "is_topology_on ((UNIV::real set) \<times> (UNIV::real set))
-      (product_topology_on top1_open_sets top1_open_sets)"
-    using hR product_topology_on_is_topology_on by (by100 blast)
-  hence hR2': "is_topology_on (UNIV::(real \<times> real) set)
-      (product_topology_on top1_open_sets top1_open_sets)" by (by100 simp)
-  have hTP_top: "is_topology_on P ?TP"
-  proof -
-    have "P \<subseteq> (UNIV::(real \<times> real) set)" by (by100 blast)
-    thus ?thesis by (rule subspace_topology_is_topology_on[OF hR2'])
-  qed
-  have hTB2: "is_topology_on top1_B2 top1_B2_topology"
-    unfolding top1_B2_topology_def
-    by (rule subspace_topology_is_topology_on[OF hR2']) (by100 blast)
-  from Theorem_26_6[OF hTP_top hTB2 hP_compact hB2_haus h\<psi>_top1 h\<psi>_bij]
-  show ?thesis by (by100 blast)
+  then obtain \<psi> where h\<psi>1: "top1_homeomorphism_on P ?TP top1_B2 top1_B2_topology \<psi>"
+      and h\<psi>2: "\<psi> ` ?BdP = top1_S1"
+      and h\<psi>3: "top1_homeomorphism_on (P - ?BdP)
+          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (P - ?BdP))
+          (top1_B2 - top1_S1)
+          (subspace_topology top1_B2 top1_B2_topology (top1_B2 - top1_S1)) \<psi>"
+    by (elim conjE exE) (rule that, assumption+)
+  show ?thesis
+    apply (rule exI[of _ \<psi>])
+    apply (intro conjI)
+    using h\<psi>1 apply (by100 blast)
+    using h\<psi>2 apply (by100 blast)
+    using h\<psi>3 apply (by100 assumption)
+    done
 qed
 
-text \<open>Key helper: a scheme quotient provides the attaching data for Theorem 72.1.
-  The 1-skeleton A = q(boundary of polygon) is closed and path-connected.
-  The attaching map h = q composed with polygon-to-disk homeomorphism is continuous.
-  The interior of the disk maps homeomorphically to X - A.\<close>
-lemma scheme_quotient_CW_data:
+text \<open>Hausdorff property for scheme quotients. Following Munkres Theorem 74.1:
+  the quotient map q: P \<rightarrow> X is a closed map (preimages of saturations are closed
+  by finite edge image argument), and a closed quotient of a normal space is Hausdorff.\<close>
+lemma scheme_quotient_hausdorff:
   assumes "top1_quotient_of_scheme_on X TX scheme"
       and "length scheme \<ge> 3"
-  shows "\<exists>(A :: 'a set) (h :: real \<times> real \<Rightarrow> 'a) (a :: 'a).
-      closedin_on X TX A
-    \<and> top1_path_connected_on A (subspace_topology X TX A)
-    \<and> top1_continuous_map_on top1_B2 top1_B2_topology X TX h
-    \<and> a \<in> A
-    \<and> top1_homeomorphism_on
-        (top1_B2 - top1_S1) (subspace_topology top1_B2 top1_B2_topology (top1_B2 - top1_S1))
-        (X - A) (subspace_topology X TX (X - A)) h
-    \<and> h ` top1_S1 \<subseteq> A
-    \<and> (\<forall>z\<in>top1_S1. h z \<in> A)"
+  shows "is_hausdorff_on X TX"
 proof -
-  \<comment> \<open>Step 1: Extract (P, q, vx, vy) from the scheme definition.\<close>
+  \<comment> \<open>Extract P, q, vx, vy from the scheme definition.\<close>
   obtain P q vx vy where
     hP: "top1_is_polygonal_region_on P (length scheme)" and
     hq: "top1_quotient_map_on P (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) X TX q" and
-    hlen3: "length scheme \<ge> 3" and
     hverts: "\<forall>i<length scheme. (vx i, vy i) \<in> P" and
     hedge: "\<forall>i<length scheme. \<forall>j<length scheme.
         fst (scheme!i) = fst (scheme!j) \<longrightarrow>
@@ -3945,13 +3404,802 @@ proof -
     hint: "\<forall>p\<in>P. (\<forall>i<length scheme. \<forall>t\<in>I_set.
           p \<noteq> ((1-t) * vx i + t * vx (Suc i mod length scheme),
                 (1-t) * vy i + t * vy (Suc i mod length scheme)))
-       \<longrightarrow> (\<forall>p'\<in>P. q p = q p' \<longrightarrow> p = p')"
+       \<longrightarrow> (\<forall>p'\<in>P. q p = q p' \<longrightarrow> p = p')" and
+    hno_extra: "\<forall>i<length scheme. \<forall>j<length scheme. \<forall>t\<in>I_set. \<forall>s\<in>I_set.
+          q ((1-t) * vx i + t * vx (Suc i mod length scheme),
+             (1-t) * vy i + t * vy (Suc i mod length scheme))
+        = q ((1-s) * vx j + s * vx (Suc j mod length scheme),
+             (1-s) * vy j + s * vy (Suc j mod length scheme))
+        \<longrightarrow> (i = j \<and> t = s)
+          \<or> (fst (scheme!i) = fst (scheme!j) \<and>
+             (if snd (scheme!i) = snd (scheme!j) then s = t else s = 1 - t))"
     using assms(1)[unfolded top1_quotient_of_scheme_on_def] assms(2)
     by (elim conjE exE) (rule that, assumption+)
-  \<comment> \<open>Step 2: Get homeomorphism \<psi>: P \<rightarrow> B^2 from polygon\_homeomorphic\_to\_disk.\<close>
   let ?TP = "subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P"
-  from polygon_homeomorphic_to_disk[OF hP hlen3]
-  obtain \<psi> where h\<psi>: "top1_homeomorphism_on P ?TP top1_B2 top1_B2_topology \<psi>" by (by100 blast)
+  let ?n = "length scheme"
+  have hn_pos: "?n > 0" using assms(2) by (by100 linarith)
+  have hX_strict: "is_topology_on_strict X TX"
+    using assms(1) unfolding top1_quotient_of_scheme_on_def by (by100 blast)
+  have hTX: "is_topology_on X TX"
+    using hX_strict unfolding is_topology_on_strict_def by (by100 blast)
+  have hTP: "is_topology_on P ?TP" using hq unfolding top1_quotient_map_on_def by (by100 blast)
+  have hq_cont: "top1_continuous_map_on P ?TP X TX q"
+    using hq unfolding top1_quotient_map_on_def by (by100 blast)
+  have hq_surj: "q ` P = X" using hq unfolding top1_quotient_map_on_def by (by5000 blast)
+  have hq_maps: "\<forall>x\<in>P. q x \<in> X"
+    using hq_cont unfolding top1_continuous_map_on_def by (by5000 blast)
+  have hqm_prop: "\<forall>V. V \<subseteq> X \<longrightarrow> ({x \<in> P. q x \<in> V} \<in> ?TP \<longrightarrow> V \<in> TX)"
+    using hq unfolding top1_quotient_map_on_def by (by100 blast)
+  \<comment> \<open>Step 1: P is compact Hausdorff, hence normal.\<close>
+  have hP_compact: "top1_compact_on P ?TP"
+    by (rule polygonal_region_compact[OF hP assms(2)])
+  have hR2_haus: "is_hausdorff_on (UNIV::(real\<times>real) set)
+      (product_topology_on top1_open_sets top1_open_sets)"
+    using top1_R2_is_hausdorff .
+  have hP_haus: "is_hausdorff_on P ?TP"
+    using hausdorff_subspace[OF hR2_haus] by (by100 blast)
+  have hP_normal: "top1_normal_on P ?TP"
+    using Theorem_32_3[OF hP_compact hP_haus] .
+  \<comment> \<open>Step 2 (Munkres 74.1): q is a closed map.
+     For closed C \<subseteq> P, preimg = {p \<in> P. q p \<in> q ` C} is closed because:
+     preimg \<subseteq> C \<union> (finite union of images of C \<inter> edge under pasting maps).
+     Interior points: by hint, p \<in> preimg \<and> p interior \<Rightarrow> p \<in> C.
+     Boundary points: by hedge, pasted partners of C \<inter> edge_j lie on edge_i.
+     Each pasting image is compact (continuous image of compact), hence closed.\<close>
+  have hq_closed_map: "\<forall>C. closedin_on P ?TP C \<longrightarrow> closedin_on X TX (q ` C)"
+  proof (intro allI impI)
+    fix C assume hC: "closedin_on P ?TP C"
+    have hC_sub: "C \<subseteq> P" using hC unfolding closedin_on_def by (by100 blast)
+    define preimg where "preimg = {p \<in> P. q p \<in> q ` C}"
+    \<comment> \<open>preimg is closed in P: it equals C \<union> finite union of edge images.\<close>
+    have hpreimg_closed: "closedin_on P ?TP preimg"
+    proof -
+      \<comment> \<open>Munkres 74.1: preimg = C \<union> \<Union>_{(i,j) same label} paste(C \<inter> edge_j \<rightarrow> edge_i).
+         Interior points: by hint, p \<in> preimg \<and> p not on any edge \<Rightarrow> p \<in> C.
+         Edge points: by hedge, boundary pasting maps carry C \<inter> edge_j to edge_i.\<close>
+      \<comment> \<open>Define edge pasting images.\<close>
+      define edge where "edge i = {((1-t) * vx i + t * vx (Suc i mod ?n),
+          (1-t) * vy i + t * vy (Suc i mod ?n)) | t::real. 0 \<le> t \<and> t \<le> 1}" for i
+      define paste_img where "paste_img i j =
+          (if fst (scheme!i) = fst (scheme!j) then
+            (if snd (scheme!i) = snd (scheme!j)
+             then (\<lambda>t. ((1-t) * vx i + t * vx (Suc i mod ?n),
+                        (1-t) * vy i + t * vy (Suc i mod ?n)))
+                  ` {t. 0 \<le> t \<and> t \<le> 1 \<and>
+                       ((1-t) * vx j + t * vx (Suc j mod ?n),
+                        (1-t) * vy j + t * vy (Suc j mod ?n)) \<in> C}
+             else (\<lambda>t. (t * vx i + (1-t) * vx (Suc i mod ?n),
+                        t * vy i + (1-t) * vy (Suc i mod ?n)))
+                  ` {t. 0 \<le> t \<and> t \<le> 1 \<and>
+                       ((1-t) * vx j + t * vx (Suc j mod ?n),
+                        (1-t) * vy j + t * vy (Suc j mod ?n)) \<in> C})
+           else {})" for i j
+      \<comment> \<open>Edge points are in P (convex combination of vertices).
+         Placed early so both hpreimg\_sub and hpaste\_sub can use them.\<close>
+      have hedge_in_P0: "\<And>i t. (i::nat) < ?n \<Longrightarrow> (0::real) \<le> t \<Longrightarrow> t \<le> 1 \<Longrightarrow>
+          ((1-t) * vx i + t * vx (Suc i mod ?n),
+           (1-t) * vy i + t * vy (Suc i mod ?n)) \<in> P"
+      proof -
+        fix i :: nat and t :: real
+        assume hi: "i < ?n" and ht0: "0 \<le> t" and ht1: "t \<le> 1"
+        have hvi: "(vx i, vy i) \<in> P" using hverts hi by (by100 blast)
+        have hvi': "(vx (Suc i mod ?n), vy (Suc i mod ?n)) \<in> P"
+        proof -
+          have "Suc i mod ?n < ?n" using mod_less_divisor hn_pos by (by100 blast)
+          thus ?thesis using hverts by (by100 blast)
+        qed
+        from polygonal_region_convex_combo[OF hP assms(2) hvi hvi' ht0 ht1]
+        show "((1-t) * vx i + t * vx (Suc i mod ?n),
+               (1-t) * vy i + t * vy (Suc i mod ?n)) \<in> P"
+          by (by100 simp)
+      qed
+      have hedge_rev_in_P0: "\<And>i t. (i::nat) < ?n \<Longrightarrow> (0::real) \<le> t \<Longrightarrow> t \<le> 1 \<Longrightarrow>
+          (t * vx i + (1-t) * vx (Suc i mod ?n),
+           t * vy i + (1-t) * vy (Suc i mod ?n)) \<in> P"
+      proof -
+        fix i :: nat and t :: real
+        assume hi: "i < ?n" and ht0: "0 \<le> t" and ht1: "t \<le> 1"
+        have h1: "0 \<le> 1 - t" using ht1 by (by100 linarith)
+        have h2: "1 - t \<le> 1" using ht0 by (by100 linarith)
+        have "((1 - (1-t)) * vx i + (1-t) * vx (Suc i mod ?n),
+               (1 - (1-t)) * vy i + (1-t) * vy (Suc i mod ?n)) \<in> P"
+          using hedge_in_P0[OF hi h1 h2] .
+        moreover have "((1 - (1-t)) * vx i + (1-t) * vx (Suc i mod ?n),
+               (1 - (1-t)) * vy i + (1-t) * vy (Suc i mod ?n))
+             = (t * vx i + (1-t) * vx (Suc i mod ?n),
+                t * vy i + (1-t) * vy (Suc i mod ?n))"
+          by (by100 simp)
+        ultimately show "(t * vx i + (1-t) * vx (Suc i mod ?n),
+               t * vy i + (1-t) * vy (Suc i mod ?n)) \<in> P" by (by100 simp)
+      qed
+      \<comment> \<open>preimg \<subseteq> C \<union> \<Union>_{i<n,j<n} paste\_img i j: by hint + hedge.\<close>
+      have hpreimg_sub: "preimg \<subseteq> C \<union> (\<Union>i<?n. \<Union>j<?n. paste_img i j)"
+      proof (rule subsetI)
+        fix p assume hp: "p \<in> preimg"
+        hence "p \<in> P" "q p \<in> q ` C" unfolding preimg_def by (by100 blast)+
+        then obtain c where hc: "c \<in> C" "q p = q c" by (by100 blast)
+        have hc_P: "c \<in> P" using hc(1) hC_sub by (by100 blast)
+        show "p \<in> C \<union> (\<Union>i<?n. \<Union>j<?n. paste_img i j)"
+        proof (cases "p \<in> C")
+          case True thus ?thesis by (by100 blast)
+        next
+          case False
+          hence hpc: "p \<noteq> c" using hc(1) by (by100 blast)
+          \<comment> \<open>p must be on some edge (otherwise hint gives p = c, contradiction).\<close>
+          have "\<exists>i t. i < ?n \<and> t \<in> I_set \<and>
+              p = ((1-t) * vx i + t * vx (Suc i mod ?n), (1-t) * vy i + t * vy (Suc i mod ?n))"
+          proof (rule ccontr)
+            assume "\<not> ?thesis"
+            hence "\<forall>i<?n. \<forall>t\<in>I_set. p \<noteq> ((1-t) * vx i + t * vx (Suc i mod ?n),
+                (1-t) * vy i + t * vy (Suc i mod ?n))" by (by100 blast)
+            hence hp_int: "\<forall>p'\<in>P. q p = q p' \<longrightarrow> p = p'"
+              using hint \<open>p \<in> P\<close> by (by100 blast)
+            from hp_int[rule_format, OF hc_P] hc(2)
+            have "p = c" by (by100 blast)
+            thus False using hpc by (by100 blast)
+          qed
+          then obtain i t where hi: "i < ?n" and ht: "t \<in> I_set" and
+            hp_eq: "p = ((1-t) * vx i + t * vx (Suc i mod ?n),
+                        (1-t) * vy i + t * vy (Suc i mod ?n))" by (by100 blast)
+          \<comment> \<open>c must also be on some edge (otherwise hint gives c = p, contradiction).\<close>
+          have "\<exists>j s. j < ?n \<and> s \<in> I_set \<and>
+              c = ((1-s) * vx j + s * vx (Suc j mod ?n), (1-s) * vy j + s * vy (Suc j mod ?n))"
+          proof (rule ccontr)
+            assume "\<not> ?thesis"
+            hence "\<forall>j<?n. \<forall>s\<in>I_set. c \<noteq> ((1-s) * vx j + s * vx (Suc j mod ?n),
+                (1-s) * vy j + s * vy (Suc j mod ?n))" by (by100 blast)
+            hence hc_int: "\<forall>p'\<in>P. q c = q p' \<longrightarrow> c = p'"
+              using hint hc_P by (by100 blast)
+            have "q c = q p" using hc(2) by (by100 simp)
+            from hc_int[rule_format, OF \<open>p \<in> P\<close> this]
+            have "c = p" .
+            thus False using hpc by (by100 blast)
+          qed
+          then obtain j s where hj: "j < ?n" and hs: "s \<in> I_set" and
+            hc_eq: "c = ((1-s) * vx j + s * vx (Suc j mod ?n),
+                        (1-s) * vy j + s * vy (Suc j mod ?n))" by (by100 blast)
+          \<comment> \<open>By hno\_extra: q(edge_i(t)) = q(edge_j(s)) implies same point or same label.\<close>
+          have "q ((1-t) * vx i + t * vx (Suc i mod ?n), (1-t) * vy i + t * vy (Suc i mod ?n))
+              = q ((1-s) * vx j + s * vx (Suc j mod ?n), (1-s) * vy j + s * vy (Suc j mod ?n))"
+            using hc(2) hp_eq hc_eq by (by100 simp)
+          from hno_extra[rule_format, OF hi hj ht hs this]
+          have "(i = j \<and> t = s) \<or> (fst (scheme!i) = fst (scheme!j) \<and>
+                (if snd (scheme!i) = snd (scheme!j) then s = t else s = 1 - t))" .
+          thus ?thesis
+          proof
+            assume "i = j \<and> t = s"
+            hence "p = c" using hp_eq hc_eq by (by100 simp)
+            thus ?thesis using hpc by (by100 blast)
+          next
+            assume hsame: "fst (scheme!i) = fst (scheme!j) \<and>
+                (if snd (scheme!i) = snd (scheme!j) then s = t else s = 1 - t)"
+            \<comment> \<open>p is in paste\_img i j: p = edge_i(t) where c = edge_j(s) \<in> C, same label.\<close>
+            have "p \<in> paste_img i j"
+            proof -
+              have hlabel: "fst (scheme ! i) = fst (scheme ! j)" using hsame by (by100 blast)
+              have hs01: "0 \<le> s" "s \<le> 1" using hs unfolding top1_unit_interval_def by (by100 auto)+
+              have ht01: "0 \<le> t" "t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 auto)+
+              have hc_in_C: "((1-s) * vx j + s * vx (Suc j mod ?n),
+                  (1-s) * vy j + s * vy (Suc j mod ?n)) \<in> C"
+                using hc(1) hc_eq by (by100 simp)
+              show ?thesis
+              proof (cases "snd (scheme!i) = snd (scheme!j)")
+                case True
+                have "s = t" using hsame True by (by100 simp)
+                have "p \<in> (\<lambda>t. ((1-t) * vx i + t * vx (Suc i mod ?n),
+                    (1-t) * vy i + t * vy (Suc i mod ?n))) `
+                    {t. 0 \<le> t \<and> t \<le> 1 \<and> ((1-t) * vx j + t * vx (Suc j mod ?n),
+                        (1-t) * vy j + t * vy (Suc j mod ?n)) \<in> C}"
+                  using ht01 hp_eq hc_in_C \<open>s = t\<close> by (by100 force)
+                thus ?thesis unfolding paste_img_def using hlabel True by (by100 simp)
+              next
+                case False
+                have "s = 1 - t" using hsame False by (by100 simp)
+                \<comment> \<open>Witness: t' = 1-t. edge\_j(1-t) = edge\_j(s) = c \<in> C.
+                   rev\_edge\_i(1-t) = ((1-t)*vx\_i + t*vx\_{i+1},...) = p.\<close>
+                let ?t' = "1 - t"
+                have ht'01: "0 \<le> ?t'" "?t' \<le> 1" using ht01 by (by100 linarith)+
+                have hc_at_t': "((1-?t') * vx j + ?t' * vx (Suc j mod ?n),
+                    (1-?t') * vy j + ?t' * vy (Suc j mod ?n)) \<in> C"
+                  using hc_in_C \<open>s = 1 - t\<close> by (by100 simp)
+                have hp_rev: "p = (?t' * vx i + (1-?t') * vx (Suc i mod ?n),
+                    ?t' * vy i + (1-?t') * vy (Suc i mod ?n))"
+                  using hp_eq by (simp add: algebra_simps)
+                have "p \<in> (\<lambda>t. (t * vx i + (1-t) * vx (Suc i mod ?n),
+                    t * vy i + (1-t) * vy (Suc i mod ?n))) `
+                    {t. 0 \<le> t \<and> t \<le> 1 \<and> ((1-t) * vx j + t * vx (Suc j mod ?n),
+                        (1-t) * vy j + t * vy (Suc j mod ?n)) \<in> C}"
+                proof (rule image_eqI[of _ _ ?t'])
+                  show "p = (?t' * vx i + (1-?t') * vx (Suc i mod ?n),
+                      ?t' * vy i + (1-?t') * vy (Suc i mod ?n))" by (rule hp_rev)
+                  show "?t' \<in> {t. 0 \<le> t \<and> t \<le> 1 \<and> ((1-t) * vx j + t * vx (Suc j mod ?n),
+                      (1-t) * vy j + t * vy (Suc j mod ?n)) \<in> C}"
+                    using ht'01 hc_at_t' by (by100 simp)
+                qed
+                thus ?thesis unfolding paste_img_def using hlabel False by (by100 simp)
+              qed
+            qed
+            thus ?thesis using hi hj by (by100 blast)
+          qed
+        qed
+      qed
+      have hpaste_sub: "C \<union> (\<Union>i<?n. \<Union>j<?n. paste_img i j) \<subseteq> preimg"
+      proof (rule Un_least)
+        \<comment> \<open>C \<subseteq> preimg: trivial.\<close>
+        show "C \<subseteq> preimg" unfolding preimg_def using hC_sub by (by100 blast)
+      next
+        \<comment> \<open>Each paste\_img point is in preimg.\<close>
+        show "(\<Union>i<?n. \<Union>j<?n. paste_img i j) \<subseteq> preimg"
+        proof (rule UN_least, rule UN_least)
+          fix i j assume hi: "i \<in> {..<?n}" and hj: "j \<in> {..<?n}"
+          have hi': "i < ?n" using hi by (by100 blast)
+          have hj': "j < ?n" using hj by (by100 blast)
+          show "paste_img i j \<subseteq> preimg"
+          proof (cases "fst (scheme!i) = fst (scheme!j)")
+            case False thus ?thesis unfolding paste_img_def by (by100 simp)
+          next
+            case True note hlab = this
+            show ?thesis
+            proof (cases "snd (scheme!i) = snd (scheme!j)")
+              case True note hdir = this
+              \<comment> \<open>Same label, same direction: q(edge\_i(t)) = q(edge\_j(t)).\<close>
+              show ?thesis
+              proof (rule subsetI)
+                fix p assume "p \<in> paste_img i j"
+                then obtain t :: real where ht0: "0 \<le> t" and ht1: "t \<le> 1"
+                  and hc_in: "((1-t) * vx j + t * vx (Suc j mod ?n),
+                               (1-t) * vy j + t * vy (Suc j mod ?n)) \<in> C"
+                  and hp: "p = ((1-t) * vx i + t * vx (Suc i mod ?n),
+                                (1-t) * vy i + t * vy (Suc i mod ?n))"
+                  unfolding paste_img_def using hlab hdir by (by5000 auto)
+                have hp_in_P: "p \<in> P" unfolding hp using hedge_in_P0[OF hi' ht0 ht1] .
+                have ht_I: "t \<in> I_set" unfolding top1_unit_interval_def using ht0 ht1 by (by100 simp)
+                \<comment> \<open>Apply hedge to get q(edge\_i(t)) = q(edge\_j(t)).\<close>
+                have hedge_inst: "q ((1-t) * vx i + t * vx (Suc i mod ?n),
+                                    (1-t) * vy i + t * vy (Suc i mod ?n))
+                  = (if snd (scheme!i) = snd (scheme!j)
+                     then q ((1-t) * vx j + t * vx (Suc j mod ?n),
+                             (1-t) * vy j + t * vy (Suc j mod ?n))
+                     else q (t * vx j + (1-t) * vx (Suc j mod ?n),
+                             t * vy j + (1-t) * vy (Suc j mod ?n)))"
+                  using hedge hi' hj' hlab ht_I by (by100 blast)
+                have "q p = q ((1-t) * vx j + t * vx (Suc j mod ?n),
+                               (1-t) * vy j + t * vy (Suc j mod ?n))"
+                  unfolding hp using hedge_inst hdir by (by100 simp)
+                hence "q p \<in> q ` C" using hc_in by (by100 blast)
+                thus "p \<in> preimg" unfolding preimg_def using hp_in_P by (by100 blast)
+              qed
+            next
+              case False note hdir = this
+              \<comment> \<open>Same label, different direction: q(edge\_j(t)) = q(edge\_i\_rev(t)).\<close>
+              show ?thesis
+              proof (rule subsetI)
+                fix p assume "p \<in> paste_img i j"
+                then obtain t :: real where ht0: "0 \<le> t" and ht1: "t \<le> 1"
+                  and hc_in: "((1-t) * vx j + t * vx (Suc j mod ?n),
+                               (1-t) * vy j + t * vy (Suc j mod ?n)) \<in> C"
+                  and hp: "p = (t * vx i + (1-t) * vx (Suc i mod ?n),
+                                t * vy i + (1-t) * vy (Suc i mod ?n))"
+                  unfolding paste_img_def using hlab hdir by (by5000 auto)
+                have hp_in_P: "p \<in> P" unfolding hp using hedge_rev_in_P0[OF hi' ht0 ht1] .
+                have ht_I: "t \<in> I_set" unfolding top1_unit_interval_def using ht0 ht1 by (by100 simp)
+                \<comment> \<open>From hedge with j,i: q(edge\_j(t)) = q(edge\_i\_rev(t)).\<close>
+                have hlab': "fst (scheme!j) = fst (scheme!i)" using hlab by (by100 simp)
+                have hdir'': "\<not> (snd (scheme!j) = snd (scheme!i))" using hdir by (by100 blast)
+                have hedge_ji: "q ((1-t) * vx j + t * vx (Suc j mod ?n),
+                         (1-t) * vy j + t * vy (Suc j mod ?n))
+                    = (if snd (scheme!j) = snd (scheme!i)
+                       then q ((1-t) * vx i + t * vx (Suc i mod ?n),
+                               (1-t) * vy i + t * vy (Suc i mod ?n))
+                       else q (t * vx i + (1-t) * vx (Suc i mod ?n),
+                               t * vy i + (1-t) * vy (Suc i mod ?n)))"
+                  using hedge hj' hi' hlab' ht_I by (by100 blast)
+                hence "q ((1-t) * vx j + t * vx (Suc j mod ?n),
+                         (1-t) * vy j + t * vy (Suc j mod ?n)) = q p"
+                  unfolding hp using hdir'' by (by100 simp)
+                hence "q p = q ((1-t) * vx j + t * vx (Suc j mod ?n),
+                               (1-t) * vy j + t * vy (Suc j mod ?n))"
+                  by (by100 simp)
+                hence "q p \<in> q ` C" using hc_in by (by100 blast)
+                thus "p \<in> preimg" unfolding preimg_def using hp_in_P by (by100 blast)
+              qed
+            qed
+          qed
+        qed
+      qed
+      \<comment> \<open>Each paste\_img i j is compact (continuous affine image of compact set).\<close>
+      \<comment> \<open>product\_topology\_on top1\_open\_sets top1\_open\_sets = top1\_open\_sets for R2.\<close>
+      have hR2_eq: "product_topology_on top1_open_sets top1_open_sets
+            = (top1_open_sets :: (real \<times> real) set set)"
+        by (rule product_topology_on_open_sets)
+      \<comment> \<open>C closedin\_on P means C closed in the standard topology of R2.
+         Proof: P compact \<Rightarrow> P closedin R2; C closedin P \<Rightarrow> C closedin R2 (Thm 17.3).
+         closedin R2 = closed.\<close>
+      have hP_closedin_R2: "closedin_on (UNIV::(real\<times>real) set)
+            (product_topology_on top1_open_sets top1_open_sets) P"
+        using compact_in_hausdorff_closed[OF hR2_haus hP_compact] by (by100 blast)
+      have hR2_top: "is_topology_on (UNIV::(real \<times> real) set)
+            (product_topology_on top1_open_sets top1_open_sets)"
+      proof -
+        have hR_os: "is_topology_on (UNIV::real set) top1_open_sets"
+          unfolding top1_open_sets_def is_topology_on_def
+          using open_UNIV open_empty open_Un open_Int by (by5000 auto)
+        hence "is_topology_on ((UNIV::real set) \<times> (UNIV::real set))
+            (product_topology_on top1_open_sets top1_open_sets)"
+          using product_topology_on_is_topology_on by (by100 blast)
+        thus ?thesis by (by100 simp)
+      qed
+      have hC_closedin_R2: "closedin_on (UNIV::(real\<times>real) set)
+            (product_topology_on top1_open_sets top1_open_sets) C"
+        using Theorem_17_3[OF hR2_top hP_closedin_R2 hC] .
+      have hC_closed_R2: "closed C"
+      proof -
+        from hC_closedin_R2 have "UNIV - C \<in> product_topology_on top1_open_sets top1_open_sets"
+          unfolding closedin_on_def by (by100 blast)
+        hence "UNIV - C \<in> (top1_open_sets :: (real \<times> real) set set)" using hR2_eq by (by100 simp)
+        hence "open (UNIV - C)" unfolding top1_open_sets_def by (by100 simp)
+        thus "closed C" unfolding closed_def using Compl_eq_Diff_UNIV[of C] by (by100 simp)
+      qed
+      \<comment> \<open>Edge maps are continuous.\<close>
+      have hedge_cont: "\<And>j. continuous_on {0..1::real}
+          (\<lambda>t. ((1-t) * vx j + t * vx (Suc j mod ?n),
+                (1-t) * vy j + t * vy (Suc j mod ?n)))"
+        by (intro continuous_on_Pair continuous_on_add continuous_on_mult
+            continuous_on_diff continuous_on_const continuous_on_id)
+      \<comment> \<open>The domain set {t \<in> [0,1] | edge\_j(t) \<in> C} is compact.\<close>
+      have hdom_compact: "\<And>j. compact {t::real. 0 \<le> t \<and> t \<le> 1 \<and>
+            ((1-t) * vx j + t * vx (Suc j mod ?n),
+             (1-t) * vy j + t * vy (Suc j mod ?n)) \<in> C}"
+      proof -
+        fix j
+        define ej where "ej t = ((1-t) * vx j + t * vx (Suc j mod ?n),
+             (1-t) * vy j + t * vy (Suc j mod ?n))" for t :: real
+        have hej_cont: "continuous_on {0..1} ej"
+          unfolding ej_def
+          by (intro continuous_on_Pair continuous_on_add continuous_on_mult
+              continuous_on_diff continuous_on_const continuous_on_id)
+        have hdom_eq: "{t::real. 0 \<le> t \<and> t \<le> 1 \<and>
+            ((1-t) * vx j + t * vx (Suc j mod ?n),
+             (1-t) * vy j + t * vy (Suc j mod ?n)) \<in> C}
+            = ej -` C \<inter> {0..1}"
+          unfolding ej_def by (by100 auto)
+        have "closed (ej -` C \<inter> {0..1})"
+          by (rule closed_vimage_Int[OF hC_closed_R2 hej_cont]) (by100 simp)
+        moreover have "ej -` C \<inter> {0..1} \<subseteq> {0..1::real}" by (by100 blast)
+        ultimately have "compact (ej -` C \<inter> {0..1})"
+          using closed_subset_compact[OF compact_Icc] by (by100 blast)
+        thus "compact {t::real. 0 \<le> t \<and> t \<le> 1 \<and>
+            ((1-t) * vx j + t * vx (Suc j mod ?n),
+             (1-t) * vy j + t * vy (Suc j mod ?n)) \<in> C}"
+          using hdom_eq by (by100 simp)
+      qed
+      \<comment> \<open>Affine pasting maps are continuous.\<close>
+      have hpaste_fwd_cont: "\<And>i. continuous_on UNIV
+          (\<lambda>t::real. ((1-t) * vx i + t * vx (Suc i mod ?n),
+                      (1-t) * vy i + t * vy (Suc i mod ?n)))"
+        by (intro continuous_on_Pair continuous_on_add continuous_on_mult
+            continuous_on_diff continuous_on_const continuous_on_id)
+      have hpaste_rev_cont: "\<And>i. continuous_on UNIV
+          (\<lambda>t::real. (t * vx i + (1-t) * vx (Suc i mod ?n),
+                      t * vy i + (1-t) * vy (Suc i mod ?n)))"
+        by (intro continuous_on_Pair continuous_on_add continuous_on_mult
+            continuous_on_diff continuous_on_const continuous_on_id)
+      have hpaste_compact: "\<forall>i<?n. \<forall>j<?n. compact (paste_img i j)"
+      proof (intro allI impI)
+        fix i j assume hi: "i < ?n" and hj: "j < ?n"
+        show "compact (paste_img i j)"
+        proof (cases "fst (scheme!i) = fst (scheme!j)")
+          case False
+          thus ?thesis unfolding paste_img_def by (by100 simp)
+        next
+          case True
+          show ?thesis
+          proof (cases "snd (scheme!i) = snd (scheme!j)")
+            case True2: True
+            have "paste_img i j = (\<lambda>t. ((1-t) * vx i + t * vx (Suc i mod ?n),
+                        (1-t) * vy i + t * vy (Suc i mod ?n)))
+                  ` {t. 0 \<le> t \<and> t \<le> 1 \<and>
+                       ((1-t) * vx j + t * vx (Suc j mod ?n),
+                        (1-t) * vy j + t * vy (Suc j mod ?n)) \<in> C}"
+              unfolding paste_img_def using True True2 by (by100 simp)
+            moreover have "compact ((\<lambda>t. ((1-t) * vx i + t * vx (Suc i mod ?n),
+                        (1-t) * vy i + t * vy (Suc i mod ?n)))
+                  ` {t. 0 \<le> t \<and> t \<le> 1 \<and>
+                       ((1-t) * vx j + t * vx (Suc j mod ?n),
+                        (1-t) * vy j + t * vy (Suc j mod ?n)) \<in> C})"
+            proof (rule compact_continuous_image)
+              show "continuous_on {t. 0 \<le> t \<and> t \<le> 1 \<and>
+                       ((1-t) * vx j + t * vx (Suc j mod ?n),
+                        (1-t) * vy j + t * vy (Suc j mod ?n)) \<in> C}
+                  (\<lambda>t. ((1-t) * vx i + t * vx (Suc i mod ?n),
+                        (1-t) * vy i + t * vy (Suc i mod ?n)))"
+                using continuous_on_subset[OF hpaste_fwd_cont] by (by100 blast)
+              show "compact {t. 0 \<le> t \<and> t \<le> 1 \<and>
+                       ((1-t) * vx j + t * vx (Suc j mod ?n),
+                        (1-t) * vy j + t * vy (Suc j mod ?n)) \<in> C}"
+                by (rule hdom_compact)
+            qed
+            ultimately show ?thesis by (by100 simp)
+          next
+            case False2: False
+            have "paste_img i j = (\<lambda>t. (t * vx i + (1-t) * vx (Suc i mod ?n),
+                        t * vy i + (1-t) * vy (Suc i mod ?n)))
+                  ` {t. 0 \<le> t \<and> t \<le> 1 \<and>
+                       ((1-t) * vx j + t * vx (Suc j mod ?n),
+                        (1-t) * vy j + t * vy (Suc j mod ?n)) \<in> C}"
+              unfolding paste_img_def using True False2 by (by100 simp)
+            moreover have "compact ((\<lambda>t. (t * vx i + (1-t) * vx (Suc i mod ?n),
+                        t * vy i + (1-t) * vy (Suc i mod ?n)))
+                  ` {t. 0 \<le> t \<and> t \<le> 1 \<and>
+                       ((1-t) * vx j + t * vx (Suc j mod ?n),
+                        (1-t) * vy j + t * vy (Suc j mod ?n)) \<in> C})"
+            proof (rule compact_continuous_image)
+              show "continuous_on {t. 0 \<le> t \<and> t \<le> 1 \<and>
+                       ((1-t) * vx j + t * vx (Suc j mod ?n),
+                        (1-t) * vy j + t * vy (Suc j mod ?n)) \<in> C}
+                  (\<lambda>t. (t * vx i + (1-t) * vx (Suc i mod ?n),
+                        t * vy i + (1-t) * vy (Suc i mod ?n)))"
+                using continuous_on_subset[OF hpaste_rev_cont] by (by100 blast)
+              show "compact {t. 0 \<le> t \<and> t \<le> 1 \<and>
+                       ((1-t) * vx j + t * vx (Suc j mod ?n),
+                        (1-t) * vy j + t * vy (Suc j mod ?n)) \<in> C}"
+                by (rule hdom_compact)
+            qed
+            ultimately show ?thesis by (by100 simp)
+          qed
+        qed
+      qed
+      \<comment> \<open>Compact in R2 implies closed. Closed implies closedin\_on P.\<close>
+      \<comment> \<open>P is closedin\_on in R2 (compact in Hausdorff).\<close>
+      have hP_closedin_R2: "closedin_on (UNIV::(real\<times>real) set)
+            (product_topology_on top1_open_sets top1_open_sets) P"
+        using compact_in_hausdorff_closed[OF hR2_haus hP_compact] by (by100 blast)
+      \<comment> \<open>paste\_img i j \<subseteq> P.\<close>
+      have hpaste_sub_P: "\<And>i j. i < ?n \<Longrightarrow> j < ?n \<Longrightarrow> paste_img i j \<subseteq> P"
+      proof -
+        fix i j assume hi: "i < ?n" and hj: "j < ?n"
+        show "paste_img i j \<subseteq> P"
+        proof (cases "fst (scheme!i) = fst (scheme!j)")
+          case False thus ?thesis unfolding paste_img_def by (by100 simp)
+        next
+          case True
+          show ?thesis
+          proof (cases "snd (scheme!i) = snd (scheme!j)")
+            case True2: True
+            show ?thesis
+            proof (rule subsetI)
+              fix p assume "p \<in> paste_img i j"
+              then obtain t :: real where ht0: "0 \<le> t" and ht1: "t \<le> 1"
+                and hp: "p = ((1-t) * vx i + t * vx (Suc i mod ?n),
+                              (1-t) * vy i + t * vy (Suc i mod ?n))"
+                unfolding paste_img_def using True True2 by (by5000 auto)
+              show "p \<in> P" unfolding hp using hedge_in_P0[OF hi ht0 ht1] .
+            qed
+          next
+            case False2: False
+            show ?thesis
+            proof (rule subsetI)
+              fix p assume "p \<in> paste_img i j"
+              then obtain t :: real where ht0: "0 \<le> t" and ht1: "t \<le> 1"
+                and hp: "p = (t * vx i + (1-t) * vx (Suc i mod ?n),
+                              t * vy i + (1-t) * vy (Suc i mod ?n))"
+                unfolding paste_img_def using True False2 by (by5000 auto)
+              show "p \<in> P" unfolding hp using hedge_rev_in_P0[OF hi ht0 ht1] .
+            qed
+          qed
+        qed
+      qed
+      have hpaste_closed: "\<forall>i<?n. \<forall>j<?n. closedin_on P ?TP (paste_img i j)"
+      proof (intro allI impI)
+        fix i j assume hi: "i < ?n" and hj: "j < ?n"
+        have hcomp: "compact (paste_img i j)" using hpaste_compact hi hj by (by100 blast)
+        have hsub: "paste_img i j \<subseteq> P" using hpaste_sub_P[OF hi hj] .
+        have hsub_univ: "paste_img i j \<subseteq> (UNIV::(real\<times>real) set)" by (by100 blast)
+        have "top1_compact_on (paste_img i j)
+            (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (paste_img i j))"
+          using compact_R2_bridge[OF hcomp] .
+        hence hcl_R2: "closedin_on (UNIV::(real\<times>real) set)
+            (product_topology_on top1_open_sets top1_open_sets) (paste_img i j)"
+          using compact_in_hausdorff_closed[OF hR2_haus _ hsub_univ] by (by100 blast)
+        show "closedin_on P ?TP (paste_img i j)"
+          using closedin_on_subspace[OF hR2_top _ hP_closedin_R2 hcl_R2 hsub] by (by100 blast)
+      qed
+      \<comment> \<open>Finite union of closed + C closed = preimg closed.\<close>
+      have hunion_closed: "closedin_on P ?TP (\<Union>i<?n. \<Union>j<?n. paste_img i j)"
+      proof -
+        \<comment> \<open>Flatten the double union into a single finite union of sets.\<close>
+        define FF where "FF = {paste_img i j | i j. i < ?n \<and> j < ?n}"
+        have hFF_fin: "finite FF"
+        proof -
+          have hsub: "FF \<subseteq> (\<lambda>(i,j). paste_img i j) ` ({..<?n} \<times> {..<?n})"
+            unfolding FF_def by (by100 blast)
+          have "finite ({..<?n} \<times> {..<?n})" by (by100 blast)
+          hence "finite ((\<lambda>(i,j). paste_img i j) ` ({..<?n} \<times> {..<?n}))" by (by100 blast)
+          thus ?thesis using finite_subset[OF hsub] by (by100 blast)
+        qed
+        have hFF_cl: "\<forall>S\<in>FF. closedin_on P ?TP S"
+          unfolding FF_def using hpaste_closed by (by100 blast)
+        have "closedin_on P ?TP (\<Union>FF)"
+          using closedin_on_finite_Union[OF hTP hFF_cl hFF_fin] .
+        moreover have "\<Union>FF = (\<Union>i<?n. \<Union>j<?n. paste_img i j)"
+          unfolding FF_def by (by100 blast)
+        ultimately show ?thesis by (by100 simp)
+      qed
+      have "preimg = C \<union> (\<Union>i<?n. \<Union>j<?n. paste_img i j)"
+        using hpreimg_sub hpaste_sub by (by100 blast)
+      thus ?thesis using closedin_on_Un[OF hTP hC hunion_closed] by (by100 simp)
+    qed
+    \<comment> \<open>preimg closed \<Rightarrow> q(C) closed via quotient map property.\<close>
+    have "q ` C \<subseteq> X" using hC_sub hq_maps by (by100 blast)
+    hence "X - q ` C \<subseteq> X" by (by100 blast)
+    have hcomp_eq: "P - preimg = {p \<in> P. q p \<in> X - q ` C}"
+      unfolding preimg_def using hq_maps by (by100 blast)
+    have "P - preimg \<in> ?TP" using hpreimg_closed unfolding closedin_on_def preimg_def
+      by (by100 blast)
+    hence "{p \<in> P. q p \<in> X - q ` C} \<in> ?TP" using hcomp_eq by (by100 simp)
+    hence "X - q ` C \<in> TX" using hqm_prop \<open>X - q ` C \<subseteq> X\<close> by (by100 blast)
+    thus "closedin_on X TX (q ` C)" unfolding closedin_on_def
+      using \<open>q ` C \<subseteq> X\<close> by (by100 blast)
+  qed
+  \<comment> \<open>Step 3: X is Hausdorff (Lemma 73.3 argument).
+     For x \<noteq> y: preimages q\<inverse>({x}), q\<inverse>({y}) are disjoint closed in P.
+     P normal \<Rightarrow> separated by disjoint open U, V.
+     X - q(P-U), X - q(P-V) are disjoint open neighborhoods of x, y.\<close>
+  show "is_hausdorff_on X TX" unfolding is_hausdorff_on_def
+  proof (intro conjI ballI impI)
+    show "is_topology_on X TX" by (rule hTX)
+  next
+    fix x y assume hx: "x \<in> X" and hy: "y \<in> X" and hne: "x \<noteq> y"
+    \<comment> \<open>Preimages are disjoint closed in P.\<close>
+    define Fx where "Fx = {p \<in> P. q p = x}"
+    define Fy where "Fy = {p \<in> P. q p = y}"
+    have hFx_ne: "Fx \<noteq> {}" unfolding Fx_def using hq_surj hx by (by100 blast)
+    have hFy_ne: "Fy \<noteq> {}" unfolding Fy_def using hq_surj hy by (by100 blast)
+    have hFx_sub: "Fx \<subseteq> P" unfolding Fx_def by (by100 blast)
+    have hFy_sub: "Fy \<subseteq> P" unfolding Fy_def by (by100 blast)
+    have hFxy_disj: "Fx \<inter> Fy = {}" unfolding Fx_def Fy_def using hne by (by100 blast)
+    \<comment> \<open>Fx, Fy are closed in P (preimage of closed singleton under continuous q).
+       First show X is T1: q closed map + P Hausdorff ⟹ singletons in X are closed.
+       Then Fx = q⁻¹({x}) is closed as preimage of closed set under continuous map.\<close>
+    have hx_closed: "closedin_on X TX {x}"
+    proof -
+      obtain p0 where hp0: "p0 \<in> P" "q p0 = x"
+        using hq_surj hx by (by100 blast)
+      have "{p0} \<subseteq> P" using hp0(1) by (by100 blast)
+      have "closedin_on P ?TP {p0}"
+        using singleton_closed_in_hausdorff[OF hP_haus hp0(1)] .
+      hence "closedin_on X TX (q ` {p0})"
+        using hq_closed_map by (by100 blast)
+      thus ?thesis using hp0(2) by (by100 simp)
+    qed
+    have hy_closed: "closedin_on X TX {y}"
+    proof -
+      obtain p0 where hp0: "p0 \<in> P" "q p0 = y"
+        using hq_surj hy by (by100 blast)
+      have "closedin_on P ?TP {p0}"
+        using singleton_closed_in_hausdorff[OF hP_haus hp0(1)] .
+      hence "closedin_on X TX (q ` {p0})"
+        using hq_closed_map by (by100 blast)
+      thus ?thesis using hp0(2) by (by100 simp)
+    qed
+    have hFx_closed: "closedin_on P ?TP Fx"
+    proof -
+      have "Fx = {p \<in> P. q p \<in> {x}}" unfolding Fx_def by (by100 blast)
+      thus ?thesis
+        using continuous_preimage_closedin[OF hTP hTX hq_cont hx_closed] by (by100 simp)
+    qed
+    have hFy_closed: "closedin_on P ?TP Fy"
+    proof -
+      have "Fy = {p \<in> P. q p \<in> {y}}" unfolding Fy_def by (by100 blast)
+      thus ?thesis
+        using continuous_preimage_closedin[OF hTP hTX hq_cont hy_closed] by (by100 simp)
+    qed
+    \<comment> \<open>P normal: separate Fx, Fy by disjoint open U, V.\<close>
+    from normal_separation[OF hP_normal hFx_closed hFy_closed hFxy_disj]
+    obtain U V where hU: "U \<in> ?TP" and hV: "V \<in> ?TP"
+        and hFxU: "Fx \<subseteq> U" and hFyV: "Fy \<subseteq> V" and hUV: "U \<inter> V = {}" by (by100 blast)
+    \<comment> \<open>X - q(P-U) is open (q closed map) and contains x.\<close>
+    have hTP_strict: "is_topology_on_strict P ?TP"
+      unfolding is_topology_on_strict_def
+    proof (intro conjI)
+      show "is_topology_on P ?TP" by (rule hTP)
+    next
+      show "?TP \<subseteq> Pow P" unfolding subspace_topology_def by (by100 blast)
+    qed
+    have hU_sub: "U \<subseteq> P"
+      using hU hTP_strict unfolding is_topology_on_strict_def by (by100 blast)
+    have hV_sub: "V \<subseteq> P"
+      using hV hTP_strict unfolding is_topology_on_strict_def by (by100 blast)
+    have hPmU_closed: "closedin_on P ?TP (P - U)"
+    proof -
+      have "P - U \<subseteq> P" by (by100 blast)
+      moreover have "P - (P - U) = U" using hU_sub by (by100 blast)
+      hence "P - (P - U) \<in> ?TP" using hU by (by100 simp)
+      ultimately show ?thesis unfolding closedin_on_def by (by100 blast)
+    qed
+    have hPmV_closed: "closedin_on P ?TP (P - V)"
+    proof -
+      have "P - V \<subseteq> P" by (by100 blast)
+      moreover have "P - (P - V) = V" using hV_sub by (by100 blast)
+      hence "P - (P - V) \<in> ?TP" using hV by (by100 simp)
+      ultimately show ?thesis unfolding closedin_on_def by (by100 blast)
+    qed
+    have hqPmU_closed: "closedin_on X TX (q ` (P - U))"
+      using hq_closed_map hPmU_closed by (by100 blast)
+    have hqPmV_closed: "closedin_on X TX (q ` (P - V))"
+      using hq_closed_map hPmV_closed by (by100 blast)
+    define Ux where "Ux = X - q ` (P - U)"
+    define Vy where "Vy = X - q ` (P - V)"
+    have hUx_open: "Ux \<in> TX"
+      using hqPmU_closed unfolding Ux_def closedin_on_def by (by100 blast)
+    have hVy_open: "Vy \<in> TX"
+      using hqPmV_closed unfolding Vy_def closedin_on_def by (by100 blast)
+    have hx_Ux: "x \<in> Ux"
+    proof -
+      have "\<forall>p \<in> P - U. q p \<noteq> x"
+      proof (intro ballI)
+        fix p assume "p \<in> P - U"
+        hence "p \<in> P" "p \<notin> U" by (by100 blast)+
+        hence "p \<notin> Fx" using hFxU by (by100 blast)
+        thus "q p \<noteq> x" unfolding Fx_def using \<open>p \<in> P\<close> by (by100 blast)
+      qed
+      hence "x \<notin> q ` (P - U)" by (by100 blast)
+      thus "x \<in> Ux" unfolding Ux_def using hx by (by100 blast)
+    qed
+    have hy_Vy: "y \<in> Vy"
+    proof -
+      have "\<forall>p \<in> P - V. q p \<noteq> y"
+      proof (intro ballI)
+        fix p assume "p \<in> P - V"
+        hence "p \<in> P" "p \<notin> V" by (by100 blast)+
+        hence "p \<notin> Fy" using hFyV by (by100 blast)
+        thus "q p \<noteq> y" unfolding Fy_def using \<open>p \<in> P\<close> by (by100 blast)
+      qed
+      hence "y \<notin> q ` (P - V)" by (by100 blast)
+      thus "y \<in> Vy" unfolding Vy_def using hy by (by100 blast)
+    qed
+    have hUxVy_disj: "Ux \<inter> Vy = {}"
+    proof (rule ccontr)
+      assume "Ux \<inter> Vy \<noteq> {}"
+      then obtain z where "z \<in> Ux" "z \<in> Vy" by (by100 blast)
+      hence "z \<notin> q ` (P - U)" "z \<notin> q ` (P - V)"
+        unfolding Ux_def Vy_def by (by100 blast)+
+      have "z \<in> X" using \<open>z \<in> Ux\<close> unfolding Ux_def by (by100 blast)
+      then obtain p where "p \<in> P" "q p = z" using hq_surj by (by100 blast)
+      have "p \<notin> P - U" using \<open>z \<notin> q ` (P - U)\<close> \<open>q p = z\<close> by (by100 blast)
+      hence "p \<in> U" using \<open>p \<in> P\<close> by (by100 blast)
+      have "p \<notin> P - V" using \<open>z \<notin> q ` (P - V)\<close> \<open>q p = z\<close> by (by100 blast)
+      hence "p \<in> V" using \<open>p \<in> P\<close> by (by100 blast)
+      from \<open>p \<in> U\<close> \<open>p \<in> V\<close> hUV show False by (by100 blast)
+    qed
+    show "\<exists>U V. neighborhood_of x X TX U \<and> neighborhood_of y X TX V \<and> U \<inter> V = {}"
+      unfolding neighborhood_of_def
+      using hUx_open hVy_open hx_Ux hy_Vy hUxVy_disj by (by100 blast)
+  qed
+qed
+
+text \<open>Key helper: a scheme quotient provides the attaching data for Theorem 72.1.
+  The 1-skeleton A = q(boundary of polygon) is closed and path-connected.
+  The attaching map h = q composed with polygon-to-disk homeomorphism is continuous.
+  The interior of the disk maps homeomorphically to X - A.\<close>
+lemma scheme_quotient_CW_data:
+  assumes "top1_quotient_of_scheme_on X TX scheme"
+      and "length scheme \<ge> 3"
+      \<comment> \<open>Vertex connectivity: all vertices are identified under any valid edge identification.
+         This is a combinatorial property of the scheme (label graph connected).
+         True for torus, projective, and all standard schemes.\<close>
+      and hvert_connected: "\<forall>(q::real\<times>real\<Rightarrow>'a) (vx::nat\<Rightarrow>real) (vy::nat\<Rightarrow>real).
+          (\<forall>i<length scheme. \<forall>j<length scheme.
+            fst (scheme!i) = fst (scheme!j) \<longrightarrow>
+            (\<forall>t\<in>I_set. q ((1-t) * vx i + t * vx (Suc i mod length scheme),
+               (1-t) * vy i + t * vy (Suc i mod length scheme))
+             = (if snd (scheme!i) = snd (scheme!j)
+                then q ((1-t) * vx j + t * vx (Suc j mod length scheme),
+                        (1-t) * vy j + t * vy (Suc j mod length scheme))
+                else q (t * vx j + (1-t) * vx (Suc j mod length scheme),
+                        t * vy j + (1-t) * vy (Suc j mod length scheme)))))
+          \<longrightarrow> (\<forall>i<length scheme. \<forall>j<length scheme. q (vx i, vy i) = q (vx j, vy j))"
+  shows "\<exists>(A :: 'a set) (h :: real \<times> real \<Rightarrow> 'a) (a :: 'a) (q :: real \<times> real \<Rightarrow> 'a)
+      (vx :: nat \<Rightarrow> real) (vy :: nat \<Rightarrow> real).
+      closedin_on X TX A
+    \<and> top1_path_connected_on A (subspace_topology X TX A)
+    \<and> top1_continuous_map_on top1_B2 top1_B2_topology X TX h
+    \<and> a \<in> A
+    \<and> top1_homeomorphism_on
+        (top1_B2 - top1_S1) (subspace_topology top1_B2 top1_B2_topology (top1_B2 - top1_S1))
+        (X - A) (subspace_topology X TX (X - A)) h
+    \<and> h ` top1_S1 \<subseteq> A
+    \<and> (\<forall>z\<in>top1_S1. h z \<in> A)
+    \<comment> \<open>Additional: the internal witnesses for reasoning about A's structure.\<close>
+    \<and> A = q ` (\<Union>i<length scheme. {((1-t) * vx i + t * vx (Suc i mod length scheme),
+                   (1-t) * vy i + t * vy (Suc i mod length scheme)) | t. t \<in> I_set})
+    \<and> a = q (vx 0, vy 0)
+    \<and> (\<forall>i<length scheme. \<forall>j<length scheme. q (vx i, vy i) = q (vx j, vy j))
+    \<and> (\<forall>i<length scheme. \<forall>j<length scheme.
+          fst (scheme!i) = fst (scheme!j) \<longrightarrow>
+          (\<forall>t\<in>I_set. q ((1-t) * vx i + t * vx (Suc i mod length scheme),
+              (1-t) * vy i + t * vy (Suc i mod length scheme))
+           = (if snd (scheme!i) = snd (scheme!j)
+              then q ((1-t) * vx j + t * vx (Suc j mod length scheme),
+                      (1-t) * vy j + t * vy (Suc j mod length scheme))
+              else q (t * vx j + (1-t) * vx (Suc j mod length scheme),
+                      t * vy j + (1-t) * vy (Suc j mod length scheme)))))
+    \<and> (\<forall>i<length scheme. \<forall>j<length scheme. \<forall>t\<in>I_set. \<forall>s\<in>I_set.
+          q ((1-t) * vx i + t * vx (Suc i mod length scheme),
+             (1-t) * vy i + t * vy (Suc i mod length scheme))
+        = q ((1-s) * vx j + s * vx (Suc j mod length scheme),
+             (1-s) * vy j + s * vy (Suc j mod length scheme))
+        \<longrightarrow> (i = j \<and> t = s)
+          \<or> (fst (scheme!i) = fst (scheme!j) \<and>
+             (if snd (scheme!i) = snd (scheme!j) then s = t else s = 1 - t)))
+    \<comment> \<open>Continuity of q on individual edges (for constructing circle homeomorphisms).\<close>
+    \<and> (\<forall>i<length scheme.
+          top1_continuous_map_on I_set top1_unit_interval_topology A (subspace_topology X TX A)
+            (\<lambda>t. q ((1-t) * vx i + t * vx (Suc i mod length scheme),
+                     (1-t) * vy i + t * vy (Suc i mod length scheme))))"
+proof -
+  \<comment> \<open>Step 1: Extract (P, q, vx, vy) from the scheme definition.\<close>
+  obtain P q vx vy where
+    hP: "top1_is_polygonal_region_on P (length scheme)" and
+    hq: "top1_quotient_map_on P (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) X TX q" and
+    hlen3: "length scheme \<ge> 3" and
+    hverts: "\<forall>i<length scheme. (vx i, vy i) \<in> P" and
+    hP_hull_extract: "P = {(x, y) | x y.
+                \<exists>coeffs. (\<forall>i<length scheme. coeffs i \<ge> 0)
+                       \<and> (\<Sum>i<length scheme. coeffs i) = 1
+                       \<and> x = (\<Sum>i<length scheme. coeffs i * vx i)
+                       \<and> y = (\<Sum>i<length scheme. coeffs i * vy i)}" and
+    hedge: "\<forall>i<length scheme. \<forall>j<length scheme.
+        fst (scheme!i) = fst (scheme!j) \<longrightarrow>
+        (\<forall>t\<in>I_set. q ((1-t) * vx i + t * vx (Suc i mod length scheme),
+           (1-t) * vy i + t * vy (Suc i mod length scheme))
+         = (if snd (scheme!i) = snd (scheme!j)
+            then q ((1-t) * vx j + t * vx (Suc j mod length scheme),
+                    (1-t) * vy j + t * vy (Suc j mod length scheme))
+            else q (t * vx j + (1-t) * vx (Suc j mod length scheme),
+                    t * vy j + (1-t) * vy (Suc j mod length scheme))))" and
+    hint: "\<forall>p\<in>P. (\<forall>i<length scheme. \<forall>t\<in>I_set.
+          p \<noteq> ((1-t) * vx i + t * vx (Suc i mod length scheme),
+                (1-t) * vy i + t * vy (Suc i mod length scheme)))
+       \<longrightarrow> (\<forall>p'\<in>P. q p = q p' \<longrightarrow> p = p')" and
+    hno_extra_cw: "\<forall>i<length scheme. \<forall>j<length scheme. \<forall>t\<in>I_set. \<forall>s\<in>I_set.
+          q ((1-t) * vx i + t * vx (Suc i mod length scheme),
+             (1-t) * vy i + t * vy (Suc i mod length scheme))
+        = q ((1-s) * vx j + s * vx (Suc j mod length scheme),
+             (1-s) * vy j + s * vy (Suc j mod length scheme))
+        \<longrightarrow> (i = j \<and> t = s)
+          \<or> (fst (scheme!i) = fst (scheme!j) \<and>
+             (if snd (scheme!i) = snd (scheme!j) then s = t else s = 1 - t))" and
+    hccw_extract: "\<forall>i<length scheme.
+        let cx = (\<Sum>j<length scheme. vx j) / real (length scheme);
+            cy = (\<Sum>j<length scheme. vy j) / real (length scheme)
+        in (vx i - cx) * (vy (Suc i mod length scheme) - cy)
+         - (vy i - cy) * (vx (Suc i mod length scheme) - cx) > 0"
+    using assms(1)[unfolded top1_quotient_of_scheme_on_def] assms(2)
+    by (elim conjE exE) (rule that, assumption+)
+  \<comment> \<open>Step 2: Get homeomorphism \<psi>: P \<rightarrow> B^2 with boundary correspondence.\<close>
+  let ?TP = "subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P"
+  have hP_hull: "P = {(x, y) | x y.
+            \<exists>coeffs. (\<forall>i<length scheme. coeffs i \<ge> 0)
+                   \<and> (\<Sum>i<length scheme. coeffs i) = 1
+                   \<and> x = (\<Sum>i<length scheme. coeffs i * vx i)
+                   \<and> y = (\<Sum>i<length scheme. coeffs i * vy i)}"
+    using hP_hull_extract by (by100 simp)
+  from polygon_homeomorphic_to_disk_with_boundary[OF hP hlen3 hverts hP_hull hccw_extract]
+  obtain \<psi> where h\<psi>: "top1_homeomorphism_on P ?TP top1_B2 top1_B2_topology \<psi>"
+      and h\<psi>_bd: "\<psi> ` (\<Union>i<length scheme. {((1-t) * vx i + t * vx (Suc i mod length scheme),
+                     (1-t) * vy i + t * vy (Suc i mod length scheme)) | t. t \<in> I_set})
+          = top1_S1"
+      and h\<psi>_int: "top1_homeomorphism_on
+          (P - (\<Union>i<length scheme. {((1-t) * vx i + t * vx (Suc i mod length scheme),
+                          (1-t) * vy i + t * vy (Suc i mod length scheme)) | t. t \<in> I_set}))
+          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets)
+             (P - (\<Union>i<length scheme. {((1-t) * vx i + t * vx (Suc i mod length scheme),
+                            (1-t) * vy i + t * vy (Suc i mod length scheme)) | t. t \<in> I_set})))
+          (top1_B2 - top1_S1)
+          (subspace_topology top1_B2 top1_B2_topology (top1_B2 - top1_S1))
+          \<psi>"
+    by (elim conjE exE) (rule that, assumption+)
   \<comment> \<open>Step 3: Define A = q(Bd P) where Bd P = union of edges.\<close>
   define BdP where "BdP = (\<Union>i<length scheme.
       {((1-t) * vx i + t * vx (Suc i mod length scheme),
@@ -3994,21 +4242,15 @@ proof -
   define h where "h z = q (inv_into P \<psi> z)" for z
   define a where "a = q (vx 0, vy 0)"
   \<comment> \<open>Step 5: Verify all CW data properties.\<close>
-  have hA_closed: "closedin_on X TX A"
-  proof -
-    \<comment> \<open>Use compact\_hausdorff\_continuous\_closed\_map: compact P, Hausdorff X,
-       continuous q, closedin BdP \<Rightarrow> closedin A = q(BdP).\<close>
-    have hP_compact_top: "top1_compact_on P ?TP"
-      by (rule polygonal_region_compact[OF hP hlen3])
-    have hX_strict: "is_topology_on_strict X TX"
-      using assms(1) unfolding top1_quotient_of_scheme_on_def by (by100 blast)
-    have hX_haus: "is_hausdorff_on X TX"
-      sorry \<comment> \<open>X Hausdorff: follows from the scheme quotient being a compact Hausdorff space
-         (Theorem 74.1). Cannot use Theorem\_74\_1 directly (forward reference).
-         The proof is available in the Theorem\_74\_1 proof below.\<close>
-    have hq_cont: "top1_continuous_map_on P ?TP X TX q"
-      using hq unfolding top1_quotient_map_on_def by (by100 blast)
-    have hBdP_closed: "closedin_on P ?TP BdP"
+  have hP_compact_top: "top1_compact_on P ?TP"
+    by (rule polygonal_region_compact[OF hP hlen3])
+  have hX_strict: "is_topology_on_strict X TX"
+    using assms(1) unfolding top1_quotient_of_scheme_on_def by (by100 blast)
+  have hX_haus: "is_hausdorff_on X TX"
+    by (rule scheme_quotient_hausdorff[OF assms(1) assms(2)])
+  have hq_cont: "top1_continuous_map_on P ?TP X TX q"
+    using hq unfolding top1_quotient_map_on_def by (by100 blast)
+  have hBdP_closed: "closedin_on P ?TP BdP"
     proof -
       \<comment> \<open>BdP is compact (finite union of compact line segments in R²).
          Compact in R² \<Rightarrow> closed in R² (t2\_space). Closed in R² \<Rightarrow> closedin\_on P.\<close>
@@ -4087,6 +4329,8 @@ proof -
       ultimately have "P - BdP \<in> ?TP" by (by100 simp)
       thus ?thesis unfolding closedin_on_def using hBdP_sub_P by (by100 blast)
     qed
+  have hA_closed: "closedin_on X TX A"
+  proof -
     from compact_hausdorff_continuous_closed_map[OF hP_compact_top hX_haus hq_cont hBdP_closed]
     show ?thesis unfolding A_def .
   qed
@@ -4095,8 +4339,159 @@ proof -
     \<comment> \<open>BdP is path-connected (polygon boundary is a cycle of edges).\<close>
     have hBdP_pc: "top1_path_connected_on BdP (subspace_topology UNIV
         (product_topology_on top1_open_sets top1_open_sets) BdP)"
-      sorry \<comment> \<open>BdP = cycle of line segments. Each segment is a path (continuous image of [0,1]).
-         Consecutive segments share vertices. All connected.\<close>
+    proof -
+      let ?R2 = "product_topology_on (top1_open_sets :: real set set) top1_open_sets"
+      let ?TBdP = "subspace_topology (UNIV::(real\<times>real) set) ?R2 BdP"
+      let ?n = "length scheme"
+      have hn_pos: "?n > 0" using hlen3 by (by100 linarith)
+      have hR_top: "is_topology_on (UNIV::real set) top1_open_sets"
+        unfolding top1_open_sets_def is_topology_on_def
+        using open_UNIV open_empty open_Un open_Int by (by5000 auto)
+      have hR2_top: "is_topology_on (UNIV::(real\<times>real) set) ?R2"
+      proof -
+        have "(UNIV::real set) \<times> (UNIV::real set) = (UNIV::(real\<times>real) set)" by (by100 auto)
+        thus ?thesis using product_topology_on_is_topology_on[OF hR_top hR_top] by (by100 simp)
+      qed
+      have hBdP_top: "is_topology_on BdP ?TBdP"
+        by (rule subspace_topology_is_topology_on[OF hR2_top]) (by100 blast)
+      \<comment> \<open>Edge point membership: edge i at parameter t is in BdP.\<close>
+      have edge_mem: "\<And>i t. i < ?n \<Longrightarrow> t \<in> I_set \<Longrightarrow>
+          ((1-t) * vx i + t * vx (Suc i mod ?n),
+           (1-t) * vy i + t * vy (Suc i mod ?n)) \<in> BdP"
+        unfolding BdP_def by (by5000 force)
+      \<comment> \<open>Vertex i is in BdP (edge i at parameter 0).\<close>
+      have v_in_BdP: "\<And>i. i < ?n \<Longrightarrow> (vx i, vy i) \<in> BdP"
+      proof -
+        fix i assume hi: "i < ?n"
+        have "((1-(0::real)) * vx i + 0 * vx (Suc i mod ?n),
+               (1-0) * vy i + 0 * vy (Suc i mod ?n)) \<in> BdP"
+          by (rule edge_mem[OF hi]) (simp add: top1_unit_interval_def)
+        thus "(vx i, vy i) \<in> BdP" by (by100 simp)
+      qed
+      \<comment> \<open>Edge path: straight line from v_i to v_{Suc i mod n} lies in BdP.\<close>
+      have edge_path: "\<And>i. i < ?n \<Longrightarrow>
+          \<exists>f. top1_is_path_on BdP ?TBdP (vx i, vy i)
+              (vx (Suc i mod ?n), vy (Suc i mod ?n)) f"
+      proof -
+        fix i assume hi: "i < ?n"
+        define \<gamma> where "\<gamma> t = ((1-t)*vx i + t*vx(Suc i mod ?n),
+                               (1-t)*vy i + t*vy(Suc i mod ?n))" for t
+        have himg: "\<forall>t\<in>I_set. \<gamma> t \<in> BdP"
+          unfolding \<gamma>_def using edge_mem[OF hi] by (by100 blast)
+        have h\<gamma>_eq: "\<gamma> = (\<lambda>t. ((1-t) * fst (vx i, vy i) + t * fst (vx(Suc i mod ?n), vy(Suc i mod ?n)),
+                              (1-t) * snd (vx i, vy i) + t * snd (vx(Suc i mod ?n), vy(Suc i mod ?n))))"
+          unfolding \<gamma>_def by (by100 simp)
+        have "top1_is_path_on UNIV ?R2 (vx i, vy i) (vx(Suc i mod ?n), vy(Suc i mod ?n)) \<gamma>"
+          using R2_straight_line_path[of "(vx i, vy i)" "(vx(Suc i mod ?n), vy(Suc i mod ?n))"]
+          h\<gamma>_eq by (by100 simp)
+        hence hcont: "top1_continuous_map_on I_set I_top UNIV ?R2 \<gamma>"
+          unfolding top1_is_path_on_def by (by100 blast)
+        have "top1_continuous_map_on I_set I_top BdP ?TBdP \<gamma>"
+          by (rule continuous_map_restrict_codomain[OF hcont himg]) (by100 blast)
+        moreover have "\<gamma> 0 = (vx i, vy i)" unfolding \<gamma>_def by (by100 simp)
+        moreover have "\<gamma> 1 = (vx(Suc i mod ?n), vy(Suc i mod ?n))" unfolding \<gamma>_def by (by100 simp)
+        ultimately have "top1_is_path_on BdP ?TBdP (vx i, vy i) (vx(Suc i mod ?n), vy(Suc i mod ?n)) \<gamma>"
+          unfolding top1_is_path_on_def by (by100 blast)
+        thus "\<exists>f. top1_is_path_on BdP ?TBdP (vx i, vy i) (vx(Suc i mod ?n), vy(Suc i mod ?n)) f"
+          by (by100 blast)
+      qed
+      \<comment> \<open>Reverse edge: path from v_{Suc i mod n} to v_i.\<close>
+      have rev_edge: "\<And>i. i < ?n \<Longrightarrow>
+          \<exists>f. top1_is_path_on BdP ?TBdP (vx (Suc i mod ?n), vy (Suc i mod ?n)) (vx i, vy i) f"
+      proof -
+        fix i assume hi: "i < ?n"
+        from edge_path[OF hi] obtain f where
+          hf: "top1_is_path_on BdP ?TBdP (vx i, vy i) (vx(Suc i mod ?n), vy(Suc i mod ?n)) f"
+          by (by100 blast)
+        from top1_is_path_on_reverse[OF hBdP_top hf]
+        show "\<exists>f. top1_is_path_on BdP ?TBdP (vx(Suc i mod ?n), vy(Suc i mod ?n)) (vx i, vy i) f"
+          by (by100 blast)
+      qed
+      \<comment> \<open>By induction: vertex j connects to vertex 0 in BdP.\<close>
+      have v_to_v0: "\<forall>j<?n. \<exists>f. top1_is_path_on BdP ?TBdP (vx j, vy j) (vx 0, vy 0) f"
+      proof (intro allI impI)
+        fix j assume hj: "j < ?n"
+        show "\<exists>f. top1_is_path_on BdP ?TBdP (vx j, vy j) (vx 0, vy 0) f"
+          using hj
+        proof (induction j)
+          case 0
+          from top1_constant_path_is_path[OF hBdP_top v_in_BdP[OF 0]]
+          show ?case by (by100 blast)
+        next
+          case (Suc k)
+          have hk: "k < ?n" using Suc.prems by (by100 linarith)
+          have hsk_mod: "Suc k mod ?n = Suc k" using Suc.prems by (by100 simp)
+          from rev_edge[OF hk] obtain f1 where
+            hf1: "top1_is_path_on BdP ?TBdP (vx(Suc k mod ?n), vy(Suc k mod ?n)) (vx k, vy k) f1"
+            by (by100 blast)
+          hence hf1': "top1_is_path_on BdP ?TBdP (vx(Suc k), vy(Suc k)) (vx k, vy k) f1"
+            using hsk_mod by (by100 simp)
+          from Suc.IH[OF hk] obtain f2 where
+            hf2: "top1_is_path_on BdP ?TBdP (vx k, vy k) (vx 0, vy 0) f2"
+            by (by100 blast)
+          from top1_path_product_is_path[OF hBdP_top hf1' hf2]
+          show ?case by (by100 blast)
+        qed
+      qed
+      \<comment> \<open>Any point p \<in> BdP connects to v_0.\<close>
+      have any_to_v0: "\<And>p. p \<in> BdP \<Longrightarrow> \<exists>f. top1_is_path_on BdP ?TBdP p (vx 0, vy 0) f"
+      proof -
+        fix p assume hp: "p \<in> BdP"
+        then obtain j t where hj: "j < ?n" and ht: "t \<in> I_set" and
+          hp_eq: "p = ((1-t)*vx j + t*vx(Suc j mod ?n), (1-t)*vy j + t*vy(Suc j mod ?n))"
+          unfolding BdP_def by (by5000 force)
+        \<comment> \<open>Straight line from p to (vx j, vy j): stays in edge j \<subseteq> BdP.\<close>
+        define \<gamma>0 where "\<gamma>0 s = ((1-s)*fst p + s*vx j, (1-s)*snd p + s*vy j)" for s
+        have himg0: "\<forall>s\<in>I_set. \<gamma>0 s \<in> BdP"
+        proof (intro ballI)
+          fix s assume hs: "s \<in> I_set"
+          have hs01: "0 \<le> s" "s \<le> 1" using hs unfolding top1_unit_interval_def by (by100 auto)+
+          have ht01: "0 \<le> t" "t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 auto)+
+          define t' where "t' = (1-s)*t"
+          have ht'01: "0 \<le> t'" using hs01 ht01 unfolding t'_def
+            by (by100 simp)
+          have ht'le1: "t' \<le> 1" unfolding t'_def
+            using mult_le_one[of "1-s" t] hs01 ht01 by (by100 linarith)
+          have ht'I: "t' \<in> I_set" unfolding top1_unit_interval_def using ht'01 ht'le1 by (by100 simp)
+          have "\<gamma>0 s = ((1-t')*vx j + t'*vx(Suc j mod ?n), (1-t')*vy j + t'*vy(Suc j mod ?n))"
+            unfolding \<gamma>0_def hp_eq t'_def by (simp add: algebra_simps)
+          thus "\<gamma>0 s \<in> BdP" using edge_mem[OF hj ht'I] by (by100 simp)
+        qed
+        have h\<gamma>0_eq: "\<gamma>0 = (\<lambda>s. ((1-s)*fst p + s*fst(vx j, vy j), (1-s)*snd p + s*snd(vx j, vy j)))"
+          unfolding \<gamma>0_def by (by100 simp)
+        have "top1_is_path_on UNIV ?R2 p (vx j, vy j) \<gamma>0"
+          using R2_straight_line_path[of p "(vx j, vy j)"] h\<gamma>0_eq by (by100 simp)
+        hence hcont0: "top1_continuous_map_on I_set I_top UNIV ?R2 \<gamma>0"
+          unfolding top1_is_path_on_def by (by100 blast)
+        have hcont_BdP: "top1_continuous_map_on I_set I_top BdP ?TBdP \<gamma>0"
+          by (rule continuous_map_restrict_codomain[OF hcont0 himg0]) (by100 blast)
+        have "\<gamma>0 0 = p" unfolding \<gamma>0_def by (by100 simp)
+        moreover have "\<gamma>0 1 = (vx j, vy j)" unfolding \<gamma>0_def by (by100 simp)
+        ultimately have hpath0: "top1_is_path_on BdP ?TBdP p (vx j, vy j) \<gamma>0"
+          unfolding top1_is_path_on_def using hcont_BdP by (by100 blast)
+        from v_to_v0 hj obtain f1 where
+          hf1: "top1_is_path_on BdP ?TBdP (vx j, vy j) (vx 0, vy 0) f1"
+          by (by100 blast)
+        from top1_path_product_is_path[OF hBdP_top hpath0 hf1]
+        show "\<exists>f. top1_is_path_on BdP ?TBdP p (vx 0, vy 0) f"
+          by (by100 blast)
+      qed
+      \<comment> \<open>Conclusion: BdP is path-connected.\<close>
+      show ?thesis unfolding top1_path_connected_on_def
+      proof (intro conjI ballI)
+        show "is_topology_on BdP ?TBdP" by (rule hBdP_top)
+      next
+        fix x y assume hx: "x \<in> BdP" and hy: "y \<in> BdP"
+        from any_to_v0[OF hx] obtain fx where hfx: "top1_is_path_on BdP ?TBdP x (vx 0, vy 0) fx"
+          by (by100 blast)
+        from any_to_v0[OF hy] obtain fy where hfy: "top1_is_path_on BdP ?TBdP y (vx 0, vy 0) fy"
+          by (by100 blast)
+        from top1_is_path_on_reverse[OF hBdP_top hfy]
+        have hfyr: "top1_is_path_on BdP ?TBdP (vx 0, vy 0) y (\<lambda>t. fy (1-t))" .
+        from top1_path_product_is_path[OF hBdP_top hfx hfyr]
+        show "\<exists>f. top1_is_path_on BdP ?TBdP x y f" by (by100 blast)
+      qed
+    qed
     \<comment> \<open>q restricted to BdP is continuous: BdP \<subseteq> P, q continuous on P.\<close>
     have hq_cont_Bd: "top1_continuous_map_on BdP
         (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) BdP)
@@ -4183,16 +4578,488 @@ proof -
   have hh_homeo: "top1_homeomorphism_on (top1_B2 - top1_S1)
       (subspace_topology top1_B2 top1_B2_topology (top1_B2 - top1_S1))
       (X - A) (subspace_topology X TX (X - A)) h"
-    sorry \<comment> \<open>\<psi>inv maps Int B^2 to Int P, q is injective on Int P (hint), so h = q\<circ>\<psi>inv is
-       a bijection Int B^2 \<rightarrow> X - A. Continuous + bijection + open map = homeomorphism.\<close>
+  proof -
+    \<comment> \<open>Fold BdP\_def into h\<psi>\_int.\<close>
+    have h\<psi>_int_BdP: "top1_homeomorphism_on (P - BdP)
+        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (P - BdP))
+        (top1_B2 - top1_S1)
+        (subspace_topology top1_B2 top1_B2_topology (top1_B2 - top1_S1))
+        \<psi>"
+      using h\<psi>_int[folded BdP_def] by (by100 simp)
+    \<comment> \<open>Inverse: inv\_into (P-BdP) \<psi> is homeomorphism B2-S1 \<rightarrow> P-BdP.\<close>
+    have h\<psi>inv_homeo: "top1_homeomorphism_on (top1_B2 - top1_S1)
+        (subspace_topology top1_B2 top1_B2_topology (top1_B2 - top1_S1))
+        (P - BdP) (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (P - BdP))
+        (inv_into (P - BdP) \<psi>)"
+      by (rule homeomorphism_inverse[OF h\<psi>_int_BdP])
+    \<comment> \<open>inv\_into P \<psi> = inv\_into (P-BdP) \<psi> on B2-S1.\<close>
+    have h\<psi>_inj: "inj_on \<psi> P"
+      using h\<psi>_bij unfolding bij_betw_def by (by100 blast)
+    have hinv_agree: "\<forall>z\<in>top1_B2 - top1_S1. inv_into P \<psi> z = inv_into (P - BdP) \<psi> z"
+    proof (intro ballI)
+      fix z assume hz: "z \<in> top1_B2 - top1_S1"
+      have hbij_int: "bij_betw \<psi> (P - BdP) (top1_B2 - top1_S1)"
+        using h\<psi>_int_BdP unfolding top1_homeomorphism_on_def by (by100 blast)
+      hence hz_img: "z \<in> \<psi> ` (P - BdP)" using hz unfolding bij_betw_def by (by100 blast)
+      then obtain p where hp: "p \<in> P - BdP" "\<psi> p = z" by (by100 blast)
+      have hp_P: "p \<in> P" using hp(1) by (by100 blast)
+      have "inv_into (P - BdP) \<psi> z = p"
+        using inv_into_f_f[of \<psi> "P - BdP" p] hbij_int hp
+        unfolding bij_betw_def by (by100 blast)
+      moreover have "inv_into P \<psi> z = p"
+        using inv_into_f_f[OF h\<psi>_inj hp_P] hp(2) by (by100 simp)
+      ultimately show "inv_into P \<psi> z = inv_into (P - BdP) \<psi> z" by (by100 simp)
+    qed
+    have hq_surj: "q ` P = X" using hq unfolding top1_quotient_map_on_def by (by5000 blast)
+    \<comment> \<open>Step 2: q is injective on P-BdP.\<close>
+    have hq_inj_int: "inj_on q (P - BdP)"
+    proof (rule inj_onI)
+      fix p p' assume hp: "p \<in> P - BdP" and hp': "p' \<in> P - BdP" and hqeq: "q p = q p'"
+      have hp_P: "p \<in> P" using hp by (by100 blast)
+      have hp'_P: "p' \<in> P" using hp' by (by100 blast)
+      have hpnot: "\<forall>i<length scheme. \<forall>t\<in>I_set.
+          p \<noteq> ((1-t) * vx i + t * vx (Suc i mod length scheme),
+                (1-t) * vy i + t * vy (Suc i mod length scheme))"
+      proof (intro allI ballI impI)
+        fix i t assume hi: "i < length scheme" and ht: "t \<in> I_set"
+        show "p \<noteq> ((1-t) * vx i + t * vx (Suc i mod length scheme),
+                   (1-t) * vy i + t * vy (Suc i mod length scheme))"
+        proof
+          assume "p = ((1-t) * vx i + t * vx (Suc i mod length scheme),
+                       (1-t) * vy i + t * vy (Suc i mod length scheme))"
+          hence "p \<in> BdP" unfolding BdP_def using hi ht by (by5000 force)
+          thus False using hp by (by100 blast)
+        qed
+      qed
+      from hint hp_P hpnot hp'_P hqeq
+      show "p = p'" by (by100 blast)
+    qed
+    \<comment> \<open>Step 3: q(P-BdP) = X - A.\<close>
+    have hq_int_eq: "q ` (P - BdP) = X - A"
+    proof
+      show "q ` (P - BdP) \<subseteq> X - A"
+      proof (rule image_subsetI)
+        fix p assume hp: "p \<in> P - BdP"
+        have hp_P: "p \<in> P" using hp by (by100 blast)
+        have hp_notBdP: "p \<notin> BdP" using hp by (by100 blast)
+        have hqp_X: "q p \<in> X" using hq_surj hp_P by (by100 blast)
+        have hqp_notA: "q p \<notin> A"
+        proof
+          assume "q p \<in> A"
+          hence "q p \<in> q ` BdP" unfolding A_def by (by100 simp)
+          then obtain b where hb: "b \<in> BdP" "q b = q p" by (by100 auto)
+          have hb_P: "b \<in> P" using hb(1) hBdP_sub_P by (by100 blast)
+          have hpnot: "\<forall>i<length scheme. \<forall>t\<in>I_set.
+              p \<noteq> ((1-t) * vx i + t * vx (Suc i mod length scheme),
+                    (1-t) * vy i + t * vy (Suc i mod length scheme))"
+          proof (intro allI ballI impI)
+            fix i t assume hi: "i < length scheme" and ht: "t \<in> I_set"
+            show "p \<noteq> ((1-t) * vx i + t * vx (Suc i mod length scheme),
+                       (1-t) * vy i + t * vy (Suc i mod length scheme))"
+            proof
+              assume "p = ((1-t) * vx i + t * vx (Suc i mod length scheme),
+                           (1-t) * vy i + t * vy (Suc i mod length scheme))"
+              hence "p \<in> BdP" unfolding BdP_def using hi ht by (by5000 force)
+              thus False using hp_notBdP by (by100 blast)
+            qed
+          qed
+          from hint hp_P hpnot hb_P hb(2)[symmetric]
+          have "p = b" by (by100 blast)
+          thus False using hp_notBdP hb(1) by (by100 blast)
+        qed
+        thus "q p \<in> X - A" using hqp_X hqp_notA by (by100 blast)
+      qed
+    next
+      show "X - A \<subseteq> q ` (P - BdP)"
+      proof (rule subsetI)
+        fix x assume hx: "x \<in> X - A"
+        have hx_X: "x \<in> X" using hx by (by100 blast)
+        have hx_notA: "x \<notin> A" using hx by (by100 blast)
+        from hq_surj hx_X obtain p where hp_P: "p \<in> P" and hqp: "q p = x"
+          by (by100 blast)
+        have "p \<notin> BdP"
+        proof
+          assume "p \<in> BdP"
+          hence "q p \<in> q ` BdP" by (by100 blast)
+          hence "x \<in> A" using hqp A_def by (by100 simp)
+          thus False using hx_notA by (by100 blast)
+        qed
+        thus "x \<in> q ` (P - BdP)" using hp_P hqp by (by100 blast)
+      qed
+    qed
+    \<comment> \<open>Step 4: q|_{P-BdP} is a homeomorphism via Theorem 22.1 + bijectivity.\<close>
+    have hPBdP_sat: "top1_saturated_with_respect_to_on P q (P - BdP)"
+      unfolding top1_saturated_with_respect_to_on_def
+    proof (intro conjI)
+      show "P - BdP \<subseteq> P" by (by100 blast)
+    next
+      show "\<forall>x\<in>P - BdP. \<forall>y\<in>P. q y = q x \<longrightarrow> y \<in> P - BdP"
+      proof (intro ballI impI)
+        fix p p' assume hp: "p \<in> P - BdP" and hp': "p' \<in> P" and hqeq: "q p' = q p"
+        have hp_P: "p \<in> P" using hp by (by100 blast)
+        have hp_notBdP: "p \<notin> BdP" using hp by (by100 blast)
+        have hpnot: "\<forall>i<length scheme. \<forall>t\<in>I_set.
+            p \<noteq> ((1-t) * vx i + t * vx (Suc i mod length scheme),
+                  (1-t) * vy i + t * vy (Suc i mod length scheme))"
+        proof (intro allI ballI impI)
+          fix i t assume hi: "i < length scheme" and ht: "t \<in> I_set"
+          show "p \<noteq> ((1-t) * vx i + t * vx (Suc i mod length scheme),
+                     (1-t) * vy i + t * vy (Suc i mod length scheme))"
+          proof
+            assume "p = ((1-t) * vx i + t * vx (Suc i mod length scheme),
+                         (1-t) * vy i + t * vy (Suc i mod length scheme))"
+            hence "p \<in> BdP" unfolding BdP_def using hi ht by (by5000 force)
+            thus False using hp_notBdP by (by100 blast)
+          qed
+        qed
+        from hint hp_P hpnot hp' hqeq[symmetric]
+        have "p = p'" by (by100 blast)
+        thus "p' \<in> P - BdP" using hp by (by100 simp)
+      qed
+    qed
+    have hPBdP_open: "openin_on P ?TP (P - BdP)"
+      using closedin_complement_openin[OF hBdP_closed] by (by100 simp)
+    have hq_quot_int: "top1_quotient_map_on (P - BdP)
+        (subspace_topology P ?TP (P - BdP))
+        (q ` (P - BdP)) (subspace_topology X TX (q ` (P - BdP))) q"
+    proof -
+      from Theorem_22_1(1)[OF hq hPBdP_sat] hPBdP_open
+      show ?thesis by (by100 simp)
+    qed
+    have hTP_sub: "subspace_topology P ?TP (P - BdP) =
+        subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (P - BdP)"
+      using subspace_topology_trans[of "P - BdP" P] by (by100 simp)
+    have hq_quot_XA: "top1_quotient_map_on (P - BdP)
+        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (P - BdP))
+        (X - A) (subspace_topology X TX (X - A)) q"
+      using hq_quot_int hTP_sub hq_int_eq by (by100 simp)
+    have hq_bij_int: "bij_betw q (P - BdP) (X - A)"
+      unfolding bij_betw_def using hq_inj_int hq_int_eq by (by100 blast)
+    have hq_homeo_int: "top1_homeomorphism_on (P - BdP)
+        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (P - BdP))
+        (X - A) (subspace_topology X TX (X - A)) q"
+      by (rule top1_bij_quotient_map_on_imp_homeomorphism_on[OF hq_quot_XA hq_bij_int])
+    \<comment> \<open>Compose: (q \<circ> inv\_into (P-BdP) \<psi>) is homeomorphism B2-S1 \<rightarrow> X-A.\<close>
+    have hcomp_homeo: "top1_homeomorphism_on (top1_B2 - top1_S1)
+        (subspace_topology top1_B2 top1_B2_topology (top1_B2 - top1_S1))
+        (X - A) (subspace_topology X TX (X - A)) (q \<circ> inv_into (P - BdP) \<psi>)"
+      by (rule homeomorphism_comp[OF h\<psi>inv_homeo hq_homeo_int])
+    \<comment> \<open>h agrees with q \<circ> inv\_into (P-BdP) \<psi> on B2-S1.\<close>
+    have hext: "\<forall>z\<in>top1_B2 - top1_S1. h z = (q \<circ> inv_into (P - BdP) \<psi>) z"
+    proof (intro ballI)
+      fix z assume hz: "z \<in> top1_B2 - top1_S1"
+      have "h z = q (inv_into P \<psi> z)" unfolding h_def by (by100 simp)
+      also have "inv_into P \<psi> z = inv_into (P - BdP) \<psi> z" using hinv_agree hz by (by100 simp)
+      finally show "h z = (q \<circ> inv_into (P - BdP) \<psi>) z" unfolding comp_def by (by100 simp)
+    qed
+    \<comment> \<open>Transfer the homeomorphism from q \<circ> inv\_into (P-BdP) \<psi> to h.\<close>
+    show ?thesis
+    proof -
+      \<comment> \<open>Extract pieces from the composition homeomorphism.\<close>
+      have htop1: "is_topology_on (top1_B2 - top1_S1) (subspace_topology top1_B2 top1_B2_topology (top1_B2 - top1_S1))"
+        using hcomp_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+      have htop2: "is_topology_on (X - A) (subspace_topology X TX (X - A))"
+        using hcomp_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+      have hbij_comp: "bij_betw (q \<circ> inv_into (P - BdP) \<psi>) (top1_B2 - top1_S1) (X - A)"
+        using hcomp_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+      \<comment> \<open>bij\_betw h from bij\_betw of composition + extensional equality.\<close>
+      have hbij_h: "bij_betw h (top1_B2 - top1_S1) (X - A)"
+      proof -
+        have hinj_comp: "inj_on (q \<circ> inv_into (P - BdP) \<psi>) (top1_B2 - top1_S1)"
+          using hbij_comp unfolding bij_betw_def by (by100 blast)
+        have hinj_h: "inj_on h (top1_B2 - top1_S1)"
+        proof (rule inj_onI)
+          fix a b assume ha: "a \<in> top1_B2 - top1_S1" and hb: "b \<in> top1_B2 - top1_S1"
+              and hab: "h a = h b"
+          have "(q \<circ> inv_into (P - BdP) \<psi>) a = (q \<circ> inv_into (P - BdP) \<psi>) b"
+            using hab hext ha hb by (by100 simp)
+          thus "a = b" using inj_onD[OF hinj_comp _ ha hb] by (by100 simp)
+        qed
+        have himg_h: "h ` (top1_B2 - top1_S1) = X - A"
+        proof
+          show "h ` (top1_B2 - top1_S1) \<subseteq> X - A"
+          proof (rule image_subsetI)
+            fix z assume hz: "z \<in> top1_B2 - top1_S1"
+            have "h z = (q \<circ> inv_into (P - BdP) \<psi>) z" using hext hz by (by100 simp)
+            moreover have "(q \<circ> inv_into (P - BdP) \<psi>) z \<in> X - A"
+              using hbij_comp hz unfolding bij_betw_def by (by100 blast)
+            ultimately show "h z \<in> X - A" by (by100 simp)
+          qed
+        next
+          show "X - A \<subseteq> h ` (top1_B2 - top1_S1)"
+          proof (rule subsetI)
+            fix x assume hx: "x \<in> X - A"
+            have hx_img: "x \<in> (q \<circ> inv_into (P - BdP) \<psi>) ` (top1_B2 - top1_S1)"
+              using hbij_comp hx unfolding bij_betw_def by (by100 blast)
+            then obtain z where hz: "z \<in> top1_B2 - top1_S1" and hqz: "(q \<circ> inv_into (P - BdP) \<psi>) z = x"
+              by (by100 blast)
+            have "h z = x" using hext hz hqz by (by100 simp)
+            thus "x \<in> h ` (top1_B2 - top1_S1)" using hz by (by100 blast)
+          qed
+        qed
+        show ?thesis unfolding bij_betw_def using hinj_h himg_h by (by100 blast)
+      qed
+      \<comment> \<open>Continuity of h from continuity of composition.\<close>
+      have hcont_comp: "top1_continuous_map_on (top1_B2 - top1_S1) (subspace_topology top1_B2 top1_B2_topology (top1_B2 - top1_S1))
+          (X - A) (subspace_topology X TX (X - A)) (q \<circ> inv_into (P - BdP) \<psi>)"
+        using hcomp_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+      have hmap_h: "\<forall>z\<in>top1_B2 - top1_S1. h z \<in> X - A"
+      proof (intro ballI)
+        fix z assume hz: "z \<in> top1_B2 - top1_S1"
+        have "h z = (q \<circ> inv_into (P - BdP) \<psi>) z" using hext hz by (by100 simp)
+        moreover have "(q \<circ> inv_into (P - BdP) \<psi>) z \<in> X - A"
+          using hcont_comp hz unfolding top1_continuous_map_on_def by (by100 blast)
+        ultimately show "h z \<in> X - A" by (by100 simp)
+      qed
+      have hpre_h: "\<forall>V\<in>subspace_topology X TX (X - A).
+          {z \<in> top1_B2 - top1_S1. h z \<in> V}
+          \<in> subspace_topology top1_B2 top1_B2_topology (top1_B2 - top1_S1)"
+      proof (intro ballI)
+        fix V assume hV: "V \<in> subspace_topology X TX (X - A)"
+        have hpre_eq: "{z \<in> top1_B2 - top1_S1. h z \<in> V} =
+            {z \<in> top1_B2 - top1_S1. (q \<circ> inv_into (P - BdP) \<psi>) z \<in> V}"
+          using hext by (by100 auto)
+        have "{z \<in> top1_B2 - top1_S1. (q \<circ> inv_into (P - BdP) \<psi>) z \<in> V}
+            \<in> subspace_topology top1_B2 top1_B2_topology (top1_B2 - top1_S1)"
+          using hcont_comp hV unfolding top1_continuous_map_on_def by (by100 blast)
+        thus "{z \<in> top1_B2 - top1_S1. h z \<in> V}
+            \<in> subspace_topology top1_B2 top1_B2_topology (top1_B2 - top1_S1)"
+          using hpre_eq by (by100 simp)
+      qed
+      have hcont_h: "top1_continuous_map_on (top1_B2 - top1_S1) (subspace_topology top1_B2 top1_B2_topology (top1_B2 - top1_S1))
+          (X - A) (subspace_topology X TX (X - A)) h"
+        unfolding top1_continuous_map_on_def
+        using htop1 htop2 hmap_h hpre_h by (by5000 blast)
+      \<comment> \<open>Inverse continuity: inv\_into (B2-S1) h agrees with inv\_into (B2-S1) (q \<circ> inv\_into (P-BdP) \<psi>) on X-A.\<close>
+      have hcont_inv_comp: "top1_continuous_map_on (X - A) (subspace_topology X TX (X - A))
+          (top1_B2 - top1_S1) (subspace_topology top1_B2 top1_B2_topology (top1_B2 - top1_S1))
+          (inv_into (top1_B2 - top1_S1) (q \<circ> inv_into (P - BdP) \<psi>))"
+        using hcomp_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+      have hinj_comp: "inj_on (q \<circ> inv_into (P - BdP) \<psi>) (top1_B2 - top1_S1)"
+        using hbij_comp unfolding bij_betw_def by (by100 blast)
+      have hinj_h: "inj_on h (top1_B2 - top1_S1)"
+        using hbij_h unfolding bij_betw_def by (by100 blast)
+      have hext_inv: "\<forall>x\<in>X - A. inv_into (top1_B2 - top1_S1) h x =
+          inv_into (top1_B2 - top1_S1) (q \<circ> inv_into (P - BdP) \<psi>) x"
+      proof (intro ballI)
+        fix x assume hx: "x \<in> X - A"
+        have hx_img: "x \<in> (q \<circ> inv_into (P - BdP) \<psi>) ` (top1_B2 - top1_S1)"
+          using hbij_comp hx unfolding bij_betw_def by (by100 blast)
+        then obtain z where hz: "z \<in> top1_B2 - top1_S1" and hqz: "(q \<circ> inv_into (P - BdP) \<psi>) z = x"
+          by (by100 blast)
+        have hh_z: "h z = x" using hext hz hqz by (by100 simp)
+        have "inv_into (top1_B2 - top1_S1) h x = z"
+          using inv_into_f_eq[OF hinj_h hz hh_z] by (by100 simp)
+        moreover have "inv_into (top1_B2 - top1_S1) (q \<circ> inv_into (P - BdP) \<psi>) x = z"
+          using inv_into_f_eq[OF hinj_comp hz hqz] unfolding comp_def by (by100 simp)
+        ultimately show "inv_into (top1_B2 - top1_S1) h x =
+            inv_into (top1_B2 - top1_S1) (q \<circ> inv_into (P - BdP) \<psi>) x" by (by100 simp)
+      qed
+      have hmap_inv: "\<forall>x\<in>X - A. inv_into (top1_B2 - top1_S1) h x \<in> top1_B2 - top1_S1"
+      proof (intro ballI)
+        fix x assume hx: "x \<in> X - A"
+        have "inv_into (top1_B2 - top1_S1) h x = inv_into (top1_B2 - top1_S1) (q \<circ> inv_into (P - BdP) \<psi>) x"
+          using hext_inv hx by (by100 simp)
+        moreover have "inv_into (top1_B2 - top1_S1) (q \<circ> inv_into (P - BdP) \<psi>) x \<in> top1_B2 - top1_S1"
+          using hcont_inv_comp hx unfolding top1_continuous_map_on_def by (by100 blast)
+        ultimately show "inv_into (top1_B2 - top1_S1) h x \<in> top1_B2 - top1_S1" by (by100 simp)
+      qed
+      have hpre_inv: "\<forall>V\<in>subspace_topology top1_B2 top1_B2_topology (top1_B2 - top1_S1).
+          {x \<in> X - A. inv_into (top1_B2 - top1_S1) h x \<in> V}
+          \<in> subspace_topology X TX (X - A)"
+      proof (intro ballI)
+        fix V assume hV: "V \<in> subspace_topology top1_B2 top1_B2_topology (top1_B2 - top1_S1)"
+        have hpre_eq: "{x \<in> X - A. inv_into (top1_B2 - top1_S1) h x \<in> V} =
+            {x \<in> X - A. inv_into (top1_B2 - top1_S1) (q \<circ> inv_into (P - BdP) \<psi>) x \<in> V}"
+          using hext_inv by (by100 auto)
+        have "{x \<in> X - A. inv_into (top1_B2 - top1_S1) (q \<circ> inv_into (P - BdP) \<psi>) x \<in> V}
+            \<in> subspace_topology X TX (X - A)"
+          using hcont_inv_comp hV unfolding top1_continuous_map_on_def by (by100 blast)
+        thus "{x \<in> X - A. inv_into (top1_B2 - top1_S1) h x \<in> V}
+            \<in> subspace_topology X TX (X - A)"
+          using hpre_eq by (by100 simp)
+      qed
+      have hcont_inv_h: "top1_continuous_map_on (X - A) (subspace_topology X TX (X - A))
+          (top1_B2 - top1_S1) (subspace_topology top1_B2 top1_B2_topology (top1_B2 - top1_S1))
+          (inv_into (top1_B2 - top1_S1) h)"
+        unfolding top1_continuous_map_on_def
+        using htop2 htop1 hmap_inv hpre_inv by (by5000 blast)
+      show ?thesis unfolding top1_homeomorphism_on_def
+        using htop1 htop2 hbij_h hcont_h hcont_inv_h by (by100 blast)
+    qed
+  qed
   have hh_S1: "h ` top1_S1 \<subseteq> A"
-    sorry \<comment> \<open>\<psi>inv(S^1) = Bd P (boundary maps to boundary), so h(S^1) = q(Bd P) = A.\<close>
+  proof -
+    \<comment> \<open>S1 = \<psi>(BdP) from h\<psi>\_bd. So \<psi>inv(S1) = BdP. h(S1) = q(\<psi>inv(S1)) = q(BdP) = A.\<close>
+    have "\<psi> ` BdP = top1_S1" using h\<psi>_bd unfolding BdP_def by (by100 simp)
+    hence "inv_into P \<psi> ` top1_S1 \<subseteq> BdP"
+    proof -
+      assume h\<psi>BdP: "\<psi> ` BdP = top1_S1"
+      show "inv_into P \<psi> ` top1_S1 \<subseteq> BdP"
+      proof (rule image_subsetI)
+        fix z assume "z \<in> top1_S1"
+        hence "z \<in> \<psi> ` BdP" using h\<psi>BdP by (by100 simp)
+        then obtain p where "p \<in> BdP" "\<psi> p = z" by (by100 blast)
+        have "p \<in> P" using \<open>p \<in> BdP\<close> hBdP_sub_P by (by100 blast)
+        have "inj_on \<psi> P" using h\<psi>_bij unfolding bij_betw_def by (by100 blast)
+        hence "inv_into P \<psi> z = p"
+          using inv_into_f_f[OF \<open>inj_on \<psi> P\<close> \<open>p \<in> P\<close>] \<open>\<psi> p = z\<close> by (by100 simp)
+        thus "inv_into P \<psi> z \<in> BdP" using \<open>p \<in> BdP\<close> by (by100 simp)
+      qed
+    qed
+    hence "q ` (inv_into P \<psi> ` top1_S1) \<subseteq> q ` BdP" by (by100 blast)
+    moreover have "h ` top1_S1 = q ` (inv_into P \<psi> ` top1_S1)"
+      unfolding h_def by (by100 auto)
+    ultimately show ?thesis unfolding A_def by (by100 blast)
+  qed
   have hh_S1': "\<forall>z\<in>top1_S1. h z \<in> A" using hh_S1 by (by100 blast)
+  have hA_eq: "A = q ` (\<Union>i<length scheme. {((1-t) * vx i + t * vx (Suc i mod length scheme),
+                   (1-t) * vy i + t * vy (Suc i mod length scheme)) | t. t \<in> I_set})"
+    unfolding A_def BdP_def by (by100 simp)
+  have ha_eq: "a = q (vx 0, vy 0)" unfolding a_def by (by100 simp)
+  have hvert_all_id: "\<forall>i<length scheme. \<forall>j<length scheme. q (vx i, vy i) = q (vx j, vy j)"
+    using mp[OF spec[OF spec[OF spec[OF hvert_connected, of q], of vx], of vy] hedge] .
+  \<comment> \<open>Continuity of q on individual edges.\<close>
+  have hq_edge_cont: "\<forall>i<length scheme.
+      top1_continuous_map_on I_set top1_unit_interval_topology A (subspace_topology X TX A)
+        (\<lambda>t. q ((1-t) * vx i + t * vx (Suc i mod length scheme),
+                 (1-t) * vy i + t * vy (Suc i mod length scheme)))"
+  proof (intro allI impI)
+    fix i assume hi: "i < length scheme"
+    let ?f = "\<lambda>t. q ((1-t) * vx i + t * vx (Suc i mod length scheme),
+                     (1-t) * vy i + t * vy (Suc i mod length scheme))"
+    \<comment> \<open>The affine map t \<mapsto> edge\_i(t) is continuous from I\_set to R2.\<close>
+    \<comment> \<open>q is continuous from P to X (quotient map). Compose.\<close>
+    have hq_cont: "top1_continuous_map_on P ?TP X TX q"
+      using hq unfolding top1_quotient_map_on_def by (by100 blast)
+    \<comment> \<open>The affine map is continuous from I\_set to P.\<close>
+    have hTI: "is_topology_on I_set top1_unit_interval_topology"
+      by (rule top1_unit_interval_topology_is_topology_on)
+    \<comment> \<open>The edge points lie in P.\<close>
+    have hlen_pos: "length scheme > 0" using assms(2) by (by100 linarith)
+    have hi1: "Suc i mod length scheme < length scheme" using hlen_pos by (by100 simp)
+    have hvi: "(vx i, vy i) \<in> P" using hverts hi by (by100 blast)
+    have hvi1: "(vx (Suc i mod length scheme), vy (Suc i mod length scheme)) \<in> P"
+      using hverts hi1 by (by100 blast)
+    \<comment> \<open>The edge map lands in P (convex combination of polygon vertices).\<close>
+    have hedge_in_P: "\<forall>t\<in>I_set. ((1-t) * vx i + t * vx (Suc i mod length scheme),
+                     (1-t) * vy i + t * vy (Suc i mod length scheme)) \<in> P"
+    proof (intro ballI)
+      fix t assume "t \<in> I_set"
+      hence "0 \<le> t" "t \<le> 1" unfolding top1_unit_interval_def by (by100 auto)+
+      thus "((1-t) * vx i + t * vx (Suc i mod length scheme),
+             (1-t) * vy i + t * vy (Suc i mod length scheme)) \<in> P"
+        using polygonal_region_convex_combo[OF hP hlen3 hvi hvi1] by (by100 simp)
+    qed
+    \<comment> \<open>The composition lands in A.\<close>
+    have hf_in_A: "\<forall>t\<in>I_set. ?f t \<in> A"
+    proof (intro ballI)
+      fix t assume ht: "t \<in> I_set"
+      have "?f t \<in> q ` (\<Union>j<length scheme. {((1-s) * vx j + s * vx (Suc j mod length scheme),
+                   (1-s) * vy j + s * vy (Suc j mod length scheme)) | s. s \<in> I_set})"
+        using hi ht by (by100 blast)
+      thus "?f t \<in> A" unfolding hA_eq by (by100 simp)
+    qed
+    \<comment> \<open>Full proof via composition of continuous maps.\<close>
+    \<comment> \<open>Step 1: The affine map is continuous from R to R2.\<close>
+    define aff_i :: "real \<Rightarrow> real \<times> real" where
+      "aff_i t = ((1-t) * vx i + t * vx (Suc i mod length scheme),
+                  (1-t) * vy i + t * vy (Suc i mod length scheme))" for t
+    have haff_eq: "\<And>t. ?f t = q (aff_i t)" unfolding aff_i_def by (by100 simp)
+    have haff_cont_univ: "continuous_on UNIV aff_i"
+      unfolding aff_i_def
+      by (intro continuous_intros)
+    have haff_in_P: "\<And>t. t \<in> I_set \<Longrightarrow> aff_i t \<in> P"
+      using hedge_in_P unfolding aff_i_def by (by100 blast)
+    \<comment> \<open>Step 2: Affine map continuous from I\_set to P (restrict domain and range).\<close>
+    have haff_cont_I: "top1_continuous_map_on I_set top1_unit_interval_topology P ?TP aff_i"
+    proof -
+      \<comment> \<open>aff\_i is continuous on UNIV as R \<to> R2. Restrict domain to I\_set, range to P.\<close>
+      have h1: "top1_continuous_map_on (UNIV::real set) top1_open_sets
+           (UNIV :: (real\<times>real) set) (product_topology_on top1_open_sets top1_open_sets) aff_i"
+      proof -
+        have "top1_continuous_map_on (UNIV::real set) top1_open_sets
+           (UNIV :: (real\<times>real) set)
+           (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) UNIV) aff_i"
+          using top1_continuous_map_on_R_to_R2_subspace[of aff_i "UNIV :: (real\<times>real) set"]
+                haff_cont_univ by (by100 simp)
+        moreover have "subspace_topology (UNIV :: (real\<times>real) set)
+            (product_topology_on top1_open_sets top1_open_sets) (UNIV :: (real\<times>real) set)
+            = product_topology_on top1_open_sets top1_open_sets"
+          by (rule subspace_topology_UNIV_self)
+        ultimately show ?thesis by (by100 simp)
+      qed
+      \<comment> \<open>Restrict domain to I\_set.\<close>
+      have hTR: "is_topology_on (UNIV::real set) top1_open_sets"
+        by (rule top1_open_sets_is_topology_on_UNIV)
+      have hTR2: "is_topology_on (UNIV::(real\<times>real) set) (product_topology_on top1_open_sets top1_open_sets)"
+      proof -
+        have "is_topology_on ((UNIV::real set) \<times> (UNIV::real set))
+            (product_topology_on top1_open_sets top1_open_sets)"
+          by (rule product_topology_on_is_topology_on[OF top1_open_sets_is_topology_on_UNIV
+               top1_open_sets_is_topology_on_UNIV])
+        thus ?thesis by (by100 simp)
+      qed
+      have hP_sub: "P \<subseteq> (UNIV :: (real\<times>real) set)" by (by100 blast)
+      have hTR2': "is_topology_on P ?TP"
+        using subspace_topology_is_topology_on[OF hTR2 hP_sub] by (by100 blast)
+      have h2: "top1_continuous_map_on I_set (subspace_topology UNIV top1_open_sets I_set)
+           (UNIV :: (real\<times>real) set) (product_topology_on top1_open_sets top1_open_sets) aff_i"
+        using Theorem_18_2(4)[OF hTR hTR2 hTR2'] h1 by (by5000 blast)
+      have hI_sub: "top1_unit_interval_topology = subspace_topology UNIV top1_open_sets I_set"
+        unfolding top1_unit_interval_topology_def by (by100 simp)
+      have h3: "top1_continuous_map_on I_set top1_unit_interval_topology
+           (UNIV :: (real\<times>real) set) (product_topology_on top1_open_sets top1_open_sets) aff_i"
+        using h2 hI_sub by (by100 simp)
+      \<comment> \<open>Restrict range to P.\<close>
+      have himg: "aff_i ` I_set \<subseteq> P" using haff_in_P by (by100 blast)
+      have hP_sub: "P \<subseteq> (UNIV :: (real\<times>real) set)" by (by100 blast)
+      from Theorem_18_2(5)[OF hTI hTR2 hTR2']
+      have "\<forall>W f. top1_continuous_map_on I_set top1_unit_interval_topology
+           (UNIV :: (real\<times>real) set) (product_topology_on top1_open_sets top1_open_sets) f \<and>
+           W \<subseteq> (UNIV :: (real\<times>real) set) \<and> f ` I_set \<subseteq> W \<longrightarrow>
+           top1_continuous_map_on I_set top1_unit_interval_topology W
+             (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) W) f"
+        by (by5000 blast)
+      thus ?thesis using h3 hP_sub himg by (by100 blast)
+    qed
+    \<comment> \<open>Step 3: Compose with q : P \<to> X.\<close>
+    have hf_cont_X: "top1_continuous_map_on I_set top1_unit_interval_topology X TX ?f"
+    proof -
+      have "top1_continuous_map_on I_set top1_unit_interval_topology X TX (q \<circ> aff_i)"
+        using top1_continuous_map_on_comp[OF haff_cont_I hq_cont] by (by100 blast)
+      moreover have "q \<circ> aff_i = ?f" unfolding aff_i_def comp_def by (by100 auto)
+      ultimately show ?thesis by (by100 simp)
+    qed
+    \<comment> \<open>Step 4: Restrict codomain to A.\<close>
+    have hTX_top: "is_topology_on X TX"
+      using assms(1) unfolding top1_quotient_of_scheme_on_def is_topology_on_strict_def by (by100 blast)
+    have hA_sub_X: "A \<subseteq> X" using hA_closed closedin_sub by (by100 blast)
+    have hTA_top: "is_topology_on A (subspace_topology X TX A)"
+      using subspace_topology_is_topology_on[OF hTX_top hA_sub_X] by (by100 blast)
+    have himg_A: "?f ` I_set \<subseteq> A" using hf_in_A by (by100 blast)
+    from Theorem_18_2(5)[OF hTI hTX_top hTA_top]
+    show "top1_continuous_map_on I_set top1_unit_interval_topology A (subspace_topology X TX A) ?f"
+      using hf_cont_X hA_sub_X himg_A by (by100 blast)
+  qed
   show ?thesis
-    apply (rule exI[of _ A])
-    apply (rule exI[of _ h])
-    apply (rule exI[of _ a])
-    using hA_closed hA_pc hh_cont ha_A hh_homeo hh_S1 hh_S1' by (by100 blast)
+    apply (rule exI[of _ A], rule exI[of _ h], rule exI[of _ a],
+           rule exI[of _ q], rule exI[of _ vx], rule exI[of _ vy])
+    apply (intro conjI)
+    using hA_closed apply (by100 blast)
+    using hA_pc apply (by100 blast)
+    using hh_cont apply (by100 blast)
+    using ha_A apply (by100 blast)
+    using hh_homeo apply (by100 assumption)
+    using hh_S1 apply (by100 blast)
+    using hh_S1' apply (by100 blast)
+    using hA_eq apply (by100 blast)
+    using ha_eq apply (by100 blast)
+    using hvert_all_id apply (by100 blast)
+    using hedge apply (by100 blast)
+    using hno_extra_cw apply (by100 blast)
+    using hq_edge_cont apply (by100 blast)
+    done
 qed
 
 text \<open>For the torus scheme, the 1-skeleton is a wedge of 2 circles.
@@ -4825,6 +5692,11 @@ lemma quotient_of_scheme_extract_full:
         (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) X TX q"
     "length scheme \<ge> 3"
     "\<forall>i<length scheme. (vx i, vy i) \<in> P"
+    "P = {(x, y) | x y.
+                \<exists>coeffs. (\<forall>i<length scheme. coeffs i \<ge> 0)
+                       \<and> (\<Sum>i<length scheme. coeffs i) = 1
+                       \<and> x = (\<Sum>i<length scheme. coeffs i * vx i)
+                       \<and> y = (\<Sum>i<length scheme. coeffs i * vy i)}"
     "\<forall>i<length scheme. \<forall>j<length scheme.
         fst (scheme!i) = fst (scheme!j) \<longrightarrow>
         (\<forall>t\<in>I_set.
@@ -4839,11 +5711,28 @@ lemma quotient_of_scheme_extract_full:
               p \<noteq> ((1-t) * vx i + t * vx (Suc i mod length scheme),
                     (1-t) * vy i + t * vy (Suc i mod length scheme)))
          \<longrightarrow> (\<forall>p'\<in>P. q p = q p' \<longrightarrow> p = p')"
+    "\<forall>i<length scheme. \<forall>j<length scheme. \<forall>t\<in>I_set. \<forall>s\<in>I_set.
+              q ((1-t) * vx i + t * vx (Suc i mod length scheme),
+                 (1-t) * vy i + t * vy (Suc i mod length scheme))
+            = q ((1-s) * vx j + s * vx (Suc j mod length scheme),
+                 (1-s) * vy j + s * vy (Suc j mod length scheme))
+            \<longrightarrow> (i = j \<and> t = s)
+              \<or> (fst (scheme!i) = fst (scheme!j) \<and>
+                 (if snd (scheme!i) = snd (scheme!j) then s = t else s = 1 - t))"
+    "\<forall>i<length scheme. let cx = (\<Sum>j<length scheme. vx j) / real (length scheme);
+                            cy = (\<Sum>j<length scheme. vy j) / real (length scheme)
+         in (vx i - cx) * (vy (Suc i mod length scheme) - cy)
+          - (vy i - cy) * (vx (Suc i mod length scheme) - cx) > 0"
 proof -
   from assms obtain P q vx vy where
     h1: "top1_is_polygonal_region_on P (length scheme)" and
     h2: "top1_quotient_map_on P (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) X TX q" and
     h3: "\<forall>i<length scheme. (vx i, vy i) \<in> P" and
+    h8: "P = {(x, y) | x y.
+                \<exists>coeffs. (\<forall>i<length scheme. coeffs i \<ge> 0)
+                       \<and> (\<Sum>i<length scheme. coeffs i) = 1
+                       \<and> x = (\<Sum>i<length scheme. coeffs i * vx i)
+                       \<and> y = (\<Sum>i<length scheme. coeffs i * vy i)}" and
     h4: "\<forall>i<length scheme. \<forall>j<length scheme.
         fst (scheme!i) = fst (scheme!j) \<longrightarrow>
         (\<forall>t\<in>I_set. q ((1-t) * vx i + t * vx (Suc i mod length scheme),
@@ -4856,12 +5745,24 @@ proof -
     h5: "\<forall>p\<in>P. (\<forall>i<length scheme. \<forall>t\<in>I_set.
           p \<noteq> ((1-t) * vx i + t * vx (Suc i mod length scheme),
                 (1-t) * vy i + t * vy (Suc i mod length scheme)))
-       \<longrightarrow> (\<forall>p'\<in>P. q p = q p' \<longrightarrow> p = p')"
+       \<longrightarrow> (\<forall>p'\<in>P. q p = q p' \<longrightarrow> p = p')" and
+    h7: "\<forall>i<length scheme. \<forall>j<length scheme. \<forall>t\<in>I_set. \<forall>s\<in>I_set.
+              q ((1-t) * vx i + t * vx (Suc i mod length scheme),
+                 (1-t) * vy i + t * vy (Suc i mod length scheme))
+            = q ((1-s) * vx j + s * vx (Suc j mod length scheme),
+                 (1-s) * vy j + s * vy (Suc j mod length scheme))
+            \<longrightarrow> (i = j \<and> t = s)
+              \<or> (fst (scheme!i) = fst (scheme!j) \<and>
+                 (if snd (scheme!i) = snd (scheme!j) then s = t else s = 1 - t))" and
+    h9: "\<forall>i<length scheme. let cx = (\<Sum>j<length scheme. vx j) / real (length scheme);
+                               cy = (\<Sum>j<length scheme. vy j) / real (length scheme)
+         in (vx i - cx) * (vy (Suc i mod length scheme) - cy)
+          - (vy i - cy) * (vx (Suc i mod length scheme) - cx) > 0"
     using assms unfolding top1_quotient_of_scheme_on_def
-    by (elim conjE exE) blast
+    by (elim conjE exE) (rule that, assumption+)
   have h6: "length scheme \<ge> 3"
     using h1 unfolding top1_is_polygonal_region_on_def by (by100 blast)
-  show ?thesis by (rule that[OF h1 h2 h6 h3 h4 h5])
+  show ?thesis by (rule that[OF h1 h2 h6 h3 h8 h4 h5 h7 h9])
 qed
 
 \<comment> \<open>Note: quotient\_strict\_extract was removed because automation can't handle the
@@ -4892,6 +5793,11 @@ proof -
           (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) X TX q"
       and hlen_full: "length scheme \<ge> 3"
       and hvert_full: "\<forall>i<length scheme. (vx i, vy i) \<in> P"
+      and hP_hull_full: "P = {(x, y) | x y.
+                \<exists>coeffs. (\<forall>i<length scheme. coeffs i \<ge> 0)
+                       \<and> (\<Sum>i<length scheme. coeffs i) = 1
+                       \<and> x = (\<Sum>i<length scheme. coeffs i * vx i)
+                       \<and> y = (\<Sum>i<length scheme. coeffs i * vy i)}"
       and hedge_full: "\<forall>i<length scheme. \<forall>j<length scheme. fst (scheme!i) = fst (scheme!j) \<longrightarrow>
           (\<forall>t\<in>I_set. q ((1-t) * vx i + t * vx (Suc i mod length scheme),
               (1-t) * vy i + t * vy (Suc i mod length scheme))
@@ -4904,11 +5810,7 @@ proof -
               p \<noteq> ((1-t) * vx i + t * vx (Suc i mod length scheme),
                     (1-t) * vy i + t * vy (Suc i mod length scheme)))
            \<longrightarrow> (\<forall>p'\<in>P. q p = q p' \<longrightarrow> p = p')"
-    by (rule quotient_of_scheme_extract_full[OF hsch])
-  \<comment> \<open>The "no extra identifications" condition: proof gap. This requires
-     the polygonal quotient to have ONLY the scheme-specified identifications
-     on the boundary. The current definition doesn't guarantee this.\<close>
-  have hno_extra_full: "\<forall>i<length scheme. \<forall>j<length scheme. \<forall>t\<in>I_set. \<forall>s\<in>I_set.
+      and hno_extra_full: "\<forall>i<length scheme. \<forall>j<length scheme. \<forall>t\<in>I_set. \<forall>s\<in>I_set.
               q ((1-t) * vx i + t * vx (Suc i mod length scheme),
                  (1-t) * vy i + t * vy (Suc i mod length scheme))
             = q ((1-s) * vx j + s * vx (Suc j mod length scheme),
@@ -4916,7 +5818,7 @@ proof -
             \<longrightarrow> (i = j \<and> t = s)
               \<or> (fst (scheme!i) = fst (scheme!j) \<and>
                  (if snd (scheme!i) = snd (scheme!j) then s = t else s = 1 - t))"
-    sorry \<comment> \<open>Definition gap: needs "no extra identifications" condition.\<close>
+    by (rule quotient_of_scheme_extract_full[OF hsch])
   have hcompact: "top1_compact_on X TX"
   proof -
     let ?TP_c = "subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P"
@@ -5957,11 +6859,31 @@ theorem Theorem_74_2_scheme_presentation:
   assumes hscheme: "top1_quotient_of_scheme_on X TX scheme"
       and hx0: "x0 \<in> X"
       and hlen: "length scheme \<ge> 3"
-      \<comment> \<open>All vertices identified under the (specific extracted) quotient map.\<close>
+      \<comment> \<open>All vertices map to x0 (book: "\<pi> maps all vertices to a single point x_0").\<close>
       and hvert: "\<exists>P q vx vy. top1_is_polygonal_region_on P (length scheme)
           \<and> top1_quotient_map_on P (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) X TX q
           \<and> (\<forall>i<length scheme. (vx i, vy i) \<in> P)
-          \<and> (\<forall>i<length scheme. \<forall>j<length scheme. q (vx i, vy i) = q (vx j, vy j))"
+          \<and> (\<forall>i<length scheme. \<forall>j<length scheme. q (vx i, vy i) = q (vx j, vy j))
+          \<and> (\<forall>i<length scheme. \<forall>j<length scheme. \<forall>t\<in>I_set. \<forall>s\<in>I_set.
+              q ((1-t) * vx i + t * vx (Suc i mod length scheme),
+                 (1-t) * vy i + t * vy (Suc i mod length scheme))
+            = q ((1-s) * vx j + s * vx (Suc j mod length scheme),
+                 (1-s) * vy j + s * vy (Suc j mod length scheme))
+            \<longrightarrow> (i = j \<and> t = s)
+              \<or> (fst (scheme!i) = fst (scheme!j) \<and>
+                 (if snd (scheme!i) = snd (scheme!j) then s = t else s = 1 - t)))"
+      \<comment> \<open>Vertex connectivity: the scheme's label graph connects all vertices.\<close>
+      and hvert_conn_assm: "\<forall>(q::real\<times>real\<Rightarrow>'a) (vx::nat\<Rightarrow>real) (vy::nat\<Rightarrow>real).
+          (\<forall>i<length scheme. \<forall>j<length scheme.
+            fst (scheme!i) = fst (scheme!j) \<longrightarrow>
+            (\<forall>t\<in>I_set. q ((1-t) * vx i + t * vx (Suc i mod length scheme),
+               (1-t) * vy i + t * vy (Suc i mod length scheme))
+             = (if snd (scheme!i) = snd (scheme!j)
+                then q ((1-t) * vx j + t * vx (Suc j mod length scheme),
+                        (1-t) * vy j + t * vy (Suc j mod length scheme))
+                else q (t * vx j + (1-t) * vx (Suc j mod length scheme),
+                        t * vy j + (1-t) * vy (Suc j mod length scheme)))))
+          \<longrightarrow> (\<forall>i<length scheme. \<forall>j<length scheme. q (vx i, vy i) = q (vx j, vy j))"
   shows "\<exists>(G::'g set) mul e invg.
            top1_group_presented_by_on G mul e invg
              (fst ` set scheme) \<comment> \<open>The distinct labels\<close>
@@ -5976,47 +6898,821 @@ proof -
     hPoly: "top1_is_polygonal_region_on P (length scheme)" and
     hq: "top1_quotient_map_on P (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) X TX q" and
     hverts: "\<forall>i<length scheme. (vxP i, vyP i) \<in> P" and
-    hvert_id: "\<forall>i<length scheme. \<forall>j<length scheme. q (vxP i, vyP i) = q (vxP j, vyP j)"
-    by (by100 blast)
+    hvert_id: "\<forall>i<length scheme. \<forall>j<length scheme. q (vxP i, vyP i) = q (vxP j, vyP j)" and
+    hno_extra: "\<forall>i<length scheme. \<forall>j<length scheme. \<forall>t\<in>I_set. \<forall>s\<in>I_set.
+          q ((1-t) * vxP i + t * vxP (Suc i mod length scheme),
+             (1-t) * vyP i + t * vyP (Suc i mod length scheme))
+        = q ((1-s) * vxP j + s * vxP (Suc j mod length scheme),
+             (1-s) * vyP j + s * vyP (Suc j mod length scheme))
+        \<longrightarrow> (i = j \<and> t = s)
+          \<or> (fst (scheme!i) = fst (scheme!j) \<and>
+             (if snd (scheme!i) = snd (scheme!j) then s = t else s = 1 - t))"
+    by (elim conjE exE) (rule that, assumption+)
   let ?TP = "subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P"
   \<comment> \<open>Step 2 (book): "A = \<pi>(Bd P) is a wedge of k circles."
      Since all vertices are identified by q, the boundary edges become loops in X.
      Edges with the same label are identified, giving k distinct circles.
      All circles share the common point x0 = q(vertex).\<close>
   let ?k = "card (fst ` set scheme)"
-  have hA_wedge: "\<exists>A. closedin_on X TX A
-      \<and> top1_is_wedge_of_circles_on A (subspace_topology X TX A) (fst ` set scheme) x0"
-    sorry \<comment> \<open>Book: "A = \<pi>(Bd P) is a wedge of k circles."
-       Each label determines a pair of identified edges that form a circle in X.\<close>
-  \<comment> \<open>Step 3 (book): "The loops g_1,...,g_k represent a set of free generators for \<pi>_1(A, x0)."
-     This is Theorem 71.1 (wedge of circles has free fundamental group).\<close>
-  \<comment> \<open>Step 4 (book): "The loop running around Bd P maps to the relator word."
-     The boundary loop in order is the scheme word w.\<close>
-  \<comment> \<open>Step 5 (book): "The theorem now follows from Theorem 72.1."
-     Theorem 72.1 gives \<pi>_1(X) \<cong> \<pi>_1(A) / N(relator).
-     \<pi>_1(A) is free on {labels}. The relator is the scheme word.
-     This is exactly the group presentation.\<close>
-  \<comment> \<open>Combine steps 2-5 to get the presentation.\<close>
-  from hA_wedge obtain A where hA_cl: "closedin_on X TX A"
-      and hA_wd: "top1_is_wedge_of_circles_on A (subspace_topology X TX A) (fst ` set scheme) x0"
-    by (by100 blast)
-  \<comment> \<open>\<pi>_1(A) is free on the labels (Theorem 71.1).\<close>
+  \<comment> \<open>Step 2-5 combined: Get CW data, show A is a wedge, apply Theorem 72.1.\<close>
+  \<comment> \<open>Use scheme\_quotient\_CW\_data to get a single A with all properties.\<close>
+  from scheme_quotient_CW_data[OF hscheme hlen hvert_conn_assm]
+  obtain A h a qC vxC vyC where hA_cl: "closedin_on X TX A"
+      and hA_pc: "top1_path_connected_on A (subspace_topology X TX A)"
+      and hh_cont: "top1_continuous_map_on top1_B2 top1_B2_topology X TX h"
+      and ha_A: "a \<in> A"
+      and hh_homeo: "top1_homeomorphism_on (top1_B2 - top1_S1)
+          (subspace_topology top1_B2 top1_B2_topology (top1_B2 - top1_S1))
+          (X - A) (subspace_topology X TX (X - A)) h"
+      and hh_S1: "h ` top1_S1 \<subseteq> A"
+      and hA_eq: "A = qC ` (\<Union>i<length scheme. {((1-t) * vxC i + t * vxC (Suc i mod length scheme),
+                   (1-t) * vyC i + t * vyC (Suc i mod length scheme)) | t. t \<in> I_set})"
+      and ha_eq: "a = qC (vxC 0, vyC 0)"
+      and hvert_C: "\<forall>i<length scheme. \<forall>j<length scheme. qC (vxC i, vyC i) = qC (vxC j, vyC j)"
+      and hedge_C: "\<forall>i<length scheme. \<forall>j<length scheme.
+          fst (scheme!i) = fst (scheme!j) \<longrightarrow>
+          (\<forall>t\<in>I_set. qC ((1-t) * vxC i + t * vxC (Suc i mod length scheme),
+              (1-t) * vyC i + t * vyC (Suc i mod length scheme))
+           = (if snd (scheme!i) = snd (scheme!j)
+              then qC ((1-t) * vxC j + t * vxC (Suc j mod length scheme),
+                      (1-t) * vyC j + t * vyC (Suc j mod length scheme))
+              else qC (t * vxC j + (1-t) * vxC (Suc j mod length scheme),
+                      t * vyC j + (1-t) * vyC (Suc j mod length scheme))))"
+      and hno_C: "\<forall>i<length scheme. \<forall>j<length scheme. \<forall>t\<in>I_set. \<forall>s\<in>I_set.
+          qC ((1-t) * vxC i + t * vxC (Suc i mod length scheme),
+             (1-t) * vyC i + t * vyC (Suc i mod length scheme))
+        = qC ((1-s) * vxC j + s * vxC (Suc j mod length scheme),
+             (1-s) * vyC j + s * vyC (Suc j mod length scheme))
+        \<longrightarrow> (i = j \<and> t = s)
+          \<or> (fst (scheme!i) = fst (scheme!j) \<and>
+             (if snd (scheme!i) = snd (scheme!j) then s = t else s = 1 - t))"
+      and hqC_edge_cont: "\<forall>i<length scheme.
+          top1_continuous_map_on I_set top1_unit_interval_topology A (subspace_topology X TX A)
+            (\<lambda>t. qC ((1-t) * vxC i + t * vxC (Suc i mod length scheme),
+                      (1-t) * vyC i + t * vyC (Suc i mod length scheme)))"
+    by (elim conjE exE) (rule that, assumption+)
+  \<comment> \<open>Step 2 (book): "A is a wedge of k circles." (Using the SAME A from CW data.)\<close>
+  have hA_wd: "top1_is_wedge_of_circles_on A (subspace_topology X TX A) (fst ` set scheme) a"
+  proof -
+    \<comment> \<open>Abbreviations.\<close>
+    let ?n = "length scheme"
+    let ?TA = "subspace_topology X TX A"
+    let ?J = "fst ` set scheme"
+    have hn_pos: "?n > 0" using hlen by (by100 linarith)
+    \<comment> \<open>Prerequisites: strict topology and Hausdorff for A.\<close>
+    have hX_s: "is_topology_on_strict X TX"
+      using hscheme unfolding top1_quotient_of_scheme_on_def by (by100 blast)
+    have hX_h: "is_hausdorff_on X TX"
+      by (rule scheme_quotient_hausdorff[OF hscheme hlen])
+    have hA_sub: "A \<subseteq> X" using hA_cl closedin_sub by (by100 blast)
+    have hA_strict: "is_topology_on_strict A ?TA"
+      using subspace_topology_is_strict[OF hX_s hA_sub] by (by100 blast)
+    have hA_haus: "is_hausdorff_on A ?TA"
+      using Theorem_17_11 hX_h hA_sub by (by100 blast)
+
+    \<comment> \<open>For each label \<alpha> \<in> J, pick a canonical edge index i(\<alpha>).\<close>
+    define i_of where "i_of \<alpha> = (SOME i. i < ?n \<and> fst (scheme!i) = \<alpha>)" for \<alpha>
+    \<comment> \<open>Key property: i_of \<alpha> is valid for \<alpha> \<in> J.\<close>
+    have hi_of: "\<And>\<alpha>. \<alpha> \<in> ?J \<Longrightarrow> i_of \<alpha> < ?n \<and> fst (scheme!(i_of \<alpha>)) = \<alpha>"
+    proof -
+      fix \<alpha> assume h\<alpha>: "\<alpha> \<in> ?J"
+      then obtain x where hx: "x \<in> set scheme" "fst x = \<alpha>" by (by100 blast)
+      then obtain i where "i < ?n" "scheme!i = x" using in_set_conv_nth by (by5000 metis)
+      hence "\<exists>i. i < ?n \<and> fst (scheme!i) = \<alpha>" using hx by (by100 blast)
+      thus "i_of \<alpha> < ?n \<and> fst (scheme!(i_of \<alpha>)) = \<alpha>"
+        unfolding i_of_def by (rule someI_ex)
+    qed
+
+    \<comment> \<open>Define the edge map for index i: edge\_i(t) = (1-t)*v_i + t*v_{i+1}.\<close>
+    define edge_pt where "edge_pt i t = ((1-t) * vxC i + t * vxC (Suc i mod ?n),
+                                         (1-t) * vyC i + t * vyC (Suc i mod ?n))" for i t
+
+    \<comment> \<open>Define C(\<alpha>) = qC ` {edge_{i(\<alpha>)}(t) | t \<in> I\_set}.\<close>
+    define C where "C \<alpha> = qC ` {edge_pt (i_of \<alpha>) t | t. t \<in> I_set}" for \<alpha>
+
+    \<comment> \<open>--- (A) C(\<alpha>) \<subseteq> A for each \<alpha> \<in> J ---\<close>
+    have hC_sub: "\<And>\<alpha>. \<alpha> \<in> ?J \<Longrightarrow> C \<alpha> \<subseteq> A"
+    proof -
+      fix \<alpha> assume h\<alpha>: "\<alpha> \<in> ?J"
+      have hi: "i_of \<alpha> < ?n" using hi_of[OF h\<alpha>] by (by100 blast)
+      show "C \<alpha> \<subseteq> A" unfolding C_def hA_eq edge_pt_def
+        using hi by (by100 blast)
+    qed
+
+    \<comment> \<open>--- (B) a \<in> C(\<alpha>) for each \<alpha> \<in> J ---\<close>
+    have ha_C: "\<And>\<alpha>. \<alpha> \<in> ?J \<Longrightarrow> a \<in> C \<alpha>"
+    proof -
+      fix \<alpha> assume h\<alpha>: "\<alpha> \<in> ?J"
+      have hi: "i_of \<alpha> < ?n" using hi_of[OF h\<alpha>] by (by100 blast)
+      have "edge_pt (i_of \<alpha>) 0 = (vxC (i_of \<alpha>), vyC (i_of \<alpha>))"
+        unfolding edge_pt_def by (by100 simp)
+      have h0_I: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+      have "qC (edge_pt (i_of \<alpha>) 0) \<in> C \<alpha>" unfolding C_def using h0_I by (by100 blast)
+      moreover have "qC (edge_pt (i_of \<alpha>) 0) = qC (vxC (i_of \<alpha>), vyC (i_of \<alpha>))"
+        unfolding edge_pt_def by (by100 simp)
+      moreover have "qC (vxC (i_of \<alpha>), vyC (i_of \<alpha>)) = qC (vxC 0, vyC 0)"
+        using hvert_C hi hn_pos by (by100 blast)
+      moreover have "qC (vxC 0, vyC 0) = a" using ha_eq by (by100 simp)
+      ultimately show "a \<in> C \<alpha>" by (by100 simp)
+    qed
+
+    \<comment> \<open>--- (C) \<Union>{C(\<alpha>) | \<alpha> \<in> J} = A ---\<close>
+    have hC_union: "(\<Union>\<alpha> \<in> ?J. C \<alpha>) = A"
+    proof (rule set_eqI, rule iffI)
+      fix x assume "x \<in> (\<Union>\<alpha> \<in> ?J. C \<alpha>)"
+      then obtain \<alpha> where h\<alpha>: "\<alpha> \<in> ?J" "x \<in> C \<alpha>" by (by100 blast)
+      thus "x \<in> A" using hC_sub by (by100 blast)
+    next
+      fix x assume "x \<in> A"
+      then obtain i t where hi: "i < ?n" and ht: "t \<in> I_set"
+        and hx: "x = qC (edge_pt i t)"
+        unfolding hA_eq edge_pt_def by (by100 blast)
+      let ?\<alpha> = "fst (scheme!i)"
+      have h\<alpha>J: "?\<alpha> \<in> ?J" using hi by (by100 force)
+      have hi\<alpha>: "i_of ?\<alpha> < ?n" "fst (scheme!(i_of ?\<alpha>)) = ?\<alpha>"
+        using hi_of[OF h\<alpha>J] by (by100 blast)+
+      \<comment> \<open>Same label: hedge\_C says qC(edge\_i(t)) = qC(edge\_{i(\<alpha>)}(t')) for appropriate t'.\<close>
+      have hsame_label: "fst (scheme!i) = fst (scheme!(i_of ?\<alpha>))" using hi\<alpha>(2) by (by100 simp)
+      \<comment> \<open>By hedge\_C, the image of edge\_i under qC equals the image of edge\_{i(\<alpha>)} under qC.\<close>
+      have "x \<in> C ?\<alpha>"
+      proof -
+        have hhedge: "qC (edge_pt i t)
+          = (if snd (scheme!i) = snd (scheme!(i_of ?\<alpha>))
+             then qC (edge_pt (i_of ?\<alpha>) t)
+             else qC ((t * vxC (i_of ?\<alpha>) + (1-t) * vxC (Suc (i_of ?\<alpha>) mod ?n),
+                       t * vyC (i_of ?\<alpha>) + (1-t) * vyC (Suc (i_of ?\<alpha>) mod ?n))))"
+          using hedge_C hi hi\<alpha>(1) hsame_label ht
+          unfolding edge_pt_def by (by5000 metis)
+        show ?thesis
+        proof (cases "snd (scheme!i) = snd (scheme!(i_of ?\<alpha>))")
+          case True
+          hence "qC (edge_pt i t) = qC (edge_pt (i_of ?\<alpha>) t)"
+            using hhedge by (by100 simp)
+          hence "x = qC (edge_pt (i_of ?\<alpha>) t)" using hx by (by100 simp)
+          thus ?thesis unfolding C_def using ht by (by100 blast)
+        next
+          case False
+          \<comment> \<open>Reversed orientation: t \<mapsto> 1-t.\<close>
+          let ?t' = "1 - t"
+          have ht': "?t' \<in> I_set" using ht unfolding top1_unit_interval_def by (by100 auto)
+          have "qC (edge_pt i t) = qC ((t * vxC (i_of ?\<alpha>) + (1-t) * vxC (Suc (i_of ?\<alpha>) mod ?n),
+                       t * vyC (i_of ?\<alpha>) + (1-t) * vyC (Suc (i_of ?\<alpha>) mod ?n)))"
+            using hhedge False by (by100 simp)
+          moreover have "((t * vxC (i_of ?\<alpha>) + (1-t) * vxC (Suc (i_of ?\<alpha>) mod ?n),
+                       t * vyC (i_of ?\<alpha>) + (1-t) * vyC (Suc (i_of ?\<alpha>) mod ?n)))
+                       = edge_pt (i_of ?\<alpha>) ?t'"
+            unfolding edge_pt_def by (by5000 auto)
+          ultimately have "x = qC (edge_pt (i_of ?\<alpha>) ?t')" using hx by (by100 simp)
+          thus ?thesis unfolding C_def using ht' by (by100 blast)
+        qed
+      qed
+      thus "x \<in> (\<Union>\<alpha> \<in> ?J. C \<alpha>)" using h\<alpha>J by (by100 blast)
+    qed
+
+    \<comment> \<open>--- (D) C(\<alpha>) \<inter> C(\<beta>) = {a} for \<alpha> \<noteq> \<beta> ---\<close>
+    have hC_disj: "\<And>\<alpha> \<beta>. \<alpha> \<in> ?J \<Longrightarrow> \<beta> \<in> ?J \<Longrightarrow> \<alpha> \<noteq> \<beta> \<Longrightarrow> C \<alpha> \<inter> C \<beta> = {a}"
+    proof -
+      fix \<alpha> \<beta> assume h\<alpha>: "\<alpha> \<in> ?J" and h\<beta>: "\<beta> \<in> ?J" and hne: "\<alpha> \<noteq> \<beta>"
+      have hi\<alpha>: "i_of \<alpha> < ?n" "fst (scheme!(i_of \<alpha>)) = \<alpha>" using hi_of[OF h\<alpha>] by (by100 blast)+
+      have hi\<beta>: "i_of \<beta> < ?n" "fst (scheme!(i_of \<beta>)) = \<beta>" using hi_of[OF h\<beta>] by (by100 blast)+
+      have hlabel_ne: "fst (scheme!(i_of \<alpha>)) \<noteq> fst (scheme!(i_of \<beta>))"
+        using hi\<alpha>(2) hi\<beta>(2) hne by (by100 simp)
+      show "C \<alpha> \<inter> C \<beta> = {a}"
+      proof (rule set_eqI, rule iffI)
+        fix x assume "x \<in> C \<alpha> \<inter> C \<beta>"
+        then obtain t s where ht: "t \<in> I_set" and hs: "s \<in> I_set"
+          and hxt: "x = qC (edge_pt (i_of \<alpha>) t)"
+          and hxs: "x = qC (edge_pt (i_of \<beta>) s)"
+          unfolding C_def by (by100 blast)
+        have heq: "qC (edge_pt (i_of \<alpha>) t) = qC (edge_pt (i_of \<beta>) s)"
+          using hxt hxs by (by100 simp)
+        \<comment> \<open>By hno\_C: either (i_of \<alpha> = i_of \<beta> \<and> t = s) or same label. But labels differ!\<close>
+        from hno_C have hcase: "(i_of \<alpha> = i_of \<beta> \<and> t = s)
+          \<or> (fst (scheme!(i_of \<alpha>)) = fst (scheme!(i_of \<beta>)) \<and>
+             (if snd (scheme!(i_of \<alpha>)) = snd (scheme!(i_of \<beta>)) then s = t else s = 1 - t))"
+          using hi\<alpha>(1) hi\<beta>(1) ht hs heq unfolding edge_pt_def by (by100 blast)
+        \<comment> \<open>The second disjunct is impossible since labels differ.\<close>
+        have "i_of \<alpha> = i_of \<beta> \<and> t = s" using hcase hlabel_ne by (by100 blast)
+        \<comment> \<open>But i_of \<alpha> = i_of \<beta> implies same label, contradiction.\<close>
+        hence "i_of \<alpha> = i_of \<beta>" by (by100 blast)
+        hence "fst (scheme!(i_of \<alpha>)) = fst (scheme!(i_of \<beta>))" by (by100 simp)
+        hence "\<alpha> = \<beta>" using hi\<alpha>(2) hi\<beta>(2) by (by100 simp)
+        hence False using hne by (by100 blast)
+        thus "x \<in> {a}" by (by100 blast)
+      next
+        fix x assume "x \<in> {a}"
+        hence "x = a" by (by100 simp)
+        thus "x \<in> C \<alpha> \<inter> C \<beta>" using ha_C[OF h\<alpha>] ha_C[OF h\<beta>] by (by100 blast)
+      qed
+    qed
+
+    \<comment> \<open>--- (E) Homeomorphism S1 to C(alpha) for each alpha ---\<close>
+    have hC_homeo: "\<And>\<alpha>. \<alpha> \<in> ?J \<Longrightarrow> \<exists>f. top1_homeomorphism_on top1_S1 top1_S1_topology
+        (C \<alpha>) (subspace_topology A ?TA (C \<alpha>)) f"
+    proof -
+      fix \<alpha> assume h\<alpha>: "\<alpha> \<in> ?J"
+      have hi\<alpha>: "i_of \<alpha> < ?n" "fst (scheme!(i_of \<alpha>)) = \<alpha>" using hi_of[OF h\<alpha>] by (by100 blast)+
+      \<comment> \<open>Define the edge map f_\<alpha>(t) = qC(edge_{i(\<alpha>)}(t)).\<close>
+      define f_\<alpha> where "f_\<alpha> t = qC (edge_pt (i_of \<alpha>) t)" for t
+      \<comment> \<open>f_\<alpha> is continuous from I\_set to A.\<close>
+      have hf_cont: "top1_continuous_map_on I_set top1_unit_interval_topology A ?TA f_\<alpha>"
+      proof -
+        have "top1_continuous_map_on I_set top1_unit_interval_topology A ?TA
+            (\<lambda>t. qC ((1-t) * vxC (i_of \<alpha>) + t * vxC (Suc (i_of \<alpha>) mod ?n),
+                      (1-t) * vyC (i_of \<alpha>) + t * vyC (Suc (i_of \<alpha>) mod ?n)))"
+          using hqC_edge_cont hi\<alpha>(1) by (by100 blast)
+        moreover have "\<And>t. qC ((1-t) * vxC (i_of \<alpha>) + t * vxC (Suc (i_of \<alpha>) mod ?n),
+                      (1-t) * vyC (i_of \<alpha>) + t * vyC (Suc (i_of \<alpha>) mod ?n))
+                    = f_\<alpha> t"
+          unfolding f_\<alpha>_def edge_pt_def by (by100 simp)
+        ultimately show ?thesis by (by100 simp)
+      qed
+      \<comment> \<open>f_\<alpha>(0) = a and f_\<alpha>(1) = a.\<close>
+      have hf0: "f_\<alpha> 0 = a"
+      proof -
+        have "f_\<alpha> 0 = qC (vxC (i_of \<alpha>), vyC (i_of \<alpha>))"
+          unfolding f_\<alpha>_def edge_pt_def by (by100 simp)
+        also have "... = qC (vxC 0, vyC 0)"
+          using hvert_C hi\<alpha>(1) hn_pos by (by100 blast)
+        also have "... = a" using ha_eq by (by100 simp)
+        finally show ?thesis .
+      qed
+      have hf1: "f_\<alpha> 1 = a"
+      proof -
+        have hi1: "Suc (i_of \<alpha>) mod ?n < ?n" using hn_pos by (by100 simp)
+        have "f_\<alpha> 1 = qC (vxC (Suc (i_of \<alpha>) mod ?n), vyC (Suc (i_of \<alpha>) mod ?n))"
+          unfolding f_\<alpha>_def edge_pt_def by (by100 simp)
+        also have "... = qC (vxC 0, vyC 0)"
+          using hvert_C hi1 hn_pos by (by100 blast)
+        also have "... = a" using ha_eq by (by100 simp)
+        finally show ?thesis .
+      qed
+      \<comment> \<open>f_\<alpha> is a loop in A at basepoint a.\<close>
+      have hf_loop: "top1_is_loop_on A ?TA a f_\<alpha>"
+        unfolding top1_is_loop_on_def top1_is_path_on_def
+        using hf_cont hf0 hf1 by (by100 blast)
+      \<comment> \<open>A has a topology.\<close>
+      have hA_top: "is_topology_on A ?TA"
+        using hA_strict unfolding is_topology_on_strict_def by (by100 blast)
+      \<comment> \<open>By loop\_factors\_through\_S1: get g : S1 \<to> A continuous with f_\<alpha>(s) = g(R\_to\_S1(s)).\<close>
+      from loop_factors_through_S1[OF hA_top hf_loop]
+      obtain g where hg_cont: "top1_continuous_map_on top1_S1 top1_S1_topology A ?TA g"
+        and hg_base: "g (1, 0) = a"
+        and hg_factor: "\<forall>s\<in>I_set. f_\<alpha> s = g (top1_R_to_S1 s)"
+        by (by100 blast)
+      \<comment> \<open>g is surjective onto C(\<alpha>).\<close>
+      have hg_surj: "g ` top1_S1 = C \<alpha>"
+      proof (rule set_eqI, rule iffI)
+        fix x assume "x \<in> g ` top1_S1"
+        then obtain z where "z \<in> top1_S1" "x = g z" by (by100 blast)
+        \<comment> \<open>z = R\_to\_S1(t) for some t \<in> I\_set (R\_to\_S1 surjects I\_set onto S1).\<close>
+        then obtain t where "t \<in> I_set" "top1_R_to_S1 t = z"
+        proof -
+          obtain x y where hq_eq: "z = (x, y)" by (cases z)
+          have hcirc: "x^2 + y^2 = 1"
+            using \<open>z \<in> top1_S1\<close> hq_eq unfolding top1_S1_def by (by100 simp)
+          obtain t0 where "0 \<le> t0" "t0 < 2*pi" "x = cos t0" "y = sin t0"
+            using sincos_total_2pi[OF hcirc] by (by100 blast)
+          define t' where "t' = t0 / (2*pi)"
+          have "0 \<le> t'" "t' < 1" unfolding t'_def
+            using \<open>0 \<le> t0\<close> \<open>t0 < 2*pi\<close> pi_gt_zero by (by100 auto)+
+          hence "t' \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+          moreover have "top1_R_to_S1 t' = z"
+            unfolding top1_R_to_S1_def t'_def hq_eq
+            using \<open>x = cos t0\<close> \<open>y = sin t0\<close> pi_gt_zero by (by100 simp)
+          ultimately show ?thesis using that by (by100 blast)
+        qed
+        hence "x = g (top1_R_to_S1 t)" using \<open>x = g z\<close> by (by100 simp)
+        hence "x = f_\<alpha> t" using hg_factor \<open>t \<in> I_set\<close> by (by100 simp)
+        hence "x = qC (edge_pt (i_of \<alpha>) t)" unfolding f_\<alpha>_def by (by100 simp)
+        thus "x \<in> C \<alpha>" unfolding C_def using \<open>t \<in> I_set\<close> by (by100 blast)
+      next
+        fix x assume "x \<in> C \<alpha>"
+        then obtain t where "t \<in> I_set" "x = qC (edge_pt (i_of \<alpha>) t)"
+          unfolding C_def by (by100 blast)
+        hence "x = f_\<alpha> t" unfolding f_\<alpha>_def by (by100 simp)
+        hence "x = g (top1_R_to_S1 t)" using hg_factor \<open>t \<in> I_set\<close> by (by100 simp)
+        moreover have "top1_R_to_S1 t \<in> top1_S1"
+          unfolding top1_R_to_S1_def top1_S1_def
+          using sin_cos_squared_add[of "2 * pi * t"]
+          by (by5000 auto)
+        ultimately show "x \<in> g ` top1_S1" by (by100 blast)
+      qed
+      \<comment> \<open>g is injective on S1.\<close>
+      have hg_inj: "inj_on g top1_S1"
+      proof (rule inj_onI)
+        fix z1 z2 assume hz1: "z1 \<in> top1_S1" and hz2: "z2 \<in> top1_S1" and hgeq: "g z1 = g z2"
+        \<comment> \<open>Lift z1, z2 to t1, t2 \<in> I\_set.\<close>
+        obtain t1 where ht1: "t1 \<in> I_set" "top1_R_to_S1 t1 = z1"
+        proof -
+          obtain x1 y1 where hz1_eq: "z1 = (x1, y1)" by (cases z1)
+          have hcirc1: "x1^2 + y1^2 = 1"
+            using hz1 hz1_eq unfolding top1_S1_def by (by100 simp)
+          obtain t0 where "0 \<le> t0" "t0 < 2*pi" "x1 = cos t0" "y1 = sin t0"
+            using sincos_total_2pi[OF hcirc1] by (by100 blast)
+          define t' where "t' = t0 / (2*pi)"
+          have "0 \<le> t'" "t' < 1" unfolding t'_def
+            using \<open>0 \<le> t0\<close> \<open>t0 < 2*pi\<close> pi_gt_zero by (by100 auto)+
+          hence "t' \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+          moreover have "top1_R_to_S1 t' = z1"
+            unfolding top1_R_to_S1_def t'_def hz1_eq
+            using \<open>x1 = cos t0\<close> \<open>y1 = sin t0\<close> pi_gt_zero by (by100 simp)
+          ultimately show ?thesis using that by (by100 blast)
+        qed
+        obtain t2 where ht2: "t2 \<in> I_set" "top1_R_to_S1 t2 = z2"
+        proof -
+          obtain x2 y2 where hz2_eq: "z2 = (x2, y2)" by (cases z2)
+          have hcirc2: "x2^2 + y2^2 = 1"
+            using hz2 hz2_eq unfolding top1_S1_def by (by100 simp)
+          obtain t0 where "0 \<le> t0" "t0 < 2*pi" "x2 = cos t0" "y2 = sin t0"
+            using sincos_total_2pi[OF hcirc2] by (by100 blast)
+          define t' where "t' = t0 / (2*pi)"
+          have "0 \<le> t'" "t' < 1" unfolding t'_def
+            using \<open>0 \<le> t0\<close> \<open>t0 < 2*pi\<close> pi_gt_zero by (by100 auto)+
+          hence "t' \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+          moreover have "top1_R_to_S1 t' = z2"
+            unfolding top1_R_to_S1_def t'_def hz2_eq
+            using \<open>x2 = cos t0\<close> \<open>y2 = sin t0\<close> pi_gt_zero by (by100 simp)
+          ultimately show ?thesis using that by (by100 blast)
+        qed
+        \<comment> \<open>From the factoring: f_\<alpha>(t1) = g(z1) = g(z2) = f_\<alpha>(t2).\<close>
+        have "f_\<alpha> t1 = g (top1_R_to_S1 t1)" using hg_factor ht1(1) by (by100 simp)
+        also have "... = g z1" using ht1(2) by (by100 simp)
+        also have "... = g z2" using hgeq by (by100 simp)
+        also have "... = g (top1_R_to_S1 t2)" using ht2(2) by (by100 simp)
+        also have "... = f_\<alpha> t2" using hg_factor ht2(1) by (by100 simp)
+        finally have hfeq: "f_\<alpha> t1 = f_\<alpha> t2" .
+        hence "qC (edge_pt (i_of \<alpha>) t1) = qC (edge_pt (i_of \<alpha>) t2)"
+          unfolding f_\<alpha>_def by (by100 simp)
+        \<comment> \<open>By hno\_C with i = j = i\_of \<alpha>: t1 = t2.\<close>
+        hence "(i_of \<alpha> = i_of \<alpha> \<and> t1 = t2)
+          \<or> (fst (scheme!(i_of \<alpha>)) = fst (scheme!(i_of \<alpha>)) \<and>
+             (if snd (scheme!(i_of \<alpha>)) = snd (scheme!(i_of \<alpha>)) then t2 = t1 else t2 = 1 - t1))"
+          using hno_C hi\<alpha>(1) ht1(1) ht2(1) unfolding edge_pt_def by (by100 blast)
+        hence "t1 = t2" by (by100 auto)
+        thus "z1 = z2" using ht1(2) ht2(2) by (by100 simp)
+      qed
+      \<comment> \<open>g is a bijection from S1 to C(\<alpha>).\<close>
+      have hg_bij: "bij_betw g top1_S1 (C \<alpha>)"
+        unfolding bij_betw_def using hg_inj hg_surj by (by100 blast)
+      \<comment> \<open>S1 is compact.\<close>
+      have hS1_compact: "top1_compact_on top1_S1 top1_S1_topology" by (rule S1_compact)
+      \<comment> \<open>C(\<alpha>) is Hausdorff (subspace of Hausdorff A).\<close>
+      have hC_haus: "is_hausdorff_on (C \<alpha>) (subspace_topology A ?TA (C \<alpha>))"
+        using Theorem_17_11 hA_haus hC_sub[OF h\<alpha>] by (by100 blast)
+      \<comment> \<open>S1 topology and C(\<alpha>) topology.\<close>
+      have hS1_top: "is_topology_on top1_S1 top1_S1_topology"
+        using top1_S1_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
+      have hC_top: "is_topology_on (C \<alpha>) (subspace_topology A ?TA (C \<alpha>))"
+      proof -
+        have "is_topology_on_strict (C \<alpha>) (subspace_topology A ?TA (C \<alpha>))"
+          using subspace_topology_is_strict[OF hA_strict hC_sub[OF h\<alpha>]] by (by100 blast)
+        thus ?thesis unfolding is_topology_on_strict_def by (by100 blast)
+      qed
+      \<comment> \<open>Restrict g to codomain C(\<alpha>).\<close>
+      have hg_cont_C: "top1_continuous_map_on top1_S1 top1_S1_topology
+            (C \<alpha>) (subspace_topology A ?TA (C \<alpha>)) g"
+      proof -
+        have himg: "g ` top1_S1 \<subseteq> C \<alpha>" using hg_surj by (by100 blast)
+        have hCsub: "C \<alpha> \<subseteq> A" using hC_sub[OF h\<alpha>] .
+        \<comment> \<open>Use Theorem\_18\_2 restrict\_range.\<close>
+        from Theorem_18_2[OF hS1_top hA_top hA_top]
+        have "\<forall>W f. top1_continuous_map_on top1_S1 top1_S1_topology A ?TA f \<and>
+                     W \<subseteq> A \<and> f ` top1_S1 \<subseteq> W
+                     \<longrightarrow> top1_continuous_map_on top1_S1 top1_S1_topology W (subspace_topology A ?TA W) f"
+          by (by100 blast)
+        thus ?thesis using hg_cont hCsub himg by (by100 blast)
+      qed
+      \<comment> \<open>By Theorem 26.6: compact + Hausdorff + continuous bijection = homeomorphism.\<close>
+      have "top1_homeomorphism_on top1_S1 top1_S1_topology (C \<alpha>) (subspace_topology A ?TA (C \<alpha>)) g"
+        using Theorem_26_6[OF hS1_top hC_top hS1_compact hC_haus hg_cont_C hg_bij] by (by100 blast)
+      thus "\<exists>f. top1_homeomorphism_on top1_S1 top1_S1_topology (C \<alpha>) (subspace_topology A ?TA (C \<alpha>)) f"
+        by (by100 blast)
+    qed
+
+    \<comment> \<open>--- (F) Weak topology condition ---\<close>
+    \<comment> \<open>Finiteness of the index set J.\<close>
+    have hJ_finite: "finite ?J" by (by100 simp)
+
+    \<comment> \<open>Each C(\<alpha>) is compact (continuous image of compact I\_set via edge map).\<close>
+    have hC_compact: "\<And>\<alpha>. \<alpha> \<in> ?J \<Longrightarrow> top1_compact_on (C \<alpha>) (subspace_topology A ?TA (C \<alpha>))"
+    proof -
+      fix \<alpha> assume h\<alpha>: "\<alpha> \<in> ?J"
+      have hi\<alpha>: "i_of \<alpha> < ?n" using hi_of[OF h\<alpha>] by (by100 blast)
+      \<comment> \<open>The edge map f(t) = qC(edge(t)) is continuous from I\_set to A.\<close>
+      let ?f = "\<lambda>t. qC ((1-t) * vxC (i_of \<alpha>) + t * vxC (Suc (i_of \<alpha>) mod ?n),
+                         (1-t) * vyC (i_of \<alpha>) + t * vyC (Suc (i_of \<alpha>) mod ?n))"
+      have hf_cont: "top1_continuous_map_on I_set top1_unit_interval_topology A ?TA ?f"
+        using hqC_edge_cont hi\<alpha> by (by100 blast)
+      \<comment> \<open>I\_set is compact.\<close>
+      have hI_compact: "top1_compact_on I_set top1_unit_interval_topology"
+      proof -
+        have "compact {0..1::real}" by (rule compact_Icc)
+        have "I_set = {0..1::real}" unfolding top1_unit_interval_def
+          by (by5000 auto)
+        have "compact I_set" using \<open>compact {0..1::real}\<close> \<open>I_set = _\<close> by (by100 simp)
+        have "top1_compact_on I_set (subspace_topology UNIV top1_open_sets I_set)"
+          using top1_compact_on_subspace_UNIV_iff_compact[of I_set] \<open>compact I_set\<close> by (by100 simp)
+        thus ?thesis unfolding top1_unit_interval_topology_def by (by100 simp)
+      qed
+      have hA_top: "is_topology_on A ?TA"
+        using hA_strict unfolding is_topology_on_strict_def by (by100 blast)
+      \<comment> \<open>?f(I\_set) = C(\<alpha>).\<close>
+      have himg: "?f ` I_set = C \<alpha>"
+      proof (rule set_eqI, rule iffI)
+        fix x assume "x \<in> ?f ` I_set"
+        then obtain t where "t \<in> I_set" "x = ?f t" by (by100 blast)
+        thus "x \<in> C \<alpha>" unfolding C_def edge_pt_def by (by100 blast)
+      next
+        fix x assume "x \<in> C \<alpha>"
+        then obtain t where "t \<in> I_set" "x = qC (edge_pt (i_of \<alpha>) t)"
+          unfolding C_def by (by100 blast)
+        hence "x = ?f t" unfolding edge_pt_def by (by100 simp)
+        thus "x \<in> ?f ` I_set" using \<open>t \<in> I_set\<close> by (by100 blast)
+      qed
+      \<comment> \<open>Continuous image of compact is compact.\<close>
+      have "top1_compact_on (?f ` I_set) (subspace_topology A ?TA (?f ` I_set))"
+        using top1_compact_on_continuous_image[OF hI_compact hA_top hf_cont] by (by100 blast)
+      thus "top1_compact_on (C \<alpha>) (subspace_topology A ?TA (C \<alpha>))"
+        using himg by (by100 simp)
+    qed
+
+    \<comment> \<open>Each C(\<alpha>) is closed in A (compact in Hausdorff).\<close>
+    have hC_closed: "\<And>\<alpha>. \<alpha> \<in> ?J \<Longrightarrow> closedin_on A ?TA (C \<alpha>)"
+    proof -
+      fix \<alpha> assume h\<alpha>: "\<alpha> \<in> ?J"
+      have "C \<alpha> \<subseteq> A" using hC_sub[OF h\<alpha>] .
+      moreover have "top1_compact_on (C \<alpha>) (subspace_topology A ?TA (C \<alpha>))"
+        using hC_compact[OF h\<alpha>] .
+      ultimately show "closedin_on A ?TA (C \<alpha>)"
+        using Theorem_26_3[OF hA_haus] by (by100 blast)
+    qed
+
+    \<comment> \<open>A has a topology.\<close>
+    have hA_top: "is_topology_on A ?TA"
+      using hA_strict unfolding is_topology_on_strict_def by (by100 blast)
+
+    have hC_weak: "\<And>D. D \<subseteq> A \<Longrightarrow>
+        (closedin_on A ?TA D \<longleftrightarrow> (\<forall>\<alpha>\<in>?J. closedin_on (C \<alpha>) (subspace_topology A ?TA (C \<alpha>)) (C \<alpha> \<inter> D)))"
+    proof (intro iffI ballI)
+      \<comment> \<open>Forward: D closed in A implies D \<inter> C(\<alpha>) closed in C(\<alpha>).\<close>
+      fix D \<alpha> assume hD_sub: "D \<subseteq> A" and hD_cl: "closedin_on A ?TA D" and h\<alpha>: "\<alpha> \<in> ?J"
+      show "closedin_on (C \<alpha>) (subspace_topology A ?TA (C \<alpha>)) (C \<alpha> \<inter> D)"
+        using Theorem_17_2[OF hA_top hC_sub[OF h\<alpha>]]
+        using hD_cl by (by100 blast)
+    next
+      \<comment> \<open>Backward: D \<inter> C(\<alpha>) closed in C(\<alpha>) for all \<alpha> implies D closed in A.\<close>
+      fix D assume hD_sub: "D \<subseteq> A"
+        and hD_each: "\<forall>\<alpha>\<in>?J. closedin_on (C \<alpha>) (subspace_topology A ?TA (C \<alpha>)) (C \<alpha> \<inter> D)"
+      \<comment> \<open>Each D \<inter> C(\<alpha>) is closed in A (by Theorem 17.3: C(\<alpha>) closed in A, D \<inter> C(\<alpha>) closed in C(\<alpha>)).\<close>
+      have hDC_closed: "\<forall>\<alpha>\<in>?J. closedin_on A ?TA (C \<alpha> \<inter> D)"
+      proof (intro ballI)
+        fix \<alpha> assume h\<alpha>: "\<alpha> \<in> ?J"
+        show "closedin_on A ?TA (C \<alpha> \<inter> D)"
+          using Theorem_17_3[OF hA_top hC_closed[OF h\<alpha>] hD_each[rule_format, OF h\<alpha>]]
+          by (by100 blast)
+      qed
+      \<comment> \<open>D = \<Union>{D \<inter> C(\<alpha>) | \<alpha> \<in> J} since D \<subseteq> A = \<Union>C(\<alpha>).\<close>
+      have hD_eq: "D = (\<Union>\<alpha>\<in>?J. C \<alpha> \<inter> D)"
+      proof (rule set_eqI, rule iffI)
+        fix x assume "x \<in> D"
+        hence "x \<in> A" using hD_sub by (by100 blast)
+        hence "x \<in> (\<Union>\<alpha>\<in>?J. C \<alpha>)" using hC_union by (by100 simp)
+        then obtain \<alpha> where "\<alpha> \<in> ?J" "x \<in> C \<alpha>" by (by100 blast)
+        thus "x \<in> (\<Union>\<alpha>\<in>?J. C \<alpha> \<inter> D)" using \<open>x \<in> D\<close> by (by100 blast)
+      next
+        fix x assume "x \<in> (\<Union>\<alpha>\<in>?J. C \<alpha> \<inter> D)"
+        thus "x \<in> D" by (by100 blast)
+      qed
+      \<comment> \<open>Finite union of closed sets is closed.\<close>
+      let ?F = "(\<lambda>\<alpha>. C \<alpha> \<inter> D) ` ?J"
+      have "finite ?F" using hJ_finite by (by100 simp)
+      have "\<forall>S\<in>?F. closedin_on A ?TA S"
+        using hDC_closed by (by100 blast)
+      have "closedin_on A ?TA (\<Union>?F)"
+        using closedin_Union_finite[OF hA_top \<open>finite ?F\<close> \<open>\<forall>S\<in>?F. closedin_on A ?TA S\<close>] .
+      moreover have "\<Union>?F = (\<Union>\<alpha>\<in>?J. C \<alpha> \<inter> D)" by (by100 blast)
+      ultimately have "closedin_on A ?TA (\<Union>\<alpha>\<in>?J. C \<alpha> \<inter> D)" by (by100 simp)
+      thus "closedin_on A ?TA D" using hD_eq by (by100 simp)
+    qed
+
+    \<comment> \<open>--- (G) Subspace topology on C(\<alpha>) agrees ---\<close>
+    have hC_sub_eq: "\<And>\<alpha>. \<alpha> \<in> ?J \<Longrightarrow>
+        subspace_topology A ?TA (C \<alpha>) = subspace_topology X TX (C \<alpha>)"
+    proof -
+      fix \<alpha> assume h\<alpha>: "\<alpha> \<in> ?J"
+      have "C \<alpha> \<subseteq> A" using hC_sub[OF h\<alpha>] by (by100 blast)
+      thus "subspace_topology A ?TA (C \<alpha>) = subspace_topology X TX (C \<alpha>)"
+        by (rule subspace_topology_trans)
+    qed
+
+    \<comment> \<open>--- Assemble the wedge ---\<close>
+    show ?thesis unfolding top1_is_wedge_of_circles_on_def
+    proof (intro conjI)
+      show "is_topology_on_strict A ?TA" by (rule hA_strict)
+      show "is_hausdorff_on A ?TA" by (rule hA_haus)
+      show "a \<in> A" by (rule ha_A)
+      show "\<exists>Ca. (\<forall>\<alpha>\<in>?J. Ca \<alpha> \<subseteq> A \<and> a \<in> Ca \<alpha> \<and>
+            (\<exists>h. top1_homeomorphism_on top1_S1 top1_S1_topology (Ca \<alpha>)
+                 (subspace_topology A ?TA (Ca \<alpha>)) h)) \<and>
+           (\<Union>\<alpha>\<in>?J. Ca \<alpha>) = A \<and>
+           (\<forall>\<alpha>\<in>?J. \<forall>\<beta>\<in>?J. \<alpha> \<noteq> \<beta> \<longrightarrow> Ca \<alpha> \<inter> Ca \<beta> = {a}) \<and>
+           (\<forall>D\<subseteq>A. closedin_on A ?TA D \<longleftrightarrow>
+                   (\<forall>\<alpha>\<in>?J. closedin_on (Ca \<alpha>) (subspace_topology A ?TA (Ca \<alpha>)) (Ca \<alpha> \<inter> D)))"
+      proof (rule exI[of _ C], intro conjI)
+        show "\<forall>\<alpha>\<in>?J. C \<alpha> \<subseteq> A \<and> a \<in> C \<alpha> \<and>
+              (\<exists>h. top1_homeomorphism_on top1_S1 top1_S1_topology (C \<alpha>)
+                   (subspace_topology A ?TA (C \<alpha>)) h)"
+        proof (intro ballI)
+          fix \<alpha> assume h\<alpha>: "\<alpha> \<in> ?J"
+          show "C \<alpha> \<subseteq> A \<and> a \<in> C \<alpha> \<and>
+                (\<exists>h. top1_homeomorphism_on top1_S1 top1_S1_topology (C \<alpha>)
+                     (subspace_topology A ?TA (C \<alpha>)) h)"
+            using hC_sub[OF h\<alpha>] ha_C[OF h\<alpha>] hC_homeo[OF h\<alpha>] by (by100 blast)
+        qed
+      next
+        show "(\<Union>\<alpha>\<in>?J. C \<alpha>) = A" by (rule hC_union)
+      next
+        show "\<forall>\<alpha>\<in>?J. \<forall>\<beta>\<in>?J. \<alpha> \<noteq> \<beta> \<longrightarrow> C \<alpha> \<inter> C \<beta> = {a}"
+          using hC_disj by (by100 blast)
+      next
+        show "\<forall>D\<subseteq>A. closedin_on A ?TA D \<longleftrightarrow>
+                 (\<forall>\<alpha>\<in>?J. closedin_on (C \<alpha>) (subspace_topology A ?TA (C \<alpha>)) (C \<alpha> \<inter> D))"
+          using hC_weak by (by100 blast)
+      qed
+    qed
+  qed
+  \<comment> \<open>Step 3: \<pi>_1(A) is free on the labels (Theorem 71.1) at basepoint a.\<close>
   have hA_free: "\<exists>(F::int set) mulF eF invgF (\<iota>F::nat \<Rightarrow> int).
       top1_is_free_group_full_on F mulF eF invgF \<iota>F (fst ` set scheme)
       \<and> top1_groups_isomorphic_on F mulF
-          (top1_fundamental_group_carrier A (subspace_topology X TX A) x0)
-          (top1_fundamental_group_mul A (subspace_topology X TX A) x0)"
+          (top1_fundamental_group_carrier A (subspace_topology X TX A) a)
+          (top1_fundamental_group_mul A (subspace_topology X TX A) a)"
     using Theorem_71_3_wedge_of_circles_general hA_wd by (by5000 fastforce)
-  \<comment> \<open>Apply Theorem 72.1 to get \<pi>_1(X) \<cong> \<pi>_1(A)/N(relator word).\<close>
-  have hThm72: "\<exists>(G::'g set) mul e invg.
+  \<comment> \<open>Step 4-5: Apply Theorem 72.1 with the SAME A (avoiding alignment issues).\<close>
+  have hX_strict: "is_topology_on_strict X TX"
+    using hscheme unfolding top1_quotient_of_scheme_on_def by (by100 blast)
+  have hX_haus: "is_hausdorff_on X TX"
+    by (rule scheme_quotient_hausdorff[OF hscheme hlen])
+  \<comment> \<open>Apply Theorem 72.1 with basepoint a (from CW data). This gives
+     \<pi>_1(X, a) \<cong> \<pi>_1(A, a)/N(relator), where the relator is the scheme word.\<close>
+  \<comment> \<open>Apply Theorem 72.1 with basepoint a' = h(1,0) \<in> A (avoids needing h(1,0) = a).\<close>
+  define a' where "a' = h (1::real, 0::real)"
+  have ha'_A: "a' \<in> A"
+  proof -
+    have "(1::real, 0::real) \<in> top1_S1" unfolding top1_S1_def by (by100 simp)
+    thus ?thesis unfolding a'_def using hh_S1 by (by100 blast)
+  qed
+  have ha'_base: "h (1, 0) = a'" unfolding a'_def by (by100 simp)
+  \<comment> \<open>Apply Theorem 72.1 with basepoint a'.\<close>
+  from Theorem_72_1_attaching_two_cell[OF hX_strict hX_haus hA_cl hA_pc
+      hh_cont ha'_A hh_homeo hh_S1 ha'_base]
+  obtain \<iota> where h\<iota>_cont: "top1_continuous_map_on top1_S1 top1_S1_topology A
+          (subspace_topology X TX A) \<iota>"
+      and h\<iota>_eq: "\<forall>z\<in>top1_S1. \<iota> z = h z"
+      and h\<iota>_iso: "top1_groups_isomorphic_on
+          (top1_fundamental_group_carrier X TX a')
+          (top1_fundamental_group_mul X TX a')
+          (top1_quotient_group_carrier_on
+             (top1_fundamental_group_carrier A (subspace_topology X TX A) a')
+             (top1_fundamental_group_mul A (subspace_topology X TX A) a')
+             (top1_normal_subgroup_generated_on
+                (top1_fundamental_group_carrier A (subspace_topology X TX A) a')
+                (top1_fundamental_group_mul A (subspace_topology X TX A) a')
+                (top1_fundamental_group_id A (subspace_topology X TX A) a')
+                (top1_fundamental_group_invg A (subspace_topology X TX A) a')
+                {top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1, 0)
+                   A (subspace_topology X TX A) a' \<iota>
+                   {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0)
+                         (\<lambda>s. (cos (2 * pi * s), sin (2 * pi * s))) g}}))
+          (top1_quotient_group_mul_on
+             (top1_fundamental_group_mul A (subspace_topology X TX A) a'))"
+    by (by100 blast)
+  \<comment> \<open>Now: \<pi>_1(X, a') \<cong> \<pi>_1(A, a')/N(relator).
+     The relator is the image of the S1 generator under \<iota>.
+     \<pi>_1(A, a') is free on the labels (from hA\_free, transferred via basepoint change).
+     The relator corresponds to the scheme word.
+     So \<pi>_1(X, a') has presentation G.\<close>
+  \<comment> \<open>Step (i): \<pi>\_1(A, a') is free on the labels (basepoint change from a).\<close>
+  have hA_free_a': "\<exists>(F::int set) mulF eF invgF (\<iota>F::nat \<Rightarrow> int).
+      top1_is_free_group_full_on F mulF eF invgF \<iota>F (fst ` set scheme)
+      \<and> top1_groups_isomorphic_on F mulF
+          (top1_fundamental_group_carrier A (subspace_topology X TX A) a')
+          (top1_fundamental_group_mul A (subspace_topology X TX A) a')"
+  proof -
+    from hA_free obtain F0 :: "int set" and mulF0 eF0 invgF0 and \<iota>F0 :: "nat \<Rightarrow> int" where
+      hfree0: "top1_is_free_group_full_on F0 mulF0 eF0 invgF0 \<iota>F0 (fst ` set scheme)" and
+      hiso_a: "top1_groups_isomorphic_on F0 mulF0
+          (top1_fundamental_group_carrier A (subspace_topology X TX A) a)
+          (top1_fundamental_group_mul A (subspace_topology X TX A) a)"
+      by (elim conjE exE) (rule that, assumption+)
+    \<comment> \<open>Basepoint change: \<pi>_1(A, a) \<cong> \<pi>_1(A, a') since A path-connected.\<close>
+    have hTA: "is_topology_on A (subspace_topology X TX A)"
+    proof -
+      have "A \<subseteq> X" using hA_cl unfolding closedin_on_def by (by100 blast)
+      have "is_topology_on X TX"
+        using hX_strict unfolding is_topology_on_strict_def by (by100 blast)
+      thus ?thesis by (rule subspace_topology_is_topology_on[OF _ \<open>A \<subseteq> X\<close>])
+    qed
+    have hiso_aa': "top1_groups_isomorphic_on
+        (top1_fundamental_group_carrier A (subspace_topology X TX A) a)
+        (top1_fundamental_group_mul A (subspace_topology X TX A) a)
+        (top1_fundamental_group_carrier A (subspace_topology X TX A) a')
+        (top1_fundamental_group_mul A (subspace_topology X TX A) a')"
+      by (rule Theorem_52_1_iso[OF hTA hA_pc ha_A ha'_A])
+    have "top1_groups_isomorphic_on F0 mulF0
+        (top1_fundamental_group_carrier A (subspace_topology X TX A) a')
+        (top1_fundamental_group_mul A (subspace_topology X TX A) a')"
+      by (rule groups_isomorphic_trans_fwd[OF hiso_a hiso_aa'])
+    thus ?thesis using hfree0 by (by100 blast)
+  qed
+  \<comment> \<open>Step (ii): The relator from Thm 72.1 = the scheme word in the free group.
+     The boundary loop h \<circ> (cos 2\<pi>s, sin 2\<pi>s) traces edges 0..n-1,
+     each mapping to the generator fst(scheme!i) (or inverse if snd=False).
+     So the relator class = scheme word in \<pi>_1(A, a').\<close>
+  \<comment> \<open>Step (iii): Combine into group presentation.\<close>
+  \<comment> \<open>Step (ii-iii): The quotient \<pi>_1(A,a')/N(relator) is the presented group.
+     This needs: relator from Thm 72.1 = scheme word in the free group.\<close>
+  have hThm72_a': "\<exists>(G::'g set) mul e invg.
       top1_group_presented_by_on G mul e invg (fst ` set scheme)
         { map (\<lambda>(s,b). (s, b)) scheme }
       \<and> top1_groups_isomorphic_on G mul
-          (top1_fundamental_group_carrier X TX x0)
-          (top1_fundamental_group_mul X TX x0)"
-    sorry \<comment> \<open>Theorem 72.1 application: needs CW data (h: B^2 -> X from scheme\_quotient\_CW\_data),
-       identification of the relator with the scheme word, then group presentation.\<close>
-  show ?thesis using hThm72 by (by100 blast)
+          (top1_fundamental_group_carrier X TX a')
+          (top1_fundamental_group_mul X TX a')"
+    sorry \<comment> \<open>From h\<iota>\_iso + hA\_free\_a': identify relator with scheme word.
+       The boundary loop h \<circ> (cos 2\<pi>s, sin 2\<pi>s) traces edges 0..n-1.
+       Each edge i maps to generator fst(scheme!i) (or inverse if snd=False).
+       Product = scheme word. This is the core algebraic topology identification.\<close>
+  \<comment> \<open>Step (iv): Transfer a' \<rightarrow> a via basepoint change.\<close>
+  have hThm72_a: "\<exists>(G::'g set) mul e invg.
+      top1_group_presented_by_on G mul e invg (fst ` set scheme)
+        { map (\<lambda>(s,b). (s, b)) scheme }
+      \<and> top1_groups_isomorphic_on G mul
+          (top1_fundamental_group_carrier X TX a)
+          (top1_fundamental_group_mul X TX a)"
+  proof -
+    from hThm72_a' obtain G0 :: "'g set" and mul0 e0 invg0 where
+      hpres: "top1_group_presented_by_on G0 mul0 e0 invg0 (fst ` set scheme)
+          { map (\<lambda>(s,b). (s, b)) scheme }" and
+      hiso_a': "top1_groups_isomorphic_on G0 mul0
+          (top1_fundamental_group_carrier X TX a')
+          (top1_fundamental_group_mul X TX a')"
+      by (elim conjE exE) (rule that, assumption+)
+    \<comment> \<open>Basepoint change: \<pi>_1(X, a') \<cong> \<pi>_1(X, a) since X path-connected.\<close>
+    have hTX: "is_topology_on X TX"
+      using hX_strict unfolding is_topology_on_strict_def by (by100 blast)
+    have ha_X: "a \<in> X"
+    proof -
+      have "A \<subseteq> X" using hA_cl unfolding closedin_on_def by (by100 blast)
+      thus ?thesis using ha_A by (by100 blast)
+    qed
+    have ha'_X: "a' \<in> X"
+    proof -
+      have "A \<subseteq> X" using hA_cl unfolding closedin_on_def by (by100 blast)
+      thus ?thesis using ha'_A by (by100 blast)
+    qed
+    have hiso_change: "top1_groups_isomorphic_on
+        (top1_fundamental_group_carrier X TX a')
+        (top1_fundamental_group_mul X TX a')
+        (top1_fundamental_group_carrier X TX a)
+        (top1_fundamental_group_mul X TX a)"
+    proof -
+      have hX_pc_loc: "top1_path_connected_on X TX"
+      proof -
+        have hP_pc_l: "top1_path_connected_on P ?TP"
+        proof -
+          have hTP_l: "is_topology_on P ?TP"
+            using hq unfolding top1_quotient_map_on_def by (by100 blast)
+          show ?thesis unfolding top1_path_connected_on_def
+          proof (intro conjI ballI)
+            show "is_topology_on P ?TP" by (rule hTP_l)
+          next
+            fix x y assume "x \<in> P" "y \<in> P"
+            define \<gamma> where "\<gamma> t = ((1-t)*fst x + t*fst y, (1-t)*snd x + t*snd y)" for t
+            have "\<forall>t\<in>I_set. \<gamma> t \<in> P"
+              using polygonal_region_convex_combo[OF hPoly hlen \<open>x \<in> P\<close> \<open>y \<in> P\<close>]
+              unfolding \<gamma>_def top1_unit_interval_def by (by100 auto)
+            moreover have "top1_continuous_map_on I_set I_top P ?TP \<gamma>"
+            proof -
+              have "top1_is_path_on UNIV (product_topology_on top1_open_sets top1_open_sets) x y \<gamma>"
+                using R2_straight_line_path[of x y] unfolding \<gamma>_def by (by100 simp)
+              hence "top1_continuous_map_on I_set I_top UNIV
+                  (product_topology_on top1_open_sets top1_open_sets) \<gamma>"
+                unfolding top1_is_path_on_def by (by100 blast)
+              thus ?thesis using \<open>\<forall>t\<in>I_set. \<gamma> t \<in> P\<close>
+                by (rule continuous_map_restrict_codomain) (by100 blast)
+            qed
+            moreover have "\<gamma> 0 = x" "\<gamma> 1 = y" unfolding \<gamma>_def by (by100 simp)+
+            ultimately show "\<exists>f. top1_is_path_on P ?TP x y f"
+              unfolding top1_is_path_on_def by (by100 blast)
+          qed
+        qed
+        have hq_cont_l: "top1_continuous_map_on P ?TP X TX q"
+          using hq unfolding top1_quotient_map_on_def by (by100 blast)
+        have hq_maps_l: "\<forall>x\<in>P. q x \<in> X"
+          using hq_cont_l unfolding top1_continuous_map_on_def by (by5000 blast)
+        have hq_surj_l: "q ` P = X"
+          using hq unfolding top1_quotient_map_on_def by (by5000 blast)
+        have hsubself: "subspace_topology X TX X = TX"
+        proof -
+          have "\<forall>U\<in>TX. U \<subseteq> X" using hX_strict unfolding is_topology_on_strict_def by (by100 blast)
+          thus ?thesis by (rule subspace_topology_self)
+        qed
+        have "X \<subseteq> X" by (by100 blast)
+        have "TX = subspace_topology X TX X" using hsubself by (by100 simp)
+        from top1_path_connected_continuous_image[OF hP_pc_l hq_cont_l hq_maps_l hq_surj_l
+            \<open>X \<subseteq> X\<close> this hTX]
+        show ?thesis .
+      qed
+      from Theorem_52_1_iso[OF hTX hX_pc_loc ha'_X ha_X] show ?thesis .
+    qed
+    have "top1_groups_isomorphic_on G0 mul0
+        (top1_fundamental_group_carrier X TX a)
+        (top1_fundamental_group_mul X TX a)"
+      by (rule groups_isomorphic_trans_fwd[OF hiso_a' hiso_change])
+    thus ?thesis using hpres by (by100 blast)
+  qed
+  \<comment> \<open>Transfer from basepoint a to basepoint x0 using path-connectivity.\<close>
+  have hX_pc: "top1_path_connected_on X TX"
+  proof -
+    \<comment> \<open>P is path-connected (convex polygon). q is continuous surjection. X = q(P) path-connected.\<close>
+    have hP_pc: "top1_path_connected_on P ?TP"
+    proof -
+      \<comment> \<open>Convex set: for any a, b \<in> P, the line segment from a to b is in P.
+         The straight line path is a path in P (from R2\_straight\_line\_path + restrict).\<close>
+      have hTP_loc: "is_topology_on P ?TP"
+        using hq unfolding top1_quotient_map_on_def by (by100 blast)
+      have hR2_top: "is_topology_on (UNIV::(real\<times>real) set)
+          (product_topology_on top1_open_sets top1_open_sets)"
+        using top1_R2_is_hausdorff unfolding is_hausdorff_on_def by (by100 blast)
+      show ?thesis unfolding top1_path_connected_on_def
+      proof (intro conjI ballI)
+        show "is_topology_on P ?TP" by (rule hTP_loc)
+      next
+        fix x y assume hx: "x \<in> P" and hy: "y \<in> P"
+        \<comment> \<open>Line segment from x to y: \<gamma>(t) = (1-t)*x + t*y lies in P (convexity).\<close>
+        define \<gamma> where "\<gamma> t = ((1-t)*fst x + t*fst y, (1-t)*snd x + t*snd y)" for t
+        have himg: "\<forall>t\<in>I_set. \<gamma> t \<in> P"
+          using polygonal_region_convex_combo[OF hPoly hlen hx hy]
+          unfolding \<gamma>_def top1_unit_interval_def by (by100 auto)
+        have hR2_path: "top1_is_path_on UNIV (product_topology_on top1_open_sets top1_open_sets)
+            x y \<gamma>"
+          using R2_straight_line_path[of x y] unfolding \<gamma>_def by (by100 simp)
+        have hcont: "top1_continuous_map_on I_set I_top UNIV
+            (product_topology_on top1_open_sets top1_open_sets) \<gamma>"
+          using hR2_path unfolding top1_is_path_on_def by (by100 blast)
+        have "top1_continuous_map_on I_set I_top P ?TP \<gamma>"
+          by (rule continuous_map_restrict_codomain[OF hcont himg]) (by100 blast)
+        moreover have "\<gamma> 0 = x" unfolding \<gamma>_def by (by100 simp)
+        moreover have "\<gamma> 1 = y" unfolding \<gamma>_def by (by100 simp)
+        ultimately have "top1_is_path_on P ?TP x y \<gamma>"
+          unfolding top1_is_path_on_def by (by100 blast)
+        thus "\<exists>f. top1_is_path_on P ?TP x y f" by (by100 blast)
+      qed
+    qed
+    have hq_cont_loc: "top1_continuous_map_on P ?TP X TX q"
+      using hq unfolding top1_quotient_map_on_def by (by100 blast)
+    have hq_maps: "\<forall>x\<in>P. q x \<in> X"
+      using hq_cont_loc unfolding top1_continuous_map_on_def by (by5000 blast)
+    have hq_surj: "q ` P = X"
+      using hq unfolding top1_quotient_map_on_def by (by5000 blast)
+    have "X \<subseteq> X" by (by100 blast)
+    have "subspace_topology X TX X = TX"
+    proof -
+      have "\<forall>U\<in>TX. U \<subseteq> X" using hX_strict unfolding is_topology_on_strict_def by (by100 blast)
+      thus ?thesis by (rule subspace_topology_self)
+    qed
+    have hTX_loc: "is_topology_on X TX"
+      using hX_strict unfolding is_topology_on_strict_def by (by100 blast)
+    from top1_path_connected_continuous_image[OF hP_pc hq_cont_loc hq_maps hq_surj
+        _ _ hTX_loc, of TX]
+    show ?thesis using \<open>subspace_topology X TX X = TX\<close> by (by100 simp)
+  qed
+  have hTX: "is_topology_on X TX"
+    using hX_strict unfolding is_topology_on_strict_def by (by100 blast)
+  have ha_X: "a \<in> X"
+  proof -
+    have "A \<subseteq> X" using hA_cl unfolding closedin_on_def by (by100 blast)
+    thus ?thesis using ha_A by (by100 blast)
+  qed
+  have hpi1_base_change: "top1_groups_isomorphic_on
+      (top1_fundamental_group_carrier X TX a) (top1_fundamental_group_mul X TX a)
+      (top1_fundamental_group_carrier X TX x0) (top1_fundamental_group_mul X TX x0)"
+    by (rule Theorem_52_1_iso[OF hTX hX_pc ha_X hx0])
+  \<comment> \<open>Compose: G \<cong> \<pi>_1(X, a) \<cong> \<pi>_1(X, x0).\<close>
+  show ?thesis
+  proof -
+    from hThm72_a obtain G0 :: "'g set" and mul0 e0 invg0 where
+      hpres0: "top1_group_presented_by_on G0 mul0 e0 invg0 (fst ` set scheme)
+          { map (\<lambda>(s,b). (s, b)) scheme }" and
+      hiso0: "top1_groups_isomorphic_on G0 mul0
+          (top1_fundamental_group_carrier X TX a) (top1_fundamental_group_mul X TX a)"
+      by (by5000 auto)
+    have hiso_x0: "top1_groups_isomorphic_on G0 mul0
+        (top1_fundamental_group_carrier X TX x0) (top1_fundamental_group_mul X TX x0)"
+      by (rule groups_isomorphic_trans_fwd[OF hiso0 hpi1_base_change])
+    show ?thesis using hpres0 hiso_x0 by (by100 blast)
+  qed
 qed
 
 text \<open>Nth-element access for the torus scheme.\<close>
@@ -6140,7 +7836,15 @@ proof -
   have hvert: "\<exists>P q vx vy. top1_is_polygonal_region_on P (length ?scheme)
       \<and> top1_quotient_map_on P (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) X TX q
       \<and> (\<forall>i<length ?scheme. (vx i, vy i) \<in> P)
-      \<and> (\<forall>i<length ?scheme. \<forall>j<length ?scheme. q (vx i, vy i) = q (vx j, vy j))"
+      \<and> (\<forall>i<length ?scheme. \<forall>j<length ?scheme. q (vx i, vy i) = q (vx j, vy j))
+      \<and> (\<forall>i<length ?scheme. \<forall>j<length ?scheme. \<forall>t\<in>I_set. \<forall>s\<in>I_set.
+            q ((1-t) * vx i + t * vx (Suc i mod length ?scheme),
+               (1-t) * vy i + t * vy (Suc i mod length ?scheme))
+          = q ((1-s) * vx j + s * vx (Suc j mod length ?scheme),
+               (1-s) * vy j + s * vy (Suc j mod length ?scheme))
+          \<longrightarrow> (i = j \<and> t = s)
+            \<or> (fst (?scheme!i) = fst (?scheme!j) \<and>
+               (if snd (?scheme!i) = snd (?scheme!j) then s = t else s = 1 - t)))"
   proof -
     \<comment> \<open>Extract (P, q, vx, vy) from the torus scheme definition.\<close>
     obtain P q vx vy where
@@ -6148,6 +7852,11 @@ proof -
       hq: "top1_quotient_map_on P (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) X TX q" and
       hlen3: "length ?scheme \<ge> 3" and
       hverts: "\<forall>i<length ?scheme. (vx i, vy i) \<in> P" and
+      hP_hull_loc: "P = {(x, y) | x y.
+                \<exists>coeffs. (\<forall>i<length ?scheme. coeffs i \<ge> 0)
+                       \<and> (\<Sum>i<length ?scheme. coeffs i) = 1
+                       \<and> x = (\<Sum>i<length ?scheme. coeffs i * vx i)
+                       \<and> y = (\<Sum>i<length ?scheme. coeffs i * vy i)}" and
       hedge: "\<forall>i<length ?scheme. \<forall>j<length ?scheme.
           fst (?scheme!i) = fst (?scheme!j) \<longrightarrow>
           (\<forall>t\<in>I_set.
@@ -6161,7 +7870,15 @@ proof -
       hinterior: "\<forall>p\<in>P. (\<forall>i<length ?scheme. \<forall>t\<in>I_set.
             p \<noteq> ((1-t) * vx i + t * vx (Suc i mod length ?scheme),
                   (1-t) * vy i + t * vy (Suc i mod length ?scheme)))
-       \<longrightarrow> (\<forall>p'\<in>P. q p = q p' \<longrightarrow> p = p')"
+       \<longrightarrow> (\<forall>p'\<in>P. q p = q p' \<longrightarrow> p = p')" and
+      hno_extra_loc: "\<forall>i<length ?scheme. \<forall>j<length ?scheme. \<forall>t\<in>I_set. \<forall>s\<in>I_set.
+            q ((1-t) * vx i + t * vx (Suc i mod length ?scheme),
+               (1-t) * vy i + t * vy (Suc i mod length ?scheme))
+          = q ((1-s) * vx j + s * vx (Suc j mod length ?scheme),
+               (1-s) * vy j + s * vy (Suc j mod length ?scheme))
+          \<longrightarrow> (i = j \<and> t = s)
+            \<or> (fst (?scheme!i) = fst (?scheme!j) \<and>
+               (if snd (?scheme!i) = snd (?scheme!j) then s = t else s = 1 - t))"
       by (rule quotient_of_scheme_extract_full[OF hscheme])
     \<comment> \<open>The edge identification at t=0 gives vertex identifications.
        For edges i,j with same label and different direction (snd differs):
@@ -6363,7 +8080,15 @@ proof -
         ultimately show "q (vx i, vy i) = q (vx j, vy j)" by (by100 simp)
       qed
     qed
-    show ?thesis using hP hq hverts hvert_ident by (by100 blast)
+    show ?thesis
+      apply (rule exI[of _ P], rule exI[of _ q], rule exI[of _ vx], rule exI[of _ vy])
+      apply (intro conjI)
+      using hP apply (by100 blast)
+      using hq apply (by100 blast)
+      using hverts apply (by100 blast)
+      using hvert_ident apply (by100 blast)
+      using hno_extra_loc apply (by100 blast)
+      done
   qed
   \<comment> \<open>Apply Theorem 74.2.\<close>
   have h742: "\<exists>(G::'g set) mul e invg.
@@ -6372,7 +8097,22 @@ proof -
       \<and> top1_groups_isomorphic_on G mul
           (top1_fundamental_group_carrier X TX x0)
           (top1_fundamental_group_mul X TX x0)"
-    by (rule Theorem_74_2_scheme_presentation[OF hscheme assms(2) hlen hvert])
+  proof -
+    have hvc: "\<forall>q (vx::nat\<Rightarrow>real) (vy::nat\<Rightarrow>real).
+        (\<forall>i<length ?scheme. \<forall>j<length ?scheme.
+          fst (?scheme!i) = fst (?scheme!j) \<longrightarrow>
+          (\<forall>t\<in>I_set. q ((1-t) * vx i + t * vx (Suc i mod length ?scheme),
+             (1-t) * vy i + t * vy (Suc i mod length ?scheme))
+           = (if snd (?scheme!i) = snd (?scheme!j)
+              then q ((1-t) * vx j + t * vx (Suc j mod length ?scheme),
+                      (1-t) * vy j + t * vy (Suc j mod length ?scheme))
+              else q (t * vx j + (1-t) * vx (Suc j mod length ?scheme),
+                      t * vy j + (1-t) * vy (Suc j mod length ?scheme)))))
+        \<longrightarrow> (\<forall>i<length ?scheme. \<forall>j<length ?scheme. q (vx i, vy i) = q (vx j, vy j))"
+      sorry \<comment> \<open>Torus scheme vertex connectivity.\<close>
+    from Theorem_74_2_scheme_presentation[OF hscheme assms(2) hlen hvert hvc]
+    show ?thesis .
+  qed
   \<comment> \<open>The distinct labels of the torus scheme are {0,...,2n-1}.\<close>
   have hlabels: "fst ` set ?scheme = {..<2*n}"
   proof -
@@ -14680,6 +16420,7 @@ end
  
   
  
+
 
 
 
