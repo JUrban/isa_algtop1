@@ -4114,7 +4114,7 @@ proof -
           "\<lambda>s. (real k + s) / real n" "{0..1}"]
           hrescale_range hrescale_univ
         unfolding top1_unit_interval_def
-        sorry \<comment> \<open>Definition matching: I\_set = {0..1}, I\_top = subspace\_topology.\<close>
+        using top1_unit_interval_def top1_unit_interval_topology_def by (by5000 simp)
       have "top1_continuous_map_on I_set top1_unit_interval_topology X TX
           (f \<circ> (\<lambda>s. (real k + s) / real n))"
         using top1_continuous_map_on_comp[OF hrescale_top1 hf_cont] .
@@ -4130,8 +4130,8 @@ proof -
   \<comment> \<open>The foldr product is a loop from x0 to x0.\<close>
   have hprod_loop: "top1_is_loop_on X TX x0
       (foldr top1_path_product (map sub [0..<n]) (top1_constant_path x0))"
-    sorry \<comment> \<open>Induction: constant path is loop, path product of two loops is loop.
-       Uses top1\_path\_product\_is\_path + hsub\_loop.\<close>
+    sorry \<comment> \<open>foldr path\_product of loops is a loop. Needs induction with
+       foldr\_append + path\_product\_is\_path. Known infrastructure gap.\<close>
   \<comment> \<open>f is homotopic to the product (by reparametrization).\<close>
   \<comment> \<open>Use reparam\_path\_homotopy: the reparametrization that maps
      the binary product timing to the linear timing gives homotopy.\<close>
