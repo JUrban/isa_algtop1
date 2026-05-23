@@ -7505,8 +7505,17 @@ proof -
               (top1_fundamental_group_id A (subspace_topology X TX A) a')}"
         unfolding top1_group_kernel_on_def by (by100 simp)
       also have "\<dots> = {f \<in> F. \<phi> f \<in> N}"
-        using hproj_ker unfolding top1_group_kernel_on_def proj_def
-        sorry \<comment> \<open>proj(g) = coset(N, e\_A) iff g \<in> N.\<close>
+      proof -
+        have h\<phi>_image: "\<And>f. f \<in> F \<Longrightarrow> \<phi> f \<in> top1_fundamental_group_carrier A (subspace_topology X TX A) a'"
+          using h\<phi>_bij unfolding bij_betw_def by (by100 blast)
+        have hcoset_iff: "\<And>g. g \<in> top1_fundamental_group_carrier A (subspace_topology X TX A) a' \<Longrightarrow>
+            (proj g = top1_group_coset_on
+              (top1_fundamental_group_carrier A (subspace_topology X TX A) a')
+              (top1_fundamental_group_mul A (subspace_topology X TX A) a') N
+              (top1_fundamental_group_id A (subspace_topology X TX A) a')) = (g \<in> N)"
+          using hproj_ker unfolding top1_group_kernel_on_def by (by100 blast)
+        show ?thesis using hcoset_iff h\<phi>_image unfolding proj_def by (by5000 force)
+      qed
       finally show ?thesis .
     qed
     \<comment> \<open>By first isomorphism theorem: Q \<cong> F / ker(proj \<circ> \<phi>).
