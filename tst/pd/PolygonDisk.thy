@@ -4080,7 +4080,33 @@ proof -
     qed
     \<comment> \<open>sub k is continuous (f continuous, linear rescaling continuous).\<close>
     have hsub_cont: "top1_continuous_map_on I_set top1_unit_interval_topology X TX (sub k)"
-      sorry \<comment> \<open>Composition of continuous: f \<circ> linear\_rescale.\<close>
+    proof -
+      \<comment> \<open>f is continuous from hloop.\<close>
+      have hf_cont: "top1_continuous_map_on I_set top1_unit_interval_topology X TX f"
+        using hloop unfolding top1_is_loop_on_def top1_is_path_on_def top1_unit_interval_def
+        by (by100 blast)
+      \<comment> \<open>The linear rescaling s \<mapsto> (k+s)/n maps I\_set to I\_set.\<close>
+      have hrescale_range: "\<And>s. s \<in> I_set \<Longrightarrow> (real k + s) / real n \<in> I_set"
+      proof -
+        fix s :: real assume hs: "s \<in> I_set"
+        hence hs01: "0 \<le> s \<and> s \<le> 1" unfolding top1_unit_interval_def by (by100 auto)
+        have "0 \<le> (real k + s) / real n" using hs01 hn by (by100 simp)
+        moreover have "(real k + s) / real n \<le> 1"
+        proof -
+          have "real k + s \<le> real k + 1" using hs01 by (by100 linarith)
+          also have "\<dots> \<le> real n" using hk by (by100 simp)
+          finally show ?thesis using hn by (by100 simp)
+        qed
+        ultimately show "(real k + s) / real n \<in> I_set"
+          unfolding top1_unit_interval_def by (by100 auto)
+      qed
+      \<comment> \<open>Rescaling is continuous.\<close>
+      have hrescale_cont: "continuous_on I_set (\<lambda>s. (real k + s) / real n)"
+        using hn by (intro continuous_intros) (by100 simp)+
+      \<comment> \<open>Composition f \<circ> rescale is continuous.\<close>
+      show ?thesis unfolding sub_def
+        sorry \<comment> \<open>Compose continuous f with continuous rescaling.\<close>
+    qed
     \<comment> \<open>sub k is a path from x0 to x0 = loop.\<close>
     show "top1_is_loop_on X TX x0 (sub k)"
       unfolding top1_is_loop_on_def top1_is_path_on_def top1_unit_interval_def
