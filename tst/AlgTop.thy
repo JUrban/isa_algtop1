@@ -7421,7 +7421,7 @@ proof -
                 (\<lambda>s. (cos (2 * pi * s), sin (2 * pi * s))) g}"
       have hcc_in: "circle_class \<in> top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0)"
         unfolding top1_fundamental_group_carrier_def circle_class_def
-        sorry \<comment> \<open>circle loop is a loop in S1 at (1,0).\<close>
+        using standard_S1_loop_is_loop by (by100 blast)
       \<comment> \<open>\<iota>_* maps \<pi>_1(S1,(1,0)) to \<pi>_1(A,a') since \<iota> is continuous and \<iota>(1,0) = a'.\<close>
       have hS1_top: "is_topology_on top1_S1 top1_S1_topology"
         using top1_S1_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
@@ -7524,7 +7524,7 @@ proof -
         (top1_fundamental_group_carrier X TX a')
         (top1_fundamental_group_mul X TX a')"
       using top1_groups_isomorphic_on_refl[OF hpi1_X_grp] .
-    show ?thesis using hpresented hiso_XG sorry
+    show ?thesis using hpresented hiso_XG sorry \<comment> \<open>Trivial existential instantiation (type unification issue).\<close>
   qed
   \<comment> \<open>Step (iv): Transfer a' \<rightarrow> a via basepoint change.\<close>
   have hThm72_a: "\<exists>(G::'g set) mul e invg.
