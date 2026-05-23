@@ -7785,13 +7785,18 @@ proof -
     \<comment> \<open>Combine: from hrel\_product + hphi\_word + hrelator\_word + first iso theorem:
        Q is presented by (S, {scheme}) and Q \<cong> \<pi>_1(X,a').
        Use presentation\_from\_free\_quotient helper (proved separately).\<close>
-    show ?thesis
-      using hfree hpi1_X_grp hpi1_A_grp h\<phi>_hom h\<phi>_bij
-        hproj_hom hproj_surj hproj_ker hQ_grp h\<iota>_iso'
-        hrel_product hphi_word hrelator_word hrel_in N_def
-      sorry \<comment> \<open>Final assembly: instantiate presentation\_from\_free\_quotient with
-         F, mulF, eF, invgF, \<iota>F, \<phi>, proj, Q, mulQ, eQ, invgQ, scheme.
-         All preconditions are in scope. Output gives \<exists>G. presented \<and> iso.\<close>
+    \<comment> \<open>Final assembly: Q is presented and Q \<cong> \<pi>_1(X,a').\<close>
+    have hQ_iso_pi1: "top1_groups_isomorphic_on Q mulQ
+        (top1_fundamental_group_carrier X TX a')
+        (top1_fundamental_group_mul X TX a')"
+      using top1_groups_isomorphic_on_sym[OF h\<iota>_iso' hpi1_X_grp hQ_grp] .
+    \<comment> \<open>Q is presented by (S, {scheme}).\<close>
+    have hQ_presented: "top1_group_presented_by_on Q mulQ eQ invgQ
+        (fst ` set scheme) { map (\<lambda>(s,b). (s, b)) scheme }"
+      unfolding top1_group_presented_by_on_def
+      using hQ_grp hfree hproj_phi_hom hproj_phi_surj
+      sorry \<comment> \<open>Need: ker(proj \<circ> \<phi>) = N(scheme word). From hrelator\_word + normal closure.\<close>
+    show ?thesis using hQ_presented hQ_iso_pi1 sorry
   qed
   \<comment> \<open>Step (iv): Transfer a' \<rightarrow> a via basepoint change.\<close>
   have hThm72_a: "\<exists>(G::'g set) mul e invg.
