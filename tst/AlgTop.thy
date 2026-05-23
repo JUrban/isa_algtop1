@@ -7577,8 +7577,7 @@ proof -
         (top1_fundamental_group_mul X TX a')"
       using top1_groups_isomorphic_on_sym[OF h\<iota>_iso' hpi1_X_grp hQ_grp] .
     \<comment> \<open>Combine: \<exists>G. presented G \<and> G \<cong> \<pi>_1(X,a').\<close>
-    show ?thesis
-      using hQ_presented hQ_iso_pi1 sorry \<comment> \<open>Existential: G=Q, mul=mulQ, e=eQ, invg=invgQ.\<close>
+    show ?thesis using hQ_presented hQ_iso_pi1 sorry
   qed
   \<comment> \<open>Step (iv): Transfer a' \<rightarrow> a via basepoint change.\<close>
   have hThm72_a: "\<exists>(G::'g set) mul e invg.
