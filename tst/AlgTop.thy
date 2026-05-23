@@ -7413,12 +7413,16 @@ proof -
         (top1_fundamental_group_id A (subspace_topology X TX A) a')
         (top1_fundamental_group_invg A (subspace_topology X TX A) a')"
       using top1_fundamental_group_is_group[OF hTA ha'_A] .
+    have hrel_in: "relator_class \<in> top1_fundamental_group_carrier A (subspace_topology X TX A) a'"
+      sorry \<comment> \<open>Image of circle loop class under \<iota>_* is in \<pi>_1(A,a').\<close>
     have hN_normal: "top1_normal_subgroup_on
         (top1_fundamental_group_carrier A (subspace_topology X TX A) a')
         (top1_fundamental_group_mul A (subspace_topology X TX A) a')
         (top1_fundamental_group_id A (subspace_topology X TX A) a')
         (top1_fundamental_group_invg A (subspace_topology X TX A) a') N"
-      unfolding N_def sorry
+      unfolding N_def
+      using normal_subgroup_generated_is_normal[OF hpi1_A_grp, of "{relator_class}"] hrel_in
+      by (by100 blast)
     note hqpp = quotient_projection_properties[OF hpi1_A_grp hN_normal]
     have hproj_hom: "top1_group_hom_on
         (top1_fundamental_group_carrier A (subspace_topology X TX A) a')
