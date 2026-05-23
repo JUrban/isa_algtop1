@@ -6680,7 +6680,42 @@ proof -
   have hker_word: "top1_group_kernel_on F eQ (proj \<circ> \<phi>) =
       top1_normal_subgroup_generated_on F mulF eF invgF
         {top1_group_word_product mulF eF invgF (map (\<lambda>(s, b). (\<iota>F s, b)) w)}"
-    using hcomp_ker hN_eq hrel_word sorry \<comment> \<open>\<phi>^{-1}(N\_G({r})) = N\_F({\<phi>^{-1}(r)}) via iso.\<close>
+  proof -
+    \<comment> \<open>From hcomp\_ker: kernel = {f \<in> F. \<phi> f \<in> N}.
+       From hN\_eq: N = N\_G({r}).
+       From hrel\_word: inv\_into F \<phi> r = word\_product.
+       Need: {f \<in> F. \<phi> f \<in> N\_G({r})} = N\_F({word\_product}).
+       Use inj\_hom\_preimage\_normal\_closure for \<subseteq> direction.\<close>
+    define wp where "wp = top1_group_word_product mulF eF invgF (map (\<lambda>(s, b). (\<iota>F s, b)) w)"
+    have hwp_eq: "wp = inv_into F \<phi> r" using hrel_word unfolding wp_def by (by100 simp)
+    \<comment> \<open>\<subseteq>: if \<phi> f \<in> N\_G({r}) then f \<in> N\_F({wp}) using inj\_hom\_preimage\_normal\_closure.\<close>
+    have hN_sub: "N \<subseteq> G" using hN_eq
+      unfolding top1_normal_subgroup_generated_on_def sorry
+    have hr_in_N: "r \<in> N" using hN_eq
+      unfolding top1_normal_subgroup_generated_on_def sorry
+    have hsubset1: "{f \<in> F. \<phi> f \<in> N} \<subseteq>
+        top1_normal_subgroup_generated_on F mulF eF invgF {wp}"
+    proof (rule subsetI)
+      fix c assume hc: "c \<in> {f \<in> F. \<phi> f \<in> N}"
+      hence hcF: "c \<in> F" and h\<phi>c_N: "\<phi> c \<in> N" by (by100 blast)+
+      from hN_eq have h\<phi>c: "\<phi> c \<in> top1_normal_subgroup_generated_on G mulG eG invgG {r}"
+        using h\<phi>c_N by (by100 simp)
+      have hN_F_normal: "top1_normal_subgroup_on F mulF eF invgF
+          (top1_normal_subgroup_generated_on F mulF eF invgF {wp})"
+        sorry
+      show "c \<in> top1_normal_subgroup_generated_on F mulF eF invgF {wp}"
+        using inj_hom_preimage_normal_closure[OF hF_grp hG_grp h\<phi>_hom _ _ hN_F_normal]
+          hcF h\<phi>c hwp_eq
+        sorry
+    qed
+    \<comment> \<open>\<supseteq>: if f \<in> N\_F({wp}) then \<phi> f \<in> N\_G({r}).\<close>
+    have hsubset2: "top1_normal_subgroup_generated_on F mulF eF invgF {wp} \<subseteq>
+        {f \<in> F. \<phi> f \<in> N}"
+      sorry
+    have "{f \<in> F. \<phi> f \<in> N} = top1_normal_subgroup_generated_on F mulF eF invgF {wp}"
+      using hsubset1 hsubset2 by (by100 blast)
+    thus ?thesis using hcomp_ker hN_eq hrel_word unfolding wp_def by (by100 simp)
+  qed
   \<comment> \<open>Step 4: Q is presented by (S, {w}).\<close>
   have hQ_presented: "top1_group_presented_by_on Q mulQ eQ invgQ S {w}"
   proof -
