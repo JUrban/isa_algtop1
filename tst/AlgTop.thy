@@ -7565,7 +7565,7 @@ proof -
                      (top1_fundamental_group_mul A (subspace_topology X TX A) a') N g))" for C
     have hQ_grp: "top1_is_group_on Q mulQ eQ invgQ"
       using quotient_group_is_group[OF hpi1_A_grp hN_normal]
-        unfolding Q_def mulQ_def eQ_def invgQ_def sorry
+        unfolding Q_def mulQ_def eQ_def invgQ_def by (by100 simp)
     have hQ_presented: "top1_group_presented_by_on Q mulQ eQ invgQ
         (fst ` set scheme) { map (\<lambda>(s,b). (s, b)) scheme }"
       unfolding top1_group_presented_by_on_def
