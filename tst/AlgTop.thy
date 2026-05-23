@@ -7548,23 +7548,37 @@ proof -
     \<comment> \<open>From hrelator\_word + first\_isomorphism\_theorem + h\<iota>\_iso:
        F / N(scheme\_word\_in\_F) \<cong> Q \<cong> \<pi>_1(X,a').
        This gives the presentation.\<close>
-    have hpresented: "top1_group_presented_by_on
-        (top1_fundamental_group_carrier X TX a')
-        (top1_fundamental_group_mul X TX a')
-        (top1_fundamental_group_id X TX a')
-        (top1_fundamental_group_invg X TX a')
-        (fst ` set scheme)
-        { map (\<lambda>(s,b). (s, b)) scheme }"
-      using hpi1_X_grp hfree hproj_phi_hom hproj_phi_surj h\<iota>_iso' hrelator_word
-        hproj_ker hker_proj_phi
-      sorry \<comment> \<open>Assembly from first\_isomorphism\_theorem + iso chain + relator ID.\<close>
-    have hiso_XG: "top1_groups_isomorphic_on
-        (top1_fundamental_group_carrier X TX a')
-        (top1_fundamental_group_mul X TX a')
+    \<comment> \<open>Q is presented by (S, {scheme}).
+       Use proj \<circ> \<phi> as the surjective hom from F to Q.
+       ker = {f \<in> F. \<phi> f \<in> N} = N(scheme word) (from hrelator\_word).\<close>
+    define eQ where "eQ = top1_group_coset_on
+        (top1_fundamental_group_carrier A (subspace_topology X TX A) a')
+        (top1_fundamental_group_mul A (subspace_topology X TX A) a') N
+        (top1_fundamental_group_id A (subspace_topology X TX A) a')"
+    define invgQ where "invgQ C = top1_group_coset_on
+        (top1_fundamental_group_carrier A (subspace_topology X TX A) a')
+        (top1_fundamental_group_mul A (subspace_topology X TX A) a') N
+        (top1_fundamental_group_invg A (subspace_topology X TX A) a'
+          (SOME g. g \<in> top1_fundamental_group_carrier A (subspace_topology X TX A) a' \<and>
+                   C = top1_group_coset_on
+                     (top1_fundamental_group_carrier A (subspace_topology X TX A) a')
+                     (top1_fundamental_group_mul A (subspace_topology X TX A) a') N g))" for C
+    have hQ_grp: "top1_is_group_on Q mulQ eQ invgQ"
+      using quotient_group_is_group[OF hpi1_A_grp hN_normal]
+        unfolding Q_def mulQ_def eQ_def invgQ_def sorry
+    have hQ_presented: "top1_group_presented_by_on Q mulQ eQ invgQ
+        (fst ` set scheme) { map (\<lambda>(s,b). (s, b)) scheme }"
+      unfolding top1_group_presented_by_on_def
+      using hQ_grp hfree hproj_phi_hom hproj_phi_surj hker_proj_phi hrelator_word
+      sorry \<comment> \<open>Assembly: F free, proj\<circ>\<phi> surj hom to Q, ker = N(scheme word).\<close>
+    \<comment> \<open>Q \<cong> \<pi>_1(X,a') (from h\<iota>\_iso').\<close>
+    have hQ_iso_pi1: "top1_groups_isomorphic_on Q mulQ
         (top1_fundamental_group_carrier X TX a')
         (top1_fundamental_group_mul X TX a')"
-      using top1_groups_isomorphic_on_refl[OF hpi1_X_grp] .
-    show ?thesis using hpresented hiso_XG sorry \<comment> \<open>Trivial existential instantiation (type unification issue).\<close>
+      using top1_groups_isomorphic_on_sym[OF h\<iota>_iso' hpi1_X_grp hQ_grp] .
+    \<comment> \<open>Combine: \<exists>G. presented G \<and> G \<cong> \<pi>_1(X,a').\<close>
+    show ?thesis
+      using hQ_presented hQ_iso_pi1 sorry \<comment> \<open>Existential: G=Q, mul=mulQ, e=eQ, invg=invgQ.\<close>
   qed
   \<comment> \<open>Step (iv): Transfer a' \<rightarrow> a via basepoint change.\<close>
   have hThm72_a: "\<exists>(G::'g set) mul e invg.
