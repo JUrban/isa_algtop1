@@ -4062,7 +4062,30 @@ proof -
      The path product of these sub-paths is homotopic to f by reparametrization.\<close>
   \<comment> \<open>Each sub path is a path from x0 to x0.\<close>
   have hsub_loop: "\<And>k. k < n \<Longrightarrow> top1_is_loop_on X TX x0 (sub k)"
-    sorry
+  proof -
+    fix k assume hk: "k < n"
+    \<comment> \<open>sub k 0 = f(k/n) = x0, sub k 1 = f((k+1)/n) = x0.\<close>
+    have hsub0: "sub k 0 = x0"
+      unfolding sub_def using hvertex[rule_format, of k] hk hn by (by100 simp)
+    have hsub1: "sub k 1 = x0"
+    proof -
+      have "sub k 1 = f ((real k + 1) / real n)" unfolding sub_def by (by100 simp)
+      also have "(real k + 1) / real n = real (Suc k) / real n" by (by100 simp)
+      also have "f (real (Suc k) / real n) = x0"
+      proof -
+        have "Suc k \<le> n" using hk by (by100 linarith)
+        thus ?thesis using hvertex by (by100 blast)
+      qed
+      finally show ?thesis .
+    qed
+    \<comment> \<open>sub k is continuous (f continuous, linear rescaling continuous).\<close>
+    have hsub_cont: "top1_continuous_map_on I_set top1_unit_interval_topology X TX (sub k)"
+      sorry \<comment> \<open>Composition of continuous: f \<circ> linear\_rescale.\<close>
+    \<comment> \<open>sub k is a path from x0 to x0 = loop.\<close>
+    show "top1_is_loop_on X TX x0 (sub k)"
+      unfolding top1_is_loop_on_def top1_is_path_on_def
+      using hsub0 hsub1 hsub_cont sorry
+  qed
   \<comment> \<open>The foldr product is a loop from x0 to x0.\<close>
   have hprod_loop: "top1_is_loop_on X TX x0
       (foldr top1_path_product (map sub [0..<n]) (top1_constant_path x0))"
