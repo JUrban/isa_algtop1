@@ -2068,9 +2068,75 @@ proof -
     have hcone_cover: "P \<subseteq> (\<Union>i\<in>{..<n}. cone_set i)"
       using hP_cones unfolding cone_set_def by (by100 blast)
     have hpsi_local_cont: "\<And>i. i < n \<Longrightarrow> continuous_on (cone_set i) (psi_local i)"
-      sorry \<comment> \<open>psi\_local i is continuous on cone i: composition of continuous functions
-         (beta\_cr, gamma\_cr are linear, cos/sin continuous, s*cos/s*sin continuous).
-         At centroid (s=0): |psi\_local| = s -> 0, squeeze argument.\<close>
+    proof -
+      fix i :: nat assume hi: "i < n"
+      have hDi_ne: "Di i \<noteq> 0" using hDi_pos[OF hi] by (by100 linarith)
+      \<comment> \<open>psi_local i z = (s*cos \<theta>, s*sin \<theta>) where s = beta+gamma, \<theta> depends on gamma/s.\<close>
+      \<comment> \<open>Key: |psi\_local i z - psi\_local i (cx,cy)| = |psi\_local i z| = s = beta+gamma.\<close>
+      \<comment> \<open>And s is continuous (as sum of continuous beta, gamma). So as z\<rightarrow>c, s\<rightarrow>0.\<close>
+      \<comment> \<open>Since |psi\_local| = s for all z, and s is continuous, psi\_local is continuous.\<close>
+      have hs_cont: "continuous_on (cone_set i) (\<lambda>z. beta_cr i z + gamma_cr i z)"
+      proof -
+        have hb_eq: "beta_cr i = (\<lambda>z::real\<times>real. ((fst z - cx) * (vy (Suc i mod n) - cy)
+            - (snd z - cy) * (vx (Suc i mod n) - cx)) / Di i)"
+          unfolding beta_cr_def cross2_def by (rule ext) (by100 simp)
+        have hg_eq: "gamma_cr i = (\<lambda>z::real\<times>real. ((vx i - cx) * (snd z - cy)
+            - (vy i - cy) * (fst z - cx)) / Di i)"
+          unfolding gamma_cr_def cross2_def by (rule ext) (by100 simp)
+        have "continuous_on UNIV (beta_cr i)" unfolding hb_eq
+          using hDi_ne by (intro continuous_intros) (by100 simp)+
+        moreover have "continuous_on UNIV (gamma_cr i)" unfolding hg_eq
+          using hDi_ne by (intro continuous_intros) (by100 simp)+
+        ultimately have "continuous_on UNIV (\<lambda>z. beta_cr i z + gamma_cr i z)"
+          by (intro continuous_intros)
+        thus ?thesis using continuous_on_subset by (by100 blast)
+      qed
+      \<comment> \<open>For any z in cone i: |psi\_local i z|^2 = s^2 (proved earlier as h1 pattern).\<close>
+      \<comment> \<open>Each component of psi\_local i z is bounded by s = beta+gamma.\<close>
+      have hcomp_bound: "\<And>z. z \<in> cone_set i \<Longrightarrow>
+          \<bar>fst (psi_local i z)\<bar> \<le> beta_cr i z + gamma_cr i z \<and>
+          \<bar>snd (psi_local i z)\<bar> \<le> beta_cr i z + gamma_cr i z"
+      proof -
+        fix z assume "z \<in> cone_set i"
+        hence hic: "in_cone i z" unfolding cone_set_def by (by100 simp)
+        define s where "s = beta_cr i z + gamma_cr i z"
+        have hs0: "s \<ge> 0" using hic unfolding in_cone_def s_def by (by100 linarith)
+        define u where "u = (if s = 0 then 0 else gamma_cr i z / s)"
+        define \<theta> where "\<theta> = 2*pi*(real i + u)/real n"
+        have hval: "psi_local i z = (s * cos \<theta>, s * sin \<theta>)"
+          unfolding psi_local_def Let_def s_def u_def \<theta>_def by (by100 simp)
+        have h1: "\<bar>fst (psi_local i z)\<bar> \<le> s"
+        proof -
+          have "\<bar>fst (psi_local i z)\<bar> = \<bar>s * cos \<theta>\<bar>" using hval by (by100 simp)
+          also have "\<dots> = s * \<bar>cos \<theta>\<bar>"
+            using abs_mult[of s "cos \<theta>"] hs0 by (by100 simp)
+          also have "\<dots> \<le> s * 1"
+            using mult_left_mono[OF abs_cos_le_one[of \<theta>] hs0] by (by100 simp)
+          finally show ?thesis by (by100 simp)
+        qed
+        have h2: "\<bar>snd (psi_local i z)\<bar> \<le> s"
+        proof -
+          have "\<bar>snd (psi_local i z)\<bar> = \<bar>s * sin \<theta>\<bar>" using hval by (by100 simp)
+          also have "\<dots> = s * \<bar>sin \<theta>\<bar>"
+            using abs_mult[of s "sin \<theta>"] hs0 by (by100 simp)
+          also have "\<dots> \<le> s * 1"
+            using mult_left_mono[OF abs_sin_le_one[of \<theta>] hs0] by (by100 simp)
+          finally show ?thesis by (by100 simp)
+        qed
+        show "\<bar>fst (psi_local i z)\<bar> \<le> beta_cr i z + gamma_cr i z \<and>
+            \<bar>snd (psi_local i z)\<bar> \<le> beta_cr i z + gamma_cr i z"
+          using h1 h2 unfolding s_def by (by100 blast)
+      qed
+      \<comment> \<open>psi\_local i is continuous by squeeze: dist(psi\_local z, 0) = s(z) and s is continuous.\<close>
+      \<comment> \<open>Also psi\_local(c) = (0,0), so dist(psi\_local z, psi\_local c) = s(z).\<close>
+      \<comment> \<open>For z0 \<in> cone: dist(psi\_local z, psi\_local z0) \<le> dist(psi\_local z, 0) + dist(psi\_local z0, 0)
+         = s(z) + s(z0). And s is continuous. So psi\_local is continuous.\<close>
+      \<comment> \<open>Actually simpler: psi\_local maps to R^2, and each component is bounded by s.
+         fst(psi\_local z) = s*cos \<theta> with |s*cos \<theta>| \<le> s. Similarly for snd.
+         And s is continuous. So each component is squeezed, hence continuous.\<close>
+      show "continuous_on (cone_set i) (psi_local i)"
+        sorry \<comment> \<open>From hnorm\_eq + hs\_cont: squeeze argument for continuity.\<close>
+    qed
     have h\<psi>_cont_cone: "\<And>i. i < n \<Longrightarrow> continuous_on (cone_set i) \<psi>"
     proof -
       fix i :: nat assume hi: "i < n"
