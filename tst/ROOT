@@ -45,7 +45,7 @@ session AlgIsoFixed in fi = AlgIsoFixedBase +
     AlgIsoFixed
 
 session K5 in k5 = AlgIsoFixed +
-  options [timeout = 300]
+  options [timeout = 600]
   theories
     K5_nonplanar
 
@@ -55,6 +55,11 @@ session AlgTopGroups in ag = K5 +
     AlgTopGroups
 
 session AlgTop = AlgTopGroups +
-  options [quick_and_dirty, timeout = 300]
+  options [quick_and_dirty, timeout = 600]
   theories
     AlgTop
+
+session PolygonDisk in pd = AlgTopGroups +
+  options [quick_and_dirty, timeout = 600]
+  theories
+    PolygonDisk

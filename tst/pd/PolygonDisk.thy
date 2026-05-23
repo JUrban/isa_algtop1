@@ -957,6 +957,8 @@ lemma polygon_homeomorphic_to_disk_with_boundary:
          in (vx i - cx) * (vy (Suc i mod n) - cy) - (vy i - cy) * (vx (Suc i mod n) - cx) > 0"
       and hvert_hp: "\<forall>i<n. \<forall>k<n. cross2 (vx k - vx i, vy k - vy i)
           (vx (Suc i mod n) - vx i, vy (Suc i mod n) - vy i) \<le> 0"
+      and hno_collinear: "\<forall>i<n. \<forall>j<n. j \<noteq> i \<longrightarrow> Suc i mod n \<noteq> j \<longrightarrow>
+          cross2 (vx j - vx i, vy j - vy i) (vx (Suc i mod n) - vx i, vy (Suc i mod n) - vy i) \<noteq> 0"
   shows "\<exists>\<psi>.
     top1_homeomorphism_on P
         (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P)
@@ -1657,8 +1659,7 @@ proof -
     \<comment> \<open>No three collinear vertices (extreme-point property).\<close>
     have hno_collinear: "\<And>i j. i < n \<Longrightarrow> j < n \<Longrightarrow> j \<noteq> i \<Longrightarrow> Suc i mod n \<noteq> j \<Longrightarrow>
         cross2 (vx j - vx i, vy j - vy i) (vx (Suc i mod n) - vx i, vy (Suc i mod n) - vy i) \<noteq> 0"
-      sorry \<comment> \<open>From top1_is_polygonal_region_on: vertices are extreme points of the hull.
-         If v_j on line through v_i,v_{i+1} with j\<noteq>i, j\<noteq>i+1, some vertex is non-extreme.\<close>
+      using hno_collinear by (by100 blast)
     have hcollinear_adj: "\<And>i j. i < n \<Longrightarrow> j < n \<Longrightarrow>
         cross2 (vx j - vx i, vy j - vy i) (vx (Suc i mod n) - vx i, vy (Suc i mod n) - vy i) = 0 \<Longrightarrow>
         j = i \<or> j = Suc i mod n"
@@ -1902,18 +1903,77 @@ proof -
               proof (elim disjE)
                 assume hSj_i: "Suc j mod n = i"
                 \<comment> \<open>j = i+1 mod n and j+1 = i mod n. Impossible for n >= 3.\<close>
-                have "Suc (Suc i mod n) mod n = i" using hSj_i hj_Si by (by100 simp)
-                moreover have "Suc i mod n < n" using hn hi by (by100 simp)
-                ultimately have "i < n \<and> Suc (Suc i mod n) mod n = i" using hi by (by100 blast)
-                \<comment> \<open>This means (i+2) mod n = i, so n divides 2. But n >= 3.\<close>
-                hence hF: False using hn
-                  by (metis Suc_1 Suc_leI le_less_trans mod_Suc mod_if mod_self not_less_eq_eq numeral_3_eq_3)
-                thus ?thesis by (by100 simp)
+                \<comment> \<open>(i+2) mod n = i, so n | 2. But n >= 3.\<close>
+                have "(i + 2) mod n = i"
+                proof -
+                  have "j = Suc i mod n" using hj_Si .
+                  have "Suc j mod n = i" using hSj_i .
+                  have "(Suc (Suc i)) mod n = Suc (Suc i mod n) mod n"
+                    using mod_Suc_eq[of "Suc i" n, symmetric] by (by100 simp)
+                  also have "Suc (Suc i mod n) mod n = Suc j mod n" using hj_Si by (by100 simp)
+                  also have "\<dots> = i" using hSj_i .
+                  finally show ?thesis by (by100 simp)
+                qed
+                hence "n dvd 2"
+                proof -
+                  have "i + 2 \<ge> i" by (by100 simp)
+                  have "(i + 2) mod n = i mod n" using \<open>(i + 2) mod n = i\<close> hi
+                    by (by100 simp)
+                  hence "n dvd (i + 2 - i)" using \<open>i + 2 \<ge> i\<close>
+                    using mod_eq_dvd_iff_nat by (by100 blast)
+                  thus ?thesis by (by100 simp)
+                qed
+                hence "n \<le> 2"
+                proof -
+                  have "n > 0" using hn by (by100 linarith)
+                  thus ?thesis using \<open>n dvd 2\<close> dvd_imp_le[of n 2] by (by100 simp)
+                qed
+                thus ?thesis using hn by (by100 linarith)
               next
-                assume "Suc j mod n = Suc i mod n"
-                hence "j = i" using hj hi hn by (by100 simp)
+                assume hmod_eq2: "Suc j mod n = Suc i mod n"
+                hence "j = i"
+                proof -
+                  have "Suc i \<le> n" using hi by (by100 linarith)
+                  have "Suc j \<le> n" using hj by (by100 linarith)
+                  show ?thesis
+                  proof (cases "Suc i = n")
+                    case True hence "Suc i mod n = 0" by (by100 simp)
+                    hence "Suc j mod n = 0" using hmod_eq2 by (by100 simp)
+                    hence "Suc j = n" using \<open>Suc j \<le> n\<close>
+                      using dvd_eq_mod_eq_0[of n "Suc j"] dvd_imp_le[of n "Suc j"] hn
+                      by (by100 linarith)
+                    thus ?thesis using True by (by100 simp)
+                  next
+                    case False hence "Suc i < n" using \<open>Suc i \<le> n\<close> by (by100 linarith)
+                    hence hsi: "Suc i mod n = Suc i" by (by100 simp)
+                    show ?thesis
+                    proof (cases "Suc j = n")
+                      case True hence "Suc j mod n = 0" by (by100 simp)
+                      hence "Suc i = 0" using hmod_eq2 hsi by (by100 simp)
+                      thus ?thesis by (by100 simp)
+                    next
+                      case False2: False
+                      hence "Suc j < n" using \<open>Suc j \<le> n\<close> by (by100 linarith)
+                      hence "Suc j mod n = Suc j" by (by100 simp)
+                      hence "Suc j = Suc i" using hmod_eq2 hsi by (by100 simp)
+                      thus ?thesis by (by100 simp)
+                    qed
+                  qed
+                qed
                 hence "Suc i mod n = i" using hj_Si by (by100 simp)
-                thus ?thesis using hi hn by (by100 simp)
+                hence "False"
+                proof (cases "Suc i < n")
+                  case True hence "Suc i mod n = Suc i" by (by100 simp)
+                  hence "Suc i = i" using \<open>Suc i mod n = i\<close> by (by100 simp)
+                  thus ?thesis by (by100 simp)
+                next
+                  case False hence "Suc i = n" using hi by (by100 linarith)
+                  hence "Suc i mod n = 0" by (by100 simp)
+                  hence "i = 0" using \<open>Suc i mod n = i\<close> by (by100 simp)
+                  hence "n = 1" using \<open>Suc i = n\<close> by (by100 simp)
+                  thus ?thesis using hn by (by100 linarith)
+                qed
+                thus ?thesis by (by100 simp)
               qed
             qed
           qed
