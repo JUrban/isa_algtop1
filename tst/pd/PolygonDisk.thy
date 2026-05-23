@@ -792,6 +792,156 @@ qed
 
 
 
+text \<open>Helper: psi\_local agreement on cone overlaps.
+  Given equal total Cramer weight s and one of four adjacency cases,
+  the angle-based psi maps agree.\<close>
+lemma psi_angle_cases_agree:
+  fixes s bi gi bj gj :: real and i j n :: nat
+  assumes hn: "n > 0" and hi: "i < n" and hj: "j < n"
+      and hs: "bi + gi = s" and hsj: "bj + gj = s"
+      and hcase: "s = 0
+        \<or> (i = j \<and> gi = gj)
+        \<or> (Suc i mod n = j \<and> bi = 0 \<and> gj = 0)
+        \<or> (Suc j mod n = i \<and> gi = 0 \<and> bj = 0)"
+  shows "(let ui = (if s = 0 then 0 else gi / s);
+              \<theta>i = 2 * pi * (real i + ui) / real n
+          in (s * cos \<theta>i, s * sin \<theta>i))
+       = (let uj = (if s = 0 then 0 else gj / s);
+              \<theta>j = 2 * pi * (real j + uj) / real n
+          in (s * cos \<theta>j, s * sin \<theta>j))"
+proof -
+  define ui where "ui = (if s = 0 then 0 else gi / s)"
+  define uj where "uj = (if s = 0 then 0 else gj / s)"
+  define \<theta>i where "\<theta>i = 2 * pi * (real i + ui) / real n"
+  define \<theta>j where "\<theta>j = 2 * pi * (real j + uj) / real n"
+  have hgoal: "s * cos \<theta>i = s * cos \<theta>j \<and> s * sin \<theta>i = s * sin \<theta>j"
+  proof -
+    from hcase show ?thesis
+    proof (elim disjE)
+      assume "s = 0"
+      thus ?thesis by (by100 simp)
+    next
+      assume hij: "i = j \<and> gi = gj"
+      hence "ui = uj" unfolding ui_def uj_def by (by100 simp)
+      hence "\<theta>i = \<theta>j" unfolding \<theta>i_def \<theta>j_def using hij by (by100 simp)
+      thus ?thesis by (by100 simp)
+    next
+      assume hadj1: "Suc i mod n = j \<and> bi = 0 \<and> gj = 0"
+      hence hbi0: "bi = 0" and hgj0: "gj = 0" and hj_eq: "j = Suc i mod n" by (by100 blast)+
+      have hgi_s: "gi = s" using hs hbi0 by (by100 linarith)
+      have hbj_s: "bj = s" using hsj hgj0 by (by100 linarith)
+      show ?thesis
+      proof (cases "s = 0")
+        case True thus ?thesis by (by100 simp)
+      next
+        case hsnz: False
+        have hui: "ui = 1" unfolding ui_def using hsnz hgi_s by (by100 simp)
+        have huj: "uj = 0" unfolding uj_def using hsnz hgj0 by (by100 simp)
+        have h\<theta>i: "\<theta>i = 2 * pi * (real i + 1) / real n"
+          unfolding \<theta>i_def using hui by (by100 simp)
+        have h\<theta>j: "\<theta>j = 2 * pi * real j / real n"
+          unfolding \<theta>j_def using huj by (by100 simp)
+        \<comment> \<open>j = Suc i mod n. If Suc i < n then j = Suc i and \<theta>i = \<theta>j.
+           If Suc i = n then j = 0 and \<theta>i = 2\<pi> and \<theta>j = 0, same mod 2\<pi>.\<close>
+        have "\<theta>i = \<theta>j \<or> (\<theta>i - \<theta>j = 2 * pi \<or> \<theta>j - \<theta>i = 2 * pi)"
+        proof (cases "Suc i < n")
+          case True
+          hence "Suc i mod n = Suc i" by (by100 simp)
+          hence "j = Suc i" using hj_eq by (by100 simp)
+          hence "\<theta>j = 2 * pi * real (Suc i) / real n" using h\<theta>j by (by100 simp)
+          also have "\<dots> = 2 * pi * (real i + 1) / real n"
+            by (by100 simp)
+          finally show ?thesis using h\<theta>i by (by100 simp)
+        next
+          case False
+          hence "Suc i \<ge> n" by (by100 linarith)
+          hence hSi_n: "Suc i = n" using hi by (by100 linarith)
+          hence "j = 0" using hj_eq by (by100 simp)
+          hence h\<theta>j_val: "\<theta>j = 0" using h\<theta>j by (by100 simp)
+          have hri: "real i + 1 = real n" using hSi_n by (by100 simp)
+          have h\<theta>i_val: "\<theta>i = 2 * pi * real n / real n" unfolding h\<theta>i hri by (by100 simp)
+          have h\<theta>i_2pi: "\<theta>i = 2 * pi" using h\<theta>i_val hn by (by100 simp)
+          thus ?thesis using h\<theta>j_val by (by100 simp)
+        qed
+        thus ?thesis
+        proof (elim disjE)
+          assume "\<theta>i = \<theta>j" thus ?thesis by (by100 simp)
+        next
+          assume hd: "\<theta>i - \<theta>j = 2 * pi"
+          hence heq: "\<theta>i = \<theta>j + 2 * pi" by (by100 linarith)
+          have "cos \<theta>i = cos \<theta>j" using heq cos_periodic[of \<theta>j] by (by100 simp)
+          moreover have "sin \<theta>i = sin \<theta>j" using heq sin_periodic[of \<theta>j] by (by100 simp)
+          ultimately show ?thesis by (by100 simp)
+        next
+          assume hd: "\<theta>j - \<theta>i = 2 * pi"
+          hence heq: "\<theta>j = \<theta>i + 2 * pi" by (by100 linarith)
+          have "cos \<theta>j = cos \<theta>i" using heq cos_periodic[of \<theta>i] by (by100 simp)
+          moreover have "sin \<theta>j = sin \<theta>i" using heq sin_periodic[of \<theta>i] by (by100 simp)
+          ultimately show ?thesis by (by100 simp)
+        qed
+      qed
+    next
+      assume hadj2: "Suc j mod n = i \<and> gi = 0 \<and> bj = 0"
+      hence hgi0: "gi = 0" and hbj0: "bj = 0" and hi_eq: "i = Suc j mod n" by (by100 blast)+
+      have hbi_s: "bi = s" using hs hgi0 by (by100 linarith)
+      have hgj_s: "gj = s" using hsj hbj0 by (by100 linarith)
+      show ?thesis
+      proof (cases "s = 0")
+        case True thus ?thesis by (by100 simp)
+      next
+        case hsnz: False
+        have hui: "ui = 0" unfolding ui_def using hsnz hgi0 by (by100 simp)
+        have huj: "uj = 1" unfolding uj_def using hsnz hgj_s by (by100 simp)
+        have h\<theta>i: "\<theta>i = 2 * pi * real i / real n"
+          unfolding \<theta>i_def using hui by (by100 simp)
+        have h\<theta>j: "\<theta>j = 2 * pi * (real j + 1) / real n"
+          unfolding \<theta>j_def using huj by (by100 simp)
+        have "\<theta>i = \<theta>j \<or> (\<theta>i - \<theta>j = 2 * pi \<or> \<theta>j - \<theta>i = 2 * pi)"
+        proof (cases "Suc j < n")
+          case True
+          hence "Suc j mod n = Suc j" by (by100 simp)
+          hence "i = Suc j" using hi_eq by (by100 simp)
+          hence "\<theta>i = 2 * pi * real (Suc j) / real n" using h\<theta>i by (by100 simp)
+          also have "\<dots> = 2 * pi * (real j + 1) / real n"
+            by (by100 simp)
+          finally show ?thesis using h\<theta>j by (by100 simp)
+        next
+          case False
+          hence "Suc j \<ge> n" by (by100 linarith)
+          hence hSj_n: "Suc j = n" using hj by (by100 linarith)
+          hence "i = 0" using hi_eq by (by100 simp)
+          hence h\<theta>i_val: "\<theta>i = 0" using h\<theta>i by (by100 simp)
+          have hrj: "real j + 1 = real n" using hSj_n by (by100 simp)
+          have h\<theta>j_val: "\<theta>j = 2 * pi * real n / real n" unfolding h\<theta>j hrj by (by100 simp)
+          have h\<theta>j_2pi: "\<theta>j = 2 * pi" using h\<theta>j_val hn by (by100 simp)
+          thus ?thesis using h\<theta>i_val by (by100 simp)
+        qed
+        thus ?thesis
+        proof (elim disjE)
+          assume "\<theta>i = \<theta>j" thus ?thesis by (by100 simp)
+        next
+          assume hd: "\<theta>i - \<theta>j = 2 * pi"
+          hence heq: "\<theta>i = \<theta>j + 2 * pi" by (by100 linarith)
+          have "cos \<theta>i = cos \<theta>j" using heq cos_periodic[of \<theta>j] by (by100 simp)
+          moreover have "sin \<theta>i = sin \<theta>j" using heq sin_periodic[of \<theta>j] by (by100 simp)
+          ultimately show ?thesis by (by100 simp)
+        next
+          assume hd: "\<theta>j - \<theta>i = 2 * pi"
+          hence heq: "\<theta>j = \<theta>i + 2 * pi" by (by100 linarith)
+          have "cos \<theta>j = cos \<theta>i" using heq cos_periodic[of \<theta>i] by (by100 simp)
+          moreover have "sin \<theta>j = sin \<theta>i" using heq sin_periodic[of \<theta>i] by (by100 simp)
+          ultimately show ?thesis by (by100 simp)
+        qed
+      qed
+    qed
+  qed
+  have hcos: "s * cos \<theta>i = s * cos \<theta>j" using hgoal by (by100 simp)
+  have hsin: "s * sin \<theta>i = s * sin \<theta>j" using hgoal by (by100 simp)
+  show ?thesis unfolding Let_def ui_def[symmetric] uj_def[symmetric]
+      \<theta>i_def[symmetric] \<theta>j_def[symmetric]
+    using hcos hsin by (by100 simp)
+qed
+
 text \<open>Strengthened polygon-to-disk: following the book (Munkres \<S>74) exactly.
   Uses radial projection from the centroid, not cone decomposition.
   Returns both the homeomorphism AND boundary correspondence.\<close>
@@ -1245,9 +1395,304 @@ proof -
     \<comment> \<open>Local maps agree on cone overlaps.\<close>
     have hpsi_agree_centroid: "\<And>i j. psi_local i (cx, cy) = psi_local j (cx, cy)"
       using hpsi_local_c by (by100 simp)
+    \<comment> \<open>Helper: cross2(z - v_i, v_{i+1} - v_i) in terms of Cramer coordinates.\<close>
+    have hcross_z_vi: "\<And>i z. i < n \<Longrightarrow>
+        cross2 (fst z - vx i, snd z - vy i)
+            (vx (Suc i mod n) - vx i, vy (Suc i mod n) - vy i) =
+        (beta_cr i z + gamma_cr i z - 1) * Di i"
+    proof -
+      fix i :: nat and z :: "real \<times> real"
+      assume hi: "i < n"
+      have hDne: "Di i \<noteq> 0" using hDi_pos[OF hi] by (by100 linarith)
+      \<comment> \<open>z - v_i = (z - c) - (v_i - c) = beta_i*(v_i-c) + gamma_i*(v_{i+1}-c) - (v_i-c)
+         = (beta_i - 1)*(v_i-c) + gamma_i*(v_{i+1}-c).\<close>
+      have hfst: "fst z - vx i = (beta_cr i z - 1) * (vx i - cx) + gamma_cr i z * (vx (Suc i mod n) - cx)"
+      proof -
+        have "fst z - vx i = (fst z - cx) - (vx i - cx)" by (by100 simp)
+        also have "fst z - cx = beta_cr i z * (vx i - cx) + gamma_cr i z * (vx (Suc i mod n) - cx)"
+          using hCramer_x[OF hDne] .
+        finally show ?thesis by (simp add: algebra_simps)
+      qed
+      have hsnd: "snd z - vy i = (beta_cr i z - 1) * (vy i - cy) + gamma_cr i z * (vy (Suc i mod n) - cy)"
+      proof -
+        have "snd z - vy i = (snd z - cy) - (vy i - cy)" by (by100 simp)
+        also have "snd z - cy = beta_cr i z * (vy i - cy) + gamma_cr i z * (vy (Suc i mod n) - cy)"
+          using hCramer_y[OF hDne] .
+        finally show ?thesis by (simp add: algebra_simps)
+      qed
+      \<comment> \<open>cross2((beta-1)*(v_i-c) + gamma*(v_{i+1}-c), v_{i+1}-v_i)
+         = (beta-1)*cross2(v_i-c, v_{i+1}-v_i) + gamma*cross2(v_{i+1}-c, v_{i+1}-v_i)
+         = (beta-1)*Di + gamma*Di = (beta+gamma-1)*Di.\<close>
+      have "cross2 (fst z - vx i, snd z - vy i) (vx (Suc i mod n) - vx i, vy (Suc i mod n) - vy i) =
+          (beta_cr i z - 1) * ((vx i - cx) * (vy (Suc i mod n) - vy i) - (vy i - cy) * (vx (Suc i mod n) - vx i)) +
+          gamma_cr i z * ((vx (Suc i mod n) - cx) * (vy (Suc i mod n) - vy i) - (vy (Suc i mod n) - cy) * (vx (Suc i mod n) - vx i))"
+        unfolding cross2_def hfst hsnd by (simp add: algebra_simps)
+      also have "(vx i - cx) * (vy (Suc i mod n) - vy i) - (vy i - cy) * (vx (Suc i mod n) - vx i) = Di i"
+        using hDi_eq unfolding cross2_def by (by100 simp)
+      also have "(vx (Suc i mod n) - cx) * (vy (Suc i mod n) - vy i) - (vy (Suc i mod n) - cy) * (vx (Suc i mod n) - vx i) = Di i"
+      proof -
+        have "(vx (Suc i mod n) - cx) * (vy (Suc i mod n) - vy i) - (vy (Suc i mod n) - cy) * (vx (Suc i mod n) - vx i) =
+            ((vx i - cx) + (vx (Suc i mod n) - vx i)) * (vy (Suc i mod n) - vy i) -
+            ((vy i - cy) + (vy (Suc i mod n) - vy i)) * (vx (Suc i mod n) - vx i)"
+          by (simp add: algebra_simps)
+        also have "\<dots> = (vx i - cx) * (vy (Suc i mod n) - vy i) - (vy i - cy) * (vx (Suc i mod n) - vx i)"
+          by (simp add: algebra_simps)
+        also have "\<dots> = Di i"
+          using hDi_eq unfolding cross2_def by (by100 simp)
+        finally show ?thesis .
+      qed
+      finally show "cross2 (fst z - vx i, snd z - vy i) (vx (Suc i mod n) - vx i, vy (Suc i mod n) - vy i) =
+          (beta_cr i z + gamma_cr i z - 1) * Di i"
+        by (simp add: algebra_simps)
+    qed
+    \<comment> \<open>Helper: alpha_i >= alpha_j (centroid weight inequality).\<close>
+    have halpha_le: "\<And>i j z. i < n \<Longrightarrow> j < n \<Longrightarrow> in_cone i z \<Longrightarrow> in_cone j z \<Longrightarrow>
+        beta_cr i z + gamma_cr i z \<le> beta_cr j z + gamma_cr j z"
+    proof -
+      fix i j :: nat and z :: "real \<times> real"
+      assume hi: "i < n" and hj: "j < n"
+      assume hic: "in_cone i z" and hjc: "in_cone j z"
+      \<comment> \<open>From in_cone j: z - v_i expressed via j-decomposition.
+         cross2(z-v_i, v_{i+1}-v_i) = -(1-s_i)*Di (from i-decomp)
+         = alpha_j*cross2(c-v_i, ...) + beta_j*cross2(v_j-v_i, ...) + gamma_j*cross2(v_{j+1}-v_i, ...)
+         = -alpha_j*Di + beta_j*Xji + gamma_j*Yji
+         where Xji, Yji <= 0.\<close>
+      have hDi: "Di i > 0" using hDi_pos[OF hi] .
+      have hDne: "Di i \<noteq> 0" using hDi by (by100 linarith)
+      have hDjne: "Di j \<noteq> 0" using hDi_pos[OF hj] by (by100 linarith)
+      have hbi: "beta_cr i z \<ge> 0" using hic unfolding in_cone_def by (by100 blast)
+      have hgi: "gamma_cr i z \<ge> 0" using hic unfolding in_cone_def by (by100 blast)
+      have hbgi: "beta_cr i z + gamma_cr i z \<le> 1" using hic unfolding in_cone_def by (by100 blast)
+      have hbj: "beta_cr j z \<ge> 0" using hjc unfolding in_cone_def by (by100 blast)
+      have hgj: "gamma_cr j z \<ge> 0" using hjc unfolding in_cone_def by (by100 blast)
+      have hbgj: "beta_cr j z + gamma_cr j z \<le> 1" using hjc unfolding in_cone_def by (by100 blast)
+      \<comment> \<open>cross2(z-v_i, v_{i+1}-v_i) via i-decomposition.\<close>
+      have hcross_i: "cross2 (fst z - vx i, snd z - vy i) (vx (Suc i mod n) - vx i, vy (Suc i mod n) - vy i) =
+          (beta_cr i z + gamma_cr i z - 1) * Di i"
+        using hcross_z_vi[OF hi] .
+      \<comment> \<open>Same cross2 via j-decomposition: use Cramer for j.\<close>
+      have hfst_j: "fst z - cx = beta_cr j z * (vx j - cx) + gamma_cr j z * (vx (Suc j mod n) - cx)"
+        using hCramer_x[OF hDjne, of z] .
+      have hsnd_j: "snd z - cy = beta_cr j z * (vy j - cy) + gamma_cr j z * (vy (Suc j mod n) - cy)"
+        using hCramer_y[OF hDjne, of z] .
+      \<comment> \<open>z - v_i = (z-c) + (c-v_i) = beta_j*(v_j-c) + gamma_j*(v_{j+1}-c) + (c-v_i)
+         = (1-beta_j-gamma_j)*(c-v_i) + beta_j*(v_j-v_i) + gamma_j*(v_{j+1}-v_i).\<close>
+      define alpha_j where "alpha_j = 1 - beta_cr j z - gamma_cr j z"
+      have haj_ge: "alpha_j \<ge> 0" unfolding alpha_j_def using hbgj by (by100 linarith)
+      have hXji: "cross2 (vx j - vx i, vy j - vy i) (vx (Suc i mod n) - vx i, vy (Suc i mod n) - vy i) \<le> 0"
+        using hvert_hp hi hj by (by100 blast)
+      have hYji: "cross2 (vx (Suc j mod n) - vx i, vy (Suc j mod n) - vy i) (vx (Suc i mod n) - vx i, vy (Suc i mod n) - vy i) \<le> 0"
+      proof -
+        have "Suc j mod n < n" using hn hj by (by100 simp)
+        thus ?thesis using hvert_hp hi by (by100 blast)
+      qed
+      \<comment> \<open>cross2(z-v_i, v_{i+1}-v_i) = alpha_j*cross2(c-v_i, ...) + beta_j*Xji + gamma_j*Yji
+         = -alpha_j*Di + beta_j*Xji + gamma_j*Yji.\<close>
+      have hcross_j: "cross2 (fst z - vx i, snd z - vy i) (vx (Suc i mod n) - vx i, vy (Suc i mod n) - vy i) =
+          - alpha_j * Di i + beta_cr j z * cross2 (vx j - vx i, vy j - vy i) (vx (Suc i mod n) - vx i, vy (Suc i mod n) - vy i)
+          + gamma_cr j z * cross2 (vx (Suc j mod n) - vx i, vy (Suc j mod n) - vy i) (vx (Suc i mod n) - vx i, vy (Suc i mod n) - vy i)"
+      proof -
+        \<comment> \<open>fst z - vx i = alpha_j*(cx - vx i) + beta_j*(vx j - vx i) + gamma_j*(vx(j+1) - vx i).\<close>
+        have hfst_vi: "fst z - vx i = alpha_j * (cx - vx i) + beta_cr j z * (vx j - vx i) + gamma_cr j z * (vx (Suc j mod n) - vx i)"
+        proof -
+          have "fst z - vx i = (fst z - cx) + (cx - vx i)" by (by100 simp)
+          also have "fst z - cx = beta_cr j z * (vx j - cx) + gamma_cr j z * (vx (Suc j mod n) - cx)"
+            using hfst_j .
+          finally have "fst z - vx i = beta_cr j z * (vx j - cx) + gamma_cr j z * (vx (Suc j mod n) - cx) + (cx - vx i)"
+            by (by100 simp)
+          also have "\<dots> = (1 - beta_cr j z - gamma_cr j z) * (cx - vx i) + beta_cr j z * (vx j - vx i) + gamma_cr j z * (vx (Suc j mod n) - vx i)"
+            by (simp add: algebra_simps)
+          finally show ?thesis unfolding alpha_j_def by (by100 simp)
+        qed
+        have hsnd_vi: "snd z - vy i = alpha_j * (cy - vy i) + beta_cr j z * (vy j - vy i) + gamma_cr j z * (vy (Suc j mod n) - vy i)"
+        proof -
+          have "snd z - vy i = (snd z - cy) + (cy - vy i)" by (by100 simp)
+          also have "snd z - cy = beta_cr j z * (vy j - cy) + gamma_cr j z * (vy (Suc j mod n) - cy)"
+            using hsnd_j .
+          finally have "snd z - vy i = beta_cr j z * (vy j - cy) + gamma_cr j z * (vy (Suc j mod n) - cy) + (cy - vy i)"
+            by (by100 simp)
+          also have "\<dots> = (1 - beta_cr j z - gamma_cr j z) * (cy - vy i) + beta_cr j z * (vy j - vy i) + gamma_cr j z * (vy (Suc j mod n) - vy i)"
+            by (simp add: algebra_simps)
+          finally show ?thesis unfolding alpha_j_def by (by100 simp)
+        qed
+        \<comment> \<open>Now expand cross2(z-v_i, v_{i+1}-v_i) using hfst_vi and hsnd_vi.\<close>
+        have "cross2 (fst z - vx i, snd z - vy i) (vx (Suc i mod n) - vx i, vy (Suc i mod n) - vy i) =
+            (fst z - vx i) * (vy (Suc i mod n) - vy i) - (snd z - vy i) * (vx (Suc i mod n) - vx i)"
+          unfolding cross2_def by (by100 simp)
+        also have "\<dots> = (alpha_j * (cx - vx i) + beta_cr j z * (vx j - vx i) + gamma_cr j z * (vx (Suc j mod n) - vx i)) * (vy (Suc i mod n) - vy i)
+            - (alpha_j * (cy - vy i) + beta_cr j z * (vy j - vy i) + gamma_cr j z * (vy (Suc j mod n) - vy i)) * (vx (Suc i mod n) - vx i)"
+          unfolding hfst_vi hsnd_vi by (by100 simp)
+        also have "\<dots> = alpha_j * ((cx - vx i) * (vy (Suc i mod n) - vy i) - (cy - vy i) * (vx (Suc i mod n) - vx i))
+            + beta_cr j z * ((vx j - vx i) * (vy (Suc i mod n) - vy i) - (vy j - vy i) * (vx (Suc i mod n) - vx i))
+            + gamma_cr j z * ((vx (Suc j mod n) - vx i) * (vy (Suc i mod n) - vy i) - (vy (Suc j mod n) - vy i) * (vx (Suc i mod n) - vx i))"
+          by (simp add: algebra_simps)
+        also have "((cx - vx i) * (vy (Suc i mod n) - vy i) - (cy - vy i) * (vx (Suc i mod n) - vx i)) = - Di i"
+          using hDi_eq unfolding cross2_def by (simp add: algebra_simps)
+        finally show ?thesis unfolding cross2_def by (simp add: algebra_simps)
+      qed
+      \<comment> \<open>Equating the two expressions for cross2(z-v_i, ...).\<close>
+      have hkey: "(beta_cr i z + gamma_cr i z - 1) * Di i =
+          - alpha_j * Di i + beta_cr j z * cross2 (vx j - vx i, vy j - vy i) (vx (Suc i mod n) - vx i, vy (Suc i mod n) - vy i)
+          + gamma_cr j z * cross2 (vx (Suc j mod n) - vx i, vy (Suc j mod n) - vy i) (vx (Suc i mod n) - vx i, vy (Suc i mod n) - vy i)"
+        using hcross_i hcross_j by (by100 simp)
+      \<comment> \<open>Rearrange: (s_i - s_j)*Di = beta_j*Xji + gamma_j*Yji \<le> 0.\<close>
+      have hkey2: "(beta_cr i z + gamma_cr i z - (beta_cr j z + gamma_cr j z)) * Di i =
+          beta_cr j z * cross2 (vx j - vx i, vy j - vy i) (vx (Suc i mod n) - vx i, vy (Suc i mod n) - vy i)
+          + gamma_cr j z * cross2 (vx (Suc j mod n) - vx i, vy (Suc j mod n) - vy i) (vx (Suc i mod n) - vx i, vy (Suc i mod n) - vy i)"
+        using hkey unfolding alpha_j_def by (simp add: algebra_simps)
+      have hrhs_le0: "beta_cr j z * cross2 (vx j - vx i, vy j - vy i) (vx (Suc i mod n) - vx i, vy (Suc i mod n) - vy i)
+          + gamma_cr j z * cross2 (vx (Suc j mod n) - vx i, vy (Suc j mod n) - vy i) (vx (Suc i mod n) - vx i, vy (Suc i mod n) - vy i) \<le> 0"
+      proof -
+        have "beta_cr j z * cross2 (vx j - vx i, vy j - vy i) (vx (Suc i mod n) - vx i, vy (Suc i mod n) - vy i) \<le> 0"
+          using mult_nonneg_nonpos[OF hbj hXji] .
+        moreover have "gamma_cr j z * cross2 (vx (Suc j mod n) - vx i, vy (Suc j mod n) - vy i) (vx (Suc i mod n) - vx i, vy (Suc i mod n) - vy i) \<le> 0"
+          using mult_nonneg_nonpos[OF hgj hYji] .
+        ultimately show ?thesis by (by100 linarith)
+      qed
+      \<comment> \<open>So (s_i - s_j)*Di \<le> 0, hence s_i \<le> s_j since Di > 0.\<close>
+      have "(beta_cr i z + gamma_cr i z - (beta_cr j z + gamma_cr j z)) * Di i \<le> 0"
+        using hkey2 hrhs_le0 by (by100 linarith)
+      thus "beta_cr i z + gamma_cr i z \<le> beta_cr j z + gamma_cr j z"
+        using hDi by (simp add: mult_le_0_iff)
+    qed
+    \<comment> \<open>Corollary: s_i = s_j.\<close>
+    have hs_eq: "\<And>i j z. i < n \<Longrightarrow> j < n \<Longrightarrow> in_cone i z \<Longrightarrow> in_cone j z \<Longrightarrow>
+        beta_cr i z + gamma_cr i z = beta_cr j z + gamma_cr j z"
+    proof -
+      fix i j :: nat and z :: "real \<times> real"
+      assume hi: "i < n" and hj: "j < n" and hic: "in_cone i z" and hjc: "in_cone j z"
+      have "beta_cr i z + gamma_cr i z \<le> beta_cr j z + gamma_cr j z"
+        using halpha_le[OF hi hj hic hjc] .
+      moreover have "beta_cr j z + gamma_cr j z \<le> beta_cr i z + gamma_cr i z"
+        using halpha_le[OF hj hi hjc hic] .
+      ultimately show "beta_cr i z + gamma_cr i z = beta_cr j z + gamma_cr j z"
+        by (by100 linarith)
+    qed
+    \<comment> \<open>Corollary: vanishing cross2 products.\<close>
+    have hvanish: "\<And>i j z. i < n \<Longrightarrow> j < n \<Longrightarrow> in_cone i z \<Longrightarrow> in_cone j z \<Longrightarrow>
+        beta_cr j z * cross2 (vx j - vx i, vy j - vy i) (vx (Suc i mod n) - vx i, vy (Suc i mod n) - vy i) = 0
+      \<and> gamma_cr j z * cross2 (vx (Suc j mod n) - vx i, vy (Suc j mod n) - vy i) (vx (Suc i mod n) - vx i, vy (Suc i mod n) - vy i) = 0"
+    proof -
+      fix i j :: nat and z :: "real \<times> real"
+      assume hi: "i < n" and hj: "j < n" and hic: "in_cone i z" and hjc: "in_cone j z"
+      have hDi: "Di i > 0" using hDi_pos[OF hi] .
+      have hDne: "Di i \<noteq> 0" using hDi by (by100 linarith)
+      have hDjne: "Di j \<noteq> 0" using hDi_pos[OF hj] by (by100 linarith)
+      have hbj: "beta_cr j z \<ge> 0" using hjc unfolding in_cone_def by (by100 blast)
+      have hgj: "gamma_cr j z \<ge> 0" using hjc unfolding in_cone_def by (by100 blast)
+      have hXji: "cross2 (vx j - vx i, vy j - vy i) (vx (Suc i mod n) - vx i, vy (Suc i mod n) - vy i) \<le> 0"
+        using hvert_hp hi hj by (by100 blast)
+      have hYji: "cross2 (vx (Suc j mod n) - vx i, vy (Suc j mod n) - vy i) (vx (Suc i mod n) - vx i, vy (Suc i mod n) - vy i) \<le> 0"
+      proof -
+        have "Suc j mod n < n" using hn hj by (by100 simp)
+        thus ?thesis using hvert_hp hi by (by100 blast)
+      qed
+      have hseq: "beta_cr i z + gamma_cr i z = beta_cr j z + gamma_cr j z"
+        using hs_eq[OF hi hj hic hjc] .
+      \<comment> \<open>From the key equation: (s_i - s_j)*Di = beta_j*Xji + gamma_j*Yji = 0.\<close>
+      have hfst_j: "fst z - cx = beta_cr j z * (vx j - cx) + gamma_cr j z * (vx (Suc j mod n) - cx)"
+        using hCramer_x[OF hDjne, of z] .
+      have hsnd_j: "snd z - cy = beta_cr j z * (vy j - cy) + gamma_cr j z * (vy (Suc j mod n) - cy)"
+        using hCramer_y[OF hDjne, of z] .
+      have hcross_i: "cross2 (fst z - vx i, snd z - vy i) (vx (Suc i mod n) - vx i, vy (Suc i mod n) - vy i) =
+          (beta_cr i z + gamma_cr i z - 1) * Di i"
+        using hcross_z_vi[OF hi] .
+      define alpha_j where "alpha_j = 1 - beta_cr j z - gamma_cr j z"
+      have hcross_j: "cross2 (fst z - vx i, snd z - vy i) (vx (Suc i mod n) - vx i, vy (Suc i mod n) - vy i) =
+          - alpha_j * Di i + beta_cr j z * cross2 (vx j - vx i, vy j - vy i) (vx (Suc i mod n) - vx i, vy (Suc i mod n) - vy i)
+          + gamma_cr j z * cross2 (vx (Suc j mod n) - vx i, vy (Suc j mod n) - vy i) (vx (Suc i mod n) - vx i, vy (Suc i mod n) - vy i)"
+      proof -
+        have hfst_vi: "fst z - vx i = alpha_j * (cx - vx i) + beta_cr j z * (vx j - vx i) + gamma_cr j z * (vx (Suc j mod n) - vx i)"
+        proof -
+          have "fst z - vx i = (fst z - cx) + (cx - vx i)" by (by100 simp)
+          also have "fst z - cx = beta_cr j z * (vx j - cx) + gamma_cr j z * (vx (Suc j mod n) - cx)"
+            using hfst_j .
+          finally show ?thesis unfolding alpha_j_def by (simp add: algebra_simps)
+        qed
+        have hsnd_vi: "snd z - vy i = alpha_j * (cy - vy i) + beta_cr j z * (vy j - vy i) + gamma_cr j z * (vy (Suc j mod n) - vy i)"
+        proof -
+          have "snd z - vy i = (snd z - cy) + (cy - vy i)" by (by100 simp)
+          also have "snd z - cy = beta_cr j z * (vy j - cy) + gamma_cr j z * (vy (Suc j mod n) - cy)"
+            using hsnd_j .
+          finally show ?thesis unfolding alpha_j_def by (simp add: algebra_simps)
+        qed
+        show ?thesis
+        proof -
+          have "cross2 (fst z - vx i, snd z - vy i) (vx (Suc i mod n) - vx i, vy (Suc i mod n) - vy i) =
+              (fst z - vx i) * (vy (Suc i mod n) - vy i) - (snd z - vy i) * (vx (Suc i mod n) - vx i)"
+            unfolding cross2_def by (by100 simp)
+          also have "\<dots> = alpha_j * ((cx - vx i) * (vy (Suc i mod n) - vy i) - (cy - vy i) * (vx (Suc i mod n) - vx i))
+              + beta_cr j z * ((vx j - vx i) * (vy (Suc i mod n) - vy i) - (vy j - vy i) * (vx (Suc i mod n) - vx i))
+              + gamma_cr j z * ((vx (Suc j mod n) - vx i) * (vy (Suc i mod n) - vy i) - (vy (Suc j mod n) - vy i) * (vx (Suc i mod n) - vx i))"
+            unfolding hfst_vi hsnd_vi by (simp add: algebra_simps)
+          also have "((cx - vx i) * (vy (Suc i mod n) - vy i) - (cy - vy i) * (vx (Suc i mod n) - vx i)) = - Di i"
+            using hDi_eq unfolding cross2_def by (simp add: algebra_simps)
+          finally show ?thesis unfolding cross2_def by (simp add: algebra_simps)
+        qed
+      qed
+      have hsum0: "beta_cr j z * cross2 (vx j - vx i, vy j - vy i) (vx (Suc i mod n) - vx i, vy (Suc i mod n) - vy i)
+          + gamma_cr j z * cross2 (vx (Suc j mod n) - vx i, vy (Suc j mod n) - vy i) (vx (Suc i mod n) - vx i, vy (Suc i mod n) - vy i) = 0"
+      proof -
+        have h1: "(beta_cr i z + gamma_cr i z - 1) * Di i =
+            - alpha_j * Di i + beta_cr j z * cross2 (vx j - vx i, vy j - vy i) (vx (Suc i mod n) - vx i, vy (Suc i mod n) - vy i)
+            + gamma_cr j z * cross2 (vx (Suc j mod n) - vx i, vy (Suc j mod n) - vy i) (vx (Suc i mod n) - vx i, vy (Suc i mod n) - vy i)"
+          using hcross_i hcross_j by (by100 simp)
+        have "alpha_j = 1 - (beta_cr j z + gamma_cr j z)" unfolding alpha_j_def by (by100 simp)
+        hence halpha_eq: "alpha_j = 1 - (beta_cr i z + gamma_cr i z)" using hseq by (by100 simp)
+        hence "(beta_cr i z + gamma_cr i z - 1) * Di i = - alpha_j * Di i"
+          by (by5000 simp)
+        hence "(beta_cr i z + gamma_cr i z - 1) * Di i =
+            - alpha_j * Di i + 0" by (by100 simp)
+        thus ?thesis using h1 by (by100 linarith)
+      qed
+      \<comment> \<open>Each term \<le> 0 and sum = 0, so each = 0.\<close>
+      have ht1: "beta_cr j z * cross2 (vx j - vx i, vy j - vy i) (vx (Suc i mod n) - vx i, vy (Suc i mod n) - vy i) \<le> 0"
+        using mult_nonneg_nonpos[OF hbj hXji] .
+      have ht2: "gamma_cr j z * cross2 (vx (Suc j mod n) - vx i, vy (Suc j mod n) - vy i) (vx (Suc i mod n) - vx i, vy (Suc i mod n) - vy i) \<le> 0"
+        using mult_nonneg_nonpos[OF hgj hYji] .
+      show "beta_cr j z * cross2 (vx j - vx i, vy j - vy i) (vx (Suc i mod n) - vx i, vy (Suc i mod n) - vy i) = 0
+        \<and> gamma_cr j z * cross2 (vx (Suc j mod n) - vx i, vy (Suc j mod n) - vy i) (vx (Suc i mod n) - vx i, vy (Suc i mod n) - vy i) = 0"
+        using hsum0 ht1 ht2 by (by100 linarith)
+    qed
+    \<comment> \<open>From vanishing products + Cramer reconstruction, derive the case disjunction.\<close>
+    have hcases: "\<And>i j z. i < n \<Longrightarrow> j < n \<Longrightarrow> in_cone i z \<Longrightarrow> in_cone j z \<Longrightarrow>
+        beta_cr i z + gamma_cr i z = 0
+        \<or> (i = j \<and> gamma_cr i z = gamma_cr j z)
+        \<or> (Suc i mod n = j \<and> beta_cr i z = 0 \<and> gamma_cr j z = 0)
+        \<or> (Suc j mod n = i \<and> gamma_cr i z = 0 \<and> beta_cr j z = 0)"
+      sorry \<comment> \<open>From hvanish products = 0 + hseq (s equal) + Cramer linear independence:
+         case split on beta\_j=0/gamma\_j=0 gives adjacent-or-equal disjunction.\<close>
     have hpsi_agree: "\<And>i j z. i < n \<Longrightarrow> j < n \<Longrightarrow> in_cone i z \<Longrightarrow> in_cone j z \<Longrightarrow>
         psi_local i z = psi_local j z"
-      sorry \<comment> \<open>Overlap agreement: z=c by hpsi_agree_centroid; z!=c by hvert_hp + Di>0 + adjacent case.\<close>
+    proof -
+      fix i j :: nat and z :: "real \<times> real"
+      assume hi: "i < n" and hj: "j < n" and hic: "in_cone i z" and hjc: "in_cone j z"
+      have hseq: "beta_cr i z + gamma_cr i z = beta_cr j z + gamma_cr j z"
+        using hs_eq[OF hi hj hic hjc] .
+      define s where "s = beta_cr i z + gamma_cr i z"
+      have hsj: "beta_cr j z + gamma_cr j z = s" using hseq unfolding s_def by (by100 simp)
+      have hcase4: "s = 0 \<or> (i = j \<and> gamma_cr i z = gamma_cr j z)
+          \<or> (Suc i mod n = j \<and> beta_cr i z = 0 \<and> gamma_cr j z = 0)
+          \<or> (Suc j mod n = i \<and> gamma_cr i z = 0 \<and> beta_cr j z = 0)"
+        using hcases[OF hi hj hic hjc] unfolding s_def by (by100 simp)
+      have hn_pos: "n > 0" using hn by (by100 linarith)
+      have hsi: "beta_cr i z + gamma_cr i z = s" unfolding s_def by (by100 simp)
+      have hagree: "(let ui = (if s = 0 then 0 else gamma_cr i z / s);
+              \<theta>i = 2 * pi * (real i + ui) / real n
+          in (s * cos \<theta>i, s * sin \<theta>i))
+       = (let uj = (if s = 0 then 0 else gamma_cr j z / s);
+              \<theta>j = 2 * pi * (real j + uj) / real n
+          in (s * cos \<theta>j, s * sin \<theta>j))"
+        using psi_angle_cases_agree[OF hn_pos hi hj hsi hsj hcase4] .
+      have hpsi_i: "psi_local i z = (let ui = (if s = 0 then 0 else gamma_cr i z / s);
+              \<theta>i = 2 * pi * (real i + ui) / real n in (s * cos \<theta>i, s * sin \<theta>i))"
+        unfolding psi_local_def Let_def using hsi by (by100 simp)
+      have hpsi_j: "psi_local j z = (let uj = (if s = 0 then 0 else gamma_cr j z / s);
+              \<theta>j = 2 * pi * (real j + uj) / real n in (s * cos \<theta>j, s * sin \<theta>j))"
+        unfolding psi_local_def Let_def using hsj by (by100 simp)
+      show "psi_local i z = psi_local j z"
+        using hpsi_i hpsi_j hagree by (by100 simp)
+    qed
     \<comment> \<open>Global \<psi>: well-defined by overlap agreement.\<close>
     define \<psi> where "\<psi> z = psi_local (SOME i. i < n \<and> in_cone i z) z" for z
     have hpsi_eq: "\<And>i z. i < n \<Longrightarrow> in_cone i z \<Longrightarrow> \<psi> z = psi_local i z"
@@ -1275,12 +1720,16 @@ proof -
     have h\<psi>_cont_cone: "\<And>i. i < n \<Longrightarrow> continuous_on (cone_set i) \<psi>"
     proof -
       fix i :: nat assume hi: "i < n"
-      have "\<And>z. z \<in> cone_set i \<Longrightarrow> \<psi> z = psi_local i z"
+      have hag: "\<And>z. z \<in> cone_set i \<Longrightarrow> \<psi> z = psi_local i z"
         using hpsi_eq[OF hi] unfolding cone_set_def by (by100 simp)
-      hence "\<psi> = (\<lambda>z. psi_local i z)"
-        sorry \<comment> \<open>Extension: on cone\_set i, psi = psi\_local i.\<close>
+      have "continuous_on (cone_set i) (psi_local i)"
+        using hpsi_local_cont[OF hi] .
+      have hag': "\<And>z. z \<in> cone_set i \<Longrightarrow> psi_local i z = \<psi> z"
+        using hag by (by100 simp)
+      have "continuous_on (cone_set i) (psi_local i) = continuous_on (cone_set i) \<psi>"
+        by (rule continuous_on_cong) (by100 simp, rule hag', assumption)
       thus "continuous_on (cone_set i) \<psi>"
-        using hpsi_local_cont[OF hi] sorry
+        using \<open>continuous_on (cone_set i) (psi_local i)\<close> by (by100 simp)
     qed
     have h\<psi>_cont: "continuous_on P \<psi>"
     proof -
