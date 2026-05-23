@@ -7472,23 +7472,31 @@ proof -
     \<comment> \<open>Compose: \<pi> = inv(\<psi>) \<circ> proj \<circ> \<phi>.\<close>
     define \<pi>F where "\<pi>F f = inv_into (top1_fundamental_group_carrier X TX a') \<psi> (proj (\<phi> f))" for f
     \<comment> \<open>Show \<pi>F is a surjective hom with ker = N(scheme word).\<close>
-    \<comment> \<open>proj \<circ> \<phi> is a hom F \<rightarrow> Q.\<close>
+    \<comment> \<open>proj \<circ> \<phi> is a surjective hom F \<rightarrow> Q.\<close>
     have hproj_phi_hom: "top1_group_hom_on F mulF Q mulQ (proj \<circ> \<phi>)"
       using group_hom_comp[OF h\<phi>_hom hproj_hom] .
-    \<comment> \<open>\<psi>^{-1} is a hom Q \<rightarrow> \<pi>_1(X,a').\<close>
-    have h\<psi>_inv_hom: "top1_group_hom_on Q mulQ
-        (top1_fundamental_group_carrier X TX a')
-        (top1_fundamental_group_mul X TX a')
-        (inv_into (top1_fundamental_group_carrier X TX a') \<psi>)"
-      sorry \<comment> \<open>Inverse of bijective hom is a hom.\<close>
-    \<comment> \<open>\<pi>F = \<psi>^{-1} \<circ> (proj \<circ> \<phi>) is a hom.\<close>
-    have h\<pi>F_hom: "top1_group_hom_on F mulF
-        (top1_fundamental_group_carrier X TX a')
-        (top1_fundamental_group_mul X TX a') \<pi>F"
-      using group_hom_comp[OF hproj_phi_hom h\<psi>_inv_hom]
-        unfolding \<pi>F_def comp_def sorry
-    have h\<pi>F_surj: "\<pi>F ` F = top1_fundamental_group_carrier X TX a'"
-      sorry
+    have hproj_phi_surj: "(proj \<circ> \<phi>) ` F = Q"
+    proof -
+      have "\<phi> ` F = top1_fundamental_group_carrier A (subspace_topology X TX A) a'"
+        using h\<phi>_bij unfolding bij_betw_def by (by100 blast)
+      hence "(proj \<circ> \<phi>) ` F = proj ` (top1_fundamental_group_carrier A (subspace_topology X TX A) a')"
+        using image_image[of proj \<phi> F, symmetric] by (by100 simp)
+      thus ?thesis using hproj_surj by (by100 simp)
+    qed
+    \<comment> \<open>ker(proj \<circ> \<phi>) = \<phi>^{-1}(N).\<close>
+    have hker_proj_phi: "top1_group_kernel_on F
+        (top1_group_coset_on
+          (top1_fundamental_group_carrier A (subspace_topology X TX A) a')
+          (top1_fundamental_group_mul A (subspace_topology X TX A) a') N
+          (top1_fundamental_group_id A (subspace_topology X TX A) a'))
+        (proj \<circ> \<phi>) = {f \<in> F. \<phi> f \<in> N}"
+      sorry \<comment> \<open>Kernel of composition = preimage of kernel.\<close>
+    \<comment> \<open>By first isomorphism theorem: Q \<cong> F / ker(proj \<circ> \<phi>).
+       Since Q \<cong> \<pi>_1(X,a'): \<pi>_1(X,a') \<cong> F / ker.
+       If ker = N(scheme word): this gives the presentation.\<close>
+    \<comment> \<open>Simplification: the goal asks for \<exists>G. presented\_by G ... \<and> G \<cong> \<pi>_1(X,a').
+       Use G = Q (the quotient group), which is presented by (S, {scheme word})
+       and is iso to \<pi>_1(X,a') by h\<iota>\_iso.\<close>
     \<comment> \<open>Key: the relator class under \<phi>^{-1} equals the scheme word product.
        relator\_class = image of circle loop under \<iota>.
        Under \<phi>^{-1}: this maps to word\_product(\<iota>F, scheme) in F.
@@ -7497,13 +7505,9 @@ proof -
         top1_group_word_product mulF eF invgF
           (map (\<lambda>(s, b). (\<iota>F s, b)) (map (\<lambda>(s,b). (s, b)) scheme))"
       sorry \<comment> \<open>Core topology: boundary loop = scheme word in free group.\<close>
-    have hker: "top1_group_kernel_on F
-        (top1_fundamental_group_id X TX a') \<pi>F =
-      top1_normal_subgroup_generated_on F mulF eF invgF
-        {r. \<exists>w\<in>{map (\<lambda>(s,b). (s, b)) scheme}.
-            r = top1_group_word_product mulF eF invgF (map (\<lambda>(s, b). (\<iota>F s, b)) w)}"
-      sorry \<comment> \<open>From hrelator\_word + kernel computation.\<close>
-    \<comment> \<open>Assemble the presentation.\<close>
+    \<comment> \<open>From hrelator\_word + first\_isomorphism\_theorem + h\<iota>\_iso:
+       F / N(scheme\_word\_in\_F) \<cong> Q \<cong> \<pi>_1(X,a').
+       This gives the presentation.\<close>
     have hpresented: "top1_group_presented_by_on
         (top1_fundamental_group_carrier X TX a')
         (top1_fundamental_group_mul X TX a')
@@ -7511,9 +7515,9 @@ proof -
         (top1_fundamental_group_invg X TX a')
         (fst ` set scheme)
         { map (\<lambda>(s,b). (s, b)) scheme }"
-      unfolding top1_group_presented_by_on_def
-      using hpi1_X_grp hfree h\<pi>F_hom h\<pi>F_surj hker
-      sorry \<comment> \<open>Assembly: instantiate existentials with F, mulF, eF, invgF, \<iota>F, \<pi>F.\<close>
+      using hpi1_X_grp hfree hproj_phi_hom hproj_phi_surj h\<iota>_iso' hrelator_word
+        hproj_ker hker_proj_phi
+      sorry \<comment> \<open>Assembly from first\_isomorphism\_theorem + iso chain + relator ID.\<close>
     have hiso_XG: "top1_groups_isomorphic_on
         (top1_fundamental_group_carrier X TX a')
         (top1_fundamental_group_mul X TX a')
