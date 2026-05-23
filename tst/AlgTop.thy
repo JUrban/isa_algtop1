@@ -7645,9 +7645,16 @@ proof -
           (top1_fundamental_group_id A (subspace_topology X TX A) a')
           (top1_fundamental_group_invg A (subspace_topology X TX A) a')
           (map (\<lambda>(s, b). (\<phi> (\<iota>F s), b)) scheme)"
-      sorry \<comment> \<open>Topology: boundary loop = product of edge loops.
-         Each edge i in A corresponds to generator \<phi>(\<iota>F(label\_i))^{sign\_i}.
-         The boundary loop traverses all edges in order.\<close>
+      sorry \<comment> \<open>LAST BLOCKER (Munkres 74.2 one-sentence step):
+         "the loop \<pi> \<circ> f equals (g\_{i\_1})^{\<epsilon>\_1} * ... * (g\_{i\_n})^{\<epsilon>\_n}."
+         In our formalization: the loop class of \<iota> \<circ> circle in \<pi>_1(A,a')
+         equals the word product of edge loop classes.
+         Edge loop for (label, True) = \<phi>(\<iota>F(label)).
+         Edge loop for (label, False) = invg(\<phi>(\<iota>F(label))).
+         The boundary loop traverses edges 0,...,n-1 in order.
+         Proof needs: loop\_split\_at\_vertices (reparametrization)
+         + identification of each sub-loop with the correct generator class
+         (from the wedge-of-circles construction in scheme\_quotient\_CW\_data).\<close>
     \<comment> \<open>Step R2: \<phi> is a hom, so \<phi>(word\_product in F) = word\_product in \<pi>_1(A,a').\<close>
     have hphi_word: "\<phi> (top1_group_word_product mulF eF invgF
           (map (\<lambda>(s, b). (\<iota>F s, b)) scheme))
