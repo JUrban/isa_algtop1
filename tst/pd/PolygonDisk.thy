@@ -945,7 +945,7 @@ qed
 text \<open>Helper: if f is continuous on S-{c} and |fst(f z)|,|snd(f z)| \<le> g(z) where
   g is continuous, g(c)=0, and f(c)=(0,0), then f is continuous on S.\<close>
 lemma continuous_on_squeeze_at_point:
-  fixes f :: "'a::topological_space \<Rightarrow> real \<times> real" and g :: "'a \<Rightarrow> real"
+  fixes f :: "'a::t1_space \<Rightarrow> real \<times> real" and g :: "'a \<Rightarrow> real"
   assumes hS: "c \<in> S"
       and hfc: "f c = (0, 0)"
       and hg_cont: "continuous_on S g"
@@ -968,7 +968,20 @@ proof (unfold continuous_on_def, intro ballI)
     proof (rule filterlim_mono_eventually)
       show "eventually (\<lambda>x. f x = f x) (at z0 within S)" by (by100 simp)
       show "at z0 within S \<le> at z0 within (S - {c})"
-        sorry \<comment> \<open>Filter order: removing c from S doesn't affect at z0 when z0\<noteq>c.\<close>
+      proof (rule filter_leI)
+        fix P assume hP: "eventually P (at z0 within (S - {c}))"
+        from hP[unfolded eventually_at_filter]
+        have hev: "eventually (\<lambda>x. x \<noteq> z0 \<longrightarrow> x \<in> S - {c} \<longrightarrow> P x) (nhds z0)" .
+        \<comment> \<open>Eventually x \<noteq> c near z0 (T1 separation, or for R\<times>R: open complement of {c}).\<close>
+        have hev_nc: "eventually (\<lambda>x. x \<noteq> c) (nhds z0)"
+          using False t1_space_nhds by (by100 blast)
+        have "eventually (\<lambda>x. (x \<noteq> z0 \<longrightarrow> x \<in> S - {c} \<longrightarrow> P x) \<and> x \<noteq> c) (nhds z0)"
+          using eventually_conj[OF hev hev_nc] .
+        hence "eventually (\<lambda>x. x \<noteq> z0 \<longrightarrow> x \<in> S \<longrightarrow> P x) (nhds z0)"
+          by (rule eventually_mono) (by100 blast)
+        thus "eventually P (at z0 within S)"
+          unfolding eventually_at_filter .
+      qed
       show "(f \<longlongrightarrow> f z0) (at z0 within (S - {c}))" using h_lim .
       show "nhds (f z0) \<le> nhds (f z0)" by (by100 simp)
     qed
@@ -978,8 +991,49 @@ proof (unfold continuous_on_def, intro ballI)
     \<comment> \<open>Need: f \<longlongrightarrow> (0,0) at c within S.\<close>
     \<comment> \<open>Equivalently: fst \<circ> f \<longlongrightarrow> 0 and snd \<circ> f \<longlongrightarrow> 0.\<close>
     \<comment> \<open>By squeeze: |fst(f z)| \<le> g z and g \<longlongrightarrow> g(c) = 0.\<close>
-    show ?thesis unfolding hfz0
-      sorry
+    \<comment> \<open>Squeeze: |fst(f z)| \<le> g z \<longrightarrow> 0 and |snd(f z)| \<le> g z \<longrightarrow> 0.
+       So f z \<longrightarrow> (0,0).\<close>
+    have hg_lim: "(g \<longlongrightarrow> 0) (at c within S)"
+      using hg_cont[unfolded continuous_on_def, rule_format, OF hS] hgc by (by100 simp)
+    \<comment> \<open>fst(f z) is squeezed between -g(z) and g(z), both tending to 0.\<close>
+    \<comment> \<open>Squeeze: -g(z) \<le> fst(f z) \<le> g(z) and g \<longrightarrow> 0, -g \<longrightarrow> 0. So fst(f) \<longrightarrow> 0.\<close>
+    have hng_lim: "((\<lambda>z. -g z) \<longlongrightarrow> 0) (at c within S)"
+      using tendsto_minus[OF hg_lim] by (by100 simp)
+    have hfst_lim: "((\<lambda>z. fst (f z)) \<longlongrightarrow> 0) (at c within S)"
+    proof (rule real_tendsto_sandwich)
+      show "eventually (\<lambda>z. - g z \<le> fst (f z)) (at c within S)"
+        unfolding eventually_at_filter
+        apply (rule eventually_mono[OF eventually_True[of "nhds c"]])
+        using hbound hg_nn by (by100 force)
+      show "eventually (\<lambda>z. fst (f z) \<le> g z) (at c within S)"
+        unfolding eventually_at_filter
+        apply (rule eventually_mono[OF eventually_True[of "nhds c"]])
+        using hbound by (by100 force)
+      show "((\<lambda>z. -g z) \<longlongrightarrow> 0) (at c within S)" using hng_lim .
+      show "(g \<longlongrightarrow> 0) (at c within S)" using hg_lim .
+    qed
+    have hsnd_lim: "((\<lambda>z. snd (f z)) \<longlongrightarrow> 0) (at c within S)"
+    proof (rule real_tendsto_sandwich)
+      show "eventually (\<lambda>z. - g z \<le> snd (f z)) (at c within S)"
+        unfolding eventually_at_filter
+        apply (rule eventually_mono[OF eventually_True[of "nhds c"]])
+        using hbound hg_nn by (by100 force)
+      show "eventually (\<lambda>z. snd (f z) \<le> g z) (at c within S)"
+        unfolding eventually_at_filter
+        apply (rule eventually_mono[OF eventually_True[of "nhds c"]])
+        using hbound by (by100 force)
+      show "((\<lambda>z. -g z) \<longlongrightarrow> 0) (at c within S)" using hng_lim .
+      show "(g \<longlongrightarrow> 0) (at c within S)" using hg_lim .
+    qed
+    \<comment> \<open>Combine component limits into pair limit.\<close>
+    have "(f \<longlongrightarrow> (0, 0)) (at c within S)"
+    proof -
+      have "((\<lambda>z. (fst (f z), snd (f z))) \<longlongrightarrow> (0, 0)) (at c within S)"
+        using tendsto_Pair[OF hfst_lim hsnd_lim] by (by100 simp)
+      moreover have "(\<lambda>z. (fst (f z), snd (f z))) = f" by (rule ext) (by100 simp)
+      ultimately show ?thesis by (by100 simp)
+    qed
+    thus ?thesis using hfz0 True by (by100 simp)
   qed
 qed
 
