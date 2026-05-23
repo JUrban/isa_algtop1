@@ -1654,14 +1654,272 @@ proof -
         \<and> gamma_cr j z * cross2 (vx (Suc j mod n) - vx i, vy (Suc j mod n) - vy i) (vx (Suc i mod n) - vx i, vy (Suc i mod n) - vy i) = 0"
         using hsum0 ht1 ht2 by (by100 linarith)
     qed
-    \<comment> \<open>From vanishing products + Cramer reconstruction, derive the case disjunction.\<close>
+    \<comment> \<open>No three collinear vertices (extreme-point property).\<close>
+    have hno_collinear: "\<And>i j. i < n \<Longrightarrow> j < n \<Longrightarrow> j \<noteq> i \<Longrightarrow> Suc i mod n \<noteq> j \<Longrightarrow>
+        cross2 (vx j - vx i, vy j - vy i) (vx (Suc i mod n) - vx i, vy (Suc i mod n) - vy i) \<noteq> 0"
+      sorry \<comment> \<open>From top1_is_polygonal_region_on: vertices are extreme points of the hull.
+         If v_j on line through v_i,v_{i+1} with j\<noteq>i, j\<noteq>i+1, some vertex is non-extreme.\<close>
+    have hcollinear_adj: "\<And>i j. i < n \<Longrightarrow> j < n \<Longrightarrow>
+        cross2 (vx j - vx i, vy j - vy i) (vx (Suc i mod n) - vx i, vy (Suc i mod n) - vy i) = 0 \<Longrightarrow>
+        j = i \<or> j = Suc i mod n"
+    proof -
+      fix i j :: nat
+      assume hi: "i < n" and hj: "j < n"
+        and hc: "cross2 (vx j - vx i, vy j - vy i) (vx (Suc i mod n) - vx i, vy (Suc i mod n) - vy i) = 0"
+      show "j = i \<or> j = Suc i mod n"
+      proof (rule ccontr)
+        assume "\<not> (j = i \<or> j = Suc i mod n)"
+        hence "j \<noteq> i" "Suc i mod n \<noteq> j" by (by100 simp)+
+        thus False using hno_collinear[OF hi hj] hc by (by100 simp)
+      qed
+    qed
+    \<comment> \<open>From vanishing products + no-collinear + Cramer, derive the case disjunction.\<close>
     have hcases: "\<And>i j z. i < n \<Longrightarrow> j < n \<Longrightarrow> in_cone i z \<Longrightarrow> in_cone j z \<Longrightarrow>
         beta_cr i z + gamma_cr i z = 0
         \<or> (i = j \<and> gamma_cr i z = gamma_cr j z)
         \<or> (Suc i mod n = j \<and> beta_cr i z = 0 \<and> gamma_cr j z = 0)
         \<or> (Suc j mod n = i \<and> gamma_cr i z = 0 \<and> beta_cr j z = 0)"
-      sorry \<comment> \<open>From hvanish products = 0 + hseq (s equal) + Cramer linear independence:
-         case split on beta\_j=0/gamma\_j=0 gives adjacent-or-equal disjunction.\<close>
+    proof -
+      fix i j :: nat and z :: "real \<times> real"
+      assume hi: "i < n" and hj: "j < n" and hic: "in_cone i z" and hjc: "in_cone j z"
+      have hDi: "Di i > 0" using hDi_pos[OF hi] .
+      have hDj: "Di j > 0" using hDi_pos[OF hj] .
+      have hDne: "Di i \<noteq> 0" using hDi by (by100 linarith)
+      have hDjne: "Di j \<noteq> 0" using hDj by (by100 linarith)
+      have hbi: "beta_cr i z \<ge> 0" using hic unfolding in_cone_def by (by100 blast)
+      have hgi: "gamma_cr i z \<ge> 0" using hic unfolding in_cone_def by (by100 blast)
+      have hbj: "beta_cr j z \<ge> 0" using hjc unfolding in_cone_def by (by100 blast)
+      have hgj: "gamma_cr j z \<ge> 0" using hjc unfolding in_cone_def by (by100 blast)
+      have hseq: "beta_cr i z + gamma_cr i z = beta_cr j z + gamma_cr j z"
+        using hs_eq[OF hi hj hic hjc] .
+      define s where "s = beta_cr i z + gamma_cr i z"
+      have hsj: "beta_cr j z + gamma_cr j z = s" using hseq unfolding s_def by (by100 simp)
+      have hvan: "beta_cr j z * cross2 (vx j - vx i, vy j - vy i) (vx (Suc i mod n) - vx i, vy (Suc i mod n) - vy i) = 0
+        \<and> gamma_cr j z * cross2 (vx (Suc j mod n) - vx i, vy (Suc j mod n) - vy i) (vx (Suc i mod n) - vx i, vy (Suc i mod n) - vy i) = 0"
+        using hvanish[OF hi hj hic hjc] .
+      have hvan_i: "beta_cr i z * cross2 (vx i - vx j, vy i - vy j) (vx (Suc j mod n) - vx j, vy (Suc j mod n) - vy j) = 0
+        \<and> gamma_cr i z * cross2 (vx (Suc i mod n) - vx j, vy (Suc i mod n) - vy j) (vx (Suc j mod n) - vx j, vy (Suc j mod n) - vy j) = 0"
+        using hvanish[OF hj hi hjc hic] .
+      show "s = 0 \<or> (i = j \<and> gamma_cr i z = gamma_cr j z)
+        \<or> (Suc i mod n = j \<and> beta_cr i z = 0 \<and> gamma_cr j z = 0)
+        \<or> (Suc j mod n = i \<and> gamma_cr i z = 0 \<and> beta_cr j z = 0)"
+      proof (cases "s = 0")
+        case True thus ?thesis by (by100 simp)
+      next
+        case hsnz: False
+        show ?thesis
+        proof (cases "beta_cr j z = 0")
+          case hbj0: True
+          hence hgj_pos: "gamma_cr j z > 0" using hsnz hsj hgj by (by100 linarith)
+          have hYji0: "cross2 (vx (Suc j mod n) - vx i, vy (Suc j mod n) - vy i) (vx (Suc i mod n) - vx i, vy (Suc i mod n) - vy i) = 0"
+            using hvan hgj_pos by (by100 simp)
+          have hSjn: "Suc j mod n < n" using hn hj by (by100 simp)
+          have hadj: "Suc j mod n = i \<or> Suc j mod n = Suc i mod n"
+            using hcollinear_adj[OF hi hSjn hYji0] .
+          show ?thesis
+          proof (cases "beta_cr i z = 0")
+            case hbi0: True
+            have hgi_s: "gamma_cr i z = s" using hbi0 s_def by (by100 linarith)
+            have hgj_s: "gamma_cr j z = s" using hbj0 hsj by (by100 linarith)
+            have hCx_i: "fst z - cx = s * (vx (Suc i mod n) - cx)" using hCramer_x[OF hDne] hbi0 hgi_s by (by100 simp)
+            have hCx_j: "fst z - cx = s * (vx (Suc j mod n) - cx)" using hCramer_x[OF hDjne] hbj0 hgj_s by (by100 simp)
+            have hvx: "vx (Suc i mod n) = vx (Suc j mod n)" using hCx_i hCx_j hsnz by (by100 simp)
+            have hCy_i: "snd z - cy = s * (vy (Suc i mod n) - cy)" using hCramer_y[OF hDne] hbi0 hgi_s by (by100 simp)
+            have hCy_j: "snd z - cy = s * (vy (Suc j mod n) - cy)" using hCramer_y[OF hDjne] hbj0 hgj_s by (by100 simp)
+            have hvy: "vy (Suc i mod n) = vy (Suc j mod n)" using hCy_i hCy_j hsnz by (by100 simp)
+            from hadj show ?thesis
+            proof (elim disjE)
+              assume "Suc j mod n = i"
+              hence "vx (Suc i mod n) = vx i" and "vy (Suc i mod n) = vy i" using hvx hvy by (by100 simp)+
+              hence "Di i = 0" unfolding Di_def by (by100 simp)
+              thus ?thesis using hDi by (by100 linarith)
+            next
+              assume hmod_eq: "Suc j mod n = Suc i mod n"
+              hence "i = j"
+              proof -
+                have "Suc i \<le> n" using hi by (by100 linarith)
+                have "Suc j \<le> n" using hj by (by100 linarith)
+                show ?thesis
+                proof (cases "Suc i = n")
+                  case True hence "Suc i mod n = 0" by (by100 simp)
+                  hence hsjmod: "Suc j mod n = 0" using hmod_eq by (by100 simp)
+                  hence "n dvd Suc j"
+                  proof -
+                    from hsjmod have "Suc j mod n = 0" .
+                    thus "n dvd Suc j" using dvd_eq_mod_eq_0[of n "Suc j"] by (by100 simp)
+                  qed
+                  hence "Suc j = n" using \<open>Suc j \<le> n\<close>
+                    using dvd_imp_le[of n "Suc j"] hn by (by100 linarith)
+                  thus ?thesis using True by (by100 simp)
+                next
+                  case False hence "Suc i < n" using \<open>Suc i \<le> n\<close> by (by100 linarith)
+                  hence hsi: "Suc i mod n = Suc i" by (by100 simp)
+                  show ?thesis
+                  proof (cases "Suc j = n")
+                    case True hence "Suc j mod n = 0" by (by100 simp)
+                    hence "Suc i = 0" using hmod_eq hsi by (by100 simp)
+                    thus ?thesis by (by100 simp)
+                  next
+                    case False2: False
+                    hence "Suc j < n" using \<open>Suc j \<le> n\<close> by (by100 linarith)
+                    hence "Suc j mod n = Suc j" by (by100 simp)
+                    hence "Suc j = Suc i" using hmod_eq hsi by (by100 simp)
+                    thus ?thesis by (by100 simp)
+                  qed
+                qed
+              qed
+              thus ?thesis using hgi_s hgj_s by (by100 simp)
+            qed
+          next
+            case hbi_pos: False
+            hence hbi_pos': "beta_cr i z > 0" using hbi by (by100 linarith)
+            show ?thesis
+            proof (cases "gamma_cr i z = 0")
+              case hgi0: True
+              have hbi_s: "beta_cr i z = s" using hgi0 s_def by (by100 linarith)
+              have hCx_i: "fst z - cx = s * (vx i - cx)" using hCramer_x[OF hDne] hgi0 hbi_s by (by100 simp)
+              have hCx_j: "fst z - cx = s * (vx (Suc j mod n) - cx)" using hCramer_x[OF hDjne] hbj0 hsj by (by100 simp)
+              have hvx: "vx i = vx (Suc j mod n)" using hCx_i hCx_j hsnz by (by100 simp)
+              have hCy_i: "snd z - cy = s * (vy i - cy)" using hCramer_y[OF hDne] hgi0 hbi_s by (by100 simp)
+              have hCy_j: "snd z - cy = s * (vy (Suc j mod n) - cy)" using hCramer_y[OF hDjne] hbj0 hsj by (by100 simp)
+              have hvy: "vy i = vy (Suc j mod n)" using hCy_i hCy_j hsnz by (by100 simp)
+              from hadj show ?thesis
+              proof (elim disjE)
+                assume "Suc j mod n = i" thus ?thesis using hgi0 hbj0 by (by100 blast)
+              next
+                assume "Suc j mod n = Suc i mod n"
+                hence "vx (Suc i mod n) = vx i" and "vy (Suc i mod n) = vy i" using hvx hvy by (by100 simp)+
+                hence "Di i = 0" unfolding Di_def by (by100 simp)
+                thus ?thesis using hDi by (by100 linarith)
+              qed
+            next
+              case hgi_pos: False
+              hence hgi_pos': "gamma_cr i z > 0" using hgi by (by100 linarith)
+              have hXij0_prod: "beta_cr i z * cross2 (vx i - vx j, vy i - vy j) (vx (Suc j mod n) - vx j, vy (Suc j mod n) - vy j) = 0"
+                using hvan_i by (by100 blast)
+              have hXij0: "cross2 (vx i - vx j, vy i - vy j) (vx (Suc j mod n) - vx j, vy (Suc j mod n) - vy j) = 0"
+                using hXij0_prod hbi_pos' by (by100 simp)
+              have hadj_ij: "i = j \<or> i = Suc j mod n"
+                using hcollinear_adj[OF hj hi hXij0] .
+              show ?thesis
+              proof (cases "i = j")
+                case True
+                have "gamma_cr i z = gamma_cr j z" using True by (by100 simp)
+                thus ?thesis using True by (by100 blast)
+              next
+                case False
+                hence "i = Suc j mod n" using hadj_ij by (by100 simp)
+                hence hSj_i: "Suc j mod n = i" by (by100 simp)
+                have hCx_j: "fst z - cx = gamma_cr j z * (vx i - cx)" using hCramer_x[OF hDjne] hbj0 hSj_i by (by100 simp)
+                have hCx_i: "fst z - cx = beta_cr i z * (vx i - cx) + gamma_cr i z * (vx (Suc i mod n) - cx)" using hCramer_x[OF hDne] .
+                have heqx: "gamma_cr i z * (vx (Suc i mod n) - cx) = (gamma_cr j z - beta_cr i z) * (vx i - cx)"
+                  using hCx_i hCx_j by (simp add: algebra_simps)
+                have hCy_j: "snd z - cy = gamma_cr j z * (vy i - cy)" using hCramer_y[OF hDjne] hbj0 hSj_i by (by100 simp)
+                have hCy_i: "snd z - cy = beta_cr i z * (vy i - cy) + gamma_cr i z * (vy (Suc i mod n) - cy)" using hCramer_y[OF hDne] .
+                have heqy: "gamma_cr i z * (vy (Suc i mod n) - cy) = (gamma_cr j z - beta_cr i z) * (vy i - cy)"
+                  using hCy_i hCy_j by (simp add: algebra_simps)
+                define r where "r = (gamma_cr j z - beta_cr i z) / gamma_cr i z"
+                have hvx_eq: "vx (Suc i mod n) - cx = r * (vx i - cx)" using heqx hgi_pos' unfolding r_def by (simp add: field_simps)
+                have hvy_eq: "vy (Suc i mod n) - cy = r * (vy i - cy)" using heqy hgi_pos' unfolding r_def by (simp add: field_simps)
+                have "Di i = r * (vx i - cx) * (vy i - cy) - r * (vy i - cy) * (vx i - cx)" unfolding Di_def using hvx_eq hvy_eq by (by100 simp)
+                hence "Di i = 0" by (simp add: algebra_simps)
+                thus ?thesis using hDi by (by100 linarith)
+              qed
+            qed
+          qed
+        next
+          case hbj_pos: False
+          hence hbj_pos': "beta_cr j z > 0" using hbj by (by100 linarith)
+          have hXji0: "cross2 (vx j - vx i, vy j - vy i) (vx (Suc i mod n) - vx i, vy (Suc i mod n) - vy i) = 0"
+            using hvan hbj_pos' by (by100 simp)
+          have hadj_ji: "j = i \<or> j = Suc i mod n" using hcollinear_adj[OF hi hj hXji0] .
+          show ?thesis
+          proof (cases "gamma_cr j z = 0")
+            case hgj0: True
+            have hbj_s: "beta_cr j z = s" using hgj0 hsj by (by100 linarith)
+            show ?thesis
+            proof (cases "gamma_cr i z = 0")
+              case hgi0: True
+              have hbi_s: "beta_cr i z = s" using hgi0 s_def by (by100 linarith)
+              have hCx_i: "fst z - cx = s * (vx i - cx)" using hCramer_x[OF hDne] hgi0 hbi_s by (by100 simp)
+              have hCx_j: "fst z - cx = s * (vx j - cx)" using hCramer_x[OF hDjne] hgj0 hbj_s by (by100 simp)
+              have hvx: "vx i = vx j" using hCx_i hCx_j hsnz by (by100 simp)
+              have hCy_i: "snd z - cy = s * (vy i - cy)" using hCramer_y[OF hDne] hgi0 hbi_s by (by100 simp)
+              have hCy_j: "snd z - cy = s * (vy j - cy)" using hCramer_y[OF hDjne] hgj0 hbj_s by (by100 simp)
+              have hvy: "vy i = vy j" using hCy_i hCy_j hsnz by (by100 simp)
+              from hadj_ji show ?thesis
+              proof (elim disjE)
+                assume "j = i" thus ?thesis using hgi0 hgj0 by (by100 simp)
+              next
+                assume "j = Suc i mod n"
+                hence "vx (Suc i mod n) = vx i" and "vy (Suc i mod n) = vy i" using hvx hvy by (by100 simp)+
+                hence "Di i = 0" unfolding Di_def by (by100 simp)
+                thus ?thesis using hDi by (by100 linarith)
+              qed
+            next
+              case hgi_pos: False
+              hence hgi_pos': "gamma_cr i z > 0" using hgi by (by100 linarith)
+              from hadj_ji show ?thesis
+              proof (elim disjE)
+                assume "j = i" thus ?thesis using s_def hsj by (by100 simp)
+              next
+                assume hj_Si: "j = Suc i mod n"
+                show ?thesis
+                proof (cases "beta_cr i z = 0")
+                  case True thus ?thesis using hj_Si hgj0 by (by100 blast)
+                next
+                  case False
+                  hence hbi_pos': "beta_cr i z > 0" using hbi by (by100 linarith)
+                  have hCx_j: "fst z - cx = s * (vx (Suc i mod n) - cx)" using hCramer_x[OF hDjne] hgj0 hbj_s hj_Si by (by100 simp)
+                  have hCx_i: "fst z - cx = beta_cr i z * (vx i - cx) + gamma_cr i z * (vx (Suc i mod n) - cx)" using hCramer_x[OF hDne] .
+                  have heqx: "beta_cr i z * (vx i - cx) = (s - gamma_cr i z) * (vx (Suc i mod n) - cx)" using hCx_i hCx_j by (simp add: algebra_simps)
+                  have hCy_j: "snd z - cy = s * (vy (Suc i mod n) - cy)" using hCramer_y[OF hDjne] hgj0 hbj_s hj_Si by (by100 simp)
+                  have hCy_i: "snd z - cy = beta_cr i z * (vy i - cy) + gamma_cr i z * (vy (Suc i mod n) - cy)" using hCramer_y[OF hDne] .
+                  have heqy: "beta_cr i z * (vy i - cy) = (s - gamma_cr i z) * (vy (Suc i mod n) - cy)" using hCy_i hCy_j by (simp add: algebra_simps)
+                  define r where "r = (s - gamma_cr i z) / beta_cr i z"
+                  have hvx_eq: "vx i - cx = r * (vx (Suc i mod n) - cx)" using heqx hbi_pos' unfolding r_def by (simp add: field_simps)
+                  have hvy_eq: "vy i - cy = r * (vy (Suc i mod n) - cy)" using heqy hbi_pos' unfolding r_def by (simp add: field_simps)
+                  have "Di i = r * (vx (Suc i mod n) - cx) * (vy (Suc i mod n) - cy) - r * (vy (Suc i mod n) - cy) * (vx (Suc i mod n) - cx)"
+                    unfolding Di_def using hvx_eq hvy_eq by (by100 simp)
+                  hence "Di i = 0" by (simp add: algebra_simps)
+                  thus ?thesis using hDi by (by100 linarith)
+                qed
+              qed
+            qed
+          next
+            case hgj_pos: False
+            hence hgj_pos': "gamma_cr j z > 0" using hgj by (by100 linarith)
+            have hYji0: "cross2 (vx (Suc j mod n) - vx i, vy (Suc j mod n) - vy i) (vx (Suc i mod n) - vx i, vy (Suc i mod n) - vy i) = 0"
+              using hvan hgj_pos' by (by100 simp)
+            have hSjn: "Suc j mod n < n" using hn hj by (by100 simp)
+            have hadj_Sj: "Suc j mod n = i \<or> Suc j mod n = Suc i mod n" using hcollinear_adj[OF hi hSjn hYji0] .
+            from hadj_ji show ?thesis
+            proof (elim disjE)
+              assume "j = i" thus ?thesis using s_def hsj by (by100 simp)
+            next
+              assume hj_Si: "j = Suc i mod n"
+              from hadj_Sj show ?thesis
+              proof (elim disjE)
+                assume hSj_i: "Suc j mod n = i"
+                \<comment> \<open>j = i+1 mod n and j+1 = i mod n. Impossible for n >= 3.\<close>
+                have "Suc (Suc i mod n) mod n = i" using hSj_i hj_Si by (by100 simp)
+                moreover have "Suc i mod n < n" using hn hi by (by100 simp)
+                ultimately have "i < n \<and> Suc (Suc i mod n) mod n = i" using hi by (by100 blast)
+                \<comment> \<open>This means (i+2) mod n = i, so n divides 2. But n >= 3.\<close>
+                hence hF: False using hn
+                  by (metis Suc_1 Suc_leI le_less_trans mod_Suc mod_if mod_self not_less_eq_eq numeral_3_eq_3)
+                thus ?thesis by (by100 simp)
+              next
+                assume "Suc j mod n = Suc i mod n"
+                hence "j = i" using hj hi hn by (by100 simp)
+                hence "Suc i mod n = i" using hj_Si by (by100 simp)
+                thus ?thesis using hi hn by (by100 simp)
+              qed
+            qed
+          qed
+        qed
+      qed
+    qed
     have hpsi_agree: "\<And>i j z. i < n \<Longrightarrow> j < n \<Longrightarrow> in_cone i z \<Longrightarrow> in_cone j z \<Longrightarrow>
         psi_local i z = psi_local j z"
     proof -
@@ -1709,8 +1967,44 @@ proof -
     \<comment> \<open>Define cone sets.\<close>
     define cone_set where "cone_set i = {z. in_cone i z}" for i :: nat
     have hcone_closed: "\<And>i. i < n \<Longrightarrow> closed (cone_set i)"
-      sorry \<comment> \<open>Cone i = {z. beta>=0, gamma>=0, beta+gamma<=1} is a closed set
-         (intersection of half-planes, each defined by a linear inequality).\<close>
+    proof -
+      fix i :: nat assume hi: "i < n"
+      \<comment> \<open>beta_cr i is a continuous linear function of z.\<close>
+      have hDi_ne: "Di i \<noteq> 0" using hDi_pos[OF hi] by (by100 linarith)
+      have hb_eq: "beta_cr i = (\<lambda>z::real\<times>real. ((fst z - cx) * (vy (Suc i mod n) - cy)
+          - (snd z - cy) * (vx (Suc i mod n) - cx)) / Di i)"
+        unfolding beta_cr_def cross2_def by (rule ext) (by100 simp)
+      have hg_eq: "gamma_cr i = (\<lambda>z::real\<times>real. ((vx i - cx) * (snd z - cy)
+          - (vy i - cy) * (fst z - cx)) / Di i)"
+        unfolding gamma_cr_def cross2_def by (rule ext) (by100 simp)
+      \<comment> \<open>These are continuous as compositions of continuous functions.\<close>
+      have hb_cont: "continuous_on UNIV (beta_cr i)" unfolding hb_eq
+        using hDi_ne by (intro continuous_intros) (by100 simp)+
+      have hg_cont: "continuous_on UNIV (gamma_cr i)" unfolding hg_eq
+        using hDi_ne by (intro continuous_intros) (by100 simp)+
+      have hbg_cont: "continuous_on UNIV (\<lambda>z. beta_cr i z + gamma_cr i z)"
+        using hb_cont hg_cont by (intro continuous_intros)
+      \<comment> \<open>cone_set i is the preimage of a closed set under a continuous function.\<close>
+      have "cone_set i = (\<lambda>z. beta_cr i z) -` {0..} \<inter>
+          (\<lambda>z. gamma_cr i z) -` {0..} \<inter>
+          (\<lambda>z. beta_cr i z + gamma_cr i z) -` {..1}"
+        unfolding cone_set_def in_cone_def by (by100 blast)
+      moreover have "closed ((\<lambda>z::real\<times>real. beta_cr i z) -` {0..})"
+        using closed_vimage[OF closed_atLeast hb_cont] by (by100 simp)
+      moreover have "closed ((\<lambda>z::real\<times>real. gamma_cr i z) -` {0..})"
+        using closed_vimage[OF closed_atLeast hg_cont] by (by100 simp)
+      moreover have "closed ((\<lambda>z::real\<times>real. beta_cr i z + gamma_cr i z) -` {..1})"
+        using closed_vimage[OF closed_atMost hbg_cont] by (by100 simp)
+      ultimately have "closed ((\<lambda>z. beta_cr i z) -` {0..} \<inter>
+          (\<lambda>z. gamma_cr i z) -` {0..} \<inter>
+          (\<lambda>z. beta_cr i z + gamma_cr i z) -` {..1})"
+        by (intro closed_Int) (by100 assumption)+
+      moreover have "cone_set i = (\<lambda>z. beta_cr i z) -` {0..} \<inter>
+          (\<lambda>z. gamma_cr i z) -` {0..} \<inter>
+          (\<lambda>z. beta_cr i z + gamma_cr i z) -` {..1}"
+        unfolding cone_set_def in_cone_def by (by100 blast)
+      ultimately show "closed (cone_set i)" by (by100 simp)
+    qed
     have hcone_cover: "P \<subseteq> (\<Union>i\<in>{..<n}. cone_set i)"
       using hP_cones unfolding cone_set_def by (by100 blast)
     have hpsi_local_cont: "\<And>i. i < n \<Longrightarrow> continuous_on (cone_set i) (psi_local i)"
