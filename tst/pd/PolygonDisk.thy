@@ -3841,7 +3841,94 @@ lemma torus_scheme_all_eq_v0:
           else q (t * vx j + (1-t) * vx (Suc j mod length scheme),
                   t * vy j + (1-t) * vy (Suc j mod length scheme))))"
   shows "\<And>i. i < length scheme \<Longrightarrow> q (vx i, vy i) = q (vx 0, vy 0)"
-  sorry
+proof -
+  have hlen: "length scheme = 4 * n" unfolding scheme_def
+    by (induct n) (by100 simp)+
+  \<comment> \<open>Scheme access: scheme!(4k+r) for block k.\<close>
+  have hscheme_0: "\<And>k. k < n \<Longrightarrow> scheme ! (4*k) = (2*k, True)" sorry
+  have hscheme_1: "\<And>k. k < n \<Longrightarrow> scheme ! (4*k+1) = (2*k+1, True)" sorry
+  have hscheme_2: "\<And>k. k < n \<Longrightarrow> scheme ! (4*k+2) = (2*k, False)" sorry
+  have hscheme_3: "\<And>k. k < n \<Longrightarrow> scheme ! (4*k+3) = (2*k+1, False)" sorry
+  \<comment> \<open>Index bounds.\<close>
+  have hidx: "\<And>k r. k < n \<Longrightarrow> r < 4 \<Longrightarrow> 4*k+r < length scheme"
+    using hlen by (by100 linarith)
+  \<comment> \<open>Edge pairing: edges 4k and 4k+2 share label 2k, opposite orientation.
+     At t=0: q(v_{4k}) = q(v_{4k+3}). At t=1: q(v_{4k+1}) = q(v_{4k+2}).\<close>
+  have hpair_a: "\<And>k. k < n \<Longrightarrow>
+      q (vx (4*k), vy (4*k)) = q (vx (4*k+3), vy (4*k+3))"
+  proof -
+    fix k assume hk: "k < n"
+    \<comment> \<open>Edge 4k has label (2k,T), edge 4k+2 has label (2k,F). Same fst, different snd.\<close>
+    have h_fst: "fst (scheme!(4*k)) = fst (scheme!(4*k+2))"
+      using hscheme_0[OF hk] hscheme_2[OF hk] by (by100 simp)
+    have h_snd: "snd (scheme!(4*k)) \<noteq> snd (scheme!(4*k+2))"
+      using hscheme_0[OF hk] hscheme_2[OF hk] by (by100 simp)
+    have hi: "4*k < length scheme" using hidx[OF hk, of 0] by (by100 simp)
+    have hj: "4*k+2 < length scheme" using hidx[OF hk, of 2] by (by100 simp)
+    \<comment> \<open>Apply hedge with i=4k, j=4k+2, t=0.\<close>
+    have h0: "0 \<in> I_set" unfolding top1_unit_interval_def by (by100 auto)
+    from hedge[rule_format, OF hi hj h_fst, rule_format, OF h0]
+    show "q (vx (4*k), vy (4*k)) = q (vx (4*k+3), vy (4*k+3))"
+      using h_snd sorry \<comment> \<open>Simplify: (1-0)*vx(4k) + 0*vx(4k+1) = vx(4k),
+         and 0*vx(4k+2) + (1-0)*vx(4k+3) = vx(4k+3).\<close>
+  qed
+  have hpair_b: "\<And>k. k < n \<Longrightarrow>
+      q (vx (4*k+1), vy (4*k+1)) = q (vx (4*k+2), vy (4*k+2))"
+    sorry \<comment> \<open>Similar: edges 4k and 4k+2, t=1.\<close>
+  have hpair_c: "\<And>k. k < n \<Longrightarrow>
+      q (vx (4*k+2), vy (4*k+2)) = q (vx (4*k+3), vy (4*k+3))"
+    sorry \<comment> \<open>Edges 4k+1 and 4k+3 (label 2k+1), t=1.\<close>
+  \<comment> \<open>Link between blocks: edges 4k+1 (label 2k+1,T) and 4k+3 (label 2k+1,F), t=0:
+     q(v_{4k+1}) = q(v_{Suc(4k+3) mod 4n}) = q(v_{4(k+1) mod 4n}).\<close>
+  have hlink: "\<And>k. k < n \<Longrightarrow>
+      q (vx (4*k+1), vy (4*k+1)) = q (vx (4*((k+1) mod n)), vy (4*((k+1) mod n)))"
+    sorry \<comment> \<open>Edges 4k+1 and 4k+3, t=0.\<close>
+  \<comment> \<open>Chain within block k: q(v_{4k}) = q(v_{4k+3}) = q(v_{4k+2}) = q(v_{4k+1}).\<close>
+  have hblock_eq: "\<And>k r. k < n \<Longrightarrow> r < 4 \<Longrightarrow>
+      q (vx (4*k+r), vy (4*k+r)) = q (vx (4*k), vy (4*k))"
+  proof -
+    fix k r :: nat assume hk: "k < n" and hr: "r < 4"
+    show "q (vx (4*k+r), vy (4*k+r)) = q (vx (4*k), vy (4*k))"
+    proof (cases r)
+      case 0 thus ?thesis by (by100 simp)
+    next
+      case (Suc r') thus ?thesis using hpair_a[OF hk] hpair_b[OF hk] hpair_c[OF hk] hr
+        sorry \<comment> \<open>Case r=1,2,3: chain through the block identifications.\<close>
+    qed
+  qed
+  \<comment> \<open>Chain across blocks: q(v_{4k}) = q(v_0) by induction using hlink.\<close>
+  have hblock_0: "\<And>k. k < n \<Longrightarrow> q (vx (4*k), vy (4*k)) = q (vx 0, vy 0)"
+  proof -
+    fix k show "k < n \<Longrightarrow> q (vx (4*k), vy (4*k)) = q (vx 0, vy 0)"
+    proof (induct k)
+      case 0 thus ?case by (by100 simp)
+    next
+      case (Suc k')
+      hence hk': "k' < n" by (by100 linarith)
+      have hIH: "q (vx (4*k'), vy (4*k')) = q (vx 0, vy 0)"
+        using Suc.hyps hk' by (by100 simp)
+      have "q (vx (4*k'+1), vy (4*k'+1)) = q (vx (4*k'), vy (4*k'))"
+        using hblock_eq[OF hk', of 1] by (by100 simp)
+      moreover have "q (vx (4*k'+1), vy (4*k'+1)) = q (vx (4*Suc k'), vy (4*Suc k'))"
+      proof -
+        have "(k'+1) mod n = Suc k'" using Suc.prems by (by100 simp)
+        thus ?thesis using hlink[OF hk'] by (by100 simp)
+      qed
+      ultimately show ?case using hIH by (by100 simp)
+    qed
+  qed
+  \<comment> \<open>Combine: any i < 4n decomposes as i = 4k+r, so q(v_i) = q(v_{4k}) = q(v_0).\<close>
+  fix i :: nat assume hi: "i < length scheme"
+  define k where "k = i div 4"
+  define r where "r = i mod 4"
+  have "i = 4*k + r" unfolding k_def r_def by (by100 simp)
+  have "k < n" using hi hlen k_def by (by100 simp)
+  have "r < 4" unfolding r_def by (by100 simp)
+  have "q (vx i, vy i) = q (vx (4*k+r), vy (4*k+r))" using \<open>i = 4*k + r\<close> by (by100 simp)
+  also have "\<dots> = q (vx (4*k), vy (4*k))" using hblock_eq[OF \<open>k < n\<close> \<open>r < 4\<close>] .
+  also have "\<dots> = q (vx 0, vy 0)" using hblock_0[OF \<open>k < n\<close>] .
+  finally show "q (vx i, vy i) = q (vx 0, vy 0)" .
+qed
 
 lemma torus_scheme_vertex_connectivity:
   fixes n :: nat
