@@ -6692,6 +6692,11 @@ proof -
   show ?thesis using hQ_presented hQ_iso_H sorry
 qed
 
+lemma map_map_pair_compose:
+  "map (\<lambda>(x, b). (f x, b)) (map (\<lambda>(s, b). (g s, b)) ws)
+     = map (\<lambda>(s, b). (f (g s), b)) ws"
+  by (induct ws) auto
+
 theorem Theorem_74_2_scheme_presentation:
   fixes X :: "'a set" and TX :: "'a set set" and x0 :: 'a
     and scheme :: "(nat \<times> bool) list"
@@ -7645,7 +7650,51 @@ proof -
       using hom_word_product[OF _ hpi1_A_grp h\<phi>_hom, of eF invgF
           "map (\<lambda>(s, b). (\<iota>F s, b)) scheme"]
         hfree[unfolded top1_is_free_group_full_on_def]
-      sorry \<comment> \<open>Need: generators in F + map composition = map (\<lambda>(s,b). (\<phi>(\<iota>F s), b)).\<close>
+    proof -
+      have hF_grp: "top1_is_group_on F mulF eF invgF"
+        using hfree unfolding top1_is_free_group_full_on_def by (by100 blast)
+      have hgens: "\<forall>i<length (map (\<lambda>(s, b). (\<iota>F s, b)) scheme).
+          fst ((map (\<lambda>(s, b). (\<iota>F s, b)) scheme) ! i) \<in> F"
+      proof (intro allI impI)
+        fix i assume hi: "i < length (map (\<lambda>(s, b). (\<iota>F s, b)) scheme)"
+        hence hi': "i < length scheme" by (by100 simp)
+        have "(map (\<lambda>(s, b). (\<iota>F s, b)) scheme) ! i = (\<lambda>(s, b). (\<iota>F s, b)) (scheme ! i)"
+          using nth_map[OF hi'] by (by100 blast)
+        hence "fst ((map (\<lambda>(s, b). (\<iota>F s, b)) scheme) ! i) = \<iota>F (fst (scheme ! i))"
+          by (cases "scheme ! i") (by100 simp)
+        moreover have "fst (scheme ! i) \<in> fst ` set scheme" using hi' by (by100 force)
+        moreover have "\<iota>F (fst (scheme ! i)) \<in> F"
+          using hfree unfolding top1_is_free_group_full_on_def
+          using \<open>fst (scheme ! i) \<in> fst ` set scheme\<close> by (by100 blast)
+        ultimately show "fst ((map (\<lambda>(s, b). (\<iota>F s, b)) scheme) ! i) \<in> F"
+          by (by100 simp)
+      qed
+      from hom_word_product[OF hF_grp hpi1_A_grp h\<phi>_hom hgens]
+      have "\<phi> (top1_group_word_product mulF eF invgF
+          (map (\<lambda>(s, b). (\<iota>F s, b)) scheme))
+        = top1_group_word_product
+          (top1_fundamental_group_mul A (subspace_topology X TX A) a')
+          (top1_fundamental_group_id A (subspace_topology X TX A) a')
+          (top1_fundamental_group_invg A (subspace_topology X TX A) a')
+          (map (\<lambda>(x, b). (\<phi> x, b)) (map (\<lambda>(s, b). (\<iota>F s, b)) scheme))" .
+      also have "top1_group_word_product
+          (top1_fundamental_group_mul A (subspace_topology X TX A) a')
+          (top1_fundamental_group_id A (subspace_topology X TX A) a')
+          (top1_fundamental_group_invg A (subspace_topology X TX A) a')
+          (map (\<lambda>(x, b). (\<phi> x, b)) (map (\<lambda>(s, b). (\<iota>F s, b)) scheme))
+        = top1_group_word_product
+          (top1_fundamental_group_mul A (subspace_topology X TX A) a')
+          (top1_fundamental_group_id A (subspace_topology X TX A) a')
+          (top1_fundamental_group_invg A (subspace_topology X TX A) a')
+          (map (\<lambda>(s, b). (\<phi> (\<iota>F s), b)) scheme)"
+      proof -
+        have hmap_eq: "map (\<lambda>(x::int, b::bool). (\<phi> x, b)) (map (\<lambda>(s::nat, b::bool). (\<iota>F s, b)) scheme)
+          = map (\<lambda>(s::nat, b::bool). (\<phi> (\<iota>F s), b)) scheme"
+          using map_map_pair_compose[of \<phi> \<iota>F scheme] .
+        show ?thesis unfolding hmap_eq ..
+      qed
+      finally show ?thesis .
+    qed
     \<comment> \<open>Step R3: combine R1 + R2 + bijectivity of \<phi> to get \<phi>^{-1}(relator).\<close>
     have hrelator_word: "inv_into F \<phi> relator_class =
         top1_group_word_product mulF eF invgF
