@@ -6612,6 +6612,16 @@ qed
     This is the general engine; 74.3 and 74.4 are immediate applications.
     Proof (book): A = \<pi>(Bd P) is a wedge of k circles (since all vertices identified).
     Theorem 72.1 gives \<pi>_1(X) \<cong> \<pi>_1(A)/N(relator). Then \<pi>_1(A) = Free(k). **)
+text \<open>Helper: given CW data, free group iso, and Theorem 72.1 quotient,
+  produce the group presentation. This factors out the relator identification
+  step from Theorem 74.2 into a standalone lemma where proof blocks work.\<close>
+text \<open>TODO: Factor out the relator identification from Theorem 74.2 into a standalone
+  lemma. The key fact: the boundary loop class in \<pi>_1(A,a') equals the product
+  of edge loop classes, which under the free group isomorphism corresponds to
+  the scheme word product. This is Munkres's one-sentence argument:
+  "the loop \<pi> \<circ> f equals (g\_{i\_1})^{\<epsilon>\_1} * ... * (g\_{i\_n})^{\<epsilon>\_n}."
+  Needs ~200 lines of path decomposition + homotopy + wedge generator identification.\<close>
+
 theorem Theorem_74_2_scheme_presentation:
   fixes X :: "'a set" and TX :: "'a set set" and x0 :: 'a
     and scheme :: "(nat \<times> bool) list"
