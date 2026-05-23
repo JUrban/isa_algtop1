@@ -6737,9 +6737,15 @@ proof -
            = top1_normal_subgroup_generated_on F mulF eF invgF
                {r. \<exists>w'\<in>{w}. r = top1_group_word_product mulF eF invgF
                             (map (\<lambda>(s, b). (\<iota>F s, b)) w')}"
-      using hF_free hcomp_hom hcomp_surj hker_word sorry
-    show ?thesis unfolding top1_group_presented_by_on_def using hQ_grp h1
-      sorry
+    proof -
+      have "{r. \<exists>w'\<in>{w}. r = top1_group_word_product mulF eF invgF
+                            (map (\<lambda>(s, b). (\<iota>F s, b)) w')}
+        = {top1_group_word_product mulF eF invgF (map (\<lambda>(s, b). (\<iota>F s, b)) w)}"
+        by (by100 blast)
+      thus ?thesis using hF_free hcomp_hom hcomp_surj hker_word by (by5000 simp)
+    qed
+    show ?thesis unfolding top1_group_presented_by_on_def
+      using hQ_grp h1 sorry
   qed
   \<comment> \<open>Step 5: H \<cong> Q, so use Q as the witness.\<close>
   have hQ_iso_H: "top1_groups_isomorphic_on Q mulQ H mulH"
