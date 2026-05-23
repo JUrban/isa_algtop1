@@ -4044,4 +4044,19 @@ lemma torus_scheme_vertex_connectivity:
     by (by5000 force)
   done
 
+text \<open>Path splitting lemma: a loop f: [0,1] \<rightarrow> X that passes through x0 at
+  s = k/n (for k = 0,...,n) is path-homotopic to the product of n sub-loops
+  f\_k: [0,1] \<rightarrow> X defined by f\_k(s) = f((k+s)/n).
+  This is the key infrastructure for Theorem 74.2s relator identification.\<close>
+lemma loop_split_at_vertices:
+  assumes htop: "is_topology_on X TX"
+      and hloop: "top1_is_loop_on X TX x0 f"
+      and hn: "n \<ge> 1"
+      and hvertex: "\<forall>k\<le>n. f (real k / real n) = x0"
+  defines "sub k \<equiv> (\<lambda>s. f ((real k + s) / real n))"
+  shows "top1_loop_equiv_on X TX x0 f
+      (foldr top1_path_product (map sub [0..<n]) (top1_constant_path x0))"
+  sorry
+
 end
+
