@@ -4104,8 +4104,18 @@ proof -
       have hrescale_cont: "continuous_on I_set (\<lambda>s. (real k + s) / real n)"
         using hn by (intro continuous_intros) (by100 simp)+
       \<comment> \<open>Composition f \<circ> rescale is continuous.\<close>
-      show ?thesis unfolding sub_def
-        sorry \<comment> \<open>Compose continuous f with continuous rescaling.\<close>
+      \<comment> \<open>Bridge: rescaling as top1\_continuous\_map\_on.\<close>
+      have hrescale_top1: "top1_continuous_map_on I_set top1_unit_interval_topology
+          I_set top1_unit_interval_topology (\<lambda>s. (real k + s) / real n)"
+        using hrescale_range hrescale_cont
+          top1_continuous_map_on_real_subspace_open_sets[of I_set "\<lambda>s. (real k + s) / real n" I_set]
+        sorry \<comment> \<open>Bridge continuous\_on to top1\_continuous\_map\_on via subspace.\<close>
+      have "top1_continuous_map_on I_set top1_unit_interval_topology X TX
+          (f \<circ> (\<lambda>s. (real k + s) / real n))"
+        using top1_continuous_map_on_comp[OF hrescale_top1 hf_cont] .
+      moreover have "(\<lambda>s. f ((real k + s) / real n)) = f \<circ> (\<lambda>s. (real k + s) / real n)"
+        unfolding comp_def by (by100 simp)
+      ultimately show ?thesis unfolding sub_def by (by100 simp)
     qed
     \<comment> \<open>sub k is a path from x0 to x0 = loop.\<close>
     show "top1_is_loop_on X TX x0 (sub k)"
