@@ -6708,9 +6708,12 @@ proof -
       hence hcF: "c \<in> F" and h\<phi>c_N: "\<phi> c \<in> N" by (by100 blast)+
       from hN_eq have h\<phi>c: "\<phi> c \<in> top1_normal_subgroup_generated_on G mulG eG invgG {r}"
         using h\<phi>c_N by (by100 simp)
+      have hwp_in_F: "wp \<in> F" unfolding wp_def
+        sorry \<comment> \<open>word\_product of generators \<in> F.\<close>
       have hN_F_normal: "top1_normal_subgroup_on F mulF eF invgF
           (top1_normal_subgroup_generated_on F mulF eF invgF {wp})"
-        sorry
+        using normal_subgroup_generated_is_normal[OF hF_grp, of "{wp}"] hwp_in_F
+        by (by100 blast)
       show "c \<in> top1_normal_subgroup_generated_on F mulF eF invgF {wp}"
         using inj_hom_preimage_normal_closure[OF hF_grp hG_grp h\<phi>_hom _ _ hN_F_normal]
           hcF h\<phi>c hwp_eq
