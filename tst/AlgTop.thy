@@ -7519,10 +7519,23 @@ proof -
        relator\_class = image of circle loop under \<iota>.
        Under \<phi>^{-1}: this maps to word\_product(\<iota>F, scheme) in F.
        This is the core topological identification.\<close>
+    \<comment> \<open>Core topology: boundary loop = scheme word in free group.
+       Munkres: "the loop f running around Bd P once counterclockwise
+       generates \<pi>_1(Bd P), and the loop \<pi> \<circ> f equals g_{i_1}^{\<epsilon>_1} * ... * g_{i_n}^{\<epsilon>_n}."
+
+       Proof plan:
+       1. relator\_class = class of \<iota> \<circ> circle in \<pi>_1(A,a').
+       2. \<iota> \<circ> circle decomposes as product of n sub-loops, one per edge.
+       3. Each sub-loop is homotopic to the edge loop g\_i (or g\_i^{-1}).
+       4. Under \<phi>^{-1}: the class maps to the corresponding word in F.
+       5. Word = word\_product of scheme.\<close>
     have hrelator_word: "inv_into F \<phi> relator_class =
         top1_group_word_product mulF eF invgF
           (map (\<lambda>(s, b). (\<iota>F s, b)) (map (\<lambda>(s,b). (s, b)) scheme))"
-      sorry \<comment> \<open>Core topology: boundary loop = scheme word in free group.\<close>
+      sorry \<comment> \<open>Core topology: the boundary loop \<iota> \<circ> circle\_path decomposes
+         as the product of edge loops, matching the scheme word in the free group.
+         This is the one-sentence step in Munkres that requires ~200 lines of
+         formal path decomposition + homotopy + multiplicativity.\<close>
     \<comment> \<open>From hrelator\_word + first\_isomorphism\_theorem + h\<iota>\_iso:
        F / N(scheme\_word\_in\_F) \<cong> Q \<cong> \<pi>_1(X,a').
        This gives the presentation.\<close>
