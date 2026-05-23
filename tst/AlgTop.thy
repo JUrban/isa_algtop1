@@ -7298,10 +7298,17 @@ proof -
       \<and> top1_groups_isomorphic_on G mul
           (top1_fundamental_group_carrier X TX a')
           (top1_fundamental_group_mul X TX a')"
-    sorry \<comment> \<open>From h\<iota>\_iso + hA\_free\_a': identify relator with scheme word.
-       The boundary loop h \<circ> (cos 2\<pi>s, sin 2\<pi>s) traces edges 0..n-1.
-       Each edge i maps to generator fst(scheme!i) (or inverse if snd=False).
-       Product = scheme word. This is the core algebraic topology identification.\<close>
+    sorry \<comment> \<open>Relator identification: the core algebraic topology step.
+       Proof outline (Munkres Theorem 74.2):
+       Step A: Extract free group isomorphism from hA\_free\_a'.
+       Step B: From h\<iota>\_iso, get \<pi>_1(X,a') \<cong> F(S)/N(relator).
+       Step C: Identify relator = scheme word.
+         - The boundary loop h \<circ> (cos 2\<pi>s, sin 2\<pi>s) traces edges 0,...,n-1.
+         - Edge i with (label, True) maps to generator \<iota>(label).
+         - Edge i with (label, False) maps to inverse \<iota>(label)^{-1}.
+         - Product = scheme word in the free group.
+       Step D: Combine into group\_presented\_by\_on.
+       Available: h\<iota>\_iso, hA\_free\_a', h\<iota>\_eq, CW data from scheme\_quotient\_CW\_data.\<close>
   \<comment> \<open>Step (iv): Transfer a' \<rightarrow> a via basepoint change.\<close>
   have hThm72_a: "\<exists>(G::'g set) mul e invg.
       top1_group_presented_by_on G mul e invg (fst ` set scheme)
