@@ -7414,7 +7414,40 @@ proof -
         (top1_fundamental_group_invg A (subspace_topology X TX A) a')"
       using top1_fundamental_group_is_group[OF hTA ha'_A] .
     have hrel_in: "relator_class \<in> top1_fundamental_group_carrier A (subspace_topology X TX A) a'"
-      sorry \<comment> \<open>Image of circle loop class under \<iota>_* is in \<pi>_1(A,a').\<close>
+    proof -
+      \<comment> \<open>The circle loop class is in \<pi>_1(S1,(1,0)).\<close>
+      define circle_class where "circle_class =
+          {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0)
+                (\<lambda>s. (cos (2 * pi * s), sin (2 * pi * s))) g}"
+      have hcc_in: "circle_class \<in> top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0)"
+        unfolding top1_fundamental_group_carrier_def circle_class_def
+        sorry \<comment> \<open>circle loop is a loop in S1 at (1,0).\<close>
+      \<comment> \<open>\<iota>_* maps \<pi>_1(S1,(1,0)) to \<pi>_1(A,a') since \<iota> is continuous and \<iota>(1,0) = a'.\<close>
+      have hS1_top: "is_topology_on top1_S1 top1_S1_topology"
+        sorry
+      have h10_S1: "(1::real, 0::real) \<in> top1_S1"
+        unfolding top1_S1_def by (by100 simp)
+      have h\<iota>_10: "\<iota> (1, 0) = a'"
+        using h\<iota>_eq h10_S1 unfolding a'_def sorry
+      have h\<iota>_S1_hom: "top1_group_hom_on
+          (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
+          (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))
+          (top1_fundamental_group_carrier A (subspace_topology X TX A) a')
+          (top1_fundamental_group_mul A (subspace_topology X TX A) a')
+          (top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1, 0)
+             A (subspace_topology X TX A) a' \<iota>)"
+        using top1_fundamental_group_induced_on_is_hom[OF hS1_top hTA h10_S1 ha'_A h\<iota>_cont h\<iota>_10]
+        sorry
+      \<comment> \<open>relator\_class = \<iota>_*(circle\_class), which is in \<pi>_1(A,a') since \<iota>_* is a hom.\<close>
+      have "relator_class = top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1, 0)
+             A (subspace_topology X TX A) a' \<iota> circle_class"
+        unfolding relator_class_def circle_class_def by (by100 simp)
+      moreover have "top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1, 0)
+             A (subspace_topology X TX A) a' \<iota> circle_class
+        \<in> top1_fundamental_group_carrier A (subspace_topology X TX A) a'"
+        using h\<iota>_S1_hom hcc_in unfolding top1_group_hom_on_def sorry
+      ultimately show ?thesis by (by100 simp)
+    qed
     have hN_normal: "top1_normal_subgroup_on
         (top1_fundamental_group_carrier A (subspace_topology X TX A) a')
         (top1_fundamental_group_mul A (subspace_topology X TX A) a')
