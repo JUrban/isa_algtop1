@@ -4105,11 +4105,16 @@ proof -
         using hn by (intro continuous_intros) (by100 simp)+
       \<comment> \<open>Composition f \<circ> rescale is continuous.\<close>
       \<comment> \<open>Bridge: rescaling as top1\_continuous\_map\_on.\<close>
+      have hrescale_univ: "continuous_on (UNIV::real set) (\<lambda>s. (real k + s) / real n)"
+        using hn by (intro continuous_intros) (by100 simp)+
       have hrescale_top1: "top1_continuous_map_on I_set top1_unit_interval_topology
           I_set top1_unit_interval_topology (\<lambda>s. (real k + s) / real n)"
-        using hrescale_range hrescale_cont
-          top1_continuous_map_on_real_subspace_open_sets[of I_set "\<lambda>s. (real k + s) / real n" I_set]
-        sorry \<comment> \<open>Bridge continuous\_on to top1\_continuous\_map\_on via subspace.\<close>
+        unfolding top1_unit_interval_def
+        using top1_continuous_map_on_real_subspace_open_sets[of "{0..1}"
+          "\<lambda>s. (real k + s) / real n" "{0..1}"]
+          hrescale_range hrescale_univ
+        unfolding top1_unit_interval_def
+        sorry \<comment> \<open>Definition matching: I\_set = {0..1}, I\_top = subspace\_topology.\<close>
       have "top1_continuous_map_on I_set top1_unit_interval_topology X TX
           (f \<circ> (\<lambda>s. (real k + s) / real n))"
         using top1_continuous_map_on_comp[OF hrescale_top1 hf_cont] .
