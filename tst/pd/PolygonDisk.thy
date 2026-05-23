@@ -3791,44 +3791,11 @@ proof -
     done
 qed
 
-text \<open>Lemma 1: Vertex half-plane condition for convex polygons.
-  For a polygon given as convex hull of n vertices with CCW ordering (D\_i > 0),
-  every vertex is on the non-positive side of every directed edge.
-  This is the defining property of convexity for the vertex representation.\<close>
-lemma convex_polygon_vertex_half_plane:
-  assumes hn: "n \<ge> 3"
-      and hP_hull: "P = {(x, y) | x y.
-                \<exists>coeffs. (\<forall>i<n. coeffs i \<ge> 0)
-                       \<and> (\<Sum>i<n. coeffs i) = 1
-                       \<and> x = (\<Sum>i<n. coeffs i * vx i)
-                       \<and> y = (\<Sum>i<n. coeffs i * vy i)}"
-      and hverts: "\<forall>i<n. (vx i, vy i) \<in> P"
-      and hccw: "\<forall>i<n. let cx = (\<Sum>j<n. vx j) / real n; cy = (\<Sum>j<n. vy j) / real n
-         in (vx i - cx) * (vy (Suc i mod n) - cy) - (vy i - cy) * (vx (Suc i mod n) - cx) > 0"
-  shows "\<forall>i<n. \<forall>k<n. cross2 (vx k - vx i, vy k - vy i)
-      (vx (Suc i mod n) - vx i, vy (Suc i mod n) - vy i) \<le> 0"
-  sorry \<comment> \<open>Convex polygon vertex half-plane condition.
-     Proof approach: P = convex hull of vertices. H\_i = {z. cross2(z-vi, vi+1-vi) \<le> 0} is convex.
-     Need P \<subseteq> H\_i. Since P = conv(vertices), suffices to show all vertices in H\_i.
-     This is the statement itself - so we need the CCW ordering to break circularity.
-     Key: use the centroid c \<in> interior(H\_i) (since cross2(c-vi,...) = -Di < 0)
-     and show that any vertex v\_k with cross2(v\_k-vi,...) > 0 would violate convexity
-     (segment from c to v\_k exits H\_i but stays in P, contradicting P \<subseteq> H\_i).
-     Bootstrapping issue: we need P \<subseteq> H\_i to conclude v\_k \<in> H\_i.
-     Alternative: add as scheme assumption (pragmatic, reviewer-recommended).\<close>
-
-text \<open>Lemma 2: No 3 non-adjacent collinear vertices in a CCW convex polygon.
-  If D\_i = cross2(v\_i - c, v\_{i+1} - c) > 0 for all i, then for j \<noteq> i and
-  j \<noteq> Suc i mod n, v\_j is NOT on the line through v\_i and v\_{i+1}.\<close>
-lemma ccw_polygon_no_collinear:
-  assumes hn: "n \<ge> 3"
-      and hccw: "\<forall>i<n. let cx = (\<Sum>j<n. vx j) / real n; cy = (\<Sum>j<n. vy j) / real n
-         in (vx i - cx) * (vy (Suc i mod n) - cy) - (vy i - cy) * (vx (Suc i mod n) - cx) > 0"
-      and hvert_hp: "\<forall>i<n. \<forall>k<n. cross2 (vx k - vx i, vy k - vy i)
-          (vx (Suc i mod n) - vx i, vy (Suc i mod n) - vy i) \<le> 0"
-  shows "\<forall>i<n. \<forall>j<n. j \<noteq> i \<longrightarrow> Suc i mod n \<noteq> j \<longrightarrow>
-      cross2 (vx j - vx i, vy j - vy i) (vx (Suc i mod n) - vx i, vy (Suc i mod n) - vy i) \<noteq> 0"
-  sorry
+text \<open>Note: convex\_polygon\_vertex\_half\_plane and ccw\_polygon\_no\_collinear
+  were removed per reviewer advice. These conditions are now derived from the
+  strict edge-side condition added to top1\_quotient\_of\_scheme\_on, rather than
+  proved from CCW + convex hull alone (which has a bootstrapping issue, and
+  the non-strict half-plane does not imply no-collinearity for degenerate polygons).\<close>
 
 text \<open>Lemma 3: Torus scheme vertex connectivity.
   In the torus scheme [(a1,+),(b1,+),(a1,-),(b1,-),...,(an,+),(bn,+),(an,-),(bn,-)],

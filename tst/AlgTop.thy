@@ -3078,6 +3078,9 @@ lemma polygon_homeomorphic_to_disk_with_boundary:
          in (vx i - cx) * (vy (Suc i mod n) - cy) - (vy i - cy) * (vx (Suc i mod n) - cx) > 0"
       and hvert_hp: "\<forall>i<n. \<forall>k<n. cross2 (vx k - vx i, vy k - vy i)
           (vx (Suc i mod n) - vx i, vy (Suc i mod n) - vy i) \<le> 0"
+      and hstrict_hp: "\<forall>i<n. \<forall>k<n. k \<noteq> i \<longrightarrow> k \<noteq> Suc i mod n \<longrightarrow>
+          cross2 (vx k - vx i, vy k - vy i)
+              (vx (Suc i mod n) - vx i, vy (Suc i mod n) - vy i) < 0"
   shows "\<exists>\<psi>.
     top1_homeomorphism_on P
         (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P)
@@ -3095,13 +3098,10 @@ lemma polygon_homeomorphic_to_disk_with_boundary:
         (subspace_topology top1_B2 top1_B2_topology (top1_B2 - top1_S1))
         \<psi>"
 proof -
-  \<comment> \<open>Derive hno_collinear from hccw + hvert_hp (non-adjacent collinear vertices
-     would cause some D_k = 0, contradicting CCW).\<close>
+  \<comment> \<open>Derive hno_collinear from strict half-plane condition.\<close>
   have hno_collinear: "\<forall>i<n. \<forall>j<n. j \<noteq> i \<longrightarrow> Suc i mod n \<noteq> j \<longrightarrow>
       PolygonDisk.cross2 (vx j - vx i, vy j - vy i) (vx (Suc i mod n) - vx i, vy (Suc i mod n) - vy i) \<noteq> 0"
-    using ccw_polygon_no_collinear[OF assms(2) hccw]
-      convex_polygon_vertex_half_plane[OF assms(2) hP_hull hverts_in hccw]
-    by (by100 blast)
+    using hstrict_hp unfolding cross2_def PolygonDisk.cross2_def by (by5000 force)
   have hvert_hp': "\<forall>i<n. \<forall>k<n. PolygonDisk.cross2 (vx k - vx i, vy k - vy i)
       (vx (Suc i mod n) - vx i, vy (Suc i mod n) - vy i) \<le> 0"
     using hvert_hp unfolding cross2_def PolygonDisk.cross2_def by (by100 simp)
@@ -3904,7 +3904,11 @@ proof -
         let cx = (\<Sum>j<length scheme. vx j) / real (length scheme);
             cy = (\<Sum>j<length scheme. vy j) / real (length scheme)
         in (vx i - cx) * (vy (Suc i mod length scheme) - cy)
-         - (vy i - cy) * (vx (Suc i mod length scheme) - cx) > 0"
+         - (vy i - cy) * (vx (Suc i mod length scheme) - cx) > 0" and
+    hstrict_hp: "\<forall>i<length scheme. \<forall>k<length scheme.
+        k \<noteq> i \<longrightarrow> k \<noteq> Suc i mod length scheme \<longrightarrow>
+        (vx k - vx i) * (vy (Suc i mod length scheme) - vy i)
+        - (vy k - vy i) * (vx (Suc i mod length scheme) - vx i) < 0"
     using assms(1)[unfolded top1_quotient_of_scheme_on_def] assms(2)
     by (elim conjE exE) (rule that, assumption+)
   \<comment> \<open>Step 2: Get homeomorphism \<psi>: P \<rightarrow> B^2 with boundary correspondence.\<close>
@@ -3919,9 +3923,28 @@ proof -
       cross2 (vx k - vx i, vy k - vy i)
           (vx (Suc i mod length scheme) - vx i,
            vy (Suc i mod length scheme) - vy i) \<le> 0"
-    using convex_polygon_vertex_half_plane[OF hlen3 hP_hull hverts hccw_extract]
-      unfolding cross2_def PolygonDisk.cross2_def by (by100 simp)
-  from polygon_homeomorphic_to_disk_with_boundary[OF hP hlen3 hverts hP_hull hccw_extract hvert_hp]
+  proof (intro allI impI)
+    fix i k :: nat assume hi: "i < length scheme" and hk: "k < length scheme"
+    show "cross2 (vx k - vx i, vy k - vy i)
+        (vx (Suc i mod length scheme) - vx i, vy (Suc i mod length scheme) - vy i) \<le> 0"
+    proof (cases "k = i \<or> k = Suc i mod length scheme")
+      case True thus ?thesis unfolding cross2_def by (by100 force)
+    next
+      case False
+      hence "k \<noteq> i" "k \<noteq> Suc i mod length scheme" by (by100 blast)+
+      have "(vx k - vx i) * (vy (Suc i mod length scheme) - vy i)
+          - (vy k - vy i) * (vx (Suc i mod length scheme) - vx i) < 0"
+        using hstrict_hp \<open>k \<noteq> i\<close> \<open>k \<noteq> Suc i mod length scheme\<close> hi hk by (by5000 blast)
+      hence "(vx k - vx i) * (vy (Suc i mod length scheme) - vy i)
+          - (vy k - vy i) * (vx (Suc i mod length scheme) - vx i) \<le> 0" by (by100 linarith)
+      thus ?thesis unfolding cross2_def by (by100 simp)
+    qed
+  qed
+  have hstrict_hp': "\<forall>i<length scheme. \<forall>k<length scheme. k \<noteq> i \<longrightarrow> k \<noteq> Suc i mod length scheme \<longrightarrow>
+      cross2 (vx k - vx i, vy k - vy i)
+          (vx (Suc i mod length scheme) - vx i, vy (Suc i mod length scheme) - vy i) < 0"
+    using hstrict_hp unfolding cross2_def by (by100 force)
+  from polygon_homeomorphic_to_disk_with_boundary[OF hP hlen3 hverts hP_hull hccw_extract hvert_hp hstrict_hp']
   obtain \<psi> where h\<psi>: "top1_homeomorphism_on P ?TP top1_B2 top1_B2_topology \<psi>"
       and h\<psi>_bd: "\<psi> ` (\<Union>i<length scheme. {((1-t) * vx i + t * vx (Suc i mod length scheme),
                      (1-t) * vy i + t * vy (Suc i mod length scheme)) | t. t \<in> I_set})

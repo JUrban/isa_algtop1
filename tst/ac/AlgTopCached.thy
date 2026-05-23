@@ -31331,7 +31331,13 @@ definition top1_quotient_of_scheme_on ::
       \<and> (\<forall>i<length scheme. let cx = (\<Sum>j<length scheme. vx j) / real (length scheme);
                                cy = (\<Sum>j<length scheme. vy j) / real (length scheme)
            in (vx i - cx) * (vy (Suc i mod length scheme) - cy)
-            - (vy i - cy) * (vx (Suc i mod length scheme) - cx) > 0))"
+            - (vy i - cy) * (vx (Suc i mod length scheme) - cx) > 0)
+      \<comment> \<open>Strict edge-side: non-adjacent vertices are strictly on the interior side of each edge.
+          This ensures the polygon vertices are genuine corners (not redundant subdivision points).\<close>
+      \<and> (\<forall>i<length scheme. \<forall>k<length scheme.
+            k \<noteq> i \<longrightarrow> k \<noteq> Suc i mod length scheme \<longrightarrow>
+            (vx k - vx i) * (vy (Suc i mod length scheme) - vy i)
+            - (vy k - vy i) * (vx (Suc i mod length scheme) - vx i) < 0))"
 
 text \<open>Extraction lemma: from quotient_of_scheme_on, get the polygonal region and quotient map.\<close>
 lemma quotient_of_scheme_extract:

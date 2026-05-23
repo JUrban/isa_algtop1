@@ -62,6 +62,6 @@ session AlgTop = PolygonDisk +
     AlgTop
 
 session PolygonDisk in pd = AlgTopGroups +
-  options [quick_and_dirty, timeout = 600]
+  options [timeout = 600]
   theories
     PolygonDisk
