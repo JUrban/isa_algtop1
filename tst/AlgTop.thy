@@ -6754,7 +6754,9 @@ proof -
     \<comment> \<open>\<supseteq>: if f \<in> N\_F({wp}) then \<phi> f \<in> N\_G({r}).\<close>
     have hsubset2: "top1_normal_subgroup_generated_on F mulF eF invgF {wp} \<subseteq>
         {f \<in> F. \<phi> f \<in> N}"
-      sorry
+      sorry \<comment> \<open>Group theory: iso maps normal closure to normal closure.
+         \<phi>(N\_F({wp})) = N\_G({\<phi>(wp)}) = N\_G({r}) = N.
+         So f \<in> N\_F({wp}) implies \<phi> f \<in> \<phi>(N\_F({wp})) = N.\<close>
     have "{f \<in> F. \<phi> f \<in> N} = top1_normal_subgroup_generated_on F mulF eF invgF {wp}"
       using hsubset1 hsubset2 by (by100 blast)
     thus ?thesis using hcomp_ker hN_eq hrel_word unfolding wp_def by (by100 simp)
