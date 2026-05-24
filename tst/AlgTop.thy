@@ -9236,14 +9236,98 @@ lemma finite_wedge_pi1_free_with_chosen_loops:
               (top1_fundamental_group_mul V (subspace_topology X TX V) p) \<Phi>2
           \<and> (\<forall>j\<in>{1..<n}. \<Phi>2 (\<eta>2 j) = {l. top1_loop_equiv_on V (subspace_topology X TX V) p
               (\<lambda>t. g j (cos (2*pi*t), sin (2*pi*t))) l})"
-          sorry \<comment> \<open>Same pattern as hU\_free:
-             1. hX'\_free: G2, \<eta>2', \<Phi>2' iso to \<pi>\_1(X') with gen corr for g'(j) loops.
-             2. Theorem\_58\_3\_explicit[OF hV\_retract ...]: incl\_V is explicit iso X' \<hookrightarrow> V.
-             3. Compose \<Phi>2 = incl\_V \<circ> \<Phi>2' via group\_iso\_on\_compose.
-             4. Gen: incl\_V sends [g'(j)\<circ>std\_loop]\_{X'} to [g'(j)\<circ>std\_loop]\_V
-                by subspace\_inclusion\_induced\_class.
-             5. Re-index: g'(j) = g(j+1), so for k \<in> {1..<n}: g(k) = g'(k-1).
-                Define \<eta>2(k) = \<eta>2'(k-1). Free basis re-indexed from {..<n-1} to {1..<n}.\<close>
+        proof -
+          \<comment> \<open>Step 1: Extract from hX'\_free.\<close>
+          from hX'_free obtain G2 :: "int set" and mul2 e2 invg2
+              and \<eta>2' :: "nat \<Rightarrow> int" and \<Phi>2' where
+            hG2_all: "top1_is_free_group_full_on G2 mul2 e2 invg2 \<eta>2' {..<n-1}
+            \<and> top1_group_iso_on G2 mul2
+                (top1_fundamental_group_carrier X' (subspace_topology X TX X') p)
+                (top1_fundamental_group_mul X' (subspace_topology X TX X') p) \<Phi>2'
+            \<and> (\<forall>j<n-1. \<Phi>2' (\<eta>2' j) = {l. top1_loop_equiv_on X' (subspace_topology X TX X') p
+                (\<lambda>t. g' j (cos (2*pi*t), sin (2*pi*t))) l})"
+            by (by5000 auto)
+          have hG2_free': "top1_is_free_group_full_on G2 mul2 e2 invg2 \<eta>2' {..<n-1}"
+            using hG2_all by (by100 blast)
+          have h\<Phi>2'_iso: "top1_group_iso_on G2 mul2
+              (top1_fundamental_group_carrier X' (subspace_topology X TX X') p)
+              (top1_fundamental_group_mul X' (subspace_topology X TX X') p) \<Phi>2'"
+            using hG2_all by (by100 blast)
+          have h\<Phi>2'_gen: "\<forall>j<n-1. \<Phi>2' (\<eta>2' j) = {l. top1_loop_equiv_on X' (subspace_topology X TX X') p
+              (\<lambda>t. g' j (cos (2*pi*t), sin (2*pi*t))) l}"
+            using hG2_all by (by100 blast)
+          \<comment> \<open>Step 2: Explicit inclusion iso X' \<hookrightarrow> V via Theorem\_58\_3\_explicit.\<close>
+          have hX'_sub_V: "X' \<subseteq> V" unfolding X'_def V_def by (by100 blast)
+          have hX'_trans: "subspace_topology V (subspace_topology X TX V) X' = subspace_topology X TX X'"
+            using hX'_sub_V by (rule subspace_topology_trans)
+          have hp_X'_V: "p \<in> X'" unfolding X'_def using less.prems(4) hn2 by (by100 force)
+          let ?incl_V = "top1_fundamental_group_induced_on X' (subspace_topology X TX X') p V (subspace_topology X TX V) p (\<lambda>x. x)"
+          have hTX_is: "is_topology_on X TX"
+            using less.prems(1) unfolding is_topology_on_strict_def by (by100 blast)
+          have hVsub_here: "V \<subseteq> X"
+          proof -
+            have "W 0 \<subseteq> X" using hW_sub_C less.prems(4) hn_pos by (by100 force)
+            moreover have "\<forall>j\<in>{1..<n}. C j \<subseteq> X" using less.prems(4) by (by100 force)
+            ultimately show ?thesis unfolding V_def by (by100 blast)
+          qed
+          have hTV_here: "is_topology_on V (subspace_topology X TX V)"
+            by (rule subspace_topology_is_topology_on[OF hTX_is hVsub_here])
+          have hX'_incl_iso_V: "top1_group_iso_on
+              (top1_fundamental_group_carrier X' (subspace_topology X TX X') p)
+              (top1_fundamental_group_mul X' (subspace_topology X TX X') p)
+              (top1_fundamental_group_carrier V (subspace_topology X TX V) p)
+              (top1_fundamental_group_mul V (subspace_topology X TX V) p) ?incl_V"
+          proof -
+            from Theorem_58_3_explicit[OF hV_retract hTV_here hp_X'_V]
+            show ?thesis using hX'_trans by (by100 simp)
+          qed
+          \<comment> \<open>Step 3: Re-index. Define \<eta>2(k) = \<eta>2'(k-1) for k \<in> {1..<n}.\<close>
+          define \<eta>2 where "\<eta>2 k = \<eta>2' (k - 1)" for k
+          \<comment> \<open>Step 4: Compose \<Phi>2 = incl\_V \<circ> \<Phi>2'.\<close>
+          define \<Phi>2 where "\<Phi>2 = ?incl_V \<circ> \<Phi>2'"
+          \<comment> \<open>Step 5: \<Phi>2 is an iso (composition).\<close>
+          have h\<Phi>2_iso: "top1_group_iso_on G2 mul2
+              (top1_fundamental_group_carrier V (subspace_topology X TX V) p)
+              (top1_fundamental_group_mul V (subspace_topology X TX V) p) \<Phi>2"
+          proof -
+            have hG2_grp: "top1_is_group_on G2 mul2 e2 invg2"
+              using hG2_free' unfolding top1_is_free_group_full_on_def by (by100 blast)
+            have hTX_is: "is_topology_on X TX"
+              using less.prems(1) unfolding is_topology_on_strict_def by (by100 blast)
+            have hX'_sub: "X' \<subseteq> X" unfolding X'_def using less.prems(4) by (by100 force)
+            have hX'_grp: "top1_is_group_on
+                (top1_fundamental_group_carrier X' (subspace_topology X TX X') p)
+                (top1_fundamental_group_mul X' (subspace_topology X TX X') p)
+                (top1_fundamental_group_id X' (subspace_topology X TX X') p)
+                (top1_fundamental_group_invg X' (subspace_topology X TX X') p)"
+              by (rule top1_fundamental_group_is_group[OF subspace_topology_is_topology_on[OF hTX_is hX'_sub] hp_X'_V])
+            have hV_grp: "top1_is_group_on
+                (top1_fundamental_group_carrier V (subspace_topology X TX V) p)
+                (top1_fundamental_group_mul V (subspace_topology X TX V) p)
+                (top1_fundamental_group_id V (subspace_topology X TX V) p)
+                (top1_fundamental_group_invg V (subspace_topology X TX V) p)"
+            proof -
+              have "p \<in> V" unfolding V_def using hp_W hn_pos by (by100 force)
+              thus ?thesis by (rule top1_fundamental_group_is_group[OF hTV_here])
+            qed
+            show ?thesis unfolding \<Phi>2_def
+              by (rule group_iso_on_compose[OF h\<Phi>2'_iso hX'_incl_iso_V hG2_grp hX'_grp hV_grp])
+          qed
+          \<comment> \<open>Step 6: Free group re-indexed from {..<n-1} to {1..<n}.\<close>
+          have hG2_free: "top1_is_free_group_full_on G2 mul2 e2 invg2 \<eta>2 {1..<n}"
+            sorry \<comment> \<open>Re-index \<eta>2(k) = \<eta>2'(k-1). The bijection k \<mapsto> k-1 maps {1..<n} to {..<n-1}.
+               free\_group\_full on {..<n-1} with \<eta>2' transfers to {1..<n} with \<eta>2.\<close>
+          \<comment> \<open>Step 7: Generator correspondence.\<close>
+          have h\<Phi>2_gen: "\<forall>j\<in>{1..<n}. \<Phi>2 (\<eta>2 j) = {l. top1_loop_equiv_on V (subspace_topology X TX V) p
+              (\<lambda>t. g j (cos (2*pi*t), sin (2*pi*t))) l}"
+            sorry \<comment> \<open>\<Phi>2(\<eta>2 k) = incl\_V(\<Phi>2'(\<eta>2'(k-1))) = incl\_V([g'(k-1)\<circ>std\_loop]\_{X'})
+               = [g'(k-1)\<circ>std\_loop]\_V = [g(k)\<circ>std\_loop]\_V (since g'(k-1) = g(k)).
+               Inclusion preserves loop class by subspace\_inclusion\_induced\_class.\<close>
+          show ?thesis
+            apply (rule exI[of _ G2], rule exI[of _ mul2], rule exI[of _ e2],
+                   rule exI[of _ invg2], rule exI[of _ \<eta>2], rule exI[of _ \<Phi>2])
+            using hG2_free h\<Phi>2_iso h\<Phi>2_gen by (by100 blast)
+        qed
         \<comment> \<open>Step 10: Compose SvK + Theorem\_69\_2 + iso tracking.
            \<pi>_1(X) \<cong> FP(\<pi>_1(U), \<pi>_1(V)) \<cong> FP(Z, F_{n-1}) \<cong> F_n.\<close>
         \<comment> \<open>Munkres: "Our theorem now follows from Theorem 69.2."
