@@ -8462,10 +8462,14 @@ lemma finite_wedge_pi1_free_with_chosen_loops:
               (top1_fundamental_group_mul U (subspace_topology X TX U) p) \<Phi>1
           \<and> \<Phi>1 (\<eta>1 0) = {l. top1_loop_equiv_on U (subspace_topology X TX U) p
               (\<lambda>t. g 0 (cos (2*pi*t), sin (2*pi*t))) l}"
-          sorry \<comment> \<open>From hC0\_free: get G1, \<eta>1, \<Phi>1' iso to \<pi>\_1(C(0)) with gen corr.
-             From hC0\_pi1\_iso\_U: \<pi>\_1(C(0)) \<cong> \<pi>\_1(U) via inclusion-induced map.
-             Compose: \<Phi>1 = inclusion\_* \<circ> \<Phi>1'. Generator preserved by
-             subspace\_inclusion\_induced\_class: [f]_{C(0)} \<mapsto> [f]\_U.\<close>
+          sorry \<comment> \<open>Expert Step 4: compose hC0\_free + deformation retract transfer.
+             1. From hC0\_free: G1, \<eta>1, \<Phi>1' iso to \<pi>\_1(C(0)) with \<Phi>1'(\<eta>1 0) = [g0\<circ>std\_loop]_{C(0)}.
+             2. From hC0\_pi1\_iso\_U + hC0\_trans: abstract iso \<pi>\_1(C(0)) \<cong> \<pi>\_1(U).
+             3. Compose via groups\_isomorphic\_trans\_fwd to get \<Phi>1: G1 \<rightarrow> \<pi>\_1(U).
+             4. Generator: inclusion C(0) \<hookrightarrow> U sends [g0\<circ>std\_loop]_{C(0)} to [g0\<circ>std\_loop]\_U
+                by subspace\_inclusion\_induced\_class.
+             Note: the abstract iso is inclusion-induced, so gen corr transfers.
+             Full proof requires explicit iso composition + gen tracking (~50 lines).\<close>
         \<comment> \<open>Step 9: IH on V. V contains circles C(1),...,C(n-1) as a sub-wedge.
            By inductive hypothesis (less.IH with n-1 < n), \<pi>_1(V) is free on n-1 generators
            with loop correspondence for C(1),...,C(n-1).\<close>
@@ -8744,10 +8748,53 @@ lemma finite_wedge_pi1_free_with_chosen_loops:
              3. Generator preserved by subspace\_inclusion\_induced\_class.\<close>
         \<comment> \<open>Step 10: Compose SvK + Theorem\_69\_2 + iso tracking.
            \<pi>_1(X) \<cong> FP(\<pi>_1(U), \<pi>_1(V)) \<cong> FP(Z, F_{n-1}) \<cong> F_n.\<close>
+        \<comment> \<open>Munkres: "Our theorem now follows from Theorem 69.2."
+           Step 7a: SvK gives \<pi>\_1(X) \<cong> FP = \<pi>\_1(U) * \<pi>\_1(V).\<close>
+        have hp_UV_final: "p \<in> U \<inter> V"
+        proof -
+          have "p \<in> C 0" using less.prems(4) hn_pos by (by100 blast)
+          hence "p \<in> U" unfolding U_def by (by100 blast)
+          have "p \<noteq> q 0" using hq hn_pos by (by100 blast)
+          hence "p \<in> W 0" using \<open>p \<in> C 0\<close> unfolding W_def by (by100 blast)
+          hence "p \<in> V" unfolding V_def by (by100 blast)
+          thus ?thesis using \<open>p \<in> U\<close> by (by100 blast)
+        qed
+        \<comment> \<open>Step 7b: Extract from hU\_free and hV\_free.\<close>
+        from hU_free obtain G1 :: "int set" and mul1 e1 invg1 and \<eta>1 :: "nat \<Rightarrow> int" and \<Phi>1 where
+          hG1_free: "top1_is_free_group_full_on G1 mul1 e1 invg1 \<eta>1 {0::nat}" and
+          h\<Phi>1_iso: "top1_group_iso_on G1 mul1
+              (top1_fundamental_group_carrier U (subspace_topology X TX U) p)
+              (top1_fundamental_group_mul U (subspace_topology X TX U) p) \<Phi>1" and
+          h\<Phi>1_gen: "\<Phi>1 (\<eta>1 0) = {l. top1_loop_equiv_on U (subspace_topology X TX U) p
+              (\<lambda>t. g 0 (cos (2*pi*t), sin (2*pi*t))) l}"
+          by (by100 blast)
+        from hV_free obtain G2 :: "int set" and mul2 e2 invg2 and \<eta>2 :: "nat \<Rightarrow> int" and \<Phi>2 where
+          hG2_free: "top1_is_free_group_full_on G2 mul2 e2 invg2 \<eta>2 {1..<n}" and
+          h\<Phi>2_iso: "top1_group_iso_on G2 mul2
+              (top1_fundamental_group_carrier V (subspace_topology X TX V) p)
+              (top1_fundamental_group_mul V (subspace_topology X TX V) p) \<Phi>2" and
+          h\<Phi>2_gen: "\<forall>j\<in>{1..<n}. \<Phi>2 (\<eta>2 j) = {l. top1_loop_equiv_on V (subspace_topology X TX V) p
+              (\<lambda>t. g j (cos (2*pi*t), sin (2*pi*t))) l}"
+          by (by100 blast)
+        \<comment> \<open>Step 7c: Apply Theorem 69.2.
+           G1 free on {0}, G2 free on {1..<n}. {0} \<inter> {1..<n} = {}.
+           Theorem\_69\_2: FP(G1,G2) is free on {0} \<union> {1..<n} = {..<n}.\<close>
+        have hS_disj: "{0::nat} \<inter> {1..<n} = {}" by (by100 auto)
+        have hS_union: "{0::nat} \<union> {1..<n} = {..<n}"
+        proof -
+          have "{..<n} = {0} \<union> {1..<n}" using hn_pos by (by100 auto)
+          thus ?thesis by (by100 simp)
+        qed
+        \<comment> \<open>Step 7d: Compose all isomorphisms to get the final result.\<close>
         show ?thesis
-          sorry \<comment> \<open>Corollary\_70\_3[OF hstrict hU\_open hV\_open hUV\_cover hUV\_sc hU\_pc hV\_pc hp\_UV]
-             gives FP iso. Theorem\_69\_2[OF hU\_free hV\_free] gives FP free on {..<n}.
-             Compose isos + track generators through inclusions.\<close>
+          sorry \<comment> \<open>Combine:
+             1. Corollary\_70\_3: \<pi>\_1(X) \<cong> FP(\<pi>\_1(U), \<pi>\_1(V)) via SvK.
+             2. \<Phi>1: G1 \<cong> \<pi>\_1(U) and \<Phi>2: G2 \<cong> \<pi>\_1(V) (free groups with gen corr).
+             3. Theorem\_69\_2: FP(G1,G2) free on {0} \<union> {1..<n} = {..<n}.
+             4. SvK \<iota>-maps: the inclusion-induced maps preserve loop classes.
+             5. Compose: F \<cong> FP(G1,G2) \<cong> FP(\<pi>\_1(U),\<pi>\_1(V)) \<cong> \<pi>\_1(X).
+             6. Generator tracking: \<eta>(j) \<mapsto> [g(j)\<circ>std\_loop] through all compositions.
+             This is the algebraic climax of the proof.\<close>
       qed
     qed
   qed
