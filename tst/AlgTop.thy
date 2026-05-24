@@ -7874,7 +7874,69 @@ proof -
       qed
       \<comment> \<open>Step 5: Path-connectedness.\<close>
       have hU_pc: "top1_path_connected_on UV_U (subspace_topology X TX UV_U)"
-        sorry \<comment> \<open>UV\_U is union of path-connected sets sharing p.\<close>
+      proof -
+        let ?TUV_U = "subspace_topology X TX UV_U"
+        have hU_sub_X2: "UV_U \<subseteq> X"
+        proof -
+          have "C j0 \<subseteq> X" using hC_sub[OF hj0] .
+          moreover have "(\<Union>j\<in>J-{j0}. C j - {q j}) \<subseteq> X"
+            by (rule UN_least) (use hC_sub in \<open>by100 blast\<close>)
+          ultimately show ?thesis unfolding UV_U_def by (by100 blast)
+        qed
+        have hTUV_U: "is_topology_on UV_U ?TUV_U"
+          by (rule subspace_topology_is_topology_on[OF hTX hU_sub_X2])
+        let ?F = "insert (C j0) ((\<lambda>j. C j - {q j}) ` (J - {j0}))"
+        have hF_union: "UV_U = \<Union>?F" unfolding UV_U_def by (by100 blast)
+        have hF_fin: "finite ?F" using hfin by (by100 simp)
+        have hF_sub: "\<forall>A\<in>?F. A \<subseteq> UV_U" unfolding UV_U_def by (by100 blast)
+        have hF_pc: "\<forall>A\<in>?F. top1_path_connected_on A (subspace_topology UV_U ?TUV_U A)"
+        proof (intro ballI)
+          fix A assume hA: "A \<in> ?F"
+          have hA_sub_U: "A \<subseteq> UV_U" using hF_sub hA by (by5000 blast)
+          have "subspace_topology UV_U ?TUV_U A = subspace_topology X TX A"
+            by (rule subspace_topology_trans[OF hA_sub_U])
+          thus "top1_path_connected_on A (subspace_topology UV_U ?TUV_U A)"
+          proof (simp only:)
+            from hA show "top1_path_connected_on A (subspace_topology X TX A)"
+            proof
+              assume "A = C j0"
+              obtain h0 where "top1_homeomorphism_on top1_S1 top1_S1_topology
+                  (C j0) (subspace_topology X TX (C j0)) h0"
+                using hC1 hj0 by (by100 blast)
+              from circle_path_connected[OF this]
+              show ?thesis unfolding \<open>A = C j0\<close> .
+            next
+              assume "A \<in> (\<lambda>j. C j - {q j}) ` (J - {j0})"
+              then obtain j where hj: "j \<in> J" "j \<noteq> j0" "A = C j - {q j}" by (by100 blast)
+              obtain hj_h where "top1_homeomorphism_on top1_S1 top1_S1_topology
+                  (C j) (subspace_topology X TX (C j)) hj_h"
+                using hC1[rule_format, OF hj(1)] by (by100 blast)
+              have "q j \<in> C j" using hq hj by (by100 blast)
+              from circle_minus_point_path_connected[OF \<open>top1_homeomorphism_on _ _ _ _ hj_h\<close> this]
+              have "top1_path_connected_on (C j - {q j})
+                  (subspace_topology (C j) (subspace_topology X TX (C j)) (C j - {q j}))" .
+              moreover have "subspace_topology (C j) (subspace_topology X TX (C j)) (C j - {q j})
+                  = subspace_topology X TX (C j - {q j})"
+                by (rule subspace_topology_trans) (by100 blast)
+              ultimately show ?thesis unfolding hj(3) by (by100 simp)
+            qed
+          qed
+        qed
+        have hp_F: "\<forall>A\<in>?F. p \<in> A"
+        proof (intro ballI)
+          fix A assume "A \<in> ?F"
+          thus "p \<in> A"
+          proof
+            assume "A = C j0" thus ?thesis using hp_C[OF hj0] by (by100 blast)
+          next
+            assume "A \<in> (\<lambda>j. C j - {q j}) ` (J - {j0})"
+            then obtain j where "j \<in> J" "A = C j - {q j}" by (by100 blast)
+            thus ?thesis using hp_C hq by (by100 blast)
+          qed
+        qed
+        show ?thesis
+          by (rule path_connected_finite_union_common_point[OF hTUV_U hF_fin hF_sub hF_pc hp_F hF_union])
+      qed
       have hV_pc: "top1_path_connected_on UV_V (subspace_topology X TX UV_V)"
       proof -
         let ?TUV_V = "subspace_topology X TX UV_V"
