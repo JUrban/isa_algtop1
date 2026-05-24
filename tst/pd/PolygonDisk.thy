@@ -4353,7 +4353,18 @@ proof (induction n arbitrary: f rule: nat_less_induct)
         using hpw by (by100 auto)
     qed
     \<comment> \<open>Combine: f \<simeq> sub\_0 * g \<simeq> sub\_0 * foldr [sub\_1,...] const = foldr [sub\_0,...] const.\<close>
-    show ?thesis sorry \<comment> \<open>Product congruence + foldr cons decomposition.\<close>
+    \<comment> \<open>Step 1: g \<simeq> foldr [sub Suc 0,...,sub (n-1)] const (from hIH\_g + hg\_sub\_eq).\<close>
+    have hg_foldr: "top1_loop_equiv_on X TX x0 g
+        (foldr top1_path_product (map (\<lambda>k. \<lambda>s. f ((real k + s) / real n)) [Suc 0..<n])
+          (top1_constant_path x0))"
+      using hIH_g hg_sub_eq by (by100 simp)
+    \<comment> \<open>Step 2: f \<simeq> sub 0 * g (from hf\_split).\<close>
+    \<comment> \<open>Step 3: sub 0 * g \<simeq> sub 0 * foldr [...] const (product congruence on right).\<close>
+    \<comment> \<open>Step 4: = foldr [sub 0,...,sub (n-1)] const (from hfoldr\_cons).\<close>
+    \<comment> \<open>Step 5: Transitivity.\<close>
+    show ?thesis sorry \<comment> \<open>Remaining: hf\_split (loop\_split\_first) + product congruence + transitivity.
+       Product congruence needs: path\_homotopic\_product\_right.
+       Transitivity needs: top1\_loop\_equiv\_on\_trans.\<close>
   qed
 qed
 
