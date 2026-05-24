@@ -7783,11 +7783,54 @@ proof -
        Proof: lift f to R via covering map R\_to\_S1.
        The lift stays in an interval (\<alpha>, \<alpha>+1) (avoiding q).
        Straight-line homotopy in R projects to null-homotopy in S1\{q}.\<close>
+    \<comment> \<open>Lift f to R via covering map R\_to\_S1.\<close>
+    have hTS1: "is_topology_on top1_S1 top1_S1_topology"
+      using top1_S1_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
+    have hf_S1: "top1_is_loop_on top1_S1 top1_S1_topology x0 f"
+    proof -
+      \<comment> \<open>f is a loop in the subspace S1\{q}. Lift to S1 via inclusion.\<close>
+      have "top1_is_path_on ?S ?TS x0 x0 f"
+        using hf unfolding top1_is_loop_on_def by (by100 blast)
+      hence hf_cont_sub: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology ?S ?TS f"
+          and hf0: "f 0 = x0" and hf1: "f 1 = x0"
+        unfolding top1_is_path_on_def by (by100 blast)+
+      have hS_sub: "?S \<subseteq> top1_S1" by (by100 blast)
+      have hincl: "top1_continuous_map_on ?S ?TS top1_S1 top1_S1_topology (\<lambda>x. x)"
+        by (rule top1_continuous_map_on_restrict_domain_simple[OF
+              top1_continuous_map_on_id[OF hTS1, unfolded id_def] hS_sub])
+      have "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology top1_S1 top1_S1_topology ((\<lambda>x. x) \<circ> f)"
+        by (rule top1_continuous_map_on_comp[OF hf_cont_sub hincl])
+      hence "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology top1_S1 top1_S1_topology f"
+        unfolding comp_def by (by100 simp)
+      thus ?thesis unfolding top1_is_loop_on_def top1_is_path_on_def using hf0 hf1 by (by100 blast)
+    qed
+    have hf_path_S1: "top1_is_path_on top1_S1 top1_S1_topology x0 x0 f"
+      using hf_S1 unfolding top1_is_loop_on_def by (by100 blast)
+    have hx0_S1: "x0 \<in> top1_S1" using hx0 by (by100 blast)
+    have hTR: "is_topology_on (UNIV::real set) top1_open_sets"
+      by (rule top1_open_sets_is_topology_on_UNIV)
+    \<comment> \<open>Choose a lift point e0 with R\_to\_S1(e0) = x0.\<close>
+    from S1_point_to_angle[OF hx0_S1] obtain e0 :: real where he0: "top1_R_to_S1 e0 = x0"
+      by (by100 blast)
+    have he0_E: "e0 \<in> (UNIV::real set)" by (by100 blast)
+    \<comment> \<open>Path lifting: \<exists>f\<tilde>. path in R, R\_to\_S1 \<circ> f\<tilde> = f.\<close>
+    from Lemma_54_1_path_lifting[OF Theorem_53_1 he0_E he0 hf_path_S1 hTS1 hTR]
+    obtain ftilde where hft_path: "top1_is_path_on (UNIV::real set) top1_open_sets e0 (ftilde 1) ftilde"
+        and hft_lift: "\<forall>s\<in>I_set. top1_R_to_S1 (ftilde s) = f s"
+      by (by100 blast)
+    \<comment> \<open>f\<tilde> avoids \<alpha> + Z (since f avoids q = R\_to\_S1(\<alpha>)).
+       f\<tilde> is continuous and avoids a discrete set, so stays in one interval (\<alpha>+n, \<alpha>+n+1).
+       f\<tilde>(1) - f\<tilde>(0) = 0 (winding number 0, since both in same interval and difference \<in> Z).
+       Straight-line homotopy contracts f\<tilde> to constant.
+       Projection gives null-homotopy of f in S1\{q}.\<close>
     show "top1_path_homotopic_on ?S ?TS x0 x0 f (top1_constant_path x0)"
-      sorry \<comment> \<open>Covering space argument: lift f to R, straight-line null-homotopy.
-         Requires path lifting (Theorem 54.1), uniqueness of lifts, and
-         the projection of the linear homotopy stays in S1\{q}.
-         Alternatively: use R simply connected + homeomorphism S1\{q} \<cong> R.\<close>
+      sorry \<comment> \<open>From lift ftilde:
+         1. ftilde avoids \<alpha>+Z (f avoids q, periodicity)
+         2. ftilde stays in (\<alpha>+n, \<alpha>+n+1) (continuous, avoids discrete set)
+         3. ftilde(1) = ftilde(0) (winding number 0)
+         4. Linear homotopy H(s,t) = (1-t)*ftilde(s) + t*e0 contracts ftilde
+         5. R\_to\_S1 \<circ> H gives homotopy f \<sim> const in S1\{q}
+         Each step ~5-10 lines. Total ~40 lines.\<close>
   qed
 qed
 
@@ -8249,7 +8292,7 @@ proof -
         proof (intro ballI)
           fix A assume hA: "A \<in> ?F"
           \<comment> \<open>subspace of subspace = subspace of X (by trans).\<close>
-          have hA_sub_V: "A \<subseteq> UV_V" using hF_sub hA by (by100 blast)
+          have hA_sub_V: "A \<subseteq> UV_V" using hF_sub hA by (by5000 blast)
           have "subspace_topology UV_V ?TUV_V A = subspace_topology X TX A"
             by (rule subspace_topology_trans[OF hA_sub_V])
           thus "top1_path_connected_on A (subspace_topology UV_V ?TUV_V A)"
