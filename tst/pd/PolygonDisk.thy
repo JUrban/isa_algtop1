@@ -4226,7 +4226,14 @@ proof (induction n arbitrary: f rule: nat_less_induct)
       \<comment> \<open>g(0) = f(1/n) = x0, g(1) = f(1/n + (n-1)/n) = f(1) = x0.\<close>
       have hg0: "g 0 = x0" unfolding g_def using hvertex[rule_format, of 1] hn by (by100 simp)
       have hg1: "g 1 = x0"
-        sorry \<comment> \<open>g(1) = f(1/n + (n-1)/n) = f(1) = x0. Arithmetic inside f.\<close>
+      proof -
+        have "g 1 = f (1 / real n + 1 * (real n - 1) / real n)" unfolding g_def by (by100 simp)
+        moreover have "(1::real) / real n + 1 * (real n - 1) / real n = real n / real n"
+          by (simp add: field_simps)
+        moreover have "f (real n / real n) = x0"
+          using hvertex[rule_format, of n] hn by (by100 simp)
+        ultimately show ?thesis by (by100 simp)
+      qed
       \<comment> \<open>g is continuous (composition of f with affine rescaling).\<close>
       have hg_cont: "top1_continuous_map_on I_set top1_unit_interval_topology X TX g"
         sorry \<comment> \<open>f continuous + affine rescaling continuous \<Rightarrow> g continuous.\<close>
@@ -4247,7 +4254,15 @@ proof (induction n arbitrary: f rule: nat_less_induct)
             using hvertex[rule_format, of 1] hn by (by100 simp)
         next
           assume "k = 1"
-          have "g 1 = x0" sorry \<comment> \<open>g(1)=f(1/n+(n-1)/n)=f(1)=x0.\<close>
+          have "g 1 = x0"
+          proof -
+            have "g 1 = f (1 / real n + 1 * (real n - 1) / real n)" unfolding g_def by (by100 simp)
+            moreover have "(1::real) / real n + 1 * (real n - 1) / real n = real n / real n"
+              by (simp add: field_simps)
+            moreover have "f (real n / real n) = x0"
+              using hvertex[rule_format, of n] hn by (by100 simp)
+            ultimately show ?thesis by (by100 simp)
+          qed
           thus ?thesis using \<open>k = 1\<close> True by (by100 simp)
         qed
       next
