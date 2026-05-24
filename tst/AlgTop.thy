@@ -7769,10 +7769,27 @@ lemma circle_path_connected:
 
 text \<open>Helper: S1 minus a point is simply connected (homeomorphic to R).\<close>
 lemma S1_minus_point_simply_connected:
-  assumes "q \<in> top1_S1"
+  assumes hq: "q \<in> top1_S1"
   shows "top1_simply_connected_on (top1_S1 - {q}) (subspace_topology top1_S1 top1_S1_topology (top1_S1 - {q}))"
-  sorry \<comment> \<open>S1\{q} homeomorphic to R (angle parametrization). R is simply connected (top1\_R\_simply\_connected').
-     Homeomorphism preserves simply connected.\<close>
+proof -
+  let ?S = "top1_S1 - {q}" and ?TS = "subspace_topology top1_S1 top1_S1_topology (top1_S1 - {q})"
+  have hpc: "top1_path_connected_on ?S ?TS"
+    by (rule S1_minus_point_path_connected[OF hq])
+  show ?thesis unfolding top1_simply_connected_on_def
+  proof (intro conjI ballI allI impI)
+    show "top1_path_connected_on ?S ?TS" by (rule hpc)
+    fix x0 f assume hx0: "x0 \<in> ?S" and hf: "top1_is_loop_on ?S ?TS x0 f"
+    \<comment> \<open>f is a loop in S1\{q}. Need: f null-homotopic in S1\{q}.
+       Proof: lift f to R via covering map R\_to\_S1.
+       The lift stays in an interval (\<alpha>, \<alpha>+1) (avoiding q).
+       Straight-line homotopy in R projects to null-homotopy in S1\{q}.\<close>
+    show "top1_path_homotopic_on ?S ?TS x0 x0 f (top1_constant_path x0)"
+      sorry \<comment> \<open>Covering space argument: lift f to R, straight-line null-homotopy.
+         Requires path lifting (Theorem 54.1), uniqueness of lifts, and
+         the projection of the linear homotopy stays in S1\{q}.
+         Alternatively: use R simply connected + homeomorphism S1\{q} \<cong> R.\<close>
+  qed
+qed
 
 text \<open>Helper: homeomorphic image of S1 minus point is simply connected.\<close>
 lemma circle_minus_point_simply_connected:
