@@ -8273,7 +8273,27 @@ lemma finite_wedge_pi1_free_with_chosen_loops:
               have "closedin_on X TX (C j)" using hC_closed hjn by (by100 blast)
               have "W j \<subseteq> U" unfolding U_def using \<open>j \<in> {1..<n}\<close> by (by100 blast)
               have "W j = C j \<inter> U"
-                sorry \<comment> \<open>q(j) \<notin> U for j \<ge> 1 (q(j) \<in> X - U = {q(k)|k\<ge>1} only if j=k, but then q(j) \<notin> C(0) and q(j) \<notin> W(k) for k\<noteq>j).\<close>
+              proof -
+                have "q j \<notin> U"
+                proof -
+                  have "q j \<in> q ` {1..<n}" using \<open>j \<in> {1..<n}\<close> by (by100 blast)
+                  hence "q j \<in> X - U" using hXmU by (by100 simp)
+                  thus ?thesis by (by100 blast)
+                qed
+                have "C j \<subseteq> U \<union> {q j}"
+                proof
+                  fix x assume "x \<in> C j"
+                  show "x \<in> U \<union> {q j}"
+                  proof (cases "x = q j")
+                    case True thus ?thesis by (by100 blast)
+                  next
+                    case False hence "x \<in> W j" using \<open>x \<in> C j\<close> unfolding W_def by (by100 blast)
+                    hence "x \<in> U" unfolding U_def using \<open>j \<in> {1..<n}\<close> by (by100 blast)
+                    thus ?thesis by (by100 blast)
+                  qed
+                qed
+                thus ?thesis unfolding W_def using \<open>q j \<notin> U\<close> by (by100 blast)
+              qed
               thus ?thesis using \<open>A = W j\<close> iffD2[OF Theorem_17_2[OF hTX hUsub]]
                 \<open>closedin_on X TX (C j)\<close> by (by100 blast)
             qed
@@ -8287,15 +8307,42 @@ lemma finite_wedge_pi1_free_with_chosen_loops:
             proof -
               have hCij: "\<forall>i<n. \<forall>j<n. i \<noteq> j \<longrightarrow> C i \<inter> C j = {p}"
                 using less.prems(6) by (by100 force)
-              \<comment> \<open>A \<subseteq> C(iA), B \<subseteq> C(iB) with iA \<noteq> iB.\<close>
-              from hA obtain iA where hiA: "A \<subseteq> C iA" "iA < n"
-                using hW_sub_C hn_pos by (by100 force)
-              from hB obtain iB where hiB: "B \<subseteq> C iB" "iB < n"
-                using hW_sub_C hn_pos by (by100 force)
-              have "iA \<noteq> iB"
-                sorry \<comment> \<open>A \<noteq> B and they are distinct elements of F\_U, hence different indices.\<close>
-              hence "C iA \<inter> C iB = {p}" using hCij hiA(2) hiB(2) by (by100 blast)
-              thus ?thesis using hiA(1) hiB(1) by (by100 blast)
+              \<comment> \<open>Case analysis: A and B are among C(0), W(i) for i \<ge> 1.
+                 In all cases A \<subseteq> C(iA) and B \<subseteq> C(iB) with iA \<noteq> iB.\<close>
+              from hA show ?thesis
+              proof
+                assume "A = C 0"
+                from hB show ?thesis
+                proof
+                  assume "B = C 0" thus ?thesis using \<open>A = C 0\<close> \<open>A \<noteq> B\<close> by (by100 blast)
+                next
+                  assume "\<exists>j\<in>{1..<n}. B = W j"
+                  then obtain j where "j \<in> {1..<n}" "B = W j" by (by100 blast)
+                  have "A \<inter> B \<subseteq> C 0 \<inter> C j" using \<open>A = C 0\<close> \<open>B = W j\<close> hW_sub_C by (by100 blast)
+                  also have "\<dots> = {p}" using hCij hn_pos \<open>j \<in> {1..<n}\<close> by (by100 force)
+                  finally show ?thesis .
+                qed
+              next
+                assume "\<exists>i\<in>{1..<n}. A = W i"
+                then obtain i where "i \<in> {1..<n}" "A = W i" by (by100 blast)
+                from hB show ?thesis
+                proof
+                  assume "B = C 0"
+                  have "A \<inter> B \<subseteq> C i \<inter> C 0" using \<open>A = W i\<close> \<open>B = C 0\<close> hW_sub_C by (by100 blast)
+                  also have "\<dots> = {p}" using hCij hn_pos \<open>i \<in> {1..<n}\<close> by (by100 force)
+                  finally show ?thesis .
+                next
+                  assume "\<exists>j\<in>{1..<n}. B = W j"
+                  then obtain j where "j \<in> {1..<n}" "B = W j" by (by100 blast)
+                  have "i \<noteq> j"
+                  proof
+                    assume "i = j" thus False using \<open>A = W i\<close> \<open>B = W j\<close> \<open>A \<noteq> B\<close> by (by100 simp)
+                  qed
+                  have "A \<inter> B \<subseteq> C i \<inter> C j" using \<open>A = W i\<close> \<open>B = W j\<close> hW_sub_C by (by100 blast)
+                  also have "\<dots> = {p}" using hCij \<open>i \<in> {1..<n}\<close> \<open>j \<in> {1..<n}\<close> \<open>i \<noteq> j\<close> by (by100 force)
+                  finally show ?thesis .
+                qed
+              qed
             qed
           qed
           have hdr': "\<forall>A\<in>F_U - {C 0}. top1_deformation_retract_of_on A (subspace_topology U ?TU A) {p}"
