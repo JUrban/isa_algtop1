@@ -6959,7 +6959,119 @@ lemma finite_wedge_pi1_free_with_chosen_loops:
         case True
         \<comment> \<open>Base n=1: X = C(0) homeomorphic to S1. pi1(X) = Z.
            The standard loop f_0 generates. Use Theorem\_54\_5 or cached results.\<close>
-        show ?thesis sorry \<comment> \<open>Single circle: pi1(C 0) = Z with generator = circle loop.\<close>
+        \<comment> \<open>n = 1: X = C(0) \<cong> S1 via g(0). pi1(X,p) \<cong> Z.
+           Loop class = [g(0) \<circ> standard S1 loop] maps to generator 1 \<in> Z.\<close>
+        have hJ1: "{..<n} = {0::nat}" using True by auto
+        \<comment> \<open>X = C(0).\<close>
+        have hX_eq: "X = C 0" using less.prems(5) hJ1 by (by100 simp)
+        \<comment> \<open>Z is free on {0} with generator \<iota>(0) = 1.\<close>
+        let ?F = "top1_Z_group" and ?mul = "top1_Z_mul" and ?e = "top1_Z_id"
+        let ?invg = "top1_Z_invg" and ?\<eta> = "\<lambda>(_::nat). (1::int)"
+        have hZ_free: "top1_is_free_group_full_on ?F ?mul ?e ?invg ?\<eta> {0::nat}"
+          by (rule Z_is_free_on_one_generator)
+        \<comment> \<open>g(0): S1 \<rightarrow> C(0) = X is a homeomorphism.\<close>
+        have hg0_homeo: "top1_homeomorphism_on top1_S1 top1_S1_topology
+            X (subspace_topology X TX X) (g 0)"
+        proof -
+          have "0 < n" using True by (by100 simp)
+          have "top1_homeomorphism_on top1_S1 top1_S1_topology
+              (C 0) (subspace_topology X TX (C 0)) (g 0)"
+            using less.prems(7) \<open>0 < n\<close> by (by100 blast)
+          thus ?thesis using hX_eq by (by100 simp)
+        qed
+        \<comment> \<open>Transfer iso: pi1(S1,(1,0)) \<cong> Z \<Rightarrow> pi1(X,p) \<cong> Z with generator tracking.\<close>
+        \<comment> \<open>Theorem\_54\_5\_iso\_with\_generator gives phi: pi1(S1) \<cong> Z with phi([std loop]) = 1.\<close>
+        from Theorem_54_5_iso_with_generator obtain \<phi>0 where
+          h\<phi>0_iso: "top1_group_iso_on
+            (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
+            (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0)) ?F ?mul \<phi>0"
+          and h\<phi>0_gen: "\<phi>0 {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0)
+            (\<lambda>s. (cos (2*pi*s), sin (2*pi*s))) g} = (1::int)"
+          by (by100 blast)
+        \<comment> \<open>g(0)\_* : pi1(S1,(1,0)) \<rightarrow> pi1(X,p) is an isomorphism (homeomorphism induces iso).\<close>
+        \<comment> \<open>Compose: \<Phi> = \<phi>0^{-1} composed with g(0)\_*^{-1}.\<close>
+        \<comment> \<open>Actually: we need \<Phi>: Z \<rightarrow> pi1(X,p). So \<Phi> = g(0)\_* \<circ> \<phi>0^{-1}.\<close>
+        \<comment> \<open>g(0)\_*: \<pi>_1(S1,(1,0)) \<rightarrow> \<pi>_1(X,p) is an iso (homeomorphism induces iso).\<close>
+        have hTX: "is_topology_on X TX"
+          using less.prems(1) unfolding is_topology_on_strict_def by (by100 blast)
+        have hg0_base: "g 0 (1, 0) = p" using less.prems(8) True by (by100 simp)
+        have hTS1: "is_topology_on top1_S1 top1_S1_topology"
+          using top1_S1_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
+        \<comment> \<open>Subspace topology on X = full topology (X \<subseteq> X).\<close>
+        have hTX_pow: "TX \<subseteq> Pow X"
+          using less.prems(1) unfolding is_topology_on_strict_def by (by100 blast)
+        have hTX_sub: "subspace_topology X TX X = TX"
+        proof (rule set_eqI, rule iffI)
+          fix U assume "U \<in> subspace_topology X TX X"
+          then obtain V where "V \<in> TX" "U = X \<inter> V" unfolding subspace_topology_def by (by100 blast)
+          moreover have "V \<subseteq> X" using \<open>V \<in> TX\<close> hTX_pow by (by100 blast)
+          ultimately have "U = V" by (by100 blast)
+          thus "U \<in> TX" using \<open>V \<in> TX\<close> by (by100 simp)
+        next
+          fix U assume "U \<in> TX"
+          moreover have "U \<subseteq> X" using \<open>U \<in> TX\<close> hTX_pow by (by100 blast)
+          ultimately have "X \<inter> U = U" by (by100 blast)
+          thus "U \<in> subspace_topology X TX X" unfolding subspace_topology_def
+            using \<open>U \<in> TX\<close> by (by100 blast)
+        qed
+        have hg0_homeo': "top1_homeomorphism_on top1_S1 top1_S1_topology X TX (g 0)"
+          using hg0_homeo hTX_sub by (by100 simp)
+        \<comment> \<open>Homeomorphism induces isomorphism on \<pi>_1.\<close>
+        have h10_S1: "(1::real, 0::real) \<in> top1_S1" unfolding top1_S1_def by (by100 simp)
+        have hg0_iso: "top1_groups_isomorphic_on
+            (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
+            (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))
+            (top1_fundamental_group_carrier X TX p)
+            (top1_fundamental_group_mul X TX p)"
+          by (rule Corollary_52_5_homeomorphism_iso[OF hTS1 hTX hg0_homeo' h10_S1 hg0_base])
+        \<comment> \<open>Compose: Z \<cong> \<pi>_1(S1) \<cong> \<pi>_1(X). Use groups\_isomorphic\_trans.\<close>
+        have hZ_iso_X: "top1_groups_isomorphic_on ?F ?mul
+            (top1_fundamental_group_carrier X TX p) (top1_fundamental_group_mul X TX p)"
+        proof -
+          have hS1_iso_Z: "top1_groups_isomorphic_on
+              (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
+              (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0)) ?F ?mul"
+            using h\<phi>0_iso unfolding top1_groups_isomorphic_on_def by (by100 blast)
+          have hZ_grp: "top1_is_group_on ?F ?mul ?e ?invg"
+            using hZ_free unfolding top1_is_free_group_full_on_def by (by100 blast)
+          have hS1_grp: "top1_is_group_on
+              (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
+              (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))
+              (top1_fundamental_group_id top1_S1 top1_S1_topology (1, 0))
+              (top1_fundamental_group_invg top1_S1 top1_S1_topology (1, 0))"
+          proof -
+            have "(1::real, 0::real) \<in> top1_S1" unfolding top1_S1_def by (by100 simp)
+            thus ?thesis by (rule top1_fundamental_group_is_group[OF hTS1])
+          qed
+          have hZ_iso_S1: "top1_groups_isomorphic_on ?F ?mul
+              (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
+              (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))"
+            by (rule top1_groups_isomorphic_on_sym[OF hS1_iso_Z hS1_grp hZ_grp])
+          from groups_isomorphic_trans_fwd[OF hZ_iso_S1 hg0_iso]
+          show ?thesis .
+        qed
+        \<comment> \<open>Extract the iso witness \<Phi>.\<close>
+        from hZ_iso_X[unfolded top1_groups_isomorphic_on_def top1_group_iso_on_def]
+        obtain \<Phi> where h\<Phi>_hom: "top1_group_hom_on ?F ?mul
+              (top1_fundamental_group_carrier X TX p) (top1_fundamental_group_mul X TX p) \<Phi>"
+            and h\<Phi>_bij: "bij_betw \<Phi> ?F (top1_fundamental_group_carrier X TX p)"
+          by (by100 blast)
+        \<comment> \<open>Generator correspondence: \<Phi>(1) = loop\_class(0).
+           This needs: the composed iso maps 1 to [g(0) \<circ> std loop] = loop\_class(0).
+           The composition is \<Phi> = g(0)\_* \<circ> \<phi>0^{-1}. And \<phi>0^{-1}(1) = [std loop].
+           Then g(0)\_*([std loop]) = [g(0) \<circ> std loop] = loop\_class(0).\<close>
+        have h\<Phi>_gen: "\<forall>j<n. \<Phi> (?\<eta> j) = {l. top1_loop_equiv_on X TX p
+            (\<lambda>t. g j (cos (2*pi*t), sin (2*pi*t))) l}"
+          sorry \<comment> \<open>For j=0: \<Phi>(1) = loop\_class(0) by construction of composed iso.
+             Needs: g(0)\_*([std loop]) = [g(0) \<circ> std loop] and composition tracking.\<close>
+        \<comment> \<open>Package the result.\<close>
+        have h\<Phi>_iso: "top1_group_iso_on ?F ?mul
+            (top1_fundamental_group_carrier X TX p) (top1_fundamental_group_mul X TX p) \<Phi>"
+          unfolding top1_group_iso_on_def using h\<Phi>_hom h\<Phi>_bij by (by100 blast)
+        show ?thesis unfolding hJ1
+          apply (rule exI[of _ ?F], rule exI[of _ ?mul], rule exI[of _ ?e],
+                 rule exI[of _ ?invg], rule exI[of _ ?\<eta>], rule exI[of _ \<Phi>])
+          using hZ_free h\<Phi>_iso h\<Phi>_gen hJ1 by (by100 blast)
       next
         case False hence hn2: "n \<ge> 2" using hn_pos by (by100 linarith)
         \<comment> \<open>Inductive step: n \<ge> 2. Following Munkres 71.1 exactly.
