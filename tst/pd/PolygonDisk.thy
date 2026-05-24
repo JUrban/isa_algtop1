@@ -4148,10 +4148,101 @@ lemma loop_split_first:
   defines "sub0 \<equiv> (\<lambda>s. f (s / real n))"
       and "g \<equiv> (\<lambda>s. f (1 / real n + s * (real n - 1) / real n))"
   shows "top1_loop_equiv_on X TX x0 f (top1_path_product sub0 g)"
-  sorry \<comment> \<open>Proof via reparam\_path\_homotopy:
-     Define \<psi>(s) = 2s/n for s \<le> 1/2, \<psi>(s) = 1/n + (2s-1)*(n-1)/n for s > 1/2.
-     Then sub0 * g = f \<circ> \<psi>, f = f \<circ> id, \<psi>(0) = 0, \<psi>(1) = 1, \<psi> continuous.
-     By reparam\_path\_homotopy: f \<circ> id \<simeq> f \<circ> \<psi>, so f \<simeq> sub0 * g.\<close>
+proof -
+  have hn_pos: "real n > 0" using hn by (by100 simp)
+  have hf_cont: "top1_continuous_map_on I_set top1_unit_interval_topology X TX f"
+    using hloop unfolding top1_is_loop_on_def top1_is_path_on_def top1_unit_interval_def
+    by (by100 blast)
+  have hf_range: "\<forall>s\<in>I_set. f s \<in> X"
+    using hf_cont unfolding top1_continuous_map_on_def by (by100 blast)
+  have hf0: "f 0 = x0" using hloop unfolding top1_is_loop_on_def top1_is_path_on_def
+    by (by100 blast)
+  have hf1: "f 1 = x0" using hloop unfolding top1_is_loop_on_def top1_is_path_on_def
+    by (by100 blast)
+  \<comment> \<open>Define \<psi>: the splitting reparametrization.\<close>
+  define \<psi> where "\<psi> s = (if s \<le> 1/2 then 2*s / real n
+      else 1 / real n + (2*s - 1) * (real n - 1) / real n)" for s :: real
+  \<comment> \<open>\<psi>(0) = 0, \<psi>(1) = 1.\<close>
+  have h\<psi>0: "\<psi> 0 = 0" unfolding \<psi>_def by (by100 simp)
+  have h\<psi>1: "\<psi> 1 = 1"
+  proof -
+    have "1 / real n + (2*1 - 1) * (real n - 1) / real n = real n / real n"
+      by (simp add: field_simps)
+    thus ?thesis unfolding \<psi>_def using hn_pos by (by100 simp)
+  qed
+  \<comment> \<open>\<psi> maps I\_set to I\_set.\<close>
+  have h\<psi>_range: "\<forall>s\<in>I_set. \<psi> s \<in> I_set"
+  proof (intro ballI)
+    fix s :: real assume hs: "s \<in> I_set"
+    hence hs01: "0 \<le> s" "s \<le> 1" unfolding top1_unit_interval_def by (by100 auto)+
+    show "\<psi> s \<in> I_set" unfolding top1_unit_interval_def
+    proof (cases "s \<le> 1/2")
+      case True
+      hence "\<psi> s = 2*s / real n" unfolding \<psi>_def by (by100 simp)
+      moreover have "0 \<le> 2*s / real n" using hs01 hn_pos by (by100 simp)
+      moreover have "2*s / real n \<le> 1" using True hn by (by100 simp)
+      ultimately show "\<psi> s \<in> {0..1}" by (by100 auto)
+    next
+      case False
+      hence hs_gt: "s > 1/2" by (by100 simp)
+      hence "\<psi> s = 1/real n + (2*s-1)*(real n-1)/real n" unfolding \<psi>_def by (by100 simp)
+      moreover have "0 \<le> 1/real n + (2*s-1)*(real n-1)/real n"
+        using hs01 hs_gt hn_pos by (by100 simp)
+      moreover have "1/real n + (2*s-1)*(real n-1)/real n \<le> 1"
+      proof -
+        have "(2*s-1) \<le> 1" using hs01 by (by100 linarith)
+        hence "(2*s-1)*(real n-1)/real n \<le> 1*(real n-1)/real n"
+          using hn by (intro divide_right_mono mult_right_mono) (by100 simp)+
+        also have "1*(real n-1)/real n = (real n - 1)/real n" by (by100 simp)
+        finally have "(2*s-1)*(real n-1)/real n \<le> (real n-1)/real n" .
+        moreover have "1/real n + (real n-1)/real n = real n / real n"
+          by (simp add: field_simps)
+        moreover have "real n / real n = 1" using hn_pos by (by100 simp)
+        ultimately show ?thesis by (by100 linarith)
+      qed
+      ultimately show "\<psi> s \<in> {0..1}" by (by100 auto)
+    qed
+  qed
+  \<comment> \<open>\<psi> is continuous on I\_set.\<close>
+  have h\<psi>_cont: "top1_continuous_map_on I_set top1_unit_interval_topology
+      I_set top1_unit_interval_topology \<psi>"
+    sorry \<comment> \<open>Piecewise linear, continuous at junction s=1/2 (both sides give 1/n).\<close>
+  \<comment> \<open>id is continuous on I\_set.\<close>
+  have hid_cont: "top1_continuous_map_on I_set top1_unit_interval_topology
+      I_set top1_unit_interval_topology id"
+    sorry
+  \<comment> \<open>f \<circ> \<psi> = sub0 * g (pointwise on I\_set).\<close>
+  have hf_psi_eq: "\<forall>s\<in>I_set. (f \<circ> \<psi>) s = top1_path_product sub0 g s"
+  proof (intro ballI)
+    fix s :: real assume hs: "s \<in> I_set"
+    show "(f \<circ> \<psi>) s = top1_path_product sub0 g s"
+      unfolding \<psi>_def top1_path_product_def sub0_def g_def comp_def by (by100 simp)
+  qed
+  \<comment> \<open>Subspace topology X TX X = TX.\<close>
+  have hX_sub: "is_topology_on X (subspace_topology X TX X)"
+    using subspace_topology_is_topology_on[OF htop] by (by100 blast)
+  \<comment> \<open>Apply reparam\_path\_homotopy.\<close>
+  have h0_I: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 auto)
+  have h1_I: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 auto)
+  have hreparam: "top1_path_homotopic_on X (subspace_topology X TX X)
+      (f 0) (f 1) (f \<circ> id) (f \<circ> \<psi>)"
+    using reparam_path_homotopy[OF htop hf_cont hf_range _ hX_sub
+        hid_cont h\<psi>_cont _ _ _ _ h0_I h1_I] h\<psi>0 h\<psi>1
+    by (by100 simp)
+  \<comment> \<open>f \<circ> id = f.\<close>
+  have hf_id: "f \<circ> id = f" by (by100 simp)
+  \<comment> \<open>Convert: path\_homotopic f (f \<circ> \<psi>) in subspace X.
+     Since subspace X TX X = TX, this gives path\_homotopic in (X, TX).
+     And f \<circ> \<psi> = sub0 * g pointwise, so path\_homotopic f (sub0 * g).\<close>
+  have hpath_homot: "top1_path_homotopic_on X TX x0 x0 f (top1_path_product sub0 g)"
+    sorry \<comment> \<open>From hreparam + hf\_id + hf\_psi\_eq + hX\_sub\_eq + hf0 + hf1.\<close>
+  \<comment> \<open>Convert path\_homotopic to loop\_equiv.\<close>
+  have hsub0_g_loop: "top1_is_loop_on X TX x0 (top1_path_product sub0 g)"
+    sorry \<comment> \<open>sub0 is a path x0 \<rightarrow> f(1/n) = x0, g is a path x0 \<rightarrow> x0.
+       Product of loops is a loop.\<close>
+  show ?thesis unfolding top1_loop_equiv_on_def
+    using hloop hsub0_g_loop hpath_homot by (by100 blast)
+qed
 
 text \<open>Inductive helper: loop split at multiple vertices by induction on n.
   Proves: f \<simeq> foldr [sub\_0,...,sub\_{n-1}] const, where sub\_k(s) = f((k+s)/n).\<close>
