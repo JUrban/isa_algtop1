@@ -54,10 +54,15 @@ session AlgTopGroups in ag = K5 +
   theories
     AlgTopGroups
 
-session AlgTop = PolygonDisk +
-  options [quick_and_dirty, timeout = 600]
+session AlgTopSvK in svk = PolygonDisk +
+  options [timeout = 600]
   sessions
     AlgTopGroups
+  theories
+    AlgTopSvK
+
+session AlgTop = AlgTopSvK +
+  options [quick_and_dirty, timeout = 600]
   theories
     AlgTop
 
