@@ -7729,6 +7729,17 @@ proof -
     \<comment> \<open>Construct \<phi>: F \<rightarrow> \<pi>_1(A,a') mapping \<iota>F(s) \<rightarrow> [edge\_loop for label s].
        Munkres: "choose an edge oriented counterclockwise, let g_i = \<pi> \<circ> f_i.
        Then g_1,...,g_k represent free generators for \<pi>_1(A,x_0)."\<close>
+    \<comment> \<open>Re-define i\_of at this scope: canonical True-direction edge index for each label.\<close>
+    define i_of where "i_of \<alpha> = (SOME i. i < length scheme \<and> fst (scheme!i) = \<alpha> \<and> snd (scheme!i) = True)" for \<alpha>
+    have hi_of: "\<And>\<alpha>. \<alpha> \<in> fst ` set scheme \<Longrightarrow>
+        i_of \<alpha> < length scheme \<and> fst (scheme!(i_of \<alpha>)) = \<alpha> \<and> snd (scheme!(i_of \<alpha>)) = True"
+    proof -
+      fix \<alpha> assume h\<alpha>: "\<alpha> \<in> fst ` set scheme"
+      have "\<exists>i. i < length scheme \<and> fst (scheme!i) = \<alpha> \<and> snd (scheme!i) = True"
+        using htrue_dir h\<alpha> by (by100 blast)
+      thus "i_of \<alpha> < length scheme \<and> fst (scheme!(i_of \<alpha>)) = \<alpha> \<and> snd (scheme!(i_of \<alpha>)) = True"
+        unfolding i_of_def by (rule someI_ex)
+    qed
     define edge_loop_class where "edge_loop_class s =
         {g. top1_loop_equiv_on A (subspace_topology X TX A) a'
           (\<lambda>t. qC ((1-t) * vxC (i_of s) + t * vxC (Suc (i_of s) mod length scheme),
@@ -7736,7 +7747,88 @@ proof -
       for s :: nat
     have hedge_class_in: "\<forall>s\<in>fst ` set scheme.
         edge_loop_class s \<in> top1_fundamental_group_carrier A (subspace_topology X TX A) a'"
-      sorry \<comment> \<open>edge\_loop\_class s is a loop class, hence in \<pi>_1 carrier.\<close>
+    proof (intro ballI)
+      fix s assume hs: "s \<in> fst ` set scheme"
+      let ?i = "i_of s"
+      have hi: "?i < length scheme" "fst (scheme!?i) = s" "snd (scheme!?i) = True"
+        using hi_of[OF hs] by (by100 blast)+
+      define el where "el t = qC ((1-t) * vxC ?i + t * vxC (Suc ?i mod length scheme),
+          (1-t) * vyC ?i + t * vyC (Suc ?i mod length scheme))" for t
+      have hel_loop: "top1_is_loop_on A (subspace_topology X TX A) a' el"
+      proof -
+        have hel0: "el 0 = a'"
+        proof -
+          have "el 0 = qC (vxC ?i, vyC ?i)" unfolding el_def by (by100 simp)
+          also have "\<dots> = qC (vxC 0, vyC 0)"
+          proof -
+            have "0 < length scheme" using hlen by (by100 linarith)
+            thus ?thesis using hvert_C[rule_format, OF hi(1) \<open>0 < length scheme\<close>] by (by100 simp)
+          qed
+          also have "\<dots> = a" using ha_eq by (by100 simp)
+          finally show ?thesis
+          proof -
+            assume ha_val: "el 0 = a"
+            have "h (1, 0) = qC (vxC 0, vyC 0)"
+            proof -
+              have "0 < length scheme" using hlen by (by100 linarith)
+              moreover have "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 auto)
+              ultimately have "h (cos (2*pi*(real 0+0)/real (length scheme)),
+                  sin (2*pi*(real 0+0)/real (length scheme)))
+                = qC ((1-0)*vxC 0 + 0*vxC (Suc 0 mod length scheme),
+                       (1-0)*vyC 0 + 0*vyC (Suc 0 mod length scheme))"
+                using hh_edge_arc by (by100 blast)
+              thus ?thesis by (by100 simp)
+            qed
+            thus ?thesis unfolding a'_def using ha_val ha_eq by (by100 simp)
+          qed
+        qed
+        have hel1: "el 1 = a'"
+        proof -
+          have hn_pos: "length scheme > 0" using hlen by (by100 linarith)
+          have hj: "Suc ?i mod length scheme < length scheme"
+            using mod_less_divisor[OF hn_pos] by (by100 simp)
+          have "el 1 = qC (vxC (Suc ?i mod length scheme), vyC (Suc ?i mod length scheme))"
+            unfolding el_def by (by100 simp)
+          also have "\<dots> = qC (vxC 0, vyC 0)"
+            using hvert_C[rule_format, OF hj] hlen by (by100 force)
+          also have "\<dots> = a" using ha_eq by (by100 simp)
+          finally show ?thesis
+          proof -
+            assume ha_val: "el 1 = a"
+            have "h (1, 0) = qC (vxC 0, vyC 0)"
+            proof -
+              have "0 < length scheme" using hlen by (by100 linarith)
+              moreover have "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 auto)
+              ultimately have "h (cos (2*pi*(real 0+0)/real (length scheme)),
+                  sin (2*pi*(real 0+0)/real (length scheme)))
+                = qC ((1-0)*vxC 0 + 0*vxC (Suc 0 mod length scheme),
+                       (1-0)*vyC 0 + 0*vyC (Suc 0 mod length scheme))"
+                using hh_edge_arc by (by100 blast)
+              thus ?thesis by (by100 simp)
+            qed
+            thus ?thesis unfolding a'_def using ha_val ha_eq by (by100 simp)
+          qed
+        qed
+        have hel_cont: "top1_continuous_map_on I_set top1_unit_interval_topology
+            A (subspace_topology X TX A) el"
+        proof -
+          have "top1_continuous_map_on I_set top1_unit_interval_topology
+              A (subspace_topology X TX A) (\<lambda>t. qC ((1-t) * vxC ?i + t * vxC (Suc ?i mod length scheme),
+                  (1-t) * vyC ?i + t * vyC (Suc ?i mod length scheme)))"
+            using hqC_edge_cont hi(1) by (by100 blast)
+          moreover have "\<And>t. qC ((1-t) * vxC ?i + t * vxC (Suc ?i mod length scheme),
+              (1-t) * vyC ?i + t * vyC (Suc ?i mod length scheme)) = el t"
+            unfolding el_def by (by100 simp)
+          ultimately show ?thesis by (by100 simp)
+        qed
+        show ?thesis unfolding top1_is_loop_on_def top1_is_path_on_def
+          using hel0 hel1 hel_cont by (by5000 blast)
+      qed
+      have "edge_loop_class s = {g. top1_loop_equiv_on A (subspace_topology X TX A) a' el g}"
+        unfolding edge_loop_class_def el_def by (by100 simp)
+      thus "edge_loop_class s \<in> top1_fundamental_group_carrier A (subspace_topology X TX A) a'"
+        unfolding top1_fundamental_group_carrier_def using hel_loop by (by100 blast)
+    qed
     from free_group_hom_exists[OF hfree hpi1_A_grp hedge_class_in]
     obtain \<phi> where
       h\<phi>_hom: "top1_group_hom_on F mulF
