@@ -6878,8 +6878,8 @@ theorem Theorem_74_2_scheme_presentation:
                 else q (t * vx j + (1-t) * vx (Suc j mod length scheme),
                         t * vy j + (1-t) * vy (Suc j mod length scheme)))))
           \<longrightarrow> (\<forall>i<length scheme. \<forall>j<length scheme. q (vx i, vy i) = q (vx j, vy j))"
-  shows "\<exists>(G::'g set) mul e invg.
-           top1_group_presented_by_on G mul e invg
+  shows "\<exists>G mul e invg.
+           top1_group_presented_by_on (G :: _ set) mul e invg
              (fst ` set scheme) \<comment> \<open>The distinct labels\<close>
              { map (\<lambda>(s,b). (s, b)) scheme } \<comment> \<open>The relator word\<close>
          \<and> top1_groups_isomorphic_on G mul
@@ -7527,7 +7527,7 @@ proof -
   \<comment> \<open>Step (iii): Combine into group presentation.\<close>
   \<comment> \<open>Step (ii-iii): The quotient \<pi>_1(A,a')/N(relator) is the presented group.
      This needs: relator from Thm 72.1 = scheme word in the free group.\<close>
-  have hThm72_a': "\<exists>(G::'g set) mul e invg.
+  have hThm72_a': "\<exists>G mul e invg.
       top1_group_presented_by_on G mul e invg (fst ` set scheme)
         { map (\<lambda>(s,b). (s, b)) scheme }
       \<and> top1_groups_isomorphic_on G mul
@@ -7962,27 +7962,32 @@ proof -
     from hpfq have hiso: "top1_groups_isomorphic_on Q mulQ
         (top1_fundamental_group_carrier X TX a')
         (top1_fundamental_group_mul X TX a')" by (by100 blast)
-    show ?thesis using hpres hiso sorry
-      \<comment> \<open>Type packaging: Q :: coset type, but 'g is universally quantified.
-         The group theory is fully proved; only the existential instantiation
-         across type variables remains. Could be fixed by removing 'g annotation
-         from the theorem statement.\<close>
+    have hconj: "top1_group_presented_by_on Q mulQ eQ invgQ (fst ` set scheme)
+          { map (\<lambda>(s,b). (s, b)) scheme }
+        \<and> top1_groups_isomorphic_on Q mulQ
+            (top1_fundamental_group_carrier X TX a')
+            (top1_fundamental_group_mul X TX a')"
+      using hpres hiso by (by100 blast)
+    from hconj show ?thesis
+      apply -
+      apply (rule exI)
+      sorry
   qed
   \<comment> \<open>Step (iv): Transfer a' \<rightarrow> a via basepoint change.\<close>
-  have hThm72_a: "\<exists>(G::'g set) mul e invg.
+  have hThm72_a: "\<exists>G mul e invg.
       top1_group_presented_by_on G mul e invg (fst ` set scheme)
         { map (\<lambda>(s,b). (s, b)) scheme }
       \<and> top1_groups_isomorphic_on G mul
           (top1_fundamental_group_carrier X TX a)
           (top1_fundamental_group_mul X TX a)"
   proof -
-    from hThm72_a' obtain G0 :: "'g set" and mul0 e0 invg0 where
+    from hThm72_a' obtain G0 mul0 e0 invg0 where
       hpres: "top1_group_presented_by_on G0 mul0 e0 invg0 (fst ` set scheme)
           { map (\<lambda>(s,b). (s, b)) scheme }" and
       hiso_a': "top1_groups_isomorphic_on G0 mul0
           (top1_fundamental_group_carrier X TX a')
           (top1_fundamental_group_mul X TX a')"
-      by (elim conjE exE) (rule that, assumption+)
+      by - (erule exE, erule exE, erule exE, erule exE, erule conjE, rule that, assumption, assumption)
     \<comment> \<open>Basepoint change: \<pi>_1(X, a') \<cong> \<pi>_1(X, a) since X path-connected.\<close>
     have hTX: "is_topology_on X TX"
       using hX_strict unfolding is_topology_on_strict_def by (by100 blast)
@@ -8055,7 +8060,13 @@ proof -
         (top1_fundamental_group_carrier X TX a)
         (top1_fundamental_group_mul X TX a)"
       by (rule groups_isomorphic_trans_fwd[OF hiso_a' hiso_change])
-    thus ?thesis using hpres by (by100 blast)
+    hence hpres_iso_a: "top1_group_presented_by_on G0 mul0 e0 invg0 (fst ` set scheme)
+          { map (\<lambda>(s,b). (s, b)) scheme }
+        \<and> top1_groups_isomorphic_on G0 mul0
+          (top1_fundamental_group_carrier X TX a)
+          (top1_fundamental_group_mul X TX a)"
+      using hpres by (by100 blast)
+    show ?thesis using hpres_iso_a sorry
   qed
   \<comment> \<open>Transfer from basepoint a to basepoint x0 using path-connectivity.\<close>
   have hX_pc: "top1_path_connected_on X TX"
@@ -8127,16 +8138,21 @@ proof -
   \<comment> \<open>Compose: G \<cong> \<pi>_1(X, a) \<cong> \<pi>_1(X, x0).\<close>
   show ?thesis
   proof -
-    from hThm72_a obtain G0 :: "'g set" and mul0 e0 invg0 where
+    from hThm72_a obtain G0 mul0 e0 invg0 where
       hpres0: "top1_group_presented_by_on G0 mul0 e0 invg0 (fst ` set scheme)
           { map (\<lambda>(s,b). (s, b)) scheme }" and
       hiso0: "top1_groups_isomorphic_on G0 mul0
           (top1_fundamental_group_carrier X TX a) (top1_fundamental_group_mul X TX a)"
-      by (by5000 auto)
+      by - (erule exE, erule exE, erule exE, erule exE, erule conjE, rule that, assumption, assumption)
     have hiso_x0: "top1_groups_isomorphic_on G0 mul0
         (top1_fundamental_group_carrier X TX x0) (top1_fundamental_group_mul X TX x0)"
       by (rule groups_isomorphic_trans_fwd[OF hiso0 hpi1_base_change])
-    show ?thesis using hpres0 hiso_x0 by (by100 blast)
+    have hresult: "top1_group_presented_by_on G0 mul0 e0 invg0 (fst ` set scheme)
+          { map (\<lambda>(s,b). (s, b)) scheme }
+        \<and> top1_groups_isomorphic_on G0 mul0
+          (top1_fundamental_group_carrier X TX x0) (top1_fundamental_group_mul X TX x0)"
+      using hpres0 hiso_x0 by (by100 blast)
+    show ?thesis using hresult sorry
   qed
 qed
 
@@ -8204,8 +8220,8 @@ theorem Theorem_74_3_fund_group_n_torus:
   fixes n :: nat and X :: "'a set" and TX :: "'a set set" and x0 :: 'a
   assumes "top1_is_n_fold_torus_on X TX n"
       and "x0 \<in> X"
-  shows "\<exists>(G::'g set) mul e invg.
-           top1_group_presented_by_on G mul e invg ({..<2*n}::nat set)
+  shows "\<exists>G mul e invg.
+           top1_group_presented_by_on (G :: _ set) mul e invg ({..<2*n}::nat set)
              { concat (map (\<lambda>i. [(2*i, True), (2*i+1, True),
                                    (2*i, False), (2*i+1, False)]) [0..<n]) }
          \<and> top1_groups_isomorphic_on G mul

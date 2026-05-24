@@ -4172,7 +4172,10 @@ proof -
   \<comment> \<open>Use reparam\_path\_homotopy: the reparametrization that maps
      the binary product timing to the linear timing gives homotopy.\<close>
   show ?thesis
-    sorry
+    sorry \<comment> \<open>Reparametrization homotopy: f ≃ foldr product.
+       Proof strategy: induction on n using reparam_path_homotopy.
+       Base n=1: right identity (Theorem 51.2).
+       Step n+1: split at 1/(n+1), apply IH to remaining n loops.\<close>
 qed
 
 end
