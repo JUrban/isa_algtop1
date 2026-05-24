@@ -6847,6 +6847,9 @@ lemma map_map_pair_compose:
      = map (\<lambda>(s, b). (f (g s), b)) ws"
   by (induct ws) auto
 
+lemma exI4: "P a b c d \<Longrightarrow> \<exists>x y z w. P x y z w"
+  by (by100 blast)
+
 theorem Theorem_74_2_scheme_presentation:
   fixes X :: "'a set" and TX :: "'a set set" and x0 :: 'a
     and scheme :: "(nat \<times> bool) list"
@@ -7968,10 +7971,9 @@ proof -
             (top1_fundamental_group_carrier X TX a')
             (top1_fundamental_group_mul X TX a')"
       using hpres hiso by (by100 blast)
-    from hconj show ?thesis
-      apply -
-      apply (rule exI)
-      sorry
+    from hconj show ?thesis sorry
+      \<comment> \<open>Type packaging: 'have' fixes type variables, preventing exI unification.
+         Fix: restructure to prove theorem conclusion directly (not via intermediate have).\<close>
   qed
   \<comment> \<open>Step (iv): Transfer a' \<rightarrow> a via basepoint change.\<close>
   have hThm72_a: "\<exists>G mul e invg.
