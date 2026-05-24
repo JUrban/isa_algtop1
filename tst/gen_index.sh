@@ -20,6 +20,8 @@ THEORIES=(
   fi/AlgIsoFixed.thy
   k5/K5_nonplanar.thy
   ag/AlgTopGroups.thy
+  pd/PolygonDisk.thy
+  svk/AlgTopSvK.thy
   AlgTop.thy
 )
 
