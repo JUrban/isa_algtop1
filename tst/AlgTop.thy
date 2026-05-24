@@ -7694,7 +7694,10 @@ lemma finite_wedge_pi1_free_with_chosen_loops:
             moreover have "(g j) ` top1_S1 = C j" using hg_img by (by100 simp)
             moreover have "subspace_topology (C j) (subspace_topology X TX (C j)) (C j)
                 = subspace_topology X TX (C j)"
-              sorry \<comment> \<open>subspace\_topology A TA A = TA when TA = subspace X TX A.\<close>
+            proof (rule subspace_topology_self)
+              show "\<forall>U\<in>subspace_topology X TX (C j). U \<subseteq> C j"
+                unfolding subspace_topology_def by (by100 blast)
+            qed
             ultimately show ?thesis by (by100 simp)
           qed
           have "C j \<subseteq> X" using less.prems(4) hj by (by100 blast)
@@ -8401,7 +8404,17 @@ lemma finite_wedge_pi1_free_with_chosen_loops:
                   using hC_closed by (by100 force)
                 moreover have "X' = (\<Union>j\<in>{1..<n}. C j)" unfolding X'_def ..
                 ultimately show ?thesis
-                  sorry \<comment> \<open>Finite union of closed sets is closed.\<close>
+                proof -
+                  assume hcl: "\<forall>j\<in>{1..<n}. closedin_on X TX (C j)" and hX'eq: "X' = (\<Union>j\<in>{1..<n}. C j)"
+                  have "\<forall>A\<in>C ` {1..<n}. closedin_on X TX A" using hcl by (by100 blast)
+                  moreover have "finite (C ` {1..<n})" by (by100 simp)
+                  have hTXh: "is_topology_on X TX"
+                    using less.prems(1) unfolding is_topology_on_strict_def by (by100 blast)
+                  ultimately have "closedin_on X TX (\<Union>(C ` {1..<n}))"
+                    using closedin_on_finite_Union[OF hTXh, of "C ` {1..<n}"] by (by100 blast)
+                  moreover have "(\<Union>(C ` {1..<n})) = X'" using hX'eq by (by100 auto)
+                  ultimately show ?thesis by (by100 simp)
+                qed
               qed
               have "X' \<subseteq> V" unfolding X'_def V_def by (by100 blast)
               hence "X' = X' \<inter> V" by (by100 blast)
@@ -8412,7 +8425,23 @@ lemma finite_wedge_pi1_free_with_chosen_loops:
               have "closedin_on X TX (C 0)" using hC_closed hn_pos by (by100 blast)
               have "W 0 \<subseteq> V" unfolding V_def by (by100 blast)
               have "W 0 = C 0 \<inter> V"
-                sorry \<comment> \<open>q(0) \<notin> V (since X - V = {q(0)}).\<close>
+              proof -
+                have "q 0 \<notin> V" using hXmV by (by100 blast)
+                \<comment> \<open>C(0) \<subseteq> V \<union> {q 0}: V = W(0) \<union> ... and W(0) = C(0) - {q(0)}.\<close>
+                have "C 0 \<subseteq> V \<union> {q 0}"
+                proof
+                  fix x assume "x \<in> C 0"
+                  show "x \<in> V \<union> {q 0}"
+                  proof (cases "x = q 0")
+                    case True thus ?thesis by (by100 blast)
+                  next
+                    case False hence "x \<in> W 0" using \<open>x \<in> C 0\<close> unfolding W_def by (by100 blast)
+                    hence "x \<in> V" unfolding V_def by (by100 blast)
+                    thus ?thesis by (by100 blast)
+                  qed
+                qed
+                thus ?thesis unfolding W_def using \<open>q 0 \<notin> V\<close> by (by100 blast)
+              qed
               thus ?thesis using \<open>A = W 0\<close> iffD2[OF Theorem_17_2[OF hTX hVsub]]
                 \<open>closedin_on X TX (C 0)\<close> by (by100 blast)
             qed
