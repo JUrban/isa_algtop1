@@ -7823,14 +7823,76 @@ proof -
        f\<tilde>(1) - f\<tilde>(0) = 0 (winding number 0, since both in same interval and difference \<in> Z).
        Straight-line homotopy contracts f\<tilde> to constant.
        Projection gives null-homotopy of f in S1\{q}.\<close>
+    \<comment> \<open>Step 1: ftilde avoids \<alpha>+Z.\<close>
+    from S1_point_to_angle[OF hq] obtain \<alpha> where h\<alpha>: "top1_R_to_S1 \<alpha> = q" by (by100 blast)
+    have hft_avoids: "\<forall>s\<in>I_set. \<forall>n::int. ftilde s \<noteq> \<alpha> + of_int n"
+    proof (intro ballI allI)
+      fix s :: real and n :: int assume hs: "s \<in> I_set"
+      show "ftilde s \<noteq> \<alpha> + of_int n"
+      proof
+        assume "ftilde s = \<alpha> + of_int n"
+        hence "top1_R_to_S1 (ftilde s) = top1_R_to_S1 (\<alpha> + of_int n)" by (by100 simp)
+        also have "\<dots> = top1_R_to_S1 \<alpha>" by (rule top1_R_to_S1_int_shift_early)
+        also have "\<dots> = q" using h\<alpha> .
+        finally have "f s = q" using hft_lift hs by (by100 simp)
+        \<comment> \<open>But f maps into S1\{q}, so f s \<noteq> q.\<close>
+        moreover have "f s \<in> ?S"
+          using hf hs unfolding top1_is_loop_on_def top1_is_path_on_def top1_continuous_map_on_def
+          by (by5000 blast)
+        ultimately show False by (by100 blast)
+      qed
+    qed
+    \<comment> \<open>Step 2: ftilde(1) = e0 (winding number 0).
+       ftilde is continuous, avoids \<alpha>+Z. ftilde(0) = e0 (from lift).
+       ftilde stays in (\<alpha>+n, \<alpha>+n+1) for some n (connected + avoids discrete set).
+       ftilde(1) - e0 \<in> Z (since R\_to\_S1(ftilde 1) = f(1) = x0 = R\_to\_S1(e0)).
+       But ftilde(1) and e0 are in the same interval, so ftilde(1) - e0 \<in> Z \<inter> (-1,1) = {0}.\<close>
+    have hft0: "ftilde 0 = e0"
+      using hft_path unfolding top1_is_path_on_def by (by100 blast)
+    have hft1_eq: "ftilde 1 = e0"
+    proof -
+      \<comment> \<open>R\_to\_S1(ftilde 1) = f(1) = x0 = R\_to\_S1(e0).\<close>
+      have h1_I: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 auto)
+      have "top1_R_to_S1 (ftilde 1) = f 1" using hft_lift h1_I by (by100 blast)
+      also have "f 1 = x0" using hf_S1 unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+      also have "\<dots> = top1_R_to_S1 e0" using he0 by (by100 simp)
+      finally have hRS1_eq: "top1_R_to_S1 (ftilde 1) = top1_R_to_S1 e0" .
+      \<comment> \<open>ftilde(1) - e0 \<in> Z (from cos\_sin\_eq\_imp).\<close>
+      have "cos (2 * pi * (ftilde 1)) = cos (2 * pi * e0)
+          \<and> sin (2 * pi * (ftilde 1)) = sin (2 * pi * e0)"
+        using hRS1_eq unfolding top1_R_to_S1_def by (by100 auto)
+      from cos_sin_eq_imp[OF conjunct1[OF this] conjunct2[OF this]]
+      obtain k :: int where hk: "2 * pi * (ftilde 1) - 2 * pi * e0 = real_of_int k * 2 * pi"
+        by (by100 blast)
+      have "2 * pi * ((ftilde 1) - e0) = 2 * pi * real_of_int k"
+        using hk by (simp add: algebra_simps)
+      hence hft1_diff: "ftilde 1 - e0 = real_of_int k"
+      proof -
+        assume h2pi: "2 * pi * (ftilde 1 - e0) = 2 * pi * real_of_int k"
+        have "(2 * pi) * (ftilde 1 - e0 - real_of_int k) = 0"
+          using h2pi by (simp add: algebra_simps)
+        thus "ftilde 1 - e0 = real_of_int k" using pi_gt_zero by (by100 simp)
+      qed
+      \<comment> \<open>ftilde continuous, avoids \<alpha>+Z, so stays in (\<alpha>+n, \<alpha>+n+1).
+         Both e0 and ftilde(1) in the same interval \<Rightarrow> |diff| < 1 \<Rightarrow> k = 0.\<close>
+      have "k = 0"
+        sorry \<comment> \<open>ftilde continuous on I\_set, avoids \<alpha>+Z (discrete).
+           Connected image avoids discrete set \<Rightarrow> stays in one component.
+           e0 = ftilde(0) and ftilde(1) in same component \<Rightarrow> diff < 1 \<Rightarrow> k = 0.\<close>
+      thus ?thesis using hft1_diff by (by100 linarith)
+    qed
+    \<comment> \<open>Step 3: Construct null-homotopy.
+       H(s,t) = R\_to\_S1((1-t)*ftilde(s) + t*e0) is a homotopy from f to const\_x0.
+       It stays in S1\{q} because (1-t)*ftilde(s) + t*e0 stays in (\<alpha>+n, \<alpha>+n+1).\<close>
     show "top1_path_homotopic_on ?S ?TS x0 x0 f (top1_constant_path x0)"
-      sorry \<comment> \<open>From lift ftilde:
-         1. ftilde avoids \<alpha>+Z (f avoids q, periodicity)
-         2. ftilde stays in (\<alpha>+n, \<alpha>+n+1) (continuous, avoids discrete set)
-         3. ftilde(1) = ftilde(0) (winding number 0)
-         4. Linear homotopy H(s,t) = (1-t)*ftilde(s) + t*e0 contracts ftilde
-         5. R\_to\_S1 \<circ> H gives homotopy f \<sim> const in S1\{q}
-         Each step ~5-10 lines. Total ~40 lines.\<close>
+      sorry \<comment> \<open>Construct the homotopy H and verify:
+         - H(s,0) = R\_to\_S1(ftilde s) = f(s)
+         - H(s,1) = R\_to\_S1(e0) = x0 = const(s)
+         - H(0,t) = R\_to\_S1((1-t)*e0 + t*e0) = R\_to\_S1(e0) = x0
+         - H(1,t) = R\_to\_S1((1-t)*e0 + t*e0) = x0 (since ftilde(1)=e0)
+         - H continuous (R\_to\_S1 continuous, affine continuous)
+         - H range in S1\{q} (convex combination in (\<alpha>+n, \<alpha>+n+1))
+         ~20 lines of homotopy construction.\<close>
   qed
 qed
 
