@@ -4210,7 +4210,8 @@ proof -
   \<comment> \<open>id is continuous on I\_set.\<close>
   have hid_cont: "top1_continuous_map_on I_set top1_unit_interval_topology
       I_set top1_unit_interval_topology id"
-    sorry
+    unfolding top1_continuous_map_on_def top1_unit_interval_topology_def
+      subspace_topology_def by (by5000 auto)
   \<comment> \<open>f \<circ> \<psi> = sub0 * g (pointwise on I\_set).\<close>
   have hf_psi_eq: "\<forall>s\<in>I_set. (f \<circ> \<psi>) s = top1_path_product sub0 g s"
   proof (intro ballI)
@@ -4238,8 +4239,90 @@ proof -
     sorry \<comment> \<open>From hreparam + hf\_id + hf\_psi\_eq + hX\_sub\_eq + hf0 + hf1.\<close>
   \<comment> \<open>Convert path\_homotopic to loop\_equiv.\<close>
   have hsub0_g_loop: "top1_is_loop_on X TX x0 (top1_path_product sub0 g)"
-    sorry \<comment> \<open>sub0 is a path x0 \<rightarrow> f(1/n) = x0, g is a path x0 \<rightarrow> x0.
-       Product of loops is a loop.\<close>
+  proof -
+    have hsub0_loop: "top1_is_loop_on X TX x0 sub0"
+    proof -
+      have hs0: "sub0 0 = x0" unfolding sub0_def using hf0 by (by100 simp)
+      have hs1: "sub0 1 = x0" unfolding sub0_def
+      proof -
+        have "f (1 / real n) = x0" using hvertex .
+        thus "f (1 / real n) = x0" .
+      qed
+      have hs_cont: "top1_continuous_map_on I_set top1_unit_interval_topology X TX sub0"
+      proof -
+        define r where "r s = s / real n" for s :: real
+        have "continuous_on UNIV r" unfolding r_def using hn_pos
+          by (intro continuous_intros) (by100 simp)+
+        have hr_range: "\<And>s. s \<in> I_set \<Longrightarrow> r s \<in> I_set"
+          unfolding r_def top1_unit_interval_def using hn by (by100 auto)
+        have hr_top1: "top1_continuous_map_on I_set top1_unit_interval_topology
+            I_set top1_unit_interval_topology r"
+          unfolding top1_unit_interval_def
+          using top1_continuous_map_on_real_subspace_open_sets[of "{0..1}" r "{0..1}"]
+            hr_range \<open>continuous_on UNIV r\<close>
+          unfolding top1_unit_interval_def
+          using top1_unit_interval_def top1_unit_interval_topology_def by (by5000 simp)
+        have "top1_continuous_map_on I_set top1_unit_interval_topology X TX (f \<circ> r)"
+          using top1_continuous_map_on_comp[OF hr_top1 hf_cont] .
+        moreover have "sub0 = f \<circ> r" unfolding sub0_def r_def comp_def by (by100 simp)
+        ultimately show ?thesis by (by100 simp)
+      qed
+      show ?thesis unfolding top1_is_loop_on_def top1_is_path_on_def
+        using hs0 hs1 hs_cont by (by5000 blast)
+    qed
+    have hg_loop: "top1_is_loop_on X TX x0 g"
+    proof -
+      have hg0: "g 0 = x0" unfolding g_def using hvertex by (by100 simp)
+      have hg1: "g 1 = x0"
+      proof -
+        have "g 1 = f (1 / real n + 1 * (real n - 1) / real n)" unfolding g_def by (by100 simp)
+        moreover have "(1::real) / real n + 1 * (real n - 1) / real n = real n / real n"
+          by (simp add: field_simps)
+        moreover have "f (real n / real n) = x0" using hf1 hn_pos by (by100 simp)
+        ultimately show ?thesis by (by100 simp)
+      qed
+      have hg_cont: "top1_continuous_map_on I_set top1_unit_interval_topology X TX g"
+      proof -
+        define r where "r s = 1 / real n + s * (real n - 1) / real n" for s :: real
+        have "continuous_on UNIV r" unfolding r_def using hn_pos
+          by (intro continuous_intros) (by100 simp)+
+        have hr_range: "\<And>s. s \<in> I_set \<Longrightarrow> r s \<in> I_set"
+        proof -
+          fix s :: real assume "s \<in> I_set"
+          hence hs01: "0 \<le> s" "s \<le> 1" unfolding top1_unit_interval_def by (by100 auto)+
+          have "0 \<le> r s" unfolding r_def using hs01 hn_pos by (by100 simp)
+          moreover have "r s \<le> 1"
+          proof -
+            have "s * (real n - 1) / real n \<le> 1 * (real n - 1) / real n"
+              using hs01 hn by (intro divide_right_mono mult_right_mono) (by100 simp)+
+            also have "1 * (real n - 1) / real n = (real n - 1) / real n" by (by100 simp)
+            finally have "r s \<le> 1/real n + (real n-1)/real n" unfolding r_def by (by100 linarith)
+            also have "1/real n + (real n-1)/real n = real n / real n" by (simp add: field_simps)
+            also have "\<dots> = 1" using hn_pos by (by100 simp)
+            finally show ?thesis .
+          qed
+          ultimately show "r s \<in> I_set" unfolding top1_unit_interval_def by (by100 auto)
+        qed
+        have hr_top1: "top1_continuous_map_on I_set top1_unit_interval_topology
+            I_set top1_unit_interval_topology r"
+          unfolding top1_unit_interval_def
+          using top1_continuous_map_on_real_subspace_open_sets[of "{0..1}" r "{0..1}"]
+            hr_range \<open>continuous_on UNIV r\<close>
+          unfolding top1_unit_interval_def
+          using top1_unit_interval_def top1_unit_interval_topology_def by (by5000 simp)
+        have "top1_continuous_map_on I_set top1_unit_interval_topology X TX (f \<circ> r)"
+          using top1_continuous_map_on_comp[OF hr_top1 hf_cont] .
+        moreover have "g = f \<circ> r" unfolding g_def r_def comp_def by (by100 simp)
+        ultimately show ?thesis by (by100 simp)
+      qed
+      show ?thesis unfolding top1_is_loop_on_def top1_is_path_on_def
+        using hg0 hg1 hg_cont by (by5000 blast)
+    qed
+    show ?thesis unfolding top1_is_loop_on_def
+      using top1_path_product_is_path[OF htop
+        hsub0_loop[unfolded top1_is_loop_on_def]
+        hg_loop[unfolded top1_is_loop_on_def]] by (by100 simp)
+  qed
   show ?thesis unfolding top1_loop_equiv_on_def
     using hloop hsub0_g_loop hpath_homot by (by100 blast)
 qed
