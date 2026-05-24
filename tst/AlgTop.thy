@@ -8594,10 +8594,72 @@ lemma finite_wedge_pi1_free_with_chosen_loops:
               (top1_fundamental_group_mul X' (subspace_topology X TX X') p) \<Phi>2
           \<and> (\<forall>j<n-1. \<Phi>2 (\<eta>2 j) = {l. top1_loop_equiv_on X' (subspace_topology X TX X') p
               (\<lambda>t. g' j (cos (2*pi*t), sin (2*pi*t))) l})"
-          sorry \<comment> \<open>Apply less.IH[of "n-1"] with hn1\_lt. X' has n-1 circles C'(j) = C(j+1).
-             Verify: strict topology, Hausdorff, p \<in> X', C'(j) cover, disjoint,
-             homeomorphisms g'(j) = g(j+1), basepoints, coherent topology.
-             All transfer from X via subspace properties.\<close>
+        proof -
+          let ?TX' = "subspace_topology X TX X'"
+          have hTX_is: "is_topology_on X TX"
+            using less.prems(1) unfolding is_topology_on_strict_def by (by100 blast)
+          have hX'_sub: "X' \<subseteq> X" unfolding X'_def using less.prems(4) by (by100 force)
+          have hstrict': "is_topology_on_strict X' ?TX'"
+            by (rule subspace_topology_is_strict[OF less.prems(1) hX'_sub])
+          have hhaus': "is_hausdorff_on X' ?TX'"
+            using conjunct2[OF conjunct2[OF Theorem_17_11]] less.prems(2) hX'_sub by (by100 blast)
+          have hp': "p \<in> X'" unfolding X'_def using less.prems(4) hn2 by (by100 force)
+          have hC_sub': "\<forall>j<n-1. C' j \<subseteq> X' \<and> p \<in> C' j"
+            unfolding C'_def X'_def using less.prems(4) by (by100 force)
+          have hC_union': "(\<Union>j\<in>{..<n-1}. C' j) = X'"
+          proof -
+            have "(\<Union>j\<in>{..<n-1}. C' j) = (\<Union>j\<in>{..<n-1}. C (j+1))" unfolding C'_def ..
+            also have "\<dots> = X'"
+            proof (rule set_eqI, rule iffI)
+              fix x assume "x \<in> (\<Union>j\<in>{..<n-1}. C (j+1))"
+              then obtain j where "j < n-1" "x \<in> C (j+1)" by (by100 blast)
+              hence "j+1 \<in> {1..<n}" by (by100 simp)
+              thus "x \<in> X'" unfolding X'_def using \<open>x \<in> C (j+1)\<close> by (by100 blast)
+            next
+              fix x assume "x \<in> X'"
+              then obtain k where "k \<in> {1..<n}" "x \<in> C k" unfolding X'_def by (by100 blast)
+              hence "k - 1 < n - 1"
+              proof -
+                from \<open>k \<in> {1..<n}\<close> have "1 \<le> k" "k < n" by (by100 simp)+
+                thus ?thesis by (by100 simp)
+              qed
+              moreover have "C k = C ((k-1)+1)" using \<open>k \<in> {1..<n}\<close> by (by100 simp)
+              ultimately show "x \<in> (\<Union>j\<in>{..<n-1}. C (j+1))"
+                using \<open>x \<in> C k\<close> by (by100 force)
+            qed
+            finally show ?thesis .
+          qed
+          have hC_disj': "\<forall>i<n-1. \<forall>j<n-1. i \<noteq> j \<longrightarrow> C' i \<inter> C' j = {p}"
+          proof (intro allI impI)
+            fix i j :: nat assume "i < n-1" "j < n-1" "i \<noteq> j"
+            hence "i+1 < n" "j+1 < n" "i+1 \<noteq> j+1" by (by100 simp)+
+            thus "C' i \<inter> C' j = {p}" unfolding C'_def
+              using less.prems(6) by (by100 blast)
+          qed
+          have hC_homeo': "\<forall>j<n-1. top1_homeomorphism_on top1_S1 top1_S1_topology
+              (C' j) (subspace_topology X' ?TX' (C' j)) (g' j)"
+          proof (intro allI impI)
+            fix j assume "j < n - 1"
+            hence hjn: "j + 1 < n" by (by100 simp)
+            have hCj_sub: "C' j \<subseteq> X'" unfolding C'_def X'_def using hjn by (by100 force)
+            have "subspace_topology X' ?TX' (C' j) = subspace_topology X TX (C' j)"
+              using hCj_sub by (rule subspace_topology_trans)
+            thus "top1_homeomorphism_on top1_S1 top1_S1_topology (C' j) (subspace_topology X' ?TX' (C' j)) (g' j)"
+              unfolding C'_def g'_def using less.prems(7) hjn by (by100 simp)
+          qed
+          have hC_base': "\<forall>j<n-1. g' j (1, 0) = p"
+          proof (intro allI impI)
+            fix j assume "j < n - 1"
+            thus "g' j (1, 0) = p" unfolding g'_def using less.prems(8) by (by100 force)
+          qed
+          have hC_closed': "\<forall>D\<subseteq>X'. closedin_on X' ?TX' D \<longleftrightarrow>
+              (\<forall>j<n-1. closedin_on (C' j) (subspace_topology X' ?TX' (C' j)) (C' j \<inter> D))"
+            sorry \<comment> \<open>Coherent topology for finitely many closed subspaces.
+               Munkres: "If X is the union of finitely many closed subspaces,
+               then the topology is automatically coherent with them."\<close>
+          from less.IH[OF hn1_lt hstrict' hhaus' hp' hC_sub' hC_union' hC_disj' hC_homeo' hC_base' hC_closed']
+          show ?thesis .
+        qed
         \<comment> \<open>Step 6b: Transfer from X' to V via deformation retract + re-indexing.\<close>
         have hV_free: "\<exists>(G2::int set) mul2 e2 invg2 (\<eta>2::nat \<Rightarrow> int) \<Phi>2.
             top1_is_free_group_full_on G2 mul2 e2 invg2 \<eta>2 {1..<n}
