@@ -8652,11 +8652,81 @@ lemma finite_wedge_pi1_free_with_chosen_loops:
             fix j assume "j < n - 1"
             thus "g' j (1, 0) = p" unfolding g'_def using less.prems(8) by (by100 force)
           qed
+          \<comment> \<open>Coherent topology: Munkres note. Each C'(j) is closed in X', X' = \<Union>C'(j).
+             (\<Rightarrow>) D closed in X' \<Rightarrow> C'(j) \<inter> D closed in subspace C'(j).
+             (\<Leftarrow>) Each C'(j) \<inter> D closed in C'(j) (closed in X') \<Rightarrow> closed in X'.
+             D = \<Union>(C'(j) \<inter> D) is finite union of closed, hence closed.\<close>
+          have hCj_closed_in_X': "\<forall>j<n-1. closedin_on X' ?TX' (C' j)"
+          proof (intro allI impI)
+            fix j assume "j < n - 1"
+            hence "j + 1 < n" by (by100 simp)
+            have "closedin_on X TX (C (j+1))" using hC_closed \<open>j + 1 < n\<close> by (by100 blast)
+            have "C' j \<subseteq> X'" unfolding C'_def X'_def using \<open>j + 1 < n\<close> by (by100 force)
+            have "C' j = C (j+1) \<inter> X'" unfolding C'_def
+            proof -
+              have "C (j+1) \<inter> X' = C (j+1)"
+                using \<open>C' j \<subseteq> X'\<close> unfolding C'_def by (by100 blast)
+              thus "C (j + 1) = C (j + 1) \<inter> X'" by (by100 simp)
+            qed
+            thus "closedin_on X' ?TX' (C' j)"
+              using iffD2[OF Theorem_17_2[OF hTX_is hX'_sub]] \<open>closedin_on X TX (C (j+1))\<close>
+              unfolding C'_def by (by100 blast)
+          qed
           have hC_closed': "\<forall>D\<subseteq>X'. closedin_on X' ?TX' D \<longleftrightarrow>
               (\<forall>j<n-1. closedin_on (C' j) (subspace_topology X' ?TX' (C' j)) (C' j \<inter> D))"
-            sorry \<comment> \<open>Coherent topology for finitely many closed subspaces.
-               Munkres: "If X is the union of finitely many closed subspaces,
-               then the topology is automatically coherent with them."\<close>
+          proof (intro allI impI)
+            fix D assume hD: "D \<subseteq> X'"
+            show "closedin_on X' ?TX' D \<longleftrightarrow>
+                (\<forall>j<n-1. closedin_on (C' j) (subspace_topology X' ?TX' (C' j)) (C' j \<inter> D))"
+            proof
+              assume hcl: "closedin_on X' ?TX' D"
+              show "\<forall>j<n-1. closedin_on (C' j) (subspace_topology X' ?TX' (C' j)) (C' j \<inter> D)"
+              proof (intro allI impI)
+                fix j assume "j < n - 1"
+                \<comment> \<open>C'(j) \<inter> D is closed in subspace C'(j) by Theorem\_17\_2 (\<Leftarrow>).\<close>
+                have "closedin_on X' ?TX' (C' j)" using hCj_closed_in_X' \<open>j < n-1\<close> by (by100 blast)
+                hence "closedin_on X' ?TX' (C' j \<inter> D)"
+                  using closedin_inter2[OF subspace_topology_is_topology_on[OF hTX_is hX'_sub]] hcl
+                  by (by100 blast)
+                have "C' j \<subseteq> X'" unfolding C'_def X'_def using \<open>j < n - 1\<close> by (by100 force)
+                have "\<exists>E. closedin_on X' ?TX' E \<and> C' j \<inter> D = E \<inter> C' j"
+                proof (rule exI[of _ "C' j \<inter> D"])
+                  show "closedin_on X' ?TX' (C' j \<inter> D) \<and> C' j \<inter> D = (C' j \<inter> D) \<inter> C' j"
+                    using \<open>closedin_on X' ?TX' (C' j \<inter> D)\<close> by (by100 blast)
+                qed
+                thus "closedin_on (C' j) (subspace_topology X' ?TX' (C' j)) (C' j \<inter> D)"
+                  using iffD2[OF Theorem_17_2[OF
+                    subspace_topology_is_topology_on[OF hTX_is hX'_sub] \<open>C' j \<subseteq> X'\<close>]] by (by100 blast)
+              qed
+            next
+              assume "\<forall>j<n-1. closedin_on (C' j) (subspace_topology X' ?TX' (C' j)) (C' j \<inter> D)"
+              \<comment> \<open>Each C'(j) \<inter> D is closed in C'(j) (closed subspace of X'), hence in X'.\<close>
+              hence "\<forall>j<n-1. closedin_on X' ?TX' (C' j \<inter> D)"
+              proof (intro allI impI)
+                fix j assume "j < n-1"
+                   and hall: "\<forall>j<n-1. closedin_on (C' j) (subspace_topology X' ?TX' (C' j)) (C' j \<inter> D)"
+                have "closedin_on X' ?TX' (C' j)" using hCj_closed_in_X' \<open>j < n-1\<close> by (by100 blast)
+                from Theorem_17_3[OF subspace_topology_is_topology_on[OF hTX_is hX'_sub] this]
+                show "closedin_on X' ?TX' (C' j \<inter> D)" using hall \<open>j < n-1\<close> by (by100 blast)
+              qed
+              \<comment> \<open>D = \<Union>(C'(j) \<inter> D) is a finite union of closed sets.\<close>
+              moreover have "D = (\<Union>j\<in>{..<n-1}. C' j \<inter> D)"
+                using hD hC_union' by (by100 blast)
+              ultimately show "closedin_on X' ?TX' D"
+              proof -
+                assume hcl_all: "\<forall>j<n-1. closedin_on X' ?TX' (C' j \<inter> D)"
+                   and hD_eq: "D = (\<Union>j\<in>{..<n-1}. C' j \<inter> D)"
+                define S where "S = (\<lambda>j. C' j \<inter> D) ` {..<n-1}"
+                have "finite S" unfolding S_def by (by100 simp)
+                have "\<forall>A\<in>S. closedin_on X' ?TX' A" unfolding S_def using hcl_all by (by100 blast)
+                hence "closedin_on X' ?TX' (\<Union>S)"
+                  using closedin_on_finite_Union[OF subspace_topology_is_topology_on[OF hTX_is hX'_sub]
+                        \<open>\<forall>A\<in>S. closedin_on X' ?TX' A\<close> \<open>finite S\<close>] by (by100 simp)
+                moreover have "\<Union>S = D" unfolding S_def using hD_eq by (by100 blast)
+                ultimately show ?thesis by (by100 simp)
+              qed
+            qed
+          qed
           from less.IH[OF hn1_lt hstrict' hhaus' hp' hC_sub' hC_union' hC_disj' hC_homeo' hC_base' hC_closed']
           show ?thesis .
         qed
