@@ -6917,6 +6917,86 @@ lemma map_map_pair_compose:
      = map (\<lambda>(s, b). (f (g s), b)) ws"
   by (induct ws) auto
 
+text \<open>Deformation retraction to a singleton implies simply connected.
+  Expert review Step 2: reusable lemma for deriving simply connected
+  from deformation retraction to a point.\<close>
+lemma deformation_retract_to_singleton_imp_simply_connected:
+  assumes hTX: "is_topology_on X TX"
+      and hp: "p \<in> X"
+      and hpc: "top1_path_connected_on X TX"
+      and hdr: "top1_deformation_retract_of_on X TX {p}"
+  shows "top1_simply_connected_on X TX"
+proof (rule top1_simply_connected_from_one_point[OF hTX hpc hp])
+  show "\<forall>f. top1_is_loop_on X TX p f \<longrightarrow>
+      top1_path_homotopic_on X TX p p f (top1_constant_path p)"
+  proof (intro allI impI)
+    fix f assume hloop: "top1_is_loop_on X TX p f"
+    \<comment> \<open>Extract the deformation retraction homotopy H.\<close>
+    have hdr': "{p} \<subseteq> X \<and> (\<exists>H. top1_continuous_map_on (X \<times> I_set)
+          (product_topology_on TX I_top) X TX H
+        \<and> (\<forall>x\<in>X. H (x, 0) = x) \<and> (\<forall>x\<in>X. H (x, 1) \<in> {p})
+        \<and> (\<forall>a\<in>{p}. \<forall>t\<in>I_set. H (a, t) = a))"
+      using hdr unfolding top1_deformation_retract_of_on_def by (by100 blast)
+    then obtain H where hH_all: "top1_continuous_map_on (X \<times> I_set)
+          (product_topology_on TX I_top) X TX H
+        \<and> (\<forall>x\<in>X. H (x, 0) = x) \<and> (\<forall>x\<in>X. H (x, 1) \<in> {p})
+        \<and> (\<forall>a\<in>{p}. \<forall>t\<in>I_set. H (a, t) = a)"
+      by (by5000 auto)
+    have hH_cont: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) X TX H"
+      using hH_all by (by100 blast)
+    have hH_0: "\<forall>x\<in>X. H (x, 0) = x" using hH_all by (by100 blast)
+    have hH_1: "\<forall>x\<in>X. H (x, 1) \<in> {p}" using hH_all by (by100 blast)
+    have hH_fix: "\<forall>a\<in>{p}. \<forall>t\<in>I_set. H (a, t) = a" using hH_all by (by100 blast)
+    \<comment> \<open>Define G(s,t) = H(f(s), t). This is the null-homotopy.\<close>
+    define G where "G = (\<lambda>(s, t). H (f s, t))"
+    \<comment> \<open>G is continuous: composition of H with (f \<times> id).\<close>
+    have hG_cont: "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX G"
+      sorry \<comment> \<open>G = H \<circ> (f \<times> id). f continuous (loop), id continuous, product continuous,
+         H continuous. Composition continuous. Standard.\<close>
+    \<comment> \<open>Boundary conditions.\<close>
+    have hf_range: "\<forall>s\<in>I_set. f s \<in> X"
+      using hloop unfolding top1_is_loop_on_def top1_is_path_on_def top1_continuous_map_on_def
+      by (by100 blast)
+    have hG_s0: "\<forall>s\<in>I_set. G (s, 0) = f s"
+      unfolding G_def using hH_0 hf_range by (by100 simp)
+    have hG_s1: "\<forall>s\<in>I_set. G (s, 1) = p"
+      unfolding G_def using hH_1 hf_range by (by100 force)
+    have hG_0t: "\<forall>t\<in>I_set. G (0, t) = p"
+    proof (intro ballI)
+      fix t assume "t \<in> I_set"
+      have "f 0 = p" using hloop unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+      thus "G (0, t) = p" unfolding G_def using hH_fix \<open>t \<in> I_set\<close> by (by100 simp)
+    qed
+    have hG_1t: "\<forall>t\<in>I_set. G (1, t) = p"
+    proof (intro ballI)
+      fix t assume "t \<in> I_set"
+      have "f 1 = p" using hloop unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+      thus "G (1, t) = p" unfolding G_def using hH_fix \<open>t \<in> I_set\<close> by (by100 simp)
+    qed
+    show "top1_path_homotopic_on X TX p p f (top1_constant_path p)"
+      unfolding top1_path_homotopic_on_def
+    proof (intro conjI)
+      show "top1_is_path_on X TX p p f"
+        using hloop unfolding top1_is_loop_on_def by (by100 blast)
+      show "top1_is_path_on X TX p p (top1_constant_path p)"
+        unfolding top1_is_path_on_def top1_constant_path_def top1_continuous_map_on_def
+        sorry \<comment> \<open>Constant path is a path. Continuous (constant maps are continuous).\<close>
+      show "\<exists>F. top1_continuous_map_on (I_set \<times> I_set) II_topology X TX F \<and>
+          (\<forall>s\<in>I_set. F (s, 0) = f s) \<and> (\<forall>s\<in>I_set. F (s, 1) = top1_constant_path p s) \<and>
+          (\<forall>t\<in>I_set. F (0, t) = p) \<and> (\<forall>t\<in>I_set. F (1, t) = p)"
+      proof (rule exI[of _ G], intro conjI)
+        show "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX G" by (rule hG_cont)
+        show "\<forall>s\<in>I_set. G (s, 0) = f s" by (rule hG_s0)
+        have hcp: "top1_constant_path p = (\<lambda>_. p)" unfolding top1_constant_path_def by (by100 simp)
+        show "\<forall>s\<in>I_set. G (s, 1) = top1_constant_path p s"
+          using hG_s1 hcp by (by100 simp)
+        show "\<forall>t\<in>I_set. G (0, t) = p" by (rule hG_0t)
+        show "\<forall>t\<in>I_set. G (1, t) = p" by (rule hG_1t)
+      qed
+    qed
+  qed
+qed
+
 text \<open>Deformation retraction of circle minus point to any remaining point.
   Munkres 71.1: "W\_i is homeomorphic to an open interval, so it has
   the point p as a deformation retract." Following AlgTopCached:33225.\<close>
@@ -7842,23 +7922,17 @@ lemma finite_wedge_pi1_free_with_chosen_loops:
           \<comment> \<open>Every loop at p in U \<inter> V is nulhomotopic.
              From the deformation retraction H: for any loop f at p,
              G(s,t) = H(f(s),t) is a null-homotopy. Continuous by composition.\<close>
-          show ?thesis
-          proof (rule top1_simply_connected_from_one_point[OF hTUV hUV_pc])
-            show "p \<in> U \<inter> V"
-            proof -
-              have "p \<in> C 0" using less.prems(4) hn_pos by (by100 blast)
-              hence "p \<in> U" unfolding U_def by (by100 blast)
-              have "p \<noteq> q 0" using hq hn_pos by (by100 blast)
-              hence "p \<in> W 0" using \<open>p \<in> C 0\<close> unfolding W_def by (by100 blast)
-              hence "p \<in> V" unfolding V_def by (by100 blast)
-              thus ?thesis using \<open>p \<in> U\<close> by (by100 blast)
-            qed
-            show "\<forall>f. top1_is_loop_on (U \<inter> V) (subspace_topology X TX (U \<inter> V)) p f \<longrightarrow>
-                top1_path_homotopic_on (U \<inter> V) (subspace_topology X TX (U \<inter> V)) p p f (top1_constant_path p)"
-              sorry \<comment> \<open>Standard: from hUV\_retract extract H. For loop f, G(s,t) = H(f(s),t).
-                 G(s,0)=f(s), G(s,1)=p, G(0,t)=H(p,t)=p, G(1,t)=H(p,t)=p.
-                 Continuous: composition of H and (f\<times>id). So f \<simeq> const.\<close>
+          have hp_in_UV: "p \<in> U \<inter> V"
+          proof -
+            have "p \<in> C 0" using less.prems(4) hn_pos by (by100 blast)
+            hence "p \<in> U" unfolding U_def by (by100 blast)
+            have "p \<noteq> q 0" using hq hn_pos by (by100 blast)
+            hence "p \<in> W 0" using \<open>p \<in> C 0\<close> unfolding W_def by (by100 blast)
+            hence "p \<in> V" unfolding V_def by (by100 blast)
+            thus ?thesis using \<open>p \<in> U\<close> by (by100 blast)
           qed
+          show ?thesis
+            by (rule deformation_retract_to_singleton_imp_simply_connected[OF hTUV hp_in_UV hUV_pc hUV_retract])
         qed
         \<comment> \<open>Step 6: U, V are path-connected.\<close>
         have hU_pc: "top1_path_connected_on U (subspace_topology X TX U)"
