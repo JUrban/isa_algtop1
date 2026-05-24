@@ -7975,7 +7975,78 @@ proof -
       "\<And>f1 f2. (\<forall>t\<in>I_set. f1 t = f2 t) \<Longrightarrow>
         {g. top1_loop_equiv_on A (subspace_topology X TX A) a' f1 g}
       = {g. top1_loop_equiv_on A (subspace_topology X TX A) a' f2 g}"
-      sorry \<comment> \<open>loop\_equiv\_on only uses values on I\_set (endpoints, continuity, homotopy).\<close>
+    proof -
+      fix f1 f2 :: "real \<Rightarrow> 'a"
+      assume hpw: "\<forall>t\<in>I_set. f1 t = f2 t"
+      let ?TA = "subspace_topology X TX A"
+      \<comment> \<open>Key: all conditions in loop\_equiv\_on use functions only at I\_set points.\<close>
+      have hloop_iff: "\<And>f. top1_is_loop_on A ?TA a' f1 = top1_is_loop_on A ?TA a' f2"
+      proof -
+        have h01: "(0::real) \<in> I_set" "(1::real) \<in> I_set"
+          unfolding top1_unit_interval_def by (by100 auto)+
+        have hf0: "f1 0 = f2 0" using hpw h01 by (by100 blast)
+        have hf1: "f1 1 = f2 1" using hpw h01 by (by100 blast)
+        have hcont: "top1_continuous_map_on I_set top1_unit_interval_topology A ?TA f1
+            = top1_continuous_map_on I_set top1_unit_interval_topology A ?TA f2"
+        proof -
+          have hfpw: "\<And>x. x \<in> I_set \<Longrightarrow> f1 x = f2 x" using hpw by (by100 blast)
+          show ?thesis
+          proof (rule iffI)
+            assume h1: "top1_continuous_map_on I_set top1_unit_interval_topology A ?TA f1"
+            show "top1_continuous_map_on I_set top1_unit_interval_topology A ?TA f2"
+              unfolding top1_continuous_map_on_def
+            proof (intro conjI ballI)
+              fix x assume "x \<in> I_set"
+              have "f1 x \<in> A" using h1 \<open>x \<in> I_set\<close> unfolding top1_continuous_map_on_def by (by100 blast)
+              thus "f2 x \<in> A" using hfpw[OF \<open>x \<in> I_set\<close>] by (by100 simp)
+            next
+              fix V assume "V \<in> ?TA"
+              have "{x \<in> I_set. f2 x \<in> V} = {x \<in> I_set. f1 x \<in> V}"
+              proof -
+                { fix x
+                  have "(x \<in> I_set \<and> f2 x \<in> V) = (x \<in> I_set \<and> f1 x \<in> V)"
+                    using hfpw[of x] by (cases "x \<in> I_set") (by100 simp)+
+                }
+                thus ?thesis by (by100 blast)
+              qed
+              thus "{x \<in> I_set. f2 x \<in> V} \<in> top1_unit_interval_topology"
+                using h1 \<open>V \<in> ?TA\<close> unfolding top1_continuous_map_on_def by (by100 simp)
+            qed
+          next
+            assume h2: "top1_continuous_map_on I_set top1_unit_interval_topology A ?TA f2"
+            show "top1_continuous_map_on I_set top1_unit_interval_topology A ?TA f1"
+              unfolding top1_continuous_map_on_def
+            proof (intro conjI ballI)
+              fix x assume "x \<in> I_set"
+              have "f2 x \<in> A" using h2 \<open>x \<in> I_set\<close> unfolding top1_continuous_map_on_def by (by100 blast)
+              thus "f1 x \<in> A" using hfpw[OF \<open>x \<in> I_set\<close>] by (by100 simp)
+            next
+              fix V assume "V \<in> ?TA"
+              have "{x \<in> I_set. f1 x \<in> V} = {x \<in> I_set. f2 x \<in> V}"
+                using hfpw by (by5000 force)
+              thus "{x \<in> I_set. f1 x \<in> V} \<in> top1_unit_interval_topology"
+                using h2 \<open>V \<in> ?TA\<close> unfolding top1_continuous_map_on_def by (by100 simp)
+            qed
+          qed
+        qed
+        show "\<And>f. top1_is_loop_on A ?TA a' f1 = top1_is_loop_on A ?TA a' f2"
+          unfolding top1_is_loop_on_def top1_is_path_on_def
+          using hf0 hf1 hcont by (by5000 metis)
+      qed
+      have hph_iff: "\<And>g. top1_path_homotopic_on A ?TA a' a' f1 g
+          = top1_path_homotopic_on A ?TA a' a' f2 g"
+      proof -
+        fix g :: "real \<Rightarrow> 'a"
+        have hF_eq: "\<And>F s. s \<in> I_set \<Longrightarrow> (F (s, 0) = f1 s) = (F (s, 0) = f2 s)"
+          using hpw by (by100 auto)
+        show "top1_path_homotopic_on A ?TA a' a' f1 g
+            = top1_path_homotopic_on A ?TA a' a' f2 g"
+          unfolding top1_path_homotopic_on_def top1_is_path_on_def
+          using hloop_iff hF_eq sorry
+      qed
+      show "{g. top1_loop_equiv_on A ?TA a' f1 g} = {g. top1_loop_equiv_on A ?TA a' f2 g}"
+        unfolding top1_loop_equiv_on_def using hloop_iff hph_iff by (by100 blast)
+    qed
     \<comment> \<open>Step R1: relator\_class = product of edge loop classes in \<pi>_1(A,a').\<close>
     have hrel_product: "relator_class =
         top1_group_word_product
