@@ -6923,32 +6923,33 @@ text \<open>Munkres Theorem 71.1 (witnessed version with chosen loop generators)
   Proof by induction on |J| using SvK (Corollary\_70\_3) + Theorem\_69\_2.
   Following Munkres' proof exactly.\<close>
 lemma finite_wedge_pi1_free_with_chosen_loops:
-  fixes n :: nat and X :: "'a set" and TX :: "'a set set" and p :: 'a
-    and C :: "nat \<Rightarrow> 'a set" and g :: "nat \<Rightarrow> real \<times> real \<Rightarrow> 'a"
+  fixes J :: "'i set" and X :: "'a set" and TX :: "'a set set" and p :: 'a
+    and C :: "'i \<Rightarrow> 'a set" and g :: "'i \<Rightarrow> real \<times> real \<Rightarrow> 'a"
   assumes hstrict: "is_topology_on_strict X TX"
       and hhaus: "is_hausdorff_on X TX"
+      and hfin: "finite J"
       and hp: "p \<in> X"
-      and hC_sub: "\<forall>j<n. C j \<subseteq> X \<and> p \<in> C j"
-      and hC_union: "(\<Union>j\<in>{..<n}. C j) = X"
-      and hC_disj: "\<forall>i<n. \<forall>j<n. i \<noteq> j \<longrightarrow> C i \<inter> C j = {p}"
-      and hC_homeo: "\<forall>j<n. top1_homeomorphism_on top1_S1 top1_S1_topology
+      and hC_sub: "\<forall>j\<in>J. C j \<subseteq> X \<and> p \<in> C j"
+      and hC_union: "(\<Union>j\<in>J. C j) = X"
+      and hC_disj: "\<forall>i\<in>J. \<forall>j\<in>J. i \<noteq> j \<longrightarrow> C i \<inter> C j = {p}"
+      and hC_homeo: "\<forall>j\<in>J. top1_homeomorphism_on top1_S1 top1_S1_topology
           (C j) (subspace_topology X TX (C j)) (g j)"
-      and hC_base: "\<forall>j<n. g j (1, 0) = p"
+      and hC_base: "\<forall>j\<in>J. g j (1, 0) = p"
       and hC_closed: "\<forall>D\<subseteq>X. closedin_on X TX D \<longleftrightarrow>
-          (\<forall>j<n. closedin_on (C j) (subspace_topology X TX (C j)) (C j \<inter> D))"
-  shows "\<exists>(F::int set) mul e invg (\<eta>::nat \<Rightarrow> int) \<Phi>.
-      top1_is_free_group_full_on F mul e invg \<eta> {..<n}
+          (\<forall>j\<in>J. closedin_on (C j) (subspace_topology X TX (C j)) (C j \<inter> D))"
+  shows "\<exists>(F::int set) mul e invg (\<eta>::'i \<Rightarrow> int) \<Phi>.
+      top1_is_free_group_full_on F mul e invg \<eta> J
     \<and> top1_group_iso_on F mul
         (top1_fundamental_group_carrier X TX p)
         (top1_fundamental_group_mul X TX p) \<Phi>
-    \<and> (\<forall>j<n. \<Phi> (\<eta> j) = {l. top1_loop_equiv_on X TX p
+    \<and> (\<forall>j\<in>J. \<Phi> (\<eta> j) = {l. top1_loop_equiv_on X TX p
         (\<lambda>t. g j (cos (2 * pi * t), sin (2 * pi * t))) l})"
   sorry \<comment> \<open>Munkres Theorem 71.1 with chosen loop generators.
-     Proof by induction on n following the book exactly:
-     Base n=0: trivial. Base n=1: pi1(circle) = Z.
+     Proof by induction on card J following the book exactly:
+     Base J={}: trivial. Base |J|=1: pi1(circle) = Z.
      Step: Munkres' SvK decomposition (U, V), U Int V simply connected,
      Corollary\_70\_3 gives free product, deformation retracts give
-     pi1(U) = Z and pi1(V) = free on n-1 (IH), Theorem\_69\_2 gives
+     pi1(U) = Z and pi1(V) = free on |J|-1 (IH), Theorem\_69\_2 gives
      free product free on all generators with explicit correspondence.
      Following AlgTopCached:31794-39914 but adding generator tracking.\<close>
 
@@ -8420,7 +8421,9 @@ proof -
       qed
     qed
   qed
-  \<comment> \<open>Step 3: \<pi>_1(A) is free on the labels (Theorem 71.1) at basepoint a.\<close>
+  \<comment> \<open>Step 3: \<pi>_1(A) is free on the labels (Theorem 71.1) at basepoint a.
+     TODO (plan10): Replace Theorem\_71\_3 with finite\_wedge\_pi1\_free\_with\_chosen\_loops
+     to remove infinite-case dependency AND get generator correspondence.\<close>
   have hA_free: "\<exists>(F::int set) mulF eF invgF (\<iota>F::nat \<Rightarrow> int).
       top1_is_free_group_full_on F mulF eF invgF \<iota>F (fst ` set scheme)
       \<and> top1_groups_isomorphic_on F mulF
