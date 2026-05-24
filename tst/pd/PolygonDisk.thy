@@ -4331,7 +4331,27 @@ proof (induction n arbitrary: f rule: nat_less_induct)
     \<comment> \<open>Key: g\_sub k = sub (k+1).\<close>
     have hg_sub_eq: "map (\<lambda>k. \<lambda>s. g ((real k + s) / real (n-1))) [0..<n-1]
         = map (\<lambda>k. \<lambda>s. f ((real k + s) / real n)) [Suc 0..<n]"
-      sorry \<comment> \<open>g((k+s)/(n-1)) = f(1/n + (k+s)/(n-1) * (n-1)/n) = f((k+1+s)/n).\<close>
+    proof -
+      have hnm1_pos: "real (n-1) > 0" using hn2 by (by100 simp)
+      \<comment> \<open>Pointwise: g((k+s)/(n-1)) = f(((Suc k)+s)/n).\<close>
+      have hpw: "\<And>k s. g ((real k + s) / real (n-1)) = f ((real (Suc k) + s) / real n)"
+      proof -
+        fix k :: nat and s :: real
+        have "g ((real k + s) / real (n-1)) =
+            f (1/real n + ((real k + s) / real (n-1)) * (real n - 1) / real n)"
+          unfolding g_def by (by100 simp)
+        moreover have "1/real n + ((real k + s) / real (n-1)) * (real n - 1) / real n
+            = (real (Suc k) + s) / real n"
+          using hn_pos hnm1_pos by (simp add: field_simps)
+        ultimately show "g ((real k + s) / real (n-1)) = f ((real (Suc k) + s) / real n)"
+          by (by100 simp)
+      qed
+      \<comment> \<open>[Suc 0..<n] = map Suc [0..<n-1].\<close>
+      have hmap_suc: "[Suc 0..<n] = map Suc [0..<n-1]"
+        using map_Suc_upt[of 0 "n-1", symmetric] hn2 by (by100 simp)
+      show ?thesis unfolding hmap_suc
+        using hpw by (by100 auto)
+    qed
     \<comment> \<open>Combine: f \<simeq> sub\_0 * g \<simeq> sub\_0 * foldr [sub\_1,...] const = foldr [sub\_0,...] const.\<close>
     show ?thesis sorry \<comment> \<open>Product congruence + foldr cons decomposition.\<close>
   qed
