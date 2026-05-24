@@ -4171,11 +4171,27 @@ proof -
   \<comment> \<open>f is homotopic to the product (by reparametrization).\<close>
   \<comment> \<open>Use reparam\_path\_homotopy: the reparametrization that maps
      the binary product timing to the linear timing gives homotopy.\<close>
+  \<comment> \<open>Proof by induction on n.
+     For n=1: sub 0 = f, so foldr [f] const = f * const \<simeq> f (right identity).
+     For n>1: split f at 1/n, then f \<simeq> sub\_0 * g (reparametrization).
+     g has n-1 sub-loops equal to sub\_1,...,sub\_{n-1}.
+     By IH, g \<simeq> foldr [sub\_1,...,sub\_{n-1}] const.
+     Product congruence: sub\_0 * g \<simeq> sub\_0 * foldr [...] const = foldr [sub\_0,...] const.\<close>
+  \<comment> \<open>Define the reparametrization for the splitting step.\<close>
+  define \<psi> where "\<psi> s \<equiv> (if s \<le> 1/2 then 2*s / real n else 1 / real n + (2*s - 1) * (real n - 1) / real n)"
+  \<comment> \<open>Key: sub 0 * g = f \<circ> \<psi> where g(s) = f(1/n + s*(n-1)/n).\<close>
+  define g where "g s \<equiv> f (1 / real n + s * (real n - 1) / real n)"
+  \<comment> \<open>The foldr product decomposes as sub\_0 * foldr [sub\_1,...,sub\_{n-1}] const.\<close>
+  have hfoldr_cons: "foldr top1_path_product (map sub [0..<n]) (top1_constant_path x0)
+      = top1_path_product (sub 0) (foldr top1_path_product (map sub [Suc 0..<n]) (top1_constant_path x0))"
+  proof -
+    have "n > 0" using hn by (by100 linarith)
+    hence "[0..<n] = 0 # [Suc 0..<n]" using upt_rec[of 0 n] by (by100 simp)
+    thus ?thesis by (by100 simp)
+  qed
   show ?thesis
-    sorry \<comment> \<open>Reparametrization homotopy: f ≃ foldr product.
-       Proof strategy: induction on n using reparam_path_homotopy.
-       Base n=1: right identity (Theorem 51.2).
-       Step n+1: split at 1/(n+1), apply IH to remaining n loops.\<close>
+    sorry \<comment> \<open>Remaining: split f at 1/n using reparam\_path\_homotopy with \<psi>,
+       then induction on g. Technical but structure is clear.\<close>
 qed
 
 end
