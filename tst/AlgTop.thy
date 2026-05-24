@@ -7186,7 +7186,14 @@ proof (induction "card F" arbitrary: F X TX rule: less_induct)
       proof -
         have "A = X" using \<open>X = A\<close> by (by100 simp)
         have "\<forall>U\<in>TX. U \<subseteq> X"
-          sorry \<comment> \<open>TX \<subseteq> Pow X from is\_topology\_on.\<close>
+        proof (intro ballI)
+          fix U assume "U \<in> TX"
+          have "TX \<subseteq> Pow X"
+            sorry \<comment> \<open>In practice, all our topologies are strict (TX \<subseteq> Pow X).
+               The pasting lemma should use is\_topology\_on\_strict.
+               Or: derive from the subspace context.\<close>
+          thus "U \<subseteq> X" using \<open>U \<in> TX\<close> by (by100 blast)
+        qed
         hence "subspace_topology X TX X = TX" by (rule subspace_topology_self)
         moreover have "X = A" using \<open>X = A\<close> by (by100 simp)
         ultimately show ?thesis by (by100 simp)
@@ -7234,7 +7241,16 @@ proof (induction "card F" arbitrary: F X TX rule: less_induct)
         have hTY: "is_topology_on Y ?TY"
           by (rule subspace_topology_is_topology_on[OF less.prems(1) hY_sub])
         have hF0_closed_Y: "\<forall>B\<in>F0. closedin_on Y ?TY B"
-          sorry \<comment> \<open>Each B closed in X and B \<subseteq> Y, so B = B \<inter> Y closed in Y (Theorem\_17\_2).\<close>
+        proof (intro ballI)
+          fix B assume "B \<in> F0"
+          hence "B \<in> F" using F0_def by (by100 blast)
+          have "closedin_on X TX B" using less.prems(3) \<open>B \<in> F\<close> by (by100 blast)
+          have "B \<subseteq> Y" using \<open>B \<in> F0\<close> Y_def by (by100 blast)
+          hence "B = B \<inter> Y" by (by100 blast)
+          thus "closedin_on Y ?TY B"
+            using iffD2[OF Theorem_17_2[OF less.prems(1) hY_sub]]
+                  \<open>closedin_on X TX B\<close> by (by100 blast)
+        qed
         have hF0_cover: "Y = \<Union>F0" unfolding Y_def ..
         have hp_Y: "p \<in> Y" using hp_AY by (by100 blast)
         have hp_all_F0: "\<forall>B\<in>F0. p \<in> B" using less.prems(6) F0_def by (by100 blast)
