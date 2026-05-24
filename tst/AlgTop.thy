@@ -7768,130 +7768,14 @@ lemma circle_path_connected:
   by (rule homeomorphism_preserves_path_connected[OF assms S1_path_connected])
 
 text \<open>Helper: S1 minus a point is simply connected (homeomorphic to R).\<close>
+text \<open>Helper: S1 minus a point is simply connected (homeomorphic to R).\<close>
 lemma S1_minus_point_simply_connected:
   assumes hq: "q \<in> top1_S1"
   shows "top1_simply_connected_on (top1_S1 - {q}) (subspace_topology top1_S1 top1_S1_topology (top1_S1 - {q}))"
-proof -
-  let ?S = "top1_S1 - {q}" and ?TS = "subspace_topology top1_S1 top1_S1_topology (top1_S1 - {q})"
-  have hpc: "top1_path_connected_on ?S ?TS"
-    by (rule S1_minus_point_path_connected[OF hq])
-  show ?thesis unfolding top1_simply_connected_on_def
-  proof (intro conjI ballI allI impI)
-    show "top1_path_connected_on ?S ?TS" by (rule hpc)
-    fix x0 f assume hx0: "x0 \<in> ?S" and hf: "top1_is_loop_on ?S ?TS x0 f"
-    \<comment> \<open>f is a loop in S1\{q}. Need: f null-homotopic in S1\{q}.
-       Proof: lift f to R via covering map R\_to\_S1.
-       The lift stays in an interval (\<alpha>, \<alpha>+1) (avoiding q).
-       Straight-line homotopy in R projects to null-homotopy in S1\{q}.\<close>
-    \<comment> \<open>Lift f to R via covering map R\_to\_S1.\<close>
-    have hTS1: "is_topology_on top1_S1 top1_S1_topology"
-      using top1_S1_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
-    have hf_S1: "top1_is_loop_on top1_S1 top1_S1_topology x0 f"
-    proof -
-      \<comment> \<open>f is a loop in the subspace S1\{q}. Lift to S1 via inclusion.\<close>
-      have "top1_is_path_on ?S ?TS x0 x0 f"
-        using hf unfolding top1_is_loop_on_def by (by100 blast)
-      hence hf_cont_sub: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology ?S ?TS f"
-          and hf0: "f 0 = x0" and hf1: "f 1 = x0"
-        unfolding top1_is_path_on_def by (by100 blast)+
-      have hS_sub: "?S \<subseteq> top1_S1" by (by100 blast)
-      have hincl: "top1_continuous_map_on ?S ?TS top1_S1 top1_S1_topology (\<lambda>x. x)"
-        by (rule top1_continuous_map_on_restrict_domain_simple[OF
-              top1_continuous_map_on_id[OF hTS1, unfolded id_def] hS_sub])
-      have "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology top1_S1 top1_S1_topology ((\<lambda>x. x) \<circ> f)"
-        by (rule top1_continuous_map_on_comp[OF hf_cont_sub hincl])
-      hence "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology top1_S1 top1_S1_topology f"
-        unfolding comp_def by (by100 simp)
-      thus ?thesis unfolding top1_is_loop_on_def top1_is_path_on_def using hf0 hf1 by (by100 blast)
-    qed
-    have hf_path_S1: "top1_is_path_on top1_S1 top1_S1_topology x0 x0 f"
-      using hf_S1 unfolding top1_is_loop_on_def by (by100 blast)
-    have hx0_S1: "x0 \<in> top1_S1" using hx0 by (by100 blast)
-    have hTR: "is_topology_on (UNIV::real set) top1_open_sets"
-      by (rule top1_open_sets_is_topology_on_UNIV)
-    \<comment> \<open>Choose a lift point e0 with R\_to\_S1(e0) = x0.\<close>
-    from S1_point_to_angle[OF hx0_S1] obtain e0 :: real where he0: "top1_R_to_S1 e0 = x0"
-      by (by100 blast)
-    have he0_E: "e0 \<in> (UNIV::real set)" by (by100 blast)
-    \<comment> \<open>Path lifting: \<exists>f\<tilde>. path in R, R\_to\_S1 \<circ> f\<tilde> = f.\<close>
-    from Lemma_54_1_path_lifting[OF Theorem_53_1 he0_E he0 hf_path_S1 hTS1 hTR]
-    obtain ftilde where hft_path: "top1_is_path_on (UNIV::real set) top1_open_sets e0 (ftilde 1) ftilde"
-        and hft_lift: "\<forall>s\<in>I_set. top1_R_to_S1 (ftilde s) = f s"
-      by (by100 blast)
-    \<comment> \<open>f\<tilde> avoids \<alpha> + Z (since f avoids q = R\_to\_S1(\<alpha>)).
-       f\<tilde> is continuous and avoids a discrete set, so stays in one interval (\<alpha>+n, \<alpha>+n+1).
-       f\<tilde>(1) - f\<tilde>(0) = 0 (winding number 0, since both in same interval and difference \<in> Z).
-       Straight-line homotopy contracts f\<tilde> to constant.
-       Projection gives null-homotopy of f in S1\{q}.\<close>
-    \<comment> \<open>Step 1: ftilde avoids \<alpha>+Z.\<close>
-    from S1_point_to_angle[OF hq] obtain \<alpha> where h\<alpha>: "top1_R_to_S1 \<alpha> = q" by (by100 blast)
-    have hft_avoids: "\<forall>s\<in>I_set. \<forall>n::int. ftilde s \<noteq> \<alpha> + of_int n"
-    proof (intro ballI allI)
-      fix s :: real and n :: int assume hs: "s \<in> I_set"
-      show "ftilde s \<noteq> \<alpha> + of_int n"
-      proof
-        assume "ftilde s = \<alpha> + of_int n"
-        hence "top1_R_to_S1 (ftilde s) = top1_R_to_S1 (\<alpha> + of_int n)" by (by100 simp)
-        also have "\<dots> = top1_R_to_S1 \<alpha>" by (rule top1_R_to_S1_int_shift_early)
-        also have "\<dots> = q" using h\<alpha> .
-        finally have "f s = q" using hft_lift hs by (by100 simp)
-        \<comment> \<open>But f maps into S1\{q}, so f s \<noteq> q.\<close>
-        moreover have "f s \<in> ?S"
-          using hf hs unfolding top1_is_loop_on_def top1_is_path_on_def top1_continuous_map_on_def
-          by (by5000 blast)
-        ultimately show False by (by100 blast)
-      qed
-    qed
-    \<comment> \<open>Step 2: ftilde(1) = e0 (winding number 0).
-       ftilde is continuous, avoids \<alpha>+Z. ftilde(0) = e0 (from lift).
-       ftilde stays in (\<alpha>+n, \<alpha>+n+1) for some n (connected + avoids discrete set).
-       ftilde(1) - e0 \<in> Z (since R\_to\_S1(ftilde 1) = f(1) = x0 = R\_to\_S1(e0)).
-       But ftilde(1) and e0 are in the same interval, so ftilde(1) - e0 \<in> Z \<inter> (-1,1) = {0}.\<close>
-    have hft0: "ftilde 0 = e0"
-      using hft_path unfolding top1_is_path_on_def by (by100 blast)
-    have hft1_eq: "ftilde 1 = e0"
-    proof -
-      \<comment> \<open>R\_to\_S1(ftilde 1) = f(1) = x0 = R\_to\_S1(e0).\<close>
-      have h1_I: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 auto)
-      have "top1_R_to_S1 (ftilde 1) = f 1" using hft_lift h1_I by (by100 blast)
-      also have "f 1 = x0" using hf_S1 unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
-      also have "\<dots> = top1_R_to_S1 e0" using he0 by (by100 simp)
-      finally have hRS1_eq: "top1_R_to_S1 (ftilde 1) = top1_R_to_S1 e0" .
-      \<comment> \<open>ftilde(1) - e0 \<in> Z (from cos\_sin\_eq\_imp).\<close>
-      have "cos (2 * pi * (ftilde 1)) = cos (2 * pi * e0)
-          \<and> sin (2 * pi * (ftilde 1)) = sin (2 * pi * e0)"
-        using hRS1_eq unfolding top1_R_to_S1_def by (by100 auto)
-      from cos_sin_eq_imp[OF conjunct1[OF this] conjunct2[OF this]]
-      obtain k :: int where hk: "2 * pi * (ftilde 1) - 2 * pi * e0 = real_of_int k * 2 * pi"
-        by (by100 blast)
-      have "2 * pi * ((ftilde 1) - e0) = 2 * pi * real_of_int k"
-        using hk by (simp add: algebra_simps)
-      hence hft1_diff: "ftilde 1 - e0 = real_of_int k"
-      proof -
-        assume h2pi: "2 * pi * (ftilde 1 - e0) = 2 * pi * real_of_int k"
-        have "(2 * pi) * (ftilde 1 - e0 - real_of_int k) = 0"
-          using h2pi by (simp add: algebra_simps)
-        thus "ftilde 1 - e0 = real_of_int k" using pi_gt_zero by (by100 simp)
-      qed
-      \<comment> \<open>ftilde continuous, avoids \<alpha>+Z, so stays in (\<alpha>+n, \<alpha>+n+1).
-         Both e0 and ftilde(1) in the same interval \<Rightarrow> |diff| < 1 \<Rightarrow> k = 0.\<close>
-      \<comment> \<open>k = 0 by IVT: if k \<noteq> 0, ftilde would hit \<alpha>+Z (between e0 and e0+k).
-         But ftilde avoids \<alpha>+Z. Contradiction.\<close>
-      have "k = 0"
-        sorry \<comment> \<open>IVT argument: ftilde continuous on [0,1], avoids \<alpha>+Z.
-           If k \<noteq> 0: |k| \<ge> 1. Between e0 and e0+k there's an \<alpha>+n point.
-           By IVT (continuous\_on I\_set ftilde): ftilde hits it. Contradiction.
-           Then k = 0 \<Rightarrow> ftilde(1) = e0. ~20 lines.\<close>
-      thus ?thesis using hft1_diff by (by100 linarith)
-    qed
-    \<comment> \<open>Step 3: null-homotopy via straight-line in R.\<close>
-    show "top1_path_homotopic_on ?S ?TS x0 x0 f (top1_constant_path x0)"
-      sorry \<comment> \<open>H(s,t) = R\_to\_S1((1-t)*ftilde(s) + t*e0). Homotopy f ~ const in S1\{q}.
-         ftilde(1) = e0 gives H(1,t) = x0. H(0,t) = x0.
-         H continuous (R\_to\_S1 \<circ> affine). Range in S1\{q} (convex in interval).
-         ~20 lines.\<close>
-  qed
-qed
+  sorry \<comment> \<open>S1\{q} simply connected. Path-connected: PROVED (S1_minus_point_path_connected).
+     Trivial pi1: lift loop to R via covering (Lemma_54_1 + Theorem_53_1),
+     show winding number = 0 (lift avoids alpha+Z, IVT/connected argument),
+     project straight-line null-homotopy from R. ~40 lines remaining.\<close>
 
 text \<open>Helper: homeomorphic image of S1 minus point is simply connected.\<close>
 lemma circle_minus_point_simply_connected:
