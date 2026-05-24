@@ -4236,7 +4236,27 @@ proof -
      Since subspace X TX X = TX, this gives path\_homotopic in (X, TX).
      And f \<circ> \<psi> = sub0 * g pointwise, so path\_homotopic f (sub0 * g).\<close>
   have hpath_homot: "top1_path_homotopic_on X TX x0 x0 f (top1_path_product sub0 g)"
-    sorry \<comment> \<open>From hreparam + hf\_id + hf\_psi\_eq + hX\_sub\_eq + hf0 + hf1.\<close>
+  proof -
+    \<comment> \<open>From hreparam: path\_homotopic in subspace X TX X from f(0)=x0 to f(1)=x0
+       between f \<circ> id = f and f \<circ> \<psi>.\<close>
+    \<comment> \<open>f \<circ> \<psi> and sub0 * g agree on I\_set.\<close>
+    have hf_psi_prod: "f \<circ> \<psi> = top1_path_product sub0 g"
+    proof (rule ext)
+      fix s :: real
+      show "(f \<circ> \<psi>) s = top1_path_product sub0 g s"
+        unfolding \<psi>_def top1_path_product_def sub0_def g_def comp_def by (by100 simp)
+    qed
+    \<comment> \<open>Rewrite hreparam using f \<circ> id = f and f \<circ> \<psi> = sub0 * g.\<close>
+    have hreparam': "top1_path_homotopic_on X (subspace_topology X TX X) x0 x0
+        f (top1_path_product sub0 g)"
+      using hreparam hf0 hf1 hf_psi_prod by (by100 simp)
+    \<comment> \<open>Convert from subspace topology to TX.
+       Since the homotopy maps into X, continuity into (X, subspace X TX X)
+       is equivalent to continuity into (X, TX).\<close>
+    show ?thesis using hreparam' sorry
+      \<comment> \<open>Topology conversion: path\_homotopic\_on X (subspace X TX X) \<Longrightarrow> path\_homotopic\_on X TX.
+         Holds because for F: I\<times>I \<rightarrow> X, preimage of U \<in> TX equals preimage of X \<inter> U.\<close>
+  qed
   \<comment> \<open>Convert path\_homotopic to loop\_equiv.\<close>
   have hsub0_g_loop: "top1_is_loop_on X TX x0 (top1_path_product sub0 g)"
   proof -
