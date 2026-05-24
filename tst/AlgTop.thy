@@ -7876,9 +7876,28 @@ proof -
       \<comment> \<open>ftilde continuous, avoids \<alpha>+Z, so stays in (\<alpha>+n, \<alpha>+n+1).
          Both e0 and ftilde(1) in the same interval \<Rightarrow> |diff| < 1 \<Rightarrow> k = 0.\<close>
       have "k = 0"
-        sorry \<comment> \<open>ftilde continuous on I\_set, avoids \<alpha>+Z (discrete).
-           Connected image avoids discrete set \<Rightarrow> stays in one component.
-           e0 = ftilde(0) and ftilde(1) in same component \<Rightarrow> diff < 1 \<Rightarrow> k = 0.\<close>
+      proof (rule ccontr)
+        assume hk_ne: "k \<noteq> 0"
+        \<comment> \<open>ftilde(1) = e0 + k, |k| \<ge> 1. Between e0 and e0+k there's \<alpha>+n for some n.\<close>
+        \<comment> \<open>ftilde is continuous on I\_set (from hft\_path). By IVT, ftilde hits \<alpha>+n. Contradiction.\<close>
+        have hft_cont_HOL: "continuous_on I_set ftilde"
+          using hft_path unfolding top1_is_path_on_def top1_continuous_map_on_def
+          sorry \<comment> \<open>Convert top1 continuity to HOL continuous\_on. Standard.\<close>
+        \<comment> \<open>There exists m \<in> Z with \<alpha>+m strictly between e0 and e0+k.\<close>
+        define target where "target = \<alpha> + of_int (\<lfloor>e0 - \<alpha>\<rfloor> + (if k > 0 then 1 else 0))"
+        have htarget_Z: "\<exists>m::int. target = \<alpha> + of_int m"
+          unfolding target_def by (by100 blast)
+        have htarget_between: "(e0 < target \<and> target \<le> e0 + of_int k) \<or>
+            (e0 + of_int k \<le> target \<and> target < e0)"
+          sorry \<comment> \<open>Floor arithmetic: target is the first \<alpha>+Z point above or below e0.\<close>
+        \<comment> \<open>By IVT: \<exists>s \<in> [0,1]. ftilde(s) = target.\<close>
+        have "\<exists>s\<in>I_set. ftilde s = target"
+          sorry \<comment> \<open>IVT from continuous\_on + target between ftilde(0) and ftilde(1).\<close>
+        then obtain s where hs: "s \<in> I_set" and hfs: "ftilde s = target" by (by100 blast)
+        from htarget_Z obtain m where hm: "target = \<alpha> + of_int m" by (by100 blast)
+        have "ftilde s = \<alpha> + of_int m" using hfs hm by (by100 simp)
+        thus False using hft_avoids hs by (by100 blast)
+      qed
       thus ?thesis using hft1_diff by (by100 linarith)
     qed
     \<comment> \<open>Step 3: Construct null-homotopy.
