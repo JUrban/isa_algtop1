@@ -7437,6 +7437,18 @@ lemma topology_X_mem_TX:
   shows "X \<in> TX"
   using assms unfolding is_topology_on_def by (by100 blast)
 
+text \<open>Helper: finite union of path-connected subspaces sharing a common point is path-connected.\<close>
+lemma path_connected_finite_union_common_point:
+  assumes hTX: "is_topology_on X TX"
+      and hfin: "finite F"
+      and hF_sub: "\<forall>A\<in>F. A \<subseteq> X"
+      and hF_pc: "\<forall>A\<in>F. top1_path_connected_on A (subspace_topology X TX A)"
+      and hp_F: "\<forall>A\<in>F. p \<in> A"
+      and hX_eq: "X = \<Union>F"
+  shows "top1_path_connected_on X TX"
+  sorry \<comment> \<open>For x, y \<in> X: x \<in> A_i, y \<in> A_j with p \<in> A_i \<inter> A_j.
+     Path x \<rightarrow> p in A_i, p \<rightarrow> y in A_j, concatenate. ~20 lines.\<close>
+
 text \<open>Helper: singleton is closed in a Hausdorff space.\<close>
 lemma hausdorff_singleton_closed:
   assumes "is_topology_on X TX" "is_hausdorff_on X TX" "x \<in> X"
@@ -7677,7 +7689,73 @@ proof -
       \<comment> \<open>Step 4: Construct U and show it's open (mirror of V construction).\<close>
       define UV_U where "UV_U = C j0 \<union> (\<Union>j\<in>J-{j0}. C j - {q j})"
       have hU_open: "openin_on X TX UV_U"
-        sorry \<comment> \<open>Mirror of V openness: X \ U = {q j | j \<in> J-{j0}} closed via coherent topology.\<close>
+      proof -
+        \<comment> \<open>X \ U = {q j | j \<in> J\{j0}}. This is a finite set of points, each closed.\<close>
+        have hXmU: "X - UV_U = (\<Union>j\<in>J-{j0}. {q j})"
+        proof (rule set_eqI, rule iffI)
+          fix x assume "x \<in> X - UV_U"
+          hence hx_X: "x \<in> X" and hx_nU: "x \<notin> UV_U" by (by100 blast)+
+          from hx_X[unfolded hC_union[symmetric]] obtain j where hj: "j \<in> J" "x \<in> C j"
+            by (by100 blast)
+          show "x \<in> (\<Union>j\<in>J-{j0}. {q j})"
+          proof (cases "j = j0")
+            case True thus ?thesis using hj hx_nU unfolding UV_U_def by (by100 blast)
+          next
+            case False
+            have "x \<notin> C j - {q j}" using hx_nU hj False unfolding UV_U_def by (by100 blast)
+            hence "x = q j" using hj by (by100 blast)
+            thus ?thesis using hj False by (by100 blast)
+          qed
+        next
+          fix x assume "x \<in> (\<Union>j\<in>J-{j0}. {q j})"
+          then obtain j where hj: "j \<in> J" "j \<noteq> j0" "x = q j" by (by100 blast)
+          have "x \<in> X" using hj hC_sub hq by (by100 blast)
+          moreover have "x \<notin> UV_U"
+          proof
+            assume "x \<in> UV_U"
+            hence "x \<in> C j0 \<or> (\<exists>k\<in>J-{j0}. x \<in> C k - {q k})" unfolding UV_U_def by (by100 blast)
+            thus False
+            proof
+              assume "x \<in> C j0"
+              hence "x \<in> C j \<inter> C j0" using hj hq by (by100 blast)
+              hence "x \<in> {p}" using hC_disj[OF _ hj0] hj by (by100 blast)
+              thus False using hj hq by (by100 blast)
+            next
+              assume "\<exists>k\<in>J-{j0}. x \<in> C k - {q k}"
+              then obtain k where "k \<in> J" "k \<noteq> j0" "x \<in> C k" "x \<noteq> q k" by (by100 blast)
+              show False
+              proof (cases "k = j")
+                case True thus ?thesis using \<open>x \<noteq> q k\<close> hj by (by100 blast)
+              next
+                case False
+                have "x \<in> C j \<inter> C k" using hj hq \<open>x \<in> C k\<close> by (by100 blast)
+                hence "x = p" using hC_disj \<open>k \<in> J\<close> hj False by (by100 blast)
+                thus ?thesis using hj hq by (by100 blast)
+              qed
+            qed
+          qed
+          ultimately show "x \<in> X - UV_U" by (by100 blast)
+        qed
+        \<comment> \<open>Finite set of points is closed in Hausdorff space.\<close>
+        have "finite (J - {j0})" using hfin by (by100 simp)
+        hence "finite (\<Union>j\<in>J-{j0}. {q j})" by (by100 simp)
+        moreover have "(\<Union>j\<in>J-{j0}. {q j}) \<subseteq> X"
+          using hC_sub hq by (by100 blast)
+        ultimately have "closedin_on X TX (\<Union>j\<in>J-{j0}. {q j})"
+          by (rule Theorem_17_8[OF hX_haus])
+        hence "closedin_on X TX (X - UV_U)" using hXmU by (by100 simp)
+        have "openin_on X TX (X - (X - UV_U))"
+          by (rule closed_complement_open[OF \<open>closedin_on X TX (X - UV_U)\<close>])
+        moreover have "UV_U \<subseteq> X"
+        proof -
+          have "C j0 \<subseteq> X" using hC_sub[OF hj0] .
+          moreover have "(\<Union>j\<in>J-{j0}. C j - {q j}) \<subseteq> X"
+            by (rule UN_least) (use hC_sub in \<open>by100 blast\<close>)
+          ultimately show ?thesis unfolding UV_U_def by (by100 blast)
+        qed
+        hence "X - (X - UV_U) = UV_U" by (by100 blast)
+        ultimately show ?thesis by (by100 simp)
+      qed
       have hp_UV: "p \<in> UV_U \<inter> UV_V"
       proof -
         have "p \<in> UV_U" unfolding UV_U_def using hp_C[OF hj0] by (by100 blast)
