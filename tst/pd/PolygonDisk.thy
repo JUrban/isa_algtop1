@@ -4206,7 +4206,44 @@ proof -
   \<comment> \<open>\<psi> is continuous on I\_set.\<close>
   have h\<psi>_cont: "top1_continuous_map_on I_set top1_unit_interval_topology
       I_set top1_unit_interval_topology \<psi>"
-    sorry \<comment> \<open>Piecewise linear, continuous at junction s=1/2 (both sides give 1/n).\<close>
+  proof -
+    define f1 where "f1 s = 2 * s / real n" for s :: real
+    define f2 where "f2 s = 1 / real n + (2*s - 1) * (real n - 1) / real n" for s :: real
+    have hf1_cont: "continuous_on UNIV f1" unfolding f1_def
+      using hn_pos by (intro continuous_intros) (by100 simp)+
+    have hf2_cont: "continuous_on UNIV f2" unfolding f2_def
+      using hn_pos by (intro continuous_intros) (by100 simp)+
+    \<comment> \<open>At junction s=1/2: f1(1/2) = 1/n = f2(1/2).\<close>
+    have hjunction1: "\<And>s::real. s \<le> 1/2 \<Longrightarrow> \<not> (s \<le> 1/2) \<Longrightarrow> f1 s = f2 s"
+      by (by100 simp)
+    have hjunction2: "\<And>s::real. \<not> (s \<le> 1/2) \<Longrightarrow> s \<le> 1/2 \<Longrightarrow> f1 s = f2 s"
+      by (by100 simp)
+    have h\<psi>_cont_univ: "continuous_on (UNIV :: real set) \<psi>"
+    proof -
+      have "continuous_on ({..1/2} \<union> {1/2..}) (\<lambda>s. if s \<le> 1/2 then f1 s else f2 s)"
+      proof (rule continuous_on_If)
+        show "closed ({..1/2::real})" by (by100 simp)
+        show "closed ({1/2::real..})" by (by100 simp)
+        show "continuous_on {..1/2} f1" using continuous_on_subset[OF hf1_cont] by (by100 blast)
+        show "continuous_on {1/2..} f2" using continuous_on_subset[OF hf2_cont] by (by100 blast)
+        fix s :: real assume "s \<in> {..1/2}" "\<not> s \<le> 1/2"
+        thus "f1 s = f2 s" by (by100 simp)
+      next
+        fix s :: real assume "s \<in> {1/2::real..}" "s \<le> 1/2"
+        hence hs: "s = 1/2" by (by100 simp)
+        show "f1 s = f2 s" unfolding f1_def f2_def hs by (by100 simp)
+      qed
+      moreover have "{..1/2::real} \<union> {1/2..} = UNIV" by (by100 auto)
+      moreover have "\<And>s. \<psi> s = (if s \<le> 1/2 then f1 s else f2 s)"
+        unfolding \<psi>_def f1_def f2_def by (by100 simp)
+      ultimately show ?thesis by (by100 simp)
+    qed
+    show ?thesis unfolding top1_unit_interval_def
+      using top1_continuous_map_on_real_subspace_open_sets[of "{0..1}" \<psi> "{0..1}"]
+        h\<psi>_range h\<psi>_cont_univ
+      unfolding top1_unit_interval_def
+      using top1_unit_interval_def top1_unit_interval_topology_def by (by5000 simp)
+  qed
   \<comment> \<open>id is continuous on I\_set.\<close>
   have hid_cont: "top1_continuous_map_on I_set top1_unit_interval_topology
       I_set top1_unit_interval_topology id"
