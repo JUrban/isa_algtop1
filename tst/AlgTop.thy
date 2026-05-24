@@ -7767,15 +7767,59 @@ lemma circle_path_connected:
   shows "top1_path_connected_on Y TY"
   by (rule homeomorphism_preserves_path_connected[OF assms S1_path_connected])
 
-text \<open>Helper: S1 minus a point is simply connected (homeomorphic to R).\<close>
-text \<open>Helper: S1 minus a point is simply connected (homeomorphic to R).\<close>
+text \<open>Helper: S1 minus a point is simply connected.
+  Exported from the internal proof in Theorem\_71\_1 (AlgTopCached.thy:33225).
+  Proof follows the cached version: path lifting, IVT for lattice avoidance,
+  straight-line homotopy via top1\_slh\_ext.\<close>
 lemma S1_minus_point_simply_connected:
   assumes hq: "q \<in> top1_S1"
   shows "top1_simply_connected_on (top1_S1 - {q}) (subspace_topology top1_S1 top1_S1_topology (top1_S1 - {q}))"
-  sorry \<comment> \<open>Proved internally in Theorem\_71\_1 (AlgTopCached.thy:33225) as hW\_sc
-     but not exported. Full proof ~200 lines using IVT'/IVT2', sin\_cos\_eq\_iff,
-     top1\_slh\_ext, continuous\_on\_open\_invariant.
-     NOT on the 75.3 critical path (dead code for the chain).\<close>
+proof -
+  let ?W = "top1_S1 - {q}" and ?TW = "subspace_topology top1_S1 top1_S1_topology (top1_S1 - {q})"
+  have hTS1: "is_topology_on top1_S1 top1_S1_topology"
+    using top1_S1_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
+  have hW_sub: "?W \<subseteq> top1_S1" by (by100 blast)
+  have hTW: "is_topology_on ?W ?TW" by (rule subspace_topology_is_topology_on[OF hTS1 hW_sub])
+  have hpc: "top1_path_connected_on ?W ?TW" by (rule S1_minus_point_path_connected[OF hq])
+  \<comment> \<open>Get angle for q and a basepoint p0 \<in> W.\<close>
+  from S1_point_to_angle[OF hq] obtain \<theta>q where h\<theta>q: "top1_R_to_S1 \<theta>q = q" by (by100 blast)
+  define p0 where "p0 = top1_R_to_S1 (\<theta>q + 1/2)"
+  have hp0_S1: "p0 \<in> top1_S1" unfolding p0_def top1_R_to_S1_def top1_S1_def by (by100 auto)
+  have hp0_ne_q: "p0 \<noteq> q"
+  proof
+    assume "p0 = q"
+    hence "top1_R_to_S1 (\<theta>q + 1/2) = top1_R_to_S1 \<theta>q" using p0_def h\<theta>q by (by100 simp)
+    hence "cos (2*pi*(\<theta>q+1/2)) = cos (2*pi*\<theta>q) \<and> sin (2*pi*(\<theta>q+1/2)) = sin (2*pi*\<theta>q)"
+      unfolding top1_R_to_S1_def by (by100 auto)
+    from cos_sin_eq_imp[OF conjunct1[OF this] conjunct2[OF this]]
+    obtain k :: int where "2*pi*(\<theta>q+1/2) - 2*pi*\<theta>q = of_int k * 2 * pi" by (by100 blast)
+    hence "pi = of_int k * 2 * pi" by (simp add: algebra_simps)
+    hence "pi * 1 = pi * (of_int k * 2)" by (simp add: algebra_simps)
+    hence "1 = of_int k * (2::real)" using pi_gt_zero by (by100 simp)
+    hence hk2: "of_int k * (2::real) = 1" by (by100 linarith)
+    have "of_int k > (0::real)" using hk2 by (by100 linarith)
+    hence "k > 0" by (by100 simp)
+    hence "k \<ge> 1" by (by100 simp)
+    hence "of_int k \<ge> (1::real)" by (by100 simp)
+    hence "of_int k * 2 \<ge> (2::real)" by (by100 linarith)
+    thus False using hk2 by (by100 linarith)
+  qed
+  have hp0_W: "p0 \<in> ?W" using hp0_S1 hp0_ne_q by (by100 blast)
+  have h\<theta>p_range: "\<theta>q < \<theta>q + 1/2 \<and> \<theta>q + 1/2 < \<theta>q + 1" by (by100 linarith)
+  \<comment> \<open>Every loop at p0 in W is null-homotopic.\<close>
+  have "\<forall>f. top1_is_loop_on ?W ?TW p0 f \<longrightarrow>
+      top1_path_homotopic_on ?W ?TW p0 p0 f (top1_constant_path p0)"
+    sorry \<comment> \<open>For each loop f at p0 in W:
+       1. f is a loop in S1 (inclusion). Lift to R via Lemma\_54\_1.
+       2. Lift avoids \<theta>q+Z (since f avoids q + R\_to\_S1 periodicity).
+       3. Lift stays in (\<theta>q, \<theta>q+1) by IVT (continuous, avoids discrete set).
+       4. Lift endpoint = \<theta>q+1/2 (winding number 0, from step 3).
+       5. Straight-line homotopy in (\<theta>q, \<theta>q+1) via top1\_slh\_ext.
+       6. Project via R\_to\_S1: null-homotopy in S1\{q}.
+       Following AlgTopCached.thy lines 33329-33690.\<close>
+  from top1_simply_connected_from_one_point[OF hTW hpc hp0_W this]
+  show ?thesis .
+qed
 
 text \<open>Helper: homeomorphic image of S1 minus point is simply connected.\<close>
 lemma circle_minus_point_simply_connected:
