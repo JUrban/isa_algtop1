@@ -3096,7 +3096,10 @@ lemma polygon_homeomorphic_to_disk_with_boundary:
                           (1-t) * vy i + t * vy (Suc i mod n)) | t. t \<in> I_set})))
         (top1_B2 - top1_S1)
         (subspace_topology top1_B2 top1_B2_topology (top1_B2 - top1_S1))
-        \<psi>"
+        \<psi>
+    \<and> (\<forall>i<n. \<forall>t\<in>I_set. \<psi> ((1-t) * vx i + t * vx (Suc i mod n),
+                              (1-t) * vy i + t * vy (Suc i mod n))
+        = (cos (2 * pi * (real i + t) / real n), sin (2 * pi * (real i + t) / real n)))"
 proof -
   \<comment> \<open>Derive hno_collinear from strict half-plane condition.\<close>
   have hno_collinear: "\<forall>i<n. \<forall>j<n. j \<noteq> i \<longrightarrow> Suc i mod n \<noteq> j \<longrightarrow>
@@ -3128,7 +3131,12 @@ proof -
     by - (erule exE, erule conjE, erule conjE, erule conjE, rule that, assumption, assumption, assumption, assumption)
   show ?thesis
     apply (rule exI[of _ \<psi>])
-    using h1 h2 h3 by (by100 blast)
+    apply (intro conjI)
+    using h1 apply (by100 blast)
+    using h2 apply (by100 blast)
+    using h3 apply (by100 blast)
+    using h4 apply (by100 blast)
+    done
 qed
 text \<open>Hausdorff property for scheme quotients. Following Munkres Theorem 74.1:
   the quotient map q: P \<rightarrow> X is a closed map (preimages of saturations are closed
@@ -3887,7 +3895,12 @@ lemma scheme_quotient_CW_data:
     \<and> (\<forall>i<length scheme.
           top1_continuous_map_on I_set top1_unit_interval_topology A (subspace_topology X TX A)
             (\<lambda>t. q ((1-t) * vx i + t * vx (Suc i mod length scheme),
-                     (1-t) * vy i + t * vy (Suc i mod length scheme))))"
+                     (1-t) * vy i + t * vy (Suc i mod length scheme))))
+    \<and> (\<forall>i<length scheme. \<forall>t\<in>I_set.
+          h (cos (2 * pi * (real i + t) / real (length scheme)),
+             sin (2 * pi * (real i + t) / real (length scheme)))
+        = q ((1-t) * vx i + t * vx (Suc i mod length scheme),
+             (1-t) * vy i + t * vy (Suc i mod length scheme)))"
 proof -
   \<comment> \<open>Step 1: Extract (P, q, vx, vy) from the scheme definition.\<close>
   obtain P q vx vy where
@@ -3979,7 +3992,12 @@ proof -
           (top1_B2 - top1_S1)
           (subspace_topology top1_B2 top1_B2_topology (top1_B2 - top1_S1))
           \<psi>"
-    by (elim conjE exE) (rule that, assumption+)
+      and h\<psi>_edge_arc: "\<forall>i<length scheme. \<forall>t\<in>I_set.
+          \<psi> ((1-t) * vx i + t * vx (Suc i mod length scheme),
+              (1-t) * vy i + t * vy (Suc i mod length scheme))
+          = (cos (2 * pi * (real i + t) / real (length scheme)),
+             sin (2 * pi * (real i + t) / real (length scheme)))"
+    by - (erule exE, (erule conjE)+, rule that, assumption+)
   \<comment> \<open>Step 3: Define A = q(Bd P) where Bd P = union of edges.\<close>
   define BdP where "BdP = (\<Union>i<length scheme.
       {((1-t) * vx i + t * vx (Suc i mod length scheme),
@@ -4822,6 +4840,29 @@ proof -
     show "top1_continuous_map_on I_set top1_unit_interval_topology A (subspace_topology X TX A) ?f"
       using hf_cont_X hA_sub_X himg_A by (by100 blast)
   qed
+  \<comment> \<open>Edge-to-arc: h maps circle at angle 2\<pi>(i+t)/n to the edge loop.\<close>
+  have hedge_to_arc: "\<forall>i<length scheme. \<forall>t\<in>I_set.
+      h (cos (2 * pi * (real i + t) / real (length scheme)),
+         sin (2 * pi * (real i + t) / real (length scheme)))
+    = q ((1-t) * vx i + t * vx (Suc i mod length scheme),
+         (1-t) * vy i + t * vy (Suc i mod length scheme))"
+  proof (intro allI impI ballI)
+    fix i :: nat and t :: real
+    assume hi: "i < length scheme" and ht: "t \<in> I_set"
+    \<comment> \<open>From edge-to-arc property of \<psi>: \<psi>(edge\_i(t)) = (cos(\<theta>), sin(\<theta>)).\<close>
+    let ?edge_pt = "((1-t) * vx i + t * vx (Suc i mod length scheme),
+         (1-t) * vy i + t * vy (Suc i mod length scheme))"
+    let ?\<theta> = "2 * pi * (real i + t) / real (length scheme)"
+    have h\<psi>_edge: "\<psi> ?edge_pt = (cos ?\<theta>, sin ?\<theta>)"
+      using h\<psi>_edge_arc[rule_format, OF hi ht] .
+    \<comment> \<open>h = q \<circ> \<psi>^{-1}, so h(cos\<theta>, sin\<theta>) = q(\<psi>^{-1}(cos\<theta>, sin\<theta>)) = q(edge\_pt).\<close>
+    have "?edge_pt \<in> P" sorry
+    hence "\<psi> ?edge_pt \<in> \<psi> ` P" by (by100 blast)
+    hence h_inv: "inv_into P \<psi> (\<psi> ?edge_pt) = ?edge_pt"
+      sorry \<comment> \<open>inj\_on \<psi> P from homeomorphism, then inv\_into\_f\_f.\<close>
+    show "h (cos ?\<theta>, sin ?\<theta>) = q ?edge_pt"
+      using h_inv h\<psi>_edge unfolding h_def by (by100 simp)
+  qed
   show ?thesis
     apply (rule exI[of _ A], rule exI[of _ h], rule exI[of _ a],
            rule exI[of _ q], rule exI[of _ vx], rule exI[of _ vy])
@@ -4839,6 +4880,7 @@ proof -
     using hedge apply (by100 blast)
     using hno_extra_cw apply (by100 blast)
     using hq_edge_cont apply (by100 blast)
+    using hedge_to_arc apply (by100 blast)
     done
 qed
 
