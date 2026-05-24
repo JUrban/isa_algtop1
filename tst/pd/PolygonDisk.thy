@@ -4236,7 +4236,46 @@ proof (induction n arbitrary: f rule: nat_less_induct)
       qed
       \<comment> \<open>g is continuous (composition of f with affine rescaling).\<close>
       have hg_cont: "top1_continuous_map_on I_set top1_unit_interval_topology X TX g"
-        sorry \<comment> \<open>f continuous + affine rescaling continuous \<Rightarrow> g continuous.\<close>
+      proof -
+        \<comment> \<open>g = f \<circ> (affine rescaling). Rescaling maps [0,1] \<rightarrow> [0,1] continuously.\<close>
+        have hf_cont: "top1_continuous_map_on I_set top1_unit_interval_topology X TX f"
+          using hloop unfolding top1_is_loop_on_def top1_is_path_on_def top1_unit_interval_def
+          by (by100 blast)
+        define r where "r s = 1 / real n + s * (real n - 1) / real n" for s :: real
+        have hr_range: "\<And>s. s \<in> I_set \<Longrightarrow> r s \<in> I_set"
+        proof -
+          fix s :: real assume hs: "s \<in> I_set"
+          hence hs01: "0 \<le> s \<and> s \<le> 1" unfolding top1_unit_interval_def by (by100 auto)
+          have "0 \<le> r s" unfolding r_def using hs01 hn_pos by (by100 simp)
+          moreover have "r s \<le> 1"
+          proof -
+            have "r s = 1 / real n + s * (real n - 1) / real n" unfolding r_def by (by100 simp)
+            also have "\<dots> \<le> 1 / real n + 1 * (real n - 1) / real n"
+            proof -
+              have "s * (real n - 1) / real n \<le> 1 * (real n - 1) / real n"
+                using hs01 hn2 by (intro divide_right_mono mult_right_mono) (by100 simp)+
+              thus ?thesis by (by100 simp)
+            qed
+            also have "\<dots> = real n / real n" by (simp add: field_simps)
+            also have "\<dots> = 1" using hn_pos by (by100 simp)
+            finally show ?thesis .
+          qed
+          ultimately show "r s \<in> I_set" unfolding top1_unit_interval_def by (by100 auto)
+        qed
+        have hr_cont_univ: "continuous_on (UNIV::real set) r"
+          unfolding r_def using hn_pos by (intro continuous_intros) (by100 simp)+
+        have hr_top1: "top1_continuous_map_on I_set top1_unit_interval_topology
+            I_set top1_unit_interval_topology r"
+          unfolding top1_unit_interval_def
+          using top1_continuous_map_on_real_subspace_open_sets[of "{0..1}" r "{0..1}"]
+            hr_range hr_cont_univ
+          unfolding top1_unit_interval_def
+          using top1_unit_interval_def top1_unit_interval_topology_def by (by5000 simp)
+        have "top1_continuous_map_on I_set top1_unit_interval_topology X TX (f \<circ> r)"
+          using top1_continuous_map_on_comp[OF hr_top1 hf_cont] .
+        moreover have "g = f \<circ> r" unfolding g_def r_def comp_def by (by100 simp)
+        ultimately show ?thesis by (by100 simp)
+      qed
       show ?thesis unfolding top1_is_loop_on_def top1_is_path_on_def
         using hg0 hg1 hg_cont by (by5000 blast)
     qed
