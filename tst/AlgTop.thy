@@ -8469,8 +8469,56 @@ proof -
         let ?boundary = "\<lambda>s. \<iota> (?circle s)"
         \<comment> \<open>Step 1: relator\_class = class of ?boundary.\<close>
         have hrel_eq: "relator_class = {g. top1_loop_equiv_on A (subspace_topology X TX A) a' ?boundary g}"
-          sorry \<comment> \<open>From induced map def: relator\_class = {\<iota>\<circ>f | f \<simeq> circle, \<iota>\<circ>f \<simeq> g}
-             = class(\<iota> \<circ> circle) since circle is in its own class.\<close>
+        proof -
+          let ?circle_class = "{g'. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) ?circle g'}"
+          have hrel_def: "relator_class = {g. \<exists>f\<in>?circle_class.
+              top1_loop_equiv_on A (subspace_topology X TX A) a' (\<iota> \<circ> f) g}"
+            unfolding relator_class_def top1_fundamental_group_induced_on_def by (by100 simp)
+          \<comment> \<open>circle \<in> circle\_class (by reflexivity).\<close>
+          have hcircle_loop: "top1_is_loop_on top1_S1 top1_S1_topology (1, 0) ?circle"
+            using standard_S1_loop_is_loop .
+          have hcircle_in: "?circle \<in> ?circle_class"
+            using top1_loop_equiv_on_refl[OF hcircle_loop] by (by100 blast)
+          \<comment> \<open>S1 topology.\<close>
+          have hS1_top: "is_topology_on top1_S1 top1_S1_topology"
+            using top1_S1_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
+          show ?thesis unfolding hrel_def
+          proof (rule set_eqI, rule iffI)
+            \<comment> \<open>Forward: if \<exists>f\<in>circle\_class. equiv(\<iota>\<circ>f, g), then equiv(\<iota>\<circ>circle, g).\<close>
+            fix g assume "g \<in> {g. \<exists>f\<in>?circle_class. top1_loop_equiv_on A (subspace_topology X TX A) a' (\<iota> \<circ> f) g}"
+            then obtain f where hf_in: "f \<in> ?circle_class"
+                and hfg: "top1_loop_equiv_on A (subspace_topology X TX A) a' (\<iota> \<circ> f) g" by (by100 blast)
+            \<comment> \<open>circle \<simeq> f in S1.\<close>
+            have hcf: "top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) ?circle f"
+              using hf_in by (by100 blast)
+            \<comment> \<open>By continuous\_preserves: \<iota>\<circ>circle \<simeq> \<iota>\<circ>f.\<close>
+            have hcf_ph: "top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0) ?circle f"
+              using hcf unfolding top1_loop_equiv_on_def by (by100 blast)
+            have h\<iota>cf: "top1_path_homotopic_on A (subspace_topology X TX A) (\<iota> (1, 0)) (\<iota> (1, 0))
+                (\<iota> \<circ> ?circle) (\<iota> \<circ> f)"
+              using continuous_preserves_path_homotopic[OF hS1_top hTA h\<iota>_cont hcf_ph] .
+            have h\<iota>10: "\<iota> (1, 0) = a'"
+            proof -
+              have "(1::real, 0::real) \<in> top1_S1" unfolding top1_S1_def by (by100 simp)
+              thus ?thesis using h\<iota>_eq ha'_base by (by100 blast)
+            qed
+            \<comment> \<open>\<iota> \<circ> circle \<simeq> \<iota> \<circ> f, and \<iota> \<circ> f \<simeq> g, so \<iota> \<circ> circle \<simeq> g.\<close>
+            have "top1_loop_equiv_on A (subspace_topology X TX A) a' ?boundary g"
+              sorry \<comment> \<open>From h\<iota>cf (path homotopic) + hfg (loop equiv) + transitivity.
+                 Needs: \<iota>\<circ>circle is a loop at a' (hbdy\_loop, proved below),
+                 \<iota>\<circ>f is a loop at a' (from hfg), g is a loop (from hfg).\<close>
+            thus "g \<in> {g. top1_loop_equiv_on A (subspace_topology X TX A) a' ?boundary g}" by (by100 blast)
+          next
+            \<comment> \<open>Backward: if equiv(?boundary, g), take f = circle.\<close>
+            fix g assume "g \<in> {g. top1_loop_equiv_on A (subspace_topology X TX A) a' ?boundary g}"
+            hence hbg: "top1_loop_equiv_on A (subspace_topology X TX A) a' ?boundary g" by (by100 blast)
+            have "\<And>s. ?boundary s = (\<iota> \<circ> ?circle) s" unfolding comp_def by (by100 simp)
+            hence hbg': "top1_loop_equiv_on A (subspace_topology X TX A) a' (\<iota> \<circ> ?circle) g"
+              using hbg hloop_class_eq_pointwise sorry
+            thus "g \<in> {g. \<exists>f\<in>?circle_class. top1_loop_equiv_on A (subspace_topology X TX A) a' (\<iota> \<circ> f) g}"
+              using hcircle_in by (by100 blast)
+          qed
+        qed
         \<comment> \<open>Step 2: ?boundary is a loop at a' in A.\<close>
         have hbdy_loop: "top1_is_loop_on A (subspace_topology X TX A) a' ?boundary"
         proof -
