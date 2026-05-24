@@ -7858,16 +7858,44 @@ proof -
           (top1_fundamental_group_id A (subspace_topology X TX A) a')
           (top1_fundamental_group_invg A (subspace_topology X TX A) a')
           (map (\<lambda>(s, b). (\<phi> (\<iota>F s), b)) scheme)"
-      sorry \<comment> \<open>LAST BLOCKER (Munkres 74.2 one-sentence step):
-         "the loop \<pi> \<circ> f equals (g\_{i\_1})^{\<epsilon>\_1} * ... * (g\_{i\_n})^{\<epsilon>\_n}."
-         In our formalization: the loop class of \<iota> \<circ> circle in \<pi>_1(A,a')
-         equals the word product of edge loop classes.
-         Edge loop for (label, True) = \<phi>(\<iota>F(label)).
-         Edge loop for (label, False) = invg(\<phi>(\<iota>F(label))).
-         The boundary loop traverses edges 0,...,n-1 in order.
-         Proof needs: loop\_split\_at\_vertices (reparametrization)
-         + identification of each sub-loop with the correct generator class
-         (from the wedge-of-circles construction in scheme\_quotient\_CW\_data).\<close>
+    proof -
+      let ?n = "length scheme"
+      let ?TA = "subspace_topology X TX A"
+      let ?mulA = "top1_fundamental_group_mul A ?TA a'"
+      let ?idA = "top1_fundamental_group_id A ?TA a'"
+      let ?invA = "top1_fundamental_group_invg A ?TA a'"
+      \<comment> \<open>Step R1 (Munkres): "\<iota> \<circ> circle" traverses edges in order.
+         From hh\_edge\_arc: h(cos(2\<pi>(i+t)/n), sin(2\<pi>(i+t)/n)) = qC(edge\_i(t)).
+         From h\<iota>\_eq: \<iota> = h on S1.
+         So (\<iota> \<circ> circle)((i+t)/n) = edge\_loop\_i(t) for each edge i.\<close>
+      \<comment> \<open>Define edge loops in A:\<close>
+      define edge_loop where "edge_loop i t =
+          qC ((1-t) * vxC i + t * vxC (Suc i mod ?n),
+              (1-t) * vyC i + t * vyC (Suc i mod ?n))" for i :: nat and t :: real
+      \<comment> \<open>Key: (\<iota> \<circ> circle)((i+t)/n) = edge\_loop i t.\<close>
+      have h\<iota>_circle_edge: "\<forall>i<?n. \<forall>t\<in>I_set.
+          (\<iota> \<circ> (\<lambda>s. (cos (2 * pi * s), sin (2 * pi * s)))) ((real i + t) / real ?n) = edge_loop i t"
+        sorry \<comment> \<open>From hh\_edge\_arc + h\<iota>\_eq: \<iota>(cos(2\<pi>s), sin(2\<pi>s)) = h(cos(2\<pi>s), sin(2\<pi>s))
+           = qC(edge\_i(t)) = edge\_loop i t for s = (i+t)/n.\<close>
+      \<comment> \<open>Step R2: Edge loops are loops through a' (all vertices = a').\<close>
+      have hedge_loops: "\<forall>i<?n. edge_loop i 0 = a' \<and> edge_loop i 1 = a'"
+        sorry \<comment> \<open>edge\_loop i 0 = qC(vxC i, vyC i) = qC(vxC 0, vyC 0) = a'
+           (from hvert\_C + ha\_eq + a'\_def).\<close>
+      \<comment> \<open>Step R3: Each edge loop class = \<phi>(\<iota>F(label))^{sign}.
+         From the wedge-of-circles free group construction: \<phi>(\<iota>F(s)) is the
+         class of the canonical loop around circle s in A.\<close>
+      have hedge_class: "\<forall>i<?n. let (s, b) = scheme ! i in
+          {g. top1_loop_equiv_on A ?TA a' (edge_loop i) g}
+        = (if b then \<phi> (\<iota>F s) else ?invA (\<phi> (\<iota>F s)))"
+        sorry \<comment> \<open>Core identification: edge loop for label s with direction b
+           equals \<phi>(\<iota>F s) (if True) or its inverse (if False).
+           From the wedge-of-circles structure and hedge\_C identification.\<close>
+      \<comment> \<open>Step R4: Combine via group operations.
+         relator\_class = [\<iota> \<circ> circle] = product of [edge\_loop\_i]
+         = product of \<phi>(\<iota>F(s\_i))^{b\_i} = word\_product.\<close>
+      show ?thesis sorry \<comment> \<open>Assembly: combine R1-R3 with loop\_split\_at\_vertices
+         and group word\_product definition.\<close>
+    qed
     \<comment> \<open>Step R2: \<phi> is a hom, so \<phi>(word\_product in F) = word\_product in \<pi>_1(A,a').\<close>
     have hphi_word: "\<phi> (top1_group_word_product mulF eF invgF
           (map (\<lambda>(s, b). (\<iota>F s, b)) scheme))
