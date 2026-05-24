@@ -8277,6 +8277,27 @@ proof -
               top1_fundamental_group_invg A (subspace_topology X TX A) a' (\<phi> (\<iota>F s')))"
           unfolding hsb using hclass_eq by (by100 simp)
       qed
+      \<comment> \<open>Helper: word\_product in \<pi>_1 = class of foldr path product.
+         By induction on the list: each \<pi>_1\_mul step corresponds to a path\_product step
+         via top1\_fundamental\_group\_mul\_class.\<close>
+      have hword_foldr: "\<And>ws (fs :: nat \<Rightarrow> real \<Rightarrow> 'a).
+          (\<forall>k<length ws. top1_is_loop_on A (subspace_topology X TX A) a' (fs k)) \<Longrightarrow>
+          (\<forall>k<length ws. {g. top1_loop_equiv_on A (subspace_topology X TX A) a' (fs k) g}
+            = (if snd (ws!k) then fst (ws!k)
+               else top1_fundamental_group_invg A (subspace_topology X TX A) a' (fst (ws!k)))) \<Longrightarrow>
+          top1_group_word_product
+            (top1_fundamental_group_mul A (subspace_topology X TX A) a')
+            (top1_fundamental_group_id A (subspace_topology X TX A) a')
+            (top1_fundamental_group_invg A (subspace_topology X TX A) a')
+            ws
+          = {g. top1_loop_equiv_on A (subspace_topology X TX A) a'
+              (foldr top1_path_product (map fs [0..<length ws]) (top1_constant_path a')) g}"
+        sorry \<comment> \<open>By induction on ws:
+           Base: word\_product [] = \<pi>_1\_id = [const a']. \<checkmark>
+           Step: word\_product (w#rest) = \<pi>_1\_mul(w\^b, word\_product rest)
+             = \<pi>_1\_mul([fs 0], [foldr rest const]) (by IH + hsub matching)
+             = [fs 0 * foldr rest const] (by top1\_fundamental\_group\_mul\_class)
+             = [foldr (fs 0 # rest) const]. \<checkmark>\<close>
       \<comment> \<open>Assembly: connect loop decomposition with word\_product in \<pi>_1.\<close>
       \<comment> \<open>Step A1: relator\_class = class of \<iota> \<circ> circle.\<close>
       \<comment> \<open>Step A2: [\<iota> \<circ> circle] = [foldr path\_product [sub\_0,...] const]
@@ -8286,9 +8307,55 @@ proof -
          (by induction using top1\_fundamental\_group\_mul\_class).\<close>
       \<comment> \<open>Step A4: Substitute [sub\_k] = \<phi>(\<iota>F(s\_k))^{b\_k} (from hsub\_class).\<close>
       \<comment> \<open>Step A5: The \<pi>_1\_mul product = word\_product\_\<pi>_1 (by definition of word\_product).\<close>
-      show ?thesis sorry
-        \<comment> \<open>Remaining: induction connecting foldr path\_product class with word\_product \<pi>_1.
-           Uses top1\_fundamental\_group\_mul\_class + hsub\_class + word\_product recursion.\<close>
+      \<comment> \<open>Apply the helper with ws = map (\<lambda>(s,b). (\<phi>(\<iota>F s), b)) scheme
+         and fs k = edge\_loop\_k.\<close>
+      define edge_loop_fn where "edge_loop_fn k t =
+          qC ((1-t) * vxC k + t * vxC (Suc k mod ?n),
+              (1-t) * vyC k + t * vyC (Suc k mod ?n))" for k :: nat and t :: real
+      have hlen_eq: "length (map (\<lambda>(s,b). (\<phi> (\<iota>F s), b)) scheme) = length scheme"
+        by (by100 simp)
+      \<comment> \<open>Connect relator\_class with the foldr product via loop\_split\_at\_vertices.\<close>
+      have hrel_foldr: "relator_class =
+          {g. top1_loop_equiv_on A (subspace_topology X TX A) a'
+            (foldr top1_path_product (map edge_loop_fn [0..<?n]) (top1_constant_path a')) g}"
+        sorry \<comment> \<open>From relator\_class = [\<iota> \<circ> circle], loop\_split\_at\_vertices gives
+           [\<iota> \<circ> circle] = [foldr sub-loops const], and h\_iota\_circle\_edge gives
+           sub\_k = edge\_loop\_fn k. Also needs a = a'.\<close>
+      \<comment> \<open>Edge loops are loops at a'.\<close>
+      have hedge_loops_fn: "\<forall>k<?n. top1_is_loop_on A (subspace_topology X TX A) a' (edge_loop_fn k)"
+        sorry \<comment> \<open>From hqC\_edge\_cont + vertex identification.\<close>
+      \<comment> \<open>hsub\_class in terms of edge\_loop\_fn.\<close>
+      have hsub_fn: "\<forall>k<?n. {g. top1_loop_equiv_on A (subspace_topology X TX A) a' (edge_loop_fn k) g}
+          = (if snd (scheme!k) then \<phi> (\<iota>F (fst (scheme!k)))
+             else top1_fundamental_group_invg A (subspace_topology X TX A) a' (\<phi> (\<iota>F (fst (scheme!k)))))"
+      proof (intro allI impI)
+        fix k assume hk: "k < ?n"
+        from hsub_class[rule_format, OF hk] obtain s b where
+          hsb: "scheme!k = (s, b)" and
+          hc: "{g. top1_loop_equiv_on A (subspace_topology X TX A) a'
+                (\<lambda>t. qC ((1-t) * vxC k + t * vxC (Suc k mod ?n),
+                          (1-t) * vyC k + t * vyC (Suc k mod ?n))) g}
+              = (if b then \<phi> (\<iota>F s) else
+                  top1_fundamental_group_invg A (subspace_topology X TX A) a' (\<phi> (\<iota>F s)))"
+          by (cases "scheme!k") (by100 force)
+        have "edge_loop_fn k = (\<lambda>t. qC ((1-t) * vxC k + t * vxC (Suc k mod ?n),
+                                         (1-t) * vyC k + t * vyC (Suc k mod ?n)))"
+          unfolding edge_loop_fn_def by (by100 simp)
+        thus "{g. top1_loop_equiv_on A (subspace_topology X TX A) a' (edge_loop_fn k) g}
+            = (if snd (scheme!k) then \<phi> (\<iota>F (fst (scheme!k)))
+               else top1_fundamental_group_invg A (subspace_topology X TX A) a' (\<phi> (\<iota>F (fst (scheme!k)))))"
+          using hc hsb by (by100 simp)
+      qed
+      \<comment> \<open>Apply the helper.\<close>
+      have hword_eq: "top1_group_word_product
+          (top1_fundamental_group_mul A (subspace_topology X TX A) a')
+          (top1_fundamental_group_id A (subspace_topology X TX A) a')
+          (top1_fundamental_group_invg A (subspace_topology X TX A) a')
+          (map (\<lambda>(s,b). (\<phi> (\<iota>F s), b)) scheme)
+        = {g. top1_loop_equiv_on A (subspace_topology X TX A) a'
+            (foldr top1_path_product (map edge_loop_fn [0..<?n]) (top1_constant_path a')) g}"
+        sorry \<comment> \<open>From hword\_foldr + list matching.\<close>
+      show ?thesis using hrel_foldr hword_eq by (by100 simp)
     qed
     \<comment> \<open>Step R2: \<phi> is a hom, so \<phi>(word\_product in F) = word\_product in \<pi>_1(A,a').\<close>
     have hphi_word: "\<phi> (top1_group_word_product mulF eF invgF
