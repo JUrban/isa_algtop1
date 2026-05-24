@@ -6923,7 +6923,7 @@ definition top1_group_presented_by_on ::
    \<Rightarrow> 's set \<Rightarrow> (('s \<times> bool) list set) \<Rightarrow> bool" where
   "top1_group_presented_by_on G mul e invg S R \<longleftrightarrow>
      top1_is_group_on G mul e invg \<and>
-     (\<exists>(F::'g set) mulF eF invgF \<iota> \<pi>.
+     (\<exists>(F::int set) mulF eF invgF \<iota> \<pi>.
         top1_is_free_group_full_on F mulF eF invgF \<iota> S
       \<and> top1_group_hom_on F mulF G mul \<pi>
       \<and> \<pi> ` F = G

@@ -6619,8 +6619,8 @@ text \<open>Helper: given a free group F \<cong> \<pi>_1(A), a quotient \<pi>_1(
   and a word w such that \<phi>^{-1}(r) = word\_product(\<iota>F, w),
   conclude that \<pi>_1(X) has presentation \<langle>S | w\<rangle>.\<close>
 lemma presentation_from_free_quotient:
-  fixes F :: "'f set" and mulF :: "'f \<Rightarrow> 'f \<Rightarrow> 'f" and eF :: 'f and invgF :: "'f \<Rightarrow> 'f"
-    and \<iota>F :: "'s \<Rightarrow> 'f" and S :: "'s set"
+  fixes F :: "int set" and mulF :: "int \<Rightarrow> int \<Rightarrow> int" and eF :: int and invgF :: "int \<Rightarrow> int"
+    and \<iota>F :: "'s \<Rightarrow> int" and S :: "'s set"
     and G :: "'g set" and mulG :: "'g \<Rightarrow> 'g \<Rightarrow> 'g" and eG :: 'g and invgG :: "'g \<Rightarrow> 'g"
     and H :: "'h set" and mulH :: "'h \<Rightarrow> 'h \<Rightarrow> 'h" and eH :: 'h and invgH :: "'h \<Rightarrow> 'h"
     and w :: "('s \<times> bool) list"
@@ -6638,9 +6638,8 @@ lemma presentation_from_free_quotient:
       and hr_in: "r \<in> G"
       and hN_eq: "N = top1_normal_subgroup_generated_on G mulG eG invgG {r}"
       and hw_valid: "\<forall>i<length w. fst (w ! i) \<in> S"
-  shows "\<exists>G' mul' e' invg'.
-      top1_group_presented_by_on G' mul' e' invg' S {w}
-    \<and> top1_groups_isomorphic_on G' mul' H mulH"
+  shows "top1_group_presented_by_on Q mulQ eQ invgQ S {w}
+    \<and> top1_groups_isomorphic_on Q mulQ H mulH"
 proof -
   \<comment> \<open>F --\<phi>--> G --proj--> Q \<cong> H.
      proj \<circ> \<phi>: F \<rightarrow> Q surjective hom.
@@ -6754,9 +6753,52 @@ proof -
     \<comment> \<open>\<supseteq>: if f \<in> N\_F({wp}) then \<phi> f \<in> N\_G({r}).\<close>
     have hsubset2: "top1_normal_subgroup_generated_on F mulF eF invgF {wp} \<subseteq>
         {f \<in> F. \<phi> f \<in> N}"
-      sorry \<comment> \<open>Group theory: iso maps normal closure to normal closure.
-         \<phi>(N\_F({wp})) = N\_G({\<phi>(wp)}) = N\_G({r}) = N.
-         So f \<in> N\_F({wp}) implies \<phi> f \<in> \<phi>(N\_F({wp})) = N.\<close>
+    proof -
+      have hN_normal: "top1_normal_subgroup_on G mulG eG invgG N"
+        unfolding hN_eq
+        using normal_subgroup_generated_is_normal[OF hG_grp, of "{r}"] hr_in
+        by (by100 blast)
+      have hK_normal: "top1_normal_subgroup_on F mulF eF invgF {f \<in> F. \<phi> f \<in> N}"
+        using preimage_normal_subgroup[OF hF_grp hG_grp h\<phi>_hom hN_normal] .
+      have hr_in_N: "r \<in> N" unfolding hN_eq top1_normal_subgroup_generated_on_def
+      proof (rule InterI)
+        fix X assume "X \<in> {Na. {r} \<subseteq> Na \<and> top1_normal_subgroup_on G mulG eG invgG Na}"
+        thus "r \<in> X" by (by100 blast)
+      qed
+      have hwp_in_F: "wp \<in> F"
+      proof -
+        have "\<forall>i<length (map (\<lambda>(s, b). (\<iota>F s, b)) w).
+            fst ((map (\<lambda>(s, b). (\<iota>F s, b)) w) ! i) \<in> F"
+        proof (intro allI impI)
+          fix i assume "i < length (map (\<lambda>(s, b). (\<iota>F s, b)) w)"
+          hence hi: "i < length w" by (by100 simp)
+          have "fst (w ! i) \<in> S" using hw_valid hi by (by100 blast)
+          hence "\<iota>F (fst (w ! i)) \<in> F"
+            using hF_free unfolding top1_is_free_group_full_on_def by (by100 blast)
+          moreover have "(map (\<lambda>(s, b). (\<iota>F s, b)) w) ! i = (\<lambda>(s, b). (\<iota>F s, b)) (w ! i)"
+            using nth_map[OF hi] by (by100 blast)
+          ultimately show "fst ((map (\<lambda>(s, b). (\<iota>F s, b)) w) ! i) \<in> F"
+            by (cases "w ! i") (by100 simp)
+        qed
+        thus ?thesis unfolding wp_def
+          using word_product_in_group[OF hF_grp] by (by100 simp)
+      qed
+      have h\<phi>_surj2: "\<phi> ` F = G" using h\<phi>_bij unfolding bij_betw_def by (by100 blast)
+      have h\<phi>wp: "\<phi> wp = r"
+      proof -
+        have "inv_into F \<phi> r = wp" using hwp_eq by (by100 simp)
+        moreover have "r \<in> G" using hr_in .
+        moreover have "r \<in> \<phi> ` F" using h\<phi>_surj2 \<open>r \<in> G\<close> by (by100 blast)
+        ultimately have "\<phi> (inv_into F \<phi> r) = r"
+          using f_inv_into_f[of r \<phi> F] by (by100 simp)
+        thus ?thesis using \<open>inv_into F \<phi> r = wp\<close> by (by100 simp)
+      qed
+      have hwp_in_K: "wp \<in> {f \<in> F. \<phi> f \<in> N}" using hwp_in_F h\<phi>wp hr_in_N by (by100 blast)
+      have "{wp} \<subseteq> {f \<in> F. \<phi> f \<in> N}" using hwp_in_K by (by100 blast)
+      thus ?thesis
+        unfolding top1_normal_subgroup_generated_on_def
+        using hK_normal by (by100 blast)
+    qed
     have "{f \<in> F. \<phi> f \<in> N} = top1_normal_subgroup_generated_on F mulF eF invgF {wp}"
       using hsubset1 hsubset2 by (by100 blast)
     thus ?thesis using hcomp_ker hN_eq hrel_word unfolding wp_def by (by100 simp)
@@ -6778,8 +6820,18 @@ proof -
         by (by100 blast)
       thus ?thesis using hF_free hcomp_hom hcomp_surj hker_word by (by5000 simp)
     qed
-    show ?thesis unfolding top1_group_presented_by_on_def
-      using hQ_grp h1 sorry
+    show ?thesis
+      unfolding top1_group_presented_by_on_def
+      apply (rule conjI)
+       apply (rule hQ_grp)
+      apply (rule exI[of _ F])
+      apply (rule exI[of _ mulF])
+      apply (rule exI[of _ eF])
+      apply (rule exI[of _ invgF])
+      apply (rule exI[of _ \<iota>F])
+      apply (rule exI[of _ "proj \<circ> \<phi>"])
+      using h1 apply (by100 blast)
+      done
   qed
   \<comment> \<open>Step 5: H \<cong> Q, so use Q as the witness.\<close>
   have hQ_iso_H: "top1_groups_isomorphic_on Q mulQ H mulH"
@@ -6787,7 +6839,7 @@ proof -
   have hconj: "top1_group_presented_by_on Q mulQ eQ invgQ S {w}
     \<and> top1_groups_isomorphic_on Q mulQ H mulH"
     using hQ_presented hQ_iso_H by (by100 blast)
-  show ?thesis using hQ_presented hQ_iso_H sorry
+  show ?thesis using hQ_presented hQ_iso_H by (by100 blast)
 qed
 
 lemma map_map_pair_compose:
@@ -7886,13 +7938,35 @@ proof -
         (top1_fundamental_group_carrier X TX a')
         (top1_fundamental_group_mul X TX a')"
       using top1_groups_isomorphic_on_sym[OF h\<iota>_iso' hpi1_X_grp hQ_grp] .
-    \<comment> \<open>Q is presented by (S, {scheme}).\<close>
-    have hQ_presented: "top1_group_presented_by_on Q mulQ eQ invgQ
-        (fst ` set scheme) { map (\<lambda>(s,b). (s, b)) scheme }"
-      unfolding top1_group_presented_by_on_def
-      using hQ_grp hfree hproj_phi_hom hproj_phi_surj
-      sorry \<comment> \<open>Need: ker(proj \<circ> \<phi>) = N(scheme word). From hrelator\_word + normal closure.\<close>
-    show ?thesis using hQ_presented hQ_iso_pi1 sorry
+    \<comment> \<open>Q is presented by (S, {scheme}).
+       Use presentation\_from\_free\_quotient helper.\<close>
+    have h\<phi>_iso: "top1_group_iso_on F mulF
+        (top1_fundamental_group_carrier A (subspace_topology X TX A) a')
+        (top1_fundamental_group_mul A (subspace_topology X TX A) a') \<phi>"
+      using h\<phi>_hom h\<phi>_bij unfolding top1_group_iso_on_def by (by100 blast)
+    have hw_valid: "\<forall>i<length (map (\<lambda>(s::nat,b::bool). (s, b)) scheme).
+        fst ((map (\<lambda>(s,b). (s, b)) scheme) ! i) \<in> fst ` set scheme"
+      by (by100 force)
+    have hproj_ker': "top1_group_kernel_on
+        (top1_fundamental_group_carrier A (subspace_topology X TX A) a') eQ proj = N"
+      using hproj_ker unfolding eQ_def by (by100 simp)
+    have hpfq: "top1_group_presented_by_on Q mulQ eQ invgQ
+        (fst ` set scheme) { map (\<lambda>(s,b). (s, b)) scheme }
+      \<and> top1_groups_isomorphic_on Q mulQ
+          (top1_fundamental_group_carrier X TX a')
+          (top1_fundamental_group_mul X TX a')"
+      using presentation_from_free_quotient[OF hfree hpi1_A_grp hpi1_X_grp h\<phi>_iso
+          hproj_hom hproj_surj hproj_ker' hQ_grp h\<iota>_iso' hrelator_word hrel_in N_def hw_valid] .
+    from hpfq have hpres: "top1_group_presented_by_on Q mulQ eQ invgQ
+        (fst ` set scheme) { map (\<lambda>(s,b). (s, b)) scheme }" by (by100 blast)
+    from hpfq have hiso: "top1_groups_isomorphic_on Q mulQ
+        (top1_fundamental_group_carrier X TX a')
+        (top1_fundamental_group_mul X TX a')" by (by100 blast)
+    show ?thesis using hpres hiso sorry
+      \<comment> \<open>Type packaging: Q :: coset type, but 'g is universally quantified.
+         The group theory is fully proved; only the existential instantiation
+         across type variables remains. Could be fixed by removing 'g annotation
+         from the theorem statement.\<close>
   qed
   \<comment> \<open>Step (iv): Transfer a' \<rightarrow> a via basepoint change.\<close>
   have hThm72_a: "\<exists>(G::'g set) mul e invg.
@@ -8694,7 +8768,7 @@ lemma presented_comm_relator_abelianization:
     and e :: 'g and invg :: "'g \<Rightarrow> 'g"
     and S :: "'s set" and R :: "('s \<times> bool) list set"
   assumes hpres: "top1_group_presented_by_on G mul e invg S R"
-      and hcomm: "\<And>(F::'g set) mulF eF invgF \<iota> \<pi>.
+      and hcomm: "\<And>(F::int set) mulF eF invgF \<iota> \<pi>.
            top1_is_free_group_full_on F mulF eF invgF \<iota> S \<Longrightarrow>
            top1_group_hom_on F mulF G mul \<pi> \<Longrightarrow>
            \<pi> ` F = G \<Longrightarrow>
