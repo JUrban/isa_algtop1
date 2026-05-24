@@ -8146,8 +8146,7 @@ proof -
             (top1_fundamental_group_mul X TX a')"
       using hpres hiso by (by100 blast)
     from hconj show ?thesis sorry
-      \<comment> \<open>Type packaging: 'have' fixes type variables, preventing exI unification.
-         Fix: restructure to prove theorem conclusion directly (not via intermediate have).\<close>
+      \<comment> \<open>Type packaging: fixed type variable in 'have' blocks exI unification.\<close>
   qed
   \<comment> \<open>Step (iv): Transfer a' \<rightarrow> a via basepoint change.\<close>
   have hThm72_a: "\<exists>G mul e invg.
