@@ -4448,8 +4448,10 @@ proof (induction n arbitrary: f rule: nat_less_induct)
     \<comment> \<open>Step: split f at 1/n, apply IH to g with n-1.\<close>
     define g where "g s = f (1 / real n + s * (real n - 1) / real n)" for s
     \<comment> \<open>f \<simeq> sub 0 * g (from loop\_split\_first).\<close>
+    have hvertex_1n: "f (1 / real n) = x0" using hvertex[rule_format, of 1] hn by (by100 simp)
     have hf_split: "top1_loop_equiv_on X TX x0 f (top1_path_product (sub 0) g)"
-      sorry \<comment> \<open>From loop\_split\_first.\<close>
+      using loop_split_first[OF htop hloop hn2 hvertex_1n] unfolding sub_def g_def
+      by (by100 simp)
     \<comment> \<open>g is a loop satisfying IH hypotheses with n-1.\<close>
     have hn_pos: "real n > 0" using hn by (by100 simp)
     have hg_loop: "top1_is_loop_on X TX x0 g"
