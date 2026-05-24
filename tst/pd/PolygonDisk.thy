@@ -3825,9 +3825,10 @@ proof -
       \<comment> \<open>\<psi> z = psi\_local (SOME i'. in\_cone i' z) z.
          On edge i, z is in cone i (or cone (i-1)), and psi\_local agrees.\<close>
       have "\<psi> ?z = psi_local i ?z"
-        sorry \<comment> \<open>z is in cone i (edge i \<subseteq> cone i).
-           SOME picks some cone j containing z.
-           psi\_local j z = psi\_local i z (agreement on boundary).\<close>
+      proof -
+        have "in_cone i ?z" unfolding in_cone_def using h\<beta> h\<gamma> ht01 by (by100 simp)
+        thus ?thesis using hpsi_eq[OF hi] by (by100 simp)
+      qed
       thus "\<psi> ?z = (cos (2 * pi * (real i + t) / real n), sin (2 * pi * (real i + t) / real n))"
         using hpsi_local by (by100 simp)
     qed
