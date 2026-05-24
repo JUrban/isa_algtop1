@@ -8011,7 +8011,90 @@ proof -
           by (rule path_connected_finite_union_common_point[OF hTUV_V hF_fin hF_sub hF_pc hp_F hF_union])
       qed
       have hUV_pc: "top1_path_connected_on (UV_U \<inter> UV_V) (subspace_topology X TX (UV_U \<inter> UV_V))"
-        sorry \<comment> \<open>UV\_U \<inter> UV\_V = \<Union>_j W_j contractible to p, hence path-connected.\<close>
+      proof -
+        \<comment> \<open>UV\_U \<inter> UV\_V = \<Union>_j (C j \<setminus> {q j}): union of arcs sharing p.\<close>
+        have hUV_eq: "UV_U \<inter> UV_V = (\<Union>j\<in>J. C j - {q j})"
+        proof (rule set_eqI, rule iffI)
+          fix x assume "x \<in> UV_U \<inter> UV_V"
+          hence hxU: "x \<in> UV_U" and hxV: "x \<in> UV_V" by (by100 blast)+
+          from hxU obtain jU where hjU: "(jU = j0 \<and> x \<in> C j0) \<or> (jU \<in> J - {j0} \<and> x \<in> C jU - {q jU})"
+            unfolding UV_U_def by (by100 blast)
+          show "x \<in> (\<Union>j\<in>J. C j - {q j})"
+          proof (cases "x = q j0")
+            case True
+            \<comment> \<open>x = q(j0) \<notin> UV\_V since q(j0) \<notin> C(j0)\{q(j0)} and q(j0) \<notin> C(j) for j\<noteq>j0.\<close>
+            have "x \<notin> C j0 - {q j0}" using True by (by100 blast)
+            moreover have "\<And>j. j \<in> J \<Longrightarrow> j \<noteq> j0 \<Longrightarrow> x \<notin> C j"
+              using True hC_disj hj0 hq by (by100 blast)
+            ultimately have "x \<notin> UV_V" unfolding UV_V_def by (by100 blast)
+            thus ?thesis using hxV by (by100 blast)
+          next
+            case False
+            from hjU show ?thesis
+            proof
+              assume "jU = j0 \<and> x \<in> C j0"
+              hence "x \<in> C j0 - {q j0}" using False by (by100 blast)
+              thus ?thesis using hj0 by (by100 blast)
+            next
+              assume "jU \<in> J - {j0} \<and> x \<in> C jU - {q jU}"
+              thus ?thesis by (by100 blast)
+            qed
+          qed
+        next
+          fix x assume "x \<in> (\<Union>j\<in>J. C j - {q j})"
+          then obtain j where hj: "j \<in> J" "x \<in> C j" "x \<noteq> q j" by (by100 blast)
+          have "x \<in> UV_U"
+          proof (cases "j = j0")
+            case True thus ?thesis using hj unfolding UV_U_def by (by100 blast)
+          next
+            case False thus ?thesis using hj unfolding UV_U_def by (by100 blast)
+          qed
+          moreover have "x \<in> UV_V"
+          proof (cases "j = j0")
+            case True thus ?thesis using hj unfolding UV_V_def by (by100 blast)
+          next
+            case False thus ?thesis using hj unfolding UV_V_def by (by100 blast)
+          qed
+          ultimately show "x \<in> UV_U \<inter> UV_V" by (by100 blast)
+        qed
+        have hUV_sub_X: "UV_U \<inter> UV_V \<subseteq> X"
+          using hUV_eq hC_sub by (by5000 blast)
+        let ?TUV = "subspace_topology X TX (UV_U \<inter> UV_V)"
+        have hTUV: "is_topology_on (UV_U \<inter> UV_V) ?TUV"
+          by (rule subspace_topology_is_topology_on[OF hTX hUV_sub_X])
+        let ?F = "(\<lambda>j. C j - {q j}) ` J"
+        have "UV_U \<inter> UV_V = \<Union>?F" using hUV_eq by (by100 blast)
+        have hF_fin: "finite ?F" using hfin by (by100 simp)
+        have hF_sub: "\<forall>A\<in>?F. A \<subseteq> UV_U \<inter> UV_V"
+          using hUV_eq by (by100 blast)
+        have hF_pc: "\<forall>A\<in>?F. top1_path_connected_on A (subspace_topology (UV_U \<inter> UV_V) ?TUV A)"
+        proof (intro ballI)
+          fix A assume "A \<in> ?F"
+          then obtain j where hj: "j \<in> J" "A = C j - {q j}" by (by100 blast)
+          have hA_sub: "A \<subseteq> UV_U \<inter> UV_V" using hF_sub \<open>A \<in> ?F\<close> by (by100 blast)
+          have "subspace_topology (UV_U \<inter> UV_V) ?TUV A = subspace_topology X TX A"
+            by (rule subspace_topology_trans[OF hA_sub])
+          thus "top1_path_connected_on A (subspace_topology (UV_U \<inter> UV_V) ?TUV A)"
+          proof (simp only:)
+            obtain hj_h where "top1_homeomorphism_on top1_S1 top1_S1_topology
+                (C j) (subspace_topology X TX (C j)) hj_h"
+              using hC1[rule_format, OF hj(1)] by (by100 blast)
+            have "q j \<in> C j" using hq hj by (by100 blast)
+            from circle_minus_point_path_connected[OF \<open>top1_homeomorphism_on _ _ _ _ hj_h\<close> this]
+            have "top1_path_connected_on (C j - {q j})
+                (subspace_topology (C j) (subspace_topology X TX (C j)) (C j - {q j}))" .
+            moreover have "subspace_topology (C j) (subspace_topology X TX (C j)) (C j - {q j})
+                = subspace_topology X TX (C j - {q j})"
+              by (rule subspace_topology_trans) (by100 blast)
+            ultimately show "top1_path_connected_on A (subspace_topology X TX A)"
+              unfolding hj(2) by (by100 simp)
+          qed
+        qed
+        have hp_F: "\<forall>A\<in>?F. p \<in> A" using hp_C hq by (by100 blast)
+        show ?thesis
+          by (rule path_connected_finite_union_common_point[OF hTUV hF_fin hF_sub hF_pc hp_F
+                  \<open>UV_U \<inter> UV_V = \<Union>?F\<close>])
+      qed
       \<comment> \<open>Step 6: Apply svk\_generation\_sc.\<close>
       have hc_in_gen: "{g. top1_loop_equiv_on X TX p f g} \<in>
           top1_subgroup_generated_on ?\<pi>X
