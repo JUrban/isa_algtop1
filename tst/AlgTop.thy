@@ -8173,8 +8173,103 @@ proof -
           thus ?thesis using True hphi_s by (by100 simp)
         next
           case False
-          thus ?thesis sorry
-            \<comment> \<open>False case: el\_k(t) = el\_s(1-t) on I\_set \<Rightarrow> el\_k = reverse(el\_s) \<Rightarrow> invg class.\<close>
+          \<comment> \<open>hedge\_k with False: el\_k(t) = el\_s(1-t) = reverse(el\_s)(t) on I\_set.\<close>
+          have "\<forall>t\<in>I_set. el_k t = top1_path_reverse el_s t"
+          proof (intro ballI)
+            fix t assume ht: "t \<in> I_set"
+            have "el_k t = qC (t * vxC (i_of s) + (1-t) * vxC (Suc (i_of s) mod length scheme),
+                               t * vyC (i_of s) + (1-t) * vyC (Suc (i_of s) mod length scheme))"
+              using hedge_k[rule_format, OF ht] False by (by100 simp)
+            also have "\<dots> = el_s (1 - t)" unfolding el_s_def by (simp add: algebra_simps)
+            also have "\<dots> = top1_path_reverse el_s t"
+              unfolding top1_path_reverse_def by (by100 simp)
+            finally show "el_k t = top1_path_reverse el_s t" .
+          qed
+          hence "{g. top1_loop_equiv_on A (subspace_topology X TX A) a' el_k g}
+              = {g. top1_loop_equiv_on A (subspace_topology X TX A) a' (top1_path_reverse el_s) g}"
+            using hloop_class_eq_pointwise by (by100 blast)
+          \<comment> \<open>By fundamental\_group\_invg\_class: class(reverse f) = invg(class f).\<close>
+          also have "\<dots> = top1_fundamental_group_invg A (subspace_topology X TX A) a'
+              {g. top1_loop_equiv_on A (subspace_topology X TX A) a' el_s g}"
+          proof -
+            have hel_s_loop: "top1_is_loop_on A (subspace_topology X TX A) a' el_s"
+            proof -
+              have "top1_continuous_map_on I_set top1_unit_interval_topology
+                  A (subspace_topology X TX A) el_s"
+              proof -
+                have "top1_continuous_map_on I_set top1_unit_interval_topology
+                    A (subspace_topology X TX A)
+                    (\<lambda>t. qC ((1-t) * vxC (i_of s) + t * vxC (Suc (i_of s) mod length scheme),
+                              (1-t) * vyC (i_of s) + t * vyC (Suc (i_of s) mod length scheme)))"
+                  using hqC_edge_cont hi_s(1) by (by100 blast)
+                moreover have "\<And>t. qC ((1-t) * vxC (i_of s) + t * vxC (Suc (i_of s) mod length scheme),
+                              (1-t) * vyC (i_of s) + t * vyC (Suc (i_of s) mod length scheme)) = el_s t"
+                  unfolding el_s_def by (by100 simp)
+                ultimately show ?thesis by (by100 simp)
+              qed
+              moreover have "el_s 0 = a'"
+              proof -
+                have "el_s 0 = qC (vxC (i_of s), vyC (i_of s))" unfolding el_s_def by (by100 simp)
+                also have "\<dots> = qC (vxC 0, vyC 0)"
+                proof -
+                  have "0 < length scheme" using hlen by (by100 linarith)
+                  thus ?thesis using hvert_C[rule_format, OF hi_s(1) \<open>0 < length scheme\<close>] by (by100 simp)
+                qed
+                also have "\<dots> = a" using ha_eq by (by100 simp)
+                finally show ?thesis
+                proof -
+                  assume "el_s 0 = a"
+                  have "h (1, 0) = qC (vxC 0, vyC 0)"
+                  proof -
+                    have "0 < length scheme" using hlen by (by100 linarith)
+                    moreover have "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 auto)
+                    ultimately have "h (cos (2*pi*(real 0+0)/real (length scheme)),
+                        sin (2*pi*(real 0+0)/real (length scheme)))
+                      = qC ((1-0)*vxC 0 + 0*vxC (Suc 0 mod length scheme),
+                             (1-0)*vyC 0 + 0*vyC (Suc 0 mod length scheme))"
+                      using hh_edge_arc by (by100 blast)
+                    thus ?thesis by (by100 simp)
+                  qed
+                  thus ?thesis unfolding a'_def using \<open>el_s 0 = a\<close> ha_eq by (by100 simp)
+                qed
+              qed
+              moreover have "el_s 1 = a'"
+              proof -
+                have hn_pos: "length scheme > 0" using hlen by (by100 linarith)
+                have hj: "Suc (i_of s) mod length scheme < length scheme"
+                  using mod_less_divisor[OF hn_pos] by (by100 simp)
+                have "el_s 1 = qC (vxC (Suc (i_of s) mod length scheme),
+                    vyC (Suc (i_of s) mod length scheme))"
+                  unfolding el_s_def by (by100 simp)
+                also have "\<dots> = qC (vxC 0, vyC 0)"
+                  using hvert_C[rule_format, OF hj] hn_pos by (by100 force)
+                also have "\<dots> = a" using ha_eq by (by100 simp)
+                finally show ?thesis
+                proof -
+                  assume "el_s 1 = a"
+                  have "h (1, 0) = qC (vxC 0, vyC 0)"
+                  proof -
+                    have "0 < length scheme" using hlen by (by100 linarith)
+                    moreover have "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 auto)
+                    ultimately have "h (cos (2*pi*(real 0+0)/real (length scheme)),
+                        sin (2*pi*(real 0+0)/real (length scheme)))
+                      = qC ((1-0)*vxC 0 + 0*vxC (Suc 0 mod length scheme),
+                             (1-0)*vyC 0 + 0*vyC (Suc 0 mod length scheme))"
+                      using hh_edge_arc by (by100 blast)
+                    thus ?thesis by (by100 simp)
+                  qed
+                  thus ?thesis unfolding a'_def using \<open>el_s 1 = a\<close> ha_eq by (by100 simp)
+                qed
+              qed
+              ultimately show ?thesis
+                unfolding top1_is_loop_on_def top1_is_path_on_def by (by5000 blast)
+            qed
+            from fundamental_group_invg_class[OF hTA hel_s_loop]
+            show ?thesis by (by100 simp)
+          qed
+          also have "\<dots> = top1_fundamental_group_invg A (subspace_topology X TX A) a' (\<phi> (\<iota>F s))"
+            using hphi_s by (by100 simp)
+          finally show ?thesis using False by (by100 simp)
         qed
         show "let (s', b') = scheme ! k in
           {g. top1_loop_equiv_on A (subspace_topology X TX A) a' el_k g}
