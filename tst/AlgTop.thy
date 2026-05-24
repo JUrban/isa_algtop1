@@ -8467,6 +8467,43 @@ proof -
       proof -
         let ?circle = "\<lambda>s::real. (cos (2 * pi * s), sin (2 * pi * s))"
         let ?boundary = "\<lambda>s. \<iota> (?circle s)"
+        \<comment> \<open>Step 0 (moved before step 1): ?boundary is a loop at a' in A.\<close>
+        have hbdy_loop: "top1_is_loop_on A (subspace_topology X TX A) a' ?boundary"
+        proof -
+          have hcircle_cont: "top1_continuous_map_on I_set top1_unit_interval_topology
+              top1_S1 top1_S1_topology ?circle"
+            using standard_S1_loop_is_loop
+            unfolding top1_is_loop_on_def top1_is_path_on_def top1_unit_interval_def by (by100 blast)
+          have hbdy_cont: "top1_continuous_map_on I_set top1_unit_interval_topology
+              A (subspace_topology X TX A) ?boundary"
+          proof -
+            have "top1_continuous_map_on I_set top1_unit_interval_topology
+                A (subspace_topology X TX A) (\<iota> \<circ> ?circle)"
+              using top1_continuous_map_on_comp[OF hcircle_cont h\<iota>_cont] .
+            moreover have "(\<iota> \<circ> ?circle) = ?boundary" unfolding comp_def by (by100 simp)
+            ultimately show ?thesis by (by100 simp)
+          qed
+          have hbdy0: "?boundary 0 = a'"
+          proof -
+            have "(1::real, 0::real) \<in> top1_S1" unfolding top1_S1_def by (by100 simp)
+            hence "\<iota> (1, 0) = h (1, 0)" using h\<iota>_eq by (by100 blast)
+            thus ?thesis using ha'_base by (by100 simp)
+          qed
+          have hbdy1: "?boundary 1 = a'"
+          proof -
+            have "?circle 1 = (cos (2 * pi), sin (2 * pi))" by (by100 simp)
+            also have "\<dots> = (1, 0)" by (by100 simp)
+            finally have "?boundary 1 = \<iota> (1, 0)" by (by100 simp)
+            also have "\<dots> = h (1, 0)"
+            proof -
+              have "(1::real, 0::real) \<in> top1_S1" unfolding top1_S1_def by (by100 simp)
+              thus ?thesis using h\<iota>_eq by (by100 blast)
+            qed
+            finally show ?thesis using ha'_base by (by100 simp)
+          qed
+          show ?thesis unfolding top1_is_loop_on_def top1_is_path_on_def
+            using hbdy0 hbdy1 hbdy_cont by (by5000 blast)
+        qed
         \<comment> \<open>Step 1: relator\_class = class of ?boundary.\<close>
         have hrel_eq: "relator_class = {g. top1_loop_equiv_on A (subspace_topology X TX A) a' ?boundary g}"
         proof -
@@ -8504,59 +8541,41 @@ proof -
             qed
             \<comment> \<open>\<iota> \<circ> circle \<simeq> \<iota> \<circ> f, and \<iota> \<circ> f \<simeq> g, so \<iota> \<circ> circle \<simeq> g.\<close>
             have "top1_loop_equiv_on A (subspace_topology X TX A) a' ?boundary g"
-              sorry \<comment> \<open>From h\<iota>cf (path homotopic) + hfg (loop equiv) + transitivity.
-                 Needs: \<iota>\<circ>circle is a loop at a' (hbdy\_loop, proved below),
-                 \<iota>\<circ>f is a loop at a' (from hfg), g is a loop (from hfg).\<close>
+            proof -
+              \<comment> \<open>\<iota>\<circ>circle is a loop equiv to \<iota>\<circ>f (from continuous\_preserves + ext).\<close>
+              have hext: "?boundary = (\<iota> \<circ> ?circle)"
+              proof (rule ext)
+                fix s show "?boundary s = (\<iota> \<circ> ?circle) s" unfolding comp_def by (by100 simp)
+              qed
+              have h\<iota>circle_loop: "top1_is_loop_on A (subspace_topology X TX A) a' (\<iota> \<circ> ?circle)"
+                using hbdy_loop unfolding hext[symmetric] .
+              have h\<iota>f_loop: "top1_is_loop_on A (subspace_topology X TX A) a' (\<iota> \<circ> f)"
+                using hfg unfolding top1_loop_equiv_on_def by (by100 blast)
+              have hg_loop: "top1_is_loop_on A (subspace_topology X TX A) a' g"
+                using hfg unfolding top1_loop_equiv_on_def by (by100 blast)
+              have h\<iota>cf_equiv: "top1_loop_equiv_on A (subspace_topology X TX A) a' (\<iota> \<circ> ?circle) (\<iota> \<circ> f)"
+                unfolding top1_loop_equiv_on_def
+                using h\<iota>circle_loop h\<iota>f_loop h\<iota>cf h\<iota>10 by (by100 blast)
+              have hbdy_iof: "top1_loop_equiv_on A (subspace_topology X TX A) a' ?boundary (\<iota> \<circ> f)"
+                using h\<iota>cf_equiv unfolding hext[symmetric] .
+              show ?thesis using top1_loop_equiv_on_trans[OF hTA hbdy_iof hfg] .
+            qed
             thus "g \<in> {g. top1_loop_equiv_on A (subspace_topology X TX A) a' ?boundary g}" by (by100 blast)
           next
             \<comment> \<open>Backward: if equiv(?boundary, g), take f = circle.\<close>
             fix g assume "g \<in> {g. top1_loop_equiv_on A (subspace_topology X TX A) a' ?boundary g}"
             hence hbg: "top1_loop_equiv_on A (subspace_topology X TX A) a' ?boundary g" by (by100 blast)
-            have "\<And>s. ?boundary s = (\<iota> \<circ> ?circle) s" unfolding comp_def by (by100 simp)
-            hence hbg': "top1_loop_equiv_on A (subspace_topology X TX A) a' (\<iota> \<circ> ?circle) g"
-              using hbg hloop_class_eq_pointwise sorry
+            have hext: "?boundary = (\<iota> \<circ> ?circle)"
+            proof (rule ext)
+              fix s show "?boundary s = (\<iota> \<circ> ?circle) s" unfolding comp_def by (by100 simp)
+            qed
+            have hbg': "top1_loop_equiv_on A (subspace_topology X TX A) a' (\<iota> \<circ> ?circle) g"
+              using hbg unfolding hext[symmetric] .
             thus "g \<in> {g. \<exists>f\<in>?circle_class. top1_loop_equiv_on A (subspace_topology X TX A) a' (\<iota> \<circ> f) g}"
               using hcircle_in by (by100 blast)
           qed
         qed
-        \<comment> \<open>Step 2: ?boundary is a loop at a' in A.\<close>
-        have hbdy_loop: "top1_is_loop_on A (subspace_topology X TX A) a' ?boundary"
-        proof -
-          \<comment> \<open>?boundary = \<iota> \<circ> circle is continuous [0,1] \<rightarrow> A.\<close>
-          have hcircle_cont: "top1_continuous_map_on I_set top1_unit_interval_topology
-              top1_S1 top1_S1_topology ?circle"
-            using standard_S1_loop_is_loop
-            unfolding top1_is_loop_on_def top1_is_path_on_def top1_unit_interval_def by (by100 blast)
-          have hbdy_cont: "top1_continuous_map_on I_set top1_unit_interval_topology
-              A (subspace_topology X TX A) ?boundary"
-          proof -
-            have "top1_continuous_map_on I_set top1_unit_interval_topology
-                A (subspace_topology X TX A) (\<iota> \<circ> ?circle)"
-              using top1_continuous_map_on_comp[OF hcircle_cont h\<iota>_cont] .
-            moreover have "(\<iota> \<circ> ?circle) = ?boundary" unfolding comp_def by (by100 simp)
-            ultimately show ?thesis by (by100 simp)
-          qed
-          have hbdy0: "?boundary 0 = a'"
-          proof -
-            have "(1::real, 0::real) \<in> top1_S1" unfolding top1_S1_def by (by100 simp)
-            hence "\<iota> (1, 0) = h (1, 0)" using h\<iota>_eq by (by100 blast)
-            thus ?thesis using ha'_base by (by100 simp)
-          qed
-          have hbdy1: "?boundary 1 = a'"
-          proof -
-            have "?circle 1 = (cos (2 * pi), sin (2 * pi))" by (by100 simp)
-            also have "\<dots> = (1, 0)" by (by100 simp)
-            finally have "?boundary 1 = \<iota> (1, 0)" by (by100 simp)
-            also have "\<dots> = h (1, 0)"
-            proof -
-              have "(1::real, 0::real) \<in> top1_S1" unfolding top1_S1_def by (by100 simp)
-              thus ?thesis using h\<iota>_eq by (by100 blast)
-            qed
-            finally show ?thesis using ha'_base by (by100 simp)
-          qed
-          show ?thesis unfolding top1_is_loop_on_def top1_is_path_on_def
-            using hbdy0 hbdy1 hbdy_cont by (by5000 blast)
-        qed
+        \<comment> \<open>hbdy\_loop already proved above (moved before hrel\_eq).\<close>
         \<comment> \<open>Step 3: Vertices of ?boundary are a'.\<close>
         have hvertex: "\<forall>k\<le>?n. ?boundary (real k / real ?n) = a'"
         proof (intro allI impI)
