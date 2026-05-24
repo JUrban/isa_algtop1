@@ -7151,7 +7151,7 @@ text \<open>Pasting deformation retractions on finitely many closed subsets.
   to {p}, they pairwise intersect only at {p}, and all retractions fix p,
   then X deformation-retracts to {p}.\<close>
 lemma pasting_deformation_retracts_to_point:
-  assumes hTX: "is_topology_on X TX"
+  assumes hTX: "is_topology_on_strict X TX"
       and hfin: "finite F"
       and hF_closed: "\<forall>A\<in>F. closedin_on X TX A"
       and hcover: "X = \<Union>F"
@@ -7163,6 +7163,8 @@ lemma pasting_deformation_retracts_to_point:
   using assms
 proof (induction "card F" arbitrary: F X TX rule: less_induct)
   case (less F)
+  have hTX_is: "is_topology_on X TX"
+    using less.prems(1) unfolding is_topology_on_strict_def by (by100 blast)
   show ?case
   proof (cases "F = {}")
     case True thus ?thesis using less.prems(4,5) by (by100 simp)
@@ -7186,14 +7188,7 @@ proof (induction "card F" arbitrary: F X TX rule: less_induct)
       proof -
         have "A = X" using \<open>X = A\<close> by (by100 simp)
         have "\<forall>U\<in>TX. U \<subseteq> X"
-        proof (intro ballI)
-          fix U assume "U \<in> TX"
-          have "TX \<subseteq> Pow X"
-            sorry \<comment> \<open>In practice, all our topologies are strict (TX \<subseteq> Pow X).
-               The pasting lemma should use is\_topology\_on\_strict.
-               Or: derive from the subspace context.\<close>
-          thus "U \<subseteq> X" using \<open>U \<in> TX\<close> by (by100 blast)
-        qed
+          using less.prems(1) unfolding is_topology_on_strict_def by (by100 blast)
         hence "subspace_topology X TX X = TX" by (rule subspace_topology_self)
         moreover have "X = A" using \<open>X = A\<close> by (by100 simp)
         ultimately show ?thesis by (by100 simp)
@@ -7210,8 +7205,9 @@ proof (induction "card F" arbitrary: F X TX rule: less_induct)
       have hY_closed: "closedin_on X TX Y"
       proof -
         have "\<forall>B\<in>F0. closedin_on X TX B" using less.prems(3) F0_def by (by100 blast)
+        hence "\<forall>A\<in>(\<lambda>B. B) ` F0. closedin_on X TX A" by (by100 simp)
         thus ?thesis unfolding Y_def
-          using closedin_on_finite_Union[OF less.prems(1)] hF0_fin by (by100 blast)
+          using closedin_on_finite_Union[OF hTX_is] hF0_fin by (by100 blast)
       qed
       \<comment> \<open>A \<inter> Y = {p}.\<close>
       have hp_AY: "p \<in> A \<inter> Y"
@@ -7238,8 +7234,10 @@ proof (induction "card F" arbitrary: F X TX rule: less_induct)
       have hY_dr: "top1_deformation_retract_of_on Y (subspace_topology X TX Y) {p}"
       proof -
         let ?TY = "subspace_topology X TX Y"
+        have hTY_strict: "is_topology_on_strict Y ?TY"
+          by (rule subspace_topology_is_strict[OF less.prems(1) hY_sub])
         have hTY: "is_topology_on Y ?TY"
-          by (rule subspace_topology_is_topology_on[OF less.prems(1) hY_sub])
+          using hTY_strict unfolding is_topology_on_strict_def by (by100 blast)
         have hF0_closed_Y: "\<forall>B\<in>F0. closedin_on Y ?TY B"
         proof (intro ballI)
           fix B assume "B \<in> F0"
@@ -7248,7 +7246,7 @@ proof (induction "card F" arbitrary: F X TX rule: less_induct)
           have "B \<subseteq> Y" using \<open>B \<in> F0\<close> Y_def by (by100 blast)
           hence "B = B \<inter> Y" by (by100 blast)
           thus "closedin_on Y ?TY B"
-            using iffD2[OF Theorem_17_2[OF less.prems(1) hY_sub]]
+            using iffD2[OF Theorem_17_2[OF hTX_is hY_sub]]
                   \<open>closedin_on X TX B\<close> by (by100 blast)
         qed
         have hF0_cover: "Y = \<Union>F0" unfolding Y_def ..
@@ -7271,7 +7269,7 @@ proof (induction "card F" arbitrary: F X TX rule: less_induct)
           ultimately show "top1_deformation_retract_of_on B (subspace_topology Y ?TY B) {p}"
             by (by100 simp)
         qed
-        from less(1)[OF hcard_lt hTY hF0_fin hF0_closed_Y hF0_cover hp_Y hp_all_F0 hpairwise_F0 hdr_F0]
+        from less(1)[OF hcard_lt hTY_strict hF0_fin hF0_closed_Y hF0_cover hp_Y hp_all_F0 hpairwise_F0 hdr_F0]
         show ?thesis .
       qed
       have hA_dr: "top1_deformation_retract_of_on A (subspace_topology X TX A) {p}"
@@ -8329,8 +8327,10 @@ lemma finite_wedge_pi1_free_with_chosen_loops:
             ultimately have "U \<subseteq> X" unfolding U_def by (by100 blast)
             thus ?thesis by (by100 blast)
           qed
+          have hTUV_strict: "is_topology_on_strict (U \<inter> V) ?TUV"
+            by (rule subspace_topology_is_strict[OF less.prems(1) hUVsub])
           have hTUV: "is_topology_on (U \<inter> V) ?TUV"
-            by (rule subspace_topology_is_topology_on[OF hTX hUVsub])
+            using hTUV_strict unfolding is_topology_on_strict_def by (by100 blast)
           define F_set where "F_set = W ` {..<n}"
           have hfin: "finite F_set" unfolding F_set_def by (by100 simp)
           have hcover: "U \<inter> V = \<Union>F_set"
@@ -8428,7 +8428,7 @@ lemma finite_wedge_pi1_free_with_chosen_loops:
               using \<open>A = W j\<close> by (by100 simp)
           qed
           show ?thesis
-            by (rule pasting_deformation_retracts_to_point[OF hTUV hfin hF_closed hcover hp_UV hp_all hpairwise hdr])
+            by (rule pasting_deformation_retracts_to_point[OF hTUV_strict hfin hF_closed hcover hp_UV hp_all hpairwise hdr])
         qed
         have hUV_sc: "top1_simply_connected_on (U \<inter> V) (subspace_topology X TX (U \<inter> V))"
         proof -
