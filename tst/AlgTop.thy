@@ -6953,6 +6953,33 @@ proof -
   have hH_0: "\<forall>x\<in>X. H (x, 0) = x" using hH_all by (by100 blast)
   have hH_1: "\<forall>x\<in>X. H (x, 1) \<in> A" using hH_all by (by100 blast)
   have hH_fix: "\<forall>a\<in>A. \<forall>t\<in>I_set. H (a, t) = a" using hH_all by (by100 blast)
+  \<comment> \<open>r as map X \<rightarrow> X continuous: r = H \<circ> section(x,1).\<close>
+  have hTI: "is_topology_on I_set I_top"
+    by (rule top1_unit_interval_topology_is_topology_on)
+  have h1_I: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 auto)
+  have hpi1_eq: "pi1 \<circ> (\<lambda>x. (x, 1::real)) = id" unfolding pi1_def comp_def id_def by (by100 simp)
+  have hpi2_eq: "pi2 \<circ> (\<lambda>x. (x, 1::real)) = (\<lambda>_. 1::real)" unfolding pi2_def comp_def by (by100 simp)
+  have hsec: "top1_continuous_map_on X TX (X \<times> I_set) (product_topology_on TX I_top) (\<lambda>x. (x, 1::real))"
+  proof (rule iffD2[OF Theorem_18_4[OF hTX hTX hTI]])
+    have "top1_continuous_map_on X TX X TX id" by (rule top1_continuous_map_on_id[OF hTX])
+    hence "top1_continuous_map_on X TX X TX (pi1 \<circ> (\<lambda>x. (x, 1::real)))"
+      unfolding hpi1_eq[symmetric] by (by100 simp)
+    moreover have "top1_continuous_map_on X TX I_set I_top (\<lambda>_. 1::real)"
+      using Theorem_18_2(1)[OF hTX hTI hTI, rule_format] h1_I by (by100 blast)
+    hence "top1_continuous_map_on X TX I_set I_top (pi2 \<circ> (\<lambda>x. (x, 1::real)))"
+      unfolding hpi2_eq[symmetric] by (by100 simp)
+    ultimately show "top1_continuous_map_on X TX X TX (pi1 \<circ> (\<lambda>x. (x, 1::real))) \<and>
+        top1_continuous_map_on X TX I_set I_top (pi2 \<circ> (\<lambda>x. (x, 1::real)))"
+      by (by100 blast)
+  qed
+  have hr_X_cont: "top1_continuous_map_on X TX X TX r"
+  proof -
+    have "top1_continuous_map_on X TX X TX (H \<circ> (\<lambda>x. (x, 1::real)))"
+      by (rule top1_continuous_map_on_comp[OF hsec hH_cont])
+    moreover have "\<forall>x\<in>X. (H \<circ> (\<lambda>x. (x, 1::real))) x = r x"
+      unfolding r_def comp_def by (by100 simp)
+    ultimately show ?thesis using top1_continuous_map_on_agree by (by100 blast)
+  qed
   have hj_equiv: "top1_homotopy_equivalence_on A ?TA X TX (\<lambda>x. x) r"
     unfolding top1_homotopy_equivalence_on_def
   proof (intro conjI)
@@ -6965,7 +6992,47 @@ proof -
     qed
     \<comment> \<open>r : X \<rightarrow> A continuous.\<close>
     show "top1_continuous_map_on X TX A ?TA r"
-      sorry \<comment> \<open>r(x) = H(x,1). Composition of H (continuous) with section x \<mapsto> (x,1).\<close>
+    proof -
+      \<comment> \<open>r = H \<circ> (\<lambda>x. (x,1)). Section x \<mapsto> (x,1) continuous by Theorem\_18\_4.\<close>
+      have hTI: "is_topology_on I_set I_top"
+        by (rule top1_unit_interval_topology_is_topology_on)
+      have h1_I: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 auto)
+      \<comment> \<open>Section x \<mapsto> (x,1): X \<rightarrow> X \<times> I continuous.\<close>
+      \<comment> \<open>Use the section lemma from Top1\_Ch3: (\<lambda>y. (x0, y)) continuous.\<close>
+      have hsec: "top1_continuous_map_on X TX (X \<times> I_set) (product_topology_on TX I_top)
+          (\<lambda>x. (x, 1::real))"
+      proof (rule iffD2[OF Theorem_18_4[OF hTX hTX hTI]])
+        have hpi1_eq: "pi1 \<circ> (\<lambda>x. (x, 1::real)) = id" unfolding pi1_def comp_def id_def by (by100 simp)
+        have "top1_continuous_map_on X TX X TX id" by (rule top1_continuous_map_on_id[OF hTX])
+        hence "top1_continuous_map_on X TX X TX (pi1 \<circ> (\<lambda>x. (x, 1::real)))"
+          unfolding hpi1_eq[symmetric] by (by100 simp)
+        moreover have "pi2 \<circ> (\<lambda>x. (x, 1::real)) = (\<lambda>_. 1::real)"
+          unfolding pi2_def comp_def by (by100 simp)
+        have hpi2_eq: "pi2 \<circ> (\<lambda>x. (x, 1::real)) = (\<lambda>_. 1::real)"
+          unfolding pi2_def comp_def by (by100 simp)
+        have "top1_continuous_map_on X TX I_set I_top (\<lambda>_. 1::real)"
+          using Theorem_18_2(1)[OF hTX hTI hTI, rule_format] h1_I by (by100 blast)
+        hence "top1_continuous_map_on X TX I_set I_top (pi2 \<circ> (\<lambda>x. (x, 1::real)))"
+          unfolding hpi2_eq[symmetric] by (by100 simp)
+        ultimately show "top1_continuous_map_on X TX X TX (pi1 \<circ> (\<lambda>x. (x, 1::real))) \<and>
+            top1_continuous_map_on X TX I_set I_top (pi2 \<circ> (\<lambda>x. (x, 1::real)))"
+          by (by100 blast)
+      qed
+      \<comment> \<open>r as map X \<rightarrow> X: composition of section with H.\<close>
+      have hr_X: "top1_continuous_map_on X TX X TX (H \<circ> (\<lambda>x. (x, 1::real)))"
+        by (rule top1_continuous_map_on_comp[OF hsec hH_cont])
+      have hr_eq: "\<forall>x\<in>X. (H \<circ> (\<lambda>x. (x, 1::real))) x = r x"
+        unfolding r_def comp_def by (by100 simp)
+      have hr_X': "top1_continuous_map_on X TX X TX r"
+        using top1_continuous_map_on_agree[OF hr_X hr_eq] by (by100 simp)
+      \<comment> \<open>Restrict codomain from X to A. r maps into A (from hH\_1).\<close>
+      have hr_range: "\<forall>x\<in>X. r x \<in> A" unfolding r_def using hH_1 by (by100 blast)
+      hence hr_img: "r ` X \<subseteq> A" by (by100 blast)
+      \<comment> \<open>Restrict codomain: Theorem\_18\_2(5) (restrict\_range).\<close>
+      show ?thesis
+        using Theorem_18_2(5)[OF hTX hTX hTX, rule_format] hr_X' hA_sub hr_img
+        by (by100 blast)
+    qed
     \<comment> \<open>r \<circ> j \<simeq> id on A. Actually r \<circ> j = id (since H(a,1) = a for a \<in> A).\<close>
     show "top1_homotopic_on A ?TA A ?TA (r \<circ> (\<lambda>x. x)) (\<lambda>x. x)"
     proof -
@@ -7024,7 +7091,10 @@ proof -
     proof (intro conjI)
       \<comment> \<open>j \<circ> r = r : X \<rightarrow> X (since j = id).\<close>
       show "top1_continuous_map_on X TX X TX ((\<lambda>x. x) \<circ> r)"
-        sorry \<comment> \<open>r: X \<rightarrow> A continuous (from H), inclusion A \<hookrightarrow> X continuous. Compose.\<close>
+      proof -
+        have "(\<lambda>x. x) \<circ> r = r" unfolding comp_def by (by100 simp)
+        thus ?thesis using hr_X_cont by (by100 simp)
+      qed
       show "top1_continuous_map_on X TX X TX (\<lambda>y. y)"
         using top1_continuous_map_on_id[OF hTX] unfolding id_def by (by100 simp)
       \<comment> \<open>Homotopy witness: F(x,t) = H(x, 1-t).\<close>
