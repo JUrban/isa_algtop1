@@ -7504,6 +7504,27 @@ proof (intro conjI ballI)
   thus "\<exists>f. top1_is_path_on X TX x y f" by (by100 blast)
 qed
 
+text \<open>Helper: S1 minus a point is path-connected.
+  Proof: S1 \<setminus> {q} is homeomorphic to an open interval (hence to R),
+  which is path-connected (any two points connected by the linear path).\<close>
+lemma S1_minus_point_path_connected:
+  assumes "q \<in> top1_S1"
+  shows "top1_path_connected_on (top1_S1 - {q}) (subspace_topology top1_S1 top1_S1_topology (top1_S1 - {q}))"
+  sorry \<comment> \<open>S1 \<setminus> {q} \<cong> R via stereographic projection. R is path-connected.\<close>
+
+text \<open>Helper: homeomorphic image of S1 minus a point is path-connected.\<close>
+lemma circle_minus_point_path_connected:
+  assumes "top1_homeomorphism_on top1_S1 top1_S1_topology Y TY h"
+      and "q \<in> Y"
+  shows "top1_path_connected_on (Y - {q}) (subspace_topology Y TY (Y - {q}))"
+  sorry \<comment> \<open>From S1\_minus\_point + homeomorphism\_preserves\_path\_connected.\<close>
+
+text \<open>Helper: circle (homeomorphic to S1) is path-connected.\<close>
+lemma circle_path_connected:
+  assumes "top1_homeomorphism_on top1_S1 top1_S1_topology Y TY h"
+  shows "top1_path_connected_on Y TY"
+  by (rule homeomorphism_preserves_path_connected[OF assms S1_path_connected])
+
 text \<open>Helper: singleton is closed in a Hausdorff space.\<close>
 lemma hausdorff_singleton_closed:
   assumes "is_topology_on X TX" "is_hausdorff_on X TX" "x \<in> X"
@@ -7855,7 +7876,78 @@ proof -
       have hU_pc: "top1_path_connected_on UV_U (subspace_topology X TX UV_U)"
         sorry \<comment> \<open>UV\_U is union of path-connected sets sharing p.\<close>
       have hV_pc: "top1_path_connected_on UV_V (subspace_topology X TX UV_V)"
-        sorry \<comment> \<open>UV\_V is union of path-connected sets sharing p.\<close>
+      proof -
+        let ?TUV_V = "subspace_topology X TX UV_V"
+        have hV_sub_X2: "UV_V \<subseteq> X"
+        proof -
+          have "C j0 - {q j0} \<subseteq> X" using hC_sub[OF hj0] by (by100 blast)
+          moreover have "(\<Union>j\<in>J-{j0}. C j) \<subseteq> X"
+            by (rule UN_least) (use hC_sub in \<open>by100 blast\<close>)
+          ultimately show ?thesis unfolding UV_V_def by (by100 blast)
+        qed
+        have hTUV_V: "is_topology_on UV_V ?TUV_V"
+          by (rule subspace_topology_is_topology_on[OF hTX hV_sub_X2])
+        \<comment> \<open>The pieces: C(j0)\{q(j0)} and each C(j) for j \<noteq> j0.\<close>
+        let ?F = "insert (C j0 - {q j0}) ((\<lambda>j. C j) ` (J - {j0}))"
+        have hF_union: "UV_V = \<Union>?F" unfolding UV_V_def by (by100 blast)
+        have hF_fin: "finite ?F" using hfin by (by100 simp)
+        have hF_sub: "\<forall>A\<in>?F. A \<subseteq> UV_V"
+          unfolding UV_V_def by (by100 blast)
+        have hF_pc: "\<forall>A\<in>?F. top1_path_connected_on A (subspace_topology UV_V ?TUV_V A)"
+        proof (intro ballI)
+          fix A assume hA: "A \<in> ?F"
+          \<comment> \<open>subspace of subspace = subspace of X (by trans).\<close>
+          have hA_sub_V: "A \<subseteq> UV_V" using hF_sub hA by (by100 blast)
+          have "subspace_topology UV_V ?TUV_V A = subspace_topology X TX A"
+            by (rule subspace_topology_trans[OF hA_sub_V])
+          thus "top1_path_connected_on A (subspace_topology UV_V ?TUV_V A)"
+          proof (simp only:)
+            \<comment> \<open>Show A is path-connected in subspace\_topology X TX A.\<close>
+            from hA show "top1_path_connected_on A (subspace_topology X TX A)"
+            proof
+              \<comment> \<open>Case A = C(j0)\{q(j0)}: circle minus point.\<close>
+              assume "A = C j0 - {q j0}"
+              obtain h0 where "top1_homeomorphism_on top1_S1 top1_S1_topology
+                  (C j0) (subspace_topology X TX (C j0)) h0"
+                using hC1 hj0 by (by100 blast)
+              have "q j0 \<in> C j0" using hq hj0 by (by100 blast)
+              from circle_minus_point_path_connected[OF \<open>top1_homeomorphism_on _ _ _ _ h0\<close> this]
+              have "top1_path_connected_on (C j0 - {q j0})
+                  (subspace_topology (C j0) (subspace_topology X TX (C j0)) (C j0 - {q j0}))" .
+              moreover have "subspace_topology (C j0) (subspace_topology X TX (C j0)) (C j0 - {q j0})
+                  = subspace_topology X TX (C j0 - {q j0})"
+                by (rule subspace_topology_trans) (by100 blast)
+              ultimately show "top1_path_connected_on A (subspace_topology X TX A)"
+                unfolding \<open>A = C j0 - {q j0}\<close> by (by100 simp)
+            next
+              \<comment> \<open>Case A = C(j) for some j \<noteq> j0: circle.\<close>
+              assume "A \<in> (\<lambda>j. C j) ` (J - {j0})"
+              then obtain j where hj: "j \<in> J" "j \<noteq> j0" and hA_eq: "A = C j" by (by100 blast)
+              obtain hj_h where "top1_homeomorphism_on top1_S1 top1_S1_topology
+                  (C j) (subspace_topology X TX (C j)) hj_h"
+                using hC1 hj by (by100 blast)
+              from circle_path_connected[OF this]
+              show "top1_path_connected_on A (subspace_topology X TX A)"
+                unfolding hA_eq .
+            qed
+          qed
+        qed
+        have hp_F: "\<forall>A\<in>?F. p \<in> A"
+        proof (intro ballI)
+          fix A assume "A \<in> ?F"
+          thus "p \<in> A"
+          proof
+            assume "A = C j0 - {q j0}"
+            thus ?thesis using hp_C[OF hj0] hq hj0 by (by100 blast)
+          next
+            assume "A \<in> (\<lambda>j. C j) ` (J - {j0})"
+            then obtain j where "j \<in> J" "A = C j" by (by100 blast)
+            thus ?thesis using hp_C by (by100 blast)
+          qed
+        qed
+        show ?thesis
+          by (rule path_connected_finite_union_common_point[OF hTUV_V hF_fin hF_sub hF_pc hp_F hF_union])
+      qed
       have hUV_pc: "top1_path_connected_on (UV_U \<inter> UV_V) (subspace_topology X TX (UV_U \<inter> UV_V))"
         sorry \<comment> \<open>UV\_U \<inter> UV\_V = \<Union>_j W_j contractible to p, hence path-connected.\<close>
       \<comment> \<open>Step 6: Apply svk\_generation\_sc.\<close>
