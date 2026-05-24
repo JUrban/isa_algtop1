@@ -6921,11 +6921,85 @@ text \<open>Deformation retraction of circle minus point to any remaining point.
   Munkres 71.1: "W\_i is homeomorphic to an open interval, so it has
   the point p as a deformation retract." Following AlgTopCached:33225.\<close>
 lemma circle_minus_point_deformation_retract:
-  assumes "top1_homeomorphism_on top1_S1 top1_S1_topology Y TY h"
-      and "q \<in> Y" and "r \<in> Y" and "q \<noteq> r"
+  assumes hh: "top1_homeomorphism_on top1_S1 top1_S1_topology Y TY h"
+      and hq: "q \<in> Y" and hr: "r \<in> Y" and hqr: "q \<noteq> r"
   shows "top1_deformation_retract_of_on (Y - {q}) (subspace_topology Y TY (Y - {q})) {r}"
-  sorry \<comment> \<open>Via angle parameterization: h^{-1} maps Y-{q} to S1-{q0},
-     R\_to\_S1 lifts to open interval, linear retraction, project back.\<close>
+proof -
+  \<comment> \<open>Step 1: Extract homeomorphism data. h: S1 \<rightarrow> Y bijective continuous.\<close>
+  have hbij: "bij_betw h top1_S1 Y"
+    using hh unfolding top1_homeomorphism_on_def by (by100 blast)
+  let ?hinv = "inv_into top1_S1 h"
+  have hinj: "inj_on h top1_S1" using hbij unfolding bij_betw_def by (by100 blast)
+  \<comment> \<open>Step 2: q0 = h^{-1}(q), r0 = h^{-1}(r) in S1.\<close>
+  have hq_img: "q \<in> h ` top1_S1" using hbij hq unfolding bij_betw_def by (by100 blast)
+  have hr_img: "r \<in> h ` top1_S1" using hbij hr unfolding bij_betw_def by (by100 blast)
+  define q0 where "q0 = ?hinv q"
+  define r0 where "r0 = ?hinv r"
+  have hq0_S1: "q0 \<in> top1_S1" unfolding q0_def by (rule inv_into_into[OF hq_img])
+  have hr0_S1: "r0 \<in> top1_S1" unfolding r0_def by (rule inv_into_into[OF hr_img])
+  have hq0_map: "h q0 = q" unfolding q0_def using f_inv_into_f[OF hq_img] by (by100 simp)
+  have hr0_map: "h r0 = r" unfolding r0_def using f_inv_into_f[OF hr_img] by (by100 simp)
+  have hq0r0: "q0 \<noteq> r0"
+  proof
+    assume "q0 = r0" hence "h q0 = h r0" by (by100 simp)
+    thus False using hq0_map hr0_map hqr by (by100 simp)
+  qed
+  \<comment> \<open>Step 3: Choose \<theta>\_q with R\_to\_S1(\<theta>\_q) = q0. The interval (\<theta>\_q, \<theta>\_q + 1)
+     parameterizes S1 - {q0} via R\_to\_S1.\<close>
+  have "\<exists>\<theta>q. top1_R_to_S1 \<theta>q = q0" using S1_point_to_angle[OF hq0_S1] by (by100 blast)
+  then obtain \<theta>q where h\<theta>q: "top1_R_to_S1 \<theta>q = q0" by (by100 blast)
+  \<comment> \<open>Step 4: Find \<theta>\_r \<in> (\<theta>\_q, \<theta>\_q + 1) with R\_to\_S1(\<theta>\_r) = r0.\<close>
+  have "\<exists>\<theta>r. \<theta>q < \<theta>r \<and> \<theta>r < \<theta>q + 1 \<and> top1_R_to_S1 \<theta>r = r0"
+  proof -
+    from S1_point_to_angle[OF hr0_S1] obtain \<theta>' where h\<theta>': "top1_R_to_S1 \<theta>' = r0" by (by100 blast)
+    \<comment> \<open>Adjust \<theta>' to lie in (\<theta>q, \<theta>q + 1) via floor shift.\<close>
+    define k where "k = \<lfloor>\<theta>' - \<theta>q\<rfloor>"
+    define \<theta>r where "\<theta>r = \<theta>' - of_int k"
+    have h\<theta>r_map: "top1_R_to_S1 \<theta>r = r0"
+    proof -
+      have "\<theta>r = \<theta>' + of_int (- k)" unfolding \<theta>r_def by (by100 simp)
+      hence "top1_R_to_S1 \<theta>r = top1_R_to_S1 (\<theta>' + of_int (- k))" by (by100 simp)
+      also have "\<dots> = top1_R_to_S1 \<theta>'" by (rule top1_R_to_S1_int_shift)
+      finally show ?thesis using h\<theta>' by (by100 simp)
+    qed
+    have h\<theta>r_lb: "\<theta>q \<le> \<theta>r"
+      unfolding \<theta>r_def k_def using floor_le_iff by (by100 linarith)
+    have h\<theta>r_ub: "\<theta>r < \<theta>q + 1"
+      unfolding \<theta>r_def k_def using floor_less_iff by (by100 linarith)
+    \<comment> \<open>\<theta>r \<noteq> \<theta>q because R\_to\_S1(\<theta>r) = r0 \<noteq> q0 = R\_to\_S1(\<theta>q).\<close>
+    have "\<theta>r \<noteq> \<theta>q"
+    proof
+      assume "\<theta>r = \<theta>q"
+      hence "top1_R_to_S1 \<theta>r = top1_R_to_S1 \<theta>q" by (by100 simp)
+      hence "r0 = q0" using h\<theta>r_map h\<theta>q by (by100 simp)
+      thus False using hq0r0 by (by100 simp)
+    qed
+    hence "\<theta>q < \<theta>r" using h\<theta>r_lb by (by100 linarith)
+    thus ?thesis using h\<theta>r_ub h\<theta>r_map by (by100 blast)
+  qed
+  then obtain \<theta>r where h\<theta>r_bounds: "\<theta>q < \<theta>r" "\<theta>r < \<theta>q + 1"
+      and h\<theta>r_map: "top1_R_to_S1 \<theta>r = r0" by (by100 blast)
+  \<comment> \<open>Step 5: Define the angle function: for y \<in> Y - {q}, angle(y) is the unique
+     \<theta> \<in> (\<theta>\_q, \<theta>\_q + 1) with R\_to\_S1(\<theta>) = h^{-1}(y).\<close>
+  define angle where "angle y = (THE \<theta>. \<theta>q < \<theta> \<and> \<theta> < \<theta>q + 1 \<and>
+      top1_R_to_S1 \<theta> = ?hinv y)" for y
+  \<comment> \<open>Step 6: Define the retraction: F(y, t) = h(R\_to\_S1((1-t)*angle(y) + t*\<theta>\_r)).\<close>
+  define F where "F = (\<lambda>(y, t). h (top1_R_to_S1 ((1 - t) * angle y + t * \<theta>r)))"
+  \<comment> \<open>Step 7: Verify deformation retraction properties.\<close>
+  show ?thesis unfolding top1_deformation_retract_of_on_def
+  proof (intro conjI)
+    show "{r} \<subseteq> Y - {q}" using hr hqr by (by100 blast)
+    show "\<exists>H. top1_continuous_map_on ((Y - {q}) \<times> I_set)
+        (product_topology_on (subspace_topology Y TY (Y - {q})) I_top)
+        (Y - {q}) (subspace_topology Y TY (Y - {q})) H
+      \<and> (\<forall>y\<in>Y - {q}. H (y, 0) = y) \<and> (\<forall>y\<in>Y - {q}. H (y, 1) \<in> {r})
+      \<and> (\<forall>a\<in>{r}. \<forall>t\<in>I_set. H (a, t) = a)"
+      sorry \<comment> \<open>H = F. Continuity: angle continuous (via h^{-1} continuous, R\_to\_S1^{-1}
+         continuous on interval, THE unique). Then linear combination + R\_to\_S1 + h.
+         Boundary: F(y,0) = h(R\_to\_S1(angle(y))) = h(h^{-1}(y)) = y.
+         F(y,1) = h(R\_to\_S1(\<theta>\_r)) = h(r0) = r. F(r,t) = h(R\_to\_S1(\<theta>\_r)) = r.\<close>
+  qed
+qed
 
 text \<open>Munkres Theorem 71.1 (witnessed version with chosen loop generators).
   For a finite wedge of circles with explicit circle data (homeomorphisms, basepoints),
