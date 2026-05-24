@@ -6943,14 +6943,39 @@ lemma finite_wedge_pi1_free_with_chosen_loops:
         (top1_fundamental_group_mul X TX p) \<Phi>
     \<and> (\<forall>j<n. \<Phi> (\<eta> j) = {l. top1_loop_equiv_on X TX p
         (\<lambda>t. g j (cos (2 * pi * t), sin (2 * pi * t))) l})"
-  sorry \<comment> \<open>Munkres Theorem 71.1 with chosen loop generators.
-     Proof by induction on n following the book exactly:
-     Base n=0: trivial. Base n=1: pi1(circle) = Z.
-     Step: Munkres' SvK decomposition (U, V), U Int V simply connected,
-     Corollary\_70\_3 gives free product, deformation retracts give
-     pi1(U) = Z and pi1(V) = free on n-1 (IH), Theorem\_69\_2 gives
-     free product free on all generators with explicit correspondence.
-     Following AlgTopCached:31794-39914 but adding generator tracking.\<close>
+  using assms proof (induction n arbitrary: X TX p C g rule: less_induct)
+    case (less n)
+    show ?case
+    proof (cases "n = 0")
+      case True
+      \<comment> \<open>Base n=0: X = {p}, \<pi>_1 trivial, free on empty set.\<close>
+      \<comment> \<open>n=0: X = \<Union>{} = {} but p \<in> X. Contradiction.\<close>
+      have "X = {}" using less.prems(5) True by (by100 simp)
+      thus ?thesis using less.prems(3) by (by100 blast)
+    next
+      case False hence hn_pos: "n > 0" by (by100 simp)
+      show ?thesis
+      proof (cases "n = 1")
+        case True
+        \<comment> \<open>Base n=1: X = C(0) homeomorphic to S1. pi1(X) = Z.
+           The standard loop f_0 generates. Use Theorem\_54\_5 or cached results.\<close>
+        show ?thesis sorry \<comment> \<open>Single circle: pi1(C 0) = Z with generator = circle loop.\<close>
+      next
+        case False hence hn2: "n \<ge> 2" using hn_pos by (by100 linarith)
+        \<comment> \<open>Inductive step: n \<ge> 2. Following Munkres 71.1 exactly.
+           Step 1: Construct U, V (Munkres' decomposition).
+           Step 2: U \<inter> V simply connected (deformation retract to p).
+           Step 3: SvK (Corollary\_70\_3): \<pi>_1(X) \<cong> FP (free product of \<pi>_1(U), \<pi>_1(V)).
+           Step 4: Deformation retracts: \<pi>_1(U) \<cong> \<pi>_1(C 0) \<cong> Z, \<pi>_1(V) \<cong> \<pi>_1(sub-wedge).
+           Step 5: IH on V: sub-wedge has n-1 circles, free on loops f_1,...,f_{n-1}.
+           Step 6: Theorem\_69\_2: FP free on f_0,...,f_{n-1} with explicit generator map.
+           Step 7: Compose isomorphisms to get \<Phi> with \<Phi>(\<eta> j) = loop\_class j.\<close>
+        show ?thesis sorry \<comment> \<open>Inductive step: Munkres 71.1 SvK decomposition
+           + Theorem\_69\_2 generator tracking + deformation retractions.
+           Following AlgTopCached:31794-39914 structure.\<close>
+      qed
+    qed
+  qed
 
 lemma finite_wedge_pi1_free_with_generators:
   fixes X :: "'a set" and TX :: "'a set set" and J :: "'i set" and p :: 'a
