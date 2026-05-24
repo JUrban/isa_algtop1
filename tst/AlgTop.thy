@@ -7024,50 +7024,222 @@ lemma finite_wedge_pi1_free_with_chosen_loops:
             (top1_fundamental_group_carrier X TX p)
             (top1_fundamental_group_mul X TX p)"
           by (rule Corollary_52_5_homeomorphism_iso[OF hTS1 hTX hg0_homeo' h10_S1 hg0_base])
-        \<comment> \<open>Compose: Z \<cong> \<pi>_1(S1) \<cong> \<pi>_1(X). Use groups\_isomorphic\_trans.\<close>
-        have hZ_iso_X: "top1_groups_isomorphic_on ?F ?mul
-            (top1_fundamental_group_carrier X TX p) (top1_fundamental_group_mul X TX p)"
-        proof -
-          have hS1_iso_Z: "top1_groups_isomorphic_on
-              (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
-              (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0)) ?F ?mul"
-            using h\<phi>0_iso unfolding top1_groups_isomorphic_on_def by (by100 blast)
-          have hZ_grp: "top1_is_group_on ?F ?mul ?e ?invg"
-            using hZ_free unfolding top1_is_free_group_full_on_def by (by100 blast)
-          have hS1_grp: "top1_is_group_on
-              (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
-              (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))
-              (top1_fundamental_group_id top1_S1 top1_S1_topology (1, 0))
-              (top1_fundamental_group_invg top1_S1 top1_S1_topology (1, 0))"
-          proof -
-            have "(1::real, 0::real) \<in> top1_S1" unfolding top1_S1_def by (by100 simp)
-            thus ?thesis by (rule top1_fundamental_group_is_group[OF hTS1])
-          qed
-          have hZ_iso_S1: "top1_groups_isomorphic_on ?F ?mul
-              (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
-              (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))"
-            by (rule top1_groups_isomorphic_on_sym[OF hS1_iso_Z hS1_grp hZ_grp])
-          from groups_isomorphic_trans_fwd[OF hZ_iso_S1 hg0_iso]
-          show ?thesis .
+        \<comment> \<open>Explicit construction: \<Phi> = g(0)\_* \<circ> \<phi>0^{-1} for generator tracking.
+           g(0)\_* : \<pi>_1(S1) \<rightarrow> \<pi>_1(X) is the induced map.
+           \<phi>0^{-1} : Z \<rightarrow> \<pi>_1(S1) is the inverse of the Theorem\_54\_5 iso.\<close>
+        let ?pi1_S1 = "top1_fundamental_group_carrier top1_S1 top1_S1_topology (1::real, 0::real)"
+        let ?mul_S1 = "top1_fundamental_group_mul top1_S1 top1_S1_topology (1::real, 0::real)"
+        let ?g0_star = "top1_fundamental_group_induced_on
+            top1_S1 top1_S1_topology (1, 0) X TX p (g 0)"
+        have hg0_cont: "top1_continuous_map_on top1_S1 top1_S1_topology X TX (g 0)"
+          using hg0_homeo' unfolding top1_homeomorphism_on_def by (by100 blast)
+        \<comment> \<open>\<phi>0 is bijective \<pi>_1(S1) \<rightarrow> Z.\<close>
+        have hphi0_bij: "bij_betw \<phi>0 ?pi1_S1 ?F"
+          using h\<phi>0_iso unfolding top1_group_iso_on_def by (by100 blast)
+        have hphi0_inj: "inj_on \<phi>0 ?pi1_S1"
+          using hphi0_bij unfolding bij_betw_def by (by100 blast)
+        \<comment> \<open>Standard loop on S1.\<close>
+        let ?std_loop = "\<lambda>s::real. (cos (2 * pi * s), sin (2 * pi * s))"
+        let ?std_class = "{f. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) ?std_loop f}"
+        \<comment> \<open>[std\_loop] \<in> \<pi>_1(S1): std\_loop is a loop on S1 at (1,0).\<close>
+        have hstd_in_pi1: "?std_class \<in> ?pi1_S1"
+          by (rule standard_S1_loop_class_in_carrier)
+        \<comment> \<open>\<phi>0^{-1}(1) = [std\_loop] (from \<phi>0([std\_loop]) = 1 and \<phi>0 injective).\<close>
+        have hphi0_inv: "inv_into ?pi1_S1 \<phi>0 (1::int) = ?std_class"
+          using inv_into_f_eq[OF hphi0_inj hstd_in_pi1 h\<phi>0_gen] by (by100 simp)
+        \<comment> \<open>g(0)\_*([std\_loop]) = loop\_class(0).
+           By definition: g(0)\_*(c) = {h. \<exists>f\<in>c. loop\_equiv(g0\<circ>f, h)}.
+           Since std\_loop \<in> [std\_loop] (reflexivity), g0\<circ>std\_loop = \<lambda>t. g 0 (cos .., sin ..).
+           Conversely, if f \<in> [std\_loop] then g0\<circ>f homotopic to g0\<circ>std\_loop
+           by continuous\_preserves\_path\_homotopic.\<close>
+        \<comment> \<open>Helper: std\_loop is a loop on S1 (from cached lemma).\<close>
+        have hstd_is_loop: "top1_is_loop_on top1_S1 top1_S1_topology (1, 0) ?std_loop"
+          by (rule standard_S1_loop_is_loop)
+        \<comment> \<open>Helper: g(0) \<circ> std\_loop is a loop on X at p.\<close>
+        have hg0_std_loop: "top1_is_loop_on X TX p ((g 0) \<circ> ?std_loop)"
+          using top1_continuous_map_loop_early[OF hg0_cont hstd_is_loop] hg0_base
+          by (by100 simp)
+        \<comment> \<open>Helper: (g 0) \<circ> std\_loop = \<lambda>t. g 0 (cos (2*pi*t), sin (2*pi*t)) pointwise.\<close>
+        have hcomp_eq: "\<And>t. ((g 0) \<circ> ?std_loop) t = g 0 (cos (2*pi*t), sin (2*pi*t))"
+          unfolding comp_def by (by100 simp)
+        have hg0_star_std: "?g0_star ?std_class =
+            {l. top1_loop_equiv_on X TX p (\<lambda>t. g 0 (cos (2*pi*t), sin (2*pi*t))) l}"
+          unfolding top1_fundamental_group_induced_on_def
+        proof (rule set_eqI, rule iffI)
+          fix l
+          assume "l \<in> {h. \<exists>f\<in>?std_class. top1_loop_equiv_on X TX p ((g 0) \<circ> f) h}"
+          then obtain f where hf_in: "top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0)
+              ?std_loop f"
+              and hle: "top1_loop_equiv_on X TX p ((g 0) \<circ> f) l" by (by100 blast)
+          \<comment> \<open>f is loop-equiv to std\_loop, so g0\<circ>f is path-homotopic to g0\<circ>std\_loop.\<close>
+          have hf_loop: "top1_is_loop_on top1_S1 top1_S1_topology (1, 0) f"
+            using hf_in unfolding top1_loop_equiv_on_def by (by100 blast)
+          have hph: "top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0) ?std_loop f"
+            using hf_in unfolding top1_loop_equiv_on_def by (by100 blast)
+          have hph_X: "top1_path_homotopic_on X TX p p ((g 0) \<circ> ?std_loop) ((g 0) \<circ> f)"
+            using top1_continuous_preserves_path_homotopy[OF hTS1 hg0_cont hstd_is_loop hf_loop hph]
+                  hg0_base by (by100 simp)
+          \<comment> \<open>Build loop\_equiv for g0 \<circ> std\_loop and g0 \<circ> f.\<close>
+          have hg0f_loop: "top1_is_loop_on X TX p ((g 0) \<circ> f)"
+            using hle unfolding top1_loop_equiv_on_def by (by100 blast)
+          have hg0_std_equiv_f: "top1_loop_equiv_on X TX p ((g 0) \<circ> ?std_loop) ((g 0) \<circ> f)"
+            unfolding top1_loop_equiv_on_def
+            using hg0_std_loop hg0f_loop hph_X by (by100 blast)
+          \<comment> \<open>By transitivity: g0 \<circ> std\_loop loop-equiv l.\<close>
+          have "top1_loop_equiv_on X TX p ((g 0) \<circ> ?std_loop) l"
+            by (rule top1_loop_equiv_on_trans[OF hTX hg0_std_equiv_f hle])
+          thus "l \<in> {l. top1_loop_equiv_on X TX p (\<lambda>t. g 0 (cos (2*pi*t), sin (2*pi*t))) l}"
+            using hcomp_eq unfolding comp_def by (by100 simp)
+        next
+          fix l
+          assume hl: "l \<in> {l. top1_loop_equiv_on X TX p (\<lambda>t. g 0 (cos (2*pi*t), sin (2*pi*t))) l}"
+          \<comment> \<open>Take f = std\_loop. std\_loop \<in> std\_class by reflexivity.\<close>
+          have "?std_loop \<in> ?std_class"
+            using top1_loop_equiv_on_refl[OF hstd_is_loop] by (by100 simp)
+          moreover have "top1_loop_equiv_on X TX p ((g 0) \<circ> ?std_loop) l"
+            using hl hcomp_eq unfolding comp_def by (by100 simp)
+          ultimately show "l \<in> {h. \<exists>f\<in>?std_class. top1_loop_equiv_on X TX p ((g 0) \<circ> f) h}"
+            by (by100 blast)
         qed
-        \<comment> \<open>Extract the iso witness \<Phi>.\<close>
-        from hZ_iso_X[unfolded top1_groups_isomorphic_on_def top1_group_iso_on_def]
-        obtain \<Phi> where h\<Phi>_hom: "top1_group_hom_on ?F ?mul
-              (top1_fundamental_group_carrier X TX p) (top1_fundamental_group_mul X TX p) \<Phi>"
-            and h\<Phi>_bij: "bij_betw \<Phi> ?F (top1_fundamental_group_carrier X TX p)"
-          by (by100 blast)
-        \<comment> \<open>Generator correspondence: \<Phi>(1) = loop\_class(0).
-           This needs: the composed iso maps 1 to [g(0) \<circ> std loop] = loop\_class(0).
-           The composition is \<Phi> = g(0)\_* \<circ> \<phi>0^{-1}. And \<phi>0^{-1}(1) = [std loop].
-           Then g(0)\_*([std loop]) = [g(0) \<circ> std loop] = loop\_class(0).\<close>
+        \<comment> \<open>Define \<Phi> = g(0)\_* \<circ> \<phi>0^{-1}.\<close>
+        define \<Phi> where "\<Phi> = ?g0_star \<circ> (inv_into ?pi1_S1 \<phi>0)"
+        \<comment> \<open>Generator correspondence: \<Phi>(1) = loop\_class(0).\<close>
         have h\<Phi>_gen: "\<forall>j<n. \<Phi> (?\<eta> j) = {l. top1_loop_equiv_on X TX p
             (\<lambda>t. g j (cos (2*pi*t), sin (2*pi*t))) l}"
-          sorry \<comment> \<open>For j=0: \<Phi>(1) = loop\_class(0) by construction of composed iso.
-             Needs: g(0)\_*([std loop]) = [g(0) \<circ> std loop] and composition tracking.\<close>
-        \<comment> \<open>Package the result.\<close>
+        proof (intro allI impI)
+          fix j assume "j < n"
+          hence "j = 0" using True by (by100 simp)
+          thus "\<Phi> (?\<eta> j) = {l. top1_loop_equiv_on X TX p
+              (\<lambda>t. g j (cos (2*pi*t), sin (2*pi*t))) l}"
+            unfolding \<Phi>_def comp_def using hphi0_inv hg0_star_std by (by100 simp)
+        qed
+        \<comment> \<open>\<Phi> is an isomorphism Z \<rightarrow> \<pi>_1(X,p): composition of two isos.\<close>
+        \<comment> \<open>Step A: g(0)\_* is an iso \<pi>_1(S1) \<rightarrow> \<pi>_1(X,p).
+           Homeomorphism \<Rightarrow> homotopy equivalence \<Rightarrow> AlgIsoFixed.Theorem\_58\_7.\<close>
+        have hg0_star_iso: "top1_group_iso_on ?pi1_S1 ?mul_S1
+            (top1_fundamental_group_carrier X TX p) (top1_fundamental_group_mul X TX p) ?g0_star"
+        proof -
+          \<comment> \<open>Construct homotopy equivalence from homeomorphism g(0): S1 \<rightarrow> X.\<close>
+          let ?ginv = "inv_into top1_S1 (g 0)"
+          have hbij: "bij_betw (g 0) top1_S1 X"
+            using hg0_homeo' unfolding top1_homeomorphism_on_def by (by100 blast)
+          have hinj: "inj_on (g 0) top1_S1"
+            using hbij unfolding bij_betw_def by (by100 blast)
+          have hginv_cont: "top1_continuous_map_on X TX top1_S1 top1_S1_topology ?ginv"
+            using hg0_homeo' unfolding top1_homeomorphism_on_def by (by100 blast)
+          \<comment> \<open>ginv \<circ> g(0) = id on S1.\<close>
+          have hgh_eq: "\<forall>x\<in>top1_S1. (?ginv \<circ> (g 0)) x = x"
+            using inv_into_f_f[OF hinj] by (by100 simp)
+          \<comment> \<open>g(0) \<circ> ginv = id on X.\<close>
+          have hhg_eq: "\<forall>y\<in>X. ((g 0) \<circ> ?ginv) y = y"
+          proof (intro ballI)
+            fix y assume "y \<in> X"
+            hence "y \<in> (g 0) ` top1_S1" using hbij unfolding bij_betw_def by (by100 blast)
+            thus "((g 0) \<circ> ?ginv) y = y"
+            proof -
+              from \<open>y \<in> (g 0) ` top1_S1\<close> have "?ginv y \<in> top1_S1"
+                by (rule inv_into_into)
+              from \<open>y \<in> (g 0) ` top1_S1\<close> have "(g 0) (?ginv y) = y" by (rule f_inv_into_f)
+              thus ?thesis by (by100 simp)
+            qed
+          qed
+          \<comment> \<open>ginv \<circ> g(0) homotopic to id (constant homotopy, since they agree on S1).\<close>
+          have hgh_cont: "top1_continuous_map_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology (?ginv \<circ> (g 0))"
+            by (rule top1_continuous_map_on_comp[OF hg0_cont hginv_cont])
+          have hid_cont: "top1_continuous_map_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology id"
+            by (rule top1_continuous_map_on_id[OF hTS1])
+          have hgh_htpy: "top1_homotopic_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology
+              (?ginv \<circ> (g 0)) (\<lambda>x. x)"
+            unfolding top1_homotopic_on_def
+          proof (intro conjI)
+            show "top1_continuous_map_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology (?ginv \<circ> (g 0))"
+              by (rule hgh_cont)
+            show "top1_continuous_map_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology (\<lambda>x. x)"
+              using hid_cont unfolding id_def by (by100 simp)
+            show "\<exists>F. top1_continuous_map_on (top1_S1 \<times> I_set) (product_topology_on top1_S1_topology I_top)
+                top1_S1 top1_S1_topology F
+              \<and> (\<forall>x\<in>top1_S1. F (x, 0) = (?ginv \<circ> (g 0)) x) \<and> (\<forall>x\<in>top1_S1. F (x, 1) = x)"
+            proof (rule exI[of _ "\<lambda>p. (?ginv \<circ> (g 0)) (fst p)"])
+              have hF_cont: "top1_continuous_map_on (top1_S1 \<times> I_set)
+                  (product_topology_on top1_S1_topology I_top) top1_S1 top1_S1_topology
+                  (\<lambda>p. (?ginv \<circ> (g 0)) (fst p))"
+                by (rule homotopy_const_continuous[OF hgh_cont hTS1])
+              show "top1_continuous_map_on (top1_S1 \<times> I_set)
+                    (product_topology_on top1_S1_topology I_top) top1_S1 top1_S1_topology
+                    (\<lambda>p. (?ginv \<circ> (g 0)) (fst p))
+                  \<and> (\<forall>x\<in>top1_S1. (?ginv \<circ> (g 0)) (fst (x, 0::real)) = (?ginv \<circ> (g 0)) x)
+                  \<and> (\<forall>x\<in>top1_S1. (?ginv \<circ> (g 0)) (fst (x, 1::real)) = x)"
+                using hF_cont hgh_eq by (by100 simp)
+            qed
+          qed
+          \<comment> \<open>g(0) \<circ> ginv homotopic to id on X.\<close>
+          have hhg_cont: "top1_continuous_map_on X TX X TX ((g 0) \<circ> ?ginv)"
+            by (rule top1_continuous_map_on_comp[OF hginv_cont hg0_cont])
+          have hid_X_cont: "top1_continuous_map_on X TX X TX id"
+            by (rule top1_continuous_map_on_id[OF hTX])
+          have hhg_htpy: "top1_homotopic_on X TX X TX ((g 0) \<circ> ?ginv) (\<lambda>y. y)"
+            unfolding top1_homotopic_on_def
+          proof (intro conjI)
+            show "top1_continuous_map_on X TX X TX ((g 0) \<circ> ?ginv)" by (rule hhg_cont)
+            show "top1_continuous_map_on X TX X TX (\<lambda>y. y)"
+              using hid_X_cont unfolding id_def by (by100 simp)
+            show "\<exists>F. top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) X TX F
+              \<and> (\<forall>y\<in>X. F (y, 0) = ((g 0) \<circ> ?ginv) y) \<and> (\<forall>y\<in>X. F (y, 1) = y)"
+            proof (rule exI[of _ "\<lambda>p. ((g 0) \<circ> ?ginv) (fst p)"])
+              have "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) X TX
+                  (\<lambda>p. ((g 0) \<circ> ?ginv) (fst p))"
+                by (rule homotopy_const_continuous[OF hhg_cont hTX])
+              thus "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) X TX
+                    (\<lambda>p. ((g 0) \<circ> ?ginv) (fst p))
+                  \<and> (\<forall>y\<in>X. ((g 0) \<circ> ?ginv) (fst (y, 0::real)) = ((g 0) \<circ> ?ginv) y)
+                  \<and> (\<forall>y\<in>X. ((g 0) \<circ> ?ginv) (fst (y, 1::real)) = y)"
+                using hhg_eq by (by100 simp)
+            qed
+          qed
+          have heq: "top1_homotopy_equivalence_on top1_S1 top1_S1_topology X TX (g 0) ?ginv"
+            unfolding top1_homotopy_equivalence_on_def
+            using hg0_cont hginv_cont hgh_htpy hhg_htpy by (by100 blast)
+          \<comment> \<open>Apply Theorem\_58\_7 (AlgIsoFixed version): induced map is an iso.\<close>
+          show ?thesis
+            using AlgIsoFixed.Theorem_58_7[OF hTS1 hTX heq h10_S1] hg0_base by (by100 simp)
+        qed
+        \<comment> \<open>Step B: \<phi>0^{-1} is an iso Z \<rightarrow> \<pi>_1(S1).
+           From bij\_hom\_inv\_is\_hom + bij\_betw\_inv\_into.\<close>
+        have hphi0_inv_iso: "top1_group_iso_on ?F ?mul ?pi1_S1 ?mul_S1
+            (inv_into ?pi1_S1 \<phi>0)"
+        proof -
+          have hphi0_hom: "top1_group_hom_on ?pi1_S1 ?mul_S1 ?F ?mul \<phi>0"
+            using h\<phi>0_iso unfolding top1_group_iso_on_def by (by100 blast)
+          have hZ_grp: "top1_is_group_on ?F ?mul ?e ?invg"
+            using hZ_free unfolding top1_is_free_group_full_on_def by (by100 blast)
+          have hS1_grp: "top1_is_group_on ?pi1_S1 ?mul_S1
+              (top1_fundamental_group_id top1_S1 top1_S1_topology (1, 0))
+              (top1_fundamental_group_invg top1_S1 top1_S1_topology (1, 0))"
+            by (rule top1_fundamental_group_is_group[OF hTS1 h10_S1])
+          have "top1_group_hom_on ?F ?mul ?pi1_S1 ?mul_S1 (inv_into ?pi1_S1 \<phi>0)"
+            by (rule bij_hom_inv_is_hom[OF hS1_grp hZ_grp hphi0_bij hphi0_hom])
+          moreover have "bij_betw (inv_into ?pi1_S1 \<phi>0) ?F ?pi1_S1"
+            using bij_betw_inv_into[OF hphi0_bij] by (by100 simp)
+          ultimately show ?thesis unfolding top1_group_iso_on_def by (by100 blast)
+        qed
+        \<comment> \<open>Step C: Compose g(0)\_* \<circ> \<phi>0^{-1} to get \<Phi> iso.\<close>
         have h\<Phi>_iso: "top1_group_iso_on ?F ?mul
             (top1_fundamental_group_carrier X TX p) (top1_fundamental_group_mul X TX p) \<Phi>"
-          unfolding top1_group_iso_on_def using h\<Phi>_hom h\<Phi>_bij by (by100 blast)
+        proof -
+          have hZ_grp: "top1_is_group_on ?F ?mul ?e ?invg"
+            using hZ_free unfolding top1_is_free_group_full_on_def by (by100 blast)
+          have hS1_grp: "top1_is_group_on ?pi1_S1 ?mul_S1
+              (top1_fundamental_group_id top1_S1 top1_S1_topology (1, 0))
+              (top1_fundamental_group_invg top1_S1 top1_S1_topology (1, 0))"
+            by (rule top1_fundamental_group_is_group[OF hTS1 h10_S1])
+          have hX_grp: "top1_is_group_on
+              (top1_fundamental_group_carrier X TX p) (top1_fundamental_group_mul X TX p)
+              (top1_fundamental_group_id X TX p) (top1_fundamental_group_invg X TX p)"
+            by (rule top1_fundamental_group_is_group[OF hTX less.prems(3)])
+          show ?thesis unfolding \<Phi>_def
+            by (rule group_iso_on_compose[OF hphi0_inv_iso hg0_star_iso hZ_grp hS1_grp hX_grp])
+        qed
+        \<comment> \<open>Package.\<close>
         show ?thesis unfolding hJ1
           apply (rule exI[of _ ?F], rule exI[of _ ?mul], rule exI[of _ ?e],
                  rule exI[of _ ?invg], rule exI[of _ ?\<eta>], rule exI[of _ \<Phi>])
@@ -7082,9 +7254,510 @@ lemma finite_wedge_pi1_free_with_chosen_loops:
            Step 5: IH on V: sub-wedge has n-1 circles, free on loops f_1,...,f_{n-1}.
            Step 6: Theorem\_69\_2: FP free on f_0,...,f_{n-1} with explicit generator map.
            Step 7: Compose isomorphisms to get \<Phi> with \<Phi>(\<eta> j) = loop\_class j.\<close>
-        show ?thesis sorry \<comment> \<open>Inductive step: Munkres 71.1 SvK decomposition
-           + Theorem\_69\_2 generator tracking + deformation retractions.
-           Following AlgTopCached:31794-39914 structure.\<close>
+        \<comment> \<open>Munkres 71.1 inductive step, following AlgTopCached:31794-39914.
+           We decompose X into U, V with U \<inter> V simply connected,
+           then apply SvK + Theorem\_69\_2 + IH.\<close>
+        \<comment> \<open>Step 1: Choose q(j) \<in> C(j) \ {p} via homeomorphism (S1 has more than one point).\<close>
+        define q where "q j = (if j < n then g j (- 1, 0) else undefined)" for j
+        have hq: "\<forall>j<n. q j \<in> C j \<and> q j \<noteq> p"
+        proof (intro allI impI conjI)
+          fix j assume hj: "j < n"
+          have hg_homeo: "top1_homeomorphism_on top1_S1 top1_S1_topology
+              (C j) (subspace_topology X TX (C j)) (g j)"
+            using less.prems(7) hj by (by100 blast)
+          have hg_bij: "bij_betw (g j) top1_S1 (C j)"
+            using hg_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+          have hm1_S1: "(- 1::real, 0::real) \<in> top1_S1" unfolding top1_S1_def by (by100 simp)
+          \<comment> \<open>q(j) = g(j)(-1,0) \<in> C(j) since (-1,0) \<in> S1 and g(j) maps S1 to C(j).\<close>
+          have hg_img: "g j ` top1_S1 = C j"
+            using hg_bij unfolding bij_betw_def by (by100 blast)
+          have "q j = g j (- 1, 0)" unfolding q_def using hj by (by100 simp)
+          thus "q j \<in> C j" using hm1_S1 hg_img by (by100 blast)
+          \<comment> \<open>q(j) \<noteq> p since g(j) injective and (-1,0) \<noteq> (1,0) and g(j)(1,0) = p.\<close>
+          show "q j \<noteq> p"
+          proof -
+            have hinj: "inj_on (g j) top1_S1"
+              using hg_bij unfolding bij_betw_def by (by100 blast)
+            have h10_ne: "(1::real, 0::real) \<noteq> (- 1::real, 0::real)" by (by100 simp)
+            have h10_S1: "(1::real, 0::real) \<in> top1_S1" unfolding top1_S1_def by (by100 simp)
+            have "g j (- 1, 0) \<noteq> g j (1, 0)"
+            proof
+              assume "g j (- 1, 0) = g j (1, 0)"
+              hence "(- 1::real, 0::real) = (1, 0)" using inj_onD[OF hinj] hm1_S1 h10_S1 by (by100 blast)
+              thus False by (by100 simp)
+            qed
+            thus ?thesis unfolding q_def using hj less.prems(8) by (by100 simp)
+          qed
+        qed
+        \<comment> \<open>W(j) = C(j) \ {q(j)} (punctured circle = arc).\<close>
+        define W where "W j = C j - {q j}" for j
+        \<comment> \<open>Step 2: U = C(0) \<union> \<Union>{W(j) | 1 \<le> j < n}, V = W(0) \<union> \<Union>{C(j) | 1 \<le> j < n}.\<close>
+        define U where "U = C 0 \<union> (\<Union>j\<in>{1..<n}. W j)"
+        define V where "V = W 0 \<union> (\<Union>j\<in>{1..<n}. C j)"
+        \<comment> \<open>Step 3: Basic set properties.\<close>
+        have hUV_cover: "U \<union> V = X"
+        proof -
+          have "U \<union> V = C 0 \<union> (\<Union>j\<in>{1..<n}. W j) \<union> (W 0 \<union> (\<Union>j\<in>{1..<n}. C j))"
+            unfolding U_def V_def by (by100 blast)
+          also have "\<dots> = C 0 \<union> (\<Union>j\<in>{1..<n}. C j)"
+          proof -
+            have "\<forall>j. W j \<subseteq> C j" unfolding W_def by (by100 blast)
+            hence "W 0 \<subseteq> C 0" by (by100 blast)
+            hence "C 0 \<union> W 0 = C 0" by (by100 blast)
+            moreover have "\<forall>j\<in>{1..<n}. W j \<subseteq> C j" using \<open>\<forall>j. W j \<subseteq> C j\<close> by (by100 blast)
+            ultimately show ?thesis by (by100 blast)
+          qed
+          also have "\<dots> = (\<Union>j\<in>{..<n}. C j)"
+          proof -
+            have "{..<n} = {0} \<union> {1..<n}" using hn_pos by (by100 auto)
+            thus ?thesis by (by100 auto)
+          qed
+          also have "\<dots> = X" using less.prems(5) by (by100 simp)
+          finally show ?thesis .
+        qed
+        have hW_sub_C: "\<forall>j. W j \<subseteq> C j" unfolding W_def by (by100 blast)
+        have hp_W: "\<forall>j<n. p \<in> W j"
+        proof (intro allI impI)
+          fix j assume "j < n"
+          have "p \<in> C j" using less.prems(4) \<open>j < n\<close> by (by100 blast)
+          moreover have "p \<noteq> q j" using hq \<open>j < n\<close> by (by100 blast)
+          ultimately show "p \<in> W j" unfolding W_def by (by100 blast)
+        qed
+        have hUV_inter: "U \<inter> V = (\<Union>j\<in>{..<n}. W j)"
+        proof (rule set_eqI, rule iffI)
+          fix x assume "x \<in> U \<inter> V"
+          hence hxU: "x \<in> U" and hxV: "x \<in> V" by (by100 blast)+
+          from hxU have "x \<in> C 0 \<or> (\<exists>j\<in>{1..<n}. x \<in> W j)" unfolding U_def by (by100 blast)
+          thus "x \<in> (\<Union>j\<in>{..<n}. W j)"
+          proof
+            assume "x \<in> C 0"
+            from hxV have "x \<in> W 0 \<or> (\<exists>j\<in>{1..<n}. x \<in> C j)" unfolding V_def by (by100 blast)
+            thus ?thesis
+            proof
+              assume "x \<in> W 0"
+              thus ?thesis using hn_pos by (by100 blast)
+            next
+              assume "\<exists>j\<in>{1..<n}. x \<in> C j"
+              then obtain j where "j \<in> {1..<n}" "x \<in> C j" by (by100 blast)
+              hence "x \<in> C 0 \<inter> C j" using \<open>x \<in> C 0\<close> by (by100 blast)
+              hence "x = p" using less.prems(6) hn_pos \<open>j \<in> {1..<n}\<close> by (by100 force)
+              thus ?thesis using hp_W hn_pos by (by100 blast)
+            qed
+          next
+            assume "\<exists>j\<in>{1..<n}. x \<in> W j"
+            then obtain j where hj1: "j \<in> {1..<n}" and "x \<in> W j" by (by100 blast)
+            hence "j \<in> {..<n}" by (by100 simp)
+            thus ?thesis using \<open>x \<in> W j\<close> by (by100 blast)
+          qed
+        next
+          fix x assume "x \<in> (\<Union>j\<in>{..<n}. W j)"
+          then obtain j where "j \<in> {..<n}" "x \<in> W j" by (by100 blast)
+          hence hj: "j < n" and "x \<in> C j" "x \<noteq> q j" unfolding W_def by (by100 blast)+
+          show "x \<in> U \<inter> V"
+          proof (cases "j = 0")
+            case True
+            hence "x \<in> C 0" using \<open>x \<in> C j\<close> by (by100 simp)
+            hence "x \<in> U" unfolding U_def by (by100 blast)
+            have "x \<in> W 0" using \<open>x \<in> W j\<close> True by (by100 simp)
+            hence "x \<in> V" unfolding V_def by (by100 blast)
+            thus ?thesis using \<open>x \<in> U\<close> by (by100 blast)
+          next
+            case False hence "j \<ge> 1" by (by100 simp)
+            hence "j \<in> {1..<n}" using hj by (by100 simp)
+            hence "x \<in> (\<Union>j\<in>{1..<n}. W j)" using \<open>x \<in> W j\<close> by (by100 blast)
+            hence "x \<in> U" unfolding U_def by (by100 blast)
+            have "x \<in> (\<Union>j\<in>{1..<n}. C j)" using \<open>j \<in> {1..<n}\<close> \<open>x \<in> C j\<close> by (by100 blast)
+            hence "x \<in> V" unfolding V_def by (by100 blast)
+            thus ?thesis using \<open>x \<in> U\<close> by (by100 blast)
+          qed
+        qed
+        \<comment> \<open>Step 4: U, V are open in X (from coherent/weak topology).\<close>
+        \<comment> \<open>Complement lemma: X - U = {q(j) | j \<in> {1..<n}} (finite set of removed points).\<close>
+        have hXmU: "X - U = q ` {1..<n}"
+        proof (rule set_eqI, rule iffI)
+          fix x assume hx: "x \<in> X - U"
+          hence "x \<in> X" "x \<notin> U" by (by100 blast)+
+          hence "x \<notin> C 0" "\<forall>j\<in>{1..<n}. x \<notin> W j" unfolding U_def by (by100 blast)+
+          from \<open>x \<in> X\<close> have "x \<in> (\<Union>j\<in>{..<n}. C j)" using less.prems(5) by (by100 simp)
+          then obtain k where "k < n" "x \<in> C k" by (by100 blast)
+          have "k \<noteq> 0"
+          proof
+            assume "k = 0" thus False using \<open>x \<notin> C 0\<close> \<open>x \<in> C k\<close> by (by100 simp)
+          qed
+          hence hk1: "k \<in> {1..<n}" using \<open>k < n\<close> by (by100 simp)
+          from \<open>\<forall>j\<in>{1..<n}. x \<notin> W j\<close> hk1 have "x \<notin> W k" by (by100 blast)
+          hence "x = q k" using \<open>x \<in> C k\<close> unfolding W_def by (by100 blast)
+          thus "x \<in> q ` {1..<n}" using hk1 by (by100 blast)
+        next
+          fix x assume "x \<in> q ` {1..<n}"
+          then obtain k where hk1: "k \<in> {1..<n}" and hxqk: "x = q k" by (by100 blast)
+          hence hkn: "k < n" by (by100 simp)
+          have "x \<in> C k" using hxqk hq hkn by (by100 blast)
+          hence "x \<in> X" using less.prems(4) hkn by (by100 blast)
+          have "x \<notin> C 0"
+          proof
+            assume "x \<in> C 0"
+            hence "x \<in> C 0 \<inter> C k" using \<open>x \<in> C k\<close> by (by100 blast)
+            hence "x = p" using less.prems(6) hn_pos hkn hk1 by (by100 force)
+            thus False using hxqk hq hkn by (by100 blast)
+          qed
+          have "\<forall>j\<in>{1..<n}. x \<notin> W j"
+          proof (intro ballI)
+            fix j assume "j \<in> {1..<n}"
+            show "x \<notin> W j"
+            proof (cases "j = k")
+              case True thus ?thesis using hxqk unfolding W_def by (by100 blast)
+            next
+              case False
+              have "j < n" using \<open>j \<in> {1..<n}\<close> by (by100 simp)
+              have "x \<notin> C j"
+              proof
+                assume "x \<in> C j"
+                hence "x \<in> C j \<inter> C k" using \<open>x \<in> C k\<close> by (by100 blast)
+                hence "x = p" using less.prems(6) \<open>j < n\<close> hkn False by (by100 force)
+                thus False using hxqk hq hkn by (by100 blast)
+              qed
+              thus ?thesis unfolding W_def by (by100 blast)
+            qed
+          qed
+          thus "x \<in> X - U" using \<open>x \<in> X\<close> \<open>x \<notin> C 0\<close> unfolding U_def by (by100 blast)
+        qed
+        have hU_open: "openin_on X TX U"
+        proof -
+          have hfin: "finite (q ` {1..<n})" by (by100 simp)
+          have hsub: "q ` {1..<n} \<subseteq> X" using hq less.prems(4) by (by100 force)
+          have hhaus: "is_hausdorff_on X TX" using less.prems(2) .
+          have hcl: "closedin_on X TX (q ` {1..<n})"
+            by (rule Theorem_17_8[OF hhaus hfin hsub])
+          have "X - U = q ` {1..<n}" by (rule hXmU)
+          hence "U = X - q ` {1..<n}"
+          proof -
+            have "C 0 \<subseteq> X" using less.prems(4) hn_pos by (by100 blast)
+            moreover have "\<forall>j\<in>{1..<n}. W j \<subseteq> X"
+              using hW_sub_C less.prems(4) by (by100 force)
+            ultimately have "U \<subseteq> X" unfolding U_def by (by100 blast)
+            thus ?thesis using hXmU by (by100 blast)
+          qed
+          thus ?thesis using closed_complement_open[OF hcl] by (by100 simp)
+        qed
+        \<comment> \<open>Similarly: X - V = {q(0)} (one removed point).\<close>
+        have hXmV: "X - V = {q 0}"
+        proof (rule set_eqI, rule iffI)
+          fix x assume "x \<in> X - V"
+          hence "x \<in> X" "x \<notin> V" by (by100 blast)+
+          hence "x \<notin> W 0" "\<forall>j\<in>{1..<n}. x \<notin> C j" unfolding V_def by (by100 blast)+
+          from \<open>x \<in> X\<close> obtain k where "k < n" "x \<in> C k"
+            using less.prems(5) by (by100 force)
+          have "k = 0"
+          proof (rule ccontr)
+            assume "k \<noteq> 0" hence "k \<in> {1..<n}" using \<open>k < n\<close> by (by100 simp)
+            thus False using \<open>\<forall>j\<in>{1..<n}. x \<notin> C j\<close> \<open>x \<in> C k\<close> by (by100 blast)
+          qed
+          hence "x \<in> C 0" using \<open>x \<in> C k\<close> by (by100 simp)
+          hence "x \<in> C 0 - W 0" using \<open>x \<notin> W 0\<close> by (by100 blast)
+          thus "x \<in> {q 0}" unfolding W_def by (by100 blast)
+        next
+          fix x assume "x \<in> {q 0}"
+          hence hx: "x = q 0" by (by100 blast)
+          have "x \<in> C 0" using hx hq hn_pos by (by100 blast)
+          hence "x \<in> X" using less.prems(4) hn_pos by (by100 blast)
+          have "x \<notin> W 0" using hx unfolding W_def by (by100 blast)
+          have "\<forall>j\<in>{1..<n}. x \<notin> C j"
+          proof (intro ballI)
+            fix j assume "j \<in> {1..<n}"
+            show "x \<notin> C j"
+            proof
+              assume "x \<in> C j"
+              hence "x \<in> C 0 \<inter> C j" using \<open>x \<in> C 0\<close> by (by100 blast)
+              hence "x = p" using less.prems(6) hn_pos \<open>j \<in> {1..<n}\<close> by (by100 force)
+              thus False using hx hq hn_pos by (by100 blast)
+            qed
+          qed
+          thus "x \<in> X - V" using \<open>x \<in> X\<close> \<open>x \<notin> W 0\<close> unfolding V_def by (by100 blast)
+        qed
+        have hV_open: "openin_on X TX V"
+        proof -
+          have "q 0 \<in> C 0" using hq hn_pos by (by100 blast)
+          hence hq0X: "q 0 \<in> X" using less.prems(4) hn_pos by (by100 blast)
+          have hsub: "{q 0} \<subseteq> X" using hq0X by (by100 blast)
+          have hcl: "closedin_on X TX {q 0}"
+            by (rule Theorem_17_8[OF less.prems(2) _ hsub]) (by100 simp)
+          have "W 0 \<subseteq> X" using hW_sub_C less.prems(4) hn_pos by (by100 force)
+          moreover have "\<forall>j\<in>{1..<n}. C j \<subseteq> X" using less.prems(4) by (by100 force)
+          ultimately have hVsub: "V \<subseteq> X" unfolding V_def by (by100 blast)
+          have "V = X - {q 0}" using hXmV hVsub by (by100 blast)
+          thus ?thesis using closed_complement_open[OF hcl] by (by100 simp)
+        qed
+        \<comment> \<open>Step 5: U \<inter> V is simply connected (each W(j) is simply connected,
+           they share only p, and the union deformation-retracts to p).
+           Uses: circle\_minus\_point\_simply\_connected from AlgTopSvK.\<close>
+        \<comment> \<open>\<Union>W(j) deformation-retracts to {p}. Each W(j) is an arc containing p.
+           Retract each point to p along the arc. Compatible since W(j) \<inter> W(k) = {p}.\<close>
+        have hUV_retract: "top1_deformation_retract_of_on
+            (U \<inter> V) (subspace_topology X TX (U \<inter> V)) {p}"
+          sorry \<comment> \<open>Construct H: (\<Union>W(j)) \<times> [0,1] \<rightarrow> \<Union>W(j) piecewise.
+             For x \<in> W(j): parameterize via g(j), retract via angle interpolation.
+             Continuity from coherent topology. Following AlgTopCached:33225-33690.\<close>
+        have hUV_sc: "top1_simply_connected_on (U \<inter> V) (subspace_topology X TX (U \<inter> V))"
+        proof -
+          have hTX: "is_topology_on X TX"
+            using less.prems(1) unfolding is_topology_on_strict_def by (by100 blast)
+          have hUVsub: "U \<inter> V \<subseteq> X"
+          proof -
+            have "C 0 \<subseteq> X" using less.prems(4) hn_pos by (by100 blast)
+            moreover have "\<forall>j\<in>{1..<n}. W j \<subseteq> X"
+              using hW_sub_C less.prems(4) by (by100 force)
+            ultimately have "U \<subseteq> X" unfolding U_def by (by100 blast)
+            thus ?thesis by (by100 blast)
+          qed
+          have hTUV: "is_topology_on (U \<inter> V) (subspace_topology X TX (U \<inter> V))"
+            by (rule subspace_topology_is_topology_on[OF hTX hUVsub])
+          have hp_UV': "p \<in> {p}" by (by100 blast)
+          \<comment> \<open>Deformation retract to {p} gives \<pi>_1(U \<inter> V) \<cong> \<pi>_1({p}) = trivial.\<close>
+          from Theorem_58_3[OF hUV_retract hTUV hp_UV']
+          have "top1_groups_isomorphic_on
+              (top1_fundamental_group_carrier {p} (subspace_topology (U \<inter> V) (subspace_topology X TX (U \<inter> V)) {p}) p)
+              (top1_fundamental_group_mul {p} (subspace_topology (U \<inter> V) (subspace_topology X TX (U \<inter> V)) {p}) p)
+              (top1_fundamental_group_carrier (U \<inter> V) (subspace_topology X TX (U \<inter> V)) p)
+              (top1_fundamental_group_mul (U \<inter> V) (subspace_topology X TX (U \<inter> V)) p)" .
+          \<comment> \<open>\<pi>_1({p}) is trivial, so \<pi>_1(U \<inter> V) is trivial. Combined with path-connected.\<close>
+          \<comment> \<open>U \<inter> V is path-connected: union of path-connected W(j) sharing p.\<close>
+          have hUV_pc: "top1_path_connected_on (U \<inter> V) (subspace_topology X TX (U \<inter> V))"
+          proof -
+            define F where "F = W ` {..<n}"
+            have hfin: "finite F" unfolding F_def by (by100 simp)
+            have hF_sub: "\<forall>A\<in>F. A \<subseteq> U \<inter> V"
+              unfolding F_def hUV_inter by (by100 blast)
+            have hp_F: "\<forall>A\<in>F. p \<in> A"
+              unfolding F_def using hp_W by (by100 force)
+            have hF_pc: "\<forall>A\<in>F. top1_path_connected_on A
+                (subspace_topology (U \<inter> V) (subspace_topology X TX (U \<inter> V)) A)"
+            proof (intro ballI)
+              fix A assume "A \<in> F"
+              then obtain j where "j < n" "A = W j" unfolding F_def by (by100 blast)
+              have hAtrans: "subspace_topology (U \<inter> V) (subspace_topology X TX (U \<inter> V)) A
+                  = subspace_topology X TX A"
+              proof -
+                have "A \<subseteq> U \<inter> V" using hF_sub \<open>A \<in> F\<close> by (by100 blast)
+                thus ?thesis by (rule subspace_topology_trans)
+              qed
+              have hg_homeo: "top1_homeomorphism_on top1_S1 top1_S1_topology
+                  (C j) (subspace_topology X TX (C j)) (g j)"
+                using less.prems(7) \<open>j < n\<close> by (by100 blast)
+              have hqj_in: "q j \<in> C j" using hq \<open>j < n\<close> by (by100 blast)
+              have "top1_path_connected_on (C j - {q j})
+                  (subspace_topology (C j) (subspace_topology X TX (C j)) (C j - {q j}))"
+                using circle_minus_point_path_connected[OF hg_homeo hqj_in] by (by100 simp)
+              moreover have "C j - {q j} \<subseteq> C j" by (by100 blast)
+              hence "subspace_topology (C j) (subspace_topology X TX (C j)) (C j - {q j})
+                  = subspace_topology X TX (C j - {q j})"
+                by (rule subspace_topology_trans)
+              ultimately have "top1_path_connected_on (W j) (subspace_topology X TX (W j))"
+                unfolding W_def by (by100 simp)
+              thus "top1_path_connected_on A
+                  (subspace_topology (U \<inter> V) (subspace_topology X TX (U \<inter> V)) A)"
+                using hAtrans \<open>A = W j\<close> by (by100 simp)
+            qed
+            have hUV_eq: "U \<inter> V = \<Union>F"
+              unfolding F_def using hUV_inter by (by100 auto)
+            show ?thesis
+              using path_connected_finite_union_common_point[OF hTUV hfin hF_sub hF_pc hp_F hUV_eq] .
+          qed
+          \<comment> \<open>Every loop at p in U \<inter> V is nulhomotopic.
+             From the deformation retraction H: for any loop f at p,
+             G(s,t) = H(f(s),t) is a null-homotopy. Continuous by composition.\<close>
+          show ?thesis
+          proof (rule top1_simply_connected_from_one_point[OF hTUV hUV_pc])
+            show "p \<in> U \<inter> V"
+            proof -
+              have "p \<in> C 0" using less.prems(4) hn_pos by (by100 blast)
+              hence "p \<in> U" unfolding U_def by (by100 blast)
+              have "p \<noteq> q 0" using hq hn_pos by (by100 blast)
+              hence "p \<in> W 0" using \<open>p \<in> C 0\<close> unfolding W_def by (by100 blast)
+              hence "p \<in> V" unfolding V_def by (by100 blast)
+              thus ?thesis using \<open>p \<in> U\<close> by (by100 blast)
+            qed
+            show "\<forall>f. top1_is_loop_on (U \<inter> V) (subspace_topology X TX (U \<inter> V)) p f \<longrightarrow>
+                top1_path_homotopic_on (U \<inter> V) (subspace_topology X TX (U \<inter> V)) p p f (top1_constant_path p)"
+              sorry \<comment> \<open>From hUV\_retract: extract H. For loop f at p, define G(s,t) = H(f(s),t).
+                 G continuous (composition), G(s,0) = f(s), G(s,1) = H(f(s),1) = p,
+                 G(0,t) = H(p,t) = p, G(1,t) = H(p,t) = p. So G is a null-homotopy.\<close>
+          qed
+        qed
+        \<comment> \<open>Step 6: U, V are path-connected.\<close>
+        have hU_pc: "top1_path_connected_on U (subspace_topology X TX U)"
+        proof -
+          have hTX: "is_topology_on X TX"
+            using less.prems(1) unfolding is_topology_on_strict_def by (by100 blast)
+          have "C 0 \<subseteq> X" using less.prems(4) hn_pos by (by100 blast)
+          moreover have "\<forall>j\<in>{1..<n}. W j \<subseteq> X"
+            using hW_sub_C less.prems(4) by (by100 force)
+          ultimately have hUsub: "U \<subseteq> X" unfolding U_def by (by100 blast)
+          have hTU: "is_topology_on U (subspace_topology X TX U)"
+            by (rule subspace_topology_is_topology_on[OF hTX hUsub])
+          \<comment> \<open>Family: {C(0)} \<union> {W(j) | j \<in> {1..<n}}.\<close>
+          define F where "F = insert (C 0) (W ` {1..<n})"
+          have hfin: "finite F" unfolding F_def by (by100 simp)
+          have hF_sub: "\<forall>A\<in>F. A \<subseteq> U" unfolding F_def U_def by (by100 blast)
+          have hp_F: "\<forall>A\<in>F. p \<in> A"
+            unfolding F_def using less.prems(4) hn_pos hp_W by (by100 force)
+          have hU_eq: "U = \<Union>F" unfolding F_def U_def by (by100 blast)
+          \<comment> \<open>Each piece is path-connected in subspace of U. By transitivity,
+             subspace U (subspace X TX U) A = subspace X TX A.\<close>
+          have hF_pc: "\<forall>A\<in>F. top1_path_connected_on A (subspace_topology U (subspace_topology X TX U) A)"
+          proof (intro ballI)
+            fix A assume "A \<in> F"
+            hence "A \<subseteq> U" using hF_sub by (by100 blast)
+            hence hAtrans: "subspace_topology U (subspace_topology X TX U) A = subspace_topology X TX A"
+              by (rule subspace_topology_trans)
+            from \<open>A \<in> F\<close> have "A = C 0 \<or> (\<exists>j\<in>{1..<n}. A = W j)" unfolding F_def by (by100 blast)
+            thus "top1_path_connected_on A (subspace_topology U (subspace_topology X TX U) A)"
+            proof
+              assume "A = C 0"
+              have "top1_path_connected_on (C 0) (subspace_topology X TX (C 0))"
+                using circle_path_connected less.prems(7) hn_pos by (by100 blast)
+              thus ?thesis using hAtrans \<open>A = C 0\<close> by (by100 simp)
+            next
+              assume "\<exists>j\<in>{1..<n}. A = W j"
+              then obtain j where hj: "j \<in> {1..<n}" and hA: "A = W j" by (by100 blast)
+              have hjn: "j < n" using hj by (by100 simp)
+              have hg_homeo: "top1_homeomorphism_on top1_S1 top1_S1_topology
+                  (C j) (subspace_topology X TX (C j)) (g j)"
+                using less.prems(7) hjn by (by100 blast)
+              have hqj_in: "q j \<in> C j" using hq hjn by (by100 blast)
+              have "top1_path_connected_on (C j - {q j}) (subspace_topology (C j) (subspace_topology X TX (C j)) (C j - {q j}))"
+                using circle_minus_point_path_connected[OF hg_homeo hqj_in] by (by100 simp)
+              moreover have "C j - {q j} \<subseteq> C j" by (by100 blast)
+              hence "subspace_topology (C j) (subspace_topology X TX (C j)) (C j - {q j}) = subspace_topology X TX (C j - {q j})"
+                by (rule subspace_topology_trans)
+              ultimately have "top1_path_connected_on (W j) (subspace_topology X TX (W j))"
+                unfolding W_def by (by100 simp)
+              thus ?thesis using hAtrans hA by (by100 simp)
+            qed
+          qed
+          show ?thesis using path_connected_finite_union_common_point[OF hTU hfin hF_sub hF_pc hp_F hU_eq] .
+        qed
+        have hV_pc: "top1_path_connected_on V (subspace_topology X TX V)"
+        proof -
+          have hTX: "is_topology_on X TX"
+            using less.prems(1) unfolding is_topology_on_strict_def by (by100 blast)
+          have "W 0 \<subseteq> X" using hW_sub_C less.prems(4) hn_pos by (by100 force)
+          moreover have "\<forall>j\<in>{1..<n}. C j \<subseteq> X" using less.prems(4) by (by100 force)
+          ultimately have hVsub: "V \<subseteq> X" unfolding V_def by (by100 blast)
+          have hTV: "is_topology_on V (subspace_topology X TX V)"
+            by (rule subspace_topology_is_topology_on[OF hTX hVsub])
+          define F where "F = insert (W 0) (C ` {1..<n})"
+          have hfin: "finite F" unfolding F_def by (by100 simp)
+          have hF_sub: "\<forall>A\<in>F. A \<subseteq> V" unfolding F_def V_def by (by100 blast)
+          have hp_F: "\<forall>A\<in>F. p \<in> A"
+            unfolding F_def using hp_W hn_pos less.prems(4) by (by100 force)
+          have hV_eq: "V = \<Union>F" unfolding F_def V_def by (by100 blast)
+          have hF_pc: "\<forall>A\<in>F. top1_path_connected_on A (subspace_topology V (subspace_topology X TX V) A)"
+          proof (intro ballI)
+            fix A assume "A \<in> F"
+            hence "A \<subseteq> V" using hF_sub by (by100 blast)
+            hence hAtrans: "subspace_topology V (subspace_topology X TX V) A = subspace_topology X TX A"
+              by (rule subspace_topology_trans)
+            from \<open>A \<in> F\<close> have "A = W 0 \<or> (\<exists>j\<in>{1..<n}. A = C j)" unfolding F_def by (by100 blast)
+            thus "top1_path_connected_on A (subspace_topology V (subspace_topology X TX V) A)"
+            proof
+              assume "A = W 0"
+              have hg0_homeo: "top1_homeomorphism_on top1_S1 top1_S1_topology
+                  (C 0) (subspace_topology X TX (C 0)) (g 0)"
+                using less.prems(7) hn_pos by (by100 blast)
+              have hq0_in: "q 0 \<in> C 0" using hq hn_pos by (by100 blast)
+              have "top1_path_connected_on (C 0 - {q 0}) (subspace_topology (C 0) (subspace_topology X TX (C 0)) (C 0 - {q 0}))"
+                using circle_minus_point_path_connected[OF hg0_homeo hq0_in] by (by100 simp)
+              moreover have "C 0 - {q 0} \<subseteq> C 0" by (by100 blast)
+              hence "subspace_topology (C 0) (subspace_topology X TX (C 0)) (C 0 - {q 0}) = subspace_topology X TX (C 0 - {q 0})"
+                by (rule subspace_topology_trans)
+              ultimately have "top1_path_connected_on (W 0) (subspace_topology X TX (W 0))"
+                unfolding W_def by (by100 simp)
+              thus ?thesis using hAtrans \<open>A = W 0\<close> by (by100 simp)
+            next
+              assume "\<exists>j\<in>{1..<n}. A = C j"
+              then obtain j where hj: "j \<in> {1..<n}" and hA: "A = C j" by (by100 blast)
+              have hjn: "j < n" using hj by (by100 simp)
+              have "top1_path_connected_on (C j) (subspace_topology X TX (C j))"
+                using circle_path_connected less.prems(7) hjn by (by100 blast)
+              thus ?thesis using hAtrans hA by (by100 simp)
+            qed
+          qed
+          show ?thesis using path_connected_finite_union_common_point[OF hTV hfin hF_sub hF_pc hp_F hV_eq] .
+        qed
+        have hp_UV: "p \<in> U \<inter> V"
+        proof -
+          have "p \<in> C 0" using less.prems(4) hn_pos by (by100 blast)
+          hence "p \<in> U" unfolding U_def by (by100 blast)
+          have "p \<noteq> q 0" using hq hn_pos by (by100 blast)
+          hence "p \<in> W 0" using \<open>p \<in> C 0\<close> unfolding W_def by (by100 blast)
+          hence "p \<in> V" unfolding V_def by (by100 blast)
+          thus ?thesis using \<open>p \<in> U\<close> by (by100 blast)
+        qed
+        \<comment> \<open>Step 7: The whole inductive step is assembled from the above.
+           Apply SvK (Corollary\_70\_3) + Theorem\_69\_2 + IH.
+           The composition of isomorphisms gives \<Phi> with generator tracking.\<close>
+        \<comment> \<open>Step 7: Apply SvK (Corollary\_70\_3): \<pi>_1(X) \<cong> FP = \<pi>_1(U) * \<pi>_1(V).\<close>
+        have hstrict: "is_topology_on_strict X TX" using less.prems(1) .
+        \<comment> \<open>Step 8: \<pi>_1(U) \<cong> Z (deformation retract U to C(0) \<cong> S1).
+           U = C(0) \<union> arcs. Retract arcs to p. Then \<pi>_1(U) \<cong> \<pi>_1(C(0)) \<cong> Z.\<close>
+        \<comment> \<open>U deformation retracts to C(0). Each W(j) for j \<ge> 1 retracts to p \<in> C(0).\<close>
+        have hU_retract: "top1_deformation_retract_of_on U (subspace_topology X TX U) (C 0)"
+          sorry \<comment> \<open>Retraction: for x \<in> W(j) (j\<ge>1), slide x to p along the arc.
+             Continuous by coherent topology. H(x,0)=x, H(x,1) \<in> C(0), H(a,t)=a for a \<in> C(0).\<close>
+        \<comment> \<open>By Theorem\_58\_3: deformation retract gives \<pi>_1 iso.\<close>
+        have hTU: "is_topology_on U (subspace_topology X TX U)"
+        proof -
+          have hTX: "is_topology_on X TX"
+            using less.prems(1) unfolding is_topology_on_strict_def by (by100 blast)
+          have "C 0 \<subseteq> X" using less.prems(4) hn_pos by (by100 blast)
+          moreover have "\<forall>j\<in>{1..<n}. W j \<subseteq> X"
+            using hW_sub_C less.prems(4) by (by100 force)
+          ultimately have "U \<subseteq> X" unfolding U_def by (by100 blast)
+          thus ?thesis by (rule subspace_topology_is_topology_on[OF hTX])
+        qed
+        have hC0_sub_U: "C 0 \<subseteq> U" unfolding U_def by (by100 blast)
+        have hp_C0: "p \<in> C 0" using less.prems(4) hn_pos by (by100 blast)
+        have hC0_pi1_iso_U: "top1_groups_isomorphic_on
+            (top1_fundamental_group_carrier (C 0) (subspace_topology U (subspace_topology X TX U) (C 0)) p)
+            (top1_fundamental_group_mul (C 0) (subspace_topology U (subspace_topology X TX U) (C 0)) p)
+            (top1_fundamental_group_carrier U (subspace_topology X TX U) p)
+            (top1_fundamental_group_mul U (subspace_topology X TX U) p)"
+          by (rule Theorem_58_3[OF hU_retract hTU hp_C0])
+        \<comment> \<open>Subspace topology transitivity: subspace U (subspace X TX U) (C 0) = subspace X TX (C 0).\<close>
+        have hC0_trans: "subspace_topology U (subspace_topology X TX U) (C 0) = subspace_topology X TX (C 0)"
+          using hC0_sub_U by (rule subspace_topology_trans)
+        \<comment> \<open>\<pi>_1(C(0), subspace X TX (C 0)) is free on {0} with loop\_class(0) as generator.
+           Apply the n=1 case to C(0). First verify the hypotheses.\<close>
+        have hU_free: "\<exists>(G1::int set) mul1 e1 invg1 (\<eta>1::nat \<Rightarrow> int) \<Phi>1.
+            top1_is_free_group_full_on G1 mul1 e1 invg1 \<eta>1 {0::nat}
+          \<and> top1_group_iso_on G1 mul1
+              (top1_fundamental_group_carrier U (subspace_topology X TX U) p)
+              (top1_fundamental_group_mul U (subspace_topology X TX U) p) \<Phi>1
+          \<and> \<Phi>1 (\<eta>1 0) = {l. top1_loop_equiv_on U (subspace_topology X TX U) p
+              (\<lambda>t. g 0 (cos (2*pi*t), sin (2*pi*t))) l}"
+          sorry \<comment> \<open>From hC0\_pi1\_iso\_U + n=1 case applied to C(0).
+             The deformation retract iso preserves loop classes (inclusion-induced).
+             So the generator correspondence transfers from C(0) to U.\<close>
+        \<comment> \<open>Step 9: IH on V. V contains circles C(1),...,C(n-1) as a sub-wedge.
+           By inductive hypothesis (less.IH with n-1 < n), \<pi>_1(V) is free on n-1 generators
+           with loop correspondence for C(1),...,C(n-1).\<close>
+        have hV_free: "\<exists>(G2::int set) mul2 e2 invg2 (\<eta>2::nat \<Rightarrow> int) \<Phi>2.
+            top1_is_free_group_full_on G2 mul2 e2 invg2 \<eta>2 {1..<n}
+          \<and> top1_group_iso_on G2 mul2
+              (top1_fundamental_group_carrier V (subspace_topology X TX V) p)
+              (top1_fundamental_group_mul V (subspace_topology X TX V) p) \<Phi>2
+          \<and> (\<forall>j\<in>{1..<n}. \<Phi>2 (\<eta>2 j) = {l. top1_loop_equiv_on V (subspace_topology X TX V) p
+              (\<lambda>t. g j (cos (2*pi*t), sin (2*pi*t))) l})"
+          sorry \<comment> \<open>Apply less.IH with n' = n-1 < n. V is a wedge of n-1 circles.
+             Need to verify all hypotheses: strict topology, Hausdorff, circle data,
+             coherent topology on V. Re-index {1..<n} to {..<n-1}.\<close>
+        \<comment> \<open>Step 10: Compose SvK + Theorem\_69\_2 + iso tracking.
+           \<pi>_1(X) \<cong> FP(\<pi>_1(U), \<pi>_1(V)) \<cong> FP(Z, F_{n-1}) \<cong> F_n.\<close>
+        show ?thesis
+          sorry \<comment> \<open>Corollary\_70\_3[OF hstrict hU\_open hV\_open hUV\_cover hUV\_sc hU\_pc hV\_pc hp\_UV]
+             gives FP iso. Theorem\_69\_2[OF hU\_free hV\_free] gives FP free on {..<n}.
+             Compose isos + track generators through inclusions.\<close>
       qed
     qed
   qed
