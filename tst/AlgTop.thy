@@ -7510,7 +7510,21 @@ text \<open>Helper: S1 minus a point is path-connected.
 lemma S1_minus_point_path_connected:
   assumes "q \<in> top1_S1"
   shows "top1_path_connected_on (top1_S1 - {q}) (subspace_topology top1_S1 top1_S1_topology (top1_S1 - {q}))"
-  sorry \<comment> \<open>S1 \<setminus> {q} \<cong> R via stereographic projection. R is path-connected.\<close>
+proof -
+  \<comment> \<open>Write q = (cos \<alpha>, sin \<alpha>) for some \<alpha>.
+     S1 \ {q} = {(cos \<theta>, sin \<theta>) | \<theta> \<in> (\<alpha>, \<alpha>+2\<pi>)}.
+     For any a = (cos \<theta>_a, sin \<theta>_a), b = (cos \<theta>_b, sin \<theta>_b) \<in> S1\{q}
+     with \<theta>_a, \<theta>_b \<in> (\<alpha>, \<alpha>+2\<pi>), the linear interpolation
+     t \<mapsto> (cos(\<theta>_a + t(\<theta>_b - \<theta>_a)), sin(\<theta>_a + t(\<theta>_b - \<theta>_a)))
+     stays in S1\{q} (convexity of (\<alpha>, \<alpha>+2\<pi>)).\<close>
+  \<comment> \<open>The actual proof requires angle extraction from points on S1,
+     which needs arctan2 or similar. This is standard real analysis
+     but tedious to formalize (~40 lines of angle arithmetic).\<close>
+  show ?thesis sorry \<comment> \<open>S1 \<setminus> {q} \<cong> open interval via angle parametrization.
+     Proof: q = (cos \<alpha>, sin \<alpha>). The map \<theta> \<mapsto> (cos \<theta>, sin \<theta>) is a
+     homeomorphism (\<alpha>, \<alpha>+2\<pi>) \<rightarrow> S1 \<setminus> {q}. Open intervals are
+     path-connected (convex). Homeomorphism preserves path-connectedness.\<close>
+qed
 
 text \<open>Helper: homeomorphic image of S1 minus a point is path-connected.\<close>
 lemma circle_minus_point_path_connected:
@@ -7532,7 +7546,7 @@ proof -
   have hh_restrict: "top1_homeomorphism_on (top1_S1 - {q0})
       (subspace_topology top1_S1 top1_S1_topology (top1_S1 - {q0}))
       (Y - {q}) (subspace_topology Y TY (Y - {q})) h"
-    sorry \<comment> \<open>Restriction of homeomorphism to complement of a point.\<close>
+    using homeomorphism_restrict_point[OF hh hq0_S1] hq0_map by (by100 simp)
   \<comment> \<open>S1\{q0} is path-connected.\<close>
   have hS1mq_pc: "top1_path_connected_on (top1_S1 - {q0})
       (subspace_topology top1_S1 top1_S1_topology (top1_S1 - {q0}))"
