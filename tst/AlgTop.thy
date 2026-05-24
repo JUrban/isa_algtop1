@@ -3107,7 +3107,28 @@ proof -
     using hvert_hp unfolding cross2_def PolygonDisk.cross2_def by (by100 simp)
   from PolygonDisk.polygon_homeomorphic_to_disk_with_boundary[OF assms(1,2)
       hverts_in hP_hull hccw hvert_hp' hno_collinear]
-  show ?thesis by (by100 blast)
+  obtain \<psi> where h1: "top1_homeomorphism_on P
+        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P)
+        top1_B2 top1_B2_topology \<psi>"
+      and h2: "\<psi> ` (\<Union>i<n. {((1-t) * vx i + t * vx (Suc i mod n),
+                     (1-t) * vy i + t * vy (Suc i mod n)) | t. t \<in> I_set})
+        = top1_S1"
+      and h3: "top1_homeomorphism_on
+        (P - (\<Union>i<n. {((1-t) * vx i + t * vx (Suc i mod n),
+                       (1-t) * vy i + t * vy (Suc i mod n)) | t. t \<in> I_set}))
+        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets)
+           (P - (\<Union>i<n. {((1-t) * vx i + t * vx (Suc i mod n),
+                          (1-t) * vy i + t * vy (Suc i mod n)) | t. t \<in> I_set})))
+        (top1_B2 - top1_S1)
+        (subspace_topology top1_B2 top1_B2_topology (top1_B2 - top1_S1))
+        \<psi>"
+      and h4: "\<forall>i<n. \<forall>t\<in>I_set. \<psi> ((1-t) * vx i + t * vx (Suc i mod n),
+                              (1-t) * vy i + t * vy (Suc i mod n))
+        = (cos (2 * pi * (real i + t) / real n), sin (2 * pi * (real i + t) / real n))"
+    by - (erule exE, erule conjE, erule conjE, erule conjE, rule that, assumption, assumption, assumption, assumption)
+  show ?thesis
+    apply (rule exI[of _ \<psi>])
+    using h1 h2 h3 by (by100 blast)
 qed
 text \<open>Hausdorff property for scheme quotients. Following Munkres Theorem 74.1:
   the quotient map q: P \<rightarrow> X is a closed map (preimages of saturations are closed

@@ -1069,7 +1069,11 @@ lemma polygon_homeomorphic_to_disk_with_boundary:
                           (1-t) * vy i + t * vy (Suc i mod n)) | t. t \<in> I_set})))
         (top1_B2 - top1_S1)
         (subspace_topology top1_B2 top1_B2_topology (top1_B2 - top1_S1))
-        \<psi>"
+        \<psi>
+    \<comment> \<open>Edge-to-arc: \<psi> maps edge i at parameter t to angle 2\<pi>(i+t)/n on S1.\<close>
+    \<and> (\<forall>i<n. \<forall>t\<in>I_set. \<psi> ((1-t) * vx i + t * vx (Suc i mod n),
+                              (1-t) * vy i + t * vy (Suc i mod n))
+        = (cos (2 * pi * (real i + t) / real n), sin (2 * pi * (real i + t) / real n)))"
 proof -
   \<comment> \<open>Following Munkres \<S>74 paragraph before Theorem 74.2:
      "If two polygonal regions P and Q have the same number of vertices...
@@ -3782,12 +3786,19 @@ proof -
           (top1_B2 - top1_S1)
           (subspace_topology top1_B2 top1_B2_topology (top1_B2 - top1_S1)) \<psi>"
     by (elim conjE exE) (rule that, assumption+)
+  \<comment> \<open>Edge-to-arc property: \<psi> maps edge i at parameter t to (cos, sin).\<close>
+  have h\<psi>4: "\<forall>i<n. \<forall>t\<in>I_set. \<psi> ((1-t) * vx i + t * vx (Suc i mod n),
+                              (1-t) * vy i + t * vy (Suc i mod n))
+      = (cos (2 * pi * (real i + t) / real n), sin (2 * pi * (real i + t) / real n))"
+    sorry \<comment> \<open>From the cone construction: psi\_local i maps edge i at parameter t
+       via Cramer \<beta>=1-t, \<gamma>=t, s=1, u=t, \<theta>=2\<pi>(i+t)/n, result=(cos\<theta>, sin\<theta>).\<close>
   show ?thesis
     apply (rule exI[of _ \<psi>])
     apply (intro conjI)
     using h\<psi>1 apply (by100 blast)
     using h\<psi>2 apply (by100 blast)
-    using h\<psi>3 apply (by100 assumption)
+    using h\<psi>3 apply (by100 blast)
+    using h\<psi>4 apply (by100 blast)
     done
 qed
 
