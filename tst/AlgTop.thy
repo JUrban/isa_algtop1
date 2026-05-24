@@ -7875,8 +7875,31 @@ proof -
       \<comment> \<open>Key: (\<iota> \<circ> circle)((i+t)/n) = edge\_loop i t.\<close>
       have h\<iota>_circle_edge: "\<forall>i<?n. \<forall>t\<in>I_set.
           (\<iota> \<circ> (\<lambda>s. (cos (2 * pi * s), sin (2 * pi * s)))) ((real i + t) / real ?n) = edge_loop i t"
-        sorry \<comment> \<open>From hh\_edge\_arc + h\<iota>\_eq: \<iota>(cos(2\<pi>s), sin(2\<pi>s)) = h(cos(2\<pi>s), sin(2\<pi>s))
-           = qC(edge\_i(t)) = edge\_loop i t for s = (i+t)/n.\<close>
+      proof (intro allI impI ballI)
+        fix i :: nat and t :: real
+        assume hi: "i < ?n" and ht: "t \<in> I_set"
+        \<comment> \<open>LHS = \<iota>(cos(2\<pi>(i+t)/n), sin(2\<pi>(i+t)/n)).\<close>
+        have "(\<iota> \<circ> (\<lambda>s. (cos (2 * pi * s), sin (2 * pi * s)))) ((real i + t) / real ?n)
+            = \<iota> (cos (2 * pi * ((real i + t) / real ?n)), sin (2 * pi * ((real i + t) / real ?n)))"
+          by (by100 simp)
+        \<comment> \<open>From h\<iota>\_eq: \<iota> = h on S1. The point (cos\<theta>, sin\<theta>) \<in> S1.\<close>
+        also have "\<dots> = h (cos (2 * pi * ((real i + t) / real ?n)), sin (2 * pi * ((real i + t) / real ?n)))"
+        proof -
+          have "(cos (2 * pi * ((real i + t) / real ?n)), sin (2 * pi * ((real i + t) / real ?n))) \<in> top1_S1"
+            unfolding top1_S1_def by (by5000 force)
+          thus ?thesis using h\<iota>_eq by (by100 blast)
+        qed
+        \<comment> \<open>From hh\_edge\_arc: h(cos(2\<pi>(i+t)/n), sin(2\<pi>(i+t)/n)) = qC(edge\_i(t)).\<close>
+        also have "\<dots> = qC ((1-t) * vxC i + t * vxC (Suc i mod ?n),
+                            (1-t) * vyC i + t * vyC (Suc i mod ?n))"
+        proof -
+          have "2 * pi * ((real i + t) / real ?n) = 2 * pi * (real i + t) / real ?n"
+            by (by100 simp)
+          thus ?thesis using hh_edge_arc[rule_format, OF hi ht] by (by100 simp)
+        qed
+        also have "\<dots> = edge_loop i t" unfolding edge_loop_def by (by100 simp)
+        finally show "(\<iota> \<circ> (\<lambda>s. (cos (2 * pi * s), sin (2 * pi * s)))) ((real i + t) / real ?n) = edge_loop i t" .
+      qed
       \<comment> \<open>Step R2: Edge loops are loops through a' (all vertices = a').\<close>
       have hedge_loops: "\<forall>i<?n. edge_loop i 0 = a' \<and> edge_loop i 1 = a'"
       proof (intro allI impI conjI)
