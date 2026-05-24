@@ -7039,8 +7039,33 @@ proof -
           using hangle_prop \<open>r \<in> Y - {q}\<close> by (by100 blast)+
         moreover have "top1_R_to_S1 \<theta>r = r0" using h\<theta>r_map .
         ultimately show "angle r = \<theta>r"
-          sorry \<comment> \<open>R\_to\_S1 injective on (\<theta>q, \<theta>q+1): both angle(r) and \<theta>r are in
-             (\<theta>q, \<theta>q+1) and map to the same r0. Use sin\_cos\_eq\_iff.\<close>
+        proof -
+          assume ha: "top1_R_to_S1 (angle r) = r0"
+             and hab: "\<theta>q < angle r" "angle r < \<theta>q + 1"
+             and hb: "top1_R_to_S1 \<theta>r = r0"
+          hence "top1_R_to_S1 (angle r) = top1_R_to_S1 \<theta>r" by (by100 simp)
+          hence "(cos (2*pi*(angle r)), sin (2*pi*(angle r))) = (cos (2*pi*\<theta>r), sin (2*pi*\<theta>r))"
+            unfolding top1_R_to_S1_def by (by100 simp)
+          hence "sin (2*pi*(angle r)) = sin (2*pi*\<theta>r) \<and> cos (2*pi*(angle r)) = cos (2*pi*\<theta>r)"
+            by (by100 simp)
+          hence "\<exists>k::int. 2*pi*(angle r) = 2*pi*\<theta>r + 2*pi*of_int k"
+            using iffD1[OF sin_cos_eq_iff] by (by100 blast)
+          then obtain k :: int where hk: "2*pi*(angle r) = 2*pi*\<theta>r + 2*pi*of_int k" by (by100 blast)
+          have "angle r - \<theta>r = of_int k"
+          proof -
+            from hk have "2*pi*angle r = 2*pi*\<theta>r + 2*pi*of_int k" .
+            hence "2*pi*angle r - 2*pi*\<theta>r = 2*pi*of_int k" by (by100 linarith)
+            hence hd: "2*pi*(angle r - \<theta>r) = 2*pi*of_int k"
+              using right_diff_distrib[of "2*pi" "angle r" \<theta>r] by (by100 linarith)
+            have "2*pi \<noteq> (0::real)" using pi_neq_zero by (by100 simp)
+            with hd show ?thesis by (by100 simp)
+          qed
+          moreover have "\<bar>angle r - \<theta>r\<bar> < 1"
+            using hab h\<theta>r_bounds by (by100 linarith)
+          ultimately have "k = 0" by (by100 linarith)
+          hence "angle r - \<theta>r = 0" using \<open>angle r - \<theta>r = of_int k\<close> by (by100 simp)
+          thus "angle r = \<theta>r" by (by100 simp)
+        qed
       qed
       have "F (r, t) = h (top1_R_to_S1 ((1 - t) * \<theta>r + t * \<theta>r))"
         unfolding F_def using hangle_r by (by100 simp)
