@@ -8323,7 +8323,78 @@ proof -
            sub\_k = edge\_loop\_fn k. Also needs a = a'.\<close>
       \<comment> \<open>Edge loops are loops at a'.\<close>
       have hedge_loops_fn: "\<forall>k<?n. top1_is_loop_on A (subspace_topology X TX A) a' (edge_loop_fn k)"
-        sorry \<comment> \<open>From hqC\_edge\_cont + vertex identification.\<close>
+      proof (intro allI impI)
+        fix k assume hk: "k < ?n"
+        have hcont: "top1_continuous_map_on I_set top1_unit_interval_topology
+            A (subspace_topology X TX A) (edge_loop_fn k)"
+        proof -
+          have h: "top1_continuous_map_on I_set top1_unit_interval_topology
+              A (subspace_topology X TX A) (\<lambda>t. qC ((1-t) * vxC k + t * vxC (Suc k mod ?n),
+                  (1-t) * vyC k + t * vyC (Suc k mod ?n)))"
+            using hqC_edge_cont hk by (by100 blast)
+          moreover have "\<And>t. qC ((1-t) * vxC k + t * vxC (Suc k mod ?n),
+              (1-t) * vyC k + t * vyC (Suc k mod ?n)) = edge_loop_fn k t"
+            unfolding edge_loop_fn_def by (by100 simp)
+          ultimately show ?thesis by (by100 simp)
+        qed
+        have h0: "edge_loop_fn k 0 = a'"
+        proof -
+          have "edge_loop_fn k 0 = qC (vxC k, vyC k)" unfolding edge_loop_fn_def by (by100 simp)
+          also have "\<dots> = qC (vxC 0, vyC 0)"
+          proof -
+            have "0 < ?n" using hlen by (by100 linarith)
+            thus ?thesis using hvert_C[rule_format, OF hk \<open>0 < ?n\<close>] by (by100 simp)
+          qed
+          also have "\<dots> = a" using ha_eq by (by100 simp)
+          finally show ?thesis
+          proof -
+            assume "edge_loop_fn k 0 = a"
+            have "a = a'" proof -
+              have "h (1, 0) = qC (vxC 0, vyC 0)"
+              proof -
+                have "0 < ?n" using hlen by (by100 linarith)
+                moreover have "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 auto)
+                ultimately have "h (cos (2*pi*(real 0+0)/real ?n), sin (2*pi*(real 0+0)/real ?n))
+                  = qC ((1-0)*vxC 0 + 0*vxC (Suc 0 mod ?n), (1-0)*vyC 0 + 0*vyC (Suc 0 mod ?n))"
+                  using hh_edge_arc by (by100 blast)
+                thus ?thesis by (by100 simp)
+              qed
+              thus ?thesis unfolding a'_def using ha_eq by (by100 simp)
+            qed
+            thus ?thesis using \<open>edge_loop_fn k 0 = a\<close> by (by100 simp)
+          qed
+        qed
+        have h1: "edge_loop_fn k 1 = a'"
+        proof -
+          have hn_pos: "?n > 0" using hlen by (by100 linarith)
+          have hj: "Suc k mod ?n < ?n" using mod_less_divisor[OF hn_pos] by (by100 simp)
+          have "edge_loop_fn k 1 = qC (vxC (Suc k mod ?n), vyC (Suc k mod ?n))"
+            unfolding edge_loop_fn_def by (by100 simp)
+          also have "\<dots> = qC (vxC 0, vyC 0)"
+            using hvert_C[rule_format, OF hj] hn_pos by (by100 force)
+          also have "\<dots> = a" using ha_eq by (by100 simp)
+          finally show ?thesis
+          proof -
+            assume "edge_loop_fn k 1 = a"
+            have "a = a'" proof -
+              have "h (1, 0) = qC (vxC 0, vyC 0)"
+              proof -
+                have "0 < ?n" using hlen by (by100 linarith)
+                moreover have "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 auto)
+                ultimately have "h (cos (2*pi*(real 0+0)/real ?n), sin (2*pi*(real 0+0)/real ?n))
+                  = qC ((1-0)*vxC 0 + 0*vxC (Suc 0 mod ?n), (1-0)*vyC 0 + 0*vyC (Suc 0 mod ?n))"
+                  using hh_edge_arc by (by100 blast)
+                thus ?thesis by (by100 simp)
+              qed
+              thus ?thesis unfolding a'_def using ha_eq by (by100 simp)
+            qed
+            thus ?thesis using \<open>edge_loop_fn k 1 = a\<close> by (by100 simp)
+          qed
+        qed
+        show "top1_is_loop_on A (subspace_topology X TX A) a' (edge_loop_fn k)"
+          unfolding top1_is_loop_on_def top1_is_path_on_def
+          using h0 h1 hcont by (by5000 blast)
+      qed
       \<comment> \<open>hsub\_class in terms of edge\_loop\_fn.\<close>
       have hsub_fn: "\<forall>k<?n. {g. top1_loop_equiv_on A (subspace_topology X TX A) a' (edge_loop_fn k) g}
           = (if snd (scheme!k) then \<phi> (\<iota>F (fst (scheme!k)))
