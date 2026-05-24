@@ -7514,10 +7514,33 @@ lemma S1_minus_point_path_connected:
 
 text \<open>Helper: homeomorphic image of S1 minus a point is path-connected.\<close>
 lemma circle_minus_point_path_connected:
-  assumes "top1_homeomorphism_on top1_S1 top1_S1_topology Y TY h"
-      and "q \<in> Y"
+  assumes hh: "top1_homeomorphism_on top1_S1 top1_S1_topology Y TY h"
+      and hq: "q \<in> Y"
   shows "top1_path_connected_on (Y - {q}) (subspace_topology Y TY (Y - {q}))"
-  sorry \<comment> \<open>From S1\_minus\_point + homeomorphism\_preserves\_path\_connected.\<close>
+proof -
+  \<comment> \<open>h is bijective S1 \<rightarrow> Y, so h^{-1}(q) \<in> S1.\<close>
+  have hbij: "bij_betw h top1_S1 Y"
+    using hh unfolding top1_homeomorphism_on_def by (by100 blast)
+  define q0 where "q0 = inv_into top1_S1 h q"
+  have hq_img: "q \<in> h ` top1_S1" using hbij hq unfolding bij_betw_def by (by100 blast)
+  have hq0_S1: "q0 \<in> top1_S1"
+    unfolding q0_def by (rule inv_into_into[OF hq_img])
+  have hq0_map: "h q0 = q"
+    unfolding q0_def using f_inv_into_f[of q h top1_S1] hbij hq
+    unfolding bij_betw_def by (by5000 blast)
+  \<comment> \<open>h restricts to a homeomorphism S1\{q0} \<rightarrow> Y\{q}.\<close>
+  have hh_restrict: "top1_homeomorphism_on (top1_S1 - {q0})
+      (subspace_topology top1_S1 top1_S1_topology (top1_S1 - {q0}))
+      (Y - {q}) (subspace_topology Y TY (Y - {q})) h"
+    sorry \<comment> \<open>Restriction of homeomorphism to complement of a point.\<close>
+  \<comment> \<open>S1\{q0} is path-connected.\<close>
+  have hS1mq_pc: "top1_path_connected_on (top1_S1 - {q0})
+      (subspace_topology top1_S1 top1_S1_topology (top1_S1 - {q0}))"
+    by (rule S1_minus_point_path_connected[OF hq0_S1])
+  \<comment> \<open>Homeomorphic image is path-connected.\<close>
+  show ?thesis
+    by (rule homeomorphism_preserves_path_connected[OF hh_restrict hS1mq_pc])
+qed
 
 text \<open>Helper: circle (homeomorphic to S1) is path-connected.\<close>
 lemma circle_path_connected:
