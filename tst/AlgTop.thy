@@ -7997,9 +7997,30 @@ proof -
                       (1-t) * vyC k + t * vyC (Suc k mod ?n))) g}
         = (if b then \<phi> (\<iota>F s) else
             top1_fundamental_group_invg A (subspace_topology X TX A) a' (\<phi> (\<iota>F s)))"
-        sorry \<comment> \<open>From hedge\_C: same-label edges trace the same circle (or reverse).
-           i\_of(s) has True direction. So for True: same path \<Rightarrow> same class = \<phi>(\<iota>F s).
-           For False: reversed path \<Rightarrow> inverse class.\<close>
+      proof (intro allI impI)
+        fix k assume hk: "k < ?n"
+        obtain s b where hsb: "scheme ! k = (s, b)" by (cases "scheme!k") (by100 blast)
+        hence hs: "fst (scheme!k) = s" and hb: "snd (scheme!k) = b" by (by100 simp)+
+        have hs_label: "s \<in> fst ` set scheme" using hk hs by (by100 force)
+        have hi_s: "i_of s < ?n" "fst (scheme!(i_of s)) = s" "snd (scheme!(i_of s)) = True"
+          using hi_of[OF hs_label] by (by100 blast)+
+        \<comment> \<open>Define edge loop for edge k and canonical edge.\<close>
+        define el_k where "el_k t = qC ((1-t) * vxC k + t * vxC (Suc k mod ?n),
+            (1-t) * vyC k + t * vyC (Suc k mod ?n))" for t
+        define el_s where "el_s t = qC ((1-t) * vxC (i_of s) + t * vxC (Suc (i_of s) mod ?n),
+            (1-t) * vyC (i_of s) + t * vyC (Suc (i_of s) mod ?n))" for t
+        \<comment> \<open>From hedge\_C: same label s, so edge k and i\_of(s) are identified.\<close>
+        have hsamelabel: "fst (scheme!k) = fst (scheme!(i_of s))"
+          using hs hi_s(2) by (by100 simp)
+        \<comment> \<open>Case on direction b.\<close>
+        show "let (s', b') = scheme ! k in
+          {g. top1_loop_equiv_on A (subspace_topology X TX A) a' el_k g}
+          = (if b' then \<phi> (\<iota>F s') else
+              top1_fundamental_group_invg A (subspace_topology X TX A) a' (\<phi> (\<iota>F s')))"
+          sorry \<comment> \<open>Unfold let with hsb, then cases on b:
+             True: hedge\_C gives el\_k = el\_s pointwise \<Rightarrow> same class = \<phi>(\<iota>F s).
+             False: hedge\_C gives el\_k(t) = el\_s(1-t) \<Rightarrow> reverse \<Rightarrow> invg class.\<close>
+      qed
       show ?thesis sorry
         \<comment> \<open>Assembly: relator\_class = [\<iota> \<circ> circle]
            = [foldr path\_product (map sub [0..<n]) const] (loop\_split\_at\_vertices)
