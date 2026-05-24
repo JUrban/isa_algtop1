@@ -7682,15 +7682,7 @@ proof -
        3. A surjective hom \<pi>: F \<rightarrow> \<pi>_1(X,a')
        4. ker(\<pi>) = N(scheme word in F)
        Items 3-4 require the group theory composition + relator identification.\<close>
-    \<comment> \<open>Extract the isomorphism \<phi>: F \<rightarrow> \<pi>_1(A,a').\<close>
-    from hiso_AF[unfolded top1_groups_isomorphic_on_def top1_group_iso_on_def]
-    obtain \<phi> where
-      h\<phi>_hom: "top1_group_hom_on F mulF
-          (top1_fundamental_group_carrier A (subspace_topology X TX A) a')
-          (top1_fundamental_group_mul A (subspace_topology X TX A) a') \<phi>" and
-      h\<phi>_bij: "bij_betw \<phi> F
-          (top1_fundamental_group_carrier A (subspace_topology X TX A) a')"
-      by (by100 blast)
+    \<comment> \<open>\<phi> will be constructed after hpi1\_A\_grp is available.\<close>
     \<comment> \<open>The relator class in \<pi>_1(A,a').\<close>
     define relator_class where "relator_class =
         top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1, 0)
@@ -7734,6 +7726,27 @@ proof -
         (top1_fundamental_group_id A (subspace_topology X TX A) a')
         (top1_fundamental_group_invg A (subspace_topology X TX A) a')"
       using top1_fundamental_group_is_group[OF hTA ha'_A] .
+    \<comment> \<open>Construct \<phi>: F \<rightarrow> \<pi>_1(A,a') mapping \<iota>F(s) \<rightarrow> [edge\_loop for label s].
+       Munkres: "choose an edge oriented counterclockwise, let g_i = \<pi> \<circ> f_i.
+       Then g_1,...,g_k represent free generators for \<pi>_1(A,x_0)."\<close>
+    define edge_loop_class where "edge_loop_class s =
+        {g. top1_loop_equiv_on A (subspace_topology X TX A) a'
+          (\<lambda>t. qC ((1-t) * vxC (i_of s) + t * vxC (Suc (i_of s) mod length scheme),
+                    (1-t) * vyC (i_of s) + t * vyC (Suc (i_of s) mod length scheme))) g}"
+      for s :: nat
+    have hedge_class_in: "\<forall>s\<in>fst ` set scheme.
+        edge_loop_class s \<in> top1_fundamental_group_carrier A (subspace_topology X TX A) a'"
+      sorry \<comment> \<open>edge\_loop\_class s is a loop class, hence in \<pi>_1 carrier.\<close>
+    from free_group_hom_exists[OF hfree hpi1_A_grp hedge_class_in]
+    obtain \<phi> where
+      h\<phi>_hom: "top1_group_hom_on F mulF
+          (top1_fundamental_group_carrier A (subspace_topology X TX A) a')
+          (top1_fundamental_group_mul A (subspace_topology X TX A) a') \<phi>" and
+      h\<phi>_gen: "\<forall>s\<in>fst ` set scheme. \<phi> (\<iota>F s) = edge_loop_class s"
+      by (by100 blast)
+    have h\<phi>_bij: "bij_betw \<phi> F
+        (top1_fundamental_group_carrier A (subspace_topology X TX A) a')"
+      sorry \<comment> \<open>Surjective (edge loops generate) + injective (Hopfian).\<close>
     have hrel_in: "relator_class \<in> top1_fundamental_group_carrier A (subspace_topology X TX A) a'"
     proof -
       \<comment> \<open>The circle loop class is in \<pi>_1(S1,(1,0)).\<close>
@@ -7872,12 +7885,16 @@ proof -
           (top1_fundamental_group_id A (subspace_topology X TX A) a')
           (top1_fundamental_group_invg A (subspace_topology X TX A) a')
           (map (\<lambda>(s, b). (\<phi> (\<iota>F s), b)) scheme)"
-      sorry \<comment> \<open>Munkres 74.2 core step: the boundary loop \<iota> \<circ> circle equals the
-         product of edge loop generators in \<pi>_1(A,a').
-         Requires: (1) decomposing the boundary loop into edge sub-loops
-         (from h\<iota>\_circle\_edge + reparametrization homotopy),
-         (2) identifying each edge loop class with \<phi>(\<iota>F(label)) (from the
-         wedge-of-circles SvK construction + True-direction convention).\<close>
+      sorry \<comment> \<open>Munkres 74.2: boundary loop = product of edge generators.
+         With the new \<phi> mapping \<iota>F(s) \<rightarrow> edge\_loop\_class(s):
+         (1) relator\_class = [boundary loop] = [product of sub-loops]
+             (from loop\_split\_at\_vertices, PROVED in PolygonDisk),
+         (2) each sub-loop class = \<phi>(\<iota>F(label))^{direction}
+             (from hedge\_C edge identification + edge\_loop\_class definition
+             + i\_of True-direction convention),
+         (3) product of classes = word\_product(\<phi>(\<iota>F), scheme).
+         Remaining sorrys: (a) sub-loop = edge loop homotopy via hedge\_C,
+         (b) π₁ product of classes = fundamental group word product.\<close>
     \<comment> \<open>Step R2: \<phi> is a hom, so \<phi>(word\_product in F) = word\_product in \<pi>_1(A,a').\<close>
     have hphi_word: "\<phi> (top1_group_word_product mulF eF invgF
           (map (\<lambda>(s, b). (\<iota>F s, b)) scheme))
