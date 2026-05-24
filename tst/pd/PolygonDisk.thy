@@ -4303,12 +4303,75 @@ proof -
         unfolding top1_path_homotopic_on_def by (by100 blast)
       \<comment> \<open>Convert continuity from subspace to TX.\<close>
       have hF_cont_TX: "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX F"
-        sorry \<comment> \<open>F maps into X. For U \<in> TX: F\<inverse>(U) = F\<inverse>(X \<inter> U) since F maps into X.
-           X \<inter> U \<in> subspace\_topology. So F\<inverse>(X \<inter> U) is open. Hence F\<inverse>(U) is open.\<close>
+        unfolding top1_continuous_map_on_def
+      proof (intro conjI ballI)
+        fix p assume "p \<in> I_set \<times> I_set"
+        thus "F p \<in> X" using hF_cont unfolding top1_continuous_map_on_def by (by100 blast)
+      next
+        fix U assume hU: "U \<in> TX"
+        \<comment> \<open>X \<inter> U \<in> subspace\_topology X TX X.\<close>
+        have "X \<inter> U \<in> subspace_topology X TX X"
+          unfolding subspace_topology_def using hU by (by100 blast)
+        hence "{p \<in> I_set \<times> I_set. F p \<in> X \<inter> U} \<in> II_topology"
+          using hF_cont unfolding top1_continuous_map_on_def by (by100 blast)
+        \<comment> \<open>F maps into X, so F\<inverse>(U) = F\<inverse>(X \<inter> U).\<close>
+        moreover have "{p \<in> I_set \<times> I_set. F p \<in> U} = {p \<in> I_set \<times> I_set. F p \<in> X \<inter> U}"
+        proof (rule set_eqI, rule iffI)
+          fix p assume "p \<in> {p \<in> I_set \<times> I_set. F p \<in> U}"
+          hence hp: "p \<in> I_set \<times> I_set" "F p \<in> U" by (by100 blast)+
+          moreover have "F p \<in> X" using hF_cont hp(1) unfolding top1_continuous_map_on_def
+            by (by100 blast)
+          ultimately show "p \<in> {p \<in> I_set \<times> I_set. F p \<in> X \<inter> U}" by (by100 blast)
+        next
+          fix p assume "p \<in> {p \<in> I_set \<times> I_set. F p \<in> X \<inter> U}"
+          thus "p \<in> {p \<in> I_set \<times> I_set. F p \<in> U}" by (by100 blast)
+        qed
+        ultimately show "{p \<in> I_set \<times> I_set. F p \<in> U} \<in> II_topology" by (by100 simp)
+      qed
       have hf_path: "top1_is_path_on X TX x0 x0 f"
         using hloop unfolding top1_is_loop_on_def by (by100 blast)
       have hprod_path: "top1_is_path_on X TX x0 x0 (top1_path_product sub0 g)"
-        sorry \<comment> \<open>sub0 * g is a path x0 to x0 (both are loops).\<close>
+      proof -
+        from hreparam' have hprod_sub: "top1_is_path_on X (subspace_topology X TX X) x0 x0
+            (top1_path_product sub0 g)"
+          unfolding top1_path_homotopic_on_def by (by100 blast)
+        have hprod_cont: "top1_continuous_map_on I_set top1_unit_interval_topology X TX
+            (top1_path_product sub0 g)"
+          unfolding top1_continuous_map_on_def
+        proof (intro conjI ballI)
+          fix s assume hs: "s \<in> I_set"
+          show "top1_path_product sub0 g s \<in> X"
+            using hprod_sub hs unfolding top1_is_path_on_def top1_continuous_map_on_def
+            by (by100 blast)
+        next
+          fix U assume hU: "U \<in> TX"
+          have "X \<inter> U \<in> subspace_topology X TX X"
+            unfolding subspace_topology_def using hU by (by100 blast)
+          hence "{s \<in> I_set. top1_path_product sub0 g s \<in> X \<inter> U} \<in> top1_unit_interval_topology"
+            using hprod_sub unfolding top1_is_path_on_def top1_continuous_map_on_def by (by100 blast)
+          moreover have "{s \<in> I_set. top1_path_product sub0 g s \<in> U}
+              = {s \<in> I_set. top1_path_product sub0 g s \<in> X \<inter> U}"
+          proof (rule set_eqI, rule iffI)
+            fix s assume "s \<in> {s \<in> I_set. top1_path_product sub0 g s \<in> U}"
+            hence "s \<in> I_set" "top1_path_product sub0 g s \<in> U" by (by100 blast)+
+            moreover have "top1_path_product sub0 g s \<in> X"
+              using hprod_sub \<open>s \<in> I_set\<close> unfolding top1_is_path_on_def top1_continuous_map_on_def
+              by (by100 blast)
+            ultimately show "s \<in> {s \<in> I_set. top1_path_product sub0 g s \<in> X \<inter> U}" by (by100 blast)
+          next
+            fix s assume "s \<in> {s \<in> I_set. top1_path_product sub0 g s \<in> X \<inter> U}"
+            thus "s \<in> {s \<in> I_set. top1_path_product sub0 g s \<in> U}" by (by100 blast)
+          qed
+          ultimately show "{s \<in> I_set. top1_path_product sub0 g s \<in> U} \<in> top1_unit_interval_topology"
+            by (by100 simp)
+        qed
+        have "top1_path_product sub0 g 0 = x0"
+          using hprod_sub unfolding top1_is_path_on_def by (by100 blast)
+        moreover have "top1_path_product sub0 g 1 = x0"
+          using hprod_sub unfolding top1_is_path_on_def by (by100 blast)
+        ultimately show ?thesis unfolding top1_is_path_on_def
+          using hprod_cont by (by5000 blast)
+      qed
       show ?thesis unfolding top1_path_homotopic_on_def
         using hf_path hprod_path hF_cont_TX hF0 hF1 hF_x0 hF_x1 by (by100 blast)
     qed
