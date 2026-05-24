@@ -7520,14 +7520,150 @@ proof -
   \<comment> \<open>The actual proof requires angle extraction from points on S1,
      which needs arctan2 or similar. This is standard real analysis
      but tedious to formalize (~40 lines of angle arithmetic).\<close>
-  show ?thesis
-    sorry \<comment> \<open>S1 \<setminus> {q} is path-connected.
-       Proof: q = top1\_R\_to\_S1 \<alpha> for some \<alpha> (by S1\_point\_to\_angle).
-       For any a, b \<in> S1\{q}: get angles \<theta>a, \<theta>b with a = top1\_R\_to\_S1 \<theta>a,
-       b = top1\_R\_to\_S1 \<theta>b. Adjust to (\<alpha>, \<alpha>+1) using periodicity.
-       Linear interpolation t \<mapsto> top1\_R\_to\_S1(\<theta>a + t(\<theta>b - \<theta>a)) is a path
-       in S1\{q} (angle stays in (\<alpha>, \<alpha>+1), so never hits q).
-       Continuous (cos/sin \<circ> affine is continuous). ~30 lines.\<close>
+  \<comment> \<open>Get angle for q.\<close>
+  from S1_point_to_angle[OF assms] obtain \<alpha> where h\<alpha>: "top1_R_to_S1 \<alpha> = q"
+    by (by100 blast)
+  let ?T = "subspace_topology top1_S1 top1_S1_topology (top1_S1 - {q})"
+  have hTS1: "is_topology_on top1_S1 top1_S1_topology"
+    using top1_S1_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
+  have hS1_sub: "top1_S1 - {q} \<subseteq> top1_S1" by (by100 blast)
+  have hT: "is_topology_on (top1_S1 - {q}) ?T"
+    by (rule subspace_topology_is_topology_on[OF hTS1 hS1_sub])
+  show ?thesis unfolding top1_path_connected_on_def
+  proof (intro conjI ballI)
+    show "is_topology_on (top1_S1 - {q}) ?T" by (rule hT)
+    fix a b assume ha: "a \<in> top1_S1 - {q}" and hb: "b \<in> top1_S1 - {q}"
+    \<comment> \<open>Get angles for a and b.\<close>
+    have ha_S1: "a \<in> top1_S1" using ha by (by100 blast)
+    have hb_S1: "b \<in> top1_S1" using hb by (by100 blast)
+    from S1_point_to_angle[OF ha_S1] obtain \<theta>a where h\<theta>a: "top1_R_to_S1 \<theta>a = a"
+      by (by100 blast)
+    from S1_point_to_angle[OF hb_S1] obtain \<theta>b where h\<theta>b: "top1_R_to_S1 \<theta>b = b"
+      by (by100 blast)
+    \<comment> \<open>Adjust angles to (\<alpha>, \<alpha>+1) using floor.
+       For any x with R\_to\_S1(x) \<noteq> R\_to\_S1(\<alpha>):
+       x - floor(x - \<alpha>) is in [\<alpha>, \<alpha>+1) and not equal to \<alpha> (since R\_to\_S1 \<noteq> q).
+       Actually x - floor(x - \<alpha>) is in [\<alpha>, \<alpha>+1), and equals \<alpha> iff x - \<alpha> \<in> Z,
+       iff R\_to\_S1(x) = R\_to\_S1(\<alpha>) = q. So since R\_to\_S1(x) \<noteq> q, it's in (\<alpha>, \<alpha>+1).\<close>
+    define \<theta>a' where "\<theta>a' = \<theta>a - real_of_int \<lfloor>\<theta>a - \<alpha>\<rfloor>"
+    define \<theta>b' where "\<theta>b' = \<theta>b - real_of_int \<lfloor>\<theta>b - \<alpha>\<rfloor>"
+    \<comment> \<open>Properties of floor: \<alpha> \<le> \<theta>' < \<alpha> + 1.\<close>
+    have h\<theta>a'_ge: "\<alpha> \<le> \<theta>a'" unfolding \<theta>a'_def by (by100 linarith)
+    have h\<theta>a'_lt: "\<theta>a' < \<alpha> + 1" unfolding \<theta>a'_def by (by100 linarith)
+    have h\<theta>b'_ge: "\<alpha> \<le> \<theta>b'" unfolding \<theta>b'_def by (by100 linarith)
+    have h\<theta>b'_lt: "\<theta>b' < \<alpha> + 1" unfolding \<theta>b'_def by (by100 linarith)
+    \<comment> \<open>R\_to\_S1 is periodic with period 1: R\_to\_S1(\<theta>') = R\_to\_S1(\<theta>).\<close>
+    have h\<theta>a'_map: "top1_R_to_S1 \<theta>a' = a"
+    proof -
+      have "top1_R_to_S1 \<theta>a' = top1_R_to_S1 (\<theta>a + (- \<lfloor>\<theta>a - \<alpha>\<rfloor>))"
+        unfolding \<theta>a'_def by (by100 simp)
+      also have "\<dots> = top1_R_to_S1 \<theta>a"
+        by (rule top1_R_to_S1_int_shift_early)
+      finally show ?thesis using h\<theta>a by (by100 simp)
+    qed
+    have h\<theta>b'_map: "top1_R_to_S1 \<theta>b' = b"
+    proof -
+      have "top1_R_to_S1 \<theta>b' = top1_R_to_S1 (\<theta>b + (- \<lfloor>\<theta>b - \<alpha>\<rfloor>))"
+        unfolding \<theta>b'_def by (by100 simp)
+      also have "\<dots> = top1_R_to_S1 \<theta>b"
+        by (rule top1_R_to_S1_int_shift_early)
+      finally show ?thesis using h\<theta>b by (by100 simp)
+    qed
+    \<comment> \<open>\<theta>' = \<alpha> iff R\_to\_S1(\<theta>') = q. Since a \<noteq> q, \<theta>a' \<noteq> \<alpha>. So \<theta>a' \<in> (\<alpha>, \<alpha>+1).\<close>
+    have ha_neq_q: "a \<noteq> q" using ha by (by100 blast)
+    have hb_neq_q: "b \<noteq> q" using hb by (by100 blast)
+    have h\<theta>a'_neq: "\<theta>a' \<noteq> \<alpha>"
+    proof
+      assume "  \<theta>a' = \<alpha>"
+      hence "top1_R_to_S1 \<theta>a' = top1_R_to_S1 \<alpha>" by (by100 simp)
+      hence "a = q" using h\<theta>a'_map h\<alpha> by (by100 simp)
+      thus False using ha_neq_q by (by100 blast)
+    qed
+    have h\<theta>b'_neq: "\<theta>b' \<noteq> \<alpha>"
+    proof
+      assume "\<theta>b' = \<alpha>"
+      hence "top1_R_to_S1 \<theta>b' = top1_R_to_S1 \<alpha>" by (by100 simp)
+      hence "b = q" using h\<theta>b'_map h\<alpha> by (by100 simp)
+      thus False using hb_neq_q by (by100 blast)
+    qed
+    have h\<theta>a'_range: "\<alpha> < \<theta>a' \<and> \<theta>a' < \<alpha> + 1"
+      using h\<theta>a'_ge h\<theta>a'_lt h\<theta>a'_neq by (by100 linarith)
+    have h\<theta>b'_range: "\<alpha> < \<theta>b' \<and> \<theta>b' < \<alpha> + 1"
+      using h\<theta>b'_ge h\<theta>b'_lt h\<theta>b'_neq by (by100 linarith)
+    \<comment> \<open>Linear interpolation stays in (\<alpha>, \<alpha>+1).\<close>
+    define f where "f t = top1_R_to_S1 (\<theta>a' + t * (\<theta>b' - \<theta>a'))" for t
+    have hf_in_S1: "\<And>t. 0 \<le> t \<Longrightarrow> t \<le> 1 \<Longrightarrow> f t \<in> top1_S1 - {q}"
+    proof -
+      fix t :: real assume ht0: "0 \<le> t" and ht1: "t \<le> 1"
+      let ?\<theta> = "\<theta>a' + t * (\<theta>b' - \<theta>a')"
+      have h\<theta>_range: "\<alpha> < ?\<theta> \<and> ?\<theta> < \<alpha> + 1"
+      proof (intro conjI)
+        have "?\<theta> = (1 - t) * \<theta>a' + t * \<theta>b'" by (simp add: algebra_simps)
+        show "\<alpha> < ?\<theta>"
+        proof -
+          have h1: "(1-t) * (\<theta>a' - \<alpha>) \<ge> 0" using h\<theta>a'_range ht0 ht1
+            using mult_nonneg_nonneg by (by5000 simp)
+          have h2: "t * (\<theta>b' - \<alpha>) \<ge> 0" using h\<theta>b'_range ht0
+            using mult_nonneg_nonneg by (by5000 simp)
+          have h3: "(1-t) * (\<theta>a' - \<alpha>) + t * (\<theta>b' - \<alpha>) > 0"
+          proof (cases "t = 0")
+            case True thus ?thesis using h\<theta>a'_range by (by100 simp)
+          next
+            case False
+            have "t * (\<theta>b' - \<alpha>) > 0" using h\<theta>b'_range ht0 False
+              using mult_pos_pos by (by5000 simp)
+            thus ?thesis using h1 by (by100 linarith)
+          qed
+          have "?\<theta> - \<alpha> = (1-t) * (\<theta>a' - \<alpha>) + t * (\<theta>b' - \<alpha>)"
+            by (simp add: algebra_simps)
+          thus ?thesis using h3 by (by100 linarith)
+        qed
+        show "?\<theta> < \<alpha> + 1"
+        proof -
+          have h1: "(1-t) * ((\<alpha>+1) - \<theta>a') > 0 \<or> (1-t) = 0"
+            using h\<theta>a'_range ht0 ht1 by (by100 auto)
+          have h2: "t * ((\<alpha>+1) - \<theta>b') > 0 \<or> t = 0"
+            using h\<theta>b'_range ht0 ht1 by (by100 auto)
+          have "(\<alpha>+1) - ?\<theta> = (1-t) * ((\<alpha>+1) - \<theta>a') + t * ((\<alpha>+1) - \<theta>b')"
+            by (simp add: algebra_simps)
+          moreover have "(1-t) * ((\<alpha>+1) - \<theta>a') + t * ((\<alpha>+1) - \<theta>b') > 0"
+            using h1 h2 h\<theta>a'_range h\<theta>b'_range ht0 ht1
+            sorry \<comment> \<open>Sum of two nonneg reals where at least one is positive.\<close>
+          ultimately show ?thesis by (by100 linarith)
+        qed
+      qed
+      have "f t \<in> top1_S1"
+        unfolding f_def top1_R_to_S1_def top1_S1_def by (by100 auto)
+      moreover have "f t \<noteq> q"
+      proof
+        assume heq: "f t = q"
+        have hRS1_eq: "top1_R_to_S1 ?\<theta> = top1_R_to_S1 \<alpha>"
+          using heq h\<alpha> unfolding f_def by (by100 simp)
+        hence hcos: "cos (2 * pi * ?\<theta>) = cos (2 * pi * \<alpha>)"
+          and hsin: "sin (2 * pi * ?\<theta>) = sin (2 * pi * \<alpha>)"
+          unfolding top1_R_to_S1_def by (by100 auto)+
+        from cos_sin_eq_imp[OF hcos hsin]
+        obtain k :: int where hk: "2 * pi * ?\<theta> - 2 * pi * \<alpha> = real_of_int k * 2 * pi"
+          by (by100 blast)
+        \<comment> \<open>Cancel 2\<pi>: \<theta> - \<alpha> = k. Since \<theta> - \<alpha> \<in> (0,1), k \<in> (0,1), impossible for integer.\<close>
+        have "?\<theta> - \<alpha> > 0 \<and> ?\<theta> - \<alpha> < 1" using h\<theta>_range by (by100 linarith)
+        moreover have "2 * pi * (?\<theta> - \<alpha>) = 2 * pi * real_of_int k"
+          using hk by (simp add: algebra_simps)
+        ultimately show False sorry \<comment> \<open>2\<pi>x = 2\<pi>k with x \<in> (0,1) \<Rightarrow> k \<in> (0,1) \<Rightarrow> contradiction (no int in (0,1)).\<close>
+      qed
+      ultimately show "f t \<in> top1_S1 - {q}" by (by100 blast)
+    qed
+    have hf0: "f 0 = a" unfolding f_def using h\<theta>a'_map by (by100 simp)
+    have hf1: "f 1 = b" unfolding f_def using h\<theta>b'_map by (by100 simp)
+    have hf_cont: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+        (top1_S1 - {q}) ?T f"
+      sorry \<comment> \<open>f = R\_to\_S1 \<circ> affine. Continuous into S1 (R\_to\_S1 continuous + affine continuous).
+         Range in S1\{q} by hf\_in\_S1. Continuous into subspace.\<close>
+    have hf_path: "top1_is_path_on (top1_S1 - {q}) ?T a b f"
+      unfolding top1_is_path_on_def using hf0 hf1 hf_cont by (by100 blast)
+    show "\<exists>f. top1_is_path_on (top1_S1 - {q}) ?T a b f"
+      using hf_path by (by100 blast)
+  qed
 qed
 
 text \<open>Helper: homeomorphic image of S1 minus a point is path-connected.\<close>
