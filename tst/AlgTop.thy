@@ -6931,10 +6931,57 @@ lemma Theorem_58_3_explicit:
       (top1_fundamental_group_carrier X TX x0)
       (top1_fundamental_group_mul X TX x0)
       (top1_fundamental_group_induced_on A (subspace_topology X TX A) x0 X TX x0 (\<lambda>x. x))"
-  sorry \<comment> \<open>Proof: deformation retract \<Rightarrow> homotopy equivalence (inclusion + retraction).
-     Then AlgIsoFixed.Theorem\_58\_7 gives the inclusion-induced map is an iso.
-     Construction of homotopy equivalence: same as in n=1 base case
-     (identity homotopy from H(x,0)=x and H|\_A = id).\<close>
+proof -
+  have hA_sub: "A \<subseteq> X" using hdr unfolding top1_deformation_retract_of_on_def
+    by (by100 blast)
+  let ?TA = "subspace_topology X TX A"
+  \<comment> \<open>Deformation retract \<Rightarrow> inclusion is a homotopy equivalence.
+     r(x) = H(x,1) is the retraction. r \<circ> j = id (since H(a,1)=a).
+     j \<circ> r \<simeq> id via H reversed: F(x,t) = H(x,1-t).\<close>
+  have hdr_ex: "\<exists>H. top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) X TX H
+      \<and> (\<forall>x\<in>X. H (x, 0) = x) \<and> (\<forall>x\<in>X. H (x, 1) \<in> A)
+      \<and> (\<forall>a\<in>A. \<forall>t\<in>I_set. H (a, t) = a)"
+    using hdr unfolding top1_deformation_retract_of_on_def by (by100 blast)
+  then obtain H where
+    hH_all: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) X TX H
+      \<and> (\<forall>x\<in>X. H (x, 0) = x) \<and> (\<forall>x\<in>X. H (x, 1) \<in> A)
+      \<and> (\<forall>a\<in>A. \<forall>t\<in>I_set. H (a, t) = a)"
+    by (by5000 auto)
+  define r where "r x = H (x, 1)" for x
+  have hH_cont: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) X TX H"
+    using hH_all by (by100 blast)
+  have hH_0: "\<forall>x\<in>X. H (x, 0) = x" using hH_all by (by100 blast)
+  have hH_1: "\<forall>x\<in>X. H (x, 1) \<in> A" using hH_all by (by100 blast)
+  have hH_fix: "\<forall>a\<in>A. \<forall>t\<in>I_set. H (a, t) = a" using hH_all by (by100 blast)
+  have hj_equiv: "top1_homotopy_equivalence_on A ?TA X TX (\<lambda>x. x) r"
+    unfolding top1_homotopy_equivalence_on_def
+  proof (intro conjI)
+    \<comment> \<open>j = id : A \<rightarrow> X continuous (inclusion).\<close>
+    show "top1_continuous_map_on A ?TA X TX (\<lambda>x. x)"
+    proof -
+      have "top1_continuous_map_on A ?TA X TX id"
+        using Theorem_18_2(2)[OF hTX hTX hTX] hA_sub by (by100 blast)
+      thus ?thesis unfolding id_def by (by100 simp)
+    qed
+    \<comment> \<open>r : X \<rightarrow> A continuous.\<close>
+    show "top1_continuous_map_on X TX A ?TA r"
+      sorry \<comment> \<open>r(x) = H(x,1). Composition of H (continuous) with section x \<mapsto> (x,1).\<close>
+    \<comment> \<open>r \<circ> j \<simeq> id on A. Actually r \<circ> j = id (since H(a,1) = a for a \<in> A).\<close>
+    show "top1_homotopic_on A ?TA A ?TA (r \<circ> (\<lambda>x. x)) (\<lambda>x. x)"
+      sorry \<comment> \<open>r(a) = H(a,1) = a for a \<in> A. So r \<circ> j = id.
+         Homotopic to id via constant homotopy.\<close>
+    \<comment> \<open>j \<circ> r \<simeq> id on X. Homotopy: F(x,t) = H(x,1-t).
+       F(x,0) = H(x,1) = r(x) = (j \<circ> r)(x). F(x,1) = H(x,0) = x.\<close>
+    show "top1_homotopic_on X TX X TX ((\<lambda>x. x) \<circ> r) (\<lambda>y. y)"
+      sorry \<comment> \<open>j \<circ> r = r as function on X. Homotopy H reversed: F(x,t) = H(x,1-t).
+         Continuous (composition with t \<mapsto> 1-t, which is continuous).
+         F(x,0) = H(x,1) = r(x). F(x,1) = H(x,0) = x.\<close>
+  qed
+  have hTA: "is_topology_on A ?TA"
+    by (rule subspace_topology_is_topology_on[OF hTX hA_sub])
+  from AlgIsoFixed.Theorem_58_7[OF hTA hTX hj_equiv hx0]
+  show ?thesis by (by100 simp)
+qed
 
 text \<open>Pasting deformation retractions on finitely many closed subsets.
   Munkres 71.1: "The maps F\_i fit together... the pasting lemma applies."
