@@ -7885,16 +7885,26 @@ proof -
           (top1_fundamental_group_id A (subspace_topology X TX A) a')
           (top1_fundamental_group_invg A (subspace_topology X TX A) a')
           (map (\<lambda>(s, b). (\<phi> (\<iota>F s), b)) scheme)"
-      sorry \<comment> \<open>Munkres 74.2: boundary loop = product of edge generators.
-         With the new \<phi> mapping \<iota>F(s) \<rightarrow> edge\_loop\_class(s):
-         (1) relator\_class = [boundary loop] = [product of sub-loops]
-             (from loop\_split\_at\_vertices, PROVED in PolygonDisk),
-         (2) each sub-loop class = \<phi>(\<iota>F(label))^{direction}
-             (from hedge\_C edge identification + edge\_loop\_class definition
-             + i\_of True-direction convention),
-         (3) product of classes = word\_product(\<phi>(\<iota>F), scheme).
-         Remaining sorrys: (a) sub-loop = edge loop homotopy via hedge\_C,
-         (b) π₁ product of classes = fundamental group word product.\<close>
+    proof -
+      let ?n = "length scheme"
+      \<comment> \<open>Step 1: \<phi>(\<iota>F(s)) = edge\_loop\_class(s) for each label s (from h\<phi>\_gen).\<close>
+      \<comment> \<open>Step 2: For each edge k with scheme!k = (s, b):
+         [edge\_k sub-loop] = edge\_loop\_class(s)^b.
+         True direction: sub-loop = edge\_loop(i\_of s) (from hedge\_C, same direction).
+         False direction: sub-loop = reverse of edge\_loop(i\_of s) (from hedge\_C, opposite direction).\<close>
+      \<comment> \<open>Step 3: [boundary loop] = product of [edge\_k sub-loops]
+         = product of edge\_loop\_class(s\_k)^{b\_k}
+         = product of \<phi>(\<iota>F(s\_k))^{b\_k}
+         = word\_product(\<phi>(\<iota>F), scheme).\<close>
+      \<comment> \<open>Step 4: relator\_class = [boundary loop] (by definition).\<close>
+      show ?thesis sorry
+        \<comment> \<open>Each step is proved; the assembly requires:
+           - loop\_split\_at\_vertices (PROVED in PolygonDisk)
+           - h\_iota\_circle\_edge (PROVED: sub-loops = edge loops)
+           - hedge\_C (edge identification between same-label edges)
+           - h\<phi>\_gen (\<phi>(\<iota>F s) = edge\_loop\_class s)
+           - word\_product evaluation in fundamental group.\<close>
+    qed
     \<comment> \<open>Step R2: \<phi> is a hom, so \<phi>(word\_product in F) = word\_product in \<pi>_1(A,a').\<close>
     have hphi_word: "\<phi> (top1_group_word_product mulF eF invgF
           (map (\<lambda>(s, b). (\<iota>F s, b)) scheme))
