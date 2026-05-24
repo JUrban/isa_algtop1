@@ -6989,15 +6989,86 @@ proof -
   show ?thesis unfolding top1_deformation_retract_of_on_def
   proof (intro conjI)
     show "{r} \<subseteq> Y - {q}" using hr hqr by (by100 blast)
+    \<comment> \<open>Key property of angle: for y \<in> Y - {q}, angle(y) \<in> (\<theta>q, \<theta>q+1) and
+       R\_to\_S1(angle(y)) = h^{-1}(y).\<close>
+    have hangle_prop: "\<forall>y\<in>Y - {q}. \<theta>q < angle y \<and> angle y < \<theta>q + 1 \<and>
+        top1_R_to_S1 (angle y) = ?hinv y"
+      sorry \<comment> \<open>y \<in> Y - {q} \<Rightarrow> h^{-1}(y) \<in> S1 - {q0} \<Rightarrow> \<exists>! \<theta> \<in> (\<theta>q, \<theta>q+1). R\_to\_S1(\<theta>) = h^{-1}(y).
+         THE picks the unique one. Existence from S1\_point\_to\_angle + floor shift.
+         Uniqueness from R\_to\_S1 injective on intervals of length < 1.\<close>
+    \<comment> \<open>Boundary conditions for F.\<close>
+    have hF_id: "\<forall>y\<in>Y - {q}. F (y, 0) = y"
+    proof (intro ballI)
+      fix y assume hy: "y \<in> Y - {q}"
+      have "F (y, 0) = h (top1_R_to_S1 ((1 - 0) * angle y + 0 * \<theta>r))"
+        unfolding F_def by (by100 simp)
+      also have "\<dots> = h (top1_R_to_S1 (angle y))" by (by100 simp)
+      also have "\<dots> = h (?hinv y)"
+      proof -
+        have "top1_R_to_S1 (angle y) = ?hinv y" using hangle_prop hy by (by100 blast)
+        thus ?thesis by (by100 simp)
+      qed
+      also have "\<dots> = y"
+      proof -
+        have "y \<in> Y" using hy by (by100 blast)
+        hence "y \<in> h ` top1_S1" using hbij unfolding bij_betw_def by (by100 blast)
+        thus ?thesis by (rule f_inv_into_f)
+      qed
+      finally show "F (y, 0) = y" .
+    qed
+    have hF_r: "\<forall>y\<in>Y - {q}. F (y, 1) \<in> {r}"
+    proof (intro ballI)
+      fix y assume "y \<in> Y - {q}"
+      have "F (y, 1) = h (top1_R_to_S1 ((1 - 1) * angle y + 1 * \<theta>r))"
+        unfolding F_def by (by100 simp)
+      also have "\<dots> = h (top1_R_to_S1 \<theta>r)" by (by100 simp)
+      also have "\<dots> = h r0" using h\<theta>r_map by (by100 simp)
+      also have "\<dots> = r" using hr0_map .
+      finally show "F (y, 1) \<in> {r}" by (by100 simp)
+    qed
+    have hF_fix: "\<forall>t\<in>I_set. F (r, t) = r"
+    proof (intro ballI)
+      fix t assume "t \<in> I_set"
+      have hangle_r: "angle r = \<theta>r"
+      proof -
+        have "r \<in> Y - {q}" using hr hqr by (by100 blast)
+        from hangle_prop[rule_format, OF this]
+        have "top1_R_to_S1 (angle r) = ?hinv r" by (by100 blast)
+        hence "top1_R_to_S1 (angle r) = r0" unfolding r0_def by (by100 simp)
+        moreover have "\<theta>q < angle r" "angle r < \<theta>q + 1"
+          using hangle_prop \<open>r \<in> Y - {q}\<close> by (by100 blast)+
+        moreover have "top1_R_to_S1 \<theta>r = r0" using h\<theta>r_map .
+        ultimately show "angle r = \<theta>r"
+          sorry \<comment> \<open>R\_to\_S1 injective on (\<theta>q, \<theta>q+1): both angle(r) and \<theta>r are in
+             (\<theta>q, \<theta>q+1) and map to the same r0. Use sin\_cos\_eq\_iff.\<close>
+      qed
+      have "F (r, t) = h (top1_R_to_S1 ((1 - t) * \<theta>r + t * \<theta>r))"
+        unfolding F_def using hangle_r by (by100 simp)
+      also have "\<dots> = h (top1_R_to_S1 \<theta>r)"
+      proof -
+        have "(1 - t) * \<theta>r + t * \<theta>r = \<theta>r"
+          using left_diff_distrib[of 1 t \<theta>r] by (by100 simp)
+        thus ?thesis by (by100 simp)
+      qed
+      also have "\<dots> = r" using h\<theta>r_map hr0_map by (by100 simp)
+      finally show "F (r, t) = r" .
+    qed
+    \<comment> \<open>Continuity of F.\<close>
+    have hF_cont: "top1_continuous_map_on ((Y - {q}) \<times> I_set)
+        (product_topology_on (subspace_topology Y TY (Y - {q})) I_top)
+        (Y - {q}) (subspace_topology Y TY (Y - {q})) F"
+      sorry \<comment> \<open>F = h \<circ> R\_to\_S1 \<circ> linear(angle, \<theta>r). Decompose:
+         1. angle: Y-{q} \<rightarrow> (\<theta>q, \<theta>q+1) continuous (h^{-1} continuous, R\_to\_S1^{-1} on interval).
+         2. (y,t) \<mapsto> (1-t)*angle(y) + t*\<theta>r continuous (linear in continuous args).
+         3. R\_to\_S1 continuous. 4. h continuous. Composition continuous.
+         5. Image in Y-{q}: convex combination stays in (\<theta>q, \<theta>q+1), avoids q0.\<close>
     show "\<exists>H. top1_continuous_map_on ((Y - {q}) \<times> I_set)
         (product_topology_on (subspace_topology Y TY (Y - {q})) I_top)
         (Y - {q}) (subspace_topology Y TY (Y - {q})) H
       \<and> (\<forall>y\<in>Y - {q}. H (y, 0) = y) \<and> (\<forall>y\<in>Y - {q}. H (y, 1) \<in> {r})
       \<and> (\<forall>a\<in>{r}. \<forall>t\<in>I_set. H (a, t) = a)"
-      sorry \<comment> \<open>H = F. Continuity: angle continuous (via h^{-1} continuous, R\_to\_S1^{-1}
-         continuous on interval, THE unique). Then linear combination + R\_to\_S1 + h.
-         Boundary: F(y,0) = h(R\_to\_S1(angle(y))) = h(h^{-1}(y)) = y.
-         F(y,1) = h(R\_to\_S1(\<theta>\_r)) = h(r0) = r. F(r,t) = h(R\_to\_S1(\<theta>\_r)) = r.\<close>
+      apply (rule exI[of _ F])
+      using hF_cont hF_id hF_r hF_fix by (by100 blast)
   qed
 qed
 
@@ -7685,9 +7756,9 @@ lemma finite_wedge_pi1_free_with_chosen_loops:
             qed
             show "\<forall>f. top1_is_loop_on (U \<inter> V) (subspace_topology X TX (U \<inter> V)) p f \<longrightarrow>
                 top1_path_homotopic_on (U \<inter> V) (subspace_topology X TX (U \<inter> V)) p p f (top1_constant_path p)"
-              sorry \<comment> \<open>From hUV\_retract: extract H. For loop f at p, define G(s,t) = H(f(s),t).
-                 G continuous (composition), G(s,0) = f(s), G(s,1) = H(f(s),1) = p,
-                 G(0,t) = H(p,t) = p, G(1,t) = H(p,t) = p. So G is a null-homotopy.\<close>
+              sorry \<comment> \<open>Standard: from hUV\_retract extract H. For loop f, G(s,t) = H(f(s),t).
+                 G(s,0)=f(s), G(s,1)=p, G(0,t)=H(p,t)=p, G(1,t)=H(p,t)=p.
+                 Continuous: composition of H and (f\<times>id). So f \<simeq> const.\<close>
           qed
         qed
         \<comment> \<open>Step 6: U, V are path-connected.\<close>
