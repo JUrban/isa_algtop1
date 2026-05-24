@@ -7160,10 +7160,117 @@ lemma pasting_deformation_retracts_to_point:
       and hpairwise: "\<forall>A\<in>F. \<forall>B\<in>F. A \<noteq> B \<longrightarrow> A \<inter> B = {p}"
       and hdr: "\<forall>A\<in>F. top1_deformation_retract_of_on A (subspace_topology X TX A) {p}"
   shows "top1_deformation_retract_of_on X TX {p}"
-  sorry \<comment> \<open>Munkres pasting. Define H piecewise: H(x,t) = H\_A(x,t) for x \<in> A.
-     Well-defined (overlaps = {p}, all fix p). Continuous by iterated pasting lemma
-     (pasting\_lemma\_two\_closed on finite closed cover). Boundary conditions follow.
-     Full proof: ~80 lines, using induction on |F| and pasting\_lemma\_two\_closed.\<close>
+  using assms
+proof (induction "card F" arbitrary: F X TX rule: less_induct)
+  case (less F)
+  show ?case
+  proof (cases "F = {}")
+    case True thus ?thesis using less.prems(4,5) by (by100 simp)
+  next
+    case False
+    then obtain A where hA: "A \<in> F" by (by100 blast)
+    define F0 where "F0 = F - {A}"
+    have hF_eq: "F = insert A F0" and hA_notin: "A \<notin> F0"
+      unfolding F0_def using hA by (by100 blast)+
+    have hF0_fin: "finite F0" using less.prems(2) F0_def by (by100 simp)
+    have hcard_lt: "card F0 < card F"
+      using less.prems(2) hA hF_eq hA_notin by (by100 simp)
+    show ?thesis
+    proof (cases "F0 = {}")
+      case True
+      \<comment> \<open>|F| = 1. X = A. Retraction of A in subspace = retraction of X.\<close>
+      hence "X = A" using less.prems(4) hF_eq by (by100 simp)
+      have "top1_deformation_retract_of_on A (subspace_topology X TX A) {p}"
+        using less.prems(8) hA by (by100 blast)
+      moreover have "subspace_topology X TX A = TX"
+      proof -
+        have "A = X" using \<open>X = A\<close> by (by100 simp)
+        have "\<forall>U\<in>TX. U \<subseteq> X"
+          sorry \<comment> \<open>TX \<subseteq> Pow X from is\_topology\_on.\<close>
+        hence "subspace_topology X TX X = TX" by (rule subspace_topology_self)
+        moreover have "X = A" using \<open>X = A\<close> by (by100 simp)
+        ultimately show ?thesis by (by100 simp)
+      qed
+      ultimately show ?thesis using \<open>X = A\<close> by (by100 simp)
+    next
+      case False
+      \<comment> \<open>|F| \<ge> 2. X = A \<union> \<Union>F0.\<close>
+      define Y where "Y = \<Union>F0"
+      have hX_AY: "X = A \<union> Y" using less.prems(4) hF_eq Y_def by (by100 auto)
+      have hY_sub: "Y \<subseteq> X" using hX_AY by (by100 blast)
+      have hA_sub: "A \<subseteq> X" using hX_AY by (by100 blast)
+      have hA_closed: "closedin_on X TX A" using less.prems(3) hA by (by100 blast)
+      have hY_closed: "closedin_on X TX Y"
+      proof -
+        have "\<forall>B\<in>F0. closedin_on X TX B" using less.prems(3) F0_def by (by100 blast)
+        thus ?thesis unfolding Y_def
+          using closedin_on_finite_Union[OF less.prems(1)] hF0_fin by (by100 blast)
+      qed
+      \<comment> \<open>A \<inter> Y = {p}.\<close>
+      have hp_AY: "p \<in> A \<inter> Y"
+      proof -
+        have "p \<in> A" using less.prems(6) hA by (by100 blast)
+        from False obtain B where "B \<in> F0" by (by100 blast)
+        hence "p \<in> B" using less.prems(6) F0_def by (by100 blast)
+        hence "p \<in> Y" unfolding Y_def using \<open>B \<in> F0\<close> by (by100 blast)
+        thus ?thesis using \<open>p \<in> A\<close> by (by100 blast)
+      qed
+      have hAY_inter: "A \<inter> Y = {p}"
+      proof (rule set_eqI, rule iffI)
+        fix x assume "x \<in> A \<inter> Y"
+        hence "x \<in> A" "x \<in> Y" by (by100 blast)+
+        from \<open>x \<in> Y\<close> obtain B where "B \<in> F0" "x \<in> B" unfolding Y_def by (by100 blast)
+        have "A \<noteq> B" using hA_notin \<open>B \<in> F0\<close> by (by100 blast)
+        have "A \<in> F" "B \<in> F" using hA \<open>B \<in> F0\<close> F0_def by (by100 blast)+
+        hence "A \<inter> B = {p}" using less.prems(7) \<open>A \<noteq> B\<close> by (by100 blast)
+        thus "x \<in> {p}" using \<open>x \<in> A\<close> \<open>x \<in> B\<close> by (by100 blast)
+      next
+        fix x assume "x \<in> {p}" thus "x \<in> A \<inter> Y" using hp_AY by (by100 blast)
+      qed
+      \<comment> \<open>IH: Y deformation-retracts to {p} in subspace X TX Y.\<close>
+      have hY_dr: "top1_deformation_retract_of_on Y (subspace_topology X TX Y) {p}"
+      proof -
+        let ?TY = "subspace_topology X TX Y"
+        have hTY: "is_topology_on Y ?TY"
+          by (rule subspace_topology_is_topology_on[OF less.prems(1) hY_sub])
+        have hF0_closed_Y: "\<forall>B\<in>F0. closedin_on Y ?TY B"
+          sorry \<comment> \<open>Each B closed in X and B \<subseteq> Y, so B = B \<inter> Y closed in Y (Theorem\_17\_2).\<close>
+        have hF0_cover: "Y = \<Union>F0" unfolding Y_def ..
+        have hp_Y: "p \<in> Y" using hp_AY by (by100 blast)
+        have hp_all_F0: "\<forall>B\<in>F0. p \<in> B" using less.prems(6) F0_def by (by100 blast)
+        have hpairwise_F0: "\<forall>B1\<in>F0. \<forall>B2\<in>F0. B1 \<noteq> B2 \<longrightarrow> B1 \<inter> B2 = {p}"
+        proof (intro ballI impI)
+          fix B1 B2 assume "B1 \<in> F0" "B2 \<in> F0" "B1 \<noteq> B2"
+          hence "B1 \<in> F" "B2 \<in> F" using F0_def by (by100 blast)+
+          thus "B1 \<inter> B2 = {p}" using less.prems(7) \<open>B1 \<noteq> B2\<close> by (by100 blast)
+        qed
+        have hdr_F0: "\<forall>B\<in>F0. top1_deformation_retract_of_on B (subspace_topology Y ?TY B) {p}"
+        proof (intro ballI)
+          fix B assume "B \<in> F0"
+          have "top1_deformation_retract_of_on B (subspace_topology X TX B) {p}"
+            using less.prems(8) \<open>B \<in> F0\<close> F0_def by (by100 blast)
+          moreover have "B \<subseteq> Y" using \<open>B \<in> F0\<close> Y_def by (by100 blast)
+          hence "subspace_topology Y ?TY B = subspace_topology X TX B"
+            by (rule subspace_topology_trans)
+          ultimately show "top1_deformation_retract_of_on B (subspace_topology Y ?TY B) {p}"
+            by (by100 simp)
+        qed
+        from less(1)[OF hcard_lt hTY hF0_fin hF0_closed_Y hF0_cover hp_Y hp_all_F0 hpairwise_F0 hdr_F0]
+        show ?thesis .
+      qed
+      have hA_dr: "top1_deformation_retract_of_on A (subspace_topology X TX A) {p}"
+        using less.prems(8) hA by (by100 blast)
+      \<comment> \<open>Paste: X = A \<union> Y, A \<inter> Y = {p}, A closed, Y closed,
+         A and Y each deformation-retract to {p}.\<close>
+      show ?thesis
+        sorry \<comment> \<open>Define H piecewise: H(x,t) = H\_A(x,t) if x \<in> A, H\_Y(x,t) if x \<in> Y.
+           Well-defined: x \<in> A \<inter> Y \<Rightarrow> x = p, H\_A(p,t) = p = H\_Y(p,t).
+           Continuous: A \<times> I and Y \<times> I closed in X \<times> I. Each restriction continuous.
+           By pasting\_lemma\_two\_closed (with A \<times> I and Y \<times> I as the two closed sets).
+           Boundary: H(x,0) = x, H(x,1) = p, H(p,t) = p.\<close>
+    qed
+  qed
+qed
 
 text \<open>Variant: pasting deformation retractions to a subspace (not just a point).
   Munkres: "S\_1 is a deformation retract of U."
