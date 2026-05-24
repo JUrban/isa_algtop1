@@ -6920,6 +6920,116 @@ lemma map_map_pair_compose:
 lemma exI4: "P a b c d \<Longrightarrow> \<exists>x y z w. P x y z w"
   by (by100 blast)
 
+text \<open>Helper: word\_product in \<pi>_1 = class of foldr path product.
+  By induction: each \<pi>_1 multiplication step corresponds to a path\_product step.\<close>
+lemma word_product_foldr_class:
+  assumes hTA: "is_topology_on Y TY"
+    and hloops: "\<forall>k<length ws. top1_is_loop_on Y TY y0 (fs k)"
+    and hmatch: "\<forall>k<length ws.
+        {g. top1_loop_equiv_on Y TY y0 (fs k) g}
+      = (if snd (ws!k) then fst (ws!k)
+         else top1_fundamental_group_invg Y TY y0 (fst (ws!k)))"
+  shows "top1_group_word_product
+      (top1_fundamental_group_mul Y TY y0)
+      (top1_fundamental_group_id Y TY y0)
+      (top1_fundamental_group_invg Y TY y0)
+      ws
+    = {g. top1_loop_equiv_on Y TY y0
+        (foldr top1_path_product (map fs [0..<length ws]) (top1_constant_path y0)) g}"
+  using assms
+proof (induction ws arbitrary: fs)
+  case Nil
+  show ?case unfolding top1_fundamental_group_id_def by (by100 simp)
+next
+  case (Cons w rest)
+  obtain x b where hw: "w = (x, b)" by (cases w) (by100 blast)
+  \<comment> \<open>Shifted fs for the tail.\<close>
+  define fs' where "fs' k = fs (Suc k)" for k
+  have hloops': "\<forall>k<length rest. top1_is_loop_on Y TY y0 (fs' k)"
+    using Cons(3) unfolding fs'_def by (by100 force)
+  have hmatch': "\<forall>k<length rest.
+      {g. top1_loop_equiv_on Y TY y0 (fs' k) g}
+    = (if snd (rest!k) then fst (rest!k)
+       else top1_fundamental_group_invg Y TY y0 (fst (rest!k)))"
+    using Cons(4) unfolding fs'_def hw by (by100 force)
+  \<comment> \<open>IH gives word\_product rest = class of foldr rest.\<close>
+  have hIH: "top1_group_word_product
+      (top1_fundamental_group_mul Y TY y0) (top1_fundamental_group_id Y TY y0)
+      (top1_fundamental_group_invg Y TY y0) rest
+    = {g. top1_loop_equiv_on Y TY y0
+        (foldr top1_path_product (map fs' [0..<length rest]) (top1_constant_path y0)) g}"
+    using Cons(1)[OF Cons(2) hloops' hmatch'] .
+  \<comment> \<open>fs 0 is a loop, and its class matches w.\<close>
+  have hfs0_loop: "top1_is_loop_on Y TY y0 (fs 0)"
+    using Cons(3) by (by100 force)
+  have hfs0_class: "{g. top1_loop_equiv_on Y TY y0 (fs 0) g}
+      = (if b then x else top1_fundamental_group_invg Y TY y0 x)"
+    using Cons(4) hw by (by100 force)
+  \<comment> \<open>The foldr of the rest is a loop.\<close>
+  have hfoldr_loop: "top1_is_loop_on Y TY y0
+      (foldr top1_path_product (map fs' [0..<length rest]) (top1_constant_path y0))"
+  proof -
+    have hy0_Y: "y0 \<in> Y"
+    proof -
+      have hfs0: "top1_is_loop_on Y TY y0 (fs 0)" using Cons(3) by (by100 force)
+      have "fs 0 0 = y0" using hfs0 unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+      moreover have "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 auto)
+      moreover have "fs 0 0 \<in> Y" using hfs0 \<open>0 \<in> I_set\<close>
+        unfolding top1_is_loop_on_def top1_is_path_on_def top1_continuous_map_on_def by (by100 blast)
+      ultimately show ?thesis by (by100 simp)
+    qed
+    have hconst: "top1_is_loop_on Y TY y0 (top1_constant_path y0)"
+      using top1_constant_path_is_loop[OF hTA hy0_Y] .
+    have hloops_set: "\<forall>g \<in> set (map fs' [0..<length rest]). top1_is_loop_on Y TY y0 g"
+      using hloops' by (by100 force)
+    show ?thesis using foldr_path_product_loops_is_loop[OF hTA hconst hloops_set] .
+  qed
+  \<comment> \<open>Apply top1\_fundamental\_group\_mul\_class.\<close>
+  have hmul: "top1_fundamental_group_mul Y TY y0
+      {g. top1_loop_equiv_on Y TY y0 (fs 0) g}
+      {g. top1_loop_equiv_on Y TY y0
+          (foldr top1_path_product (map fs' [0..<length rest]) (top1_constant_path y0)) g}
+    = {g. top1_loop_equiv_on Y TY y0
+          (top1_path_product (fs 0)
+            (foldr top1_path_product (map fs' [0..<length rest]) (top1_constant_path y0))) g}"
+    using top1_fundamental_group_mul_class[OF hTA hfs0_loop hfoldr_loop] .
+  \<comment> \<open>word\_product (w#rest) = \<pi>_1\_mul(x\^b, word\_product rest).\<close>
+  have hstep: "top1_group_word_product
+      (top1_fundamental_group_mul Y TY y0) (top1_fundamental_group_id Y TY y0)
+      (top1_fundamental_group_invg Y TY y0) (w # rest)
+    = top1_fundamental_group_mul Y TY y0
+        (if b then x else top1_fundamental_group_invg Y TY y0 x)
+        (top1_group_word_product
+          (top1_fundamental_group_mul Y TY y0) (top1_fundamental_group_id Y TY y0)
+          (top1_fundamental_group_invg Y TY y0) rest)"
+    unfolding hw by (cases b) (by100 simp)+
+  \<comment> \<open>Substitute class(fs 0) for x\^b, and IH for word\_product rest.\<close>
+  have "top1_group_word_product
+      (top1_fundamental_group_mul Y TY y0) (top1_fundamental_group_id Y TY y0)
+      (top1_fundamental_group_invg Y TY y0) (w # rest)
+    = top1_fundamental_group_mul Y TY y0
+        {g. top1_loop_equiv_on Y TY y0 (fs 0) g}
+        {g. top1_loop_equiv_on Y TY y0
+            (foldr top1_path_product (map fs' [0..<length rest]) (top1_constant_path y0)) g}"
+    using hstep hfs0_class hIH by (by100 simp)
+  \<comment> \<open>= class of (fs 0 * foldr rest const) by mul\_class.\<close>
+  also have "\<dots> = {g. top1_loop_equiv_on Y TY y0
+      (top1_path_product (fs 0)
+        (foldr top1_path_product (map fs' [0..<length rest]) (top1_constant_path y0))) g}"
+    using hmul .
+  \<comment> \<open>= class of foldr (map fs [0..<Suc(length rest)]) const.\<close>
+  also have "top1_path_product (fs 0)
+      (foldr top1_path_product (map fs' [0..<length rest]) (top1_constant_path y0))
+    = foldr top1_path_product (map fs [0..<length (w # rest)]) (top1_constant_path y0)"
+  proof -
+    have "map fs [0..<Suc (length rest)] = fs 0 # map fs' [0..<length rest]"
+      unfolding fs'_def using upt_rec[of 0 "Suc (length rest)"] map_Suc_upt[of 0 "length rest", symmetric]
+      by (by100 simp)
+    thus ?thesis by (by100 simp)
+  qed
+  finally show ?case .
+qed
+
 theorem Theorem_74_2_scheme_presentation:
   fixes X :: "'a set" and TX :: "'a set set" and x0 :: 'a
     and scheme :: "(nat \<times> bool) list"
@@ -8292,12 +8402,7 @@ proof -
             ws
           = {g. top1_loop_equiv_on A (subspace_topology X TX A) a'
               (foldr top1_path_product (map fs [0..<length ws]) (top1_constant_path a')) g}"
-        sorry \<comment> \<open>By induction on ws:
-           Base: word\_product [] = \<pi>_1\_id = [const a']. \<checkmark>
-           Step: word\_product (w#rest) = \<pi>_1\_mul(w\^b, word\_product rest)
-             = \<pi>_1\_mul([fs 0], [foldr rest const]) (by IH + hsub matching)
-             = [fs 0 * foldr rest const] (by top1\_fundamental\_group\_mul\_class)
-             = [foldr (fs 0 # rest) const]. \<checkmark>\<close>
+        using word_product_foldr_class[OF hTA] by (by100 blast)
       \<comment> \<open>Assembly: connect loop decomposition with word\_product in \<pi>_1.\<close>
       \<comment> \<open>Step A1: relator\_class = class of \<iota> \<circ> circle.\<close>
       \<comment> \<open>Step A2: [\<iota> \<circ> circle] = [foldr path\_product [sub\_0,...] const]
