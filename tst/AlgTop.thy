@@ -7146,14 +7146,21 @@ proof -
       finally show "F (r, t) = r" .
     qed
     \<comment> \<open>Continuity of F.\<close>
+    \<comment> \<open>angle: Y-{q} \<rightarrow> (\<theta>q, \<theta>q+1) is continuous.
+       angle = (R\_to\_S1|_{(\<theta>q,\<theta>q+1)})^{-1} \<circ> h^{-1}. Both factors continuous:
+       h^{-1} by homeomorphism; R\_to\_S1 restricted to (\<theta>q, \<theta>q+1) is a homeomorphism
+       (covering map, evenly covered neighborhood S1 - {q0}).\<close>
+    have hangle_cont: "top1_continuous_map_on (Y - {q}) (subspace_topology Y TY (Y - {q}))
+        (UNIV :: real set) top1_open_sets angle"
+      sorry \<comment> \<open>From covering map Theorem\_53\_1: R\_to\_S1 restricted to open interval
+         (\<theta>q, \<theta>q+1) is a homeomorphism onto S1-{q0}. Its inverse composed with
+         h^{-1} gives angle. Both are continuous, hence angle is continuous.\<close>
     have hF_cont: "top1_continuous_map_on ((Y - {q}) \<times> I_set)
         (product_topology_on (subspace_topology Y TY (Y - {q})) I_top)
         (Y - {q}) (subspace_topology Y TY (Y - {q})) F"
-      sorry \<comment> \<open>F = h \<circ> R\_to\_S1 \<circ> linear(angle, \<theta>r). Decompose:
-         1. angle: Y-{q} \<rightarrow> (\<theta>q, \<theta>q+1) continuous (h^{-1} continuous, R\_to\_S1^{-1} on interval).
-         2. (y,t) \<mapsto> (1-t)*angle(y) + t*\<theta>r continuous (linear in continuous args).
-         3. R\_to\_S1 continuous. 4. h continuous. Composition continuous.
-         5. Image in Y-{q}: convex combination stays in (\<theta>q, \<theta>q+1), avoids q0.\<close>
+      sorry \<comment> \<open>From hangle\_cont: F = h \<circ> R\_to\_S1 \<circ> (\<lambda>(y,t). (1-t)*angle(y) + t*\<theta>r).
+         Each factor continuous; composition continuous.
+         Image in Y-{q}: convex combination stays in (\<theta>q, \<theta>q+1), avoids q0.\<close>
     show "\<exists>H. top1_continuous_map_on ((Y - {q}) \<times> I_set)
         (product_topology_on (subspace_topology Y TY (Y - {q})) I_top)
         (Y - {q}) (subspace_topology Y TY (Y - {q})) H
