@@ -6932,12 +6932,10 @@ lemma pasting_deformation_retracts_to_point:
       and hpairwise: "\<forall>A\<in>F. \<forall>B\<in>F. A \<noteq> B \<longrightarrow> A \<inter> B = {p}"
       and hdr: "\<forall>A\<in>F. top1_deformation_retract_of_on A (subspace_topology X TX A) {p}"
   shows "top1_deformation_retract_of_on X TX {p}"
-  sorry \<comment> \<open>For each A \<in> F, extract retraction H\_A: A \<times> I \<rightarrow> A with H\_A(x,0)=x,
-     H\_A(x,1)=p, H\_A(p,t)=p. Define H(x,t) = H\_A(x,t) for x \<in> A.
-     Well-defined: if x \<in> A \<inter> B then x = p, and H\_A(p,t) = p = H\_B(p,t).
-     Continuous: each A is closed in X, so A \<times> I is closed in X \<times> I.
-     Each H|_{A \<times> I} is continuous. By pasting lemma (finite closed cover), H is continuous.
-     Range: H(x,t) \<in> A \<subseteq> X. Boundary: H(x,0) = x, H(x,1) = p, H(p,t) = p.\<close>
+  sorry \<comment> \<open>Munkres pasting. Define H piecewise: H(x,t) = H\_A(x,t) for x \<in> A.
+     Well-defined (overlaps = {p}, all fix p). Continuous by iterated pasting lemma
+     (pasting\_lemma\_two\_closed on finite closed cover). Boundary conditions follow.
+     Full proof: ~80 lines, using induction on |F| and pasting\_lemma\_two\_closed.\<close>
 
 text \<open>Variant: pasting deformation retractions to a subspace (not just a point).
   Munkres: "S\_1 is a deformation retract of U."
@@ -8837,6 +8835,31 @@ proof -
     using hfree h\<Phi>_iso h\<Phi>_bij by (by100 blast)
 qed
 
+text \<open>Expert Step 8: finite-index wrapper for the witnessed wedge theorem.
+  Allows application with arbitrary finite index sets (not just {..<n}).\<close>
+lemma finite_wedge_pi1_free_with_chosen_loops_arb:
+  fixes J :: "'i set" and X :: "'a set" and TX :: "'a set set" and p :: 'a
+    and C :: "'i \<Rightarrow> 'a set" and g :: "'i \<Rightarrow> real \<times> real \<Rightarrow> 'a"
+  assumes hwedge: "top1_is_wedge_of_circles_on X TX J p"
+      and hfin: "finite J"
+      and hg: "\<forall>j\<in>J. top1_homeomorphism_on top1_S1 top1_S1_topology
+          (C j) (subspace_topology X TX (C j)) (g j)"
+      and hbase: "\<forall>j\<in>J. g j (1, 0) = p"
+      and hC_data: "\<forall>j\<in>J. C j \<subseteq> X \<and> p \<in> C j"
+      and hC_union: "(\<Union>j\<in>J. C j) = X"
+      and hC_disj: "\<forall>i\<in>J. \<forall>j\<in>J. i \<noteq> j \<longrightarrow> C i \<inter> C j = {p}"
+  shows "\<exists>(F::int set) mul e invg (\<eta>::'i \<Rightarrow> int) \<Phi>.
+      top1_is_free_group_full_on F mul e invg \<eta> J
+    \<and> top1_group_iso_on F mul
+        (top1_fundamental_group_carrier X TX p)
+        (top1_fundamental_group_mul X TX p) \<Phi>
+    \<and> (\<forall>j\<in>J. \<Phi> (\<eta> j) = {l. top1_loop_equiv_on X TX p
+        (\<lambda>t. g j (cos (2 * pi * t), sin (2 * pi * t))) l})"
+  sorry \<comment> \<open>Choose bijection enum: {..<card J} \<rightarrow> J.
+     Apply finite\_wedge\_pi1\_free\_with\_chosen\_loops with:
+     C'(k) = C(enum(k)), g'(k) = g(enum(k)) for k < card J.
+     Re-index the free basis and generator correspondence through enum.\<close>
+
 text \<open>Helper: foldr of pointwise-equal function lists gives pointwise-equal results.\<close>
 lemma foldr_path_product_pointwise_eq:
   fixes xs ys :: "(real \<Rightarrow> 'a) list" and base :: "real \<Rightarrow> 'a"
@@ -9929,9 +9952,12 @@ proof -
        to get \<Phi> with iso + gen correspondence, then \<phi> = \<Phi> by free group uniqueness.\<close>
     have h\<phi>_bij: "bij_betw \<phi> F
         (top1_fundamental_group_carrier A (subspace_topology X TX A) a')"
-      sorry \<comment> \<open>From finite\_wedge\_pi1\_free\_with\_chosen\_loops (plan10 step 3):
-         Extract circle data, apply theorem, get iso + gen correspondence,
-         then phi = Phi by free group uniqueness, hence phi bijective.\<close>
+      sorry \<comment> \<open>Expert Step 9: Apply finite\_wedge\_pi1\_free\_with\_chosen\_loops\_arb to A.
+         Get \<Phi>: G \<rightarrow> \<pi>\_1(A) iso with \<Phi>(\<eta>(s)) = edge\_loop\_class(s).
+         By free\_group\_hom\_unique: \<phi> = \<Phi> \<circ> \<rho> where \<rho>: F \<rightarrow> G iso.
+         Hence \<phi> bijective. Needs: extracting circle data from hA\_wd\_a',
+         verifying homeomorphism/basepoint conditions, composing isos.
+         Full proof: ~80 lines. Depends on finite\_wedge\_pi1\_free\_with\_chosen\_loops\_arb.\<close>
     have hrel_in: "relator_class \<in> top1_fundamental_group_carrier A (subspace_topology X TX A) a'"
     proof -
       \<comment> \<open>The circle loop class is in \<pi>_1(S1,(1,0)).\<close>
