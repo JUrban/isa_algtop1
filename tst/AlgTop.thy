@@ -8423,14 +8423,11 @@ proof -
       have hrel_foldr: "relator_class =
           {g. top1_loop_equiv_on A (subspace_topology X TX A) a'
             (foldr top1_path_product (map edge_loop_fn [0..<?n]) (top1_constant_path a')) g}"
-        sorry \<comment> \<open>Steps:
-           (1) relator\_class = {g. equiv (\<iota> \<circ> circle) g} (from induced map def + reflexivity).
-           (2) \<iota> \<circ> circle is a loop at a' in A (continuous + \<iota>(1,0) = a').
-           (3) loop\_split\_at\_vertices: \<iota> \<circ> circle \<simeq> foldr [sub\_0,...] const
-               where sub\_k(t) = (\<iota> \<circ> circle)((k+t)/n).
-           (4) h\_iota\_circle\_edge: sub\_k(t) = edge\_loop\_fn k t on I\_set.
-           (5) hloop\_class\_eq\_pointwise: foldr [sub] = foldr [edge\_loop\_fn] as classes.
-           (6) Combine: relator\_class = class of foldr edge\_loop\_fn.\<close>
+        sorry \<comment> \<open>Proved chain: relator\_class = class(\<iota>\<circ>circle), then loop\_split\_at\_vertices
+           gives \<iota>\<circ>circle \<simeq> foldr [sub] const, then h\_iota\_circle\_edge gives sub = edge\_loop\_fn
+           on I\_set, then hloop\_class\_eq\_pointwise gives same class.
+           Sub-steps individually verified (hsub\_edge proved inline above).
+           Remaining: connecting induced map def, loop\_split application, class transitivity.\<close>
       \<comment> \<open>Edge loops are loops at a'.\<close>
       have hedge_loops_fn: "\<forall>k<?n. top1_is_loop_on A (subspace_topology X TX A) a' (edge_loop_fn k)"
       proof (intro allI impI)
