@@ -7627,8 +7627,14 @@ proof -
           have "(\<alpha>+1) - ?\<theta> = (1-t) * ((\<alpha>+1) - \<theta>a') + t * ((\<alpha>+1) - \<theta>b')"
             by (simp add: algebra_simps)
           moreover have "(1-t) * ((\<alpha>+1) - \<theta>a') + t * ((\<alpha>+1) - \<theta>b') > 0"
-            using h1 h2 h\<theta>a'_range h\<theta>b'_range ht0 ht1
-            sorry \<comment> \<open>Sum of two nonneg reals where at least one is positive.\<close>
+          proof -
+            have hnn1: "(1-t) * ((\<alpha>+1) - \<theta>a') \<ge> 0"
+              using h\<theta>a'_range ht0 ht1 by (by5000 simp)
+            have hnn2: "t * ((\<alpha>+1) - \<theta>b') \<ge> 0"
+              using h\<theta>b'_range ht0 by (by5000 simp)
+            have "1-t \<noteq> 0 \<or> t \<noteq> 0" by (by100 linarith)
+            thus ?thesis using h1 h2 hnn1 hnn2 by (by100 linarith)
+          qed
           ultimately show ?thesis by (by100 linarith)
         qed
       qed
@@ -7649,7 +7655,21 @@ proof -
         have "?\<theta> - \<alpha> > 0 \<and> ?\<theta> - \<alpha> < 1" using h\<theta>_range by (by100 linarith)
         moreover have "2 * pi * (?\<theta> - \<alpha>) = 2 * pi * real_of_int k"
           using hk by (simp add: algebra_simps)
-        ultimately show False sorry \<comment> \<open>2\<pi>x = 2\<pi>k with x \<in> (0,1) \<Rightarrow> k \<in> (0,1) \<Rightarrow> contradiction (no int in (0,1)).\<close>
+        ultimately show False
+        proof -
+          assume hxr: "?\<theta> - \<alpha> > 0 \<and> ?\<theta> - \<alpha> < 1"
+             and h2pi: "2 * pi * (?\<theta> - \<alpha>) = 2 * pi * real_of_int k"
+          have "2 * pi > 0" using pi_gt_zero by (by100 linarith)
+          hence "?\<theta> - \<alpha> = real_of_int k"
+          proof -
+            from h2pi have "(2 * pi) * (?\<theta> - \<alpha> - real_of_int k) = 0"
+              by (simp add: algebra_simps)
+            thus ?thesis using \<open>2 * pi > 0\<close> by (by100 simp)
+          qed
+          hence "real_of_int k > 0 \<and> real_of_int k < 1" using hxr by (by100 linarith)
+          hence "k > 0 \<and> k < 1" by (by100 linarith)
+          thus False by (by100 linarith)
+        qed
       qed
       ultimately show "f t \<in> top1_S1 - {q}" by (by100 blast)
     qed
@@ -7657,8 +7677,53 @@ proof -
     have hf1: "f 1 = b" unfolding f_def using h\<theta>b'_map by (by100 simp)
     have hf_cont: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
         (top1_S1 - {q}) ?T f"
-      sorry \<comment> \<open>f = R\_to\_S1 \<circ> affine. Continuous into S1 (R\_to\_S1 continuous + affine continuous).
-         Range in S1\{q} by hf\_in\_S1. Continuous into subspace.\<close>
+    proof -
+      \<comment> \<open>R\_to\_S1 is continuous R \<rightarrow> S1 (from Theorem 53.1 covering map).\<close>
+      have hR2S1_cont: "top1_continuous_map_on (UNIV::real set) top1_open_sets top1_S1 top1_S1_topology top1_R_to_S1"
+        using Theorem_53_1 unfolding top1_covering_map_on_def by (by100 blast)
+      \<comment> \<open>The affine map t \<mapsto> \<theta>a' + t*(\<theta>b'-\<theta>a') is continuous I \<rightarrow> R.\<close>
+      define aff where "aff t = \<theta>a' + t * (\<theta>b' - \<theta>a')" for t
+      have haff_cont: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+          (UNIV::real set) top1_open_sets aff"
+      proof -
+        have "continuous_on UNIV aff" unfolding aff_def by (intro continuous_intros)
+        hence "continuous_on top1_unit_interval aff"
+          by (rule continuous_on_subset) (by100 blast)
+        \<comment> \<open>Convert continuous\_on to top1\_continuous\_map\_on.\<close>
+        have "\<And>t. t \<in> top1_unit_interval \<Longrightarrow> aff t \<in> (UNIV::real set)" by (by100 blast)
+        have "top1_continuous_map_on top1_unit_interval
+            (subspace_topology (UNIV::real set) top1_open_sets top1_unit_interval)
+            (UNIV::real set) (subspace_topology (UNIV::real set) top1_open_sets (UNIV::real set)) aff"
+          by (rule top1_continuous_map_on_real_subspace_open_sets)
+             (by100 blast, use \<open>continuous_on UNIV aff\<close> in \<open>by100 blast\<close>)
+        hence "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+            (UNIV::real set) (subspace_topology (UNIV::real set) top1_open_sets (UNIV::real set)) aff"
+          unfolding top1_unit_interval_topology_def .
+        moreover have "subspace_topology (UNIV::real set) top1_open_sets (UNIV::real set) = top1_open_sets"
+          unfolding subspace_topology_def by (by100 auto)
+        ultimately show ?thesis by (by100 simp)
+      qed
+      \<comment> \<open>Compose: f = R\_to\_S1 \<circ> aff is continuous I \<rightarrow> S1.\<close>
+      have hf_eq: "\<And>t. f t = (top1_R_to_S1 \<circ> aff) t" unfolding f_def aff_def comp_def by (by100 simp)
+      have hcomp: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+          top1_S1 top1_S1_topology (top1_R_to_S1 \<circ> aff)"
+        by (rule top1_continuous_map_on_comp[OF haff_cont hR2S1_cont])
+      have hf_eq_ext: "f = top1_R_to_S1 \<circ> aff"
+        unfolding f_def aff_def comp_def by (rule ext) (by100 simp)
+      have hf_cont_S1: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+          top1_S1 top1_S1_topology f"
+        using hcomp hf_eq_ext by (by100 simp)
+      \<comment> \<open>f maps into S1\{q}, so continuous into subspace.\<close>
+      have hf_range: "\<forall>t\<in>top1_unit_interval. f t \<in> top1_S1 - {q}"
+      proof (intro ballI)
+        fix t assume "t \<in> top1_unit_interval"
+        hence "0 \<le> t \<and> t \<le> 1" unfolding top1_unit_interval_def by (by100 auto)
+        thus "f t \<in> top1_S1 - {q}" using hf_in_S1 by (by100 blast)
+      qed
+      show ?thesis
+        by (rule continuous_map_restrict_codomain[OF hf_cont_S1])
+           (use hf_range in \<open>by100 blast\<close>, by100 blast)
+    qed
     have hf_path: "top1_is_path_on (top1_S1 - {q}) ?T a b f"
       unfolding top1_is_path_on_def using hf0 hf1 hf_cont by (by100 blast)
     show "\<exists>f. top1_is_path_on (top1_S1 - {q}) ?T a b f"
