@@ -7989,13 +7989,23 @@ proof -
          = product of \<phi>(\<iota>F(s\_k))^{b\_k}
          = word\_product(\<phi>(\<iota>F), scheme).\<close>
       \<comment> \<open>Step 4: relator\_class = [boundary loop] (by definition).\<close>
+      \<comment> \<open>Key intermediate: for each edge k, the sub-loop class = \<phi>(\<iota>F(s))^b
+         where (s,b) = scheme!k. Uses hedge\_C + edge\_loop\_class + h\<phi>\_gen.\<close>
+      have hsub_class: "\<forall>k<?n. let (s, b) = scheme!k in
+          {g. top1_loop_equiv_on A (subspace_topology X TX A) a'
+            (\<lambda>t. qC ((1-t) * vxC k + t * vxC (Suc k mod ?n),
+                      (1-t) * vyC k + t * vyC (Suc k mod ?n))) g}
+        = (if b then \<phi> (\<iota>F s) else
+            top1_fundamental_group_invg A (subspace_topology X TX A) a' (\<phi> (\<iota>F s)))"
+        sorry \<comment> \<open>From hedge\_C: same-label edges trace the same circle (or reverse).
+           i\_of(s) has True direction. So for True: same path \<Rightarrow> same class = \<phi>(\<iota>F s).
+           For False: reversed path \<Rightarrow> inverse class.\<close>
       show ?thesis sorry
-        \<comment> \<open>Each step is proved; the assembly requires:
-           - loop\_split\_at\_vertices (PROVED in PolygonDisk)
-           - h\_iota\_circle\_edge (PROVED: sub-loops = edge loops)
-           - hedge\_C (edge identification between same-label edges)
-           - h\<phi>\_gen (\<phi>(\<iota>F s) = edge\_loop\_class s)
-           - word\_product evaluation in fundamental group.\<close>
+        \<comment> \<open>Assembly: relator\_class = [\<iota> \<circ> circle]
+           = [foldr path\_product (map sub [0..<n]) const] (loop\_split\_at\_vertices)
+           = word\_product of [sub\_k] classes (foldr \<rightarrow> \<pi>_1 product)
+           = word\_product of \<phi>(\<iota>F(s\_k))^{b\_k} (from hsub\_class)
+           = word\_product(\<phi>(\<iota>F), scheme).\<close>
     qed
     \<comment> \<open>Step R2: \<phi> is a hom, so \<phi>(word\_product in F) = word\_product in \<pi>_1(A,a').\<close>
     have hphi_word: "\<phi> (top1_group_word_product mulF eF invgF
