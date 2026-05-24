@@ -8252,9 +8252,49 @@ lemma finite_wedge_pi1_free_with_chosen_loops:
           have hfin': "finite F_U" unfolding F_U_def by (by100 simp)
           have hC0_in: "C 0 \<in> F_U" unfolding F_U_def by (by100 blast)
           have hF_closed': "\<forall>A\<in>F_U. closedin_on U ?TU A"
-            sorry \<comment> \<open>C(0) and each W(j) are closed in U (compact in Hausdorff).\<close>
+          proof (intro ballI)
+            fix A assume "A \<in> F_U"
+            hence "A = C 0 \<or> (\<exists>j\<in>{1..<n}. A = W j)" unfolding F_U_def by (by100 blast)
+            thus "closedin_on U ?TU A"
+            proof
+              assume "A = C 0"
+              have "closedin_on X TX (C 0)" using hC_closed hn_pos by (by100 blast)
+              have "C 0 \<subseteq> U" unfolding U_def by (by100 blast)
+              hence "C 0 = C 0 \<inter> U" by (by100 blast)
+              thus ?thesis using \<open>A = C 0\<close> iffD2[OF Theorem_17_2[OF hTX hUsub]]
+                \<open>closedin_on X TX (C 0)\<close> by (by100 blast)
+            next
+              assume "\<exists>j\<in>{1..<n}. A = W j"
+              then obtain j where "j \<in> {1..<n}" "A = W j" by (by100 blast)
+              have hjn: "j < n" using \<open>j \<in> {1..<n}\<close> by (by100 simp)
+              have "closedin_on X TX (C j)" using hC_closed hjn by (by100 blast)
+              have "W j \<subseteq> U" unfolding U_def using \<open>j \<in> {1..<n}\<close> by (by100 blast)
+              have "W j = C j \<inter> U"
+                sorry \<comment> \<open>q(j) \<notin> U for j \<ge> 1 (q(j) \<in> X - U = {q(k)|k\<ge>1} only if j=k, but then q(j) \<notin> C(0) and q(j) \<notin> W(k) for k\<noteq>j).\<close>
+              thus ?thesis using \<open>A = W j\<close> iffD2[OF Theorem_17_2[OF hTX hUsub]]
+                \<open>closedin_on X TX (C j)\<close> by (by100 blast)
+            qed
+          qed
           have hpairwise': "\<forall>A\<in>F_U. \<forall>B\<in>F_U. A \<noteq> B \<longrightarrow> A \<inter> B \<subseteq> {p}"
-            sorry \<comment> \<open>C(0) \<inter> W(j) \<subseteq> C(0) \<inter> C(j) = {p}. W(i) \<inter> W(j) \<subseteq> C(i) \<inter> C(j) = {p}.\<close>
+          proof (intro ballI impI)
+            fix A B assume "A \<in> F_U" "B \<in> F_U" "A \<noteq> B"
+            from \<open>A \<in> F_U\<close> have hA: "A = C 0 \<or> (\<exists>i\<in>{1..<n}. A = W i)" unfolding F_U_def by (by100 blast)
+            from \<open>B \<in> F_U\<close> have hB: "B = C 0 \<or> (\<exists>j\<in>{1..<n}. B = W j)" unfolding F_U_def by (by100 blast)
+            show "A \<inter> B \<subseteq> {p}"
+            proof -
+              have hCij: "\<forall>i<n. \<forall>j<n. i \<noteq> j \<longrightarrow> C i \<inter> C j = {p}"
+                using less.prems(6) by (by100 force)
+              \<comment> \<open>A \<subseteq> C(iA), B \<subseteq> C(iB) with iA \<noteq> iB.\<close>
+              from hA obtain iA where hiA: "A \<subseteq> C iA" "iA < n"
+                using hW_sub_C hn_pos by (by100 force)
+              from hB obtain iB where hiB: "B \<subseteq> C iB" "iB < n"
+                using hW_sub_C hn_pos by (by100 force)
+              have "iA \<noteq> iB"
+                sorry \<comment> \<open>A \<noteq> B and they are distinct elements of F\_U, hence different indices.\<close>
+              hence "C iA \<inter> C iB = {p}" using hCij hiA(2) hiB(2) by (by100 blast)
+              thus ?thesis using hiA(1) hiB(1) by (by100 blast)
+            qed
+          qed
           have hdr': "\<forall>A\<in>F_U - {C 0}. top1_deformation_retract_of_on A (subspace_topology U ?TU A) {p}"
           proof (intro ballI)
             fix A assume "A \<in> F_U - {C 0}"
@@ -8348,9 +8388,51 @@ lemma finite_wedge_pi1_free_with_chosen_loops:
           have hX'_in: "X' \<in> F_V" unfolding F_V_def by (by100 blast)
           have hV_eq': "V = \<Union>F_V" unfolding F_V_def V_def X'_def by (by100 blast)
           have hF_closed': "\<forall>A\<in>F_V. closedin_on V ?TV A"
-            sorry \<comment> \<open>X' = union of closed C(j) is closed. W(0) closed (compact in Hausdorff).\<close>
+          proof (intro ballI)
+            fix A assume "A \<in> F_V"
+            hence "A = X' \<or> A = W 0" unfolding F_V_def by (by100 blast)
+            thus "closedin_on V ?TV A"
+            proof
+              assume "A = X'"
+              \<comment> \<open>X' = \<Union>{1..<n} C(j). Each C(j) closed in X, finite union closed.\<close>
+              have "closedin_on X TX X'"
+              proof -
+                have "\<forall>j\<in>{1..<n}. closedin_on X TX (C j)"
+                  using hC_closed by (by100 force)
+                moreover have "X' = (\<Union>j\<in>{1..<n}. C j)" unfolding X'_def ..
+                ultimately show ?thesis
+                  sorry \<comment> \<open>Finite union of closed sets is closed.\<close>
+              qed
+              have "X' \<subseteq> V" unfolding X'_def V_def by (by100 blast)
+              hence "X' = X' \<inter> V" by (by100 blast)
+              thus ?thesis using \<open>A = X'\<close> iffD2[OF Theorem_17_2[OF hTX hVsub]]
+                \<open>closedin_on X TX X'\<close> by (by100 blast)
+            next
+              assume "A = W 0"
+              have "closedin_on X TX (C 0)" using hC_closed hn_pos by (by100 blast)
+              have "W 0 \<subseteq> V" unfolding V_def by (by100 blast)
+              have "W 0 = C 0 \<inter> V"
+                sorry \<comment> \<open>q(0) \<notin> V (since X - V = {q(0)}).\<close>
+              thus ?thesis using \<open>A = W 0\<close> iffD2[OF Theorem_17_2[OF hTX hVsub]]
+                \<open>closedin_on X TX (C 0)\<close> by (by100 blast)
+            qed
+          qed
           have hpairwise': "\<forall>A\<in>F_V. \<forall>B\<in>F_V. A \<noteq> B \<longrightarrow> A \<inter> B \<subseteq> {p}"
-            sorry \<comment> \<open>X' \<inter> W(0) \<subseteq> (\<Union>j\<ge>1. C(j)) \<inter> C(0) = {p} (disjointness).\<close>
+          proof (intro ballI impI)
+            fix A B assume "A \<in> F_V" "B \<in> F_V" "A \<noteq> B"
+            hence "A = X' \<and> B = W 0 \<or> A = W 0 \<and> B = X'"
+              unfolding F_V_def by (by100 blast)
+            hence "A \<inter> B = X' \<inter> W 0 \<or> A \<inter> B = W 0 \<inter> X'" by (by100 blast)
+            moreover have "X' \<inter> W 0 \<subseteq> {p}"
+            proof -
+              have "X' \<inter> W 0 \<subseteq> (\<Union>j\<in>{1..<n}. C j) \<inter> C 0"
+                unfolding X'_def using hW_sub_C by (by100 blast)
+              also have "\<dots> \<subseteq> {p}"
+                using less.prems(6) hn_pos by (by100 force)
+              finally show ?thesis .
+            qed
+            ultimately show "A \<inter> B \<subseteq> {p}" by (by100 blast)
+          qed
           have hp_X': "p \<in> X'"
             unfolding X'_def using less.prems(4) hn2 by (by100 force)
           have hdr': "\<forall>A\<in>F_V - {X'}. top1_deformation_retract_of_on A (subspace_topology V ?TV A) {p}"
