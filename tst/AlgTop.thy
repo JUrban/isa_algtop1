@@ -7767,6 +7767,37 @@ lemma circle_path_connected:
   shows "top1_path_connected_on Y TY"
   by (rule homeomorphism_preserves_path_connected[OF assms S1_path_connected])
 
+text \<open>Helper: S1 minus a point is simply connected (homeomorphic to R).\<close>
+lemma S1_minus_point_simply_connected:
+  assumes "q \<in> top1_S1"
+  shows "top1_simply_connected_on (top1_S1 - {q}) (subspace_topology top1_S1 top1_S1_topology (top1_S1 - {q}))"
+  sorry \<comment> \<open>S1\{q} homeomorphic to R (angle parametrization). R is simply connected (top1\_R\_simply\_connected').
+     Homeomorphism preserves simply connected.\<close>
+
+text \<open>Helper: homeomorphic image of S1 minus point is simply connected.\<close>
+lemma circle_minus_point_simply_connected:
+  assumes "top1_homeomorphism_on top1_S1 top1_S1_topology Y TY h"
+      and "q \<in> Y"
+  shows "top1_simply_connected_on (Y - {q}) (subspace_topology Y TY (Y - {q}))"
+proof -
+  have hbij: "bij_betw h top1_S1 Y"
+    using assms(1) unfolding top1_homeomorphism_on_def by (by100 blast)
+  define q0 where "q0 = inv_into top1_S1 h q"
+  have hq_img: "q \<in> h ` top1_S1" using hbij assms(2) unfolding bij_betw_def by (by100 blast)
+  have hq0_S1: "q0 \<in> top1_S1"
+    unfolding q0_def by (rule inv_into_into[OF hq_img])
+  have hq0_map: "h q0 = q"
+    unfolding q0_def using f_inv_into_f[of q h top1_S1] hbij assms(2)
+    unfolding bij_betw_def by (by5000 blast)
+  have hh_restrict: "top1_homeomorphism_on (top1_S1 - {q0})
+      (subspace_topology top1_S1 top1_S1_topology (top1_S1 - {q0}))
+      (Y - {q}) (subspace_topology Y TY (Y - {q})) h"
+    using homeomorphism_restrict_point[OF assms(1) hq0_S1] hq0_map by (by100 simp)
+  from S1_minus_point_simply_connected[OF hq0_S1]
+  show ?thesis
+    by (rule homeomorphism_preserves_simply_connected_forward[OF hh_restrict])
+qed
+
 text \<open>Helper: singleton is closed in a Hausdorff space.\<close>
 lemma hausdorff_singleton_closed:
   assumes "is_topology_on X TX" "is_hausdorff_on X TX" "x \<in> X"
