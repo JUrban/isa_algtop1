@@ -8228,6 +8228,24 @@ lemma finite_wedge_pi1_free_with_chosen_loops:
           using hC0_sub_U by (rule subspace_topology_trans)
         \<comment> \<open>\<pi>_1(C(0), subspace X TX (C 0)) is free on {0} with loop\_class(0) as generator.
            Apply the n=1 case to C(0). First verify the hypotheses.\<close>
+        \<comment> \<open>Munkres: "\<pi>\_1(U) is infinite cyclic, and f\_1 represents a generator."
+           Step 1: Apply the n=1 case (less.IH with 1 < n) to C(0) \<cong> S1.
+           Step 2: Transfer through Theorem\_58\_3 iso (deformation retract).
+           Step 3: Generator preservation via inclusion-induced map.\<close>
+        \<comment> \<open>Step 1: \<pi>\_1(C(0)) is free on {0} with g(0)\<circ>std\_loop as generator.\<close>
+        have hC0_free: "\<exists>(G1::int set) mul1 e1 invg1 (\<eta>1::nat \<Rightarrow> int) \<Phi>1.
+            top1_is_free_group_full_on G1 mul1 e1 invg1 \<eta>1 {..<(1::nat)}
+          \<and> top1_group_iso_on G1 mul1
+              (top1_fundamental_group_carrier (C 0) (subspace_topology X TX (C 0)) p)
+              (top1_fundamental_group_mul (C 0) (subspace_topology X TX (C 0)) p) \<Phi>1
+          \<and> (\<forall>j<(1::nat). \<Phi>1 (\<eta>1 j) = {l. top1_loop_equiv_on (C 0) (subspace_topology X TX (C 0)) p
+              (\<lambda>t. g 0 (cos (2*pi*t), sin (2*pi*t))) l})"
+          sorry \<comment> \<open>Apply less.IH with n'=1 < n to (C 0, subspace X TX (C 0), p, \<lambda>\_. C 0, g).
+             Need: is\_topology\_on\_strict, Hausdorff, p \<in> C 0, cover = C 0, disjoint (trivial),
+             homeomorphism g(0), basepoint g(0)(1,0)=p, coherent (trivial for 1 circle).\<close>
+        \<comment> \<open>Step 2+3: Transfer from \<pi>\_1(C(0)) to \<pi>\_1(U) via deformation retract.
+           The Theorem\_58\_3 iso is the inclusion-induced map, which preserves loop classes
+           by subspace\_inclusion\_induced\_class.\<close>
         have hU_free: "\<exists>(G1::int set) mul1 e1 invg1 (\<eta>1::nat \<Rightarrow> int) \<Phi>1.
             top1_is_free_group_full_on G1 mul1 e1 invg1 \<eta>1 {0::nat}
           \<and> top1_group_iso_on G1 mul1
@@ -8235,9 +8253,10 @@ lemma finite_wedge_pi1_free_with_chosen_loops:
               (top1_fundamental_group_mul U (subspace_topology X TX U) p) \<Phi>1
           \<and> \<Phi>1 (\<eta>1 0) = {l. top1_loop_equiv_on U (subspace_topology X TX U) p
               (\<lambda>t. g 0 (cos (2*pi*t), sin (2*pi*t))) l}"
-          sorry \<comment> \<open>From hC0\_pi1\_iso\_U + n=1 case applied to C(0).
-             The deformation retract iso preserves loop classes (inclusion-induced).
-             So the generator correspondence transfers from C(0) to U.\<close>
+          sorry \<comment> \<open>From hC0\_free: get G1, \<eta>1, \<Phi>1' iso to \<pi>\_1(C(0)) with gen corr.
+             From hC0\_pi1\_iso\_U: \<pi>\_1(C(0)) \<cong> \<pi>\_1(U) via inclusion-induced map.
+             Compose: \<Phi>1 = inclusion\_* \<circ> \<Phi>1'. Generator preserved by
+             subspace\_inclusion\_induced\_class: [f]_{C(0)} \<mapsto> [f]\_U.\<close>
         \<comment> \<open>Step 9: IH on V. V contains circles C(1),...,C(n-1) as a sub-wedge.
            By inductive hypothesis (less.IH with n-1 < n), \<pi>_1(V) is free on n-1 generators
            with loop correspondence for C(1),...,C(n-1).\<close>
@@ -8286,6 +8305,23 @@ lemma finite_wedge_pi1_free_with_chosen_loops:
            with loops f\_2,...,f\_n as free generators."
            IH: apply less.IH with n-1 < n to X' = C(1) \<union> \<cdots> \<union> C(n-1).
            Re-index: C'(j) = C(j+1), g'(j) = g(j+1) for j < n-1.\<close>
+        \<comment> \<open>Expert Step 6: IH on X' with re-indexing, then transfer via deformation retract.\<close>
+        \<comment> \<open>Step 6a: Apply IH to X' = C(1) \<union> ... \<union> C(n-1) with n-1 circles.\<close>
+        have hn1_lt: "n - 1 < n" using hn2 by (by100 simp)
+        define C' where "C' j = C (j + 1)" for j
+        define g' where "g' j = g (j + 1)" for j
+        have hX'_free: "\<exists>(G2::int set) mul2 e2 invg2 (\<eta>2::nat \<Rightarrow> int) \<Phi>2.
+            top1_is_free_group_full_on G2 mul2 e2 invg2 \<eta>2 {..<n-1}
+          \<and> top1_group_iso_on G2 mul2
+              (top1_fundamental_group_carrier X' (subspace_topology X TX X') p)
+              (top1_fundamental_group_mul X' (subspace_topology X TX X') p) \<Phi>2
+          \<and> (\<forall>j<n-1. \<Phi>2 (\<eta>2 j) = {l. top1_loop_equiv_on X' (subspace_topology X TX X') p
+              (\<lambda>t. g' j (cos (2*pi*t), sin (2*pi*t))) l})"
+          sorry \<comment> \<open>Apply less.IH[of "n-1"] with hn1\_lt. X' has n-1 circles C'(j) = C(j+1).
+             Verify: strict topology, Hausdorff, p \<in> X', C'(j) cover, disjoint,
+             homeomorphisms g'(j) = g(j+1), basepoints, coherent topology.
+             All transfer from X via subspace properties.\<close>
+        \<comment> \<open>Step 6b: Transfer from X' to V via deformation retract + re-indexing.\<close>
         have hV_free: "\<exists>(G2::int set) mul2 e2 invg2 (\<eta>2::nat \<Rightarrow> int) \<Phi>2.
             top1_is_free_group_full_on G2 mul2 e2 invg2 \<eta>2 {1..<n}
           \<and> top1_group_iso_on G2 mul2
@@ -8293,10 +8329,10 @@ lemma finite_wedge_pi1_free_with_chosen_loops:
               (top1_fundamental_group_mul V (subspace_topology X TX V) p) \<Phi>2
           \<and> (\<forall>j\<in>{1..<n}. \<Phi>2 (\<eta>2 j) = {l. top1_loop_equiv_on V (subspace_topology X TX V) p
               (\<lambda>t. g j (cos (2*pi*t), sin (2*pi*t))) l})"
-          sorry \<comment> \<open>1. Apply less.IH with n-1 to X' (re-index C(j+1) \<rightarrow> C'(j), g(j+1) \<rightarrow> g'(j)).
-             2. Get \<pi>_1(X') free on {..<n-1} with gen correspondence for C'(j) loops.
-             3. By hV\_retract + Theorem\_58\_3: \<pi>_1(V) \<cong> \<pi>_1(X') via inclusion.
-             4. Re-index {..<n-1} \<rightarrow> {1..<n} and transfer gen correspondence.\<close>
+          sorry \<comment> \<open>From hX'\_free:
+             1. Re-index {..<n-1} \<rightarrow> {1..<n}: \<eta>'(j) = \<eta>(j-1), C'(j-1) = C(j), g'(j-1) = g(j).
+             2. By hV\_retract + Theorem\_58\_3: \<pi>_1(V) \<cong> \<pi>_1(X') via inclusion.
+             3. Generator preserved by subspace\_inclusion\_induced\_class.\<close>
         \<comment> \<open>Step 10: Compose SvK + Theorem\_69\_2 + iso tracking.
            \<pi>_1(X) \<cong> FP(\<pi>_1(U), \<pi>_1(V)) \<cong> FP(Z, F_{n-1}) \<cong> F_n.\<close>
         show ?thesis
