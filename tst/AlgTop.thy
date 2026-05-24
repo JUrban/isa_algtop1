@@ -8423,11 +8423,98 @@ proof -
       have hrel_foldr: "relator_class =
           {g. top1_loop_equiv_on A (subspace_topology X TX A) a'
             (foldr top1_path_product (map edge_loop_fn [0..<?n]) (top1_constant_path a')) g}"
-        sorry \<comment> \<open>Proved chain: relator\_class = class(\<iota>\<circ>circle), then loop\_split\_at\_vertices
-           gives \<iota>\<circ>circle \<simeq> foldr [sub] const, then h\_iota\_circle\_edge gives sub = edge\_loop\_fn
-           on I\_set, then hloop\_class\_eq\_pointwise gives same class.
-           Sub-steps individually verified (hsub\_edge proved inline above).
-           Remaining: connecting induced map def, loop\_split application, class transitivity.\<close>
+      proof -
+        let ?circle = "\<lambda>s::real. (cos (2 * pi * s), sin (2 * pi * s))"
+        let ?boundary = "\<lambda>s. \<iota> (?circle s)"
+        \<comment> \<open>Step 1: relator\_class = class of ?boundary.\<close>
+        have hrel_eq: "relator_class = {g. top1_loop_equiv_on A (subspace_topology X TX A) a' ?boundary g}"
+          sorry \<comment> \<open>From induced map def: relator\_class = {\<iota>\<circ>f | f \<simeq> circle, \<iota>\<circ>f \<simeq> g}
+             = class(\<iota> \<circ> circle) since circle is in its own class.\<close>
+        \<comment> \<open>Step 2: ?boundary is a loop at a' in A.\<close>
+        have hbdy_loop: "top1_is_loop_on A (subspace_topology X TX A) a' ?boundary"
+          sorry \<comment> \<open>\<iota> continuous on S1, circle continuous on [0,1] into S1.
+             Composition continuous. Endpoints: ?boundary(0) = \<iota>(1,0) = h(1,0) = a'.\<close>
+        \<comment> \<open>Step 3: Vertices of ?boundary are a'.\<close>
+        have hvertex: "\<forall>k\<le>?n. ?boundary (real k / real ?n) = a'"
+          sorry \<comment> \<open>?boundary(k/n) = \<iota>(cos(2\<pi>k/n), sin(2\<pi>k/n)) = h(cos(2\<pi>k/n), sin(2\<pi>k/n)).
+             From hh\_edge\_arc at t=0 or t=1 (edge endpoints): = qC(vxC k, vyC k) = a'.\<close>
+        \<comment> \<open>Step 4: loop\_split\_at\_vertices decomposes ?boundary.\<close>
+        define sub where "sub k s = ?boundary ((real k + s) / real ?n)" for k :: nat and s :: real
+        have hn_ge1: "?n \<ge> 1" using hlen by (by100 linarith)
+        have hbdy_split: "top1_loop_equiv_on A (subspace_topology X TX A) a' ?boundary
+            (foldr top1_path_product (map sub [0..<?n]) (top1_constant_path a'))"
+          sorry \<comment> \<open>From loop\_split\_at\_vertices[OF hTA hbdy\_loop hn\_ge1 hvertex].
+             Need to match sub definition with the lemma's internal sub.\<close>
+        \<comment> \<open>Step 5: sub k = edge\_loop\_fn k on I\_set (from h\_iota\_circle\_edge via hh\_edge\_arc).\<close>
+        have hsub_edge: "\<forall>k<?n. \<forall>t\<in>I_set. sub k t = edge_loop_fn k t"
+        proof (intro allI impI ballI)
+          fix k :: nat and t :: real assume hk: "k < ?n" and ht: "t \<in> I_set"
+          have "sub k t = \<iota> (cos (2*pi*((real k+t)/real ?n)), sin (2*pi*((real k+t)/real ?n)))"
+            unfolding sub_def by (by100 simp)
+          also have "\<dots> = h (cos (2*pi*((real k+t)/real ?n)), sin (2*pi*((real k+t)/real ?n)))"
+          proof -
+            have "(cos (2*pi*((real k+t)/real ?n)), sin (2*pi*((real k+t)/real ?n))) \<in> top1_S1"
+              unfolding top1_S1_def by (by5000 force)
+            thus ?thesis using h\<iota>_eq by (by100 blast)
+          qed
+          also have "\<dots> = qC ((1-t)*vxC k + t*vxC (Suc k mod ?n), (1-t)*vyC k + t*vyC (Suc k mod ?n))"
+          proof -
+            have "2*pi*((real k+t)/real ?n) = 2*pi*(real k+t)/real ?n" by (by100 simp)
+            thus ?thesis using hh_edge_arc[rule_format, OF hk ht] by (by100 simp)
+          qed
+          also have "\<dots> = edge_loop_fn k t" unfolding edge_loop_fn_def by (by100 simp)
+          finally show "sub k t = edge_loop_fn k t" .
+        qed
+        \<comment> \<open>Step 6: foldr [sub] and foldr [edge\_loop\_fn] have the same class.\<close>
+        have hfoldr_eq: "{g. top1_loop_equiv_on A (subspace_topology X TX A) a'
+              (foldr top1_path_product (map sub [0..<?n]) (top1_constant_path a')) g}
+            = {g. top1_loop_equiv_on A (subspace_topology X TX A) a'
+              (foldr top1_path_product (map edge_loop_fn [0..<?n]) (top1_constant_path a')) g}"
+        proof -
+          \<comment> \<open>The foldr products agree on I\_set because each component agrees on I\_set.
+             path\_product f g s = f(2s) for s \<le> 1/2, g(2s-1) for s > 1/2.
+             Both 2s and 2s-1 are in I\_set when s \<in> I\_set, so the agreement propagates.\<close>
+          have "\<forall>t\<in>I_set. foldr top1_path_product (map sub [0..<?n]) (top1_constant_path a') t
+              = foldr top1_path_product (map edge_loop_fn [0..<?n]) (top1_constant_path a') t"
+          proof (intro ballI)
+            fix t assume ht: "t \<in> I_set"
+            \<comment> \<open>Both foldrs agree on I\_set because path\_product preserves
+               I\_set-pointwise equality (2s, 2s-1 \<in> I\_set for s \<in> I\_set).\<close>
+            show "foldr top1_path_product (map sub [0..<?n]) (top1_constant_path a') t
+                = foldr top1_path_product (map edge_loop_fn [0..<?n]) (top1_constant_path a') t"
+              sorry \<comment> \<open>Induction: each path\_product step uses values in I\_set.\<close>
+          qed
+          thus ?thesis using hloop_class_eq_pointwise by (by100 blast)
+        qed
+        \<comment> \<open>Step 7: Combine via equivalence class transitivity.\<close>
+        have hbdy_class: "{g. top1_loop_equiv_on A (subspace_topology X TX A) a' ?boundary g}
+            = {g. top1_loop_equiv_on A (subspace_topology X TX A) a'
+                (foldr top1_path_product (map sub [0..<?n]) (top1_constant_path a')) g}"
+        proof (rule set_eqI, rule iffI)
+          fix g assume hg: "g \<in> {g. top1_loop_equiv_on A (subspace_topology X TX A) a' ?boundary g}"
+          hence hbg: "top1_loop_equiv_on A (subspace_topology X TX A) a' ?boundary g" by (by100 blast)
+          have hfb: "top1_loop_equiv_on A (subspace_topology X TX A) a'
+              (foldr top1_path_product (map sub [0..<?n]) (top1_constant_path a')) ?boundary"
+            by (rule top1_loop_equiv_on_sym[OF hbdy_split])
+          have "top1_loop_equiv_on A (subspace_topology X TX A) a'
+              (foldr top1_path_product (map sub [0..<?n]) (top1_constant_path a')) g"
+            by (rule top1_loop_equiv_on_trans[OF hTA hfb hbg])
+          thus "g \<in> {g. top1_loop_equiv_on A (subspace_topology X TX A) a'
+              (foldr top1_path_product (map sub [0..<?n]) (top1_constant_path a')) g}"
+            by (by100 blast)
+        next
+          fix g assume hg: "g \<in> {g. top1_loop_equiv_on A (subspace_topology X TX A) a'
+              (foldr top1_path_product (map sub [0..<?n]) (top1_constant_path a')) g}"
+          hence hfg: "top1_loop_equiv_on A (subspace_topology X TX A) a'
+              (foldr top1_path_product (map sub [0..<?n]) (top1_constant_path a')) g"
+            by (by100 blast)
+          have "top1_loop_equiv_on A (subspace_topology X TX A) a' ?boundary g"
+            by (rule top1_loop_equiv_on_trans[OF hTA hbdy_split hfg])
+          thus "g \<in> {g. top1_loop_equiv_on A (subspace_topology X TX A) a' ?boundary g}"
+            by (by100 blast)
+        qed
+        show ?thesis using hrel_eq hbdy_class hfoldr_eq by (by100 simp)
+      qed
       \<comment> \<open>Edge loops are loops at a'.\<close>
       have hedge_loops_fn: "\<forall>k<?n. top1_is_loop_on A (subspace_topology X TX A) a' (edge_loop_fn k)"
       proof (intro allI impI)
