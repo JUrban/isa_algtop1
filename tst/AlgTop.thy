@@ -8578,8 +8578,17 @@ proof -
         have hn_ge1: "?n \<ge> 1" using hlen by (by100 linarith)
         have hbdy_split: "top1_loop_equiv_on A (subspace_topology X TX A) a' ?boundary
             (foldr top1_path_product (map sub [0..<?n]) (top1_constant_path a'))"
-          sorry \<comment> \<open>From loop\_split\_at\_vertices[OF hTA hbdy\_loop hn\_ge1 hvertex].
-             Need to match sub definition with the lemma's internal sub.\<close>
+        proof -
+          from PolygonDisk.loop_split_at_vertices[OF hTA hbdy_loop hn_ge1 hvertex]
+          have "top1_loop_equiv_on A (subspace_topology X TX A) a' ?boundary
+              (foldr top1_path_product
+                (map (\<lambda>k. \<lambda>s. ?boundary ((real k + s) / real ?n)) [0..<?n])
+                (top1_constant_path a'))" .
+          moreover have hmap_eq: "map (\<lambda>k. \<lambda>s. ?boundary ((real k + s) / real ?n)) [0..<?n]
+              = map sub [0..<?n]"
+            unfolding sub_def by (by100 simp)
+          ultimately show ?thesis using hmap_eq by (by5000 metis)
+        qed
         \<comment> \<open>Step 5: sub k = edge\_loop\_fn k on I\_set (from h\_iota\_circle\_edge via hh\_edge\_arc).\<close>
         have hsub_edge: "\<forall>k<?n. \<forall>t\<in>I_set. sub k t = edge_loop_fn k t"
         proof (intro allI impI ballI)
