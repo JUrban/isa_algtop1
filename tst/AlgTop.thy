@@ -6917,6 +6917,25 @@ lemma map_map_pair_compose:
      = map (\<lambda>(s, b). (f (g s), b)) ws"
   by (induct ws) auto
 
+text \<open>Book-faithful Theorem 58.3: the inclusion-induced map IS the iso.
+  Munkres: "the inclusion map j:(A,x0) \<rightarrow> (X,x0) induces an isomorphism."
+  Derives from AlgIsoFixed.Theorem\_58\_7 (explicit induced map iso) by
+  constructing the homotopy equivalence from the deformation retract.\<close>
+lemma Theorem_58_3_explicit:
+  assumes hdr: "top1_deformation_retract_of_on X TX A"
+      and hTX: "is_topology_on X TX"
+      and hx0: "x0 \<in> A"
+  shows "top1_group_iso_on
+      (top1_fundamental_group_carrier A (subspace_topology X TX A) x0)
+      (top1_fundamental_group_mul A (subspace_topology X TX A) x0)
+      (top1_fundamental_group_carrier X TX x0)
+      (top1_fundamental_group_mul X TX x0)
+      (top1_fundamental_group_induced_on A (subspace_topology X TX A) x0 X TX x0 (\<lambda>x. x))"
+  sorry \<comment> \<open>Proof: deformation retract \<Rightarrow> homotopy equivalence (inclusion + retraction).
+     Then AlgIsoFixed.Theorem\_58\_7 gives the inclusion-induced map is an iso.
+     Construction of homotopy equivalence: same as in n=1 base case
+     (identity homotopy from H(x,0)=x and H|\_A = id).\<close>
+
 text \<open>Pasting deformation retractions on finitely many closed subsets.
   Munkres 71.1: "The maps F\_i fit together... the pasting lemma applies."
   If X = \<Union>F with F finite, each A \<in> F closed in X, each A deformation-retracts
@@ -8413,15 +8432,19 @@ lemma finite_wedge_pi1_free_with_chosen_loops:
         qed
         have hC0_sub_U: "C 0 \<subseteq> U" unfolding U_def by (by100 blast)
         have hp_C0: "p \<in> C 0" using less.prems(4) hn_pos by (by100 blast)
-        have hC0_pi1_iso_U: "top1_groups_isomorphic_on
-            (top1_fundamental_group_carrier (C 0) (subspace_topology U (subspace_topology X TX U) (C 0)) p)
-            (top1_fundamental_group_mul (C 0) (subspace_topology U (subspace_topology X TX U) (C 0)) p)
-            (top1_fundamental_group_carrier U (subspace_topology X TX U) p)
-            (top1_fundamental_group_mul U (subspace_topology X TX U) p)"
-          by (rule Theorem_58_3[OF hU_retract hTU hp_C0])
-        \<comment> \<open>Subspace topology transitivity: subspace U (subspace X TX U) (C 0) = subspace X TX (C 0).\<close>
+        \<comment> \<open>Book Theorem 58.3: the inclusion-induced map is THE iso.\<close>
         have hC0_trans: "subspace_topology U (subspace_topology X TX U) (C 0) = subspace_topology X TX (C 0)"
           using hC0_sub_U by (rule subspace_topology_trans)
+        let ?incl_U = "top1_fundamental_group_induced_on (C 0) (subspace_topology X TX (C 0)) p U (subspace_topology X TX U) p (\<lambda>x. x)"
+        have hC0_incl_iso_U: "top1_group_iso_on
+            (top1_fundamental_group_carrier (C 0) (subspace_topology X TX (C 0)) p)
+            (top1_fundamental_group_mul (C 0) (subspace_topology X TX (C 0)) p)
+            (top1_fundamental_group_carrier U (subspace_topology X TX U) p)
+            (top1_fundamental_group_mul U (subspace_topology X TX U) p) ?incl_U"
+        proof -
+          from Theorem_58_3_explicit[OF hU_retract hTU hp_C0]
+          show ?thesis using hC0_trans by (by100 simp)
+        qed
         \<comment> \<open>\<pi>_1(C(0), subspace X TX (C 0)) is free on {0} with loop\_class(0) as generator.
            Apply the n=1 case to C(0). First verify the hypotheses.\<close>
         \<comment> \<open>Munkres: "\<pi>\_1(U) is infinite cyclic, and f\_1 represents a generator."
@@ -8501,14 +8524,97 @@ lemma finite_wedge_pi1_free_with_chosen_loops:
               (top1_fundamental_group_mul U (subspace_topology X TX U) p) \<Phi>1
           \<and> \<Phi>1 (\<eta>1 0) = {l. top1_loop_equiv_on U (subspace_topology X TX U) p
               (\<lambda>t. g 0 (cos (2*pi*t), sin (2*pi*t))) l}"
-          sorry \<comment> \<open>Expert Step 4: compose hC0\_free + deformation retract transfer.
-             1. From hC0\_free: G1, \<eta>1, \<Phi>1' iso to \<pi>\_1(C(0)) with \<Phi>1'(\<eta>1 0) = [g0\<circ>std\_loop]_{C(0)}.
-             2. From hC0\_pi1\_iso\_U + hC0\_trans: abstract iso \<pi>\_1(C(0)) \<cong> \<pi>\_1(U).
-             3. Compose via groups\_isomorphic\_trans\_fwd to get \<Phi>1: G1 \<rightarrow> \<pi>\_1(U).
-             4. Generator: inclusion C(0) \<hookrightarrow> U sends [g0\<circ>std\_loop]_{C(0)} to [g0\<circ>std\_loop]\_U
-                by subspace\_inclusion\_induced\_class.
-             Note: the abstract iso is inclusion-induced, so gen corr transfers.
-             Full proof requires explicit iso composition + gen tracking (~50 lines).\<close>
+        proof -
+          \<comment> \<open>Step 1: Extract from hC0\_free.\<close>
+          from hC0_free obtain G1 :: "int set" and mul1 e1 invg1
+              and \<eta>1 :: "nat \<Rightarrow> int" and \<Phi>1' where
+            hG1_all: "top1_is_free_group_full_on G1 mul1 e1 invg1 \<eta>1 {..<(1::nat)}
+            \<and> top1_group_iso_on G1 mul1
+                (top1_fundamental_group_carrier (C 0) (subspace_topology X TX (C 0)) p)
+                (top1_fundamental_group_mul (C 0) (subspace_topology X TX (C 0)) p) \<Phi>1'
+            \<and> (\<forall>j<(1::nat). \<Phi>1' (\<eta>1 j) = {l. top1_loop_equiv_on (C 0)
+                (subspace_topology X TX (C 0)) p (\<lambda>t. g 0 (cos (2*pi*t), sin (2*pi*t))) l})"
+            by (by5000 auto)
+          have hG1_free: "top1_is_free_group_full_on G1 mul1 e1 invg1 \<eta>1 {..<(1::nat)}"
+            using hG1_all by (by100 blast)
+          have h\<Phi>1'_iso: "top1_group_iso_on G1 mul1
+              (top1_fundamental_group_carrier (C 0) (subspace_topology X TX (C 0)) p)
+              (top1_fundamental_group_mul (C 0) (subspace_topology X TX (C 0)) p) \<Phi>1'"
+            using hG1_all by (by100 blast)
+          have h\<Phi>1'_gen: "\<forall>j<(1::nat). \<Phi>1' (\<eta>1 j) = {l. top1_loop_equiv_on (C 0)
+              (subspace_topology X TX (C 0)) p (\<lambda>t. g 0 (cos (2*pi*t), sin (2*pi*t))) l}"
+            using hG1_all by (by100 blast)
+          have hJ1: "{..<(1::nat)} = {0}" by (by100 auto)
+          \<comment> \<open>Step 2: Compose \<Phi>1 = incl\_U \<circ> \<Phi>1' : G1 \<rightarrow> \<pi>\_1(C(0)) \<rightarrow> \<pi>\_1(U).\<close>
+          define \<Phi>1 where "\<Phi>1 = ?incl_U \<circ> \<Phi>1'"
+          \<comment> \<open>\<Phi>1 is an iso (composition of isos) by group\_iso\_on\_compose.\<close>
+          have h\<Phi>1_iso: "top1_group_iso_on G1 mul1
+              (top1_fundamental_group_carrier U (subspace_topology X TX U) p)
+              (top1_fundamental_group_mul U (subspace_topology X TX U) p) \<Phi>1"
+          proof -
+            have hG1_grp: "top1_is_group_on G1 mul1 e1 invg1"
+              using hG1_free unfolding top1_is_free_group_full_on_def by (by100 blast)
+            have hC0_grp: "top1_is_group_on
+                (top1_fundamental_group_carrier (C 0) (subspace_topology X TX (C 0)) p)
+                (top1_fundamental_group_mul (C 0) (subspace_topology X TX (C 0)) p)
+                (top1_fundamental_group_id (C 0) (subspace_topology X TX (C 0)) p)
+                (top1_fundamental_group_invg (C 0) (subspace_topology X TX (C 0)) p)"
+            proof -
+              have hTX_here: "is_topology_on X TX"
+                using less.prems(1) unfolding is_topology_on_strict_def by (by100 blast)
+              have "C 0 \<subseteq> X" using less.prems(4) hn_pos by (by100 blast)
+              have "is_topology_on (C 0) (subspace_topology X TX (C 0))"
+                by (rule subspace_topology_is_topology_on[OF hTX_here \<open>C 0 \<subseteq> X\<close>])
+              thus ?thesis by (rule top1_fundamental_group_is_group) (rule hp_C0)
+            qed
+            have hU_grp: "top1_is_group_on
+                (top1_fundamental_group_carrier U (subspace_topology X TX U) p)
+                (top1_fundamental_group_mul U (subspace_topology X TX U) p)
+                (top1_fundamental_group_id U (subspace_topology X TX U) p)
+                (top1_fundamental_group_invg U (subspace_topology X TX U) p)"
+            proof -
+              have "p \<in> U" unfolding U_def using hp_C0 by (by100 blast)
+              thus ?thesis by (rule top1_fundamental_group_is_group[OF hTU])
+            qed
+            show ?thesis unfolding \<Phi>1_def
+              by (rule group_iso_on_compose[OF h\<Phi>1'_iso hC0_incl_iso_U hG1_grp hC0_grp hU_grp])
+          qed
+          \<comment> \<open>Step 3: Generator correspondence via subspace\_inclusion\_induced\_class.
+             \<Phi>1(\<eta>1 0) = incl\_U(\<Phi>1'(\<eta>1 0)) = incl\_U([g0\<circ>std\_loop]\_{C(0)}) = [g0\<circ>std\_loop]\_U.\<close>
+          have h\<Phi>1_gen: "\<Phi>1 (\<eta>1 0) = {l. top1_loop_equiv_on U (subspace_topology X TX U) p
+              (\<lambda>t. g 0 (cos (2*pi*t), sin (2*pi*t))) l}"
+          proof -
+            have h0lt: "(0::nat) < 1" by (by100 simp)
+            have "\<Phi>1 (\<eta>1 0) = ?incl_U (\<Phi>1' (\<eta>1 0))" unfolding \<Phi>1_def comp_def by (by100 simp)
+            also have "\<Phi>1' (\<eta>1 0) = {l. top1_loop_equiv_on (C 0) (subspace_topology X TX (C 0)) p
+                (\<lambda>t. g 0 (cos (2*pi*t), sin (2*pi*t))) l}"
+              using h\<Phi>1'_gen h0lt by (by100 blast)
+            also have "?incl_U \<dots> = {k. top1_loop_equiv_on U (subspace_topology X TX U) p
+                (\<lambda>t. g 0 (cos (2*pi*t), sin (2*pi*t))) k}"
+            proof -
+              let ?loop0 = "\<lambda>t. g 0 (cos (2*pi*t), sin (2*pi*t))"
+              have hloop0: "top1_is_loop_on (C 0) (subspace_topology X TX (C 0)) p ?loop0"
+                sorry \<comment> \<open>g(0) \<circ> std\_loop is a loop on C(0).\<close>
+              \<comment> \<open>subspace\_inclusion\_induced\_class with X=U, A=C(0).\<close>
+              have hloop0': "top1_is_loop_on (C 0) (subspace_topology U (subspace_topology X TX U) (C 0)) p ?loop0"
+                using hloop0 hC0_trans by (by100 simp)
+              have "top1_fundamental_group_induced_on (C 0) (subspace_topology U (subspace_topology X TX U) (C 0))
+                  p U (subspace_topology X TX U) p (\<lambda>x. x)
+                  {k. top1_loop_equiv_on (C 0) (subspace_topology U (subspace_topology X TX U) (C 0)) p ?loop0 k}
+                = {k. top1_loop_equiv_on U (subspace_topology X TX U) p ?loop0 k}"
+                by (rule subspace_inclusion_induced_class[OF hTU hC0_sub_U hloop0'])
+              \<comment> \<open>Simplify using hC0\_trans.\<close>
+              thus ?thesis using hC0_trans by (by100 simp)
+            qed
+            finally show ?thesis .
+          qed
+          have hG1_free': "top1_is_free_group_full_on G1 mul1 e1 invg1 \<eta>1 {0::nat}"
+            using hG1_free hJ1 by (by100 simp)
+          show ?thesis
+            apply (rule exI[of _ G1], rule exI[of _ mul1], rule exI[of _ e1],
+                   rule exI[of _ invg1], rule exI[of _ \<eta>1], rule exI[of _ \<Phi>1])
+            using hG1_free' h\<Phi>1_iso h\<Phi>1_gen by (by100 blast)
+        qed
         \<comment> \<open>Step 9: IH on V. V contains circles C(1),...,C(n-1) as a sub-wedge.
            By inductive hypothesis (less.IH with n-1 < n), \<pi>_1(V) is free on n-1 generators
            with loop correspondence for C(1),...,C(n-1).\<close>
