@@ -7018,8 +7018,7 @@ proof (rule top1_simply_connected_from_one_point[OF hTX hpc hp])
       show "top1_is_path_on X TX p p f"
         using hloop unfolding top1_is_loop_on_def by (by100 blast)
       show "top1_is_path_on X TX p p (top1_constant_path p)"
-        unfolding top1_is_path_on_def top1_constant_path_def top1_continuous_map_on_def
-        sorry \<comment> \<open>Constant path is a path. Continuous (constant maps are continuous).\<close>
+        by (rule top1_constant_path_is_path[OF hTX hp])
       show "\<exists>F. top1_continuous_map_on (I_set \<times> I_set) II_topology X TX F \<and>
           (\<forall>s\<in>I_set. F (s, 0) = f s) \<and> (\<forall>s\<in>I_set. F (s, 1) = top1_constant_path p s) \<and>
           (\<forall>t\<in>I_set. F (0, t) = p) \<and> (\<forall>t\<in>I_set. F (1, t) = p)"
@@ -7667,6 +7666,41 @@ lemma finite_wedge_pi1_free_with_chosen_loops:
         \<comment> \<open>Step 2: U = C(0) \<union> \<Union>{W(j) | 1 \<le> j < n}, V = W(0) \<union> \<Union>{C(j) | 1 \<le> j < n}.\<close>
         define U where "U = C 0 \<union> (\<Union>j\<in>{1..<n}. W j)"
         define V where "V = W 0 \<union> (\<Union>j\<in>{1..<n}. C j)"
+        \<comment> \<open>Key fact: each C(j) is closed in X.
+           Munkres: "each space S\_i, being compact, is closed in X."
+           S1 compact (S1\_compact), g(j) continuous + bij \<Rightarrow> C(j) compact, Hausdorff \<Rightarrow> closed.\<close>
+        have hC_closed: "\<forall>j<n. closedin_on X TX (C j)"
+        proof (intro allI impI)
+          fix j assume hj: "j < n"
+          have hg_h: "top1_homeomorphism_on top1_S1 top1_S1_topology
+              (C j) (subspace_topology X TX (C j)) (g j)"
+            using less.prems(7) hj by (by100 blast)
+          have hg_cont: "top1_continuous_map_on top1_S1 top1_S1_topology
+              (C j) (subspace_topology X TX (C j)) (g j)"
+            using hg_h unfolding top1_homeomorphism_on_def by (by100 blast)
+          have hg_bij: "bij_betw (g j) top1_S1 (C j)"
+            using hg_h unfolding top1_homeomorphism_on_def by (by100 blast)
+          have hg_img: "C j = (g j) ` top1_S1"
+            using hg_bij unfolding bij_betw_def by (by100 blast)
+          have hTX': "is_topology_on X TX"
+            using less.prems(1) unfolding is_topology_on_strict_def by (by100 blast)
+          have hCj_sub: "C j \<subseteq> X" using less.prems(4) hj by (by100 blast)
+          have hTCj: "is_topology_on (C j) (subspace_topology X TX (C j))"
+            by (rule subspace_topology_is_topology_on[OF hTX' hCj_sub])
+          have hCj_compact: "top1_compact_on (C j) (subspace_topology X TX (C j))"
+          proof -
+            have "top1_compact_on ((g j) ` top1_S1) (subspace_topology (C j) (subspace_topology X TX (C j)) ((g j) ` top1_S1))"
+              by (rule top1_compact_on_continuous_image[OF S1_compact hTCj hg_cont])
+            moreover have "(g j) ` top1_S1 = C j" using hg_img by (by100 simp)
+            moreover have "subspace_topology (C j) (subspace_topology X TX (C j)) (C j)
+                = subspace_topology X TX (C j)"
+              sorry \<comment> \<open>subspace\_topology A TA A = TA when TA = subspace X TX A.\<close>
+            ultimately show ?thesis by (by100 simp)
+          qed
+          have "C j \<subseteq> X" using less.prems(4) hj by (by100 blast)
+          thus "closedin_on X TX (C j)"
+            by (rule Theorem_26_3[OF less.prems(2) _ hCj_compact])
+        qed
         \<comment> \<open>Step 3: Basic set properties.\<close>
         have hUV_cover: "U \<union> V = X"
         proof -
@@ -7915,13 +7949,46 @@ lemma finite_wedge_pi1_free_with_chosen_loops:
             fix A assume "A \<in> F_set"
             then obtain j where "j < n" "A = W j" unfolding F_set_def by (by100 blast)
             \<comment> \<open>C(j) closed in X: compact (homeo to S1) in Hausdorff space.\<close>
-            have "closedin_on X TX (C j)"
-              sorry \<comment> \<open>C(j) compact (homeo to S1), X Hausdorff \<Rightarrow> C(j) closed (Thm 26.3).\<close>
+            have "closedin_on X TX (C j)" using hC_closed \<open>j < n\<close> by (by100 blast)
             \<comment> \<open>W(j) = C(j) \<inter> (U \<inter> V), so closed in subspace U \<inter> V.\<close>
             moreover have "A = C j \<inter> (U \<inter> V)"
             proof -
               have "W j = C j \<inter> (U \<inter> V)"
-                sorry \<comment> \<open>q(j) \<notin> U \<inter> V (shown earlier), so C(j) \<inter> (U\<inter>V) = C(j) - {q(j)} = W(j).\<close>
+              proof -
+                \<comment> \<open>W(j) \<subseteq> C(j) \<inter> (U\<inter>V): W(j) \<subseteq> C(j) and W(j) \<subseteq> U\<inter>V (from hUV\_inter).\<close>
+                have "W j \<subseteq> C j" using hW_sub_C by (by100 blast)
+                moreover have "W j \<subseteq> U \<inter> V" using hUV_inter \<open>j < n\<close> by (by100 force)
+                ultimately have "W j \<subseteq> C j \<inter> (U \<inter> V)" by (by100 blast)
+                \<comment> \<open>C(j) \<inter> (U\<inter>V) \<subseteq> W(j): if x \<in> C(j) \<inter> (U\<inter>V) then x \<noteq> q(j)
+                   (since q(j) \<notin> U\<inter>V), hence x \<in> C(j) - {q(j)} = W(j).\<close>
+                moreover have "C j \<inter> (U \<inter> V) \<subseteq> W j"
+                proof (intro subsetI)
+                  fix x assume "x \<in> C j \<inter> (U \<inter> V)"
+                  hence "x \<in> C j" "x \<in> U \<inter> V" by (by100 blast)+
+                  have "x \<noteq> q j"
+                  proof
+                    assume "x = q j"
+                    \<comment> \<open>q(j) \<notin> U\<inter>V = \<Union>W(k): q(j) \<notin> W(j) and q(j) \<notin> W(k) for k\<noteq>j.\<close>
+                    have "x \<notin> W j" using \<open>x = q j\<close> unfolding W_def by (by100 blast)
+                    moreover have "\<forall>k<n. k \<noteq> j \<longrightarrow> x \<notin> W k"
+                    proof (intro allI impI)
+                      fix k assume "k < n" "k \<noteq> j"
+                      have "x \<in> C j" using \<open>x \<in> C j\<close> .
+                      have "W k \<subseteq> C k" using hW_sub_C by (by100 blast)
+                      moreover have "x \<noteq> p" using \<open>x = q j\<close> hq \<open>j < n\<close> by (by100 blast)
+                      hence "x \<notin> C k"
+                        using less.prems(6) \<open>j < n\<close> \<open>k < n\<close> \<open>k \<noteq> j\<close> \<open>x \<in> C j\<close>
+                        by (by100 force)
+                      ultimately show "x \<notin> W k" by (by100 blast)
+                    qed
+                    ultimately have "x \<notin> (\<Union>k\<in>{..<n}. W k)" by (by100 force)
+                    hence "x \<notin> U \<inter> V" using hUV_inter by (by100 simp)
+                    thus False using \<open>x \<in> U \<inter> V\<close> by (by100 blast)
+                  qed
+                  thus "x \<in> W j" using \<open>x \<in> C j\<close> unfolding W_def by (by100 blast)
+                qed
+                ultimately show ?thesis by (by100 blast)
+              qed
               thus ?thesis using \<open>A = W j\<close> by (by100 simp)
             qed
             ultimately have "closedin_on (U \<inter> V) ?TUV (C j \<inter> (U \<inter> V))"
