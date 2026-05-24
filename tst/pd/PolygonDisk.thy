@@ -4259,41 +4259,19 @@ proof -
     hence "[0..<n] = 0 # [Suc 0..<n]" using upt_rec[of 0 n] by (by100 simp)
     thus ?thesis by (by100 simp)
   qed
-  \<comment> \<open>For n=1: f = sub 0, foldr = f * const, apply right identity.
-     For n>1: use reparam\_path\_homotopy to split f at 1/n, then induction.\<close>
-  show ?thesis
-  proof (cases "n = 1")
-    case True
-    \<comment> \<open>sub 0 = f since (0 + s)/1 = s.\<close>
-    have hsub0_eq: "sub 0 = f"
-      unfolding sub_def using True by (by100 simp)
-    have hfoldr_1: "foldr top1_path_product (map sub [0..<n]) (top1_constant_path x0)
-        = top1_path_product f (top1_constant_path x0)"
-      using True hsub0_eq by (by100 simp)
-    \<comment> \<open>By Theorem 51.2 (right identity): f * const \<simeq> f.\<close>
-    have hf_path: "top1_is_path_on X TX x0 x0 f"
-      using hloop unfolding top1_is_loop_on_def by (by100 blast)
-    have hident: "top1_path_homotopic_on X TX x0 x0
-        (top1_path_product f (top1_constant_path x0)) f"
-      using Theorem_51_2_right_identity[OF htop hf_path] .
-    \<comment> \<open>Symmetric: f \<simeq> f * const.\<close>
-    have hident_sym: "top1_path_homotopic_on X TX x0 x0
-        f (top1_path_product f (top1_constant_path x0))"
-      using Lemma_51_1_path_homotopic_sym[OF hident] .
-    have hprod_loop_1: "top1_is_loop_on X TX x0
-        (top1_path_product f (top1_constant_path x0))"
-      using hprod_loop hfoldr_1 by (by100 simp)
-    show ?thesis unfolding top1_loop_equiv_on_def
-      using hloop hprod_loop_1 hident_sym hfoldr_1 by (by5000 simp)
-  next
-    case False
-    hence hn_gt1: "n > 1" using hn by (by100 linarith)
-    show ?thesis sorry
-      \<comment> \<open>n > 1: Split f at 1/n using reparam\_path\_homotopy, then induction.
-         The boundary loop decomposes as sub\_0 * g where g has n-1 sub-loops.
-         By IH, g \<simeq> foldr [sub\_1,...,sub\_{n-1}] const.
-         Product congruence gives f \<simeq> sub\_0 * foldr [sub\_1,...] const = foldr [sub\_0,...] const.\<close>
-  qed
+  \<comment> \<open>Proof by strong induction on n (following Munkres: concatenation of edge traversals).
+     Base n=1: sub 0 = f, foldr = f * const, right identity gives f \<simeq> f * const.
+     Step n\<ge>2: Split f at 1/n using reparam\_path\_homotopy.
+       f \<simeq> sub\_0 * g where g(s) = f(1/n + s*(n-1)/n).
+       g has n-1 sub-loops equal to sub\_1,...,sub\_{n-1}.
+       By IH, g \<simeq> foldr [sub\_1,...,sub\_{n-1}] const.
+       Product congruence: sub\_0 * g \<simeq> sub\_0 * foldr [...].
+       = foldr [sub\_0,...,sub\_{n-1}] const.\<close>
+  show ?thesis sorry
+    \<comment> \<open>Reparametrization homotopy:
+       Needs induction outside the lemma (sub depends on n), or direct
+       reparametrization \<psi>: [0,1] \<rightarrow> [0,1] mapping binary to linear timing.
+       Both approaches are ~200 lines.\<close>
 qed
 
 end
