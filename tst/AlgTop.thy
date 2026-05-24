@@ -8002,11 +8002,107 @@ proof -
     define F where "F st = top1_R_to_S1 (SLH st)" for st
     \<comment> \<open>Verify homotopy properties.\<close>
     show "top1_path_homotopic_on ?W ?TW p0 p0 f (top1_constant_path p0)"
-      sorry \<comment> \<open>F(s,0) = R\_to\_S1(g\_tilde s) = f(s). F(s,1) = R\_to\_S1(\<theta>p) = p0.
-         F(0,t) = R\_to\_S1((1-t)*\<theta>p + t*\<theta>p) = p0. F(1,t) = p0 (since g\_tilde(1) = \<theta>p).
-         F continuous (R\_to\_S1 continuous, SLH continuous).
-         F range in S1\{q} (SLH in (\<theta>q, \<theta>q+1), so R\_to\_S1 \<noteq> q).
-         ~20 lines to assemble.\<close>
+      unfolding top1_path_homotopic_on_def
+    proof (intro conjI exI[of _ F])
+      show "top1_is_path_on ?W ?TW p0 p0 f"
+        using hloop unfolding top1_is_loop_on_def by (by100 blast)
+      show "top1_is_path_on ?W ?TW p0 p0 (top1_constant_path p0)"
+        by (rule top1_constant_path_is_path[OF hTW hp0_W])
+      show "top1_continuous_map_on (I_set \<times> I_set) II_topology ?W ?TW F"
+      proof -
+        \<comment> \<open>SLH continuous on UNIV (from top1\_slh\_ext\_continuous).\<close>
+        \<comment> \<open>R\_to\_S1 continuous (covering map).\<close>
+        have hR2S1_cont: "top1_continuous_map_on (UNIV::real set) top1_open_sets
+            top1_S1 top1_S1_topology top1_R_to_S1"
+          using Theorem_53_1 unfolding top1_covering_map_on_def by (by100 blast)
+        \<comment> \<open>F = R\_to\_S1 \<circ> SLH is continuous I\<times>I \<rightarrow> S1.\<close>
+        have hSLH_cont_II: "top1_continuous_map_on (I_set \<times> I_set) II_topology
+            (UNIV::real set) top1_open_sets SLH"
+          using top1_continuous_map_on_II_to_UNIV[OF hSLH_cont] .
+        have hF_eq: "\<And>st. F st = (top1_R_to_S1 \<circ> SLH) st" unfolding F_def comp_def by (by100 simp)
+        have "top1_continuous_map_on (I_set \<times> I_set) II_topology top1_S1 top1_S1_topology (top1_R_to_S1 \<circ> SLH)"
+          by (rule top1_continuous_map_on_comp[OF hSLH_cont_II hR2S1_cont])
+        have "F = top1_R_to_S1 \<circ> SLH" unfolding F_def comp_def by (rule ext) (by100 simp)
+        hence hF_cont_S1: "top1_continuous_map_on (I_set \<times> I_set) II_topology top1_S1 top1_S1_topology F"
+          using \<open>top1_continuous_map_on _ _ _ _ (top1_R_to_S1 \<circ> SLH)\<close> by (by100 simp)
+        \<comment> \<open>F range in S1\{q} (from hSLH\_range).\<close>
+        have hF_range: "\<forall>st\<in>I_set \<times> I_set. F st \<in> ?W"
+        proof (intro ballI)
+          fix st assume hst: "st \<in> I_set \<times> I_set"
+          then obtain s t where hst_eq: "st = (s, t)" and hs: "s \<in> I_set" and ht: "t \<in> I_set"
+            by (by100 blast)
+          have "F st = top1_R_to_S1 (SLH (s, t))" unfolding F_def hst_eq by (by100 simp)
+          have hSLH_in: "\<theta>q < SLH (s, t) \<and> SLH (s, t) < \<theta>q + 1" using hSLH_range hs ht .
+          have "F st \<in> top1_S1" unfolding F_def hst_eq top1_R_to_S1_def top1_S1_def by (by100 auto)
+          moreover have "F st \<noteq> q"
+          proof
+            assume "F st = q"
+            hence "top1_R_to_S1 (SLH (s, t)) = top1_R_to_S1 \<theta>q"
+              unfolding F_def hst_eq using h\<theta>q by (by100 simp)
+            hence "sin (2*pi*SLH(s,t)) = sin (2*pi*\<theta>q) \<and> cos (2*pi*SLH(s,t)) = cos (2*pi*\<theta>q)"
+              unfolding top1_R_to_S1_def by (by100 auto)
+            then obtain k :: int where hk: "2*pi*SLH(s,t) = 2*pi*\<theta>q + 2*pi*of_int k"
+              using iffD1[OF sin_cos_eq_iff] by (by100 blast)
+            have "2*pi*(SLH(s,t) - \<theta>q) = 2*pi*of_int k"
+              using hk by (simp add: algebra_simps)
+            hence hdiff: "SLH(s,t) - \<theta>q = of_int k" using pi_gt_zero by (by100 simp)
+            have "SLH(s,t) - \<theta>q > 0 \<and> SLH(s,t) - \<theta>q < 1" using hSLH_in by (by100 linarith)
+            hence "of_int k > (0::real) \<and> of_int k < (1::real)" using hdiff by (by100 linarith)
+            hence "k > 0" by (by100 simp)
+            hence "k \<ge> 1" by (by100 simp)
+            hence "of_int k \<ge> (1::real)" by (by100 simp)
+            moreover have "of_int k < (1::real)" using \<open>of_int k > 0 \<and> of_int k < 1\<close> by (by100 blast)
+            ultimately show False by (by100 linarith)
+          qed
+          ultimately show "F st \<in> ?W" by (by100 blast)
+        qed
+        \<comment> \<open>Continuous into subspace.\<close>
+        show ?thesis by (rule continuous_map_restrict_codomain[OF hF_cont_S1 hF_range]) (by100 blast)
+      qed
+      show "\<forall>s\<in>I_set. F (s, 0) = f s"
+      proof (intro ballI)
+        fix s assume hs: "s \<in> I_set"
+        have "F (s, 0) = top1_R_to_S1 (SLH (s, 0))" unfolding F_def by (by100 simp)
+        also have "SLH (s, 0) = (1 - 0) * g_tilde s + 0 * \<theta>p"
+          using hSLH_agrees[OF hs] unfolding top1_unit_interval_def by (by100 auto)
+        also have "\<dots> = g_tilde s" by (by100 simp)
+        also have "top1_R_to_S1 (g_tilde s) = f s" using hgt_proj hs by (by100 blast)
+        finally show "F (s, 0) = f s" .
+      qed
+      show "\<forall>s\<in>I_set. F (s, 1) = top1_constant_path p0 s"
+      proof (intro ballI)
+        fix s assume hs: "s \<in> I_set"
+        have "F (s, 1) = top1_R_to_S1 (SLH (s, 1))" unfolding F_def by (by100 simp)
+        also have "SLH (s, 1) = (1 - 1) * g_tilde s + 1 * \<theta>p"
+          using hSLH_agrees[OF hs] unfolding top1_unit_interval_def by (by100 auto)
+        also have "\<dots> = \<theta>p" by (by100 simp)
+        also have "top1_R_to_S1 \<theta>p = p0" using h\<theta>p .
+        finally show "F (s, 1) = top1_constant_path p0 s"
+          unfolding top1_constant_path_def by (by100 simp)
+      qed
+      show "\<forall>t\<in>I_set. F (0, t) = p0"
+      proof (intro ballI)
+        fix t assume ht: "t \<in> I_set"
+        have h0I: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 auto)
+        have "F (0, t) = top1_R_to_S1 (SLH (0, t))" unfolding F_def by (by100 simp)
+        also have "SLH (0, t) = (1 - t) * g_tilde 0 + t * \<theta>p"
+          using hSLH_agrees[OF h0I ht] .
+        also have "\<dots> = (1 - t) * \<theta>p + t * \<theta>p" using hgt_0 by (by100 simp)
+        also have "\<dots> = \<theta>p" by (simp add: algebra_simps)
+        finally show "F (0, t) = p0" using h\<theta>p by (by100 simp)
+      qed
+      show "\<forall>t\<in>I_set. F (1, t) = p0"
+      proof (intro ballI)
+        fix t assume ht: "t \<in> I_set"
+        have h1I: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 auto)
+        have "F (1, t) = top1_R_to_S1 (SLH (1, t))" unfolding F_def by (by100 simp)
+        also have "SLH (1, t) = (1 - t) * g_tilde 1 + t * \<theta>p"
+          using hSLH_agrees[OF h1I ht] .
+        also have "\<dots> = (1 - t) * \<theta>p + t * \<theta>p" using hgt_1 by (by100 simp)
+        also have "\<dots> = \<theta>p" by (simp add: algebra_simps)
+        finally show "F (1, t) = p0" using h\<theta>p by (by100 simp)
+      qed
+    qed
   qed
   from top1_simply_connected_from_one_point[OF hTW hpc hp0_W this]
   show ?thesis .
