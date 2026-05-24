@@ -8803,7 +8803,24 @@ lemma finite_wedge_pi1_free_with_chosen_loops:
             proof -
               let ?loop0 = "\<lambda>t. g 0 (cos (2*pi*t), sin (2*pi*t))"
               have hloop0: "top1_is_loop_on (C 0) (subspace_topology X TX (C 0)) p ?loop0"
-                sorry \<comment> \<open>g(0) \<circ> std\_loop is a loop on C(0).\<close>
+              proof -
+                have hg0_homeo: "top1_homeomorphism_on top1_S1 top1_S1_topology
+                    (C 0) (subspace_topology X TX (C 0)) (g 0)"
+                  using less.prems(7) hn_pos by (by100 blast)
+                have hg0_cont: "top1_continuous_map_on top1_S1 top1_S1_topology
+                    (C 0) (subspace_topology X TX (C 0)) (g 0)"
+                  using hg0_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+                have hstd: "top1_is_loop_on top1_S1 top1_S1_topology (1, 0)
+                    (\<lambda>s. (cos (2*pi*s), sin (2*pi*s)))"
+                  by (rule standard_S1_loop_is_loop)
+                have "top1_is_loop_on (C 0) (subspace_topology X TX (C 0)) (g 0 (1, 0))
+                    ((g 0) \<circ> (\<lambda>s. (cos (2*pi*s), sin (2*pi*s))))"
+                  by (rule top1_continuous_map_loop_early[OF hg0_cont hstd])
+                moreover have "(g 0) \<circ> (\<lambda>s. (cos (2*pi*s), sin (2*pi*s))) = ?loop0"
+                  unfolding comp_def by (by100 simp)
+                moreover have "g 0 (1, 0) = p" using less.prems(8) hn_pos by (by100 blast)
+                ultimately show ?thesis by (by100 simp)
+              qed
               \<comment> \<open>subspace\_inclusion\_induced\_class with X=U, A=C(0).\<close>
               have hloop0': "top1_is_loop_on (C 0) (subspace_topology U (subspace_topology X TX U) (C 0)) p ?loop0"
                 using hloop0 hC0_trans by (by100 simp)
