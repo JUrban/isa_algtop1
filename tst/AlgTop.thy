@@ -8425,7 +8425,31 @@ proof -
           (map (\<lambda>(s,b). (\<phi> (\<iota>F s), b)) scheme)
         = {g. top1_loop_equiv_on A (subspace_topology X TX A) a'
             (foldr top1_path_product (map edge_loop_fn [0..<?n]) (top1_constant_path a')) g}"
-        sorry \<comment> \<open>From hword\_foldr + list matching.\<close>
+      proof -
+        let ?ws = "map (\<lambda>(s,b). (\<phi> (\<iota>F s), b)) scheme"
+        have hlen_ws: "length ?ws = ?n" by (by100 simp)
+        have hloops: "\<forall>k<length ?ws. top1_is_loop_on A (subspace_topology X TX A) a' (edge_loop_fn k)"
+          using hedge_loops_fn hlen_ws by (by100 simp)
+        have hmatch: "\<forall>k<length ?ws. {g. top1_loop_equiv_on A (subspace_topology X TX A) a' (edge_loop_fn k) g}
+            = (if snd (?ws!k) then fst (?ws!k)
+               else top1_fundamental_group_invg A (subspace_topology X TX A) a' (fst (?ws!k)))"
+        proof (intro allI impI)
+          fix k assume hk: "k < length ?ws"
+          hence hk': "k < ?n" using hlen_ws by (by100 simp)
+          have "?ws!k = (\<lambda>(s,b). (\<phi> (\<iota>F s), b)) (scheme!k)"
+            using nth_map[OF hk'] by (by100 blast)
+          hence "?ws!k = (\<phi> (\<iota>F (fst (scheme!k))), snd (scheme!k))"
+            by (cases "scheme!k") (by100 simp)
+          hence "fst (?ws!k) = \<phi> (\<iota>F (fst (scheme!k)))" "snd (?ws!k) = snd (scheme!k)"
+            by (by100 simp)+
+          thus "{g. top1_loop_equiv_on A (subspace_topology X TX A) a' (edge_loop_fn k) g}
+              = (if snd (?ws!k) then fst (?ws!k) else
+                  top1_fundamental_group_invg A (subspace_topology X TX A) a' (fst (?ws!k)))"
+            using hsub_fn[rule_format, OF hk'] by (by100 simp)
+        qed
+        from hword_foldr[OF hloops hmatch]
+        show ?thesis using hlen_ws by (by100 simp)
+      qed
       show ?thesis using hrel_foldr hword_eq by (by100 simp)
     qed
     \<comment> \<open>Step R2: \<phi> is a hom, so \<phi>(word\_product in F) = word\_product in \<pi>_1(A,a').\<close>
