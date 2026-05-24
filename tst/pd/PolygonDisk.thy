@@ -4138,6 +4138,42 @@ next
         hIH[unfolded top1_is_loop_on_def]] by (by100 simp)
 qed
 
+text \<open>Helper: splitting a loop at 1/n gives f \<simeq> sub\_0 * g
+  where g(s) = f(1/n + s*(n-1)/n). Uses reparam\_path\_homotopy.\<close>
+lemma loop_split_first:
+  assumes htop: "is_topology_on X TX"
+      and hloop: "top1_is_loop_on X TX x0 f"
+      and hn: "n \<ge> 2"
+      and hvertex: "f (1 / real n) = x0"
+  defines "sub0 \<equiv> (\<lambda>s. f (s / real n))"
+      and "g \<equiv> (\<lambda>s. f (1 / real n + s * (real n - 1) / real n))"
+  shows "top1_loop_equiv_on X TX x0 f (top1_path_product sub0 g)"
+  sorry \<comment> \<open>Proof via reparam\_path\_homotopy:
+     Define \<psi>(s) = 2s/n for s \<le> 1/2, \<psi>(s) = 1/n + (2s-1)*(n-1)/n for s > 1/2.
+     Then sub0 * g = f \<circ> \<psi>, f = f \<circ> id, \<psi>(0) = 0, \<psi>(1) = 1, \<psi> continuous.
+     By reparam\_path\_homotopy: f \<circ> id \<simeq> f \<circ> \<psi>, so f \<simeq> sub0 * g.\<close>
+
+text \<open>Inductive helper: loop split at multiple vertices by induction on n.
+  Proves: f \<simeq> foldr [sub\_0,...,sub\_{n-1}] const, where sub\_k(s) = f((k+s)/n).\<close>
+lemma loop_split_inductive:
+  assumes htop: "is_topology_on X TX"
+      and hloop: "top1_is_loop_on X TX x0 f"
+      and hn: "n \<ge> 1"
+      and hvertex: "\<forall>k\<le>n. f (real k / real n) = x0"
+  shows "top1_loop_equiv_on X TX x0 f
+      (foldr top1_path_product
+        (map (\<lambda>k. \<lambda>s. f ((real k + s) / real n)) [0..<n])
+        (top1_constant_path x0))"
+  using assms
+proof (induction n arbitrary: f rule: nat_less_induct)
+  case (1 n)
+  show ?case sorry \<comment> \<open>
+     Base n=1: by right identity (Theorem 51.2).
+     Step n\<ge>2: by loop\_split\_first (split at 1/n), then IH on g with n-1.
+     Product congruence: sub\_0 * g \<simeq> sub\_0 * foldr [sub\_1,...] const.
+     Key: g\_sub k = sub (k+1), so IH result for g translates to the tail.\<close>
+qed
+
 lemma loop_split_at_vertices:
   assumes htop: "is_topology_on X TX"
       and hloop: "top1_is_loop_on X TX x0 f"
@@ -4267,11 +4303,15 @@ proof -
        By IH, g \<simeq> foldr [sub\_1,...,sub\_{n-1}] const.
        Product congruence: sub\_0 * g \<simeq> sub\_0 * foldr [...].
        = foldr [sub\_0,...,sub\_{n-1}] const.\<close>
-  show ?thesis sorry
-    \<comment> \<open>Reparametrization homotopy:
-       Needs induction outside the lemma (sub depends on n), or direct
-       reparametrization \<psi>: [0,1] \<rightarrow> [0,1] mapping binary to linear timing.
-       Both approaches are ~200 lines.\<close>
+  \<comment> \<open>Use the inductive helper: sub k = (\<lambda>s. f((k+s)/n)), so the map is correct.\<close>
+  have hsub_eq: "map sub [0..<n] = map (\<lambda>k. \<lambda>s. f ((real k + s) / real n)) [0..<n]"
+    unfolding sub_def by (by100 simp)
+  have hresult: "top1_loop_equiv_on X TX x0 f
+      (foldr top1_path_product
+        (map (\<lambda>k. \<lambda>s. f ((real k + s) / real n)) [0..<n])
+        (top1_constant_path x0))"
+    using loop_split_inductive[OF htop hloop hn hvertex] .
+  show ?thesis using hresult unfolding hsub_eq .
 qed
 
 end
