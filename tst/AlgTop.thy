@@ -7020,9 +7020,54 @@ proof -
     \<comment> \<open>j \<circ> r \<simeq> id on X. Homotopy: F(x,t) = H(x,1-t).
        F(x,0) = H(x,1) = r(x) = (j \<circ> r)(x). F(x,1) = H(x,0) = x.\<close>
     show "top1_homotopic_on X TX X TX ((\<lambda>x. x) \<circ> r) (\<lambda>y. y)"
-      sorry \<comment> \<open>j \<circ> r = r as function on X. Homotopy H reversed: F(x,t) = H(x,1-t).
-         Continuous (composition with t \<mapsto> 1-t, which is continuous).
-         F(x,0) = H(x,1) = r(x). F(x,1) = H(x,0) = x.\<close>
+      unfolding top1_homotopic_on_def
+    proof (intro conjI)
+      \<comment> \<open>j \<circ> r = r : X \<rightarrow> X (since j = id).\<close>
+      show "top1_continuous_map_on X TX X TX ((\<lambda>x. x) \<circ> r)"
+        sorry \<comment> \<open>r: X \<rightarrow> A continuous (from H), inclusion A \<hookrightarrow> X continuous. Compose.\<close>
+      show "top1_continuous_map_on X TX X TX (\<lambda>y. y)"
+        using top1_continuous_map_on_id[OF hTX] unfolding id_def by (by100 simp)
+      \<comment> \<open>Homotopy witness: F(x,t) = H(x, 1-t).\<close>
+      show "\<exists>F. top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) X TX F
+          \<and> (\<forall>x\<in>X. F (x, 0) = ((\<lambda>x. x) \<circ> r) x) \<and> (\<forall>x\<in>X. F (x, 1) = x)"
+      proof (rule exI[of _ "\<lambda>p. H (fst p, 1 - snd p)"])
+        have hflip_cont: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top)
+            (X \<times> I_set) (product_topology_on TX I_top) (\<lambda>p. (fst p, 1 - snd p))"
+          by (rule flip_t_continuous_product[OF hTX])
+        have hHflip_cont: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top)
+            X TX (\<lambda>p. H (fst p, 1 - snd p))"
+        proof -
+          have "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top)
+              X TX (H \<circ> (\<lambda>p. (fst p, 1 - snd p)))"
+            by (rule top1_continuous_map_on_comp[OF hflip_cont hH_cont])
+          moreover have "\<forall>p\<in>X \<times> I_set. (H \<circ> (\<lambda>p. (fst p, 1 - snd p))) p = H (fst p, 1 - snd p)"
+            unfolding comp_def by (by100 simp)
+          ultimately show ?thesis
+            by (rule top1_continuous_map_on_agree)
+        qed
+        have hHflip_0: "\<forall>x\<in>X. H (fst (x, (0::real)), 1 - snd (x, (0::real))) = ((\<lambda>x. x) \<circ> r) x"
+        proof (intro ballI)
+          fix x assume "x \<in> X"
+          have "H (fst (x, (0::real)), 1 - snd (x, (0::real))) = H (x, 1)"
+            by (by100 simp)
+          also have "\<dots> = r x" unfolding r_def by (by100 simp)
+          finally show "H (fst (x, (0::real)), 1 - snd (x, (0::real))) = ((\<lambda>x. x) \<circ> r) x"
+            by (by100 simp)
+        qed
+        have hHflip_1: "\<forall>x\<in>X. H (fst (x, (1::real)), 1 - snd (x, (1::real))) = x"
+        proof (intro ballI)
+          fix x assume "x \<in> X"
+          have "H (fst (x, (1::real)), 1 - snd (x, (1::real))) = H (x, 0)"
+            by (by100 simp)
+          also have "\<dots> = x" using hH_0 \<open>x \<in> X\<close> by (by100 blast)
+          finally show "H (fst (x, (1::real)), 1 - snd (x, (1::real))) = x" .
+        qed
+        show "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) X TX (\<lambda>p. H (fst p, 1 - snd p))
+            \<and> (\<forall>x\<in>X. H (fst (x, (0::real)), 1 - snd (x, (0::real))) = ((\<lambda>x. x) \<circ> r) x)
+            \<and> (\<forall>x\<in>X. H (fst (x, (1::real)), 1 - snd (x, (1::real))) = x)"
+          using hHflip_cont hHflip_0 hHflip_1 by (by100 blast)
+      qed
+    qed
   qed
   have hTA: "is_topology_on A ?TA"
     by (rule subspace_topology_is_topology_on[OF hTX hA_sub])
