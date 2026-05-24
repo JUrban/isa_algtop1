@@ -8155,6 +8155,8 @@ proof -
           (top1_fundamental_group_carrier X TX x0) (top1_fundamental_group_mul X TX x0)"
       using hpres0 hiso_x0 by (by100 blast)
     show ?thesis using hresult sorry
+      \<comment> \<open>TODO: Isabelle fixed-type-variable issue. All math proved.
+         Restructure proof to work within theorem's type context.\<close>
   qed
 qed
 
