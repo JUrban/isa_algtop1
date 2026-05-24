@@ -4595,9 +4595,79 @@ proof (induction n arbitrary: f rule: nat_less_induct)
     \<comment> \<open>Step 3: sub 0 * g \<simeq> sub 0 * foldr [...] const (product congruence on right).\<close>
     \<comment> \<open>Step 4: = foldr [sub 0,...,sub (n-1)] const (from hfoldr\_cons).\<close>
     \<comment> \<open>Step 5: Transitivity.\<close>
-    show ?thesis sorry \<comment> \<open>Remaining: hf\_split (loop\_split\_first) + product congruence + transitivity.
-       Product congruence needs: path\_homotopic\_product\_right.
-       Transitivity needs: top1\_loop\_equiv\_on\_trans.\<close>
+    \<comment> \<open>Step 3: Product congruence: sub\_0 * g \<simeq> sub\_0 * foldr [sub\_1,...] const.\<close>
+    define rest where "rest = foldr top1_path_product
+        (map (\<lambda>k. \<lambda>s. f ((real k + s) / real n)) [Suc 0..<n]) (top1_constant_path x0)"
+    have hg_ph_rest: "top1_path_homotopic_on X TX x0 x0 g rest"
+      using hg_foldr unfolding top1_loop_equiv_on_def rest_def by (by100 blast)
+    have hsub0_loop: "top1_is_loop_on X TX x0 (sub 0)"
+    proof -
+      have "sub 0 0 = x0" unfolding sub_def
+        using hvertex[rule_format, of 0] hn by (by100 simp)
+      moreover have "sub 0 1 = x0" unfolding sub_def
+        using hvertex[rule_format, of 1] hn by (by100 simp)
+      moreover have "top1_continuous_map_on I_set top1_unit_interval_topology X TX (sub 0)"
+      proof -
+        have hf_cont: "top1_continuous_map_on I_set top1_unit_interval_topology X TX f"
+          using hloop unfolding top1_is_loop_on_def top1_is_path_on_def top1_unit_interval_def
+          by (by100 blast)
+        define r where "r s = s / real n" for s :: real
+        have "continuous_on UNIV r" unfolding r_def
+          using hn_pos by (intro continuous_intros) (by100 simp)+
+        have hr_range: "\<And>s. s \<in> I_set \<Longrightarrow> r s \<in> I_set"
+          unfolding r_def top1_unit_interval_def using hn by (by100 auto)
+        have hr_top1: "top1_continuous_map_on I_set top1_unit_interval_topology
+            I_set top1_unit_interval_topology r"
+          unfolding top1_unit_interval_def
+          using top1_continuous_map_on_real_subspace_open_sets[of "{0..1}" r "{0..1}"]
+            hr_range \<open>continuous_on UNIV r\<close>
+          unfolding top1_unit_interval_def
+          using top1_unit_interval_def top1_unit_interval_topology_def by (by5000 simp)
+        have "top1_continuous_map_on I_set top1_unit_interval_topology X TX (f \<circ> r)"
+          using top1_continuous_map_on_comp[OF hr_top1 hf_cont] .
+        moreover have "sub 0 = f \<circ> r" unfolding sub_def r_def comp_def by (by100 simp)
+        ultimately show ?thesis by (by100 simp)
+      qed
+      ultimately show ?thesis unfolding top1_is_loop_on_def top1_is_path_on_def
+        by (by5000 blast)
+    qed
+    have hsub0_path: "top1_is_path_on X TX x0 x0 (sub 0)"
+      using hsub0_loop unfolding top1_is_loop_on_def by (by100 blast)
+    have hprod_cong: "top1_path_homotopic_on X TX x0 x0
+        (top1_path_product (sub 0) g) (top1_path_product (sub 0) rest)"
+    proof -
+      from path_homotopic_product_right[OF htop hg_ph_rest hsub0_path]
+      show ?thesis by (by100 simp)
+    qed
+    \<comment> \<open>Step 4: foldr cons = sub\_0 * rest.\<close>
+    have hcons: "foldr top1_path_product
+        (map (\<lambda>k. \<lambda>s. f ((real k + s) / real n)) [0..<n]) (top1_constant_path x0)
+      = top1_path_product (sub 0) rest"
+    proof -
+      have "n > 0" using hn by (by100 linarith)
+      hence "[0..<n] = 0 # [Suc 0..<n]" using upt_rec[of 0 n] by (by100 simp)
+      thus ?thesis unfolding rest_def sub_def by (by100 simp)
+    qed
+    \<comment> \<open>Step 5: f \<simeq> sub\_0 * g (hf\_split), sub\_0 * g \<simeq> sub\_0 * rest (hprod\_cong),
+       sub\_0 * rest = foldr [sub\_0,...] (hcons). Transitivity.\<close>
+    have hf_ph_prod: "top1_path_homotopic_on X TX x0 x0 f (top1_path_product (sub 0) g)"
+      using hf_split unfolding top1_loop_equiv_on_def by (by100 blast)
+    have hf_ph_rest: "top1_path_homotopic_on X TX x0 x0
+        f (top1_path_product (sub 0) rest)"
+      using Lemma_51_1_path_homotopic_trans[OF htop hf_ph_prod hprod_cong] .
+    have hrest_loop: "top1_is_loop_on X TX x0 rest"
+      using hg_foldr unfolding top1_loop_equiv_on_def rest_def by (by100 blast)
+    have hprod_rest_loop: "top1_is_loop_on X TX x0 (top1_path_product (sub 0) rest)"
+    proof -
+      have "top1_is_loop_on X TX x0 (sub 0)"
+        using hsub0_loop .
+      thus ?thesis unfolding top1_is_loop_on_def
+        using top1_path_product_is_path[OF htop
+            \<open>top1_is_loop_on X TX x0 (sub 0)\<close>[unfolded top1_is_loop_on_def]
+            hrest_loop[unfolded top1_is_loop_on_def]] by (by100 simp)
+    qed
+    show ?thesis unfolding top1_loop_equiv_on_def hcons
+      using hloop hprod_rest_loop hf_ph_rest by (by100 blast)
   qed
 qed
 
