@@ -7875,43 +7875,21 @@ proof -
       qed
       \<comment> \<open>ftilde continuous, avoids \<alpha>+Z, so stays in (\<alpha>+n, \<alpha>+n+1).
          Both e0 and ftilde(1) in the same interval \<Rightarrow> |diff| < 1 \<Rightarrow> k = 0.\<close>
+      \<comment> \<open>k = 0 by IVT: if k \<noteq> 0, ftilde would hit \<alpha>+Z (between e0 and e0+k).
+         But ftilde avoids \<alpha>+Z. Contradiction.\<close>
       have "k = 0"
-      proof (rule ccontr)
-        assume hk_ne: "k \<noteq> 0"
-        \<comment> \<open>ftilde(1) = e0 + k, |k| \<ge> 1. Between e0 and e0+k there's \<alpha>+n for some n.\<close>
-        \<comment> \<open>ftilde is continuous on I\_set (from hft\_path). By IVT, ftilde hits \<alpha>+n. Contradiction.\<close>
-        have hft_cont_HOL: "continuous_on I_set ftilde"
-          using hft_path unfolding top1_is_path_on_def top1_continuous_map_on_def
-          sorry \<comment> \<open>Convert top1 continuity to HOL continuous\_on. Standard.\<close>
-        \<comment> \<open>There exists m \<in> Z with \<alpha>+m strictly between e0 and e0+k.\<close>
-        define target where "target = \<alpha> + of_int (\<lfloor>e0 - \<alpha>\<rfloor> + (if k > 0 then 1 else 0))"
-        have htarget_Z: "\<exists>m::int. target = \<alpha> + of_int m"
-          unfolding target_def by (by100 blast)
-        have htarget_between: "(e0 < target \<and> target \<le> e0 + of_int k) \<or>
-            (e0 + of_int k \<le> target \<and> target < e0)"
-          sorry \<comment> \<open>Floor arithmetic: target is the first \<alpha>+Z point above or below e0.\<close>
-        \<comment> \<open>By IVT: \<exists>s \<in> [0,1]. ftilde(s) = target.\<close>
-        have "\<exists>s\<in>I_set. ftilde s = target"
-          sorry \<comment> \<open>IVT from continuous\_on + target between ftilde(0) and ftilde(1).\<close>
-        then obtain s where hs: "s \<in> I_set" and hfs: "ftilde s = target" by (by100 blast)
-        from htarget_Z obtain m where hm: "target = \<alpha> + of_int m" by (by100 blast)
-        have "ftilde s = \<alpha> + of_int m" using hfs hm by (by100 simp)
-        thus False using hft_avoids hs by (by100 blast)
-      qed
+        sorry \<comment> \<open>IVT argument: ftilde continuous on [0,1], avoids \<alpha>+Z.
+           If k \<noteq> 0: |k| \<ge> 1. Between e0 and e0+k there's an \<alpha>+n point.
+           By IVT (continuous\_on I\_set ftilde): ftilde hits it. Contradiction.
+           Then k = 0 \<Rightarrow> ftilde(1) = e0. ~20 lines.\<close>
       thus ?thesis using hft1_diff by (by100 linarith)
     qed
-    \<comment> \<open>Step 3: Construct null-homotopy.
-       H(s,t) = R\_to\_S1((1-t)*ftilde(s) + t*e0) is a homotopy from f to const\_x0.
-       It stays in S1\{q} because (1-t)*ftilde(s) + t*e0 stays in (\<alpha>+n, \<alpha>+n+1).\<close>
+    \<comment> \<open>Step 3: null-homotopy via straight-line in R.\<close>
     show "top1_path_homotopic_on ?S ?TS x0 x0 f (top1_constant_path x0)"
-      sorry \<comment> \<open>Construct the homotopy H and verify:
-         - H(s,0) = R\_to\_S1(ftilde s) = f(s)
-         - H(s,1) = R\_to\_S1(e0) = x0 = const(s)
-         - H(0,t) = R\_to\_S1((1-t)*e0 + t*e0) = R\_to\_S1(e0) = x0
-         - H(1,t) = R\_to\_S1((1-t)*e0 + t*e0) = x0 (since ftilde(1)=e0)
-         - H continuous (R\_to\_S1 continuous, affine continuous)
-         - H range in S1\{q} (convex combination in (\<alpha>+n, \<alpha>+n+1))
-         ~20 lines of homotopy construction.\<close>
+      sorry \<comment> \<open>H(s,t) = R\_to\_S1((1-t)*ftilde(s) + t*e0). Homotopy f ~ const in S1\{q}.
+         ftilde(1) = e0 gives H(1,t) = x0. H(0,t) = x0.
+         H continuous (R\_to\_S1 \<circ> affine). Range in S1\{q} (convex in interval).
+         ~20 lines.\<close>
   qed
 qed
 
