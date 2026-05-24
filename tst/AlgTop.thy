@@ -7023,7 +7023,8 @@ proof -
              sin (2 * pi * (real i + t) / real (length scheme)))
         = qC ((1-t) * vxC i + t * vxC (Suc i mod length scheme),
              (1-t) * vyC i + t * vyC (Suc i mod length scheme))"
-    sorry \<comment> \<open>Decomposition of 14-conjunct scheme\_quotient\_CW\_data result. All facts present.\<close>
+    by - (erule exE, erule exE, erule exE, erule exE, erule exE, erule exE,
+          (erule conjE)+, rule that, assumption+)
   \<comment> \<open>Step 2 (book): "A is a wedge of k circles." (Using the SAME A from CW data.)\<close>
   have hA_wd: "top1_is_wedge_of_circles_on A (subspace_topology X TX A) (fst ` set scheme) a"
   proof -
