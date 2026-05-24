@@ -6920,6 +6920,47 @@ lemma map_map_pair_compose:
 lemma exI4: "P a b c d \<Longrightarrow> \<exists>x y z w. P x y z w"
   by (by100 blast)
 
+text \<open>Helper: foldr of pointwise-equal function lists gives pointwise-equal results.\<close>
+lemma foldr_path_product_pointwise_eq:
+  fixes xs ys :: "(real \<Rightarrow> 'a) list" and base :: "real \<Rightarrow> 'a"
+  assumes hlen: "length xs = length ys"
+    and hpw: "\<forall>k<length xs. \<forall>t\<in>I_set. (xs!k) t = (ys!k) t"
+  shows "\<forall>t\<in>I_set. foldr top1_path_product xs base t = foldr top1_path_product ys base t"
+  using assms
+proof (induction xs arbitrary: ys)
+  case Nil
+  from Nil(1) have "ys = []" by (by100 simp)
+  thus ?case by (by100 simp)
+next
+  case (Cons f rest)
+  then obtain g rest' where hys: "ys = g # rest'" by (cases ys) (by100 simp)+
+  have hlen': "length rest = length rest'" using Cons(2) hys by (by100 simp)
+  have hpw_rest: "\<forall>k<length rest. \<forall>t\<in>I_set. (rest!k) t = (rest'!k) t"
+    using Cons(3) hys by (by100 force)
+  have hpw_head: "\<forall>t\<in>I_set. f t = g t"
+    using Cons(3) hys by (by100 force)
+  have hIH: "\<forall>t\<in>I_set. foldr top1_path_product rest base t
+      = foldr top1_path_product rest' base t"
+    using Cons(1)[OF hlen' hpw_rest] .
+  show ?case unfolding hys
+  proof (intro ballI)
+    fix t assume ht: "t \<in> I_set"
+    show "foldr top1_path_product (f # rest) base t
+        = foldr top1_path_product (g # rest') base t"
+    proof (cases "t \<le> 1/2")
+      case True
+      have "2*t \<in> I_set" using ht True unfolding top1_unit_interval_def by (by100 auto)
+      thus ?thesis unfolding top1_path_product_def using True hpw_head by (by100 simp)
+    next
+      case False
+      have h2t1: "2*t-1 \<in> I_set" using ht False unfolding top1_unit_interval_def by (by100 auto)
+      have "foldr top1_path_product rest base (2*t-1) = foldr top1_path_product rest' base (2*t-1)"
+        using hIH h2t1 by (by100 blast)
+      thus ?thesis unfolding top1_path_product_def using False by (by100 simp)
+    qed
+  qed
+qed
+
 text \<open>Helper: word\_product in \<pi>_1 = class of foldr path product.
   By induction: each \<pi>_1 multiplication step corresponds to a path\_product step.\<close>
 lemma word_product_foldr_class:
@@ -8482,7 +8523,16 @@ proof -
                I\_set-pointwise equality (2s, 2s-1 \<in> I\_set for s \<in> I\_set).\<close>
             show "foldr top1_path_product (map sub [0..<?n]) (top1_constant_path a') t
                 = foldr top1_path_product (map edge_loop_fn [0..<?n]) (top1_constant_path a') t"
-              sorry \<comment> \<open>Induction: each path\_product step uses values in I\_set.\<close>
+            proof -
+              have "length (map sub [0..<?n]) = length (map edge_loop_fn [0..<?n])" by (by100 simp)
+              moreover have "\<forall>k<length (map sub [0..<?n]). \<forall>t\<in>I_set.
+                  (map sub [0..<?n] ! k) t = (map edge_loop_fn [0..<?n] ! k) t"
+                using hsub_edge by (by100 force)
+              ultimately have "\<forall>t\<in>I_set. foldr top1_path_product (map sub [0..<?n]) (top1_constant_path a') t
+                  = foldr top1_path_product (map edge_loop_fn [0..<?n]) (top1_constant_path a') t"
+                using foldr_path_product_pointwise_eq by (by100 blast)
+              thus ?thesis using ht by (by100 blast)
+            qed
           qed
           thus ?thesis using hloop_class_eq_pointwise by (by100 blast)
         qed
