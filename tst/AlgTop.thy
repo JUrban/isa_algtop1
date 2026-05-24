@@ -7772,10 +7772,10 @@ text \<open>Helper: S1 minus a point is simply connected (homeomorphic to R).\<c
 lemma S1_minus_point_simply_connected:
   assumes hq: "q \<in> top1_S1"
   shows "top1_simply_connected_on (top1_S1 - {q}) (subspace_topology top1_S1 top1_S1_topology (top1_S1 - {q}))"
-  sorry \<comment> \<open>S1\{q} simply connected. Path-connected: PROVED (S1_minus_point_path_connected).
-     Trivial pi1: lift loop to R via covering (Lemma_54_1 + Theorem_53_1),
-     show winding number = 0 (lift avoids alpha+Z, IVT/connected argument),
-     project straight-line null-homotopy from R. ~40 lines remaining.\<close>
+  sorry \<comment> \<open>Proved internally in Theorem\_71\_1 (AlgTopCached.thy:33225) as hW\_sc
+     but not exported. Full proof ~200 lines using IVT'/IVT2', sin\_cos\_eq\_iff,
+     top1\_slh\_ext, continuous\_on\_open\_invariant.
+     NOT on the 75.3 critical path (dead code for the chain).\<close>
 
 text \<open>Helper: homeomorphic image of S1 minus point is simply connected.\<close>
 lemma circle_minus_point_simply_connected:
