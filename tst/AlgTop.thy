@@ -9113,10 +9113,14 @@ lemma finite_wedge_pi1_free_with_chosen_loops:
               (top1_fundamental_group_mul V (subspace_topology X TX V) p) \<Phi>2
           \<and> (\<forall>j\<in>{1..<n}. \<Phi>2 (\<eta>2 j) = {l. top1_loop_equiv_on V (subspace_topology X TX V) p
               (\<lambda>t. g j (cos (2*pi*t), sin (2*pi*t))) l})"
-          sorry \<comment> \<open>From hX'\_free:
-             1. Re-index {..<n-1} \<rightarrow> {1..<n}: \<eta>'(j) = \<eta>(j-1), C'(j-1) = C(j), g'(j-1) = g(j).
-             2. By hV\_retract + Theorem\_58\_3: \<pi>_1(V) \<cong> \<pi>_1(X') via inclusion.
-             3. Generator preserved by subspace\_inclusion\_induced\_class.\<close>
+          sorry \<comment> \<open>Same pattern as hU\_free:
+             1. hX'\_free: G2, \<eta>2', \<Phi>2' iso to \<pi>\_1(X') with gen corr for g'(j) loops.
+             2. Theorem\_58\_3\_explicit[OF hV\_retract ...]: incl\_V is explicit iso X' \<hookrightarrow> V.
+             3. Compose \<Phi>2 = incl\_V \<circ> \<Phi>2' via group\_iso\_on\_compose.
+             4. Gen: incl\_V sends [g'(j)\<circ>std\_loop]\_{X'} to [g'(j)\<circ>std\_loop]\_V
+                by subspace\_inclusion\_induced\_class.
+             5. Re-index: g'(j) = g(j+1), so for k \<in> {1..<n}: g(k) = g'(k-1).
+                Define \<eta>2(k) = \<eta>2'(k-1). Free basis re-indexed from {..<n-1} to {1..<n}.\<close>
         \<comment> \<open>Step 10: Compose SvK + Theorem\_69\_2 + iso tracking.
            \<pi>_1(X) \<cong> FP(\<pi>_1(U), \<pi>_1(V)) \<cong> FP(Z, F_{n-1}) \<cong> F_n.\<close>
         \<comment> \<open>Munkres: "Our theorem now follows from Theorem 69.2."
