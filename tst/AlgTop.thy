@@ -6993,9 +6993,76 @@ proof -
        R\_to\_S1(angle(y)) = h^{-1}(y).\<close>
     have hangle_prop: "\<forall>y\<in>Y - {q}. \<theta>q < angle y \<and> angle y < \<theta>q + 1 \<and>
         top1_R_to_S1 (angle y) = ?hinv y"
-      sorry \<comment> \<open>y \<in> Y - {q} \<Rightarrow> h^{-1}(y) \<in> S1 - {q0} \<Rightarrow> \<exists>! \<theta> \<in> (\<theta>q, \<theta>q+1). R\_to\_S1(\<theta>) = h^{-1}(y).
-         THE picks the unique one. Existence from S1\_point\_to\_angle + floor shift.
-         Uniqueness from R\_to\_S1 injective on intervals of length < 1.\<close>
+    proof (intro ballI conjI)
+      fix y assume hy: "y \<in> Y - {q}"
+      hence hy_Y: "y \<in> Y" "y \<noteq> q" by (by100 blast)+
+      have hy_img: "y \<in> h ` top1_S1" using hbij hy_Y unfolding bij_betw_def by (by100 blast)
+      have hinvy_S1: "?hinv y \<in> top1_S1" by (rule inv_into_into[OF hy_img])
+      have hinvy_ne_q0: "?hinv y \<noteq> q0"
+      proof
+        assume "?hinv y = q0"
+        hence "h (?hinv y) = h q0" by (by100 simp)
+        hence "y = q" using f_inv_into_f[OF hy_img] hq0_map by (by100 simp)
+        thus False using hy_Y by (by100 simp)
+      qed
+      \<comment> \<open>Find \<theta> \<in> (\<theta>q, \<theta>q+1) with R\_to\_S1(\<theta>) = h^{-1}(y). Same as \<theta>r construction.\<close>
+      from S1_point_to_angle[OF hinvy_S1] obtain \<theta>' where h\<theta>': "top1_R_to_S1 \<theta>' = ?hinv y" by (by100 blast)
+      define k' where "k' = \<lfloor>\<theta>' - \<theta>q\<rfloor>"
+      define \<theta>y where "\<theta>y = \<theta>' - of_int k'"
+      have h\<theta>y_map: "top1_R_to_S1 \<theta>y = ?hinv y"
+      proof -
+        have "\<theta>y = \<theta>' + of_int (- k')" unfolding \<theta>y_def by (by100 simp)
+        hence "top1_R_to_S1 \<theta>y = top1_R_to_S1 (\<theta>' + of_int (- k'))" by (by100 simp)
+        also have "\<dots> = top1_R_to_S1 \<theta>'" by (rule top1_R_to_S1_int_shift)
+        finally show ?thesis using h\<theta>' by (by100 simp)
+      qed
+      have h\<theta>y_lb: "\<theta>q \<le> \<theta>y" unfolding \<theta>y_def k'_def using floor_le_iff by (by100 linarith)
+      have h\<theta>y_ub: "\<theta>y < \<theta>q + 1" unfolding \<theta>y_def k'_def using floor_less_iff by (by100 linarith)
+      have h\<theta>y_ne: "\<theta>y \<noteq> \<theta>q"
+      proof
+        assume "\<theta>y = \<theta>q"
+        hence "top1_R_to_S1 \<theta>y = top1_R_to_S1 \<theta>q" by (by100 simp)
+        hence "?hinv y = q0" using h\<theta>y_map h\<theta>q by (by100 simp)
+        thus False using hinvy_ne_q0 by (by100 simp)
+      qed
+      hence h\<theta>y_strict: "\<theta>q < \<theta>y" using h\<theta>y_lb by (by100 linarith)
+      \<comment> \<open>Uniqueness: if \<theta>1, \<theta>2 \<in> (\<theta>q, \<theta>q+1) both map to same point, then \<theta>1 = \<theta>2.\<close>
+      have huniq: "\<And>\<theta>1. \<theta>q < \<theta>1 \<Longrightarrow> \<theta>1 < \<theta>q + 1 \<Longrightarrow> top1_R_to_S1 \<theta>1 = ?hinv y \<Longrightarrow> \<theta>1 = \<theta>y"
+      proof -
+        fix \<theta>1 assume h1: "\<theta>q < \<theta>1" "\<theta>1 < \<theta>q + 1" "top1_R_to_S1 \<theta>1 = ?hinv y"
+        hence "top1_R_to_S1 \<theta>1 = top1_R_to_S1 \<theta>y" using h\<theta>y_map by (by100 simp)
+        hence "(cos (2*pi*\<theta>1), sin (2*pi*\<theta>1)) = (cos (2*pi*\<theta>y), sin (2*pi*\<theta>y))"
+          unfolding top1_R_to_S1_def by (by100 simp)
+        hence "sin (2*pi*\<theta>1) = sin (2*pi*\<theta>y) \<and> cos (2*pi*\<theta>1) = cos (2*pi*\<theta>y)"
+          by (by100 simp)
+        hence "\<exists>m::int. 2*pi*\<theta>1 = 2*pi*\<theta>y + 2*pi*of_int m"
+          using iffD1[OF sin_cos_eq_iff] by (by100 blast)
+        then obtain m :: int where hm: "2*pi*\<theta>1 = 2*pi*\<theta>y + 2*pi*of_int m" by (by100 blast)
+        have "\<theta>1 - \<theta>y = of_int m"
+        proof -
+          from hm have "2*pi*\<theta>1 - 2*pi*\<theta>y = 2*pi*of_int m" by (by100 linarith)
+          hence "2*pi*(\<theta>1 - \<theta>y) = 2*pi*of_int m"
+            using right_diff_distrib[of "2*pi" \<theta>1 \<theta>y] by (by100 linarith)
+          moreover have "2*pi \<noteq> (0::real)" using pi_neq_zero by (by100 simp)
+          ultimately show ?thesis by (by100 simp)
+        qed
+        moreover have "\<bar>\<theta>1 - \<theta>y\<bar> < 1" using h1 h\<theta>y_strict h\<theta>y_ub by (by100 linarith)
+        ultimately have "m = 0" by (by100 linarith)
+        thus "\<theta>1 = \<theta>y" using \<open>\<theta>1 - \<theta>y = of_int m\<close> by (by100 simp)
+      qed
+      \<comment> \<open>THE picks \<theta>y since it's the unique element satisfying the predicate.\<close>
+      have hangle_eq: "angle y = \<theta>y"
+        unfolding angle_def
+      proof (rule the_equality)
+        show "\<theta>q < \<theta>y \<and> \<theta>y < \<theta>q + 1 \<and> top1_R_to_S1 \<theta>y = ?hinv y"
+          using h\<theta>y_strict h\<theta>y_ub h\<theta>y_map by (by100 blast)
+        fix \<theta>1 assume "\<theta>q < \<theta>1 \<and> \<theta>1 < \<theta>q + 1 \<and> top1_R_to_S1 \<theta>1 = ?hinv y"
+        thus "\<theta>1 = \<theta>y" using huniq by (by100 blast)
+      qed
+      show "\<theta>q < angle y" using hangle_eq h\<theta>y_strict by (by100 simp)
+      show "angle y < \<theta>q + 1" using hangle_eq h\<theta>y_ub by (by100 simp)
+      show "top1_R_to_S1 (angle y) = ?hinv y" using hangle_eq h\<theta>y_map by (by100 simp)
+    qed
     \<comment> \<open>Boundary conditions for F.\<close>
     have hF_id: "\<forall>y\<in>Y - {q}. F (y, 0) = y"
     proof (intro ballI)
