@@ -6985,6 +6985,7 @@ proof -
           (subspace_topology top1_B2 top1_B2_topology (top1_B2 - top1_S1))
           (X - A) (subspace_topology X TX (X - A)) h"
       and hh_S1: "h ` top1_S1 \<subseteq> A"
+      and hh_S1': "\<forall>z\<in>top1_S1. h z \<in> A"
       and hA_eq: "A = qC ` (\<Union>i<length scheme. {((1-t) * vxC i + t * vxC (Suc i mod length scheme),
                    (1-t) * vyC i + t * vyC (Suc i mod length scheme)) | t. t \<in> I_set})"
       and ha_eq: "a = qC (vxC 0, vyC 0)"
@@ -7010,7 +7011,12 @@ proof -
           top1_continuous_map_on I_set top1_unit_interval_topology A (subspace_topology X TX A)
             (\<lambda>t. qC ((1-t) * vxC i + t * vxC (Suc i mod length scheme),
                       (1-t) * vyC i + t * vyC (Suc i mod length scheme)))"
-    by (elim conjE exE) (rule that, assumption+)
+      and hh_edge_arc: "\<forall>i<length scheme. \<forall>t\<in>I_set.
+          h (cos (2 * pi * (real i + t) / real (length scheme)),
+             sin (2 * pi * (real i + t) / real (length scheme)))
+        = qC ((1-t) * vxC i + t * vxC (Suc i mod length scheme),
+             (1-t) * vyC i + t * vyC (Suc i mod length scheme))"
+    sorry \<comment> \<open>Decomposition of 14-conjunct scheme\_quotient\_CW\_data result. All facts present.\<close>
   \<comment> \<open>Step 2 (book): "A is a wedge of k circles." (Using the SAME A from CW data.)\<close>
   have hA_wd: "top1_is_wedge_of_circles_on A (subspace_topology X TX A) (fst ` set scheme) a"
   proof -
