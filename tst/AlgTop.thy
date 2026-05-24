@@ -6988,8 +6988,49 @@ proof (rule top1_simply_connected_from_one_point[OF hTX hpc hp])
     define G where "G = (\<lambda>(s, t). H (f s, t))"
     \<comment> \<open>G is continuous: composition of H with (f \<times> id).\<close>
     have hG_cont: "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX G"
-      sorry \<comment> \<open>G = H \<circ> (f \<times> id). f continuous (loop), id continuous, product continuous,
-         H continuous. Composition continuous. Standard.\<close>
+    proof -
+      \<comment> \<open>G = H \<circ> (\<lambda>(s,t). (f s, t)). Show (\<lambda>(s,t). (f s, t)) : I\<times>I \<rightarrow> X\<times>I continuous,
+         then compose with H.\<close>
+      have hTI: "is_topology_on I_set I_top"
+        by (rule top1_unit_interval_topology_is_topology_on)
+      have hf_cont: "top1_continuous_map_on I_set I_top X TX f"
+        using hloop unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+      \<comment> \<open>The map (s,t) \<mapsto> (f(s), t) : I\<times>I \<rightarrow> X\<times>I is continuous.
+         By Theorem\_18\_4: continuous into product iff each projection is.\<close>
+      define fid where "fid = (\<lambda>(s::real, t::real). (f s, t))"
+      have hfid_cont: "top1_continuous_map_on (I_set \<times> I_set) (product_topology_on I_top I_top)
+          (X \<times> I_set) (product_topology_on TX I_top) fid"
+      proof -
+        have "top1_continuous_map_on (I_set \<times> I_set) (product_topology_on I_top I_top)
+            (X \<times> I_set) (product_topology_on TX I_top) fid \<longleftrightarrow>
+          (top1_continuous_map_on (I_set \<times> I_set) (product_topology_on I_top I_top) X TX (pi1 \<circ> fid) \<and>
+           top1_continuous_map_on (I_set \<times> I_set) (product_topology_on I_top I_top) I_set I_top (pi2 \<circ> fid))"
+          by (rule Theorem_18_4[OF product_topology_on_is_topology_on[OF hTI hTI] hTX hTI])
+        moreover have "pi1 \<circ> fid = f \<circ> pi1"
+          unfolding pi1_def fid_def comp_def by (by100 auto)
+        moreover have "pi2 \<circ> fid = pi2"
+          unfolding pi2_def fid_def comp_def by (by100 auto)
+        moreover have "top1_continuous_map_on (I_set \<times> I_set) (product_topology_on I_top I_top) X TX (f \<circ> pi1)"
+          by (rule top1_continuous_map_on_comp[OF top1_continuous_pi1[OF hTI hTI] hf_cont])
+        moreover have "top1_continuous_map_on (I_set \<times> I_set) (product_topology_on I_top I_top) I_set I_top pi2"
+          by (rule top1_continuous_pi2[OF hTI hTI])
+        ultimately show ?thesis by (by100 simp)
+      qed
+      \<comment> \<open>G = H \<circ> fid.\<close>
+      \<comment> \<open>G = H \<circ> fid pointwise on I\<times>I. Show (H \<circ> fid) continuous then transfer.\<close>
+      have "top1_continuous_map_on (I_set \<times> I_set) (product_topology_on I_top I_top)
+          X TX (H \<circ> fid)"
+        by (rule top1_continuous_map_on_comp[OF hfid_cont hH_cont])
+      moreover have "\<forall>p\<in>I_set \<times> I_set. (H \<circ> fid) p = G p"
+      proof (intro ballI)
+        fix p assume hp: "p \<in> I_set \<times> I_set"
+        then obtain s t where hst: "p = (s, t)" "s \<in> I_set" "t \<in> I_set" by (by100 blast)
+        show "(H \<circ> fid) p = G p"
+          unfolding comp_def fid_def G_def using hst by (by100 simp)
+      qed
+      ultimately show ?thesis unfolding II_topology_def
+        by (rule top1_continuous_map_on_agree)
+    qed
     \<comment> \<open>Boundary conditions.\<close>
     have hf_range: "\<forall>s\<in>I_set. f s \<in> X"
       using hloop unfolding top1_is_loop_on_def top1_is_path_on_def top1_continuous_map_on_def
