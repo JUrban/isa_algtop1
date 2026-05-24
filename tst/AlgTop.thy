@@ -6938,10 +6938,33 @@ lemma finite_wedge_pi1_free_with_generators:
         (top1_fundamental_group_carrier X TX p)
         (top1_fundamental_group_mul X TX p) \<Phi>
     \<and> bij_betw \<Phi> G (top1_fundamental_group_carrier X TX p)"
-  sorry \<comment> \<open>The full proof requires SvK induction (Corollary\_70\_3 + Theorem\_69\_2)
-     on |J|, tracking generator images through the free product at each step.
-     This is ~200-400 lines. The key tool is Theorem\_69\_2 which gives the
-     generator mapping explicitly when combining free groups via free product.\<close>
+proof -
+  \<comment> \<open>The existing Theorem\_71\_1 already proves freeness + abstract iso.
+     We just need to extract bijectivity from the iso.\<close>
+  from Theorem_71_3_wedge_of_circles_general[OF hwedge]
+  obtain G :: "int set" and mul e invg and \<eta> :: "'i \<Rightarrow> int" where
+    hfree: "top1_is_free_group_full_on G mul e invg \<eta> J" and
+    hiso: "top1_groups_isomorphic_on G mul
+        (top1_fundamental_group_carrier X TX p)
+        (top1_fundamental_group_mul X TX p)"
+    by (by100 blast)
+  \<comment> \<open>Extract the isomorphism function \<Phi>.\<close>
+  from hiso[unfolded top1_groups_isomorphic_on_def top1_group_iso_on_def]
+  obtain \<Phi> where
+    h\<Phi>_hom: "top1_group_hom_on G mul
+        (top1_fundamental_group_carrier X TX p)
+        (top1_fundamental_group_mul X TX p) \<Phi>" and
+    h\<Phi>_bij: "bij_betw \<Phi> G (top1_fundamental_group_carrier X TX p)"
+    by (by100 blast)
+  have h\<Phi>_iso: "top1_group_iso_on G mul
+      (top1_fundamental_group_carrier X TX p)
+      (top1_fundamental_group_mul X TX p) \<Phi>"
+    unfolding top1_group_iso_on_def using h\<Phi>_hom h\<Phi>_bij by (by100 blast)
+  show ?thesis
+    apply (rule exI[of _ G], rule exI[of _ mul], rule exI[of _ e],
+           rule exI[of _ invg], rule exI[of _ \<eta>], rule exI[of _ \<Phi>])
+    using hfree h\<Phi>_iso h\<Phi>_bij by (by100 blast)
+qed
 
 text \<open>Helper: foldr of pointwise-equal function lists gives pointwise-equal results.\<close>
 lemma foldr_path_product_pointwise_eq:
