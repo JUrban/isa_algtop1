@@ -4167,11 +4167,74 @@ lemma loop_split_inductive:
   using assms
 proof (induction n arbitrary: f rule: nat_less_induct)
   case (1 n)
-  show ?case sorry \<comment> \<open>
-     Base n=1: by right identity (Theorem 51.2).
-     Step n\<ge>2: by loop\_split\_first (split at 1/n), then IH on g with n-1.
-     Product congruence: sub\_0 * g \<simeq> sub\_0 * foldr [sub\_1,...] const.
-     Key: g\_sub k = sub (k+1), so IH result for g translates to the tail.\<close>
+  hence htop: "is_topology_on X TX" and hloop: "top1_is_loop_on X TX x0 f"
+    and hn: "n \<ge> 1" and hvertex: "\<forall>k\<le>n. f (real k / real n) = x0"
+    by (by100 blast)+
+  note hIH = 1(1)
+  define sub where "sub k s = f ((real k + s) / real n)" for k :: nat and s :: real
+  show ?case
+  proof (cases "n = 1")
+    case True
+    \<comment> \<open>Base: sub 0 = f, foldr [sub 0] const = f * const \<simeq> f.\<close>
+    have "sub 0 = f" unfolding sub_def using True by (by100 simp)
+    hence hfoldr_1: "foldr top1_path_product
+        (map (\<lambda>k. \<lambda>s. f ((real k + s) / real n)) [0..<n]) (top1_constant_path x0)
+      = top1_path_product f (top1_constant_path x0)"
+      using True unfolding sub_def by (by100 simp)
+    have hf_path: "top1_is_path_on X TX x0 x0 f"
+      using hloop unfolding top1_is_loop_on_def by (by100 blast)
+    have hident: "top1_path_homotopic_on X TX x0 x0
+        (top1_path_product f (top1_constant_path x0)) f"
+      using Theorem_51_2_right_identity[OF htop hf_path] .
+    have hident_sym: "top1_path_homotopic_on X TX x0 x0
+        f (top1_path_product f (top1_constant_path x0))"
+      using Lemma_51_1_path_homotopic_sym[OF hident] .
+    have hprod_loop_1: "top1_is_loop_on X TX x0
+        (top1_path_product f (top1_constant_path x0))"
+    proof -
+      have hx0_X: "x0 \<in> X"
+      proof -
+        have "0 \<in> I_set" unfolding top1_unit_interval_def by (by100 auto)
+        hence "f 0 \<in> X"
+          using hloop unfolding top1_is_loop_on_def top1_is_path_on_def
+            top1_continuous_map_on_def by (by100 blast)
+        moreover have "f 0 = x0"
+          using hloop unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+        ultimately show ?thesis by (by100 simp)
+      qed
+      have hconst: "top1_is_loop_on X TX x0 (top1_constant_path x0)"
+        using top1_constant_path_is_loop[OF htop hx0_X] .
+      show ?thesis unfolding top1_is_loop_on_def
+        using top1_path_product_is_path[OF htop
+            hloop[unfolded top1_is_loop_on_def]
+            hconst[unfolded top1_is_loop_on_def]] by (by100 simp)
+    qed
+    show ?thesis unfolding top1_loop_equiv_on_def
+      using hloop hprod_loop_1 hident_sym hfoldr_1 by (by5000 simp)
+  next
+    case False
+    hence hn2: "n \<ge> 2" using hn by (by100 linarith)
+    \<comment> \<open>Step: split f at 1/n, apply IH to g with n-1.\<close>
+    define g where "g s = f (1 / real n + s * (real n - 1) / real n)" for s
+    \<comment> \<open>f \<simeq> sub 0 * g (from loop\_split\_first).\<close>
+    have hf_split: "top1_loop_equiv_on X TX x0 f (top1_path_product (sub 0) g)"
+      sorry \<comment> \<open>From loop\_split\_first.\<close>
+    \<comment> \<open>g is a loop satisfying IH hypotheses with n-1.\<close>
+    have hg_loop: "top1_is_loop_on X TX x0 g" sorry
+    have hg_vertex: "\<forall>k\<le>n-1. g (real k / real (n-1)) = x0" sorry
+    \<comment> \<open>Apply IH: g \<simeq> foldr [g\_sub 0,...,g\_sub (n-2)] const.\<close>
+    have hIH_g: "top1_loop_equiv_on X TX x0 g
+        (foldr top1_path_product
+          (map (\<lambda>k. \<lambda>s. g ((real k + s) / real (n-1))) [0..<n-1])
+          (top1_constant_path x0))"
+      sorry \<comment> \<open>From IH with m = n-1.\<close>
+    \<comment> \<open>Key: g\_sub k = sub (k+1).\<close>
+    have hg_sub_eq: "map (\<lambda>k. \<lambda>s. g ((real k + s) / real (n-1))) [0..<n-1]
+        = map (\<lambda>k. \<lambda>s. f ((real k + s) / real n)) [Suc 0..<n]"
+      sorry \<comment> \<open>g((k+s)/(n-1)) = f(1/n + (k+s)/(n-1) * (n-1)/n) = f((k+1+s)/n).\<close>
+    \<comment> \<open>Combine: f \<simeq> sub\_0 * g \<simeq> sub\_0 * foldr [sub\_1,...] const = foldr [sub\_0,...] const.\<close>
+    show ?thesis sorry \<comment> \<open>Product congruence + foldr cons decomposition.\<close>
+  qed
 qed
 
 lemma loop_split_at_vertices:
