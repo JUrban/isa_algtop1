@@ -8397,9 +8397,61 @@ lemma finite_wedge_pi1_free_with_chosen_loops:
               (top1_fundamental_group_mul (C 0) (subspace_topology X TX (C 0)) p) \<Phi>1
           \<and> (\<forall>j<(1::nat). \<Phi>1 (\<eta>1 j) = {l. top1_loop_equiv_on (C 0) (subspace_topology X TX (C 0)) p
               (\<lambda>t. g 0 (cos (2*pi*t), sin (2*pi*t))) l})"
-          sorry \<comment> \<open>Apply less.IH with n'=1 < n to (C 0, subspace X TX (C 0), p, \<lambda>\_. C 0, g).
-             Need: is\_topology\_on\_strict, Hausdorff, p \<in> C 0, cover = C 0, disjoint (trivial),
-             homeomorphism g(0), basepoint g(0)(1,0)=p, coherent (trivial for 1 circle).\<close>
+        proof -
+          \<comment> \<open>Apply less.IH with n'=1 to C(0).\<close>
+          let ?TX0 = "subspace_topology X TX (C 0)"
+          let ?C0 = "\<lambda>_::nat. C 0"
+          let ?g0 = "\<lambda>_::nat. g 0"
+          have h1_lt: "(1::nat) < n" using hn2 by (by100 linarith)
+          \<comment> \<open>Verify the 9 hypotheses for C(0) as a 1-circle wedge.\<close>
+          have hstrict0: "is_topology_on_strict (C 0) ?TX0"
+            using subspace_topology_is_strict[OF less.prems(1)]
+                  less.prems(4) hn_pos by (by100 force)
+          have hhaus0: "is_hausdorff_on (C 0) ?TX0"
+            using conjunct2[OF conjunct2[OF Theorem_17_11]] less.prems(2) less.prems(4) hn_pos
+            by (by100 blast)
+          have hp0: "p \<in> C 0" using less.prems(4) hn_pos by (by100 blast)
+          have hC_sub0: "\<forall>j<(1::nat). ?C0 j \<subseteq> C 0 \<and> p \<in> ?C0 j"
+            using hp0 by (by100 simp)
+          have hC_union0: "(\<Union>j\<in>{..<(1::nat)}. ?C0 j) = C 0"
+          proof -
+            have "{..<(1::nat)} = {0}" by (by100 auto)
+            thus ?thesis by (by100 simp)
+          qed
+          have hC_disj0: "\<forall>i<(1::nat). \<forall>j<(1::nat). i \<noteq> j \<longrightarrow> ?C0 i \<inter> ?C0 j = {p}"
+            by (by100 simp)
+          have hC_homeo0: "\<forall>j<(1::nat). top1_homeomorphism_on top1_S1 top1_S1_topology
+              (?C0 j) (subspace_topology (C 0) ?TX0 (?C0 j)) (?g0 j)"
+          proof (intro allI impI)
+            fix j :: nat assume "j < 1"
+            hence "j = 0" by (by100 simp)
+            have "subspace_topology (C 0) ?TX0 (C 0) = ?TX0"
+            proof (rule subspace_topology_self)
+              show "\<forall>U\<in>?TX0. U \<subseteq> C 0" unfolding subspace_topology_def by (by100 blast)
+            qed
+            thus "top1_homeomorphism_on top1_S1 top1_S1_topology (?C0 j) (subspace_topology (C 0) ?TX0 (?C0 j)) (?g0 j)"
+              using less.prems(7) hn_pos \<open>j = 0\<close> by (by100 simp)
+          qed
+          have hC_base0: "\<forall>j<(1::nat). ?g0 j (1, 0) = p"
+            using less.prems(8) hn_pos by (by100 simp)
+          \<comment> \<open>Coherent topology for 1 circle is trivial: closedin(C0) D \<longleftrightarrow> closedin(C0) (C0 \<inter> D)
+             which holds since D \<subseteq> C0 gives C0 \<inter> D = D.\<close>
+          have hC0_self: "subspace_topology (C 0) ?TX0 (C 0) = ?TX0"
+          proof (rule subspace_topology_self)
+            show "\<forall>U\<in>?TX0. U \<subseteq> C 0" unfolding subspace_topology_def by (by100 blast)
+          qed
+          have hC_closed0: "\<forall>D\<subseteq>C 0. closedin_on (C 0) ?TX0 D \<longleftrightarrow>
+              (\<forall>j<(1::nat). closedin_on (?C0 j) (subspace_topology (C 0) ?TX0 (?C0 j)) (?C0 j \<inter> D))"
+          proof (intro allI impI)
+            fix D assume hD: "D \<subseteq> C 0"
+            hence hCD: "C 0 \<inter> D = D" by (by100 blast)
+            show "closedin_on (C 0) ?TX0 D \<longleftrightarrow>
+                (\<forall>j<(1::nat). closedin_on (?C0 j) (subspace_topology (C 0) ?TX0 (?C0 j)) (?C0 j \<inter> D))"
+              using hC0_self hCD by (by100 simp)
+          qed
+          from less.IH[OF h1_lt hstrict0 hhaus0 hp0 hC_sub0 hC_union0 hC_disj0 hC_homeo0 hC_base0 hC_closed0]
+          show ?thesis .
+        qed
         \<comment> \<open>Step 2+3: Transfer from \<pi>\_1(C(0)) to \<pi>\_1(U) via deformation retract.
            The Theorem\_58\_3 iso is the inclusion-induced map, which preserves loop classes
            by subspace\_inclusion\_induced\_class.\<close>
