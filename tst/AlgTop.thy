@@ -7970,6 +7970,12 @@ proof -
        So relator\_class = \<phi>(\<iota>F(s_0))^{b_0} * ... * \<phi>(\<iota>F(s_{n-1}))^{b_{n-1}}
        = \<phi>(word\_product of scheme) since \<phi> is a hom.
        Hence \<phi>^{-1}(relator\_class) = word\_product of scheme.\<close>
+    \<comment> \<open>Helper: two loops agreeing on I\_set have the same equivalence class.\<close>
+    have hloop_class_eq_pointwise:
+      "\<And>f1 f2. (\<forall>t\<in>I_set. f1 t = f2 t) \<Longrightarrow>
+        {g. top1_loop_equiv_on A (subspace_topology X TX A) a' f1 g}
+      = {g. top1_loop_equiv_on A (subspace_topology X TX A) a' f2 g}"
+      sorry \<comment> \<open>loop\_equiv\_on only uses values on I\_set (endpoints, continuity, homotopy).\<close>
     \<comment> \<open>Step R1: relator\_class = product of edge loop classes in \<pi>_1(A,a').\<close>
     have hrel_product: "relator_class =
         top1_group_word_product
@@ -8044,8 +8050,18 @@ proof -
         have hclass_eq: "{g. top1_loop_equiv_on A (subspace_topology X TX A) a' el_k g}
           = (if b then \<phi> (\<iota>F s)
              else top1_fundamental_group_invg A (subspace_topology X TX A) a' (\<phi> (\<iota>F s)))"
-          sorry \<comment> \<open>True case: \<forall>t\<in>I\_set. el\_k t = el\_s t (from hedge\_k), so same loop class = \<phi>(\<iota>F s).
-             False case: el\_k(t) = el\_s(1-t), so el\_k = reverse(el\_s), class = invg(\<phi>(\<iota>F s)).\<close>
+        proof (cases b)
+          case True
+          have "\<forall>t\<in>I_set. el_k t = el_s t" using hedge_k True by (by100 simp)
+          hence "{g. top1_loop_equiv_on A (subspace_topology X TX A) a' el_k g}
+              = {g. top1_loop_equiv_on A (subspace_topology X TX A) a' el_s g}"
+            using hloop_class_eq_pointwise by (by100 blast)
+          thus ?thesis using True hphi_s by (by100 simp)
+        next
+          case False
+          thus ?thesis sorry
+            \<comment> \<open>False case: el\_k(t) = el\_s(1-t) on I\_set \<Rightarrow> el\_k = reverse(el\_s) \<Rightarrow> invg class.\<close>
+        qed
         show "let (s', b') = scheme ! k in
           {g. top1_loop_equiv_on A (subspace_topology X TX A) a' el_k g}
           = (if b' then \<phi> (\<iota>F s') else
