@@ -6917,6 +6917,16 @@ lemma map_map_pair_compose:
      = map (\<lambda>(s, b). (f (g s), b)) ws"
   by (induct ws) auto
 
+text \<open>Deformation retraction of circle minus point to any remaining point.
+  Munkres 71.1: "W\_i is homeomorphic to an open interval, so it has
+  the point p as a deformation retract." Following AlgTopCached:33225.\<close>
+lemma circle_minus_point_deformation_retract:
+  assumes "top1_homeomorphism_on top1_S1 top1_S1_topology Y TY h"
+      and "q \<in> Y" and "r \<in> Y" and "q \<noteq> r"
+  shows "top1_deformation_retract_of_on (Y - {q}) (subspace_topology Y TY (Y - {q})) {r}"
+  sorry \<comment> \<open>Via angle parameterization: h^{-1} maps Y-{q} to S1-{q0},
+     R\_to\_S1 lifts to open interval, linear retraction, project back.\<close>
+
 text \<open>Munkres Theorem 71.1 (witnessed version with chosen loop generators).
   For a finite wedge of circles with explicit circle data (homeomorphisms, basepoints),
   \<pi>_1 is free and the chosen circle loops are the free generators.
@@ -7493,11 +7503,33 @@ lemma finite_wedge_pi1_free_with_chosen_loops:
            Uses: circle\_minus\_point\_simply\_connected from AlgTopSvK.\<close>
         \<comment> \<open>\<Union>W(j) deformation-retracts to {p}. Each W(j) is an arc containing p.
            Retract each point to p along the arc. Compatible since W(j) \<inter> W(k) = {p}.\<close>
+        \<comment> \<open>Each W(j) deformation retracts to {p} (Munkres: "W\_i homeomorphic to open interval").\<close>
+        have hW_retract: "\<forall>j<n. top1_deformation_retract_of_on
+            (W j) (subspace_topology X TX (W j)) {p}"
+        proof (intro allI impI)
+          fix j assume hj: "j < n"
+          have hg_h: "top1_homeomorphism_on top1_S1 top1_S1_topology
+              (C j) (subspace_topology X TX (C j)) (g j)"
+            using less.prems(7) hj by (by100 blast)
+          have hqj: "q j \<in> C j" using hq hj by (by100 blast)
+          have hpj: "p \<in> C j" using less.prems(4) hj by (by100 blast)
+          have hpq: "q j \<noteq> p" using hq hj by (by100 blast)
+          have "top1_deformation_retract_of_on (C j - {q j})
+              (subspace_topology (C j) (subspace_topology X TX (C j)) (C j - {q j})) {p}"
+            by (rule circle_minus_point_deformation_retract[OF hg_h hqj hpj hpq])
+          moreover have "subspace_topology (C j) (subspace_topology X TX (C j)) (C j - {q j})
+              = subspace_topology X TX (C j - {q j})"
+            by (rule subspace_topology_trans) (by100 blast)
+          ultimately show "top1_deformation_retract_of_on (W j) (subspace_topology X TX (W j)) {p}"
+            unfolding W_def by (by100 simp)
+        qed
+        \<comment> \<open>Munkres: "The maps F\_i fit together... pasting lemma applies."
+           W(j) closed in U \<inter> V because S(j) closed in X and W(j) = S(j) \<inter> (U\<inter>V).\<close>
         have hUV_retract: "top1_deformation_retract_of_on
             (U \<inter> V) (subspace_topology X TX (U \<inter> V)) {p}"
-          sorry \<comment> \<open>Construct H: (\<Union>W(j)) \<times> [0,1] \<rightarrow> \<Union>W(j) piecewise.
-             For x \<in> W(j): parameterize via g(j), retract via angle interpolation.
-             Continuity from coherent topology. Following AlgTopCached:33225-33690.\<close>
+          sorry \<comment> \<open>Paste hW\_retract via pasting lemma. Each W(j) is closed in U\<inter>V
+             (S(j) compact in Hausdorff \<Rightarrow> closed; W(j) = S(j) \<inter> (U\<inter>V)). Well-defined
+             since W(j) \<inter> W(k) = {p} and all retractions fix p.\<close>
         have hUV_sc: "top1_simply_connected_on (U \<inter> V) (subspace_topology X TX (U \<inter> V))"
         proof -
           have hTX: "is_topology_on X TX"
@@ -7702,9 +7734,13 @@ lemma finite_wedge_pi1_free_with_chosen_loops:
         \<comment> \<open>Step 8: \<pi>_1(U) \<cong> Z (deformation retract U to C(0) \<cong> S1).
            U = C(0) \<union> arcs. Retract arcs to p. Then \<pi>_1(U) \<cong> \<pi>_1(C(0)) \<cong> Z.\<close>
         \<comment> \<open>U deformation retracts to C(0). Each W(j) for j \<ge> 1 retracts to p \<in> C(0).\<close>
+        \<comment> \<open>Munkres: "A similar argument shows that S\_1 is a deformation retract of U."
+           U = C(0) \<union> arcs. Identity on C(0), retract each arc W(j) to p \<in> C(0).
+           Pasting: C(0) closed in U (compact in Hausdorff), each W(j) closed (same reason).\<close>
         have hU_retract: "top1_deformation_retract_of_on U (subspace_topology X TX U) (C 0)"
-          sorry \<comment> \<open>Retraction: for x \<in> W(j) (j\<ge>1), slide x to p along the arc.
-             Continuous by coherent topology. H(x,0)=x, H(x,1) \<in> C(0), H(a,t)=a for a \<in> C(0).\<close>
+          sorry \<comment> \<open>Same pasting as hUV\_retract but target is C(0) not {p}.
+             On C(0): identity. On W(j) for j\<ge>1: retract to p via hW\_retract.
+             Well-defined: W(j) \<inter> C(0) = {p}, and retraction fixes p.\<close>
         \<comment> \<open>By Theorem\_58\_3: deformation retract gives \<pi>_1 iso.\<close>
         have hTU: "is_topology_on U (subspace_topology X TX U)"
         proof -
@@ -7742,6 +7778,16 @@ lemma finite_wedge_pi1_free_with_chosen_loops:
         \<comment> \<open>Step 9: IH on V. V contains circles C(1),...,C(n-1) as a sub-wedge.
            By inductive hypothesis (less.IH with n-1 < n), \<pi>_1(V) is free on n-1 generators
            with loop correspondence for C(1),...,C(n-1).\<close>
+        \<comment> \<open>Munkres: "S\_2 \<union> \<cdots> \<union> S\_n is a deformation retract of V."
+           V = W(0) \<union> C(1) \<union> \<cdots> \<union> C(n-1). Retract W(0) to p.\<close>
+        define X' where "X' = (\<Union>j\<in>{1..<n}. C j)"
+        have hV_retract: "top1_deformation_retract_of_on V (subspace_topology X TX V) X'"
+          sorry \<comment> \<open>Same as hU\_retract: identity on C(j) for j\<ge>1, retract W(0) to p.
+             W(0) closed in V, each C(j) closed in V. Pasting lemma.\<close>
+        \<comment> \<open>Munkres: "using the induction hypothesis, \<pi>\_1(V,p) is a free group,
+           with loops f\_2,...,f\_n as free generators."
+           IH: apply less.IH with n-1 < n to X' = C(1) \<union> \<cdots> \<union> C(n-1).
+           Re-index: C'(j) = C(j+1), g'(j) = g(j+1) for j < n-1.\<close>
         have hV_free: "\<exists>(G2::int set) mul2 e2 invg2 (\<eta>2::nat \<Rightarrow> int) \<Phi>2.
             top1_is_free_group_full_on G2 mul2 e2 invg2 \<eta>2 {1..<n}
           \<and> top1_group_iso_on G2 mul2
@@ -7749,9 +7795,10 @@ lemma finite_wedge_pi1_free_with_chosen_loops:
               (top1_fundamental_group_mul V (subspace_topology X TX V) p) \<Phi>2
           \<and> (\<forall>j\<in>{1..<n}. \<Phi>2 (\<eta>2 j) = {l. top1_loop_equiv_on V (subspace_topology X TX V) p
               (\<lambda>t. g j (cos (2*pi*t), sin (2*pi*t))) l})"
-          sorry \<comment> \<open>Apply less.IH with n' = n-1 < n. V is a wedge of n-1 circles.
-             Need to verify all hypotheses: strict topology, Hausdorff, circle data,
-             coherent topology on V. Re-index {1..<n} to {..<n-1}.\<close>
+          sorry \<comment> \<open>1. Apply less.IH with n-1 to X' (re-index C(j+1) \<rightarrow> C'(j), g(j+1) \<rightarrow> g'(j)).
+             2. Get \<pi>_1(X') free on {..<n-1} with gen correspondence for C'(j) loops.
+             3. By hV\_retract + Theorem\_58\_3: \<pi>_1(V) \<cong> \<pi>_1(X') via inclusion.
+             4. Re-index {..<n-1} \<rightarrow> {1..<n} and transfer gen correspondence.\<close>
         \<comment> \<open>Step 10: Compose SvK + Theorem\_69\_2 + iso tracking.
            \<pi>_1(X) \<cong> FP(\<pi>_1(U), \<pi>_1(V)) \<cong> FP(Z, F_{n-1}) \<cong> F_n.\<close>
         show ?thesis
