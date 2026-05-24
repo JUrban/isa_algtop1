@@ -7807,16 +7807,207 @@ proof -
   have hp0_W: "p0 \<in> ?W" using hp0_S1 hp0_ne_q by (by100 blast)
   have h\<theta>p_range: "\<theta>q < \<theta>q + 1/2 \<and> \<theta>q + 1/2 < \<theta>q + 1" by (by100 linarith)
   \<comment> \<open>Every loop at p0 in W is null-homotopic.\<close>
+  \<comment> \<open>Following AlgTopCached.thy lines 33329-33690 (adapted for S1 directly, no h).\<close>
+  define \<theta>p where "\<theta>p = \<theta>q + 1/2"
+  have h\<theta>p: "top1_R_to_S1 \<theta>p = p0" unfolding \<theta>p_def p0_def by (by100 simp)
+  have h\<theta>p_range: "\<theta>q < \<theta>p \<and> \<theta>p < \<theta>q + 1" unfolding \<theta>p_def by (by100 linarith)
+  have hTR: "is_topology_on (UNIV::real set) top1_open_sets"
+    by (rule top1_open_sets_is_topology_on_UNIV)
   have "\<forall>f. top1_is_loop_on ?W ?TW p0 f \<longrightarrow>
       top1_path_homotopic_on ?W ?TW p0 p0 f (top1_constant_path p0)"
-    sorry \<comment> \<open>For each loop f at p0 in W:
-       1. f is a loop in S1 (inclusion). Lift to R via Lemma\_54\_1.
-       2. Lift avoids \<theta>q+Z (since f avoids q + R\_to\_S1 periodicity).
-       3. Lift stays in (\<theta>q, \<theta>q+1) by IVT (continuous, avoids discrete set).
-       4. Lift endpoint = \<theta>q+1/2 (winding number 0, from step 3).
-       5. Straight-line homotopy in (\<theta>q, \<theta>q+1) via top1\_slh\_ext.
-       6. Project via R\_to\_S1: null-homotopy in S1\{q}.
-       Following AlgTopCached.thy lines 33329-33690.\<close>
+  proof (intro allI impI)
+    fix f assume hloop: "top1_is_loop_on ?W ?TW p0 f"
+    \<comment> \<open>Step A: f is a loop in S1 (by inclusion). Lift to R.\<close>
+    have hf_cont_W: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology ?W ?TW f"
+      using hloop unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+    have hf0: "f 0 = p0" and hf1: "f 1 = p0"
+      using hloop unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)+
+    \<comment> \<open>Enlarge codomain to S1.\<close>
+    have hf_cont_S1: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+        top1_S1 top1_S1_topology f"
+    proof -
+      have hincl: "top1_continuous_map_on ?W ?TW top1_S1 top1_S1_topology (\<lambda>x. x)"
+        by (rule top1_continuous_map_on_restrict_domain_simple[OF
+              top1_continuous_map_on_id[OF hTS1, unfolded id_def] hW_sub])
+      from top1_continuous_map_on_comp[OF hf_cont_W hincl]
+      show ?thesis unfolding comp_def by (by100 simp)
+    qed
+    have hf_path_S1: "top1_is_path_on top1_S1 top1_S1_topology p0 p0 f"
+      unfolding top1_is_path_on_def using hf_cont_S1 hf0 hf1 by (by100 blast)
+    \<comment> \<open>Step B: Lift f to R via covering map.\<close>
+    obtain g_tilde where hgt_path: "top1_is_path_on (UNIV::real set) top1_open_sets \<theta>p (g_tilde 1) g_tilde"
+        and hgt_proj: "\<forall>s\<in>I_set. top1_R_to_S1 (g_tilde s) = f s"
+      using Lemma_54_1_path_lifting[OF Theorem_53_1 _ h\<theta>p hf_path_S1 hTS1 hTR] by (by100 blast)
+    have hgt_cont: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+        (UNIV::real set) top1_open_sets g_tilde"
+      using hgt_path unfolding top1_is_path_on_def by (by100 blast)
+    have hgt_0: "g_tilde 0 = \<theta>p"
+      using hgt_path unfolding top1_is_path_on_def by (by100 blast)
+    \<comment> \<open>Step C: g\_tilde avoids \<theta>q + Z.\<close>
+    have hgt_avoids: "\<forall>s\<in>I_set. \<forall>k::int. g_tilde s \<noteq> \<theta>q + of_int k"
+    proof (intro ballI allI)
+      fix s :: real and k :: int assume hs: "s \<in> I_set"
+      show "g_tilde s \<noteq> \<theta>q + of_int k"
+      proof
+        assume "g_tilde s = \<theta>q + of_int k"
+        hence "top1_R_to_S1 (g_tilde s) = top1_R_to_S1 (\<theta>q + of_int k)" by (by100 simp)
+        also have "\<dots> = q" using top1_R_to_S1_int_shift_early h\<theta>q by (by100 simp)
+        finally have "f s = q" using hgt_proj hs by (by100 simp)
+        moreover have "f s \<in> ?W"
+          using hf_cont_W hs unfolding top1_continuous_map_on_def by (by100 blast)
+        ultimately show False by (by100 blast)
+      qed
+    qed
+    \<comment> \<open>Step D: continuous\_on for g\_tilde (needed for IVT).\<close>
+    have hgt_cont_on: "continuous_on I_set g_tilde"
+    proof -
+      have h: "top1_continuous_map_on I_set
+          (subspace_topology UNIV top1_open_sets I_set) UNIV top1_open_sets g_tilde"
+        using hgt_cont unfolding top1_unit_interval_topology_def .
+      show ?thesis unfolding continuous_on_open_invariant
+      proof (intro allI impI)
+        fix B :: "real set" assume hBo: "open B"
+        have "B \<in> top1_open_sets" using hBo unfolding top1_open_sets_def by (by100 blast)
+        hence "{s \<in> I_set. g_tilde s \<in> B} \<in> subspace_topology UNIV top1_open_sets I_set"
+          using h unfolding top1_continuous_map_on_def by (by100 blast)
+        then obtain W where hW: "W \<in> top1_open_sets"
+            and heq: "{s \<in> I_set. g_tilde s \<in> B} = I_set \<inter> W"
+          unfolding subspace_topology_def by (by100 blast)
+        have "open W" using hW unfolding top1_open_sets_def by (by100 blast)
+        thus "\<exists>A. open A \<and> A \<inter> I_set = g_tilde -` B \<inter> I_set"
+          using heq by (by100 blast)
+      qed
+    qed
+    \<comment> \<open>Step E: g\_tilde stays in (\<theta>q, \<theta>q + 1) by IVT.\<close>
+    have hgt_range: "\<forall>s\<in>I_set. \<theta>q < g_tilde s \<and> g_tilde s < \<theta>q + 1"
+    proof (intro ballI conjI)
+      fix s assume hs: "s \<in> I_set"
+      have hs_range: "0 \<le> s \<and> s \<le> 1" using hs unfolding top1_unit_interval_def by (by100 simp)
+      \<comment> \<open>Lower bound via IVT2'.\<close>
+      show "\<theta>q < g_tilde s"
+      proof (rule ccontr)
+        assume "\<not> \<theta>q < g_tilde s"
+        hence "g_tilde s \<le> \<theta>q" by (by100 linarith)
+        have h_cont_seg: "continuous_on {0..s} g_tilde"
+          by (rule continuous_on_subset[OF hgt_cont_on])
+             (use hs_range in \<open>unfold top1_unit_interval_def, by100 auto\<close>)
+        have "g_tilde 0 > \<theta>q" using hgt_0 h\<theta>p_range by (by100 linarith)
+        have "\<theta>q \<le> g_tilde 0" using \<open>g_tilde 0 > \<theta>q\<close> by (by100 linarith)
+        have "0 \<le> s" using hs_range by (by100 blast)
+        from IVT2'[OF \<open>g_tilde s \<le> \<theta>q\<close> \<open>\<theta>q \<le> g_tilde 0\<close> \<open>0 \<le> s\<close> h_cont_seg]
+        obtain s' where "0 \<le> s'" "s' \<le> s" "g_tilde s' = \<theta>q" by (by100 blast)
+        hence "s' \<in> I_set" using hs_range unfolding top1_unit_interval_def by (by100 auto)
+        thus False using hgt_avoids[rule_format, OF \<open>s' \<in> I_set\<close>, of 0] \<open>g_tilde s' = \<theta>q\<close>
+          by (by100 simp)
+      qed
+      \<comment> \<open>Upper bound via IVT'.\<close>
+      show "g_tilde s < \<theta>q + 1"
+      proof (rule ccontr)
+        assume "\<not> g_tilde s < \<theta>q + 1"
+        hence "g_tilde s \<ge> \<theta>q + 1" by (by100 linarith)
+        have h_cont_seg: "continuous_on {0..s} g_tilde"
+          by (rule continuous_on_subset[OF hgt_cont_on])
+             (use hs_range in \<open>unfold top1_unit_interval_def, by100 auto\<close>)
+        have "g_tilde 0 < \<theta>q + 1" using hgt_0 h\<theta>p_range by (by100 linarith)
+        have "g_tilde 0 \<le> \<theta>q + 1" using \<open>g_tilde 0 < \<theta>q + 1\<close> by (by100 linarith)
+        have "\<theta>q + 1 \<le> g_tilde s" using \<open>g_tilde s \<ge> \<theta>q + 1\<close> by (by100 linarith)
+        have "0 \<le> s" using hs_range by (by100 blast)
+        from IVT'[OF \<open>g_tilde 0 \<le> \<theta>q + 1\<close> \<open>\<theta>q + 1 \<le> g_tilde s\<close> \<open>0 \<le> s\<close> h_cont_seg]
+        obtain s' where "0 \<le> s'" "s' \<le> s" "g_tilde s' = \<theta>q + 1" by (by100 blast)
+        hence "s' \<in> I_set" using hs_range unfolding top1_unit_interval_def by (by100 auto)
+        thus False using hgt_avoids[rule_format, OF \<open>s' \<in> I_set\<close>, of 1] \<open>g_tilde s' = \<theta>q + 1\<close>
+          by (by100 simp)
+      qed
+    qed
+    \<comment> \<open>Step F: g\_tilde(1) = \<theta>p (winding number 0).\<close>
+    have hgt_1: "g_tilde 1 = \<theta>p"
+    proof -
+      have h1I: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 auto)
+      have "top1_R_to_S1 (g_tilde 1) = f 1" using hgt_proj h1I by (by100 blast)
+      also have "\<dots> = p0" using hf1 .
+      also have "\<dots> = top1_R_to_S1 \<theta>p" using h\<theta>p by (by100 simp)
+      finally have hR1: "top1_R_to_S1 (g_tilde 1) = top1_R_to_S1 \<theta>p" .
+      have "sin (2*pi*g_tilde 1) = sin (2*pi*\<theta>p) \<and> cos (2*pi*g_tilde 1) = cos (2*pi*\<theta>p)"
+        using hR1 unfolding top1_R_to_S1_def by (by100 auto)
+      then obtain k :: int where hk: "2*pi*g_tilde 1 = 2*pi*\<theta>p + 2*pi*of_int k"
+        using iffD1[OF sin_cos_eq_iff] by (by100 blast)
+      have "g_tilde 1 - \<theta>p = of_int k"
+      proof -
+        from hk have "2*pi*(g_tilde 1 - \<theta>p) = 2*pi*of_int k" by (simp add: algebra_simps)
+        thus ?thesis using pi_gt_zero by (by100 simp)
+      qed
+      have hg1_range2: "g_tilde 1 - \<theta>p > -1 \<and> g_tilde 1 - \<theta>p < 1"
+        using hgt_range[rule_format, OF h1I] h\<theta>p_range by (by100 linarith)
+      have "of_int k > (-1::real) \<and> of_int k < (1::real)"
+        using \<open>g_tilde 1 - \<theta>p = of_int k\<close> hg1_range2 by (by100 linarith)
+      hence "k = 0" by (by100 linarith)
+      thus ?thesis using \<open>g_tilde 1 - \<theta>p = of_int k\<close> by (by100 simp)
+    qed
+    \<comment> \<open>Step G: Straight-line homotopy via top1\_slh\_ext.\<close>
+    define SLH where "SLH = top1_slh_ext g_tilde \<theta>p"
+    have hSLH_cont: "continuous_on UNIV SLH"
+      unfolding SLH_def by (rule top1_slh_ext_continuous[OF hgt_cont_on])
+    have hSLH_agrees: "\<And>s t. s \<in> I_set \<Longrightarrow> t \<in> I_set \<Longrightarrow>
+        SLH (s, t) = (1 - t) * g_tilde s + t * \<theta>p"
+      unfolding SLH_def using top1_slh_ext_agrees
+      unfolding top1_unit_interval_def by auto
+    \<comment> \<open>SLH stays in (\<theta>q, \<theta>q+1): convex combination of g\_tilde(s) \<in> (\<theta>q, \<theta>q+1) and \<theta>p \<in> (\<theta>q, \<theta>q+1).\<close>
+    have hSLH_range: "\<And>s t. s \<in> I_set \<Longrightarrow> t \<in> I_set \<Longrightarrow>
+        \<theta>q < SLH (s, t) \<and> SLH (s, t) < \<theta>q + 1"
+    proof -
+      fix s t assume hs: "s \<in> I_set" and ht: "t \<in> I_set"
+      have ht_range: "0 \<le> t \<and> t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 simp)
+      have hgs: "\<theta>q < g_tilde s \<and> g_tilde s < \<theta>q + 1" using hgt_range hs by (by100 blast)
+      have hval: "SLH (s, t) = (1 - t) * g_tilde s + t * \<theta>p" using hSLH_agrees hs ht .
+      have hge: "SLH (s, t) > \<theta>q"
+      proof -
+        have "(1 - t) * (g_tilde s - \<theta>q) \<ge> 0"
+          using ht_range hgs by (by5000 simp)
+        moreover have "t * (\<theta>p - \<theta>q) \<ge> 0"
+          using ht_range h\<theta>p_range by (by5000 simp)
+        moreover have "(1-t) * (g_tilde s - \<theta>q) + t * (\<theta>p - \<theta>q) > 0"
+        proof (cases "t = 0")
+          case True thus ?thesis using hgs by (by100 simp)
+        next
+          case False
+          have "t * (\<theta>p - \<theta>q) > 0" using ht_range h\<theta>p_range False by (by5000 simp)
+          thus ?thesis using \<open>(1 - t) * (g_tilde s - \<theta>q) \<ge> 0\<close> by (by100 linarith)
+        qed
+        have "SLH (s, t) - \<theta>q = (1-t) * (g_tilde s - \<theta>q) + t * (\<theta>p - \<theta>q)"
+          using hval by (simp add: algebra_simps)
+        thus ?thesis using \<open>_ + _ > 0\<close> by (by100 linarith)
+      qed
+      moreover have hlt: "SLH (s, t) < \<theta>q + 1"
+      proof -
+        have "(1 - t) * ((\<theta>q + 1) - g_tilde s) \<ge> 0"
+          using ht_range hgs by (by5000 simp)
+        moreover have "t * ((\<theta>q + 1) - \<theta>p) \<ge> 0"
+          using ht_range h\<theta>p_range by (by5000 simp)
+        moreover have "(1-t) * ((\<theta>q+1) - g_tilde s) + t * ((\<theta>q+1) - \<theta>p) > 0"
+        proof (cases "t = 1")
+          case True thus ?thesis using h\<theta>p_range by (by100 simp)
+        next
+          case False
+          have "(1-t) * ((\<theta>q+1) - g_tilde s) > 0"
+            using ht_range hgs False by (by5000 simp)
+          thus ?thesis using \<open>t * ((\<theta>q + 1) - \<theta>p) \<ge> 0\<close> by (by100 linarith)
+        qed
+        have "(\<theta>q + 1) - SLH (s, t) = (1-t) * ((\<theta>q+1) - g_tilde s) + t * ((\<theta>q+1) - \<theta>p)"
+          using hval by (simp add: algebra_simps)
+        thus ?thesis using \<open>_ + _ > 0\<close> by (by100 linarith)
+      qed
+      ultimately show "\<theta>q < SLH (s, t) \<and> SLH (s, t) < \<theta>q + 1" by (by100 blast)
+    qed
+    \<comment> \<open>Define F = R\_to\_S1 \<circ> SLH: homotopy from f to const in S1\{q}.\<close>
+    define F where "F st = top1_R_to_S1 (SLH st)" for st
+    \<comment> \<open>Verify homotopy properties.\<close>
+    show "top1_path_homotopic_on ?W ?TW p0 p0 f (top1_constant_path p0)"
+      sorry \<comment> \<open>F(s,0) = R\_to\_S1(g\_tilde s) = f(s). F(s,1) = R\_to\_S1(\<theta>p) = p0.
+         F(0,t) = R\_to\_S1((1-t)*\<theta>p + t*\<theta>p) = p0. F(1,t) = p0 (since g\_tilde(1) = \<theta>p).
+         F continuous (R\_to\_S1 continuous, SLH continuous).
+         F range in S1\{q} (SLH in (\<theta>q, \<theta>q+1), so R\_to\_S1 \<noteq> q).
+         ~20 lines to assemble.\<close>
+  qed
   from top1_simply_connected_from_one_point[OF hTW hpc hp0_W this]
   show ?thesis .
 qed
