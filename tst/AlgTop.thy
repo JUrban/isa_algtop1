@@ -7879,8 +7879,54 @@ proof -
            = qC(edge\_i(t)) = edge\_loop i t for s = (i+t)/n.\<close>
       \<comment> \<open>Step R2: Edge loops are loops through a' (all vertices = a').\<close>
       have hedge_loops: "\<forall>i<?n. edge_loop i 0 = a' \<and> edge_loop i 1 = a'"
-        sorry \<comment> \<open>edge\_loop i 0 = qC(vxC i, vyC i) = qC(vxC 0, vyC 0) = a'
-           (from hvert\_C + ha\_eq + a'\_def).\<close>
+      proof (intro allI impI conjI)
+        fix i assume hi: "i < ?n"
+        have "edge_loop i 0 = qC (vxC i, vyC i)"
+          unfolding edge_loop_def by (by100 simp)
+        also have "\<dots> = qC (vxC 0, vyC 0)"
+          using hvert_C[rule_format, OF hi] hlen by (by100 force)
+        also have "\<dots> = a" using ha_eq by (by100 simp)
+        also have "\<dots> = a'"
+        proof -
+          have "h (1, 0) = qC (vxC 0, vyC 0)"
+          proof -
+            have "0 < ?n" using hlen by (by100 linarith)
+            moreover have "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 auto)
+            ultimately have "h (cos (2*pi*(real 0+0)/real ?n), sin (2*pi*(real 0+0)/real ?n))
+                = qC ((1-0)*vxC 0 + 0*vxC (Suc 0 mod ?n), (1-0)*vyC 0 + 0*vyC (Suc 0 mod ?n))"
+              using hh_edge_arc by (by100 blast)
+            thus ?thesis by (by100 simp)
+          qed
+          thus ?thesis unfolding a'_def using ha_eq by (by100 simp)
+        qed
+        finally show "edge_loop i 0 = a'" .
+      next
+        fix i assume hi: "i < ?n"
+        have "edge_loop i 1 = qC (vxC (Suc i mod ?n), vyC (Suc i mod ?n))"
+          unfolding edge_loop_def by (by100 simp)
+        also have "\<dots> = qC (vxC 0, vyC 0)"
+        proof -
+          have hn_pos: "?n > 0" using hlen by (by100 linarith)
+          have hj: "Suc i mod ?n < ?n" using mod_less_divisor[OF hn_pos] by (by100 simp)
+          have "0 < ?n" using hn_pos by (by100 simp)
+          thus ?thesis using hvert_C[rule_format, OF hj \<open>0 < ?n\<close>] by (by100 simp)
+        qed
+        also have "\<dots> = a" using ha_eq by (by100 simp)
+        also have "\<dots> = a'"
+        proof -
+          have "h (1, 0) = qC (vxC 0, vyC 0)"
+          proof -
+            have "0 < ?n" using hlen by (by100 linarith)
+            moreover have "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 auto)
+            ultimately have "h (cos (2*pi*(real 0+0)/real ?n), sin (2*pi*(real 0+0)/real ?n))
+                = qC ((1-0)*vxC 0 + 0*vxC (Suc 0 mod ?n), (1-0)*vyC 0 + 0*vyC (Suc 0 mod ?n))"
+              using hh_edge_arc by (by100 blast)
+            thus ?thesis by (by100 simp)
+          qed
+          thus ?thesis unfolding a'_def using ha_eq by (by100 simp)
+        qed
+        finally show "edge_loop i 1 = a'" .
+      qed
       \<comment> \<open>Step R3: Each edge loop class = \<phi>(\<iota>F(label))^{sign}.
          From the wedge-of-circles free group construction: \<phi>(\<iota>F(s)) is the
          class of the canonical loop around circle s in A.\<close>
