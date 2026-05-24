@@ -6939,6 +6939,9 @@ theorem Theorem_74_2_scheme_presentation:
             \<longrightarrow> (i = j \<and> t = s)
               \<or> (fst (scheme!i) = fst (scheme!j) \<and>
                  (if snd (scheme!i) = snd (scheme!j) then s = t else s = 1 - t)))"
+      \<comment> \<open>Each label has a True-direction edge (Munkres convention: counterclockwise).\<close>
+      and htrue_dir: "\<forall>\<alpha>\<in>fst ` set scheme.
+          \<exists>i<length scheme. fst (scheme!i) = \<alpha> \<and> snd (scheme!i) = True"
       \<comment> \<open>Vertex connectivity: the scheme's label graph connects all vertices.\<close>
       and hvert_conn_assm: "\<forall>(q::real\<times>real\<Rightarrow>'a) (vx::nat\<Rightarrow>real) (vy::nat\<Rightarrow>real).
           (\<forall>i<length scheme. \<forall>j<length scheme.
@@ -7055,8 +7058,7 @@ proof -
       then obtain i where hi: "i < ?n" "scheme!i = x" using in_set_conv_nth by (by5000 metis)
       \<comment> \<open>Every label has a True-direction edge (from the scheme structure).\<close>
       have "\<exists>i. i < ?n \<and> fst (scheme!i) = \<alpha> \<and> snd (scheme!i) = True"
-        sorry \<comment> \<open>From the scheme structure: each label appears with both directions.
-           This follows from top1\_quotient\_of\_scheme\_on requiring edge pairings.\<close>
+        using htrue_dir h\<alpha> by (by100 blast)
       thus "i_of \<alpha> < ?n \<and> fst (scheme!(i_of \<alpha>)) = \<alpha> \<and> snd (scheme!(i_of \<alpha>)) = True"
         unfolding i_of_def by (rule someI_ex)
     qed
@@ -8739,7 +8741,29 @@ proof -
         \<longrightarrow> (\<forall>i<length ?scheme. \<forall>j<length ?scheme. q (vx i, vy i) = q (vx j, vy j))"
       using torus_scheme_vertex_connectivity[of n]
         unfolding top1_n_torus_scheme_def by (by5000 simp)
-    from Theorem_74_2_scheme_presentation[OF hscheme assms(2) hlen hvert hvc]
+    have htd: "\<forall>\<alpha>\<in>fst ` set ?scheme.
+        \<exists>i<length ?scheme. fst (?scheme!i) = \<alpha> \<and> snd (?scheme!i) = True"
+    proof (intro ballI)
+      fix \<alpha> assume h\<alpha>: "\<alpha> \<in> fst ` set ?scheme"
+      \<comment> \<open>Each label \<alpha> in the torus scheme has (\<alpha>, True) \<in> set scheme.\<close>
+      have "(\<alpha>, True) \<in> set ?scheme"
+      proof -
+        from h\<alpha> obtain x where "x \<in> set ?scheme" "fst x = \<alpha>" by (by100 blast)
+        then obtain k where hk: "k < n" and "x \<in> set [(2*k, True), (2*k+1, True), (2*k, False), (2*k+1, False)]"
+          unfolding top1_n_torus_scheme_def by (by5000 auto)
+        hence "\<alpha> = 2*k \<or> \<alpha> = 2*k+1" using \<open>fst x = \<alpha>\<close> by (by100 auto)
+        moreover have "(2*k, True) \<in> set ?scheme"
+          unfolding top1_n_torus_scheme_def using hk by (by5000 auto)
+        moreover have "(2*k+1, True) \<in> set ?scheme"
+          unfolding top1_n_torus_scheme_def using hk by (by5000 auto)
+        ultimately show ?thesis by (by100 blast)
+      qed
+      then obtain i where "i < length ?scheme" "?scheme!i = (\<alpha>, True)"
+        using in_set_conv_nth by (by5000 metis)
+      thus "\<exists>i<length ?scheme. fst (?scheme!i) = \<alpha> \<and> snd (?scheme!i) = True"
+        by (by100 force)
+    qed
+    from Theorem_74_2_scheme_presentation[OF hscheme assms(2) hlen hvert htd hvc]
     show ?thesis .
   qed
   \<comment> \<open>The distinct labels of the torus scheme are {0,...,2n-1}.\<close>
