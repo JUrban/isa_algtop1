@@ -4856,10 +4856,17 @@ proof -
     have h\<psi>_edge: "\<psi> ?edge_pt = (cos ?\<theta>, sin ?\<theta>)"
       using h\<psi>_edge_arc[rule_format, OF hi ht] .
     \<comment> \<open>h = q \<circ> \<psi>^{-1}, so h(cos\<theta>, sin\<theta>) = q(\<psi>^{-1}(cos\<theta>, sin\<theta>)) = q(edge\_pt).\<close>
-    have "?edge_pt \<in> P" sorry
+    have hedge_in_P: "?edge_pt \<in> P"
+    proof -
+      have "?edge_pt \<in> BdP" unfolding BdP_def
+        using hi ht by (by100 blast)
+      thus ?thesis using hBdP_sub_P by (by100 blast)
+    qed
     hence "\<psi> ?edge_pt \<in> \<psi> ` P" by (by100 blast)
-    hence h_inv: "inv_into P \<psi> (\<psi> ?edge_pt) = ?edge_pt"
-      sorry \<comment> \<open>inj\_on \<psi> P from homeomorphism, then inv\_into\_f\_f.\<close>
+    have h\<psi>_inj: "inj_on \<psi> P"
+      using h\<psi>[unfolded top1_homeomorphism_on_def bij_betw_def] by (by100 blast)
+    have h_inv: "inv_into P \<psi> (\<psi> ?edge_pt) = ?edge_pt"
+      using inv_into_f_f[OF h\<psi>_inj hedge_in_P] by (by100 simp)
     show "h (cos ?\<theta>, sin ?\<theta>) = q ?edge_pt"
       using h_inv h\<psi>_edge unfolding h_def by (by100 simp)
   qed
