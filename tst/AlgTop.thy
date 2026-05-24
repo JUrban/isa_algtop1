@@ -8277,12 +8277,18 @@ proof -
               top1_fundamental_group_invg A (subspace_topology X TX A) a' (\<phi> (\<iota>F s')))"
           unfolding hsb using hclass_eq by (by100 simp)
       qed
+      \<comment> \<open>Assembly: connect loop decomposition with word\_product in \<pi>_1.\<close>
+      \<comment> \<open>Step A1: relator\_class = class of \<iota> \<circ> circle.\<close>
+      \<comment> \<open>Step A2: [\<iota> \<circ> circle] = [foldr path\_product [sub\_0,...] const]
+         (from loop\_split\_at\_vertices + h\_iota\_circle\_edge + reparametrization).\<close>
+      \<comment> \<open>Step A3: [foldr path\_product [f\_0,...,f\_{n-1}] const]
+         = \<pi>_1\_mul([f\_0], ..., \<pi>_1\_mul([f\_{n-1}], \<pi>_1\_id)...)
+         (by induction using top1\_fundamental\_group\_mul\_class).\<close>
+      \<comment> \<open>Step A4: Substitute [sub\_k] = \<phi>(\<iota>F(s\_k))^{b\_k} (from hsub\_class).\<close>
+      \<comment> \<open>Step A5: The \<pi>_1\_mul product = word\_product\_\<pi>_1 (by definition of word\_product).\<close>
       show ?thesis sorry
-        \<comment> \<open>Assembly: relator\_class = [\<iota> \<circ> circle]
-           = [foldr path\_product (map sub [0..<n]) const] (loop\_split\_at\_vertices)
-           = word\_product of [sub\_k] classes (foldr \<rightarrow> \<pi>_1 product)
-           = word\_product of \<phi>(\<iota>F(s\_k))^{b\_k} (from hsub\_class)
-           = word\_product(\<phi>(\<iota>F), scheme).\<close>
+        \<comment> \<open>Remaining: induction connecting foldr path\_product class with word\_product \<pi>_1.
+           Uses top1\_fundamental\_group\_mul\_class + hsub\_class + word\_product recursion.\<close>
     qed
     \<comment> \<open>Step R2: \<phi> is a hom, so \<phi>(word\_product in F) = word\_product in \<pi>_1(A,a').\<close>
     have hphi_word: "\<phi> (top1_group_word_product mulF eF invgF
