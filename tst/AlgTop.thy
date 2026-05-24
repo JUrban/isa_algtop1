@@ -6951,8 +6951,8 @@ theorem Theorem_74_2_scheme_presentation:
                 else q (t * vx j + (1-t) * vx (Suc j mod length scheme),
                         t * vy j + (1-t) * vy (Suc j mod length scheme)))))
           \<longrightarrow> (\<forall>i<length scheme. \<forall>j<length scheme. q (vx i, vy i) = q (vx j, vy j))"
-  shows "\<exists>G mul e invg.
-           top1_group_presented_by_on (G :: _ set) mul e invg
+  shows "\<exists>(G :: (real \<Rightarrow> 'a) set set set) mul e invg.
+           top1_group_presented_by_on G mul e invg
              (fst ` set scheme) \<comment> \<open>The distinct labels\<close>
              { map (\<lambda>(s,b). (s, b)) scheme } \<comment> \<open>The relator word\<close>
          \<and> top1_groups_isomorphic_on G mul
@@ -7607,7 +7607,7 @@ proof -
   \<comment> \<open>Step (iii): Combine into group presentation.\<close>
   \<comment> \<open>Step (ii-iii): The quotient \<pi>_1(A,a')/N(relator) is the presented group.
      This needs: relator from Thm 72.1 = scheme word in the free group.\<close>
-  have hThm72_a': "\<exists>G mul e invg.
+  have hThm72_a': "\<exists>(G :: (real \<Rightarrow> 'a) set set set) mul e invg.
       top1_group_presented_by_on G mul e invg (fst ` set scheme)
         { map (\<lambda>(s,b). (s, b)) scheme }
       \<and> top1_groups_isomorphic_on G mul
@@ -8145,24 +8145,24 @@ proof -
             (top1_fundamental_group_carrier X TX a')
             (top1_fundamental_group_mul X TX a')"
       using hpres hiso by (by100 blast)
-    from hconj show ?thesis sorry
-      \<comment> \<open>Type packaging: fixed type variable in 'have' blocks exI unification.\<close>
+    from hconj show ?thesis
+      by - (rule exI, rule exI, rule exI, rule exI, assumption)
   qed
   \<comment> \<open>Step (iv): Transfer a' \<rightarrow> a via basepoint change.\<close>
-  have hThm72_a: "\<exists>G mul e invg.
+  have hThm72_a: "\<exists>(G :: (real \<Rightarrow> 'a) set set set) mul e invg.
       top1_group_presented_by_on G mul e invg (fst ` set scheme)
         { map (\<lambda>(s,b). (s, b)) scheme }
       \<and> top1_groups_isomorphic_on G mul
           (top1_fundamental_group_carrier X TX a)
           (top1_fundamental_group_mul X TX a)"
   proof -
-    from hThm72_a' obtain G0 mul0 e0 invg0 where
+    from hThm72_a' obtain G0 :: "(real \<Rightarrow> 'a) set set set" and mul0 e0 invg0 where
       hpres: "top1_group_presented_by_on G0 mul0 e0 invg0 (fst ` set scheme)
           { map (\<lambda>(s,b). (s, b)) scheme }" and
       hiso_a': "top1_groups_isomorphic_on G0 mul0
           (top1_fundamental_group_carrier X TX a')
           (top1_fundamental_group_mul X TX a')"
-      by - (erule exE, erule exE, erule exE, erule exE, erule conjE, rule that, assumption, assumption)
+      by (by5000 blast)
     \<comment> \<open>Basepoint change: \<pi>_1(X, a') \<cong> \<pi>_1(X, a) since X path-connected.\<close>
     have hTX: "is_topology_on X TX"
       using hX_strict unfolding is_topology_on_strict_def by (by100 blast)
@@ -8241,7 +8241,14 @@ proof -
           (top1_fundamental_group_carrier X TX a)
           (top1_fundamental_group_mul X TX a)"
       using hpres by (by100 blast)
-    show ?thesis using hpres_iso_a sorry
+    show ?thesis using hpres_iso_a
+      apply -
+      apply (rule exI[of _ G0])
+      apply (rule exI[of _ mul0])
+      apply (rule exI[of _ e0])
+      apply (rule exI[of _ invg0])
+      apply assumption
+      done
   qed
   \<comment> \<open>Transfer from basepoint a to basepoint x0 using path-connectivity.\<close>
   have hX_pc: "top1_path_connected_on X TX"
@@ -8313,12 +8320,12 @@ proof -
   \<comment> \<open>Compose: G \<cong> \<pi>_1(X, a) \<cong> \<pi>_1(X, x0).\<close>
   show ?thesis
   proof -
-    from hThm72_a obtain G0 mul0 e0 invg0 where
+    from hThm72_a obtain G0 :: "(real \<Rightarrow> 'a) set set set" and mul0 e0 invg0 where
       hpres0: "top1_group_presented_by_on G0 mul0 e0 invg0 (fst ` set scheme)
           { map (\<lambda>(s,b). (s, b)) scheme }" and
       hiso0: "top1_groups_isomorphic_on G0 mul0
           (top1_fundamental_group_carrier X TX a) (top1_fundamental_group_mul X TX a)"
-      by - (erule exE, erule exE, erule exE, erule exE, erule conjE, rule that, assumption, assumption)
+      by (by5000 blast)
     have hiso_x0: "top1_groups_isomorphic_on G0 mul0
         (top1_fundamental_group_carrier X TX x0) (top1_fundamental_group_mul X TX x0)"
       by (rule groups_isomorphic_trans_fwd[OF hiso0 hpi1_base_change])
@@ -8327,9 +8334,8 @@ proof -
         \<and> top1_groups_isomorphic_on G0 mul0
           (top1_fundamental_group_carrier X TX x0) (top1_fundamental_group_mul X TX x0)"
       using hpres0 hiso_x0 by (by100 blast)
-    show ?thesis using hresult sorry
-      \<comment> \<open>TODO: Isabelle fixed-type-variable issue. All math proved.
-         Restructure proof to work within theorem's type context.\<close>
+    from hresult show ?thesis
+      by - (rule exI, rule exI, rule exI, rule exI, assumption)
   qed
 qed
 
@@ -8397,8 +8403,8 @@ theorem Theorem_74_3_fund_group_n_torus:
   fixes n :: nat and X :: "'a set" and TX :: "'a set set" and x0 :: 'a
   assumes "top1_is_n_fold_torus_on X TX n"
       and "x0 \<in> X"
-  shows "\<exists>G mul e invg.
-           top1_group_presented_by_on (G :: _ set) mul e invg ({..<2*n}::nat set)
+  shows "\<exists>(G :: (real \<Rightarrow> 'a) set set set) mul e invg.
+           top1_group_presented_by_on G mul e invg ({..<2*n}::nat set)
              { concat (map (\<lambda>i. [(2*i, True), (2*i+1, True),
                                    (2*i, False), (2*i+1, False)]) [0..<n]) }
          \<and> top1_groups_isomorphic_on G mul
@@ -8709,7 +8715,7 @@ proof -
       done
   qed
   \<comment> \<open>Apply Theorem 74.2.\<close>
-  have h742: "\<exists>(G::'g set) mul e invg.
+  have h742: "\<exists>(G :: (real \<Rightarrow> 'a) set set set) mul e invg.
       top1_group_presented_by_on G mul e invg (fst ` set ?scheme)
         { map (\<lambda>(s,b). (s, b)) ?scheme }
       \<and> top1_groups_isomorphic_on G mul
@@ -9545,7 +9551,7 @@ theorem Theorem_75_3_H1_n_torus:
   fixes n :: nat and X :: "'a set" and TX :: "'a set set" and x0 :: 'a
   assumes "top1_is_n_fold_torus_on X TX n"
       and "x0 \<in> X"
-  shows "\<exists>(H :: 'g set set) mulH eH invgH \<iota>_S \<phi>.
+  shows "\<exists>(H :: (real \<Rightarrow> 'a) set set set set) mulH eH invgH \<iota>_S \<phi>.
            top1_is_abelianization_of H mulH eH invgH
              (top1_fundamental_group_carrier X TX x0)
              (top1_fundamental_group_mul X TX x0)
@@ -9558,17 +9564,17 @@ proof -
   \<comment> \<open>Munkres 75.3: \<pi>_1(T_n) has presentation \<langle>a_1,...,b_n | [a_1,b_1]...[a_n,b_n]\<rangle>.
      Abelianizing: the commutator relation becomes trivial, so H_1(T_n) \<cong> Z^{2n}.\<close>
   \<comment> \<open>Step 1: By Theorem 74.3, \<pi>_1(T_n) has presentation with relator [a_1,b_1]...[a_n,b_n].\<close>
-  have h_presentation: "\<exists>(G::'g set) mul e invg.
+  have h_presentation: "\<exists>(G :: (real \<Rightarrow> 'a) set set set) mul e invg.
       top1_group_presented_by_on G mul e invg ({..<2*n}::nat set)
         { concat (map (\<lambda>i. [(2*i, True), (2*i+1, True),
                               (2*i, False), (2*i+1, False)]) [0..<n]) }
       \<and> top1_groups_isomorphic_on G mul
           (top1_fundamental_group_carrier X TX x0) (top1_fundamental_group_mul X TX x0)"
-    using Theorem_74_3_fund_group_n_torus[OF assms] by (by100 auto)
+    using Theorem_74_3_fund_group_n_torus[OF assms] by (by100 simp)
   \<comment> \<open>Step 2: Abelianize. The presentation ⟨a₁,b₁,...|[a₁,b₁]...[aₙ,bₙ]⟩ abelianizes to
      the free abelian group on 2n generators (commutator relator becomes trivial).\<close>
   \<comment> \<open>Step 2: Apply presented\_comm\_relator\_abelianization + abelianization\_transfer\_iso.\<close>
-  from h_presentation obtain G0 :: "'g set" and mul0 e0 invg0
+  from h_presentation obtain G0 :: "(real \<Rightarrow> 'a) set set set" and mul0 e0 invg0
     where hpres0: "top1_group_presented_by_on G0 mul0 e0 invg0 ({..<2*n}::nat set)
         { concat (map (\<lambda>i. [(2*i, True), (2*i+1, True),
                               (2*i, False), (2*i+1, False)]) [0..<n]) }"
@@ -9576,7 +9582,7 @@ proof -
           (top1_fundamental_group_carrier X TX x0) (top1_fundamental_group_mul X TX x0)"
     by (by100 auto)
   \<comment> \<open>Abelianize the presented group G0: Abel(G0) is free abelian on {..<2n}.\<close>
-  have habel0: "\<exists>(H :: 'g set set) mulH eH invgH \<phi> \<iota>H.
+  have habel0: "\<exists>(H :: (real \<Rightarrow> 'a) set set set set) mulH eH invgH \<phi> \<iota>H.
       top1_is_abelianization_of H mulH eH invgH G0 mul0 e0 invg0 \<phi>
     \<and> top1_is_free_abelian_group_full_on H mulH eH invgH \<iota>H ({..<2*n}::nat set)"
     using hpres0[unfolded top1_group_presented_by_on_def]
@@ -9586,7 +9592,7 @@ proof -
     apply (by100 blast)
     done
   \<comment> \<open>Extract the abelianization witnesses.\<close>
-  from habel0 obtain H0 :: "'g set set" and mulH0 eH0 invgH0 \<phi>0 \<iota>H0
+  from habel0 obtain H0 :: "(real \<Rightarrow> 'a) set set set set" and mulH0 eH0 invgH0 \<phi>0 \<iota>H0
     where habel0': "top1_is_abelianization_of H0 mulH0 eH0 invgH0 G0 mul0 e0 invg0 \<phi>0"
       and hfab0: "top1_is_free_abelian_group_full_on H0 mulH0 eH0 invgH0 \<iota>H0 ({..<2*n}::nat set)"
     by (by100 blast)
