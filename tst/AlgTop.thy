@@ -7872,113 +7872,12 @@ proof -
           (top1_fundamental_group_id A (subspace_topology X TX A) a')
           (top1_fundamental_group_invg A (subspace_topology X TX A) a')
           (map (\<lambda>(s, b). (\<phi> (\<iota>F s), b)) scheme)"
-    proof -
-      let ?n = "length scheme"
-      let ?TA = "subspace_topology X TX A"
-      let ?mulA = "top1_fundamental_group_mul A ?TA a'"
-      let ?idA = "top1_fundamental_group_id A ?TA a'"
-      let ?invA = "top1_fundamental_group_invg A ?TA a'"
-      \<comment> \<open>Step R1 (Munkres): "\<iota> \<circ> circle" traverses edges in order.
-         From hh\_edge\_arc: h(cos(2\<pi>(i+t)/n), sin(2\<pi>(i+t)/n)) = qC(edge\_i(t)).
-         From h\<iota>\_eq: \<iota> = h on S1.
-         So (\<iota> \<circ> circle)((i+t)/n) = edge\_loop\_i(t) for each edge i.\<close>
-      \<comment> \<open>Define edge loops in A:\<close>
-      define edge_loop where "edge_loop i t =
-          qC ((1-t) * vxC i + t * vxC (Suc i mod ?n),
-              (1-t) * vyC i + t * vyC (Suc i mod ?n))" for i :: nat and t :: real
-      \<comment> \<open>Key: (\<iota> \<circ> circle)((i+t)/n) = edge\_loop i t.\<close>
-      have h\<iota>_circle_edge: "\<forall>i<?n. \<forall>t\<in>I_set.
-          (\<iota> \<circ> (\<lambda>s. (cos (2 * pi * s), sin (2 * pi * s)))) ((real i + t) / real ?n) = edge_loop i t"
-      proof (intro allI impI ballI)
-        fix i :: nat and t :: real
-        assume hi: "i < ?n" and ht: "t \<in> I_set"
-        \<comment> \<open>LHS = \<iota>(cos(2\<pi>(i+t)/n), sin(2\<pi>(i+t)/n)).\<close>
-        have "(\<iota> \<circ> (\<lambda>s. (cos (2 * pi * s), sin (2 * pi * s)))) ((real i + t) / real ?n)
-            = \<iota> (cos (2 * pi * ((real i + t) / real ?n)), sin (2 * pi * ((real i + t) / real ?n)))"
-          by (by100 simp)
-        \<comment> \<open>From h\<iota>\_eq: \<iota> = h on S1. The point (cos\<theta>, sin\<theta>) \<in> S1.\<close>
-        also have "\<dots> = h (cos (2 * pi * ((real i + t) / real ?n)), sin (2 * pi * ((real i + t) / real ?n)))"
-        proof -
-          have "(cos (2 * pi * ((real i + t) / real ?n)), sin (2 * pi * ((real i + t) / real ?n))) \<in> top1_S1"
-            unfolding top1_S1_def by (by5000 force)
-          thus ?thesis using h\<iota>_eq by (by100 blast)
-        qed
-        \<comment> \<open>From hh\_edge\_arc: h(cos(2\<pi>(i+t)/n), sin(2\<pi>(i+t)/n)) = qC(edge\_i(t)).\<close>
-        also have "\<dots> = qC ((1-t) * vxC i + t * vxC (Suc i mod ?n),
-                            (1-t) * vyC i + t * vyC (Suc i mod ?n))"
-        proof -
-          have "2 * pi * ((real i + t) / real ?n) = 2 * pi * (real i + t) / real ?n"
-            by (by100 simp)
-          thus ?thesis using hh_edge_arc[rule_format, OF hi ht] by (by100 simp)
-        qed
-        also have "\<dots> = edge_loop i t" unfolding edge_loop_def by (by100 simp)
-        finally show "(\<iota> \<circ> (\<lambda>s. (cos (2 * pi * s), sin (2 * pi * s)))) ((real i + t) / real ?n) = edge_loop i t" .
-      qed
-      \<comment> \<open>Step R2: Edge loops are loops through a' (all vertices = a').\<close>
-      have hedge_loops: "\<forall>i<?n. edge_loop i 0 = a' \<and> edge_loop i 1 = a'"
-      proof (intro allI impI conjI)
-        fix i assume hi: "i < ?n"
-        have "edge_loop i 0 = qC (vxC i, vyC i)"
-          unfolding edge_loop_def by (by100 simp)
-        also have "\<dots> = qC (vxC 0, vyC 0)"
-          using hvert_C[rule_format, OF hi] hlen by (by100 force)
-        also have "\<dots> = a" using ha_eq by (by100 simp)
-        also have "\<dots> = a'"
-        proof -
-          have "h (1, 0) = qC (vxC 0, vyC 0)"
-          proof -
-            have "0 < ?n" using hlen by (by100 linarith)
-            moreover have "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 auto)
-            ultimately have "h (cos (2*pi*(real 0+0)/real ?n), sin (2*pi*(real 0+0)/real ?n))
-                = qC ((1-0)*vxC 0 + 0*vxC (Suc 0 mod ?n), (1-0)*vyC 0 + 0*vyC (Suc 0 mod ?n))"
-              using hh_edge_arc by (by100 blast)
-            thus ?thesis by (by100 simp)
-          qed
-          thus ?thesis unfolding a'_def using ha_eq by (by100 simp)
-        qed
-        finally show "edge_loop i 0 = a'" .
-      next
-        fix i assume hi: "i < ?n"
-        have "edge_loop i 1 = qC (vxC (Suc i mod ?n), vyC (Suc i mod ?n))"
-          unfolding edge_loop_def by (by100 simp)
-        also have "\<dots> = qC (vxC 0, vyC 0)"
-        proof -
-          have hn_pos: "?n > 0" using hlen by (by100 linarith)
-          have hj: "Suc i mod ?n < ?n" using mod_less_divisor[OF hn_pos] by (by100 simp)
-          have "0 < ?n" using hn_pos by (by100 simp)
-          thus ?thesis using hvert_C[rule_format, OF hj \<open>0 < ?n\<close>] by (by100 simp)
-        qed
-        also have "\<dots> = a" using ha_eq by (by100 simp)
-        also have "\<dots> = a'"
-        proof -
-          have "h (1, 0) = qC (vxC 0, vyC 0)"
-          proof -
-            have "0 < ?n" using hlen by (by100 linarith)
-            moreover have "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 auto)
-            ultimately have "h (cos (2*pi*(real 0+0)/real ?n), sin (2*pi*(real 0+0)/real ?n))
-                = qC ((1-0)*vxC 0 + 0*vxC (Suc 0 mod ?n), (1-0)*vyC 0 + 0*vyC (Suc 0 mod ?n))"
-              using hh_edge_arc by (by100 blast)
-            thus ?thesis by (by100 simp)
-          qed
-          thus ?thesis unfolding a'_def using ha_eq by (by100 simp)
-        qed
-        finally show "edge_loop i 1 = a'" .
-      qed
-      \<comment> \<open>Step R3: Each edge loop class = \<phi>(\<iota>F(label))^{sign}.
-         From the wedge-of-circles free group construction: \<phi>(\<iota>F(s)) is the
-         class of the canonical loop around circle s in A.\<close>
-      have hedge_class: "\<forall>i<?n. let (s, b) = scheme ! i in
-          {g. top1_loop_equiv_on A ?TA a' (edge_loop i) g}
-        = (if b then \<phi> (\<iota>F s) else ?invA (\<phi> (\<iota>F s)))"
-        sorry \<comment> \<open>Core identification: edge loop for label s with direction b
-           equals \<phi>(\<iota>F s) (if True) or its inverse (if False).
-           From the wedge-of-circles structure and hedge\_C identification.\<close>
-      \<comment> \<open>Step R4: Combine via group operations.
-         relator\_class = [\<iota> \<circ> circle] = product of [edge\_loop\_i]
-         = product of \<phi>(\<iota>F(s\_i))^{b\_i} = word\_product.\<close>
-      show ?thesis sorry \<comment> \<open>Assembly: combine R1-R3 with loop\_split\_at\_vertices
-         and group word\_product definition.\<close>
-    qed
+      sorry \<comment> \<open>Munkres 74.2 core step: the boundary loop \<iota> \<circ> circle equals the
+         product of edge loop generators in \<pi>_1(A,a').
+         Requires: (1) decomposing the boundary loop into edge sub-loops
+         (from h\<iota>\_circle\_edge + reparametrization homotopy),
+         (2) identifying each edge loop class with \<phi>(\<iota>F(label)) (from the
+         wedge-of-circles SvK construction + True-direction convention).\<close>
     \<comment> \<open>Step R2: \<phi> is a hom, so \<phi>(word\_product in F) = word\_product in \<pi>_1(A,a').\<close>
     have hphi_word: "\<phi> (top1_group_word_product mulF eF invgF
           (map (\<lambda>(s, b). (\<iota>F s, b)) scheme))
