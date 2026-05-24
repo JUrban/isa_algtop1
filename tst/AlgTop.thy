@@ -9315,14 +9315,78 @@ lemma finite_wedge_pi1_free_with_chosen_loops:
           qed
           \<comment> \<open>Step 6: Free group re-indexed from {..<n-1} to {1..<n}.\<close>
           have hG2_free: "top1_is_free_group_full_on G2 mul2 e2 invg2 \<eta>2 {1..<n}"
-            sorry \<comment> \<open>Re-index \<eta>2(k) = \<eta>2'(k-1). The bijection k \<mapsto> k-1 maps {1..<n} to {..<n-1}.
-               free\_group\_full on {..<n-1} with \<eta>2' transfers to {1..<n} with \<eta>2.\<close>
+            sorry \<comment> \<open>Re-index: \<eta>2 = \<eta>2' \<circ> (\<lambda>k. k-1). Bijection {1..<n} \<leftrightarrow> {..<n-1}.
+               Each condition of free\_group\_full transfers:
+               gens \<in> G, injective, generates G, reduced words \<noteq> e.
+               Need a general re-indexing lemma for free\_group\_full.\<close>
           \<comment> \<open>Step 7: Generator correspondence.\<close>
           have h\<Phi>2_gen: "\<forall>j\<in>{1..<n}. \<Phi>2 (\<eta>2 j) = {l. top1_loop_equiv_on V (subspace_topology X TX V) p
               (\<lambda>t. g j (cos (2*pi*t), sin (2*pi*t))) l}"
-            sorry \<comment> \<open>\<Phi>2(\<eta>2 k) = incl\_V(\<Phi>2'(\<eta>2'(k-1))) = incl\_V([g'(k-1)\<circ>std\_loop]\_{X'})
-               = [g'(k-1)\<circ>std\_loop]\_V = [g(k)\<circ>std\_loop]\_V (since g'(k-1) = g(k)).
-               Inclusion preserves loop class by subspace\_inclusion\_induced\_class.\<close>
+          proof (intro ballI)
+            fix k assume hk: "k \<in> {1..<n}"
+            hence hk_bound: "k - 1 < n - 1"
+            proof -
+              from hk have "1 \<le> k" "k < n" by (by100 simp)+
+              thus ?thesis by (by100 simp)
+            qed
+            \<comment> \<open>\<Phi>2(\<eta>2 k) = incl\_V(\<Phi>2'(\<eta>2'(k-1))).\<close>
+            have "\<Phi>2 (\<eta>2 k) = ?incl_V (\<Phi>2' (\<eta>2' (k - 1)))"
+              unfolding \<Phi>2_def \<eta>2_def comp_def by (by100 simp)
+            \<comment> \<open>\<Phi>2'(\<eta>2'(k-1)) = [g'(k-1)\<circ>std\_loop]\_{X'}.\<close>
+            also have "\<Phi>2' (\<eta>2' (k - 1)) = {l. top1_loop_equiv_on X' (subspace_topology X TX X') p
+                (\<lambda>t. g' (k-1) (cos (2*pi*t), sin (2*pi*t))) l}"
+              using h\<Phi>2'_gen hk_bound by (by100 blast)
+            \<comment> \<open>g'(k-1) = g(k) by definition.\<close>
+            also have "g' (k - 1) = g k" unfolding g'_def using hk by (by100 simp)
+            \<comment> \<open>incl\_V sends [f]\_{X'} to [f]\_V by subspace\_inclusion\_induced\_class.\<close>
+            also have "?incl_V {l. top1_loop_equiv_on X' (subspace_topology X TX X') p
+                (\<lambda>t. g k (cos (2*pi*t), sin (2*pi*t))) l}
+              = {l. top1_loop_equiv_on V (subspace_topology X TX V) p
+                (\<lambda>t. g k (cos (2*pi*t), sin (2*pi*t))) l}"
+            proof -
+              let ?loop_k = "\<lambda>t. g k (cos (2*pi*t), sin (2*pi*t))"
+              have hloop_k: "top1_is_loop_on X' (subspace_topology X TX X') p ?loop_k"
+              proof -
+                have hkn: "k < n" using hk by (by100 simp)
+                have hgk_homeo: "top1_homeomorphism_on top1_S1 top1_S1_topology
+                    (C k) (subspace_topology X TX (C k)) (g k)"
+                  using less.prems(7) hkn by (by100 blast)
+                have hgk_cont: "top1_continuous_map_on top1_S1 top1_S1_topology
+                    (C k) (subspace_topology X TX (C k)) (g k)"
+                  using hgk_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+                have hstd: "top1_is_loop_on top1_S1 top1_S1_topology (1, 0)
+                    (\<lambda>s. (cos (2*pi*s), sin (2*pi*s)))"
+                  by (rule standard_S1_loop_is_loop)
+                have "top1_is_loop_on (C k) (subspace_topology X TX (C k)) (g k (1, 0))
+                    ((g k) \<circ> (\<lambda>s. (cos (2*pi*s), sin (2*pi*s))))"
+                  by (rule top1_continuous_map_loop_early[OF hgk_cont hstd])
+                moreover have "(g k) \<circ> (\<lambda>s. (cos (2*pi*s), sin (2*pi*s))) = ?loop_k"
+                  unfolding comp_def by (by100 simp)
+                moreover have "g k (1, 0) = p" using less.prems(8) hkn by (by100 blast)
+                \<comment> \<open>Loop on C(k) \<subseteq> X'. Transfer via subspace.\<close>
+                moreover have "C k \<subseteq> X'" unfolding X'_def using hk by (by100 force)
+                moreover have "subspace_topology (C k) (subspace_topology X TX (C k)) (C k)
+                    = subspace_topology X TX (C k)"
+                proof (rule subspace_topology_self)
+                  show "\<forall>U\<in>subspace_topology X TX (C k). U \<subseteq> C k"
+                    unfolding subspace_topology_def by (by100 blast)
+                qed
+                ultimately have "top1_is_loop_on (C k) (subspace_topology X TX (C k)) p ?loop_k"
+                  by (by100 simp)
+                \<comment> \<open>C(k) \<subseteq> X', so loop in C(k) is loop in X' (subspace topology).\<close>
+                thus ?thesis
+                  sorry \<comment> \<open>Loop in C(k) with subspace X TX (C k) is loop in X' with subspace X TX X'.
+                     Need: continuous map restriction (loop in subspace of subspace).\<close>
+              qed
+              have hloop_k': "top1_is_loop_on X' (subspace_topology V (subspace_topology X TX V) X') p ?loop_k"
+                using hloop_k hX'_trans by (by100 simp)
+              show ?thesis
+                using subspace_inclusion_induced_class[OF hTV_here hX'_sub_V hloop_k']
+                      hX'_trans by (by100 simp)
+            qed
+            finally show "\<Phi>2 (\<eta>2 k) = {l. top1_loop_equiv_on V (subspace_topology X TX V) p
+                (\<lambda>t. g k (cos (2*pi*t), sin (2*pi*t))) l}" .
+          qed
           show ?thesis
             apply (rule exI[of _ G2], rule exI[of _ mul2], rule exI[of _ e2],
                    rule exI[of _ invg2], rule exI[of _ \<eta>2], rule exI[of _ \<Phi>2])
