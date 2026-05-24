@@ -8013,13 +8013,44 @@ proof -
         have hsamelabel: "fst (scheme!k) = fst (scheme!(i_of s))"
           using hs hi_s(2) by (by100 simp)
         \<comment> \<open>Case on direction b.\<close>
+        \<comment> \<open>Apply hedge\_C to edges k and i\_of(s).\<close>
+        have hedge_k: "\<forall>t\<in>I_set. el_k t =
+            (if b then el_s t
+             else qC (t * vxC (i_of s) + (1-t) * vxC (Suc (i_of s) mod ?n),
+                       t * vyC (i_of s) + (1-t) * vyC (Suc (i_of s) mod ?n)))"
+        proof (intro ballI)
+          fix t assume ht: "t \<in> I_set"
+          have hC: "qC ((1-t) * vxC k + t * vxC (Suc k mod ?n),
+                        (1-t) * vyC k + t * vyC (Suc k mod ?n))
+              = (if snd (scheme!k) = snd (scheme!(i_of s))
+                 then qC ((1-t) * vxC (i_of s) + t * vxC (Suc (i_of s) mod ?n),
+                           (1-t) * vyC (i_of s) + t * vyC (Suc (i_of s) mod ?n))
+                 else qC (t * vxC (i_of s) + (1-t) * vxC (Suc (i_of s) mod ?n),
+                           t * vyC (i_of s) + (1-t) * vyC (Suc (i_of s) mod ?n)))"
+            using hedge_C[rule_format, OF hk hi_s(1) hsamelabel ht] .
+          \<comment> \<open>snd(scheme!(i\_of s)) = True, so snd(scheme!k) = snd(scheme!(i\_of s)) \<longleftrightarrow> b = True.\<close>
+          have hdir: "(snd (scheme!k) = snd (scheme!(i_of s))) = b"
+            using hb hi_s(3) by (by100 simp)
+          show "el_k t = (if b then el_s t
+               else qC (t * vxC (i_of s) + (1-t) * vxC (Suc (i_of s) mod ?n),
+                         t * vyC (i_of s) + (1-t) * vyC (Suc (i_of s) mod ?n)))"
+            using hC hdir unfolding el_k_def el_s_def by (by100 simp)
+        qed
+        \<comment> \<open>The class of el\_k equals edge\_loop\_class(s) (True) or invg (False).\<close>
+        \<comment> \<open>\<phi>(\<iota>F s) = edge\_loop\_class(s) = {g. loop\_equiv el\_s g}.\<close>
+        have hphi_s: "\<phi> (\<iota>F s) = {g. top1_loop_equiv_on A (subspace_topology X TX A) a' el_s g}"
+          using h\<phi>_gen[rule_format, OF hs_label] unfolding edge_loop_class_def el_s_def by (by100 simp)
+        \<comment> \<open>Show the class of el\_k equals \<phi>(\<iota>F s) (if True) or invg(\<phi>(\<iota>F s)) (if False).\<close>
+        have hclass_eq: "{g. top1_loop_equiv_on A (subspace_topology X TX A) a' el_k g}
+          = (if b then \<phi> (\<iota>F s)
+             else top1_fundamental_group_invg A (subspace_topology X TX A) a' (\<phi> (\<iota>F s)))"
+          sorry \<comment> \<open>True case: \<forall>t\<in>I\_set. el\_k t = el\_s t (from hedge\_k), so same loop class = \<phi>(\<iota>F s).
+             False case: el\_k(t) = el\_s(1-t), so el\_k = reverse(el\_s), class = invg(\<phi>(\<iota>F s)).\<close>
         show "let (s', b') = scheme ! k in
           {g. top1_loop_equiv_on A (subspace_topology X TX A) a' el_k g}
           = (if b' then \<phi> (\<iota>F s') else
               top1_fundamental_group_invg A (subspace_topology X TX A) a' (\<phi> (\<iota>F s')))"
-          sorry \<comment> \<open>Unfold let with hsb, then cases on b:
-             True: hedge\_C gives el\_k = el\_s pointwise \<Rightarrow> same class = \<phi>(\<iota>F s).
-             False: hedge\_C gives el\_k(t) = el\_s(1-t) \<Rightarrow> reverse \<Rightarrow> invg class.\<close>
+          unfolding hsb using hclass_eq by (by100 simp)
       qed
       show ?thesis sorry
         \<comment> \<open>Assembly: relator\_class = [\<iota> \<circ> circle]
