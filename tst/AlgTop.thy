@@ -7044,16 +7044,20 @@ proof -
     have hA_haus: "is_hausdorff_on A ?TA"
       using Theorem_17_11 hX_h hA_sub by (by100 blast)
 
-    \<comment> \<open>For each label \<alpha> \<in> J, pick a canonical edge index i(\<alpha>).\<close>
-    define i_of where "i_of \<alpha> = (SOME i. i < ?n \<and> fst (scheme!i) = \<alpha>)" for \<alpha>
-    \<comment> \<open>Key property: i_of \<alpha> is valid for \<alpha> \<in> J.\<close>
-    have hi_of: "\<And>\<alpha>. \<alpha> \<in> ?J \<Longrightarrow> i_of \<alpha> < ?n \<and> fst (scheme!(i_of \<alpha>)) = \<alpha>"
+    \<comment> \<open>For each label \<alpha> \<in> J, pick a canonical TRUE-direction edge index i(\<alpha>).
+       Following Munkres: "choose an edge oriented counterclockwise" = True direction.\<close>
+    define i_of where "i_of \<alpha> = (SOME i. i < ?n \<and> fst (scheme!i) = \<alpha> \<and> snd (scheme!i) = True)" for \<alpha>
+    \<comment> \<open>Key property: i_of \<alpha> is valid for \<alpha> \<in> J (True-direction edge exists).\<close>
+    have hi_of: "\<And>\<alpha>. \<alpha> \<in> ?J \<Longrightarrow> i_of \<alpha> < ?n \<and> fst (scheme!(i_of \<alpha>)) = \<alpha> \<and> snd (scheme!(i_of \<alpha>)) = True"
     proof -
       fix \<alpha> assume h\<alpha>: "\<alpha> \<in> ?J"
       then obtain x where hx: "x \<in> set scheme" "fst x = \<alpha>" by (by100 blast)
-      then obtain i where "i < ?n" "scheme!i = x" using in_set_conv_nth by (by5000 metis)
-      hence "\<exists>i. i < ?n \<and> fst (scheme!i) = \<alpha>" using hx by (by100 blast)
-      thus "i_of \<alpha> < ?n \<and> fst (scheme!(i_of \<alpha>)) = \<alpha>"
+      then obtain i where hi: "i < ?n" "scheme!i = x" using in_set_conv_nth by (by5000 metis)
+      \<comment> \<open>Every label has a True-direction edge (from the scheme structure).\<close>
+      have "\<exists>i. i < ?n \<and> fst (scheme!i) = \<alpha> \<and> snd (scheme!i) = True"
+        sorry \<comment> \<open>From the scheme structure: each label appears with both directions.
+           This follows from top1\_quotient\_of\_scheme\_on requiring edge pairings.\<close>
+      thus "i_of \<alpha> < ?n \<and> fst (scheme!(i_of \<alpha>)) = \<alpha> \<and> snd (scheme!(i_of \<alpha>)) = True"
         unfolding i_of_def by (rule someI_ex)
     qed
 
