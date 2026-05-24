@@ -6968,8 +6968,55 @@ proof -
       sorry \<comment> \<open>r(x) = H(x,1). Composition of H (continuous) with section x \<mapsto> (x,1).\<close>
     \<comment> \<open>r \<circ> j \<simeq> id on A. Actually r \<circ> j = id (since H(a,1) = a for a \<in> A).\<close>
     show "top1_homotopic_on A ?TA A ?TA (r \<circ> (\<lambda>x. x)) (\<lambda>x. x)"
-      sorry \<comment> \<open>r(a) = H(a,1) = a for a \<in> A. So r \<circ> j = id.
-         Homotopic to id via constant homotopy.\<close>
+    proof -
+      \<comment> \<open>r \<circ> j = id on A: r(a) = H(a,1) = a for a \<in> A.\<close>
+      have hrj_eq: "\<forall>a\<in>A. (r \<circ> (\<lambda>x. x)) a = a"
+      proof (intro ballI)
+        fix a assume "a \<in> A"
+        have "(r \<circ> (\<lambda>x. x)) a = H (a, 1)" unfolding r_def by (by100 simp)
+        also have "\<dots> = a"
+        proof -
+          have "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 auto)
+          thus ?thesis using hH_fix \<open>a \<in> A\<close> by (by100 blast)
+        qed
+        finally show "(r \<circ> (\<lambda>x. x)) a = a" .
+      qed
+      \<comment> \<open>id : A \<rightarrow> A continuous.\<close>
+      have hTA: "is_topology_on A ?TA"
+        by (rule subspace_topology_is_topology_on[OF hTX hA_sub])
+      have hid_cont: "top1_continuous_map_on A ?TA A ?TA (\<lambda>x. x)"
+        using top1_continuous_map_on_id[OF hTA] unfolding id_def by (by100 simp)
+      \<comment> \<open>id \<simeq> id (reflexivity), then r \<circ> j agrees with id on A.\<close>
+      have "top1_homotopic_on A ?TA A ?TA (\<lambda>x. x) (\<lambda>x. x)"
+        using Lemma_51_1_homotopic_refl[OF hid_cont hTA] by (by100 simp)
+      \<comment> \<open>r \<circ> j agrees with id on A, so they're homotopic.\<close>
+      moreover have "top1_continuous_map_on A ?TA A ?TA (r \<circ> (\<lambda>x. x))"
+      proof -
+        have "\<forall>a\<in>A. (\<lambda>x. x) a = (r \<circ> (\<lambda>x. x)) a" using hrj_eq by (by100 simp)
+        thus ?thesis using top1_continuous_map_on_agree[OF hid_cont] by (by100 blast)
+      qed
+      ultimately show ?thesis
+      proof -
+        assume hid_htpy: "top1_homotopic_on A ?TA A ?TA (\<lambda>x. x) (\<lambda>x. x)"
+           and hrj_cont: "top1_continuous_map_on A ?TA A ?TA (r \<circ> (\<lambda>x. x))"
+        from hid_htpy[unfolded top1_homotopic_on_def]
+        obtain F where hF_cont: "top1_continuous_map_on (A \<times> I_set)
+              (product_topology_on ?TA I_top) A ?TA F"
+            and hF_0: "\<forall>x\<in>A. F (x, 0) = x" and hF_1: "\<forall>x\<in>A. F (x, 1) = x"
+          by (by100 blast)
+        have "\<forall>x\<in>A. F (x, 0) = (r \<circ> (\<lambda>x. x)) x"
+          using hF_0 hrj_eq by (by100 simp)
+        show "top1_homotopic_on A ?TA A ?TA (r \<circ> (\<lambda>x. x)) (\<lambda>x. x)"
+          unfolding top1_homotopic_on_def
+        proof (intro conjI)
+          show "top1_continuous_map_on A ?TA A ?TA (r \<circ> (\<lambda>x. x))" by (rule hrj_cont)
+          show "top1_continuous_map_on A ?TA A ?TA (\<lambda>x. x)" by (rule hid_cont)
+          show "\<exists>Fa. top1_continuous_map_on (A \<times> I_set) (product_topology_on ?TA I_top) A ?TA Fa
+              \<and> (\<forall>x\<in>A. Fa (x, 0) = (r \<circ> (\<lambda>x. x)) x) \<and> (\<forall>x\<in>A. Fa (x, 1) = x)"
+            using hF_cont \<open>\<forall>x\<in>A. F (x, 0) = (r \<circ> (\<lambda>x. x)) x\<close> hF_1 by (by100 blast)
+        qed
+      qed
+    qed
     \<comment> \<open>j \<circ> r \<simeq> id on X. Homotopy: F(x,t) = H(x,1-t).
        F(x,0) = H(x,1) = r(x) = (j \<circ> r)(x). F(x,1) = H(x,0) = x.\<close>
     show "top1_homotopic_on X TX X TX ((\<lambda>x. x) \<circ> r) (\<lambda>y. y)"
