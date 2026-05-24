@@ -8041,8 +8041,51 @@ proof -
           using hpw by (by100 auto)
         show "top1_path_homotopic_on A ?TA a' a' f1 g
             = top1_path_homotopic_on A ?TA a' a' f2 g"
-          unfolding top1_path_homotopic_on_def top1_is_path_on_def
-          using hloop_iff hF_eq sorry
+        proof (rule iffI)
+          assume h1: "top1_path_homotopic_on A ?TA a' a' f1 g"
+          from h1 obtain F where
+            hF: "top1_continuous_map_on (I_set \<times> I_set) II_topology A ?TA F"
+            and hF0: "\<forall>s\<in>I_set. F (s, 0) = f1 s"
+            and hF1: "\<forall>s\<in>I_set. F (s, 1) = g s"
+            and hFl: "\<forall>t\<in>I_set. F (0, t) = a'" and hFr: "\<forall>t\<in>I_set. F (1, t) = a'"
+            unfolding top1_path_homotopic_on_def by (by100 blast)
+          have hF0': "\<forall>s\<in>I_set. F (s, 0) = f2 s"
+          proof (intro ballI)
+            fix s assume "s \<in> I_set"
+            from hF0 have "F (s, 0) = f1 s" using \<open>s \<in> I_set\<close> by (by100 blast)
+            also from hF_eq have "f1 s = f2 s" using \<open>s \<in> I_set\<close> hpw by (by100 blast)
+            finally show "F (s, 0) = f2 s" .
+          qed
+          have "top1_is_path_on A ?TA a' a' f2" using h1 hloop_iff
+            unfolding top1_path_homotopic_on_def top1_is_loop_on_def by (by100 blast)
+          moreover have "top1_is_path_on A ?TA a' a' g" using h1
+            unfolding top1_path_homotopic_on_def by (by100 blast)
+          ultimately show "top1_path_homotopic_on A ?TA a' a' f2 g"
+            unfolding top1_path_homotopic_on_def
+            using hF hF0' hF1 hFl hFr by (by100 blast)
+        next
+          assume h2: "top1_path_homotopic_on A ?TA a' a' f2 g"
+          from h2 obtain F where
+            hF: "top1_continuous_map_on (I_set \<times> I_set) II_topology A ?TA F"
+            and hF0: "\<forall>s\<in>I_set. F (s, 0) = f2 s"
+            and hF1: "\<forall>s\<in>I_set. F (s, 1) = g s"
+            and hFl: "\<forall>t\<in>I_set. F (0, t) = a'" and hFr: "\<forall>t\<in>I_set. F (1, t) = a'"
+            unfolding top1_path_homotopic_on_def by (by100 blast)
+          have hF0': "\<forall>s\<in>I_set. F (s, 0) = f1 s"
+          proof (intro ballI)
+            fix s assume "s \<in> I_set"
+            from hF0 have "F (s, 0) = f2 s" using \<open>s \<in> I_set\<close> by (by100 blast)
+            also have "f2 s = f1 s" using hpw \<open>s \<in> I_set\<close> by (by100 auto)
+            finally show "F (s, 0) = f1 s" .
+          qed
+          have "top1_is_path_on A ?TA a' a' f1" using h2 hloop_iff
+            unfolding top1_path_homotopic_on_def top1_is_loop_on_def by (by100 blast)
+          moreover have "top1_is_path_on A ?TA a' a' g" using h2
+            unfolding top1_path_homotopic_on_def by (by100 blast)
+          ultimately show "top1_path_homotopic_on A ?TA a' a' f1 g"
+            unfolding top1_path_homotopic_on_def
+            using hF hF0' hF1 hFl hFr by (by100 blast)
+        qed
       qed
       show "{g. top1_loop_equiv_on A ?TA a' f1 g} = {g. top1_loop_equiv_on A ?TA a' f2 g}"
         unfolding top1_loop_equiv_on_def using hloop_iff hph_iff by (by100 blast)
