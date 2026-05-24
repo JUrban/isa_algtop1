@@ -7446,8 +7446,63 @@ lemma path_connected_finite_union_common_point:
       and hp_F: "\<forall>A\<in>F. p \<in> A"
       and hX_eq: "X = \<Union>F"
   shows "top1_path_connected_on X TX"
-  sorry \<comment> \<open>For x, y \<in> X: x \<in> A_i, y \<in> A_j with p \<in> A_i \<inter> A_j.
-     Path x \<rightarrow> p in A_i, p \<rightarrow> y in A_j, concatenate. ~20 lines.\<close>
+  unfolding top1_path_connected_on_def
+proof (intro conjI ballI)
+  show "is_topology_on X TX" by (rule hTX)
+  fix x y assume hx: "x \<in> X" and hy: "y \<in> X"
+  \<comment> \<open>x \<in> A_i, y \<in> A_j for some A_i, A_j \<in> F.\<close>
+  from hx[unfolded hX_eq] obtain Ai where hAi: "Ai \<in> F" "x \<in> Ai" by (by100 blast)
+  from hy[unfolded hX_eq] obtain Aj where hAj: "Aj \<in> F" "y \<in> Aj" by (by100 blast)
+  \<comment> \<open>p \<in> Ai and p \<in> Aj.\<close>
+  have hp_Ai: "p \<in> Ai" using hp_F hAi by (by100 blast)
+  have hp_Aj: "p \<in> Aj" using hp_F hAj by (by100 blast)
+  \<comment> \<open>Path from x to p in Ai.\<close>
+  have hAi_pc: "top1_path_connected_on Ai (subspace_topology X TX Ai)" using hF_pc hAi by (by100 blast)
+  from hAi_pc[unfolded top1_path_connected_on_def] hAi hp_Ai
+  obtain f1 where hf1: "top1_is_path_on Ai (subspace_topology X TX Ai) x p f1"
+    by (by100 blast)
+  \<comment> \<open>Path from p to y in Aj.\<close>
+  have hAj_pc: "top1_path_connected_on Aj (subspace_topology X TX Aj)" using hF_pc hAj by (by100 blast)
+  from hAj_pc[unfolded top1_path_connected_on_def] hAj hp_Aj
+  obtain f2 where hf2: "top1_is_path_on Aj (subspace_topology X TX Aj) p y f2"
+    by (by100 blast)
+  \<comment> \<open>f1 is a path in X (since Ai \<subseteq> X) from x to p.\<close>
+  have hAi_sub: "Ai \<subseteq> X" using hF_sub hAi by (by100 blast)
+  have hf1_X: "top1_is_path_on X TX x p f1"
+  proof -
+    have hf1_cont_A: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+        Ai (subspace_topology X TX Ai) f1"
+      using hf1 unfolding top1_is_path_on_def by (by100 blast)
+    have hid_cont: "top1_continuous_map_on Ai (subspace_topology X TX Ai) X TX (\<lambda>x. x)"
+      by (rule top1_continuous_map_on_restrict_domain_simple[OF
+            top1_continuous_map_on_id[OF hTX, unfolded id_def] hAi_sub])
+    have "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology X TX ((\<lambda>x. x) \<circ> f1)"
+      by (rule top1_continuous_map_on_comp[OF hf1_cont_A hid_cont])
+    hence "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology X TX f1"
+      unfolding comp_def by (by100 simp)
+    thus ?thesis using hf1 unfolding top1_is_path_on_def by (by100 blast)
+  qed
+  \<comment> \<open>f2 is a path in X from p to y.\<close>
+  have hAj_sub: "Aj \<subseteq> X" using hF_sub hAj by (by100 blast)
+  have hf2_X: "top1_is_path_on X TX p y f2"
+  proof -
+    have hf2_cont_A: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+        Aj (subspace_topology X TX Aj) f2"
+      using hf2 unfolding top1_is_path_on_def by (by100 blast)
+    have hid_cont: "top1_continuous_map_on Aj (subspace_topology X TX Aj) X TX (\<lambda>x. x)"
+      by (rule top1_continuous_map_on_restrict_domain_simple[OF
+            top1_continuous_map_on_id[OF hTX, unfolded id_def] hAj_sub])
+    have "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology X TX ((\<lambda>x. x) \<circ> f2)"
+      by (rule top1_continuous_map_on_comp[OF hf2_cont_A hid_cont])
+    hence "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology X TX f2"
+      unfolding comp_def by (by100 simp)
+    thus ?thesis using hf2 unfolding top1_is_path_on_def by (by100 blast)
+  qed
+  \<comment> \<open>Concatenate: path from x to y in X.\<close>
+  have "top1_is_path_on X TX x y (top1_path_product f1 f2)"
+    by (rule top1_path_product_is_path[OF hTX hf1_X hf2_X])
+  thus "\<exists>f. top1_is_path_on X TX x y f" by (by100 blast)
+qed
 
 text \<open>Helper: singleton is closed in a Hausdorff space.\<close>
 lemma hausdorff_singleton_closed:
