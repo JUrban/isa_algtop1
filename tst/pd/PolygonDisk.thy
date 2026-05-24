@@ -1174,7 +1174,10 @@ proof -
       \<and> top1_homeomorphism_on (P - ?BdP)
           (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (P - ?BdP))
           (top1_B2 - top1_S1)
-          (subspace_topology top1_B2 top1_B2_topology (top1_B2 - top1_S1)) \<psi>"
+          (subspace_topology top1_B2 top1_B2_topology (top1_B2 - top1_S1)) \<psi>
+      \<and> (\<forall>i<n. \<forall>t\<in>I_set. \<psi> ((1-t) * vx i + t * vx (Suc i mod n),
+                                (1-t) * vy i + t * vy (Suc i mod n))
+          = (cos (2 * pi * (real i + t) / real n), sin (2 * pi * (real i + t) / real n)))"
   proof -
     \<comment> \<open>Centroid abbreviations.\<close>
     define cx where "cx = (\<Sum>j<n. vx j) / real n"
@@ -3771,12 +3774,70 @@ proof -
         by (by100 simp)
       show ?thesis using hrestr h\<psi>_img hTP_eq by (by100 simp)
     qed
+    \<comment> \<open>Edge-to-arc: \<psi> maps edge i at parameter t to (cos(2\<pi>(i+t)/n), sin(2\<pi>(i+t)/n)).
+       From the cone construction: z on edge i has \<beta>=1-t, \<gamma>=t, s=1, u=t.\<close>
+    have h\<psi>_edge_arc: "\<forall>i<n. \<forall>t\<in>I_set. \<psi> ((1-t) * vx i + t * vx (Suc i mod n),
+                                (1-t) * vy i + t * vy (Suc i mod n))
+        = (cos (2 * pi * (real i + t) / real n), sin (2 * pi * (real i + t) / real n))"
+    proof (intro allI impI ballI)
+      fix i :: nat and t :: real
+      assume hi: "i < n" and ht: "t \<in> I_set"
+      let ?z = "((1-t) * vx i + t * vx (Suc i mod n), (1-t) * vy i + t * vy (Suc i mod n))"
+      \<comment> \<open>z is on edge i, hence in cone i.\<close>
+      have ht01: "0 \<le> t \<and> t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 auto)
+      \<comment> \<open>Cramer coordinates for z on edge i: \<beta> = 1-t, \<gamma> = t.\<close>
+      have hDi_ne: "Di i \<noteq> 0" using hDi_pos[OF hi] by (by100 linarith)
+      have h\<beta>: "beta_cr i ?z = 1 - t"
+      proof -
+        \<comment> \<open>fst ?z - cx = (1-t)*(vx i - cx) + t*(vx(i+1) - cx),
+           snd ?z - cy = (1-t)*(vy i - cy) + t*(vy(i+1) - cy).
+           cross2(fst z - cx, snd z - cy)(vx(i+1)-cx, vy(i+1)-cy)
+           = ((1-t)*(vx i-cx) + t*(vx(i+1)-cx))*(vy(i+1)-cy)
+             - ((1-t)*(vy i-cy) + t*(vy(i+1)-cy))*(vx(i+1)-cx)
+           = (1-t)*((vx i-cx)*(vy(i+1)-cy) - (vy i-cy)*(vx(i+1)-cx)) + t*0
+           = (1-t)*Di i.\<close>
+        have "cross2 (fst ?z - cx, snd ?z - cy) (vx (Suc i mod n) - cx, vy (Suc i mod n) - cy)
+            = (1 - t) * Di i"
+          unfolding cross2_def Di_def by (simp add: algebra_simps)
+        thus ?thesis unfolding beta_cr_def using hDi_ne by (by100 simp)
+      qed
+      have h\<gamma>: "gamma_cr i ?z = t"
+      proof -
+        \<comment> \<open>cross2(vx i - cx, vy i - cy)(fst z - cx, snd z - cy)
+           = (vx i-cx)*((1-t)*(vy i-cy) + t*(vy(i+1)-cy))
+             - (vy i-cy)*((1-t)*(vx i-cx) + t*(vx(i+1)-cx))
+           = (1-t)*0 + t*((vx i-cx)*(vy(i+1)-cy) - (vy i-cy)*(vx(i+1)-cx))
+           = t*Di i.\<close>
+        have "cross2 (vx i - cx, vy i - cy) (fst ?z - cx, snd ?z - cy) = t * Di i"
+          unfolding cross2_def Di_def by (simp add: algebra_simps)
+        thus ?thesis unfolding gamma_cr_def using hDi_ne by (by100 simp)
+      qed
+      \<comment> \<open>s = \<beta> + \<gamma> = 1, u = \<gamma>/s = t.\<close>
+      have hs: "beta_cr i ?z + gamma_cr i ?z = 1" using h\<beta> h\<gamma> by (by100 simp)
+      have hu: "(if beta_cr i ?z + gamma_cr i ?z = 0 then 0
+                 else gamma_cr i ?z / (beta_cr i ?z + gamma_cr i ?z)) = t"
+        using h\<beta> h\<gamma> hs by (by100 simp)
+      \<comment> \<open>\<theta> = 2\<pi>(i + t)/n.\<close>
+      \<comment> \<open>psi\_local i z = (s * cos \<theta>, s * sin \<theta>) = (cos \<theta>, sin \<theta>) since s = 1.\<close>
+      have hpsi_local: "psi_local i ?z = (cos (2 * pi * (real i + t) / real n),
+          sin (2 * pi * (real i + t) / real n))"
+        unfolding psi_local_def Let_def using hs hu by (by100 simp)
+      \<comment> \<open>\<psi> z = psi\_local (SOME i'. in\_cone i' z) z.
+         On edge i, z is in cone i (or cone (i-1)), and psi\_local agrees.\<close>
+      have "\<psi> ?z = psi_local i ?z"
+        sorry \<comment> \<open>z is in cone i (edge i \<subseteq> cone i).
+           SOME picks some cone j containing z.
+           psi\_local j z = psi\_local i z (agreement on boundary).\<close>
+      thus "\<psi> ?z = (cos (2 * pi * (real i + t) / real n), sin (2 * pi * (real i + t) / real n))"
+        using hpsi_local by (by100 simp)
+    qed
     show ?thesis
       apply (rule exI[of _ \<psi>])
       apply (intro conjI)
       using h\<psi>_homeo apply (by100 blast)
       using h\<psi>_bd apply (by100 blast)
-      using h\<psi>_int apply (by100 assumption)
+      using h\<psi>_int apply (by100 blast)
+      using h\<psi>_edge_arc apply (by100 blast)
       done
   qed
   then obtain \<psi> where h\<psi>1: "top1_homeomorphism_on P ?TP top1_B2 top1_B2_topology \<psi>"
@@ -3785,13 +3846,10 @@ proof -
           (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (P - ?BdP))
           (top1_B2 - top1_S1)
           (subspace_topology top1_B2 top1_B2_topology (top1_B2 - top1_S1)) \<psi>"
-    by (elim conjE exE) (rule that, assumption+)
-  \<comment> \<open>Edge-to-arc property: \<psi> maps edge i at parameter t to (cos, sin).\<close>
-  have h\<psi>4: "\<forall>i<n. \<forall>t\<in>I_set. \<psi> ((1-t) * vx i + t * vx (Suc i mod n),
+      and h\<psi>4: "\<forall>i<n. \<forall>t\<in>I_set. \<psi> ((1-t) * vx i + t * vx (Suc i mod n),
                               (1-t) * vy i + t * vy (Suc i mod n))
-      = (cos (2 * pi * (real i + t) / real n), sin (2 * pi * (real i + t) / real n))"
-    sorry \<comment> \<open>From the cone construction: psi\_local i maps edge i at parameter t
-       via Cramer \<beta>=1-t, \<gamma>=t, s=1, u=t, \<theta>=2\<pi>(i+t)/n, result=(cos\<theta>, sin\<theta>).\<close>
+          = (cos (2 * pi * (real i + t) / real n), sin (2 * pi * (real i + t) / real n))"
+    by - (erule exE, (erule conjE)+, rule that, assumption+)
   show ?thesis
     apply (rule exI[of _ \<psi>])
     apply (intro conjI)
