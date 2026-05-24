@@ -1233,4 +1233,5 @@ lemma closed_complement_open:
   using assms unfolding openin_on_def closedin_on_def by (by100 blast)
 
 
+
 end
