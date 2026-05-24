@@ -6917,6 +6917,45 @@ lemma map_map_pair_compose:
      = map (\<lambda>(s, b). (f (g s), b)) ws"
   by (induct ws) auto
 
+text \<open>Pasting deformation retractions on finitely many closed subsets.
+  Munkres 71.1: "The maps F\_i fit together... the pasting lemma applies."
+  If X = \<Union>F with F finite, each A \<in> F closed in X, each A deformation-retracts
+  to {p}, they pairwise intersect only at {p}, and all retractions fix p,
+  then X deformation-retracts to {p}.\<close>
+lemma pasting_deformation_retracts_to_point:
+  assumes hTX: "is_topology_on X TX"
+      and hfin: "finite F"
+      and hF_closed: "\<forall>A\<in>F. closedin_on X TX A"
+      and hcover: "X = \<Union>F"
+      and hp: "p \<in> X"
+      and hp_all: "\<forall>A\<in>F. p \<in> A"
+      and hpairwise: "\<forall>A\<in>F. \<forall>B\<in>F. A \<noteq> B \<longrightarrow> A \<inter> B = {p}"
+      and hdr: "\<forall>A\<in>F. top1_deformation_retract_of_on A (subspace_topology X TX A) {p}"
+  shows "top1_deformation_retract_of_on X TX {p}"
+  sorry \<comment> \<open>For each A \<in> F, extract retraction H\_A: A \<times> I \<rightarrow> A with H\_A(x,0)=x,
+     H\_A(x,1)=p, H\_A(p,t)=p. Define H(x,t) = H\_A(x,t) for x \<in> A.
+     Well-defined: if x \<in> A \<inter> B then x = p, and H\_A(p,t) = p = H\_B(p,t).
+     Continuous: each A is closed in X, so A \<times> I is closed in X \<times> I.
+     Each H|_{A \<times> I} is continuous. By pasting lemma (finite closed cover), H is continuous.
+     Range: H(x,t) \<in> A \<subseteq> X. Boundary: H(x,0) = x, H(x,1) = p, H(p,t) = p.\<close>
+
+text \<open>Variant: pasting deformation retractions to a subspace (not just a point).
+  Munkres: "S\_1 is a deformation retract of U."
+  A\_0 stays fixed (identity homotopy), each A\_j for j \<ge> 1 retracts to p \<in> A\_0.\<close>
+lemma pasting_deformation_retract_to_subspace:
+  assumes hTX: "is_topology_on X TX"
+      and hfin: "finite F"
+      and hA0: "A0 \<in> F"
+      and hF_closed: "\<forall>A\<in>F. closedin_on X TX A"
+      and hcover: "X = \<Union>F"
+      and hp: "p \<in> A0"
+      and hpairwise: "\<forall>A\<in>F. \<forall>B\<in>F. A \<noteq> B \<longrightarrow> A \<inter> B \<subseteq> {p}"
+      and hdr: "\<forall>A\<in>F - {A0}. top1_deformation_retract_of_on A (subspace_topology X TX A) {p}"
+  shows "top1_deformation_retract_of_on X TX A0"
+  sorry \<comment> \<open>On A0: identity H(x,t)=x. On each A \<in> F - {A0}: retraction H\_A to {p} \<subseteq> A0.
+     Well-defined: overlaps are \<subseteq> {p}, identity and retraction agree at p.
+     Continuous: pasting lemma on closed sets A0, A1, ...\<close>
+
 text \<open>Deformation retraction to a singleton implies simply connected.
   Expert review Step 2: reusable lemma for deriving simply connected
   from deformation retraction to a point.\<close>
@@ -7851,9 +7890,86 @@ lemma finite_wedge_pi1_free_with_chosen_loops:
            W(j) closed in U \<inter> V because S(j) closed in X and W(j) = S(j) \<inter> (U\<inter>V).\<close>
         have hUV_retract: "top1_deformation_retract_of_on
             (U \<inter> V) (subspace_topology X TX (U \<inter> V)) {p}"
-          sorry \<comment> \<open>Paste hW\_retract via pasting lemma. Each W(j) is closed in U\<inter>V
-             (S(j) compact in Hausdorff \<Rightarrow> closed; W(j) = S(j) \<inter> (U\<inter>V)). Well-defined
-             since W(j) \<inter> W(k) = {p} and all retractions fix p.\<close>
+        proof -
+          let ?TUV = "subspace_topology X TX (U \<inter> V)"
+          have hTX: "is_topology_on X TX"
+            using less.prems(1) unfolding is_topology_on_strict_def by (by100 blast)
+          have hUVsub: "U \<inter> V \<subseteq> X"
+          proof -
+            have "C 0 \<subseteq> X" using less.prems(4) hn_pos by (by100 blast)
+            moreover have "\<forall>j\<in>{1..<n}. W j \<subseteq> X"
+              using hW_sub_C less.prems(4) by (by100 force)
+            ultimately have "U \<subseteq> X" unfolding U_def by (by100 blast)
+            thus ?thesis by (by100 blast)
+          qed
+          have hTUV: "is_topology_on (U \<inter> V) ?TUV"
+            by (rule subspace_topology_is_topology_on[OF hTX hUVsub])
+          define F_set where "F_set = W ` {..<n}"
+          have hfin: "finite F_set" unfolding F_set_def by (by100 simp)
+          have hcover: "U \<inter> V = \<Union>F_set"
+            unfolding F_set_def using hUV_inter by (by100 auto)
+          \<comment> \<open>Each W(j) is closed in U \<inter> V. Munkres: "S\_i is closed in X,
+             so W\_i = S\_i - q\_i is closed in U \<inter> V." (since q\_i \<notin> U \<inter> V)\<close>
+          have hF_closed: "\<forall>A\<in>F_set. closedin_on (U \<inter> V) ?TUV A"
+          proof (intro ballI)
+            fix A assume "A \<in> F_set"
+            then obtain j where "j < n" "A = W j" unfolding F_set_def by (by100 blast)
+            \<comment> \<open>C(j) closed in X: compact (homeo to S1) in Hausdorff space.\<close>
+            have "closedin_on X TX (C j)"
+              sorry \<comment> \<open>C(j) compact (homeo to S1), X Hausdorff \<Rightarrow> C(j) closed (Thm 26.3).\<close>
+            \<comment> \<open>W(j) = C(j) \<inter> (U \<inter> V), so closed in subspace U \<inter> V.\<close>
+            moreover have "A = C j \<inter> (U \<inter> V)"
+            proof -
+              have "W j = C j \<inter> (U \<inter> V)"
+                sorry \<comment> \<open>q(j) \<notin> U \<inter> V (shown earlier), so C(j) \<inter> (U\<inter>V) = C(j) - {q(j)} = W(j).\<close>
+              thus ?thesis using \<open>A = W j\<close> by (by100 simp)
+            qed
+            ultimately have "closedin_on (U \<inter> V) ?TUV (C j \<inter> (U \<inter> V))"
+              using iffD2[OF Theorem_17_2[OF hTX hUVsub]] by (by100 blast)
+            thus "closedin_on (U \<inter> V) ?TUV A" using \<open>A = C j \<inter> (U \<inter> V)\<close> by (by100 simp)
+          qed
+          have hp_UV: "p \<in> U \<inter> V"
+          proof -
+            have "p \<in> C 0" using less.prems(4) hn_pos by (by100 blast)
+            hence "p \<in> U" unfolding U_def by (by100 blast)
+            have "p \<noteq> q 0" using hq hn_pos by (by100 blast)
+            hence "p \<in> W 0" using \<open>p \<in> C 0\<close> unfolding W_def by (by100 blast)
+            hence "p \<in> V" unfolding V_def by (by100 blast)
+            thus ?thesis using \<open>p \<in> U\<close> by (by100 blast)
+          qed
+          have hp_all: "\<forall>A\<in>F_set. p \<in> A" unfolding F_set_def using hp_W by (by100 force)
+          have hpairwise: "\<forall>A\<in>F_set. \<forall>B\<in>F_set. A \<noteq> B \<longrightarrow> A \<inter> B = {p}"
+          proof (intro ballI impI)
+            fix A B assume hAB: "A \<in> F_set" "B \<in> F_set" "A \<noteq> B"
+            from hAB(1) obtain i where hi: "i < n" "A = W i" unfolding F_set_def by (by100 blast)
+            from hAB(2) obtain j where hj: "j < n" "B = W j" unfolding F_set_def by (by100 blast)
+            have "i \<noteq> j"
+            proof
+              assume "i = j" thus False using hAB(3) hi(2) hj(2) by (by100 simp)
+            qed
+            have "W i \<inter> W j \<subseteq> C i \<inter> C j" using hW_sub_C by (by100 blast)
+            also have "\<dots> = {p}" using less.prems(6) \<open>i < n\<close> \<open>j < n\<close> \<open>i \<noteq> j\<close> by (by100 force)
+            finally have "W i \<inter> W j \<subseteq> {p}" .
+            moreover have "p \<in> W i \<inter> W j" using hp_W \<open>i < n\<close> \<open>j < n\<close> by (by100 blast)
+            ultimately show "A \<inter> B = {p}" using \<open>A = W i\<close> \<open>B = W j\<close> by (by100 blast)
+          qed
+          \<comment> \<open>Transfer retractions from subspace X TX (W j) to subspace (U\<inter>V) ?TUV (W j).\<close>
+          have hdr: "\<forall>A\<in>F_set. top1_deformation_retract_of_on A (subspace_topology (U \<inter> V) ?TUV A) {p}"
+          proof (intro ballI)
+            fix A assume "A \<in> F_set"
+            then obtain j where "j < n" "A = W j" unfolding F_set_def by (by100 blast)
+            have "top1_deformation_retract_of_on (W j) (subspace_topology X TX (W j)) {p}"
+              using hW_retract \<open>j < n\<close> by (by100 blast)
+            moreover have "W j \<subseteq> U \<inter> V"
+              using hUV_inter \<open>j < n\<close> by (by100 force)
+            hence "subspace_topology (U \<inter> V) ?TUV (W j) = subspace_topology X TX (W j)"
+              by (rule subspace_topology_trans)
+            ultimately show "top1_deformation_retract_of_on A (subspace_topology (U \<inter> V) ?TUV A) {p}"
+              using \<open>A = W j\<close> by (by100 simp)
+          qed
+          show ?thesis
+            by (rule pasting_deformation_retracts_to_point[OF hTUV hfin hF_closed hcover hp_UV hp_all hpairwise hdr])
+        qed
         have hUV_sc: "top1_simply_connected_on (U \<inter> V) (subspace_topology X TX (U \<inter> V))"
         proof -
           have hTX: "is_topology_on X TX"
@@ -8056,9 +8172,38 @@ lemma finite_wedge_pi1_free_with_chosen_loops:
            U = C(0) \<union> arcs. Identity on C(0), retract each arc W(j) to p \<in> C(0).
            Pasting: C(0) closed in U (compact in Hausdorff), each W(j) closed (same reason).\<close>
         have hU_retract: "top1_deformation_retract_of_on U (subspace_topology X TX U) (C 0)"
-          sorry \<comment> \<open>Same pasting as hUV\_retract but target is C(0) not {p}.
-             On C(0): identity. On W(j) for j\<ge>1: retract to p via hW\_retract.
-             Well-defined: W(j) \<inter> C(0) = {p}, and retraction fixes p.\<close>
+        proof -
+          let ?TU = "subspace_topology X TX U"
+          have hTX: "is_topology_on X TX"
+            using less.prems(1) unfolding is_topology_on_strict_def by (by100 blast)
+          have "C 0 \<subseteq> X" using less.prems(4) hn_pos by (by100 blast)
+          moreover have "\<forall>j\<in>{1..<n}. W j \<subseteq> X" using hW_sub_C less.prems(4) by (by100 force)
+          ultimately have hUsub: "U \<subseteq> X" unfolding U_def by (by100 blast)
+          have hTU': "is_topology_on U ?TU" by (rule subspace_topology_is_topology_on[OF hTX hUsub])
+          define F_U where "F_U = insert (C 0) (W ` {1..<n})"
+          have hU_eq': "U = \<Union>F_U" unfolding F_U_def U_def by (by100 blast)
+          have hfin': "finite F_U" unfolding F_U_def by (by100 simp)
+          have hC0_in: "C 0 \<in> F_U" unfolding F_U_def by (by100 blast)
+          have hF_closed': "\<forall>A\<in>F_U. closedin_on U ?TU A"
+            sorry \<comment> \<open>C(0) and each W(j) are closed in U (compact in Hausdorff).\<close>
+          have hpairwise': "\<forall>A\<in>F_U. \<forall>B\<in>F_U. A \<noteq> B \<longrightarrow> A \<inter> B \<subseteq> {p}"
+            sorry \<comment> \<open>C(0) \<inter> W(j) \<subseteq> C(0) \<inter> C(j) = {p}. W(i) \<inter> W(j) \<subseteq> C(i) \<inter> C(j) = {p}.\<close>
+          have hdr': "\<forall>A\<in>F_U - {C 0}. top1_deformation_retract_of_on A (subspace_topology U ?TU A) {p}"
+          proof (intro ballI)
+            fix A assume "A \<in> F_U - {C 0}"
+            then obtain j where "j \<in> {1..<n}" "A = W j" unfolding F_U_def by (by100 blast)
+            have "top1_deformation_retract_of_on (W j) (subspace_topology X TX (W j)) {p}"
+              using hW_retract \<open>j \<in> {1..<n}\<close> by (by100 force)
+            moreover have "W j \<subseteq> U" unfolding U_def using \<open>j \<in> {1..<n}\<close> by (by100 blast)
+            hence "subspace_topology U ?TU (W j) = subspace_topology X TX (W j)"
+              by (rule subspace_topology_trans)
+            ultimately show "top1_deformation_retract_of_on A (subspace_topology U ?TU A) {p}"
+              using \<open>A = W j\<close> by (by100 simp)
+          qed
+          have "p \<in> C 0" using less.prems(4) hn_pos by (by100 blast)
+          show ?thesis
+            by (rule pasting_deformation_retract_to_subspace[OF hTU' hfin' hC0_in hF_closed' hU_eq' \<open>p \<in> C 0\<close> hpairwise' hdr'])
+        qed
         \<comment> \<open>By Theorem\_58\_3: deformation retract gives \<pi>_1 iso.\<close>
         have hTU: "is_topology_on U (subspace_topology X TX U)"
         proof -
@@ -8100,8 +8245,43 @@ lemma finite_wedge_pi1_free_with_chosen_loops:
            V = W(0) \<union> C(1) \<union> \<cdots> \<union> C(n-1). Retract W(0) to p.\<close>
         define X' where "X' = (\<Union>j\<in>{1..<n}. C j)"
         have hV_retract: "top1_deformation_retract_of_on V (subspace_topology X TX V) X'"
-          sorry \<comment> \<open>Same as hU\_retract: identity on C(j) for j\<ge>1, retract W(0) to p.
-             W(0) closed in V, each C(j) closed in V. Pasting lemma.\<close>
+        proof -
+          \<comment> \<open>V = W(0) \<union> C(1) \<union> ... \<union> C(n-1). X' = C(1) \<union> ... \<union> C(n-1).
+             Retract W(0) to {p} \<subseteq> X'. Identity on C(j) for j \<ge> 1.
+             Use pasting\_deformation\_retract\_to\_subspace with A0 = X'.\<close>
+          let ?TV = "subspace_topology X TX V"
+          have hTX: "is_topology_on X TX"
+            using less.prems(1) unfolding is_topology_on_strict_def by (by100 blast)
+          have "W 0 \<subseteq> X" using hW_sub_C less.prems(4) hn_pos by (by100 force)
+          moreover have "\<forall>j\<in>{1..<n}. C j \<subseteq> X" using less.prems(4) by (by100 force)
+          ultimately have hVsub: "V \<subseteq> X" unfolding V_def by (by100 blast)
+          have hTV': "is_topology_on V ?TV" by (rule subspace_topology_is_topology_on[OF hTX hVsub])
+          \<comment> \<open>F = {X', W(0)}. X' is the "base" set, W(0) retracts to p.\<close>
+          define F_V where "F_V = {X', W 0}"
+          have hfin': "finite F_V" unfolding F_V_def by (by100 simp)
+          have hX'_in: "X' \<in> F_V" unfolding F_V_def by (by100 blast)
+          have hV_eq': "V = \<Union>F_V" unfolding F_V_def V_def X'_def by (by100 blast)
+          have hF_closed': "\<forall>A\<in>F_V. closedin_on V ?TV A"
+            sorry \<comment> \<open>X' = union of closed C(j) is closed. W(0) closed (compact in Hausdorff).\<close>
+          have hpairwise': "\<forall>A\<in>F_V. \<forall>B\<in>F_V. A \<noteq> B \<longrightarrow> A \<inter> B \<subseteq> {p}"
+            sorry \<comment> \<open>X' \<inter> W(0) \<subseteq> (\<Union>j\<ge>1. C(j)) \<inter> C(0) = {p} (disjointness).\<close>
+          have hp_X': "p \<in> X'"
+            unfolding X'_def using less.prems(4) hn2 by (by100 force)
+          have hdr': "\<forall>A\<in>F_V - {X'}. top1_deformation_retract_of_on A (subspace_topology V ?TV A) {p}"
+          proof (intro ballI)
+            fix A assume "A \<in> F_V - {X'}"
+            hence "A = W 0" unfolding F_V_def by (by100 blast)
+            have "top1_deformation_retract_of_on (W 0) (subspace_topology X TX (W 0)) {p}"
+              using hW_retract hn_pos by (by100 blast)
+            moreover have "W 0 \<subseteq> V" unfolding V_def by (by100 blast)
+            hence "subspace_topology V ?TV (W 0) = subspace_topology X TX (W 0)"
+              by (rule subspace_topology_trans)
+            ultimately show "top1_deformation_retract_of_on A (subspace_topology V ?TV A) {p}"
+              using \<open>A = W 0\<close> by (by100 simp)
+          qed
+          show ?thesis
+            by (rule pasting_deformation_retract_to_subspace[OF hTV' hfin' hX'_in hF_closed' hV_eq' hp_X' hpairwise' hdr'])
+        qed
         \<comment> \<open>Munkres: "using the induction hypothesis, \<pi>\_1(V,p) is a free group,
            with loops f\_2,...,f\_n as free generators."
            IH: apply less.IH with n-1 < n to X' = C(1) \<union> \<cdots> \<union> C(n-1).
