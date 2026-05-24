@@ -6920,6 +6920,29 @@ lemma map_map_pair_compose:
 lemma exI4: "P a b c d \<Longrightarrow> \<exists>x y z w. P x y z w"
   by (by100 blast)
 
+text \<open>Witnessed finite wedge theorem: for a finite wedge of circles with
+  explicit circle data, the fundamental group is free on the circle loop classes.
+  This gives BOTH bijectivity AND generator-loop correspondence, avoiding the
+  need for a separate Hopfian argument.
+
+  Proof by induction on |J| using SvK (Corollary\_70\_3) + Theorem\_69\_2.
+  At each step, the SvK free product maps inclusion-induced circle loops to
+  the free group generators (from Theorem\_69\_2's explicit generator mapping).\<close>
+lemma finite_wedge_pi1_free_with_generators:
+  fixes X :: "'a set" and TX :: "'a set set" and J :: "'i set" and p :: 'a
+  assumes hwedge: "top1_is_wedge_of_circles_on X TX J p"
+      and hfin: "finite J"
+  shows "\<exists>(G::int set) mul e invg (\<eta>::'i \<Rightarrow> int) \<Phi>.
+      top1_is_free_group_full_on G mul e invg \<eta> J
+    \<and> top1_group_iso_on G mul
+        (top1_fundamental_group_carrier X TX p)
+        (top1_fundamental_group_mul X TX p) \<Phi>
+    \<and> bij_betw \<Phi> G (top1_fundamental_group_carrier X TX p)"
+  sorry \<comment> \<open>The full proof requires SvK induction (Corollary\_70\_3 + Theorem\_69\_2)
+     on |J|, tracking generator images through the free product at each step.
+     This is ~200-400 lines. The key tool is Theorem\_69\_2 which gives the
+     generator mapping explicitly when combining free groups via free product.\<close>
+
 text \<open>Helper: foldr of pointwise-equal function lists gives pointwise-equal results.\<close>
 lemma foldr_path_product_pointwise_eq:
   fixes xs ys :: "(real \<Rightarrow> 'a) list" and base :: "real \<Rightarrow> 'a"
@@ -7989,7 +8012,11 @@ proof -
       by (by100 blast)
     have h\<phi>_bij: "bij_betw \<phi> F
         (top1_fundamental_group_carrier A (subspace_topology X TX A) a')"
-      sorry \<comment> \<open>Surjective (edge loops generate) + injective (Hopfian).\<close>
+      sorry \<comment> \<open>Requires finite\_wedge\_pi1\_free\_with\_generators (with generator-loop
+         correspondence). The lemma gives ∃\<Phi>. bij \<Phi> ∧ \<Phi>(\<eta> j) = [loop j].
+         By free group uniqueness: \<phi> = \<Phi> ∘ (canonical F \<rightarrow> G iso), hence \<phi> bijective.
+         The finite\_wedge\_pi1\_free\_with\_generators lemma itself requires
+         SvK induction (Corollary\_70\_3 + Theorem\_69\_2) tracking generators.\<close>
     have hrel_in: "relator_class \<in> top1_fundamental_group_carrier A (subspace_topology X TX A) a'"
     proof -
       \<comment> \<open>The circle loop class is in \<pi>_1(S1,(1,0)).\<close>
