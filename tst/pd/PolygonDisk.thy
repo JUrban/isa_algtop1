@@ -4220,8 +4220,51 @@ proof (induction n arbitrary: f rule: nat_less_induct)
     have hf_split: "top1_loop_equiv_on X TX x0 f (top1_path_product (sub 0) g)"
       sorry \<comment> \<open>From loop\_split\_first.\<close>
     \<comment> \<open>g is a loop satisfying IH hypotheses with n-1.\<close>
-    have hg_loop: "top1_is_loop_on X TX x0 g" sorry
-    have hg_vertex: "\<forall>k\<le>n-1. g (real k / real (n-1)) = x0" sorry
+    have hn_pos: "real n > 0" using hn by (by100 simp)
+    have hg_loop: "top1_is_loop_on X TX x0 g"
+    proof -
+      \<comment> \<open>g(0) = f(1/n) = x0, g(1) = f(1/n + (n-1)/n) = f(1) = x0.\<close>
+      have hg0: "g 0 = x0" unfolding g_def using hvertex[rule_format, of 1] hn by (by100 simp)
+      have hg1: "g 1 = x0"
+        sorry \<comment> \<open>g(1) = f(1/n + (n-1)/n) = f(1) = x0. Arithmetic inside f.\<close>
+      \<comment> \<open>g is continuous (composition of f with affine rescaling).\<close>
+      have hg_cont: "top1_continuous_map_on I_set top1_unit_interval_topology X TX g"
+        sorry \<comment> \<open>f continuous + affine rescaling continuous \<Rightarrow> g continuous.\<close>
+      show ?thesis unfolding top1_is_loop_on_def top1_is_path_on_def
+        using hg0 hg1 hg_cont by (by5000 blast)
+    qed
+    have hg_vertex: "\<forall>k\<le>n-1. g (real k / real (n-1)) = x0"
+    proof (intro allI impI)
+      fix k assume hk: "k \<le> n - 1"
+      show "g (real k / real (n-1)) = x0"
+      proof (cases "n = 2")
+        case True
+        hence "n - 1 = 1" by (by100 simp)
+        hence "k = 0 \<or> k = 1" using hk True by (by100 auto)
+        thus ?thesis
+        proof
+          assume "k = 0" thus ?thesis unfolding g_def
+            using hvertex[rule_format, of 1] hn by (by100 simp)
+        next
+          assume "k = 1"
+          have "g 1 = x0" sorry \<comment> \<open>g(1)=f(1/n+(n-1)/n)=f(1)=x0.\<close>
+          thus ?thesis using \<open>k = 1\<close> True by (by100 simp)
+        qed
+      next
+        case False
+        hence hn3: "n \<ge> 3" using hn2 by (by100 linarith)
+        have hnm1_pos: "real (n-1) > 0" using hn2 by (by100 simp)
+        \<comment> \<open>g(k/(n-1)) = f(1/n + k/(n-1) * (n-1)/n) = f((k+1)/n).\<close>
+        have "g (real k / real (n-1)) = f (1/real n + (real k / real (n-1)) * (real n - 1) / real n)"
+          unfolding g_def by (by100 simp)
+        also have "1/real n + (real k / real (n-1)) * (real n - 1) / real n
+            = real (k+1) / real n"
+          using hnm1_pos hn_pos by (simp add: field_simps)
+        also have "f (real (k+1) / real n) = x0"
+          using hvertex[rule_format, of "k+1"] hk hn2 by (by100 force)
+        finally show ?thesis .
+      qed
+    qed
     \<comment> \<open>Apply IH: g \<simeq> foldr [g\_sub 0,...,g\_sub (n-2)] const.\<close>
     have hIH_g: "top1_loop_equiv_on X TX x0 g
         (foldr top1_path_product
