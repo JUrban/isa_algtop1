@@ -4320,11 +4320,14 @@ proof (induction n arbitrary: f rule: nat_less_induct)
       qed
     qed
     \<comment> \<open>Apply IH: g \<simeq> foldr [g\_sub 0,...,g\_sub (n-2)] const.\<close>
+    have hn1_ge1: "n - 1 \<ge> 1" using hn2 by (by100 linarith)
+    have hn1_lt_n: "n - 1 < n" using hn2 by (by100 linarith)
     have hIH_g: "top1_loop_equiv_on X TX x0 g
         (foldr top1_path_product
           (map (\<lambda>k. \<lambda>s. g ((real k + s) / real (n-1))) [0..<n-1])
           (top1_constant_path x0))"
-      sorry \<comment> \<open>From IH with m = n-1.\<close>
+      using hIH[rule_format, of "n-1" g] hn1_lt_n htop hg_loop hn1_ge1 hg_vertex
+      by (by100 blast)
     \<comment> \<open>Key: g\_sub k = sub (k+1).\<close>
     have hg_sub_eq: "map (\<lambda>k. \<lambda>s. g ((real k + s) / real (n-1))) [0..<n-1]
         = map (\<lambda>k. \<lambda>s. f ((real k + s) / real n)) [Suc 0..<n]"
