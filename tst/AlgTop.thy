@@ -8511,8 +8511,68 @@ proof -
         qed
         \<comment> \<open>Step 3: Vertices of ?boundary are a'.\<close>
         have hvertex: "\<forall>k\<le>?n. ?boundary (real k / real ?n) = a'"
-          sorry \<comment> \<open>?boundary(k/n) = \<iota>(cos(2\<pi>k/n), sin(2\<pi>k/n)) = h(cos(2\<pi>k/n), sin(2\<pi>k/n)).
-             From hh\_edge\_arc at t=0 or t=1 (edge endpoints): = qC(vxC k, vyC k) = a'.\<close>
+        proof (intro allI impI)
+          fix k assume hk: "k \<le> ?n"
+          \<comment> \<open>?boundary(k/n) = \<iota>(cos(2\<pi>k/n), sin(2\<pi>k/n)).\<close>
+          \<comment> \<open>= h(cos(2\<pi>k/n), sin(2\<pi>k/n)) since point is on S1.\<close>
+          have h_eq_h: "\<iota> (cos (2*pi*(real k / real ?n)), sin (2*pi*(real k / real ?n)))
+              = h (cos (2*pi*(real k / real ?n)), sin (2*pi*(real k / real ?n)))"
+          proof -
+            have "(cos (2*pi*(real k / real ?n)), sin (2*pi*(real k / real ?n))) \<in> top1_S1"
+              unfolding top1_S1_def by (by5000 force)
+            thus ?thesis using h\<iota>_eq by (by100 blast)
+          qed
+          show "?boundary (real k / real ?n) = a'"
+          proof (cases "k = ?n")
+            case True
+            have hn_pos: "real ?n > 0" using hlen by (by100 linarith)
+            have hkn: "real k / real ?n = (1::real)"
+            proof -
+              have "real ?n \<noteq> (0::real)" using hn_pos by (by100 linarith)
+              hence "real ?n / real ?n = (1::real)" by (rule divide_self)
+              thus ?thesis using True by (by100 simp)
+            qed
+            have "?boundary (real k / real ?n) = \<iota> (cos (2*pi), sin (2*pi))" using hkn by (by100 simp)
+            also have "\<dots> = \<iota> (1, 0)" by (by100 simp)
+            also have "\<dots> = h (1, 0)"
+            proof -
+              have "(1::real, 0::real) \<in> top1_S1" unfolding top1_S1_def by (by100 simp)
+              thus ?thesis using h\<iota>_eq by (by100 blast)
+            qed
+            finally show ?thesis using ha'_base by (by100 simp)
+          next
+            case False
+            hence hk': "k < ?n" using hk by (by100 linarith)
+            \<comment> \<open>From hh\_edge\_arc at t=0: h(cos(2\<pi>k/n), sin(2\<pi>k/n)) = qC(vxC k, vyC k).\<close>
+            have h0: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 auto)
+            have hh_val: "h (cos (2*pi*(real k+0)/real ?n), sin (2*pi*(real k+0)/real ?n))
+                = qC ((1-0)*vxC k + 0*vxC (Suc k mod ?n), (1-0)*vyC k + 0*vyC (Suc k mod ?n))"
+              using hh_edge_arc[rule_format, OF hk' h0] .
+            hence "h (cos (2*pi*real k/real ?n), sin (2*pi*real k/real ?n)) = qC (vxC k, vyC k)"
+              by (by100 simp)
+            hence "?boundary (real k / real ?n) = qC (vxC k, vyC k)" using h_eq_h by (by100 simp)
+            also have "\<dots> = qC (vxC 0, vyC 0)"
+            proof -
+              have "0 < ?n" using hlen by (by100 linarith)
+              thus ?thesis using hvert_C[rule_format, OF hk' \<open>0 < ?n\<close>] by (by100 simp)
+            qed
+            also have "\<dots> = a" using ha_eq by (by100 simp)
+            also have "\<dots> = a'"
+            proof -
+              have "h (1, 0) = qC (vxC 0, vyC 0)"
+              proof -
+                have "0 < ?n" using hlen by (by100 linarith)
+                moreover have "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 auto)
+                ultimately have "h (cos (2*pi*(real 0+0)/real ?n), sin (2*pi*(real 0+0)/real ?n))
+                  = qC ((1-0)*vxC 0 + 0*vxC (Suc 0 mod ?n), (1-0)*vyC 0 + 0*vyC (Suc 0 mod ?n))"
+                  using hh_edge_arc by (by100 blast)
+                thus ?thesis by (by100 simp)
+              qed
+              thus ?thesis unfolding a'_def using ha_eq by (by100 simp)
+            qed
+            finally show ?thesis .
+          qed
+        qed
         \<comment> \<open>Step 4: loop\_split\_at\_vertices decomposes ?boundary.\<close>
         define sub where "sub k s = ?boundary ((real k + s) / real ?n)" for k :: nat and s :: real
         have hn_ge1: "?n \<ge> 1" using hlen by (by100 linarith)
