@@ -7520,10 +7520,14 @@ proof -
   \<comment> \<open>The actual proof requires angle extraction from points on S1,
      which needs arctan2 or similar. This is standard real analysis
      but tedious to formalize (~40 lines of angle arithmetic).\<close>
-  show ?thesis sorry \<comment> \<open>S1 \<setminus> {q} \<cong> open interval via angle parametrization.
-     Proof: q = (cos \<alpha>, sin \<alpha>). The map \<theta> \<mapsto> (cos \<theta>, sin \<theta>) is a
-     homeomorphism (\<alpha>, \<alpha>+2\<pi>) \<rightarrow> S1 \<setminus> {q}. Open intervals are
-     path-connected (convex). Homeomorphism preserves path-connectedness.\<close>
+  show ?thesis
+    sorry \<comment> \<open>S1 \<setminus> {q} is path-connected.
+       Proof: q = top1\_R\_to\_S1 \<alpha> for some \<alpha> (by S1\_point\_to\_angle).
+       For any a, b \<in> S1\{q}: get angles \<theta>a, \<theta>b with a = top1\_R\_to\_S1 \<theta>a,
+       b = top1\_R\_to\_S1 \<theta>b. Adjust to (\<alpha>, \<alpha>+1) using periodicity.
+       Linear interpolation t \<mapsto> top1\_R\_to\_S1(\<theta>a + t(\<theta>b - \<theta>a)) is a path
+       in S1\{q} (angle stays in (\<alpha>, \<alpha>+1), so never hits q).
+       Continuous (cos/sin \<circ> affine is continuous). ~30 lines.\<close>
 qed
 
 text \<open>Helper: homeomorphic image of S1 minus a point is path-connected.\<close>
