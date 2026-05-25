@@ -4648,6 +4648,38 @@ qed
 
 section \<open>\<S>73 Fundamental Groups of the Torus and the Dunce Cap\<close>
 
+text \<open>Helper: group with commutator relators (all relators are commutators) is abelian.
+  Book: Corollary 73.2 — "αβα⁻¹β⁻¹ = 1 means αβ = βα, so the group is abelian."\<close>
+lemma presented_by_commutators_abelian:
+  assumes hpres: "top1_group_presented_by_on G mul e invg S R"
+    and hcomm: "\<forall>w\<in>R. \<exists>s1\<in>S. \<exists>s2\<in>S.
+        w = [(s1, True), (s2, True), (s1, False), (s2, False)]"
+  shows "top1_is_abelian_group_on G mul e invg"
+  sorry
+
+text \<open>Helper: abelian group has trivial commutator subgroup.\<close>
+lemma abelian_commutator_trivial:
+  assumes hG: "top1_is_group_on G mul e invg"
+    and hab: "top1_is_abelian_group_on G mul e invg"
+  shows "top1_commutator_subgroup_on G mul e invg = {e}"
+  sorry
+
+text \<open>Helper: trivial kernel implies injective for group hom.\<close>
+lemma trivial_kernel_injective:
+  assumes hG: "top1_is_group_on G mulG eG invgG"
+    and hH: "top1_is_group_on H mulH eH invgH"
+    and hf: "top1_group_hom_on G mulG H mulH f"
+    and hker: "top1_group_kernel_on G eH f = {eG}"
+  shows "inj_on f G"
+  sorry
+
+text \<open>Helper: free abelian group on {..<2} is isomorphic to Z \<times> Z.\<close>
+lemma free_abelian_2_iso_ZZ:
+  assumes "top1_is_free_abelian_group_full_on G mul e invg iota ({..<2}::nat set)"
+  shows "top1_groups_isomorphic_on G mul (UNIV::(int \<times> int) set)
+    (\<lambda>(a1, a2) (b1, b2). (a1 + b1, a2 + b2))"
+  sorry
+
 (** from \<S>73 Theorem 73.1: \<pi>_1(torus) has presentation <\<alpha>, \<beta> | \<alpha>\<beta>\<alpha>^{-1}\<beta>^{-1}>,
     i.e. is isomorphic to the free abelian group Z \<times> Z on 2 generators. **)
 theorem Theorem_73_1_torus_presentation:
@@ -4687,7 +4719,27 @@ proof -
       (top1_fundamental_group_mul T_torus TT x0)
       (top1_fundamental_group_id T_torus TT x0)
       (top1_fundamental_group_invg T_torus TT x0)"
-    sorry \<comment> \<open>From Theorem\_74\_3 (n=1): torus has commutator relator, so \<pi>\_1 is abelian.\<close>
+  proof -
+    \<comment> \<open>Theorem\_74\_3 for n=1: \<pi>\_1(T) has presentation \<langle>{0,1} | [(0,T)(1,T)(0,F)(1,F)]\<rangle>.\<close>
+    from Theorem_74_3_fund_group_n_torus[OF h1fold assms(2)]
+    obtain G :: "(real \<Rightarrow> 'a) set set set" and mulG eG invgG where
+      hpres: "top1_group_presented_by_on G mulG eG invgG ({..<2*1}::nat set)
+        {concat (map (\<lambda>i. [(2*i, True), (2*i+1, True), (2*i, False), (2*i+1, False)]) [0..<1])}" and
+      hiso_pi1: "top1_groups_isomorphic_on G mulG
+        (top1_fundamental_group_carrier T_torus TT x0)
+        (top1_fundamental_group_mul T_torus TT x0)"
+      by (by5000 auto)
+    \<comment> \<open>The relator [(0,T),(1,T),(0,F),(1,F)] is a commutator of generators 0,1.\<close>
+    have hrelator_comm: "\<forall>w\<in>{concat (map (\<lambda>i. [(2*i, True), (2*i+1, True), (2*i, False), (2*i+1, False)]) [0..<1])}.
+        \<exists>s1\<in>{..<2*1::nat}. \<exists>s2\<in>{..<2*1::nat}. w = [(s1, True), (s2, True), (s1, False), (s2, False)]"
+      by (by100 auto)
+    \<comment> \<open>So G is abelian by presented\_by\_commutators\_abelian.\<close>
+    have hG_abelian: "top1_is_abelian_group_on G mulG eG invgG"
+      using presented_by_commutators_abelian[OF hpres hrelator_comm] by (by100 blast)
+    \<comment> \<open>Transfer: G abelian + G \<cong> \<pi>\_1(T) \<Rightarrow> \<pi>\_1(T) abelian.\<close>
+    show ?thesis using hG_abelian hiso_pi1
+      sorry \<comment> \<open>iso preserves abelian: G abelian + G \<cong> \<pi>\_1 \<Rightarrow> \<pi>\_1 abelian.\<close>
+  qed
   \<comment> \<open>Step 4: phi bijective (abelian \<Rightarrow> ker = {e} \<Rightarrow> injective + surjective = bijective).\<close>
   have hphi_bij: "bij_betw phi
       (top1_fundamental_group_carrier T_torus TT x0) H"
@@ -4702,13 +4754,19 @@ proof -
     \<comment> \<open>ker(phi) = [G,G] = {eG} since G is abelian.\<close>
     have hker: "top1_group_kernel_on ?G eH phi = top1_commutator_subgroup_on ?G ?mulG ?eG ?invG"
       using habel unfolding top1_is_abelianization_of_def by (by100 blast)
+    have hG_grp: "top1_is_group_on ?G ?mulG ?eG ?invG"
+      using habel unfolding top1_is_abelianization_of_def by (by100 blast)
     have hcomm_trivial: "top1_commutator_subgroup_on ?G ?mulG ?eG ?invG = {?eG}"
-      using hpi1_abelian sorry \<comment> \<open>Abelian group has trivial commutator subgroup.\<close>
+      using abelian_commutator_trivial[OF hG_grp hpi1_abelian] by (by100 blast)
     have hker_trivial: "top1_group_kernel_on ?G eH phi = {?eG}"
       using hker hcomm_trivial by (by100 simp)
     \<comment> \<open>Trivial kernel + surjective = bijective.\<close>
+    have hH_grp: "top1_is_group_on H mulH eH invgH"
+      using habel unfolding top1_is_abelianization_of_def top1_is_abelian_group_on_def by (by100 blast)
+    have hphi_hom: "top1_group_hom_on ?G ?mulG H mulH phi"
+      using habel unfolding top1_is_abelianization_of_def by (by100 blast)
     have hinj: "inj_on phi ?G"
-      sorry \<comment> \<open>Trivial kernel \<Rightarrow> injective (standard group theory).\<close>
+      using trivial_kernel_injective[OF hG_grp hH_grp hphi_hom hker_trivial] by (by100 blast)
     show ?thesis unfolding bij_betw_def using hinj hsurj by (by100 blast)
   qed
   \<comment> \<open>Step 5: phi is a group iso \<pi>\_1(T) \<rightarrow> H.\<close>
@@ -4720,7 +4778,7 @@ proof -
   \<comment> \<open>Step 6: H free abelian on {0,1} \<cong> Z \<times> Z.\<close>
   have hH_ZZ: "top1_groups_isomorphic_on H mulH (UNIV::(int \<times> int) set)
       (\<lambda>(a1, a2) (b1, b2). (a1 + b1, a2 + b2))"
-    sorry \<comment> \<open>Free abelian group on 2 generators \<cong> Z\<times>Z.\<close>
+    using free_abelian_2_iso_ZZ[OF hfree_ab] by (by100 blast)
   \<comment> \<open>Step 7: Compose: \<pi>\_1(T) \<cong> H \<cong> Z\<times>Z.\<close>
   show ?thesis
   proof -
