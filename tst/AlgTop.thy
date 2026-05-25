@@ -9315,10 +9315,22 @@ lemma finite_wedge_pi1_free_with_chosen_loops:
           qed
           \<comment> \<open>Step 6: Free group re-indexed from {..<n-1} to {1..<n}.\<close>
           have hG2_free: "top1_is_free_group_full_on G2 mul2 e2 invg2 \<eta>2 {1..<n}"
-            sorry \<comment> \<open>Re-index: \<eta>2 = \<eta>2' \<circ> (\<lambda>k. k-1). Bijection {1..<n} \<leftrightarrow> {..<n-1}.
-               Each condition of free\_group\_full transfers:
-               gens \<in> G, injective, generates G, reduced words \<noteq> e.
-               Need a general re-indexing lemma for free\_group\_full.\<close>
+          proof -
+            \<comment> \<open>The bijection \<phi>: k \<mapsto> k-1 maps {1..<n} to {..<n-1}.\<close>
+            define \<phi> where "\<phi> k = k - (1::nat)" for k
+            have h\<phi>_bij: "bij_betw \<phi> {1..<n} {..<n-1}"
+              sorry \<comment> \<open>Standard: \<phi>(k) = k-1 is a bijection {1..<n} \<rightarrow> {..<n-1}.\<close>
+            have h\<eta>2_eq: "\<forall>k\<in>{1..<n}. \<eta>2 k = \<eta>2' (\<phi> k)"
+              unfolding \<eta>2_def \<phi>_def by (by100 simp)
+            have h\<eta>2_img: "\<eta>2 ` {1..<n} = \<eta>2' ` {..<n-1}"
+              sorry \<comment> \<open>\<eta>2 ` {1..<n} = \<eta>2' \<circ> \<phi> ` {1..<n} = \<eta>2' ` {..<n-1} (bijection).\<close>
+            \<comment> \<open>Transfer free\_group\_full from {..<n-1} to {1..<n}.\<close>
+            show ?thesis unfolding top1_is_free_group_full_on_def
+              sorry \<comment> \<open>Each conjunct: group (same), gens \<in> G (\<eta>2 img = \<eta>2' img),
+                 injective (\<eta>2 injective from \<eta>2' injective + \<phi> bijection),
+                 generates (same generator set), reduced words \<noteq> e
+                 (re-labeling preserves reduced and non-identity).\<close>
+          qed
           \<comment> \<open>Step 7: Generator correspondence.\<close>
           have h\<Phi>2_gen: "\<forall>j\<in>{1..<n}. \<Phi>2 (\<eta>2 j) = {l. top1_loop_equiv_on V (subspace_topology X TX V) p
               (\<lambda>t. g j (cos (2*pi*t), sin (2*pi*t))) l}"
