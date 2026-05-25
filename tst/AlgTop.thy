@@ -5460,10 +5460,9 @@ proof (rule image_subsetI)
   proof (elim disjE exE conjE)
     assume "g = eG"
     have "f eG = eH"
-      sorry \<comment> \<open>Hom preserves identity.\<close>
+      using hom_preserves_id[OF hG_grp hH_grp hf] by (by100 blast)
     hence "f g = eH" using \<open>g = eG\<close> by (by100 simp)
-    thus ?thesis
-      sorry \<comment> \<open>eH \<in> N (N is a group).\<close>
+    thus ?thesis using hN_grp unfolding top1_is_group_on_def by (by100 blast)
   next
     fix ws assume hlen: "length ws > 0"
       and hws: "\<forall>i<length ws. ws!i \<in> S \<or> (\<exists>s\<in>S. ws!i = invgG s)"
@@ -5480,7 +5479,8 @@ proof (rule image_subsetI)
       sorry \<comment> \<open>By induction on ws, using hom property.\<close>
     \<comment> \<open>foldr mulH (map f ws) eH \<in> N since each (map f ws)!i \<in> N and N closed.\<close>
     have "foldr mulH (map f ws) eH \<in> N"
-      sorry \<comment> \<open>By induction on length (map f ws), using N group.\<close>
+      using hmap_N hN_grp
+    sorry \<comment> \<open>foldr of elements all in N stays in N (N closed under mul, contains eH).\<close>
     thus "f g \<in> N" using hprod hf_foldr by (by100 simp)
   qed
 qed
