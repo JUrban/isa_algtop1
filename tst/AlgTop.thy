@@ -7781,10 +7781,174 @@ proof -
       have hH_fix: "\<forall>a\<in>A0. \<forall>t\<in>I_set. H (a, t) = a"
         unfolding H_def by (by100 simp)
       have hH_cont: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) X TX H"
-        sorry \<comment> \<open>Same pasting technique as pasting\_deformation\_retracts\_to\_point:
-           A0\<times>I closed, Y\<times>I closed. On A0\<times>I: H = fst (continuous, pi1).
-           On Y\<times>I: H = HY (continuous, expand codomain Y \<rightarrow> X).
-           Theorem\_16\_3 + expand\_range + agree + pasting\_lemma\_two\_closed.\<close>
+      proof -
+        let ?TXI = "product_topology_on TX I_top"
+        have hTX_is: "is_topology_on X TX"
+          using hTX unfolding is_topology_on_strict_def by (by100 blast)
+        have hTI: "is_topology_on I_set I_top"
+          by (rule top1_unit_interval_topology_is_topology_on)
+        have hTXI: "is_topology_on (X \<times> I_set) ?TXI"
+          by (rule product_topology_on_is_topology_on[OF hTX_is hTI])
+        \<comment> \<open>A0\<times>I, Y\<times>I closed.\<close>
+        have hA0I_closed: "closedin_on (X \<times> I_set) ?TXI (A0 \<times> I_set)"
+        proof -
+          have "(X \<times> I_set) - (A0 \<times> I_set) = (X - A0) \<times> I_set" by (by100 blast)
+          moreover have "X - A0 \<in> TX" using hA0_closed unfolding closedin_on_def by (by100 blast)
+          moreover have "I_set \<in> I_top"
+            using hTI unfolding is_topology_on_def by (by100 blast)
+          ultimately have "(X \<times> I_set) - (A0 \<times> I_set) \<in> ?TXI"
+            using product_rect_open by (by100 simp)
+          moreover have "A0 \<times> I_set \<subseteq> X \<times> I_set" using hA0_sub by (by100 blast)
+          ultimately show ?thesis unfolding closedin_on_def by (by100 blast)
+        qed
+        have hYI_closed: "closedin_on (X \<times> I_set) ?TXI (Y \<times> I_set)"
+        proof -
+          have "(X \<times> I_set) - (Y \<times> I_set) = (X - Y) \<times> I_set" by (by100 blast)
+          moreover have "X - Y \<in> TX" using hY_closed unfolding closedin_on_def by (by100 blast)
+          moreover have "I_set \<in> I_top"
+            using hTI unfolding is_topology_on_def by (by100 blast)
+          ultimately have "(X \<times> I_set) - (Y \<times> I_set) \<in> ?TXI"
+            using product_rect_open by (by100 simp)
+          moreover have "Y \<times> I_set \<subseteq> X \<times> I_set" using hY_sub by (by100 blast)
+          ultimately show ?thesis unfolding closedin_on_def by (by100 blast)
+        qed
+        have hAYI_cover: "A0 \<times> I_set \<union> Y \<times> I_set = X \<times> I_set"
+          using hX_eq by (by100 blast)
+        \<comment> \<open>H range.\<close>
+        have hH_range: "\<forall>p\<in>X \<times> I_set. H p \<in> X"
+        proof (intro ballI)
+          fix pt assume "pt \<in> X \<times> I_set"
+          then obtain x t where hpt: "pt = (x, t)" "x \<in> X" "t \<in> I_set" by (by100 blast)
+          show "H pt \<in> X"
+          proof (cases "x \<in> A0")
+            case True
+            have "H pt = x" unfolding H_def hpt using True by (by100 simp)
+            thus ?thesis using \<open>x \<in> X\<close> by (by100 simp)
+          next
+            case False
+            hence "x \<in> Y" using \<open>x \<in> X\<close> hX_eq by (by100 blast)
+            have "H pt = HY (x, t)" unfolding H_def hpt using False by (by100 simp)
+            have "HY (x, t) \<in> Y"
+            proof -
+              have "top1_continuous_map_on (Y \<times> I_set)
+                  (product_topology_on (subspace_topology X TX Y) I_top) Y (subspace_topology X TX Y) HY"
+                using hHY by (by100 blast)
+              hence "\<forall>q\<in>Y \<times> I_set. HY q \<in> Y" unfolding top1_continuous_map_on_def by (by100 blast)
+              thus ?thesis using \<open>x \<in> Y\<close> \<open>t \<in> I_set\<close> by (by100 blast)
+            qed
+            hence "HY (x, t) \<in> X" using hY_sub by (by100 blast)
+            thus ?thesis using \<open>H pt = HY (x, t)\<close> by (by100 simp)
+          qed
+        qed
+        \<comment> \<open>Subspace/product topology facts.\<close>
+        have hI_strict: "I_top \<subseteq> Pow I_set"
+        proof -
+          have "is_topology_on_strict (UNIV :: real set) top1_open_sets"
+            unfolding is_topology_on_strict_def
+            using top1_open_sets_is_topology_on_UNIV by (by100 blast)
+          hence "is_topology_on_strict I_set I_top"
+            unfolding top1_unit_interval_topology_def
+            by (rule subspace_topology_is_strict) (by100 blast)
+          thus ?thesis unfolding is_topology_on_strict_def by (by100 blast)
+        qed
+        have hI_self: "subspace_topology I_set I_top I_set = I_top"
+        proof (rule subspace_topology_self)
+          show "\<forall>U\<in>I_top. U \<subseteq> I_set" using hI_strict by (by100 blast)
+        qed
+        have hA0_sub_eq: "subspace_topology (X \<times> I_set) ?TXI (A0 \<times> I_set)
+            = product_topology_on (subspace_topology X TX A0) I_top"
+        proof -
+          have "product_topology_on (subspace_topology X TX A0) (subspace_topology I_set I_top I_set)
+              = subspace_topology (X \<times> I_set) ?TXI (A0 \<times> I_set)"
+            by (rule Theorem_16_3[OF hTX_is hTI])
+          thus ?thesis using hI_self by (by100 simp)
+        qed
+        \<comment> \<open>H on A0\<times>I: agrees with fst (identity), which is continuous.\<close>
+        have hH_eq_fst: "\<forall>p\<in>A0 \<times> I_set. fst p = H p"
+          unfolding H_def by (by100 auto)
+        have hfst_cont_A0: "top1_continuous_map_on (A0 \<times> I_set)
+            (product_topology_on (subspace_topology X TX A0) I_top) X TX fst"
+        proof -
+          have "top1_continuous_map_on (A0 \<times> I_set)
+              (product_topology_on (subspace_topology X TX A0) I_top)
+              A0 (subspace_topology X TX A0) fst"
+          proof -
+            have "top1_continuous_map_on (A0 \<times> I_set)
+                (product_topology_on (subspace_topology X TX A0) I_top)
+                A0 (subspace_topology X TX A0) pi1"
+              by (rule top1_continuous_pi1[OF subspace_topology_is_topology_on[OF hTX_is hA0_sub] hTI])
+            thus ?thesis unfolding pi1_def by (by100 simp)
+          qed
+          thus ?thesis
+            using Theorem_18_2(6)[OF
+              product_topology_on_is_topology_on[OF subspace_topology_is_topology_on[OF hTX_is hA0_sub] hTI]
+              subspace_topology_is_topology_on[OF hTX_is hA0_sub]
+              hTX_is, rule_format]
+            hA0_sub by (by100 blast)
+        qed
+        have hH_on_A0: "top1_continuous_map_on (A0 \<times> I_set)
+            (subspace_topology (X \<times> I_set) ?TXI (A0 \<times> I_set)) X TX H"
+        proof -
+          have "top1_continuous_map_on (A0 \<times> I_set)
+              (product_topology_on (subspace_topology X TX A0) I_top) X TX H"
+            by (rule top1_continuous_map_on_agree[OF hfst_cont_A0 hH_eq_fst])
+          thus ?thesis using hA0_sub_eq by (by100 simp)
+        qed
+        \<comment> \<open>H on Y\<times>I: agrees with HY, which is continuous Y\<times>I \<rightarrow> Y \<subseteq> X.\<close>
+        have hY_sub_eq: "subspace_topology (X \<times> I_set) ?TXI (Y \<times> I_set)
+            = product_topology_on (subspace_topology X TX Y) I_top"
+        proof -
+          have "product_topology_on (subspace_topology X TX Y) (subspace_topology I_set I_top I_set)
+              = subspace_topology (X \<times> I_set) ?TXI (Y \<times> I_set)"
+            by (rule Theorem_16_3[OF hTX_is hTI])
+          thus ?thesis using hI_self by (by100 simp)
+        qed
+        have hH_eq_HY: "\<forall>p\<in>Y \<times> I_set. HY p = H p"
+        proof (intro ballI)
+          fix pt assume "pt \<in> Y \<times> I_set"
+          then obtain x t where hpt: "pt = (x, t)" "x \<in> Y" "t \<in> I_set" by (by100 blast)
+          show "HY pt = H pt"
+          proof (cases "x \<in> A0")
+            case True
+            have "x \<in> Y" using \<open>x \<in> Y\<close> .
+            then obtain B where "B \<in> F - {A0}" "x \<in> B" unfolding Y_def by (by100 blast)
+            hence "B \<in> F" "A0 \<noteq> B" by (by100 blast)+
+            hence "A0 \<inter> B \<subseteq> {p}" using hpairwise hA0 by (by100 blast)
+            hence "x = p" using True \<open>x \<in> B\<close> by (by100 blast)
+            have hHY_fix: "\<forall>a\<in>{p}. \<forall>t\<in>I_set. HY (a, t) = a" using hHY by (by100 blast)
+            have "HY pt = p" using hHY_fix \<open>x = p\<close> \<open>t \<in> I_set\<close> hpt by (by100 simp)
+            moreover have "H pt = p" unfolding H_def hpt using True \<open>x = p\<close> by (by100 simp)
+            ultimately show ?thesis by (by100 simp)
+          next
+            case False
+            show ?thesis unfolding H_def hpt using False by (by100 simp)
+          qed
+        qed
+        have hHY_cont_X: "top1_continuous_map_on (Y \<times> I_set)
+            (product_topology_on (subspace_topology X TX Y) I_top) X TX HY"
+        proof -
+          have hHY_cont: "top1_continuous_map_on (Y \<times> I_set)
+              (product_topology_on (subspace_topology X TX Y) I_top)
+              Y (subspace_topology X TX Y) HY"
+            using hHY by (by100 blast)
+          thus ?thesis
+            using Theorem_18_2(6)[OF
+              product_topology_on_is_topology_on[OF subspace_topology_is_topology_on[OF hTX_is hY_sub] hTI]
+              subspace_topology_is_topology_on[OF hTX_is hY_sub]
+              hTX_is, rule_format]
+            hY_sub by (by100 blast)
+        qed
+        have hH_on_Y: "top1_continuous_map_on (Y \<times> I_set)
+            (subspace_topology (X \<times> I_set) ?TXI (Y \<times> I_set)) X TX H"
+        proof -
+          have "top1_continuous_map_on (Y \<times> I_set)
+              (product_topology_on (subspace_topology X TX Y) I_top) X TX H"
+            by (rule top1_continuous_map_on_agree[OF hHY_cont_X hH_eq_HY])
+          thus ?thesis using hY_sub_eq by (by100 simp)
+        qed
+        show ?thesis
+          by (rule pasting_lemma_two_closed[OF hTXI hTX_is hA0I_closed hYI_closed hAYI_cover hH_range hH_on_A0 hH_on_Y])
+      qed
       show "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) X TX H
           \<and> (\<forall>x\<in>X. H (x, 0) = x) \<and> (\<forall>x\<in>X. H (x, 1) \<in> A0)
           \<and> (\<forall>a\<in>A0. \<forall>t\<in>I_set. H (a, t) = a)"
