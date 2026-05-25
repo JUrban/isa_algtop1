@@ -7288,10 +7288,16 @@ lemma finite_wedge_pi1_free_with_chosen_loops:
         \<comment> \<open>Since \<pi>\_1(X) is free on {..<n} with loop\_class as generators,
            and G is also free on {..<n}, \<Phi> (which maps \<iota>\_G(j) \<rightarrow> loop\_class(j))
            is an iso by the universal property of free groups.\<close>
+        \<comment> \<open>Step 7d-vii: \<Phi> bijective. This is the KEY remaining step.
+           DIAGNOSIS: Need to show loop\_class(j) are free generators of \<pi>\_1(X).
+           This requires SvK composition tracking through the type boundary:
+           FP :: (nat \<times> int) list (from Theorem\_69\_2) vs
+           FP\_UV :: (nat \<times> 'a set) list (from SvK free product of \<pi>\_1(U), \<pi>\_1(V)).
+           These are isomorphic via the factor isos \<Phi>1, \<Phi>2 but connecting them
+           formally requires Theorem\_68\_4\_free\_product\_unique or a direct construction
+           transferring the free product through the factor isomorphisms.\<close>
         have h\<Phi>_bij: "bij_betw \<Phi> G (top1_fundamental_group_carrier X TX p)"
-          sorry \<comment> \<open>From the above: both G and \<pi>\_1(X) free on {..<n} with matching generators.
-             Construct inverse \<Psi> via free\_group\_hom\_exists mapping loop\_class(j) \<rightarrow> \<iota>\_G(j).
-             By free\_group\_hom\_unique: \<Psi>\<circ>\<Phi> = id and \<Phi>\<circ>\<Psi> = id, hence \<Phi> bijective.\<close>
+          sorry
         have h\<Phi>_iso: "top1_group_iso_on G mul_G
             (top1_fundamental_group_carrier X TX p) (top1_fundamental_group_mul X TX p) \<Phi>"
           unfolding top1_group_iso_on_def using h\<Phi>_hom h\<Phi>_bij by (by100 blast)
