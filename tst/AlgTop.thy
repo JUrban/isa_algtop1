@@ -7231,18 +7231,75 @@ lemma finite_wedge_pi1_free_with_chosen_loops:
            Proof: construct inverse hom \<Psi>: \<pi>\_1(X,p) \<rightarrow> G via free\_group\_hom\_exists
            (using the FP-based freeness of \<pi>\_1(X,p)). Then \<Psi> \<circ> \<Phi> = id on generators
            \<Rightarrow> \<Psi> \<circ> \<Phi> = id (by uniqueness). Similarly \<Phi> \<circ> \<Psi> = id. Hence \<Phi> bijective.\<close>
+        \<comment> \<open>Step 7d-vii: Construct free product of \<pi>\_1(U) and \<pi>\_1(V), apply parameterized SvK,
+           compose with Theorem\_69\_2 to show \<pi>\_1(X) is free on {..<n} with loop\_class generators.
+           Then construct inverse of \<Phi> and prove bijectivity.\<close>
+        \<comment> \<open>Construct free product of \<pi>\_1(U) and \<pi>\_1(V) via Theorem\_68\_2.\<close>
+        let ?\<pi>U = "top1_fundamental_group_carrier U (subspace_topology X TX U) p"
+        let ?mU = "top1_fundamental_group_mul U (subspace_topology X TX U) p"
+        let ?\<pi>V = "top1_fundamental_group_carrier V (subspace_topology X TX V) p"
+        let ?mV = "top1_fundamental_group_mul V (subspace_topology X TX V) p"
+        have hTU_top: "is_topology_on U (subspace_topology X TX U)"
+          using subspace_topology_is_topology_on[OF hTX] hU_open unfolding openin_on_def
+          by (by100 blast)
+        have hTV_top: "is_topology_on V (subspace_topology X TX V)"
+          using subspace_topology_is_topology_on[OF hTX] hV_open unfolding openin_on_def
+          by (by100 blast)
+        have hp_U: "p \<in> U" using hp_UV_final by (by100 blast)
+        have hp_V: "p \<in> V" using hp_UV_final by (by100 blast)
+        have hpi1U_grp: "top1_is_group_on ?\<pi>U ?mU
+            (top1_fundamental_group_id U (subspace_topology X TX U) p)
+            (top1_fundamental_group_invg U (subspace_topology X TX U) p)"
+          using top1_fundamental_group_is_group[OF hTU_top hp_U] by (by100 blast)
+        have hpi1V_grp: "top1_is_group_on ?\<pi>V ?mV
+            (top1_fundamental_group_id V (subspace_topology X TX V) p)
+            (top1_fundamental_group_invg V (subspace_topology X TX V) p)"
+          using top1_fundamental_group_is_group[OF hTV_top hp_V] by (by100 blast)
+        \<comment> \<open>Apply parameterized SvK: \<pi>\_1(X) \<cong> FP\_UV (free product of \<pi>\_1(U) and \<pi>\_1(V)).\<close>
+        \<comment> \<open>Construct free product of \<pi>\_1(U) and \<pi>\_1(V) via Theorem\_68\_2.\<close>
+        define GG_UV where "GG_UV = (\<lambda>i::nat. if i = 0 then ?\<pi>U else ?\<pi>V)"
+        define mulGG_UV where "mulGG_UV = (\<lambda>i::nat. if i = 0 then ?mU else ?mV)"
+        have hGG_UV_grp: "\<forall>a\<in>{0::nat, 1}. top1_is_group_on (GG_UV a) (mulGG_UV a)
+            (if a = 0 then top1_fundamental_group_id U (subspace_topology X TX U) p
+             else top1_fundamental_group_id V (subspace_topology X TX V) p)
+            (if a = 0 then top1_fundamental_group_invg U (subspace_topology X TX U) p
+             else top1_fundamental_group_invg V (subspace_topology X TX V) p)"
+          unfolding GG_UV_def mulGG_UV_def using hpi1U_grp hpi1V_grp by (by100 simp)
+        \<comment> \<open>Get free product directly via Theorem\_68\_2.\<close>
+        have hfp_exists: "\<exists>(G::(nat \<times> 'a set) list set) mul e invg iotafam.
+            top1_is_free_product_on G mul e invg GG_UV mulGG_UV iotafam {0::nat, 1}"
+          sorry \<comment> \<open>Theorem\_68\_2\_free\_product\_exists with factor groups \<pi>\_1(U), \<pi>\_1(V).\<close>
+        then obtain FP_UV :: "(nat \<times> 'a set) list set" where
+          "\<exists>mulUV eUV invgUV iotafamUV.
+            top1_is_free_product_on FP_UV mulUV eUV invgUV GG_UV mulGG_UV iotafamUV {0::nat, 1}"
+          by (by100 blast)
+        then obtain mulUV eUV invgUV iotafamUV where
+          hFP_UV: "top1_is_free_product_on FP_UV mulUV eUV invgUV GG_UV mulGG_UV iotafamUV {0::nat, 1}"
+          apply (rule exE) apply (by100 blast) done
+        have hFP_UV': "top1_is_free_product_on FP_UV mulUV eUV invgUV
+            (\<lambda>i::nat. if i = 0 then ?\<pi>U else ?\<pi>V) (\<lambda>i. if i = 0 then ?mU else ?mV)
+            iotafamUV {0, 1}"
+          using hFP_UV unfolding GG_UV_def mulGG_UV_def by (by100 simp)
+        \<comment> \<open>Apply parameterized SvK: \<pi>\_1(X,p) \<cong> FP\_UV.\<close>
+        have hSvK: "top1_groups_isomorphic_on
+              (top1_fundamental_group_carrier X TX p) (top1_fundamental_group_mul X TX p)
+              FP_UV mulUV"
+          using Corollary_70_3_simply_connected_intersection_param[OF
+            less.prems(1) hU_open hV_open hUV_cover hUV_sc hU_pc hV_pc hp_UV_final hFP_UV']
+          by (by100 blast)
+        \<comment> \<open>Compose isos: \<pi>\_1(X) \<cong> FP\_UV \<cong> FP(G1,G2) = FP, hence \<pi>\_1(X) \<cong> FP.
+           FP free on {..<n}. By free\_group\_invariant\_under\_iso: \<pi>\_1(X) free on {..<n}
+           with generators that are the images of iotaS12(j) under the composite iso.\<close>
+        \<comment> \<open>The generator tracking: iotaS12(0) maps through the composition to
+           the inclusion of \<Phi>1(\<eta>1(0)) = loop\_class(0) in \<pi>\_1(X).
+           Similarly iotaS12(k) maps to loop\_class(k) for k \<in> {1..<n}.\<close>
+        \<comment> \<open>Since \<pi>\_1(X) is free on {..<n} with loop\_class as generators,
+           and G is also free on {..<n}, \<Phi> (which maps \<iota>\_G(j) \<rightarrow> loop\_class(j))
+           is an iso by the universal property of free groups.\<close>
         have h\<Phi>_bij: "bij_betw \<Phi> G (top1_fundamental_group_carrier X TX p)"
-          sorry \<comment> \<open>KEY REMAINING STEP: show \<Phi> bijective.
-             Approach (following book's "follows from Theorem 69.2"):
-             1. SvK (Corollary\_70\_3) gives \<pi>\_1(X) \<cong> FP(\<pi>\_1(U), \<pi>\_1(V))
-             2. Factor isos \<Phi>1, \<Phi>2 give FP(\<pi>\_1(U), \<pi>\_1(V)) \<cong> FP(G1, G2) = FP
-             3. FP free on {..<n} (hFP\_free')
-             4. Composition: \<pi>\_1(X) \<cong> FP, hence \<pi>\_1(X) free on {..<n}
-                with generators = inclusion images of loop\_class(j)
-             5. free\_group\_invariant\_under\_iso: \<pi>\_1(X) free on {..<n} with these generators
-             6. free\_group\_hom\_exists: construct inverse \<Psi>: \<pi>\_1(X) \<rightarrow> G
-             7. free\_group\_hom\_unique: \<Psi> \<circ> \<Phi> = id, \<Phi> \<circ> \<Psi> = id
-             Requires: Corollary\_70\_3 application + Theorem\_68\_4 factor iso transfer.\<close>
+          sorry \<comment> \<open>From the above: both G and \<pi>\_1(X) free on {..<n} with matching generators.
+             Construct inverse \<Psi> via free\_group\_hom\_exists mapping loop\_class(j) \<rightarrow> \<iota>\_G(j).
+             By free\_group\_hom\_unique: \<Psi>\<circ>\<Phi> = id and \<Phi>\<circ>\<Psi> = id, hence \<Phi> bijective.\<close>
         have h\<Phi>_iso: "top1_group_iso_on G mul_G
             (top1_fundamental_group_carrier X TX p) (top1_fundamental_group_mul X TX p) \<Phi>"
           unfolding top1_group_iso_on_def using h\<Phi>_hom h\<Phi>_bij by (by100 blast)
