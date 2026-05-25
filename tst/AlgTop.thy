@@ -5448,7 +5448,42 @@ lemma hom_image_in_subgroup_from_generators:
       and hN_sub: "N \<subseteq> H"
       and hfS_N: "f ` S \<subseteq> N"
   shows "f ` G \<subseteq> N"
-  sorry
+proof (rule image_subsetI)
+  fix g assume "g \<in> G"
+  hence "g \<in> top1_subgroup_generated_on G mulG eG invgG S" using hG_gen by (by100 simp)
+  \<comment> \<open>g = e or g = word product of elements from S \<union> invg(S).\<close>
+  from subgroup_generated_word_repr[OF hG_grp hS_sub this]
+  have "g = eG \<or> (\<exists>ws. length ws > 0 \<and>
+      (\<forall>i<length ws. ws!i \<in> S \<or> (\<exists>s\<in>S. ws!i = invgG s)) \<and>
+      foldr mulG ws eG = g)" .
+  thus "f g \<in> N"
+  proof (elim disjE exE conjE)
+    assume "g = eG"
+    have "f eG = eH"
+      sorry \<comment> \<open>Hom preserves identity.\<close>
+    hence "f g = eH" using \<open>g = eG\<close> by (by100 simp)
+    thus ?thesis
+      sorry \<comment> \<open>eH \<in> N (N is a group).\<close>
+  next
+    fix ws assume hlen: "length ws > 0"
+      and hws: "\<forall>i<length ws. ws!i \<in> S \<or> (\<exists>s\<in>S. ws!i = invgG s)"
+      and hprod: "foldr mulG ws eG = g"
+    \<comment> \<open>f(g) = f(foldr mulG ws eG) = foldr mulH (map f ws) eH.\<close>
+    \<comment> \<open>Each f(ws!i) is either f(s) \<in> N or f(invg(s)) = invgH(f(s)) \<in> N.\<close>
+    \<comment> \<open>So the product is in N (N closed under multiplication).\<close>
+    \<comment> \<open>Each ws!i maps to N: if ws!i \<in> S then f(ws!i) \<in> N by hfS\_N.
+       If ws!i = invg(s) for s \<in> S, then f(ws!i) = invgH(f(s)) \<in> N since N group.\<close>
+    have hmap_N: "\<forall>i<length ws. f (ws!i) \<in> N"
+      sorry \<comment> \<open>From hws + hfS\_N + hom preserves inverse.\<close>
+    \<comment> \<open>f preserves foldr: f(foldr mulG ws eG) = foldr mulH (map f ws) eH.\<close>
+    have hf_foldr: "f (foldr mulG ws eG) = foldr mulH (map f ws) eH"
+      sorry \<comment> \<open>By induction on ws, using hom property.\<close>
+    \<comment> \<open>foldr mulH (map f ws) eH \<in> N since each (map f ws)!i \<in> N and N closed.\<close>
+    have "foldr mulH (map f ws) eH \<in> N"
+      sorry \<comment> \<open>By induction on length (map f ws), using N group.\<close>
+    thus "f g \<in> N" using hprod hf_foldr by (by100 simp)
+  qed
+qed
 
 text \<open>A surjective hom from a free group to a free group of the same finite rank
   is an isomorphism (hence bijective). This follows from rank invariance:
