@@ -6917,6 +6917,18 @@ lemma map_map_pair_compose:
      = map (\<lambda>(s, b). (f (g s), b)) ws"
   by (induct ws) auto
 
+text \<open>Re-indexing a free group: if free on S via \<iota> and f: S' \<rightarrow> S is bijective,
+  then free on S' via \<iota> \<circ> f. Expert Step 5 helper.\<close>
+lemma free_group_full_reindex:
+  assumes hfree: "top1_is_free_group_full_on G mul e invg \<iota> S"
+      and hbij: "bij_betw f S' S"
+  shows "top1_is_free_group_full_on G mul e invg (\<iota> \<circ> f) S'"
+  sorry \<comment> \<open>Each condition of free\_group\_full transfers:
+     1. Group: same. 2. (\<iota>\<circ>f)(s') \<in> G from \<iota>(f(s')) \<in> G. 3. inj\_on (\<iota>\<circ>f) S' from
+     inj\_on \<iota> S + f bijective. 4. Generated: (\<iota>\<circ>f)`S' = \<iota>`S. 5. Reduced words:
+     map (\<lambda>(s,b). ((\<iota>\<circ>f)(s), b)) ws = map (\<lambda>(s,b). (\<iota>(s), b)) (map (\<lambda>(s,b). (f(s),b)) ws).
+     Re-labeling preserves reduced-ness and word product.\<close>
+
 text \<open>Book-faithful Theorem 58.3: the inclusion-induced map IS the iso.
   Munkres: "the inclusion map j:(A,x0) \<rightarrow> (X,x0) induces an isomorphism."
   Derives from AlgIsoFixed.Theorem\_58\_7 (explicit induced map iso) by
@@ -9355,11 +9367,11 @@ lemma finite_wedge_pi1_free_with_chosen_loops:
               finally show ?thesis .
             qed
             \<comment> \<open>Transfer free\_group\_full from {..<n-1} to {1..<n}.\<close>
-            show ?thesis unfolding top1_is_free_group_full_on_def
-              sorry \<comment> \<open>Each conjunct: group (same), gens \<in> G (\<eta>2 img = \<eta>2' img),
-                 injective (\<eta>2 injective from \<eta>2' injective + \<phi> bijection),
-                 generates (same generator set), reduced words \<noteq> e
-                 (re-labeling preserves reduced and non-identity).\<close>
+            \<comment> \<open>\<eta>2 = \<eta>2' \<circ> \<phi>. Apply free\_group\_full\_reindex.\<close>
+            have h\<eta>2_is_comp: "\<eta>2 = \<eta>2' \<circ> \<phi>"
+              unfolding \<eta>2_def \<phi>_def comp_def by (by100 simp)
+            show ?thesis using free_group_full_reindex[OF hG2_free' h\<phi>_bij]
+              h\<eta>2_is_comp by (by100 simp)
           qed
           \<comment> \<open>Step 7: Generator correspondence.\<close>
           have h\<Phi>2_gen: "\<forall>j\<in>{1..<n}. \<Phi>2 (\<eta>2 j) = {l. top1_loop_equiv_on V (subspace_topology X TX V) p
