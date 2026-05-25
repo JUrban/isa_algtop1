@@ -7485,11 +7485,28 @@ proof (induction "card F" arbitrary: F X TX rule: less_induct)
               qed
             qed
             \<comment> \<open>H continuous on A\<times>I (agrees with HA there, which is continuous).\<close>
+            \<comment> \<open>Subspace of product = product of subspaces (Theorem\_16\_3).\<close>
+            have hTI: "is_topology_on I_set I_top"
+              by (rule top1_unit_interval_topology_is_topology_on)
+            have hI_strict: "I_top \<subseteq> Pow I_set"
+            proof -
+              have "is_topology_on_strict I_set I_top"
+              proof -
+                have "is_topology_on_strict (UNIV :: real set) top1_open_sets"
+                  sorry \<comment> \<open>Standard topology on R is strict.\<close>
+                have "I_set \<subseteq> (UNIV :: real set)" by (by100 blast)
+                thus ?thesis unfolding top1_unit_interval_topology_def
+                  by (rule subspace_topology_is_strict[OF \<open>is_topology_on_strict UNIV top1_open_sets\<close>])
+              qed
+              thus ?thesis unfolding is_topology_on_strict_def by (by100 blast)
+            qed
             have hH_on_A: "top1_continuous_map_on (A \<times> I_set)
                 (subspace_topology (X \<times> I_set) ?TXI (A \<times> I_set)) X TX H"
-              sorry \<comment> \<open>H|_{A\<times>I} = HA. By Theorem\_16\_3: subspace = product of subspaces.
-                 HA: A\<times>I \<rightarrow> A continuous. Expand codomain A \<rightarrow> X via Theorem\_18\_2(6).\<close>
-            \<comment> \<open>H continuous on Y\<times>I (agrees with HY there).\<close>
+              sorry \<comment> \<open>Step 1: subspace(X\<times>I, product TX I\_top, A\<times>I) = product(subspace X TX A, I\_top)
+                 by Theorem\_16\_3 + hI\_strict (subspace I I\_top I = I\_top).
+                 Step 2: HA continuous from product(subspace X TX A, I\_top) to A.
+                 Step 3: Expand codomain A \<rightarrow> X.
+                 Step 4: H = HA on A\<times>I. Transfer by agree.\<close>
             have hH_on_Y: "top1_continuous_map_on (Y \<times> I_set)
                 (subspace_topology (X \<times> I_set) ?TXI (Y \<times> I_set)) X TX H"
               sorry \<comment> \<open>Same as hH\_on\_A but for Y and HY.\<close>
