@@ -7639,8 +7639,76 @@ lemma finite_wedge_pi1_free_with_chosen_loops:
         have h\<Phi>_bij: "bij_betw \<Phi> G (top1_fundamental_group_carrier X TX p)"
         proof -
           have h\<Phi>_surj: "\<Phi> ` G = top1_fundamental_group_carrier X TX p"
-            sorry \<comment> \<open>\<Phi> surjective: loop\_class generate \<pi>\_1(X) by SvK,
-               \<Phi>(G) contains all loop\_class, hence \<Phi>(G) = \<pi>\_1(X).\<close>
+          proof -
+            let ?pi1X = "top1_fundamental_group_carrier X TX p"
+            let ?mX = "top1_fundamental_group_mul X TX p"
+            let ?eX = "top1_fundamental_group_id X TX p"
+            let ?iX = "top1_fundamental_group_invg X TX p"
+            let ?jU = "top1_fundamental_group_induced_on U (subspace_topology X TX U) p X TX p (\<lambda>x. x)"
+            let ?jV = "top1_fundamental_group_induced_on V (subspace_topology X TX V) p X TX p (\<lambda>x. x)"
+            \<comment> \<open>SvK generation: \<pi>\_1(X) = subgroup gen by j\_U*(\<pi>\_1(U)) \<union> j\_V*(\<pi>\_1(V)).\<close>
+            have hUV_pc_inter: "top1_path_connected_on (U \<inter> V) (subspace_topology X TX (U \<inter> V))"
+              using hUV_sc top1_simply_connected_on_path_connected by (by100 blast)
+            have hTX_here: "is_topology_on X TX"
+              using less.prems(1) unfolding is_topology_on_strict_def by (by100 blast)
+            define S_gen where "S_gen = ?jU ` top1_fundamental_group_carrier U (subspace_topology X TX U) p \<union>
+                 ?jV ` top1_fundamental_group_carrier V (subspace_topology X TX V) p"
+            have hgen: "?pi1X = top1_subgroup_generated_on ?pi1X ?mX ?eX ?iX S_gen"
+            proof (rule set_eqI, rule iffI)
+              fix c assume "c \<in> ?pi1X"
+              then obtain f where hf: "top1_is_loop_on X TX p f" and hc: "c = {g. top1_loop_equiv_on X TX p f g}"
+                unfolding top1_fundamental_group_carrier_def by (by100 blast)
+              from svk_generation_sc[OF hTX_here hU_open hV_open hUV_cover hU_pc hV_pc hUV_pc_inter hp_UV_final hf]
+              show "c \<in> top1_subgroup_generated_on ?pi1X ?mX ?eX ?iX S_gen"
+                using hc unfolding S_gen_def by (by100 blast)
+            next
+              fix c assume "c \<in> top1_subgroup_generated_on ?pi1X ?mX ?eX ?iX S_gen"
+              have "S_gen \<subseteq> ?pi1X"
+              proof -
+                have hU_sub: "U \<subseteq> X" using hU_open unfolding openin_on_def by (by100 blast)
+                have hV_sub: "V \<subseteq> X" using hV_open unfolding openin_on_def by (by100 blast)
+                have hp_U: "p \<in> U" using hp_UV_final by (by100 blast)
+                have hp_V: "p \<in> V" using hp_UV_final by (by100 blast)
+                have hjU_hom: "top1_group_hom_on
+                    (top1_fundamental_group_carrier U (subspace_topology X TX U) p)
+                    (top1_fundamental_group_mul U (subspace_topology X TX U) p)
+                    ?pi1X ?mX ?jU"
+                  using subspace_inclusion_induced_hom[OF hTX_here hU_sub hp_U] by (by100 blast)
+                have hjV_hom: "top1_group_hom_on
+                    (top1_fundamental_group_carrier V (subspace_topology X TX V) p)
+                    (top1_fundamental_group_mul V (subspace_topology X TX V) p)
+                    ?pi1X ?mX ?jV"
+                  using subspace_inclusion_induced_hom[OF hTX_here hV_sub hp_V] by (by100 blast)
+                have "?jU ` top1_fundamental_group_carrier U (subspace_topology X TX U) p \<subseteq> ?pi1X"
+                  using hjU_hom unfolding top1_group_hom_on_def by (by100 blast)
+                moreover have "?jV ` top1_fundamental_group_carrier V (subspace_topology X TX V) p \<subseteq> ?pi1X"
+                  using hjV_hom unfolding top1_group_hom_on_def by (by100 blast)
+                ultimately show ?thesis unfolding S_gen_def by (by100 blast)
+              qed
+              thus "c \<in> ?pi1X"
+                using subgroup_generated_subset[OF hpi1_grp \<open>S_gen \<subseteq> ?pi1X\<close>]
+                \<open>c \<in> top1_subgroup_generated_on ?pi1X ?mX ?eX ?iX S_gen\<close>
+                by (by100 blast)
+            qed
+            \<comment> \<open>\<Phi>(G) is a subgroup containing all loop\_class(j), hence all j\_U*/j\_V* images.\<close>
+            have h\<Phi>G_sub: "\<Phi> ` G \<subseteq> ?pi1X"
+            proof
+              fix y assume "y \<in> \<Phi> ` G"
+              then obtain x where "x \<in> G" "y = \<Phi> x" by (by100 blast)
+              thus "y \<in> ?pi1X" using h\<Phi>_hom unfolding top1_group_hom_on_def by (by100 blast)
+            qed
+            have h\<Phi>G_subgrp: "top1_is_subgroup_of ?pi1X ?mX ?eX ?iX (\<Phi> ` G)"
+              sorry \<comment> \<open>Image of hom is a subgroup.\<close>
+            have h\<Phi>G_contains_jU: "?jU ` top1_fundamental_group_carrier U (subspace_topology X TX U) p \<subseteq> \<Phi> ` G"
+              sorry \<comment> \<open>\<pi>\_1(U) generated by loop\_class\_U(0). j\_U* sends it to loop\_class(0) in X.
+                 loop\_class(0) = \<Phi>(\<iota>\_G(0)) \<in> \<Phi>(G). Since \<Phi>(G) is a subgroup,
+                 all of j\_U*(\<pi>\_1(U)) \<subseteq> \<Phi>(G).\<close>
+            have h\<Phi>G_contains_jV: "?jV ` top1_fundamental_group_carrier V (subspace_topology X TX V) p \<subseteq> \<Phi> ` G"
+              sorry \<comment> \<open>Similarly for V side.\<close>
+            \<comment> \<open>Since \<Phi>(G) is a subgroup containing j\_U* \<union> j\_V*, and \<pi>\_1(X) is generated by these,
+               \<Phi>(G) \<supseteq> \<pi>\_1(X). Combined with \<Phi>(G) \<subseteq> \<pi>\_1(X), we get equality.\<close>
+            show ?thesis sorry
+          qed
           have hfin_n: "finite {..<n}" by (by100 simp)
           show ?thesis
             using free_group_surj_hom_same_rank_bij[OF hG_free hpi1X_abs h\<Phi>_hom h\<Phi>_surj hfin_n]
