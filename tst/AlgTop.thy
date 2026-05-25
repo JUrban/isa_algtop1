@@ -8963,11 +8963,6 @@ proof -
     by - (erule exE, erule exE, erule exE, erule exE, erule exE, erule exE,
           (erule conjE)+, rule that, assumption+)
   \<comment> \<open>Step 2 (book): "A is a wedge of k circles." (Using the SAME A from CW data.)\<close>
-  define edge_loop_class_a where "edge_loop_class_a s =
-      {g. top1_loop_equiv_on A (subspace_topology X TX A) a
-        (\<lambda>t. qC ((1-t) * vxC (i_of s) + t * vxC (Suc (i_of s) mod length scheme),
-                  (1-t) * vyC (i_of s) + t * vyC (Suc (i_of s) mod length scheme))) g}"
-    for s :: nat
   have hA_wd_and_gen: "top1_is_wedge_of_circles_on A (subspace_topology X TX A) (fst ` set scheme) a
     \<and> (\<exists>\<iota>A. top1_is_free_group_full_on
         (top1_fundamental_group_carrier A (subspace_topology X TX A) a)
@@ -8975,12 +8970,21 @@ proof -
         (top1_fundamental_group_id A (subspace_topology X TX A) a)
         (top1_fundamental_group_invg A (subspace_topology X TX A) a)
         \<iota>A (fst ` set scheme)
-      \<and> (\<forall>s\<in>fst ` set scheme. \<iota>A s = edge_loop_class_a s))"
+      \<and> (\<forall>s\<in>fst ` set scheme. \<iota>A s =
+          {g. top1_loop_equiv_on A (subspace_topology X TX A) a
+            (\<lambda>t. qC ((1-t) * vxC (i_of s) + t * vxC (Suc (i_of s) mod length scheme),
+                      (1-t) * vyC (i_of s) + t * vyC (Suc (i_of s) mod length scheme))) g}))"
   proof -
     \<comment> \<open>Abbreviations.\<close>
     let ?n = "length scheme"
     let ?TA = "subspace_topology X TX A"
     let ?J = "fst ` set scheme"
+    \<comment> \<open>Local definition using let abbreviations for matching.\<close>
+    define edge_loop_class_a where "edge_loop_class_a s =
+        {g. top1_loop_equiv_on A ?TA a
+          (\<lambda>t. qC ((1-t) * vxC (i_of s) + t * vxC (Suc (i_of s) mod ?n),
+                    (1-t) * vyC (i_of s) + t * vyC (Suc (i_of s) mod ?n))) g}"
+      for s :: nat
     have hn_pos: "?n > 0" using hlen by (by100 linarith)
     \<comment> \<open>Prerequisites: strict topology and Hausdorff for A.\<close>
     have hX_s: "is_topology_on_strict X TX"
@@ -9830,7 +9834,8 @@ proof -
         using hgen_eq_a by (by100 simp)
       thus ?thesis using \<open>top1_is_free_group_full_on _ _ _ _ \<iota>A ?J \<and> _\<close> by (by100 blast)
     qed
-    show ?thesis using hA_wd_part hpi1A_gen_a by (by100 blast)
+    show ?thesis using hA_wd_part hpi1A_gen_a
+      by (simp only: edge_loop_class_a_def)
   qed
   have hA_wd: "top1_is_wedge_of_circles_on A (subspace_topology X TX A) (fst ` set scheme) a"
     using hA_wd_and_gen by (by100 blast)
@@ -9840,7 +9845,10 @@ proof -
       (top1_fundamental_group_id A (subspace_topology X TX A) a)
       (top1_fundamental_group_invg A (subspace_topology X TX A) a)
       \<iota>A (fst ` set scheme)
-    \<and> (\<forall>s\<in>fst ` set scheme. \<iota>A s = edge_loop_class_a s)"
+    \<and> (\<forall>s\<in>fst ` set scheme. \<iota>A s =
+        {g. top1_loop_equiv_on A (subspace_topology X TX A) a
+          (\<lambda>t. qC ((1-t) * vxC (i_of s) + t * vxC (Suc (i_of s) mod length scheme),
+                    (1-t) * vyC (i_of s) + t * vyC (Suc (i_of s) mod length scheme))) g})"
     using hA_wd_and_gen by (by100 blast)
   \<comment> \<open>Step 3: \<pi>_1(A) is free on the labels (Theorem 71.1) at basepoint a.\<close>
   have hA_free: "\<exists>(F::int set) mulF eF invgF (\<iota>F::nat \<Rightarrow> int).
@@ -10194,14 +10202,39 @@ proof -
         \<iota>A (fst ` set scheme)
       \<and> (\<forall>s\<in>fst ` set scheme. \<iota>A s = edge_loop_class s)"
     proof -
-      from hpi1A_gen_a obtain \<iota>A where h1: "top1_is_free_group_full_on
+      define \<iota>A where "\<iota>A \<equiv> SOME \<iota>'. top1_is_free_group_full_on
+          (top1_fundamental_group_carrier A (subspace_topology X TX A) a)
+          (top1_fundamental_group_mul A (subspace_topology X TX A) a)
+          (top1_fundamental_group_id A (subspace_topology X TX A) a)
+          (top1_fundamental_group_invg A (subspace_topology X TX A) a)
+          \<iota>' (fst ` set scheme)
+        \<and> (\<forall>s\<in>fst ` set scheme. \<iota>' s =
+            {g. top1_loop_equiv_on A (subspace_topology X TX A) a
+              (\<lambda>t. qC ((1-t) * vxC (i_of s) + t * vxC (Suc (i_of s) mod length scheme),
+                        (1-t) * vyC (i_of s) + t * vyC (Suc (i_of s) mod length scheme))) g})"
+      have hprops: "top1_is_free_group_full_on
+          (top1_fundamental_group_carrier A (subspace_topology X TX A) a)
+          (top1_fundamental_group_mul A (subspace_topology X TX A) a)
+          (top1_fundamental_group_id A (subspace_topology X TX A) a)
+          (top1_fundamental_group_invg A (subspace_topology X TX A) a)
+          \<iota>A (fst ` set scheme)
+        \<and> (\<forall>s\<in>fst ` set scheme. \<iota>A s =
+            {g. top1_loop_equiv_on A (subspace_topology X TX A) a
+              (\<lambda>t. qC ((1-t) * vxC (i_of s) + t * vxC (Suc (i_of s) mod length scheme),
+                        (1-t) * vyC (i_of s) + t * vyC (Suc (i_of s) mod length scheme))) g})"
+        unfolding \<iota>A_def using someI_ex[OF hpi1A_gen_a] sorry
+      have h1: "top1_is_free_group_full_on
           (top1_fundamental_group_carrier A (subspace_topology X TX A) a)
           (top1_fundamental_group_mul A (subspace_topology X TX A) a)
           (top1_fundamental_group_id A (subspace_topology X TX A) a)
           (top1_fundamental_group_invg A (subspace_topology X TX A) a)
           \<iota>A (fst ` set scheme)"
-        and h2: "\<forall>s\<in>fst ` set scheme. \<iota>A s = edge_loop_class_a s"
-        by (by100 blast)
+        using hprops by (by100 blast)
+      have h2: "\<forall>s\<in>fst ` set scheme. \<iota>A s =
+            {g. top1_loop_equiv_on A (subspace_topology X TX A) a
+              (\<lambda>t. qC ((1-t) * vxC (i_of s) + t * vxC (Suc (i_of s) mod length scheme),
+                        (1-t) * vyC (i_of s) + t * vyC (Suc (i_of s) mod length scheme))) g}"
+        using hprops by (by100 blast)
       have h1': "top1_is_free_group_full_on
           (top1_fundamental_group_carrier A (subspace_topology X TX A) a')
           (top1_fundamental_group_mul A (subspace_topology X TX A) a')
@@ -10212,19 +10245,17 @@ proof -
       have h2': "\<forall>s\<in>fst ` set scheme. \<iota>A s = edge_loop_class s"
       proof
         fix s assume "s \<in> fst ` set scheme"
-        have "\<iota>A s = edge_loop_class_a s" using h2 \<open>s \<in> fst ` set scheme\<close> by (by100 blast)
+        have "\<iota>A s = {g. top1_loop_equiv_on A (subspace_topology X TX A) a
+              (\<lambda>t. qC ((1-t) * vxC (i_of s) + t * vxC (Suc (i_of s) mod length scheme),
+                        (1-t) * vyC (i_of s) + t * vyC (Suc (i_of s) mod length scheme))) g}"
+          using h2 \<open>s \<in> fst ` set scheme\<close> by (by100 blast)
         also have "\<dots> = edge_loop_class s"
         proof -
           have haa: "a = a'" by (rule ha_eq_a')
-          have "\<And>g. top1_loop_equiv_on A (subspace_topology X TX A) a
-              (\<lambda>t. qC ((1-t) * vxC (i_of s) + t * vxC (Suc (i_of s) mod length scheme),
-                        (1-t) * vyC (i_of s) + t * vyC (Suc (i_of s) mod length scheme))) g
-            = top1_loop_equiv_on A (subspace_topology X TX A) a'
-              (\<lambda>t. qC ((1-t) * vxC (i_of s) + t * vxC (Suc (i_of s) mod length scheme),
-                        (1-t) * vyC (i_of s) + t * vyC (Suc (i_of s) mod length scheme))) g"
+          show ?thesis
             apply (simp only: haa)
+            apply (simp only: edge_loop_class_def)
             done
-          thus ?thesis sorry \<comment> \<open>TEMP: edge\_loop\_class\_a s = edge\_loop\_class s. See workaround below.\<close>
         qed
         finally show "\<iota>A s = edge_loop_class s" .
       qed
