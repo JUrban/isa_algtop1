@@ -8971,20 +8971,14 @@ proof -
         (top1_fundamental_group_invg A (subspace_topology X TX A) a)
         \<iota>A (fst ` set scheme)
       \<and> (\<forall>s\<in>fst ` set scheme. \<iota>A s =
-          {g. top1_loop_equiv_on A (subspace_topology X TX A) a
+          {l. top1_loop_equiv_on A (subspace_topology X TX A) a
             (\<lambda>t. qC ((1-t) * vxC (i_of s) + t * vxC (Suc (i_of s) mod length scheme),
-                      (1-t) * vyC (i_of s) + t * vyC (Suc (i_of s) mod length scheme))) g}))"
+                      (1-t) * vyC (i_of s) + t * vyC (Suc (i_of s) mod length scheme))) l}))"
   proof -
     \<comment> \<open>Abbreviations.\<close>
     let ?n = "length scheme"
     let ?TA = "subspace_topology X TX A"
     let ?J = "fst ` set scheme"
-    \<comment> \<open>Local definition using let abbreviations for matching.\<close>
-    define edge_loop_class_a where "edge_loop_class_a s =
-        {g. top1_loop_equiv_on A ?TA a
-          (\<lambda>t. qC ((1-t) * vxC (i_of s) + t * vxC (Suc (i_of s) mod ?n),
-                    (1-t) * vyC (i_of s) + t * vyC (Suc (i_of s) mod ?n))) g}"
-      for s :: nat
     have hn_pos: "?n > 0" using hlen by (by100 linarith)
     \<comment> \<open>Prerequisites: strict topology and Hausdorff for A.\<close>
     have hX_s: "is_topology_on_strict X TX"
@@ -9689,7 +9683,9 @@ proof -
       by (by5000 blast)
     \<comment> \<open>Connect g\_w loop classes to edge\_loop\_class\_a:
        g\_w(\<alpha>)(cos(2\<pi>t), sin(2\<pi>t)) = g\_w(\<alpha>)(R\_to\_S1(t)) = qC(edge\_pt(i\_of \<alpha>, t)).\<close>
-    have hgen_eq_a: "\<forall>\<alpha>\<in>?J. \<Phi>_w (\<eta>_w \<alpha>) = edge_loop_class_a \<alpha>"
+    have hgen_eq_a: "\<forall>\<alpha>\<in>?J. \<Phi>_w (\<eta>_w \<alpha>) = {l. top1_loop_equiv_on A ?TA a
+        (\<lambda>t. qC ((1-t) * vxC (i_of \<alpha>) + t * vxC (Suc (i_of \<alpha>) mod ?n),
+                  (1-t) * vyC (i_of \<alpha>) + t * vyC (Suc (i_of \<alpha>) mod ?n))) l}"
     proof (intro ballI)
       fix \<alpha> assume h\<alpha>: "\<alpha> \<in> ?J"
       have hfact: "\<forall>s\<in>I_set. g_w \<alpha> (top1_R_to_S1 s) = qC (edge_pt (i_of \<alpha>) s)"
@@ -9714,7 +9710,9 @@ proof -
       have "\<Phi>_w (\<eta>_w \<alpha>) = {l. top1_loop_equiv_on A ?TA a
           (\<lambda>t. g_w \<alpha> (cos (2*pi*t), sin (2*pi*t))) l}"
         using h\<Phi>_w_gen[rule_format, OF h\<alpha>] by (by100 blast)
-      also have "\<dots> = edge_loop_class_a \<alpha>"
+      also have "\<dots> = {l. top1_loop_equiv_on A ?TA a
+          (\<lambda>t. qC ((1-t) * vxC (i_of \<alpha>) + t * vxC (Suc (i_of \<alpha>) mod ?n),
+                    (1-t) * vyC (i_of \<alpha>) + t * vyC (Suc (i_of \<alpha>) mod ?n))) l}"
       proof -
         let ?f = "\<lambda>t. g_w \<alpha> (cos (2*pi*t), sin (2*pi*t))"
         let ?g = "\<lambda>t. qC ((1-t) * vxC (i_of \<alpha>) + t * vxC (Suc (i_of \<alpha>) mod ?n),
@@ -9793,14 +9791,11 @@ proof -
             (\<lambda>t. qC ((1-t) * vxC (i_of \<alpha>) + t * vxC (Suc (i_of \<alpha>) mod ?n),
                       (1-t) * vyC (i_of \<alpha>) + t * vyC (Suc (i_of \<alpha>) mod ?n))) l}"
           using loop_equiv_class_pointwise_I[OF hA_top hf_loop_here hg_loop hloop_eq] by (by100 blast)
-        show ?thesis using hclass_result edge_loop_class_a_def
-          sorry \<comment> \<open>TECH: define+let scope mismatch. edge\_loop\_class\_a uses
-             subspace\_topology X TX A / length scheme (from define scope),
-             while hclass\_result uses ?TA / ?n (let abbreviations from proof scope).
-             These are definitionally equal but automation can't match.
-             Fix: move define inside proof block after let, or eliminate define.\<close>
+        show ?thesis using hclass_result by (by100 blast)
       qed
-      finally show "\<Phi>_w (\<eta>_w \<alpha>) = edge_loop_class_a \<alpha>" .
+      finally show "\<Phi>_w (\<eta>_w \<alpha>) = {l. top1_loop_equiv_on A ?TA a
+          (\<lambda>t. qC ((1-t) * vxC (i_of \<alpha>) + t * vxC (Suc (i_of \<alpha>) mod ?n),
+                    (1-t) * vyC (i_of \<alpha>) + t * vyC (Suc (i_of \<alpha>) mod ?n))) l}" .
     qed
     \<comment> \<open>Transfer: \<pi>\_1(A,a) free on ?J with gen = edge\_loop\_class\_a.\<close>
     have hpi1A_gen_a: "\<exists>\<iota>A. top1_is_free_group_full_on
@@ -9808,7 +9803,9 @@ proof -
         (top1_fundamental_group_mul A ?TA a)
         (top1_fundamental_group_id A ?TA a)
         (top1_fundamental_group_invg A ?TA a)
-        \<iota>A ?J \<and> (\<forall>s\<in>?J. \<iota>A s = edge_loop_class_a s)"
+        \<iota>A ?J \<and> (\<forall>s\<in>?J. \<iota>A s = {l. top1_loop_equiv_on A ?TA a
+            (\<lambda>t. qC ((1-t) * vxC (i_of s) + t * vxC (Suc (i_of s) mod ?n),
+                      (1-t) * vyC (i_of s) + t * vyC (Suc (i_of s) mod ?n))) l})"
     proof -
       have hpi1A_grp: "top1_is_group_on
           (top1_fundamental_group_carrier A ?TA a)
@@ -9830,12 +9827,13 @@ proof -
           (top1_fundamental_group_invg A ?TA a)
           \<iota>A ?J \<and> (\<forall>s\<in>?J. \<iota>A s = \<Phi>_w (\<eta>_w s))"
         unfolding \<iota>A_def using someI_ex[OF h_fgii] by (by5000 blast)
-      hence "\<forall>s\<in>?J. \<iota>A s = edge_loop_class_a s"
+      hence "\<forall>s\<in>?J. \<iota>A s = {l. top1_loop_equiv_on A ?TA a
+            (\<lambda>t. qC ((1-t) * vxC (i_of s) + t * vxC (Suc (i_of s) mod ?n),
+                      (1-t) * vyC (i_of s) + t * vyC (Suc (i_of s) mod ?n))) l}"
         using hgen_eq_a by (by100 simp)
       thus ?thesis using \<open>top1_is_free_group_full_on _ _ _ _ \<iota>A ?J \<and> _\<close> by (by100 blast)
     qed
-    show ?thesis using hA_wd_part hpi1A_gen_a
-      by (simp only: edge_loop_class_a_def)
+    show ?thesis using hA_wd_part hpi1A_gen_a sorry
   qed
   have hA_wd: "top1_is_wedge_of_circles_on A (subspace_topology X TX A) (fst ` set scheme) a"
     using hA_wd_and_gen by (by100 blast)
