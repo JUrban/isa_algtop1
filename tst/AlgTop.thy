@@ -7033,10 +7033,34 @@ lemma finite_wedge_pi1_free_with_chosen_loops:
           have "{..<n} = {0} \<union> {1..<n}" using hn_pos by (by100 auto)
           thus ?thesis by (by100 simp)
         qed
-        \<comment> \<open>Step 7d: Compose all isomorphisms to get the final result.\<close>
-        \<comment> \<open>Approach: Use Theorem\_69\_2 to get FP free on {..<n} with gen tracking.
-           Then Lemma\_68\_3 to extend to hom FP \<rightarrow> \<pi>\_1(X). Then show it's iso.\<close>
-        \<comment> \<open>Alternatively: reconstruct wedge, apply cached theorem, sorry gen corr.\<close>
+        \<comment> \<open>Step 7d: "Our theorem now follows from Theorem 69.2." (Munkres)
+           Apply Theorem\_69\_2 to get FP = G1 * G2, free on {..<n} with gen tracking.
+           Then use cached theorem for int carrier + free\_group\_hom\_exists for
+           the generator-correct iso.\<close>
+        \<comment> \<open>Step 7d-i: Apply Theorem\_69\_2.\<close>
+        have hThm692: "\<exists>(FP :: (nat \<times> int) list set) mulFP eFP invgFP iotafam12 iotaS12.
+          top1_is_free_product_on FP mulFP eFP invgFP
+            (\<lambda>i::nat. if i = 0 then G1 else G2) (\<lambda>i. if i = 0 then mul1 else mul2)
+            iotafam12 {0, 1} \<and>
+          top1_is_free_group_full_on FP mulFP eFP invgFP iotaS12 ({0::nat} \<union> {1..<n}) \<and>
+          (\<forall>s\<in>{0::nat}. iotaS12 s = iotafam12 0 (\<eta>1 s)) \<and>
+          (\<forall>s\<in>{1..<n}. iotaS12 s = iotafam12 1 (\<eta>2 s))"
+          using Theorem_69_2[OF hG1_free hG2_free hS_disj] by (by100 blast)
+        from hThm692
+        obtain FP :: "(nat \<times> int) list set" and mulFP eFP invgFP iotafam12
+            and iotaS12 :: "nat \<Rightarrow> (nat \<times> int) list" where
+          hFP_prod: "top1_is_free_product_on FP mulFP eFP invgFP
+            (\<lambda>i::nat. if i = 0 then G1 else G2) (\<lambda>i. if i = 0 then mul1 else mul2)
+            iotafam12 {0, 1}" and
+          hFP_free: "top1_is_free_group_full_on FP mulFP eFP invgFP iotaS12 ({0::nat} \<union> {1..<n})" and
+          hiotaS_G1: "\<forall>s\<in>{0::nat}. iotaS12 s = iotafam12 0 (\<eta>1 s)" and
+          hiotaS_G2: "\<forall>s\<in>{1..<n}. iotaS12 s = iotafam12 1 (\<eta>2 s)"
+          apply (rule exE)
+          apply (by100 blast)
+          done
+        have hFP_free': "top1_is_free_group_full_on FP mulFP eFP invgFP iotaS12 {..<n}"
+          using hFP_free hS_union by (by100 simp)
+        \<comment> \<open>Step 7d-ii: Get int-typed carrier from cached theorem.\<close>
         have hwedge_X: "top1_is_wedge_of_circles_on X TX {..<n} p"
           unfolding top1_is_wedge_of_circles_on_def
         proof (intro conjI)
@@ -7081,29 +7105,58 @@ lemma finite_wedge_pi1_free_with_chosen_loops:
           hG_iso: "top1_groups_isomorphic_on G mul_G
               (top1_fundamental_group_carrier X TX p) (top1_fundamental_group_mul X TX p)"
           by (by100 blast)
-        \<comment> \<open>Extract explicit iso \<Phi>.\<close>
-        from hG_iso[unfolded top1_groups_isomorphic_on_def top1_group_iso_on_def]
-        obtain \<Phi> where
-          h\<Phi>_hom: "top1_group_hom_on G mul_G
-              (top1_fundamental_group_carrier X TX p) (top1_fundamental_group_mul X TX p) \<Phi>"
-          and h\<Phi>_bij: "bij_betw \<Phi> G (top1_fundamental_group_carrier X TX p)"
+        \<comment> \<open>Step 7d-iii: Define the loop classes (the target generator images).\<close>
+        define loop_class where "loop_class j =
+          {l. top1_loop_equiv_on X TX p (\<lambda>t. g j (cos (2*pi*t), sin (2*pi*t))) l}" for j
+        \<comment> \<open>Step 7d-iv: Each loop\_class(j) is in \<pi>\_1(X,p).\<close>
+        have hloop_in_pi1: "\<forall>j<n. loop_class j \<in>
+            top1_fundamental_group_carrier X TX p"
+        proof (intro allI impI)
+          fix j assume "j < n"
+          define fj where "fj = (\<lambda>t. g j (cos (2*pi*t), sin (2*pi*t)))"
+          have "top1_is_loop_on X TX p fj"
+            sorry \<comment> \<open>fj is continuous I \<rightarrow> X (composition of std\_loop and g(j) homeomorphism),
+               fj(0) = g(j)(1,0) = p, fj(1) = g(j)(1,0) = p.\<close>
+          moreover have "loop_class j = {l. top1_loop_equiv_on X TX p fj l}"
+            unfolding loop_class_def fj_def by (by100 simp)
+          ultimately show "loop_class j \<in> top1_fundamental_group_carrier X TX p"
+            unfolding top1_fundamental_group_carrier_def by (by100 blast)
+        qed
+        \<comment> \<open>Step 7d-v: \<pi>\_1(X,p) is a group.\<close>
+        have hTX: "is_topology_on X TX"
+          using less.prems(1) unfolding is_topology_on_strict_def by (by100 blast)
+        have hpi1_grp: "top1_is_group_on
+            (top1_fundamental_group_carrier X TX p) (top1_fundamental_group_mul X TX p)
+            (top1_fundamental_group_id X TX p) (top1_fundamental_group_invg X TX p)"
+          using top1_fundamental_group_is_group[OF hTX less.prems(3)] by (by100 blast)
+        \<comment> \<open>Step 7d-vi: By free\_group\_hom\_exists, construct hom \<Phi>: G \<rightarrow> \<pi>\_1(X,p)
+           that maps \<iota>\_G(j) to loop\_class(j).\<close>
+        have hloop_in: "\<forall>s\<in>{..<n}. loop_class s \<in> top1_fundamental_group_carrier X TX p"
+          using hloop_in_pi1 by (by100 blast)
+        from free_group_hom_exists[OF hG_free hpi1_grp hloop_in]
+        obtain \<Phi> where h\<Phi>_hom: "top1_group_hom_on G mul_G
+            (top1_fundamental_group_carrier X TX p) (top1_fundamental_group_mul X TX p) \<Phi>"
+          and h\<Phi>_gen: "\<forall>j\<in>{..<n}. \<Phi> (\<iota>_G j) = loop_class j"
           by (by100 blast)
+        \<comment> \<open>Step 7d-vii: \<Phi> is bijective (hence iso).
+           Both G and \<pi>\_1(X,p) are free on {..<n}. A hom between free groups of same
+           rank that maps generators to generators is an iso.
+           Proof: construct inverse hom \<Psi>: \<pi>\_1(X,p) \<rightarrow> G via free\_group\_hom\_exists
+           (using the FP-based freeness of \<pi>\_1(X,p)). Then \<Psi> \<circ> \<Phi> = id on generators
+           \<Rightarrow> \<Psi> \<circ> \<Phi> = id (by uniqueness). Similarly \<Phi> \<circ> \<Psi> = id. Hence \<Phi> bijective.\<close>
+        have h\<Phi>_bij: "bij_betw \<Phi> G (top1_fundamental_group_carrier X TX p)"
+          sorry \<comment> \<open>Inverse construction via free\_group\_hom\_exists on \<pi>\_1(X) (which is free
+             on {..<n} via FP + free\_group\_invariant\_under\_iso) + free\_group\_hom\_unique.\<close>
         have h\<Phi>_iso: "top1_group_iso_on G mul_G
             (top1_fundamental_group_carrier X TX p) (top1_fundamental_group_mul X TX p) \<Phi>"
           unfolding top1_group_iso_on_def using h\<Phi>_hom h\<Phi>_bij by (by100 blast)
-        \<comment> \<open>Generator correspondence: the NEW content.\<close>
-        have h\<Phi>_gen: "\<forall>j<n. \<Phi> (\<iota>_G j) = {l. top1_loop_equiv_on X TX p
+        have h\<Phi>_gen': "\<forall>j<n. \<Phi> (\<iota>_G j) = {l. top1_loop_equiv_on X TX p
             (\<lambda>t. g j (cos (2*pi*t), sin (2*pi*t))) l}"
-          sorry \<comment> \<open>This is the part that requires the SvK + Theorem\_69\_2 chain.
-             The abstract iso \<Phi> from the cached theorem may not map generators
-             to the specific loop classes. Need to REPLACE \<Phi> with the composed
-             iso from the SvK/Theorem\_69\_2 chain, which DOES track generators.
-             Alternatively: show any iso maps the generators correctly by uniqueness
-             of the fundamental group iso (from the covering space structure).\<close>
+          using h\<Phi>_gen unfolding loop_class_def by (by100 blast)
         show ?thesis
           apply (rule exI[of _ G], rule exI[of _ mul_G], rule exI[of _ e_G],
                  rule exI[of _ invg_G], rule exI[of _ \<iota>_G], rule exI[of _ \<Phi>])
-          using hG_free h\<Phi>_iso h\<Phi>_gen by (by100 blast)
+          using hG_free h\<Phi>_iso h\<Phi>_gen' by (by100 blast)
       qed
     qed
   qed
