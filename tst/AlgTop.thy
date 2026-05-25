@@ -5409,9 +5409,12 @@ proof -
         (\<lambda>i::nat. if i = 0 then ?\<pi>U else ?\<pi>V) (\<lambda>i. if i = 0 then ?mU else ?mV)
         iotafam_uv {0::nat, 1}
     \<and> (\<exists>iotaS. top1_is_free_group_full_on FP_uv mulFP_uv eFP_uv invgFP_uv iotaS (S1 \<union> S2))"
-    sorry \<comment> \<open>5-variable existential extraction from Theorem\_69\_2\_free\_product\_part.
-       Types match (now with explicit annotations on Theorem\_69\_2\_free\_product\_part).
-       Automation times out on the conjunction matching.\<close>
+    sorry \<comment> \<open>FORMAL OBSTACLE: 5-variable existential extraction from
+       Theorem\_69\_2\_free\_product\_part. All Isabelle tactics (blast, fast, meson,
+       force, auto) time out even without by100 wrapper.
+       The predicate top1\_is\_free\_product\_on has a deeply nested structure
+       that defeats first-order unification.
+       SOLUTION: move svk\_free\_product\_free to cached session or use ML.\<close>
   have hFP_prod: "top1_is_free_product_on FP_uv mulFP_uv eFP_uv invgFP_uv
       (\<lambda>i::nat. if i = 0 then ?\<pi>U else ?\<pi>V) (\<lambda>i. if i = 0 then ?mU else ?mV)
       iotafam_uv {0::nat, 1}"
