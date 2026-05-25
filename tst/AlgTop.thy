@@ -10230,8 +10230,9 @@ lemma finite_wedge_pi1_free_with_chosen_loops:
           thus ?thesis by (by100 simp)
         qed
         \<comment> \<open>Step 7d: Compose all isomorphisms to get the final result.\<close>
-        \<comment> \<open>Pragmatic approach: reconstruct wedge predicate, apply cached abstract theorem,
-           then sorry only the generator correspondence (the new content of this theorem).\<close>
+        \<comment> \<open>Approach: Use Theorem\_69\_2 to get FP free on {..<n} with gen tracking.
+           Then Lemma\_68\_3 to extend to hom FP \<rightarrow> \<pi>\_1(X). Then show it's iso.\<close>
+        \<comment> \<open>Alternatively: reconstruct wedge, apply cached theorem, sorry gen corr.\<close>
         have hwedge_X: "top1_is_wedge_of_circles_on X TX {..<n} p"
           unfolding top1_is_wedge_of_circles_on_def
         proof (intro conjI)
