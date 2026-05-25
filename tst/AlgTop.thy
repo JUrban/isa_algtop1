@@ -9941,9 +9941,18 @@ proof -
         fix s assume "s \<in> fst ` set scheme"
         have "\<iota>A s = edge_loop_class_a s" using h2 \<open>s \<in> fst ` set scheme\<close> by (by100 blast)
         also have "\<dots> = edge_loop_class s"
-          sorry \<comment> \<open>edge\_loop\_class\_a s = edge\_loop\_class s: both defined identically
-             except basepoint a vs a'. Since a=a' (ha\_eq\_a'), these are equal.
-             Technical simp/subst issue with deeply nested Collect+lambda.\<close>
+        proof -
+          have haa: "a = a'" by (rule ha_eq_a')
+          have "\<And>g. top1_loop_equiv_on A (subspace_topology X TX A) a
+              (\<lambda>t. qC ((1-t) * vxC (i_of s) + t * vxC (Suc (i_of s) mod length scheme),
+                        (1-t) * vyC (i_of s) + t * vyC (Suc (i_of s) mod length scheme))) g
+            = top1_loop_equiv_on A (subspace_topology X TX A) a'
+              (\<lambda>t. qC ((1-t) * vxC (i_of s) + t * vxC (Suc (i_of s) mod length scheme),
+                        (1-t) * vyC (i_of s) + t * vyC (Suc (i_of s) mod length scheme))) g"
+            apply (simp only: haa)
+            done
+          thus ?thesis sorry \<comment> \<open>TEMP: edge\_loop\_class\_a s = edge\_loop\_class s. See workaround below.\<close>
+        qed
         finally show "\<iota>A s = edge_loop_class s" .
       qed
       show ?thesis using h1' h2' by (by100 blast)
