@@ -5404,12 +5404,14 @@ proof -
   \<comment> \<open>Step 1: Theorem\_69\_2\_free\_product\_part gives extraction with 5-variable existential.\<close>
   note hfpp = Theorem_69_2_free_product_part[OF hU_free hV_free hS_disj]
   \<comment> \<open>Extract 5-variable existential from hfpp using the same pattern as Theorem\_69\_2\_free\_product\_part.\<close>
-  from hfpp obtain FP_uv mulFP_uv eFP_uv invgFP_uv iotafam_uv where
+  from hfpp obtain FP_uv and mulFP_uv eFP_uv invgFP_uv and iotafam_uv where
     hFP_all: "top1_is_free_product_on FP_uv mulFP_uv eFP_uv invgFP_uv
         (\<lambda>i::nat. if i = 0 then ?\<pi>U else ?\<pi>V) (\<lambda>i. if i = 0 then ?mU else ?mV)
         iotafam_uv {0::nat, 1}
     \<and> (\<exists>iotaS. top1_is_free_group_full_on FP_uv mulFP_uv eFP_uv invgFP_uv iotaS (S1 \<union> S2))"
-    sorry
+    sorry \<comment> \<open>5-variable existential extraction from Theorem\_69\_2\_free\_product\_part.
+       Types match (now with explicit annotations on Theorem\_69\_2\_free\_product\_part).
+       Automation times out on the conjunction matching.\<close>
   have hFP_prod: "top1_is_free_product_on FP_uv mulFP_uv eFP_uv invgFP_uv
       (\<lambda>i::nat. if i = 0 then ?\<pi>U else ?\<pi>V) (\<lambda>i. if i = 0 then ?mU else ?mV)
       iotafam_uv {0::nat, 1}"
@@ -5429,7 +5431,7 @@ proof -
   obtain \<psi>_svk where h\<psi>_iso: "top1_group_iso_on
       (top1_fundamental_group_carrier X TX p) (top1_fundamental_group_mul X TX p)
       FP_uv mulFP_uv \<psi>_svk"
-    sorry
+    by (by100 blast)
   have hFP_grp: "top1_is_group_on FP_uv mulFP_uv eFP_uv invgFP_uv"
     using hFP_free unfolding top1_is_free_group_full_on_def by (by100 blast)
   have h\<psi>_inv: "top1_group_iso_on FP_uv mulFP_uv
