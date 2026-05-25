@@ -7998,7 +7998,9 @@ lemma finite_wedge_pi1_free_with_chosen_loops:
             \<comment> \<open>Apply inclusion\_gen\_images\_in\_hom\_image for V.\<close>
             have hV_loops: "\<forall>k\<in>{1..<n}. top1_is_loop_on V (subspace_topology X TX V) p
                 (\<lambda>t. g k (cos (2*pi*t), sin (2*pi*t)))"
-              sorry \<comment> \<open>Each g(k) \<circ> std\_loop is a loop on V. Same pattern as U.\<close>
+              sorry \<comment> \<open>Each g(k) \<circ> std\_loop is loop on V. Proof: g(k) homeo S1\<rightarrow>C(k),
+                 std\_loop loop on S1, compose to get loop on C(k), C(k) \<subseteq> V,
+                 subspace\_topology\_trans + Theorem\_18\_2(6) to expand to V.\<close>
             have hV_gen_class: "\<forall>k\<in>{1..<n}. \<iota>V_out k =
                 {l. top1_loop_equiv_on V (subspace_topology X TX V) p
                     (\<lambda>t. g k (cos (2*pi*t), sin (2*pi*t))) l}"
