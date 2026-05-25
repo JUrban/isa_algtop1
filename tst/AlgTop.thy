@@ -5567,7 +5567,26 @@ lemma inclusion_gen_images_in_hom_image:
       and hiG_in: "\<forall>k\<in>S. \<iota>_G k \<in> G"
   shows "(top1_fundamental_group_induced_on V (subspace_topology X TX V) p X TX p (\<lambda>x. x)) `
       (\<iota>V ` S) \<subseteq> \<Phi> ` G"
-  sorry
+proof -
+  let ?jV = "top1_fundamental_group_induced_on V (subspace_topology X TX V) p X TX p (\<lambda>x. x)"
+  have "\<forall>k\<in>S. ?jV (\<iota>V k) \<in> \<Phi> ` G"
+  proof
+    fix k assume "k \<in> S"
+    have hloop_k: "top1_is_loop_on V (subspace_topology X TX V) p
+        (\<lambda>t. gk k (cos (2*pi*t), sin (2*pi*t)))"
+      using hloop \<open>k \<in> S\<close> by (by100 blast)
+    have "?jV (\<iota>V k) = ?jV {l. top1_loop_equiv_on V (subspace_topology X TX V) p
+        (\<lambda>t. gk k (cos (2*pi*t), sin (2*pi*t))) l}"
+      using hgen_eq \<open>k \<in> S\<close> by (by100 simp)
+    also have "\<dots> = {l. top1_loop_equiv_on X TX p (\<lambda>t. gk k (cos (2*pi*t), sin (2*pi*t))) l}"
+      by (rule subspace_inclusion_induced_class[OF hTX hV_sub hloop_k])
+    also have "\<dots> = \<Phi> (\<iota>_G k)"
+      using h\<Phi>_gen \<open>k \<in> S\<close> by (by100 simp)
+    finally show "?jV (\<iota>V k) \<in> \<Phi> ` G"
+      using hiG_in \<open>k \<in> S\<close> by (by100 blast)
+  qed
+  thus ?thesis by (by100 blast)
+qed
 
 text \<open>Munkres Theorem 71.1 (witnessed version with chosen loop generators).
   For a finite wedge of circles with explicit circle data (homeomorphisms, basepoints),
