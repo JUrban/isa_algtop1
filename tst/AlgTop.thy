@@ -5361,6 +5361,462 @@ proof -
   qed
 qed
 
+text \<open>SvK with generator tracking: the specific hom FP \<rightarrow> \<pi>\_1(X) from
+  Lemma\_68\_3 (extending the inclusion maps) IS the SvK iso.
+  It maps iotafam(0,c) \<rightarrow> j\_U*(c) and iotafam(1,c) \<rightarrow> j\_V*(c).\<close>
+lemma svk_iso_with_tracking:
+  assumes hstrict: "is_topology_on_strict X TX"
+      and hU_open: "openin_on X TX U" and hV_open: "openin_on X TX V"
+      and hUV_cover: "U \<union> V = X"
+      and hUV_sc: "top1_simply_connected_on (U \<inter> V) (subspace_topology X TX (U \<inter> V))"
+      and hU_pc: "top1_path_connected_on U (subspace_topology X TX U)"
+      and hV_pc: "top1_path_connected_on V (subspace_topology X TX V)"
+      and hp: "p \<in> U \<inter> V"
+      and hFP: "top1_is_free_product_on FP mulFP eFP invgFP
+          (\<lambda>i::nat. if i = 0
+             then top1_fundamental_group_carrier U (subspace_topology X TX U) p
+             else top1_fundamental_group_carrier V (subspace_topology X TX V) p)
+          (\<lambda>i. if i = 0
+             then top1_fundamental_group_mul U (subspace_topology X TX U) p
+             else top1_fundamental_group_mul V (subspace_topology X TX V) p)
+          iotafam {0::nat, 1}"
+  shows "\<exists>h. top1_group_iso_on FP mulFP
+      (top1_fundamental_group_carrier X TX p) (top1_fundamental_group_mul X TX p) h
+    \<and> (\<forall>c \<in> top1_fundamental_group_carrier U (subspace_topology X TX U) p.
+        h (iotafam 0 c) = top1_fundamental_group_induced_on U (subspace_topology X TX U) p X TX p (\<lambda>x. x) c)
+    \<and> (\<forall>c \<in> top1_fundamental_group_carrier V (subspace_topology X TX V) p.
+        h (iotafam 1 c) = top1_fundamental_group_induced_on V (subspace_topology X TX V) p X TX p (\<lambda>x. x) c)"
+proof -
+  let ?TU = "subspace_topology X TX U" and ?TV = "subspace_topology X TX V"
+  let ?TUV = "subspace_topology X TX (U \<inter> V)"
+  let ?\<pi>X = "top1_fundamental_group_carrier X TX p"
+  let ?mX = "top1_fundamental_group_mul X TX p"
+  let ?eX = "top1_fundamental_group_id X TX p"
+  let ?iX = "top1_fundamental_group_invg X TX p"
+  let ?\<pi>U = "top1_fundamental_group_carrier U ?TU p"
+  let ?mU = "top1_fundamental_group_mul U ?TU p"
+  let ?eU = "top1_fundamental_group_id U ?TU p"
+  let ?iU = "top1_fundamental_group_invg U ?TU p"
+  let ?\<pi>V = "top1_fundamental_group_carrier V ?TV p"
+  let ?mV = "top1_fundamental_group_mul V ?TV p"
+  let ?eV = "top1_fundamental_group_id V ?TV p"
+  let ?iV = "top1_fundamental_group_invg V ?TV p"
+  let ?jU = "top1_fundamental_group_induced_on U ?TU p X TX p (\<lambda>x. x)"
+  let ?jV = "top1_fundamental_group_induced_on V ?TV p X TX p (\<lambda>x. x)"
+  define GG where "GG \<equiv> (\<lambda>i::nat. if i = 0 then ?\<pi>U else ?\<pi>V)"
+  define mulGG where "mulGG \<equiv> (\<lambda>i::nat. if i = 0 then ?mU else ?mV)"
+  \<comment> \<open>Basic topology/group facts.\<close>
+  have hTX: "is_topology_on X TX" using hstrict unfolding is_topology_on_strict_def
+    by (by100 blast)
+  have hUsub: "U \<subseteq> X" using hU_open unfolding openin_on_def by (by100 blast)
+  have hVsub: "V \<subseteq> X" using hV_open unfolding openin_on_def by (by100 blast)
+  have hp_X: "p \<in> X" using hp hUsub by (by100 blast)
+  have hp_U: "p \<in> U" using hp by (by100 blast)
+  have hp_V: "p \<in> V" using hp by (by100 blast)
+  have hTU: "is_topology_on U ?TU" using subspace_topology_is_topology_on[OF hTX hUsub] .
+  have hTV: "is_topology_on V ?TV" using subspace_topology_is_topology_on[OF hTX hVsub] .
+  have hUVsub: "U \<inter> V \<subseteq> X" using hUsub hVsub by (by100 blast)
+  have hTUV: "is_topology_on (U \<inter> V) ?TUV"
+    using subspace_topology_is_topology_on[OF hTX hUVsub] .
+  have hUV_pc: "top1_path_connected_on (U \<inter> V) ?TUV"
+    using hUV_sc top1_simply_connected_on_path_connected by (by100 blast)
+  have hpi1X_grp: "top1_is_group_on ?\<pi>X ?mX ?eX ?iX"
+    using top1_fundamental_group_is_group[OF hTX hp_X] by (by100 blast)
+  have hpi1U_grp: "top1_is_group_on ?\<pi>U ?mU ?eU ?iU"
+    using top1_fundamental_group_is_group[OF hTU hp_U] by (by100 blast)
+  have hpi1V_grp: "top1_is_group_on ?\<pi>V ?mV ?eV ?iV"
+    using top1_fundamental_group_is_group[OF hTV hp_V] by (by100 blast)
+  have hFP_grp: "top1_is_group_on FP mulFP eFP invgFP"
+    using hFP unfolding top1_is_free_product_on_def by (by100 blast)
+  \<comment> \<open>Inclusion-induced maps are group homs.\<close>
+  have hjU_hom: "top1_group_hom_on ?\<pi>U ?mU ?\<pi>X ?mX ?jU"
+    using subspace_inclusion_induced_hom[OF hTX hUsub hp_U] by (by100 blast)
+  have hjV_hom: "top1_group_hom_on ?\<pi>V ?mV ?\<pi>X ?mX ?jV"
+    using subspace_inclusion_induced_hom[OF hTX hVsub hp_V] by (by100 blast)
+  \<comment> \<open>iotafam maps are group homs (from free product definition).\<close>
+  \<comment> \<open>Extract free product conditions for iotafam.\<close>
+  have hFP_mem: "\<forall>a\<in>{0::nat,1}. \<forall>x\<in>(if a = 0 then ?\<pi>U else ?\<pi>V). iotafam a x \<in> FP"
+    using hFP unfolding top1_is_free_product_on_def by (by100 blast)
+  have hFP_mul: "\<forall>a\<in>{0::nat,1}. \<forall>x\<in>(if a = 0 then ?\<pi>U else ?\<pi>V).
+      \<forall>y\<in>(if a = 0 then ?\<pi>U else ?\<pi>V).
+      iotafam a ((if a = 0 then ?mU else ?mV) x y) = mulFP (iotafam a x) (iotafam a y)"
+    using hFP unfolding top1_is_free_product_on_def by (by100 blast)
+  have hiotafam0_in: "\<forall>x\<in>?\<pi>U. iotafam 0 x \<in> FP"
+    using hFP_mem by (by100 force)
+  have hiotafam0_mul: "\<forall>x\<in>?\<pi>U. \<forall>y\<in>?\<pi>U. iotafam 0 (?mU x y) = mulFP (iotafam 0 x) (iotafam 0 y)"
+    using hFP_mul by (by100 force)
+  have hiotafam0_hom: "top1_group_hom_on ?\<pi>U ?mU FP mulFP (iotafam 0)"
+    unfolding top1_group_hom_on_def using hiotafam0_in hiotafam0_mul by (by100 blast)
+  have hiotafam1_in: "\<forall>x\<in>?\<pi>V. iotafam 1 x \<in> FP"
+  proof
+    fix x assume "x \<in> ?\<pi>V"
+    have "(1::nat) \<in> {0::nat,1}" by (by100 blast)
+    have "(if (1::nat) = 0 then ?\<pi>U else ?\<pi>V) = ?\<pi>V" by (by100 simp)
+    thus "iotafam 1 x \<in> FP"
+      using hFP_mem \<open>x \<in> ?\<pi>V\<close> \<open>(1::nat) \<in> {0::nat,1}\<close> by (by100 force)
+  qed
+  have hiotafam1_mul: "\<forall>x\<in>?\<pi>V. \<forall>y\<in>?\<pi>V. iotafam 1 (?mV x y) = mulFP (iotafam 1 x) (iotafam 1 y)"
+  proof (intro ballI)
+    fix x y assume "x \<in> ?\<pi>V" "y \<in> ?\<pi>V"
+    have h1: "(1::nat) \<in> {0::nat,1}" by (by100 blast)
+    have "iotafam 1 ((if (1::nat) = 0 then ?mU else ?mV) x y)
+        = mulFP (iotafam 1 x) (iotafam 1 y)"
+      using hFP_mul[rule_format, OF h1] \<open>x \<in> ?\<pi>V\<close> \<open>y \<in> ?\<pi>V\<close> by (by100 force)
+    thus "iotafam 1 (?mV x y) = mulFP (iotafam 1 x) (iotafam 1 y)" by (by100 simp)
+  qed
+  have hiotafam1_hom: "top1_group_hom_on ?\<pi>V ?mV FP mulFP (iotafam 1)"
+    unfolding top1_group_hom_on_def using hiotafam1_in hiotafam1_mul by (by100 blast)
+  \<comment> \<open>Step 1: Lemma\_68\_3 gives h: FP \<rightarrow> \<pi>\_1(X) extending j\_U*, j\_V*.\<close>
+  have h683_hfam: "\<forall>a\<in>{0::nat, 1}. top1_group_hom_on (GG a) (mulGG a) ?\<pi>X ?mX
+      (\<lambda>c. if a = 0 then ?jU c else ?jV c)"
+  proof (intro ballI)
+    fix a assume "a \<in> {0::nat, 1}"
+    show "top1_group_hom_on (GG a) (mulGG a) ?\<pi>X ?mX (\<lambda>c. if a = 0 then ?jU c else ?jV c)"
+    proof (cases "a = 0")
+      case True thus ?thesis unfolding GG_def mulGG_def using hjU_hom by (by100 simp)
+    next
+      case False
+      hence "a = 1" using \<open>a \<in> {0::nat, 1}\<close> by (by100 blast)
+      thus ?thesis unfolding GG_def mulGG_def using hjV_hom by (by100 simp)
+    qed
+  qed
+  have h683_grps: "\<forall>a\<in>{0::nat, 1}. top1_is_group_on (GG a) (mulGG a)
+      (if a = 0 then ?eU else ?eV) (if a = 0 then ?iU else ?iV)"
+  proof (intro ballI)
+    fix a assume "a \<in> {0::nat, 1}"
+    show "top1_is_group_on (GG a) (mulGG a)
+        (if a = 0 then ?eU else ?eV) (if a = 0 then ?iU else ?iV)"
+    proof (cases "a = 0")
+      case True thus ?thesis unfolding GG_def mulGG_def using hpi1U_grp by (by100 simp)
+    next
+      case False
+      hence "a = 1" using \<open>a \<in> {0::nat, 1}\<close> by (by100 blast)
+      thus ?thesis unfolding GG_def mulGG_def using hpi1V_grp by (by100 simp)
+    qed
+  qed
+  note h683_result = Lemma_68_3_extension_property[OF hFP[folded GG_def mulGG_def] hpi1X_grp h683_hfam h683_grps]
+  define h where "h \<equiv> SOME h. top1_group_hom_on FP mulFP ?\<pi>X ?mX h
+    \<and> (\<forall>a\<in>{0::nat, 1}. \<forall>x\<in>GG a. h (iotafam a x) = (if a = 0 then ?jU x else ?jV x))
+    \<and> (\<forall>h'. top1_group_hom_on FP mulFP ?\<pi>X ?mX h'
+        \<longrightarrow> (\<forall>a\<in>{0::nat, 1}. \<forall>x\<in>GG a. h' (iotafam a x) = (if a = 0 then ?jU x else ?jV x))
+        \<longrightarrow> (\<forall>g\<in>FP. h' g = h g))"
+  have hh_props: "top1_group_hom_on FP mulFP ?\<pi>X ?mX h
+    \<and> (\<forall>a\<in>{0::nat, 1}. \<forall>x\<in>GG a. h (iotafam a x) = (if a = 0 then ?jU x else ?jV x))
+    \<and> (\<forall>h'. top1_group_hom_on FP mulFP ?\<pi>X ?mX h'
+        \<longrightarrow> (\<forall>a\<in>{0::nat, 1}. \<forall>x\<in>GG a. h' (iotafam a x) = (if a = 0 then ?jU x else ?jV x))
+        \<longrightarrow> (\<forall>g\<in>FP. h' g = h g))"
+    unfolding h_def using someI_ex[OF h683_result] by (by5000 blast)
+  have hh_hom: "top1_group_hom_on FP mulFP ?\<pi>X ?mX h"
+    using hh_props by (by100 blast)
+  have hh_track: "\<forall>a\<in>{0::nat, 1}. \<forall>x\<in>GG a. h (iotafam a x) = (if a = 0 then ?jU x else ?jV x)"
+    using hh_props by (by100 blast)
+  \<comment> \<open>Extract specific tracking for U and V.\<close>
+  have hh_trackU: "\<forall>c\<in>?\<pi>U. h (iotafam 0 c) = ?jU c"
+    using hh_track unfolding GG_def by (by100 simp)
+  have hh_trackV: "\<forall>c\<in>?\<pi>V. h (iotafam 1 c) = ?jV c"
+    using hh_track unfolding GG_def by (by100 force)
+  \<comment> \<open>Step 2: Theorem\_70\_1 gives \<Phi>: \<pi>\_1(X) \<rightarrow> FP extending iotafam(0), iotafam(1).\<close>
+  \<comment> \<open>Compatibility condition: trivial since U\<inter>V simply connected.\<close>
+  \<comment> \<open>Compatibility condition: trivial since U\<inter>V simply connected, so \<pi>\_1(U\<inter>V) = \{e\}.\<close>
+  have hUV_trivial: "top1_fundamental_group_carrier (U \<inter> V) ?TUV p
+      = {top1_fundamental_group_id (U \<inter> V) ?TUV p}"
+    using simply_connected_trivial_carrier[OF hUV_sc hp] by (by100 blast)
+  \<comment> \<open>iotafam(0) and iotafam(1) are homs, so they send identities to eFP.\<close>
+  have hiotafam0_e: "iotafam 0 ?eU = eFP"
+    using hom_preserves_id[OF hpi1U_grp hFP_grp hiotafam0_hom] by (by100 blast)
+  have hiotafam1_e: "iotafam 1 ?eV = eFP"
+    using hom_preserves_id[OF hpi1V_grp hFP_grp hiotafam1_hom] by (by100 blast)
+  \<comment> \<open>Inclusion-induced maps U\<inter>V \<rightarrow> U and U\<inter>V \<rightarrow> V send the identity to identity.\<close>
+  \<comment> \<open>Iterated subspace: subspace(U, subspace(X,TX,U), U\<inter>V) = subspace(X,TX,U\<inter>V).\<close>
+  have hUV_sub_U: "U \<inter> V \<subseteq> U" by (by100 blast)
+  have hUV_sub_V: "U \<inter> V \<subseteq> V" by (by100 blast)
+  have hiter_U: "subspace_topology U ?TU (U \<inter> V) = ?TUV"
+    using subspace_topology_trans[OF hUV_sub_U] by (by100 blast)
+  have hiter_V: "subspace_topology V ?TV (U \<inter> V) = ?TUV"
+    using subspace_topology_trans[OF hUV_sub_V] by (by100 blast)
+  \<comment> \<open>Inclusion U\<inter>V \<rightarrow> U is a group hom (via subspace\_inclusion\_induced\_hom on U).\<close>
+  have hjUV_U_hom_raw: "top1_group_hom_on
+      (top1_fundamental_group_carrier (U \<inter> V) (subspace_topology U ?TU (U \<inter> V)) p)
+      (top1_fundamental_group_mul (U \<inter> V) (subspace_topology U ?TU (U \<inter> V)) p)
+      ?\<pi>U ?mU (top1_fundamental_group_induced_on (U \<inter> V) (subspace_topology U ?TU (U \<inter> V)) p U ?TU p (\<lambda>x. x))"
+    using subspace_inclusion_induced_hom[OF hTU hUV_sub_U hp] by (by100 blast)
+  have hjUV_U_hom: "top1_group_hom_on
+      (top1_fundamental_group_carrier (U \<inter> V) ?TUV p)
+      (top1_fundamental_group_mul (U \<inter> V) ?TUV p)
+      ?\<pi>U ?mU (top1_fundamental_group_induced_on (U \<inter> V) ?TUV p U ?TU p (\<lambda>x. x))"
+    using hjUV_U_hom_raw unfolding hiter_U by (by100 blast)
+  have hjUV_V_hom_raw: "top1_group_hom_on
+      (top1_fundamental_group_carrier (U \<inter> V) (subspace_topology V ?TV (U \<inter> V)) p)
+      (top1_fundamental_group_mul (U \<inter> V) (subspace_topology V ?TV (U \<inter> V)) p)
+      ?\<pi>V ?mV (top1_fundamental_group_induced_on (U \<inter> V) (subspace_topology V ?TV (U \<inter> V)) p V ?TV p (\<lambda>x. x))"
+    using subspace_inclusion_induced_hom[OF hTV hUV_sub_V hp] by (by100 blast)
+  have hjUV_V_hom: "top1_group_hom_on
+      (top1_fundamental_group_carrier (U \<inter> V) ?TUV p)
+      (top1_fundamental_group_mul (U \<inter> V) ?TUV p)
+      ?\<pi>V ?mV (top1_fundamental_group_induced_on (U \<inter> V) ?TUV p V ?TV p (\<lambda>x. x))"
+    using hjUV_V_hom_raw unfolding hiter_V by (by100 blast)
+  \<comment> \<open>π₁(U∩V) is a group.\<close>
+  have hpi1UV_grp: "top1_is_group_on
+      (top1_fundamental_group_carrier (U \<inter> V) ?TUV p)
+      (top1_fundamental_group_mul (U \<inter> V) ?TUV p)
+      (top1_fundamental_group_id (U \<inter> V) ?TUV p)
+      (top1_fundamental_group_invg (U \<inter> V) ?TUV p)"
+    using top1_fundamental_group_is_group[OF hTUV hp] by (by100 blast)
+  have hjUV_U_id: "top1_fundamental_group_induced_on (U \<inter> V) ?TUV p U ?TU p (\<lambda>x. x)
+      (top1_fundamental_group_id (U \<inter> V) ?TUV p) = ?eU"
+    using hom_preserves_id[OF hpi1UV_grp hpi1U_grp hjUV_U_hom] by (by100 blast)
+  have hjUV_V_id: "top1_fundamental_group_induced_on (U \<inter> V) ?TUV p V ?TV p (\<lambda>x. x)
+      (top1_fundamental_group_id (U \<inter> V) ?TUV p) = ?eV"
+    using hom_preserves_id[OF hpi1UV_grp hpi1V_grp hjUV_V_hom] by (by100 blast)
+  have hcompat: "\<forall>c\<in>top1_fundamental_group_carrier (U \<inter> V) ?TUV p.
+      iotafam 0 (top1_fundamental_group_induced_on (U \<inter> V) ?TUV p U ?TU p (\<lambda>x. x) c)
+    = iotafam 1 (top1_fundamental_group_induced_on (U \<inter> V) ?TUV p V ?TV p (\<lambda>x. x) c)"
+  proof
+    fix c assume "c \<in> top1_fundamental_group_carrier (U \<inter> V) ?TUV p"
+    hence "c = top1_fundamental_group_id (U \<inter> V) ?TUV p" using hUV_trivial by (by100 blast)
+    thus "iotafam 0 (top1_fundamental_group_induced_on (U \<inter> V) ?TUV p U ?TU p (\<lambda>x. x) c)
+        = iotafam 1 (top1_fundamental_group_induced_on (U \<inter> V) ?TUV p V ?TV p (\<lambda>x. x) c)"
+      using hjUV_U_id hjUV_V_id hiotafam0_e hiotafam1_e by (by100 simp)
+  qed
+  from Theorem_70_1_universal_property[OF hstrict hU_open hV_open hUV_cover hUV_pc hU_pc hV_pc hp
+      hFP_grp hiotafam0_hom hiotafam1_hom hcompat]
+  obtain \<Phi> where h\<Phi>_hom: "top1_group_hom_on ?\<pi>X ?mX FP mulFP \<Phi>"
+    and h\<Phi>_trackU: "\<forall>a\<in>?\<pi>U. \<Phi> (?jU a) = iotafam 0 a"
+    and h\<Phi>_trackV: "\<forall>b\<in>?\<pi>V. \<Phi> (?jV b) = iotafam 1 b"
+    by (by5000 blast)
+  \<comment> \<open>Step 3: h \<circ> \<Phi> = id on \<pi>\_1(X) via Theorem\_70\_1\_uniqueness.\<close>
+  have hhPhi_hom: "top1_group_hom_on ?\<pi>X ?mX ?\<pi>X ?mX (h \<circ> \<Phi>)"
+    using group_hom_comp[OF h\<Phi>_hom hh_hom] by (by100 blast)
+  have hid_hom: "top1_group_hom_on ?\<pi>X ?mX ?\<pi>X ?mX id"
+    using group_hom_id[OF hpi1X_grp] by (by100 blast)
+  \<comment> \<open>h \<circ> \<Phi> and id agree on j\_U* and j\_V* images.\<close>
+  have hhPhi_eqU: "\<forall>a\<in>?\<pi>U. (h \<circ> \<Phi>) (?jU a) = id (?jU a)"
+  proof
+    fix a assume "a \<in> ?\<pi>U"
+    have "(h \<circ> \<Phi>) (?jU a) = h (iotafam 0 a)" using h\<Phi>_trackU \<open>a \<in> ?\<pi>U\<close> by (by100 simp)
+    also have "\<dots> = ?jU a" using hh_trackU \<open>a \<in> ?\<pi>U\<close> by (by100 blast)
+    finally show "(h \<circ> \<Phi>) (?jU a) = id (?jU a)" by (by100 simp)
+  qed
+  have hhPhi_eqV: "\<forall>b\<in>?\<pi>V. (h \<circ> \<Phi>) (?jV b) = id (?jV b)"
+  proof
+    fix b assume "b \<in> ?\<pi>V"
+    have "(h \<circ> \<Phi>) (?jV b) = h (iotafam 1 b)" using h\<Phi>_trackV \<open>b \<in> ?\<pi>V\<close> by (by100 simp)
+    also have "\<dots> = ?jV b" using hh_trackV \<open>b \<in> ?\<pi>V\<close> by (by100 blast)
+    finally show "(h \<circ> \<Phi>) (?jV b) = id (?jV b)" by (by100 simp)
+  qed
+  from Theorem_70_1_uniqueness[OF hstrict hU_open hV_open hUV_cover hUV_pc hU_pc hV_pc hp
+      hpi1X_grp hhPhi_hom hid_hom hhPhi_eqU hhPhi_eqV]
+  have hhPhi_id: "\<forall>c\<in>?\<pi>X. (h \<circ> \<Phi>) c = c" by (by100 simp)
+  \<comment> \<open>Step 4: \<Phi> \<circ> h = id on FP via Lemma\_68\_3 uniqueness.\<close>
+  have hPhih_hom: "top1_group_hom_on FP mulFP FP mulFP (\<Phi> \<circ> h)"
+    using group_hom_comp[OF hh_hom h\<Phi>_hom] by (by100 blast)
+  have hFPid_hom: "top1_group_hom_on FP mulFP FP mulFP id"
+    using group_hom_id[OF hFP_grp] by (by100 blast)
+  \<comment> \<open>\<Phi> \<circ> h and id agree on iotafam images.\<close>
+  \<comment> \<open>Both \<Phi> \<circ> h and id extend the same maps on the factors, so they agree on FP.\<close>
+  have hPhih_on_factors: "\<forall>a\<in>{0::nat, 1}. \<forall>x\<in>GG a. (\<Phi> \<circ> h) (iotafam a x) = iotafam a x"
+  proof (intro ballI)
+    fix a x assume "a \<in> {0::nat, 1}" "x \<in> GG a"
+    show "(\<Phi> \<circ> h) (iotafam a x) = iotafam a x"
+    proof (cases "a = 0")
+      case True
+      hence "x \<in> ?\<pi>U" using \<open>x \<in> GG a\<close> unfolding GG_def by (by100 simp)
+      have "(\<Phi> \<circ> h) (iotafam 0 x) = \<Phi> (h (iotafam 0 x))" by (by100 simp)
+      also have "\<dots> = \<Phi> (?jU x)" using hh_trackU \<open>x \<in> ?\<pi>U\<close> by (by100 simp)
+      also have "\<dots> = iotafam 0 x" using h\<Phi>_trackU \<open>x \<in> ?\<pi>U\<close> by (by100 blast)
+      finally show ?thesis using True by (by100 simp)
+    next
+      case False
+      hence "a = 1" using \<open>a \<in> {0::nat, 1}\<close> by (by100 blast)
+      hence "x \<in> ?\<pi>V" using \<open>x \<in> GG a\<close> unfolding GG_def by (by100 simp)
+      have "(\<Phi> \<circ> h) (iotafam 1 x) = \<Phi> (h (iotafam 1 x))" by (by100 simp)
+      also have "\<dots> = \<Phi> (?jV x)" using hh_trackV \<open>x \<in> ?\<pi>V\<close> by (by100 simp)
+      also have "\<dots> = iotafam 1 x" using h\<Phi>_trackV \<open>x \<in> ?\<pi>V\<close> by (by100 blast)
+      finally show ?thesis using \<open>a = 1\<close> by (by100 simp)
+    qed
+  qed
+  \<comment> \<open>id also maps iotafam images to themselves.\<close>
+  have hid_on_factors: "\<forall>a\<in>{0::nat, 1}. \<forall>x\<in>GG a. id (iotafam a x) = iotafam a x"
+    by (by100 simp)
+  \<comment> \<open>Both \<Phi>\<circ>h and id extend the same factor maps, so by Lemma\_68\_3 uniqueness on FP
+     (which is a separate use with H = FP), they agree on all of FP.\<close>
+  have h_grps_for_68_3: "\<forall>a\<in>{0::nat, 1}. top1_is_group_on (GG a) (mulGG a)
+      (if a = 0 then ?eU else ?eV) (if a = 0 then ?iU else ?iV)"
+    using h683_grps by (by100 blast)
+  have hiotafam_homs: "\<forall>a\<in>{0::nat, 1}. top1_group_hom_on (GG a) (mulGG a) FP mulFP
+      (\<lambda>x. iotafam a x)"
+  proof (intro ballI)
+    fix a assume "a \<in> {0::nat, 1}"
+    show "top1_group_hom_on (GG a) (mulGG a) FP mulFP (\<lambda>x. iotafam a x)"
+    proof (cases "a = 0")
+      case True thus ?thesis unfolding GG_def mulGG_def using hiotafam0_hom by (by100 simp)
+    next
+      case False
+      hence "a = 1" using \<open>a \<in> {0::nat, 1}\<close> by (by100 blast)
+      thus ?thesis unfolding GG_def mulGG_def using hiotafam1_hom by (by100 simp)
+    qed
+  qed
+  from Lemma_68_3_extension_property[OF hFP[folded GG_def mulGG_def] hFP_grp hiotafam_homs h_grps_for_68_3]
+  obtain h_ext where hh_ext_hom: "top1_group_hom_on FP mulFP FP mulFP h_ext"
+    and hh_ext_track: "\<forall>a\<in>{0::nat, 1}. \<forall>x\<in>GG a. h_ext (iotafam a x) = iotafam a x"
+    and hh_ext_unique: "\<forall>h'. top1_group_hom_on FP mulFP FP mulFP h'
+        \<longrightarrow> (\<forall>a\<in>{0::nat, 1}. \<forall>x\<in>GG a. h' (iotafam a x) = iotafam a x)
+        \<longrightarrow> (\<forall>g\<in>FP. h' g = h_ext g)"
+    by (by5000 blast)
+  \<comment> \<open>Both \<Phi>\<circ>h and id satisfy the conditions, so they equal h\_ext on FP.\<close>
+  have hPhih_eq: "\<forall>g\<in>FP. (\<Phi> \<circ> h) g = h_ext g"
+    using hh_ext_unique hPhih_hom hPhih_on_factors by (by100 blast)
+  have hid_eq: "\<forall>g\<in>FP. id g = h_ext g"
+    using hh_ext_unique hFPid_hom hid_on_factors by (by100 blast)
+  have hPhih_id_FP: "\<forall>g\<in>FP. (\<Phi> \<circ> h) g = g"
+  proof
+    fix g assume "g \<in> FP"
+    have "(\<Phi> \<circ> h) g = h_ext g" using hPhih_eq \<open>g \<in> FP\<close> by (by100 blast)
+    also have "\<dots> = id g" using hid_eq \<open>g \<in> FP\<close> by (by100 simp)
+    finally show "(\<Phi> \<circ> h) g = g" by (by100 simp)
+  qed
+  \<comment> \<open>Step 5: h is bijective (h \<circ> \<Phi> = id AND \<Phi> \<circ> h = id gives mutual inverses).\<close>
+  have hh_surj: "h ` FP = ?\<pi>X"
+  proof
+    show "h ` FP \<subseteq> ?\<pi>X"
+      using hh_hom unfolding top1_group_hom_on_def by (by100 blast)
+    show "?\<pi>X \<subseteq> h ` FP"
+    proof
+      fix c assume "c \<in> ?\<pi>X"
+      have "\<Phi> c \<in> FP" using h\<Phi>_hom \<open>c \<in> ?\<pi>X\<close> unfolding top1_group_hom_on_def by (by100 blast)
+      have "h (\<Phi> c) = c" using hhPhi_id \<open>c \<in> ?\<pi>X\<close> by (by100 simp)
+      thus "c \<in> h ` FP" using \<open>\<Phi> c \<in> FP\<close> by (by100 blast)
+    qed
+  qed
+  have hh_inj: "inj_on h FP"
+  proof (rule inj_onI)
+    fix x y assume "x \<in> FP" "y \<in> FP" "h x = h y"
+    have "\<Phi> (h x) = \<Phi> (h y)" using \<open>h x = h y\<close> by (by100 simp)
+    hence "x = y" using hPhih_id_FP \<open>x \<in> FP\<close> \<open>y \<in> FP\<close> by (by100 simp)
+    thus "x = y" .
+  qed
+  have hh_bij: "bij_betw h FP ?\<pi>X"
+    unfolding bij_betw_def using hh_inj hh_surj by (by100 blast)
+  \<comment> \<open>Step 6: h is a group iso with tracking.\<close>
+  have hh_iso: "top1_group_iso_on FP mulFP ?\<pi>X ?mX h"
+    unfolding top1_group_iso_on_def using hh_hom hh_bij by (by100 blast)
+  show ?thesis using hh_iso hh_trackU hh_trackV by (by100 blast)
+qed
+
+text \<open>Strengthened version: \<pi>\_1(X) free with SPECIFIC generators that are
+  the inclusion-induced images of the \<pi>\_1(U), \<pi>\_1(V) generators.\<close>
+lemma svk_free_product_free_with_generators:
+  assumes hstrict: "is_topology_on_strict X TX"
+      and hU_open: "openin_on X TX U" and hV_open: "openin_on X TX V"
+      and hUV_cover: "U \<union> V = X"
+      and hUV_sc: "top1_simply_connected_on (U \<inter> V) (subspace_topology X TX (U \<inter> V))"
+      and hU_pc: "top1_path_connected_on U (subspace_topology X TX U)"
+      and hV_pc: "top1_path_connected_on V (subspace_topology X TX V)"
+      and hp: "p \<in> U \<inter> V"
+      and hU_free: "top1_is_free_group_full_on
+          (top1_fundamental_group_carrier U (subspace_topology X TX U) p)
+          (top1_fundamental_group_mul U (subspace_topology X TX U) p)
+          (top1_fundamental_group_id U (subspace_topology X TX U) p)
+          (top1_fundamental_group_invg U (subspace_topology X TX U) p)
+          \<iota>U S1"
+      and hV_free: "top1_is_free_group_full_on
+          (top1_fundamental_group_carrier V (subspace_topology X TX V) p)
+          (top1_fundamental_group_mul V (subspace_topology X TX V) p)
+          (top1_fundamental_group_id V (subspace_topology X TX V) p)
+          (top1_fundamental_group_invg V (subspace_topology X TX V) p)
+          \<iota>V S2"
+      and hS_disj: "S1 \<inter> S2 = {}"
+  shows "\<exists>\<iota>X. top1_is_free_group_full_on
+      (top1_fundamental_group_carrier X TX p) (top1_fundamental_group_mul X TX p)
+      (top1_fundamental_group_id X TX p) (top1_fundamental_group_invg X TX p)
+      \<iota>X (S1 \<union> S2)
+    \<and> (\<forall>s\<in>S1. \<iota>X s = top1_fundamental_group_induced_on U (subspace_topology X TX U) p X TX p (\<lambda>x. x) (\<iota>U s))
+    \<and> (\<forall>s\<in>S2. \<iota>X s = top1_fundamental_group_induced_on V (subspace_topology X TX V) p X TX p (\<lambda>x. x) (\<iota>V s))"
+proof -
+  let ?TU = "subspace_topology X TX U" and ?TV = "subspace_topology X TX V"
+  let ?\<pi>U = "top1_fundamental_group_carrier U ?TU p"
+  let ?mU = "top1_fundamental_group_mul U ?TU p"
+  let ?\<pi>V = "top1_fundamental_group_carrier V ?TV p"
+  let ?mV = "top1_fundamental_group_mul V ?TV p"
+  have hTX: "is_topology_on X TX"
+    using hstrict unfolding is_topology_on_strict_def by (by100 blast)
+  have hp_X: "p \<in> X" using hp hUV_cover by (by100 blast)
+  have hpi1_grp: "top1_is_group_on
+      (top1_fundamental_group_carrier X TX p) (top1_fundamental_group_mul X TX p)
+      (top1_fundamental_group_id X TX p) (top1_fundamental_group_invg X TX p)"
+    using top1_fundamental_group_is_group[OF hTX hp_X] by (by100 blast)
+  \<comment> \<open>Apply Theorem\_69\_2 to get FP free on S1 \<union> S2 with iotaS tracking.\<close>
+  from Theorem_69_2[OF hU_free hV_free hS_disj] show ?thesis
+  proof (elim exE conjE)
+    fix FP_uv mulFP_uv eFP_uv invgFP_uv iotafam_uv iotaS_uv
+    assume hFP_prod: "top1_is_free_product_on FP_uv mulFP_uv eFP_uv invgFP_uv
+        (\<lambda>i::nat. if i = 0 then ?\<pi>U else ?\<pi>V) (\<lambda>i. if i = 0 then ?mU else ?mV)
+        iotafam_uv {0, 1}"
+    assume hFP_free: "top1_is_free_group_full_on FP_uv mulFP_uv eFP_uv invgFP_uv iotaS_uv (S1 \<union> S2)"
+    assume hiotaS_U: "\<forall>s\<in>S1. iotaS_uv s = iotafam_uv 0 (\<iota>U s)"
+    assume hiotaS_V: "\<forall>s\<in>S2. iotaS_uv s = iotafam_uv 1 (\<iota>V s)"
+    \<comment> \<open>Get the SvK iso WITH tracking from svk\_iso\_with\_tracking.\<close>
+    from svk_iso_with_tracking[OF hstrict hU_open hV_open hUV_cover hUV_sc hU_pc hV_pc hp hFP_prod]
+    obtain h where hh_iso: "top1_group_iso_on FP_uv mulFP_uv
+        (top1_fundamental_group_carrier X TX p) (top1_fundamental_group_mul X TX p) h"
+      and hh_trackU: "\<forall>c\<in>?\<pi>U. h (iotafam_uv 0 c) =
+          top1_fundamental_group_induced_on U ?TU p X TX p (\<lambda>x. x) c"
+      and hh_trackV: "\<forall>c\<in>?\<pi>V. h (iotafam_uv 1 c) =
+          top1_fundamental_group_induced_on V ?TV p X TX p (\<lambda>x. x) c"
+      by (by100 blast)
+    \<comment> \<open>Transfer freeness from FP to \<pi>\_1(X) via h.\<close>
+    have hFP_grp: "top1_is_group_on FP_uv mulFP_uv eFP_uv invgFP_uv"
+      using hFP_free unfolding top1_is_free_group_full_on_def by (by100 blast)
+    note h_fgii = free_group_invariant_under_iso[OF hFP_free hh_iso hpi1_grp]
+    define \<iota>X where "\<iota>X \<equiv> SOME \<iota>'. top1_is_free_group_full_on
+        (top1_fundamental_group_carrier X TX p) (top1_fundamental_group_mul X TX p)
+        (top1_fundamental_group_id X TX p) (top1_fundamental_group_invg X TX p)
+        \<iota>' (S1 \<union> S2) \<and> (\<forall>s\<in>S1 \<union> S2. \<iota>' s = h (iotaS_uv s))"
+    have hiotaX_props: "top1_is_free_group_full_on
+        (top1_fundamental_group_carrier X TX p) (top1_fundamental_group_mul X TX p)
+        (top1_fundamental_group_id X TX p) (top1_fundamental_group_invg X TX p)
+        \<iota>X (S1 \<union> S2) \<and> (\<forall>s\<in>S1 \<union> S2. \<iota>X s = h (iotaS_uv s))"
+      unfolding \<iota>X_def using someI_ex[OF h_fgii] by (by5000 blast)
+    have hpi1X_free: "top1_is_free_group_full_on
+        (top1_fundamental_group_carrier X TX p) (top1_fundamental_group_mul X TX p)
+        (top1_fundamental_group_id X TX p) (top1_fundamental_group_invg X TX p)
+        \<iota>X (S1 \<union> S2)"
+      using hiotaX_props by (by100 blast)
+    have hiotaX_eq: "\<forall>s\<in>S1 \<union> S2. \<iota>X s = h (iotaS_uv s)"
+      using hiotaX_props by (by100 blast)
+    \<comment> \<open>Generator tracking: for s \<in> S1, \<iota>X(s) = h(iotaS\_uv(s)) = h(iotafam\_uv(0, \<iota>U(s))) = j\_U*(\<iota>U(s)).\<close>
+    have hgenU: "\<forall>s\<in>S1. \<iota>X s =
+        top1_fundamental_group_induced_on U ?TU p X TX p (\<lambda>x. x) (\<iota>U s)"
+    proof
+      fix s assume "s \<in> S1"
+      have "\<iota>X s = h (iotaS_uv s)" using hiotaX_eq \<open>s \<in> S1\<close> by (by100 blast)
+      also have "\<dots> = h (iotafam_uv 0 (\<iota>U s))" using hiotaS_U \<open>s \<in> S1\<close> by (by100 simp)
+      also have "\<dots> = top1_fundamental_group_induced_on U ?TU p X TX p (\<lambda>x. x) (\<iota>U s)"
+      proof -
+        have "\<iota>U s \<in> ?\<pi>U"
+          using hU_free \<open>s \<in> S1\<close> unfolding top1_is_free_group_full_on_def by (by5000 simp)
+        thus ?thesis using hh_trackU by (by100 blast)
+      qed
+      finally show "\<iota>X s = top1_fundamental_group_induced_on U ?TU p X TX p (\<lambda>x. x) (\<iota>U s)" .
+    qed
+    have hgenV: "\<forall>s\<in>S2. \<iota>X s =
+        top1_fundamental_group_induced_on V ?TV p X TX p (\<lambda>x. x) (\<iota>V s)"
+    proof
+      fix s assume "s \<in> S2"
+      have "\<iota>X s = h (iotaS_uv s)" using hiotaX_eq \<open>s \<in> S2\<close> by (by100 blast)
+      also have "\<dots> = h (iotafam_uv 1 (\<iota>V s))" using hiotaS_V \<open>s \<in> S2\<close> by (by100 simp)
+      also have "\<dots> = top1_fundamental_group_induced_on V ?TV p X TX p (\<lambda>x. x) (\<iota>V s)"
+      proof -
+        have "\<iota>V s \<in> ?\<pi>V"
+          using hV_free \<open>s \<in> S2\<close> unfolding top1_is_free_group_full_on_def by (by5000 simp)
+        thus ?thesis using hh_trackV by (by100 blast)
+      qed
+      finally show "\<iota>X s = top1_fundamental_group_induced_on V ?TV p X TX p (\<lambda>x. x) (\<iota>V s)" .
+    qed
+    show ?thesis using hpi1X_free hgenU hgenV by (by100 blast)
+  qed
+qed
+
 text \<open>Helper: combine Theorem 69.2 + Corollary 70.3 + free\_group\_invariant\_under\_iso
   to get \<pi>\_1(X) free when \<pi>\_1(U) and \<pi>\_1(V) are free and U\<inter>V simply connected.\<close>
 lemma svk_free_product_free:
@@ -7753,44 +8209,207 @@ lemma finite_wedge_pi1_free_with_chosen_loops:
           let ?mV = "top1_fundamental_group_mul V (subspace_topology X TX V) p"
           let ?eV = "top1_fundamental_group_id V (subspace_topology X TX V) p"
           let ?iV = "top1_fundamental_group_invg V (subspace_topology X TX V) p"
-          \<comment> \<open>Step C: Extract \<pi>\_1(U) and \<pi>\_1(V) as full free groups.\<close>
+          \<comment> \<open>Step C: Extract \<pi>\_1(U) and \<pi>\_1(V) as full free groups with gen tracking.\<close>
           from hpi1U_free obtain \<iota>U' where
             hU'_free: "top1_is_free_group_full_on ?\<pi>U ?mU ?eU ?iU \<iota>U' {0::nat}"
+            and hU'_gen: "\<iota>U' 0 = \<Phi>1 (\<eta>1 0)"
             by (by100 blast)
           from hpi1V_free obtain \<iota>V' where
             hV'_free: "top1_is_free_group_full_on ?\<pi>V ?mV ?eV ?iV \<iota>V' {1..<n}"
+            and hV'_gen: "\<forall>k\<in>{1..<n}. \<iota>V' k = \<Phi>2 (\<eta>2 k)"
             by (by100 blast)
-          \<comment> \<open>Step D: Apply Theorem\_69\_2 to \<pi>\_1(U) and \<pi>\_1(V).
-             Both have type 'a set set \<Rightarrow> compatible for Theorem\_69\_2.\<close>
-          \<comment> \<open>Theorem\_69\_2 gives a big existential+conjunction. We sorry-extract
-             the pieces we need directly, avoiding the obtain extraction issue.\<close>
-          \<comment> \<open>Theorem\_69\_2 gives FP\_UV (free product of \<pi>\_1(U), \<pi>\_1(V)) free on {..<n}.
-             The extraction from the existential is handled via note + sorry composition.\<close>
-          note hThm692_result = Theorem_69_2[OF hU'_free hV'_free hS_disj]
-          \<comment> \<open>Step D-1: \<pi>\_1(X) \<cong> some free group on {..<n}.\<close>
-          \<comment> \<open>Combined proof: from Theorem\_69\_2 result + SvK + free\_group\_invariant\_under\_iso.
-             All ingredients available: hThm692\_result, Corollary\_70\_3\_param, hpi1\_grp.\<close>
-          \<comment> \<open>Apply svk\_free\_product\_free helper.\<close>
-          from svk_free_product_free[OF less.prems(1) hU_open hV_open hUV_cover hUV_sc
+          \<comment> \<open>Step D: Apply svk\_free\_product\_free\_with\_generators (the newly proved lemma).
+             This gives \<pi>\_1(X) free on {0}\<union>{1..<n} with SPECIFIC generators
+             that are inclusion-induced images of \<iota>U' and \<iota>V'.\<close>
+          note hsvk_gen_result = svk_free_product_free_with_generators[OF less.prems(1) hU_open hV_open hUV_cover hUV_sc
                 hU_pc hV_pc hp_UV_final hU'_free hV'_free hS_disj]
-          obtain \<iota>X_raw where hpi1X_raw: "top1_is_free_group_full_on
+          define \<iota>X_raw where "\<iota>X_raw \<equiv> SOME \<iota>X. top1_is_free_group_full_on
+              (top1_fundamental_group_carrier X TX p) (top1_fundamental_group_mul X TX p)
+              (top1_fundamental_group_id X TX p) (top1_fundamental_group_invg X TX p)
+              \<iota>X ({0::nat} \<union> {1..<n})
+            \<and> (\<forall>s\<in>{0::nat}. \<iota>X s =
+              top1_fundamental_group_induced_on U (subspace_topology X TX U) p X TX p (\<lambda>x. x) (\<iota>U' s))
+            \<and> (\<forall>s\<in>{1..<n}. \<iota>X s =
+              top1_fundamental_group_induced_on V (subspace_topology X TX V) p X TX p (\<lambda>x. x) (\<iota>V' s))"
+          have hsvk_gen_props: "top1_is_free_group_full_on
+              (top1_fundamental_group_carrier X TX p) (top1_fundamental_group_mul X TX p)
+              (top1_fundamental_group_id X TX p) (top1_fundamental_group_invg X TX p)
+              \<iota>X_raw ({0::nat} \<union> {1..<n})
+            \<and> (\<forall>s\<in>{0::nat}. \<iota>X_raw s =
+              top1_fundamental_group_induced_on U (subspace_topology X TX U) p X TX p (\<lambda>x. x) (\<iota>U' s))
+            \<and> (\<forall>s\<in>{1..<n}. \<iota>X_raw s =
+              top1_fundamental_group_induced_on V (subspace_topology X TX V) p X TX p (\<lambda>x. x) (\<iota>V' s))"
+            unfolding \<iota>X_raw_def using someI_ex[OF hsvk_gen_result] by (by5000 blast)
+          have hpi1X_raw: "top1_is_free_group_full_on
               (top1_fundamental_group_carrier X TX p) (top1_fundamental_group_mul X TX p)
               (top1_fundamental_group_id X TX p) (top1_fundamental_group_invg X TX p)
               \<iota>X_raw ({0::nat} \<union> {1..<n})"
-            by (by100 blast)
+            using hsvk_gen_props by (by100 blast)
+          have hgenU_track: "\<forall>s\<in>{0::nat}. \<iota>X_raw s =
+              top1_fundamental_group_induced_on U (subspace_topology X TX U) p X TX p (\<lambda>x. x) (\<iota>U' s)"
+            using hsvk_gen_props by (by100 blast)
+          have hgenV_track: "\<forall>s\<in>{1..<n}. \<iota>X_raw s =
+              top1_fundamental_group_induced_on V (subspace_topology X TX V) p X TX p (\<lambda>x. x) (\<iota>V' s)"
+            using hsvk_gen_props by (by100 blast)
           have hpi1X_raw': "top1_is_free_group_full_on
               (top1_fundamental_group_carrier X TX p) (top1_fundamental_group_mul X TX p)
               (top1_fundamental_group_id X TX p) (top1_fundamental_group_invg X TX p)
               \<iota>X_raw {..<n}"
             using hpi1X_raw hS_union by (by100 simp)
-          \<comment> \<open>Generator tracking: \<iota>X\_raw(j) may not equal loop\_class(j).
-             svk\_free\_product\_free gives abstract generators from free\_group\_invariant\_under\_iso.
-             The gen tracking requires the specific SvK construction.
-             However, π₁(X) IS free on {..<n}, so free\_group\_hom\_generators\_iso applies
-             IF we can show loop\_class(j) are also free generators.
-             Since both \<iota>X\_raw and loop\_class are free bases of the same group,
-             any map sending one to the other is an iso.\<close>
-          show ?thesis using hpi1X_raw' sorry
+          \<comment> \<open>Generator tracking: connect \<iota>X\_raw(j) to loop\_class(j).
+             For j=0: \<iota>X\_raw(0) = j\_U*(\<iota>U'(0)) = j\_U*(\<Phi>1(\<eta>1(0))) = j\_U*([g0\<circ>std\_loop]\_U) = loop\_class(0).
+             For j\<in>{1..<n}: \<iota>X\_raw(j) = j\_V*(\<iota>V'(j)) = j\_V*(\<Phi>2(\<eta>2(j))) = j\_V*([gj\<circ>std\_loop]\_V) = loop\_class(j).
+             The last step uses subspace\_inclusion\_induced\_class.\<close>
+          have hgen_corr: "\<forall>j\<in>{..<n}. \<iota>X_raw j = loop_class j"
+          proof
+            fix j assume "j \<in> {..<n}"
+            show "\<iota>X_raw j = loop_class j"
+            proof (cases "j = 0")
+              case True
+              \<comment> \<open>\<iota>X\_raw(0) = j\_U*(\<iota>U'(0)) = j\_U*(\<Phi>1(\<eta>1(0))) = j\_U*([g0\<circ>std\_loop]\_U) = loop\_class(0).\<close>
+              have "\<iota>X_raw 0 = top1_fundamental_group_induced_on U (subspace_topology X TX U) p X TX p (\<lambda>x. x) (\<iota>U' 0)"
+                using hgenU_track by (by100 blast)
+              also have "\<iota>U' 0 = \<Phi>1 (\<eta>1 0)" using hU'_gen by (by100 blast)
+              also have "\<Phi>1 (\<eta>1 0) = {l. top1_loop_equiv_on U (subspace_topology X TX U) p
+                  (\<lambda>t. g 0 (cos (2*pi*t), sin (2*pi*t))) l}" using h\<Phi>1_gen by (by100 blast)
+              finally have h0_eq: "\<iota>X_raw 0 = top1_fundamental_group_induced_on U (subspace_topology X TX U) p X TX p (\<lambda>x. x)
+                  {l. top1_loop_equiv_on U (subspace_topology X TX U) p
+                      (\<lambda>t. g 0 (cos (2*pi*t), sin (2*pi*t))) l}" .
+              \<comment> \<open>Inclusion sends class: j\_U*([f]\_U) = [f]\_X.\<close>
+              have hU_sub: "U \<subseteq> X" using hU_open unfolding openin_on_def by (by100 blast)
+              have hloop0_U: "top1_is_loop_on U (subspace_topology X TX U) p
+                  (\<lambda>t. g 0 (cos (2*pi*t), sin (2*pi*t)))"
+              proof -
+                have hg0_homeo: "top1_homeomorphism_on top1_S1 top1_S1_topology
+                    (C 0) (subspace_topology X TX (C 0)) (g 0)"
+                  using less.prems(7) hn_pos by (by100 blast)
+                have hg0_cont: "top1_continuous_map_on top1_S1 top1_S1_topology
+                    (C 0) (subspace_topology X TX (C 0)) (g 0)"
+                  using hg0_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+                have hloop_C0: "top1_is_loop_on (C 0) (subspace_topology X TX (C 0)) p
+                    (\<lambda>t. g 0 (cos (2*pi*t), sin (2*pi*t)))"
+                proof -
+                  have hloop_raw: "top1_is_loop_on (C 0) (subspace_topology X TX (C 0)) (g 0 (1, 0))
+                      ((g 0) \<circ> (\<lambda>s. (cos (2*pi*s), sin (2*pi*s))))"
+                    by (rule top1_continuous_map_loop_early[OF hg0_cont standard_S1_loop_is_loop])
+                  have heq: "(g 0) \<circ> (\<lambda>s. (cos (2*pi*s), sin (2*pi*s))) =
+                      (\<lambda>t. g 0 (cos (2*pi*t), sin (2*pi*t)))"
+                    unfolding comp_def by (by100 simp)
+                  have "g 0 (1, 0) = p" using less.prems(8) hn_pos by (by100 blast)
+                  thus ?thesis using hloop_raw heq by (by100 simp)
+                qed
+                \<comment> \<open>C(0) \<subseteq> U, expand loop from C(0) to U.\<close>
+                have hC0_sub_U: "C 0 \<subseteq> U" unfolding U_def by (by100 blast)
+                have hC0_trans: "subspace_topology U (subspace_topology X TX U) (C 0) =
+                    subspace_topology X TX (C 0)"
+                  using subspace_topology_trans[OF hC0_sub_U] by (by100 simp)
+                have hloop_C0_U: "top1_is_loop_on (C 0) (subspace_topology U (subspace_topology X TX U) (C 0)) p
+                    (\<lambda>t. g 0 (cos (2*pi*t), sin (2*pi*t)))"
+                  using hloop_C0 hC0_trans by (by100 simp)
+                have hloop_cont: "top1_continuous_map_on I_set I_top
+                    (C 0) (subspace_topology U (subspace_topology X TX U) (C 0))
+                    (\<lambda>t. g 0 (cos (2*pi*t), sin (2*pi*t)))"
+                  using hloop_C0_U unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+                have hI_top: "is_topology_on I_set I_top"
+                  using top1_unit_interval_topology_is_topology_on by (by100 blast)
+                have hTC0: "is_topology_on (C 0) (subspace_topology U (subspace_topology X TX U) (C 0))"
+                  using subspace_topology_is_topology_on[OF hTU_top hC0_sub_U] by (by100 blast)
+                have hloop_cont_U: "top1_continuous_map_on I_set I_top U (subspace_topology X TX U)
+                    (\<lambda>t. g 0 (cos (2*pi*t), sin (2*pi*t)))"
+                  using Theorem_18_2(6)[OF hI_top hTC0 hTU_top, rule_format, of
+                      "(\<lambda>t. g 0 (cos (2*pi*t), sin (2*pi*t)))"]
+                  hloop_cont hC0_sub_U hC0_trans
+                  by (by5000 blast)
+                have "(\<lambda>t. g 0 (cos (2*pi*t), sin (2*pi*t))) 0 = p"
+                  using less.prems(8) hn_pos by (by100 force)
+                have "(\<lambda>t. g 0 (cos (2*pi*t), sin (2*pi*t))) 1 = p"
+                  using less.prems(8) hn_pos by (by100 force)
+                show ?thesis unfolding top1_is_loop_on_def top1_is_path_on_def
+                  using hloop_cont_U \<open>(\<lambda>t. g 0 (cos (2*pi*t), sin (2*pi*t))) 0 = p\<close>
+                  \<open>(\<lambda>t. g 0 (cos (2*pi*t), sin (2*pi*t))) 1 = p\<close> by (by100 blast)
+              qed
+              have "top1_fundamental_group_induced_on U (subspace_topology X TX U) p X TX p (\<lambda>x. x)
+                  {l. top1_loop_equiv_on U (subspace_topology X TX U) p
+                      (\<lambda>t. g 0 (cos (2*pi*t), sin (2*pi*t))) l}
+                = {l. top1_loop_equiv_on X TX p (\<lambda>t. g 0 (cos (2*pi*t), sin (2*pi*t))) l}"
+                using subspace_inclusion_induced_class[OF hTX hU_sub hloop0_U] by (by100 blast)
+              thus "\<iota>X_raw j = loop_class j"
+                using h0_eq True unfolding loop_class_def by (by100 simp)
+            next
+              case False
+              hence "j \<in> {1..<n}" using \<open>j \<in> {..<n}\<close> by (by100 force)
+              \<comment> \<open>\<iota>X\_raw(j) = j\_V*(\<iota>V'(j)) = j\_V*(\<Phi>2(\<eta>2(j))) = j\_V*([gj\<circ>std\_loop]\_V) = loop\_class(j).\<close>
+              have "\<iota>X_raw j = top1_fundamental_group_induced_on V (subspace_topology X TX V) p X TX p (\<lambda>x. x) (\<iota>V' j)"
+                using hgenV_track \<open>j \<in> {1..<n}\<close> by (by100 blast)
+              also have "\<iota>V' j = \<Phi>2 (\<eta>2 j)" using hV'_gen \<open>j \<in> {1..<n}\<close> by (by100 blast)
+              also have "\<Phi>2 (\<eta>2 j) = {l. top1_loop_equiv_on V (subspace_topology X TX V) p
+                  (\<lambda>t. g j (cos (2*pi*t), sin (2*pi*t))) l}" using h\<Phi>2_gen \<open>j \<in> {1..<n}\<close> by (by100 blast)
+              finally have hj_eq: "\<iota>X_raw j = top1_fundamental_group_induced_on V (subspace_topology X TX V) p X TX p (\<lambda>x. x)
+                  {l. top1_loop_equiv_on V (subspace_topology X TX V) p
+                      (\<lambda>t. g j (cos (2*pi*t), sin (2*pi*t))) l}" .
+              have hV_sub: "V \<subseteq> X" using hV_open unfolding openin_on_def by (by100 blast)
+              have hloopj_V: "top1_is_loop_on V (subspace_topology X TX V) p
+                  (\<lambda>t. g j (cos (2*pi*t), sin (2*pi*t)))"
+              proof -
+                have "j < n" using \<open>j \<in> {1..<n}\<close> by (by100 force)
+                have hgj_homeo: "top1_homeomorphism_on top1_S1 top1_S1_topology
+                    (C j) (subspace_topology X TX (C j)) (g j)"
+                  using less.prems(7) \<open>j < n\<close> by (by100 blast)
+                have hgj_cont: "top1_continuous_map_on top1_S1 top1_S1_topology
+                    (C j) (subspace_topology X TX (C j)) (g j)"
+                  using hgj_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+                have hloop_Cj: "top1_is_loop_on (C j) (subspace_topology X TX (C j)) p
+                    (\<lambda>t. g j (cos (2*pi*t), sin (2*pi*t)))"
+                proof -
+                  have hloop_raw: "top1_is_loop_on (C j) (subspace_topology X TX (C j)) (g j (1, 0))
+                      ((g j) \<circ> (\<lambda>s. (cos (2*pi*s), sin (2*pi*s))))"
+                    by (rule top1_continuous_map_loop_early[OF hgj_cont standard_S1_loop_is_loop])
+                  have heq: "(g j) \<circ> (\<lambda>s. (cos (2*pi*s), sin (2*pi*s))) =
+                      (\<lambda>t. g j (cos (2*pi*t), sin (2*pi*t)))"
+                    unfolding comp_def by (by100 simp)
+                  have "g j (1, 0) = p" using less.prems(8) \<open>j < n\<close> by (by100 blast)
+                  thus ?thesis using hloop_raw heq by (by100 simp)
+                qed
+                \<comment> \<open>C(j) \<subseteq> V for j \<in> {1..<n}, expand loop from C(j) to V.\<close>
+                have hCj_sub_V: "C j \<subseteq> V" unfolding V_def using \<open>j \<in> {1..<n}\<close> by (by100 blast)
+                have hCj_trans: "subspace_topology V (subspace_topology X TX V) (C j) =
+                    subspace_topology X TX (C j)"
+                  using subspace_topology_trans[OF hCj_sub_V] by (by100 simp)
+                have hloop_Cj_V: "top1_is_loop_on (C j) (subspace_topology V (subspace_topology X TX V) (C j)) p
+                    (\<lambda>t. g j (cos (2*pi*t), sin (2*pi*t)))"
+                  using hloop_Cj hCj_trans by (by100 simp)
+                have hloop_cont: "top1_continuous_map_on I_set I_top
+                    (C j) (subspace_topology V (subspace_topology X TX V) (C j))
+                    (\<lambda>t. g j (cos (2*pi*t), sin (2*pi*t)))"
+                  using hloop_Cj_V unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+                have hI_top: "is_topology_on I_set I_top"
+                  using top1_unit_interval_topology_is_topology_on by (by100 blast)
+                have hTCj: "is_topology_on (C j) (subspace_topology V (subspace_topology X TX V) (C j))"
+                  using subspace_topology_is_topology_on[OF hTV_top hCj_sub_V] by (by100 blast)
+                have hloop_cont_V: "top1_continuous_map_on I_set I_top V (subspace_topology X TX V)
+                    (\<lambda>t. g j (cos (2*pi*t), sin (2*pi*t)))"
+                  using Theorem_18_2(6)[OF hI_top hTCj hTV_top, rule_format, of
+                      "(\<lambda>t. g j (cos (2*pi*t), sin (2*pi*t)))"]
+                  hloop_cont hCj_sub_V hCj_trans
+                  by (by5000 blast)
+                have "(\<lambda>t. g j (cos (2*pi*t), sin (2*pi*t))) 0 = p"
+                  using less.prems(8) \<open>j < n\<close> by (by100 force)
+                have "(\<lambda>t. g j (cos (2*pi*t), sin (2*pi*t))) 1 = p"
+                  using less.prems(8) \<open>j < n\<close> by (by100 force)
+                show ?thesis unfolding top1_is_loop_on_def top1_is_path_on_def
+                  using hloop_cont_V \<open>(\<lambda>t. g j (cos (2*pi*t), sin (2*pi*t))) 0 = p\<close>
+                  \<open>(\<lambda>t. g j (cos (2*pi*t), sin (2*pi*t))) 1 = p\<close> by (by100 blast)
+              qed
+              have "top1_fundamental_group_induced_on V (subspace_topology X TX V) p X TX p (\<lambda>x. x)
+                  {l. top1_loop_equiv_on V (subspace_topology X TX V) p
+                      (\<lambda>t. g j (cos (2*pi*t), sin (2*pi*t))) l}
+                = {l. top1_loop_equiv_on X TX p (\<lambda>t. g j (cos (2*pi*t), sin (2*pi*t))) l}"
+                using subspace_inclusion_induced_class[OF hTX hV_sub hloopj_V] by (by100 blast)
+              thus "\<iota>X_raw j = loop_class j"
+                using hj_eq unfolding loop_class_def by (by100 simp)
+            qed
+          qed
+          show ?thesis using hpi1X_raw' hgen_corr by (by100 blast)
         qed
         \<comment> \<open>\<Phi> bijective via surjective hom between free groups of same rank.\<close>
         \<comment> \<open>Get abstract freeness of \<pi>\_1(X) (same as hpi1X\_raw' but in outer scope).\<close>
@@ -8188,6 +8807,8 @@ lemma finite_wedge_pi1_free_with_chosen_loops_arb:
       and hC_data: "\<forall>j\<in>J. C j \<subseteq> X \<and> p \<in> C j"
       and hC_union: "(\<Union>j\<in>J. C j) = X"
       and hC_disj: "\<forall>i\<in>J. \<forall>j\<in>J. i \<noteq> j \<longrightarrow> C i \<inter> C j = {p}"
+      and hC_closed: "\<forall>D\<subseteq>X. closedin_on X TX D \<longleftrightarrow>
+          (\<forall>j\<in>J. closedin_on (C j) (subspace_topology X TX (C j)) (C j \<inter> D))"
   shows "\<exists>(F::int set) mul e invg (\<eta>::'i \<Rightarrow> int) \<Phi>.
       top1_is_free_group_full_on F mul e invg \<eta> J
     \<and> top1_group_iso_on F mul
@@ -8195,10 +8816,130 @@ lemma finite_wedge_pi1_free_with_chosen_loops_arb:
         (top1_fundamental_group_mul X TX p) \<Phi>
     \<and> (\<forall>j\<in>J. \<Phi> (\<eta> j) = {l. top1_loop_equiv_on X TX p
         (\<lambda>t. g j (cos (2 * pi * t), sin (2 * pi * t))) l})"
-  sorry \<comment> \<open>Choose bijection enum: {..<card J} \<rightarrow> J.
-     Apply finite\_wedge\_pi1\_free\_with\_chosen\_loops with:
-     C'(k) = C(enum(k)), g'(k) = g(enum(k)) for k < card J.
-     Re-index the free basis and generator correspondence through enum.\<close>
+proof -
+  define n where "n = card J"
+  \<comment> \<open>Get bijection enum: {..<card J} \<rightarrow> J.\<close>
+  from ex_bij_betw_nat_finite[OF hfin] obtain enum where
+    henum_raw: "bij_betw enum {0..<card J} J" by (by100 blast)
+  have henum: "bij_betw enum {..<n} J"
+  proof -
+    have "{0..<card J} = {..<card J}" by (by100 auto)
+    thus ?thesis using henum_raw unfolding n_def by (by100 simp)
+  qed
+  define inv_enum where "inv_enum = the_inv_into {..<n} enum"
+  have hinv: "bij_betw inv_enum J {..<n}"
+    using bij_betw_the_inv_into[OF henum] unfolding inv_enum_def by (by100 blast)
+  have henum_inv: "\<forall>j\<in>J. enum (inv_enum j) = j"
+    using f_the_inv_into_f_bij_betw[OF henum] unfolding inv_enum_def by (by100 blast)
+  have hinv_enum: "\<forall>k<n. inv_enum (enum k) = k"
+    using the_inv_into_f_f[OF bij_betw_imp_inj_on[OF henum]] unfolding inv_enum_def by (by100 blast)
+  have henum_in: "\<forall>k<n. enum k \<in> J"
+    using henum unfolding bij_betw_def by (by100 blast)
+  \<comment> \<open>Reindex C and g: C'(k) = C(enum(k)), g'(k) = g(enum(k)).\<close>
+  define C' where "C' k = C (enum k)" for k
+  define g' where "g' k = g (enum k)" for k
+  \<comment> \<open>Extract wedge conditions.\<close>
+  have hstrict: "is_topology_on_strict X TX"
+    using hwedge unfolding top1_is_wedge_of_circles_on_def by (by100 blast)
+  have hhaus: "is_hausdorff_on X TX"
+    using hwedge unfolding top1_is_wedge_of_circles_on_def by (by100 blast)
+  have hp_X: "p \<in> X"
+    using hwedge unfolding top1_is_wedge_of_circles_on_def by (by100 blast)
+  \<comment> \<open>Transfer conditions from J to {..<n}.\<close>
+  have hC'_sub: "\<forall>k<n. C' k \<subseteq> X \<and> p \<in> C' k"
+    using hC_data henum_in unfolding C'_def by (by100 blast)
+  have hC'_union: "(\<Union>k\<in>{..<n}. C' k) = X"
+  proof -
+    have "(\<Union>k\<in>{..<n}. C' k) = (\<Union>k\<in>{..<n}. C (enum k))" unfolding C'_def by (by100 simp)
+    also have "\<dots> = (\<Union>j\<in>J. C j)"
+      using henum unfolding bij_betw_def by (by100 force)
+    also have "\<dots> = X" using hC_union by (by100 blast)
+    finally show ?thesis .
+  qed
+  have hC'_disj: "\<forall>i<n. \<forall>k<n. i \<noteq> k \<longrightarrow> C' i \<inter> C' k = {p}"
+  proof (intro allI impI)
+    fix i k assume "i < n" "k < n" "i \<noteq> k"
+    have "enum i \<in> J" using henum_in \<open>i < n\<close> by (by100 blast)
+    have "enum k \<in> J" using henum_in \<open>k < n\<close> by (by100 blast)
+    have hinj: "inj_on enum {..<n}" using henum unfolding bij_betw_def by (by100 blast)
+    have "enum i \<noteq> enum k"
+      using hinj \<open>i < n\<close> \<open>k < n\<close> \<open>i \<noteq> k\<close> unfolding inj_on_def by (by100 blast)
+    thus "C' i \<inter> C' k = {p}"
+      using hC_disj \<open>enum i \<in> J\<close> \<open>enum k \<in> J\<close> \<open>enum i \<noteq> enum k\<close> unfolding C'_def by (by100 blast)
+  qed
+  have hC'_homeo: "\<forall>k<n. top1_homeomorphism_on top1_S1 top1_S1_topology
+      (C' k) (subspace_topology X TX (C' k)) (g' k)"
+    using hg henum_in unfolding C'_def g'_def by (by100 blast)
+  have hC'_base: "\<forall>k<n. g' k (1, 0) = p"
+    using hbase henum_in unfolding g'_def by (by100 blast)
+  \<comment> \<open>Coherent topology condition.\<close>
+  have hC'_closed: "\<forall>D\<subseteq>X. closedin_on X TX D \<longleftrightarrow>
+      (\<forall>k<n. closedin_on (C' k) (subspace_topology X TX (C' k)) (C' k \<inter> D))"
+  proof (intro allI impI iffI)
+    fix D assume "D \<subseteq> X" "closedin_on X TX D"
+    fix k assume "k < n"
+    hence "enum k \<in> J" using henum_in by (by100 blast)
+    from hC_closed \<open>D \<subseteq> X\<close> \<open>closedin_on X TX D\<close>
+    have "\<forall>j\<in>J. closedin_on (C j) (subspace_topology X TX (C j)) (C j \<inter> D)" by (by100 blast)
+    thus "closedin_on (C' k) (subspace_topology X TX (C' k)) (C' k \<inter> D)"
+      using \<open>enum k \<in> J\<close> unfolding C'_def by (by100 blast)
+  next
+    fix D assume "D \<subseteq> X" "\<forall>k<n. closedin_on (C' k) (subspace_topology X TX (C' k)) (C' k \<inter> D)"
+    have "\<forall>j\<in>J. closedin_on (C j) (subspace_topology X TX (C j)) (C j \<inter> D)"
+    proof
+      fix j assume "j \<in> J"
+      have "inv_enum j \<in> {..<n}" using hinv \<open>j \<in> J\<close> unfolding bij_betw_def by (by100 blast)
+      hence "inv_enum j < n" by (by100 blast)
+      have "closedin_on (C' (inv_enum j)) (subspace_topology X TX (C' (inv_enum j)))
+          (C' (inv_enum j) \<inter> D)"
+        using \<open>\<forall>k<n. closedin_on (C' k) (subspace_topology X TX (C' k)) (C' k \<inter> D)\<close>
+        \<open>inv_enum j < n\<close> by (by100 blast)
+      moreover have "C' (inv_enum j) = C j"
+        unfolding C'_def using henum_inv \<open>j \<in> J\<close> by (by100 simp)
+      ultimately show "closedin_on (C j) (subspace_topology X TX (C j)) (C j \<inter> D)"
+        by (by100 simp)
+    qed
+    thus "closedin_on X TX D" using hC_closed \<open>D \<subseteq> X\<close> by (by100 blast)
+  qed
+  \<comment> \<open>Apply the nat-indexed theorem.\<close>
+  from finite_wedge_pi1_free_with_chosen_loops[OF hstrict hhaus hp_X
+      hC'_sub hC'_union hC'_disj hC'_homeo hC'_base hC'_closed]
+  obtain F mul e invg and \<eta>_nat :: "nat \<Rightarrow> int" and \<Phi> where
+    hfree_nat: "top1_is_free_group_full_on F mul e invg \<eta>_nat {..<n}"
+    and hiso: "top1_group_iso_on F mul
+        (top1_fundamental_group_carrier X TX p)
+        (top1_fundamental_group_mul X TX p) \<Phi>"
+    and hgen_nat: "\<forall>k<n. \<Phi> (\<eta>_nat k) = {l. top1_loop_equiv_on X TX p
+        (\<lambda>t. g' k (cos (2 * pi * t), sin (2 * pi * t))) l}"
+    by (by5000 blast)
+  \<comment> \<open>Reindex: \<eta> j = \<eta>\_nat (inv\_enum j) for j \<in> J.\<close>
+  define \<eta> where "\<eta> j = \<eta>_nat (inv_enum j)" for j
+  \<comment> \<open>F is free on J via reindexing.\<close>
+  have hfree_J: "top1_is_free_group_full_on F mul e invg \<eta> J"
+  proof -
+    have "\<eta> = \<eta>_nat \<circ> inv_enum" unfolding \<eta>_def comp_def by (by100 simp)
+    thus ?thesis using free_group_full_reindex[OF hfree_nat hinv] by (by100 simp)
+  qed
+  \<comment> \<open>Generator correspondence.\<close>
+  have hgen_J: "\<forall>j\<in>J. \<Phi> (\<eta> j) = {l. top1_loop_equiv_on X TX p
+      (\<lambda>t. g j (cos (2 * pi * t), sin (2 * pi * t))) l}"
+  proof
+    fix j assume "j \<in> J"
+    have "inv_enum j < n" using hinv \<open>j \<in> J\<close> unfolding bij_betw_def by (by100 blast)
+    have "\<Phi> (\<eta> j) = \<Phi> (\<eta>_nat (inv_enum j))" unfolding \<eta>_def by (by100 simp)
+    also have "\<dots> = {l. top1_loop_equiv_on X TX p
+        (\<lambda>t. g' (inv_enum j) (cos (2 * pi * t), sin (2 * pi * t))) l}"
+      using hgen_nat \<open>inv_enum j < n\<close> by (by100 blast)
+    also have "g' (inv_enum j) = g j"
+      unfolding g'_def using henum_inv \<open>j \<in> J\<close> by (by100 simp)
+    finally show "\<Phi> (\<eta> j) = {l. top1_loop_equiv_on X TX p
+        (\<lambda>t. g j (cos (2 * pi * t), sin (2 * pi * t))) l}" .
+  qed
+  show ?thesis
+    apply (rule exI[of _ F], rule exI[of _ mul], rule exI[of _ e],
+           rule exI[of _ invg], rule exI[of _ \<eta>], rule exI[of _ \<Phi>])
+    using hfree_J hiso hgen_J by (by100 blast)
+qed
 
 text \<open>Helper: foldr of pointwise-equal function lists gives pointwise-equal results.\<close>
 lemma foldr_path_product_pointwise_eq:
@@ -9290,14 +10031,42 @@ proof -
     \<comment> \<open>Bijectivity of \<phi>: from finite\_wedge\_pi1\_free\_with\_chosen\_loops (Munkres 71.1
        witnessed version). Extract circle data from hA\_wd\_a', apply the theorem
        to get \<Phi> with iso + gen correspondence, then \<phi> = \<Phi> by free group uniqueness.\<close>
+    \<comment> \<open>--- Bijectivity of \<phi> via wrapper + free\_group\_hom\_generators\_iso ---\<close>
+    \<comment> \<open>Key: \<pi>\_1(A, a') is free on J with gen = edge\_loop\_class.
+       Apply free\_group\_hom\_generators\_iso to get \<phi> bijective.\<close>
+    \<comment> \<open>Step 1: Get \<pi>\_1(A, a') free on J with gen = edge\_loop\_class from wrapper.\<close>
+    \<comment> \<open>\<pi>\_1(A, a') is free on J with gen = edge\_loop\_class.
+       Proof: extract from hA\_free\_a' + abstract freeness + gen correlation
+       (or from wrapper once circle data is hoisted). For now: sorry the gen corr.\<close>
+    have hpi1A_free_gen: "\<exists>\<iota>A. top1_is_free_group_full_on
+        (top1_fundamental_group_carrier A (subspace_topology X TX A) a')
+        (top1_fundamental_group_mul A (subspace_topology X TX A) a')
+        (top1_fundamental_group_id A (subspace_topology X TX A) a')
+        (top1_fundamental_group_invg A (subspace_topology X TX A) a')
+        \<iota>A (fst ` set scheme)
+      \<and> (\<forall>s\<in>fst ` set scheme. \<iota>A s = edge_loop_class s)"
+      sorry \<comment> \<open>Apply finite\_wedge\_pi1\_free\_with\_chosen\_loops\_arb to A.
+         Requires: extract circle homeomorphisms from wedge data (hA\_wd\_a'),
+         verify basepoint = a', apply wrapper, connect loop classes to edge\_loop\_class.
+         The proof requires hoisting the circle data (C, g, hC\_weak) from inside
+         the wedge construction proof (lines 9205-9696) to this scope.
+         Approximately 100 lines of technical reindexing.\<close>
+    from hpi1A_free_gen obtain \<iota>A where
+      hpi1A_free: "top1_is_free_group_full_on
+        (top1_fundamental_group_carrier A (subspace_topology X TX A) a')
+        (top1_fundamental_group_mul A (subspace_topology X TX A) a')
+        (top1_fundamental_group_id A (subspace_topology X TX A) a')
+        (top1_fundamental_group_invg A (subspace_topology X TX A) a')
+        \<iota>A (fst ` set scheme)"
+      and hpi1A_gen: "\<forall>s\<in>fst ` set scheme. \<iota>A s = edge_loop_class s"
+      by (by100 blast)
+    \<comment> \<open>Step 2: \<phi> maps \<iota>F(s) to edge\_loop\_class(s) = \<iota>A(s).\<close>
+    have h\<phi>_gen_eq: "\<forall>s\<in>fst ` set scheme. \<phi> (\<iota>F s) = \<iota>A s"
+      using h\<phi>_gen hpi1A_gen by (by100 simp)
+    \<comment> \<open>Step 3: free\_group\_hom\_generators\_iso: \<phi> bijective.\<close>
     have h\<phi>_bij: "bij_betw \<phi> F
         (top1_fundamental_group_carrier A (subspace_topology X TX A) a')"
-      sorry \<comment> \<open>Expert Step 9: Apply finite\_wedge\_pi1\_free\_with\_chosen\_loops\_arb to A.
-         Get \<Phi>: G \<rightarrow> \<pi>\_1(A) iso with \<Phi>(\<eta>(s)) = edge\_loop\_class(s).
-         By free\_group\_hom\_unique: \<phi> = \<Phi> \<circ> \<rho> where \<rho>: F \<rightarrow> G iso.
-         Hence \<phi> bijective. Needs: extracting circle data from hA\_wd\_a',
-         verifying homeomorphism/basepoint conditions, composing isos.
-         Full proof: ~80 lines. Depends on finite\_wedge\_pi1\_free\_with\_chosen\_loops\_arb.\<close>
+      using free_group_hom_generators_iso[OF hfree hpi1A_free h\<phi>_hom h\<phi>_gen_eq] by (by100 blast)
     have hrel_in: "relator_class \<in> top1_fundamental_group_carrier A (subspace_topology X TX A) a'"
     proof -
       \<comment> \<open>The circle loop class is in \<pi>_1(S1,(1,0)).\<close>
