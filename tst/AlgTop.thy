@@ -8078,6 +8078,44 @@ proof (rule top1_simply_connected_from_one_point[OF hTX hpc hp])
   qed
 qed
 
+text \<open>Homeomorphisms map open sets to open sets (the image is open).\<close>
+lemma homeomorphism_image_open:
+  assumes hhomeo: "top1_homeomorphism_on X TX Y TY f"
+      and hU: "U \<in> TX" and hUX: "U \<subseteq> X"
+  shows "f ` U \<in> TY"
+proof -
+  have hbij: "bij_betw f X Y"
+    using hhomeo unfolding top1_homeomorphism_on_def by (by100 blast)
+  have hinv_cont: "top1_continuous_map_on Y TY X TX (inv_into X f)"
+    using hhomeo unfolding top1_homeomorphism_on_def by (by100 blast)
+  have hpre: "{y \<in> Y. inv_into X f y \<in> U} \<in> TY"
+    using continuous_map_preimage_open[OF hinv_cont hU] by (by100 blast)
+  have hpre_eq: "{y \<in> Y. inv_into X f y \<in> U} = f ` U"
+  proof (rule set_eqI, rule iffI)
+    fix y assume "y \<in> {y \<in> Y. inv_into X f y \<in> U}"
+    hence "y \<in> Y" "inv_into X f y \<in> U" by (by100 blast)+
+    have "inv_into X f y \<in> X"
+      using \<open>inv_into X f y \<in> U\<close> hUX by (by100 blast)
+    hence "f (inv_into X f y) = y"
+      using f_inv_into_f[of y f X] bij_betw_imp_surj_on[OF hbij] \<open>y \<in> Y\<close>
+      by (by100 blast)
+    have "f (inv_into X f y) \<in> f ` U"
+      using \<open>inv_into X f y \<in> U\<close> by (by100 blast)
+    thus "y \<in> f ` U"
+      using \<open>f (inv_into X f y) = y\<close> by (by100 simp)
+  next
+    fix y assume "y \<in> f ` U"
+    then obtain x where "x \<in> U" "y = f x" by (by100 blast)
+    have "x \<in> X" using \<open>x \<in> U\<close> hUX by (by100 blast)
+    have "y \<in> Y" using bij_betw_apply[OF hbij \<open>x \<in> X\<close>] \<open>y = f x\<close> by (by100 blast)
+    have "inv_into X f y = x"
+      using inv_into_f_f[OF bij_betw_imp_inj_on[OF hbij] \<open>x \<in> X\<close>] \<open>y = f x\<close>
+      by (by100 simp)
+    thus "y \<in> {y \<in> Y. inv_into X f y \<in> U}" using \<open>y \<in> Y\<close> \<open>x \<in> U\<close> by (by100 blast)
+  qed
+  thus ?thesis using hpre by (by100 simp)
+qed
+
 text \<open>Covering maps are open maps.
   For V open in E, p(V) is open in B.
   Proof: for each b \<in> p(V), take evenly covered U \<ni> b.
@@ -8085,14 +8123,111 @@ text \<open>Covering maps are open maps.
   p(V\<inter>W) open in U (homeo maps open to open), hence open in B.\<close>
 lemma covering_map_is_open_map:
   assumes hcov: "top1_covering_map_on E TE B TB p"
-      and hTE: "is_topology_on E TE"
+      and hTE: "is_topology_on_strict E TE"
       and hTB: "is_topology_on B TB"
       and hV: "V \<in> TE"
   shows "p ` V \<in> TB"
-  sorry \<comment> \<open>Standard covering space theory. Uses:
-     top1\_covering\_map\_on\_evenly\_covered for evenly covered neighborhoods,
-     homeomorphism of sheets from top1\_evenly\_covered\_on definition,
-     openin\_on propagation.\<close>
+proof -
+  have hTE_top: "is_topology_on E TE"
+    using hTE unfolding is_topology_on_strict_def by (by100 blast)
+  have hVE: "V \<subseteq> E" using hV hTE unfolding is_topology_on_strict_def by (by100 blast)
+  \<comment> \<open>For each b in p(V), find an open neighborhood of b inside p(V).\<close>
+  have "\<forall>b \<in> p ` V. \<exists>O_b \<in> TB. b \<in> O_b \<and> O_b \<subseteq> p ` V"
+  proof
+    fix b assume "b \<in> p ` V"
+    then obtain e where "e \<in> V" "p e = b" by (by100 blast)
+    have "e \<in> E" using \<open>e \<in> V\<close> hVE by (by100 blast)
+    have "b \<in> B"
+      using continuous_map_maps_to[OF top1_covering_map_on_continuous[OF hcov] \<open>e \<in> E\<close>]
+            \<open>p e = b\<close> by (by100 simp)
+    \<comment> \<open>Get evenly covered neighborhood of b.\<close>
+    obtain U where "b \<in> U" and hec: "top1_evenly_covered_on E TE B TB p U"
+      using top1_covering_map_on_evenly_covered[OF hcov \<open>b \<in> B\<close>] by (by100 blast)
+    have hU_open: "openin_on B TB U"
+      by (rule top1_evenly_covered_on_openin_on[OF hec])
+    have hU_TB: "U \<in> TB" using hU_open unfolding openin_on_def by (by100 blast)
+    have hU_B: "U \<subseteq> B" using hU_open unfolding openin_on_def by (by100 blast)
+    \<comment> \<open>Get the sheets.\<close>
+    have hec_full: "openin_on B TB U \<and>
+      (\<exists>\<V>. (\<forall>V\<in>\<V>. openin_on E TE V) \<and>
+           (\<forall>V\<in>\<V>. \<forall>V'\<in>\<V>. V \<noteq> V' \<longrightarrow> V \<inter> V' = {}) \<and>
+           {x\<in>E. p x \<in> U} = \<Union>\<V> \<and>
+           (\<forall>V\<in>\<V>. top1_homeomorphism_on V (subspace_topology E TE V) U
+                        (subspace_topology B TB U) p))"
+      using hec unfolding top1_evenly_covered_on_def .
+    have hex: "\<exists>\<V>. (\<forall>V\<in>\<V>. openin_on E TE V) \<and>
+           (\<forall>V\<in>\<V>. \<forall>V'\<in>\<V>. V \<noteq> V' \<longrightarrow> V \<inter> V' = {}) \<and>
+           {x\<in>E. p x \<in> U} = \<Union>\<V> \<and>
+           (\<forall>V\<in>\<V>. top1_homeomorphism_on V (subspace_topology E TE V) U
+                        (subspace_topology B TB U) p)"
+      using hec_full by (by100 blast)
+    then obtain \<V> where hall: "(\<forall>V\<in>\<V>. openin_on E TE V) \<and>
+           (\<forall>V\<in>\<V>. \<forall>V'\<in>\<V>. V \<noteq> V' \<longrightarrow> V \<inter> V' = {}) \<and>
+           {x\<in>E. p x \<in> U} = \<Union>\<V> \<and>
+           (\<forall>V\<in>\<V>. top1_homeomorphism_on V (subspace_topology E TE V) U
+                        (subspace_topology B TB U) p)"
+      apply (rule exE)
+      apply (by100 blast)
+      done
+    have hV_open: "\<forall>W\<in>\<V>. openin_on E TE W" using hall by (by100 blast)
+    have hV_union: "{x\<in>E. p x \<in> U} = \<Union>\<V>" using hall by (by100 blast)
+    have hV_homeo: "\<forall>W\<in>\<V>. top1_homeomorphism_on W (subspace_topology E TE W) U
+                       (subspace_topology B TB U) p" using hall by (by100 blast)
+    \<comment> \<open>e is in some sheet W.\<close>
+    have "e \<in> {x\<in>E. p x \<in> U}" using \<open>e \<in> E\<close> \<open>p e = b\<close> \<open>b \<in> U\<close> by (by100 blast)
+    hence "e \<in> \<Union>\<V>" using hV_union by (by100 simp)
+    then obtain W where "W \<in> \<V>" "e \<in> W" by (by100 blast)
+    have hW_open: "W \<in> TE" using hV_open \<open>W \<in> \<V>\<close> unfolding openin_on_def by (by100 blast)
+    have hW_E: "W \<subseteq> E" using hV_open \<open>W \<in> \<V>\<close> unfolding openin_on_def by (by100 blast)
+    have hW_homeo: "top1_homeomorphism_on W (subspace_topology E TE W) U
+                       (subspace_topology B TB U) p"
+      using hV_homeo \<open>W \<in> \<V>\<close> by (by100 blast)
+    \<comment> \<open>V \<inter> W is open in the subspace topology on W.\<close>
+    have hVW_sub: "V \<inter> W \<in> subspace_topology E TE W"
+      unfolding subspace_topology_def using hV by (by100 blast)
+    have hVW_W: "V \<inter> W \<subseteq> W" by (by100 blast)
+    \<comment> \<open>Homeomorphism maps V\<inter>W to an open subset of U.\<close>
+    have hpVW_open: "p ` (V \<inter> W) \<in> subspace_topology B TB U"
+      using homeomorphism_image_open[OF hW_homeo hVW_sub hVW_W] by (by100 blast)
+    \<comment> \<open>Lift from subspace topology to TB.\<close>
+    obtain O' where "O' \<in> TB" "p ` (V \<inter> W) = U \<inter> O'"
+      using hpVW_open unfolding subspace_topology_def by (by100 blast)
+    have hpVW_TB: "p ` (V \<inter> W) \<in> TB"
+    proof -
+      have "U \<inter> O' \<in> TB"
+        using topology_inter2[OF hTB hU_TB \<open>O' \<in> TB\<close>] by (by100 blast)
+      thus ?thesis using \<open>p ` (V \<inter> W) = U \<inter> O'\<close> by (by100 simp)
+    qed
+    have hb_in: "b \<in> p ` (V \<inter> W)"
+      using \<open>e \<in> V\<close> \<open>e \<in> W\<close> \<open>p e = b\<close> by (by100 blast)
+    have hpVW_sub: "p ` (V \<inter> W) \<subseteq> p ` V" by (by100 blast)
+    show "\<exists>O_b \<in> TB. b \<in> O_b \<and> O_b \<subseteq> p ` V"
+      using hpVW_TB hb_in hpVW_sub
+      apply (rule_tac x="p ` (V \<inter> W)" in bexI)
+      apply (by100 blast)
+      by assumption
+  qed
+  \<comment> \<open>p(V) is a union of open sets in TB.\<close>
+  then obtain F where hF: "\<forall>b \<in> p ` V. F b \<in> TB \<and> b \<in> F b \<and> F b \<subseteq> p ` V"
+    by (by100 metis)
+  have "p ` V = \<Union>(F ` (p ` V))"
+  proof (rule set_eqI, rule iffI)
+    fix b assume "b \<in> p ` V"
+    thus "b \<in> \<Union>(F ` (p ` V))" using hF by (by100 blast)
+  next
+    fix b assume "b \<in> \<Union>(F ` (p ` V))"
+    then obtain b' where "b' \<in> p ` V" "b \<in> F b'" by (by100 blast)
+    thus "b \<in> p ` V" using hF by (by100 blast)
+  qed
+  moreover have "\<Union>(F ` (p ` V)) \<in> TB"
+  proof -
+    have "\<forall>U. U \<subseteq> TB \<longrightarrow> (\<Union>U) \<in> TB"
+      using hTB unfolding is_topology_on_def by (by100 blast)
+    moreover have "F ` (p ` V) \<subseteq> TB" using hF by (by100 blast)
+    ultimately show ?thesis by (by100 blast)
+  qed
+  ultimately show ?thesis by (by100 simp)
+qed
 
 text \<open>R\_to\_S1 restricted to an open interval of length 1 is a homeomorphism
   onto S1 minus the image of the endpoints.\<close>
@@ -8218,14 +8353,106 @@ proof -
   qed
   \<comment> \<open>Forward continuity.\<close>
   have hcont: "top1_continuous_map_on ?I ?TI ?S ?TS top1_R_to_S1"
-    sorry \<comment> \<open>R\_to\_S1 continuous UNIV \<rightarrow> S1 (from Theorem\_53\_1 covering map).
-       Restrict domain to ?I by Theorem\_18\_2(4).
-       Restrict codomain to ?S by Theorem\_18\_2(5) (image ⊆ ?S from bijectivity).\<close>
-  \<comment> \<open>Inverse continuity.\<close>
+  proof -
+    have hR_S1_cont: "top1_continuous_map_on UNIV top1_open_sets top1_S1 top1_S1_topology top1_R_to_S1"
+      using top1_covering_map_on_continuous[OF Theorem_53_1] by (by100 blast)
+    have hI_sub: "?I \<subseteq> (UNIV :: real set)" by (by100 blast)
+    have hS1_top: "is_topology_on top1_S1 top1_S1_topology"
+      using top1_S1_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
+    have hcont_I: "top1_continuous_map_on ?I ?TI top1_S1 top1_S1_topology top1_R_to_S1"
+      using Theorem_18_2(4)[OF top1_open_sets_is_topology_on_UNIV
+              hS1_top hS1_top] hR_S1_cont hI_sub
+      by (by100 blast)
+    have hS_sub: "?S \<subseteq> top1_S1" by (by100 blast)
+    have himg_sub: "top1_R_to_S1 ` ?I \<subseteq> ?S"
+      using bij_betw_imp_surj_on[OF hbij] by (by100 blast)
+    show ?thesis
+      using Theorem_18_2(5)[OF hTI hS1_top hS1_top]
+            hcont_I hS_sub himg_sub
+      by (by100 blast)
+  qed
+  \<comment> \<open>Inverse continuity: use covering\_map\_is\_open\_map to show R\_to\_S1 is open,
+     then preimage under inv\_into = image under R\_to\_S1.\<close>
   have hcont_inv: "top1_continuous_map_on ?S ?TS ?I ?TI (inv_into ?I top1_R_to_S1)"
-    sorry \<comment> \<open>From covering\_map\_is\_open\_map: R\_to\_S1 is open.
-       Open + continuous + bijective \<Rightarrow> inverse continuous.
-       Or: direct from covering map local homeomorphism.\<close>
+  proof (rule continuous_map_onI)
+    \<comment> \<open>Maps ?S to ?I.\<close>
+    show "\<forall>s\<in>?S. inv_into ?I top1_R_to_S1 s \<in> ?I"
+    proof
+      fix s assume "s \<in> ?S"
+      hence "s \<in> top1_R_to_S1 ` ?I" using bij_betw_imp_surj_on[OF hbij] by (by100 blast)
+      then obtain x where "x \<in> ?I" "top1_R_to_S1 x = s" by (by100 blast)
+      have "inv_into ?I top1_R_to_S1 (top1_R_to_S1 x) = x"
+        using inv_into_f_f[OF bij_betw_imp_inj_on[OF hbij] \<open>x \<in> ?I\<close>] by (by100 blast)
+      hence "inv_into ?I top1_R_to_S1 s = x" using \<open>top1_R_to_S1 x = s\<close> by (by100 simp)
+      thus "inv_into ?I top1_R_to_S1 s \<in> ?I" using \<open>x \<in> ?I\<close> by (by100 simp)
+    qed
+    \<comment> \<open>Preimage of open set V in ?TI is open in ?TS.\<close>
+    show "\<forall>V\<in>?TI. {s \<in> ?S. inv_into ?I top1_R_to_S1 s \<in> V} \<in> ?TS"
+    proof
+      fix V assume "V \<in> ?TI"
+      \<comment> \<open>V = Vb \<inter> ?I for some Vb \<in> top1\_open\_sets.\<close>
+      obtain Vb where "Vb \<in> top1_open_sets" "V = ?I \<inter> Vb"
+        using \<open>V \<in> ?TI\<close> unfolding subspace_topology_def by (by100 blast)
+      \<comment> \<open>?I is open in \<real> (open interval).\<close>
+      have hI_open: "?I \<in> top1_open_sets"
+      proof -
+        have "{x::real. \<theta>q < x \<and> x < \<theta>q + 1} = {\<theta>q <..< \<theta>q + 1}"
+          by (by100 auto)
+        moreover have "open ({\<theta>q <..< \<theta>q + 1} :: real set)" by (by100 simp)
+        ultimately show ?thesis unfolding top1_open_sets_def by (by100 simp)
+      qed
+      have hV_open: "V \<in> top1_open_sets"
+        using topology_inter2[OF top1_open_sets_is_topology_on_UNIV hI_open \<open>Vb \<in> top1_open_sets\<close>]
+              \<open>V = ?I \<inter> Vb\<close> by (by100 simp)
+      \<comment> \<open>R\_to\_S1 maps V (open in \<real>) to an open set in S1 (covering map is open).\<close>
+      have hS1_top: "is_topology_on top1_S1 top1_S1_topology"
+        using top1_S1_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
+      have hopen_strict: "is_topology_on_strict (UNIV :: real set) top1_open_sets"
+        using top1_open_sets_is_topology_on_UNIV unfolding is_topology_on_strict_def
+        by (by100 blast)
+      have hpV_S1: "top1_R_to_S1 ` V \<in> top1_S1_topology"
+        using covering_map_is_open_map[OF Theorem_53_1 hopen_strict
+                                          hS1_top hV_open] by (by100 blast)
+      \<comment> \<open>Image is contained in ?S.\<close>
+      have hpV_sub: "top1_R_to_S1 ` V \<subseteq> ?S"
+      proof
+        fix s assume "s \<in> top1_R_to_S1 ` V"
+        then obtain x where "x \<in> V" "s = top1_R_to_S1 x" by (by100 blast)
+        have "x \<in> ?I" using \<open>x \<in> V\<close> \<open>V = ?I \<inter> Vb\<close> by (by100 blast)
+        thus "s \<in> ?S" using bij_betw_imp_surj_on[OF hbij] \<open>x \<in> ?I\<close> \<open>s = top1_R_to_S1 x\<close>
+          by (by100 blast)
+      qed
+      \<comment> \<open>Preimage under inv\_into equals image under R\_to\_S1 (by bijectivity).\<close>
+      have hpre_eq: "{s \<in> ?S. inv_into ?I top1_R_to_S1 s \<in> V} = top1_R_to_S1 ` V"
+      proof (rule set_eqI, rule iffI)
+        fix s assume "s \<in> {s \<in> ?S. inv_into ?I top1_R_to_S1 s \<in> V}"
+        hence "s \<in> ?S" "inv_into ?I top1_R_to_S1 s \<in> V" by (by100 blast)+
+        have "inv_into ?I top1_R_to_S1 s \<in> ?I"
+          using \<open>inv_into ?I top1_R_to_S1 s \<in> V\<close> \<open>V = ?I \<inter> Vb\<close> by (by100 blast)
+        have "top1_R_to_S1 (inv_into ?I top1_R_to_S1 s) = s"
+          using f_inv_into_f[of s top1_R_to_S1 ?I]
+                bij_betw_imp_surj_on[OF hbij] \<open>s \<in> ?S\<close> by (by100 blast)
+        have "top1_R_to_S1 (inv_into ?I top1_R_to_S1 s) \<in> top1_R_to_S1 ` V"
+          using \<open>inv_into ?I top1_R_to_S1 s \<in> V\<close> by (by100 blast)
+        thus "s \<in> top1_R_to_S1 ` V"
+          using \<open>top1_R_to_S1 (inv_into ?I top1_R_to_S1 s) = s\<close> by (by100 simp)
+      next
+        fix s assume "s \<in> top1_R_to_S1 ` V"
+        then obtain x where "x \<in> V" "s = top1_R_to_S1 x" by (by100 blast)
+        have "x \<in> ?I" using \<open>x \<in> V\<close> \<open>V = ?I \<inter> Vb\<close> by (by100 blast)
+        have "s \<in> ?S" using hpV_sub \<open>s \<in> top1_R_to_S1 ` V\<close> by (by100 blast)
+        have "inv_into ?I top1_R_to_S1 s = x"
+          using inv_into_f_f[OF bij_betw_imp_inj_on[OF hbij] \<open>x \<in> ?I\<close>]
+                \<open>s = top1_R_to_S1 x\<close> by (by100 simp)
+        thus "s \<in> {s \<in> ?S. inv_into ?I top1_R_to_S1 s \<in> V}"
+          using \<open>s \<in> ?S\<close> \<open>x \<in> V\<close> by (by100 simp)
+      qed
+      \<comment> \<open>R\_to\_S1 ` V is in ?TS (open in S1, subset of ?S, so in subspace topology).\<close>
+      show "{s \<in> ?S. inv_into ?I top1_R_to_S1 s \<in> V} \<in> ?TS"
+        unfolding hpre_eq subspace_topology_def
+        using hpV_S1 hpV_sub by (by100 blast)
+    qed
+  qed
   show ?thesis unfolding top1_homeomorphism_on_def
     using hTI hTS hbij hcont hcont_inv by (by100 blast)
 qed
@@ -8485,13 +8712,134 @@ proof -
         from R_to_S1_interval_homeomorphism[of \<theta>q]
         show ?thesis using hq0_eq by (by100 simp)
       qed
-      \<comment> \<open>h^{-1}: Y-{q} \<rightarrow> S1-{q0} is continuous (homeomorphism inverse restricted).\<close>
-      \<comment> \<open>angle = inv(R\_to\_S1|\_I) \<circ> h^{-1}. Both continuous. Composition continuous.\<close>
+      \<comment> \<open>h^{-1}: Y \<rightarrow> S1 continuous, then restrict to Y-{q} \<rightarrow> S1-{q0}.\<close>
+      have hhinv_cont: "top1_continuous_map_on Y TY top1_S1 top1_S1_topology ?hinv"
+        using hh unfolding top1_homeomorphism_on_def by (by100 blast)
+      have hTY: "is_topology_on Y TY"
+        using hh unfolding top1_homeomorphism_on_def by (by100 blast)
+      have hS1_top: "is_topology_on top1_S1 top1_S1_topology"
+        using top1_S1_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
+      have hTYq: "is_topology_on (Y - {q}) (subspace_topology Y TY (Y - {q}))"
+        by (rule subspace_topology_is_topology_on[OF hTY]) (by100 blast)
+      \<comment> \<open>Restrict domain of h^{-1} to Y-{q}.\<close>
+      have hhinv_dom: "top1_continuous_map_on (Y - {q}) (subspace_topology Y TY (Y - {q}))
+            top1_S1 top1_S1_topology ?hinv"
+        using Theorem_18_2(4)[OF hTY hS1_top hS1_top] hhinv_cont by (by100 blast)
+      \<comment> \<open>h^{-1} maps Y-{q} into S1-{q0}.\<close>
+      have hhinv_range: "?hinv ` (Y - {q}) \<subseteq> top1_S1 - {q0}"
+      proof
+        fix s assume "s \<in> ?hinv ` (Y - {q})"
+        then obtain y where "y \<in> Y - {q}" "s = ?hinv y" by (by100 blast)
+        have "y \<in> Y" "y \<noteq> q" using \<open>y \<in> Y - {q}\<close> by (by100 blast)+
+        have hy_img: "y \<in> h ` top1_S1" using hbij \<open>y \<in> Y\<close> unfolding bij_betw_def by (by100 blast)
+        have "s \<in> top1_S1" unfolding \<open>s = ?hinv y\<close> by (rule inv_into_into[OF hy_img])
+        moreover have "s \<noteq> q0"
+        proof
+          assume "s = q0"
+          hence "h s = h q0" by (by100 simp)
+          hence "y = q" using f_inv_into_f[OF hy_img] hq0_map \<open>s = ?hinv y\<close> by (by100 simp)
+          thus False using \<open>y \<noteq> q\<close> by (by100 simp)
+        qed
+        ultimately show "s \<in> top1_S1 - {q0}" by (by100 blast)
+      qed
+      \<comment> \<open>Restrict range to S1-{q0}.\<close>
+      have hhinv_S1q0: "top1_continuous_map_on (Y - {q}) (subspace_topology Y TY (Y - {q}))
+            (top1_S1 - {q0}) (subspace_topology top1_S1 top1_S1_topology (top1_S1 - {q0})) ?hinv"
+        using Theorem_18_2(5)[OF hTYq hS1_top hS1_top] hhinv_dom hhinv_range by (by100 blast)
+      \<comment> \<open>inv\_into ?I\_open R\_to\_S1 is continuous S1-{q0} \<rightarrow> ?I\_open (from hR\_homeo).\<close>
+      have hRinv_cont: "top1_continuous_map_on (top1_S1 - {q0})
+            (subspace_topology top1_S1 top1_S1_topology (top1_S1 - {q0}))
+            ?I_open (subspace_topology UNIV top1_open_sets ?I_open)
+            (inv_into ?I_open top1_R_to_S1)"
+        using hR_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+      \<comment> \<open>Expand range from ?I\_open (subspace) to UNIV (top1\_open\_sets).\<close>
+      have hI_sub_UNIV: "?I_open \<subseteq> (UNIV :: real set)" by (by100 blast)
+      have hsubspace_eq: "subspace_topology UNIV top1_open_sets ?I_open
+          = subspace_topology (UNIV :: real set) top1_open_sets ?I_open" by (by100 simp)
+      have hTS1q0: "is_topology_on (top1_S1 - {q0})
+            (subspace_topology top1_S1 top1_S1_topology (top1_S1 - {q0}))"
+        by (rule subspace_topology_is_topology_on[OF hS1_top]) (by100 blast)
+      have hTI_open: "is_topology_on ?I_open (subspace_topology UNIV top1_open_sets ?I_open)"
+        by (rule subspace_topology_is_topology_on[OF top1_open_sets_is_topology_on_UNIV])
+           (by100 blast)
+      have hRinv_UNIV: "top1_continuous_map_on (top1_S1 - {q0})
+            (subspace_topology top1_S1 top1_S1_topology (top1_S1 - {q0}))
+            (UNIV :: real set) top1_open_sets (inv_into ?I_open top1_R_to_S1)"
+        using Theorem_18_2(6)[OF hTS1q0 hTI_open top1_open_sets_is_topology_on_UNIV]
+              hRinv_cont hI_sub_UNIV
+        by (by100 blast)
+      \<comment> \<open>Compose: angle' = inv\_into \<circ> h^{-1} continuous Y-{q} \<rightarrow> UNIV.\<close>
+      have hcomp_cont: "top1_continuous_map_on (Y - {q}) (subspace_topology Y TY (Y - {q}))
+            (UNIV :: real set) top1_open_sets (inv_into ?I_open top1_R_to_S1 \<circ> ?hinv)"
+      proof -
+        have hconj: "top1_continuous_map_on (Y - {q}) (subspace_topology Y TY (Y - {q}))
+              (top1_S1 - {q0}) (subspace_topology top1_S1 top1_S1_topology (top1_S1 - {q0})) ?hinv \<and>
+            top1_continuous_map_on (top1_S1 - {q0})
+              (subspace_topology top1_S1 top1_S1_topology (top1_S1 - {q0}))
+              (UNIV :: real set) top1_open_sets (inv_into ?I_open top1_R_to_S1)"
+          using hhinv_S1q0 hRinv_UNIV by (by100 blast)
+        have hTR: "is_topology_on (UNIV :: real set) (top1_open_sets :: real set set)"
+          using top1_open_sets_is_topology_on_UNIV by (by100 blast)
+        show ?thesis
+        proof (rule continuous_map_onI)
+          show "\<forall>x \<in> Y - {q}. (inv_into ?I_open top1_R_to_S1 \<circ> ?hinv) x \<in> (UNIV :: real set)"
+            by (by100 blast)
+          show "\<forall>V \<in> top1_open_sets. {x \<in> Y - {q}. (inv_into ?I_open top1_R_to_S1 \<circ> ?hinv) x \<in> V}
+                \<in> subspace_topology Y TY (Y - {q})"
+          proof
+            fix V assume "V \<in> (top1_open_sets :: real set set)"
+            \<comment> \<open>Preimage under Rinv: a set in subspace S1 S1\_top (S1-{q0}).\<close>
+            have "{s \<in> top1_S1 - {q0}. inv_into ?I_open top1_R_to_S1 s \<in> V}
+                \<in> subspace_topology top1_S1 top1_S1_topology (top1_S1 - {q0})"
+              using continuous_map_preimage_open[OF hRinv_UNIV \<open>V \<in> top1_open_sets\<close>] by (by100 blast)
+            \<comment> \<open>Preimage under hinv: a set in subspace Y TY (Y-{q}).\<close>
+            hence "{y \<in> Y - {q}. ?hinv y \<in> {s \<in> top1_S1 - {q0}. inv_into ?I_open top1_R_to_S1 s \<in> V}}
+                \<in> subspace_topology Y TY (Y - {q})"
+              using continuous_map_preimage_open[OF hhinv_S1q0] by (by100 blast)
+            moreover have "{y \<in> Y - {q}. ?hinv y \<in> {s \<in> top1_S1 - {q0}. inv_into ?I_open top1_R_to_S1 s \<in> V}}
+                = {x \<in> Y - {q}. (inv_into ?I_open top1_R_to_S1 \<circ> ?hinv) x \<in> V}"
+            proof (rule set_eqI, rule iffI)
+              fix y assume "y \<in> {y \<in> Y - {q}. ?hinv y \<in> {s \<in> top1_S1 - {q0}. inv_into ?I_open top1_R_to_S1 s \<in> V}}"
+              thus "y \<in> {x \<in> Y - {q}. (inv_into ?I_open top1_R_to_S1 \<circ> ?hinv) x \<in> V}"
+                by (by5000 auto)
+            next
+              fix y assume "y \<in> {x \<in> Y - {q}. (inv_into ?I_open top1_R_to_S1 \<circ> ?hinv) x \<in> V}"
+              hence "y \<in> Y - {q}" "(inv_into ?I_open top1_R_to_S1 \<circ> ?hinv) y \<in> V" by (by100 blast)+
+              have "?hinv y \<in> top1_S1 - {q0}" using hhinv_range \<open>y \<in> Y - {q}\<close> by (by100 blast)
+              thus "y \<in> {y \<in> Y - {q}. ?hinv y \<in> {s \<in> top1_S1 - {q0}. inv_into ?I_open top1_R_to_S1 s \<in> V}}"
+                using \<open>y \<in> Y - {q}\<close> \<open>(inv_into ?I_open top1_R_to_S1 \<circ> ?hinv) y \<in> V\<close>
+                by (by5000 auto)
+            qed
+            ultimately show "{x \<in> Y - {q}. (inv_into ?I_open top1_R_to_S1 \<circ> ?hinv) x \<in> V}
+                \<in> subspace_topology Y TY (Y - {q})" by (by100 simp)
+          qed
+        qed
+      qed
+      \<comment> \<open>angle agrees with inv\_into \<circ> h^{-1} on Y-{q}.\<close>
+      have hagree: "\<forall>y \<in> Y - {q}. angle y = (inv_into ?I_open top1_R_to_S1 \<circ> ?hinv) y"
+      proof
+        fix y assume hy: "y \<in> Y - {q}"
+        from hangle_prop[rule_format, OF hy]
+        have ha: "\<theta>q < angle y" "angle y < \<theta>q + 1" "top1_R_to_S1 (angle y) = ?hinv y"
+          by (by100 blast)+
+        have "angle y \<in> ?I_open" using ha by (by100 simp)
+        hence "top1_R_to_S1 (angle y) = ?hinv y \<Longrightarrow>
+               inv_into ?I_open top1_R_to_S1 (?hinv y) = angle y"
+        proof -
+          assume "top1_R_to_S1 (angle y) = ?hinv y"
+          have hinj_I: "inj_on top1_R_to_S1 ?I_open"
+            using hR_homeo unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+          have "inv_into ?I_open top1_R_to_S1 (top1_R_to_S1 (angle y)) = angle y"
+            using inv_into_f_f[OF hinj_I \<open>angle y \<in> ?I_open\<close>] by (by100 blast)
+          thus ?thesis using \<open>top1_R_to_S1 (angle y) = ?hinv y\<close> by (by100 simp)
+        qed
+        thus "angle y = (inv_into ?I_open top1_R_to_S1 \<circ> ?hinv) y"
+          using ha by (by100 simp)
+      qed
+      have hagree': "\<forall>y \<in> Y - {q}. (inv_into ?I_open top1_R_to_S1 \<circ> ?hinv) y = angle y"
+        using hagree by (by100 simp)
       show ?thesis
-        sorry \<comment> \<open>From hR\_homeo: inverse of R\_to\_S1|\_I is continuous S1-{q0} \<rightarrow> I\_open.
-           h^{-1} continuous Y-{q} \<rightarrow> S1-{q0} (homeomorphism\_inverse\_restrict).
-           angle agrees with inverse \<circ> h^{-1} on Y-{q} (by angle definition + THE).
-           Composition continuous. Transfer via continuous\_map\_on\_agree.\<close>
+        using top1_continuous_map_on_agree[OF hcomp_cont hagree'] by (by100 blast)
     qed
     have hF_cont: "top1_continuous_map_on ((Y - {q}) \<times> I_set)
         (product_topology_on (subspace_topology Y TY (Y - {q})) I_top)
