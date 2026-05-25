@@ -45,261 +45,6 @@ lemma m_projective_scheme_CW_data:
     \<and> h ` top1_S1 \<subseteq> A"
   sorry
 
-section \<open>\<S>73 Fundamental Groups of the Torus and the Dunce Cap\<close>
-
-(** from \<S>73 Theorem 73.1: \<pi>_1(torus) has presentation <\<alpha>, \<beta> | \<alpha>\<beta>\<alpha>^{-1}\<beta>^{-1}>,
-    i.e. is isomorphic to the free abelian group Z \<times> Z on 2 generators. **)
-theorem Theorem_73_1_torus_presentation:
-  fixes T_torus :: "'a set" and TT :: "'a set set" and x0 :: 'a
-  assumes "top1_is_torus_on T_torus TT"
-      and "x0 \<in> T_torus"
-  shows "top1_groups_isomorphic_on
-           (top1_fundamental_group_carrier T_torus TT x0)
-           (top1_fundamental_group_mul T_torus TT x0)
-           (UNIV::(int \<times> int) set)
-           (\<lambda>(a1, a2) (b1, b2). (a1 + b1, a2 + b2))"
-proof -
-  \<comment> \<open>Munkres 73.1: The torus is the quotient of the unit square by aba\<inverse>b\<inverse>.
-     By Theorem 72.1 (attaching 2-cell to wedge of two circles), \<pi>_1(T) has presentation
-     \<langle>a, b | aba\<inverse>b\<inverse>\<rangle>. The relator aba\<inverse>b\<inverse>=1 means ab=ba, so the group is abelian.
-     Hence \<pi>_1(T) \<cong> Z \<times> Z (free abelian group on 2 generators).\<close>
-  \<comment> \<open>Step 1: The torus is the quotient of the square by scheme aba\<inverse>b\<inverse>. Extract the
-     attaching data: 1-skeleton A (wedge of 2 circles), attaching map h: B² \<rightarrow> T.\<close>
-  obtain A :: "'a set" and h :: "real \<times> real \<Rightarrow> 'a"
-    where hA_sub: "closedin_on T_torus TT A"
-      and hA_wedge: "top1_is_wedge_of_circles_on A (subspace_topology T_torus TT A) {0::nat, 1} x0"
-      and hh_cont: "top1_continuous_map_on top1_B2 top1_B2_topology T_torus TT h"
-      and hh_S1_A: "h ` top1_S1 \<subseteq> A"
-    using torus_scheme_CW_data[OF assms] by (by100 blast)
-  \<comment> \<open>Step 2: By Theorem 72.1, \<pi>_1(T) \<cong> \<pi>_1(A)/\<langle>\<langle>k_*([p])\<rangle>\<rangle> where k = h|_{S¹}.
-     \<pi>_1(A) is free on {a, b}. The relator is aba\<inverse>b\<inverse>.\<close>
-  have hA_free: "\<exists>(F::int set) mulF eF invgF (\<iota>F::nat \<Rightarrow> int).
-      top1_is_free_group_full_on F mulF eF invgF \<iota>F {0::nat, 1}
-      \<and> top1_groups_isomorphic_on F mulF
-          (top1_fundamental_group_carrier A (subspace_topology T_torus TT A) x0)
-          (top1_fundamental_group_mul A (subspace_topology T_torus TT A) x0)"
-  proof -
-    have hset_eq: "{0::nat, 1} = {..<(2::nat)}" by (by100 auto)
-    have hwedge2: "top1_is_wedge_of_circles_on A (subspace_topology T_torus TT A) {..<(2::nat)} x0"
-      using hA_wedge hset_eq by (by100 simp)
-    from Theorem_71_1_wedge_of_circles_finite[OF hwedge2]
-    obtain G0 :: "int set" and mul0 e0 invg0 and \<iota>0 :: "nat \<Rightarrow> int" where
-        hG0f: "top1_is_free_group_full_on G0 mul0 e0 invg0 \<iota>0 {..<2::nat}" and
-        hG0i: "top1_groups_isomorphic_on G0 mul0
-            (top1_fundamental_group_carrier A (subspace_topology T_torus TT A) x0)
-            (top1_fundamental_group_mul A (subspace_topology T_torus TT A) x0)"
-      by (elim exE conjE) (rule that, assumption+)
-    have "top1_is_free_group_full_on G0 mul0 e0 invg0 \<iota>0 {0::nat, 1}"
-      using hG0f hset_eq by (by100 simp)
-    thus ?thesis using hG0i by (by100 blast)
-  qed
-  \<comment> \<open>Step 3: The quotient F({a,b})/\<langle>\<langle>aba\<inverse>b\<inverse>\<rangle>\<rangle>: since aba\<inverse>b\<inverse>=1 means ab=ba,
-     the quotient is the free abelian group on {a,b}, which is Z \<times> Z.\<close>
-  \<comment> \<open>Step 3a: Need additional CW data: h|_{int B²} homeomorphism onto T-A, h(1,0) = x0.\<close>
-  have hCW_full: "\<exists>h'. top1_continuous_map_on top1_B2 top1_B2_topology T_torus TT h'
-      \<and> h' ` top1_S1 \<subseteq> A
-      \<and> top1_homeomorphism_on (top1_B2 - top1_S1)
-            (subspace_topology top1_B2 top1_B2_topology (top1_B2 - top1_S1))
-            (T_torus - A) (subspace_topology T_torus TT (T_torus - A)) h'
-      \<and> h' (1, 0) = x0"
-    sorry \<comment> \<open>Needs scheme\_quotient\_CW\_data with homeomorphism condition + basepoint.\<close>
-  \<comment> \<open>Step 3b: Apply Theorem 72.1 to get \<pi>_1(T) \<cong> \<pi>_1(A)/\<langle>\<langle>relator\<rangle>\<rangle>.\<close>
-  have hThm721: "\<exists>\<iota>. top1_groups_isomorphic_on
-      (top1_fundamental_group_carrier T_torus TT x0)
-      (top1_fundamental_group_mul T_torus TT x0)
-      (top1_quotient_group_carrier_on
-         (top1_fundamental_group_carrier A (subspace_topology T_torus TT A) x0)
-         (top1_fundamental_group_mul A (subspace_topology T_torus TT A) x0)
-         (top1_normal_subgroup_generated_on
-            (top1_fundamental_group_carrier A (subspace_topology T_torus TT A) x0)
-            (top1_fundamental_group_mul A (subspace_topology T_torus TT A) x0)
-            (top1_fundamental_group_id A (subspace_topology T_torus TT A) x0)
-            (top1_fundamental_group_invg A (subspace_topology T_torus TT A) x0)
-            {top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1, 0)
-               A (subspace_topology T_torus TT A) x0 \<iota>
-               {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0)
-                     (\<lambda>s. (cos (2 * pi * s), sin (2 * pi * s))) g}}))
-      (top1_quotient_group_mul_on
-         (top1_fundamental_group_mul A (subspace_topology T_torus TT A) x0))"
-    sorry \<comment> \<open>Apply Theorem\_72\_1 with the CW data.\<close>
-  \<comment> \<open>Step 3c: The relator is aba\<inverse>b\<inverse> = [a,b]. Quotient by [a,b] = abelianization.
-     F({a,b})/[F,F] = free abelian on {a,b} = Z \<times> Z (Theorem 69.4 + 67.8).\<close>
-  have hquotient_ZZ: "top1_groups_isomorphic_on
-      (top1_fundamental_group_carrier T_torus TT x0)
-      (top1_fundamental_group_mul T_torus TT x0)
-      (UNIV::(int \<times> int) set) (\<lambda>(a1,a2) (b1,b2). (a1+b1, a2+b2))"
-    sorry \<comment> \<open>Compose: \<pi>_1(T) \<cong> \<pi>_1(A)/\<langle>\<langle>[a,b]\<rangle>\<rangle> \<cong> Abel(F(a,b)) \<cong> Z\<times>Z.\<close>
-  show ?thesis by (rule hquotient_ZZ)
-qed
-
-(** from \<S>73 Theorem 73.4: the n-fold dunce cap has fundamental group Z/nZ. **)
-theorem Theorem_73_4_dunce_cap:
-  fixes n :: nat and X :: "'a set" and TX :: "'a set set" and x0 :: 'a
-  assumes "n > 0"
-      and "top1_is_dunce_cap_on X TX n"
-      and "x0 \<in> X"
-  shows "top1_groups_isomorphic_on
-           (top1_fundamental_group_carrier X TX x0)
-           (top1_fundamental_group_mul X TX x0)
-           (top1_Zn_group n)
-           (top1_Zn_mul n)"
-proof -
-  \<comment> \<open>Munkres 73.4: X is the dunce cap = quotient of B^2 by n-fold rotation on S^1.
-     The 1-skeleton is a single circle A, and \<pi>_1(A) \<cong> Z generated by the loop a.
-     The 2-cell is attached by a^n. By Theorem 72.1:
-     \<pi>_1(X) \<cong> Z/\<langle>\<langle>a^n\<rangle>\<rangle> \<cong> Z/nZ.\<close>
-  \<comment> \<open>Step 1: The dunce cap has 1-skeleton A = single circle (\<cong> S¹).
-     The attaching map wraps S¹ n times around A.\<close>
-  \<comment> \<open>Extract quotient map q from dunce cap definition.\<close>
-  obtain q where hq_quot: "top1_quotient_map_on top1_B2 top1_B2_topology X TX q"
-      and hq_S1: "\<forall>z\<in>top1_S1. \<forall>z'\<in>top1_S1.
-            q z = q z' \<longleftrightarrow>
-            (\<exists>k::nat. k < n \<and>
-               z' = (cos (2*pi*real k/real n) * fst z - sin (2*pi*real k/real n) * snd z,
-                     sin (2*pi*real k/real n) * fst z + cos (2*pi*real k/real n) * snd z))"
-      and hq_inj: "inj_on q (top1_B2 - top1_S1)"
-      and hq_sep: "\<forall>z\<in>top1_B2 - top1_S1. \<forall>z'\<in>top1_S1. q z \<noteq> q z'"
-    using assms(2) unfolding top1_is_dunce_cap_on_def
-    apply (elim exE conjE)
-    apply (rule that)
-    apply assumption+
-    done
-  \<comment> \<open>A = q(S1) is the 1-skeleton, h = q is the attaching map.\<close>
-  let ?A_loc = "q ` top1_S1"
-  have hq_cont: "top1_continuous_map_on top1_B2 top1_B2_topology X TX q"
-    using hq_quot unfolding top1_quotient_map_on_def by (by100 blast)
-  obtain A :: "'a set" and h :: "real \<times> real \<Rightarrow> 'a"
-    where hA_circle: "\<exists>f. top1_homeomorphism_on top1_S1 top1_S1_topology
-             A (subspace_topology X TX A) f"
-      and hh_att: "top1_continuous_map_on top1_B2 top1_B2_topology X TX h"
-      and hh_wrap: "\<forall>s\<in>I_set. h (cos (2*pi*s), sin (2*pi*s)) = h (cos (2*pi*n*s), sin (2*pi*n*s))"
-      and hx0_A: "x0 \<in> A" and hA_sub: "A \<subseteq> X"
-    sorry \<comment> \<open>From dunce cap: A = q(S1), h = q. Circle homeomorphism from quotient structure.
-       Uses dunce\_cap\_scheme\_CW\_data for basic structure; wrapping from dunce cap definition.\<close>
-  \<comment> \<open>Step 2: \<pi>_1(A) \<cong> Z (fundamental group of circle).\<close>
-  have hA_Z: "\<exists>f. top1_group_iso_on
-      (top1_fundamental_group_carrier A (subspace_topology X TX A) x0)
-      (top1_fundamental_group_mul A (subspace_topology X TX A) x0)
-      (UNIV::int set) (\<lambda>a b. a + b) f"
-  proof -
-    let ?TA = "subspace_topology X TX A"
-    \<comment> \<open>Extract homeomorphism h_circ: S1 \<rightarrow> A.\<close>
-    obtain h_circ where h_homeo: "top1_homeomorphism_on top1_S1 top1_S1_topology A ?TA h_circ"
-      using hA_circle by (by100 blast)
-    \<comment> \<open>\<pi>_1(S1, (1,0)) \<cong> (Z, +) by Theorem 54.5.\<close>
-    have hS1_Z: "top1_groups_isomorphic_on
-        (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
-        (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))
-        top1_Z_group top1_Z_mul"
-      by (rule Theorem_54_5_iso)
-    \<comment> \<open>By Corollary 52.5: homeomorphism S1 \<cong> A gives \<pi>_1(S1, (1,0)) \<cong> \<pi>_1(A, h_circ(1,0)).\<close>
-    have hS1_top: "is_topology_on top1_S1 top1_S1_topology"
-      using top1_S1_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
-    have hTA_top: "is_topology_on A ?TA"
-    proof -
-      have hTX: "is_topology_on X TX"
-        using assms(2) unfolding top1_is_dunce_cap_on_def is_topology_on_strict_def by (by100 blast)
-      show ?thesis by (rule subspace_topology_is_topology_on[OF hTX hA_sub])
-    qed
-    have h10_S1: "(1::real, 0::real) \<in> top1_S1"
-      unfolding top1_S1_def by (by100 simp)
-    have hS1_A_iso: "top1_groups_isomorphic_on
-        (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
-        (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))
-        (top1_fundamental_group_carrier A ?TA (h_circ (1, 0)))
-        (top1_fundamental_group_mul A ?TA (h_circ (1, 0)))"
-      by (rule Corollary_52_5_homeomorphism_iso[OF hS1_top hTA_top h_homeo h10_S1]) (by100 simp)
-    \<comment> \<open>Chain: \<pi>_1(A, h_circ(1,0)) \<cong> \<pi>_1(S1, (1,0)) \<cong> Z.\<close>
-    have hA_hc_Z: "top1_groups_isomorphic_on
-        (top1_fundamental_group_carrier A ?TA (h_circ (1, 0)))
-        (top1_fundamental_group_mul A ?TA (h_circ (1, 0)))
-        top1_Z_group top1_Z_mul"
-    proof -
-      have hA_S1: "top1_groups_isomorphic_on
-          (top1_fundamental_group_carrier A ?TA (h_circ (1, 0)))
-          (top1_fundamental_group_mul A ?TA (h_circ (1, 0)))
-          (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
-          (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))"
-      proof -
-        have hgrpS1: "top1_is_group_on
-            (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
-            (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))
-            (top1_fundamental_group_id top1_S1 top1_S1_topology (1, 0))
-            (top1_fundamental_group_invg top1_S1 top1_S1_topology (1, 0))"
-          by (rule top1_fundamental_group_is_group[OF hS1_top h10_S1])
-        have hhc_A: "h_circ (1, 0) \<in> A"
-          using h_homeo h10_S1 unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
-        have hgrpA: "top1_is_group_on
-            (top1_fundamental_group_carrier A ?TA (h_circ (1, 0)))
-            (top1_fundamental_group_mul A ?TA (h_circ (1, 0)))
-            (top1_fundamental_group_id A ?TA (h_circ (1, 0)))
-            (top1_fundamental_group_invg A ?TA (h_circ (1, 0)))"
-          by (rule top1_fundamental_group_is_group[OF hTA_top hhc_A])
-        show ?thesis by (rule top1_groups_isomorphic_on_sym[OF hS1_A_iso hgrpS1 hgrpA])
-      qed
-      show ?thesis by (rule groups_isomorphic_trans_fwd[OF hA_S1 hS1_Z])
-    qed
-    \<comment> \<open>Base change: \<pi>_1(A, x0) \<cong> \<pi>_1(A, h_circ(1,0)) (since A is path-connected).\<close>
-    have hA_pc: "top1_path_connected_on A ?TA"
-    proof -
-      have "top1_path_connected_on top1_S1 top1_S1_topology"
-        by (rule S1_path_connected)
-      thus ?thesis
-        by (rule homeomorphism_preserves_path_connected[OF h_homeo])
-    qed
-    have hhc_A: "h_circ (1, 0) \<in> A"
-      using h_homeo h10_S1 unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
-    have hA_bc: "top1_groups_isomorphic_on
-        (top1_fundamental_group_carrier A ?TA x0)
-        (top1_fundamental_group_mul A ?TA x0)
-        (top1_fundamental_group_carrier A ?TA (h_circ (1, 0)))
-        (top1_fundamental_group_mul A ?TA (h_circ (1, 0)))"
-      by (rule Corollary_52_2_basepoint_independent[OF hA_pc hx0_A hhc_A])
-    \<comment> \<open>Chain: \<pi>_1(A, x0) \<cong> \<pi>_1(A, h_circ(1,0)) \<cong> Z.\<close>
-    have hA_x0_Z: "top1_groups_isomorphic_on
-        (top1_fundamental_group_carrier A ?TA x0)
-        (top1_fundamental_group_mul A ?TA x0)
-        top1_Z_group top1_Z_mul"
-      by (rule groups_isomorphic_trans_fwd[OF hA_bc hA_hc_Z])
-    \<comment> \<open>Unfold Z definitions.\<close>
-    have "top1_Z_group = (UNIV :: int set)" unfolding top1_Z_group_def by (by100 simp)
-    moreover have "top1_Z_mul = (\<lambda>a b. a + b)" unfolding top1_Z_mul_def by (rule ext)+ (by100 simp)
-    ultimately show ?thesis using hA_x0_Z unfolding top1_groups_isomorphic_on_def by (by100 simp)
-  qed
-  \<comment> \<open>Step 3: By Theorem 72.1, \<pi>_1(X) \<cong> Z/\<langle>\<langle>n\<rangle>\<rangle> = Z/nZ.
-     The relator is aⁿ (the standard loop wrapped n times).\<close>
-  \<comment> \<open>Step 3a: Apply Theorem 72.1 to get \<pi>_1(X) \<cong> \<pi>_1(A)/\<langle>\<langle>[k\<circ>p]\<rangle>\<rangle>.\<close>
-  \<comment> \<open>Need: is_topology_on_strict, Hausdorff, A closed, A path-connected,
-     h continuous B2\<rightarrow>X, a \<in> A, h|_{Int B2} homeomorphism, h(S1)\<subseteq>A, h(1,0)=a.\<close>
-  have hThm72: "\<exists>\<iota>.
-      top1_continuous_map_on top1_S1 top1_S1_topology A
-           (subspace_topology X TX A) \<iota>
-    \<and> (\<forall>z\<in>top1_S1. \<iota> z = h z)
-    \<and> top1_groups_isomorphic_on
-          (top1_fundamental_group_carrier X TX x0)
-          (top1_fundamental_group_mul X TX x0)
-          (top1_quotient_group_carrier_on
-             (top1_fundamental_group_carrier A (subspace_topology X TX A) x0)
-             (top1_fundamental_group_mul A (subspace_topology X TX A) x0)
-             (top1_normal_subgroup_generated_on
-                (top1_fundamental_group_carrier A (subspace_topology X TX A) x0)
-                (top1_fundamental_group_mul A (subspace_topology X TX A) x0)
-                (top1_fundamental_group_id A (subspace_topology X TX A) x0)
-                (top1_fundamental_group_invg A (subspace_topology X TX A) x0)
-                {top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1, 0)
-                    A (subspace_topology X TX A) x0
-                    (\<lambda>z. h z)
-                  {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0)
-                      (\<lambda>s. (cos (2*pi*s), sin (2*pi*s))) g}}))
-          (top1_quotient_group_mul_on
-             (top1_fundamental_group_mul A (subspace_topology X TX A) x0))"
-    sorry \<comment> \<open>Apply Theorem_72_1. Needs all hypotheses verified.\<close>
-  \<comment> \<open>Step 3b: The relator [k\<circ>p] in \<pi>_1(A) corresponds to n \<in> Z.
-     Since \<pi>_1(A) \<cong> Z, the normal closure of {n} is nZ.
-     Z/nZ \<cong> (top1_Zn_group n, top1_Zn_mul n) by Z_quotient_nZ_iso.\<close>
-  \<comment> \<open>Step 3c: Compose isomorphisms: \<pi>_1(X) \<cong> \<pi>_1(A)/\<langle>\<langle>[k\<circ>p]\<rangle>\<rangle> \<cong> Z/\<langle>\<langle>n\<rangle>\<rangle> \<cong> Z/nZ.\<close>
-  show ?thesis sorry \<comment> \<open>Compose the three isomorphisms.\<close>
-qed
 
 
 (** Theorem 71.3 stub: infinite case has sorry. Not on \<S>75.3 chain. **)
@@ -4934,6 +4679,261 @@ proof -
   show ?thesis sorry \<comment> \<open>Abelianization + Smith normal form decomposition.\<close>
 qed
 
+section \<open>\<S>73 Fundamental Groups of the Torus and the Dunce Cap\<close>
+
+(** from \<S>73 Theorem 73.1: \<pi>_1(torus) has presentation <\<alpha>, \<beta> | \<alpha>\<beta>\<alpha>^{-1}\<beta>^{-1}>,
+    i.e. is isomorphic to the free abelian group Z \<times> Z on 2 generators. **)
+theorem Theorem_73_1_torus_presentation:
+  fixes T_torus :: "'a set" and TT :: "'a set set" and x0 :: 'a
+  assumes "top1_is_torus_on T_torus TT"
+      and "x0 \<in> T_torus"
+  shows "top1_groups_isomorphic_on
+           (top1_fundamental_group_carrier T_torus TT x0)
+           (top1_fundamental_group_mul T_torus TT x0)
+           (UNIV::(int \<times> int) set)
+           (\<lambda>(a1, a2) (b1, b2). (a1 + b1, a2 + b2))"
+proof -
+  \<comment> \<open>Munkres 73.1: The torus is the quotient of the unit square by aba\<inverse>b\<inverse>.
+     By Theorem 72.1 (attaching 2-cell to wedge of two circles), \<pi>_1(T) has presentation
+     \<langle>a, b | aba\<inverse>b\<inverse>\<rangle>. The relator aba\<inverse>b\<inverse>=1 means ab=ba, so the group is abelian.
+     Hence \<pi>_1(T) \<cong> Z \<times> Z (free abelian group on 2 generators).\<close>
+  \<comment> \<open>Step 1: The torus is the quotient of the square by scheme aba\<inverse>b\<inverse>. Extract the
+     attaching data: 1-skeleton A (wedge of 2 circles), attaching map h: B² \<rightarrow> T.\<close>
+  obtain A :: "'a set" and h :: "real \<times> real \<Rightarrow> 'a"
+    where hA_sub: "closedin_on T_torus TT A"
+      and hA_wedge: "top1_is_wedge_of_circles_on A (subspace_topology T_torus TT A) {0::nat, 1} x0"
+      and hh_cont: "top1_continuous_map_on top1_B2 top1_B2_topology T_torus TT h"
+      and hh_S1_A: "h ` top1_S1 \<subseteq> A"
+    using torus_scheme_CW_data[OF assms] by (by100 blast)
+  \<comment> \<open>Step 2: By Theorem 72.1, \<pi>_1(T) \<cong> \<pi>_1(A)/\<langle>\<langle>k_*([p])\<rangle>\<rangle> where k = h|_{S¹}.
+     \<pi>_1(A) is free on {a, b}. The relator is aba\<inverse>b\<inverse>.\<close>
+  have hA_free: "\<exists>(F::int set) mulF eF invgF (\<iota>F::nat \<Rightarrow> int).
+      top1_is_free_group_full_on F mulF eF invgF \<iota>F {0::nat, 1}
+      \<and> top1_groups_isomorphic_on F mulF
+          (top1_fundamental_group_carrier A (subspace_topology T_torus TT A) x0)
+          (top1_fundamental_group_mul A (subspace_topology T_torus TT A) x0)"
+  proof -
+    have hset_eq: "{0::nat, 1} = {..<(2::nat)}" by (by100 auto)
+    have hwedge2: "top1_is_wedge_of_circles_on A (subspace_topology T_torus TT A) {..<(2::nat)} x0"
+      using hA_wedge hset_eq by (by100 simp)
+    from Theorem_71_1_wedge_of_circles_finite[OF hwedge2]
+    obtain G0 :: "int set" and mul0 e0 invg0 and \<iota>0 :: "nat \<Rightarrow> int" where
+        hG0f: "top1_is_free_group_full_on G0 mul0 e0 invg0 \<iota>0 {..<2::nat}" and
+        hG0i: "top1_groups_isomorphic_on G0 mul0
+            (top1_fundamental_group_carrier A (subspace_topology T_torus TT A) x0)
+            (top1_fundamental_group_mul A (subspace_topology T_torus TT A) x0)"
+      by (elim exE conjE) (rule that, assumption+)
+    have "top1_is_free_group_full_on G0 mul0 e0 invg0 \<iota>0 {0::nat, 1}"
+      using hG0f hset_eq by (by100 simp)
+    thus ?thesis using hG0i by (by100 blast)
+  qed
+  \<comment> \<open>Step 3: The quotient F({a,b})/\<langle>\<langle>aba\<inverse>b\<inverse>\<rangle>\<rangle>: since aba\<inverse>b\<inverse>=1 means ab=ba,
+     the quotient is the free abelian group on {a,b}, which is Z \<times> Z.\<close>
+  \<comment> \<open>Step 3a: Need additional CW data: h|_{int B²} homeomorphism onto T-A, h(1,0) = x0.\<close>
+  have hCW_full: "\<exists>h'. top1_continuous_map_on top1_B2 top1_B2_topology T_torus TT h'
+      \<and> h' ` top1_S1 \<subseteq> A
+      \<and> top1_homeomorphism_on (top1_B2 - top1_S1)
+            (subspace_topology top1_B2 top1_B2_topology (top1_B2 - top1_S1))
+            (T_torus - A) (subspace_topology T_torus TT (T_torus - A)) h'
+      \<and> h' (1, 0) = x0"
+    sorry \<comment> \<open>Needs scheme\_quotient\_CW\_data with homeomorphism condition + basepoint.\<close>
+  \<comment> \<open>Step 3b: Apply Theorem 72.1 to get \<pi>_1(T) \<cong> \<pi>_1(A)/\<langle>\<langle>relator\<rangle>\<rangle>.\<close>
+  have hThm721: "\<exists>\<iota>. top1_groups_isomorphic_on
+      (top1_fundamental_group_carrier T_torus TT x0)
+      (top1_fundamental_group_mul T_torus TT x0)
+      (top1_quotient_group_carrier_on
+         (top1_fundamental_group_carrier A (subspace_topology T_torus TT A) x0)
+         (top1_fundamental_group_mul A (subspace_topology T_torus TT A) x0)
+         (top1_normal_subgroup_generated_on
+            (top1_fundamental_group_carrier A (subspace_topology T_torus TT A) x0)
+            (top1_fundamental_group_mul A (subspace_topology T_torus TT A) x0)
+            (top1_fundamental_group_id A (subspace_topology T_torus TT A) x0)
+            (top1_fundamental_group_invg A (subspace_topology T_torus TT A) x0)
+            {top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1, 0)
+               A (subspace_topology T_torus TT A) x0 \<iota>
+               {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0)
+                     (\<lambda>s. (cos (2 * pi * s), sin (2 * pi * s))) g}}))
+      (top1_quotient_group_mul_on
+         (top1_fundamental_group_mul A (subspace_topology T_torus TT A) x0))"
+    sorry \<comment> \<open>Apply Theorem\_72\_1 with the CW data.\<close>
+  \<comment> \<open>Step 3c: The relator is aba\<inverse>b\<inverse> = [a,b]. Quotient by [a,b] = abelianization.
+     F({a,b})/[F,F] = free abelian on {a,b} = Z \<times> Z (Theorem 69.4 + 67.8).\<close>
+  have hquotient_ZZ: "top1_groups_isomorphic_on
+      (top1_fundamental_group_carrier T_torus TT x0)
+      (top1_fundamental_group_mul T_torus TT x0)
+      (UNIV::(int \<times> int) set) (\<lambda>(a1,a2) (b1,b2). (a1+b1, a2+b2))"
+    sorry \<comment> \<open>Compose: \<pi>_1(T) \<cong> \<pi>_1(A)/\<langle>\<langle>[a,b]\<rangle>\<rangle> \<cong> Abel(F(a,b)) \<cong> Z\<times>Z.\<close>
+  show ?thesis by (rule hquotient_ZZ)
+qed
+
+(** from \<S>73 Theorem 73.4: the n-fold dunce cap has fundamental group Z/nZ. **)
+theorem Theorem_73_4_dunce_cap:
+  fixes n :: nat and X :: "'a set" and TX :: "'a set set" and x0 :: 'a
+  assumes "n > 0"
+      and "top1_is_dunce_cap_on X TX n"
+      and "x0 \<in> X"
+  shows "top1_groups_isomorphic_on
+           (top1_fundamental_group_carrier X TX x0)
+           (top1_fundamental_group_mul X TX x0)
+           (top1_Zn_group n)
+           (top1_Zn_mul n)"
+proof -
+  \<comment> \<open>Munkres 73.4: X is the dunce cap = quotient of B^2 by n-fold rotation on S^1.
+     The 1-skeleton is a single circle A, and \<pi>_1(A) \<cong> Z generated by the loop a.
+     The 2-cell is attached by a^n. By Theorem 72.1:
+     \<pi>_1(X) \<cong> Z/\<langle>\<langle>a^n\<rangle>\<rangle> \<cong> Z/nZ.\<close>
+  \<comment> \<open>Step 1: The dunce cap has 1-skeleton A = single circle (\<cong> S¹).
+     The attaching map wraps S¹ n times around A.\<close>
+  \<comment> \<open>Extract quotient map q from dunce cap definition.\<close>
+  obtain q where hq_quot: "top1_quotient_map_on top1_B2 top1_B2_topology X TX q"
+      and hq_S1: "\<forall>z\<in>top1_S1. \<forall>z'\<in>top1_S1.
+            q z = q z' \<longleftrightarrow>
+            (\<exists>k::nat. k < n \<and>
+               z' = (cos (2*pi*real k/real n) * fst z - sin (2*pi*real k/real n) * snd z,
+                     sin (2*pi*real k/real n) * fst z + cos (2*pi*real k/real n) * snd z))"
+      and hq_inj: "inj_on q (top1_B2 - top1_S1)"
+      and hq_sep: "\<forall>z\<in>top1_B2 - top1_S1. \<forall>z'\<in>top1_S1. q z \<noteq> q z'"
+    using assms(2) unfolding top1_is_dunce_cap_on_def
+    apply (elim exE conjE)
+    apply (rule that)
+    apply assumption+
+    done
+  \<comment> \<open>A = q(S1) is the 1-skeleton, h = q is the attaching map.\<close>
+  let ?A_loc = "q ` top1_S1"
+  have hq_cont: "top1_continuous_map_on top1_B2 top1_B2_topology X TX q"
+    using hq_quot unfolding top1_quotient_map_on_def by (by100 blast)
+  obtain A :: "'a set" and h :: "real \<times> real \<Rightarrow> 'a"
+    where hA_circle: "\<exists>f. top1_homeomorphism_on top1_S1 top1_S1_topology
+             A (subspace_topology X TX A) f"
+      and hh_att: "top1_continuous_map_on top1_B2 top1_B2_topology X TX h"
+      and hh_wrap: "\<forall>s\<in>I_set. h (cos (2*pi*s), sin (2*pi*s)) = h (cos (2*pi*n*s), sin (2*pi*n*s))"
+      and hx0_A: "x0 \<in> A" and hA_sub: "A \<subseteq> X"
+    sorry \<comment> \<open>From dunce cap: A = q(S1), h = q. Circle homeomorphism from quotient structure.
+       Uses dunce\_cap\_scheme\_CW\_data for basic structure; wrapping from dunce cap definition.\<close>
+  \<comment> \<open>Step 2: \<pi>_1(A) \<cong> Z (fundamental group of circle).\<close>
+  have hA_Z: "\<exists>f. top1_group_iso_on
+      (top1_fundamental_group_carrier A (subspace_topology X TX A) x0)
+      (top1_fundamental_group_mul A (subspace_topology X TX A) x0)
+      (UNIV::int set) (\<lambda>a b. a + b) f"
+  proof -
+    let ?TA = "subspace_topology X TX A"
+    \<comment> \<open>Extract homeomorphism h_circ: S1 \<rightarrow> A.\<close>
+    obtain h_circ where h_homeo: "top1_homeomorphism_on top1_S1 top1_S1_topology A ?TA h_circ"
+      using hA_circle by (by100 blast)
+    \<comment> \<open>\<pi>_1(S1, (1,0)) \<cong> (Z, +) by Theorem 54.5.\<close>
+    have hS1_Z: "top1_groups_isomorphic_on
+        (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
+        (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))
+        top1_Z_group top1_Z_mul"
+      by (rule Theorem_54_5_iso)
+    \<comment> \<open>By Corollary 52.5: homeomorphism S1 \<cong> A gives \<pi>_1(S1, (1,0)) \<cong> \<pi>_1(A, h_circ(1,0)).\<close>
+    have hS1_top: "is_topology_on top1_S1 top1_S1_topology"
+      using top1_S1_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
+    have hTA_top: "is_topology_on A ?TA"
+    proof -
+      have hTX: "is_topology_on X TX"
+        using assms(2) unfolding top1_is_dunce_cap_on_def is_topology_on_strict_def by (by100 blast)
+      show ?thesis by (rule subspace_topology_is_topology_on[OF hTX hA_sub])
+    qed
+    have h10_S1: "(1::real, 0::real) \<in> top1_S1"
+      unfolding top1_S1_def by (by100 simp)
+    have hS1_A_iso: "top1_groups_isomorphic_on
+        (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
+        (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))
+        (top1_fundamental_group_carrier A ?TA (h_circ (1, 0)))
+        (top1_fundamental_group_mul A ?TA (h_circ (1, 0)))"
+      by (rule Corollary_52_5_homeomorphism_iso[OF hS1_top hTA_top h_homeo h10_S1]) (by100 simp)
+    \<comment> \<open>Chain: \<pi>_1(A, h_circ(1,0)) \<cong> \<pi>_1(S1, (1,0)) \<cong> Z.\<close>
+    have hA_hc_Z: "top1_groups_isomorphic_on
+        (top1_fundamental_group_carrier A ?TA (h_circ (1, 0)))
+        (top1_fundamental_group_mul A ?TA (h_circ (1, 0)))
+        top1_Z_group top1_Z_mul"
+    proof -
+      have hA_S1: "top1_groups_isomorphic_on
+          (top1_fundamental_group_carrier A ?TA (h_circ (1, 0)))
+          (top1_fundamental_group_mul A ?TA (h_circ (1, 0)))
+          (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
+          (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))"
+      proof -
+        have hgrpS1: "top1_is_group_on
+            (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
+            (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))
+            (top1_fundamental_group_id top1_S1 top1_S1_topology (1, 0))
+            (top1_fundamental_group_invg top1_S1 top1_S1_topology (1, 0))"
+          by (rule top1_fundamental_group_is_group[OF hS1_top h10_S1])
+        have hhc_A: "h_circ (1, 0) \<in> A"
+          using h_homeo h10_S1 unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+        have hgrpA: "top1_is_group_on
+            (top1_fundamental_group_carrier A ?TA (h_circ (1, 0)))
+            (top1_fundamental_group_mul A ?TA (h_circ (1, 0)))
+            (top1_fundamental_group_id A ?TA (h_circ (1, 0)))
+            (top1_fundamental_group_invg A ?TA (h_circ (1, 0)))"
+          by (rule top1_fundamental_group_is_group[OF hTA_top hhc_A])
+        show ?thesis by (rule top1_groups_isomorphic_on_sym[OF hS1_A_iso hgrpS1 hgrpA])
+      qed
+      show ?thesis by (rule groups_isomorphic_trans_fwd[OF hA_S1 hS1_Z])
+    qed
+    \<comment> \<open>Base change: \<pi>_1(A, x0) \<cong> \<pi>_1(A, h_circ(1,0)) (since A is path-connected).\<close>
+    have hA_pc: "top1_path_connected_on A ?TA"
+    proof -
+      have "top1_path_connected_on top1_S1 top1_S1_topology"
+        by (rule S1_path_connected)
+      thus ?thesis
+        by (rule homeomorphism_preserves_path_connected[OF h_homeo])
+    qed
+    have hhc_A: "h_circ (1, 0) \<in> A"
+      using h_homeo h10_S1 unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+    have hA_bc: "top1_groups_isomorphic_on
+        (top1_fundamental_group_carrier A ?TA x0)
+        (top1_fundamental_group_mul A ?TA x0)
+        (top1_fundamental_group_carrier A ?TA (h_circ (1, 0)))
+        (top1_fundamental_group_mul A ?TA (h_circ (1, 0)))"
+      by (rule Corollary_52_2_basepoint_independent[OF hA_pc hx0_A hhc_A])
+    \<comment> \<open>Chain: \<pi>_1(A, x0) \<cong> \<pi>_1(A, h_circ(1,0)) \<cong> Z.\<close>
+    have hA_x0_Z: "top1_groups_isomorphic_on
+        (top1_fundamental_group_carrier A ?TA x0)
+        (top1_fundamental_group_mul A ?TA x0)
+        top1_Z_group top1_Z_mul"
+      by (rule groups_isomorphic_trans_fwd[OF hA_bc hA_hc_Z])
+    \<comment> \<open>Unfold Z definitions.\<close>
+    have "top1_Z_group = (UNIV :: int set)" unfolding top1_Z_group_def by (by100 simp)
+    moreover have "top1_Z_mul = (\<lambda>a b. a + b)" unfolding top1_Z_mul_def by (rule ext)+ (by100 simp)
+    ultimately show ?thesis using hA_x0_Z unfolding top1_groups_isomorphic_on_def by (by100 simp)
+  qed
+  \<comment> \<open>Step 3: By Theorem 72.1, \<pi>_1(X) \<cong> Z/\<langle>\<langle>n\<rangle>\<rangle> = Z/nZ.
+     The relator is aⁿ (the standard loop wrapped n times).\<close>
+  \<comment> \<open>Step 3a: Apply Theorem 72.1 to get \<pi>_1(X) \<cong> \<pi>_1(A)/\<langle>\<langle>[k\<circ>p]\<rangle>\<rangle>.\<close>
+  \<comment> \<open>Need: is_topology_on_strict, Hausdorff, A closed, A path-connected,
+     h continuous B2\<rightarrow>X, a \<in> A, h|_{Int B2} homeomorphism, h(S1)\<subseteq>A, h(1,0)=a.\<close>
+  have hThm72: "\<exists>\<iota>.
+      top1_continuous_map_on top1_S1 top1_S1_topology A
+           (subspace_topology X TX A) \<iota>
+    \<and> (\<forall>z\<in>top1_S1. \<iota> z = h z)
+    \<and> top1_groups_isomorphic_on
+          (top1_fundamental_group_carrier X TX x0)
+          (top1_fundamental_group_mul X TX x0)
+          (top1_quotient_group_carrier_on
+             (top1_fundamental_group_carrier A (subspace_topology X TX A) x0)
+             (top1_fundamental_group_mul A (subspace_topology X TX A) x0)
+             (top1_normal_subgroup_generated_on
+                (top1_fundamental_group_carrier A (subspace_topology X TX A) x0)
+                (top1_fundamental_group_mul A (subspace_topology X TX A) x0)
+                (top1_fundamental_group_id A (subspace_topology X TX A) x0)
+                (top1_fundamental_group_invg A (subspace_topology X TX A) x0)
+                {top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1, 0)
+                    A (subspace_topology X TX A) x0
+                    (\<lambda>z. h z)
+                  {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0)
+                      (\<lambda>s. (cos (2*pi*s), sin (2*pi*s))) g}}))
+          (top1_quotient_group_mul_on
+             (top1_fundamental_group_mul A (subspace_topology X TX A) x0))"
+    sorry \<comment> \<open>Apply Theorem_72_1. Needs all hypotheses verified.\<close>
+  \<comment> \<open>Step 3b: The relator [k\<circ>p] in \<pi>_1(A) corresponds to n \<in> Z.
+     Since \<pi>_1(A) \<cong> Z, the normal closure of {n} is nZ.
+     Z/nZ \<cong> (top1_Zn_group n, top1_Zn_mul n) by Z_quotient_nZ_iso.\<close>
+  \<comment> \<open>Step 3c: Compose isomorphisms: \<pi>_1(X) \<cong> \<pi>_1(A)/\<langle>\<langle>[k\<circ>p]\<rangle>\<rangle> \<cong> Z/\<langle>\<langle>n\<rangle>\<rangle> \<cong> Z/nZ.\<close>
+  show ?thesis sorry \<comment> \<open>Compose the three isomorphisms.\<close>
+qed
 section \<open>*\<S>78 Constructing Compact Surfaces\<close>
 
 lemma standard_simplex_is_polygonal_region:
