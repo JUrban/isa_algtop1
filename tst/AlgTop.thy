@@ -8841,12 +8841,140 @@ proof -
       show ?thesis
         using top1_continuous_map_on_agree[OF hcomp_cont hagree'] by (by100 blast)
     qed
+    \<comment> \<open>F continuity: F = h \<circ> R\_to\_S1 \<circ> linear\_comb where linear\_comb(y,t) = (1-t)*angle(y)+t*\<theta>r.\<close>
+    \<comment> \<open>First show image of F is in Y-{q}: convex combination stays in (\<theta>q,\<theta>q+1).\<close>
+    have hF_image: "\<forall>y\<in>Y - {q}. \<forall>t\<in>I_set. F (y, t) \<in> Y - {q}"
+    proof (intro ballI)
+      fix y t assume hy: "y \<in> Y - {q}" and ht: "t \<in> I_set"
+      have ha: "\<theta>q < angle y" "angle y < \<theta>q + 1" using hangle_prop hy by (by100 blast)+
+      have ht01: "0 \<le> t" "t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 simp)+
+      \<comment> \<open>Convex combination stays in (\<theta>q, \<theta>q+1).\<close>
+      define \<theta>_mix where "\<theta>_mix = (1 - t) * angle y + t * \<theta>r"
+      have hmix_lb: "\<theta>q < \<theta>_mix"
+      proof -
+        have h1: "(1 - t) * (angle y - \<theta>q) \<ge> 0"
+          using mult_nonneg_nonneg[of "1 - t" "angle y - \<theta>q"] ha ht01 by (by100 linarith)
+        have h2: "t * (\<theta>r - \<theta>q) \<ge> 0"
+          using mult_nonneg_nonneg[of t "\<theta>r - \<theta>q"] h\<theta>r_bounds ht01 by (by100 linarith)
+        have h3: "(1 - t) > 0 \<or> t > 0" using ht01 by (by100 linarith)
+        have h4: "(1 - t) * (angle y - \<theta>q) > 0 \<or> t * (\<theta>r - \<theta>q) > 0"
+          using h3 ha h\<theta>r_bounds ht01
+        proof (cases "t = 0")
+            case True thus ?thesis using ha ht01 by (by100 simp)
+          next
+            case False hence "t > 0" using ht01 by (by100 linarith)
+            have "\<theta>r - \<theta>q > 0" using h\<theta>r_bounds by (by100 linarith)
+            hence "t * (\<theta>r - \<theta>q) > 0" using mult_pos_pos[OF \<open>t > 0\<close> \<open>\<theta>r - \<theta>q > 0\<close>] by (by100 blast)
+            thus ?thesis by (by100 blast)
+          qed
+        have "(1 - t) * (angle y - \<theta>q) + t * (\<theta>r - \<theta>q) > 0" using h1 h2 h4 by (by100 linarith)
+        moreover have "(1 - t) * (angle y - \<theta>q) + t * (\<theta>r - \<theta>q) = (1 - t) * angle y + t * \<theta>r - \<theta>q"
+        proof -
+          have h_d1: "(1 - t) * (angle y - \<theta>q) = (1 - t) * angle y - (1 - t) * \<theta>q"
+            using right_diff_distrib[of "1 - t" "angle y" \<theta>q] by (by100 linarith)
+          have h_d2: "t * (\<theta>r - \<theta>q) = t * \<theta>r - t * \<theta>q"
+            using right_diff_distrib[of t \<theta>r \<theta>q] by (by100 linarith)
+          have h_sum: "(1 - t) * \<theta>q + t * \<theta>q = \<theta>q"
+          proof -
+            have "(1 - t) * \<theta>q + t * \<theta>q = ((1 - t) + t) * \<theta>q"
+              using distrib_right[of "1 - t" t \<theta>q] by (by100 linarith)
+            also have "\<dots> = \<theta>q" by (by100 simp)
+            finally show ?thesis .
+          qed
+          show ?thesis using h_d1 h_d2 h_sum by (by100 linarith)
+        qed
+        ultimately show ?thesis unfolding \<theta>_mix_def by (by100 linarith)
+      qed
+      have hmix_ub: "\<theta>_mix < \<theta>q + 1"
+      proof -
+        have h1: "(1 - t) * (\<theta>q + 1 - angle y) \<ge> 0"
+          using mult_nonneg_nonneg[of "1 - t" "\<theta>q + 1 - angle y"] ha ht01 by (by100 linarith)
+        have h2: "t * (\<theta>q + 1 - \<theta>r) \<ge> 0"
+          using mult_nonneg_nonneg[of t "\<theta>q + 1 - \<theta>r"] h\<theta>r_bounds ht01 by (by100 linarith)
+        have h3: "(1 - t) > 0 \<or> t > 0" using ht01 by (by100 linarith)
+        have h4: "(1 - t) * (\<theta>q + 1 - angle y) > 0 \<or> t * (\<theta>q + 1 - \<theta>r) > 0"
+          using h3 ha h\<theta>r_bounds ht01
+        proof (cases "t = 0")
+            case True thus ?thesis using ha ht01 by (by100 simp)
+          next
+            case False hence "t > 0" using ht01 by (by100 linarith)
+            have "\<theta>q + 1 - \<theta>r > 0" using h\<theta>r_bounds by (by100 linarith)
+            hence "t * (\<theta>q + 1 - \<theta>r) > 0"
+              using mult_pos_pos[OF \<open>t > 0\<close> \<open>\<theta>q + 1 - \<theta>r > 0\<close>] by (by100 blast)
+            thus ?thesis by (by100 blast)
+          qed
+        have "(1 - t) * (\<theta>q + 1 - angle y) + t * (\<theta>q + 1 - \<theta>r) > 0" using h1 h2 h4 by (by100 linarith)
+        \<comment> \<open>Algebraic expansion: LHS = (\<theta>q+1) - ((1-t)*angle y + t*\<theta>r).\<close>
+        have hd1: "(1 - t) * (\<theta>q + 1 - angle y) = (1 - t) * (\<theta>q + 1) - (1 - t) * angle y"
+          using right_diff_distrib[of "1-t" "\<theta>q + 1" "angle y"] by (by100 linarith)
+        have hd2: "t * (\<theta>q + 1 - \<theta>r) = t * (\<theta>q + 1) - t * \<theta>r"
+          using right_diff_distrib[of t "\<theta>q + 1" \<theta>r] by (by100 linarith)
+        have hds: "(1 - t) * (\<theta>q + 1) + t * (\<theta>q + 1) = ((1 - t) + t) * (\<theta>q + 1)"
+          using distrib_right[of "1 - t" t "\<theta>q + 1"] by (by100 linarith)
+        hence hds': "(1 - t) * (\<theta>q + 1) + t * (\<theta>q + 1) = \<theta>q + 1" by (by100 simp)
+        have heq: "(1 - t) * (\<theta>q + 1 - angle y) + t * (\<theta>q + 1 - \<theta>r)
+            = (\<theta>q + 1) - ((1 - t) * angle y + t * \<theta>r)"
+        proof -
+          have s1: "(1 - t) * (\<theta>q + 1 - angle y) + t * (\<theta>q + 1 - \<theta>r)
+              = ((1 - t) * (\<theta>q + 1) - (1 - t) * angle y) + (t * (\<theta>q + 1) - t * \<theta>r)"
+            using hd1 hd2 by (by100 linarith)
+          also have "\<dots> = ((1 - t) * (\<theta>q + 1) + t * (\<theta>q + 1)) - ((1 - t) * angle y + t * \<theta>r)"
+            by (by100 linarith)
+          also have "\<dots> = (\<theta>q + 1) - ((1 - t) * angle y + t * \<theta>r)" using hds' by (by100 linarith)
+          finally show ?thesis .
+        qed
+        thus ?thesis unfolding \<theta>_mix_def
+          using \<open>(1 - t) * (\<theta>q + 1 - angle y) + t * (\<theta>q + 1 - \<theta>r) > 0\<close>
+          by (by100 linarith)
+      qed
+      \<comment> \<open>So R\_to\_S1(\<theta>\_mix) \<noteq> q0.\<close>
+      have "top1_R_to_S1 \<theta>_mix \<noteq> q0"
+      proof
+        assume "top1_R_to_S1 \<theta>_mix = q0"
+        hence "top1_R_to_S1 \<theta>_mix = top1_R_to_S1 \<theta>q" using h\<theta>q by (by100 simp)
+        hence "(cos (2*pi*\<theta>_mix), sin (2*pi*\<theta>_mix)) = (cos (2*pi*\<theta>q), sin (2*pi*\<theta>q))"
+          unfolding top1_R_to_S1_def by (by100 simp)
+        hence "sin (2*pi*\<theta>_mix) = sin (2*pi*\<theta>q) \<and> cos (2*pi*\<theta>_mix) = cos (2*pi*\<theta>q)"
+          by (by100 simp)
+        hence "\<exists>k::int. 2*pi*\<theta>_mix = 2*pi*\<theta>q + 2*pi*of_int k"
+          using iffD1[OF sin_cos_eq_iff] by (by100 blast)
+        then obtain k :: int where "2*pi*\<theta>_mix = 2*pi*\<theta>q + 2*pi*of_int k" by (by100 blast)
+        hence "\<theta>_mix - \<theta>q = of_int k"
+        proof -
+          assume "2*pi*\<theta>_mix = 2*pi*\<theta>q + 2*pi*of_int k"
+          hence "2*pi*(\<theta>_mix - \<theta>q) = 2*pi*of_int k"
+            using right_diff_distrib[of "2*pi" \<theta>_mix \<theta>q] by (by100 linarith)
+          moreover have "2*pi \<noteq> (0::real)" using pi_neq_zero by (by100 simp)
+          ultimately show ?thesis by (by100 simp)
+        qed
+        moreover have "\<bar>\<theta>_mix - \<theta>q\<bar> < 1" using hmix_lb hmix_ub by (by100 linarith)
+        ultimately have "k = 0" by (by100 linarith)
+        thus False using \<open>\<theta>_mix - \<theta>q = of_int k\<close> hmix_lb by (by100 linarith)
+      qed
+      \<comment> \<open>R\_to\_S1(\<theta>\_mix) \<in> S1.\<close>
+      have "top1_R_to_S1 \<theta>_mix \<in> top1_S1"
+        unfolding top1_R_to_S1_def top1_S1_def by (by100 simp)
+      \<comment> \<open>h maps S1-{q0} to Y-{q}.\<close>
+      have "h (top1_R_to_S1 \<theta>_mix) \<in> Y"
+        using bij_betw_apply[OF hbij \<open>top1_R_to_S1 \<theta>_mix \<in> top1_S1\<close>] by (by100 blast)
+      moreover have "h (top1_R_to_S1 \<theta>_mix) \<noteq> q"
+      proof
+        assume "h (top1_R_to_S1 \<theta>_mix) = q"
+        hence "h (top1_R_to_S1 \<theta>_mix) = h q0" using hq0_map by (by100 simp)
+        hence "top1_R_to_S1 \<theta>_mix = q0"
+          using inj_onD[OF hinj _ \<open>top1_R_to_S1 \<theta>_mix \<in> top1_S1\<close> hq0_S1] by (by100 simp)
+        thus False using \<open>top1_R_to_S1 \<theta>_mix \<noteq> q0\<close> by (by100 simp)
+      qed
+      ultimately show "F (y, t) \<in> Y - {q}" unfolding F_def \<theta>_mix_def by (by100 simp)
+    qed
+    \<comment> \<open>Now: F continuous (Y-{q})\<times>I \<rightarrow> Y-{q}.\<close>
     have hF_cont: "top1_continuous_map_on ((Y - {q}) \<times> I_set)
         (product_topology_on (subspace_topology Y TY (Y - {q})) I_top)
         (Y - {q}) (subspace_topology Y TY (Y - {q})) F"
-      sorry \<comment> \<open>From hangle\_cont: F = h \<circ> R\_to\_S1 \<circ> (\<lambda>(y,t). (1-t)*angle(y) + t*\<theta>r).
-         Each factor continuous; composition continuous.
-         Image in Y-{q}: convex combination stays in (\<theta>q, \<theta>q+1), avoids q0.\<close>
+      sorry \<comment> \<open>Composition of continuous functions:
+         (y,t) \<mapsto> (1-t)*angle(y)+t*\<theta>r continuous (product of angle + arithmetic);
+         R\_to\_S1 continuous; h continuous.
+         Image in Y-{q} shown above. Restrict codomain.\<close>
     show "\<exists>H. top1_continuous_map_on ((Y - {q}) \<times> I_set)
         (product_topology_on (subspace_topology Y TY (Y - {q})) I_top)
         (Y - {q}) (subspace_topology Y TY (Y - {q})) H
