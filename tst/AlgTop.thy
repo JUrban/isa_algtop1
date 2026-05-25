@@ -7863,11 +7863,61 @@ lemma finite_wedge_pi1_free_with_chosen_loops:
                 \<comment> \<open>g(0) \<circ> std\_loop is a loop on C(0) at p, and C(0) \<subseteq> U.\<close>
                 have "C 0 \<subseteq> U" unfolding U_def by (by100 blast)
                 have hC0_sub_X: "C 0 \<subseteq> X" using less.prems(4) hn_pos by (by100 blast)
-                have "top1_is_loop_on (C 0) (subspace_topology X TX (C 0)) p
+                \<comment> \<open>g(0) \<circ> std\_loop is a loop on C(0): same pattern as hloop0 (line ~6815).\<close>
+                have hg0_homeo: "top1_homeomorphism_on top1_S1 top1_S1_topology
+                    (C 0) (subspace_topology X TX (C 0)) (g 0)"
+                  using less.prems(7) hn_pos by (by100 blast)
+                have hg0_cont: "top1_continuous_map_on top1_S1 top1_S1_topology
+                    (C 0) (subspace_topology X TX (C 0)) (g 0)"
+                  using hg0_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+                have hstd_loop: "top1_is_loop_on top1_S1 top1_S1_topology (1, 0)
+                    (\<lambda>s. (cos (2*pi*s), sin (2*pi*s)))"
+                  by (rule standard_S1_loop_is_loop)
+                have hloop_C0: "top1_is_loop_on (C 0) (subspace_topology X TX (C 0)) (g 0 (1, 0))
+                    ((g 0) \<circ> (\<lambda>s. (cos (2*pi*s), sin (2*pi*s))))"
+                  by (rule top1_continuous_map_loop_early[OF hg0_cont hstd_loop])
+                have heq: "(g 0) \<circ> (\<lambda>s. (cos (2*pi*s), sin (2*pi*s))) =
                     (\<lambda>t. g 0 (cos (2*pi*t), sin (2*pi*t)))"
-                  sorry \<comment> \<open>From hC0\_free or the loop construction earlier.\<close>
-                \<comment> \<open>Expand from C(0) to U: subspace\_topology X TX (C 0) vs subspace\_topology X TX U.\<close>
-                thus ?thesis sorry \<comment> \<open>subspace\_topology\_trans + Theorem\_18\_2(6).\<close>
+                  unfolding comp_def by (by100 simp)
+                have hg0_base: "g 0 (1, 0) = p" using less.prems(8) hn_pos by (by100 blast)
+                have hloop_C0': "top1_is_loop_on (C 0) (subspace_topology X TX (C 0)) p
+                    (\<lambda>t. g 0 (cos (2*pi*t), sin (2*pi*t)))"
+                  using hloop_C0 heq hg0_base by (by100 simp)
+                \<comment> \<open>Expand from C(0) to U: C(0) \<subseteq> U, subspace topology transitivity.\<close>
+                have hC0_sub_U: "C 0 \<subseteq> U" unfolding U_def by (by100 blast)
+                have hC0_trans: "subspace_topology U (subspace_topology X TX U) (C 0) =
+                    subspace_topology X TX (C 0)"
+                  using subspace_topology_trans[OF hC0_sub_U] by (by100 simp)
+                have hloop_C0_U: "top1_is_loop_on (C 0) (subspace_topology U (subspace_topology X TX U) (C 0)) p
+                    (\<lambda>t. g 0 (cos (2*pi*t), sin (2*pi*t)))"
+                  using hloop_C0' hC0_trans by (by100 simp)
+                \<comment> \<open>Expand from C(0) to U: loop on subspace C(0) of U → loop on U.\<close>
+                have hTU_loc: "is_topology_on U (subspace_topology X TX U)"
+                  using hTU_here by (by100 blast)
+                have hloop_cont: "top1_continuous_map_on I_set I_top
+                    (C 0) (subspace_topology U (subspace_topology X TX U) (C 0))
+                    (\<lambda>t. g 0 (cos (2*pi*t), sin (2*pi*t)))"
+                  using hloop_C0_U unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+                have hloop_cont_U: "top1_continuous_map_on I_set I_top
+                    U (subspace_topology X TX U)
+                    (\<lambda>t. g 0 (cos (2*pi*t), sin (2*pi*t)))"
+                proof -
+                  have hI_top: "is_topology_on I_set I_top"
+                    using top1_unit_interval_topology_is_topology_on by (by100 blast)
+                  have hTC0: "is_topology_on (C 0) (subspace_topology U (subspace_topology X TX U) (C 0))"
+                    using subspace_topology_is_topology_on[OF hTU_loc hC0_sub_U] by (by100 blast)
+                  show ?thesis
+                    using Theorem_18_2(6)[OF hI_top hTC0 hTU_loc, rule_format, of
+                        "(\<lambda>t. g 0 (cos (2*pi*t), sin (2*pi*t)))"]
+                    hloop_cont hC0_sub_U hC0_trans
+                    by (by5000 blast)
+                qed
+                have hloop0: "g 0 (cos (2 * pi * 0), sin (2 * pi * 0)) = p"
+                  using hg0_base by (by100 simp)
+                have hloop1: "g 0 (cos (2 * pi * 1), sin (2 * pi * 1)) = p"
+                  using hg0_base by (by100 simp)
+                show ?thesis unfolding top1_is_loop_on_def top1_is_path_on_def
+                  using hloop_cont_U hloop0 hloop1 by (by100 blast)
               qed
               from subspace_inclusion_induced_class[OF hTX_here hU_sub hloop_U]
               show ?thesis unfolding hU_out_val loop_class_def by (by100 simp)
