@@ -5196,7 +5196,43 @@ lemma group_iso_on_inverse:
       and hG_grp: "top1_is_group_on G mulG eG invgG"
       and hH_grp: "top1_is_group_on H mulH eH invgH"
   shows "top1_group_iso_on H mulH G mulG (inv_into G f)"
-  sorry
+proof -
+  have hbij: "bij_betw f G H" using hiso unfolding top1_group_iso_on_def by (by100 blast)
+  have hhom: "top1_group_hom_on G mulG H mulH f" using hiso unfolding top1_group_iso_on_def by (by100 blast)
+  have hinj: "inj_on f G" using hbij unfolding bij_betw_def by (by100 blast)
+  have hsurj: "f ` G = H" using hbij unfolding bij_betw_def by (by100 blast)
+  have hbij_inv: "bij_betw (inv_into G f) H G"
+    using bij_betw_inv_into[OF hbij] by (by100 blast)
+  have hhom_inv: "top1_group_hom_on H mulH G mulG (inv_into G f)"
+    unfolding top1_group_hom_on_def
+  proof (intro conjI allI ballI impI)
+    fix x assume "x \<in> H"
+    thus "inv_into G f x \<in> G" using hbij_inv unfolding bij_betw_def by (by100 blast)
+  next
+    fix x y assume "x \<in> H" "y \<in> H"
+    \<comment> \<open>Let a = f^{-1}(x), b = f^{-1}(y). Then f(a)=x, f(b)=y.
+       f(mulG a b) = mulH (f a) (f b) = mulH x y.
+       So f^{-1}(mulH x y) = mulG a b = mulG (f^{-1}(x)) (f^{-1}(y)).\<close>
+    have "inv_into G f x \<in> G" using hbij_inv \<open>x \<in> H\<close> unfolding bij_betw_def by (by100 blast)
+    have "inv_into G f y \<in> G" using hbij_inv \<open>y \<in> H\<close> unfolding bij_betw_def by (by100 blast)
+    have "x \<in> f ` G" using \<open>x \<in> H\<close> hsurj by (by100 simp)
+    have "f (inv_into G f x) = x" using f_inv_into_f[OF \<open>x \<in> f ` G\<close>] by (by100 blast)
+    have "y \<in> f ` G" using \<open>y \<in> H\<close> hsurj by (by100 simp)
+    have "f (inv_into G f y) = y" using f_inv_into_f[OF \<open>y \<in> f ` G\<close>] by (by100 blast)
+    have "mulG (inv_into G f x) (inv_into G f y) \<in> G"
+      using hG_grp \<open>inv_into G f x \<in> G\<close> \<open>inv_into G f y \<in> G\<close>
+      unfolding top1_is_group_on_def by (by100 blast)
+    have "f (mulG (inv_into G f x) (inv_into G f y)) =
+        mulH (f (inv_into G f x)) (f (inv_into G f y))"
+      using hhom \<open>inv_into G f x \<in> G\<close> \<open>inv_into G f y \<in> G\<close>
+      unfolding top1_group_hom_on_def by (by100 blast)
+    hence "f (mulG (inv_into G f x) (inv_into G f y)) = mulH x y"
+      using \<open>f (inv_into G f x) = x\<close> \<open>f (inv_into G f y) = y\<close> by (by100 simp)
+    thus "inv_into G f (mulH x y) = mulG (inv_into G f x) (inv_into G f y)"
+      using inv_into_f_f[OF hinj \<open>mulG (inv_into G f x) (inv_into G f y) \<in> G\<close>] by (by100 simp)
+  qed
+  show ?thesis unfolding top1_group_iso_on_def using hhom_inv hbij_inv by (by100 blast)
+qed
 
 text \<open>Transferring a free product through factor isomorphisms.
   If FP is the free product of (G1, G2) with inclusions \<iota>, and f1: G1 \<cong> H1, f2: G2 \<cong> H2,
