@@ -4671,7 +4671,35 @@ lemma trivial_kernel_injective:
     and hf: "top1_group_hom_on G mulG H mulH f"
     and hker: "top1_group_kernel_on G eH f = {eG}"
   shows "inj_on f G"
-  sorry
+proof (rule inj_onI)
+  fix x y assume hx: "x \<in> G" and hy: "y \<in> G" and heq: "f x = f y"
+  \<comment> \<open>x * y\<inverse> \<in> ker(f) = {eG}.\<close>
+  have hinvy: "invgG y \<in> G" using hG hy unfolding top1_is_group_on_def by (by100 blast)
+  have hxy: "mulG x (invgG y) \<in> G"
+    using hG hx hinvy unfolding top1_is_group_on_def by (by100 blast)
+  have "f (mulG x (invgG y)) = mulH (f x) (f (invgG y))"
+    using hf hx hinvy unfolding top1_group_hom_on_def by (by100 blast)
+  also have "f (invgG y) = invgH (f y)"
+    using hom_preserves_inv[OF hG hH hf hy] by (by100 blast)
+  also have "mulH (f x) (invgH (f y)) = mulH (f x) (invgH (f x))"
+    using heq by (by100 simp)
+  also have "\<dots> = eH"
+  proof -
+    have "f x \<in> H" using hf hx unfolding top1_group_hom_on_def by (by100 blast)
+    thus ?thesis using hH unfolding top1_is_group_on_def by (by100 blast)
+  qed
+  finally have "f (mulG x (invgG y)) = eH" .
+  hence "mulG x (invgG y) \<in> top1_group_kernel_on G eH f"
+    using hxy unfolding top1_group_kernel_on_def by (by100 blast)
+  hence "mulG x (invgG y) = eG" using hker by (by100 blast)
+  \<comment> \<open>x * y\<inverse> = eG \<Rightarrow> x = y.\<close>
+  hence "mulG (mulG x (invgG y)) y = mulG eG y" by (by100 simp)
+  hence "mulG x (mulG (invgG y) y) = y"
+    using hG hx hinvy hy unfolding top1_is_group_on_def by (by5000 metis)
+  hence "mulG x eG = y"
+    using hG hy unfolding top1_is_group_on_def by (by5000 metis)
+  thus "x = y" using hG hx unfolding top1_is_group_on_def by (by5000 metis)
+qed
 
 text \<open>Helper: free abelian group on {..<2} is isomorphic to Z \<times> Z.\<close>
 lemma free_abelian_2_iso_ZZ:
