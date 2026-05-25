@@ -8103,9 +8103,131 @@ lemma R_to_S1_interval_homeomorphism:
       (top1_S1 - {top1_R_to_S1 \<theta>q})
       (subspace_topology top1_S1 top1_S1_topology (top1_S1 - {top1_R_to_S1 \<theta>q}))
       top1_R_to_S1"
-  sorry \<comment> \<open>R\_to\_S1 continuous (Theorem\_53\_1), injective on intervals of length < 1
-     (sin\_cos\_eq\_iff), surjective onto S1-{q0} (S1\_point\_to\_angle + floor shift),
-     open map (covering\_map\_is\_open\_map). Hence homeomorphism.\<close>
+proof -
+  let ?I = "{x::real. \<theta>q < x \<and> x < \<theta>q + 1}"
+  let ?TI = "subspace_topology (UNIV :: real set) top1_open_sets ?I"
+  let ?S = "top1_S1 - {top1_R_to_S1 \<theta>q}"
+  let ?TS = "subspace_topology top1_S1 top1_S1_topology ?S"
+  \<comment> \<open>Topologies.\<close>
+  have hTI: "is_topology_on ?I ?TI"
+    by (rule subspace_topology_is_topology_on[OF top1_open_sets_is_topology_on_UNIV])
+       (by100 blast)
+  have hTS: "is_topology_on ?S ?TS"
+  proof -
+    have "is_topology_on top1_S1 top1_S1_topology"
+      using top1_S1_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
+    thus ?thesis by (rule subspace_topology_is_topology_on) (by100 blast)
+  qed
+  \<comment> \<open>Bijectivity.\<close>
+  have hbij: "bij_betw top1_R_to_S1 ?I ?S"
+    unfolding bij_betw_def
+  proof (intro conjI)
+    \<comment> \<open>Injective: sin\_cos\_eq\_iff (same as hangle\_prop uniqueness argument).\<close>
+    show "inj_on top1_R_to_S1 ?I"
+    proof (rule inj_onI)
+      fix a b assume "a \<in> ?I" "b \<in> ?I" "top1_R_to_S1 a = top1_R_to_S1 b"
+      hence "(cos (2*pi*a), sin (2*pi*a)) = (cos (2*pi*b), sin (2*pi*b))"
+        unfolding top1_R_to_S1_def by (by100 simp)
+      hence "sin (2*pi*a) = sin (2*pi*b) \<and> cos (2*pi*a) = cos (2*pi*b)" by (by100 simp)
+      hence "\<exists>k::int. 2*pi*a = 2*pi*b + 2*pi*of_int k"
+        using iffD1[OF sin_cos_eq_iff] by (by100 blast)
+      then obtain k :: int where "2*pi*a = 2*pi*b + 2*pi*of_int k" by (by100 blast)
+      have "a - b = of_int k"
+      proof -
+        from \<open>2*pi*a = 2*pi*b + 2*pi*of_int k\<close>
+        have "2*pi*a - 2*pi*b = 2*pi*of_int k" by (by100 linarith)
+        hence "2*pi*(a - b) = 2*pi*of_int k"
+          using right_diff_distrib[of "2*pi" a b] by (by100 linarith)
+        moreover have "2*pi \<noteq> (0::real)" using pi_neq_zero by (by100 simp)
+        ultimately show ?thesis by (by100 simp)
+      qed
+      moreover have "\<bar>a - b\<bar> < 1"
+      proof -
+        from \<open>a \<in> ?I\<close> have "\<theta>q < a" "a < \<theta>q + 1" by (by100 simp)+
+        from \<open>b \<in> ?I\<close> have "\<theta>q < b" "b < \<theta>q + 1" by (by100 simp)+
+        have hab1: "a - b < 1" using \<open>a < \<theta>q + 1\<close> \<open>\<theta>q < b\<close> by (by100 linarith)
+        have hab2: "b - a < 1" using \<open>b < \<theta>q + 1\<close> \<open>\<theta>q < a\<close> by (by100 linarith)
+        thus ?thesis using hab1 hab2 by (by100 linarith)
+      qed
+      ultimately have "k = 0" by (by100 linarith)
+      thus "a = b" using \<open>a - b = of_int k\<close> by (by100 simp)
+    qed
+    \<comment> \<open>Surjective onto S1-{q0}: same as \<theta>r existence.\<close>
+    show "top1_R_to_S1 ` ?I = ?S"
+    proof (rule set_eqI, rule iffI)
+      fix s assume "s \<in> top1_R_to_S1 ` ?I"
+      then obtain \<theta> where "s = top1_R_to_S1 \<theta>" "\<theta>q < \<theta>" "\<theta> < \<theta>q + 1" by (by100 blast)
+      have "s \<in> top1_S1" unfolding \<open>s = top1_R_to_S1 \<theta>\<close> top1_R_to_S1_def top1_S1_def
+        by (by100 simp)
+      moreover have "s \<noteq> top1_R_to_S1 \<theta>q"
+      proof
+        assume "s = top1_R_to_S1 \<theta>q"
+        hence "top1_R_to_S1 \<theta> = top1_R_to_S1 \<theta>q" using \<open>s = top1_R_to_S1 \<theta>\<close> by (by100 simp)
+        hence "\<theta> = \<theta>q"
+        proof -
+          assume heq: "top1_R_to_S1 \<theta> = top1_R_to_S1 \<theta>q"
+          hence "(cos (2*pi*\<theta>), sin (2*pi*\<theta>)) = (cos (2*pi*\<theta>q), sin (2*pi*\<theta>q))"
+            unfolding top1_R_to_S1_def by (by100 simp)
+          hence "sin (2*pi*\<theta>) = sin (2*pi*\<theta>q) \<and> cos (2*pi*\<theta>) = cos (2*pi*\<theta>q)" by (by100 simp)
+          hence "\<exists>k::int. 2*pi*\<theta> = 2*pi*\<theta>q + 2*pi*of_int k"
+            using iffD1[OF sin_cos_eq_iff] by (by100 blast)
+          then obtain k :: int where "2*pi*\<theta> = 2*pi*\<theta>q + 2*pi*of_int k" by (by100 blast)
+          have "\<theta> - \<theta>q = of_int k"
+          proof -
+            from \<open>2*pi*\<theta> = 2*pi*\<theta>q + 2*pi*of_int k\<close>
+            have "2*pi*\<theta> - 2*pi*\<theta>q = 2*pi*of_int k" by (by100 linarith)
+            hence "2*pi*(\<theta> - \<theta>q) = 2*pi*of_int k"
+              using right_diff_distrib[of "2*pi" \<theta> \<theta>q] by (by100 linarith)
+            moreover have "2*pi \<noteq> (0::real)" using pi_neq_zero by (by100 simp)
+            ultimately show ?thesis by (by100 simp)
+          qed
+          moreover have "\<bar>\<theta> - \<theta>q\<bar> < 1"
+            using \<open>\<theta>q < \<theta>\<close> \<open>\<theta> < \<theta>q + 1\<close> by (by100 linarith)
+          ultimately have "k = 0" by (by100 linarith)
+          thus "\<theta> = \<theta>q" using \<open>\<theta> - \<theta>q = of_int k\<close> by (by100 simp)
+        qed
+        thus False using \<open>\<theta>q < \<theta>\<close> by (by100 linarith)
+      qed
+      ultimately show "s \<in> ?S" by (by100 blast)
+    next
+      fix s assume "s \<in> ?S"
+      hence "s \<in> top1_S1" "s \<noteq> top1_R_to_S1 \<theta>q" by (by100 blast)+
+      from S1_point_to_angle[OF \<open>s \<in> top1_S1\<close>] obtain \<theta>' where "top1_R_to_S1 \<theta>' = s" by (by100 blast)
+      define k where "k = \<lfloor>\<theta>' - \<theta>q\<rfloor>"
+      define \<theta>_s where "\<theta>_s = \<theta>' - of_int k"
+      have "top1_R_to_S1 \<theta>_s = s"
+      proof -
+        have "\<theta>_s = \<theta>' + of_int (- k)" unfolding \<theta>_s_def by (by100 simp)
+        hence "top1_R_to_S1 \<theta>_s = top1_R_to_S1 (\<theta>' + of_int (- k))" by (by100 simp)
+        also have "\<dots> = top1_R_to_S1 \<theta>'" by (rule top1_R_to_S1_int_shift)
+        finally show ?thesis using \<open>top1_R_to_S1 \<theta>' = s\<close> by (by100 simp)
+      qed
+      have "\<theta>q \<le> \<theta>_s" unfolding \<theta>_s_def k_def using floor_le_iff by (by100 linarith)
+      have "\<theta>_s < \<theta>q + 1" unfolding \<theta>_s_def k_def using floor_less_iff by (by100 linarith)
+      have "\<theta>_s \<noteq> \<theta>q"
+      proof
+        assume "\<theta>_s = \<theta>q"
+        hence "top1_R_to_S1 \<theta>_s = top1_R_to_S1 \<theta>q" by (by100 simp)
+        hence "s = top1_R_to_S1 \<theta>q" using \<open>top1_R_to_S1 \<theta>_s = s\<close> by (by100 simp)
+        thus False using \<open>s \<noteq> top1_R_to_S1 \<theta>q\<close> by (by100 simp)
+      qed
+      hence "\<theta>q < \<theta>_s" using \<open>\<theta>q \<le> \<theta>_s\<close> by (by100 linarith)
+      hence "\<theta>_s \<in> ?I" using \<open>\<theta>_s < \<theta>q + 1\<close> by (by100 simp)
+      thus "s \<in> top1_R_to_S1 ` ?I" using \<open>top1_R_to_S1 \<theta>_s = s\<close> by (by100 blast)
+    qed
+  qed
+  \<comment> \<open>Forward continuity.\<close>
+  have hcont: "top1_continuous_map_on ?I ?TI ?S ?TS top1_R_to_S1"
+    sorry \<comment> \<open>R\_to\_S1 continuous on UNIV (Theorem\_53\_1). Restrict domain to ?I
+       and codomain to ?S via Theorem\_18\_2(4,5).\<close>
+  \<comment> \<open>Inverse continuity.\<close>
+  have hcont_inv: "top1_continuous_map_on ?S ?TS ?I ?TI (inv_into ?I top1_R_to_S1)"
+    sorry \<comment> \<open>From covering\_map\_is\_open\_map: R\_to\_S1 is open.
+       Open + continuous + bijective \<Rightarrow> inverse continuous.
+       Or: direct from covering map local homeomorphism.\<close>
+  show ?thesis unfolding top1_homeomorphism_on_def
+    using hTI hTS hbij hcont hcont_inv by (by100 blast)
+qed
 
 text \<open>Deformation retraction of circle minus point to any remaining point.
   Munkres 71.1: "W\_i is homeomorphic to an open interval, so it has
