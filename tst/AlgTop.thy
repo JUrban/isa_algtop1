@@ -4693,77 +4693,26 @@ theorem Theorem_73_1_torus_presentation:
            (UNIV::(int \<times> int) set)
            (\<lambda>(a1, a2) (b1, b2). (a1 + b1, a2 + b2))"
 proof -
-  \<comment> \<open>Munkres 73.1: The torus is the quotient of the unit square by aba\<inverse>b\<inverse>.
-     By Theorem 72.1 (attaching 2-cell to wedge of two circles), \<pi>_1(T) has presentation
-     \<langle>a, b | aba\<inverse>b\<inverse>\<rangle>. The relator aba\<inverse>b\<inverse>=1 means ab=ba, so the group is abelian.
-     Hence \<pi>_1(T) \<cong> Z \<times> Z (free abelian group on 2 generators).\<close>
-  \<comment> \<open>Step 1: The torus is the quotient of the square by scheme aba\<inverse>b\<inverse>. Extract the
-     attaching data: 1-skeleton A (wedge of 2 circles), attaching map h: B² \<rightarrow> T.\<close>
-  obtain A :: "'a set" and h :: "real \<times> real \<Rightarrow> 'a"
-    where hA_sub: "closedin_on T_torus TT A"
-      and hA_wedge: "top1_is_wedge_of_circles_on A (subspace_topology T_torus TT A) {0::nat, 1} x0"
-      and hh_cont: "top1_continuous_map_on top1_B2 top1_B2_topology T_torus TT h"
-      and hh_S1_A: "h ` top1_S1 \<subseteq> A"
-    using torus_scheme_CW_data[OF assms] by (by100 blast)
-  \<comment> \<open>Step 2: By Theorem 72.1, \<pi>_1(T) \<cong> \<pi>_1(A)/\<langle>\<langle>k_*([p])\<rangle>\<rangle> where k = h|_{S¹}.
-     \<pi>_1(A) is free on {a, b}. The relator is aba\<inverse>b\<inverse>.\<close>
-  have hA_free: "\<exists>(F::int set) mulF eF invgF (\<iota>F::nat \<Rightarrow> int).
-      top1_is_free_group_full_on F mulF eF invgF \<iota>F {0::nat, 1}
-      \<and> top1_groups_isomorphic_on F mulF
-          (top1_fundamental_group_carrier A (subspace_topology T_torus TT A) x0)
-          (top1_fundamental_group_mul A (subspace_topology T_torus TT A) x0)"
-  proof -
-    have hset_eq: "{0::nat, 1} = {..<(2::nat)}" by (by100 auto)
-    have hwedge2: "top1_is_wedge_of_circles_on A (subspace_topology T_torus TT A) {..<(2::nat)} x0"
-      using hA_wedge hset_eq by (by100 simp)
-    from Theorem_71_1_wedge_of_circles_finite[OF hwedge2]
-    obtain G0 :: "int set" and mul0 e0 invg0 and \<iota>0 :: "nat \<Rightarrow> int" where
-        hG0f: "top1_is_free_group_full_on G0 mul0 e0 invg0 \<iota>0 {..<2::nat}" and
-        hG0i: "top1_groups_isomorphic_on G0 mul0
-            (top1_fundamental_group_carrier A (subspace_topology T_torus TT A) x0)
-            (top1_fundamental_group_mul A (subspace_topology T_torus TT A) x0)"
-      by (elim exE conjE) (rule that, assumption+)
-    have "top1_is_free_group_full_on G0 mul0 e0 invg0 \<iota>0 {0::nat, 1}"
-      using hG0f hset_eq by (by100 simp)
-    thus ?thesis using hG0i by (by100 blast)
-  qed
-  \<comment> \<open>Step 3: The quotient F({a,b})/\<langle>\<langle>aba\<inverse>b\<inverse>\<rangle>\<rangle>: since aba\<inverse>b\<inverse>=1 means ab=ba,
-     the quotient is the free abelian group on {a,b}, which is Z \<times> Z.\<close>
-  \<comment> \<open>Step 3a: Need additional CW data: h|_{int B²} homeomorphism onto T-A, h(1,0) = x0.\<close>
-  have hCW_full: "\<exists>h'. top1_continuous_map_on top1_B2 top1_B2_topology T_torus TT h'
-      \<and> h' ` top1_S1 \<subseteq> A
-      \<and> top1_homeomorphism_on (top1_B2 - top1_S1)
-            (subspace_topology top1_B2 top1_B2_topology (top1_B2 - top1_S1))
-            (T_torus - A) (subspace_topology T_torus TT (T_torus - A)) h'
-      \<and> h' (1, 0) = x0"
-    sorry \<comment> \<open>Needs scheme\_quotient\_CW\_data with homeomorphism condition + basepoint.\<close>
-  \<comment> \<open>Step 3b: Apply Theorem 72.1 to get \<pi>_1(T) \<cong> \<pi>_1(A)/\<langle>\<langle>relator\<rangle>\<rangle>.\<close>
-  have hThm721: "\<exists>\<iota>. top1_groups_isomorphic_on
-      (top1_fundamental_group_carrier T_torus TT x0)
-      (top1_fundamental_group_mul T_torus TT x0)
-      (top1_quotient_group_carrier_on
-         (top1_fundamental_group_carrier A (subspace_topology T_torus TT A) x0)
-         (top1_fundamental_group_mul A (subspace_topology T_torus TT A) x0)
-         (top1_normal_subgroup_generated_on
-            (top1_fundamental_group_carrier A (subspace_topology T_torus TT A) x0)
-            (top1_fundamental_group_mul A (subspace_topology T_torus TT A) x0)
-            (top1_fundamental_group_id A (subspace_topology T_torus TT A) x0)
-            (top1_fundamental_group_invg A (subspace_topology T_torus TT A) x0)
-            {top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1, 0)
-               A (subspace_topology T_torus TT A) x0 \<iota>
-               {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0)
-                     (\<lambda>s. (cos (2 * pi * s), sin (2 * pi * s))) g}}))
-      (top1_quotient_group_mul_on
-         (top1_fundamental_group_mul A (subspace_topology T_torus TT A) x0))"
-    sorry \<comment> \<open>Apply Theorem\_72\_1 with the CW data.\<close>
-  \<comment> \<open>Step 3c: The relator is aba\<inverse>b\<inverse> = [a,b]. Quotient by [a,b] = abelianization.
-     F({a,b})/[F,F] = free abelian on {a,b} = Z \<times> Z (Theorem 69.4 + 67.8).\<close>
-  have hquotient_ZZ: "top1_groups_isomorphic_on
-      (top1_fundamental_group_carrier T_torus TT x0)
-      (top1_fundamental_group_mul T_torus TT x0)
-      (UNIV::(int \<times> int) set) (\<lambda>(a1,a2) (b1,b2). (a1+b1, a2+b2))"
-    sorry \<comment> \<open>Compose: \<pi>_1(T) \<cong> \<pi>_1(A)/\<langle>\<langle>[a,b]\<rangle>\<rangle> \<cong> Abel(F(a,b)) \<cong> Z\<times>Z.\<close>
-  show ?thesis by (rule hquotient_ZZ)
+  \<comment> \<open>Route via Theorem\_75\_3: H\_1(T) free abelian on 2 generators.
+     Since torus has commutator relator, \<pi>\_1(T) is abelian, so \<pi>\_1 = H\_1 = Z\<times>Z.\<close>
+  \<comment> \<open>Step 1: T = 1-fold torus.\<close>
+  have h1fold: "top1_is_n_fold_torus_on T_torus TT 1"
+    using assms(1) unfolding top1_is_torus_on_def by (by100 blast)
+  \<comment> \<open>Step 2: Theorem\_75\_3 gives H\_1(T) free abelian on {..<2}.\<close>
+  from Theorem_75_3_H1_n_torus[OF h1fold assms(2)]
+  obtain H mulH eH invgH iota_S phi where
+    habel: "top1_is_abelianization_of H mulH eH invgH
+        (top1_fundamental_group_carrier T_torus TT x0)
+        (top1_fundamental_group_mul T_torus TT x0)
+        (top1_fundamental_group_id T_torus TT x0)
+        (top1_fundamental_group_invg T_torus TT x0) phi" and
+    hfree_ab: "top1_is_free_abelian_group_full_on H mulH eH invgH iota_S ({..<2*1}::nat set)"
+    sorry
+  \<comment> \<open>Step 3: The torus \<pi>\_1 is abelian (commutator relator aba\<inverse>b\<inverse>=1 means ab=ba).
+     Therefore the abelianization map phi is an isomorphism.
+     Step 4: H\_1(T) free abelian on {0,1} \<cong> Z \<times> Z.
+     Step 5: Compose: \<pi>\_1(T) \<cong> H\_1(T) \<cong> Z \<times> Z.\<close>
+  show ?thesis sorry
 qed
 
 (** from \<S>73 Theorem 73.4: the n-fold dunce cap has fundamental group Z/nZ. **)
