@@ -5190,6 +5190,93 @@ proof -
   show ?thesis sorry \<comment> \<open>Compose the three isomorphisms.\<close>
 qed
 
+text \<open>A hom between free groups on the same index set that maps generators to generators
+  is an isomorphism. Standard free group fact from the universal property.\<close>
+lemma free_group_hom_generators_iso:
+  assumes hG: "top1_is_free_group_full_on G mulG eG invgG iotaG S"
+      and hH: "top1_is_free_group_full_on H mulH eH invgH iotaH S"
+      and hf: "top1_group_hom_on G mulG H mulH f"
+      and hgen: "\<forall>s \<in> S. f (iotaG s) = iotaH s"
+  shows "bij_betw f G H"
+proof -
+  \<comment> \<open>Construct inverse: \<Psi>: H \<rightarrow> G with \<Psi>(iotaH(s)) = iotaG(s).\<close>
+  have hG_grp: "top1_is_group_on G mulG eG invgG"
+    using hG unfolding top1_is_free_group_full_on_def by (by100 blast)
+  have hH_grp: "top1_is_group_on H mulH eH invgH"
+    using hH unfolding top1_is_free_group_full_on_def by (by100 blast)
+  have hiotaG_in: "\<forall>s\<in>S. iotaG s \<in> G"
+    using hG unfolding top1_is_free_group_full_on_def by (by100 blast)
+  have hiotaH_in: "\<forall>s\<in>S. iotaH s \<in> H"
+    using hH unfolding top1_is_free_group_full_on_def by (by100 blast)
+  have hG_gen: "G = top1_subgroup_generated_on G mulG eG invgG (iotaG ` S)"
+    using hG unfolding top1_is_free_group_full_on_def by (by100 blast)
+  have hH_gen: "H = top1_subgroup_generated_on H mulH eH invgH (iotaH ` S)"
+    using hH unfolding top1_is_free_group_full_on_def by (by100 blast)
+  from free_group_hom_exists[OF hH hG_grp hiotaG_in]
+  obtain \<Psi> where h\<Psi>_hom: "top1_group_hom_on H mulH G mulG \<Psi>"
+    and h\<Psi>_gen: "\<forall>s\<in>S. \<Psi> (iotaH s) = iotaG s"
+    by (by100 blast)
+  \<comment> \<open>\<Psi> \<circ> f = id on G: (\<Psi>\<circ>f)(iotaG(s)) = \<Psi>(iotaH(s)) = iotaG(s) = id(iotaG(s)).
+     By free\_group\_hom\_unique, \<Psi>\<circ>f = id on all of G.\<close>
+  \<comment> \<open>\<Psi> \<circ> f is a hom G \<rightarrow> G. id is a hom G \<rightarrow> G. Both map iotaG(s) to iotaG(s).\<close>
+  have hPsif_hom: "top1_group_hom_on G mulG G mulG (\<lambda>x. \<Psi> (f x))"
+    using group_hom_comp[OF hf h\<Psi>_hom] unfolding comp_def by (by100 blast)
+  have hid_hom: "top1_group_hom_on G mulG G mulG (\<lambda>x. x)"
+    using group_hom_id[OF hG_grp] unfolding id_def by (by100 blast)
+  have hPsif_gen: "\<forall>s\<in>S. \<Psi> (f (iotaG s)) = iotaG s"
+  proof
+    fix s assume "s \<in> S"
+    have "f (iotaG s) = iotaH s" using hgen \<open>s \<in> S\<close> by (by100 blast)
+    thus "\<Psi> (f (iotaG s)) = iotaG s" using h\<Psi>_gen \<open>s \<in> S\<close> by (by100 simp)
+  qed
+  have hcomp1: "\<forall>x\<in>G. \<Psi> (f x) = x"
+    using free_group_hom_unique[OF hG_grp hG_grp hG_gen hiotaG_in hPsif_hom hid_hom]
+          hPsif_gen by (by100 blast)
+  \<comment> \<open>Similarly: f \<circ> \<Psi> = id on H.\<close>
+  have hfPsi_hom: "top1_group_hom_on H mulH H mulH (\<lambda>y. f (\<Psi> y))"
+    using group_hom_comp[OF h\<Psi>_hom hf] unfolding comp_def by (by100 blast)
+  have hidH_hom: "top1_group_hom_on H mulH H mulH (\<lambda>y. y)"
+    using group_hom_id[OF hH_grp] unfolding id_def by (by100 blast)
+  have hfPsi_gen: "\<forall>s\<in>S. f (\<Psi> (iotaH s)) = iotaH s"
+  proof
+    fix s assume "s \<in> S"
+    have "\<Psi> (iotaH s) = iotaG s" using h\<Psi>_gen \<open>s \<in> S\<close> by (by100 blast)
+    thus "f (\<Psi> (iotaH s)) = iotaH s" using hgen \<open>s \<in> S\<close> by (by100 simp)
+  qed
+  have hcomp2: "\<forall>y\<in>H. f (\<Psi> y) = y"
+    using free_group_hom_unique[OF hH_grp hH_grp hH_gen hiotaH_in hfPsi_hom hidH_hom]
+          hfPsi_gen by (by100 blast)
+  \<comment> \<open>From left/right inverse: f bijective.\<close>
+  show ?thesis unfolding bij_betw_def
+  proof (intro conjI)
+    \<comment> \<open>Injective: if f(x) = f(y) then x = \<Psi>(f(x)) = \<Psi>(f(y)) = y.\<close>
+    show "inj_on f G"
+    proof (rule inj_onI)
+      fix x y assume "x \<in> G" "y \<in> G" "f x = f y"
+      have "x = \<Psi> (f x)" using hcomp1 \<open>x \<in> G\<close> by (by100 simp)
+      also have "\<dots> = \<Psi> (f y)" using \<open>f x = f y\<close> by (by100 simp)
+      also have "\<dots> = y" using hcomp1 \<open>y \<in> G\<close> by (by100 simp)
+      finally show "x = y" .
+    qed
+    \<comment> \<open>Surjective: for y \<in> H, \<Psi>(y) \<in> G and f(\<Psi>(y)) = y.\<close>
+    show "f ` G = H"
+    proof (rule set_eqI, rule iffI)
+      fix y assume "y \<in> f ` G"
+      then obtain x where "x \<in> G" "y = f x" by (by100 blast)
+      have "\<forall>x\<in>G. f x \<in> H" using hf unfolding top1_group_hom_on_def by (by100 blast)
+      thus "y \<in> H" using \<open>x \<in> G\<close> \<open>y = f x\<close> by (by100 blast)
+    next
+      fix y assume "y \<in> H"
+      have h\<Psi>_maps: "\<forall>y\<in>H. \<Psi> y \<in> G"
+        using h\<Psi>_hom unfolding top1_group_hom_on_def by (by100 blast)
+      have "\<Psi> y \<in> G" using h\<Psi>_maps \<open>y \<in> H\<close> by (by100 blast)
+      moreover have "f (\<Psi> y) = y" using hcomp2 \<open>y \<in> H\<close> by (by100 blast)
+      ultimately have "f (\<Psi> y) \<in> f ` G" by (by100 blast)
+      thus "y \<in> f ` G" using \<open>f (\<Psi> y) = y\<close> by (by100 simp)
+    qed
+  qed
+qed
+
 text \<open>Munkres Theorem 71.1 (witnessed version with chosen loop generators).
   For a finite wedge of circles with explicit circle data (homeomorphisms, basepoints),
   \<pi>_1 is free and the chosen circle loops are the free generators.
