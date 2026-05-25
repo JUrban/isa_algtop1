@@ -6000,18 +6000,6 @@ proof (rule image_subsetI)
   qed
 qed
 
-text \<open>A surjective hom from a free group to a free group of the same finite rank
-  is an isomorphism (hence bijective). This follows from rank invariance:
-  if ker \<noteq> {e}, the quotient has strictly smaller rank.\<close>
-lemma free_group_surj_hom_same_rank_bij:
-  assumes hG: "top1_is_free_group_full_on G mulG eG invgG iotaG S"
-      and hH: "top1_is_free_group_full_on H mulH eH invgH iotaH S"
-      and hf: "top1_group_hom_on G mulG H mulH f"
-      and hsurj: "f ` G = H"
-      and hfin: "finite S"
-  shows "bij_betw f G H"
-  sorry
-
 text \<open>Helper: inclusion-induced images of generators are in the hom image,
   when the generators map to specific elements via gen corr + inclusion.\<close>
 lemma inclusion_gen_images_in_hom_image:
