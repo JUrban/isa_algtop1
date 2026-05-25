@@ -7569,23 +7569,22 @@ lemma finite_wedge_pi1_free_with_chosen_loops:
               (top1_fundamental_group_carrier X TX p) (top1_fundamental_group_mul X TX p)
               (top1_fundamental_group_id X TX p) (top1_fundamental_group_invg X TX p)
               \<iota>X_raw ({0::nat} \<union> {1..<n})"
-            sorry
+            by (by100 blast)
           have hpi1X_raw': "top1_is_free_group_full_on
               (top1_fundamental_group_carrier X TX p) (top1_fundamental_group_mul X TX p)
               (top1_fundamental_group_id X TX p) (top1_fundamental_group_invg X TX p)
               \<iota>X_raw {..<n}"
-            using hpi1X_raw hS_union sorry
-          \<comment> \<open>Still need: generator tracking \<iota>X\_raw(j) = loop\_class(j).
-             This requires understanding how svk\_free\_product\_free constructs \<iota>X\_raw.\<close>
-          show ?thesis sorry \<comment> \<open>THE FINAL SORRY of the gen corr chain.
-             Proof outline: (1) extract FP\_UV from hThm692\_result,
-             (2) SvK: \<pi>\_1(X) \<cong> FP\_UV (Corollary\_70\_3\_param + hFP\_UV\_prod),
-             (3) free\_group\_invariant\_under\_iso: \<pi>\_1(X) free on {..<n},
-             (4) gen tracking: iotaSUV(j) maps to loop\_class(j) via SvK iso,
-             (5) pack ∃ with gens = loop\_class.
-             The extraction from the 6-variable existential hThm692\_result is the
-             main formal obstacle (Isabelle's blast can't handle it in 5s).
-             SOLUTION: use a dedicated extraction lemma or process\_theories.\<close>
+            using hpi1X_raw hS_union by (by100 simp)
+          \<comment> \<open>Generator tracking: \<iota>X\_raw(j) may not equal loop\_class(j).
+             svk\_free\_product\_free gives abstract generators from free\_group\_invariant\_under\_iso.
+             The gen tracking requires the specific SvK construction.
+             However, π₁(X) IS free on {..<n}, so free\_group\_hom\_generators\_iso applies
+             IF we can show loop\_class(j) are also free generators.
+             Since both \<iota>X\_raw and loop\_class are free bases of the same group,
+             any map sending one to the other is an iso.\<close>
+          show ?thesis sorry \<comment> \<open>Need: ∃ι. free π₁(X) ι {..<n} ∧ ∀j. ι(j) = loop\_class(j).
+             Have: hpi1X\_raw' (π₁(X) free with abstract generators).
+             Still need gen tracking through SvK composition.\<close>
         qed
         have h\<Phi>_bij: "bij_betw \<Phi> G (top1_fundamental_group_carrier X TX p)"
         proof -
