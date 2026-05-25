@@ -9374,9 +9374,17 @@ lemma finite_wedge_pi1_free_with_chosen_loops:
                 ultimately have "top1_is_loop_on (C k) (subspace_topology X TX (C k)) p ?loop_k"
                   by (by100 simp)
                 \<comment> \<open>C(k) \<subseteq> X', so loop in C(k) is loop in X' (subspace topology).\<close>
+                \<comment> \<open>Transfer loop from C(k) to X': expand codomain.
+                   f continuous I \<rightarrow> C(k) in subspace X TX C(k). C(k) \<subseteq> X'.
+                   subspace X TX C(k) = subspace X' (subspace X TX X') C(k) [transitivity].
+                   By Theorem\_18\_2(6): f continuous I \<rightarrow> X' in subspace X TX X'.\<close>
+                moreover have "C k \<subseteq> X'" unfolding X'_def using hk by (by100 force)
+                moreover have "C k \<subseteq> X'" unfolding X'_def using hk by (by100 force)
+                ultimately have "top1_is_loop_on (C k) (subspace_topology X TX (C k)) p ?loop_k"
+                  by (by100 simp)
                 thus ?thesis
-                  sorry \<comment> \<open>Loop in C(k) with subspace X TX (C k) is loop in X' with subspace X TX X'.
-                     Need: continuous map restriction (loop in subspace of subspace).\<close>
+                  sorry \<comment> \<open>Transfer loop from C(k) (subspace X TX C(k)) to X' (subspace X TX X').
+                     C(k) \<subseteq> X'. Expand codomain via Theorem\_18\_2(6) + subspace\_topology\_trans.\<close>
               qed
               have hloop_k': "top1_is_loop_on X' (subspace_topology V (subspace_topology X TX V) X') p ?loop_k"
                 using hloop_k hX'_trans by (by100 simp)
