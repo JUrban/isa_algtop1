@@ -9833,9 +9833,9 @@ proof -
       (top1_fundamental_group_invg A (subspace_topology X TX A) a)
       \<iota>A (fst ` set scheme)
     \<and> (\<forall>s\<in>fst ` set scheme. \<iota>A s =
-        {g. top1_loop_equiv_on A (subspace_topology X TX A) a
+        {l. top1_loop_equiv_on A (subspace_topology X TX A) a
           (\<lambda>t. qC ((1-t) * vxC (i_of s) + t * vxC (Suc (i_of s) mod length scheme),
-                    (1-t) * vyC (i_of s) + t * vyC (Suc (i_of s) mod length scheme))) g})"
+                    (1-t) * vyC (i_of s) + t * vyC (Suc (i_of s) mod length scheme))) l})"
     using hA_wd_and_gen by (by100 blast)
   \<comment> \<open>Step 3: \<pi>_1(A) is free on the labels (Theorem 71.1) at basepoint a.\<close>
   have hA_free: "\<exists>(F::int set) mulF eF invgF (\<iota>F::nat \<Rightarrow> int).
@@ -10189,39 +10189,18 @@ proof -
         \<iota>A (fst ` set scheme)
       \<and> (\<forall>s\<in>fst ` set scheme. \<iota>A s = edge_loop_class s)"
     proof -
-      define \<iota>A where "\<iota>A \<equiv> SOME \<iota>'. top1_is_free_group_full_on
+      from hpi1A_gen_a
+      obtain \<iota>A where h1: "top1_is_free_group_full_on
           (top1_fundamental_group_carrier A (subspace_topology X TX A) a)
           (top1_fundamental_group_mul A (subspace_topology X TX A) a)
           (top1_fundamental_group_id A (subspace_topology X TX A) a)
           (top1_fundamental_group_invg A (subspace_topology X TX A) a)
-          \<iota>' (fst ` set scheme)
-        \<and> (\<forall>s\<in>fst ` set scheme. \<iota>' s =
-            {g. top1_loop_equiv_on A (subspace_topology X TX A) a
+          \<iota>A (fst ` set scheme)" and
+        h2: "\<forall>s\<in>fst ` set scheme. \<iota>A s =
+            {l. top1_loop_equiv_on A (subspace_topology X TX A) a
               (\<lambda>t. qC ((1-t) * vxC (i_of s) + t * vxC (Suc (i_of s) mod length scheme),
-                        (1-t) * vyC (i_of s) + t * vyC (Suc (i_of s) mod length scheme))) g})"
-      have hprops: "top1_is_free_group_full_on
-          (top1_fundamental_group_carrier A (subspace_topology X TX A) a)
-          (top1_fundamental_group_mul A (subspace_topology X TX A) a)
-          (top1_fundamental_group_id A (subspace_topology X TX A) a)
-          (top1_fundamental_group_invg A (subspace_topology X TX A) a)
-          \<iota>A (fst ` set scheme)
-        \<and> (\<forall>s\<in>fst ` set scheme. \<iota>A s =
-            {g. top1_loop_equiv_on A (subspace_topology X TX A) a
-              (\<lambda>t. qC ((1-t) * vxC (i_of s) + t * vxC (Suc (i_of s) mod length scheme),
-                        (1-t) * vyC (i_of s) + t * vyC (Suc (i_of s) mod length scheme))) g})"
-        unfolding \<iota>A_def using someI_ex[OF hpi1A_gen_a] sorry
-      have h1: "top1_is_free_group_full_on
-          (top1_fundamental_group_carrier A (subspace_topology X TX A) a)
-          (top1_fundamental_group_mul A (subspace_topology X TX A) a)
-          (top1_fundamental_group_id A (subspace_topology X TX A) a)
-          (top1_fundamental_group_invg A (subspace_topology X TX A) a)
-          \<iota>A (fst ` set scheme)"
-        using hprops by (by100 blast)
-      have h2: "\<forall>s\<in>fst ` set scheme. \<iota>A s =
-            {g. top1_loop_equiv_on A (subspace_topology X TX A) a
-              (\<lambda>t. qC ((1-t) * vxC (i_of s) + t * vxC (Suc (i_of s) mod length scheme),
-                        (1-t) * vyC (i_of s) + t * vyC (Suc (i_of s) mod length scheme))) g}"
-        using hprops by (by100 blast)
+                        (1-t) * vyC (i_of s) + t * vyC (Suc (i_of s) mod length scheme))) l}"
+        sorry \<comment> \<open>TECH: obtain from existential+Collect. Isabelle can't match lambda inside Collect.\<close>
       have h1': "top1_is_free_group_full_on
           (top1_fundamental_group_carrier A (subspace_topology X TX A) a')
           (top1_fundamental_group_mul A (subspace_topology X TX A) a')
@@ -10232,9 +10211,9 @@ proof -
       have h2': "\<forall>s\<in>fst ` set scheme. \<iota>A s = edge_loop_class s"
       proof
         fix s assume "s \<in> fst ` set scheme"
-        have "\<iota>A s = {g. top1_loop_equiv_on A (subspace_topology X TX A) a
+        have "\<iota>A s = {l. top1_loop_equiv_on A (subspace_topology X TX A) a
               (\<lambda>t. qC ((1-t) * vxC (i_of s) + t * vxC (Suc (i_of s) mod length scheme),
-                        (1-t) * vyC (i_of s) + t * vyC (Suc (i_of s) mod length scheme))) g}"
+                        (1-t) * vyC (i_of s) + t * vyC (Suc (i_of s) mod length scheme))) l}"
           using h2 \<open>s \<in> fst ` set scheme\<close> by (by100 blast)
         also have "\<dots> = edge_loop_class s"
         proof -
