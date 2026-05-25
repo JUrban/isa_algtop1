@@ -7493,23 +7493,116 @@ proof (induction "card F" arbitrary: F X TX rule: less_induct)
               have "is_topology_on_strict I_set I_top"
               proof -
                 have "is_topology_on_strict (UNIV :: real set) top1_open_sets"
-                  sorry \<comment> \<open>Standard topology on R is strict.\<close>
+                  unfolding is_topology_on_strict_def
+                  using top1_open_sets_is_topology_on_UNIV by (by100 blast)
                 have "I_set \<subseteq> (UNIV :: real set)" by (by100 blast)
                 thus ?thesis unfolding top1_unit_interval_topology_def
                   by (rule subspace_topology_is_strict[OF \<open>is_topology_on_strict UNIV top1_open_sets\<close>])
               qed
               thus ?thesis unfolding is_topology_on_strict_def by (by100 blast)
             qed
+            \<comment> \<open>Subspace I I\_top I = I\_top (I\_top strict).\<close>
+            have hI_self: "subspace_topology I_set I_top I_set = I_top"
+            proof (rule subspace_topology_self)
+              show "\<forall>U\<in>I_top. U \<subseteq> I_set" using hI_strict by (by100 blast)
+            qed
+            \<comment> \<open>Theorem\_16\_3: subspace(X\<times>I, product TX I\_top, A\<times>I) = product(subspace TX A, I\_top).\<close>
+            have hTI: "is_topology_on I_set I_top"
+              by (rule top1_unit_interval_topology_is_topology_on)
+            have hA_sub_eq: "subspace_topology (X \<times> I_set) ?TXI (A \<times> I_set)
+                = product_topology_on (subspace_topology X TX A) I_top"
+            proof -
+              have "product_topology_on (subspace_topology X TX A) (subspace_topology I_set I_top I_set)
+                  = subspace_topology (X \<times> I_set) ?TXI (A \<times> I_set)"
+                by (rule Theorem_16_3[OF hTX_is hTI])
+              thus ?thesis using hI_self by (by100 simp)
+            qed
+            \<comment> \<open>H = HA on A\<times>I.\<close>
+            have hH_eq_HA: "\<forall>p\<in>A \<times> I_set. HA p = H p"
+              unfolding H_def by (by100 auto)
+            \<comment> \<open>HA continuous product(subspace TX A, I\_top) \<rightarrow> A (given).\<close>
+            have hHA_cont: "top1_continuous_map_on (A \<times> I_set)
+                (product_topology_on (subspace_topology X TX A) I_top)
+                A (subspace_topology X TX A) HA"
+              using hHA by (by100 blast)
+            \<comment> \<open>Expand codomain from A to X: Theorem\_18\_2(6).\<close>
+            have hHA_cont_X: "top1_continuous_map_on (A \<times> I_set)
+                (product_topology_on (subspace_topology X TX A) I_top) X TX HA"
+            proof -
+              have hTAI: "is_topology_on (A \<times> I_set) (product_topology_on (subspace_topology X TX A) I_top)"
+                by (rule product_topology_on_is_topology_on[OF
+                    subspace_topology_is_topology_on[OF hTX_is hA_sub] hTI])
+              have hTA: "is_topology_on A (subspace_topology X TX A)"
+                by (rule subspace_topology_is_topology_on[OF hTX_is hA_sub])
+              have "subspace_topology X TX A = subspace_topology X TX A" ..
+              show ?thesis
+                using Theorem_18_2(6)[OF hTAI hTA hTX_is, rule_format]
+                      hHA_cont hA_sub by (by100 blast)
+            qed
+            \<comment> \<open>Transfer: H = HA on A\<times>I, HA continuous \<Rightarrow> H continuous.\<close>
             have hH_on_A: "top1_continuous_map_on (A \<times> I_set)
                 (subspace_topology (X \<times> I_set) ?TXI (A \<times> I_set)) X TX H"
-              sorry \<comment> \<open>Step 1: subspace(X\<times>I, product TX I\_top, A\<times>I) = product(subspace X TX A, I\_top)
-                 by Theorem\_16\_3 + hI\_strict (subspace I I\_top I = I\_top).
-                 Step 2: HA continuous from product(subspace X TX A, I\_top) to A.
-                 Step 3: Expand codomain A \<rightarrow> X.
-                 Step 4: H = HA on A\<times>I. Transfer by agree.\<close>
+            proof -
+              have "top1_continuous_map_on (A \<times> I_set)
+                  (product_topology_on (subspace_topology X TX A) I_top) X TX H"
+                by (rule top1_continuous_map_on_agree[OF hHA_cont_X hH_eq_HA])
+              thus ?thesis using hA_sub_eq by (by100 simp)
+            qed
+            \<comment> \<open>Same for Y side.\<close>
+            \<comment> \<open>Y side: same argument.\<close>
+            have hY_sub_eq: "subspace_topology (X \<times> I_set) ?TXI (Y \<times> I_set)
+                = product_topology_on (subspace_topology X TX Y) I_top"
+            proof -
+              have "product_topology_on (subspace_topology X TX Y) (subspace_topology I_set I_top I_set)
+                  = subspace_topology (X \<times> I_set) ?TXI (Y \<times> I_set)"
+                by (rule Theorem_16_3[OF hTX_is hTI])
+              thus ?thesis using hI_self by (by100 simp)
+            qed
+            have hH_eq_HY: "\<forall>p\<in>Y \<times> I_set. HY p = H p"
+            proof (intro ballI)
+              fix pt assume "pt \<in> Y \<times> I_set"
+              then obtain x t where hpt: "pt = (x, t)" "x \<in> Y" "t \<in> I_set" by (by100 blast)
+              show "HY pt = H pt"
+              proof (cases "x \<in> A")
+                case True
+                hence "x = p" using \<open>x \<in> Y\<close> hAY_inter by (by100 blast)
+                have hHA_fix: "\<forall>a\<in>{p}. \<forall>t\<in>I_set. HA (a, t) = a"
+                  using hHA by (by100 blast)
+                have hHY_fix: "\<forall>a\<in>{p}. \<forall>t\<in>I_set. HY (a, t) = a"
+                  using hHY by (by100 blast)
+                have "H pt = HA pt" unfolding H_def hpt using True by (by100 simp)
+                also have "\<dots> = p" using hHA_fix \<open>x = p\<close> \<open>t \<in> I_set\<close> hpt by (by100 simp)
+                also have "\<dots> = HY pt" using hHY_fix \<open>x = p\<close> \<open>t \<in> I_set\<close> hpt by (by100 simp)
+                finally show ?thesis by (by100 simp)
+              next
+                case False
+                show ?thesis unfolding H_def hpt using False by (by100 simp)
+              qed
+            qed
+            have hHY_cont: "top1_continuous_map_on (Y \<times> I_set)
+                (product_topology_on (subspace_topology X TX Y) I_top)
+                Y (subspace_topology X TX Y) HY"
+              using hHY by (by100 blast)
+            have hHY_cont_X: "top1_continuous_map_on (Y \<times> I_set)
+                (product_topology_on (subspace_topology X TX Y) I_top) X TX HY"
+            proof -
+              have hTYI: "is_topology_on (Y \<times> I_set) (product_topology_on (subspace_topology X TX Y) I_top)"
+                by (rule product_topology_on_is_topology_on[OF
+                    subspace_topology_is_topology_on[OF hTX_is hY_sub] hTI])
+              have hTY_here: "is_topology_on Y (subspace_topology X TX Y)"
+                by (rule subspace_topology_is_topology_on[OF hTX_is hY_sub])
+              show ?thesis
+                using Theorem_18_2(6)[OF hTYI hTY_here hTX_is, rule_format]
+                      hHY_cont hY_sub by (by100 blast)
+            qed
             have hH_on_Y: "top1_continuous_map_on (Y \<times> I_set)
                 (subspace_topology (X \<times> I_set) ?TXI (Y \<times> I_set)) X TX H"
-              sorry \<comment> \<open>Same as hH\_on\_A but for Y and HY.\<close>
+            proof -
+              have "top1_continuous_map_on (Y \<times> I_set)
+                  (product_topology_on (subspace_topology X TX Y) I_top) X TX H"
+                by (rule top1_continuous_map_on_agree[OF hHY_cont_X hH_eq_HY])
+              thus ?thesis using hY_sub_eq by (by100 simp)
+            qed
             \<comment> \<open>Apply pasting\_lemma\_two\_closed.\<close>
             show ?thesis
               by (rule pasting_lemma_two_closed[OF hTXI hTX_is hAI_closed hYI_closed hAYI_cover hH_range hH_on_A hH_on_Y])
