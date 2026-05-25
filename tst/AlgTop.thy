@@ -5327,6 +5327,35 @@ proof -
   qed
 qed
 
+text \<open>Helper: combine Theorem 69.2 + Corollary 70.3 + free\_group\_invariant\_under\_iso
+  to get \<pi>\_1(X) free when \<pi>\_1(U) and \<pi>\_1(V) are free and U\<inter>V simply connected.\<close>
+lemma svk_free_product_free:
+  assumes hstrict: "is_topology_on_strict X TX"
+      and hU_open: "openin_on X TX U" and hV_open: "openin_on X TX V"
+      and hUV_cover: "U \<union> V = X"
+      and hUV_sc: "top1_simply_connected_on (U \<inter> V) (subspace_topology X TX (U \<inter> V))"
+      and hU_pc: "top1_path_connected_on U (subspace_topology X TX U)"
+      and hV_pc: "top1_path_connected_on V (subspace_topology X TX V)"
+      and hp: "p \<in> U \<inter> V"
+      and hU_free: "top1_is_free_group_full_on
+          (top1_fundamental_group_carrier U (subspace_topology X TX U) p)
+          (top1_fundamental_group_mul U (subspace_topology X TX U) p)
+          (top1_fundamental_group_id U (subspace_topology X TX U) p)
+          (top1_fundamental_group_invg U (subspace_topology X TX U) p)
+          \<iota>U S1"
+      and hV_free: "top1_is_free_group_full_on
+          (top1_fundamental_group_carrier V (subspace_topology X TX V) p)
+          (top1_fundamental_group_mul V (subspace_topology X TX V) p)
+          (top1_fundamental_group_id V (subspace_topology X TX V) p)
+          (top1_fundamental_group_invg V (subspace_topology X TX V) p)
+          \<iota>V S2"
+      and hS_disj: "S1 \<inter> S2 = {}"
+  shows "\<exists>\<iota>X. top1_is_free_group_full_on
+      (top1_fundamental_group_carrier X TX p) (top1_fundamental_group_mul X TX p)
+      (top1_fundamental_group_id X TX p) (top1_fundamental_group_invg X TX p)
+      \<iota>X (S1 \<union> S2)"
+  sorry
+
 text \<open>Munkres Theorem 71.1 (witnessed version with chosen loop generators).
   For a finite wedge of circles with explicit circle data (homeomorphisms, basepoints),
   \<pi>_1 is free and the chosen circle loops are the free generators.
@@ -7454,6 +7483,21 @@ lemma finite_wedge_pi1_free_with_chosen_loops:
           \<comment> \<open>Step D-1: \<pi>\_1(X) \<cong> some free group on {..<n}.\<close>
           \<comment> \<open>Combined proof: from Theorem\_69\_2 result + SvK + free\_group\_invariant\_under\_iso.
              All ingredients available: hThm692\_result, Corollary\_70\_3\_param, hpi1\_grp.\<close>
+          \<comment> \<open>Apply svk\_free\_product\_free helper.\<close>
+          from svk_free_product_free[OF less.prems(1) hU_open hV_open hUV_cover hUV_sc
+                hU_pc hV_pc hp_UV_final hU'_free hV'_free hS_disj]
+          obtain \<iota>X_raw where hpi1X_raw: "top1_is_free_group_full_on
+              (top1_fundamental_group_carrier X TX p) (top1_fundamental_group_mul X TX p)
+              (top1_fundamental_group_id X TX p) (top1_fundamental_group_invg X TX p)
+              \<iota>X_raw ({0::nat} \<union> {1..<n})"
+            sorry
+          have hpi1X_raw': "top1_is_free_group_full_on
+              (top1_fundamental_group_carrier X TX p) (top1_fundamental_group_mul X TX p)
+              (top1_fundamental_group_id X TX p) (top1_fundamental_group_invg X TX p)
+              \<iota>X_raw {..<n}"
+            using hpi1X_raw hS_union sorry
+          \<comment> \<open>Still need: generator tracking \<iota>X\_raw(j) = loop\_class(j).
+             This requires understanding how svk\_free\_product\_free constructs \<iota>X\_raw.\<close>
           show ?thesis sorry \<comment> \<open>THE FINAL SORRY of the gen corr chain.
              Proof outline: (1) extract FP\_UV from hThm692\_result,
              (2) SvK: \<pi>\_1(X) \<cong> FP\_UV (Corollary\_70\_3\_param + hFP\_UV\_prod),
