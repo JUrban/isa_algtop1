@@ -7660,8 +7660,23 @@ proof -
       show "\<exists>H. top1_continuous_map_on (A0 \<times> I_set) (product_topology_on TX I_top) A0 TX H
           \<and> (\<forall>x\<in>A0. H (x, 0) = x) \<and> (\<forall>x\<in>A0. H (x, 1) \<in> A0)
           \<and> (\<forall>a\<in>A0. \<forall>t\<in>I_set. H (a, t) = a)"
-        sorry \<comment> \<open>Identity homotopy: H(x,t) = x. Projection fst continuous.
-             Boundary: trivial (x stays in A0).\<close>
+      proof (rule exI[of _ "\<lambda>p. fst p"])
+        have hTX_is: "is_topology_on X TX"
+          using hTX unfolding is_topology_on_strict_def by (by100 blast)
+        have hTI: "is_topology_on I_set I_top"
+          by (rule top1_unit_interval_topology_is_topology_on)
+        \<comment> \<open>X = A0, so TX is a topology on A0.\<close>
+        have "top1_continuous_map_on (A0 \<times> I_set) (product_topology_on TX I_top) A0 TX fst"
+        proof -
+          have "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) X TX pi1"
+            by (rule top1_continuous_pi1[OF hTX_is hTI])
+          thus ?thesis unfolding \<open>X = A0\<close> pi1_def by (by100 simp)
+        qed
+        thus "top1_continuous_map_on (A0 \<times> I_set) (product_topology_on TX I_top) A0 TX (\<lambda>p. fst p)
+            \<and> (\<forall>x\<in>A0. fst (x, (0::real)) = x) \<and> (\<forall>x\<in>A0. fst (x, (1::real)) \<in> A0)
+            \<and> (\<forall>a\<in>A0. \<forall>t\<in>I_set. fst (a, t) = a)"
+          by (by100 simp)
+      qed
     qed
   next
     case False
@@ -7717,11 +7732,65 @@ proof -
   qed
   \<comment> \<open>Paste: identity on A0, retraction on Y.
      Same construction as pasting\_deformation\_retracts\_to\_point but target is A0.\<close>
-  show ?thesis
-    sorry \<comment> \<open>Extract HY from hY\_dr. Define H piecewise:
-       H(x,t) = x if x \<in> A0, HY(x,t) if x \<in> Y.
-       H(x,0)=x, H(x,1) \<in> A0 (x or p), H(a,t)=a for a \<in> A0.
-       Continuous by pasting\_lemma\_two\_closed (same technique as above).\<close>
+  \<comment> \<open>Extract HY from hY\_dr.\<close>
+  have hY_dr_ex: "\<exists>HY. top1_continuous_map_on (Y \<times> I_set)
+        (product_topology_on (subspace_topology X TX Y) I_top) Y (subspace_topology X TX Y) HY
+      \<and> (\<forall>x\<in>Y. HY (x, 0) = x) \<and> (\<forall>x\<in>Y. HY (x, 1) \<in> {p})
+      \<and> (\<forall>a\<in>{p}. \<forall>t\<in>I_set. HY (a, t) = a)"
+    using hY_dr unfolding top1_deformation_retract_of_on_def by (by100 blast)
+  then obtain HY where hHY: "top1_continuous_map_on (Y \<times> I_set)
+        (product_topology_on (subspace_topology X TX Y) I_top) Y (subspace_topology X TX Y) HY
+      \<and> (\<forall>x\<in>Y. HY (x, 0) = x) \<and> (\<forall>x\<in>Y. HY (x, 1) \<in> {p})
+      \<and> (\<forall>a\<in>{p}. \<forall>t\<in>I_set. HY (a, t) = a)"
+    by (by5000 auto)
+  \<comment> \<open>Define H: identity on A0, HY on Y.\<close>
+  define H where "H = (\<lambda>(x, t). if x \<in> A0 then x else HY (x, t))"
+  show ?thesis unfolding top1_deformation_retract_of_on_def
+  proof (intro conjI)
+    show "A0 \<subseteq> X" by (rule hA0_sub)
+    show "\<exists>Hmap. top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) X TX Hmap
+        \<and> (\<forall>x\<in>X. Hmap (x, 0) = x) \<and> (\<forall>x\<in>X. Hmap (x, 1) \<in> A0)
+        \<and> (\<forall>a\<in>A0. \<forall>t\<in>I_set. Hmap (a, t) = a)"
+    proof (rule exI[of _ H])
+      have hH_0: "\<forall>x\<in>X. H (x, 0) = x"
+      proof (intro ballI)
+        fix x assume "x \<in> X"
+        show "H (x, 0) = x"
+        proof (cases "x \<in> A0")
+          case True thus ?thesis unfolding H_def by (by100 simp)
+        next
+          case False hence "x \<in> Y" using \<open>x \<in> X\<close> hX_eq by (by100 blast)
+          thus ?thesis unfolding H_def using False hHY by (by100 force)
+        qed
+      qed
+      have hH_1: "\<forall>x\<in>X. H (x, 1) \<in> A0"
+      proof (intro ballI)
+        fix x assume "x \<in> X"
+        show "H (x, 1) \<in> A0"
+        proof (cases "x \<in> A0")
+          case True thus ?thesis unfolding H_def by (by100 simp)
+        next
+          case False hence "x \<in> Y" using \<open>x \<in> X\<close> hX_eq by (by100 blast)
+          have "H (x, 1) = HY (x, 1)" unfolding H_def using False by (by100 simp)
+          have "(\<forall>y\<in>Y. HY (y, 1) \<in> {p})" using hHY by (by100 blast)
+          hence "HY (x, 1) \<in> {p}" using \<open>x \<in> Y\<close> by (by100 blast)
+          hence "HY (x, 1) = p" by (by100 blast)
+          thus ?thesis using \<open>H (x, 1) = HY (x, 1)\<close> hp by (by100 simp)
+        qed
+      qed
+      have hH_fix: "\<forall>a\<in>A0. \<forall>t\<in>I_set. H (a, t) = a"
+        unfolding H_def by (by100 simp)
+      have hH_cont: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) X TX H"
+        sorry \<comment> \<open>Same pasting technique as pasting\_deformation\_retracts\_to\_point:
+           A0\<times>I closed, Y\<times>I closed. On A0\<times>I: H = fst (continuous, pi1).
+           On Y\<times>I: H = HY (continuous, expand codomain Y \<rightarrow> X).
+           Theorem\_16\_3 + expand\_range + agree + pasting\_lemma\_two\_closed.\<close>
+      show "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) X TX H
+          \<and> (\<forall>x\<in>X. H (x, 0) = x) \<and> (\<forall>x\<in>X. H (x, 1) \<in> A0)
+          \<and> (\<forall>a\<in>A0. \<forall>t\<in>I_set. H (a, t) = a)"
+        using hH_cont hH_0 hH_1 hH_fix by (by100 blast)
+    qed
+  qed
   qed
 qed
 
