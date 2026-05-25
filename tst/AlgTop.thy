@@ -7232,8 +7232,17 @@ lemma finite_wedge_pi1_free_with_chosen_loops:
            (using the FP-based freeness of \<pi>\_1(X,p)). Then \<Psi> \<circ> \<Phi> = id on generators
            \<Rightarrow> \<Psi> \<circ> \<Phi> = id (by uniqueness). Similarly \<Phi> \<circ> \<Psi> = id. Hence \<Phi> bijective.\<close>
         have h\<Phi>_bij: "bij_betw \<Phi> G (top1_fundamental_group_carrier X TX p)"
-          sorry \<comment> \<open>Inverse construction via free\_group\_hom\_exists on \<pi>\_1(X) (which is free
-             on {..<n} via FP + free\_group\_invariant\_under\_iso) + free\_group\_hom\_unique.\<close>
+          sorry \<comment> \<open>KEY REMAINING STEP: show \<Phi> bijective.
+             Approach (following book's "follows from Theorem 69.2"):
+             1. SvK (Corollary\_70\_3) gives \<pi>\_1(X) \<cong> FP(\<pi>\_1(U), \<pi>\_1(V))
+             2. Factor isos \<Phi>1, \<Phi>2 give FP(\<pi>\_1(U), \<pi>\_1(V)) \<cong> FP(G1, G2) = FP
+             3. FP free on {..<n} (hFP\_free')
+             4. Composition: \<pi>\_1(X) \<cong> FP, hence \<pi>\_1(X) free on {..<n}
+                with generators = inclusion images of loop\_class(j)
+             5. free\_group\_invariant\_under\_iso: \<pi>\_1(X) free on {..<n} with these generators
+             6. free\_group\_hom\_exists: construct inverse \<Psi>: \<pi>\_1(X) \<rightarrow> G
+             7. free\_group\_hom\_unique: \<Psi> \<circ> \<Phi> = id, \<Phi> \<circ> \<Psi> = id
+             Requires: Corollary\_70\_3 application + Theorem\_68\_4 factor iso transfer.\<close>
         have h\<Phi>_iso: "top1_group_iso_on G mul_G
             (top1_fundamental_group_carrier X TX p) (top1_fundamental_group_mul X TX p) \<Phi>"
           unfolding top1_group_iso_on_def using h\<Phi>_hom h\<Phi>_bij by (by100 blast)
