@@ -8311,11 +8311,20 @@ proof -
        angle = (R\_to\_S1|_{(\<theta>q,\<theta>q+1)})^{-1} \<circ> h^{-1}. Both factors continuous:
        h^{-1} by homeomorphism; R\_to\_S1 restricted to (\<theta>q, \<theta>q+1) is a homeomorphism
        (covering map, evenly covered neighborhood S1 - {q0}).\<close>
+    \<comment> \<open>angle = inv(R\_to\_S1|(\<theta>q,\<theta>q+1)) \<circ> h^{-1}.
+       R\_to\_S1 restricted to (\<theta>q,\<theta>q+1) is a homeomorphism onto S1-{q0}.
+       Its inverse is continuous. h^{-1} is continuous. Composition continuous.\<close>
     have hangle_cont: "top1_continuous_map_on (Y - {q}) (subspace_topology Y TY (Y - {q}))
         (UNIV :: real set) top1_open_sets angle"
-      sorry \<comment> \<open>From covering map Theorem\_53\_1: R\_to\_S1 restricted to open interval
-         (\<theta>q, \<theta>q+1) is a homeomorphism onto S1-{q0}. Its inverse composed with
-         h^{-1} gives angle. Both are continuous, hence angle is continuous.\<close>
+      sorry \<comment> \<open>R\_to\_S1 restricted to (\<theta>q, \<theta>q+1) is:
+         - Continuous (restriction of continuous R\_to\_S1)
+         - Injective (sin\_cos\_eq\_iff: a-b integer, |a-b|<1 \<Rightarrow> a=b)
+         - Surjective onto S1-{q0} (S1\_point\_to\_angle + floor shift)
+         - Open map (covering maps are open: for U open in (\<theta>q,\<theta>q+1),
+           R\_to\_S1(U) open in S1 by the evenly covered structure)
+         Hence a homeomorphism. Its inverse is continuous.
+         angle = inverse \<circ> h^{-1} (h^{-1} continuous from homeomorphism).
+         Composition is continuous.\<close>
     have hF_cont: "top1_continuous_map_on ((Y - {q}) \<times> I_set)
         (product_topology_on (subspace_topology Y TY (Y - {q})) I_top)
         (Y - {q}) (subspace_topology Y TY (Y - {q})) F"
