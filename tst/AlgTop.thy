@@ -9415,18 +9415,41 @@ lemma finite_wedge_pi1_free_with_chosen_loops:
                 qed
                 ultimately have "top1_is_loop_on (C k) (subspace_topology X TX (C k)) p ?loop_k"
                   by (by100 simp)
-                \<comment> \<open>C(k) \<subseteq> X', so loop in C(k) is loop in X' (subspace topology).\<close>
-                \<comment> \<open>Transfer loop from C(k) to X': expand codomain.
-                   f continuous I \<rightarrow> C(k) in subspace X TX C(k). C(k) \<subseteq> X'.
-                   subspace X TX C(k) = subspace X' (subspace X TX X') C(k) [transitivity].
-                   By Theorem\_18\_2(6): f continuous I \<rightarrow> X' in subspace X TX X'.\<close>
-                moreover have "C k \<subseteq> X'" unfolding X'_def using hk by (by100 force)
-                moreover have "C k \<subseteq> X'" unfolding X'_def using hk by (by100 force)
-                ultimately have "top1_is_loop_on (C k) (subspace_topology X TX (C k)) p ?loop_k"
+                \<comment> \<open>Transfer loop from C(k) to X' \<supseteq> C(k).\<close>
+                moreover have hCk_sub_X': "C k \<subseteq> X'" unfolding X'_def using hk by (by100 force)
+                ultimately have hloop_Ck: "top1_is_loop_on (C k) (subspace_topology X TX (C k)) p ?loop_k"
                   by (by100 simp)
+                \<comment> \<open>Expand codomain from C(k) to X'.\<close>
                 thus ?thesis
-                  sorry \<comment> \<open>Transfer loop from C(k) (subspace X TX C(k)) to X' (subspace X TX X').
-                     C(k) \<subseteq> X'. Expand codomain via Theorem\_18\_2(6) + subspace\_topology\_trans.\<close>
+                proof -
+                  assume hloop: "top1_is_loop_on (C k) (subspace_topology X TX (C k)) p ?loop_k"
+                  have hf_cont_Ck: "top1_continuous_map_on I_set I_top (C k) (subspace_topology X TX (C k)) ?loop_k"
+                    using hloop unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+                  have hf0: "?loop_k 0 = p" using hloop unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+                  have hf1: "?loop_k 1 = p" using hloop unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+                  \<comment> \<open>subspace X TX C(k) = subspace X' TX' C(k) by transitivity.\<close>
+                  have hCk_trans: "subspace_topology X TX (C k) = subspace_topology X' (subspace_topology X TX X') (C k)"
+                    using subspace_topology_trans[OF hCk_sub_X'] by (by100 simp)
+                  \<comment> \<open>f continuous I \<rightarrow> C(k) in subspace X' TX' C(k).\<close>
+                  have hf_cont_Ck': "top1_continuous_map_on I_set I_top (C k) (subspace_topology X' (subspace_topology X TX X') (C k)) ?loop_k"
+                    using hf_cont_Ck hCk_trans by (by100 simp)
+                  \<comment> \<open>Expand codomain: C(k) \<subseteq> X', topology matches.\<close>
+                  have hTI: "is_topology_on I_set I_top"
+                    by (rule top1_unit_interval_topology_is_topology_on)
+                  have hX'_sub_X: "X' \<subseteq> X" unfolding X'_def using less.prems(4) by (by100 force)
+                  have hTX'_is: "is_topology_on X' (subspace_topology X TX X')"
+                    by (rule subspace_topology_is_topology_on)
+                       (rule less.prems(1)[unfolded is_topology_on_strict_def, THEN conjunct1],
+                        rule hX'_sub_X)
+                  have hTCk: "is_topology_on (C k) (subspace_topology X' (subspace_topology X TX X') (C k))"
+                    by (rule subspace_topology_is_topology_on[OF hTX'_is hCk_sub_X'])
+                  have hf_cont_X': "top1_continuous_map_on I_set I_top X' (subspace_topology X TX X') ?loop_k"
+                    using Theorem_18_2(6)[OF hTI hTCk hTX'_is, rule_format]
+                          hf_cont_Ck' hCk_sub_X' hCk_trans by (by100 blast)
+                  show "top1_is_loop_on X' (subspace_topology X TX X') p ?loop_k"
+                    unfolding top1_is_loop_on_def top1_is_path_on_def
+                    using hf_cont_X' hf0 hf1 by (by100 blast)
+                qed
               qed
               have hloop_k': "top1_is_loop_on X' (subspace_topology V (subspace_topology X TX V) X') p ?loop_k"
                 using hloop_k hX'_trans by (by100 simp)
