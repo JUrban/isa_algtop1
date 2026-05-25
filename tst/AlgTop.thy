@@ -8218,8 +8218,9 @@ proof -
   qed
   \<comment> \<open>Forward continuity.\<close>
   have hcont: "top1_continuous_map_on ?I ?TI ?S ?TS top1_R_to_S1"
-    sorry \<comment> \<open>R\_to\_S1 continuous on UNIV (Theorem\_53\_1). Restrict domain to ?I
-       and codomain to ?S via Theorem\_18\_2(4,5).\<close>
+    sorry \<comment> \<open>R\_to\_S1 continuous UNIV \<rightarrow> S1 (from Theorem\_53\_1 covering map).
+       Restrict domain to ?I by Theorem\_18\_2(4).
+       Restrict codomain to ?S by Theorem\_18\_2(5) (image ⊆ ?S from bijectivity).\<close>
   \<comment> \<open>Inverse continuity.\<close>
   have hcont_inv: "top1_continuous_map_on ?S ?TS ?I ?TI (inv_into ?I top1_R_to_S1)"
     sorry \<comment> \<open>From covering\_map\_is\_open\_map: R\_to\_S1 is open.
