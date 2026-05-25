@@ -8005,9 +8005,23 @@ lemma finite_wedge_pi1_free_with_chosen_loops:
               sorry \<comment> \<open>\<iota>V\_out(k) = \<Phi>2(\<eta>2(k)) = loop\_class\_V(k).\<close>
             have hPhi_loop_class: "\<forall>k\<in>{1..<n}. \<Phi> (\<iota>_G k) =
                 {l. top1_loop_equiv_on X TX p (\<lambda>t. g k (cos (2*pi*t), sin (2*pi*t))) l}"
-              sorry \<comment> \<open>\<Phi>(\<iota>\_G(k)) = loop\_class(k) from h\<Phi>\_gen.\<close>
+            proof (intro ballI)
+              fix k assume "k \<in> {1..<n}"
+              hence hk_lt: "k < n" by (by100 simp)
+              hence "k \<in> {..<n}" by (by100 simp)
+              from h\<Phi>_gen[rule_format, OF this]
+              show "\<Phi> (\<iota>_G k) = {l. top1_loop_equiv_on X TX p (\<lambda>t. g k (cos (2*pi*t), sin (2*pi*t))) l}"
+                unfolding loop_class_def by (by100 simp)
+            qed
             have hiG_in_1n: "\<forall>k\<in>{1..<n}. \<iota>_G k \<in> G"
-              sorry \<comment> \<open>From hG\_free.\<close>
+            proof (intro ballI)
+              fix k assume "k \<in> {1..<n}"
+              hence "k < n" by (by100 simp)
+              hence "k \<in> {..<n}" by (by100 simp)
+              show "\<iota>_G k \<in> G"
+                using hG_free \<open>k \<in> {..<n}\<close>
+                unfolding top1_is_free_group_full_on_def by (by5000 simp)
+            qed
             have "?jV ` (\<iota>V_out ` {1..<n}) \<subseteq> \<Phi> ` G"
               using inclusion_gen_images_in_hom_image[OF hTX_here hV_sub
                 hV_loops hV_gen_class hPhi_loop_class hiG_in_1n] by (by100 blast)
