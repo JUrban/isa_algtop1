@@ -9396,8 +9396,58 @@ proof -
     have hC_homeo_base: "\<And>\<alpha>. \<alpha> \<in> ?J \<Longrightarrow> \<exists>f. top1_homeomorphism_on top1_S1 top1_S1_topology
         (C \<alpha>) (subspace_topology A ?TA (C \<alpha>)) f \<and> f (1, 0) = a
         \<and> (\<forall>s\<in>I_set. f (top1_R_to_S1 s) = qC (edge_pt (i_of \<alpha>) s))"
-      sorry \<comment> \<open>From the hC\_homeo proof: loop\_factors\_through\_S1 gives g with
-         g(1,0)=a and g(R\_to\_S1(s))=f\_\<alpha>(s)=qC(edge\_pt(i\_of \<alpha>, s)).\<close>
+    proof -
+      fix \<alpha> assume h\<alpha>: "\<alpha> \<in> ?J"
+      \<comment> \<open>Repeat the hC\_homeo construction with stronger conclusion.
+         The homeomorphism g from loop\_factors\_through\_S1 has g(1,0)=a
+         and g(R\_to\_S1(s))=qC(edge\_pt(i\_of \<alpha>, s)).\<close>
+      from hC_homeo[OF h\<alpha>] obtain g_ex where
+        "top1_homeomorphism_on top1_S1 top1_S1_topology (C \<alpha>) (subspace_topology A ?TA (C \<alpha>)) g_ex"
+        by (by100 blast)
+      \<comment> \<open>But g\_ex may not have the basepoint/factoring property. We need the specific
+         g from loop\_factors\_through\_S1, which was constructed inside hC\_homeo.
+         Reprove with the stronger conclusion.\<close>
+      have hi\<alpha>: "i_of \<alpha> < ?n" "fst (scheme!(i_of \<alpha>)) = \<alpha>" using hi_of[OF h\<alpha>] by (by100 blast)+
+      define f_\<alpha> where "f_\<alpha> t = qC (edge_pt (i_of \<alpha>) t)" for t
+      have hf_cont: "top1_continuous_map_on I_set top1_unit_interval_topology A ?TA f_\<alpha>"
+        sorry \<comment> \<open>Same as hC\_homeo proof: qC continuous + edge\_pt continuous.\<close>
+      have hf0: "f_\<alpha> 0 = a"
+      proof -
+        have "f_\<alpha> 0 = qC (vxC (i_of \<alpha>), vyC (i_of \<alpha>))"
+          unfolding f_\<alpha>_def edge_pt_def by (by100 simp)
+        also have "\<dots> = qC (vxC 0, vyC 0)"
+          using hvert_C hi\<alpha>(1) hn_pos by (by100 blast)
+        also have "\<dots> = a" using ha_eq by (by100 simp)
+        finally show ?thesis .
+      qed
+      have hf1: "f_\<alpha> 1 = a"
+      proof -
+        have hi1: "Suc (i_of \<alpha>) mod ?n < ?n" using hn_pos by (by100 simp)
+        have "f_\<alpha> 1 = qC (vxC (Suc (i_of \<alpha>) mod ?n), vyC (Suc (i_of \<alpha>) mod ?n))"
+          unfolding f_\<alpha>_def edge_pt_def by (by100 simp)
+        also have "\<dots> = qC (vxC 0, vyC 0)"
+          using hvert_C hi1 hn_pos by (by100 blast)
+        also have "\<dots> = a" using ha_eq by (by100 simp)
+        finally show ?thesis .
+      qed
+      have hf_loop: "top1_is_loop_on A ?TA a f_\<alpha>"
+        unfolding top1_is_loop_on_def top1_is_path_on_def
+        using hf_cont hf0 hf1 by (by100 blast)
+      from loop_factors_through_S1[OF hA_top hf_loop]
+      obtain g where hg_cont: "top1_continuous_map_on top1_S1 top1_S1_topology A ?TA g"
+        and hg_base: "g (1, 0) = a"
+        and hg_factor: "\<forall>s\<in>I_set. f_\<alpha> s = g (top1_R_to_S1 s)"
+        by (by100 blast)
+      \<comment> \<open>g is a homeomorphism S1 \<rightarrow> C(\<alpha>) (surjection + injection + compactness).\<close>
+      have hg_homeo: "top1_homeomorphism_on top1_S1 top1_S1_topology (C \<alpha>) (subspace_topology A ?TA (C \<alpha>)) g"
+        sorry \<comment> \<open>Same as hC\_homeo proof: surjective onto C(\<alpha>) + injective + Theorem 26.6.\<close>
+      have hg_track: "\<forall>s\<in>I_set. g (top1_R_to_S1 s) = qC (edge_pt (i_of \<alpha>) s)"
+        using hg_factor unfolding f_\<alpha>_def by (by100 simp)
+      show "\<exists>f. top1_homeomorphism_on top1_S1 top1_S1_topology
+          (C \<alpha>) (subspace_topology A ?TA (C \<alpha>)) f \<and> f (1, 0) = a
+          \<and> (\<forall>s\<in>I_set. f (top1_R_to_S1 s) = qC (edge_pt (i_of \<alpha>) s))"
+        using hg_homeo hg_base hg_track by (by100 blast)
+    qed
     define g_w where "g_w \<alpha> = (SOME f. top1_homeomorphism_on top1_S1 top1_S1_topology
         (C \<alpha>) (subspace_topology A (subspace_topology X TX A) (C \<alpha>)) f \<and> f (1, 0) = a
         \<and> (\<forall>s\<in>I_set. f (top1_R_to_S1 s) = qC (edge_pt (i_of \<alpha>) s)))" for \<alpha>
@@ -9881,7 +9931,9 @@ proof -
         fix s assume "s \<in> fst ` set scheme"
         have "\<iota>A s = edge_loop_class_a s" using h2 \<open>s \<in> fst ` set scheme\<close> by (by100 blast)
         also have "\<dots> = edge_loop_class s"
-          sorry \<comment> \<open>edge\_loop\_class\_a s = edge\_loop\_class s from a=a'. Technical simp issue.\<close>
+          sorry \<comment> \<open>edge\_loop\_class\_a s = edge\_loop\_class s: both defined identically
+             except basepoint a vs a'. Since a=a' (ha\_eq\_a'), these are equal.
+             Technical simp/subst issue with deeply nested Collect+lambda.\<close>
         finally show "\<iota>A s = edge_loop_class s" .
       qed
       show ?thesis using h1' h2' by (by100 blast)
