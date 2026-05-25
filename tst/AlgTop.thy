@@ -4666,20 +4666,71 @@ proof -
   have h1fold: "top1_is_n_fold_torus_on T_torus TT 1"
     using assms(1) unfolding top1_is_torus_on_def by (by100 blast)
   \<comment> \<open>Step 2: Theorem\_75\_3 gives H\_1(T) free abelian on {..<2}.\<close>
-  from Theorem_75_3_H1_n_torus[OF h1fold assms(2)]
-  obtain H mulH eH invgH iota_S phi where
+  note hThm753 = Theorem_75_3_H1_n_torus[OF h1fold assms(2)]
+  from hThm753 obtain H :: "(real \<Rightarrow> 'a) set set set set"
+    and mulH eH invgH iota_S phi where
     habel: "top1_is_abelianization_of H mulH eH invgH
         (top1_fundamental_group_carrier T_torus TT x0)
         (top1_fundamental_group_mul T_torus TT x0)
         (top1_fundamental_group_id T_torus TT x0)
         (top1_fundamental_group_invg T_torus TT x0) phi" and
-    hfree_ab: "top1_is_free_abelian_group_full_on H mulH eH invgH iota_S ({..<2*1}::nat set)"
-    sorry
+    hfree_ab: "top1_is_free_abelian_group_full_on H mulH eH invgH iota_S ({..<2}::nat set)"
+    by (by5000 auto)
   \<comment> \<open>Step 3: The torus \<pi>\_1 is abelian (commutator relator aba\<inverse>b\<inverse>=1 means ab=ba).
      Therefore the abelianization map phi is an isomorphism.
      Step 4: H\_1(T) free abelian on {0,1} \<cong> Z \<times> Z.
      Step 5: Compose: \<pi>\_1(T) \<cong> H\_1(T) \<cong> Z \<times> Z.\<close>
-  show ?thesis sorry
+  \<comment> \<open>Step 3: \<pi>\_1(T) is abelian (from Theorem\_74\_3: commutator relator).
+     Therefore ker(phi) = [G,G] = {e}, so phi is injective.\<close>
+  have hpi1_abelian: "top1_is_abelian_group_on
+      (top1_fundamental_group_carrier T_torus TT x0)
+      (top1_fundamental_group_mul T_torus TT x0)
+      (top1_fundamental_group_id T_torus TT x0)
+      (top1_fundamental_group_invg T_torus TT x0)"
+    sorry \<comment> \<open>From Theorem\_74\_3 (n=1): torus has commutator relator, so \<pi>\_1 is abelian.\<close>
+  \<comment> \<open>Step 4: phi bijective (abelian \<Rightarrow> ker = {e} \<Rightarrow> injective + surjective = bijective).\<close>
+  have hphi_bij: "bij_betw phi
+      (top1_fundamental_group_carrier T_torus TT x0) H"
+  proof -
+    let ?G = "top1_fundamental_group_carrier T_torus TT x0"
+    let ?mulG = "top1_fundamental_group_mul T_torus TT x0"
+    let ?eG = "top1_fundamental_group_id T_torus TT x0"
+    let ?invG = "top1_fundamental_group_invg T_torus TT x0"
+    \<comment> \<open>phi is surjective.\<close>
+    have hsurj: "phi ` ?G = H"
+      using habel unfolding top1_is_abelianization_of_def by (by100 blast)
+    \<comment> \<open>ker(phi) = [G,G] = {eG} since G is abelian.\<close>
+    have hker: "top1_group_kernel_on ?G eH phi = top1_commutator_subgroup_on ?G ?mulG ?eG ?invG"
+      using habel unfolding top1_is_abelianization_of_def by (by100 blast)
+    have hcomm_trivial: "top1_commutator_subgroup_on ?G ?mulG ?eG ?invG = {?eG}"
+      using hpi1_abelian sorry \<comment> \<open>Abelian group has trivial commutator subgroup.\<close>
+    have hker_trivial: "top1_group_kernel_on ?G eH phi = {?eG}"
+      using hker hcomm_trivial by (by100 simp)
+    \<comment> \<open>Trivial kernel + surjective = bijective.\<close>
+    have hinj: "inj_on phi ?G"
+      sorry \<comment> \<open>Trivial kernel \<Rightarrow> injective (standard group theory).\<close>
+    show ?thesis unfolding bij_betw_def using hinj hsurj by (by100 blast)
+  qed
+  \<comment> \<open>Step 5: phi is a group iso \<pi>\_1(T) \<rightarrow> H.\<close>
+  have hphi_iso: "top1_group_iso_on
+      (top1_fundamental_group_carrier T_torus TT x0)
+      (top1_fundamental_group_mul T_torus TT x0) H mulH phi"
+    unfolding top1_group_iso_on_def using habel hphi_bij
+    unfolding top1_is_abelianization_of_def by (by100 blast)
+  \<comment> \<open>Step 6: H free abelian on {0,1} \<cong> Z \<times> Z.\<close>
+  have hH_ZZ: "top1_groups_isomorphic_on H mulH (UNIV::(int \<times> int) set)
+      (\<lambda>(a1, a2) (b1, b2). (a1 + b1, a2 + b2))"
+    sorry \<comment> \<open>Free abelian group on 2 generators \<cong> Z\<times>Z.\<close>
+  \<comment> \<open>Step 7: Compose: \<pi>\_1(T) \<cong> H \<cong> Z\<times>Z.\<close>
+  show ?thesis
+  proof -
+    have "top1_groups_isomorphic_on
+        (top1_fundamental_group_carrier T_torus TT x0)
+        (top1_fundamental_group_mul T_torus TT x0) H mulH"
+      using hphi_iso unfolding top1_groups_isomorphic_on_def by (by100 blast)
+    thus ?thesis using hH_ZZ
+      using groups_isomorphic_trans_fwd by (by100 blast)
+  qed
 qed
 
 (** from \<S>73 Theorem 73.4: the n-fold dunce cap has fundamental group Z/nZ. **)
