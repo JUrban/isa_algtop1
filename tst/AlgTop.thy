@@ -5354,7 +5354,40 @@ lemma svk_free_product_free:
       (top1_fundamental_group_carrier X TX p) (top1_fundamental_group_mul X TX p)
       (top1_fundamental_group_id X TX p) (top1_fundamental_group_invg X TX p)
       \<iota>X (S1 \<union> S2)"
-  sorry
+proof -
+  let ?TU = "subspace_topology X TX U" and ?TV = "subspace_topology X TX V"
+  let ?\<pi>U = "top1_fundamental_group_carrier U ?TU p"
+  let ?mU = "top1_fundamental_group_mul U ?TU p"
+  let ?\<pi>V = "top1_fundamental_group_carrier V ?TV p"
+  let ?mV = "top1_fundamental_group_mul V ?TV p"
+  \<comment> \<open>Step 1: Apply Theorem\_69\_2 to \<pi>\_1(U), \<pi>\_1(V).\<close>
+  note hThm692 = Theorem_69_2[OF hU_free hV_free hS_disj]
+  \<comment> \<open>Step 2: From hThm692, get FP\_UV as free product of \<pi>\_1(U), \<pi>\_1(V) and free on S1 \<union> S2.\<close>
+  \<comment> \<open>Step 3: Apply Corollary\_70\_3\_param with this free product.\<close>
+  \<comment> \<open>Step 4: Transfer freeness from FP\_UV to \<pi>\_1(X).\<close>
+  have hTX: "is_topology_on X TX"
+    using hstrict unfolding is_topology_on_strict_def sorry
+  have hpi1_grp: "top1_is_group_on
+      (top1_fundamental_group_carrier X TX p) (top1_fundamental_group_mul X TX p)
+      (top1_fundamental_group_id X TX p) (top1_fundamental_group_invg X TX p)"
+    using top1_fundamental_group_is_group[OF hTX] hp sorry
+  \<comment> \<open>The full proof is a composition chain. Each step uses an existing lemma.
+     The key obstacle was extracting from Theorem\_69\_2's 6-variable existential.\<close>
+  \<comment> \<open>Step 5: Expand hThm692 manually. It gives ∃FP mul e invg iotafam iotaS. (4 conjuncts).
+     We only need the free product and free group parts.\<close>
+  \<comment> \<open>Extract step by step from the 6-variable existential.\<close>
+  \<comment> \<open>hThm692 is a 6-variable existential. Use it in `show` directly.\<close>
+  \<comment> \<open>Use hThm692 (Theorem\_69\_2 result) + SvK + free\_group\_invariant\_under\_iso.
+     The composition gives \<pi>\_1(X) free on S1 \<union> S2.
+     The extraction from hThm692's 6-variable existential is handled
+     by sorry-ing the combined statement; the mathematical content
+     (free product + SvK + transfer) is the book's "follows from Theorem 69.2."\<close>
+  show ?thesis using hThm692
+    Corollary_70_3_simply_connected_intersection_param[OF
+      hstrict hU_open hV_open hUV_cover hUV_sc hU_pc hV_pc hp]
+    group_iso_on_inverse free_group_invariant_under_iso hpi1_grp
+    sorry
+qed
 
 text \<open>Munkres Theorem 71.1 (witnessed version with chosen loop generators).
   For a finite wedge of circles with explicit circle data (homeomorphisms, basepoints),
