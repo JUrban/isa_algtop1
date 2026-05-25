@@ -7358,18 +7358,26 @@ proof (induction "card F" arbitrary: F X TX rule: less_induct)
       \<comment> \<open>Paste: X = A \<union> Y, A \<inter> Y = {p}, A closed, Y closed,
          A and Y each deformation-retract to {p}.\<close>
       \<comment> \<open>Extract retraction homotopies HA and HY.\<close>
-      from hA_dr[unfolded top1_deformation_retract_of_on_def]
-      obtain HA where hHA: "top1_continuous_map_on (A \<times> I_set)
+      have hA_dr_ex: "\<exists>HA. top1_continuous_map_on (A \<times> I_set)
             (product_topology_on (subspace_topology X TX A) I_top) A (subspace_topology X TX A) HA
           \<and> (\<forall>x\<in>A. HA (x, 0) = x) \<and> (\<forall>x\<in>A. HA (x, 1) \<in> {p})
           \<and> (\<forall>a\<in>{p}. \<forall>t\<in>I_set. HA (a, t) = a)"
-        sorry \<comment> \<open>Extract from deformation\_retract definition.\<close>
-      from hY_dr[unfolded top1_deformation_retract_of_on_def]
-      obtain HY where hHY: "top1_continuous_map_on (Y \<times> I_set)
+        using hA_dr unfolding top1_deformation_retract_of_on_def by (by100 blast)
+      then obtain HA where hHA: "top1_continuous_map_on (A \<times> I_set)
+            (product_topology_on (subspace_topology X TX A) I_top) A (subspace_topology X TX A) HA
+          \<and> (\<forall>x\<in>A. HA (x, 0) = x) \<and> (\<forall>x\<in>A. HA (x, 1) \<in> {p})
+          \<and> (\<forall>a\<in>{p}. \<forall>t\<in>I_set. HA (a, t) = a)"
+        by (by5000 auto)
+      have hY_dr_ex: "\<exists>HY. top1_continuous_map_on (Y \<times> I_set)
             (product_topology_on (subspace_topology X TX Y) I_top) Y (subspace_topology X TX Y) HY
           \<and> (\<forall>x\<in>Y. HY (x, 0) = x) \<and> (\<forall>x\<in>Y. HY (x, 1) \<in> {p})
           \<and> (\<forall>a\<in>{p}. \<forall>t\<in>I_set. HY (a, t) = a)"
-        sorry \<comment> \<open>Extract from deformation\_retract definition.\<close>
+        using hY_dr unfolding top1_deformation_retract_of_on_def by (by100 blast)
+      then obtain HY where hHY: "top1_continuous_map_on (Y \<times> I_set)
+            (product_topology_on (subspace_topology X TX Y) I_top) Y (subspace_topology X TX Y) HY
+          \<and> (\<forall>x\<in>Y. HY (x, 0) = x) \<and> (\<forall>x\<in>Y. HY (x, 1) \<in> {p})
+          \<and> (\<forall>a\<in>{p}. \<forall>t\<in>I_set. HY (a, t) = a)"
+        by (by5000 auto)
       \<comment> \<open>Define H piecewise.\<close>
       define H where "H = (\<lambda>(x, t). if x \<in> A then HA (x, t) else HY (x, t))"
       show ?thesis unfolding top1_deformation_retract_of_on_def
