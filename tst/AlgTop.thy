@@ -9451,10 +9451,92 @@ proof -
       \<comment> \<open>g is a homeomorphism S1 \<rightarrow> C(\<alpha>) (surjection + injection + compactness).\<close>
       \<comment> \<open>g surjects onto C(\<alpha>).\<close>
       have hg_surj: "g ` top1_S1 = C \<alpha>"
-        sorry \<comment> \<open>Repeat of hC\_homeo surjectivity proof (lines ~9100-9140).\<close>
+      proof (rule set_eqI, rule iffI)
+        fix x assume "x \<in> g ` top1_S1"
+        then obtain z where "z \<in> top1_S1" "x = g z" by (by100 blast)
+        then obtain t where "t \<in> I_set" "top1_R_to_S1 t = z"
+        proof -
+          obtain xc yc where hq_eq: "z = (xc, yc)" by (cases z)
+          have hcirc: "xc^2 + yc^2 = 1"
+            using \<open>z \<in> top1_S1\<close> hq_eq unfolding top1_S1_def by (by100 simp)
+          obtain t0 where "0 \<le> t0" "t0 < 2*pi" "xc = cos t0" "yc = sin t0"
+            using sincos_total_2pi[OF hcirc] by (by100 blast)
+          define t' where "t' = t0 / (2*pi)"
+          have "0 \<le> t'" "t' < 1" unfolding t'_def
+            using \<open>0 \<le> t0\<close> \<open>t0 < 2*pi\<close> pi_gt_zero by (by100 auto)+
+          hence "t' \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+          moreover have "top1_R_to_S1 t' = z"
+            unfolding top1_R_to_S1_def t'_def hq_eq
+            using \<open>xc = cos t0\<close> \<open>yc = sin t0\<close> pi_gt_zero by (by100 simp)
+          ultimately show ?thesis using that by (by100 blast)
+        qed
+        hence "x = g (top1_R_to_S1 t)" using \<open>x = g z\<close> by (by100 simp)
+        hence "x = f_\<alpha> t" using hg_factor \<open>t \<in> I_set\<close> by (by100 simp)
+        hence "x = qC (edge_pt (i_of \<alpha>) t)" unfolding f_\<alpha>_def by (by100 simp)
+        thus "x \<in> C \<alpha>" unfolding C_def using \<open>t \<in> I_set\<close> by (by100 blast)
+      next
+        fix x assume "x \<in> C \<alpha>"
+        then obtain t where "t \<in> I_set" "x = qC (edge_pt (i_of \<alpha>) t)"
+          unfolding C_def by (by100 blast)
+        hence "x = f_\<alpha> t" unfolding f_\<alpha>_def by (by100 simp)
+        hence "x = g (top1_R_to_S1 t)" using hg_factor \<open>t \<in> I_set\<close> by (by100 simp)
+        moreover have "top1_R_to_S1 t \<in> top1_S1"
+          unfolding top1_R_to_S1_def top1_S1_def
+          using sin_cos_squared_add[of "2 * pi * t"]
+          by (by5000 auto)
+        ultimately show "x \<in> g ` top1_S1" by (by100 blast)
+      qed
       \<comment> \<open>g is injective on S1.\<close>
       have hg_inj: "inj_on g top1_S1"
-        sorry \<comment> \<open>Repeat of hC\_homeo injectivity proof (lines ~9140-9190).\<close>
+      proof (rule inj_onI)
+        fix z1 z2 assume hz1: "z1 \<in> top1_S1" and hz2: "z2 \<in> top1_S1" and hgeq: "g z1 = g z2"
+        obtain t1 where ht1: "t1 \<in> I_set" "top1_R_to_S1 t1 = z1"
+        proof -
+          obtain x1 y1 where hz1_eq: "z1 = (x1, y1)" by (cases z1)
+          have hcirc1: "x1^2 + y1^2 = 1"
+            using hz1 hz1_eq unfolding top1_S1_def by (by100 simp)
+          obtain t0 where "0 \<le> t0" "t0 < 2*pi" "x1 = cos t0" "y1 = sin t0"
+            using sincos_total_2pi[OF hcirc1] by (by100 blast)
+          define t' where "t' = t0 / (2*pi)"
+          have "0 \<le> t'" "t' < 1" unfolding t'_def
+            using \<open>0 \<le> t0\<close> \<open>t0 < 2*pi\<close> pi_gt_zero by (by100 auto)+
+          hence "t' \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+          moreover have "top1_R_to_S1 t' = z1"
+            unfolding top1_R_to_S1_def t'_def hz1_eq
+            using \<open>x1 = cos t0\<close> \<open>y1 = sin t0\<close> pi_gt_zero by (by100 simp)
+          ultimately show ?thesis using that by (by100 blast)
+        qed
+        obtain t2 where ht2: "t2 \<in> I_set" "top1_R_to_S1 t2 = z2"
+        proof -
+          obtain x2 y2 where hz2_eq: "z2 = (x2, y2)" by (cases z2)
+          have hcirc2: "x2^2 + y2^2 = 1"
+            using hz2 hz2_eq unfolding top1_S1_def by (by100 simp)
+          obtain t0 where "0 \<le> t0" "t0 < 2*pi" "x2 = cos t0" "y2 = sin t0"
+            using sincos_total_2pi[OF hcirc2] by (by100 blast)
+          define t' where "t' = t0 / (2*pi)"
+          have "0 \<le> t'" "t' < 1" unfolding t'_def
+            using \<open>0 \<le> t0\<close> \<open>t0 < 2*pi\<close> pi_gt_zero by (by100 auto)+
+          hence "t' \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+          moreover have "top1_R_to_S1 t' = z2"
+            unfolding top1_R_to_S1_def t'_def hz2_eq
+            using \<open>x2 = cos t0\<close> \<open>y2 = sin t0\<close> pi_gt_zero by (by100 simp)
+          ultimately show ?thesis using that by (by100 blast)
+        qed
+        have "f_\<alpha> t1 = g (top1_R_to_S1 t1)" using hg_factor ht1(1) by (by100 simp)
+        also have "\<dots> = g z1" using ht1(2) by (by100 simp)
+        also have "\<dots> = g z2" using hgeq by (by100 simp)
+        also have "\<dots> = g (top1_R_to_S1 t2)" using ht2(2) by (by100 simp)
+        also have "\<dots> = f_\<alpha> t2" using hg_factor ht2(1) by (by100 simp)
+        finally have hfeq: "f_\<alpha> t1 = f_\<alpha> t2" .
+        hence "qC (edge_pt (i_of \<alpha>) t1) = qC (edge_pt (i_of \<alpha>) t2)"
+          unfolding f_\<alpha>_def by (by100 simp)
+        hence "(i_of \<alpha> = i_of \<alpha> \<and> t1 = t2)
+          \<or> (fst (scheme!(i_of \<alpha>)) = fst (scheme!(i_of \<alpha>)) \<and>
+             (if snd (scheme!(i_of \<alpha>)) = snd (scheme!(i_of \<alpha>)) then t2 = t1 else t2 = 1 - t1))"
+          using hno_C hi\<alpha>(1) ht1(1) ht2(1) unfolding edge_pt_def by (by100 blast)
+        hence "t1 = t2" by (by100 auto)
+        thus "z1 = z2" using ht1(2) ht2(2) by (by100 simp)
+      qed
       \<comment> \<open>By Theorem 26.6: compact + Hausdorff + continuous bijection = homeomorphism.\<close>
       have hg_bij: "bij_betw g top1_S1 (C \<alpha>)"
         unfolding bij_betw_def using hg_inj hg_surj by (by100 blast)
