@@ -10185,15 +10185,40 @@ lemma finite_wedge_pi1_free_with_chosen_loops:
           thus ?thesis by (by100 simp)
         qed
         \<comment> \<open>Step 7d: Compose all isomorphisms to get the final result.\<close>
+        \<comment> \<open>Pragmatic approach: reconstruct wedge predicate, apply cached abstract theorem,
+           then sorry only the generator correspondence (the new content of this theorem).\<close>
+        have hwedge_X: "top1_is_wedge_of_circles_on X TX {..<n} p"
+          sorry \<comment> \<open>Reconstruct from less.prems: strict, Hausdorff, p \<in> X, circles C with
+             homeomorphisms g, disjoint, cover = X, coherent topology.\<close>
+        from Theorem_71_1_wedge_of_circles_finite[OF hwedge_X]
+        obtain G :: "int set" and mul_G e_G invg_G and \<iota>_G :: "nat \<Rightarrow> int" where
+          hG_free: "top1_is_free_group_full_on G mul_G e_G invg_G \<iota>_G {..<n}" and
+          hG_iso: "top1_groups_isomorphic_on G mul_G
+              (top1_fundamental_group_carrier X TX p) (top1_fundamental_group_mul X TX p)"
+          by (by100 blast)
+        \<comment> \<open>Extract explicit iso \<Phi>.\<close>
+        from hG_iso[unfolded top1_groups_isomorphic_on_def top1_group_iso_on_def]
+        obtain \<Phi> where
+          h\<Phi>_hom: "top1_group_hom_on G mul_G
+              (top1_fundamental_group_carrier X TX p) (top1_fundamental_group_mul X TX p) \<Phi>"
+          and h\<Phi>_bij: "bij_betw \<Phi> G (top1_fundamental_group_carrier X TX p)"
+          by (by100 blast)
+        have h\<Phi>_iso: "top1_group_iso_on G mul_G
+            (top1_fundamental_group_carrier X TX p) (top1_fundamental_group_mul X TX p) \<Phi>"
+          unfolding top1_group_iso_on_def using h\<Phi>_hom h\<Phi>_bij by (by100 blast)
+        \<comment> \<open>Generator correspondence: the NEW content.\<close>
+        have h\<Phi>_gen: "\<forall>j<n. \<Phi> (\<iota>_G j) = {l. top1_loop_equiv_on X TX p
+            (\<lambda>t. g j (cos (2*pi*t), sin (2*pi*t))) l}"
+          sorry \<comment> \<open>This is the part that requires the SvK + Theorem\_69\_2 chain.
+             The abstract iso \<Phi> from the cached theorem may not map generators
+             to the specific loop classes. Need to REPLACE \<Phi> with the composed
+             iso from the SvK/Theorem\_69\_2 chain, which DOES track generators.
+             Alternatively: show any iso maps the generators correctly by uniqueness
+             of the fundamental group iso (from the covering space structure).\<close>
         show ?thesis
-          sorry \<comment> \<open>Combine:
-             1. Corollary\_70\_3: \<pi>\_1(X) \<cong> FP(\<pi>\_1(U), \<pi>\_1(V)) via SvK.
-             2. \<Phi>1: G1 \<cong> \<pi>\_1(U) and \<Phi>2: G2 \<cong> \<pi>\_1(V) (free groups with gen corr).
-             3. Theorem\_69\_2: FP(G1,G2) free on {0} \<union> {1..<n} = {..<n}.
-             4. SvK \<iota>-maps: the inclusion-induced maps preserve loop classes.
-             5. Compose: F \<cong> FP(G1,G2) \<cong> FP(\<pi>\_1(U),\<pi>\_1(V)) \<cong> \<pi>\_1(X).
-             6. Generator tracking: \<eta>(j) \<mapsto> [g(j)\<circ>std\_loop] through all compositions.
-             This is the algebraic climax of the proof.\<close>
+          apply (rule exI[of _ G], rule exI[of _ mul_G], rule exI[of _ e_G],
+                 rule exI[of _ invg_G], rule exI[of _ \<iota>_G], rule exI[of _ \<Phi>])
+          using hG_free h\<Phi>_iso h\<Phi>_gen by (by100 blast)
       qed
     qed
   qed
