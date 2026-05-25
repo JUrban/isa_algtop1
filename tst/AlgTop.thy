@@ -7266,27 +7266,19 @@ lemma finite_wedge_pi1_free_with_chosen_loops:
              else top1_fundamental_group_invg V (subspace_topology X TX V) p)"
           unfolding GG_UV_def mulGG_UV_def using hpi1U_grp hpi1V_grp by (by100 simp)
         \<comment> \<open>Get free product directly via Theorem\_68\_2.\<close>
-        have hfp_exists: "\<exists>(G::(nat \<times> 'a set) list set) mul e invg iotafam.
-            top1_is_free_product_on G mul e invg GG_UV mulGG_UV iotafam {0::nat, 1}"
-          sorry \<comment> \<open>Theorem\_68\_2\_free\_product\_exists with factor groups \<pi>\_1(U), \<pi>\_1(V).\<close>
-        then obtain FP_UV :: "(nat \<times> 'a set) list set" where
-          "\<exists>mulUV eUV invgUV iotafamUV.
-            top1_is_free_product_on FP_UV mulUV eUV invgUV GG_UV mulGG_UV iotafamUV {0::nat, 1}"
-          by (by100 blast)
-        then obtain mulUV eUV invgUV iotafamUV where
-          hFP_UV: "top1_is_free_product_on FP_UV mulUV eUV invgUV GG_UV mulGG_UV iotafamUV {0::nat, 1}"
-          apply (rule exE) apply (by100 blast) done
-        have hFP_UV': "top1_is_free_product_on FP_UV mulUV eUV invgUV
-            (\<lambda>i::nat. if i = 0 then ?\<pi>U else ?\<pi>V) (\<lambda>i. if i = 0 then ?mU else ?mV)
-            iotafamUV {0, 1}"
-          using hFP_UV unfolding GG_UV_def mulGG_UV_def by (by100 simp)
-        \<comment> \<open>Apply parameterized SvK: \<pi>\_1(X,p) \<cong> FP\_UV.\<close>
-        have hSvK: "top1_groups_isomorphic_on
-              (top1_fundamental_group_carrier X TX p) (top1_fundamental_group_mul X TX p)
-              FP_UV mulUV"
-          using Corollary_70_3_simply_connected_intersection_param[OF
-            less.prems(1) hU_open hV_open hUV_cover hUV_sc hU_pc hV_pc hp_UV_final hFP_UV']
-          by (by100 blast)
+        define eGG_UV where "eGG_UV = (\<lambda>i::nat. if i = 0
+            then top1_fundamental_group_id U (subspace_topology X TX U) p
+            else top1_fundamental_group_id V (subspace_topology X TX V) p)"
+        define invgGG_UV where "invgGG_UV = (\<lambda>i::nat. if i = 0
+            then top1_fundamental_group_invg U (subspace_topology X TX U) p
+            else top1_fundamental_group_invg V (subspace_topology X TX V) p)"
+        have hGG_UV_grp': "\<forall>a\<in>{0::nat, 1}. top1_is_group_on (GG_UV a) (mulGG_UV a)
+            (eGG_UV a) (invgGG_UV a)"
+          unfolding GG_UV_def mulGG_UV_def eGG_UV_def invgGG_UV_def
+          using hpi1U_grp hpi1V_grp by (by100 simp)
+        note hfp_exists = Theorem_68_2_free_product_exists[OF hGG_UV_grp']
+        \<comment> \<open>SvK gives \<pi>\_1(X) \<cong> some free product. We don't need to extract it explicitly;
+           the cached theorem already gives G \<cong> \<pi>\_1(X) with the right type.\<close>
         \<comment> \<open>Compose isos: \<pi>\_1(X) \<cong> FP\_UV \<cong> FP(G1,G2) = FP, hence \<pi>\_1(X) \<cong> FP.
            FP free on {..<n}. By free\_group\_invariant\_under\_iso: \<pi>\_1(X) free on {..<n}
            with generators that are the images of iotaS12(j) under the composite iso.\<close>
