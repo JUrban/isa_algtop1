@@ -7405,13 +7405,7 @@ lemma finite_wedge_pi1_free_with_chosen_loops:
             \<iota>U' {0::nat}"
         proof -
           from free_group_invariant_under_iso[OF hG1_free h\<Phi>1_iso hpi1U_grp]
-          obtain \<iota>U' where "top1_is_free_group_full_on
-              (top1_fundamental_group_carrier U (subspace_topology X TX U) p)
-              (top1_fundamental_group_mul U (subspace_topology X TX U) p)
-              (top1_fundamental_group_id U (subspace_topology X TX U) p)
-              (top1_fundamental_group_invg U (subspace_topology X TX U) p)
-              \<iota>U' {0::nat}" sorry
-          thus ?thesis sorry
+          show ?thesis by (by100 blast)
         qed
         \<comment> \<open>Step B: \<pi>\_1(V) is free on {1..<n}.\<close>
         have hpi1V_free: "\<exists>\<iota>V'. top1_is_free_group_full_on
@@ -7422,13 +7416,7 @@ lemma finite_wedge_pi1_free_with_chosen_loops:
             \<iota>V' {1..<n}"
         proof -
           from free_group_invariant_under_iso[OF hG2_free h\<Phi>2_iso hpi1V_grp]
-          obtain \<iota>V' where "top1_is_free_group_full_on
-              (top1_fundamental_group_carrier V (subspace_topology X TX V) p)
-              (top1_fundamental_group_mul V (subspace_topology X TX V) p)
-              (top1_fundamental_group_id V (subspace_topology X TX V) p)
-              (top1_fundamental_group_invg V (subspace_topology X TX V) p)
-              \<iota>V' {1..<n}" sorry
-          thus ?thesis sorry
+          show ?thesis by (by100 blast)
         qed
         \<comment> \<open>Step C: Apply Theorem\_69\_2 to \<pi>\_1(U) and \<pi>\_1(V) (SAME type 'a set set!).\<close>
         \<comment> \<open>This gives FP\_UV free on {..<n} and FP\_UV = free product of \<pi>\_1(U), \<pi>\_1(V).\<close>
