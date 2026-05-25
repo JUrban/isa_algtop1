@@ -9833,7 +9833,8 @@ proof -
         using hgen_eq_a by (by100 simp)
       thus ?thesis using \<open>top1_is_free_group_full_on _ _ _ _ \<iota>A ?J \<and> _\<close> by (by100 blast)
     qed
-    show ?thesis using hA_wd_part hpi1A_gen_a sorry
+    show ?thesis using hA_wd_part hpi1A_gen_a
+      sorry \<comment> \<open>TECH: conjI + existential assembly. Both parts proved but blast can't combine.\<close>
   qed
   have hA_wd: "top1_is_wedge_of_circles_on A (subspace_topology X TX A) (fst ` set scheme) a"
     using hA_wd_and_gen by (by100 blast)
