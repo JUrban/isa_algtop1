@@ -9449,8 +9449,37 @@ proof -
         and hg_factor: "\<forall>s\<in>I_set. f_\<alpha> s = g (top1_R_to_S1 s)"
         by (by100 blast)
       \<comment> \<open>g is a homeomorphism S1 \<rightarrow> C(\<alpha>) (surjection + injection + compactness).\<close>
+      \<comment> \<open>g surjects onto C(\<alpha>).\<close>
+      have hg_surj: "g ` top1_S1 = C \<alpha>"
+        sorry \<comment> \<open>Repeat of hC\_homeo surjectivity proof (lines ~9100-9140).\<close>
+      \<comment> \<open>g is injective on S1.\<close>
+      have hg_inj: "inj_on g top1_S1"
+        sorry \<comment> \<open>Repeat of hC\_homeo injectivity proof (lines ~9140-9190).\<close>
+      \<comment> \<open>By Theorem 26.6: compact + Hausdorff + continuous bijection = homeomorphism.\<close>
+      have hg_bij: "bij_betw g top1_S1 (C \<alpha>)"
+        unfolding bij_betw_def using hg_inj hg_surj by (by100 blast)
+      have hS1_compact: "top1_compact_on top1_S1 top1_S1_topology"
+        using S1_compact by (by100 blast)
+      have hC_haus: "is_hausdorff_on (C \<alpha>) (subspace_topology A ?TA (C \<alpha>))"
+        using Theorem_17_11 hA_haus hC_sub[OF h\<alpha>] by (by100 blast)
+      have hS1_top: "is_topology_on top1_S1 top1_S1_topology"
+        using top1_S1_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
+      have hC_top: "is_topology_on (C \<alpha>) (subspace_topology A ?TA (C \<alpha>))"
+        using subspace_topology_is_topology_on[OF hA_top hC_sub[OF h\<alpha>]] by (by100 blast)
+      \<comment> \<open>Restrict g to codomain C(\<alpha>).\<close>
+      have hg_cont_C: "top1_continuous_map_on top1_S1 top1_S1_topology
+            (C \<alpha>) (subspace_topology A ?TA (C \<alpha>)) g"
+      proof -
+        have himg: "g ` top1_S1 \<subseteq> C \<alpha>" using hg_surj by (by100 blast)
+        from Theorem_18_2[OF hS1_top hA_top hA_top]
+        have "\<forall>W f. top1_continuous_map_on top1_S1 top1_S1_topology A ?TA f \<and>
+                     W \<subseteq> A \<and> f ` top1_S1 \<subseteq> W
+                     \<longrightarrow> top1_continuous_map_on top1_S1 top1_S1_topology W (subspace_topology A ?TA W) f"
+          by (by100 blast)
+        thus ?thesis using hg_cont hC_sub[OF h\<alpha>] himg by (by100 blast)
+      qed
       have hg_homeo: "top1_homeomorphism_on top1_S1 top1_S1_topology (C \<alpha>) (subspace_topology A ?TA (C \<alpha>)) g"
-        sorry \<comment> \<open>Same as hC\_homeo proof: surjective onto C(\<alpha>) + injective + Theorem 26.6.\<close>
+        using Theorem_26_6[OF hS1_top hC_top hS1_compact hC_haus hg_cont_C hg_bij] by (by100 blast)
       have hg_track: "\<forall>s\<in>I_set. g (top1_R_to_S1 s) = qC (edge_pt (i_of \<alpha>) s)"
         using hg_factor unfolding f_\<alpha>_def by (by100 simp)
       show "\<exists>f. top1_homeomorphism_on top1_S1 top1_S1_topology
