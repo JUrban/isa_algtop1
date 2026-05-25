@@ -7115,8 +7115,95 @@ lemma finite_wedge_pi1_free_with_chosen_loops:
           fix j assume "j < n"
           define fj where "fj = (\<lambda>t. g j (cos (2*pi*t), sin (2*pi*t)))"
           have "top1_is_loop_on X TX p fj"
-            sorry \<comment> \<open>fj is continuous I \<rightarrow> X (composition of std\_loop and g(j) homeomorphism),
-               fj(0) = g(j)(1,0) = p, fj(1) = g(j)(1,0) = p.\<close>
+          proof -
+            \<comment> \<open>std\_loop is a loop on S1 at (1,0).\<close>
+            have hstd: "top1_is_loop_on top1_S1 top1_S1_topology (1, 0)
+                (\<lambda>s. (cos (2*pi*s), sin (2*pi*s)))"
+              by (rule standard_S1_loop_is_loop)
+            \<comment> \<open>g(j) is continuous S1 \<rightarrow> C(j) (homeomorphism).\<close>
+            have hgj_homeo: "top1_homeomorphism_on top1_S1 top1_S1_topology
+                (C j) (subspace_topology X TX (C j)) (g j)"
+              using less.prems(7) \<open>j < n\<close> by (by100 blast)
+            have hgj_cont: "top1_continuous_map_on top1_S1 top1_S1_topology
+                (C j) (subspace_topology X TX (C j)) (g j)"
+              using hgj_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+            \<comment> \<open>Endpoints: g(j)(1,0) = p.\<close>
+            have hgj_base: "g j (1, 0) = p"
+              using less.prems(8) \<open>j < n\<close> by (by100 blast)
+            \<comment> \<open>fj = g(j) \<circ> std\_loop is a loop on C(j) at p.\<close>
+            \<comment> \<open>std\_loop as a path: continuous I \<rightarrow> S1.\<close>
+            have hstd_path: "top1_is_path_on top1_S1 top1_S1_topology (1, 0) (1, 0)
+                (\<lambda>s. (cos (2*pi*s), sin (2*pi*s)))"
+              using hstd unfolding top1_is_loop_on_def by (by100 blast)
+            have hstd_cont: "top1_continuous_map_on I_set I_top top1_S1 top1_S1_topology
+                (\<lambda>s. (cos (2*pi*s), sin (2*pi*s)))"
+              using hstd_path unfolding top1_is_path_on_def by (by100 blast)
+            \<comment> \<open>Compose: fj = g(j) \<circ> std\_loop continuous I \<rightarrow> C(j).\<close>
+            have hfj_cont_Cj: "top1_continuous_map_on I_set I_top
+                (C j) (subspace_topology X TX (C j)) fj"
+            proof (rule continuous_map_onI)
+              show "\<forall>t \<in> I_set. fj t \<in> C j"
+              proof
+                fix t assume "t \<in> I_set"
+                have "(cos (2*pi*t), sin (2*pi*t)) \<in> top1_S1"
+                  unfolding top1_S1_def by (by100 simp)
+                thus "fj t \<in> C j"
+                  using continuous_map_maps_to[OF hgj_cont] unfolding fj_def by (by100 blast)
+              qed
+              show "\<forall>V \<in> subspace_topology X TX (C j). {t \<in> I_set. fj t \<in> V} \<in> I_top"
+              proof
+                fix V assume "V \<in> subspace_topology X TX (C j)"
+                \<comment> \<open>Preimage under g(j).\<close>
+                have hpre_g: "{s \<in> top1_S1. g j s \<in> V} \<in> top1_S1_topology"
+                  using continuous_map_preimage_open[OF hgj_cont \<open>V \<in> subspace_topology X TX (C j)\<close>]
+                  by (by100 blast)
+                \<comment> \<open>Preimage under std\_loop.\<close>
+                have "{t \<in> I_set. (cos (2*pi*t), sin (2*pi*t)) \<in> {s \<in> top1_S1. g j s \<in> V}} \<in> I_top"
+                  using continuous_map_preimage_open[OF hstd_cont hpre_g] by (by100 blast)
+                moreover have "{t \<in> I_set. fj t \<in> V}
+                    = {t \<in> I_set. (cos (2*pi*t), sin (2*pi*t)) \<in> {s \<in> top1_S1. g j s \<in> V}}"
+                proof (rule set_eqI, rule iffI)
+                  fix t assume "t \<in> {t \<in> I_set. fj t \<in> V}"
+                  hence "t \<in> I_set" "fj t \<in> V" by (by100 blast)+
+                  have "(cos (2*pi*t), sin (2*pi*t)) \<in> top1_S1"
+                    unfolding top1_S1_def by (by100 simp)
+                  thus "t \<in> {t \<in> I_set. (cos (2*pi*t), sin (2*pi*t)) \<in> {s \<in> top1_S1. g j s \<in> V}}"
+                    using \<open>t \<in> I_set\<close> \<open>fj t \<in> V\<close> unfolding fj_def by (by100 simp)
+                next
+                  fix t assume "t \<in> {t \<in> I_set. (cos (2*pi*t), sin (2*pi*t)) \<in> {s \<in> top1_S1. g j s \<in> V}}"
+                  thus "t \<in> {t \<in> I_set. fj t \<in> V}" unfolding fj_def by (by100 simp)
+                qed
+                ultimately show "{t \<in> I_set. fj t \<in> V} \<in> I_top" by (by100 simp)
+              qed
+            qed
+            have hfj_loop_Cj: "top1_is_loop_on (C j) (subspace_topology X TX (C j)) p fj"
+              unfolding top1_is_loop_on_def top1_is_path_on_def
+              using hfj_cont_Cj hgj_base unfolding fj_def by (by100 simp)
+            \<comment> \<open>Transfer from C(j) to X via Theorem\_18\_2(6) (expand range).\<close>
+            have hCj_sub: "C j \<subseteq> X" using less.prems(4) \<open>j < n\<close> by (by100 blast)
+            \<comment> \<open>Transfer loop from C(j) to X: expand range via Theorem\_18\_2(6).\<close>
+            have hfj_cont_X: "top1_continuous_map_on I_set I_top X TX fj"
+            proof -
+              have hfj_cont_Cj': "top1_continuous_map_on I_set I_top
+                  (C j) (subspace_topology X TX (C j)) fj"
+                using hfj_loop_Cj unfolding top1_is_loop_on_def top1_is_path_on_def
+                by (by100 blast)
+              have hI_top: "is_topology_on I_set I_top"
+                using top1_unit_interval_topology_is_topology_on by (by100 blast)
+              have hTX_loc: "is_topology_on X TX"
+                using less.prems(1) unfolding is_topology_on_strict_def by (by100 blast)
+              have hTCj: "is_topology_on (C j) (subspace_topology X TX (C j))"
+                using subspace_topology_is_topology_on[OF hTX_loc hCj_sub] by (by100 blast)
+              show ?thesis
+                using Theorem_18_2(6)[OF hI_top hTCj hTX_loc] hfj_cont_Cj' hCj_sub
+                by (by100 blast)
+            qed
+            have hfj_0: "fj 0 = p" unfolding fj_def using hgj_base by (by100 simp)
+            have hfj_1: "fj 1 = p" unfolding fj_def using hgj_base by (by100 simp)
+            show ?thesis
+              unfolding top1_is_loop_on_def top1_is_path_on_def
+              using hfj_cont_X hfj_0 hfj_1 by (by100 blast)
+          qed
           moreover have "loop_class j = {l. top1_loop_equiv_on X TX p fj l}"
             unfolding loop_class_def fj_def by (by100 simp)
           ultimately show "loop_class j \<in> top1_fundamental_group_carrier X TX p"
