@@ -6923,11 +6923,46 @@ lemma free_group_full_reindex:
   assumes hfree: "top1_is_free_group_full_on G mul e invg \<iota> S"
       and hbij: "bij_betw f S' S"
   shows "top1_is_free_group_full_on G mul e invg (\<iota> \<circ> f) S'"
-  sorry \<comment> \<open>Each condition of free\_group\_full transfers:
-     1. Group: same. 2. (\<iota>\<circ>f)(s') \<in> G from \<iota>(f(s')) \<in> G. 3. inj\_on (\<iota>\<circ>f) S' from
-     inj\_on \<iota> S + f bijective. 4. Generated: (\<iota>\<circ>f)`S' = \<iota>`S. 5. Reduced words:
-     map (\<lambda>(s,b). ((\<iota>\<circ>f)(s), b)) ws = map (\<lambda>(s,b). (\<iota>(s), b)) (map (\<lambda>(s,b). (f(s),b)) ws).
-     Re-labeling preserves reduced-ness and word product.\<close>
+proof -
+  have hf_inj: "inj_on f S'" using hbij unfolding bij_betw_def by (by100 blast)
+  have hf_img: "f ` S' = S" using hbij unfolding bij_betw_def by (by100 blast)
+  have himg_eq: "(\<iota> \<circ> f) ` S' = \<iota> ` S"
+    unfolding image_comp[symmetric] using hf_img by (by100 simp)
+  \<comment> \<open>Extract conditions from hfree and build the result.
+     Avoid unfolding the full definition at once to prevent automation blowup.\<close>
+  have hfree_unfold: "top1_is_group_on G mul e invg
+      \<and> (\<forall>s\<in>S. \<iota> s \<in> G) \<and> inj_on \<iota> S
+      \<and> G = top1_subgroup_generated_on G mul e invg (\<iota> ` S)
+      \<and> (\<forall>ws. ws \<noteq> [] \<longrightarrow> top1_is_reduced_word (map (\<lambda>(s, b). (\<iota> s, b)) ws) \<longrightarrow>
+          (\<forall>i<length ws. fst (ws!i) \<in> S) \<longrightarrow>
+          top1_group_word_product mul e invg (map (\<lambda>(s, b). (\<iota> s, b)) ws) \<noteq> e)"
+    using hfree unfolding top1_is_free_group_full_on_def by (by100 blast)
+  have h1: "top1_is_group_on G mul e invg" using hfree_unfold by (by100 blast)
+  have h\<iota>_in: "\<forall>s\<in>S. \<iota> s \<in> G" using hfree_unfold by (by100 blast)
+  have h\<iota>_inj: "inj_on \<iota> S" using hfree_unfold by (by100 blast)
+  have hG_gen: "G = top1_subgroup_generated_on G mul e invg (\<iota> ` S)"
+    using hfree_unfold by (by100 blast)
+  have h2: "\<forall>s\<in>S'. (\<iota> \<circ> f) s \<in> G"
+  proof (intro ballI)
+    fix s assume "s \<in> S'"
+    hence "f s \<in> S" using hf_img by (by100 blast)
+    thus "(\<iota> \<circ> f) s \<in> G" using h\<iota>_in unfolding comp_def by (by100 blast)
+  qed
+  have h3: "inj_on (\<iota> \<circ> f) S'"
+  proof (rule comp_inj_on[OF hf_inj])
+    show "inj_on \<iota> (f ` S')" using h\<iota>_inj hf_img by (by100 simp)
+  qed
+  have h4: "G = top1_subgroup_generated_on G mul e invg ((\<iota> \<circ> f) ` S')"
+    using hG_gen himg_eq by (by100 simp)
+  have h5: "\<forall>ws. ws \<noteq> [] \<longrightarrow>
+      top1_is_reduced_word (map (\<lambda>(s, b). ((\<iota> \<circ> f) s, b)) ws) \<longrightarrow>
+      (\<forall>i<length ws. fst (ws ! i) \<in> S') \<longrightarrow>
+      top1_group_word_product mul e invg (map (\<lambda>(s, b). ((\<iota> \<circ> f) s, b)) ws) \<noteq> e"
+    sorry \<comment> \<open>Transform ws to ws' = map(\<lambda>(s,b). (f s, b)) ws over S.
+       map\_map\_pair\_compose: maps are equal. Original condition gives \<noteq> e.\<close>
+  show ?thesis unfolding top1_is_free_group_full_on_def
+    using h1 h2 h3 h4 h5 by (by100 blast)
+qed
 
 text \<open>Book-faithful Theorem 58.3: the inclusion-induced map IS the iso.
   Munkres: "the inclusion map j:(A,x0) \<rightarrow> (X,x0) induces an isomorphism."
