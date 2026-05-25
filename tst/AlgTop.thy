@@ -8002,7 +8002,16 @@ lemma finite_wedge_pi1_free_with_chosen_loops:
             have hV_gen_class: "\<forall>k\<in>{1..<n}. \<iota>V_out k =
                 {l. top1_loop_equiv_on V (subspace_topology X TX V) p
                     (\<lambda>t. g k (cos (2*pi*t), sin (2*pi*t))) l}"
-              sorry \<comment> \<open>\<iota>V\_out(k) = \<Phi>2(\<eta>2(k)) = loop\_class\_V(k).\<close>
+            proof (intro ballI)
+              fix k assume "k \<in> {1..<n}"
+              have "\<iota>V_out k = \<Phi>2 (\<eta>2 k)"
+                using hV_out_gen \<open>k \<in> {1..<n}\<close> by (by100 blast)
+              also have "\<dots> = {l. top1_loop_equiv_on V (subspace_topology X TX V) p
+                  (\<lambda>t. g k (cos (2*pi*t), sin (2*pi*t))) l}"
+                using h\<Phi>2_gen \<open>k \<in> {1..<n}\<close> by (by100 simp)
+              finally show "\<iota>V_out k = {l. top1_loop_equiv_on V (subspace_topology X TX V) p
+                  (\<lambda>t. g k (cos (2*pi*t), sin (2*pi*t))) l}" .
+            qed
             have hPhi_loop_class: "\<forall>k\<in>{1..<n}. \<Phi> (\<iota>_G k) =
                 {l. top1_loop_equiv_on X TX p (\<lambda>t. g k (cos (2*pi*t), sin (2*pi*t))) l}"
             proof (intro ballI)
