@@ -9016,12 +9016,143 @@ proof -
        R\_to\_S1 (continuous), h (continuous). Image in Y-{q} proved above.
        Standard product topology argument using Theorem\_18\_2, top1\_continuous\_mul\_real,
        top1\_continuous\_add\_real. Deferred: formally tedious product topology plumbing.\<close>
+    \<comment> \<open>F = h \<circ> R\_to\_S1 \<circ> lc where lc(y,t) = (1-t)*angle(y) + t*\<theta>r.
+       Prove by composition: first lc continuous to \<real>, then R\_to\_S1 to S1, then h to Y,
+       then restrict codomain to Y-{q}.\<close>
+    have hTY_top: "is_topology_on Y TY"
+      using hh unfolding top1_homeomorphism_on_def by (by100 blast)
+    have hTYq_top: "is_topology_on (Y - {q}) (subspace_topology Y TY (Y - {q}))"
+      by (rule subspace_topology_is_topology_on[OF hTY_top]) (by100 blast)
+    have hI_top: "is_topology_on I_set I_top"
+      using top1_unit_interval_topology_is_topology_on by (by100 blast)
+    have hprod_top: "is_topology_on ((Y - {q}) \<times> I_set)
+        (product_topology_on (subspace_topology Y TY (Y - {q})) I_top)"
+      using product_topology_on_is_topology_on[OF hTYq_top hI_top] by (by100 blast)
+    have hTR_eq: "(order_topology_on_UNIV :: real set set) = top1_open_sets"
+    proof (rule set_eqI)
+      fix U :: "real set"
+      show "U \<in> order_topology_on_UNIV \<longleftrightarrow> U \<in> top1_open_sets"
+        using order_topology_on_UNIV_eq_HOL_open unfolding top1_open_sets_def by (by100 simp)
+    qed
+    \<comment> \<open>lc continuous: (Y-{q})\<times>I \<rightarrow> \<real>.\<close>
+    have hlc: "top1_continuous_map_on ((Y - {q}) \<times> I_set)
+        (product_topology_on (subspace_topology Y TY (Y - {q})) I_top)
+        (UNIV :: real set) top1_open_sets (\<lambda>(y,t). (1 - t) * angle y + t * \<theta>r)"
+      sorry \<comment> \<open>Composition of angle \<circ> \<pi>1 and \<pi>2 via arithmetic continuity.
+         Uses: hangle\_cont, top1\_continuous\_mul\_real, top1\_continuous\_add\_real.\<close>
+    \<comment> \<open>R\_to\_S1 \<circ> lc continuous: (Y-{q})\<times>I \<rightarrow> S1.\<close>
+    have hh_cont: "top1_continuous_map_on top1_S1 top1_S1_topology Y TY h"
+      using hh unfolding top1_homeomorphism_on_def by (by100 blast)
+    have hR_S1_cont: "top1_continuous_map_on (UNIV :: real set) top1_open_sets
+        top1_S1 top1_S1_topology top1_R_to_S1"
+      using top1_covering_map_on_continuous[OF Theorem_53_1] by (by100 blast)
+    have hR_lc: "top1_continuous_map_on ((Y - {q}) \<times> I_set)
+        (product_topology_on (subspace_topology Y TY (Y - {q})) I_top)
+        top1_S1 top1_S1_topology (\<lambda>(y,t). top1_R_to_S1 ((1 - t) * angle y + t * \<theta>r))"
+    proof (rule continuous_map_onI)
+      show "\<forall>x \<in> (Y - {q}) \<times> I_set. (case x of (y,t) \<Rightarrow> top1_R_to_S1 ((1 - t) * angle y + t * \<theta>r)) \<in> top1_S1"
+      proof
+        fix x assume "x \<in> (Y - {q}) \<times> I_set"
+        then obtain y t where "x = (y, t)" "y \<in> Y - {q}" "t \<in> I_set" by (by100 blast)
+        thus "(case x of (y,t) \<Rightarrow> top1_R_to_S1 ((1 - t) * angle y + t * \<theta>r)) \<in> top1_S1"
+          unfolding top1_R_to_S1_def top1_S1_def by (by100 simp)
+      qed
+      show "\<forall>V \<in> top1_S1_topology. {x \<in> (Y - {q}) \<times> I_set.
+          (case x of (y,t) \<Rightarrow> top1_R_to_S1 ((1 - t) * angle y + t * \<theta>r)) \<in> V}
+          \<in> product_topology_on (subspace_topology Y TY (Y - {q})) I_top"
+      proof
+        fix V assume "V \<in> top1_S1_topology"
+        have hpre_R: "{x \<in> (UNIV :: real set). top1_R_to_S1 x \<in> V} \<in> top1_open_sets"
+          using continuous_map_preimage_open[OF hR_S1_cont \<open>V \<in> top1_S1_topology\<close>] by (by100 blast)
+        have hpre_lc: "{x \<in> (Y - {q}) \<times> I_set.
+            (case x of (y,t) \<Rightarrow> (1 - t) * angle y + t * \<theta>r) \<in> {x \<in> UNIV. top1_R_to_S1 x \<in> V}}
+            \<in> product_topology_on (subspace_topology Y TY (Y - {q})) I_top"
+          using continuous_map_preimage_open[OF hlc hpre_R] by (by100 blast)
+        moreover have "{x \<in> (Y - {q}) \<times> I_set.
+            (case x of (y,t) \<Rightarrow> top1_R_to_S1 ((1 - t) * angle y + t * \<theta>r)) \<in> V}
+            = {x \<in> (Y - {q}) \<times> I_set.
+            (case x of (y,t) \<Rightarrow> (1 - t) * angle y + t * \<theta>r) \<in> {x \<in> UNIV. top1_R_to_S1 x \<in> V}}"
+          by (by5000 auto)
+        ultimately show "{x \<in> (Y - {q}) \<times> I_set.
+            (case x of (y,t) \<Rightarrow> top1_R_to_S1 ((1 - t) * angle y + t * \<theta>r)) \<in> V}
+            \<in> product_topology_on (subspace_topology Y TY (Y - {q})) I_top"
+          by (by100 simp)
+      qed
+    qed
+    \<comment> \<open>h \<circ> (R\_to\_S1 \<circ> lc) continuous: (Y-{q})\<times>I \<rightarrow> Y.\<close>
+    have hF_Y: "top1_continuous_map_on ((Y - {q}) \<times> I_set)
+        (product_topology_on (subspace_topology Y TY (Y - {q})) I_top)
+        Y TY (\<lambda>(y,t). h (top1_R_to_S1 ((1 - t) * angle y + t * \<theta>r)))"
+    proof (rule continuous_map_onI)
+      show "\<forall>x \<in> (Y - {q}) \<times> I_set. (case x of (y,t) \<Rightarrow> h (top1_R_to_S1 ((1 - t) * angle y + t * \<theta>r))) \<in> Y"
+      proof
+        fix x assume "x \<in> (Y - {q}) \<times> I_set"
+        then obtain y t where "x = (y, t)" "y \<in> Y - {q}" "t \<in> I_set" by (by100 blast)
+        have "F (y, t) \<in> Y - {q}" using hF_image \<open>y \<in> Y - {q}\<close> \<open>t \<in> I_set\<close> by (by100 blast)
+        thus "(case x of (y,t) \<Rightarrow> h (top1_R_to_S1 ((1 - t) * angle y + t * \<theta>r))) \<in> Y"
+          using \<open>x = (y, t)\<close> unfolding F_def by (by100 simp)
+      qed
+      show "\<forall>V \<in> TY. {x \<in> (Y - {q}) \<times> I_set.
+          (case x of (y,t) \<Rightarrow> h (top1_R_to_S1 ((1 - t) * angle y + t * \<theta>r))) \<in> V}
+          \<in> product_topology_on (subspace_topology Y TY (Y - {q})) I_top"
+      proof
+        fix V assume "V \<in> TY"
+        have hpre_h: "{s \<in> top1_S1. h s \<in> V} \<in> top1_S1_topology"
+          using continuous_map_preimage_open[OF hh_cont \<open>V \<in> TY\<close>] by (by100 blast)
+        have hpre_Rlc: "{x \<in> (Y - {q}) \<times> I_set.
+            (case x of (y,t) \<Rightarrow> top1_R_to_S1 ((1 - t) * angle y + t * \<theta>r)) \<in>
+              {s \<in> top1_S1. h s \<in> V}}
+            \<in> product_topology_on (subspace_topology Y TY (Y - {q})) I_top"
+          using continuous_map_preimage_open[OF hR_lc hpre_h] by (by100 blast)
+        show "{x \<in> (Y - {q}) \<times> I_set.
+            (case x of (y,t) \<Rightarrow> h (top1_R_to_S1 ((1 - t) * angle y + t * \<theta>r))) \<in> V}
+            \<in> product_topology_on (subspace_topology Y TY (Y - {q})) I_top"
+        proof -
+          have hR_in_S1: "\<And>x::real. top1_R_to_S1 x \<in> top1_S1"
+            unfolding top1_R_to_S1_def top1_S1_def by (by100 simp)
+          have "{x \<in> (Y - {q}) \<times> I_set.
+              (case x of (y,t) \<Rightarrow> h (top1_R_to_S1 ((1 - t) * angle y + t * \<theta>r))) \<in> V}
+              \<subseteq> {x \<in> (Y - {q}) \<times> I_set.
+              (case x of (y,t) \<Rightarrow> top1_R_to_S1 ((1 - t) * angle y + t * \<theta>r)) \<in>
+                {s \<in> top1_S1. h s \<in> V}}"
+            using hR_in_S1 by (by5000 force)
+          moreover have "{x \<in> (Y - {q}) \<times> I_set.
+              (case x of (y,t) \<Rightarrow> top1_R_to_S1 ((1 - t) * angle y + t * \<theta>r)) \<in>
+                {s \<in> top1_S1. h s \<in> V}}
+              \<subseteq> {x \<in> (Y - {q}) \<times> I_set.
+              (case x of (y,t) \<Rightarrow> h (top1_R_to_S1 ((1 - t) * angle y + t * \<theta>r))) \<in> V}"
+            by (by5000 force)
+          ultimately have heq: "{x \<in> (Y - {q}) \<times> I_set.
+              (case x of (y,t) \<Rightarrow> h (top1_R_to_S1 ((1 - t) * angle y + t * \<theta>r))) \<in> V}
+              = {x \<in> (Y - {q}) \<times> I_set.
+              (case x of (y,t) \<Rightarrow> top1_R_to_S1 ((1 - t) * angle y + t * \<theta>r)) \<in>
+                {s \<in> top1_S1. h s \<in> V}}" by (by100 blast)
+          show ?thesis using hpre_Rlc heq by (by100 simp)
+        qed
+      qed
+    qed
+    \<comment> \<open>Restrict codomain to Y-{q} using Theorem\_18\_2(5) and hF\_image.\<close>
     have hF_cont: "top1_continuous_map_on ((Y - {q}) \<times> I_set)
         (product_topology_on (subspace_topology Y TY (Y - {q})) I_top)
         (Y - {q}) (subspace_topology Y TY (Y - {q})) F"
-      sorry \<comment> \<open>Composition of continuous functions through product topology.
-         Key facts: hangle\_cont (angle continuous), Lemma\_21\_4 (arithmetic continuous),
-         Theorem\_53\_1 (R\_to\_S1 continuous), hh (h continuous), hF\_image (image in Y-{q}).\<close>
+    proof -
+      have hF_agree: "\<forall>x \<in> (Y - {q}) \<times> I_set.
+          (case x of (y,t) \<Rightarrow> h (top1_R_to_S1 ((1 - t) * angle y + t * \<theta>r))) = F x"
+        unfolding F_def by (by100 auto)
+      have hF_Y': "top1_continuous_map_on ((Y - {q}) \<times> I_set)
+          (product_topology_on (subspace_topology Y TY (Y - {q})) I_top) Y TY F"
+        using top1_continuous_map_on_agree[OF hF_Y hF_agree] by (by100 blast)
+      have hF_sub: "F ` ((Y - {q}) \<times> I_set) \<subseteq> Y - {q}"
+      proof
+        fix z assume "z \<in> F ` ((Y - {q}) \<times> I_set)"
+        then obtain y t where "z = F (y, t)" "y \<in> Y - {q}" "t \<in> I_set" by (by100 blast)
+        thus "z \<in> Y - {q}" using hF_image by (by100 blast)
+      qed
+      have hYq_sub: "Y - {q} \<subseteq> Y" by (by100 blast)
+      show ?thesis
+        using Theorem_18_2(5)[OF hprod_top hTY_top hTY_top] hF_Y' hF_sub hYq_sub
+        by (by5000 blast)
+    qed
     show "\<exists>H. top1_continuous_map_on ((Y - {q}) \<times> I_set)
         (product_topology_on (subspace_topology Y TY (Y - {q})) I_top)
         (Y - {q}) (subspace_topology Y TY (Y - {q})) H
