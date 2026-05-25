@@ -5588,6 +5588,59 @@ proof -
   thus ?thesis by (by100 blast)
 qed
 
+text \<open>Helper: g(k) composed with the standard loop is a loop on V,
+  when C(k) \<subseteq> V and g(k) is a homeomorphism S1 \<rightarrow> C(k).\<close>
+lemma loop_on_superspace_via_homeo:
+  assumes hTX: "is_topology_on X TX"
+      and hV_sub: "V \<subseteq> X"
+      and hCk_sub_V: "Ck \<subseteq> V"
+      and hgk_homeo: "top1_homeomorphism_on top1_S1 top1_S1_topology
+          Ck (subspace_topology X TX Ck) gk"
+      and hgk_base: "gk (1, 0) = p"
+      and hp_V: "p \<in> V"
+  shows "top1_is_loop_on V (subspace_topology X TX V) p
+      (\<lambda>t. gk (cos (2*pi*t), sin (2*pi*t)))"
+proof -
+  let ?loop = "\<lambda>t. gk (cos (2*pi*t), sin (2*pi*t))"
+  \<comment> \<open>std\_loop is a loop on S1.\<close>
+  have hstd: "top1_is_loop_on top1_S1 top1_S1_topology (1, 0)
+      (\<lambda>s. (cos (2*pi*s), sin (2*pi*s)))"
+    by (rule standard_S1_loop_is_loop)
+  \<comment> \<open>Compose with gk: loop on Ck.\<close>
+  have hgk_cont: "top1_continuous_map_on top1_S1 top1_S1_topology
+      Ck (subspace_topology X TX Ck) gk"
+    using hgk_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+  have hloop_Ck: "top1_is_loop_on Ck (subspace_topology X TX Ck) (gk (1,0))
+      (gk \<circ> (\<lambda>s. (cos (2*pi*s), sin (2*pi*s))))"
+    by (rule top1_continuous_map_loop_early[OF hgk_cont hstd])
+  have hcomp_eq: "gk \<circ> (\<lambda>s. (cos (2*pi*s), sin (2*pi*s))) = ?loop"
+    unfolding comp_def by (by100 simp)
+  have hloop_Ck': "top1_is_loop_on Ck (subspace_topology X TX Ck) p ?loop"
+    using hloop_Ck hcomp_eq hgk_base by (by100 simp)
+  \<comment> \<open>Transfer from Ck to V: Ck \<subseteq> V \<subseteq> X.\<close>
+  have hCk_trans: "subspace_topology V (subspace_topology X TX V) Ck = subspace_topology X TX Ck"
+    using subspace_topology_trans[OF hCk_sub_V] by (by100 simp)
+  have hloop_Ck_V: "top1_is_loop_on Ck (subspace_topology V (subspace_topology X TX V) Ck) p ?loop"
+    using hloop_Ck' hCk_trans by (by100 simp)
+  \<comment> \<open>Expand from Ck to V.\<close>
+  have hTV: "is_topology_on V (subspace_topology X TX V)"
+    using subspace_topology_is_topology_on[OF hTX hV_sub] by (by100 blast)
+  have hloop_cont_Ck: "top1_continuous_map_on I_set I_top
+      Ck (subspace_topology V (subspace_topology X TX V) Ck) ?loop"
+    using hloop_Ck_V unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+  have hI_top: "is_topology_on I_set I_top"
+    using top1_unit_interval_topology_is_topology_on by (by100 blast)
+  have hTCk: "is_topology_on Ck (subspace_topology V (subspace_topology X TX V) Ck)"
+    using subspace_topology_is_topology_on[OF hTV hCk_sub_V] by (by100 blast)
+  have hloop_cont_V: "top1_continuous_map_on I_set I_top V (subspace_topology X TX V) ?loop"
+    using Theorem_18_2(6)[OF hI_top hTCk hTV] hloop_cont_Ck hCk_sub_V hCk_trans
+    by (by5000 blast)
+  have "?loop 0 = p" using hgk_base by (by100 simp)
+  have "?loop 1 = p" using hgk_base by (by100 simp)
+  show ?thesis unfolding top1_is_loop_on_def top1_is_path_on_def
+    using hloop_cont_V \<open>?loop 0 = p\<close> \<open>?loop 1 = p\<close> by (by100 blast)
+qed
+
 text \<open>Munkres Theorem 71.1 (witnessed version with chosen loop generators).
   For a finite wedge of circles with explicit circle data (homeomorphisms, basepoints),
   \<pi>_1 is free and the chosen circle loops are the free generators.
@@ -7998,9 +8051,21 @@ lemma finite_wedge_pi1_free_with_chosen_loops:
             \<comment> \<open>Apply inclusion\_gen\_images\_in\_hom\_image for V.\<close>
             have hV_loops: "\<forall>k\<in>{1..<n}. top1_is_loop_on V (subspace_topology X TX V) p
                 (\<lambda>t. g k (cos (2*pi*t), sin (2*pi*t)))"
-              sorry \<comment> \<open>Each g(k) \<circ> std\_loop is loop on V. Proof: g(k) homeo S1\<rightarrow>C(k),
-                 std\_loop loop on S1, compose to get loop on C(k), C(k) \<subseteq> V,
-                 subspace\_topology\_trans + Theorem\_18\_2(6) to expand to V.\<close>
+            proof (intro ballI)
+              fix k assume "k \<in> {1..<n}"
+              have "k < n" using \<open>k \<in> {1..<n}\<close> by (by100 simp)
+              have "C k \<subseteq> V" unfolding V_def using \<open>k \<in> {1..<n}\<close> by (by100 blast)
+              have "top1_homeomorphism_on top1_S1 top1_S1_topology
+                  (C k) (subspace_topology X TX (C k)) (g k)"
+                using less.prems(7) \<open>k < n\<close> by (by100 blast)
+              have "g k (1, 0) = p"
+                using less.prems(8) \<open>k < n\<close> by (by100 blast)
+              show "top1_is_loop_on V (subspace_topology X TX V) p
+                  (\<lambda>t. g k (cos (2*pi*t), sin (2*pi*t)))"
+                by (rule loop_on_superspace_via_homeo[OF hTX_here hV_sub \<open>C k \<subseteq> V\<close>
+                    \<open>top1_homeomorphism_on top1_S1 top1_S1_topology (C k) (subspace_topology X TX (C k)) (g k)\<close>
+                    \<open>g k (1, 0) = p\<close> hp_V_here])
+            qed
             have hV_gen_class: "\<forall>k\<in>{1..<n}. \<iota>V_out k =
                 {l. top1_loop_equiv_on V (subspace_topology X TX V) p
                     (\<lambda>t. g k (cos (2*pi*t), sin (2*pi*t))) l}"
