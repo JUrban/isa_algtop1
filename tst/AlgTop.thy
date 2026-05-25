@@ -5475,8 +5475,23 @@ proof (rule image_subsetI)
     have hmap_N: "\<forall>i<length ws. f (ws!i) \<in> N"
       sorry \<comment> \<open>From hws + hfS\_N + hom preserves inverse.\<close>
     \<comment> \<open>f preserves foldr: f(foldr mulG ws eG) = foldr mulH (map f ws) eH.\<close>
+    have hws_in_G: "\<forall>i<length ws. ws!i \<in> G"
+    proof (intro allI impI)
+      fix i :: nat assume "i < length ws"
+      from hws[rule_format, OF this] have hwsi: "ws!i \<in> S \<or> (\<exists>s\<in>S. ws!i = invgG s)" .
+      show "ws!i \<in> G"
+      proof (cases "ws!i \<in> S")
+        case True thus ?thesis using hS_sub by (by100 blast)
+      next
+        case False
+        from hwsi False obtain s where "s \<in> S" "ws!i = invgG s" by (by100 blast)
+        have "s \<in> G" using \<open>s \<in> S\<close> hS_sub by (by100 blast)
+        hence "invgG s \<in> G" using hG_grp unfolding top1_is_group_on_def by (by100 blast)
+        thus ?thesis using \<open>ws!i = invgG s\<close> by (by100 simp)
+      qed
+    qed
     have hf_foldr: "f (foldr mulG ws eG) = foldr mulH (map f ws) eH"
-      sorry \<comment> \<open>By induction on ws, using hom property.\<close>
+      using hom_foldr_mul[OF hG_grp hH_grp hf hws_in_G] by (by100 blast)
     \<comment> \<open>foldr mulH (map f ws) eH \<in> N since each (map f ws)!i \<in> N and N closed.\<close>
     have "foldr mulH (map f ws) eH \<in> N"
       using hmap_N hN_grp
