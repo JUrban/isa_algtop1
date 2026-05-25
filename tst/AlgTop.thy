@@ -2,39 +2,6 @@ theory AlgTop
   imports "AlgTopChain.AlgTopChain"
 begin
 
-text \<open>For the torus scheme, the 1-skeleton is a wedge of 2 circles.
-  For the dunce cap, the 1-skeleton is a single circle.\<close>
-lemma torus_scheme_CW_data:
-  assumes "top1_is_torus_on X TX"
-      and "x0 \<in> X"
-  shows "\<exists>(A :: 'a set) (h :: real \<times> real \<Rightarrow> 'a).
-      closedin_on X TX A
-    \<and> top1_is_wedge_of_circles_on A (subspace_topology X TX A) {0::nat, 1} x0
-    \<and> top1_continuous_map_on top1_B2 top1_B2_topology X TX h
-    \<and> h ` top1_S1 \<subseteq> A"
-  sorry
-
-lemma n_torus_scheme_CW_data:
-  assumes "top1_is_n_fold_torus_on X TX n"
-      and "x0 \<in> X"
-  shows "\<exists>(A :: 'a set) (h :: real \<times> real \<Rightarrow> 'a).
-      closedin_on X TX A
-    \<and> top1_is_wedge_of_circles_on A (subspace_topology X TX A) ({..<2*n}::nat set) x0
-    \<and> top1_continuous_map_on top1_B2 top1_B2_topology X TX h
-    \<and> h ` top1_S1 \<subseteq> A"
-  sorry
-
-lemma dunce_cap_scheme_CW_data:
-  assumes "top1_is_dunce_cap_on X TX m"
-      and "x0 \<in> X" and "m > 0"
-  shows "\<exists>(A :: 'a set) (h :: real \<times> real \<Rightarrow> 'a).
-      closedin_on X TX A
-    \<and> (\<exists>f. top1_homeomorphism_on top1_S1 top1_S1_topology A (subspace_topology X TX A) f)
-    \<and> top1_continuous_map_on top1_B2 top1_B2_topology X TX h
-    \<and> h ` top1_S1 \<subseteq> A
-    \<and> x0 \<in> A \<and> A \<subseteq> X"
-  sorry
-
 lemma m_projective_scheme_CW_data:
   assumes "top1_is_m_fold_projective_on X TX m"
       and "x0 \<in> X"
