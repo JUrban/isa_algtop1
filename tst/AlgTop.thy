@@ -5332,22 +5332,33 @@ lemma Theorem_69_2_free_product_part:
   assumes hG1: "top1_is_free_group_full_on G1 mul1 e1 invg1 iota1 S1"
       and hG2: "top1_is_free_group_full_on G2 mul2 e2 invg2 iota2 S2"
       and hS: "S1 \<inter> S2 = {}"
-  shows "\<exists>FP mulFP eFP invgFP iotafam.
+  shows "\<exists>(FP :: (nat \<times> 'a) list set) (mulFP :: (nat \<times> 'a) list \<Rightarrow> (nat \<times> 'a) list \<Rightarrow> (nat \<times> 'a) list) (eFP :: (nat \<times> 'a) list) (invgFP :: (nat \<times> 'a) list \<Rightarrow> (nat \<times> 'a) list) (iotafam :: nat \<Rightarrow> 'a \<Rightarrow> (nat \<times> 'a) list).
       top1_is_free_product_on FP mulFP eFP invgFP
         (\<lambda>i::nat. if i = 0 then G1 else G2) (\<lambda>i. if i = 0 then mul1 else mul2)
         iotafam {0::nat, 1}
     \<and> (\<exists>iotaS. top1_is_free_group_full_on FP mulFP eFP invgFP iotaS (S1 \<union> S2))"
 proof -
-  note hex = Theorem_69_2[OF hG1 hG2 hS]
-  \<comment> \<open>hex: \<exists>FP ... free\_product FP ... \<and> free\_group FP ... (S1 \<union> S2) \<and> gen tracking.
-     Need: \<exists>\<iota>X. free\_group \<pi>\_1(X) ... \<iota>X (S1 \<union> S2).
-     Route: (1) extract FP from hex, (2) SvK: \<pi>\_1(X) \<cong> FP,
-     (3) free\_group\_invariant\_under\_iso: \<pi>\_1(X) free on S1 \<union> S2.\<close>
-  from hex show ?thesis
-    sorry \<comment> \<open>Requires: Corollary\_70\_3\_param + group\_iso\_on\_inverse +
-       free\_group\_invariant\_under\_iso + hpi1\_grp.
-       The SvK application needs the free product part of hex.
-       Available: all lemmas, just needs extraction + composition.\<close>
+  from Theorem_69_2[OF hG1 hG2 hS] show ?thesis
+  proof -
+    note hex = Theorem_69_2[OF hG1 hG2 hS]
+    \<comment> \<open>hex has the Theorem\_69\_2 result with schematic internal names.
+       The thesis requires the same structure but with possibly different names.
+       Use ML-level or schematic_goal to match.\<close>
+    from hex show ?thesis
+      apply (elim exE conjE)
+      subgoal for fp_w mul_w e_w invg_w iotafam_w iotaS_w
+        apply (rule_tac x=fp_w in exI)
+        apply (rule_tac x=mul_w in exI)
+        apply (rule_tac x=e_w in exI)
+        apply (rule_tac x=invg_w in exI)
+        apply (rule_tac x=iotafam_w in exI)
+        apply (rule conjI)
+        apply assumption
+        apply (rule_tac x=iotaS_w in exI)
+        apply assumption
+        done
+      done
+  qed
 qed
 
 text \<open>Helper: combine Theorem 69.2 + Corollary 70.3 + free\_group\_invariant\_under\_iso
@@ -5383,33 +5394,50 @@ proof -
   let ?mU = "top1_fundamental_group_mul U ?TU p"
   let ?\<pi>V = "top1_fundamental_group_carrier V ?TV p"
   let ?mV = "top1_fundamental_group_mul V ?TV p"
-  \<comment> \<open>Step 1: Apply Theorem\_69\_2 to \<pi>\_1(U), \<pi>\_1(V).\<close>
-  note hThm692 = Theorem_69_2[OF hU_free hV_free hS_disj]
-  \<comment> \<open>Step 2: From hThm692, get FP\_UV as free product of \<pi>\_1(U), \<pi>\_1(V) and free on S1 \<union> S2.\<close>
-  \<comment> \<open>Step 3: Apply Corollary\_70\_3\_param with this free product.\<close>
-  \<comment> \<open>Step 4: Transfer freeness from FP\_UV to \<pi>\_1(X).\<close>
   have hTX: "is_topology_on X TX"
-    using hstrict unfolding is_topology_on_strict_def sorry
+    using hstrict unfolding is_topology_on_strict_def by (by100 blast)
+  have hp_X: "p \<in> X" using hp hUV_cover by (by100 blast)
   have hpi1_grp: "top1_is_group_on
       (top1_fundamental_group_carrier X TX p) (top1_fundamental_group_mul X TX p)
       (top1_fundamental_group_id X TX p) (top1_fundamental_group_invg X TX p)"
-    using top1_fundamental_group_is_group[OF hTX] hp sorry
-  \<comment> \<open>The full proof is a composition chain. Each step uses an existing lemma.
-     The key obstacle was extracting from Theorem\_69\_2's 6-variable existential.\<close>
-  \<comment> \<open>Step 5: Expand hThm692 manually. It gives ∃FP mul e invg iotafam iotaS. (4 conjuncts).
-     We only need the free product and free group parts.\<close>
-  \<comment> \<open>Extract step by step from the 6-variable existential.\<close>
-  \<comment> \<open>hThm692 is a 6-variable existential. Use it in `show` directly.\<close>
-  \<comment> \<open>Use hThm692 (Theorem\_69\_2 result) + SvK + free\_group\_invariant\_under\_iso.
-     The composition gives \<pi>\_1(X) free on S1 \<union> S2.
-     The extraction from hThm692's 6-variable existential is handled
-     by sorry-ing the combined statement; the mathematical content
-     (free product + SvK + transfer) is the book's "follows from Theorem 69.2."\<close>
-  show ?thesis using hThm692
-    Corollary_70_3_simply_connected_intersection_param[OF
-      hstrict hU_open hV_open hUV_cover hUV_sc hU_pc hV_pc hp]
-    group_iso_on_inverse free_group_invariant_under_iso hpi1_grp
+    using top1_fundamental_group_is_group[OF hTX hp_X] by (by100 blast)
+  \<comment> \<open>Step 1: Theorem\_69\_2\_free\_product\_part gives extraction with 5-variable existential.\<close>
+  note hfpp = Theorem_69_2_free_product_part[OF hU_free hV_free hS_disj]
+  \<comment> \<open>Extract 5-variable existential from hfpp using the same pattern as Theorem\_69\_2\_free\_product\_part.\<close>
+  from hfpp obtain FP_uv mulFP_uv eFP_uv invgFP_uv iotafam_uv where
+    hFP_all: "top1_is_free_product_on FP_uv mulFP_uv eFP_uv invgFP_uv
+        (\<lambda>i::nat. if i = 0 then ?\<pi>U else ?\<pi>V) (\<lambda>i. if i = 0 then ?mU else ?mV)
+        iotafam_uv {0::nat, 1}
+    \<and> (\<exists>iotaS. top1_is_free_group_full_on FP_uv mulFP_uv eFP_uv invgFP_uv iotaS (S1 \<union> S2))"
     sorry
+  have hFP_prod: "top1_is_free_product_on FP_uv mulFP_uv eFP_uv invgFP_uv
+      (\<lambda>i::nat. if i = 0 then ?\<pi>U else ?\<pi>V) (\<lambda>i. if i = 0 then ?mU else ?mV)
+      iotafam_uv {0::nat, 1}"
+    using hFP_all by (by100 blast)
+  obtain iotaS_uv where hFP_free:
+      "top1_is_free_group_full_on FP_uv mulFP_uv eFP_uv invgFP_uv iotaS_uv (S1 \<union> S2)"
+    using hFP_all by (by100 blast)
+  \<comment> \<open>Step 2: SvK: \<pi>\_1(X) \<cong> FP\_uv.\<close>
+  have hSvK: "top1_groups_isomorphic_on
+      (top1_fundamental_group_carrier X TX p) (top1_fundamental_group_mul X TX p)
+      FP_uv mulFP_uv"
+    using Corollary_70_3_simply_connected_intersection_param[OF
+      hstrict hU_open hV_open hUV_cover hUV_sc hU_pc hV_pc hp hFP_prod]
+    by (by100 blast)
+  \<comment> \<open>Step 3: Transfer freeness from FP\_uv to \<pi>\_1(X).\<close>
+  from hSvK[unfolded top1_groups_isomorphic_on_def]
+  obtain \<psi>_svk where h\<psi>_iso: "top1_group_iso_on
+      (top1_fundamental_group_carrier X TX p) (top1_fundamental_group_mul X TX p)
+      FP_uv mulFP_uv \<psi>_svk"
+    sorry
+  have hFP_grp: "top1_is_group_on FP_uv mulFP_uv eFP_uv invgFP_uv"
+    using hFP_free unfolding top1_is_free_group_full_on_def by (by100 blast)
+  have h\<psi>_inv: "top1_group_iso_on FP_uv mulFP_uv
+      (top1_fundamental_group_carrier X TX p) (top1_fundamental_group_mul X TX p)
+      (inv_into (top1_fundamental_group_carrier X TX p) \<psi>_svk)"
+    using group_iso_on_inverse[OF h\<psi>_iso hpi1_grp hFP_grp] by (by100 blast)
+  from free_group_invariant_under_iso[OF hFP_free h\<psi>_inv hpi1_grp]
+  show ?thesis by (by100 blast)
 qed
 
 text \<open>Munkres Theorem 71.1 (witnessed version with chosen loop generators).
