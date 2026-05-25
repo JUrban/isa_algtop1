@@ -6954,12 +6954,46 @@ proof -
   qed
   have h4: "G = top1_subgroup_generated_on G mul e invg ((\<iota> \<circ> f) ` S')"
     using hG_gen himg_eq by (by100 simp)
+  have hred_orig: "\<forall>ws. ws \<noteq> [] \<longrightarrow>
+      top1_is_reduced_word (map (\<lambda>(s, b). (\<iota> s, b)) ws) \<longrightarrow>
+      (\<forall>i<length ws. fst (ws!i) \<in> S) \<longrightarrow>
+      top1_group_word_product mul e invg (map (\<lambda>(s, b). (\<iota> s, b)) ws) \<noteq> e"
+    using hfree_unfold by (by100 blast)
   have h5: "\<forall>ws. ws \<noteq> [] \<longrightarrow>
       top1_is_reduced_word (map (\<lambda>(s, b). ((\<iota> \<circ> f) s, b)) ws) \<longrightarrow>
       (\<forall>i<length ws. fst (ws ! i) \<in> S') \<longrightarrow>
       top1_group_word_product mul e invg (map (\<lambda>(s, b). ((\<iota> \<circ> f) s, b)) ws) \<noteq> e"
-    sorry \<comment> \<open>Transform ws to ws' = map(\<lambda>(s,b). (f s, b)) ws over S.
-       map\_map\_pair\_compose: maps are equal. Original condition gives \<noteq> e.\<close>
+  proof (intro allI impI)
+    fix ws assume hne: "ws \<noteq> []"
+       and hred_ws: "top1_is_reduced_word (map (\<lambda>(s, b). ((\<iota> \<circ> f) s, b)) ws)"
+       and hentries: "\<forall>i<length ws. fst (ws ! i) \<in> S'"
+    \<comment> \<open>Key: map (\<lambda>(s,b). ((\<iota>\<circ>f) s, b)) ws = map (\<lambda>(s,b). (\<iota> s, b)) (map (\<lambda>(s,b). (f s, b)) ws).\<close>
+    define ws' where "ws' = map (\<lambda>(s, b). (f s, b)) ws"
+    have hmap_eq: "map (\<lambda>(s, b). (\<iota> s, b)) ws' = map (\<lambda>(s, b). ((\<iota> \<circ> f) s, b)) ws"
+      unfolding ws'_def
+      using map_map_pair_compose[of \<iota> f ws, symmetric] unfolding comp_def by (by100 simp)
+    have hne': "ws' \<noteq> []" unfolding ws'_def using hne by (by100 simp)
+    have hentries': "\<forall>i<length ws'. fst (ws' ! i) \<in> S"
+    proof (intro allI impI)
+      fix i assume "i < length ws'"
+      hence "i < length ws" unfolding ws'_def by (by100 simp)
+      have "fst (ws ! i) \<in> S'" using hentries \<open>i < length ws\<close> by (by100 blast)
+      hence "f (fst (ws ! i)) \<in> S" using hf_img by (by100 blast)
+      moreover have "fst (ws' ! i) = f (fst (ws ! i))"
+      proof -
+        have "ws' ! i = (\<lambda>(s,b). (f s, b)) (ws ! i)"
+          unfolding ws'_def using \<open>i < length ws\<close> by (by100 simp)
+        thus ?thesis unfolding case_prod_beta by (by100 simp)
+      qed
+      ultimately show "fst (ws' ! i) \<in> S" by (by100 simp)
+    qed
+    have hred': "top1_is_reduced_word (map (\<lambda>(s, b). (\<iota> s, b)) ws')"
+      using hred_ws hmap_eq by (by100 simp)
+    have "top1_group_word_product mul e invg (map (\<lambda>(s, b). (\<iota> s, b)) ws') \<noteq> e"
+      using hred_orig hne' hred' hentries' by (by100 blast)
+    thus "top1_group_word_product mul e invg (map (\<lambda>(s, b). ((\<iota> \<circ> f) s, b)) ws) \<noteq> e"
+      using hmap_eq by (by100 simp)
+  qed
   show ?thesis unfolding top1_is_free_group_full_on_def
     using h1 h2 h3 h4 h5 by (by100 blast)
 qed
