@@ -9038,8 +9038,111 @@ proof -
     have hlc: "top1_continuous_map_on ((Y - {q}) \<times> I_set)
         (product_topology_on (subspace_topology Y TY (Y - {q})) I_top)
         (UNIV :: real set) top1_open_sets (\<lambda>(y,t). (1 - t) * angle y + t * \<theta>r)"
-      sorry \<comment> \<open>Composition of angle \<circ> \<pi>1 and \<pi>2 via arithmetic continuity.
-         Uses: hangle\_cont, top1\_continuous\_mul\_real, top1\_continuous\_add\_real.\<close>
+    proof -
+      let ?PT = "product_topology_on (subspace_topology Y TY (Y - {q})) I_top"
+      let ?OT = "order_topology_on_UNIV :: real set set"
+      \<comment> \<open>Bridge: top1\_open\_sets = order\_topology\_on\_UNIV for reals.\<close>
+      \<comment> \<open>angle \<circ> \<pi>1 continuous to \<real> (already proved as hangle\_pi1, with open\_sets).\<close>
+      have hf_angle: "top1_continuous_map_on ((Y - {q}) \<times> I_set) ?PT
+          (UNIV :: real set) ?OT (\<lambda>(y,t). angle y)"
+        using hangle_pi1 hTR_eq by (by100 simp)
+      \<comment> \<open>\<pi>2 continuous to I, then expand to \<real>.\<close>
+      have hpi2: "top1_continuous_map_on ((Y - {q}) \<times> I_set) ?PT I_set I_top pi2"
+        using top1_continuous_pi2[OF hTYq_top hI_top] by (by100 blast)
+      have hpi2_OT: "top1_continuous_map_on ((Y - {q}) \<times> I_set) ?PT
+          (UNIV :: real set) ?OT (\<lambda>(y,t). t)"
+      proof (rule continuous_map_onI)
+        show "\<forall>x \<in> (Y - {q}) \<times> I_set. (case x of (y,t) \<Rightarrow> t) \<in> (UNIV :: real set)"
+          by (by100 blast)
+        show "\<forall>V \<in> ?OT. {x \<in> (Y - {q}) \<times> I_set. (case x of (y,t) \<Rightarrow> t) \<in> V} \<in> ?PT"
+        proof
+          fix V assume "V \<in> ?OT"
+          hence "V \<in> top1_open_sets" using hTR_eq by (by100 simp)
+          hence "open V" unfolding top1_open_sets_def by (by100 simp)
+          have hpre_I: "{t \<in> I_set. t \<in> V} \<in> I_top"
+          proof -
+            have "I_top = subspace_topology UNIV top1_open_sets I_set"
+              unfolding top1_unit_interval_topology_def by (by100 simp)
+            hence "{t \<in> I_set. t \<in> V} = I_set \<inter> V" by (by100 blast)
+            also have "\<dots> \<in> subspace_topology UNIV top1_open_sets I_set"
+              unfolding subspace_topology_def using \<open>V \<in> top1_open_sets\<close> by (by100 blast)
+            finally show ?thesis
+              unfolding top1_unit_interval_topology_def by (by100 simp)
+          qed
+          have "I_set \<in> I_top" using hI_top unfolding is_topology_on_def by (by100 blast)
+          have "{x \<in> (Y - {q}) \<times> I_set. (case x of (y,t) \<Rightarrow> t) \<in> V}
+              = (Y - {q}) \<times> {t \<in> I_set. t \<in> V}" by (by5000 auto)
+          have "Y - {q} \<in> subspace_topology Y TY (Y - {q})"
+          proof -
+            have "Y \<in> TY" using hTY_top unfolding is_topology_on_def by (by100 blast)
+            hence "Y \<inter> (Y - {q}) \<in> subspace_topology Y TY (Y - {q})"
+              unfolding subspace_topology_def by (by100 blast)
+            moreover have "Y \<inter> (Y - {q}) = Y - {q}" by (by100 blast)
+            ultimately show ?thesis by (by100 simp)
+          qed
+          show "{x \<in> (Y - {q}) \<times> I_set. (case x of (y,t) \<Rightarrow> t) \<in> V} \<in> ?PT"
+            using product_rect_open[OF \<open>Y - {q} \<in> subspace_topology Y TY (Y - {q})\<close> hpre_I]
+                  \<open>{x \<in> (Y - {q}) \<times> I_set. (case x of (y,t) \<Rightarrow> t) \<in> V}
+                    = (Y - {q}) \<times> {t \<in> I_set. t \<in> V}\<close>
+            by (by100 simp)
+        qed
+      qed
+      \<comment> \<open>Constant function continuous.\<close>
+      have hOT: "is_topology_on (UNIV :: real set) ?OT"
+        using order_topology_on_UNIV_is_topology_on by (by100 blast)
+      have hconst_1: "top1_continuous_map_on ((Y - {q}) \<times> I_set) ?PT
+          (UNIV :: real set) ?OT (\<lambda>_. 1 :: real)"
+        using top1_continuous_map_on_const[OF hprod_top hOT] by (by100 simp)
+      have hconst_thr: "top1_continuous_map_on ((Y - {q}) \<times> I_set) ?PT
+          (UNIV :: real set) ?OT (\<lambda>_. \<theta>r)"
+        using top1_continuous_map_on_const[OF hprod_top hOT] by (by100 simp)
+      \<comment> \<open>Subtract: (y,t) \<mapsto> 1-t.\<close>
+      have hnt: "top1_continuous_map_on ((Y - {q}) \<times> I_set) ?PT
+          (UNIV :: real set) ?OT (\<lambda>(y,t). - t)"
+      proof -
+        have "top1_continuous_map_on ((Y - {q}) \<times> I_set) ?PT
+            (UNIV :: real set) ?OT (\<lambda>x. - (case x of (y,t) \<Rightarrow> t))"
+          using top1_continuous_uminus_real[OF hpi2_OT] by (by100 blast)
+        thus ?thesis by (rule top1_continuous_map_on_agree') (by100 auto)
+      qed
+      have h1mt: "top1_continuous_map_on ((Y - {q}) \<times> I_set) ?PT
+          (UNIV :: real set) ?OT (\<lambda>(y,t). 1 - t)"
+      proof -
+        have "top1_continuous_map_on ((Y - {q}) \<times> I_set) ?PT
+            (UNIV :: real set) ?OT (\<lambda>x. (\<lambda>_. 1::real) x + (\<lambda>(y,t). - t) x)"
+          using top1_continuous_add_real[OF hprod_top hconst_1 hnt] by (by100 blast)
+        thus ?thesis by (rule top1_continuous_map_on_agree') (by100 auto)
+      qed
+      \<comment> \<open>Product: (1-t) * angle(y).\<close>
+      have hprod1: "top1_continuous_map_on ((Y - {q}) \<times> I_set) ?PT
+          (UNIV :: real set) ?OT (\<lambda>(y,t). (1 - t) * angle y)"
+      proof -
+        have "top1_continuous_map_on ((Y - {q}) \<times> I_set) ?PT
+            (UNIV :: real set) ?OT (\<lambda>x. (case x of (y,t) \<Rightarrow> 1 - t) * (case x of (y,t) \<Rightarrow> angle y))"
+          using top1_continuous_mul_real[OF hprod_top h1mt hf_angle] by (by100 blast)
+        thus ?thesis by (rule top1_continuous_map_on_agree') (by100 auto)
+      qed
+      \<comment> \<open>Product: t * \<theta>r.\<close>
+      have hprod2: "top1_continuous_map_on ((Y - {q}) \<times> I_set) ?PT
+          (UNIV :: real set) ?OT (\<lambda>(y,t). t * \<theta>r)"
+      proof -
+        have hraw: "top1_continuous_map_on ((Y - {q}) \<times> I_set) ?PT
+            (UNIV :: real set) ?OT (\<lambda>x. (case x of (y,t) \<Rightarrow> t) * \<theta>r)"
+          using top1_continuous_mul_real[OF hprod_top hpi2_OT hconst_thr] by (by100 simp)
+        show ?thesis using top1_continuous_map_on_agree'[OF hraw] by (by100 auto)
+      qed
+      \<comment> \<open>Sum: (1-t)*angle(y) + t*\<theta>r.\<close>
+      have hsum: "top1_continuous_map_on ((Y - {q}) \<times> I_set) ?PT
+          (UNIV :: real set) ?OT (\<lambda>(y,t). (1 - t) * angle y + t * \<theta>r)"
+      proof -
+        have "top1_continuous_map_on ((Y - {q}) \<times> I_set) ?PT
+            (UNIV :: real set) ?OT (\<lambda>x. (case x of (y,t) \<Rightarrow> (1 - t) * angle y) +
+                                         (case x of (y,t) \<Rightarrow> t * \<theta>r))"
+          using top1_continuous_add_real[OF hprod_top hprod1 hprod2] by (by100 blast)
+        thus ?thesis by (rule top1_continuous_map_on_agree') (by100 auto)
+      qed
+      show ?thesis using hsum hTR_eq by (by100 simp)
+    qed
     \<comment> \<open>R\_to\_S1 \<circ> lc continuous: (Y-{q})\<times>I \<rightarrow> S1.\<close>
     have hh_cont: "top1_continuous_map_on top1_S1 top1_S1_topology Y TY h"
       using hh unfolding top1_homeomorphism_on_def by (by100 blast)
