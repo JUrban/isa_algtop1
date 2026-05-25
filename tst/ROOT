@@ -61,7 +61,12 @@ session AlgTopSvK in svk = PolygonDisk +
   theories
     AlgTopSvK
 
-session AlgTop = AlgTopSvK +
+session AlgTopWedgeHelpers in wh = AlgTopSvK +
+  options [timeout = 600]
+  theories
+    AlgTopWedgeHelpers
+
+session AlgTop = AlgTopWedgeHelpers +
   options [quick_and_dirty, timeout = 600]
   theories
     AlgTop
