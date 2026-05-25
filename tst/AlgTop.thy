@@ -9410,7 +9410,17 @@ proof -
       have hi\<alpha>: "i_of \<alpha> < ?n" "fst (scheme!(i_of \<alpha>)) = \<alpha>" using hi_of[OF h\<alpha>] by (by100 blast)+
       define f_\<alpha> where "f_\<alpha> t = qC (edge_pt (i_of \<alpha>) t)" for t
       have hf_cont: "top1_continuous_map_on I_set top1_unit_interval_topology A ?TA f_\<alpha>"
-        sorry \<comment> \<open>Same as hC\_homeo proof: qC continuous + edge\_pt continuous.\<close>
+      proof -
+        have "top1_continuous_map_on I_set top1_unit_interval_topology A ?TA
+            (\<lambda>t. qC ((1-t) * vxC (i_of \<alpha>) + t * vxC (Suc (i_of \<alpha>) mod ?n),
+                      (1-t) * vyC (i_of \<alpha>) + t * vyC (Suc (i_of \<alpha>) mod ?n)))"
+          using hqC_edge_cont hi\<alpha>(1) by (by100 blast)
+        moreover have "\<And>t. qC ((1-t) * vxC (i_of \<alpha>) + t * vxC (Suc (i_of \<alpha>) mod ?n),
+                      (1-t) * vyC (i_of \<alpha>) + t * vyC (Suc (i_of \<alpha>) mod ?n))
+                    = f_\<alpha> t"
+          unfolding f_\<alpha>_def edge_pt_def by (by100 simp)
+        ultimately show ?thesis by (by100 simp)
+      qed
       have hf0: "f_\<alpha> 0 = a"
       proof -
         have "f_\<alpha> 0 = qC (vxC (i_of \<alpha>), vyC (i_of \<alpha>))"
