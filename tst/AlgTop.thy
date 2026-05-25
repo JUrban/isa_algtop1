@@ -5402,47 +5402,37 @@ proof -
       (top1_fundamental_group_id X TX p) (top1_fundamental_group_invg X TX p)"
     using top1_fundamental_group_is_group[OF hTX hp_X] by (by100 blast)
   \<comment> \<open>Step 1: Theorem\_69\_2\_free\_product\_part gives extraction with 5-variable existential.\<close>
-  note hfpp = Theorem_69_2_free_product_part[OF hU_free hV_free hS_disj]
-  \<comment> \<open>Extract 5-variable existential from hfpp using the same pattern as Theorem\_69\_2\_free\_product\_part.\<close>
-  from hfpp obtain FP_uv and mulFP_uv eFP_uv invgFP_uv and iotafam_uv where
-    hFP_all: "top1_is_free_product_on FP_uv mulFP_uv eFP_uv invgFP_uv
+  \<comment> \<open>Apply Theorem\_69\_2 directly (avoiding the extraction problem)
+     and compose with SvK + transfer in a single existential chain.\<close>
+  from Theorem_69_2[OF hU_free hV_free hS_disj] show ?thesis
+  proof (elim exE conjE)
+    fix FP_uv mulFP_uv eFP_uv invgFP_uv iotafam_uv iotaS_uv
+    assume hFP_prod: "top1_is_free_product_on FP_uv mulFP_uv eFP_uv invgFP_uv
         (\<lambda>i::nat. if i = 0 then ?\<pi>U else ?\<pi>V) (\<lambda>i. if i = 0 then ?mU else ?mV)
-        iotafam_uv {0::nat, 1}
-    \<and> (\<exists>iotaS. top1_is_free_group_full_on FP_uv mulFP_uv eFP_uv invgFP_uv iotaS (S1 \<union> S2))"
-    sorry \<comment> \<open>FORMAL OBSTACLE: 5-variable existential extraction from
-       Theorem\_69\_2\_free\_product\_part. All Isabelle tactics (blast, fast, meson,
-       force, auto) time out even without by100 wrapper.
-       The predicate top1\_is\_free\_product\_on has a deeply nested structure
-       that defeats first-order unification.
-       SOLUTION: move svk\_free\_product\_free to cached session or use ML.\<close>
-  have hFP_prod: "top1_is_free_product_on FP_uv mulFP_uv eFP_uv invgFP_uv
-      (\<lambda>i::nat. if i = 0 then ?\<pi>U else ?\<pi>V) (\<lambda>i. if i = 0 then ?mU else ?mV)
-      iotafam_uv {0::nat, 1}"
-    using hFP_all by (by100 blast)
-  obtain iotaS_uv where hFP_free:
-      "top1_is_free_group_full_on FP_uv mulFP_uv eFP_uv invgFP_uv iotaS_uv (S1 \<union> S2)"
-    using hFP_all by (by100 blast)
-  \<comment> \<open>Step 2: SvK: \<pi>\_1(X) \<cong> FP\_uv.\<close>
-  have hSvK: "top1_groups_isomorphic_on
-      (top1_fundamental_group_carrier X TX p) (top1_fundamental_group_mul X TX p)
-      FP_uv mulFP_uv"
-    using Corollary_70_3_simply_connected_intersection_param[OF
-      hstrict hU_open hV_open hUV_cover hUV_sc hU_pc hV_pc hp hFP_prod]
-    by (by100 blast)
-  \<comment> \<open>Step 3: Transfer freeness from FP\_uv to \<pi>\_1(X).\<close>
-  from hSvK[unfolded top1_groups_isomorphic_on_def]
-  obtain \<psi>_svk where h\<psi>_iso: "top1_group_iso_on
-      (top1_fundamental_group_carrier X TX p) (top1_fundamental_group_mul X TX p)
-      FP_uv mulFP_uv \<psi>_svk"
-    by (by100 blast)
-  have hFP_grp: "top1_is_group_on FP_uv mulFP_uv eFP_uv invgFP_uv"
-    using hFP_free unfolding top1_is_free_group_full_on_def by (by100 blast)
-  have h\<psi>_inv: "top1_group_iso_on FP_uv mulFP_uv
-      (top1_fundamental_group_carrier X TX p) (top1_fundamental_group_mul X TX p)
-      (inv_into (top1_fundamental_group_carrier X TX p) \<psi>_svk)"
-    using group_iso_on_inverse[OF h\<psi>_iso hpi1_grp hFP_grp] by (by100 blast)
-  from free_group_invariant_under_iso[OF hFP_free h\<psi>_inv hpi1_grp]
-  show ?thesis by (by100 blast)
+        iotafam_uv {0, 1}"
+    assume hFP_free: "top1_is_free_group_full_on FP_uv mulFP_uv eFP_uv invgFP_uv iotaS_uv (S1 \<union> S2)"
+    \<comment> \<open>SvK: \<pi>\_1(X) \<cong> FP\_uv.\<close>
+    have hSvK: "top1_groups_isomorphic_on
+        (top1_fundamental_group_carrier X TX p) (top1_fundamental_group_mul X TX p)
+        FP_uv mulFP_uv"
+      using Corollary_70_3_simply_connected_intersection_param[OF
+        hstrict hU_open hV_open hUV_cover hUV_sc hU_pc hV_pc hp hFP_prod]
+      by (by100 blast)
+    \<comment> \<open>Transfer freeness.\<close>
+    from hSvK[unfolded top1_groups_isomorphic_on_def]
+    obtain \<psi>_svk where h\<psi>_iso: "top1_group_iso_on
+        (top1_fundamental_group_carrier X TX p) (top1_fundamental_group_mul X TX p)
+        FP_uv mulFP_uv \<psi>_svk"
+      by (by100 blast)
+    have hFP_grp: "top1_is_group_on FP_uv mulFP_uv eFP_uv invgFP_uv"
+      using hFP_free unfolding top1_is_free_group_full_on_def by (by100 blast)
+    have h\<psi>_inv: "top1_group_iso_on FP_uv mulFP_uv
+        (top1_fundamental_group_carrier X TX p) (top1_fundamental_group_mul X TX p)
+        (inv_into (top1_fundamental_group_carrier X TX p) \<psi>_svk)"
+      using group_iso_on_inverse[OF h\<psi>_iso hpi1_grp hFP_grp] by (by100 blast)
+    from free_group_invariant_under_iso[OF hFP_free h\<psi>_inv hpi1_grp]
+    show ?thesis by (by100 blast)
+  qed
 qed
 
 text \<open>Munkres Theorem 71.1 (witnessed version with chosen loop generators).
