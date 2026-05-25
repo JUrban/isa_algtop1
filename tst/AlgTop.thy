@@ -5190,6 +5190,26 @@ proof -
   show ?thesis sorry \<comment> \<open>Compose the three isomorphisms.\<close>
 qed
 
+text \<open>Inverse of a group isomorphism is a group isomorphism.\<close>
+lemma group_iso_on_inverse:
+  assumes hiso: "top1_group_iso_on G mulG H mulH f"
+      and hG_grp: "top1_is_group_on G mulG eG invgG"
+      and hH_grp: "top1_is_group_on H mulH eH invgH"
+  shows "top1_group_iso_on H mulH G mulG (inv_into G f)"
+  sorry
+
+text \<open>Transferring a free product through factor isomorphisms.
+  If FP is the free product of (G1, G2) with inclusions \<iota>, and f1: G1 \<cong> H1, f2: G2 \<cong> H2,
+  then FP with inclusions \<iota>' = \<iota> \<circ> f^{-1} is the free product of (H1, H2).\<close>
+lemma free_product_factor_iso_transfer:
+  assumes hFP: "top1_is_free_product_on FP mulFP eFP invgFP GG mulGG iotafam {0::nat, 1}"
+      and hiso1: "top1_group_iso_on (HH 0) (mulHH 0) (GG 0) (mulGG 0) (ff 0)"
+      and hiso2: "top1_group_iso_on (HH 1) (mulHH 1) (GG 1) (mulGG 1) (ff 1)"
+      and hHH_grps: "\<forall>a\<in>{0::nat, 1}. top1_is_group_on (HH a) (mulHH a) (eHH a) (invgHH a)"
+  shows "top1_is_free_product_on FP mulFP eFP invgFP HH mulHH
+      (\<lambda>i. iotafam i \<circ> ff i) {0::nat, 1}"
+  sorry
+
 text \<open>A hom between free groups on the same index set that maps generators to generators
   is an isomorphism. Standard free group fact from the universal property.\<close>
 lemma free_group_hom_generators_iso:
@@ -7384,7 +7404,89 @@ lemma finite_wedge_pi1_free_with_chosen_loops:
            formally requires Theorem\_68\_4\_free\_product\_unique or a direct construction
            transferring the free product through the factor isomorphisms.\<close>
         have h\<Phi>_bij: "bij_betw \<Phi> G (top1_fundamental_group_carrier X TX p)"
-          sorry
+        proof -
+          \<comment> \<open>Step A: Invert the factor isos: \<Phi>1^{-1}: \<pi>\_1(U) \<rightarrow> G1, \<Phi>2^{-1}: \<pi>\_1(V) \<rightarrow> G2.\<close>
+          have hG1_grp: "top1_is_group_on G1 mul1 e1 invg1"
+            using hG1_free unfolding top1_is_free_group_full_on_def by (by100 blast)
+          have hG2_grp: "top1_is_group_on G2 mul2 e2 invg2"
+            using hG2_free unfolding top1_is_free_group_full_on_def by (by100 blast)
+          have h\<Phi>1_inv: "top1_group_iso_on ?\<pi>U ?mU G1 mul1 (inv_into G1 \<Phi>1)"
+            using group_iso_on_inverse[OF h\<Phi>1_iso hG1_grp hpi1U_grp] by (by100 blast)
+          have h\<Phi>2_inv: "top1_group_iso_on ?\<pi>V ?mV G2 mul2 (inv_into G2 \<Phi>2)"
+            using group_iso_on_inverse[OF h\<Phi>2_iso hG2_grp hpi1V_grp] by (by100 blast)
+          \<comment> \<open>Step B: Transfer FP to be a free product of \<pi>\_1(U), \<pi>\_1(V).\<close>
+          define GG_FP where "GG_FP = (\<lambda>i::nat. if i = 0 then G1 else G2)"
+          define mulGG_FP where "mulGG_FP = (\<lambda>i::nat. if i = 0 then mul1 else mul2)"
+          have hFP_prod_GG: "top1_is_free_product_on FP mulFP eFP invgFP GG_FP mulGG_FP iotafam12 {0::nat, 1}"
+            using hFP_prod unfolding GG_FP_def mulGG_FP_def by (by100 simp)
+          define ff_inv where "ff_inv = (\<lambda>i::nat. if i = 0 then inv_into G1 \<Phi>1 else inv_into G2 \<Phi>2)"
+          define HH_UV where "HH_UV = (\<lambda>i::nat. if i = 0 then ?\<pi>U else ?\<pi>V)"
+          define mulHH_UV where "mulHH_UV = (\<lambda>i::nat. if i = 0 then ?mU else ?mV)"
+          have hFP_as_piUV': "top1_is_free_product_on FP mulFP eFP invgFP HH_UV mulHH_UV
+              (\<lambda>i. iotafam12 i \<circ> ff_inv i) {0::nat, 1}"
+          proof -
+            have hiso0: "top1_group_iso_on (HH_UV 0) (mulHH_UV 0) (GG_FP 0) (mulGG_FP 0) (ff_inv 0)"
+              unfolding HH_UV_def mulHH_UV_def GG_FP_def mulGG_FP_def ff_inv_def
+              using h\<Phi>1_inv by (by100 simp)
+            have hiso1: "top1_group_iso_on (HH_UV 1) (mulHH_UV 1) (GG_FP 1) (mulGG_FP 1) (ff_inv 1)"
+              unfolding HH_UV_def mulHH_UV_def GG_FP_def mulGG_FP_def ff_inv_def
+              using h\<Phi>2_inv by (by100 simp)
+            have hHH_grps: "\<forall>a\<in>{0::nat, 1}. top1_is_group_on (HH_UV a) (mulHH_UV a)
+                (if a = 0 then top1_fundamental_group_id U (subspace_topology X TX U) p
+                 else top1_fundamental_group_id V (subspace_topology X TX V) p)
+                (if a = 0 then top1_fundamental_group_invg U (subspace_topology X TX U) p
+                 else top1_fundamental_group_invg V (subspace_topology X TX V) p)"
+              unfolding HH_UV_def mulHH_UV_def
+              using hpi1U_grp hpi1V_grp by (by100 simp)
+            show ?thesis
+              using free_product_factor_iso_transfer[OF hFP_prod_GG hiso0 hiso1 hHH_grps]
+              sorry
+          qed
+          have hFP_as_piUV: "top1_is_free_product_on FP mulFP eFP invgFP
+              (\<lambda>i::nat. if i = 0 then ?\<pi>U else ?\<pi>V) (\<lambda>i. if i = 0 then ?mU else ?mV)
+              (\<lambda>i. iotafam12 i \<circ> ff_inv i) {0::nat, 1}"
+            using hFP_as_piUV' unfolding HH_UV_def mulHH_UV_def by (by100 simp)
+          \<comment> \<open>Step C: SvK gives \<pi>\_1(X) \<cong> FP.\<close>
+          have hSvK: "top1_groups_isomorphic_on
+                (top1_fundamental_group_carrier X TX p) (top1_fundamental_group_mul X TX p)
+                FP mulFP"
+            using Corollary_70_3_simply_connected_intersection_param[OF
+              less.prems(1) hU_open hV_open hUV_cover hUV_sc hU_pc hV_pc hp_UV_final hFP_as_piUV]
+            sorry
+          \<comment> \<open>Step D: FP free on {..<n}, \<pi>\_1(X) \<cong> FP \<Rightarrow> \<pi>\_1(X) free on {..<n}.\<close>
+          from hSvK[unfolded top1_groups_isomorphic_on_def]
+          obtain \<Psi>_svk where h\<Psi>_iso: "top1_group_iso_on
+              (top1_fundamental_group_carrier X TX p) (top1_fundamental_group_mul X TX p)
+              FP mulFP \<Psi>_svk"
+            sorry
+          have h\<Psi>_inv_iso: "top1_group_iso_on FP mulFP
+              (top1_fundamental_group_carrier X TX p) (top1_fundamental_group_mul X TX p)
+              (inv_into (top1_fundamental_group_carrier X TX p) \<Psi>_svk)"
+            sorry \<comment> \<open>Inverse of \<Psi>\_svk.\<close>
+          have hFP_grp: "top1_is_group_on FP mulFP eFP invgFP"
+            using hFP_free' unfolding top1_is_free_group_full_on_def by (by100 blast)
+          from free_group_invariant_under_iso[OF hFP_free' h\<Psi>_inv_iso hpi1_grp]
+          obtain \<iota>_pi1 where
+            hpi1_free: "top1_is_free_group_full_on
+              (top1_fundamental_group_carrier X TX p) (top1_fundamental_group_mul X TX p)
+              (top1_fundamental_group_id X TX p) (top1_fundamental_group_invg X TX p)
+              \<iota>_pi1 {..<n}" and
+            hpi1_gens: "\<forall>s\<in>{..<n}. \<iota>_pi1 s = inv_into (top1_fundamental_group_carrier X TX p) \<Psi>_svk (iotaS12 s)"
+            sorry
+          \<comment> \<open>Step E: Show \<iota>\_pi1(j) = loop\_class(j) by tracking through the composition.
+             iotaS12(0) = iotafam12(0, \<eta>1(0)) in FP.
+             Mapped back to \<pi>\_1(X) by \<Psi>\_svk^{-1}.
+             The SvK iso \<Psi>\_svk maps the inclusion j\_U*([f]) to iotafam\_UV(0, [f]).
+             So \<Psi>\_svk^{-1}(iotafam12(0, \<eta>1(0))) = j\_U*(\<Phi>1(\<eta>1(0))) = j\_U*(loop\_class(0) in U)
+             = loop\_class(0) in X.
+             This is the CORE generator tracking step.\<close>
+          have hgens_match: "\<forall>j\<in>{..<n}. \<iota>_pi1 j = loop_class j"
+            sorry \<comment> \<open>Generator tracking through SvK + factor iso composition.\<close>
+          \<comment> \<open>Step F: Apply free\_group\_hom\_generators\_iso.\<close>
+          show ?thesis
+            using free_group_hom_generators_iso[OF hG_free hpi1_free h\<Phi>_hom]
+                  h\<Phi>_gen hgens_match sorry
+        qed
         have h\<Phi>_iso: "top1_group_iso_on G mul_G
             (top1_fundamental_group_carrier X TX p) (top1_fundamental_group_mul X TX p) \<Phi>"
           unfolding top1_group_iso_on_def using h\<Phi>_hom h\<Phi>_bij by (by100 blast)
