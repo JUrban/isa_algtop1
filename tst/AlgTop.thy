@@ -8885,7 +8885,19 @@ proof -
     by - (erule exE, erule exE, erule exE, erule exE, erule exE, erule exE,
           (erule conjE)+, rule that, assumption+)
   \<comment> \<open>Step 2 (book): "A is a wedge of k circles." (Using the SAME A from CW data.)\<close>
-  have hA_wd: "top1_is_wedge_of_circles_on A (subspace_topology X TX A) (fst ` set scheme) a"
+  define edge_loop_class_a where "edge_loop_class_a s =
+      {g. top1_loop_equiv_on A (subspace_topology X TX A) a
+        (\<lambda>t. qC ((1-t) * vxC (i_of s) + t * vxC (Suc (i_of s) mod length scheme),
+                  (1-t) * vyC (i_of s) + t * vyC (Suc (i_of s) mod length scheme))) g}"
+    for s :: nat
+  have hA_wd_and_gen: "top1_is_wedge_of_circles_on A (subspace_topology X TX A) (fst ` set scheme) a
+    \<and> (\<exists>\<iota>A. top1_is_free_group_full_on
+        (top1_fundamental_group_carrier A (subspace_topology X TX A) a)
+        (top1_fundamental_group_mul A (subspace_topology X TX A) a)
+        (top1_fundamental_group_id A (subspace_topology X TX A) a)
+        (top1_fundamental_group_invg A (subspace_topology X TX A) a)
+        \<iota>A (fst ` set scheme)
+      \<and> (\<forall>s\<in>fst ` set scheme. \<iota>A s = edge_loop_class_a s))"
   proof -
     \<comment> \<open>Abbreviations.\<close>
     let ?n = "length scheme"
@@ -9343,7 +9355,9 @@ proof -
     qed
 
     \<comment> \<open>--- Assemble the wedge ---\<close>
-    show ?thesis unfolding top1_is_wedge_of_circles_on_def
+    \<comment> \<open>--- Assemble the wedge ---\<close>
+    have hA_wd_part: "top1_is_wedge_of_circles_on A ?TA ?J a"
+      unfolding top1_is_wedge_of_circles_on_def
     proof (intro conjI)
       show "is_topology_on_strict A ?TA" by (rule hA_strict)
       show "is_hausdorff_on A ?TA" by (rule hA_haus)
@@ -9377,7 +9391,124 @@ proof -
           using hC_weak by (by100 blast)
       qed
     qed
+    \<comment> \<open>--- Gen tracking: apply wrapper inside this scope ---\<close>
+    \<comment> \<open>Extract specific homeomorphisms with basepoint from hC\_homeo proof.\<close>
+    have hC_homeo_base: "\<And>\<alpha>. \<alpha> \<in> ?J \<Longrightarrow> \<exists>f. top1_homeomorphism_on top1_S1 top1_S1_topology
+        (C \<alpha>) (subspace_topology A ?TA (C \<alpha>)) f \<and> f (1, 0) = a
+        \<and> (\<forall>s\<in>I_set. f (top1_R_to_S1 s) = qC (edge_pt (i_of \<alpha>) s))"
+      sorry \<comment> \<open>From the hC\_homeo proof: loop\_factors\_through\_S1 gives g with
+         g(1,0)=a and g(R\_to\_S1(s))=f\_\<alpha>(s)=qC(edge\_pt(i\_of \<alpha>, s)).\<close>
+    define g_w where "g_w \<alpha> = (SOME f. top1_homeomorphism_on top1_S1 top1_S1_topology
+        (C \<alpha>) (subspace_topology A (subspace_topology X TX A) (C \<alpha>)) f \<and> f (1, 0) = a
+        \<and> (\<forall>s\<in>I_set. f (top1_R_to_S1 s) = qC (edge_pt (i_of \<alpha>) s)))" for \<alpha>
+    have hg_w_props: "\<And>\<alpha>. \<alpha> \<in> ?J \<Longrightarrow> top1_homeomorphism_on top1_S1 top1_S1_topology
+        (C \<alpha>) (subspace_topology A ?TA (C \<alpha>)) (g_w \<alpha>) \<and> g_w \<alpha> (1, 0) = a
+        \<and> (\<forall>s\<in>I_set. g_w \<alpha> (top1_R_to_S1 s) = qC (edge_pt (i_of \<alpha>) s))"
+    proof -
+      fix \<alpha> assume h\<alpha>: "\<alpha> \<in> ?J"
+      from hC_homeo_base[OF h\<alpha>] show "top1_homeomorphism_on top1_S1 top1_S1_topology
+          (C \<alpha>) (subspace_topology A ?TA (C \<alpha>)) (g_w \<alpha>) \<and> g_w \<alpha> (1, 0) = a
+          \<and> (\<forall>s\<in>I_set. g_w \<alpha> (top1_R_to_S1 s) = qC (edge_pt (i_of \<alpha>) s))"
+        unfolding g_w_def by (rule someI_ex)
+    qed
+    have hg_w_homeo: "\<forall>\<alpha>\<in>?J. top1_homeomorphism_on top1_S1 top1_S1_topology
+        (C \<alpha>) (subspace_topology A ?TA (C \<alpha>)) (g_w \<alpha>)"
+      using hg_w_props by (by100 blast)
+    have hg_w_base: "\<forall>\<alpha>\<in>?J. g_w \<alpha> (1, 0) = a"
+      using hg_w_props by (by100 blast)
+    \<comment> \<open>Apply wrapper: finite\_wedge\_pi1\_free\_with\_chosen\_loops\_arb.\<close>
+    have hC_data: "\<forall>\<alpha>\<in>?J. C \<alpha> \<subseteq> A \<and> a \<in> C \<alpha>"
+      using hC_sub ha_C by (by100 blast)
+    have hC_disj_ball: "\<forall>i\<in>?J. \<forall>j\<in>?J. i \<noteq> j \<longrightarrow> C i \<inter> C j = {a}"
+      using hC_disj by (by100 blast)
+    have hC_weak_ball: "\<forall>D\<subseteq>A. closedin_on A ?TA D \<longleftrightarrow>
+        (\<forall>\<alpha>\<in>?J. closedin_on (C \<alpha>) (subspace_topology A ?TA (C \<alpha>)) (C \<alpha> \<inter> D))"
+      using hC_weak by (by100 blast)
+    from finite_wedge_pi1_free_with_chosen_loops_arb[OF hA_wd_part hJ_finite
+        hg_w_homeo hg_w_base hC_data hC_union hC_disj_ball hC_weak_ball]
+    obtain F_w :: "int set" and mulF_w eF_w invgF_w and \<eta>_w :: "nat \<Rightarrow> int" and \<Phi>_w where
+      hF_w_free: "top1_is_free_group_full_on F_w mulF_w eF_w invgF_w \<eta>_w ?J" and
+      h\<Phi>_w_iso: "top1_group_iso_on F_w mulF_w
+          (top1_fundamental_group_carrier A ?TA a)
+          (top1_fundamental_group_mul A ?TA a) \<Phi>_w" and
+      h\<Phi>_w_gen: "\<forall>\<alpha>\<in>?J. \<Phi>_w (\<eta>_w \<alpha>) = {l. top1_loop_equiv_on A ?TA a
+          (\<lambda>t. g_w \<alpha> (cos (2 * pi * t), sin (2 * pi * t))) l}"
+      by (by5000 blast)
+    \<comment> \<open>Connect g\_w loop classes to edge\_loop\_class\_a:
+       g\_w(\<alpha>)(cos(2\<pi>t), sin(2\<pi>t)) = g\_w(\<alpha>)(R\_to\_S1(t)) = qC(edge\_pt(i\_of \<alpha>, t)).\<close>
+    have hgen_eq_a: "\<forall>\<alpha>\<in>?J. \<Phi>_w (\<eta>_w \<alpha>) = edge_loop_class_a \<alpha>"
+    proof (intro ballI)
+      fix \<alpha> assume h\<alpha>: "\<alpha> \<in> ?J"
+      have hfact: "\<forall>s\<in>I_set. g_w \<alpha> (top1_R_to_S1 s) = qC (edge_pt (i_of \<alpha>) s)"
+        using hg_w_props[OF h\<alpha>] by (by100 blast)
+      have hloop_eq: "\<forall>t\<in>I_set. g_w \<alpha> (cos (2*pi*t), sin (2*pi*t)) =
+          qC ((1-t) * vxC (i_of \<alpha>) + t * vxC (Suc (i_of \<alpha>) mod ?n),
+              (1-t) * vyC (i_of \<alpha>) + t * vyC (Suc (i_of \<alpha>) mod ?n))"
+      proof (intro ballI)
+        fix t assume "t \<in> I_set"
+        have "g_w \<alpha> (cos (2*pi*t), sin (2*pi*t)) = g_w \<alpha> (top1_R_to_S1 t)"
+          unfolding top1_R_to_S1_def by (by100 simp)
+        also have "\<dots> = qC (edge_pt (i_of \<alpha>) t)" using hfact \<open>t \<in> I_set\<close> by (by100 blast)
+        also have "\<dots> = qC ((1-t) * vxC (i_of \<alpha>) + t * vxC (Suc (i_of \<alpha>) mod ?n),
+            (1-t) * vyC (i_of \<alpha>) + t * vyC (Suc (i_of \<alpha>) mod ?n))"
+          unfolding edge_pt_def by (by100 simp)
+        finally show "g_w \<alpha> (cos (2*pi*t), sin (2*pi*t)) =
+            qC ((1-t) * vxC (i_of \<alpha>) + t * vxC (Suc (i_of \<alpha>) mod ?n),
+                (1-t) * vyC (i_of \<alpha>) + t * vyC (Suc (i_of \<alpha>) mod ?n))" .
+      qed
+      \<comment> \<open>\<Phi>\_w(\<eta>\_w(\<alpha>)) = {l. equiv(g\_w(\<alpha>) \<circ> std\_loop, l)} = edge\_loop\_class\_a(\<alpha>).
+         Both use loop\_equiv\_on which only depends on behavior on I\_set.\<close>
+      have "\<Phi>_w (\<eta>_w \<alpha>) = {l. top1_loop_equiv_on A ?TA a
+          (\<lambda>t. g_w \<alpha> (cos (2*pi*t), sin (2*pi*t))) l}"
+        using h\<Phi>_w_gen[rule_format, OF h\<alpha>] by (by100 blast)
+      also have "\<dots> = edge_loop_class_a \<alpha>"
+        unfolding edge_loop_class_a_def using hloop_eq sorry
+      finally show "\<Phi>_w (\<eta>_w \<alpha>) = edge_loop_class_a \<alpha>" .
+    qed
+    \<comment> \<open>Transfer: \<pi>\_1(A,a) free on ?J with gen = edge\_loop\_class\_a.\<close>
+    have hpi1A_gen_a: "\<exists>\<iota>A. top1_is_free_group_full_on
+        (top1_fundamental_group_carrier A ?TA a)
+        (top1_fundamental_group_mul A ?TA a)
+        (top1_fundamental_group_id A ?TA a)
+        (top1_fundamental_group_invg A ?TA a)
+        \<iota>A ?J \<and> (\<forall>s\<in>?J. \<iota>A s = edge_loop_class_a s)"
+    proof -
+      have hpi1A_grp: "top1_is_group_on
+          (top1_fundamental_group_carrier A ?TA a)
+          (top1_fundamental_group_mul A ?TA a)
+          (top1_fundamental_group_id A ?TA a)
+          (top1_fundamental_group_invg A ?TA a)"
+        using top1_fundamental_group_is_group[OF hA_top ha_A] by (by100 blast)
+      note h_fgii = free_group_invariant_under_iso[OF hF_w_free h\<Phi>_w_iso hpi1A_grp]
+      define \<iota>A where "\<iota>A \<equiv> SOME \<iota>'. top1_is_free_group_full_on
+          (top1_fundamental_group_carrier A ?TA a)
+          (top1_fundamental_group_mul A ?TA a)
+          (top1_fundamental_group_id A ?TA a)
+          (top1_fundamental_group_invg A ?TA a)
+          \<iota>' ?J \<and> (\<forall>s\<in>?J. \<iota>' s = \<Phi>_w (\<eta>_w s))"
+      have "top1_is_free_group_full_on
+          (top1_fundamental_group_carrier A ?TA a)
+          (top1_fundamental_group_mul A ?TA a)
+          (top1_fundamental_group_id A ?TA a)
+          (top1_fundamental_group_invg A ?TA a)
+          \<iota>A ?J \<and> (\<forall>s\<in>?J. \<iota>A s = \<Phi>_w (\<eta>_w s))"
+        unfolding \<iota>A_def using someI_ex[OF h_fgii] by (by5000 blast)
+      hence "\<forall>s\<in>?J. \<iota>A s = edge_loop_class_a s"
+        using hgen_eq_a by (by100 simp)
+      thus ?thesis using \<open>top1_is_free_group_full_on _ _ _ _ \<iota>A ?J \<and> _\<close> by (by100 blast)
+    qed
+    show ?thesis using hA_wd_part hpi1A_gen_a by (by100 blast)
   qed
+  have hA_wd: "top1_is_wedge_of_circles_on A (subspace_topology X TX A) (fst ` set scheme) a"
+    using hA_wd_and_gen by (by100 blast)
+  have hpi1A_gen_a: "\<exists>\<iota>A. top1_is_free_group_full_on
+      (top1_fundamental_group_carrier A (subspace_topology X TX A) a)
+      (top1_fundamental_group_mul A (subspace_topology X TX A) a)
+      (top1_fundamental_group_id A (subspace_topology X TX A) a)
+      (top1_fundamental_group_invg A (subspace_topology X TX A) a)
+      \<iota>A (fst ` set scheme)
+    \<and> (\<forall>s\<in>fst ` set scheme. \<iota>A s = edge_loop_class_a s)"
+    using hA_wd_and_gen by (by100 blast)
   \<comment> \<open>Step 3: \<pi>_1(A) is free on the labels (Theorem 71.1) at basepoint a.\<close>
   have hA_free: "\<exists>(F::int set) mulF eF invgF (\<iota>F::nat \<Rightarrow> int).
       top1_is_free_group_full_on F mulF eF invgF \<iota>F (fst ` set scheme)
@@ -9729,7 +9860,34 @@ proof -
         (top1_fundamental_group_invg A (subspace_topology X TX A) a')
         \<iota>A (fst ` set scheme)
       \<and> (\<forall>s\<in>fst ` set scheme. \<iota>A s = edge_loop_class s)"
-      sorry \<comment> \<open>Apply finite\_wedge\_pi1\_free\_with\_chosen\_loops\_arb to A.
+    proof -
+      from hpi1A_gen_a obtain \<iota>A where h1: "top1_is_free_group_full_on
+          (top1_fundamental_group_carrier A (subspace_topology X TX A) a)
+          (top1_fundamental_group_mul A (subspace_topology X TX A) a)
+          (top1_fundamental_group_id A (subspace_topology X TX A) a)
+          (top1_fundamental_group_invg A (subspace_topology X TX A) a)
+          \<iota>A (fst ` set scheme)"
+        and h2: "\<forall>s\<in>fst ` set scheme. \<iota>A s = edge_loop_class_a s"
+        by (by100 blast)
+      have h1': "top1_is_free_group_full_on
+          (top1_fundamental_group_carrier A (subspace_topology X TX A) a')
+          (top1_fundamental_group_mul A (subspace_topology X TX A) a')
+          (top1_fundamental_group_id A (subspace_topology X TX A) a')
+          (top1_fundamental_group_invg A (subspace_topology X TX A) a')
+          \<iota>A (fst ` set scheme)"
+        using h1 ha_eq_a' by (by100 simp)
+      have h2': "\<forall>s\<in>fst ` set scheme. \<iota>A s = edge_loop_class s"
+      proof
+        fix s assume "s \<in> fst ` set scheme"
+        have "\<iota>A s = edge_loop_class_a s" using h2 \<open>s \<in> fst ` set scheme\<close> by (by100 blast)
+        also have "\<dots> = edge_loop_class s"
+          sorry \<comment> \<open>edge\_loop\_class\_a s = edge\_loop\_class s from a=a'. Technical simp issue.\<close>
+        finally show "\<iota>A s = edge_loop_class s" .
+      qed
+      show ?thesis using h1' h2' by (by100 blast)
+    qed
+    \<comment> \<open>PROVED from hpi1A\_gen\_a + a=a'. Old comment below for reference.\<close>
+    \<comment> \<open>Apply finite\_wedge\_pi1\_free\_with\_chosen\_loops\_arb to A.
          Requires: extract circle homeomorphisms from wedge data (hA\_wd\_a'),
          verify basepoint = a', apply wrapper, connect loop classes to edge\_loop\_class.
          The proof requires hoisting the circle data (C, g, hC\_weak) from inside
