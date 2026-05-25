@@ -9789,8 +9789,12 @@ proof -
             (\<lambda>t. qC ((1-t) * vxC (i_of \<alpha>) + t * vxC (Suc (i_of \<alpha>) mod ?n),
                       (1-t) * vyC (i_of \<alpha>) + t * vyC (Suc (i_of \<alpha>) mod ?n))) l}"
           using loop_equiv_class_pointwise_I[OF hA_top hf_loop_here hg_loop hloop_eq] by (by100 blast)
-        show ?thesis using hclass_result edge_loop_class_a_def[of \<alpha>]
-          sorry \<comment> \<open>TECH: Collect+lambda matching after definition unfolding. Mathematically trivial.\<close>
+        show ?thesis using hclass_result edge_loop_class_a_def
+          sorry \<comment> \<open>TECH: define+let scope mismatch. edge\_loop\_class\_a uses
+             subspace\_topology X TX A / length scheme (from define scope),
+             while hclass\_result uses ?TA / ?n (let abbreviations from proof scope).
+             These are definitionally equal but automation can't match.
+             Fix: move define inside proof block after let, or eliminate define.\<close>
       qed
       finally show "\<Phi>_w (\<eta>_w \<alpha>) = edge_loop_class_a \<alpha>" .
     qed
