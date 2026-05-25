@@ -7630,9 +7630,75 @@ lemma pasting_deformation_retract_to_subspace:
       and hpairwise: "\<forall>A\<in>F. \<forall>B\<in>F. A \<noteq> B \<longrightarrow> A \<inter> B \<subseteq> {p}"
       and hdr: "\<forall>A\<in>F - {A0}. top1_deformation_retract_of_on A (subspace_topology X TX A) {p}"
   shows "top1_deformation_retract_of_on X TX A0"
-  sorry \<comment> \<open>On A0: identity H(x,t)=x. On each A \<in> F - {A0}: retraction H\_A to {p} \<subseteq> A0.
-     Well-defined: overlaps are \<subseteq> {p}, identity and retraction agree at p.
-     Continuous: pasting lemma on closed sets A0, A1, ...\<close>
+proof -
+  \<comment> \<open>Y = \<Union>(F - {A0}). X = A0 \<union> Y.\<close>
+  define Y where "Y = \<Union>(F - {A0})"
+  have hX_eq: "X = A0 \<union> Y" using hcover hA0 Y_def by (by100 auto)
+  have hA0_sub: "A0 \<subseteq> X" using hX_eq by (by100 blast)
+  have hY_sub: "Y \<subseteq> X" using hX_eq by (by100 blast)
+  have hA0_closed: "closedin_on X TX A0" using hF_closed hA0 by (by100 blast)
+  have hY_closed: "closedin_on X TX Y"
+  proof -
+    have "\<forall>A\<in>F - {A0}. closedin_on X TX A" using hF_closed by (by100 blast)
+    hence "\<forall>A\<in>(F - {A0}). closedin_on X TX A" by (by100 blast)
+    moreover have "finite (F - {A0})" using hfin by (by100 simp)
+    ultimately show ?thesis unfolding Y_def
+      using closedin_on_finite_Union[OF hTX] by (by100 blast)
+  qed
+  \<comment> \<open>Y deformation-retracts to {p} by pasting\_deformation\_retracts\_to\_point.\<close>
+  have hY_dr: "top1_deformation_retract_of_on Y (subspace_topology X TX Y) {p}"
+  proof -
+    let ?TY = "subspace_topology X TX Y"
+    have hTY_strict: "is_topology_on_strict Y ?TY"
+      sorry \<comment> \<open>Subspace of strict is strict. Need is\_topology\_on\_strict X TX.\<close>
+    have hF0_closed_Y: "\<forall>A\<in>F - {A0}. closedin_on Y ?TY A"
+    proof (intro ballI)
+      fix B assume "B \<in> F - {A0}"
+      have "closedin_on X TX B" using hF_closed \<open>B \<in> F - {A0}\<close> by (by100 blast)
+      have "B \<subseteq> Y" using \<open>B \<in> F - {A0}\<close> Y_def by (by100 blast)
+      hence "B = B \<inter> Y" by (by100 blast)
+      thus "closedin_on Y ?TY B"
+        using iffD2[OF Theorem_17_2[OF hTX hY_sub]] \<open>closedin_on X TX B\<close>
+        by (by100 blast)
+    qed
+    have hp_Y: "p \<in> Y"
+      sorry \<comment> \<open>p \<in> A0 and F - {A0} \<noteq> \<emptyset> (need at least one other piece containing p).\<close>
+    have hp_all_F0: "\<forall>A\<in>F - {A0}. p \<in> A"
+      sorry \<comment> \<open>From pairwise: A \<inter> A0 \<subseteq> {p} and A, A0 share the common point p.\<close>
+    have hpairwise_F0: "\<forall>A\<in>F - {A0}. \<forall>B\<in>F - {A0}. A \<noteq> B \<longrightarrow> A \<inter> B = {p}"
+    proof (intro ballI impI)
+      fix A B assume "A \<in> F - {A0}" "B \<in> F - {A0}" "A \<noteq> B"
+      hence "A \<in> F" "B \<in> F" by (by100 blast)+
+      from hpairwise \<open>A \<in> F\<close> \<open>B \<in> F\<close> \<open>A \<noteq> B\<close>
+      have "A \<inter> B \<subseteq> {p}" by (by100 blast)
+      moreover have "p \<in> A \<inter> B" using hp_all_F0 \<open>A \<in> F - {A0}\<close> \<open>B \<in> F - {A0}\<close> by (by100 blast)
+      ultimately show "A \<inter> B = {p}" by (by100 blast)
+    qed
+    have hdr_F0: "\<forall>A\<in>F - {A0}. top1_deformation_retract_of_on A (subspace_topology Y ?TY A) {p}"
+    proof (intro ballI)
+      fix B assume "B \<in> F - {A0}"
+      have "top1_deformation_retract_of_on B (subspace_topology X TX B) {p}"
+        using hdr \<open>B \<in> F - {A0}\<close> by (by100 blast)
+      moreover have "B \<subseteq> Y" using \<open>B \<in> F - {A0}\<close> Y_def by (by100 blast)
+      hence "subspace_topology Y ?TY B = subspace_topology X TX B"
+        by (rule subspace_topology_trans)
+      ultimately show "top1_deformation_retract_of_on B (subspace_topology Y ?TY B) {p}"
+        by (by100 simp)
+    qed
+    have "finite (F - {A0})" using hfin by (by100 simp)
+    have "Y = \<Union>(F - {A0})" unfolding Y_def ..
+    show ?thesis
+      by (rule pasting_deformation_retracts_to_point[OF hTY_strict \<open>finite (F - {A0})\<close>
+          hF0_closed_Y \<open>Y = \<Union>(F - {A0})\<close> hp_Y hp_all_F0 hpairwise_F0 hdr_F0])
+  qed
+  \<comment> \<open>Paste: identity on A0, retraction on Y.
+     Same construction as pasting\_deformation\_retracts\_to\_point but target is A0.\<close>
+  show ?thesis
+    sorry \<comment> \<open>Extract HY from hY\_dr. Define H piecewise:
+       H(x,t) = x if x \<in> A0, HY(x,t) if x \<in> Y.
+       H(x,0)=x, H(x,1) \<in> A0 (x or p), H(a,t)=a for a \<in> A0.
+       Continuous by pasting\_lemma\_two\_closed (same technique as above).\<close>
+qed
 
 text \<open>Deformation retraction to a singleton implies simply connected.
   Expert review Step 2: reusable lemma for deriving simply connected
