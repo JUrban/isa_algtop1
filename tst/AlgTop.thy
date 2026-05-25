@@ -7709,8 +7709,10 @@ lemma finite_wedge_pi1_free_with_chosen_loops:
                \<Phi>(G) \<supseteq> \<pi>\_1(X). Combined with \<Phi>(G) \<subseteq> \<pi>\_1(X), we get equality.\<close>
             have "S_gen \<subseteq> \<Phi> ` G"
               using h\<Phi>G_contains_jU h\<Phi>G_contains_jV unfolding S_gen_def by (by100 blast)
+            have hG_grp_here: "top1_is_group_on G mul_G e_G invg_G"
+              using hG_free unfolding top1_is_free_group_full_on_def by (by100 blast)
             have h\<Phi>G_is_grp: "top1_is_group_on (\<Phi> ` G) ?mX ?eX ?iX"
-              sorry \<comment> \<open>Image of hom is a group (needs hom properties).\<close>
+              using hom_image_is_subgroup[OF hG_grp_here hpi1_grp h\<Phi>_hom] by (by100 blast)
             from subgroup_generated_minimal[OF \<open>S_gen \<subseteq> \<Phi> ` G\<close> h\<Phi>G_sub h\<Phi>G_is_grp]
             have "top1_subgroup_generated_on ?pi1X ?mX ?eX ?iX S_gen \<subseteq> \<Phi> ` G" .
             hence "?pi1X \<subseteq> \<Phi> ` G" using hgen by (by100 simp)
