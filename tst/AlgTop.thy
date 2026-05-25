@@ -5435,6 +5435,18 @@ proof -
   qed
 qed
 
+text \<open>A surjective hom from a free group to a free group of the same finite rank
+  is an isomorphism (hence bijective). This follows from rank invariance:
+  if ker \<noteq> {e}, the quotient has strictly smaller rank.\<close>
+lemma free_group_surj_hom_same_rank_bij:
+  assumes hG: "top1_is_free_group_full_on G mulG eG invgG iotaG S"
+      and hH: "top1_is_free_group_full_on H mulH eH invgH iotaH S"
+      and hf: "top1_group_hom_on G mulG H mulH f"
+      and hsurj: "f ` G = H"
+      and hfin: "finite S"
+  shows "bij_betw f G H"
+  sorry
+
 text \<open>Munkres Theorem 71.1 (witnessed version with chosen loop generators).
   For a finite wedge of circles with explicit circle data (homeomorphisms, basepoints),
   \<pi>_1 is free and the chosen circle loops are the free generators.
@@ -7582,24 +7594,56 @@ lemma finite_wedge_pi1_free_with_chosen_loops:
              IF we can show loop\_class(j) are also free generators.
              Since both \<iota>X\_raw and loop\_class are free bases of the same group,
              any map sending one to the other is an iso.\<close>
-          show ?thesis sorry \<comment> \<open>Need: ∃ι. free π₁(X) ι {..<n} ∧ ∀j. ι(j) = loop\_class(j).
-             Have: hpi1X\_raw' (π₁(X) free with abstract generators).
-             Still need gen tracking through SvK composition.\<close>
+          show ?thesis using hpi1X_raw' sorry
         qed
-        have h\<Phi>_bij: "bij_betw \<Phi> G (top1_fundamental_group_carrier X TX p)"
+        \<comment> \<open>\<Phi> bijective via surjective hom between free groups of same rank.\<close>
+        \<comment> \<open>Get abstract freeness of \<pi>\_1(X) (same as hpi1X\_raw' but in outer scope).\<close>
+        \<comment> \<open>Re-derive \<pi>\_1(U), \<pi>\_1(V) free in outer scope.\<close>
+        from hpi1U_free obtain \<iota>U_out where hU_out_free:
+          "top1_is_free_group_full_on
+            (top1_fundamental_group_carrier U (subspace_topology X TX U) p)
+            (top1_fundamental_group_mul U (subspace_topology X TX U) p)
+            (top1_fundamental_group_id U (subspace_topology X TX U) p)
+            (top1_fundamental_group_invg U (subspace_topology X TX U) p)
+            \<iota>U_out {0::nat}" by (by100 blast)
+        from hpi1V_free obtain \<iota>V_out where hV_out_free:
+          "top1_is_free_group_full_on
+            (top1_fundamental_group_carrier V (subspace_topology X TX V) p)
+            (top1_fundamental_group_mul V (subspace_topology X TX V) p)
+            (top1_fundamental_group_id V (subspace_topology X TX V) p)
+            (top1_fundamental_group_invg V (subspace_topology X TX V) p)
+            \<iota>V_out {1..<n}" by (by100 blast)
+        have hpi1X_abstract: "\<exists>\<iota>X_abs. top1_is_free_group_full_on
+            (top1_fundamental_group_carrier X TX p) (top1_fundamental_group_mul X TX p)
+            (top1_fundamental_group_id X TX p) (top1_fundamental_group_invg X TX p)
+            \<iota>X_abs {..<n}"
         proof -
-          from hpi1X_free obtain \<iota>X' where
-            hpi1X_full: "top1_is_free_group_full_on
+          from svk_free_product_free[OF less.prems(1) hU_open hV_open hUV_cover hUV_sc
+                hU_pc hV_pc hp_UV_final hU_out_free hV_out_free hS_disj]
+          obtain \<iota>tmp where "top1_is_free_group_full_on
               (top1_fundamental_group_carrier X TX p) (top1_fundamental_group_mul X TX p)
               (top1_fundamental_group_id X TX p) (top1_fundamental_group_invg X TX p)
-              \<iota>X' {..<n}" and
-            hpi1X_gen: "\<forall>j\<in>{..<n}. \<iota>X' j = loop_class j"
+              \<iota>tmp ({0::nat} \<union> {1..<n})"
             by (by100 blast)
-          \<comment> \<open>\<Phi> maps \<iota>\_G(j) to loop\_class(j) = \<iota>X'(j). By free\_group\_hom\_generators\_iso:\<close>
-          have h\<Phi>_gen_match: "\<forall>s\<in>{..<n}. \<Phi> (\<iota>_G s) = \<iota>X' s"
-            using h\<Phi>_gen hpi1X_gen by (by100 simp)
+          hence "top1_is_free_group_full_on
+              (top1_fundamental_group_carrier X TX p) (top1_fundamental_group_mul X TX p)
+              (top1_fundamental_group_id X TX p) (top1_fundamental_group_invg X TX p)
+              \<iota>tmp {..<n}" using hS_union by (by100 simp)
+          thus ?thesis by (by100 blast)
+        qed
+        from hpi1X_abstract obtain \<iota>X_abs where hpi1X_abs: "top1_is_free_group_full_on
+            (top1_fundamental_group_carrier X TX p) (top1_fundamental_group_mul X TX p)
+            (top1_fundamental_group_id X TX p) (top1_fundamental_group_invg X TX p)
+            \<iota>X_abs {..<n}"
+          by (by100 blast)
+        have h\<Phi>_bij: "bij_betw \<Phi> G (top1_fundamental_group_carrier X TX p)"
+        proof -
+          have h\<Phi>_surj: "\<Phi> ` G = top1_fundamental_group_carrier X TX p"
+            sorry \<comment> \<open>\<Phi> surjective: loop\_class generate \<pi>\_1(X) by SvK,
+               \<Phi>(G) contains all loop\_class, hence \<Phi>(G) = \<pi>\_1(X).\<close>
+          have hfin_n: "finite {..<n}" by (by100 simp)
           show ?thesis
-            using free_group_hom_generators_iso[OF hG_free hpi1X_full h\<Phi>_hom h\<Phi>_gen_match]
+            using free_group_surj_hom_same_rank_bij[OF hG_free hpi1X_abs h\<Phi>_hom h\<Phi>_surj hfin_n]
             by (by100 blast)
         qed
         have h\<Phi>_iso: "top1_group_iso_on G mul_G
