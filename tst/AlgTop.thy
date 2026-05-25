@@ -7621,16 +7621,19 @@ text \<open>Variant: pasting deformation retractions to a subspace (not just a p
   Munkres: "S\_1 is a deformation retract of U."
   A\_0 stays fixed (identity homotopy), each A\_j for j \<ge> 1 retracts to p \<in> A\_0.\<close>
 lemma pasting_deformation_retract_to_subspace:
-  assumes hTX: "is_topology_on X TX"
+  assumes hTX: "is_topology_on_strict X TX"
       and hfin: "finite F"
       and hA0: "A0 \<in> F"
       and hF_closed: "\<forall>A\<in>F. closedin_on X TX A"
       and hcover: "X = \<Union>F"
       and hp: "p \<in> A0"
+      and hp_all: "\<forall>A\<in>F. p \<in> A"
       and hpairwise: "\<forall>A\<in>F. \<forall>B\<in>F. A \<noteq> B \<longrightarrow> A \<inter> B \<subseteq> {p}"
       and hdr: "\<forall>A\<in>F - {A0}. top1_deformation_retract_of_on A (subspace_topology X TX A) {p}"
   shows "top1_deformation_retract_of_on X TX A0"
 proof -
+  have hTX_is: "is_topology_on X TX"
+    using hTX unfolding is_topology_on_strict_def by (by100 blast)
   \<comment> \<open>Y = \<Union>(F - {A0}). X = A0 \<union> Y.\<close>
   define Y where "Y = \<Union>(F - {A0})"
   have hX_eq: "X = A0 \<union> Y" using hcover hA0 Y_def by (by100 auto)
@@ -7643,14 +7646,32 @@ proof -
     hence "\<forall>A\<in>(F - {A0}). closedin_on X TX A" by (by100 blast)
     moreover have "finite (F - {A0})" using hfin by (by100 simp)
     ultimately show ?thesis unfolding Y_def
-      using closedin_on_finite_Union[OF hTX] by (by100 blast)
+      using closedin_on_finite_Union[OF hTX_is] by (by100 blast)
   qed
+  show ?thesis
+  proof (cases "F - {A0} = {}")
+    case True
+    \<comment> \<open>F = {A0}. X = A0. Identity is deformation retract.\<close>
+    hence "Y = {}" unfolding Y_def using True by (by100 auto)
+    hence "X = A0" using hX_eq by (by100 blast)
+    show ?thesis unfolding \<open>X = A0\<close> top1_deformation_retract_of_on_def
+    proof (intro conjI)
+      show "A0 \<subseteq> A0" by (by100 blast)
+      show "\<exists>H. top1_continuous_map_on (A0 \<times> I_set) (product_topology_on TX I_top) A0 TX H
+          \<and> (\<forall>x\<in>A0. H (x, 0) = x) \<and> (\<forall>x\<in>A0. H (x, 1) \<in> A0)
+          \<and> (\<forall>a\<in>A0. \<forall>t\<in>I_set. H (a, t) = a)"
+        sorry \<comment> \<open>Identity homotopy: H(x,t) = x. Projection fst continuous.
+             Boundary: trivial (x stays in A0).\<close>
+    qed
+  next
+    case False
+    \<comment> \<open>F - {A0} \<noteq> \<emptyset>. Y \<noteq> \<emptyset>.\<close>
   \<comment> \<open>Y deformation-retracts to {p} by pasting\_deformation\_retracts\_to\_point.\<close>
   have hY_dr: "top1_deformation_retract_of_on Y (subspace_topology X TX Y) {p}"
   proof -
     let ?TY = "subspace_topology X TX Y"
     have hTY_strict: "is_topology_on_strict Y ?TY"
-      sorry \<comment> \<open>Subspace of strict is strict. Need is\_topology\_on\_strict X TX.\<close>
+      by (rule subspace_topology_is_strict[OF hTX hY_sub])
     have hF0_closed_Y: "\<forall>A\<in>F - {A0}. closedin_on Y ?TY A"
     proof (intro ballI)
       fix B assume "B \<in> F - {A0}"
@@ -7658,13 +7679,16 @@ proof -
       have "B \<subseteq> Y" using \<open>B \<in> F - {A0}\<close> Y_def by (by100 blast)
       hence "B = B \<inter> Y" by (by100 blast)
       thus "closedin_on Y ?TY B"
-        using iffD2[OF Theorem_17_2[OF hTX hY_sub]] \<open>closedin_on X TX B\<close>
+        using iffD2[OF Theorem_17_2[OF hTX_is hY_sub]] \<open>closedin_on X TX B\<close>
         by (by100 blast)
     qed
+    have hp_all_F0: "\<forall>A\<in>F - {A0}. p \<in> A" using hp_all by (by100 blast)
     have hp_Y: "p \<in> Y"
-      sorry \<comment> \<open>p \<in> A0 and F - {A0} \<noteq> \<emptyset> (need at least one other piece containing p).\<close>
-    have hp_all_F0: "\<forall>A\<in>F - {A0}. p \<in> A"
-      sorry \<comment> \<open>From pairwise: A \<inter> A0 \<subseteq> {p} and A, A0 share the common point p.\<close>
+    proof -
+      from False obtain B where "B \<in> F - {A0}" by (by100 blast)
+      hence "p \<in> B" using hp_all_F0 by (by100 blast)
+      thus ?thesis unfolding Y_def using \<open>B \<in> F - {A0}\<close> by (by100 blast)
+    qed
     have hpairwise_F0: "\<forall>A\<in>F - {A0}. \<forall>B\<in>F - {A0}. A \<noteq> B \<longrightarrow> A \<inter> B = {p}"
     proof (intro ballI impI)
       fix A B assume "A \<in> F - {A0}" "B \<in> F - {A0}" "A \<noteq> B"
@@ -7698,6 +7722,7 @@ proof -
        H(x,t) = x if x \<in> A0, HY(x,t) if x \<in> Y.
        H(x,0)=x, H(x,1) \<in> A0 (x or p), H(a,t)=a for a \<in> A0.
        Continuous by pasting\_lemma\_two\_closed (same technique as above).\<close>
+  qed
 qed
 
 text \<open>Deformation retraction to a singleton implies simply connected.
@@ -9036,7 +9061,10 @@ lemma finite_wedge_pi1_free_with_chosen_loops:
           have "C 0 \<subseteq> X" using less.prems(4) hn_pos by (by100 blast)
           moreover have "\<forall>j\<in>{1..<n}. W j \<subseteq> X" using hW_sub_C less.prems(4) by (by100 force)
           ultimately have hUsub: "U \<subseteq> X" unfolding U_def by (by100 blast)
-          have hTU': "is_topology_on U ?TU" by (rule subspace_topology_is_topology_on[OF hTX hUsub])
+          have hTU'_strict: "is_topology_on_strict U ?TU"
+            by (rule subspace_topology_is_strict[OF less.prems(1) hUsub])
+          have hTU': "is_topology_on U ?TU"
+            using hTU'_strict unfolding is_topology_on_strict_def by (by100 blast)
           define F_U where "F_U = insert (C 0) (W ` {1..<n})"
           have hU_eq': "U = \<Union>F_U" unfolding F_U_def U_def by (by100 blast)
           have hfin': "finite F_U" unfolding F_U_def by (by100 simp)
@@ -9146,7 +9174,12 @@ lemma finite_wedge_pi1_free_with_chosen_loops:
           qed
           have "p \<in> C 0" using less.prems(4) hn_pos by (by100 blast)
           show ?thesis
-            by (rule pasting_deformation_retract_to_subspace[OF hTU' hfin' hC0_in hF_closed' hU_eq' \<open>p \<in> C 0\<close> hpairwise' hdr'])
+          proof -
+            have hp_all_FU: "\<forall>A\<in>F_U. p \<in> A"
+              unfolding F_U_def using \<open>p \<in> C 0\<close> hp_W by (by100 force)
+            show ?thesis
+              by (rule pasting_deformation_retract_to_subspace[OF hTU'_strict hfin' hC0_in hF_closed' hU_eq' \<open>p \<in> C 0\<close> hp_all_FU hpairwise' hdr'])
+          qed
         qed
         \<comment> \<open>By Theorem\_58\_3: deformation retract gives \<pi>_1 iso.\<close>
         have hTU: "is_topology_on U (subspace_topology X TX U)"
@@ -9378,7 +9411,10 @@ lemma finite_wedge_pi1_free_with_chosen_loops:
           have "W 0 \<subseteq> X" using hW_sub_C less.prems(4) hn_pos by (by100 force)
           moreover have "\<forall>j\<in>{1..<n}. C j \<subseteq> X" using less.prems(4) by (by100 force)
           ultimately have hVsub: "V \<subseteq> X" unfolding V_def by (by100 blast)
-          have hTV': "is_topology_on V ?TV" by (rule subspace_topology_is_topology_on[OF hTX hVsub])
+          have hTV'_strict: "is_topology_on_strict V ?TV"
+            by (rule subspace_topology_is_strict[OF less.prems(1) hVsub])
+          have hTV': "is_topology_on V ?TV"
+            using hTV'_strict unfolding is_topology_on_strict_def by (by100 blast)
           \<comment> \<open>F = {X', W(0)}. X' is the "base" set, W(0) retracts to p.\<close>
           define F_V where "F_V = {X', W 0}"
           have hfin': "finite F_V" unfolding F_V_def by (by100 simp)
@@ -9471,7 +9507,12 @@ lemma finite_wedge_pi1_free_with_chosen_loops:
               using \<open>A = W 0\<close> by (by100 simp)
           qed
           show ?thesis
-            by (rule pasting_deformation_retract_to_subspace[OF hTV' hfin' hX'_in hF_closed' hV_eq' hp_X' hpairwise' hdr'])
+          proof -
+            have hp_all_FV: "\<forall>A\<in>F_V. p \<in> A"
+              unfolding F_V_def using hp_X' hp_W hn_pos by (by100 force)
+            show ?thesis
+              by (rule pasting_deformation_retract_to_subspace[OF hTV'_strict hfin' hX'_in hF_closed' hV_eq' hp_X' hp_all_FV hpairwise' hdr'])
+          qed
         qed
         \<comment> \<open>Munkres: "using the induction hypothesis, \<pi>\_1(V,p) is a free group,
            with loops f\_2,...,f\_n as free generators."
