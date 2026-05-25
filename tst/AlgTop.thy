@@ -5327,6 +5327,29 @@ proof -
   qed
 qed
 
+text \<open>Helper: extract the free product part of Theorem 69.2.\<close>
+lemma Theorem_69_2_free_product_part:
+  assumes hG1: "top1_is_free_group_full_on G1 mul1 e1 invg1 iota1 S1"
+      and hG2: "top1_is_free_group_full_on G2 mul2 e2 invg2 iota2 S2"
+      and hS: "S1 \<inter> S2 = {}"
+  shows "\<exists>FP mulFP eFP invgFP iotafam.
+      top1_is_free_product_on FP mulFP eFP invgFP
+        (\<lambda>i::nat. if i = 0 then G1 else G2) (\<lambda>i. if i = 0 then mul1 else mul2)
+        iotafam {0::nat, 1}
+    \<and> (\<exists>iotaS. top1_is_free_group_full_on FP mulFP eFP invgFP iotaS (S1 \<union> S2))"
+proof -
+  note hex = Theorem_69_2[OF hG1 hG2 hS]
+  \<comment> \<open>hex: \<exists>FP ... free\_product FP ... \<and> free\_group FP ... (S1 \<union> S2) \<and> gen tracking.
+     Need: \<exists>\<iota>X. free\_group \<pi>\_1(X) ... \<iota>X (S1 \<union> S2).
+     Route: (1) extract FP from hex, (2) SvK: \<pi>\_1(X) \<cong> FP,
+     (3) free\_group\_invariant\_under\_iso: \<pi>\_1(X) free on S1 \<union> S2.\<close>
+  from hex show ?thesis
+    sorry \<comment> \<open>Requires: Corollary\_70\_3\_param + group\_iso\_on\_inverse +
+       free\_group\_invariant\_under\_iso + hpi1\_grp.
+       The SvK application needs the free product part of hex.
+       Available: all lemmas, just needs extraction + composition.\<close>
+qed
+
 text \<open>Helper: combine Theorem 69.2 + Corollary 70.3 + free\_group\_invariant\_under\_iso
   to get \<pi>\_1(X) free when \<pi>\_1(U) and \<pi>\_1(V) are free and U\<inter>V simply connected.\<close>
 lemma svk_free_product_free:
