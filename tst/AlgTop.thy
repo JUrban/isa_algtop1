@@ -8078,6 +8078,35 @@ proof (rule top1_simply_connected_from_one_point[OF hTX hpc hp])
   qed
 qed
 
+text \<open>Covering maps are open maps.
+  For V open in E, p(V) is open in B.
+  Proof: for each b \<in> p(V), take evenly covered U \<ni> b.
+  The sheet W containing a point of V\<inter>p^{-1}(b) maps W homeo U.
+  p(V\<inter>W) open in U (homeo maps open to open), hence open in B.\<close>
+lemma covering_map_is_open_map:
+  assumes hcov: "top1_covering_map_on E TE B TB p"
+      and hTE: "is_topology_on E TE"
+      and hTB: "is_topology_on B TB"
+      and hV: "V \<in> TE"
+  shows "p ` V \<in> TB"
+  sorry \<comment> \<open>Standard covering space theory. Uses:
+     top1\_covering\_map\_on\_evenly\_covered for evenly covered neighborhoods,
+     homeomorphism of sheets from top1\_evenly\_covered\_on definition,
+     openin\_on propagation.\<close>
+
+text \<open>R\_to\_S1 restricted to an open interval of length 1 is a homeomorphism
+  onto S1 minus the image of the endpoints.\<close>
+lemma R_to_S1_interval_homeomorphism:
+  shows "top1_homeomorphism_on
+      {x. \<theta>q < x \<and> x < \<theta>q + 1}
+      (subspace_topology (UNIV :: real set) top1_open_sets {x. \<theta>q < x \<and> x < \<theta>q + 1})
+      (top1_S1 - {top1_R_to_S1 \<theta>q})
+      (subspace_topology top1_S1 top1_S1_topology (top1_S1 - {top1_R_to_S1 \<theta>q}))
+      top1_R_to_S1"
+  sorry \<comment> \<open>R\_to\_S1 continuous (Theorem\_53\_1), injective on intervals of length < 1
+     (sin\_cos\_eq\_iff), surjective onto S1-{q0} (S1\_point\_to\_angle + floor shift),
+     open map (covering\_map\_is\_open\_map). Hence homeomorphism.\<close>
+
 text \<open>Deformation retraction of circle minus point to any remaining point.
   Munkres 71.1: "W\_i is homeomorphic to an open interval, so it has
   the point p as a deformation retract." Following AlgTopCached:33225.\<close>
@@ -8314,17 +8343,33 @@ proof -
     \<comment> \<open>angle = inv(R\_to\_S1|(\<theta>q,\<theta>q+1)) \<circ> h^{-1}.
        R\_to\_S1 restricted to (\<theta>q,\<theta>q+1) is a homeomorphism onto S1-{q0}.
        Its inverse is continuous. h^{-1} is continuous. Composition continuous.\<close>
+    \<comment> \<open>angle = (R\_to\_S1|(\<theta>q,\<theta>q+1))^{-1} \<circ> h^{-1}.
+       By R\_to\_S1\_interval\_homeomorphism: the restriction is a homeomorphism.
+       Its inverse is continuous. h^{-1} continuous. Composition continuous.\<close>
     have hangle_cont: "top1_continuous_map_on (Y - {q}) (subspace_topology Y TY (Y - {q}))
         (UNIV :: real set) top1_open_sets angle"
-      sorry \<comment> \<open>R\_to\_S1 restricted to (\<theta>q, \<theta>q+1) is:
-         - Continuous (restriction of continuous R\_to\_S1)
-         - Injective (sin\_cos\_eq\_iff: a-b integer, |a-b|<1 \<Rightarrow> a=b)
-         - Surjective onto S1-{q0} (S1\_point\_to\_angle + floor shift)
-         - Open map (covering maps are open: for U open in (\<theta>q,\<theta>q+1),
-           R\_to\_S1(U) open in S1 by the evenly covered structure)
-         Hence a homeomorphism. Its inverse is continuous.
-         angle = inverse \<circ> h^{-1} (h^{-1} continuous from homeomorphism).
-         Composition is continuous.\<close>
+    proof -
+      \<comment> \<open>R\_to\_S1(\<theta>q) = q0. So S1-{q0} = S1-{R\_to\_S1(\<theta>q)}.\<close>
+      have hq0_eq: "top1_R_to_S1 \<theta>q = q0" by (rule h\<theta>q)
+      \<comment> \<open>R\_to\_S1|(\<theta>q,\<theta>q+1) is a homeomorphism onto S1-{q0}.\<close>
+      let ?I_open = "{x::real. \<theta>q < x \<and> x < \<theta>q + 1}"
+      have hR_homeo: "top1_homeomorphism_on ?I_open
+          (subspace_topology UNIV top1_open_sets ?I_open)
+          (top1_S1 - {q0})
+          (subspace_topology top1_S1 top1_S1_topology (top1_S1 - {q0}))
+          top1_R_to_S1"
+      proof -
+        from R_to_S1_interval_homeomorphism[of \<theta>q]
+        show ?thesis using hq0_eq by (by100 simp)
+      qed
+      \<comment> \<open>h^{-1}: Y-{q} \<rightarrow> S1-{q0} is continuous (homeomorphism inverse restricted).\<close>
+      \<comment> \<open>angle = inv(R\_to\_S1|\_I) \<circ> h^{-1}. Both continuous. Composition continuous.\<close>
+      show ?thesis
+        sorry \<comment> \<open>From hR\_homeo: inverse of R\_to\_S1|\_I is continuous S1-{q0} \<rightarrow> I\_open.
+           h^{-1} continuous Y-{q} \<rightarrow> S1-{q0} (homeomorphism\_inverse\_restrict).
+           angle agrees with inverse \<circ> h^{-1} on Y-{q} (by angle definition + THE).
+           Composition continuous. Transfer via continuous\_map\_on\_agree.\<close>
+    qed
     have hF_cont: "top1_continuous_map_on ((Y - {q}) \<times> I_set)
         (product_topology_on (subspace_topology Y TY (Y - {q})) I_top)
         (Y - {q}) (subspace_topology Y TY (Y - {q})) F"
