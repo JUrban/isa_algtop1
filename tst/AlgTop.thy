@@ -10188,8 +10188,43 @@ lemma finite_wedge_pi1_free_with_chosen_loops:
         \<comment> \<open>Pragmatic approach: reconstruct wedge predicate, apply cached abstract theorem,
            then sorry only the generator correspondence (the new content of this theorem).\<close>
         have hwedge_X: "top1_is_wedge_of_circles_on X TX {..<n} p"
-          sorry \<comment> \<open>Reconstruct from less.prems: strict, Hausdorff, p \<in> X, circles C with
-             homeomorphisms g, disjoint, cover = X, coherent topology.\<close>
+          unfolding top1_is_wedge_of_circles_on_def
+        proof (intro conjI)
+          show "is_topology_on_strict X TX" by (rule less.prems(1))
+          show "is_hausdorff_on X TX" by (rule less.prems(2))
+          show "p \<in> X" by (rule less.prems(3))
+          show "\<exists>Ca. (\<forall>\<alpha>\<in>{..<n}. Ca \<alpha> \<subseteq> X \<and> p \<in> Ca \<alpha>
+                 \<and> (\<exists>h. top1_homeomorphism_on top1_S1 top1_S1_topology
+                          (Ca \<alpha>) (subspace_topology X TX (Ca \<alpha>)) h))
+              \<and> (\<Union>\<alpha>\<in>{..<n}. Ca \<alpha>) = X
+              \<and> (\<forall>\<alpha>\<in>{..<n}. \<forall>\<beta>\<in>{..<n}. \<alpha> \<noteq> \<beta> \<longrightarrow> Ca \<alpha> \<inter> Ca \<beta> = {p})
+              \<and> (\<forall>D. D \<subseteq> X \<longrightarrow>
+                   (closedin_on X TX D \<longleftrightarrow>
+                    (\<forall>\<alpha>\<in>{..<n}. closedin_on (Ca \<alpha>) (subspace_topology X TX (Ca \<alpha>)) (Ca \<alpha> \<inter> D))))"
+          proof (rule exI[of _ C])
+            show "(\<forall>\<alpha>\<in>{..<n}. C \<alpha> \<subseteq> X \<and> p \<in> C \<alpha>
+                   \<and> (\<exists>h. top1_homeomorphism_on top1_S1 top1_S1_topology
+                            (C \<alpha>) (subspace_topology X TX (C \<alpha>)) h))
+                \<and> (\<Union>\<alpha>\<in>{..<n}. C \<alpha>) = X
+                \<and> (\<forall>\<alpha>\<in>{..<n}. \<forall>\<beta>\<in>{..<n}. \<alpha> \<noteq> \<beta> \<longrightarrow> C \<alpha> \<inter> C \<beta> = {p})
+                \<and> (\<forall>D. D \<subseteq> X \<longrightarrow>
+                     (closedin_on X TX D \<longleftrightarrow>
+                      (\<forall>\<alpha>\<in>{..<n}. closedin_on (C \<alpha>) (subspace_topology X TX (C \<alpha>)) (C \<alpha> \<inter> D))))"
+            proof (intro conjI)
+              show "\<forall>\<alpha>\<in>{..<n}. C \<alpha> \<subseteq> X \<and> p \<in> C \<alpha>
+                   \<and> (\<exists>h. top1_homeomorphism_on top1_S1 top1_S1_topology
+                            (C \<alpha>) (subspace_topology X TX (C \<alpha>)) h)"
+                using less.prems(4,7) by (by100 blast)
+              show "(\<Union>\<alpha>\<in>{..<n}. C \<alpha>) = X" by (rule less.prems(5))
+              show "\<forall>\<alpha>\<in>{..<n}. \<forall>\<beta>\<in>{..<n}. \<alpha> \<noteq> \<beta> \<longrightarrow> C \<alpha> \<inter> C \<beta> = {p}"
+                using less.prems(6) by (by100 blast)
+              show "\<forall>D. D \<subseteq> X \<longrightarrow>
+                     (closedin_on X TX D \<longleftrightarrow>
+                      (\<forall>\<alpha>\<in>{..<n}. closedin_on (C \<alpha>) (subspace_topology X TX (C \<alpha>)) (C \<alpha> \<inter> D)))"
+                using less.prems(9) by (by100 blast)
+            qed
+          qed
+        qed
         from Theorem_71_1_wedge_of_circles_finite[OF hwedge_X]
         obtain G :: "int set" and mul_G e_G invg_G and \<iota>_G :: "nat \<Rightarrow> int" where
           hG_free: "top1_is_free_group_full_on G mul_G e_G invg_G \<iota>_G {..<n}" and
