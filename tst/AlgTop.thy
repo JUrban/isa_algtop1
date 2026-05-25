@@ -5556,6 +5556,19 @@ lemma free_group_surj_hom_same_rank_bij:
   shows "bij_betw f G H"
   sorry
 
+text \<open>Helper: inclusion-induced images of generators are in the hom image,
+  when the generators map to specific elements via gen corr + inclusion.\<close>
+lemma inclusion_gen_images_in_hom_image:
+  assumes hTX: "is_topology_on X TX"
+      and hV_sub: "V \<subseteq> X"
+      and hloop: "\<forall>k\<in>S. top1_is_loop_on V (subspace_topology X TX V) p (\<lambda>t. gk k (cos (2*pi*t), sin (2*pi*t)))"
+      and hgen_eq: "\<forall>k\<in>S. \<iota>V k = {l. top1_loop_equiv_on V (subspace_topology X TX V) p (\<lambda>t. gk k (cos (2*pi*t), sin (2*pi*t))) l}"
+      and h\<Phi>_gen: "\<forall>k\<in>S. \<Phi> (\<iota>_G k) = {l. top1_loop_equiv_on X TX p (\<lambda>t. gk k (cos (2*pi*t), sin (2*pi*t))) l}"
+      and hiG_in: "\<forall>k\<in>S. \<iota>_G k \<in> G"
+  shows "(top1_fundamental_group_induced_on V (subspace_topology X TX V) p X TX p (\<lambda>x. x)) `
+      (\<iota>V ` S) \<subseteq> \<Phi> ` G"
+  sorry
+
 text \<open>Munkres Theorem 71.1 (witnessed version with chosen loop generators).
   For a finite wedge of circles with explicit circle data (homeomorphisms, basepoints),
   \<pi>_1 is free and the chosen circle loops are the free generators.
@@ -7963,10 +7976,22 @@ lemma finite_wedge_pi1_free_with_chosen_loops:
                 top1_fundamental_group_carrier V (subspace_topology X TX V) p"
               using hV_out_free unfolding top1_is_free_group_full_on_def by (by100 blast)
             \<comment> \<open>j\_V*(\<iota>V\_out(k)) \<in> \<Phi>(G) for each k \<in> {1..<n}.\<close>
+            \<comment> \<open>Apply inclusion\_gen\_images\_in\_hom\_image for V.\<close>
+            have hV_loops: "\<forall>k\<in>{1..<n}. top1_is_loop_on V (subspace_topology X TX V) p
+                (\<lambda>t. g k (cos (2*pi*t), sin (2*pi*t)))"
+              sorry \<comment> \<open>Each g(k) \<circ> std\_loop is a loop on V. Same pattern as U.\<close>
+            have hV_gen_class: "\<forall>k\<in>{1..<n}. \<iota>V_out k =
+                {l. top1_loop_equiv_on V (subspace_topology X TX V) p
+                    (\<lambda>t. g k (cos (2*pi*t), sin (2*pi*t))) l}"
+              sorry \<comment> \<open>\<iota>V\_out(k) = \<Phi>2(\<eta>2(k)) = loop\_class\_V(k).\<close>
+            have hPhi_loop_class: "\<forall>k\<in>{1..<n}. \<Phi> (\<iota>_G k) =
+                {l. top1_loop_equiv_on X TX p (\<lambda>t. g k (cos (2*pi*t), sin (2*pi*t))) l}"
+              sorry \<comment> \<open>\<Phi>(\<iota>\_G(k)) = loop\_class(k) from h\<Phi>\_gen.\<close>
+            have hiG_in_1n: "\<forall>k\<in>{1..<n}. \<iota>_G k \<in> G"
+              sorry \<comment> \<open>From hG\_free.\<close>
             have "?jV ` (\<iota>V_out ` {1..<n}) \<subseteq> \<Phi> ` G"
-              sorry \<comment> \<open>Same pattern as j\_U: gen corr + inclusion\_induced\_class + loop in V.
-                 Deep proof context causes by100/by5000 timeouts on trivial steps.
-                 Would work if moved to a standalone helper outside the induction.\<close>
+              using inclusion_gen_images_in_hom_image[OF hTX_here hV_sub
+                hV_loops hV_gen_class hPhi_loop_class hiG_in_1n] by (by100 blast)
             have h\<Phi>G_contains_jV: "?jV ` top1_fundamental_group_carrier V (subspace_topology X TX V) p \<subseteq> \<Phi> ` G"
               using hom_image_in_subgroup_from_generators[OF
                 hpi1V_grp_here hpi1_grp hjV_hom hpiV_gen hiV_sub h\<Phi>G_is_grp h\<Phi>G_sub
