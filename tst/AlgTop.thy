@@ -7451,21 +7451,18 @@ lemma finite_wedge_pi1_free_with_chosen_loops:
           \<comment> \<open>Theorem\_69\_2 gives FP\_UV (free product of \<pi>\_1(U), \<pi>\_1(V)) free on {..<n}.
              The extraction from the existential is handled via note + sorry composition.\<close>
           note hThm692_result = Theorem_69_2[OF hU'_free hV'_free hS_disj]
-          \<comment> \<open>From hThm692\_result + Corollary\_70\_3\_param + free\_group\_invariant\_under\_iso:
-             \<pi>\_1(X) is free on {..<n}. Generator tracking through the SvK iso gives
-             \<iota>X'(j) = loop\_class(j). The full chain:
-             1. hThm692\_result: \<exists>FP\_UV ... free product + free on {..<n}
-             2. Corollary\_70\_3\_param: \<pi>\_1(X) \<cong> FP\_UV
-             3. free\_group\_invariant\_under\_iso: \<pi>\_1(X) free on {..<n}
-             4. Gen tracking: iotaSUV(j) \<mapsto> loop\_class(j) via factor iso + SvK\<close>
-          show ?thesis
-            sorry \<comment> \<open>Combined sorry for the SvK + Theorem\_69\_2 + gen tracking chain.
-               All mathematical ingredients are available:
-               hThm692\_result, Corollary\_70\_3\_param, free\_group\_invariant\_under\_iso,
-               group\_iso\_on\_inverse, hpi1\_grp.
-               The formal execution requires: (1) extracting from hThm692\_result,
-               (2) applying Corollary\_70\_3\_param with the free product,
-               (3) composing the isos, (4) tracking generators through composition.\<close>
+          \<comment> \<open>Step D-1: \<pi>\_1(X) \<cong> some free group on {..<n}.\<close>
+          \<comment> \<open>Combined proof: from Theorem\_69\_2 result + SvK + free\_group\_invariant\_under\_iso.
+             All ingredients available: hThm692\_result, Corollary\_70\_3\_param, hpi1\_grp.\<close>
+          show ?thesis sorry \<comment> \<open>THE FINAL SORRY of the gen corr chain.
+             Proof outline: (1) extract FP\_UV from hThm692\_result,
+             (2) SvK: \<pi>\_1(X) \<cong> FP\_UV (Corollary\_70\_3\_param + hFP\_UV\_prod),
+             (3) free\_group\_invariant\_under\_iso: \<pi>\_1(X) free on {..<n},
+             (4) gen tracking: iotaSUV(j) maps to loop\_class(j) via SvK iso,
+             (5) pack ∃ with gens = loop\_class.
+             The extraction from the 6-variable existential hThm692\_result is the
+             main formal obstacle (Isabelle's blast can't handle it in 5s).
+             SOLUTION: use a dedicated extraction lemma or process\_theories.\<close>
         qed
         have h\<Phi>_bij: "bij_betw \<Phi> G (top1_fundamental_group_carrier X TX p)"
         proof -
