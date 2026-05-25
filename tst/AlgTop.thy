@@ -5435,6 +5435,32 @@ proof -
   qed
 qed
 
+lemma foldr_in_subgroup:
+  assumes hN_grp: "top1_is_group_on N mul e invg"
+      and hys: "\<forall>i<length ys. ys!i \<in> N"
+  shows "foldr mul ys e \<in> N"
+  using hys
+proof (induction ys)
+  case Nil
+  have "e \<in> N" using hN_grp[unfolded top1_is_group_on_def] by (by100 simp)
+  thus ?case by (by100 simp)
+next
+  case (Cons a rest)
+  have "a \<in> N" using Cons.prems by (by100 force)
+  have "\<forall>i<length rest. rest!i \<in> N" using Cons.prems by (by100 force)
+  hence "foldr mul rest e \<in> N" using Cons.IH by (by100 blast)
+  have hmul_closure: "\<forall>x\<in>N. \<forall>y\<in>N. mul x y \<in> N"
+  proof (intro ballI)
+    fix x y assume "x \<in> N" "y \<in> N"
+    have "\<forall>x\<in>N. \<forall>y\<in>N. mul x y \<in> N"
+      using hN_grp[unfolded top1_is_group_on_def] by (by100 simp)
+    thus "mul x y \<in> N" using \<open>x \<in> N\<close> \<open>y \<in> N\<close> by (by100 blast)
+  qed
+  have "mul a (foldr mul rest e) \<in> N"
+    using hmul_closure \<open>a \<in> N\<close> \<open>foldr mul rest e \<in> N\<close> by (by100 blast)
+  thus ?case by (by100 simp)
+qed
+
 text \<open>If G = gen(S), f: G \<rightarrow> H hom, N subgroup of H, f(S) \<subseteq> N, then f(G) \<subseteq> N.
   Proof: every g \<in> G is a word product of elements from S \<union> invg(S).
   f maps word products to word products, which stay in N since N is a subgroup.\<close>
@@ -5473,7 +5499,24 @@ proof (rule image_subsetI)
     \<comment> \<open>Each ws!i maps to N: if ws!i \<in> S then f(ws!i) \<in> N by hfS\_N.
        If ws!i = invg(s) for s \<in> S, then f(ws!i) = invgH(f(s)) \<in> N since N group.\<close>
     have hmap_N: "\<forall>i<length ws. f (ws!i) \<in> N"
-      sorry \<comment> \<open>From hws + hfS\_N + hom preserves inverse.\<close>
+    proof (intro allI impI)
+      fix i :: nat assume "i < length ws"
+      from hws[rule_format, OF this] have hwsi: "ws!i \<in> S \<or> (\<exists>s\<in>S. ws!i = invgG s)" .
+      show "f (ws!i) \<in> N"
+      proof (cases "ws!i \<in> S")
+        case True thus ?thesis using hfS_N by (by100 blast)
+      next
+        case False
+        from hwsi False obtain s where "s \<in> S" "ws!i = invgG s" by (by100 blast)
+        have "s \<in> G" using \<open>s \<in> S\<close> hS_sub by (by100 blast)
+        have "f s \<in> N" using \<open>s \<in> S\<close> hfS_N by (by100 blast)
+        have "f (invgG s) = invgH (f s)"
+          using hom_preserves_inv[OF hG_grp hH_grp hf \<open>s \<in> G\<close>] by (by100 blast)
+        hence "f (ws!i) = invgH (f s)" using \<open>ws!i = invgG s\<close> by (by100 simp)
+        have "invgH (f s) \<in> N" using \<open>f s \<in> N\<close> hN_grp unfolding top1_is_group_on_def by (by100 blast)
+        thus ?thesis using \<open>f (ws!i) = invgH (f s)\<close> by (by100 simp)
+      qed
+    qed
     \<comment> \<open>f preserves foldr: f(foldr mulG ws eG) = foldr mulH (map f ws) eH.\<close>
     have hws_in_G: "\<forall>i<length ws. ws!i \<in> G"
     proof (intro allI impI)
@@ -5493,9 +5536,10 @@ proof (rule image_subsetI)
     have hf_foldr: "f (foldr mulG ws eG) = foldr mulH (map f ws) eH"
       using hom_foldr_mul[OF hG_grp hH_grp hf hws_in_G] by (by100 blast)
     \<comment> \<open>foldr mulH (map f ws) eH \<in> N since each (map f ws)!i \<in> N and N closed.\<close>
-    have "foldr mulH (map f ws) eH \<in> N"
-      using hmap_N hN_grp
-    sorry \<comment> \<open>foldr of elements all in N stays in N (N closed under mul, contains eH).\<close>
+    have "\<forall>i<length (map f ws). (map f ws)!i \<in> N"
+      using hmap_N by (by100 auto)
+    hence "foldr mulH (map f ws) eH \<in> N"
+      using foldr_in_subgroup[OF hN_grp] by (by100 blast)
     thus "f g \<in> N" using hprod hf_foldr by (by100 simp)
   qed
 qed
