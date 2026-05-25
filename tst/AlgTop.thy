@@ -9319,11 +9319,41 @@ lemma finite_wedge_pi1_free_with_chosen_loops:
             \<comment> \<open>The bijection \<phi>: k \<mapsto> k-1 maps {1..<n} to {..<n-1}.\<close>
             define \<phi> where "\<phi> k = k - (1::nat)" for k
             have h\<phi>_bij: "bij_betw \<phi> {1..<n} {..<n-1}"
-              sorry \<comment> \<open>Standard: \<phi>(k) = k-1 is a bijection {1..<n} \<rightarrow> {..<n-1}.\<close>
+              unfolding \<phi>_def bij_betw_def
+            proof (intro conjI)
+              show "inj_on (\<lambda>k::nat. k - 1) {1..<n}" unfolding inj_on_def
+              proof (intro ballI impI)
+                fix x y :: nat assume hx: "x \<in> {1..<n}" and hy: "y \<in> {1..<n}" and heq: "x - 1 = y - 1"
+                from hx have "1 \<le> x" by (by100 simp)
+                from hy have "1 \<le> y" by (by100 simp)
+                from heq \<open>1 \<le> x\<close> \<open>1 \<le> y\<close> show "x = y" by (by100 linarith)
+              qed
+              show "(\<lambda>k. k - 1) ` {1..<n} = {..<n - 1}"
+              proof (rule set_eqI, rule iffI)
+                fix x assume "x \<in> (\<lambda>k. k - 1) ` {1..<n}"
+                then obtain k where hk: "k \<in> {1..<n}" "x = k - 1" by (by100 blast)
+                from hk have "1 \<le> k" "k < n" by (by100 simp)+
+                thus "x \<in> {..<n - 1}" using \<open>x = k - 1\<close> by (by100 simp)
+              next
+                fix x assume "x \<in> {..<n - 1}"
+                hence "x + 1 \<in> {1..<n}" by (by100 simp)
+                moreover have "x = (x + 1) - 1" by (by100 simp)
+                ultimately show "x \<in> (\<lambda>k. k - 1) ` {1..<n}" by (by100 blast)
+              qed
+            qed
             have h\<eta>2_eq: "\<forall>k\<in>{1..<n}. \<eta>2 k = \<eta>2' (\<phi> k)"
               unfolding \<eta>2_def \<phi>_def by (by100 simp)
             have h\<eta>2_img: "\<eta>2 ` {1..<n} = \<eta>2' ` {..<n-1}"
-              sorry \<comment> \<open>\<eta>2 ` {1..<n} = \<eta>2' \<circ> \<phi> ` {1..<n} = \<eta>2' ` {..<n-1} (bijection).\<close>
+            proof -
+              have "\<eta>2 ` {1..<n} = (\<eta>2' \<circ> \<phi>) ` {1..<n}"
+              proof (rule image_cong)
+                fix k assume "k \<in> {1..<n}"
+                thus "\<eta>2 k = (\<eta>2' \<circ> \<phi>) k" using h\<eta>2_eq by (by100 simp)
+              qed (by100 simp)
+              also have "\<dots> = \<eta>2' ` (\<phi> ` {1..<n})" unfolding image_comp[symmetric] by (by100 simp)
+              also have "\<phi> ` {1..<n} = {..<n-1}" using h\<phi>_bij unfolding bij_betw_def by (by100 blast)
+              finally show ?thesis .
+            qed
             \<comment> \<open>Transfer free\_group\_full from {..<n-1} to {1..<n}.\<close>
             show ?thesis unfolding top1_is_free_group_full_on_def
               sorry \<comment> \<open>Each conjunct: group (same), gens \<in> G (\<eta>2 img = \<eta>2' img),
