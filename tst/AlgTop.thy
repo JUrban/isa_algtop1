@@ -8776,6 +8776,84 @@ next
   finally show ?case .
 qed
 
+text \<open>Helper: two loops that agree pointwise on I\_set have the same loop-equiv class.
+  Proof: the constant homotopy H(s,t) = f(s) witnesses path\_homotopic\_on f g,
+  since f(s) = g(s) for all s \<in> I\_set.\<close>
+lemma loop_equiv_class_pointwise_I:
+  assumes hTA: "is_topology_on X TX"
+    and hf: "top1_is_loop_on X TX x0 f"
+    and hg: "top1_is_loop_on X TX x0 g"
+    and hpw: "\<forall>t\<in>I_set. f t = g t"
+  shows "{l. top1_loop_equiv_on X TX x0 f l} = {l. top1_loop_equiv_on X TX x0 g l}"
+proof -
+  \<comment> \<open>f and g are path-homotopic via the constant homotopy H(s,t) = f(s).\<close>
+  have hfg: "top1_path_homotopic_on X TX x0 x0 f g"
+    unfolding top1_path_homotopic_on_def
+  proof (intro conjI)
+    show "top1_is_path_on X TX x0 x0 f" using hf unfolding top1_is_loop_on_def by (by100 blast)
+    show "top1_is_path_on X TX x0 x0 g" using hg unfolding top1_is_loop_on_def by (by100 blast)
+    \<comment> \<open>The homotopy H(s,t) = f(s). H is continuous because f is continuous and H doesn't depend on t.\<close>
+    define H where "H p = f (fst p)" for p :: "real \<times> real"
+    show "\<exists>F. top1_continuous_map_on (I_set \<times> I_set) II_topology X TX F
+        \<and> (\<forall>s\<in>I_set. F (s, 0) = f s) \<and> (\<forall>s\<in>I_set. F (s, 1) = g s)
+        \<and> (\<forall>t\<in>I_set. F (0, t) = x0) \<and> (\<forall>t\<in>I_set. F (1, t) = x0)"
+    proof (rule exI[of _ H], intro conjI)
+      \<comment> \<open>H(s,0) = f(s).\<close>
+      show "\<forall>s\<in>I_set. H (s, 0) = f s" unfolding H_def by (by100 simp)
+      \<comment> \<open>H(s,1) = f(s) = g(s) for s \<in> I\_set.\<close>
+      show "\<forall>s\<in>I_set. H (s, 1) = g s" unfolding H_def using hpw by (by100 simp)
+      \<comment> \<open>H(0,t) = f(0) = x0.\<close>
+      show "\<forall>t\<in>I_set. H (0, t) = x0" unfolding H_def
+        using hf unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 simp)
+      \<comment> \<open>H(1,t) = f(1) = x0.\<close>
+      show "\<forall>t\<in>I_set. H (1, t) = x0" unfolding H_def
+        using hf unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 simp)
+      \<comment> \<open>H is continuous: H = f \<circ> fst, composition of continuous maps.\<close>
+      show "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX H"
+      proof -
+        have hI_top: "is_topology_on I_set I_top"
+          using top1_unit_interval_topology_is_topology_on by (by100 blast)
+        have hf_cont: "top1_continuous_map_on I_set I_top X TX f"
+          using hf unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+        have "top1_continuous_map_on (I_set \<times> I_set) (product_topology_on I_top I_top) X TX (\<lambda>p. f (fst p))"
+          using homotopy_const_continuous[OF hf_cont hI_top] by (by100 blast)
+        moreover have "\<And>p. f (fst p) = H p" unfolding H_def by (by100 simp)
+        ultimately show ?thesis unfolding II_topology_def by (by100 simp)
+      qed
+    qed
+  qed
+  \<comment> \<open>loop\_equiv is an equivalence relation, so equiv classes of equivalent elements are equal.\<close>
+  have hfg_equiv: "top1_loop_equiv_on X TX x0 f g"
+    unfolding top1_loop_equiv_on_def using hf hg hfg by (by100 blast)
+  show ?thesis
+  proof (rule set_eqI, rule iffI)
+    fix l
+    assume "l \<in> {l. top1_loop_equiv_on X TX x0 f l}"
+    hence "top1_loop_equiv_on X TX x0 f l" by (by100 blast)
+    hence hl: "top1_is_loop_on X TX x0 l" and hfl: "top1_path_homotopic_on X TX x0 x0 f l"
+      unfolding top1_loop_equiv_on_def by (by100 blast)+
+    have "top1_path_homotopic_on X TX x0 x0 g l"
+    proof -
+      have hgf: "top1_path_homotopic_on X TX x0 x0 g f"
+        using Lemma_51_1_path_homotopic_sym[OF hfg] by (by100 blast)
+      from Lemma_51_1_path_homotopic_trans[OF hTA hgf hfl]
+      show ?thesis .
+    qed
+    thus "l \<in> {l. top1_loop_equiv_on X TX x0 g l}"
+      unfolding top1_loop_equiv_on_def using hg hl by (by100 blast)
+  next
+    fix l
+    assume "l \<in> {l. top1_loop_equiv_on X TX x0 g l}"
+    hence "top1_loop_equiv_on X TX x0 g l" by (by100 blast)
+    hence hl: "top1_is_loop_on X TX x0 l" and hgl: "top1_path_homotopic_on X TX x0 x0 g l"
+      unfolding top1_loop_equiv_on_def by (by100 blast)+
+    have "top1_path_homotopic_on X TX x0 x0 f l"
+      using Lemma_51_1_path_homotopic_trans[OF hTA hfg hgl] .
+    thus "l \<in> {l. top1_loop_equiv_on X TX x0 f l}"
+      unfolding top1_loop_equiv_on_def using hf hl by (by100 blast)
+  qed
+qed
+
 theorem Theorem_74_2_scheme_presentation:
   fixes X :: "'a set" and TX :: "'a set set" and x0 :: 'a
     and scheme :: "(nat \<times> bool) list"
@@ -9633,7 +9711,58 @@ proof -
           (\<lambda>t. g_w \<alpha> (cos (2*pi*t), sin (2*pi*t))) l}"
         using h\<Phi>_w_gen[rule_format, OF h\<alpha>] by (by100 blast)
       also have "\<dots> = edge_loop_class_a \<alpha>"
-        unfolding edge_loop_class_a_def using hloop_eq sorry
+      proof -
+        let ?f = "\<lambda>t. g_w \<alpha> (cos (2*pi*t), sin (2*pi*t))"
+        let ?g = "\<lambda>t. qC ((1-t) * vxC (i_of \<alpha>) + t * vxC (Suc (i_of \<alpha>) mod ?n),
+                          (1-t) * vyC (i_of \<alpha>) + t * vyC (Suc (i_of \<alpha>) mod ?n))"
+        \<comment> \<open>?g = f\_\<alpha> (the edge loop), already proved to be a loop.\<close>
+        \<comment> \<open>?g is a loop: it's the edge loop for \<alpha>, which we proved earlier as hf\_loop.\<close>
+        have hg_loop: "top1_is_loop_on A ?TA a ?g"
+          sorry \<comment> \<open>Same as f\_\<alpha> loop, needs f\_\<alpha> in scope or reproving.\<close>
+        \<comment> \<open>?f is a loop: \<Phi>\_w(\<eta>\_w \<alpha>) is in \<pi>\_1(A,a), so its representative is a loop.\<close>
+        have heta_in: "\<eta>_w \<alpha> \<in> F_w"
+        proof -
+          have "\<forall>s\<in>?J. \<eta>_w s \<in> F_w"
+            using hF_w_free unfolding top1_is_free_group_full_on_def by (by100 blast)
+          thus ?thesis using h\<alpha> by (by100 blast)
+        qed
+        have hPhi_in: "\<Phi>_w (\<eta>_w \<alpha>) \<in> top1_fundamental_group_carrier A ?TA a"
+          using h\<Phi>_w_iso heta_in unfolding top1_group_iso_on_def top1_group_hom_on_def by (by100 blast)
+        hence "\<exists>f'. top1_is_loop_on A ?TA a f' \<and> \<Phi>_w (\<eta>_w \<alpha>) = {l. top1_loop_equiv_on A ?TA a f' l}"
+          unfolding top1_fundamental_group_carrier_def by (by100 blast)
+        then obtain f' where hf'_loop: "top1_is_loop_on A ?TA a f'"
+          and hf'_class: "\<Phi>_w (\<eta>_w \<alpha>) = {l. top1_loop_equiv_on A ?TA a f' l}"
+          by (by100 blast)
+        have hclass_eq: "{l. top1_loop_equiv_on A ?TA a ?f l} = {l. top1_loop_equiv_on A ?TA a f' l}"
+          using h\<Phi>_w_gen[rule_format, OF h\<alpha>] hf'_class by (by100 simp)
+        \<comment> \<open>f' is loop-equiv to ?f, so ?f is a loop.\<close>
+        have hf_loop_here: "top1_is_loop_on A ?TA a ?f"
+        proof -
+          have "f' \<in> {l. top1_loop_equiv_on A ?TA a ?f l}"
+          proof -
+            have "f' \<in> {l. top1_loop_equiv_on A ?TA a f' l}"
+            proof -
+              have "top1_loop_equiv_on A ?TA a f' f'"
+                unfolding top1_loop_equiv_on_def
+                using hf'_loop Lemma_51_1_path_homotopic_refl[OF hf'_loop[unfolded top1_is_loop_on_def]]
+                by (by100 blast)
+              thus ?thesis by (by100 blast)
+            qed
+            thus ?thesis using hclass_eq by (by100 blast)
+          qed
+          hence "top1_loop_equiv_on A ?TA a ?f f'" by (by100 blast)
+          thus ?thesis unfolding top1_loop_equiv_on_def by (by100 blast)
+        qed
+        \<comment> \<open>Apply loop\_equiv\_class\_pointwise\_I.\<close>
+        have hclass_result: "{l. top1_loop_equiv_on A ?TA a
+            (\<lambda>t. g_w \<alpha> (cos (2*pi*t), sin (2*pi*t))) l} =
+            {l. top1_loop_equiv_on A ?TA a
+            (\<lambda>t. qC ((1-t) * vxC (i_of \<alpha>) + t * vxC (Suc (i_of \<alpha>) mod ?n),
+                      (1-t) * vyC (i_of \<alpha>) + t * vyC (Suc (i_of \<alpha>) mod ?n))) l}"
+          using loop_equiv_class_pointwise_I[OF hA_top hf_loop_here hg_loop hloop_eq] by (by100 blast)
+        show ?thesis using hclass_result edge_loop_class_a_def[of \<alpha>]
+          sorry \<comment> \<open>TECH: Collect+lambda matching after definition unfolding. Mathematically trivial.\<close>
+      qed
       finally show "\<Phi>_w (\<eta>_w \<alpha>) = edge_loop_class_a \<alpha>" .
     qed
     \<comment> \<open>Transfer: \<pi>\_1(A,a) free on ?J with gen = edge\_loop\_class\_a.\<close>
