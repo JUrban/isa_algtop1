@@ -23,6 +23,7 @@ THEORIES=(
   pd/PolygonDisk.thy
   svk/AlgTopSvK.thy
   wh/AlgTopWedgeHelpers.thy
+  at/AlgTopChain.thy
   AlgTop.thy
 )
 
