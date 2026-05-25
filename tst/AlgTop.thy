@@ -4662,7 +4662,42 @@ lemma abelian_commutator_trivial:
   assumes hG: "top1_is_group_on G mul e invg"
     and hab: "top1_is_abelian_group_on G mul e invg"
   shows "top1_commutator_subgroup_on G mul e invg = {e}"
-  sorry
+proof -
+  \<comment> \<open>Use Lemma\_69\_3 with h = id: G \<rightarrow> G. Since G is abelian, [G,G] \<subseteq> ker(id) = {e}.\<close>
+  have hid_hom: "top1_group_hom_on G mul G mul id"
+    using group_hom_id[OF hG] by (by100 blast)
+  have hcomm_sub_ker: "top1_commutator_subgroup_on G mul e invg
+      \<subseteq> top1_group_kernel_on G e id"
+    using Lemma_69_3_commutator_in_kernel[OF hG hab hid_hom] by (by100 blast)
+  have he_in_G: "e \<in> G" using hG unfolding top1_is_group_on_def by (by100 blast)
+  have hker_id: "top1_group_kernel_on G e id = {e}"
+    unfolding top1_group_kernel_on_def using he_in_G by (by100 auto)
+  have hcomm_sub_e: "top1_commutator_subgroup_on G mul e invg \<subseteq> {e}"
+    using hcomm_sub_ker hker_id by (by100 blast)
+  \<comment> \<open>Also e \<in> [G,G] (identity in any subgroup).\<close>
+  have he_in_comm: "e \<in> top1_commutator_subgroup_on G mul e invg"
+  proof -
+    have he_in_G: "e \<in> G" using hG unfolding top1_is_group_on_def by (by100 blast)
+    have "top1_group_commutator_on mul invg e e = e"
+      unfolding top1_group_commutator_on_def
+      using hG he_in_G unfolding top1_is_group_on_def by (by5000 metis)
+    hence "e \<in> {top1_group_commutator_on mul invg a b | a b. a \<in> G \<and> b \<in> G}"
+      using he_in_G by (by5000 force)
+    have hcomm_set_sub: "{top1_group_commutator_on mul invg a b | a b. a \<in> G \<and> b \<in> G} \<subseteq> G"
+    proof
+      fix x assume "x \<in> {top1_group_commutator_on mul invg a b | a b. a \<in> G \<and> b \<in> G}"
+      then obtain a b where "a \<in> G" "b \<in> G" "x = top1_group_commutator_on mul invg a b"
+        by (by100 blast)
+      thus "x \<in> G" unfolding top1_group_commutator_on_def
+        using hG \<open>a \<in> G\<close> \<open>b \<in> G\<close> unfolding top1_is_group_on_def by (by5000 metis)
+    qed
+    thus ?thesis unfolding top1_commutator_subgroup_on_def
+      using subgroup_generated_contains[OF hG hcomm_set_sub]
+      \<open>e \<in> {top1_group_commutator_on mul invg a b | a b. a \<in> G \<and> b \<in> G}\<close>
+      by (by100 blast)
+  qed
+  show ?thesis using hcomm_sub_e he_in_comm by (by100 blast)
+qed
 
 text \<open>Helper: trivial kernel implies injective for group hom.\<close>
 lemma trivial_kernel_injective:
