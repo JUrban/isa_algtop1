@@ -8968,13 +8968,90 @@ proof -
       ultimately show "F (y, t) \<in> Y - {q}" unfolding F_def \<theta>_mix_def by (by100 simp)
     qed
     \<comment> \<open>Now: F continuous (Y-{q})\<times>I \<rightarrow> Y-{q}.\<close>
+    \<comment> \<open>F = h \<circ> R\_to\_S1 \<circ> lc where lc(y,t) = (1-t)*angle(y) + t*\<theta>r.
+       Prove continuity step by step.\<close>
+    have hTR_eq: "(order_topology_on_UNIV :: real set set) = top1_open_sets"
+    proof (rule set_eqI)
+      fix U :: "real set"
+      show "U \<in> order_topology_on_UNIV \<longleftrightarrow> U \<in> top1_open_sets"
+        using order_topology_on_UNIV_eq_HOL_open unfolding top1_open_sets_def by (by100 simp)
+    qed
+    have hTY_top: "is_topology_on Y TY"
+      using hh unfolding top1_homeomorphism_on_def by (by100 blast)
+    have hTYq_top: "is_topology_on (Y - {q}) (subspace_topology Y TY (Y - {q}))"
+      by (rule subspace_topology_is_topology_on[OF hTY_top]) (by100 blast)
+    have hI_top: "is_topology_on I_set I_top"
+      using top1_unit_interval_topology_is_topology_on by (by100 blast)
+    have hprod_top: "is_topology_on ((Y - {q}) \<times> I_set)
+        (product_topology_on (subspace_topology Y TY (Y - {q})) I_top)"
+      using product_topology_on_is_topology_on[OF hTYq_top hI_top] by (by100 blast)
+    \<comment> \<open>Step A: angle \<circ> \<pi>1 continuous (Y-{q})\<times>I \<rightarrow> \<real>.\<close>
+    have hangle_pi1: "top1_continuous_map_on ((Y - {q}) \<times> I_set)
+        (product_topology_on (subspace_topology Y TY (Y - {q})) I_top)
+        (UNIV :: real set) top1_open_sets (\<lambda>(y,t). angle y)"
+    proof (rule continuous_map_onI)
+      show "\<forall>x \<in> (Y - {q}) \<times> I_set. (case x of (y, t) \<Rightarrow> angle y) \<in> (UNIV :: real set)"
+        by (by100 blast)
+      show "\<forall>V \<in> top1_open_sets. {x \<in> (Y - {q}) \<times> I_set. (case x of (y, t) \<Rightarrow> angle y) \<in> V}
+            \<in> product_topology_on (subspace_topology Y TY (Y - {q})) I_top"
+      proof
+        fix V assume "V \<in> (top1_open_sets :: real set set)"
+        have hpre: "{y \<in> Y - {q}. angle y \<in> V} \<in> subspace_topology Y TY (Y - {q})"
+          using continuous_map_preimage_open[OF hangle_cont \<open>V \<in> top1_open_sets\<close>] by (by100 blast)
+        have "{x \<in> (Y - {q}) \<times> I_set. (case x of (y, t) \<Rightarrow> angle y) \<in> V}
+            = {y \<in> Y - {q}. angle y \<in> V} \<times> I_set"
+          by (by5000 auto)
+        have "I_set \<in> I_top"
+          using hI_top unfolding is_topology_on_def by (by100 blast)
+        have "{y \<in> Y - {q}. angle y \<in> V} \<times> I_set \<in>
+            product_topology_on (subspace_topology Y TY (Y - {q})) I_top"
+          using product_rect_open[OF hpre \<open>I_set \<in> I_top\<close>] by (by100 blast)
+        thus "{x \<in> (Y - {q}) \<times> I_set. (case x of (y, t) \<Rightarrow> angle y) \<in> V}
+            \<in> product_topology_on (subspace_topology Y TY (Y - {q})) I_top"
+          using \<open>{x \<in> (Y - {q}) \<times> I_set. (case x of (y, t) \<Rightarrow> angle y) \<in> V}
+            = {y \<in> Y - {q}. angle y \<in> V} \<times> I_set\<close> by (by100 simp)
+      qed
+    qed
+    \<comment> \<open>Step B: \<pi>2 continuous (Y-{q})\<times>I \<rightarrow> I \<subseteq> \<real>.\<close>
+    have hpi2_real: "top1_continuous_map_on ((Y - {q}) \<times> I_set)
+        (product_topology_on (subspace_topology Y TY (Y - {q})) I_top)
+        (UNIV :: real set) top1_open_sets (\<lambda>(y,t). t)"
+      sorry \<comment> \<open>\<pi>2 then expand range from I to UNIV.\<close>
+    \<comment> \<open>Step C: (y,t) \<mapsto> (1-t) continuous.\<close>
+    have h1mt: "top1_continuous_map_on ((Y - {q}) \<times> I_set)
+        (product_topology_on (subspace_topology Y TY (Y - {q})) I_top)
+        (UNIV :: real set) top1_open_sets (\<lambda>(y,t). 1 - t)"
+      sorry \<comment> \<open>Constant 1 minus \<pi>2.\<close>
+    \<comment> \<open>Step D: (y,t) \<mapsto> (1-t)*angle(y) continuous (product of continuous functions).\<close>
+    have hprod1: "top1_continuous_map_on ((Y - {q}) \<times> I_set)
+        (product_topology_on (subspace_topology Y TY (Y - {q})) I_top)
+        (UNIV :: real set) top1_open_sets (\<lambda>(y,t). (1 - t) * angle y)"
+      sorry \<comment> \<open>Product of h1mt and hangle\_pi1 via top1\_continuous\_mul\_real.\<close>
+    \<comment> \<open>Step E: (y,t) \<mapsto> t*\<theta>r continuous.\<close>
+    have hprod2: "top1_continuous_map_on ((Y - {q}) \<times> I_set)
+        (product_topology_on (subspace_topology Y TY (Y - {q})) I_top)
+        (UNIV :: real set) top1_open_sets (\<lambda>(y,t). t * \<theta>r)"
+      sorry \<comment> \<open>Product of \<pi>2 and constant \<theta>r via top1\_continuous\_mul\_real.\<close>
+    \<comment> \<open>Step F: lc(y,t) = (1-t)*angle(y) + t*\<theta>r continuous.\<close>
+    have hlc: "top1_continuous_map_on ((Y - {q}) \<times> I_set)
+        (product_topology_on (subspace_topology Y TY (Y - {q})) I_top)
+        (UNIV :: real set) top1_open_sets (\<lambda>(y,t). (1 - t) * angle y + t * \<theta>r)"
+      sorry \<comment> \<open>Sum of hprod1 and hprod2 via top1\_continuous\_add\_real.\<close>
+    \<comment> \<open>Step G: R\_to\_S1 \<circ> lc continuous (Y-{q})\<times>I \<rightarrow> S1.\<close>
+    have hR_lc: "top1_continuous_map_on ((Y - {q}) \<times> I_set)
+        (product_topology_on (subspace_topology Y TY (Y - {q})) I_top)
+        top1_S1 top1_S1_topology (\<lambda>(y,t). top1_R_to_S1 ((1 - t) * angle y + t * \<theta>r))"
+      sorry \<comment> \<open>Composition of hlc with R\_to\_S1 (continuous \<real> \<rightarrow> S1).\<close>
+    \<comment> \<open>Step H: F = h \<circ> (R\_to\_S1 \<circ> lc) continuous (Y-{q})\<times>I \<rightarrow> Y.\<close>
+    have hF_Y: "top1_continuous_map_on ((Y - {q}) \<times> I_set)
+        (product_topology_on (subspace_topology Y TY (Y - {q})) I_top)
+        Y TY (\<lambda>(y,t). h (top1_R_to_S1 ((1 - t) * angle y + t * \<theta>r)))"
+      sorry \<comment> \<open>Composition of hR\_lc with h (continuous S1 \<rightarrow> Y).\<close>
+    \<comment> \<open>Step I: Restrict codomain to Y-{q} using hF\_image.\<close>
     have hF_cont: "top1_continuous_map_on ((Y - {q}) \<times> I_set)
         (product_topology_on (subspace_topology Y TY (Y - {q})) I_top)
         (Y - {q}) (subspace_topology Y TY (Y - {q})) F"
-      sorry \<comment> \<open>Composition of continuous functions:
-         (y,t) \<mapsto> (1-t)*angle(y)+t*\<theta>r continuous (product of angle + arithmetic);
-         R\_to\_S1 continuous; h continuous.
-         Image in Y-{q} shown above. Restrict codomain.\<close>
+      sorry \<comment> \<open>hF\_Y + image in Y-{q} (hF\_image) + Theorem\_18\_2(5).\<close>
     show "\<exists>H. top1_continuous_map_on ((Y - {q}) \<times> I_set)
         (product_topology_on (subspace_topology Y TY (Y - {q})) I_top)
         (Y - {q}) (subspace_topology Y TY (Y - {q})) H
