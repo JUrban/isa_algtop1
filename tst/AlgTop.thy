@@ -7357,12 +7357,65 @@ proof (induction "card F" arbitrary: F X TX rule: less_induct)
         using less.prems(8) hA by (by100 blast)
       \<comment> \<open>Paste: X = A \<union> Y, A \<inter> Y = {p}, A closed, Y closed,
          A and Y each deformation-retract to {p}.\<close>
-      show ?thesis
-        sorry \<comment> \<open>Define H piecewise: H(x,t) = H\_A(x,t) if x \<in> A, H\_Y(x,t) if x \<in> Y.
-           Well-defined: x \<in> A \<inter> Y \<Rightarrow> x = p, H\_A(p,t) = p = H\_Y(p,t).
-           Continuous: A \<times> I and Y \<times> I closed in X \<times> I. Each restriction continuous.
-           By pasting\_lemma\_two\_closed (with A \<times> I and Y \<times> I as the two closed sets).
-           Boundary: H(x,0) = x, H(x,1) = p, H(p,t) = p.\<close>
+      \<comment> \<open>Extract retraction homotopies HA and HY.\<close>
+      from hA_dr[unfolded top1_deformation_retract_of_on_def]
+      obtain HA where hHA: "top1_continuous_map_on (A \<times> I_set)
+            (product_topology_on (subspace_topology X TX A) I_top) A (subspace_topology X TX A) HA
+          \<and> (\<forall>x\<in>A. HA (x, 0) = x) \<and> (\<forall>x\<in>A. HA (x, 1) \<in> {p})
+          \<and> (\<forall>a\<in>{p}. \<forall>t\<in>I_set. HA (a, t) = a)"
+        sorry \<comment> \<open>Extract from deformation\_retract definition.\<close>
+      from hY_dr[unfolded top1_deformation_retract_of_on_def]
+      obtain HY where hHY: "top1_continuous_map_on (Y \<times> I_set)
+            (product_topology_on (subspace_topology X TX Y) I_top) Y (subspace_topology X TX Y) HY
+          \<and> (\<forall>x\<in>Y. HY (x, 0) = x) \<and> (\<forall>x\<in>Y. HY (x, 1) \<in> {p})
+          \<and> (\<forall>a\<in>{p}. \<forall>t\<in>I_set. HY (a, t) = a)"
+        sorry \<comment> \<open>Extract from deformation\_retract definition.\<close>
+      \<comment> \<open>Define H piecewise.\<close>
+      define H where "H = (\<lambda>(x, t). if x \<in> A then HA (x, t) else HY (x, t))"
+      show ?thesis unfolding top1_deformation_retract_of_on_def
+      proof (intro conjI)
+        show "{p} \<subseteq> X" using less.prems(5) by (by100 blast)
+        \<comment> \<open>H continuous + boundary conditions.\<close>
+        show "\<exists>Hmap. top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) X TX Hmap
+            \<and> (\<forall>x\<in>X. Hmap (x, 0) = x) \<and> (\<forall>x\<in>X. Hmap (x, 1) \<in> {p})
+            \<and> (\<forall>a\<in>{p}. \<forall>t\<in>I_set. Hmap (a, t) = a)"
+        proof (rule exI[of _ H])
+          \<comment> \<open>Boundary conditions.\<close>
+          have hH_0: "\<forall>x\<in>X. H (x, 0) = x"
+          proof (intro ballI)
+            fix x assume "x \<in> X"
+            hence "x \<in> A \<or> x \<in> Y" using hX_AY by (by100 blast)
+            thus "H (x, 0) = x"
+              unfolding H_def using hHA hHY by (by100 force)
+          qed
+          have hH_1: "\<forall>x\<in>X. H (x, 1) \<in> {p}"
+          proof (intro ballI)
+            fix x assume "x \<in> X"
+            hence "x \<in> A \<or> x \<in> Y" using hX_AY by (by100 blast)
+            thus "H (x, 1) \<in> {p}"
+              unfolding H_def using hHA hHY by (by100 force)
+          qed
+          have hH_fix: "\<forall>a\<in>{p}. \<forall>t\<in>I_set. H (a, t) = a"
+          proof (intro ballI)
+            fix a t assume "a \<in> {p}" "t \<in> I_set"
+            hence "a = p" by (by100 blast)
+            have "p \<in> A" using hp_AY by (by100 blast)
+            thus "H (a, t) = a" unfolding H_def \<open>a = p\<close>
+              using hHA \<open>t \<in> I_set\<close> \<open>p \<in> A\<close> by (by100 force)
+          qed
+          \<comment> \<open>Continuity by pasting\_lemma\_two\_closed.\<close>
+          have hH_cont: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) X TX H"
+            sorry \<comment> \<open>A\<times>I and Y\<times>I closed in X\<times>I (Hausdorff product).
+               H|_{A\<times>I} = HA continuous (Theorem\_16\_3 + expand\_range).
+               H|_{Y\<times>I} = HY continuous (similarly).
+               H well-defined on (A\<inter>Y)\<times>I = {p}\<times>I.
+               pasting\_lemma\_two\_closed gives H continuous on X\<times>I.\<close>
+          show "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) X TX H
+              \<and> (\<forall>x\<in>X. H (x, 0) = x) \<and> (\<forall>x\<in>X. H (x, 1) \<in> {p})
+              \<and> (\<forall>a\<in>{p}. \<forall>t\<in>I_set. H (a, t) = a)"
+            using hH_cont hH_0 hH_1 hH_fix by (by100 blast)
+        qed
+      qed
     qed
   qed
 qed
