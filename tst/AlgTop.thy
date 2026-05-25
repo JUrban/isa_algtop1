@@ -8950,6 +8950,18 @@ proof -
              (1-t) * vyC i + t * vyC (Suc i mod length scheme))"
     by - (erule exE, erule exE, erule exE, erule exE, erule exE, erule exE,
           (erule conjE)+, rule that, assumption+)
+  \<comment> \<open>For each label \<alpha> \<in> J, pick a canonical TRUE-direction edge index i(\<alpha>).
+     Defined ONCE at \<S>74.2 scope so all sub-proofs use the same constant.\<close>
+  define i_of where "i_of \<alpha> = (SOME i. i < length scheme \<and> fst (scheme!i) = \<alpha> \<and> snd (scheme!i) = True)" for \<alpha>
+  have hi_of: "\<And>\<alpha>. \<alpha> \<in> fst ` set scheme \<Longrightarrow>
+      i_of \<alpha> < length scheme \<and> fst (scheme!(i_of \<alpha>)) = \<alpha> \<and> snd (scheme!(i_of \<alpha>)) = True"
+  proof -
+    fix \<alpha> assume h\<alpha>: "\<alpha> \<in> fst ` set scheme"
+    have "\<exists>i. i < length scheme \<and> fst (scheme!i) = \<alpha> \<and> snd (scheme!i) = True"
+      using htrue_dir h\<alpha> by (by100 blast)
+    thus "i_of \<alpha> < length scheme \<and> fst (scheme!(i_of \<alpha>)) = \<alpha> \<and> snd (scheme!(i_of \<alpha>)) = True"
+      unfolding i_of_def by (rule someI_ex)
+  qed
   \<comment> \<open>Step 2 (book): "A is a wedge of k circles." (Using the SAME A from CW data.)\<close>
   have hA_wd_and_gen: "top1_is_wedge_of_circles_on A (subspace_topology X TX A) (fst ` set scheme) a
     \<and> (\<exists>\<iota>A. top1_is_free_group_full_on
@@ -8979,21 +8991,7 @@ proof -
     have hA_haus: "is_hausdorff_on A ?TA"
       using Theorem_17_11 hX_h hA_sub by (by100 blast)
 
-    \<comment> \<open>For each label \<alpha> \<in> J, pick a canonical TRUE-direction edge index i(\<alpha>).
-       Following Munkres: "choose an edge oriented counterclockwise" = True direction.\<close>
-    define i_of where "i_of \<alpha> = (SOME i. i < ?n \<and> fst (scheme!i) = \<alpha> \<and> snd (scheme!i) = True)" for \<alpha>
-    \<comment> \<open>Key property: i_of \<alpha> is valid for \<alpha> \<in> J (True-direction edge exists).\<close>
-    have hi_of: "\<And>\<alpha>. \<alpha> \<in> ?J \<Longrightarrow> i_of \<alpha> < ?n \<and> fst (scheme!(i_of \<alpha>)) = \<alpha> \<and> snd (scheme!(i_of \<alpha>)) = True"
-    proof -
-      fix \<alpha> assume h\<alpha>: "\<alpha> \<in> ?J"
-      then obtain x where hx: "x \<in> set scheme" "fst x = \<alpha>" by (by100 blast)
-      then obtain i where hi: "i < ?n" "scheme!i = x" using in_set_conv_nth by (by5000 metis)
-      \<comment> \<open>Every label has a True-direction edge (from the scheme structure).\<close>
-      have "\<exists>i. i < ?n \<and> fst (scheme!i) = \<alpha> \<and> snd (scheme!i) = True"
-        using htrue_dir h\<alpha> by (by100 blast)
-      thus "i_of \<alpha> < ?n \<and> fst (scheme!(i_of \<alpha>)) = \<alpha> \<and> snd (scheme!(i_of \<alpha>)) = True"
-        unfolding i_of_def by (rule someI_ex)
-    qed
+    \<comment> \<open>i\_of and hi\_of now at \<S>74.2 outer scope (line ~8955).\<close>
 
     \<comment> \<open>Define the edge map for index i: edge\_i(t) = (1-t)*v_i + t*v_{i+1}.\<close>
     define edge_pt where "edge_pt i t = ((1-t) * vxC i + t * vxC (Suc i mod ?n),
@@ -9821,8 +9819,7 @@ proof -
         using hgen_eq_a by (by100 simp)
       thus ?thesis using \<open>top1_is_free_group_full_on _ _ _ _ \<iota>A ?J \<and> _\<close> by (by100 blast)
     qed
-    show ?thesis using hA_wd_part hpi1A_gen_a
-      sorry \<comment> \<open>TECH: conjI + existential assembly. Both parts proved but blast can't combine.\<close>
+    show ?thesis using hA_wd_part hpi1A_gen_a by (by100 blast)
   qed
   have hA_wd: "top1_is_wedge_of_circles_on A (subspace_topology X TX A) (fst ` set scheme) a"
     using hA_wd_and_gen by (by100 blast)
@@ -10044,17 +10041,7 @@ proof -
     \<comment> \<open>Construct \<phi>: F \<rightarrow> \<pi>_1(A,a') mapping \<iota>F(s) \<rightarrow> [edge\_loop for label s].
        Munkres: "choose an edge oriented counterclockwise, let g_i = \<pi> \<circ> f_i.
        Then g_1,...,g_k represent free generators for \<pi>_1(A,x_0)."\<close>
-    \<comment> \<open>Re-define i\_of at this scope: canonical True-direction edge index for each label.\<close>
-    define i_of where "i_of \<alpha> = (SOME i. i < length scheme \<and> fst (scheme!i) = \<alpha> \<and> snd (scheme!i) = True)" for \<alpha>
-    have hi_of: "\<And>\<alpha>. \<alpha> \<in> fst ` set scheme \<Longrightarrow>
-        i_of \<alpha> < length scheme \<and> fst (scheme!(i_of \<alpha>)) = \<alpha> \<and> snd (scheme!(i_of \<alpha>)) = True"
-    proof -
-      fix \<alpha> assume h\<alpha>: "\<alpha> \<in> fst ` set scheme"
-      have "\<exists>i. i < length scheme \<and> fst (scheme!i) = \<alpha> \<and> snd (scheme!i) = True"
-        using htrue_dir h\<alpha> by (by100 blast)
-      thus "i_of \<alpha> < length scheme \<and> fst (scheme!(i_of \<alpha>)) = \<alpha> \<and> snd (scheme!(i_of \<alpha>)) = True"
-        unfolding i_of_def by (rule someI_ex)
-    qed
+    \<comment> \<open>i\_of and hi\_of now at \<S>74.2 outer scope (line ~8955). No re-definition needed.\<close>
     define edge_loop_class where "edge_loop_class s =
         {g. top1_loop_equiv_on A (subspace_topology X TX A) a'
           (\<lambda>t. qC ((1-t) * vxC (i_of s) + t * vxC (Suc (i_of s) mod length scheme),
@@ -10200,7 +10187,7 @@ proof -
             {l. top1_loop_equiv_on A (subspace_topology X TX A) a
               (\<lambda>t. qC ((1-t) * vxC (i_of s) + t * vxC (Suc (i_of s) mod length scheme),
                         (1-t) * vyC (i_of s) + t * vyC (Suc (i_of s) mod length scheme))) l}"
-        sorry \<comment> \<open>TECH: obtain from existential+Collect. Isabelle can't match lambda inside Collect.\<close>
+        by (by100 blast)
       have h1': "top1_is_free_group_full_on
           (top1_fundamental_group_carrier A (subspace_topology X TX A) a')
           (top1_fundamental_group_mul A (subspace_topology X TX A) a')
