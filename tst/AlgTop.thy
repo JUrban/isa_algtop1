@@ -9718,7 +9718,36 @@ proof -
         \<comment> \<open>?g = f\_\<alpha> (the edge loop), already proved to be a loop.\<close>
         \<comment> \<open>?g is a loop: it's the edge loop for \<alpha>, which we proved earlier as hf\_loop.\<close>
         have hg_loop: "top1_is_loop_on A ?TA a ?g"
-          sorry \<comment> \<open>Same as f\_\<alpha> loop, needs f\_\<alpha> in scope or reproving.\<close>
+        proof -
+          have hg_cont: "top1_continuous_map_on I_set top1_unit_interval_topology A ?TA ?g"
+          proof -
+            have "top1_continuous_map_on I_set top1_unit_interval_topology A ?TA
+                (\<lambda>t. qC ((1-t) * vxC (i_of \<alpha>) + t * vxC (Suc (i_of \<alpha>) mod ?n),
+                          (1-t) * vyC (i_of \<alpha>) + t * vyC (Suc (i_of \<alpha>) mod ?n)))"
+              using hqC_edge_cont hi_of[OF h\<alpha>] by (by100 blast)
+            thus ?thesis by (by100 blast)
+          qed
+          have "?g 0 = a"
+          proof -
+            have "?g 0 = qC (vxC (i_of \<alpha>), vyC (i_of \<alpha>))" unfolding edge_pt_def by (by100 simp)
+            also have "\<dots> = qC (vxC 0, vyC 0)"
+              using hvert_C hi_of[OF h\<alpha>] hn_pos by (by100 blast)
+            also have "\<dots> = a" using ha_eq by (by100 simp)
+            finally show ?thesis .
+          qed
+          have "?g 1 = a"
+          proof -
+            have hi1: "Suc (i_of \<alpha>) mod ?n < ?n" using hn_pos by (by100 simp)
+            have "?g 1 = qC (vxC (Suc (i_of \<alpha>) mod ?n), vyC (Suc (i_of \<alpha>) mod ?n))"
+              unfolding edge_pt_def by (by100 simp)
+            also have "\<dots> = qC (vxC 0, vyC 0)"
+              using hvert_C hi1 hn_pos by (by100 blast)
+            also have "\<dots> = a" using ha_eq by (by100 simp)
+            finally show ?thesis .
+          qed
+          show ?thesis unfolding top1_is_loop_on_def top1_is_path_on_def
+            using hg_cont \<open>?g 0 = a\<close> \<open>?g 1 = a\<close> by (by100 blast)
+        qed
         \<comment> \<open>?f is a loop: \<Phi>\_w(\<eta>\_w \<alpha>) is in \<pi>\_1(A,a), so its representative is a loop.\<close>
         have heta_in: "\<eta>_w \<alpha> \<in> F_w"
         proof -
