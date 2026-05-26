@@ -4894,83 +4894,20 @@ proof (rule inj_onI)
   thus "x = y" using hG hx unfolding top1_is_group_on_def by (by5000 metis)
 qed
 
-text \<open>Helper: free abelian group on {..<2} is isomorphic to Z \<times> Z.\<close>
-lemma free_abelian_2_iso_ZZ:
-  assumes hfab: "top1_is_free_abelian_group_full_on G mul e invg iota ({..<2}::nat set)"
-  shows "top1_groups_isomorphic_on G mul (UNIV::(int \<times> int) set)
-    (\<lambda>(a1, a2) (b1, b2). (a1 + b1, a2 + b2))"
-proof -
-  have h0: "(0::nat) \<in> {..<2}" by (by100 simp)
-  have h1: "(1::nat) \<in> {..<2}" by (by100 simp)
-  \<comment> \<open>Coordinate projections \<epsilon>\_0, \<epsilon>\_1.\<close>
-  from free_abelian_coordinate_projection[OF hfab h0]
-  obtain \<epsilon>0 where h\<epsilon>0_hom: "top1_group_hom_on G mul (UNIV::int set) (+) \<epsilon>0"
-    and h\<epsilon>0_gen0: "\<epsilon>0 (iota 0) = 1"
-    and h\<epsilon>0_other: "\<forall>s\<in>{..<2::nat}. s \<noteq> 0 \<longrightarrow> \<epsilon>0 (iota s) = 0"
-    by (by5000 blast)
-  have h\<epsilon>0_gen1: "\<epsilon>0 (iota 1) = 0" using h\<epsilon>0_other by (by100 force)
-  from free_abelian_coordinate_projection[OF hfab h1]
-  obtain \<epsilon>1 where h\<epsilon>1_hom: "top1_group_hom_on G mul (UNIV::int set) (+) \<epsilon>1"
-    and h\<epsilon>1_gen1: "\<epsilon>1 (iota 1) = 1"
-    and h\<epsilon>1_other: "\<forall>s\<in>{..<2::nat}. s \<noteq> 1 \<longrightarrow> \<epsilon>1 (iota s) = 0"
-    by (by5000 blast)
-  have h\<epsilon>1_gen0: "\<epsilon>1 (iota 0) = 0" using h\<epsilon>1_other by (by100 force)
-  \<comment> \<open>Product map \<Phi>(g) = (\<epsilon>\_0(g), \<epsilon>\_1(g)) is a group iso G \<rightarrow> Z\<times>Z.\<close>
-  have h\<Phi>_hom: "top1_group_hom_on G mul (UNIV::(int \<times> int) set)
-      (\<lambda>(a1, a2) (b1, b2). (a1 + b1, a2 + b2)) (\<lambda>g. (\<epsilon>0 g, \<epsilon>1 g))"
-    unfolding top1_group_hom_on_def
-    using h\<epsilon>0_hom h\<epsilon>1_hom unfolding top1_group_hom_on_def by (by5000 auto)
-  have h\<Phi>_bij: "bij_betw (\<lambda>g. (\<epsilon>0 g, \<epsilon>1 g)) G (UNIV::(int \<times> int) set)"
-  proof -
-    \<comment> \<open>Injectivity.\<close>
-    have hinj: "inj_on (\<lambda>g. (\<epsilon>0 g, \<epsilon>1 g)) G"
-    proof (rule inj_onI)
-      fix x y assume hx: "x \<in> G" and hy: "y \<in> G"
-        and heq: "(\<epsilon>0 x, \<epsilon>1 x) = (\<epsilon>0 y, \<epsilon>1 y)"
-      hence h0eq: "\<epsilon>0 x = \<epsilon>0 y" and h1eq: "\<epsilon>1 x = \<epsilon>1 y" by (by100 auto)+
-      \<comment> \<open>ker(\<epsilon>0) is free abelian on {1}.\<close>
-      have hker0_fab: "top1_is_free_abelian_group_full_on {g \<in> G. \<epsilon>0 g = 0} mul e invg iota ({..<2} - {0::nat})"
-        using free_abelian_kernel_coordinate[OF hfab h0 h\<epsilon>0_hom h\<epsilon>0_gen0 h\<epsilon>0_other] by (by100 blast)
-      have h1_in: "(1::nat) \<in> {..<2} - {0::nat}" by (by100 simp)
-      \<comment> \<open>ε₁ on ker(ε₀): maps ι(1) to 1.\<close>
-      \<comment> \<open>ker(ε₁) ∩ ker(ε₀) is free abelian on {} = trivial.\<close>
-      \<comment> \<open>Restrict \<epsilon>1 to ker(\<epsilon>0): it's a hom from ker(\<epsilon>0) to Z.\<close>
-      have h\<epsilon>1_hom_ker: "top1_group_hom_on {g \<in> G. \<epsilon>0 g = 0} mul (UNIV::int set) (+) \<epsilon>1"
-        using h\<epsilon>1_hom unfolding top1_group_hom_on_def by (by100 blast)
-      have h\<epsilon>1_gen1_ker: "\<epsilon>1 (iota 1) = 1" by (rule h\<epsilon>1_gen1)
-      have h\<epsilon>1_other_ker: "\<forall>s\<in>{..<2::nat} - {0}. s \<noteq> 1 \<longrightarrow> \<epsilon>1 (iota s) = 0"
-        using h\<epsilon>1_other by (by100 force)
-      have hker01_fab: "top1_is_free_abelian_group_full_on
-          {g \<in> {g \<in> G. \<epsilon>0 g = 0}. \<epsilon>1 g = 0} mul e invg iota ({..<2} - {0::nat} - {1::nat})"
-        using free_abelian_kernel_coordinate[OF hker0_fab h1_in h\<epsilon>1_hom_ker h\<epsilon>1_gen1_ker h\<epsilon>1_other_ker]
-        by (by100 blast)
-      have hempty: "{..<2::nat} - {0} - {1} = {}" by (by100 auto)
-      \<comment> \<open>Free abelian on {} = {e}.\<close>
-      have hker01_trivial: "{g \<in> {g \<in> G. \<epsilon>0 g = 0}. \<epsilon>1 g = 0} = {e}"
-        sorry \<comment> \<open>Free abelian on empty set = {e}. From hker01\_fab + hempty.\<close>
-      \<comment> \<open>Use trivial\_kernel\_injective pattern: ε₀(x)=ε₀(y) ∧ ε₁(x)=ε₁(y) ⟹ x·y⁻¹ ∈ ker₀₁ = {e} ⟹ x=y.\<close>
-      show "x = y" sorry
-    qed
-    \<comment> \<open>Surjectivity.\<close>
-    have hsurj: "(\<lambda>g. (\<epsilon>0 g, \<epsilon>1 g)) ` G = UNIV"
-      sorry
-    show ?thesis unfolding bij_betw_def using hinj hsurj by (by100 blast)
-  qed
-  show ?thesis unfolding top1_groups_isomorphic_on_def
-    using h\<Phi>_hom h\<Phi>_bij unfolding top1_group_iso_on_def by (by100 blast)
-qed
+\<comment> \<open>free\_abelian\_2\_iso\_ZZ no longer needed: Theorem\_73\_2 uses free\_abelian\_invariant\_under\_iso directly.\<close>
 
 (** from \<S>73 Theorem 73.1: \<pi>_1(torus) has presentation <\<alpha>, \<beta> | \<alpha>\<beta>\<alpha>^{-1}\<beta>^{-1}>,
     i.e. is isomorphic to the free abelian group Z \<times> Z on 2 generators. **)
-theorem Theorem_73_1_torus_presentation:
+text \<open>Corollary 73.2: The fundamental group of the torus is a free abelian group of rank 2.\<close>
+theorem Theorem_73_2_torus_free_abelian:
   fixes T_torus :: "'a set" and TT :: "'a set set" and x0 :: 'a
   assumes "top1_is_torus_on T_torus TT"
       and "x0 \<in> T_torus"
-  shows "top1_groups_isomorphic_on
-           (top1_fundamental_group_carrier T_torus TT x0)
-           (top1_fundamental_group_mul T_torus TT x0)
-           (UNIV::(int \<times> int) set)
-           (\<lambda>(a1, a2) (b1, b2). (a1 + b1, a2 + b2))"
+  shows "\<exists>H mulH eH invgH iotaH phi.
+    top1_is_free_abelian_group_full_on H mulH eH invgH iotaH ({..<2}::nat set) \<and>
+    top1_group_iso_on H mulH
+      (top1_fundamental_group_carrier T_torus TT x0)
+      (top1_fundamental_group_mul T_torus TT x0) phi"
 proof -
   \<comment> \<open>Route via Theorem\_75\_3: H\_1(T) free abelian on 2 generators.
      Since torus has commutator relator, \<pi>\_1(T) is abelian, so \<pi>\_1 = H\_1 = Z\<times>Z.\<close>
@@ -5109,20 +5046,23 @@ proof -
       (top1_fundamental_group_mul T_torus TT x0) H mulH phi"
     unfolding top1_group_iso_on_def using habel hphi_bij
     unfolding top1_is_abelianization_of_def by (by100 blast)
-  \<comment> \<open>Step 6: H free abelian on {0,1} \<cong> Z \<times> Z.\<close>
-  have hH_ZZ: "top1_groups_isomorphic_on H mulH (UNIV::(int \<times> int) set)
-      (\<lambda>(a1, a2) (b1, b2). (a1 + b1, a2 + b2))"
-    using free_abelian_2_iso_ZZ[OF hfree_ab] by (by100 blast)
-  \<comment> \<open>Step 7: Compose: \<pi>\_1(T) \<cong> H \<cong> Z\<times>Z.\<close>
-  show ?thesis
+  \<comment> \<open>Step 6: phi\<inverse>: H \<rightarrow> \<pi>\_1(T) is also an iso.\<close>
+  have hphi_inv_iso: "top1_group_iso_on H mulH
+      (top1_fundamental_group_carrier T_torus TT x0)
+      (top1_fundamental_group_mul T_torus TT x0) (inv_into (top1_fundamental_group_carrier T_torus TT x0) phi)"
   proof -
-    have "top1_groups_isomorphic_on
+    have hG_grp: "top1_is_group_on
         (top1_fundamental_group_carrier T_torus TT x0)
-        (top1_fundamental_group_mul T_torus TT x0) H mulH"
-      using hphi_iso unfolding top1_groups_isomorphic_on_def by (by100 blast)
-    thus ?thesis using hH_ZZ
-      using groups_isomorphic_trans_fwd by (by100 blast)
+        (top1_fundamental_group_mul T_torus TT x0)
+        (top1_fundamental_group_id T_torus TT x0)
+        (top1_fundamental_group_invg T_torus TT x0)"
+      using habel unfolding top1_is_abelianization_of_def by (by100 blast)
+    have hH_grp: "top1_is_group_on H mulH eH invgH"
+      using habel unfolding top1_is_abelianization_of_def top1_is_abelian_group_on_def by (by100 blast)
+    show ?thesis using group_iso_on_inverse[OF hphi_iso hG_grp hH_grp] by (by100 blast)
   qed
+  \<comment> \<open>Step 7: Package result.\<close>
+  show ?thesis using hfree_ab hphi_inv_iso sorry
 qed
 
 (** from \<S>73 Theorem 73.4: the n-fold dunce cap has fundamental group Z/nZ. **)
