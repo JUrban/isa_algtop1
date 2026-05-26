@@ -5447,7 +5447,23 @@ proof -
       proof -
         \<comment> \<open>Each r^k(C\<inter>S¹) is closed: continuous image of compact subset of Hausdorff.\<close>
         have hC0_closed_S1: "closedin_on top1_S1 top1_S1_topology ?C0"
-          sorry \<comment> \<open>C\<inter>S¹ is closed in S¹ (intersection of closed from ambient B² with S¹).\<close>
+        proof -
+          \<comment> \<open>S¹ topology = subspace of B² topology (by transitivity of subspace).\<close>
+          have hS1_B2_loc: "top1_S1 \<subseteq> top1_B2"
+            unfolding top1_S1_def top1_B2_def by (by100 auto)
+          have hS1_eq: "top1_S1_topology = subspace_topology top1_B2 top1_B2_topology top1_S1"
+            unfolding top1_B2_topology_def top1_S1_topology_def
+            using subspace_topology_trans[OF hS1_B2_loc] by (by100 simp)
+          have "is_topology_on top1_B2 top1_B2_topology"
+            using top1_B2_path_connected unfolding top1_path_connected_on_def by (by100 blast)
+          from Theorem_17_2[OF this hS1_B2_loc]
+          have "closedin_on top1_S1 (subspace_topology top1_B2 top1_B2_topology top1_S1) ?C0 \<longleftrightarrow>
+              (\<exists>D. closedin_on top1_B2 top1_B2_topology D \<and> ?C0 = D \<inter> top1_S1)"
+            by (by100 blast)
+          hence "closedin_on top1_S1 (subspace_topology top1_B2 top1_B2_topology top1_S1) ?C0"
+            using hC by (by100 blast)
+          thus ?thesis using hS1_eq by (by100 simp)
+        qed
         have "\<And>k. k < n \<Longrightarrow> closedin_on top1_B2 top1_B2_topology (?rot k ` ?C0)"
           sorry \<comment> \<open>Rotation is continuous homeomorphism on S¹; image of closed is closed.
              r^k(C\<inter>S¹) \<subseteq> S¹ \<subseteq> B², and is a continuous image of closed compact set in Hausdorff.\<close>
