@@ -4735,10 +4735,73 @@ proof -
     have haG: "?a \<in> G" using hpi_hom hs1F unfolding top1_group_hom_on_def by (by100 blast)
     have hbG: "?b \<in> G" using hpi_hom hs2F unfolding top1_group_hom_on_def by (by100 blast)
     have hpi_r_eq: "\<pi> ?r = mul ?a (mul ?b (mul (invg ?a) (invg ?b)))"
-      sorry \<comment> \<open>\<pi> distributes over mulF (hom) and preserves invg.\<close>
+    proof -
+      have hpi_mul: "\<And>x y. x \<in> F \<Longrightarrow> y \<in> F \<Longrightarrow> \<pi> (mulF x y) = mul (\<pi> x) (\<pi> y)"
+        using hpi_hom unfolding top1_group_hom_on_def by (by100 blast)
+      have hinvF1: "invgF (\<iota> s1) \<in> F"
+        using hF_grp hs1F unfolding top1_is_group_on_def by (by100 blast)
+      have hinvF2: "invgF (\<iota> s2) \<in> F"
+        using hF_grp hs2F unfolding top1_is_group_on_def by (by100 blast)
+      have hpi_inv1: "\<pi> (invgF (\<iota> s1)) = invg (\<pi> (\<iota> s1))"
+        using hom_preserves_inv[OF hF_grp hG_grp hpi_hom hs1F] by (by100 blast)
+      have hpi_inv2: "\<pi> (invgF (\<iota> s2)) = invg (\<pi> (\<iota> s2))"
+        using hom_preserves_inv[OF hF_grp hG_grp hpi_hom hs2F] by (by100 blast)
+      have hmulF_cl: "\<And>x y. x \<in> F \<Longrightarrow> y \<in> F \<Longrightarrow> mulF x y \<in> F"
+        using hF_grp unfolding top1_is_group_on_def by (by100 blast)
+      show ?thesis unfolding hr_expand
+        using hpi_mul[OF hs1F] hpi_mul[OF hs2F] hpi_mul[OF hinvF1 hinvF2]
+              hpi_mul hmulF_cl hs1F hs2F hinvF1 hinvF2 hpi_inv1 hpi_inv2
+        by (by5000 metis)
+    qed
     hence "mul ?a (mul ?b (mul (invg ?a) (invg ?b))) = e" using hr_in_ker by (by100 simp)
     show "mul ?a ?b = mul ?b ?a"
-      sorry \<comment> \<open>aba\<inverse>b\<inverse> = e \<Rightarrow> ab = ba (group algebra).\<close>
+    proof -
+      have hmul_cl: "\<forall>x\<in>G. \<forall>y\<in>G. mul x y \<in> G"
+        using hG_grp unfolding top1_is_group_on_def by (by100 blast)
+      have hinv_cl: "\<forall>x\<in>G. invg x \<in> G"
+        using hG_grp unfolding top1_is_group_on_def by (by100 blast)
+      have hassoc: "\<forall>x\<in>G. \<forall>y\<in>G. \<forall>z\<in>G. mul (mul x y) z = mul x (mul y z)"
+        using hG_grp unfolding top1_is_group_on_def by (by100 blast)
+      have hinv_r: "\<forall>x\<in>G. mul x (invg x) = e"
+        using hG_grp unfolding top1_is_group_on_def by (by100 blast)
+      have hinv_l: "\<forall>x\<in>G. mul (invg x) x = e"
+        using hG_grp unfolding top1_is_group_on_def by (by100 blast)
+      have hid_r: "\<forall>x\<in>G. mul x e = x"
+        using hG_grp unfolding top1_is_group_on_def by (by100 blast)
+      have hid_l: "\<forall>x\<in>G. mul e x = x"
+        using hG_grp unfolding top1_is_group_on_def by (by100 blast)
+      note hcomm_e = \<open>mul ?a (mul ?b (mul (invg ?a) (invg ?b))) = e\<close>
+      have hiaG: "invg ?a \<in> G" using hinv_cl haG by (by100 blast)
+      have hibG: "invg ?b \<in> G" using hinv_cl hbG by (by100 blast)
+      \<comment> \<open>Multiply on right by b: aba\<inverse>b\<inverse>b = b, i.e. aba\<inverse> = b... no.
+         Actually: from aba\<inverse>b\<inverse> = e, multiply on RIGHT by (ba):
+         aba\<inverse>b\<inverse>(ba) = ba. LHS = ab(a\<inverse>(b\<inverse>(ba))) = ab(a\<inverse>(e·a))...
+         Simpler: aba\<inverse>b\<inverse> = e \<Rightarrow> ab = (aba\<inverse>b\<inverse>)\<inverse>\<inverse> ...
+         Just: aba\<inverse>b\<inverse> = e \<Rightarrow> ab = (b\<inverse>)\<inverse>(a\<inverse>)\<inverse> = ba. Wait, that's not right.
+         aba\<inverse>b\<inverse> = e \<Rightarrow> ab = (a\<inverse>b\<inverse>)\<inverse> = ba. No.
+         aba\<inverse>b\<inverse> = e. Multiply right by b: aba\<inverse> = b. Multiply right by a: ab = ba. \<close>
+      \<comment> \<open>Step 1: aba\<inverse>b\<inverse> = e \<Rightarrow> aba\<inverse>b\<inverse>b = eb = b \<Rightarrow> aba\<inverse> = b.\<close>
+      have h1: "mul (mul ?a (mul ?b (mul (invg ?a) (invg ?b)))) ?b = mul e ?b"
+        using hcomm_e by (by100 simp)
+      have habG: "mul ?a ?b \<in> G" using hmul_cl haG hbG by (by100 blast)
+      have "mul (mul ?a (mul ?b (mul (invg ?a) (invg ?b)))) ?b
+          = mul ?a (mul ?b (mul (invg ?a) (mul (invg ?b) ?b)))"
+        using hassoc haG hbG hiaG hibG hmul_cl by (by5000 metis)
+      also have "mul (invg ?b) ?b = e" using hinv_l hbG by (by100 blast)
+      finally have "mul ?a (mul ?b (mul (invg ?a) e)) = ?b"
+        using h1 hid_l hbG by (by5000 metis)
+      hence h2: "mul ?a (mul ?b (invg ?a)) = ?b"
+        using hid_r hiaG by (by5000 metis)
+      \<comment> \<open>Step 2: aba\<inverse> = b \<Rightarrow> aba\<inverse>a = ba \<Rightarrow> ab = ba.\<close>
+      have "mul (mul ?a (mul ?b (invg ?a))) ?a = mul ?b ?a"
+        using h2 by (by100 simp)
+      have "mul ?a (mul ?b (mul (invg ?a) ?a)) = mul ?b ?a"
+        using \<open>mul (mul ?a (mul ?b (invg ?a))) ?a = mul ?b ?a\<close>
+              hassoc haG hbG hiaG hmul_cl by (by5000 metis)
+      hence "mul ?a (mul ?b e) = mul ?b ?a"
+        using hinv_l haG by (by5000 metis)
+      thus ?thesis using hid_r hbG by (by5000 metis)
+    qed
   qed
   \<comment> \<open>Step 2: from hcomm, every pair that appears in R commutes.\<close>
   \<comment> \<open>Step 3: {π(ι(s)) | s ∈ S} generates G (since π surjective and F generated by ι(S)).\<close>
