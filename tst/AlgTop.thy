@@ -6875,7 +6875,44 @@ proof -
       \<comment> \<open>Step 2: normal_closure({n}) = normal_closure({-n}) in Z.\<close>
       have hneg_nc: "top1_normal_subgroup_generated_on top1_Z_group top1_Z_mul (0::int) uminus {- int n}
           = top1_normal_subgroup_generated_on top1_Z_group top1_Z_mul (0::int) uminus {int n}"
-        sorry \<comment> \<open>In Z abelian: generated-by-{-n} = generated-by-{n}.\<close>
+      proof (rule set_eqI, rule iffI)
+        let ?NC_n = "top1_normal_subgroup_generated_on top1_Z_group top1_Z_mul (0::int) uminus {int n}"
+        let ?NC_neg = "top1_normal_subgroup_generated_on top1_Z_group top1_Z_mul (0::int) uminus {- int n}"
+        \<comment> \<open>-n \<in> NC({n}): -n = uminus n, and n \<in> NC({n}) \<supseteq> {n}, so uminus n \<in> NC({n}) since it's a group.\<close>
+        have hn_in: "int n \<in> ?NC_n"
+          unfolding top1_normal_subgroup_generated_on_def by (by100 blast)
+        have hn_Z: "int n \<in> top1_Z_group" unfolding top1_Z_group_def by (by100 blast)
+        have hneg_Z: "- int n \<in> top1_Z_group" unfolding top1_Z_group_def by (by100 blast)
+        have hNC_n_normal: "top1_normal_subgroup_on top1_Z_group top1_Z_mul (0::int) uminus ?NC_n"
+          using normal_subgroup_generated_is_normal[OF hgrpZ] hn_Z
+          unfolding top1_Z_group_def by (by5000 auto)
+        have hneg_in_NCn: "- int n \<in> ?NC_n"
+        proof -
+          from hNC_n_normal have hgrp_NCn: "top1_is_group_on ?NC_n top1_Z_mul 0 uminus"
+            unfolding top1_normal_subgroup_on_def by (by100 blast)
+          hence "uminus (int n) \<in> ?NC_n" using hn_in
+            unfolding top1_is_group_on_def by (by100 blast)
+          thus ?thesis by (by100 simp)
+        qed
+        have hNC_neg_normal: "top1_normal_subgroup_on top1_Z_group top1_Z_mul (0::int) uminus ?NC_neg"
+          using normal_subgroup_generated_is_normal[OF hgrpZ] hneg_Z
+          unfolding top1_Z_group_def by (by5000 auto)
+        have hn_in_NCneg: "int n \<in> ?NC_neg"
+        proof -
+          have hneg_in: "- int n \<in> ?NC_neg"
+            unfolding top1_normal_subgroup_generated_on_def by (by100 blast)
+          from hNC_neg_normal have "top1_is_group_on ?NC_neg top1_Z_mul 0 uminus"
+            unfolding top1_normal_subgroup_on_def by (by100 blast)
+          hence "uminus (- int n) \<in> ?NC_neg" using hneg_in
+            unfolding top1_is_group_on_def by (by100 blast)
+          thus ?thesis by (by100 simp)
+        qed
+        fix x
+        show "x \<in> ?NC_neg \<Longrightarrow> x \<in> ?NC_n"
+          using normal_closure_least[OF hgrpZ hNC_n_normal] hneg_in_NCn by (by100 blast)
+        show "x \<in> ?NC_n \<Longrightarrow> x \<in> ?NC_neg"
+          using normal_closure_least[OF hgrpZ hNC_neg_normal] hn_in_NCneg by (by100 blast)
+      qed
       \<comment> \<open>Step 3: Combine via h_relator_val.\<close>
       from h_relator_val show ?thesis
       proof
