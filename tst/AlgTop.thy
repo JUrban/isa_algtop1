@@ -6789,8 +6789,27 @@ proof -
     \<comment> \<open>Step 10.3: Use quotient_group_iso_transfer: pi1(A)/N iso Z/phi(N).\<close>
     have hgrpA: "top1_is_group_on ?GA ?mulA ?eA ?invA"
       by (rule top1_fundamental_group_is_group[OF hTA_top ha_A])
+    have h\<iota>_10: "\<iota> (1, 0) = ?a"
+      using h\<iota>_eq h10_S1 hq_10 by (by100 simp)
+    have hS1_top: "is_topology_on top1_S1 top1_S1_topology"
+      using top1_S1_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
+    have hTA_top2: "is_topology_on ?A ?TA" by (rule subspace_topology_is_topology_on[OF hTX hA_sub])
+    have h\<iota>_hom: "top1_group_hom_on
+        (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
+        (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))
+        ?GA ?mulA
+        (top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1, 0) ?A ?TA ?a \<iota>)"
+      by (rule top1_fundamental_group_induced_on_is_hom[OF hS1_top hTA_top2 h10_S1 ha_A h\<iota>_cont h\<iota>_10])
+    have hstd_loop_in_S1: "{g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0)
+          (\<lambda>s. (cos (2 * pi * s), sin (2 * pi * s))) g} \<in>
+        top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0)"
+      by (rule standard_S1_loop_class_in_carrier)
     have hrel_in_GA: "{?relator} \<subseteq> ?GA"
-      sorry \<comment> \<open>The relator class is in pi1(A,a).\<close>
+    proof -
+      have "?relator \<in> ?GA"
+        using h\<iota>_hom hstd_loop_in_S1 unfolding top1_group_hom_on_def by (by100 blast)
+      thus ?thesis by (by100 blast)
+    qed
     have hN_normal: "top1_normal_subgroup_on ?GA ?mulA ?eA ?invA ?N"
       by (rule normal_subgroup_generated_is_normal[OF hgrpA hrel_in_GA])
     have hgrpZ: "top1_is_group_on top1_Z_group top1_Z_mul (0::int) uminus"
