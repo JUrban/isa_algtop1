@@ -6530,7 +6530,7 @@ proof -
                 using h_angle by (by100 linarith)
               hence "2*pi*?t/real n = 2*pi * real ?k / real n + 2*pi*\<theta> - 2*pi * real_of_int ?j"
                 by (by100 linarith)
-              thus ?thesis by (by100 simp)
+              thus ?thesis by (by5000 simp)
             qed
             \<comment> \<open>cos/sin at angle 2\<pi>?t/n = cos/sin at angle 2\<pi>?k/n + 2\<pi>\<theta> (periodicity).\<close>
             \<comment> \<open>cos/sin periodicity via R\_to\_S1\_int\_shift: t/n = k/n + \<theta> - j.\<close>
@@ -6865,8 +6865,25 @@ proof -
       using quotient_group_iso_transfer[OF hgrpA hgrpZ h\<phi>_iso hN_normal] by (by100 blast)
     \<comment> \<open>Step 10.4: phi(N) = nZ. Whether relator maps to n or -n,
        the generated normal subgroup is the same: nZ.\<close>
+    \<comment> \<open>For an iso phi, phi(normal_closure(S)) = normal_closure(phi(S)).
+       Since phi(relator) = +/-n, normal_closure({+/-n}) = normal_closure({n}) in Z.\<close>
     have hphiN_eq: "\<phi> ` ?N = top1_normal_subgroup_generated_on top1_Z_group top1_Z_mul (0::int) uminus {int n}"
-      sorry \<comment> \<open>phi maps generated-by-{relator} to generated-by-{phi(relator)} = generated-by-{n}.\<close>
+    proof -
+      \<comment> \<open>Step 1: phi(normal_closure({r})) = normal_closure({phi(r)}) for iso phi.\<close>
+      have hiso_nc: "\<phi> ` ?N = top1_normal_subgroup_generated_on top1_Z_group top1_Z_mul (0::int) uminus {\<phi> ?relator}"
+        sorry \<comment> \<open>General: iso preserves normal closure of singleton.\<close>
+      \<comment> \<open>Step 2: normal_closure({n}) = normal_closure({-n}) in Z.\<close>
+      have hneg_nc: "top1_normal_subgroup_generated_on top1_Z_group top1_Z_mul (0::int) uminus {- int n}
+          = top1_normal_subgroup_generated_on top1_Z_group top1_Z_mul (0::int) uminus {int n}"
+        sorry \<comment> \<open>In Z abelian: generated-by-{-n} = generated-by-{n}.\<close>
+      \<comment> \<open>Step 3: Combine via h_relator_val.\<close>
+      from h_relator_val show ?thesis
+      proof
+        assume "\<phi> ?relator = int n" thus ?thesis using hiso_nc by (by100 simp)
+      next
+        assume "\<phi> ?relator = - int n" thus ?thesis using hiso_nc hneg_nc by (by100 simp)
+      qed
+    qed
     \<comment> \<open>Step 10.5: Z/nZ iso by Z_quotient_nZ_iso.\<close>
     have hn_ge: "n \<ge> 1" using assms(1) by (by100 linarith)
     have hZ_nZ: "top1_groups_isomorphic_on
