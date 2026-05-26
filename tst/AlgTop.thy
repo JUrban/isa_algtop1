@@ -5421,13 +5421,93 @@ proof -
   \<comment> \<open>Step 4: A is closed in X (image of compact S¹ under quotient map to Hausdorff X).\<close>
   have hA_cl: "closedin_on X TX ?A"
     sorry \<comment> \<open>Continuous image of compact S¹ in Hausdorff X is closed.\<close>
-  \<comment> \<open>Step 5: q restricted to Int(B²) = B² - S¹ is a homeomorphism onto X - A.\<close>
+  \<comment> \<open>Step 5: q restricted to Int(B²) = B² - S¹ is a homeomorphism onto X - A.
+     Proof: B² - S¹ is open and saturated in B², so by Thm 22.1 the restriction
+     is a quotient map. Since it's also bijective, it's a homeomorphism.\<close>
+  have hS1_sub_B2: "top1_S1 \<subseteq> top1_B2"
+    unfolding top1_S1_def top1_B2_def by (by100 auto)
+  have hintB2_sub: "top1_B2 - top1_S1 \<subseteq> top1_B2" by (by100 blast)
+  \<comment> \<open>B² - S¹ is open in B² (S¹ is closed in B²).\<close>
+  have hS1_closed: "closedin_on top1_B2 top1_B2_topology top1_S1"
+    sorry \<comment> \<open>S¹ = {x | |x|²=1} is closed in B² = {x | |x|²≤1}: preimage of {1} under continuous |·|².\<close>
+  have hintB2_open: "openin_on top1_B2 top1_B2_topology (top1_B2 - top1_S1)"
+    using hS1_closed unfolding openin_on_def closedin_on_def by (by100 blast)
+  \<comment> \<open>B² - S¹ is saturated: each fiber q⁻¹(q(z)) for z ∈ B²-S¹ is {z} (by inj + sep).\<close>
+  have hintB2_sat: "top1_saturated_with_respect_to_on top1_B2 q (top1_B2 - top1_S1)"
+    unfolding top1_saturated_with_respect_to_on_def
+  proof (intro conjI ballI impI)
+    show "top1_B2 - top1_S1 \<subseteq> top1_B2" by (by100 blast)
+  next
+    fix x y assume hx: "x \<in> top1_B2 - top1_S1" and hy: "y \<in> top1_B2" and hqeq: "q y = q x"
+    show "y \<in> top1_B2 - top1_S1"
+    proof (rule ccontr)
+      assume "y \<notin> top1_B2 - top1_S1"
+      hence "y \<in> top1_S1" using hy by (by100 blast)
+      hence "q x \<noteq> q y" using hq_sep hx by (by5000 metis)
+      thus False using hqeq by (by100 simp)
+    qed
+  qed
+  \<comment> \<open>q(B² - S¹) = X - A: surjectivity of q + separation.\<close>
+  have hq_intB2_img: "q ` (top1_B2 - top1_S1) = X - ?A"
+  proof
+    show "q ` (top1_B2 - top1_S1) \<subseteq> X - ?A"
+    proof
+      fix y assume "y \<in> q ` (top1_B2 - top1_S1)"
+      then obtain z where hz: "z \<in> top1_B2 - top1_S1" and hy: "y = q z" by (by100 blast)
+      have "y \<in> X" using hq_surj hz hy by (by100 blast)
+      moreover have "y \<notin> ?A"
+      proof
+        assume "y \<in> ?A"
+        then obtain s where hs: "s \<in> top1_S1" and hqs: "y = q s" by (by100 blast)
+        have "q z = q s" using hy hqs by (by100 simp)
+        thus False using hq_sep hz hs by (by5000 metis)
+      qed
+      ultimately show "y \<in> X - ?A" by (by100 blast)
+    qed
+  next
+    show "X - ?A \<subseteq> q ` (top1_B2 - top1_S1)"
+    proof
+      fix y assume "y \<in> X - ?A"
+      hence hyX: "y \<in> X" and hyA: "y \<notin> ?A" by (by100 blast)+
+      from hyX obtain z where hz: "z \<in> top1_B2" and hy: "y = q z" using hq_surj by (by100 blast)
+      have "z \<notin> top1_S1"
+      proof
+        assume "z \<in> top1_S1" hence "y \<in> ?A" using hy by (by100 blast)
+        thus False using hyA by (by100 blast)
+      qed
+      hence "z \<in> top1_B2 - top1_S1" using hz by (by100 blast)
+      thus "y \<in> q ` (top1_B2 - top1_S1)" using hy by (by100 blast)
+    qed
+  qed
+  \<comment> \<open>By Theorem 22.1: q restricted to B²-S¹ is a quotient map onto X-A.\<close>
+  have hq_restricted_quot: "top1_quotient_map_on (top1_B2 - top1_S1)
+      (subspace_topology top1_B2 top1_B2_topology (top1_B2 - top1_S1))
+      (X - ?A)
+      (subspace_topology X TX (X - ?A)) q"
+  proof -
+    have "openin_on top1_B2 top1_B2_topology (top1_B2 - top1_S1) \<or>
+          closedin_on top1_B2 top1_B2_topology (top1_B2 - top1_S1)"
+      using hintB2_open by (by100 blast)
+    hence "top1_quotient_map_on (top1_B2 - top1_S1)
+        (subspace_topology top1_B2 top1_B2_topology (top1_B2 - top1_S1))
+        (q ` (top1_B2 - top1_S1))
+        (subspace_topology X TX (q ` (top1_B2 - top1_S1))) q"
+      using Theorem_22_1(1)[OF hq_quot hintB2_sat] by (by100 blast)
+    thus ?thesis using hq_intB2_img by (by100 simp)
+  qed
+  \<comment> \<open>q restricted to B²-S¹ is bijective onto X-A.\<close>
+  have hq_bij: "bij_betw q (top1_B2 - top1_S1) (X - ?A)"
+  proof -
+    have hinj: "inj_on q (top1_B2 - top1_S1)" using hq_inj by (by100 blast)
+    have hsurj: "q ` (top1_B2 - top1_S1) = X - ?A" by (rule hq_intB2_img)
+    show ?thesis unfolding bij_betw_def using hinj hsurj by (by100 blast)
+  qed
+  \<comment> \<open>Bijective quotient map is homeomorphism.\<close>
   have hq_int_homeo: "top1_homeomorphism_on (top1_B2 - top1_S1)
       (subspace_topology top1_B2 top1_B2_topology (top1_B2 - top1_S1))
       (X - ?A)
       (subspace_topology X TX (X - ?A)) q"
-    sorry \<comment> \<open>From: q injective on Int(B²), q continuous, q surjective with q(S¹) = A and q(Int B²) = X - A.
-       Quotient map + injective = homeomorphism onto image.\<close>
+    by (rule top1_bij_quotient_map_on_imp_homeomorphism_on[OF hq_restricted_quot hq_bij])
   \<comment> \<open>Step 6: q(S¹) \<subseteq> A and q(1,0) = a (trivially).\<close>
   have hq_S1_A: "q ` top1_S1 \<subseteq> ?A" by (by100 blast)
   have hq_10: "q (1, 0) = ?a" by (by100 simp)
