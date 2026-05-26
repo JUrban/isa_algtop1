@@ -6342,8 +6342,57 @@ proof -
         have "top1_R_to_S1 t = top1_R_to_S1 t'"
         proof -
           have "t = t' \<or> (t = 0 \<and> t' = 1) \<or> (t = 1 \<and> t' = 0)"
-            using hgt hg_const_fibers ht(1) ht'(1) hq_S1 hq_inj hq_sep assms(1)
-            sorry \<comment> \<open>g(t)=g(t') \<Rightarrow> rotation identification \<Rightarrow> t'=t+k on [0,1] \<Rightarrow> same fiber.\<close>
+          proof -
+            \<comment> \<open>g(t) = g(t') means q identifies the two points on S¹. By hq\_S1, they are
+               rotation-equivalent. This gives an integer relation on t, t'. On [0,1]
+               the only possibilities are t=t' or {t,t'}={0,1}.\<close>
+            have hS1_t: "(cos (2*pi*t/real n), sin (2*pi*t/real n)) \<in> top1_S1"
+              sorry
+            have hS1_t': "(cos (2*pi*t'/real n), sin (2*pi*t'/real n)) \<in> top1_S1"
+              sorry
+            \<comment> \<open>hq\_S1 gives rotation identification.\<close>
+            from hq_S1[rule_format, OF hS1_t hS1_t'] hgt
+            have "\<exists>k::nat. k < n \<and> (cos (2*pi*t'/real n), sin (2*pi*t'/real n)) =
+                (cos (2*pi*real k/real n) * cos (2*pi*t/real n) - sin (2*pi*real k/real n) * sin (2*pi*t/real n),
+                 sin (2*pi*real k/real n) * cos (2*pi*t/real n) + cos (2*pi*real k/real n) * sin (2*pi*t/real n))"
+              sorry
+            then obtain k :: nat where hk: "k < n"
+                and hcos_eq: "cos (2*pi*t'/real n) = cos (2*pi*real k/real n + 2*pi*t/real n)"
+                and hsin_eq: "sin (2*pi*t'/real n) = sin (2*pi*real k/real n + 2*pi*t/real n)"
+              sorry
+            \<comment> \<open>cos\_sin\_eq\_imp: angle difference is integer multiple of 2\<pi>.\<close>
+            from cos_sin_eq_imp[OF hcos_eq hsin_eq]
+            obtain j :: int where hj: "2*pi*t'/real n - (2*pi*real k/real n + 2*pi*t/real n)
+                = real_of_int j * 2 * pi" by (by100 blast)
+            \<comment> \<open>Divide by 2\<pi>, multiply by n: t' = t + k + j*n.\<close>
+            have hn_ne: "real n \<noteq> (0::real)" using assms(1) by (by100 simp)
+            have "t' - t = real k + real_of_int j * real n"
+            proof -
+              from hj have "(2*pi) * (t'/real n - real k/real n - t/real n) = real_of_int j * (2*pi)"
+                using hn_ne by (simp add: field_simps diff_divide_distrib)
+              hence "(t'/real n - real k/real n - t/real n - real_of_int j) * (2*pi) = 0"
+                by (simp add: algebra_simps)
+              hence "t'/real n - real k/real n - t/real n = real_of_int j"
+                using pi_gt_zero by (by100 simp)
+              hence "(t' - real k - t) / real n = real_of_int j"
+                using hn_ne by (simp add: field_simps diff_divide_distrib)
+              thus ?thesis using hn_ne by (simp add: field_simps)
+            qed
+            \<comment> \<open>With t, t' \<in> [0,1] and k \<in> {0,...,n-1}: integer k + j*n \<in> [-1,1].\<close>
+            have "0 \<le> t" "t \<le> 1" "0 \<le> t'" "t' \<le> 1"
+              using ht(1) ht'(1) unfolding top1_unit_interval_def by (by100 auto)+
+            hence "-1 \<le> t' - t" "t' - t \<le> 1" by (by100 linarith)+
+            hence "-1 \<le> real k + real_of_int j * real n"
+                  "real k + real_of_int j * real n \<le> 1"
+              using \<open>t' - t = real k + real_of_int j * real n\<close> by (by100 linarith)+
+            hence "int k + j * int n \<ge> -1" "int k + j * int n \<le> 1"
+              by (by100 linarith)+
+            hence "int k + j * int n \<in> {-1, 0, 1}" by (by100 auto)
+            hence "t' - t \<in> {-1, 0, 1}"
+              using \<open>t' - t = real k + real_of_int j * real n\<close> by (by100 auto)
+            thus ?thesis using \<open>0 \<le> t\<close> \<open>t \<le> 1\<close> \<open>0 \<le> t'\<close> \<open>t' \<le> 1\<close>
+              sorry
+          qed
           thus ?thesis
           proof (elim disjE conjE)
             assume "t = t'" thus ?thesis by (by100 simp)
