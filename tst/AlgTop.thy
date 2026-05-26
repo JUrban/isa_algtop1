@@ -5580,12 +5580,39 @@ proof -
         assume "t = 1" "t' = 0" thus ?thesis using hg0 hg1 by (by100 simp)
       qed
     qed
-    \<comment> \<open>Step D3: R\_to\_S1|[0,1] is a quotient map (already proved in ac/AlgTopCached).\<close>
+    \<comment> \<open>Step D3: R\_to\_S1|[0,1] is a quotient map.\<close>
+    have hR_quot: "top1_quotient_map_on top1_unit_interval top1_unit_interval_topology
+        top1_S1 top1_S1_topology top1_R_to_S1"
+      sorry \<comment> \<open>Proved in ac/AlgTopCached as a local fact. Need to lift or re-prove.\<close>
     \<comment> \<open>Step D4: Apply Theorem\_22\_2 to get continuous \<phi>: S¹ \<rightarrow> A.\<close>
-    \<comment> \<open>Step D5: Show \<phi> is bijective.\<close>
-    \<comment> \<open>Step D6: Apply Theorem\_26\_6 (compact S¹ \<rightarrow> Hausdorff A = homeomorphism).\<close>
-    show ?thesis sorry \<comment> \<open>Theorem\_22\_2 + bijectivity + Theorem\_26\_6.
-       All ingredients proved: g continuous, g constant on fibers, g surjective, g injective mod fibers.\<close>
+    let ?TA = "subspace_topology X TX ?A"
+    from Theorem_22_2[OF hR_quot _ hg_const_fibers, of ?A ?TA]
+    obtain \<phi> where h\<phi>_map: "\<forall>y\<in>top1_S1. \<phi> y \<in> ?A"
+        and h\<phi>_eq: "\<forall>t\<in>top1_unit_interval. \<phi> (top1_R_to_S1 t) = ?g t"
+        and h\<phi>_cont_iff: "(top1_continuous_map_on top1_S1 top1_S1_topology ?A ?TA \<phi>) \<longleftrightarrow>
+            (top1_continuous_map_on top1_unit_interval top1_unit_interval_topology ?A ?TA ?g)"
+      using hg_in_A by (by5000 auto)
+    have h\<phi>_cont: "top1_continuous_map_on top1_S1 top1_S1_topology ?A ?TA \<phi>"
+      using h\<phi>_cont_iff hg_cont_top by (by100 blast)
+    \<comment> \<open>Step D5: \<phi> is bijective.\<close>
+    have h\<phi>_bij: "bij_betw \<phi> top1_S1 ?A"
+      sorry \<comment> \<open>Surjective: g surjective onto A. Injective: g injective mod fibers of R\_to\_S1.\<close>
+    \<comment> \<open>Step D6: Theorem\_26\_6: compact S¹ \<rightarrow> Hausdorff A = homeomorphism.\<close>
+    have hTA_top: "is_topology_on ?A ?TA"
+      by (rule subspace_topology_is_topology_on[OF hTX hA_sub])
+    have hA_haus: "is_hausdorff_on ?A ?TA"
+      sorry \<comment> \<open>A \<subseteq> Hausdorff X (proved later as hX\_haus); subspace of Hausdorff is Hausdorff.\<close>
+    have hTS1: "is_topology_on top1_S1 top1_S1_topology"
+    proof -
+      have "is_topology_on (UNIV::(real\<times>real) set) (product_topology_on top1_open_sets top1_open_sets)"
+        using product_topology_on_is_topology_on[OF top1_open_sets_is_topology_on_UNIV
+              top1_open_sets_is_topology_on_UNIV] by (by100 simp)
+      thus ?thesis unfolding top1_S1_topology_def
+        by (rule subspace_topology_is_topology_on) (by100 simp)
+    qed
+    have "top1_homeomorphism_on top1_S1 top1_S1_topology ?A ?TA \<phi>"
+      by (rule Theorem_26_6[OF hTS1 hTA_top S1_compact hA_haus h\<phi>_cont h\<phi>_bij])
+    thus ?thesis by (by100 blast)
   qed
   \<comment> \<open>Step 3: X is Hausdorff. Book proof: (1) q is a closed map (rotation saturation argument),
      then (2) Lemma 73.3: closed quotient of normal space is normal (hence Hausdorff).\<close>
