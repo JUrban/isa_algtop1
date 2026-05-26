@@ -4781,7 +4781,7 @@ proof -
   \<comment> \<open>\<Phi> is a group hom G \<rightarrow> Z\<times>Z.\<close>
   have h\<Phi>_hom: "top1_group_hom_on G mul (UNIV::(int \<times> int) set)
       (\<lambda>(a1, a2) (b1, b2). (a1 + b1, a2 + b2)) \<Phi>"
-    sorry
+    sorry \<comment> \<open>Product of two group homs into Z is a hom into Z\<times>Z.\<close>
   \<comment> \<open>\<Phi> is bijective (injective: ker = {e}; surjective: (m,n) = m*\<iota>(0) + n*\<iota>(1)).\<close>
   have h\<Phi>_bij: "bij_betw \<Phi> G (UNIV::(int \<times> int) set)"
     sorry
