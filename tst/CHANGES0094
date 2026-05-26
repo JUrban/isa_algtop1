@@ -1,0 +1,9 @@
+CHANGES0094 — Session: Dunce cap Hausdorff proof structure
+
+B² topology facts PROVED:
+  - B² is Hausdorff (order_topology + product + subspace)
+  - B² is compact (closed bounded subset)
+  - B² is normal (Theorem_32_3)
+
+Fiber facts PROVED:
+  - Interior fiber finite (finite_inverse_image_gen)
