@@ -5507,9 +5507,25 @@ proof -
             have hzS1: "z \<in> top1_S1"
             proof -
               have "(fst c)^2 + (snd c)^2 = 1" using hcS1 unfolding top1_S1_def by (by100 simp)
-              hence "(fst z)^2 + (snd z)^2 = 1" unfolding hzeq
-                sorry \<comment> \<open>Rotation preserves |z|² = 1: (cos\<theta> x - sin\<theta> y)² + (sin\<theta> x + cos\<theta> y)²
-                   = (cos²\<theta>+sin²\<theta>)(x²+y²) = 1. Needs algebraic expansion + sin²+cos²=1.\<close>
+              hence "(fst z)^2 + (snd z)^2 = 1"
+              proof -
+                let ?\<theta> = "2*pi*real k/real n"
+                assume h1: "(fst c)^2 + (snd c)^2 = 1"
+                have hident: "\<And>co si x y :: real. (co*x - si*y)^2 + (si*x + co*y)^2
+                    = (co^2 + si^2) * (x^2 + y^2)"
+                  by (simp add: power2_eq_square algebra_simps)
+                have "fst z = cos ?\<theta> * fst c - sin ?\<theta> * snd c"
+                  unfolding hzeq by (by100 simp)
+                moreover have "snd z = sin ?\<theta> * fst c + cos ?\<theta> * snd c"
+                  unfolding hzeq by (by100 simp)
+                ultimately have "(fst z)^2 + (snd z)^2
+                    = (cos ?\<theta> * fst c - sin ?\<theta> * snd c)^2 + (sin ?\<theta> * fst c + cos ?\<theta> * snd c)^2"
+                  by (by100 simp)
+                also have "\<dots> = ((cos ?\<theta>)^2 + (sin ?\<theta>)^2) * ((fst c)^2 + (snd c)^2)"
+                  by (rule hident)
+                also have "\<dots> = 1" using sin_cos_squared_add[of ?\<theta>] h1 by (by100 simp)
+                finally show ?thesis .
+              qed
               thus ?thesis unfolding top1_S1_def by (by100 simp)
             qed
             have hzB: "z \<in> top1_B2" using hzS1 hS1_B2 by (by100 blast)
