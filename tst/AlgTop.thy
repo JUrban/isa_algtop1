@@ -6884,7 +6884,55 @@ proof -
           \<comment> \<open>Bridge to formal continuous_map_on.\<close>
           have h\<gamma>_cmap: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
               top1_S1 top1_S1_topology ?\<gamma>"
-            sorry \<comment> \<open>Bridge: continuous_on + image ⊆ S1 → continuous_map_on between subspace topologies.\<close>
+          proof -
+            \<comment> \<open>gamma = R_to_S1 . (lambda t. t/n).\<close>
+            have h\<gamma>_eq: "?\<gamma> = top1_R_to_S1 \<circ> (\<lambda>t. t / real n)"
+            proof (rule ext)
+              fix t :: real show "?\<gamma> t = (top1_R_to_S1 \<circ> (\<lambda>t. t / real n)) t"
+                unfolding top1_R_to_S1_def by (by100 simp)
+            qed
+            \<comment> \<open>R_to_S1 is continuous UNIV -> S1 (covering map).\<close>
+            have hR_cont: "top1_continuous_map_on (UNIV::real set) top1_open_sets top1_S1 top1_S1_topology top1_R_to_S1"
+              using Theorem_53_1 unfolding top1_covering_map_on_def by (by100 blast)
+            \<comment> \<open>Restrict to [0,1].\<close>
+            from top1_continuous_map_on_restrict_domain_simple[OF hR_cont subset_UNIV]
+            have hR_I: "top1_continuous_map_on top1_unit_interval
+                (subspace_topology (UNIV::real set) top1_open_sets top1_unit_interval)
+                top1_S1 top1_S1_topology top1_R_to_S1" .
+            \<comment> \<open>subspace_topology UNIV open_sets I = I_topology.\<close>
+            have hI_eq: "subspace_topology (UNIV::real set) top1_open_sets top1_unit_interval
+                = top1_unit_interval_topology"
+              unfolding top1_unit_interval_topology_def by (by100 blast)
+            have hR_I2: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+                top1_S1 top1_S1_topology top1_R_to_S1"
+              using hR_I hI_eq by (by100 simp)
+            \<comment> \<open>t/n is continuous [0,1] -> [0,1] (or at least [0,1] -> UNIV -> S1 via R_to_S1).\<close>
+            \<comment> \<open>Actually, compose: (lambda t. t/n) maps [0,1] into UNIV, R_to_S1 maps UNIV to S1.\<close>
+            \<comment> \<open>Use: continuous_map_on is closed under precomposition with continuous real functions.\<close>
+            \<comment> \<open>The composition R_to_S1 . (t/n) is continuous UNIV -> S1.\<close>
+            have hscale_cont: "top1_continuous_map_on (UNIV::real set) top1_open_sets
+                (UNIV::real set) top1_open_sets (\<lambda>t. t / real n)"
+            proof -
+              have hn_ne: "real n \<noteq> (0::real)" using assms(1) by (by100 simp)
+              have hco: "continuous_on (UNIV::real set) (\<lambda>t::real. t / real n)"
+                using hn_ne by (intro continuous_intros; by100 blast)
+              have hsub: "subspace_topology (UNIV::real set) top1_open_sets (UNIV::real set) = top1_open_sets"
+                using subspace_topology_UNIV_self by (by100 blast)
+              from top1_continuous_map_on_real_subspace_open_sets[of UNIV "\<lambda>t. t / real n" UNIV] hco
+              show ?thesis using hsub by (by100 simp)
+            qed
+            have hcomp_UNIV: "top1_continuous_map_on (UNIV::real set) top1_open_sets
+                top1_S1 top1_S1_topology (top1_R_to_S1 \<circ> (\<lambda>t. t / real n))"
+              by (rule top1_continuous_map_on_comp[OF hscale_cont hR_cont])
+            from top1_continuous_map_on_restrict_domain_simple[OF hcomp_UNIV subset_UNIV]
+            have "top1_continuous_map_on top1_unit_interval
+                (subspace_topology (UNIV::real set) top1_open_sets top1_unit_interval)
+                top1_S1 top1_S1_topology (top1_R_to_S1 \<circ> (\<lambda>t. t / real n))" .
+            hence "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+                top1_S1 top1_S1_topology (top1_R_to_S1 \<circ> (\<lambda>t. t / real n))"
+              using hI_eq by (by100 simp)
+            thus ?thesis using h\<gamma>_eq by (by100 simp)
+          qed
           \<comment> \<open>Compose gamma with iota.\<close>
           have h_comp: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
               ?A ?TA (\<iota> \<circ> ?\<gamma>)"
