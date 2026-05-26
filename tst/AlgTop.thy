@@ -6383,9 +6383,53 @@ proof -
             ultimately show "?t \<in> {0..1}" by (by100 auto)
           qed
           have "?g ?t = a"
-            using ha h\<theta> hq_S1 assms(1)
-            sorry \<comment> \<open>g(n\<theta> mod 1) = q(cos(2\<pi>(n\<theta> mod 1)/n), sin(...)) = q(cos(2\<pi>\<theta> - ...floor...), sin(...))
-               = q(cos 2\<pi>\<theta>, sin 2\<pi>\<theta>) = q(s) = a by rotation identification under q.\<close>
+          proof -
+            let ?m = "floor (real n * \<theta>)"
+            \<comment> \<open>2\<pi>?t/n = 2\<pi>\<theta> - 2\<pi>?m/n. The point (cos(2\<pi>?t/n), sin(2\<pi>?t/n)) is a rotation
+               of s = (cos(2\<pi>\<theta>), sin(2\<pi>\<theta>)) by angle -2\<pi>?m/n.
+               By hq\_S1, q identifies rotations by 2\<pi>k/n. Need k \<in> {0,...,n-1}.\<close>
+            have h_angle: "2*pi*?t / real n = 2*pi*\<theta> - 2*pi * real_of_int ?m / real n"
+              sorry \<comment> \<open>Arithmetic: (n\<theta>-floor(n\<theta>))/n = \<theta> - floor(n\<theta>)/n.\<close>
+            \<comment> \<open>s is on S¹.\<close>
+            have hs_S1: "s \<in> top1_S1" by (rule hs)
+            have hs_eq: "s = (cos (2*pi*\<theta>), sin (2*pi*\<theta>))"
+              using h\<theta>(2) unfolding top1_R_to_S1_def by (by100 simp)
+            \<comment> \<open>The g-image point is on S¹.\<close>
+            have hgt_S1: "(cos (2*pi*?t / real n), sin (2*pi*?t / real n)) \<in> top1_S1"
+              using hg_img by (by100 blast)
+            \<comment> \<open>Use hq\_S1: q(s) = q(gt\_point) iff gt\_point is a rotation of s.\<close>
+            from hq_S1[rule_format, OF hs_S1 hgt_S1]
+            have hq_iff: "q s = q (cos (2*pi*?t / real n), sin (2*pi*?t / real n)) \<longleftrightarrow>
+                (\<exists>k::nat. k < n \<and> (cos (2*pi*?t / real n), sin (2*pi*?t / real n)) =
+                  (cos (2*pi*real k/real n) * fst s - sin (2*pi*real k/real n) * snd s,
+                   sin (2*pi*real k/real n) * fst s + cos (2*pi*real k/real n) * snd s))"
+              by (by5000 blast)
+            \<comment> \<open>We need to find k. Using addition formulas:
+               cos(2\<pi>\<theta> - 2\<pi>m/n) = cos(2\<pi>\<theta>)cos(2\<pi>m/n) + sin(2\<pi>\<theta>)sin(2\<pi>m/n)
+               This equals cos(-2\<pi>m/n)*cos(2\<pi>\<theta>) - sin(-2\<pi>m/n)*sin(2\<pi>\<theta>)
+               = cos(2\<pi>m/n)*cos(2\<pi>\<theta>) + sin(2\<pi>m/n)*sin(2\<pi>\<theta>)
+               The rotation formula: rot\_k(s) = (cos(2\<pi>k/n)*fst s - sin(2\<pi>k/n)*snd s, ...)
+               We need k such that rot\_k reverses the -2\<pi>m/n rotation.
+               Take k = nat((-?m) mod int n). This works modulo n.\<close>
+            let ?k = "nat ((-?m) mod int n)"
+            have hk_lt: "?k < n"
+            proof -
+              have "int n > 0" using assms(1) by (by100 simp)
+              hence "(-?m) mod int n \<ge> 0 \<and> (-?m) mod int n < int n" by (by100 simp)
+              thus ?thesis by (by100 auto)
+            qed
+            \<comment> \<open>The angle 2\<pi>?t/n + 2\<pi>?k/n = 2\<pi>\<theta> + 2\<pi>(-?m + ?k)/n = 2\<pi>\<theta> + integer * 2\<pi>.\<close>
+            have hk_angle: "2*pi*?t/real n + 2*pi*real ?k/real n = 2*pi*\<theta> + real_of_int ((- ?m + int ?k) div int n) * (2*pi)"
+              sorry \<comment> \<open>Arithmetic: ?t/n + ?k/n = \<theta> + integer. Uses (?k + ?m) mod n = 0.\<close>
+            \<comment> \<open>cos/sin addition: gt\_point = rot\_k(s) using the angle identity.\<close>
+            have "(cos (2*pi*?t / real n), sin (2*pi*?t / real n)) =
+                (cos (2*pi*real ?k/real n) * fst s - sin (2*pi*real ?k/real n) * snd s,
+                 sin (2*pi*real ?k/real n) * fst s + cos (2*pi*real ?k/real n) * snd s)"
+              sorry \<comment> \<open>cos/sin subtraction formula + hk\_angle.\<close>
+            hence "q s = q (cos (2*pi*?t / real n), sin (2*pi*?t / real n))"
+              using hq_iff hk_lt by (by100 blast)
+            thus "?g ?t = a" using ha by (by100 simp)
+          qed
           hence "\<phi> (top1_R_to_S1 ?t) = a" using h\<phi>_eq h_t_I by (by100 simp)
           moreover have "top1_R_to_S1 ?t \<in> top1_S1" using hR_surj2 h_t_I by (by100 blast)
           ultimately show "a \<in> \<phi> ` top1_S1" by (by100 blast)
