@@ -6507,14 +6507,28 @@ proof -
             have hj_eq: "?m + int ?k = ?j * int n" using hmod0 by (by100 auto)
             \<comment> \<open>2\<pi>?t/n = 2\<pi>?k/n + 2\<pi>\<theta> - 2\<pi>?j (where j is an integer).\<close>
             have h_angle2: "2*pi*?t/real n = 2*pi*real ?k/real n + 2*pi*\<theta> - real_of_int ?j * (2*pi)"
-              sorry \<comment> \<open>Algebra: m+k=j*n → 2πt/n = 2πk/n + 2πθ - j·2π. Needs field_simps.\<close>
+              sorry \<comment> \<open>field_simps: h_angle + hj_eq algebra\<close>
             \<comment> \<open>cos/sin at angle 2\<pi>?t/n = cos/sin at angle 2\<pi>?k/n + 2\<pi>\<theta> (periodicity).\<close>
             \<comment> \<open>cos/sin periodicity via R\_to\_S1\_int\_shift: t/n = k/n + \<theta> - j.\<close>
             \<comment> \<open>From h_angle2 + R_to_S1_int_shift: cos/sin at 2πt/n = cos/sin at 2πk/n+2πθ.\<close>
             have hcos_eq: "cos (2*pi*?t/real n) = cos (2*pi*real ?k/real n + 2*pi*\<theta>)"
-              using h_angle2 sorry \<comment> \<open>cos periodicity: cos(x - j·2π) = cos(x)\<close>
+            proof -
+              let ?x = "2*pi*real ?k/real n + 2*pi*\<theta>"
+              from h_angle2 have "2*pi*?t/real n = ?x - real_of_int ?j * (2*pi)"
+                by (by100 blast)
+              hence "cos (2*pi*?t/real n) = cos (?x - real_of_int ?j * (2*pi))"
+                by (by100 simp)
+              also have "\<dots> = cos ?x * cos (real_of_int ?j * (2*pi))
+                  + sin ?x * sin (real_of_int ?j * (2*pi))"
+                by (rule cos_diff)
+              also have "cos (real_of_int ?j * (2*pi)) = 1"
+                using cos_int_2pin[of ?j] by (metis mult.commute)
+              also have "sin (real_of_int ?j * (2*pi)) = 0"
+                using sin_int_2pin[of ?j] by (metis mult.commute)
+              finally show ?thesis by (by100 simp)
+            qed
             have hsin_eq: "sin (2*pi*?t/real n) = sin (2*pi*real ?k/real n + 2*pi*\<theta>)"
-              using h_angle2 sorry \<comment> \<open>sin periodicity: sin(x - j·2π) = sin(x)\<close>
+              using h_angle2 by (metis diff_add_cancel mult.commute sin_cos_eq_iff)
             \<comment> \<open>Addition formulas: rotation = cos/sin of sum.\<close>
             have "(cos (2*pi*?t / real n), sin (2*pi*?t / real n)) =
                 (cos (2*pi*real ?k/real n) * fst s - sin (2*pi*real ?k/real n) * snd s,
