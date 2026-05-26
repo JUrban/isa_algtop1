@@ -5429,7 +5429,38 @@ proof -
   have hintB2_sub: "top1_B2 - top1_S1 \<subseteq> top1_B2" by (by100 blast)
   \<comment> \<open>B² - S¹ is open in B² (S¹ is closed in B²).\<close>
   have hS1_closed: "closedin_on top1_B2 top1_B2_topology top1_S1"
-    sorry \<comment> \<open>S¹ = {x | |x|²=1} is closed in B² = {x | |x|²≤1}: preimage of {1} under continuous |·|².\<close>
+  proof (rule closedin_intro[OF hS1_sub_B2])
+    \<comment> \<open>B² - S¹ = {z | |z|² < 1} = B² \<inter> V where V is open in R².\<close>
+    \<comment> \<open>V = {(x,y) | x²+y² < 1} is open: preimage of open {t<1} under continuous norm-sq.\<close>
+    have hopen_disk: "open {z::real\<times>real. (fst z)^2 + (snd z)^2 < 1}"
+    proof -
+      have hcont_nsq: "continuous_on UNIV (\<lambda>z::real\<times>real. (fst z)^2 + (snd z)^2)"
+        by (intro continuous_intros)
+      have hopen_lt1: "open {t::real. t < 1}"
+      proof -
+        have "{t::real. t < 1} = {..<1}" by (by100 auto)
+        moreover have "open ({..<1}::real set)" by (by100 simp)
+        ultimately show ?thesis by (by100 simp)
+      qed
+      have heq: "{z::real\<times>real. (fst z)^2 + (snd z)^2 < 1}
+          = (\<lambda>z. (fst z)^2 + (snd z)^2) -` {..<1::real} \<inter> UNIV"
+        by (by100 auto)
+      have "open ((\<lambda>z::real\<times>real. (fst z)^2 + (snd z)^2) -` {..<1::real} \<inter> UNIV)"
+        using continuous_on_open_vimage[of "UNIV::((real\<times>real) set)"
+              "\<lambda>z. (fst z)^2 + (snd z)^2"] hcont_nsq hopen_lt1
+        by (by5000 auto)
+      thus ?thesis using heq by (by100 simp)
+    qed
+    have hdisk_in_PT: "{z::real\<times>real. (fst z)^2 + (snd z)^2 < 1}
+        \<in> product_topology_on top1_open_sets top1_open_sets"
+      using hopen_disk product_topology_on_open_sets_real2 unfolding top1_open_sets_def
+      by (by100 blast)
+    have hdiff_eq: "top1_B2 - top1_S1 = top1_B2 \<inter> {z. (fst z)^2 + (snd z)^2 < 1}"
+      unfolding top1_B2_def top1_S1_def by (by100 auto)
+    show "top1_B2 - top1_S1 \<in> top1_B2_topology"
+      unfolding top1_B2_topology_def subspace_topology_def
+      using hdisk_in_PT hdiff_eq by (by100 blast)
+  qed
   have hintB2_open: "openin_on top1_B2 top1_B2_topology (top1_B2 - top1_S1)"
     using hS1_closed unfolding openin_on_def closedin_on_def by (by100 blast)
   \<comment> \<open>B² - S¹ is saturated: each fiber q⁻¹(q(z)) for z ∈ B²-S¹ is {z} (by inj + sep).\<close>
