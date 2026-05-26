@@ -6347,19 +6347,24 @@ proof -
                rotation-equivalent. This gives an integer relation on t, t'. On [0,1]
                the only possibilities are t=t' or {t,t'}={0,1}.\<close>
             have hS1_t: "(cos (2*pi*t/real n), sin (2*pi*t/real n)) \<in> top1_S1"
-              sorry
+              using hg_img by (by100 blast)
             have hS1_t': "(cos (2*pi*t'/real n), sin (2*pi*t'/real n)) \<in> top1_S1"
-              sorry
+              using hg_img by (by100 blast)
             \<comment> \<open>hq\_S1 gives rotation identification.\<close>
             from hq_S1[rule_format, OF hS1_t hS1_t'] hgt
             have "\<exists>k::nat. k < n \<and> (cos (2*pi*t'/real n), sin (2*pi*t'/real n)) =
                 (cos (2*pi*real k/real n) * cos (2*pi*t/real n) - sin (2*pi*real k/real n) * sin (2*pi*t/real n),
                  sin (2*pi*real k/real n) * cos (2*pi*t/real n) + cos (2*pi*real k/real n) * sin (2*pi*t/real n))"
-              sorry
+              by (by5000 force)
             then obtain k :: nat where hk: "k < n"
-                and hcos_eq: "cos (2*pi*t'/real n) = cos (2*pi*real k/real n + 2*pi*t/real n)"
-                and hsin_eq: "sin (2*pi*t'/real n) = sin (2*pi*real k/real n + 2*pi*t/real n)"
-              sorry
+                and hpair: "(cos (2*pi*t'/real n), sin (2*pi*t'/real n)) =
+                  (cos (2*pi*real k/real n) * cos (2*pi*t/real n) - sin (2*pi*real k/real n) * sin (2*pi*t/real n),
+                   sin (2*pi*real k/real n) * cos (2*pi*t/real n) + cos (2*pi*real k/real n) * sin (2*pi*t/real n))"
+              by (by100 blast)
+            have hcos_eq: "cos (2*pi*t'/real n) = cos (2*pi*real k/real n + 2*pi*t/real n)"
+              using hpair by (simp add: cos_add)
+            have hsin_eq: "sin (2*pi*t'/real n) = sin (2*pi*real k/real n + 2*pi*t/real n)"
+              using hpair by (simp add: sin_add)
             \<comment> \<open>cos\_sin\_eq\_imp: angle difference is integer multiple of 2\<pi>.\<close>
             from cos_sin_eq_imp[OF hcos_eq hsin_eq]
             obtain j :: int where hj: "2*pi*t'/real n - (2*pi*real k/real n + 2*pi*t/real n)
@@ -6391,7 +6396,7 @@ proof -
             hence "t' - t \<in> {-1, 0, 1}"
               using \<open>t' - t = real k + real_of_int j * real n\<close> by (by100 auto)
             thus ?thesis using \<open>0 \<le> t\<close> \<open>t \<le> 1\<close> \<open>0 \<le> t'\<close> \<open>t' \<le> 1\<close>
-              sorry
+              by (by100 auto)
           qed
           thus ?thesis
           proof (elim disjE conjE)
