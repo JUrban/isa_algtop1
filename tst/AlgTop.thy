@@ -6350,12 +6350,17 @@ proof -
               using hg_img by (by100 blast)
             have hS1_t': "(cos (2*pi*t'/real n), sin (2*pi*t'/real n)) \<in> top1_S1"
               using hg_img by (by100 blast)
-            \<comment> \<open>hq\_S1 gives rotation identification.\<close>
-            from hq_S1[rule_format, OF hS1_t hS1_t'] hgt
+            \<comment> \<open>hq\_S1 gives rotation identification. Simplify fst/snd before applying.\<close>
+            have hq_iff: "?g t = ?g t' \<longleftrightarrow>
+                (\<exists>k::nat. k < n \<and> (cos (2*pi*t'/real n), sin (2*pi*t'/real n)) =
+                (cos (2*pi*real k/real n) * cos (2*pi*t/real n) - sin (2*pi*real k/real n) * sin (2*pi*t/real n),
+                 sin (2*pi*real k/real n) * cos (2*pi*t/real n) + cos (2*pi*real k/real n) * sin (2*pi*t/real n)))"
+              using hq_S1[rule_format, OF hS1_t hS1_t'] by (by100 simp)
+            from hq_iff hgt
             have "\<exists>k::nat. k < n \<and> (cos (2*pi*t'/real n), sin (2*pi*t'/real n)) =
                 (cos (2*pi*real k/real n) * cos (2*pi*t/real n) - sin (2*pi*real k/real n) * sin (2*pi*t/real n),
                  sin (2*pi*real k/real n) * cos (2*pi*t/real n) + cos (2*pi*real k/real n) * sin (2*pi*t/real n))"
-              sorry \<comment> \<open>From hq\_S1 biconditional + hgt: extract rotation. Force explodes on fst/snd.\<close>
+              by (by100 blast)
             then obtain k :: nat where hk: "k < n"
                 and hpair: "(cos (2*pi*t'/real n), sin (2*pi*t'/real n)) =
                   (cos (2*pi*real k/real n) * cos (2*pi*t/real n) - sin (2*pi*real k/real n) * sin (2*pi*t/real n),
