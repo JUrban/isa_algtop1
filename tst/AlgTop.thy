@@ -5489,10 +5489,47 @@ proof -
     fix x y assume hx: "x \<in> X" and hy: "y \<in> X" and hne: "x \<noteq> y"
     \<comment> \<open>Fibers q\<inverse>(x), q\<inverse>(y) are disjoint closed subsets of B².\<close>
     let ?Fx = "{z \<in> top1_B2. q z = x}" and ?Fy = "{z \<in> top1_B2. q z = y}"
+    \<comment> \<open>Fibers are finite (size \<le> n), hence closed in Hausdorff B².\<close>
+    have hB2_T1: "top1_T1_on top1_B2 top1_B2_topology"
+      by (rule hausdorff_imp_T1_on[OF hB2_haus])
+    have hfiber_finite: "\<And>p. p \<in> X \<Longrightarrow> finite {z \<in> top1_B2. q z = p}"
+    proof -
+      fix p assume hp: "p \<in> X"
+      \<comment> \<open>Interior: at most 1 point. Circle: at most n points (orbit).\<close>
+      have "{z \<in> top1_B2. q z = p} \<subseteq>
+          {z \<in> top1_B2 - top1_S1. q z = p} \<union> {z \<in> top1_S1. q z = p}" by (by100 blast)
+      moreover have "finite {z \<in> top1_B2 - top1_S1. q z = p}"
+      proof -
+        have "\<And>z1 z2. z1 \<in> top1_B2 - top1_S1 \<Longrightarrow> z2 \<in> top1_B2 - top1_S1 \<Longrightarrow>
+            q z1 = p \<Longrightarrow> q z2 = p \<Longrightarrow> z1 = z2"
+          using hq_inj unfolding inj_on_def by (by5000 metis)
+        hence "card {z \<in> top1_B2 - top1_S1. q z = p} \<le> 1" sorry
+        thus ?thesis sorry
+      qed
+      moreover have "finite {z \<in> top1_S1. q z = p}" sorry
+        \<comment> \<open>Orbit under n-fold rotation: |\<le> n points.\<close>
+      ultimately show "finite {z \<in> top1_B2. q z = p}"
+        using finite_subset by (by5000 blast)
+    qed
+    have hfiber_closed: "\<And>p. p \<in> X \<Longrightarrow> closedin_on top1_B2 top1_B2_topology {z \<in> top1_B2. q z = p}"
+    proof -
+      fix p assume hp: "p \<in> X"
+      let ?F = "{z \<in> top1_B2. q z = p}"
+      have h_fin: "finite ?F" using hfiber_finite[OF hp] by (by100 blast)
+      have h_sing_cl: "\<And>z. z \<in> ?F \<Longrightarrow> closedin_on top1_B2 top1_B2_topology {z}"
+        using hB2_T1 unfolding top1_T1_on_def by (by100 blast)
+      have "finite ((\<lambda>z. {z}) ` ?F)" using h_fin by (by100 simp)
+      moreover have "\<forall>A\<in>((\<lambda>z. {z}) ` ?F). closedin_on top1_B2 top1_B2_topology A"
+        using h_sing_cl by (by100 blast)
+      ultimately have "closedin_on top1_B2 top1_B2_topology (\<Union>((\<lambda>z. {z}) ` ?F))"
+        by (rule closedin_Union_finite[OF hB2_top])
+      moreover have "\<Union>((\<lambda>z. {z}) ` ?F) = ?F" by (by100 blast)
+      ultimately show "closedin_on top1_B2 top1_B2_topology ?F" by (by100 simp)
+    qed
     have hFx_cl: "closedin_on top1_B2 top1_B2_topology ?Fx"
-      sorry \<comment> \<open>Finite fiber (size \<le> n) in Hausdorff B² is closed.\<close>
+      by (rule hfiber_closed[OF hx])
     have hFy_cl: "closedin_on top1_B2 top1_B2_topology ?Fy"
-      sorry \<comment> \<open>Same argument.\<close>
+      by (rule hfiber_closed[OF hy])
     have hFxy_disj: "?Fx \<inter> ?Fy = {}" using hne by (by100 blast)
     \<comment> \<open>B² normal: separate ?Fx and ?Fy by disjoint open sets.\<close>
     from normal_separation[OF hB2_normal hFx_cl hFy_cl hFxy_disj]
