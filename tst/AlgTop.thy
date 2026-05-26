@@ -5499,7 +5499,17 @@ proof -
         then obtain k :: int where hk: "2*pi*t - 2*pi*t' = real_of_int k * 2 * pi"
           by (by100 blast)
         have htk: "t - t' = real_of_int k"
-          sorry \<comment> \<open>From hk: 2\<pi>(t-t') = k\<cdot>2\<pi>, divide by 2\<pi>\<noteq>0.\<close>
+        proof -
+          from hk have "2*pi*t - 2*pi*t' - real_of_int k * 2 * pi = 0"
+            by (by100 linarith)
+          hence "2*pi*(t - t') - real_of_int k * (2 * pi) = 0"
+            by (simp add: algebra_simps)
+          hence "(t - t' - real_of_int k) * (2 * pi) = 0"
+            by (simp add: algebra_simps)
+          moreover have "(2 * pi :: real) \<noteq> 0" using pi_gt_zero by (by100 linarith)
+          ultimately have "t - t' - real_of_int k = 0" by (by100 simp)
+          thus ?thesis by (by100 linarith)
+        qed
         have "t \<in> {0..1}" and "t' \<in> {0..1}"
           using ht ht' unfolding top1_unit_interval_def by (by100 auto)+
         hence "0 \<le> t" "t \<le> 1" "0 \<le> t'" "t' \<le> 1" by (by100 auto)+
