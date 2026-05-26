@@ -5595,7 +5595,19 @@ proof -
             sorry \<comment> \<open>Rotation is a linear (hence continuous) map R² \<rightarrow> R²; restriction to S¹ is continuous.\<close>
           \<comment> \<open>S¹ is compact and Hausdorff \<Rightarrow> closed map.\<close>
           have hS1_haus: "is_hausdorff_on top1_S1 top1_S1_topology"
-            sorry \<comment> \<open>S¹ is Hausdorff (subspace of Hausdorff R²).\<close>
+          proof -
+            have hTOS_eq: "(order_topology_on_UNIV :: real set set) = top1_open_sets"
+              using order_topology_on_UNIV_eq_HOL_open unfolding top1_open_sets_def by (by100 auto)
+            have hR_haus: "is_hausdorff_on (UNIV::real set) (top1_open_sets::real set set)"
+              using conjunct1[OF Theorem_17_11[where 'a=real]] unfolding hTOS_eq .
+            have "is_hausdorff_on ((UNIV::real set) \<times> (UNIV::real set))
+                (product_topology_on (top1_open_sets::real set set) (top1_open_sets::real set set))"
+              using conjunct1[OF conjunct2[OF Theorem_17_11]] hR_haus by (by100 blast)
+            hence "is_hausdorff_on (UNIV::(real\<times>real) set)
+                (product_topology_on top1_open_sets top1_open_sets)" by (by100 simp)
+            thus ?thesis using conjunct2[OF conjunct2[OF Theorem_17_11]]
+              unfolding top1_S1_topology_def by (by100 blast)
+          qed
           \<comment> \<open>C\<inter>S¹ is closed in compact S¹, rotation continuous S¹\<rightarrow>Hausdorff S¹ \<Rightarrow> image closed.\<close>
           have "closedin_on top1_S1 top1_S1_topology (?rot k ` ?C0)"
             by (rule compact_hausdorff_continuous_closed_map[OF S1_compact hS1_haus hrot_cont hC0_closed_S1])
