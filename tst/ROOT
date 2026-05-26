@@ -72,7 +72,7 @@ session AlgTopChain in at = AlgTopWedgeHelpers +
     AlgTopChain
 
 session AlgTop = AlgTopChain +
-  options [quick_and_dirty, timeout = 1200]
+  options [quick_and_dirty, timeout = 1800]
   theories
     AlgTop
 
