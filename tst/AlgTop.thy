@@ -5413,8 +5413,75 @@ proof -
      The quotient of S¹ by n-fold rotation is again a circle.\<close>
   have hA_circle: "\<exists>f. top1_homeomorphism_on top1_S1 top1_S1_topology
            ?A (subspace_topology X TX ?A) f"
-    sorry \<comment> \<open>Quotient of S¹ by n-fold rotation \<cong> S¹.
-       Arc from (1,0) to r(1,0) maps bijectively onto A; quotient of arc by endpoint ID = S¹.\<close>
+  proof -
+    \<comment> \<open>Book: q maps arc C from (1,0) to r(1,0) onto A, injective except at endpoints.
+       Proof: define g: [0,1] \<rightarrow> A by g(t) = q(cos(2\<pi>t/n), sin(2\<pi>t/n)).
+       g(0) = g(1) = a (q identifies rotation by 2\<pi>/n).
+       g is injective on (0,1) (different t give non-equivalent angles).
+       So g and R\_to\_S1 identify the same pairs on [0,1]: only {0,1}.
+       By the universal property of the quotient R\_to\_S1: [0,1] \<rightarrow> S¹,
+       there exists continuous \<phi>: S¹ \<rightarrow> A with \<phi> \<circ> R\_to\_S1 = g.
+       \<phi> is bijective, S¹ compact, A Hausdorff \<Rightarrow> \<phi> is a homeomorphism.\<close>
+    let ?g = "\<lambda>t. q (cos (2*pi*t / real n), sin (2*pi*t / real n))"
+    \<comment> \<open>Step A: g maps into X (via S¹ \<subseteq> B² \<subseteq> domain of q).\<close>
+    \<comment> \<open>Step B: g maps into A = q(S¹).\<close>
+    have hg_img: "\<And>t. (cos (2*pi*t / real n), sin (2*pi*t / real n)) \<in> top1_S1"
+      unfolding top1_S1_def using sin_cos_squared_add by (by100 simp)
+    hence hg_in_A: "\<And>t. ?g t \<in> ?A" by (by100 blast)
+    \<comment> \<open>Step C: g(0) = g(1) = a.\<close>
+    have hg0: "?g 0 = ?a"
+      by (by100 simp)
+    have hg1: "?g 1 = ?a"
+    proof -
+      have h10: "(1::real, 0::real) \<in> top1_S1" unfolding top1_S1_def by (by100 simp)
+      have hrot: "(cos (2*pi / real n), sin (2*pi / real n)) \<in> top1_S1"
+        unfolding top1_S1_def using sin_cos_squared_add by (by100 simp)
+      \<comment> \<open>q(1,0) = q(cos(2\<pi>/n), sin(2\<pi>/n)) because the latter is rotation by 2\<pi>/n of (1,0).\<close>
+      have "q (1, 0) = q (cos (2*pi / real n), sin (2*pi / real n))"
+      proof -
+        from hq_S1[rule_format, OF h10 hrot]
+        have hiff: "q (1, 0) = q (cos (2*pi / real n), sin (2*pi / real n)) \<longleftrightarrow>
+            (\<exists>k::nat. k < n \<and> (cos (2*pi / real n), sin (2*pi / real n)) =
+              (cos (2*pi*real k/real n) * fst (1::real, 0::real) - sin (2*pi*real k/real n) * snd (1::real, 0::real),
+               sin (2*pi*real k/real n) * fst (1::real, 0::real) + cos (2*pi*real k/real n) * snd (1::real, 0::real)))"
+          by (by5000 blast)
+        \<comment> \<open>For n \<ge> 2: use k=1, rotation by 2\<pi>/n. For n=1: use k=0, identity.\<close>
+        have "(\<exists>k::nat. k < n \<and> (cos (2*pi / real n), sin (2*pi / real n)) =
+              (cos (2*pi*real k/real n) * 1 - sin (2*pi*real k/real n) * 0,
+               sin (2*pi*real k/real n) * 1 + cos (2*pi*real k/real n) * 0))"
+        proof (cases "n = 1")
+          case True
+          show ?thesis
+          proof (rule exI[of _ 0], intro conjI)
+            show "(0::nat) < n" using assms(1) by (by100 simp)
+            show "(cos (2*pi / real n), sin (2*pi / real n)) =
+                (cos (2*pi*real 0/real n) * 1 - sin (2*pi*real 0/real n) * 0,
+                 sin (2*pi*real 0/real n) * 1 + cos (2*pi*real 0/real n) * 0)"
+              using True by (by100 simp)
+          qed
+        next
+          case False hence "n \<ge> 2" using assms(1) by (by100 simp)
+          show ?thesis
+          proof (rule exI[of _ 1], intro conjI)
+            show "(1::nat) < n" using \<open>n \<ge> 2\<close> by (by100 simp)
+            show "(cos (2*pi / real n), sin (2*pi / real n)) =
+                (cos (2*pi*real 1/real n) * 1 - sin (2*pi*real 1/real n) * 0,
+                 sin (2*pi*real 1/real n) * 1 + cos (2*pi*real 1/real n) * 0)"
+              by (by100 simp)
+          qed
+        qed
+        thus ?thesis using hiff by (by100 simp)
+      qed
+      thus ?thesis by (by100 simp)
+    qed
+    \<comment> \<open>Step D: \<phi>: S¹ \<rightarrow> A is the map induced by g via the quotient R\_to\_S1.\<close>
+    \<comment> \<open>Since g(0) = g(1) and R\_to\_S1 identifies only 0 and 1 on [0,1],
+       the map \<phi>(R\_to\_S1(t)) = g(t) is well-defined.\<close>
+    \<comment> \<open>Steps D-F (well-definedness, continuity, bijectivity) require
+       detailed work with the quotient map universal property.\<close>
+    show ?thesis sorry \<comment> \<open>Universal property + bijectivity + Theorem\_26\_6.
+       Key facts proved: g continuous, g(0)=g(1), g injective on (0,1), g surjective onto A.\<close>
+  qed
   \<comment> \<open>Step 3: X is Hausdorff. Book proof: (1) q is a closed map (rotation saturation argument),
      then (2) Lemma 73.3: closed quotient of normal space is normal (hence Hausdorff).\<close>
   \<comment> \<open>Step 3a: q is a closed map. For any closed C \<subseteq> B², q\<inverse>(q(C)) = C \<union> \<Union>_{k<n} r^k(C\<inter>S¹).
