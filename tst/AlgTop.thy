@@ -6164,7 +6164,74 @@ proof -
     \<comment> \<open>Step D3: R\_to\_S1|[0,1] is a quotient map.\<close>
     have hR_quot: "top1_quotient_map_on top1_unit_interval top1_unit_interval_topology
         top1_S1 top1_S1_topology top1_R_to_S1"
-      sorry \<comment> \<open>Proved in ac/AlgTopCached as a local fact. Need to lift or re-prove.\<close>
+    proof -
+      \<comment> \<open>[0,1] compact, S¹ Hausdorff, R\_to\_S1 continuous surjective.
+         Continuous from compact to Hausdorff is closed map.
+         Closed continuous surjection is quotient map.\<close>
+      have hI_top: "is_topology_on top1_unit_interval top1_unit_interval_topology"
+        by (rule top1_unit_interval_topology_is_topology_on)
+      have hTS1_loc: "is_topology_on top1_S1 top1_S1_topology"
+      proof -
+        have "is_topology_on (UNIV::(real\<times>real) set) (product_topology_on top1_open_sets top1_open_sets)"
+          using product_topology_on_is_topology_on[OF top1_open_sets_is_topology_on_UNIV
+                top1_open_sets_is_topology_on_UNIV] by (by100 simp)
+        thus ?thesis unfolding top1_S1_topology_def
+          by (rule subspace_topology_is_topology_on) (by100 simp)
+      qed
+      \<comment> \<open>R\_to\_S1 continuous [0,1] \<rightarrow> S¹.\<close>
+      have hR_cont: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+          top1_S1 top1_S1_topology top1_R_to_S1"
+      proof -
+        have "top1_continuous_map_on (UNIV::real set) top1_open_sets
+            top1_S1 top1_S1_topology top1_R_to_S1"
+          using Theorem_53_1 unfolding top1_covering_map_on_def by (by100 blast)
+        from top1_continuous_map_on_subspace_restrict[OF this]
+        show ?thesis unfolding top1_unit_interval_topology_def by (by100 simp)
+      qed
+      \<comment> \<open>R\_to\_S1 surjective [0,1] \<rightarrow> S¹.\<close>
+      have hR_surj_loc: "top1_R_to_S1 ` top1_unit_interval = top1_S1"
+        sorry \<comment> \<open>Every point on S¹ has an angle in [0,1]: s = R\_to\_S1(\<theta> - floor \<theta>).\<close>
+      \<comment> \<open>[0,1] is compact.\<close>
+      have hI_compact: "top1_compact_on top1_unit_interval top1_unit_interval_topology"
+      proof -
+        have "compact (top1_unit_interval :: real set)" unfolding top1_unit_interval_def
+          by (rule compact_Icc)
+        thus ?thesis using top1_compact_on_subspace_UNIV_iff_compact
+          unfolding top1_unit_interval_topology_def by (by100 blast)
+      qed
+      \<comment> \<open>S¹ Hausdorff.\<close>
+      have hS1_haus_loc: "is_hausdorff_on top1_S1 top1_S1_topology"
+      proof -
+        have hTOS_eq: "(order_topology_on_UNIV :: real set set) = top1_open_sets"
+          using order_topology_on_UNIV_eq_HOL_open unfolding top1_open_sets_def by (by100 auto)
+        have hR_haus: "is_hausdorff_on (UNIV::real set) (top1_open_sets::real set set)"
+          using conjunct1[OF Theorem_17_11[where 'a=real]] unfolding hTOS_eq .
+        have "is_hausdorff_on ((UNIV::real set) \<times> (UNIV::real set))
+            (product_topology_on (top1_open_sets::real set set) (top1_open_sets::real set set))"
+          using conjunct1[OF conjunct2[OF Theorem_17_11]] hR_haus by (by100 blast)
+        hence "is_hausdorff_on (UNIV::(real\<times>real) set)
+            (product_topology_on top1_open_sets top1_open_sets)" by (by100 simp)
+        thus ?thesis using conjunct2[OF conjunct2[OF Theorem_17_11]]
+          unfolding top1_S1_topology_def by (by100 blast)
+      qed
+      \<comment> \<open>Quotient map property: for V \<subseteq> S¹, if preimage open then V open.\<close>
+      show ?thesis unfolding top1_quotient_map_on_def
+      proof (intro conjI)
+        show "is_topology_on top1_unit_interval top1_unit_interval_topology" by (rule hI_top)
+        show "is_topology_on top1_S1 top1_S1_topology" by (rule hTS1_loc)
+        show "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+            top1_S1 top1_S1_topology top1_R_to_S1" by (rule hR_cont)
+        show "top1_R_to_S1 ` top1_unit_interval = top1_S1" by (rule hR_surj_loc)
+        \<comment> \<open>Quotient property: if preimage of V is open in [0,1] then V is open in S¹.
+           Proof: complement of V has closed preimage (in compact [0,1]).
+           Closed map: image of closed = closed. So S¹ - V = image of closed = closed.
+           Hence V is open.\<close>
+        show "\<forall>V. V \<subseteq> top1_S1 \<longrightarrow>
+            ({x \<in> top1_unit_interval. top1_R_to_S1 x \<in> V} \<in> top1_unit_interval_topology
+                \<longrightarrow> V \<in> top1_S1_topology)"
+          sorry \<comment> \<open>Compact to Hausdorff \<Rightarrow> closed map \<Rightarrow> quotient property.\<close>
+      qed
+    qed
     \<comment> \<open>Step D4: Apply Theorem\_22\_2 to get continuous \<phi>: S¹ \<rightarrow> A.\<close>
     let ?TA = "subspace_topology X TX ?A"
     from Theorem_22_2[OF hR_quot _ hg_const_fibers, of ?A ?TA]
