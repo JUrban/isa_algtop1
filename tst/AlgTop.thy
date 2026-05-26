@@ -6388,8 +6388,10 @@ proof -
             \<comment> \<open>2\<pi>?t/n = 2\<pi>\<theta> - 2\<pi>?m/n. The point (cos(2\<pi>?t/n), sin(2\<pi>?t/n)) is a rotation
                of s = (cos(2\<pi>\<theta>), sin(2\<pi>\<theta>)) by angle -2\<pi>?m/n.
                By hq\_S1, q identifies rotations by 2\<pi>k/n. Need k \<in> {0,...,n-1}.\<close>
+            have hn_pos: "real n > 0" using assms(1) by (by100 simp)
+            have hn_ne: "real n \<noteq> (0::real)" using hn_pos by (by100 linarith)
             have h_angle: "2*pi*?t / real n = 2*pi*\<theta> - 2*pi * real_of_int ?m / real n"
-              sorry \<comment> \<open>Arithmetic: (n\<theta>-floor(n\<theta>))/n = \<theta> - floor(n\<theta>)/n.\<close>
+              using hn_ne by (simp add: field_simps algebra_simps)
             \<comment> \<open>s is on S¹.\<close>
             have hs_S1: "s \<in> top1_S1" by (rule hs)
             have hs_eq: "s = (cos (2*pi*\<theta>), sin (2*pi*\<theta>))"
