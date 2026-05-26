@@ -5062,7 +5062,32 @@ proof -
     show ?thesis using group_iso_on_inverse[OF hphi_iso hG_grp hH_grp] by (by100 blast)
   qed
   \<comment> \<open>Step 7: Package result.\<close>
-  show ?thesis using hfree_ab hphi_inv_iso sorry
+  have "\<exists>phi. top1_is_free_abelian_group_full_on H mulH eH invgH iota_S ({..<2}::nat set)
+    \<and> top1_group_iso_on H mulH
+      (top1_fundamental_group_carrier T_torus TT x0)
+      (top1_fundamental_group_mul T_torus TT x0) phi"
+    using hfree_ab hphi_inv_iso by (by100 blast)
+  hence "\<exists>iotaH phi. top1_is_free_abelian_group_full_on H mulH eH invgH iotaH ({..<2}::nat set)
+    \<and> top1_group_iso_on H mulH
+      (top1_fundamental_group_carrier T_torus TT x0)
+      (top1_fundamental_group_mul T_torus TT x0) phi"
+    by (by100 blast)
+  hence "\<exists>invgH iotaH phi. top1_is_free_abelian_group_full_on H mulH eH invgH iotaH ({..<2}::nat set)
+    \<and> top1_group_iso_on H mulH
+      (top1_fundamental_group_carrier T_torus TT x0)
+      (top1_fundamental_group_mul T_torus TT x0) phi"
+    by (by100 blast)
+  hence "\<exists>eH invgH iotaH phi. top1_is_free_abelian_group_full_on H mulH eH invgH iotaH ({..<2}::nat set)
+    \<and> top1_group_iso_on H mulH
+      (top1_fundamental_group_carrier T_torus TT x0)
+      (top1_fundamental_group_mul T_torus TT x0) phi"
+    by (by100 blast)
+  hence "\<exists>mulH eH invgH iotaH phi. top1_is_free_abelian_group_full_on H mulH eH invgH iotaH ({..<2}::nat set)
+    \<and> top1_group_iso_on H mulH
+      (top1_fundamental_group_carrier T_torus TT x0)
+      (top1_fundamental_group_mul T_torus TT x0) phi"
+    by (by100 blast)
+  thus ?thesis sorry
 qed
 
 (** from \<S>73 Theorem 73.4: the n-fold dunce cap has fundamental group Z/nZ. **)
