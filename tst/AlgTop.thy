@@ -6989,9 +6989,27 @@ proof -
           thus ?thesis .
         qed
         \<comment> \<open>Step D.3: path_power n gives the n-fold path product, whose class is group_pow n.\<close>
-        have h_pow_class: "{g. top1_loop_equiv_on ?A ?TA ?a (top1_path_power ?\<alpha> ?a n) g}
-            = top1_group_pow ?mulA ?eA ?class_\<alpha> n"
-          sorry \<comment> \<open>Path power class = group power of class. Induction on n.\<close>
+        have h_pow_class: "{g. top1_loop_equiv_on ?A ?TA ?a (top1_path_power ?\<alpha> ?a m) g}
+            = top1_group_pow ?mulA ?eA ?class_\<alpha> m" for m
+        proof (induct m)
+          case 0
+          \<comment> \<open>path_power 0 = constant_path, class = eA = group_pow 0.\<close>
+          show ?case unfolding top1_fundamental_group_id_def by (by5000 auto)
+        next
+          case (Suc k)
+          \<comment> \<open>path_power (Suc k) = path_product alpha (path_power k).\<close>
+          have h_pp: "top1_path_power ?\<alpha> ?a (Suc k) = top1_path_product ?\<alpha> (top1_path_power ?\<alpha> ?a k)"
+            by (by100 simp)
+          \<comment> \<open>Both alpha and path_power k are loops.\<close>
+          have h_pp_loop: "top1_is_loop_on ?A ?TA ?a (top1_path_power ?\<alpha> ?a k)"
+            by (rule top1_path_power_is_loop[OF hTA_loc h\<alpha>_loop])
+          \<comment> \<open>Class of product = product of classes.\<close>
+          have h_mul_class: "{g. top1_loop_equiv_on ?A ?TA ?a
+                (top1_path_product ?\<alpha> (top1_path_power ?\<alpha> ?a k)) g}
+              = ?mulA ?class_\<alpha> {g. top1_loop_equiv_on ?A ?TA ?a (top1_path_power ?\<alpha> ?a k) g}"
+            using top1_fundamental_group_mul_class[OF hTA_loc h\<alpha>_loop h_pp_loop] by (by100 simp)
+          show ?case using h_pp h_mul_class Suc by (by100 simp)
+        qed
         \<comment> \<open>Step D.4: homotopic loops have the same equivalence class.\<close>
         have h_class_eq: "{g. top1_loop_equiv_on ?A ?TA ?a ?\<iota>_loop g}
             = {g. top1_loop_equiv_on ?A ?TA ?a (top1_path_power ?\<alpha> ?a n) g}"
