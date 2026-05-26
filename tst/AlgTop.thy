@@ -6324,7 +6324,74 @@ proof -
       using h\<phi>_cont_iff hg_cont_top by (by100 blast)
     \<comment> \<open>Step D5: \<phi> is bijective.\<close>
     have h\<phi>_bij: "bij_betw \<phi> top1_S1 ?A"
-      sorry \<comment> \<open>Surjective: g surjective onto A. Injective: g injective mod fibers of R\_to\_S1.\<close>
+      unfolding bij_betw_def
+    proof (intro conjI)
+      show "inj_on \<phi> top1_S1"
+      proof (rule inj_onI)
+        fix z z' assume hz: "z \<in> top1_S1" and hz': "z' \<in> top1_S1" and heq: "\<phi> z = \<phi> z'"
+        have hR_surj: "top1_R_to_S1 ` top1_unit_interval = top1_S1"
+          using hR_quot unfolding top1_quotient_map_on_def by (by100 blast)
+        have "z \<in> top1_R_to_S1 ` top1_unit_interval" using hz hR_surj by (by100 blast)
+        then obtain t where ht: "t \<in> top1_unit_interval" "top1_R_to_S1 t = z" by (by100 blast)
+        have "z' \<in> top1_R_to_S1 ` top1_unit_interval" using hz' hR_surj by (by100 blast)
+        then obtain t' where ht': "t' \<in> top1_unit_interval" "top1_R_to_S1 t' = z'" by (by100 blast)
+        have "\<phi> z = ?g t" using h\<phi>_eq[rule_format, OF ht(1)] ht(2) by (by100 simp)
+        moreover have "\<phi> z' = ?g t'" using h\<phi>_eq[rule_format, OF ht'(1)] ht'(2) by (by100 simp)
+        ultimately have hgt: "?g t = ?g t'" using heq by (by100 simp)
+        \<comment> \<open>g(t) = g(t') implies R\_to\_S1(t) = R\_to\_S1(t') by hg\_const\_fibers logic.\<close>
+        have "top1_R_to_S1 t = top1_R_to_S1 t'"
+        proof -
+          have "t = t' \<or> (t = 0 \<and> t' = 1) \<or> (t = 1 \<and> t' = 0)"
+            using hgt hg_const_fibers ht(1) ht'(1) hq_S1 hq_inj hq_sep assms(1)
+            sorry \<comment> \<open>g(t)=g(t') \<Rightarrow> rotation identification \<Rightarrow> t'=t+k on [0,1] \<Rightarrow> same fiber.\<close>
+          thus ?thesis
+          proof (elim disjE conjE)
+            assume "t = t'" thus ?thesis by (by100 simp)
+          next
+            assume "t = 0" "t' = 1"
+            thus ?thesis unfolding top1_R_to_S1_def by (by100 simp)
+          next
+            assume "t = 1" "t' = 0"
+            thus ?thesis unfolding top1_R_to_S1_def by (by100 simp)
+          qed
+        qed
+        thus "z = z'" using ht(2) ht'(2) by (by100 simp)
+      qed
+    next
+      show "\<phi> ` top1_S1 = ?A"
+      proof
+        show "\<phi> ` top1_S1 \<subseteq> ?A" using h\<phi>_map by (by100 blast)
+      next
+        show "?A \<subseteq> \<phi> ` top1_S1"
+        proof
+          fix a assume "a \<in> ?A"
+          then obtain s where hs: "s \<in> top1_S1" and ha: "a = q s" by (by100 blast)
+          have hR_surj2: "top1_R_to_S1 ` top1_unit_interval = top1_S1"
+            using hR_quot unfolding top1_quotient_map_on_def by (by100 blast)
+          have "s \<in> top1_R_to_S1 ` top1_unit_interval" using hs hR_surj2 by (by100 blast)
+          then obtain \<theta> where h\<theta>: "\<theta> \<in> top1_unit_interval" "top1_R_to_S1 \<theta> = s" by (by100 blast)
+          \<comment> \<open>Need t \<in> [0,1] with g(t) = a = q(s). Since s = R\_to\_S1(\<theta>) = (cos 2\<pi>\<theta>, sin 2\<pi>\<theta>),
+             and g(t) = q(cos(2\<pi>t/n), sin(2\<pi>t/n)), we need q(cos(2\<pi>t/n),...) = q(cos 2\<pi>\<theta>,...).
+             This holds when 2\<pi>t/n \<equiv> 2\<pi>\<theta> mod 2\<pi>/n, i.e., t = n\<theta> + k for integer k.
+             Take t = n\<theta> mod 1.\<close>
+          let ?t = "real n * \<theta> - of_int (floor (real n * \<theta>))"
+          have h_t_I: "?t \<in> top1_unit_interval" unfolding top1_unit_interval_def
+          proof -
+            have "0 \<le> ?t" by (by100 linarith)
+            moreover have "?t < 1" by (by100 linarith)
+            hence "?t \<le> 1" by (by100 linarith)
+            ultimately show "?t \<in> {0..1}" by (by100 auto)
+          qed
+          have "?g ?t = a"
+            using ha h\<theta> hq_S1 assms(1)
+            sorry \<comment> \<open>g(n\<theta> mod 1) = q(cos(2\<pi>(n\<theta> mod 1)/n), sin(...)) = q(cos(2\<pi>\<theta> - ...floor...), sin(...))
+               = q(cos 2\<pi>\<theta>, sin 2\<pi>\<theta>) = q(s) = a by rotation identification under q.\<close>
+          hence "\<phi> (top1_R_to_S1 ?t) = a" using h\<phi>_eq h_t_I by (by100 simp)
+          moreover have "top1_R_to_S1 ?t \<in> top1_S1" using hR_surj2 h_t_I by (by100 blast)
+          ultimately show "a \<in> \<phi> ` top1_S1" by (by100 blast)
+        qed
+      qed
+    qed
     \<comment> \<open>Step D6: Theorem\_26\_6: compact S¹ \<rightarrow> Hausdorff A = homeomorphism.\<close>
     have hTA_top: "is_topology_on ?A ?TA"
       by (rule subspace_topology_is_topology_on[OF hTX hA_sub])
