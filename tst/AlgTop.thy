@@ -6765,7 +6765,73 @@ proof -
                      (\<lambda>s. (cos (2 * pi * s), sin (2 * pi * s))) g}}))
       (top1_quotient_group_mul_on (top1_fundamental_group_mul ?A ?TA ?a))
       (top1_Zn_group n) (top1_Zn_mul n)"
-    sorry \<comment> \<open>Under \<pi>_1(A,a) \<cong> Z, the relator [\<iota>\<circ>p] = n. Z/\<langle>n\<rangle> \<cong> Z/nZ by Z_quotient_nZ_iso.\<close>
+  proof -
+    let ?GA = "top1_fundamental_group_carrier ?A ?TA ?a"
+    let ?mulA = "top1_fundamental_group_mul ?A ?TA ?a"
+    let ?eA = "top1_fundamental_group_id ?A ?TA ?a"
+    let ?invA = "top1_fundamental_group_invg ?A ?TA ?a"
+    let ?relator = "top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1, 0)
+               ?A ?TA ?a \<iota>
+               {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0)
+                     (\<lambda>s. (cos (2 * pi * s), sin (2 * pi * s))) g}"
+    let ?N = "top1_normal_subgroup_generated_on ?GA ?mulA ?eA ?invA {?relator}"
+    \<comment> \<open>Step 10.1: Get iso phi: pi1(A,a) -> Z.
+       We have hA_Z_iso: pi1(A,a) iso Z. Extract an explicit iso.\<close>
+    obtain \<phi> where h\<phi>_iso: "top1_group_iso_on ?GA ?mulA top1_Z_group top1_Z_mul \<phi>"
+      using hA_Z unfolding top1_groups_isomorphic_on_def by (by100 blast)
+    \<comment> \<open>Step 10.2: phi maps the relator to plus/minus n.
+       The standard S1 loop goes around once. Under iota (= q on S1),
+       this maps to the loop q(cos(2*pi*t), sin(2*pi*t)) in A,
+       which equals the n-fold product of the A-generator alpha.
+       So phi(relator) = plus/minus n.\<close>
+    have h_relator_val: "\<phi> ?relator = int n \<or> \<phi> ?relator = - int n"
+      sorry \<comment> \<open>Core: iota maps S1 generator to n-th power of A generator.\<close>
+    \<comment> \<open>Step 10.3: Use quotient_group_iso_transfer: pi1(A)/N iso Z/phi(N).\<close>
+    have hgrpA: "top1_is_group_on ?GA ?mulA ?eA ?invA"
+      by (rule top1_fundamental_group_is_group[OF hTA_top ha_A])
+    have hrel_in_GA: "{?relator} \<subseteq> ?GA"
+      sorry \<comment> \<open>The relator class is in pi1(A,a).\<close>
+    have hN_normal: "top1_normal_subgroup_on ?GA ?mulA ?eA ?invA ?N"
+      by (rule normal_subgroup_generated_is_normal[OF hgrpA hrel_in_GA])
+    have hgrpZ: "top1_is_group_on top1_Z_group top1_Z_mul (0::int) uminus"
+    proof -
+      have "top1_Z_id = (0::int)" unfolding top1_Z_id_def by (by100 blast)
+      moreover have "top1_Z_invg = (uminus :: int \<Rightarrow> int)" unfolding top1_Z_invg_def by (by100 blast)
+      ultimately show ?thesis
+        using top1_Z_is_abelian_group unfolding top1_is_abelian_group_on_def by (by100 simp)
+    qed
+    have hquot_transfer: "top1_groups_isomorphic_on
+        (top1_quotient_group_carrier_on ?GA ?mulA ?N)
+        (top1_quotient_group_mul_on ?mulA)
+        (top1_quotient_group_carrier_on top1_Z_group top1_Z_mul (\<phi> ` ?N))
+        (top1_quotient_group_mul_on top1_Z_mul)"
+      using quotient_group_iso_transfer[OF hgrpA hgrpZ h\<phi>_iso hN_normal] by (by100 blast)
+    \<comment> \<open>Step 10.4: phi(N) = nZ. Whether relator maps to n or -n,
+       the generated normal subgroup is the same: nZ.\<close>
+    have hphiN_eq: "\<phi> ` ?N = top1_normal_subgroup_generated_on top1_Z_group top1_Z_mul (0::int) uminus {int n}"
+      sorry \<comment> \<open>phi maps generated-by-{relator} to generated-by-{phi(relator)} = generated-by-{n}.\<close>
+    \<comment> \<open>Step 10.5: Z/nZ iso by Z_quotient_nZ_iso.\<close>
+    have hn_ge: "n \<ge> 1" using assms(1) by (by100 linarith)
+    have hZ_nZ: "top1_groups_isomorphic_on
+        (top1_quotient_group_carrier_on top1_Z_group top1_Z_mul
+           (top1_normal_subgroup_generated_on top1_Z_group top1_Z_mul (0::int) uminus {int n}))
+        (top1_quotient_group_mul_on top1_Z_mul)
+        (top1_Zn_group n) (top1_Zn_mul n)"
+    proof -
+      have "top1_Z_group = (UNIV::int set)" unfolding top1_Z_group_def by (by100 blast)
+      moreover have "top1_Z_mul = ((+)::int \<Rightarrow> int \<Rightarrow> int)" unfolding top1_Z_mul_def by (by100 blast)
+      ultimately show ?thesis using Z_quotient_nZ_iso[OF hn_ge] by (by100 simp)
+    qed
+    \<comment> \<open>Compose: pi1(A)/N iso Z/phi(N) = Z/nZ iso Z/nZ.\<close>
+    have "top1_groups_isomorphic_on
+        (top1_quotient_group_carrier_on ?GA ?mulA ?N)
+        (top1_quotient_group_mul_on ?mulA)
+        (top1_quotient_group_carrier_on top1_Z_group top1_Z_mul
+           (top1_normal_subgroup_generated_on top1_Z_group top1_Z_mul (0::int) uminus {int n}))
+        (top1_quotient_group_mul_on top1_Z_mul)"
+      using hquot_transfer hphiN_eq by (by100 simp)
+    thus ?thesis by (rule groups_isomorphic_trans_fwd[OF _ hZ_nZ])
+  qed
   \<comment> \<open>Step 11: Compose: \<pi>_1(X,a) \<cong> \<pi>_1(A,a)/\<langle>\<langle>relator\<rangle>\<rangle> \<cong> Z/nZ.\<close>
   have hmain: "top1_groups_isomorphic_on
       (top1_fundamental_group_carrier X TX ?a)
