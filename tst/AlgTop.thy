@@ -6507,7 +6507,31 @@ proof -
             have hj_eq: "?m + int ?k = ?j * int n" using hmod0 by (by100 auto)
             \<comment> \<open>2\<pi>?t/n = 2\<pi>?k/n + 2\<pi>\<theta> - 2\<pi>?j (where j is an integer).\<close>
             have h_angle2: "2*pi*?t/real n = 2*pi*real ?k/real n + 2*pi*\<theta> - real_of_int ?j * (2*pi)"
-              sorry \<comment> \<open>field_simps: h_angle + hj_eq algebra\<close>
+            proof -
+              \<comment> \<open>From hj_eq: m + k = j*n, so m = j*n - k.\<close>
+              from hj_eq have hm_rel: "?m = ?j * int n - int ?k" by (by100 linarith)
+              \<comment> \<open>real_of_int m = real_of_int j * real n - real k.\<close>
+              have hint_n: "int n > 0" using assms(1) by (by100 simp)
+              have hk_nn: "int ?k \<ge> 0" using hint_n by (by100 simp)
+              have "real_of_int (int ?k) = real ?k" using hk_nn by (by100 simp)
+              have hm_real: "real_of_int ?m = real_of_int ?j * real n - real ?k"
+              proof -
+                from hm_rel have "real_of_int ?m = real_of_int (?j * int n - int ?k)" by (by100 simp)
+                also have "\<dots> = real_of_int (?j * int n) - real_of_int (int ?k)" by (by100 simp)
+                also have "real_of_int (?j * int n) = real_of_int ?j * real n" by (by100 simp)
+                also have "real_of_int (int ?k) = real ?k" using hk_nn by (by100 simp)
+                finally show ?thesis by (by100 linarith)
+              qed
+              \<comment> \<open>So 2*pi*m/n = 2*pi*(j*n - k)/n = 2*pi*j - 2*pi*k/n.\<close>
+              have "2*pi * real_of_int ?m / real n = 2*pi * real_of_int ?j - 2*pi * real ?k / real n"
+                using hm_real hn_ne by (simp add: diff_divide_eq_iff right_diff_distrib')
+              \<comment> \<open>h_angle gives 2*pi*t/n = 2*pi*theta - 2*pi*m/n.\<close>
+              hence "2*pi*?t/real n = 2*pi*\<theta> - (2*pi * real_of_int ?j - 2*pi * real ?k / real n)"
+                using h_angle by (by100 linarith)
+              hence "2*pi*?t/real n = 2*pi * real ?k / real n + 2*pi*\<theta> - 2*pi * real_of_int ?j"
+                by (by100 linarith)
+              thus ?thesis by (by100 simp)
+            qed
             \<comment> \<open>cos/sin at angle 2\<pi>?t/n = cos/sin at angle 2\<pi>?k/n + 2\<pi>\<theta> (periodicity).\<close>
             \<comment> \<open>cos/sin periodicity via R\_to\_S1\_int\_shift: t/n = k/n + \<theta> - j.\<close>
             \<comment> \<open>From h_angle2 + R_to_S1_int_shift: cos/sin at 2πt/n = cos/sin at 2πk/n+2πθ.\<close>
