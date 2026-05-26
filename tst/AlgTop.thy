@@ -6874,7 +6874,28 @@ proof -
         qed
         \<comment> \<open>alpha is continuous on [0,1] into A.\<close>
         have h\<alpha>_cont: "top1_is_path_on ?A ?TA ?a ?a ?\<alpha>"
-          sorry \<comment> \<open>Composition of continuous: gamma into S1, iota from S1 to A.\<close>
+        proof -
+          \<comment> \<open>gamma maps [0,1] into S1.\<close>
+          have h\<gamma>_image: "\<forall>t \<in> top1_unit_interval. ?\<gamma> t \<in> top1_S1"
+            unfolding top1_S1_def top1_unit_interval_def by (by100 auto)
+          \<comment> \<open>gamma is continuous on [0,1] (cos and sin are continuous).\<close>
+          have h\<gamma>_cont_on: "continuous_on top1_unit_interval ?\<gamma>"
+            using assms(1) by (intro continuous_intros; by100 simp)
+          \<comment> \<open>Bridge to formal continuous_map_on.\<close>
+          have h\<gamma>_cmap: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+              top1_S1 top1_S1_topology ?\<gamma>"
+            sorry \<comment> \<open>Bridge: continuous_on + image ⊆ S1 → continuous_map_on between subspace topologies.\<close>
+          \<comment> \<open>Compose gamma with iota.\<close>
+          have h_comp: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+              ?A ?TA (\<iota> \<circ> ?\<gamma>)"
+            by (rule top1_continuous_map_on_comp[OF h\<gamma>_cmap h\<iota>_cont])
+          have h\<alpha>_eq: "(\<iota> \<circ> ?\<gamma>) = ?\<alpha>" by (by100 auto)
+          have h\<alpha>_cmap: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+              ?A ?TA ?\<alpha>"
+            using h_comp h\<alpha>_eq by (by100 simp)
+          show ?thesis using h\<alpha>_cmap h\<alpha>0 h\<alpha>1
+            unfolding top1_is_path_on_def by (by100 blast)
+        qed
         show ?thesis using h\<alpha>_cont h\<alpha>0 h\<alpha>1
           unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
       qed
