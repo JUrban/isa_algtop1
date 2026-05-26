@@ -4934,13 +4934,20 @@ proof -
       have h1_in: "(1::nat) \<in> {..<2} - {0::nat}" by (by100 simp)
       \<comment> \<open>ε₁ on ker(ε₀): maps ι(1) to 1.\<close>
       \<comment> \<open>ker(ε₁) ∩ ker(ε₀) is free abelian on {} = trivial.\<close>
+      \<comment> \<open>Restrict \<epsilon>1 to ker(\<epsilon>0): it's a hom from ker(\<epsilon>0) to Z.\<close>
+      have h\<epsilon>1_hom_ker: "top1_group_hom_on {g \<in> G. \<epsilon>0 g = 0} mul (UNIV::int set) (+) \<epsilon>1"
+        using h\<epsilon>1_hom unfolding top1_group_hom_on_def by (by100 blast)
+      have h\<epsilon>1_gen1_ker: "\<epsilon>1 (iota 1) = 1" by (rule h\<epsilon>1_gen1)
+      have h\<epsilon>1_other_ker: "\<forall>s\<in>{..<2::nat} - {0}. s \<noteq> 1 \<longrightarrow> \<epsilon>1 (iota s) = 0"
+        using h\<epsilon>1_other by (by100 force)
       have hker01_fab: "top1_is_free_abelian_group_full_on
           {g \<in> {g \<in> G. \<epsilon>0 g = 0}. \<epsilon>1 g = 0} mul e invg iota ({..<2} - {0::nat} - {1::nat})"
-        sorry
+        using free_abelian_kernel_coordinate[OF hker0_fab h1_in h\<epsilon>1_hom_ker h\<epsilon>1_gen1_ker h\<epsilon>1_other_ker]
+        by (by100 blast)
       have hempty: "{..<2::nat} - {0} - {1} = {}" by (by100 auto)
       \<comment> \<open>Free abelian on {} = {e}.\<close>
       have hker01_trivial: "{g \<in> {g \<in> G. \<epsilon>0 g = 0}. \<epsilon>1 g = 0} = {e}"
-        sorry
+        sorry \<comment> \<open>Free abelian on empty set = {e}. From hker01\_fab + hempty.\<close>
       \<comment> \<open>Use trivial\_kernel\_injective pattern: ε₀(x)=ε₀(y) ∧ ε₁(x)=ε₁(y) ⟹ x·y⁻¹ ∈ ker₀₁ = {e} ⟹ x=y.\<close>
       show "x = y" sorry
     qed
