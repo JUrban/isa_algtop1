@@ -6982,7 +6982,32 @@ proof -
           have hTA_loc: "is_topology_on ?A ?TA" by (rule subspace_topology_is_topology_on[OF hTX hA_sub])
           have hclass_all: "\<And>f. f \<in> ?std_class \<Longrightarrow>
               {g. top1_loop_equiv_on ?A ?TA ?a (\<iota> \<circ> f) g} = {g. top1_loop_equiv_on ?A ?TA ?a ?\<iota>_loop g}"
-            sorry \<comment> \<open>f ~ std_loop implies iota.f ~ iota.std_loop, hence same class.\<close>
+          proof -
+            fix f assume hf: "f \<in> ?std_class"
+            hence hf_equiv: "top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) ?std_loop f"
+              unfolding top1_loop_equiv_on_def by (by100 blast)
+            hence hf_loop: "top1_is_loop_on top1_S1 top1_S1_topology (1, 0) f"
+              unfolding top1_loop_equiv_on_def by (by100 blast)
+            have hf_htpy: "top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0) ?std_loop f"
+              using hf_equiv unfolding top1_loop_equiv_on_def by (by100 blast)
+            \<comment> \<open>iota is continuous S1 -> A, so iota.std_loop ~ iota.f.\<close>
+            have hS1_top_loc: "is_topology_on top1_S1 top1_S1_topology"
+              using top1_S1_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
+            have h\<iota>_cmapS1: "top1_continuous_map_on top1_S1 top1_S1_topology ?A ?TA \<iota>"
+              using h\<iota>_cont by (by100 blast)
+            from top1_continuous_preserves_path_homotopy[OF hS1_top_loc h\<iota>_cmapS1
+                standard_S1_loop_is_loop hf_loop hf_htpy]
+            have "top1_path_homotopic_on ?A ?TA (\<iota> (1,0)) (\<iota> (1,0)) (\<iota> \<circ> ?std_loop) (\<iota> \<circ> f)" .
+            have h\<iota>_10_loc: "\<iota> (1, 0) = ?a"
+              using h\<iota>_eq h10_S1 hq_10 by (by100 simp)
+            have h\<iota>_loop_eq: "(\<iota> \<circ> ?std_loop) = ?\<iota>_loop"
+              by (by100 auto)
+            hence h\<iota>_htpy: "top1_path_homotopic_on ?A ?TA ?a ?a ?\<iota>_loop (\<iota> \<circ> f)"
+              using \<open>top1_path_homotopic_on ?A ?TA (\<iota> (1,0)) (\<iota> (1,0)) (\<iota> \<circ> ?std_loop) (\<iota> \<circ> f)\<close>
+                    h\<iota>_10_loc by (by100 simp)
+            show "{g. top1_loop_equiv_on ?A ?TA ?a (\<iota> \<circ> f) g} = {g. top1_loop_equiv_on ?A ?TA ?a ?\<iota>_loop g}"
+              using path_homotopic_same_class[OF hTA_loc h\<iota>_htpy] by (by100 simp)
+          qed
           \<comment> \<open>Therefore the existential collapses.\<close>
           hence "?relator = {g. top1_loop_equiv_on ?A ?TA ?a ?\<iota>_loop g}"
             using hdef hstd_in by (by5000 blast)
