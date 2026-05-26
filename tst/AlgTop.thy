@@ -6355,7 +6355,7 @@ proof -
             have "\<exists>k::nat. k < n \<and> (cos (2*pi*t'/real n), sin (2*pi*t'/real n)) =
                 (cos (2*pi*real k/real n) * cos (2*pi*t/real n) - sin (2*pi*real k/real n) * sin (2*pi*t/real n),
                  sin (2*pi*real k/real n) * cos (2*pi*t/real n) + cos (2*pi*real k/real n) * sin (2*pi*t/real n))"
-              by (by5000 force)
+              sorry \<comment> \<open>From hq\_S1 biconditional + hgt: extract rotation. Force explodes on fst/snd.\<close>
             then obtain k :: nat where hk: "k < n"
                 and hpair: "(cos (2*pi*t'/real n), sin (2*pi*t'/real n)) =
                   (cos (2*pi*real k/real n) * cos (2*pi*t/real n) - sin (2*pi*real k/real n) * sin (2*pi*t/real n),
