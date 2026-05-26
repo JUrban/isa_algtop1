@@ -6835,7 +6835,49 @@ proof -
       \<comment> \<open>Step B: alpha is a loop in A based at a (since gamma(0) = p and gamma(1) = r(p),
          and iota(p) = iota(r(p)) = a because q identifies rotations).\<close>
       have h\<alpha>_loop: "top1_is_loop_on ?A ?TA ?a ?\<alpha>"
-        sorry
+      proof -
+        \<comment> \<open>alpha(0) = iota(1,0) = a.\<close>
+        have h\<alpha>0: "?\<alpha> 0 = ?a"
+        proof -
+          have "?\<gamma> 0 = (1, 0)" by (by100 simp)
+          hence "?\<alpha> 0 = \<iota> (1, 0)" by (by100 simp)
+          also have "\<dots> = ?a" using h\<iota>_eq h10_S1 hq_10 by (by100 simp)
+          finally show ?thesis .
+        qed
+        \<comment> \<open>alpha(1) = iota(cos(2pi/n), sin(2pi/n)) = iota(r(1,0)) = q(r(1,0)) = q(1,0) = a.\<close>
+        have h\<alpha>1: "?\<alpha> 1 = ?a"
+        proof -
+          let ?pt = "(cos (2*pi*1/real n), sin (2*pi*1/real n))"
+          have h1: "?\<alpha> 1 = \<iota> ?pt" by (by100 simp)
+          have hpt_S1: "?pt \<in> top1_S1" unfolding top1_S1_def by (by100 auto)
+          have h2: "\<iota> ?pt = q ?pt" using h\<iota>_eq hpt_S1 by (by100 blast)
+          have h3: "q ?pt = q (1, 0)"
+          proof (cases "n = 1")
+            case True
+            \<comment> \<open>n=1: pt = (cos(2pi), sin(2pi)) = (1,0).\<close>
+            hence "?pt = (1, 0)" by (by100 simp)
+            thus ?thesis by (by100 simp)
+          next
+            case False
+            hence "n \<ge> 2" using assms(1) by (by100 linarith)
+            hence "1 < n" by (by100 linarith)
+            moreover have "?pt = (cos (2*pi*real 1/real n) * fst (1::real, 0::real)
+                - sin (2*pi*real 1/real n) * snd (1::real, 0::real),
+                sin (2*pi*real 1/real n) * fst (1::real, 0::real)
+                + cos (2*pi*real 1/real n) * snd (1::real, 0::real))"
+              by (by100 simp)
+            ultimately have "q (1, 0) = q ?pt"
+              using hq_S1[rule_format, OF h10_S1 hpt_S1] by (by100 blast)
+            thus ?thesis by (by100 simp)
+          qed
+          show ?thesis using h1 h2 h3 hq_10 by (by100 simp)
+        qed
+        \<comment> \<open>alpha is continuous on [0,1] into A.\<close>
+        have h\<alpha>_cont: "top1_is_path_on ?A ?TA ?a ?a ?\<alpha>"
+          sorry \<comment> \<open>Composition of continuous: gamma into S1, iota from S1 to A.\<close>
+        show ?thesis using h\<alpha>_cont h\<alpha>0 h\<alpha>1
+          unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+      qed
       \<comment> \<open>Step C: The class of alpha generates pi1(A,a), i.e. phi([alpha]) = +/-1.\<close>
       let ?class_\<alpha> = "{g. top1_loop_equiv_on ?A ?TA ?a ?\<alpha> g}"
       have h\<alpha>_gen: "\<phi> ?class_\<alpha> = 1 \<or> \<phi> ?class_\<alpha> = -1"
