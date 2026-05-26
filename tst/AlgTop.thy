@@ -4655,7 +4655,26 @@ lemma presented_by_commutators_abelian:
     and hcomm: "\<forall>w\<in>R. \<exists>s1\<in>S. \<exists>s2\<in>S.
         w = [(s1, True), (s2, True), (s1, False), (s2, False)]"
   shows "top1_is_abelian_group_on G mul e invg"
-  sorry
+proof -
+  \<comment> \<open>Extract free group F, gen map \<iota>, projection \<pi>.\<close>
+  have hG_grp: "top1_is_group_on G mul e invg"
+    using hpres unfolding top1_group_presented_by_on_def by (by100 blast)
+  from hpres obtain F :: "int set" and mulF eF invgF and \<iota> :: "'b \<Rightarrow> int" and \<pi> where
+    hF_free: "top1_is_free_group_full_on F mulF eF invgF \<iota> S" and
+    hpi_hom: "top1_group_hom_on F mulF G mul \<pi>" and
+    hpi_surj: "\<pi> ` F = G" and
+    hpi_ker: "top1_group_kernel_on F e \<pi> = top1_normal_subgroup_generated_on F mulF eF invgF
+        {r. \<exists>w\<in>R. r = top1_group_word_product mulF eF invgF (map (\<lambda>(s,b). (\<iota> s, b)) w)}"
+    unfolding top1_group_presented_by_on_def by (by5000 auto)
+  \<comment> \<open>Each relator w \<in> R maps to commutator \<iota>(s1)\<iota>(s2)\<iota>(s1)\<inverse>\<iota>(s2)\<inverse> in F.
+     Under \<pi>: \<pi>(\<iota>(s1))\<pi>(\<iota>(s2))\<pi>(\<iota>(s1))\<inverse>\<pi>(\<iota>(s2))\<inverse> = e in G.
+     So \<pi>(\<iota>(s1)) and \<pi>(\<iota>(s2)) commute in G for all s1,s2 \<in> S.\<close>
+  \<comment> \<open>Since \<pi>(\<iota>(S)) generates G (via \<pi> surjective), all elements commute.\<close>
+  \<comment> \<open>All generators of G commute (from relators being commutators).
+     Since generators generate G, G is abelian.
+     Needs: "pairwise commuting generators \<Rightarrow> group is abelian."\<close>
+  show ?thesis sorry
+qed
 
 text \<open>Helper: abelian group has trivial commutator subgroup.\<close>
 lemma abelian_commutator_trivial:
@@ -4800,8 +4819,62 @@ proof -
     have hG_abelian: "top1_is_abelian_group_on G mulG eG invgG"
       using presented_by_commutators_abelian[OF hpres hrelator_comm] by (by100 blast)
     \<comment> \<open>Transfer: G abelian + G \<cong> \<pi>\_1(T) \<Rightarrow> \<pi>\_1(T) abelian.\<close>
-    show ?thesis using hG_abelian hiso_pi1
-      sorry \<comment> \<open>iso preserves abelian: G abelian + G \<cong> \<pi>\_1 \<Rightarrow> \<pi>\_1 abelian.\<close>
+    \<comment> \<open>Iso preserves abelian: G abelian + G \<cong> H \<Rightarrow> H abelian.\<close>
+    from hiso_pi1 obtain f where hf_iso: "top1_group_iso_on G mulG
+        (top1_fundamental_group_carrier T_torus TT x0)
+        (top1_fundamental_group_mul T_torus TT x0) f"
+      unfolding top1_groups_isomorphic_on_def by (by100 blast)
+    show ?thesis unfolding top1_is_abelian_group_on_def
+    proof (intro conjI ballI)
+      have hTT: "is_topology_on T_torus TT"
+      proof -
+        have "top1_quotient_of_scheme_on T_torus TT (top1_n_torus_scheme 1)"
+          using h1fold unfolding top1_is_n_fold_torus_on_def by (by100 blast)
+        hence "is_topology_on_strict T_torus TT"
+          unfolding top1_quotient_of_scheme_on_def by (by100 blast)
+        thus ?thesis unfolding is_topology_on_strict_def by (by100 blast)
+      qed
+      have hpi1_grp: "top1_is_group_on
+          (top1_fundamental_group_carrier T_torus TT x0)
+          (top1_fundamental_group_mul T_torus TT x0)
+          (top1_fundamental_group_id T_torus TT x0)
+          (top1_fundamental_group_invg T_torus TT x0)"
+        using top1_fundamental_group_is_group[OF hTT assms(2)] by (by100 blast)
+      show "top1_is_group_on
+          (top1_fundamental_group_carrier T_torus TT x0)
+          (top1_fundamental_group_mul T_torus TT x0)
+          (top1_fundamental_group_id T_torus TT x0)
+          (top1_fundamental_group_invg T_torus TT x0)"
+        by (rule hpi1_grp)
+    next
+      fix x y
+      assume hx: "x \<in> top1_fundamental_group_carrier T_torus TT x0"
+         and hy: "y \<in> top1_fundamental_group_carrier T_torus TT x0"
+      show "top1_fundamental_group_mul T_torus TT x0 x y =
+            top1_fundamental_group_mul T_torus TT x0 y x"
+      proof -
+        let ?pi1 = "top1_fundamental_group_carrier T_torus TT x0"
+        let ?mulpi = "top1_fundamental_group_mul T_torus TT x0"
+        have hf_bij: "bij_betw f G ?pi1"
+          using hf_iso unfolding top1_group_iso_on_def by (by100 blast)
+        have hf_hom: "top1_group_hom_on G mulG ?pi1 ?mulpi f"
+          using hf_iso unfolding top1_group_iso_on_def by (by100 blast)
+        have hf_surj: "f ` G = ?pi1" using hf_bij unfolding bij_betw_def by (by100 blast)
+        have "x \<in> f ` G" using hf_surj hx by (by100 blast)
+        then obtain a where "a \<in> G" "f a = x" by (by100 blast)
+        have "y \<in> f ` G" using hf_surj hy by (by100 blast)
+        then obtain b where "b \<in> G" "f b = y" by (by100 blast)
+        have "?mulpi x y = ?mulpi (f a) (f b)" using \<open>f a = x\<close> \<open>f b = y\<close> by (by100 simp)
+        also have "\<dots> = f (mulG a b)"
+          using hf_hom \<open>a \<in> G\<close> \<open>b \<in> G\<close> unfolding top1_group_hom_on_def by (by100 blast)
+        also have "mulG a b = mulG b a"
+          using hG_abelian \<open>a \<in> G\<close> \<open>b \<in> G\<close> unfolding top1_is_abelian_group_on_def by (by100 blast)
+        also have "f (mulG b a) = ?mulpi (f b) (f a)"
+          using hf_hom \<open>a \<in> G\<close> \<open>b \<in> G\<close> unfolding top1_group_hom_on_def by (by100 blast)
+        also have "\<dots> = ?mulpi y x" using \<open>f a = x\<close> \<open>f b = y\<close> by (by100 simp)
+        finally show ?thesis .
+      qed
+    qed
   qed
   \<comment> \<open>Step 4: phi bijective (abelian \<Rightarrow> ker = {e} \<Rightarrow> injective + surjective = bijective).\<close>
   have hphi_bij: "bij_betw phi
