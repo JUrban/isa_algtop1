@@ -4757,10 +4757,37 @@ qed
 
 text \<open>Helper: free abelian group on {..<2} is isomorphic to Z \<times> Z.\<close>
 lemma free_abelian_2_iso_ZZ:
-  assumes "top1_is_free_abelian_group_full_on G mul e invg iota ({..<2}::nat set)"
+  assumes hfab: "top1_is_free_abelian_group_full_on G mul e invg iota ({..<2}::nat set)"
   shows "top1_groups_isomorphic_on G mul (UNIV::(int \<times> int) set)
     (\<lambda>(a1, a2) (b1, b2). (a1 + b1, a2 + b2))"
-  sorry
+proof -
+  have h0: "(0::nat) \<in> {..<2}" by (by100 simp)
+  have h1: "(1::nat) \<in> {..<2}" by (by100 simp)
+  \<comment> \<open>Coordinate projections \<epsilon>\_0, \<epsilon>\_1.\<close>
+  from free_abelian_coordinate_projection[OF hfab h0]
+  obtain \<epsilon>0 where h\<epsilon>0_hom: "top1_group_hom_on G mul (UNIV::int set) (+) \<epsilon>0"
+    and h\<epsilon>0_gen0: "\<epsilon>0 (iota 0) = 1"
+    and h\<epsilon>0_other: "\<forall>s\<in>{..<2::nat}. s \<noteq> 0 \<longrightarrow> \<epsilon>0 (iota s) = 0"
+    by (by5000 blast)
+  have h\<epsilon>0_gen1: "\<epsilon>0 (iota 1) = 0" using h\<epsilon>0_other by (by100 force)
+  from free_abelian_coordinate_projection[OF hfab h1]
+  obtain \<epsilon>1 where h\<epsilon>1_hom: "top1_group_hom_on G mul (UNIV::int set) (+) \<epsilon>1"
+    and h\<epsilon>1_gen1: "\<epsilon>1 (iota 1) = 1"
+    and h\<epsilon>1_other: "\<forall>s\<in>{..<2::nat}. s \<noteq> 1 \<longrightarrow> \<epsilon>1 (iota s) = 0"
+    by (by5000 blast)
+  have h\<epsilon>1_gen0: "\<epsilon>1 (iota 0) = 0" using h\<epsilon>1_other by (by100 force)
+  \<comment> \<open>Product map \<Phi>(g) = (\<epsilon>\_0(g), \<epsilon>\_1(g)).\<close>
+  define \<Phi> where "\<Phi> g = (\<epsilon>0 g, \<epsilon>1 g)" for g
+  \<comment> \<open>\<Phi> is a group hom G \<rightarrow> Z\<times>Z.\<close>
+  have h\<Phi>_hom: "top1_group_hom_on G mul (UNIV::(int \<times> int) set)
+      (\<lambda>(a1, a2) (b1, b2). (a1 + b1, a2 + b2)) \<Phi>"
+    sorry
+  \<comment> \<open>\<Phi> is bijective (injective: ker = {e}; surjective: (m,n) = m*\<iota>(0) + n*\<iota>(1)).\<close>
+  have h\<Phi>_bij: "bij_betw \<Phi> G (UNIV::(int \<times> int) set)"
+    sorry
+  show ?thesis unfolding top1_groups_isomorphic_on_def
+    using h\<Phi>_hom h\<Phi>_bij unfolding top1_group_iso_on_def by (by100 blast)
+qed
 
 (** from \<S>73 Theorem 73.1: \<pi>_1(torus) has presentation <\<alpha>, \<beta> | \<alpha>\<beta>\<alpha>^{-1}\<beta>^{-1}>,
     i.e. is isomorphic to the free abelian group Z \<times> Z on 2 generators. **)
