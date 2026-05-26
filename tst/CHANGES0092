@@ -1,0 +1,23 @@
+CHANGES0092 — Session E §73 completion work
+
+presented_by_commutators_abelian PROVED:
+  - New helpers: centralizer_is_subgroup, surjective_hom_preserves_generation
+  - Two-round centralizer argument: commuting generators → abelian group
+  - Strengthened assumption (hcovers: all pairs have commutator relator)
+
+Theorem_73_4_dunce_cap restructured:
+  - Proper base-point: a = q(1,0), with Corollary_52_2 base-point change
+  - Theorem_72_1 applied directly (not sorry'd)
+  - Composition step proved (groups_isomorphic_trans_fwd)
+  - X path-connected proved (continuous surjective image of B²)
+  - S¹ closed in B² proved (preimage of {..1} under continuous norm-sq)
+  - q|_{Int B²} homeomorphism proved (Theorem_22_1 + bij_quotient)
+  - B² compact proved (closed bounded + compact_Icc_Times)
+  - A = q(S¹) closed in X proved (compact_hausdorff_continuous_closed_map)
+
+Remaining dunce cap sorrys (3):
+  - hA_circle: quotient of S¹ by n-fold rotation ≅ S¹
+  - hX_haus: dunce cap quotient is Hausdorff
+  - hquot_ZnZ: quotient π₁(A)/⟨⟨relator⟩⟩ ≅ Z/nZ
+
+39 → 38 sorrys
