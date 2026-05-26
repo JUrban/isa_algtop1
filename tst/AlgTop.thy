@@ -5499,15 +5499,9 @@ proof -
       have "{z \<in> top1_B2. q z = p} \<subseteq>
           {z \<in> top1_B2 - top1_S1. q z = p} \<union> {z \<in> top1_S1. q z = p}" by (by100 blast)
       moreover have "finite {z \<in> top1_B2 - top1_S1. q z = p}"
-      proof -
-        have "\<And>z1 z2. z1 \<in> top1_B2 - top1_S1 \<Longrightarrow> z2 \<in> top1_B2 - top1_S1 \<Longrightarrow>
-            q z1 = p \<Longrightarrow> q z2 = p \<Longrightarrow> z1 = z2"
-          using hq_inj unfolding inj_on_def by (by5000 metis)
-        hence "card {z \<in> top1_B2 - top1_S1. q z = p} \<le> 1" sorry
-        thus ?thesis sorry
-      qed
-      moreover have "finite {z \<in> top1_S1. q z = p}" sorry
-        \<comment> \<open>Orbit under n-fold rotation: |\<le> n points.\<close>
+        sorry \<comment> \<open>Injective on B²-S¹ means the fiber has at most 1 element.\<close>
+      moreover have "finite {z \<in> top1_S1. q z = p}"
+        sorry \<comment> \<open>Orbit of a point under n-fold rotation has \<le> n points, hence finite.\<close>
       ultimately show "finite {z \<in> top1_B2. q z = p}"
         using finite_subset by (by5000 blast)
     qed
