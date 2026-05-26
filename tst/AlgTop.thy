@@ -6956,7 +6956,48 @@ proof -
          gives t -> iota(cos(2*pi*t), sin(2*pi*t)) which equals alpha composed n times
          (up to path homotopy).\<close>
       have h_relator_is_alpha_n: "?relator = top1_group_pow ?mulA ?eA ?class_\<alpha> n"
-        sorry \<comment> \<open>iota . std_loop ~ alpha^n: path decomposition into n arcs.\<close>
+      proof -
+        \<comment> \<open>Following Munkres: iota . (std S1 loop) decomposes as alpha^n.
+           For t in [k/n, (k+1)/n], the std loop at t is a rotation of gamma(nt-k).
+           Since q identifies rotations, q . (std loop) restricted to each piece equals alpha reparametrized.
+           So iota . (std loop) is path-homotopic to alpha * alpha * ... * alpha (n times).\<close>
+        have hTA_loc: "is_topology_on ?A ?TA" by (rule subspace_topology_is_topology_on[OF hTX hA_sub])
+        let ?std_loop = "\<lambda>s::real. (cos (2*pi*s), sin (2*pi*s))"
+        let ?\<iota>_loop = "\<lambda>s. \<iota> (?std_loop s)"
+        \<comment> \<open>Step D.1: iota . std_loop is path-homotopic to the n-fold product of alpha in A.\<close>
+        have h_htpy: "top1_path_homotopic_on ?A ?TA ?a ?a ?\<iota>_loop
+            (top1_path_power ?\<alpha> ?a n)"
+          sorry \<comment> \<open>Reparametrization: q identifies rotations, so each 1/n piece of the loop equals alpha.\<close>
+        \<comment> \<open>Step D.2: The relator is the class of iota . std_loop.\<close>
+        have h_rel_class: "?relator = {g. top1_loop_equiv_on ?A ?TA ?a ?\<iota>_loop g}"
+        proof -
+          let ?std_class = "{g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) ?std_loop g}"
+          \<comment> \<open>By definition: relator = {g. EX f in std_class. loop_equiv(iota . f, g)}.\<close>
+          have hdef: "?relator = {g. \<exists>f \<in> ?std_class. top1_loop_equiv_on ?A ?TA ?a (\<iota> \<circ> f) g}"
+            unfolding top1_fundamental_group_induced_on_def by (by100 blast)
+          \<comment> \<open>std_loop is in its own class (reflexivity).\<close>
+          have hstd_in: "?std_loop \<in> ?std_class"
+            using top1_loop_equiv_on_refl[OF standard_S1_loop_is_loop] by (by100 blast)
+          \<comment> \<open>For any f in std_class, iota.f ~ iota.std_loop (continuous map preserves homotopy).\<close>
+          have hTA_loc: "is_topology_on ?A ?TA" by (rule subspace_topology_is_topology_on[OF hTX hA_sub])
+          have hclass_all: "\<And>f. f \<in> ?std_class \<Longrightarrow>
+              {g. top1_loop_equiv_on ?A ?TA ?a (\<iota> \<circ> f) g} = {g. top1_loop_equiv_on ?A ?TA ?a ?\<iota>_loop g}"
+            sorry \<comment> \<open>f ~ std_loop implies iota.f ~ iota.std_loop, hence same class.\<close>
+          \<comment> \<open>Therefore the existential collapses.\<close>
+          hence "?relator = {g. top1_loop_equiv_on ?A ?TA ?a ?\<iota>_loop g}"
+            using hdef hstd_in by (by5000 blast)
+          thus ?thesis .
+        qed
+        \<comment> \<open>Step D.3: path_power n gives the n-fold path product, whose class is group_pow n.\<close>
+        have h_pow_class: "{g. top1_loop_equiv_on ?A ?TA ?a (top1_path_power ?\<alpha> ?a n) g}
+            = top1_group_pow ?mulA ?eA ?class_\<alpha> n"
+          sorry \<comment> \<open>Path power class = group power of class. Induction on n.\<close>
+        \<comment> \<open>Step D.4: homotopic loops have the same equivalence class.\<close>
+        have h_class_eq: "{g. top1_loop_equiv_on ?A ?TA ?a ?\<iota>_loop g}
+            = {g. top1_loop_equiv_on ?A ?TA ?a (top1_path_power ?\<alpha> ?a n) g}"
+          by (rule path_homotopic_same_class[OF hTA_loc h_htpy])
+        show ?thesis using h_rel_class h_class_eq h_pow_class by (by100 simp)
+      qed
       \<comment> \<open>Step E: phi is a hom, so phi([alpha]^n) = phi([alpha])^n in Z.\<close>
       have h\<alpha>_in_GA: "?class_\<alpha> \<in> ?GA"
         using h\<alpha>_loop unfolding top1_fundamental_group_carrier_def by (by100 blast)
