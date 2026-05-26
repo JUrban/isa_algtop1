@@ -5592,7 +5592,17 @@ proof -
           hence hrot_C0_S1: "?rot k ` ?C0 \<subseteq> top1_S1" by (by100 blast)
           \<comment> \<open>r^k is continuous on S¹ (restriction of continuous linear map on R²).\<close>
           have hrot_cont: "top1_continuous_map_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology (?rot k)"
-            sorry \<comment> \<open>Rotation is a linear (hence continuous) map R² \<rightarrow> R²; restriction to S¹ is continuous.\<close>
+          proof -
+            \<comment> \<open>Rotation is continuous on UNIV (linear map = polynomial = continuous).\<close>
+            have hrot_cont_R2: "continuous_on UNIV (?rot k)"
+              by (intro continuous_intros)
+            \<comment> \<open>Rotation maps S¹ to S¹ (proved above).\<close>
+            have hrot_maps: "\<And>p. p \<in> top1_S1 \<Longrightarrow> ?rot k p \<in> top1_S1"
+              using hrot_S1 by (by100 blast)
+            \<comment> \<open>By top1_continuous_map_on_real2_subspace: continuous from S¹ to S¹.\<close>
+            from top1_continuous_map_on_real2_subspace[OF hrot_maps hrot_cont_R2]
+            show ?thesis unfolding top1_S1_topology_def .
+          qed
           \<comment> \<open>S¹ is compact and Hausdorff \<Rightarrow> closed map.\<close>
           have hS1_haus: "is_hausdorff_on top1_S1 top1_S1_topology"
           proof -
