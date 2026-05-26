@@ -5418,20 +5418,11 @@ proof -
   \<comment> \<open>Step 3: X is Hausdorff (compact quotient of B²).\<close>
   have hX_haus: "is_hausdorff_on X TX"
     sorry \<comment> \<open>Quotient of compact Hausdorff B² by closed equivalence relation is Hausdorff.\<close>
-  \<comment> \<open>Step 4: A is closed in X (image of compact S¹ under quotient map to Hausdorff X).\<close>
-  have hA_cl: "closedin_on X TX ?A"
-    sorry \<comment> \<open>Continuous image of compact S¹ in Hausdorff X is closed.\<close>
-  \<comment> \<open>Step 5: q restricted to Int(B²) = B² - S¹ is a homeomorphism onto X - A.
-     Proof: B² - S¹ is open and saturated in B², so by Thm 22.1 the restriction
-     is a quotient map. Since it's also bijective, it's a homeomorphism.\<close>
+  \<comment> \<open>Step 3b: S¹ \<subseteq> B² and S¹ is closed in B² (needed for Step 4).\<close>
   have hS1_sub_B2: "top1_S1 \<subseteq> top1_B2"
     unfolding top1_S1_def top1_B2_def by (by100 auto)
-  have hintB2_sub: "top1_B2 - top1_S1 \<subseteq> top1_B2" by (by100 blast)
-  \<comment> \<open>B² - S¹ is open in B² (S¹ is closed in B²).\<close>
   have hS1_closed: "closedin_on top1_B2 top1_B2_topology top1_S1"
   proof (rule closedin_intro[OF hS1_sub_B2])
-    \<comment> \<open>B² - S¹ = {z | |z|² < 1} = B² \<inter> V where V is open in R².\<close>
-    \<comment> \<open>V = {(x,y) | x²+y² < 1} is open: preimage of open {t<1} under continuous norm-sq.\<close>
     have hopen_disk: "open {z::real\<times>real. (fst z)^2 + (snd z)^2 < 1}"
     proof -
       have hcont_nsq: "continuous_on UNIV (\<lambda>z::real\<times>real. (fst z)^2 + (snd z)^2)"
@@ -5461,6 +5452,55 @@ proof -
       unfolding top1_B2_topology_def subspace_topology_def
       using hdisk_in_PT hdiff_eq by (by100 blast)
   qed
+  \<comment> \<open>Step 4: A is closed in X (image of compact S¹ under quotient map to Hausdorff X).\<close>
+  have hA_cl: "closedin_on X TX ?A"
+  proof -
+    \<comment> \<open>B² is compact, q continuous, S¹ closed in B², X Hausdorff \<Rightarrow> q(S¹) closed in X.\<close>
+    have hB2_compact: "top1_compact_on top1_B2 top1_B2_topology"
+    proof -
+      \<comment> \<open>Reuse the pattern from AlgTopCached: B2 \<subseteq> [-1,1]\<times>[-1,1], closed, hence compact.\<close>
+      have hB2_sub: "top1_B2 \<subseteq> {-1..1} \<times> {-1..1::real}"
+      proof
+        fix p :: "real \<times> real" assume "p \<in> top1_B2"
+        hence h: "fst p ^ 2 + snd p ^ 2 \<le> 1" unfolding top1_B2_def by (by100 simp)
+        have "0 \<le> snd p ^ 2" by (by100 simp)
+        hence "fst p ^ 2 \<le> 1" using h by (by100 linarith)
+        hence "\<bar>fst p\<bar> \<le> 1" using power2_le_imp_le[of "\<bar>fst p\<bar>" 1] by (by100 simp)
+        moreover have "0 \<le> fst p ^ 2" by (by100 simp)
+        moreover have "snd p ^ 2 \<le> 1" using h calculation by (by100 linarith)
+        hence "\<bar>snd p\<bar> \<le> 1" using power2_le_imp_le[of "\<bar>snd p\<bar>" 1] by (by100 simp)
+        hence "- 1 \<le> snd p \<and> snd p \<le> 1" by (by100 linarith)
+        moreover from \<open>\<bar>fst p\<bar> \<le> 1\<close> have "- 1 \<le> fst p \<and> fst p \<le> 1" by (by100 linarith)
+        ultimately have "fst p \<in> {-1..1} \<and> snd p \<in> {-1..1}" by (by100 simp)
+        thus "p \<in> {-1..1} \<times> {-1..1}" by (simp add: mem_Times_iff)
+      qed
+      have "closed top1_B2"
+      proof -
+        have "top1_B2 = (\<lambda>p::real\<times>real. fst p ^ 2 + snd p ^ 2) -` {..1}"
+          unfolding top1_B2_def by (by100 auto)
+        moreover have "continuous_on UNIV (\<lambda>p::real\<times>real. fst p ^ 2 + snd p ^ 2)"
+          by (intro continuous_intros)
+        hence "closed ((\<lambda>p::real\<times>real. fst p ^ 2 + snd p ^ 2) -` {..1})"
+          by (intro closed_vimage closed_atMost) (simp add: continuous_on_eq_continuous_at open_UNIV)
+        ultimately show ?thesis by (by100 simp)
+      qed
+      hence "compact top1_B2"
+        using closed_subset_compact[OF compact_Icc_Times _ hB2_sub] by (by100 blast)
+      have "top1_B2_topology = subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) top1_B2"
+        unfolding top1_B2_topology_def ..
+      hence "top1_B2_topology = subspace_topology (UNIV::((real\<times>real) set)) (top1_open_sets::((real\<times>real) set set)) top1_B2"
+        using product_topology_on_open_sets[where 'a=real and 'b=real] by simp
+      hence "top1_compact_on top1_B2 top1_B2_topology \<longleftrightarrow> compact top1_B2"
+        using top1_compact_on_subspace_UNIV_iff_compact[of top1_B2] by simp
+      thus ?thesis using \<open>compact top1_B2\<close> by (by100 simp)
+    qed
+    show ?thesis
+      by (rule compact_hausdorff_continuous_closed_map[OF hB2_compact hX_haus hq_cont hS1_closed])
+  qed
+  \<comment> \<open>Step 5: q restricted to Int(B²) = B² - S¹ is a homeomorphism onto X - A.
+     Proof: B² - S¹ is open and saturated in B², so by Thm 22.1 the restriction
+     is a quotient map. Since it's also bijective, it's a homeomorphism.\<close>
+  have hintB2_sub: "top1_B2 - top1_S1 \<subseteq> top1_B2" by (by100 blast)
   have hintB2_open: "openin_on top1_B2 top1_B2_topology (top1_B2 - top1_S1)"
     using hS1_closed unfolding openin_on_def closedin_on_def by (by100 blast)
   \<comment> \<open>B² - S¹ is saturated: each fiber q⁻¹(q(z)) for z ∈ B²-S¹ is {z} (by inj + sep).\<close>
