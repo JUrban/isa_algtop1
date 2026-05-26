@@ -4921,7 +4921,34 @@ proof -
     unfolding top1_group_hom_on_def
     using h\<epsilon>0_hom h\<epsilon>1_hom unfolding top1_group_hom_on_def by (by5000 auto)
   have h\<Phi>_bij: "bij_betw (\<lambda>g. (\<epsilon>0 g, \<epsilon>1 g)) G (UNIV::(int \<times> int) set)"
-    sorry
+  proof -
+    \<comment> \<open>Injectivity.\<close>
+    have hinj: "inj_on (\<lambda>g. (\<epsilon>0 g, \<epsilon>1 g)) G"
+    proof (rule inj_onI)
+      fix x y assume hx: "x \<in> G" and hy: "y \<in> G"
+        and heq: "(\<epsilon>0 x, \<epsilon>1 x) = (\<epsilon>0 y, \<epsilon>1 y)"
+      hence h0eq: "\<epsilon>0 x = \<epsilon>0 y" and h1eq: "\<epsilon>1 x = \<epsilon>1 y" by (by100 auto)+
+      \<comment> \<open>ker(\<epsilon>0) is free abelian on {1}.\<close>
+      have hker0_fab: "top1_is_free_abelian_group_full_on {g \<in> G. \<epsilon>0 g = 0} mul e invg iota ({..<2} - {0::nat})"
+        using free_abelian_kernel_coordinate[OF hfab h0 h\<epsilon>0_hom h\<epsilon>0_gen0 h\<epsilon>0_other] by (by100 blast)
+      have h1_in: "(1::nat) \<in> {..<2} - {0::nat}" by (by100 simp)
+      \<comment> \<open>ε₁ on ker(ε₀): maps ι(1) to 1.\<close>
+      \<comment> \<open>ker(ε₁) ∩ ker(ε₀) is free abelian on {} = trivial.\<close>
+      have hker01_fab: "top1_is_free_abelian_group_full_on
+          {g \<in> {g \<in> G. \<epsilon>0 g = 0}. \<epsilon>1 g = 0} mul e invg iota ({..<2} - {0::nat} - {1::nat})"
+        sorry
+      have hempty: "{..<2::nat} - {0} - {1} = {}" by (by100 auto)
+      \<comment> \<open>Free abelian on {} = {e}.\<close>
+      have hker01_trivial: "{g \<in> {g \<in> G. \<epsilon>0 g = 0}. \<epsilon>1 g = 0} = {e}"
+        sorry
+      \<comment> \<open>Use trivial\_kernel\_injective pattern: ε₀(x)=ε₀(y) ∧ ε₁(x)=ε₁(y) ⟹ x·y⁻¹ ∈ ker₀₁ = {e} ⟹ x=y.\<close>
+      show "x = y" sorry
+    qed
+    \<comment> \<open>Surjectivity.\<close>
+    have hsurj: "(\<lambda>g. (\<epsilon>0 g, \<epsilon>1 g)) ` G = UNIV"
+      sorry
+    show ?thesis unfolding bij_betw_def using hinj hsurj by (by100 blast)
+  qed
   show ?thesis unfolding top1_groups_isomorphic_on_def
     using h\<Phi>_hom h\<Phi>_bij unfolding top1_group_iso_on_def by (by100 blast)
 qed
