@@ -4648,12 +4648,191 @@ qed
 
 section \<open>\<S>73 Fundamental Groups of the Torus and the Dunce Cap\<close>
 
-text \<open>Helper: group with commutator relators (all relators are commutators) is abelian.
+text \<open>Helper: centralizer of an element is a subgroup.\<close>
+lemma centralizer_is_subgroup:
+  assumes hG: "top1_is_group_on G mul e invg" and ha: "a \<in> G"
+  shows "top1_is_group_on {g \<in> G. mul a g = mul g a} mul e invg"
+proof -
+  let ?C = "{g \<in> G. mul a g = mul g a}"
+  have hmul_cl: "\<And>x y. x \<in> G \<Longrightarrow> y \<in> G \<Longrightarrow> mul x y \<in> G"
+    using hG unfolding top1_is_group_on_def by (by100 blast)
+  have hinv_cl: "\<And>x. x \<in> G \<Longrightarrow> invg x \<in> G"
+    using hG unfolding top1_is_group_on_def by (by100 blast)
+  have hassoc: "\<And>x y z. x \<in> G \<Longrightarrow> y \<in> G \<Longrightarrow> z \<in> G \<Longrightarrow> mul (mul x y) z = mul x (mul y z)"
+    using hG unfolding top1_is_group_on_def by (by100 blast)
+  have hid_l: "\<And>x. x \<in> G \<Longrightarrow> mul e x = x"
+    using hG unfolding top1_is_group_on_def by (by100 blast)
+  have hid_r: "\<And>x. x \<in> G \<Longrightarrow> mul x e = x"
+    using hG unfolding top1_is_group_on_def by (by100 blast)
+  have hinv_l: "\<And>x. x \<in> G \<Longrightarrow> mul (invg x) x = e"
+    using hG unfolding top1_is_group_on_def by (by100 blast)
+  have hinv_r: "\<And>x. x \<in> G \<Longrightarrow> mul x (invg x) = e"
+    using hG unfolding top1_is_group_on_def by (by100 blast)
+  have he: "e \<in> G" using hG unfolding top1_is_group_on_def by (by100 blast)
+  show ?thesis unfolding top1_is_group_on_def
+  proof (intro conjI ballI)
+    have "mul a e = a" using hid_r[OF ha] by (by100 blast)
+    moreover have "mul e a = a" using hid_l[OF ha] by (by100 blast)
+    ultimately show "e \<in> ?C" using he by (by100 auto)
+  next
+    fix x y assume hx: "x \<in> ?C" and hy: "y \<in> ?C"
+    hence hxG: "x \<in> G" and hyG: "y \<in> G" and hax: "mul a x = mul x a" and hay: "mul a y = mul y a"
+      by (by100 auto)+
+    have hxyG: "mul x y \<in> G" using hmul_cl[OF hxG hyG] by (by100 blast)
+    have "mul a (mul x y) = mul (mul a x) y" using hassoc ha hxG hyG by (by5000 metis)
+    also have "\<dots> = mul (mul x a) y" using hax by (by100 simp)
+    also have "\<dots> = mul x (mul a y)" using hassoc hxG ha hyG by (by5000 metis)
+    also have "\<dots> = mul x (mul y a)" using hay by (by100 simp)
+    also have "\<dots> = mul (mul x y) a" using hassoc hxG hyG ha by (by5000 metis)
+    finally show "mul x y \<in> ?C" using hxyG by (by100 blast)
+  next
+    fix x assume hx: "x \<in> ?C"
+    hence hxG: "x \<in> G" and hax: "mul a x = mul x a" by (by100 auto)+
+    have hixG: "invg x \<in> G" using hinv_cl[OF hxG] by (by100 blast)
+    \<comment> \<open>From ax = xa, derive a(x\<inverse>) = (x\<inverse>)a by left-cancellation.
+       x \<cdot> (a \<cdot> x\<inverse>) = (xa) \<cdot> x\<inverse> = (ax) \<cdot> x\<inverse> = a \<cdot> (x \<cdot> x\<inverse>) = a \<cdot> e = a.
+       x \<cdot> (x\<inverse> \<cdot> a) = (x \<cdot> x\<inverse>) \<cdot> a = e \<cdot> a = a.
+       So x \<cdot> (a \<cdot> x\<inverse>) = x \<cdot> (x\<inverse> \<cdot> a), hence a \<cdot> x\<inverse> = x\<inverse> \<cdot> a.\<close>
+    have h1: "mul x (mul a (invg x)) = a"
+    proof -
+      have "mul x (mul a (invg x)) = mul (mul x a) (invg x)"
+        using hassoc hxG ha hixG by (by5000 metis)
+      also have "\<dots> = mul (mul a x) (invg x)" using hax by (by100 simp)
+      also have "\<dots> = mul a (mul x (invg x))" using hassoc ha hxG hixG by (by5000 metis)
+      also have "\<dots> = mul a e" using hinv_r[OF hxG] by (by100 simp)
+      also have "\<dots> = a" using hid_r[OF ha] by (by100 blast)
+      finally show ?thesis .
+    qed
+    have h2: "mul x (mul (invg x) a) = a"
+    proof -
+      have "mul x (mul (invg x) a) = mul (mul x (invg x)) a"
+        using hassoc hxG hixG ha by (by5000 metis)
+      also have "\<dots> = mul e a" using hinv_r[OF hxG] by (by100 simp)
+      also have "\<dots> = a" using hid_l[OF ha] by (by100 blast)
+      finally show ?thesis .
+    qed
+    have "mul a (invg x) = mul (invg x) a"
+    proof -
+      from h1 h2 have "mul x (mul a (invg x)) = mul x (mul (invg x) a)" by (by100 simp)
+      \<comment> \<open>Left cancellation: mul x u = mul x v \<Rightarrow> u = v.\<close>
+      hence "mul (invg x) (mul x (mul a (invg x))) = mul (invg x) (mul x (mul (invg x) a))"
+        by (by100 simp)
+      hence "mul (mul (invg x) x) (mul a (invg x)) = mul (mul (invg x) x) (mul (invg x) a)"
+        using hassoc hixG hxG hmul_cl[OF ha hixG] hmul_cl[OF hixG ha] by (by5000 metis)
+      hence "mul e (mul a (invg x)) = mul e (mul (invg x) a)"
+        using hinv_l[OF hxG] by (by100 simp)
+      thus ?thesis using hid_l hmul_cl[OF ha hixG] hmul_cl[OF hixG ha] by (by5000 metis)
+    qed
+    thus "invg x \<in> ?C" using hixG by (by100 blast)
+  next
+    fix x y z assume "x \<in> ?C" "y \<in> ?C" "z \<in> ?C"
+    thus "mul (mul x y) z = mul x (mul y z)" using hassoc by (by100 auto)
+  next
+    fix x assume "x \<in> ?C" thus "mul e x = x" using hid_l by (by100 auto)
+  next
+    fix x assume "x \<in> ?C" thus "mul x e = x" using hid_r by (by100 auto)
+  next
+    fix x assume "x \<in> ?C" thus "mul (invg x) x = e" using hinv_l by (by100 auto)
+  next
+    fix x assume "x \<in> ?C" thus "mul x (invg x) = e" using hinv_r by (by100 auto)
+  qed
+qed
+
+text \<open>Helper: surjective hom preserves generation.\<close>
+lemma surjective_hom_preserves_generation:
+  assumes hF_grp: "top1_is_group_on F mulF eF invgF"
+    and hG_grp: "top1_is_group_on G mul e invg"
+    and hF_gen: "F = top1_subgroup_generated_on F mulF eF invgF S"
+    and hhom: "top1_group_hom_on F mulF G mul \<pi>"
+    and hsurj: "\<pi> ` F = G"
+    and hS_sub: "S \<subseteq> F"
+  shows "G = top1_subgroup_generated_on G mul e invg (\<pi> ` S)"
+proof
+  show "top1_subgroup_generated_on G mul e invg (\<pi> ` S) \<subseteq> G"
+    by (rule subgroup_generated_subset[OF hG_grp])
+       (use hhom hS_sub in \<open>unfold top1_group_hom_on_def, by100 blast\<close>)
+next
+  show "G \<subseteq> top1_subgroup_generated_on G mul e invg (\<pi> ` S)"
+  proof
+    fix g assume "g \<in> G"
+    then obtain f where hf: "f \<in> F" "\<pi> f = g" using hsurj by (by100 blast)
+    let ?H = "top1_subgroup_generated_on G mul e invg (\<pi> ` S)"
+    let ?H' = "{f \<in> F. \<pi> f \<in> ?H}"
+    have hH_grp: "top1_is_group_on ?H mul e invg"
+      by (rule intersection_of_subgroups_is_group[OF hG_grp])
+         (use hhom hS_sub in \<open>unfold top1_group_hom_on_def, by100 blast\<close>)
+    have hH'_sub: "?H' \<subseteq> F" by (by100 blast)
+    have h\<pi>S_sub_G: "\<pi> ` S \<subseteq> G"
+      using hhom hS_sub unfolding top1_group_hom_on_def by (by100 blast)
+    have hS_in_H': "S \<subseteq> ?H'"
+    proof
+      fix s assume hs: "s \<in> S"
+      hence "s \<in> F" using hS_sub by (by100 blast)
+      have "\<pi> s \<in> \<pi> ` S" using hs by (by100 blast)
+      hence "\<pi> s \<in> ?H"
+        using subgroup_generated_contains[OF hG_grp h\<pi>S_sub_G] by (by100 blast)
+      thus "s \<in> ?H'" using \<open>s \<in> F\<close> by (by100 blast)
+    qed
+    have hH'_grp: "top1_is_group_on ?H' mulF eF invgF"
+      unfolding top1_is_group_on_def
+    proof (intro conjI ballI)
+      have "\<pi> eF = e" by (rule hom_preserves_id[OF hF_grp hG_grp hhom])
+      moreover have "e \<in> ?H" using hH_grp unfolding top1_is_group_on_def by (by100 blast)
+      moreover have "eF \<in> F" using hF_grp unfolding top1_is_group_on_def by (by100 blast)
+      ultimately show "eF \<in> ?H'" by (by100 blast)
+    next
+      fix x y assume "x \<in> ?H'" "y \<in> ?H'"
+      hence hxF: "x \<in> F" and hyF: "y \<in> F" and hxH: "\<pi> x \<in> ?H" and hyH: "\<pi> y \<in> ?H"
+        by (by100 auto)+
+      have hmxy: "mulF x y \<in> F" using hF_grp hxF hyF unfolding top1_is_group_on_def by (by100 blast)
+      have "\<pi> (mulF x y) = mul (\<pi> x) (\<pi> y)"
+        using hhom hxF hyF unfolding top1_group_hom_on_def by (by100 blast)
+      moreover have "mul (\<pi> x) (\<pi> y) \<in> ?H"
+        using hH_grp hxH hyH unfolding top1_is_group_on_def by (by100 blast)
+      ultimately have "\<pi> (mulF x y) \<in> ?H" by (by100 simp)
+      thus "mulF x y \<in> ?H'" using hmxy by (by100 blast)
+    next
+      fix x assume "x \<in> ?H'"
+      hence hxF: "x \<in> F" and hxH: "\<pi> x \<in> ?H" by (by100 auto)+
+      have hixF: "invgF x \<in> F" using hF_grp hxF unfolding top1_is_group_on_def by (by100 blast)
+      have "\<pi> (invgF x) = invg (\<pi> x)"
+        by (rule hom_preserves_inv[OF hF_grp hG_grp hhom hxF])
+      moreover have "invg (\<pi> x) \<in> ?H"
+        using hH_grp hxH unfolding top1_is_group_on_def by (by100 blast)
+      ultimately have "\<pi> (invgF x) \<in> ?H" by (by100 simp)
+      thus "invgF x \<in> ?H'" using hixF by (by100 blast)
+    next
+      fix x y z assume "x \<in> ?H'" "y \<in> ?H'" "z \<in> ?H'"
+      thus "mulF (mulF x y) z = mulF x (mulF y z)"
+        using hF_grp unfolding top1_is_group_on_def by (by100 auto)
+    next
+      fix x assume "x \<in> ?H'" thus "mulF eF x = x"
+        using hF_grp unfolding top1_is_group_on_def by (by100 auto)
+    next
+      fix x assume "x \<in> ?H'" thus "mulF x eF = x"
+        using hF_grp unfolding top1_is_group_on_def by (by100 auto)
+    next
+      fix x assume "x \<in> ?H'" thus "mulF (invgF x) x = eF"
+        using hF_grp unfolding top1_is_group_on_def by (by100 auto)
+    next
+      fix x assume "x \<in> ?H'" thus "mulF x (invgF x) = eF"
+        using hF_grp unfolding top1_is_group_on_def by (by100 auto)
+    qed
+    have "top1_subgroup_generated_on F mulF eF invgF S \<subseteq> ?H'"
+      by (rule subgroup_generated_minimal[OF hS_in_H' hH'_sub hH'_grp])
+    hence "F \<subseteq> ?H'" using hF_gen by (by100 simp)
+    hence "f \<in> ?H'" using hf(1) by (by100 blast)
+    thus "g \<in> ?H" using hf(2) by (by100 blast)
+  qed
+qed
+
+text \<open>Helper: group with commutator relators covering all pairs is abelian.
   Book: Corollary 73.2 — "αβα⁻¹β⁻¹ = 1 means αβ = βα, so the group is abelian."\<close>
 lemma presented_by_commutators_abelian:
   assumes hpres: "top1_group_presented_by_on G mul e invg S R"
-    and hcomm: "\<forall>w\<in>R. \<exists>s1\<in>S. \<exists>s2\<in>S.
-        w = [(s1, True), (s2, True), (s1, False), (s2, False)]"
+    and hcovers: "\<forall>s1\<in>S. \<forall>s2\<in>S. s1 \<noteq> s2 \<longrightarrow>
+        (\<exists>w\<in>R. w = [(s1, True), (s2, True), (s1, False), (s2, False)]
+              \<or> w = [(s2, True), (s1, True), (s2, False), (s1, False)])"
   shows "top1_is_abelian_group_on G mul e invg"
 proof -
   \<comment> \<open>Extract free group F, gen map \<iota>, projection \<pi>.\<close>
@@ -4803,20 +4982,95 @@ proof -
       thus ?thesis using hid_r hbG by (by5000 metis)
     qed
   qed
-  \<comment> \<open>Step 2: from hcomm, every pair that appears in R commutes.\<close>
-  \<comment> \<open>Step 3: {π(ι(s)) | s ∈ S} generates G (since π surjective and F generated by ι(S)).\<close>
-  \<comment> \<open>Step 4: generated by commuting elements ⟹ G abelian.\<close>
-  \<comment> \<open>From hcomm + hgens\_commute: for all s1 s2 \<in> S, \<pi>(\<iota> s1) and \<pi>(\<iota> s2) commute.\<close>
-  \<comment> \<open>[G,G] is generated by commutators of generators = {e}. Hence [G,G] = {e}, G abelian.\<close>
-  \<comment> \<open>Step A: [G,G] \<subseteq> {e}. All commutators of GENERATORS are e (from hgens\_commute).
-     [G,G] = commutator subgroup = subgroup generated by {mul(mul(mul a b)(invg a))(invg b) | a,b \<in> G}.
-     Since every g \<in> G is \<pi>(word in \<iota>(S)), commutator of g,h = product of commutators of generators.
-     Each generator commutator = e. So all commutators = e. Hence [G,G] \<subseteq> {e}.\<close>
-  \<comment> \<open>The abelianization of G is free abelian on S (Theorem 69.4 via presentation).
-     ker(\<pi>) \<subseteq> [F,F] since relators are commutators. By abelianization\_of\_presented\_group,
-     the abelianization of G is free abelian. Since generators commute, [G,G] = {e},
-     so G = its own abelianization = abelian.\<close>
-  show ?thesis using hgens_commute hcomm hpi_surj hpi_hom hF_free hG_grp sorry
+  \<comment> \<open>Step 2: Derive ALL generator pairs commute from hcovers + hgens\_commute.\<close>
+  have hall_commute: "\<forall>s1\<in>S. \<forall>s2\<in>S.
+      mul (\<pi> (\<iota> s1)) (\<pi> (\<iota> s2)) = mul (\<pi> (\<iota> s2)) (\<pi> (\<iota> s1))"
+  proof (intro ballI)
+    fix s1 s2 assume hs1: "s1 \<in> S" and hs2: "s2 \<in> S"
+    show "mul (\<pi> (\<iota> s1)) (\<pi> (\<iota> s2)) = mul (\<pi> (\<iota> s2)) (\<pi> (\<iota> s1))"
+    proof (cases "s1 = s2")
+      case True thus ?thesis by (by100 simp)
+    next
+      case False
+      from hcovers hs1 hs2 False obtain w where hw: "w \<in> R" and
+        hdisj: "w = [(s1, True), (s2, True), (s1, False), (s2, False)]
+              \<or> w = [(s2, True), (s1, True), (s2, False), (s1, False)]"
+        by (by100 blast)
+      from hdisj show ?thesis
+      proof
+        assume "w = [(s1, True), (s2, True), (s1, False), (s2, False)]"
+        thus ?thesis using hgens_commute hw hs1 hs2 by (by100 blast)
+      next
+        assume hw2: "w = [(s2, True), (s1, True), (s2, False), (s1, False)]"
+        \<comment> \<open>This is commutator(s2,s1). Apply hgens\_commute with s1'=s2, s2'=s1.\<close>
+        have "mul (\<pi> (\<iota> s2)) (\<pi> (\<iota> s1)) = mul (\<pi> (\<iota> s1)) (\<pi> (\<iota> s2))"
+          using hgens_commute hw hs1 hs2 hw2 by (by100 blast)
+        thus ?thesis by (by100 simp)
+      qed
+    qed
+  qed
+  \<comment> \<open>Step 3: G is generated by generator images \<pi>(\<iota>(S)).\<close>
+  have hF_grp: "top1_is_group_on F mulF eF invgF"
+    using hF_free unfolding top1_is_free_group_full_on_def by (by100 blast)
+  have h\<iota>_sub: "\<iota> ` S \<subseteq> F"
+    using hF_free unfolding top1_is_free_group_full_on_def by (by100 blast)
+  have hF_gen: "F = top1_subgroup_generated_on F mulF eF invgF (\<iota> ` S)"
+    using hF_free unfolding top1_is_free_group_full_on_def by (by100 blast)
+  let ?gens = "(\<lambda>s. \<pi> (\<iota> s)) ` S"
+  have hgens_eq: "?gens = \<pi> ` (\<iota> ` S)" by (by100 auto)
+  have hG_gen: "G = top1_subgroup_generated_on G mul e invg ?gens"
+    using surjective_hom_preserves_generation[OF hF_grp hG_grp hF_gen hpi_hom hpi_surj h\<iota>_sub]
+    unfolding hgens_eq by (by100 blast)
+  \<comment> \<open>Step 4: Centralizer argument. Each generator commutes with all of G.\<close>
+  have hgens_sub_G: "?gens \<subseteq> G"
+    using hpi_hom h\<iota>_sub unfolding top1_group_hom_on_def by (by100 blast)
+  have hgens_central: "\<forall>s\<in>S. \<forall>g\<in>G. mul (\<pi> (\<iota> s)) g = mul g (\<pi> (\<iota> s))"
+  proof (intro ballI)
+    fix s g assume hs: "s \<in> S" and hg: "g \<in> G"
+    let ?a = "\<pi> (\<iota> s)"
+    have haG: "?a \<in> G" using hgens_sub_G hs by (by100 blast)
+    let ?C = "{h \<in> G. mul ?a h = mul h ?a}"
+    have hC_grp: "top1_is_group_on ?C mul e invg"
+      by (rule centralizer_is_subgroup[OF hG_grp haG])
+    have hC_sub: "?C \<subseteq> G" by (by100 blast)
+    have hgens_in_C: "?gens \<subseteq> ?C"
+    proof
+      fix x assume "x \<in> ?gens"
+      then obtain s' where hs': "s' \<in> S" and hx: "x = \<pi> (\<iota> s')" by (by100 blast)
+      have hxG: "x \<in> G" using hgens_sub_G \<open>x \<in> ?gens\<close> by (by100 blast)
+      have "mul ?a x = mul x ?a"
+        using hall_commute hs hs' unfolding hx by (by100 blast)
+      thus "x \<in> ?C" using hxG by (by100 blast)
+    qed
+    have "top1_subgroup_generated_on G mul e invg ?gens \<subseteq> ?C"
+      by (rule subgroup_generated_minimal[OF hgens_in_C hC_sub hC_grp])
+    hence "G \<subseteq> ?C" using hG_gen by (by100 simp)
+    thus "mul ?a g = mul g ?a" using hg by (by100 blast)
+  qed
+  \<comment> \<open>Step 5: For any x \<in> G, the centralizer C(x) contains all generators, hence G. So G is abelian.\<close>
+  show ?thesis unfolding top1_is_abelian_group_on_def
+  proof (intro conjI ballI)
+    show "top1_is_group_on G mul e invg" by (rule hG_grp)
+  next
+    fix x y assume hx: "x \<in> G" and hy: "y \<in> G"
+    let ?C = "{h \<in> G. mul x h = mul h x}"
+    have hC_grp: "top1_is_group_on ?C mul e invg"
+      by (rule centralizer_is_subgroup[OF hG_grp hx])
+    have hC_sub: "?C \<subseteq> G" by (by100 blast)
+    have hgens_in_C: "?gens \<subseteq> ?C"
+    proof
+      fix g assume "g \<in> ?gens"
+      then obtain s where hs: "s \<in> S" and hg: "g = \<pi> (\<iota> s)" by (by100 blast)
+      have hgG: "g \<in> G" using hgens_sub_G \<open>g \<in> ?gens\<close> by (by100 blast)
+      have "mul x g = mul g x"
+        using hgens_central hs hx unfolding hg by (by5000 metis)
+      thus "g \<in> ?C" using hgG by (by100 blast)
+    qed
+    have "top1_subgroup_generated_on G mul e invg ?gens \<subseteq> ?C"
+      by (rule subgroup_generated_minimal[OF hgens_in_C hC_sub hC_grp])
+    hence "G \<subseteq> ?C" using hG_gen by (by100 simp)
+    thus "mul x y = mul y x" using hy by (by100 blast)
+  qed
 qed
 
 text \<open>Helper: abelian group has trivial commutator subgroup.\<close>
@@ -4950,13 +5204,15 @@ proof -
         (top1_fundamental_group_carrier T_torus TT x0)
         (top1_fundamental_group_mul T_torus TT x0)"
       by (by5000 auto)
-    \<comment> \<open>The relator [(0,T),(1,T),(0,F),(1,F)] is a commutator of generators 0,1.\<close>
-    have hrelator_comm: "\<forall>w\<in>{concat (map (\<lambda>i. [(2*i, True), (2*i+1, True), (2*i, False), (2*i+1, False)]) [0..<1])}.
-        \<exists>s1\<in>{..<2*1::nat}. \<exists>s2\<in>{..<2*1::nat}. w = [(s1, True), (s2, True), (s1, False), (s2, False)]"
-      by (by100 auto)
+    \<comment> \<open>Every distinct generator pair has a commutator relator (or its reverse).\<close>
+    have hcovers: "\<forall>s1\<in>{..<2*1::nat}. \<forall>s2\<in>{..<2*1::nat}. s1 \<noteq> s2 \<longrightarrow>
+        (\<exists>w\<in>{concat (map (\<lambda>i. [(2*i, True), (2*i+1, True), (2*i, False), (2*i+1, False)]) [0..<1])}.
+            w = [(s1, True), (s2, True), (s1, False), (s2, False)]
+          \<or> w = [(s2, True), (s1, True), (s2, False), (s1, False)])"
+      by (by5000 auto)
     \<comment> \<open>So G is abelian by presented\_by\_commutators\_abelian.\<close>
     have hG_abelian: "top1_is_abelian_group_on G mulG eG invgG"
-      using presented_by_commutators_abelian[OF hpres hrelator_comm] by (by100 blast)
+      using presented_by_commutators_abelian[OF hpres hcovers] by (by100 blast)
     \<comment> \<open>Transfer: G abelian + G \<cong> \<pi>\_1(T) \<Rightarrow> \<pi>\_1(T) abelian.\<close>
     \<comment> \<open>Iso preserves abelian: G abelian + G \<cong> H \<Rightarrow> H abelian.\<close>
     from hiso_pi1 obtain f where hf_iso: "top1_group_iso_on G mulG
