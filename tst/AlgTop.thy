@@ -6190,7 +6190,37 @@ proof -
       qed
       \<comment> \<open>R\_to\_S1 surjective [0,1] \<rightarrow> S¹.\<close>
       have hR_surj_loc: "top1_R_to_S1 ` top1_unit_interval = top1_S1"
-        sorry \<comment> \<open>Every point on S¹ has an angle in [0,1]: s = R\_to\_S1(\<theta> - floor \<theta>).\<close>
+      proof
+        \<comment> \<open>R\_to\_S1([0,1]) \<subseteq> S¹: trivial (R\_to\_S1 maps to S¹).\<close>
+        show "top1_R_to_S1 ` top1_unit_interval \<subseteq> top1_S1"
+        proof
+          fix z assume "z \<in> top1_R_to_S1 ` top1_unit_interval"
+          then obtain t where "z = top1_R_to_S1 t" by (by100 blast)
+          thus "z \<in> top1_S1" unfolding top1_R_to_S1_def top1_S1_def
+            using sin_cos_squared_add by (by100 simp)
+        qed
+      next
+        \<comment> \<open>S¹ \<subseteq> R\_to\_S1([0,1]): for any (cos \<alpha>, sin \<alpha>) \<in> S¹, take \<theta> = \<alpha>/(2\<pi>) mod 1.\<close>
+        show "top1_S1 \<subseteq> top1_R_to_S1 ` top1_unit_interval"
+        proof
+          fix p assume hp: "p \<in> top1_S1"
+          hence h_norm: "(fst p)^2 + (snd p)^2 = 1" unfolding top1_S1_def by (by100 simp)
+          \<comment> \<open>Use S1\_point\_to\_angle or direct Arg construction.\<close>
+          from S1_point_to_angle[OF hp]
+          obtain \<theta> :: real where h\<theta>: "top1_R_to_S1 \<theta> = p" by (by100 blast)
+          let ?\<theta>' = "\<theta> - of_int (floor \<theta>)"
+          have "?\<theta>' \<in> top1_unit_interval" unfolding top1_unit_interval_def
+          proof -
+            have "0 \<le> ?\<theta>'" by (by100 linarith)
+            moreover have "?\<theta>' < 1" by (by100 linarith)
+            hence "?\<theta>' \<le> 1" by (by100 linarith)
+            ultimately show "?\<theta>' \<in> {0..1}" by (by100 auto)
+          qed
+          moreover have "top1_R_to_S1 ?\<theta>' = p"
+            using h\<theta> top1_R_to_S1_int_shift[of ?\<theta>' "floor \<theta>"] by (by100 simp)
+          ultimately show "p \<in> top1_R_to_S1 ` top1_unit_interval" by (by100 blast)
+        qed
+      qed
       \<comment> \<open>[0,1] is compact.\<close>
       have hI_compact: "top1_compact_on top1_unit_interval top1_unit_interval_topology"
       proof -
