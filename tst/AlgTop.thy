@@ -5563,8 +5563,105 @@ proof -
           thus ?thesis using hS1_eq by (by100 simp)
         qed
         have "\<And>k. k < n \<Longrightarrow> closedin_on top1_B2 top1_B2_topology (?rot k ` ?C0)"
-          sorry \<comment> \<open>Rotation is continuous homeomorphism on S¹; image of closed is closed.
-             r^k(C\<inter>S¹) \<subseteq> S¹ \<subseteq> B², and is a continuous image of closed compact set in Hausdorff.\<close>
+        proof -
+          fix k :: nat assume hk: "k < n"
+          \<comment> \<open>r^k(C\<inter>S¹) \<subseteq> S¹ (rotation maps S¹ to S¹ — proved in saturation equality).\<close>
+          have hrot_S1: "?rot k ` top1_S1 \<subseteq> top1_S1"
+          proof
+            fix z assume "z \<in> ?rot k ` top1_S1"
+            then obtain w where hw: "w \<in> top1_S1" and hz: "z = ?rot k w" by (by100 blast)
+            have "(fst w)^2 + (snd w)^2 = 1" using hw unfolding top1_S1_def by (by100 simp)
+            hence "(fst z)^2 + (snd z)^2 = 1"
+            proof -
+              let ?\<theta> = "2*pi*real k/real n"
+              assume h1: "(fst w)^2 + (snd w)^2 = 1"
+              have hident: "\<And>co si x y :: real. (co*x - si*y)^2 + (si*x + co*y)^2
+                  = (co^2 + si^2) * (x^2 + y^2)"
+                by (simp add: power2_eq_square algebra_simps)
+              have "fst z = cos ?\<theta> * fst w - sin ?\<theta> * snd w" unfolding hz by (by100 simp)
+              moreover have "snd z = sin ?\<theta> * fst w + cos ?\<theta> * snd w" unfolding hz by (by100 simp)
+              ultimately have "(fst z)^2 + (snd z)^2
+                  = (cos ?\<theta> * fst w - sin ?\<theta> * snd w)^2 + (sin ?\<theta> * fst w + cos ?\<theta> * snd w)^2"
+                by (by100 simp)
+              also have "\<dots> = ((cos ?\<theta>)^2 + (sin ?\<theta>)^2) * ((fst w)^2 + (snd w)^2)" by (rule hident)
+              also have "\<dots> = 1" using sin_cos_squared_add[of ?\<theta>] h1 by (by100 simp)
+              finally show ?thesis .
+            qed
+            thus "z \<in> top1_S1" unfolding top1_S1_def by (by100 simp)
+          qed
+          hence hrot_C0_S1: "?rot k ` ?C0 \<subseteq> top1_S1" by (by100 blast)
+          \<comment> \<open>r^k is continuous on S¹ (restriction of continuous linear map on R²).\<close>
+          have hrot_cont: "top1_continuous_map_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology (?rot k)"
+            sorry \<comment> \<open>Rotation is a linear (hence continuous) map R² \<rightarrow> R²; restriction to S¹ is continuous.\<close>
+          \<comment> \<open>S¹ is compact and Hausdorff \<Rightarrow> closed map.\<close>
+          have hS1_haus: "is_hausdorff_on top1_S1 top1_S1_topology"
+            sorry \<comment> \<open>S¹ is Hausdorff (subspace of Hausdorff R²).\<close>
+          \<comment> \<open>C\<inter>S¹ is closed in compact S¹, rotation continuous S¹\<rightarrow>Hausdorff S¹ \<Rightarrow> image closed.\<close>
+          have "closedin_on top1_S1 top1_S1_topology (?rot k ` ?C0)"
+            by (rule compact_hausdorff_continuous_closed_map[OF S1_compact hS1_haus hrot_cont hC0_closed_S1])
+          \<comment> \<open>Closed in S¹ + S¹ closed in B² \<Rightarrow> closed in B².\<close>
+          thus "closedin_on top1_B2 top1_B2_topology (?rot k ` ?C0)"
+          proof -
+            assume hcl_S1: "closedin_on top1_S1 top1_S1_topology (?rot k ` ?C0)"
+            have hS1_eq: "top1_S1_topology = subspace_topology top1_B2 top1_B2_topology top1_S1"
+              unfolding top1_B2_topology_def top1_S1_topology_def
+              using subspace_topology_trans[OF hS1_B2] by (by100 simp)
+            have hB2_top_l: "is_topology_on top1_B2 top1_B2_topology"
+              using top1_B2_path_connected unfolding top1_path_connected_on_def by (by100 blast)
+            from Theorem_17_2[OF hB2_top_l hS1_B2]
+            have "closedin_on top1_S1 (subspace_topology top1_B2 top1_B2_topology top1_S1) (?rot k ` ?C0)
+                \<longleftrightarrow> (\<exists>D. closedin_on top1_B2 top1_B2_topology D \<and> ?rot k ` ?C0 = D \<inter> top1_S1)"
+              by (by100 blast)
+            hence "\<exists>D. closedin_on top1_B2 top1_B2_topology D \<and> ?rot k ` ?C0 = D \<inter> top1_S1"
+              using hcl_S1 hS1_eq by (by100 simp)
+            then obtain D where hD: "closedin_on top1_B2 top1_B2_topology D"
+                and hD_eq: "?rot k ` ?C0 = D \<inter> top1_S1" by (by100 blast)
+            \<comment> \<open>rot\_k(C\<inter>S¹) = D \<inter> S¹. Since S¹ is closed in B², D \<inter> S¹ is closed in B².\<close>
+            have "closedin_on top1_B2 top1_B2_topology (D \<inter> top1_S1)"
+            proof -
+              have hB2_t: "is_topology_on top1_B2 top1_B2_topology"
+                using top1_B2_path_connected unfolding top1_path_connected_on_def by (by100 blast)
+              \<comment> \<open>S¹ is closed in B² (same proof as outer hS1\_closed).\<close>
+              have hS1_cl: "closedin_on top1_B2 top1_B2_topology top1_S1"
+              proof (rule closedin_intro[OF hS1_B2])
+                have hopen_disk: "open {z::real\<times>real. (fst z)^2 + (snd z)^2 < 1}"
+                proof -
+                  have hcont_nsq: "continuous_on UNIV (\<lambda>z::real\<times>real. (fst z)^2 + (snd z)^2)"
+                    by (intro continuous_intros)
+                  have "open ({..<1::real})" by (by100 simp)
+                  hence "open {t::real. t < 1}"
+                  proof -
+                    have "{..<1::real} = {t. t < 1}" by (by100 auto)
+                    thus ?thesis using \<open>open ({..<1::real})\<close> by (by100 simp)
+                  qed
+                  hence "open ((\<lambda>z::real\<times>real. (fst z)^2 + (snd z)^2) -` {..<1::real} \<inter> UNIV)"
+                    using continuous_on_open_vimage[of "UNIV::(real\<times>real) set"
+                          "\<lambda>z. (fst z)^2 + (snd z)^2"] hcont_nsq by (by5000 auto)
+                  moreover have "{z::real\<times>real. (fst z)^2 + (snd z)^2 < 1}
+                      = (\<lambda>z. (fst z)^2 + (snd z)^2) -` {..<1::real} \<inter> UNIV" by (by100 auto)
+                  ultimately show ?thesis by (by100 simp)
+                qed
+                have "{z::real\<times>real. (fst z)^2 + (snd z)^2 < 1}
+                    \<in> product_topology_on top1_open_sets top1_open_sets"
+                  using hopen_disk product_topology_on_open_sets_real2 unfolding top1_open_sets_def
+                  by (by100 blast)
+                moreover have "top1_B2 - top1_S1 = top1_B2 \<inter> {z. (fst z)^2 + (snd z)^2 < 1}"
+                  unfolding top1_B2_def top1_S1_def by (by100 auto)
+                ultimately show "top1_B2 - top1_S1 \<in> top1_B2_topology"
+                  unfolding top1_B2_topology_def subspace_topology_def by (by100 blast)
+              qed
+              \<comment> \<open>Intersection of D and S¹ (both closed in B²) is closed.\<close>
+              have "{D, top1_S1} \<noteq> ({}::(real\<times>real) set set)" by (by100 simp)
+              moreover have "\<forall>A\<in>{D, top1_S1}. closedin_on top1_B2 top1_B2_topology A"
+                using hD hS1_cl by (by100 blast)
+              ultimately have "closedin_on top1_B2 top1_B2_topology (\<Inter>{D, top1_S1})"
+                by (rule closedin_Inter[OF hB2_t])
+              moreover have "\<Inter>{D, top1_S1} = D \<inter> top1_S1" by (by100 blast)
+              ultimately show ?thesis by (by100 simp)
+            qed
+            thus ?thesis using hD_eq by (by100 simp)
+          qed
+        qed
         hence "closedin_on top1_B2 top1_B2_topology (\<Union>k\<in>{..<n}. ?rot k ` ?C0)"
         proof -
           have hB2_top_loc: "is_topology_on top1_B2 top1_B2_topology"
