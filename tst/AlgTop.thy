@@ -5481,8 +5481,56 @@ proof -
     \<comment> \<open>Step D1: g is continuous [0,1] \<rightarrow> A (in our topology framework).\<close>
     have hg_cont_top: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
         ?A (subspace_topology X TX ?A) ?g"
-      sorry \<comment> \<open>g = q \<circ> (\<lambda>t. (cos(2\<pi>t/n), sin(2\<pi>t/n))), both continuous. Uses
-         top1_continuous_map_on_real2_subspace + continuous_intros for inner, q for outer.\<close>
+    proof -
+      let ?h = "\<lambda>t. (cos (2*pi*t / real n), sin (2*pi*t / real n))"
+      \<comment> \<open>h: R \<rightarrow> S¹ continuous (polynomial \<Rightarrow> continuous\_on UNIV, bridge to top1).\<close>
+      have hn_ne: "real n \<noteq> (0::real)" using assms(1) by (by100 simp)
+      have hh_cont_on: "continuous_on UNIV ?h"
+        by (intro continuous_intros) (simp add: assms)+
+      have hh_img: "\<And>t. ?h t \<in> top1_B2"
+      proof -
+        fix t :: real
+        have "(fst (?h t))^2 + (snd (?h t))^2 = 1"
+          using sin_cos_squared_add[of "2*pi*t/real n"] by (by100 simp)
+        thus "?h t \<in> top1_B2" unfolding top1_B2_def by (by100 simp)
+      qed
+      have hh_top1: "top1_continuous_map_on (UNIV::real set) top1_open_sets
+          top1_B2 top1_B2_topology ?h"
+      proof -
+        have "top1_continuous_map_on (UNIV::real set) top1_open_sets
+            top1_B2 (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) top1_B2) ?h"
+          by (rule top1_continuous_map_on_R_to_R2_subspace[OF hh_img hh_cont_on])
+        thus ?thesis unfolding top1_B2_topology_def by (by100 blast)
+      qed
+      \<comment> \<open>Restrict h to [0,1].\<close>
+      have hh_I: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+          top1_B2 top1_B2_topology ?h"
+      proof -
+        have hI_sub: "top1_unit_interval \<subseteq> (UNIV::real set)" by (by100 blast)
+        have "top1_continuous_map_on top1_unit_interval
+            (subspace_topology UNIV top1_open_sets top1_unit_interval)
+            top1_B2 top1_B2_topology ?h"
+          by (rule top1_continuous_map_on_subspace_restrict[OF hh_top1 hI_sub])
+        moreover have "subspace_topology UNIV top1_open_sets top1_unit_interval
+            = top1_unit_interval_topology"
+          unfolding top1_unit_interval_topology_def by (by100 simp)
+        ultimately show ?thesis by (by100 simp)
+      qed
+      \<comment> \<open>g = q \<circ> h: [0,1] \<rightarrow> X continuous.\<close>
+      have hg_X: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology X TX ?g"
+      proof -
+        have hcomp: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology X TX (q \<circ> ?h)"
+          by (rule top1_continuous_map_on_comp[OF hh_I hq_cont])
+        have "\<And>t. t \<in> top1_unit_interval \<Longrightarrow> (q \<circ> ?h) t = ?g t" by (by100 simp)
+        hence "{t \<in> top1_unit_interval. (q \<circ> ?h) t \<in> V} = {t \<in> top1_unit_interval. ?g t \<in> V}" for V
+          by (by100 auto)
+        thus ?thesis using hcomp unfolding top1_continuous_map_on_def by (by5000 auto)
+      qed
+      \<comment> \<open>Shrink codomain to A.\<close>
+      have hg_img: "?g ` top1_unit_interval \<subseteq> ?A" using hg_in_A by (by100 blast)
+      show ?thesis
+        using top1_continuous_map_on_codomain_shrink[OF hg_X hg_img hA_sub] by (by100 blast)
+    qed
     \<comment> \<open>Step D2: g constant on fibers of R\_to\_S1: if R\_to\_S1(t)=R\_to\_S1(t') then g(t)=g(t').\<close>
     have hg_const_fibers: "\<forall>t\<in>top1_unit_interval. \<forall>t'\<in>top1_unit_interval.
         top1_R_to_S1 t = top1_R_to_S1 t' \<longrightarrow> ?g t = ?g t'"
