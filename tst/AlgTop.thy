@@ -4686,9 +4686,7 @@ proof -
     have "?r \<in> {r. \<exists>w'\<in>R. r = top1_group_word_product mulF eF invgF (map (\<lambda>(s,b). (\<iota> s, b)) w')}"
       using hw by (by100 blast)
     hence hr_in_ker: "\<pi> ?r = e"
-      sorry \<comment> \<open>?r is in the relator set, hence in N = ker(\<pi>). So \<pi>(?r) = e.\<close>
-    \<comment> \<open>\<pi>(word\_product of w) = \<pi>(\<iota>(s1))\<cdot>\<pi>(\<iota>(s2))\<cdot>\<pi>(\<iota>(s1))\<inverse>\<cdot>\<pi>(\<iota>(s2))\<inverse> = e.\<close>
-    \<comment> \<open>Therefore \<pi>(\<iota>(s1)) and \<pi>(\<iota>(s2)) commute.\<close>
+      sorry
     show "mul (\<pi> (\<iota> s1)) (\<pi> (\<iota> s2)) = mul (\<pi> (\<iota> s2)) (\<pi> (\<iota> s1))"
       sorry
   qed
