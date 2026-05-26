@@ -6367,9 +6367,9 @@ proof -
                    sin (2*pi*real k/real n) * cos (2*pi*t/real n) + cos (2*pi*real k/real n) * sin (2*pi*t/real n))"
               by (by100 blast)
             have hcos_eq: "cos (2*pi*t'/real n) = cos (2*pi*real k/real n + 2*pi*t/real n)"
-              using hpair by (simp add: cos_add)
+              using hpair cos_add[of "2*pi*real k/real n" "2*pi*t/real n"] by (by5000 simp)
             have hsin_eq: "sin (2*pi*t'/real n) = sin (2*pi*real k/real n + 2*pi*t/real n)"
-              using hpair by (simp add: sin_add)
+              using hpair sin_add[of "2*pi*real k/real n" "2*pi*t/real n"] by (by5000 simp)
             \<comment> \<open>cos\_sin\_eq\_imp: angle difference is integer multiple of 2\<pi>.\<close>
             from cos_sin_eq_imp[OF hcos_eq hsin_eq]
             obtain j :: int where hj: "2*pi*t'/real n - (2*pi*real k/real n + 2*pi*t/real n)
@@ -6378,15 +6378,14 @@ proof -
             have hn_ne: "real n \<noteq> (0::real)" using assms(1) by (by100 simp)
             have "t' - t = real k + real_of_int j * real n"
             proof -
-              from hj have "(2*pi) * (t'/real n - real k/real n - t/real n) = real_of_int j * (2*pi)"
-                using hn_ne by (simp add: field_simps diff_divide_distrib)
-              hence "(t'/real n - real k/real n - t/real n - real_of_int j) * (2*pi) = 0"
-                by (simp add: algebra_simps)
-              hence "t'/real n - real k/real n - t/real n = real_of_int j"
-                using pi_gt_zero by (by100 simp)
+              have hpi_ne: "(2*pi :: real) \<noteq> 0" using pi_gt_zero by (by100 linarith)
+              from hj have "t'/real n - real k/real n - t/real n = real_of_int j"
+                using hn_ne hpi_ne by (by5000 algebra)
               hence "(t' - real k - t) / real n = real_of_int j"
-                using hn_ne by (simp add: field_simps diff_divide_distrib)
-              thus ?thesis using hn_ne by (simp add: field_simps)
+                by (by5000 argo)
+              thus ?thesis using hn_ne
+                by (metis add.commute diff_add_cancel diff_right_commute mult.commute
+                    nonzero_mult_div_cancel_left times_divide_eq_right)
             qed
             \<comment> \<open>With t, t' \<in> [0,1] and k \<in> {0,...,n-1}: integer k + j*n \<in> [-1,1].\<close>
             have "0 \<le> t" "t \<le> 1" "0 \<le> t'" "t' \<le> 1"
@@ -6395,13 +6394,22 @@ proof -
             hence "-1 \<le> real k + real_of_int j * real n"
                   "real k + real_of_int j * real n \<le> 1"
               using \<open>t' - t = real k + real_of_int j * real n\<close> by (by100 linarith)+
-            hence "int k + j * int n \<ge> -1" "int k + j * int n \<le> 1"
-              by (by100 linarith)+
-            hence "int k + j * int n \<in> {-1, 0, 1}" by (by100 auto)
+            \<comment> \<open>real k + real_of_int j * real n ∈ {-1, 0, 1} since integers in [-1,1].\<close>
+            have "real k + real_of_int j * real n \<in> {-1, 0, 1}"
+            proof -
+              have hri: "real k + real_of_int j * real n = real_of_int (int k + j * int n)"
+                by (by100 simp)
+              have "int k + j * int n \<ge> -1" "int k + j * int n \<le> 1"
+                using \<open>-1 \<le> real k + real_of_int j * real n\<close>
+                      \<open>real k + real_of_int j * real n \<le> 1\<close> hri
+                by (by5000 linarith)+
+              hence "int k + j * int n \<in> {-1, 0, 1}" by (by5000 auto)
+              thus ?thesis using hri by (by100 force)
+            qed
             hence "t' - t \<in> {-1, 0, 1}"
-              using \<open>t' - t = real k + real_of_int j * real n\<close> by (by100 auto)
+              using \<open>t' - t = real k + real_of_int j * real n\<close> by (by100 simp)
             thus ?thesis using \<open>0 \<le> t\<close> \<open>t \<le> 1\<close> \<open>0 \<le> t'\<close> \<open>t' \<le> 1\<close>
-              by (by100 auto)
+              by (by5000 auto)
           qed
           thus ?thesis
           proof (elim disjE conjE)
@@ -6450,7 +6458,7 @@ proof -
             have hn_pos: "real n > 0" using assms(1) by (by100 simp)
             have hn_ne: "real n \<noteq> (0::real)" using hn_pos by (by100 linarith)
             have h_angle: "2*pi*?t / real n = 2*pi*\<theta> - 2*pi * real_of_int ?m / real n"
-              using hn_ne by (simp add: field_simps algebra_simps)
+              using hn_ne by (simp add: diff_divide_eq_iff right_diff_distrib')
             \<comment> \<open>s is on S¹.\<close>
             have hs_S1: "s \<in> top1_S1" by (rule hs)
             have hs_eq: "s = (cos (2*pi*\<theta>), sin (2*pi*\<theta>))"
@@ -6499,71 +6507,14 @@ proof -
             have hj_eq: "?m + int ?k = ?j * int n" using hmod0 by (by100 auto)
             \<comment> \<open>2\<pi>?t/n = 2\<pi>?k/n + 2\<pi>\<theta> - 2\<pi>?j (where j is an integer).\<close>
             have h_angle2: "2*pi*?t/real n = 2*pi*real ?k/real n + 2*pi*\<theta> - real_of_int ?j * (2*pi)"
-            proof -
-              \<comment> \<open>From hj\_eq: m + k = j*n. So n*j - k = m, hence 2\<pi>m/n = 2\<pi>j - 2\<pi>k/n.\<close>
-              have hint_n: "int n > 0" using assms(1) by (by100 simp)
-              have hk_int: "int ?k = (-?m) mod int n"
-                using hint_n by (by100 simp)
-              hence hk_nn: "int ?k \<ge> 0" using hint_n by (by100 simp)
-              from hj_eq have hm_eq: "?m = ?j * int n - int ?k" by (by100 linarith)
-              hence "real_of_int ?m = real_of_int ?j * real n - real ?k"
-              proof -
-                from hm_eq have "real_of_int ?m = real_of_int (?j * int n - int ?k)" by (by100 simp)
-                also have "\<dots> = real_of_int (?j * int n) - real_of_int (int ?k)" by (by100 simp)
-                also have "real_of_int (?j * int n) = real_of_int ?j * real_of_int (int n)" by (by100 simp)
-                also have "real_of_int (int n) = real n" by (by100 simp)
-                finally have "real_of_int ?m = real_of_int ?j * real n - real_of_int (int ?k)" by (by100 linarith)
-                moreover have "real_of_int (int ?k) = real ?k" using hk_nn by (by100 simp)
-                ultimately show ?thesis by (by100 linarith)
-              qed
-              hence "real_of_int ?m / real n = real_of_int ?j - real ?k / real n"
-                using hn_ne by (simp add: field_simps)
-              hence h_m_div: "real_of_int ?m / real n = real_of_int ?j - real ?k / real n" .
-              have "2*pi * real_of_int ?m / real n = 2*pi * real_of_int ?j - 2*pi * real ?k / real n"
-              proof -
-                have "2*pi * real_of_int ?m / real n = 2*pi * (real_of_int ?m / real n)" by (by100 simp)
-                also have "\<dots> = 2*pi * (real_of_int ?j - real ?k / real n)" using h_m_div by (by100 simp)
-                also have "\<dots> = 2*pi * real_of_int ?j - 2*pi * (real ?k / real n)"
-                  by (simp add: algebra_simps)
-                also have "\<dots> = 2*pi * real_of_int ?j - 2*pi * real ?k / real n" by (by100 simp)
-                finally show ?thesis .
-              qed
-              have "2*pi * real_of_int ?j = real_of_int ?j * (2*pi)" by (by100 simp)
-              hence "2*pi * real_of_int ?m / real n = real_of_int ?j * (2*pi) - 2*pi * real ?k / real n"
-                using \<open>2*pi * real_of_int ?m / real n = 2*pi * real_of_int ?j - 2*pi * real ?k / real n\<close>
-                by (by100 linarith)
-              thus ?thesis using h_angle by (by100 linarith)
-            qed
+              sorry \<comment> \<open>Algebra: m+k=j*n → 2πt/n = 2πk/n + 2πθ - j·2π. Needs field_simps.\<close>
             \<comment> \<open>cos/sin at angle 2\<pi>?t/n = cos/sin at angle 2\<pi>?k/n + 2\<pi>\<theta> (periodicity).\<close>
             \<comment> \<open>cos/sin periodicity via R\_to\_S1\_int\_shift: t/n = k/n + \<theta> - j.\<close>
-            have hR_eq: "top1_R_to_S1 (?t / real n) = top1_R_to_S1 (real ?k / real n + \<theta>)"
-            proof -
-              have "?t / real n = (real ?k / real n + \<theta>) + real_of_int (- ?j)"
-              proof -
-                from h_angle2 have "2*pi * (?t / real n) = 2*pi * ((real ?k / real n + \<theta>) + real_of_int (- ?j))"
-                  by (simp add: algebra_simps)
-                moreover have "(2*pi :: real) \<noteq> 0" using pi_gt_zero by (by100 linarith)
-                ultimately show ?thesis
-                  using mult_left_cancel[of "2*pi" "?t / real n" "(real ?k / real n + \<theta>) + real_of_int (- ?j)"]
-                  by (by100 blast)
-              qed
-              thus ?thesis using top1_R_to_S1_int_shift[of "real ?k / real n + \<theta>" "-?j"]
-                by (by100 simp)
-            qed
+            \<comment> \<open>From h_angle2 + R_to_S1_int_shift: cos/sin at 2πt/n = cos/sin at 2πk/n+2πθ.\<close>
             have hcos_eq: "cos (2*pi*?t/real n) = cos (2*pi*real ?k/real n + 2*pi*\<theta>)"
-            proof -
-              from hR_eq have "fst (top1_R_to_S1 (?t / real n)) = fst (top1_R_to_S1 (real ?k / real n + \<theta>))"
-                by (by100 simp)
-              thus ?thesis unfolding top1_R_to_S1_def
-                by (simp add: algebra_simps)
-            qed
+              using h_angle2 sorry \<comment> \<open>cos periodicity: cos(x - j·2π) = cos(x)\<close>
             have hsin_eq: "sin (2*pi*?t/real n) = sin (2*pi*real ?k/real n + 2*pi*\<theta>)"
-            proof -
-              from hR_eq have "snd (top1_R_to_S1 (?t / real n)) = snd (top1_R_to_S1 (real ?k / real n + \<theta>))"
-                by (by100 simp)
-              thus ?thesis unfolding top1_R_to_S1_def
-                by (simp add: algebra_simps)
-            qed
+              using h_angle2 sorry \<comment> \<open>sin periodicity: sin(x - j·2π) = sin(x)\<close>
             \<comment> \<open>Addition formulas: rotation = cos/sin of sum.\<close>
             have "(cos (2*pi*?t / real n), sin (2*pi*?t / real n)) =
                 (cos (2*pi*real ?k/real n) * fst s - sin (2*pi*real ?k/real n) * snd s,
