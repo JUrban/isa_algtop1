@@ -5420,7 +5420,61 @@ proof -
   \<comment> \<open>Step 3a: q is a closed map. For any closed C \<subseteq> B², q\<inverse>(q(C)) = C \<union> \<Union>_{k<n} r^k(C\<inter>S¹).
      Each r^k(C\<inter>S¹) is closed (rotation is continuous on compact S¹). Finite union closed.\<close>
   have hq_closed_map: "top1_closed_map_on top1_B2 top1_B2_topology X TX q"
-    sorry \<comment> \<open>Book: q\<inverse>(q(C)) = C \<union> r(C\<inter>S¹) \<union> ... \<union> r^{n-1}(C\<inter>S¹), finite union of closed.\<close>
+    unfolding top1_closed_map_on_def
+  proof (intro conjI ballI allI impI)
+    fix z assume "z \<in> top1_B2" thus "q z \<in> X" using hq_surj by (by100 blast)
+  next
+    fix C assume hC: "closedin_on top1_B2 top1_B2_topology C"
+    \<comment> \<open>Book proof: q(C) is closed iff q\<inverse>(q(C)) is closed in B² (quotient property).
+       q\<inverse>(q(C)) = C \<union> \<Union>{r^k(C\<inter>S¹) | k < n}. Each r^k(C\<inter>S¹) is closed.\<close>
+    \<comment> \<open>To show q(C) is closed in X: show X - q(C) is open, i.e., X - q(C) \<in> TX.
+       By quotient property: {z \<in> B². q z \<in> X - q(C)} \<in> B²_top, i.e., B² - q\<inverse>(q(C)) is open.\<close>
+    have hC_sub: "C \<subseteq> top1_B2" using hC unfolding closedin_on_def by (by100 blast)
+    \<comment> \<open>Define the saturation: q\<inverse>(q(C)) = {z \<in> B². q z \<in> q ` C}.\<close>
+    let ?sat = "{z \<in> top1_B2. q z \<in> q ` C}"
+    \<comment> \<open>q\<inverse>(q(C)) \<subseteq> C \<union> \<Union>_{k<n} r^k(C \<inter> S¹).\<close>
+    \<comment> \<open>For z \<in> B² with q(z) \<in> q(C): either z \<in> C, or z \<in> S¹ and some c \<in> C \<inter> S¹ with q(z)=q(c).\<close>
+    have hsat_closed: "closedin_on top1_B2 top1_B2_topology ?sat"
+    proof -
+      \<comment> \<open>?sat = C \<union> {z \<in> S¹. \<exists>c \<in> C \<inter> S¹. q z = q c}.\<close>
+      \<comment> \<open>The S¹ part = \<Union>_{k<n} r^k(C \<inter> S¹), each r^k(C\<inter>S¹) is closed.\<close>
+      let ?C0 = "C \<inter> top1_S1"
+      let ?rot = "\<lambda>(k::nat) z. (cos (2*pi*real k/real n) * fst z - sin (2*pi*real k/real n) * snd z,
+                                 sin (2*pi*real k/real n) * fst z + cos (2*pi*real k/real n) * snd z)"
+      have hsat_eq: "?sat = C \<union> (\<Union>k\<in>{..<n}. ?rot k ` ?C0)"
+        sorry \<comment> \<open>Set equality from hq\_S1: z in sat iff z \<in> C or z = r^k(c) for c \<in> C\<inter>S¹.\<close>
+      moreover have "closedin_on top1_B2 top1_B2_topology (C \<union> (\<Union>k\<in>{..<n}. ?rot k ` ?C0))"
+      proof -
+        \<comment> \<open>Each r^k(C\<inter>S¹) is closed: continuous image of compact subset of Hausdorff.\<close>
+        have hC0_closed_S1: "closedin_on top1_S1 top1_S1_topology ?C0"
+          sorry \<comment> \<open>C\<inter>S¹ is closed in S¹ (intersection of closed from ambient B² with S¹).\<close>
+        have "\<And>k. k < n \<Longrightarrow> closedin_on top1_B2 top1_B2_topology (?rot k ` ?C0)"
+          sorry \<comment> \<open>Rotation is continuous homeomorphism on S¹; image of closed is closed.
+             r^k(C\<inter>S¹) \<subseteq> S¹ \<subseteq> B², and is a continuous image of closed compact set in Hausdorff.\<close>
+        hence "closedin_on top1_B2 top1_B2_topology (\<Union>k\<in>{..<n}. ?rot k ` ?C0)"
+          sorry \<comment> \<open>Finite union of closed sets is closed.\<close>
+        thus ?thesis
+          sorry \<comment> \<open>Union of two closed sets is closed.\<close>
+      qed
+      ultimately show ?thesis by (by100 simp)
+    qed
+    \<comment> \<open>By quotient property: sat closed in B² \<Rightarrow> q(C) closed in X.\<close>
+    show "closedin_on X TX (q ` C)"
+    proof -
+      have "q ` C \<subseteq> X" using hC_sub hq_surj by (by100 blast)
+      moreover have "X - q ` C \<in> TX"
+      proof -
+        have "{z \<in> top1_B2. q z \<in> X - q ` C} = top1_B2 - ?sat"
+          using hq_surj by (by5000 blast)
+        moreover have "top1_B2 - ?sat \<in> top1_B2_topology"
+          using hsat_closed unfolding closedin_on_def by (by100 blast)
+        ultimately have "{z \<in> top1_B2. q z \<in> X - q ` C} \<in> top1_B2_topology" by (by100 simp)
+        moreover have "X - q ` C \<subseteq> X" by (by100 blast)
+        ultimately show ?thesis using hq_quot unfolding top1_quotient_map_on_def by (by100 blast)
+      qed
+      ultimately show ?thesis unfolding closedin_on_def by (by100 blast)
+    qed
+  qed
   \<comment> \<open>Step 3b: B² is compact Hausdorff, hence normal.\<close>
   have hB2_top: "is_topology_on top1_B2 top1_B2_topology"
     using top1_B2_path_connected unfolding top1_path_connected_on_def by (by100 blast)
