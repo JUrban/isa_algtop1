@@ -6259,7 +6259,57 @@ proof -
         show "\<forall>V. V \<subseteq> top1_S1 \<longrightarrow>
             ({x \<in> top1_unit_interval. top1_R_to_S1 x \<in> V} \<in> top1_unit_interval_topology
                 \<longrightarrow> V \<in> top1_S1_topology)"
-          sorry \<comment> \<open>Compact to Hausdorff \<Rightarrow> closed map \<Rightarrow> quotient property.\<close>
+        proof (intro allI impI)
+          fix V assume hV: "V \<subseteq> top1_S1"
+              and hpre: "{x \<in> top1_unit_interval. top1_R_to_S1 x \<in> V} \<in> top1_unit_interval_topology"
+          \<comment> \<open>Complement: {x \<in> I. R\_to\_S1 x \<notin> V} is closed in [0,1].\<close>
+          have hcompl_cl: "closedin_on top1_unit_interval top1_unit_interval_topology
+              {x \<in> top1_unit_interval. top1_R_to_S1 x \<notin> V}"
+          proof -
+            have hcl_sub: "{x \<in> top1_unit_interval. top1_R_to_S1 x \<notin> V} \<subseteq> top1_unit_interval"
+              by (by100 blast)
+            have hcl_compl: "top1_unit_interval - {x \<in> top1_unit_interval. top1_R_to_S1 x \<notin> V}
+                = {x \<in> top1_unit_interval. top1_R_to_S1 x \<in> V}" by (by100 blast)
+            have hcl_open: "top1_unit_interval - {x \<in> top1_unit_interval. top1_R_to_S1 x \<notin> V}
+                \<in> top1_unit_interval_topology" using hcl_compl hpre by (by100 simp)
+            show ?thesis using closedin_intro[OF hcl_sub hcl_open] by (by100 blast)
+          qed
+          \<comment> \<open>Image: R\_to\_S1({x | x \<in> I, R\_to\_S1 x \<notin> V}) = S¹ - V (surjectivity).\<close>
+          have himg_eq: "top1_R_to_S1 ` {x \<in> top1_unit_interval. top1_R_to_S1 x \<notin> V} = top1_S1 - V"
+          proof
+            show "top1_R_to_S1 ` {x \<in> top1_unit_interval. top1_R_to_S1 x \<notin> V} \<subseteq> top1_S1 - V"
+            proof
+              fix z assume "z \<in> top1_R_to_S1 ` {x \<in> top1_unit_interval. top1_R_to_S1 x \<notin> V}"
+              then obtain t where "t \<in> top1_unit_interval" "top1_R_to_S1 t \<notin> V" "z = top1_R_to_S1 t"
+                by (by100 blast)
+              moreover have "z \<in> top1_S1" using hR_surj_loc \<open>t \<in> top1_unit_interval\<close> \<open>z = _\<close>
+                by (by100 blast)
+              ultimately show "z \<in> top1_S1 - V" by (by100 blast)
+            qed
+          next
+            show "top1_S1 - V \<subseteq> top1_R_to_S1 ` {x \<in> top1_unit_interval. top1_R_to_S1 x \<notin> V}"
+            proof
+              fix z assume "z \<in> top1_S1 - V"
+              hence hzS1: "z \<in> top1_S1" and hzV: "z \<notin> V" by (by100 blast)+
+              have "z \<in> top1_R_to_S1 ` top1_unit_interval" using hR_surj_loc hzS1 by (by100 blast)
+              then obtain t where "t \<in> top1_unit_interval" "top1_R_to_S1 t = z" by (by100 blast)
+              hence "t \<in> {x \<in> top1_unit_interval. top1_R_to_S1 x \<notin> V}" using hzV by (by100 blast)
+              thus "z \<in> top1_R_to_S1 ` {x \<in> top1_unit_interval. top1_R_to_S1 x \<notin> V}"
+                using \<open>top1_R_to_S1 t = z\<close> by (by100 blast)
+            qed
+          qed
+          \<comment> \<open>Closed map: image of closed is closed in S¹.\<close>
+          have "closedin_on top1_S1 top1_S1_topology (top1_S1 - V)"
+            using compact_hausdorff_continuous_closed_map[OF hI_compact hS1_haus_loc hR_cont hcompl_cl]
+                  himg_eq by (by100 simp)
+          \<comment> \<open>S¹ - V closed \<Rightarrow> V open.\<close>
+          hence "top1_S1 - (top1_S1 - V) \<in> top1_S1_topology"
+            unfolding closedin_on_def by (by100 blast)
+          moreover have "top1_S1 - (top1_S1 - V) = V \<inter> top1_S1" by (by100 blast)
+          ultimately have "(V \<inter> top1_S1) \<in> top1_S1_topology" by (by100 simp)
+          moreover have "V \<inter> top1_S1 = V" using hV by (by100 blast)
+          ultimately show "V \<in> top1_S1_topology" by (by100 simp)
+        qed
       qed
     qed
     \<comment> \<open>Step D4: Apply Theorem\_22\_2 to get continuous \<phi>: S¹ \<rightarrow> A.\<close>
