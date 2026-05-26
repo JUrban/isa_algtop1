@@ -5415,9 +5415,173 @@ proof -
            ?A (subspace_topology X TX ?A) f"
     sorry \<comment> \<open>Quotient of S¹ by n-fold rotation \<cong> S¹.
        Arc from (1,0) to r(1,0) maps bijectively onto A; quotient of arc by endpoint ID = S¹.\<close>
-  \<comment> \<open>Step 3: X is Hausdorff (compact quotient of B²).\<close>
+  \<comment> \<open>Step 3: X is Hausdorff. Book proof: (1) q is a closed map (rotation saturation argument),
+     then (2) Lemma 73.3: closed quotient of normal space is normal (hence Hausdorff).\<close>
+  \<comment> \<open>Step 3a: q is a closed map. For any closed C \<subseteq> B², q\<inverse>(q(C)) = C \<union> \<Union>_{k<n} r^k(C\<inter>S¹).
+     Each r^k(C\<inter>S¹) is closed (rotation is continuous on compact S¹). Finite union closed.\<close>
+  have hq_closed_map: "top1_closed_map_on top1_B2 top1_B2_topology X TX q"
+    sorry \<comment> \<open>Book: q\<inverse>(q(C)) = C \<union> r(C\<inter>S¹) \<union> ... \<union> r^{n-1}(C\<inter>S¹), finite union of closed.\<close>
+  \<comment> \<open>Step 3b: B² is compact Hausdorff, hence normal.\<close>
+  have hB2_top: "is_topology_on top1_B2 top1_B2_topology"
+    using top1_B2_path_connected unfolding top1_path_connected_on_def by (by100 blast)
+  have hB2_haus: "is_hausdorff_on top1_B2 top1_B2_topology"
+  proof -
+    have hTOS_eq: "(order_topology_on_UNIV :: real set set) = top1_open_sets"
+      using order_topology_on_UNIV_eq_HOL_open unfolding top1_open_sets_def by (by100 auto)
+    have hR_haus: "is_hausdorff_on (UNIV::real set) (top1_open_sets::real set set)"
+      using conjunct1[OF Theorem_17_11[where 'a=real]] unfolding hTOS_eq .
+    have "is_hausdorff_on ((UNIV::real set) \<times> (UNIV::real set))
+        (product_topology_on (top1_open_sets::real set set) (top1_open_sets::real set set))"
+      using conjunct1[OF conjunct2[OF Theorem_17_11]] hR_haus by (by100 blast)
+    hence hR2_haus: "is_hausdorff_on (UNIV::(real\<times>real) set)
+        (product_topology_on top1_open_sets top1_open_sets)" by (by100 simp)
+    thus ?thesis using conjunct2[OF conjunct2[OF Theorem_17_11]]
+      unfolding top1_B2_topology_def by (by100 blast)
+  qed
+  have hB2_compact: "top1_compact_on top1_B2 top1_B2_topology"
+  proof -
+    have hB2_sub: "top1_B2 \<subseteq> {-1..1} \<times> {-1..1::real}"
+    proof
+      fix p :: "real \<times> real" assume "p \<in> top1_B2"
+      hence h: "fst p ^ 2 + snd p ^ 2 \<le> 1" unfolding top1_B2_def by (by100 simp)
+      have "0 \<le> snd p ^ 2" by (by100 simp)
+      hence "fst p ^ 2 \<le> 1" using h by (by100 linarith)
+      hence "\<bar>fst p\<bar> \<le> 1" using power2_le_imp_le[of "\<bar>fst p\<bar>" 1] by (by100 simp)
+      moreover have "0 \<le> fst p ^ 2" by (by100 simp)
+      moreover have "snd p ^ 2 \<le> 1" using h calculation by (by100 linarith)
+      hence "\<bar>snd p\<bar> \<le> 1" using power2_le_imp_le[of "\<bar>snd p\<bar>" 1] by (by100 simp)
+      hence "- 1 \<le> snd p \<and> snd p \<le> 1" by (by100 linarith)
+      moreover from \<open>\<bar>fst p\<bar> \<le> 1\<close> have "- 1 \<le> fst p \<and> fst p \<le> 1" by (by100 linarith)
+      ultimately have "fst p \<in> {-1..1} \<and> snd p \<in> {-1..1}" by (by100 simp)
+      thus "p \<in> {-1..1} \<times> {-1..1}" by (simp add: mem_Times_iff)
+    qed
+    have "closed top1_B2"
+    proof -
+      have "top1_B2 = (\<lambda>p::real\<times>real. fst p ^ 2 + snd p ^ 2) -` {..1}"
+        unfolding top1_B2_def by (by100 auto)
+      moreover have "continuous_on UNIV (\<lambda>p::real\<times>real. fst p ^ 2 + snd p ^ 2)"
+        by (intro continuous_intros)
+      hence "closed ((\<lambda>p::real\<times>real. fst p ^ 2 + snd p ^ 2) -` {..1})"
+        by (intro closed_vimage closed_atMost) (simp add: continuous_on_eq_continuous_at open_UNIV)
+      ultimately show ?thesis by (by100 simp)
+    qed
+    hence "compact top1_B2"
+      using closed_subset_compact[OF compact_Icc_Times _ hB2_sub] by (by100 blast)
+    have "top1_B2_topology = subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) top1_B2"
+      unfolding top1_B2_topology_def ..
+    hence "top1_B2_topology = subspace_topology (UNIV::((real\<times>real) set)) (top1_open_sets::((real\<times>real) set set)) top1_B2"
+      using product_topology_on_open_sets[where 'a=real and 'b=real] by simp
+    hence "top1_compact_on top1_B2 top1_B2_topology \<longleftrightarrow> compact top1_B2"
+      using top1_compact_on_subspace_UNIV_iff_compact[of top1_B2] by simp
+    thus ?thesis using \<open>compact top1_B2\<close> by (by100 simp)
+  qed
+  have hB2_normal: "top1_normal_on top1_B2 top1_B2_topology"
+    by (rule Theorem_32_3[OF hB2_compact hB2_haus])
+  \<comment> \<open>Step 3c: Lemma 73.3 specialized to Hausdorff: closed quotient map from normal space
+     gives Hausdorff target. For distinct x, y \<in> X: {x}, {y} are closed (closed map from T1).
+     q\<inverse>({x}), q\<inverse>({y}) disjoint closed in B². B² normal \<Rightarrow> separated by open U, V.
+     Then X - q(B²-U) and X - q(B²-V) are disjoint open neighborhoods of x, y.\<close>
   have hX_haus: "is_hausdorff_on X TX"
-    sorry \<comment> \<open>Quotient of compact Hausdorff B² by closed equivalence relation is Hausdorff.\<close>
+    unfolding is_hausdorff_on_def
+  proof (intro conjI ballI impI)
+    show "is_topology_on X TX" by (rule hTX)
+  next
+    fix x y assume hx: "x \<in> X" and hy: "y \<in> X" and hne: "x \<noteq> y"
+    \<comment> \<open>Fibers q\<inverse>(x), q\<inverse>(y) are disjoint closed subsets of B².\<close>
+    let ?Fx = "{z \<in> top1_B2. q z = x}" and ?Fy = "{z \<in> top1_B2. q z = y}"
+    have hFx_cl: "closedin_on top1_B2 top1_B2_topology ?Fx"
+      sorry \<comment> \<open>Finite fiber (size \<le> n) in Hausdorff B² is closed.\<close>
+    have hFy_cl: "closedin_on top1_B2 top1_B2_topology ?Fy"
+      sorry \<comment> \<open>Same argument.\<close>
+    have hFxy_disj: "?Fx \<inter> ?Fy = {}" using hne by (by100 blast)
+    \<comment> \<open>B² normal: separate ?Fx and ?Fy by disjoint open sets.\<close>
+    from normal_separation[OF hB2_normal hFx_cl hFy_cl hFxy_disj]
+    obtain U V where hU: "U \<in> top1_B2_topology" and hV: "V \<in> top1_B2_topology"
+        and hFxU: "?Fx \<subseteq> U" and hFyV: "?Fy \<subseteq> V" and hUV: "U \<inter> V = {}"
+      by (by100 blast)
+    \<comment> \<open>Lemma 73.3 trick: U₀ = X - q(B²-U), V₀ = X - q(B²-V).\<close>
+    let ?C = "top1_B2 - U" and ?D = "top1_B2 - V"
+    have hB2T_sub: "top1_B2_topology \<subseteq> Pow top1_B2"
+      unfolding top1_B2_topology_def subspace_topology_def by (by100 blast)
+    have hU_sub: "U \<subseteq> top1_B2" using hU hB2T_sub by (by100 blast)
+    have hV_sub: "V \<subseteq> top1_B2" using hV hB2T_sub by (by100 blast)
+    have hC_cl: "closedin_on top1_B2 top1_B2_topology ?C"
+    proof -
+      have "?C \<subseteq> top1_B2" by (by100 blast)
+      moreover have "top1_B2 - ?C = U" using hU_sub by (by100 blast)
+      hence "top1_B2 - ?C \<in> top1_B2_topology" using hU by (by100 simp)
+      ultimately show ?thesis unfolding closedin_on_def by (by100 blast)
+    qed
+    have hD_cl: "closedin_on top1_B2 top1_B2_topology ?D"
+    proof -
+      have "?D \<subseteq> top1_B2" by (by100 blast)
+      moreover have "top1_B2 - ?D = V" using hV_sub by (by100 blast)
+      hence "top1_B2 - ?D \<in> top1_B2_topology" using hV by (by100 simp)
+      ultimately show ?thesis unfolding closedin_on_def by (by100 blast)
+    qed
+    have hqC_cl: "closedin_on X TX (q ` ?C)"
+      using hq_closed_map hC_cl unfolding top1_closed_map_on_def by (by100 blast)
+    have hqD_cl: "closedin_on X TX (q ` ?D)"
+      using hq_closed_map hD_cl unfolding top1_closed_map_on_def by (by100 blast)
+    let ?U0 = "X - q ` ?C" and ?V0 = "X - q ` ?D"
+    have hU0_open: "?U0 \<in> TX"
+      using hqC_cl hTX unfolding closedin_on_def by (by100 blast)
+    have hV0_open: "?V0 \<in> TX"
+      using hqD_cl hTX unfolding closedin_on_def by (by100 blast)
+    \<comment> \<open>x \<in> U₀: q\<inverse>(x) \<subseteq> U, so q\<inverse>(x) \<inter> C = {} (\<because> C = B²-U), so x \<notin> q(C).\<close>
+    have "x \<in> ?U0"
+    proof -
+      have "x \<in> X" by (rule hx)
+      have "x \<notin> q ` ?C"
+      proof
+        assume "x \<in> q ` ?C"
+        then obtain z where hz: "z \<in> top1_B2 - U" and hqz: "q z = x" by (by100 blast)
+        hence "z \<in> ?Fx" by (by100 blast)
+        hence "z \<in> U" using hFxU by (by100 blast)
+        thus False using hz by (by100 blast)
+      qed
+      thus ?thesis using hx by (by100 blast)
+    qed
+    have "y \<in> ?V0"
+    proof -
+      have "y \<notin> q ` ?D"
+      proof
+        assume "y \<in> q ` ?D"
+        then obtain z where hz: "z \<in> top1_B2 - V" and hqz: "q z = y" by (by100 blast)
+        hence "z \<in> ?Fy" by (by100 blast)
+        hence "z \<in> V" using hFyV by (by100 blast)
+        thus False using hz by (by100 blast)
+      qed
+      thus ?thesis using hy by (by100 blast)
+    qed
+    \<comment> \<open>U₀ \<inter> V₀ = {}: if x \<in> U₀ \<inter> V₀ then q\<inverse>(x) \<subseteq> U and q\<inverse>(x) \<subseteq> V, contradicting U\<inter>V={}.\<close>
+    have "?U0 \<inter> ?V0 = {}"
+    proof (rule ccontr)
+      assume "\<not> ?U0 \<inter> ?V0 = {}"
+      then obtain w where hw0: "w \<in> ?U0 \<inter> ?V0" by (by100 blast)
+      hence hwU: "w \<notin> q ` ?C" and hwV: "w \<notin> q ` ?D" and hwX: "w \<in> X" by (by100 blast)+
+      \<comment> \<open>w \<in> X, so w = q(z) for some z \<in> B².\<close>
+      from hwX obtain z where hz: "z \<in> top1_B2" and hqz: "q z = w" using hq_surj by (by100 blast)
+      \<comment> \<open>From w \<notin> q(C): z \<notin> C, i.e., z \<in> U. Similarly z \<in> V.\<close>
+      have "z \<in> U"
+      proof (rule ccontr)
+        assume "z \<notin> U" hence "z \<in> ?C" using hz by (by100 blast)
+        hence "w \<in> q ` ?C" using hqz by (by100 blast)
+        thus False using hwU by (by100 blast)
+      qed
+      moreover have "z \<in> V"
+      proof (rule ccontr)
+        assume "z \<notin> V" hence "z \<in> ?D" using hz by (by100 blast)
+        hence "w \<in> q ` ?D" using hqz by (by100 blast)
+        thus False using hwV by (by100 blast)
+      qed
+      ultimately have "z \<in> U \<inter> V" by (by100 blast)
+      thus False using hUV by (by100 blast)
+    qed
+    show "\<exists>U V. neighborhood_of x X TX U \<and> neighborhood_of y X TX V \<and> U \<inter> V = {}"
+      using hU0_open hV0_open \<open>x \<in> ?U0\<close> \<open>y \<in> ?V0\<close> \<open>?U0 \<inter> ?V0 = {}\<close>
+      unfolding neighborhood_of_def by (by100 blast)
+  qed
   \<comment> \<open>Step 3b: S¹ \<subseteq> B² and S¹ is closed in B² (needed for Step 4).\<close>
   have hS1_sub_B2: "top1_S1 \<subseteq> top1_B2"
     unfolding top1_S1_def top1_B2_def by (by100 auto)
@@ -5454,49 +5618,7 @@ proof -
   qed
   \<comment> \<open>Step 4: A is closed in X (image of compact S¹ under quotient map to Hausdorff X).\<close>
   have hA_cl: "closedin_on X TX ?A"
-  proof -
-    \<comment> \<open>B² is compact, q continuous, S¹ closed in B², X Hausdorff \<Rightarrow> q(S¹) closed in X.\<close>
-    have hB2_compact: "top1_compact_on top1_B2 top1_B2_topology"
-    proof -
-      \<comment> \<open>Reuse the pattern from AlgTopCached: B2 \<subseteq> [-1,1]\<times>[-1,1], closed, hence compact.\<close>
-      have hB2_sub: "top1_B2 \<subseteq> {-1..1} \<times> {-1..1::real}"
-      proof
-        fix p :: "real \<times> real" assume "p \<in> top1_B2"
-        hence h: "fst p ^ 2 + snd p ^ 2 \<le> 1" unfolding top1_B2_def by (by100 simp)
-        have "0 \<le> snd p ^ 2" by (by100 simp)
-        hence "fst p ^ 2 \<le> 1" using h by (by100 linarith)
-        hence "\<bar>fst p\<bar> \<le> 1" using power2_le_imp_le[of "\<bar>fst p\<bar>" 1] by (by100 simp)
-        moreover have "0 \<le> fst p ^ 2" by (by100 simp)
-        moreover have "snd p ^ 2 \<le> 1" using h calculation by (by100 linarith)
-        hence "\<bar>snd p\<bar> \<le> 1" using power2_le_imp_le[of "\<bar>snd p\<bar>" 1] by (by100 simp)
-        hence "- 1 \<le> snd p \<and> snd p \<le> 1" by (by100 linarith)
-        moreover from \<open>\<bar>fst p\<bar> \<le> 1\<close> have "- 1 \<le> fst p \<and> fst p \<le> 1" by (by100 linarith)
-        ultimately have "fst p \<in> {-1..1} \<and> snd p \<in> {-1..1}" by (by100 simp)
-        thus "p \<in> {-1..1} \<times> {-1..1}" by (simp add: mem_Times_iff)
-      qed
-      have "closed top1_B2"
-      proof -
-        have "top1_B2 = (\<lambda>p::real\<times>real. fst p ^ 2 + snd p ^ 2) -` {..1}"
-          unfolding top1_B2_def by (by100 auto)
-        moreover have "continuous_on UNIV (\<lambda>p::real\<times>real. fst p ^ 2 + snd p ^ 2)"
-          by (intro continuous_intros)
-        hence "closed ((\<lambda>p::real\<times>real. fst p ^ 2 + snd p ^ 2) -` {..1})"
-          by (intro closed_vimage closed_atMost) (simp add: continuous_on_eq_continuous_at open_UNIV)
-        ultimately show ?thesis by (by100 simp)
-      qed
-      hence "compact top1_B2"
-        using closed_subset_compact[OF compact_Icc_Times _ hB2_sub] by (by100 blast)
-      have "top1_B2_topology = subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) top1_B2"
-        unfolding top1_B2_topology_def ..
-      hence "top1_B2_topology = subspace_topology (UNIV::((real\<times>real) set)) (top1_open_sets::((real\<times>real) set set)) top1_B2"
-        using product_topology_on_open_sets[where 'a=real and 'b=real] by simp
-      hence "top1_compact_on top1_B2 top1_B2_topology \<longleftrightarrow> compact top1_B2"
-        using top1_compact_on_subspace_UNIV_iff_compact[of top1_B2] by simp
-      thus ?thesis using \<open>compact top1_B2\<close> by (by100 simp)
-    qed
-    show ?thesis
-      by (rule compact_hausdorff_continuous_closed_map[OF hB2_compact hX_haus hq_cont hS1_closed])
-  qed
+    by (rule compact_hausdorff_continuous_closed_map[OF hB2_compact hX_haus hq_cont hS1_closed])
   \<comment> \<open>Step 5: q restricted to Int(B²) = B² - S¹ is a homeomorphism onto X - A.
      Proof: B² - S¹ is open and saturated in B², so by Thm 22.1 the restriction
      is a quotient map. Since it's also bijective, it's a homeomorphism.\<close>
