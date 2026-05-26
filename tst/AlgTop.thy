@@ -6452,8 +6452,14 @@ proof -
             have hR_eq: "top1_R_to_S1 (?t / real n) = top1_R_to_S1 (real ?k / real n + \<theta>)"
             proof -
               have "?t / real n = (real ?k / real n + \<theta>) + real_of_int (- ?j)"
-                using h_angle2 pi_gt_zero
-                sorry \<comment> \<open>From h\_angle2: 2\<pi>*t/n = 2\<pi>*(k/n+\<theta>) - j*2\<pi>. Divide by 2\<pi>.\<close>
+              proof -
+                from h_angle2 have "2*pi * (?t / real n) = 2*pi * ((real ?k / real n + \<theta>) + real_of_int (- ?j))"
+                  by (simp add: algebra_simps)
+                moreover have "(2*pi :: real) \<noteq> 0" using pi_gt_zero by (by100 linarith)
+                ultimately show ?thesis
+                  using mult_left_cancel[of "2*pi" "?t / real n" "(real ?k / real n + \<theta>) + real_of_int (- ?j)"]
+                  by (by100 blast)
+              qed
               thus ?thesis using top1_R_to_S1_int_shift[of "real ?k / real n + \<theta>" "-?j"]
                 by (by100 simp)
             qed
