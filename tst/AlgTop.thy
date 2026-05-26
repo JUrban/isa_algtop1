@@ -4903,7 +4903,7 @@ theorem Theorem_73_2_torus_free_abelian:
   fixes T_torus :: "'a set" and TT :: "'a set set" and x0 :: 'a
   assumes "top1_is_torus_on T_torus TT"
       and "x0 \<in> T_torus"
-  shows "\<exists>H mulH eH invgH iotaH phi.
+  shows "\<exists>(H :: (real \<Rightarrow> 'a) set set set set) mulH eH invgH iotaH phi.
     top1_is_free_abelian_group_full_on H mulH eH invgH iotaH ({..<2}::nat set) \<and>
     top1_group_iso_on H mulH
       (top1_fundamental_group_carrier T_torus TT x0)
@@ -5087,7 +5087,13 @@ proof -
       (top1_fundamental_group_carrier T_torus TT x0)
       (top1_fundamental_group_mul T_torus TT x0) phi"
     by (by100 blast)
-  thus ?thesis sorry
+  hence "\<exists>(H :: (real \<Rightarrow> 'a) set set set set) mulH eH invgH iotaH phi.
+    top1_is_free_abelian_group_full_on H mulH eH invgH iotaH ({..<2}::nat set) \<and>
+    top1_group_iso_on H mulH
+      (top1_fundamental_group_carrier T_torus TT x0)
+      (top1_fundamental_group_mul T_torus TT x0) phi"
+    by (by100 blast)
+  thus ?thesis .
 qed
 
 (** from \<S>73 Theorem 73.4: the n-fold dunce cap has fundamental group Z/nZ. **)
