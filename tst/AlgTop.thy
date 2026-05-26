@@ -5452,9 +5452,37 @@ proof -
           sorry \<comment> \<open>Rotation is continuous homeomorphism on S¹; image of closed is closed.
              r^k(C\<inter>S¹) \<subseteq> S¹ \<subseteq> B², and is a continuous image of closed compact set in Hausdorff.\<close>
         hence "closedin_on top1_B2 top1_B2_topology (\<Union>k\<in>{..<n}. ?rot k ` ?C0)"
-          sorry \<comment> \<open>Finite union of closed sets is closed.\<close>
+        proof -
+          have hB2_top_loc: "is_topology_on top1_B2 top1_B2_topology"
+            using top1_B2_path_connected unfolding top1_path_connected_on_def by (by100 blast)
+          have hfin: "finite ((\<lambda>k. ?rot k ` ?C0) ` {..<n})" by (by100 simp)
+          assume "\<And>k. k < n \<Longrightarrow> closedin_on top1_B2 top1_B2_topology (?rot k ` ?C0)"
+          hence hall: "\<forall>A\<in>((\<lambda>k. ?rot k ` ?C0) ` {..<n}). closedin_on top1_B2 top1_B2_topology A"
+            by (by100 blast)
+          have "closedin_on top1_B2 top1_B2_topology (\<Union>((\<lambda>k. ?rot k ` ?C0) ` {..<n}))"
+            by (rule closedin_Union_finite[OF hB2_top_loc hfin hall])
+          moreover have "\<Union>((\<lambda>k. ?rot k ` ?C0) ` {..<n}) = (\<Union>k\<in>{..<n}. ?rot k ` ?C0)"
+            by (by100 blast)
+          ultimately show ?thesis by (by100 simp)
+        qed
         thus ?thesis
-          sorry \<comment> \<open>Union of two closed sets is closed.\<close>
+        proof -
+          assume hrot_cl: "closedin_on top1_B2 top1_B2_topology (\<Union>k\<in>{..<n}. ?rot k ` ?C0)"
+          have "closedin_on top1_B2 top1_B2_topology (C \<union> (\<Union>k\<in>{..<n}. ?rot k ` ?C0))"
+          proof -
+            have hB2_t: "is_topology_on top1_B2 top1_B2_topology"
+              using top1_B2_path_connected unfolding top1_path_connected_on_def by (by100 blast)
+            have hfin: "finite {C, \<Union>k\<in>{..<n}. ?rot k ` ?C0}" by (by100 simp)
+            have hall: "\<forall>A\<in>{C, \<Union>k\<in>{..<n}. ?rot k ` ?C0}. closedin_on top1_B2 top1_B2_topology A"
+              using hC hrot_cl by (by100 blast)
+            have "closedin_on top1_B2 top1_B2_topology (\<Union>{C, \<Union>k\<in>{..<n}. ?rot k ` ?C0})"
+              by (rule closedin_Union_finite[OF hB2_t hfin hall])
+            moreover have "\<Union>{C, \<Union>k\<in>{..<n}. ?rot k ` ?C0} = C \<union> (\<Union>k\<in>{..<n}. ?rot k ` ?C0)"
+              by (by100 blast)
+            ultimately show ?thesis by (by100 simp)
+          qed
+          thus ?thesis .
+        qed
       qed
       ultimately show ?thesis by (by100 simp)
     qed
