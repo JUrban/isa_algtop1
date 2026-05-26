@@ -6823,7 +6823,70 @@ proof -
        which equals the n-fold product of the A-generator alpha.
        So phi(relator) = plus/minus n.\<close>
     have h_relator_val: "\<phi> ?relator = int n \<or> \<phi> ?relator = - int n"
-      sorry \<comment> \<open>Core: iota maps S1 generator to n-th power of A generator.\<close>
+    proof -
+      \<comment> \<open>Following Munkres p.443: gamma(t) = (cos(2*pi*t/n), sin(2*pi*t/n)) is the arc from p to r(p).
+         alpha = h . gamma represents a generator of pi1(A,a).
+         The standard S1 loop f goes around once, decomposing as gamma * (r.gamma) * ... * (r^{n-1}.gamma).
+         Since h identifies rotations, h.f = alpha^n.
+         Under any iso phi: pi1(A,a) -> Z, phi(alpha) = +/-1, so phi(alpha^n) = +/-n.\<close>
+      \<comment> \<open>Step A: Define alpha = iota . gamma where gamma(t) = (cos(2*pi*t/n), sin(2*pi*t/n)).\<close>
+      let ?\<gamma> = "\<lambda>t::real. (cos (2*pi*t/real n), sin (2*pi*t/real n))"
+      let ?\<alpha> = "\<lambda>t::real. \<iota> (?\<gamma> t)"
+      \<comment> \<open>Step B: alpha is a loop in A based at a (since gamma(0) = p and gamma(1) = r(p),
+         and iota(p) = iota(r(p)) = a because q identifies rotations).\<close>
+      have h\<alpha>_loop: "top1_is_loop_on ?A ?TA ?a ?\<alpha>"
+        sorry
+      \<comment> \<open>Step C: The class of alpha generates pi1(A,a), i.e. phi([alpha]) = +/-1.\<close>
+      let ?class_\<alpha> = "{g. top1_loop_equiv_on ?A ?TA ?a ?\<alpha> g}"
+      have h\<alpha>_gen: "\<phi> ?class_\<alpha> = 1 \<or> \<phi> ?class_\<alpha> = -1"
+        sorry
+      \<comment> \<open>Step D: The induced map of iota sends [std S1 loop] to [alpha]^n in pi1(A,a).
+         The standard S1 loop t -> (cos(2*pi*t), sin(2*pi*t)) composed with iota
+         gives t -> iota(cos(2*pi*t), sin(2*pi*t)) which equals alpha composed n times
+         (up to path homotopy).\<close>
+      have h_relator_is_alpha_n: "?relator = top1_group_pow ?mulA ?eA ?class_\<alpha> n"
+        sorry \<comment> \<open>iota . std_loop ~ alpha^n: path decomposition into n arcs.\<close>
+      \<comment> \<open>Step E: phi is a hom, so phi([alpha]^n) = phi([alpha])^n in Z.\<close>
+      have h\<alpha>_in_GA: "?class_\<alpha> \<in> ?GA"
+        using h\<alpha>_loop unfolding top1_fundamental_group_carrier_def by (by100 blast)
+      have h\<phi>_hom: "top1_group_hom_on ?GA ?mulA top1_Z_group top1_Z_mul \<phi>"
+        using h\<phi>_iso unfolding top1_group_iso_on_def by (by100 blast)
+      have hgrpA_loc: "top1_is_group_on ?GA ?mulA ?eA ?invA"
+        by (rule top1_fundamental_group_is_group[OF hTA_top ha_A])
+      have hgrpZ_loc: "top1_is_group_on top1_Z_group top1_Z_mul (0::int) uminus"
+      proof -
+        have "top1_Z_id = (0::int)" unfolding top1_Z_id_def by (by100 blast)
+        moreover have "top1_Z_invg = (uminus :: int \<Rightarrow> int)" unfolding top1_Z_invg_def by (by100 blast)
+        ultimately show ?thesis
+          using top1_Z_is_abelian_group unfolding top1_is_abelian_group_on_def by (by100 simp)
+      qed
+      have h_phi_pow: "\<phi> (top1_group_pow ?mulA ?eA ?class_\<alpha> n) = top1_group_pow top1_Z_mul (0::int) (\<phi> ?class_\<alpha>) n"
+        using hom_group_pow[OF hgrpA_loc hgrpZ_loc h\<phi>_hom h\<alpha>_in_GA] by (by100 blast)
+      \<comment> \<open>In Z: x^n = n*x.\<close>
+      have hZ_pow_eq: "top1_group_pow top1_Z_mul (0::int) x n = int n * x" for x :: int
+      proof (induct n)
+        case 0 thus ?case by (by100 simp)
+      next
+        case (Suc n)
+        have "top1_group_pow top1_Z_mul (0::int) x (Suc n) = top1_Z_mul x (top1_group_pow top1_Z_mul 0 x n)"
+          by (by100 simp)
+        also have "\<dots> = x + int n * x" using Suc unfolding top1_Z_mul_def by (by100 simp)
+        also have "\<dots> = (1 + int n) * x" by (by5000 algebra)
+        also have "\<dots> = int (Suc n) * x" by (by100 simp)
+        finally show ?case .
+      qed
+      \<comment> \<open>Step F: Combine.\<close>
+      from h\<alpha>_gen show ?thesis
+      proof
+        assume "\<phi> ?class_\<alpha> = 1"
+        hence "\<phi> ?relator = int n * 1" using h_relator_is_alpha_n h_phi_pow hZ_pow_eq by (by100 simp)
+        thus ?thesis by (by100 simp)
+      next
+        assume "\<phi> ?class_\<alpha> = -1"
+        hence "\<phi> ?relator = int n * (-1)" using h_relator_is_alpha_n h_phi_pow hZ_pow_eq by (by100 simp)
+        thus ?thesis by (by100 simp)
+      qed
+    qed
     \<comment> \<open>Step 10.3: Use quotient_group_iso_transfer: pi1(A)/N iso Z/phi(N).\<close>
     have hgrpA: "top1_is_group_on ?GA ?mulA ?eA ?invA"
       by (rule top1_fundamental_group_is_group[OF hTA_top ha_A])
