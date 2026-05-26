@@ -5441,8 +5441,90 @@ proof -
       let ?C0 = "C \<inter> top1_S1"
       let ?rot = "\<lambda>(k::nat) z. (cos (2*pi*real k/real n) * fst z - sin (2*pi*real k/real n) * snd z,
                                  sin (2*pi*real k/real n) * fst z + cos (2*pi*real k/real n) * snd z)"
+      have hS1_B2: "top1_S1 \<subseteq> top1_B2"
+        unfolding top1_S1_def top1_B2_def by (by100 auto)
       have hsat_eq: "?sat = C \<union> (\<Union>k\<in>{..<n}. ?rot k ` ?C0)"
-        sorry \<comment> \<open>Set equality from hq\_S1: z in sat iff z \<in> C or z = r^k(c) for c \<in> C\<inter>S¹.\<close>
+      proof
+        \<comment> \<open>Forward: z \<in> sat \<Rightarrow> z \<in> C or z \<in> some rot\_k(C\<inter>S¹).\<close>
+        show "?sat \<subseteq> C \<union> (\<Union>k\<in>{..<n}. ?rot k ` ?C0)"
+        proof
+          fix z assume hz: "z \<in> ?sat"
+          hence hzB: "z \<in> top1_B2" and "\<exists>c\<in>C. q z = q c" by (by100 blast)+
+          then obtain c where hcC: "c \<in> C" and hqeq: "q z = q c" by (by100 blast)
+          have hcB: "c \<in> top1_B2" using hcC hC_sub by (by100 blast)
+          show "z \<in> C \<union> (\<Union>k\<in>{..<n}. ?rot k ` ?C0)"
+          proof (cases "z \<in> top1_S1")
+            case False
+            hence hzInt: "z \<in> top1_B2 - top1_S1" using hzB by (by100 blast)
+            \<comment> \<open>c must also be in B²-S¹ (if c \<in> S¹, separation gives contradiction).\<close>
+            have "c \<notin> top1_S1"
+            proof
+              assume "c \<in> top1_S1"
+              hence "q z \<noteq> q c" using hq_sep hzInt by (by5000 metis)
+              thus False using hqeq by (by100 simp)
+            qed
+            hence "c \<in> top1_B2 - top1_S1" using hcB by (by100 blast)
+            hence "z = c" using hq_inj hzInt hqeq unfolding inj_on_def by (by5000 metis)
+            thus ?thesis using hcC by (by100 blast)
+          next
+            case True
+            hence hzS1: "z \<in> top1_S1" .
+            have "c \<in> top1_S1"
+            proof (rule ccontr)
+              assume "c \<notin> top1_S1"
+              hence "c \<in> top1_B2 - top1_S1" using hcB by (by100 blast)
+              hence "q c \<noteq> q z" using hq_sep hzS1 by (by5000 metis)
+              thus False using hqeq by (by100 simp)
+            qed
+            hence hcS1: "c \<in> top1_S1" .
+            from hq_S1[rule_format, OF hcS1 hzS1]
+            have "q c = q z \<longleftrightarrow>
+                (\<exists>k::nat. k < n \<and> z = ?rot k c)" by (by5000 blast)
+            hence "\<exists>k<n. z = ?rot k c" using hqeq by (by100 simp)
+            then obtain k where "k < n" "z = ?rot k c" by (by100 blast)
+            hence "z \<in> ?rot k ` ?C0" using hcC hcS1 by (by100 blast)
+            thus ?thesis using \<open>k < n\<close> by (by100 blast)
+          qed
+        qed
+      next
+        \<comment> \<open>Backward: C \<union> rot images \<subseteq> sat.\<close>
+        show "C \<union> (\<Union>k\<in>{..<n}. ?rot k ` ?C0) \<subseteq> ?sat"
+        proof
+          fix z assume "z \<in> C \<union> (\<Union>k\<in>{..<n}. ?rot k ` ?C0)"
+          thus "z \<in> ?sat"
+          proof
+            assume "z \<in> C"
+            hence "z \<in> top1_B2" using hC_sub by (by100 blast)
+            moreover have "q z \<in> q ` C" using \<open>z \<in> C\<close> by (by100 blast)
+            ultimately show ?thesis by (by100 blast)
+          next
+            assume "z \<in> (\<Union>k\<in>{..<n}. ?rot k ` ?C0)"
+            then obtain k c where hk: "k < n" and hcC0: "c \<in> ?C0" and hzeq: "z = ?rot k c"
+              by (by100 blast)
+            hence hcS1: "c \<in> top1_S1" by (by100 blast)
+            have hcC': "c \<in> C" using hcC0 by (by100 blast)
+            \<comment> \<open>z = rot\_k(c) \<in> S¹ (rotation preserves S¹).\<close>
+            have hzS1: "z \<in> top1_S1"
+            proof -
+              have "(fst c)^2 + (snd c)^2 = 1" using hcS1 unfolding top1_S1_def by (by100 simp)
+              hence "(fst z)^2 + (snd z)^2 = 1" unfolding hzeq
+                sorry \<comment> \<open>Rotation preserves |z|² = 1: (cos\<theta> x - sin\<theta> y)² + (sin\<theta> x + cos\<theta> y)²
+                   = (cos²\<theta>+sin²\<theta>)(x²+y²) = 1. Needs algebraic expansion + sin²+cos²=1.\<close>
+              thus ?thesis unfolding top1_S1_def by (by100 simp)
+            qed
+            have hzB: "z \<in> top1_B2" using hzS1 hS1_B2 by (by100 blast)
+            \<comment> \<open>q(z) = q(c) by hq\_S1.\<close>
+            from hq_S1[rule_format, OF hcS1 hzS1]
+            have "q c = q z \<longleftrightarrow>
+                (\<exists>j::nat. j < n \<and> z = ?rot j c)" by (by5000 blast)
+            hence "q c = q z" using hk hzeq by (by100 blast)
+            hence "q z = q c" by (by100 simp)
+            moreover have "q c \<in> q ` C" using hcC' by (by100 blast)
+            ultimately have "q z \<in> q ` C" by (by100 simp)
+            thus ?thesis using hzB by (by100 blast)
+          qed
+        qed
+      qed
       moreover have "closedin_on top1_B2 top1_B2_topology (C \<union> (\<Union>k\<in>{..<n}. ?rot k ` ?C0))"
       proof -
         \<comment> \<open>Each r^k(C\<inter>S¹) is closed: continuous image of compact subset of Hausdorff.\<close>
