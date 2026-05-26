@@ -6421,13 +6421,73 @@ proof -
               thus ?thesis by (by100 auto)
             qed
             \<comment> \<open>The angle 2\<pi>?t/n + 2\<pi>?k/n = 2\<pi>\<theta> + 2\<pi>(-?m + ?k)/n = 2\<pi>\<theta> + integer * 2\<pi>.\<close>
-            have hk_angle: "2*pi*?t/real n + 2*pi*real ?k/real n = 2*pi*\<theta> + real_of_int ((- ?m + int ?k) div int n) * (2*pi)"
-              sorry \<comment> \<open>Arithmetic: ?t/n + ?k/n = \<theta> + integer. Uses (?k + ?m) mod n = 0.\<close>
-            \<comment> \<open>cos/sin addition: gt\_point = rot\_k(s) using the angle identity.\<close>
+            \<comment> \<open>Key: 2\<pi>?t/n = 2\<pi>?k/n + 2\<pi>\<theta> - 2\<pi>j for integer j = (?m+?k)/n.
+               Since k = nat((-?m) mod n): ?m + int ?k = ?m + (-?m) mod n \<equiv> 0 (mod n).
+               So (?m + int ?k)/n is an integer. Then cos/sin periodicity gives the result.\<close>
+            have hmod0: "(?m + int ?k) mod int n = 0"
+            proof -
+              have hint_n: "int n > 0" using assms(1) by (by100 simp)
+              have "int ?k = (-?m) mod int n"
+                using hint_n by (by100 simp)
+              hence "(?m + int ?k) mod int n = (?m + (-?m) mod int n) mod int n"
+                by (by100 simp)
+              also have "\<dots> = (?m + (-?m)) mod int n"
+                using mod_add_right_eq[of ?m "(-?m)" "int n"] by (by100 simp)
+              also have "\<dots> = 0" by (by100 simp)
+              finally show ?thesis .
+            qed
+            let ?j = "(?m + int ?k) div int n"
+            have hj_eq: "?m + int ?k = ?j * int n" using hmod0 by (by100 auto)
+            \<comment> \<open>2\<pi>?t/n = 2\<pi>?k/n + 2\<pi>\<theta> - 2\<pi>?j (where j is an integer).\<close>
+            have h_angle2: "2*pi*?t/real n = 2*pi*real ?k/real n + 2*pi*\<theta> - real_of_int ?j * (2*pi)"
+            proof -
+              have h1: "real_of_int (?m + int ?k) = real_of_int (?j * int n)"
+                using hj_eq by (by100 simp)
+              thus ?thesis using h_angle hn_ne
+                sorry \<comment> \<open>Simple field arithmetic: ?t/n = \<theta> - ?m/n and (?m+?k)/n = ?j.
+                   Hence ?t/n = ?k/n + \<theta> - ?j.\<close>
+            qed
+            \<comment> \<open>cos/sin at angle 2\<pi>?t/n = cos/sin at angle 2\<pi>?k/n + 2\<pi>\<theta> (periodicity).\<close>
+            \<comment> \<open>cos/sin periodicity via R\_to\_S1\_int\_shift: t/n = k/n + \<theta> - j.\<close>
+            have hR_eq: "top1_R_to_S1 (?t / real n) = top1_R_to_S1 (real ?k / real n + \<theta>)"
+            proof -
+              have "?t / real n = (real ?k / real n + \<theta>) + real_of_int (- ?j)"
+                using h_angle2 pi_gt_zero
+                sorry \<comment> \<open>From h\_angle2: 2\<pi>*t/n = 2\<pi>*(k/n+\<theta>) - j*2\<pi>. Divide by 2\<pi>.\<close>
+              thus ?thesis using top1_R_to_S1_int_shift[of "real ?k / real n + \<theta>" "-?j"]
+                by (by100 simp)
+            qed
+            have hcos_eq: "cos (2*pi*?t/real n) = cos (2*pi*real ?k/real n + 2*pi*\<theta>)"
+            proof -
+              from hR_eq have "fst (top1_R_to_S1 (?t / real n)) = fst (top1_R_to_S1 (real ?k / real n + \<theta>))"
+                by (by100 simp)
+              thus ?thesis unfolding top1_R_to_S1_def
+                by (simp add: algebra_simps)
+            qed
+            have hsin_eq: "sin (2*pi*?t/real n) = sin (2*pi*real ?k/real n + 2*pi*\<theta>)"
+            proof -
+              from hR_eq have "snd (top1_R_to_S1 (?t / real n)) = snd (top1_R_to_S1 (real ?k / real n + \<theta>))"
+                by (by100 simp)
+              thus ?thesis unfolding top1_R_to_S1_def
+                by (simp add: algebra_simps)
+            qed
+            \<comment> \<open>Addition formulas: rotation = cos/sin of sum.\<close>
             have "(cos (2*pi*?t / real n), sin (2*pi*?t / real n)) =
                 (cos (2*pi*real ?k/real n) * fst s - sin (2*pi*real ?k/real n) * snd s,
                  sin (2*pi*real ?k/real n) * fst s + cos (2*pi*real ?k/real n) * snd s)"
-              sorry \<comment> \<open>cos/sin subtraction formula + hk\_angle.\<close>
+            proof -
+              have "cos (2*pi*?t/real n) = cos (2*pi*real ?k/real n + 2*pi*\<theta>)" by (rule hcos_eq)
+              also have "\<dots> = cos (2*pi*real ?k/real n) * cos (2*pi*\<theta>)
+                  - sin (2*pi*real ?k/real n) * sin (2*pi*\<theta>)" by (rule cos_add)
+              finally have hc: "cos (2*pi*?t/real n) = cos (2*pi*real ?k/real n) * cos (2*pi*\<theta>)
+                  - sin (2*pi*real ?k/real n) * sin (2*pi*\<theta>)" .
+              have "sin (2*pi*?t/real n) = sin (2*pi*real ?k/real n + 2*pi*\<theta>)" by (rule hsin_eq)
+              also have "\<dots> = sin (2*pi*real ?k/real n) * cos (2*pi*\<theta>)
+                  + cos (2*pi*real ?k/real n) * sin (2*pi*\<theta>)" by (rule sin_add)
+              finally have hs: "sin (2*pi*?t/real n) = sin (2*pi*real ?k/real n) * cos (2*pi*\<theta>)
+                  + cos (2*pi*real ?k/real n) * sin (2*pi*\<theta>)" .
+              show ?thesis using hc hs hs_eq by (by100 simp)
+            qed
             hence "q s = q (cos (2*pi*?t / real n), sin (2*pi*?t / real n))"
               using hq_iff hk_lt by (by100 blast)
             thus "?g ?t = a" using ha by (by100 simp)
