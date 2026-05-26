@@ -5408,280 +5408,6 @@ proof -
     have "top1_S1 \<subseteq> top1_B2" unfolding top1_S1_def top1_B2_def by (by100 auto)
     thus ?thesis using hq_surj by (by100 blast)
   qed
-  \<comment> \<open>Step 2: A = q(S¹) is homeomorphic to S¹.
-     Book: h maps arc C from (1,0) to r(1,0) onto A, injective except at endpoints.
-     The quotient of S¹ by n-fold rotation is again a circle.\<close>
-  have hA_circle: "\<exists>f. top1_homeomorphism_on top1_S1 top1_S1_topology
-           ?A (subspace_topology X TX ?A) f"
-  proof -
-    \<comment> \<open>Book: q maps arc C from (1,0) to r(1,0) onto A, injective except at endpoints.
-       Proof: define g: [0,1] \<rightarrow> A by g(t) = q(cos(2\<pi>t/n), sin(2\<pi>t/n)).
-       g(0) = g(1) = a (q identifies rotation by 2\<pi>/n).
-       g is injective on (0,1) (different t give non-equivalent angles).
-       So g and R\_to\_S1 identify the same pairs on [0,1]: only {0,1}.
-       By the universal property of the quotient R\_to\_S1: [0,1] \<rightarrow> S¹,
-       there exists continuous \<phi>: S¹ \<rightarrow> A with \<phi> \<circ> R\_to\_S1 = g.
-       \<phi> is bijective, S¹ compact, A Hausdorff \<Rightarrow> \<phi> is a homeomorphism.\<close>
-    let ?g = "\<lambda>t. q (cos (2*pi*t / real n), sin (2*pi*t / real n))"
-    \<comment> \<open>Step A: g maps into X (via S¹ \<subseteq> B² \<subseteq> domain of q).\<close>
-    \<comment> \<open>Step B: g maps into A = q(S¹).\<close>
-    have hg_img: "\<And>t. (cos (2*pi*t / real n), sin (2*pi*t / real n)) \<in> top1_S1"
-      unfolding top1_S1_def using sin_cos_squared_add by (by100 simp)
-    hence hg_in_A: "\<And>t. ?g t \<in> ?A" by (by100 blast)
-    \<comment> \<open>Step C: g(0) = g(1) = a.\<close>
-    have hg0: "?g 0 = ?a"
-      by (by100 simp)
-    have hg1: "?g 1 = ?a"
-    proof -
-      have h10: "(1::real, 0::real) \<in> top1_S1" unfolding top1_S1_def by (by100 simp)
-      have hrot: "(cos (2*pi / real n), sin (2*pi / real n)) \<in> top1_S1"
-        unfolding top1_S1_def using sin_cos_squared_add by (by100 simp)
-      \<comment> \<open>q(1,0) = q(cos(2\<pi>/n), sin(2\<pi>/n)) because the latter is rotation by 2\<pi>/n of (1,0).\<close>
-      have "q (1, 0) = q (cos (2*pi / real n), sin (2*pi / real n))"
-      proof -
-        from hq_S1[rule_format, OF h10 hrot]
-        have hiff: "q (1, 0) = q (cos (2*pi / real n), sin (2*pi / real n)) \<longleftrightarrow>
-            (\<exists>k::nat. k < n \<and> (cos (2*pi / real n), sin (2*pi / real n)) =
-              (cos (2*pi*real k/real n) * fst (1::real, 0::real) - sin (2*pi*real k/real n) * snd (1::real, 0::real),
-               sin (2*pi*real k/real n) * fst (1::real, 0::real) + cos (2*pi*real k/real n) * snd (1::real, 0::real)))"
-          by (by5000 blast)
-        \<comment> \<open>For n \<ge> 2: use k=1, rotation by 2\<pi>/n. For n=1: use k=0, identity.\<close>
-        have "(\<exists>k::nat. k < n \<and> (cos (2*pi / real n), sin (2*pi / real n)) =
-              (cos (2*pi*real k/real n) * 1 - sin (2*pi*real k/real n) * 0,
-               sin (2*pi*real k/real n) * 1 + cos (2*pi*real k/real n) * 0))"
-        proof (cases "n = 1")
-          case True
-          show ?thesis
-          proof (rule exI[of _ 0], intro conjI)
-            show "(0::nat) < n" using assms(1) by (by100 simp)
-            show "(cos (2*pi / real n), sin (2*pi / real n)) =
-                (cos (2*pi*real 0/real n) * 1 - sin (2*pi*real 0/real n) * 0,
-                 sin (2*pi*real 0/real n) * 1 + cos (2*pi*real 0/real n) * 0)"
-              using True by (by100 simp)
-          qed
-        next
-          case False hence "n \<ge> 2" using assms(1) by (by100 simp)
-          show ?thesis
-          proof (rule exI[of _ 1], intro conjI)
-            show "(1::nat) < n" using \<open>n \<ge> 2\<close> by (by100 simp)
-            show "(cos (2*pi / real n), sin (2*pi / real n)) =
-                (cos (2*pi*real 1/real n) * 1 - sin (2*pi*real 1/real n) * 0,
-                 sin (2*pi*real 1/real n) * 1 + cos (2*pi*real 1/real n) * 0)"
-              by (by100 simp)
-          qed
-        qed
-        thus ?thesis using hiff by (by100 simp)
-      qed
-      thus ?thesis by (by100 simp)
-    qed
-    \<comment> \<open>Step D: Apply Theorem\_22\_2 (quotient universal property) with
-       p = R\_to\_S1|[0,1]: [0,1] \<rightarrow> S¹ (quotient map), g: [0,1] \<rightarrow> A.
-       g constant on fibers of p (both identify only {0,1}).
-       Gets continuous \<phi>: S¹ \<rightarrow> A with \<phi>(R\_to\_S1(t)) = g(t).\<close>
-    \<comment> \<open>Step D1: g is continuous [0,1] \<rightarrow> A (in our topology framework).\<close>
-    have hg_cont_top: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
-        ?A (subspace_topology X TX ?A) ?g"
-    proof -
-      let ?h = "\<lambda>t. (cos (2*pi*t / real n), sin (2*pi*t / real n))"
-      \<comment> \<open>h: R \<rightarrow> S¹ continuous (polynomial \<Rightarrow> continuous\_on UNIV, bridge to top1).\<close>
-      have hn_ne: "real n \<noteq> (0::real)" using assms(1) by (by100 simp)
-      have hh_cont_on: "continuous_on UNIV ?h"
-        by (intro continuous_intros) (simp add: assms)+
-      have hh_img: "\<And>t. ?h t \<in> top1_B2"
-      proof -
-        fix t :: real
-        have "(fst (?h t))^2 + (snd (?h t))^2 = 1"
-          using sin_cos_squared_add[of "2*pi*t/real n"] by (by100 simp)
-        thus "?h t \<in> top1_B2" unfolding top1_B2_def by (by100 simp)
-      qed
-      have hh_top1: "top1_continuous_map_on (UNIV::real set) top1_open_sets
-          top1_B2 top1_B2_topology ?h"
-      proof -
-        have "top1_continuous_map_on (UNIV::real set) top1_open_sets
-            top1_B2 (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) top1_B2) ?h"
-          by (rule top1_continuous_map_on_R_to_R2_subspace[OF hh_img hh_cont_on])
-        thus ?thesis unfolding top1_B2_topology_def by (by100 blast)
-      qed
-      \<comment> \<open>Restrict h to [0,1].\<close>
-      have hh_I: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
-          top1_B2 top1_B2_topology ?h"
-      proof -
-        have hI_sub: "top1_unit_interval \<subseteq> (UNIV::real set)" by (by100 blast)
-        have "top1_continuous_map_on top1_unit_interval
-            (subspace_topology UNIV top1_open_sets top1_unit_interval)
-            top1_B2 top1_B2_topology ?h"
-          by (rule top1_continuous_map_on_subspace_restrict[OF hh_top1 hI_sub])
-        moreover have "subspace_topology UNIV top1_open_sets top1_unit_interval
-            = top1_unit_interval_topology"
-          unfolding top1_unit_interval_topology_def by (by100 simp)
-        ultimately show ?thesis by (by100 simp)
-      qed
-      \<comment> \<open>g = q \<circ> h: [0,1] \<rightarrow> X continuous.\<close>
-      have hg_X: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology X TX ?g"
-      proof -
-        have hcomp: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology X TX (q \<circ> ?h)"
-          by (rule top1_continuous_map_on_comp[OF hh_I hq_cont])
-        have "\<And>t. t \<in> top1_unit_interval \<Longrightarrow> (q \<circ> ?h) t = ?g t" by (by100 simp)
-        hence "{t \<in> top1_unit_interval. (q \<circ> ?h) t \<in> V} = {t \<in> top1_unit_interval. ?g t \<in> V}" for V
-          by (by100 auto)
-        thus ?thesis using hcomp unfolding top1_continuous_map_on_def by (by5000 auto)
-      qed
-      \<comment> \<open>Shrink codomain to A.\<close>
-      have hg_img: "?g ` top1_unit_interval \<subseteq> ?A" using hg_in_A by (by100 blast)
-      show ?thesis
-        using top1_continuous_map_on_codomain_shrink[OF hg_X hg_img hA_sub] by (by100 blast)
-    qed
-    \<comment> \<open>Step D2: g constant on fibers of R\_to\_S1: if R\_to\_S1(t)=R\_to\_S1(t') then g(t)=g(t').\<close>
-    have hg_const_fibers: "\<forall>t\<in>top1_unit_interval. \<forall>t'\<in>top1_unit_interval.
-        top1_R_to_S1 t = top1_R_to_S1 t' \<longrightarrow> ?g t = ?g t'"
-    proof (intro ballI impI)
-      fix t t' assume ht: "t \<in> top1_unit_interval" and ht': "t' \<in> top1_unit_interval"
-        and heq: "top1_R_to_S1 t = top1_R_to_S1 t'"
-      \<comment> \<open>R\_to\_S1(t) = R\_to\_S1(t') with t, t' \<in> [0,1] means t = t' or {t,t'} = {0,1}.\<close>
-      have "t = t' \<or> (t = 0 \<and> t' = 1) \<or> (t = 1 \<and> t' = 0)"
-      proof -
-        from heq have "cos (2*pi*t) = cos (2*pi*t') \<and> sin (2*pi*t) = sin (2*pi*t')"
-          unfolding top1_R_to_S1_def by (by100 auto)
-        hence "\<exists>k::int. 2*pi*t - 2*pi*t' = real_of_int k * 2 * pi"
-          using cos_sin_eq_imp by (by100 blast)
-        then obtain k :: int where hk: "2*pi*t - 2*pi*t' = real_of_int k * 2 * pi"
-          by (by100 blast)
-        have htk: "t - t' = real_of_int k"
-        proof -
-          from hk have "2*pi*t - 2*pi*t' - real_of_int k * 2 * pi = 0"
-            by (by100 linarith)
-          hence "2*pi*(t - t') - real_of_int k * (2 * pi) = 0"
-            by (simp add: algebra_simps)
-          hence "(t - t' - real_of_int k) * (2 * pi) = 0"
-            by (simp add: algebra_simps)
-          moreover have "(2 * pi :: real) \<noteq> 0" using pi_gt_zero by (by100 linarith)
-          ultimately have "t - t' - real_of_int k = 0" by (by100 simp)
-          thus ?thesis by (by100 linarith)
-        qed
-        have "t \<in> {0..1}" and "t' \<in> {0..1}"
-          using ht ht' unfolding top1_unit_interval_def by (by100 auto)+
-        hence "0 \<le> t" "t \<le> 1" "0 \<le> t'" "t' \<le> 1" by (by100 auto)+
-        have "-1 \<le> t - t'" using \<open>0 \<le> t\<close> \<open>t' \<le> 1\<close> by (by100 linarith)
-        have "t - t' \<le> 1" using \<open>t \<le> 1\<close> \<open>0 \<le> t'\<close> by (by100 linarith)
-        have "-1 \<le> real_of_int k" using htk \<open>-1 \<le> t - t'\<close> by (by100 linarith)
-        have "real_of_int k \<le> 1" using htk \<open>t - t' \<le> 1\<close> by (by100 linarith)
-        hence "k \<ge> -1" and "k \<le> 1"
-          using \<open>-1 \<le> real_of_int k\<close> \<open>real_of_int k \<le> 1\<close> by (by100 linarith)+
-        hence "k \<in> {-1, 0, 1}" by (by100 auto)
-        thus ?thesis using htk \<open>t \<in> {0..1}\<close> \<open>t' \<in> {0..1}\<close>
-          by (by5000 force)
-      qed
-      thus "?g t = ?g t'"
-      proof (elim disjE conjE)
-        assume "t = t'" thus ?thesis by (by100 simp)
-      next
-        assume "t = 0" "t' = 1" thus ?thesis using hg0 hg1 by (by100 simp)
-      next
-        assume "t = 1" "t' = 0" thus ?thesis using hg0 hg1 by (by100 simp)
-      qed
-    qed
-    \<comment> \<open>Step D3: R\_to\_S1|[0,1] is a quotient map.\<close>
-    have hR_quot: "top1_quotient_map_on top1_unit_interval top1_unit_interval_topology
-        top1_S1 top1_S1_topology top1_R_to_S1"
-      sorry \<comment> \<open>Proved in ac/AlgTopCached as a local fact. Need to lift or re-prove.\<close>
-    \<comment> \<open>Step D4: Apply Theorem\_22\_2 to get continuous \<phi>: S¹ \<rightarrow> A.\<close>
-    let ?TA = "subspace_topology X TX ?A"
-    from Theorem_22_2[OF hR_quot _ hg_const_fibers, of ?A ?TA]
-    obtain \<phi> where h\<phi>_map: "\<forall>y\<in>top1_S1. \<phi> y \<in> ?A"
-        and h\<phi>_eq: "\<forall>t\<in>top1_unit_interval. \<phi> (top1_R_to_S1 t) = ?g t"
-        and h\<phi>_cont_iff: "(top1_continuous_map_on top1_S1 top1_S1_topology ?A ?TA \<phi>) \<longleftrightarrow>
-            (top1_continuous_map_on top1_unit_interval top1_unit_interval_topology ?A ?TA ?g)"
-      using hg_in_A by (by5000 auto)
-    have h\<phi>_cont: "top1_continuous_map_on top1_S1 top1_S1_topology ?A ?TA \<phi>"
-      using h\<phi>_cont_iff hg_cont_top by (by100 blast)
-    \<comment> \<open>Step D5: \<phi> is bijective.\<close>
-    have h\<phi>_bij: "bij_betw \<phi> top1_S1 ?A"
-      unfolding bij_betw_def
-    proof (intro conjI)
-      \<comment> \<open>Injective: if \<phi>(z) = \<phi>(z') then z = z'.\<close>
-      show "inj_on \<phi> top1_S1"
-      proof (rule inj_onI)
-        fix z z' assume hz: "z \<in> top1_S1" and hz': "z' \<in> top1_S1" and heq: "\<phi> z = \<phi> z'"
-        \<comment> \<open>Pick t, t' \<in> [0,1] with R\_to\_S1(t) = z, R\_to\_S1(t') = z'.\<close>
-        have hR_surj: "top1_R_to_S1 ` top1_unit_interval = top1_S1"
-          using hR_quot unfolding top1_quotient_map_on_def by (by100 blast)
-        have "z \<in> top1_R_to_S1 ` top1_unit_interval" using hz hR_surj by (by100 blast)
-        then obtain t where ht: "t \<in> top1_unit_interval" "top1_R_to_S1 t = z" by (by100 blast)
-        have "z' \<in> top1_R_to_S1 ` top1_unit_interval" using hz' hR_surj by (by100 blast)
-        then obtain t' where ht': "t' \<in> top1_unit_interval" "top1_R_to_S1 t' = z'" by (by100 blast)
-        \<comment> \<open>g(t) = \<phi>(R\_to\_S1(t)) = \<phi>(z) = \<phi>(z') = \<phi>(R\_to\_S1(t')) = g(t').\<close>
-        have "?g t = \<phi> (top1_R_to_S1 t)" using h\<phi>_eq ht(1) by (by100 simp)
-        also have "\<dots> = \<phi> z" using ht(2) by (by100 simp)
-        also have "\<dots> = \<phi> z'" using heq by (by100 simp)
-        also have "\<dots> = \<phi> (top1_R_to_S1 t')" using ht'(2) by (by100 simp)
-        also have "\<dots> = ?g t'" using h\<phi>_eq ht'(1) by (by100 simp)
-        finally have "?g t = ?g t'" .
-        \<comment> \<open>g(t) = g(t') with t, t' \<in> [0,1]: by the same argument as hg\_const\_fibers,
-           either t = t' or {t,t'} = {0,1}. In both cases R\_to\_S1(t) = R\_to\_S1(t').\<close>
-        hence "top1_R_to_S1 t = top1_R_to_S1 t'"
-          sorry \<comment> \<open>From g(t)=g(t'): q identifies iff rotation, so t'=t+k; on [0,1] \<Rightarrow> R\_to\_S1 equal.\<close>
-        thus "z = z'" using ht(2) ht'(2) by (by100 simp)
-      qed
-    next
-      \<comment> \<open>Surjective: \<phi>(S¹) = A.\<close>
-      show "\<phi> ` top1_S1 = ?A"
-      proof
-        show "\<phi> ` top1_S1 \<subseteq> ?A" using h\<phi>_map by (by100 blast)
-      next
-        show "?A \<subseteq> \<phi> ` top1_S1"
-        proof
-          fix a assume "a \<in> ?A"
-          then obtain s where hs: "s \<in> top1_S1" and ha: "a = q s" by (by100 blast)
-          \<comment> \<open>s = (cos \<alpha>, sin \<alpha>). Find t \<in> [0,1] with 2\<pi>t/n \<equiv> \<alpha> mod 2\<pi>/n.\<close>
-          have hR_surj: "top1_R_to_S1 ` top1_unit_interval = top1_S1"
-            using hR_quot unfolding top1_quotient_map_on_def by (by100 blast)
-          \<comment> \<open>s \<in> S¹ = R\_to\_S1([0,1]), so s = R\_to\_S1(\<theta>) for some \<theta> \<in> [0,1].\<close>
-          have "s \<in> top1_R_to_S1 ` top1_unit_interval" using hs hR_surj by (by100 blast)
-          then obtain \<theta> where h\<theta>: "\<theta> \<in> top1_unit_interval" "top1_R_to_S1 \<theta> = s" by (by100 blast)
-          \<comment> \<open>s = (cos(2\<pi>\<theta>), sin(2\<pi>\<theta>)). Need t with g(t) = q(s).
-             g(t) = q(cos(2\<pi>t/n), sin(2\<pi>t/n)). Need q(cos(2\<pi>t/n),...) = q(cos(2\<pi>\<theta>),...).
-             This holds when 2\<pi>t/n = 2\<pi>\<theta> + 2\<pi>k/n for some integer k, i.e., t = n\<theta> + k.
-             Choose t = n\<theta> - floor(n\<theta>) (or similar) to get t \<in> [0,1).\<close>
-          let ?t_raw = "n * \<theta>"
-          let ?t = "?t_raw - of_int (floor ?t_raw)"
-          have h_t_I: "?t \<in> top1_unit_interval"
-          proof -
-            have "0 \<le> ?t" by (by100 linarith)
-            moreover have "?t \<le> 1" by (by100 linarith)
-            ultimately show ?thesis unfolding top1_unit_interval_def by (by100 auto)
-          qed
-          \<comment> \<open>g(?t) = q(cos(2\<pi>?t/n), sin(2\<pi>?t/n)). Since ?t = n\<theta> - floor(n\<theta>),
-             2\<pi>?t/n = 2\<pi>\<theta> - 2\<pi>·floor(n\<theta>)/n. Then q identifies the rotation.\<close>
-          have "?g ?t = a"
-            sorry \<comment> \<open>g(n\<theta> mod 1) = q(s) = a by rotation identification under q.\<close>
-          hence "\<phi> (top1_R_to_S1 ?t) = a" using h\<phi>_eq h_t_I by (by100 simp)
-          moreover have "top1_R_to_S1 ?t \<in> top1_S1" using hR_surj h_t_I by (by100 blast)
-          ultimately show "a \<in> \<phi> ` top1_S1" by (by100 blast)
-        qed
-      qed
-    qed
-    \<comment> \<open>Step D6: Theorem\_26\_6: compact S¹ \<rightarrow> Hausdorff A = homeomorphism.\<close>
-    have hTA_top: "is_topology_on ?A ?TA"
-      by (rule subspace_topology_is_topology_on[OF hTX hA_sub])
-    have hA_haus: "is_hausdorff_on ?A ?TA"
-    proof -
-      \<comment> \<open>Forward reference: X is Hausdorff (proved independently below at Step 3).\<close>
-      have hX_haus_loc: "is_hausdorff_on X TX"
-        sorry \<comment> \<open>Hausdorff proof (closed map + Lemma 73.3) does NOT depend on hA\_circle.\<close>
-      show ?thesis using conjunct2[OF conjunct2[OF Theorem_17_11]] hX_haus_loc hA_sub by (by100 blast)
-    qed
-    have hTS1: "is_topology_on top1_S1 top1_S1_topology"
-    proof -
-      have "is_topology_on (UNIV::(real\<times>real) set) (product_topology_on top1_open_sets top1_open_sets)"
-        using product_topology_on_is_topology_on[OF top1_open_sets_is_topology_on_UNIV
-              top1_open_sets_is_topology_on_UNIV] by (by100 simp)
-      thus ?thesis unfolding top1_S1_topology_def
-        by (rule subspace_topology_is_topology_on) (by100 simp)
-    qed
-    have "top1_homeomorphism_on top1_S1 top1_S1_topology ?A ?TA \<phi>"
-      by (rule Theorem_26_6[OF hTS1 hTA_top S1_compact hA_haus h\<phi>_cont h\<phi>_bij])
-    thus ?thesis by (by100 blast)
-  qed
   \<comment> \<open>Step 3: X is Hausdorff. Book proof: (1) q is a closed map (rotation saturation argument),
      then (2) Lemma 73.3: closed quotient of normal space is normal (hence Hausdorff).\<close>
   \<comment> \<open>Step 3a: q is a closed map. For any closed C \<subseteq> B², q\<inverse>(q(C)) = C \<union> \<Union>_{k<n} r^k(C\<inter>S¹).
@@ -6263,6 +5989,212 @@ proof -
   \<comment> \<open>Step 4: A is closed in X (image of compact S¹ under quotient map to Hausdorff X).\<close>
   have hA_cl: "closedin_on X TX ?A"
     by (rule compact_hausdorff_continuous_closed_map[OF hB2_compact hX_haus hq_cont hS1_closed])
+  \<comment> \<open>Step 2: A = q(S¹) is homeomorphic to S¹.
+     Book: h maps arc C from (1,0) to r(1,0) onto A, injective except at endpoints.
+     The quotient of S¹ by n-fold rotation is again a circle.\<close>
+  have hA_circle: "\<exists>f. top1_homeomorphism_on top1_S1 top1_S1_topology
+           ?A (subspace_topology X TX ?A) f"
+  proof -
+    \<comment> \<open>Book: q maps arc C from (1,0) to r(1,0) onto A, injective except at endpoints.
+       Proof: define g: [0,1] \<rightarrow> A by g(t) = q(cos(2\<pi>t/n), sin(2\<pi>t/n)).
+       g(0) = g(1) = a (q identifies rotation by 2\<pi>/n).
+       g is injective on (0,1) (different t give non-equivalent angles).
+       So g and R\_to\_S1 identify the same pairs on [0,1]: only {0,1}.
+       By the universal property of the quotient R\_to\_S1: [0,1] \<rightarrow> S¹,
+       there exists continuous \<phi>: S¹ \<rightarrow> A with \<phi> \<circ> R\_to\_S1 = g.
+       \<phi> is bijective, S¹ compact, A Hausdorff \<Rightarrow> \<phi> is a homeomorphism.\<close>
+    let ?g = "\<lambda>t. q (cos (2*pi*t / real n), sin (2*pi*t / real n))"
+    \<comment> \<open>Step A: g maps into X (via S¹ \<subseteq> B² \<subseteq> domain of q).\<close>
+    \<comment> \<open>Step B: g maps into A = q(S¹).\<close>
+    have hg_img: "\<And>t. (cos (2*pi*t / real n), sin (2*pi*t / real n)) \<in> top1_S1"
+      unfolding top1_S1_def using sin_cos_squared_add by (by100 simp)
+    hence hg_in_A: "\<And>t. ?g t \<in> ?A" by (by100 blast)
+    \<comment> \<open>Step C: g(0) = g(1) = a.\<close>
+    have hg0: "?g 0 = ?a"
+      by (by100 simp)
+    have hg1: "?g 1 = ?a"
+    proof -
+      have h10: "(1::real, 0::real) \<in> top1_S1" unfolding top1_S1_def by (by100 simp)
+      have hrot: "(cos (2*pi / real n), sin (2*pi / real n)) \<in> top1_S1"
+        unfolding top1_S1_def using sin_cos_squared_add by (by100 simp)
+      \<comment> \<open>q(1,0) = q(cos(2\<pi>/n), sin(2\<pi>/n)) because the latter is rotation by 2\<pi>/n of (1,0).\<close>
+      have "q (1, 0) = q (cos (2*pi / real n), sin (2*pi / real n))"
+      proof -
+        from hq_S1[rule_format, OF h10 hrot]
+        have hiff: "q (1, 0) = q (cos (2*pi / real n), sin (2*pi / real n)) \<longleftrightarrow>
+            (\<exists>k::nat. k < n \<and> (cos (2*pi / real n), sin (2*pi / real n)) =
+              (cos (2*pi*real k/real n) * fst (1::real, 0::real) - sin (2*pi*real k/real n) * snd (1::real, 0::real),
+               sin (2*pi*real k/real n) * fst (1::real, 0::real) + cos (2*pi*real k/real n) * snd (1::real, 0::real)))"
+          by (by5000 blast)
+        \<comment> \<open>For n \<ge> 2: use k=1, rotation by 2\<pi>/n. For n=1: use k=0, identity.\<close>
+        have "(\<exists>k::nat. k < n \<and> (cos (2*pi / real n), sin (2*pi / real n)) =
+              (cos (2*pi*real k/real n) * 1 - sin (2*pi*real k/real n) * 0,
+               sin (2*pi*real k/real n) * 1 + cos (2*pi*real k/real n) * 0))"
+        proof (cases "n = 1")
+          case True
+          show ?thesis
+          proof (rule exI[of _ 0], intro conjI)
+            show "(0::nat) < n" using assms(1) by (by100 simp)
+            show "(cos (2*pi / real n), sin (2*pi / real n)) =
+                (cos (2*pi*real 0/real n) * 1 - sin (2*pi*real 0/real n) * 0,
+                 sin (2*pi*real 0/real n) * 1 + cos (2*pi*real 0/real n) * 0)"
+              using True by (by100 simp)
+          qed
+        next
+          case False hence "n \<ge> 2" using assms(1) by (by100 simp)
+          show ?thesis
+          proof (rule exI[of _ 1], intro conjI)
+            show "(1::nat) < n" using \<open>n \<ge> 2\<close> by (by100 simp)
+            show "(cos (2*pi / real n), sin (2*pi / real n)) =
+                (cos (2*pi*real 1/real n) * 1 - sin (2*pi*real 1/real n) * 0,
+                 sin (2*pi*real 1/real n) * 1 + cos (2*pi*real 1/real n) * 0)"
+              by (by100 simp)
+          qed
+        qed
+        thus ?thesis using hiff by (by100 simp)
+      qed
+      thus ?thesis by (by100 simp)
+    qed
+    \<comment> \<open>Step D: Apply Theorem\_22\_2 (quotient universal property) with
+       p = R\_to\_S1|[0,1]: [0,1] \<rightarrow> S¹ (quotient map), g: [0,1] \<rightarrow> A.
+       g constant on fibers of p (both identify only {0,1}).
+       Gets continuous \<phi>: S¹ \<rightarrow> A with \<phi>(R\_to\_S1(t)) = g(t).\<close>
+    \<comment> \<open>Step D1: g is continuous [0,1] \<rightarrow> A (in our topology framework).\<close>
+    have hg_cont_top: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+        ?A (subspace_topology X TX ?A) ?g"
+    proof -
+      let ?h = "\<lambda>t. (cos (2*pi*t / real n), sin (2*pi*t / real n))"
+      \<comment> \<open>h: R \<rightarrow> S¹ continuous (polynomial \<Rightarrow> continuous\_on UNIV, bridge to top1).\<close>
+      have hn_ne: "real n \<noteq> (0::real)" using assms(1) by (by100 simp)
+      have hh_cont_on: "continuous_on UNIV ?h"
+        by (intro continuous_intros) (simp add: assms)+
+      have hh_img: "\<And>t. ?h t \<in> top1_B2"
+      proof -
+        fix t :: real
+        have "(fst (?h t))^2 + (snd (?h t))^2 = 1"
+          using sin_cos_squared_add[of "2*pi*t/real n"] by (by100 simp)
+        thus "?h t \<in> top1_B2" unfolding top1_B2_def by (by100 simp)
+      qed
+      have hh_top1: "top1_continuous_map_on (UNIV::real set) top1_open_sets
+          top1_B2 top1_B2_topology ?h"
+      proof -
+        have "top1_continuous_map_on (UNIV::real set) top1_open_sets
+            top1_B2 (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) top1_B2) ?h"
+          by (rule top1_continuous_map_on_R_to_R2_subspace[OF hh_img hh_cont_on])
+        thus ?thesis unfolding top1_B2_topology_def by (by100 blast)
+      qed
+      \<comment> \<open>Restrict h to [0,1].\<close>
+      have hh_I: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+          top1_B2 top1_B2_topology ?h"
+      proof -
+        have hI_sub: "top1_unit_interval \<subseteq> (UNIV::real set)" by (by100 blast)
+        have "top1_continuous_map_on top1_unit_interval
+            (subspace_topology UNIV top1_open_sets top1_unit_interval)
+            top1_B2 top1_B2_topology ?h"
+          by (rule top1_continuous_map_on_subspace_restrict[OF hh_top1 hI_sub])
+        moreover have "subspace_topology UNIV top1_open_sets top1_unit_interval
+            = top1_unit_interval_topology"
+          unfolding top1_unit_interval_topology_def by (by100 simp)
+        ultimately show ?thesis by (by100 simp)
+      qed
+      \<comment> \<open>g = q \<circ> h: [0,1] \<rightarrow> X continuous.\<close>
+      have hg_X: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology X TX ?g"
+      proof -
+        have hcomp: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology X TX (q \<circ> ?h)"
+          by (rule top1_continuous_map_on_comp[OF hh_I hq_cont])
+        have "\<And>t. t \<in> top1_unit_interval \<Longrightarrow> (q \<circ> ?h) t = ?g t" by (by100 simp)
+        hence "{t \<in> top1_unit_interval. (q \<circ> ?h) t \<in> V} = {t \<in> top1_unit_interval. ?g t \<in> V}" for V
+          by (by100 auto)
+        thus ?thesis using hcomp unfolding top1_continuous_map_on_def by (by5000 auto)
+      qed
+      \<comment> \<open>Shrink codomain to A.\<close>
+      have hg_img: "?g ` top1_unit_interval \<subseteq> ?A" using hg_in_A by (by100 blast)
+      show ?thesis
+        using top1_continuous_map_on_codomain_shrink[OF hg_X hg_img hA_sub] by (by100 blast)
+    qed
+    \<comment> \<open>Step D2: g constant on fibers of R\_to\_S1: if R\_to\_S1(t)=R\_to\_S1(t') then g(t)=g(t').\<close>
+    have hg_const_fibers: "\<forall>t\<in>top1_unit_interval. \<forall>t'\<in>top1_unit_interval.
+        top1_R_to_S1 t = top1_R_to_S1 t' \<longrightarrow> ?g t = ?g t'"
+    proof (intro ballI impI)
+      fix t t' assume ht: "t \<in> top1_unit_interval" and ht': "t' \<in> top1_unit_interval"
+        and heq: "top1_R_to_S1 t = top1_R_to_S1 t'"
+      \<comment> \<open>R\_to\_S1(t) = R\_to\_S1(t') with t, t' \<in> [0,1] means t = t' or {t,t'} = {0,1}.\<close>
+      have "t = t' \<or> (t = 0 \<and> t' = 1) \<or> (t = 1 \<and> t' = 0)"
+      proof -
+        from heq have "cos (2*pi*t) = cos (2*pi*t') \<and> sin (2*pi*t) = sin (2*pi*t')"
+          unfolding top1_R_to_S1_def by (by100 auto)
+        hence "\<exists>k::int. 2*pi*t - 2*pi*t' = real_of_int k * 2 * pi"
+          using cos_sin_eq_imp by (by100 blast)
+        then obtain k :: int where hk: "2*pi*t - 2*pi*t' = real_of_int k * 2 * pi"
+          by (by100 blast)
+        have htk: "t - t' = real_of_int k"
+        proof -
+          from hk have "2*pi*t - 2*pi*t' - real_of_int k * 2 * pi = 0"
+            by (by100 linarith)
+          hence "2*pi*(t - t') - real_of_int k * (2 * pi) = 0"
+            by (simp add: algebra_simps)
+          hence "(t - t' - real_of_int k) * (2 * pi) = 0"
+            by (simp add: algebra_simps)
+          moreover have "(2 * pi :: real) \<noteq> 0" using pi_gt_zero by (by100 linarith)
+          ultimately have "t - t' - real_of_int k = 0" by (by100 simp)
+          thus ?thesis by (by100 linarith)
+        qed
+        have "t \<in> {0..1}" and "t' \<in> {0..1}"
+          using ht ht' unfolding top1_unit_interval_def by (by100 auto)+
+        hence "0 \<le> t" "t \<le> 1" "0 \<le> t'" "t' \<le> 1" by (by100 auto)+
+        have "-1 \<le> t - t'" using \<open>0 \<le> t\<close> \<open>t' \<le> 1\<close> by (by100 linarith)
+        have "t - t' \<le> 1" using \<open>t \<le> 1\<close> \<open>0 \<le> t'\<close> by (by100 linarith)
+        have "-1 \<le> real_of_int k" using htk \<open>-1 \<le> t - t'\<close> by (by100 linarith)
+        have "real_of_int k \<le> 1" using htk \<open>t - t' \<le> 1\<close> by (by100 linarith)
+        hence "k \<ge> -1" and "k \<le> 1"
+          using \<open>-1 \<le> real_of_int k\<close> \<open>real_of_int k \<le> 1\<close> by (by100 linarith)+
+        hence "k \<in> {-1, 0, 1}" by (by100 auto)
+        thus ?thesis using htk \<open>t \<in> {0..1}\<close> \<open>t' \<in> {0..1}\<close>
+          by (by5000 force)
+      qed
+      thus "?g t = ?g t'"
+      proof (elim disjE conjE)
+        assume "t = t'" thus ?thesis by (by100 simp)
+      next
+        assume "t = 0" "t' = 1" thus ?thesis using hg0 hg1 by (by100 simp)
+      next
+        assume "t = 1" "t' = 0" thus ?thesis using hg0 hg1 by (by100 simp)
+      qed
+    qed
+    \<comment> \<open>Step D3: R\_to\_S1|[0,1] is a quotient map.\<close>
+    have hR_quot: "top1_quotient_map_on top1_unit_interval top1_unit_interval_topology
+        top1_S1 top1_S1_topology top1_R_to_S1"
+      sorry \<comment> \<open>Proved in ac/AlgTopCached as a local fact. Need to lift or re-prove.\<close>
+    \<comment> \<open>Step D4: Apply Theorem\_22\_2 to get continuous \<phi>: S¹ \<rightarrow> A.\<close>
+    let ?TA = "subspace_topology X TX ?A"
+    from Theorem_22_2[OF hR_quot _ hg_const_fibers, of ?A ?TA]
+    obtain \<phi> where h\<phi>_map: "\<forall>y\<in>top1_S1. \<phi> y \<in> ?A"
+        and h\<phi>_eq: "\<forall>t\<in>top1_unit_interval. \<phi> (top1_R_to_S1 t) = ?g t"
+        and h\<phi>_cont_iff: "(top1_continuous_map_on top1_S1 top1_S1_topology ?A ?TA \<phi>) \<longleftrightarrow>
+            (top1_continuous_map_on top1_unit_interval top1_unit_interval_topology ?A ?TA ?g)"
+      using hg_in_A by (by5000 auto)
+    have h\<phi>_cont: "top1_continuous_map_on top1_S1 top1_S1_topology ?A ?TA \<phi>"
+      using h\<phi>_cont_iff hg_cont_top by (by100 blast)
+    \<comment> \<open>Step D5: \<phi> is bijective.\<close>
+    have h\<phi>_bij: "bij_betw \<phi> top1_S1 ?A"
+      sorry \<comment> \<open>Surjective: g surjective onto A. Injective: g injective mod fibers of R\_to\_S1.\<close>
+    \<comment> \<open>Step D6: Theorem\_26\_6: compact S¹ \<rightarrow> Hausdorff A = homeomorphism.\<close>
+    have hTA_top: "is_topology_on ?A ?TA"
+      by (rule subspace_topology_is_topology_on[OF hTX hA_sub])
+    have hA_haus: "is_hausdorff_on ?A ?TA"
+      using conjunct2[OF conjunct2[OF Theorem_17_11]] hX_haus hA_sub by (by100 blast)
+    have hTS1: "is_topology_on top1_S1 top1_S1_topology"
+    proof -
+      have "is_topology_on (UNIV::(real\<times>real) set) (product_topology_on top1_open_sets top1_open_sets)"
+        using product_topology_on_is_topology_on[OF top1_open_sets_is_topology_on_UNIV
+              top1_open_sets_is_topology_on_UNIV] by (by100 simp)
+      thus ?thesis unfolding top1_S1_topology_def
+        by (rule subspace_topology_is_topology_on) (by100 simp)
+    qed
+    have "top1_homeomorphism_on top1_S1 top1_S1_topology ?A ?TA \<phi>"
+      by (rule Theorem_26_6[OF hTS1 hTA_top S1_compact hA_haus h\<phi>_cont h\<phi>_bij])
+    thus ?thesis by (by100 blast)
+  qed
   \<comment> \<open>Step 5: q restricted to Int(B²) = B² - S¹ is a homeomorphism onto X - A.
      Proof: B² - S¹ is open and saturated in B², so by Thm 22.1 the restriction
      is a quotient map. Since it's also bijective, it's a homeomorphism.\<close>
