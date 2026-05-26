@@ -6871,7 +6871,59 @@ proof -
     proof -
       \<comment> \<open>Step 1: phi(normal_closure({r})) = normal_closure({phi(r)}) for iso phi.\<close>
       have hiso_nc: "\<phi> ` ?N = top1_normal_subgroup_generated_on top1_Z_group top1_Z_mul (0::int) uminus {\<phi> ?relator}"
-        sorry \<comment> \<open>General: iso preserves normal closure of singleton.\<close>
+      proof (rule set_eqI, rule iffI)
+        let ?NC_Z = "top1_normal_subgroup_generated_on top1_Z_group top1_Z_mul (0::int) uminus {\<phi> ?relator}"
+        \<comment> \<open>Forward: NC_Z({phi(r)}) \<subseteq> phi(N).\<close>
+        \<comment> \<open>phi(N) is normal in Z (iso image of normal subgroup).\<close>
+        have hphiN_normal: "top1_normal_subgroup_on top1_Z_group top1_Z_mul (0::int) uminus (\<phi> ` ?N)"
+          by (rule group_iso_on_image_normal_subgroup[OF h\<phi>_iso hgrpA hgrpZ hN_normal])
+        \<comment> \<open>{phi(r)} \<subseteq> phi(N): since r \<in> N, phi(r) \<in> phi(N).\<close>
+        have hr_in_N: "?relator \<in> ?N"
+          unfolding top1_normal_subgroup_generated_on_def by (by100 blast)
+        hence hphir_in_phiN: "\<phi> ?relator \<in> \<phi> ` ?N" by (by100 blast)
+        hence hset_sub: "{\<phi> ?relator} \<subseteq> \<phi> ` ?N" by (by100 blast)
+        \<comment> \<open>By normal_closure_least: NC_Z({phi(r)}) \<subseteq> phi(N).\<close>
+        have hfwd: "?NC_Z \<subseteq> \<phi> ` ?N"
+          using normal_closure_least[OF hgrpZ hphiN_normal hset_sub] by (by100 blast)
+        \<comment> \<open>Backward: phi(N) \<subseteq> NC_Z({phi(r)}).
+           For c \<in> N: phi(c) \<in> phi(N). Need phi(c) \<in> NC_Z({phi(r)}).
+           By inj_hom_preimage_normal_closure (reverse direction):
+           actually we use that phi is surj + inj, so apply to phi^{-1}.\<close>
+        have hbwd: "\<phi> ` ?N \<subseteq> ?NC_Z"
+        proof -
+          \<comment> \<open>NC_Z({phi(r)}) is normal in Z.\<close>
+          have hphi_rel_in_Z: "\<phi> ?relator \<in> top1_Z_group"
+            using h\<phi>_iso hrel_in_GA unfolding top1_group_iso_on_def top1_group_hom_on_def top1_Z_group_def
+            by (by100 blast)
+          have hNC_Z_normal: "top1_normal_subgroup_on top1_Z_group top1_Z_mul (0::int) uminus ?NC_Z"
+          proof -
+            have "{\<phi> ?relator} \<subseteq> top1_Z_group" using hphi_rel_in_Z by (by100 blast)
+            thus ?thesis by (rule normal_subgroup_generated_is_normal[OF hgrpZ])
+          qed
+          \<comment> \<open>Preimage f^{-1}(NC_Z) is normal in pi1(A).\<close>
+          have h\<phi>_hom: "top1_group_hom_on ?GA ?mulA top1_Z_group top1_Z_mul \<phi>"
+            using h\<phi>_iso unfolding top1_group_iso_on_def by (by100 blast)
+          have hpreimg_normal: "top1_normal_subgroup_on ?GA ?mulA ?eA ?invA {g \<in> ?GA. \<phi> g \<in> ?NC_Z}"
+            using preimage_normal_subgroup[OF hgrpA hgrpZ h\<phi>_hom hNC_Z_normal] by (by100 blast)
+          \<comment> \<open>s \<in> preimage: phi(s) \<in> NC_Z({phi(s)}).\<close>
+          have hrel_in_preimg: "?relator \<in> {g \<in> ?GA. \<phi> g \<in> ?NC_Z}"
+          proof -
+            have "?relator \<in> ?GA" using hrel_in_GA by (by100 blast)
+            moreover have "\<phi> ?relator \<in> ?NC_Z"
+              unfolding top1_normal_subgroup_generated_on_def by (by100 blast)
+            ultimately show ?thesis by (by100 blast)
+          qed
+          hence "{?relator} \<subseteq> {g \<in> ?GA. \<phi> g \<in> ?NC_Z}" by (by100 blast)
+          \<comment> \<open>By normal_closure_least: N = NC({r}) \<subseteq> preimage.\<close>
+          hence "?N \<subseteq> {g \<in> ?GA. \<phi> g \<in> ?NC_Z}"
+            using normal_closure_least[OF hgrpA hpreimg_normal] by (by100 blast)
+          \<comment> \<open>Therefore phi(N) \<subseteq> NC_Z.\<close>
+          thus ?thesis by (by100 blast)
+        qed
+        fix x
+        show "x \<in> \<phi> ` ?N \<Longrightarrow> x \<in> ?NC_Z" using hbwd by (by100 blast)
+        show "x \<in> ?NC_Z \<Longrightarrow> x \<in> \<phi> ` ?N" using hfwd by (by100 blast)
+      qed
       \<comment> \<open>Step 2: normal_closure({n}) = normal_closure({-n}) in Z.\<close>
       have hneg_nc: "top1_normal_subgroup_generated_on top1_Z_group top1_Z_mul (0::int) uminus {- int n}
           = top1_normal_subgroup_generated_on top1_Z_group top1_Z_mul (0::int) uminus {int n}"
