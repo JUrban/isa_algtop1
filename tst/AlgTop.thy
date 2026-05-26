@@ -5601,7 +5601,12 @@ proof -
     have hTA_top: "is_topology_on ?A ?TA"
       by (rule subspace_topology_is_topology_on[OF hTX hA_sub])
     have hA_haus: "is_hausdorff_on ?A ?TA"
-      sorry \<comment> \<open>A \<subseteq> Hausdorff X (proved later as hX\_haus); subspace of Hausdorff is Hausdorff.\<close>
+    proof -
+      \<comment> \<open>Forward reference: X is Hausdorff (proved independently below at Step 3).\<close>
+      have hX_haus_loc: "is_hausdorff_on X TX"
+        sorry \<comment> \<open>Hausdorff proof (closed map + Lemma 73.3) does NOT depend on hA\_circle.\<close>
+      show ?thesis using conjunct2[OF conjunct2[OF Theorem_17_11]] hX_haus_loc hA_sub by (by100 blast)
+    qed
     have hTS1: "is_topology_on top1_S1 top1_S1_topology"
     proof -
       have "is_topology_on (UNIV::(real\<times>real) set) (product_topology_on top1_open_sets top1_open_sets)"
