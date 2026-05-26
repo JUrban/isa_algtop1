@@ -5499,9 +5499,40 @@ proof -
       have "{z \<in> top1_B2. q z = p} \<subseteq>
           {z \<in> top1_B2 - top1_S1. q z = p} \<union> {z \<in> top1_S1. q z = p}" by (by100 blast)
       moreover have "finite {z \<in> top1_B2 - top1_S1. q z = p}"
-        sorry \<comment> \<open>Injective on B²-S¹ means the fiber has at most 1 element.\<close>
+      proof -
+        have "finite {p}" by (by100 simp)
+        have "{z \<in> top1_B2 - top1_S1. q z = p} = {z \<in> top1_B2 - top1_S1. q z \<in> {p}}"
+          by (by100 blast)
+        moreover have "finite {z \<in> top1_B2 - top1_S1. q z \<in> {p}}"
+          by (rule finite_inverse_image_gen[OF \<open>finite {p}\<close> hq_inj])
+        ultimately show ?thesis by (by100 simp)
+      qed
       moreover have "finite {z \<in> top1_S1. q z = p}"
-        sorry \<comment> \<open>Orbit of a point under n-fold rotation has \<le> n points, hence finite.\<close>
+      proof -
+        \<comment> \<open>Use hq\_S1: z and z' on S¹ satisfy q(z)=q(z') iff z' is a rotation of z.
+           So {z \<in> S¹. q z = p} is contained in the orbit of any base point, which has \<le> n elements.\<close>
+        obtain s0 :: "real \<times> real" where hs0_def: "s0 = (SOME s. s \<in> top1_S1 \<and> q s = p)" by (by100 blast)
+        let ?rot = "\<lambda>k::nat. (cos (2*pi*real k/real n) * fst s0 - sin (2*pi*real k/real n) * snd s0,
+                               sin (2*pi*real k/real n) * fst s0 + cos (2*pi*real k/real n) * snd s0)"
+        have "{z \<in> top1_S1. q z = p} \<subseteq> ?rot ` {..<n}"
+        proof
+          fix z assume hz: "z \<in> {z \<in> top1_S1. q z = p}"
+          hence hzS1: "z \<in> top1_S1" and hqz: "q z = p" by (by100 blast)+
+          have hs0: "s0 \<in> top1_S1 \<and> q s0 = p"
+            using someI[of "\<lambda>s. s \<in> top1_S1 \<and> q s = p" z] hzS1 hqz hs0_def by (by5000 metis)
+          have "q s0 = q z" using hs0 hqz by (by100 simp)
+          have hs0_S1: "s0 \<in> top1_S1" using hs0 by (by100 blast)
+          from hq_S1[rule_format, OF hs0_S1 hzS1]
+          have "q s0 = q z \<longleftrightarrow>
+              (\<exists>k::nat. k < n \<and> z = (cos (2*pi*real k/real n) * fst s0 - sin (2*pi*real k/real n) * snd s0,
+                   sin (2*pi*real k/real n) * fst s0 + cos (2*pi*real k/real n) * snd s0))"
+            by (by5000 blast)
+          hence "\<exists>k<n. z = ?rot k" using \<open>q s0 = q z\<close> by (by100 blast)
+          thus "z \<in> ?rot ` {..<n}" by (by100 blast)
+        qed
+        moreover have "finite (?rot ` {..<n})" by (by100 simp)
+        ultimately show ?thesis using finite_subset by (by100 blast)
+      qed
       ultimately show "finite {z \<in> top1_B2. q z = p}"
         using finite_subset by (by5000 blast)
     qed
