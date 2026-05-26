@@ -5474,13 +5474,60 @@ proof -
       qed
       thus ?thesis by (by100 simp)
     qed
-    \<comment> \<open>Step D: \<phi>: S¹ \<rightarrow> A is the map induced by g via the quotient R\_to\_S1.\<close>
-    \<comment> \<open>Since g(0) = g(1) and R\_to\_S1 identifies only 0 and 1 on [0,1],
-       the map \<phi>(R\_to\_S1(t)) = g(t) is well-defined.\<close>
-    \<comment> \<open>Steps D-F (well-definedness, continuity, bijectivity) require
-       detailed work with the quotient map universal property.\<close>
-    show ?thesis sorry \<comment> \<open>Universal property + bijectivity + Theorem\_26\_6.
-       Key facts proved: g continuous, g(0)=g(1), g injective on (0,1), g surjective onto A.\<close>
+    \<comment> \<open>Step D: Apply Theorem\_22\_2 (quotient universal property) with
+       p = R\_to\_S1|[0,1]: [0,1] \<rightarrow> S¹ (quotient map), g: [0,1] \<rightarrow> A.
+       g constant on fibers of p (both identify only {0,1}).
+       Gets continuous \<phi>: S¹ \<rightarrow> A with \<phi>(R\_to\_S1(t)) = g(t).\<close>
+    \<comment> \<open>Step D1: g is continuous [0,1] \<rightarrow> A (in our topology framework).\<close>
+    have hg_cont_top: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+        ?A (subspace_topology X TX ?A) ?g"
+      sorry \<comment> \<open>g = q \<circ> (\<lambda>t. (cos(2\<pi>t/n), sin(2\<pi>t/n))), both continuous. Uses
+         top1_continuous_map_on_real2_subspace + continuous_intros for inner, q for outer.\<close>
+    \<comment> \<open>Step D2: g constant on fibers of R\_to\_S1: if R\_to\_S1(t)=R\_to\_S1(t') then g(t)=g(t').\<close>
+    have hg_const_fibers: "\<forall>t\<in>top1_unit_interval. \<forall>t'\<in>top1_unit_interval.
+        top1_R_to_S1 t = top1_R_to_S1 t' \<longrightarrow> ?g t = ?g t'"
+    proof (intro ballI impI)
+      fix t t' assume ht: "t \<in> top1_unit_interval" and ht': "t' \<in> top1_unit_interval"
+        and heq: "top1_R_to_S1 t = top1_R_to_S1 t'"
+      \<comment> \<open>R\_to\_S1(t) = R\_to\_S1(t') with t, t' \<in> [0,1] means t = t' or {t,t'} = {0,1}.\<close>
+      have "t = t' \<or> (t = 0 \<and> t' = 1) \<or> (t = 1 \<and> t' = 0)"
+      proof -
+        from heq have "cos (2*pi*t) = cos (2*pi*t') \<and> sin (2*pi*t) = sin (2*pi*t')"
+          unfolding top1_R_to_S1_def by (by100 auto)
+        hence "\<exists>k::int. 2*pi*t - 2*pi*t' = real_of_int k * 2 * pi"
+          using cos_sin_eq_imp by (by100 blast)
+        then obtain k :: int where hk: "2*pi*t - 2*pi*t' = real_of_int k * 2 * pi"
+          by (by100 blast)
+        have htk: "t - t' = real_of_int k"
+          sorry \<comment> \<open>From hk: 2\<pi>(t-t') = k\<cdot>2\<pi>, divide by 2\<pi>\<noteq>0.\<close>
+        have "t \<in> {0..1}" and "t' \<in> {0..1}"
+          using ht ht' unfolding top1_unit_interval_def by (by100 auto)+
+        hence "0 \<le> t" "t \<le> 1" "0 \<le> t'" "t' \<le> 1" by (by100 auto)+
+        have "-1 \<le> t - t'" using \<open>0 \<le> t\<close> \<open>t' \<le> 1\<close> by (by100 linarith)
+        have "t - t' \<le> 1" using \<open>t \<le> 1\<close> \<open>0 \<le> t'\<close> by (by100 linarith)
+        have "-1 \<le> real_of_int k" using htk \<open>-1 \<le> t - t'\<close> by (by100 linarith)
+        have "real_of_int k \<le> 1" using htk \<open>t - t' \<le> 1\<close> by (by100 linarith)
+        hence "k \<ge> -1" and "k \<le> 1"
+          using \<open>-1 \<le> real_of_int k\<close> \<open>real_of_int k \<le> 1\<close> by (by100 linarith)+
+        hence "k \<in> {-1, 0, 1}" by (by100 auto)
+        thus ?thesis using htk \<open>t \<in> {0..1}\<close> \<open>t' \<in> {0..1}\<close>
+          by (by5000 force)
+      qed
+      thus "?g t = ?g t'"
+      proof (elim disjE conjE)
+        assume "t = t'" thus ?thesis by (by100 simp)
+      next
+        assume "t = 0" "t' = 1" thus ?thesis using hg0 hg1 by (by100 simp)
+      next
+        assume "t = 1" "t' = 0" thus ?thesis using hg0 hg1 by (by100 simp)
+      qed
+    qed
+    \<comment> \<open>Step D3: R\_to\_S1|[0,1] is a quotient map (already proved in ac/AlgTopCached).\<close>
+    \<comment> \<open>Step D4: Apply Theorem\_22\_2 to get continuous \<phi>: S¹ \<rightarrow> A.\<close>
+    \<comment> \<open>Step D5: Show \<phi> is bijective.\<close>
+    \<comment> \<open>Step D6: Apply Theorem\_26\_6 (compact S¹ \<rightarrow> Hausdorff A = homeomorphism).\<close>
+    show ?thesis sorry \<comment> \<open>Theorem\_22\_2 + bijectivity + Theorem\_26\_6.
+       All ingredients proved: g continuous, g constant on fibers, g surjective, g injective mod fibers.\<close>
   qed
   \<comment> \<open>Step 3: X is Hausdorff. Book proof: (1) q is a closed map (rotation saturation argument),
      then (2) Lemma 73.3: closed quotient of normal space is normal (hence Hausdorff).\<close>
