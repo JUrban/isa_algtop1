@@ -6950,7 +6950,7 @@ proof -
       \<comment> \<open>Step C: The class of alpha generates pi1(A,a), i.e. phi([alpha]) = +/-1.\<close>
       let ?class_\<alpha> = "{g. top1_loop_equiv_on ?A ?TA ?a ?\<alpha> g}"
       have h\<alpha>_gen: "\<phi> ?class_\<alpha> = 1 \<or> \<phi> ?class_\<alpha> = -1"
-        sorry \<comment> \<open>Alpha generates pi1(A,a): A ~ S1, alpha is once-around loop.\<close>
+        sorry \<comment> \<open>Alpha generates pi1(A,a): homeomorphism S1->A sends std loop to alpha, hence alpha is generator. Phi([alpha]) = +/-1.\<close>
       \<comment> \<open>Step D: The induced map of iota sends [std S1 loop] to [alpha]^n in pi1(A,a).
          The standard S1 loop t -> (cos(2*pi*t), sin(2*pi*t)) composed with iota
          gives t -> iota(cos(2*pi*t), sin(2*pi*t)) which equals alpha composed n times
