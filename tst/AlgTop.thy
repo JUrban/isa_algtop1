@@ -94,7 +94,7 @@ proof -
           have "(\<Union>i\<in>{..<card J}. C' i) = (\<Union>i\<in>{..<card J}. C (f i))"
             unfolding C'_def ..
           also have "\<dots> = (\<Union>\<alpha>\<in>f`{..<card J}. C \<alpha>)"
-            by (by5000 auto)
+            by (by100 auto)
           also have "\<dots> = (\<Union>\<alpha>\<in>J. C \<alpha>)" using hf_surj by (by100 simp)
           finally show ?thesis using hcover by (by100 simp)
         qed
@@ -420,7 +420,7 @@ proof -
         (top1_fundamental_group_mul X TX p) \<Phi>"
     and hgen_nat: "\<forall>k<n. \<Phi> (\<eta>_nat k) = {l. top1_loop_equiv_on X TX p
         (\<lambda>t. g' k (cos (2 * pi * t), sin (2 * pi * t))) l}"
-    by (by5000 blast)
+    by (by100 blast)
   \<comment> \<open>Reindex: \<eta> j = \<eta>\_nat (inv\_enum j) for j \<in> J.\<close>
   define \<eta> where "\<eta> j = \<eta>_nat (inv_enum j)" for j
   \<comment> \<open>F is free on J via reindexing.\<close>
@@ -889,7 +889,7 @@ proof -
              else qC ((t * vxC (i_of ?\<alpha>) + (1-t) * vxC (Suc (i_of ?\<alpha>) mod ?n),
                        t * vyC (i_of ?\<alpha>) + (1-t) * vyC (Suc (i_of ?\<alpha>) mod ?n))))"
           using hedge_C hi hi\<alpha>(1) hsame_label ht
-          unfolding edge_pt_def by (by5000 metis)
+          unfolding edge_pt_def by (by100 metis)
         show ?thesis
         proof (cases "snd (scheme!i) = snd (scheme!(i_of ?\<alpha>))")
           case True
@@ -908,7 +908,7 @@ proof -
           moreover have "((t * vxC (i_of ?\<alpha>) + (1-t) * vxC (Suc (i_of ?\<alpha>) mod ?n),
                        t * vyC (i_of ?\<alpha>) + (1-t) * vyC (Suc (i_of ?\<alpha>) mod ?n)))
                        = edge_pt (i_of ?\<alpha>) ?t'"
-            unfolding edge_pt_def by (by5000 auto)
+            unfolding edge_pt_def by (by100 auto)
           ultimately have "x = qC (edge_pt (i_of ?\<alpha>) ?t')" using hx by (by100 simp)
           thus ?thesis unfolding C_def using ht' by (by100 blast)
         qed
@@ -1042,7 +1042,7 @@ proof -
         moreover have "top1_R_to_S1 t \<in> top1_S1"
           unfolding top1_R_to_S1_def top1_S1_def
           using sin_cos_squared_add[of "2 * pi * t"]
-          by (by5000 auto)
+          by (by100 auto)
         ultimately show "x \<in> g ` top1_S1" by (by100 blast)
       qed
       \<comment> \<open>g is injective on S1.\<close>
@@ -1156,7 +1156,7 @@ proof -
       proof -
         have "compact {0..1::real}" by (rule compact_Icc)
         have "I_set = {0..1::real}" unfolding top1_unit_interval_def
-          by (by5000 auto)
+          by (by100 auto)
         have "compact I_set" using \<open>compact {0..1::real}\<close> \<open>I_set = _\<close> by (by100 simp)
         have "top1_compact_on I_set (subspace_topology UNIV top1_open_sets I_set)"
           using top1_compact_on_subspace_UNIV_iff_compact[of I_set] \<open>compact I_set\<close> by (by100 simp)
@@ -1382,7 +1382,7 @@ proof -
         moreover have "top1_R_to_S1 t \<in> top1_S1"
           unfolding top1_R_to_S1_def top1_S1_def
           using sin_cos_squared_add[of "2 * pi * t"]
-          by (by5000 auto)
+          by (by100 auto)
         ultimately show "x \<in> g ` top1_S1" by (by100 blast)
       qed
       \<comment> \<open>g is injective on S1.\<close>
@@ -1503,7 +1503,7 @@ proof -
           (top1_fundamental_group_mul A ?TA a) \<Phi>_w" and
       h\<Phi>_w_gen: "\<forall>\<alpha>\<in>?J. \<Phi>_w (\<eta>_w \<alpha>) = {l. top1_loop_equiv_on A ?TA a
           (\<lambda>t. g_w \<alpha> (cos (2 * pi * t), sin (2 * pi * t))) l}"
-      by (by5000 blast)
+      by (by100 blast)
     \<comment> \<open>Connect g\_w loop classes to edge\_loop\_class\_a:
        g\_w(\<alpha>)(cos(2\<pi>t), sin(2\<pi>t)) = g\_w(\<alpha>)(R\_to\_S1(t)) = qC(edge\_pt(i\_of \<alpha>, t)).\<close>
     have hgen_eq_a: "\<forall>\<alpha>\<in>?J. \<Phi>_w (\<eta>_w \<alpha>) = {l. top1_loop_equiv_on A ?TA a
@@ -1649,7 +1649,7 @@ proof -
           (top1_fundamental_group_id A ?TA a)
           (top1_fundamental_group_invg A ?TA a)
           \<iota>A ?J \<and> (\<forall>s\<in>?J. \<iota>A s = \<Phi>_w (\<eta>_w s))"
-        unfolding \<iota>A_def using someI_ex[OF h_fgii] by (by5000 blast)
+        unfolding \<iota>A_def using someI_ex[OF h_fgii] by (by100 blast)
       hence "\<forall>s\<in>?J. \<iota>A s = {l. top1_loop_equiv_on A ?TA a
             (\<lambda>t. qC ((1-t) * vxC (i_of s) + t * vxC (Suc (i_of s) mod ?n),
                       (1-t) * vyC (i_of s) + t * vyC (Suc (i_of s) mod ?n))) l}"
@@ -1677,7 +1677,7 @@ proof -
       \<and> top1_groups_isomorphic_on F mulF
           (top1_fundamental_group_carrier A (subspace_topology X TX A) a)
           (top1_fundamental_group_mul A (subspace_topology X TX A) a)"
-    using Theorem_71_3_wedge_of_circles_general hA_wd by (by5000 fastforce)
+    using Theorem_71_3_wedge_of_circles_general hA_wd by (by100 fastforce)
   \<comment> \<open>Step 4-5: Apply Theorem 72.1 with the SAME A (avoiding alignment issues).\<close>
   have hX_strict: "is_topology_on_strict X TX"
     using hscheme unfolding top1_quotient_of_scheme_on_def by (by100 blast)
@@ -1961,7 +1961,7 @@ proof -
           ultimately show ?thesis by (by100 simp)
         qed
         show ?thesis unfolding top1_is_loop_on_def top1_is_path_on_def
-          using hel0 hel1 hel_cont by (by5000 blast)
+          using hel0 hel1 hel_cont by (by100 blast)
       qed
       have "edge_loop_class s = {g. top1_loop_equiv_on A (subspace_topology X TX A) a' el g}"
         unfolding edge_loop_class_def el_def by (by100 simp)
@@ -2120,16 +2120,16 @@ proof -
     have hproj_hom: "top1_group_hom_on
         (top1_fundamental_group_carrier A (subspace_topology X TX A) a')
         (top1_fundamental_group_mul A (subspace_topology X TX A) a') Q mulQ proj"
-      using hqpp unfolding proj_def Q_def mulQ_def by (by5000 blast)
+      using hqpp unfolding proj_def Q_def mulQ_def by (by100 blast)
     have hproj_surj: "proj ` (top1_fundamental_group_carrier A (subspace_topology X TX A) a') = Q"
-      using hqpp unfolding proj_def Q_def by (by5000 blast)
+      using hqpp unfolding proj_def Q_def by (by100 blast)
     have hproj_ker: "top1_group_kernel_on
         (top1_fundamental_group_carrier A (subspace_topology X TX A) a')
         (top1_group_coset_on
           (top1_fundamental_group_carrier A (subspace_topology X TX A) a')
           (top1_fundamental_group_mul A (subspace_topology X TX A) a') N
           (top1_fundamental_group_id A (subspace_topology X TX A) a')) proj = N"
-      using hqpp unfolding proj_def by (by5000 blast)
+      using hqpp unfolding proj_def by (by100 blast)
     \<comment> \<open>Compose: \<pi> = inv(\<psi>) \<circ> proj \<circ> \<phi>.\<close>
     define \<pi>F where "\<pi>F f = inv_into (top1_fundamental_group_carrier X TX a') \<psi> (proj (\<phi> f))" for f
     \<comment> \<open>Show \<pi>F is a surjective hom with ker = N(scheme word).\<close>
@@ -2175,7 +2175,7 @@ proof -
               (top1_fundamental_group_mul A (subspace_topology X TX A) a') N
               (top1_fundamental_group_id A (subspace_topology X TX A) a')) = (g \<in> N)"
           using hproj_ker unfolding top1_group_kernel_on_def by (by100 blast)
-        show ?thesis using hcoset_iff h\<phi>_image unfolding proj_def by (by5000 force)
+        show ?thesis using hcoset_iff h\<phi>_image unfolding proj_def by (by100 force)
       qed
       finally show ?thesis .
     qed
@@ -2258,7 +2258,7 @@ proof -
             next
               fix V assume "V \<in> ?TA"
               have "{x \<in> I_set. f1 x \<in> V} = {x \<in> I_set. f2 x \<in> V}"
-                using hfpw by (by5000 force)
+                using hfpw by (by100 force)
               thus "{x \<in> I_set. f1 x \<in> V} \<in> top1_unit_interval_topology"
                 using h2 \<open>V \<in> ?TA\<close> unfolding top1_continuous_map_on_def by (by100 simp)
             qed
@@ -2266,7 +2266,7 @@ proof -
         qed
         show "\<And>f. top1_is_loop_on A ?TA a' f1 = top1_is_loop_on A ?TA a' f2"
           unfolding top1_is_loop_on_def top1_is_path_on_def
-          using hf0 hf1 hcont by (by5000 metis)
+          using hf0 hf1 hcont by (by100 metis)
       qed
       have hph_iff: "\<And>g. top1_path_homotopic_on A ?TA a' a' f1 g
           = top1_path_homotopic_on A ?TA a' a' f2 g"
@@ -2497,7 +2497,7 @@ proof -
                 qed
               qed
               ultimately show ?thesis
-                unfolding top1_is_loop_on_def top1_is_path_on_def by (by5000 blast)
+                unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
             qed
             from fundamental_group_invg_class[OF hTA hel_s_loop]
             show ?thesis by (by100 simp)
@@ -2586,7 +2586,7 @@ proof -
             finally show ?thesis using ha'_base by (by100 simp)
           qed
           show ?thesis unfolding top1_is_loop_on_def top1_is_path_on_def
-            using hbdy0 hbdy1 hbdy_cont by (by5000 blast)
+            using hbdy0 hbdy1 hbdy_cont by (by100 blast)
         qed
         \<comment> \<open>Step 1: relator\_class = class of ?boundary.\<close>
         have hrel_eq: "relator_class = {g. top1_loop_equiv_on A (subspace_topology X TX A) a' ?boundary g}"
@@ -2670,7 +2670,7 @@ proof -
               = h (cos (2*pi*(real k / real ?n)), sin (2*pi*(real k / real ?n)))"
           proof -
             have "(cos (2*pi*(real k / real ?n)), sin (2*pi*(real k / real ?n))) \<in> top1_S1"
-              unfolding top1_S1_def by (by5000 force)
+              unfolding top1_S1_def by (by100 force)
             thus ?thesis using h\<iota>_eq by (by100 blast)
           qed
           show "?boundary (real k / real ?n) = a'"
@@ -2738,7 +2738,7 @@ proof -
           moreover have hmap_eq: "map (\<lambda>k. \<lambda>s. ?boundary ((real k + s) / real ?n)) [0..<?n]
               = map sub [0..<?n]"
             unfolding sub_def by (by100 simp)
-          ultimately show ?thesis using hmap_eq by (by5000 metis)
+          ultimately show ?thesis using hmap_eq by (by100 metis)
         qed
         \<comment> \<open>Step 5: sub k = edge\_loop\_fn k on I\_set (from h\_iota\_circle\_edge via hh\_edge\_arc).\<close>
         have hsub_edge: "\<forall>k<?n. \<forall>t\<in>I_set. sub k t = edge_loop_fn k t"
@@ -2749,7 +2749,7 @@ proof -
           also have "\<dots> = h (cos (2*pi*((real k+t)/real ?n)), sin (2*pi*((real k+t)/real ?n)))"
           proof -
             have "(cos (2*pi*((real k+t)/real ?n)), sin (2*pi*((real k+t)/real ?n))) \<in> top1_S1"
-              unfolding top1_S1_def by (by5000 force)
+              unfolding top1_S1_def by (by100 force)
             thus ?thesis using h\<iota>_eq by (by100 blast)
           qed
           also have "\<dots> = qC ((1-t)*vxC k + t*vxC (Suc k mod ?n), (1-t)*vyC k + t*vyC (Suc k mod ?n))"
@@ -2891,7 +2891,7 @@ proof -
         qed
         show "top1_is_loop_on A (subspace_topology X TX A) a' (edge_loop_fn k)"
           unfolding top1_is_loop_on_def top1_is_path_on_def
-          using h0 h1 hcont by (by5000 blast)
+          using h0 h1 hcont by (by100 blast)
       qed
       \<comment> \<open>hsub\_class in terms of edge\_loop\_fn.\<close>
       have hsub_fn: "\<forall>k<?n. {g. top1_loop_equiv_on A (subspace_topology X TX A) a' (edge_loop_fn k) g}
@@ -3139,7 +3139,7 @@ proof -
       hiso_a': "top1_groups_isomorphic_on G0 mul0
           (top1_fundamental_group_carrier X TX a')
           (top1_fundamental_group_mul X TX a')"
-      by (by5000 blast)
+      by (by100 blast)
     \<comment> \<open>Basepoint change: \<pi>_1(X, a') \<cong> \<pi>_1(X, a) since X path-connected.\<close>
     have hTX: "is_topology_on X TX"
       using hX_strict unfolding is_topology_on_strict_def by (by100 blast)
@@ -3192,9 +3192,9 @@ proof -
         have hq_cont_l: "top1_continuous_map_on P ?TP X TX q"
           using hq unfolding top1_quotient_map_on_def by (by100 blast)
         have hq_maps_l: "\<forall>x\<in>P. q x \<in> X"
-          using hq_cont_l unfolding top1_continuous_map_on_def by (by5000 blast)
+          using hq_cont_l unfolding top1_continuous_map_on_def by (by100 blast)
         have hq_surj_l: "q ` P = X"
-          using hq unfolding top1_quotient_map_on_def by (by5000 blast)
+          using hq unfolding top1_quotient_map_on_def by (by100 blast)
         have hsubself: "subspace_topology X TX X = TX"
         proof -
           have "\<forall>U\<in>TX. U \<subseteq> X" using hX_strict unfolding is_topology_on_strict_def by (by100 blast)
@@ -3268,9 +3268,9 @@ proof -
     have hq_cont_loc: "top1_continuous_map_on P ?TP X TX q"
       using hq unfolding top1_quotient_map_on_def by (by100 blast)
     have hq_maps: "\<forall>x\<in>P. q x \<in> X"
-      using hq_cont_loc unfolding top1_continuous_map_on_def by (by5000 blast)
+      using hq_cont_loc unfolding top1_continuous_map_on_def by (by100 blast)
     have hq_surj: "q ` P = X"
-      using hq unfolding top1_quotient_map_on_def by (by5000 blast)
+      using hq unfolding top1_quotient_map_on_def by (by100 blast)
     have "X \<subseteq> X" by (by100 blast)
     have "subspace_topology X TX X = TX"
     proof -
@@ -3302,7 +3302,7 @@ proof -
           { map (\<lambda>(s,b). (s, b)) scheme }" and
       hiso0: "top1_groups_isomorphic_on G0 mul0
           (top1_fundamental_group_carrier X TX a) (top1_fundamental_group_mul X TX a)"
-      by (by5000 blast)
+      by (by100 blast)
     have hiso_x0: "top1_groups_isomorphic_on G0 mul0
         (top1_fundamental_group_carrier X TX x0) (top1_fundamental_group_mul X TX x0)"
       by (rule groups_isomorphic_trans_fwd[OF hiso0 hpi1_base_change])
@@ -3554,8 +3554,8 @@ proof -
                    (1-1) * vy (4*k) + 1 * vy (Suc (4*k) mod length ?scheme))
               = q (1 * vx (4*k+2) + (1-1) * vx (Suc (4*k+2) mod length ?scheme),
                    1 * vy (4*k+2) + (1-1) * vy (Suc (4*k+2) mod length ?scheme))"
-            using hdir_a by (by5000 simp)
-          ultimately show ?thesis by (by5000 simp)
+            using hdir_a by (by100 simp)
+          ultimately show ?thesis by (by100 simp)
         qed
         \<comment> \<open>Similarly for t=0: q(vx(4k), vy(4k)) = q(vx(4k+3), vy(4k+3)).\<close>
         have hedge_a_t0: "q (vx (4*k), vy (4*k)) = q (vx (Suc (4*k+2) mod length ?scheme), vy (Suc (4*k+2) mod length ?scheme))"
@@ -3565,8 +3565,8 @@ proof -
                    (1-0) * vy (4*k) + 0 * vy (Suc (4*k) mod length ?scheme))
               = q (0 * vx (4*k+2) + (1-0) * vx (Suc (4*k+2) mod length ?scheme),
                    0 * vy (4*k+2) + (1-0) * vy (Suc (4*k+2) mod length ?scheme))"
-            using hdir_a by (by5000 simp)
-          thus ?thesis by (by5000 simp)
+            using hdir_a by (by100 simp)
+          thus ?thesis by (by100 simp)
         qed
         have h4k3_eq: "Suc (4*k+2) mod length ?scheme = 4*k+3"
           using h4k3_bound by (by100 simp)
@@ -3583,8 +3583,8 @@ proof -
                    (1-1) * vy (4*k+1) + 1 * vy (Suc (4*k+1) mod length ?scheme))
               = q (1 * vx (4*k+3) + (1-1) * vx (Suc (4*k+3) mod length ?scheme),
                    1 * vy (4*k+3) + (1-1) * vy (Suc (4*k+3) mod length ?scheme))"
-            using hdir_b by (by5000 simp)
-          thus ?thesis by (by5000 simp)
+            using hdir_b by (by100 simp)
+          thus ?thesis by (by100 simp)
         qed
         have hedge_b_t1': "q (vx (4*k+2), vy (4*k+2)) = q (vx (4*k+3), vy (4*k+3))"
         proof -
@@ -3601,8 +3601,8 @@ proof -
                    (1-0) * vy (4*k+1) + 0 * vy (Suc (4*k+1) mod length ?scheme))
               = q (0 * vx (4*k+3) + (1-0) * vx (Suc (4*k+3) mod length ?scheme),
                    0 * vy (4*k+3) + (1-0) * vy (Suc (4*k+3) mod length ?scheme))"
-            using hdir_b by (by5000 simp)
-          thus ?thesis by (by5000 simp)
+            using hdir_b by (by100 simp)
+          thus ?thesis by (by100 simp)
         qed
         \<comment> \<open>Also: q(vx(4k+1)) = q(vx(4k+1)) from hedge\_a\_t1.\<close>
         have hedge_a_t1': "q (vx (4*k+1), vy (4*k+1)) = q (vx (4*k+2), vy (4*k+2))"
@@ -3711,7 +3711,7 @@ proof -
                       t * vy j + (1-t) * vy (Suc j mod length ?scheme)))))
         \<longrightarrow> (\<forall>i<length ?scheme. \<forall>j<length ?scheme. q (vx i, vy i) = q (vx j, vy j))"
       using torus_scheme_vertex_connectivity[of n]
-        unfolding top1_n_torus_scheme_def by (by5000 simp)
+        unfolding top1_n_torus_scheme_def by (by100 simp)
     have htd: "\<forall>\<alpha>\<in>fst ` set ?scheme.
         \<exists>i<length ?scheme. fst (?scheme!i) = \<alpha> \<and> snd (?scheme!i) = True"
     proof (intro ballI)
@@ -3721,16 +3721,16 @@ proof -
       proof -
         from h\<alpha> obtain x where "x \<in> set ?scheme" "fst x = \<alpha>" by (by100 blast)
         then obtain k where hk: "k < n" and "x \<in> set [(2*k, True), (2*k+1, True), (2*k, False), (2*k+1, False)]"
-          unfolding top1_n_torus_scheme_def by (by5000 auto)
+          unfolding top1_n_torus_scheme_def by (by100 auto)
         hence "\<alpha> = 2*k \<or> \<alpha> = 2*k+1" using \<open>fst x = \<alpha>\<close> by (by100 auto)
         moreover have "(2*k, True) \<in> set ?scheme"
-          unfolding top1_n_torus_scheme_def using hk by (by5000 auto)
+          unfolding top1_n_torus_scheme_def using hk by (by100 auto)
         moreover have "(2*k+1, True) \<in> set ?scheme"
-          unfolding top1_n_torus_scheme_def using hk by (by5000 auto)
+          unfolding top1_n_torus_scheme_def using hk by (by100 auto)
         ultimately show ?thesis by (by100 blast)
       qed
       then obtain i where "i < length ?scheme" "?scheme!i = (\<alpha>, True)"
-        using in_set_conv_nth by (by5000 metis)
+        using in_set_conv_nth by (by100 metis)
       thus "\<exists>i<length ?scheme. fst (?scheme!i) = \<alpha> \<and> snd (?scheme!i) = True"
         by (by100 force)
     qed
@@ -3741,15 +3741,15 @@ proof -
   have hlabels: "fst ` set ?scheme = {..<2*n}"
   proof -
     define f where "f = (\<lambda>i::nat. [(2*i, True), (2*i+1, True), (2*i, False), (2*i+1, False)])"
-    have hfst_f: "\<And>i. fst ` set (f i) = {2*i, 2*i+1}" unfolding f_def by (by5000 force)
+    have hfst_f: "\<And>i. fst ` set (f i) = {2*i, 2*i+1}" unfolding f_def by (by100 force)
     have "fst ` set ?scheme = fst ` set (concat (map f [0..<n]))"
       unfolding top1_n_torus_scheme_def f_def by (by100 simp)
-    also have "\<dots> = (\<Union>i\<in>{0..<n}. fst ` set (f i))" by (by5000 auto)
+    also have "\<dots> = (\<Union>i\<in>{0..<n}. fst ` set (f i))" by (by100 auto)
     also have "\<dots> = (\<Union>i\<in>{0..<n}. {2*i, 2*i+1})" using hfst_f by (by100 simp)
     also have "\<dots> = {..<2*n}"
     proof (rule set_eqI, rule iffI)
       fix x assume "x \<in> (\<Union>i\<in>{0..<n}. {2 * i, 2 * i + 1})"
-      then obtain i where "i < n" "x = 2*i \<or> x = 2*i+1" by (by5000 auto)
+      then obtain i where "i < n" "x = 2*i \<or> x = 2*i+1" by (by100 auto)
       thus "x \<in> {..<2*n}" by (by100 auto)
     next
       fix x assume "x \<in> {..<2*n}"
@@ -3764,7 +3764,7 @@ proof -
       next
         case False
         hence "odd x" by (by100 simp)
-        then obtain k where "x = 2*k+1" using oddE by (by5000 blast)
+        then obtain k where "x = 2*k+1" using oddE by (by100 blast)
         hence "k < n" using \<open>x < 2*n\<close> by (by100 simp)
         thus ?thesis using \<open>x = 2*k+1\<close> by (by100 force)
       qed
@@ -3779,7 +3779,7 @@ proof -
     have "map (\<lambda>(s,b). (s, b)) ?scheme = ?scheme" by (by100 simp)
     thus ?thesis unfolding top1_n_torus_scheme_def by (by100 simp)
   qed
-  show ?thesis using h742 hlabels hrelator by (by5000 simp)
+  show ?thesis using h742 hlabels hrelator by (by100 simp)
 qed
 
 (** from \<S>74 Theorem 74.4: \<pi>_1(P_m) has presentation \<langle>a_1, \<dots>, a_m | a_1² \<cdots> a_m²\<rangle>.
@@ -4072,7 +4072,7 @@ next
       \<comment> \<open>Step-by-step unfolding of word\_product.\<close>
       have "top1_group_word_product mul e invg ?sub
           = mul (a j) (mul (b j) (mul (invg (a j)) (mul (invg (b j)) e)))"
-        by (by5000 simp)
+        by (by100 simp)
       also have "\<dots> = mul (a j) (mul (b j) (mul (invg (a j)) (invg (b j))))"
         using hrid_invb by (by100 simp)
       also have "\<dots> = top1_group_commutator_on mul invg (a j) (b j)"
@@ -4126,7 +4126,7 @@ next
           then obtain x y where "x \<in> G" "y \<in> G" "c = top1_group_commutator_on mul invg x y"
             by (by100 blast)
           thus "c \<in> G" using hG unfolding top1_group_commutator_on_def top1_is_group_on_def
-            by (by5000 blast)
+            by (by100 blast)
         qed
         thus ?thesis using subgroup_generated_contains[OF hG hcomms_sub]
           \<open>top1_group_commutator_on mul invg (a j) (b j) \<in> {top1_group_commutator_on mul invg x y | x y. x \<in> G \<and> y \<in> G}\<close>
@@ -4177,7 +4177,7 @@ lemma torus_relator_commutator:
        \<subseteq> top1_commutator_subgroup_on F mulF eF invgF"
 proof -
   have hF_grp: "top1_is_group_on F mulF eF invgF"
-    using hfree unfolding top1_is_free_group_full_on_def by (by5000 blast)
+    using hfree unfolding top1_is_free_group_full_on_def by (by100 blast)
   let ?R = "{ concat (map (\<lambda>i. [(2*i, True), (2*i+1, True),
                 (2*i, False), (2*i+1, False)]) [0..<n]) }"
   let ?relators = "{r. \<exists>w\<in>?R. r = top1_group_word_product mulF eF invgF
@@ -4352,7 +4352,7 @@ next
       using hf hg1 hg2 hinvg1 hinvg2 hg12 hg12inv1
         hom_preserves_inv[OF hG hH hf hg1(1)]
         hom_preserves_inv[OF hG hH hf hg2(1)]
-      unfolding top1_group_hom_on_def by (by5000 simp)
+      unfolding top1_group_hom_on_def by (by100 simp)
     \<comment> \<open>[g1,g2] \<in> [G,G]: commutator is a generator of commutator subgroup.\<close>
     have hcommsG_sub_G: "{top1_group_commutator_on mulG invgG x y | x y. x \<in> G \<and> y \<in> G} \<subseteq> G"
     proof (rule subsetI, clarify)
@@ -4426,7 +4426,7 @@ next
     have hinverse: "\<forall>x\<in>f ` ?CG. mulH (invgH x) x = eH \<and> mulH x (invgH x) = eH"
       using hH himage_sub unfolding top1_is_group_on_def by (by100 blast)
     show ?thesis unfolding top1_is_group_on_def
-      using heH_im hmul hinv hassoc hid hinverse by (by5000 fast)
+      using heH_im hmul hinv hassoc hid hinverse by (by100 fast)
   qed
   \<comment> \<open>By subgroup\_generated\_minimal: [H,H] = ⟨commsH⟩ \<subseteq> f(?CG).\<close>
   have h_CH_eq: "?CH = top1_subgroup_generated_on H mulH eH invgH ?commsH"
@@ -4679,11 +4679,11 @@ proof -
     hence hxG: "x \<in> G" and hyG: "y \<in> G" and hax: "mul a x = mul x a" and hay: "mul a y = mul y a"
       by (by100 auto)+
     have hxyG: "mul x y \<in> G" using hmul_cl[OF hxG hyG] by (by100 blast)
-    have "mul a (mul x y) = mul (mul a x) y" using hassoc ha hxG hyG by (by5000 metis)
+    have "mul a (mul x y) = mul (mul a x) y" using hassoc ha hxG hyG by (by100 metis)
     also have "\<dots> = mul (mul x a) y" using hax by (by100 simp)
-    also have "\<dots> = mul x (mul a y)" using hassoc hxG ha hyG by (by5000 metis)
+    also have "\<dots> = mul x (mul a y)" using hassoc hxG ha hyG by (by100 metis)
     also have "\<dots> = mul x (mul y a)" using hay by (by100 simp)
-    also have "\<dots> = mul (mul x y) a" using hassoc hxG hyG ha by (by5000 metis)
+    also have "\<dots> = mul (mul x y) a" using hassoc hxG hyG ha by (by100 metis)
     finally show "mul x y \<in> ?C" using hxyG by (by100 blast)
   next
     fix x assume hx: "x \<in> ?C"
@@ -4696,9 +4696,9 @@ proof -
     have h1: "mul x (mul a (invg x)) = a"
     proof -
       have "mul x (mul a (invg x)) = mul (mul x a) (invg x)"
-        using hassoc hxG ha hixG by (by5000 metis)
+        using hassoc hxG ha hixG by (by100 metis)
       also have "\<dots> = mul (mul a x) (invg x)" using hax by (by100 simp)
-      also have "\<dots> = mul a (mul x (invg x))" using hassoc ha hxG hixG by (by5000 metis)
+      also have "\<dots> = mul a (mul x (invg x))" using hassoc ha hxG hixG by (by100 metis)
       also have "\<dots> = mul a e" using hinv_r[OF hxG] by (by100 simp)
       also have "\<dots> = a" using hid_r[OF ha] by (by100 blast)
       finally show ?thesis .
@@ -4706,7 +4706,7 @@ proof -
     have h2: "mul x (mul (invg x) a) = a"
     proof -
       have "mul x (mul (invg x) a) = mul (mul x (invg x)) a"
-        using hassoc hxG hixG ha by (by5000 metis)
+        using hassoc hxG hixG ha by (by100 metis)
       also have "\<dots> = mul e a" using hinv_r[OF hxG] by (by100 simp)
       also have "\<dots> = a" using hid_l[OF ha] by (by100 blast)
       finally show ?thesis .
@@ -4718,10 +4718,10 @@ proof -
       hence "mul (invg x) (mul x (mul a (invg x))) = mul (invg x) (mul x (mul (invg x) a))"
         by (by100 simp)
       hence "mul (mul (invg x) x) (mul a (invg x)) = mul (mul (invg x) x) (mul (invg x) a)"
-        using hassoc hixG hxG hmul_cl[OF ha hixG] hmul_cl[OF hixG ha] by (by5000 metis)
+        using hassoc hixG hxG hmul_cl[OF ha hixG] hmul_cl[OF hixG ha] by (by100 metis)
       hence "mul e (mul a (invg x)) = mul e (mul (invg x) a)"
         using hinv_l[OF hxG] by (by100 simp)
-      thus ?thesis using hid_l hmul_cl[OF ha hixG] hmul_cl[OF hixG ha] by (by5000 metis)
+      thus ?thesis using hid_l hmul_cl[OF ha hixG] hmul_cl[OF hixG ha] by (by100 metis)
     qed
     thus "invg x \<in> ?C" using hixG by (by100 blast)
   next
@@ -4844,7 +4844,7 @@ proof -
     hpi_surj: "\<pi> ` F = G" and
     hpi_ker: "top1_group_kernel_on F e \<pi> = top1_normal_subgroup_generated_on F mulF eF invgF
         {r. \<exists>w\<in>R. r = top1_group_word_product mulF eF invgF (map (\<lambda>(s,b). (\<iota> s, b)) w)}"
-    unfolding top1_group_presented_by_on_def by (by5000 auto)
+    unfolding top1_group_presented_by_on_def by (by100 auto)
   \<comment> \<open>Each relator w \<in> R maps to commutator \<iota>(s1)\<iota>(s2)\<iota>(s1)\<inverse>\<iota>(s2)\<inverse> in F.
      Under \<pi>: \<pi>(\<iota>(s1))\<pi>(\<iota>(s2))\<pi>(\<iota>(s1))\<inverse>\<pi>(\<iota>(s2))\<inverse> = e in G.
      So \<pi>(\<iota>(s1)) and \<pi>(\<iota>(s2)) commute in G for all s1,s2 \<in> S.\<close>
@@ -4896,10 +4896,10 @@ proof -
       proof -
         have "invgF (\<iota> s2) \<in> F"
           using hF_free hs2 unfolding top1_is_free_group_full_on_def top1_is_group_on_def
-          by (by5000 blast)
+          by (by100 blast)
         hence "mulF (invgF (\<iota> s2)) eF = invgF (\<iota> s2)"
           using hF_free unfolding top1_is_free_group_full_on_def top1_is_group_on_def
-          by (by5000 blast)
+          by (by100 blast)
         thus ?thesis by (by100 simp)
       qed
       finally show ?thesis .
@@ -4930,7 +4930,7 @@ proof -
       show ?thesis unfolding hr_expand
         using hpi_mul[OF hs1F] hpi_mul[OF hs2F] hpi_mul[OF hinvF1 hinvF2]
               hpi_mul hmulF_cl hs1F hs2F hinvF1 hinvF2 hpi_inv1 hpi_inv2
-        by (by5000 metis)
+        by (by100 metis)
     qed
     hence "mul ?a (mul ?b (mul (invg ?a) (invg ?b))) = e" using hr_in_ker by (by100 simp)
     show "mul ?a ?b = mul ?b ?a"
@@ -4965,21 +4965,21 @@ proof -
       have habG: "mul ?a ?b \<in> G" using hmul_cl haG hbG by (by100 blast)
       have "mul (mul ?a (mul ?b (mul (invg ?a) (invg ?b)))) ?b
           = mul ?a (mul ?b (mul (invg ?a) (mul (invg ?b) ?b)))"
-        using hassoc haG hbG hiaG hibG hmul_cl by (by5000 metis)
+        using hassoc haG hbG hiaG hibG hmul_cl by (by100 metis)
       also have "mul (invg ?b) ?b = e" using hinv_l hbG by (by100 blast)
       finally have "mul ?a (mul ?b (mul (invg ?a) e)) = ?b"
-        using h1 hid_l hbG by (by5000 metis)
+        using h1 hid_l hbG by (by100 metis)
       hence h2: "mul ?a (mul ?b (invg ?a)) = ?b"
-        using hid_r hiaG by (by5000 metis)
+        using hid_r hiaG by (by100 metis)
       \<comment> \<open>Step 2: aba\<inverse> = b \<Rightarrow> aba\<inverse>a = ba \<Rightarrow> ab = ba.\<close>
       have "mul (mul ?a (mul ?b (invg ?a))) ?a = mul ?b ?a"
         using h2 by (by100 simp)
       have "mul ?a (mul ?b (mul (invg ?a) ?a)) = mul ?b ?a"
         using \<open>mul (mul ?a (mul ?b (invg ?a))) ?a = mul ?b ?a\<close>
-              hassoc haG hbG hiaG hmul_cl by (by5000 metis)
+              hassoc haG hbG hiaG hmul_cl by (by100 metis)
       hence "mul ?a (mul ?b e) = mul ?b ?a"
-        using hinv_l haG by (by5000 metis)
-      thus ?thesis using hid_r hbG by (by5000 metis)
+        using hinv_l haG by (by100 metis)
+      thus ?thesis using hid_r hbG by (by100 metis)
     qed
   qed
   \<comment> \<open>Step 2: Derive ALL generator pairs commute from hcovers + hgens\_commute.\<close>
@@ -5063,7 +5063,7 @@ proof -
       then obtain s where hs: "s \<in> S" and hg: "g = \<pi> (\<iota> s)" by (by100 blast)
       have hgG: "g \<in> G" using hgens_sub_G \<open>g \<in> ?gens\<close> by (by100 blast)
       have "mul x g = mul g x"
-        using hgens_central hs hx unfolding hg by (by5000 metis)
+        using hgens_central hs hx unfolding hg by (by100 metis)
       thus "g \<in> ?C" using hgG by (by100 blast)
     qed
     have "top1_subgroup_generated_on G mul e invg ?gens \<subseteq> ?C"
@@ -5096,16 +5096,16 @@ proof -
     have he_in_G: "e \<in> G" using hG unfolding top1_is_group_on_def by (by100 blast)
     have "top1_group_commutator_on mul invg e e = e"
       unfolding top1_group_commutator_on_def
-      using hG he_in_G unfolding top1_is_group_on_def by (by5000 metis)
+      using hG he_in_G unfolding top1_is_group_on_def by (by100 metis)
     hence "e \<in> {top1_group_commutator_on mul invg a b | a b. a \<in> G \<and> b \<in> G}"
-      using he_in_G by (by5000 force)
+      using he_in_G by (by100 force)
     have hcomm_set_sub: "{top1_group_commutator_on mul invg a b | a b. a \<in> G \<and> b \<in> G} \<subseteq> G"
     proof
       fix x assume "x \<in> {top1_group_commutator_on mul invg a b | a b. a \<in> G \<and> b \<in> G}"
       then obtain a b where "a \<in> G" "b \<in> G" "x = top1_group_commutator_on mul invg a b"
         by (by100 blast)
       thus "x \<in> G" unfolding top1_group_commutator_on_def
-        using hG \<open>a \<in> G\<close> \<open>b \<in> G\<close> unfolding top1_is_group_on_def by (by5000 metis)
+        using hG \<open>a \<in> G\<close> \<open>b \<in> G\<close> unfolding top1_is_group_on_def by (by100 metis)
     qed
     thus ?thesis unfolding top1_commutator_subgroup_on_def
       using subgroup_generated_contains[OF hG hcomm_set_sub]
@@ -5146,10 +5146,10 @@ proof (rule inj_onI)
   \<comment> \<open>x * y\<inverse> = eG \<Rightarrow> x = y.\<close>
   hence "mulG (mulG x (invgG y)) y = mulG eG y" by (by100 simp)
   hence "mulG x (mulG (invgG y) y) = y"
-    using hG hx hinvy hy unfolding top1_is_group_on_def by (by5000 metis)
+    using hG hx hinvy hy unfolding top1_is_group_on_def by (by100 metis)
   hence "mulG x eG = y"
-    using hG hy unfolding top1_is_group_on_def by (by5000 metis)
-  thus "x = y" using hG hx unfolding top1_is_group_on_def by (by5000 metis)
+    using hG hy unfolding top1_is_group_on_def by (by100 metis)
+  thus "x = y" using hG hx unfolding top1_is_group_on_def by (by100 metis)
 qed
 
 \<comment> \<open>free\_abelian\_2\_iso\_ZZ no longer needed: Theorem\_73\_2 uses free\_abelian\_invariant\_under\_iso directly.\<close>
@@ -5182,7 +5182,7 @@ proof -
         (top1_fundamental_group_id T_torus TT x0)
         (top1_fundamental_group_invg T_torus TT x0) phi" and
     hfree_ab: "top1_is_free_abelian_group_full_on H mulH eH invgH iota_S ({..<2}::nat set)"
-    by (by5000 auto)
+    by (by100 auto)
   \<comment> \<open>Step 3: The torus \<pi>\_1 is abelian (commutator relator aba\<inverse>b\<inverse>=1 means ab=ba).
      Therefore the abelianization map phi is an isomorphism.
      Step 4: H\_1(T) free abelian on {0,1} \<cong> Z \<times> Z.
@@ -5203,13 +5203,13 @@ proof -
       hiso_pi1: "top1_groups_isomorphic_on G mulG
         (top1_fundamental_group_carrier T_torus TT x0)
         (top1_fundamental_group_mul T_torus TT x0)"
-      by (by5000 auto)
+      by (by100 auto)
     \<comment> \<open>Every distinct generator pair has a commutator relator (or its reverse).\<close>
     have hcovers: "\<forall>s1\<in>{..<2*1::nat}. \<forall>s2\<in>{..<2*1::nat}. s1 \<noteq> s2 \<longrightarrow>
         (\<exists>w\<in>{concat (map (\<lambda>i. [(2*i, True), (2*i+1, True), (2*i, False), (2*i+1, False)]) [0..<1])}.
             w = [(s1, True), (s2, True), (s1, False), (s2, False)]
           \<or> w = [(s2, True), (s1, True), (s2, False), (s1, False)])"
-      by (by5000 auto)
+      by (by100 auto)
     \<comment> \<open>So G is abelian by presented\_by\_commutators\_abelian.\<close>
     have hG_abelian: "top1_is_abelian_group_on G mulG eG invgG"
       using presented_by_commutators_abelian[OF hpres hcovers] by (by100 blast)
@@ -5453,11 +5453,11 @@ proof -
             have "c \<notin> top1_S1"
             proof
               assume "c \<in> top1_S1"
-              hence "q z \<noteq> q c" using hq_sep hzInt by (by5000 metis)
+              hence "q z \<noteq> q c" using hq_sep hzInt by (by100 metis)
               thus False using hqeq by (by100 simp)
             qed
             hence "c \<in> top1_B2 - top1_S1" using hcB by (by100 blast)
-            hence "z = c" using hq_inj hzInt hqeq unfolding inj_on_def by (by5000 metis)
+            hence "z = c" using hq_inj hzInt hqeq unfolding inj_on_def by (by100 metis)
             thus ?thesis using hcC by (by100 blast)
           next
             case True
@@ -5466,13 +5466,13 @@ proof -
             proof (rule ccontr)
               assume "c \<notin> top1_S1"
               hence "c \<in> top1_B2 - top1_S1" using hcB by (by100 blast)
-              hence "q c \<noteq> q z" using hq_sep hzS1 by (by5000 metis)
+              hence "q c \<noteq> q z" using hq_sep hzS1 by (by100 metis)
               thus False using hqeq by (by100 simp)
             qed
             hence hcS1: "c \<in> top1_S1" .
             from hq_S1[rule_format, OF hcS1 hzS1]
             have "q c = q z \<longleftrightarrow>
-                (\<exists>k::nat. k < n \<and> z = ?rot k c)" by (by5000 blast)
+                (\<exists>k::nat. k < n \<and> z = ?rot k c)" by (by100 blast)
             hence "\<exists>k<n. z = ?rot k c" using hqeq by (by100 simp)
             then obtain k where "k < n" "z = ?rot k c" by (by100 blast)
             hence "z \<in> ?rot k ` ?C0" using hcC hcS1 by (by100 blast)
@@ -5525,7 +5525,7 @@ proof -
             \<comment> \<open>q(z) = q(c) by hq\_S1.\<close>
             from hq_S1[rule_format, OF hcS1 hzS1]
             have "q c = q z \<longleftrightarrow>
-                (\<exists>j::nat. j < n \<and> z = ?rot j c)" by (by5000 blast)
+                (\<exists>j::nat. j < n \<and> z = ?rot j c)" by (by100 blast)
             hence "q c = q z" using hk hzeq by (by100 blast)
             hence "q z = q c" by (by100 simp)
             moreover have "q c \<in> q ` C" using hcC' by (by100 blast)
@@ -5651,7 +5651,7 @@ proof -
                   qed
                   hence "open ((\<lambda>z::real\<times>real. (fst z)^2 + (snd z)^2) -` {..<1::real} \<inter> UNIV)"
                     using continuous_on_open_vimage[of "UNIV::(real\<times>real) set"
-                          "\<lambda>z. (fst z)^2 + (snd z)^2"] hcont_nsq by (by5000 auto)
+                          "\<lambda>z. (fst z)^2 + (snd z)^2"] hcont_nsq by (by100 auto)
                   moreover have "{z::real\<times>real. (fst z)^2 + (snd z)^2 < 1}
                       = (\<lambda>z. (fst z)^2 + (snd z)^2) -` {..<1::real} \<inter> UNIV" by (by100 auto)
                   ultimately show ?thesis by (by100 simp)
@@ -5719,7 +5719,7 @@ proof -
       moreover have "X - q ` C \<in> TX"
       proof -
         have "{z \<in> top1_B2. q z \<in> X - q ` C} = top1_B2 - ?sat"
-          using hq_surj by (by5000 blast)
+          using hq_surj by (by100 blast)
         moreover have "top1_B2 - ?sat \<in> top1_B2_topology"
           using hsat_closed unfolding closedin_on_def by (by100 blast)
         ultimately have "{z \<in> top1_B2. q z \<in> X - q ` C} \<in> top1_B2_topology" by (by100 simp)
@@ -5827,14 +5827,14 @@ proof -
           fix z assume hz: "z \<in> {z \<in> top1_S1. q z = p}"
           hence hzS1: "z \<in> top1_S1" and hqz: "q z = p" by (by100 blast)+
           have hs0: "s0 \<in> top1_S1 \<and> q s0 = p"
-            using someI[of "\<lambda>s. s \<in> top1_S1 \<and> q s = p" z] hzS1 hqz hs0_def by (by5000 metis)
+            using someI[of "\<lambda>s. s \<in> top1_S1 \<and> q s = p" z] hzS1 hqz hs0_def by (by100 metis)
           have "q s0 = q z" using hs0 hqz by (by100 simp)
           have hs0_S1: "s0 \<in> top1_S1" using hs0 by (by100 blast)
           from hq_S1[rule_format, OF hs0_S1 hzS1]
           have "q s0 = q z \<longleftrightarrow>
               (\<exists>k::nat. k < n \<and> z = (cos (2*pi*real k/real n) * fst s0 - sin (2*pi*real k/real n) * snd s0,
                    sin (2*pi*real k/real n) * fst s0 + cos (2*pi*real k/real n) * snd s0))"
-            by (by5000 blast)
+            by (by100 blast)
           hence "\<exists>k<n. z = ?rot k" using \<open>q s0 = q z\<close> by (by100 blast)
           thus "z \<in> ?rot ` {..<n}" by (by100 blast)
         qed
@@ -5842,7 +5842,7 @@ proof -
         ultimately show ?thesis using finite_subset by (by100 blast)
       qed
       ultimately show "finite {z \<in> top1_B2. q z = p}"
-        using finite_subset by (by5000 blast)
+        using finite_subset by (by100 blast)
     qed
     have hfiber_closed: "\<And>p. p \<in> X \<Longrightarrow> closedin_on top1_B2 top1_B2_topology {z \<in> top1_B2. q z = p}"
     proof -
@@ -5973,7 +5973,7 @@ proof -
       have "open ((\<lambda>z::real\<times>real. (fst z)^2 + (snd z)^2) -` {..<1::real} \<inter> UNIV)"
         using continuous_on_open_vimage[of "UNIV::((real\<times>real) set)"
               "\<lambda>z. (fst z)^2 + (snd z)^2"] hcont_nsq hopen_lt1
-        by (by5000 auto)
+        by (by100 auto)
       thus ?thesis using heq by (by100 simp)
     qed
     have hdisk_in_PT: "{z::real\<times>real. (fst z)^2 + (snd z)^2 < 1}
@@ -6025,7 +6025,7 @@ proof -
             (\<exists>k::nat. k < n \<and> (cos (2*pi / real n), sin (2*pi / real n)) =
               (cos (2*pi*real k/real n) * fst (1::real, 0::real) - sin (2*pi*real k/real n) * snd (1::real, 0::real),
                sin (2*pi*real k/real n) * fst (1::real, 0::real) + cos (2*pi*real k/real n) * snd (1::real, 0::real)))"
-          by (by5000 blast)
+          by (by100 blast)
         \<comment> \<open>For n \<ge> 2: use k=1, rotation by 2\<pi>/n. For n=1: use k=0, identity.\<close>
         have "(\<exists>k::nat. k < n \<and> (cos (2*pi / real n), sin (2*pi / real n)) =
               (cos (2*pi*real k/real n) * 1 - sin (2*pi*real k/real n) * 0,
@@ -6105,7 +6105,7 @@ proof -
         have "\<And>t. t \<in> top1_unit_interval \<Longrightarrow> (q \<circ> ?h) t = ?g t" by (by100 simp)
         hence "{t \<in> top1_unit_interval. (q \<circ> ?h) t \<in> V} = {t \<in> top1_unit_interval. ?g t \<in> V}" for V
           by (by100 auto)
-        thus ?thesis using hcomp unfolding top1_continuous_map_on_def by (by5000 auto)
+        thus ?thesis using hcomp unfolding top1_continuous_map_on_def by (by100 auto)
       qed
       \<comment> \<open>Shrink codomain to A.\<close>
       have hg_img: "?g ` top1_unit_interval \<subseteq> ?A" using hg_in_A by (by100 blast)
@@ -6150,7 +6150,7 @@ proof -
           using \<open>-1 \<le> real_of_int k\<close> \<open>real_of_int k \<le> 1\<close> by (by100 linarith)+
         hence "k \<in> {-1, 0, 1}" by (by100 auto)
         thus ?thesis using htk \<open>t \<in> {0..1}\<close> \<open>t' \<in> {0..1}\<close>
-          by (by5000 force)
+          by (by100 force)
       qed
       thus "?g t = ?g t'"
       proof (elim disjE conjE)
@@ -6319,7 +6319,7 @@ proof -
         and h\<phi>_eq: "\<forall>t\<in>top1_unit_interval. \<phi> (top1_R_to_S1 t) = ?g t"
         and h\<phi>_cont_iff: "(top1_continuous_map_on top1_S1 top1_S1_topology ?A ?TA \<phi>) \<longleftrightarrow>
             (top1_continuous_map_on top1_unit_interval top1_unit_interval_topology ?A ?TA ?g)"
-      using hg_in_A by (by5000 auto)
+      using hg_in_A by (by100 auto)
     have h\<phi>_cont: "top1_continuous_map_on top1_S1 top1_S1_topology ?A ?TA \<phi>"
       using h\<phi>_cont_iff hg_cont_top by (by100 blast)
     \<comment> \<open>Step D5: \<phi> is bijective.\<close>
@@ -6464,7 +6464,7 @@ proof -
                 (\<exists>k::nat. k < n \<and> (cos (2*pi*?t / real n), sin (2*pi*?t / real n)) =
                   (cos (2*pi*real k/real n) * fst s - sin (2*pi*real k/real n) * snd s,
                    sin (2*pi*real k/real n) * fst s + cos (2*pi*real k/real n) * snd s))"
-              by (by5000 blast)
+              by (by100 blast)
             \<comment> \<open>We need to find k. Using addition formulas:
                cos(2\<pi>\<theta> - 2\<pi>m/n) = cos(2\<pi>\<theta>)cos(2\<pi>m/n) + sin(2\<pi>\<theta>)sin(2\<pi>m/n)
                This equals cos(-2\<pi>m/n)*cos(2\<pi>\<theta>) - sin(-2\<pi>m/n)*sin(2\<pi>\<theta>)
@@ -6625,7 +6625,7 @@ proof -
     proof (rule ccontr)
       assume "y \<notin> top1_B2 - top1_S1"
       hence "y \<in> top1_S1" using hy by (by100 blast)
-      hence "q x \<noteq> q y" using hq_sep hx by (by5000 metis)
+      hence "q x \<noteq> q y" using hq_sep hx by (by100 metis)
       thus False using hqeq by (by100 simp)
     qed
   qed
@@ -6642,7 +6642,7 @@ proof -
         assume "y \<in> ?A"
         then obtain s where hs: "s \<in> top1_S1" and hqs: "y = q s" by (by100 blast)
         have "q z = q s" using hy hqs by (by100 simp)
-        thus False using hq_sep hz hs by (by5000 metis)
+        thus False using hq_sep hz hs by (by100 metis)
       qed
       ultimately show "y \<in> X - ?A" by (by100 blast)
     qed
@@ -8426,7 +8426,7 @@ proof -
               qed
               moreover have "(top1_path_product \<alpha>0 \<sigma>) s = \<alpha>0 (2 * s)"
                 unfolding top1_path_product_def using True by (by100 simp)
-              ultimately show ?thesis by (by5000 simp)
+              ultimately show ?thesis by (by100 simp)
             next
               case False
               hence hgt: "s > 1/2" by (by100 simp)
@@ -8438,7 +8438,7 @@ proof -
               qed
               moreover have "(top1_path_product \<alpha>0 \<sigma>) s = \<sigma> (2 * s - 1)"
                 unfolding top1_path_product_def using False by (by100 simp)
-              ultimately show ?thesis by (by5000 simp)
+              ultimately show ?thesis by (by100 simp)
             qed
           qed
           \<comment> \<open>By ftilde_eq_lift: ftilde(y') = endpoint of this lift = inv_into W0 p (f y').\<close>
@@ -8548,7 +8548,7 @@ proof -
               ultimately have "\<Inter>{U, V} \<in> TB"
                 using \<open>\<forall>F. _\<close> by (by100 blast)
               moreover have "\<Inter>{U, V} = U \<inter> V" by (by100 auto)
-              ultimately show ?thesis by (by5000 simp)
+              ultimately show ?thesis by (by100 simp)
             qed
             thus "p ` (W0 \<inter> W) \<in> TB" using hpWW_eq by (by100 simp)
           qed
@@ -13109,7 +13109,7 @@ proof -
       and hq_quotient: "top1_quotient_map_on X TX W TW q"
       and hq_T: "\<forall>x\<in>T. q x = pw"
     using graph_quotient_by_tree_wedge_of_circles[OF assms(1) assms(2) hT_tree hT_sub hx0_T]
-    by (by5000 fast)
+    by (by100 fast)
   \<comment> \<open>Step 4: The quotient map q: X \<rightarrow> X/T is a homotopy equivalence
      (since T is contractible in X).\<close>
   have hq_equiv: "top1_groups_isomorphic_on
