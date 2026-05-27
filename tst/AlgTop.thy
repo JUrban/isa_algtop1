@@ -15333,7 +15333,7 @@ proof -
      K compact + B closed discrete \<Rightarrow> B finite \<Rightarrow> finitely many arcs.\<close>
   let ?\<A>K = "{A \<in> \<A>. A \<inter> K \<noteq> {}}"
   have "finite ?\<A>K"
-    sorry \<comment> \<open>The key step: selection set is closed discrete in compact K.\<close>
+    sorry \<comment> \<open>Munkres 83.2: selection set is closed discrete in compact K, hence finite.\<close>
   moreover have "?\<A>K \<subseteq> {A. \<exists>\<A>'. (\<forall>A\<in>\<A>'. A \<subseteq> X \<and> top1_is_arc_on A (subspace_topology X TX A))
       \<and> (\<Union>\<A>') = X \<and> A \<in> \<A>'}" using h\<A> h\<A>_cover by (by100 blast)
   moreover have "K \<subseteq> \<Union>?\<A>K"
