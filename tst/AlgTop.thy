@@ -9063,7 +9063,7 @@ next
         \<longrightarrow> (i = j \<and> t = s)
           \<or> (fst (?scheme!i) = fst (?scheme!j) \<and>
              (if snd (?scheme!i) = snd (?scheme!j) then s = t else s = 1 - t))"
-      sorry \<comment> \<open>Extraction from obtains (blast timeout).\<close>
+      sorry \<comment> \<open>Extraction from quotient_of_scheme_extract_full (requires matching all 9+ obtains clauses).\<close>
     \<comment> \<open>Derive vertex identification from hvc and hedge0.\<close>
     have hvert_id0: "\<forall>i<length ?scheme. \<forall>j<length ?scheme.
         q0 (vx0 i, vy0 i) = q0 (vx0 j, vy0 j)"
