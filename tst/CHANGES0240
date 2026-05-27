@@ -1,0 +1,23 @@
+CHANGES0240 - AlgTop formalization status
+Date: 2026-05-28
+Build: 30s, Isabelle build -D .
+Lines: 15916
+Theorems: 2049
+Sorrys: 34 total (29 actual)
+
+COMPLETED (zero sorry):
+- §73 Theorem 73.4: Fundamental group of n-fold dunce cap = Z/nZ
+- Unit interval simply connected (path-connected + null-homotopic via straight-line homotopy)
+- Arc simply connected (homeomorphism from [0,1])
+- Arc is tree (connected + simply connected + graph structure)
+- Single arc graph (strict, Hausdorff, trivial arc cover)
+
+REMAINING SORRYS BY SECTION:
+§71 (2): CW data extraction, infinite wedge direct limit
+§72-74 (2): n=2 dunce cap polygonal, projective presentation
+§75 (1): Abelianization + Smith normal form
+§76-78 (5): Surface classification (simplex, merging, scheme, normal form, classification)
+§81-82 (2): Covering group iso construction, covering existence
+§83 (4+3): Graph coverings (arc preimage, cover, intersection, coherent topology)
+§84 (4): Chain of trees, graph quotient, maximal tree spanning, homotopy equiv
+§85 (6): Free subgroups (wedge existence x3, covering+graph x3)
