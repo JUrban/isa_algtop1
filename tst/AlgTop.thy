@@ -7106,9 +7106,26 @@ proof -
             have "\<And>t. t \<in> top1_unit_interval \<Longrightarrow>
                 (h_circ \<circ> (\<lambda>s. (cos (2*pi*s), sin (2*pi*s)))) t = ?\<alpha> t"
               using hhc_alpha by (by100 simp)
-            hence "\<And>g. top1_loop_equiv_on ?A ?TA_l ?a (h_circ \<circ> (\<lambda>s. (cos (2*pi*s), sin (2*pi*s)))) g
+            let ?hsl = "h_circ \<circ> (\<lambda>s. (cos (2*pi*s), sin (2*pi*s)))"
+            \<comment> \<open>hsl and alpha agree on [0,1] \<supseteq> I_set.\<close>
+            have heq_ext: "\<And>t. t \<in> top1_unit_interval \<Longrightarrow> ?hsl t = ?\<alpha> t"
+              using hhc_alpha by (by100 simp)
+            \<comment> \<open>Preimages agree: {t in I. hsl(t) in U} = {t in I. alpha(t) in U}.\<close>
+            have hpre_eq: "\<And>U. {t \<in> top1_unit_interval. ?hsl t \<in> U} = {t \<in> top1_unit_interval. ?\<alpha> t \<in> U}"
+              using heq_ext by (by100 auto)
+            \<comment> \<open>continuous_map_on for hsl iff for alpha.\<close>
+            have hcont_eq: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology ?A ?TA_l ?hsl
+                \<longleftrightarrow> top1_continuous_map_on top1_unit_interval top1_unit_interval_topology ?A ?TA_l ?\<alpha>"
+              unfolding top1_continuous_map_on_def using hpre_eq heq_ext by (by5000 auto)
+            \<comment> \<open>path_homotopic for hsl iff for alpha.\<close>
+            have hhtpy_eq: "\<And>h. top1_path_homotopic_on ?A ?TA_l ?a ?a ?hsl h
+                \<longleftrightarrow> top1_path_homotopic_on ?A ?TA_l ?a ?a ?\<alpha> h"
+              sorry \<comment> \<open>path_homotopic extensional: hsl|_I = alpha|_I. Swap F(s,0).\<close>
+            \<comment> \<open>Combine: loop_equiv for hsl iff for alpha.\<close>
+            hence "\<And>g. top1_loop_equiv_on ?A ?TA_l ?a ?hsl g
                 \<longleftrightarrow> top1_loop_equiv_on ?A ?TA_l ?a ?\<alpha> g"
-              sorry \<comment> \<open>loop_equiv extensional: f|_I = g|_I implies same equiv class.\<close>
+              unfolding top1_loop_equiv_on_def top1_is_loop_on_def top1_is_path_on_def
+              using hcont_eq hhtpy_eq heq_ext sorry
             thus ?thesis by (by100 blast)
           qed
           finally show ?thesis .
