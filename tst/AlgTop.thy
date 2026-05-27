@@ -7610,12 +7610,16 @@ proof -
             qed
           qed
           \<comment> \<open>At m=n: obtain psi_n with iota_loop . psi_n = path_power alpha n.\<close>
+          have hn_div: "real n / real n = (1::real)" using assms(1) by (by100 simp)
           from hind[rule_format, of n]
-          obtain \<psi> where h\<psi>_range: "\<forall>t\<in>top1_unit_interval. \<psi> t \<ge> 0 \<and> \<psi> t \<le> 1"
-              and h\<psi>_0: "\<psi> 0 = 0" and h\<psi>_1: "\<psi> 1 = 1"
+          obtain \<psi> where h\<psi>_range_raw: "\<forall>t\<in>top1_unit_interval. \<psi> t \<ge> 0 \<and> \<psi> t \<le> real n / real n"
+              and h\<psi>_0: "\<psi> 0 = 0" and h\<psi>_1_raw: "\<psi> 1 = real n / real n"
               and h\<psi>_eq: "\<forall>t\<in>top1_unit_interval. ?\<iota>_loop (\<psi> t) = top1_path_power ?\<alpha> ?a n t"
               and h\<psi>_cont: "continuous_on top1_unit_interval \<psi>"
-            sorry \<comment> \<open>Extract from hind at m=n: real n / real n = 1.\<close>
+            by (by100 blast)
+          have h\<psi>_range: "\<forall>t\<in>top1_unit_interval. \<psi> t \<ge> 0 \<and> \<psi> t \<le> 1"
+            using h\<psi>_range_raw hn_div by (by100 simp)
+          have h\<psi>_1: "\<psi> 1 = 1" using h\<psi>_1_raw hn_div by (by100 simp)
           \<comment> \<open>Apply reparam_path_homotopy: iota_loop . id ~ iota_loop . psi.\<close>
           show ?thesis sorry \<comment> \<open>reparam_path_homotopy application.\<close>
         qed
