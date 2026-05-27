@@ -7664,7 +7664,23 @@ proof -
           \<comment> \<open>Need: continuous_map_on versions of f, id, and psi.\<close>
           have hf_cmap: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
               X TX ?\<iota>_loop"
-            sorry \<comment> \<open>iota_loop is continuous I -> X (composition of cos/sin with iota).\<close>
+          proof -
+            \<comment> \<open>std_loop: I -> S1 continuous.\<close>
+            have hsl_cont: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+                top1_S1 top1_S1_topology (\<lambda>s. (cos (2*pi*s), sin (2*pi*s)))"
+              using standard_S1_loop_is_loop unfolding top1_is_loop_on_def top1_is_path_on_def
+              by (by100 blast)
+            \<comment> \<open>iota: S1 -> A continuous. Lift to X.\<close>
+            have h\<iota>_img_X: "\<iota> ` top1_S1 \<subseteq> X"
+              using h\<iota>_cont hA_sub unfolding top1_continuous_map_on_def by (by100 blast)
+            have h\<iota>_X: "top1_continuous_map_on top1_S1 top1_S1_topology X TX \<iota>"
+              sorry \<comment> \<open>iota: S1->A continuous, A subset X implies S1->X continuous. Needs subspace_topology X TX X = TX.\<close>
+            \<comment> \<open>Compose: iota . std_loop : I -> X.\<close>
+            have "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology X TX (\<iota> \<circ> (\<lambda>s. (cos (2*pi*s), sin (2*pi*s))))"
+              by (rule top1_continuous_map_on_comp[OF hsl_cont h\<iota>_X])
+            moreover have "(\<iota> \<circ> (\<lambda>s. (cos (2*pi*s), sin (2*pi*s)))) = ?\<iota>_loop" by (by100 auto)
+            ultimately show ?thesis by (by100 simp)
+          qed
           have h\<psi>_cmap: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
               top1_unit_interval top1_unit_interval_topology \<psi>"
           proof -
