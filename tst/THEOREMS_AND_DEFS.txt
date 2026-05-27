@@ -748,7 +748,7 @@ i/Top1_Ch5_8.thy|lemma|geom_cauchy_lim_bound|11892
 i/Top1_Ch5_8.thy|lemma|gp_singleton|29297
 i/Top1_Ch5_8.thy|lemma|gp_singleton_set|29279
 AlgTop.thy|lemma|graph_covering_is_graph|14230
-AlgTop.thy|lemma|graph_quotient_by_tree_wedge_of_circles|14535
+AlgTop.thy|lemma|graph_quotient_by_tree_wedge_of_circles|14629
 i/Top1_Ch9_13.thy|lemma|grid_from_per_piece_subdivisions|7786
 ac/AlgTopCached.thy|lemma|grid_subdivision_UV|15124
 ac/AlgTopCached.thy|lemma|group_assoc|7524
@@ -2044,6 +2044,6 @@ AlgTop.thy|theorem|Theorem_80_3_universal|12413
 AlgTop.thy|theorem|Theorem_81_2_covering_group_iso|13646
 AlgTop.thy|theorem|Theorem_82_1_covering_existence|13944
 AlgTop.thy|theorem|Theorem_83_4_covering_of_graph_is_graph|14056
-AlgTop.thy|theorem|Theorem_84_7_fund_group_graph_is_free|14562
-AlgTop.thy|theorem|Theorem_85_1_Nielsen_Schreier|14674
-AlgTop.thy|theorem|Theorem_85_3_Schreier_index|14714
+AlgTop.thy|theorem|Theorem_84_7_fund_group_graph_is_free|14656
+AlgTop.thy|theorem|Theorem_85_1_Nielsen_Schreier|14768
+AlgTop.thy|theorem|Theorem_85_3_Schreier_index|14808
