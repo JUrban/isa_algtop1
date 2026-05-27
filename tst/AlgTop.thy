@@ -7075,16 +7075,49 @@ proof -
         \<comment> \<open>phi . h_circ* : pi1(S1) -> Z is bij + hom.\<close>
         let ?\<psi>_explicit = "\<phi> \<circ> ?hc_star"
         \<comment> \<open>Get the induced iso from h_circ.\<close>
+        \<comment> \<open>h_circ is homeomorphism, hence homotopy equivalence. By Theorem_58_7, induced map is iso.\<close>
+        have hhc_htpy_eq: "top1_homotopy_equivalence_on top1_S1 top1_S1_topology ?A ?TA_l h_circ
+            (inv_into top1_S1 h_circ)"
+          sorry \<comment> \<open>Homeomorphism implies homotopy equivalence.\<close>
+        have "h_circ (1, 0) = ?a" by (rule hhc_10)
         have hhc_iso: "top1_group_iso_on
             (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1,0))
             (top1_fundamental_group_mul top1_S1 top1_S1_topology (1,0))
+            (top1_fundamental_group_carrier ?A ?TA_l ?a)
+            (top1_fundamental_group_mul ?A ?TA_l ?a)
+            (top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1,0) ?A ?TA_l ?a h_circ)"
+        proof -
+          from Theorem_58_7[OF hS1_top_l hTA_l hhc_htpy_eq h10_S1]
+          show ?thesis using hhc_10 by (by100 simp)
+        qed
+        have hhc_iso2: "top1_group_iso_on
+            (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1,0))
+            (top1_fundamental_group_mul top1_S1 top1_S1_topology (1,0))
             ?GA ?mulA ?hc_star"
-          using hiso_hc unfolding top1_groups_isomorphic_on_def by (by100 blast)
+          using hhc_iso by (by100 blast)
+        have hgrpA_loc2: "top1_is_group_on ?GA ?mulA ?eA ?invA"
+          by (rule top1_fundamental_group_is_group[OF hTA_l ha_A])
+        have hgrpS1: "top1_is_group_on
+            (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1,0))
+            (top1_fundamental_group_mul top1_S1 top1_S1_topology (1,0))
+            (top1_fundamental_group_id top1_S1 top1_S1_topology (1,0))
+            (top1_fundamental_group_invg top1_S1 top1_S1_topology (1,0))"
+          by (rule top1_fundamental_group_is_group[OF hS1_top_l h10_S1])
         have h\<psi>e_iso: "top1_group_iso_on
             (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
             (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))
             top1_Z_group top1_Z_mul ?\<psi>_explicit"
-          sorry \<comment> \<open>group_iso_on_compose of hhc_iso and h_phi_iso.\<close>
+        proof -
+          have hgrpZ2: "top1_is_group_on top1_Z_group top1_Z_mul (0::int) uminus"
+          proof -
+            have "top1_Z_id = (0::int)" unfolding top1_Z_id_def by (by100 blast)
+            moreover have "top1_Z_invg = (uminus :: int \<Rightarrow> int)" unfolding top1_Z_invg_def by (by100 blast)
+            ultimately show ?thesis
+              using top1_Z_is_abelian_group unfolding top1_is_abelian_group_on_def by (by100 simp)
+          qed
+          show ?thesis
+            by (rule group_iso_on_compose[OF hhc_iso2 h\<phi>_iso hgrpS1 hgrpA_loc2 hgrpZ2])
+        qed
         have h\<psi>e_bij: "bij_betw ?\<psi>_explicit
             (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
             top1_Z_group"
