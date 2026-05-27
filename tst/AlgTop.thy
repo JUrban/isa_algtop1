@@ -7377,11 +7377,31 @@ proof -
         \<comment> \<open>Step D.1: iota . std_loop is path-homotopic to the n-fold product of alpha in A.\<close>
         have h_htpy: "top1_path_homotopic_on ?A ?TA ?a ?a ?\<iota>_loop
             (top1_path_power ?\<alpha> ?a n)"
-          sorry \<comment> \<open>Reparametrization: iota_loop traces A n times at uniform speed;
-             path_power alpha n traces A n times at binary-tree speed.
-             Both are reparametrizations of the same curve, hence homotopic.
-             For n=1: iota_loop = alpha exactly, path_power 1 = alpha * const ~ alpha (right identity).
-             For general n: needs reparam_path_homotopy or path-splitting argument.\<close>
+        proof (cases "n = 1")
+          case True
+          \<comment> \<open>For n=1: alpha(t) = iota(cos(2*pi*t), sin(2*pi*t)) = iota_loop(t).
+             path_power alpha a 1 = path_product alpha (const a).
+             By right identity (symmetric): alpha ~ path_product alpha (const a).\<close>
+          have heq_n1: "?\<alpha> = ?\<iota>_loop"
+          proof (rule ext)
+            fix t :: real show "?\<alpha> t = ?\<iota>_loop t" using True by (by100 simp)
+          qed
+          have "top1_is_path_on ?A ?TA ?a ?a ?\<alpha>"
+            using h\<alpha>_loop unfolding top1_is_loop_on_def by (by100 blast)
+          from Theorem_51_2_right_identity[OF hTA_loc this]
+          have "top1_path_homotopic_on ?A ?TA ?a ?a (top1_path_product ?\<alpha> (top1_constant_path ?a)) ?\<alpha>" .
+          from Lemma_51_1_path_homotopic_sym[OF this]
+          have "top1_path_homotopic_on ?A ?TA ?a ?a ?\<alpha> (top1_path_product ?\<alpha> (top1_constant_path ?a))" .
+          hence "top1_path_homotopic_on ?A ?TA ?a ?a ?\<iota>_loop (top1_path_power ?\<alpha> ?a 1)"
+            using heq_n1 by (by100 simp)
+          thus ?thesis using True by (by100 simp)
+        next
+          case False
+          \<comment> \<open>For n >= 2: reparametrization argument.
+             Both iota_loop and path_power alpha n trace A n times.
+             By reparam_path_homotopy they are homotopic.\<close>
+          show ?thesis sorry
+        qed
         \<comment> \<open>Step D.2: The relator is the class of iota . std_loop.\<close>
         have h_rel_class: "?relator = {g. top1_loop_equiv_on ?A ?TA ?a ?\<iota>_loop g}"
         proof -
