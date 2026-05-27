@@ -7667,7 +7667,15 @@ proof -
             sorry \<comment> \<open>iota_loop is continuous I -> X (composition of cos/sin with iota).\<close>
           have h\<psi>_cmap: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
               top1_unit_interval top1_unit_interval_topology \<psi>"
-            sorry \<comment> \<open>Bridge: continuous_on I psi + psi maps I into I -> continuous_map_on.\<close>
+          proof -
+            have h\<psi>_img: "\<forall>t\<in>top1_unit_interval. \<psi> t \<in> top1_unit_interval"
+              using h\<psi>_range unfolding top1_unit_interval_def by (by100 auto)
+            have "top1_unit_interval_topology = subspace_topology UNIV top1_open_sets top1_unit_interval"
+              unfolding top1_unit_interval_topology_def by (by100 blast)
+            thus ?thesis
+              using top1_continuous_map_on_subspace_open_sets_on[of top1_unit_interval \<psi> top1_unit_interval]
+                    h\<psi>_img h\<psi>_cont by (by5000 simp)
+          qed
           have hid_cmap: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
               top1_unit_interval top1_unit_interval_topology (\<lambda>t. t)"
           proof -
