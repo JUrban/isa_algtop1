@@ -7603,7 +7603,9 @@ proof -
               have h_endpts: "?\<psi>s 0 = 0 \<and> ?\<psi>s 1 = real (Suc m) / real n"
                 using h\<psi>m_1 assms(1) by (simp add: field_simps)
               have h_cont_new: "continuous_on top1_unit_interval ?\<psi>s"
-                sorry \<comment> \<open>Piecewise continuous; matching at t=1/2.\<close>
+                sorry \<comment> \<open>Piecewise continuous: 2t/n on [0,1/2] and psi_m(2t-1)+1/n on [1/2,1].
+                   Both pieces continuous, matching at t=1/2 (both = 1/n).
+                   By continuous_on_cases.\<close>
               show ?case
                 apply (rule exI[of _ ?\<psi>s])
                 using h_range_new h_endpts h_eq_new h_cont_new by (by100 blast)
