@@ -7400,15 +7400,80 @@ proof -
         next
           case False
           hence hn_ge2: "n \<ge> 2" using assms(1) by (by100 linarith)
-          \<comment> \<open>For n >= 2: the loop iota . std_loop and path_power alpha n are both
-             n-fold traversals of A. They are homotopic via reparametrization.\<close>
-          \<comment> \<open>Proof: iota_loop(t) = q(cos(2*pi*t), sin(2*pi*t)).
-             alpha(t) = q(cos(2*pi*t/n), sin(2*pi*t/n)).
-             For any t in [0,1]: iota_loop(t) = alpha(n*t mod [0,1] periodic)
-               because q identifies rotations by 2*pi/n.
-             path_power alpha n traces alpha n times with binary-tree timing.
-             Both cover the same curve at different speeds.
-             By reparam_path_homotopy they are homotopic.\<close>
+          \<comment> \<open>Key property: iota_loop has quasi-period 1/n under q-identification.
+             iota_loop(t + 1/n) = q(cos(2*pi*(t+1/n)), sin(...)) = q(cos(2*pi*t + 2*pi/n), sin(...))
+             = q(cos(2*pi*t), sin(2*pi*t)) = iota_loop(t) by rotation identification.\<close>
+          have hf_period: "\<forall>t. ?\<iota>_loop (t + 1/real n) = ?\<iota>_loop t"
+          proof (intro allI)
+            fix t :: real
+            \<comment> \<open>iota_loop(t + 1/n) = iota(cos(2*pi*(t+1/n)), sin(2*pi*(t+1/n)))
+               = q(cos(2*pi*t + 2*pi/n), sin(2*pi*t + 2*pi/n)).
+               The point (cos(2*pi*t + 2*pi/n), sin(...)) is rotation_1 of (cos(2*pi*t), sin(2*pi*t)).
+               By hq_S1: q identifies rotations. So q(rot_1(z)) = q(z) for z in S1.\<close>
+            have "(cos (2*pi*t + 2*pi/real n), sin (2*pi*t + 2*pi/real n)) \<in> top1_S1"
+              unfolding top1_S1_def by (by100 auto)
+            have "(cos (2*pi*t), sin (2*pi*t)) \<in> top1_S1"
+              unfolding top1_S1_def by (by100 auto)
+            \<comment> \<open>The shifted point = rotation_1 of original.\<close>
+            have h_rot: "(cos (2*pi*t + 2*pi/real n), sin (2*pi*t + 2*pi/real n)) =
+                (cos (2*pi*real 1/real n) * cos (2*pi*t) - sin (2*pi*real 1/real n) * sin (2*pi*t),
+                 sin (2*pi*real 1/real n) * cos (2*pi*t) + cos (2*pi*real 1/real n) * sin (2*pi*t))"
+              using cos_add[of "2*pi*t" "2*pi*real 1/real n"] sin_add[of "2*pi*t" "2*pi*real 1/real n"]
+              by (by100 simp)
+            \<comment> \<open>By hq_S1: q identifies this rotation (k=1 < n).\<close>
+            have "1 < n" using hn_ge2 by (by100 linarith)
+            have "q (cos (2*pi*t), sin (2*pi*t)) = q (cos (2*pi*t + 2*pi/real n), sin (2*pi*t + 2*pi/real n))"
+            proof -
+              have "(cos (2*pi*t + 2*pi/real n), sin (2*pi*t + 2*pi/real n)) =
+                  (cos (2*pi*real 1/real n) * fst (cos (2*pi*t), sin (2*pi*t))
+                  - sin (2*pi*real 1/real n) * snd (cos (2*pi*t), sin (2*pi*t)),
+                   sin (2*pi*real 1/real n) * fst (cos (2*pi*t), sin (2*pi*t))
+                  + cos (2*pi*real 1/real n) * snd (cos (2*pi*t), sin (2*pi*t)))"
+                using h_rot by (by100 simp)
+              hence "\<exists>k::nat. k < n \<and> (cos (2*pi*t + 2*pi/real n), sin (2*pi*t + 2*pi/real n)) =
+                  (cos (2*pi*real k/real n) * fst (cos (2*pi*t), sin (2*pi*t))
+                  - sin (2*pi*real k/real n) * snd (cos (2*pi*t), sin (2*pi*t)),
+                   sin (2*pi*real k/real n) * fst (cos (2*pi*t), sin (2*pi*t))
+                  + cos (2*pi*real k/real n) * snd (cos (2*pi*t), sin (2*pi*t)))"
+              proof -
+                have "(1::nat) < n" using \<open>1 < n\<close> by (by100 blast)
+                moreover have "(cos (2*pi*t + 2*pi/real n), sin (2*pi*t + 2*pi/real n)) =
+                    (cos (2*pi*real (1::nat)/real n) * fst (cos (2*pi*t), sin (2*pi*t))
+                    - sin (2*pi*real (1::nat)/real n) * snd (cos (2*pi*t), sin (2*pi*t)),
+                     sin (2*pi*real (1::nat)/real n) * fst (cos (2*pi*t), sin (2*pi*t))
+                    + cos (2*pi*real (1::nat)/real n) * snd (cos (2*pi*t), sin (2*pi*t)))"
+                  using h_rot by (by100 simp)
+                ultimately show ?thesis by (by100 blast)
+              qed
+              thus ?thesis
+                using hq_S1[rule_format, OF \<open>(cos (2*pi*t), sin (2*pi*t)) \<in> top1_S1\<close>
+                      \<open>(cos (2*pi*t + 2*pi/real n), sin (2*pi*t + 2*pi/real n)) \<in> top1_S1\<close>]
+                by (by100 blast)
+            qed
+            \<comment> \<open>Since iota = q on S1:\<close>
+            have hq_eq: "q (cos (2*pi*t), sin (2*pi*t)) = q (cos (2*pi*t + 2*pi/real n), sin (2*pi*t + 2*pi/real n))"
+              using \<open>q (cos (2*pi*t), sin (2*pi*t)) = q (cos (2*pi*t + 2*pi/real n), sin (2*pi*t + 2*pi/real n))\<close> .
+            have h\<iota>1: "\<iota> (cos (2*pi*t), sin (2*pi*t)) = q (cos (2*pi*t), sin (2*pi*t))"
+              using h\<iota>_eq \<open>(cos (2*pi*t), sin (2*pi*t)) \<in> top1_S1\<close> by (by100 blast)
+            have h\<iota>2: "\<iota> (cos (2*pi*t + 2*pi/real n), sin (2*pi*t + 2*pi/real n)) = q (cos (2*pi*t + 2*pi/real n), sin (2*pi*t + 2*pi/real n))"
+              using h\<iota>_eq \<open>(cos (2*pi*t + 2*pi/real n), sin (2*pi*t + 2*pi/real n)) \<in> top1_S1\<close> by (by100 metis)
+            have h_angle_eq: "2*pi*t + 2*pi/real n = 2*pi*(t + 1/real n)"
+              using assms(1) by (simp add: field_simps)
+            have "?\<iota>_loop t = q (cos (2*pi*t), sin (2*pi*t))" using h\<iota>1 by (by100 simp)
+            also have "\<dots> = q (cos (2*pi*t + 2*pi/real n), sin (2*pi*t + 2*pi/real n))" by (rule hq_eq)
+            also have "\<dots> = \<iota> (cos (2*pi*t + 2*pi/real n), sin (2*pi*t + 2*pi/real n))" using h\<iota>2 by (by100 simp)
+            finally have "?\<iota>_loop t = \<iota> (cos (2*pi*t + 2*pi/real n), sin (2*pi*t + 2*pi/real n))" .
+            hence "?\<iota>_loop t = ?\<iota>_loop (t + 1/real n)" using h_angle_eq by (by100 simp)
+            thus "?\<iota>_loop (t + 1/real n) = ?\<iota>_loop t" by (by100 simp)
+          qed
+          \<comment> \<open>alpha(t) = iota_loop(t/n) since alpha(t) = q(cos(2*pi*t/n),...) = iota_loop(t/n).\<close>
+          have h\<alpha>_eq_f: "\<forall>t \<in> top1_unit_interval. ?\<alpha> t = ?\<iota>_loop (t / real n)"
+          proof (intro ballI)
+            fix t :: real assume "t \<in> top1_unit_interval"
+            show "?\<alpha> t = ?\<iota>_loop (t / real n)" by (by100 simp)
+          qed
+          \<comment> \<open>path_power alpha n = iota_loop . psi_n where psi_n is the binary-tree reparametrization.
+             By reparam_path_homotopy: iota_loop . id ~ iota_loop . psi_n.\<close>
           show ?thesis sorry
         qed
         \<comment> \<open>Step D.2: The relator is the class of iota . std_loop.\<close>
