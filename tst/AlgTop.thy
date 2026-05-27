@@ -7482,7 +7482,39 @@ proof -
           \<comment> \<open>Key: f(psi_m(2t-1) + 1/n) = f(psi_m(2t-1)) by hf_period.
              So f(psi_{m+1}(t)) = alpha(2t) for t<=1/2, path_power m (2t-1) for t>1/2
              = path_power (m+1) (t).\<close>
-          show ?thesis sorry \<comment> \<open>Reparam: needs psi_n construction + reparam_path_homotopy.\<close>
+          \<comment> \<open>Prove by induction: for all m, there exists continuous psi_m: I -> [0, m/n]
+             with psi_m(0)=0, psi_m(1)=m/n, and iota_loop . psi_m = path_power alpha a m on I.
+             At m=n: psi_n maps to [0,1], and by reparam_path_homotopy: iota_loop ~ path_power alpha n.\<close>
+          have hind: "\<forall>m \<le> n. \<exists>\<psi>. (\<forall>t\<in>top1_unit_interval. \<psi> t \<ge> 0 \<and> \<psi> t \<le> real m / real n)
+              \<and> \<psi> 0 = 0 \<and> \<psi> 1 = real m / real n
+              \<and> (\<forall>t\<in>top1_unit_interval. ?\<iota>_loop (\<psi> t) = top1_path_power ?\<alpha> ?a m t)
+              \<and> continuous_on top1_unit_interval \<psi>"
+          proof (intro allI impI)
+            fix m assume "m \<le> n"
+            show "\<exists>\<psi>. (\<forall>t\<in>top1_unit_interval. \<psi> t \<ge> 0 \<and> \<psi> t \<le> real m / real n)
+                \<and> \<psi> 0 = 0 \<and> \<psi> 1 = real m / real n
+                \<and> (\<forall>t\<in>top1_unit_interval. ?\<iota>_loop (\<psi> t) = top1_path_power ?\<alpha> ?a m t)
+                \<and> continuous_on top1_unit_interval \<psi>"
+            proof (induct m)
+              case 0
+              show ?case sorry \<comment> \<open>psi_0 = const 0: iota_loop(0) = a = const_a = path_power 0.\<close>
+            next
+              case (Suc m)
+              \<comment> \<open>Given psi_m, define psi_{m+1}(t) = 2t/n for t<=1/2, psi_m(2t-1)+1/n for t>1/2.
+                 Uses hf_period: iota_loop(psi_m(2t-1) + 1/n) = iota_loop(psi_m(2t-1)) = path_power m (2t-1).
+                 And h_alpha_eq_f: alpha(2t) = iota_loop(2t/n).\<close>
+              show ?case sorry
+            qed
+          qed
+          \<comment> \<open>At m=n: obtain psi_n with iota_loop . psi_n = path_power alpha n.\<close>
+          from hind[rule_format, of n]
+          obtain \<psi> where h\<psi>_range: "\<forall>t\<in>top1_unit_interval. \<psi> t \<ge> 0 \<and> \<psi> t \<le> 1"
+              and h\<psi>_0: "\<psi> 0 = 0" and h\<psi>_1: "\<psi> 1 = 1"
+              and h\<psi>_eq: "\<forall>t\<in>top1_unit_interval. ?\<iota>_loop (\<psi> t) = top1_path_power ?\<alpha> ?a n t"
+              and h\<psi>_cont: "continuous_on top1_unit_interval \<psi>"
+            sorry \<comment> \<open>Extract from hind at m=n: real n / real n = 1.\<close>
+          \<comment> \<open>Apply reparam_path_homotopy: iota_loop . id ~ iota_loop . psi.\<close>
+          show ?thesis sorry \<comment> \<open>reparam_path_homotopy application.\<close>
         qed
         \<comment> \<open>Step D.2: The relator is the class of iota . std_loop.\<close>
         have h_rel_class: "?relator = {g. top1_loop_equiv_on ?A ?TA ?a ?\<iota>_loop g}"
