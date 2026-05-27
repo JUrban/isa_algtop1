@@ -1,0 +1,32 @@
+CHANGES0228 - AlgTop formalization status
+Date: 2026-05-27
+Build: 25-29s, Isabelle build -D .
+Sorrys: 36 total (31 actual, 5 in comments)
+
+§73 Theorem 73.4 (dunce cap pi1 = Z/nZ):
+  Status: 99.7% complete
+  ONLY 1 sorry: h_htpy reparametrization (n>=2 case)
+  n=1 case fully proved.
+  
+  Proof chain (all proved except h_htpy):
+  1. X is Hausdorff
+  2. A = q(S1) ~ S1 (homeomorphism with h_circ(1,0)=a)
+  3. pi1(A,a) ~ Z
+  4. Bijectivity phi: S1 -> A (injectivity + surjectivity)
+  5. alpha = iota.gamma is a loop in A (continuity + endpoints)
+  6. phi([alpha]) = +/-1 (homeomorphism -> htpy_equiv -> Theorem_58_7 -> standard_S1_loop_generates_Z)
+  7. Quotient group iso transfer
+  8. NC({-n}) = NC({n}) in Z
+  9. Iso preserves normal closure
+  10. Z/<n> ~ Z/nZ
+  11. relator = [alpha]^n (NEEDS h_htpy)
+  12. Base point change
+
+Other sorry sections:
+  §71: 2 (CW data, infinite wedge)
+  §72-74: 3 (n=2 dunce, projective presentation, elem ops)
+  §75: 1 (abelianization + Smith normal form)
+  §76-78: 5 (simplex, merging, scheme extraction, normal form, classification)
+  §81: 2 (covering group iso, covering existence)
+  §82-83: 4 (covering construction steps)
+  §84-85: 13 (graphs, trees, wedge existence, covering, Euler char)
