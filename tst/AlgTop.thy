@@ -231,9 +231,94 @@ proof -
     have hF_disj: "{z \<in> top1_B2. q z = x} \<inter> {z \<in> top1_B2. q z = y} = {}"
       using hne by (by100 blast)
     \<comment> \<open>By normality: separate fibers, push forward through quotient.\<close>
+    \<comment> \<open>Step 1: B2 normal, separate closed disjoint fibers by open U, V.\<close>
+    obtain U V where hU_open: "U \<in> top1_B2_topology" and hV_open: "V \<in> top1_B2_topology"
+        and hFx_U: "{z \<in> top1_B2. q z = x} \<subseteq> U" and hFy_V: "{z \<in> top1_B2. q z = y} \<subseteq> V"
+        and hUV_disj: "U \<inter> V = {}"
+    proof -
+      from hB2_normal hFx_closed hFy_closed hF_disj
+      have "\<exists>U V. U \<in> top1_B2_topology \<and> V \<in> top1_B2_topology
+          \<and> {z \<in> top1_B2. q z = x} \<subseteq> U \<and> {z \<in> top1_B2. q z = y} \<subseteq> V \<and> U \<inter> V = {}"
+        unfolding top1_normal_on_def by (by5000 blast)
+      thus ?thesis using that by (by5000 blast)
+    qed
+    \<comment> \<open>Step 2: Define saturated open neighborhoods in X.
+       Let U0 = X - q(B2 - U) and V0 = X - q(B2 - V).
+       These are open in X (B2-U and B2-V are closed, q is closed map, so q(B2-U) closed in X).
+       x \<in> U0 (because q\<inverse>(x) \<subseteq> U, so q\<inverse>(x) \<inter> (B2-U) = {}, so x \<notin> q(B2-U)).
+       Similarly y \<in> V0. And U0 \<inter> V0 = {} (from U \<inter> V = {}).\<close>
+    let ?U0 = "X - q ` (top1_B2 - U)"
+    let ?V0 = "X - q ` (top1_B2 - V)"
+    have hU_sub: "U \<subseteq> top1_B2" using hU_open sorry
+    have hV_sub: "V \<subseteq> top1_B2" using hV_open sorry
+    have hB2U_closed: "closedin_on top1_B2 top1_B2_topology (top1_B2 - U)"
+    proof -
+      have "top1_B2 - U \<subseteq> top1_B2" by (by100 blast)
+      moreover have "top1_B2 - (top1_B2 - U) = U" using hU_sub by (by100 blast)
+      hence "top1_B2 - (top1_B2 - U) \<in> top1_B2_topology" using hU_open by (by100 simp)
+      ultimately show ?thesis unfolding closedin_on_def by (by100 blast)
+    qed
+    have hB2V_closed: "closedin_on top1_B2 top1_B2_topology (top1_B2 - V)"
+    proof -
+      have "top1_B2 - V \<subseteq> top1_B2" by (by100 blast)
+      moreover have "top1_B2 - (top1_B2 - V) = V" using hV_sub by (by100 blast)
+      hence "top1_B2 - (top1_B2 - V) \<in> top1_B2_topology" using hV_open by (by100 simp)
+      ultimately show ?thesis unfolding closedin_on_def by (by100 blast)
+    qed
+    have hqU_closed: "closedin_on X TX (q ` (top1_B2 - U))"
+      using hq_closed hB2U_closed by (by100 blast)
+    have hqV_closed: "closedin_on X TX (q ` (top1_B2 - V))"
+      using hq_closed hB2V_closed by (by100 blast)
+    have hU0_open: "?U0 \<in> TX"
+      using hqU_closed unfolding closedin_on_def by (by100 blast)
+    have hV0_open: "?V0 \<in> TX"
+      using hqV_closed unfolding closedin_on_def by (by100 blast)
+    have "x \<in> ?U0"
+    proof -
+      have "x \<in> X" by (rule hx)
+      moreover have "x \<notin> q ` (top1_B2 - U)"
+      proof
+        assume "x \<in> q ` (top1_B2 - U)"
+        then obtain z where "z \<in> top1_B2 - U" "q z = x" by (by100 blast)
+        hence "z \<in> {z \<in> top1_B2. q z = x}" by (by100 blast)
+        hence "z \<in> U" using hFx_U by (by100 blast)
+        thus False using \<open>z \<in> top1_B2 - U\<close> by (by100 blast)
+      qed
+      ultimately show ?thesis by (by100 blast)
+    qed
+    have "y \<in> ?V0"
+    proof -
+      have "y \<in> X" by (rule hy)
+      moreover have "y \<notin> q ` (top1_B2 - V)"
+      proof
+        assume "y \<in> q ` (top1_B2 - V)"
+        then obtain z where "z \<in> top1_B2 - V" "q z = y" by (by100 blast)
+        hence "z \<in> {z \<in> top1_B2. q z = y}" by (by100 blast)
+        hence "z \<in> V" using hFy_V by (by100 blast)
+        thus False using \<open>z \<in> top1_B2 - V\<close> by (by100 blast)
+      qed
+      ultimately show ?thesis by (by100 blast)
+    qed
+    have "?U0 \<inter> ?V0 = {}"
+    proof -
+      have "\<forall>w. w \<in> ?U0 \<longrightarrow> w \<notin> ?V0"
+      proof (intro allI impI)
+        fix w assume "w \<in> ?U0"
+        hence hw: "w \<in> X" "w \<notin> q ` (top1_B2 - U)" by (by100 blast)+
+        \<comment> \<open>w \<in> X = q(B2), so w = q(z) for some z. z \<notin> B2-U (since w \<notin> q(B2-U)), so z \<in> U.
+           But U \<inter> V = {}, so z \<notin> V, so z \<in> B2-V, so w = q(z) \<in> q(B2-V), so w \<notin> V0.\<close>
+        obtain z where hz: "z \<in> top1_B2" "q z = w" using hw(1) hq_surj by (by100 blast)
+        have "z \<notin> top1_B2 - U" using hw(2) hz by (by100 blast)
+        hence "z \<in> U" using hz(1) by (by100 blast)
+        hence "z \<notin> V" using hUV_disj by (by100 blast)
+        hence "z \<in> top1_B2 - V" using hz(1) by (by100 blast)
+        hence "w \<in> q ` (top1_B2 - V)" using hz by (by100 blast)
+        thus "w \<notin> ?V0" by (by100 blast)
+      qed
+      thus ?thesis by (by100 blast)
+    qed
     show "\<exists>Ux Vy. (Ux \<in> TX \<and> x \<in> Ux) \<and> (Vy \<in> TX \<and> y \<in> Vy) \<and> Ux \<inter> Vy = {}"
-      sorry \<comment> \<open>Normal + closed fibers \<Rightarrow> separated by open U,V.
-         Quotient: push U,V forward to open neighborhoods of x,y.\<close>
+      using hU0_open hV0_open \<open>x \<in> ?U0\<close> \<open>y \<in> ?V0\<close> \<open>?U0 \<inter> ?V0 = {}\<close> by (by100 blast)
   qed
 qed
 text \<open>Helper: the projective scheme has length 2m and its elements are (k, True) for k = i div 2.\<close>
