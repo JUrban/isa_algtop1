@@ -9014,16 +9014,8 @@ proof -
         { replicate n (0::nat, True) }
     \<and> top1_groups_isomorphic_on G mul
         (top1_fundamental_group_carrier X TX x0) (top1_fundamental_group_mul X TX x0)"
-  \<comment> \<open>Extract the presentation from hquot\_ZnZ\_and\_pres.\<close>
-  \<comment> \<open>Q \<cong> \<pi>_1(X, a) (from h72\_iso, reversed).\<close>
-    \<comment> \<open>h72_iso: \<pi>_1(X,a) \<cong> Q. We need Q \<cong> \<pi>_1(X,a) \<cong> \<pi>_1(X,x0).\<close>
-    \<comment> \<open>hbc: \<pi>_1(X,x0) \<cong> \<pi>_1(X,a). Reverse: \<pi>_1(X,a) \<cong> \<pi>_1(X,x0).\<close>
-    \<comment> \<open>But groups_isomorphic is symmetric per definition (it's \<exists>f. iso_on ...).\<close>
-    \<comment> \<open>Actually h72_iso: iso(pi1(X,a), mulX, Q, mulQ). We need iso(Q, mulQ, pi1(X,x0), mulX).\<close>
-    \<comment> \<open>Step 1: iso(Q, mulQ, pi1(X,a), mulX) from h72_iso by symmetry.\<close>
-    \<comment> \<open>Step 2: iso(pi1(X,a), pi1(X,x0)) from hbc by symmetry.\<close>
-    \<comment> \<open>Step 3: iso(Q, pi1(X,x0)) by transitivity.\<close>
-    using conjunct2[OF hquot_ZnZ_and_pres] sorry
+    using conjunct2[OF hquot_ZnZ_and_pres] h72_iso hbc sorry
+    \<comment> \<open>Need: compose iso chain Q \<cong> pi1(X,a) \<cong> pi1(X,x0) and package with presentation.\<close>
   show ?thesis using hiso_final hpres by (by100 blast)
 qed
 
