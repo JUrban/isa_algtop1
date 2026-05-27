@@ -14605,7 +14605,48 @@ proof -
         thus ?thesis using \<open>T0 \<in> C\<close> by (by100 blast)
       qed
       have hU_tree: "top1_is_tree_on (\<Union>C) (subspace_topology X TX (\<Union>C))"
-        sorry \<comment> \<open>Union of nonempty chain of trees is tree: connected (directed union) + simply_connected (compactness) + graph (union of arc covers).\<close>
+        unfolding top1_is_tree_on_def
+      proof (intro conjI)
+        \<comment> \<open>Connected: union of chain of connected sets sharing x0 (Theorem 23.3).\<close>
+        show "top1_connected_on (\<Union>C) (subspace_topology X TX (\<Union>C))"
+        proof -
+          have hX_strict: "is_topology_on_strict X TX"
+            using assms(1) unfolding top1_is_graph_on_def by (by5000 blast)
+          hence hX_top: "is_topology_on X TX"
+            unfolding is_topology_on_strict_def by (by100 blast)
+          have hC_ne_idx: "C \<noteq> {}" using False by (by100 blast)
+          have hC_sub: "\<forall>T' \<in> C. T' \<subseteq> X"
+            using hC unfolding chains_def \<A>_def by (by100 blast)
+          have hC_conn: "\<forall>T' \<in> C. top1_connected_on T' (subspace_topology X TX T')"
+          proof (intro ballI)
+            fix T' assume "T' \<in> C"
+            hence "T' \<in> \<A>" using hC unfolding chains_def by (by100 blast)
+            hence "top1_is_tree_on T' (subspace_topology X TX T')" unfolding \<A>_def by (by100 blast)
+            thus "top1_connected_on T' (subspace_topology X TX T')"
+              unfolding top1_is_tree_on_def by (by100 blast)
+          qed
+          have hx0_all: "x0 \<in> \<Inter>(C)"
+          proof (intro InterI)
+            fix T' assume "T' \<in> C"
+            hence "T' \<in> \<A>" using hC unfolding chains_def by (by100 blast)
+            thus "x0 \<in> T'" unfolding \<A>_def by (by100 blast)
+          qed
+          have hx0_inter: "x0 \<in> \<Inter>((\<lambda>T'. T') ` C)" using hx0_all by (by100 simp)
+          have hU_eq: "\<Union>C = (\<Union>T'\<in>C. T')" by (by100 blast)
+          from Theorem_23_3[OF hX_top hC_ne_idx _ hC_conn hx0_inter]
+          have "top1_connected_on (\<Union>((\<lambda>T'. T') ` C)) (subspace_topology X TX (\<Union>((\<lambda>T'. T') ` C)))"
+            using hC_sub by (by100 blast)
+          thus ?thesis by (by100 simp)
+        qed
+      next
+        \<comment> \<open>Simply connected: any loop is compact, hence in some Ti (chain), hence null-homotopic.\<close>
+        show "top1_simply_connected_on (\<Union>C) (subspace_topology X TX (\<Union>C))"
+          sorry \<comment> \<open>Compactness argument: loop image compact, in finitely many arcs, hence in some Ti.\<close>
+      next
+        \<comment> \<open>Graph: union of arc covers from the chain.\<close>
+        show "top1_is_graph_on (\<Union>C) (subspace_topology X TX (\<Union>C))"
+          sorry \<comment> \<open>Arc cover of union = union of arc covers. Intersection + coherent topology conditions.\<close>
+      qed
       hence "\<Union>C \<in> \<A>" using hU_sub hU_x0 unfolding \<A>_def by (by100 blast)
       thus ?thesis by (by100 blast)
     qed
