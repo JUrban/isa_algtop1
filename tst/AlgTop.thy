@@ -7474,7 +7474,15 @@ proof -
           qed
           \<comment> \<open>path_power alpha n = iota_loop . psi_n where psi_n is the binary-tree reparametrization.
              By reparam_path_homotopy: iota_loop . id ~ iota_loop . psi_n.\<close>
-          show ?thesis sorry
+          \<comment> \<open>Construct reparametrization psi_n by recursion:
+             psi_0(t) = 0
+             psi_{m+1}(t) = 2t/n for t in [0,1/2], psi_m(2t-1) + 1/n for t in [1/2,1].
+             Then f(psi_n(t)) = path_power alpha a n (t) by induction using hf_period.
+             Apply reparam_path_homotopy: f . id ~ f . psi_n.\<close>
+          \<comment> \<open>Key: f(psi_m(2t-1) + 1/n) = f(psi_m(2t-1)) by hf_period.
+             So f(psi_{m+1}(t)) = alpha(2t) for t<=1/2, path_power m (2t-1) for t>1/2
+             = path_power (m+1) (t).\<close>
+          show ?thesis sorry \<comment> \<open>Reparam: needs psi_n construction + reparam_path_homotopy.\<close>
         qed
         \<comment> \<open>Step D.2: The relator is the class of iota . std_loop.\<close>
         have h_rel_class: "?relator = {g. top1_loop_equiv_on ?A ?TA ?a ?\<iota>_loop g}"
