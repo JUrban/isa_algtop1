@@ -15109,6 +15109,21 @@ lemma wedge_circles_pi1_free:
   using Theorem_71_1_wedge_of_circles_finite[OF assms]
   by (by100 blast)
 
+text \<open>Any free group on a finite set S is realized as \<pi>_1 of a wedge of |S| circles
+  (which is a connected graph). This is the geometric realization step.\<close>
+lemma free_group_realized_by_wedge:
+  fixes F :: "'g set" and mul :: "'g \<Rightarrow> 'g \<Rightarrow> 'g" and S :: "'s set"
+  assumes "top1_is_free_group_full_on F mul e invg \<iota> S"
+      and "finite S"
+  shows "\<exists>(X :: 'a set) TX (x0 :: 'a).
+      top1_is_graph_on X TX \<and> top1_connected_on X TX \<and> x0 \<in> X
+    \<and> top1_groups_isomorphic_on F mul
+        (top1_fundamental_group_carrier X TX x0)
+        (top1_fundamental_group_mul X TX x0)"
+  sorry \<comment> \<open>Construct a wedge of |S| circles. Apply Theorem 71.1: \<pi>_1(wedge) is free.
+     Free groups on equinumerous sets are isomorphic (free\_group\_full\_reindex).
+     Wedge is a graph (arcs = circles, coherent topology). Wedge is connected.\<close>
+
 text \<open>Covering space of a graph is a graph (Munkres Theorem 83.4).\<close>
 lemma graph_covering_is_graph:
   assumes "top1_is_graph_on B TB"
@@ -15134,7 +15149,7 @@ proof -
       and hx0: "x0 \<in> X"
       and hiso: "top1_groups_isomorphic_on F mul
           (top1_fundamental_group_carrier X TX x0) (top1_fundamental_group_mul X TX x0)"
-    sorry \<comment> \<open>Wedge of n+1 circles realizes F.\<close>
+    sorry \<comment> \<open>Use free_group_realized_by_wedge[OF assms(1) assms(2)] — blast timeout on extraction.\<close>
   \<comment> \<open>Choose covering E \<rightarrow> X with p_*(\<pi>_1(E)) = H. E is k-fold cover.\<close>
   obtain E :: "'b set" and TE :: "'b set set" and p :: "'b \<Rightarrow> 'a" and e0 :: 'b
     where hcov: "top1_covering_map_on E TE X TX p"
