@@ -199,7 +199,26 @@ proof -
       \<comment> \<open>rot k ` (C \<inter> S1) is closed in S1 (continuous image of compact in Hausdorff,
          or homeomorphism preserves closed).\<close>
       have "closedin_on top1_S1 top1_S1_topology (rot k ` (C \<inter> top1_S1))"
-        sorry
+      proof -
+        \<comment> \<open>rot k is continuous on S1 (composition of continuous functions).\<close>
+        have hrot_cont: "top1_continuous_map_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology (rot k)"
+          sorry \<comment> \<open>Rotation is continuous on S1 (standard continuous_intros).\<close>
+        \<comment> \<open>S1 is compact and Hausdorff.\<close>
+        have hS1_haus: "is_hausdorff_on top1_S1 top1_S1_topology"
+        proof -
+          have hS1_sub: "top1_S1 \<subseteq> top1_B2" unfolding top1_S1_def top1_B2_def by (by100 auto)
+          from conjunct2[OF conjunct2[OF Theorem_17_11]] hB2_haus hS1_sub
+          have "is_hausdorff_on top1_S1 (subspace_topology top1_B2 top1_B2_topology top1_S1)"
+            by (by100 blast)
+          moreover have "subspace_topology top1_B2 top1_B2_topology top1_S1 = top1_S1_topology"
+            using subspace_topology_trans[OF hS1_sub]
+            unfolding top1_S1_topology_def top1_B2_topology_def by (by100 simp)
+          ultimately show ?thesis by (by100 simp)
+        qed
+        \<comment> \<open>Compact + Hausdorff + continuous + closed C∩S1 \<Rightarrow> image closed.\<close>
+        show ?thesis
+          by (rule compact_hausdorff_continuous_closed_map[OF S1_compact hS1_haus hrot_cont hCS1_closed_S1])
+      qed
       \<comment> \<open>Closed in S1 + S1 closed in B2 \<Rightarrow> closed in B2.\<close>
       moreover have "closedin_on top1_B2 top1_B2_topology top1_S1"
         by (rule S1_closed_in_B2)
