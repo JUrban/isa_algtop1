@@ -8912,7 +8912,7 @@ theorem Theorem_74_4_fund_group_m_projective:
   fixes m :: nat and X :: "'a set" and TX :: "'a set set" and x0 :: 'a
   assumes "top1_is_m_fold_projective_on X TX m"
       and "x0 \<in> X"
-  shows "\<exists>(G::'g set) mul e invg.
+  shows "\<exists>(G :: (real \<Rightarrow> 'a) set set set) mul e invg.
            top1_group_presented_by_on G mul e invg ({..<m}::nat set)
              { concat (map (\<lambda>i. [(i, True), (i, True)]) [0..<m]) }
          \<and> top1_groups_isomorphic_on G mul
@@ -8991,14 +8991,6 @@ next
     \<comment> \<open>quotient\_of\_scheme\_extract\_full gives all vertex data.\<close>
     show ?thesis using hfull sorry \<comment> \<open>Extract vertex data from full scheme extraction.\<close>
   qed
-  \<comment> \<open>Apply Theorem 74.2 and match labels/relator.\<close>
-  from Theorem_74_2_scheme_presentation[OF hscheme assms(2) hlen hvert htd hvc]
-  have h742: "\<exists>(G :: (real \<Rightarrow> 'a) set set set) mul e invg.
-      top1_group_presented_by_on G mul e invg (fst ` set ?scheme)
-        { map (\<lambda>(s,b). (s, b)) ?scheme }
-      \<and> top1_groups_isomorphic_on G mul
-          (top1_fundamental_group_carrier X TX x0)
-          (top1_fundamental_group_mul X TX x0)" .
   have hlabels: "fst ` set ?scheme = {..<m}"
   proof -
     have "fst ` set ?scheme = fst ` set (concat (map (\<lambda>i. [(i, True), (i, True)]) [0..<m]))"
@@ -9026,7 +9018,15 @@ next
     have "map (\<lambda>(s,b). (s, b)) ?scheme = ?scheme" by (by100 simp)
     thus ?thesis unfolding top1_m_projective_scheme_def by (by100 simp)
   qed
-  show ?thesis using h742 hlabels hrelator sorry \<comment> \<open>Packaging: type unification issue.\<close>
+  \<comment> \<open>Apply Theorem 74.2.\<close>
+  have h742: "\<exists>(G :: (real \<Rightarrow> 'a) set set set) mul e invg.
+      top1_group_presented_by_on G mul e invg (fst ` set ?scheme)
+        { map (\<lambda>(s,b). (s, b)) ?scheme }
+      \<and> top1_groups_isomorphic_on G mul
+          (top1_fundamental_group_carrier X TX x0)
+          (top1_fundamental_group_mul X TX x0)"
+    using Theorem_74_2_scheme_presentation[OF hscheme assms(2) hlen hvert htd hvc] .
+  show ?thesis using h742 hlabels hrelator by (by5000 simp)
 qed
 section \<open>*\<S>78 Constructing Compact Surfaces\<close>
 
