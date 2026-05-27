@@ -7674,7 +7674,18 @@ proof -
             have h\<iota>_img_X: "\<iota> ` top1_S1 \<subseteq> X"
               using h\<iota>_cont hA_sub unfolding top1_continuous_map_on_def by (by100 blast)
             have h\<iota>_X: "top1_continuous_map_on top1_S1 top1_S1_topology X TX \<iota>"
-              sorry \<comment> \<open>iota: S1->A continuous, A subset X implies S1->X continuous. Needs subspace_topology X TX X = TX.\<close>
+            proof -
+              from top1_continuous_map_on_codomain_enlarge[OF h\<iota>_cont hA_sub]
+              have "top1_continuous_map_on top1_S1 top1_S1_topology X (subspace_topology X TX X) \<iota>"
+                by (by100 blast)
+              moreover have "subspace_topology X TX X = TX"
+              proof -
+                have "\<forall>U \<in> TX. U \<subseteq> X"
+                  using hX_strict unfolding is_topology_on_strict_def by (by100 blast)
+                thus ?thesis by (rule subspace_topology_self)
+              qed
+              ultimately show ?thesis by (by100 simp)
+            qed
             \<comment> \<open>Compose: iota . std_loop : I -> X.\<close>
             have "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology X TX (\<iota> \<circ> (\<lambda>s. (cos (2*pi*s), sin (2*pi*s))))"
               by (rule top1_continuous_map_on_comp[OF hsl_cont h\<iota>_X])
@@ -7738,7 +7749,36 @@ proof -
             \<comment> \<open>path_homotopic_same_class: homotopic loops have same class.\<close>
             \<comment> \<open>And loops agreeing on I have same class (extensionality).\<close>
             have h_eq_htpy: "top1_path_homotopic_on ?A ?TA ?a ?a (?\<iota>_loop \<circ> \<psi>) (top1_path_power ?\<alpha> ?a n)"
-              sorry \<comment> \<open>Pointwise equal on I implies path-homotopic (reflexivity + extensionality).\<close>
+            proof -
+              \<comment> \<open>path_power alpha n is a loop in A, hence path-homotopic to itself.\<close>
+              have "top1_is_loop_on ?A ?TA ?a (top1_path_power ?\<alpha> ?a n)"
+                by (rule top1_path_power_is_loop[OF hTA_loc h\<alpha>_loop])
+              hence "top1_is_path_on ?A ?TA ?a ?a (top1_path_power ?\<alpha> ?a n)"
+                unfolding top1_is_loop_on_def by (by100 blast)
+              from Lemma_51_1_path_homotopic_refl[OF this]
+              have "top1_path_homotopic_on ?A ?TA ?a ?a (top1_path_power ?\<alpha> ?a n) (top1_path_power ?\<alpha> ?a n)" .
+              \<comment> \<open>Since iota_loop . psi = path_power alpha n on I, they have the same homotopy class.\<close>
+              \<comment> \<open>Swap: since iota_loop.psi and path_power agree on I, use the reflexivity homotopy
+                 for path_power, rewriting the F(s,0) condition.\<close>
+              hence "\<exists>F. top1_continuous_map_on (top1_unit_interval \<times> top1_unit_interval) II_topology ?A ?TA F
+                  \<and> (\<forall>s\<in>top1_unit_interval. F (s, 0) = top1_path_power ?\<alpha> ?a n s)
+                  \<and> (\<forall>s\<in>top1_unit_interval. F (s, 1) = top1_path_power ?\<alpha> ?a n s)
+                  \<and> (\<forall>t\<in>top1_unit_interval. F (0, t) = ?a)
+                  \<and> (\<forall>t\<in>top1_unit_interval. F (1, t) = ?a)"
+                unfolding top1_path_homotopic_on_def by (by100 blast)
+              hence "\<exists>F. top1_continuous_map_on (top1_unit_interval \<times> top1_unit_interval) II_topology ?A ?TA F
+                  \<and> (\<forall>s\<in>top1_unit_interval. F (s, 0) = (?\<iota>_loop \<circ> \<psi>) s)
+                  \<and> (\<forall>s\<in>top1_unit_interval. F (s, 1) = top1_path_power ?\<alpha> ?a n s)
+                  \<and> (\<forall>t\<in>top1_unit_interval. F (0, t) = ?a)
+                  \<and> (\<forall>t\<in>top1_unit_interval. F (1, t) = ?a)"
+                using hagree by (by5000 auto)
+              moreover have "top1_is_path_on ?A ?TA ?a ?a (?\<iota>_loop \<circ> \<psi>)"
+                sorry \<comment> \<open>iota_loop . psi is a path (continuous + endpoints).\<close>
+              moreover have "top1_is_path_on ?A ?TA ?a ?a (top1_path_power ?\<alpha> ?a n)"
+                using \<open>top1_is_loop_on ?A ?TA ?a (top1_path_power ?\<alpha> ?a n)\<close>
+                unfolding top1_is_loop_on_def by (by100 blast)
+              ultimately show ?thesis unfolding top1_path_homotopic_on_def by (by100 blast)
+            qed
             show ?thesis using Lemma_51_1_path_homotopic_trans[OF hTA_loc hhtpy h_eq_htpy] by (by100 blast)
           qed
         qed
