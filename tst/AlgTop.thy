@@ -14641,7 +14641,57 @@ proof -
       next
         \<comment> \<open>Simply connected: any loop is compact, hence in some Ti (chain), hence null-homotopic.\<close>
         show "top1_simply_connected_on (\<Union>C) (subspace_topology X TX (\<Union>C))"
-          sorry \<comment> \<open>Compactness argument: loop image compact, in finitely many arcs, hence in some Ti.\<close>
+        proof -
+          let ?U = "\<Union>C"
+          let ?TU = "subspace_topology X TX ?U"
+          have hX_top2: "is_topology_on X TX"
+            using assms(1) unfolding top1_is_graph_on_def is_topology_on_strict_def by (by5000 blast)
+          have hTU: "is_topology_on ?U ?TU"
+            by (rule subspace_topology_is_topology_on[OF hX_top2 hU_sub])
+          \<comment> \<open>Path-connected: for any x,y in UC, they're in some Tj (chain), which is path-connected.\<close>
+          have hU_pc: "top1_path_connected_on ?U ?TU"
+            unfolding top1_path_connected_on_def
+          proof (intro conjI ballI)
+            show "is_topology_on ?U ?TU" by (rule hTU)
+          next
+            fix x y assume hx: "x \<in> ?U" and hy: "y \<in> ?U"
+            obtain Ti where "Ti \<in> C" "x \<in> Ti" using hx by (by100 blast)
+            obtain Tj where "Tj \<in> C" "y \<in> Tj" using hy by (by100 blast)
+            \<comment> \<open>C is a chain, so Ti \<subseteq> Tj or Tj \<subseteq> Ti.\<close>
+            have "Ti \<subseteq> Tj \<or> Tj \<subseteq> Ti"
+              using hC \<open>Ti \<in> C\<close> \<open>Tj \<in> C\<close> unfolding chains_def chain_subset_def by (by100 blast)
+            then obtain Tk where "Tk \<in> C" "x \<in> Tk" "y \<in> Tk"
+              using \<open>x \<in> Ti\<close> \<open>y \<in> Tj\<close> \<open>Ti \<in> C\<close> \<open>Tj \<in> C\<close> by (by100 blast)
+            hence "Tk \<in> \<A>" using hC unfolding chains_def by (by100 blast)
+            hence htree: "top1_is_tree_on Tk (subspace_topology X TX Tk)" unfolding \<A>_def by (by100 blast)
+            hence hTk_pc: "top1_path_connected_on Tk (subspace_topology X TX Tk)"
+              unfolding top1_is_tree_on_def top1_simply_connected_on_def by (by100 blast)
+            hence "\<exists>f. top1_is_path_on Tk (subspace_topology X TX Tk) x y f"
+              using \<open>x \<in> Tk\<close> \<open>y \<in> Tk\<close> unfolding top1_path_connected_on_def by (by100 blast)
+            then obtain f where hf: "top1_is_path_on Tk (subspace_topology X TX Tk) x y f" by (by100 blast)
+            \<comment> \<open>A path in Tk is also a path in UC (since Tk \<subseteq> UC \<subseteq> X).\<close>
+            have hTk_sub_U: "Tk \<subseteq> ?U" using \<open>Tk \<in> C\<close> by (by100 blast)
+            have "top1_is_path_on ?U ?TU x y f"
+            proof -
+              have hf_cont: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+                  Tk (subspace_topology X TX Tk) f"
+                using hf unfolding top1_is_path_on_def by (by100 blast)
+              from top1_continuous_map_on_codomain_enlarge[OF hf_cont hTk_sub_U hU_sub]
+              have "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+                  ?U ?TU f" .
+              moreover have "f 0 = x" and "f 1 = y" using hf unfolding top1_is_path_on_def by (by100 blast)+
+              ultimately show ?thesis unfolding top1_is_path_on_def by (by100 blast)
+            qed
+            thus "\<exists>f. top1_is_path_on ?U ?TU x y f" by (by100 blast)
+          qed
+          \<comment> \<open>Every loop at x0 is null-homotopic: the loop is in some Tj (tree), hence null-homotopic.\<close>
+          have hU_loops: "\<forall>f. top1_is_loop_on ?U ?TU x0 f
+              \<longrightarrow> top1_path_homotopic_on ?U ?TU x0 x0 f (top1_constant_path x0)"
+            sorry \<comment> \<open>Loop in UC: by compactness/chain argument, loop is in some Tj (tree).
+               Tj simply connected, so loop is null-homotopic in Tj, hence in UC.\<close>
+          show ?thesis using top1_simply_connected_from_one_point[OF hTU hU_pc hU_x0] hU_loops
+            unfolding top1_simply_connected_on_def by (by100 blast)
+        qed
       next
         \<comment> \<open>Graph: union of arc covers from the chain.\<close>
         show "top1_is_graph_on (\<Union>C) (subspace_topology X TX (\<Union>C))"
