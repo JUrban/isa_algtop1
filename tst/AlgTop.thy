@@ -8918,7 +8918,8 @@ proof -
         top1_group_presented_by_on
           (top1_quotient_group_carrier_on ?GA ?mulA ?N) (top1_quotient_group_mul_on ?mulA)
           e invg ({..<1}::nat set) { replicate n (0::nat, True) }"
-      sorry \<comment> \<open>Z free on {0}, quotient proj surjective, kernel = N, relator = a^n.\<close>
+    unfolding top1_group_presented_by_on_def
+      sorry \<comment> \<open>Need: is_group Q \<and> \<exists>F mulF eF invgF \<iota> \<pi>. free Z {0} \<and> hom \<pi> \<and> surj \<pi> \<and> ker \<pi> = N(a^n).\<close>
     \<comment> \<open>Compose: pi1(A)/N iso Z/phi(N) = Z/nZ iso Z/nZ.\<close>
     have "top1_groups_isomorphic_on
         (top1_quotient_group_carrier_on ?GA ?mulA ?N)
