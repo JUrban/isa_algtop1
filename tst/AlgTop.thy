@@ -8986,7 +8986,11 @@ next
       \<longrightarrow> (i = j \<and> t = s)
         \<or> (fst (?scheme!i) = fst (?scheme!j) \<and>
            (if snd (?scheme!i) = snd (?scheme!j) then s = t else s = 1 - t)))"
-    sorry \<comment> \<open>From quotient_of_scheme_extract_full.\<close>
+  proof -
+    note hfull = quotient_of_scheme_extract_full[OF hscheme]
+    \<comment> \<open>quotient\_of\_scheme\_extract\_full gives all vertex data.\<close>
+    show ?thesis using hfull sorry \<comment> \<open>Extract vertex data from full scheme extraction.\<close>
+  qed
   \<comment> \<open>Apply Theorem 74.2 and match labels/relator.\<close>
   from Theorem_74_2_scheme_presentation[OF hscheme assms(2) hlen hvert htd hvc]
   have h742: "\<exists>(G :: (real \<Rightarrow> 'a) set set set) mul e invg.
