@@ -16495,7 +16495,18 @@ proof -
       and hx0: "x0 \<in> X"
       and hF_iso: "top1_groups_isomorphic_on F mul
           (top1_fundamental_group_carrier X TX x0) (top1_fundamental_group_mul X TX x0)"
-    sorry \<comment> \<open>Use free_group_realized_by_wedge.\<close>
+  proof -
+    have "finite S" using assms(2) by (cases "finite S", by100 simp, by100 simp)
+    note hrealiz = free_group_realized_by_wedge[OF assms(1) this]
+    from hrealiz obtain X' :: "'a set" and TX' :: "'a set set" and x0' :: 'a where
+      hconj: "top1_is_graph_on X' TX' \<and> top1_connected_on X' TX' \<and> x0' \<in> X'
+      \<and> top1_groups_isomorphic_on F mul
+          (top1_fundamental_group_carrier X' TX' x0') (top1_fundamental_group_mul X' TX' x0')"
+      by (by5000 fast)
+    show ?thesis
+      apply (rule that[of X' TX' x0'])
+      using hconj by (by100 blast)+
+  qed
   \<comment> \<open>Step 2: H \<le> F corresponds to a k-sheeted covering E of X.
      By Theorem 82.1, there exists a covering E with p_*(\<pi>_1(E)) = H-image.\<close>
   obtain E' :: "'b set" and TE' :: "'b set set" and p' :: "'b \<Rightarrow> 'a"
