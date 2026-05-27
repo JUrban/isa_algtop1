@@ -7052,7 +7052,48 @@ proof -
         \<comment> \<open>More precisely: hiso_hc gives pi1(S1) ~ pi1(A,a). Combined with hA_Z: pi1(A,a) ~ Z.
            The generator of pi1(A,a) is h_circ*([std_loop]) ~ [alpha].
            phi maps generators to +/-1.\<close>
-        show ?thesis sorry \<comment> \<open>phi([alpha]) = +/-1: alpha is the h_circ-image of the S1 generator.\<close>
+        \<comment> \<open>Key: h_circ*([std_loop]) = [alpha]. Then phi([alpha]) = (phi.h_circ*)([std_loop]) = psi([std_loop]) = +/-1.
+           But psi is arbitrary. Instead: CONSTRUCT phi . h_circ* and apply standard_S1_loop_generates_Z.\<close>
+        \<comment> \<open>h_circ* is a group hom.\<close>
+        have hhc_cont: "top1_continuous_map_on top1_S1 top1_S1_topology ?A ?TA_l h_circ"
+          using hhc unfolding top1_homeomorphism_on_def by (by100 blast)
+        let ?hc_star = "top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1,0) ?A ?TA_l ?a h_circ"
+        \<comment> \<open>h_circ*([std_loop]) = [h_circ . std_loop] = [alpha].\<close>
+        have hhc_star_std: "?hc_star {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0)
+              (\<lambda>s. (cos (2*pi*s), sin (2*pi*s))) g} = ?class_\<alpha>"
+        proof -
+          \<comment> \<open>By definition, induced_on sends [f] to {g. EX f' in [f]. loop_equiv (h_circ . f') g}.\<close>
+          have "?hc_star {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1,0)
+              (\<lambda>s. (cos (2*pi*s), sin (2*pi*s))) g}
+            = {g. top1_loop_equiv_on ?A ?TA_l ?a (h_circ \<circ> (\<lambda>s. (cos (2*pi*s), sin (2*pi*s)))) g}"
+            sorry \<comment> \<open>induced_on class = class of composed loop (standard fact).\<close>
+          \<comment> \<open>(h_circ . std_loop)(t) = h_circ(cos 2pi*t, sin 2pi*t) = alpha(t) for t in I.\<close>
+          also have "\<dots> = ?class_\<alpha>"
+            sorry \<comment> \<open>h_circ . std_loop = alpha pointwise (from hhc_alpha), hence same class.\<close>
+          finally show ?thesis .
+        qed
+        \<comment> \<open>phi . h_circ* : pi1(S1) -> Z is bij + hom.\<close>
+        let ?\<psi>_explicit = "\<phi> \<circ> ?hc_star"
+        have h\<psi>e_bij: "bij_betw ?\<psi>_explicit
+            (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
+            top1_Z_group"
+          sorry \<comment> \<open>Composition of bijections.\<close>
+        have h\<psi>e_hom: "top1_group_hom_on
+            (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
+            (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))
+            top1_Z_group top1_Z_mul ?\<psi>_explicit"
+          sorry \<comment> \<open>Composition of homomorphisms.\<close>
+        from standard_S1_loop_generates_Z[OF h\<psi>e_bij h\<psi>e_hom]
+        have "?\<psi>_explicit {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0)
+              (\<lambda>s. (cos (2*pi*s), sin (2*pi*s))) g} = 1 \<or>
+            ?\<psi>_explicit {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0)
+              (\<lambda>s. (cos (2*pi*s), sin (2*pi*s))) g} = -1" .
+        hence "\<phi> (?hc_star {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0)
+              (\<lambda>s. (cos (2*pi*s), sin (2*pi*s))) g}) = 1 \<or>
+            \<phi> (?hc_star {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0)
+              (\<lambda>s. (cos (2*pi*s), sin (2*pi*s))) g}) = -1"
+          by (by100 simp)
+        thus ?thesis using hhc_star_std by (by100 simp)
       qed
       \<comment> \<open>Step D: The induced map of iota sends [std S1 loop] to [alpha]^n in pi1(A,a).
          The standard S1 loop t -> (cos(2*pi*t), sin(2*pi*t)) composed with iota
