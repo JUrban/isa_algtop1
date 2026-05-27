@@ -152,7 +152,30 @@ proof -
       fix k assume "k < n"
       \<comment> \<open>rot k maps S1 to S1 (rotation preserves norm).\<close>
       have hrot_S1: "rot k ` top1_S1 \<subseteq> top1_S1"
-        unfolding rot_def top1_S1_def sorry
+      proof
+        fix w assume "w \<in> rot k ` top1_S1"
+        then obtain z where hz: "z \<in> top1_S1" "w = rot k z" by (by100 blast)
+        have "fst z ^ 2 + snd z ^ 2 = 1" using hz(1) unfolding top1_S1_def by (by100 simp)
+        have "fst w ^ 2 + snd w ^ 2 = 1"
+        proof -
+          define c where "c = cos (2*pi*real k/real n)"
+          define s where "s = sin (2*pi*real k/real n)"
+          have "fst w = c * fst z - s * snd z" and "snd w = s * fst z + c * snd z"
+            using hz(2) unfolding rot_def c_def s_def by (by100 simp)+
+          hence "fst w ^ 2 + snd w ^ 2
+              = (c * fst z - s * snd z)^2 + (s * fst z + c * snd z)^2" by (by100 simp)
+          also have "\<dots> = c^2 * (fst z)^2 - 2*c*s*(fst z)*(snd z) + s^2*(snd z)^2
+              + s^2*(fst z)^2 + 2*s*c*(fst z)*(snd z) + c^2*(snd z)^2"
+            by (by5000 algebra)
+          also have "\<dots> = (c^2 + s^2) * ((fst z)^2 + (snd z)^2)"
+            by (by5000 algebra)
+          also have "\<dots> = 1 * 1" using sin_cos_squared_add[of "2*pi*real k/real n"]
+              \<open>fst z ^ 2 + snd z ^ 2 = 1\<close> unfolding c_def s_def
+            by (by5000 algebra)
+          finally show ?thesis by (by100 simp)
+        qed
+        thus "w \<in> top1_S1" unfolding top1_S1_def by (by100 simp)
+      qed
       \<comment> \<open>rot k is continuous on S1 (composition of continuous functions).\<close>
       \<comment> \<open>C \<inter> S1 is closed in S1 (C closed in B2, S1 \<subseteq> B2).\<close>
       have hCS1_closed_S1: "closedin_on top1_S1 top1_S1_topology (C \<inter> top1_S1)"
