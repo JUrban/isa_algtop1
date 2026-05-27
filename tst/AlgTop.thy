@@ -7618,7 +7618,7 @@ proof -
      the loop \<iota>\<circ>p wraps n times around A (since q identifies n-fold rotations).
      So [k\<circ>p] = n \<in> Z, and the quotient is Z/\<langle>\<langle>n\<rangle>\<rangle> = Z/nZ.\<close>
   \<comment> \<open>Step 10a: \<pi>_1(A,a)/\<langle>\<langle>[k\<circ>p]\<rangle>\<rangle> \<cong> Z/nZ.\<close>
-  have hquot_ZnZ: "top1_groups_isomorphic_on
+  have hquot_ZnZ_and_pres: "top1_groups_isomorphic_on
       (top1_quotient_group_carrier_on
          (top1_fundamental_group_carrier ?A ?TA ?a)
          (top1_fundamental_group_mul ?A ?TA ?a)
@@ -7632,7 +7632,22 @@ proof -
                {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0)
                      (\<lambda>s. (cos (2 * pi * s), sin (2 * pi * s))) g}}))
       (top1_quotient_group_mul_on (top1_fundamental_group_mul ?A ?TA ?a))
-      (top1_Zn_group n) (top1_Zn_mul n)"
+      (top1_Zn_group n) (top1_Zn_mul n)
+    \<and> (\<exists>e invg. top1_group_presented_by_on
+          (top1_quotient_group_carrier_on
+             (top1_fundamental_group_carrier ?A ?TA ?a)
+             (top1_fundamental_group_mul ?A ?TA ?a)
+             (top1_normal_subgroup_generated_on
+                (top1_fundamental_group_carrier ?A ?TA ?a)
+                (top1_fundamental_group_mul ?A ?TA ?a)
+                (top1_fundamental_group_id ?A ?TA ?a)
+                (top1_fundamental_group_invg ?A ?TA ?a)
+                {top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1, 0)
+                   ?A ?TA ?a \<iota>
+                   {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0)
+                         (\<lambda>s. (cos (2 * pi * s), sin (2 * pi * s))) g}}))
+          (top1_quotient_group_mul_on (top1_fundamental_group_mul ?A ?TA ?a))
+          e invg ({..<1}::nat set) { replicate n (0::nat, True) })"
   proof -
     let ?GA = "top1_fundamental_group_carrier ?A ?TA ?a"
     let ?mulA = "top1_fundamental_group_mul ?A ?TA ?a"
@@ -8898,6 +8913,12 @@ proof -
       moreover have "top1_Z_mul = ((+)::int \<Rightarrow> int \<Rightarrow> int)" unfolding top1_Z_mul_def by (by100 blast)
       ultimately show ?thesis using Z_quotient_nZ_iso[OF hn_ge] by (by100 simp)
     qed
+    \<comment> \<open>Presentation: the quotient Q = pi1(A)/N is presented by \<langle>a | a^n\<rangle>.\<close>
+    have hQ_presented: "\<exists>e invg.
+        top1_group_presented_by_on
+          (top1_quotient_group_carrier_on ?GA ?mulA ?N) (top1_quotient_group_mul_on ?mulA)
+          e invg ({..<1}::nat set) { replicate n (0::nat, True) }"
+      sorry \<comment> \<open>Z free on {0}, quotient proj surjective, kernel = N, relator = a^n.\<close>
     \<comment> \<open>Compose: pi1(A)/N iso Z/phi(N) = Z/nZ iso Z/nZ.\<close>
     have "top1_groups_isomorphic_on
         (top1_quotient_group_carrier_on ?GA ?mulA ?N)
@@ -8906,14 +8927,36 @@ proof -
            (top1_normal_subgroup_generated_on top1_Z_group top1_Z_mul (0::int) uminus {int n}))
         (top1_quotient_group_mul_on top1_Z_mul)"
       using hquot_transfer hphiN_eq by (by100 simp)
-    thus ?thesis by (rule groups_isomorphic_trans_fwd[OF _ hZ_nZ])
+    hence hiso_part: "top1_groups_isomorphic_on
+        (top1_quotient_group_carrier_on ?GA ?mulA ?N) (top1_quotient_group_mul_on ?mulA)
+        (top1_Zn_group n) (top1_Zn_mul n)"
+      by (rule groups_isomorphic_trans_fwd[OF _ hZ_nZ])
+    show ?thesis using hiso_part hQ_presented by (by100 blast)
   qed
   \<comment> \<open>Step 11: Compose: \<pi>_1(X,a) \<cong> \<pi>_1(A,a)/\<langle>\<langle>relator\<rangle>\<rangle> \<cong> Z/nZ.\<close>
   have hmain: "top1_groups_isomorphic_on
       (top1_fundamental_group_carrier X TX ?a)
       (top1_fundamental_group_mul X TX ?a)
       (top1_Zn_group n) (top1_Zn_mul n)"
-    by (rule groups_isomorphic_trans_fwd[OF h72_iso hquot_ZnZ])
+  proof -
+    have hquot_ZnZ: "top1_groups_isomorphic_on
+        (top1_quotient_group_carrier_on
+           (top1_fundamental_group_carrier ?A ?TA ?a)
+           (top1_fundamental_group_mul ?A ?TA ?a)
+           (top1_normal_subgroup_generated_on
+              (top1_fundamental_group_carrier ?A ?TA ?a)
+              (top1_fundamental_group_mul ?A ?TA ?a)
+              (top1_fundamental_group_id ?A ?TA ?a)
+              (top1_fundamental_group_invg ?A ?TA ?a)
+              {top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1, 0)
+                 ?A ?TA ?a \<iota>
+                 {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0)
+                       (\<lambda>s. (cos (2 * pi * s), sin (2 * pi * s))) g}}))
+        (top1_quotient_group_mul_on (top1_fundamental_group_mul ?A ?TA ?a))
+        (top1_Zn_group n) (top1_Zn_mul n)"
+      using hquot_ZnZ_and_pres by (by100 blast)
+    show ?thesis by (rule groups_isomorphic_trans_fwd[OF h72_iso hquot_ZnZ])
+  qed
   \<comment> \<open>Step 12: Base-point change: X is path-connected (continuous surjective image of B²).
      \<pi>_1(X, x0) \<cong> \<pi>_1(X, a) \<cong> Z/nZ.\<close>
   have hX_pc: "top1_path_connected_on X TX"
@@ -8971,8 +9014,16 @@ proof -
         { replicate n (0::nat, True) }
     \<and> top1_groups_isomorphic_on G mul
         (top1_fundamental_group_carrier X TX x0) (top1_fundamental_group_mul X TX x0)"
-    sorry \<comment> \<open>Need: Q presented by \<langle>a|a^n\<rangle> \<and> Q \<cong> \<pi>_1(X,x0).
-       Available: h72_iso, hbc, h\<phi>_iso, Z free, h_relator_val.\<close>
+  \<comment> \<open>Extract the presentation from hquot\_ZnZ\_and\_pres.\<close>
+  \<comment> \<open>Q \<cong> \<pi>_1(X, a) (from h72\_iso, reversed).\<close>
+    \<comment> \<open>h72_iso: \<pi>_1(X,a) \<cong> Q. We need Q \<cong> \<pi>_1(X,a) \<cong> \<pi>_1(X,x0).\<close>
+    \<comment> \<open>hbc: \<pi>_1(X,x0) \<cong> \<pi>_1(X,a). Reverse: \<pi>_1(X,a) \<cong> \<pi>_1(X,x0).\<close>
+    \<comment> \<open>But groups_isomorphic is symmetric per definition (it's \<exists>f. iso_on ...).\<close>
+    \<comment> \<open>Actually h72_iso: iso(pi1(X,a), mulX, Q, mulQ). We need iso(Q, mulQ, pi1(X,x0), mulX).\<close>
+    \<comment> \<open>Step 1: iso(Q, mulQ, pi1(X,a), mulX) from h72_iso by symmetry.\<close>
+    \<comment> \<open>Step 2: iso(pi1(X,a), pi1(X,x0)) from hbc by symmetry.\<close>
+    \<comment> \<open>Step 3: iso(Q, pi1(X,x0)) by transitivity.\<close>
+    using conjunct2[OF hquot_ZnZ_and_pres] sorry
   show ?thesis using hiso_final hpres by (by100 blast)
 qed
 
