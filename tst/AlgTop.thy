@@ -8890,30 +8890,11 @@ proof -
         top1_group_presented_by_on
           (top1_quotient_group_carrier_on ?GA ?mulA ?N) (top1_quotient_group_mul_on ?mulA)
           e invg ({..<1}::nat set) { replicate n (0::nat, True) }"
-    unfolding top1_group_presented_by_on_def
-    \<comment> \<open>Provide e and invg from quotient\_group\_is\_group, then the free group existential.\<close>
-    apply (rule exI[of _ "top1_group_coset_on ?GA ?mulA ?N ?eA"])
-    apply (rule exI[of _ "\<lambda>C. top1_group_coset_on ?GA ?mulA ?N (?invA (SOME g. g \<in> ?GA \<and> C = top1_group_coset_on ?GA ?mulA ?N g))"])
-    apply (intro conjI)
-    apply (rule quotient_group_is_group[OF hgrpA hN_normal])
-    \<comment> \<open>Provide witnesses: F = Z, \<iota> = (const 1), \<pi> = coset \<circ> \<phi>^{-1}.\<close>
-    apply (rule exI[of _ top1_Z_group])
-    apply (rule exI[of _ top1_Z_mul])
-    apply (rule exI[of _ top1_Z_id])
-    apply (rule exI[of _ top1_Z_invg])
-    apply (rule exI[of _ "\<lambda>(_::nat). (1::int)"])
-    apply (rule exI[of _ "\<lambda>z. top1_group_coset_on ?GA ?mulA ?N (inv_into ?GA \<phi> z)"])
-    apply (intro conjI)
-    \<comment> \<open>Z free on {..<1}: rewrite {0::nat} = {..<1} then use Z\_is\_free\_on\_one\_generator.\<close>
-    apply (subgoal_tac "top1_is_free_group_full_on top1_Z_group top1_Z_mul top1_Z_id top1_Z_invg (\<lambda>(_::nat). (1::int)) {..<1::nat}")
-    apply assumption
-    using Z_is_free_on_one_generator apply (by100 simp)
-    \<comment> \<open>hom: \<pi> = coset \<circ> \<phi>^{-1} is hom Z \<rightarrow> Q.\<close>
-    \<comment> \<open>surj: \<pi> surjective (from \<phi> bij + coset surj).\<close>
-    \<comment> \<open>ker: ker(\<pi>) = N(\{word\_product replicate n (0,True)\}).\<close>
-    using quotient_projection_properties[OF hgrpA hN_normal] h\<phi>_iso h_relator_val
-    sorry \<comment> \<open>3 subgoals: hom(\<pi>) + surj(\<pi>) + ker(\<pi>) = N(word a^n).
-       Each requires careful composition of \<phi>^{-1} with coset projection.\<close>
+      sorry \<comment> \<open>Presentation: is\_group Q (quotient\_group\_is\_group) + Z free ({..<1}) +
+         hom(coset \<circ> \<phi>^{-1}) + surj + ker = N(word a^n).
+         All ingredients: hgrpA, hN\_normal, h\<phi>\_iso, h\_relator\_val,
+         quotient\_projection\_properties, Z\_is\_free\_on\_one\_generator,
+         bij\_hom\_inv\_is\_hom, group\_hom\_comp.\<close>
     \<comment> \<open>Compose: pi1(A)/N iso Z/phi(N) = Z/nZ iso Z/nZ.\<close>
     have "top1_groups_isomorphic_on
         (top1_quotient_group_carrier_on ?GA ?mulA ?N)
