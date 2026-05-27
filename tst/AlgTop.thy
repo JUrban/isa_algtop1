@@ -148,7 +148,35 @@ proof -
        Closed in S1 + S1 closed in B2 \<Rightarrow> closed in B2.\<close>
     have hrot_img_closed: "\<And>k. k < n \<Longrightarrow>
         closedin_on top1_B2 top1_B2_topology (rot k ` (C \<inter> top1_S1))"
-      sorry
+    proof -
+      fix k assume "k < n"
+      \<comment> \<open>rot k maps S1 to S1 (rotation preserves norm).\<close>
+      have hrot_S1: "rot k ` top1_S1 \<subseteq> top1_S1"
+        unfolding rot_def top1_S1_def sorry
+      \<comment> \<open>rot k is continuous on S1 (composition of continuous functions).\<close>
+      \<comment> \<open>C \<inter> S1 is closed in S1 (C closed in B2, S1 \<subseteq> B2).\<close>
+      have hCS1_closed_S1: "closedin_on top1_S1 top1_S1_topology (C \<inter> top1_S1)"
+        sorry \<comment> \<open>C closed in B2, S1 \<subseteq> B2, so C \<inter> S1 closed in S1 by Theorem 17.2.\<close>
+      \<comment> \<open>rot k ` (C \<inter> S1) is closed in S1 (continuous image of compact in Hausdorff,
+         or homeomorphism preserves closed).\<close>
+      have "closedin_on top1_S1 top1_S1_topology (rot k ` (C \<inter> top1_S1))"
+        sorry
+      \<comment> \<open>Closed in S1 + S1 closed in B2 \<Rightarrow> closed in B2.\<close>
+      moreover have "closedin_on top1_B2 top1_B2_topology top1_S1"
+        by (rule S1_closed_in_B2)
+      ultimately show "closedin_on top1_B2 top1_B2_topology (rot k ` (C \<inter> top1_S1))"
+      proof -
+        assume hcl_S1: "closedin_on top1_S1 top1_S1_topology (rot k ` (C \<inter> top1_S1))"
+            and hS1_cl: "closedin_on top1_B2 top1_B2_topology top1_S1"
+        have hB2_top: "is_topology_on top1_B2 top1_B2_topology"
+          using hB2_haus unfolding is_hausdorff_on_def by (by100 blast)
+        have "top1_S1_topology = subspace_topology top1_B2 top1_B2_topology top1_S1"
+          sorry \<comment> \<open>S1 topology = subspace of B2 topology.\<close>
+        hence "closedin_on top1_S1 (subspace_topology top1_B2 top1_B2_topology top1_S1)
+            (rot k ` (C \<inter> top1_S1))" using hcl_S1 by (by100 simp)
+        thus ?thesis by (rule Theorem_17_3[OF hB2_top hS1_cl])
+      qed
+    qed
     \<comment> \<open>Step 3: sat is closed (C closed + finite union of closed).\<close>
     have "closedin_on top1_B2 top1_B2_topology sat"
     proof -
