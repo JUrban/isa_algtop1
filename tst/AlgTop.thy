@@ -9038,14 +9038,17 @@ next
         \<or> (fst (?scheme!i) = fst (?scheme!j) \<and>
            (if snd (?scheme!i) = snd (?scheme!j) then s = t else s = 1 - t)))"
   proof -
-    note hfull = quotient_of_scheme_extract_full[OF hscheme]
-    \<comment> \<open>quotient\_of\_scheme\_extract\_full gives all vertex data.\<close>
-    \<comment> \<open>Use quotient\_of\_scheme\_extract\_full (obtains form) to get vertex data.\<close>
-    from quotient_of_scheme_extract_full[OF hscheme]
+    \<comment> \<open>Extract ALL properties from quotient\_of\_scheme\_extract\_full (like torus case).\<close>
     obtain P0 q0 vx0 vy0 where
       hP0: "top1_is_polygonal_region_on P0 (length ?scheme)"
       and hq0: "top1_quotient_map_on P0 (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P0) X TX q0"
+      and hlen0: "length ?scheme \<ge> 3"
       and hverts0: "\<forall>i<length ?scheme. (vx0 i, vy0 i) \<in> P0"
+      and hP0_hull: "P0 = {(x, y) | x y.
+                \<exists>coeffs. (\<forall>i<length ?scheme. coeffs i \<ge> 0)
+                       \<and> (\<Sum>i<length ?scheme. coeffs i) = 1
+                       \<and> x = (\<Sum>i<length ?scheme. coeffs i * vx0 i)
+                       \<and> y = (\<Sum>i<length ?scheme. coeffs i * vy0 i)}"
       and hedge0: "\<forall>i<length ?scheme. \<forall>j<length ?scheme.
           fst (?scheme!i) = fst (?scheme!j) \<longrightarrow>
           (\<forall>t\<in>I_set. q0 ((1-t) * vx0 i + t * vx0 (Suc i mod length ?scheme),
@@ -9055,6 +9058,10 @@ next
                       (1-t) * vy0 j + t * vy0 (Suc j mod length ?scheme))
               else q0 (t * vx0 j + (1-t) * vx0 (Suc j mod length ?scheme),
                       t * vy0 j + (1-t) * vy0 (Suc j mod length ?scheme))))"
+      and hinterior0: "\<forall>p\<in>P0. (\<forall>i<length ?scheme. \<forall>t\<in>I_set.
+            p \<noteq> ((1-t) * vx0 i + t * vx0 (Suc i mod length ?scheme),
+                  (1-t) * vy0 i + t * vy0 (Suc i mod length ?scheme)))
+       \<longrightarrow> (\<forall>p'\<in>P0. q0 p = q0 p' \<longrightarrow> p = p')"
       and hno_extra0: "\<forall>i<length ?scheme. \<forall>j<length ?scheme. \<forall>t\<in>I_set. \<forall>s\<in>I_set.
           q0 ((1-t) * vx0 i + t * vx0 (Suc i mod length ?scheme),
              (1-t) * vy0 i + t * vy0 (Suc i mod length ?scheme))
@@ -9063,7 +9070,7 @@ next
         \<longrightarrow> (i = j \<and> t = s)
           \<or> (fst (?scheme!i) = fst (?scheme!j) \<and>
              (if snd (?scheme!i) = snd (?scheme!j) then s = t else s = 1 - t))"
-      sorry \<comment> \<open>Extraction from quotient_of_scheme_extract_full (requires matching all 9+ obtains clauses).\<close>
+      by (rule quotient_of_scheme_extract_full[OF hscheme])
     \<comment> \<open>Derive vertex identification from hvc and hedge0.\<close>
     have hvert_id0: "\<forall>i<length ?scheme. \<forall>j<length ?scheme.
         q0 (vx0 i, vy0 i) = q0 (vx0 j, vy0 j)"
