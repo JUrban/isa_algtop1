@@ -130,8 +130,72 @@ proof -
      - C \<union> \<Union>k<n. rot_k(C \<inter> S1) on S1 (orbit of C's circle part).
      Both are closed (finite union of rotations of closed sets).\<close>
   have hq_closed: "\<forall>C. closedin_on top1_B2 top1_B2_topology C \<longrightarrow> closedin_on X TX (q ` C)"
-    sorry \<comment> \<open>Saturated closure is closed in B2 (orbit is finite union of rotations).
-       Then quotient map pushes closed to closed.\<close>
+  proof (intro allI impI)
+    fix C assume hC: "closedin_on top1_B2 top1_B2_topology C"
+    have hC_sub: "C \<subseteq> top1_B2" using hC unfolding closedin_on_def by (by100 blast)
+    \<comment> \<open>Define rotation: rot\_k(z) = rotation of z by 2\<pi>k/n.\<close>
+    define rot where "rot k z = (cos (2*pi*real k/real n) * fst z - sin (2*pi*real k/real n) * snd z,
+        sin (2*pi*real k/real n) * fst z + cos (2*pi*real k/real n) * snd z)" for k :: nat and z :: "real \<times> real"
+    \<comment> \<open>Saturation: sat(C) = {z \<in> B2 | q(z) \<in> q(C)} = C \<union> \<Union>k<n. rot k ` (C \<inter> S1).\<close>
+    define sat where "sat = {z \<in> top1_B2. q z \<in> q ` C}"
+    \<comment> \<open>Step 1: sat = C \<union> \<Union>k<n. rot k ` (C \<inter> S1).\<close>
+    have hsat_eq: "sat = C \<union> (\<Union>k\<in>{..<n}. rot k ` (C \<inter> top1_S1))"
+      unfolding sat_def rot_def sorry
+    \<comment> \<open>Step 2: Each rot k ` (C \<inter> S1) is closed in B2.
+       rot k is a homeomorphism S1 \<rightarrow> S1 (rotation).
+       C \<inter> S1 is closed in S1 (intersection of closed sets).
+       Image of closed under homeomorphism is closed.
+       Closed in S1 + S1 closed in B2 \<Rightarrow> closed in B2.\<close>
+    have hrot_img_closed: "\<And>k. k < n \<Longrightarrow>
+        closedin_on top1_B2 top1_B2_topology (rot k ` (C \<inter> top1_S1))"
+      sorry
+    \<comment> \<open>Step 3: sat is closed (C closed + finite union of closed).\<close>
+    have "closedin_on top1_B2 top1_B2_topology sat"
+    proof -
+      have "closedin_on top1_B2 top1_B2_topology (\<Union>k\<in>{..<n}. rot k ` (C \<inter> top1_S1))"
+      proof -
+        have hB2_top: "is_topology_on top1_B2 top1_B2_topology"
+          using hB2_haus unfolding is_hausdorff_on_def by (by100 blast)
+        have hfin: "finite ((\<lambda>k. rot k ` (C \<inter> top1_S1)) ` {..<n})" by (by100 simp)
+        have "\<forall>A\<in>((\<lambda>k. rot k ` (C \<inter> top1_S1)) ` {..<n}). closedin_on top1_B2 top1_B2_topology A"
+          using hrot_img_closed by (by100 blast)
+        from closedin_Union_finite[OF hB2_top hfin this]
+        have "closedin_on top1_B2 top1_B2_topology (\<Union>((\<lambda>k. rot k ` (C \<inter> top1_S1)) ` {..<n}))" .
+        moreover have "\<Union>((\<lambda>k. rot k ` (C \<inter> top1_S1)) ` {..<n}) = (\<Union>k\<in>{..<n}. rot k ` (C \<inter> top1_S1))"
+          by (by100 blast)
+        ultimately show ?thesis by (by100 simp)
+      qed
+      hence "closedin_on top1_B2 top1_B2_topology (C \<union> (\<Union>k\<in>{..<n}. rot k ` (C \<inter> top1_S1)))"
+      proof -
+        assume horbit_cl: "closedin_on top1_B2 top1_B2_topology (\<Union>k\<in>{..<n}. rot k ` (C \<inter> top1_S1))"
+        have hB2_top: "is_topology_on top1_B2 top1_B2_topology"
+          using hB2_haus unfolding is_hausdorff_on_def by (by100 blast)
+        have "finite {C, \<Union>k\<in>{..<n}. rot k ` (C \<inter> top1_S1)}" by (by100 simp)
+        moreover have hall: "\<forall>A\<in>{C, \<Union>k\<in>{..<n}. rot k ` (C \<inter> top1_S1)}.
+            closedin_on top1_B2 top1_B2_topology A"
+          using hC horbit_cl by (by100 blast)
+        from closedin_Union_finite[OF hB2_top calculation hall]
+        have "closedin_on top1_B2 top1_B2_topology (\<Union>{C, \<Union>k\<in>{..<n}. rot k ` (C \<inter> top1_S1)})" .
+        moreover have "\<Union>{C, \<Union>k\<in>{..<n}. rot k ` (C \<inter> top1_S1)}
+            = C \<union> (\<Union>k\<in>{..<n}. rot k ` (C \<inter> top1_S1))" by (by100 blast)
+        ultimately show ?thesis by (by100 simp)
+      qed
+      thus ?thesis using hsat_eq by (by100 simp)
+    qed
+    \<comment> \<open>Step 4: sat is saturated (q\<inverse>(q(C)) = sat by definition).\<close>
+    have "q ` C \<subseteq> X" using hC_sub hq_surj by (by100 blast)
+    moreover have "X - q ` C \<in> TX"
+    proof -
+      have "{z \<in> top1_B2. q z \<in> X - q ` C} = top1_B2 - sat"
+        unfolding sat_def using hq_surj by (by5000 blast)
+      moreover have "top1_B2 - sat \<in> top1_B2_topology"
+        using \<open>closedin_on top1_B2 top1_B2_topology sat\<close> unfolding closedin_on_def by (by100 blast)
+      ultimately have "{z \<in> top1_B2. q z \<in> X - q ` C} \<in> top1_B2_topology" by (by100 simp)
+      moreover have "X - q ` C \<subseteq> X" by (by100 blast)
+      ultimately show ?thesis using hq_quot unfolding top1_quotient_map_on_def by (by100 blast)
+    qed
+    ultimately show "closedin_on X TX (q ` C)" unfolding closedin_on_def by (by100 blast)
+  qed
   \<comment> \<open>With q closed, X is Hausdorff by Lemma 73.3 (Munkres):
      closed quotient map from normal space gives Hausdorff target.\<close>
   show ?thesis
