@@ -564,6 +564,22 @@ proof -
       using hU0_open hV0_open \<open>x \<in> ?U0\<close> \<open>y \<in> ?V0\<close> \<open>?U0 \<inter> ?V0 = {}\<close> by (by100 blast)
   qed
 qed
+text \<open>The 1-skeleton q(S1) of the dunce cap is homeomorphic to S1.
+  This follows from Munkres \<S>73: the map g(t) = q(cos(2\<pi>t/n), sin(2\<pi>t/n))
+  factors through R\_to\_S1 to give a homeomorphism S1 \<rightarrow> q(S1).\<close>
+lemma dunce_cap_skeleton_is_circle:
+  assumes "top1_is_dunce_cap_on X TX n"
+      and "top1_quotient_map_on top1_B2 top1_B2_topology X TX q"
+      and "\<forall>z\<in>top1_S1. \<forall>z'\<in>top1_S1. q z = q z' \<longleftrightarrow>
+            (\<exists>k::nat. k < n \<and>
+               z' = (cos (2*pi*real k/real n) * fst z - sin (2*pi*real k/real n) * snd z,
+                     sin (2*pi*real k/real n) * fst z + cos (2*pi*real k/real n) * snd z))"
+  shows "\<exists>f. top1_homeomorphism_on top1_S1 top1_S1_topology
+      (q ` top1_S1) (subspace_topology X TX (q ` top1_S1)) f"
+  sorry \<comment> \<open>Munkres: q(S1) \<cong> S1.
+     Define g(t) = q(cos(2\<pi>t/n), sin(2\<pi>t/n)). g(0)=g(1)=a.
+     g injective on (0,1). Factor through R\_to\_S1 for homeomorphism.\<close>
+
 text \<open>Helper: the projective scheme has length 2m and its elements are (k, True) for k = i div 2.\<close>
 
 lemma projective_scheme_length:
@@ -825,8 +841,72 @@ proof -
        The map z \<mapsto> z^2 (squaring as complex numbers) gives the homeomorphism.\<close>
     have hA_wedge: "top1_is_wedge_of_circles_on A (subspace_topology X TX A)
         ({..<1}::nat set) x0"
-      sorry \<comment> \<open>A = q(S1) where q identifies antipodal points on S1.
-         S1/Z2 \<cong> S1 via the squaring map. So A is one circle.\<close>
+    proof -
+      let ?TA = "subspace_topology X TX A"
+      \<comment> \<open>A \<cong> S1 (from dunce\_cap\_skeleton\_is\_circle).\<close>
+      have "A = q ` top1_S1" unfolding A_def ..
+      from dunce_cap_skeleton_is_circle[OF hdc hq_quot hq_S1]
+      obtain f where hf_homeo: "top1_homeomorphism_on top1_S1 top1_S1_topology
+          (q ` top1_S1) (subspace_topology X TX (q ` top1_S1)) f" by (by100 blast)
+      hence hf_homeo': "top1_homeomorphism_on top1_S1 top1_S1_topology A ?TA f"
+        unfolding A_def by (by100 simp)
+      \<comment> \<open>A has strict topology (subspace of strict).\<close>
+      have hA_sub: "A \<subseteq> X" using hA_cl unfolding closedin_on_def by (by100 blast)
+      have hA_strict: "is_topology_on_strict A ?TA"
+      proof -
+        have "is_topology_on_strict X TX"
+          using hdc unfolding top1_is_dunce_cap_on_def by (by100 blast)
+        from subspace_topology_is_strict[OF this hA_sub]
+        show ?thesis .
+      qed
+      \<comment> \<open>A is Hausdorff (subspace of Hausdorff X).\<close>
+      have hA_haus: "is_hausdorff_on A ?TA"
+      proof -
+        from conjunct2[OF conjunct2[OF Theorem_17_11]] hX_haus hA_sub
+        show ?thesis by (by100 blast)
+      qed
+      \<comment> \<open>x0 \<in> A: need to show x0 is in the image q(S1).\<close>
+      have hx0_A: "x0 \<in> A"
+        sorry \<comment> \<open>x0 \<in> X = q(B2), so x0 = q(z) for some z. If z \<in> S1, x0 \<in> A. Otherwise need argument.\<close>
+      \<comment> \<open>Build the wedge structure: C(0) = A.\<close>
+      define C :: "nat \<Rightarrow> 'a set" where "C = (\<lambda>_. A)"
+      have "\<forall>a\<in>{..<1::nat}. C a \<subseteq> A \<and> x0 \<in> C a \<and> (\<exists>h. top1_homeomorphism_on top1_S1 top1_S1_topology (C a) ?TA h)"
+        unfolding C_def using hx0_A hf_homeo' by (by100 blast)
+      moreover have "(\<Union>a\<in>{..<1::nat}. C a) = A"
+      proof -
+        have "{..<1::nat} = {0}" by (by100 auto)
+        thus ?thesis unfolding C_def by (by100 simp)
+      qed
+      moreover have "\<forall>a\<in>{..<1::nat}. \<forall>b\<in>{..<1::nat}. a \<noteq> b \<longrightarrow> C a \<inter> C b = {x0}"
+      proof (intro ballI impI)
+        fix a b :: nat assume "a \<in> {..<1}" "b \<in> {..<1}" "a \<noteq> b"
+        hence "a = 0" "b = 0" by (by100 simp)+
+        thus "C a \<inter> C b = {x0}" using \<open>a \<noteq> b\<close> by (by100 simp)
+      qed
+      moreover have "\<forall>D. D \<subseteq> A \<longrightarrow>
+          (closedin_on A ?TA D \<longleftrightarrow> (\<forall>a\<in>{..<1::nat}. closedin_on (C a) ?TA (C a \<inter> D)))"
+      proof -
+        \<comment> \<open>With C(0) = A and {..<1} = {0}, the condition reduces to:
+           D closed in A iff A \<inter> D closed in A. Since D \<subseteq> A, A \<inter> D = D.\<close>
+        have hC0: "C 0 = A" unfolding C_def by (by100 simp)
+        have hone: "{..<1::nat} = {0}" by (by100 auto)
+        show ?thesis
+        proof (intro allI impI iffI ballI)
+          fix D a assume "D \<subseteq> A" "closedin_on A ?TA D" "a \<in> {..<1::nat}"
+          hence "a = 0" by (by100 simp)
+          hence "C a \<inter> D = D" using \<open>D \<subseteq> A\<close> hC0 by (by100 blast)
+          thus "closedin_on (C a) ?TA (C a \<inter> D)" using \<open>closedin_on A ?TA D\<close> \<open>a = 0\<close> hC0 by (by100 simp)
+        next
+          fix D assume "D \<subseteq> A" "\<forall>a\<in>{..<1::nat}. closedin_on (C a) ?TA (C a \<inter> D)"
+          hence "closedin_on (C 0) ?TA (C 0 \<inter> D)" unfolding hone by (by100 simp)
+          have "C 0 \<inter> D = D" using \<open>D \<subseteq> A\<close> hC0 by (by100 blast)
+          thus "closedin_on A ?TA D" using \<open>closedin_on (C 0) ?TA (C 0 \<inter> D)\<close> hC0 \<open>C 0 \<inter> D = D\<close>
+            by (by100 simp)
+        qed
+      qed
+      ultimately show ?thesis unfolding top1_is_wedge_of_circles_on_def
+        using hA_strict hA_haus hx0_A sorry
+    qed
     \<comment> \<open>Step 4: q(S1) \<subseteq> A by definition.\<close>
     have hq_S1_A: "q ` top1_S1 \<subseteq> A" unfolding A_def by (by100 blast)
     \<comment> \<open>Match: {..<m} = {..<1} since m = 1.\<close>
