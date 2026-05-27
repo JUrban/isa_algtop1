@@ -140,12 +140,94 @@ proof -
     show "is_topology_on X TX" by (rule hTX)
   next
     fix x y assume hx: "x \<in> X" and hy: "y \<in> X" and hne: "x \<noteq> y"
-    \<comment> \<open>{x} and {y} are closed in X (q closed \<Rightarrow> X is T1).\<close>
-    have hx_closed: "closedin_on X TX {x}" sorry
-    have hy_closed: "closedin_on X TX {y}" sorry
-    \<comment> \<open>Fibers q\<inverse>({x}), q\<inverse>({y}) are closed in B2 (preimage of closed under continuous).\<close>
-    have hFx_closed: "closedin_on top1_B2 top1_B2_topology {z \<in> top1_B2. q z = x}" sorry
-    have hFy_closed: "closedin_on top1_B2 top1_B2_topology {z \<in> top1_B2. q z = y}" sorry
+    \<comment> \<open>Fibers q\<inverse>({x}), q\<inverse>({y}) are closed in B2 (finite in Hausdorff).\<close>
+    \<comment> \<open>Fibers are finite (at most n+1 points), hence closed in Hausdorff B2.\<close>
+    have hfiber_finite: "\<And>p. p \<in> X \<Longrightarrow> finite {z \<in> top1_B2. q z = p}"
+    proof -
+      fix p assume hp: "p \<in> X"
+      \<comment> \<open>Split fiber into interior and circle parts.\<close>
+      have hS1_sub: "top1_S1 \<subseteq> top1_B2"
+        unfolding top1_S1_def top1_B2_def by (by100 auto)
+      have hsplit: "{z \<in> top1_B2. q z = p} =
+          {z \<in> top1_B2 - top1_S1. q z = p} \<union> {z \<in> top1_S1. q z = p}"
+        using hS1_sub by (by100 blast)
+      \<comment> \<open>Interior part: at most 1 point (q injective on B2 - S1).\<close>
+      have "finite {z \<in> top1_B2 - top1_S1. q z = p}"
+      proof -
+        have "{z \<in> top1_B2 - top1_S1. q z = p} = {z \<in> top1_B2 - top1_S1. q z \<in> {p}}"
+          by (by100 blast)
+        moreover have "finite {z \<in> top1_B2 - top1_S1. q z \<in> {p}}"
+          by (rule finite_inverse_image_gen[OF _ hq_inj]) (by100 simp)
+        ultimately show ?thesis by (by100 simp)
+      qed
+      \<comment> \<open>Circle part: at most n points (orbit under n-fold rotation).\<close>
+      moreover have "finite {z \<in> top1_S1. q z = p}"
+      proof (cases "\<exists>z0 \<in> top1_S1. q z0 = p")
+        case False thus ?thesis sorry
+      next
+        case True
+        then obtain z0 where hz0: "z0 \<in> top1_S1" "q z0 = p" by (by100 blast)
+        \<comment> \<open>Any z \<in> S1 with q(z) = p = q(z0) must be a rotation of z0.\<close>
+        have "{z \<in> top1_S1. q z = p} \<subseteq>
+            (\<lambda>k. (cos (2*pi*real k/real n) * fst z0 - sin (2*pi*real k/real n) * snd z0,
+                  sin (2*pi*real k/real n) * fst z0 + cos (2*pi*real k/real n) * snd z0)) ` {..<n}"
+        proof
+          fix z assume "z \<in> {z \<in> top1_S1. q z = p}"
+          hence "z \<in> top1_S1" "q z = p" by (by100 blast)+
+          hence "q z = q z0" using hz0 by (by100 simp)
+          from hq_S1[rule_format, OF hz0(1) \<open>z \<in> top1_S1\<close>]
+          have "q z0 = q z \<longleftrightarrow> (\<exists>k::nat. k < n \<and>
+              z = (cos (2*pi*real k/real n) * fst z0 - sin (2*pi*real k/real n) * snd z0,
+                   sin (2*pi*real k/real n) * fst z0 + cos (2*pi*real k/real n) * snd z0))"
+            by (by100 simp)
+          with \<open>q z = q z0\<close> show "z \<in> (\<lambda>k. (cos (2*pi*real k/real n) * fst z0 - sin (2*pi*real k/real n) * snd z0,
+              sin (2*pi*real k/real n) * fst z0 + cos (2*pi*real k/real n) * snd z0)) ` {..<n}"
+            by (by5000 force)
+        qed
+        moreover have "finite ((\<lambda>k. (cos (2*pi*real k/real n) * fst z0 - sin (2*pi*real k/real n) * snd z0,
+            sin (2*pi*real k/real n) * fst z0 + cos (2*pi*real k/real n) * snd z0)) ` {..<n})"
+          by (by100 simp)
+        ultimately show ?thesis using finite_subset by (by100 blast)
+      qed
+      ultimately show "finite {z \<in> top1_B2. q z = p}" using hsplit by (by100 simp)
+    qed
+    have hB2_T1: "top1_T1_on top1_B2 top1_B2_topology"
+      by (rule hausdorff_imp_T1_on[OF hB2_haus])
+    have hfiber_closed: "\<And>p. p \<in> X \<Longrightarrow> closedin_on top1_B2 top1_B2_topology {z \<in> top1_B2. q z = p}"
+    proof -
+      fix p assume "p \<in> X"
+      have "{z \<in> top1_B2. q z = p} \<subseteq> top1_B2" by (by100 blast)
+      have "finite {z \<in> top1_B2. q z = p}" by (rule hfiber_finite[OF \<open>p \<in> X\<close>])
+      \<comment> \<open>Finite subset of T1 space is closed.\<close>
+      \<comment> \<open>Finite set = finite union of singletons; each singleton closed in T1; union closed.\<close>
+      have "{z \<in> top1_B2. q z = p} = \<Union>((\<lambda>z. {z}) ` {z \<in> top1_B2. q z = p})"
+        by (by100 blast)
+      moreover have "finite ((\<lambda>z. {z}) ` {z \<in> top1_B2. q z = p})"
+        using \<open>finite {z \<in> top1_B2. q z = p}\<close> by (by100 simp)
+      moreover have "\<forall>A\<in>((\<lambda>z. {z}) ` {z \<in> top1_B2. q z = p}).
+          closedin_on top1_B2 top1_B2_topology A"
+      proof (intro ballI)
+        fix A assume "A \<in> (\<lambda>z. {z}) ` {z \<in> top1_B2. q z = p}"
+        then obtain z where "z \<in> top1_B2" "A = {z}" by (by100 blast)
+        thus "closedin_on top1_B2 top1_B2_topology A"
+          using hB2_T1 unfolding top1_T1_on_def by (by100 blast)
+      qed
+      moreover have "is_topology_on top1_B2 top1_B2_topology"
+        using hB2_haus unfolding is_hausdorff_on_def by (by100 blast)
+      ultimately show "closedin_on top1_B2 top1_B2_topology {z \<in> top1_B2. q z = p}"
+      proof -
+        assume heq: "{z \<in> top1_B2. q z = p} = \<Union>((\<lambda>z. {z}) ` {z \<in> top1_B2. q z = p})"
+            and hfin: "finite ((\<lambda>z. {z}) ` {z \<in> top1_B2. q z = p})"
+            and hall: "\<forall>A\<in>((\<lambda>z. {z}) ` {z \<in> top1_B2. q z = p}). closedin_on top1_B2 top1_B2_topology A"
+            and htop: "is_topology_on top1_B2 top1_B2_topology"
+        from closedin_Union_finite[OF htop hfin hall]
+        show ?thesis using heq by (by100 simp)
+      qed
+    qed
+    have hFx_closed: "closedin_on top1_B2 top1_B2_topology {z \<in> top1_B2. q z = x}"
+      by (rule hfiber_closed[OF hx])
+    have hFy_closed: "closedin_on top1_B2 top1_B2_topology {z \<in> top1_B2. q z = y}"
+      by (rule hfiber_closed[OF hy])
     have hF_disj: "{z \<in> top1_B2. q z = x} \<inter> {z \<in> top1_B2. q z = y} = {}"
       using hne by (by100 blast)
     \<comment> \<open>By normality: separate fibers, push forward through quotient.\<close>
