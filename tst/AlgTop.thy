@@ -5993,7 +5993,9 @@ proof -
      Book: h maps arc C from (1,0) to r(1,0) onto A, injective except at endpoints.
      The quotient of S¹ by n-fold rotation is again a circle.\<close>
   have hA_circle: "\<exists>f. top1_homeomorphism_on top1_S1 top1_S1_topology
-           ?A (subspace_topology X TX ?A) f"
+           ?A (subspace_topology X TX ?A) f
+         \<and> f (1, 0) = ?a
+         \<and> (\<forall>t\<in>top1_unit_interval. f (top1_R_to_S1 t) = q (cos (2*pi*t/real n), sin (2*pi*t/real n)))"
   proof -
     \<comment> \<open>Book: q maps arc C from (1,0) to r(1,0) onto A, injective except at endpoints.
        Proof: define g: [0,1] \<rightarrow> A by g(t) = q(cos(2\<pi>t/n), sin(2\<pi>t/n)).
@@ -6593,9 +6595,17 @@ proof -
       thus ?thesis unfolding top1_S1_topology_def
         by (rule subspace_topology_is_topology_on) (by100 simp)
     qed
-    have "top1_homeomorphism_on top1_S1 top1_S1_topology ?A ?TA \<phi>"
+    have hhomeo: "top1_homeomorphism_on top1_S1 top1_S1_topology ?A ?TA \<phi>"
       by (rule Theorem_26_6[OF hTS1 hTA_top S1_compact hA_haus h\<phi>_cont h\<phi>_bij])
-    thus ?thesis by (by100 blast)
+    moreover have "\<phi> (1, 0) = ?a"
+    proof -
+      have "(0::real) \<in> top1_unit_interval" unfolding top1_unit_interval_def by (by100 auto)
+      hence "\<phi> (top1_R_to_S1 0) = ?g 0" using h\<phi>_eq by (by100 blast)
+      thus ?thesis unfolding top1_R_to_S1_def by (by100 simp)
+    qed
+    moreover have "\<forall>t\<in>top1_unit_interval. \<phi> (top1_R_to_S1 t) = q (cos (2*pi*t/real n), sin (2*pi*t/real n))"
+      using h\<phi>_eq by (by100 blast)
+    ultimately show ?thesis by (by100 blast)
   qed
   \<comment> \<open>Step 5: q restricted to Int(B²) = B² - S¹ is a homeomorphism onto X - A.
      Proof: B² - S¹ is open and saturated in B², so by Thm 22.1 the restriction
@@ -6950,7 +6960,100 @@ proof -
       \<comment> \<open>Step C: The class of alpha generates pi1(A,a), i.e. phi([alpha]) = +/-1.\<close>
       let ?class_\<alpha> = "{g. top1_loop_equiv_on ?A ?TA ?a ?\<alpha> g}"
       have h\<alpha>_gen: "\<phi> ?class_\<alpha> = 1 \<or> \<phi> ?class_\<alpha> = -1"
-        sorry \<comment> \<open>Alpha generates pi1(A,a): homeomorphism S1->A sends std loop to alpha, hence alpha is generator. Phi([alpha]) = +/-1.\<close>
+      proof -
+        \<comment> \<open>Get the specific homeomorphism that sends std_loop to alpha.\<close>
+        let ?TA_l = "subspace_topology X TX ?A"
+        obtain h_circ where hhc: "top1_homeomorphism_on top1_S1 top1_S1_topology ?A ?TA_l h_circ"
+            and hhc_10: "h_circ (1, 0) = ?a"
+            and hhc_eq: "\<forall>t\<in>top1_unit_interval. h_circ (top1_R_to_S1 t) = q (cos (2*pi*t/real n), sin (2*pi*t/real n))"
+          using hA_circle by (by100 blast)
+        \<comment> \<open>h_circ . std_loop = alpha on [0,1].\<close>
+        have hhc_alpha: "\<forall>t\<in>top1_unit_interval. h_circ (cos (2*pi*t), sin (2*pi*t)) = ?\<alpha> t"
+        proof (intro ballI)
+          fix t assume ht: "t \<in> top1_unit_interval"
+          have "h_circ (cos (2*pi*t), sin (2*pi*t)) = h_circ (top1_R_to_S1 t)"
+            unfolding top1_R_to_S1_def by (by100 simp)
+          also have "\<dots> = q (cos (2*pi*t/real n), sin (2*pi*t/real n))"
+            using hhc_eq ht by (by100 blast)
+          also have "\<dots> = \<iota> (cos (2*pi*t/real n), sin (2*pi*t/real n))"
+          proof -
+            have "(cos (2*pi*t/real n), sin (2*pi*t/real n)) \<in> top1_S1"
+              unfolding top1_S1_def by (by100 auto)
+            thus ?thesis using h\<iota>_eq by (by100 metis)
+          qed
+          finally show "h_circ (cos (2*pi*t), sin (2*pi*t)) = ?\<alpha> t" by (by100 simp)
+        qed
+        \<comment> \<open>h_circ induces iso pi1(S1, (1,0)) -> pi1(A, a) since h_circ(1,0) = a.\<close>
+        have hS1_top_l: "is_topology_on top1_S1 top1_S1_topology"
+          using top1_S1_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
+        have hTA_l: "is_topology_on ?A ?TA_l"
+          by (rule subspace_topology_is_topology_on[OF hTX hA_sub])
+        \<comment> \<open>The induced iso sends [std_loop] to [h_circ . std_loop] = [alpha].\<close>
+        \<comment> \<open>Compose phi . (h_circ)*: pi1(S1) -> Z. This is an iso sending [std_loop] to phi([alpha]).\<close>
+        \<comment> \<open>By standard_S1_loop_generates_Z: any iso pi1(S1) -> Z maps [std_loop] to +/-1.\<close>
+        \<comment> \<open>h_circ induces iso pi1(S1,(1,0)) -> pi1(A,a) with base point h_circ(1,0)=a.\<close>
+        have hiso_hc: "top1_groups_isomorphic_on
+            (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
+            (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))
+            (top1_fundamental_group_carrier ?A ?TA_l ?a)
+            (top1_fundamental_group_mul ?A ?TA_l ?a)"
+        proof -
+          have "top1_groups_isomorphic_on
+              (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
+              (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))
+              (top1_fundamental_group_carrier ?A ?TA_l (h_circ (1, 0)))
+              (top1_fundamental_group_mul ?A ?TA_l (h_circ (1, 0)))"
+            by (rule Corollary_52_5_homeomorphism_iso[OF hS1_top_l hTA_l hhc h10_S1]) (by100 simp)
+          thus ?thesis using hhc_10 by (by100 simp)
+        qed
+        \<comment> \<open>Compose with hA_Z to get iso pi1(S1) -> Z.\<close>
+        have hcomposed_iso: "top1_groups_isomorphic_on
+            (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
+            (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))
+            top1_Z_group top1_Z_mul"
+          by (rule groups_isomorphic_trans_fwd[OF hiso_hc hA_Z])
+        \<comment> \<open>Extract explicit iso psi from the composed iso.\<close>
+        obtain \<psi> where h\<psi>: "bij_betw \<psi>
+            (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0)) top1_Z_group"
+            and h\<psi>_hom: "top1_group_hom_on
+                (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
+                (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))
+                top1_Z_group top1_Z_mul \<psi>"
+            and h\<psi>_std: "\<psi> {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0)
+                  (\<lambda>s. (cos (2*pi*s), sin (2*pi*s))) g} = 1 \<or>
+                \<psi> {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0)
+                  (\<lambda>s. (cos (2*pi*s), sin (2*pi*s))) g} = -1"
+        proof -
+          from hcomposed_iso obtain f where
+            hf: "top1_group_iso_on
+                (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
+                (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))
+                top1_Z_group top1_Z_mul f"
+            unfolding top1_groups_isomorphic_on_def by (by100 blast)
+          have hf_bij: "bij_betw f (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0)) top1_Z_group"
+            using hf unfolding top1_group_iso_on_def by (by100 blast)
+          have hf_hom: "top1_group_hom_on
+              (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
+              (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))
+              top1_Z_group top1_Z_mul f"
+            using hf unfolding top1_group_iso_on_def by (by100 blast)
+          from standard_S1_loop_generates_Z[OF hf_bij hf_hom]
+          show ?thesis using that[OF hf_bij hf_hom] by (by100 blast)
+        qed
+        \<comment> \<open>Need: psi([std_loop]) = phi([alpha]).
+           Both psi and phi are isos to Z. The composed iso pi1(S1)->pi1(A)->Z has
+           psi = phi . h_circ*. Since h_circ* sends [std_loop] to [h_circ.std_loop] = [alpha],
+           we get psi([std_loop]) = phi([alpha]).
+           But psi is an arbitrary iso from the existential, not the specific composition.
+           However, standard_S1_loop_generates_Z tells us ANY iso sends [std_loop] to +/-1.\<close>
+        \<comment> \<open>Actually we don't need psi = phi . h_circ*. We just need phi([alpha]) = +/-1.
+           Direct: phi is an iso pi1(A,a)->Z. [alpha] generates pi1(A,a) because h_circ sends
+           the generator of pi1(S1) to [alpha]. Under any iso to Z, a generator maps to +/-1.\<close>
+        \<comment> \<open>More precisely: hiso_hc gives pi1(S1) ~ pi1(A,a). Combined with hA_Z: pi1(A,a) ~ Z.
+           The generator of pi1(A,a) is h_circ*([std_loop]) ~ [alpha].
+           phi maps generators to +/-1.\<close>
+        show ?thesis sorry \<comment> \<open>phi([alpha]) = +/-1: alpha is the h_circ-image of the S1 generator.\<close>
+      qed
       \<comment> \<open>Step D: The induced map of iota sends [std S1 loop] to [alpha]^n in pi1(A,a).
          The standard S1 loop t -> (cos(2*pi*t), sin(2*pi*t)) composed with iota
          gives t -> iota(cos(2*pi*t), sin(2*pi*t)) which equals alpha composed n times
