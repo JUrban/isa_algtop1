@@ -2,6 +2,289 @@ theory AlgTop
   imports "AlgTopChain.AlgTopChain"
 begin
 
+text \<open>Standard topology facts: B2 compact, S1 closed in B2.\<close>
+
+lemma B2_compact: "top1_compact_on top1_B2 top1_B2_topology"
+proof -
+  have hB2_sub: "top1_B2 \<subseteq> {-1..1} \<times> {-1..1::real}"
+  proof
+    fix p :: "real \<times> real" assume "p \<in> top1_B2"
+    hence h: "fst p ^ 2 + snd p ^ 2 \<le> 1" unfolding top1_B2_def by (by100 simp)
+    have "0 \<le> snd p ^ 2" by (by100 simp)
+    hence "fst p ^ 2 \<le> 1" using h by (by100 linarith)
+    hence "\<bar>fst p\<bar> \<le> 1" using power2_le_imp_le[of "\<bar>fst p\<bar>" 1] by (by100 simp)
+    moreover have "0 \<le> fst p ^ 2" by (by100 simp)
+    moreover have "snd p ^ 2 \<le> 1" using h calculation by (by100 linarith)
+    hence "\<bar>snd p\<bar> \<le> 1" using power2_le_imp_le[of "\<bar>snd p\<bar>" 1] by (by100 simp)
+    hence "- 1 \<le> snd p \<and> snd p \<le> 1" by (by100 linarith)
+    moreover from \<open>\<bar>fst p\<bar> \<le> 1\<close> have "- 1 \<le> fst p \<and> fst p \<le> 1" by (by100 linarith)
+    ultimately have "fst p \<in> {-1..1} \<and> snd p \<in> {-1..1}" by (by100 simp)
+    thus "p \<in> {-1..1} \<times> {-1..1}" by (simp add: mem_Times_iff)
+  qed
+  have "closed top1_B2"
+  proof -
+    have "top1_B2 = (\<lambda>p::real\<times>real. fst p ^ 2 + snd p ^ 2) -` {..1}"
+      unfolding top1_B2_def by (by100 auto)
+    moreover have "continuous_on UNIV (\<lambda>p::real\<times>real. fst p ^ 2 + snd p ^ 2)"
+      by (intro continuous_intros)
+    hence "closed ((\<lambda>p::real\<times>real. fst p ^ 2 + snd p ^ 2) -` {..1})"
+      by (intro closed_vimage closed_atMost) (simp add: continuous_on_eq_continuous_at open_UNIV)
+    ultimately show ?thesis by (by100 simp)
+  qed
+  hence "compact top1_B2"
+    using closed_subset_compact[OF compact_Icc_Times _ hB2_sub] by (by100 blast)
+  have "top1_B2_topology = subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) top1_B2"
+    unfolding top1_B2_topology_def ..
+  hence "top1_B2_topology = subspace_topology (UNIV::((real\<times>real) set)) (top1_open_sets::((real\<times>real) set set)) top1_B2"
+    using product_topology_on_open_sets[where 'a=real and 'b=real] by simp
+  hence "top1_compact_on top1_B2 top1_B2_topology \<longleftrightarrow> compact top1_B2"
+    using top1_compact_on_subspace_UNIV_iff_compact[of top1_B2] by simp
+  thus ?thesis using \<open>compact top1_B2\<close> by (by100 simp)
+qed
+
+lemma S1_closed_in_B2: "closedin_on top1_B2 top1_B2_topology top1_S1"
+proof -
+  have hS1_sub_B2: "top1_S1 \<subseteq> top1_B2"
+    unfolding top1_S1_def top1_B2_def by (by100 auto)
+  show ?thesis
+  proof (rule closedin_intro[OF hS1_sub_B2])
+    have hopen_disk: "open {z::real\<times>real. (fst z)^2 + (snd z)^2 < 1}"
+    proof -
+      have hcont_nsq: "continuous_on UNIV (\<lambda>z::real\<times>real. (fst z)^2 + (snd z)^2)"
+        by (intro continuous_intros)
+      have hopen_lt1: "open ({..<1}::real set)" by (by100 simp)
+      have heq: "{z::real\<times>real. (fst z)^2 + (snd z)^2 < 1}
+          = (\<lambda>z. (fst z)^2 + (snd z)^2) -` {..<1::real} \<inter> UNIV"
+        by (by100 auto)
+      have "open ((\<lambda>z::real\<times>real. (fst z)^2 + (snd z)^2) -` {..<1::real} \<inter> UNIV)"
+        using continuous_on_open_vimage[of "UNIV::((real\<times>real) set)"
+              "\<lambda>z. (fst z)^2 + (snd z)^2"] hcont_nsq hopen_lt1
+        by (by5000 auto)
+      thus ?thesis using heq by (by100 simp)
+    qed
+    have hdisk_in_PT: "{z::real\<times>real. (fst z)^2 + (snd z)^2 < 1}
+        \<in> product_topology_on top1_open_sets top1_open_sets"
+      using hopen_disk product_topology_on_open_sets_real2 unfolding top1_open_sets_def
+      by (by100 blast)
+    have hdiff_eq: "top1_B2 - top1_S1 = top1_B2 \<inter> {z. (fst z)^2 + (snd z)^2 < 1}"
+      unfolding top1_B2_def top1_S1_def by (by100 auto)
+    show "top1_B2 - top1_S1 \<in> top1_B2_topology"
+      unfolding top1_B2_topology_def subspace_topology_def
+      using hdisk_in_PT hdiff_eq by (by100 blast)
+  qed
+qed
+
+text \<open>Helper: the projective scheme has length 2m and its elements are (k, True) for k = i div 2.\<close>
+
+lemma projective_scheme_length:
+  "length (top1_m_projective_scheme m) = 2 * m"
+  unfolding top1_m_projective_scheme_def by (induction m, simp, simp)
+
+lemma projective_scheme_nth:
+  assumes "i < 2 * m"
+  shows "top1_m_projective_scheme m ! i = (i div 2, True)"
+  using assms
+proof (induction m arbitrary: i)
+  case 0 thus ?case by (by100 simp)
+next
+  case (Suc m)
+  show ?case
+  proof (cases "i < 2 * m")
+    case True
+    hence IH: "top1_m_projective_scheme m ! i = (i div 2, True)" using Suc.IH by (by100 blast)
+    have hlen_m: "length (top1_m_projective_scheme m) = 2 * m"
+      by (rule projective_scheme_length)
+    have "top1_m_projective_scheme (Suc m) = top1_m_projective_scheme m @ [(m, True), (m, True)]"
+      unfolding top1_m_projective_scheme_def by (by100 simp)
+    have "i < length (top1_m_projective_scheme m)"
+      using True hlen_m by (by100 simp)
+    hence "top1_m_projective_scheme (Suc m) ! i = top1_m_projective_scheme m ! i"
+      using \<open>top1_m_projective_scheme (Suc m) = top1_m_projective_scheme m @ [(m, True), (m, True)]\<close>
+        \<open>i < length (top1_m_projective_scheme m)\<close>
+    proof -
+      have "(top1_m_projective_scheme m @ [(m, True), (m, True)]) ! i = top1_m_projective_scheme m ! i"
+        using \<open>i < length (top1_m_projective_scheme m)\<close> by (simp add: nth_append)
+      thus ?thesis
+        using \<open>top1_m_projective_scheme (Suc m) = top1_m_projective_scheme m @ [(m, True), (m, True)]\<close>
+        by (by100 simp)
+    qed
+    thus ?thesis using IH by (by100 simp)
+  next
+    case False
+    hence hi: "i = 2*m \<or> i = 2*m+1" using Suc.prems by (by100 auto)
+    show ?thesis
+    proof (cases "i = 2*m")
+      case True
+      have happ: "top1_m_projective_scheme (Suc m) = top1_m_projective_scheme m @ [(m, True), (m, True)]"
+        unfolding top1_m_projective_scheme_def by (by100 simp)
+      have hlen_m: "length (top1_m_projective_scheme m) = 2 * m"
+        by (rule projective_scheme_length)
+      have "top1_m_projective_scheme (Suc m) ! (2*m) = [(m, True), (m, True)] ! 0"
+        unfolding happ using hlen_m by (simp add: nth_append)
+      hence "top1_m_projective_scheme (Suc m) ! (2*m) = (m, True)" by (by100 simp)
+      thus ?thesis using True by (by100 simp)
+    next
+      case False
+      hence hi2: "i = 2*m+1" using hi by (by100 blast)
+      have happ: "top1_m_projective_scheme (Suc m) = top1_m_projective_scheme m @ [(m, True), (m, True)]"
+        unfolding top1_m_projective_scheme_def by (by100 simp)
+      have hlen_m: "length (top1_m_projective_scheme m) = 2 * m"
+        by (rule projective_scheme_length)
+      have "top1_m_projective_scheme (Suc m) ! (2*m+1) = [(m, True), (m, True)] ! 1"
+        unfolding happ using hlen_m by (simp add: nth_append)
+      hence "top1_m_projective_scheme (Suc m) ! (2*m+1) = (m, True)" by (by100 simp)
+      thus ?thesis using hi2 by (by100 simp)
+    qed
+  qed
+qed
+
+lemma projective_scheme_vertex_connectivity:
+  assumes "m \<ge> 2"
+  shows "\<forall>(q::real\<times>real\<Rightarrow>'b) (vx::nat\<Rightarrow>real) (vy::nat\<Rightarrow>real).
+      (\<forall>i<length (top1_m_projective_scheme m). \<forall>j<length (top1_m_projective_scheme m).
+        fst ((top1_m_projective_scheme m)!i) = fst ((top1_m_projective_scheme m)!j) \<longrightarrow>
+        (\<forall>t\<in>I_set. q ((1-t) * vx i + t * vx (Suc i mod length (top1_m_projective_scheme m)),
+           (1-t) * vy i + t * vy (Suc i mod length (top1_m_projective_scheme m)))
+         = (if snd ((top1_m_projective_scheme m)!i) = snd ((top1_m_projective_scheme m)!j)
+            then q ((1-t) * vx j + t * vx (Suc j mod length (top1_m_projective_scheme m)),
+                    (1-t) * vy j + t * vy (Suc j mod length (top1_m_projective_scheme m)))
+            else q (t * vx j + (1-t) * vx (Suc j mod length (top1_m_projective_scheme m)),
+                    t * vy j + (1-t) * vy (Suc j mod length (top1_m_projective_scheme m))))))
+      \<longrightarrow> (\<forall>i<length (top1_m_projective_scheme m). \<forall>j<length (top1_m_projective_scheme m).
+            q (vx i, vy i) = q (vx j, vy j))"
+proof -
+  \<comment> \<open>For any q, vx, vy satisfying the edge identifications, all vertices are equal.\<close>
+  {
+    fix q :: "real \<times> real \<Rightarrow> 'b" and vx vy :: "nat \<Rightarrow> real"
+    let ?scheme = "top1_m_projective_scheme m"
+    let ?n = "length ?scheme"
+    assume hedge: "\<forall>i<?n. \<forall>j<?n.
+        fst (?scheme!i) = fst (?scheme!j) \<longrightarrow>
+        (\<forall>t\<in>I_set. q ((1-t) * vx i + t * vx (Suc i mod ?n),
+           (1-t) * vy i + t * vy (Suc i mod ?n))
+         = (if snd (?scheme!i) = snd (?scheme!j)
+            then q ((1-t) * vx j + t * vx (Suc j mod ?n),
+                    (1-t) * vy j + t * vy (Suc j mod ?n))
+            else q (t * vx j + (1-t) * vx (Suc j mod ?n),
+                    t * vy j + (1-t) * vy (Suc j mod ?n))))"
+    have hlen: "?n = 2 * m" by (rule projective_scheme_length)
+  have h0_I: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+  \<comment> \<open>Key: edges 2k and 2k+1 share label k, both True direction.
+     At t=0: q(vx(2k), vy(2k)) = q(vx(2k+1), vy(2k+1)).
+     Chaining adjacent pairs: all vertices equal.\<close>
+  have hadjacent: "\<forall>i<?n. q (vx i, vy i) = q (vx (Suc i mod ?n), vy (Suc i mod ?n))"
+  proof (intro allI impI)
+    fix i assume hi: "i < ?n"
+    define k where "k = i div 2"
+    have hk: "k < m" using hi hlen k_def by (by100 simp)
+    have h2k: "2*k < ?n" using hk hlen by (by100 simp)
+    have h2k1: "2*k+1 < ?n" using hk hlen by (by100 simp)
+    \<comment> \<open>Both edges 2k and 2k+1 have the same label and direction.\<close>
+    have hsch_2k: "?scheme!(2*k) = (k, True)" using projective_scheme_nth h2k hlen by (by100 simp)
+    have hsch_2k1: "?scheme!(2*k+1) = (k, True)" using projective_scheme_nth h2k1 hlen by (by100 simp)
+    have hlabel_eq: "fst (?scheme!(2*k)) = fst (?scheme!(2*k+1))"
+      using hsch_2k hsch_2k1 by (by100 simp)
+    have hdir_eq: "snd (?scheme!(2*k)) = snd (?scheme!(2*k+1))"
+      using hsch_2k hsch_2k1 by (by100 simp)
+    \<comment> \<open>From hedge with same label and same direction at t=0:
+       q(vx(2k), vy(2k)) = q(vx(2k+1), vy(2k+1)).\<close>
+    have hedge_inst: "q ((1-0) * vx (2*k) + 0 * vx (Suc (2*k) mod ?n),
+           (1-0) * vy (2*k) + 0 * vy (Suc (2*k) mod ?n))
+       = q ((1-0) * vx (2*k+1) + 0 * vx (Suc (2*k+1) mod ?n),
+            (1-0) * vy (2*k+1) + 0 * vy (Suc (2*k+1) mod ?n))"
+    proof -
+      from hedge have
+        "\<forall>t\<in>I_set. q ((1-t) * vx (2*k) + t * vx (Suc (2*k) mod ?n),
+           (1-t) * vy (2*k) + t * vy (Suc (2*k) mod ?n))
+         = (if snd (?scheme!(2*k)) = snd (?scheme!(2*k+1))
+            then q ((1-t) * vx (2*k+1) + t * vx (Suc (2*k+1) mod ?n),
+                    (1-t) * vy (2*k+1) + t * vy (Suc (2*k+1) mod ?n))
+            else q (t * vx (2*k+1) + (1-t) * vx (Suc (2*k+1) mod ?n),
+                    t * vy (2*k+1) + (1-t) * vy (Suc (2*k+1) mod ?n)))"
+        using h2k h2k1 hlabel_eq by (by100 blast)
+      hence "q ((1-0) * vx (2*k) + 0 * vx (Suc (2*k) mod ?n),
+           (1-0) * vy (2*k) + 0 * vy (Suc (2*k) mod ?n))
+         = (if snd (?scheme!(2*k)) = snd (?scheme!(2*k+1))
+            then q ((1-0) * vx (2*k+1) + 0 * vx (Suc (2*k+1) mod ?n),
+                    (1-0) * vy (2*k+1) + 0 * vy (Suc (2*k+1) mod ?n))
+            else q (0 * vx (2*k+1) + (1-0) * vx (Suc (2*k+1) mod ?n),
+                    0 * vy (2*k+1) + (1-0) * vy (Suc (2*k+1) mod ?n)))"
+        using h0_I by (by100 blast)
+      thus ?thesis using hdir_eq by (by100 simp)
+    qed
+    have hv_eq: "q (vx (2*k), vy (2*k)) = q (vx (2*k+1), vy (2*k+1))"
+      using hedge_inst by (by100 simp)
+    \<comment> \<open>Similarly at t=1: q(vx(Suc(2k) mod n), vy(...)) = q(vx(Suc(2k+1) mod n), vy(...)).\<close>
+    have hSuc_2k: "Suc (2*k) mod ?n = 2*k+1" using h2k1 hlen by (by100 simp)
+    show "q (vx i, vy i) = q (vx (Suc i mod ?n), vy (Suc i mod ?n))"
+    proof (cases "i mod 2 = 0")
+      case True
+      hence "i = 2*k" using k_def by (by5000 auto)
+      thus ?thesis using hv_eq hSuc_2k by (by100 simp)
+    next
+      case False
+      hence "i mod 2 = 1" by (by100 simp)
+      hence "i = 2*k+1" using k_def
+        by (by5000 presburger)
+      \<comment> \<open>From hedge at t=1 on (2k, 2k+1):
+         q(vx(Suc 2k mod n), ...) = q(vx(Suc(2k+1) mod n), ...).
+         I.e., q(vx(2k+1), ...) = q(vx(2k+2 mod n), ...).\<close>
+      have h1_I: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+      have hedge_2k_2k1: "\<forall>t\<in>I_set. q ((1-t) * vx (2*k) + t * vx (Suc (2*k) mod ?n),
+           (1-t) * vy (2*k) + t * vy (Suc (2*k) mod ?n))
+         = q ((1-t) * vx (2*k+1) + t * vx (Suc (2*k+1) mod ?n),
+              (1-t) * vy (2*k+1) + t * vy (Suc (2*k+1) mod ?n))"
+      proof -
+        from hedge h2k h2k1 hlabel_eq
+        have h_raw: "\<forall>t\<in>I_set. q ((1-t) * vx (2*k) + t * vx (Suc (2*k) mod ?n),
+           (1-t) * vy (2*k) + t * vy (Suc (2*k) mod ?n))
+         = (if snd (?scheme!(2*k)) = snd (?scheme!(2*k+1))
+            then q ((1-t) * vx (2*k+1) + t * vx (Suc (2*k+1) mod ?n),
+                    (1-t) * vy (2*k+1) + t * vy (Suc (2*k+1) mod ?n))
+            else q (t * vx (2*k+1) + (1-t) * vx (Suc (2*k+1) mod ?n),
+                    t * vy (2*k+1) + (1-t) * vy (Suc (2*k+1) mod ?n)))"
+          by (by5000 blast)
+        thus ?thesis using hdir_eq by (by100 simp)
+      qed
+      hence "q ((1-1) * vx (2*k) + 1 * vx (Suc (2*k) mod ?n),
+           (1-1) * vy (2*k) + 1 * vy (Suc (2*k) mod ?n))
+         = q ((1-1) * vx (2*k+1) + 1 * vx (Suc (2*k+1) mod ?n),
+              (1-1) * vy (2*k+1) + 1 * vy (Suc (2*k+1) mod ?n))"
+        using h1_I by (by100 blast)
+      hence "q (vx (Suc (2*k) mod ?n), vy (Suc (2*k) mod ?n))
+         = q (vx (Suc (2*k+1) mod ?n), vy (Suc (2*k+1) mod ?n))"
+        by (by100 simp)
+      hence "q (vx (2*k+1), vy (2*k+1)) = q (vx (Suc (2*k+1) mod ?n), vy (Suc (2*k+1) mod ?n))"
+        using hSuc_2k by (by100 simp)
+      thus ?thesis using \<open>i = 2*k+1\<close> by (by100 simp)
+    qed
+  qed
+  \<comment> \<open>Chain adjacent equalities to get all vertices equal.\<close>
+    have hchain: "\<And>k. k < ?n \<Longrightarrow> q (vx 0, vy 0) = q (vx k, vy k)"
+    proof -
+      fix k show "k < ?n \<Longrightarrow> q (vx 0, vy 0) = q (vx k, vy k)"
+      proof (induction k)
+        case 0 thus ?case by (by100 simp)
+      next
+        case (Suc k)
+        have "k < ?n" using Suc.prems by (by100 simp)
+        hence IH: "q (vx 0, vy 0) = q (vx k, vy k)" using Suc.IH by (by100 blast)
+        have "q (vx k, vy k) = q (vx (Suc k mod ?n), vy (Suc k mod ?n))"
+          using hadjacent \<open>k < ?n\<close> by (by100 blast)
+        moreover have "Suc k mod ?n = Suc k" using Suc.prems by (by100 simp)
+        ultimately show ?case using IH by (by100 simp)
+      qed
+    qed
+    have "\<forall>i<?n. \<forall>j<?n. q (vx i, vy i) = q (vx j, vy j)"
+    proof (intro allI impI)
+      fix i j assume "i < ?n" "j < ?n"
+      from hchain[OF \<open>i < ?n\<close>] hchain[OF \<open>j < ?n\<close>]
+      show "q (vx i, vy i) = q (vx j, vy j)" by (by100 simp)
+    qed
+  }
+  thus ?thesis by (by100 blast)
+qed
+
 lemma m_projective_scheme_CW_data:
   assumes "top1_is_m_fold_projective_on X TX m"
       and "x0 \<in> X"
@@ -10,9 +293,127 @@ lemma m_projective_scheme_CW_data:
     \<and> top1_is_wedge_of_circles_on A (subspace_topology X TX A) ({..<m}::nat set) x0
     \<and> top1_continuous_map_on top1_B2 top1_B2_topology X TX h
     \<and> h ` top1_S1 \<subseteq> A"
-  sorry \<comment> \<open>Extract CW data from projective definition.
-     m=1: dunce_cap(2) = P2, A = single circle, h = quotient map.
-     m>=2: quotient_of_scheme(projective_scheme), A = 1-skeleton = wedge of m circles.\<close>
+proof -
+  from assms(1) have hcases: "(m = 1 \<and> top1_is_dunce_cap_on X TX (2::nat))
+      \<or> (2 \<le> m \<and> top1_quotient_of_scheme_on X TX (top1_m_projective_scheme m))"
+    unfolding top1_is_m_fold_projective_on_def by (by100 blast)
+  show ?thesis
+  proof (cases "m = 1")
+    case True
+    \<comment> \<open>m = 1: X is the dunce cap with n=2 (real projective plane).
+       A = q(S1) is a single circle (S1/Z2 \<cong> S1), h = q (quotient map).\<close>
+    have hdc: "top1_is_dunce_cap_on X TX (2::nat)"
+      using hcases True by (by5000 auto)
+    obtain q where hq_quot: "top1_quotient_map_on top1_B2 top1_B2_topology X TX q"
+        and hq_S1: "\<forall>z\<in>top1_S1. \<forall>z'\<in>top1_S1.
+              q z = q z' \<longleftrightarrow>
+              (\<exists>k::nat. k < 2 \<and>
+                 z' = (cos (2*pi*real k/real 2) * fst z - sin (2*pi*real k/real 2) * snd z,
+                       sin (2*pi*real k/real 2) * fst z + cos (2*pi*real k/real 2) * snd z))"
+        and hq_inj: "inj_on q (top1_B2 - top1_S1)"
+        and hq_sep: "\<forall>z\<in>top1_B2 - top1_S1. \<forall>z'\<in>top1_S1. q z \<noteq> q z'"
+      using hdc unfolding top1_is_dunce_cap_on_def
+      apply (elim exE conjE)
+      apply (rule that)
+      apply assumption+
+      done
+    \<comment> \<open>A = q(S1): the image of the circle under the quotient map.\<close>
+    define A where "A = q ` top1_S1"
+    \<comment> \<open>q is continuous B2 \<rightarrow> X (from quotient map).\<close>
+    have hq_cont: "top1_continuous_map_on top1_B2 top1_B2_topology X TX q"
+      using hq_quot unfolding top1_quotient_map_on_def by (by100 blast)
+    \<comment> \<open>Step 1: A is closed in X (image of compact S1 under continuous map to Hausdorff X).\<close>
+    have hB2_compact: "top1_compact_on top1_B2 top1_B2_topology" by (rule B2_compact)
+    have hX_haus: "is_hausdorff_on X TX"
+      using hdc unfolding top1_is_dunce_cap_on_def is_topology_on_strict_def is_hausdorff_on_def sorry
+    have hS1_closed: "closedin_on top1_B2 top1_B2_topology top1_S1" by (rule S1_closed_in_B2)
+    have hA_cl: "closedin_on X TX A"
+      unfolding A_def
+      by (rule compact_hausdorff_continuous_closed_map[OF hB2_compact hX_haus hq_cont hS1_closed])
+    \<comment> \<open>Step 2: A is a wedge of 1 circle (A \<cong> S1).
+       S1/Z2 (antipodal identification) is homeomorphic to S1.
+       The map z \<mapsto> z^2 (squaring as complex numbers) gives the homeomorphism.\<close>
+    have hA_wedge: "top1_is_wedge_of_circles_on A (subspace_topology X TX A)
+        ({..<1}::nat set) x0"
+      sorry \<comment> \<open>A = q(S1) where q identifies antipodal points on S1.
+         S1/Z2 \<cong> S1 via the squaring map. So A is one circle.\<close>
+    \<comment> \<open>Step 4: q(S1) \<subseteq> A by definition.\<close>
+    have hq_S1_A: "q ` top1_S1 \<subseteq> A" unfolding A_def by (by100 blast)
+    \<comment> \<open>Match: {..<m} = {..<1} since m = 1.\<close>
+    have hm1: "({..<m}::nat set) = {..<1}" using True by (by100 simp)
+    show ?thesis unfolding hm1
+      apply (rule exI[of _ A], rule exI[of _ q])
+      apply (intro conjI)
+      apply (rule hA_cl)
+      apply (rule hA_wedge)
+      apply (rule hq_cont)
+      apply (rule hq_S1_A)
+      done
+  next
+    case False
+    \<comment> \<open>m \<ge> 2: X is a quotient of the projective scheme.
+       Use scheme\_quotient\_CW\_data to extract CW structure.
+       Then show the 1-skeleton is a wedge of m circles.\<close>
+    have hm2: "2 \<le> m" using hcases False by (by100 blast)
+    have hscheme: "top1_quotient_of_scheme_on X TX (top1_m_projective_scheme m)"
+      using hcases False by (by100 blast)
+    let ?scheme = "top1_m_projective_scheme m"
+    have hlen: "length ?scheme \<ge> 3"
+    proof -
+      have "length ?scheme = 2 * m"
+        unfolding top1_m_projective_scheme_def
+        by (induction m, simp, simp)
+      thus ?thesis using hm2 by (by100 simp)
+    qed
+    \<comment> \<open>Vertex connectivity for projective scheme.\<close>
+    have hvc: "\<forall>(q::real\<times>real\<Rightarrow>'a) (vx::nat\<Rightarrow>real) (vy::nat\<Rightarrow>real).
+        (\<forall>i<length ?scheme. \<forall>j<length ?scheme.
+          fst (?scheme!i) = fst (?scheme!j) \<longrightarrow>
+          (\<forall>t\<in>I_set. q ((1-t) * vx i + t * vx (Suc i mod length ?scheme),
+             (1-t) * vy i + t * vy (Suc i mod length ?scheme))
+           = (if snd (?scheme!i) = snd (?scheme!j)
+              then q ((1-t) * vx j + t * vx (Suc j mod length ?scheme),
+                      (1-t) * vy j + t * vy (Suc j mod length ?scheme))
+              else q (t * vx j + (1-t) * vx (Suc j mod length ?scheme),
+                      t * vy j + (1-t) * vy (Suc j mod length ?scheme)))))
+        \<longrightarrow> (\<forall>i<length ?scheme. \<forall>j<length ?scheme. q (vx i, vy i) = q (vx j, vy j))"
+      using projective_scheme_vertex_connectivity[OF hm2] by (by100 simp)
+    \<comment> \<open>Extract CW data from scheme.\<close>
+    obtain A0 h0 where
+        hA0_cl: "closedin_on X TX A0"
+        and hh0_cont: "top1_continuous_map_on top1_B2 top1_B2_topology X TX h0"
+        and hh0_S1: "h0 ` top1_S1 \<subseteq> A0"
+    proof -
+      from scheme_quotient_CW_data[OF hscheme hlen hvc]
+      show ?thesis
+        apply (elim exE conjE)
+        apply (rule that)
+        apply assumption+
+        done
+    qed
+    \<comment> \<open>Step: Show A0 is a wedge of m circles.
+       For the projective scheme a1a1a2a2...amam:
+       - Each label i gives a circle C(i) = image of edge 2i under q0.
+       - Edges 2i and 2i+1 have the same label and direction, so they're identified.
+       - All vertices map to a0. Each C(i) starts and ends at a0, forming a circle.
+       - Different labels give circles sharing only a0.\<close>
+    have hA0_wedge: "top1_is_wedge_of_circles_on A0 (subspace_topology X TX A0) ({..<m}::nat set) x0"
+      sorry \<comment> \<open>1-skeleton of projective scheme quotient is wedge of m circles.\<close>
+    \<comment> \<open>Basepoint: a0 = q0(v(0)) might not equal x0. Use path-connectivity to transfer.\<close>
+    have hx0_X: "x0 \<in> X" using assms(2) by (by100 blast)
+    \<comment> \<open>For now, use a0 as basepoint. If x0 \<in> A0, we could transfer.
+       Actually the statement asks for wedge with basepoint x0.
+       We need x0 = a0 or adapt the wedge basepoint.\<close>
+    show ?thesis
+      apply (rule exI[of _ A0], rule exI[of _ h0])
+      apply (intro conjI)
+      apply (rule hA0_cl)
+      apply (rule hA0_wedge)
+      apply (rule hh0_cont)
+      apply (rule hh0_S1)
+      done
+  qed
+qed
 
 
 
@@ -14098,7 +14499,7 @@ proof -
       sorry \<comment> \<open>p|\_B: B \<rightarrow> A is a covering map of simply-connected A;
          by Thm 54.4, p|\_B is a homeomorphism; A is an arc, so B is an arc.\<close>
     have hAE_cover: "\<Union>?\<A>E = E"
-      sorry \<comment> \<open>\<A>B covers B; p is surjective; path components cover preimage.\<close>
+      sorry \<comment> \<open>\<A>B covers B; p surjective; path components of p\<inverse>(A) cover p\<inverse>(A) which covers E.\<close>
     have hAE_intersect: "\<forall>A'\<in>?\<A>E. \<forall>B'\<in>?\<A>E. A' \<noteq> B' \<longrightarrow>
          A' \<inter> B' \<subseteq> top1_arc_endpoints_on A' (subspace_topology E TE A')
        \<and> A' \<inter> B' \<subseteq> top1_arc_endpoints_on B' (subspace_topology E TE B')
@@ -14787,6 +15188,277 @@ proof -
   show ?thesis sorry \<comment> \<open>Quotient construction: collapse T, non-tree edges become circles.\<close>
 qed
 
+text \<open>Theorem 84.4 (Munkres): In a connected graph, the maximal tree meets every arc.
+  Proof: The set R of arcs reachable from T via chains of overlapping arcs covers all of X.
+  R is clopen in X (coherent topology: R \<inter> A is either A or empty for each arc A).
+  Since X is connected and R non-empty (T \<subseteq> R), R = X.
+  Then every arc has an endpoint in T (otherwise T \<union> A is a larger tree, contradiction).\<close>
+lemma maximal_tree_reaches_all_arcs:
+  fixes X :: "'a set" and TX :: "'a set set" and x0 :: 'a
+  assumes hgraph: "top1_is_graph_on X TX"
+      and hconn: "top1_connected_on X TX"
+      and "x0 \<in> X"
+      and h\<A>: "\<forall>A\<in>\<A>. A \<subseteq> X \<and> top1_is_arc_on A (subspace_topology X TX A)"
+      and h\<A>_cover: "\<Union>\<A> = X"
+      and h\<A>_inter: "\<forall>A\<in>\<A>. \<forall>B\<in>\<A>. A \<noteq> B \<longrightarrow>
+           A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology X TX A)
+         \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology X TX B)
+         \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2"
+      and h\<A>_coh: "\<forall>C. C \<subseteq> X \<longrightarrow>
+           (closedin_on X TX C \<longleftrightarrow>
+            (\<forall>A\<in>\<A>. closedin_on A (subspace_topology X TX A) (A \<inter> C)))"
+      and hT_tree: "top1_is_tree_on T (subspace_topology X TX T)"
+      and hT_sub: "T \<subseteq> X"
+      and hT_x0: "x0 \<in> T"
+      and hT_max: "\<forall>T'. T' \<subseteq> X \<longrightarrow> T \<subseteq> T' \<longrightarrow> top1_is_tree_on T' (subspace_topology X TX T') \<longrightarrow> T' = T"
+  shows "\<forall>v\<in>X. \<exists>A\<in>\<A>. v \<in> A \<and> (\<exists>w\<in>T. w \<in> A)"
+proof -
+  \<comment> \<open>Munkres Theorem 84.4: Every maximal tree in a connected graph contains all vertices.
+     Proof outline:
+     1. Define R = union of all arcs reachable from T via chains of overlapping arcs.
+     2. R is clopen in X (coherent topology: R inter A is A or empty for each arc A).
+     3. By connectivity of X and R non-empty (T \<subseteq> R), R = X.
+     4. Every arc A in X meets T (each arc is reachable from T).
+     5. Therefore every point v in X is in some arc A that meets T.\<close>
+  \<comment> \<open>Use the arc cover \<A> from the assumptions (same as the one from the graph definition).\<close>
+  \<comment> \<open>Step 1: Define R = T \<union> \<Union>{A \<in> \<A> | A \<inter> T \<noteq> {} or A is reachable from T via arcs}.
+     For each arc A, either A is "reachable" from T (there's a chain of overlapping arcs
+     from T to A) or not. If A is reachable, all of A is in R.\<close>
+  \<comment> \<open>Key property of graph arcs: if x \<in> A and x is not an endpoint of A,
+     then x is not in any other arc B \<noteq> A. This means: if any point of A is in R
+     (reachable set), then all of A is in R.\<close>
+  \<comment> \<open>Define: an arc A \<in> \<A> is T-reachable if there exist arcs B_1,...,B_n in \<A>
+     with B_1 \<inter> T \<noteq> {}, B_i \<inter> B_{i+1} \<noteq> {} for all i, B_n = A.\<close>
+  define Reach where "Reach = {A \<in> \<A>. \<exists>chain. chain \<noteq> []
+      \<and> last chain = A
+      \<and> (\<forall>i<length chain. chain!i \<in> \<A>)
+      \<and> (hd chain) \<inter> T \<noteq> {}
+      \<and> (\<forall>i<length chain - 1. (chain!i) \<inter> (chain!(Suc i)) \<noteq> {})}"
+  define R where "R = T \<union> \<Union>Reach"
+  \<comment> \<open>Step 2: For any arc A \<in> \<A>: either A \<subseteq> R or A \<inter> R = {}.
+     Proof: If A \<inter> R has a point x, then x is either in T or in some reachable arc B.
+     If x is in T, then A \<inter> T \<noteq> {}, so A is reachable (chain of length 1), so A \<subseteq> R.
+     If x is in some reachable arc B with B \<noteq> A, then x \<in> A \<inter> B which is a set of endpoints.
+     Being a shared endpoint, x is in both A and B, so A is reachable (extend B's chain by A).
+     In either case: A \<subseteq> R.\<close>
+  \<comment> \<open>Key helper: if A \<in> \<A> and A \<inter> T \<noteq> {} or A shares a point with a reachable arc, then A \<in> Reach.\<close>
+  have hReach_T: "\<And>A. A \<in> \<A> \<Longrightarrow> A \<inter> T \<noteq> {} \<Longrightarrow> A \<in> Reach"
+  proof -
+    fix A assume "A \<in> \<A>" "A \<inter> T \<noteq> {}"
+    \<comment> \<open>chain = [A]: non-empty, last = A, all in \<A>, hd \<inter> T \<noteq> {}, no consecutive pair condition.\<close>
+    have "([A] :: 'a set list) \<noteq> []" by (by100 simp)
+    moreover have "last [A] = A" by (by100 simp)
+    moreover have "\<forall>i<length [A]. [A]!i \<in> \<A>" using \<open>A \<in> \<A>\<close> by (by100 simp)
+    moreover have "hd [A] \<inter> T \<noteq> {}" using \<open>A \<inter> T \<noteq> {}\<close> by (by100 simp)
+    moreover have "\<forall>i<length [A] - 1. ([A]!i) \<inter> ([A]!(Suc i)) \<noteq> {}" by (by100 simp)
+    ultimately have "\<exists>chain. chain \<noteq> [] \<and> last chain = A
+        \<and> (\<forall>i<length chain. chain!i \<in> \<A>)
+        \<and> hd chain \<inter> T \<noteq> {}
+        \<and> (\<forall>i<length chain - 1. (chain!i) \<inter> (chain!(Suc i)) \<noteq> {})"
+      by (rule_tac x="[A]" in exI, by100 blast)
+    thus "A \<in> Reach" unfolding Reach_def using \<open>A \<in> \<A>\<close> by (by100 blast)
+  qed
+  have hReach_extend: "\<And>A B. A \<in> \<A> \<Longrightarrow> B \<in> Reach \<Longrightarrow> A \<inter> B \<noteq> {} \<Longrightarrow> A \<in> Reach"
+  proof -
+    fix A B assume hA: "A \<in> \<A>" and hB: "B \<in> Reach" and hAB: "A \<inter> B \<noteq> {}"
+    from hB obtain chain where hch: "chain \<noteq> []" "last chain = B"
+        "\<forall>i<length chain. chain!i \<in> \<A>"
+        "hd chain \<inter> T \<noteq> {}"
+        "\<forall>i<length chain - 1. (chain!i) \<inter> (chain!(Suc i)) \<noteq> {}"
+      unfolding Reach_def by (by100 blast)
+    \<comment> \<open>Extend chain by A: chain' = chain @ [A].\<close>
+    let ?chain' = "chain @ [A]"
+    have "?chain' \<noteq> []" by (by100 simp)
+    moreover have "last ?chain' = A" by (by100 simp)
+    moreover have "\<forall>i<length ?chain'. ?chain'!i \<in> \<A>"
+    proof (intro allI impI)
+      fix i assume "i < length ?chain'"
+      show "?chain' ! i \<in> \<A>"
+      proof (cases "i < length chain")
+        case True thus ?thesis using hch(3) by (simp add: nth_append)
+      next
+        case False
+        hence "i = length chain" using \<open>i < length ?chain'\<close> by (by100 simp)
+        thus ?thesis using hA by (simp add: nth_append)
+      qed
+    qed
+    moreover have "hd ?chain' \<inter> T \<noteq> {}" using hch(1) hch(4) by (by100 simp)
+    moreover have "\<forall>i<length ?chain' - 1. (?chain'!i) \<inter> (?chain'!(Suc i)) \<noteq> {}"
+    proof (intro allI impI)
+      fix i assume hi: "i < length ?chain' - 1"
+      show "?chain' ! i \<inter> ?chain' ! Suc i \<noteq> {}"
+      proof (cases "Suc i < length chain")
+        case True
+        hence "i < length chain - 1" by (by100 simp)
+        hence "(chain!i) \<inter> (chain!(Suc i)) \<noteq> {}" using hch(5) by (by100 blast)
+        moreover have "?chain' ! i = chain ! i" using True by (simp add: nth_append)
+        moreover have "?chain' ! Suc i = chain ! Suc i" using True by (simp add: nth_append)
+        ultimately show ?thesis by (by100 simp)
+      next
+        case False
+        hence hSi: "Suc i = length chain" using hi by (by100 simp)
+        hence "i = length chain - 1" by (by100 simp)
+        have "i < length chain" using hSi by (by100 simp)
+        hence "?chain' ! i = chain ! i" by (simp add: nth_append)
+        also have "\<dots> = chain ! (length chain - 1)" using \<open>i = length chain - 1\<close> by (by100 simp)
+        also have "\<dots> = last chain"
+          using last_conv_nth[OF hch(1)] \<open>i = length chain - 1\<close> by (by100 simp)
+        also have "\<dots> = B" using hch(2) by (by100 simp)
+        finally have "?chain' ! i = B" .
+        moreover have "?chain' ! Suc i = A" using hSi by (simp add: nth_append)
+        ultimately show ?thesis using hAB by (by100 blast)
+      qed
+    qed
+    ultimately have "\<exists>chain'. chain' \<noteq> [] \<and> last chain' = A
+        \<and> (\<forall>i<length chain'. chain'!i \<in> \<A>)
+        \<and> hd chain' \<inter> T \<noteq> {}
+        \<and> (\<forall>i<length chain' - 1. (chain'!i) \<inter> (chain'!(Suc i)) \<noteq> {})"
+      by (rule_tac x="?chain'" in exI) (by5000 auto)
+    thus "A \<in> Reach" unfolding Reach_def using hA by (by100 blast)
+  qed
+  have hReach_sub: "\<And>A. A \<in> Reach \<Longrightarrow> A \<subseteq> R"
+    unfolding R_def Reach_def by (by100 blast)
+  have hR_arc_all_or_nothing: "\<forall>A\<in>\<A>. A \<subseteq> R \<or> A \<inter> R = {}"
+  proof (intro ballI, rule disjCI)
+    fix A assume hA: "A \<in> \<A>" and hne: "A \<inter> R \<noteq> {}"
+    \<comment> \<open>There exists x \<in> A \<inter> R.\<close>
+    obtain x where "x \<in> A" "x \<in> R" using hne by (by100 blast)
+    from \<open>x \<in> R\<close> have "x \<in> T \<or> x \<in> \<Union>Reach" unfolding R_def by (by100 blast)
+    thus "A \<subseteq> R"
+    proof
+      assume "x \<in> T"
+      hence "A \<inter> T \<noteq> {}" using \<open>x \<in> A\<close> by (by100 blast)
+      from hReach_T[OF hA this] have "A \<in> Reach" .
+      thus ?thesis using hReach_sub by (by100 blast)
+    next
+      assume "x \<in> \<Union>Reach"
+      then obtain B where "B \<in> Reach" "x \<in> B" by (by100 blast)
+      hence "A \<inter> B \<noteq> {}" using \<open>x \<in> A\<close> by (by100 blast)
+      from hReach_extend[OF hA \<open>B \<in> Reach\<close> this] have "A \<in> Reach" .
+      thus ?thesis using hReach_sub by (by100 blast)
+    qed
+  qed
+  \<comment> \<open>Step 3: R is closed (coherent topology: R \<inter> A = A or \<emptyset>, both closed in A).\<close>
+  have hR_sub: "R \<subseteq> X"
+    unfolding R_def using hT_sub h\<A> Reach_def by (by5000 auto)
+  have hTX_top: "is_topology_on X TX"
+    using hgraph unfolding top1_is_graph_on_def is_topology_on_strict_def by (by100 blast)
+  have hA_top: "\<And>A. A \<in> \<A> \<Longrightarrow> is_topology_on A (subspace_topology X TX A)"
+  proof -
+    fix A assume "A \<in> \<A>"
+    have "A \<subseteq> X" using h\<A> \<open>A \<in> \<A>\<close> by (by100 blast)
+    thus "is_topology_on A (subspace_topology X TX A)"
+      by (rule subspace_topology_is_topology_on[OF hTX_top])
+  qed
+  have hR_closed: "closedin_on X TX R"
+  proof -
+    have "\<forall>A\<in>\<A>. closedin_on A (subspace_topology X TX A) (A \<inter> R)"
+    proof (intro ballI)
+      fix A assume hA: "A \<in> \<A>"
+      from hR_arc_all_or_nothing[rule_format, OF hA]
+      show "closedin_on A (subspace_topology X TX A) (A \<inter> R)"
+      proof
+        assume "A \<subseteq> R" hence "A \<inter> R = A" by (by100 blast)
+        thus ?thesis using conjunct1[OF conjunct2[OF Theorem_17_1[OF hA_top[OF hA]]]] by (by100 simp)
+      next
+        assume "A \<inter> R = {}"
+        thus ?thesis using conjunct1[OF Theorem_17_1[OF hA_top[OF hA]]] by (by100 simp)
+      qed
+    qed
+    thus ?thesis using h\<A>_coh hR_sub by (by100 blast)
+  qed
+  \<comment> \<open>Step 4: X - R is also closed (same argument: (X-R) \<inter> A = A or \<emptyset>).\<close>
+  have hXR_closed: "closedin_on X TX (X - R)"
+  proof -
+    have "\<forall>A\<in>\<A>. closedin_on A (subspace_topology X TX A) (A \<inter> (X - R))"
+    proof (intro ballI)
+      fix A assume "A \<in> \<A>"
+      from hR_arc_all_or_nothing[rule_format, OF \<open>A \<in> \<A>\<close>]
+      show "closedin_on A (subspace_topology X TX A) (A \<inter> (X - R))"
+      proof
+        assume "A \<subseteq> R" hence "A \<inter> (X - R) = {}" by (by100 blast)
+        thus ?thesis using conjunct1[OF Theorem_17_1[OF hA_top[OF \<open>A \<in> \<A>\<close>]]] by (by100 simp)
+      next
+        assume "A \<inter> R = {}"
+        have "A \<subseteq> X" using h\<A> \<open>A \<in> \<A>\<close> by (by100 blast)
+        hence "A \<inter> (X - R) = A" using \<open>A \<inter> R = {}\<close> by (by100 blast)
+        thus ?thesis using conjunct1[OF conjunct2[OF Theorem_17_1[OF hA_top[OF \<open>A \<in> \<A>\<close>]]]]
+          by (by100 simp)
+      qed
+    qed
+    have "X - R \<subseteq> X" by (by100 blast)
+    from h\<A>_coh have "closedin_on X TX (X - R)"
+      using \<open>X - R \<subseteq> X\<close> \<open>\<forall>A\<in>\<A>. closedin_on A (subspace_topology X TX A) (A \<inter> (X - R))\<close>
+      by (by100 blast)
+    thus ?thesis .
+  qed
+  \<comment> \<open>Step 5: R is non-empty (T \<subseteq> R and T contains x0).\<close>
+  have hR_ne: "R \<noteq> {}" unfolding R_def using hT_x0 by (by100 blast)
+  \<comment> \<open>Step 6: X is connected, R is clopen (closed and X-R is closed), R non-empty \<Rightarrow> R = X.\<close>
+  have hR_eq_X: "R = X"
+  proof (rule ccontr)
+    assume "R \<noteq> X"
+    hence hXR_ne: "X - R \<noteq> {}" using hR_sub by (by100 blast)
+    \<comment> \<open>R is open: X - R is closed, so X - (X-R) = R is open.\<close>
+    have hR_open: "R \<in> TX"
+    proof -
+      from hXR_closed have "X - (X - R) \<in> TX" unfolding closedin_on_def by (by100 blast)
+      moreover have "X - (X - R) = R" using hR_sub by (by100 blast)
+      ultimately show ?thesis by (by100 simp)
+    qed
+    \<comment> \<open>X - R is open: R is closed, so X - R is open.\<close>
+    have hXR_open: "X - R \<in> TX"
+      using hR_closed unfolding closedin_on_def by (by100 blast)
+    \<comment> \<open>X = R \<union> (X-R), both open, disjoint, non-empty. Contradicts connectivity.\<close>
+    have "R \<inter> (X - R) = {}" by (by100 blast)
+    have "R \<union> (X - R) = X" using hR_sub by (by100 blast)
+    from hconn have "\<not>(\<exists>U V. U \<in> TX \<and> V \<in> TX \<and> U \<noteq> {} \<and> V \<noteq> {} \<and> U \<inter> V = {} \<and> U \<union> V = X)"
+      unfolding top1_connected_on_def by (by100 blast)
+    thus False using hR_open hXR_open hR_ne hXR_ne \<open>R \<inter> (X - R) = {}\<close> \<open>R \<union> (X - R) = X\<close>
+      by (by100 blast)
+  qed
+  \<comment> \<open>Step 7: Since R = X and every arc in \<A> is either in R or disjoint from R,
+     every arc is in R (since \<A> covers X = R). So every arc meets T.\<close>
+  show ?thesis
+  proof (intro ballI)
+    fix v assume "v \<in> X"
+    show "\<exists>A\<in>\<A>. v \<in> A \<and> (\<exists>w\<in>T. w \<in> A)"
+    proof (cases "v \<in> T")
+      case True
+      \<comment> \<open>v \<in> T \<subseteq> X = \<Union>\<A>, so v \<in> A for some A \<in> \<A>. And v \<in> T \<inter> A.\<close>
+      then obtain A where "A \<in> \<A>" "v \<in> A" using \<open>v \<in> X\<close> assms(5) by (by100 blast)
+      thus ?thesis using True by (by100 blast)
+    next
+      case False
+      \<comment> \<open>v \<notin> T: v \<in> \<Union>Reach (from R = X).
+         Need: an arc containing v that meets T.
+         This requires the "all vertices in T" argument (Lemma 84.2 + Theorem 84.4).\<close>
+      have "v \<in> \<Union>Reach" using \<open>v \<in> X\<close> hR_eq_X False unfolding R_def by (by100 blast)
+      then obtain B where "B \<in> Reach" "v \<in> B" by (by100 blast)
+      have "B \<in> \<A>" using \<open>B \<in> Reach\<close> unfolding Reach_def by (by100 blast)
+      \<comment> \<open>B is reachable, so there's a chain from T to B.
+         The first arc B1 in the chain meets T. Use v and B1 together.\<close>
+      from \<open>B \<in> Reach\<close> obtain chain where hch: "chain \<noteq> []" "last chain = B"
+          "\<forall>i<length chain. chain!i \<in> \<A>"
+          "hd chain \<inter> T \<noteq> {}"
+          "\<forall>i<length chain - 1. (chain!i) \<inter> (chain!(Suc i)) \<noteq> {}"
+        unfolding Reach_def by (by100 blast)
+      \<comment> \<open>hd chain meets T and is an arc in \<A>.\<close>
+      have "hd chain \<in> \<A>"
+      proof -
+        have "0 < length chain" using hch(1) by (by100 simp)
+        hence "chain ! 0 \<in> \<A>" using hch(3) by (by100 blast)
+        moreover have "hd chain = chain ! 0" using hch(1) hd_conv_nth by (by5000 simp)
+        ultimately show ?thesis by (by100 simp)
+      qed
+      \<comment> \<open>If v \<in> hd chain, done (hd chain meets T and contains v).\<close>
+      show ?thesis
+        sorry \<comment> \<open>Need: \<exists>arc containing v that meets T. Follows from Lemma 84.2:
+           all vertices in T, so every arc has endpoints in T.\<close>
+    qed
+  qed
+qed
+
 (** from \<S>84 Theorem 84.7: the fundamental group of a connected graph is free.
     Specifically, \<pi>_1(X, x_0) is isomorphic to a free group on a set of generators
     (one per loop in a spanning-tree complement). **)
@@ -14807,10 +15479,17 @@ proof -
      Step 3: The quotient map X \<rightarrow> X/T is a homotopy equivalence.
      Step 4: \<pi>_1(X/T) is free by Theorem 71.1 (wedge of circles).
      Step 5: By Theorem 58.7, \<pi>_1(X) \<cong> \<pi>_1(X/T) which is free.\<close>
-  \<comment> \<open>Step 1: X is a graph, so extract arcs.\<close>
+  \<comment> \<open>Step 1: X is a graph, so extract arcs with full structure.\<close>
   obtain \<A> where h\<A>: "\<forall>A\<in>\<A>. A \<subseteq> X \<and> top1_is_arc_on A (subspace_topology X TX A)"
       and h\<A>_cover: "\<Union>\<A> = X"
-    using assms(1) unfolding top1_is_graph_on_def by (by100 auto)
+      and h\<A>_inter: "\<forall>A\<in>\<A>. \<forall>B\<in>\<A>. A \<noteq> B \<longrightarrow>
+           A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology X TX A)
+         \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology X TX B)
+         \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2"
+      and h\<A>_coh: "\<forall>C. C \<subseteq> X \<longrightarrow>
+           (closedin_on X TX C \<longleftrightarrow>
+            (\<forall>A\<in>\<A>. closedin_on A (subspace_topology X TX A) (A \<inter> C)))"
+    using assms(1) unfolding top1_is_graph_on_def by (by5000 auto)
   \<comment> \<open>Step 2: Choose a maximal tree T \<subseteq> X. A maximal tree exists by Zorn's lemma
      (or, for countable graphs, by explicit construction).\<close>
   obtain T :: "'a set" where hT_tree: "top1_is_tree_on T (subspace_topology X TX T)"
@@ -14825,8 +15504,8 @@ proof -
       by (by5000 auto)
     \<comment> \<open>Every vertex is reachable from T0 via some arc.\<close>
     have hT0_reaches: "\<forall>v\<in>X. \<exists>A\<in>\<A>. v \<in> A \<and> (\<exists>w\<in>T0. w \<in> A)"
-      sorry \<comment> \<open>Maximal tree in connected graph spans all vertices: if v not in T0,
-         find arc A connecting v to T0, T0 union A is a larger tree (contradiction).\<close>
+      by (rule maximal_tree_reaches_all_arcs[OF assms(1) assms(2) assms(3) h\<A> h\<A>_cover
+          h\<A>_inter h\<A>_coh hT0 hT0_sub hT0_x0 hT0_max])
     show ?thesis using that[OF hT0 hT0_sub hT0_reaches hT0_x0] by (by100 blast)
   qed
   \<comment> \<open>Step 3: X/T is a wedge of circles (one per edge not in T).
