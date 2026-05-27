@@ -8989,7 +8989,7 @@ next
   proof -
     note hfull = quotient_of_scheme_extract_full[OF hscheme]
     \<comment> \<open>quotient\_of\_scheme\_extract\_full gives all vertex data.\<close>
-    show ?thesis using hfull sorry \<comment> \<open>Extract vertex data from full scheme extraction.\<close>
+    show ?thesis using hfull sorry \<comment> \<open>Extract 5 conjuncts from 15-conjunct existential.\<close>
   qed
   have hlabels: "fst ` set ?scheme = {..<m}"
   proof -
