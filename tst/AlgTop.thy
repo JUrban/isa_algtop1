@@ -8891,7 +8891,20 @@ proof -
           (top1_quotient_group_carrier_on ?GA ?mulA ?N) (top1_quotient_group_mul_on ?mulA)
           e invg ({..<1}::nat set) { replicate n (0::nat, True) }"
     unfolding top1_group_presented_by_on_def
-      sorry \<comment> \<open>Need: is_group Q + \<exists>Z free + hom \<pi> + surj \<pi> + ker \<pi> = N(word a^n). All ingredients available.\<close>
+    \<comment> \<open>Provide e and invg from quotient\_group\_is\_group, then the free group existential.\<close>
+    apply (rule exI[of _ "top1_group_coset_on ?GA ?mulA ?N ?eA"])
+    apply (rule exI[of _ "\<lambda>C. top1_group_coset_on ?GA ?mulA ?N (?invA (SOME g. g \<in> ?GA \<and> C = top1_group_coset_on ?GA ?mulA ?N g))"])
+    apply (intro conjI)
+    apply (rule quotient_group_is_group[OF hgrpA hN_normal])
+    \<comment> \<open>Provide witnesses: F = Z, \<iota> = (const 1), \<pi> = coset \<circ> \<phi>^{-1}.\<close>
+    apply (rule exI[of _ top1_Z_group])
+    apply (rule exI[of _ top1_Z_mul])
+    apply (rule exI[of _ top1_Z_id])
+    apply (rule exI[of _ top1_Z_invg])
+    apply (rule exI[of _ "\<lambda>(_::nat). (1::int)"])
+    apply (rule exI[of _ "\<lambda>z. top1_group_coset_on ?GA ?mulA ?N (inv_into ?GA \<phi> z)"])
+    apply (intro conjI)
+    sorry \<comment> \<open>Z free on {..<1} + hom + surj + ker = N(word a^n).\<close>
     \<comment> \<open>Compose: pi1(A)/N iso Z/phi(N) = Z/nZ iso Z/nZ.\<close>
     have "top1_groups_isomorphic_on
         (top1_quotient_group_carrier_on ?GA ?mulA ?N)
