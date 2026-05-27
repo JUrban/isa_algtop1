@@ -14376,7 +14376,51 @@ proof -
           \<comment> \<open>Every loop in [0,1] is null-homotopic (straight-line contraction).\<close>
           have hI_loops: "\<forall>x0 \<in> top1_unit_interval. \<forall>f. top1_is_loop_on top1_unit_interval top1_unit_interval_topology x0 f
               \<longrightarrow> top1_path_homotopic_on top1_unit_interval top1_unit_interval_topology x0 x0 f (top1_constant_path x0)"
-            sorry \<comment> \<open>Straight-line homotopy: H(s,t) = (1-t)*f(s) + t*x0 contracts f to constant.\<close>
+          proof (intro ballI allI impI)
+            fix x0 f assume hx0: "x0 \<in> top1_unit_interval"
+                and hloop: "top1_is_loop_on top1_unit_interval top1_unit_interval_topology x0 f"
+            \<comment> \<open>Straight-line homotopy: H(s,t) = (1-t)*f(s) + t*x0.\<close>
+            let ?H = "\<lambda>(s::real, t::real). (1 - t) * f s + t * x0"
+            \<comment> \<open>H is continuous on I x I.\<close>
+            have hH_cont: "top1_continuous_map_on (top1_unit_interval \<times> top1_unit_interval) II_topology
+                top1_unit_interval top1_unit_interval_topology ?H"
+              sorry \<comment> \<open>H continuous: bilinear combo of continuous f and constants. Maps into [0,1] by convexity.\<close>
+            \<comment> \<open>Boundary conditions.\<close>
+            have hH0: "\<forall>s\<in>top1_unit_interval. ?H (s, 0) = f s" by (by100 simp)
+            have hH1: "\<forall>s\<in>top1_unit_interval. ?H (s, 1) = x0" by (by100 simp)
+            have hf0: "f 0 = x0" and hf1: "f 1 = x0"
+              using hloop unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)+
+            have hHL: "\<forall>t\<in>top1_unit_interval. ?H (0, t) = x0"
+            proof (intro ballI)
+              fix t :: real assume "t \<in> top1_unit_interval"
+              have "?H (0, t) = (1 - t) * f 0 + t * x0" by (by100 simp)
+              also have "\<dots> = (1 - t) * x0 + t * x0" using hf0 by (by100 simp)
+              also have "\<dots> = ((1-t) + t) * x0" using distrib_right[of "1-t" t x0] by (by100 simp)
+              also have "\<dots> = x0" by (by100 simp)
+              finally show "?H (0, t) = x0" .
+            qed
+            have hHR: "\<forall>t\<in>top1_unit_interval. ?H (1, t) = x0"
+            proof (intro ballI)
+              fix t :: real assume "t \<in> top1_unit_interval"
+              have "?H (1, t) = (1 - t) * f 1 + t * x0" by (by100 simp)
+              also have "\<dots> = (1 - t) * x0 + t * x0" using hf1 by (by100 simp)
+              also have "\<dots> = ((1-t) + t) * x0" using distrib_right[of "1-t" t x0] by (by100 simp)
+              also have "\<dots> = x0" by (by100 simp)
+              finally show "?H (1, t) = x0" .
+            qed
+            \<comment> \<open>f is a path (from loop).\<close>
+            have hf_path: "top1_is_path_on top1_unit_interval top1_unit_interval_topology x0 x0 f"
+              using hloop unfolding top1_is_loop_on_def by (by100 blast)
+            \<comment> \<open>const_x0 is a path.\<close>
+            have hconst_path: "top1_is_path_on top1_unit_interval top1_unit_interval_topology x0 x0 (top1_constant_path x0)"
+              sorry \<comment> \<open>Constant path is a path.\<close>
+            have "?H (s, 1) = top1_constant_path x0 s" for s
+              unfolding top1_constant_path_def by (by100 simp)
+            hence hH1': "\<forall>s\<in>top1_unit_interval. ?H (s, 1) = top1_constant_path x0 s" by (by100 blast)
+            show "top1_path_homotopic_on top1_unit_interval top1_unit_interval_topology x0 x0 f (top1_constant_path x0)"
+              unfolding top1_path_homotopic_on_def
+              using hf_path hconst_path hH_cont hH0 hH1' hHL hHR by (by100 blast)
+          qed
           show ?thesis using top1_simply_connected_from_one_point[OF hI_top hI_pc] hI_loops hI_pc
             unfolding top1_simply_connected_on_def by (by100 blast)
         qed
