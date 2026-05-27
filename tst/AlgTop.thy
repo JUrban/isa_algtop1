@@ -7120,12 +7120,91 @@ proof -
             \<comment> \<open>path_homotopic for hsl iff for alpha.\<close>
             have hhtpy_eq: "\<And>h. top1_path_homotopic_on ?A ?TA_l ?a ?a ?hsl h
                 \<longleftrightarrow> top1_path_homotopic_on ?A ?TA_l ?a ?a ?\<alpha> h"
-              sorry \<comment> \<open>path_homotopic extensional: hsl|_I = alpha|_I. Swap F(s,0).\<close>
+            proof -
+              fix h
+              show "top1_path_homotopic_on ?A ?TA_l ?a ?a ?hsl h
+                  \<longleftrightarrow> top1_path_homotopic_on ?A ?TA_l ?a ?a ?\<alpha> h"
+              proof (rule iffI)
+                assume "top1_path_homotopic_on ?A ?TA_l ?a ?a ?hsl h"
+                then obtain F where hF: "top1_continuous_map_on (top1_unit_interval \<times> top1_unit_interval) II_topology ?A ?TA_l F"
+                    and "\<forall>s\<in>top1_unit_interval. F (s, 0) = ?hsl s"
+                    and "\<forall>s\<in>top1_unit_interval. F (s, 1) = h s"
+                    and "\<forall>t\<in>top1_unit_interval. F (0, t) = ?a"
+                    and "\<forall>t\<in>top1_unit_interval. F (1, t) = ?a"
+                  unfolding top1_path_homotopic_on_def by (by100 blast)
+                have "\<forall>s\<in>top1_unit_interval. F (s, 0) = ?\<alpha> s"
+                  using \<open>\<forall>s\<in>top1_unit_interval. F (s, 0) = ?hsl s\<close> heq_ext by (by100 simp)
+                \<comment> \<open>Also need is_path for alpha and h from the assumption.\<close>
+                have "top1_is_path_on ?A ?TA_l ?a ?a ?hsl" and "top1_is_path_on ?A ?TA_l ?a ?a h"
+                  using \<open>top1_path_homotopic_on ?A ?TA_l ?a ?a ?hsl h\<close>
+                  unfolding top1_path_homotopic_on_def by (by100 blast)+
+                have "top1_is_path_on ?A ?TA_l ?a ?a ?\<alpha>"
+                  using h\<alpha>_loop unfolding top1_is_loop_on_def by (by100 blast)
+                thus "top1_path_homotopic_on ?A ?TA_l ?a ?a ?\<alpha> h"
+                  unfolding top1_path_homotopic_on_def
+                  using hF \<open>\<forall>s\<in>_. F (s, 0) = ?\<alpha> s\<close> \<open>\<forall>s\<in>_. F (s, 1) = h s\<close>
+                    \<open>\<forall>t\<in>_. F (0, t) = ?a\<close> \<open>\<forall>t\<in>_. F (1, t) = ?a\<close> \<open>top1_is_path_on ?A ?TA_l ?a ?a h\<close>
+                  by (by100 blast)
+              next
+                assume "top1_path_homotopic_on ?A ?TA_l ?a ?a ?\<alpha> h"
+                then obtain F where hF: "top1_continuous_map_on (top1_unit_interval \<times> top1_unit_interval) II_topology ?A ?TA_l F"
+                    and "\<forall>s\<in>top1_unit_interval. F (s, 0) = ?\<alpha> s"
+                    and "\<forall>s\<in>top1_unit_interval. F (s, 1) = h s"
+                    and "\<forall>t\<in>top1_unit_interval. F (0, t) = ?a"
+                    and "\<forall>t\<in>top1_unit_interval. F (1, t) = ?a"
+                  unfolding top1_path_homotopic_on_def by (by100 blast)
+                have "\<forall>s\<in>top1_unit_interval. F (s, 0) = ?hsl s"
+                  using \<open>\<forall>s\<in>top1_unit_interval. F (s, 0) = ?\<alpha> s\<close> heq_ext by (by100 simp)
+                have "top1_is_path_on ?A ?TA_l ?a ?a ?\<alpha>" and "top1_is_path_on ?A ?TA_l ?a ?a h"
+                  using \<open>top1_path_homotopic_on ?A ?TA_l ?a ?a ?\<alpha> h\<close>
+                  unfolding top1_path_homotopic_on_def by (by100 blast)+
+                have "top1_is_path_on ?A ?TA_l ?a ?a ?hsl"
+                proof -
+                  have hcont_hsl: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology ?A ?TA_l ?hsl"
+                    using hcont_eq \<open>top1_is_path_on ?A ?TA_l ?a ?a ?\<alpha>\<close>
+                    unfolding top1_is_path_on_def by (by100 blast)
+                  have h0_I: "(0::real) \<in> top1_unit_interval" unfolding top1_unit_interval_def by (by100 auto)
+                  have h1_I: "(1::real) \<in> top1_unit_interval" unfolding top1_unit_interval_def by (by100 auto)
+                  have h0: "?hsl 0 = ?a"
+                  proof -
+                    have "?hsl 0 = ?\<alpha> 0" using heq_ext h0_I by (by100 blast)
+                    also have "?\<alpha> 0 = ?a" using \<open>top1_is_path_on ?A ?TA_l ?a ?a ?\<alpha>\<close>
+                      unfolding top1_is_path_on_def by (by100 simp)
+                    finally show ?thesis .
+                  qed
+                  have h1: "?hsl 1 = ?a"
+                  proof -
+                    have "?hsl 1 = ?\<alpha> 1" using heq_ext h1_I by (by100 blast)
+                    also have "?\<alpha> 1 = ?a" using \<open>top1_is_path_on ?A ?TA_l ?a ?a ?\<alpha>\<close>
+                      unfolding top1_is_path_on_def by (by100 simp)
+                    finally show ?thesis .
+                  qed
+                  show ?thesis using hcont_hsl h0 h1
+                    unfolding top1_is_path_on_def by (by100 blast)
+                qed
+                thus "top1_path_homotopic_on ?A ?TA_l ?a ?a ?hsl h"
+                  unfolding top1_path_homotopic_on_def
+                  using hF \<open>\<forall>s\<in>_. F (s, 0) = ?hsl s\<close> \<open>\<forall>s\<in>_. F (s, 1) = h s\<close>
+                    \<open>\<forall>t\<in>_. F (0, t) = ?a\<close> \<open>\<forall>t\<in>_. F (1, t) = ?a\<close> \<open>top1_is_path_on ?A ?TA_l ?a ?a h\<close>
+                  by (by100 blast)
+              qed
+            qed
+            \<comment> \<open>is_loop for hsl iff is_loop for alpha.\<close>
+            have hloop_eq: "top1_is_loop_on ?A ?TA_l ?a ?hsl \<longleftrightarrow> top1_is_loop_on ?A ?TA_l ?a ?\<alpha>"
+            proof -
+              have h0_I: "(0::real) \<in> top1_unit_interval" unfolding top1_unit_interval_def by (by100 auto)
+              have h1_I: "(1::real) \<in> top1_unit_interval" unfolding top1_unit_interval_def by (by100 auto)
+              have "?hsl 0 = ?\<alpha> 0" using heq_ext h0_I by (by100 blast)
+              moreover have "?hsl 1 = ?\<alpha> 1" using heq_ext h1_I by (by100 blast)
+              ultimately show ?thesis
+                unfolding top1_is_loop_on_def top1_is_path_on_def
+                using hcont_eq by (by5000 auto)
+            qed
             \<comment> \<open>Combine: loop_equiv for hsl iff for alpha.\<close>
             hence "\<And>g. top1_loop_equiv_on ?A ?TA_l ?a ?hsl g
                 \<longleftrightarrow> top1_loop_equiv_on ?A ?TA_l ?a ?\<alpha> g"
-              unfolding top1_loop_equiv_on_def top1_is_loop_on_def top1_is_path_on_def
-              using hcont_eq hhtpy_eq heq_ext sorry
+              unfolding top1_loop_equiv_on_def
+              using hloop_eq hhtpy_eq by (by5000 blast)
             thus ?thesis by (by100 blast)
           qed
           finally show ?thesis .
