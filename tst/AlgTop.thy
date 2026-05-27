@@ -14509,7 +14509,7 @@ proof -
         show ?thesis using homeomorphism_preserves_simply_connected[OF hh hI_sc] by (by100 blast)
       qed
       show "top1_is_graph_on A0 (subspace_topology X TX A0)"
-        sorry \<comment> \<open>Single arc forms a valid graph: arc cover = {A0}.\<close>
+        sorry \<comment> \<open>Single arc A0 forms a graph: cover={A0}, strict+Hausdorff from X, trivial intersections.\<close>
     qed
     hence "A0 \<in> \<A>" using hA0_sub \<open>x0 \<in> A0\<close> unfolding \<A>_def by (by100 blast)
     thus ?thesis by (by100 blast)
