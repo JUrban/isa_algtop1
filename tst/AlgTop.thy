@@ -8891,7 +8891,7 @@ proof -
           (top1_quotient_group_carrier_on ?GA ?mulA ?N) (top1_quotient_group_mul_on ?mulA)
           e invg ({..<1}::nat set) { replicate n (0::nat, True) }"
     unfolding top1_group_presented_by_on_def
-      sorry \<comment> \<open>Need: is_group Q \<and> \<exists>F mulF eF invgF \<iota> \<pi>. free Z {0} \<and> hom \<pi> \<and> surj \<pi> \<and> ker \<pi> = N(a^n).\<close>
+      sorry \<comment> \<open>Need: is_group Q + \<exists>Z free + hom \<pi> + surj \<pi> + ker \<pi> = N(word a^n). All ingredients available.\<close>
     \<comment> \<open>Compose: pi1(A)/N iso Z/phi(N) = Z/nZ iso Z/nZ.\<close>
     have "top1_groups_isomorphic_on
         (top1_quotient_group_carrier_on ?GA ?mulA ?N)
@@ -8987,8 +8987,8 @@ proof -
         { replicate n (0::nat, True) }
     \<and> top1_groups_isomorphic_on G mul
         (top1_fundamental_group_carrier X TX x0) (top1_fundamental_group_mul X TX x0)"
-    using conjunct2[OF hquot_ZnZ_and_pres] h72_iso hbc sorry
-    \<comment> \<open>Need: compose iso chain Q \<cong> pi1(X,a) \<cong> pi1(X,x0) and package with presentation.\<close>
+    using conjunct2[OF hquot_ZnZ_and_pres]
+      groups_isomorphic_trans_fwd[OF hbc h72_iso] sorry
   show ?thesis using hiso_final hpres by (by100 blast)
 qed
 
