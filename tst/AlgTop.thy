@@ -15773,19 +15773,60 @@ proof -
      For each arc A \<in> \<A> meeting K, pick one point x_A \<in> K \<inter> A.
      The set B = {x_A} is closed discrete in K (by the graph intersection property).
      K compact + B closed discrete \<Rightarrow> B finite \<Rightarrow> finitely many arcs.\<close>
-  let ?\<A>K = "{A \<in> \<A>. A \<inter> K \<noteq> {}}"
-  have "finite ?\<A>K"
-    sorry \<comment> \<open>Book proof: choose interior points from arcs meeting K \<Rightarrow> closed discrete set in compact K.
-       Use compact\_discrete\_finite + graph\_selection\_set\_discrete.\<close>
-  moreover have "?\<A>K \<subseteq> {A. \<exists>\<A>'. (\<forall>A\<in>\<A>'. A \<subseteq> X \<and> top1_is_arc_on A (subspace_topology X TX A))
-      \<and> (\<Union>\<A>') = X \<and> A \<in> \<A>'}" using h\<A> h\<A>_cover by (by100 blast)
-  moreover have "K \<subseteq> \<Union>?\<A>K"
+  \<comment> \<open>Munkres 83.2: Construct finite \<A>0 covering K.
+     Split K points: vertices (in arc endpoints) + interior points (in exactly one arc).
+     Vertices: finitely many (closed discrete in compact K).
+     Interior arcs: finitely many (selection set is closed discrete).\<close>
+  \<comment> \<open>Define: vertices of X = endpoints of arcs.\<close>
+  let ?Vertices = "\<Union>A\<in>\<A>. top1_arc_endpoints_on A (subspace_topology X TX A)"
+  \<comment> \<open>Step 1: Interior points. For each arc A with interior points in K,
+     choose one interior point x_A \<in> K \<inter> (A - endpoints(A)).
+     The selection set B satisfies |B \<inter> A'| \<le> 1 for each arc A'.\<close>
+  let ?\<A>_int = "{A \<in> \<A>. (A - top1_arc_endpoints_on A (subspace_topology X TX A)) \<inter> K \<noteq> {}}"
+  have h\<A>int_finite: "finite ?\<A>_int"
+    sorry \<comment> \<open>Selection of interior points gives closed discrete set in K. Compact \<Rightarrow> finite.\<close>
+  \<comment> \<open>Step 2: Vertices in K are finitely many.\<close>
+  have hvert_K_finite: "finite (?Vertices \<inter> K)"
+    sorry \<comment> \<open>Vertices form closed discrete set in K. Compact \<Rightarrow> finite.\<close>
+  \<comment> \<open>Step 3: For each vertex v \<in> K, choose ONE arc containing v.\<close>
+  have "\<exists>\<A>_vert. finite \<A>_vert \<and> \<A>_vert \<subseteq> \<A> \<and> (\<forall>v \<in> ?Vertices \<inter> K. \<exists>A \<in> \<A>_vert. v \<in> A)"
+    sorry \<comment> \<open>One arc per vertex: finitely many choices (|Vertices \<inter> K| finite).\<close>
+  then obtain \<A>_vert where h\<A>v_fin: "finite \<A>_vert" and h\<A>v_sub: "\<A>_vert \<subseteq> \<A>"
+    and h\<A>v_cover: "\<forall>v \<in> ?Vertices \<inter> K. \<exists>A \<in> \<A>_vert. v \<in> A" by (by100 blast)
+  \<comment> \<open>Step 4: \<A>0 = \<A>_int \<union> \<A>_vert covers K.\<close>
+  let ?\<A>0 = "?\<A>_int \<union> \<A>_vert"
+  have "finite ?\<A>0" using h\<A>int_finite h\<A>v_fin by (by100 blast)
+  moreover have "?\<A>0 \<subseteq> {A. \<exists>\<A>'. (\<forall>A\<in>\<A>'. A \<subseteq> X \<and> top1_is_arc_on A (subspace_topology X TX A))
+      \<and> (\<Union>\<A>') = X \<and> A \<in> \<A>'}"
+  proof
+    fix A assume "A \<in> ?\<A>0"
+    hence "A \<in> \<A>" using h\<A>v_sub by (by100 blast)
+    show "A \<in> {A. \<exists>\<A>'. (\<forall>A\<in>\<A>'. A \<subseteq> X \<and> top1_is_arc_on A (subspace_topology X TX A))
+        \<and> (\<Union>\<A>') = X \<and> A \<in> \<A>'}"
+      using h\<A> h\<A>_cover \<open>A \<in> \<A>\<close> by (by5000 blast)
+  qed
+  moreover have "K \<subseteq> \<Union>?\<A>0"
   proof
     fix x assume "x \<in> K"
     hence "x \<in> X" using assms(2) by (by100 blast)
-    then obtain A where "A \<in> \<A>" "x \<in> A" using h\<A>_cover by (by100 blast)
-    hence "A \<in> ?\<A>K" using \<open>x \<in> K\<close> by (by100 blast)
-    thus "x \<in> \<Union>?\<A>K" using \<open>x \<in> A\<close> by (by100 blast)
+    then obtain A where hA: "A \<in> \<A>" "x \<in> A" using h\<A>_cover by (by100 blast)
+    show "x \<in> \<Union>?\<A>0"
+    proof (cases "x \<in> top1_arc_endpoints_on A (subspace_topology X TX A)")
+      case True
+      \<comment> \<open>x is a vertex of A, hence in Vertices \<inter> K.\<close>
+      hence "x \<in> ?Vertices \<inter> K" using hA(1) \<open>x \<in> K\<close> by (by100 blast)
+      from h\<A>v_cover[rule_format, OF this] obtain A' where "A' \<in> \<A>_vert" "x \<in> A'"
+        by (by100 blast)
+      thus ?thesis by (by100 blast)
+    next
+      case False
+      \<comment> \<open>x is an interior point of A, so A \<in> \<A>_int.\<close>
+      hence "x \<in> A - top1_arc_endpoints_on A (subspace_topology X TX A)" using hA(2) by (by100 blast)
+      hence "(A - top1_arc_endpoints_on A (subspace_topology X TX A)) \<inter> K \<noteq> {}"
+        using \<open>x \<in> K\<close> by (by100 blast)
+      hence "A \<in> ?\<A>_int" using hA(1) by (by100 blast)
+      thus ?thesis using hA(2) by (by100 blast)
+    qed
   qed
   ultimately show ?thesis by (by100 blast)
 qed
