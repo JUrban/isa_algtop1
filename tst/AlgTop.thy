@@ -15790,7 +15790,23 @@ proof -
     sorry \<comment> \<open>Vertices form closed discrete set in K. Compact \<Rightarrow> finite.\<close>
   \<comment> \<open>Step 3: For each vertex v \<in> K, choose ONE arc containing v.\<close>
   have "\<exists>\<A>_vert. finite \<A>_vert \<and> \<A>_vert \<subseteq> \<A> \<and> (\<forall>v \<in> ?Vertices \<inter> K. \<exists>A \<in> \<A>_vert. v \<in> A)"
-    sorry \<comment> \<open>One arc per vertex: finitely many choices (|Vertices \<inter> K| finite).\<close>
+  proof -
+    \<comment> \<open>For each v \<in> Vertices \<inter> K, v \<in> X = \<Union>\<A>, so v \<in> some A \<in> \<A>. Choose one.\<close>
+    have "\<forall>v \<in> ?Vertices \<inter> K. \<exists>A \<in> \<A>. v \<in> A"
+    proof (intro ballI)
+      fix v assume "v \<in> ?Vertices \<inter> K"
+      hence "v \<in> X" using assms(2) by (by100 blast)
+      thus "\<exists>A \<in> \<A>. v \<in> A" using h\<A>_cover by (by100 blast)
+    qed
+    hence "\<exists>f. \<forall>v \<in> ?Vertices \<inter> K. f v \<in> \<A> \<and> v \<in> f v" by (by5000 metis)
+    then obtain f where hf: "\<forall>v \<in> ?Vertices \<inter> K. f v \<in> \<A> \<and> v \<in> f v" by (by100 blast)
+    let ?\<A>_v = "f ` (?Vertices \<inter> K)"
+    have "finite ?\<A>_v" using hvert_K_finite by (by100 simp)
+    moreover have "?\<A>_v \<subseteq> \<A>" using hf by (by100 blast)
+    moreover have "\<forall>v \<in> ?Vertices \<inter> K. \<exists>A \<in> ?\<A>_v. v \<in> A"
+      using hf by (by100 blast)
+    ultimately show ?thesis by (by100 blast)
+  qed
   then obtain \<A>_vert where h\<A>v_fin: "finite \<A>_vert" and h\<A>v_sub: "\<A>_vert \<subseteq> \<A>"
     and h\<A>v_cover: "\<forall>v \<in> ?Vertices \<inter> K. \<exists>A \<in> \<A>_vert. v \<in> A" by (by100 blast)
   \<comment> \<open>Step 4: \<A>0 = \<A>_int \<union> \<A>_vert covers K.\<close>
