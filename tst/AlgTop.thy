@@ -14680,7 +14680,18 @@ proof -
       and hT_sub: "T \<subseteq> X"
       and hT_max: "\<forall>v\<in>X. \<exists>A\<in>\<A>. v \<in> A \<and> (\<exists>w\<in>T. w \<in> A)"
       and hx0_T: "x0 \<in> T"
-    sorry \<comment> \<open>Existence of maximal tree containing x0 (Munkres Lemma 84.3).\<close>
+  proof -
+    from connected_graph_has_maximal_tree[OF assms(1) assms(2) assms(3)]
+    obtain T0 where hT0: "top1_is_tree_on T0 (subspace_topology X TX T0)"
+        and hT0_sub: "T0 \<subseteq> X" and hT0_x0: "x0 \<in> T0"
+        and hT0_max: "\<forall>T'. T' \<subseteq> X \<longrightarrow> T0 \<subseteq> T' \<longrightarrow> top1_is_tree_on T' (subspace_topology X TX T') \<longrightarrow> T' = T0"
+      by (by5000 auto)
+    \<comment> \<open>Every vertex is reachable from T0 via some arc.\<close>
+    have hT0_reaches: "\<forall>v\<in>X. \<exists>A\<in>\<A>. v \<in> A \<and> (\<exists>w\<in>T0. w \<in> A)"
+      sorry \<comment> \<open>Maximal tree in connected graph spans all vertices: if v not in T0,
+         find arc A connecting v to T0, T0 union A is a larger tree (contradiction).\<close>
+    show ?thesis using that[OF hT0 hT0_sub hT0_reaches hT0_x0] by (by100 blast)
+  qed
   \<comment> \<open>Step 3: X/T is a wedge of circles (one per edge not in T).
      The edges not in T form loops when their endpoints are identified via T-collapse.\<close>
   obtain n :: nat and W :: "'b set" and TW :: "'b set set" and q :: "'a \<Rightarrow> 'b" and pw :: 'b
