@@ -16257,7 +16257,7 @@ proof -
       and hx0: "x0 \<in> X"
       and hF_iso: "top1_groups_isomorphic_on F mul
           (top1_fundamental_group_carrier X TX x0) (top1_fundamental_group_mul X TX x0)"
-    sorry \<comment> \<open>Wedge of n+1 circles realizes F.\<close>
+    sorry \<comment> \<open>Use free_group_realized_by_wedge.\<close>
   \<comment> \<open>Step 2: H \<le> F corresponds to a k-sheeted covering E of X.
      By Theorem 82.1, there exists a covering E with p_*(\<pi>_1(E)) = H-image.\<close>
   obtain E' :: "'b set" and TE' :: "'b set set" and p' :: "'b \<Rightarrow> 'a"
