@@ -14413,7 +14413,7 @@ proof -
               using hloop unfolding top1_is_loop_on_def by (by100 blast)
             \<comment> \<open>const_x0 is a path.\<close>
             have hconst_path: "top1_is_path_on top1_unit_interval top1_unit_interval_topology x0 x0 (top1_constant_path x0)"
-              sorry \<comment> \<open>Constant path is a path.\<close>
+              by (rule top1_constant_path_is_path[OF hI_top hx0])
             have "?H (s, 1) = top1_constant_path x0 s" for s
               unfolding top1_constant_path_def by (by100 simp)
             hence hH1': "\<forall>s\<in>top1_unit_interval. ?H (s, 1) = top1_constant_path x0 s" by (by100 blast)
