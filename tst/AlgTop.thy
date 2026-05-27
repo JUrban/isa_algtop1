@@ -14332,7 +14332,47 @@ proof -
             by (rule subspace_topology_is_topology_on[OF top1_open_sets_is_topology_on_UNIV]) (by100 blast)
           \<comment> \<open>[0,1] is path-connected (for any x,y in [0,1], the line segment connects them).\<close>
           have hI_pc: "top1_path_connected_on top1_unit_interval top1_unit_interval_topology"
-            sorry \<comment> \<open>Unit interval path-connected: straight-line paths.\<close>
+            unfolding top1_path_connected_on_def
+          proof (intro conjI ballI)
+            show "is_topology_on top1_unit_interval top1_unit_interval_topology" by (rule hI_top)
+          next
+            fix x y assume hx: "x \<in> top1_unit_interval" and hy: "y \<in> top1_unit_interval"
+            let ?f = "\<lambda>t::real. (1 - t) * x + t * y"
+            have hf_img: "\<forall>t\<in>top1_unit_interval. ?f t \<in> top1_unit_interval"
+            proof (intro ballI)
+              fix t assume "t \<in> top1_unit_interval"
+              hence ht: "0 \<le> t" "t \<le> 1" unfolding top1_unit_interval_def by (by100 auto)+
+              have hx': "0 \<le> x" "x \<le> 1" using hx unfolding top1_unit_interval_def by (by100 auto)+
+              have hy': "0 \<le> y" "y \<le> 1" using hy unfolding top1_unit_interval_def by (by100 auto)+
+              have "0 \<le> (1 - t) * x + t * y"
+                using ht hx' hy' by (intro add_nonneg_nonneg mult_nonneg_nonneg; by100 linarith)
+              moreover have "(1 - t) * x + t * y \<le> 1"
+              proof -
+                have "(1 - t) * x + t * y \<le> (1 - t) * 1 + t * 1"
+                  using ht hx' hy' by (intro add_mono mult_left_mono; by100 linarith)
+                thus ?thesis by (by100 simp)
+              qed
+              ultimately show "?f t \<in> top1_unit_interval"
+                unfolding top1_unit_interval_def by (by100 auto)
+            qed
+            have hf_cont: "continuous_on top1_unit_interval ?f"
+              by (intro continuous_intros)
+            have hf_cmap: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+                top1_unit_interval top1_unit_interval_topology ?f"
+            proof -
+              have "top1_unit_interval_topology = subspace_topology UNIV top1_open_sets top1_unit_interval"
+                unfolding top1_unit_interval_topology_def by (by100 blast)
+              thus ?thesis
+                using top1_continuous_map_on_subspace_open_sets_on[of top1_unit_interval ?f top1_unit_interval]
+                      hf_img hf_cont by (by5000 simp)
+            qed
+            have "?f 0 = x" by (by100 simp)
+            moreover have "?f 1 = y" by (by100 simp)
+            ultimately have "top1_is_path_on top1_unit_interval top1_unit_interval_topology x y ?f"
+              using hf_cmap unfolding top1_is_path_on_def by (by100 blast)
+            thus "\<exists>f. top1_is_path_on top1_unit_interval top1_unit_interval_topology x y f"
+              by (by100 blast)
+          qed
           \<comment> \<open>Every loop in [0,1] is null-homotopic (straight-line contraction).\<close>
           have hI_loops: "\<forall>x0 \<in> top1_unit_interval. \<forall>f. top1_is_loop_on top1_unit_interval top1_unit_interval_topology x0 f
               \<longrightarrow> top1_path_homotopic_on top1_unit_interval top1_unit_interval_topology x0 x0 f (top1_constant_path x0)"
