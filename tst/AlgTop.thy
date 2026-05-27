@@ -14301,9 +14301,25 @@ proof -
      Step 3: By Zorn's Lemma, \<A> has a maximal element T.\<close>
   define \<A> where "\<A> = {T \<in> Pow X. top1_is_tree_on T (subspace_topology X TX T) \<and> x0 \<in> T}"
   have h\<A>_ne: "\<A> \<noteq> {}"
-    sorry \<comment> \<open>X is a graph containing x0, so there exists an arc A containing x0.
-       A single arc is a graph, connected, and simply connected (contractible), hence a tree.
-       So A \<in> \<A>.\<close>
+  proof -
+    \<comment> \<open>X is a graph, so it's covered by arcs. x0 is in some arc.\<close>
+    obtain \<A>0 where h\<A>0: "(\<forall>A\<in>\<A>0. A \<subseteq> X \<and> top1_is_arc_on A (subspace_topology X TX A))"
+        and h\<A>0_cover: "\<Union>\<A>0 = X"
+    proof -
+      from assms(1) obtain A' where hA': "(\<forall>A\<in>A'. A \<subseteq> X \<and> top1_is_arc_on A (subspace_topology X TX A))"
+          and hA'_cover: "\<Union>A' = X"
+        unfolding top1_is_graph_on_def by (by5000 auto)
+      thus ?thesis using that by (by100 blast)
+    qed
+    from h\<A>0_cover assms(3) obtain A0 where "A0 \<in> \<A>0" "x0 \<in> A0" by (by100 blast)
+    hence hA0_arc: "top1_is_arc_on A0 (subspace_topology X TX A0)" and hA0_sub: "A0 \<subseteq> X"
+      using h\<A>0 by (by100 blast)+
+    \<comment> \<open>A single arc is a tree: graph (single-arc graph), connected, simply connected.\<close>
+    have "top1_is_tree_on A0 (subspace_topology X TX A0)"
+      sorry \<comment> \<open>Arc is a tree: connected + simply connected + graph structure.\<close>
+    hence "A0 \<in> \<A>" using hA0_sub \<open>x0 \<in> A0\<close> unfolding \<A>_def by (by100 blast)
+    thus ?thesis by (by100 blast)
+  qed
   have hchain: "\<forall>C \<in> chains \<A>. \<Union>C \<in> \<A>"
     sorry \<comment> \<open>Union of chain of trees is a tree (connected + simply connected + x0).\<close>
   from Zorn_Lemma[OF hchain]
