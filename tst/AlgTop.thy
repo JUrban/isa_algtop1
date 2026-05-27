@@ -7377,7 +7377,11 @@ proof -
         \<comment> \<open>Step D.1: iota . std_loop is path-homotopic to the n-fold product of alpha in A.\<close>
         have h_htpy: "top1_path_homotopic_on ?A ?TA ?a ?a ?\<iota>_loop
             (top1_path_power ?\<alpha> ?a n)"
-          sorry \<comment> \<open>Reparametrization: q identifies rotations, so each 1/n piece of the loop equals alpha.\<close>
+          sorry \<comment> \<open>Reparametrization: iota_loop traces A n times at uniform speed;
+             path_power alpha n traces A n times at binary-tree speed.
+             Both are reparametrizations of the same curve, hence homotopic.
+             For n=1: iota_loop = alpha exactly, path_power 1 = alpha * const ~ alpha (right identity).
+             For general n: needs reparam_path_homotopy or path-splitting argument.\<close>
         \<comment> \<open>Step D.2: The relator is the class of iota . std_loop.\<close>
         have h_rel_class: "?relator = {g. top1_loop_equiv_on ?A ?TA ?a ?\<iota>_loop g}"
         proof -
