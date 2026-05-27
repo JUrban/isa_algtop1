@@ -14386,7 +14386,42 @@ proof -
                 top1_unit_interval top1_unit_interval_topology ?H"
             proof -
               have hf_cont_on: "continuous_on top1_unit_interval f"
-                sorry \<comment> \<open>Bridge: continuous_map_on I I_top I I_top f implies continuous_on I f.\<close>
+              proof -
+                have hf_cmap: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+                    top1_unit_interval top1_unit_interval_topology f"
+                  using hloop unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+                \<comment> \<open>top1_open_sets = {U. open U}. I_top = subspace UNIV open_sets I.\<close>
+                \<comment> \<open>continuous_map_on gives: preimages of subspace-open sets are subspace-open.
+                   This equals continuous_on by continuous_on_open_invariant.\<close>
+                show ?thesis unfolding continuous_on_topological
+                proof (intro ballI allI impI)
+                  fix x T assume hx: "x \<in> top1_unit_interval" and hT: "open T" and hfx: "f x \<in> T"
+                  \<comment> \<open>T is open in R, so I \<inter> T is open in I_top.\<close>
+                  have "T \<in> top1_open_sets" unfolding top1_open_sets_def using hT by (by100 blast)
+                  hence "top1_unit_interval \<inter> T \<in> top1_unit_interval_topology"
+                    unfolding top1_unit_interval_topology_def subspace_topology_def by (by100 blast)
+                  \<comment> \<open>By continuous_map_on: preimage is in I_top.\<close>
+                  hence "{s \<in> top1_unit_interval. f s \<in> top1_unit_interval \<inter> T} \<in> top1_unit_interval_topology"
+                    using hf_cmap unfolding top1_continuous_map_on_def by (by100 blast)
+                  \<comment> \<open>Since f maps I into I, the preimage simplifies.\<close>
+                  have hf_img: "\<forall>s\<in>top1_unit_interval. f s \<in> top1_unit_interval"
+                    using hf_cmap unfolding top1_continuous_map_on_def by (by100 blast)
+                  hence "{s \<in> top1_unit_interval. f s \<in> top1_unit_interval \<inter> T}
+                      = {s \<in> top1_unit_interval. f s \<in> T}" using hf_img by (by100 blast)
+                  hence hpre: "{s \<in> top1_unit_interval. f s \<in> T} \<in> top1_unit_interval_topology"
+                    using \<open>{s \<in> top1_unit_interval. f s \<in> top1_unit_interval \<inter> T} \<in> top1_unit_interval_topology\<close>
+                    by (by100 simp)
+                  \<comment> \<open>I_top is subspace of R, so open in I_top means open_in_R intersect I.\<close>
+                  from hpre obtain U where hU: "U \<in> top1_open_sets" and heq: "{s \<in> top1_unit_interval. f s \<in> T} = top1_unit_interval \<inter> U"
+                    unfolding top1_unit_interval_topology_def subspace_topology_def by (by100 blast)
+                  have "open U" using hU unfolding top1_open_sets_def by (by100 blast)
+                  moreover have "x \<in> {s \<in> top1_unit_interval. f s \<in> T}" using hx hfx by (by100 blast)
+                  hence "x \<in> top1_unit_interval \<inter> U" using heq by (by100 simp)
+                  hence "x \<in> U" by (by100 blast)
+                  ultimately show "\<exists>A. open A \<and> x \<in> A \<and> (\<forall>y\<in>top1_unit_interval. y \<in> A \<longrightarrow> f y \<in> T)"
+                    using heq by (by100 blast)
+                qed
+              qed
               have hH_img: "\<And>p. p \<in> top1_unit_interval \<times> top1_unit_interval \<Longrightarrow> ?H p \<in> top1_unit_interval"
               proof -
                 fix p :: "real \<times> real" assume hp: "p \<in> top1_unit_interval \<times> top1_unit_interval"
