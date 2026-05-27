@@ -8956,12 +8956,79 @@ proof -
                 (map (\<lambda>(s, b). ((\<lambda>(_::nat). (1::int)) s, b)) (replicate n (0::nat, True)))}"
       proof -
         \<comment> \<open>Step 6a: word\_product of replicate n (0,True) with \<iota>(0) = 1 equals n.\<close>
+        have hmap_simp: "map (\<lambda>(s, b). ((\<lambda>(_::nat). (1::int)) s, b)) (replicate n (0::nat, True))
+            = replicate n (1::int, True)" by (induction n, by100 simp, by100 simp)
+        have hword_rep: "\<And>m. top1_group_word_product top1_Z_mul top1_Z_id top1_Z_invg
+            (replicate m (1::int, True)) = int m"
+        proof -
+          fix m show "top1_group_word_product top1_Z_mul top1_Z_id top1_Z_invg
+              (replicate m (1::int, True)) = int m"
+          proof (induction m)
+            case 0 show ?case unfolding top1_Z_id_def by (by100 simp)
+          next
+            case (Suc m)
+            have "replicate (Suc m) (1::int, True) = (1::int, True) # replicate m (1, True)"
+              by (by100 simp)
+            hence "top1_group_word_product top1_Z_mul top1_Z_id top1_Z_invg
+                (replicate (Suc m) (1::int, True))
+              = top1_Z_mul 1 (top1_group_word_product top1_Z_mul top1_Z_id top1_Z_invg
+                  (replicate m (1, True)))"
+              by (by100 simp)
+            also have "\<dots> = top1_Z_mul 1 (int m)" using Suc.IH by (by100 simp)
+            also have "\<dots> = int (Suc m)" unfolding top1_Z_mul_def by (by100 simp)
+            finally show ?case .
+          qed
+        qed
         have hword_eq: "top1_group_word_product top1_Z_mul top1_Z_id top1_Z_invg
             (map (\<lambda>(s, b). ((\<lambda>(_::nat). (1::int)) s, b)) (replicate n (0::nat, True))) = int n"
-          sorry \<comment> \<open>Word product of n copies of (1, True) in (Z, +, 0, uminus) = n.\<close>
+          using hmap_simp hword_rep by (by100 simp)
         \<comment> \<open>Step 6b: ker(\<pi>) = {z \<in> Z | \<phi>^{-1}(z) \<in> N} = \<phi>(N).\<close>
         have hker_eq_phiN: "top1_group_kernel_on top1_Z_group ?eQ ?\<pi> = \<phi> ` ?N"
-          sorry
+        proof (rule set_eqI, rule iffI)
+          fix z assume "z \<in> top1_group_kernel_on top1_Z_group ?eQ ?\<pi>"
+          \<comment> \<open>z \<in> Z, \<pi>(z) = eQ. So coset(\<phi>^{-1}(z)) = coset(eA). So \<phi>^{-1}(z) \<in> N.\<close>
+          hence hz: "z \<in> top1_Z_group" "?\<pi> z = ?eQ"
+            unfolding top1_group_kernel_on_def by (by100 blast)+
+          have "?coset (inv_into ?GA \<phi> z) = ?coset ?eA" using hz(2) by (by100 simp)
+          have "inv_into ?GA \<phi> z \<in> ?GA"
+          proof -
+            have "z \<in> \<phi> ` ?GA" using hz(1) h\<phi>_bij unfolding bij_betw_def by (by100 blast)
+            thus ?thesis by (rule inv_into_into)
+          qed
+          hence "inv_into ?GA \<phi> z \<in> ?N"
+            using \<open>?coset (inv_into ?GA \<phi> z) = ?coset ?eA\<close> hcoset_ker
+            unfolding top1_group_kernel_on_def by (by100 blast)
+          \<comment> \<open>\<phi>^{-1}(z) \<in> N, so z = \<phi>(\<phi>^{-1}(z)) \<in> \<phi>(N).\<close>
+          moreover have "z = \<phi> (inv_into ?GA \<phi> z)"
+          proof -
+            have "z \<in> \<phi> ` ?GA" using hz(1) h\<phi>_bij unfolding bij_betw_def by (by100 blast)
+            from f_inv_into_f[OF this] show ?thesis by (by100 simp)
+          qed
+          ultimately show "z \<in> \<phi> ` ?N" by (by100 blast)
+        next
+          fix z assume "z \<in> \<phi> ` ?N"
+          then obtain g where hg: "g \<in> ?N" "z = \<phi> g" by (by100 blast)
+          have "g \<in> ?GA" using hg(1) hN_normal
+            unfolding top1_normal_subgroup_on_def by (by100 blast)
+          hence "inv_into ?GA \<phi> z = g"
+          proof -
+            have "inj_on \<phi> ?GA" using h\<phi>_bij unfolding bij_betw_def by (by100 blast)
+            from inv_into_f_f[OF this \<open>g \<in> ?GA\<close>] show ?thesis using hg(2) by (by100 simp)
+          qed
+          hence "?\<pi> z = ?coset g" by (by100 simp)
+          also have "\<dots> = ?eQ"
+          proof -
+            from hg(1) have "g \<in> ?N" .
+            hence "g \<in> top1_group_kernel_on ?GA ?eQ ?coset"
+              using hcoset_ker by (by100 simp)
+            thus ?thesis unfolding top1_group_kernel_on_def using \<open>g \<in> ?GA\<close> by (by100 blast)
+          qed
+          finally have "?\<pi> z = ?eQ" .
+          moreover have "z \<in> top1_Z_group"
+            using hg(2) \<open>g \<in> ?GA\<close> h\<phi>_bij unfolding bij_betw_def by (by100 blast)
+          ultimately show "z \<in> top1_group_kernel_on top1_Z_group ?eQ ?\<pi>"
+            unfolding top1_group_kernel_on_def by (by100 blast)
+        qed
         \<comment> \<open>Step 6c: \<phi>(N) = \<phi>(NC\_G(\{relator\})) = NC\_Z(\{\<phi>(relator)\}).\<close>
         \<comment> \<open>Step 6d: NC\_Z(\{\<phi>(relator)\}) = NC\_Z(\{n\}) (from h\_relator\_val: \<phi>(relator) = \<pm>n).\<close>
         \<comment> \<open>Step 6e: NC\_Z(\{n\}) = NC\_Z(\{word\_product\}) (from hword\_eq).\<close>
