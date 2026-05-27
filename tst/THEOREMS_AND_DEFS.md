@@ -704,7 +704,7 @@ geom_cauchy_lim_bound                          i/Top1_Ch5_8.thy                 
 gp_singleton                                   i/Top1_Ch5_8.thy                     line 29297
 gp_singleton_set                               i/Top1_Ch5_8.thy                     line 29279
 graph_covering_is_graph                        AlgTop.thy                           line 14230
-graph_quotient_by_tree_wedge_of_circles        AlgTop.thy                           line 14341
+graph_quotient_by_tree_wedge_of_circles        AlgTop.thy                           line 14535
 grid_from_per_piece_subdivisions               i/Top1_Ch9_13.thy                    line 7786
 grid_subdivision_UV                            ac/AlgTopCached.thy                  line 15124
 group_assoc                                    ac/AlgTopCached.thy                  line 7524
@@ -2003,9 +2003,9 @@ Theorem_80_3_universal                         AlgTop.thy                       
 Theorem_81_2_covering_group_iso                AlgTop.thy                           line 13646
 Theorem_82_1_covering_existence                AlgTop.thy                           line 13944
 Theorem_83_4_covering_of_graph_is_graph        AlgTop.thy                           line 14056
-Theorem_84_7_fund_group_graph_is_free          AlgTop.thy                           line 14368
-Theorem_85_1_Nielsen_Schreier                  AlgTop.thy                           line 14480
-Theorem_85_3_Schreier_index                    AlgTop.thy                           line 14520
+Theorem_84_7_fund_group_graph_is_free          AlgTop.thy                           line 14562
+Theorem_85_1_Nielsen_Schreier                  AlgTop.thy                           line 14674
+Theorem_85_3_Schreier_index                    AlgTop.thy                           line 14714
 
 ## corollarys (64)
 
