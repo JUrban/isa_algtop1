@@ -8989,7 +8989,43 @@ next
   proof -
     note hfull = quotient_of_scheme_extract_full[OF hscheme]
     \<comment> \<open>quotient\_of\_scheme\_extract\_full gives all vertex data.\<close>
-    show ?thesis using hfull sorry \<comment> \<open>Extract 5 conjuncts from 15-conjunct existential.\<close>
+    \<comment> \<open>Use quotient\_of\_scheme\_extract\_full (obtains form) to get vertex data.\<close>
+    from quotient_of_scheme_extract_full[OF hscheme]
+    obtain P0 q0 vx0 vy0 where
+      hP0: "top1_is_polygonal_region_on P0 (length ?scheme)"
+      and hq0: "top1_quotient_map_on P0 (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P0) X TX q0"
+      and hverts0: "\<forall>i<length ?scheme. (vx0 i, vy0 i) \<in> P0"
+      and hedge0: "\<forall>i<length ?scheme. \<forall>j<length ?scheme.
+          fst (?scheme!i) = fst (?scheme!j) \<longrightarrow>
+          (\<forall>t\<in>I_set. q0 ((1-t) * vx0 i + t * vx0 (Suc i mod length ?scheme),
+             (1-t) * vy0 i + t * vy0 (Suc i mod length ?scheme))
+           = (if snd (?scheme!i) = snd (?scheme!j)
+              then q0 ((1-t) * vx0 j + t * vx0 (Suc j mod length ?scheme),
+                      (1-t) * vy0 j + t * vy0 (Suc j mod length ?scheme))
+              else q0 (t * vx0 j + (1-t) * vx0 (Suc j mod length ?scheme),
+                      t * vy0 j + (1-t) * vy0 (Suc j mod length ?scheme))))"
+      and hno_extra0: "\<forall>i<length ?scheme. \<forall>j<length ?scheme. \<forall>t\<in>I_set. \<forall>s\<in>I_set.
+          q0 ((1-t) * vx0 i + t * vx0 (Suc i mod length ?scheme),
+             (1-t) * vy0 i + t * vy0 (Suc i mod length ?scheme))
+        = q0 ((1-s) * vx0 j + s * vx0 (Suc j mod length ?scheme),
+             (1-s) * vy0 j + s * vy0 (Suc j mod length ?scheme))
+        \<longrightarrow> (i = j \<and> t = s)
+          \<or> (fst (?scheme!i) = fst (?scheme!j) \<and>
+             (if snd (?scheme!i) = snd (?scheme!j) then s = t else s = 1 - t))"
+      sorry \<comment> \<open>Extraction from obtains (blast timeout).\<close>
+    \<comment> \<open>Derive vertex identification from hvc and hedge0.\<close>
+    have hvert_id0: "\<forall>i<length ?scheme. \<forall>j<length ?scheme.
+        q0 (vx0 i, vy0 i) = q0 (vx0 j, vy0 j)"
+      using hvc[rule_format, of q0 vx0 vy0] hedge0 by (by100 blast)
+    show ?thesis
+      apply (rule exI[of _ P0], rule exI[of _ q0], rule exI[of _ vx0], rule exI[of _ vy0])
+      apply (intro conjI)
+      apply (rule hP0)
+      apply (rule hq0)
+      apply (rule hverts0)
+      apply (rule hvert_id0)
+      apply (rule hno_extra0)
+      done
   qed
   have hlabels: "fst ` set ?scheme = {..<m}"
   proof -
