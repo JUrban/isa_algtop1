@@ -15315,10 +15315,37 @@ lemma compact_in_graph_finite_arcs:
       and "top1_compact_on K (subspace_topology X TX K)"
   shows "\<exists>\<A>0. finite \<A>0 \<and> \<A>0 \<subseteq> {A. \<exists>\<A>. (\<forall>A\<in>\<A>. A \<subseteq> X \<and> top1_is_arc_on A (subspace_topology X TX A))
         \<and> (\<Union>\<A>) = X \<and> A \<in> \<A>} \<and> K \<subseteq> \<Union>\<A>0"
-  sorry \<comment> \<open>Munkres 83.2: compact set meets finitely many arcs.
-     Proof: vertices form discrete closed subset of compact K (finite).
-     Interior arc points form discrete closed subset (finite).
-     Each remaining point is in exactly one arc. Total: finitely many arcs.\<close>
+proof -
+  \<comment> \<open>Munkres 83.2: K compact in graph X. K meets finitely many arcs.\<close>
+  obtain \<A> where h\<A>: "\<forall>A\<in>\<A>. A \<subseteq> X \<and> top1_is_arc_on A (subspace_topology X TX A)"
+      and h\<A>_cover: "\<Union>\<A> = X"
+      and h\<A>_inter: "\<forall>A\<in>\<A>. \<forall>B\<in>\<A>. A \<noteq> B \<longrightarrow>
+           A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology X TX A)
+         \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology X TX B)
+         \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2"
+      and h\<A>_coh: "\<forall>C. C \<subseteq> X \<longrightarrow>
+           (closedin_on X TX C \<longleftrightarrow>
+            (\<forall>A\<in>\<A>. closedin_on A (subspace_topology X TX A) (A \<inter> C)))"
+    using assms(1) unfolding top1_is_graph_on_def by (by5000 auto)
+  \<comment> \<open>Step 1: The set of arcs meeting K is finite.
+     For each arc A \<in> \<A> meeting K, pick one point x_A \<in> K \<inter> A.
+     The set B = {x_A} is closed discrete in K (by the graph intersection property).
+     K compact + B closed discrete \<Rightarrow> B finite \<Rightarrow> finitely many arcs.\<close>
+  let ?\<A>K = "{A \<in> \<A>. A \<inter> K \<noteq> {}}"
+  have "finite ?\<A>K"
+    sorry \<comment> \<open>The key step: selection set is closed discrete in compact K.\<close>
+  moreover have "?\<A>K \<subseteq> {A. \<exists>\<A>'. (\<forall>A\<in>\<A>'. A \<subseteq> X \<and> top1_is_arc_on A (subspace_topology X TX A))
+      \<and> (\<Union>\<A>') = X \<and> A \<in> \<A>'}" using h\<A> h\<A>_cover by (by100 blast)
+  moreover have "K \<subseteq> \<Union>?\<A>K"
+  proof
+    fix x assume "x \<in> K"
+    hence "x \<in> X" using assms(2) by (by100 blast)
+    then obtain A where "A \<in> \<A>" "x \<in> A" using h\<A>_cover by (by100 blast)
+    hence "A \<in> ?\<A>K" using \<open>x \<in> K\<close> by (by100 blast)
+    thus "x \<in> \<Union>?\<A>K" using \<open>x \<in> A\<close> by (by100 blast)
+  qed
+  ultimately show ?thesis by (by100 blast)
+qed
 
 text \<open>Reviewer-requested: connected graph has a maximal tree (Munkres Lemma 84.3).
   A maximal tree T is one where no strictly larger subtree of X is also a tree.\<close>
