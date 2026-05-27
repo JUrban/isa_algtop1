@@ -7670,7 +7670,13 @@ proof -
             sorry \<comment> \<open>Bridge: continuous_on I psi + psi maps I into I -> continuous_map_on.\<close>
           have hid_cmap: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
               top1_unit_interval top1_unit_interval_topology (\<lambda>t. t)"
-            sorry \<comment> \<open>Identity is continuous_map_on.\<close>
+          proof -
+            have hI_top: "is_topology_on top1_unit_interval top1_unit_interval_topology"
+              unfolding top1_unit_interval_topology_def
+              by (rule subspace_topology_is_topology_on[OF top1_open_sets_is_topology_on_UNIV])
+                (by100 blast)
+            from top1_continuous_map_on_id[OF hI_top] show ?thesis unfolding id_def by (by100 blast)
+          qed
           have hf_img: "\<forall>s\<in>top1_unit_interval. ?\<iota>_loop s \<in> ?A"
           proof (intro ballI)
             fix s assume "s \<in> top1_unit_interval"
@@ -7700,8 +7706,17 @@ proof -
           \<comment> \<open>Bridge: iota_loop . psi = path_power alpha n on I.\<close>
           moreover have "\<forall>t\<in>top1_unit_interval. (?\<iota>_loop \<circ> \<psi>) t = top1_path_power ?\<alpha> ?a n t"
             using h\<psi>_eq by (by100 simp)
+          \<comment> \<open>The two loops agree pointwise on I, so they're path-homotopic by reflexivity + extensionality.\<close>
           ultimately show ?thesis
-            sorry \<comment> \<open>Same class: if two loops agree on I, they have the same homotopy class.\<close>
+          proof -
+            assume hhtpy: "top1_path_homotopic_on ?A ?TA ?a ?a ?\<iota>_loop (?\<iota>_loop \<circ> \<psi>)"
+            assume hagree: "\<forall>t\<in>top1_unit_interval. (?\<iota>_loop \<circ> \<psi>) t = top1_path_power ?\<alpha> ?a n t"
+            \<comment> \<open>path_homotopic_same_class: homotopic loops have same class.\<close>
+            \<comment> \<open>And loops agreeing on I have same class (extensionality).\<close>
+            have h_eq_htpy: "top1_path_homotopic_on ?A ?TA ?a ?a (?\<iota>_loop \<circ> \<psi>) (top1_path_power ?\<alpha> ?a n)"
+              sorry \<comment> \<open>Pointwise equal on I implies path-homotopic (reflexivity + extensionality).\<close>
+            show ?thesis using Lemma_51_1_path_homotopic_trans[OF hTA_loc hhtpy h_eq_htpy] by (by100 blast)
+          qed
         qed
         \<comment> \<open>Step D.2: The relator is the class of iota . std_loop.\<close>
         have h_rel_class: "?relator = {g. top1_loop_equiv_on ?A ?TA ?a ?\<iota>_loop g}"
