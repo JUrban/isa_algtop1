@@ -14687,8 +14687,54 @@ proof -
           \<comment> \<open>Every loop at x0 is null-homotopic: the loop is in some Tj (tree), hence null-homotopic.\<close>
           have hU_loops: "\<forall>f. top1_is_loop_on ?U ?TU x0 f
               \<longrightarrow> top1_path_homotopic_on ?U ?TU x0 x0 f (top1_constant_path x0)"
-            sorry \<comment> \<open>Loop in UC: by compactness/chain argument, loop is in some Tj (tree).
-               Tj simply connected, so loop is null-homotopic in Tj, hence in UC.\<close>
+          proof (intro allI impI)
+            fix f assume hf_loop: "top1_is_loop_on ?U ?TU x0 f"
+            \<comment> \<open>Step 1: f is in some Tk (chain argument + graph compactness).\<close>
+            obtain Tk where hTk_C: "Tk \<in> C" and hf_in_Tk: "top1_is_loop_on Tk (subspace_topology X TX Tk) x0 f"
+              sorry \<comment> \<open>Loop image f([0,1]) is compact in graph, hence in finitely many arcs, hence in some Tk.\<close>
+            \<comment> \<open>Step 2: Tk is simply connected (tree).\<close>
+            have "Tk \<in> \<A>" using hTk_C hC unfolding chains_def by (by100 blast)
+            hence "top1_is_tree_on Tk (subspace_topology X TX Tk)" unfolding \<A>_def by (by100 blast)
+            hence "top1_simply_connected_on Tk (subspace_topology X TX Tk)"
+              unfolding top1_is_tree_on_def by (by100 blast)
+            hence "\<forall>x0'\<in>Tk. \<forall>g. top1_is_loop_on Tk (subspace_topology X TX Tk) x0' g
+                \<longrightarrow> top1_path_homotopic_on Tk (subspace_topology X TX Tk) x0' x0' g (top1_constant_path x0')"
+              unfolding top1_simply_connected_on_def by (by100 blast)
+            have hx0_Tk: "x0 \<in> Tk"
+            proof -
+              have "Tk \<in> \<A>" using hTk_C hC unfolding chains_def by (by100 blast)
+              thus ?thesis unfolding \<A>_def by (by100 blast)
+            qed
+            hence "top1_path_homotopic_on Tk (subspace_topology X TX Tk) x0 x0 f (top1_constant_path x0)"
+              using hf_in_Tk \<open>\<forall>x0'\<in>Tk. _\<close> hx0_Tk by (by100 blast)
+            \<comment> \<open>Step 3: Lift homotopy from Tk to UC.\<close>
+            have hTk_sub_U: "Tk \<subseteq> ?U" using hTk_C by (by100 blast)
+            \<comment> \<open>Lift: path_homotopic in Tk → path_homotopic in UC via codomain enlargement.\<close>
+            have "top1_path_homotopic_on ?U ?TU x0 x0 f (top1_constant_path x0)"
+            proof -
+              from \<open>top1_path_homotopic_on Tk (subspace_topology X TX Tk) x0 x0 f (top1_constant_path x0)\<close>
+              obtain F where hF_cont: "top1_continuous_map_on (top1_unit_interval \<times> top1_unit_interval) II_topology
+                    Tk (subspace_topology X TX Tk) F"
+                  and hF0: "\<forall>s\<in>top1_unit_interval. F (s, 0) = f s"
+                  and hF1: "\<forall>s\<in>top1_unit_interval. F (s, 1) = top1_constant_path x0 s"
+                  and hFL: "\<forall>t\<in>top1_unit_interval. F (0, t) = x0"
+                  and hFR: "\<forall>t\<in>top1_unit_interval. F (1, t) = x0"
+                unfolding top1_path_homotopic_on_def by (by5000 blast)
+              \<comment> \<open>Enlarge codomain: F maps into Tk \<subseteq> UC, so it maps into UC.\<close>
+              from top1_continuous_map_on_codomain_enlarge[OF hF_cont hTk_sub_U hU_sub]
+              have "top1_continuous_map_on (top1_unit_interval \<times> top1_unit_interval) II_topology
+                  ?U ?TU F" .
+              \<comment> \<open>f and const_x0 are paths in UC (from the loop assumption).\<close>
+              have hf_path: "top1_is_path_on ?U ?TU x0 x0 f"
+                using hf_loop unfolding top1_is_loop_on_def by (by100 blast)
+              have hconst_path: "top1_is_path_on ?U ?TU x0 x0 (top1_constant_path x0)"
+                by (rule top1_constant_path_is_path[OF hTU hU_x0])
+              show ?thesis unfolding top1_path_homotopic_on_def
+                using hf_path hconst_path \<open>top1_continuous_map_on _ _ ?U ?TU F\<close> hF0 hF1 hFL hFR
+                by (by100 blast)
+            qed
+            thus "top1_path_homotopic_on ?U ?TU x0 x0 f (top1_constant_path x0)" .
+          qed
           show ?thesis using top1_simply_connected_from_one_point[OF hTU hU_pc hU_x0] hU_loops
             unfolding top1_simply_connected_on_def by (by100 blast)
         qed
