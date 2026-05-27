@@ -7109,17 +7109,18 @@ proof -
             \<comment> \<open>Direct: the constant homotopy H(x,t)=x satisfies H(x,0)=(inv.h)(x)=x and H(x,1)=x.\<close>
             show ?thesis unfolding top1_homotopic_on_def
             proof (intro conjI)
-              have "top1_continuous_map_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology (inv_into top1_S1 h_circ \<circ> h_circ)"
-                sorry \<comment> \<open>Composition of continuous maps.\<close>
-              thus "top1_continuous_map_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology (inv_into top1_S1 h_circ \<circ> h_circ)" .
+              have hinv_cont: "top1_continuous_map_on ?A ?TA_l top1_S1 top1_S1_topology (inv_into top1_S1 h_circ)"
+                using hhc unfolding top1_homeomorphism_on_def by (by100 blast)
+              show "top1_continuous_map_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology (inv_into top1_S1 h_circ \<circ> h_circ)"
+                by (rule top1_continuous_map_on_comp[OF hhc_cont hinv_cont])
             next
               show "top1_continuous_map_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology (\<lambda>x. x)"
                 by (rule hid_cont)
             next
               \<comment> \<open>Constant homotopy: F(x,t) = x.\<close>
               have "top1_continuous_map_on (top1_S1 \<times> top1_unit_interval)
-                  (product_topology_on top1_S1_topology top1_unit_interval_topology) top1_S1 top1_S1_topology fst"
-                sorry \<comment> \<open>First projection is continuous.\<close>
+                  (product_topology_on top1_S1_topology top1_unit_interval_topology) top1_S1 top1_S1_topology (\<lambda>p. fst p)"
+                using homotopy_const_continuous[OF hid_cont hS1_top_l] by (by100 simp)
               moreover have "\<forall>x\<in>top1_S1. fst (x, (0::real)) = (inv_into top1_S1 h_circ \<circ> h_circ) x"
                 using heq by (by100 simp)
               moreover have "\<forall>x\<in>top1_S1. fst (x, (1::real)) = x" by (by100 simp)
@@ -7134,7 +7135,34 @@ proof -
           \<comment> \<open>h . inv = id on A.\<close>
           show "top1_homotopic_on ?A ?TA_l ?A ?TA_l
               (h_circ \<circ> inv_into top1_S1 h_circ) (\<lambda>y. y)"
-            sorry \<comment> \<open>h.inv = id pointwise on A; reflexivity of homotopy.\<close>
+          proof -
+            have hbij: "bij_betw h_circ top1_S1 ?A"
+              using hhc unfolding top1_homeomorphism_on_def by (by100 blast)
+            have heqA: "\<forall>y \<in> ?A. (h_circ \<circ> inv_into top1_S1 h_circ) y = y"
+            proof
+              fix y assume "y \<in> ?A"
+              thus "(h_circ \<circ> inv_into top1_S1 h_circ) y = y"
+                using hbij f_inv_into_f[of y h_circ top1_S1]
+                unfolding bij_betw_def by (by5000 simp)
+            qed
+            have hidA: "top1_continuous_map_on ?A ?TA_l ?A ?TA_l (\<lambda>y. y)"
+              using top1_continuous_map_on_id[OF hTA_l] unfolding id_def by (by100 blast)
+            have hcomp_cont: "top1_continuous_map_on ?A ?TA_l ?A ?TA_l (h_circ \<circ> inv_into top1_S1 h_circ)"
+            proof -
+              have "top1_continuous_map_on ?A ?TA_l top1_S1 top1_S1_topology (inv_into top1_S1 h_circ)"
+                using hhc unfolding top1_homeomorphism_on_def by (by100 blast)
+              thus ?thesis by (rule top1_continuous_map_on_comp[OF _ hhc_cont])
+            qed
+            \<comment> \<open>Constant homotopy: F(y,t) = y.\<close>
+            have "top1_continuous_map_on (?A \<times> top1_unit_interval)
+                (product_topology_on ?TA_l top1_unit_interval_topology) ?A ?TA_l (\<lambda>p. fst p)"
+              using homotopy_const_continuous[OF hidA hTA_l] by (by100 simp)
+            moreover have "\<forall>y\<in>?A. fst (y, (0::real)) = (h_circ \<circ> inv_into top1_S1 h_circ) y"
+              using heqA by (by100 simp)
+            moreover have "\<forall>y\<in>?A. fst (y, (1::real)) = y" by (by100 simp)
+            ultimately show ?thesis unfolding top1_homotopic_on_def
+              using hcomp_cont hidA by (by100 blast)
+          qed
         qed
         have "h_circ (1, 0) = ?a" by (rule hhc_10)
         have hhc_iso: "top1_group_iso_on
