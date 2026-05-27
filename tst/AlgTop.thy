@@ -8971,7 +8971,8 @@ proof -
         { replicate n (0::nat, True) }
     \<and> top1_groups_isomorphic_on G mul
         (top1_fundamental_group_carrier X TX x0) (top1_fundamental_group_mul X TX x0)"
-    sorry \<comment> \<open>Presentation from Theorem 72.1 quotient + Z free + relator = a^n.\<close>
+    sorry \<comment> \<open>Need: Q presented by \<langle>a|a^n\<rangle> \<and> Q \<cong> \<pi>_1(X,x0).
+       Available: h72_iso, hbc, h\<phi>_iso, Z free, h_relator_val.\<close>
   show ?thesis using hiso_final hpres by (by100 blast)
 qed
 
