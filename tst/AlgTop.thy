@@ -9032,7 +9032,17 @@ proof -
         \<comment> \<open>Step 6c: \<phi>(N) = \<phi>(NC\_G(\{relator\})) = NC\_Z(\{\<phi>(relator)\}).\<close>
         \<comment> \<open>Step 6d: NC\_Z(\{\<phi>(relator)\}) = NC\_Z(\{n\}) (from h\_relator\_val: \<phi>(relator) = \<pm>n).\<close>
         \<comment> \<open>Step 6e: NC\_Z(\{n\}) = NC\_Z(\{word\_product\}) (from hword\_eq).\<close>
-        show ?thesis using hword_eq hker_eq_phiN h_relator_val sorry
+        \<comment> \<open>ker(\<pi>) = \<phi>(N) = NC\_Z(\{n\}) = NC\_Z(\{word\_product\}).\<close>
+        have "top1_group_kernel_on top1_Z_group ?eQ ?\<pi> = \<phi> ` ?N" by (rule hker_eq_phiN)
+        also have "\<dots> = top1_normal_subgroup_generated_on top1_Z_group top1_Z_mul (0::int) uminus {int n}"
+          by (rule hphiN_eq)
+        also have "{int n} = {top1_group_word_product top1_Z_mul top1_Z_id top1_Z_invg
+            (map (\<lambda>(s, b). ((\<lambda>(_::nat). (1::int)) s, b)) (replicate n (0::nat, True)))}"
+          using hword_eq by (by100 simp)
+        also have "top1_normal_subgroup_generated_on top1_Z_group top1_Z_mul (0::int) uminus \<dots>
+            = top1_normal_subgroup_generated_on top1_Z_group top1_Z_mul top1_Z_id top1_Z_invg \<dots>"
+          unfolding top1_Z_id_def top1_Z_invg_def by (by100 simp)
+        finally show ?thesis .
       qed
       \<comment> \<open>Step 7: Assemble the presentation.\<close>
       \<comment> \<open>Z free on {..<1}.\<close>
@@ -9050,7 +9060,11 @@ proof -
         apply (rule exI[of _ top1_Z_group], rule exI[of _ top1_Z_mul],
                rule exI[of _ top1_Z_id], rule exI[of _ top1_Z_invg],
                rule exI[of _ "\<lambda>(_::nat). (1::int)"], rule exI[of _ ?\<pi>])
-        using hZ_free_01 h\<pi>_hom h\<pi>_surj h\<pi>_ker sorry
+        apply (intro conjI)
+        apply (rule hZ_free_01)
+        apply (rule h\<pi>_hom)
+        apply (rule h\<pi>_surj)
+        using h\<pi>_ker by (by100 simp)
     qed
     \<comment> \<open>Compose: pi1(A)/N iso Z/phi(N) = Z/nZ iso Z/nZ.\<close>
     have "top1_groups_isomorphic_on
