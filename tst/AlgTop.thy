@@ -156,7 +156,23 @@ proof -
       \<comment> \<open>rot k is continuous on S1 (composition of continuous functions).\<close>
       \<comment> \<open>C \<inter> S1 is closed in S1 (C closed in B2, S1 \<subseteq> B2).\<close>
       have hCS1_closed_S1: "closedin_on top1_S1 top1_S1_topology (C \<inter> top1_S1)"
-        sorry \<comment> \<open>C closed in B2, S1 \<subseteq> B2, so C \<inter> S1 closed in S1 by Theorem 17.2.\<close>
+      proof -
+        have "top1_S1 \<subseteq> top1_B2" unfolding top1_S1_def top1_B2_def by (by100 auto)
+        have hB2_top: "is_topology_on top1_B2 top1_B2_topology"
+          using hB2_haus unfolding is_hausdorff_on_def by (by100 blast)
+        from Theorem_17_2[OF hB2_top \<open>top1_S1 \<subseteq> top1_B2\<close>, of "C \<inter> top1_S1"]
+        have "closedin_on top1_S1 (subspace_topology top1_B2 top1_B2_topology top1_S1) (C \<inter> top1_S1)
+            \<longleftrightarrow> (\<exists>D. closedin_on top1_B2 top1_B2_topology D \<and> C \<inter> top1_S1 = D \<inter> top1_S1)"
+          by (by100 blast)
+        moreover have "\<exists>D. closedin_on top1_B2 top1_B2_topology D \<and> C \<inter> top1_S1 = D \<inter> top1_S1"
+          using hC by (rule_tac x=C in exI) (by100 blast)
+        moreover have "subspace_topology top1_B2 top1_B2_topology top1_S1 = top1_S1_topology"
+        proof -
+          from subspace_topology_trans[OF \<open>top1_S1 \<subseteq> top1_B2\<close>]
+          show ?thesis unfolding top1_S1_topology_def top1_B2_topology_def by (by100 simp)
+        qed
+        ultimately show ?thesis by (by100 simp)
+      qed
       \<comment> \<open>rot k ` (C \<inter> S1) is closed in S1 (continuous image of compact in Hausdorff,
          or homeomorphism preserves closed).\<close>
       have "closedin_on top1_S1 top1_S1_topology (rot k ` (C \<inter> top1_S1))"
