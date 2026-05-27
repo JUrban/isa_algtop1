@@ -794,9 +794,10 @@ qed
 lemma m_projective_scheme_CW_data:
   assumes "top1_is_m_fold_projective_on X TX m"
       and "x0 \<in> X"
-  shows "\<exists>(A :: 'a set) (h :: real \<times> real \<Rightarrow> 'a).
+  shows "\<exists>(A :: 'a set) (h :: real \<times> real \<Rightarrow> 'a) (a :: 'a).
       closedin_on X TX A
-    \<and> top1_is_wedge_of_circles_on A (subspace_topology X TX A) ({..<m}::nat set) x0
+    \<and> a \<in> A
+    \<and> top1_is_wedge_of_circles_on A (subspace_topology X TX A) ({..<m}::nat set) a
     \<and> top1_continuous_map_on top1_B2 top1_B2_topology X TX h
     \<and> h ` top1_S1 \<subseteq> A"
 proof -
@@ -839,52 +840,49 @@ proof -
     \<comment> \<open>Step 2: A is a wedge of 1 circle (A \<cong> S1).
        S1/Z2 (antipodal identification) is homeomorphic to S1.
        The map z \<mapsto> z^2 (squaring as complex numbers) gives the homeomorphism.\<close>
+    \<comment> \<open>Define basepoint a = q(1,0) \<in> A.\<close>
+    define a where "a = q (1::real, 0::real)"
+    have ha_A: "a \<in> A"
+    proof -
+      have "(1::real, 0::real) \<in> top1_S1" unfolding top1_S1_def by (by100 simp)
+      thus ?thesis unfolding a_def A_def by (by100 blast)
+    qed
     have hA_wedge: "top1_is_wedge_of_circles_on A (subspace_topology X TX A)
-        ({..<1}::nat set) x0"
+        ({..<1}::nat set) a"
     proof -
       let ?TA = "subspace_topology X TX A"
       \<comment> \<open>A \<cong> S1 (from dunce\_cap\_skeleton\_is\_circle).\<close>
-      have "A = q ` top1_S1" unfolding A_def ..
       from dunce_cap_skeleton_is_circle[OF hdc hq_quot hq_S1]
       obtain f where hf_homeo: "top1_homeomorphism_on top1_S1 top1_S1_topology
           (q ` top1_S1) (subspace_topology X TX (q ` top1_S1)) f" by (by100 blast)
       hence hf_homeo': "top1_homeomorphism_on top1_S1 top1_S1_topology A ?TA f"
         unfolding A_def by (by100 simp)
-      \<comment> \<open>A has strict topology (subspace of strict).\<close>
       have hA_sub: "A \<subseteq> X" using hA_cl unfolding closedin_on_def by (by100 blast)
       have hA_strict: "is_topology_on_strict A ?TA"
       proof -
         have "is_topology_on_strict X TX"
           using hdc unfolding top1_is_dunce_cap_on_def by (by100 blast)
-        from subspace_topology_is_strict[OF this hA_sub]
-        show ?thesis .
+        from subspace_topology_is_strict[OF this hA_sub] show ?thesis .
       qed
-      \<comment> \<open>A is Hausdorff (subspace of Hausdorff X).\<close>
       have hA_haus: "is_hausdorff_on A ?TA"
-      proof -
-        from conjunct2[OF conjunct2[OF Theorem_17_11]] hX_haus hA_sub
-        show ?thesis by (by100 blast)
-      qed
-      \<comment> \<open>x0 \<in> A: need to show x0 is in the image q(S1).\<close>
-      have hx0_A: "x0 \<in> A"
-        sorry \<comment> \<open>x0 \<in> X = q(B2), so x0 = q(z) for some z. If z \<in> S1, x0 \<in> A. Otherwise need argument.\<close>
+        using conjunct2[OF conjunct2[OF Theorem_17_11]] hX_haus hA_sub by (by100 blast)
       \<comment> \<open>Build the wedge structure: C(0) = A.\<close>
       define C :: "nat \<Rightarrow> 'a set" where "C = (\<lambda>_. A)"
-      have "\<forall>a\<in>{..<1::nat}. C a \<subseteq> A \<and> x0 \<in> C a \<and> (\<exists>h. top1_homeomorphism_on top1_S1 top1_S1_topology (C a) ?TA h)"
-        unfolding C_def using hx0_A hf_homeo' by (by100 blast)
+      have hC_props: "\<forall>j\<in>{..<1::nat}. C j \<subseteq> A \<and> a \<in> C j \<and> (\<exists>h. top1_homeomorphism_on top1_S1 top1_S1_topology (C j) ?TA h)"
+        unfolding C_def using ha_A hf_homeo' by (by100 blast)
       moreover have "(\<Union>a\<in>{..<1::nat}. C a) = A"
       proof -
         have "{..<1::nat} = {0}" by (by100 auto)
         thus ?thesis unfolding C_def by (by100 simp)
       qed
-      moreover have "\<forall>a\<in>{..<1::nat}. \<forall>b\<in>{..<1::nat}. a \<noteq> b \<longrightarrow> C a \<inter> C b = {x0}"
+      moreover have "\<forall>j\<in>{..<1::nat}. \<forall>k\<in>{..<1::nat}. j \<noteq> k \<longrightarrow> C j \<inter> C k = {a}"
       proof (intro ballI impI)
-        fix a b :: nat assume "a \<in> {..<1}" "b \<in> {..<1}" "a \<noteq> b"
-        hence "a = 0" "b = 0" by (by100 simp)+
-        thus "C a \<inter> C b = {x0}" using \<open>a \<noteq> b\<close> by (by100 simp)
+        fix j' k' :: nat assume "j' \<in> {..<1}" "k' \<in> {..<1}" "j' \<noteq> k'"
+        hence "j' = 0" "k' = 0" by (by100 simp)+
+        thus "C j' \<inter> C k' = {a}" using \<open>j' \<noteq> k'\<close> by (by100 simp)
       qed
       moreover have "\<forall>D. D \<subseteq> A \<longrightarrow>
-          (closedin_on A ?TA D \<longleftrightarrow> (\<forall>a\<in>{..<1::nat}. closedin_on (C a) ?TA (C a \<inter> D)))"
+          (closedin_on A ?TA D \<longleftrightarrow> (\<forall>j\<in>{..<1::nat}. closedin_on (C j) ?TA (C j \<inter> D)))"
       proof -
         \<comment> \<open>With C(0) = A and {..<1} = {0}, the condition reduces to:
            D closed in A iff A \<inter> D closed in A. Since D \<subseteq> A, A \<inter> D = D.\<close>
@@ -892,12 +890,12 @@ proof -
         have hone: "{..<1::nat} = {0}" by (by100 auto)
         show ?thesis
         proof (intro allI impI iffI ballI)
-          fix D a assume "D \<subseteq> A" "closedin_on A ?TA D" "a \<in> {..<1::nat}"
-          hence "a = 0" by (by100 simp)
-          hence "C a \<inter> D = D" using \<open>D \<subseteq> A\<close> hC0 by (by100 blast)
-          thus "closedin_on (C a) ?TA (C a \<inter> D)" using \<open>closedin_on A ?TA D\<close> \<open>a = 0\<close> hC0 by (by100 simp)
+          fix D j assume "D \<subseteq> A" "closedin_on A ?TA D" "j \<in> {..<1::nat}"
+          hence "j = 0" by (by100 simp)
+          hence "C j \<inter> D = D" using \<open>D \<subseteq> A\<close> hC0 by (by100 blast)
+          thus "closedin_on (C j) ?TA (C j \<inter> D)" using \<open>closedin_on A ?TA D\<close> \<open>j = 0\<close> hC0 by (by100 simp)
         next
-          fix D assume "D \<subseteq> A" "\<forall>a\<in>{..<1::nat}. closedin_on (C a) ?TA (C a \<inter> D)"
+          fix D assume "D \<subseteq> A" "\<forall>j\<in>{..<1::nat}. closedin_on (C j) ?TA (C j \<inter> D)"
           hence "closedin_on (C 0) ?TA (C 0 \<inter> D)" unfolding hone by (by100 simp)
           have "C 0 \<inter> D = D" using \<open>D \<subseteq> A\<close> hC0 by (by100 blast)
           thus "closedin_on A ?TA D" using \<open>closedin_on (C 0) ?TA (C 0 \<inter> D)\<close> hC0 \<open>C 0 \<inter> D = D\<close>
@@ -905,16 +903,17 @@ proof -
         qed
       qed
       ultimately show ?thesis unfolding top1_is_wedge_of_circles_on_def
-        using hA_strict hA_haus hx0_A sorry
+        using hA_strict hA_haus ha_A hC_props sorry
     qed
     \<comment> \<open>Step 4: q(S1) \<subseteq> A by definition.\<close>
     have hq_S1_A: "q ` top1_S1 \<subseteq> A" unfolding A_def by (by100 blast)
     \<comment> \<open>Match: {..<m} = {..<1} since m = 1.\<close>
     have hm1: "({..<m}::nat set) = {..<1}" using True by (by100 simp)
     show ?thesis unfolding hm1
-      apply (rule exI[of _ A], rule exI[of _ q])
+      apply (rule exI[of _ A], rule exI[of _ q], rule exI[of _ a])
       apply (intro conjI)
       apply (rule hA_cl)
+      apply (rule ha_A)
       apply (rule hA_wedge)
       apply (rule hq_cont)
       apply (rule hq_S1_A)
@@ -967,18 +966,17 @@ proof -
        - Edges 2i and 2i+1 have the same label and direction, so they're identified.
        - All vertices map to a0. Each C(i) starts and ends at a0, forming a circle.
        - Different labels give circles sharing only a0.\<close>
-    have hA0_wedge: "top1_is_wedge_of_circles_on A0 (subspace_topology X TX A0) ({..<m}::nat set) x0"
+    have hA0_wedge: "\<exists>a0. a0 \<in> A0 \<and> top1_is_wedge_of_circles_on A0 (subspace_topology X TX A0) ({..<m}::nat set) a0"
       sorry \<comment> \<open>1-skeleton of projective scheme quotient is wedge of m circles.\<close>
-    \<comment> \<open>Basepoint: a0 = q0(v(0)) might not equal x0. Use path-connectivity to transfer.\<close>
-    have hx0_X: "x0 \<in> X" using assms(2) by (by100 blast)
-    \<comment> \<open>For now, use a0 as basepoint. If x0 \<in> A0, we could transfer.
-       Actually the statement asks for wedge with basepoint x0.
-       We need x0 = a0 or adapt the wedge basepoint.\<close>
+    then obtain a0 where ha0_A: "a0 \<in> A0"
+        and ha0_wedge: "top1_is_wedge_of_circles_on A0 (subspace_topology X TX A0) ({..<m}::nat set) a0"
+      by (by100 blast)
     show ?thesis
-      apply (rule exI[of _ A0], rule exI[of _ h0])
+      apply (rule exI[of _ A0], rule exI[of _ h0], rule exI[of _ a0])
       apply (intro conjI)
       apply (rule hA0_cl)
-      apply (rule hA0_wedge)
+      apply (rule ha0_A)
+      apply (rule ha0_wedge)
       apply (rule hh0_cont)
       apply (rule hh0_S1)
       done
@@ -4792,8 +4790,8 @@ proof -
     qed
   qed
   \<comment> \<open>Step 2: The 2m-gon's 1-skeleton after identifications is a wedge of m circles.\<close>
-  have h_skel: "\<exists>A. closedin_on X TX A \<and>
-      top1_is_wedge_of_circles_on A (subspace_topology X TX A) {..<m} x0"
+  have h_skel: "\<exists>A a. closedin_on X TX A \<and> a \<in> A \<and>
+      top1_is_wedge_of_circles_on A (subspace_topology X TX A) {..<m} a"
     using m_projective_scheme_CW_data[OF assms] by (by100 blast)
   \<comment> \<open>Step 3: Theorem 72.1 with relator a₁²a₂²...aₘ².\<close>
   show ?thesis sorry \<comment> \<open>Theorem 72.1 + projective presentation.\<close>
