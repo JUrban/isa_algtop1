@@ -7066,10 +7066,51 @@ proof -
           have "?hc_star {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1,0)
               (\<lambda>s. (cos (2*pi*s), sin (2*pi*s))) g}
             = {g. top1_loop_equiv_on ?A ?TA_l ?a (h_circ \<circ> (\<lambda>s. (cos (2*pi*s), sin (2*pi*s)))) g}"
-            sorry \<comment> \<open>induced_on class = class of composed loop (standard fact).\<close>
+          proof -
+            let ?sl = "\<lambda>s::real. (cos (2*pi*s), sin (2*pi*s))"
+            let ?sl_class = "{g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0) ?sl g}"
+            \<comment> \<open>By definition: induced_on = {g. EX f' in [sl]. loop_equiv (h_circ . f') g}.\<close>
+            have hdef: "?hc_star ?sl_class = {g. \<exists>f' \<in> ?sl_class. top1_loop_equiv_on ?A ?TA_l ?a (h_circ \<circ> f') g}"
+              unfolding top1_fundamental_group_induced_on_def by (by100 blast)
+            \<comment> \<open>std_loop is in its own class.\<close>
+            have hsl_in: "?sl \<in> ?sl_class"
+              using top1_loop_equiv_on_refl[OF standard_S1_loop_is_loop] by (by100 blast)
+            \<comment> \<open>For any f' in [sl], h_circ.f' ~ h_circ.sl (continuous preserves homotopy).\<close>
+            have "\<And>f'. f' \<in> ?sl_class \<Longrightarrow>
+                {g. top1_loop_equiv_on ?A ?TA_l ?a (h_circ \<circ> f') g}
+                = {g. top1_loop_equiv_on ?A ?TA_l ?a (h_circ \<circ> ?sl) g}"
+            proof -
+              fix f' assume hf': "f' \<in> ?sl_class"
+              have hf'_htpy: "top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0) ?sl f'"
+                using hf' unfolding top1_loop_equiv_on_def by (by100 blast)
+              have hf'_loop: "top1_is_loop_on top1_S1 top1_S1_topology (1, 0) f'"
+                using hf' unfolding top1_loop_equiv_on_def by (by100 blast)
+              from top1_continuous_preserves_path_homotopy[OF hS1_top_l hhc_cont
+                  standard_S1_loop_is_loop hf'_loop hf'_htpy]
+              have "top1_path_homotopic_on ?A ?TA_l (h_circ (1,0)) (h_circ (1,0)) (h_circ \<circ> ?sl) (h_circ \<circ> f')" .
+              hence "top1_path_homotopic_on ?A ?TA_l ?a ?a (h_circ \<circ> ?sl) (h_circ \<circ> f')"
+                using hhc_10 by (by100 simp)
+              from path_homotopic_same_class[OF hTA_l this]
+              show "{g. top1_loop_equiv_on ?A ?TA_l ?a (h_circ \<circ> f') g}
+                  = {g. top1_loop_equiv_on ?A ?TA_l ?a (h_circ \<circ> ?sl) g}"
+                by (by100 simp)
+            qed
+            hence "?hc_star ?sl_class = {g. top1_loop_equiv_on ?A ?TA_l ?a (h_circ \<circ> ?sl) g}"
+              using hdef hsl_in by (by5000 blast)
+            thus ?thesis by (by100 blast)
+          qed
           \<comment> \<open>(h_circ . std_loop)(t) = h_circ(cos 2pi*t, sin 2pi*t) = alpha(t) for t in I.\<close>
           also have "\<dots> = ?class_\<alpha>"
-            sorry \<comment> \<open>h_circ . std_loop = alpha pointwise (from hhc_alpha), hence same class.\<close>
+          proof -
+            \<comment> \<open>h_circ . std_loop and alpha agree on [0,1], hence loop_equiv classes are equal.\<close>
+            have "\<And>t. t \<in> top1_unit_interval \<Longrightarrow>
+                (h_circ \<circ> (\<lambda>s. (cos (2*pi*s), sin (2*pi*s)))) t = ?\<alpha> t"
+              using hhc_alpha by (by100 simp)
+            hence "\<And>g. top1_loop_equiv_on ?A ?TA_l ?a (h_circ \<circ> (\<lambda>s. (cos (2*pi*s), sin (2*pi*s)))) g
+                \<longleftrightarrow> top1_loop_equiv_on ?A ?TA_l ?a ?\<alpha> g"
+              sorry \<comment> \<open>loop_equiv extensional: f|_I = g|_I implies same equiv class.\<close>
+            thus ?thesis by (by100 blast)
+          qed
           finally show ?thesis .
         qed
         \<comment> \<open>phi . h_circ* : pi1(S1) -> Z is bij + hom.\<close>
