@@ -15307,6 +15307,58 @@ lemma tree_simply_connected:
   shows "top1_simply_connected_on T TT"
   using assms unfolding top1_is_tree_on_def by (by100 blast)
 
+text \<open>Helper: a compact discrete topological space is finite.
+  In a discrete space, every singleton is open, so \{\{x\} | x \<in> X\} is an open cover.
+  By compactness, there is a finite subcover, hence X is finite.\<close>
+lemma compact_discrete_finite:
+  assumes "top1_compact_on X TX"
+      and "\<forall>x\<in>X. {x} \<in> TX"
+  shows "finite X"
+proof -
+  \<comment> \<open>The singletons form an open cover of X.\<close>
+  let ?U = "(\<lambda>x. {x}) ` X"
+  have hU_open: "?U \<subseteq> TX"
+  proof
+    fix U assume "U \<in> ?U"
+    then obtain x where "x \<in> X" "U = {x}" by (by100 blast)
+    thus "U \<in> TX" using assms(2) by (by100 blast)
+  qed
+  have hU_cover: "X \<subseteq> \<Union>?U" by (by100 blast)
+  \<comment> \<open>By compactness, there exists a finite subcover.\<close>
+  have hTX: "is_topology_on X TX"
+    using assms(1) unfolding top1_compact_on_def by (by100 blast)
+  have "\<exists>F. finite F \<and> F \<subseteq> ?U \<and> X \<subseteq> \<Union>F"
+  proof -
+    from assms(1) have "\<forall>Uc. Uc \<subseteq> TX \<and> X \<subseteq> \<Union>Uc \<longrightarrow> (\<exists>F. finite F \<and> F \<subseteq> Uc \<and> X \<subseteq> \<Union>F)"
+      unfolding top1_compact_on_def by (by100 blast)
+    from this[rule_format, of ?U] hU_open hU_cover show ?thesis by (by100 blast)
+  qed
+  then obtain F where hF: "finite F" "F \<subseteq> ?U" "X \<subseteq> \<Union>F"
+    by (by100 blast)
+  \<comment> \<open>F is a finite set of singletons. Each element of F is {x} for some x.\<close>
+  have "\<forall>S\<in>F. \<exists>x. S = {x}" using hF(2) by (by100 blast)
+  \<comment> \<open>\<Union>F is finite (finite union of singletons).\<close>
+  have "\<forall>S\<in>F. finite S" using hF(2) by (by100 blast)
+  have "finite (\<Union>F)" using hF(1) \<open>\<forall>S\<in>F. finite S\<close> by (by100 blast)
+  thus "finite X" using hF(3) using finite_subset by (by100 blast)
+qed
+
+text \<open>Helper: in a graph with coherent topology, if B \<subseteq> X and |B \<inter> A| \<le> 1
+  for each arc A, then every subset of B is closed in X.\<close>
+lemma graph_selection_set_discrete:
+  assumes "top1_is_graph_on X TX"
+      and "B \<subseteq> X"
+      and "\<forall>A\<in>\<A>. A \<subseteq> X \<and> top1_is_arc_on A (subspace_topology X TX A)"
+      and "\<Union>\<A> = X"
+      and "\<forall>D. D \<subseteq> X \<longrightarrow>
+           (closedin_on X TX D \<longleftrightarrow>
+            (\<forall>A\<in>\<A>. closedin_on A (subspace_topology X TX A) (A \<inter> D)))"
+      and "\<forall>A\<in>\<A>. finite (B \<inter> A) \<and> card (B \<inter> A) \<le> 1"
+  shows "\<forall>S. S \<subseteq> B \<longrightarrow> closedin_on X TX S"
+  sorry \<comment> \<open>For each A, S \<inter> A \<subseteq> B \<inter> A which has \<le> 1 element.
+     Finite sets are closed in arcs (T1/Hausdorff subspace).
+     By coherent topology: S closed in X.\<close>
+
 text \<open>Lemma 83.2 (Munkres): A compact subspace of a graph meets only finitely many arcs.
   This is needed for the chain-of-trees Zorn argument.\<close>
 lemma compact_in_graph_finite_arcs:
