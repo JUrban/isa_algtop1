@@ -6345,7 +6345,13 @@ theorem Theorem_73_4_dunce_cap:
            (top1_fundamental_group_carrier X TX x0)
            (top1_fundamental_group_mul X TX x0)
            (top1_Zn_group n)
-           (top1_Zn_mul n)"
+           (top1_Zn_mul n)
+       \<and> (\<exists>(G :: (real \<Rightarrow> 'a) set set set) mul e invg.
+           top1_group_presented_by_on G mul e invg ({..<1}::nat set)
+             { replicate n (0::nat, True) }
+         \<and> top1_groups_isomorphic_on G mul
+             (top1_fundamental_group_carrier X TX x0)
+             (top1_fundamental_group_mul X TX x0))"
 proof -
   \<comment> \<open>Step 0: Extract quotient map q from dunce cap definition.\<close>
   obtain q where hq_quot: "top1_quotient_map_on top1_B2 top1_B2_topology X TX q"
@@ -8955,7 +8961,18 @@ proof -
       (top1_fundamental_group_carrier X TX ?a)
       (top1_fundamental_group_mul X TX ?a)"
     by (rule Corollary_52_2_basepoint_independent[OF hX_pc assms(3) ha_X])
-  show ?thesis by (rule groups_isomorphic_trans_fwd[OF hbc hmain])
+  have hiso_final: "top1_groups_isomorphic_on
+      (top1_fundamental_group_carrier X TX x0) (top1_fundamental_group_mul X TX x0)
+      (top1_Zn_group n) (top1_Zn_mul n)"
+    by (rule groups_isomorphic_trans_fwd[OF hbc hmain])
+  \<comment> \<open>Presentation: the Theorem 72.1 quotient is presented by \<langle>a | a^n\<rangle>.\<close>
+  have hpres: "\<exists>(G :: (real \<Rightarrow> 'a) set set set) mul e invg.
+      top1_group_presented_by_on G mul e invg ({..<1}::nat set)
+        { replicate n (0::nat, True) }
+    \<and> top1_groups_isomorphic_on G mul
+        (top1_fundamental_group_carrier X TX x0) (top1_fundamental_group_mul X TX x0)"
+    sorry \<comment> \<open>Use h72\_iso + hA\_free\_a' + relator identification from the proof above.\<close>
+  show ?thesis using hiso_final hpres by (by100 blast)
 qed
 
 text \<open>Corollary: the dunce cap with n has presentation \<langle>a | a^n\<rangle>.
@@ -8971,10 +8988,7 @@ corollary dunce_cap_presentation:
          \<and> top1_groups_isomorphic_on G mul
              (top1_fundamental_group_carrier X TX x0)
              (top1_fundamental_group_mul X TX x0)"
-  sorry \<comment> \<open>The \<S>73 proof constructs this via Theorem 72.1:
-     \<pi>_1(X) = \<pi>_1(A) / N(relator) where A = q(S1) is a circle,
-     \<pi>_1(A) is free on 1 generator, relator = a^n.
-     The quotient group has the right type (real \<Rightarrow> 'a) set set set.\<close>
+  using Theorem_73_4_dunce_cap[OF assms] by (by100 blast)
 
 (** from \<S>74 Theorem 74.4: \<pi>_1(P_m) has presentation \<langle>a_1, \<dots>, a_m | a_1² \<cdots> a_m²\<rangle>.
     The single relator is (a_1 a_1)(a_2 a_2)\<cdots>(a_m a_m). **)
@@ -8997,25 +9011,21 @@ proof (cases "m = 1")
   from Theorem_73_4_dunce_cap[OF _ hdc assms(2)]
   have hiso: "top1_groups_isomorphic_on
       (top1_fundamental_group_carrier X TX x0) (top1_fundamental_group_mul X TX x0)
-      (top1_Zn_group 2) (top1_Zn_mul 2)" by (by100 simp)
-  \<comment> \<open>Use dunce\_cap\_presentation for n=2 to get the right type.\<close>
-  have "2 > (0::nat)" by (by100 simp)
-  from dunce_cap_presentation[OF this hdc assms(2)]
-  have "\<exists>(G :: (real \<Rightarrow> 'a) set set set) mul e invg.
+      (top1_Zn_group 2) (top1_Zn_mul 2)"
+    and hpres_raw: "\<exists>(G :: (real \<Rightarrow> 'a) set set set) mul e invg.
       top1_group_presented_by_on G mul e invg ({..<1}::nat set) { replicate 2 (0::nat, True) }
     \<and> top1_groups_isomorphic_on G mul
-        (top1_fundamental_group_carrier X TX x0) (top1_fundamental_group_mul X TX x0)" .
+        (top1_fundamental_group_carrier X TX x0) (top1_fundamental_group_mul X TX x0)"
+    by (by100 simp)+
   \<comment> \<open>Match: {..<1} = {..<m} and replicate 2 = [(0,T),(0,T)] = concat for m=1.\<close>
-  moreover have "{..<1::nat} = {..<m}" using True by (by100 simp)
-  moreover have "{ replicate 2 (0::nat, True) }
+  have hrep_eq: "replicate 2 (0::nat, True) = [(0, True), (0, True)]" by (by5000 eval)
+  have hconcat_eq: "concat (map (\<lambda>i. [(i, True), (i, True)]) [0..<1]) = [(0::nat, True), (0, True)]"
+    by (by5000 eval)
+  have hm_eq: "{..<m} = ({..<1}::nat set)" using True by (by100 simp)
+  have hrel_eq: "{ replicate 2 (0::nat, True) }
       = { concat (map (\<lambda>i. [(i, True), (i, True)]) [0..<m]) }"
-  proof -
-    have "replicate 2 (0::nat, True) = [(0, True), (0, True)]" by (by5000 eval)
-    also have "\<dots> = concat (map (\<lambda>i. [(i, True), (i, True)]) [0..<1])" by (by5000 eval)
-    also have "\<dots> = concat (map (\<lambda>i. [(i, True), (i, True)]) [0..<m])" using True by (by100 simp)
-    finally show ?thesis by (by100 simp)
-  qed
-  ultimately show ?thesis by (by5000 simp)
+    using True hrep_eq hconcat_eq by (by100 simp)
+  from hpres_raw show ?thesis unfolding hm_eq[symmetric] hrel_eq[symmetric] .
 next
   case False
   \<comment> \<open>Case m \<ge> 2: Standard approach via polygonal quotient + Theorem 72.1.\<close>
@@ -15110,7 +15120,7 @@ proof -
       sorry \<comment> \<open>p|\_B: B \<rightarrow> A is a covering map of simply-connected A;
          by Thm 54.4, p|\_B is a homeomorphism; A is an arc, so B is an arc.\<close>
     have hAE_cover: "\<Union>?\<A>E = E"
-      sorry \<comment> \<open>\<A>B covers B; p surjective; path components of p\<inverse>(A) cover p\<inverse>(A) which covers E.\<close>
+      sorry \<comment> \<open>\<A>B covers B; p surjective; path components of p\<inverse>(A) cover E.\<close>
     have hAE_intersect: "\<forall>A'\<in>?\<A>E. \<forall>B'\<in>?\<A>E. A' \<noteq> B' \<longrightarrow>
          A' \<inter> B' \<subseteq> top1_arc_endpoints_on A' (subspace_topology E TE A')
        \<and> A' \<inter> B' \<subseteq> top1_arc_endpoints_on B' (subspace_topology E TE B')
