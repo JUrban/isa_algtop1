@@ -7603,9 +7603,46 @@ proof -
               have h_endpts: "?\<psi>s 0 = 0 \<and> ?\<psi>s 1 = real (Suc m) / real n"
                 using h\<psi>m_1 assms(1) by (simp add: field_simps)
               have h_cont_new: "continuous_on top1_unit_interval ?\<psi>s"
-                sorry \<comment> \<open>Piecewise continuous: 2t/n on [0,1/2] and psi_m(2t-1)+1/n on [1/2,1].
-                   Both pieces continuous, matching at t=1/2 (both = 1/n).
-                   By continuous_on_cases.\<close>
+              proof -
+                have hn_ne: "real n \<noteq> (0::real)" using assms(1) by (by100 simp)
+                \<comment> \<open>Left piece: continuous on {0..1/2}.\<close>
+                let ?f = "\<lambda>t::real. 2*t / real n"
+                let ?g = "\<lambda>t::real. \<psi>m (2*t - 1) + 1 / real n"
+                have hc_f: "continuous_on {0..1/2} ?f"
+                  using hn_ne by (intro continuous_intros; by100 blast)
+                \<comment> \<open>Right piece: continuous on {1/2..1}.\<close>
+                have hc_g: "continuous_on {1/2..1} ?g"
+                proof -
+                  have hc_lin: "continuous_on {1/2..1::real} (\<lambda>t. 2*t - 1)" by (intro continuous_intros)
+                  have himg: "(\<lambda>t::real. 2*t - 1) ` {1/2..1} \<subseteq> top1_unit_interval"
+                    unfolding top1_unit_interval_def by (by100 auto)
+                  have "continuous_on {1/2..1} (\<lambda>t. \<psi>m (2*t - 1))"
+                    by (rule continuous_on_compose2[OF h\<psi>m_cont hc_lin himg])
+                  thus ?thesis by (intro continuous_intros)
+                qed
+                \<comment> \<open>Matching at t=1/2: f(1/2) = 1/n = g(1/2).\<close>
+                have hmatch: "\<forall>t. (t \<in> {0..1/2} \<and> \<not> t \<le> 1/2) \<or> (t \<in> {1/2..1} \<and> t \<le> 1/2)
+                    \<longrightarrow> ?f t = ?g t"
+                proof (intro allI impI)
+                  fix t :: real assume "(t \<in> {0..1/2} \<and> \<not> t \<le> 1/2) \<or> (t \<in> {1/2..1} \<and> t \<le> 1/2)"
+                  hence ht: "t = 1/2" by (by100 auto)
+                  have "?f t = 1 / real n" using ht by (by100 simp)
+                  also have "\<dots> = ?g t"
+                  proof -
+                    have "2*t - 1 = 0" using ht by (by100 simp)
+                    thus ?thesis using h\<psi>m_0 by (by100 simp)
+                  qed
+                  finally show "?f t = ?g t" .
+                qed
+                \<comment> \<open>Combine via continuous_on_cases.\<close>
+                have "top1_unit_interval = {0..1/2::real} \<union> {1/2..1}"
+                  unfolding top1_unit_interval_def by (by100 auto)
+                moreover have "closed {0..1/2::real}" by (by100 auto)
+                moreover have "closed {1/2..1::real}" by (by100 auto)
+                ultimately show ?thesis
+                  using continuous_on_cases[OF \<open>closed {0..1/2}\<close> \<open>closed {1/2..1}\<close> hc_f hc_g hmatch]
+                  by (by100 simp)
+              qed
               show ?case
                 apply (rule exI[of _ ?\<psi>s])
                 using h_range_new h_endpts h_eq_new h_cont_new by (by100 blast)
