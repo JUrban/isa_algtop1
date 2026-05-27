@@ -7497,7 +7497,13 @@ proof -
                 \<and> continuous_on top1_unit_interval \<psi>"
             proof (induct m)
               case 0
-              show ?case sorry \<comment> \<open>psi_0 = const 0: iota_loop(0) = a = const_a = path_power 0.\<close>
+              \<comment> \<open>psi_0 = const 0. iota_loop(0) = a = path_power 0 t.\<close>
+              have hf0: "?\<iota>_loop 0 = ?a" using h\<iota>_eq h10_S1 hq_10 by (by100 simp)
+              have hpp0: "\<And>t. top1_path_power ?\<alpha> ?a 0 t = ?a"
+                by (simp add: top1_constant_path_def)
+              show ?case
+                apply (rule exI[of _ "\<lambda>_. 0"])
+                using hf0 hpp0 by (intro conjI; by100 auto)
             next
               case (Suc m)
               \<comment> \<open>Given psi_m, define psi_{m+1}(t) = 2t/n for t<=1/2, psi_m(2t-1)+1/n for t>1/2.
