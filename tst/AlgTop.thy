@@ -7568,7 +7568,38 @@ proof -
                 qed
               qed
               have h_range_new: "\<forall>t\<in>top1_unit_interval. ?\<psi>s t \<ge> 0 \<and> ?\<psi>s t \<le> real (Suc m) / real n"
-                sorry \<comment> \<open>Range bounds from psi_m range + arithmetic.\<close>
+              proof (intro ballI conjI)
+                fix t :: real assume ht: "t \<in> top1_unit_interval"
+                have hn_pos: "real n > 0" using assms(1) by (by100 simp)
+                show "?\<psi>s t \<ge> 0"
+                proof (cases "t \<le> 1/2")
+                  case True thus ?thesis using hn_pos ht unfolding top1_unit_interval_def by (by100 auto)
+                next
+                  case False
+                  have "2*t-1 \<in> top1_unit_interval" using ht False unfolding top1_unit_interval_def by (by100 auto)
+                  thus ?thesis using h\<psi>m_range False hn_pos by (by100 auto)
+                qed
+                show "?\<psi>s t \<le> real (Suc m) / real n"
+                proof (cases "t \<le> 1/2")
+                  case True
+                  have "2*t \<le> 1" using True by (by100 linarith)
+                  hence "2*t/real n \<le> 1/real n" using hn_pos
+                    by (metis divide_right_mono less_imp_le)
+                  also have "\<dots> \<le> real (Suc m) / real n"
+                  proof -
+                    have "(1::real) \<le> real (Suc m)" by (by100 simp)
+                    thus ?thesis using hn_pos by (metis divide_right_mono less_imp_le)
+                  qed
+                  finally show ?thesis using True by (by100 simp)
+                next
+                  case False
+                  have "2*t-1 \<in> top1_unit_interval" using ht False unfolding top1_unit_interval_def by (by100 auto)
+                  hence "\<psi>m (2*t-1) \<le> real m / real n" using h\<psi>m_range by (by100 blast)
+                  hence "\<psi>m (2*t-1) + 1/real n \<le> real m / real n + 1/real n" by (by100 linarith)
+                  also have "\<dots> = real (Suc m) / real n" using hn_pos assms(1) by (simp add: field_simps)
+                  finally show ?thesis using False by (by100 simp)
+                qed
+              qed
               have h_endpts: "?\<psi>s 0 = 0 \<and> ?\<psi>s 1 = real (Suc m) / real n"
                 using h\<psi>m_1 assms(1) by (simp add: field_simps)
               have h_cont_new: "continuous_on top1_unit_interval ?\<psi>s"
