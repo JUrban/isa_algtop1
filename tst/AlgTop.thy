@@ -14326,7 +14326,20 @@ proof -
            homotopy contracts any loop). By homeomorphism_preserves_simply_connected.\<close>
         \<comment> \<open>Step 1: [0,1] is simply connected.\<close>
         have hI_sc: "top1_simply_connected_on top1_unit_interval top1_unit_interval_topology"
-          sorry \<comment> \<open>Unit interval simply connected: convex, straight-line homotopy.\<close>
+        proof -
+          have hI_top: "is_topology_on top1_unit_interval top1_unit_interval_topology"
+            unfolding top1_unit_interval_topology_def
+            by (rule subspace_topology_is_topology_on[OF top1_open_sets_is_topology_on_UNIV]) (by100 blast)
+          \<comment> \<open>[0,1] is path-connected (for any x,y in [0,1], the line segment connects them).\<close>
+          have hI_pc: "top1_path_connected_on top1_unit_interval top1_unit_interval_topology"
+            sorry \<comment> \<open>Unit interval path-connected: straight-line paths.\<close>
+          \<comment> \<open>Every loop in [0,1] is null-homotopic (straight-line contraction).\<close>
+          have hI_loops: "\<forall>x0 \<in> top1_unit_interval. \<forall>f. top1_is_loop_on top1_unit_interval top1_unit_interval_topology x0 f
+              \<longrightarrow> top1_path_homotopic_on top1_unit_interval top1_unit_interval_topology x0 x0 f (top1_constant_path x0)"
+            sorry \<comment> \<open>Straight-line homotopy: H(s,t) = (1-t)*f(s) + t*x0 contracts f to constant.\<close>
+          show ?thesis using top1_simply_connected_from_one_point[OF hI_top hI_pc] hI_loops hI_pc
+            unfolding top1_simply_connected_on_def by (by100 blast)
+        qed
         \<comment> \<open>Step 2: Arc is homeomorphic to [0,1] (by definition of arc).\<close>
         obtain h where hh: "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology A0 (subspace_topology X TX A0) h"
           using hA0_arc unfolding top1_is_arc_on_def by (by100 blast)
