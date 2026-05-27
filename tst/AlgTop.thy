@@ -903,7 +903,7 @@ proof -
         qed
       qed
       ultimately show ?thesis unfolding top1_is_wedge_of_circles_on_def
-        using hA_strict hA_haus ha_A hC_props sorry
+        using hA_strict hA_haus ha_A hC_props sorry \<comment> \<open>Packaging all wedge conditions.\<close>
     qed
     \<comment> \<open>Step 4: q(S1) \<subseteq> A by definition.\<close>
     have hq_S1_A: "q ` top1_S1 \<subseteq> A" unfolding A_def by (by100 blast)
