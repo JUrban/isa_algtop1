@@ -341,8 +341,18 @@ proof -
        Similarly y \<in> V0. And U0 \<inter> V0 = {} (from U \<inter> V = {}).\<close>
     let ?U0 = "X - q ` (top1_B2 - U)"
     let ?V0 = "X - q ` (top1_B2 - V)"
-    have hU_sub: "U \<subseteq> top1_B2" using hU_open sorry
-    have hV_sub: "V \<subseteq> top1_B2" using hV_open sorry
+    have hU_sub: "U \<subseteq> top1_B2"
+    proof -
+      from hU_open have "U \<in> subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) top1_B2"
+        unfolding top1_B2_topology_def .
+      thus ?thesis unfolding subspace_topology_def by (by100 blast)
+    qed
+    have hV_sub: "V \<subseteq> top1_B2"
+    proof -
+      from hV_open have "V \<in> subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) top1_B2"
+        unfolding top1_B2_topology_def .
+      thus ?thesis unfolding subspace_topology_def by (by100 blast)
+    qed
     have hB2U_closed: "closedin_on top1_B2 top1_B2_topology (top1_B2 - U)"
     proof -
       have "top1_B2 - U \<subseteq> top1_B2" by (by100 blast)
