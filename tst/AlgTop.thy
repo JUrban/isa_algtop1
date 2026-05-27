@@ -7506,10 +7506,76 @@ proof -
                 using hf0 hpp0 by (intro conjI; by100 auto)
             next
               case (Suc m)
-              \<comment> \<open>Given psi_m, define psi_{m+1}(t) = 2t/n for t<=1/2, psi_m(2t-1)+1/n for t>1/2.
-                 Uses hf_period: iota_loop(psi_m(2t-1) + 1/n) = iota_loop(psi_m(2t-1)) = path_power m (2t-1).
-                 And h_alpha_eq_f: alpha(2t) = iota_loop(2t/n).\<close>
-              show ?case sorry
+              \<comment> \<open>Given psi_m, define psi_{m+1}(t) = 2t/n for t<=1/2, psi_m(2t-1)+1/n for t>1/2.\<close>
+              from Suc obtain \<psi>m where
+                  h\<psi>m_range: "\<forall>t\<in>top1_unit_interval. \<psi>m t \<ge> 0 \<and> \<psi>m t \<le> real m / real n"
+                  and h\<psi>m_0: "\<psi>m 0 = 0" and h\<psi>m_1: "\<psi>m 1 = real m / real n"
+                  and h\<psi>m_eq: "\<forall>t\<in>top1_unit_interval. ?\<iota>_loop (\<psi>m t) = top1_path_power ?\<alpha> ?a m t"
+                  and h\<psi>m_cont: "continuous_on top1_unit_interval \<psi>m"
+                by (by100 blast)
+              let ?\<psi>s = "\<lambda>t::real. if t \<le> 1/2 then 2*t / real n else \<psi>m (2*t - 1) + 1 / real n"
+              \<comment> \<open>Verification: f(psi_s(t)) = path_power alpha (Suc m) t.\<close>
+              have h_eq_new: "\<forall>t\<in>top1_unit_interval. ?\<iota>_loop (?\<psi>s t) = top1_path_power ?\<alpha> ?a (Suc m) t"
+              proof (intro ballI)
+                fix t :: real assume ht: "t \<in> top1_unit_interval"
+                show "?\<iota>_loop (?\<psi>s t) = top1_path_power ?\<alpha> ?a (Suc m) t"
+                proof (cases "t \<le> 1/2")
+                  case True
+                  \<comment> \<open>psi_s(t) = 2t/n. iota_loop(2t/n) = alpha(2t) by h_alpha_eq_f.\<close>
+                  have "?\<iota>_loop (?\<psi>s t) = ?\<iota>_loop (2*t / real n)" using True by (by100 simp)
+                  also have "\<dots> = ?\<alpha> (2*t)"
+                  proof -
+                    have "2*t \<in> top1_unit_interval" using ht True
+                      unfolding top1_unit_interval_def by (by100 auto)
+                    from h\<alpha>_eq_f[rule_format, OF this]
+                    show ?thesis by (by100 simp)
+                  qed
+                  finally have "?\<iota>_loop (?\<psi>s t) = ?\<alpha> (2*t)" .
+                  \<comment> \<open>path_power (Suc m) at t<=1/2 = alpha(2t).\<close>
+                  moreover have "top1_path_power ?\<alpha> ?a (Suc m) t = ?\<alpha> (2*t)"
+                  proof -
+                    have "top1_path_power ?\<alpha> ?a (Suc m) t = top1_path_product ?\<alpha> (top1_path_power ?\<alpha> ?a m) t"
+                      by (by100 simp)
+                    also have "\<dots> = ?\<alpha> (2*t)" using True unfolding top1_path_product_def by (by100 simp)
+                    finally show ?thesis .
+                  qed
+                  ultimately show ?thesis by (by100 simp)
+                next
+                  case False
+                  hence ht2: "t > 1/2" by (by100 linarith)
+                  \<comment> \<open>psi_s(t) = psi_m(2t-1) + 1/n.\<close>
+                  have "?\<iota>_loop (?\<psi>s t) = ?\<iota>_loop (\<psi>m (2*t - 1) + 1/real n)"
+                    using ht2 by (by100 simp)
+                  also have "\<dots> = ?\<iota>_loop (\<psi>m (2*t - 1))"
+                    using hf_period by (by100 metis)
+                  also have "\<dots> = top1_path_power ?\<alpha> ?a m (2*t - 1)"
+                  proof -
+                    have "2*t - 1 \<in> top1_unit_interval"
+                      using ht ht2 unfolding top1_unit_interval_def by (by100 auto)
+                    thus ?thesis using h\<psi>m_eq by (by100 blast)
+                  qed
+                  finally have "?\<iota>_loop (?\<psi>s t) = top1_path_power ?\<alpha> ?a m (2*t - 1)" .
+                  \<comment> \<open>path_power (Suc m) at t>1/2 = path_power m (2t-1).\<close>
+                  moreover have "top1_path_power ?\<alpha> ?a (Suc m) t = top1_path_power ?\<alpha> ?a m (2*t - 1)"
+                  proof -
+                    have "top1_path_power ?\<alpha> ?a (Suc m) t = top1_path_product ?\<alpha> (top1_path_power ?\<alpha> ?a m) t"
+                      by (by100 simp)
+                    also have "\<dots> = top1_path_power ?\<alpha> ?a m (2*t - 1)"
+                      using ht2 unfolding top1_path_product_def by (by100 simp)
+                    finally show ?thesis .
+                  qed
+                  ultimately show ?thesis by (by100 simp)
+                qed
+              qed
+              have h_range_new: "\<forall>t\<in>top1_unit_interval. ?\<psi>s t \<ge> 0 \<and> ?\<psi>s t \<le> real (Suc m) / real n"
+                sorry \<comment> \<open>Range bounds from psi_m range + arithmetic.\<close>
+              have h_endpts: "?\<psi>s 0 = 0 \<and> ?\<psi>s 1 = real (Suc m) / real n"
+                using h\<psi>m_1 assms(1) by (simp add: field_simps)
+              have h_cont_new: "continuous_on top1_unit_interval ?\<psi>s"
+                sorry \<comment> \<open>Piecewise continuous; matching at t=1/2.\<close>
+              show ?case
+                apply (rule exI[of _ ?\<psi>s])
+                using h_range_new h_endpts h_eq_new h_cont_new by (by100 blast)
             qed
           qed
           \<comment> \<open>At m=n: obtain psi_n with iota_loop . psi_n = path_power alpha n.\<close>
