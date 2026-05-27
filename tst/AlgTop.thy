@@ -2,7 +2,66 @@ theory AlgTop
   imports "AlgTopChain.AlgTopChain"
 begin
 
-text \<open>Standard topology facts: B2 compact, S1 closed in B2.\<close>
+text \<open>Standard topology facts: B2 compact, S1 closed in B2, dunce cap Hausdorff.\<close>
+
+text \<open>The dunce cap quotient space is Hausdorff. This is used in both
+  m\_projective\_scheme\_CW\_data and Theorem 73.4.\<close>
+lemma dunce_cap_hausdorff:
+  assumes "top1_is_dunce_cap_on X TX n"
+  shows "is_hausdorff_on X TX"
+proof -
+  \<comment> \<open>Extract data from dunce cap definition.\<close>
+  have hX_strict: "is_topology_on_strict X TX"
+    using assms unfolding top1_is_dunce_cap_on_def by (by100 blast)
+  have hTX: "is_topology_on X TX"
+    using hX_strict unfolding is_topology_on_strict_def by (by100 blast)
+  have hn_pos: "n > 0" using assms unfolding top1_is_dunce_cap_on_def by (by100 blast)
+  obtain q where hq_quot: "top1_quotient_map_on top1_B2 top1_B2_topology X TX q"
+      and hq_S1: "\<forall>z\<in>top1_S1. \<forall>z'\<in>top1_S1.
+            q z = q z' \<longleftrightarrow>
+            (\<exists>k::nat. k < n \<and>
+               z' = (cos (2*pi*real k/real n) * fst z - sin (2*pi*real k/real n) * snd z,
+                     sin (2*pi*real k/real n) * fst z + cos (2*pi*real k/real n) * snd z))"
+      and hq_inj: "inj_on q (top1_B2 - top1_S1)"
+      and hq_sep: "\<forall>z\<in>top1_B2 - top1_S1. \<forall>z'\<in>top1_S1. q z \<noteq> q z'"
+    using assms unfolding top1_is_dunce_cap_on_def
+    apply (elim exE conjE)
+    apply (rule that)
+    apply assumption+
+    done
+  have hq_cont: "top1_continuous_map_on top1_B2 top1_B2_topology X TX q"
+    using hq_quot unfolding top1_quotient_map_on_def by (by100 blast)
+  have hq_surj: "q ` top1_B2 = X"
+    using hq_quot unfolding top1_quotient_map_on_def by (by100 blast)
+  \<comment> \<open>B2 is compact Hausdorff, hence normal.\<close>
+  have hB2_haus: "is_hausdorff_on top1_B2 top1_B2_topology"
+  proof -
+    have hTOS_eq: "(order_topology_on_UNIV :: real set set) = top1_open_sets"
+      using order_topology_on_UNIV_eq_HOL_open unfolding top1_open_sets_def by (by100 auto)
+    have hR_haus: "is_hausdorff_on (UNIV::real set) (top1_open_sets::real set set)"
+      using conjunct1[OF Theorem_17_11[where 'a=real]] unfolding hTOS_eq .
+    have "is_hausdorff_on ((UNIV::real set) \<times> (UNIV::real set))
+        (product_topology_on (top1_open_sets::real set set) (top1_open_sets::real set set))"
+      using conjunct1[OF conjunct2[OF Theorem_17_11]] hR_haus by (by100 blast)
+    hence "is_hausdorff_on (UNIV::(real\<times>real) set)
+        (product_topology_on top1_open_sets top1_open_sets)" by (by100 simp)
+    thus ?thesis using conjunct2[OF conjunct2[OF Theorem_17_11]]
+      unfolding top1_B2_topology_def by (by100 blast)
+  qed
+  \<comment> \<open>q is a closed map (quotient from compact to Hausdorff \<Rightarrow> closed,
+     or directly: fibers are finite hence closed in B2, saturated closed = closed map).\<close>
+  \<comment> \<open>By Theorem 26.6: continuous from compact to Hausdorff is closed.\<close>
+  \<comment> \<open>Actually need: the quotient map property + normal source \<Rightarrow> Hausdorff target.\<close>
+  \<comment> \<open>Munkres uses: for distinct x, y \<in> X, the fibers q\<inverse>(x) and q\<inverse>(y) are disjoint
+     closed subsets of normal B2, hence separable by open sets. Push forward via quotient.\<close>
+  \<comment> \<open>Step 1: q is a closed map.\<close>
+  have hq_closed: "\<forall>C. closedin_on top1_B2 top1_B2_topology C \<longrightarrow> closedin_on X TX (q ` C)"
+    sorry \<comment> \<open>Quotient map from compact to T1 is closed.\<close>
+  \<comment> \<open>Step 2: For distinct x, y, fibers q\<inverse>(x) and q\<inverse>(y) are disjoint finite closed sets.\<close>
+  \<comment> \<open>Step 3: B2 is normal (compact Hausdorff), so separate fibers by open U, V.\<close>
+  \<comment> \<open>Step 4: Saturate U, V; push forward to get open neighborhoods of x, y.\<close>
+  show ?thesis sorry
+qed
 
 lemma B2_compact: "top1_compact_on top1_B2 top1_B2_topology"
 proof -
@@ -325,7 +384,7 @@ proof -
     \<comment> \<open>Step 1: A is closed in X (image of compact S1 under continuous map to Hausdorff X).\<close>
     have hB2_compact: "top1_compact_on top1_B2 top1_B2_topology" by (rule B2_compact)
     have hX_haus: "is_hausdorff_on X TX"
-      using hdc unfolding top1_is_dunce_cap_on_def is_topology_on_strict_def is_hausdorff_on_def sorry
+      by (rule dunce_cap_hausdorff[OF hdc])
     have hS1_closed: "closedin_on top1_B2 top1_B2_topology top1_S1" by (rule S1_closed_in_B2)
     have hA_cl: "closedin_on X TX A"
       unfolding A_def
