@@ -8904,7 +8904,14 @@ proof -
     apply (rule exI[of _ "\<lambda>(_::nat). (1::int)"])
     apply (rule exI[of _ "\<lambda>z. top1_group_coset_on ?GA ?mulA ?N (inv_into ?GA \<phi> z)"])
     apply (intro conjI)
-    sorry \<comment> \<open>Z free on {..<1} + hom + surj + ker = N(word a^n).\<close>
+    \<comment> \<open>Z free on {..<1}: rewrite {0::nat} = {..<1} then use Z\_is\_free\_on\_one\_generator.\<close>
+    apply (subgoal_tac "top1_is_free_group_full_on top1_Z_group top1_Z_mul top1_Z_id top1_Z_invg (\<lambda>(_::nat). (1::int)) {..<1::nat}")
+    apply assumption
+    using Z_is_free_on_one_generator apply (by100 simp)
+    \<comment> \<open>hom: \<pi> = coset \<circ> \<phi>^{-1} is hom Z \<rightarrow> Q.\<close>
+    \<comment> \<open>surj: \<pi> surjective (from \<phi> bij + coset surj).\<close>
+    \<comment> \<open>ker: ker(\<pi>) = N(\{word\_product replicate n (0,True)\}).\<close>
+    sorry \<comment> \<open>Remaining: hom + surj + ker = N(word a^n). Uses h\<phi>_iso, quotient_projection_properties.\<close>
     \<comment> \<open>Compose: pi1(A)/N iso Z/phi(N) = Z/nZ iso Z/nZ.\<close>
     have "top1_groups_isomorphic_on
         (top1_quotient_group_carrier_on ?GA ?mulA ?N)
