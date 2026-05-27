@@ -10,7 +10,9 @@ lemma m_projective_scheme_CW_data:
     \<and> top1_is_wedge_of_circles_on A (subspace_topology X TX A) ({..<m}::nat set) x0
     \<and> top1_continuous_map_on top1_B2 top1_B2_topology X TX h
     \<and> h ` top1_S1 \<subseteq> A"
-  sorry
+  sorry \<comment> \<open>Extract CW data from projective definition.
+     m=1: dunce_cap(2) = P2, A = single circle, h = quotient map.
+     m>=2: quotient_of_scheme(projective_scheme), A = 1-skeleton = wedge of m circles.\<close>
 
 
 
