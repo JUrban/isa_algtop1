@@ -139,8 +139,99 @@ proof -
     \<comment> \<open>Saturation: sat(C) = {z \<in> B2 | q(z) \<in> q(C)} = C \<union> \<Union>k<n. rot k ` (C \<inter> S1).\<close>
     define sat where "sat = {z \<in> top1_B2. q z \<in> q ` C}"
     \<comment> \<open>Step 1: sat = C \<union> \<Union>k<n. rot k ` (C \<inter> S1).\<close>
+    have hS1_sub_B2: "top1_S1 \<subseteq> top1_B2"
+      unfolding top1_S1_def top1_B2_def by (by100 auto)
+    \<comment> \<open>General fact: rotation preserves S1 (for any k).\<close>
+    have hrot_S1_gen: "\<And>k. rot k ` top1_S1 \<subseteq> top1_S1"
+    proof
+      fix k :: nat and w assume "w \<in> rot k ` top1_S1"
+      then obtain z where hz: "z \<in> top1_S1" "w = rot k z" by (by100 blast)
+      have "fst z ^ 2 + snd z ^ 2 = 1" using hz(1) unfolding top1_S1_def by (by100 simp)
+      define c where "c = cos (2*pi*real k/real n)"
+      define s where "s = sin (2*pi*real k/real n)"
+      have "fst w = c * fst z - s * snd z" and "snd w = s * fst z + c * snd z"
+        using hz(2) unfolding rot_def c_def s_def by (by100 simp)+
+      hence "fst w ^ 2 + snd w ^ 2 = (c^2 + s^2) * ((fst z)^2 + (snd z)^2)"
+        by (by5000 algebra)
+      also have "\<dots> = 1" using sin_cos_squared_add[of "2*pi*real k/real n"]
+          \<open>fst z ^ 2 + snd z ^ 2 = 1\<close> unfolding c_def s_def by (by5000 algebra)
+      finally show "w \<in> top1_S1" unfolding top1_S1_def by (by100 simp)
+    qed
     have hsat_eq: "sat = C \<union> (\<Union>k\<in>{..<n}. rot k ` (C \<inter> top1_S1))"
-      unfolding sat_def rot_def sorry
+    proof (rule set_eqI, rule iffI)
+      fix z assume "z \<in> sat"
+      hence hz_B2: "z \<in> top1_B2" and hqz: "q z \<in> q ` C" unfolding sat_def by (by100 blast)+
+      from hqz obtain w where hw_C: "w \<in> C" and hqeq: "q z = q w" by (by100 blast)
+      have hw_B2: "w \<in> top1_B2" using hw_C hC_sub by (by100 blast)
+      show "z \<in> C \<union> (\<Union>k\<in>{..<n}. rot k ` (C \<inter> top1_S1))"
+      proof (cases "z \<in> top1_S1")
+        case False
+        \<comment> \<open>z \<in> B2 - S1. Then w must also be in B2 - S1 (by hq\_sep: interior \<noteq> boundary).\<close>
+        hence hz_int: "z \<in> top1_B2 - top1_S1" using hz_B2 by (by100 blast)
+        have hw_int: "w \<in> top1_B2 - top1_S1"
+        proof (rule ccontr)
+          assume "\<not> w \<in> top1_B2 - top1_S1"
+          hence "w \<in> top1_S1" using hw_B2 by (by100 blast)
+          from hq_sep hz_int \<open>w \<in> top1_S1\<close> have "q z \<noteq> q w" by (by100 blast)
+          thus False using hqeq by (by100 blast)
+        qed
+        \<comment> \<open>Both in interior: q injective \<Rightarrow> z = w \<in> C.\<close>
+        from hq_inj have "z = w" using hz_int hw_int hqeq unfolding inj_on_def by (by100 blast)
+        thus ?thesis using hw_C by (by100 blast)
+      next
+        case True
+        \<comment> \<open>z \<in> S1. Then w must also be in S1.\<close>
+        have hw_S1: "w \<in> top1_S1"
+        proof (rule ccontr)
+          assume "\<not> w \<in> top1_S1"
+          hence "w \<in> top1_B2 - top1_S1" using hw_B2 by (by100 blast)
+          from hq_sep this True have "q w \<noteq> q z" by (by100 blast)
+          thus False using hqeq by (by100 simp)
+        qed
+        \<comment> \<open>Both on S1: q z = q w means z is a rotation of w.\<close>
+        from hq_S1[rule_format, OF hw_S1 True] hqeq
+        have "\<exists>k::nat. k < n \<and> z = (cos (2*pi*real k/real n) * fst w - sin (2*pi*real k/real n) * snd w,
+              sin (2*pi*real k/real n) * fst w + cos (2*pi*real k/real n) * snd w)"
+          by (by100 simp)
+        then obtain k where "k < n" "z = rot k w" unfolding rot_def by (by100 blast)
+        hence "z \<in> rot k ` (C \<inter> top1_S1)" using hw_C hw_S1 by (by100 blast)
+        thus ?thesis using \<open>k < n\<close> by (by100 blast)
+      qed
+    next
+      fix z assume "z \<in> C \<union> (\<Union>k\<in>{..<n}. rot k ` (C \<inter> top1_S1))"
+      thus "z \<in> sat"
+      proof
+        assume "z \<in> C"
+        thus ?thesis unfolding sat_def using hC_sub by (by100 blast)
+      next
+        assume "z \<in> (\<Union>k\<in>{..<n}. rot k ` (C \<inter> top1_S1))"
+        then obtain k w where hk: "k < n" and hw: "w \<in> C" "w \<in> top1_S1" and hzw: "z = rot k w"
+          by (by100 blast)
+        \<comment> \<open>z = rot k(w) \<in> S1 \<subseteq> B2.\<close>
+        have "rot k w \<in> top1_S1"
+        proof -
+          have "rot k ` top1_S1 \<subseteq> top1_S1" by (rule hrot_S1_gen)
+          thus ?thesis using hw(2) by (by100 blast)
+        qed
+        hence hz_B2: "z \<in> top1_B2" using hzw hS1_sub_B2 by (by100 blast)
+        \<comment> \<open>q(z) = q(rot k(w)) = q(w) (by the identification on S1).\<close>
+        have "q z = q w"
+        proof -
+          from hq_S1[rule_format, OF hw(2) \<open>rot k w \<in> top1_S1\<close>]
+          have "q w = q (rot k w) \<longleftrightarrow> (\<exists>j::nat. j < n \<and>
+              rot k w = (cos (2*pi*real j/real n) * fst w - sin (2*pi*real j/real n) * snd w,
+                         sin (2*pi*real j/real n) * fst w + cos (2*pi*real j/real n) * snd w))"
+            by (by100 simp)
+          moreover have "rot k w = (cos (2*pi*real k/real n) * fst w - sin (2*pi*real k/real n) * snd w,
+              sin (2*pi*real k/real n) * fst w + cos (2*pi*real k/real n) * snd w)"
+            unfolding rot_def by (by100 simp)
+          ultimately have "q w = q (rot k w)" using hk by (by100 blast)
+          thus ?thesis using hzw by (by100 simp)
+        qed
+        hence "q z \<in> q ` C" using hw(1) by (by100 blast)
+        thus ?thesis unfolding sat_def using hz_B2 by (by100 blast)
+      qed
+    qed
     \<comment> \<open>Step 2: Each rot k ` (C \<inter> S1) is closed in B2.
        rot k is a homeomorphism S1 \<rightarrow> S1 (rotation).
        C \<inter> S1 is closed in S1 (intersection of closed sets).
@@ -151,31 +242,7 @@ proof -
     proof -
       fix k assume "k < n"
       \<comment> \<open>rot k maps S1 to S1 (rotation preserves norm).\<close>
-      have hrot_S1: "rot k ` top1_S1 \<subseteq> top1_S1"
-      proof
-        fix w assume "w \<in> rot k ` top1_S1"
-        then obtain z where hz: "z \<in> top1_S1" "w = rot k z" by (by100 blast)
-        have "fst z ^ 2 + snd z ^ 2 = 1" using hz(1) unfolding top1_S1_def by (by100 simp)
-        have "fst w ^ 2 + snd w ^ 2 = 1"
-        proof -
-          define c where "c = cos (2*pi*real k/real n)"
-          define s where "s = sin (2*pi*real k/real n)"
-          have "fst w = c * fst z - s * snd z" and "snd w = s * fst z + c * snd z"
-            using hz(2) unfolding rot_def c_def s_def by (by100 simp)+
-          hence "fst w ^ 2 + snd w ^ 2
-              = (c * fst z - s * snd z)^2 + (s * fst z + c * snd z)^2" by (by100 simp)
-          also have "\<dots> = c^2 * (fst z)^2 - 2*c*s*(fst z)*(snd z) + s^2*(snd z)^2
-              + s^2*(fst z)^2 + 2*s*c*(fst z)*(snd z) + c^2*(snd z)^2"
-            by (by5000 algebra)
-          also have "\<dots> = (c^2 + s^2) * ((fst z)^2 + (snd z)^2)"
-            by (by5000 algebra)
-          also have "\<dots> = 1 * 1" using sin_cos_squared_add[of "2*pi*real k/real n"]
-              \<open>fst z ^ 2 + snd z ^ 2 = 1\<close> unfolding c_def s_def
-            by (by5000 algebra)
-          finally show ?thesis by (by100 simp)
-        qed
-        thus "w \<in> top1_S1" unfolding top1_S1_def by (by100 simp)
-      qed
+      have hrot_S1: "rot k ` top1_S1 \<subseteq> top1_S1" by (rule hrot_S1_gen)
       \<comment> \<open>rot k is continuous on S1 (composition of continuous functions).\<close>
       \<comment> \<open>C \<inter> S1 is closed in S1 (C closed in B2, S1 \<subseteq> B2).\<close>
       have hCS1_closed_S1: "closedin_on top1_S1 top1_S1_topology (C \<inter> top1_S1)"
@@ -202,7 +269,17 @@ proof -
       proof -
         \<comment> \<open>rot k is continuous on S1 (composition of continuous functions).\<close>
         have hrot_cont: "top1_continuous_map_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology (rot k)"
-          sorry \<comment> \<open>Rotation is continuous on S1 (standard continuous_intros).\<close>
+        proof -
+          \<comment> \<open>rot k is continuous on UNIV (linear map, hence continuous).\<close>
+          have hrot_cont_UNIV: "continuous_on UNIV (rot k)"
+            unfolding rot_def by (intro continuous_intros)
+          \<comment> \<open>rot k maps S1 to S1.\<close>
+          have hrot_img: "\<And>p. p \<in> top1_S1 \<Longrightarrow> rot k p \<in> top1_S1"
+            using hrot_S1 by (by100 blast)
+          \<comment> \<open>Apply the subspace continuity lemma.\<close>
+          from top1_continuous_map_on_real2_subspace[OF hrot_img hrot_cont_UNIV]
+          show ?thesis unfolding top1_S1_topology_def .
+        qed
         \<comment> \<open>S1 is compact and Hausdorff.\<close>
         have hS1_haus: "is_hausdorff_on top1_S1 top1_S1_topology"
         proof -
