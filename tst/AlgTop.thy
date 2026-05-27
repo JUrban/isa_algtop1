@@ -9071,7 +9071,29 @@ proof -
             {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0)
                   (\<lambda>s. (cos (2 * pi * s), sin (2 * pi * s))) g}
           \<in> top1_fundamental_group_carrier ?A ?TA ?a"
-          sorry \<comment> \<open>Induced hom maps carrier to carrier. Standard loop class is in carrier.\<close>
+        proof -
+          \<comment> \<open>h\<iota>_cont and h\<iota>_eq are from Theorem 72.1 (outer proof block).\<close>
+          have hS1_top: "is_topology_on top1_S1 top1_S1_topology"
+            using S1_compact unfolding top1_compact_on_def by (by100 blast)
+          have h10_S1: "(1::real, 0::real) \<in> top1_S1"
+            unfolding top1_S1_def by (by100 simp)
+          have h\<iota>_10: "\<iota> (1, 0) = ?a"
+            using h\<iota>_eq h10_S1 by (by100 simp)
+          from top1_fundamental_group_induced_on_is_hom[OF hS1_top hTA_top h10_S1 ha_in_A h\<iota>_cont h\<iota>_10]
+          have hhom: "top1_group_hom_on
+              (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
+              (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))
+              (top1_fundamental_group_carrier ?A ?TA ?a) (top1_fundamental_group_mul ?A ?TA ?a)
+              (top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1, 0) ?A ?TA ?a \<iota>)" .
+          \<comment> \<open>The standard loop class is in \<pi>_1(S1, (1,0)).\<close>
+          have hstd_in: "{g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0)
+                (\<lambda>s. (cos (2 * pi * s), sin (2 * pi * s))) g}
+              \<in> top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0)"
+            by (rule standard_S1_loop_class_in_carrier)
+          \<comment> \<open>Image of carrier element under hom is in carrier.\<close>
+          from hhom hstd_in show ?thesis
+            unfolding top1_group_hom_on_def by (by5000 blast)
+        qed
         thus ?thesis by (by100 blast)
       qed
       from normal_subgroup_generated_is_normal[OF hgrpA' this]
