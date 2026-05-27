@@ -8954,7 +8954,19 @@ proof -
           top1_normal_subgroup_generated_on top1_Z_group top1_Z_mul top1_Z_id top1_Z_invg
             {top1_group_word_product top1_Z_mul top1_Z_id top1_Z_invg
                 (map (\<lambda>(s, b). ((\<lambda>(_::nat). (1::int)) s, b)) (replicate n (0::nat, True)))}"
-        sorry \<comment> \<open>ker = \<phi>(N) = NC\_Z(\{\<phi>(relator)\}) = NC\_Z(\{n\}) = NC\_Z(\{word a^n\}).\<close>
+      proof -
+        \<comment> \<open>Step 6a: word\_product of replicate n (0,True) with \<iota>(0) = 1 equals n.\<close>
+        have hword_eq: "top1_group_word_product top1_Z_mul top1_Z_id top1_Z_invg
+            (map (\<lambda>(s, b). ((\<lambda>(_::nat). (1::int)) s, b)) (replicate n (0::nat, True))) = int n"
+          sorry \<comment> \<open>Word product of n copies of (1, True) in (Z, +, 0, uminus) = n.\<close>
+        \<comment> \<open>Step 6b: ker(\<pi>) = {z \<in> Z | \<phi>^{-1}(z) \<in> N} = \<phi>(N).\<close>
+        have hker_eq_phiN: "top1_group_kernel_on top1_Z_group ?eQ ?\<pi> = \<phi> ` ?N"
+          sorry
+        \<comment> \<open>Step 6c: \<phi>(N) = \<phi>(NC\_G(\{relator\})) = NC\_Z(\{\<phi>(relator)\}).\<close>
+        \<comment> \<open>Step 6d: NC\_Z(\{\<phi>(relator)\}) = NC\_Z(\{n\}) (from h\_relator\_val: \<phi>(relator) = \<pm>n).\<close>
+        \<comment> \<open>Step 6e: NC\_Z(\{n\}) = NC\_Z(\{word\_product\}) (from hword\_eq).\<close>
+        show ?thesis using hword_eq hker_eq_phiN h_relator_val sorry
+      qed
       \<comment> \<open>Step 7: Assemble the presentation.\<close>
       \<comment> \<open>Z free on {..<1}.\<close>
       have hZ_free_01: "top1_is_free_group_full_on top1_Z_group top1_Z_mul top1_Z_id top1_Z_invg
