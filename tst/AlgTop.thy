@@ -7660,7 +7660,48 @@ proof -
             using h\<psi>_range_raw hn_div by (by100 simp)
           have h\<psi>_1: "\<psi> 1 = 1" using h\<psi>_1_raw hn_div by (by100 simp)
           \<comment> \<open>Apply reparam_path_homotopy: iota_loop . id ~ iota_loop . psi.\<close>
-          show ?thesis sorry \<comment> \<open>reparam_path_homotopy application.\<close>
+          \<comment> \<open>Apply reparam_path_homotopy with f=iota_loop, phi=id, psi=our psi.\<close>
+          \<comment> \<open>Need: continuous_map_on versions of f, id, and psi.\<close>
+          have hf_cmap: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+              X TX ?\<iota>_loop"
+            sorry \<comment> \<open>iota_loop is continuous I -> X (composition of cos/sin with iota).\<close>
+          have h\<psi>_cmap: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+              top1_unit_interval top1_unit_interval_topology \<psi>"
+            sorry \<comment> \<open>Bridge: continuous_on I psi + psi maps I into I -> continuous_map_on.\<close>
+          have hid_cmap: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+              top1_unit_interval top1_unit_interval_topology (\<lambda>t. t)"
+            sorry \<comment> \<open>Identity is continuous_map_on.\<close>
+          have hf_img: "\<forall>s\<in>top1_unit_interval. ?\<iota>_loop s \<in> ?A"
+          proof (intro ballI)
+            fix s assume "s \<in> top1_unit_interval"
+            have "(cos (2*pi*s), sin (2*pi*s)) \<in> top1_S1" unfolding top1_S1_def by (by100 auto)
+            thus "?\<iota>_loop s \<in> ?A" using h\<iota>_cont unfolding top1_continuous_map_on_def by (by100 blast)
+          qed
+          have hf_0: "?\<iota>_loop 0 = ?a"
+            using h\<iota>_eq h10_S1 hq_10 by (by100 simp)
+          have hf_1: "?\<iota>_loop 1 = ?a"
+          proof -
+            have "(cos (2*pi*1), sin (2*pi*1)) = ((1::real), 0)" by (by100 simp)
+            thus ?thesis using h\<iota>_eq h10_S1 hq_10 by (by100 simp)
+          qed
+          \<comment> \<open>By reparam_path_homotopy: iota_loop . id ~ iota_loop . psi in A.\<close>
+          have h0I: "(0::real) \<in> top1_unit_interval" unfolding top1_unit_interval_def by (by100 auto)
+          have h1I: "(1::real) \<in> top1_unit_interval" unfolding top1_unit_interval_def by (by100 auto)
+          from reparam_path_homotopy[OF hTX hf_cmap hf_img hA_sub hTA_loc hid_cmap h\<psi>_cmap
+              _ _ h\<psi>_0 h\<psi>_1] h0I h1I
+          have "top1_path_homotopic_on ?A ?TA (?\<iota>_loop 0) (?\<iota>_loop 1)
+              (?\<iota>_loop \<circ> (\<lambda>t. t)) (?\<iota>_loop \<circ> \<psi>)"
+            by (by100 blast)
+          \<comment> \<open>iota_loop . id = iota_loop, iota_loop . psi = path_power alpha n (pointwise on I).\<close>
+          have "(?\<iota>_loop \<circ> (\<lambda>t. t)) = ?\<iota>_loop" by (by100 auto)
+          hence "top1_path_homotopic_on ?A ?TA ?a ?a ?\<iota>_loop (?\<iota>_loop \<circ> \<psi>)"
+            using hf_0 hf_1 \<open>top1_path_homotopic_on ?A ?TA (?\<iota>_loop 0) (?\<iota>_loop 1)
+              (?\<iota>_loop \<circ> (\<lambda>t. t)) (?\<iota>_loop \<circ> \<psi>)\<close> by (by100 simp)
+          \<comment> \<open>Bridge: iota_loop . psi = path_power alpha n on I.\<close>
+          moreover have "\<forall>t\<in>top1_unit_interval. (?\<iota>_loop \<circ> \<psi>) t = top1_path_power ?\<alpha> ?a n t"
+            using h\<psi>_eq by (by100 simp)
+          ultimately show ?thesis
+            sorry \<comment> \<open>Same class: if two loops agree on I, they have the same homotopy class.\<close>
         qed
         \<comment> \<open>Step D.2: The relator is the class of iota . std_loop.\<close>
         have h_rel_class: "?relator = {g. top1_loop_equiv_on ?A ?TA ?a ?\<iota>_loop g}"
