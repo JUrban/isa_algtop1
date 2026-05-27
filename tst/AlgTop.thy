@@ -8957,6 +8957,25 @@ proof -
     by (rule Corollary_52_2_basepoint_independent[OF hX_pc assms(3) ha_X])
   show ?thesis by (rule groups_isomorphic_trans_fwd[OF hbc hmain])
 qed
+
+text \<open>Corollary: the dunce cap with n has presentation \<langle>a | a^n\<rangle>.
+  This follows from Theorem 73.4 + the structure of the Theorem 72.1 quotient.\<close>
+corollary dunce_cap_presentation:
+  fixes n :: nat and X :: "'a set" and TX :: "'a set set" and x0 :: 'a
+  assumes "n > 0"
+      and "top1_is_dunce_cap_on X TX n"
+      and "x0 \<in> X"
+  shows "\<exists>(G :: (real \<Rightarrow> 'a) set set set) mul e invg.
+           top1_group_presented_by_on G mul e invg ({..<1}::nat set)
+             { replicate n (0::nat, True) }
+         \<and> top1_groups_isomorphic_on G mul
+             (top1_fundamental_group_carrier X TX x0)
+             (top1_fundamental_group_mul X TX x0)"
+  sorry \<comment> \<open>The \<S>73 proof constructs this via Theorem 72.1:
+     \<pi>_1(X) = \<pi>_1(A) / N(relator) where A = q(S1) is a circle,
+     \<pi>_1(A) is free on 1 generator, relator = a^n.
+     The quotient group has the right type (real \<Rightarrow> 'a) set set set.\<close>
+
 (** from \<S>74 Theorem 74.4: \<pi>_1(P_m) has presentation \<langle>a_1, \<dots>, a_m | a_1² \<cdots> a_m²\<rangle>.
     The single relator is (a_1 a_1)(a_2 a_2)\<cdots>(a_m a_m). **)
 theorem Theorem_74_4_fund_group_m_projective:
@@ -8979,8 +8998,24 @@ proof (cases "m = 1")
   have hiso: "top1_groups_isomorphic_on
       (top1_fundamental_group_carrier X TX x0) (top1_fundamental_group_mul X TX x0)
       (top1_Zn_group 2) (top1_Zn_mul 2)" by (by100 simp)
-  \<comment> \<open>Z/2Z has presentation \<langle>a | a^2\<rangle>. Transfer to \<pi>_1(X, x0).\<close>
-  show ?thesis using True hiso sorry \<comment> \<open>Z/2Z presented by \<langle>a | a^2\<rangle> + iso transfer.\<close>
+  \<comment> \<open>Use dunce\_cap\_presentation for n=2 to get the right type.\<close>
+  have "2 > (0::nat)" by (by100 simp)
+  from dunce_cap_presentation[OF this hdc assms(2)]
+  have "\<exists>(G :: (real \<Rightarrow> 'a) set set set) mul e invg.
+      top1_group_presented_by_on G mul e invg ({..<1}::nat set) { replicate 2 (0::nat, True) }
+    \<and> top1_groups_isomorphic_on G mul
+        (top1_fundamental_group_carrier X TX x0) (top1_fundamental_group_mul X TX x0)" .
+  \<comment> \<open>Match: {..<1} = {..<m} and replicate 2 = [(0,T),(0,T)] = concat for m=1.\<close>
+  moreover have "{..<1::nat} = {..<m}" using True by (by100 simp)
+  moreover have "{ replicate 2 (0::nat, True) }
+      = { concat (map (\<lambda>i. [(i, True), (i, True)]) [0..<m]) }"
+  proof -
+    have "replicate 2 (0::nat, True) = [(0, True), (0, True)]" by (by5000 eval)
+    also have "\<dots> = concat (map (\<lambda>i. [(i, True), (i, True)]) [0..<1])" by (by5000 eval)
+    also have "\<dots> = concat (map (\<lambda>i. [(i, True), (i, True)]) [0..<m])" using True by (by100 simp)
+    finally show ?thesis by (by100 simp)
+  qed
+  ultimately show ?thesis by (by5000 simp)
 next
   case False
   \<comment> \<open>Case m \<ge> 2: Standard approach via polygonal quotient + Theorem 72.1.\<close>
