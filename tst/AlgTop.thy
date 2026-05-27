@@ -8965,8 +8965,10 @@ next
       thus ?thesis using \<open>fst x = \<alpha>\<close> \<open>snd x = True\<close> by (by100 simp)
     qed
     hence "(\<alpha>, True) \<in> set ?scheme" using \<open>x \<in> set ?scheme\<close> by (by100 simp)
+    hence "\<exists>i<length ?scheme. ?scheme!i = (\<alpha>, True)"
+      by (simp add: in_set_conv_nth)
     then obtain i where "i < length ?scheme" "?scheme!i = (\<alpha>, True)"
-      sorry
+      by (by100 blast)
     thus "\<exists>i<length ?scheme. fst (?scheme!i) = \<alpha> \<and> snd (?scheme!i) = True"
       by (by100 force)
   qed
@@ -8985,6 +8987,7 @@ next
         \<or> (fst (?scheme!i) = fst (?scheme!j) \<and>
            (if snd (?scheme!i) = snd (?scheme!j) then s = t else s = 1 - t)))"
     sorry \<comment> \<open>From quotient_of_scheme_extract_full.\<close>
+  \<comment> \<open>Apply Theorem 74.2 and match labels/relator.\<close>
   from Theorem_74_2_scheme_presentation[OF hscheme assms(2) hlen hvert htd hvc]
   have h742: "\<exists>(G :: (real \<Rightarrow> 'a) set set set) mul e invg.
       top1_group_presented_by_on G mul e invg (fst ` set ?scheme)
@@ -8992,12 +8995,25 @@ next
       \<and> top1_groups_isomorphic_on G mul
           (top1_fundamental_group_carrier X TX x0)
           (top1_fundamental_group_mul X TX x0)" .
-  \<comment> \<open>Match labels and relator.\<close>
   have hlabels: "fst ` set ?scheme = {..<m}"
   proof -
     have "fst ` set ?scheme = fst ` set (concat (map (\<lambda>i. [(i, True), (i, True)]) [0..<m]))"
       unfolding top1_m_projective_scheme_def by (by100 simp)
-    also have "\<dots> = {..<m}" sorry
+    also have "\<dots> = {..<m}"
+    proof (induction m)
+      case 0 thus ?case by (by100 simp)
+    next
+      case (Suc m)
+      have "concat (map (\<lambda>i. [(i, True), (i, True)]) [0..<Suc m])
+          = concat (map (\<lambda>i. [(i, True), (i, True)]) [0..<m]) @ [(m, True), (m, True)]"
+        by (by100 simp)
+      hence "fst ` set (concat (map (\<lambda>i. [(i, True), (i, True)]) [0..<Suc m]))
+          = fst ` set (concat (map (\<lambda>i. [(i, True), (i, True)]) [0..<m])) \<union> {m}"
+        by (by5000 auto)
+      also have "\<dots> = {..<m} \<union> {m}" using Suc.IH by (by100 simp)
+      also have "\<dots> = {..<Suc m}" by (by100 auto)
+      finally show ?case .
+    qed
     finally show ?thesis .
   qed
   have hrelator: "{ map (\<lambda>(s,b). (s, b)) ?scheme }
@@ -9006,7 +9022,7 @@ next
     have "map (\<lambda>(s,b). (s, b)) ?scheme = ?scheme" by (by100 simp)
     thus ?thesis unfolding top1_m_projective_scheme_def by (by100 simp)
   qed
-  show ?thesis using h742 hlabels hrelator sorry
+  show ?thesis using h742 hlabels hrelator sorry \<comment> \<open>Packaging: type unification issue.\<close>
 qed
 section \<open>*\<S>78 Constructing Compact Surfaces\<close>
 
