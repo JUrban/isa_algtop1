@@ -7773,7 +7773,30 @@ proof -
                   \<and> (\<forall>t\<in>top1_unit_interval. F (1, t) = ?a)"
                 using hagree by (by5000 auto)
               moreover have "top1_is_path_on ?A ?TA ?a ?a (?\<iota>_loop \<circ> \<psi>)"
-                sorry \<comment> \<open>iota_loop . psi is a path (continuous + endpoints).\<close>
+              proof -
+                \<comment> \<open>Continuity: psi maps I -> I (continuous_map_on), iota_loop maps I -> A.\<close>
+                have "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology ?A ?TA (?\<iota>_loop \<circ> \<psi>)"
+                proof -
+                  \<comment> \<open>iota_loop is a path in A (alpha loop, which we proved).\<close>
+                  have "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology ?A ?TA ?\<alpha>"
+                    using h\<alpha>_loop unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+                  \<comment> \<open>But we need iota_loop, not alpha. They differ. However, iota_loop . psi agrees
+                     with path_power alpha n on I. And path_power alpha n is continuous.\<close>
+                  have hcomp: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology ?A ?TA
+                      (top1_path_power ?\<alpha> ?a n)"
+                    using top1_path_power_is_loop[OF hTA_loc h\<alpha>_loop]
+                    unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+                  \<comment> \<open>iota_loop . psi agrees with path_power on I, so use the same continuity.\<close>
+                  have hpre_eq: "\<And>V. {x \<in> top1_unit_interval. (?\<iota>_loop \<circ> \<psi>) x \<in> V}
+                      = {x \<in> top1_unit_interval. top1_path_power ?\<alpha> ?a n x \<in> V}"
+                    using hagree by (by100 auto)
+                  show ?thesis using hcomp hf_img
+                    unfolding top1_continuous_map_on_def using hpre_eq hagree by (by5000 auto)
+                qed
+                moreover have "(?\<iota>_loop \<circ> \<psi>) 0 = ?a" using h\<psi>_0 hf_0 by (by100 simp)
+                moreover have "(?\<iota>_loop \<circ> \<psi>) 1 = ?a" using h\<psi>_1 hf_1 by (by100 simp)
+                ultimately show ?thesis unfolding top1_is_path_on_def by (by100 blast)
+              qed
               moreover have "top1_is_path_on ?A ?TA ?a ?a (top1_path_power ?\<alpha> ?a n)"
                 using \<open>top1_is_loop_on ?A ?TA ?a (top1_path_power ?\<alpha> ?a n)\<close>
                 unfolding top1_is_loop_on_def by (by100 blast)
