@@ -14509,7 +14509,78 @@ proof -
         show ?thesis using homeomorphism_preserves_simply_connected[OF hh hI_sc] by (by100 blast)
       qed
       show "top1_is_graph_on A0 (subspace_topology X TX A0)"
-        sorry \<comment> \<open>Single arc A0 forms a graph: cover={A0}, strict+Hausdorff from X, trivial intersections.\<close>
+        unfolding top1_is_graph_on_def
+      proof (intro conjI)
+        let ?TA0 = "subspace_topology X TX A0"
+        \<comment> \<open>Strict topology: subspace of strict is strict.\<close>
+        show "is_topology_on_strict A0 ?TA0"
+        proof -
+          have "is_topology_on_strict X TX"
+            using assms(1) unfolding top1_is_graph_on_def by (by5000 blast)
+          thus ?thesis using subspace_topology_is_strict hA0_sub by (by100 blast)
+        qed
+        \<comment> \<open>Hausdorff: subspace of Hausdorff is Hausdorff.\<close>
+        show "is_hausdorff_on A0 ?TA0"
+        proof -
+          have "is_hausdorff_on X TX"
+            using assms(1) unfolding top1_is_graph_on_def by (by5000 blast)
+          thus ?thesis
+            using conjunct2[OF conjunct2[OF Theorem_17_11]] hA0_sub by (by100 blast)
+        qed
+        \<comment> \<open>Arc cover: {A0}.\<close>
+        show "\<exists>\<A>. (\<forall>A\<in>\<A>. A \<subseteq> A0 \<and> top1_is_arc_on A (subspace_topology A0 ?TA0 A))
+            \<and> \<Union>\<A> = A0
+            \<and> (\<forall>A\<in>\<A>. \<forall>B\<in>\<A>. A \<noteq> B \<longrightarrow>
+                 A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology A0 ?TA0 A)
+               \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology A0 ?TA0 B)
+               \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2)
+            \<and> (\<forall>C. C \<subseteq> A0 \<longrightarrow>
+                 (closedin_on A0 ?TA0 C \<longleftrightarrow>
+                  (\<forall>A\<in>\<A>. closedin_on A (subspace_topology A0 ?TA0 A) (A \<inter> C))))"
+        proof (rule exI[of _ "{A0}"])
+          have h_sub_sub: "subspace_topology A0 ?TA0 A0 = ?TA0"
+          proof (rule subspace_topology_self)
+            show "\<forall>U \<in> ?TA0. U \<subseteq> A0" unfolding subspace_topology_def by (by100 blast)
+          qed
+          have h_arc: "top1_is_arc_on A0 (subspace_topology A0 ?TA0 A0)"
+            using hA0_arc h_sub_sub by (by100 simp)
+          show "(\<forall>A\<in>{A0}. A \<subseteq> A0 \<and> top1_is_arc_on A (subspace_topology A0 ?TA0 A))
+              \<and> \<Union>{A0} = A0
+              \<and> (\<forall>A\<in>{A0}. \<forall>B\<in>{A0}. A \<noteq> B \<longrightarrow>
+                   A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology A0 ?TA0 A)
+                 \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology A0 ?TA0 B)
+                 \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2)
+              \<and> (\<forall>C. C \<subseteq> A0 \<longrightarrow>
+                   (closedin_on A0 ?TA0 C \<longleftrightarrow>
+                    (\<forall>A\<in>{A0}. closedin_on A (subspace_topology A0 ?TA0 A) (A \<inter> C))))"
+          proof -
+            have h1: "\<forall>A\<in>{A0}. A \<subseteq> A0 \<and> top1_is_arc_on A (subspace_topology A0 ?TA0 A)"
+              using h_arc by (by100 blast)
+            have h2: "\<Union>{A0} = A0" by (by100 blast)
+            have h3: "\<forall>A\<in>{A0}. \<forall>B\<in>{A0}. A \<noteq> B \<longrightarrow>
+                 A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology A0 ?TA0 A)
+               \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology A0 ?TA0 B)
+               \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2"
+              by (by100 blast)
+            have h4: "\<forall>C. C \<subseteq> A0 \<longrightarrow>
+                 (closedin_on A0 ?TA0 C \<longleftrightarrow>
+                  (\<forall>A\<in>{A0}. closedin_on A (subspace_topology A0 ?TA0 A) (A \<inter> C)))"
+            proof (intro allI impI iffI ballI)
+              fix C A assume hC: "C \<subseteq> A0" and hcl: "closedin_on A0 ?TA0 C" and "A \<in> {A0}"
+              hence "A = A0" by (by100 blast)
+              have "A0 \<inter> C = C" using hC by (by100 blast)
+              thus "closedin_on A (subspace_topology A0 ?TA0 A) (A \<inter> C)"
+                using \<open>A = A0\<close> h_sub_sub hcl by (by100 simp)
+            next
+              fix C assume hC: "C \<subseteq> A0" and "\<forall>A\<in>{A0}. closedin_on A (subspace_topology A0 ?TA0 A) (A \<inter> C)"
+              hence "closedin_on A0 ?TA0 (A0 \<inter> C)" using h_sub_sub by (by100 simp)
+              moreover have "A0 \<inter> C = C" using hC by (by100 blast)
+              ultimately show "closedin_on A0 ?TA0 C" by (by100 simp)
+            qed
+            show ?thesis using h1 h2 h3 h4 by (by100 blast)
+          qed
+        qed
+      qed
     qed
     hence "A0 \<in> \<A>" using hA0_sub \<open>x0 \<in> A0\<close> unfolding \<A>_def by (by100 blast)
     thus ?thesis by (by100 blast)
