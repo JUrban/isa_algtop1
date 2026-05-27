@@ -7074,15 +7074,26 @@ proof -
         qed
         \<comment> \<open>phi . h_circ* : pi1(S1) -> Z is bij + hom.\<close>
         let ?\<psi>_explicit = "\<phi> \<circ> ?hc_star"
+        \<comment> \<open>Get the induced iso from h_circ.\<close>
+        have hhc_iso: "top1_group_iso_on
+            (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1,0))
+            (top1_fundamental_group_mul top1_S1 top1_S1_topology (1,0))
+            ?GA ?mulA ?hc_star"
+          using hiso_hc unfolding top1_groups_isomorphic_on_def by (by100 blast)
+        have h\<psi>e_iso: "top1_group_iso_on
+            (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
+            (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))
+            top1_Z_group top1_Z_mul ?\<psi>_explicit"
+          sorry \<comment> \<open>group_iso_on_compose of hhc_iso and h_phi_iso.\<close>
         have h\<psi>e_bij: "bij_betw ?\<psi>_explicit
             (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
             top1_Z_group"
-          sorry \<comment> \<open>Composition of bijections.\<close>
+          using h\<psi>e_iso unfolding top1_group_iso_on_def by (by100 blast)
         have h\<psi>e_hom: "top1_group_hom_on
             (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1, 0))
             (top1_fundamental_group_mul top1_S1 top1_S1_topology (1, 0))
             top1_Z_group top1_Z_mul ?\<psi>_explicit"
-          sorry \<comment> \<open>Composition of homomorphisms.\<close>
+          using h\<psi>e_iso unfolding top1_group_iso_on_def by (by100 blast)
         from standard_S1_loop_generates_Z[OF h\<psi>e_bij h\<psi>e_hom]
         have "?\<psi>_explicit {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0)
               (\<lambda>s. (cos (2*pi*s), sin (2*pi*s))) g} = 1 \<or>
