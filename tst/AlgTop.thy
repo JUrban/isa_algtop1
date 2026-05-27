@@ -14384,7 +14384,32 @@ proof -
             \<comment> \<open>H is continuous on I x I.\<close>
             have hH_cont: "top1_continuous_map_on (top1_unit_interval \<times> top1_unit_interval) II_topology
                 top1_unit_interval top1_unit_interval_topology ?H"
-              sorry \<comment> \<open>H continuous: bilinear combo of continuous f and constants. Maps into [0,1] by convexity.\<close>
+            proof -
+              have hf_cont_on: "continuous_on top1_unit_interval f"
+                sorry \<comment> \<open>Bridge: continuous_map_on I I_top I I_top f implies continuous_on I f.\<close>
+              have hH_img: "\<And>p. p \<in> top1_unit_interval \<times> top1_unit_interval \<Longrightarrow> ?H p \<in> top1_unit_interval"
+              proof -
+                fix p :: "real \<times> real" assume hp: "p \<in> top1_unit_interval \<times> top1_unit_interval"
+                obtain s t where hst: "p = (s, t)" and hs: "s \<in> top1_unit_interval" and ht: "t \<in> top1_unit_interval"
+                  using hp by (by100 blast)
+                have ht': "0 \<le> t" "t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 auto)+
+                have hfs: "f s \<in> top1_unit_interval"
+                  using hloop hs unfolding top1_is_loop_on_def top1_is_path_on_def top1_continuous_map_on_def by (by100 blast)
+                hence hfs': "0 \<le> f s" "f s \<le> 1" unfolding top1_unit_interval_def by (by100 auto)+
+                have hx0': "0 \<le> x0" "x0 \<le> 1" using hx0 unfolding top1_unit_interval_def by (by100 auto)+
+                have "0 \<le> (1 - t) * f s + t * x0"
+                  using ht' hfs' hx0' by (intro add_nonneg_nonneg mult_nonneg_nonneg; by100 linarith)
+                moreover have "(1 - t) * f s + t * x0 \<le> (1 - t) * 1 + t * 1"
+                  using ht' hfs' hx0' by (intro add_mono mult_left_mono; by100 linarith)
+                hence "(1 - t) * f s + t * x0 \<le> 1" by (by100 simp)
+                ultimately show "?H p \<in> top1_unit_interval" using hst
+                  unfolding top1_unit_interval_def by (by100 auto)
+              qed
+              have hH_cont_on: "continuous_on (top1_unit_interval \<times> top1_unit_interval) ?H"
+                sorry \<comment> \<open>continuous_on: composition of continuous f with projections + linear ops.\<close>
+              from top1_continuous_map_on_II_to_I[OF hH_img hH_cont_on]
+              show ?thesis unfolding II_topology_def by (by100 blast)
+            qed
             \<comment> \<open>Boundary conditions.\<close>
             have hH0: "\<forall>s\<in>top1_unit_interval. ?H (s, 0) = f s" by (by100 simp)
             have hH1: "\<forall>s\<in>top1_unit_interval. ?H (s, 1) = x0" by (by100 simp)
