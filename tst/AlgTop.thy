@@ -7397,6 +7397,7 @@ proof -
           thus ?thesis using True by (by100 simp)
         next
           case False
+          hence hn_ge2: "n \<ge> 2" using assms(1) by (by100 linarith)
           \<comment> \<open>For n >= 2: reparametrization argument.
              Both iota_loop and path_power alpha n trace A n times.
              By reparam_path_homotopy they are homotopic.\<close>
