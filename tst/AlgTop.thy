@@ -15355,9 +15355,57 @@ lemma graph_selection_set_discrete:
             (\<forall>A\<in>\<A>. closedin_on A (subspace_topology X TX A) (A \<inter> D)))"
       and "\<forall>A\<in>\<A>. finite (B \<inter> A) \<and> card (B \<inter> A) \<le> 1"
   shows "\<forall>S. S \<subseteq> B \<longrightarrow> closedin_on X TX S"
-  sorry \<comment> \<open>For each A, S \<inter> A \<subseteq> B \<inter> A which has \<le> 1 element.
-     Finite sets are closed in arcs (T1/Hausdorff subspace).
-     By coherent topology: S closed in X.\<close>
+proof (intro allI impI)
+  fix S assume hS: "S \<subseteq> B"
+  have hS_sub: "S \<subseteq> X" using hS assms(2) by (by100 blast)
+  \<comment> \<open>By coherent topology: S closed iff S \<inter> A closed in A for all A.\<close>
+  have "\<forall>A\<in>\<A>. closedin_on A (subspace_topology X TX A) (A \<inter> S)"
+  proof (intro ballI)
+    fix A assume "A \<in> \<A>"
+    \<comment> \<open>A \<inter> S \<subseteq> A \<inter> B which has \<le> 1 element.\<close>
+    have "A \<inter> S \<subseteq> A \<inter> B" using hS by (by100 blast)
+    have "finite (B \<inter> A) \<and> card (B \<inter> A) \<le> 1" using assms(6) \<open>A \<in> \<A>\<close> by (by100 blast)
+    hence hfin: "finite (A \<inter> S)"
+    proof -
+      have "finite (B \<inter> A)" using \<open>finite (B \<inter> A) \<and> card (B \<inter> A) \<le> 1\<close> by (by100 blast)
+      have "A \<inter> B = B \<inter> A" by (by100 blast)
+      hence "finite (A \<inter> B)" using \<open>finite (B \<inter> A)\<close> by (by100 simp)
+      show ?thesis using finite_subset[OF \<open>A \<inter> S \<subseteq> A \<inter> B\<close> \<open>finite (A \<inter> B)\<close>] .
+    qed
+    \<comment> \<open>A is Hausdorff (subspace of graph). Finite set in Hausdorff is closed.\<close>
+    have hA_sub: "A \<subseteq> X" using assms(3) \<open>A \<in> \<A>\<close> by (by100 blast)
+    have hA_haus: "is_hausdorff_on A (subspace_topology X TX A)"
+    proof -
+      have "is_hausdorff_on X TX"
+        using assms(1) unfolding top1_is_graph_on_def by (by100 blast)
+      from conjunct2[OF conjunct2[OF Theorem_17_11]] this hA_sub
+      show ?thesis by (by100 blast)
+    qed
+    have hA_T1: "top1_T1_on A (subspace_topology X TX A)"
+      by (rule hausdorff_imp_T1_on[OF hA_haus])
+    \<comment> \<open>Finite set is closed (union of singletons, each closed in T1).\<close>
+    have "A \<inter> S \<subseteq> A" by (by100 blast)
+    show "closedin_on A (subspace_topology X TX A) (A \<inter> S)"
+    proof -
+      have hA_top: "is_topology_on A (subspace_topology X TX A)"
+        using hA_haus unfolding is_hausdorff_on_def by (by100 blast)
+      have "A \<inter> S = \<Union>((\<lambda>x. {x}) ` (A \<inter> S))" by (by100 blast)
+      moreover have hfin_img: "finite ((\<lambda>x. {x}) ` (A \<inter> S))" using hfin by (by100 simp)
+      moreover have "\<forall>U\<in>((\<lambda>x. {x}) ` (A \<inter> S)).
+          closedin_on A (subspace_topology X TX A) U"
+      proof (intro ballI)
+        fix U assume "U \<in> (\<lambda>x. {x}) ` (A \<inter> S)"
+        then obtain x where "x \<in> A" "U = {x}" by (by100 blast)
+        thus "closedin_on A (subspace_topology X TX A) U"
+          using hA_T1 unfolding top1_T1_on_def by (by100 blast)
+      qed
+      from closedin_Union_finite[OF hA_top hfin_img this]
+      have "closedin_on A (subspace_topology X TX A) (\<Union>((\<lambda>x. {x}) ` (A \<inter> S)))" .
+      thus ?thesis using calculation(1) by (by100 simp)
+    qed
+  qed
+  thus "closedin_on X TX S" using assms(5) hS_sub by (by100 blast)
+qed
 
 text \<open>Lemma 83.2 (Munkres): A compact subspace of a graph meets only finitely many arcs.
   This is needed for the chain-of-trees Zorn argument.\<close>
