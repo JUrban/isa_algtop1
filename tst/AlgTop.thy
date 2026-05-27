@@ -8911,7 +8911,9 @@ proof -
     \<comment> \<open>hom: \<pi> = coset \<circ> \<phi>^{-1} is hom Z \<rightarrow> Q.\<close>
     \<comment> \<open>surj: \<pi> surjective (from \<phi> bij + coset surj).\<close>
     \<comment> \<open>ker: ker(\<pi>) = N(\{word\_product replicate n (0,True)\}).\<close>
-    sorry \<comment> \<open>Remaining: hom + surj + ker = N(word a^n). Uses h\<phi>_iso, quotient_projection_properties.\<close>
+    using quotient_projection_properties[OF hgrpA hN_normal] h\<phi>_iso h_relator_val
+    sorry \<comment> \<open>3 subgoals: hom(\<pi>) + surj(\<pi>) + ker(\<pi>) = N(word a^n).
+       Each requires careful composition of \<phi>^{-1} with coset projection.\<close>
     \<comment> \<open>Compose: pi1(A)/N iso Z/phi(N) = Z/nZ iso Z/nZ.\<close>
     have "top1_groups_isomorphic_on
         (top1_quotient_group_carrier_on ?GA ?mulA ?N)
