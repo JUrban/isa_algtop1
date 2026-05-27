@@ -8918,36 +8918,25 @@ theorem Theorem_74_4_fund_group_m_projective:
          \<and> top1_groups_isomorphic_on G mul
              (top1_fundamental_group_carrier X TX x0)
              (top1_fundamental_group_mul X TX x0)"
-proof -
-  \<comment> \<open>Munkres 74.4: P_m is the quotient of a 2m-gon by the projective scheme.
-     The 1-skeleton is a wedge of m circles. By Theorem 72.1, \<pi>_1(P_m) is the
-     quotient of the free group on m generators by the normal closure of
-     the single relator a_1^2 a_2^2 ... a_m^2.\<close>
-  \<comment> \<open>Step 1: P_m is a polygonal quotient of a 2m-gon with projective scheme.\<close>
-  have h_poly: "top1_is_polygonal_quotient_on X TX"
-    using assms(1) unfolding top1_is_m_fold_projective_on_def
-  proof (elim disjE conjE)
-    \<comment> \<open>Case m = 1: dunce cap. Need to show dunce cap is polygonal quotient.\<close>
-    assume "m = 1" "top1_is_dunce_cap_on X TX (2::nat)"
-    thus ?thesis sorry \<comment> \<open>Dunce cap with n=2 is a polygonal quotient.\<close>
-  next
-    \<comment> \<open>Case m \<ge> 2: directly from the projective scheme.\<close>
-    assume "2 \<le> m" "top1_quotient_of_scheme_on X TX (top1_m_projective_scheme m)"
-    thus ?thesis unfolding top1_is_polygonal_quotient_on_def
-    proof (intro conjI)
-      show "is_topology_on_strict X TX"
-        using \<open>top1_quotient_of_scheme_on X TX (top1_m_projective_scheme m)\<close>
-        unfolding top1_quotient_of_scheme_on_def by (by100 blast)
-      show "\<exists>scheme::(nat \<times> bool) list. top1_quotient_of_scheme_on X TX scheme"
-        using \<open>top1_quotient_of_scheme_on X TX (top1_m_projective_scheme m)\<close> by (by100 blast)
-    qed
-  qed
-  \<comment> \<open>Step 2: The 2m-gon's 1-skeleton after identifications is a wedge of m circles.\<close>
-  have h_skel: "\<exists>A a. closedin_on X TX A \<and> a \<in> A \<and>
-      top1_is_wedge_of_circles_on A (subspace_topology X TX A) {..<m} a"
-    using m_projective_scheme_CW_data[OF assms] by (by100 blast)
-  \<comment> \<open>Step 3: Theorem 72.1 with relator a₁²a₂²...aₘ².\<close>
-  show ?thesis sorry \<comment> \<open>Theorem 72.1 + projective presentation.\<close>
+proof (cases "m = 1")
+  case True
+  \<comment> \<open>Case m = 1: Use Theorem 73.4 directly. \<pi>_1(dunce\_cap(2)) \<cong> Z/2Z.
+     Z/2Z is presented by \<langle>a | a^2\<rangle>.\<close>
+  have hdc: "top1_is_dunce_cap_on X TX (2::nat)"
+    using assms(1) True unfolding top1_is_m_fold_projective_on_def by (by5000 auto)
+  from Theorem_73_4_dunce_cap[OF _ hdc assms(2)]
+  have hiso: "top1_groups_isomorphic_on
+      (top1_fundamental_group_carrier X TX x0) (top1_fundamental_group_mul X TX x0)
+      (top1_Zn_group 2) (top1_Zn_mul 2)" by (by100 simp)
+  \<comment> \<open>Z/2Z has presentation \<langle>a | a^2\<rangle>. Transfer to \<pi>_1(X, x0).\<close>
+  show ?thesis using True hiso sorry \<comment> \<open>Z/2Z presented by \<langle>a | a^2\<rangle> + iso transfer.\<close>
+next
+  case False
+  \<comment> \<open>Case m \<ge> 2: Standard approach via polygonal quotient + Theorem 72.1.\<close>
+  have hm2: "2 \<le> m" using assms(1) False unfolding top1_is_m_fold_projective_on_def by (by100 blast)
+  have hscheme: "top1_quotient_of_scheme_on X TX (top1_m_projective_scheme m)"
+    using assms(1) False unfolding top1_is_m_fold_projective_on_def by (by100 blast)
+  show ?thesis sorry \<comment> \<open>Theorem 74.2 application to projective scheme (m \<ge> 2).\<close>
 qed
 section \<open>*\<S>78 Constructing Compact Surfaces\<close>
 
