@@ -7400,8 +7400,14 @@ proof -
         next
           case False
           hence hn_ge2: "n \<ge> 2" using assms(1) by (by100 linarith)
-          \<comment> \<open>For n >= 2: reparametrization argument.
-             Both iota_loop and path_power alpha n trace A n times.
+          \<comment> \<open>For n >= 2: the loop iota . std_loop and path_power alpha n are both
+             n-fold traversals of A. They are homotopic via reparametrization.\<close>
+          \<comment> \<open>Proof: iota_loop(t) = q(cos(2*pi*t), sin(2*pi*t)).
+             alpha(t) = q(cos(2*pi*t/n), sin(2*pi*t/n)).
+             For any t in [0,1]: iota_loop(t) = alpha(n*t mod [0,1] periodic)
+               because q identifies rotations by 2*pi/n.
+             path_power alpha n traces alpha n times with binary-tree timing.
+             Both cover the same curve at different speeds.
              By reparam_path_homotopy they are homotopic.\<close>
           show ?thesis sorry
         qed
