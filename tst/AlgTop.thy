@@ -14380,7 +14380,7 @@ proof -
             fix x0 f assume hx0: "x0 \<in> top1_unit_interval"
                 and hloop: "top1_is_loop_on top1_unit_interval top1_unit_interval_topology x0 f"
             \<comment> \<open>Straight-line homotopy: H(s,t) = (1-t)*f(s) + t*x0.\<close>
-            let ?H = "\<lambda>(s::real, t::real). (1 - t) * f s + t * x0"
+            let ?H = "\<lambda>p :: real \<times> real. (1 - snd p) * f (fst p) + snd p * x0"
             \<comment> \<open>H is continuous on I x I.\<close>
             have hH_cont: "top1_continuous_map_on (top1_unit_interval \<times> top1_unit_interval) II_topology
                 top1_unit_interval top1_unit_interval_topology ?H"
@@ -14441,7 +14441,25 @@ proof -
                   unfolding top1_unit_interval_def by (by100 auto)
               qed
               have hH_cont_on: "continuous_on (top1_unit_interval \<times> top1_unit_interval) ?H"
-                sorry \<comment> \<open>continuous_on: composition of continuous f with projections + linear ops.\<close>
+              proof -
+                let ?S = "top1_unit_interval \<times> top1_unit_interval"
+                have hc_id: "continuous_on ?S (\<lambda>x. x)"
+                  using continuous_on_id[of ?S] unfolding id_def by (by100 blast)
+                have hc_fst: "continuous_on ?S (\<lambda>p. fst p)"
+                  using continuous_on_fst[OF hc_id] by (by100 simp)
+                have hc_snd: "continuous_on ?S (\<lambda>p. snd p)"
+                  using continuous_on_snd[OF hc_id] by (by100 simp)
+                have himg: "fst ` ?S \<subseteq> top1_unit_interval" by (by100 auto)
+                have hc_f_fst: "continuous_on ?S (\<lambda>p. f (fst p))"
+                  using continuous_on_compose2[OF hf_cont_on hc_fst himg] by (by100 simp)
+                have hc_1mt: "continuous_on ?S (\<lambda>p. 1 - snd p)"
+                  by (intro continuous_intros hc_snd hc_id)
+                have hc_p1: "continuous_on ?S (\<lambda>p. (1 - snd p) * f (fst p))"
+                  by (intro continuous_intros hc_1mt hc_f_fst hc_id)
+                have hc_p2: "continuous_on ?S (\<lambda>p. snd p * x0)"
+                  by (intro continuous_intros hc_snd hc_id)
+                show ?thesis by (intro continuous_intros hc_p1 hc_p2 hc_id)
+              qed
               from top1_continuous_map_on_II_to_I[OF hH_img hH_cont_on]
               show ?thesis unfolding II_topology_def by (by100 blast)
             qed
