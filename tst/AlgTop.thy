@@ -171,7 +171,11 @@ proof -
         have hB2_top: "is_topology_on top1_B2 top1_B2_topology"
           using hB2_haus unfolding is_hausdorff_on_def by (by100 blast)
         have "top1_S1_topology = subspace_topology top1_B2 top1_B2_topology top1_S1"
-          sorry \<comment> \<open>S1 topology = subspace of B2 topology.\<close>
+        proof -
+          have "top1_S1 \<subseteq> top1_B2" unfolding top1_S1_def top1_B2_def by (by100 auto)
+          from subspace_topology_trans[OF this]
+          show ?thesis unfolding top1_S1_topology_def top1_B2_topology_def by (by100 simp)
+        qed
         hence "closedin_on top1_S1 (subspace_topology top1_B2 top1_B2_topology top1_S1)
             (rot k ` (C \<inter> top1_S1))" using hcl_S1 by (by100 simp)
         thus ?thesis by (rule Theorem_17_3[OF hB2_top hS1_cl])
