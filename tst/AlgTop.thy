@@ -8981,14 +8981,82 @@ proof -
       (top1_fundamental_group_carrier X TX x0) (top1_fundamental_group_mul X TX x0)
       (top1_Zn_group n) (top1_Zn_mul n)"
     by (rule groups_isomorphic_trans_fwd[OF hbc hmain])
-  \<comment> \<open>Presentation: the Theorem 72.1 quotient is presented by \<langle>a | a^n\<rangle>.\<close>
+  \<comment> \<open>Helper: iso(pi1(x0), Q) from hbc + h72_iso.\<close>
+  have hiso_x0_Q: "top1_groups_isomorphic_on
+      (top1_fundamental_group_carrier X TX x0) (top1_fundamental_group_mul X TX x0)
+      (top1_quotient_group_carrier_on
+         (top1_fundamental_group_carrier ?A ?TA ?a) (top1_fundamental_group_mul ?A ?TA ?a)
+         (top1_normal_subgroup_generated_on
+            (top1_fundamental_group_carrier ?A ?TA ?a) (top1_fundamental_group_mul ?A ?TA ?a)
+            (top1_fundamental_group_id ?A ?TA ?a) (top1_fundamental_group_invg ?A ?TA ?a)
+            {top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1, 0)
+               ?A ?TA ?a \<iota>
+               {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0)
+                     (\<lambda>s. (cos (2 * pi * s), sin (2 * pi * s))) g}}))
+      (top1_quotient_group_mul_on (top1_fundamental_group_mul ?A ?TA ?a))"
+    by (rule groups_isomorphic_trans_fwd[OF hbc h72_iso])
+  \<comment> \<open>Group structures for iso reversal.\<close>
+  have hgrp_x0: "top1_is_group_on
+      (top1_fundamental_group_carrier X TX x0) (top1_fundamental_group_mul X TX x0)
+      (top1_fundamental_group_id X TX x0) (top1_fundamental_group_invg X TX x0)"
+    by (rule top1_fundamental_group_is_group[OF hTX assms(3)])
+  \<comment> \<open>The quotient group Q is also a group (from hquot\_ZnZ which gives iso to Z/nZ which is a group).\<close>
+  have hgrp_Q: "\<exists>eQ invQ. top1_is_group_on
+      (top1_quotient_group_carrier_on
+         (top1_fundamental_group_carrier ?A ?TA ?a) (top1_fundamental_group_mul ?A ?TA ?a)
+         (top1_normal_subgroup_generated_on
+            (top1_fundamental_group_carrier ?A ?TA ?a) (top1_fundamental_group_mul ?A ?TA ?a)
+            (top1_fundamental_group_id ?A ?TA ?a) (top1_fundamental_group_invg ?A ?TA ?a)
+            {top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1, 0)
+               ?A ?TA ?a \<iota>
+               {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0)
+                     (\<lambda>s. (cos (2 * pi * s), sin (2 * pi * s))) g}}))
+      (top1_quotient_group_mul_on (top1_fundamental_group_mul ?A ?TA ?a)) eQ invQ"
+  proof -
+    have hTA_top: "is_topology_on ?A ?TA"
+    proof -
+      have "?A \<subseteq> X" using hA_cl unfolding closedin_on_def by (by100 blast)
+      show ?thesis by (rule subspace_topology_is_topology_on[OF hTX \<open>?A \<subseteq> X\<close>])
+    qed
+    have ha_in_A: "?a \<in> ?A"
+    proof -
+      have "(1::real, 0::real) \<in> top1_S1" unfolding top1_S1_def by (by100 simp)
+      thus ?thesis by (by100 blast)
+    qed
+    have hgrpA': "top1_is_group_on
+        (top1_fundamental_group_carrier ?A ?TA ?a)
+        (top1_fundamental_group_mul ?A ?TA ?a)
+        (top1_fundamental_group_id ?A ?TA ?a)
+        (top1_fundamental_group_invg ?A ?TA ?a)"
+      by (rule top1_fundamental_group_is_group[OF hTA_top ha_in_A])
+    have hN_normal': "top1_normal_subgroup_on
+        (top1_fundamental_group_carrier ?A ?TA ?a) (top1_fundamental_group_mul ?A ?TA ?a)
+        (top1_fundamental_group_id ?A ?TA ?a) (top1_fundamental_group_invg ?A ?TA ?a)
+        (top1_normal_subgroup_generated_on
+           (top1_fundamental_group_carrier ?A ?TA ?a) (top1_fundamental_group_mul ?A ?TA ?a)
+           (top1_fundamental_group_id ?A ?TA ?a) (top1_fundamental_group_invg ?A ?TA ?a)
+           {top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1, 0) ?A ?TA ?a \<iota>
+              {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0)
+                    (\<lambda>s. (cos (2 * pi * s), sin (2 * pi * s))) g}})"
+    proof -
+      have "{top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1, 0) ?A ?TA ?a \<iota>
+              {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0)
+                    (\<lambda>s. (cos (2 * pi * s), sin (2 * pi * s))) g}}
+          \<subseteq> top1_fundamental_group_carrier ?A ?TA ?a"
+        sorry \<comment> \<open>The relator class is an element of \<pi>_1(A, a').\<close>
+      from normal_subgroup_generated_is_normal[OF hgrpA' this]
+      show ?thesis .
+    qed
+    from quotient_group_is_group[OF hgrpA' hN_normal'] show ?thesis by (by100 blast)
+  qed
+  \<comment> \<open>Presentation: presented(Q) + iso(Q, pi1(x0)) packaged.\<close>
   have hpres: "\<exists>(G :: (real \<Rightarrow> 'a) set set set) mul e invg.
       top1_group_presented_by_on G mul e invg ({..<1}::nat set)
         { replicate n (0::nat, True) }
     \<and> top1_groups_isomorphic_on G mul
         (top1_fundamental_group_carrier X TX x0) (top1_fundamental_group_mul X TX x0)"
-    using conjunct2[OF hquot_ZnZ_and_pres]
-      groups_isomorphic_trans_fwd[OF hbc h72_iso] sorry
+    using conjunct2[OF hquot_ZnZ_and_pres] hiso_x0_Q
+      top1_groups_isomorphic_on_sym hgrp_x0 hgrp_Q by (by5000 fast)
   show ?thesis using hiso_final hpres by (by100 blast)
 qed
 
