@@ -8890,11 +8890,89 @@ proof -
         top1_group_presented_by_on
           (top1_quotient_group_carrier_on ?GA ?mulA ?N) (top1_quotient_group_mul_on ?mulA)
           e invg ({..<1}::nat set) { replicate n (0::nat, True) }"
-      sorry \<comment> \<open>Presentation: is\_group Q (quotient\_group\_is\_group) + Z free ({..<1}) +
-         hom(coset \<circ> \<phi>^{-1}) + surj + ker = N(word a^n).
-         All ingredients: hgrpA, hN\_normal, h\<phi>\_iso, h\_relator\_val,
-         quotient\_projection\_properties, Z\_is\_free\_on\_one\_generator,
-         bij\_hom\_inv\_is\_hom, group\_hom\_comp.\<close>
+    proof -
+      let ?Q = "top1_quotient_group_carrier_on ?GA ?mulA ?N"
+      let ?mulQ = "top1_quotient_group_mul_on ?mulA"
+      let ?coset = "\<lambda>g. top1_group_coset_on ?GA ?mulA ?N g"
+      let ?eQ = "?coset ?eA"
+      let ?invQ = "\<lambda>C. ?coset (?invA (SOME g. g \<in> ?GA \<and> C = ?coset g))"
+      let ?\<pi> = "\<lambda>z. ?coset (inv_into ?GA \<phi> z)"
+      \<comment> \<open>Step 1: Q is a group.\<close>
+      have hQ_grp: "top1_is_group_on ?Q ?mulQ ?eQ ?invQ"
+        by (rule quotient_group_is_group[OF hgrpA hN_normal])
+      \<comment> \<open>Step 2: Quotient projection properties.\<close>
+      have hcoset_hom: "top1_group_hom_on ?GA ?mulA ?Q ?mulQ ?coset"
+        and hcoset_surj: "?coset ` ?GA = ?Q"
+        and hcoset_ker: "top1_group_kernel_on ?GA ?eQ ?coset = ?N"
+        using quotient_projection_properties[OF hgrpA hN_normal] by (by100 blast)+
+      \<comment> \<open>Step 3: \<phi>^{-1} is a group hom Z \<rightarrow> ?GA.\<close>
+      have h\<phi>_hom: "top1_group_hom_on ?GA ?mulA top1_Z_group top1_Z_mul \<phi>"
+        using h\<phi>_iso unfolding top1_group_iso_on_def by (by100 blast)
+      have h\<phi>_bij: "bij_betw \<phi> ?GA top1_Z_group"
+        using h\<phi>_iso unfolding top1_group_iso_on_def by (by100 blast)
+      have h\<phi>inv_hom: "top1_group_hom_on top1_Z_group top1_Z_mul ?GA ?mulA (inv_into ?GA \<phi>)"
+        by (rule bij_hom_inv_is_hom[OF hgrpA hgrpZ h\<phi>_bij h\<phi>_hom])
+      \<comment> \<open>Step 4: \<pi> = coset \<circ> \<phi>^{-1} is a hom Z \<rightarrow> Q.\<close>
+      have h\<pi>_hom: "top1_group_hom_on top1_Z_group top1_Z_mul ?Q ?mulQ ?\<pi>"
+      proof -
+        from group_hom_comp[OF h\<phi>inv_hom hcoset_hom]
+        have "top1_group_hom_on top1_Z_group top1_Z_mul ?Q ?mulQ (?coset \<circ> inv_into ?GA \<phi>)" .
+        moreover have "(\<lambda>z. ?coset (inv_into ?GA \<phi> z)) = ?coset \<circ> inv_into ?GA \<phi>" by (by100 auto)
+        ultimately show ?thesis by (by100 simp)
+      qed
+      \<comment> \<open>Step 5: \<pi> surjective.\<close>
+      have h\<pi>_surj: "?\<pi> ` top1_Z_group = ?Q"
+      proof -
+        have h_inv_surj: "inv_into ?GA \<phi> ` top1_Z_group = ?GA"
+        proof -
+          have "\<phi> ` ?GA = top1_Z_group" using h\<phi>_bij unfolding bij_betw_def by (by100 blast)
+          have "inj_on \<phi> ?GA" using h\<phi>_bij unfolding bij_betw_def by (by100 blast)
+          show ?thesis
+          proof (rule set_eqI, rule iffI)
+            fix g assume "g \<in> inv_into ?GA \<phi> ` top1_Z_group"
+            then obtain z where "z \<in> top1_Z_group" "g = inv_into ?GA \<phi> z" by (by100 blast)
+            have "z \<in> \<phi> ` ?GA" using \<open>z \<in> top1_Z_group\<close> \<open>\<phi> ` ?GA = top1_Z_group\<close> by (by100 simp)
+            hence "inv_into ?GA \<phi> z \<in> ?GA"
+              by (rule inv_into_into)
+            thus "g \<in> ?GA" using \<open>g = inv_into ?GA \<phi> z\<close> by (by100 simp)
+          next
+            fix g assume "g \<in> ?GA"
+            hence "\<phi> g \<in> top1_Z_group" using \<open>\<phi> ` ?GA = top1_Z_group\<close> by (by100 blast)
+            moreover have "inv_into ?GA \<phi> (\<phi> g) = g"
+              using inv_into_f_f[OF \<open>inj_on \<phi> ?GA\<close> \<open>g \<in> ?GA\<close>] .
+            ultimately show "g \<in> inv_into ?GA \<phi> ` top1_Z_group" by (by100 blast)
+          qed
+        qed
+        have "?\<pi> ` top1_Z_group = ?coset ` (inv_into ?GA \<phi> ` top1_Z_group)"
+          by (by100 auto)
+        also have "\<dots> = ?coset ` ?GA" using h_inv_surj by (by100 simp)
+        also have "\<dots> = ?Q" by (rule hcoset_surj)
+        finally show ?thesis .
+      qed
+      \<comment> \<open>Step 6: ker(\<pi>) = NC\_Z(\{word\_product replicate n (0,True)\}).\<close>
+      have h\<pi>_ker: "top1_group_kernel_on top1_Z_group ?eQ ?\<pi> =
+          top1_normal_subgroup_generated_on top1_Z_group top1_Z_mul top1_Z_id top1_Z_invg
+            {top1_group_word_product top1_Z_mul top1_Z_id top1_Z_invg
+                (map (\<lambda>(s, b). ((\<lambda>(_::nat). (1::int)) s, b)) (replicate n (0::nat, True)))}"
+        sorry \<comment> \<open>ker = \<phi>(N) = NC\_Z(\{\<phi>(relator)\}) = NC\_Z(\{n\}) = NC\_Z(\{word a^n\}).\<close>
+      \<comment> \<open>Step 7: Assemble the presentation.\<close>
+      \<comment> \<open>Z free on {..<1}.\<close>
+      have hZ_free_01: "top1_is_free_group_full_on top1_Z_group top1_Z_mul top1_Z_id top1_Z_invg
+          (\<lambda>(_::nat). (1::int)) {..<1::nat}"
+      proof -
+        have "{0::nat} = {..<1::nat}" by (by100 auto)
+        thus ?thesis using Z_is_free_on_one_generator by (by100 simp)
+      qed
+      show ?thesis
+        unfolding top1_group_presented_by_on_def
+        apply (rule exI[of _ ?eQ], rule exI[of _ ?invQ])
+        apply (intro conjI)
+        apply (rule hQ_grp)
+        apply (rule exI[of _ top1_Z_group], rule exI[of _ top1_Z_mul],
+               rule exI[of _ top1_Z_id], rule exI[of _ top1_Z_invg],
+               rule exI[of _ "\<lambda>(_::nat). (1::int)"], rule exI[of _ ?\<pi>])
+        using hZ_free_01 h\<pi>_hom h\<pi>_surj h\<pi>_ker sorry
+    qed
     \<comment> \<open>Compose: pi1(A)/N iso Z/phi(N) = Z/nZ iso Z/nZ.\<close>
     have "top1_groups_isomorphic_on
         (top1_quotient_group_carrier_on ?GA ?mulA ?N)
