@@ -8936,7 +8936,77 @@ next
   have hm2: "2 \<le> m" using assms(1) False unfolding top1_is_m_fold_projective_on_def by (by100 blast)
   have hscheme: "top1_quotient_of_scheme_on X TX (top1_m_projective_scheme m)"
     using assms(1) False unfolding top1_is_m_fold_projective_on_def by (by100 blast)
-  show ?thesis sorry \<comment> \<open>Theorem 74.2 application to projective scheme (m \<ge> 2).\<close>
+  let ?scheme = "top1_m_projective_scheme m"
+  have hlen: "length ?scheme \<ge> 3"
+    using projective_scheme_length hm2 by (by100 simp)
+  have hvc: "\<forall>(q'::real\<times>real\<Rightarrow>'a) (vx::nat\<Rightarrow>real) (vy::nat\<Rightarrow>real).
+      (\<forall>i<length ?scheme. \<forall>j<length ?scheme.
+        fst (?scheme!i) = fst (?scheme!j) \<longrightarrow>
+        (\<forall>t\<in>I_set. q' ((1-t) * vx i + t * vx (Suc i mod length ?scheme),
+           (1-t) * vy i + t * vy (Suc i mod length ?scheme))
+         = (if snd (?scheme!i) = snd (?scheme!j)
+            then q' ((1-t) * vx j + t * vx (Suc j mod length ?scheme),
+                    (1-t) * vy j + t * vy (Suc j mod length ?scheme))
+            else q' (t * vx j + (1-t) * vx (Suc j mod length ?scheme),
+                    t * vy j + (1-t) * vy (Suc j mod length ?scheme)))))
+      \<longrightarrow> (\<forall>i<length ?scheme. \<forall>j<length ?scheme. q' (vx i, vy i) = q' (vx j, vy j))"
+    using projective_scheme_vertex_connectivity[OF hm2] by (by100 simp)
+  \<comment> \<open>All entries in the projective scheme have direction True.\<close>
+  have htd: "\<forall>\<alpha>\<in>fst ` set ?scheme.
+      \<exists>i<length ?scheme. fst (?scheme!i) = \<alpha> \<and> snd (?scheme!i) = True"
+  proof (intro ballI)
+    fix \<alpha> assume "\<alpha> \<in> fst ` set ?scheme"
+    then obtain x where "x \<in> set ?scheme" "fst x = \<alpha>" by (by100 blast)
+    \<comment> \<open>All entries have True direction.\<close>
+    hence "snd x = True" unfolding top1_m_projective_scheme_def by (by5000 auto)
+    have "x = (\<alpha>, True)"
+    proof -
+      have "x = (fst x, snd x)" by (by100 simp)
+      thus ?thesis using \<open>fst x = \<alpha>\<close> \<open>snd x = True\<close> by (by100 simp)
+    qed
+    hence "(\<alpha>, True) \<in> set ?scheme" using \<open>x \<in> set ?scheme\<close> by (by100 simp)
+    then obtain i where "i < length ?scheme" "?scheme!i = (\<alpha>, True)"
+      sorry
+    thus "\<exists>i<length ?scheme. fst (?scheme!i) = \<alpha> \<and> snd (?scheme!i) = True"
+      by (by100 force)
+  qed
+  \<comment> \<open>Vertex identification from quotient\_of\_scheme\_extract\_full.\<close>
+  have hvert: "\<exists>P q' vx vy.
+      top1_is_polygonal_region_on P (length ?scheme)
+    \<and> top1_quotient_map_on P (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) X TX q'
+    \<and> (\<forall>i<length ?scheme. (vx i, vy i) \<in> P)
+    \<and> (\<forall>i<length ?scheme. \<forall>j<length ?scheme. q' (vx i, vy i) = q' (vx j, vy j))
+    \<and> (\<forall>i<length ?scheme. \<forall>j<length ?scheme. \<forall>t\<in>I_set. \<forall>s\<in>I_set.
+        q' ((1-t) * vx i + t * vx (Suc i mod length ?scheme),
+           (1-t) * vy i + t * vy (Suc i mod length ?scheme))
+      = q' ((1-s) * vx j + s * vx (Suc j mod length ?scheme),
+           (1-s) * vy j + s * vy (Suc j mod length ?scheme))
+      \<longrightarrow> (i = j \<and> t = s)
+        \<or> (fst (?scheme!i) = fst (?scheme!j) \<and>
+           (if snd (?scheme!i) = snd (?scheme!j) then s = t else s = 1 - t)))"
+    sorry \<comment> \<open>From quotient_of_scheme_extract_full.\<close>
+  from Theorem_74_2_scheme_presentation[OF hscheme assms(2) hlen hvert htd hvc]
+  have h742: "\<exists>(G :: (real \<Rightarrow> 'a) set set set) mul e invg.
+      top1_group_presented_by_on G mul e invg (fst ` set ?scheme)
+        { map (\<lambda>(s,b). (s, b)) ?scheme }
+      \<and> top1_groups_isomorphic_on G mul
+          (top1_fundamental_group_carrier X TX x0)
+          (top1_fundamental_group_mul X TX x0)" .
+  \<comment> \<open>Match labels and relator.\<close>
+  have hlabels: "fst ` set ?scheme = {..<m}"
+  proof -
+    have "fst ` set ?scheme = fst ` set (concat (map (\<lambda>i. [(i, True), (i, True)]) [0..<m]))"
+      unfolding top1_m_projective_scheme_def by (by100 simp)
+    also have "\<dots> = {..<m}" sorry
+    finally show ?thesis .
+  qed
+  have hrelator: "{ map (\<lambda>(s,b). (s, b)) ?scheme }
+      = { concat (map (\<lambda>i. [(i, True), (i, True)]) [0..<m]) }"
+  proof -
+    have "map (\<lambda>(s,b). (s, b)) ?scheme = ?scheme" by (by100 simp)
+    thus ?thesis unfolding top1_m_projective_scheme_def by (by100 simp)
+  qed
+  show ?thesis using h742 hlabels hrelator sorry
 qed
 section \<open>*\<S>78 Constructing Compact Surfaces\<close>
 
