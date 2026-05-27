@@ -14859,6 +14859,19 @@ lemma tree_simply_connected:
   shows "top1_simply_connected_on T TT"
   using assms unfolding top1_is_tree_on_def by (by100 blast)
 
+text \<open>Lemma 83.2 (Munkres): A compact subspace of a graph meets only finitely many arcs.
+  This is needed for the chain-of-trees Zorn argument.\<close>
+lemma compact_in_graph_finite_arcs:
+  assumes "top1_is_graph_on X TX"
+      and "K \<subseteq> X"
+      and "top1_compact_on K (subspace_topology X TX K)"
+  shows "\<exists>\<A>0. finite \<A>0 \<and> \<A>0 \<subseteq> {A. \<exists>\<A>. (\<forall>A\<in>\<A>. A \<subseteq> X \<and> top1_is_arc_on A (subspace_topology X TX A))
+        \<and> (\<Union>\<A>) = X \<and> A \<in> \<A>} \<and> K \<subseteq> \<Union>\<A>0"
+  sorry \<comment> \<open>Munkres 83.2: compact set meets finitely many arcs.
+     Proof: vertices form discrete closed subset of compact K (finite).
+     Interior arc points form discrete closed subset (finite).
+     Each remaining point is in exactly one arc. Total: finitely many arcs.\<close>
+
 text \<open>Reviewer-requested: connected graph has a maximal tree (Munkres Lemma 84.3).
   A maximal tree T is one where no strictly larger subtree of X is also a tree.\<close>
 lemma connected_graph_has_maximal_tree:
