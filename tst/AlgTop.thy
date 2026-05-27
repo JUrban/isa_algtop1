@@ -298,7 +298,9 @@ proof -
       \<comment> \<open>Circle part: at most n points (orbit under n-fold rotation).\<close>
       moreover have "finite {z \<in> top1_S1. q z = p}"
       proof (cases "\<exists>z0 \<in> top1_S1. q z0 = p")
-        case False thus ?thesis sorry
+        case False
+        hence hempty: "{z \<in> top1_S1. q z = p} = {}" by (by5000 blast)
+        show ?thesis unfolding hempty by (by100 simp)
       next
         case True
         then obtain z0 where hz0: "z0 \<in> top1_S1" "q z0 = p" by (by100 blast)
