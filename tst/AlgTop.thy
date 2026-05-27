@@ -14585,9 +14585,32 @@ proof -
     hence "A0 \<in> \<A>" using hA0_sub \<open>x0 \<in> A0\<close> unfolding \<A>_def by (by100 blast)
     thus ?thesis by (by100 blast)
   qed
-  have hchain: "\<forall>C \<in> chains \<A>. \<Union>C \<in> \<A>"
-    sorry \<comment> \<open>Union of chain of trees is a tree (connected + simply connected + x0).\<close>
-  from Zorn_Lemma[OF hchain]
+  have hchain: "\<forall>C \<in> chains \<A>. \<exists>U \<in> \<A>. \<forall>X\<in>C. X \<subseteq> U"
+  proof (intro ballI)
+    fix C assume hC: "C \<in> chains \<A>"
+    show "\<exists>U \<in> \<A>. \<forall>X\<in>C. X \<subseteq> U"
+    proof (cases "C = {}")
+      case True
+      from h\<A>_ne obtain T0 where "T0 \<in> \<A>" by (by100 blast)
+      thus ?thesis using True by (by100 blast)
+    next
+      case False
+      \<comment> \<open>Nonempty chain: union is a tree.\<close>
+      have hU_sub: "\<Union>C \<subseteq> X" using hC unfolding chains_def \<A>_def by (by100 blast)
+      have hU_x0: "x0 \<in> \<Union>C"
+      proof -
+        from False obtain T0 where "T0 \<in> C" by (by100 blast)
+        hence "T0 \<in> \<A>" using hC unfolding chains_def by (by100 blast)
+        hence "x0 \<in> T0" unfolding \<A>_def by (by100 blast)
+        thus ?thesis using \<open>T0 \<in> C\<close> by (by100 blast)
+      qed
+      have hU_tree: "top1_is_tree_on (\<Union>C) (subspace_topology X TX (\<Union>C))"
+        sorry \<comment> \<open>Union of nonempty chain of trees is tree: connected (directed union) + simply_connected (compactness) + graph (union of arc covers).\<close>
+      hence "\<Union>C \<in> \<A>" using hU_sub hU_x0 unfolding \<A>_def by (by100 blast)
+      thus ?thesis by (by100 blast)
+    qed
+  qed
+  from Zorn_Lemma2[OF hchain]
   obtain M where "M \<in> \<A>" and hmax: "\<forall>X'\<in>\<A>. M \<subseteq> X' \<longrightarrow> X' = M" by (by100 blast)
   from \<open>M \<in> \<A>\<close> have hM_tree: "top1_is_tree_on M (subspace_topology X TX M)"
       and hM_sub: "M \<subseteq> X" and hM_x0: "x0 \<in> M"
