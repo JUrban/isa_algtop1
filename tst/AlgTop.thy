@@ -14316,7 +14316,26 @@ proof -
       using h\<A>0 by (by100 blast)+
     \<comment> \<open>A single arc is a tree: graph (single-arc graph), connected, simply connected.\<close>
     have "top1_is_tree_on A0 (subspace_topology X TX A0)"
-      sorry \<comment> \<open>Arc is a tree: connected + simply connected + graph structure.\<close>
+      unfolding top1_is_tree_on_def
+    proof (intro conjI)
+      show "top1_connected_on A0 (subspace_topology X TX A0)"
+        by (rule arc_connected[OF hA0_arc])
+      show "top1_simply_connected_on A0 (subspace_topology X TX A0)"
+      proof -
+        \<comment> \<open>An arc is homeomorphic to [0,1]. And [0,1] is simply connected (convex: straight-line
+           homotopy contracts any loop). By homeomorphism_preserves_simply_connected.\<close>
+        \<comment> \<open>Step 1: [0,1] is simply connected.\<close>
+        have hI_sc: "top1_simply_connected_on top1_unit_interval top1_unit_interval_topology"
+          sorry \<comment> \<open>Unit interval simply connected: convex, straight-line homotopy.\<close>
+        \<comment> \<open>Step 2: Arc is homeomorphic to [0,1] (by definition of arc).\<close>
+        obtain h where hh: "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology A0 (subspace_topology X TX A0) h"
+          using hA0_arc unfolding top1_is_arc_on_def by (by100 blast)
+        \<comment> \<open>Step 3: Homeomorphism preserves simply connected.\<close>
+        show ?thesis using homeomorphism_preserves_simply_connected[OF hh hI_sc] by (by100 blast)
+      qed
+      show "top1_is_graph_on A0 (subspace_topology X TX A0)"
+        sorry \<comment> \<open>Single arc forms a valid graph: arc cover = {A0}.\<close>
+    qed
     hence "A0 \<in> \<A>" using hA0_sub \<open>x0 \<in> A0\<close> unfolding \<A>_def by (by100 blast)
     thus ?thesis by (by100 blast)
   qed
