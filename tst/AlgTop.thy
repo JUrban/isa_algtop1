@@ -7078,7 +7078,64 @@ proof -
         \<comment> \<open>h_circ is homeomorphism, hence homotopy equivalence. By Theorem_58_7, induced map is iso.\<close>
         have hhc_htpy_eq: "top1_homotopy_equivalence_on top1_S1 top1_S1_topology ?A ?TA_l h_circ
             (inv_into top1_S1 h_circ)"
-          sorry \<comment> \<open>Homeomorphism implies homotopy equivalence.\<close>
+          unfolding top1_homotopy_equivalence_on_def
+        proof (intro conjI)
+          show "top1_continuous_map_on top1_S1 top1_S1_topology ?A ?TA_l h_circ"
+            using hhc_cont by (by100 blast)
+        next
+          show "top1_continuous_map_on ?A ?TA_l top1_S1 top1_S1_topology (inv_into top1_S1 h_circ)"
+            using hhc unfolding top1_homeomorphism_on_def by (by100 blast)
+        next
+          \<comment> \<open>inv . h = id on S1.\<close>
+          show "top1_homotopic_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology
+              (inv_into top1_S1 h_circ \<circ> h_circ) (\<lambda>x. x)"
+          proof -
+            have "\<forall>x \<in> top1_S1. (inv_into top1_S1 h_circ \<circ> h_circ) x = x"
+            proof
+              fix x assume "x \<in> top1_S1"
+              thus "(inv_into top1_S1 h_circ \<circ> h_circ) x = x"
+                using hhc inv_into_f_f
+                unfolding top1_homeomorphism_on_def bij_betw_def by (by5000 simp)
+            qed
+            hence heq: "\<And>x. x \<in> top1_S1 \<Longrightarrow> (inv_into top1_S1 h_circ \<circ> h_circ) x = (\<lambda>x. x) x"
+              by (by100 simp)
+            \<comment> \<open>id is continuous S1 -> S1.\<close>
+            have hid_cont: "top1_continuous_map_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology (\<lambda>x. x)"
+              using top1_continuous_map_on_id[OF hS1_top_l] unfolding id_def by (by100 blast)
+            \<comment> \<open>By Lemma_51_1_homotopic_refl: id ~ id.\<close>
+            from Lemma_51_1_homotopic_refl[OF hid_cont hS1_top_l]
+            have "top1_homotopic_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology (\<lambda>x. x) (\<lambda>x. x)" .
+            \<comment> \<open>Since inv.h = id on S1, the homotopy also works for inv.h.\<close>
+            \<comment> \<open>Direct: the constant homotopy H(x,t)=x satisfies H(x,0)=(inv.h)(x)=x and H(x,1)=x.\<close>
+            show ?thesis unfolding top1_homotopic_on_def
+            proof (intro conjI)
+              have "top1_continuous_map_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology (inv_into top1_S1 h_circ \<circ> h_circ)"
+                sorry \<comment> \<open>Composition of continuous maps.\<close>
+              thus "top1_continuous_map_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology (inv_into top1_S1 h_circ \<circ> h_circ)" .
+            next
+              show "top1_continuous_map_on top1_S1 top1_S1_topology top1_S1 top1_S1_topology (\<lambda>x. x)"
+                by (rule hid_cont)
+            next
+              \<comment> \<open>Constant homotopy: F(x,t) = x.\<close>
+              have "top1_continuous_map_on (top1_S1 \<times> top1_unit_interval)
+                  (product_topology_on top1_S1_topology top1_unit_interval_topology) top1_S1 top1_S1_topology fst"
+                sorry \<comment> \<open>First projection is continuous.\<close>
+              moreover have "\<forall>x\<in>top1_S1. fst (x, (0::real)) = (inv_into top1_S1 h_circ \<circ> h_circ) x"
+                using heq by (by100 simp)
+              moreover have "\<forall>x\<in>top1_S1. fst (x, (1::real)) = x" by (by100 simp)
+              ultimately show "\<exists>F. top1_continuous_map_on (top1_S1 \<times> top1_unit_interval)
+                  (product_topology_on top1_S1_topology top1_unit_interval_topology) top1_S1 top1_S1_topology F
+                \<and> (\<forall>x\<in>top1_S1. F (x, 0) = (inv_into top1_S1 h_circ \<circ> h_circ) x)
+                \<and> (\<forall>x\<in>top1_S1. F (x, 1) = x)"
+                by (by100 blast)
+            qed
+          qed
+        next
+          \<comment> \<open>h . inv = id on A.\<close>
+          show "top1_homotopic_on ?A ?TA_l ?A ?TA_l
+              (h_circ \<circ> inv_into top1_S1 h_circ) (\<lambda>y. y)"
+            sorry \<comment> \<open>h.inv = id pointwise on A; reflexivity of homotopy.\<close>
+        qed
         have "h_circ (1, 0) = ?a" by (rule hhc_10)
         have hhc_iso: "top1_group_iso_on
             (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1,0))
