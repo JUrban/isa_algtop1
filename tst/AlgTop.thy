@@ -9043,7 +9043,17 @@ proof -
               {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0)
                     (\<lambda>s. (cos (2 * pi * s), sin (2 * pi * s))) g}}
           \<subseteq> top1_fundamental_group_carrier ?A ?TA ?a"
-        sorry \<comment> \<open>The relator class is an element of \<pi>_1(A, a').\<close>
+      proof -
+        \<comment> \<open>The induced map \<iota>_*: \<pi>_1(S1, (1,0)) \<rightarrow> \<pi>_1(A, a') is a homomorphism.
+           The standard loop class is in \<pi>_1(S1, (1,0)).
+           Its image under \<iota>_* is in \<pi>_1(A, a').\<close>
+        have "top1_fundamental_group_induced_on top1_S1 top1_S1_topology (1, 0) ?A ?TA ?a \<iota>
+            {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1, 0)
+                  (\<lambda>s. (cos (2 * pi * s), sin (2 * pi * s))) g}
+          \<in> top1_fundamental_group_carrier ?A ?TA ?a"
+          sorry \<comment> \<open>Induced hom maps carrier to carrier. Standard loop class is in carrier.\<close>
+        thus ?thesis by (by100 blast)
+      qed
       from normal_subgroup_generated_is_normal[OF hgrpA' this]
       show ?thesis .
     qed
