@@ -902,8 +902,59 @@ proof -
             by (by100 simp)
         qed
       qed
-      ultimately show ?thesis unfolding top1_is_wedge_of_circles_on_def
-        using hA_strict hA_haus ha_A hC_props sorry \<comment> \<open>Packaging all wedge conditions.\<close>
+      ultimately have hcoh_and_cover_and_disj:
+        "(\<forall>D. D \<subseteq> A \<longrightarrow> (closedin_on A ?TA D \<longleftrightarrow> (\<forall>j\<in>{..<1::nat}. closedin_on (C j) ?TA (C j \<inter> D))))
+       \<and> (\<Union>j\<in>{..<1::nat}. C j) = A
+       \<and> (\<forall>j\<in>{..<1::nat}. \<forall>k\<in>{..<1::nat}. j \<noteq> k \<longrightarrow> C j \<inter> C k = {a})"
+        by (by100 blast)
+      have "top1_is_wedge_of_circles_on A ?TA ({..<1}::nat set) a"
+        unfolding top1_is_wedge_of_circles_on_def
+      proof (intro conjI)
+        show "is_topology_on_strict A ?TA" by (rule hA_strict)
+        show "is_hausdorff_on A ?TA" by (rule hA_haus)
+        show "a \<in> A" by (rule ha_A)
+        show "\<exists>Ca. (\<forall>j\<in>{..<1::nat}. Ca j \<subseteq> A \<and> a \<in> Ca j \<and>
+            (\<exists>h. top1_homeomorphism_on top1_S1 top1_S1_topology (Ca j)
+                  (subspace_topology A ?TA (Ca j)) h))
+          \<and> (\<Union>j\<in>{..<1::nat}. Ca j) = A
+          \<and> (\<forall>j\<in>{..<1::nat}. \<forall>k\<in>{..<1::nat}. j \<noteq> k \<longrightarrow> Ca j \<inter> Ca k = {a})
+          \<and> (\<forall>D. D \<subseteq> A \<longrightarrow> (closedin_on A ?TA D \<longleftrightarrow>
+              (\<forall>j\<in>{..<1::nat}. closedin_on (Ca j) (subspace_topology A ?TA (Ca j)) (Ca j \<inter> D))))"
+        proof -
+          \<comment> \<open>Key: subspace\_topology A TA A = TA when TA is topology on A.\<close>
+          have hTA_sub: "?TA \<subseteq> Pow A"
+            using hA_strict unfolding is_topology_on_strict_def by (by100 blast)
+          have hTA_self: "subspace_topology A ?TA A = ?TA"
+          proof (rule set_eqI, rule iffI)
+            fix U assume "U \<in> subspace_topology A ?TA A"
+            then obtain V where "V \<in> ?TA" "U = A \<inter> V" unfolding subspace_topology_def by (by100 blast)
+            have "V \<subseteq> A" using \<open>V \<in> ?TA\<close> hTA_sub by (by100 blast)
+            hence "A \<inter> V = V" by (by100 blast)
+            thus "U \<in> ?TA" using \<open>V \<in> ?TA\<close> \<open>U = A \<inter> V\<close> by (by100 simp)
+          next
+            fix U assume "U \<in> ?TA"
+            have "U \<subseteq> A" using \<open>U \<in> ?TA\<close> hTA_sub by (by100 blast)
+            hence "A \<inter> U = U" by (by100 blast)
+            have "\<exists>V. V \<in> ?TA \<and> U = A \<inter> V" using \<open>U \<in> ?TA\<close> \<open>A \<inter> U = U\<close> by (by100 blast)
+            thus "U \<in> subspace_topology A ?TA A" unfolding subspace_topology_def by (by100 blast)
+          qed
+          have hCj_eq: "\<And>j. j \<in> {..<1::nat} \<Longrightarrow> subspace_topology A ?TA (C j) = ?TA"
+            unfolding C_def using hTA_self by (by100 simp)
+          hence hC_match: "\<forall>j\<in>{..<1::nat}. C j \<subseteq> A \<and> a \<in> C j \<and>
+              (\<exists>h. top1_homeomorphism_on top1_S1 top1_S1_topology (C j)
+                    (subspace_topology A ?TA (C j)) h)"
+            using hC_props by (by100 simp)
+          \<comment> \<open>Similarly for coherent topology.\<close>
+          have hcoh_match: "\<forall>D. D \<subseteq> A \<longrightarrow> (closedin_on A ?TA D \<longleftrightarrow>
+              (\<forall>j\<in>{..<1::nat}. closedin_on (C j) (subspace_topology A ?TA (C j)) (C j \<inter> D)))"
+            using hcoh_and_cover_and_disj \<open>\<And>j. j \<in> {..<1::nat} \<Longrightarrow> subspace_topology A ?TA (C j) = ?TA\<close>
+            by (by100 simp)
+          show ?thesis
+            apply (rule exI[of _ C])
+            using hC_match hcoh_and_cover_and_disj hcoh_match by (by5000 blast)
+        qed
+      qed
+      thus ?thesis .
     qed
     \<comment> \<open>Step 4: q(S1) \<subseteq> A by definition.\<close>
     have hq_S1_A: "q ` top1_S1 \<subseteq> A" unfolding A_def by (by100 blast)
