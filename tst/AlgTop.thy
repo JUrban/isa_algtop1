@@ -16423,11 +16423,101 @@ proof -
              With continuity + open map: homeomorphism. Then arc\_endpoints\_under\_homeomorphism
              gives: endpoints of A1' map to endpoints of A1 under p.
              For e \<in> A1'\<inter>A2': p(e) \<in> endpoints(A1). So e \<in> p\<inverse>(endpoints(A1)) \<inter> A1' = endpoints(A1').\<close>
-          show ?thesis sorry \<comment> \<open>Needs: homeomorphism p|A1' from hAE\_surj + hAE\_arcs.\<close>
+          show ?thesis
+          proof (intro subsetI)
+            fix e assume he: "e \<in> A1' \<inter> A2'"
+            have he_A1': "e \<in> A1'" using he by (by100 blast)
+            have hpe_ep: "p e \<in> top1_arc_endpoints_on A1 (subspace_topology B TB A1)"
+              using hp_inter he hbase_inter by (by100 blast)
+            \<comment> \<open>Step 1: Construct homeomorphism p: A1' \<rightarrow> A1 via Theorem 26.6.\<close>
+            have hp_A1_surj: "p ` A1' = A1"
+            proof -
+              \<comment> \<open>A1' \<subseteq> p\<inverse>(A1) (from hA1\_comp). So p(A1') \<subseteq> A1.\<close>
+              have "p ` A1' \<subseteq> A1" using hA1'_sub by (by100 blast)
+              \<comment> \<open>From hAE\_surj: p(A1') = some A0 \<in> \<A>B.\<close>
+              from hAE_surj[rule_format, OF hA1] obtain A0 where
+                "A0 \<in> \<A>B" "p ` A1' = A0" by (by100 blast)
+              \<comment> \<open>A0 = p(A1') \<subseteq> A1. Both A0, A1 \<in> \<A>B. If A0 \<noteq> A1: |A0 \<inter> A1| \<le> 2.
+                 But A0 \<subseteq> A1 means A0 = A0 \<inter> A1. Card(A0) \<le> 2. But A0 is an arc (infinite). \<bot>.\<close>
+              have "A0 \<subseteq> A1" using \<open>p ` A1' = A0\<close> \<open>p ` A1' \<subseteq> A1\<close> by (by100 blast)
+              have "A0 = A1"
+              proof (rule ccontr)
+                assume "A0 \<noteq> A1"
+                from hAB_inter[rule_format, OF \<open>A0 \<in> \<A>B\<close> hA1_base this]
+                have "finite (A0 \<inter> A1) \<and> card (A0 \<inter> A1) \<le> 2" by (by100 blast)
+                have "A0 \<inter> A1 = A0" using \<open>A0 \<subseteq> A1\<close> by (by100 blast)
+                hence "finite A0 \<and> card A0 \<le> 2" using \<open>finite (A0 \<inter> A1) \<and> _\<close> by (by100 simp)
+                \<comment> \<open>But A0 is an arc (infinite). Contradiction.\<close>
+                have "top1_is_arc_on A0 (subspace_topology B TB A0)"
+                  using hAB \<open>A0 \<in> \<A>B\<close> by (by100 blast)
+                hence "\<not> finite A0"
+                  sorry \<comment> \<open>Arcs are infinite (homeomorphic to [0,1]).\<close>
+                thus False using \<open>finite A0 \<and> card A0 \<le> 2\<close> by (by100 blast)
+              qed
+              thus ?thesis using \<open>p ` A1' = A0\<close> by (by100 simp)
+            qed
+            have hp_A1_inj: "inj_on p A1'" using hAE_arcs hA1 by (by5000 blast)
+            have hp_A1_bij: "bij_betw p A1' A1"
+              unfolding bij_betw_def using hp_A1_inj hp_A1_surj by (by100 blast)
+            have hA1'_arc: "top1_is_arc_on A1' (subspace_topology E TE A1')"
+              using hAE_arcs hA1 by (by100 blast)
+            have hA1'_strict: "is_topology_on_strict A1' (subspace_topology E TE A1')"
+              using hA1'_arc unfolding top1_is_arc_on_def by (by100 blast)
+            have hA1_strict: "is_topology_on_strict A1 (subspace_topology B TB A1)"
+            proof -
+              have hA1_arc: "top1_is_arc_on A1 (subspace_topology B TB A1)"
+                using hAB hA1_base by (by100 blast)
+              thus ?thesis unfolding top1_is_arc_on_def by (by100 blast)
+            qed
+            have hA1'_compact: "top1_compact_on A1' (subspace_topology E TE A1')"
+              sorry \<comment> \<open>A1' is arc \<cong> [0,1], hence compact.\<close>
+            have hA1_haus: "is_hausdorff_on A1 (subspace_topology B TB A1)"
+            proof -
+              have "is_hausdorff_on B TB"
+                using assms(1) unfolding top1_is_graph_on_def by (by100 blast)
+              have "A1 \<subseteq> B" using hAB hA1_base by (by100 blast)
+              from conjunct2[OF conjunct2[OF Theorem_17_11]] this \<open>is_hausdorff_on B TB\<close>
+              show ?thesis by (by100 blast)
+            qed
+            have hp_A1_cont: "top1_continuous_map_on A1' (subspace_topology E TE A1')
+                A1 (subspace_topology B TB A1) p"
+            proof -
+              have hp_cont: "top1_continuous_map_on E TE B TB p"
+                using assms(2) unfolding top1_covering_map_on_def by (by100 blast)
+              have "top1_continuous_map_on A1' (subspace_topology E TE A1') B TB p"
+                by (rule top1_continuous_map_on_subspace_restrict[OF hp_cont hA1'_sub_E])
+              have "\<forall>e \<in> A1'. p e \<in> A1" using hA1'_sub by (by100 blast)
+              have "A1 \<subseteq> B" using hAB hA1_base by (by100 blast)
+              from continuous_map_restrict_codomain[OF
+                  \<open>top1_continuous_map_on A1' (subspace_topology E TE A1') B TB p\<close>
+                  \<open>\<forall>e \<in> A1'. p e \<in> A1\<close> this]
+              show ?thesis .
+            qed
+            have hp_A1_homeo: "top1_homeomorphism_on A1' (subspace_topology E TE A1')
+                A1 (subspace_topology B TB A1) p"
+            proof -
+              have hA1'_top: "is_topology_on A1' (subspace_topology E TE A1')"
+                using hA1'_strict unfolding is_topology_on_strict_def by (by100 blast)
+              have hA1_top: "is_topology_on A1 (subspace_topology B TB A1)"
+                using hA1_strict unfolding is_topology_on_strict_def by (by100 blast)
+              from Theorem_26_6[OF hA1'_top hA1_top hA1'_compact hA1_haus hp_A1_cont hp_A1_bij]
+              show ?thesis .
+            qed
+            \<comment> \<open>Step 2: p(e) endpoint of A1 \<Rightarrow> A1 - {p(e)} connected.\<close>
+            have hA1_minus_connected: "top1_connected_on (A1 - {p e}) (subspace_topology A1 (subspace_topology B TB A1) (A1 - {p e}))"
+              using hpe_ep unfolding top1_arc_endpoints_on_def by (by100 blast)
+            \<comment> \<open>Step 3: A1' - {e} \<cong> A1 - {p(e)} via p (restriction of homeomorphism).\<close>
+            \<comment> \<open>Step 4: A1' - {e} connected (homeomorphic to connected).\<close>
+            have "top1_connected_on (A1' - {e}) (subspace_topology A1' (subspace_topology E TE A1') (A1' - {e}))"
+              sorry \<comment> \<open>Restrict homeomorphism to A1'-{e} \<rightarrow> A1-{p(e)}, transport connectedness.\<close>
+            \<comment> \<open>Step 5: e is an endpoint of A1'.\<close>
+            thus "e \<in> top1_arc_endpoints_on A1' (subspace_topology E TE A1')"
+              unfolding top1_arc_endpoints_on_def using he_A1' by (by100 blast)
+          qed
         qed
         moreover have "A1' \<inter> A2' \<subseteq> top1_arc_endpoints_on A2' (subspace_topology E TE A2')"
         proof -
-          show ?thesis sorry \<comment> \<open>Same argument for A2'.\<close>
+          show ?thesis sorry \<comment> \<open>Same argument as A1' (symmetric).\<close>
         qed
         ultimately show ?thesis by (by100 blast)
       qed
