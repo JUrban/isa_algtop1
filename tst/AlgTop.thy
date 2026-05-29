@@ -16545,7 +16545,30 @@ proof -
                      (E-C)\<inter>B' open in B' from hall). Their intersection is open in B'.
                      p maps it to an open subset of A0.\<close>
                   have "openin_on A0 (subspace_topology B TB A0) (A0 \<inter> p ` (V \<inter> ?W))"
-                    sorry \<comment> \<open>Core: covering sheet over A0 maps open to open.\<close>
+                  proof -
+                    \<comment> \<open>A0 \<inter> p(V\<inter>?W) = p((V\<inter>?W) \<inter> p\<inverse>(A0)).
+                       For each lifted arc B' over A0 that meets V:
+                       (V \<inter> ?W) \<inter> B' is open in B' (V\<inter>B' and (E-C)\<inter>B' both open in B').
+                       p maps it to an open subset of A0. Union of these is open.\<close>
+                    have "A0 \<inter> p ` (V \<inter> ?W) = p ` ((V \<inter> ?W) \<inter> {e \<in> E. p e \<in> A0})"
+                    proof (rule set_eqI, rule iffI)
+                      fix a assume "a \<in> A0 \<inter> p ` (V \<inter> ?W)"
+                      then obtain e where "e \<in> V \<inter> ?W" "p e = a" "a \<in> A0" by (by100 blast)
+                      have "e \<in> E" using \<open>e \<in> V \<inter> ?W\<close> hV_open unfolding openin_on_def by (by100 blast)
+                      hence "e \<in> (V \<inter> ?W) \<inter> {e \<in> E. p e \<in> A0}" using \<open>e \<in> V \<inter> ?W\<close> \<open>p e = a\<close> \<open>a \<in> A0\<close>
+                        by (by100 blast)
+                      thus "a \<in> p ` ((V \<inter> ?W) \<inter> {e \<in> E. p e \<in> A0})" using \<open>p e = a\<close> by (by100 blast)
+                    next
+                      fix a assume "a \<in> p ` ((V \<inter> ?W) \<inter> {e \<in> E. p e \<in> A0})"
+                      then obtain e where "e \<in> V \<inter> ?W" "e \<in> E" "p e \<in> A0" "p e = a" by (by100 blast)
+                      thus "a \<in> A0 \<inter> p ` (V \<inter> ?W)" by (by100 blast)
+                    qed
+                    \<comment> \<open>For each B' \<in> \<A>E with B' \<subseteq> p\<inverse>(A0): (V\<inter>?W)\<inter>B' is open in B',
+                       and p maps it to an open subset of A0.\<close>
+                    \<comment> \<open>The union over all such B' gives A0 \<inter> p(V\<inter>?W).\<close>
+                    \<comment> \<open>For now, sorry the full construction.\<close>
+                    show ?thesis sorry \<comment> \<open>Core arc-level openness via lifted arcs + homeomorphism.\<close>
+                  qed
                   have "A0 \<inter> p ` (V \<inter> ?W) \<in> subspace_topology B TB A0"
                     using \<open>openin_on A0 _ (A0 \<inter> p ` (V \<inter> ?W))\<close> unfolding openin_on_def by (by100 blast)
                   have "A0 - (A0 \<inter> p ` (V \<inter> ?W)) \<subseteq> A0" by (by100 blast)
