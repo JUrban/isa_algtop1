@@ -16655,7 +16655,147 @@ proof -
                       \<comment> \<open>So V\<inter>?W\<inter>p\<inverse>(A0\<inter>U) is open in V\<inter>p\<inverse>(A0\<inter>U).\<close>
                       \<comment> \<open>Via homeo: A0\<inter>p(V\<inter>?W) open in A0\<inter>U.\<close>
                       \<comment> \<open>Since A0\<inter>U open in A0: A0\<inter>p(V\<inter>?W) open in A0.\<close>
-                      show ?thesis sorry
+                      \<comment> \<open>Munkres non-circular argument:
+                         p(V\<inter>?W) \<inter> A0 \<subseteq> A0 \<inter> U (open in A0).
+                         For each a \<in> p(V\<inter>?W) \<inter> A0: preimage e = (p|V)\<inverse>(a) \<in> V\<inter>?W\<inter>p\<inverse>(A0).
+                         e \<in> B' for some B' \<in> \<A>E. (E-C)\<inter>B' open in B' (hall).
+                         So \<exists>T \<in> TE: e \<in> T, T\<inter>B' \<subseteq> (E-C)\<inter>B'.
+                         p(T\<inter>V) open in U (homeo p|V). p(T\<inter>V) \<inter> A0 open in A0.
+                         p(T\<inter>V) \<inter> A0 is a nbhd of a in A0 contained in p(V\<inter>?W) \<inter> A0:
+                         For a' \<in> p(T\<inter>V)\<inter>A0: unique V-preimage e' \<in> T\<inter>V\<inter>p\<inverse>(A0) \<subseteq> T\<inter>V.
+                         e' \<in> some arc B''. If B'' = B': e' \<in> T\<inter>B' \<subseteq> (E-C)\<inter>B' so e' \<in> ?W.
+                         If B'' \<noteq> B': e' is at boundary (endpoint). Need T small enough.
+                         But at boundaries: e' in at most 2 arcs (B's graph structure via homeo).
+                         Use intersection: T\<inter>T' for both arcs. Both guarantee (E-C). Works.\<close>
+                      \<comment> \<open>Simpler formal route: p(V\<inter>?W)\<inter>A0 is open in A0\<inter>U (hence in A0) because
+                         under the restricted homeo p|V: V\<inter>p\<inverse>(A0\<inter>U) \<cong> A0\<inter>U,
+                         the set maps from V\<inter>(E-C)\<inter>p\<inverse>(A0\<inter>U) = (complement of C restricted to piece).
+                         The complement is open via the per-arc hall condition.\<close>
+                      show ?thesis
+                      proof -
+                        \<comment> \<open>A0 \<inter> p(V\<inter>?W) \<subseteq> A0 \<inter> U (open in A0). Suffices to show open in A0\<inter>U.\<close>
+                        have "A0 \<inter> p ` (V \<inter> ?W) \<subseteq> A0 \<inter> U" using hpV_U by (by100 blast)
+                        \<comment> \<open>Under homeo p|V: V \<cong> U. Restricted: V\<inter>p\<inverse>(A0\<inter>U) \<cong> A0\<inter>U.\<close>
+                        \<comment> \<open>Image of V\<inter>?W\<inter>p\<inverse>(A0) under this is A0\<inter>p(V\<inter>?W).\<close>
+                        \<comment> \<open>For each point a, find nbhd in A0\<inter>p(V\<inter>?W): use p(T\<inter>V)\<inter>A0 where T
+                           comes from (E-C)\<inter>B' open in B'.\<close>
+                        have "\<forall>a \<in> A0 \<inter> p ` (V \<inter> ?W).
+                            \<exists>S \<in> subspace_topology B TB A0. a \<in> S \<and> S \<subseteq> A0 \<inter> p ` (V \<inter> ?W)"
+                        proof (intro ballI)
+                          fix a assume ha: "a \<in> A0 \<inter> p ` (V \<inter> ?W)"
+                          then obtain e where he_VW: "e \<in> V \<inter> ?W" and hpe: "p e = a" by (by100 blast)
+                          have he_E: "e \<in> E" using he_VW hV_open unfolding openin_on_def by (by100 blast)
+                          have he_nC: "e \<notin> C" using he_VW by (by100 blast)
+                          \<comment> \<open>e is in some B' \<in> \<A>E.\<close>
+                          have "e \<in> \<Union>?\<A>E" using he_E hAE_cover by (by100 simp)
+                          then obtain B' where hB': "B' \<in> ?\<A>E" "e \<in> B'" by (by100 blast)
+                          \<comment> \<open>(E-C)\<inter>B' is open in B'.\<close>
+                          have hB'_sub_E: "B' \<subseteq> E" using hAE_arcs hB'(1) by (by100 blast)
+                          have hEC_B': "B' \<inter> (E - C) = B' - C" using hB'_sub_E by (by100 blast)
+                          have hB'_C_cl: "closedin_on B' (subspace_topology E TE B') (B' \<inter> C)"
+                            using hall hB'(1) by (by100 blast)
+                          have "B' \<inter> C \<subseteq> B'" by (by100 blast)
+                          have "(B' - (B' \<inter> C)) \<in> subspace_topology E TE B'"
+                            using hB'_C_cl unfolding closedin_on_def by (by100 blast)
+                          have "B' - (C \<inter> B') = B' - (B' \<inter> C)" by (by100 blast)
+                          hence "(B' - (C \<inter> B')) \<in> subspace_topology E TE B'"
+                            using \<open>(B' - (B' \<inter> C)) \<in> _\<close> by (by100 simp)
+                          hence "openin_on B' (subspace_topology E TE B') (B' - (C \<inter> B'))"
+                            unfolding openin_on_def by (by100 blast)
+                          hence "B' - (C \<inter> B') \<in> subspace_topology E TE B'"
+                            unfolding openin_on_def by (by100 blast)
+                          then obtain T where hT: "T \<in> TE" "B' - (C \<inter> B') = T \<inter> B'"
+                            unfolding subspace_topology_def by (by100 blast)
+                          have he_T: "e \<in> T" using hT(2) hB'(2) he_nC by (by100 blast)
+                          \<comment> \<open>T \<inter> V is open in E. p(T\<inter>V) is open in U (homeo p|V).\<close>
+                          have hV_TE: "V \<in> TE" using hV_open unfolding openin_on_def by (by100 blast)
+                          have hTE_loc: "is_topology_on E TE"
+                            using assms(3) unfolding is_topology_on_strict_def by (by100 blast)
+                          have hTV_TE: "T \<inter> V \<in> TE"
+                          proof -
+                            have "{T, V} \<subseteq> TE" "finite {T, V}" "{T, V} \<noteq> {}"
+                              using hT(1) hV_TE by (by100 blast, by100 simp, by100 blast)
+                            from hTE_loc[unfolded is_topology_on_def] \<open>{T, V} \<subseteq> TE\<close> \<open>finite {T, V}\<close> \<open>{T, V} \<noteq> {}\<close>
+                            have "\<Inter>{T, V} \<in> TE" by (by100 blast)
+                            thus ?thesis by (by100 simp)
+                          qed
+                          have hpTV_open_U: "p ` (T \<inter> V) \<in> subspace_topology B TB U"
+                          proof -
+                            have hTE_strict: "is_topology_on_strict E TE" using assms(3) .
+                            have hTB_loc: "is_topology_on B TB"
+                              using assms(1) unfolding top1_is_graph_on_def is_hausdorff_on_def by (by100 blast)
+                            from covering_map_is_open_map[OF assms(2) hTE_strict hTB_loc hTV_TE]
+                            have "p ` (T \<inter> V) \<in> TB" .
+                            moreover have "p ` (T \<inter> V) \<subseteq> U"
+                              using hpV_U by (by100 blast)
+                            ultimately have "p ` (T \<inter> V) = p ` (T \<inter> V) \<inter> U" by (by100 blast)
+                            thus ?thesis unfolding subspace_topology_def
+                              using \<open>p ` (T \<inter> V) \<in> TB\<close> by (by100 blast)
+                          qed
+                          \<comment> \<open>p(T\<inter>V) \<inter> A0 is open in A0 (open in U, U open in B, A0 subspace).\<close>
+                          have hpTV_A0: "p ` (T \<inter> V) \<inter> A0 \<in> subspace_topology B TB A0"
+                          proof -
+                            from hpTV_open_U obtain S0 where "S0 \<in> TB" "p ` (T \<inter> V) = S0 \<inter> U"
+                              unfolding subspace_topology_def by (by100 blast)
+                            have hU_TB: "U \<in> TB"
+                              using hev unfolding top1_evenly_covered_on_def openin_on_def by (by100 blast)
+                            have "S0 \<inter> U \<in> TB"
+                            proof -
+                              have "{S0, U} \<subseteq> TB" "finite {S0, U}" "{S0, U} \<noteq> {}"
+                                using \<open>S0 \<in> TB\<close> hU_TB by (by100 blast, by100 simp, by100 blast)
+                              have hTB_loc: "is_topology_on B TB"
+                                using assms(1) unfolding top1_is_graph_on_def is_hausdorff_on_def by (by100 blast)
+                              from hTB_loc[unfolded is_topology_on_def] \<open>{S0, U} \<subseteq> TB\<close> \<open>finite {S0, U}\<close> \<open>{S0, U} \<noteq> {}\<close>
+                              have "\<Inter>{S0, U} \<in> TB" by (by100 blast)
+                              thus ?thesis by (by100 simp)
+                            qed
+                            hence "p ` (T \<inter> V) \<in> TB" using \<open>p ` (T \<inter> V) = S0 \<inter> U\<close> by (by100 simp)
+                            thus ?thesis unfolding subspace_topology_def by (by100 blast)
+                          qed
+                          \<comment> \<open>a \<in> p(T\<inter>V) \<inter> A0.\<close>
+                          have "a \<in> p ` (T \<inter> V) \<inter> A0"
+                            using he_T hV_e he_VW hpe ha by (by100 blast)
+                          \<comment> \<open>p(T\<inter>V) \<inter> A0 \<subseteq> A0 \<inter> p(V\<inter>?W): for a' in this set, its V-preimage
+                             e' is in T\<inter>V. e' \<in> some arc. If in B': e' \<in> T\<inter>B' = B'-(C\<inter>B') \<subseteq> E-C.
+                             If in other arc B'': e' \<in> T but we don't know e' \<notin> C.
+                             KEY: the neighborhood might contain C-points from other arcs.
+                             FIX: use p(T\<inter>V) \<inter> p(V\<inter>?W) instead. This equals
+                             p((T\<inter>V) \<inter> (V\<inter>?W)) = p(T \<inter> V \<inter> ?W) (since both \<subseteq> V, p injective on V).
+                             p(T\<inter>V\<inter>?W) is open in U? No, T\<inter>V\<inter>?W open in V would need ?W open in E...\<close>
+                          \<comment> \<open>Alternative: accept this as a sorry for now.\<close>
+                          have "p ` (T \<inter> V) \<inter> A0 \<subseteq> A0 \<inter> p ` (V \<inter> ?W)"
+                            sorry \<comment> \<open>Core: T chosen so T\<inter>B' \<subseteq> E-C, but T\<inter>other arcs might not.\<close>
+                          show "\<exists>S \<in> subspace_topology B TB A0. a \<in> S \<and> S \<subseteq> A0 \<inter> p ` (V \<inter> ?W)"
+                            apply (rule bexI[of _ "p ` (T \<inter> V) \<inter> A0"])
+                            using \<open>a \<in> p ` (T \<inter> V) \<inter> A0\<close>
+                                \<open>p ` (T \<inter> V) \<inter> A0 \<subseteq> A0 \<inter> p ` (V \<inter> ?W)\<close>
+                            apply (by100 blast)
+                            apply (rule hpTV_A0)
+                            done
+                        qed
+                        \<comment> \<open>A0 \<inter> p(V\<inter>?W) is union of open nbhds, hence open in A0.\<close>
+                        hence "A0 \<inter> p ` (V \<inter> ?W) = \<Union>{S \<in> subspace_topology B TB A0. S \<subseteq> A0 \<inter> p ` (V \<inter> ?W)}"
+                          by (by5000 blast)
+                        moreover have "\<Union>{S \<in> subspace_topology B TB A0. S \<subseteq> A0 \<inter> p ` (V \<inter> ?W)} \<in> subspace_topology B TB A0"
+                        proof -
+                          have hTA0: "is_topology_on A0 (subspace_topology B TB A0)"
+                          proof -
+                            have "is_topology_on B TB"
+                              using assms(1) unfolding top1_is_graph_on_def is_hausdorff_on_def by (by100 blast)
+                            from subspace_topology_is_topology_on[OF this hA0_sub] show ?thesis .
+                          qed
+                          have "{S \<in> subspace_topology B TB A0. S \<subseteq> A0 \<inter> p ` (V \<inter> ?W)} \<subseteq> subspace_topology B TB A0"
+                            by (by100 blast)
+                          from hTA0[unfolded is_topology_on_def, THEN conjunct2, THEN conjunct2, THEN conjunct1,
+                              rule_format, OF this]
+                          show ?thesis .
+                        qed
+                        ultimately have "A0 \<inter> p ` (V \<inter> ?W) \<in> subspace_topology B TB A0" by (by100 simp)
+                        have "A0 \<inter> p ` (V \<inter> ?W) \<subseteq> A0" by (by100 blast)
+                        show ?thesis unfolding openin_on_def
+                          using \<open>A0 \<inter> p ` (V \<inter> ?W) \<in> subspace_topology B TB A0\<close>
+                              \<open>A0 \<inter> p ` (V \<inter> ?W) \<subseteq> A0\<close> by (by100 blast)
+                      qed
                     qed
                   qed
                   have "A0 \<inter> p ` (V \<inter> ?W) \<in> subspace_topology B TB A0"
