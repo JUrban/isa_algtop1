@@ -16412,9 +16412,15 @@ proof -
           ultimately show ?thesis by (by100 blast)
         qed
         moreover have "A1' \<inter> A2' \<subseteq> top1_arc_endpoints_on A1' (subspace_topology E TE A1')"
-          sorry \<comment> \<open>Homeomorphism pulls back endpoints.\<close>
+        proof -
+          \<comment> \<open>p(e) \<in> endpoints(A1) for e \<in> A1'\<inter>A2'. Need: e \<in> endpoints(A1').
+             Requires: p|A1' homeomorphism to A1 (from Step 1).\<close>
+          show ?thesis sorry
+        qed
         moreover have "A1' \<inter> A2' \<subseteq> top1_arc_endpoints_on A2' (subspace_topology E TE A2')"
-          sorry \<comment> \<open>Homeomorphism pulls back endpoints.\<close>
+        proof -
+          show ?thesis sorry
+        qed
         ultimately show ?thesis by (by100 blast)
       qed
     qed
