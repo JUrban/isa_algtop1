@@ -17041,7 +17041,17 @@ proof -
                                also T\_B'' \<in> TE. T* = T\_B'\<inter>T\_B''\<inter>V gives clean neighborhood in E-C
                                within V\<inter>p\<inverse>(A\_\<alpha>) (only arcs over A\_\<alpha> appear, at most 2 at each point).\<close>
                             show "closedin_on A_\<alpha> (subspace_topology B TB A_\<alpha>) (A_\<alpha> \<inter> p ` (V \<inter> C))"
-                              sorry \<comment> \<open>Per-A\_\<alpha>: restricted homeo + hall + at-most-2-arcs at each point.\<close>
+                            proof -
+                              \<comment> \<open>A\_\<alpha>\<inter>p(V\<inter>C) \<subseteq> A\_\<alpha>\<inter>U. Under homeo p|V: V\<inter>p\<inverse>(A\_\<alpha>) \<cong> A\_\<alpha>\<inter>U.
+                                 For each B' over A\_\<alpha>: C\<inter>B'\<inter>V closed in V\<inter>p\<inverse>(A\_\<alpha>) (hall + B'\<inter>V closed).
+                                 Use closedin\_Union\_locally\_finite or finite version.\<close>
+                              have "A_\<alpha> \<inter> p ` (V \<inter> C) \<subseteq> A_\<alpha>"  by (by100 blast)
+                              \<comment> \<open>A\_\<alpha>\<inter>p(V\<inter>C) \<subseteq> A\_\<alpha>\<inter>U.\<close>
+                              have "A_\<alpha> \<inter> p ` (V \<inter> C) \<subseteq> A_\<alpha> \<inter> U" using hpV_U by (by100 blast)
+                              \<comment> \<open>Simple case: if A\_\<alpha> \<inter> U = {} then set is empty, hence closed.\<close>
+                              show ?thesis
+                                sorry \<comment> \<open>Locally finite union of closed via arc partition of interval.\<close>
+                            qed
                           qed
                           from hAB_coh[rule_format, OF hpVC_sub_B] this
                           show ?thesis by (by100 blast)
