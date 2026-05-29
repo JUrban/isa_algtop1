@@ -16512,7 +16512,34 @@ proof -
               qed
               \<comment> \<open>p(V \<inter> ?W) is open in B (coherent topology of B).\<close>
               have hpVW_open: "openin_on B TB (p ` (V \<inter> ?W))"
-                sorry \<comment> \<open>Step 3a for V \<inter> ?W: coherent topology of B.\<close>
+              proof -
+                \<comment> \<open>Use coherent topology (open version): S open in B iff S \<inter> A\<alpha> open in A\<alpha> for all A\<alpha>.\<close>
+                \<comment> \<open>Derived from hAB\_coh by complementation.\<close>
+                have hpVW_sub_B: "p ` (V \<inter> ?W) \<subseteq> B"
+                proof -
+                  have "V \<subseteq> E" using hV_open unfolding openin_on_def by (by100 blast)
+                  have "p ` E = B" using assms(2) unfolding top1_covering_map_on_def by (by100 blast)
+                  thus ?thesis using \<open>V \<subseteq> E\<close> by (by100 blast)
+                qed
+                \<comment> \<open>B \\ p(V \<inter> ?W) is closed in B iff for each A\<alpha>, A\<alpha> \<inter> (B \\ p(V\<inter>?W)) closed in A\<alpha>.
+                   Equivalently, A\<alpha> \\ p(V\<inter>?W) closed in A\<alpha>.
+                   Equivalently, A\<alpha> \<inter> p(V\<inter>?W) open in A\<alpha>.\<close>
+                have hcompl_sub: "B - p ` (V \<inter> ?W) \<subseteq> B" by (by100 blast)
+                have "closedin_on B TB (B - p ` (V \<inter> ?W))
+                    \<longleftrightarrow> (\<forall>A\<in>\<A>B. closedin_on A (subspace_topology B TB A) (A \<inter> (B - p ` (V \<inter> ?W))))"
+                  using hAB_coh[rule_format, OF hcompl_sub] .
+                \<comment> \<open>Show: for each A\<alpha> \<in> \<A>B, A\<alpha> \<inter> (B \\ p(V\<inter>?W)) is closed in A\<alpha>.
+                   Equivalently, A\<alpha> \<inter> p(V\<inter>?W) is open in A\<alpha>.\<close>
+                have "\<forall>A\<in>\<A>B. closedin_on A (subspace_topology B TB A) (A \<inter> (B - p ` (V \<inter> ?W)))"
+                  sorry \<comment> \<open>For each A\<alpha>: the sheet piece maps open parts to open parts.\<close>
+                hence "closedin_on B TB (B - p ` (V \<inter> ?W))"
+                  using \<open>closedin_on B TB (B - p ` (V \<inter> ?W)) \<longleftrightarrow> _\<close> by (by100 blast)
+                hence "B - p ` (V \<inter> ?W) \<subseteq> B \<and> (B - (B - p ` (V \<inter> ?W))) \<in> TB"
+                  unfolding closedin_on_def by (by100 blast)
+                have "B - (B - p ` (V \<inter> ?W)) = p ` (V \<inter> ?W)" using hpVW_sub_B by (by100 blast)
+                hence "p ` (V \<inter> ?W) \<in> TB" using \<open>_ \<and> (B - (B - p ` (V \<inter> ?W))) \<in> TB\<close> by (by100 simp)
+                thus ?thesis unfolding openin_on_def using hpVW_sub_B by (by100 blast)
+              qed
               \<comment> \<open>p(V \<inter> ?W) \<subseteq> U (since V maps into U). So p(V \<inter> ?W) open in U.\<close>
               \<comment> \<open>(p|V)\<inverse>(p(V \<inter> ?W)) = V \<inter> ?W (p injective on V). Open in V (homeomorphism).\<close>
               \<comment> \<open>V \<inter> ?W is open in V, V open in E, so V \<inter> ?W is open in E.\<close>
