@@ -16954,8 +16954,108 @@ proof -
                        Each such set is open in A0.
                        A0 \<inter> p(V\<inter>?W) = union of these.\<close>
                     \<comment> \<open>SIMPLER: A0\<inter>p(V\<inter>?W) = (A0\<inter>U) - p(V\<inter>C\<inter>p\<inverse>(A0)). Open-minus-closed = open.\<close>
+                    \<comment> \<open>Complement approach: A0\<inter>p(V\<inter>?W) = (A0\<inter>U) - p(V\<inter>C\<inter>p\<inverse>(A0)).
+                       (A0\<inter>U) open in A0. p(V\<inter>C\<inter>p\<inverse>(A0)) closed in A0\<inter>U.
+                       Hence open minus closed = open.\<close>
                     show ?thesis
-                      sorry \<comment> \<open>Complement approach: p(V\<inter>C\<inter>p\<inverse>(A0)) closed in A0\<inter>U \<Rightarrow> complement open.\<close>
+                    proof -
+                      have hinj_V: "inj_on p V"
+                        using hV_homeo unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+                      have hpV_U: "p ` V = U"
+                      proof -
+                        have "bij_betw p V U" using hV_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+                        thus ?thesis unfolding bij_betw_def by (by100 blast)
+                      qed
+                      have hV_sub_E: "V \<subseteq> E" using hV_open unfolding openin_on_def by (by100 blast)
+                      \<comment> \<open>Step 1: A0\<inter>p(V\<inter>?W) = (A0\<inter>U) - p(V\<inter>C\<inter>p\<inverse>(A0)).\<close>
+                      have hset_eq: "A0 \<inter> p ` (V \<inter> ?W) = (A0 \<inter> U) - p ` (V \<inter> C \<inter> {e \<in> E. p e \<in> A0})"
+                      proof (rule set_eqI, rule iffI)
+                        fix a assume ha: "a \<in> A0 \<inter> p ` (V \<inter> ?W)"
+                        hence "a \<in> A0" "a \<in> U" using hpV_U by (by100 blast)+
+                        from ha obtain e where he: "e \<in> V" "e \<notin> C" "p e = a" by (by100 blast)
+                        have "a \<notin> p ` (V \<inter> C \<inter> {e \<in> E. p e \<in> A0})"
+                        proof
+                          assume "a \<in> p ` (V \<inter> C \<inter> {e \<in> E. p e \<in> A0})"
+                          then obtain e' where "e' \<in> V" "e' \<in> C" "p e' = a" by (by100 blast)
+                          have "e' = e" using inj_onD[OF hinj_V \<open>p e' = a\<close>[unfolded he(3)[symmetric]]
+                              \<open>e' \<in> V\<close> he(1)] by (by100 simp)
+                          thus False using \<open>e' \<in> C\<close> he(2) by (by100 blast)
+                        qed
+                        thus "a \<in> (A0 \<inter> U) - p ` (V \<inter> C \<inter> {e \<in> E. p e \<in> A0})"
+                          using \<open>a \<in> A0\<close> \<open>a \<in> U\<close> by (by100 blast)
+                      next
+                        fix a assume ha: "a \<in> (A0 \<inter> U) - p ` (V \<inter> C \<inter> {e \<in> E. p e \<in> A0})"
+                        hence "a \<in> A0" "a \<in> U" by (by100 blast)+
+                        have "a \<in> p ` V" using \<open>a \<in> U\<close> hpV_U by (by100 simp)
+                        then obtain e where he: "e \<in> V" "p e = a" by (by100 blast)
+                        have "e \<in> E" using he(1) hV_sub_E by (by100 blast)
+                        have "e \<notin> C"
+                        proof
+                          assume "e \<in> C"
+                          hence "e \<in> V \<inter> C \<inter> {e \<in> E. p e \<in> A0}"
+                            using he(1) \<open>e \<in> E\<close> \<open>a \<in> A0\<close> he(2) by (by100 blast)
+                          hence "a \<in> p ` (V \<inter> C \<inter> {e \<in> E. p e \<in> A0})" using he(2) by (by100 blast)
+                          thus False using ha by (by100 blast)
+                        qed
+                        hence "e \<in> V \<inter> ?W" using he(1) \<open>e \<in> E\<close> by (by100 blast)
+                        thus "a \<in> A0 \<inter> p ` (V \<inter> ?W)" using \<open>a \<in> A0\<close> he(2) by (by100 blast)
+                      qed
+                      \<comment> \<open>Step 2: A0\<inter>U open in A0.\<close>
+                      have hU_TB: "U \<in> TB"
+                        using hev unfolding top1_evenly_covered_on_def openin_on_def by (by100 blast)
+                      have "A0 \<inter> U \<in> subspace_topology B TB A0"
+                        unfolding subspace_topology_def using hU_TB by (by100 blast)
+                      \<comment> \<open>Step 3: p(V\<inter>C\<inter>p\<inverse>(A0)) closed in A0\<inter>U.
+                         Under homeo p|V: V\<inter>p\<inverse>(A0) \<cong> A0\<inter>U. Need C\<inter>V\<inter>p\<inverse>(A0) closed in V\<inter>p\<inverse>(A0).
+                         For each arc B' over A0 in V: C\<inter>B'\<inter>V closed in B'\<inter>V (from hall).
+                         The pieces B'\<inter>V partition V\<inter>p\<inverse>(A0). Locally finite union of closed = closed.\<close>
+                      have hpVC_closed: "closedin_on (A0 \<inter> U)
+                          (subspace_topology A0 (subspace_topology B TB A0) (A0 \<inter> U))
+                          (p ` (V \<inter> C \<inter> {e \<in> E. p e \<in> A0}))"
+                        sorry \<comment> \<open>Core: local finiteness of arc decomposition + hall.\<close>
+                      \<comment> \<open>Step 4: Open minus closed.\<close>
+                      have "(A0 \<inter> U) - p ` (V \<inter> C \<inter> {e \<in> E. p e \<in> A0}) \<in>
+                          subspace_topology A0 (subspace_topology B TB A0) (A0 \<inter> U)"
+                        using hpVC_closed unfolding closedin_on_def by (by100 blast)
+                      hence "A0 \<inter> p ` (V \<inter> ?W) \<in>
+                          subspace_topology A0 (subspace_topology B TB A0) (A0 \<inter> U)"
+                        using hset_eq by (by100 simp)
+                      \<comment> \<open>Open in subspace of A0 (which is open in A0) = open in A0.\<close>
+                      hence "A0 \<inter> p ` (V \<inter> ?W) \<in> subspace_topology B TB A0"
+                      proof -
+                        have "subspace_topology A0 (subspace_topology B TB A0) (A0 \<inter> U) =
+                            subspace_topology B TB (A0 \<inter> U)"
+                          by (rule subspace_topology_trans) (by100 blast)
+                        have "A0 \<inter> p ` (V \<inter> ?W) \<in> subspace_topology B TB (A0 \<inter> U)"
+                          using \<open>A0 \<inter> p ` (V \<inter> ?W) \<in> subspace_topology A0 _ (A0 \<inter> U)\<close>
+                              \<open>subspace_topology A0 _ (A0 \<inter> U) = subspace_topology B TB (A0 \<inter> U)\<close>
+                          by (by100 simp)
+                        then obtain S0 where hS0: "S0 \<in> TB" "A0 \<inter> p ` (V \<inter> ?W) = S0 \<inter> (A0 \<inter> U)"
+                        proof -
+                          from \<open>A0 \<inter> p ` (V \<inter> ?W) \<in> subspace_topology B TB (A0 \<inter> U)\<close>
+                          obtain T0 where "T0 \<in> TB" "A0 \<inter> p ` (V \<inter> ?W) = T0 \<inter> (A0 \<inter> U)"
+                            unfolding subspace_topology_def by (by100 auto)
+                          thus ?thesis using that by (by100 blast)
+                        qed
+                        have hTB_loc: "is_topology_on B TB"
+                          using assms(1) unfolding top1_is_graph_on_def is_hausdorff_on_def by (by100 blast)
+                        have "S0 \<inter> U \<in> TB"
+                        proof -
+                          have "{S0, U} \<subseteq> TB" "finite {S0, U}" "{S0, U} \<noteq> {}"
+                            using \<open>S0 \<in> TB\<close> hU_TB by (by100 blast, by100 simp, by100 blast)
+                          from hTB_loc[unfolded is_topology_on_def] this
+                          have "\<Inter>{S0, U} \<in> TB" by (by100 blast)
+                          thus ?thesis by (by100 simp)
+                        qed
+                        have "A0 \<inter> p ` (V \<inter> ?W) = S0 \<inter> U \<inter> A0"
+                          using \<open>A0 \<inter> p ` (V \<inter> ?W) = S0 \<inter> (A0 \<inter> U)\<close> by (by100 blast)
+                        thus ?thesis unfolding subspace_topology_def using \<open>S0 \<inter> U \<in> TB\<close> by (by100 blast)
+                      qed
+                      have "A0 \<inter> p ` (V \<inter> ?W) \<subseteq> A0" by (by100 blast)
+                      show ?thesis unfolding openin_on_def
+                        using \<open>A0 \<inter> p ` (V \<inter> ?W) \<in> subspace_topology B TB A0\<close>
+                            \<open>A0 \<inter> p ` (V \<inter> ?W) \<subseteq> A0\<close> by (by100 blast)
+                    qed
                   qed
                   \<comment> \<open>Decomposition approach replaces old per-point argument.\<close>
                   have "A0 \<inter> p ` (V \<inter> ?W) \<in> subspace_topology B TB A0"
