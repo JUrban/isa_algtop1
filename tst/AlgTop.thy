@@ -17033,8 +17033,15 @@ proof -
                                in V\<inter>p\<inverse>(A\_\<alpha>), only arcs OVER A\_\<alpha> appear (no cross-arc leaking).
                                For each such arc B': C\<inter>B'\<inter>V closed in B'\<inter>V (from hall).
                                Under the homeo, maps to closed in A\_\<alpha>\<inter>U. Hence closed in A\_\<alpha>.\<close>
+                            \<comment> \<open>Proof: A\_\<alpha>\<inter>p(V\<inter>C) = p(V\<inter>C\<inter>p\<inverse>(A\_\<alpha>)). Under homeo p|V restricted to
+                               V\<inter>p\<inverse>(A\_\<alpha>) \<rightarrow> A\_\<alpha>\<inter>U: this is closed iff V\<inter>C\<inter>p\<inverse>(A\_\<alpha>) closed in V\<inter>p\<inverse>(A\_\<alpha>).
+                               Complement: V\<inter>(E-C)\<inter>p\<inverse>(A\_\<alpha>) open in V\<inter>p\<inverse>(A\_\<alpha>).
+                               For each e in complement: e \<in> B' (arc over A\_\<alpha>). (E-C)\<inter>B' open in B'.
+                               T\_B' \<in> TE with T\_B'\<inter>B' \<subseteq> (E-C)\<inter>B'. If e at boundary with B'':
+                               also T\_B'' \<in> TE. T* = T\_B'\<inter>T\_B''\<inter>V gives clean neighborhood in E-C
+                               within V\<inter>p\<inverse>(A\_\<alpha>) (only arcs over A\_\<alpha> appear, at most 2 at each point).\<close>
                             show "closedin_on A_\<alpha> (subspace_topology B TB A_\<alpha>) (A_\<alpha> \<inter> p ` (V \<inter> C))"
-                              sorry \<comment> \<open>Per-A\_\<alpha> closedness: restrict to arcs over A\_\<alpha> only.\<close>
+                              sorry \<comment> \<open>Per-A\_\<alpha>: restricted homeo + hall + at-most-2-arcs at each point.\<close>
                           qed
                           from hAB_coh[rule_format, OF hpVC_sub_B] this
                           show ?thesis by (by100 blast)
