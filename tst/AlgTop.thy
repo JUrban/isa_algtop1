@@ -16470,7 +16470,29 @@ proof -
               thus ?thesis unfolding top1_is_arc_on_def by (by100 blast)
             qed
             have hA1'_compact: "top1_compact_on A1' (subspace_topology E TE A1')"
-              sorry \<comment> \<open>A1' is arc \<cong> [0,1], hence compact.\<close>
+            proof -
+              obtain h1' where hh1': "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
+                  A1' (subspace_topology E TE A1') h1'"
+                using hA1'_arc unfolding top1_is_arc_on_def by (by100 blast)
+              have hI_compact: "top1_compact_on top1_unit_interval top1_unit_interval_topology"
+                unfolding top1_unit_interval_def top1_unit_interval_topology_def
+                using Theorem_27_1[of "0::real" 1] by (by100 simp)
+              have hI_top: "is_topology_on top1_unit_interval top1_unit_interval_topology"
+                using hh1' unfolding top1_homeomorphism_on_def by (by100 blast)
+              have hA1'_top: "is_topology_on A1' (subspace_topology E TE A1')"
+                using hA1'_strict unfolding is_topology_on_strict_def by (by100 blast)
+              have hh1'_cont: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+                  A1' (subspace_topology E TE A1') h1'"
+                using hh1' unfolding top1_homeomorphism_on_def by (by100 blast)
+              have "h1' ` top1_unit_interval = A1'"
+                using hh1' unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+              from top1_compact_on_continuous_image[OF hI_compact hA1'_top hh1'_cont]
+              have "top1_compact_on (h1' ` top1_unit_interval) (subspace_topology A1' (subspace_topology E TE A1') (h1' ` top1_unit_interval))" .
+              have "subspace_topology A1' (subspace_topology E TE A1') (h1' ` top1_unit_interval) = subspace_topology E TE A1'"
+                using subspace_topology_trans[of A1' A1'] \<open>h1' ` top1_unit_interval = A1'\<close> by (by100 simp)
+              thus ?thesis using \<open>top1_compact_on (h1' ` top1_unit_interval) _\<close>
+                  \<open>h1' ` top1_unit_interval = A1'\<close> by (by100 simp)
+            qed
             have hA1_haus: "is_hausdorff_on A1 (subspace_topology B TB A1)"
             proof -
               have "is_hausdorff_on B TB"
