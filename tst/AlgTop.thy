@@ -16567,7 +16567,129 @@ proof -
                        and p maps it to an open subset of A0.\<close>
                     \<comment> \<open>The union over all such B' gives A0 \<inter> p(V\<inter>?W).\<close>
                     \<comment> \<open>For now, sorry the full construction.\<close>
-                    show ?thesis sorry \<comment> \<open>Core arc-level openness via lifted arcs + homeomorphism.\<close>
+                    \<comment> \<open>The set A0 \<inter> p(V\<inter>?W) is a union of sets p((V\<inter>?W)\<inter>B') over lifted arcs B'
+                       that are components of p\<inverse>(A0). Each such p((V\<inter>?W)\<inter>B') is open in A0.\<close>
+                    \<comment> \<open>Key: for B' component of p\<inverse>(A0) with B' \<in> \<A>E:
+                       - p|\_B': B' \<rightarrow> A0\_base is a homeomorphism (where A0\_base is the base arc for B')
+                       - If A0\_base = A0: p maps open in B' to open in A0. Done.
+                       - If A0\_base \<noteq> A0: B' \<inter> p\<inverse>(A0) \<subseteq> endpoints (at most 2 points).
+                         p((V\<inter>?W)\<inter>B'\<inter>p\<inverse>(A0)) is at most 2 points.
+                         These points are in A0 \<inter> A0\_base \<subseteq> endpoints of A0.
+                         But open in A0? Only if they're isolated. This needs more care.\<close>
+                    \<comment> \<open>Actually: for the coherent topology, we only need: the UNION of all such sets
+                       is open in A0. The contribution from B' with A0\_base = A0 gives the main open part.
+                       The contribution from other B' adds only endpoint points, which are already included.\<close>
+                    \<comment> \<open>Simplest approach: A0 \<inter> p(V \<inter> ?W) \<subseteq> A0 \<inter> U (since p(V) = U).
+                       A0 \<inter> U is open in A0 (U open in B). And within A0 \<inter> U, the set
+                       A0 \<inter> p(V \<inter> ?W) is the image of an open set under p|\_V\<inverse>.
+                       Since p|\_V is a homeomorphism V \<rightarrow> U, it maps V \<inter> A0\_preimage to A0 \<inter> U.
+                       The open set (V \<inter> ?W) restricted to this preimage maps to an open subset of A0 \<inter> U.\<close>
+                    have hpV_U: "p ` V = U"
+                    proof -
+                      have "bij_betw p V U" using hV_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+                      thus ?thesis unfolding bij_betw_def by (by100 blast)
+                    qed
+                    have "A0 \<inter> p ` (V \<inter> ?W) \<subseteq> A0 \<inter> U" using hpV_U by (by100 blast)
+                    \<comment> \<open>A0 \<inter> U is open in A0 (since U is open in B and A0 has subspace topology).\<close>
+                    have hU_open: "U \<in> TB"
+                      using hev unfolding top1_evenly_covered_on_def openin_on_def by (by100 blast)
+                    have "A0 \<inter> U \<in> subspace_topology B TB A0"
+                      unfolding subspace_topology_def using hU_open by (by100 blast)
+                    \<comment> \<open>p|V is a homeomorphism V \<rightarrow> U. Within the open A0 \<inter> U in the base:
+                       the preimage under p|V of A0 \<inter> U is an open subset of V.
+                       And V \<inter> ?W intersected with this preimage gives an open subset.\<close>
+                    \<comment> \<open>p restricted to V \<inter> p\<inverse>(A0\<inter>U) maps homeomorphically to A0 \<inter> U.\<close>
+                    \<comment> \<open>Within this restriction: (V \<inter> ?W) \<inter> p\<inverse>(A0\<inter>U) maps to A0 \<inter> p(V\<inter>?W).\<close>
+                    \<comment> \<open>For openness: (V \<inter> ?W) is open in V (from the covering\_map\_is\_open\_map argument).
+                       So its image under p|V (homeomorphism) is open in U.
+                       Hence A0 \<inter> p(V\<inter>?W) = (A0\<inter>U) \<inter> p(V\<inter>?W) is open in A0\<inter>U,
+                       hence open in A0 (A0\<inter>U is open in A0).\<close>
+                    have "p ` (V \<inter> ?W) \<in> subspace_topology B TB U"
+                    proof -
+                      have hTE_strict: "is_topology_on_strict E TE" using assms(3) .
+                      have "V \<in> TE" using hV_open unfolding openin_on_def by (by100 blast)
+                      have "V \<inter> ?W \<subseteq> V" by (by100 blast)
+                      \<comment> \<open>V \<inter> ?W is open in V.\<close>
+                      \<comment> \<open>p(V\<inter>?W) is open in U (p|V homeomorphism maps open to open).\<close>
+                      have hV_open_map: "V \<inter> ?W \<in> subspace_topology E TE V"
+                        sorry \<comment> \<open>V\<inter>?W open in V (from earlier proof or re-derive).\<close>
+                      \<comment> \<open>Homeomorphism maps open to open.\<close>
+                      have hp_V_open: "\<forall>S \<in> subspace_topology E TE V. p ` S \<in> subspace_topology B TB U"
+                      proof (intro ballI)
+                        fix S assume "S \<in> subspace_topology E TE V"
+                        \<comment> \<open>Homeomorphism inverse is continuous: maps open in V to open in U.\<close>
+                        have "top1_homeomorphism_on V (subspace_topology E TE V) U (subspace_topology B TB U) p"
+                          using hV_homeo .
+                        hence "top1_continuous_map_on U (subspace_topology B TB U) V (subspace_topology E TE V) (inv_into V p)"
+                          unfolding top1_homeomorphism_on_def by (by100 blast)
+                        \<comment> \<open>{a \<in> U. inv\_into V p a \<in> S} \<in> subspace B TB U.\<close>
+                        have "{a \<in> U. inv_into V p a \<in> S} \<in> subspace_topology B TB U"
+                          using \<open>top1_continuous_map_on U _ V _ (inv_into V p)\<close> \<open>S \<in> subspace_topology E TE V\<close>
+                          unfolding top1_continuous_map_on_def by (by100 blast)
+                        \<comment> \<open>p ` S = {a \<in> U. inv\_into V p a \<in> S} (from bijectivity).\<close>
+                        have "bij_betw p V U" using hV_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+                        have "S \<subseteq> V"
+                        proof -
+                          from \<open>S \<in> subspace_topology E TE V\<close> obtain T0 where "T0 \<in> TE" "S = T0 \<inter> V"
+                            unfolding subspace_topology_def by (by100 blast)
+                          thus ?thesis by (by100 blast)
+                        qed
+                        have "p ` S = {a \<in> U. inv_into V p a \<in> S}"
+                        proof (rule set_eqI, rule iffI)
+                          fix a assume "a \<in> p ` S"
+                          then obtain s where hs: "s \<in> S" "p s = a" by (by100 blast)
+                          have "s \<in> V" using hs(1) \<open>S \<subseteq> V\<close> by (by100 blast)
+                          have "a \<in> U" using hs(2) \<open>bij_betw p V U\<close> \<open>s \<in> V\<close> unfolding bij_betw_def by (by100 blast)
+                          have "inv_into V p a = s"
+                            using inv_into_f_f[OF bij_betw_imp_inj_on[OF \<open>bij_betw p V U\<close>] \<open>s \<in> V\<close>] hs(2)
+                            by (by100 simp)
+                          thus "a \<in> {a \<in> U. inv_into V p a \<in> S}" using \<open>a \<in> U\<close> hs(1) by (by100 simp)
+                        next
+                          fix a assume "a \<in> {a \<in> U. inv_into V p a \<in> S}"
+                          hence ha: "a \<in> U" "inv_into V p a \<in> S" by (by100 blast)+
+                          have "a \<in> p ` V" using ha(1) \<open>bij_betw p V U\<close> unfolding bij_betw_def by (by100 blast)
+                          have "p (inv_into V p a) = a" by (rule f_inv_into_f[OF \<open>a \<in> p ` V\<close>])
+                          hence "a = p (inv_into V p a)" by (by100 simp)
+                          thus "a \<in> p ` S" using ha(2) by (by100 blast)
+                        qed
+                        thus "p ` S \<in> subspace_topology B TB U"
+                          using \<open>{a \<in> U. inv_into V p a \<in> S} \<in> subspace_topology B TB U\<close> by (by100 simp)
+                      qed
+                      from hp_V_open[rule_format, OF hV_open_map] show ?thesis .
+                    qed
+                    \<comment> \<open>A0 \<inter> p(V\<inter>?W) = (A0\<inter>U) \<inter> p(V\<inter>?W). Open in A0\<inter>U. Open in A0.\<close>
+                    have "A0 \<inter> p ` (V \<inter> ?W) = (A0 \<inter> U) \<inter> p ` (V \<inter> ?W)"
+                      using \<open>A0 \<inter> p ` (V \<inter> ?W) \<subseteq> A0 \<inter> U\<close> by (by100 blast)
+                    \<comment> \<open>p(V\<inter>?W) = V0 \<inter> U for some V0 \<in> TB. So (A0\<inter>U) \<inter> (V0\<inter>U) = A0 \<inter> V0 \<inter> U.\<close>
+                    \<comment> \<open>A0 \<inter> V0 \<inter> U = A0 \<inter> (V0 \<inter> U). V0 \<inter> U \<in> TB (intersection of opens). So A0 \<inter> (V0\<inter>U) \<in> subspace.\<close>
+                    from \<open>p ` (V \<inter> ?W) \<in> subspace_topology B TB U\<close>
+                    obtain V0 where "V0 \<in> TB" "p ` (V \<inter> ?W) = V0 \<inter> U"
+                      unfolding subspace_topology_def by (by100 blast)
+                    have "A0 \<inter> p ` (V \<inter> ?W) = A0 \<inter> V0 \<inter> U"
+                      using \<open>p ` (V \<inter> ?W) = V0 \<inter> U\<close> by (by100 blast)
+                    also have "\<dots> = A0 \<inter> (V0 \<inter> U)" by (by100 blast)
+                    finally have "A0 \<inter> p ` (V \<inter> ?W) = A0 \<inter> (V0 \<inter> U)" .
+                    have "V0 \<inter> U \<in> TB"
+                    proof -
+                      have hTB: "is_topology_on B TB"
+                        using assms(1) unfolding top1_is_graph_on_def is_hausdorff_on_def by (by100 blast)
+                      have "{V0, U} \<subseteq> TB" "finite {V0, U}" "{V0, U} \<noteq> {}"
+                        using \<open>V0 \<in> TB\<close> hU_open by (by100 blast, by100 simp, by100 blast)
+                      from hTB[unfolded is_topology_on_def] \<open>{V0, U} \<subseteq> TB\<close> \<open>finite {V0, U}\<close> \<open>{V0, U} \<noteq> {}\<close>
+                      have "\<Inter>{V0, U} \<in> TB" by (by100 blast)
+                      thus ?thesis by (by100 simp)
+                    qed
+                    have "A0 \<inter> (V0 \<inter> U) \<in> subspace_topology B TB A0"
+                      unfolding subspace_topology_def using \<open>V0 \<inter> U \<in> TB\<close> by (by100 blast)
+                    have "A0 \<inter> p ` (V \<inter> ?W) \<subseteq> A0" by (by100 blast)
+                    have "A0 \<inter> p ` (V \<inter> ?W) \<in> subspace_topology B TB A0"
+                      using \<open>A0 \<inter> p ` (V \<inter> ?W) = A0 \<inter> (V0 \<inter> U)\<close>
+                          \<open>A0 \<inter> (V0 \<inter> U) \<in> subspace_topology B TB A0\<close>
+                      by (by100 simp)
+                    show ?thesis unfolding openin_on_def
+                      using \<open>A0 \<inter> p ` (V \<inter> ?W) \<in> subspace_topology B TB A0\<close>
+                          \<open>A0 \<inter> p ` (V \<inter> ?W) \<subseteq> A0\<close>
+                      by (by100 blast)
                   qed
                   have "A0 \<inter> p ` (V \<inter> ?W) \<in> subspace_topology B TB A0"
                     using \<open>openin_on A0 _ (A0 \<inter> p ` (V \<inter> ?W))\<close> unfolding openin_on_def by (by100 blast)
