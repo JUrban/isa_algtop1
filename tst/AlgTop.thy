@@ -16421,8 +16421,131 @@ proof -
     have hAE_topology: "\<forall>C. C \<subseteq> E \<longrightarrow>
          (closedin_on E TE C \<longleftrightarrow>
           (\<forall>A'\<in>?\<A>E. closedin_on A' (subspace_topology E TE A') (A' \<inter> C)))"
-      sorry \<comment> \<open>E has coherent topology: W open iff W \<inter> B open in B for all B.
-         Proof: p(W) open in X (coherent topology of X); then W open via slices.\<close>
+    proof (intro allI impI)
+      fix C assume hC_sub: "C \<subseteq> E"
+      show "closedin_on E TE C \<longleftrightarrow>
+          (\<forall>A'\<in>?\<A>E. closedin_on A' (subspace_topology E TE A') (A' \<inter> C))"
+      proof (rule iffI)
+        \<comment> \<open>Forward: C closed in E \<Rightarrow> C \<inter> A' closed in A' for all A'.\<close>
+        assume hC_cl: "closedin_on E TE C"
+        show "\<forall>A'\<in>?\<A>E. closedin_on A' (subspace_topology E TE A') (A' \<inter> C)"
+        proof (intro ballI)
+          fix A' assume "A' \<in> ?\<A>E"
+          have "A' \<subseteq> E" using hAE_arcs \<open>A' \<in> ?\<A>E\<close> by (by100 blast)
+          have hTE: "is_topology_on E TE"
+            using assms(3) unfolding is_topology_on_strict_def by (by100 blast)
+          have "A' \<inter> C = C \<inter> A'" by (by100 blast)
+          moreover have "closedin_on E TE C" using hC_cl .
+          ultimately show "closedin_on A' (subspace_topology E TE A') (A' \<inter> C)"
+            using Theorem_17_2[OF hTE \<open>A' \<subseteq> E\<close>] by (by100 blast)
+        qed
+      next
+        \<comment> \<open>Backward: all A' \<inter> C closed in A' \<Rightarrow> C closed in E.\<close>
+        assume hall: "\<forall>A'\<in>?\<A>E. closedin_on A' (subspace_topology E TE A') (A' \<inter> C)"
+        \<comment> \<open>Munkres Step 3: Show E \\ C is open in E.
+           Step 3a: p(E\\C) is open in B (using coherent topology of B).
+           Step 3b: For each slice V, (E\\C) \<inter> V is open in E.
+           Step 3c: E\\C = \<Union>{(E\\C) \<inter> V | V slice} is open in E.\<close>
+        \<comment> \<open>Equivalently: E \\ C is open in E. We use Munkres's Step 3.\<close>
+        let ?W = "E - C"
+        have hW_sub: "?W \<subseteq> E" by (by100 blast)
+        \<comment> \<open>Step 3a: p(?W) is open in B (using coherent topology of B, i.e., hAB\_coh).\<close>
+        \<comment> \<open>For each A\<alpha> \<in> \<A>B: p(?W) \<inter> A\<alpha> is open in A\<alpha>.
+           p(?W) \<inter> A\<alpha> = p(?W \<inter> p\<inverse>(A\<alpha>)). ?W \<inter> p\<inverse>(A\<alpha>) = \<Union>{?W \<inter> B' | B' component of p\<inverse>(A\<alpha>)}.
+           p(?W \<inter> B') is open in A\<alpha> (p|B' homeomorphism, ?W \<inter> B' open in B' since
+           B' \\ (?W \<inter> B') = B' \<inter> C which is closed in B' by assumption).\<close>
+        \<comment> \<open>Note: p(?W) open in B is not needed directly; we work with individual slices.\<close>
+        \<comment> \<open>Step 3b+3c: p(?W) open in B, covering slices, lift to E.\<close>
+        \<comment> \<open>For each e \<in> ?W: p(e) \<in> p(?W) which is open in B.
+           Get evenly covered U of p(e). The slice V containing e is open in E.
+           p maps V homeomorphically to U. V \<inter> ?W = p|\_V\<inverse>(p(?W) \<inter> U).
+           p(?W) \<inter> U is open in U (since p(?W) is open in B and U is open in B).
+           So V \<inter> ?W is open in V (homeomorphism), hence open in E.
+           Hence ?W = \<Union>{V \<inter> ?W | ...} is open in E.\<close>
+        have "openin_on E TE ?W"
+        proof -
+          \<comment> \<open>For each e \<in> ?W, find an open nbhd of e in ?W.
+             Get evenly covered U of p(e). Slice V containing e. V open in E.
+             V \<inter> ?W is open in E: use the fact that p|V is a homeomorphism
+             and p(V \<inter> ?W) is open in U.
+             To show p(V \<inter> ?W) is open in U:
+             V \<inter> ?W = V \<inter> (E - C). For each B' \<in> \<A>E: (E-C) \<inter> B' is open in B'.
+             V \<inter> B' is open in B' (V is open in E, so V \<inter> B' is open in B').
+             Hence V \<inter> ?W \<inter> B' = V \<inter> (E-C) \<inter> B' is open in B'.
+             p maps V \<inter> B' homeomorphically to part of base arc A\<alpha>.
+             p(V \<inter> ?W \<inter> B') is open in A\<alpha>.
+             p(V \<inter> ?W) = \<Union>{p(V \<inter> ?W \<inter> B') | B'} is a union of sets open in their arcs.
+             By coherent topology of B: p(V \<inter> ?W) is open in B.
+             p(V \<inter> ?W) \<subseteq> U (since V maps into U). So p(V \<inter> ?W) is open in U.
+             p|V homeomorphism, so V \<inter> ?W = (p|V)\<inverse>(p(V \<inter> ?W)) is open in V, hence open in E.\<close>
+          \<comment> \<open>Every point of ?W has an open nbhd in ?W (by above).\<close>
+          \<comment> \<open>?W = union of these nbhds, hence open.\<close>
+          have "?W \<subseteq> E" by (by100 blast)
+          moreover have "?W \<in> TE"
+          proof -
+            \<comment> \<open>For each e \<in> ?W, find an open V\_e \<in> TE with e \<in> V\_e \<subseteq> ?W.\<close>
+            have "\<forall>e \<in> ?W. \<exists>V \<in> TE. e \<in> V \<and> V \<subseteq> ?W"
+            proof (intro ballI)
+              fix e assume he_W: "e \<in> ?W"
+              hence he_E: "e \<in> E" and he_nC: "e \<notin> C" by (by100 blast)+
+              have hpe: "p e \<in> B"
+                using assms(2) he_E unfolding top1_covering_map_on_def by (by100 blast)
+              obtain U \<V> where hU_pe: "p e \<in> U"
+                  and hev: "top1_evenly_covered_on E TE B TB p U"
+                using assms(2) hpe unfolding top1_covering_map_on_def by (by100 blast)
+              \<comment> \<open>Extract the sheet V containing e from evenly covered U.\<close>
+              obtain V where hV_e: "e \<in> V" and hV_open: "openin_on E TE V"
+                  and hV_homeo: "top1_homeomorphism_on V (subspace_topology E TE V) U (subspace_topology B TB U) p"
+              proof -
+                obtain \<V> where hV_all: "(\<forall>V\<in>\<V>. openin_on E TE V)
+                    \<and> (\<forall>V\<in>\<V>. \<forall>V'\<in>\<V>. V \<noteq> V' \<longrightarrow> V \<inter> V' = {})
+                    \<and> {x \<in> E. p x \<in> U} = \<Union>\<V>
+                    \<and> (\<forall>V\<in>\<V>. top1_homeomorphism_on V (subspace_topology E TE V) U (subspace_topology B TB U) p)"
+                  using hev unfolding top1_evenly_covered_on_def
+                  apply (elim conjE exE) apply (rule that) apply (by100 blast)+ done
+                have "e \<in> {x \<in> E. p x \<in> U}" using he_E hU_pe by (by100 blast)
+                hence "e \<in> \<Union>\<V>" using hV_all by (by100 blast)
+                then obtain V0 where "V0 \<in> \<V>" "e \<in> V0" by (by100 blast)
+                show ?thesis
+                  apply (rule that[of V0])
+                  using \<open>V0 \<in> \<V>\<close> \<open>e \<in> V0\<close> hV_all by (by100 blast)+
+              qed
+              \<comment> \<open>p(V \<inter> ?W) is open in B (coherent topology of B).\<close>
+              have hpVW_open: "openin_on B TB (p ` (V \<inter> ?W))"
+                sorry \<comment> \<open>Step 3a for V \<inter> ?W: coherent topology of B.\<close>
+              \<comment> \<open>p(V \<inter> ?W) \<subseteq> U (since V maps into U). So p(V \<inter> ?W) open in U.\<close>
+              \<comment> \<open>(p|V)\<inverse>(p(V \<inter> ?W)) = V \<inter> ?W (p injective on V). Open in V (homeomorphism).\<close>
+              \<comment> \<open>V \<inter> ?W is open in V, V open in E, so V \<inter> ?W is open in E.\<close>
+              have hVW_TE: "V \<inter> ?W \<in> TE"
+                sorry \<comment> \<open>Open in V via homeomorphism, open in E since V is open.\<close>
+              have "e \<in> V \<inter> ?W" using hV_e he_W by (by100 blast)
+              have "V \<inter> ?W \<subseteq> ?W" by (by100 blast)
+              show "\<exists>V \<in> TE. e \<in> V \<and> V \<subseteq> ?W"
+                apply (rule bexI[of _ "V \<inter> ?W"])
+                using \<open>e \<in> V \<inter> ?W\<close> \<open>V \<inter> ?W \<subseteq> ?W\<close> apply (by100 blast)
+                apply (rule hVW_TE)
+                done
+            qed
+            \<comment> \<open>?W = union of open sets, hence open.\<close>
+            hence "?W = \<Union>{V \<in> TE. V \<subseteq> ?W}" by (by5000 blast)
+            moreover have "\<Union>{V \<in> TE. V \<subseteq> ?W} \<in> TE"
+            proof -
+              have hTE: "is_topology_on E TE"
+                using assms(3) unfolding is_topology_on_strict_def by (by100 blast)
+              have "{V \<in> TE. V \<subseteq> ?W} \<subseteq> TE" by (by100 blast)
+              from hTE[unfolded is_topology_on_def, THEN conjunct2, THEN conjunct2, THEN conjunct1,
+                  rule_format, OF this]
+              show ?thesis .
+            qed
+            ultimately show ?thesis by (by100 simp)
+          qed
+          ultimately show ?thesis unfolding openin_on_def by (by100 blast)
+        qed
+        show "closedin_on E TE C"
+          using \<open>openin_on E TE ?W\<close> hC_sub unfolding closedin_on_def openin_on_def
+          by (by100 blast)
+      qed
+    qed
     show ?thesis
       apply (rule exI[of _ ?\<A>E])
       using hAE_arcs hAE_cover hAE_intersect hAE_topology by (by100 blast)
