@@ -16517,7 +16517,63 @@ proof -
               \<comment> \<open>(p|V)\<inverse>(p(V \<inter> ?W)) = V \<inter> ?W (p injective on V). Open in V (homeomorphism).\<close>
               \<comment> \<open>V \<inter> ?W is open in V, V open in E, so V \<inter> ?W is open in E.\<close>
               have hVW_TE: "V \<inter> ?W \<in> TE"
-                sorry \<comment> \<open>Open in V via homeomorphism, open in E since V is open.\<close>
+              proof -
+                \<comment> \<open>p(V \<inter> ?W) \<subseteq> U.\<close>
+                have hpVW_sub_U: "p ` (V \<inter> ?W) \<subseteq> U"
+                proof -
+                  have "bij_betw p V U" using hV_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+                  hence "p ` V = U" unfolding bij_betw_def by (by100 blast)
+                  thus ?thesis by (by100 blast)
+                qed
+                \<comment> \<open>p(V \<inter> ?W) \<in> subspace B TB U.\<close>
+                have "p ` (V \<inter> ?W) \<in> subspace_topology B TB U"
+                proof -
+                  have "p ` (V \<inter> ?W) \<in> TB" using hpVW_open unfolding openin_on_def by (by100 blast)
+                  have "p ` (V \<inter> ?W) = p ` (V \<inter> ?W) \<inter> U" using hpVW_sub_U by (by100 blast)
+                  thus ?thesis unfolding subspace_topology_def using \<open>p ` (V \<inter> ?W) \<in> TB\<close> by (by100 blast)
+                qed
+                \<comment> \<open>p|V continuous inverse: preimage of open in U is open in V.\<close>
+                have "{v \<in> V. p v \<in> p ` (V \<inter> ?W)} \<in> subspace_topology E TE V"
+                proof -
+                  have hV_cont_p: "top1_continuous_map_on V (subspace_topology E TE V)
+                      U (subspace_topology B TB U) p"
+                    using hV_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+                  from hV_cont_p \<open>p ` (V \<inter> ?W) \<in> subspace_topology B TB U\<close>
+                  show ?thesis unfolding top1_continuous_map_on_def by (by100 blast)
+                qed
+                \<comment> \<open>{v \<in> V. p v \<in> p(V \<inter> ?W)} = V \<inter> ?W (p injective on V).\<close>
+                have "{v \<in> V. p v \<in> p ` (V \<inter> ?W)} = V \<inter> ?W"
+                proof (rule set_eqI, rule iffI)
+                  fix v assume "v \<in> {v \<in> V. p v \<in> p ` (V \<inter> ?W)}"
+                  hence hv: "v \<in> V" "p v \<in> p ` (V \<inter> ?W)" by (by100 blast)+
+                  from hv(2) obtain w where hw: "w \<in> V \<inter> ?W" "p w = p v" by (by100 auto)
+                  have "inj_on p V" using hV_homeo unfolding top1_homeomorphism_on_def bij_betw_def
+                    by (by100 blast)
+                  have "w \<in> V" using hw(1) by (by100 blast)
+                  from inj_onD[OF \<open>inj_on p V\<close> hw(2) \<open>w \<in> V\<close> hv(1)]
+                  have "w = v" .
+                  thus "v \<in> V \<inter> ?W" using hw(1) by (by100 simp)
+                next
+                  fix v assume "v \<in> V \<inter> ?W"
+                  hence "v \<in> V" "p v \<in> p ` (V \<inter> ?W)" by (by100 blast)+
+                  thus "v \<in> {v \<in> V. p v \<in> p ` (V \<inter> ?W)}" by (by100 blast)
+                qed
+                hence "V \<inter> ?W \<in> subspace_topology E TE V"
+                  using \<open>{v \<in> V. p v \<in> p ` (V \<inter> ?W)} \<in> subspace_topology E TE V\<close> by (by100 simp)
+                \<comment> \<open>V \<inter> ?W open in V + V open in E \<Rightarrow> V \<inter> ?W open in E.\<close>
+                from this obtain U0 where "U0 \<in> TE" "V \<inter> ?W = U0 \<inter> V"
+                  unfolding subspace_topology_def by (by100 blast)
+                have "V \<in> TE" using hV_open unfolding openin_on_def by (by100 blast)
+                have hTE_loc: "is_topology_on E TE"
+                  using assms(3) unfolding is_topology_on_strict_def by (by100 blast)
+                have "{U0, V} \<subseteq> TE" "finite {U0, V}" "{U0, V} \<noteq> {}"
+                  using \<open>U0 \<in> TE\<close> \<open>V \<in> TE\<close> by (by100 blast, by100 simp, by100 blast)
+                have "\<Inter>{U0, V} \<in> TE"
+                  using hTE_loc[unfolded is_topology_on_def] \<open>{U0, V} \<subseteq> TE\<close> \<open>finite {U0, V}\<close> \<open>{U0, V} \<noteq> {}\<close>
+                  by (by100 blast)
+                have "\<Inter>{U0, V} = U0 \<inter> V" by (by100 blast)
+                thus ?thesis using \<open>\<Inter>{U0, V} \<in> TE\<close> \<open>V \<inter> ?W = U0 \<inter> V\<close> by (by100 simp)
+              qed
               have "e \<in> V \<inter> ?W" using hV_e he_W by (by100 blast)
               have "V \<inter> ?W \<subseteq> ?W" by (by100 blast)
               show "\<exists>V \<in> TE. e \<in> V \<and> V \<subseteq> ?W"
