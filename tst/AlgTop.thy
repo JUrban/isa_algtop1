@@ -15765,34 +15765,156 @@ proof -
                 obtain U0 where hU0a: "a \<in> U0"
                     and hU0ev: "top1_evenly_covered_on ?E0 (subspace_topology E TE ?E0) A (subspace_topology B TB A) p U0"
                   using hcov_A ha_A unfolding top1_covering_map_on_def by (by100 blast)
-                \<comment> \<open>No sheet over U0 meets B'.\<close>
-                \<comment> \<open>Proof: if some sheet V meets B', then V \<subseteq> B' (by PC+maximality), so a \<in> p(V) \<subseteq> p(B').\<close>
-                have "U0 \<inter> p ` B' = {}"
+                \<comment> \<open>Key: p(B') is already proved open. Since a \<notin> p(B') and p(B') is open,
+                   U0 \\ p(B') is a neighborhood of a. More directly:
+                   A \\ p(B') is the complement of an open set, but we need A \\ p(B') open too.
+
+                   Direct argument: the fiber of a in E0 is nonempty (from covering surjectivity onto A).
+                   Each point e0 of the fiber is NOT in B' (since a \<notin> p(B')).
+                   The covering sheet at e0 is a connected nbhd of e0 in E0.
+                   For this sheet to not meet B': if it did meet B', then the sheet \<subseteq> B' by maximality,
+                   so a = p(e0) \<in> p(sheet) = U' \<subseteq> p(B'), contradiction.
+                   So the sheet does not meet B'.
+                   So {e \<in> E0. p e \<in> U'} has no points of B' (where U' is the PC sub-nbhd).
+                   Hence U' \<inter> p(B') = {}.\<close>
+                \<comment> \<open>Get a point in the fiber of a in E0.\<close>
+                have "a \<in> A" using ha_A .
+                have hp_surj_E0: "p ` ?E0 = A"
+                  using hcov_A unfolding top1_covering_map_on_def by (by100 blast)
+                have "a \<in> p ` ?E0" using hp_surj_E0 ha_A by (by100 simp)
+                then obtain e0 where he0_E0: "e0 \<in> ?E0" and hpe0: "p e0 = a"
+                  by (by100 blast)
+                have he0_nB: "e0 \<notin> B'"
+                  using ha_nB hpe0 by (by100 blast)
+                \<comment> \<open>Get PC sheet W0 at e0.\<close>
+                from covering_sheet_over_arc_path_connected[OF hcov_A hA_arc hTE0 hTA he0_E0]
+                obtain W0 where hW0_sub: "W0 \<subseteq> ?E0" and hW0_open: "openin_on ?E0 (subspace_topology E TE ?E0) W0"
+                    and hW0_e0: "e0 \<in> W0" and hW0_pc: "top1_path_connected_on W0 (subspace_topology ?E0 (subspace_topology E TE ?E0) W0)"
+                  by (by100 blast)
+                \<comment> \<open>W0 does NOT meet B': if it did, W0 \<subseteq> B' (by maximality), so e0 \<in> B', contradiction.\<close>
+                have "W0 \<inter> B' = {}"
                 proof (rule ccontr)
-                  assume "U0 \<inter> p ` B' \<noteq> {}"
-                  then obtain a' e where "a' \<in> U0" "e \<in> B'" "p e = a'" by (by100 blast)
-                  \<comment> \<open>e is in some sheet V over U0. V meets B' (at e). V connected? For this we need V connected.
-                     Instead, use covering\_sheet to get a PC open nbhd of e in E0, contained in B'.\<close>
-                  have he_E0: "e \<in> ?E0" using \<open>e \<in> B'\<close> \<open>B' \<subseteq> {e \<in> E. p e \<in> A}\<close> by (by100 blast)
-                  from covering_sheet_over_arc_path_connected[OF hcov_A hA_arc hTE0 hTA he_E0]
-                  obtain W where hW_sub: "W \<subseteq> ?E0" and hW_open: "openin_on ?E0 (subspace_topology E TE ?E0) W"
-                      and hW_e: "e \<in> W" and hW_pc: "top1_path_connected_on W (subspace_topology ?E0 (subspace_topology E TE ?E0) W)"
-                    by (by100 blast)
-                  \<comment> \<open>W \<subseteq> B' (by maximality, same as before).\<close>
-                  \<comment> \<open>p(W) is open in A and contains a'. U0 is open and contains a'.\<close>
-                  \<comment> \<open>a \<in> U0 and U0 \<inter> p(B') \<noteq> {} gives p(W) \<inter> U0 \<noteq> {}, but we need a \<in> p(B')...\<close>
-                  \<comment> \<open>Actually this approach is wrong: just because U0 \<inter> p(B') \<noteq> {} doesn't mean a \<in> p(B').\<close>
-                  \<comment> \<open>We need a stronger argument: restrict to a connected sub-neighborhood.\<close>
-                  show False sorry
+                  assume "W0 \<inter> B' \<noteq> {}"
+                  have hW0_conn: "top1_connected_on W0 (subspace_topology ?E0 (subspace_topology E TE ?E0) W0)"
+                    by (rule path_connected_imp_connected[OF hW0_pc])
+                  have hW0B_sub: "W0 \<union> B' \<subseteq> ?E0"
+                    using hW0_sub \<open>B' \<subseteq> {e \<in> E. p e \<in> A}\<close> by (by100 blast)
+                  obtain e_meet where "e_meet \<in> W0" "e_meet \<in> B'"
+                    using \<open>W0 \<inter> B' \<noteq> {}\<close> by (by100 blast)
+                  let ?A3 = "\<lambda>b::bool. if b then W0 else B'"
+                  have hA3_conn: "\<forall>i\<in>{True, False}. top1_connected_on (?A3 i) (subspace_topology ?E0 (subspace_topology E TE ?E0) (?A3 i))"
+                  proof (intro ballI)
+                    fix i :: bool assume "i \<in> {True, False}"
+                    thus "top1_connected_on (?A3 i) (subspace_topology ?E0 (subspace_topology E TE ?E0) (?A3 i))"
+                    proof (cases i)
+                      case True thus ?thesis using hW0_conn by (by100 simp)
+                    next
+                      case False
+                      have "top1_connected_on B' (subspace_topology {e \<in> E. p e \<in> A}
+                          (subspace_topology E TE {e \<in> E. p e \<in> A}) B')"
+                        using hB'_comp unfolding top1_max_conn_comp_def by (by100 blast)
+                      thus ?thesis using False by (by100 simp)
+                    qed
+                  qed
+                  have hI3: "{True, False} \<noteq> ({}::bool set)" by (by100 blast)
+                  have hA3_sub: "\<forall>i\<in>{True, False}. ?A3 i \<subseteq> ?E0"
+                    using hW0_sub \<open>B' \<subseteq> {e \<in> E. p e \<in> A}\<close> by (by100 auto)
+                  have hp3: "e_meet \<in> \<Inter>(?A3 ` {True, False})"
+                    using \<open>e_meet \<in> W0\<close> \<open>e_meet \<in> B'\<close> by (by100 auto)
+                  have hY3: "W0 \<union> B' = (\<Union>i\<in>{True, False}. ?A3 i)" by (by100 auto)
+                  from Theorem_23_3[OF hTE0 hI3 hA3_sub hA3_conn hp3]
+                  have "top1_connected_on (\<Union>i\<in>{True, False}. ?A3 i) (subspace_topology ?E0 (subspace_topology E TE ?E0) (\<Union>i\<in>{True, False}. ?A3 i))" .
+                  hence "top1_connected_on (W0 \<union> B') (subspace_topology ?E0 (subspace_topology E TE ?E0) (W0 \<union> B'))"
+                    using hY3 by (by100 simp)
+                  from hB'_comp[unfolded top1_max_conn_comp_def, THEN conjunct2, THEN conjunct2, THEN conjunct2,
+                      rule_format, OF _ hW0B_sub this]
+                  have "W0 \<union> B' = B'" by (by100 blast)
+                  hence "W0 \<subseteq> B'" by (by100 blast)
+                  hence "e0 \<in> B'" using hW0_e0 by (by100 blast)
+                  thus False using he0_nB by (by100 blast)
                 qed
-                have hU0_open: "openin_on A (subspace_topology B TB A) U0"
-                  using hU0ev unfolding top1_evenly_covered_on_def by (by100 blast)
-                have "U0 \<subseteq> A" using hU0_open unfolding openin_on_def by (by100 blast)
-                have "U0 \<subseteq> A - p ` B'" using \<open>U0 \<subseteq> A\<close> \<open>U0 \<inter> p ` B' = {}\<close> by (by100 blast)
-                have "U0 \<in> subspace_topology B TB A"
-                  using hU0ev unfolding top1_evenly_covered_on_def openin_on_def by (by100 blast)
+                \<comment> \<open>p(W0) is open in A. a \<in> p(W0). All sheets over p(W0) are disjoint from B'.\<close>
+                let ?U' = "p ` W0"
+                have hU'_open: "?U' \<in> subspace_topology B TB A"
+                proof -
+                  have hTE0_strict: "is_topology_on_strict ?E0 (subspace_topology E TE ?E0)"
+                    by (rule subspace_topology_is_strict[OF assms(3) hE0_sub])
+                  have "W0 \<in> subspace_topology E TE ?E0"
+                    using hW0_open unfolding openin_on_def by (by100 blast)
+                  from covering_map_is_open_map[OF hcov_A hTE0_strict hTA this]
+                  show ?thesis .
+                qed
+                have "a \<in> ?U'" using hW0_e0 hpe0 by (by100 blast)
+                \<comment> \<open>?U' \<inter> p(B') = {}: if a' \<in> ?U' \<inter> p(B'), then some b \<in> B' with p(b) = a' \<in> ?U'.
+                   So b \<in> {e \<in> E0. p e \<in> ?U'}. Get evenly covered U0' \<ni> a' and find the sheet of b.
+                   The covering sheet at b (in E0) gives W\_b \<subseteq> B' with a' \<in> p(W\_b) = U\_b.
+                   But U\_b and ?U' overlap at a'. The sheet containing e0 (W0) maps onto ?U' \<ni> a'.
+                   If the sheet containing b also maps onto ?U'... then it meets W0 in the fiber of a'.
+                   But they're different sheets (W0 \<inter> B' = {} and b \<in> B').\<close>
+                \<comment> \<open>Actually: ALL sheets of p\<inverse>(?U') are disjoint from B'. If any sheet V meets B',
+                   then V \<subseteq> B' (connected + maximality), so p(V) = some evenly covered neighborhood
+                   containing a. But p|V: V \<rightarrow> ?U' is a homeomorphism (since V is a sheet over ?U'),
+                   so a \<in> ?U' = p(V) \<subseteq> p(B'), contradicting a \<notin> p(B').\<close>
+                \<comment> \<open>For this to work, we need the evenly covered neighborhood to be ?U' or a subset.
+                   We need to work with an evenly covered ?U'.\<close>
+                \<comment> \<open>?U' = p(W0) is a PC open subset of A. W0 is a sheet of the covering.
+                   The key property: W0 is inside a sheet of the evenly covered nbhd of a.
+                   In fact, ?U' is evenly covered (from the covering\_sheet construction).\<close>
+                have hU'_ev: "top1_evenly_covered_on ?E0 (subspace_topology E TE ?E0) A (subspace_topology B TB A) p ?U'"
+                  sorry \<comment> \<open>p(W0) is evenly covered (open subset of evenly covered).\<close>
+                \<comment> \<open>All sheets over ?U' that meet B' must be in B'. For each such sheet V:
+                   p|V: V \<rightarrow> ?U' is bijective (homeomorphism). So p(V) = ?U' \<ni> a.
+                   But a \<notin> p(B'). Contradiction.\<close>
+                have "?U' \<inter> p ` B' = {}"
+                proof (rule ccontr)
+                  assume hne: "?U' \<inter> p ` B' \<noteq> {}"
+                  then obtain z where hz: "z \<in> ?U'" "z \<in> p ` B'" by (by100 blast)
+                  from hz(2) obtain b where hb_B': "b \<in> B'" and hpb: "p b = z"
+                    by (by100 auto)
+                  have hpb_U': "p b \<in> ?U'" using hpb hz(1) by (by100 simp)
+                  have hb_E0: "b \<in> ?E0" using hb_B' \<open>B' \<subseteq> {e \<in> E. p e \<in> A}\<close> by (by100 blast)
+                  have "b \<in> {e \<in> ?E0. p e \<in> ?U'}" using hb_E0 hpb_U' by (by100 blast)
+                  \<comment> \<open>b is in some sheet Vb over ?U'.\<close>
+                  obtain \<V>' where hV'_sheets: "(\<forall>V\<in>\<V>'. openin_on ?E0 (subspace_topology E TE ?E0) V)
+                      \<and> (\<forall>V\<in>\<V>'. \<forall>V'\<in>\<V>'. V \<noteq> V' \<longrightarrow> V \<inter> V' = {})
+                      \<and> {e \<in> ?E0. p e \<in> ?U'} = \<Union>\<V>'
+                      \<and> (\<forall>V\<in>\<V>'. top1_homeomorphism_on V (subspace_topology ?E0 (subspace_topology E TE ?E0) V)
+                          ?U' (subspace_topology A (subspace_topology B TB A) ?U') p)"
+                    using hU'_ev unfolding top1_evenly_covered_on_def
+                    apply (elim conjE exE) apply (rule that) apply (by100 blast)+ done
+                  have "b \<in> \<Union>\<V>'" using hV'_sheets \<open>b \<in> {e \<in> ?E0. p e \<in> ?U'}\<close> by (by100 blast)
+                  then obtain Vb where hVb: "Vb \<in> \<V>'" "b \<in> Vb" by (by100 blast)
+                  \<comment> \<open>Vb is homeomorphic to ?U' via p. So p(Vb) = ?U'.\<close>
+                  have "p ` Vb = ?U'"
+                    using hV'_sheets hVb(1) unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+                  hence "a \<in> p ` Vb" using \<open>a \<in> ?U'\<close> by (by100 blast)
+                  then obtain e_a where "e_a \<in> Vb" "p e_a = a" by (by100 blast)
+                  \<comment> \<open>e\_a \<in> Vb \<subseteq> E0. p(e\_a) = a. If Vb meets B' (at b), then Vb connected \<Rightarrow> Vb \<subseteq> B'.
+                     But then e\_a \<in> B' and p(e\_a) = a \<in> p(B'). Contradicts a \<notin> p(B').\<close>
+                  \<comment> \<open>Vb connected: homeomorphic to ?U' which is PC (image of PC W0).\<close>
+                  have "top1_path_connected_on ?U' (subspace_topology A (subspace_topology B TB A) ?U')"
+                  proof -
+                    from top1_path_connected_continuous_image[OF hW0_pc]
+                    show ?thesis sorry \<comment> \<open>PC image transport.\<close>
+                  qed
+                  \<comment> \<open>Vb homeomorphic to PC set \<Rightarrow> Vb PC \<Rightarrow> Vb connected.\<close>
+                  have hVb_pc: "top1_path_connected_on Vb (subspace_topology ?E0 (subspace_topology E TE ?E0) Vb)"
+                    sorry \<comment> \<open>Inverse homeomorphism preserves PC.\<close>
+                  have hVb_conn: "top1_connected_on Vb (subspace_topology ?E0 (subspace_topology E TE ?E0) Vb)"
+                    by (rule path_connected_imp_connected[OF hVb_pc])
+                  have hVb_sub: "Vb \<subseteq> ?E0"
+                    using hV'_sheets hVb(1) unfolding openin_on_def by (by100 blast)
+                  \<comment> \<open>Vb connected, meets B' at b, Vb \<subseteq> E0. By maximality: Vb \<subseteq> B'.\<close>
+                  have "Vb \<subseteq> B'"
+                    sorry \<comment> \<open>Same Theorem\_23\_3 argument.\<close>
+                  hence "e_a \<in> B'" using \<open>e_a \<in> Vb\<close> by (by100 blast)
+                  hence "a \<in> p ` B'" using \<open>p e_a = a\<close> by (by100 blast)
+                  thus False using ha_nB by (by100 blast)
+                qed
+                have "?U' \<subseteq> A" using hW0_sub by (by100 blast)
+                have "?U' \<subseteq> A - p ` B'" using \<open>?U' \<subseteq> A\<close> \<open>?U' \<inter> p ` B' = {}\<close> by (by100 blast)
                 thus "\<exists>U. U \<in> subspace_topology B TB A \<and> a \<in> U \<and> U \<subseteq> A - p ` B'"
-                  using hU0a \<open>U0 \<subseteq> A - p ` B'\<close> by (by100 blast)
+                  using hU'_open \<open>a \<in> ?U'\<close> \<open>?U' \<subseteq> A - p ` B'\<close> by (by100 blast)
               qed
               hence "A - p ` B' = \<Union>{U \<in> subspace_topology B TB A. U \<subseteq> A - p ` B'}"
                 by (by5000 blast)
