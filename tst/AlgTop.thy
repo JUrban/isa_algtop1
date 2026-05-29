@@ -17049,8 +17049,15 @@ proof -
                               \<comment> \<open>A\_\<alpha>\<inter>p(V\<inter>C) \<subseteq> A\_\<alpha>\<inter>U.\<close>
                               have "A_\<alpha> \<inter> p ` (V \<inter> C) \<subseteq> A_\<alpha> \<inter> U" using hpV_U by (by100 blast)
                               \<comment> \<open>Simple case: if A\_\<alpha> \<inter> U = {} then set is empty, hence closed.\<close>
+                              \<comment> \<open>Direct proof: A\_\<alpha>\<inter>p(V\<inter>?W) open in A\_\<alpha>. Equiv: A\_\<alpha>\<inter>p(V\<inter>C) closed.
+                                 For each a \<in> A\_\<alpha>\<inter>p(V\<inter>?W): e=(p|V)\<inverse>(a) \<in> V\<inter>?W\<inter>p\<inverse>(A\_\<alpha>).
+                                 e \<in> B' over A\_\<alpha>. Get T from (E-C)\<inter>B' open. Also get T' for each
+                                 adjacent arc at B's endpoints. T*=T\<inter>T'\<inter>V \<in> TE (finite intersection).
+                                 p(T*)\<inter>A\_\<alpha> \<subseteq> A\_\<alpha>\<inter>p(V\<inter>?W) (all points map to E-C via T or T').\<close>
+                              \<comment> \<open>The complement: A\_\<alpha> - (A\_\<alpha>\<inter>p(V\<inter>C)) = (A\_\<alpha>-U) \<union> (A\_\<alpha>\<inter>p(V\<inter>?W)).
+                                 Showing closedness of A\_\<alpha>\<inter>p(V\<inter>C) is equiv to openness of A\_\<alpha>\<inter>p(V\<inter>?W).\<close>
                               show ?thesis
-                                sorry \<comment> \<open>Locally finite union of closed via arc partition of interval.\<close>
+                                sorry \<comment> \<open>T*-neighborhood argument: T from B' + T' from adjacent arcs.\<close>
                             qed
                           qed
                           from hAB_coh[rule_format, OF hpVC_sub_B] this
