@@ -577,7 +577,7 @@ fib/AlgIsoFixedBase.thy|lemma|component_eq_from_subset|1214
 fib/AlgIsoFixedBase.thy|lemma|component_image_under_homeomorphism|5080
 ac/AlgTopCached.thy|lemma|comp_path_product|5587
 ac/AlgTopCached.thy|lemma|comp_path_reverse|5599
-AlgTop.thy|lemma|connected_graph_has_maximal_tree|16966
+AlgTop.thy|lemma|connected_graph_has_maximal_tree|17125
 i/Top1_Ch3.thy|lemma|connected_iff_clopen|128
 b/AlgTop_JCT_Base.thy|lemma|connected_open_delete_R2|7937
 b/AlgTop_JCT_Base.thy|lemma|connected_open_delete_S2|8060
@@ -728,7 +728,7 @@ at/AlgTopChain.thy|lemma|free_group_hom_generators_iso|4706
 ag/AlgTopGroups.thy|lemma|free_group_hom_unique|2635
 ag/AlgTopGroups.thy|lemma|free_group_invariant_under_iso|2335
 at/AlgTopChain.thy|lemma|free_group_rank_invariant_finite|1756
-AlgTop.thy|lemma|free_group_realized_by_wedge|16898
+AlgTop.thy|lemma|free_group_realized_by_wedge|17057
 at/AlgTopChain.thy|lemma|free_group_universal_property|396
 ag/AlgTopGroups.thy|lemma|free_group_word_kernel|3110
 ac/AlgTopCached.thy|lemma|free_product_reduced_repr|10948
@@ -750,8 +750,8 @@ i/Top1_Ch5_8.thy|lemma|geom_cauchy_converges|11886
 i/Top1_Ch5_8.thy|lemma|geom_cauchy_lim_bound|11892
 i/Top1_Ch5_8.thy|lemma|gp_singleton|29297
 i/Top1_Ch5_8.thy|lemma|gp_singleton_set|29279
-AlgTop.thy|lemma|graph_covering_is_graph|16912
-AlgTop.thy|lemma|graph_quotient_by_tree_wedge_of_circles|17459
+AlgTop.thy|lemma|graph_covering_is_graph|17071
+AlgTop.thy|lemma|graph_quotient_by_tree_wedge_of_circles|17618
 i/Top1_Ch9_13.thy|lemma|grid_from_per_piece_subdivisions|7786
 ac/AlgTopCached.thy|lemma|grid_subdivision_UV|15124
 ac/AlgTopCached.thy|lemma|group_assoc|7524
@@ -977,7 +977,7 @@ ag/AlgTopGroups.thy|lemma|map_pair_fst_flip_rev|148
 ag/AlgTopGroups.thy|lemma|map_pair_fst_rev|141
 ag/AlgTopGroups.thy|lemma|mapped_word_fst_flip_rev|102
 ag/AlgTopGroups.thy|lemma|map_tl_pair|30
-AlgTop.thy|lemma|maximal_tree_reaches_all_arcs|17486
+AlgTop.thy|lemma|maximal_tree_reaches_all_arcs|17645
 i/Top1_Ch5_8.thy|lemma|mem_of_elem_eq|806
 i/Top1_Ch5_8.thy|lemma|mem_of_eq|804
 i/Top1_Ch5_8.thy|lemma|mem_of_eq_sym|805
@@ -1236,7 +1236,7 @@ fi/AlgIsoFixed.thy|lemma|scc_minus_point_connected|2636
 fib/AlgIsoFixedBase.thy|lemma|SCC_pi1_iso_Z|14
 at/AlgTopChain.thy|lemma|scheme_quotient_CW_data|3602
 at/AlgTopChain.thy|lemma|scheme_quotient_hausdorff|2902
-AlgTop.thy|lemma|schreier_rank_formula|16921
+AlgTop.thy|lemma|schreier_rank_formula|17080
 i/Top1_Ch4.thy|lemma|second_countable_countable_subcover_of_closed|2160
 i/Top1_Ch5_8.thy|lemma|seq_conv_comp|32635
 i/Top1_Ch2.thy|lemma|seq_converges_eventually|6128
@@ -1293,7 +1293,7 @@ b/AlgTop_JCT_Base.thy|lemma|stereographic_proj_inv|3839
 i/Top1_Ch2.thy|lemma|strict_inter_sub_carrier|68
 i/Top1_Ch2.thy|lemma|strict_open_sub|11796
 i/Top1_Ch2.thy|lemma|strict_union_sub_carrier|64
-AlgTop.thy|lemma|subgraph_union_of_arcs_is_graph|16797
+AlgTop.thy|lemma|subgraph_union_of_arcs_is_graph|16956
 ac/AlgTopCached.thy|lemma|subgroup_generated_contains|6222
 ac/AlgTopCached.thy|lemma|subgroup_generated_minimal|6227
 ac/AlgTopCached.thy|lemma|subgroup_generated_subset|6213
@@ -1804,7 +1804,7 @@ i/Top1_Ch5_8.thy|lemma|uniform_metric_lt_imp_d_lt|14354
 i/Top1_Ch5_8.thy|lemma|uniform_metric_pointwise_lt|14336
 ac/AlgTopCached.thy|lemma|unit_interval_reversal_homeomorphism|48998
 i/Top1_Ch9_13.thy|lemma|vector_field_must_point_inward|13533
-AlgTop.thy|lemma|wedge_circles_pi1_free|16886
+AlgTop.thy|lemma|wedge_circles_pi1_free|17045
 i/Top1_Ch5_8.thy|lemma|weighted_sum_epsilon_delta|29816
 i/Top1_Ch4.thy|lemma|wellorder_basis_refine_Ioc|5161
 i/Top1_Ch4.thy|lemma|wellorder_Ioc_open_in_order_topology|5065
@@ -2048,6 +2048,6 @@ AlgTop.thy|theorem|Theorem_80_3_universal|12965
 AlgTop.thy|theorem|Theorem_81_2_covering_group_iso|14198
 AlgTop.thy|theorem|Theorem_82_1_covering_existence|14496
 AlgTop.thy|theorem|Theorem_83_4_covering_of_graph_is_graph|15283
-AlgTop.thy|theorem|Theorem_84_7_fund_group_graph_is_free|17975
-AlgTop.thy|theorem|Theorem_85_1_Nielsen_Schreier|18107
-AlgTop.thy|theorem|Theorem_85_3_Schreier_index|18147
+AlgTop.thy|theorem|Theorem_84_7_fund_group_graph_is_free|18134
+AlgTop.thy|theorem|Theorem_85_1_Nielsen_Schreier|18266
+AlgTop.thy|theorem|Theorem_85_3_Schreier_index|18306
