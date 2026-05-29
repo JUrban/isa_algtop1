@@ -14756,7 +14756,7 @@ proof -
         also have "\<bar>t\<bar> = t" using abs_of_nonneg[OF ht0] .
         finally show ?thesis .
       qed
-      finally show ?thesis using \<open>?z - ?a0 = _\<close> by (by100 linarith)
+      finally show ?thesis using \<open>?z - ?a0 = _\<close> by (by5000 linarith)
     qed
     also have "... < (1 - t) * \<epsilon> + t * \<epsilon>"
     proof (cases "t = 0")
