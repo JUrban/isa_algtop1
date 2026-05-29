@@ -16793,6 +16793,95 @@ text \<open>Quotient of a graph by a maximal tree is a wedge of circles (Munkres
 text \<open>Quotient of a graph by a maximal tree is a wedge of circles (Munkres Lemma 84.5).
   Moved after top1\_is\_tree\_on definition in \<S>84.\<close>
 
+text \<open>A subset of a graph covered by a sub-collection of arcs is itself a graph (subgraph).\<close>
+lemma subgraph_union_of_arcs_is_graph:
+  fixes X :: "'a set" and TX :: "'a set set"
+  assumes hgraph: "top1_is_graph_on X TX"
+      and h\<A>: "\<forall>A\<in>\<A>. A \<subseteq> X \<and> top1_is_arc_on A (subspace_topology X TX A)"
+      and hcover_X: "\<Union>\<A> \<subseteq> X"
+      and h\<A>_inter: "\<forall>A\<in>\<A>. \<forall>B\<in>\<A>. A \<noteq> B \<longrightarrow>
+           A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology X TX A)
+         \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology X TX B)
+         \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2"
+      and h\<A>_coh: "\<forall>C. C \<subseteq> \<Union>\<A> \<longrightarrow>
+           (closedin_on (\<Union>\<A>) (subspace_topology X TX (\<Union>\<A>)) C \<longleftrightarrow>
+            (\<forall>A\<in>\<A>. closedin_on A (subspace_topology X TX A) (A \<inter> C)))"
+  shows "top1_is_graph_on (\<Union>\<A>) (subspace_topology X TX (\<Union>\<A>))"
+proof -
+  let ?S = "\<Union>\<A>"
+  let ?TS = "subspace_topology X TX ?S"
+  have hS_sub: "?S \<subseteq> X" using hcover_X .
+  have hTS_strict: "is_topology_on_strict ?S ?TS"
+    by (rule subspace_topology_is_strict[OF _ hS_sub])
+       (rule assms(1)[unfolded top1_is_graph_on_def, THEN conjunct1])
+  have hS_haus: "is_hausdorff_on ?S ?TS"
+  proof -
+    have "is_hausdorff_on X TX" using hgraph unfolding top1_is_graph_on_def by (by100 blast)
+    from conjunct2[OF conjunct2[OF Theorem_17_11]] hS_sub this
+    show ?thesis by (by100 blast)
+  qed
+  \<comment> \<open>The arcs \<A> form the arc decomposition of ?S.\<close>
+  \<comment> \<open>Need: arcs in subspace topology of ?S equal arcs in subspace of X.\<close>
+  have h\<A>_sub: "\<forall>A\<in>\<A>. top1_is_arc_on A (subspace_topology ?S ?TS A)"
+  proof (intro ballI)
+    fix A assume "A \<in> \<A>"
+    have "A \<subseteq> ?S" using \<open>A \<in> \<A>\<close> by (by100 blast)
+    have "subspace_topology ?S ?TS A = subspace_topology X TX A"
+      by (rule subspace_topology_trans[OF \<open>A \<subseteq> ?S\<close>])
+    thus "top1_is_arc_on A (subspace_topology ?S ?TS A)"
+      using h\<A> \<open>A \<in> \<A>\<close> by (by100 simp)
+  qed
+  have h\<A>_sub2: "\<forall>A\<in>\<A>. A \<subseteq> ?S" by (by100 blast)
+  have hcover: "\<Union>\<A> = ?S" by (by100 blast)
+  have h_inter_sub: "\<forall>A\<in>\<A>. \<forall>B\<in>\<A>. A \<noteq> B \<longrightarrow>
+       A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology ?S ?TS A)
+     \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology ?S ?TS B)
+     \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2"
+  proof (intro ballI impI)
+    fix A B assume "A \<in> \<A>" "B \<in> \<A>" "A \<noteq> B"
+    from h\<A>_inter[rule_format, OF this]
+    have h1: "A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology X TX A)
+        \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology X TX B)
+        \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2" .
+    have "subspace_topology ?S ?TS A = subspace_topology X TX A"
+      using subspace_topology_trans[of A ?S] \<open>A \<in> \<A>\<close> by (by100 blast)
+    moreover have "subspace_topology ?S ?TS B = subspace_topology X TX B"
+      using subspace_topology_trans[of B ?S] \<open>B \<in> \<A>\<close> by (by100 blast)
+    ultimately show "A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology ?S ?TS A)
+        \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology ?S ?TS B)
+        \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2"
+      using h1 by (by100 simp)
+  qed
+  have h_coh_sub: "\<forall>C. C \<subseteq> ?S \<longrightarrow>
+       (closedin_on ?S ?TS C \<longleftrightarrow>
+        (\<forall>A\<in>\<A>. closedin_on A (subspace_topology ?S ?TS A) (A \<inter> C)))"
+  proof (intro allI impI)
+    fix C assume "C \<subseteq> ?S"
+    have "\<And>A. A \<in> \<A> \<Longrightarrow> subspace_topology ?S ?TS A = subspace_topology X TX A"
+      by (rule subspace_topology_trans, blast)
+    show "closedin_on ?S ?TS C \<longleftrightarrow>
+        (\<forall>A\<in>\<A>. closedin_on A (subspace_topology ?S ?TS A) (A \<inter> C))"
+      using h\<A>_coh[rule_format, OF \<open>C \<subseteq> ?S\<close>] \<open>\<And>A. A \<in> \<A> \<Longrightarrow> subspace_topology ?S ?TS A = subspace_topology X TX A\<close>
+      by (by100 simp)
+  qed
+  show ?thesis unfolding top1_is_graph_on_def
+  proof (intro conjI)
+    show "is_topology_on_strict ?S ?TS" using hTS_strict .
+    show "is_hausdorff_on ?S ?TS" using hS_haus .
+    show "\<exists>\<A>'. (\<forall>A\<in>\<A>'. A \<subseteq> ?S \<and> top1_is_arc_on A (subspace_topology ?S ?TS A))
+        \<and> \<Union>\<A>' = ?S
+        \<and> (\<forall>A\<in>\<A>'. \<forall>B\<in>\<A>'. A \<noteq> B \<longrightarrow>
+             A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology ?S ?TS A)
+           \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology ?S ?TS B)
+           \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2)
+        \<and> (\<forall>C. C \<subseteq> ?S \<longrightarrow>
+             (closedin_on ?S ?TS C \<longleftrightarrow>
+              (\<forall>A\<in>\<A>'. closedin_on A (subspace_topology ?S ?TS A) (A \<inter> C))))"
+      apply (rule exI[of _ \<A>])
+      using h\<A>_sub h\<A>_sub2 hcover h_inter_sub h_coh_sub by (by100 blast)
+  qed
+qed
+
 text \<open>The fundamental group of a wedge of circles is free.\<close>
 lemma wedge_circles_pi1_free:
   assumes "top1_is_wedge_of_circles_on X TX {..<(n::nat)} p"
