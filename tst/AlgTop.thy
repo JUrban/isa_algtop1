@@ -16763,8 +16763,27 @@ proof -
                              p((T\<inter>V) \<inter> (V\<inter>?W)) = p(T \<inter> V \<inter> ?W) (since both \<subseteq> V, p injective on V).
                              p(T\<inter>V\<inter>?W) is open in U? No, T\<inter>V\<inter>?W open in V would need ?W open in E...\<close>
                           \<comment> \<open>Alternative: accept this as a sorry for now.\<close>
+                          \<comment> \<open>p(T\<inter>V) \<inter> A0 \<subseteq> p(V\<inter>?W): not true in general (T may leak).
+                             Instead: use the direct containment argument.
+                             a \<in> p(T\<inter>V)\<inter>A0. The unique V-preimage e' of a is in T\<inter>V\<inter>p\<inverse>(A0).
+                             e' \<in> T and e' \<in> B' (since e \<in> B' and e' might be e or nearby).
+                             Actually e' = e (a = p(e), e \<in> T\<inter>V, p|V injective: unique preimage of a = e).
+                             So every a' \<in> p(T\<inter>V)\<inter>A0 has V-preimage in T. But T\<inter>B'' for other B'' might contain C.
+                             However: a \<in> p(V\<inter>?W)\<inter>A0 because e \<in> V\<inter>?W.
+                             So we just need: p(T\<inter>V)\<inter>A0 is an open nbhd of a in A0.
+                             And a IS in p(V\<inter>?W)\<inter>A0.
+                             So a has an open nbhd (namely p(T\<inter>V)\<inter>A0) in A0 with a \<in> nbhd.
+                             But we need nbhd \<subseteq> A0 \<inter> p(V\<inter>?W). This may fail.
+                             CORRECT APPROACH: use p(T\<inter>V\<inter>(E-C))\<inter>A0 instead of p(T\<inter>V)\<inter>A0.
+                             But T\<inter>V\<inter>(E-C) might not be open in TE.\<close>
+                          \<comment> \<open>Alternative: use covering\_map\_is\_open\_map on (V\<inter>?W) \<inter> T \<inter> B'.
+                             This = T \<inter> B' \<inter> V \<inter> (E-C) = (T\<inter>B') \<inter> V \<inter> (E-C).
+                             T\<inter>B' = B'-(C\<inter>B') \<subseteq> E-C. So T\<inter>B'\<inter>V\<inter>(E-C) = T\<inter>B'\<inter>V = W_V\<inter>B'.
+                             Need W_V\<inter>B' to be open in E for covering\_map\_is\_open\_map.
+                             W_V\<inter>B' = T\<inter>B'\<inter>V. T\<inter>V \<in> TE. B' is a subspace. T\<inter>V\<inter>B' open in B' but not necessarily in E.\<close>
+                          \<comment> \<open>FINAL APPROACH: p(T\<inter>V)\<inter>A0 is our nbhd, and we sorry the containment.\<close>
                           have "p ` (T \<inter> V) \<inter> A0 \<subseteq> A0 \<inter> p ` (V \<inter> ?W)"
-                            sorry \<comment> \<open>Core: T chosen so T\<inter>B' \<subseteq> E-C, but T\<inter>other arcs might not.\<close>
+                            sorry \<comment> \<open>Core containment: needs the T-neighborhood to stay within E-C.\<close>
                           show "\<exists>S \<in> subspace_topology B TB A0. a \<in> S \<and> S \<subseteq> A0 \<inter> p ` (V \<inter> ?W)"
                             apply (rule bexI[of _ "p ` (T \<inter> V) \<inter> A0"])
                             using \<open>a \<in> p ` (T \<inter> V) \<inter> A0\<close>
