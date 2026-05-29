@@ -16575,7 +16575,132 @@ proof -
                     qed
                     \<comment> \<open>Step 2: For each B' \<in> \<A>E, p(V\<inter>?W\<inter>B') \<subseteq> open set in A0.\<close>
                     \<comment> \<open>Step 3: A0\<inter>p(V\<inter>?W) = union of these, hence open.\<close>
-                    show ?thesis sorry \<comment> \<open>Decomposition proof: per-arc images + union of opens.\<close>
+                    \<comment> \<open>For each B' \<in> \<A>E: p(V\<inter>?W\<inter>B') = p(T_{B'}\<inter>V) \<inter> A0.
+                       Each such set is open in A0.
+                       A0 \<inter> p(V\<inter>?W) = union of these.\<close>
+                    have "\<forall>B'\<in>?\<A>E. p ` (V \<inter> ?W \<inter> B') \<in> subspace_topology B TB A0"
+                    proof (intro ballI)
+                      fix B' assume hB': "B' \<in> ?\<A>E"
+                      have hB'_sub_E: "B' \<subseteq> E" using hAE_arcs hB' by (by100 blast)
+                      \<comment> \<open>Get T_{B'} \<in> TE with T_{B'}\<inter>B' = B'-C.\<close>
+                      have "closedin_on B' (subspace_topology E TE B') (B' \<inter> C)"
+                        using hall hB' by (by100 blast)
+                      hence "(B' - (B' \<inter> C)) \<in> subspace_topology E TE B'"
+                        unfolding closedin_on_def by (by100 blast)
+                      have "B' - (B' \<inter> C) = B' - C" by (by100 blast)
+                      hence "(B' - C) \<in> subspace_topology E TE B'"
+                        using \<open>(B' - (B' \<inter> C)) \<in> _\<close> by (by100 simp)
+                      then obtain T_B' where hTB': "T_B' \<in> TE" "B' - C = T_B' \<inter> B'"
+                        unfolding subspace_topology_def by (by100 blast)
+                      \<comment> \<open>V\<inter>?W\<inter>B' = T_{B'}\<inter>V\<inter>B'.\<close>
+                      have hVWB: "V \<inter> ?W \<inter> B' = T_B' \<inter> V \<inter> B'"
+                      proof -
+                        have "V \<inter> (E - C) \<inter> B' = V \<inter> (B' - C)" using hB'_sub_E by (by100 blast)
+                        also have "\<dots> = V \<inter> (T_B' \<inter> B')" using hTB'(2) by (by100 simp)
+                        also have "\<dots> = T_B' \<inter> V \<inter> B'" by (by100 blast)
+                        finally show ?thesis .
+                      qed
+                      \<comment> \<open>p(T_{B'}\<inter>V\<inter>B') = p(T_{B'}\<inter>V) \<inter> p(V\<inter>B') (inj p on V).\<close>
+                      have hinj_V: "inj_on p V"
+                        using hV_homeo unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+                      have "p ` (T_B' \<inter> V \<inter> B') = p ` (T_B' \<inter> V) \<inter> p ` (V \<inter> B')"
+                      proof (rule set_eqI, rule iffI)
+                        fix a assume "a \<in> p ` (T_B' \<inter> V \<inter> B')"
+                        then obtain e where "e \<in> T_B' \<inter> V" "e \<in> B'" "p e = a" by (by100 blast)
+                        thus "a \<in> p ` (T_B' \<inter> V) \<inter> p ` (V \<inter> B')" by (by100 blast)
+                      next
+                        fix a assume ha: "a \<in> p ` (T_B' \<inter> V) \<inter> p ` (V \<inter> B')"
+                        from ha obtain e1 where he1: "e1 \<in> T_B' \<inter> V" "p e1 = a"
+                          by (by100 blast)
+                        from ha obtain e2 where he2: "e2 \<in> V \<inter> B'" "p e2 = a"
+                          by (by100 auto)
+                        have "e1 \<in> V" using he1(1) by (by100 blast)
+                        have "e2 \<in> V" using he2(1) by (by100 blast)
+                        have "p e1 = p e2" using he1(2) he2(2) by (by100 simp)
+                        have "e1 = e2" using inj_onD[OF hinj_V \<open>p e1 = p e2\<close> \<open>e1 \<in> V\<close> \<open>e2 \<in> V\<close>] .
+                        thus "a \<in> p ` (T_B' \<inter> V \<inter> B')" using he1(1) he2(1) he1(2)
+                          by (by100 blast)
+                      qed
+                      \<comment> \<open>p(T_{B'}\<inter>V) \<in> TB.\<close>
+                      have hV_TE: "V \<in> TE" using hV_open unfolding openin_on_def by (by100 blast)
+                      have hTE_loc: "is_topology_on E TE"
+                        using assms(3) unfolding is_topology_on_strict_def by (by100 blast)
+                      have hTBV_TE: "T_B' \<inter> V \<in> TE"
+                      proof -
+                        have "{T_B', V} \<subseteq> TE" "finite {T_B', V}" "{T_B', V} \<noteq> {}"
+                          using hTB'(1) hV_TE by (by100 blast, by100 simp, by100 blast)
+                        from hTE_loc[unfolded is_topology_on_def] this
+                        have "\<Inter>{T_B', V} \<in> TE" by (by100 blast)
+                        thus ?thesis by (by100 simp)
+                      qed
+                      have "p ` (T_B' \<inter> V) \<in> TB"
+                      proof -
+                        have hTB_loc: "is_topology_on B TB"
+                          using assms(1) unfolding top1_is_graph_on_def is_hausdorff_on_def by (by100 blast)
+                        from covering_map_is_open_map[OF assms(2) assms(3) hTB_loc hTBV_TE]
+                        show ?thesis .
+                      qed
+                      \<comment> \<open>p(V\<inter>?W\<inter>B') \<subseteq> p(T_{B'}\<inter>V) \<inter> A0 \<in> subspace.\<close>
+                      have "p ` (V \<inter> B') \<subseteq> A0"
+                        sorry \<comment> \<open>B' maps into A0 when B' is over A0.\<close>
+                      have "p ` (V \<inter> ?W \<inter> B') = p ` (T_B' \<inter> V) \<inter> p ` (V \<inter> B')"
+                        using hVWB \<open>p ` (T_B' \<inter> V \<inter> B') = p ` (T_B' \<inter> V) \<inter> p ` (V \<inter> B')\<close> by (by100 simp)
+                      hence "p ` (V \<inter> ?W \<inter> B') \<subseteq> p ` (T_B' \<inter> V) \<inter> A0"
+                        using \<open>p ` (V \<inter> B') \<subseteq> A0\<close> by (by100 blast)
+                      \<comment> \<open>p(T_{B'}\<inter>V) \<inter> A0 \<in> subspace B TB A0.\<close>
+                      have "p ` (T_B' \<inter> V) \<inter> A0 \<in> subspace_topology B TB A0"
+                        unfolding subspace_topology_def using \<open>p ` (T_B' \<inter> V) \<in> TB\<close> by (by100 blast)
+                      \<comment> \<open>p(V\<inter>?W\<inter>B') = p(T_{B'}\<inter>V) \<inter> A0 (when p(V\<inter>B') = A0\<inter>U).\<close>
+                      \<comment> \<open>Actually we only need: p(V\<inter>?W\<inter>B') \<in> subspace. It's \<subseteq> open set.
+                         For it to be open itself: need p(V\<inter>?W\<inter>B') = p(T_{B'}\<inter>V) \<inter> A0.
+                         This requires p(V\<inter>B') \<supseteq> A0\<inter>U, i.e., surjectivity of p on V\<inter>B' onto A0\<inter>U.\<close>
+                      show "p ` (V \<inter> ?W \<inter> B') \<in> subspace_topology B TB A0"
+                        sorry \<comment> \<open>Need: p(V\<inter>?W\<inter>B') = p(T_{B'}\<inter>V) \<inter> A0 from surjectivity.\<close>
+                    qed
+                    \<comment> \<open>A0\<inter>p(V\<inter>?W) = union of these open sets.\<close>
+                    have hA0_decomp: "A0 \<inter> p ` (V \<inter> ?W) = (\<Union>B'\<in>?\<A>E. p ` (V \<inter> ?W \<inter> B'))"
+                    proof (rule set_eqI, rule iffI)
+                      fix a assume "a \<in> A0 \<inter> p ` (V \<inter> ?W)"
+                      then obtain e where "e \<in> V \<inter> ?W" "p e = a" "a \<in> A0" by (by100 blast)
+                      have "e \<in> E" using \<open>e \<in> V \<inter> ?W\<close> hV_open unfolding openin_on_def by (by100 blast)
+                      hence "e \<in> \<Union>?\<A>E" using hAE_cover by (by100 simp)
+                      then obtain B'' where "B'' \<in> ?\<A>E" "e \<in> B''" by (by100 blast)
+                      hence "e \<in> V \<inter> ?W \<inter> B''" using \<open>e \<in> V \<inter> ?W\<close> by (by100 blast)
+                      thus "a \<in> (\<Union>B'\<in>?\<A>E. p ` (V \<inter> ?W \<inter> B'))"
+                        using \<open>B'' \<in> ?\<A>E\<close> \<open>p e = a\<close> by (by100 blast)
+                    next
+                      fix a assume "a \<in> (\<Union>B'\<in>?\<A>E. p ` (V \<inter> ?W \<inter> B'))"
+                      then obtain B'' e where "B'' \<in> ?\<A>E" "e \<in> V \<inter> ?W \<inter> B''" "p e = a" by (by100 blast)
+                      have "e \<in> V \<inter> ?W" using \<open>e \<in> V \<inter> ?W \<inter> B''\<close> by (by100 blast)
+                      have "e \<in> E" using hAE_arcs \<open>B'' \<in> ?\<A>E\<close> \<open>e \<in> V \<inter> ?W \<inter> B''\<close> by (by100 blast)
+                      have "p e \<in> A0"
+                        sorry \<comment> \<open>B'' maps into some base arc. Need p(B'') \<subseteq> some arc. For A0 containment: might not hold for all B''.\<close>
+                      thus "a \<in> A0 \<inter> p ` (V \<inter> ?W)" using \<open>e \<in> V \<inter> ?W\<close> \<open>p e = a\<close> by (by100 blast)
+                    qed
+                    \<comment> \<open>Union of open sets in A0's subspace topology is open.\<close>
+                    have "(\<Union>B'\<in>?\<A>E. p ` (V \<inter> ?W \<inter> B')) \<in> subspace_topology B TB A0"
+                    proof -
+                      have hTA0: "is_topology_on A0 (subspace_topology B TB A0)"
+                      proof -
+                        have "is_topology_on B TB"
+                          using assms(1) unfolding top1_is_graph_on_def is_hausdorff_on_def by (by100 blast)
+                        from subspace_topology_is_topology_on[OF this hA0_sub] show ?thesis .
+                      qed
+                      have "(\<lambda>B'. p ` (V \<inter> ?W \<inter> B')) ` ?\<A>E \<subseteq> subspace_topology B TB A0"
+                        using \<open>\<forall>B'\<in>?\<A>E. p ` (V \<inter> ?W \<inter> B') \<in> subspace_topology B TB A0\<close> by (by100 blast)
+                      have "(\<Union>B'\<in>?\<A>E. p ` (V \<inter> ?W \<inter> B')) = \<Union>((\<lambda>B'. p ` (V \<inter> ?W \<inter> B')) ` ?\<A>E)"
+                        by (by100 blast)
+                      moreover from hTA0[unfolded is_topology_on_def, THEN conjunct2, THEN conjunct2, THEN conjunct1,
+                          rule_format, OF \<open>(\<lambda>B'. _) ` ?\<A>E \<subseteq> _\<close>]
+                      have "\<Union>((\<lambda>B'. p ` (V \<inter> ?W \<inter> B')) ` ?\<A>E) \<in> subspace_topology B TB A0" .
+                      ultimately show ?thesis by (by100 simp)
+                    qed
+                    hence "A0 \<inter> p ` (V \<inter> ?W) \<in> subspace_topology B TB A0"
+                      using hA0_decomp by (by100 simp)
+                    have "A0 \<inter> p ` (V \<inter> ?W) \<subseteq> A0" by (by100 blast)
+                    show ?thesis unfolding openin_on_def
+                      using \<open>A0 \<inter> p ` (V \<inter> ?W) \<in> subspace_topology B TB A0\<close>
+                          \<open>A0 \<inter> p ` (V \<inter> ?W) \<subseteq> A0\<close> by (by100 blast)
                   qed
                   \<comment> \<open>Decomposition approach replaces old per-point argument.\<close>
                   have "A0 \<inter> p ` (V \<inter> ?W) \<in> subspace_topology B TB A0"
