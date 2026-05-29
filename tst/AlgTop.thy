@@ -15407,21 +15407,23 @@ proof -
         (subspace_topology E TE {e \<in> E. p e \<in> A}) B'}"
     \<comment> \<open>Each B \<in> \<A>E is an arc (homeomorphic to A via p|_B).\<close>
     have hAE_arcs: "\<forall>B'\<in>?\<A>E. B' \<subseteq> E \<and> top1_is_arc_on B' (subspace_topology E TE B') \<and> inj_on p B'"
-    proof (intro ballI conjI)
+    proof (intro ballI)
       fix B' assume "B' \<in> ?\<A>E"
       then obtain A where hA: "A \<in> \<A>B"
           and hB'_comp: "top1_max_conn_comp {e \<in> E. p e \<in> A}
               (subspace_topology E TE {e \<in> E. p e \<in> A}) B'"
         by (by100 blast)
       \<comment> \<open>B' \<subseteq> p\<inverse>(A) \<subseteq> E.\<close>
-      have "B' \<subseteq> {e \<in> E. p e \<in> A}" using max_conn_comp_sub[OF hB'_comp] .
-      thus "B' \<subseteq> E" by (by100 blast)
+      have hB'_sub_pre: "B' \<subseteq> {e \<in> E. p e \<in> A}" using max_conn_comp_sub[OF hB'_comp] .
+      have hB'_sub_E: "B' \<subseteq> E" using hB'_sub_pre by (by100 blast)
       \<comment> \<open>Step 1: Restrict covering to arc A. By Theorem 53.2, p: p\<inverse>(A) \<rightarrow> A is a covering.\<close>
       \<comment> \<open>Step 2: B' is a connected component of p\<inverse>(A), hence path-connected (in LPC space).
          p restricted to B' maps onto A (connected component covers connected base).
          Since A is simply connected, by Theorem 54.4, fiber has 1 point \<rightarrow> homeomorphism.
          B' \<cong> A (arc) \<rightarrow> B' is an arc.\<close>
-      show "top1_is_arc_on B' (subspace_topology E TE B')"
+      \<comment> \<open>Prove arc and injectivity together (injectivity is needed for the arc proof
+         and should also be exported).\<close>
+      have hB'_arc_and_inj: "top1_is_arc_on B' (subspace_topology E TE B') \<and> inj_on p B'"
       proof -
         \<comment> \<open>A is an arc: simply connected, path connected.\<close>
         have hA_arc: "top1_is_arc_on A (subspace_topology B TB A)"
@@ -16225,6 +16227,7 @@ proof -
         \<comment> \<open>Compose: [0,1] \<rightarrow>^{h\_arc0} A \<rightarrow>^{h} B'.\<close>
         show ?thesis unfolding top1_is_arc_on_def
         proof (intro conjI)
+          show "inj_on p B'" using hp_inj_B' .
           show "is_topology_on_strict B' (subspace_topology E TE B')" using hB'_strict .
           show "\<exists>h'. top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
               B' (subspace_topology E TE B') h'"
@@ -16272,54 +16275,10 @@ proof -
             thus ?thesis by (by100 blast)
           qed
         qed
+        \<comment> \<open>The proof is complete: arc from the two shows above, inj\_on from hp\_inj\_B'.\<close>
       qed
-    next
-      fix B' assume "B' \<in> ?\<A>E"
-      then obtain A where hA: "A \<in> \<A>B"
-          and hB'_comp: "top1_max_conn_comp {e \<in> E. p e \<in> A}
-              (subspace_topology E TE {e \<in> E. p e \<in> A}) B'"
-        by (by100 blast)
-      \<comment> \<open>Injectivity: same Theorem\_54\_3 argument used in the arc proof.\<close>
-      show "inj_on p B'"
-      proof (intro inj_onI)
-        fix e1' e2' assume he1': "e1' \<in> B'" and he2': "e2' \<in> B'" and hpeq: "p e1' = p e2'"
-        \<comment> \<open>Same argument as hp\_inj\_B' in the arc proof: Theorem 54.3.\<close>
-        have hA_arc: "top1_is_arc_on A (subspace_topology B TB A)" using hAB hA by (by100 blast)
-        have hA_sub: "A \<subseteq> B" using hAB hA by (by100 blast)
-        let ?E0 = "{e \<in> E. p e \<in> A}"
-        have hE0_sub: "?E0 \<subseteq> E" by (by100 blast)
-        have hTE_loc: "is_topology_on E TE"
-          using assms(3) unfolding is_topology_on_strict_def by (by100 blast)
-        have hTE0: "is_topology_on ?E0 (subspace_topology E TE ?E0)"
-          by (rule subspace_topology_is_topology_on[OF hTE_loc hE0_sub])
-        have hTA: "is_topology_on A (subspace_topology B TB A)"
-        proof -
-          have "is_topology_on B TB"
-            using assms(1) unfolding top1_is_graph_on_def is_hausdorff_on_def by (by100 blast)
-          from subspace_topology_is_topology_on[OF this hA_sub] show ?thesis .
-        qed
-        have hB'_sub: "B' \<subseteq> ?E0" using max_conn_comp_sub[OF hB'_comp] .
-        have hcov_A: "top1_covering_map_on ?E0 (subspace_topology E TE ?E0) A (subspace_topology B TB A) p"
-        proof -
-          have hBT_strict: "is_topology_on_strict B TB"
-            using assms(1) unfolding top1_is_graph_on_def by (by100 blast)
-          have hE0_eq: "?E0 = {e \<in> E. p e \<in> A}" by (by100 blast)
-          from Theorem_53_2[OF assms(2) assms(3) hBT_strict hA_sub hE0_eq]
-          show ?thesis .
-        qed
-        \<comment> \<open>B' path-connected.\<close>
-        have hB'_pc: "top1_path_connected_on B' (subspace_topology E TE B')"
-        proof -
-          from covering_component_over_arc_path_connected[OF hcov_A hA_arc hTE0 hTA hB'_comp]
-          have "top1_path_connected_on B' (subspace_topology ?E0 (subspace_topology E TE ?E0) B')" .
-          moreover have "subspace_topology ?E0 (subspace_topology E TE ?E0) B' = subspace_topology E TE B'"
-            by (rule subspace_topology_trans[OF hB'_sub])
-          ultimately show ?thesis by (by100 simp)
-        qed
-        \<comment> \<open>Theorem 54.3 application (same as hp\_inj\_B' in arc proof).\<close>
-        show "e1' = e2'"
-          sorry \<comment> \<open>Theorem\_54\_3: SC base + path in B' \<Rightarrow> same lift endpoint.\<close>
-      qed
+      show "B' \<subseteq> E \<and> top1_is_arc_on B' (subspace_topology E TE B') \<and> inj_on p B'"
+        using hB'_sub_E hB'_arc_and_inj by (by100 blast)
     qed
     have hAE_cover: "\<Union>?\<A>E = E"
     proof (rule set_eqI, rule iffI)
