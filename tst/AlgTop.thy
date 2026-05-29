@@ -15406,7 +15406,8 @@ proof -
     let ?\<A>E = "\<Union>A\<in>\<A>B. {B'. top1_max_conn_comp {e \<in> E. p e \<in> A}
         (subspace_topology E TE {e \<in> E. p e \<in> A}) B'}"
     \<comment> \<open>Each B \<in> \<A>E is an arc (homeomorphic to A via p|_B).\<close>
-    have hAE_arcs: "\<forall>B'\<in>?\<A>E. B' \<subseteq> E \<and> top1_is_arc_on B' (subspace_topology E TE B') \<and> inj_on p B'"
+    have hAE_arcs: "\<forall>B'\<in>?\<A>E. B' \<subseteq> E \<and> top1_is_arc_on B' (subspace_topology E TE B') \<and> inj_on p B'
+        \<and> (\<exists>A0\<in>\<A>B. p ` B' = A0)"
     proof (intro ballI)
       fix B' assume "B' \<in> ?\<A>E"
       then obtain A where hA: "A \<in> \<A>B"
@@ -15423,7 +15424,7 @@ proof -
          B' \<cong> A (arc) \<rightarrow> B' is an arc.\<close>
       \<comment> \<open>Prove arc and injectivity together (injectivity is needed for the arc proof
          and should also be exported).\<close>
-      have hB'_arc_and_inj: "top1_is_arc_on B' (subspace_topology E TE B') \<and> inj_on p B'"
+      have hB'_arc_and_inj: "top1_is_arc_on B' (subspace_topology E TE B') \<and> inj_on p B' \<and> p ` B' = A"
       proof -
         \<comment> \<open>A is an arc: simply connected, path connected.\<close>
         have hA_arc: "top1_is_arc_on A (subspace_topology B TB A)"
@@ -16228,6 +16229,7 @@ proof -
         show ?thesis unfolding top1_is_arc_on_def
         proof (intro conjI)
           show "inj_on p B'" using hp_inj_B' .
+          show "p ` B' = A" using hp_surj_B' .
           show "is_topology_on_strict B' (subspace_topology E TE B')" using hB'_strict .
           show "\<exists>h'. top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
               B' (subspace_topology E TE B') h'"
@@ -16275,11 +16277,15 @@ proof -
             thus ?thesis by (by100 blast)
           qed
         qed
-        \<comment> \<open>The proof is complete: arc from the two shows above, inj\_on from hp\_inj\_B'.\<close>
       qed
-      show "B' \<subseteq> E \<and> top1_is_arc_on B' (subspace_topology E TE B') \<and> inj_on p B'"
-        using hB'_sub_E hB'_arc_and_inj by (by100 blast)
+      \<comment> \<open>Surjectivity is now part of hB'\_arc\_and\_inj.\<close>
+      show "B' \<subseteq> E \<and> top1_is_arc_on B' (subspace_topology E TE B') \<and> inj_on p B'
+          \<and> (\<exists>A0\<in>\<A>B. p ` B' = A0)"
+        using hB'_sub_E hB'_arc_and_inj hA by (by100 blast)
     qed
+    \<comment> \<open>Extract per-B' surjectivity as a separate fact.\<close>
+    have hAE_surj: "\<forall>B'\<in>?\<A>E. \<exists>A0\<in>\<A>B. p ` B' = A0"
+      using hAE_arcs by (by100 blast)
     have hAE_cover: "\<Union>?\<A>E = E"
     proof (rule set_eqI, rule iffI)
       fix e assume "e \<in> \<Union>?\<A>E"
@@ -16413,13 +16419,15 @@ proof -
         qed
         moreover have "A1' \<inter> A2' \<subseteq> top1_arc_endpoints_on A1' (subspace_topology E TE A1')"
         proof -
-          \<comment> \<open>p(e) \<in> endpoints(A1) for e \<in> A1'\<inter>A2'. Need: e \<in> endpoints(A1').
-             Requires: p|A1' homeomorphism to A1 (from Step 1).\<close>
-          show ?thesis sorry
+          \<comment> \<open>From hAE\_surj: p maps A1' onto A1. With inj\_on: p|A1' is a bijection A1' \<rightarrow> A1.
+             With continuity + open map: homeomorphism. Then arc\_endpoints\_under\_homeomorphism
+             gives: endpoints of A1' map to endpoints of A1 under p.
+             For e \<in> A1'\<inter>A2': p(e) \<in> endpoints(A1). So e \<in> p\<inverse>(endpoints(A1)) \<inter> A1' = endpoints(A1').\<close>
+          show ?thesis sorry \<comment> \<open>Needs: homeomorphism p|A1' from hAE\_surj + hAE\_arcs.\<close>
         qed
         moreover have "A1' \<inter> A2' \<subseteq> top1_arc_endpoints_on A2' (subspace_topology E TE A2')"
         proof -
-          show ?thesis sorry
+          show ?thesis sorry \<comment> \<open>Same argument for A2'.\<close>
         qed
         ultimately show ?thesis by (by100 blast)
       qed
