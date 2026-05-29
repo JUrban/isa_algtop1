@@ -16694,11 +16694,17 @@ proof -
                       hence "e \<in> {e \<in> E. p e \<in> A0}" using \<open>e \<in> E\<close> by (by100 blast)
                       \<comment> \<open>e \<in> p\<inverse>(A0). e is in some component B'' of p\<inverse>(A0) in \<A>E.\<close>
                       \<comment> \<open>From \<A>E definition: components of p\<inverse>(A0) are in \<A>E.\<close>
-                      have "e \<in> \<Union>?\<A>E" using \<open>e \<in> E\<close> hAE_cover by (by100 simp)
-                      then obtain B'' where "B'' \<in> ?\<A>E" "e \<in> B''" by (by100 blast)
-                      \<comment> \<open>B'' contains e \<in> p\<inverse>(A0). Need: B'' \<subseteq> p\<inverse>(A0), so B'' \<in> \<A>E\_A0.\<close>
-                      have "B'' \<subseteq> {e \<in> E. p e \<in> A0}"
-                        sorry \<comment> \<open>B'' containing a point of p\<inverse>(A0) is entirely in p\<inverse>(A0).\<close>
+                      \<comment> \<open>e \<in> p\<inverse>(A0). Get the component of p\<inverse>(A0) containing e.\<close>
+                      have hTE_loc2: "is_topology_on E TE"
+                        using assms(3) unfolding is_topology_on_strict_def by (by100 blast)
+                      have "is_topology_on {e \<in> E. p e \<in> A0} (subspace_topology E TE {e \<in> E. p e \<in> A0})"
+                        by (rule subspace_topology_is_topology_on[OF hTE_loc2]) (by100 blast)
+                      from max_conn_comp_covers[OF this \<open>e \<in> {e \<in> E. p e \<in> A0}\<close>]
+                      obtain B'' where hB''_comp: "top1_max_conn_comp {e \<in> E. p e \<in> A0}
+                          (subspace_topology E TE {e \<in> E. p e \<in> A0}) B''" and "e \<in> B''"
+                        by (by100 blast)
+                      have "B'' \<in> ?\<A>E" using hA0 hB''_comp by (by100 blast)
+                      have "B'' \<subseteq> {e \<in> E. p e \<in> A0}" using max_conn_comp_sub[OF hB''_comp] .
                       hence "B'' \<in> ?\<A>E_A0" using \<open>B'' \<in> ?\<A>E\<close> by (by100 blast)
                       have "e \<in> V \<inter> ?W \<inter> B''" using he(1) \<open>e \<in> B''\<close> by (by100 blast)
                       thus "a \<in> (\<Union>B'\<in>?\<A>E_A0. p ` (V \<inter> ?W \<inter> B'))"
