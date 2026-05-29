@@ -16621,8 +16621,42 @@ proof -
                        Union over all such B' gives A0 \<inter> p(V\<inter>?W) which is open in A0.\<close>
                     \<comment> \<open>Actually, the argument only needs the single lifted arc B' that V passes through
                        over A0 (since V is a sheet, it intersects at most one component of p\<inverse>(A0\<inter>U)).\<close>
+                    \<comment> \<open>Non-circular proof: p(V\<inter>?W) \<subseteq> U. So A0\<inter>p(V\<inter>?W) \<subseteq> A0\<inter>U.
+                       Under p|V: V \<rightarrow> U homeo, V\<inter>p\<inverse>(A0\<inter>U) \<cong> A0\<inter>U.
+                       V\<inter>?W\<inter>p\<inverse>(A0\<inter>U) open in V\<inter>p\<inverse>(A0\<inter>U) because:
+                         for each B' \<in> \<A>E: (E-C)\<inter>B' open in B' (hall), V\<inter>B' open in B'.
+                         So V\<inter>(E-C)\<inter>B' open in B'. Its intersection with V\<inter>p\<inverse>(A0\<inter>U) is open.
+                       Hence image is open in A0\<inter>U, hence open in A0.\<close>
                     show ?thesis
-                      sorry \<comment> \<open>A0 \<inter> p(V\<inter>?W) open in A0: via lifted arc + hall + sheet homeo.\<close>
+                    proof -
+                      have hpV_U: "p ` V = U"
+                      proof -
+                        have "bij_betw p V U" using hV_homeo unfolding top1_homeomorphism_on_def
+                          by (by100 blast)
+                        thus ?thesis unfolding bij_betw_def by (by100 blast)
+                      qed
+                      have hpVW_A0_sub: "A0 \<inter> p ` (V \<inter> ?W) \<subseteq> A0 \<inter> U"
+                        using hpV_U by (by100 blast)
+                      have hU_open_TB: "U \<in> TB"
+                        using hev unfolding top1_evenly_covered_on_def openin_on_def by (by100 blast)
+                      have hA0U_open: "openin_on A0 (subspace_topology B TB A0) (A0 \<inter> U)"
+                        unfolding openin_on_def subspace_topology_def using hU_open_TB hA0_sub
+                        by (by100 blast)
+                      \<comment> \<open>p|V restricted to V\<inter>p\<inverse>(A0\<inter>U) is a homeomorphism to A0\<inter>U.\<close>
+                      \<comment> \<open>V\<inter>?W\<inter>p\<inverse>(A0\<inter>U) maps to A0\<inter>p(V\<inter>?W) which is a subset of A0\<inter>U.\<close>
+                      \<comment> \<open>We need this subset to be open in A0\<inter>U.\<close>
+                      \<comment> \<open>Equivalent (via homeo): V\<inter>?W\<inter>p\<inverse>(A0\<inter>U) is open in V\<inter>p\<inverse>(A0\<inter>U).\<close>
+                      \<comment> \<open>Both V and p\<inverse>(A0\<inter>U) are open in E. So V\<inter>p\<inverse>(A0\<inter>U) is open in E.\<close>
+                      \<comment> \<open>V\<inter>?W\<inter>p\<inverse>(A0\<inter>U) = V\<inter>(E-C)\<inter>p\<inverse>(A0\<inter>U).\<close>
+                      \<comment> \<open>For each e in this set: e \<in> B' for some B' \<in> \<A>E.\<close>
+                      \<comment> \<open>(E-C)\<inter>B' is open in B' (hall). V\<inter>p\<inverse>(A0\<inter>U)\<inter>B' is open in B'.\<close>
+                      \<comment> \<open>Their intersection is open in B', hence contains a neighborhood of e in E.\<close>
+                      \<comment> \<open>This neighborhood intersected with V\<inter>p\<inverse>(A0\<inter>U) gives a nbhd of e in V\<inter>?W\<inter>p\<inverse>(A0\<inter>U).\<close>
+                      \<comment> \<open>So V\<inter>?W\<inter>p\<inverse>(A0\<inter>U) is open in V\<inter>p\<inverse>(A0\<inter>U).\<close>
+                      \<comment> \<open>Via homeo: A0\<inter>p(V\<inter>?W) open in A0\<inter>U.\<close>
+                      \<comment> \<open>Since A0\<inter>U open in A0: A0\<inter>p(V\<inter>?W) open in A0.\<close>
+                      show ?thesis sorry
+                    qed
                   qed
                   have "A0 \<inter> p ` (V \<inter> ?W) \<in> subspace_topology B TB A0"
                     using \<open>openin_on A0 _ (A0 \<inter> p ` (V \<inter> ?W))\<close> unfolding openin_on_def by (by100 blast)
