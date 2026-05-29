@@ -16530,8 +16530,37 @@ proof -
                   using hAB_coh[rule_format, OF hcompl_sub] .
                 \<comment> \<open>Show: for each A\<alpha> \<in> \<A>B, A\<alpha> \<inter> (B \\ p(V\<inter>?W)) is closed in A\<alpha>.
                    Equivalently, A\<alpha> \<inter> p(V\<inter>?W) is open in A\<alpha>.\<close>
-                have "\<forall>A\<in>\<A>B. closedin_on A (subspace_topology B TB A) (A \<inter> (B - p ` (V \<inter> ?W)))"
-                  sorry \<comment> \<open>For each A\<alpha>: the sheet piece maps open parts to open parts.\<close>
+                have "\<forall>A0\<in>\<A>B. closedin_on A0 (subspace_topology B TB A0) (A0 \<inter> (B - p ` (V \<inter> ?W)))"
+                proof (intro ballI)
+                  fix A0 assume hA0: "A0 \<in> \<A>B"
+                  have hA0_sub: "A0 \<subseteq> B" using hAB hA0 by (by100 blast)
+                  \<comment> \<open>A0 \<inter> (B \\ p(V\<inter>?W)) = A0 \\ p(V\<inter>?W).
+                     Its complement in A0 is A0 \<inter> p(V\<inter>?W).
+                     We show A0 \<inter> p(V\<inter>?W) is open in A0.\<close>
+                  have "A0 \<inter> (B - p ` (V \<inter> ?W)) = A0 - p ` (V \<inter> ?W)" using hA0_sub by (by100 blast)
+                  \<comment> \<open>A0 \<inter> p(V\<inter>?W) = p((V\<inter>?W) \<inter> p\<inverse>(A0)).\<close>
+                  \<comment> \<open>The key: V \<inter> p\<inverse>(A0) meets at most one lifted arc B' over A0.
+                     (V\<inter>?W) \<inter> p\<inverse>(A0) = V \<inter> (E-C) \<inter> p\<inverse>(A0).
+                     This is open in B' (V open in E gives V\<inter>B' open in B';
+                     (E-C)\<inter>B' open in B' from hall). Their intersection is open in B'.
+                     p maps it to an open subset of A0.\<close>
+                  have "openin_on A0 (subspace_topology B TB A0) (A0 \<inter> p ` (V \<inter> ?W))"
+                    sorry \<comment> \<open>Core: covering sheet over A0 maps open to open.\<close>
+                  have "A0 \<inter> p ` (V \<inter> ?W) \<in> subspace_topology B TB A0"
+                    using \<open>openin_on A0 _ (A0 \<inter> p ` (V \<inter> ?W))\<close> unfolding openin_on_def by (by100 blast)
+                  have "A0 - (A0 \<inter> p ` (V \<inter> ?W)) \<subseteq> A0" by (by100 blast)
+                  have "A0 - (A0 - (A0 \<inter> p ` (V \<inter> ?W))) = A0 \<inter> p ` (V \<inter> ?W)" by (by100 blast)
+                  hence "A0 - (A0 - (A0 \<inter> p ` (V \<inter> ?W))) \<in> subspace_topology B TB A0"
+                    using \<open>A0 \<inter> p ` (V \<inter> ?W) \<in> subspace_topology B TB A0\<close> by (by100 simp)
+                  hence "closedin_on A0 (subspace_topology B TB A0) (A0 - (A0 \<inter> p ` (V \<inter> ?W)))"
+                    unfolding closedin_on_def using \<open>A0 - (A0 \<inter> p ` (V \<inter> ?W)) \<subseteq> A0\<close> by (by100 blast)
+                  have "A0 - (A0 \<inter> p ` (V \<inter> ?W)) = A0 - p ` (V \<inter> ?W)" by (by100 blast)
+                  thus "closedin_on A0 (subspace_topology B TB A0) (A0 \<inter> (B - p ` (V \<inter> ?W)))"
+                    using \<open>closedin_on A0 _ (A0 - (A0 \<inter> p ` (V \<inter> ?W)))\<close>
+                        \<open>A0 \<inter> (B - p ` (V \<inter> ?W)) = A0 - p ` (V \<inter> ?W)\<close>
+                        \<open>A0 - (A0 \<inter> p ` (V \<inter> ?W)) = A0 - p ` (V \<inter> ?W)\<close>
+                    by (by100 simp)
+                qed
                 hence "closedin_on B TB (B - p ` (V \<inter> ?W))"
                   using \<open>closedin_on B TB (B - p ` (V \<inter> ?W)) \<longleftrightarrow> _\<close> by (by100 blast)
                 hence "B - p ` (V \<inter> ?W) \<subseteq> B \<and> (B - (B - p ` (V \<inter> ?W))) \<in> TB"
