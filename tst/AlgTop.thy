@@ -16609,8 +16609,14 @@ proof -
                        Specifically: p|\_V maps V homeomorphically to U. The preimage of A0\<inter>U in V
                        is open in V (p continuous). Within this preimage, (E-C)\<inter>V is open (from hall + V open).
                        So (V\<inter>?W)\<inter>p\<inverse>(A0\<inter>U) maps to an open subset of A0\<inter>U under p|V.\<close>
+                    \<comment> \<open>Non-circular argument: for each lifted arc B' meeting V \<inter> p\<inverse>(A0):
+                       (E-C)\<inter>B' is open in B' (from hall). V\<inter>B' is open in B' (V open in E).
+                       So V\<inter>(E-C)\<inter>B' is open in B'. p maps it to an open subset of A0.
+                       Union over all such B' gives A0 \<inter> p(V\<inter>?W) which is open in A0.\<close>
+                    \<comment> \<open>Actually, the argument only needs the single lifted arc B' that V passes through
+                       over A0 (since V is a sheet, it intersects at most one component of p\<inverse>(A0\<inter>U)).\<close>
                     show ?thesis
-                      sorry \<comment> \<open>A0 \<inter> p(V\<inter>?W) open in A0: via sheet homeomorphism + hall.\<close>
+                      sorry \<comment> \<open>A0 \<inter> p(V\<inter>?W) open in A0: via lifted arc + hall + sheet homeo.\<close>
                   qed
                   have "A0 \<inter> p ` (V \<inter> ?W) \<in> subspace_topology B TB A0"
                     using \<open>openin_on A0 _ (A0 \<inter> p ` (V \<inter> ?W))\<close> unfolding openin_on_def by (by100 blast)
