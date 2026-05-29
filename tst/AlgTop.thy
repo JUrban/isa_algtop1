@@ -16451,7 +16451,32 @@ proof -
                 have "top1_is_arc_on A0 (subspace_topology B TB A0)"
                   using hAB \<open>A0 \<in> \<A>B\<close> by (by100 blast)
                 hence "\<not> finite A0"
-                  sorry \<comment> \<open>Arcs are infinite (homeomorphic to [0,1]).\<close>
+                proof -
+                  obtain h0 where "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
+                      A0 (subspace_topology B TB A0) h0"
+                    using \<open>top1_is_arc_on A0 (subspace_topology B TB A0)\<close>
+                    unfolding top1_is_arc_on_def by (by100 blast)
+                  hence "bij_betw h0 top1_unit_interval A0"
+                    unfolding top1_homeomorphism_on_def by (by100 blast)
+                  have "infinite top1_unit_interval"
+                  proof -
+                    have "\<And>n::nat. 1 / (real n + 2) \<in> top1_unit_interval"
+                      unfolding top1_unit_interval_def by (by100 auto)
+                    have "inj (\<lambda>n::nat. 1 / (real n + 2))"
+                    proof (rule injI)
+                      fix m n :: nat assume "1 / (real m + 2) = 1 / (real n + 2)"
+                      hence "real m + 2 = real n + 2" by (by100 auto)
+                      thus "m = n" by (by100 auto)
+                    qed
+                    hence "infinite (range (\<lambda>n::nat. 1 / (real n + 2)))"
+                      using finite_imageD by (by100 blast)
+                    moreover have "range (\<lambda>n::nat. 1 / (real n + 2)) \<subseteq> top1_unit_interval"
+                      using \<open>\<And>n. 1 / (real n + 2) \<in> top1_unit_interval\<close> by (by100 blast)
+                    ultimately show ?thesis using infinite_super by (by100 blast)
+                  qed
+                  from bij_betw_finite[OF \<open>bij_betw h0 top1_unit_interval A0\<close>]
+                  show ?thesis using \<open>infinite top1_unit_interval\<close> by (by100 blast)
+                qed
                 thus False using \<open>finite A0 \<and> card A0 \<le> 2\<close> by (by100 blast)
               qed
               thus ?thesis using \<open>p ` A1' = A0\<close> by (by100 simp)
