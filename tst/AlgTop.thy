@@ -15291,7 +15291,14 @@ proof -
      The intersection condition and weak topology lift from B to E.\<close>
   obtain \<A>B where hAB: "(\<forall>A\<in>\<A>B. A \<subseteq> B \<and> top1_is_arc_on A (subspace_topology B TB A))"
       and hcover: "(\<Union>\<A>B) = B"
-    using assms(1) unfolding top1_is_graph_on_def by (by100 auto)
+      and hAB_inter: "\<forall>A\<in>\<A>B. \<forall>A'\<in>\<A>B. A \<noteq> A' \<longrightarrow>
+           A \<inter> A' \<subseteq> top1_arc_endpoints_on A (subspace_topology B TB A)
+         \<and> A \<inter> A' \<subseteq> top1_arc_endpoints_on A' (subspace_topology B TB A')
+         \<and> finite (A \<inter> A') \<and> card (A \<inter> A') \<le> 2"
+      and hAB_coh: "\<forall>C. C \<subseteq> B \<longrightarrow>
+           (closedin_on B TB C \<longleftrightarrow>
+            (\<forall>A\<in>\<A>B. closedin_on A (subspace_topology B TB A) (A \<inter> C)))"
+    using assms(1) unfolding top1_is_graph_on_def by (by5000 auto)
   \<comment> \<open>E is Hausdorff (needed in arc proofs below).\<close>
   have hE_haus_top: "is_hausdorff_on E TE"
   proof -
@@ -16297,8 +16304,94 @@ proof -
          A' \<inter> B' \<subseteq> top1_arc_endpoints_on A' (subspace_topology E TE A')
        \<and> A' \<inter> B' \<subseteq> top1_arc_endpoints_on B' (subspace_topology E TE B')
        \<and> finite (A' \<inter> B') \<and> card (A' \<inter> B') \<le> 2"
-      sorry \<comment> \<open>If A'\<noteq>B' come from same base arc: disjoint (different sheets).
-         If from different base arcs: intersect in at most an endpoint.\<close>
+    proof (intro ballI impI)
+      fix A1' A2' assume hA1: "A1' \<in> ?\<A>E" and hA2: "A2' \<in> ?\<A>E" and hne: "A1' \<noteq> A2'"
+      \<comment> \<open>A1' comes from base arc A1, A2' from A2.\<close>
+      from hA1 obtain A1 where hA1_base: "A1 \<in> \<A>B"
+          and hA1_comp: "top1_max_conn_comp {e \<in> E. p e \<in> A1} (subspace_topology E TE {e \<in> E. p e \<in> A1}) A1'"
+        by (by100 blast)
+      from hA2 obtain A2 where hA2_base: "A2 \<in> \<A>B"
+          and hA2_comp: "top1_max_conn_comp {e \<in> E. p e \<in> A2} (subspace_topology E TE {e \<in> E. p e \<in> A2}) A2'"
+        by (by100 blast)
+      have hA1'_sub: "A1' \<subseteq> {e \<in> E. p e \<in> A1}" using max_conn_comp_sub[OF hA1_comp] .
+      have hA2'_sub: "A2' \<subseteq> {e \<in> E. p e \<in> A2}" using max_conn_comp_sub[OF hA2_comp] .
+      have hA1'_sub_E: "A1' \<subseteq> E" using hA1'_sub by (by100 blast)
+      have hA2'_sub_E: "A2' \<subseteq> E" using hA2'_sub by (by100 blast)
+      \<comment> \<open>The intersection A1' \<inter> A2' maps under p into A1 \<inter> A2.\<close>
+      have hp_inter: "p ` (A1' \<inter> A2') \<subseteq> A1 \<inter> A2"
+        using hA1'_sub hA2'_sub by (by100 blast)
+      show "A1' \<inter> A2' \<subseteq> top1_arc_endpoints_on A1' (subspace_topology E TE A1')
+         \<and> A1' \<inter> A2' \<subseteq> top1_arc_endpoints_on A2' (subspace_topology E TE A2')
+         \<and> finite (A1' \<inter> A2') \<and> card (A1' \<inter> A2') \<le> 2"
+      proof (cases "A1 = A2")
+        case True
+        \<comment> \<open>Same base arc: A1' and A2' are different components of p\<inverse>(A1). Hence disjoint.\<close>
+        have "A1' \<inter> A2' = {}"
+        proof (rule ccontr)
+          assume "A1' \<inter> A2' \<noteq> {}"
+          \<comment> \<open>A1' and A2' are max connected components of p\<inverse>(A1) = p\<inverse>(A2) (since A1=A2).\<close>
+          have hA2_comp': "top1_max_conn_comp {e \<in> E. p e \<in> A1} (subspace_topology E TE {e \<in> E. p e \<in> A1}) A2'"
+            using hA2_comp True by (by100 simp)
+          \<comment> \<open>B1 \<inter> B2 \<noteq> {} \<Rightarrow> B1 \<union> B2 connected \<Rightarrow> B1 = B2 by maximality.\<close>
+          obtain z where "z \<in> A1'" "z \<in> A2'" using \<open>A1' \<inter> A2' \<noteq> {}\<close> by (by100 blast)
+          have hTE_loc: "is_topology_on E TE"
+            using assms(3) unfolding is_topology_on_strict_def by (by100 blast)
+          have hTE_A1: "is_topology_on {e \<in> E. p e \<in> A1} (subspace_topology E TE {e \<in> E. p e \<in> A1})"
+            by (rule subspace_topology_is_topology_on[OF hTE_loc, of "{e \<in> E. p e \<in> A1}"])
+               (by100 blast)
+          \<comment> \<open>A1' \<union> A2' connected (Theorem 23.3).\<close>
+          let ?A12 = "\<lambda>i::bool. if i then A1' else A2'"
+          have hA12_sub: "\<forall>i\<in>{True, False}. ?A12 i \<subseteq> {e \<in> E. p e \<in> A1}"
+            using hA1'_sub hA2'_sub True by (by100 auto)
+          have hA1'_conn: "top1_connected_on A1' (subspace_topology {e \<in> E. p e \<in> A1} (subspace_topology E TE {e \<in> E. p e \<in> A1}) A1')"
+            using hA1_comp unfolding top1_max_conn_comp_def by (by100 blast)
+          have hA2'_conn: "top1_connected_on A2' (subspace_topology {e \<in> E. p e \<in> A1} (subspace_topology E TE {e \<in> E. p e \<in> A1}) A2')"
+            using hA2_comp' unfolding top1_max_conn_comp_def by (by100 blast)
+          have hA12_conn: "\<forall>i\<in>{True, False}. top1_connected_on (?A12 i) (subspace_topology {e \<in> E. p e \<in> A1} (subspace_topology E TE {e \<in> E. p e \<in> A1}) (?A12 i))"
+            using hA1'_conn hA2'_conn by (by100 auto)
+          have "z \<in> \<Inter>(?A12 ` {True, False})" using \<open>z \<in> A1'\<close> \<open>z \<in> A2'\<close> by (by100 auto)
+          from Theorem_23_3[OF hTE_A1 _ hA12_sub hA12_conn this]
+          have "top1_connected_on (\<Union>i\<in>{True, False}. ?A12 i) (subspace_topology {e \<in> E. p e \<in> A1} (subspace_topology E TE {e \<in> E. p e \<in> A1}) (\<Union>i\<in>{True, False}. ?A12 i))"
+            by (by100 blast)
+          have "A1' \<union> A2' = (\<Union>i\<in>{True, False}. ?A12 i)" by (by100 auto)
+          hence hU_conn: "top1_connected_on (A1' \<union> A2') (subspace_topology {e \<in> E. p e \<in> A1} (subspace_topology E TE {e \<in> E. p e \<in> A1}) (A1' \<union> A2'))"
+            using \<open>top1_connected_on (\<Union>i\<in>{True, False}. ?A12 i) _\<close> by (by100 simp)
+          have "A1' \<union> A2' \<subseteq> {e \<in> E. p e \<in> A1}" using hA1'_sub hA2'_sub True by (by100 blast)
+          from hA1_comp[unfolded top1_max_conn_comp_def, THEN conjunct2, THEN conjunct2, THEN conjunct2,
+              rule_format, OF _ this hU_conn]
+          have "A1' \<union> A2' = A1'" by (by100 blast)
+          hence "A2' \<subseteq> A1'" by (by100 blast)
+          \<comment> \<open>Similarly A1' \<subseteq> A2'. So A1' = A2'.\<close>
+          from hA2_comp'[unfolded top1_max_conn_comp_def, THEN conjunct2, THEN conjunct2, THEN conjunct2,
+              rule_format, OF _ \<open>A1' \<union> A2' \<subseteq> {e \<in> E. p e \<in> A1}\<close> hU_conn]
+          have "A1' \<union> A2' = A2'" by (by100 blast)
+          hence "A1' \<subseteq> A2'" by (by100 blast)
+          hence "A1' = A2'" using \<open>A2' \<subseteq> A1'\<close> by (by100 blast)
+          thus False using hne by (by100 blast)
+        qed
+        thus ?thesis by (by100 simp)
+      next
+        case False
+        \<comment> \<open>Different base arcs: A1 \<inter> A2 \<subseteq> endpoints (from base graph).\<close>
+        have hbase_inter: "A1 \<inter> A2 \<subseteq> top1_arc_endpoints_on A1 (subspace_topology B TB A1)
+            \<and> A1 \<inter> A2 \<subseteq> top1_arc_endpoints_on A2 (subspace_topology B TB A2)
+            \<and> finite (A1 \<inter> A2) \<and> card (A1 \<inter> A2) \<le> 2"
+          using hAB_inter[rule_format, OF hA1_base hA2_base False] by (by100 blast)
+        \<comment> \<open>p maps A1' \<inter> A2' into A1 \<inter> A2 (at most 2 points).
+           p is injective on A1' and on A2'. Each point of A1 \<inter> A2 has at most 1 preimage in A1'
+           and at most 1 in A2'. So |A1' \<inter> A2'| \<le> |A1 \<inter> A2| \<le> 2.\<close>
+        \<comment> \<open>Points of A1' \<inter> A2' are endpoints of A1' and A2' (pulled back from endpoints of A1, A2).\<close>
+        \<comment> \<open>|A1' \<inter> A2'| \<le> |A1 \<inter> A2| \<le> 2 (p injective on A1', p maps A1'\<inter>A2' into A1\<inter>A2).\<close>
+        \<comment> \<open>Endpoint property: p maps endpoints of A1' to endpoints of A1.\<close>
+        have "finite (A1' \<inter> A2') \<and> card (A1' \<inter> A2') \<le> 2"
+          sorry \<comment> \<open>Injective p on A1' + image in finite A1 \<inter> A2.\<close>
+        moreover have "A1' \<inter> A2' \<subseteq> top1_arc_endpoints_on A1' (subspace_topology E TE A1')"
+          sorry \<comment> \<open>Homeomorphism pulls back endpoints.\<close>
+        moreover have "A1' \<inter> A2' \<subseteq> top1_arc_endpoints_on A2' (subspace_topology E TE A2')"
+          sorry \<comment> \<open>Homeomorphism pulls back endpoints.\<close>
+        ultimately show ?thesis by (by100 blast)
+      qed
+    qed
     have hAE_topology: "\<forall>C. C \<subseteq> E \<longrightarrow>
          (closedin_on E TE C \<longleftrightarrow>
           (\<forall>A'\<in>?\<A>E. closedin_on A' (subspace_topology E TE A') (A' \<inter> C)))"
