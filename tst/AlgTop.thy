@@ -15406,7 +15406,7 @@ proof -
     let ?\<A>E = "\<Union>A\<in>\<A>B. {B'. top1_max_conn_comp {e \<in> E. p e \<in> A}
         (subspace_topology E TE {e \<in> E. p e \<in> A}) B'}"
     \<comment> \<open>Each B \<in> \<A>E is an arc (homeomorphic to A via p|_B).\<close>
-    have hAE_arcs: "\<forall>B'\<in>?\<A>E. B' \<subseteq> E \<and> top1_is_arc_on B' (subspace_topology E TE B')"
+    have hAE_arcs: "\<forall>B'\<in>?\<A>E. B' \<subseteq> E \<and> top1_is_arc_on B' (subspace_topology E TE B') \<and> inj_on p B'"
     proof (intro ballI conjI)
       fix B' assume "B' \<in> ?\<A>E"
       then obtain A where hA: "A \<in> \<A>B"
@@ -16273,6 +16273,15 @@ proof -
           qed
         qed
       qed
+    next
+      fix B' assume "B' \<in> ?\<A>E"
+      then obtain A where hA: "A \<in> \<A>B"
+          and hB'_comp: "top1_max_conn_comp {e \<in> E. p e \<in> A}
+              (subspace_topology E TE {e \<in> E. p e \<in> A}) B'"
+        by (by100 blast)
+      \<comment> \<open>Injectivity: same Theorem\_54\_3 argument used in the arc proof.\<close>
+      show "inj_on p B'"
+        sorry \<comment> \<open>Same Theorem\_54\_3 argument as in the arc homeomorphism proof.\<close>
     qed
     have hAE_cover: "\<Union>?\<A>E = E"
     proof (rule set_eqI, rule iffI)
@@ -16384,7 +16393,27 @@ proof -
         \<comment> \<open>|A1' \<inter> A2'| \<le> |A1 \<inter> A2| \<le> 2 (p injective on A1', p maps A1'\<inter>A2' into A1\<inter>A2).\<close>
         \<comment> \<open>Endpoint property: p maps endpoints of A1' to endpoints of A1.\<close>
         have "finite (A1' \<inter> A2') \<and> card (A1' \<inter> A2') \<le> 2"
-          sorry \<comment> \<open>Injective p on A1' + image in finite A1 \<inter> A2.\<close>
+        proof -
+          have "inj_on p A1'" using hAE_arcs hA1 by (by100 blast)
+          have hA12_sub_A1: "A1' \<inter> A2' \<subseteq> A1'" by (by100 blast)
+          have "inj_on p (A1' \<inter> A2')" by (rule inj_on_subset[OF \<open>inj_on p A1'\<close> hA12_sub_A1])
+          have "p ` (A1' \<inter> A2') \<subseteq> A1 \<inter> A2" using hp_inter .
+          have "finite (A1 \<inter> A2)" using hbase_inter by (by100 blast)
+          have "card (A1 \<inter> A2) \<le> 2" using hbase_inter by (by100 blast)
+          have "finite (A1' \<inter> A2')"
+            using finite_imageD[OF finite_subset[OF \<open>p ` (A1' \<inter> A2') \<subseteq> A1 \<inter> A2\<close> \<open>finite (A1 \<inter> A2)\<close>]
+                \<open>inj_on p (A1' \<inter> A2')\<close>] .
+          moreover have "card (A1' \<inter> A2') \<le> 2"
+          proof -
+            have "card (A1' \<inter> A2') = card (p ` (A1' \<inter> A2'))"
+              using card_image[OF \<open>inj_on p (A1' \<inter> A2')\<close>] by (by100 simp)
+            also have "... \<le> card (A1 \<inter> A2)"
+              by (rule card_mono[OF \<open>finite (A1 \<inter> A2)\<close> \<open>p ` (A1' \<inter> A2') \<subseteq> A1 \<inter> A2\<close>])
+            also have "... \<le> 2" using \<open>card (A1 \<inter> A2) \<le> 2\<close> .
+            finally show ?thesis .
+          qed
+          ultimately show ?thesis by (by100 blast)
+        qed
         moreover have "A1' \<inter> A2' \<subseteq> top1_arc_endpoints_on A1' (subspace_topology E TE A1')"
           sorry \<comment> \<open>Homeomorphism pulls back endpoints.\<close>
         moreover have "A1' \<inter> A2' \<subseteq> top1_arc_endpoints_on A2' (subspace_topology E TE A2')"
