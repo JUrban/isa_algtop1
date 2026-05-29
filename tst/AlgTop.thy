@@ -16556,7 +16556,67 @@ proof -
             \<comment> \<open>Step 3: A1' - {e} \<cong> A1 - {p(e)} via p (restriction of homeomorphism).\<close>
             \<comment> \<open>Step 4: A1' - {e} connected (homeomorphic to connected).\<close>
             have "top1_connected_on (A1' - {e}) (subspace_topology A1' (subspace_topology E TE A1') (A1' - {e}))"
-              sorry \<comment> \<open>Restrict homeomorphism to A1'-{e} \<rightarrow> A1-{p(e)}, transport connectedness.\<close>
+            proof -
+              \<comment> \<open>inv\_into A1' p: A1 \<rightarrow> A1' is continuous (inverse of homeomorphism).\<close>
+              let ?g = "inv_into A1' p"
+              have hg_cont: "top1_continuous_map_on A1 (subspace_topology B TB A1) A1' (subspace_topology E TE A1') ?g"
+                using hp_A1_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+              \<comment> \<open>A1 - {p(e)} is connected.\<close>
+              have hA1_minus_conn: "top1_connected_on (A1 - {p e})
+                  (subspace_topology A1 (subspace_topology B TB A1) (A1 - {p e}))"
+                using hpe_ep unfolding top1_arc_endpoints_on_def by (by100 blast)
+              \<comment> \<open>Restrict g to A1 - {p(e)}: continuous.\<close>
+              have hg_restrict: "top1_continuous_map_on (A1 - {p e})
+                  (subspace_topology A1 (subspace_topology B TB A1) (A1 - {p e}))
+                  A1' (subspace_topology E TE A1') ?g"
+                by (rule top1_continuous_map_on_subspace_restrict[OF hg_cont]) (by100 blast)
+              \<comment> \<open>Image: g ` (A1 - {p(e)}) = A1' - {e}.\<close>
+              have "?g ` (A1 - {p e}) = A1' - {e}"
+              proof -
+                have "bij_betw ?g A1 A1'" using bij_betw_inv_into[OF hp_A1_bij] .
+                hence "?g ` A1 = A1'" unfolding bij_betw_def by (by100 blast)
+                have "inj_on ?g A1" using \<open>bij_betw ?g A1 A1'\<close> unfolding bij_betw_def by (by100 blast)
+                have "?g (p e) = e"
+                  using inv_into_f_f[OF hp_A1_inj he_A1'] by (by100 simp)
+                have "p e \<in> A1" using hA1'_sub he_A1' by (by100 blast)
+                show ?thesis
+                proof (rule set_eqI, rule iffI)
+                  fix x assume "x \<in> ?g ` (A1 - {p e})"
+                  then obtain a where ha: "a \<in> A1" "a \<noteq> p e" "?g a = x" by (by100 blast)
+                  have "x \<in> A1'" using \<open>?g ` A1 = A1'\<close> ha(1) ha(3) by (by100 blast)
+                  have "x \<noteq> e"
+                  proof
+                    assume "x = e"
+                    hence "?g a = ?g (p e)" using ha(3) \<open>?g (p e) = e\<close> by (by100 simp)
+                    from inj_onD[OF \<open>inj_on ?g A1\<close> this ha(1) \<open>p e \<in> A1\<close>]
+                    show False using ha(2) by (by100 blast)
+                  qed
+                  thus "x \<in> A1' - {e}" using \<open>x \<in> A1'\<close> \<open>x \<noteq> e\<close> by (by100 blast)
+                next
+                  fix x assume "x \<in> A1' - {e}"
+                  hence hx: "x \<in> A1'" "x \<noteq> e" by (by100 blast)+
+                  have "x \<in> ?g ` A1" using \<open>?g ` A1 = A1'\<close> hx(1) by (by100 blast)
+                  then obtain a where "a \<in> A1" "?g a = x" by (by100 blast)
+                  have "a \<noteq> p e" using \<open>?g a = x\<close> \<open>?g (p e) = e\<close> hx(2) by (by100 blast)
+                  thus "x \<in> ?g ` (A1 - {p e})" using \<open>a \<in> A1\<close> \<open>?g a = x\<close> \<open>a \<noteq> p e\<close> by (by100 blast)
+                qed
+              qed
+              \<comment> \<open>By Theorem 23.5: g(A1-{pe}) connected in subspace of A1'.\<close>
+              have hA1'_top: "is_topology_on A1' (subspace_topology E TE A1')"
+                using hA1'_strict unfolding is_topology_on_strict_def by (by100 blast)
+              have hA1_minus_top: "is_topology_on (A1 - {p e})
+                  (subspace_topology A1 (subspace_topology B TB A1) (A1 - {p e}))"
+              proof -
+                have "is_topology_on A1 (subspace_topology B TB A1)"
+                  using hA1_strict unfolding is_topology_on_strict_def by (by100 blast)
+                have "A1 - {p e} \<subseteq> A1" by (by100 blast)
+                from subspace_topology_is_topology_on[OF \<open>is_topology_on A1 _\<close> this] show ?thesis .
+              qed
+              from Theorem_23_5[OF hA1_minus_top hA1'_top hA1_minus_conn hg_restrict]
+              have "top1_connected_on (?g ` (A1 - {p e}))
+                  (subspace_topology A1' (subspace_topology E TE A1') (?g ` (A1 - {p e})))" .
+              thus ?thesis using \<open>?g ` (A1 - {p e}) = A1' - {e}\<close> by (by100 simp)
+            qed
             \<comment> \<open>Step 5: e is an endpoint of A1'.\<close>
             thus "e \<in> top1_arc_endpoints_on A1' (subspace_topology E TE A1')"
               unfolding top1_arc_endpoints_on_def using he_A1' by (by100 blast)
