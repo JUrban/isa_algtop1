@@ -16624,7 +16624,177 @@ proof -
         qed
         moreover have "A1' \<inter> A2' \<subseteq> top1_arc_endpoints_on A2' (subspace_topology E TE A2')"
         proof -
-          show ?thesis sorry \<comment> \<open>Same argument as A1' (symmetric).\<close>
+          show ?thesis
+          proof (intro subsetI)
+            fix e assume he: "e \<in> A1' \<inter> A2'"
+            have he_A2': "e \<in> A2'" using he by (by100 blast)
+            have hpe_ep2: "p e \<in> top1_arc_endpoints_on A2 (subspace_topology B TB A2)"
+              using hp_inter he hbase_inter by (by100 blast)
+            \<comment> \<open>Same as A1': construct homeomorphism p|A2' \<rightarrow> A2, transport connectedness.\<close>
+            have hp_A2_surj: "p ` A2' = A2"
+            proof -
+              have "p ` A2' \<subseteq> A2" using hA2'_sub by (by100 blast)
+              from hAE_surj[rule_format, OF hA2] obtain A2_base where
+                "A2_base \<in> \<A>B" "p ` A2' = A2_base" by (by100 blast)
+              have "A2_base \<subseteq> A2" using \<open>p ` A2' = A2_base\<close> \<open>p ` A2' \<subseteq> A2\<close> by (by100 blast)
+              have "A2_base = A2"
+              proof (rule ccontr)
+                assume "A2_base \<noteq> A2"
+                have hfin_A2b: "finite (A2_base \<inter> A2) \<and> card (A2_base \<inter> A2) \<le> 2"
+                  using hAB_inter[rule_format, OF \<open>A2_base \<in> \<A>B\<close> hA2_base \<open>A2_base \<noteq> A2\<close>] by (by100 blast)
+                have "A2_base \<inter> A2 = A2_base" using \<open>A2_base \<subseteq> A2\<close> by (by100 blast)
+                hence "finite A2_base \<and> card A2_base \<le> 2" using hfin_A2b by (by100 simp)
+                have "top1_is_arc_on A2_base (subspace_topology B TB A2_base)"
+                  using hAB \<open>A2_base \<in> \<A>B\<close> by (by100 blast)
+                then obtain h0 where "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
+                    A2_base (subspace_topology B TB A2_base) h0"
+                  unfolding top1_is_arc_on_def by (by100 blast)
+                hence "bij_betw h0 top1_unit_interval A2_base"
+                  unfolding top1_homeomorphism_on_def by (by100 blast)
+                have "infinite top1_unit_interval"
+                proof -
+                  have "inj (\<lambda>n::nat. 1 / (real n + 2))"
+                  proof (rule injI)
+                    fix m n :: nat assume "1 / (real m + 2) = 1 / (real n + 2)"
+                    hence "real m + 2 = real n + 2" by (by100 auto)
+                    thus "m = n" by (by100 auto)
+                  qed
+                  hence "infinite (range (\<lambda>n::nat. 1 / (real n + 2)))"
+                    using finite_imageD by (by100 blast)
+                  moreover have "range (\<lambda>n::nat. 1 / (real n + 2)) \<subseteq> top1_unit_interval"
+                    unfolding top1_unit_interval_def by (by100 auto)
+                  ultimately show ?thesis using infinite_super by (by100 blast)
+                qed
+                from bij_betw_finite[OF \<open>bij_betw h0 top1_unit_interval A2_base\<close>]
+                have "\<not> finite A2_base" using \<open>infinite top1_unit_interval\<close> by (by100 blast)
+                thus False using \<open>finite A2_base \<and> _\<close> by (by100 blast)
+              qed
+              thus ?thesis using \<open>p ` A2' = A2_base\<close> by (by100 simp)
+            qed
+            have hp_A2_inj: "inj_on p A2'" using hAE_arcs hA2 by (by5000 blast)
+            have hp_A2_bij: "bij_betw p A2' A2"
+              unfolding bij_betw_def using hp_A2_inj hp_A2_surj by (by100 blast)
+            have hA2'_arc: "top1_is_arc_on A2' (subspace_topology E TE A2')"
+              using hAE_arcs hA2 by (by5000 blast)
+            have hA2'_strict: "is_topology_on_strict A2' (subspace_topology E TE A2')"
+              using hA2'_arc unfolding top1_is_arc_on_def by (by100 blast)
+            have hA2_strict: "is_topology_on_strict A2 (subspace_topology B TB A2)"
+            proof -
+              have "top1_is_arc_on A2 (subspace_topology B TB A2)"
+                using hAB hA2_base by (by100 blast)
+              thus ?thesis unfolding top1_is_arc_on_def by (by100 blast)
+            qed
+            have hA2'_compact: "top1_compact_on A2' (subspace_topology E TE A2')"
+            proof -
+              obtain h2' where hh2': "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
+                  A2' (subspace_topology E TE A2') h2'"
+                using hA2'_arc unfolding top1_is_arc_on_def by (by100 blast)
+              have hI_compact: "top1_compact_on top1_unit_interval top1_unit_interval_topology"
+                unfolding top1_unit_interval_def top1_unit_interval_topology_def
+                using Theorem_27_1[of "0::real" 1] by (by100 simp)
+              have hA2'_top: "is_topology_on A2' (subspace_topology E TE A2')"
+                using hA2'_strict unfolding is_topology_on_strict_def by (by100 blast)
+              have hh2'_cont: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+                  A2' (subspace_topology E TE A2') h2'"
+                using hh2' unfolding top1_homeomorphism_on_def by (by100 blast)
+              have "h2' ` top1_unit_interval = A2'"
+                using hh2' unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+              from top1_compact_on_continuous_image[OF hI_compact hA2'_top hh2'_cont]
+              have "top1_compact_on (h2' ` top1_unit_interval) (subspace_topology A2' (subspace_topology E TE A2') (h2' ` top1_unit_interval))" .
+              have "subspace_topology A2' (subspace_topology E TE A2') (h2' ` top1_unit_interval) = subspace_topology E TE A2'"
+                using subspace_topology_trans[of A2' A2'] \<open>h2' ` top1_unit_interval = A2'\<close> by (by100 simp)
+              thus ?thesis using \<open>top1_compact_on (h2' ` top1_unit_interval) _\<close> \<open>h2' ` top1_unit_interval = A2'\<close>
+                by (by100 simp)
+            qed
+            have hA2_haus: "is_hausdorff_on A2 (subspace_topology B TB A2)"
+            proof -
+              have "is_hausdorff_on B TB"
+                using assms(1) unfolding top1_is_graph_on_def by (by100 blast)
+              have "A2 \<subseteq> B" using hAB hA2_base by (by100 blast)
+              from conjunct2[OF conjunct2[OF Theorem_17_11]] this \<open>is_hausdorff_on B TB\<close>
+              show ?thesis by (by100 blast)
+            qed
+            have hp_A2_cont: "top1_continuous_map_on A2' (subspace_topology E TE A2')
+                A2 (subspace_topology B TB A2) p"
+            proof -
+              have hp_cont: "top1_continuous_map_on E TE B TB p"
+                using assms(2) unfolding top1_covering_map_on_def by (by100 blast)
+              have "top1_continuous_map_on A2' (subspace_topology E TE A2') B TB p"
+                by (rule top1_continuous_map_on_subspace_restrict[OF hp_cont hA2'_sub_E])
+              have "\<forall>e \<in> A2'. p e \<in> A2" using hA2'_sub by (by100 blast)
+              have "A2 \<subseteq> B" using hAB hA2_base by (by100 blast)
+              from continuous_map_restrict_codomain[OF
+                  \<open>top1_continuous_map_on A2' (subspace_topology E TE A2') B TB p\<close>
+                  \<open>\<forall>e \<in> A2'. p e \<in> A2\<close> this]
+              show ?thesis .
+            qed
+            have hp_A2_homeo: "top1_homeomorphism_on A2' (subspace_topology E TE A2')
+                A2 (subspace_topology B TB A2) p"
+            proof -
+              have hA2'_top: "is_topology_on A2' (subspace_topology E TE A2')"
+                using hA2'_strict unfolding is_topology_on_strict_def by (by100 blast)
+              have hA2_top: "is_topology_on A2 (subspace_topology B TB A2)"
+                using hA2_strict unfolding is_topology_on_strict_def by (by100 blast)
+              from Theorem_26_6[OF hA2'_top hA2_top hA2'_compact hA2_haus hp_A2_cont hp_A2_bij]
+              show ?thesis .
+            qed
+            have hA2_minus_connected: "top1_connected_on (A2 - {p e})
+                (subspace_topology A2 (subspace_topology B TB A2) (A2 - {p e}))"
+              using hpe_ep2 unfolding top1_arc_endpoints_on_def by (by100 blast)
+            have "top1_connected_on (A2' - {e})
+                (subspace_topology A2' (subspace_topology E TE A2') (A2' - {e}))"
+            proof -
+              let ?g2 = "inv_into A2' p"
+              have hg2_cont: "top1_continuous_map_on A2 (subspace_topology B TB A2) A2' (subspace_topology E TE A2') ?g2"
+                using hp_A2_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+              have hg2_restrict: "top1_continuous_map_on (A2 - {p e})
+                  (subspace_topology A2 (subspace_topology B TB A2) (A2 - {p e}))
+                  A2' (subspace_topology E TE A2') ?g2"
+                by (rule top1_continuous_map_on_subspace_restrict[OF hg2_cont]) (by100 blast)
+              have hg2_bij: "bij_betw ?g2 A2 A2'" using bij_betw_inv_into[OF hp_A2_bij] .
+              have "?g2 ` A2 = A2'" using hg2_bij unfolding bij_betw_def by (by100 blast)
+              have "inj_on ?g2 A2" using hg2_bij unfolding bij_betw_def by (by100 blast)
+              have "?g2 (p e) = e"
+                using inv_into_f_f[OF hp_A2_inj he_A2'] by (by100 simp)
+              have "p e \<in> A2" using hA2'_sub he_A2' by (by100 blast)
+              have "?g2 ` (A2 - {p e}) = A2' - {e}"
+              proof (rule set_eqI, rule iffI)
+                fix x assume "x \<in> ?g2 ` (A2 - {p e})"
+                then obtain a where ha: "a \<in> A2" "a \<noteq> p e" "?g2 a = x" by (by100 blast)
+                have "x \<in> A2'" using \<open>?g2 ` A2 = A2'\<close> ha(1) ha(3) by (by100 blast)
+                have "x \<noteq> e"
+                proof assume "x = e"
+                  hence "?g2 a = ?g2 (p e)" using ha(3) \<open>?g2 (p e) = e\<close> by (by100 simp)
+                  from inj_onD[OF \<open>inj_on ?g2 A2\<close> this ha(1) \<open>p e \<in> A2\<close>]
+                  show False using ha(2) by (by100 blast)
+                qed
+                thus "x \<in> A2' - {e}" using \<open>x \<in> A2'\<close> by (by100 blast)
+              next
+                fix x assume "x \<in> A2' - {e}"
+                hence hx: "x \<in> A2'" "x \<noteq> e" by (by100 blast)+
+                have "x \<in> ?g2 ` A2" using \<open>?g2 ` A2 = A2'\<close> hx(1) by (by100 blast)
+                then obtain a where "a \<in> A2" "?g2 a = x" by (by100 blast)
+                have "a \<noteq> p e" using \<open>?g2 a = x\<close> \<open>?g2 (p e) = e\<close> hx(2) by (by100 blast)
+                thus "x \<in> ?g2 ` (A2 - {p e})" using \<open>a \<in> A2\<close> \<open>?g2 a = x\<close> by (by100 blast)
+              qed
+              have hA2_minus_top: "is_topology_on (A2 - {p e})
+                  (subspace_topology A2 (subspace_topology B TB A2) (A2 - {p e}))"
+              proof -
+                have "is_topology_on A2 (subspace_topology B TB A2)"
+                  using hA2_strict unfolding is_topology_on_strict_def by (by100 blast)
+                have "A2 - {p e} \<subseteq> A2" by (by100 blast)
+                from subspace_topology_is_topology_on[OF \<open>is_topology_on A2 _\<close> this] show ?thesis .
+              qed
+              have hA2'_top: "is_topology_on A2' (subspace_topology E TE A2')"
+                using hA2'_strict unfolding is_topology_on_strict_def by (by100 blast)
+              from Theorem_23_5[OF hA2_minus_top hA2'_top hA2_minus_connected hg2_restrict]
+              have "top1_connected_on (?g2 ` (A2 - {p e}))
+                  (subspace_topology A2' (subspace_topology E TE A2') (?g2 ` (A2 - {p e})))" .
+              thus ?thesis using \<open>?g2 ` (A2 - {p e}) = A2' - {e}\<close> by (by100 simp)
+            qed
+            thus "e \<in> top1_arc_endpoints_on A2' (subspace_topology E TE A2')"
+              unfolding top1_arc_endpoints_on_def using he_A2' by (by100 blast)
+          qed
         qed
         ultimately show ?thesis by (by100 blast)
       qed
