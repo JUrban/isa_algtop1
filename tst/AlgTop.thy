@@ -17012,7 +17012,78 @@ proof -
                       have hpVC_closed: "closedin_on (A0 \<inter> U)
                           (subspace_topology A0 (subspace_topology B TB A0) (A0 \<inter> U))
                           (p ` (V \<inter> C \<inter> {e \<in> E. p e \<in> A0}))"
-                        sorry \<comment> \<open>Core: local finiteness of arc decomposition + hall.\<close>
+                      proof -
+                        \<comment> \<open>Show p(V\<inter>C) closed in B using B's coherent topology (hAB\_coh).
+                           Then p(V\<inter>C) \<inter> (A0\<inter>U) = p(V\<inter>C\<inter>p\<inverse>(A0)) closed in A0\<inter>U.\<close>
+                        have hpVC_sub_B: "p ` (V \<inter> C) \<subseteq> B"
+                        proof -
+                          have "p ` E = B" using assms(2) unfolding top1_covering_map_on_def by (by100 blast)
+                          thus ?thesis using hV_sub_E by (by100 blast)
+                        qed
+                        have hpVC_sub_U: "p ` (V \<inter> C) \<subseteq> U" using hpV_U by (by100 blast)
+                        \<comment> \<open>p(V\<inter>C) closed in B: by hAB\_coh, need p(V\<inter>C)\<inter>A\_\<alpha> closed in A\_\<alpha> for each A\_\<alpha>.\<close>
+                        have hpVC_closed_B: "closedin_on B TB (p ` (V \<inter> C))"
+                        proof -
+                          have "\<forall>A_\<alpha>\<in>\<A>B. closedin_on A_\<alpha> (subspace_topology B TB A_\<alpha>) (A_\<alpha> \<inter> p ` (V \<inter> C))"
+                          proof (intro ballI)
+                            fix A_\<alpha> assume hA_\<alpha>: "A_\<alpha> \<in> \<A>B"
+                            \<comment> \<open>p(V\<inter>C) \<inter> A\_\<alpha> = p(V\<inter>C\<inter>p\<inverse>(A\_\<alpha>)).
+                               Under homeo p|V: V\<inter>p\<inverse>(A\_\<alpha>) \<cong> A\_\<alpha>\<inter>U.
+                               V\<inter>C\<inter>p\<inverse>(A\_\<alpha>) closed in V\<inter>p\<inverse>(A\_\<alpha>) because:
+                               in V\<inter>p\<inverse>(A\_\<alpha>), only arcs OVER A\_\<alpha> appear (no cross-arc leaking).
+                               For each such arc B': C\<inter>B'\<inter>V closed in B'\<inter>V (from hall).
+                               Under the homeo, maps to closed in A\_\<alpha>\<inter>U. Hence closed in A\_\<alpha>.\<close>
+                            show "closedin_on A_\<alpha> (subspace_topology B TB A_\<alpha>) (A_\<alpha> \<inter> p ` (V \<inter> C))"
+                              sorry \<comment> \<open>Per-A\_\<alpha> closedness: restrict to arcs over A\_\<alpha> only.\<close>
+                          qed
+                          from hAB_coh[rule_format, OF hpVC_sub_B] this
+                          show ?thesis by (by100 blast)
+                        qed
+                        \<comment> \<open>p(V\<inter>C) closed in B \<Rightarrow> p(V\<inter>C) \<inter> (A0\<inter>U) closed in A0\<inter>U.\<close>
+                        have "p ` (V \<inter> C) \<inter> (A0 \<inter> U) = p ` (V \<inter> C \<inter> {e \<in> E. p e \<in> A0})"
+                        proof (rule set_eqI, rule iffI)
+                          fix a assume "a \<in> p ` (V \<inter> C) \<inter> (A0 \<inter> U)"
+                          then obtain e where "e \<in> V" "e \<in> C" "p e = a" "a \<in> A0" by (by100 blast)
+                          have "e \<in> E" using \<open>e \<in> V\<close> hV_sub_E by (by100 blast)
+                          thus "a \<in> p ` (V \<inter> C \<inter> {e \<in> E. p e \<in> A0})"
+                            using \<open>e \<in> V\<close> \<open>e \<in> C\<close> \<open>e \<in> E\<close> \<open>a \<in> A0\<close> \<open>p e = a\<close> by (by100 blast)
+                        next
+                          fix a assume "a \<in> p ` (V \<inter> C \<inter> {e \<in> E. p e \<in> A0})"
+                          then obtain e where "e \<in> V" "e \<in> C" "p e \<in> A0" "p e = a" by (by100 blast)
+                          thus "a \<in> p ` (V \<inter> C) \<inter> (A0 \<inter> U)"
+                            using hpVC_sub_U \<open>e \<in> V\<close> \<open>e \<in> C\<close> by (by100 blast)
+                        qed
+                        have "closedin_on (A0 \<inter> U) (subspace_topology B TB (A0 \<inter> U)) (p ` (V \<inter> C \<inter> {e \<in> E. p e \<in> A0}))"
+                        proof -
+                          have "closedin_on B TB (p ` (V \<inter> C))" using hpVC_closed_B .
+                          \<comment> \<open>Closed in B restricted to open subspace A0\<inter>U.\<close>
+                          have "p ` (V \<inter> C \<inter> {e \<in> E. p e \<in> A0}) \<subseteq> A0 \<inter> U"
+                            using hpVC_sub_U by (by100 blast)
+                          \<comment> \<open>p(V\<inter>C) closed in B. p(V\<inter>C) \<inter> (A0\<inter>U) closed in A0\<inter>U (Theorem 17.2).\<close>
+                          have hA0U_sub_B: "A0 \<inter> U \<subseteq> B"
+                          proof -
+                            have "A0 \<subseteq> B" using hAB hA0 by (by100 blast)
+                            thus ?thesis by (by100 blast)
+                          qed
+                          have hTB_loc: "is_topology_on B TB"
+                            using assms(1) unfolding top1_is_graph_on_def is_hausdorff_on_def by (by100 blast)
+                          from Theorem_17_2[OF hTB_loc hA0U_sub_B]
+                          have "\<And>S. closedin_on (A0 \<inter> U) (subspace_topology B TB (A0 \<inter> U)) S \<longleftrightarrow>
+                              (\<exists>D. closedin_on B TB D \<and> S = D \<inter> (A0 \<inter> U))" .
+                          hence "closedin_on (A0 \<inter> U) (subspace_topology B TB (A0 \<inter> U))
+                              (p ` (V \<inter> C) \<inter> (A0 \<inter> U))"
+                            using hpVC_closed_B by (by100 blast)
+                          thus ?thesis using \<open>p ` (V \<inter> C) \<inter> (A0 \<inter> U) = p ` (V \<inter> C \<inter> {e \<in> E. p e \<in> A0})\<close>
+                            by (by100 simp)
+                        qed
+                        \<comment> \<open>Transport: subspace B TB (A0\<inter>U) = subspace A0 (subspace B TB A0) (A0\<inter>U).\<close>
+                        have "subspace_topology B TB (A0 \<inter> U) =
+                            subspace_topology A0 (subspace_topology B TB A0) (A0 \<inter> U)"
+                          by (rule subspace_topology_trans[symmetric]) (by100 blast)
+                        thus ?thesis
+                          using \<open>closedin_on (A0 \<inter> U) (subspace_topology B TB (A0 \<inter> U)) _\<close>
+                          by (by100 simp)
+                      qed
                       \<comment> \<open>Step 4: Open minus closed.\<close>
                       have "(A0 \<inter> U) - p ` (V \<inter> C \<inter> {e \<in> E. p e \<in> A0}) \<in>
                           subspace_topology A0 (subspace_topology B TB A0) (A0 \<inter> U)"
