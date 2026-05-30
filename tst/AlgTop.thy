@@ -11823,37 +11823,46 @@ proof -
           sorry \<comment> \<open>IH: target\\_V is a graph with card(NT)-1 non-tree arcs.
              Uses hTV\\_trans to match topology.\<close>
         \<comment> \<open>Transfer freeness via the DR iso to U and V.\<close>
-        have hU_free: "\<exists>(G::int set) mul e invg (\<iota>::nat \<Rightarrow> int) S'.
-            top1_is_free_group_full_on G mul e invg \<iota> S'
-          \<and> top1_groups_isomorphic_on G mul
-              (top1_fundamental_group_carrier ?U ?TU x0)
-              (top1_fundamental_group_mul ?U ?TU x0)"
-          sorry \<comment> \<open>htU\\_free + groups\\_isomorphic\\_trans\\_fwd[OF \\<dots> hpi1\\_U\\_iso].
-             Large existential extraction needs careful tactic.\<close>
-        have hV_free: "\<exists>(G::int set) mul e invg (\<iota>::nat \<Rightarrow> int) S'.
-            top1_is_free_group_full_on G mul e invg \<iota> S'
-          \<and> top1_groups_isomorphic_on G mul
-              (top1_fundamental_group_carrier ?V ?TV x0)
-              (top1_fundamental_group_mul ?V ?TV x0)"
-          sorry \<comment> \<open>htV\\_free + groups\\_isomorphic\\_trans\\_fwd[OF \\<dots> hpi1\\_V\\_iso].
-             Same large existential extraction.\<close>
+        \<comment> \<open>Transfer freeness to \\<pi>\\_1(U) and \\<pi>\\_1(V) directly
+           (needed for svk\\_free\\_product\\_free).\<close>
+        have hU_free_direct: "\<exists>(\<iota>U::nat \<Rightarrow> _) S1. top1_is_free_group_full_on
+            (top1_fundamental_group_carrier ?U ?TU x0)
+            (top1_fundamental_group_mul ?U ?TU x0)
+            (top1_fundamental_group_id ?U ?TU x0)
+            (top1_fundamental_group_invg ?U ?TU x0)
+            \<iota>U S1"
+          sorry \<comment> \<open>htU\\_free + hpi1\\_U\\_iso + free\\_group\\_invariant\\_under\\_iso.\<close>
+        have hV_free_direct: "\<exists>(\<iota>V::nat \<Rightarrow> _) S2. top1_is_free_group_full_on
+            (top1_fundamental_group_carrier ?V ?TV x0)
+            (top1_fundamental_group_mul ?V ?TV x0)
+            (top1_fundamental_group_id ?V ?TV x0)
+            (top1_fundamental_group_invg ?V ?TV x0)
+            \<iota>V S2"
+          sorry \<comment> \<open>htV\\_free + hpi1\\_V\\_iso + free\\_group\\_invariant\\_under\\_iso.\<close>
         \<comment> \<open>U and V are path-connected.\<close>
+        \<comment> \<open>Helper: DR + target path-connected \\<Rightarrow> space path-connected.
+           Proof: H(x,\\<cdot>) gives a path from x to H(x,1) \\<in> A. A path-connected connects them.\<close>
+        have hdr_pc: "\<And>Y TY' A. top1_deformation_retract_of_on Y TY' A \<Longrightarrow>
+            is_topology_on Y TY' \<Longrightarrow>
+            top1_path_connected_on A (subspace_topology Y TY' A) \<Longrightarrow>
+            top1_path_connected_on Y TY'"
+          sorry \<comment> \<open>DR \\<Rightarrow> path-connected: for any x,y \\<in> Y,
+             path x \\<rightarrow> H(x,1) \\<in> A (section of H via top1\\_continuous\\_map\\_on\\_section2),
+             path H(x,1) \\<rightarrow> H(y,1) in A (A path-connected),
+             path H(y,1) \\<rightarrow> y (reverse section).
+             Concatenation gives path x \\<rightarrow> y.\<close>
         have hU_pc: "top1_path_connected_on ?U (subspace_topology X TX ?U)"
         proof -
-          \<comment> \<open>target\\_U = T \\<union> A1 is path-connected: T is path-connected (tree), A1 is an arc
-             with endpoints in T, so any point in A1 connects to T via the arc.\<close>
-          have htarget_U_pc: "top1_path_connected_on ?target_U (subspace_topology X TX ?target_U)"
-            sorry \<comment> \<open>T path-connected (tree) + A1 connected via endpoints to T.\<close>
-          \<comment> \<open>U deformation retracts onto target\\_U (path-connected).
-             DR homotopy H gives path from any x to H(x,1) \\<in> target\\_U.
-             Hence U is path-connected.\<close>
-          show ?thesis sorry \<comment> \<open>DR + target\\_U path-connected \\<Rightarrow> U path-connected.\<close>
+          have htarget_U_pc: "top1_path_connected_on ?target_U (subspace_topology ?U ?TU ?target_U)"
+            sorry \<comment> \<open>T path-connected (tree) + A1 connected via endpoints to T.
+               May need subspace\\_topology\\_trans.\<close>
+          show ?thesis by (rule hdr_pc[OF hU_dr hU_top htarget_U_pc])
         qed
         have hV_pc: "top1_path_connected_on ?V (subspace_topology X TX ?V)"
         proof -
-          have htarget_V_pc: "top1_path_connected_on ?target_V (subspace_topology X TX ?target_V)"
+          have htarget_V_pc: "top1_path_connected_on ?target_V (subspace_topology ?V ?TV ?target_V)"
             sorry \<comment> \<open>T path-connected + non-tree arcs connected via endpoints to T.\<close>
-          show ?thesis sorry \<comment> \<open>DR + target\\_V path-connected \\<Rightarrow> V path-connected.\<close>
+          show ?thesis by (rule hdr_pc[OF hV_dr hV_top htarget_V_pc])
         qed
         \<comment> \<open>x0 \\<in> U \\<cap> V.\<close>
         have hx0_UV: "x0 \<in> ?UV"
