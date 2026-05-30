@@ -11899,6 +11899,78 @@ proof -
           proof - have "(1/4::real) \<in> {t. 0 < t \<and> t < 1/2}" by (by100 simp) thus ?thesis by (by100 blast) qed
           have hb_B: "?pt_b \<in> ?B_comp"
           proof - have "(3/4::real) \<in> {t. 1/2 < t \<and> t < 1}" by (by100 simp) thus ?thesis by (by100 blast) qed
+          \<comment> \<open>V deformation retracts onto T (for path-connectedness and simple connectedness).\<close>
+          define ps_bc where "ps_bc A = (if A = A1 then hA (1/2) else undefined)" for A
+          \<comment> \<open>ps\\_bc gives interior points for hdr\\_helper (shared between DR and SC proofs).\<close>
+          have hps_bc_shared: "\<forall>A\<in>{A1}. ps_bc A \<in> A \<and>
+              ps_bc A \<notin> top1_arc_endpoints_on A (subspace_topology X TX A)"
+          proof (intro ballI conjI)
+            fix A assume "A \<in> {A1}" hence "A = A1" by (by100 blast)
+            have h12_I: "(1/2::real) \<in> top1_unit_interval"
+              unfolding top1_unit_interval_def by (by100 simp)
+            have hbij: "bij_betw hA top1_unit_interval A1"
+              using hhA unfolding top1_homeomorphism_on_def by (by100 blast)
+            have "hA (1/2) \<in> A1" using hbij h12_I unfolding bij_betw_def by (by100 blast)
+            show "ps_bc A \<in> A" using \<open>A = A1\<close> \<open>hA (1/2) \<in> A1\<close> unfolding ps_bc_def by (by100 simp)
+            have hep: "top1_arc_endpoints_on A1 (subspace_topology X TX A1) = {hA 0, hA 1}"
+            proof -
+              have "is_hausdorff_on X TX"
+                using assms(1) unfolding top1_is_graph_on_def by (by100 blast)
+              show ?thesis by (rule arc_endpoints_are_boundary[OF hX_strict \<open>is_hausdorff_on X TX\<close> hA1_sub hA1_arc hhA])
+            qed
+            have hinj: "inj_on hA top1_unit_interval" using hbij unfolding bij_betw_def by (by100 blast)
+            have h0_I: "(0::real) \<in> top1_unit_interval" unfolding top1_unit_interval_def by (by100 simp)
+            have h1_I: "(1::real) \<in> top1_unit_interval" unfolding top1_unit_interval_def by (by100 simp)
+            have "hA (1/2) \<noteq> hA 0"
+            proof assume "hA (1/2) = hA 0"
+              hence "(1/2::real) = 0" using hinj h12_I h0_I unfolding inj_on_def by (by100 blast)
+              thus False by (by100 simp)
+            qed
+            moreover have "hA (1/2) \<noteq> hA 1"
+            proof assume "hA (1/2) = hA 1"
+              hence "(1/2::real) = 1" using hinj h12_I h1_I unfolding inj_on_def by (by100 blast)
+              thus False by (by100 simp)
+            qed
+            ultimately have "hA (1/2) \<notin> {hA 0, hA 1}" by (by100 blast)
+            hence "hA (1/2) \<notin> top1_arc_endpoints_on A1 (subspace_topology X TX A1)"
+              using hep by (by100 simp)
+            thus "ps_bc A \<notin> top1_arc_endpoints_on A (subspace_topology X TX A)"
+              using \<open>A = A1\<close> unfolding ps_bc_def by (by100 simp)
+          qed
+          have hV_dr_T_early: "top1_deformation_retract_of_on ?V (subspace_topology X TX ?V) T"
+          proof -
+            have "{A1} \<subseteq> ?NT" using hA1 by (by100 blast)
+            from hdr_helper[OF _ \<open>{A1} \<subseteq> ?NT\<close> hps_bc_shared]
+            have "top1_deformation_retract_of_on (X - ps_bc ` {A1})
+                (subspace_topology X TX (X - ps_bc ` {A1})) (T \<union> \<Union>(?NT - {A1}))"
+              by (by100 simp)
+            have "?NT - {A1} = {}" using hNT_singleton by (by100 blast)
+            hence "T \<union> \<Union>(?NT - {A1}) = T" by (by100 blast)
+            have "ps_bc ` {A1} = {hA (1/2)}" unfolding ps_bc_def by (by100 simp)
+            hence "X - ps_bc ` {A1} = ?V" by (by100 simp)
+            thus ?thesis using \<open>top1_deformation_retract_of_on (X - ps_bc ` {A1}) _ _\<close>
+                \<open>T \<union> \<Union>(?NT - {A1}) = T\<close> by (by100 simp)
+          qed
+          have hV_top_early: "is_topology_on ?V (subspace_topology X TX ?V)"
+          proof -
+            have hTX_t: "is_topology_on X TX"
+              using hX_strict unfolding is_topology_on_strict_def by (by100 blast)
+            have "?V \<subseteq> X" by (by100 blast)
+            from subspace_topology_is_topology_on[OF hTX_t \<open>?V \<subseteq> X\<close>] show ?thesis .
+          qed
+          have hT_pc_early: "top1_path_connected_on T (subspace_topology ?V (subspace_topology X TX ?V) T)"
+          proof -
+            have "T \<subseteq> ?V"
+              using conjunct1[OF hV_dr_T_early[unfolded top1_deformation_retract_of_on_def]]
+              by (by100 blast)
+            have "subspace_topology ?V (subspace_topology X TX ?V) T = subspace_topology X TX T"
+              by (rule subspace_topology_trans[OF \<open>T \<subseteq> ?V\<close>])
+            have "top1_path_connected_on T (subspace_topology X TX T)"
+              using tree_simply_connected[OF hT_tree] top1_simply_connected_on_path_connected by (by100 blast)
+            thus ?thesis using \<open>subspace_topology ?V _ T = _\<close> by (by100 simp)
+          qed
+          have hV_pc_early: "top1_path_connected_on ?V (subspace_topology X TX ?V)"
+            by (rule deformation_retract_path_connected[OF hV_dr_T_early hV_top_early hT_pc_early])
           \<comment> \<open>Paths \\<alpha> (in U from a to b) and \\<beta> (in V from b to a).\<close>
           have halpha_loc: "\<exists>\<alpha>. top1_is_path_on ?U (subspace_topology X TX ?U) ?pt_a ?pt_b \<alpha>" sorry
           have hbeta_loc: "\<exists>\<beta>. top1_is_path_on ?V (subspace_topology X TX ?V) ?pt_b ?pt_a \<beta>"
@@ -11933,7 +12005,8 @@ proof -
               thus ?thesis using \<open>hA (3/4) \<noteq> hA (1/2)\<close> hA1_sub by (by100 blast)
             qed
             \<comment> \<open>V is path-connected (already proved above as hV\\_pc\\_bc inside V SC).\<close>
-            have hV_pc_here: "top1_path_connected_on ?V (subspace_topology X TX ?V)" sorry
+            have hV_pc_here: "top1_path_connected_on ?V (subspace_topology X TX ?V)"
+              using hV_pc_early .
             from hV_pc_here hptb_V hpta_V
             show ?thesis unfolding top1_path_connected_on_def by (by100 blast)
           qed
@@ -11941,61 +12014,9 @@ proof -
           have hU_sc_loc: "top1_simply_connected_on ?U (subspace_topology X TX ?U)" sorry
           have hV_sc_loc: "top1_simply_connected_on ?V (subspace_topology X TX ?V)"
           proof -
-            \<comment> \<open>V = X - {hA(1/2)} deformation retracts onto T (via hdr\\_helper with S = {A1}).\<close>
-            define ps_bc where "ps_bc A = (if A = A1 then hA (1/2) else undefined)" for A
-            have hps_bc: "\<forall>A\<in>{A1}. ps_bc A \<in> A \<and> ps_bc A \<notin> top1_arc_endpoints_on A (subspace_topology X TX A)"
-            proof (intro ballI conjI)
-              fix A assume "A \<in> {A1}" hence "A = A1" by (by100 blast)
-              have h12_I: "(1/2::real) \<in> top1_unit_interval"
-                unfolding top1_unit_interval_def by (by100 simp)
-              have hbij: "bij_betw hA top1_unit_interval A1"
-                using hhA unfolding top1_homeomorphism_on_def by (by100 blast)
-              have "hA (1/2) \<in> A1" using hbij h12_I unfolding bij_betw_def by (by100 blast)
-              show "ps_bc A \<in> A" using \<open>A = A1\<close> \<open>hA (1/2) \<in> A1\<close> unfolding ps_bc_def by (by100 simp)
-              have hep: "top1_arc_endpoints_on A1 (subspace_topology X TX A1) = {hA 0, hA 1}"
-              proof -
-                have hX_haus_loc: "is_hausdorff_on X TX"
-                  using assms(1) unfolding top1_is_graph_on_def by (by100 blast)
-                show ?thesis by (rule arc_endpoints_are_boundary[OF hX_strict hX_haus_loc hA1_sub hA1_arc hhA])
-              qed
-              have hinj: "inj_on hA top1_unit_interval"
-                using hbij unfolding bij_betw_def by (by100 blast)
-              have h0_I: "(0::real) \<in> top1_unit_interval" unfolding top1_unit_interval_def by (by100 simp)
-              have h1_I: "(1::real) \<in> top1_unit_interval" unfolding top1_unit_interval_def by (by100 simp)
-              have "hA (1/2) \<noteq> hA 0"
-              proof assume "hA (1/2) = hA 0"
-                hence "(1/2::real) = 0" using hinj h12_I h0_I unfolding inj_on_def by (by100 blast)
-                thus False by (by100 simp)
-              qed
-              moreover have "hA (1/2) \<noteq> hA 1"
-              proof assume "hA (1/2) = hA 1"
-                hence "(1/2::real) = 1" using hinj h12_I h1_I unfolding inj_on_def by (by100 blast)
-                thus False by (by100 simp)
-              qed
-              ultimately have "hA (1/2) \<notin> {hA 0, hA 1}" by (by100 blast)
-              hence "hA (1/2) \<notin> top1_arc_endpoints_on A1 (subspace_topology X TX A1)"
-                using hep by (by100 simp)
-              thus "ps_bc A \<notin> top1_arc_endpoints_on A (subspace_topology X TX A)"
-                using \<open>A = A1\<close> unfolding ps_bc_def by (by100 simp)
-            qed
-            have hS_bc: "finite ({A1} :: 'a set set)" by (by100 simp)
-            have "{A1} \<subseteq> ?NT" using hA1 by (by100 blast)
-            from hdr_helper[OF hS_bc \<open>{A1} \<subseteq> ?NT\<close> hps_bc]
-            have hV_dr: "top1_deformation_retract_of_on (X - ps_bc ` {A1})
-                (subspace_topology X TX (X - ps_bc ` {A1})) (T \<union> \<Union>(?NT - {A1}))" .
-            have hNT_minus: "?NT - {A1} = {}" using hNT_singleton by (by100 blast)
-            have "T \<union> \<Union>(?NT - {A1}) = T"
-              using hNT_minus by (by100 blast)
-            have "ps_bc ` {A1} = {hA (1/2)}" unfolding ps_bc_def by (by100 simp)
-            hence "X - ps_bc ` {A1} = ?V" by (by100 simp)
-            hence hV_dr_T: "top1_deformation_retract_of_on ?V (subspace_topology X TX ?V) T"
-              using hV_dr \<open>T \<union> \<Union>(?NT - {A1}) = T\<close> by (by100 simp)
-            \<comment> \<open>T is SC (tree). V DR onto T. So V is SC.\<close>
+            \<comment> \<open>Use shared hV\\_dr\\_T\\_early. T is SC. V DR onto T \\<Rightarrow> V SC.\<close>
             have hT_sc: "top1_simply_connected_on T (subspace_topology X TX T)"
               using hT_tree unfolding top1_is_tree_on_def by (by100 blast)
-            \<comment> \<open>V is path-connected (DR onto T which is PC).\<close>
-            have hT_pc_bc: "top1_path_connected_on T (subspace_topology X TX T)"
-              using hT_sc top1_simply_connected_on_path_connected by (by100 blast)
             have hV_top_bc: "is_topology_on ?V (subspace_topology X TX ?V)"
             proof -
               have "?V \<subseteq> X" by (by100 blast)
@@ -12006,27 +12027,27 @@ proof -
             have hT_pc_V: "top1_path_connected_on T (subspace_topology ?V (subspace_topology X TX ?V) T)"
             proof -
               have "T \<subseteq> ?V"
-                using conjunct1[OF hV_dr_T[unfolded top1_deformation_retract_of_on_def]]
+                using conjunct1[OF hV_dr_T_early[unfolded top1_deformation_retract_of_on_def]]
                 by (by100 blast)
               have "subspace_topology ?V (subspace_topology X TX ?V) T = subspace_topology X TX T"
                 by (rule subspace_topology_trans[OF \<open>T \<subseteq> ?V\<close>])
-              thus ?thesis using hT_pc_bc by (by100 simp)
+              thus ?thesis using hT_pc_early by (by100 simp)
             qed
             have hV_pc_bc: "top1_path_connected_on ?V (subspace_topology X TX ?V)"
-              by (rule deformation_retract_path_connected[OF hV_dr_T hV_top_bc hT_pc_V])
+              by (rule deformation_retract_path_connected[OF hV_dr_T_early hV_top_bc hT_pc_V])
             \<comment> \<open>All loops in V are null-homotopic (\\<pi>\\_1(V) \\<cong> \\<pi>\\_1(T) = trivial).\<close>
             \<comment> \<open>Use Theorem\\_58\\_3: \\<pi>\\_1(T) \\<cong> \\<pi>\\_1(V). T SC \\<Rightarrow> \\<pi>\\_1(T) trivial.
                Hence \\<pi>\\_1(V) trivial at x0. V PC + trivial \\<pi>\\_1 at x0 \\<Rightarrow> V SC.\<close>
             have hx0_V_bc: "x0 \<in> ?V"
             proof -
               have "x0 \<in> T" using hx0_T .
-              have "T \<subseteq> ?V" using conjunct1[OF hV_dr_T[unfolded top1_deformation_retract_of_on_def]]
+              have "T \<subseteq> ?V" using conjunct1[OF hV_dr_T_early[unfolded top1_deformation_retract_of_on_def]]
                 by (by100 blast)
               thus ?thesis using \<open>x0 \<in> T\<close> by (by100 blast)
             qed
             have hx0_T_bc: "x0 \<in> T" using hx0_T .
             \<comment> \<open>Theorem\\_58\\_3: \\<pi>\\_1(T, sub(V,...,T), x0) \\<cong> \\<pi>\\_1(V, sub(X,TX,V), x0).\<close>
-            from Theorem_58_3[OF hV_dr_T hV_top_bc hx0_T_bc]
+            from Theorem_58_3[OF hV_dr_T_early hV_top_bc hx0_T_bc]
             have hiso_TV: "top1_groups_isomorphic_on
                 (top1_fundamental_group_carrier T (subspace_topology ?V (subspace_topology X TX ?V) T) x0)
                 (top1_fundamental_group_mul T (subspace_topology ?V (subspace_topology X TX ?V) T) x0)
@@ -12037,7 +12058,7 @@ proof -
                 (subspace_topology ?V (subspace_topology X TX ?V) T) x0 =
                 {top1_fundamental_group_id T (subspace_topology ?V (subspace_topology X TX ?V) T) x0}"
             proof -
-              have "T \<subseteq> ?V" using conjunct1[OF hV_dr_T[unfolded top1_deformation_retract_of_on_def]]
+              have "T \<subseteq> ?V" using conjunct1[OF hV_dr_T_early[unfolded top1_deformation_retract_of_on_def]]
                 by (by100 blast)
               have hTT: "subspace_topology ?V (subspace_topology X TX ?V) T = subspace_topology X TX T"
                 by (rule subspace_topology_trans[OF \<open>T \<subseteq> ?V\<close>])
@@ -12088,7 +12109,7 @@ proof -
                     (top1_fundamental_group_id T ?TT_V x0)
                     (top1_fundamental_group_invg T ?TT_V x0)"
                 proof -
-                  have "T \<subseteq> ?V" using conjunct1[OF hV_dr_T[unfolded top1_deformation_retract_of_on_def]]
+                  have "T \<subseteq> ?V" using conjunct1[OF hV_dr_T_early[unfolded top1_deformation_retract_of_on_def]]
                     by (by100 blast)
                   have hTT_eq: "?TT_V = subspace_topology X TX T"
                     by (rule subspace_topology_trans[OF \<open>T \<subseteq> ?V\<close>])
@@ -12165,8 +12186,12 @@ proof -
               have hTX_t: "is_topology_on X TX"
                 using hX_strict unfolding is_topology_on_strict_def by (by100 blast)
               have "finite ({A1} :: 'a set set)" by (by100 simp)
+              have hA1_arc_pc: "\<forall>A\<in>{A1}. top1_is_arc_on A (subspace_topology X TX A) \<and> A \<subseteq> X"
+                using hA1_arc hA1_sub by (by100 blast)
+              have hA1_endpt: "\<forall>A\<in>{A1}. \<exists>e. e \<in> T \<and> e \<in> A"
+                sorry \<comment> \<open>Arc endpoint in T.\<close>
               from tree_union_arcs_path_connected[OF hTX_t hT_tree hT_sub
-                  \<open>finite {A1}\<close> \<open>\<forall>A\<in>{A1}. _ \<and> _\<close> \<open>\<forall>A\<in>{A1}. \<exists>e. _\<close> hx0_T]
+                  \<open>finite {A1}\<close> hA1_arc_pc hA1_endpt hx0_T]
               show ?thesis by (by100 simp)
             qed
             moreover have "T \<union> A1 = X" using hX_eq by (by100 blast)
