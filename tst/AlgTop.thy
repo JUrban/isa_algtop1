@@ -11977,8 +11977,33 @@ proof -
         have hU_pc: "top1_path_connected_on ?U (subspace_topology X TX ?U)"
         proof -
           have htarget_U_pc: "top1_path_connected_on ?target_U (subspace_topology ?U ?TU ?target_U)"
-            sorry \<comment> \<open>T path-connected (tree) + A1 connected via endpoints to T.
-               May need subspace\\_topology\\_trans.\<close>
+          proof -
+            \<comment> \<open>Rewrite topology: subspace of U restricted to target\\_U = subspace of X.\<close>
+            have "subspace_topology ?U ?TU ?target_U = subspace_topology X TX ?target_U"
+              by (rule subspace_topology_trans[OF htU_sub_U])
+            \<comment> \<open>T is path-connected (tree \\<Rightarrow> simply connected \\<Rightarrow> PC).\<close>
+            have hT_pc: "top1_path_connected_on T (subspace_topology X TX T)"
+              using tree_simply_connected[OF hT_tree] top1_simply_connected_on_path_connected by (by100 blast)
+            \<comment> \<open>A1 is path-connected (arc \\<cong> [0,1] which is convex \\<Rightarrow> PC).\<close>
+            have hA1_pc: "top1_path_connected_on A1 (subspace_topology X TX A1)"
+              sorry \<comment> \<open>Arc is PC: homeo to [0,1], convex\\_real\\_subspace\\_path\\_connected +
+                 homeomorphism\\_preserves\\_path\\_connected.\<close>
+            \<comment> \<open>Endpoints of A1 are in T, so there's a common point.\<close>
+            have "\<exists>p. p \<in> T \<and> p \<in> A1"
+              sorry \<comment> \<open>Arc endpoint is in T (hNT\\_endpoints).\<close>
+            then obtain p0 where hp0_T: "p0 \<in> T" and hp0_A1: "p0 \<in> A1" by (by100 blast)
+            \<comment> \<open>Apply finite union with common point.\<close>
+            have hA1_sub_X: "A1 \<subseteq> X" using h\<A> hA1 by (by100 blast)
+            have htU_top: "is_topology_on ?target_U (subspace_topology X TX ?target_U)"
+            proof -
+              have "?target_U \<subseteq> X" using hT_sub hA1_sub_X by (by100 blast)
+              thus ?thesis using subspace_topology_is_topology_on[OF hTX_top] by (by100 blast)
+            qed
+            have "top1_path_connected_on ?target_U (subspace_topology X TX ?target_U)"
+              sorry \<comment> \<open>path\\_connected\\_finite\\_union\\_common\\_point with F = {T, A1}.\<close>
+            thus ?thesis using \<open>subspace_topology ?U ?TU ?target_U = subspace_topology X TX ?target_U\<close>
+              by (by100 simp)
+          qed
           show ?thesis by (rule hdr_pc[OF hU_dr hU_top htarget_U_pc])
         qed
         have hV_pc: "top1_path_connected_on ?V (subspace_topology X TX ?V)"
