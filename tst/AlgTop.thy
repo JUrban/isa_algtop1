@@ -11828,13 +11828,15 @@ proof -
           \<and> top1_groups_isomorphic_on G mul
               (top1_fundamental_group_carrier ?U ?TU x0)
               (top1_fundamental_group_mul ?U ?TU x0)"
-          sorry \<comment> \<open>htU\\_free + hpi1\\_U\\_iso (compose G \\<cong> \\<pi>\\_1(tU) \\<cong> \\<pi>\\_1(U)).\<close>
+          sorry \<comment> \<open>htU\\_free + groups\\_isomorphic\\_trans\\_fwd[OF \\<dots> hpi1\\_U\\_iso].
+             Large existential extraction needs careful tactic.\<close>
         have hV_free: "\<exists>(G::int set) mul e invg (\<iota>::nat \<Rightarrow> int) S'.
             top1_is_free_group_full_on G mul e invg \<iota> S'
           \<and> top1_groups_isomorphic_on G mul
               (top1_fundamental_group_carrier ?V ?TV x0)
               (top1_fundamental_group_mul ?V ?TV x0)"
-          sorry \<comment> \<open>htV\\_free + hpi1\\_V\\_iso (compose G \\<cong> \\<pi>\\_1(tV) \\<cong> \\<pi>\\_1(V)).\<close>
+          sorry \<comment> \<open>htV\\_free + groups\\_isomorphic\\_trans\\_fwd[OF \\<dots> hpi1\\_V\\_iso].
+             Same large existential extraction.\<close>
         \<comment> \<open>U and V are path-connected.\<close>
         have hU_pc: "top1_path_connected_on ?U (subspace_topology X TX ?U)"
         proof -
