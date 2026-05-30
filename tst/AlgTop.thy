@@ -11980,15 +11980,107 @@ proof -
             have hV_pc_bc: "top1_path_connected_on ?V (subspace_topology X TX ?V)"
               by (rule deformation_retract_path_connected[OF hV_dr_T hV_top_bc hT_pc_V])
             \<comment> \<open>All loops in V are null-homotopic (\\<pi>\\_1(V) \\<cong> \\<pi>\\_1(T) = trivial).\<close>
-            show ?thesis
-              unfolding top1_simply_connected_on_def
-            proof (intro conjI)
-              show "top1_path_connected_on ?V (subspace_topology X TX ?V)" by (rule hV_pc_bc)
-            next
-              show "\<forall>x0\<in>?V. \<forall>f. top1_is_loop_on ?V (subspace_topology X TX ?V) x0 f \<longrightarrow>
-                  top1_path_homotopic_on ?V (subspace_topology X TX ?V) x0 x0 f (top1_constant_path x0)"
-                sorry \<comment> \<open>\\<pi>\\_1(V) \\<cong> \\<pi>\\_1(T) = trivial. Via Theorem\\_58\\_3.\<close>
+            \<comment> \<open>Use Theorem\\_58\\_3: \\<pi>\\_1(T) \\<cong> \\<pi>\\_1(V). T SC \\<Rightarrow> \\<pi>\\_1(T) trivial.
+               Hence \\<pi>\\_1(V) trivial at x0. V PC + trivial \\<pi>\\_1 at x0 \\<Rightarrow> V SC.\<close>
+            have hx0_V_bc: "x0 \<in> ?V"
+            proof -
+              have "x0 \<in> T" using hx0_T .
+              have "T \<subseteq> ?V" using conjunct1[OF hV_dr_T[unfolded top1_deformation_retract_of_on_def]]
+                by (by100 blast)
+              thus ?thesis using \<open>x0 \<in> T\<close> by (by100 blast)
             qed
+            have hx0_T_bc: "x0 \<in> T" using hx0_T .
+            \<comment> \<open>Theorem\\_58\\_3: \\<pi>\\_1(T, sub(V,...,T), x0) \\<cong> \\<pi>\\_1(V, sub(X,TX,V), x0).\<close>
+            from Theorem_58_3[OF hV_dr_T hV_top_bc hx0_T_bc]
+            have hiso_TV: "top1_groups_isomorphic_on
+                (top1_fundamental_group_carrier T (subspace_topology ?V (subspace_topology X TX ?V) T) x0)
+                (top1_fundamental_group_mul T (subspace_topology ?V (subspace_topology X TX ?V) T) x0)
+                (top1_fundamental_group_carrier ?V (subspace_topology X TX ?V) x0)
+                (top1_fundamental_group_mul ?V (subspace_topology X TX ?V) x0)" .
+            \<comment> \<open>T SC at x0 \\<Rightarrow> \\<pi>\\_1(T, sub(V,...,T), x0) = {id}.\<close>
+            have hT_triv: "top1_fundamental_group_carrier T
+                (subspace_topology ?V (subspace_topology X TX ?V) T) x0 =
+                {top1_fundamental_group_id T (subspace_topology ?V (subspace_topology X TX ?V) T) x0}"
+            proof -
+              have "T \<subseteq> ?V" using conjunct1[OF hV_dr_T[unfolded top1_deformation_retract_of_on_def]]
+                by (by100 blast)
+              have hTT: "subspace_topology ?V (subspace_topology X TX ?V) T = subspace_topology X TX T"
+                by (rule subspace_topology_trans[OF \<open>T \<subseteq> ?V\<close>])
+              have "top1_simply_connected_on T (subspace_topology ?V (subspace_topology X TX ?V) T)"
+                using hT_sc hTT by (by100 simp)
+              from simply_connected_trivial_carrier[OF this hx0_T_bc]
+              show ?thesis .
+            qed
+            \<comment> \<open>iso maps trivial to trivial \\<Rightarrow> \\<pi>\\_1(V, x0) = {id\\_V}.\<close>
+            have hV_triv: "top1_fundamental_group_carrier ?V (subspace_topology X TX ?V) x0 =
+                {top1_fundamental_group_id ?V (subspace_topology X TX ?V) x0}"
+            proof -
+              \<comment> \<open>Extract iso function from hiso\\_TV.\<close>
+              from hiso_TV obtain \<phi> where h\<phi>: "top1_group_iso_on
+                  (top1_fundamental_group_carrier T (subspace_topology ?V (subspace_topology X TX ?V) T) x0)
+                  (top1_fundamental_group_mul T (subspace_topology ?V (subspace_topology X TX ?V) T) x0)
+                  (top1_fundamental_group_carrier ?V (subspace_topology X TX ?V) x0)
+                  (top1_fundamental_group_mul ?V (subspace_topology X TX ?V) x0) \<phi>"
+                unfolding top1_groups_isomorphic_on_def by (by100 blast)
+              \<comment> \<open>\\<phi> is a bijection from {id\\_T} to \\<pi>\\_1(V).\<close>
+              have hbij: "bij_betw \<phi>
+                  (top1_fundamental_group_carrier T (subspace_topology ?V (subspace_topology X TX ?V) T) x0)
+                  (top1_fundamental_group_carrier ?V (subspace_topology X TX ?V) x0)"
+                using h\<phi> unfolding top1_group_iso_on_def by (by100 blast)
+              have "top1_fundamental_group_carrier ?V (subspace_topology X TX ?V) x0 =
+                  \<phi> ` (top1_fundamental_group_carrier T (subspace_topology ?V (subspace_topology X TX ?V) T) x0)"
+                using hbij unfolding bij_betw_def by (by100 blast)
+              hence "top1_fundamental_group_carrier ?V (subspace_topology X TX ?V) x0 =
+                  \<phi> ` {top1_fundamental_group_id T (subspace_topology ?V (subspace_topology X TX ?V) T) x0}"
+                using hT_triv by (by100 simp)
+              hence hV_singleton: "top1_fundamental_group_carrier ?V (subspace_topology X TX ?V) x0 =
+                  {\<phi> (top1_fundamental_group_id T (subspace_topology ?V (subspace_topology X TX ?V) T) x0)}"
+                by (by100 simp)
+              \<comment> \<open>\\<phi>(id\\_T) = id\\_V (group homomorphisms map identity to identity).\<close>
+              have "\<phi> (top1_fundamental_group_id T (subspace_topology ?V (subspace_topology X TX ?V) T) x0) =
+                  top1_fundamental_group_id ?V (subspace_topology X TX ?V) x0"
+              proof -
+                let ?TT_V = "subspace_topology ?V (subspace_topology X TX ?V) T"
+                have h\<phi>_hom: "top1_group_hom_on
+                    (top1_fundamental_group_carrier T ?TT_V x0)
+                    (top1_fundamental_group_mul T ?TT_V x0)
+                    (top1_fundamental_group_carrier ?V (subspace_topology X TX ?V) x0)
+                    (top1_fundamental_group_mul ?V (subspace_topology X TX ?V) x0) \<phi>"
+                  using h\<phi> unfolding top1_group_iso_on_def by (by100 blast)
+                have hgrp_T: "top1_is_group_on
+                    (top1_fundamental_group_carrier T ?TT_V x0)
+                    (top1_fundamental_group_mul T ?TT_V x0)
+                    (top1_fundamental_group_id T ?TT_V x0)
+                    (top1_fundamental_group_invg T ?TT_V x0)"
+                proof -
+                  have "T \<subseteq> ?V" using conjunct1[OF hV_dr_T[unfolded top1_deformation_retract_of_on_def]]
+                    by (by100 blast)
+                  have hTT_eq: "?TT_V = subspace_topology X TX T"
+                    by (rule subspace_topology_trans[OF \<open>T \<subseteq> ?V\<close>])
+                  have hTX_bc2: "is_topology_on X TX"
+                    using hX_strict unfolding is_topology_on_strict_def by (by100 blast)
+                  have "is_topology_on T ?TT_V"
+                    using hTT_eq subspace_topology_is_topology_on[OF hTX_bc2 hT_sub]
+                    by (by100 simp)
+                  from top1_fundamental_group_is_group[OF this hx0_T_bc] show ?thesis .
+                qed
+                have hgrp_V: "top1_is_group_on
+                    (top1_fundamental_group_carrier ?V (subspace_topology X TX ?V) x0)
+                    (top1_fundamental_group_mul ?V (subspace_topology X TX ?V) x0)
+                    (top1_fundamental_group_id ?V (subspace_topology X TX ?V) x0)
+                    (top1_fundamental_group_invg ?V (subspace_topology X TX ?V) x0)"
+                  by (rule top1_fundamental_group_is_group[OF hV_top_bc hx0_V_bc])
+                from hom_preserves_id[OF hgrp_T hgrp_V h\<phi>_hom]
+                show ?thesis .
+              qed
+              thus ?thesis using hV_singleton by (by100 simp)
+            qed
+            \<comment> \<open>\\<pi>\\_1(V) trivial + V PC \\<Rightarrow> V SC.
+               Uses top1\\_simply\\_connected\\_from\\_one\\_point + hV\\_triv.\<close>
+            show ?thesis
+              sorry \<comment> \<open>hV\\_triv: \\<pi>\\_1(V,x0) = {id}. V PC. x0 \\<in> V.
+                 simply\\_connected\\_from\\_one\\_point: each loop's class is in {id},
+                 hence f \\<sim> const. Needs loop\\_class\\_in\\_carrier + id\\_class\\_is\\_const.\<close>
           qed
           \<comment> \<open>Apply Lemma 84.6.\<close>
           from halpha_loc hbeta_loc obtain \<alpha> \<beta> where
