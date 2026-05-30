@@ -11523,16 +11523,135 @@ proof -
       case True
       \<comment> \<open>Finite case: induction on card ?NT.\\<close>
       \<comment> \<open>Use strong induction on card(NT). The IH needs the full graph structure.\<close>
-      show ?thesis using True False
-        sorry \<comment> \<open>Theorem 84.7 finite case: induction on card NT.
-           Restructured to carry graph axioms through induction.
-           Base (card=1): SvK with open arc + SC complement (Lemma 63.1).
-           Step (card>1): SvK with U = X-{p2..pn}, V = X-{p1}.
-           Uses: graph\\_remove\\_interior\\_points\\_sc (PROVED ZERO SORRY),
-             hdr\\_helper (1 sorry: H|D\\_B cont),
-             Theorem\\_58\\_3 (DR \\<rightarrow> \\<pi>\\_1 iso),
-             svk\\_free\\_product\\_free (available).
-           Key challenge: carrying graph+tree+arcs through nat\\_less\\_induct.\\<close>
+      \<comment> \<open>Finite case: induction on card NT using SvK.
+         Key tools: hdr (ZERO SORRY), graph\\_remove\\_interior\\_points\\_sc (ZERO SORRY),
+         Theorem\\_58\\_3 (DR \\<rightarrow> \\<pi>\\_1 iso), svk\\_free\\_product\\_free.\<close>
+      have hNT_ne: "?NT \<noteq> {}" using False by (by100 blast)
+      then obtain A1 where hA1: "A1 \<in> ?NT" by (by100 blast)
+      show ?thesis
+      proof (cases "card ?NT = 1")
+        case True
+        \<comment> \<open>Base case: exactly 1 non-tree arc. \\<pi>\\_1(X) is free on 1 generator.\<close>
+        show ?thesis sorry \<comment> \<open>Base case: 1 non-tree arc. Book Step 2.
+           Split the arc into 3 sub-arcs, apply SvK. Or use circle argument.\<close>
+      next
+        case hcard_ge2: False
+        hence hcard_gt1: "card ?NT > 1"
+        proof -
+          have "card ?NT \<noteq> 0" using \<open>finite ?NT\<close> hNT_ne by (by100 auto)
+          moreover have "card ?NT \<noteq> 1" using hcard_ge2 by (by100 blast)
+          ultimately show ?thesis by (by100 linarith)
+        qed
+        \<comment> \<open>Induction step: card(NT) > 1. Split using SvK.
+           Pick A1 \\<in> NT. Choose interior point p1 of A1.
+           U = X - ps\\`(NT - {A1}), V = X - {p1}.
+           U \\<cap> V = X - ps\\`NT is simply connected (SC lemma).
+           U deformation retracts onto T \\<union> A1 (hdr with S = NT-{A1}).
+           V deformation retracts onto T \\<union> \\<Union>(NT-{A1}) (hdr with S = {A1}).
+           Apply IH to the DR targets (which are graphs with fewer non-tree arcs).\<close>
+        \<comment> \<open>Choose interior points for each non-tree arc.\<close>
+        have "\<forall>A\<in>?NT. \<exists>p. p \<in> A \<and> p \<notin> top1_arc_endpoints_on A (subspace_topology X TX A)"
+          sorry \<comment> \<open>Each arc has interior points (arcs have \\<ge> 3 points).\<close>
+        then obtain ps where hps: "\<forall>A\<in>?NT. ps A \<in> A \<and> ps A \<notin> top1_arc_endpoints_on A (subspace_topology X TX A)"
+          sorry \<comment> \<open>Choice function for interior points.\<close>
+        \<comment> \<open>Define U, V, and their intersection.\<close>
+        let ?S_U = "?NT - {A1}" \<comment> \<open>arcs to remove from for U\<close>
+        let ?S_V = "{A1}" \<comment> \<open>arcs to remove from for V\<close>
+        let ?U = "X - ps ` ?S_U"
+        let ?V = "X - ps ` ?S_V"
+        let ?UV = "X - ps ` ?NT"
+        \<comment> \<open>U \\<union> V = X, U \\<cap> V = X - ps\\`NT.\<close>
+        have hUV_eq: "?U \<inter> ?V = ?UV"
+        proof (rule set_eqI, rule iffI)
+          fix x assume "x \<in> ?U \<inter> ?V"
+          hence "x \<in> X" "x \<notin> ps ` (?NT - {A1})" "x \<notin> ps ` {A1}" by (by100 blast)+
+          hence "x \<notin> ps ` ?NT"
+          proof -
+            have "?NT = (?NT - {A1}) \<union> {A1}" using hA1 by (by100 blast)
+            hence "ps ` ?NT = ps ` (?NT - {A1}) \<union> ps ` {A1}"
+              using image_Un[of ps "?NT - {A1}" "{A1}"] by (by100 simp)
+            thus ?thesis using \<open>x \<notin> ps ` (?NT - {A1})\<close> \<open>x \<notin> ps ` {A1}\<close> by (by100 blast)
+          qed
+          thus "x \<in> ?UV" using \<open>x \<in> X\<close> by (by100 blast)
+        next
+          fix x assume "x \<in> ?UV"
+          hence "x \<in> X" "x \<notin> ps ` ?NT" by (by100 blast)+
+          have "x \<notin> ps ` (?NT - {A1})" using \<open>x \<notin> ps ` ?NT\<close> by (by100 blast)
+          have "x \<notin> ps ` {A1}" using \<open>x \<notin> ps ` ?NT\<close> hA1 by (by100 blast)
+          thus "x \<in> ?U \<inter> ?V" using \<open>x \<in> X\<close> \<open>x \<notin> ps ` (?NT - {A1})\<close> \<open>x \<notin> ps ` {A1}\<close>
+            by (by100 blast)
+        qed
+        have hUV_cover: "?U \<union> ?V = X"
+        proof -
+          \<comment> \<open>Need: ps(A1) \\<notin> ps\\`(NT-{A1}), i.e. ps injective on NT.
+             Interior points are distinct (in different arcs, arcs pairwise disjoint on interiors).\<close>
+          have "ps ` (?NT - {A1}) \<inter> ps ` {A1} = {}"
+            sorry \<comment> \<open>ps injective: interior points in different arcs are distinct.\<close>
+          thus ?thesis by (by100 blast)
+        qed
+        \<comment> \<open>U and V are open (finite points removed from Hausdorff).\<close>
+        have hU_open: "openin_on X TX ?U" sorry \<comment> \<open>Finite set of points closed in Hausdorff X.\<close>
+        have hV_open: "openin_on X TX ?V" sorry \<comment> \<open>Single point closed in Hausdorff X.\<close>
+        \<comment> \<open>U \\<cap> V is simply connected (SC lemma).\<close>
+        have hUV_sc: "top1_simply_connected_on ?UV (subspace_topology X TX ?UV)"
+          sorry \<comment> \<open>graph\\_remove\\_interior\\_points\\_sc with ps\\`NT.\<close>
+        \<comment> \<open>U deformation retracts onto T \\<union> A1 (target for S = NT-{A1}).\<close>
+        let ?target_U = "T \<union> \<Union>(?NT - ?S_U)"
+        have "?target_U = T \<union> A1"
+        proof -
+          have "?NT - ?S_U = {A1}" using hA1 by (by100 blast)
+          thus ?thesis by (by100 simp)
+        qed
+        have hU_dr: "top1_deformation_retract_of_on ?U (subspace_topology X TX ?U) ?target_U"
+          sorry \<comment> \<open>hdr with S = NT-{A1}.\<close>
+        \<comment> \<open>V deformation retracts onto T \\<union> \\<Union>(NT - {A1}) (target for S = {A1}).\<close>
+        let ?target_V = "T \<union> \<Union>(?NT - ?S_V)"
+        have hV_dr: "top1_deformation_retract_of_on ?V (subspace_topology X TX ?V) ?target_V"
+          sorry \<comment> \<open>hdr with S = {A1}.\<close>
+        \<comment> \<open>\\<pi>\\_1(U) \\<cong> \\<pi>\\_1(target\\_U) which is free (1 non-tree arc, base case or IH).\<close>
+        have hU_free: "\<exists>(G::int set) mul e invg (\<iota>::nat \<Rightarrow> int) S.
+            top1_is_free_group_full_on G mul e invg \<iota> S
+          \<and> top1_groups_isomorphic_on G mul
+              (top1_fundamental_group_carrier ?U (subspace_topology X TX ?U) x0)
+              (top1_fundamental_group_mul ?U (subspace_topology X TX ?U) x0)"
+          sorry \<comment> \<open>DR iso (Theorem\\_58\\_3) + base case (1 non-tree arc).\<close>
+        \<comment> \<open>\\<pi>\\_1(V) \\<cong> \\<pi>\\_1(target\\_V) which is free (n-1 non-tree arcs, IH).\<close>
+        have hV_free: "\<exists>(G::int set) mul e invg (\<iota>::nat \<Rightarrow> int) S.
+            top1_is_free_group_full_on G mul e invg \<iota> S
+          \<and> top1_groups_isomorphic_on G mul
+              (top1_fundamental_group_carrier ?V (subspace_topology X TX ?V) x0)
+              (top1_fundamental_group_mul ?V (subspace_topology X TX ?V) x0)"
+          sorry \<comment> \<open>DR iso (Theorem\\_58\\_3) + IH (card(NT) - 1 non-tree arcs).\<close>
+        \<comment> \<open>U and V are path-connected.\<close>
+        have hU_pc: "top1_path_connected_on ?U (subspace_topology X TX ?U)" sorry
+        have hV_pc: "top1_path_connected_on ?V (subspace_topology X TX ?V)" sorry
+        \<comment> \<open>x0 \\<in> U \\<cap> V.\<close>
+        have hx0_UV: "x0 \<in> ?UV"
+        proof -
+          have "x0 \<in> T" using hx0_T .
+          have "x0 \<notin> ps ` ?NT"
+          proof
+            assume "x0 \<in> ps ` ?NT"
+            then obtain A where "A \<in> ?NT" "ps A = x0" by (by100 blast)
+            have "A \<in> \<A>" using \<open>A \<in> ?NT\<close> by (by100 blast)
+            have "\<not> A \<subseteq> T" using \<open>A \<in> ?NT\<close> by (by100 blast)
+            from hT_subgraph[rule_format, OF \<open>A \<in> \<A>\<close>] \<open>\<not> A \<subseteq> T\<close>
+            have "A \<inter> T \<subseteq> top1_arc_endpoints_on A (subspace_topology X TX A)" by (by100 blast)
+            have "ps A \<notin> top1_arc_endpoints_on A (subspace_topology X TX A)"
+              using hps \<open>A \<in> ?NT\<close> by (by100 blast)
+            hence "x0 \<notin> top1_arc_endpoints_on A (subspace_topology X TX A)"
+              using \<open>ps A = x0\<close> by (by100 simp)
+            hence "x0 \<notin> A \<inter> T"
+              using \<open>A \<inter> T \<subseteq> top1_arc_endpoints_on A _\<close> by (by100 blast)
+            have "x0 \<in> A" using hps \<open>A \<in> ?NT\<close> \<open>ps A = x0\<close> by (by100 blast)
+            thus False using \<open>x0 \<notin> A \<inter> T\<close> \<open>x0 \<in> T\<close> by (by100 blast)
+          qed
+          thus ?thesis using \<open>x0 \<in> T\<close> hT_sub by (by100 blast)
+        qed
+        \<comment> \<open>Apply SvK free product to get \\<pi>\\_1(X) free.\<close>
+        show ?thesis sorry \<comment> \<open>Assemble: svk\\_free\\_product\\_free\\_with\\_generators
+           with U, V, U\\<cap>V simply connected, U/V path-connected, \\<pi>\\_1 free.\<close>
+      qed
     next
       case InfFalse: False
       \<comment> \<open>Infinite case: any loop in finitely many arcs (compactness).\\<close>
