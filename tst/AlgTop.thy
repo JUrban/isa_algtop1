@@ -9420,7 +9420,111 @@ lemma tree_union_arcs_path_connected:
       and hS_endpts: "\<forall>A\<in>S. \<exists>e. e \<in> T \<and> e \<in> A"
       and hx0: "x0 \<in> T"
   shows "top1_path_connected_on (T \<union> \<Union>S) (subspace_topology X TX (T \<union> \<Union>S))"
-  sorry
+proof -
+  let ?Y = "T \<union> \<Union>S"
+  have hY_sub: "?Y \<subseteq> X" using hT_sub hS_arcs by (by100 blast)
+  have hY_top: "is_topology_on ?Y (subspace_topology X TX ?Y)"
+    by (rule subspace_topology_is_topology_on[OF hTX]) (use hY_sub in blast)
+  have hT_pc: "top1_path_connected_on T (subspace_topology X TX T)"
+    using tree_simply_connected[OF hT_tree] top1_simply_connected_on_path_connected by (by100 blast)
+  \<comment> \<open>Each arc in S is PC.\<close>
+  have hS_pc: "\<forall>A\<in>S. top1_path_connected_on A (subspace_topology X TX A)"
+  proof (intro ballI)
+    fix A assume "A \<in> S"
+    have "top1_is_arc_on A (subspace_topology X TX A)" using hS_arcs \<open>A \<in> S\<close> by (by100 blast)
+    obtain h where hh: "top1_homeomorphism_on top1_unit_interval
+        top1_unit_interval_topology A (subspace_topology X TX A) h"
+      using \<open>top1_is_arc_on A _\<close> unfolding top1_is_arc_on_def by (by100 blast)
+    have hI_pc: "top1_path_connected_on top1_unit_interval top1_unit_interval_topology"
+    proof -
+      have "top1_unit_interval \<noteq> {}" unfolding top1_unit_interval_def by (by100 auto)
+      have "\<And>x y t. x \<in> top1_unit_interval \<Longrightarrow> y \<in> top1_unit_interval \<Longrightarrow>
+          0 \<le> t \<Longrightarrow> t \<le> 1 \<Longrightarrow> (1 - t) * x + t * y \<in> top1_unit_interval"
+      proof -
+        fix x y t :: real
+        assume "x \<in> top1_unit_interval" "y \<in> top1_unit_interval" "0 \<le> t" "t \<le> 1"
+        have "0 \<le> x" "x \<le> 1" "0 \<le> y" "y \<le> 1"
+          using \<open>x \<in> _\<close> \<open>y \<in> _\<close> unfolding top1_unit_interval_def by (by100 simp)+
+        have "1 - t \<ge> 0" using \<open>t \<le> 1\<close> by (by100 linarith)
+        have "(1 - t) * x \<ge> 0" using \<open>1 - t \<ge> 0\<close> \<open>0 \<le> x\<close> by (by100 simp)
+        have "t * y \<ge> 0" using \<open>0 \<le> t\<close> \<open>0 \<le> y\<close> by (by100 simp)
+        have "(1 - t) * x \<le> 1 - t" using mult_left_mono[OF \<open>x \<le> 1\<close> \<open>1 - t \<ge> 0\<close>] by (by100 simp)
+        have "t * y \<le> t" using mult_left_mono[OF \<open>y \<le> 1\<close> \<open>0 \<le> t\<close>] by (by100 simp)
+        show "(1 - t) * x + t * y \<in> top1_unit_interval"
+          unfolding top1_unit_interval_def using \<open>(1-t)*x \<ge> 0\<close> \<open>t*y \<ge> 0\<close>
+            \<open>(1-t)*x \<le> 1-t\<close> \<open>t*y \<le> t\<close> by (by100 simp)
+      qed
+      from convex_real_subspace_path_connected[OF \<open>top1_unit_interval \<noteq> {}\<close> this]
+      show ?thesis unfolding top1_unit_interval_topology_def top1_unit_interval_def by (by100 simp)
+    qed
+    show "top1_path_connected_on A (subspace_topology X TX A)"
+      using homeomorphism_preserves_path_connected[OF hh hI_pc] .
+  qed
+  \<comment> \<open>Use F = {T \\<union> A | A \\<in> S} \\<union> {T}. Each contains x0. Each is PC.\<close>
+  let ?F = "insert T ((\<lambda>A. T \<union> A) ` S)"
+  have hF_fin: "finite ?F" using hS_fin by (by100 auto)
+  have hF_cover: "?Y = \<Union>?F" by (by100 blast)
+  have hF_sub: "\<forall>B\<in>?F. B \<subseteq> ?Y" by (by100 blast)
+  have hF_x0: "\<forall>B\<in>?F. x0 \<in> B" using hx0 by (by100 blast)
+  \<comment> \<open>Each B \\<in> F is PC in subspace of Y.\<close>
+  have hF_pc: "\<forall>B\<in>?F. top1_path_connected_on B (subspace_topology ?Y (subspace_topology X TX ?Y) B)"
+  proof -
+    \<comment> \<open>Helper: T \\<union> A is PC for any arc A with endpoint in T.\<close>
+    have hTA_pc: "\<And>A. A \<in> S \<Longrightarrow> top1_path_connected_on (T \<union> A) (subspace_topology X TX (T \<union> A))"
+    proof -
+      fix A assume "A \<in> S"
+      have "A \<subseteq> X" using hS_arcs \<open>A \<in> S\<close> by (by100 blast)
+      have hA_pc: "top1_path_connected_on A (subspace_topology X TX A)"
+        using hS_pc \<open>A \<in> S\<close> by (by100 blast)
+      obtain e0 where "e0 \<in> T" "e0 \<in> A" using hS_endpts \<open>A \<in> S\<close> by (by100 blast)
+      have hTA_top: "is_topology_on (T \<union> A) (subspace_topology X TX (T \<union> A))"
+        by (rule subspace_topology_is_topology_on[OF hTX])
+           (use hT_sub \<open>A \<subseteq> X\<close> in blast)
+      \<comment> \<open>Use path\\_connected\\_finite\\_union\\_common\\_point with {T, A} and e0.\<close>
+      let ?Fj = "{T, A}"
+      have "\<forall>C\<in>?Fj. C \<subseteq> T \<union> A" by (by100 blast)
+      have "\<forall>C\<in>?Fj. e0 \<in> C" using \<open>e0 \<in> T\<close> \<open>e0 \<in> A\<close> by (by100 blast)
+      have hT_pc_TA: "top1_path_connected_on T
+          (subspace_topology (T \<union> A) (subspace_topology X TX (T \<union> A)) T)"
+        using hT_pc subspace_topology_trans[of T "T \<union> A" X TX] by (by100 simp)
+      have hA_pc_TA: "top1_path_connected_on A
+          (subspace_topology (T \<union> A) (subspace_topology X TX (T \<union> A)) A)"
+        using hA_pc subspace_topology_trans[of A "T \<union> A" X TX] by (by100 simp)
+      have "\<forall>C\<in>?Fj. top1_path_connected_on C
+          (subspace_topology (T \<union> A) (subspace_topology X TX (T \<union> A)) C)"
+        using hT_pc_TA hA_pc_TA by (by100 blast)
+      from path_connected_finite_union_common_point[OF hTA_top _
+          \<open>\<forall>C\<in>?Fj. C \<subseteq> T \<union> A\<close>
+          \<open>\<forall>C\<in>?Fj. top1_path_connected_on C _\<close>
+          \<open>\<forall>C\<in>?Fj. e0 \<in> C\<close>]
+      show "top1_path_connected_on (T \<union> A) (subspace_topology X TX (T \<union> A))"
+        by (by100 simp)
+    qed
+    show ?thesis
+    proof (intro ballI)
+      fix B assume "B \<in> ?F"
+      have hB_sub_Y: "B \<subseteq> ?Y" using hF_sub \<open>B \<in> ?F\<close> by (by100 blast)
+      have "subspace_topology ?Y (subspace_topology X TX ?Y) B = subspace_topology X TX B"
+        by (rule subspace_topology_trans[OF hB_sub_Y])
+      have "top1_path_connected_on B (subspace_topology X TX B)"
+      proof -
+        from \<open>B \<in> ?F\<close> consider "B = T" | "\<exists>A\<in>S. B = T \<union> A" by (by100 blast)
+        thus ?thesis
+        proof cases
+          case 1 thus ?thesis using hT_pc by (by100 simp)
+        next
+          case 2
+          then obtain A where "A \<in> S" "B = T \<union> A" by (by100 blast)
+          thus ?thesis using hTA_pc[OF \<open>A \<in> S\<close>] by (by100 simp)
+        qed
+      qed
+      thus "top1_path_connected_on B (subspace_topology ?Y (subspace_topology X TX ?Y) B)"
+        using \<open>subspace_topology ?Y _ B = _\<close> by (by100 simp)
+    qed
+  qed
+  from path_connected_finite_union_common_point[OF hY_top hF_fin hF_sub hF_pc hF_x0 hF_cover]
+  show ?thesis .
+qed
 
 text \<open>Helper: deformation retract onto path-connected subspace implies path-connected.
   If X deformation retracts onto A and A is path-connected, then X is path-connected.
