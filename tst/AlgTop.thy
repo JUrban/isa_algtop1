@@ -11834,7 +11834,43 @@ proof -
               using Theorem_17_8[OF hX_haus \<open>finite {?mid}\<close>] hmid_X by (by100 blast)
             thus ?thesis unfolding openin_on_def closedin_on_def by (by100 blast)
           qed
-          have hcover_loc: "?U \<union> ?V = X" sorry
+          have hcover_loc: "?U \<union> ?V = X"
+          proof -
+            have hinj: "inj_on hA top1_unit_interval"
+              using hhA unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+            have h0_I: "(0::real) \<in> top1_unit_interval" unfolding top1_unit_interval_def by (by100 simp)
+            have h1_I: "(1::real) \<in> top1_unit_interval" unfolding top1_unit_interval_def by (by100 simp)
+            have h12_I: "(1/2::real) \<in> top1_unit_interval" unfolding top1_unit_interval_def by (by100 simp)
+            have "hA (1/2) \<noteq> hA 0"
+            proof
+              assume "hA (1/2) = hA 0"
+              hence "(1/2::real) = 0" using hinj h12_I h0_I unfolding inj_on_def by (by100 blast)
+              thus False by (by100 simp)
+            qed
+            have "hA (1/2) \<noteq> hA 1"
+            proof
+              assume "hA (1/2) = hA 1"
+              hence "(1/2::real) = 1" using hinj h12_I h1_I unfolding inj_on_def by (by100 blast)
+              thus False by (by100 simp)
+            qed
+            show ?thesis
+            proof (rule set_eqI, rule iffI)
+              fix x assume "x \<in> ?U \<union> ?V" thus "x \<in> X" using hX_eq by (by100 blast)
+            next
+              fix x assume "x \<in> X"
+              show "x \<in> ?U \<union> ?V"
+              proof (cases "x = hA (1/2)")
+                case True
+                hence "x \<in> A1" using hhA unfolding top1_homeomorphism_on_def bij_betw_def
+                  top1_unit_interval_def by (by100 auto)
+                moreover have "x \<noteq> hA 0" "x \<noteq> hA 1"
+                  using True \<open>hA (1/2) \<noteq> hA 0\<close> \<open>hA (1/2) \<noteq> hA 1\<close> by (by100 simp)+
+                ultimately show ?thesis by (by100 blast)
+              next
+                case False thus ?thesis using \<open>x \<in> X\<close> by (by100 blast)
+              qed
+            qed
+          qed
           \<comment> \<open>U \\<inter> V has two path components A, B.\<close>
           let ?A_comp = "hA ` {t. 0 < t \<and> t < 1/2}"
           let ?B_comp = "hA ` {t. 1/2 < t \<and> t < 1}"
