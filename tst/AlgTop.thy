@@ -11915,7 +11915,63 @@ proof -
           \<comment> \<open>U \\<inter> V has two path components A, B.\<close>
           let ?A_comp = "hA ` {t. 0 < t \<and> t < 1/2}"
           let ?B_comp = "hA ` {t. 1/2 < t \<and> t < 1}"
-          have hUV_split: "?U \<inter> ?V = ?A_comp \<union> ?B_comp" sorry
+          have hUV_split: "?U \<inter> ?V = ?A_comp \<union> ?B_comp"
+          proof -
+            have hbij: "bij_betw hA top1_unit_interval A1"
+              using hhA unfolding top1_homeomorphism_on_def by (by100 blast)
+            have hinj: "inj_on hA top1_unit_interval"
+              using hbij unfolding bij_betw_def by (by100 blast)
+            have himg: "hA ` top1_unit_interval = A1"
+              using hbij unfolding bij_betw_def by (by100 blast)
+            \<comment> \<open>?U \\<inter> ?V = A1 - {hA 0, hA 1, hA(1/2)} = hA \\` ((0,1) - {1/2})\<close>
+            have "?U \<inter> ?V = A1 - {hA 0, hA 1, hA (1/2)}"
+              using hA1_sub by (by100 blast)
+            moreover have "A1 - {hA 0, hA 1, hA (1/2)} = hA ` ({t. 0 < t \<and> t < 1} - {1/2})"
+            proof (rule set_eqI, rule iffI)
+              fix x assume "x \<in> A1 - {hA 0, hA 1, hA (1/2)}"
+              hence hx_A1: "x \<in> A1" and hx_ne: "x \<noteq> hA 0" "x \<noteq> hA 1" "x \<noteq> hA (1/2)"
+                by (by100 blast)+
+              have "x \<in> hA ` top1_unit_interval" using himg hx_A1 by (by100 simp)
+              then obtain t where ht: "t \<in> top1_unit_interval" "x = hA t" by (by100 blast)
+              have "t \<noteq> 0"
+              proof assume "t = 0" thus False using hx_ne(1) ht(2) by (by100 simp) qed
+              have "t \<noteq> 1"
+              proof assume "t = 1" thus False using hx_ne(2) ht(2) by (by100 simp) qed
+              have "t \<noteq> 1/2"
+              proof assume "t = 1/2" thus False using hx_ne(3) ht(2) by (by100 simp) qed
+              have "0 \<le> t" "t \<le> 1"
+                using ht(1) unfolding top1_unit_interval_def by (by100 simp)+
+              hence "0 < t \<and> t < 1" using \<open>t \<noteq> 0\<close> \<open>t \<noteq> 1\<close> by (by100 linarith)
+              thus "x \<in> hA ` ({t. 0 < t \<and> t < 1} - {1/2})"
+                using ht(2) \<open>t \<noteq> 1/2\<close> by (by100 blast)
+            next
+              fix x assume "x \<in> hA ` ({t. 0 < t \<and> t < 1} - {1/2})"
+              then obtain t where ht: "0 < t" "t < 1" "t \<noteq> 1/2" "x = hA t" by (by100 blast)
+              have "t \<in> top1_unit_interval"
+                unfolding top1_unit_interval_def using ht(1,2) by (by100 simp)
+              hence "x \<in> A1" using himg ht(4) by (by100 blast)
+              have h0_I: "(0::real) \<in> top1_unit_interval"
+                unfolding top1_unit_interval_def by (by100 simp)
+              have h1_I: "(1::real) \<in> top1_unit_interval"
+                unfolding top1_unit_interval_def by (by100 simp)
+              have h12_I: "(1/2::real) \<in> top1_unit_interval"
+                unfolding top1_unit_interval_def by (by100 simp)
+              have "x \<noteq> hA 0" using ht(1,4) hinj \<open>t \<in> _\<close> h0_I
+                unfolding inj_on_def by (by100 blast)
+              have "x \<noteq> hA 1" using ht(2,4) hinj \<open>t \<in> _\<close> h1_I
+                unfolding inj_on_def by (by100 blast)
+              have "x \<noteq> hA (1/2)" using ht(3,4) hinj \<open>t \<in> _\<close> h12_I
+                unfolding inj_on_def by (by100 blast)
+              thus "x \<in> A1 - {hA 0, hA 1, hA (1/2)}"
+                using \<open>x \<in> A1\<close> \<open>x \<noteq> hA 0\<close> \<open>x \<noteq> hA 1\<close> by (by100 blast)
+            qed
+            moreover have "{t::real. 0 < t \<and> t < 1} - {1/2} =
+                {t. 0 < t \<and> t < 1/2} \<union> {t. 1/2 < t \<and> t < 1}" by (by100 auto)
+            moreover have "hA ` ({t. 0 < t \<and> t < 1/2} \<union> {t. 1/2 < t \<and> t < 1}) =
+                hA ` {t. 0 < t \<and> t < 1/2} \<union> hA ` {t. 1/2 < t \<and> t < 1}"
+              by (by100 blast)
+            ultimately show ?thesis by (by100 simp)
+          qed
           have hAB_disj: "?A_comp \<inter> ?B_comp = {}"
           proof (rule ccontr)
             assume "\<not> ?thesis"
