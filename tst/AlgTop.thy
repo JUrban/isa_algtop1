@@ -11904,7 +11904,31 @@ proof -
           have hbeta_loc: "\<exists>\<beta>. top1_is_path_on ?V (subspace_topology X TX ?V) ?pt_b ?pt_a \<beta>" sorry
           \<comment> \<open>U and V simply connected.\<close>
           have hU_sc_loc: "top1_simply_connected_on ?U (subspace_topology X TX ?U)" sorry
-          have hV_sc_loc: "top1_simply_connected_on ?V (subspace_topology X TX ?V)" sorry
+          have hV_sc_loc: "top1_simply_connected_on ?V (subspace_topology X TX ?V)"
+          proof -
+            \<comment> \<open>V = X - {hA(1/2)} deformation retracts onto T (via hdr\\_helper with S = {A1}).\<close>
+            define ps_bc where "ps_bc A = (if A = A1 then hA (1/2) else undefined)" for A
+            have hps_bc: "\<forall>A\<in>{A1}. ps_bc A \<in> A \<and> ps_bc A \<notin> top1_arc_endpoints_on A (subspace_topology X TX A)"
+              sorry \<comment> \<open>hA(1/2) \\<in> A1 (interior) and hA(1/2) \\<notin> endpoints (by injectivity).\<close>
+            have hS_bc: "finite ({A1} :: 'a set set)" by (by100 simp)
+            have "{A1} \<subseteq> ?NT" using hA1 by (by100 blast)
+            from hdr_helper[OF hS_bc \<open>{A1} \<subseteq> ?NT\<close> hps_bc]
+            have hV_dr: "top1_deformation_retract_of_on (X - ps_bc ` {A1})
+                (subspace_topology X TX (X - ps_bc ` {A1})) (T \<union> \<Union>(?NT - {A1}))" .
+            have hNT_minus: "?NT - {A1} = {}" using hNT_singleton by (by100 blast)
+            have "T \<union> \<Union>(?NT - {A1}) = T"
+              using hNT_minus by (by100 blast)
+            have "ps_bc ` {A1} = {hA (1/2)}" unfolding ps_bc_def by (by100 simp)
+            hence "X - ps_bc ` {A1} = ?V" by (by100 simp)
+            hence hV_dr_T: "top1_deformation_retract_of_on ?V (subspace_topology X TX ?V) T"
+              using hV_dr \<open>T \<union> \<Union>(?NT - {A1}) = T\<close> by (by100 simp)
+            \<comment> \<open>T is SC (tree). V DR onto T. So V is SC.\<close>
+            have hT_sc: "top1_simply_connected_on T (subspace_topology X TX T)"
+              using hT_tree unfolding top1_is_tree_on_def by (by100 blast)
+            show ?thesis sorry \<comment> \<open>DR onto SC \\<Rightarrow> SC.
+               Via Theorem\\_58\\_3: \\<pi>\\_1(T) \\<cong> \\<pi>\\_1(V). T SC so \\<pi>\\_1(T) = 1. Hence \\<pi>\\_1(V) = 1.
+               V is path-connected (from hdr\\_pc). Hence V is SC.\<close>
+          qed
           \<comment> \<open>Apply Lemma 84.6.\<close>
           from halpha_loc hbeta_loc obtain \<alpha> \<beta> where
             h\<alpha>: "top1_is_path_on ?U (subspace_topology X TX ?U) ?pt_a ?pt_b \<alpha>" and
