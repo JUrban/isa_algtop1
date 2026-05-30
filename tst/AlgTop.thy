@@ -12765,37 +12765,38 @@ proof -
           qed
           have hV_pc_early: "top1_path_connected_on ?V (subspace_topology X TX ?V)"
             by (rule deformation_retract_path_connected[OF hV_dr_T_early hV_top_early hT_pc_early])
+          \<comment> \<open>U = hA\\`(0,1) bijection (shared between halpha\\_loc and hU\\_sc\\_loc).\<close>
+          have hU_eq_img: "hA ` {t::real. 0 < t \<and> t < 1} = ?U"
+          proof (rule set_eqI, rule iffI)
+            fix x assume "x \<in> hA ` {t. 0 < t \<and> t < 1}"
+            then obtain s where hs: "0 < s" "s < 1" "x = hA s" by (by100 blast)
+            have "s \<in> top1_unit_interval" using hs(1,2) unfolding top1_unit_interval_def by (by100 simp)
+            hence "x \<in> A1" using hhA \<open>x = hA s\<close>
+              unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+            have hinj: "inj_on hA top1_unit_interval"
+              using hhA unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+            have h0_I: "(0::real) \<in> top1_unit_interval" unfolding top1_unit_interval_def by (by100 simp)
+            have h1_I: "(1::real) \<in> top1_unit_interval" unfolding top1_unit_interval_def by (by100 simp)
+            have "s \<noteq> 0" using hs(1) by (by100 linarith)
+            hence "x \<noteq> hA 0" using \<open>x = hA s\<close> hinj \<open>s \<in> _\<close> h0_I unfolding inj_on_def by (by100 blast)
+            have "s \<noteq> 1" using hs(2) by (by100 linarith)
+            hence "x \<noteq> hA 1" using \<open>x = hA s\<close> hinj \<open>s \<in> _\<close> h1_I unfolding inj_on_def by (by100 blast)
+            thus "x \<in> ?U" using \<open>x \<in> A1\<close> \<open>x \<noteq> hA 0\<close> \<open>x \<noteq> hA 1\<close> by (by100 blast)
+          next
+            fix x assume "x \<in> ?U"
+            hence "x \<in> A1" "x \<noteq> hA 0" "x \<noteq> hA 1" by (by100 blast)+
+            have "x \<in> hA ` top1_unit_interval"
+              using \<open>x \<in> A1\<close> hhA unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+            then obtain t where ht: "t \<in> top1_unit_interval" "x = hA t" by (by100 blast)
+            have "t \<noteq> 0" using \<open>x \<noteq> hA 0\<close> ht(2) by (by100 blast)
+            have "t \<noteq> 1" using \<open>x \<noteq> hA 1\<close> ht(2) by (by100 blast)
+            have "0 \<le> t" "t \<le> 1" using ht(1) unfolding top1_unit_interval_def by (by100 simp)+
+            hence "0 < t \<and> t < 1" using \<open>t \<noteq> 0\<close> \<open>t \<noteq> 1\<close> by (by100 linarith)
+            thus "x \<in> hA ` {t. 0 < t \<and> t < 1}" using ht(2) by (by100 blast)
+          qed
           \<comment> \<open>Paths \\<alpha> (in U from a to b) and \\<beta> (in V from b to a).\<close>
           have halpha_loc: "\<exists>\<alpha>. top1_is_path_on ?U (subspace_topology X TX ?U) ?pt_a ?pt_b \<alpha>"
           proof -
-            have hU_eq_img: "hA ` {t::real. 0 < t \<and> t < 1} = ?U"
-            proof (rule set_eqI, rule iffI)
-              fix x assume "x \<in> hA ` {t. 0 < t \<and> t < 1}"
-              then obtain s where hs: "0 < s" "s < 1" "x = hA s" by (by100 blast)
-              have "s \<in> top1_unit_interval" using hs(1,2) unfolding top1_unit_interval_def by (by100 simp)
-              hence "x \<in> A1" using hhA \<open>x = hA s\<close>
-                unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
-              have hinj: "inj_on hA top1_unit_interval"
-                using hhA unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
-              have h0_I: "(0::real) \<in> top1_unit_interval" unfolding top1_unit_interval_def by (by100 simp)
-              have h1_I: "(1::real) \<in> top1_unit_interval" unfolding top1_unit_interval_def by (by100 simp)
-              have "s \<noteq> 0" using hs(1) by (by100 linarith)
-              hence "x \<noteq> hA 0" using \<open>x = hA s\<close> hinj \<open>s \<in> _\<close> h0_I unfolding inj_on_def by (by100 blast)
-              have "s \<noteq> 1" using hs(2) by (by100 linarith)
-              hence "x \<noteq> hA 1" using \<open>x = hA s\<close> hinj \<open>s \<in> _\<close> h1_I unfolding inj_on_def by (by100 blast)
-              thus "x \<in> ?U" using \<open>x \<in> A1\<close> \<open>x \<noteq> hA 0\<close> \<open>x \<noteq> hA 1\<close> by (by100 blast)
-            next
-              fix x assume "x \<in> ?U"
-              hence "x \<in> A1" "x \<noteq> hA 0" "x \<noteq> hA 1" by (by100 blast)+
-              have "x \<in> hA ` top1_unit_interval"
-                using \<open>x \<in> A1\<close> hhA unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
-              then obtain t where ht: "t \<in> top1_unit_interval" "x = hA t" by (by100 blast)
-              have "t \<noteq> 0" using \<open>x \<noteq> hA 0\<close> ht(2) by (by100 blast)
-              have "t \<noteq> 1" using \<open>x \<noteq> hA 1\<close> ht(2) by (by100 blast)
-              have "0 \<le> t" "t \<le> 1" using ht(1) unfolding top1_unit_interval_def by (by100 simp)+
-              hence "0 < t \<and> t < 1" using \<open>t \<noteq> 0\<close> \<open>t \<noteq> 1\<close> by (by100 linarith)
-              thus "x \<in> hA ` {t. 0 < t \<and> t < 1}" using ht(2) by (by100 blast)
-            qed
             \<comment> \<open>U = hA\\`(0,1) is PC (image of convex (0,1) under continuous hA).\<close>
             have hU_pc_loc: "top1_path_connected_on ?U (subspace_topology X TX ?U)"
             proof -
@@ -12976,8 +12977,31 @@ proof -
               by (rule convex_real_subspace_simply_connected[OF h01_ne h01_conv])
             \<comment> \<open>hA restricted to (0,1) is a homeomorphism (0,1) \\<rightarrow> U.\<close>
             have hhA_homeo_01: "top1_homeomorphism_on ?I01 ?TI01 ?U (subspace_topology X TX ?U) hA"
-              sorry \<comment> \<open>Restriction of homeomorphism to open subsets: hA: [0,1] \\<rightarrow> A1 homeo,
-                 restrict to (0,1) \\<rightarrow> hA\\`(0,1) = U. Both bijective + continuous + inverse continuous.\<close>
+            proof -
+              have hI01_sub: "?I01 \<subseteq> top1_unit_interval"
+                unfolding top1_unit_interval_def by (by100 auto)
+              from homeomorphism_on_restrict[OF hhA hI01_sub]
+              have "top1_homeomorphism_on ?I01 (subspace_topology top1_unit_interval top1_unit_interval_topology ?I01)
+                  (hA ` ?I01) (subspace_topology A1 (subspace_topology X TX A1) (hA ` ?I01)) hA" .
+              moreover have "subspace_topology top1_unit_interval top1_unit_interval_topology ?I01 = ?TI01"
+              proof -
+                have "subspace_topology top1_unit_interval
+                    (subspace_topology (UNIV::real set) top1_open_sets top1_unit_interval) ?I01
+                    = subspace_topology (UNIV::real set) top1_open_sets ?I01"
+                  by (rule subspace_topology_trans[OF hI01_sub])
+                moreover have "top1_unit_interval_topology =
+                    subspace_topology (UNIV::real set) top1_open_sets top1_unit_interval"
+                  unfolding top1_unit_interval_topology_def top1_unit_interval_def by (by100 blast)
+                ultimately show ?thesis by (by100 simp)
+              qed
+              moreover have "hA ` ?I01 = ?U" using hU_eq_img .
+              moreover have "subspace_topology A1 (subspace_topology X TX A1) ?U = subspace_topology X TX ?U"
+              proof -
+                have "?U \<subseteq> A1" using hA1_sub by (by100 blast)
+                thus ?thesis by (rule subspace_topology_trans)
+              qed
+              ultimately show ?thesis by (by100 simp)
+            qed
             from homeomorphism_preserves_simply_connected_forward[OF hhA_homeo_01 h01_sc]
             show ?thesis .
           qed
