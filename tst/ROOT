@@ -71,12 +71,24 @@ session AlgTopChain in at = AlgTopWedgeHelpers +
   theories
     AlgTopChain
 
-session AlgTop = AlgTopChain +
-  options [quick_and_dirty, timeout = 600]
-  theories
-    AlgTop
 
 session PolygonDisk in pd = AlgTopGroups +
   options [timeout = 600]
   theories
     PolygonDisk
+
+session AlgTopCached2 in ac2 = AlgTopChain +
+  options [timeout = 600]
+  theories
+    AlgTopCached2
+
+
+session AlgTopCached3 in ac3 = AlgTopCached2 +
+  options [timeout = 600]
+  theories
+    AlgTopCached3
+
+session AlgTop = AlgTopCached3 +
+  options [quick_and_dirty, timeout = 600]
+  theories
+    AlgTop
