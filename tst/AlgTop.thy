@@ -9444,8 +9444,29 @@ proof -
       (\<exists>n::nat. top1_path_homotopic_on X TX a a f (top1_path_power (top1_path_product \<alpha> \<beta>) a n)
         \<or> top1_path_homotopic_on X TX a a f
              (top1_path_power (top1_path_reverse (top1_path_product \<alpha> \<beta>)) a n))"
-    sorry \<comment> \<open>Lemma 84.6 generation: SvK-like decomposition for two components.
-       This is the CORE mathematical content.\<close>
+  proof (intro allI impI)
+    fix f assume hf: "top1_is_loop_on X TX a f"
+    \<comment> \<open>Step 1: Subdivide the loop f into pieces lying in U or V (Lebesgue number).\<close>
+    from loop_subdivision_UV[OF hTX_top hU_open hV_open hcover hf]
+    obtain n_sub sub_fn where
+      hn_pos: "n_sub \<ge> 1" and
+      hsub_0: "sub_fn 0 = 0" and hsub_n: "sub_fn n_sub = 1" and
+      hsub_inc: "\<forall>i<n_sub. sub_fn i < sub_fn (Suc i)" and
+      hpieces_UV: "\<forall>i<n_sub.
+        (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub_fn i + t * (sub_fn (Suc i) - sub_fn i)) \<in> U) \<or>
+        (\<forall>t. 0 \<le> t \<and> t \<le> 1 \<longrightarrow> f (sub_fn i + t * (sub_fn (Suc i) - sub_fn i)) \<in> V)"
+      by (by5000 blast)
+    \<comment> \<open>Step 2: Subdivision endpoints f(sub(i)) \\<in> U \\<inter> V = A \\<union> B.\<close>
+    \<comment> \<open>Step 3: Connect each f(sub(i)) to a (if in A) or b (if in B) via A/B paths.\<close>
+    \<comment> \<open>Step 4: Each g\\_i = \\<alpha>\\_i * (f\\_i * \\<alpha>\\_i\\_bar) is loop in U or V at a or b.\<close>
+    \<comment> \<open>Step 5: U, V SC \\<Rightarrow> each g\\_i \\<sim> const or \\<alpha> or \\<beta> or \\<alpha>\\_bar or \\<beta>\\_bar.\<close>
+    \<comment> \<open>Step 6: [f] = [g\\_1] * ... * [g\\_n] = power of [\\<alpha>*\\<beta>].\<close>
+    show "\<exists>n::nat. top1_path_homotopic_on X TX a a f (top1_path_power (top1_path_product \<alpha> \<beta>) a n)
+        \<or> top1_path_homotopic_on X TX a a f
+             (top1_path_power (top1_path_reverse (top1_path_product \<alpha> \<beta>)) a n)"
+      sorry \<comment> \<open>Steps 2-6: connecting paths + piece classification + reassembly.
+         This is the main body of the generation proof.\<close>
+  qed
   \<comment> \<open>Step 2: [\\<alpha>*\\<beta>] is non-trivial (Theorem 63.1).\<close>
   have ha_U: "a \<in> U" using hUV_split ha by (by100 blast)
   have hb_U: "b \<in> U" using hUV_split hb by (by100 blast)
