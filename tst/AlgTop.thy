@@ -11736,22 +11736,121 @@ proof -
           show ?thesis .
         qed
         \<comment> \<open>\\<pi>\\_1(U) \\<cong> \\<pi>\\_1(target\\_U) which is free (1 non-tree arc, base case or IH).\<close>
-        have hU_free: "\<exists>(G::int set) mul e invg (\<iota>::nat \<Rightarrow> int) S.
-            top1_is_free_group_full_on G mul e invg \<iota> S
+        \<comment> \<open>Theorem\\_58\\_3: DR gives \\<pi>\\_1 iso. Since U/V DR onto their targets,
+           \\<pi>\\_1(U) \\<cong> \\<pi>\\_1(target\\_U) and \\<pi>\\_1(V) \\<cong> \\<pi>\\_1(target\\_V).\<close>
+        have hx0_U: "x0 \<in> ?U"
+        proof -
+          have "x0 \<in> T" using hx0_T .
+          have "\<forall>A\<in>?NT - {A1}. ps A \<noteq> x0"
+          proof (intro ballI)
+            fix A assume "A \<in> ?NT - {A1}"
+            hence "A \<in> ?NT" by (by100 blast)
+            have "A \<in> \<A>" using \<open>A \<in> ?NT\<close> by (by100 blast)
+            have "\<not> A \<subseteq> T" using \<open>A \<in> ?NT\<close> by (by100 blast)
+            from hT_subgraph[rule_format, OF \<open>A \<in> \<A>\<close>] \<open>\<not> A \<subseteq> T\<close>
+            have "A \<inter> T \<subseteq> top1_arc_endpoints_on A (subspace_topology X TX A)" by (by100 blast)
+            have "ps A \<notin> top1_arc_endpoints_on A (subspace_topology X TX A)"
+              using hps \<open>A \<in> ?NT\<close> by (by100 blast)
+            hence "ps A \<notin> T" using \<open>A \<inter> T \<subseteq> _\<close> hps \<open>A \<in> ?NT\<close> by (by100 blast)
+            thus "ps A \<noteq> x0" using \<open>x0 \<in> T\<close> by (by100 blast)
+          qed
+          hence "x0 \<notin> ps ` (?NT - {A1})" by (by100 blast)
+          thus ?thesis using \<open>x0 \<in> T\<close> hT_sub by (by100 blast)
+        qed
+        have hx0_V: "x0 \<in> ?V"
+        proof -
+          have "ps A1 \<noteq> x0"
+          proof -
+            have "A1 \<in> \<A>" using hA1 by (by100 blast)
+            have "\<not> A1 \<subseteq> T" using hA1 by (by100 blast)
+            from hT_subgraph[rule_format, OF \<open>A1 \<in> \<A>\<close>] \<open>\<not> A1 \<subseteq> T\<close>
+            have "A1 \<inter> T \<subseteq> top1_arc_endpoints_on A1 (subspace_topology X TX A1)" by (by100 blast)
+            have "ps A1 \<notin> top1_arc_endpoints_on A1 (subspace_topology X TX A1)"
+              using hps hA1 by (by100 blast)
+            hence "ps A1 \<notin> T" using \<open>A1 \<inter> T \<subseteq> _\<close> hps hA1 by (by100 blast)
+            thus ?thesis using hx0_T by (by100 blast)
+          qed
+          thus ?thesis using hx0_T hT_sub by (by100 blast)
+        qed
+        have hTX_top: "is_topology_on X TX"
+          using assms(1) unfolding top1_is_graph_on_def is_topology_on_strict_def by (by5000 blast)
+        have hU_sub: "?U \<subseteq> X" by (by100 blast)
+        have hV_sub: "?V \<subseteq> X" by (by100 blast)
+        have hU_top: "is_topology_on ?U (subspace_topology X TX ?U)"
+          by (rule subspace_topology_is_topology_on[OF hTX_top hU_sub])
+        have hV_top: "is_topology_on ?V (subspace_topology X TX ?V)"
+          by (rule subspace_topology_is_topology_on[OF hTX_top hV_sub])
+        have hx0_tU: "x0 \<in> ?target_U" using hx0_T by (by100 blast)
+        have hx0_tV: "x0 \<in> ?target_V" using hx0_T by (by100 blast)
+        let ?TU = "subspace_topology X TX ?U"
+        let ?TV = "subspace_topology X TX ?V"
+        have hpi1_U_iso: "top1_groups_isomorphic_on
+            (top1_fundamental_group_carrier ?target_U (subspace_topology ?U ?TU ?target_U) x0)
+            (top1_fundamental_group_mul ?target_U (subspace_topology ?U ?TU ?target_U) x0)
+            (top1_fundamental_group_carrier ?U ?TU x0)
+            (top1_fundamental_group_mul ?U ?TU x0)"
+          by (rule Theorem_58_3[OF hU_dr hU_top hx0_tU])
+        have htU_sub_U: "?target_U \<subseteq> ?U"
+          sorry \<comment> \<open>First conjunct of hU\\_dr (DR definition includes A \\<subseteq> X).\<close>
+        have hTU_trans: "subspace_topology ?U ?TU ?target_U = subspace_topology X TX ?target_U"
+          by (rule subspace_topology_trans[OF htU_sub_U])
+        have hpi1_V_iso: "top1_groups_isomorphic_on
+            (top1_fundamental_group_carrier ?target_V (subspace_topology ?V ?TV ?target_V) x0)
+            (top1_fundamental_group_mul ?target_V (subspace_topology ?V ?TV ?target_V) x0)
+            (top1_fundamental_group_carrier ?V ?TV x0)
+            (top1_fundamental_group_mul ?V ?TV x0)"
+          by (rule Theorem_58_3[OF hV_dr hV_top hx0_tV])
+        have htV_sub_V: "?target_V \<subseteq> ?V"
+          sorry \<comment> \<open>First conjunct of hV\\_dr (DR definition includes A \\<subseteq> X).\<close>
+        have hTV_trans: "subspace_topology ?V ?TV ?target_V = subspace_topology X TX ?target_V"
+          by (rule subspace_topology_trans[OF htV_sub_V])
+        \<comment> \<open>target\\_U = T \\<union> A1 has free \\<pi>\\_1 (base case: 1 non-tree arc).\<close>
+        have htU_free: "\<exists>(G::int set) mul e invg (\<iota>::nat \<Rightarrow> int) S'.
+            top1_is_free_group_full_on G mul e invg \<iota> S'
           \<and> top1_groups_isomorphic_on G mul
-              (top1_fundamental_group_carrier ?U (subspace_topology X TX ?U) x0)
-              (top1_fundamental_group_mul ?U (subspace_topology X TX ?U) x0)"
-          sorry \<comment> \<open>DR iso (Theorem\\_58\\_3) + base case (1 non-tree arc).\<close>
-        \<comment> \<open>\\<pi>\\_1(V) \\<cong> \\<pi>\\_1(target\\_V) which is free (n-1 non-tree arcs, IH).\<close>
-        have hV_free: "\<exists>(G::int set) mul e invg (\<iota>::nat \<Rightarrow> int) S.
-            top1_is_free_group_full_on G mul e invg \<iota> S
+              (top1_fundamental_group_carrier ?target_U (subspace_topology ?U ?TU ?target_U) x0)
+              (top1_fundamental_group_mul ?target_U (subspace_topology ?U ?TU ?target_U) x0)"
+          sorry \<comment> \<open>Base case: T \\<union> A1 is a graph with 1 non-tree arc \\<Rightarrow> free on 1 gen.
+             Uses hTU\\_trans to match topology.\<close>
+        \<comment> \<open>target\\_V has free \\<pi>\\_1 (IH: n-1 non-tree arcs).\<close>
+        have htV_free: "\<exists>(G::int set) mul e invg (\<iota>::nat \<Rightarrow> int) S'.
+            top1_is_free_group_full_on G mul e invg \<iota> S'
           \<and> top1_groups_isomorphic_on G mul
-              (top1_fundamental_group_carrier ?V (subspace_topology X TX ?V) x0)
-              (top1_fundamental_group_mul ?V (subspace_topology X TX ?V) x0)"
-          sorry \<comment> \<open>DR iso (Theorem\\_58\\_3) + IH (card(NT) - 1 non-tree arcs).\<close>
+              (top1_fundamental_group_carrier ?target_V (subspace_topology ?V ?TV ?target_V) x0)
+              (top1_fundamental_group_mul ?target_V (subspace_topology ?V ?TV ?target_V) x0)"
+          sorry \<comment> \<open>IH: target\\_V is a graph with card(NT)-1 non-tree arcs.
+             Uses hTV\\_trans to match topology.\<close>
+        \<comment> \<open>Transfer freeness via the DR iso to U and V.\<close>
+        have hU_free: "\<exists>(G::int set) mul e invg (\<iota>::nat \<Rightarrow> int) S'.
+            top1_is_free_group_full_on G mul e invg \<iota> S'
+          \<and> top1_groups_isomorphic_on G mul
+              (top1_fundamental_group_carrier ?U ?TU x0)
+              (top1_fundamental_group_mul ?U ?TU x0)"
+          sorry \<comment> \<open>htU\\_free + hpi1\\_U\\_iso (compose G \\<cong> \\<pi>\\_1(tU) \\<cong> \\<pi>\\_1(U)).\<close>
+        have hV_free: "\<exists>(G::int set) mul e invg (\<iota>::nat \<Rightarrow> int) S'.
+            top1_is_free_group_full_on G mul e invg \<iota> S'
+          \<and> top1_groups_isomorphic_on G mul
+              (top1_fundamental_group_carrier ?V ?TV x0)
+              (top1_fundamental_group_mul ?V ?TV x0)"
+          sorry \<comment> \<open>htV\\_free + hpi1\\_V\\_iso (compose G \\<cong> \\<pi>\\_1(tV) \\<cong> \\<pi>\\_1(V)).\<close>
         \<comment> \<open>U and V are path-connected.\<close>
-        have hU_pc: "top1_path_connected_on ?U (subspace_topology X TX ?U)" sorry
-        have hV_pc: "top1_path_connected_on ?V (subspace_topology X TX ?V)" sorry
+        have hU_pc: "top1_path_connected_on ?U (subspace_topology X TX ?U)"
+        proof -
+          \<comment> \<open>target\\_U = T \\<union> A1 is path-connected: T is path-connected (tree), A1 is an arc
+             with endpoints in T, so any point in A1 connects to T via the arc.\<close>
+          have htarget_U_pc: "top1_path_connected_on ?target_U (subspace_topology X TX ?target_U)"
+            sorry \<comment> \<open>T path-connected (tree) + A1 connected via endpoints to T.\<close>
+          \<comment> \<open>U deformation retracts onto target\\_U (path-connected).
+             DR homotopy H gives path from any x to H(x,1) \\<in> target\\_U.
+             Hence U is path-connected.\<close>
+          show ?thesis sorry \<comment> \<open>DR + target\\_U path-connected \\<Rightarrow> U path-connected.\<close>
+        qed
+        have hV_pc: "top1_path_connected_on ?V (subspace_topology X TX ?V)"
+        proof -
+          have htarget_V_pc: "top1_path_connected_on ?target_V (subspace_topology X TX ?target_V)"
+            sorry \<comment> \<open>T path-connected + non-tree arcs connected via endpoints to T.\<close>
+          show ?thesis sorry \<comment> \<open>DR + target\\_V path-connected \\<Rightarrow> V path-connected.\<close>
+        qed
         \<comment> \<open>x0 \\<in> U \\<cap> V.\<close>
         have hx0_UV: "x0 \<in> ?UV"
         proof -
