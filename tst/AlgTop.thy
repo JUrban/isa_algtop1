@@ -12068,7 +12068,16 @@ proof -
                 using hT_pc hA1_pc by (by100 blast)
               \<comment> \<open>Transfer PC from subspace of X to subspace of target\\_U.\<close>
               have "\<forall>A\<in>?F. top1_path_connected_on A (subspace_topology ?target_U (subspace_topology X TX ?target_U) A)"
-                sorry \<comment> \<open>subspace\\_topology\\_trans: sub(X, TX, A) = sub(tU, sub(X,TX,tU), A) when A \\<subseteq> tU.\<close>
+              proof (intro ballI)
+                fix A assume hA_F: "A \<in> ?F"
+                hence hA_sub_tU: "A \<subseteq> ?target_U" using \<open>\<forall>A\<in>?F. A \<subseteq> ?target_U\<close> by (by100 blast)
+                have hA_eq: "subspace_topology ?target_U (subspace_topology X TX ?target_U) A = subspace_topology X TX A"
+                  by (rule subspace_topology_trans[OF hA_sub_tU])
+                have "top1_path_connected_on A (subspace_topology X TX A)"
+                  using \<open>\<forall>A\<in>?F. top1_path_connected_on A (subspace_topology X TX A)\<close> hA_F by (by100 blast)
+                thus "top1_path_connected_on A (subspace_topology ?target_U (subspace_topology X TX ?target_U) A)"
+                  using hA_eq by (by100 simp)
+              qed
               have "\<forall>A\<in>?F. p0 \<in> A" using hp0_T hp0_A1 by (by100 blast)
               from path_connected_finite_union_common_point[OF htU_top \<open>finite ?F\<close>
                   \<open>\<forall>A\<in>?F. A \<subseteq> ?target_U\<close>
