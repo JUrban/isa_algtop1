@@ -12629,7 +12629,30 @@ proof -
           have hV_pc_early: "top1_path_connected_on ?V (subspace_topology X TX ?V)"
             by (rule deformation_retract_path_connected[OF hV_dr_T_early hV_top_early hT_pc_early])
           \<comment> \<open>Paths \\<alpha> (in U from a to b) and \\<beta> (in V from b to a).\<close>
-          have halpha_loc: "\<exists>\<alpha>. top1_is_path_on ?U (subspace_topology X TX ?U) ?pt_a ?pt_b \<alpha>" sorry
+          have halpha_loc: "\<exists>\<alpha>. top1_is_path_on ?U (subspace_topology X TX ?U) ?pt_a ?pt_b \<alpha>"
+          proof -
+            \<comment> \<open>U = hA\\`(0,1) is PC (image of convex (0,1) under continuous hA).\<close>
+            have hU_pc_loc: "top1_path_connected_on ?U (subspace_topology X TX ?U)"
+              sorry \<comment> \<open>(0,1) convex \\<Rightarrow> PC. hA continuous. path\\_connected\\_continuous\\_image.\<close>
+            have hpta_U: "?pt_a \<in> ?U"
+            proof -
+              have "(1/4::real) \<in> {t. 0 < t \<and> t < 1}" by (by100 simp)
+              hence "hA (1/4) \<in> hA ` {t. 0 < t \<and> t < 1}" by (by100 blast)
+              moreover have "hA ` {t::real. 0 < t \<and> t < 1} = ?U"
+                sorry \<comment> \<open>Same bij decomposition as hUV\\_split.\<close>
+              ultimately show ?thesis by (by100 simp)
+            qed
+            have hptb_U: "?pt_b \<in> ?U"
+            proof -
+              have "(3/4::real) \<in> {t. 0 < t \<and> t < 1}" by (by100 simp)
+              hence "hA (3/4) \<in> hA ` {t. 0 < t \<and> t < 1}" by (by100 blast)
+              moreover have "hA ` {t::real. 0 < t \<and> t < 1} = ?U"
+                sorry \<comment> \<open>Same bij decomposition.\<close>
+              ultimately show ?thesis by (by100 simp)
+            qed
+            from hU_pc_loc hpta_U hptb_U show ?thesis
+              unfolding top1_path_connected_on_def by (by100 blast)
+          qed
           have hbeta_loc: "\<exists>\<beta>. top1_is_path_on ?V (subspace_topology X TX ?V) ?pt_b ?pt_a \<beta>"
           proof -
             \<comment> \<open>Both pt\\_a and pt\\_b are in V (they're in A1 but \\<noteq> hA(1/2)).\<close>
