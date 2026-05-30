@@ -11859,9 +11859,97 @@ proof -
           let ?pt_b = "hA (3/4)"
           \<comment> \<open>All the setup for Lemma 84.6.\<close>
           have hU_open_loc: "openin_on X TX ?U"
-            sorry \<comment> \<open>X - U = (X-A1) \\<union> {endpoints} closed via coherent topology:
-               B = A1: {ep} finite hence closed in Hausdorff.
-               B \\<noteq> A1: B \\<inter> (A1-endpoints) = \\<emptyset> by graph axiom, so B \\<inter> (X-U) = B, closed.\<close>
+          proof -
+            \<comment> \<open>Show X - U is closed via coherent topology.\<close>
+            have "X - ?U \<subseteq> X" by (by100 blast)
+            have "\<forall>B\<in>\<A>. closedin_on B (subspace_topology X TX B) (B \<inter> (X - ?U))"
+            proof (intro ballI)
+              fix B assume "B \<in> \<A>"
+              have "B \<subseteq> X" using h\<A> \<open>B \<in> \<A>\<close> by (by100 blast)
+              show "closedin_on B (subspace_topology X TX B) (B \<inter> (X - ?U))"
+              proof (cases "B = A1")
+                case True
+                \<comment> \<open>B = A1: B \\<inter> (X-U) = {hA 0, hA 1}, finite \\<Rightarrow> closed in Hausdorff.\<close>
+                have "B \<inter> (X - ?U) = {?ep_l, ?ep_r}"
+                proof -
+                  have "?U = A1 - {?ep_l, ?ep_r}" by (by100 blast)
+                  have "hA 0 \<in> A1 \<and> hA 1 \<in> A1"
+                  proof -
+                    have hbij0: "bij_betw hA top1_unit_interval A1"
+                      using hhA unfolding top1_homeomorphism_on_def by (by100 blast)
+                    have "(0::real) \<in> top1_unit_interval" unfolding top1_unit_interval_def by (by100 simp)
+                    have "(1::real) \<in> top1_unit_interval" unfolding top1_unit_interval_def by (by100 simp)
+                    show ?thesis using hbij0 \<open>(0::real) \<in> _\<close> \<open>(1::real) \<in> _\<close> unfolding bij_betw_def by (by100 blast)
+                  qed
+                  hence "{?ep_l, ?ep_r} \<subseteq> X" using hA1_sub by (by100 blast)
+                  have "X - ?U = (X - A1) \<union> {?ep_l, ?ep_r}"
+                    using \<open>{?ep_l, ?ep_r} \<subseteq> X\<close> by (by100 blast)
+                  have "A1 \<inter> ((X - A1) \<union> {?ep_l, ?ep_r}) = {?ep_l, ?ep_r} \<inter> A1" by (by100 blast)
+                  have "hA 0 \<in> A1 \<and> hA 1 \<in> A1"
+                  proof -
+                    have hbij: "bij_betw hA top1_unit_interval A1"
+                      using hhA unfolding top1_homeomorphism_on_def by (by100 blast)
+                    have "(0::real) \<in> top1_unit_interval" unfolding top1_unit_interval_def by (by100 simp)
+                    have "(1::real) \<in> top1_unit_interval" unfolding top1_unit_interval_def by (by100 simp)
+                    show ?thesis using hbij \<open>(0::real) \<in> _\<close> \<open>(1::real) \<in> _\<close> unfolding bij_betw_def by (by100 blast)
+                  qed
+                  thus ?thesis using True \<open>X - ?U = _\<close> by (by100 blast)
+                qed
+                have hX_haus_loc: "is_hausdorff_on X TX"
+                  using assms(1) unfolding top1_is_graph_on_def by (by100 blast)
+                have "is_hausdorff_on B (subspace_topology X TX B)"
+                  using conjunct2[OF conjunct2[OF Theorem_17_11]] hX_haus_loc \<open>B \<subseteq> X\<close> by (by100 blast)
+                have hfin_ep: "finite {?ep_l, ?ep_r}" by (by100 simp)
+                have "{?ep_l, ?ep_r} \<subseteq> B"
+                proof -
+                  have hbij: "bij_betw hA top1_unit_interval A1"
+                    using hhA unfolding top1_homeomorphism_on_def by (by100 blast)
+                  have "(0::real) \<in> top1_unit_interval" unfolding top1_unit_interval_def by (by100 simp)
+                  have "(1::real) \<in> top1_unit_interval" unfolding top1_unit_interval_def by (by100 simp)
+                  have "hA 0 \<in> A1" using hbij \<open>(0::real) \<in> _\<close> unfolding bij_betw_def by (by100 blast)
+                  have "hA 1 \<in> A1" using hbij \<open>(1::real) \<in> _\<close> unfolding bij_betw_def by (by100 blast)
+                  thus ?thesis using True \<open>hA 0 \<in> A1\<close> \<open>hA 1 \<in> A1\<close> by (by100 blast)
+                qed
+                from Theorem_17_8[OF \<open>is_hausdorff_on B _\<close> hfin_ep this]
+                have "closedin_on B (subspace_topology X TX B) {?ep_l, ?ep_r}" .
+                thus ?thesis using \<open>B \<inter> (X - ?U) = _\<close> by (by100 simp)
+              next
+                case False
+                \<comment> \<open>B \\<noteq> A1: B \\<inter> (A1 - endpoints) = \\<emptyset>, so B \\<inter> (X-U) = B, closed.\<close>
+                have "A1 \<in> \<A>" using hA1 by (by100 blast)
+                from h\<A>_inter[rule_format, OF \<open>A1 \<in> \<A>\<close> \<open>B \<in> \<A>\<close> False[symmetric]]
+                have "A1 \<inter> B \<subseteq> top1_arc_endpoints_on A1 (subspace_topology X TX A1)" by (by100 blast)
+                have hep_eq: "top1_arc_endpoints_on A1 (subspace_topology X TX A1) = {?ep_l, ?ep_r}"
+                proof -
+                  have "is_hausdorff_on X TX"
+                    using assms(1) unfolding top1_is_graph_on_def by (by100 blast)
+                  show ?thesis by (rule arc_endpoints_are_boundary[OF hX_strict \<open>is_hausdorff_on X TX\<close> hA1_sub hA1_arc hhA])
+                qed
+                have "B \<inter> (A1 - {?ep_l, ?ep_r}) = {}"
+                  using \<open>A1 \<inter> B \<subseteq> top1_arc_endpoints_on A1 _\<close> hep_eq by (by100 blast)
+                hence "B \<inter> (X - ?U) = B"
+                proof -
+                  \<comment> \<open>B \\<inter> (A1 - {ep}) = \\<emptyset> means B has no interior points of A1.
+                     So every point of B is either not in A1, or is an endpoint of A1.\<close>
+                  have "\<forall>x. x \<in> B \<longrightarrow> x \<notin> A1 \<or> x \<in> {?ep_l, ?ep_r}"
+                    using \<open>B \<inter> (A1 - {?ep_l, ?ep_r}) = {}\<close> by (by100 blast)
+                  hence "\<forall>x. x \<in> B \<longrightarrow> x \<notin> A1 - {?ep_l, ?ep_r}" by (by100 blast)
+                  thus ?thesis using \<open>B \<subseteq> X\<close> by (by100 blast)
+                qed
+                thus ?thesis
+                  using closedin_carrier[OF subspace_topology_is_topology_on[OF
+                      is_topology_on_strict_imp[OF hX_strict] \<open>B \<subseteq> X\<close>]]
+                  by (by100 simp)
+              qed
+            qed
+            from h\<A>_coh[rule_format, OF \<open>X - ?U \<subseteq> X\<close>] this
+            have "closedin_on X TX (X - ?U)" by (by100 blast)
+            hence "X - (X - ?U) \<in> TX" unfolding closedin_on_def by (by100 blast)
+            have "?U \<subseteq> X" using hA1_sub by (by100 blast)
+            hence "X - (X - ?U) = ?U" by (by100 blast)
+            thus ?thesis unfolding openin_on_def using \<open>X - (X - ?U) \<in> TX\<close> \<open>?U \<subseteq> X\<close>
+              \<open>X - (X - ?U) = ?U\<close> by (by100 simp)
+          qed
           have hV_open_loc: "openin_on X TX ?V"
           proof -
             have hX_haus: "is_hausdorff_on X TX"
