@@ -9521,9 +9521,39 @@ proof -
       top1_Z_id top1_Z_invg (\<lambda>(_::nat). (1::int)) {0::nat}"
     by (rule Z_is_free_on_one_generator)
   \<comment> \<open>Both free on {0} \\<Rightarrow> isomorphic (via unique hom mapping generators).\<close>
+  \<comment> \<open>Get hom \\<Z> \\<rightarrow> \\<pi>\\_1 mapping 1 \\<mapsto> [\\<alpha>*\\<beta>].\<close>
+  let ?\<iota>_pi = "\<lambda>(_::nat). {g. top1_loop_equiv_on X TX a (top1_path_product \<alpha> \<beta>) g}"
+  have h_gen_in_pi: "\<forall>s\<in>{0::nat}. ?\<iota>_pi s \<in> ?pi"
+  proof (intro ballI)
+    fix s :: nat assume "s \<in> {0::nat}"
+    have "top1_is_loop_on X TX a (top1_path_product \<alpha> \<beta>)"
+    proof -
+      have hab: "top1_is_path_on X TX a b \<alpha>" using halpha_X .
+      have hba: "top1_is_path_on X TX b a \<beta>" using hbeta_X .
+      have "top1_is_path_on X TX a a (top1_path_product \<alpha> \<beta>)"
+        by (rule top1_path_product_is_path[OF hTX_top hab hba])
+      thus ?thesis unfolding top1_is_loop_on_def by (by100 blast)
+    qed
+    thus "?\<iota>_pi s \<in> ?pi"
+      unfolding top1_fundamental_group_carrier_def by (by100 blast)
+  qed
+  from free_group_hom_exists[OF hZ_free hpi_grp h_gen_in_pi]
+  obtain \<psi> where h\<psi>_hom: "top1_group_hom_on top1_Z_group top1_Z_mul ?pi ?mul \<psi>" and
+    h\<psi>_gen: "\<forall>s\<in>{0::nat}. \<psi> ((\<lambda>(_::nat). (1::int)) s) = ?\<iota>_pi s"
+    by (by100 blast)
+  \<comment> \<open>\\<psi> maps generators to generators \\<Rightarrow> bijection.\<close>
+  from free_group_hom_generators_iso[OF hZ_free hpi_free h\<psi>_hom h\<psi>_gen]
+  have h\<psi>_bij: "bij_betw \<psi> top1_Z_group ?pi" .
+  \<comment> \<open>bij + hom = iso.\<close>
+  have "top1_group_iso_on top1_Z_group top1_Z_mul ?pi ?mul \<psi>"
+    unfolding top1_group_iso_on_def using h\<psi>_hom h\<psi>_bij by (by100 blast)
+  hence "top1_groups_isomorphic_on top1_Z_group top1_Z_mul ?pi ?mul"
+    unfolding top1_groups_isomorphic_on_def by (by100 blast)
+  have hZ_grp: "top1_is_group_on top1_Z_group top1_Z_mul top1_Z_id top1_Z_invg"
+    using hZ_free unfolding top1_is_free_group_full_on_def by (by100 blast)
   show ?thesis
-    sorry \<comment> \<open>free\\_group\\_hom\\_exists + free\\_group\\_hom\\_generators\\_iso.
-       Unique hom \\<Z> \\<rightarrow> \\<pi>\\_1 mapping 1 \\<mapsto> [\\<alpha>*\\<beta>] is bijection \\<Rightarrow> iso.\<close>
+    by (rule top1_groups_isomorphic_on_sym[OF
+        \<open>top1_groups_isomorphic_on top1_Z_group _ ?pi _\<close> hZ_grp hpi_grp])
 qed
 
 text \<open>Helper: free group structure transfers across isomorphism.\<close>
