@@ -9567,6 +9567,16 @@ qed
 text \<open>Helper: deformation retract onto path-connected subspace implies path-connected.
   If X deformation retracts onto A and A is path-connected, then X is path-connected.
   Proof: the homotopy H gives a path from x to H(x,1) \<in> A for each x \<in> X.\<close>
+text \<open>Helper: trivial \<pi>_1 carrier + path-connected \<Rightarrow> simply connected.\<close>
+lemma trivial_pi1_imp_simply_connected:
+  assumes "is_topology_on X TX"
+      and "top1_path_connected_on X TX"
+      and "x0 \<in> X"
+      and "top1_fundamental_group_carrier X TX x0 =
+          {top1_fundamental_group_id X TX x0}"
+  shows "top1_simply_connected_on X TX"
+  sorry
+
 lemma deformation_retract_path_connected:
   assumes hdr: "top1_deformation_retract_of_on X TX A"
       and hTX: "is_topology_on X TX"
@@ -12134,9 +12144,7 @@ proof -
             \<comment> \<open>\\<pi>\\_1(V) trivial + V PC \\<Rightarrow> V SC.
                Uses top1\\_simply\\_connected\\_from\\_one\\_point + hV\\_triv.\<close>
             show ?thesis
-              sorry \<comment> \<open>V SC: \\<pi>\\_1(V, x0) = {id} (hV\\_triv) + V PC (hV\\_pc\\_early) \\<Rightarrow> V SC.
-                 Uses simply\\_connected\\_from\\_one\\_point + homotopic\\_refl + sym.
-                 Isabelle mechanics issue with unfolding in proof context.\<close>
+              by (rule trivial_pi1_imp_simply_connected[OF hV_top_bc hV_pc_early hx0_V_bc hV_triv])
           qed
           \<comment> \<open>Apply Lemma 84.6.\<close>
           from halpha_loc hbeta_loc obtain \<alpha> \<beta> where
