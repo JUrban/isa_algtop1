@@ -88,7 +88,22 @@ session AlgTopCached3 in ac3 = AlgTopCached2 +
   theories
     AlgTopCached3
 
-session AlgTop = AlgTopCached3 +
+session AlgTopCached4 in ac4 = AlgTopCached3 +
+  options [timeout = 600]
+  theories
+    AlgTopCached4
+
+session AlgTopCached5 in ac5 = AlgTopCached4 +
+  options [timeout = 600]
+  theories
+    AlgTopCached5
+
+session AlgTopCached6 in ac6 = AlgTopCached5 +
+  options [timeout = 600]
+  theories
+    AlgTopCached6
+
+session AlgTop = AlgTopCached6 +
   options [quick_and_dirty, timeout = 600]
   theories
     AlgTop
