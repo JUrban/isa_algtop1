@@ -11875,11 +11875,26 @@ proof -
           let ?A_comp = "hA ` {t. 0 < t \<and> t < 1/2}"
           let ?B_comp = "hA ` {t. 1/2 < t \<and> t < 1}"
           have hUV_split: "?U \<inter> ?V = ?A_comp \<union> ?B_comp" sorry
-          have hAB_disj: "?A_comp \<inter> ?B_comp = {}" sorry
+          have hAB_disj: "?A_comp \<inter> ?B_comp = {}"
+          proof (rule ccontr)
+            assume "\<not> ?thesis"
+            then obtain x where "x \<in> ?A_comp" "x \<in> ?B_comp" by (by100 blast)
+            then obtain s t where hs: "0 < s" "s < 1/2" "x = hA s"
+                and ht: "1/2 < t" "t < 1" "x = hA t" by (by100 blast)
+            have "hA s = hA t" using hs(3) ht(3) by (by100 simp)
+            have "s \<in> top1_unit_interval" using hs(1,2) unfolding top1_unit_interval_def by (by100 simp)
+            have "t \<in> top1_unit_interval" using ht(1,2) unfolding top1_unit_interval_def by (by100 simp)
+            have hinj: "inj_on hA top1_unit_interval"
+              using hhA unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+            have "s = t" using inj_onD[OF hinj \<open>hA s = hA t\<close> \<open>s \<in> _\<close> \<open>t \<in> _\<close>] .
+            thus False using hs(2) ht(1) by (by100 linarith)
+          qed
           have hA_open_loc: "openin_on X TX ?A_comp" sorry
           have hB_open_loc: "openin_on X TX ?B_comp" sorry
-          have hA_pc_loc: "top1_path_connected_on ?A_comp (subspace_topology X TX ?A_comp)" sorry
-          have hB_pc_loc: "top1_path_connected_on ?B_comp (subspace_topology X TX ?B_comp)" sorry
+          have hA_pc_loc: "top1_path_connected_on ?A_comp (subspace_topology X TX ?A_comp)"
+            sorry \<comment> \<open>hA\\`(0,1/2) is PC: image of convex interval under homeo \\<Rightarrow> PC.\<close>
+          have hB_pc_loc: "top1_path_connected_on ?B_comp (subspace_topology X TX ?B_comp)"
+            sorry \<comment> \<open>hA\\`(1/2,1) is PC: same argument.\<close>
           have ha_A: "?pt_a \<in> ?A_comp"
           proof - have "(1/4::real) \<in> {t. 0 < t \<and> t < 1/2}" by (by100 simp) thus ?thesis by (by100 blast) qed
           have hb_B: "?pt_b \<in> ?B_comp"
