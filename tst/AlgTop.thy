@@ -12634,21 +12634,43 @@ proof -
             \<comment> \<open>U = hA\\`(0,1) is PC (image of convex (0,1) under continuous hA).\<close>
             have hU_pc_loc: "top1_path_connected_on ?U (subspace_topology X TX ?U)"
               sorry \<comment> \<open>(0,1) convex \\<Rightarrow> PC. hA continuous. path\\_connected\\_continuous\\_image.\<close>
+            have hU_eq_img: "hA ` {t::real. 0 < t \<and> t < 1} = ?U"
+            proof (rule set_eqI, rule iffI)
+              fix x assume "x \<in> hA ` {t. 0 < t \<and> t < 1}"
+              then obtain s where hs: "0 < s" "s < 1" "x = hA s" by (by100 blast)
+              have "s \<in> top1_unit_interval" using hs(1,2) unfolding top1_unit_interval_def by (by100 simp)
+              hence "x \<in> A1" using hhA \<open>x = hA s\<close>
+                unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+              have hinj: "inj_on hA top1_unit_interval"
+                using hhA unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+              have h0_I: "(0::real) \<in> top1_unit_interval" unfolding top1_unit_interval_def by (by100 simp)
+              have h1_I: "(1::real) \<in> top1_unit_interval" unfolding top1_unit_interval_def by (by100 simp)
+              have "s \<noteq> 0" using hs(1) by (by100 linarith)
+              hence "x \<noteq> hA 0" using \<open>x = hA s\<close> hinj \<open>s \<in> _\<close> h0_I unfolding inj_on_def by (by100 blast)
+              have "s \<noteq> 1" using hs(2) by (by100 linarith)
+              hence "x \<noteq> hA 1" using \<open>x = hA s\<close> hinj \<open>s \<in> _\<close> h1_I unfolding inj_on_def by (by100 blast)
+              thus "x \<in> ?U" using \<open>x \<in> A1\<close> \<open>x \<noteq> hA 0\<close> \<open>x \<noteq> hA 1\<close> by (by100 blast)
+            next
+              fix x assume "x \<in> ?U"
+              hence "x \<in> A1" "x \<noteq> hA 0" "x \<noteq> hA 1" by (by100 blast)+
+              have "x \<in> hA ` top1_unit_interval"
+                using \<open>x \<in> A1\<close> hhA unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+              then obtain t where ht: "t \<in> top1_unit_interval" "x = hA t" by (by100 blast)
+              have "t \<noteq> 0" using \<open>x \<noteq> hA 0\<close> ht(2) by (by100 blast)
+              have "t \<noteq> 1" using \<open>x \<noteq> hA 1\<close> ht(2) by (by100 blast)
+              have "0 \<le> t" "t \<le> 1" using ht(1) unfolding top1_unit_interval_def by (by100 simp)+
+              hence "0 < t \<and> t < 1" using \<open>t \<noteq> 0\<close> \<open>t \<noteq> 1\<close> by (by100 linarith)
+              thus "x \<in> hA ` {t. 0 < t \<and> t < 1}" using ht(2) by (by100 blast)
+            qed
             have hpta_U: "?pt_a \<in> ?U"
             proof -
               have "(1/4::real) \<in> {t. 0 < t \<and> t < 1}" by (by100 simp)
-              hence "hA (1/4) \<in> hA ` {t. 0 < t \<and> t < 1}" by (by100 blast)
-              moreover have "hA ` {t::real. 0 < t \<and> t < 1} = ?U"
-                sorry \<comment> \<open>Same bij decomposition as hUV\\_split.\<close>
-              ultimately show ?thesis by (by100 simp)
+              thus ?thesis using hU_eq_img by (by100 blast)
             qed
             have hptb_U: "?pt_b \<in> ?U"
             proof -
               have "(3/4::real) \<in> {t. 0 < t \<and> t < 1}" by (by100 simp)
-              hence "hA (3/4) \<in> hA ` {t. 0 < t \<and> t < 1}" by (by100 blast)
-              moreover have "hA ` {t::real. 0 < t \<and> t < 1} = ?U"
-                sorry \<comment> \<open>Same bij decomposition.\<close>
-              ultimately show ?thesis by (by100 simp)
+              thus ?thesis using hU_eq_img by (by100 blast)
             qed
             from hU_pc_loc hpta_U hptb_U show ?thesis
               unfolding top1_path_connected_on_def by (by100 blast)
