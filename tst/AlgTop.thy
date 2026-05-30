@@ -9574,7 +9574,22 @@ lemma convex_real_subspace_simply_connected:
       and hS_conv: "\<And>x y t. x \<in> S \<Longrightarrow> y \<in> S \<Longrightarrow> 0 \<le> t \<Longrightarrow> t \<le> 1
           \<Longrightarrow> (1 - t) * x + t * (y::real) \<in> S"
   shows "top1_simply_connected_on S (subspace_topology (UNIV::real set) top1_open_sets S)"
-  sorry
+proof -
+  let ?TS = "subspace_topology (UNIV::real set) top1_open_sets S"
+  have hS_pc: "top1_path_connected_on S ?TS"
+    by (rule convex_real_subspace_path_connected[OF hS_ne hS_conv])
+  obtain x0 where hx0: "x0 \<in> S" using hS_ne by (by100 blast)
+  have hTS: "is_topology_on S ?TS"
+    by (rule subspace_topology_is_topology_on[OF top1_open_sets_is_topology_on_UNIV]) (by100 blast)
+  \<comment> \<open>Prove all-loops-trivial in a SEPARATE block (avoids simp closing the show goal).\<close>
+  have hall_trivial: "\<forall>f. top1_is_loop_on S ?TS x0 f \<longrightarrow>
+      top1_path_homotopic_on S ?TS x0 x0 f (top1_constant_path x0)"
+    sorry \<comment> \<open>Straight-line homotopy: H(s,t)=(1-t)*f(s)+t*x0.
+       Continuous (top1\\_slh\\_ext). Image in S (convexity). Contracts f to const.\<close>
+  show ?thesis
+    by (rule top1_simply_connected_from_one_point[OF hTS hS_pc hx0])
+       (use hall_trivial in blast)
+qed
 
 text \<open>Helper: trivial \<pi>_1 carrier + path-connected \<Rightarrow> simply connected.\<close>
 lemma trivial_pi1_imp_simply_connected:
