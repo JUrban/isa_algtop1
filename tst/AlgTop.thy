@@ -12112,7 +12112,66 @@ proof -
                 \<open>\<forall>x\<in>?I_A. hA x \<in> X\<close> himg hA_sub_X hTX_loc by (by100 blast)
           qed
           have hB_pc_loc: "top1_path_connected_on ?B_comp (subspace_topology X TX ?B_comp)"
-            sorry \<comment> \<open>Same as hA\\_pc\\_loc with (1/2, 1) instead of (0, 1/2).\<close>
+          proof -
+            let ?I_B = "{t::real. 1/2 < t \<and> t < 1}"
+            let ?TI_B = "subspace_topology (UNIV::real set) top1_open_sets ?I_B"
+            have hI_B_ne: "?I_B \<noteq> {}"
+              proof - have "(3/4::real) \<in> ?I_B" by (by100 simp) thus ?thesis by (by100 blast) qed
+            have hI_B_conv: "\<And>x y t. x \<in> ?I_B \<Longrightarrow> y \<in> ?I_B \<Longrightarrow> 0 \<le> t \<Longrightarrow> t \<le> 1
+                \<Longrightarrow> (1 - t) * x + t * y \<in> ?I_B"
+              sorry \<comment> \<open>Convexity of (1/2, 1). Same pattern as (0, 1/2).\<close>
+            from convex_real_subspace_path_connected[OF hI_B_ne hI_B_conv]
+            have hI_B_pc: "top1_path_connected_on ?I_B ?TI_B" by (by100 simp)
+            have hI_B_sub: "?I_B \<subseteq> top1_unit_interval"
+              unfolding top1_unit_interval_def by (by100 auto)
+            have hI_B_top_eq: "subspace_topology top1_unit_interval top1_unit_interval_topology ?I_B = ?TI_B"
+            proof -
+              have "subspace_topology top1_unit_interval
+                  (subspace_topology (UNIV::real set) top1_open_sets top1_unit_interval) ?I_B
+                  = subspace_topology (UNIV::real set) top1_open_sets ?I_B"
+                by (rule subspace_topology_trans[OF hI_B_sub])
+              moreover have "top1_unit_interval_topology =
+                  subspace_topology (UNIV::real set) top1_open_sets top1_unit_interval"
+                unfolding top1_unit_interval_topology_def top1_unit_interval_def by (by100 blast)
+              ultimately show ?thesis by (by100 simp)
+            qed
+            have hhA_cont_X: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology X TX hA"
+            proof -
+              have "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+                  A1 (subspace_topology X TX A1) hA"
+                using hhA unfolding top1_homeomorphism_on_def by (by100 blast)
+              from top1_continuous_map_on_codomain_enlarge[OF this hA1_sub subset_refl]
+              have "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology X (subspace_topology X TX X) hA" .
+              moreover have "\<forall>U\<in>TX. U \<subseteq> X"
+                using hX_strict unfolding is_topology_on_strict_def by (by100 blast)
+              hence "subspace_topology X TX X = TX" by (rule subspace_topology_self)
+              ultimately show ?thesis by (by100 simp)
+            qed
+            from top1_continuous_map_on_restrict_domain_simple[OF hhA_cont_X hI_B_sub]
+            have hhA_rest_B: "top1_continuous_map_on ?I_B ?TI_B X TX hA"
+              using hI_B_top_eq by (by100 simp)
+            have himg_B: "hA ` ?I_B = ?B_comp" by (by100 blast)
+            have hB_sub_X: "?B_comp \<subseteq> X"
+            proof -
+              have "hA ` ?I_B \<subseteq> hA ` top1_unit_interval" using hI_B_sub by (by100 blast)
+              have "hA ` top1_unit_interval = A1"
+                using hhA unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+              have "hA ` ?I_B \<subseteq> A1" using \<open>hA ` ?I_B \<subseteq> hA ` top1_unit_interval\<close> \<open>_ = A1\<close> by (by100 blast)
+              thus ?thesis using hA1_sub by (by100 blast)
+            qed
+            have "\<forall>x\<in>?I_B. hA x \<in> X"
+              using hhA_cont_X unfolding top1_continuous_map_on_def
+              using hI_B_sub by (by100 blast)
+            show ?thesis
+              using top1_path_connected_continuous_image[OF hI_B_pc hhA_rest_B]
+                \<open>\<forall>x\<in>?I_B. hA x \<in> X\<close> himg_B hB_sub_X
+            proof -
+              have "is_topology_on X TX"
+                using hX_strict unfolding is_topology_on_strict_def by (by100 blast)
+              thus ?thesis using top1_path_connected_continuous_image[OF hI_B_pc hhA_rest_B]
+                \<open>\<forall>x\<in>?I_B. hA x \<in> X\<close> himg_B hB_sub_X by (by100 blast)
+            qed
+          qed
           have ha_A: "?pt_a \<in> ?A_comp"
           proof - have "(1/4::real) \<in> {t. 0 < t \<and> t < 1/2}" by (by100 simp) thus ?thesis by (by100 blast) qed
           have hb_B: "?pt_b \<in> ?B_comp"
