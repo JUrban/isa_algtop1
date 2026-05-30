@@ -11818,7 +11818,22 @@ proof -
           let ?pt_b = "hA (3/4)"
           \<comment> \<open>All the setup for Lemma 84.6.\<close>
           have hU_open_loc: "openin_on X TX ?U" sorry
-          have hV_open_loc: "openin_on X TX ?V" sorry
+          have hV_open_loc: "openin_on X TX ?V"
+          proof -
+            have hX_haus: "is_hausdorff_on X TX"
+              using assms(1) unfolding top1_is_graph_on_def by (by100 blast)
+            have hmid_X: "?mid \<in> X"
+            proof -
+              have "(1/2::real) \<in> top1_unit_interval" unfolding top1_unit_interval_def by (by100 simp)
+              hence "hA (1/2) \<in> A1"
+                using hhA unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+              thus ?thesis using hA1_sub by (by100 blast)
+            qed
+            have "finite {?mid}" by (by100 simp)
+            have "closedin_on X TX {?mid}"
+              using Theorem_17_8[OF hX_haus \<open>finite {?mid}\<close>] hmid_X by (by100 blast)
+            thus ?thesis unfolding openin_on_def closedin_on_def by (by100 blast)
+          qed
           have hcover_loc: "?U \<union> ?V = X" sorry
           \<comment> \<open>U \\<inter> V has two path components A, B.\<close>
           let ?A_comp = "hA ` {t. 0 < t \<and> t < 1/2}"
@@ -11859,7 +11874,47 @@ proof -
             thus ?thesis using hA1_sub by (by100 blast)
           qed
           \<comment> \<open>X is path-connected (tree \\<union> one arc, proved above).\<close>
-          have hX_pc: "top1_path_connected_on X TX" sorry
+          have hX_pc: "top1_path_connected_on X TX"
+          proof -
+            have "top1_path_connected_on (T \<union> A1) (subspace_topology X TX (T \<union> A1))"
+            proof -
+              have "\<forall>A\<in>{A1}. top1_is_arc_on A (subspace_topology X TX A) \<and> A \<subseteq> X"
+                using hA1_arc hA1_sub by (by100 blast)
+              have "\<forall>A\<in>{A1}. \<exists>e. e \<in> T \<and> e \<in> A"
+              proof -
+                have "A1 \<in> ?NT" using hA1 by (by100 blast)
+                obtain h' where hh': "top1_homeomorphism_on top1_unit_interval
+                    top1_unit_interval_topology A1 (subspace_topology X TX A1) h'"
+                  using hA1_arc unfolding top1_is_arc_on_def by (by100 blast)
+                have "is_hausdorff_on X TX"
+                  using assms(1) unfolding top1_is_graph_on_def by (by100 blast)
+                from arc_endpoints_are_boundary[OF hX_strict
+                    \<open>is_hausdorff_on X TX\<close> hA1_sub hA1_arc hh']
+                have "top1_arc_endpoints_on A1 (subspace_topology X TX A1) = {h' 0, h' 1}" .
+                have "h' 0 \<in> T"
+                  using hNT_endpoints[rule_format, OF \<open>A1 \<in> ?NT\<close>] \<open>_ = {h' 0, h' 1}\<close> by (by100 simp)
+                have "(0::real) \<in> top1_unit_interval" unfolding top1_unit_interval_def by (by100 simp)
+                have "h' 0 \<in> A1"
+                  using hh' \<open>(0::real) \<in> top1_unit_interval\<close>
+                  unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+                thus ?thesis using \<open>h' 0 \<in> T\<close> \<open>h' 0 \<in> A1\<close> by (by100 blast)
+              qed
+              have hTX_t: "is_topology_on X TX"
+                using hX_strict unfolding is_topology_on_strict_def by (by100 blast)
+              have "finite ({A1} :: 'a set set)" by (by100 simp)
+              from tree_union_arcs_path_connected[OF hTX_t hT_tree hT_sub
+                  \<open>finite {A1}\<close> \<open>\<forall>A\<in>{A1}. _ \<and> _\<close> \<open>\<forall>A\<in>{A1}. \<exists>e. _\<close> hx0_T]
+              show ?thesis by (by100 simp)
+            qed
+            moreover have "T \<union> A1 = X" using hX_eq by (by100 blast)
+            moreover have "subspace_topology X TX X = TX"
+            proof -
+              have "\<forall>U\<in>TX. U \<subseteq> X"
+                using hX_strict unfolding is_topology_on_strict_def by (by100 blast)
+              thus ?thesis by (rule subspace_topology_self)
+            qed
+            ultimately show ?thesis by (by100 simp)
+          qed
           \<comment> \<open>Path from a to x0 in X.\<close>
           have "\<exists>\<gamma>. top1_is_path_on X TX ?pt_a x0 \<gamma>"
             using hX_pc ha_X assms(3) unfolding top1_path_connected_on_def by (by100 blast)
