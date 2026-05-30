@@ -12197,7 +12197,116 @@ proof -
               by (by100 simp)
           qed
           have hB_open_loc: "openin_on X TX ?B_comp"
-            sorry \<comment> \<open>Same coherent topology argument as A\\_comp open.\<close>
+          proof -
+            have "X - ?B_comp \<subseteq> X" by (by100 blast)
+            have "\<forall>B\<in>\<A>. closedin_on B (subspace_topology X TX B) (B \<inter> (X - ?B_comp))"
+            proof (intro ballI)
+              fix B assume "B \<in> \<A>"
+              have "B \<subseteq> X" using h\<A> \<open>B \<in> \<A>\<close> by (by100 blast)
+              show "closedin_on B (subspace_topology X TX B) (B \<inter> (X - ?B_comp))"
+              proof (cases "B = A1")
+                case True
+                have hB_comp_open_A1: "?B_comp \<in> subspace_topology X TX A1"
+                proof -
+                  have h_open_I_B: "{t::real. 1/2 < t \<and> t < 1} \<in> top1_unit_interval_topology"
+                  proof -
+                    have "{t::real. 1/2 < t \<and> t < 1} = top1_unit_interval \<inter> {t. 1/2 < t \<and> t < 1}"
+                      unfolding top1_unit_interval_def by (by100 auto)
+                    moreover have "open {x::real. 1/2 < x}" using open_greaterThan
+                      unfolding greaterThan_def by (by100 blast)
+                    moreover have "open {x::real. x < 1}" using open_lessThan
+                      unfolding lessThan_def by (by100 blast)
+                    moreover have "{t::real. 1/2 < t \<and> t < 1} = {x. 1/2 < x} \<inter> {x. x < 1}" by (by100 blast)
+                    moreover have "open ({x::real. 1/2 < x} \<inter> {x. x < 1})"
+                      using calculation(2,3) by (by100 blast)
+                    ultimately have hopen_R: "{t::real. 1/2 < t \<and> t < 1} \<in> top1_open_sets"
+                      unfolding top1_open_sets_def by (by100 simp)
+                    have "{t::real. 1/2 < t \<and> t < 1} = top1_unit_interval \<inter> {t. 1/2 < t \<and> t < 1}"
+                      unfolding top1_unit_interval_def by (by100 auto)
+                    thus ?thesis unfolding top1_unit_interval_topology_def top1_unit_interval_def
+                      subspace_topology_def using hopen_R by (by5000 auto)
+                  qed
+                  have h_sub_I_B: "{t::real. 1/2 < t \<and> t < 1} \<subseteq> top1_unit_interval"
+                    unfolding top1_unit_interval_def by (by100 auto)
+                  from homeomorphism_image_open[OF hhA h_open_I_B h_sub_I_B] show ?thesis .
+                qed
+                have hBcomp_sub: "?B_comp \<subseteq> A1"
+                proof -
+                  have "hA ` top1_unit_interval = A1"
+                    using hhA unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+                  have "{t::real. 1/2 < t \<and> t < 1} \<subseteq> top1_unit_interval"
+                    unfolding top1_unit_interval_def by (by100 auto)
+                  thus ?thesis using \<open>hA ` top1_unit_interval = A1\<close> by (by100 blast)
+                qed
+                have "B \<inter> (X - ?B_comp) = A1 - ?B_comp" using True hA1_sub by (by100 blast)
+                moreover have "closedin_on A1 (subspace_topology X TX A1) (A1 - ?B_comp)"
+                proof -
+                  have "A1 - ?B_comp \<subseteq> A1" by (by100 blast)
+                  have "A1 - (A1 - ?B_comp) = ?B_comp" using hBcomp_sub by (by100 blast)
+                  hence "A1 - (A1 - ?B_comp) \<in> subspace_topology X TX A1"
+                    using hB_comp_open_A1 by (by100 simp)
+                  thus ?thesis unfolding closedin_on_def
+                    using \<open>A1 - ?B_comp \<subseteq> A1\<close> by (by100 blast)
+                qed
+                ultimately show ?thesis using True by (by100 simp)
+              next
+                case False
+                have "A1 \<in> \<A>" using hA1 by (by100 blast)
+                from h\<A>_inter[rule_format, OF \<open>A1 \<in> \<A>\<close> \<open>B \<in> \<A>\<close> False[symmetric]]
+                have "A1 \<inter> B \<subseteq> top1_arc_endpoints_on A1 (subspace_topology X TX A1)" by (by100 blast)
+                have hep_eq: "top1_arc_endpoints_on A1 (subspace_topology X TX A1) = {?ep_l, ?ep_r}"
+                proof -
+                  have "is_hausdorff_on X TX" using assms(1) unfolding top1_is_graph_on_def by (by100 blast)
+                  show ?thesis by (rule arc_endpoints_are_boundary[OF hX_strict \<open>is_hausdorff_on X TX\<close> hA1_sub hA1_arc hhA])
+                qed
+                have "?B_comp \<subseteq> A1 - {?ep_l, ?ep_r}"
+                proof
+                  fix x assume "x \<in> ?B_comp"
+                  then obtain s where hs: "1/2 < s" "s < 1" "x = hA s" by (by100 blast)
+                  have "s \<in> top1_unit_interval" using hs(1,2) unfolding top1_unit_interval_def by (by100 simp)
+                  hence "x \<in> A1" using hhA \<open>x = hA s\<close>
+                    unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+                  have hinj: "inj_on hA top1_unit_interval"
+                    using hhA unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+                  have h0_I_loc: "(0::real) \<in> top1_unit_interval"
+                    unfolding top1_unit_interval_def by (by100 simp)
+                  have h1_I_loc: "(1::real) \<in> top1_unit_interval"
+                    unfolding top1_unit_interval_def by (by100 simp)
+                  have "s \<noteq> 0" using hs(1) by (by100 linarith)
+                  hence "x \<noteq> hA 0" using \<open>x = hA s\<close> hinj \<open>s \<in> _\<close> h0_I_loc
+                    unfolding inj_on_def by (by100 blast)
+                  have "s \<noteq> 1" using hs(2) by (by100 linarith)
+                  hence "x \<noteq> hA 1" using \<open>x = hA s\<close> hinj \<open>s \<in> _\<close> h1_I_loc
+                    unfolding inj_on_def by (by100 blast)
+                  thus "x \<in> A1 - {?ep_l, ?ep_r}" using \<open>x \<in> A1\<close> \<open>x \<noteq> hA 0\<close> \<open>x \<noteq> hA 1\<close> by (by100 blast)
+                qed
+                have "B \<inter> (A1 - {?ep_l, ?ep_r}) = {}"
+                  using \<open>A1 \<inter> B \<subseteq> _\<close> hep_eq by (by100 blast)
+                hence "B \<inter> ?B_comp = {}" using \<open>?B_comp \<subseteq> A1 - {?ep_l, ?ep_r}\<close> by (by100 blast)
+                hence "B \<inter> (X - ?B_comp) = B" using \<open>B \<subseteq> X\<close> by (by100 blast)
+                thus ?thesis
+                  using closedin_carrier[OF subspace_topology_is_topology_on[OF
+                      is_topology_on_strict_imp[OF hX_strict] \<open>B \<subseteq> X\<close>]]
+                  by (by100 simp)
+              qed
+            qed
+            from h\<A>_coh[rule_format, OF \<open>X - ?B_comp \<subseteq> X\<close>] this
+            have "closedin_on X TX (X - ?B_comp)" by (by100 blast)
+            hence "X - (X - ?B_comp) \<in> TX" unfolding closedin_on_def by (by100 blast)
+            have "?B_comp \<subseteq> X"
+            proof -
+              have "hA ` top1_unit_interval = A1"
+                using hhA unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+              have "{t::real. 1/2 < t \<and> t < 1} \<subseteq> top1_unit_interval"
+                unfolding top1_unit_interval_def by (by100 auto)
+              have "?B_comp \<subseteq> A1" using \<open>hA ` top1_unit_interval = A1\<close> \<open>{t. _} \<subseteq> _\<close> by (by100 blast)
+              thus ?thesis using hA1_sub by (by100 blast)
+            qed
+            hence "X - (X - ?B_comp) = ?B_comp" by (by100 blast)
+            thus ?thesis unfolding openin_on_def
+              using \<open>X - (X - ?B_comp) \<in> TX\<close> \<open>?B_comp \<subseteq> X\<close> \<open>X - (X - ?B_comp) = ?B_comp\<close>
+              by (by100 simp)
+          qed
           have hA_pc_loc: "top1_path_connected_on ?A_comp (subspace_topology X TX ?A_comp)"
           proof -
             let ?I_A = "{t::real. 0 < t \<and> t < 1/2}"
