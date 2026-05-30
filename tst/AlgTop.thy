@@ -11791,7 +11791,8 @@ proof -
             (top1_fundamental_group_mul ?U ?TU x0)"
           by (rule Theorem_58_3[OF hU_dr hU_top hx0_tU])
         have htU_sub_U: "?target_U \<subseteq> ?U"
-          sorry \<comment> \<open>First conjunct of hU\\_dr (DR definition includes A \\<subseteq> X).\<close>
+          using conjunct1[OF hU_dr[unfolded top1_deformation_retract_of_on_def]]
+          by (by100 blast)
         have hTU_trans: "subspace_topology ?U ?TU ?target_U = subspace_topology X TX ?target_U"
           by (rule subspace_topology_trans[OF htU_sub_U])
         have hpi1_V_iso: "top1_groups_isomorphic_on
@@ -11801,7 +11802,8 @@ proof -
             (top1_fundamental_group_mul ?V ?TV x0)"
           by (rule Theorem_58_3[OF hV_dr hV_top hx0_tV])
         have htV_sub_V: "?target_V \<subseteq> ?V"
-          sorry \<comment> \<open>First conjunct of hV\\_dr (DR definition includes A \\<subseteq> X).\<close>
+          using conjunct1[OF hV_dr[unfolded top1_deformation_retract_of_on_def]]
+          by (by100 blast)
         have hTV_trans: "subspace_topology ?V ?TV ?target_V = subspace_topology X TX ?target_V"
           by (rule subspace_topology_trans[OF htV_sub_V])
         \<comment> \<open>target\\_U = T \\<union> A1 has free \\<pi>\\_1 (base case: 1 non-tree arc).\<close>
