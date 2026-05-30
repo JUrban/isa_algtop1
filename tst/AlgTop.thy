@@ -12026,7 +12026,26 @@ proof -
             qed
             \<comment> \<open>Endpoints of A1 are in T, so there's a common point.\<close>
             have "\<exists>p. p \<in> T \<and> p \<in> A1"
-              sorry \<comment> \<open>Arc endpoint is in T (hNT\\_endpoints).\<close>
+            proof -
+              have "A1 \<in> ?NT" using hA1 by (by100 blast)
+              have hA1_arc_here: "top1_is_arc_on A1 (subspace_topology X TX A1)"
+                using h\<A> hA1 by (by100 blast)
+              obtain h' where hh': "top1_homeomorphism_on top1_unit_interval
+                  top1_unit_interval_topology A1 (subspace_topology X TX A1) h'"
+                using hA1_arc_here unfolding top1_is_arc_on_def by (by100 blast)
+              have hX_strict: "is_topology_on_strict X TX"
+                using assms(1) unfolding top1_is_graph_on_def by (by100 blast)
+              have hX_haus: "is_hausdorff_on X TX"
+                using assms(1) unfolding top1_is_graph_on_def by (by100 blast)
+              have "A1 \<subseteq> X" using h\<A> hA1 by (by100 blast)
+              from arc_endpoints_are_boundary[OF hX_strict hX_haus \<open>A1 \<subseteq> X\<close> hA1_arc_here hh']
+              have hep: "top1_arc_endpoints_on A1 (subspace_topology X TX A1) = {h' 0, h' 1}" .
+              have "h' 0 \<in> T" using hNT_endpoints[rule_format, OF \<open>A1 \<in> ?NT\<close>] hep by (by100 simp)
+              have h0_I: "(0::real) \<in> top1_unit_interval" unfolding top1_unit_interval_def by (by100 simp)
+              have "h' 0 \<in> A1"
+                using hh' h0_I unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+              thus ?thesis using \<open>h' 0 \<in> T\<close> by (by100 blast)
+            qed
             then obtain p0 where hp0_T: "p0 \<in> T" and hp0_A1: "p0 \<in> A1" by (by100 blast)
             \<comment> \<open>Apply finite union with common point.\<close>
             have hA1_sub_X: "A1 \<subseteq> X" using h\<A> hA1 by (by100 blast)
@@ -12036,7 +12055,27 @@ proof -
               thus ?thesis using subspace_topology_is_topology_on[OF hTX_top] by (by100 blast)
             qed
             have "top1_path_connected_on ?target_U (subspace_topology X TX ?target_U)"
-              sorry \<comment> \<open>path\\_connected\\_finite\\_union\\_common\\_point with F = {T, A1}.\<close>
+            proof -
+              have "?target_U = T \<union> A1"
+                using \<open>?target_U = T \<union> A1\<close> .
+              let ?F = "{T, A1}"
+              have "finite ?F" by (by100 simp)
+              have "\<forall>A\<in>?F. A \<subseteq> ?target_U"
+                using \<open>?target_U = T \<union> A1\<close> by (by100 blast)
+              have "\<forall>A\<in>?F. A \<subseteq> X" using hT_sub hA1_sub_X by (by100 blast)
+              have "?target_U = \<Union>?F" using \<open>?target_U = T \<union> A1\<close> by (by100 blast)
+              have "\<forall>A\<in>?F. top1_path_connected_on A (subspace_topology X TX A)"
+                using hT_pc hA1_pc by (by100 blast)
+              \<comment> \<open>Transfer PC from subspace of X to subspace of target\\_U.\<close>
+              have "\<forall>A\<in>?F. top1_path_connected_on A (subspace_topology ?target_U (subspace_topology X TX ?target_U) A)"
+                sorry \<comment> \<open>subspace\\_topology\\_trans: sub(X, TX, A) = sub(tU, sub(X,TX,tU), A) when A \\<subseteq> tU.\<close>
+              have "\<forall>A\<in>?F. p0 \<in> A" using hp0_T hp0_A1 by (by100 blast)
+              from path_connected_finite_union_common_point[OF htU_top \<open>finite ?F\<close>
+                  \<open>\<forall>A\<in>?F. A \<subseteq> ?target_U\<close>
+                  \<open>\<forall>A\<in>?F. top1_path_connected_on A (subspace_topology ?target_U _ A)\<close>
+                  \<open>\<forall>A\<in>?F. p0 \<in> A\<close> \<open>?target_U = \<Union>?F\<close>]
+              show ?thesis .
+            qed
             thus ?thesis using \<open>subspace_topology ?U ?TU ?target_U = subspace_topology X TX ?target_U\<close>
               by (by100 simp)
           qed
