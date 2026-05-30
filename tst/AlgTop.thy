@@ -11901,7 +11901,42 @@ proof -
           proof - have "(3/4::real) \<in> {t. 1/2 < t \<and> t < 1}" by (by100 simp) thus ?thesis by (by100 blast) qed
           \<comment> \<open>Paths \\<alpha> (in U from a to b) and \\<beta> (in V from b to a).\<close>
           have halpha_loc: "\<exists>\<alpha>. top1_is_path_on ?U (subspace_topology X TX ?U) ?pt_a ?pt_b \<alpha>" sorry
-          have hbeta_loc: "\<exists>\<beta>. top1_is_path_on ?V (subspace_topology X TX ?V) ?pt_b ?pt_a \<beta>" sorry
+          have hbeta_loc: "\<exists>\<beta>. top1_is_path_on ?V (subspace_topology X TX ?V) ?pt_b ?pt_a \<beta>"
+          proof -
+            \<comment> \<open>Both pt\\_a and pt\\_b are in V (they're in A1 but \\<noteq> hA(1/2)).\<close>
+            have hpta_V: "?pt_a \<in> ?V"
+            proof -
+              have hinj: "inj_on hA top1_unit_interval"
+                using hhA unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+              have "(1/4::real) \<in> top1_unit_interval" unfolding top1_unit_interval_def by (by100 simp)
+              have "(1/2::real) \<in> top1_unit_interval" unfolding top1_unit_interval_def by (by100 simp)
+              have "(1/4::real) \<noteq> 1/2" by (by100 simp)
+              hence "hA (1/4) \<noteq> hA (1/2)"
+                using hinj \<open>(1/4::real) \<in> _\<close> \<open>(1/2::real) \<in> _\<close> unfolding inj_on_def by (by100 blast)
+              have "hA (1/4) \<in> A1"
+                using hhA \<open>(1/4::real) \<in> _\<close>
+                unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+              thus ?thesis using \<open>hA (1/4) \<noteq> hA (1/2)\<close> hA1_sub by (by100 blast)
+            qed
+            have hptb_V: "?pt_b \<in> ?V"
+            proof -
+              have hinj: "inj_on hA top1_unit_interval"
+                using hhA unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+              have "(3/4::real) \<in> top1_unit_interval" unfolding top1_unit_interval_def by (by100 simp)
+              have "(1/2::real) \<in> top1_unit_interval" unfolding top1_unit_interval_def by (by100 simp)
+              have "(3/4::real) \<noteq> 1/2" by (by100 simp)
+              hence "hA (3/4) \<noteq> hA (1/2)"
+                using hinj \<open>(3/4::real) \<in> _\<close> \<open>(1/2::real) \<in> _\<close> unfolding inj_on_def by (by100 blast)
+              have "hA (3/4) \<in> A1"
+                using hhA \<open>(3/4::real) \<in> top1_unit_interval\<close>
+                unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+              thus ?thesis using \<open>hA (3/4) \<noteq> hA (1/2)\<close> hA1_sub by (by100 blast)
+            qed
+            \<comment> \<open>V is path-connected (already proved above as hV\\_pc\\_bc inside V SC).\<close>
+            have hV_pc_here: "top1_path_connected_on ?V (subspace_topology X TX ?V)" sorry
+            from hV_pc_here hptb_V hpta_V
+            show ?thesis unfolding top1_path_connected_on_def by (by100 blast)
+          qed
           \<comment> \<open>U and V simply connected.\<close>
           have hU_sc_loc: "top1_simply_connected_on ?U (subspace_topology X TX ?U)" sorry
           have hV_sc_loc: "top1_simply_connected_on ?V (subspace_topology X TX ?V)"
