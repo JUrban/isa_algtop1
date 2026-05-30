@@ -9409,6 +9409,31 @@ qed
 
 
 
+text \<open>Lemma 84.6 (Munkres): Two-component SvK generation.
+  If X = U \<union> V open, U \<inter> V = A \<union> B disjoint open PC,
+  U and V simply connected, \<alpha> path in U from a\<in>A to b\<in>B,
+  \<beta> path in V from b to a, then [\<alpha>*\<beta>] generates \<pi>_1(X, a).
+  Combined with Theorem 63.1 ([\<alpha>*\<beta>] non-trivial), gives \<pi>_1(X, a) \<cong> \<Z>.\<close>
+lemma Lemma_84_6_two_component_generation:
+  assumes hTX: "is_topology_on_strict X TX"
+      and hU_open: "openin_on X TX U" and hV_open: "openin_on X TX V"
+      and hcover: "U \<union> V = X"
+      and hUV_split: "U \<inter> V = A \<union> B"
+      and hAB_disj: "A \<inter> B = {}"
+      and hA_open: "openin_on X TX A" and hB_open: "openin_on X TX B"
+      and hA_pc: "top1_path_connected_on A (subspace_topology X TX A)"
+      and hB_pc: "top1_path_connected_on B (subspace_topology X TX B)"
+      and ha: "a \<in> A" and hb: "b \<in> B"
+      and halpha: "top1_is_path_on U (subspace_topology X TX U) a b \<alpha>"
+      and hbeta: "top1_is_path_on V (subspace_topology X TX V) b a \<beta>"
+      and hU_sc: "top1_simply_connected_on U (subspace_topology X TX U)"
+      and hV_sc: "top1_simply_connected_on V (subspace_topology X TX V)"
+  shows "top1_groups_isomorphic_on
+      (top1_fundamental_group_carrier X TX a)
+      (top1_fundamental_group_mul X TX a)
+      top1_Z_group top1_Z_mul"
+  sorry
+
 text \<open>Helper: free group structure transfers across isomorphism.\<close>
 lemma free_group_iso_transfer:
   assumes "top1_is_free_group_full_on G mulG eG invgG \<iota> S"
@@ -11772,7 +11797,88 @@ proof -
         have hpi1_iso_Z: "top1_groups_isomorphic_on
             (top1_fundamental_group_carrier X TX x0) (top1_fundamental_group_mul X TX x0)
             top1_Z_group top1_Z_mul"
-          sorry \<comment> \<open>Theorem 63.1 + book Step 2. Most complex sub-proof.\<close>
+        proof -
+          \<comment> \<open>Book Step 2: X = T \\<union> A1 with 1 non-tree arc A1.
+             Set up Lemma 84.6: U = Int(A1), V = X - {p}, apply two-component SvK.\<close>
+          have hX_strict: "is_topology_on_strict X TX"
+            using assms(1) unfolding top1_is_graph_on_def by (by100 blast)
+          \<comment> \<open>Get homeomorphism h: [0,1] \\<rightarrow> A1.\<close>
+          obtain hA where hhA: "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
+              A1 (subspace_topology X TX A1) hA"
+            using hA1_arc unfolding top1_is_arc_on_def by (by100 blast)
+          \<comment> \<open>Endpoints and midpoint.\<close>
+          let ?a0 = "hA 0" and ?a1 = "hA 1" and ?p = "hA (1/2)"
+          \<comment> \<open>U = Int(A1) = A1 - {endpoints}.\<close>
+          let ?U = "A1 - {?a0, ?a1}"
+          \<comment> \<open>V = X - {p}.\<close>
+          let ?V = "X - {?p}"
+          \<comment> \<open>Choose a basepoint a in the intersection.\<close>
+          let ?a = "hA (1/4)"
+          \<comment> \<open>Intermediate point b.\<close>
+          let ?b = "hA (3/4)"
+          \<comment> \<open>All the setup for Lemma 84.6.\<close>
+          have hU_open_loc: "openin_on X TX ?U" sorry
+          have hV_open_loc: "openin_on X TX ?V" sorry
+          have hcover_loc: "?U \<union> ?V = X" sorry
+          \<comment> \<open>U \\<inter> V has two path components A, B.\<close>
+          let ?A_comp = "hA ` {t. 0 < t \<and> t < 1/2}"
+          let ?B_comp = "hA ` {t. 1/2 < t \<and> t < 1}"
+          have hUV_split: "?U \<inter> ?V = ?A_comp \<union> ?B_comp" sorry
+          have hAB_disj: "?A_comp \<inter> ?B_comp = {}" sorry
+          have hA_open_loc: "openin_on X TX ?A_comp" sorry
+          have hB_open_loc: "openin_on X TX ?B_comp" sorry
+          have hA_pc_loc: "top1_path_connected_on ?A_comp (subspace_topology X TX ?A_comp)" sorry
+          have hB_pc_loc: "top1_path_connected_on ?B_comp (subspace_topology X TX ?B_comp)" sorry
+          have ha_A: "?a \<in> ?A_comp" sorry
+          have hb_B: "?b \<in> ?B_comp" sorry
+          \<comment> \<open>Paths \\<alpha> (in U from a to b) and \\<beta> (in V from b to a).\<close>
+          have halpha_loc: "\<exists>\<alpha>. top1_is_path_on ?U (subspace_topology X TX ?U) ?a ?b \<alpha>" sorry
+          have hbeta_loc: "\<exists>\<beta>. top1_is_path_on ?V (subspace_topology X TX ?V) ?b ?a \<beta>" sorry
+          \<comment> \<open>U and V simply connected.\<close>
+          have hU_sc_loc: "top1_simply_connected_on ?U (subspace_topology X TX ?U)" sorry
+          have hV_sc_loc: "top1_simply_connected_on ?V (subspace_topology X TX ?V)" sorry
+          \<comment> \<open>Apply Lemma 84.6.\<close>
+          from halpha_loc hbeta_loc obtain \<alpha> \<beta> where
+            h\<alpha>: "top1_is_path_on ?U (subspace_topology X TX ?U) ?a ?b \<alpha>" and
+            h\<beta>: "top1_is_path_on ?V (subspace_topology X TX ?V) ?b ?a \<beta>"
+            by (by100 blast)
+          from Lemma_84_6_two_component_generation[OF hX_strict hU_open_loc hV_open_loc hcover_loc
+              hUV_split hAB_disj hA_open_loc hB_open_loc hA_pc_loc hB_pc_loc
+              ha_A hb_B h\<alpha> h\<beta> hU_sc_loc hV_sc_loc]
+          have hpi1_a_Z: "top1_groups_isomorphic_on
+              (top1_fundamental_group_carrier X TX ?a) (top1_fundamental_group_mul X TX ?a)
+              top1_Z_group top1_Z_mul" .
+          \<comment> \<open>Transfer from basepoint a to x0 via basepoint change iso.\<close>
+          \<comment> \<open>Transfer from basepoint a to x0.\<close>
+          have ha_X: "?a \<in> X" sorry
+          \<comment> \<open>X is path-connected (tree \\<union> one arc, proved above).\<close>
+          have hX_pc: "top1_path_connected_on X TX" sorry
+          \<comment> \<open>Path from a to x0 in X.\<close>
+          have "\<exists>\<gamma>. top1_is_path_on X TX ?a x0 \<gamma>"
+            using hX_pc ha_X assms(3) unfolding top1_path_connected_on_def by (by100 blast)
+          then obtain \<gamma> where h\<gamma>: "top1_is_path_on X TX ?a x0 \<gamma>" by (by100 blast)
+          have hTX_top_loc: "is_topology_on X TX"
+            using hX_strict unfolding is_topology_on_strict_def by (by100 blast)
+          from basepoint_change_iso_via_path[OF hTX_top_loc h\<gamma>]
+          have hbc: "top1_groups_isomorphic_on
+              (top1_fundamental_group_carrier X TX ?a) (top1_fundamental_group_mul X TX ?a)
+              (top1_fundamental_group_carrier X TX x0) (top1_fundamental_group_mul X TX x0)" .
+          \<comment> \<open>Reverse basepoint change: iso(\\<pi>\\_1(x0), \\<pi>\\_1(a)).\<close>
+          have hpi1_x0_grp: "top1_is_group_on
+              (top1_fundamental_group_carrier X TX x0) (top1_fundamental_group_mul X TX x0)
+              (top1_fundamental_group_id X TX x0) (top1_fundamental_group_invg X TX x0)"
+            by (rule top1_fundamental_group_is_group[OF hTX_top_loc assms(3)])
+          have hpi1_a_grp: "top1_is_group_on
+              (top1_fundamental_group_carrier X TX ?a) (top1_fundamental_group_mul X TX ?a)
+              (top1_fundamental_group_id X TX ?a) (top1_fundamental_group_invg X TX ?a)"
+            by (rule top1_fundamental_group_is_group[OF hTX_top_loc ha_X])
+          from top1_groups_isomorphic_on_sym[OF hbc hpi1_a_grp hpi1_x0_grp]
+          have "top1_groups_isomorphic_on
+              (top1_fundamental_group_carrier X TX x0) (top1_fundamental_group_mul X TX x0)
+              (top1_fundamental_group_carrier X TX ?a) (top1_fundamental_group_mul X TX ?a)" .
+          from groups_isomorphic_trans_fwd[OF this hpi1_a_Z]
+          show ?thesis .
+        qed
         \<comment> \<open>\\<Z> is free on 1 generator.\<close>
         have hZ_free: "top1_is_free_group_full_on top1_Z_group top1_Z_mul
             top1_Z_id top1_Z_invg (\<lambda>(_::nat). (1::int)) {0::nat}"
