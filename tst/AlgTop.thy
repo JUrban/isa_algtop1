@@ -12093,7 +12093,21 @@ proof -
         have hV_pc: "top1_path_connected_on ?V (subspace_topology X TX ?V)"
         proof -
           have htarget_V_pc: "top1_path_connected_on ?target_V (subspace_topology ?V ?TV ?target_V)"
-            sorry \<comment> \<open>T path-connected + non-tree arcs connected via endpoints to T.\<close>
+          proof -
+            have hTV_trans_loc: "subspace_topology ?V ?TV ?target_V = subspace_topology X TX ?target_V"
+              by (rule subspace_topology_trans[OF htV_sub_V])
+            \<comment> \<open>Use common point with F = {T \\<union> A | A \\<in> NT-{A1}} \\<union> {T}.
+               Each T \\<union> A is PC (same argument as target\\_U) and contains x0 \\<in> T.\<close>
+            let ?F_V = "insert T ((\<lambda>A. T \<union> A) ` (?NT - {A1}))"
+            have htV_sub_X: "?target_V \<subseteq> X"
+              using hT_sub h\<A> by (by100 blast)
+            have htV_top_loc: "is_topology_on ?target_V (subspace_topology X TX ?target_V)"
+              by (rule subspace_topology_is_topology_on[OF hTX_top]) (use htV_sub_X in blast)
+            have "top1_path_connected_on ?target_V (subspace_topology X TX ?target_V)"
+              sorry \<comment> \<open>Each T \\<union> A\\_i is PC (like target\\_U). All contain x0.
+                 \\<Union>F = T \\<union> \\<Union>(NT-{A1}) = target\\_V. Apply finite union common point.\<close>
+            thus ?thesis using hTV_trans_loc by (by100 simp)
+          qed
           show ?thesis by (rule hdr_pc[OF hV_dr hV_top htarget_V_pc])
         qed
         \<comment> \<open>x0 \\<in> U \\<cap> V.\<close>
