@@ -12669,7 +12669,49 @@ proof -
                 proof - have "(1/2::real) \<in> ?I_U" by (by100 simp) thus ?thesis by (by100 blast) qed
               have hI_U_conv: "\<And>x y t. x \<in> ?I_U \<Longrightarrow> y \<in> ?I_U \<Longrightarrow> 0 \<le> t \<Longrightarrow> t \<le> 1
                   \<Longrightarrow> (1 - t) * x + t * y \<in> ?I_U"
-                sorry \<comment> \<open>Convexity of (0, 1). Same pattern as (0,1/2) convexity.\<close>
+              proof -
+                fix x y t :: real
+                assume hx: "x \<in> ?I_U" and hy: "y \<in> ?I_U" and ht0: "0 \<le> t" and ht1: "t \<le> 1"
+                have "0 < x" "x < 1" "0 < y" "y < 1" using hx hy by (by100 simp)+
+                have h1t: "1 - t \<ge> 0" using ht1 by (by100 linarith)
+                \<comment> \<open>Lower bound > 0.\<close>
+                have "(1 - t) * x \<ge> 0" using h1t \<open>0 < x\<close> by (by100 simp)
+                have "t * y \<ge> 0" using ht0 \<open>0 < y\<close> by (by100 simp)
+                have "t * y > 0 \<or> (1 - t) * x > 0"
+                proof (cases "t = 0")
+                  case True thus ?thesis using h1t \<open>0 < x\<close> by (by100 simp)
+                next
+                  case False hence "t > 0" using ht0 by (by100 linarith)
+                  thus ?thesis using \<open>0 < y\<close> by (by100 simp)
+                qed
+                hence h_lb: "(1 - t) * x + t * y > 0"
+                  using \<open>(1-t)*x \<ge> 0\<close> \<open>t*y \<ge> 0\<close> by (by100 linarith)
+                \<comment> \<open>Upper bound < 1.\<close>
+                have "(1 - t) * x \<le> 1 - t"
+                  using mult_left_mono[OF less_imp_le[OF \<open>x < 1\<close>] h1t] by (by100 simp)
+                have "t * y \<le> t" using mult_left_mono[OF less_imp_le[OF \<open>y < 1\<close>] ht0] by (by100 simp)
+                have "(1 - t) * x + t * y \<le> (1 - t) + t"
+                  using \<open>(1-t)*x \<le> 1-t\<close> \<open>t*y \<le> t\<close> by (by100 linarith)
+                hence h_ub_le: "(1 - t) * x + t * y \<le> 1" by (by100 linarith)
+                have "(1 - t) * x + t * y \<noteq> 1"
+                proof
+                  assume "(1 - t) * x + t * y = 1"
+                  hence "(1-t)*x = 1 - t" "t*y = t"
+                    using \<open>(1-t)*x \<le> 1-t\<close> \<open>t*y \<le> t\<close> by (by100 linarith)+
+                  show False
+                  proof (cases "t < 1")
+                    case True hence "1 - t > 0" by (by100 linarith)
+                    hence "x = 1" using \<open>(1-t)*x = 1-t\<close> by (by100 simp)
+                    thus False using \<open>x < 1\<close> by (by100 linarith)
+                  next
+                    case False hence "t = 1" using ht1 by (by100 linarith)
+                    hence "y = 1" using \<open>t*y = t\<close> by (by100 simp)
+                    thus False using \<open>y < 1\<close> by (by100 linarith)
+                  qed
+                qed
+                hence h_ub: "(1 - t) * x + t * y < 1" using h_ub_le by (by100 linarith)
+                show "(1 - t) * x + t * y \<in> ?I_U" using h_lb h_ub by (by100 simp)
+              qed
               from convex_real_subspace_path_connected[OF hI_U_ne hI_U_conv]
               have hI_U_pc: "top1_path_connected_on ?I_U ?TI_U" by (by100 simp)
               have hI_U_sub: "?I_U \<subseteq> top1_unit_interval"
