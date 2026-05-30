@@ -11532,8 +11532,72 @@ proof -
       proof (cases "card ?NT = 1")
         case True
         \<comment> \<open>Base case: exactly 1 non-tree arc. \\<pi>\\_1(X) is free on 1 generator.\<close>
-        show ?thesis sorry \<comment> \<open>Base case: 1 non-tree arc. Book Step 2.
-           Split the arc into 3 sub-arcs, apply SvK. Or use circle argument.\<close>
+        \<comment> \<open>Book Step 2: exactly 1 non-tree arc D = A1.
+           U = Int(D) = D - endpoints (open arc, simply connected).
+           V = X - {p} for interior p of D (DR onto T, simply connected).
+           U \\<inter> V = U - {p}: two path components A, B.
+           Theorem 63.1: [\\<alpha>*\\<beta>] generates \\<pi>\\_1(X) and has infinite order.
+           Hence \\<pi>\\_1(X) \\<cong> \\<Z> = free on 1 generator.\<close>
+        have hNT_singleton: "?NT = {A1}"
+        proof -
+          from card_1_singletonE[OF True] obtain B where hB: "?NT = {B}" by (by100 blast)
+          hence "A1 = B" using hA1 by (by100 blast)
+          thus ?thesis using hB by (by100 simp)
+        qed
+        \<comment> \<open>A1 endpoints in T.\<close>
+        have hA1_arc: "top1_is_arc_on A1 (subspace_topology X TX A1)"
+          using h\<A> hA1 by (by100 blast)
+        have hA1_sub: "A1 \<subseteq> X" using h\<A> hA1 by (by100 blast)
+        \<comment> \<open>X = T \\<union> A1 (since NT = {A1}, all other arcs \\<subseteq> T).\<close>
+        have hX_eq: "X = T \<union> A1"
+        proof -
+          have "\<forall>A\<in>\<A>. A \<subseteq> T \<or> A = A1"
+          proof (intro ballI)
+            fix A assume "A \<in> \<A>"
+            show "A \<subseteq> T \<or> A = A1"
+            proof (cases "A \<subseteq> T")
+              case True thus ?thesis by (by100 blast)
+            next
+              case False
+              hence "A \<in> ?NT" using \<open>A \<in> \<A>\<close> by (by100 blast)
+              thus ?thesis using hNT_singleton by (by100 blast)
+            qed
+          qed
+          hence "\<Union>\<A> \<subseteq> T \<union> A1" by (by100 blast)
+          hence "X \<subseteq> T \<union> A1" using h\<A>_cover by (by100 simp)
+          moreover have "T \<union> A1 \<subseteq> X" using hT_sub hA1_sub by (by100 blast)
+          ultimately show ?thesis by (by100 blast)
+        qed
+        \<comment> \<open>\\<pi>\\_1(X, x0) \\<cong> \\<Z>: use Theorem 63.1 machinery.
+           The key: U = Int(A1) open arc (simply connected),
+           V = X - {p} DR onto T (simply connected),
+           U \\<inter> V has two path components.\<close>
+        have hpi1_iso_Z: "top1_groups_isomorphic_on
+            (top1_fundamental_group_carrier X TX x0) (top1_fundamental_group_mul X TX x0)
+            top1_Z_group top1_Z_mul"
+          sorry \<comment> \<open>Theorem 63.1 + book Step 2. Most complex sub-proof.\<close>
+        \<comment> \<open>\\<Z> is free on 1 generator.\<close>
+        have hZ_free: "top1_is_free_group_full_on top1_Z_group top1_Z_mul
+            top1_Z_id top1_Z_invg (\<lambda>(_::nat). (1::int)) {0::nat}"
+          by (rule Z_is_free_on_one_generator)
+        \<comment> \<open>Compose: \\<pi>\\_1(X) \\<cong> \\<Z> and \\<Z> free \\<Rightarrow> \\<exists>G. free(G) \\<and> iso(G, \\<pi>\\_1(X)).\<close>
+        \<comment> \<open>iso is symmetric: \\<pi>\\_1(X) \\<cong> \\<Z> \\<Rightarrow> \\<Z> \\<cong> \\<pi>\\_1(X).\<close>
+        have hTX_top_bc: "is_topology_on X TX"
+          using assms(1) unfolding top1_is_graph_on_def is_topology_on_strict_def by (by5000 blast)
+        have hpi1_grp: "top1_is_group_on
+            (top1_fundamental_group_carrier X TX x0) (top1_fundamental_group_mul X TX x0)
+            (top1_fundamental_group_id X TX x0) (top1_fundamental_group_invg X TX x0)"
+          by (rule top1_fundamental_group_is_group[OF hTX_top_bc assms(3)])
+        have hZ_grp: "top1_is_group_on top1_Z_group top1_Z_mul top1_Z_id top1_Z_invg"
+          using hZ_free unfolding top1_is_free_group_full_on_def by (by100 blast)
+        have hZ_iso_pi1: "top1_groups_isomorphic_on top1_Z_group top1_Z_mul
+            (top1_fundamental_group_carrier X TX x0) (top1_fundamental_group_mul X TX x0)"
+          by (rule top1_groups_isomorphic_on_sym[OF hpi1_iso_Z hpi1_grp hZ_grp])
+        show ?thesis
+          apply (rule exI[of _ top1_Z_group], rule exI[of _ top1_Z_mul],
+                 rule exI[of _ top1_Z_id], rule exI[of _ top1_Z_invg],
+                 rule exI[of _ "\<lambda>(_::nat). (1::int)"], rule exI[of _ "{0::nat}"])
+          using hZ_free hZ_iso_pi1 by (by100 blast)
       next
         case hcard_ge2: False
         hence hcard_gt1: "card ?NT > 1"
