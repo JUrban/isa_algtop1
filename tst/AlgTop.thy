@@ -12134,9 +12134,9 @@ proof -
             \<comment> \<open>\\<pi>\\_1(V) trivial + V PC \\<Rightarrow> V SC.
                Uses top1\\_simply\\_connected\\_from\\_one\\_point + hV\\_triv.\<close>
             show ?thesis
-              sorry \<comment> \<open>hV\\_triv: \\<pi>\\_1(V,x0) = {id}. V PC. x0 \\<in> V.
-                 simply\\_connected\\_from\\_one\\_point: each loop's class is in {id},
-                 hence f \\<sim> const. Needs loop\\_class\\_in\\_carrier + id\\_class\\_is\\_const.\<close>
+              sorry \<comment> \<open>V SC: \\<pi>\\_1(V, x0) = {id} (hV\\_triv) + V PC (hV\\_pc\\_early) \\<Rightarrow> V SC.
+                 Uses simply\\_connected\\_from\\_one\\_point + homotopic\\_refl + sym.
+                 Isabelle mechanics issue with unfolding in proof context.\<close>
           qed
           \<comment> \<open>Apply Lemma 84.6.\<close>
           from halpha_loc hbeta_loc obtain \<alpha> \<beta> where
@@ -12189,7 +12189,24 @@ proof -
               have hA1_arc_pc: "\<forall>A\<in>{A1}. top1_is_arc_on A (subspace_topology X TX A) \<and> A \<subseteq> X"
                 using hA1_arc hA1_sub by (by100 blast)
               have hA1_endpt: "\<forall>A\<in>{A1}. \<exists>e. e \<in> T \<and> e \<in> A"
-                sorry \<comment> \<open>Arc endpoint in T.\<close>
+              proof -
+                have "A1 \<in> ?NT" using hA1 by (by100 blast)
+                have "is_hausdorff_on X TX"
+                  using assms(1) unfolding top1_is_graph_on_def by (by100 blast)
+                obtain h' where hh': "top1_homeomorphism_on top1_unit_interval
+                    top1_unit_interval_topology A1 (subspace_topology X TX A1) h'"
+                  using hA1_arc unfolding top1_is_arc_on_def by (by100 blast)
+                from arc_endpoints_are_boundary[OF hX_strict \<open>is_hausdorff_on X TX\<close> hA1_sub hA1_arc hh']
+                have "top1_arc_endpoints_on A1 (subspace_topology X TX A1) = {h' 0, h' 1}" .
+                have "h' 0 \<in> T"
+                  using hNT_endpoints[rule_format, OF \<open>A1 \<in> ?NT\<close>]
+                  \<open>top1_arc_endpoints_on A1 _ = {h' 0, h' 1}\<close> by (by100 simp)
+                have "(0::real) \<in> top1_unit_interval" unfolding top1_unit_interval_def by (by100 simp)
+                have "h' 0 \<in> A1"
+                  using hh' \<open>(0::real) \<in> top1_unit_interval\<close>
+                  unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+                thus ?thesis using \<open>h' 0 \<in> T\<close> by (by100 blast)
+              qed
               from tree_union_arcs_path_connected[OF hTX_t hT_tree hT_sub
                   \<open>finite {A1}\<close> hA1_arc_pc hA1_endpt hx0_T]
               show ?thesis by (by100 simp)
