@@ -11692,11 +11692,25 @@ proof -
           thus ?thesis by (by100 simp)
         qed
         have hU_dr: "top1_deformation_retract_of_on ?U (subspace_topology X TX ?U) ?target_U"
-          sorry \<comment> \<open>hdr with S = NT-{A1}.\<close>
+        proof -
+          have "finite ?S_U" using \<open>finite ?NT\<close> by (by100 blast)
+          have "?S_U \<subseteq> ?NT" by (by100 blast)
+          have "\<forall>A\<in>?S_U. ps A \<in> A \<and> ps A \<notin> top1_arc_endpoints_on A (subspace_topology X TX A)"
+            using hps by (by100 blast)
+          from hdr_helper[OF \<open>finite ?S_U\<close> \<open>?S_U \<subseteq> ?NT\<close> this]
+          show ?thesis .
+        qed
         \<comment> \<open>V deformation retracts onto T \\<union> \\<Union>(NT - {A1}) (target for S = {A1}).\<close>
         let ?target_V = "T \<union> \<Union>(?NT - ?S_V)"
         have hV_dr: "top1_deformation_retract_of_on ?V (subspace_topology X TX ?V) ?target_V"
-          sorry \<comment> \<open>hdr with S = {A1}.\<close>
+        proof -
+          have "finite ?S_V" by (by100 simp)
+          have "?S_V \<subseteq> ?NT" using hA1 by (by100 blast)
+          have "\<forall>A\<in>?S_V. ps A \<in> A \<and> ps A \<notin> top1_arc_endpoints_on A (subspace_topology X TX A)"
+            using hps hA1 by (by100 blast)
+          from hdr_helper[OF \<open>finite ?S_V\<close> \<open>?S_V \<subseteq> ?NT\<close> this]
+          show ?thesis .
+        qed
         \<comment> \<open>\\<pi>\\_1(U) \\<cong> \\<pi>\\_1(target\\_U) which is free (1 non-tree arc, base case or IH).\<close>
         have hU_free: "\<exists>(G::int set) mul e invg (\<iota>::nat \<Rightarrow> int) S.
             top1_is_free_group_full_on G mul e invg \<iota> S
