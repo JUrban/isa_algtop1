@@ -9409,6 +9409,19 @@ qed
 
 
 
+text \<open>Helper: free group structure transfers across isomorphism.\<close>
+lemma free_group_iso_transfer:
+  assumes "top1_is_free_group_full_on G mulG eG invgG \<iota> S"
+      and "top1_groups_isomorphic_on G mulG H mulH"
+      and "top1_is_group_on H mulH eH invgH"
+  shows "\<exists>\<iota>'. top1_is_free_group_full_on H mulH eH invgH \<iota>' S"
+proof -
+  from assms(2) obtain f where hf: "top1_group_iso_on G mulG H mulH f"
+    unfolding top1_groups_isomorphic_on_def by (by100 blast)
+  from free_group_invariant_under_iso[OF assms(1) hf assms(3)]
+  show ?thesis by (by100 blast)
+qed
+
 text \<open>Helper: tree union arcs (with endpoints in tree) is path-connected.
   Used in Theorem 84.7 for targets of deformation retractions.\<close>
 lemma tree_union_arcs_path_connected:
@@ -12079,14 +12092,32 @@ proof -
             (top1_fundamental_group_id ?U ?TU x0)
             (top1_fundamental_group_invg ?U ?TU x0)
             \<iota>U S1"
-          sorry \<comment> \<open>htU\\_free + hpi1\\_U\\_iso + free\\_group\\_invariant\\_under\\_iso.\<close>
+        proof -
+          have hpi1_U_grp: "top1_is_group_on
+              (top1_fundamental_group_carrier ?U ?TU x0) (top1_fundamental_group_mul ?U ?TU x0)
+              (top1_fundamental_group_id ?U ?TU x0) (top1_fundamental_group_invg ?U ?TU x0)"
+            by (rule top1_fundamental_group_is_group[OF hU_top hx0_U])
+          \<comment> \<open>Chain: htU\\_free gives G free + iso(G, \\<pi>\\_1(tU)).
+             Compose with hpi1\\_U\\_iso, then free\\_group\\_iso\\_transfer.\<close>
+          \<comment> \<open>Use the existing hU\\_free (which already composed the isos).\<close>
+          from htU_free hpi1_U_iso hpi1_U_grp show ?thesis
+            sorry \<comment> \<open>6-var extract + groups\\_isomorphic\\_trans\\_fwd + free\\_group\\_iso\\_transfer.
+               The extract is blocked by Isabelle tactic limitations on large terms.\<close>
+        qed
         have hV_free_direct: "\<exists>(\<iota>V::nat \<Rightarrow> _) S2. top1_is_free_group_full_on
             (top1_fundamental_group_carrier ?V ?TV x0)
             (top1_fundamental_group_mul ?V ?TV x0)
             (top1_fundamental_group_id ?V ?TV x0)
             (top1_fundamental_group_invg ?V ?TV x0)
             \<iota>V S2"
-          sorry \<comment> \<open>htV\\_free + hpi1\\_V\\_iso + free\\_group\\_invariant\\_under\\_iso.\<close>
+        proof -
+          have hpi1_V_grp: "top1_is_group_on
+              (top1_fundamental_group_carrier ?V ?TV x0) (top1_fundamental_group_mul ?V ?TV x0)
+              (top1_fundamental_group_id ?V ?TV x0) (top1_fundamental_group_invg ?V ?TV x0)"
+            by (rule top1_fundamental_group_is_group[OF hV_top hx0_V])
+          from htV_free hpi1_V_iso hpi1_V_grp show ?thesis
+            sorry \<comment> \<open>Same extraction + transfer as hU\\_free\\_direct.\<close>
+        qed
         \<comment> \<open>U and V are path-connected.\<close>
         \<comment> \<open>Helper: DR + target path-connected \\<Rightarrow> space path-connected.
            Proof: H(x,\\<cdot>) gives a path from x to H(x,1) \\<in> A. A path-connected connects them.\<close>

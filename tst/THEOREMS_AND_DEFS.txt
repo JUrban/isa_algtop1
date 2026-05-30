@@ -656,6 +656,7 @@ at/AlgTopChain.thy|lemma|cyclic_strict_sign_change|2375
 pd/PolygonDisk.thy|lemma|cyclic_strict_sign_change|345
 ac4/AlgTopCached4.thy|lemma|deck_transformation_homeomorphism|4972
 ac4/AlgTopCached4.thy|lemma|deck_transformations_group|4978
+AlgTop.thy|lemma|deformation_retract_path_connected|9545
 wh/AlgTopWedgeHelpers.thy|lemma|deformation_retract_to_singleton_imp_simply_connected|2777
 i/Top1_Ch5_8.thy|lemma|dense_in_compact_image|12068
 i/Top1_Ch5_8.thy|lemma|dense_in_own_closure|20742
@@ -736,6 +737,7 @@ at/AlgTopChain.thy|lemma|free_group_hom_exists|10
 at/AlgTopChain.thy|lemma|free_group_hom_generators_iso|4706
 ag/AlgTopGroups.thy|lemma|free_group_hom_unique|2635
 ag/AlgTopGroups.thy|lemma|free_group_invariant_under_iso|2335
+AlgTop.thy|lemma|free_group_iso_transfer|9413
 at/AlgTopChain.thy|lemma|free_group_rank_invariant_finite|1756
 AlgTop.thy|lemma|free_group_realized_by_wedge|9344
 at/AlgTopChain.thy|lemma|free_group_universal_property|396
@@ -1807,6 +1809,7 @@ AlgTop.thy|lemma|torus_scheme_nth|3552
 pd/PolygonDisk.thy|lemma|torus_scheme_vertex_connectivity|4095
 b/AlgTop_JCT_Base.thy|lemma|translation_homeo_R2|8430
 ac3/AlgTopCached3.thy|lemma|tree_simply_connected|84
+AlgTop.thy|lemma|tree_union_arcs_path_connected|9427
 ac/AlgTopCached.thy|lemma|triangle_compact|41256
 i/Top1_Ch5_8.thy|lemma|tri_arg_metric|14381
 AlgTop.thy|lemma|trivial_kernel_injective|5276
@@ -2069,6 +2072,6 @@ ac4/AlgTopCached4.thy|theorem|Theorem_80_3_universal|4013
 AlgTop.thy|theorem|Theorem_81_2_covering_group_iso|8960
 AlgTop.thy|theorem|Theorem_82_1_covering_existence|9258
 ac5/AlgTopCached5.thy|theorem|Theorem_83_4_covering_of_graph_is_graph|708
-AlgTop.thy|theorem|Theorem_84_7_fund_group_graph_is_free|9415
-AlgTop.thy|theorem|Theorem_85_1_Nielsen_Schreier|11273
-AlgTop.thy|theorem|Theorem_85_3_Schreier_index|11330
+AlgTop.thy|theorem|Theorem_84_7_fund_group_graph_is_free|9612
+AlgTop.thy|theorem|Theorem_85_1_Nielsen_Schreier|12328
+AlgTop.thy|theorem|Theorem_85_3_Schreier_index|12385

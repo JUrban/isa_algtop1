@@ -4,7 +4,7 @@
 #
 # Files: i/Top1_Ch2.thy,i/Top1_Ch3.thy,i/Top1_Ch4.thy,i/Top1_Ch5_8.thy,i/Top1_Ch9_13.thy,h/AlgTopHelpers.thy,b0/AlgTop_JCT_Base0.thy,b/AlgTop_JCT_Base.thy,a0/AlgTop0.thy,ac/AlgTopCached.thy,fib/AlgIsoFixedBase.thy,fi/AlgIsoFixed.thy,k5/K5_nonplanar.thy,ag/AlgTopGroups.thy,pd/PolygonDisk.thy,svk/AlgTopSvK.thy,wh/AlgTopWedgeHelpers.thy,at/AlgTopChain.thy,ac2/AlgTopCached2.thy,ac3/AlgTopCached3.thy,ac4/AlgTopCached4.thy,ac5/AlgTopCached5.thy,ac6/AlgTopCached6.thy,AlgTop.thy
 #
-# Total entries: 2074
+# Total entries: 2077
 # Duplicate names: 34
 
 ## definitions (332)
@@ -365,7 +365,7 @@ top1_urysohn_U                                 i/Top1_Ch4.thy                   
 
 top1_I01                                       i/Top1_Ch5_8.thy                     line 25035
 
-## lemmas (1432)
+## lemmas (1435)
 
 abelian_commutator_trivial                     AlgTop.thy                           line 5234
 abelian_doubles_normal                         ag/AlgTopGroups.thy                  line 6792
@@ -611,6 +611,7 @@ cyclic_strict_sign_change                      at/AlgTopChain.thy               
 cyclic_strict_sign_change                      pd/PolygonDisk.thy                   line 345
 deck_transformation_homeomorphism              ac4/AlgTopCached4.thy                line 4972
 deck_transformations_group                     ac4/AlgTopCached4.thy                line 4978
+deformation_retract_path_connected             AlgTop.thy                           line 9545
 deformation_retract_to_singleton_imp_simply_connected  wh/AlgTopWedgeHelpers.thy            line 2777
 dense_in_compact_image                         i/Top1_Ch5_8.thy                     line 12068
 dense_in_own_closure                           i/Top1_Ch5_8.thy                     line 20742
@@ -691,6 +692,7 @@ free_group_hom_exists                          at/AlgTopChain.thy               
 free_group_hom_generators_iso                  at/AlgTopChain.thy                   line 4706
 free_group_hom_unique                          ag/AlgTopGroups.thy                  line 2635
 free_group_invariant_under_iso                 ag/AlgTopGroups.thy                  line 2335
+free_group_iso_transfer                        AlgTop.thy                           line 9413
 free_group_rank_invariant_finite               at/AlgTopChain.thy                   line 1756
 free_group_realized_by_wedge                   AlgTop.thy                           line 9344
 free_group_universal_property                  at/AlgTopChain.thy                   line 396
@@ -1762,6 +1764,7 @@ torus_scheme_nth                               AlgTop.thy                       
 torus_scheme_vertex_connectivity               pd/PolygonDisk.thy                   line 4095
 translation_homeo_R2                           b/AlgTop_JCT_Base.thy                line 8430
 tree_simply_connected                          ac3/AlgTopCached3.thy                line 84
+tree_union_arcs_path_connected                 AlgTop.thy                           line 9427
 triangle_compact                               ac/AlgTopCached.thy                  line 41256
 tri_arg_metric                                 i/Top1_Ch5_8.thy                     line 14381
 trivial_kernel_injective                       AlgTop.thy                           line 5276
@@ -2027,9 +2030,9 @@ Theorem_80_3_universal                         ac4/AlgTopCached4.thy            
 Theorem_81_2_covering_group_iso                AlgTop.thy                           line 8960
 Theorem_82_1_covering_existence                AlgTop.thy                           line 9258
 Theorem_83_4_covering_of_graph_is_graph        ac5/AlgTopCached5.thy                line 708
-Theorem_84_7_fund_group_graph_is_free          AlgTop.thy                           line 9415
-Theorem_85_1_Nielsen_Schreier                  AlgTop.thy                           line 11273
-Theorem_85_3_Schreier_index                    AlgTop.thy                           line 11330
+Theorem_84_7_fund_group_graph_is_free          AlgTop.thy                           line 9612
+Theorem_85_1_Nielsen_Schreier                  AlgTop.thy                           line 12328
+Theorem_85_3_Schreier_index                    AlgTop.thy                           line 12385
 
 ## corollarys (65)
 
