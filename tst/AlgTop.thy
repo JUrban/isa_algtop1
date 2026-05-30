@@ -10916,9 +10916,117 @@ proof -
                   \<comment> \<open>QA\\_L, QA\\_R closed in Y\\<times>I. H\\_DR = formula. Pasting + codomain restrict.\<close>
                   \<comment> \<open>QA\\_L, QA\\_R closed in QA (preimage of closed interval).\<close>
                   have hQA_L_closed: "closedin_on (QA Aq) (subspace_topology ?YI ?YItop (QA Aq)) QA_L"
-                    sorry \<comment> \<open>QA\\_L = preimage of {\\<sigma> \\<le> tAc} under inv\\<circ>fst. Closed interval + continuous preimage.\<close>
+                  proof -
+                    have hcl_I: "closedin_on top1_unit_interval top1_unit_interval_topology
+                        {x \<in> top1_unit_interval. x \<le> tAc Aq}"
+                    proof -
+                      have "top1_unit_interval - {x \<in> top1_unit_interval. x \<le> tAc Aq}
+                          = {x \<in> top1_unit_interval. x > tAc Aq}" by (by100 auto)
+                      moreover have "{x \<in> top1_unit_interval. x > tAc Aq} \<in> top1_unit_interval_topology"
+                      proof -
+                        have "{x :: real. tAc Aq < x} \<in> top1_open_sets"
+                        proof -
+                          have "open {x :: real. tAc Aq < x}" using open_greaterThan
+                            unfolding greaterThan_def by (by100 blast)
+                          thus ?thesis unfolding top1_open_sets_def by (by100 blast)
+                        qed
+                        have "{x \<in> top1_unit_interval. x > tAc Aq} = top1_unit_interval \<inter> {x. tAc Aq < x}"
+                          by (by100 auto)
+                        thus ?thesis
+                          using \<open>{x. tAc Aq < x} \<in> top1_open_sets\<close>
+                          unfolding top1_unit_interval_topology_def top1_unit_interval_def
+                            subspace_topology_def by (by100 auto)
+                      qed
+                      ultimately have "top1_unit_interval - {x \<in> top1_unit_interval. x \<le> tAc Aq}
+                          \<in> top1_unit_interval_topology" by (by100 simp)
+                      moreover have "{x \<in> top1_unit_interval. x \<le> tAc Aq} \<subseteq> top1_unit_interval"
+                        by (by100 blast)
+                      ultimately show ?thesis unfolding closedin_on_def by (by100 blast)
+                    qed
+                    from continuous_preimage_closedin[OF
+                        subspace_topology_is_topology_on[OF hYI_top hQA_sub]
+                        top1_unit_interval_topology_is_topology_on hinv_fst hcl_I]
+                    have "closedin_on (QA Aq) (subspace_topology ?YI ?YItop (QA Aq))
+                        {p \<in> QA Aq. inv_into top1_unit_interval (hAc Aq) (fst p)
+                          \<in> {x \<in> top1_unit_interval. x \<le> tAc Aq}}" .
+                    moreover have "{p \<in> QA Aq. inv_into top1_unit_interval (hAc Aq) (fst p)
+                        \<in> {x \<in> top1_unit_interval. x \<le> tAc Aq}} = QA_L"
+                    proof (rule set_eqI, rule iffI)
+                      fix p assume "p \<in> {p \<in> QA Aq. inv_into top1_unit_interval (hAc Aq) (fst p)
+                          \<in> {x \<in> top1_unit_interval. x \<le> tAc Aq}}"
+                      thus "p \<in> QA_L" unfolding QA_L_def by (by100 blast)
+                    next
+                      fix p assume "p \<in> QA_L"
+                      hence hp: "p \<in> QA Aq" "inv_into top1_unit_interval (hAc Aq) (fst p) \<le> tAc Aq"
+                        unfolding QA_L_def by (by100 blast)+
+                      have "fst p \<in> Aq \<inter> ?Y" using hp(1) unfolding QA_def by (by100 auto)
+                      hence "fst p \<in> hAc Aq ` top1_unit_interval"
+                        using hhAc[OF \<open>Aq \<in> S\<close>] unfolding top1_homeomorphism_on_def bij_betw_def
+                        by (by100 blast)
+                      hence "inv_into top1_unit_interval (hAc Aq) (fst p) \<in> top1_unit_interval"
+                        by (rule inv_into_into)
+                      thus "p \<in> {p \<in> QA Aq. inv_into top1_unit_interval (hAc Aq) (fst p)
+                          \<in> {x \<in> top1_unit_interval. x \<le> tAc Aq}}"
+                        using hp by (by100 blast)
+                    qed
+                    ultimately show ?thesis by (by100 simp)
+                  qed
                   have hQA_R_closed: "closedin_on (QA Aq) (subspace_topology ?YI ?YItop (QA Aq)) QA_R"
-                    sorry \<comment> \<open>Same for QA\\_R = preimage of {\\<sigma> \\<ge> tAc}.\<close>
+                  proof -
+                    have hcl_I: "closedin_on top1_unit_interval top1_unit_interval_topology
+                        {x \<in> top1_unit_interval. x \<ge> tAc Aq}"
+                    proof -
+                      have "top1_unit_interval - {x \<in> top1_unit_interval. x \<ge> tAc Aq}
+                          = {x \<in> top1_unit_interval. x < tAc Aq}" by (by100 auto)
+                      moreover have "{x \<in> top1_unit_interval. x < tAc Aq} \<in> top1_unit_interval_topology"
+                      proof -
+                        have "{x :: real. x < tAc Aq} \<in> top1_open_sets"
+                        proof -
+                          have "open {x :: real. x < tAc Aq}" using open_lessThan
+                            unfolding lessThan_def by (by100 blast)
+                          thus ?thesis unfolding top1_open_sets_def by (by100 blast)
+                        qed
+                        have "{x \<in> top1_unit_interval. x < tAc Aq} = top1_unit_interval \<inter> {x. x < tAc Aq}"
+                          by (by100 auto)
+                        thus ?thesis
+                          using \<open>{x. x < tAc Aq} \<in> top1_open_sets\<close>
+                          unfolding top1_unit_interval_topology_def top1_unit_interval_def
+                            subspace_topology_def by (by100 auto)
+                      qed
+                      ultimately have "top1_unit_interval - {x \<in> top1_unit_interval. x \<ge> tAc Aq}
+                          \<in> top1_unit_interval_topology" by (by100 simp)
+                      moreover have "{x \<in> top1_unit_interval. x \<ge> tAc Aq} \<subseteq> top1_unit_interval"
+                        by (by100 blast)
+                      ultimately show ?thesis unfolding closedin_on_def by (by100 blast)
+                    qed
+                    from continuous_preimage_closedin[OF
+                        subspace_topology_is_topology_on[OF hYI_top hQA_sub]
+                        top1_unit_interval_topology_is_topology_on hinv_fst hcl_I]
+                    have "closedin_on (QA Aq) (subspace_topology ?YI ?YItop (QA Aq))
+                        {p \<in> QA Aq. inv_into top1_unit_interval (hAc Aq) (fst p)
+                          \<in> {x \<in> top1_unit_interval. x \<ge> tAc Aq}}" .
+                    moreover have "{p \<in> QA Aq. inv_into top1_unit_interval (hAc Aq) (fst p)
+                        \<in> {x \<in> top1_unit_interval. x \<ge> tAc Aq}} = QA_R"
+                    proof (rule set_eqI, rule iffI)
+                      fix p assume "p \<in> {p \<in> QA Aq. inv_into top1_unit_interval (hAc Aq) (fst p)
+                          \<in> {x \<in> top1_unit_interval. x \<ge> tAc Aq}}"
+                      thus "p \<in> QA_R" unfolding QA_R_def by (by100 blast)
+                    next
+                      fix p assume "p \<in> QA_R"
+                      hence hp: "p \<in> QA Aq" "inv_into top1_unit_interval (hAc Aq) (fst p) \<ge> tAc Aq"
+                        unfolding QA_R_def by (by100 blast)+
+                      have "fst p \<in> Aq \<inter> ?Y" using hp(1) unfolding QA_def by (by100 auto)
+                      hence "fst p \<in> hAc Aq ` top1_unit_interval"
+                        using hhAc[OF \<open>Aq \<in> S\<close>] unfolding top1_homeomorphism_on_def bij_betw_def
+                        by (by100 blast)
+                      hence "inv_into top1_unit_interval (hAc Aq) (fst p) \<in> top1_unit_interval"
+                        by (rule inv_into_into)
+                      thus "p \<in> {p \<in> QA Aq. inv_into top1_unit_interval (hAc Aq) (fst p)
+                          \<in> {x \<in> top1_unit_interval. x \<ge> tAc Aq}}"
+                        using hp by (by100 blast)
+                    qed
+                    ultimately show ?thesis by (by100 simp)
+                  qed
                   \<comment> \<open>H\\_DR agrees with hstep\\_L on QA\\_L and hstep\\_R on QA\\_R.\<close>
                   have hH_img_QA: "\<forall>p\<in>QA Aq. H_DR p \<in> ?Y"
                     using hH_img hQA_sub by (by100 blast)
@@ -10935,14 +11043,14 @@ proof -
                     proof (cases "fst p \<in> ?target")
                       case True
                       \<comment> \<open>fst(p) \\<in> target: H\\_DR = fst(p). And \\<sigma>=0 (left endpoint), formula gives hAc(0)=fst(p).\<close>
-                      have "H_DR p = fst p"
+                      have hHDR_eq: "H_DR p = fst p"
                       proof -
                         obtain x t where hxt: "p = (x, t)" by (cases p)
                         have "x \<in> ?target" using True hxt by (by100 simp)
                         thus ?thesis unfolding H_DR_def hxt by (by100 simp)
                       qed
-                      moreover have "fst p \<in> Aq" using \<open>fst p \<in> Aq \<inter> ?Y\<close> by (by100 blast)
-                      moreover have "fst p \<in> T"
+                      have hfp_Aq: "fst p \<in> Aq" using \<open>fst p \<in> Aq \<inter> ?Y\<close> by (by100 blast)
+                      have hfp_T: "fst p \<in> T"
                       proof -
                         from True have "fst p \<in> T \<or> fst p \<in> \<Union>(?NT - S)" by (by100 blast)
                         thus ?thesis
@@ -10967,11 +11075,71 @@ proof -
                         using hhAc[OF \<open>Aq \<in> S\<close>] unfolding top1_homeomorphism_on_def by (by100 blast)
                       have himg_Aq_loc: "hAc Aq ` top1_unit_interval = Aq"
                         using hbij_Aq_loc unfolding bij_betw_def by (by100 blast)
-                      moreover have "fst p \<in> hAc Aq ` top1_unit_interval"
-                        using \<open>fst p \<in> Aq\<close> himg_Aq_loc by (by100 simp)
-                      moreover have "hAc Aq (inv_into top1_unit_interval (hAc Aq) (fst p)) = fst p"
-                        by (rule f_inv_into_f) (use \<open>fst p \<in> hAc Aq ` top1_unit_interval\<close> in blast)
-                      ultimately show ?thesis sorry \<comment> \<open>Need \\<sigma>=0 (endpoint hAc(0)) so formula = hAc(0) = fst(p).\<close>
+                      have hfp_img: "fst p \<in> hAc Aq ` top1_unit_interval"
+                        using hfp_Aq himg_Aq_loc by (by100 simp)
+                      have hAc_inv: "hAc Aq (inv_into top1_unit_interval (hAc Aq) (fst p)) = fst p"
+                        by (rule f_inv_into_f) (use hfp_img in blast)
+                      \<comment> \<open>Show \\<sigma> = 0: fst p is an endpoint of Aq (T \\<cap> non-tree arc \\<subseteq> endpoints),
+                         endpoints = {hAc 0, hAc 1}, and \\<sigma> \\<le> tAc < 1 rules out \\<sigma> = 1.\<close>
+                      let ?\<sigma> = "inv_into top1_unit_interval (hAc Aq) (fst p)"
+                      have h\<sigma>_0: "?\<sigma> = 0"
+                      proof -
+                        have hAq_in_A: "Aq \<in> \<A>" using hS_sub \<open>Aq \<in> S\<close> by (by100 blast)
+                        have "Aq \<in> ?NT" using hS_sub \<open>Aq \<in> S\<close> by (by100 blast)
+                        hence "\<not> Aq \<subseteq> T" by (by100 blast)
+                        from hT_subgraph[rule_format, OF hAq_in_A] \<open>\<not> Aq \<subseteq> T\<close>
+                        have "Aq \<inter> T \<subseteq> top1_arc_endpoints_on Aq (subspace_topology X TX Aq)" by (by100 blast)
+                        hence hfp_ep: "fst p \<in> top1_arc_endpoints_on Aq (subspace_topology X TX Aq)"
+                          using hfp_T hfp_Aq by (by100 blast)
+                        have hX_strict: "is_topology_on_strict X TX"
+                          using assms(1) unfolding top1_is_graph_on_def by (by100 blast)
+                        have hX_haus: "is_hausdorff_on X TX"
+                          using assms(1) unfolding top1_is_graph_on_def by (by100 blast)
+                        have "Aq \<subseteq> X" using h\<A> hAq_in_A by (by100 blast)
+                        have harc: "top1_is_arc_on Aq (subspace_topology X TX Aq)"
+                          using h\<A> hAq_in_A by (by100 blast)
+                        from arc_endpoints_are_boundary[OF hX_strict hX_haus \<open>Aq \<subseteq> X\<close> harc hhAc[OF \<open>Aq \<in> S\<close>]]
+                        have hep: "top1_arc_endpoints_on Aq (subspace_topology X TX Aq) = {hAc Aq 0, hAc Aq 1}" .
+                        from hfp_ep hep have "fst p = hAc Aq 0 \<or> fst p = hAc Aq 1" by (by100 blast)
+                        have hinj: "inj_on (hAc Aq) top1_unit_interval"
+                          using hbij_Aq_loc unfolding bij_betw_def by (by100 blast)
+                        have h0_I: "(0::real) \<in> top1_unit_interval"
+                          unfolding top1_unit_interval_def by (by100 simp)
+                        have h1_I: "(1::real) \<in> top1_unit_interval"
+                          unfolding top1_unit_interval_def by (by100 simp)
+                        have h\<sigma>_I: "?\<sigma> \<in> top1_unit_interval"
+                          using inv_into_into[OF hfp_img] by (by100 blast)
+                        have "fst p \<noteq> hAc Aq 1"
+                        proof
+                          assume "fst p = hAc Aq 1"
+                          hence "hAc Aq ?\<sigma> = hAc Aq 1" using hAc_inv by (by100 simp)
+                          hence "?\<sigma> = 1" using hinj h\<sigma>_I h1_I unfolding inj_on_def by (by100 blast)
+                          have "tAc Aq \<noteq> 1"
+                          proof
+                            assume "tAc Aq = 1"
+                            have hps_img: "ps Aq \<in> hAc Aq ` top1_unit_interval"
+                              using hps_loc \<open>Aq \<in> S\<close> himg_Aq_loc by (by100 blast)
+                            have "hAc Aq (tAc Aq) = ps Aq"
+                              unfolding tAc_def by (rule f_inv_into_f[OF hps_img])
+                            hence "hAc Aq 1 = ps Aq" using \<open>tAc Aq = 1\<close> by (by100 simp)
+                            hence "ps Aq \<in> {hAc Aq 0, hAc Aq 1}" by (by100 simp)
+                            hence "ps Aq \<in> top1_arc_endpoints_on Aq (subspace_topology X TX Aq)"
+                              using hep by (by100 simp)
+                            thus False using hps_loc \<open>Aq \<in> S\<close> by (by100 blast)
+                          qed
+                          have hps_img2: "ps Aq \<in> hAc Aq ` top1_unit_interval"
+                            using hps_loc \<open>Aq \<in> S\<close> himg_Aq_loc by (by100 blast)
+                          have "tAc Aq \<in> top1_unit_interval"
+                            using inv_into_into[OF hps_img2] unfolding tAc_def by (by100 blast)
+                          hence "tAc Aq \<le> 1" unfolding top1_unit_interval_def by (by100 simp)
+                          hence "tAc Aq < 1" using \<open>tAc Aq \<noteq> 1\<close> by (by100 linarith)
+                          thus False using hinv_le \<open>?\<sigma> = 1\<close> by (by100 linarith)
+                        qed
+                        hence "fst p = hAc Aq 0" using \<open>fst p = hAc Aq 0 \<or> fst p = hAc Aq 1\<close> by (by100 blast)
+                        hence "hAc Aq ?\<sigma> = hAc Aq 0" using hAc_inv by (by100 simp)
+                        thus "?\<sigma> = 0" using hinj h\<sigma>_I h0_I unfolding inj_on_def by (by100 blast)
+                      qed
+                      show ?thesis using hHDR_eq hAc_inv h\<sigma>_0 by (by100 simp)
                     next
                       case False
                       \<comment> \<open>fst(p) \\<notin> target: THE = Aq, \\<sigma> < tAc, ep=0. Formula matches H\\_DR.\<close>
@@ -11033,7 +11201,170 @@ proof -
                   qed
                   have hH_R_eq: "\<forall>p\<in>QA_R. H_DR p = hAc Aq (inv_into top1_unit_interval (hAc Aq) (fst p) +
                        snd p * (1 - inv_into top1_unit_interval (hAc Aq) (fst p)))"
-                    sorry \<comment> \<open>Same as hH\\_L\\_eq but with \\<sigma> \\<ge> tAc \\<Rightarrow> ep=1.\<close>
+                  proof (intro ballI)
+                    fix p assume "p \<in> QA_R"
+                    hence "p \<in> QA Aq" using hQA_eq by (by100 blast)
+                    hence "fst p \<in> Aq \<inter> ?Y" unfolding QA_def by (by100 auto)
+                    have hinv_ge: "inv_into top1_unit_interval (hAc Aq) (fst p) \<ge> tAc Aq"
+                      using \<open>p \<in> QA_R\<close> unfolding QA_R_def by (by100 blast)
+                    show "H_DR p = hAc Aq (inv_into top1_unit_interval (hAc Aq) (fst p) +
+                         snd p * (1 - inv_into top1_unit_interval (hAc Aq) (fst p)))"
+                    proof (cases "fst p \<in> ?target")
+                      case True
+                      have hHDR_eq: "H_DR p = fst p"
+                      proof -
+                        obtain x t where hxt: "p = (x, t)" by (cases p)
+                        have "x \<in> ?target" using True hxt by (by100 simp)
+                        thus ?thesis unfolding H_DR_def hxt by (by100 simp)
+                      qed
+                      have hfp_Aq: "fst p \<in> Aq" using \<open>fst p \<in> Aq \<inter> ?Y\<close> by (by100 blast)
+                      have hfp_T: "fst p \<in> T"
+                      proof -
+                        from True have "fst p \<in> T \<or> fst p \<in> \<Union>(?NT - S)" by (by100 blast)
+                        thus ?thesis
+                        proof
+                          assume "fst p \<in> T" thus ?thesis .
+                        next
+                          assume "fst p \<in> \<Union>(?NT - S)"
+                          then obtain A' where "A' \<in> ?NT - S" "fst p \<in> A'" by (by100 blast)
+                          have "A' \<in> \<A>" using \<open>A' \<in> ?NT - S\<close> by (by100 blast)
+                          have "A' \<noteq> Aq" using \<open>A' \<in> ?NT - S\<close> \<open>Aq \<in> S\<close> by (by100 blast)
+                          have "Aq \<in> \<A>" using hS_sub \<open>Aq \<in> S\<close> by (by100 blast)
+                          from h\<A>_inter[rule_format, OF \<open>Aq \<in> \<A>\<close> \<open>A' \<in> \<A>\<close> \<open>A' \<noteq> Aq\<close>[symmetric]]
+                          have "fst p \<in> top1_arc_endpoints_on Aq (subspace_topology X TX Aq)"
+                            using \<open>fst p \<in> Aq \<inter> ?Y\<close> \<open>fst p \<in> A'\<close> by (by100 blast)
+                          have "Aq \<in> ?NT" using hS_sub \<open>Aq \<in> S\<close> by (by100 blast)
+                          thus ?thesis using hNT_endpoints \<open>Aq \<in> ?NT\<close>
+                            \<open>fst p \<in> top1_arc_endpoints_on Aq _\<close> by (by100 blast)
+                        qed
+                      qed
+                      have hbij_Aq_loc: "bij_betw (hAc Aq) top1_unit_interval Aq"
+                        using hhAc[OF \<open>Aq \<in> S\<close>] unfolding top1_homeomorphism_on_def by (by100 blast)
+                      have himg_Aq_loc: "hAc Aq ` top1_unit_interval = Aq"
+                        using hbij_Aq_loc unfolding bij_betw_def by (by100 blast)
+                      have hfp_img: "fst p \<in> hAc Aq ` top1_unit_interval"
+                        using hfp_Aq himg_Aq_loc by (by100 simp)
+                      have hAc_inv: "hAc Aq (inv_into top1_unit_interval (hAc Aq) (fst p)) = fst p"
+                        by (rule f_inv_into_f) (use hfp_img in blast)
+                      let ?\<sigma> = "inv_into top1_unit_interval (hAc Aq) (fst p)"
+                      have h\<sigma>_1: "?\<sigma> = 1"
+                      proof -
+                        have hAq_in_A: "Aq \<in> \<A>" using hS_sub \<open>Aq \<in> S\<close> by (by100 blast)
+                        have "Aq \<in> ?NT" using hS_sub \<open>Aq \<in> S\<close> by (by100 blast)
+                        hence "\<not> Aq \<subseteq> T" by (by100 blast)
+                        from hT_subgraph[rule_format, OF hAq_in_A] \<open>\<not> Aq \<subseteq> T\<close>
+                        have "Aq \<inter> T \<subseteq> top1_arc_endpoints_on Aq (subspace_topology X TX Aq)" by (by100 blast)
+                        hence hfp_ep: "fst p \<in> top1_arc_endpoints_on Aq (subspace_topology X TX Aq)"
+                          using hfp_T hfp_Aq by (by100 blast)
+                        have hX_strict: "is_topology_on_strict X TX"
+                          using assms(1) unfolding top1_is_graph_on_def by (by100 blast)
+                        have hX_haus: "is_hausdorff_on X TX"
+                          using assms(1) unfolding top1_is_graph_on_def by (by100 blast)
+                        have "Aq \<subseteq> X" using h\<A> hAq_in_A by (by100 blast)
+                        have harc: "top1_is_arc_on Aq (subspace_topology X TX Aq)"
+                          using h\<A> hAq_in_A by (by100 blast)
+                        from arc_endpoints_are_boundary[OF hX_strict hX_haus \<open>Aq \<subseteq> X\<close> harc hhAc[OF \<open>Aq \<in> S\<close>]]
+                        have hep: "top1_arc_endpoints_on Aq (subspace_topology X TX Aq) = {hAc Aq 0, hAc Aq 1}" .
+                        from hfp_ep hep have "fst p = hAc Aq 0 \<or> fst p = hAc Aq 1" by (by100 blast)
+                        have hinj: "inj_on (hAc Aq) top1_unit_interval"
+                          using hbij_Aq_loc unfolding bij_betw_def by (by100 blast)
+                        have h0_I: "(0::real) \<in> top1_unit_interval"
+                          unfolding top1_unit_interval_def by (by100 simp)
+                        have h1_I: "(1::real) \<in> top1_unit_interval"
+                          unfolding top1_unit_interval_def by (by100 simp)
+                        have h\<sigma>_I: "?\<sigma> \<in> top1_unit_interval"
+                          using inv_into_into[OF hfp_img] by (by100 blast)
+                        have "fst p \<noteq> hAc Aq 0"
+                        proof
+                          assume "fst p = hAc Aq 0"
+                          hence "hAc Aq ?\<sigma> = hAc Aq 0" using hAc_inv by (by100 simp)
+                          hence "?\<sigma> = 0" using hinj h\<sigma>_I h0_I unfolding inj_on_def by (by100 blast)
+                          have "tAc Aq \<noteq> 0"
+                          proof
+                            assume "tAc Aq = 0"
+                            have hps_img: "ps Aq \<in> hAc Aq ` top1_unit_interval"
+                              using hps_loc \<open>Aq \<in> S\<close> himg_Aq_loc by (by100 blast)
+                            have "hAc Aq (tAc Aq) = ps Aq"
+                              unfolding tAc_def by (rule f_inv_into_f[OF hps_img])
+                            hence "hAc Aq 0 = ps Aq" using \<open>tAc Aq = 0\<close> by (by100 simp)
+                            hence "ps Aq \<in> {hAc Aq 0, hAc Aq 1}" by (by100 simp)
+                            hence "ps Aq \<in> top1_arc_endpoints_on Aq (subspace_topology X TX Aq)"
+                              using hep by (by100 simp)
+                            thus False using hps_loc \<open>Aq \<in> S\<close> by (by100 blast)
+                          qed
+                          have "tAc Aq \<in> top1_unit_interval"
+                          proof -
+                            have hps_img: "ps Aq \<in> hAc Aq ` top1_unit_interval"
+                              using hps_loc \<open>Aq \<in> S\<close> himg_Aq_loc by (by100 blast)
+                            show ?thesis using inv_into_into[OF hps_img] unfolding tAc_def by (by100 blast)
+                          qed
+                          hence "tAc Aq \<ge> 0" unfolding top1_unit_interval_def by (by100 simp)
+                          hence "tAc Aq > 0" using \<open>tAc Aq \<noteq> 0\<close> by (by100 linarith)
+                          thus False using hinv_ge \<open>?\<sigma> = 0\<close> by (by100 linarith)
+                        qed
+                        hence "fst p = hAc Aq 1" using \<open>fst p = hAc Aq 0 \<or> fst p = hAc Aq 1\<close> by (by100 blast)
+                        hence "hAc Aq ?\<sigma> = hAc Aq 1" using hAc_inv by (by100 simp)
+                        thus "?\<sigma> = 1" using hinj h\<sigma>_I h1_I unfolding inj_on_def by (by100 blast)
+                      qed
+                      show ?thesis using hHDR_eq hAc_inv h\<sigma>_1 by (by100 simp)
+                    next
+                      case False
+                      have hAq_NT: "Aq \<in> ?NT" using hS_sub \<open>Aq \<in> S\<close> by (by100 blast)
+                      have "fst p \<notin> top1_arc_endpoints_on Aq (subspace_topology X TX Aq)"
+                        using hNT_endpoints[rule_format, OF hAq_NT] False by (by100 blast)
+                      have hTHE: "(THE A. A \<in> S \<and> fst p \<in> A - top1_arc_endpoints_on A (subspace_topology X TX A)) = Aq"
+                      proof (rule the_equality)
+                        show "Aq \<in> S \<and> fst p \<in> Aq - top1_arc_endpoints_on Aq (subspace_topology X TX Aq)"
+                          using \<open>Aq \<in> S\<close> \<open>fst p \<in> Aq \<inter> ?Y\<close> \<open>fst p \<notin> top1_arc_endpoints_on Aq _\<close>
+                          by (by100 blast)
+                      next
+                        fix A' assume "A' \<in> S \<and> fst p \<in> A' - top1_arc_endpoints_on A' (subspace_topology X TX A')"
+                        hence "A' \<in> \<A>" "fst p \<in> A'" using hS_sub by (by100 blast)+
+                        show "A' = Aq"
+                        proof (rule ccontr)
+                          assume "A' \<noteq> Aq"
+                          have "Aq \<in> \<A>" using hS_sub \<open>Aq \<in> S\<close> by (by100 blast)
+                          from h\<A>_inter[rule_format, OF \<open>Aq \<in> \<A>\<close> \<open>A' \<in> \<A>\<close> \<open>A' \<noteq> Aq\<close>[symmetric]]
+                          show False using \<open>fst p \<in> Aq \<inter> ?Y\<close> \<open>fst p \<in> A'\<close>
+                            \<open>fst p \<notin> top1_arc_endpoints_on Aq _\<close> by (by100 blast)
+                        qed
+                      qed
+                      have "fst p \<in> hAc Aq ` top1_unit_interval"
+                      proof -
+                        have hbij_loc2: "bij_betw (hAc Aq) top1_unit_interval Aq"
+                          using hhAc[OF \<open>Aq \<in> S\<close>] unfolding top1_homeomorphism_on_def by (by100 blast)
+                        show ?thesis using \<open>fst p \<in> Aq \<inter> ?Y\<close> hbij_loc2 unfolding bij_betw_def by (by100 blast)
+                      qed
+                      have "fst p \<in> ?Y" using \<open>fst p \<in> Aq \<inter> ?Y\<close> by (by100 blast)
+                      have h\<sigma>_ne: "inv_into top1_unit_interval (hAc Aq) (fst p) \<noteq> tAc Aq"
+                      proof
+                        assume "inv_into top1_unit_interval (hAc Aq) (fst p) = tAc Aq"
+                        have "hAc Aq (inv_into top1_unit_interval (hAc Aq) (fst p)) = fst p"
+                          by (rule f_inv_into_f[OF \<open>fst p \<in> hAc Aq ` top1_unit_interval\<close>])
+                        have "ps Aq \<in> hAc Aq ` top1_unit_interval"
+                        proof -
+                          have himg_loc3: "hAc Aq ` top1_unit_interval = Aq"
+                            using hhAc[OF \<open>Aq \<in> S\<close>] unfolding top1_homeomorphism_on_def bij_betw_def
+                            by (by100 blast)
+                          show ?thesis using hps_loc \<open>Aq \<in> S\<close> himg_loc3 by (by100 blast)
+                        qed
+                        have "hAc Aq (tAc Aq) = ps Aq"
+                          unfolding tAc_def by (rule f_inv_into_f[OF \<open>ps Aq \<in> hAc Aq ` _\<close>])
+                        hence "fst p = ps Aq"
+                          using \<open>hAc Aq _ = fst p\<close> \<open>inv_into _ _ (fst p) = tAc Aq\<close> by (by100 simp)
+                        thus False using \<open>fst p \<in> ?Y\<close> \<open>Aq \<in> S\<close> by (by100 blast)
+                      qed
+                      hence "inv_into top1_unit_interval (hAc Aq) (fst p) > tAc Aq"
+                        using hinv_ge by (by100 linarith)
+                      hence "(if inv_into top1_unit_interval (hAc Aq) (fst p) < tAc Aq then (0::real) else 1) = 1"
+                        by (by100 simp)
+                      obtain x t where hxt2: "p = (x, t)" by (cases p)
+                      have "x \<notin> ?target" using False hxt2 by (by100 simp)
+                      show ?thesis unfolding H_DR_def Let_def hxt2
+                        using \<open>x \<notin> ?target\<close> hTHE \<open>(if _ then (0::real) else 1) = 1\<close>
+                        hxt2 by (by100 simp)
+                    qed
+                  qed
                   \<comment> \<open>hstep\\_L/R restricted to QA\\_L/R in QA's subspace.\<close>
                   \<comment> \<open>H\\_DR continuous on QA\\_L (from hstep\\_L + formula equality + codomain restrict).\<close>
                   have hstep_L_QA: "top1_continuous_map_on QA_L

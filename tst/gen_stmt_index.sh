@@ -9,7 +9,10 @@ THEORIES=(
   h/AlgTopHelpers.thy b0/AlgTop_JCT_Base0.thy b/AlgTop_JCT_Base.thy
   a0/AlgTop0.thy ac/AlgTopCached.thy fib/AlgIsoFixedBase.thy fi/AlgIsoFixed.thy
   k5/K5_nonplanar.thy ag/AlgTopGroups.thy pd/PolygonDisk.thy svk/AlgTopSvK.thy
-  wh/AlgTopWedgeHelpers.thy at/AlgTopChain.thy AlgTop.thy
+  wh/AlgTopWedgeHelpers.thy at/AlgTopChain.thy
+  ac2/AlgTopCached2.thy ac3/AlgTopCached3.thy
+  ac4/AlgTopCached4.thy ac5/AlgTopCached5.thy ac6/AlgTopCached6.thy
+  AlgTop.thy
 )
 
 OUT=STMT_INDEX.txt

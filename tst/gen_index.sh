@@ -24,6 +24,11 @@ THEORIES=(
   svk/AlgTopSvK.thy
   wh/AlgTopWedgeHelpers.thy
   at/AlgTopChain.thy
+  ac2/AlgTopCached2.thy
+  ac3/AlgTopCached3.thy
+  ac4/AlgTopCached4.thy
+  ac5/AlgTopCached5.thy
+  ac6/AlgTopCached6.thy
   AlgTop.thy
 )
 
