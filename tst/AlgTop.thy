@@ -11683,7 +11683,31 @@ proof -
         qed
         \<comment> \<open>U \\<cap> V is simply connected (SC lemma).\<close>
         have hUV_sc: "top1_simply_connected_on ?UV (subspace_topology X TX ?UV)"
-          sorry \<comment> \<open>graph\\_remove\\_interior\\_points\\_sc with ps\\`NT.\<close>
+        proof -
+          \<comment> \<open>Need hvertices\\_T: all arc endpoints are in T.\<close>
+          have hvert_T: "\<forall>A\<in>\<A>. \<forall>e\<in>top1_arc_endpoints_on A (subspace_topology X TX A). e \<in> T"
+          proof (intro ballI)
+            fix A e assume "A \<in> \<A>" "e \<in> top1_arc_endpoints_on A (subspace_topology X TX A)"
+            show "e \<in> T"
+            proof (cases "A \<subseteq> T")
+              case True
+              have "e \<in> A" using \<open>e \<in> top1_arc_endpoints_on A _\<close>
+                unfolding top1_arc_endpoints_on_def by (by100 blast)
+              thus ?thesis using True by (by100 blast)
+            next
+              case False
+              hence "A \<in> ?NT" using \<open>A \<in> \<A>\<close> by (by100 blast)
+              thus ?thesis using hNT_endpoints \<open>e \<in> top1_arc_endpoints_on A _\<close> by (by100 blast)
+            qed
+          qed
+          have h\<A>_inter': "\<forall>A\<in>\<A>. \<forall>B\<in>\<A>. A \<noteq> B \<longrightarrow>
+              A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology X TX A)"
+            using h\<A>_inter by (by100 blast)
+          have hNT_eq: "?NT = {A \<in> \<A>. \<not> A \<subseteq> T}" by (by100 blast)
+          show ?thesis
+            using graph_remove_interior_points_sc[OF assms(1) h\<A> h\<A>_cover h\<A>_inter' hT_tree hT_sub
+                hT_subgraph hNT_eq \<open>finite ?NT\<close> hps hvert_T hx0_T h\<A>_coh] by (by100 blast)
+        qed
         \<comment> \<open>U deformation retracts onto T \\<union> A1 (target for S = NT-{A1}).\<close>
         let ?target_U = "T \<union> \<Union>(?NT - ?S_U)"
         have "?target_U = T \<union> A1"
