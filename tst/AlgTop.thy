@@ -12094,9 +12094,30 @@ proof -
                       top1_open_sets top1_unit_interval"
                     unfolding top1_unit_interval_topology_def top1_unit_interval_def by (by100 blast)
                   have h_open_I: "{t::real. 0 < t \<and> t < 1/2} \<in> top1_unit_interval_topology"
-                    sorry \<comment> \<open>(0, 1/2) open in [0,1]: intersection of open (0, 1/2) in R with [0,1].\<close>
-                  from homeomorphism_image_open[OF hhA h_open_I]
-                  show ?thesis sorry \<comment> \<open>Image of open in I under homeo = open in A1. May need subset.\<close>
+                  proof -
+                    have "{t::real. 0 < t \<and> t < 1/2} = top1_unit_interval \<inter> {t. 0 < t \<and> t < 1/2}"
+                      unfolding top1_unit_interval_def by (by100 auto)
+                    moreover have "{t::real. 0 < t \<and> t < 1/2} \<in> top1_open_sets"
+                    proof -
+                      have "open {x::real. 0 < x}" using open_greaterThan
+                        unfolding greaterThan_def by (by100 blast)
+                      have "open {x::real. x < 1/2}" using open_lessThan
+                        unfolding lessThan_def by (by100 blast)
+                      have "open ({x::real. 0 < x} \<inter> {x. x < 1/2})"
+                        using \<open>open {x. 0 < x}\<close> \<open>open {x. x < 1/2}\<close> by (by100 blast)
+                      have "{t::real. 0 < t \<and> t < 1/2} = {x. 0 < x} \<inter> {x. x < 1/2}" by (by100 blast)
+                      hence "open {t::real. 0 < t \<and> t < 1/2}"
+                        using \<open>open ({x. 0 < x} \<inter> {x. x < 1/2})\<close> by (by100 simp)
+                      thus ?thesis unfolding top1_open_sets_def by (by100 blast)
+                    qed
+                    ultimately show ?thesis
+                      unfolding top1_unit_interval_topology_def top1_unit_interval_def
+                        subspace_topology_def by (by100 auto)
+                  qed
+                  have h_sub_I: "{t::real. 0 < t \<and> t < 1/2} \<subseteq> top1_unit_interval"
+                    unfolding top1_unit_interval_def by (by100 auto)
+                  from homeomorphism_image_open[OF hhA h_open_I h_sub_I]
+                  show ?thesis .
                 qed
                 have "B \<inter> (X - ?A_comp) = A1 - ?A_comp" using True hA1_sub by (by100 blast)
                 moreover have "closedin_on A1 (subspace_topology X TX A1) (A1 - ?A_comp)"
