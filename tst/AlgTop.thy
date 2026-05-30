@@ -9575,7 +9575,38 @@ lemma trivial_pi1_imp_simply_connected:
       and "top1_fundamental_group_carrier X TX x0 =
           {top1_fundamental_group_id X TX x0}"
   shows "top1_simply_connected_on X TX"
-  sorry
+proof -
+  have "\<forall>f. top1_is_loop_on X TX x0 f \<longrightarrow>
+      top1_path_homotopic_on X TX x0 x0 f (top1_constant_path x0)"
+  proof (intro allI impI)
+    fix f assume hf: "top1_is_loop_on X TX x0 f"
+    \<comment> \<open>f's class \\<in> carrier = {id}, so class = id.\<close>
+    have hcl: "{g. top1_loop_equiv_on X TX x0 f g} \<in>
+        top1_fundamental_group_carrier X TX x0"
+      unfolding top1_fundamental_group_carrier_def using hf by (by100 blast)
+    hence hcl_id: "{g. top1_loop_equiv_on X TX x0 f g} =
+        top1_fundamental_group_id X TX x0"
+      using assms(4) by (by5000 force)
+    \<comment> \<open>f \\<in> class(f) by reflexivity.\<close>
+    have hpath: "top1_is_path_on X TX x0 x0 f"
+      using hf unfolding top1_is_loop_on_def by (by100 blast)
+    have "top1_loop_equiv_on X TX x0 f f"
+      unfolding top1_loop_equiv_on_def
+      using hf Lemma_51_1_path_homotopic_refl[OF hpath] by (by100 blast)
+    hence "f \<in> {g. top1_loop_equiv_on X TX x0 f g}" by (by100 blast)
+    \<comment> \<open>So f \\<in> id\\_class = {g. loop\\_equiv(const, g)}.\<close>
+    hence "f \<in> top1_fundamental_group_id X TX x0" using hcl_id by (by100 simp)
+    hence "top1_loop_equiv_on X TX x0 (top1_constant_path x0) f"
+      unfolding top1_fundamental_group_id_def by (by100 blast)
+    hence "top1_path_homotopic_on X TX x0 x0 (top1_constant_path x0) f"
+      unfolding top1_loop_equiv_on_def by (by100 blast)
+    show "top1_path_homotopic_on X TX x0 x0 f (top1_constant_path x0)"
+      by (rule Lemma_51_1_path_homotopic_sym) (rule \<open>top1_path_homotopic_on _ _ _ _ _ f\<close>)
+  qed
+  show ?thesis
+    by (rule top1_simply_connected_from_one_point[OF assms(1) assms(2) assms(3)])
+       (use \<open>\<forall>f. _\<close> in blast)
+qed
 
 lemma deformation_retract_path_connected:
   assumes hdr: "top1_deformation_retract_of_on X TX A"
