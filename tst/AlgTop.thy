@@ -11986,8 +11986,44 @@ proof -
               using tree_simply_connected[OF hT_tree] top1_simply_connected_on_path_connected by (by100 blast)
             \<comment> \<open>A1 is path-connected (arc \\<cong> [0,1] which is convex \\<Rightarrow> PC).\<close>
             have hA1_pc: "top1_path_connected_on A1 (subspace_topology X TX A1)"
-              sorry \<comment> \<open>Arc is PC: homeo to [0,1], convex\\_real\\_subspace\\_path\\_connected +
-                 homeomorphism\\_preserves\\_path\\_connected.\<close>
+            proof -
+              have hA1_arc_loc: "top1_is_arc_on A1 (subspace_topology X TX A1)"
+                using h\<A> hA1 by (by100 blast)
+              obtain h where hh: "top1_homeomorphism_on top1_unit_interval
+                  top1_unit_interval_topology A1 (subspace_topology X TX A1) h"
+                using hA1_arc_loc unfolding top1_is_arc_on_def by (by100 blast)
+              have hI_pc: "top1_path_connected_on top1_unit_interval top1_unit_interval_topology"
+              proof -
+                have hne: "top1_unit_interval \<noteq> {}"
+                  unfolding top1_unit_interval_def by (by100 auto)
+                have hconv: "\<And>x y t. x \<in> top1_unit_interval \<Longrightarrow> y \<in> top1_unit_interval \<Longrightarrow>
+                    0 \<le> t \<Longrightarrow> t \<le> 1 \<Longrightarrow> (1 - t) * x + t * y \<in> top1_unit_interval"
+                proof -
+                  fix x y t :: real
+                  assume hx: "x \<in> top1_unit_interval" and hy: "y \<in> top1_unit_interval"
+                      and ht0: "0 \<le> t" and ht1: "t \<le> 1"
+                  have "0 \<le> x" "x \<le> 1" "0 \<le> y" "y \<le> 1"
+                    using hx hy unfolding top1_unit_interval_def by (by100 simp)+
+                  have h1t: "1 - t \<ge> 0" using ht1 by (by100 linarith)
+                  have "(1 - t) * x \<ge> 0" using h1t \<open>0 \<le> x\<close> by (by100 simp)
+                  have "t * y \<ge> 0" using ht0 \<open>0 \<le> y\<close> by (by100 simp)
+                  have "(1 - t) * x + t * y \<ge> 0" using \<open>(1-t)*x \<ge> 0\<close> \<open>t*y \<ge> 0\<close> by (by100 linarith)
+                  moreover have "(1 - t) * x + t * y \<le> 1"
+                  proof -
+                    have "(1 - t) * x \<le> (1 - t)"
+                      using mult_left_mono[OF \<open>x \<le> 1\<close> h1t] by (by100 simp)
+                    moreover have "t * y \<le> t"
+                      using mult_left_mono[OF \<open>y \<le> 1\<close> ht0] by (by100 simp)
+                    ultimately show ?thesis by (by100 linarith)
+                  qed
+                  ultimately show "(1 - t) * x + t * y \<in> top1_unit_interval"
+                    unfolding top1_unit_interval_def by (by100 simp)
+                qed
+                from convex_real_subspace_path_connected[OF hne hconv] show ?thesis
+                  unfolding top1_unit_interval_topology_def top1_unit_interval_def by (by100 simp)
+              qed
+              from homeomorphism_preserves_path_connected[OF hh hI_pc] show ?thesis .
+            qed
             \<comment> \<open>Endpoints of A1 are in T, so there's a common point.\<close>
             have "\<exists>p. p \<in> T \<and> p \<in> A1"
               sorry \<comment> \<open>Arc endpoint is in T (hNT\\_endpoints).\<close>
